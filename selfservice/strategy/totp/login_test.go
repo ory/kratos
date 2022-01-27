@@ -3,6 +3,7 @@ package totp_test
 import (
 	"bytes"
 	"context"
+	_ "embed"
 	"fmt"
 	"net/http"
 	"net/url"
@@ -22,6 +23,8 @@ import (
 
 	stdtotp "github.com/pquerna/otp/totp"
 
+	"github.com/ory/x/sqlxx"
+
 	"github.com/ory/kratos/driver"
 	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/identity"
@@ -30,21 +33,18 @@ import (
 	"github.com/ory/kratos/selfservice/flow/login"
 	"github.com/ory/kratos/selfservice/strategy/totp"
 	"github.com/ory/kratos/x"
-	"github.com/ory/x/sqlxx"
-
-	_ "embed"
 )
 
 const totpCodeGJSONQuery = "ui.nodes.#(attributes.name==totp_code)"
 
 func createIdentityWithoutTOTP(t *testing.T, reg driver.Registry) *identity.Identity {
-	id, _ := createIdentity(t, reg)
+	id, _, _ := createIdentity(t, reg)
 	delete(id.Credentials, identity.CredentialsTypeTOTP)
 	require.NoError(t, reg.PrivilegedIdentityPool().UpdateIdentity(context.Background(), id))
 	return id
 }
 
-func createIdentity(t *testing.T, reg driver.Registry) (*identity.Identity, *otp.Key) {
+func createIdentity(t *testing.T, reg driver.Registry) (*identity.Identity, string, *otp.Key) {
 	identifier := x.NewUUID().String() + "@ory.sh"
 	password := x.NewUUID().String()
 	key, err := totp.NewKey(context.Background(), "foo", reg)
@@ -75,13 +75,14 @@ func createIdentity(t *testing.T, reg driver.Registry) (*identity.Identity, *otp
 		},
 	}
 	require.NoError(t, reg.PrivilegedIdentityPool().UpdateIdentity(context.Background(), i))
-	return i, key
+	return i, password, key
 }
 
 func TestCompleteLogin(t *testing.T) {
 	conf, reg := internal.NewFastRegistryWithMocks(t)
 	conf.MustSet(config.ViperKeySelfServiceStrategyConfig+"."+string(identity.CredentialsTypePassword), map[string]interface{}{"enabled": true})
 	conf.MustSet(config.ViperKeySelfServiceStrategyConfig+"."+string(identity.CredentialsTypeTOTP), map[string]interface{}{"enabled": true})
+	conf.MustSet(config.ViperKeyURLsWhitelistedReturnToDomains, []string{"https://www.ory.sh"})
 
 	router := x.NewRouterPublic()
 	publicTS, _ := testhelpers.NewKratosServerWithRouters(t, reg, router, x.NewRouterAdmin())
@@ -98,7 +99,7 @@ func TestCompleteLogin(t *testing.T) {
 	conf.MustSet(config.ViperKeySecretsDefault, []string{"not-a-secure-session-key"})
 
 	t.Run("case=totp payload is set when identity has totp", func(t *testing.T) {
-		id, _ := createIdentity(t, reg)
+		id, _, _ := createIdentity(t, reg)
 
 		apiClient := testhelpers.NewHTTPClientWithIdentitySessionToken(t, reg, id)
 		f := testhelpers.InitializeLoginFlowViaAPI(t, apiClient, publicTS, false, testhelpers.InitFlowWithAAL(identity.AuthenticatorAssuranceLevel2))
@@ -116,7 +117,7 @@ func TestCompleteLogin(t *testing.T) {
 	})
 
 	t.Run("case=should show the error ui because the request payload is malformed", func(t *testing.T) {
-		id, _ := createIdentity(t, reg)
+		id, _, _ := createIdentity(t, reg)
 
 		t.Run("type=api", func(t *testing.T) {
 			apiClient := testhelpers.NewHTTPClientWithIdentitySessionToken(t, reg, id)
@@ -159,9 +160,15 @@ func TestCompleteLogin(t *testing.T) {
 		return testhelpers.LoginMakeRequest(t, true, false, f, apiClient, payload)
 	}
 
-	doBrowserFlow := func(t *testing.T, spa bool, v func(url.Values), id *identity.Identity) (string, *http.Response) {
+	doBrowserFlow := func(t *testing.T, spa bool, v func(url.Values), id *identity.Identity, returnTo string) (string, *http.Response) {
 		browserClient := testhelpers.NewHTTPClientWithIdentitySessionCookie(t, reg, id)
-		f := testhelpers.InitializeLoginFlowViaBrowser(t, browserClient, publicTS, false, spa, testhelpers.InitFlowWithAAL(identity.AuthenticatorAssuranceLevel2))
+
+		opts := []testhelpers.InitFlowWithOption{testhelpers.InitFlowWithAAL(identity.AuthenticatorAssuranceLevel2)}
+		if len(returnTo) > 0 {
+			opts = append(opts, testhelpers.InitFlowWithReturnTo(returnTo))
+		}
+
+		f := testhelpers.InitializeLoginFlowViaBrowser(t, browserClient, publicTS, false, spa, opts...)
 		values := testhelpers.SDKFormFieldsToURLValues(f.Ui.Nodes)
 		values.Set("method", "totp")
 		v(values)
@@ -177,7 +184,7 @@ func TestCompleteLogin(t *testing.T) {
 	}
 
 	t.Run("case=should fail if code is empty", func(t *testing.T) {
-		id, _ := createIdentity(t, reg)
+		id, _, _ := createIdentity(t, reg)
 		payload := func(v url.Values) {
 			v.Set("totp_code", "")
 		}
@@ -194,18 +201,18 @@ func TestCompleteLogin(t *testing.T) {
 		})
 
 		t.Run("type=browser", func(t *testing.T) {
-			body, res := doBrowserFlow(t, false, payload, id)
+			body, res := doBrowserFlow(t, false, payload, id, "")
 			check(t, true, body, res)
 		})
 
 		t.Run("type=spa", func(t *testing.T) {
-			body, res := doBrowserFlow(t, true, payload, id)
+			body, res := doBrowserFlow(t, true, payload, id, "")
 			check(t, false, body, res)
 		})
 	})
 
 	t.Run("case=should fail if code is invalid", func(t *testing.T) {
-		id, _ := createIdentity(t, reg)
+		id, _, _ := createIdentity(t, reg)
 		payload := func(v url.Values) {
 			v.Set("totp_code", "111111")
 		}
@@ -222,18 +229,18 @@ func TestCompleteLogin(t *testing.T) {
 		})
 
 		t.Run("type=browser", func(t *testing.T) {
-			body, res := doBrowserFlow(t, false, payload, id)
+			body, res := doBrowserFlow(t, false, payload, id, "")
 			check(t, true, body, res)
 		})
 
 		t.Run("type=spa", func(t *testing.T) {
-			body, res := doBrowserFlow(t, true, payload, id)
+			body, res := doBrowserFlow(t, true, payload, id, "")
 			check(t, false, body, res)
 		})
 	})
 
 	t.Run("case=should fail if code is too long", func(t *testing.T) {
-		id, _ := createIdentity(t, reg)
+		id, _, _ := createIdentity(t, reg)
 		payload := func(v url.Values) {
 			v.Set("totp_code", "1111111111")
 		}
@@ -250,12 +257,12 @@ func TestCompleteLogin(t *testing.T) {
 		})
 
 		t.Run("type=browser", func(t *testing.T) {
-			body, res := doBrowserFlow(t, false, payload, id)
+			body, res := doBrowserFlow(t, false, payload, id, "")
 			check(t, true, body, res)
 		})
 
 		t.Run("type=spa", func(t *testing.T) {
-			body, res := doBrowserFlow(t, true, payload, id)
+			body, res := doBrowserFlow(t, true, payload, id, "")
 			check(t, false, body, res)
 		})
 	})
@@ -279,18 +286,18 @@ func TestCompleteLogin(t *testing.T) {
 		})
 
 		t.Run("type=browser", func(t *testing.T) {
-			body, res := doBrowserFlow(t, false, payload, id)
+			body, res := doBrowserFlow(t, false, payload, id, "")
 			check(t, true, body, res)
 		})
 
 		t.Run("type=spa", func(t *testing.T) {
-			body, res := doBrowserFlow(t, true, payload, id)
+			body, res := doBrowserFlow(t, true, payload, id, "")
 			check(t, false, body, res)
 		})
 	})
 
 	t.Run("case=should pass when TOTP is supplied correctly", func(t *testing.T) {
-		id, key := createIdentity(t, reg)
+		id, _, key := createIdentity(t, reg)
 		code, err := stdtotp.GenerateCode(key.Secret(), time.Now())
 		require.NoError(t, err)
 		payload := func(v url.Values) {
@@ -323,12 +330,19 @@ func TestCompleteLogin(t *testing.T) {
 		})
 
 		t.Run("type=browser", func(t *testing.T) {
-			body, res := doBrowserFlow(t, false, payload, id)
+			body, res := doBrowserFlow(t, false, payload, id, "")
 			check(t, true, body, res)
 		})
 
+		t.Run("type=browser set return_to", func(t *testing.T) {
+			returnTo := "https://www.ory.sh"
+			_, res := doBrowserFlow(t, false, payload, id, returnTo)
+			t.Log(res.Request.URL.String())
+			assert.Contains(t, res.Request.URL.String(), returnTo)
+		})
+
 		t.Run("type=spa", func(t *testing.T) {
-			body, res := doBrowserFlow(t, true, payload, id)
+			body, res := doBrowserFlow(t, true, payload, id, "")
 			check(t, false, body, res)
 		})
 	})
@@ -356,7 +370,7 @@ func TestCompleteLogin(t *testing.T) {
 	})
 
 	t.Run("case=should pass without csrf if API flow", func(t *testing.T) {
-		id, _ := createIdentity(t, reg)
+		id, _, _ := createIdentity(t, reg)
 		body, res := doAPIFlow(t, func(v url.Values) {
 			v.Del("csrf_token")
 			v.Set("totp_code", "111111")
@@ -367,12 +381,12 @@ func TestCompleteLogin(t *testing.T) {
 	})
 
 	t.Run("case=should fail if CSRF token is invalid", func(t *testing.T) {
-		id, _ := createIdentity(t, reg)
+		id, _, _ := createIdentity(t, reg)
 		t.Run("type=browser", func(t *testing.T) {
 			body, res := doBrowserFlow(t, false, func(v url.Values) {
 				v.Del("csrf_token")
 				v.Set("totp_code", "111111")
-			}, id)
+			}, id, "")
 
 			assert.Contains(t, res.Request.URL.String(), errTS.URL)
 			assert.Equal(t, x.ErrInvalidCSRFToken.Reason(), gjson.Get(body, "reason").String(), body)
@@ -382,10 +396,30 @@ func TestCompleteLogin(t *testing.T) {
 			body, res := doBrowserFlow(t, true, func(v url.Values) {
 				v.Del("csrf_token")
 				v.Set("totp_code", "111111")
-			}, id)
+			}, id, "")
 
 			assert.Contains(t, res.Request.URL.String(), publicTS.URL+login.RouteSubmitFlow)
 			assert.Equal(t, x.ErrInvalidCSRFToken.Reason(), gjson.Get(body, "error.reason").String(), body)
+		})
+	})
+
+	t.Run("case=should pass return_to URL after login", func(t *testing.T) {
+		id, pwd, _ := createIdentity(t, reg)
+
+		t.Run("type=browser", func(t *testing.T) {
+			returnTo := "https://www.ory.sh"
+			browserClient := testhelpers.NewClientWithCookies(t)
+			f := testhelpers.InitializeLoginFlowViaBrowser(t, browserClient, publicTS, false, false, testhelpers.InitFlowWithReturnTo(returnTo))
+
+			cred, ok := id.GetCredentials(identity.CredentialsTypePassword)
+			require.True(t, ok)
+			values := url.Values{"method": {"password"}, "password_identifier": {cred.Identifiers[0]},
+				"password": {pwd}, "csrf_token": {x.FakeCSRFToken}}.Encode()
+
+			body, res := testhelpers.LoginMakeRequest(t, false, false, f, browserClient, values)
+			require.Contains(t, res.Request.URL.Path, "login", "%s", res.Request.URL.String())
+			assert.Equal(t, gjson.Get(body, "requested_aal").String(), "aal2", "%s", body)
+			assert.Equal(t, gjson.Get(body, "return_to").String(), returnTo, "%s", body)
 		})
 	})
 }
