@@ -1,13 +1,14 @@
 package template
 
 import (
+	"context"
 	"encoding/json"
 	"os"
 )
 
 type (
 	RecoveryInvalid struct {
-		c TemplateConfig
+		d TemplateDependencies
 		m *RecoveryInvalidModel
 	}
 	RecoveryInvalidModel struct {
@@ -15,32 +16,44 @@ type (
 	}
 )
 
-func NewRecoveryInvalid(c TemplateConfig, m *RecoveryInvalidModel) *RecoveryInvalid {
-	return &RecoveryInvalid{c: c, m: m}
+func NewRecoveryInvalid(d TemplateDependencies, m *RecoveryInvalidModel) *RecoveryInvalid {
+	return &RecoveryInvalid{d: d, m: m}
 }
 
 func (t *RecoveryInvalid) EmailRecipient() (string, error) {
 	return t.m.To, nil
 }
 
-func (t *RecoveryInvalid) EmailSubject() (string, error) {
-	return LoadTextTemplate(os.DirFS(t.c.CourierTemplatesRoot()), "recovery/invalid/email.subject.gotmpl", "recovery/invalid/email.subject*", t.m,
-		t.c.CourierTemplatesRecoveryInvalid().Subject,
-		t.c.CourierTemplatesRecoveryInvalid().TemplateRoot,
+func (t *RecoveryInvalid) EmailSubject(ctx context.Context) (string, error) {
+	return LoadTextTemplate(ctx, t.d,
+		os.DirFS(t.d.CourierConfig(ctx).CourierTemplatesRoot()),
+		"recovery/invalid/email.subject.gotmpl",
+		"recovery/invalid/email.subject*",
+		t.m,
+		t.d.CourierConfig(ctx).CourierTemplatesRecoveryInvalid().Subject,
+		t.d.CourierConfig(ctx).CourierTemplatesRecoveryInvalid().TemplateRoot,
 	)
 }
 
-func (t *RecoveryInvalid) EmailBody() (string, error) {
-	return LoadHTMLTemplate(os.DirFS(t.c.CourierTemplatesRoot()), "recovery/invalid/email.body.gotmpl", "recovery/invalid/email.body*", t.m,
-		t.c.CourierTemplatesRecoveryInvalid().Body.HTML,
-		t.c.CourierTemplatesRecoveryInvalid().TemplateRoot,
+func (t *RecoveryInvalid) EmailBody(ctx context.Context) (string, error) {
+	return LoadHTMLTemplate(ctx, t.d,
+		os.DirFS(t.d.CourierConfig(ctx).CourierTemplatesRoot()),
+		"recovery/invalid/email.body.gotmpl",
+		"recovery/invalid/email.body*",
+		t.m,
+		t.d.CourierConfig(ctx).CourierTemplatesRecoveryInvalid().Body.HTML,
+		t.d.CourierConfig(ctx).CourierTemplatesRecoveryInvalid().TemplateRoot,
 	)
 }
 
-func (t *RecoveryInvalid) EmailBodyPlaintext() (string, error) {
-	return LoadTextTemplate(os.DirFS(t.c.CourierTemplatesRoot()), "recovery/invalid/email.body.plaintext.gotmpl", "recovery/invalid/email.body.plaintext*", t.m,
-		t.c.CourierTemplatesRecoveryInvalid().Body.PlainText,
-		t.c.CourierTemplatesRecoveryInvalid().TemplateRoot,
+func (t *RecoveryInvalid) EmailBodyPlaintext(ctx context.Context) (string, error) {
+	return LoadTextTemplate(ctx, t.d,
+		os.DirFS(t.d.CourierConfig(ctx).CourierTemplatesRoot()),
+		"recovery/invalid/email.body.plaintext.gotmpl",
+		"recovery/invalid/email.body.plaintext*",
+		t.m,
+		t.d.CourierConfig(ctx).CourierTemplatesRecoveryInvalid().Body.PlainText,
+		t.d.CourierConfig(ctx).CourierTemplatesRecoveryInvalid().TemplateRoot,
 	)
 }
 

@@ -2,7 +2,9 @@ package template
 
 import (
 	"bytes"
+	"context"
 	"embed"
+	"github.com/hashicorp/go-retryablehttp"
 	"github.com/ory/x/fetcher"
 	htemplate "html/template"
 	"io"
@@ -24,23 +26,8 @@ type Template interface {
 	Execute(wr io.Writer, data interface{}) error
 }
 
-type options struct {
-	root      string
-	remoteURL string
-}
-
-type LoadTemplateOption func(*options)
-
-func WithRemoteResource(url string) LoadTemplateOption {
-	return func(o *options) {
-		o.remoteURL = url
-	}
-}
-
-func WithRemoteResourceRoot(root string) LoadTemplateOption {
-	return func(o *options) {
-		o.root = root
-	}
+type templateDependencies interface {
+	HTTPClient(ctx context.Context) *retryablehttp.Client
 }
 
 func loadBuiltInTemplate(filesystem fs.FS, name string, html bool) (Template, error) {
@@ -85,12 +72,13 @@ func loadBuiltInTemplate(filesystem fs.FS, name string, html bool) (Template, er
 	return tpl, nil
 }
 
-func loadRemoteTemplate(url string, name string, html bool, root string) (Template, error) {
+func loadRemoteTemplate(ctx context.Context, d templateDependencies, url string, name string, html bool, root string) (Template, error) {
 	if t, found := cache.Get(name); found {
 		return t.(Template), nil
 	}
 
-	f := fetcher.NewFetcher()
+	f := fetcher.NewFetcher(fetcher.WithClient(d.HTTPClient(ctx).StandardClient()))
+
 	bb, err := f.Fetch(url)
 	if err != nil {
 		return nil, errors.WithStack(err)
@@ -152,11 +140,11 @@ func loadTemplate(filesystem fs.FS, name, pattern string, html bool) (Template, 
 	return tpl, nil
 }
 
-func LoadTextTemplate(filesystem fs.FS, name, pattern string, model interface{}, remoteURL, remoteTemplateRoot string) (string, error) {
+func LoadTextTemplate(ctx context.Context, d templateDependencies, filesystem fs.FS, name, pattern string, model interface{}, remoteURL, remoteTemplateRoot string) (string, error) {
 	var t Template
 	var err error
 	if remoteURL != "" {
-		t, err = loadRemoteTemplate(remoteURL, name, false, remoteTemplateRoot)
+		t, err = loadRemoteTemplate(ctx, d, remoteURL, name, false, remoteTemplateRoot)
 		if err != nil {
 			return "", err
 		}
@@ -174,11 +162,11 @@ func LoadTextTemplate(filesystem fs.FS, name, pattern string, model interface{},
 	return b.String(), nil
 }
 
-func LoadHTMLTemplate(filesystem fs.FS, name, pattern string, model interface{}, remoteURL, remoteTemplateRoot string) (string, error) {
+func LoadHTMLTemplate(ctx context.Context, d templateDependencies, filesystem fs.FS, name, pattern string, model interface{}, remoteURL, remoteTemplateRoot string) (string, error) {
 	var t Template
 	var err error
 	if remoteURL != "" {
-		t, err = loadRemoteTemplate(remoteURL, name, true, remoteTemplateRoot)
+		t, err = loadRemoteTemplate(ctx, d, remoteURL, name, true, remoteTemplateRoot)
 		if err != nil {
 			return "", err
 		}

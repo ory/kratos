@@ -231,6 +231,17 @@ type (
 	Provider interface {
 		Config(ctx context.Context) *Config
 	}
+	CourierConfigs interface {
+		CourierSMTPURL() *url.URL
+		CourierSMTPFrom() string
+		CourierSMTPFromName() string
+		CourierSMTPHeaders() map[string]string
+		CourierTemplatesRoot() string
+		CourierTemplatesVerificationInvalid() *CourierEmailTemplate
+		CourierTemplatesVerificationValid() *CourierEmailTemplate
+		CourierTemplatesRecoveryInvalid() *CourierEmailTemplate
+		CourierTemplatesRecoveryValid() *CourierEmailTemplate
+	}
 )
 
 func (c *Argon2) MarshalJSON() ([]byte, error) {
