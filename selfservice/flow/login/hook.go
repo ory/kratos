@@ -68,7 +68,7 @@ func (e *HookExecutor) requiresAAL2(r *http.Request, s *session.Session, a *Flow
 	}
 
 	if err := aalErr.PassReturnToParameter(a.RequestURL); err != nil {
-		return aalErr, true
+		return nil, false
 	}
 
 	return aalErr, true
