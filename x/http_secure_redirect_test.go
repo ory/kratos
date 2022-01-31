@@ -143,6 +143,14 @@ func TestSecureRedirectTo(t *testing.T) {
 		return res, string(body)
 	}
 
+	t.Run("case=return to a relative path with anchor works", func(t *testing.T) {
+		s := newServer(t, false, true, false, func(ts *httptest.Server) []x.SecureRedirectOption {
+			return []x.SecureRedirectOption{x.SecureRedirectAllowURLs([]url.URL{*urlx.ParseOrPanic("/foo")})}
+		})
+		_, body := makeRequest(t, s, "?return_to=/foo/kratos%23abcd")
+		assert.Equal(t, body, "/foo/kratos#abcd")
+	})
+
 	t.Run("case=return to default URL if nothing is allowed", func(t *testing.T) {
 		s := newServer(t, false, false, false, nil)
 		_, body := makeRequest(t, s, "?return_to=/foo")
