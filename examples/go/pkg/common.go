@@ -50,7 +50,10 @@ func SDKExitOnError(err error, res *http.Response) {
 	if err == nil {
 		return
 	}
-	body, _ := json.MarshalIndent(json.RawMessage(x.MustReadAll(res.Body)), "", "  ")
+	var body []byte
+	if res != nil {
+		body, _ = json.MarshalIndent(json.RawMessage(x.MustReadAll(res.Body)), "", "  ")
+	}
 	out, _ := json.MarshalIndent(err, "", "  ")
 	fmt.Printf("%s\n\nAn error occurred: %+v\nbody: %s\n", out, err, body)
 	os.Exit(1)
