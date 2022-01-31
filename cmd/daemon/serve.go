@@ -92,6 +92,9 @@ func ServePublic(r driver.Registry, wg *sync.WaitGroup, cmd *cobra.Command, args
 	n.Use(publicLogger)
 	n.Use(x.HTTPLoaderContextMiddleware(r))
 	n.Use(sqa(ctx, cmd, r))
+	if tracer := r.Tracer(ctx); tracer.IsLoaded() {
+		n.Use(tracer)
+	}
 	n.Use(r.PrometheusManager())
 
 	router := x.NewRouterPublic()
@@ -109,10 +112,6 @@ func ServePublic(r driver.Registry, wg *sync.WaitGroup, cmd *cobra.Command, args
 
 	r.RegisterPublicRoutes(ctx, router)
 	r.PrometheusManager().RegisterRouter(router.Router)
-
-	if tracer := r.Tracer(ctx); tracer.IsLoaded() {
-		n.Use(tracer)
-	}
 
 	var handler http.Handler = n
 	options, enabled := r.Config(ctx).CORS("public")
