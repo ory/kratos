@@ -179,7 +179,7 @@ func TestLoadTextTemplate(t *testing.T) {
 			require.NoError(t, reg.Config(ctx).Source().Set(config.ViperKeyClientHTTPNoPrivateIPRanges, true))
 			reg.HTTPClient(ctx).RetryMax = 1
 			reg.HTTPClient(ctx).RetryWaitMax = time.Millisecond
-			
+
 			_, err := template.LoadHTMLTemplate(ctx, reg, nil, "", "", map[string]interface{}{},
 				"http://localhost:8080/1234",
 				"")
