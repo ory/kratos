@@ -71,12 +71,4 @@ func TestProviderGenericOIDC_AddAuthCodeURLOptions(t *testing.T) {
 		}
 		assert.Contains(t, makeAuthCodeURL(t, r, reg), "claims="+url.QueryEscape(string(makeOIDCClaims())))
 	})
-
-	t.Run("case=does not allow calling issuers in the internal network", func(t *testing.T) {
-		t.Fatal("asdf")
-	})
-
-	t.Run("case=does not allow calling mappers in the internal network", func(t *testing.T) {
-		t.Fatal("asdf")
-	})
 }
