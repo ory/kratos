@@ -24,14 +24,15 @@ import (
 
 	"github.com/stretchr/testify/require"
 
+	"github.com/ory/x/assertx"
+	"github.com/ory/x/sqlxx"
+
 	"github.com/ory/kratos/driver"
 	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/internal"
 	"github.com/ory/kratos/internal/testhelpers"
 	"github.com/ory/kratos/x"
-	"github.com/ory/x/assertx"
-	"github.com/ory/x/sqlxx"
 )
 
 //go:embed fixtures/settings/has_webauth.json
@@ -336,6 +337,44 @@ func TestCompleteSettings(t *testing.T) {
 			assert.Empty(t, gjson.GetBytes(actualFlow.InternalContext, flow.PrefixInternalContextKey(identity.CredentialsTypeWebAuthn, webauthn.InternalContextKeySessionData)))
 
 			testhelpers.EnsureAAL(t, browserClient, publicTS, "aal2", string(identity.CredentialsTypeWebAuthn))
+		}
+
+		t.Run("type=browser", func(t *testing.T) {
+			run(t, false)
+		})
+
+		t.Run("type=spa", func(t *testing.T) {
+			run(t, true)
+		})
+	})
+
+	t.Run("case=remove all security keys", func(t *testing.T) {
+		run := func(t *testing.T, spa bool) {
+			id := createIdentity(t, reg)
+			allCred, ok := id.GetCredentials(identity.CredentialsTypeWebAuthn)
+			assert.True(t, ok)
+
+			var cc webauthn.CredentialsConfig
+			require.NoError(t, json.Unmarshal(allCred.Config, &cc))
+			require.Len(t, cc.Credentials, 2)
+
+			for _, cred := range cc.Credentials {
+				body, res := doBrowserFlow(t, spa, func(v url.Values) {
+					v.Set(node.WebAuthnRemove, fmt.Sprintf("%x", cred.ID))
+				}, id)
+
+				if spa {
+					assert.Contains(t, res.Request.URL.String(), publicTS.URL+settings.RouteSubmitFlow)
+				} else {
+					assert.Contains(t, res.Request.URL.String(), uiTS.URL)
+				}
+				assert.EqualValues(t, settings.StateSuccess, gjson.Get(body, "state").String(), body)
+			}
+
+			actual, err := reg.Persister().GetIdentityConfidential(context.Background(), id.ID)
+			require.NoError(t, err)
+			_, ok = actual.GetCredentials(identity.CredentialsTypeWebAuthn)
+			assert.False(t, ok)
 		}
 
 		t.Run("type=browser", func(t *testing.T) {
