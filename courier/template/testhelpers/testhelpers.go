@@ -1,6 +1,8 @@
 package testhelpers
 
 import (
+	"context"
+	"github.com/ory/kratos/driver"
 	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/internal"
 	"github.com/stretchr/testify/assert"
@@ -8,9 +10,9 @@ import (
 	"testing"
 )
 
-func SetupRemoteConfig(t *testing.T, plaintext string, html string, subject string) *config.Config {
-	conf, _ := internal.NewFastRegistryWithMocks(t)
-	require.NoError(t, conf.Set(config.ViperKeyCourierTemplatesRecoveryInvalid, &config.CourierEmailTemplate{
+func SetupRemoteConfig(t *testing.T, ctx context.Context, plaintext string, html string, subject string) *driver.RegistryDefault {
+	_, reg := internal.NewFastRegistryWithMocks(t)
+	require.NoError(t, reg.Config(ctx).Set(config.ViperKeyCourierTemplatesRecoveryInvalid, &config.CourierEmailTemplate{
 		TemplateRoot: "",
 		Body: &config.CourierEmailBodyTemplate{
 			PlainText: plaintext,
@@ -18,18 +20,18 @@ func SetupRemoteConfig(t *testing.T, plaintext string, html string, subject stri
 		},
 		Subject: subject,
 	}))
-	return conf
+	return reg
 }
 
-func TestRendered(t *testing.T, tpl interface {
-	EmailBody() (string, error)
-	EmailSubject() (string, error)
+func TestRendered(t *testing.T, ctx context.Context, tpl interface {
+	EmailBody(context.Context) (string, error)
+	EmailSubject(context.Context) (string, error)
 }) {
-	rendered, err := tpl.EmailBody()
+	rendered, err := tpl.EmailBody(ctx)
 	require.NoError(t, err)
 	assert.NotEmpty(t, rendered)
 
-	rendered, err = tpl.EmailSubject()
+	rendered, err = tpl.EmailSubject(ctx)
 	require.NoError(t, err)
 	assert.NotEmpty(t, rendered)
 }

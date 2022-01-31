@@ -20,7 +20,7 @@ import (
 //go:embed courier/builtin/templates/*
 var templates embed.FS
 
-var cache, _ = lru.New(16)
+var Cache, _ = lru.New(16)
 
 type Template interface {
 	Execute(wr io.Writer, data interface{}) error
@@ -31,7 +31,7 @@ type templateDependencies interface {
 }
 
 func loadBuiltInTemplate(filesystem fs.FS, name string, html bool) (Template, error) {
-	if t, found := cache.Get(name); found {
+	if t, found := Cache.Get(name); found {
 		return t.(Template), nil
 	}
 
@@ -68,16 +68,16 @@ func loadBuiltInTemplate(filesystem fs.FS, name string, html bool) (Template, er
 		tpl = t
 	}
 
-	_ = cache.Add(name, tpl)
+	_ = Cache.Add(name, tpl)
 	return tpl, nil
 }
 
 func loadRemoteTemplate(ctx context.Context, d templateDependencies, url string, name string, html bool, root string) (Template, error) {
-	if t, found := cache.Get(name); found {
+	if t, found := Cache.Get(name); found {
 		return t.(Template), nil
 	}
 
-	f := fetcher.NewFetcher(fetcher.WithClient(d.HTTPClient(ctx).StandardClient()))
+	f := fetcher.NewFetcher(fetcher.WithClient(d.HTTPClient(ctx).HTTPClient))
 
 	bb, err := f.Fetch(url)
 	if err != nil {
@@ -100,7 +100,7 @@ func loadRemoteTemplate(ctx context.Context, d templateDependencies, url string,
 }
 
 func loadTemplate(filesystem fs.FS, name, pattern string, html bool) (Template, error) {
-	if t, found := cache.Get(name); found {
+	if t, found := Cache.Get(name); found {
 		return t.(Template), nil
 	}
 
@@ -136,7 +136,7 @@ func loadTemplate(filesystem fs.FS, name, pattern string, html bool) (Template, 
 		tpl = t
 	}
 
-	_ = cache.Add(name, tpl)
+	_ = Cache.Add(name, tpl)
 	return tpl, nil
 }
 

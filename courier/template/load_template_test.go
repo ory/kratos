@@ -1,14 +1,20 @@
-package template
+package template_test
 
 import (
+	"context"
 	"encoding/base64"
 	"github.com/julienschmidt/httprouter"
+	"github.com/ory/kratos/courier/template"
+	"github.com/ory/kratos/driver/config"
+	"github.com/ory/kratos/internal"
+	"github.com/ory/x/fetcher"
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
 	"os"
 	"path/filepath"
 	"testing"
+	"time"
 
 	lru "github.com/hashicorp/golang-lru"
 	"github.com/stretchr/testify/assert"
@@ -19,13 +25,17 @@ import (
 
 func TestLoadTextTemplate(t *testing.T) {
 	var executeTextTemplate = func(t *testing.T, dir, name, pattern string, model map[string]interface{}) string {
-		tp, err := LoadTextTemplate(os.DirFS(dir), name, pattern, model, "", "")
+		ctx := context.Background()
+		_, reg := internal.NewFastRegistryWithMocks(t)
+		tp, err := template.LoadTextTemplate(ctx, reg, os.DirFS(dir), name, pattern, model, "", "")
 		require.NoError(t, err)
 		return tp
 	}
 
 	var executeHTMLTemplate = func(t *testing.T, dir, name, pattern string, model map[string]interface{}) string {
-		tp, err := LoadHTMLTemplate(os.DirFS(dir), name, pattern, model, "", "")
+		ctx := context.Background()
+		_, reg := internal.NewFastRegistryWithMocks(t)
+		tp, err := template.LoadHTMLTemplate(ctx, reg, os.DirFS(dir), name, pattern, model, "", "")
 		require.NoError(t, err)
 		return tp
 	}
@@ -36,26 +46,26 @@ func TestLoadTextTemplate(t *testing.T) {
 	})
 
 	t.Run("method=fallback to bundled", func(t *testing.T) {
-		cache, _ = lru.New(16) // prevent cache hit
+		template.Cache, _ = lru.New(16) // prevent Cache hit
 		actual := executeTextTemplate(t, "some/inexistent/dir", "test_stub/email.body.gotmpl", "", nil)
 		assert.Contains(t, actual, "stub email")
 	})
 
 	t.Run("method=with Sprig functions", func(t *testing.T) {
-		cache, _ = lru.New(16)                              // prevent cache hit
+		template.Cache, _ = lru.New(16)                     // prevent Cache hit
 		m := map[string]interface{}{"input": "hello world"} // create a simple model
 		actual := executeTextTemplate(t, "courier/builtin/templates/test_stub", "email.body.sprig.gotmpl", "", m)
 		assert.Contains(t, actual, "HelloWorld,HELLOWORLD")
 	})
 
 	t.Run("method=html with nested templates", func(t *testing.T) {
-		cache, _ = lru.New(16)                       // prevent cache hit
+		template.Cache, _ = lru.New(16)              // prevent Cache hit
 		m := map[string]interface{}{"lang": "en_US"} // create a simple model
 		actual := executeHTMLTemplate(t, "courier/builtin/templates/test_stub", "email.body.html.gotmpl", "email.body.html*", m)
 		assert.Contains(t, actual, "lang=en_US")
 	})
 
-	t.Run("method=cache works", func(t *testing.T) {
+	t.Run("method=Cache works", func(t *testing.T) {
 		dir := os.TempDir()
 		name := x.NewUUID().String() + ".body.gotmpl"
 		fp := filepath.Join(dir, name)
@@ -68,13 +78,18 @@ func TestLoadTextTemplate(t *testing.T) {
 	})
 
 	t.Run("method=remote resource", func(t *testing.T) {
+		_, reg := internal.NewFastRegistryWithMocks(t)
+
+		ctx, cancel := context.WithCancel(context.Background())
+		t.Cleanup(cancel)
+
 		t.Run("case=base64 encoded data", func(t *testing.T) {
 			t.Run("html template", func(t *testing.T) {
 				m := map[string]interface{}{"lang": "en_US"}
 				f, err := ioutil.ReadFile("courier/builtin/templates/test_stub/email.body.html.nested.gotmpl")
 				require.NoError(t, err)
 				b64 := base64.StdEncoding.EncodeToString(f)
-				tp, err := LoadHTMLTemplate(nil, "", "", m, "base64://"+b64, "base")
+				tp, err := template.LoadHTMLTemplate(ctx, reg, nil, "", "", m, "base64://"+b64, "base")
 				require.NoError(t, err)
 				assert.Contains(t, tp, "lang=en_US")
 			})
@@ -86,7 +101,7 @@ func TestLoadTextTemplate(t *testing.T) {
 
 				b64 := base64.StdEncoding.EncodeToString(f)
 
-				tp, err := LoadTextTemplate(nil, "", "", m,
+				tp, err := template.LoadTextTemplate(ctx, reg, nil, "", "", m,
 					"base64://"+b64, "base")
 				require.NoError(t, err)
 				assert.Contains(t, tp, "stub email body something")
@@ -97,7 +112,7 @@ func TestLoadTextTemplate(t *testing.T) {
 		t.Run("case=file resource", func(t *testing.T) {
 			t.Run("case=html template", func(t *testing.T) {
 				m := map[string]interface{}{"lang": "en_US"}
-				tp, err := LoadHTMLTemplate(nil, "", "", m,
+				tp, err := template.LoadHTMLTemplate(ctx, reg, nil, "", "", m,
 					"file://courier/builtin/templates/test_stub/email.body.html.nested.gotmpl",
 					"base",
 				)
@@ -107,7 +122,7 @@ func TestLoadTextTemplate(t *testing.T) {
 
 			t.Run("case=plaintext", func(t *testing.T) {
 				m := map[string]interface{}{"Body": "something"}
-				tp, err := LoadTextTemplate(nil, "", "", m,
+				tp, err := template.LoadTextTemplate(ctx, reg, nil, "", "", m,
 					"file://courier/builtin/templates/test_stub/email.body.plaintext.gotmpl",
 					"base")
 				require.NoError(t, err)
@@ -128,7 +143,7 @@ func TestLoadTextTemplate(t *testing.T) {
 
 			t.Run("case=html template", func(t *testing.T) {
 				m := map[string]interface{}{"lang": "en_US"}
-				tp, err := LoadHTMLTemplate(nil, "", "", m,
+				tp, err := template.LoadHTMLTemplate(ctx, reg, nil, "", "", m,
 					ts.URL+"/html",
 					"base",
 				)
@@ -138,10 +153,45 @@ func TestLoadTextTemplate(t *testing.T) {
 
 			t.Run("case=plaintext", func(t *testing.T) {
 				m := map[string]interface{}{"Body": "something"}
-				tp, err := LoadTextTemplate(nil, "", "", m, ts.URL+"/plaintext", "base")
+				tp, err := template.LoadTextTemplate(ctx, reg, nil, "", "", m, ts.URL+"/plaintext", "base")
 				require.NoError(t, err)
 				assert.Contains(t, tp, "stub email body something")
 			})
+
+		})
+
+		t.Run("case=unsupported resource", func(t *testing.T) {
+			tp, err := template.LoadHTMLTemplate(ctx, reg, nil, "", "", map[string]interface{}{},
+				"grpc://unsupported-url",
+				"")
+
+			require.ErrorIs(t, err, fetcher.ErrUnknownScheme)
+			require.Empty(t, tp)
+
+			tp, err = template.LoadTextTemplate(ctx, reg, nil, "", "", map[string]interface{}{},
+				"grpc://unsupported-url",
+				"")
+			require.ErrorIs(t, err, fetcher.ErrUnknownScheme)
+			require.Empty(t, tp)
+		})
+
+		t.Run("case=disallowed resources", func(t *testing.T) {
+			require.NoError(t, reg.Config(ctx).Source().Set(config.ViperKeyClientHTTPNoPrivateIPRanges, true))
+			reg.HTTPClient(ctx).RetryMax = 1
+			reg.HTTPClient(ctx).RetryWaitMax = time.Millisecond
+			
+			_, err := template.LoadHTMLTemplate(ctx, reg, nil, "", "", map[string]interface{}{},
+				"http://localhost:8080/1234",
+				"")
+
+			require.Error(t, err)
+			assert.Contains(t, err.Error(), "is in the")
+
+			_, err = template.LoadTextTemplate(ctx, reg, nil, "", "", map[string]interface{}{},
+				"http://localhost:8080/1234",
+				"")
+			require.Error(t, err)
+			assert.Contains(t, err.Error(), "is in the")
 
 		})
 	})

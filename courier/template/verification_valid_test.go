@@ -1,6 +1,7 @@
 package template_test
 
 import (
+	"context"
 	"encoding/base64"
 	"github.com/julienschmidt/httprouter"
 	"github.com/ory/kratos/courier/template/testhelpers"
@@ -16,12 +17,14 @@ import (
 )
 
 func TestVerifyValid(t *testing.T) {
+	ctx, cancel := context.WithCancel(context.Background())
+	t.Cleanup(cancel)
 
 	t.Run("test=with courier templates directory", func(t *testing.T) {
-		conf, _ := internal.NewFastRegistryWithMocks(t)
-		tpl := template.NewVerificationValid(conf, &template.VerificationValidModel{})
+		_, reg := internal.NewFastRegistryWithMocks(t)
+		tpl := template.NewVerificationValid(reg, &template.VerificationValidModel{})
 
-		testhelpers.TestRendered(t, tpl)
+		testhelpers.TestRendered(t, ctx, tpl)
 	})
 
 	t.Run("test=with remote resources", func(t *testing.T) {
@@ -36,13 +39,13 @@ func TestVerifyValid(t *testing.T) {
 			ts := httptest.NewServer(router)
 			defer ts.Close()
 
-			tpl := template.NewVerificationValid(testhelpers.SetupRemoteConfig(t,
+			tpl := template.NewVerificationValid(testhelpers.SetupRemoteConfig(t, ctx,
 				ts.URL+"/email.body.plaintext.gotmpl",
 				ts.URL+"/email.body.gotmpl",
 				ts.URL+"/email.subject.gotmpl"),
 				&template.VerificationValidModel{})
 
-			testhelpers.TestRendered(t, tpl)
+			testhelpers.TestRendered(t, ctx, tpl)
 		})
 
 		t.Run("case=base64 resource", func(t *testing.T) {
@@ -54,25 +57,25 @@ func TestVerifyValid(t *testing.T) {
 				return base64.StdEncoding.EncodeToString(f)
 			}
 
-			tpl := template.NewVerificationValid(testhelpers.SetupRemoteConfig(t,
+			tpl := template.NewVerificationValid(testhelpers.SetupRemoteConfig(t, ctx,
 				toBase64(baseUrl+"email.body.plaintext.gotmpl"),
 				toBase64(baseUrl+"email.body.gotmpl"),
 				toBase64(baseUrl+"email.subject.gotmpl")),
 				&template.VerificationValidModel{})
-			testhelpers.TestRendered(t, tpl)
+			testhelpers.TestRendered(t, ctx, tpl)
 		})
 
 		t.Run("case=file resource", func(t *testing.T) {
 			baseUrl := "file://courier/builtin/templates/verification/valid/"
 
-			tpl := template.NewVerificationValid(testhelpers.SetupRemoteConfig(t,
+			tpl := template.NewVerificationValid(testhelpers.SetupRemoteConfig(t, ctx,
 				baseUrl+"email.body.plaintext.gotmpl",
 				baseUrl+"email.body.gotmpl",
 				baseUrl+"email.subject.gotmpl"),
 				&template.VerificationValidModel{},
 			)
 
-			testhelpers.TestRendered(t, tpl)
+			testhelpers.TestRendered(t, ctx, tpl)
 		})
 	})
 }
