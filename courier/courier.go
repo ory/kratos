@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"github.com/hashicorp/go-retryablehttp"
 	"github.com/ory/kratos/driver/config"
+	"github.com/ory/x/httpx"
 	"strconv"
 	"time"
 
@@ -26,7 +27,7 @@ type (
 		PersistenceProvider
 		x.LoggingProvider
 		ConfigProvider
-		HTTPClient(ctx context.Context) *retryablehttp.Client
+		HTTPClient(ctx context.Context, opts ...httpx.ResilientOptions) *retryablehttp.Client
 	}
 	TemplateTyper            func(t EmailTemplate) (TemplateType, error)
 	EmailTemplateFromMessage func(d SMTPDependencies, msg Message) (EmailTemplate, error)

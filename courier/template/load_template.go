@@ -6,6 +6,7 @@ import (
 	"embed"
 	"github.com/hashicorp/go-retryablehttp"
 	"github.com/ory/x/fetcher"
+	"github.com/ory/x/httpx"
 	htemplate "html/template"
 	"io"
 	"io/fs"
@@ -27,7 +28,7 @@ type Template interface {
 }
 
 type templateDependencies interface {
-	HTTPClient(ctx context.Context) *retryablehttp.Client
+	HTTPClient(ctx context.Context, opts ...httpx.ResilientOptions) *retryablehttp.Client
 }
 
 func loadBuiltInTemplate(filesystem fs.FS, name string, html bool) (Template, error) {
@@ -77,7 +78,7 @@ func loadRemoteTemplate(ctx context.Context, d templateDependencies, url string,
 		return t.(Template), nil
 	}
 
-	f := fetcher.NewFetcher(fetcher.WithClient(d.HTTPClient(ctx).HTTPClient))
+	f := fetcher.NewFetcher(fetcher.WithClient(d.HTTPClient(ctx)))
 
 	bb, err := f.Fetch(url)
 	if err != nil {

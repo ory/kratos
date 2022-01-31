@@ -3,6 +3,7 @@ package link
 import (
 	"context"
 	"github.com/hashicorp/go-retryablehttp"
+	"github.com/ory/x/httpx"
 	"net/http"
 	"net/url"
 
@@ -35,7 +36,7 @@ type (
 		VerificationTokenPersistenceProvider
 		RecoveryTokenPersistenceProvider
 
-		HTTPClient(ctx context.Context) *retryablehttp.Client
+		HTTPClient(ctx context.Context, opts ...httpx.ResilientOptions) *retryablehttp.Client
 	}
 	SenderProvider interface {
 		LinkSender() *Sender
