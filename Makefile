@@ -53,7 +53,7 @@ docs/node_modules: docs/package.json
 		bash <(curl -sfL https://install.goreleaser.com/github.com/golangci/golangci-lint.sh) -d -b .bin v1.28.3
 
 .bin/hydra: Makefile
-		bash <(curl https://raw.githubusercontent.com/ory/hydra/master/install.sh) -d -b .bin v1.9.0-alpha.1
+		bash <(curl https://raw.githubusercontent.com/ory/meta/master/install.sh) -d -b .bin hydra v1.11.0
 
 .PHONY: docs
 docs: docs/node_modules
