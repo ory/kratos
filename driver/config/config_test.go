@@ -1070,4 +1070,45 @@ func TestCourierTemplatesConfig(t *testing.T) {
 		assert.Contains(t, c.CourierTemplatesRecoveryInvalid().TemplateRoot, "root")
 		assert.Empty(t, c.CourierTemplatesRecoveryValid().TemplateRoot)
 	})
+
+	t.Run("case=courier template helper", func(t *testing.T) {
+		c, err := config.New(ctx, logrusx.New("", ""), os.Stderr,
+			configx.WithConfigFiles("stub/.kratos.courier.remote.templates.yaml"))
+
+		assert.NoError(t, err)
+
+		courierTemplateConfig := &config.CourierEmailTemplate{
+			TemplateRoot: "",
+			Body: &config.CourierEmailBodyTemplate{
+				PlainText: "",
+				HTML:      "",
+			},
+			Subject: "",
+		}
+
+		assert.Equal(t, courierTemplateConfig, c.CourierTemplatesHelper(config.ViperKeyCourierTemplatesVerificationInvalidEmail))
+		assert.Equal(t, courierTemplateConfig, c.CourierTemplatesHelper(config.ViperKeyCourierTemplatesVerificationValidEmail))
+		// this should return an empty courierEmailTemplate as the key does not exist
+		assert.Equal(t, courierTemplateConfig, c.CourierTemplatesHelper("a_random_key"))
+
+		courierTemplateConfig = &config.CourierEmailTemplate{
+			TemplateRoot: "root",
+			Body: &config.CourierEmailBodyTemplate{
+				PlainText: "base64://e3tkZWZpbmUgcm9vdH19CkhpLAoKeW91IChvciBzb21lb25lIGVsc2UpIGVudGVyZWQgdGhpcyBlbWFpbCBhZGRyZXNzIHdoZW4gdHJ5aW5nIHRvIHJlY292ZXIgYWNjZXNzIHRvIGFuIGFjY291bnQuCgpIb3dldmVyLCB0aGlzIGVtYWlsIGFkZHJlc3MgaXMgbm90IG9uIG91ciBkYXRhYmFzZSBvZiByZWdpc3RlcmVkIHVzZXJzIGFuZCB0aGVyZWZvcmUgdGhlIGF0dGVtcHQgaGFzIGZhaWxlZC4KCklmIHRoaXMgd2FzIHlvdSwgY2hlY2sgaWYgeW91IHNpZ25lZCB1cCB1c2luZyBhIGRpZmZlcmVudCBhZGRyZXNzLgoKSWYgdGhpcyB3YXMgbm90IHlvdSwgcGxlYXNlIGlnbm9yZSB0aGlzIGVtYWlsLgp7ey0gZW5kIC19fQo=",
+				HTML:      "base64://e3tkZWZpbmUgcm9vdH19CkhpLAoKeW91IChvciBzb21lb25lIGVsc2UpIGVudGVyZWQgdGhpcyBlbWFpbCBhZGRyZXNzIHdoZW4gdHJ5aW5nIHRvIHJlY292ZXIgYWNjZXNzIHRvIGFuIGFjY291bnQuCgpIb3dldmVyLCB0aGlzIGVtYWlsIGFkZHJlc3MgaXMgbm90IG9uIG91ciBkYXRhYmFzZSBvZiByZWdpc3RlcmVkIHVzZXJzIGFuZCB0aGVyZWZvcmUgdGhlIGF0dGVtcHQgaGFzIGZhaWxlZC4KCklmIHRoaXMgd2FzIHlvdSwgY2hlY2sgaWYgeW91IHNpZ25lZCB1cCB1c2luZyBhIGRpZmZlcmVudCBhZGRyZXNzLgoKSWYgdGhpcyB3YXMgbm90IHlvdSwgcGxlYXNlIGlnbm9yZSB0aGlzIGVtYWlsLgp7ey0gZW5kIC19fQo=",
+			},
+			Subject: "Account Access Attempted",
+		}
+		assert.Equal(t, courierTemplateConfig, c.CourierTemplatesHelper(config.ViperKeyCourierTemplatesRecoveryInvalidEmail))
+
+		courierTemplateConfig = &config.CourierEmailTemplate{
+			TemplateRoot: "",
+			Body: &config.CourierEmailBodyTemplate{
+				PlainText: "base64://e3sgZGVmaW5lIGFmLVpBIH19CkhhbGxvLAoKSGVyc3RlbCBqb3UgcmVrZW5pbmcgZGV1ciBoaWVyZGllIHNrYWtlbCB0ZSB2b2xnOgp7ey0gZW5kIC19fQoKe3sgZGVmaW5lIGVuLVVTIH19CkhpLAoKcGxlYXNlIHJlY292ZXIgYWNjZXNzIHRvIHlvdXIgYWNjb3VudCBieSBjbGlja2luZyB0aGUgZm9sbG93aW5nIGxpbms6Cnt7LSBlbmQgLX19Cgp7ey0gaWYgZXEgLmxhbmcgImFmLVpBIiAtfX0KCnt7IHRlbXBsYXRlICJhZi1aQSIgLiB9fQoKe3stIGVsc2UgLX19Cgp7eyB0ZW1wbGF0ZSAiZW4tVVMiIH19Cgp7ey0gZW5kIC19fQp7eyAuUmVjb3ZlcnlVUkwgfX0K",
+				HTML:      "base64://e3sgZGVmaW5lIGFmLVpBIH19CkhhbGxvLAoKSGVyc3RlbCBqb3UgcmVrZW5pbmcgZGV1ciBoaWVyZGllIHNrYWtlbCB0ZSB2b2xnOgp7ey0gZW5kIC19fQoKe3sgZGVmaW5lIGVuLVVTIH19CkhpLAoKcGxlYXNlIHJlY292ZXIgYWNjZXNzIHRvIHlvdXIgYWNjb3VudCBieSBjbGlja2luZyB0aGUgZm9sbG93aW5nIGxpbms6Cnt7LSBlbmQgLX19Cgp7ey0gaWYgZXEgLmxhbmcgImFmLVpBIiAtfX0KCnt7IHRlbXBsYXRlICJhZi1aQSIgLiB9fQoKe3stIGVsc2UgLX19Cgp7eyB0ZW1wbGF0ZSAiZW4tVVMiIH19Cgp7ey0gZW5kIC19fQo8YSBocmVmPSJ7eyAuUmVjb3ZlcnlVUkwgfX0iPnt7IC5SZWNvdmVyeVVSTCB9fTwvYT4=",
+			},
+			Subject: "Recover access to your account",
+		}
+		assert.Equal(t, courierTemplateConfig, c.CourierTemplatesHelper(config.ViperKeyCourierTemplatesRecoveryValidEmail))
+	})
 }

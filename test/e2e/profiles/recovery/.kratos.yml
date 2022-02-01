@@ -36,3 +36,24 @@ identity:
 secrets:
   cipher:
     - secret-thirty-two-character-long
+
+courier:
+  smtp:
+    connection_uri: smtp://stub-url
+  templates:
+    recovery:
+      invalid:
+        email:
+          # template_root could be necessary when there are nested templates, but is not required
+          template_root: "root"
+          body:
+            plaintext: file://test/e2e/profiles/recovery/recovery.invalid.body.gotmpl
+            html: file://test/e2e/profiles/recovery/recovery.invalid.body.gotmpl
+          subject: Account Access Attempted
+      valid:
+        # omit template_root on valid as it is not required
+        email:
+          body:
+            plaintext: file://test/e2e/profiles/recovery/recovery.valid.body.plaintext.gotmpl
+            html: base64://SGksCgpwbGVhc2UgcmVjb3ZlciBhY2Nlc3MgdG8geW91ciBhY2NvdW50IGJ5IGNsaWNraW5nIHRoZSBmb2xsb3dpbmcgbGluazoKPGEgaHJlZj0ie3sgLlJlY292ZXJ5VVJMIH19Ij57eyAuUmVjb3ZlcnlVUkwgfX08L2E+
+          subject: Recover access to your account

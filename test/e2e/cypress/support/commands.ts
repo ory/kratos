@@ -720,7 +720,7 @@ Cypress.Commands.add(
       expect(message.fromAddress.trim()).to.equal('no-reply@ory.kratos.sh')
       expect(message.toAddresses).to.have.length(1)
       expect(message.toAddresses[0].trim()).to.equal(email)
-
+      expect(message.body).to.include('this is a remote template')
       const link = parseHtml(message.body).querySelector('a')
       expect(link).to.not.be.null
       expect(link.href).to.contain(APP_URL)
