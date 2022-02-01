@@ -206,7 +206,10 @@ func (h *Handler) whoami(w http.ResponseWriter, r *http.Request, ps httprouter.P
 			h.r.Writer().WriteError(w, r, err)
 			return
 		}
-		h.r.SessionManager().IssueCookie(r.Context(), w, r, s)
+		if err = h.r.SessionManager().IssueCookie(r.Context(), w, r, s); err != nil {
+			h.r.Writer().WriteError(w, r, err)
+			return
+		}
 	}
 
 	// s.Devices = nil
