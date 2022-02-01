@@ -4,7 +4,7 @@ set -euxo pipefail
 
 cd "$(dirname "${BASH_SOURCE[0]}")/../.."
 
-#make .bin/hydra
+make .bin/hydra
 make .bin/yq
 make .bin/modd
 
