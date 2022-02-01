@@ -4,8 +4,9 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/ory/herodot"
 	"github.com/stretchr/testify/assert"
+
+	"github.com/ory/herodot"
 
 	"github.com/ory/kratos/session"
 )
