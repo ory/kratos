@@ -2250,42 +2250,51 @@
   ],
   "$defs": {
     "courier": {
-      "invalid": {
-        "type": "object",
-        "$ref": "#/$defs/email-courier"
-      },
-      "valid": {
-        "type": "object",
-        "$ref": "#/$defs/email-courier"
+      "type": "object",
+      "properties": {
+        "invalid": {
+          "type": "object",
+          "$ref": "#/$defs/email-courier"
+        },
+        "valid": {
+          "type": "object",
+          "$ref": "#/$defs/email-courier"
+        }
       },
       "required": ["invalid", "valid"]
     },
     "email-courier": {
-      "email": {
-        "type": "object",
-        "properties": {
-          "template_root": {
-            "type": "string",
-            "description": "The entry point for the template when using nested templates. This is optional as the template does not need to define an entry point."
-          },
-          "body": {
-            "type": "object",
-            "properties": {
-              "plaintext": {
-                "type": "string"
-              },
-              "html": {
-                "type": "string"
-              }
+      "type": "object",
+      "properties": {
+        "email": {
+          "type": "object",
+          "properties": {
+            "template_root": {
+              "type": "string",
+              "description": "The entry point for the template when using nested templates. This is optional as the template does not need to define an entry point."
             },
-            "require": ["plaintext", "html"]
+            "body": {
+              "type": "object",
+              "properties": {
+                "plaintext": {
+                  "type": "string",
+                  "description": "The fallback template for email clients that do not support html."
+                },
+                "html": {
+                  "type": "string",
+                  "description": "The default template used for sending out emails."
+                }
+              },
+              "required": ["plaintext", "html"]
+            },
+            "subject": {
+              "type": "string"
+            }
           },
-          "subject": {
-            "type": "string"
-          }
-        },
-        "required": ["body", "subject"]
-      }
+          "required": ["body", "subject"]
+        }
+      },
+      "required": ["email"]
     }
   },
   "required": [

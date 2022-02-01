@@ -62,10 +62,10 @@ const (
 	ViperKeyDSN                                              = "dsn"
 	ViperKeyCourierSMTPURL                                   = "courier.smtp.connection_uri"
 	ViperKeyCourierTemplatesPath                             = "courier.template_override_path"
-	ViperKeyCourierTemplatesRecoveryInvalid                  = "courier.templates.recovery.invalid"
-	ViperKeyCourierTemplatesRecoveryValid                    = "courier.templates.recovery.valid"
-	ViperKeyCourierTemplatesVerificationInvalid              = "courier.templates.verification.invalid"
-	ViperKeyCourierTemplatesVerificationValid                = "courier.templates.verification.valid"
+	ViperKeyCourierTemplatesRecoveryInvalidEmail             = "courier.templates.recovery.invalid.email"
+	ViperKeyCourierTemplatesRecoveryValidEmail               = "courier.templates.recovery.valid.email"
+	ViperKeyCourierTemplatesVerificationInvalidEmail         = "courier.templates.verification.invalid.email"
+	ViperKeyCourierTemplatesVerificationValidEmail           = "courier.templates.verification.valid.email"
 	ViperKeyCourierSMTPFrom                                  = "courier.smtp.from_address"
 	ViperKeyCourierSMTPFromName                              = "courier.smtp.from_name"
 	ViperKeyCourierSMTPHeaders                               = "courier.smtp.headers"
@@ -218,7 +218,7 @@ type (
 		HTML      string `json:"html"`
 	}
 	CourierEmailTemplate struct {
-		TemplateRoot string                    `json:"template_root"`
+		TemplateRoot string                    `json:"template_root,omitempty"`
 		Body         *CourierEmailBodyTemplate `json:"body"`
 		Subject      string                    `json:"subject"`
 	}
@@ -869,7 +869,7 @@ func (p *Config) CourierTemplatesRoot() string {
 	return p.p.StringF(ViperKeyCourierTemplatesPath, "courier/builtin/templates")
 }
 
-func (p *Config) courierTemplatesHelper(key string) *CourierEmailTemplate {
+func (p *Config) CourierTemplatesHelper(key string) *CourierEmailTemplate {
 	courierTemplate := &CourierEmailTemplate{
 		TemplateRoot: "",
 		Body: &CourierEmailBodyTemplate{
@@ -902,19 +902,19 @@ func (p *Config) courierTemplatesHelper(key string) *CourierEmailTemplate {
 }
 
 func (p *Config) CourierTemplatesVerificationInvalid() *CourierEmailTemplate {
-	return p.courierTemplatesHelper(ViperKeyCourierTemplatesVerificationInvalid)
+	return p.CourierTemplatesHelper(ViperKeyCourierTemplatesVerificationInvalidEmail)
 }
 
 func (p *Config) CourierTemplatesVerificationValid() *CourierEmailTemplate {
-	return p.courierTemplatesHelper(ViperKeyCourierTemplatesVerificationValid)
+	return p.CourierTemplatesHelper(ViperKeyCourierTemplatesVerificationValidEmail)
 }
 
 func (p *Config) CourierTemplatesRecoveryInvalid() *CourierEmailTemplate {
-	return p.courierTemplatesHelper(ViperKeyCourierTemplatesRecoveryInvalid)
+	return p.CourierTemplatesHelper(ViperKeyCourierTemplatesRecoveryInvalidEmail)
 }
 
 func (p *Config) CourierTemplatesRecoveryValid() *CourierEmailTemplate {
-	return p.courierTemplatesHelper(ViperKeyCourierTemplatesRecoveryValid)
+	return p.CourierTemplatesHelper(ViperKeyCourierTemplatesRecoveryValidEmail)
 }
 
 func (p *Config) CourierSMTPHeaders() map[string]string {

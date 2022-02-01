@@ -20,7 +20,7 @@ import (
 
 func SetupRemoteConfig(t *testing.T, ctx context.Context, plaintext string, html string, subject string) *driver.RegistryDefault {
 	_, reg := internal.NewFastRegistryWithMocks(t)
-	require.NoError(t, reg.Config(ctx).Set(config.ViperKeyCourierTemplatesRecoveryInvalid, &config.CourierEmailTemplate{
+	require.NoError(t, reg.Config(ctx).Set(config.ViperKeyCourierTemplatesRecoveryInvalidEmail, &config.CourierEmailTemplate{
 		TemplateRoot: "",
 		Body: &config.CourierEmailBodyTemplate{
 			PlainText: plaintext,

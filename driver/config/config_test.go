@@ -1045,3 +1045,29 @@ func TestChangeMinPasswordLength(t *testing.T) {
 		assert.NoError(t, err)
 	})
 }
+
+func TestCourierTemplatesConfig(t *testing.T) {
+	ctx := context.Background()
+
+	t.Run("case=missing required subject on invalid recovery template", func(t *testing.T) {
+		_, err := config.New(ctx, logrusx.New("", ""), os.Stderr,
+			configx.WithConfigFiles("stub/.kratos.courier.remote.invalid.subject.yaml"))
+		assert.Error(t, err)
+		assert.Contains(t, err.Error(), "missing properties: \"subject\"")
+	})
+
+	t.Run("case=missing required body plaintext on invalid recovery template", func(t *testing.T) {
+		_, err := config.New(ctx, logrusx.New("", ""), os.Stderr,
+			configx.WithConfigFiles("stub/.kratos.courier.remote.invalid.body.yaml"))
+		assert.Error(t, err)
+		assert.Contains(t, err.Error(), "missing properties: \"plaintext\"")
+	})
+
+	t.Run("case=load remote template with fallback template overrides path", func(t *testing.T) {
+		c, err := config.New(ctx, logrusx.New("", ""), os.Stderr,
+			configx.WithConfigFiles("stub/.kratos.courier.remote.templates.yaml"))
+		assert.NoError(t, err)
+		assert.Contains(t, c.CourierTemplatesRecoveryInvalid().TemplateRoot, "root")
+		assert.Empty(t, c.CourierTemplatesRecoveryValid().TemplateRoot)
+	})
+}
