@@ -1,4 +1,4 @@
-import { Configuration, V0alpha1Api } from '@ory/kratos-client';
+import { Configuration, V0alpha1Api } from '@ory/client';
 const kratos = new V0alpha1Api(new Configuration({ basePath: 'https://playground.projects.oryapis.com/api/kratos/public/' }));
 
 const route = (req: Request, res: Response) => {
