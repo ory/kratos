@@ -1,6 +1,0 @@
-verification:
-    invalid:
-      email:
-        body: "something"
-          plaintext: "something"
-        subject: "saomdweubo"

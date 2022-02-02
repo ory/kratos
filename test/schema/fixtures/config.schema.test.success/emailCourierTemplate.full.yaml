@@ -1,0 +1,5 @@
+template_root: "root"
+body:
+  plaintext: "base64://"
+  html: "base64://"
+subject: "Recovery Email"

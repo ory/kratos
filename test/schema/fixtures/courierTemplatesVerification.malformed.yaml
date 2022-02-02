@@ -1,4 +1,0 @@
-verification:
-  invalid:
-    email:
-      body: "https://invalid"

@@ -783,6 +783,82 @@
           ]
         }
       }
+    },
+    "courierTemplates": {
+      "type": "object",
+      "properties": {
+        "invalid": {
+          "type": "object",
+          "properties": {
+            "email": {
+              "$ref": "#/definitions/emailCourierTemplate"
+            }
+          },
+          "required": [
+            "email"
+          ]
+        },
+        "valid": {
+          "type": "object",
+          "properties": {
+            "email": {
+              "$ref": "#/definitions/emailCourierTemplate"
+            }
+          },
+          "required": [
+            "email"
+          ]
+        }
+      },
+      "required": [
+        "invalid",
+        "valid"
+      ]
+    },
+    "emailCourierTemplate": {
+      "type": "object",
+      "properties": {
+        "template_root": {
+          "type": "string",
+          "description": "The entry point for the template when using nested templates. This is optional as the template does not need to define an entry point."
+        },
+        "body": {
+          "type": "object",
+          "properties": {
+            "plaintext": {
+              "type": "string",
+              "description": "The fallback template for email clients that do not support html.",
+              "format": "uri",
+              "examples": [
+                "file://path/to/body.plaintext.gotmpl",
+                "https://foo.bar.com/path/to/body.plaintext.gotmpl",
+                "base64://e3sgZGVmaW5lIGFmLVpBIH19CkhhbGxvLAoKSGVyc3RlbCBqb3UgcmVrZW5pbmcgZGV1ciBoaWVyZGllIHNrYWtlbCB0ZSB2b2xnOgp7ey0gZW5kIC19fQoKe3sgZGVmaW5lIGVuLVVTIH19CkhpLAoKcGxlYXNlIHJlY292ZXIgYWNjZXNzIHRvIHlvdXIgYWNjb3VudCBieSBjbGlja2luZyB0aGUgZm9sbG93aW5nIGxpbms6Cnt7LSBlbmQgLX19Cgp7ey0gaWYgZXEgLmxhbmcgImFmLVpBIiAtfX0KCnt7IHRlbXBsYXRlICJhZi1aQSIgLiB9fQoKe3stIGVsc2UgLX19Cgp7eyB0ZW1wbGF0ZSAiZW4tVVMiIH19Cgp7ey0gZW5kIC19fQp7eyAuUmVjb3ZlcnlVUkwgfX0K"
+              ]
+            },
+            "html": {
+              "type": "string",
+              "description": "The default template used for sending out emails. The template can contain HTML ",
+              "format": "uri",
+              "examples": [
+                "file://path/to/body.html.gotmpl",
+                "https://foo.bar.com/path/to/body.html.gotmpl",
+                "base64://e3sgZGVmaW5lIGFmLVpBIH19CkhhbGxvLAoKSGVyc3RlbCBqb3UgcmVrZW5pbmcgZGV1ciBoaWVyZGllIHNrYWtlbCB0ZSB2b2xnOgp7ey0gZW5kIC19fQoKe3sgZGVmaW5lIGVuLVVTIH19CkhpLAoKcGxlYXNlIHJlY292ZXIgYWNjZXNzIHRvIHlvdXIgYWNjb3VudCBieSBjbGlja2luZyB0aGUgZm9sbG93aW5nIGxpbms6Cnt7LSBlbmQgLX19Cgp7ey0gaWYgZXEgLmxhbmcgImFmLVpBIiAtfX0KCnt7IHRlbXBsYXRlICJhZi1aQSIgLiB9fQoKe3stIGVsc2UgLX19Cgp7eyB0ZW1wbGF0ZSAiZW4tVVMiIH19Cgp7ey0gZW5kIC19fQo8YSBocmVmPSJ7eyAuUmVjb3ZlcnlVUkwgfX0iPnt7IC5SZWNvdmVyeVVSTCB9fTwvYT4"
+              ]
+            }
+          },
+          "required": [
+            "plaintext",
+            "html"
+          ]
+        },
+        "subject": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "body",
+        "subject"
+      ]
     }
   },
   "properties": {
@@ -1309,12 +1385,10 @@
           "type": "object",
           "properties": {
             "recovery": {
-              "type": "object",
-              "$ref": "#/$defs/courier"
+              "$ref": "#/definitions/courierTemplates"
             },
             "verification": {
-              "type": "object",
-              "$ref": "#/$defs/courier"
+              "$ref": "#/definitions/courierTemplates"
             }
           }
         },
@@ -2248,55 +2322,6 @@
       }
     }
   ],
-  "$defs": {
-    "courier": {
-      "type": "object",
-      "properties": {
-        "invalid": {
-          "type": "object",
-          "$ref": "#/$defs/email-courier"
-        },
-        "valid": {
-          "type": "object",
-          "$ref": "#/$defs/email-courier"
-        }
-      },
-      "required": ["invalid", "valid"]
-    },
-    "email-courier": {
-      "type": "object",
-      "properties": {
-        "email": {
-          "type": "object",
-          "properties": {
-            "template_root": {
-              "type": "string",
-              "description": "The entry point for the template when using nested templates. This is optional as the template does not need to define an entry point."
-            },
-            "body": {
-              "type": "object",
-              "properties": {
-                "plaintext": {
-                  "type": "string",
-                  "description": "The fallback template for email clients that do not support html."
-                },
-                "html": {
-                  "type": "string",
-                  "description": "The default template used for sending out emails."
-                }
-              },
-              "required": ["plaintext", "html"]
-            },
-            "subject": {
-              "type": "string"
-            }
-          },
-          "required": ["body", "subject"]
-        }
-      },
-      "required": ["email"]
-    }
-  },
   "required": [
     "identity",
     "dsn",
