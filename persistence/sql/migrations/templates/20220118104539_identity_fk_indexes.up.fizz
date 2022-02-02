@@ -1,0 +1,9 @@
+{{ if not (or .IsMySQL .IsMariaDB) }}
+  add_index("identity_credentials", ["identity_id", "nid"], { "name": "identity_credentials_nid_identity_id_idx" })
+
+  add_index("identity_credential_identifiers", ["identity_credential_id", "nid"], { "name": "identity_credential_identifiers_nid_identity_credential_id_idx" })
+
+  add_index("identity_recovery_addresses", ["identity_id", "nid"], { "name": "identity_recovery_addresses_nid_identity_id_idx" })
+
+  add_index("identity_verifiable_addresses", ["identity_id", "nid"], { "name": "identity_verifiable_addresses_nid_identity_id_idx" })
+{{ end }}

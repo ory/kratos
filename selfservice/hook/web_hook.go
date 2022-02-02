@@ -2,10 +2,13 @@ package hook
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
+
+	"github.com/hashicorp/go-retryablehttp"
 
 	"github.com/ory/x/fetcher"
 	"github.com/ory/x/logrusx"
@@ -30,33 +33,34 @@ var _ recovery.PostHookExecutor = new(WebHook)
 
 type (
 	AuthStrategy interface {
-		apply(req *http.Request)
+		apply(req *retryablehttp.Request)
 	}
 
 	authStrategyFactory func(c json.RawMessage) (AuthStrategy, error)
 
-	noopAuthStrategy struct{}
+	NoopAuthStrategy struct{}
 
-	basicAuthStrategy struct {
+	BasicAuthStrategy struct {
 		user     string
 		password string
 	}
 
-	apiKeyStrategy struct {
+	ApiKeyStrategy struct {
 		name  string
 		value string
 		in    string
 	}
 
-	webHookConfig struct {
-		method      string
-		url         string
-		templateURI string
-		auth        AuthStrategy
+	WebHookConfig struct {
+		Method      string
+		URL         string
+		TemplateURI string
+		Auth        AuthStrategy
 	}
 
 	webHookDependencies interface {
 		x.LoggingProvider
+		x.HTTPClientProvider
 	}
 
 	templateContext struct {
@@ -89,10 +93,10 @@ func newAuthStrategy(name string, c json.RawMessage) (as AuthStrategy, err error
 }
 
 func newNoopAuthStrategy(_ json.RawMessage) (AuthStrategy, error) {
-	return &noopAuthStrategy{}, nil
+	return &NoopAuthStrategy{}, nil
 }
 
-func (c *noopAuthStrategy) apply(_ *http.Request) {}
+func (c *NoopAuthStrategy) apply(_ *retryablehttp.Request) {}
 
 func newBasicAuthStrategy(raw json.RawMessage) (AuthStrategy, error) {
 	type config struct {
@@ -105,13 +109,13 @@ func newBasicAuthStrategy(raw json.RawMessage) (AuthStrategy, error) {
 		return nil, err
 	}
 
-	return &basicAuthStrategy{
+	return &BasicAuthStrategy{
 		user:     c.User,
 		password: c.Password,
 	}, nil
 }
 
-func (c *basicAuthStrategy) apply(req *http.Request) {
+func (c *BasicAuthStrategy) apply(req *retryablehttp.Request) {
 	req.SetBasicAuth(c.user, c.password)
 }
 
@@ -127,14 +131,14 @@ func newApiKeyStrategy(raw json.RawMessage) (AuthStrategy, error) {
 		return nil, err
 	}
 
-	return &apiKeyStrategy{
+	return &ApiKeyStrategy{
 		in:    c.In,
 		name:  c.Name,
 		value: c.Value,
 	}, nil
 }
 
-func (c *apiKeyStrategy) apply(req *http.Request) {
+func (c *ApiKeyStrategy) apply(req *retryablehttp.Request) {
 	switch c.in {
 	case "cookie":
 		req.AddCookie(&http.Cookie{Name: c.name, Value: c.value})
@@ -143,7 +147,7 @@ func (c *apiKeyStrategy) apply(req *http.Request) {
 	}
 }
 
-func newWebHookConfig(r json.RawMessage) (*webHookConfig, error) {
+func newWebHookConfig(r json.RawMessage) (*WebHookConfig, error) {
 	type rawWebHookConfig struct {
 		Method string
 		Url    string
@@ -165,11 +169,11 @@ func newWebHookConfig(r json.RawMessage) (*webHookConfig, error) {
 		return nil, fmt.Errorf("failed to create web hook auth strategy: %w", err)
 	}
 
-	return &webHookConfig{
-		method:      rc.Method,
-		url:         rc.Url,
-		templateURI: rc.Body,
-		auth:        as,
+	return &WebHookConfig{
+		Method:      rc.Method,
+		URL:         rc.Url,
+		TemplateURI: rc.Body,
+		Auth:        as,
 	}, nil
 }
 
@@ -178,7 +182,7 @@ func NewWebHook(r webHookDependencies, c json.RawMessage) *WebHook {
 }
 
 func (e *WebHook) ExecuteLoginPreHook(_ http.ResponseWriter, req *http.Request, flow *login.Flow) error {
-	return e.execute(&templateContext{
+	return e.execute(req.Context(), &templateContext{
 		Flow:           flow,
 		RequestHeaders: req.Header,
 		RequestMethod:  req.Method,
@@ -187,7 +191,7 @@ func (e *WebHook) ExecuteLoginPreHook(_ http.ResponseWriter, req *http.Request, 
 }
 
 func (e *WebHook) ExecuteLoginPostHook(_ http.ResponseWriter, req *http.Request, flow *login.Flow, session *session.Session) error {
-	return e.execute(&templateContext{
+	return e.execute(req.Context(), &templateContext{
 		Flow:           flow,
 		RequestHeaders: req.Header,
 		RequestMethod:  req.Method,
@@ -197,7 +201,7 @@ func (e *WebHook) ExecuteLoginPostHook(_ http.ResponseWriter, req *http.Request,
 }
 
 func (e *WebHook) ExecutePostVerificationHook(_ http.ResponseWriter, req *http.Request, flow *verification.Flow, identity *identity.Identity) error {
-	return e.execute(&templateContext{
+	return e.execute(req.Context(), &templateContext{
 		Flow:           flow,
 		RequestHeaders: req.Header,
 		RequestMethod:  req.Method,
@@ -207,7 +211,7 @@ func (e *WebHook) ExecutePostVerificationHook(_ http.ResponseWriter, req *http.R
 }
 
 func (e *WebHook) ExecutePostRecoveryHook(_ http.ResponseWriter, req *http.Request, flow *recovery.Flow, session *session.Session) error {
-	return e.execute(&templateContext{
+	return e.execute(req.Context(), &templateContext{
 		Flow:           flow,
 		RequestHeaders: req.Header,
 		RequestMethod:  req.Method,
@@ -217,7 +221,7 @@ func (e *WebHook) ExecutePostRecoveryHook(_ http.ResponseWriter, req *http.Reque
 }
 
 func (e *WebHook) ExecuteRegistrationPreHook(_ http.ResponseWriter, req *http.Request, flow *registration.Flow) error {
-	return e.execute(&templateContext{
+	return e.execute(req.Context(), &templateContext{
 		Flow:           flow,
 		RequestHeaders: req.Header,
 		RequestMethod:  req.Method,
@@ -226,7 +230,7 @@ func (e *WebHook) ExecuteRegistrationPreHook(_ http.ResponseWriter, req *http.Re
 }
 
 func (e *WebHook) ExecutePostRegistrationPostPersistHook(_ http.ResponseWriter, req *http.Request, flow *registration.Flow, session *session.Session) error {
-	return e.execute(&templateContext{
+	return e.execute(req.Context(), &templateContext{
 		Flow:           flow,
 		RequestHeaders: req.Header,
 		RequestMethod:  req.Method,
@@ -236,7 +240,7 @@ func (e *WebHook) ExecutePostRegistrationPostPersistHook(_ http.ResponseWriter, 
 }
 
 func (e *WebHook) ExecuteSettingsPostPersistHook(_ http.ResponseWriter, req *http.Request, flow *settings.Flow, identity *identity.Identity) error {
-	return e.execute(&templateContext{
+	return e.execute(req.Context(), &templateContext{
 		Flow:           flow,
 		RequestHeaders: req.Header,
 		RequestMethod:  req.Method,
@@ -245,7 +249,7 @@ func (e *WebHook) ExecuteSettingsPostPersistHook(_ http.ResponseWriter, req *htt
 	})
 }
 
-func (e *WebHook) execute(data *templateContext) error {
+func (e *WebHook) execute(ctx context.Context, data *templateContext) error {
 	// TODO: reminder for the future: move parsing of config to the web hook initialization
 	conf, err := newWebHookConfig(e.c)
 	if err != nil {
@@ -253,11 +257,11 @@ func (e *WebHook) execute(data *templateContext) error {
 	}
 
 	var body io.Reader
-	if conf.method != "TRACE" {
+	if conf.Method != "TRACE" {
 		// According to the HTTP spec any request method, but TRACE is allowed to
 		// have a body. Even this is a really bad practice for some of them, like for
 		// GET
-		body, err = createBody(e.r.Logger(), conf.templateURI, data)
+		body, err = createBody(e.r.Logger(), conf.TemplateURI, data)
 		if err != nil {
 			return fmt.Errorf("failed to create web hook body: %w", err)
 		}
@@ -266,7 +270,10 @@ func (e *WebHook) execute(data *templateContext) error {
 	if body == nil {
 		body = bytes.NewReader(make([]byte, 0))
 	}
-	if err = doHttpCall(conf.method, conf.url, conf.auth, body); err != nil {
+
+	httpClient := e.r.HTTPClient(ctx)
+
+	if err = doHttpCall(conf.Method, conf.URL, conf.Auth, body, httpClient); err != nil {
 		return fmt.Errorf("failed to call web hook %w", err)
 	}
 	return nil
@@ -310,8 +317,8 @@ func createBody(l *logrusx.Logger, templateURI string, data *templateContext) (*
 	}
 }
 
-func doHttpCall(method string, url string, as AuthStrategy, body io.Reader) error {
-	req, err := http.NewRequest(method, url, body)
+func doHttpCall(method string, url string, as AuthStrategy, body io.Reader, hc *retryablehttp.Client) error {
+	req, err := retryablehttp.NewRequest(method, url, body)
 	if err != nil {
 		return err
 	}
@@ -319,7 +326,7 @@ func doHttpCall(method string, url string, as AuthStrategy, body io.Reader) erro
 
 	as.apply(req)
 
-	resp, err := http.DefaultClient.Do(req)
+	resp, err := hc.Do(req)
 
 	if err != nil {
 		return err
