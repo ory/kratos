@@ -39,7 +39,8 @@ secrets:
 
 courier:
   smtp:
-    connection_uri: smtp://stub-url
+    connection_uri: smtps://test:test@localhost:1025/?skip_ssl_verify=true
+    from_address: no-reply@ory.kratos.sh
   templates:
     recovery:
       invalid:
