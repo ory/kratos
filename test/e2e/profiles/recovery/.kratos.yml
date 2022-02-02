@@ -55,6 +55,6 @@ courier:
         # omit template_root on valid as it is not required
         email:
           body:
-            plaintext: base64://SGksCgpwbGVhc2UgcmVjb3ZlciBhY2Nlc3MgdG8geW91ciBhY2NvdW50IGJ5IGNsaWNraW5nIHRoZSBmb2xsb3dpbmcgbGluazoKe3sgLlJlY292ZXJ5VVJMIH19
-            html: base64://SGksCgpwbGVhc2UgcmVjb3ZlciBhY2Nlc3MgdG8geW91ciBhY2NvdW50IGJ5IGNsaWNraW5nIHRoZSBmb2xsb3dpbmcgbGluazoKPGEgaHJlZj0ie3sgLlJlY292ZXJ5VVJMIH19Ij57eyAuUmVjb3ZlcnlVUkwgfX08L2E+
+            plaintext: base64://SGksCgp0aGlzIGlzIGEgcmVtb3RlIHRlbXBsYXRlCnBsZWFzZSByZWNvdmVyIGFjY2VzcyB0byB5b3VyIGFjY291bnQgYnkgY2xpY2tpbmcgdGhlIGZvbGxvd2luZyBsaW5rOgp7eyAuUmVjb3ZlcnlVUkwgfX0=
+            html: base64://SGksCgp0aGlzIGlzIGEgcmVtb3RlIHRlbXBsYXRlCnBsZWFzZSByZWNvdmVyIGFjY2VzcyB0byB5b3VyIGFjY291bnQgYnkgY2xpY2tpbmcgdGhlIGZvbGxvd2luZyBsaW5rOgo8YSBocmVmPSJ7eyAuUmVjb3ZlcnlVUkwgfX0iPnt7IC5SZWNvdmVyeVVSTCB9fTwvYT4=
           subject: base64://UmVjb3ZlciBhY2Nlc3MgdG8geW91ciBhY2NvdW50
