@@ -2,7 +2,8 @@ export const getFlowMethodLinkWithErrors = {
   browser: {
     label: 'Browser UI',
     image: require('./images/browser-missing.png').default,
-    alt: 'Email Verification and Account Activation HTML Form with validation errors'
+    alt:
+      'Email Verification and Account Activation HTML Form with validation errors'
   },
   missing: {
     label: 'Missing Email',
@@ -15,7 +16,8 @@ export const getFlowMethodLinkSuccess = {
   browser: {
     label: 'Browser UI',
     image: require('./images/browser-success.png').default,
-    alt: 'Email Verification and Account Activation HTML Form with success message'
+    alt:
+      'Email Verification and Account Activation HTML Form with success message'
   },
   missing: {
     label: 'Email Sent',
@@ -28,7 +30,8 @@ export const getFlowMethodLinkInvalidChallenge = {
   browser: {
     label: 'Browser UI',
     image: require('./images/browser-invalid-challenge.png').default,
-    alt: 'Email Verification and Account Activation HTML Form with an invalid challenge'
+    alt:
+      'Email Verification and Account Activation HTML Form with an invalid challenge'
   },
   missing: {
     label: 'Invalid Challenge',
@@ -41,7 +44,8 @@ export const getFlowMethodLinkChallengeDone = {
   browser: {
     label: 'Browser UI',
     image: require('./images/browser-challenge-completed.png').default,
-    alt: 'Email Verification and Account Activation HTML Form with an invalid challenge'
+    alt:
+      'Email Verification and Account Activation HTML Form with an invalid challenge'
   },
   missing: {
     label: 'Success State',
