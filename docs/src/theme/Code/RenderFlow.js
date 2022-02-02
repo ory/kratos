@@ -90,7 +90,11 @@ const RenderFlow = ({ flow }) => {
         .
       </TabItem>
       <TabItem value="react">
-        A React example is currently in the making.
+        <CodeFromRemote
+          lang="handlebars"
+          link={`https://github.com/ory/kratos-selfservice-ui-react-nextjs/blob/master/pages/${flow}.tsx`}
+          src={`https://raw.githubusercontent.com/ory/kratos-selfservice-ui-react-nextjs/master/pages/${flow}.tsx`}
+        />
       </TabItem>
       <TabItem value="golang">
         <CodeFromRemote
