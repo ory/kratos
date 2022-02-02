@@ -46,15 +46,15 @@ courier:
       invalid:
         email:
           # template_root could be necessary when there are nested templates, but is not required
-          template_root: "root"
+          template_root: root
           body:
-            plaintext: file://test/e2e/profiles/recovery/recovery.invalid.body.gotmpl
-            html: file://test/e2e/profiles/recovery/recovery.invalid.body.gotmpl
-          subject: Account Access Attempted
+            html: base64://e3tkZWZpbmUgInJvb3QifX0KSGksCgp0aGlzIGlzIGEgcmVtb3RlIGludmFsaWQgcmVjb3ZlcnkgdGVtcGxhdGUgd2l0aCBhIGRlZmluZWQgInJvb3QiIHRlbXBsYXRlCgp7ey0gZW5kIC19fQ==
+            plaintext: base64://e3tkZWZpbmUgInJvb3QifX0KSGksCgp0aGlzIGlzIGEgcmVtb3RlIGludmFsaWQgcmVjb3ZlcnkgdGVtcGxhdGUgd2l0aCBhIGRlZmluZWQgInJvb3QiIHRlbXBsYXRlCgp7ey0gZW5kIC19fQ==
+          subject: base64://QWNjb3VudCBBY2Nlc3MgQXR0ZW1wdGVk
       valid:
         # omit template_root on valid as it is not required
         email:
           body:
-            plaintext: file://test/e2e/profiles/recovery/recovery.valid.body.plaintext.gotmpl
+            plaintext: base64://SGksCgpwbGVhc2UgcmVjb3ZlciBhY2Nlc3MgdG8geW91ciBhY2NvdW50IGJ5IGNsaWNraW5nIHRoZSBmb2xsb3dpbmcgbGluazoKe3sgLlJlY292ZXJ5VVJMIH19
             html: base64://SGksCgpwbGVhc2UgcmVjb3ZlciBhY2Nlc3MgdG8geW91ciBhY2NvdW50IGJ5IGNsaWNraW5nIHRoZSBmb2xsb3dpbmcgbGluazoKPGEgaHJlZj0ie3sgLlJlY292ZXJ5VVJMIH19Ij57eyAuUmVjb3ZlcnlVUkwgfX08L2E+
-          subject: Recover access to your account
+          subject: base64://UmVjb3ZlciBhY2Nlc3MgdG8geW91ciBhY2NvdW50

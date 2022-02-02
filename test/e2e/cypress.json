@@ -3,6 +3,9 @@
   "baseUrl": "http://localhost:4455/",
   "fixturesFolder": "cypress/fixtures",
   "integrationFolder": "cypress/integration",
+  "testFiles": [
+    "profiles/recovery/recovery/*"
+  ],
   "pluginsFile": "cypress/plugins/index.js",
   "supportFile": "cypress/support/index.js",
   "videosFolder": "cypress/videos",
