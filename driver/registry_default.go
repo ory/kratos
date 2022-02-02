@@ -7,6 +7,10 @@ import (
 	"sync"
 	"time"
 
+	"github.com/hashicorp/go-retryablehttp"
+
+	"github.com/ory/x/httpx"
+
 	"github.com/gobuffalo/pop/v6"
 
 	"github.com/ory/nosurf"
@@ -678,4 +682,17 @@ func (m *RegistryDefault) PrometheusManager() *prometheus.MetricsManager {
 		m.pmm = prometheus.NewMetricsManagerWithPrefix("kratos", prometheus.HTTPMetrics, m.buildVersion, m.buildHash, m.buildDate)
 	}
 	return m.pmm
+}
+
+func (m *RegistryDefault) HTTPClient(ctx context.Context) *retryablehttp.Client {
+	opts := []httpx.ResilientOptions{
+		httpx.ResilientClientWithLogger(m.Logger()),
+		httpx.ResilientClientWithMaxRetry(2),
+		httpx.ResilientClientWithConnectionTimeout(30 * time.Second),
+	}
+	if m.Config(ctx).ClientHTTPNoPrivateIPRanges() {
+		opts = append(opts, httpx.ResilientClientDisallowInternalIPs())
+
+	}
+	return httpx.NewResilientClient(opts...)
 }

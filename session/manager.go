@@ -3,6 +3,7 @@ package session
 import (
 	"context"
 	"net/http"
+	"net/url"
 
 	"github.com/ory/kratos/text"
 
@@ -39,6 +40,28 @@ type ErrAALNotSatisfied struct {
 
 func (e *ErrAALNotSatisfied) EnhanceJSONError() interface{} {
 	return e
+}
+
+func (e *ErrAALNotSatisfied) PassReturnToParameter(requestURL string) error {
+	req, err := url.Parse(requestURL)
+	if err != nil {
+		return err
+	}
+	returnTo := req.Query().Get("return_to")
+	if len(returnTo) == 0 {
+		return nil
+	}
+
+	u, err := url.Parse(e.RedirectTo)
+	if err != nil {
+		return err
+	}
+	q := u.Query()
+	q.Set("return_to", returnTo)
+	u.RawQuery = q.Encode()
+	e.RedirectTo = u.String()
+
+	return nil
 }
 
 // NewErrAALNotSatisfied creates a new ErrAALNotSatisfied.
