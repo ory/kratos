@@ -2089,7 +2089,7 @@
           },
           "additionalProperties": false
         },
-        "refresh_min_time_left": {
+        "earliest_refresh": {
           "title": "Session refresh minimal time left",
           "description": "Time window when session can be refreshed to avoid excess refreshes. It is calculated as duration from the session expiration time.",
           "type": "string",

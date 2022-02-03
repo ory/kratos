@@ -120,7 +120,7 @@ type toSession struct {
 // By default session refresh on this endpoint is disabled.
 // Session refresh can be enabled only after setting `session.whoami.refresh_allowed` to true in the config.
 // After enabling this option any refresh request will set the session life equal to `session.lifespan`.
-// If you want to refresh the session only some time before session expiration you can set a proper value for `session.refresh_min_time_left`
+// If you want to refresh the session only some time before session expiration you can set a proper value for `session.earliest_refresh`
 //
 // If you call this endpoint from a server-side application, you must forward the HTTP Cookie Header to this endpoint:
 //
@@ -498,7 +498,7 @@ type adminSessionRefresh struct {
 // swagger:route PATCH /sessions/refresh/{id} v0alpha2 adminSessionRefresh
 //
 // Calling this endpoint refreshes a given session.
-// If `session.refresh_min_time_left` is set it will only refresh the session after this time has passed.
+// If `session.earliest_refresh` is set it will only refresh the session after this time has passed.
 //
 // This endpoint is useful for:
 //
@@ -535,10 +535,10 @@ func (h *Handler) adminSessionRefresh(w http.ResponseWriter, r *http.Request, ps
 	h.r.Writer().Write(w, r, s)
 }
 
-// swagger:route GET /sessions/refresh v0alpha2 adminCurrentSessionRefresh
+// swagger:route PATCH /sessions/refresh v0alpha2 adminCurrentSessionRefresh
 //
 // Calling this endpoint refreshes a given session.
-// If `session.refresh_min_time_left` is set it will only refresh the session after this time has passed.
+// If `session.earliest_refresh` is set it will only refresh the session after this time has passed.
 //
 // This endpoint is useful for:
 //

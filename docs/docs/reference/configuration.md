@@ -2239,11 +2239,11 @@ session:
   #
   # Set this value using environment variables on
   # - Linux/macOS:
-  #    $ export SESSION_REFRESH_MIN_TIME_LEFT=<value>
+  #    $ export SESSION_earliest_refresh=<value>
   # - Windows Command Line (CMD):
-  #    > set SESSION_REFRESH_MIN_TIME_LEFT=<value>
+  #    > set SESSION_earliest_refresh=<value>
   #
-  refresh_min_time_left: 1h
+  earliest_refresh: 1h
 
   ## cookie ##
   #

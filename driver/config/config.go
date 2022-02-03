@@ -95,7 +95,7 @@ const (
 	ViperKeySessionPersistentCookie                          = "session.cookie.persistent"
 	ViperKeySessionWhoAmIAAL                                 = "session.whoami.required_aal"
 	ViperKeySessionWhoAmIRefreshAllowed                      = "session.whoami.refresh_allowed"
-	ViperKeySessionRefreshMinTimeLeft                        = "session.refresh_min_time_left"
+	ViperKeySessionRefreshMinTimeLeft                        = "session.earliest_refresh"
 	ViperKeyCookieSameSite                                   = "cookies.same_site"
 	ViperKeyCookieDomain                                     = "cookies.domain"
 	ViperKeyCookiePath                                       = "cookies.path"

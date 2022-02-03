@@ -10,15 +10,24 @@ This document walks you through managing user session expiration time.
 
 ## Setting the session refresh time
 
-Since session refresh causes db writes it's possible to set a config value to
+Since session refresh causes database writes it's possible to set a config value to
 allow session refresh only for a specific time before the session expires. If we
-set the `refresh_min_time_left` equal to `lifespan`, it's possible to refresh
+set the `earliest_refresh` equal to `lifespan`, it's possible to refresh
 even new sessions.
 
 ```yaml title="path/to/config/kratos.yml"
 session:
   lifespan: 1h
-  refresh_min_time_left: 1h
+  earliest_refresh: 1h
+```
+
+Setting `earliest_refresh` to `10m` means that after 10 minutes before the session
+would expire it is possible to refresh it:
+
+```yaml title="path/to/config/kratos.yml"
+session:
+  lifespan: 1h
+  earliest_refresh: 10m
 ```
 
 ## Extend user session using the whoami endpoint
