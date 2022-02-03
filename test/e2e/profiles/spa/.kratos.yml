@@ -103,3 +103,7 @@ courier:
             plaintext: base64://SGksCgp0aGlzIGlzIGEgcmVtb3RlIHRlbXBsYXRlCnBsZWFzZSByZWNvdmVyIGFjY2VzcyB0byB5b3VyIGFjY291bnQgYnkgY2xpY2tpbmcgdGhlIGZvbGxvd2luZyBsaW5rOgp7eyAuUmVjb3ZlcnlVUkwgfX0=
             html: base64://SGksCgp0aGlzIGlzIGEgcmVtb3RlIHRlbXBsYXRlCnBsZWFzZSByZWNvdmVyIGFjY2VzcyB0byB5b3VyIGFjY291bnQgYnkgY2xpY2tpbmcgdGhlIGZvbGxvd2luZyBsaW5rOgo8YSBocmVmPSJ7eyAuUmVjb3ZlcnlVUkwgfX0iPnt7IC5SZWNvdmVyeVVSTCB9fTwvYT4=
           subject: base64://UmVjb3ZlciBhY2Nlc3MgdG8geW91ciBhY2NvdW50
+    verification:
+      invalid:
+        email:
+          subject: base64://U29tZW9uZSB0cmllZCB0byB2ZXJpZnkgdGhpcyBlbWFpbCBhZGRyZXNzIChyZW1vdGUp
