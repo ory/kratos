@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"net/http"
+	"net/url"
 	"strings"
 
 	"github.com/gofrs/uuid"
@@ -101,13 +102,13 @@ func (m *ProviderMicrosoft) updateSubject(ctx context.Context, claims *Claims, e
 		defer resp.Body.Close()
 
 		var user struct {
-			Id string `json:"id"`
+			ID string `json:"id"`
 		}
 		if err := json.NewDecoder(resp.Body).Decode(&user); err != nil {
 			return nil, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("%s", err))
 		}
 
-		claims.Subject = user.Id
+		claims.Subject = user.ID
 	}
 
 	return claims, nil
