@@ -2,6 +2,7 @@ package totp_test
 
 import (
 	"context"
+	_ "embed"
 	"encoding/json"
 	"net/http"
 	"net/url"
@@ -23,18 +24,17 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/tidwall/gjson"
 
-	"github.com/ory/kratos/selfservice/flow/settings"
-	"github.com/ory/kratos/text"
 	"github.com/ory/x/assertx"
 	"github.com/ory/x/sqlcon"
+
+	"github.com/ory/kratos/selfservice/flow/settings"
+	"github.com/ory/kratos/text"
 
 	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/internal"
 	"github.com/ory/kratos/internal/testhelpers"
 	"github.com/ory/kratos/x"
-
-	_ "embed"
 )
 
 func TestCompleteSettings(t *testing.T) {
@@ -58,7 +58,7 @@ func TestCompleteSettings(t *testing.T) {
 	conf.MustSet(config.ViperKeySecretsDefault, []string{"not-a-secure-session-key"})
 
 	t.Run("case=device unlinking is available when identity has totp", func(t *testing.T) {
-		id, _ := createIdentity(t, reg)
+		id, _, _ := createIdentity(t, reg)
 
 		apiClient := testhelpers.NewHTTPClientWithIdentitySessionToken(t, reg, id)
 		f := testhelpers.InitializeSettingsFlowViaAPI(t, apiClient, publicTS)
@@ -68,7 +68,7 @@ func TestCompleteSettings(t *testing.T) {
 	})
 
 	t.Run("case=device setup is available when identity has no totp yet", func(t *testing.T) {
-		id, _ := createIdentity(t, reg)
+		id, _, _ := createIdentity(t, reg)
 		id.Credentials = nil
 		require.NoError(t, reg.PrivilegedIdentityPool().UpdateIdentity(context.Background(), id))
 
@@ -143,7 +143,7 @@ func TestCompleteSettings(t *testing.T) {
 			conf.MustSet(config.ViperKeySelfServiceSettingsPrivilegedAuthenticationAfter, "5m")
 		})
 
-		id, key := createIdentity(t, reg)
+		id, _, key := createIdentity(t, reg)
 		var payload = func(v url.Values) {
 			v.Set("totp_unlink", "true")
 		}
@@ -231,7 +231,7 @@ func TestCompleteSettings(t *testing.T) {
 		}
 
 		t.Run("type=api", func(t *testing.T) {
-			id, _ := createIdentity(t, reg)
+			id, _, _ := createIdentity(t, reg)
 			actual, res := doAPIFlow(t, payload, id)
 			assert.Equal(t, http.StatusOK, res.StatusCode)
 			assert.Contains(t, res.Request.URL.String(), publicTS.URL+settings.RouteSubmitFlow)
@@ -240,7 +240,7 @@ func TestCompleteSettings(t *testing.T) {
 		})
 
 		t.Run("type=spa", func(t *testing.T) {
-			id, _ := createIdentity(t, reg)
+			id, _, _ := createIdentity(t, reg)
 			actual, res := doBrowserFlow(t, true, payload, id)
 			assert.Equal(t, http.StatusOK, res.StatusCode)
 			assert.Contains(t, res.Request.URL.String(), publicTS.URL+settings.RouteSubmitFlow)
@@ -249,7 +249,7 @@ func TestCompleteSettings(t *testing.T) {
 		})
 
 		t.Run("type=browser", func(t *testing.T) {
-			id, _ := createIdentity(t, reg)
+			id, _, _ := createIdentity(t, reg)
 			actual, res := doBrowserFlow(t, false, payload, id)
 			assert.Equal(t, http.StatusOK, res.StatusCode)
 			assert.Contains(t, res.Request.URL.String(), uiTS.URL)
