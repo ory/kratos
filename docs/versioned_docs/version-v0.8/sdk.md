@@ -18,17 +18,17 @@ each REST endpoint.
 We publish our SDKs for popular languages in their respective package
 repositories:
 
-- [Dart](https://pub.dev/packages/ory_kratos_client)
-- [.NET](https://www.nuget.org/packages/Ory.Kratos.Client/)
-- [Go](https://github.com/ory/kratos-client-go)
-- [Java](https://search.maven.org/artifact/sh.ory.kratos/kratos-client)
+- [Dart](https://pub.dev/packages/ory_client)
+- [.NET](https://www.nuget.org/packages/Ory.Client/)
+- [Go](https://github.com/ory/client-go)
+- [Java](https://search.maven.org/artifact/sh.ory/ory-client)
 - [JavaScript](https://www.npmjs.com/package/@ory/client) with TypeScript
   definitions and compatible with: NodeJS, ReactJS, AngularJS, Vue.js, and many
   more.
-- [PHP](https://packagist.org/packages/ory/kratos-client)
-- [Python](https://pypi.org/project/ory-kratos-client/)
-- [Ruby](https://rubygems.org/gems/ory-kratos-client)
-- [Rust](https://crates.io/crates/ory-kratos-client)
+- [PHP](https://packagist.org/packages/ory/client)
+- [Python](https://pypi.org/project/ory-client/)
+- [Ruby](https://rubygems.org/gems/ory-client)
+- [Rust](https://crates.io/crates/ory-client)
 
 Take a look at the source:
 [Generated SDKs for Ory Kratos](https://github.com/ory/sdk/tree/master/clients/kratos/)
