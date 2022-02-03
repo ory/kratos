@@ -1,0 +1,28 @@
+dsn: sqlite://foo.db?mode=memory&_fk=true
+
+selfservice:
+  default_browser_return_url: http://return-to-3-test.ory.sh/
+
+identity:
+  default_schema_id: default
+  schemas:
+    - id: default
+      url: base64://ewogICIkaWQiOiAib3J5Oi8vaWRlbnRpdHktdGVzdC1zY2hlbWEiLAogICIkc2NoZW1hIjogImh0dHA6Ly9qc29uLXNjaGVtYS5vcmcvZHJhZnQtMDcvc2NoZW1hIyIsCiAgInRpdGxlIjogIklkZW50aXR5U2NoZW1hIiwKICAidHlwZSI6ICJvYmplY3QiLAogICJwcm9wZXJ0aWVzIjogewogICAgInRyYWl0cyI6IHsKICAgICAgInR5cGUiOiAib2JqZWN0IiwKICAgICAgInByb3BlcnRpZXMiOiB7CiAgICAgICAgIm5hbWUiOiB7CiAgICAgICAgICAidHlwZSI6ICJvYmplY3QiLAogICAgICAgICAgInByb3BlcnRpZXMiOiB7CiAgICAgICAgICAgICJmaXJzdCI6IHsKICAgICAgICAgICAgICAidHlwZSI6ICJzdHJpbmciCiAgICAgICAgICAgIH0sCiAgICAgICAgICAgICJsYXN0IjogewogICAgICAgICAgICAgICJ0eXBlIjogInN0cmluZyIKICAgICAgICAgICAgfQogICAgICAgICAgfQogICAgICAgIH0KICAgICAgfSwKICAgICAgInJlcXVpcmVkIjogWwogICAgICAgICJuYW1lIgogICAgICBdLAogICAgICAiYWRkaXRpb25hbFByb3BlcnRpZXMiOiB0cnVlCiAgICB9CiAgfQp9
+
+courier:
+  smtp:
+    connection_uri: smtp://stub-url
+  templates:
+    recovery:
+      invalid:
+        email:
+          # template_root could be necessary when there are nested templates, but is not required
+          template_root: "root"
+          body:
+            plaintext: base64://e3tkZWZpbmUgcm9vdH19CkhpLAoKeW91IChvciBzb21lb25lIGVsc2UpIGVudGVyZWQgdGhpcyBlbWFpbCBhZGRyZXNzIHdoZW4gdHJ5aW5nIHRvIHJlY292ZXIgYWNjZXNzIHRvIGFuIGFjY291bnQuCgpIb3dldmVyLCB0aGlzIGVtYWlsIGFkZHJlc3MgaXMgbm90IG9uIG91ciBkYXRhYmFzZSBvZiByZWdpc3RlcmVkIHVzZXJzIGFuZCB0aGVyZWZvcmUgdGhlIGF0dGVtcHQgaGFzIGZhaWxlZC4KCklmIHRoaXMgd2FzIHlvdSwgY2hlY2sgaWYgeW91IHNpZ25lZCB1cCB1c2luZyBhIGRpZmZlcmVudCBhZGRyZXNzLgoKSWYgdGhpcyB3YXMgbm90IHlvdSwgcGxlYXNlIGlnbm9yZSB0aGlzIGVtYWlsLgp7ey0gZW5kIC19fQo=
+            html: base64://e3tkZWZpbmUgcm9vdH19CkhpLAoKeW91IChvciBzb21lb25lIGVsc2UpIGVudGVyZWQgdGhpcyBlbWFpbCBhZGRyZXNzIHdoZW4gdHJ5aW5nIHRvIHJlY292ZXIgYWNjZXNzIHRvIGFuIGFjY291bnQuCgpIb3dldmVyLCB0aGlzIGVtYWlsIGFkZHJlc3MgaXMgbm90IG9uIG91ciBkYXRhYmFzZSBvZiByZWdpc3RlcmVkIHVzZXJzIGFuZCB0aGVyZWZvcmUgdGhlIGF0dGVtcHQgaGFzIGZhaWxlZC4KCklmIHRoaXMgd2FzIHlvdSwgY2hlY2sgaWYgeW91IHNpZ25lZCB1cCB1c2luZyBhIGRpZmZlcmVudCBhZGRyZXNzLgoKSWYgdGhpcyB3YXMgbm90IHlvdSwgcGxlYXNlIGlnbm9yZSB0aGlzIGVtYWlsLgp7ey0gZW5kIC19fQo=
+    verification:
+      valid:
+        email:
+          subject: base64://VmVyaWZpY2F0aW9uIEVtYWls
+  template_override_path: "../../courier/template/courier/builtin/templates"

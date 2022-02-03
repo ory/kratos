@@ -48,6 +48,12 @@ func TestRemoteTemplates(t *testing.T, basePath string, tmplType courier.Templat
 	ctx, cancel := context.WithCancel(context.Background())
 	t.Cleanup(cancel)
 
+	toBase64 := func(filePath string) string {
+		f, err := ioutil.ReadFile(filePath)
+		require.NoError(t, err)
+		return base64.StdEncoding.EncodeToString(f)
+	}
+
 	getTemplate := func(tmpl courier.TemplateType, d template.TemplateDependencies) interface {
 		EmailBody(context.Context) (string, error)
 		EmailSubject(context.Context) (string, error)
@@ -88,12 +94,6 @@ func TestRemoteTemplates(t *testing.T, basePath string, tmplType courier.Templat
 	})
 
 	t.Run("case=base64 resource", func(t *testing.T) {
-		toBase64 := func(filePath string) string {
-			f, err := ioutil.ReadFile(filePath)
-			require.NoError(t, err)
-			return base64.StdEncoding.EncodeToString(f)
-		}
-
 		tpl := getTemplate(tmplType, SetupRemoteConfig(t, ctx,
 			toBase64(path.Join(basePath, "email.body.plaintext.gotmpl")),
 			toBase64(path.Join(basePath, "email.body.gotmpl")),
@@ -110,6 +110,22 @@ func TestRemoteTemplates(t *testing.T, basePath string, tmplType courier.Templat
 			baseUrl+"email.body.gotmpl",
 			baseUrl+"email.subject.gotmpl"))
 
+		TestRendered(t, ctx, tpl)
+	})
+
+	t.Run("case=partial subject override", func(t *testing.T) {
+		tpl := getTemplate(tmplType, SetupRemoteConfig(t, ctx,
+			"",
+			"",
+			toBase64(path.Join(basePath, "email.subject.gotmpl"))))
+		TestRendered(t, ctx, tpl)
+	})
+
+	t.Run("case=partial body override", func(t *testing.T) {
+		tpl := getTemplate(tmplType, SetupRemoteConfig(t, ctx,
+			toBase64(path.Join(basePath, "email.body.plaintext.gotmpl")),
+			toBase64(path.Join(basePath, "email.body.gotmpl")),
+			""))
 		TestRendered(t, ctx, tpl)
 	})
 }
