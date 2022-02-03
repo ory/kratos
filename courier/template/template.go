@@ -2,7 +2,9 @@ package template
 
 import (
 	"context"
+
 	"github.com/hashicorp/go-retryablehttp"
+
 	"github.com/ory/kratos/driver/config"
 	"github.com/ory/x/httpx"
 )

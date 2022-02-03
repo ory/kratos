@@ -125,13 +125,14 @@ context('Account Recovery Errors', () => {
 
       it('invalid remote recovery email template', () => {
         const identity = gen.identityWithWebsite()
-        cy.recoverApi({email: identity.email})
+        cy.recoverApi({ email: identity.email })
 
         cy.getMail().then((mail) => {
-         expect(mail.body).to.include("this is a remote invalid recovery template with a defined &#34;root&#34; template")
+          expect(mail.body).to.include(
+            'this is a remote invalid recovery template with a defined &#34;root&#34; template'
+          )
         })
       })
-
     })
   })
 })

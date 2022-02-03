@@ -90,7 +90,9 @@ context('Account Verification Error', () => {
         cy.get('input[name="email"]').type(gen.identity().email)
         cy.get('button[value="link"]').click()
         cy.getMail().then((mail) => {
-          expect(mail.subject).eq("Someone tried to verify this email address (remote)")
+          expect(mail.subject).eq(
+            'Someone tried to verify this email address (remote)'
+          )
         })
       })
     })

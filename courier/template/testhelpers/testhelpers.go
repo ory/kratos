@@ -3,19 +3,21 @@ package testhelpers
 import (
 	"context"
 	"encoding/base64"
-	"github.com/julienschmidt/httprouter"
-	"github.com/ory/kratos/courier"
-	"github.com/ory/kratos/courier/template"
-	"github.com/ory/kratos/driver"
-	"github.com/ory/kratos/driver/config"
-	"github.com/ory/kratos/internal"
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
 	"path"
 	"testing"
+
+	"github.com/julienschmidt/httprouter"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+
+	"github.com/ory/kratos/courier"
+	"github.com/ory/kratos/courier/template"
+	"github.com/ory/kratos/driver"
+	"github.com/ory/kratos/driver/config"
+	"github.com/ory/kratos/internal"
 )
 
 func SetupRemoteConfig(t *testing.T, ctx context.Context, plaintext string, html string, subject string) *driver.RegistryDefault {

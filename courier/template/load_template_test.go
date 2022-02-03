@@ -3,11 +3,6 @@ package template_test
 import (
 	"context"
 	"encoding/base64"
-	"github.com/julienschmidt/httprouter"
-	"github.com/ory/kratos/courier/template"
-	"github.com/ory/kratos/driver/config"
-	"github.com/ory/kratos/internal"
-	"github.com/ory/x/fetcher"
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
@@ -15,6 +10,13 @@ import (
 	"path/filepath"
 	"testing"
 	"time"
+
+	"github.com/julienschmidt/httprouter"
+
+	"github.com/ory/kratos/courier/template"
+	"github.com/ory/kratos/driver/config"
+	"github.com/ory/kratos/internal"
+	"github.com/ory/x/fetcher"
 
 	lru "github.com/hashicorp/golang-lru"
 	"github.com/stretchr/testify/assert"

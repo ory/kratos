@@ -4,14 +4,16 @@ import (
 	"bytes"
 	"context"
 	"embed"
-	"github.com/hashicorp/go-retryablehttp"
-	"github.com/ory/x/fetcher"
-	"github.com/ory/x/httpx"
 	htemplate "html/template"
 	"io"
 	"io/fs"
 	"path/filepath"
 	"text/template"
+
+	"github.com/hashicorp/go-retryablehttp"
+
+	"github.com/ory/x/fetcher"
+	"github.com/ory/x/httpx"
 
 	"github.com/Masterminds/sprig/v3"
 	lru "github.com/hashicorp/golang-lru"

@@ -5,11 +5,13 @@ import (
 	"crypto/tls"
 	"encoding/json"
 	"fmt"
-	"github.com/hashicorp/go-retryablehttp"
-	"github.com/ory/kratos/driver/config"
-	"github.com/ory/x/httpx"
 	"strconv"
 	"time"
+
+	"github.com/hashicorp/go-retryablehttp"
+
+	"github.com/ory/kratos/driver/config"
+	"github.com/ory/x/httpx"
 
 	"github.com/cenkalti/backoff"
 	"github.com/gofrs/uuid"

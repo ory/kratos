@@ -2,9 +2,10 @@ package template_test
 
 import (
 	"context"
+	"testing"
+
 	"github.com/ory/kratos/courier"
 	"github.com/ory/kratos/courier/template/testhelpers"
-	"testing"
 
 	"github.com/ory/kratos/courier/template"
 	"github.com/ory/kratos/internal"

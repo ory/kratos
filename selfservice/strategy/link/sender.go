@@ -2,10 +2,12 @@ package link
 
 import (
 	"context"
-	"github.com/hashicorp/go-retryablehttp"
-	"github.com/ory/x/httpx"
 	"net/http"
 	"net/url"
+
+	"github.com/hashicorp/go-retryablehttp"
+
+	"github.com/ory/x/httpx"
 
 	"github.com/pkg/errors"
 
