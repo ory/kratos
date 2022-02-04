@@ -2568,6 +2568,21 @@ courier:
         ## email ##
         #
         email:
+          ## subject ##
+          #
+          # Examples:
+          # - file://path/to/subject.gotmpl
+          # - https://foo.bar.com/path/to/subject.gotmpl
+          # - base64://e3sgZGVmaW5lIGFmLVpBIH19CkhhbGxvLAoKSGVyc3RlbCBqb3UgcmVrZW5pbmcgZGV1ciBoaWVyZGllIHNrYWtlbCB0ZSB2b2xnOgp7ey0gZW5kIC19fQoKe3sgZGVmaW5lIGVuLVVTIH19CkhpLAoKcGxlYXNlIHJlY292ZXIgYWNjZXNzIHRvIHlvdXIgYWNjb3VudCBieSBjbGlja2luZyB0aGUgZm9sbG93aW5nIGxpbms6Cnt7LSBlbmQgLX19Cgp7ey0gaWYgZXEgLmxhbmcgImFmLVpBIiAtfX0KCnt7IHRlbXBsYXRlICJhZi1aQSIgLiB9fQoKe3stIGVsc2UgLX19Cgp7eyB0ZW1wbGF0ZSAiZW4tVVMiIH19Cgp7ey0gZW5kIC19fQo8YSBocmVmPSJ7eyAuUmVjb3ZlcnlVUkwgfX0iPnt7IC5SZWNvdmVyeVVSTCB9fTwvYT4
+          #
+          # Set this value using environment variables on
+          # - Linux/macOS:
+          #    $ export COURIER_TEMPLATES_VERIFICATION_VALID_EMAIL_SUBJECT=<value>
+          # - Windows Command Line (CMD):
+          #    > set COURIER_TEMPLATES_VERIFICATION_VALID_EMAIL_SUBJECT=<value>
+          #
+          subject: file://path/to/subject.gotmpl
+
           ## body ##
           #
           body:
@@ -2605,6 +2620,12 @@ courier:
             #
             html: file://path/to/body.html.gotmpl
 
+      ## invalid ##
+      #
+      invalid:
+        ## email ##
+        #
+        email:
           ## subject ##
           #
           # Examples:
@@ -2614,30 +2635,12 @@ courier:
           #
           # Set this value using environment variables on
           # - Linux/macOS:
-          #    $ export COURIER_TEMPLATES_VERIFICATION_VALID_EMAIL_SUBJECT=<value>
+          #    $ export COURIER_TEMPLATES_VERIFICATION_INVALID_EMAIL_SUBJECT=<value>
           # - Windows Command Line (CMD):
-          #    > set COURIER_TEMPLATES_VERIFICATION_VALID_EMAIL_SUBJECT=<value>
+          #    > set COURIER_TEMPLATES_VERIFICATION_INVALID_EMAIL_SUBJECT=<value>
           #
           subject: file://path/to/subject.gotmpl
 
-          ## template_root ##
-          #
-          # The entry point for the template when using nested templates. This is optional as the template does not need to define an entry point.
-          #
-          # Set this value using environment variables on
-          # - Linux/macOS:
-          #    $ export COURIER_TEMPLATES_VERIFICATION_VALID_EMAIL_TEMPLATE_ROOT=<value>
-          # - Windows Command Line (CMD):
-          #    > set COURIER_TEMPLATES_VERIFICATION_VALID_EMAIL_TEMPLATE_ROOT=<value>
-          #
-          template_root: ''
-
-      ## invalid ##
-      #
-      invalid:
-        ## email ##
-        #
-        email:
           ## body ##
           #
           body:
@@ -2675,33 +2678,6 @@ courier:
             #
             html: file://path/to/body.html.gotmpl
 
-          ## subject ##
-          #
-          # Examples:
-          # - file://path/to/subject.gotmpl
-          # - https://foo.bar.com/path/to/subject.gotmpl
-          # - base64://e3sgZGVmaW5lIGFmLVpBIH19CkhhbGxvLAoKSGVyc3RlbCBqb3UgcmVrZW5pbmcgZGV1ciBoaWVyZGllIHNrYWtlbCB0ZSB2b2xnOgp7ey0gZW5kIC19fQoKe3sgZGVmaW5lIGVuLVVTIH19CkhpLAoKcGxlYXNlIHJlY292ZXIgYWNjZXNzIHRvIHlvdXIgYWNjb3VudCBieSBjbGlja2luZyB0aGUgZm9sbG93aW5nIGxpbms6Cnt7LSBlbmQgLX19Cgp7ey0gaWYgZXEgLmxhbmcgImFmLVpBIiAtfX0KCnt7IHRlbXBsYXRlICJhZi1aQSIgLiB9fQoKe3stIGVsc2UgLX19Cgp7eyB0ZW1wbGF0ZSAiZW4tVVMiIH19Cgp7ey0gZW5kIC19fQo8YSBocmVmPSJ7eyAuUmVjb3ZlcnlVUkwgfX0iPnt7IC5SZWNvdmVyeVVSTCB9fTwvYT4
-          #
-          # Set this value using environment variables on
-          # - Linux/macOS:
-          #    $ export COURIER_TEMPLATES_VERIFICATION_INVALID_EMAIL_SUBJECT=<value>
-          # - Windows Command Line (CMD):
-          #    > set COURIER_TEMPLATES_VERIFICATION_INVALID_EMAIL_SUBJECT=<value>
-          #
-          subject: file://path/to/subject.gotmpl
-
-          ## template_root ##
-          #
-          # The entry point for the template when using nested templates. This is optional as the template does not need to define an entry point.
-          #
-          # Set this value using environment variables on
-          # - Linux/macOS:
-          #    $ export COURIER_TEMPLATES_VERIFICATION_INVALID_EMAIL_TEMPLATE_ROOT=<value>
-          # - Windows Command Line (CMD):
-          #    > set COURIER_TEMPLATES_VERIFICATION_INVALID_EMAIL_TEMPLATE_ROOT=<value>
-          #
-          template_root: ''
-
     ## recovery ##
     #
     recovery:
@@ -2711,6 +2687,21 @@ courier:
         ## email ##
         #
         email:
+          ## subject ##
+          #
+          # Examples:
+          # - file://path/to/subject.gotmpl
+          # - https://foo.bar.com/path/to/subject.gotmpl
+          # - base64://e3sgZGVmaW5lIGFmLVpBIH19CkhhbGxvLAoKSGVyc3RlbCBqb3UgcmVrZW5pbmcgZGV1ciBoaWVyZGllIHNrYWtlbCB0ZSB2b2xnOgp7ey0gZW5kIC19fQoKe3sgZGVmaW5lIGVuLVVTIH19CkhpLAoKcGxlYXNlIHJlY292ZXIgYWNjZXNzIHRvIHlvdXIgYWNjb3VudCBieSBjbGlja2luZyB0aGUgZm9sbG93aW5nIGxpbms6Cnt7LSBlbmQgLX19Cgp7ey0gaWYgZXEgLmxhbmcgImFmLVpBIiAtfX0KCnt7IHRlbXBsYXRlICJhZi1aQSIgLiB9fQoKe3stIGVsc2UgLX19Cgp7eyB0ZW1wbGF0ZSAiZW4tVVMiIH19Cgp7ey0gZW5kIC19fQo8YSBocmVmPSJ7eyAuUmVjb3ZlcnlVUkwgfX0iPnt7IC5SZWNvdmVyeVVSTCB9fTwvYT4
+          #
+          # Set this value using environment variables on
+          # - Linux/macOS:
+          #    $ export COURIER_TEMPLATES_RECOVERY_VALID_EMAIL_SUBJECT=<value>
+          # - Windows Command Line (CMD):
+          #    > set COURIER_TEMPLATES_RECOVERY_VALID_EMAIL_SUBJECT=<value>
+          #
+          subject: file://path/to/subject.gotmpl
+
           ## body ##
           #
           body:
@@ -2748,6 +2739,12 @@ courier:
             #
             html: file://path/to/body.html.gotmpl
 
+      ## invalid ##
+      #
+      invalid:
+        ## email ##
+        #
+        email:
           ## subject ##
           #
           # Examples:
@@ -2757,30 +2754,12 @@ courier:
           #
           # Set this value using environment variables on
           # - Linux/macOS:
-          #    $ export COURIER_TEMPLATES_RECOVERY_VALID_EMAIL_SUBJECT=<value>
+          #    $ export COURIER_TEMPLATES_RECOVERY_INVALID_EMAIL_SUBJECT=<value>
           # - Windows Command Line (CMD):
-          #    > set COURIER_TEMPLATES_RECOVERY_VALID_EMAIL_SUBJECT=<value>
+          #    > set COURIER_TEMPLATES_RECOVERY_INVALID_EMAIL_SUBJECT=<value>
           #
           subject: file://path/to/subject.gotmpl
 
-          ## template_root ##
-          #
-          # The entry point for the template when using nested templates. This is optional as the template does not need to define an entry point.
-          #
-          # Set this value using environment variables on
-          # - Linux/macOS:
-          #    $ export COURIER_TEMPLATES_RECOVERY_VALID_EMAIL_TEMPLATE_ROOT=<value>
-          # - Windows Command Line (CMD):
-          #    > set COURIER_TEMPLATES_RECOVERY_VALID_EMAIL_TEMPLATE_ROOT=<value>
-          #
-          template_root: ''
-
-      ## invalid ##
-      #
-      invalid:
-        ## email ##
-        #
-        email:
           ## body ##
           #
           body:
@@ -2817,31 +2796,4 @@ courier:
             #    > set COURIER_TEMPLATES_RECOVERY_INVALID_EMAIL_BODY_HTML=<value>
             #
             html: file://path/to/body.html.gotmpl
-
-          ## subject ##
-          #
-          # Examples:
-          # - file://path/to/subject.gotmpl
-          # - https://foo.bar.com/path/to/subject.gotmpl
-          # - base64://e3sgZGVmaW5lIGFmLVpBIH19CkhhbGxvLAoKSGVyc3RlbCBqb3UgcmVrZW5pbmcgZGV1ciBoaWVyZGllIHNrYWtlbCB0ZSB2b2xnOgp7ey0gZW5kIC19fQoKe3sgZGVmaW5lIGVuLVVTIH19CkhpLAoKcGxlYXNlIHJlY292ZXIgYWNjZXNzIHRvIHlvdXIgYWNjb3VudCBieSBjbGlja2luZyB0aGUgZm9sbG93aW5nIGxpbms6Cnt7LSBlbmQgLX19Cgp7ey0gaWYgZXEgLmxhbmcgImFmLVpBIiAtfX0KCnt7IHRlbXBsYXRlICJhZi1aQSIgLiB9fQoKe3stIGVsc2UgLX19Cgp7eyB0ZW1wbGF0ZSAiZW4tVVMiIH19Cgp7ey0gZW5kIC19fQo8YSBocmVmPSJ7eyAuUmVjb3ZlcnlVUkwgfX0iPnt7IC5SZWNvdmVyeVVSTCB9fTwvYT4
-          #
-          # Set this value using environment variables on
-          # - Linux/macOS:
-          #    $ export COURIER_TEMPLATES_RECOVERY_INVALID_EMAIL_SUBJECT=<value>
-          # - Windows Command Line (CMD):
-          #    > set COURIER_TEMPLATES_RECOVERY_INVALID_EMAIL_SUBJECT=<value>
-          #
-          subject: file://path/to/subject.gotmpl
-
-          ## template_root ##
-          #
-          # The entry point for the template when using nested templates. This is optional as the template does not need to define an entry point.
-          #
-          # Set this value using environment variables on
-          # - Linux/macOS:
-          #    $ export COURIER_TEMPLATES_RECOVERY_INVALID_EMAIL_TEMPLATE_ROOT=<value>
-          # - Windows Command Line (CMD):
-          #    > set COURIER_TEMPLATES_RECOVERY_INVALID_EMAIL_TEMPLATE_ROOT=<value>
-          #
-          template_root: ''
 ```
