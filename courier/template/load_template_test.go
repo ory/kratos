@@ -181,20 +181,11 @@ func TestLoadTextTemplate(t *testing.T) {
 		})
 
 		t.Run("method=cache works", func(t *testing.T) {
-			temp1, err := ioutil.ReadFile("courier/builtin/templates/test_stub/email.body.html.en_US.gotmpl")
-			require.NoError(t, err)
-			b64Template1 := base64.StdEncoding.EncodeToString(temp1)
+			tp1, err := template.LoadTextTemplate(ctx, reg, nil, "", "", map[string]interface{}{}, "base64://e3sgJGwgOj0gY2F0ICJsYW5nPSIgLmxhbmcgfX0Ke3sgbm9zcGFjZSAkbCB9fQ==")
+			assert.NoError(t, err)
 
-			tp1, err := template.LoadTextTemplate(ctx, reg, nil, "", "", map[string]interface{}{}, "base64://"+b64Template1)
-			require.NoError(t, err)
-
-			temp2, err := ioutil.ReadFile("courier/builtin/templates/test_stub/email.body.html.gotmpl")
-			require.NoError(t, err)
-
-			b64Template2 := base64.StdEncoding.EncodeToString(temp2)
-
-			tp2, err := template.LoadTextTemplate(ctx, reg, nil, "", "", map[string]interface{}{}, "base64://"+b64Template2)
-			require.NoError(t, err)
+			tp2, err := template.LoadTextTemplate(ctx, reg, nil, "", "", map[string]interface{}{}, "base64://e3stIGlmIGVxIC5sYW5nICJlbl9VUyIgLX19Cnt7IHRlbXBsYXRlICJlbWFpbC5ib2R5Lmh0bWwuZW5fVVMuZ290bXBsIiAuIH19Cnt7LSBlbmQgLX19Cg==")
+			assert.NoError(t, err)
 
 			require.NotEqualf(t, tp1, tp2, "Expected remote template 1 and remote template 2 to not be equal")
 		})
