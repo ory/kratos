@@ -93,10 +93,9 @@ courier:
       invalid:
         email:
           body:
-            html: base64://e3tkZWZpbmUgInJvb3QifX0KSGksCgp0aGlzIGlzIGEgcmVtb3RlIGludmFsaWQgcmVjb3ZlcnkgdGVtcGxhdGUgd2l0aCBhIGRlZmluZWQgInJvb3QiIHRlbXBsYXRlCgp7ey0gZW5kIC19fQ==
-            plaintext: base64://e3tkZWZpbmUgInJvb3QifX0KSGksCgp0aGlzIGlzIGEgcmVtb3RlIGludmFsaWQgcmVjb3ZlcnkgdGVtcGxhdGUgd2l0aCBhIGRlZmluZWQgInJvb3QiIHRlbXBsYXRlCgp7ey0gZW5kIC19fQ==
+            html: base64://SGksCgp0aGlzIGlzIGEgcmVtb3RlIGludmFsaWQgcmVjb3ZlcnkgdGVtcGxhdGU=
+            plaintext: base64://SGksCgp0aGlzIGlzIGEgcmVtb3RlIGludmFsaWQgcmVjb3ZlcnkgdGVtcGxhdGU=
           subject: base64://QWNjb3VudCBBY2Nlc3MgQXR0ZW1wdGVk
-          template_root: root
       valid:
         email:
           body:

@@ -45,14 +45,11 @@ courier:
     recovery:
       invalid:
         email:
-          # template_root could be necessary when there are nested templates, but is not required
-          template_root: root
           body:
-            html: base64://e3tkZWZpbmUgInJvb3QifX0KSGksCgp0aGlzIGlzIGEgcmVtb3RlIGludmFsaWQgcmVjb3ZlcnkgdGVtcGxhdGUgd2l0aCBhIGRlZmluZWQgInJvb3QiIHRlbXBsYXRlCgp7ey0gZW5kIC19fQ==
-            plaintext: base64://e3tkZWZpbmUgInJvb3QifX0KSGksCgp0aGlzIGlzIGEgcmVtb3RlIGludmFsaWQgcmVjb3ZlcnkgdGVtcGxhdGUgd2l0aCBhIGRlZmluZWQgInJvb3QiIHRlbXBsYXRlCgp7ey0gZW5kIC19fQ==
+            html: base64://SGksCgp0aGlzIGlzIGEgcmVtb3RlIGludmFsaWQgcmVjb3ZlcnkgdGVtcGxhdGU=
+            plaintext: base64://SGksCgp0aGlzIGlzIGEgcmVtb3RlIGludmFsaWQgcmVjb3ZlcnkgdGVtcGxhdGU=
           subject: base64://QWNjb3VudCBBY2Nlc3MgQXR0ZW1wdGVk
       valid:
-        # omit template_root on valid as it is not required
         email:
           body:
             plaintext: base64://SGksCgp0aGlzIGlzIGEgcmVtb3RlIHRlbXBsYXRlCnBsZWFzZSByZWNvdmVyIGFjY2VzcyB0byB5b3VyIGFjY291bnQgYnkgY2xpY2tpbmcgdGhlIGZvbGxvd2luZyBsaW5rOgp7eyAuUmVjb3ZlcnlVUkwgfX0=

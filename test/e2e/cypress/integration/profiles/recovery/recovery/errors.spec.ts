@@ -129,7 +129,7 @@ context('Account Recovery Errors', () => {
 
         cy.getMail().then((mail) => {
           expect(mail.body).to.include(
-            'this is a remote invalid recovery template with a defined &#34;root&#34; template'
+            'this is a remote invalid recovery template'
           )
         })
       })
