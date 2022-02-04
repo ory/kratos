@@ -181,10 +181,10 @@ func TestLoadTextTemplate(t *testing.T) {
 		})
 
 		t.Run("method=cache works", func(t *testing.T) {
-			tp1, err := template.LoadTextTemplate(ctx, reg, nil, "", "", map[string]interface{}{"lang": "en_US"}, "base64://e3sgJGwgOj0gY2F0ICJsYW5nPSIgLmxhbmcgfX0Ke3sgbm9zcGFjZSAkbCB9fQ==")
+			tp1, err := template.LoadTextTemplate(ctx, reg, nil, "", "", map[string]interface{}{}, "base64://e3sgJGwgOj0gY2F0ICJsYW5nPSIgLmxhbmcgfX0Ke3sgbm9zcGFjZSAkbCB9fQ==")
 			assert.NoError(t, err)
 
-			tp2, err := template.LoadTextTemplate(ctx, reg, nil, "", "", map[string]interface{}{}, "base64://e3stIGlmIGVxIC5sYW5nICJlbl9VUyIgLX19Cnt7IHRlbXBsYXRlICJlbWFpbC5ib2R5Lmh0bWwuZW5fVVMuZ290bXBsIiAuIH19Cnt7LSBlbmQgLX19Cg==")
+			tp2, err := template.LoadTextTemplate(ctx, reg, nil, "", "", map[string]interface{}{}, "base64://c3R1YiBlbWFpbCBib2R5IHt7IC5Cb2R5IH19")
 			assert.NoError(t, err)
 
 			require.NotEqualf(t, tp1, tp2, "Expected remote template 1 and remote template 2 to not be equal")
