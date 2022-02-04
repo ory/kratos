@@ -25,36 +25,15 @@ func (t *RecoveryInvalid) EmailRecipient() (string, error) {
 }
 
 func (t *RecoveryInvalid) EmailSubject(ctx context.Context) (string, error) {
-	return LoadTextTemplate(ctx, t.d,
-		os.DirFS(t.d.CourierConfig(ctx).CourierTemplatesRoot()),
-		"recovery/invalid/email.subject.gotmpl",
-		"recovery/invalid/email.subject*",
-		t.m,
-		t.d.CourierConfig(ctx).CourierTemplatesRecoveryInvalid().Subject,
-		t.d.CourierConfig(ctx).CourierTemplatesRecoveryInvalid().TemplateRoot,
-	)
+	return LoadTextTemplate(ctx, t.d, os.DirFS(t.d.CourierConfig(ctx).CourierTemplatesRoot()), "recovery/invalid/email.subject.gotmpl", "recovery/invalid/email.subject*", t.m, t.d.CourierConfig(ctx).CourierTemplatesRecoveryInvalid().Subject)
 }
 
 func (t *RecoveryInvalid) EmailBody(ctx context.Context) (string, error) {
-	return LoadHTMLTemplate(ctx, t.d,
-		os.DirFS(t.d.CourierConfig(ctx).CourierTemplatesRoot()),
-		"recovery/invalid/email.body.gotmpl",
-		"recovery/invalid/email.body*",
-		t.m,
-		t.d.CourierConfig(ctx).CourierTemplatesRecoveryInvalid().Body.HTML,
-		t.d.CourierConfig(ctx).CourierTemplatesRecoveryInvalid().TemplateRoot,
-	)
+	return LoadHTMLTemplate(ctx, t.d, os.DirFS(t.d.CourierConfig(ctx).CourierTemplatesRoot()), "recovery/invalid/email.body.gotmpl", "recovery/invalid/email.body*", t.m, t.d.CourierConfig(ctx).CourierTemplatesRecoveryInvalid().Body.HTML)
 }
 
 func (t *RecoveryInvalid) EmailBodyPlaintext(ctx context.Context) (string, error) {
-	return LoadTextTemplate(ctx, t.d,
-		os.DirFS(t.d.CourierConfig(ctx).CourierTemplatesRoot()),
-		"recovery/invalid/email.body.plaintext.gotmpl",
-		"recovery/invalid/email.body.plaintext*",
-		t.m,
-		t.d.CourierConfig(ctx).CourierTemplatesRecoveryInvalid().Body.PlainText,
-		t.d.CourierConfig(ctx).CourierTemplatesRecoveryInvalid().TemplateRoot,
-	)
+	return LoadTextTemplate(ctx, t.d, os.DirFS(t.d.CourierConfig(ctx).CourierTemplatesRoot()), "recovery/invalid/email.body.plaintext.gotmpl", "recovery/invalid/email.body.plaintext*", t.m, t.d.CourierConfig(ctx).CourierTemplatesRecoveryInvalid().Body.PlainText)
 }
 
 func (t *RecoveryInvalid) MarshalJSON() ([]byte, error) {

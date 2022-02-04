@@ -108,18 +108,15 @@ courier:
   # Each template supports the following layout. A singular key can be specified under `email` to override the defaults.
   # When specifying `body`, however, Kratos expects `html` and `plaintext` to be set.
   # email:
-  #   template_root: base
-  #   subject: http://, file://, base64://
+  #   subject: http(s)://, file://, base64://
   #   body:
-  #     html: http://, file://, base64://
-  #     plaintext: http://, file://, base64://
+  #     html: http(s)://, file://, base64://
+  #     plaintext: http(s)://, file://, base64://
   templates:
     # we can specify here
     verification:
       valid:
         email:
-          # optional
-          template_root: base
           body:
             # plaintext and html are required when overriding the body
             html: https://some-remote-resource/gotmpl
@@ -268,16 +265,13 @@ templates change. The templates cannot reference templates outside itself as
 with templates loaded from a singular directory.
 
 The template will need to contain the nested templates in the same file. See
-below for an example. In this template we even wrap the main content in a define
-block called "base". We can then call the "base" define block by using the
-`template_root` configuration.
+below for an example.
 
 ```yaml title="path/to/my/kratos/config.yml"
 courier:
   templates:
     verify:
       email:
-        template_root: base
         body:
           plaintext: https://some-remote-template/tmp.gotmpl
           html: https://some-remote-template/tmp.gotmpl
@@ -292,11 +286,9 @@ courier:
 {{ nospace $l }}
 {{end}}
 
-{{define "base"}}
 {{- if eq .lang "en_US" -}}
 {{ template "en_US" . }}
 {{- end -}}
-{{end}}
 
 ```
 

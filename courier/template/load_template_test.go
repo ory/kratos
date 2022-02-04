@@ -29,7 +29,7 @@ func TestLoadTextTemplate(t *testing.T) {
 	var executeTextTemplate = func(t *testing.T, dir, name, pattern string, model map[string]interface{}) string {
 		ctx := context.Background()
 		_, reg := internal.NewFastRegistryWithMocks(t)
-		tp, err := template.LoadTextTemplate(ctx, reg, os.DirFS(dir), name, pattern, model, "", "")
+		tp, err := template.LoadTextTemplate(ctx, reg, os.DirFS(dir), name, pattern, model, "")
 		require.NoError(t, err)
 		return tp
 	}
@@ -37,7 +37,7 @@ func TestLoadTextTemplate(t *testing.T) {
 	var executeHTMLTemplate = func(t *testing.T, dir, name, pattern string, model map[string]interface{}) string {
 		ctx := context.Background()
 		_, reg := internal.NewFastRegistryWithMocks(t)
-		tp, err := template.LoadHTMLTemplate(ctx, reg, os.DirFS(dir), name, pattern, model, "", "")
+		tp, err := template.LoadHTMLTemplate(ctx, reg, os.DirFS(dir), name, pattern, model, "")
 		require.NoError(t, err)
 		return tp
 	}
@@ -88,10 +88,10 @@ func TestLoadTextTemplate(t *testing.T) {
 		t.Run("case=base64 encoded data", func(t *testing.T) {
 			t.Run("html template", func(t *testing.T) {
 				m := map[string]interface{}{"lang": "en_US"}
-				f, err := ioutil.ReadFile("courier/builtin/templates/test_stub/email.body.html.nested.gotmpl")
+				f, err := ioutil.ReadFile("courier/builtin/templates/test_stub/email.body.html.en_US.gotmpl")
 				require.NoError(t, err)
 				b64 := base64.StdEncoding.EncodeToString(f)
-				tp, err := template.LoadHTMLTemplate(ctx, reg, nil, "", "", m, "base64://"+b64, "base")
+				tp, err := template.LoadHTMLTemplate(ctx, reg, nil, "", "", m, "base64://"+b64)
 				require.NoError(t, err)
 				assert.Contains(t, tp, "lang=en_US")
 			})
@@ -103,8 +103,7 @@ func TestLoadTextTemplate(t *testing.T) {
 
 				b64 := base64.StdEncoding.EncodeToString(f)
 
-				tp, err := template.LoadTextTemplate(ctx, reg, nil, "", "", m,
-					"base64://"+b64, "base")
+				tp, err := template.LoadTextTemplate(ctx, reg, nil, "", "", m, "base64://"+b64)
 				require.NoError(t, err)
 				assert.Contains(t, tp, "stub email body something")
 			})
@@ -114,19 +113,14 @@ func TestLoadTextTemplate(t *testing.T) {
 		t.Run("case=file resource", func(t *testing.T) {
 			t.Run("case=html template", func(t *testing.T) {
 				m := map[string]interface{}{"lang": "en_US"}
-				tp, err := template.LoadHTMLTemplate(ctx, reg, nil, "", "", m,
-					"file://courier/builtin/templates/test_stub/email.body.html.nested.gotmpl",
-					"base",
-				)
+				tp, err := template.LoadHTMLTemplate(ctx, reg, nil, "", "", m, "file://courier/builtin/templates/test_stub/email.body.html.en_US.gotmpl")
 				require.NoError(t, err)
 				assert.Contains(t, tp, "lang=en_US")
 			})
 
 			t.Run("case=plaintext", func(t *testing.T) {
 				m := map[string]interface{}{"Body": "something"}
-				tp, err := template.LoadTextTemplate(ctx, reg, nil, "", "", m,
-					"file://courier/builtin/templates/test_stub/email.body.plaintext.gotmpl",
-					"base")
+				tp, err := template.LoadTextTemplate(ctx, reg, nil, "", "", m, "file://courier/builtin/templates/test_stub/email.body.plaintext.gotmpl")
 				require.NoError(t, err)
 				assert.Contains(t, tp, "stub email body something")
 			})
@@ -135,7 +129,7 @@ func TestLoadTextTemplate(t *testing.T) {
 		t.Run("case=http resource", func(t *testing.T) {
 			router := httprouter.New()
 			router.Handle("GET", "/html", func(writer http.ResponseWriter, request *http.Request, params httprouter.Params) {
-				http.ServeFile(writer, request, "courier/builtin/templates/test_stub/email.body.html.nested.gotmpl")
+				http.ServeFile(writer, request, "courier/builtin/templates/test_stub/email.body.html.en_US.gotmpl")
 			})
 			router.Handle("GET", "/plaintext", func(writer http.ResponseWriter, request *http.Request, params httprouter.Params) {
 				http.ServeFile(writer, request, "courier/builtin/templates/test_stub/email.body.plaintext.gotmpl")
@@ -145,17 +139,14 @@ func TestLoadTextTemplate(t *testing.T) {
 
 			t.Run("case=html template", func(t *testing.T) {
 				m := map[string]interface{}{"lang": "en_US"}
-				tp, err := template.LoadHTMLTemplate(ctx, reg, nil, "", "", m,
-					ts.URL+"/html",
-					"base",
-				)
+				tp, err := template.LoadHTMLTemplate(ctx, reg, nil, "", "", m, ts.URL+"/html")
 				require.NoError(t, err)
 				assert.Contains(t, tp, "lang=en_US")
 			})
 
 			t.Run("case=plaintext", func(t *testing.T) {
 				m := map[string]interface{}{"Body": "something"}
-				tp, err := template.LoadTextTemplate(ctx, reg, nil, "", "", m, ts.URL+"/plaintext", "base")
+				tp, err := template.LoadTextTemplate(ctx, reg, nil, "", "", m, ts.URL+"/plaintext")
 				require.NoError(t, err)
 				assert.Contains(t, tp, "stub email body something")
 			})
@@ -163,16 +154,12 @@ func TestLoadTextTemplate(t *testing.T) {
 		})
 
 		t.Run("case=unsupported resource", func(t *testing.T) {
-			tp, err := template.LoadHTMLTemplate(ctx, reg, nil, "", "", map[string]interface{}{},
-				"grpc://unsupported-url",
-				"")
+			tp, err := template.LoadHTMLTemplate(ctx, reg, nil, "", "", map[string]interface{}{}, "grpc://unsupported-url")
 
 			require.ErrorIs(t, err, fetcher.ErrUnknownScheme)
 			require.Empty(t, tp)
 
-			tp, err = template.LoadTextTemplate(ctx, reg, nil, "", "", map[string]interface{}{},
-				"grpc://unsupported-url",
-				"")
+			tp, err = template.LoadTextTemplate(ctx, reg, nil, "", "", map[string]interface{}{}, "grpc://unsupported-url")
 			require.ErrorIs(t, err, fetcher.ErrUnknownScheme)
 			require.Empty(t, tp)
 		})
@@ -182,19 +169,35 @@ func TestLoadTextTemplate(t *testing.T) {
 			reg.HTTPClient(ctx).RetryMax = 1
 			reg.HTTPClient(ctx).RetryWaitMax = time.Millisecond
 
-			_, err := template.LoadHTMLTemplate(ctx, reg, nil, "", "", map[string]interface{}{},
-				"http://localhost:8080/1234",
-				"")
+			_, err := template.LoadHTMLTemplate(ctx, reg, nil, "", "", map[string]interface{}{}, "http://localhost:8080/1234")
 
 			require.Error(t, err)
 			assert.Contains(t, err.Error(), "is in the")
 
-			_, err = template.LoadTextTemplate(ctx, reg, nil, "", "", map[string]interface{}{},
-				"http://localhost:8080/1234",
-				"")
+			_, err = template.LoadTextTemplate(ctx, reg, nil, "", "", map[string]interface{}{}, "http://localhost:8080/1234")
 			require.Error(t, err)
 			assert.Contains(t, err.Error(), "is in the")
 
 		})
+
+		t.Run("method=Cache works", func(t *testing.T) {
+			temp1, err := ioutil.ReadFile("courier/builtin/templates/test_stub/email.body.html.en_US.gotmpl")
+			require.NoError(t, err)
+			b64Template1 := base64.StdEncoding.EncodeToString(temp1)
+
+			tp1, err := template.LoadTextTemplate(ctx, reg, nil, "", "", map[string]interface{}{}, "base64://"+b64Template1)
+			require.NoError(t, err)
+
+			temp2, err := ioutil.ReadFile("courier/builtin/templates/test_stub/email.body.html.gotmpl")
+			require.NoError(t, err)
+
+			b64Template2 := base64.StdEncoding.EncodeToString(temp2)
+
+			tp2, err := template.LoadTextTemplate(ctx, reg, nil, "", "", map[string]interface{}{}, "base64://"+b64Template2)
+			require.NoError(t, err)
+
+			require.NotEqualf(t, tp1, tp2, "Expected remote template 1 and remote template 2 to not be equal")
+		})
+
 	})
 }

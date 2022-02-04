@@ -78,11 +78,8 @@ func TestRemoteTemplates(t *testing.T, basePath string, tmplType courier.Templat
 
 	t.Run("case=http resource", func(t *testing.T) {
 		router := httprouter.New()
-		router.Handle("GET", "/email.body.plaintext.gotpml", func(writer http.ResponseWriter, request *http.Request, params httprouter.Params) {
-			http.ServeFile(writer, request, path.Join(basePath, "email.body.plaintext.gotmpl"))
-		})
-		router.Handle("GET", "/plaintext", func(writer http.ResponseWriter, request *http.Request, params httprouter.Params) {
-			http.ServeFile(writer, request, path.Join(basePath, "courier/builtin/templates/recovery/invalid/email.body.gotmpl"))
+		router.Handle("GET", "/:filename", func(writer http.ResponseWriter, request *http.Request, params httprouter.Params) {
+			http.ServeFile(writer, request, path.Join(basePath, params.ByName("filename")))
 		})
 		ts := httptest.NewServer(router)
 		defer ts.Close()
@@ -97,20 +94,18 @@ func TestRemoteTemplates(t *testing.T, basePath string, tmplType courier.Templat
 
 	t.Run("case=base64 resource", func(t *testing.T) {
 		tpl := getTemplate(tmplType, SetupRemoteConfig(t, ctx,
-			toBase64(path.Join(basePath, "email.body.plaintext.gotmpl")),
-			toBase64(path.Join(basePath, "email.body.gotmpl")),
-			toBase64(path.Join(basePath, "email.subject.gotmpl"))))
+			"base64://"+toBase64(path.Join(basePath, "email.body.plaintext.gotmpl")),
+			"base64://"+toBase64(path.Join(basePath, "email.body.gotmpl")),
+			"base64://"+toBase64(path.Join(basePath, "email.subject.gotmpl"))))
 
 		TestRendered(t, ctx, tpl)
 	})
 
 	t.Run("case=file resource", func(t *testing.T) {
-		baseUrl := "file://" + basePath
-
 		tpl := getTemplate(tmplType, SetupRemoteConfig(t, ctx,
-			baseUrl+"email.body.plaintext.gotmpl",
-			baseUrl+"email.body.gotmpl",
-			baseUrl+"email.subject.gotmpl"))
+			"file://"+path.Join(basePath, "email.body.plaintext.gotmpl"),
+			"file://"+path.Join(basePath, "email.body.gotmpl"),
+			"file://"+path.Join(basePath, "email.subject.gotmpl")))
 
 		TestRendered(t, ctx, tpl)
 	})
@@ -119,14 +114,14 @@ func TestRemoteTemplates(t *testing.T, basePath string, tmplType courier.Templat
 		tpl := getTemplate(tmplType, SetupRemoteConfig(t, ctx,
 			"",
 			"",
-			toBase64(path.Join(basePath, "email.subject.gotmpl"))))
+			"base64://"+toBase64(path.Join(basePath, "email.subject.gotmpl"))))
 		TestRendered(t, ctx, tpl)
 	})
 
 	t.Run("case=partial body override", func(t *testing.T) {
 		tpl := getTemplate(tmplType, SetupRemoteConfig(t, ctx,
-			toBase64(path.Join(basePath, "email.body.plaintext.gotmpl")),
-			toBase64(path.Join(basePath, "email.body.gotmpl")),
+			"base64://"+toBase64(path.Join(basePath, "email.body.plaintext.gotmpl")),
+			"base64://"+toBase64(path.Join(basePath, "email.body.gotmpl")),
 			""))
 		TestRendered(t, ctx, tpl)
 	})

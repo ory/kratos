@@ -75,30 +75,36 @@ func loadBuiltInTemplate(filesystem fs.FS, name string, html bool) (Template, er
 	return tpl, nil
 }
 
-func loadRemoteTemplate(ctx context.Context, d templateDependencies, url string, name string, html bool, root string) (Template, error) {
-	if t, found := Cache.Get(name); found {
-		return t.(Template), nil
-	}
+func loadRemoteTemplate(ctx context.Context, d templateDependencies, url string, html bool) (Template, error) {
+	var bb *bytes.Buffer
+	var err error
 
-	f := fetcher.NewFetcher(fetcher.WithClient(d.HTTPClient(ctx)))
+	// instead of creating a new request always we always cache the bytes.Buffer using the url as the key
+	if t, found := Cache.Get(url); found {
+		bb = t.(*bytes.Buffer)
+	} else {
+		f := fetcher.NewFetcher(fetcher.WithClient(d.HTTPClient(ctx)))
 
-	bb, err := f.Fetch(url)
-	if err != nil {
-		return nil, errors.WithStack(err)
+		bb, err = f.Fetch(url)
+		if err != nil {
+			return nil, errors.WithStack(err)
+		}
+		_ = Cache.Add(url, bb)
 	}
 
 	var t Template
 	if html {
-		t, err = htemplate.New(root).Funcs(sprig.HtmlFuncMap()).Parse(bb.String())
+		t, err = htemplate.New(url).Funcs(sprig.HtmlFuncMap()).Parse(bb.String())
 		if err != nil {
 			return nil, errors.WithStack(err)
 		}
 	} else {
-		t, err = template.New(root).Funcs(sprig.TxtFuncMap()).Parse(bb.String())
+		t, err = template.New(url).Funcs(sprig.TxtFuncMap()).Parse(bb.String())
 		if err != nil {
 			return nil, errors.WithStack(err)
 		}
 	}
+
 	return t, nil
 }
 
@@ -143,11 +149,11 @@ func loadTemplate(filesystem fs.FS, name, pattern string, html bool) (Template, 
 	return tpl, nil
 }
 
-func LoadTextTemplate(ctx context.Context, d templateDependencies, filesystem fs.FS, name, pattern string, model interface{}, remoteURL, remoteTemplateRoot string) (string, error) {
+func LoadTextTemplate(ctx context.Context, d templateDependencies, filesystem fs.FS, name, pattern string, model interface{}, remoteURL string) (string, error) {
 	var t Template
 	var err error
 	if remoteURL != "" {
-		t, err = loadRemoteTemplate(ctx, d, remoteURL, name, false, remoteTemplateRoot)
+		t, err = loadRemoteTemplate(ctx, d, remoteURL, false)
 		if err != nil {
 			return "", err
 		}
@@ -165,11 +171,11 @@ func LoadTextTemplate(ctx context.Context, d templateDependencies, filesystem fs
 	return b.String(), nil
 }
 
-func LoadHTMLTemplate(ctx context.Context, d templateDependencies, filesystem fs.FS, name, pattern string, model interface{}, remoteURL, remoteTemplateRoot string) (string, error) {
+func LoadHTMLTemplate(ctx context.Context, d templateDependencies, filesystem fs.FS, name, pattern string, model interface{}, remoteURL string) (string, error) {
 	var t Template
 	var err error
 	if remoteURL != "" {
-		t, err = loadRemoteTemplate(ctx, d, remoteURL, name, true, remoteTemplateRoot)
+		t, err = loadRemoteTemplate(ctx, d, remoteURL, true)
 		if err != nil {
 			return "", err
 		}
