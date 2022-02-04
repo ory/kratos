@@ -180,7 +180,7 @@ func TestLoadTextTemplate(t *testing.T) {
 
 		})
 
-		t.Run("method=Cache works", func(t *testing.T) {
+		t.Run("method=cache works", func(t *testing.T) {
 			temp1, err := ioutil.ReadFile("courier/builtin/templates/test_stub/email.body.html.en_US.gotmpl")
 			require.NoError(t, err)
 			b64Template1 := base64.StdEncoding.EncodeToString(temp1)
