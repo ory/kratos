@@ -193,7 +193,7 @@ func TestRecovery(t *testing.T) {
 	_ = testhelpers.NewSettingsUIFlowEchoServer(t, reg)
 	_ = testhelpers.NewErrorTestServer(t, reg)
 
-	public, _ := testhelpers.NewKratosServerWithCSRF(t, reg)
+	public, _, publicRouter, _ := testhelpers.NewKratosServerWithCSRFAndRouters(t, reg)
 
 	var createIdentityToRecover = func(email string) *identity.Identity {
 		var id = &identity.Identity{
@@ -480,9 +480,7 @@ func TestRecovery(t *testing.T) {
 	})
 
 	t.Run("description=should recover an account and set the csrf cookies", func(t *testing.T) {
-		recoveryEmail := "recoverme1@ory.sh"
-
-		var check = func(t *testing.T, actual string) {
+		var check = func(t *testing.T, actual, recoveryEmail string, do func(*http.Client, *http.Request) (*http.Response, error)) {
 			message := testhelpers.CourierExpectMessage(t, reg, recoveryEmail, "Recover access to your account")
 			recoveryLink := testhelpers.CourierExpectLinkInMessage(t, message, 1)
 
@@ -490,7 +488,7 @@ func TestRecovery(t *testing.T) {
 			cl.CheckRedirect = func(req *http.Request, via []*http.Request) error {
 				return http.ErrUseLastResponse
 			}
-			res, err := cl.Get(recoveryLink)
+			res, err := do(cl, x.NewTestHTTPRequest(t, "GET", recoveryLink, nil))
 			require.NoError(t, err)
 			require.NoError(t, res.Body.Close())
 			assert.Equal(t, http.StatusSeeOther, res.StatusCode)
@@ -507,11 +505,24 @@ func TestRecovery(t *testing.T) {
 			assert.Equal(t, http.StatusOK, actualRes.StatusCode, "%s", body)
 		}
 
-		var values = func(v url.Values) {
-			v.Set("email", recoveryEmail)
-		}
+		t.Run("case=unauthenticated", func(t *testing.T) {
+			email := "recoverme1@ory.sh"
+			var values = func(v url.Values) {
+				v.Set("email", email)
+			}
+			check(t, expectSuccess(t, nil, false, false, values), email, (*http.Client).Do)
+		})
 
-		check(t, expectSuccess(t, nil, false, false, values))
+		t.Run("case=already logged into another account", func(t *testing.T) {
+			email := "recoverme2@ory.sh"
+			var values = func(v url.Values) {
+				v.Set("email", email)
+			}
+			check(t, expectSuccess(t, nil, false, false, values), email, func(cl *http.Client, req *http.Request) (*http.Response, error) {
+				_, res := testhelpers.MockMakeAuthenticatedRequestWithClient(t, reg, conf, publicRouter.Router, req, cl)
+				return res, nil
+			})
+		})
 	})
 
 	t.Run("description=should recover and invalidate all other sessions if hook is set", func(t *testing.T) {

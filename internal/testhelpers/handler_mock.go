@@ -56,10 +56,13 @@ func MockGetSession(t *testing.T, reg mockDeps) httprouter.Handle {
 }
 
 func MockMakeAuthenticatedRequest(t *testing.T, reg mockDeps, conf *config.Config, router *httprouter.Router, req *http.Request) ([]byte, *http.Response) {
+	return MockMakeAuthenticatedRequestWithClient(t, reg, conf, router, req, NewClientWithCookies(t))
+}
+
+func MockMakeAuthenticatedRequestWithClient(t *testing.T, reg mockDeps, conf *config.Config, router *httprouter.Router, req *http.Request, client *http.Client) ([]byte, *http.Response) {
 	set := "/" + uuid.New().String() + "/set"
 	router.GET(set, MockSetSession(t, reg, conf))
 
-	client := NewClientWithCookies(t)
 	MockHydrateCookieClient(t, client, "http://"+req.URL.Host+set+"?"+req.URL.Query().Encode())
 
 	res, err := client.Do(req)
