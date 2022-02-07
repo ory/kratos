@@ -218,9 +218,8 @@ type (
 		HTML      string `json:"html"`
 	}
 	CourierEmailTemplate struct {
-		TemplateRoot string                    `json:"template_root,omitempty"`
-		Body         *CourierEmailBodyTemplate `json:"body"`
-		Subject      string                    `json:"subject"`
+		Body    *CourierEmailBodyTemplate `json:"body"`
+		Subject string                    `json:"subject"`
 	}
 	Config struct {
 		l              *logrusx.Logger
@@ -871,7 +870,6 @@ func (p *Config) CourierTemplatesRoot() string {
 
 func (p *Config) CourierTemplatesHelper(key string) *CourierEmailTemplate {
 	courierTemplate := &CourierEmailTemplate{
-		TemplateRoot: "",
 		Body: &CourierEmailBodyTemplate{
 			PlainText: "",
 			HTML:      "",

@@ -16,14 +16,11 @@ courier:
     recovery:
       invalid:
         email:
-          # template_root could be necessary when there are nested templates
-          template_root: "root"
           body:
-            html: base64://e3tkZWZpbmUgcm9vdH19CkhpLAoKeW91IChvciBzb21lb25lIGVsc2UpIGVudGVyZWQgdGhpcyBlbWFpbCBhZGRyZXNzIHdoZW4gdHJ5aW5nIHRvIHJlY292ZXIgYWNjZXNzIHRvIGFuIGFjY291bnQuCgpIb3dldmVyLCB0aGlzIGVtYWlsIGFkZHJlc3MgaXMgbm90IG9uIG91ciBkYXRhYmFzZSBvZiByZWdpc3RlcmVkIHVzZXJzIGFuZCB0aGVyZWZvcmUgdGhlIGF0dGVtcHQgaGFzIGZhaWxlZC4KCklmIHRoaXMgd2FzIHlvdSwgY2hlY2sgaWYgeW91IHNpZ25lZCB1cCB1c2luZyBhIGRpZmZlcmVudCBhZGRyZXNzLgoKSWYgdGhpcyB3YXMgbm90IHlvdSwgcGxlYXNlIGlnbm9yZSB0aGlzIGVtYWlsLgp7ey0gZW5kIC19fQo=
+            html: base64://SGksCgp5b3UgKG9yIHNvbWVvbmUgZWxzZSkgZW50ZXJlZCB0aGlzIGVtYWlsIGFkZHJlc3Mgd2hlbiB0cnlpbmcgdG8gcmVjb3ZlciBhY2Nlc3MgdG8gYW4gYWNjb3VudC4KCkhvd2V2ZXIsIHRoaXMgZW1haWwgYWRkcmVzcyBpcyBub3Qgb24gb3VyIGRhdGFiYXNlIG9mIHJlZ2lzdGVyZWQgdXNlcnMgYW5kIHRoZXJlZm9yZSB0aGUgYXR0ZW1wdCBoYXMgZmFpbGVkLgoKSWYgdGhpcyB3YXMgeW91LCBjaGVjayBpZiB5b3Ugc2lnbmVkIHVwIHVzaW5nIGEgZGlmZmVyZW50IGFkZHJlc3MuCgpJZiB0aGlzIHdhcyBub3QgeW91LCBwbGVhc2UgaWdub3JlIHRoaXMgZW1haWwu
             # omit plaintext to verify it is validated
           subject: Account Access Attempted
       valid:
-        # omit template_root as it is not required on valid
         email:
           body:
             plaintext: base64://e3sgZGVmaW5lIGFmLVpBIH19CkhhbGxvLAoKSGVyc3RlbCBqb3UgcmVrZW5pbmcgZGV1ciBoaWVyZGllIHNrYWtlbCB0ZSB2b2xnOgp7ey0gZW5kIC19fQoKe3sgZGVmaW5lIGVuLVVTIH19CkhpLAoKcGxlYXNlIHJlY292ZXIgYWNjZXNzIHRvIHlvdXIgYWNjb3VudCBieSBjbGlja2luZyB0aGUgZm9sbG93aW5nIGxpbms6Cnt7LSBlbmQgLX19Cgp7ey0gaWYgZXEgLmxhbmcgImFmLVpBIiAtfX0KCnt7IHRlbXBsYXRlICJhZi1aQSIgLiB9fQoKe3stIGVsc2UgLX19Cgp7eyB0ZW1wbGF0ZSAiZW4tVVMiIH19Cgp7ey0gZW5kIC19fQp7eyAuUmVjb3ZlcnlVUkwgfX0K
