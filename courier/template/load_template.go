@@ -76,30 +76,30 @@ func loadBuiltInTemplate(filesystem fs.FS, name string, html bool) (Template, er
 }
 
 func loadRemoteTemplate(ctx context.Context, d templateDependencies, url string, html bool) (Template, error) {
-	var bb *bytes.Buffer
+	var b []byte
 	var err error
 
 	// instead of creating a new request always we always cache the bytes.Buffer using the url as the key
 	if t, found := Cache.Get(url); found {
-		bb = t.(*bytes.Buffer)
+		b = t.([]byte)
 	} else {
 		f := fetcher.NewFetcher(fetcher.WithClient(d.HTTPClient(ctx)))
-
-		bb, err = f.Fetch(url)
+		bb, err := f.Fetch(url)
 		if err != nil {
 			return nil, errors.WithStack(err)
 		}
-		_ = Cache.Add(url, bb)
+		b = bb.Bytes()
+		_ = Cache.Add(url, b)
 	}
 
 	var t Template
 	if html {
-		t, err = htemplate.New(url).Funcs(sprig.HtmlFuncMap()).Parse(bb.String())
+		t, err = htemplate.New(url).Funcs(sprig.HtmlFuncMap()).Parse(string(b))
 		if err != nil {
 			return nil, errors.WithStack(err)
 		}
 	} else {
-		t, err = template.New(url).Funcs(sprig.TxtFuncMap()).Parse(bb.String())
+		t, err = template.New(url).Funcs(sprig.TxtFuncMap()).Parse(string(b))
 		if err != nil {
 			return nil, errors.WithStack(err)
 		}
