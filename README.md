@@ -505,7 +505,20 @@ For more details, run:
 </pre>
 
 **Run only a singular test**
-Edit the `cypress.json` file located in the `test/e2e/` folder.
+
+Add `.only` to the test you would like to run.
+
+For example:
+
+```ts
+it.only('invalid remote recovery email template', () => {
+    ...
+})
+```
+
+**Run a subset of tests**
+
+This will require editing the `cypress.json` file located in the `test/e2e/` folder.
 
 Add the `testFiles` option and specify the test to run inside the `cypress/integration` folder.
 As an example we will add only the `network` tests.
