@@ -108,7 +108,7 @@ prepare() {
 
   (
     cd "$rn_ui_dir"
-    npm i -g expo-cli
+    npm i expo-cli
     WEB_PORT=4457 KRATOS_URL=http://localhost:4433 npm run web -- --non-interactive \
       >"${base}/test/e2e/rn-profile-app.e2e.log" 2>&1 &
   )

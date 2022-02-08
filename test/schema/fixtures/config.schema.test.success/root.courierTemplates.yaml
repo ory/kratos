@@ -1,0 +1,18 @@
+selfservice:
+  default_browser_return_url: "#/definitions/defaultReturnTo"
+
+dsn: foo
+
+identity:
+  schemas:
+    - id: default
+      url: https://example.com
+
+courier:
+  template_override_path: foo
+  smtp:
+    connection_uri: smtps://foo:bar@my-mailserver:1234/
+    from_address: no-reply@ory.kratos.sh
+  templates:
+    recovery: "#/definitions/courierTemplates"
+    verification: "#/definitions/courierTemplates"

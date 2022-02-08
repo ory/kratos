@@ -62,6 +62,10 @@ const (
 	ViperKeyDSN                                              = "dsn"
 	ViperKeyCourierSMTPURL                                   = "courier.smtp.connection_uri"
 	ViperKeyCourierTemplatesPath                             = "courier.template_override_path"
+	ViperKeyCourierTemplatesRecoveryInvalidEmail             = "courier.templates.recovery.invalid.email"
+	ViperKeyCourierTemplatesRecoveryValidEmail               = "courier.templates.recovery.valid.email"
+	ViperKeyCourierTemplatesVerificationInvalidEmail         = "courier.templates.verification.invalid.email"
+	ViperKeyCourierTemplatesVerificationValidEmail           = "courier.templates.verification.valid.email"
 	ViperKeyCourierSMTPFrom                                  = "courier.smtp.from_address"
 	ViperKeyCourierSMTPFromName                              = "courier.smtp.from_name"
 	ViperKeyCourierSMTPHeaders                               = "courier.smtp.headers"
@@ -208,16 +212,34 @@ type (
 		MinPasswordLength                uint   `json:"min_password_length"`
 		IdentifierSimilarityCheckEnabled bool   `json:"identifier_similarity_check_enabled"`
 	}
-	Schemas []Schema
-	Config  struct {
+	Schemas                  []Schema
+	CourierEmailBodyTemplate struct {
+		PlainText string `json:"plaintext"`
+		HTML      string `json:"html"`
+	}
+	CourierEmailTemplate struct {
+		Body    *CourierEmailBodyTemplate `json:"body"`
+		Subject string                    `json:"subject"`
+	}
+	Config struct {
 		l              *logrusx.Logger
 		p              *configx.Provider
 		identitySchema *jsonschema.Schema
 		stdOutOrErr    io.Writer
 	}
-
 	Provider interface {
 		Config(ctx context.Context) *Config
+	}
+	CourierConfigs interface {
+		CourierSMTPURL() *url.URL
+		CourierSMTPFrom() string
+		CourierSMTPFromName() string
+		CourierSMTPHeaders() map[string]string
+		CourierTemplatesRoot() string
+		CourierTemplatesVerificationInvalid() *CourierEmailTemplate
+		CourierTemplatesVerificationValid() *CourierEmailTemplate
+		CourierTemplatesRecoveryInvalid() *CourierEmailTemplate
+		CourierTemplatesRecoveryValid() *CourierEmailTemplate
 	}
 )
 
@@ -844,6 +866,53 @@ func (p *Config) CourierSMTPFromName() string {
 
 func (p *Config) CourierTemplatesRoot() string {
 	return p.p.StringF(ViperKeyCourierTemplatesPath, "courier/builtin/templates")
+}
+
+func (p *Config) CourierTemplatesHelper(key string) *CourierEmailTemplate {
+	courierTemplate := &CourierEmailTemplate{
+		Body: &CourierEmailBodyTemplate{
+			PlainText: "",
+			HTML:      "",
+		},
+		Subject: "",
+	}
+
+	if !p.p.Exists(key) {
+		return courierTemplate
+	}
+
+	out, err := p.p.Marshal(kjson.Parser())
+	if err != nil {
+		p.l.WithError(err).Fatalf("Unable to dencode values from %s.", key)
+		return courierTemplate
+	}
+
+	config := gjson.GetBytes(out, key).Raw
+	if len(config) == 0 {
+		return courierTemplate
+	}
+
+	if err := json.NewDecoder(bytes.NewBufferString(config)).Decode(&courierTemplate); err != nil {
+		p.l.WithError(err).Fatalf("Unable to encode values from %s.", key)
+		return courierTemplate
+	}
+	return courierTemplate
+}
+
+func (p *Config) CourierTemplatesVerificationInvalid() *CourierEmailTemplate {
+	return p.CourierTemplatesHelper(ViperKeyCourierTemplatesVerificationInvalidEmail)
+}
+
+func (p *Config) CourierTemplatesVerificationValid() *CourierEmailTemplate {
+	return p.CourierTemplatesHelper(ViperKeyCourierTemplatesVerificationValidEmail)
+}
+
+func (p *Config) CourierTemplatesRecoveryInvalid() *CourierEmailTemplate {
+	return p.CourierTemplatesHelper(ViperKeyCourierTemplatesRecoveryInvalidEmail)
+}
+
+func (p *Config) CourierTemplatesRecoveryValid() *CourierEmailTemplate {
+	return p.CourierTemplatesHelper(ViperKeyCourierTemplatesRecoveryValidEmail)
 }
 
 func (p *Config) CourierSMTPHeaders() map[string]string {

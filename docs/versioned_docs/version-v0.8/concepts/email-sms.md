@@ -3,8 +3,8 @@ id: email-sms
 title: Out-of-band communication via E-Mail and SMS
 ---
 
-Ory Kratos sends out-of-band messages via SMS or E-Mail. The following exemplary use cases require these messages:
-
+Ory Kratos sends out-of-band messages via SMS or E-Mail. The following exemplary
+use cases require these messages:
 
 - Send an account activation email
 - Verify an E-Mail address or mobile phone number using SMS
@@ -92,17 +92,77 @@ courier:
   #    > set COURIER_TEMPLATE_OVERRIDE_PATH=<value>
   #
   template_override_path: /conf/courier-templates
+
+  ## Override with remote templates ##
+  #
+  # You can specify specific template values to override or the whole template
+  #
+  # Supported templates are:
+  # - verification
+  #   - valid
+  #   - invalid
+  # - recovery
+  #   - valid
+  #   - invalid
+  #
+  # Each template supports the following layout. A singular key can be specified under `email` to override the defaults.
+  # When specifying `body`, however, Kratos expects `html` and `plaintext` to be set.
+  # email:
+  #   subject: http(s)://, file://, base64://
+  #   body:
+  #     html: http(s)://, file://, base64://
+  #     plaintext: http(s)://, file://, base64://
+  templates:
+    # we can specify here
+    verification:
+      valid:
+        email:
+          body:
+            # plaintext and html are required when overriding the body
+            html: https://some-remote-resource/gotmpl
+            plaintext: base64://SGV5IHlvdSBkZWNvZGVkIG1lIDop
+          # optional
+          subject: file://some-file/subject.gotmpl
+      # we can also omit the `invalid` field here if you wish to use the default built-in templates
+      # or template_override_path
+      invalid:
+        # same configuration structure as valid
+    # this is also optional and can be omitted in preference for the default built-in templates
+    # or template_override_path
+    recovery:
+      # the configuration structure is the same as the verification
 ```
 
 Ory Kratos comes with built-in templates. If you wish to define your own, custom
-templates, you should define `template_override_path`, as shown above, to
-indicate where your custom templates are located. This will become the
-`<template-root>` for your custom templates, as indicated below.
+templates, you can use two methods.
+
+1. Define each template individually through `templates` as shown above for
+   `recovery.invalid`, `recovery.valid`, `verification.invalid` and
+   `verification.valid`. None of the configurations listed are mandatory and
+   will always fallback to the build-in templates or what is defined by
+   `template_override_path`.
+2. Define `template_override_path`, as shown above, to indicate where your
+   custom templates are located. This will become the `<template-root>` for your
+   custom templates, as indicated below.
+
+### Remote Templates
+
+Templates can be added through `http://`, `file://` and `base64://` URIs in the
+configurations. The only mandatory fields are `plaintext` and `html` when
+defining the `body` key. All other keys are optional and will always fallback to
+the built-in templates or the `template_override_path`.
+
+### Template Override Path
 
 `email.subject.gotmpl`, `email.body.gotmpl` and `email.body.plaintext.gotmpl`
 are common template file names expected in the sub directories of the root
 directory, corresponding to the respective methods for filling e-mail subject
-and body.
+and body. Both plain text and HTML templates are required. The courier uses them
+as
+[alternatives](https://github.com/ory/kratos/blob/871ee0475a27771dd6395aad617f41a22ccc3b9a/courier/courier.go#L205)
+for fallback.
+
+### Creating Templates
 
 > Templates use the golang template engine in the `text/template` package for
 > rendering the `email.subject.gotmpl` and `email.body.plaintext.gotmpl`
@@ -143,6 +203,9 @@ Hi, please verify your account by clicking the following link:
 ```gotmp title="courier/template/templates/verification/valid/email.body.plaintext.gotmpl"
 Hi, please verify your account by clicking the following link: {{ .VerificationURL }}
 ```
+
+If you're running multiple instances of Kratos and separate courier job, make
+sure to provide templates to all instances (both Kratos and courier).
 
 ### The Identity attribute
 
@@ -194,6 +257,40 @@ As indicated by the example, we need a root template, which is the
 the following pattern: `email.body*`. You can also see that the `Identity` of
 the user is available in all templates, and that you can use Sprig functions
 also in the nested templates.
+
+### Nested templates with remote templates
+
+When remote templates are used in Kratos, the dynamics of loading nested
+templates change. The templates cannot reference templates outside itself as
+with templates loaded from a singular directory.
+
+The template will need to contain the nested templates in the same file. See
+below for an example.
+
+```yaml title="path/to/my/kratos/config.yml"
+courier:
+  templates:
+    verify:
+      email:
+        body:
+          plaintext: https://some-remote-template/tmp.gotmpl
+          html: https://some-remote-template/tmp.gotmpl
+```
+
+**Our template:**
+
+```gotmpl title="https://some-remote-template/tmp.gotmpl"
+
+{{define "en_US"}}
+{{ $l := cat "lang=" .lang }}
+{{ nospace $l }}
+{{end}}
+
+{{- if eq .lang "en_US" -}}
+{{ template "en_US" . }}
+{{- end -}}
+
+```
 
 ### Custom Headers
 

@@ -783,6 +783,76 @@
           ]
         }
       }
+    },
+    "courierTemplates": {
+      "type": "object",
+      "properties": {
+        "invalid": {
+          "type": "object",
+          "properties": {
+            "email": {
+              "$ref": "#/definitions/emailCourierTemplate"
+            }
+          },
+          "required": [
+            "email"
+          ]
+        },
+        "valid": {
+          "type": "object",
+          "properties": {
+            "email": {
+              "$ref": "#/definitions/emailCourierTemplate"
+            }
+          },
+          "required": [
+            "email"
+          ]
+        }
+      }
+    },
+    "emailCourierTemplate": {
+      "type": "object",
+      "properties": {
+        "body": {
+          "type": "object",
+          "properties": {
+            "plaintext": {
+              "type": "string",
+              "description": "The fallback template for email clients that do not support html.",
+              "format": "uri",
+              "examples": [
+                "file://path/to/body.plaintext.gotmpl",
+                "https://foo.bar.com/path/to/body.plaintext.gotmpl",
+                "base64://e3sgZGVmaW5lIGFmLVpBIH19CkhhbGxvLAoKSGVyc3RlbCBqb3UgcmVrZW5pbmcgZGV1ciBoaWVyZGllIHNrYWtlbCB0ZSB2b2xnOgp7ey0gZW5kIC19fQoKe3sgZGVmaW5lIGVuLVVTIH19CkhpLAoKcGxlYXNlIHJlY292ZXIgYWNjZXNzIHRvIHlvdXIgYWNjb3VudCBieSBjbGlja2luZyB0aGUgZm9sbG93aW5nIGxpbms6Cnt7LSBlbmQgLX19Cgp7ey0gaWYgZXEgLmxhbmcgImFmLVpBIiAtfX0KCnt7IHRlbXBsYXRlICJhZi1aQSIgLiB9fQoKe3stIGVsc2UgLX19Cgp7eyB0ZW1wbGF0ZSAiZW4tVVMiIH19Cgp7ey0gZW5kIC19fQp7eyAuUmVjb3ZlcnlVUkwgfX0K"
+              ]
+            },
+            "html": {
+              "type": "string",
+              "description": "The default template used for sending out emails. The template can contain HTML ",
+              "format": "uri",
+              "examples": [
+                "file://path/to/body.html.gotmpl",
+                "https://foo.bar.com/path/to/body.html.gotmpl",
+                "base64://e3sgZGVmaW5lIGFmLVpBIH19CkhhbGxvLAoKSGVyc3RlbCBqb3UgcmVrZW5pbmcgZGV1ciBoaWVyZGllIHNrYWtlbCB0ZSB2b2xnOgp7ey0gZW5kIC19fQoKe3sgZGVmaW5lIGVuLVVTIH19CkhpLAoKcGxlYXNlIHJlY292ZXIgYWNjZXNzIHRvIHlvdXIgYWNjb3VudCBieSBjbGlja2luZyB0aGUgZm9sbG93aW5nIGxpbms6Cnt7LSBlbmQgLX19Cgp7ey0gaWYgZXEgLmxhbmcgImFmLVpBIiAtfX0KCnt7IHRlbXBsYXRlICJhZi1aQSIgLiB9fQoKe3stIGVsc2UgLX19Cgp7eyB0ZW1wbGF0ZSAiZW4tVVMiIH19Cgp7ey0gZW5kIC19fQo8YSBocmVmPSJ7eyAuUmVjb3ZlcnlVUkwgfX0iPnt7IC5SZWNvdmVyeVVSTCB9fTwvYT4"
+              ]
+            }
+          },
+          "required": [
+            "plaintext",
+            "html"
+          ]
+        },
+        "subject": {
+          "type": "string",
+          "format": "uri",
+          "examples": [
+            "file://path/to/subject.gotmpl",
+            "https://foo.bar.com/path/to/subject.gotmpl",
+            "base64://e3sgZGVmaW5lIGFmLVpBIH19CkhhbGxvLAoKSGVyc3RlbCBqb3UgcmVrZW5pbmcgZGV1ciBoaWVyZGllIHNrYWtlbCB0ZSB2b2xnOgp7ey0gZW5kIC19fQoKe3sgZGVmaW5lIGVuLVVTIH19CkhpLAoKcGxlYXNlIHJlY292ZXIgYWNjZXNzIHRvIHlvdXIgYWNjb3VudCBieSBjbGlja2luZyB0aGUgZm9sbG93aW5nIGxpbms6Cnt7LSBlbmQgLX19Cgp7ey0gaWYgZXEgLmxhbmcgImFmLVpBIiAtfX0KCnt7IHRlbXBsYXRlICJhZi1aQSIgLiB9fQoKe3stIGVsc2UgLX19Cgp7eyB0ZW1wbGF0ZSAiZW4tVVMiIH19Cgp7ey0gZW5kIC19fQo8YSBocmVmPSJ7eyAuUmVjb3ZlcnlVUkwgfX0iPnt7IC5SZWNvdmVyeVVSTCB9fTwvYT4"
+          ]
+        }
+      }
     }
   },
   "properties": {
@@ -1305,6 +1375,17 @@
       "title": "Courier configuration",
       "description": "The courier is responsible for sending and delivering messages over email, sms, and other means.",
       "properties": {
+        "templates": {
+          "type": "object",
+          "properties": {
+            "recovery": {
+              "$ref": "#/definitions/courierTemplates"
+            },
+            "verification": {
+              "$ref": "#/definitions/courierTemplates"
+            }
+          }
+        },
         "template_override_path": {
           "type": "string",
           "title": "Override message templates",
