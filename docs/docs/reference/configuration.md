@@ -37,24 +37,7 @@ section.
 ## identity ##
 #
 identity:
-  ## JSON Schema URL for default identity traits ##
-  #
-  # URL for JSON Schema which describes a default identity's traits. Can be a file path, a https URL, or a base64 encoded string. Will have ID: "default"
-  #
-  # Examples:
-  # - file://path/to/identity.traits.schema.json
-  # - https://foo.bar.com/path/to/identity.traits.schema.json
-  # - base64://ewogICIkc2NoZW1hIjogImh0dHA6Ly9qc29uLXNjaGVtYS5vcmcvZHJhZnQtMDcvc2NoZW1hIyIsCiAgInR5cGUiOiAib2JqZWN0IiwKICAicHJvcGVydGllcyI6IHsKICAgICJiYXIiOiB7CiAgICAgICJ0eXBlIjogInN0cmluZyIKICAgIH0KICB9LAogICJyZXF1aXJlZCI6IFsKICAgICJiYXIiCiAgXQp9
-  #
-  # Set this value using environment variables on
-  # - Linux/macOS:
-  #    $ export IDENTITY_DEFAULT_SCHEMA_URL=<value>
-  # - Windows Command Line (CMD):
-  #    > set IDENTITY_DEFAULT_SCHEMA_URL=<value>
-  #
-  default_schema_url: file://path/to/identity.traits.schema.json
-
-  ## Additional JSON Schemas for Identity Traits ##
+  ## All JSON Schemas for Identity Traits ##
   #
   # Examples:
   # - - id: customer
@@ -77,6 +60,20 @@ identity:
       url: https://foo.bar.com/path/to/employee.traits.schema.json
     - id: employee-v2
       url: file://path/to/employee.v2.traits.schema.json
+
+  ## The default Identity Schema ##
+  #
+  # This Identity Schema will be used as the default for self-service flows. Its ID needs to exist in the "schemas" list.
+  #
+  # Default value: default
+  #
+  # Set this value using environment variables on
+  # - Linux/macOS:
+  #    $ export IDENTITY_DEFAULT_SCHEMA_ID=<value>
+  # - Windows Command Line (CMD):
+  #    > set IDENTITY_DEFAULT_SCHEMA_ID=<value>
+  #
+  default_schema_id: ''
 
 ## Data Source Name ##
 #
@@ -2558,4 +2555,245 @@ courier:
   #    > set COURIER_TEMPLATE_OVERRIDE_PATH=<value>
   #
   template_override_path: /conf/courier-templates
+
+  ## templates ##
+  #
+  templates:
+    ## verification ##
+    #
+    verification:
+      ## valid ##
+      #
+      valid:
+        ## email ##
+        #
+        email:
+          ## subject ##
+          #
+          # Examples:
+          # - file://path/to/subject.gotmpl
+          # - https://foo.bar.com/path/to/subject.gotmpl
+          # - base64://e3sgZGVmaW5lIGFmLVpBIH19CkhhbGxvLAoKSGVyc3RlbCBqb3UgcmVrZW5pbmcgZGV1ciBoaWVyZGllIHNrYWtlbCB0ZSB2b2xnOgp7ey0gZW5kIC19fQoKe3sgZGVmaW5lIGVuLVVTIH19CkhpLAoKcGxlYXNlIHJlY292ZXIgYWNjZXNzIHRvIHlvdXIgYWNjb3VudCBieSBjbGlja2luZyB0aGUgZm9sbG93aW5nIGxpbms6Cnt7LSBlbmQgLX19Cgp7ey0gaWYgZXEgLmxhbmcgImFmLVpBIiAtfX0KCnt7IHRlbXBsYXRlICJhZi1aQSIgLiB9fQoKe3stIGVsc2UgLX19Cgp7eyB0ZW1wbGF0ZSAiZW4tVVMiIH19Cgp7ey0gZW5kIC19fQo8YSBocmVmPSJ7eyAuUmVjb3ZlcnlVUkwgfX0iPnt7IC5SZWNvdmVyeVVSTCB9fTwvYT4
+          #
+          # Set this value using environment variables on
+          # - Linux/macOS:
+          #    $ export COURIER_TEMPLATES_VERIFICATION_VALID_EMAIL_SUBJECT=<value>
+          # - Windows Command Line (CMD):
+          #    > set COURIER_TEMPLATES_VERIFICATION_VALID_EMAIL_SUBJECT=<value>
+          #
+          subject: file://path/to/subject.gotmpl
+
+          ## body ##
+          #
+          body:
+            ## plaintext ##
+            #
+            # The fallback template for email clients that do not support html.
+            #
+            # Examples:
+            # - file://path/to/body.plaintext.gotmpl
+            # - https://foo.bar.com/path/to/body.plaintext.gotmpl
+            # - base64://e3sgZGVmaW5lIGFmLVpBIH19CkhhbGxvLAoKSGVyc3RlbCBqb3UgcmVrZW5pbmcgZGV1ciBoaWVyZGllIHNrYWtlbCB0ZSB2b2xnOgp7ey0gZW5kIC19fQoKe3sgZGVmaW5lIGVuLVVTIH19CkhpLAoKcGxlYXNlIHJlY292ZXIgYWNjZXNzIHRvIHlvdXIgYWNjb3VudCBieSBjbGlja2luZyB0aGUgZm9sbG93aW5nIGxpbms6Cnt7LSBlbmQgLX19Cgp7ey0gaWYgZXEgLmxhbmcgImFmLVpBIiAtfX0KCnt7IHRlbXBsYXRlICJhZi1aQSIgLiB9fQoKe3stIGVsc2UgLX19Cgp7eyB0ZW1wbGF0ZSAiZW4tVVMiIH19Cgp7ey0gZW5kIC19fQp7eyAuUmVjb3ZlcnlVUkwgfX0K
+            #
+            # Set this value using environment variables on
+            # - Linux/macOS:
+            #    $ export COURIER_TEMPLATES_VERIFICATION_VALID_EMAIL_BODY_PLAINTEXT=<value>
+            # - Windows Command Line (CMD):
+            #    > set COURIER_TEMPLATES_VERIFICATION_VALID_EMAIL_BODY_PLAINTEXT=<value>
+            #
+            plaintext: file://path/to/body.plaintext.gotmpl
+
+            ## html ##
+            #
+            # The default template used for sending out emails. The template can contain HTML
+            #
+            # Examples:
+            # - file://path/to/body.html.gotmpl
+            # - https://foo.bar.com/path/to/body.html.gotmpl
+            # - base64://e3sgZGVmaW5lIGFmLVpBIH19CkhhbGxvLAoKSGVyc3RlbCBqb3UgcmVrZW5pbmcgZGV1ciBoaWVyZGllIHNrYWtlbCB0ZSB2b2xnOgp7ey0gZW5kIC19fQoKe3sgZGVmaW5lIGVuLVVTIH19CkhpLAoKcGxlYXNlIHJlY292ZXIgYWNjZXNzIHRvIHlvdXIgYWNjb3VudCBieSBjbGlja2luZyB0aGUgZm9sbG93aW5nIGxpbms6Cnt7LSBlbmQgLX19Cgp7ey0gaWYgZXEgLmxhbmcgImFmLVpBIiAtfX0KCnt7IHRlbXBsYXRlICJhZi1aQSIgLiB9fQoKe3stIGVsc2UgLX19Cgp7eyB0ZW1wbGF0ZSAiZW4tVVMiIH19Cgp7ey0gZW5kIC19fQo8YSBocmVmPSJ7eyAuUmVjb3ZlcnlVUkwgfX0iPnt7IC5SZWNvdmVyeVVSTCB9fTwvYT4
+            #
+            # Set this value using environment variables on
+            # - Linux/macOS:
+            #    $ export COURIER_TEMPLATES_VERIFICATION_VALID_EMAIL_BODY_HTML=<value>
+            # - Windows Command Line (CMD):
+            #    > set COURIER_TEMPLATES_VERIFICATION_VALID_EMAIL_BODY_HTML=<value>
+            #
+            html: file://path/to/body.html.gotmpl
+
+      ## invalid ##
+      #
+      invalid:
+        ## email ##
+        #
+        email:
+          ## subject ##
+          #
+          # Examples:
+          # - file://path/to/subject.gotmpl
+          # - https://foo.bar.com/path/to/subject.gotmpl
+          # - base64://e3sgZGVmaW5lIGFmLVpBIH19CkhhbGxvLAoKSGVyc3RlbCBqb3UgcmVrZW5pbmcgZGV1ciBoaWVyZGllIHNrYWtlbCB0ZSB2b2xnOgp7ey0gZW5kIC19fQoKe3sgZGVmaW5lIGVuLVVTIH19CkhpLAoKcGxlYXNlIHJlY292ZXIgYWNjZXNzIHRvIHlvdXIgYWNjb3VudCBieSBjbGlja2luZyB0aGUgZm9sbG93aW5nIGxpbms6Cnt7LSBlbmQgLX19Cgp7ey0gaWYgZXEgLmxhbmcgImFmLVpBIiAtfX0KCnt7IHRlbXBsYXRlICJhZi1aQSIgLiB9fQoKe3stIGVsc2UgLX19Cgp7eyB0ZW1wbGF0ZSAiZW4tVVMiIH19Cgp7ey0gZW5kIC19fQo8YSBocmVmPSJ7eyAuUmVjb3ZlcnlVUkwgfX0iPnt7IC5SZWNvdmVyeVVSTCB9fTwvYT4
+          #
+          # Set this value using environment variables on
+          # - Linux/macOS:
+          #    $ export COURIER_TEMPLATES_VERIFICATION_INVALID_EMAIL_SUBJECT=<value>
+          # - Windows Command Line (CMD):
+          #    > set COURIER_TEMPLATES_VERIFICATION_INVALID_EMAIL_SUBJECT=<value>
+          #
+          subject: file://path/to/subject.gotmpl
+
+          ## body ##
+          #
+          body:
+            ## plaintext ##
+            #
+            # The fallback template for email clients that do not support html.
+            #
+            # Examples:
+            # - file://path/to/body.plaintext.gotmpl
+            # - https://foo.bar.com/path/to/body.plaintext.gotmpl
+            # - base64://e3sgZGVmaW5lIGFmLVpBIH19CkhhbGxvLAoKSGVyc3RlbCBqb3UgcmVrZW5pbmcgZGV1ciBoaWVyZGllIHNrYWtlbCB0ZSB2b2xnOgp7ey0gZW5kIC19fQoKe3sgZGVmaW5lIGVuLVVTIH19CkhpLAoKcGxlYXNlIHJlY292ZXIgYWNjZXNzIHRvIHlvdXIgYWNjb3VudCBieSBjbGlja2luZyB0aGUgZm9sbG93aW5nIGxpbms6Cnt7LSBlbmQgLX19Cgp7ey0gaWYgZXEgLmxhbmcgImFmLVpBIiAtfX0KCnt7IHRlbXBsYXRlICJhZi1aQSIgLiB9fQoKe3stIGVsc2UgLX19Cgp7eyB0ZW1wbGF0ZSAiZW4tVVMiIH19Cgp7ey0gZW5kIC19fQp7eyAuUmVjb3ZlcnlVUkwgfX0K
+            #
+            # Set this value using environment variables on
+            # - Linux/macOS:
+            #    $ export COURIER_TEMPLATES_VERIFICATION_INVALID_EMAIL_BODY_PLAINTEXT=<value>
+            # - Windows Command Line (CMD):
+            #    > set COURIER_TEMPLATES_VERIFICATION_INVALID_EMAIL_BODY_PLAINTEXT=<value>
+            #
+            plaintext: file://path/to/body.plaintext.gotmpl
+
+            ## html ##
+            #
+            # The default template used for sending out emails. The template can contain HTML
+            #
+            # Examples:
+            # - file://path/to/body.html.gotmpl
+            # - https://foo.bar.com/path/to/body.html.gotmpl
+            # - base64://e3sgZGVmaW5lIGFmLVpBIH19CkhhbGxvLAoKSGVyc3RlbCBqb3UgcmVrZW5pbmcgZGV1ciBoaWVyZGllIHNrYWtlbCB0ZSB2b2xnOgp7ey0gZW5kIC19fQoKe3sgZGVmaW5lIGVuLVVTIH19CkhpLAoKcGxlYXNlIHJlY292ZXIgYWNjZXNzIHRvIHlvdXIgYWNjb3VudCBieSBjbGlja2luZyB0aGUgZm9sbG93aW5nIGxpbms6Cnt7LSBlbmQgLX19Cgp7ey0gaWYgZXEgLmxhbmcgImFmLVpBIiAtfX0KCnt7IHRlbXBsYXRlICJhZi1aQSIgLiB9fQoKe3stIGVsc2UgLX19Cgp7eyB0ZW1wbGF0ZSAiZW4tVVMiIH19Cgp7ey0gZW5kIC19fQo8YSBocmVmPSJ7eyAuUmVjb3ZlcnlVUkwgfX0iPnt7IC5SZWNvdmVyeVVSTCB9fTwvYT4
+            #
+            # Set this value using environment variables on
+            # - Linux/macOS:
+            #    $ export COURIER_TEMPLATES_VERIFICATION_INVALID_EMAIL_BODY_HTML=<value>
+            # - Windows Command Line (CMD):
+            #    > set COURIER_TEMPLATES_VERIFICATION_INVALID_EMAIL_BODY_HTML=<value>
+            #
+            html: file://path/to/body.html.gotmpl
+
+    ## recovery ##
+    #
+    recovery:
+      ## valid ##
+      #
+      valid:
+        ## email ##
+        #
+        email:
+          ## subject ##
+          #
+          # Examples:
+          # - file://path/to/subject.gotmpl
+          # - https://foo.bar.com/path/to/subject.gotmpl
+          # - base64://e3sgZGVmaW5lIGFmLVpBIH19CkhhbGxvLAoKSGVyc3RlbCBqb3UgcmVrZW5pbmcgZGV1ciBoaWVyZGllIHNrYWtlbCB0ZSB2b2xnOgp7ey0gZW5kIC19fQoKe3sgZGVmaW5lIGVuLVVTIH19CkhpLAoKcGxlYXNlIHJlY292ZXIgYWNjZXNzIHRvIHlvdXIgYWNjb3VudCBieSBjbGlja2luZyB0aGUgZm9sbG93aW5nIGxpbms6Cnt7LSBlbmQgLX19Cgp7ey0gaWYgZXEgLmxhbmcgImFmLVpBIiAtfX0KCnt7IHRlbXBsYXRlICJhZi1aQSIgLiB9fQoKe3stIGVsc2UgLX19Cgp7eyB0ZW1wbGF0ZSAiZW4tVVMiIH19Cgp7ey0gZW5kIC19fQo8YSBocmVmPSJ7eyAuUmVjb3ZlcnlVUkwgfX0iPnt7IC5SZWNvdmVyeVVSTCB9fTwvYT4
+          #
+          # Set this value using environment variables on
+          # - Linux/macOS:
+          #    $ export COURIER_TEMPLATES_RECOVERY_VALID_EMAIL_SUBJECT=<value>
+          # - Windows Command Line (CMD):
+          #    > set COURIER_TEMPLATES_RECOVERY_VALID_EMAIL_SUBJECT=<value>
+          #
+          subject: file://path/to/subject.gotmpl
+
+          ## body ##
+          #
+          body:
+            ## plaintext ##
+            #
+            # The fallback template for email clients that do not support html.
+            #
+            # Examples:
+            # - file://path/to/body.plaintext.gotmpl
+            # - https://foo.bar.com/path/to/body.plaintext.gotmpl
+            # - base64://e3sgZGVmaW5lIGFmLVpBIH19CkhhbGxvLAoKSGVyc3RlbCBqb3UgcmVrZW5pbmcgZGV1ciBoaWVyZGllIHNrYWtlbCB0ZSB2b2xnOgp7ey0gZW5kIC19fQoKe3sgZGVmaW5lIGVuLVVTIH19CkhpLAoKcGxlYXNlIHJlY292ZXIgYWNjZXNzIHRvIHlvdXIgYWNjb3VudCBieSBjbGlja2luZyB0aGUgZm9sbG93aW5nIGxpbms6Cnt7LSBlbmQgLX19Cgp7ey0gaWYgZXEgLmxhbmcgImFmLVpBIiAtfX0KCnt7IHRlbXBsYXRlICJhZi1aQSIgLiB9fQoKe3stIGVsc2UgLX19Cgp7eyB0ZW1wbGF0ZSAiZW4tVVMiIH19Cgp7ey0gZW5kIC19fQp7eyAuUmVjb3ZlcnlVUkwgfX0K
+            #
+            # Set this value using environment variables on
+            # - Linux/macOS:
+            #    $ export COURIER_TEMPLATES_RECOVERY_VALID_EMAIL_BODY_PLAINTEXT=<value>
+            # - Windows Command Line (CMD):
+            #    > set COURIER_TEMPLATES_RECOVERY_VALID_EMAIL_BODY_PLAINTEXT=<value>
+            #
+            plaintext: file://path/to/body.plaintext.gotmpl
+
+            ## html ##
+            #
+            # The default template used for sending out emails. The template can contain HTML
+            #
+            # Examples:
+            # - file://path/to/body.html.gotmpl
+            # - https://foo.bar.com/path/to/body.html.gotmpl
+            # - base64://e3sgZGVmaW5lIGFmLVpBIH19CkhhbGxvLAoKSGVyc3RlbCBqb3UgcmVrZW5pbmcgZGV1ciBoaWVyZGllIHNrYWtlbCB0ZSB2b2xnOgp7ey0gZW5kIC19fQoKe3sgZGVmaW5lIGVuLVVTIH19CkhpLAoKcGxlYXNlIHJlY292ZXIgYWNjZXNzIHRvIHlvdXIgYWNjb3VudCBieSBjbGlja2luZyB0aGUgZm9sbG93aW5nIGxpbms6Cnt7LSBlbmQgLX19Cgp7ey0gaWYgZXEgLmxhbmcgImFmLVpBIiAtfX0KCnt7IHRlbXBsYXRlICJhZi1aQSIgLiB9fQoKe3stIGVsc2UgLX19Cgp7eyB0ZW1wbGF0ZSAiZW4tVVMiIH19Cgp7ey0gZW5kIC19fQo8YSBocmVmPSJ7eyAuUmVjb3ZlcnlVUkwgfX0iPnt7IC5SZWNvdmVyeVVSTCB9fTwvYT4
+            #
+            # Set this value using environment variables on
+            # - Linux/macOS:
+            #    $ export COURIER_TEMPLATES_RECOVERY_VALID_EMAIL_BODY_HTML=<value>
+            # - Windows Command Line (CMD):
+            #    > set COURIER_TEMPLATES_RECOVERY_VALID_EMAIL_BODY_HTML=<value>
+            #
+            html: file://path/to/body.html.gotmpl
+
+      ## invalid ##
+      #
+      invalid:
+        ## email ##
+        #
+        email:
+          ## subject ##
+          #
+          # Examples:
+          # - file://path/to/subject.gotmpl
+          # - https://foo.bar.com/path/to/subject.gotmpl
+          # - base64://e3sgZGVmaW5lIGFmLVpBIH19CkhhbGxvLAoKSGVyc3RlbCBqb3UgcmVrZW5pbmcgZGV1ciBoaWVyZGllIHNrYWtlbCB0ZSB2b2xnOgp7ey0gZW5kIC19fQoKe3sgZGVmaW5lIGVuLVVTIH19CkhpLAoKcGxlYXNlIHJlY292ZXIgYWNjZXNzIHRvIHlvdXIgYWNjb3VudCBieSBjbGlja2luZyB0aGUgZm9sbG93aW5nIGxpbms6Cnt7LSBlbmQgLX19Cgp7ey0gaWYgZXEgLmxhbmcgImFmLVpBIiAtfX0KCnt7IHRlbXBsYXRlICJhZi1aQSIgLiB9fQoKe3stIGVsc2UgLX19Cgp7eyB0ZW1wbGF0ZSAiZW4tVVMiIH19Cgp7ey0gZW5kIC19fQo8YSBocmVmPSJ7eyAuUmVjb3ZlcnlVUkwgfX0iPnt7IC5SZWNvdmVyeVVSTCB9fTwvYT4
+          #
+          # Set this value using environment variables on
+          # - Linux/macOS:
+          #    $ export COURIER_TEMPLATES_RECOVERY_INVALID_EMAIL_SUBJECT=<value>
+          # - Windows Command Line (CMD):
+          #    > set COURIER_TEMPLATES_RECOVERY_INVALID_EMAIL_SUBJECT=<value>
+          #
+          subject: file://path/to/subject.gotmpl
+
+          ## body ##
+          #
+          body:
+            ## plaintext ##
+            #
+            # The fallback template for email clients that do not support html.
+            #
+            # Examples:
+            # - file://path/to/body.plaintext.gotmpl
+            # - https://foo.bar.com/path/to/body.plaintext.gotmpl
+            # - base64://e3sgZGVmaW5lIGFmLVpBIH19CkhhbGxvLAoKSGVyc3RlbCBqb3UgcmVrZW5pbmcgZGV1ciBoaWVyZGllIHNrYWtlbCB0ZSB2b2xnOgp7ey0gZW5kIC19fQoKe3sgZGVmaW5lIGVuLVVTIH19CkhpLAoKcGxlYXNlIHJlY292ZXIgYWNjZXNzIHRvIHlvdXIgYWNjb3VudCBieSBjbGlja2luZyB0aGUgZm9sbG93aW5nIGxpbms6Cnt7LSBlbmQgLX19Cgp7ey0gaWYgZXEgLmxhbmcgImFmLVpBIiAtfX0KCnt7IHRlbXBsYXRlICJhZi1aQSIgLiB9fQoKe3stIGVsc2UgLX19Cgp7eyB0ZW1wbGF0ZSAiZW4tVVMiIH19Cgp7ey0gZW5kIC19fQp7eyAuUmVjb3ZlcnlVUkwgfX0K
+            #
+            # Set this value using environment variables on
+            # - Linux/macOS:
+            #    $ export COURIER_TEMPLATES_RECOVERY_INVALID_EMAIL_BODY_PLAINTEXT=<value>
+            # - Windows Command Line (CMD):
+            #    > set COURIER_TEMPLATES_RECOVERY_INVALID_EMAIL_BODY_PLAINTEXT=<value>
+            #
+            plaintext: file://path/to/body.plaintext.gotmpl
+
+            ## html ##
+            #
+            # The default template used for sending out emails. The template can contain HTML
+            #
+            # Examples:
+            # - file://path/to/body.html.gotmpl
+            # - https://foo.bar.com/path/to/body.html.gotmpl
+            # - base64://e3sgZGVmaW5lIGFmLVpBIH19CkhhbGxvLAoKSGVyc3RlbCBqb3UgcmVrZW5pbmcgZGV1ciBoaWVyZGllIHNrYWtlbCB0ZSB2b2xnOgp7ey0gZW5kIC19fQoKe3sgZGVmaW5lIGVuLVVTIH19CkhpLAoKcGxlYXNlIHJlY292ZXIgYWNjZXNzIHRvIHlvdXIgYWNjb3VudCBieSBjbGlja2luZyB0aGUgZm9sbG93aW5nIGxpbms6Cnt7LSBlbmQgLX19Cgp7ey0gaWYgZXEgLmxhbmcgImFmLVpBIiAtfX0KCnt7IHRlbXBsYXRlICJhZi1aQSIgLiB9fQoKe3stIGVsc2UgLX19Cgp7eyB0ZW1wbGF0ZSAiZW4tVVMiIH19Cgp7ey0gZW5kIC19fQo8YSBocmVmPSJ7eyAuUmVjb3ZlcnlVUkwgfX0iPnt7IC5SZWNvdmVyeVVSTCB9fTwvYT4
+            #
+            # Set this value using environment variables on
+            # - Linux/macOS:
+            #    $ export COURIER_TEMPLATES_RECOVERY_INVALID_EMAIL_BODY_HTML=<value>
+            # - Windows Command Line (CMD):
+            #    > set COURIER_TEMPLATES_RECOVERY_INVALID_EMAIL_BODY_HTML=<value>
+            #
+            html: file://path/to/body.html.gotmpl
 ```

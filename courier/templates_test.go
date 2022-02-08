@@ -1,6 +1,7 @@
 package courier_test
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"testing"
@@ -31,20 +32,22 @@ func TestGetTemplateType(t *testing.T) {
 }
 
 func TestNewEmailTemplateFromMessage(t *testing.T) {
-	conf := internal.NewConfigurationWithDefaults(t)
+	_, reg := internal.NewFastRegistryWithMocks(t)
+	ctx := context.Background()
+
 	for tmplType, expectedTmpl := range map[courier.TemplateType]courier.EmailTemplate{
-		courier.TypeRecoveryInvalid:     template.NewRecoveryInvalid(conf, &template.RecoveryInvalidModel{To: "foo"}),
-		courier.TypeRecoveryValid:       template.NewRecoveryValid(conf, &template.RecoveryValidModel{To: "bar", RecoveryURL: "http://foo.bar"}),
-		courier.TypeVerificationInvalid: template.NewVerificationInvalid(conf, &template.VerificationInvalidModel{To: "baz"}),
-		courier.TypeVerificationValid:   template.NewVerificationValid(conf, &template.VerificationValidModel{To: "faz", VerificationURL: "http://bar.foo"}),
-		courier.TypeTestStub:            template.NewTestStub(conf, &template.TestStubModel{To: "far", Subject: "test subject", Body: "test body"}),
+		courier.TypeRecoveryInvalid:     template.NewRecoveryInvalid(reg, &template.RecoveryInvalidModel{To: "foo"}),
+		courier.TypeRecoveryValid:       template.NewRecoveryValid(reg, &template.RecoveryValidModel{To: "bar", RecoveryURL: "http://foo.bar"}),
+		courier.TypeVerificationInvalid: template.NewVerificationInvalid(reg, &template.VerificationInvalidModel{To: "baz"}),
+		courier.TypeVerificationValid:   template.NewVerificationValid(reg, &template.VerificationValidModel{To: "faz", VerificationURL: "http://bar.foo"}),
+		courier.TypeTestStub:            template.NewTestStub(reg, &template.TestStubModel{To: "far", Subject: "test subject", Body: "test body"}),
 	} {
 		t.Run(fmt.Sprintf("case=%s", tmplType), func(t *testing.T) {
 			tmplData, err := json.Marshal(expectedTmpl)
 			require.NoError(t, err)
 
 			m := courier.Message{TemplateType: tmplType, TemplateData: tmplData}
-			actualTmpl, err := courier.NewEmailTemplateFromMessage(conf, m)
+			actualTmpl, err := courier.NewEmailTemplateFromMessage(reg, m)
 			require.NoError(t, err)
 
 			require.IsType(t, expectedTmpl, actualTmpl)
@@ -55,21 +58,21 @@ func TestNewEmailTemplateFromMessage(t *testing.T) {
 			require.NoError(t, err)
 			require.Equal(t, expectedRecipient, actualRecipient)
 
-			expectedSubject, err := expectedTmpl.EmailSubject()
+			expectedSubject, err := expectedTmpl.EmailSubject(ctx)
 			require.NoError(t, err)
-			actualSubject, err := actualTmpl.EmailSubject()
+			actualSubject, err := actualTmpl.EmailSubject(ctx)
 			require.NoError(t, err)
 			require.Equal(t, expectedSubject, actualSubject)
 
-			expectedBody, err := expectedTmpl.EmailBody()
+			expectedBody, err := expectedTmpl.EmailBody(ctx)
 			require.NoError(t, err)
-			actualBody, err := actualTmpl.EmailBody()
+			actualBody, err := actualTmpl.EmailBody(ctx)
 			require.NoError(t, err)
 			require.Equal(t, expectedBody, actualBody)
 
-			expectedBodyPlaintext, err := expectedTmpl.EmailBodyPlaintext()
+			expectedBodyPlaintext, err := expectedTmpl.EmailBodyPlaintext(ctx)
 			require.NoError(t, err)
-			actualBodyPlaintext, err := actualTmpl.EmailBodyPlaintext()
+			actualBodyPlaintext, err := actualTmpl.EmailBodyPlaintext(ctx)
 			require.NoError(t, err)
 			require.Equal(t, expectedBodyPlaintext, actualBodyPlaintext)
 
