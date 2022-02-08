@@ -462,6 +462,34 @@ Cypress.Commands.add('browserReturnUrlOry', ({} = {}) => {
   })
 })
 
+Cypress.Commands.add('remoteCourierRecoveryTemplates', ({} = {}) => {
+  updateConfigFile((config) => {
+    config.courier.templates = {
+      'recovery': {
+        'invalid': {
+          'email': {
+            'body': {
+              'html': 'base64://SGksCgp0aGlzIGlzIGEgcmVtb3RlIGludmFsaWQgcmVjb3ZlcnkgdGVtcGxhdGU=',
+              'plaintext': 'base64://SGksCgp0aGlzIGlzIGEgcmVtb3RlIGludmFsaWQgcmVjb3ZlcnkgdGVtcGxhdGU='
+            },
+            'subject': 'base64://QWNjb3VudCBBY2Nlc3MgQXR0ZW1wdGVk'
+          }
+        },
+        'valid': {
+          'email': {
+            'body': {
+              'html': 'base64://SGksCgp0aGlzIGlzIGEgcmVtb3RlIHRlbXBsYXRlCnBsZWFzZSByZWNvdmVyIGFjY2VzcyB0byB5b3VyIGFjY291bnQgYnkgY2xpY2tpbmcgdGhlIGZvbGxvd2luZyBsaW5rOgo8YSBocmVmPSJ7eyAuUmVjb3ZlcnlVUkwgfX0iPnt7IC5SZWNvdmVyeVVSTCB9fTwvYT4=',
+              'plaintext': 'base64://SGksCgp0aGlzIGlzIGEgcmVtb3RlIHRlbXBsYXRlCnBsZWFzZSByZWNvdmVyIGFjY2VzcyB0byB5b3VyIGFjY291bnQgYnkgY2xpY2tpbmcgdGhlIGZvbGxvd2luZyBsaW5rOgp7eyAuUmVjb3ZlcnlVUkwgfX0='
+            },
+            'subject': 'base64://UmVjb3ZlciBhY2Nlc3MgdG8geW91ciBhY2NvdW50'
+          }
+        }
+      }
+    }
+    return config
+  })
+})
+
 Cypress.Commands.add(
   'loginOidc',
   ({ expectSession = true, url = APP_URL + '/login' }) => {
@@ -720,7 +748,7 @@ Cypress.Commands.add(
       expect(message.fromAddress.trim()).to.equal('no-reply@ory.kratos.sh')
       expect(message.toAddresses).to.have.length(1)
       expect(message.toAddresses[0].trim()).to.equal(email)
-      expect(message.body).to.include('this is a remote template')
+
       const link = parseHtml(message.body).querySelector('a')
       expect(link).to.not.be.null
       expect(link.href).to.contain(APP_URL)

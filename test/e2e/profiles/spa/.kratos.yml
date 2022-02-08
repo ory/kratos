@@ -14,10 +14,12 @@ selfservice:
       after:
         password:
           hooks:
-            - hook: session
+            -
+              hook: session
         oidc:
           hooks:
-            - hook: session
+            -
+              hook: session
     login:
       ui_url: http://localhost:4455/login
     error:
@@ -36,7 +38,8 @@ selfservice:
       enabled: true
       config:
         providers:
-          - id: hydra
+          -
+            id: hydra
             label: Ory
             provider: generic
             client_id: kratos-client
@@ -45,7 +48,8 @@ selfservice:
             scope:
               - offline
             mapper_url: file://test/e2e/profiles/oidc/hydra.jsonnet
-          - id: google
+          -
+            id: google
             provider: generic
             client_id: google-client
             client_secret: kratos-secret
@@ -53,7 +57,8 @@ selfservice:
             scope:
               - offline
             mapper_url: file://test/e2e/profiles/oidc/hydra.jsonnet
-          - id: github
+          -
+            id: github
             provider: generic
             client_id: github-client
             client_secret: kratos-secret
@@ -77,32 +82,9 @@ selfservice:
 
 identity:
   schemas:
-    - id: default
-      url: file://test/e2e/profiles/spa/identity.traits.schema.json
+  - id: default
+    url: file://test/e2e/profiles/spa/identity.traits.schema.json
 
 session:
   whoami:
     required_aal: aal1
-
-courier:
-  smtp:
-    connection_uri: smtps://test:test@localhost:1025/?skip_ssl_verify=true
-    from_address: no-reply@ory.kratos.sh
-  templates:
-    recovery:
-      invalid:
-        email:
-          body:
-            html: base64://SGksCgp0aGlzIGlzIGEgcmVtb3RlIGludmFsaWQgcmVjb3ZlcnkgdGVtcGxhdGU=
-            plaintext: base64://SGksCgp0aGlzIGlzIGEgcmVtb3RlIGludmFsaWQgcmVjb3ZlcnkgdGVtcGxhdGU=
-          subject: base64://QWNjb3VudCBBY2Nlc3MgQXR0ZW1wdGVk
-      valid:
-        email:
-          body:
-            plaintext: base64://SGksCgp0aGlzIGlzIGEgcmVtb3RlIHRlbXBsYXRlCnBsZWFzZSByZWNvdmVyIGFjY2VzcyB0byB5b3VyIGFjY291bnQgYnkgY2xpY2tpbmcgdGhlIGZvbGxvd2luZyBsaW5rOgp7eyAuUmVjb3ZlcnlVUkwgfX0=
-            html: base64://SGksCgp0aGlzIGlzIGEgcmVtb3RlIHRlbXBsYXRlCnBsZWFzZSByZWNvdmVyIGFjY2VzcyB0byB5b3VyIGFjY291bnQgYnkgY2xpY2tpbmcgdGhlIGZvbGxvd2luZyBsaW5rOgo8YSBocmVmPSJ7eyAuUmVjb3ZlcnlVUkwgfX0iPnt7IC5SZWNvdmVyeVVSTCB9fTwvYT4=
-          subject: base64://UmVjb3ZlciBhY2Nlc3MgdG8geW91ciBhY2NvdW50
-    verification:
-      invalid:
-        email:
-          subject: base64://U29tZW9uZSB0cmllZCB0byB2ZXJpZnkgdGhpcyBlbWFpbCBhZGRyZXNzIChyZW1vdGUp

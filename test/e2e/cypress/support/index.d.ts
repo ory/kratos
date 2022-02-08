@@ -134,6 +134,11 @@ declare global {
       browserReturnUrlOry(): Chainable<void>
 
       /**
+       * Change the courier recovery invalid and valid templates to remote base64 strings
+       */
+      remoteCourierRecoveryTemplates(): Chainable<void>
+
+      /**
        * Changes the config so that the registration flow lifespan is very short.
        *
        * Useful when testing expiry of registration flows.

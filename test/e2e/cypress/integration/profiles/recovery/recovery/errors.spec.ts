@@ -45,7 +45,7 @@ context('Account Recovery Errors', () => {
         cy.get('input[name="email"]').should('have.value', email)
 
         cy.getMail().should((message) => {
-          expect(message.subject.trim()).to.equal('Account Access Attempted')
+          expect(message.subject.trim()).to.equal('Account access attempted')
           expect(message.fromAddress.trim()).to.equal('no-reply@ory.kratos.sh')
           expect(message.toAddresses).to.have.length(1)
           expect(message.toAddresses[0].trim()).to.equal(email)
@@ -124,6 +124,7 @@ context('Account Recovery Errors', () => {
       })
 
       it('invalid remote recovery email template', () => {
+        cy.remoteCourierRecoveryTemplates()
         const identity = gen.identityWithWebsite()
         cy.recoverApi({ email: identity.email })
 
