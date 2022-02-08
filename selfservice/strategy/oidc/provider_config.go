@@ -29,6 +29,7 @@ type Configuration struct {
 	// - vk
 	// - yandex
 	// - apple
+	// - linkedin
 	Provider string `json:"provider"`
 
 	// Label represents an optional label which can be used in the UI generation.

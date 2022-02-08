@@ -120,6 +120,9 @@ func (l *ProviderLinkedIn) ApiCall(url APIUrl, result interface{}, exchange *oau
 }
 
 func (l *ProviderLinkedIn) Claims(ctx context.Context, exchange *oauth2.Token) (*Claims, error) {
+	// For some reason linkedin does not correctly returned selected scope even though it is successfully applied
+	// therefor skip the check for now
+
 	//grantedScopes := stringsx.Splitx(fmt.Sprintf("%s", exchange.Extra("scope")), ",")
 	//for _, check := range l.Config().Scope {
 	//	if !stringslice.Has(grantedScopes, check) {
