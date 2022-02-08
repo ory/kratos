@@ -1,13 +1,14 @@
 package template
 
 import (
+	"context"
 	"encoding/json"
 	"os"
 )
 
 type (
 	VerificationInvalid struct {
-		c TemplateConfig
+		d TemplateDependencies
 		m *VerificationInvalidModel
 	}
 	VerificationInvalidModel struct {
@@ -15,24 +16,24 @@ type (
 	}
 )
 
-func NewVerificationInvalid(c TemplateConfig, m *VerificationInvalidModel) *VerificationInvalid {
-	return &VerificationInvalid{c: c, m: m}
+func NewVerificationInvalid(d TemplateDependencies, m *VerificationInvalidModel) *VerificationInvalid {
+	return &VerificationInvalid{d: d, m: m}
 }
 
 func (t *VerificationInvalid) EmailRecipient() (string, error) {
 	return t.m.To, nil
 }
 
-func (t *VerificationInvalid) EmailSubject() (string, error) {
-	return LoadTextTemplate(os.DirFS(t.c.CourierTemplatesRoot()), "verification/invalid/email.subject.gotmpl", "verification/invalid/email.subject*", t.m)
+func (t *VerificationInvalid) EmailSubject(ctx context.Context) (string, error) {
+	return LoadTextTemplate(ctx, t.d, os.DirFS(t.d.CourierConfig(ctx).CourierTemplatesRoot()), "verification/invalid/email.subject.gotmpl", "verification/invalid/email.subject*", t.m, t.d.CourierConfig(ctx).CourierTemplatesVerificationInvalid().Subject)
 }
 
-func (t *VerificationInvalid) EmailBody() (string, error) {
-	return LoadHTMLTemplate(os.DirFS(t.c.CourierTemplatesRoot()), "verification/invalid/email.body.gotmpl", "verification/invalid/email.body*", t.m)
+func (t *VerificationInvalid) EmailBody(ctx context.Context) (string, error) {
+	return LoadHTMLTemplate(ctx, t.d, os.DirFS(t.d.CourierConfig(ctx).CourierTemplatesRoot()), "verification/invalid/email.body.gotmpl", "verification/invalid/email.body*", t.m, t.d.CourierConfig(ctx).CourierTemplatesVerificationInvalid().Body.HTML)
 }
 
-func (t *VerificationInvalid) EmailBodyPlaintext() (string, error) {
-	return LoadTextTemplate(os.DirFS(t.c.CourierTemplatesRoot()), "verification/invalid/email.body.plaintext.gotmpl", "verification/invalid/email.body.plaintext*", t.m)
+func (t *VerificationInvalid) EmailBodyPlaintext(ctx context.Context) (string, error) {
+	return LoadTextTemplate(ctx, t.d, os.DirFS(t.d.CourierConfig(ctx).CourierTemplatesRoot()), "verification/invalid/email.body.plaintext.gotmpl", "verification/invalid/email.body.plaintext*", t.m, t.d.CourierConfig(ctx).CourierTemplatesVerificationInvalid().Body.PlainText)
 }
 
 func (t *VerificationInvalid) MarshalJSON() ([]byte, error) {

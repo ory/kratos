@@ -1,0 +1,4 @@
+body:
+  plaintext: "http://call-something"
+  html: "malformed uri"
+subject: "something"

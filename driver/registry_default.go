@@ -263,11 +263,7 @@ func (m *RegistryDefault) Config(ctx context.Context) *config.Config {
 	return corp.ContextualizeConfig(ctx, m.c)
 }
 
-func (m *RegistryDefault) CourierConfig(ctx context.Context) courier.SMTPConfig {
-	return m.Config(ctx)
-}
-
-func (m *RegistryDefault) SMTPConfig(ctx context.Context) courier.SMTPConfig {
+func (m *RegistryDefault) CourierConfig(ctx context.Context) config.CourierConfigs {
 	return m.Config(ctx)
 }
 

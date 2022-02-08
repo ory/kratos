@@ -85,7 +85,7 @@ func TestSMTP(t *testing.T) {
 	ctx, cancel := context.WithCancel(ctx)
 	defer cancel()
 
-	id, err := c.QueueEmail(ctx, templates.NewTestStub(conf, &templates.TestStubModel{
+	id, err := c.QueueEmail(ctx, templates.NewTestStub(reg, &templates.TestStubModel{
 		To:      "test-recipient-1@example.org",
 		Subject: "test-subject-1",
 		Body:    "test-body-1",
@@ -93,7 +93,7 @@ func TestSMTP(t *testing.T) {
 	require.NoError(t, err)
 	require.NotEqual(t, uuid.Nil, id)
 
-	id, err = c.QueueEmail(ctx, templates.NewTestStub(conf, &templates.TestStubModel{
+	id, err = c.QueueEmail(ctx, templates.NewTestStub(reg, &templates.TestStubModel{
 		To:      "test-recipient-2@example.org",
 		Subject: "test-subject-2",
 		Body:    "test-body-2",
@@ -107,7 +107,7 @@ func TestSMTP(t *testing.T) {
 	conf.MustSet(config.ViperKeyCourierSMTPHeaders+".test-stub-header2", "bar")
 	customerHeaders := conf.CourierSMTPHeaders()
 	require.Len(t, customerHeaders, 2)
-	id, err = c.QueueEmail(ctx, templates.NewTestStub(conf, &templates.TestStubModel{
+	id, err = c.QueueEmail(ctx, templates.NewTestStub(reg, &templates.TestStubModel{
 		To:      "test-recipient-3@example.org",
 		Subject: "test-subject-3",
 		Body:    "test-body-3",

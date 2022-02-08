@@ -1,6 +1,7 @@
 package courier
 
 import (
+	"context"
 	"encoding/json"
 
 	"github.com/pkg/errors"
@@ -12,9 +13,9 @@ type (
 	TemplateType  string
 	EmailTemplate interface {
 		json.Marshaler
-		EmailSubject() (string, error)
-		EmailBody() (string, error)
-		EmailBodyPlaintext() (string, error)
+		EmailSubject(context.Context) (string, error)
+		EmailBody(context.Context) (string, error)
+		EmailBodyPlaintext(context.Context) (string, error)
 		EmailRecipient() (string, error)
 	}
 )
@@ -44,38 +45,38 @@ func GetTemplateType(t EmailTemplate) (TemplateType, error) {
 	}
 }
 
-func NewEmailTemplateFromMessage(c SMTPConfig, msg Message) (EmailTemplate, error) {
+func NewEmailTemplateFromMessage(d SMTPDependencies, msg Message) (EmailTemplate, error) {
 	switch msg.TemplateType {
 	case TypeRecoveryInvalid:
 		var t template.RecoveryInvalidModel
 		if err := json.Unmarshal(msg.TemplateData, &t); err != nil {
 			return nil, err
 		}
-		return template.NewRecoveryInvalid(c, &t), nil
+		return template.NewRecoveryInvalid(d, &t), nil
 	case TypeRecoveryValid:
 		var t template.RecoveryValidModel
 		if err := json.Unmarshal(msg.TemplateData, &t); err != nil {
 			return nil, err
 		}
-		return template.NewRecoveryValid(c, &t), nil
+		return template.NewRecoveryValid(d, &t), nil
 	case TypeVerificationInvalid:
 		var t template.VerificationInvalidModel
 		if err := json.Unmarshal(msg.TemplateData, &t); err != nil {
 			return nil, err
 		}
-		return template.NewVerificationInvalid(c, &t), nil
+		return template.NewVerificationInvalid(d, &t), nil
 	case TypeVerificationValid:
 		var t template.VerificationValidModel
 		if err := json.Unmarshal(msg.TemplateData, &t); err != nil {
 			return nil, err
 		}
-		return template.NewVerificationValid(c, &t), nil
+		return template.NewVerificationValid(d, &t), nil
 	case TypeTestStub:
 		var t template.TestStubModel
 		if err := json.Unmarshal(msg.TemplateData, &t); err != nil {
 			return nil, err
 		}
-		return template.NewTestStub(c, &t), nil
+		return template.NewTestStub(d, &t), nil
 	default:
 		return nil, errors.Errorf("received unexpected message template type: %s", msg.TemplateType)
 	}

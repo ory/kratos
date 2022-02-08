@@ -1,0 +1,26 @@
+dsn: sqlite://foo.db?mode=memory&_fk=true
+
+selfservice:
+  default_browser_return_url: http://return-to-3-test.ory.sh/
+
+identity:
+  default_schema_id: default
+  schemas:
+    - id: default
+      url: base64://ewogICIkaWQiOiAib3J5Oi8vaWRlbnRpdHktdGVzdC1zY2hlbWEiLAogICIkc2NoZW1hIjogImh0dHA6Ly9qc29uLXNjaGVtYS5vcmcvZHJhZnQtMDcvc2NoZW1hIyIsCiAgInRpdGxlIjogIklkZW50aXR5U2NoZW1hIiwKICAidHlwZSI6ICJvYmplY3QiLAogICJwcm9wZXJ0aWVzIjogewogICAgInRyYWl0cyI6IHsKICAgICAgInR5cGUiOiAib2JqZWN0IiwKICAgICAgInByb3BlcnRpZXMiOiB7CiAgICAgICAgIm5hbWUiOiB7CiAgICAgICAgICAidHlwZSI6ICJvYmplY3QiLAogICAgICAgICAgInByb3BlcnRpZXMiOiB7CiAgICAgICAgICAgICJmaXJzdCI6IHsKICAgICAgICAgICAgICAidHlwZSI6ICJzdHJpbmciCiAgICAgICAgICAgIH0sCiAgICAgICAgICAgICJsYXN0IjogewogICAgICAgICAgICAgICJ0eXBlIjogInN0cmluZyIKICAgICAgICAgICAgfQogICAgICAgICAgfQogICAgICAgIH0KICAgICAgfSwKICAgICAgInJlcXVpcmVkIjogWwogICAgICAgICJuYW1lIgogICAgICBdLAogICAgICAiYWRkaXRpb25hbFByb3BlcnRpZXMiOiB0cnVlCiAgICB9CiAgfQp9
+
+courier:
+  smtp:
+    connection_uri: smtp://stub-url
+  templates:
+    recovery:
+      invalid:
+        email:
+          body:
+            plaintext: base64://SGksCgp5b3UgKG9yIHNvbWVvbmUgZWxzZSkgZW50ZXJlZCB0aGlzIGVtYWlsIGFkZHJlc3Mgd2hlbiB0cnlpbmcgdG8gcmVjb3ZlciBhY2Nlc3MgdG8gYW4gYWNjb3VudC4KCkhvd2V2ZXIsIHRoaXMgZW1haWwgYWRkcmVzcyBpcyBub3Qgb24gb3VyIGRhdGFiYXNlIG9mIHJlZ2lzdGVyZWQgdXNlcnMgYW5kIHRoZXJlZm9yZSB0aGUgYXR0ZW1wdCBoYXMgZmFpbGVkLgoKSWYgdGhpcyB3YXMgeW91LCBjaGVjayBpZiB5b3Ugc2lnbmVkIHVwIHVzaW5nIGEgZGlmZmVyZW50IGFkZHJlc3MuCgpJZiB0aGlzIHdhcyBub3QgeW91LCBwbGVhc2UgaWdub3JlIHRoaXMgZW1haWwu
+            html: base64://SGksCgp5b3UgKG9yIHNvbWVvbmUgZWxzZSkgZW50ZXJlZCB0aGlzIGVtYWlsIGFkZHJlc3Mgd2hlbiB0cnlpbmcgdG8gcmVjb3ZlciBhY2Nlc3MgdG8gYW4gYWNjb3VudC4KCkhvd2V2ZXIsIHRoaXMgZW1haWwgYWRkcmVzcyBpcyBub3Qgb24gb3VyIGRhdGFiYXNlIG9mIHJlZ2lzdGVyZWQgdXNlcnMgYW5kIHRoZXJlZm9yZSB0aGUgYXR0ZW1wdCBoYXMgZmFpbGVkLgoKSWYgdGhpcyB3YXMgeW91LCBjaGVjayBpZiB5b3Ugc2lnbmVkIHVwIHVzaW5nIGEgZGlmZmVyZW50IGFkZHJlc3MuCgpJZiB0aGlzIHdhcyBub3QgeW91LCBwbGVhc2UgaWdub3JlIHRoaXMgZW1haWwu
+    verification:
+      valid:
+        email:
+          subject: base64://VmVyaWZpY2F0aW9uIEVtYWls
+  template_override_path: "../../courier/template/courier/builtin/templates"
