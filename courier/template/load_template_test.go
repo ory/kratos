@@ -3,6 +3,7 @@ package template_test
 import (
 	"context"
 	"encoding/base64"
+	"fmt"
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
@@ -58,6 +59,22 @@ func TestLoadTextTemplate(t *testing.T) {
 		m := map[string]interface{}{"input": "hello world"} // create a simple model
 		actual := executeTextTemplate(t, "courier/builtin/templates/test_stub", "email.body.sprig.gotmpl", "", m)
 		assert.Contains(t, actual, "HelloWorld,HELLOWORLD")
+	})
+
+	t.Run("method=sprig should not support non-hermetic", func(t *testing.T) {
+		template.Cache, _ = lru.New(16)
+		ctx := context.Background()
+		_, reg := internal.NewFastRegistryWithMocks(t)
+
+		nonhermetic := []string{"date", "date_in_zone", "date_modify", "now", "htmlDate", "htmlDateInZone", "dateInZone", "dateModify", "env", "expandenv", "getHostByName", "uuidv4", "randNumeric", "randAscii", "randAlpha", "randAlphaNum"}
+
+		for _, tc := range nonhermetic {
+			t.Run("case=should not support function: "+tc, func(t *testing.T) {
+				_, err := template.LoadTextTemplate(ctx, reg, x.NewStubFS(tc, []byte(fmt.Sprintf("{{ %s }}", tc))), tc, "", map[string]interface{}{}, "")
+				require.Error(t, err)
+				require.Contains(t, err.Error(), fmt.Sprintf("function \"%s\" not defined", tc))
+			})
+		}
 	})
 
 	t.Run("method=html with nested templates", func(t *testing.T) {
