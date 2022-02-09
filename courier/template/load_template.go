@@ -94,12 +94,12 @@ func loadRemoteTemplate(ctx context.Context, d templateDependencies, url string,
 
 	var t Template
 	if html {
-		t, err = htemplate.New(url).Funcs(sprig.HtmlFuncMap()).Parse(string(b))
+		t, err = htemplate.New(url).Funcs(sprig.HermeticHtmlFuncMap()).Parse(string(b))
 		if err != nil {
 			return nil, errors.WithStack(err)
 		}
 	} else {
-		t, err = template.New(url).Funcs(sprig.TxtFuncMap()).Parse(string(b))
+		t, err = template.New(url).Funcs(sprig.HermeticTxtFuncMap()).Parse(string(b))
 		if err != nil {
 			return nil, errors.WithStack(err)
 		}
@@ -132,13 +132,13 @@ func loadTemplate(filesystem fs.FS, name, pattern string, html bool) (Template, 
 
 	var tpl Template
 	if html {
-		t, err := htemplate.New(filepath.Base(name)).Funcs(sprig.HtmlFuncMap()).ParseFS(filesystem, glob)
+		t, err := htemplate.New(filepath.Base(name)).Funcs(sprig.HermeticHtmlFuncMap()).ParseFS(filesystem, glob)
 		if err != nil {
 			return nil, errors.WithStack(err)
 		}
 		tpl = t
 	} else {
-		t, err := template.New(filepath.Base(name)).Funcs(sprig.TxtFuncMap()).ParseFS(filesystem, glob)
+		t, err := template.New(filepath.Base(name)).Funcs(sprig.HermeticTxtFuncMap()).ParseFS(filesystem, glob)
 		if err != nil {
 			return nil, errors.WithStack(err)
 		}
