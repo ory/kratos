@@ -133,9 +133,15 @@ git clone https://github.com/ory/kratos.git
 cd kratos
 git checkout v0.8.0-alpha.3
 
+# To build the standalone React app, run:
 docker-compose -f quickstart.yml -f quickstart-standalone.yml up --build --force-recreate
 # If you have SELinux, run:
 docker-compose -f quickstart.yml -f quickstart-selinux.yml -f quickstart-standalone.yml up --build --force-recreate
+
+# To build the standalone Vue app, run:
+docker-compose -f quickstart.yml -f quickstart-standalone-vue.yml up --build --force-recreate
+# If you have SELinux, run:
+docker-compose -f quickstart.yml -f quickstart-selinux.yml -f quickstart-standalone-vue.yml up --build --force-recreate
 ```
 
 This might take a minute or two. Once the output slows down and logs indicate a
