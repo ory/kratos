@@ -1,0 +1,75 @@
+version: '3.4'
+
+networks:
+  reaction:
+    external:
+      name: reaction.localhost
+
+services:
+  kratos-selfservice-ui-node:
+    image: oryd/kratos-selfservice-ui-node:v0.8.0-alpha.3
+    environment:
+      - KRATOS_PUBLIC_URL=http://kratos:4433/
+      - KRATOS_ADMIN_URL=http://127.0.0.1:4434/
+      - KRATOS_BROWSER_URL=http://127.0.0.1:4433/
+      - HYDRA_ADMIN_URL=http://127.0.0.1:4445/
+      - PORT=4455
+      - SECURITY_MODE=
+    ports:
+      - '3001:3000'
+      - '4455:4455'
+    networks:
+      - reaction
+    restart: on-failure
+
+  kratos-migrate:
+    image: oryd/kratos:v0.8.2-alpha.1
+    environment:
+      - DSN=sqlite:///var/lib/sqlite/db.sqlite?_fk=true&mode=rwc
+    volumes:
+      - type: volume
+        source: kratos-sqlite
+        target: /var/lib/sqlite
+        read_only: false
+      - type: bind
+        source: ./contrib/quickstart/kratos/email-password
+        target: /etc/config/kratos
+    command: -c /etc/config/kratos/kratos.yml migrate sql -e --yes
+    restart: on-failure
+    networks:
+      - reaction
+
+  kratos:
+    depends_on:
+      - kratos-migrate
+    image: oryd/kratos:v0.8.2-alpha.1
+    ports:
+      - '4433:4433' # public
+      - '4434:4434' # admin
+    restart: unless-stopped
+    environment:
+      - DSN=sqlite:///var/lib/sqlite/db.sqlite?_fk=true
+      - LOG_LEVEL=trace
+      # - SELFSERVICE_FLOWS_LOGIN_UI_URL=http://localhost:4455/account/login
+    command: serve -c /etc/config/kratos/kratos.yml --dev --watch-courier
+    volumes:
+      - type: volume
+        source: kratos-sqlite
+        target: /var/lib/sqlite
+        read_only: false
+      - type: bind
+        source: ./contrib/quickstart/kratos/email-password
+        target: /etc/config/kratos
+    networks:
+      - reaction
+
+  mailslurper:
+    image: oryd/mailslurper:latest-smtps
+    ports:
+      - '4436:4436'
+      - '4437:4437'
+    networks:
+      - reaction
+
+volumes:
+  kratos-sqlite:
