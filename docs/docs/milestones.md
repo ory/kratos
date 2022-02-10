@@ -81,8 +81,6 @@ New feature or request.
       ([kratos#707](https://github.com/ory/kratos/issues/707))
 - [ ] improve multi schema handling in different auth flows
       ([kratos#765](https://github.com/ory/kratos/issues/765))
-- [ ] Password policies: make api.pwnedpasswords.com configurable
-      ([kratos#969](https://github.com/ory/kratos/issues/969))
 - [ ] Access identity schema information (e.g. usernames) within the jsonnet
       mapper ([kratos#987](https://github.com/ory/kratos/issues/987))
 - [ ] [Feature] LOG_LEVEL to allow stacktrace in error for /api endpoint
@@ -110,6 +108,8 @@ New feature or request.
 - [x] Add option for disabling registration
       ([kratos#882](https://github.com/ory/kratos/issues/882)) -
       [@hackerman](https://github.com/aeneasr)
+- [x] Password policies: make api.pwnedpasswords.com configurable
+      ([kratos#969](https://github.com/ory/kratos/issues/969))
 - [x] login ui returned without flowid
       ([kratos#1055](https://github.com/ory/kratos/issues/1055))
 - [x] Allow account recovery for identities without email address
