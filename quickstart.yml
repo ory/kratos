@@ -1,5 +1,4 @@
 version: '3.7'
-
 services:
   kratos-migrate:
     image: oryd/kratos:v0.8.2-alpha.1
@@ -17,16 +16,14 @@ services:
     restart: on-failure
     networks:
       - intranet
-
   kratos-selfservice-ui-node:
-    image: oryd/kratos-selfservice-ui-node:v0.8.0-alpha.3
+    image: oryd/kratos-selfservice-ui-node:v0.8.2-alpha.1
     environment:
       - KRATOS_PUBLIC_URL=http://kratos:4433/
       - KRATOS_BROWSER_URL=http://127.0.0.1:4433/
     networks:
       - intranet
     restart: on-failure
-
   kratos:
     depends_on:
       - kratos-migrate
@@ -49,7 +46,6 @@ services:
         target: /etc/config/kratos
     networks:
       - intranet
-
   mailslurper:
     image: oryd/mailslurper:latest-smtps
     ports:
@@ -57,9 +53,7 @@ services:
       - '4437:4437'
     networks:
       - intranet
-
 networks:
   intranet:
-
 volumes:
   kratos-sqlite:

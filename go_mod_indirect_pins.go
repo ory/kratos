@@ -23,3 +23,5 @@ import (
 	_ "github.com/cortesi/modd/cmd/modd"
 	_ "github.com/hashicorp/consul/api"
 )
+
+import _ "github.com/mikefarah/yq/v4"
