@@ -81,6 +81,10 @@ jobs:
       - run: go list -json > go.list
       - name: Run nancy
         uses: sonatype-nexus-community/nancy-github-action@v1.0.2
+      - run: |
+          npm install
+          cd docs; npm install
+        name: Install node deps
       - name: Run prettier
         uses: ory/ci/prettier@master
       - name: Run prettier (docs)
@@ -95,8 +99,6 @@ jobs:
           args: --timeout 10m0s
           skip-go-installation: true
           skip-pkg-cache: true
-      - name: Install node packages
-        run: npm install
       - name: Build Kratos
         run: make install
       - name: Run documentation tests
