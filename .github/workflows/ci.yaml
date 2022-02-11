@@ -20,9 +20,6 @@ jobs:
       - uses: ory/ci/sdk/generate@master
         with:
           token: ${{ secrets.ORY_BOT_PAT }}
-          app-name: Ory_Kratos
-          swag-spec-ignore: internal/httpclient
-          swag-spec-location: spec/api.json
 
   test:
     name: Run tests and lints
@@ -248,9 +245,6 @@ jobs:
       - uses: ory/ci/sdk/release@master
         with:
           token: ${{ secrets.ORY_BOT_PAT }}
-          app-name: Ory_Kratos
-          swag-spec-ignore: internal/httpclient
-          swag-spec-location: spec/api.json
 
   release:
     name: Generate release
