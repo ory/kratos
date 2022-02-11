@@ -216,9 +216,10 @@ jobs:
     needs:
       - test
     steps:
-      - uses: ory/ci/docs/cli@master
+      - uses: ory/ci/docs/cli-next@master
         with:
           token: ${{ secrets.ORY_BOT_PAT }}
+          output-dir: docs/kratos/cli
 
   changelog:
     name: Generate changelog
