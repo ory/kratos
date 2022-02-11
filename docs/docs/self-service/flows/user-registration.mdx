@@ -110,7 +110,7 @@ Kratos, your Registration UI, and the end-user's browser:
 
 <SelfServiceBrowserFlow
   flows={['registration']}
-  success="User created and successful HTTP 302 redirect"
+  success="User created and successful HTTP 303 redirect"
   interactions={['"Sign up"']}
 />
 
@@ -136,7 +136,7 @@ strict-transport-security: max-age=15724800; includeSubDomains
 <a href="https://playground.projects.oryapis.com/hosted/registration?flow=6c2ae96c-8486-42f0-91f9-f654eccd09fb">See Other</a>.
 ```
 
-The server responds with a HTTP 302 redirect to the Registration UI, appending
+The server responds with a HTTP 303 redirect to the Registration UI, appending
 the `?flow=<flow-id>` query parameter (see the curl example) to the configured
 registration URL.
 
@@ -541,7 +541,7 @@ $ curl -H "Accept: application/json" -s \
 
 The form payloads are then submitted to Ory Kratos which follows up with:
 
-- An HTTP 302 Found redirect pointing to the Registration UI for Browser
+- An HTTP 303 Found redirect pointing to the Registration UI for Browser
   Clients;
 - An `application/json` response for API Clients and Client-Side Browser
   applications (e.g. Single Page Apps).
@@ -590,9 +590,9 @@ validation errors:
 
 <CodeTabs items={getFlowMethodPasswordWithErrors} />
 
-When validation errors happen, browser clients receive a HTTP 302 Found redirect
-to the Registration Flow UI, containing the Registration Flow ID which includes
-the error payloads.
+When validation errors happen, browser clients receive a HTTP 303 See Other
+redirect to the Registration Flow UI, containing the Registration Flow ID which
+includes the error payloads.
 
 For API Clients, the server typically responds with HTTP 400 Bad Request and the
 Registration Flow in the response payload as JSON.
@@ -701,17 +701,17 @@ typically not an issue if you follow the guidelines in the
 ### Server-Side Browser Clients
 
 When the registration is completed successfully, Ory Kratos responds with a HTTP
-302 Redirect to the
+303 Redirect to the
 [configured redirect URL](../../concepts/browser-redirect-flow-completion.mdx).
 
 #### With Auto-Login on Registration
 
 If the `session` after hook is enabled, a `Set-Cookie` HTTP Header is set
-alongside the HTTP 302 redirect which contains the Ory Kratos Login Session
+alongside the HTTP 303 redirect which contains the Ory Kratos Login Session
 Cookie:
 
 ```
-HTTP/1.1 302 Found
+HTTP/1.1 303 SeeOther
 Cache-Control: 0
 Location: http://127.0.0.1:4455/
 Set-Cookie: csrf_token=b8OebRPTPr5ow23mA5gIZmFNLeuMbv8pZz1jT1Ex7ys=; Path=/; Domain=127.0.0.1; Max-Age=31536000; HttpOnly
@@ -804,11 +804,11 @@ When the registration is completed successfully, Ory Kratos responds with a HTTP
 #### With Auto-Login on Registration
 
 If the `session` after hook is enabled, a `Set-Cookie` HTTP Header is set
-alongside the HTTP 302 redirect which contains the Ory Kratos Login Session
+alongside the HTTP 303 redirect which contains the Ory Kratos Login Session
 Cookie:
 
 ```
-HTTP/1.1 302 Found
+HTTP/1.1 303 Found
 Cache-Control: 0
 Location: http://127.0.0.1:4455/
 Set-Cookie: csrf_token=b8OebRPTPr5ow23mA5gIZmFNLeuMbv8pZz1jT1Ex7ys=; Path=/; Domain=127.0.0.1; Max-Age=31536000; HttpOnly

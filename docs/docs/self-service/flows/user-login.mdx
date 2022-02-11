@@ -131,7 +131,7 @@ strict-transport-security: max-age=15724800; includeSubDomains
 <a href="https://playground.projects.oryapis.com/hosted/login?flow=3fc63726-8461-43f4-974a-5579ff4174f1">See Other</a>.
 ```
 
-The server responds with a HTTP 302 redirect to the Login UI, appending the
+The server responds with a HTTP 303 redirect to the Login UI, appending the
 `?flow=<flow-id>` query parameter (see the curl example) to the URL configured
 here:
 
@@ -476,7 +476,7 @@ $ curl -H "Accept: application/json" -s \
 
 The form payloads are then submitted to Ory Kratos which follows up with:
 
-- An HTTP 302 Found redirect pointing to the Login UI for Browser Clients;
+- An HTTP 303 See Other redirect pointing to the Login UI for Browser Clients;
 - An `application/json` response for API Clients and Client-Side Browser
   applications (e.g. Single Page Apps).
 
@@ -488,9 +488,9 @@ missing identifier or password, or invalid credentials:
 
 <CodeTabs items={getFlowMethodPasswordWithErrors} />
 
-When validation errors happen, browser clients receive a HTTP 302 Found redirect
-to the Login Flow UI, containing the Login Flow ID which includes the error
-payloads.
+When validation errors happen, browser clients receive a HTTP 303 See Other
+redirect to the Login Flow UI, containing the Login Flow ID which includes the
+error payloads.
 
 For API Clients, the server typically responds with HTTP 400 Bad Request and the
 Login Flow in the response payload as JSON.
@@ -519,14 +519,14 @@ Completing the login behaves differently for Browser and API Clients.
 
 ### Server-Side Browser Clients
 
-When the login is completed successfully, Ory Kratos responds with a HTTP 302
+When the login is completed successfully, Ory Kratos responds with a HTTP 303
 Redirect to the
 [configured redirect URL](../../concepts/browser-redirect-flow-completion).
-Alongside the HTTP 302 Redirect is a `Set-Cookie` header which contains the Ory
+Alongside the HTTP 303 Redirect is a `Set-Cookie` header which contains the Ory
 Kratos Login Session Cookie:
 
 ```
-HTTP/1.1 302 Found
+HTTP/1.1 303 See Other
 Cache-Control: 0
 Location: http://127.0.0.1:4455/
 Set-Cookie: csrf_token=b8OebRPTPr5ow23mA5gIZmFNLeuMbv8pZz1jT1Ex7ys=; Path=/; Domain=127.0.0.1; Max-Age=31536000; HttpOnly

@@ -151,7 +151,7 @@ import DomainWarning from '@theme/DomainWarning'
 
 <DomainWarning />
 
-Once stored, the Browser is HTTP 302 redirected to the flow's configured UI URL
+Once stored, the Browser is HTTP 303 redirected to the flow's configured UI URL
 (e.g. `selfservice.flows.login.ui_url`), appending the flow ID as the `flow` URL
 Query Parameter. Also included are HTTP cookies such as Anti-CSRF cookies.
 
@@ -429,8 +429,8 @@ requests.
 
 :::info
 
-Ory Kratos and your UI must be on the hosted on same top level domain! You can
-not host Ory Kratos and your UI on separate top level domains:
+Ory Kratos and your UI must be hosted on the same top level domain! You can not
+host Ory Kratos and your UI on separate top level domains:
 
 - `kratos.bar.com` and `ui.bar.com` will work;
 - `kratos.bar.com` and `bar.com` will work;

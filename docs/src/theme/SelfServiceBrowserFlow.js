@@ -17,7 +17,7 @@ sequenceDiagram
 
   B->>K: Follow link to /self-service/${components}/browser
   K-->>K: Create and store new ${flows.join(', ')} flow
-  K->>B: HTTP 302 Found <selfservice.flows.${components}.ui_url>?flow=<flow-id>
+  K->>B: HTTP 303 See Other <selfservice.flows.${components}.ui_url>?flow=<flow-id>
 
   B->>A: Opens <selfservice.flows.<${flows.join('|')}>.ui_url>?flow=<flow-id>
   A-->>K: Fetches data to render forms using /selfservice/${components}/flows?id=<flow-id>
@@ -29,7 +29,7 @@ sequenceDiagram
     K->>B: ${success}
   else Form payload invalid
     K-->>K: Update and store flow (e.g. add form validation errors)
-    K-->>B: HTTP 302 Found <selfservice.flows.${components}.ui_url>?flow=<flow-id>
+    K-->>B: HTTP 303 See Other <selfservice.flows.${components}.ui_url>?flow=<flow-id>
     B->>A: Opens <selfservice.flows.${components}?flow=<flow-id>
     A-->>K: Fetches data to render form fields and errors
     B->>K: Repeat flow with input data, submit, validate, ...

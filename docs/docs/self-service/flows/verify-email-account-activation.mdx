@@ -254,7 +254,7 @@ $ curl -s -i -X GET \
     -H "Accept: text/html" \
     https://playground.projects.oryapis.com/api/kratos/public/self-service/verification/browser
 
-HTTP/2 302
+HTTP/2 303
 date: Fri, 09 Jul 2021 13:08:00 GMT
 content-type: text/html; charset=utf-8
 content-length: 124
@@ -268,7 +268,7 @@ strict-transport-security: max-age=15724800; includeSubDomains
 <a href="https://playground.projects.oryapis.com/hosted/verification?flow=ba66958a-5f15-4b8f-88f9-52b35020db5c">Found</a>.
 ```
 
-The server responds with a HTTP 302 redirect to the Verification UI, appending
+The server responds with a HTTP 303 redirect to the Verification UI, appending
 the `?flow=<flow-id>` query parameter (see the curl example) to the URL
 configured here:
 
@@ -562,7 +562,7 @@ $ curl -H "Accept: application/json" -s \
 
 The form payloads are then submitted to Ory Kratos which follows up with:
 
-- An HTTP 302 Found redirect pointing to the Registration UI for Browser
+- An HTTP 303 See Other redirect pointing to the Registration UI for Browser
   Clients;
 - An `application/json` response for API Clients and Client-Side Browser
   applications (e.g. Single Page Apps).
@@ -574,9 +574,9 @@ validation errors such as a malformed email:
 
 <CodeTabs items={getFlowMethodLinkWithErrors} />
 
-When validation errors happen, browser clients receive a HTTP 302 Found redirect
-to the Verification Flow UI, containing the Verification Flow ID which includes
-the error payloads.
+When validation errors happen, browser clients receive a HTTP 303 See Other
+redirect to the Verification Flow UI, containing the Verification Flow ID which
+includes the error payloads.
 
 For API Clients, the server typically responds with HTTP 400 Bad Request and the
 Verification Flow in the response payload as JSON.
@@ -590,7 +590,7 @@ On successful submission, an email will be sent to the provided address:
 ## Unsuccessful Verification
 
 If the verification challenge (e.g. the link in the verification email) is
-invalid or expired, the user will be HTTP 302 redirected to the Verification UI.
+invalid or expired, the user will be HTTP 303 redirected to the Verification UI.
 
 :::note
 

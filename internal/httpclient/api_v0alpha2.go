@@ -786,16 +786,16 @@ type V0alpha2Api interface {
 
 		API flows expect `application/json` to be sent in the body and responds with
 		HTTP 200 and a application/json body with the session token on success;
-		HTTP 302 redirect to a fresh login flow if the original flow expired with the appropriate error messages set;
+		HTTP 303 redirect to a fresh login flow if the original flow expired with the appropriate error messages set;
 		HTTP 400 on form validation errors.
 
 		Browser flows expect a Content-Type of `application/x-www-form-urlencoded` or `application/json` to be sent in the body and respond with
-		a HTTP 302 redirect to the post/after login URL or the `return_to` value if it was set and if the login succeeded;
-		a HTTP 302 redirect to the login UI URL with the flow ID containing the validation errors otherwise.
+		a HTTP 303 redirect to the post/after login URL or the `return_to` value if it was set and if the login succeeded;
+		a HTTP 303 redirect to the login UI URL with the flow ID containing the validation errors otherwise.
 
 		Browser flows with an accept header of `application/json` will not redirect but instead respond with
 		HTTP 200 and a application/json body with the signed in identity and a `Set-Cookie` header on success;
-		HTTP 302 redirect to a fresh login flow if the original flow expired with the appropriate error messages set;
+		HTTP 303 redirect to a fresh login flow if the original flow expired with the appropriate error messages set;
 		HTTP 400 on form validation errors.
 
 		If this endpoint is called with `Accept: application/json` in the header, the response contains the flow without a redirect. In the
@@ -823,7 +823,7 @@ type V0alpha2Api interface {
 			 * SubmitSelfServiceLogoutFlow Complete Self-Service Logout
 			 * This endpoint logs out an identity in a self-service manner.
 
-		If the `Accept` HTTP header is not set to `application/json`, the browser will be redirected (HTTP 302 Found)
+		If the `Accept` HTTP header is not set to `application/json`, the browser will be redirected (HTTP 303 See Other)
 		to the `return_to` parameter of the initial request or fall back to `urls.default_return_to`.
 
 		If the `Accept` HTTP header is set to `application/json`, a 204 No Content response
@@ -872,12 +872,12 @@ type V0alpha2Api interface {
 		`choose_method` expects `flow` (in the URL query) and `email` (in the body) to be sent
 		and works with API- and Browser-initiated flows.
 		For API clients and Browser clients with HTTP Header `Accept: application/json` it either returns a HTTP 200 OK when the form is valid and HTTP 400 OK when the form is invalid.
-		and a HTTP 302 Found redirect with a fresh recovery flow if the flow was otherwise invalid (e.g. expired).
-		For Browser clients without HTTP Header `Accept` or with `Accept: text/*` it returns a HTTP 302 Found redirect to the Recovery UI URL with the Recovery Flow ID appended.
+		and a HTTP 303 See Other redirect with a fresh recovery flow if the flow was otherwise invalid (e.g. expired).
+		For Browser clients without HTTP Header `Accept` or with `Accept: text/*` it returns a HTTP 303 See Other redirect to the Recovery UI URL with the Recovery Flow ID appended.
 		`sent_email` is the success state after `choose_method` for the `link` method and allows the user to request another recovery email. It
 		works for both API and Browser-initiated flows and returns the same responses as the flow in `choose_method` state.
 		`passed_challenge` expects a `token` to be sent in the URL query and given the nature of the flow ("sending a recovery link")
-		does not have any API capabilities. The server responds with a HTTP 302 Found redirect either to the Settings UI URL
+		does not have any API capabilities. The server responds with a HTTP 303 See Other redirect either to the Settings UI URL
 		(if the link was valid) and instructs the user to update their password, or a redirect to the Recover UI URL with
 		a new Recovery Flow ID which contains an error message that the recovery link was invalid.
 
@@ -901,16 +901,16 @@ type V0alpha2Api interface {
 		API flows expect `application/json` to be sent in the body and respond with
 		HTTP 200 and a application/json body with the created identity success - if the session hook is configured the
 		`session` and `session_token` will also be included;
-		HTTP 302 redirect to a fresh registration flow if the original flow expired with the appropriate error messages set;
+		HTTP 303 redirect to a fresh registration flow if the original flow expired with the appropriate error messages set;
 		HTTP 400 on form validation errors.
 
 		Browser flows expect a Content-Type of `application/x-www-form-urlencoded` or `application/json` to be sent in the body and respond with
-		a HTTP 302 redirect to the post/after registration URL or the `return_to` value if it was set and if the registration succeeded;
-		a HTTP 302 redirect to the registration UI URL with the flow ID containing the validation errors otherwise.
+		a HTTP 303 redirect to the post/after registration URL or the `return_to` value if it was set and if the registration succeeded;
+		a HTTP 303 redirect to the registration UI URL with the flow ID containing the validation errors otherwise.
 
 		Browser flows with an accept header of `application/json` will not redirect but instead respond with
 		HTTP 200 and a application/json body with the signed in identity and a `Set-Cookie` header on success;
-		HTTP 302 redirect to a fresh login flow if the original flow expired with the appropriate error messages set;
+		HTTP 303 redirect to a fresh login flow if the original flow expired with the appropriate error messages set;
 		HTTP 400 on form validation errors.
 
 		If this endpoint is called with `Accept: application/json` in the header, the response contains the flow without a redirect. In the
@@ -941,20 +941,20 @@ type V0alpha2Api interface {
 
 		API-initiated flows expect `application/json` to be sent in the body and respond with
 		HTTP 200 and an application/json body with the session token on success;
-		HTTP 302 redirect to a fresh settings flow if the original flow expired with the appropriate error messages set;
+		HTTP 303 redirect to a fresh settings flow if the original flow expired with the appropriate error messages set;
 		HTTP 400 on form validation errors.
 		HTTP 401 when the endpoint is called without a valid session token.
 		HTTP 403 when `selfservice.flows.settings.privileged_session_max_age` was reached or the session's AAL is too low.
 		Implies that the user needs to re-authenticate.
 
 		Browser flows without HTTP Header `Accept` or with `Accept: text/*` respond with
-		a HTTP 302 redirect to the post/after settings URL or the `return_to` value if it was set and if the flow succeeded;
-		a HTTP 302 redirect to the Settings UI URL with the flow ID containing the validation errors otherwise.
-		a HTTP 302 redirect to the login endpoint when `selfservice.flows.settings.privileged_session_max_age` was reached or the session's AAL is too low.
+		a HTTP 303 redirect to the post/after settings URL or the `return_to` value if it was set and if the flow succeeded;
+		a HTTP 303 redirect to the Settings UI URL with the flow ID containing the validation errors otherwise.
+		a HTTP 303 redirect to the login endpoint when `selfservice.flows.settings.privileged_session_max_age` was reached or the session's AAL is too low.
 
 		Browser flows with HTTP Header `Accept: application/json` respond with
 		HTTP 200 and a application/json body with the signed in identity and a `Set-Cookie` header on success;
-		HTTP 302 redirect to a fresh login flow if the original flow expired with the appropriate error messages set;
+		HTTP 303 redirect to a fresh login flow if the original flow expired with the appropriate error messages set;
 		HTTP 401 when the endpoint is called without a valid session cookie.
 		HTTP 403 when the page is accessed without a session cookie or the session's AAL is too low.
 		HTTP 400 on form validation errors.
@@ -998,12 +998,12 @@ type V0alpha2Api interface {
 		`choose_method` expects `flow` (in the URL query) and `email` (in the body) to be sent
 		and works with API- and Browser-initiated flows.
 		For API clients and Browser clients with HTTP Header `Accept: application/json` it either returns a HTTP 200 OK when the form is valid and HTTP 400 OK when the form is invalid
-		and a HTTP 302 Found redirect with a fresh verification flow if the flow was otherwise invalid (e.g. expired).
-		For Browser clients without HTTP Header `Accept` or with `Accept: text/*` it returns a HTTP 302 Found redirect to the Verification UI URL with the Verification Flow ID appended.
+		and a HTTP 303 See Other redirect with a fresh verification flow if the flow was otherwise invalid (e.g. expired).
+		For Browser clients without HTTP Header `Accept` or with `Accept: text/*` it returns a HTTP 303 See Other redirect to the Verification UI URL with the Verification Flow ID appended.
 		`sent_email` is the success state after `choose_method` when using the `link` method and allows the user to request another verification email. It
 		works for both API and Browser-initiated flows and returns the same responses as the flow in `choose_method` state.
 		`passed_challenge` expects a `token` to be sent in the URL query and given the nature of the flow ("sending a verification link")
-		does not have any API capabilities. The server responds with a HTTP 302 Found redirect either to the Settings UI URL
+		does not have any API capabilities. The server responds with a HTTP 303 See Other redirect either to the Settings UI URL
 		(if the link was valid) and instructs the user to update their password, or a redirect to the Verification UI URL with
 		a new Verification Flow ID which contains an error message that the verification link was invalid.
 
@@ -5795,16 +5795,16 @@ behaves differently for API and browser flows.
 
 API flows expect `application/json` to be sent in the body and responds with
 HTTP 200 and a application/json body with the session token on success;
-HTTP 302 redirect to a fresh login flow if the original flow expired with the appropriate error messages set;
+HTTP 303 redirect to a fresh login flow if the original flow expired with the appropriate error messages set;
 HTTP 400 on form validation errors.
 
 Browser flows expect a Content-Type of `application/x-www-form-urlencoded` or `application/json` to be sent in the body and respond with
-a HTTP 302 redirect to the post/after login URL or the `return_to` value if it was set and if the login succeeded;
-a HTTP 302 redirect to the login UI URL with the flow ID containing the validation errors otherwise.
+a HTTP 303 redirect to the post/after login URL or the `return_to` value if it was set and if the login succeeded;
+a HTTP 303 redirect to the login UI URL with the flow ID containing the validation errors otherwise.
 
 Browser flows with an accept header of `application/json` will not redirect but instead respond with
 HTTP 200 and a application/json body with the signed in identity and a `Set-Cookie` header on success;
-HTTP 302 redirect to a fresh login flow if the original flow expired with the appropriate error messages set;
+HTTP 303 redirect to a fresh login flow if the original flow expired with the appropriate error messages set;
 HTTP 400 on form validation errors.
 
 If this endpoint is called with `Accept: application/json` in the header, the response contains the flow without a redirect. In the
@@ -5968,7 +5968,7 @@ func (r V0alpha2ApiApiSubmitSelfServiceLogoutFlowRequest) Execute() (*http.Respo
  * SubmitSelfServiceLogoutFlow Complete Self-Service Logout
  * This endpoint logs out an identity in a self-service manner.
 
-If the `Accept` HTTP header is not set to `application/json`, the browser will be redirected (HTTP 302 Found)
+If the `Accept` HTTP header is not set to `application/json`, the browser will be redirected (HTTP 303 See Other)
 to the `return_to` parameter of the initial request or fall back to `urls.default_return_to`.
 
 If the `Accept` HTTP header is set to `application/json`, a 204 No Content response
@@ -6232,12 +6232,12 @@ behaves differently for API and browser flows and has several states:
 `choose_method` expects `flow` (in the URL query) and `email` (in the body) to be sent
 and works with API- and Browser-initiated flows.
 For API clients and Browser clients with HTTP Header `Accept: application/json` it either returns a HTTP 200 OK when the form is valid and HTTP 400 OK when the form is invalid.
-and a HTTP 302 Found redirect with a fresh recovery flow if the flow was otherwise invalid (e.g. expired).
-For Browser clients without HTTP Header `Accept` or with `Accept: text/*` it returns a HTTP 302 Found redirect to the Recovery UI URL with the Recovery Flow ID appended.
+and a HTTP 303 See Other redirect with a fresh recovery flow if the flow was otherwise invalid (e.g. expired).
+For Browser clients without HTTP Header `Accept` or with `Accept: text/*` it returns a HTTP 303 See Other redirect to the Recovery UI URL with the Recovery Flow ID appended.
 `sent_email` is the success state after `choose_method` for the `link` method and allows the user to request another recovery email. It
 works for both API and Browser-initiated flows and returns the same responses as the flow in `choose_method` state.
 `passed_challenge` expects a `token` to be sent in the URL query and given the nature of the flow ("sending a recovery link")
-does not have any API capabilities. The server responds with a HTTP 302 Found redirect either to the Settings UI URL
+does not have any API capabilities. The server responds with a HTTP 303 See Other redirect either to the Settings UI URL
 (if the link was valid) and instructs the user to update their password, or a redirect to the Recover UI URL with
 a new Recovery Flow ID which contains an error message that the recovery link was invalid.
 
@@ -6387,16 +6387,16 @@ behaves differently for API and browser flows.
 API flows expect `application/json` to be sent in the body and respond with
 HTTP 200 and a application/json body with the created identity success - if the session hook is configured the
 `session` and `session_token` will also be included;
-HTTP 302 redirect to a fresh registration flow if the original flow expired with the appropriate error messages set;
+HTTP 303 redirect to a fresh registration flow if the original flow expired with the appropriate error messages set;
 HTTP 400 on form validation errors.
 
 Browser flows expect a Content-Type of `application/x-www-form-urlencoded` or `application/json` to be sent in the body and respond with
-a HTTP 302 redirect to the post/after registration URL or the `return_to` value if it was set and if the registration succeeded;
-a HTTP 302 redirect to the registration UI URL with the flow ID containing the validation errors otherwise.
+a HTTP 303 redirect to the post/after registration URL or the `return_to` value if it was set and if the registration succeeded;
+a HTTP 303 redirect to the registration UI URL with the flow ID containing the validation errors otherwise.
 
 Browser flows with an accept header of `application/json` will not redirect but instead respond with
 HTTP 200 and a application/json body with the signed in identity and a `Set-Cookie` header on success;
-HTTP 302 redirect to a fresh login flow if the original flow expired with the appropriate error messages set;
+HTTP 303 redirect to a fresh login flow if the original flow expired with the appropriate error messages set;
 HTTP 400 on form validation errors.
 
 If this endpoint is called with `Accept: application/json` in the header, the response contains the flow without a redirect. In the
@@ -6565,20 +6565,20 @@ behaves differently for API and browser flows.
 
 API-initiated flows expect `application/json` to be sent in the body and respond with
 HTTP 200 and an application/json body with the session token on success;
-HTTP 302 redirect to a fresh settings flow if the original flow expired with the appropriate error messages set;
+HTTP 303 redirect to a fresh settings flow if the original flow expired with the appropriate error messages set;
 HTTP 400 on form validation errors.
 HTTP 401 when the endpoint is called without a valid session token.
 HTTP 403 when `selfservice.flows.settings.privileged_session_max_age` was reached or the session's AAL is too low.
 Implies that the user needs to re-authenticate.
 
 Browser flows without HTTP Header `Accept` or with `Accept: text/*` respond with
-a HTTP 302 redirect to the post/after settings URL or the `return_to` value if it was set and if the flow succeeded;
-a HTTP 302 redirect to the Settings UI URL with the flow ID containing the validation errors otherwise.
-a HTTP 302 redirect to the login endpoint when `selfservice.flows.settings.privileged_session_max_age` was reached or the session's AAL is too low.
+a HTTP 303 redirect to the post/after settings URL or the `return_to` value if it was set and if the flow succeeded;
+a HTTP 303 redirect to the Settings UI URL with the flow ID containing the validation errors otherwise.
+a HTTP 303 redirect to the login endpoint when `selfservice.flows.settings.privileged_session_max_age` was reached or the session's AAL is too low.
 
 Browser flows with HTTP Header `Accept: application/json` respond with
 HTTP 200 and a application/json body with the signed in identity and a `Set-Cookie` header on success;
-HTTP 302 redirect to a fresh login flow if the original flow expired with the appropriate error messages set;
+HTTP 303 redirect to a fresh login flow if the original flow expired with the appropriate error messages set;
 HTTP 401 when the endpoint is called without a valid session cookie.
 HTTP 403 when the page is accessed without a session cookie or the session's AAL is too low.
 HTTP 400 on form validation errors.
@@ -6783,12 +6783,12 @@ behaves differently for API and browser flows and has several states:
 `choose_method` expects `flow` (in the URL query) and `email` (in the body) to be sent
 and works with API- and Browser-initiated flows.
 For API clients and Browser clients with HTTP Header `Accept: application/json` it either returns a HTTP 200 OK when the form is valid and HTTP 400 OK when the form is invalid
-and a HTTP 302 Found redirect with a fresh verification flow if the flow was otherwise invalid (e.g. expired).
-For Browser clients without HTTP Header `Accept` or with `Accept: text/*` it returns a HTTP 302 Found redirect to the Verification UI URL with the Verification Flow ID appended.
+and a HTTP 303 See Other redirect with a fresh verification flow if the flow was otherwise invalid (e.g. expired).
+For Browser clients without HTTP Header `Accept` or with `Accept: text/*` it returns a HTTP 303 See Other redirect to the Verification UI URL with the Verification Flow ID appended.
 `sent_email` is the success state after `choose_method` when using the `link` method and allows the user to request another verification email. It
 works for both API and Browser-initiated flows and returns the same responses as the flow in `choose_method` state.
 `passed_challenge` expects a `token` to be sent in the URL query and given the nature of the flow ("sending a verification link")
-does not have any API capabilities. The server responds with a HTTP 302 Found redirect either to the Settings UI URL
+does not have any API capabilities. The server responds with a HTTP 303 See Other redirect either to the Settings UI URL
 (if the link was valid) and instructs the user to update their password, or a redirect to the Verification UI URL with
 a new Verification Flow ID which contains an error message that the verification link was invalid.
 

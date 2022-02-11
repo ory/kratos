@@ -277,7 +277,7 @@ $ curl -s -i -X GET \
     -H "Accept: text/html" \
     https://playground.projects.oryapis.com/api/kratos/public/self-service/recovery/browser
 
-HTTP/2 302
+HTTP/2 303
 date: Fri, 09 Jul 2021 12:50:38 GMT
 content-type: text/html; charset=utf-8
 content-length: 120
@@ -291,7 +291,7 @@ strict-transport-security: max-age=15724800; includeSubDomains
 <a href="https://playground.projects.oryapis.com/hosted/recovery?flow=33964b22-c364-4217-b6fc-5f381d142d65">Found</a>.
 ```
 
-The server responds with a HTTP 302 redirect to the Recovery UI, appending the
+The server responds with a HTTP 303 redirect to the Recovery UI, appending the
 `?flow=<flow-id>` query parameter (see the curl example) to the URL configured
 here:
 
@@ -540,7 +540,7 @@ $ curl -H "Accept: application/json" -s \
 
 The form payloads are then submitted to Ory Kratos which follows up with:
 
-- An HTTP 302 Found redirect pointing to the Registration UI for Browser
+- An HTTP 303 See Other redirect pointing to the Registration UI for Browser
   Clients;
 - An `application/json` response for API Clients and Client-Side Browser
   applications (e.g. Single Page Apps).
@@ -552,9 +552,9 @@ validation errors such as a malformed email:
 
 <CodeTabs items={getFlowMethodLinkWithErrors} />
 
-When validation errors happen, browser clients receive a HTTP 302 Found redirect
-to the Recovery Flow UI, containing the Recovery Flow ID which includes the
-error payloads.
+When validation errors happen, browser clients receive a HTTP 303 See Other
+redirect to the Recovery Flow UI, containing the Recovery Flow ID which includes
+the error payloads.
 
 For API Clients, the server typically responds with HTTP 400 Bad Request and the
 Recovery Flow in the response payload as JSON.
@@ -568,7 +568,7 @@ On successful submission, an email will be sent to the provided address:
 ## Unsuccessful Recovery
 
 If the recovery challenge (e.g. the link in the recovery email) is invalid or
-expired, the user will be HTTP 302 redirected to the Recovery UI.
+expired, the user will be HTTP 303 redirected to the Recovery UI.
 
 :::note
 
@@ -586,7 +586,7 @@ Please keep in mind that this part of the flow always involves a Browser!
 
 ## Successful Recovery
 
-Completing account recovery always results in a HTTP 302 redirect with a Ory
+Completing account recovery always results in a HTTP 303 redirect with a Ory
 Kratos Login Session Cookie to the Settings UI with a Settings Flow prompting
 the user to update their password or credentials:
 
