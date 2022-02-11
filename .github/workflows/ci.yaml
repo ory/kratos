@@ -1,0 +1,324 @@
+name: CI Tasks for Ory Kratos
+on:
+  push:
+    branches:
+      - master
+    tags:
+      - '*'
+  pull_request:
+
+# Cancel in-progress runs in current workflow.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  sdk-generate:
+    name: Generate SDKs
+    runs-on: ubuntu-latest
+    steps:
+      - uses: ory/ci/sdk/generate@master
+        with:
+          token: ${{ secrets.ORY_BOT_PAT }}
+          app-name: Ory_Kratos
+          swag-spec-ignore: internal/httpclient
+          swag-spec-location: spec/api.json
+
+  test:
+    name: Run tests and lints
+    runs-on: ubuntu-latest
+    needs:
+      - sdk-generate
+    services:
+      postgres:
+        image: postgres:9.6
+        env:
+          POSTGRES_DB: postgres
+          POSTGRES_PASSWORD: test
+          POSTGRES_USER: test
+        ports:
+          - 5432:5432
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: test
+        ports:
+          - 3306:3306
+    env:
+      TEST_MAILHOG_SMTP: "smtp://test:test@127.0.0.1:1025/?disable_starttls=true"
+      TEST_MAILHOG_API: http://127.0.0.1:8025
+      TEST_SELFSERVICE_OIDC_HYDRA_ADMIN: http://127.0.0.1:4445
+      TEST_SELFSERVICE_OIDC_HYDRA_PUBLIC: http://127.0.0.1:4444
+      TEST_SELFSERVICE_OIDC_HYDRA_INTEGRATION_ADDR: http://127.0.0.1:4499
+      TEST_DATABASE_POSTGRESQL: "postgres://test:test@localhost:5432/postgres?sslmode=disable"
+      TEST_DATABASE_MYSQL: "mysql://root:test@(localhost:3306)/mysql?parseTime=true&multiStatements=true"
+      TEST_DATABASE_COCKROACHDB: "cockroach://root@localhost:26257/defaultdb?sslmode=disable"
+    steps:
+      - run: |
+          docker create --name cockroach -p 26257:26257 \
+            cockroachdb/cockroach:v20.2.5 start-single-node --insecure
+          docker start cockroach
+        name: Start CockroachDB
+      - run: |
+          docker create --name mailhog -p 8025:8025 -p 1025:1025 \
+            mailhog/mailhog:v1.0.0 \
+            MailHog -invite-jim -jim-linkspeed-affect=0.25 -jim-reject-auth=0.25 -jim-reject-recipient=0.25 -jim-reject-sender=0.25 -jim-disconnect=0.25 -jim-linkspeed-min=1250 -jim-linkspeed-max=12500
+          docker start mailhog
+        name: Start MailHog
+      - run: |
+          docker create --name hydra -p 4445:4445 -p 4444:4444 \
+            -e DSN=memory \
+            -e URLS_SELF_ISSUER=http://127.0.0.1:4444/ \
+            -e URLS_LOGIN=http://127.0.0.1:4499/login \
+            -e URLS_CONSENT=http://127.0.0.1:4499/consent \
+            oryd/hydra:v1.4.10 serve all --dangerous-force-http
+          docker start hydra
+          docker logs -f hydra &> /tmp/hydra.log &
+        name: Start Hydra
+      - uses: actions/checkout@v2
+        with:
+          fetch-depth: 2
+      - uses: actions/setup-go@v2
+        with:
+          go-version: ^1.17
+      - run: go list -json > go.list
+      - name: Run nancy
+        uses: sonatype-nexus-community/nancy-github-action@v1.0.2
+      - name: Run prettier
+        uses: ory/ci/prettier@master
+      - name: Run prettier (docs)
+        uses: ory/ci/prettier@master
+        with:
+          dir: docs
+      - name: Run golangci-lint
+        uses: golangci/golangci-lint-action@v2
+        env:
+          GOGC: 100
+        with:
+          args: --timeout 10m0s
+          skip-go-installation: true
+          skip-pkg-cache: true
+      - name: Install node packages
+        run: npm install
+      - name: Build Kratos
+        run: make install
+      - name: Run documentation tests
+        run: make test-docs
+      - name: Run go-acc (tests)
+        run: make test-coverage
+      - name: Submit to Codecov
+        run: |
+          bash <(curl -s https://codecov.io/bash)
+        env:
+          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+
+  test-e2e:
+    name: Run end-to-end tests
+    runs-on: ubuntu-latest
+    needs:
+      - sdk-generate
+    services:
+      postgres:
+        image: postgres:9.6
+        env:
+          POSTGRES_DB: postgres
+          POSTGRES_PASSWORD: test
+          POSTGRES_USER: test
+        ports:
+          - 5432:5432
+      mysql:
+        image: mysql:5.7
+        env:
+          MYSQL_ROOT_PASSWORD: test
+        ports:
+          - 3306:3306
+      mailslurper:
+        image: oryd/mailslurper:latest-smtps
+        ports:
+          - 4436:4436
+          - 4437:4437
+          - 1025:1025
+    env:
+      TEST_DATABASE_POSTGRESQL: "postgres://test:test@localhost:5432/postgres?sslmode=disable"
+      TEST_DATABASE_MYSQL: "mysql://root:test@(localhost:3306)/mysql?parseTime=true&multiStatements=true"
+      TEST_DATABASE_COCKROACHDB: "cockroach://root@localhost:26257/defaultdb?sslmode=disable"
+    strategy:
+      matrix:
+        database: ['postgres', 'cockroach', 'sqlite', 'mysql']
+    steps:
+      - run: |
+          docker create --name cockroach -p 26257:26257 \
+            cockroachdb/cockroach:v20.2.5 start-single-node --insecure
+          docker start cockroach
+        name: Start CockroachDB
+      - uses: browser-actions/setup-chrome@latest
+        name: Install Chrome
+      - uses: browser-actions/setup-firefox@latest
+        name: Install Firefox
+      - uses: browser-actions/setup-geckodriver@latest
+        name: Install Geckodriver
+      - uses: actions/checkout@v2
+        with:
+          fetch-depth: 2
+      - run: |
+          npm ci
+          cd test/e2e; npm ci
+          npm i -g expo-cli
+        name: Install node deps
+      - name: Setup Go
+        uses: actions/setup-go@v2
+        with:
+          go-version: '^1.17'
+      - name: Install selfservice-ui-react-native
+        uses: actions/checkout@v2
+        with:
+          repository: ory/kratos-selfservice-ui-react-native
+          path: react-native-ui
+      - run: |
+          cd react-native-ui
+          npm install
+      - name: Install selfservice-ui-node
+        uses: actions/checkout@v2
+        with:
+          repository: ory/kratos-selfservice-ui-node
+          path: node-ui
+      - run: |
+          cd node-ui
+          npm install
+      - run: |
+          echo 'RN_UI_PATH='"$(realpath react-native-ui)" >> $GITHUB_ENV
+          echo 'NODE_UI_PATH='"$(realpath node-ui)" >> $GITHUB_ENV
+      - run: |
+          ./test/e2e/run.sh ${{ matrix.database }}
+        env:
+          RN_UI_PATH: react-native-ui
+          NODE_UI_PATH: node-ui
+      - if: failure()
+        uses: actions/upload-artifact@v2
+        with:
+          name: logs
+          path: test/e2e/*.e2e.log
+
+  docs-build:
+    runs-on: ubuntu-latest
+    name: Build and publish docs
+    if: ${{ github.ref_type == 'tag' || github.ref_name == 'master' }}
+    needs:
+      - test
+    steps:
+      - uses: ory/ci/docs/build@master
+        with:
+          token: ${{ secrets.ORY_BOT_PAT }}
+          swag-spec-location: spec/api.json
+
+  docs-cli:
+    runs-on: ubuntu-latest
+    name: Build CLI docs
+    needs:
+      - test
+    steps:
+      - uses: ory/ci/docs/cli@master
+        with:
+          token: ${{ secrets.ORY_BOT_PAT }}
+
+  changelog:
+    name: Generate changelog
+    runs-on: ubuntu-latest
+    if: ${{ github.ref_type == 'tag' || github.ref_name == 'master' }}
+    needs:
+      - test
+      - test-e2e
+      - docs-build
+    steps:
+      - uses: ory/ci/changelog@master
+        with:
+          token: ${{ secrets.ORY_BOT_PAT }}
+
+  sdk-release:
+    name: Release SDKs
+    runs-on: ubuntu-latest
+    if: ${{ github.ref_type == 'tag' }}
+    needs:
+      - test
+      - test-e2e
+      - sdk-generate
+      - docs-build
+      - release
+    steps:
+      - uses: ory/ci/sdk/release@master
+        with:
+          token: ${{ secrets.ORY_BOT_PAT }}
+          app-name: Ory_Kratos
+          swag-spec-ignore: internal/httpclient
+          swag-spec-location: spec/api.json
+
+  release:
+    name: Generate release
+    runs-on: ubuntu-latest
+    if: ${{ github.ref_type == 'tag' }}
+    needs:
+      - test
+      - test-e2e
+      - changelog
+      - docs-build
+    steps:
+      - uses: ory/ci/releaser@master
+        with:
+          token: ${{ secrets.ORY_BOT_PAT }}
+          goreleaser_key: ${{ secrets.GORELEASER_KEY }}
+          cosign_pwd: ${{ secrets.COSIGN_PWD }}
+          docker_username: ${{ secrets.DOCKERHUB_USERNAME }}
+          docker_password: ${{ secrets.DOCKERHUB_PASSWORD }}
+
+  render-version-schema:
+    name: Render version schema
+    runs-on: ubuntu-latest
+    if: ${{ github.ref_type == 'tag' }}
+    needs:
+      - release
+    steps:
+      - uses: ory/ci/releaser/render-version-schema@master
+        with:
+          schema-path: spec/config.json
+
+  newsletter-draft:
+    name: Draft newsletter
+    runs-on: ubuntu-latest
+    if: ${{ github.ref_type == 'tag' }}
+    needs:
+      - release
+    steps:
+      - uses: ory/ci/newsletter@master
+        with:
+          mailchimp_list_id: 058a056618
+          mailchmip_segment_id: 11398953
+          mailchimp_api_key: ${{ secrets.MAILCHIMP_API_KEY }}
+          draft: 'true'
+          ssh_key: ${{ secrets.ORY_BOT_SSH_KEY }}
+
+  slack-approval-notification:
+    name: Pending approval Slack notification
+    runs-on: ubuntu-latest
+    if: ${{ github.ref_type == 'tag' }}
+    needs:
+      - newsletter-draft
+    steps:
+      - uses: ory/ci/newsletter/slack-notify@master
+        with:
+          slack-webhook-url: ${{ secrets.SLACK_WEBHOOK_URL }}
+
+  newsletter-send:
+    name: Send newsletter
+    runs-on: ubuntu-latest
+    needs:
+      - newsletter-draft
+    if: ${{ github.ref_type == 'tag' }}
+    environment: production
+    steps:
+      - uses: ory/ci/newsletter@master
+        with:
+          mailchimp_list_id: 058a056618
+          mailchmip_segment_id: 11398953
+          mailchimp_api_key: ${{ secrets.MAILCHIMP_API_KEY }}
+          draft: 'false'
+          ssh_key: ${{ secrets.ORY_BOT_SSH_KEY }}
