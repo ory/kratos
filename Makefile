@@ -16,7 +16,6 @@ GO_DEPENDENCIES = github.com/ory/go-acc \
 				  github.com/golang/mock/mockgen \
 				  github.com/go-swagger/go-swagger/cmd/swagger \
 				  golang.org/x/tools/cmd/goimports \
-				  github.com/mikefarah/yq \
 				  github.com/mattn/goveralls \
 				  github.com/cortesi/modd/cmd/modd
 
@@ -31,6 +30,10 @@ $(call make-lint-dependency)
 .bin/clidoc:
 		echo "deprecated usage, use docs/cli instead"
 		go build -o .bin/clidoc ./cmd/clidoc/.
+
+.PHONY: .bin/yq
+.bin/yq:
+		go build -o .bin/yq github.com/mikefarah/yq/v4
 
 .PHONY: docs/cli
 docs/cli:
@@ -118,12 +121,12 @@ sdk: .bin/swagger .bin/ory node_modules
 quickstart:
 		docker pull oryd/kratos:latest
 		docker pull oryd/kratos-selfservice-ui-node:latest
-		docker-compose -f quickstart.yml -f quickstart-standalone.yml up --build --force-recreate
+		quickstart -f quickstart.yml -f quickstart-standalone.yml up --build --force-recreate
 
 .PHONY: quickstart-dev
 quickstart-dev:
 		docker build -f .docker/Dockerfile-build -t oryd/kratos:latest .
-		docker-compose -f quickstart.yml -f quickstart-standalone.yml -f quickstart-latest.yml $(QUICKSTART_OPTIONS) up --build --force-recreate
+		quickstart -f quickstart.yml -f quickstart-standalone.yml -f quickstart-latest.yml $(QUICKSTART_OPTIONS) up --build --force-recreate
 
 # Formats the code
 .PHONY: format
@@ -169,3 +172,9 @@ migratest-refresh:
 .PHONY: test-update-snapshots
 test-update-snapshots:
 		UPDATE_SNAPSHOTS=true go test -p 4 -tags sqlite -short ./...
+
+.PHONY: post-release
+post-release: .bin/yq
+		cat quickstart.yml | yq '.services.kratos.image = "oryd/kratos:'$$DOCKER_TAG'"' | sponge quickstart.yml
+		cat quickstart.yml | yq '.services.kratos-migrate.image = "oryd/kratos:'$$DOCKER_TAG'"' | sponge quickstart.yml
+		cat quickstart.yml | yq '.services.kratos-selfservice-ui-node.image = "oryd/kratos-selfservice-ui-node:'$$DOCKER_TAG'"' | sponge quickstart.yml
