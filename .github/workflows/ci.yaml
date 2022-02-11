@@ -87,10 +87,6 @@ jobs:
         name: Install node deps
       - name: Run prettier
         uses: ory/ci/prettier@master
-      - name: Run prettier (docs)
-        uses: ory/ci/prettier@master
-        with:
-          dir: docs
       - name: Run golangci-lint
         uses: golangci/golangci-lint-action@v2
         env:
@@ -198,18 +194,6 @@ jobs:
           name: logs
           path: test/e2e/*.e2e.log
 
-  docs-build:
-    runs-on: ubuntu-latest
-    name: Build and publish docs
-    if: ${{ github.ref_type == 'tag' || github.ref_name == 'master' }}
-    needs:
-      - test
-    steps:
-      - uses: ory/ci/docs/build@master
-        with:
-          token: ${{ secrets.ORY_BOT_PAT }}
-          swag-spec-location: spec/api.json
-
   docs-cli:
     runs-on: ubuntu-latest
     name: Build CLI docs
@@ -227,7 +211,6 @@ jobs:
     needs:
       - test
       - test-e2e
-      - docs-build
     steps:
       - uses: ory/ci/changelog@master
         with:
@@ -241,7 +224,6 @@ jobs:
       - test
       - test-e2e
       - sdk-generate
-      - docs-build
       - release
     steps:
       - uses: ory/ci/sdk/release@master
@@ -256,7 +238,6 @@ jobs:
       - test
       - test-e2e
       - changelog
-      - docs-build
     steps:
       - uses: ory/ci/releaser@master
         with:
