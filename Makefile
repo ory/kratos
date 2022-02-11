@@ -1,6 +1,6 @@
 SHELL=/bin/bash -o pipefail
 
-#  EXECUTABLES = quickstart docker node npm go
+#  EXECUTABLES = docker-compose docker node npm go
 #  K := $(foreach exec,$(EXECUTABLES),\
 #          $(if $(shell which $(exec)),some string,$(error "No $(exec) in PATH")))
 
