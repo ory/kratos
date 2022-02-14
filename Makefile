@@ -46,7 +46,7 @@ docs/cli:
 node_modules: package.json Makefile
 		npm ci
 
-docs/node_modules: docs/package.json
+docs/node_modules:
 		cd docs; npm ci
 
 .bin/golangci-lint: Makefile
