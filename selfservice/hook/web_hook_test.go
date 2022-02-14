@@ -138,7 +138,7 @@ func TestJsonNetSupport(t *testing.T) {
 		},
 	} {
 		t.Run("case="+tc.desc, func(t *testing.T) {
-			b, err := createBody(l, tc.template, tc.data)
+			b, err := createBody(l, tc.template, tc.data, retryablehttp.NewClient())
 			require.NoError(t, err)
 			body, err := io.ReadAll(b)
 			require.NoError(t, err)
@@ -160,14 +160,14 @@ func TestJsonNetSupport(t *testing.T) {
 		hook := test.Hook{}
 		l := logrusx.New("kratos", "test", logrusx.WithHook(&hook))
 
-		_, _ = createBody(l, "./foo", nil)
+		_, _ = createBody(l, "./foo", nil, retryablehttp.NewClient())
 
 		require.Len(t, hook.Entries, 1)
 		assert.Contains(t, hook.LastEntry().Message, "support for filepaths without a 'file://' scheme will be dropped")
 	})
 
 	t.Run("case=return non nil body reader on empty templateURI", func(t *testing.T) {
-		body, err := createBody(l, "", nil)
+		body, err := createBody(l, "", nil, retryablehttp.NewClient())
 		assert.NotNil(t, body)
 		assert.Nil(t, err)
 	})

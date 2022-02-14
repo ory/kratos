@@ -98,7 +98,13 @@ func (s *ErrorHandler) WriteFlowError(
 		return
 	}
 
-	if err := SortNodes(f.UI.Nodes, s.d.Config(r.Context()).DefaultIdentityTraitsSchemaURL().String()); err != nil {
+	ds, err := s.d.Config(r.Context()).DefaultIdentityTraitsSchemaURL()
+	if err != nil {
+		s.forward(w, r, f, err)
+		return
+	}
+
+	if err := SortNodes(r.Context(), f.UI.Nodes, ds.String()); err != nil {
 		s.forward(w, r, f, err)
 		return
 	}

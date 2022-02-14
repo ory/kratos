@@ -6,6 +6,8 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/ory/x/fetcher"
+
 	"github.com/tidwall/sjson"
 
 	"github.com/ory/x/decoderx"
@@ -24,7 +26,6 @@ import (
 	"github.com/google/go-jsonnet"
 	"github.com/tidwall/gjson"
 
-	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/selfservice/flow"
 	"github.com/ory/kratos/selfservice/flow/registration"
@@ -70,8 +71,11 @@ type SubmitSelfServiceRegistrationFlowWithOidcMethodBody struct {
 }
 
 func (s *Strategy) newLinkDecoder(p interface{}, r *http.Request) error {
-	raw, err := sjson.SetBytes(linkSchema,
-		"properties.traits.$ref", s.d.Config(r.Context()).DefaultIdentityTraitsSchemaURL().String()+"#/properties/traits")
+	ds, err := s.d.Config(r.Context()).DefaultIdentityTraitsSchemaURL()
+	if err != nil {
+		return err
+	}
+	raw, err := sjson.SetBytes(linkSchema, "properties.traits.$ref", ds.String()+"#/properties/traits")
 	if err != nil {
 		return errors.WithStack(err)
 	}
@@ -176,7 +180,8 @@ func (s *Strategy) processRegistration(w http.ResponseWriter, r *http.Request, a
 		return nil, nil
 	}
 
-	jn, err := s.f.Fetch(provider.Config().Mapper)
+	fetch := fetcher.NewFetcher(fetcher.WithClient(s.d.HTTPClient(r.Context())))
+	jn, err := fetch.Fetch(provider.Config().Mapper)
 	if err != nil {
 		return nil, s.handleError(w, r, a, provider.Config().ID, nil, err)
 	}
@@ -186,7 +191,7 @@ func (s *Strategy) processRegistration(w http.ResponseWriter, r *http.Request, a
 		return nil, s.handleError(w, r, a, provider.Config().ID, nil, err)
 	}
 
-	i := identity.NewIdentity(config.DefaultIdentityTraitsSchemaID)
+	i := identity.NewIdentity(s.d.Config(r.Context()).DefaultIdentityTraitsSchemaID())
 
 	vm := jsonnet.MakeVM()
 	vm.ExtCode("claims", jsonClaims.String())

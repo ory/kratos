@@ -45,8 +45,12 @@ func (s *Strategy) SettingsStrategyID() string {
 }
 
 func (s *Strategy) decoderSettings(p *submitSelfServiceSettingsFlowWithOidcMethodBody, r *http.Request) error {
+	ds, err := s.d.Config(r.Context()).DefaultIdentityTraitsSchemaURL()
+	if err != nil {
+		return err
+	}
 	raw, err := sjson.SetBytes(settingsSchema,
-		"properties.traits.$ref", s.d.Config(r.Context()).DefaultIdentityTraitsSchemaURL().String()+"#/properties/traits")
+		"properties.traits.$ref", ds.String()+"#/properties/traits")
 	if err != nil {
 		return errors.WithStack(err)
 	}
@@ -100,7 +104,7 @@ func (s *Strategy) linkedProviders(ctx context.Context, r *http.Request, conf *C
 
 	var result []Provider
 	for _, p := range available.Providers {
-		prov, err := conf.Provider(p.Provider, s.d.Config(ctx).SelfPublicURL())
+		prov, err := conf.Provider(p.Provider, s.d)
 		if err != nil {
 			return nil, err
 		}
@@ -130,7 +134,7 @@ func (s *Strategy) linkableProviders(ctx context.Context, r *http.Request, conf 
 		}
 
 		if !found {
-			prov, err := conf.Provider(p.ID, s.d.Config(ctx).SelfPublicURL())
+			prov, err := conf.Provider(p.ID, s.d)
 			if err != nil {
 				return nil, err
 			}

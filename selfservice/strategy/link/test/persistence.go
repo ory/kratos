@@ -30,7 +30,7 @@ func TestPersister(ctx context.Context, conf *config.Config, p interface {
 	return func(t *testing.T) {
 		nid, p := testhelpers.NewNetworkUnlessExisting(t, ctx, p)
 
-		conf.MustSet(config.ViperKeyDefaultIdentitySchemaURL, "file://./stub/identity.schema.json")
+		testhelpers.SetDefaultIdentitySchema(conf, "file://./stub/identity.schema.json")
 		conf.MustSet(config.ViperKeySecretsDefault, []string{"secret-a", "secret-b"})
 
 		t.Run("token=recovery", func(t *testing.T) {

@@ -5,9 +5,13 @@ import (
 	"crypto/tls"
 	"encoding/json"
 	"fmt"
-	"net/url"
 	"strconv"
 	"time"
+
+	"github.com/hashicorp/go-retryablehttp"
+
+	"github.com/ory/kratos/driver/config"
+	"github.com/ory/x/httpx"
 
 	"github.com/cenkalti/backoff"
 	"github.com/gofrs/uuid"
@@ -21,20 +25,14 @@ import (
 )
 
 type (
-	SMTPConfig interface {
-		CourierSMTPURL() *url.URL
-		CourierSMTPFrom() string
-		CourierSMTPFromName() string
-		CourierSMTPHeaders() map[string]string
-		CourierTemplatesRoot() string
-	}
 	SMTPDependencies interface {
 		PersistenceProvider
 		x.LoggingProvider
 		ConfigProvider
+		HTTPClient(ctx context.Context, opts ...httpx.ResilientOptions) *retryablehttp.Client
 	}
 	TemplateTyper            func(t EmailTemplate) (TemplateType, error)
-	EmailTemplateFromMessage func(c SMTPConfig, msg Message) (EmailTemplate, error)
+	EmailTemplateFromMessage func(d SMTPDependencies, msg Message) (EmailTemplate, error)
 	Courier                  struct {
 		Dialer                      *gomail.Dialer
 		d                           SMTPDependencies
@@ -45,7 +43,7 @@ type (
 		Courier(ctx context.Context) *Courier
 	}
 	ConfigProvider interface {
-		CourierConfig(ctx context.Context) SMTPConfig
+		CourierConfig(ctx context.Context) config.CourierConfigs
 	}
 )
 
@@ -101,12 +99,12 @@ func (m *Courier) QueueEmail(ctx context.Context, t EmailTemplate) (uuid.UUID, e
 		return uuid.Nil, err
 	}
 
-	subject, err := t.EmailSubject()
+	subject, err := t.EmailSubject(ctx)
 	if err != nil {
 		return uuid.Nil, err
 	}
 
-	bodyPlaintext, err := t.EmailBodyPlaintext()
+	bodyPlaintext, err := t.EmailBodyPlaintext(ctx)
 	if err != nil {
 		return uuid.Nil, err
 	}
@@ -188,14 +186,14 @@ func (m *Courier) DispatchMessage(ctx context.Context, msg Message) error {
 
 		gm.SetBody("text/plain", msg.Body)
 
-		tmpl, err := m.NewEmailTemplateFromMessage(m.d.CourierConfig(ctx), msg)
+		tmpl, err := m.NewEmailTemplateFromMessage(m.d, msg)
 		if err != nil {
 			m.d.Logger().
 				WithError(err).
 				WithField("message_id", msg.ID).
 				Error(`Unable to get email template from message.`)
 		} else {
-			htmlBody, err := tmpl.EmailBody()
+			htmlBody, err := tmpl.EmailBody(ctx)
 			if err != nil {
 				m.d.Logger().
 					WithError(err).

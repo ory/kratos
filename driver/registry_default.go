@@ -263,11 +263,7 @@ func (m *RegistryDefault) Config(ctx context.Context) *config.Config {
 	return corp.ContextualizeConfig(ctx, m.c)
 }
 
-func (m *RegistryDefault) CourierConfig(ctx context.Context) courier.SMTPConfig {
-	return m.Config(ctx)
-}
-
-func (m *RegistryDefault) SMTPConfig(ctx context.Context) courier.SMTPConfig {
+func (m *RegistryDefault) CourierConfig(ctx context.Context) config.CourierConfigs {
 	return m.Config(ctx)
 }
 
@@ -684,15 +680,19 @@ func (m *RegistryDefault) PrometheusManager() *prometheus.MetricsManager {
 	return m.pmm
 }
 
-func (m *RegistryDefault) HTTPClient(ctx context.Context) *retryablehttp.Client {
-	opts := []httpx.ResilientOptions{
+func (m *RegistryDefault) HTTPClient(ctx context.Context, opts ...httpx.ResilientOptions) *retryablehttp.Client {
+	opts = append(opts,
 		httpx.ResilientClientWithLogger(m.Logger()),
 		httpx.ResilientClientWithMaxRetry(2),
-		httpx.ResilientClientWithConnectionTimeout(30 * time.Second),
+		httpx.ResilientClientWithConnectionTimeout(30*time.Second))
+
+	tracer := m.Tracer(ctx)
+	if tracer.IsLoaded() {
+		opts = append(opts, httpx.ResilientClientWithTracer(tracer.Tracer()))
 	}
+
 	if m.Config(ctx).ClientHTTPNoPrivateIPRanges() {
 		opts = append(opts, httpx.ResilientClientDisallowInternalIPs())
-
 	}
 	return httpx.NewResilientClient(opts...)
 }

@@ -108,7 +108,7 @@ prepare() {
 
   (
     cd "$rn_ui_dir"
-    npm i -g expo-cli
+    npm i expo-cli
     WEB_PORT=4457 KRATOS_URL=http://localhost:4433 npm run web -- --non-interactive \
       >"${base}/test/e2e/rn-profile-app.e2e.log" 2>&1 &
   )
@@ -204,8 +204,8 @@ run() {
   ! nc -zv localhost 4433
 
   ls -la .
-  for profile in email mobile oidc recovery verification mfa spa; do
-    yq merge test/e2e/profiles/kratos.base.yml "test/e2e/profiles/${profile}/.kratos.yml" > test/e2e/kratos.${profile}.yml
+  for profile in email mobile oidc recovery verification mfa spa network; do
+    yq ea '. as $item ireduce ({}; . * $item )' test/e2e/profiles/kratos.base.yml "test/e2e/profiles/${profile}/.kratos.yml" > test/e2e/kratos.${profile}.yml
     cp test/e2e/kratos.email.yml test/e2e/kratos.generated.yml
   done
 

@@ -103,7 +103,7 @@ func TestCompleteSettings(t *testing.T) {
 
 	conf.MustSet(config.ViperKeySelfServiceSettingsPrivilegedAuthenticationAfter, "1m")
 
-	conf.MustSet(config.ViperKeyDefaultIdentitySchemaURL, "file://./stub/login.schema.json")
+	testhelpers.SetDefaultIdentitySchema(conf, "file://./stub/login.schema.json")
 	conf.MustSet(config.ViperKeySecretsDefault, []string{"not-a-secure-session-key"})
 
 	doAPIFlow := func(t *testing.T, v func(url.Values), id *identity.Identity) (string, *http.Response) {

@@ -66,7 +66,10 @@ hashers:
     cost: 8
 
 identity:
-  default_schema_url: file:///etc/config/kratos/identity.schema.json
+  default_schema_id: default
+  schemas:
+    - id: default
+      schema: file:///etc/config/kratos/identity.schema.json
 
 courier:
   smtp:

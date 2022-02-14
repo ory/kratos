@@ -1,24 +1,28 @@
 package template_test
 
 import (
+	"context"
 	"testing"
 
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
+	"github.com/ory/kratos/courier"
+	"github.com/ory/kratos/courier/template/testhelpers"
 
 	"github.com/ory/kratos/courier/template"
 	"github.com/ory/kratos/internal"
 )
 
 func TestRecoverInvalid(t *testing.T) {
-	conf, _ := internal.NewFastRegistryWithMocks(t)
-	tpl := template.NewRecoveryInvalid(conf, &template.RecoveryInvalidModel{})
+	ctx, cancel := context.WithCancel(context.Background())
+	t.Cleanup(cancel)
 
-	rendered, err := tpl.EmailBody()
-	require.NoError(t, err)
-	assert.NotEmpty(t, rendered)
+	t.Run("test=with courier templates directory", func(t *testing.T) {
+		_, reg := internal.NewFastRegistryWithMocks(t)
+		tpl := template.NewRecoveryInvalid(reg, &template.RecoveryInvalidModel{})
 
-	rendered, err = tpl.EmailSubject()
-	require.NoError(t, err)
-	assert.NotEmpty(t, rendered)
+		testhelpers.TestRendered(t, ctx, tpl)
+	})
+
+	t.Run("case=test remote resources", func(t *testing.T) {
+		testhelpers.TestRemoteTemplates(t, "courier/builtin/templates/recovery/invalid", courier.TypeRecoveryInvalid)
+	})
 }

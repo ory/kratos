@@ -85,6 +85,16 @@ context('Account Verification Error', () => {
           )
         })
       })
+
+      it('unable to verify non-existent account', async () => {
+        cy.get('input[name="email"]').type(gen.identity().email)
+        cy.get('button[value="link"]').click()
+        cy.getMail().then((mail) => {
+          expect(mail.subject).eq(
+            'Someone tried to verify this email address (remote)'
+          )
+        })
+      })
     })
   })
 })
