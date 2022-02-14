@@ -16,8 +16,6 @@ import (
 
 	_ "github.com/jteeuwen/go-bindata"
 
-	_ "github.com/mikefarah/yq"
-
 	_ "github.com/davidrjonas/semver-cli"
 
 	_ "github.com/cortesi/modd/cmd/modd"
