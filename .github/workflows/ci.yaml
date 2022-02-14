@@ -84,7 +84,7 @@ jobs:
       - run: npm install
         name: Install node deps
       - name: Run prettier
-        uses: npm run format:check
+        run: npm run format:check
       - name: Run golangci-lint
         uses: golangci/golangci-lint-action@v2
         env:
