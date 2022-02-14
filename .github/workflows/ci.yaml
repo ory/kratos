@@ -81,12 +81,10 @@ jobs:
       - run: go list -json > go.list
       - name: Run nancy
         uses: sonatype-nexus-community/nancy-github-action@v1.0.2
-      - run: |
-          npm install
-          cd docs; npm install
+      - run: npm install
         name: Install node deps
       - name: Run prettier
-        uses: ory/ci/prettier@master
+        run: npm run format:check
       - name: Run golangci-lint
         uses: golangci/golangci-lint-action@v2
         env:
@@ -194,13 +192,14 @@ jobs:
           name: logs
           path: test/e2e/*.e2e.log
 
+
   docs-cli:
     runs-on: ubuntu-latest
     name: Build CLI docs
     needs:
       - test
     steps:
-      - uses: ory/ci/docs/cli@master
+      - uses: ory/ci/docs/cli-next@master
         with:
           token: ${{ secrets.ORY_BOT_PAT }}
 
