@@ -4,7 +4,7 @@ log:
 
 secrets:
   cookie:
-    - PLEASE-CHANGE-ME-I-AM-VERY-INSECURE
+    - "PLEASE-CHANGE-ME-I-AM-VERY-INSECURE"
 
 selfservice:
   default_browser_return_url: http://localhost:4455/
