@@ -16,12 +16,10 @@ import (
 
 	_ "github.com/jteeuwen/go-bindata"
 
-	_ "github.com/mikefarah/yq"
+	_ "github.com/mikefarah/yq/v4"
 
 	_ "github.com/davidrjonas/semver-cli"
 
 	_ "github.com/cortesi/modd/cmd/modd"
 	_ "github.com/hashicorp/consul/api"
 )
-
-import _ "github.com/mikefarah/yq/v4"
