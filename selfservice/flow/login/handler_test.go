@@ -465,7 +465,7 @@ func TestFlowLifecycle(t *testing.T) {
 
 			t.Run("case=redirects with 303", func(t *testing.T) {
 				c := http.DefaultClient
-				// don't get the reference, instead copy the values so we don't alter the client directly.
+				// don't get the reference, instead copy the values, so we don't alter the client directly.
 				*c = *ts.Client()
 				// prevent the redirect
 				c.CheckRedirect = func(req *http.Request, via []*http.Request) error {
@@ -481,17 +481,6 @@ func TestFlowLifecycle(t *testing.T) {
 				defer res.Body.Close()
 			})
 
-			t.Run("case=test client isn't altered", func(t *testing.T) {
-				c := ts.Client()
-				req, err := http.NewRequest("GET", ts.URL+login.RouteInitBrowserFlow, nil)
-				require.NoError(t, err)
-
-				res, err := c.Do(req)
-				require.NoError(t, err)
-				// here we check that the redirect status is 303
-				require.Equal(t, http.StatusOK, res.StatusCode)
-				defer res.Body.Close()
-			})
 		})
 		t.Run("case=relative redirect when self-service login ui is a relative URL", func(t *testing.T) {
 			reg.Config(context.Background()).MustSet(config.ViperKeySelfServiceLoginUI, "/login-ts")
