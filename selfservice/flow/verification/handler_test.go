@@ -156,7 +156,7 @@ func TestGetFlow(t *testing.T) {
 		router := x.NewRouterPublic()
 		ts, _ := testhelpers.NewKratosServerWithRouters(t, reg, router, x.NewRouterAdmin())
 
-		c := http.DefaultClient
+		c := &http.Client{}
 		// don't get the reference, instead copy the values, so we don't alter the client directly.
 		*c = *ts.Client()
 		// prevent the redirect

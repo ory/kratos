@@ -161,9 +161,7 @@ func TestHandler(t *testing.T) {
 			})
 
 			t.Run("case=redirects with 303", func(t *testing.T) {
-				c := http.DefaultClient
-				// don't get the reference, instead copy the values, so we don't alter the client directly.
-				*c = *publicTS.Client()
+				c := testhelpers.NewHTTPClientWithArbitrarySessionCookie(t, reg)
 				// prevent the redirect
 				c.CheckRedirect = func(req *http.Request, via []*http.Request) error {
 					return http.ErrUseLastResponse

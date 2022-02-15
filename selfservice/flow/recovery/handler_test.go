@@ -170,7 +170,7 @@ func TestInitFlow(t *testing.T) {
 		})
 
 		t.Run("case=redirects with 303", func(t *testing.T) {
-			c := http.DefaultClient
+			c := &http.Client{}
 			// don't get the reference, instead copy the values, so we don't alter the client directly.
 			*c = *publicTS.Client()
 			// prevent the redirect
