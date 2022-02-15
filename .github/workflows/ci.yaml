@@ -163,7 +163,7 @@ jobs:
         with:
           go-version: '^1.17'
       - name: Install selfservice-ui-react-native
-        uses: ory/ci/checkout@master
+        uses: actions/checkout@v2
         with:
           repository: ory/kratos-selfservice-ui-react-native
           path: react-native-ui
@@ -171,7 +171,7 @@ jobs:
           cd react-native-ui
           npm install
       - name: Install selfservice-ui-node
-        uses: ory/ci/checkout@master
+        uses: actions/checkout@v2
         with:
           repository: ory/kratos-selfservice-ui-node
           path: node-ui
