@@ -72,7 +72,7 @@ jobs:
           docker start hydra
           docker logs -f hydra &> /tmp/hydra.log &
         name: Start Hydra
-      - uses: actions/checkout@v2
+      - uses: ory/ci/checkout@master
         with:
           fetch-depth: 2
       - uses: actions/setup-go@v2
@@ -150,7 +150,7 @@ jobs:
         name: Install Firefox
       - uses: browser-actions/setup-geckodriver@latest
         name: Install Geckodriver
-      - uses: actions/checkout@v2
+      - uses: ory/ci/checkout@master
         with:
           fetch-depth: 2
       - run: |
@@ -163,7 +163,7 @@ jobs:
         with:
           go-version: '^1.17'
       - name: Install selfservice-ui-react-native
-        uses: actions/checkout@v2
+        uses: ory/ci/checkout@master
         with:
           repository: ory/kratos-selfservice-ui-react-native
           path: react-native-ui
@@ -171,7 +171,7 @@ jobs:
           cd react-native-ui
           npm install
       - name: Install selfservice-ui-node
-        uses: actions/checkout@v2
+        uses: ory/ci/checkout@master
         with:
           repository: ory/kratos-selfservice-ui-node
           path: node-ui
