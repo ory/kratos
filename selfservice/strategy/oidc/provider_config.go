@@ -99,7 +99,7 @@ type ConfigurationCollection struct {
 	Providers []Configuration `json:"providers"`
 }
 
-func (c ConfigurationCollection) Provider(id string, public *url.URL) (Provider, error) {
+func (c ConfigurationCollection) Provider(id string, reg dependencies) (Provider, error) {
 	for k := range c.Providers {
 		p := c.Providers[k]
 		if p.ID == id {
@@ -109,35 +109,39 @@ func (c ConfigurationCollection) Provider(id string, public *url.URL) (Provider,
 				return pn
 			}
 
+			// !!! WARNING !!!
+			//
+			// If you add a provider here, please also add a test to
+			// provider_private_net_test.go
 			switch p.Provider {
 			case addProviderName("generic"):
-				return NewProviderGenericOIDC(&p, public), nil
+				return NewProviderGenericOIDC(&p, reg), nil
 			case addProviderName("google"):
-				return NewProviderGoogle(&p, public), nil
+				return NewProviderGoogle(&p, reg), nil
 			case addProviderName("github"):
-				return NewProviderGitHub(&p, public), nil
+				return NewProviderGitHub(&p, reg), nil
 			case addProviderName("github-app"):
-				return NewProviderGitHubApp(&p, public), nil
+				return NewProviderGitHubApp(&p, reg), nil
 			case addProviderName("gitlab"):
-				return NewProviderGitLab(&p, public), nil
+				return NewProviderGitLab(&p, reg), nil
 			case addProviderName("microsoft"):
-				return NewProviderMicrosoft(&p, public), nil
+				return NewProviderMicrosoft(&p, reg), nil
 			case addProviderName("discord"):
-				return NewProviderDiscord(&p, public), nil
+				return NewProviderDiscord(&p, reg), nil
 			case addProviderName("slack"):
-				return NewProviderSlack(&p, public), nil
+				return NewProviderSlack(&p, reg), nil
 			case addProviderName("facebook"):
-				return NewProviderFacebook(&p, public), nil
+				return NewProviderFacebook(&p, reg), nil
 			case addProviderName("auth0"):
-				return NewProviderAuth0(&p, public), nil
+				return NewProviderAuth0(&p, reg), nil
 			case addProviderName("vk"):
-				return NewProviderVK(&p, public), nil
+				return NewProviderVK(&p, reg), nil
 			case addProviderName("yandex"):
-				return NewProviderYandex(&p, public), nil
+				return NewProviderYandex(&p, reg), nil
 			case addProviderName("apple"):
-				return NewProviderApple(&p, public), nil
+				return NewProviderApple(&p, reg), nil
 			case addProviderName("spotify"):
-				return NewProviderSpotify(&p, public), nil
+				return NewProviderSpotify(&p, reg), nil
 			}
 			return nil, errors.Errorf("provider type %s is not supported, supported are: %v", p.Provider, providerNames)
 		}

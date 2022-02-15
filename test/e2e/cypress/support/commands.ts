@@ -31,7 +31,7 @@ const mergeFields = (form, fields) => {
 const updateConfigFile = (cb: (arg: any) => any) => {
   cy.readFile(configFile).then((contents) => {
     cy.writeFile(configFile, YAML.stringify(cb(YAML.parse(contents))))
-    cy.wait(200)
+    cy.wait(500)
   })
 }
 
@@ -40,7 +40,7 @@ Cypress.Commands.add('useConfigProfile', (profile: string) => {
   cy.readFile(`kratos.${profile}.yml`).then((contents) =>
     cy.writeFile(configFile, contents)
   )
-  cy.wait(200)
+  cy.wait(500)
 })
 
 Cypress.Commands.add('proxy', (app: string) => {
@@ -50,8 +50,7 @@ Cypress.Commands.add('proxy', (app: string) => {
   cy.wait(200)
   cy.visit(APP_URL + '/')
   cy.get(`[data-testid="app-${app}"]`).should('exist')
-  cy.clearAllCookies()
-  cy.visit(APP_URL + '/')
+  cy.wait(500)
 })
 
 Cypress.Commands.add('shortPrivilegedSessionTime', ({} = {}) => {
@@ -63,7 +62,22 @@ Cypress.Commands.add('shortPrivilegedSessionTime', ({} = {}) => {
 
 Cypress.Commands.add('setIdentitySchema', (schema: string) => {
   updateConfigFile((config) => {
-    config.identity.default_schema_url = schema
+    const id = gen.password()
+    config.identity.default_schema_id = id
+    config.identity.schemas = [
+      ...(config.identity.schemas || []),
+      {
+        id,
+        url: schema
+      }
+    ]
+    return config
+  })
+})
+
+Cypress.Commands.add('setDefaultIdentitySchema', (id: string) => {
+  updateConfigFile((config) => {
+    config.identity.default_schema_id = id
     return config
   })
 })
@@ -444,6 +458,36 @@ Cypress.Commands.add('longRegisterLifespan', ({} = {}) => {
 Cypress.Commands.add('browserReturnUrlOry', ({} = {}) => {
   updateConfigFile((config) => {
     config.selfservice.whitelisted_return_urls = ['https://www.ory.sh/']
+    return config
+  })
+})
+
+Cypress.Commands.add('remoteCourierRecoveryTemplates', ({} = {}) => {
+  updateConfigFile((config) => {
+    config.courier.templates = {
+      recovery: {
+        invalid: {
+          email: {
+            body: {
+              html: 'base64://SGksCgp0aGlzIGlzIGEgcmVtb3RlIGludmFsaWQgcmVjb3ZlcnkgdGVtcGxhdGU=',
+              plaintext:
+                'base64://SGksCgp0aGlzIGlzIGEgcmVtb3RlIGludmFsaWQgcmVjb3ZlcnkgdGVtcGxhdGU='
+            },
+            subject: 'base64://QWNjb3VudCBBY2Nlc3MgQXR0ZW1wdGVk'
+          }
+        },
+        valid: {
+          email: {
+            body: {
+              html: 'base64://SGksCgp0aGlzIGlzIGEgcmVtb3RlIHRlbXBsYXRlCnBsZWFzZSByZWNvdmVyIGFjY2VzcyB0byB5b3VyIGFjY291bnQgYnkgY2xpY2tpbmcgdGhlIGZvbGxvd2luZyBsaW5rOgo8YSBocmVmPSJ7eyAuUmVjb3ZlcnlVUkwgfX0iPnt7IC5SZWNvdmVyeVVSTCB9fTwvYT4=',
+              plaintext:
+                'base64://SGksCgp0aGlzIGlzIGEgcmVtb3RlIHRlbXBsYXRlCnBsZWFzZSByZWNvdmVyIGFjY2VzcyB0byB5b3VyIGFjY291bnQgYnkgY2xpY2tpbmcgdGhlIGZvbGxvd2luZyBsaW5rOgp7eyAuUmVjb3ZlcnlVUkwgfX0='
+            },
+            subject: 'base64://UmVjb3ZlciBhY2Nlc3MgdG8geW91ciBhY2NvdW50'
+          }
+        }
+      }
+    }
     return config
   })
 })
@@ -889,6 +933,20 @@ Cypress.Commands.add(
   }
 )
 
-Cypress.Commands.add('triggerOidc', (provider: string = 'hydra') => {
-  cy.get('[name="provider"][value="' + provider + '"]').click()
-})
+Cypress.Commands.add(
+  'triggerOidc',
+  (app: 'react' | 'express', provider: string = 'hydra') => {
+    let initial, didHaveSearch
+    cy.location().then((loc) => {
+      didHaveSearch = loc.search.length > 0
+      initial = loc.pathname + loc.search
+    })
+    cy.get('[name="provider"][value="' + provider + '"]').click()
+    cy.location().then((loc) => {
+      if (app === 'express' || didHaveSearch) {
+        return
+      }
+      expect(loc.pathname + loc.search).not.to.eql(initial)
+    })
+  }
+)

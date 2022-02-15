@@ -29,7 +29,9 @@ selfservice:
       ui_url: http://localhost:4455/verify
 
 identity:
-  default_schema_url: file://test/e2e/profiles/recovery/identity.traits.schema.json
+  schemas:
+    - id: default
+      url: file://test/e2e/profiles/recovery/identity.traits.schema.json
 
 secrets:
   cipher:

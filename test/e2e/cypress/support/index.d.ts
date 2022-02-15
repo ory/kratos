@@ -134,6 +134,11 @@ declare global {
       browserReturnUrlOry(): Chainable<void>
 
       /**
+       * Change the courier recovery invalid and valid templates to remote base64 strings
+       */
+      remoteCourierRecoveryTemplates(): Chainable<void>
+
+      /**
        * Changes the config so that the registration flow lifespan is very short.
        *
        * Useful when testing expiry of registration flows.
@@ -278,9 +283,10 @@ declare global {
       /**
        * Triggers a Social Sign In flow for the given provider
        *
+       * @param app
        * @param provider
        */
-      triggerOidc(provider?: string): Chainable<void>
+      triggerOidc(app: 'react' | 'express', provider?: string): Chainable<void>
 
       /**
        * Changes the config so that the recovery privileged lifespan is very long.
@@ -440,6 +446,12 @@ declare global {
        * @param schema
        */
       setIdentitySchema(schema: string): Chainable<void>
+
+      /**
+       * Set the default schema
+       * @param id
+       */
+      setDefaultIdentitySchema(id: string): Chainable<void>
     }
   }
 }

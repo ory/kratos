@@ -81,7 +81,7 @@ func TestStrategy(t *testing.T) {
 	)
 
 	conf.MustSet(config.ViperKeySelfServiceRegistrationEnabled, true)
-	conf.MustSet(config.ViperKeyDefaultIdentitySchemaURL, "file://./stub/registration.schema.json")
+	testhelpers.SetDefaultIdentitySchema(conf, "file://./stub/registration.schema.json")
 	conf.MustSet(config.HookStrategyKey(config.ViperKeySelfServiceRegistrationAfter,
 		identity.CredentialsTypeOIDC.String()), []config.SelfServiceHook{{Name: "session"}})
 
@@ -277,9 +277,9 @@ func TestStrategy(t *testing.T) {
 	})
 
 	t.Run("case=should fail because password can not handle AAL2", func(t *testing.T) {
-		conf.MustSet(config.ViperKeyDefaultIdentitySchemaURL, "file://./stub/registration-aal.schema.json")
+		testhelpers.SetDefaultIdentitySchema(conf, "file://./stub/registration-aal.schema.json")
 		t.Cleanup(func() {
-			conf.MustSet(config.ViperKeyDefaultIdentitySchemaURL, "file://./stub/registration.schema.json")
+			testhelpers.SetDefaultIdentitySchema(conf, "file://./stub/registration.schema.json")
 		})
 		bc := testhelpers.NewDebugClient(t)
 		f := testhelpers.InitializeLoginFlowViaAPI(t, bc, ts, false)
@@ -613,7 +613,7 @@ func TestDisabledEndpoint(t *testing.T) {
 		c := testhelpers.NewClientWithCookies(t)
 
 		t.Run("flow=settings", func(t *testing.T) {
-			require.NoError(t, conf.Set(config.ViperKeyDefaultIdentitySchemaURL, "file://stub/stub.schema.json"))
+			testhelpers.SetDefaultIdentitySchema(conf, "file://stub/stub.schema.json")
 			c := testhelpers.NewHTTPClientWithArbitrarySessionCookie(t, reg)
 			f := testhelpers.InitializeSettingsFlowViaAPI(t, c, publicTS)
 

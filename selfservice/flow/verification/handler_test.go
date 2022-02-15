@@ -27,7 +27,7 @@ func TestGetFlow(t *testing.T) {
 	conf.MustSet(config.ViperKeySelfServiceVerificationEnabled, true)
 	conf.MustSet(config.ViperKeySelfServiceStrategyConfig+"."+verification.StrategyVerificationLinkName,
 		map[string]interface{}{"enabled": true})
-	conf.MustSet(config.ViperKeyDefaultIdentitySchemaURL, "file://./stub/identity.schema.json")
+	testhelpers.SetDefaultIdentitySchema(conf, "file://./stub/identity.schema.json")
 
 	public, _ := testhelpers.NewKratosServerWithCSRF(t, reg)
 	_ = testhelpers.NewErrorTestServer(t, reg)

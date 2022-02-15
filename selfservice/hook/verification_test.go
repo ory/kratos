@@ -7,6 +7,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/ory/kratos/internal/testhelpers"
+
 	"github.com/ory/kratos/courier"
 
 	"github.com/stretchr/testify/assert"
@@ -40,7 +42,7 @@ func TestVerifier(t *testing.T) {
 	} {
 		t.Run("name="+k, func(t *testing.T) {
 			conf, reg := internal.NewFastRegistryWithMocks(t)
-			conf.MustSet(config.ViperKeyDefaultIdentitySchemaURL, "file://./stub/verify.schema.json")
+			testhelpers.SetDefaultIdentitySchema(conf, "file://./stub/verify.schema.json")
 			conf.MustSet(config.ViperKeyPublicBaseURL, "https://www.ory.sh/")
 			conf.MustSet(config.ViperKeyCourierSMTPURL, "smtp://foo@bar@dev.null/")
 

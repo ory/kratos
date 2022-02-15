@@ -25,7 +25,7 @@ import (
 func setup(t *testing.T, cmd *cobra.Command) driver.Registry {
 	conf, reg := internal.NewFastRegistryWithMocks(t)
 	_, admin := testhelpers.NewKratosServerWithCSRF(t, reg)
-	conf.MustSet(config.ViperKeyDefaultIdentitySchemaURL, "file://./stubs/identity.schema.json")
+	testhelpers.SetDefaultIdentitySchema(conf, "file://./stubs/identity.schema.json")
 	// setup command
 	cliclient.RegisterClientFlags(cmd.Flags())
 	cmdx.RegisterFormatFlags(cmd.Flags())

@@ -122,7 +122,12 @@ func (h *Handler) NewFlow(w http.ResponseWriter, r *http.Request, i *identity.Id
 		}
 	}
 
-	if err := sortNodes(f.UI.Nodes, h.d.Config(r.Context()).DefaultIdentityTraitsSchemaURL().String()); err != nil {
+	ds, err := h.d.Config(r.Context()).DefaultIdentityTraitsSchemaURL()
+	if err != nil {
+		return nil, err
+	}
+
+	if err := sortNodes(f.UI.Nodes, ds.String()); err != nil {
 		return nil, err
 	}
 

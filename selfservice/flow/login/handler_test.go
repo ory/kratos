@@ -48,7 +48,7 @@ func TestFlowLifecycle(t *testing.T) {
 
 	errorTS := testhelpers.NewErrorTestServer(t, reg)
 	conf.MustSet(config.ViperKeySelfServiceBrowserDefaultReturnTo, "https://www.ory.sh")
-	conf.MustSet(config.ViperKeyDefaultIdentitySchemaURL, "file://./stub/password.schema.json")
+	testhelpers.SetDefaultIdentitySchema(conf, "file://./stub/password.schema.json")
 
 	assertion := func(body []byte, isForced, isApi bool) {
 		r := gjson.GetBytes(body, "refresh")

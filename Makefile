@@ -46,18 +46,13 @@ docs/cli:
 node_modules: package.json Makefile
 		npm ci
 
-docs/node_modules: docs/package.json
-		cd docs; npm ci
 
 .bin/golangci-lint: Makefile
 		bash <(curl -sfL https://install.goreleaser.com/github.com/golangci/golangci-lint.sh) -d -b .bin v1.28.3
 
 .bin/hydra: Makefile
-		bash <(curl https://raw.githubusercontent.com/ory/hydra/master/install.sh) -d -b .bin v1.9.0-alpha.1
+		bash <(curl https://raw.githubusercontent.com/ory/meta/master/install.sh) -d -b .bin hydra v1.11.0
 
-.PHONY: docs
-docs: docs/node_modules
-		cd docs; npm run build
 
 .PHONY: lint
 lint: .bin/golangci-lint
@@ -130,9 +125,8 @@ quickstart-dev:
 
 # Formats the code
 .PHONY: format
-format: .bin/goimports docs/node_modules node_modules
+format: .bin/goimports node_modules
 		goimports -w -local github.com/ory .
-		cd docs; npm run format
 		npm run format
 
 # Build local docker image

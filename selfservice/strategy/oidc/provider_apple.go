@@ -5,7 +5,6 @@ import (
 	"crypto/ecdsa"
 	"crypto/x509"
 	"encoding/pem"
-	"net/url"
 	"time"
 
 	"github.com/form3tech-oss/jwt-go"
@@ -20,14 +19,12 @@ type ProviderApple struct {
 
 func NewProviderApple(
 	config *Configuration,
-	public *url.URL,
+	reg dependencies,
 ) *ProviderApple {
-	config.IssuerURL = "https://appleid.apple.com"
-
 	return &ProviderApple{
 		ProviderGenericOIDC: &ProviderGenericOIDC{
 			config: config,
-			public: public,
+			reg:    reg,
 		},
 	}
 }
@@ -64,7 +61,7 @@ func (a *ProviderApple) newClientSecret() (string, error) {
 	return appleToken.SignedString(privateKey)
 }
 
-func (a *ProviderApple) oauth2() (*oauth2.Config, error) {
+func (a *ProviderApple) oauth2(ctx context.Context) (*oauth2.Config, error) {
 	// Apple requires a JWT token that acts as a client secret
 	secret, err := a.newClientSecret()
 	if err != nil {
@@ -73,14 +70,14 @@ func (a *ProviderApple) oauth2() (*oauth2.Config, error) {
 	a.config.ClientSecret = secret
 
 	endpoint := oauth2.Endpoint{
-		AuthURL:  a.config.IssuerURL + "/auth/authorize",
-		TokenURL: a.config.IssuerURL + "/auth/token",
+		AuthURL:  "https://appleid.apple.com/auth/authorize",
+		TokenURL: "https://appleid.apple.com/auth/token",
 	}
-	return a.oauth2ConfigFromEndpoint(endpoint), nil
+	return a.oauth2ConfigFromEndpoint(ctx, endpoint), nil
 }
 
-func (a *ProviderApple) OAuth2(context.Context) (*oauth2.Config, error) {
-	return a.oauth2()
+func (a *ProviderApple) OAuth2(ctx context.Context) (*oauth2.Config, error) {
+	return a.oauth2(ctx)
 }
 
 func (a *ProviderApple) AuthCodeURLOptions(r ider) []oauth2.AuthCodeOption {

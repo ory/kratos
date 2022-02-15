@@ -119,10 +119,10 @@ func TestMigrations(t *testing.T) {
 					context.Background(),
 					os.Stderr,
 					configx.WithValues(map[string]interface{}{
-						config.ViperKeyDSN:                      url,
-						config.ViperKeyPublicBaseURL:            "https://www.ory.sh/",
-						config.ViperKeyDefaultIdentitySchemaURL: "file://stub/default.schema.json",
-						config.ViperKeySecretsDefault:           []string{"secret"},
+						config.ViperKeyDSN:             url,
+						config.ViperKeyPublicBaseURL:   "https://www.ory.sh/",
+						config.ViperKeyIdentitySchemas: config.Schemas{{ID: "default", URL: "file://stub/default.schema.json"}},
+						config.ViperKeySecretsDefault:  []string{"secret"},
 					}),
 					configx.SkipValidation(),
 				)

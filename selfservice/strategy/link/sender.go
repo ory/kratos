@@ -5,6 +5,10 @@ import (
 	"net/http"
 	"net/url"
 
+	"github.com/hashicorp/go-retryablehttp"
+
+	"github.com/ory/x/httpx"
+
 	"github.com/pkg/errors"
 
 	"github.com/ory/x/errorsx"
@@ -23,6 +27,8 @@ import (
 type (
 	senderDependencies interface {
 		courier.Provider
+		courier.ConfigProvider
+
 		identity.PoolProvider
 		identity.ManagementProvider
 		identity.PrivilegedPoolProvider
@@ -31,8 +37,9 @@ type (
 
 		VerificationTokenPersistenceProvider
 		RecoveryTokenPersistenceProvider
-	}
 
+		HTTPClient(ctx context.Context, opts ...httpx.ResilientOptions) *retryablehttp.Client
+	}
 	SenderProvider interface {
 		LinkSender() *Sender
 	}
@@ -59,7 +66,7 @@ func (s *Sender) SendRecoveryLink(ctx context.Context, r *http.Request, f *recov
 
 	address, err := s.r.IdentityPool().FindRecoveryAddressByValue(ctx, identity.RecoveryAddressTypeEmail, to)
 	if err != nil {
-		if err := s.send(ctx, string(via), templates.NewRecoveryInvalid(s.r.Config(ctx), &templates.RecoveryInvalidModel{To: to})); err != nil {
+		if err := s.send(ctx, string(via), templates.NewRecoveryInvalid(s.r, &templates.RecoveryInvalidModel{To: to})); err != nil {
 			return err
 		}
 		return errors.Cause(ErrUnknownAddress)
@@ -99,7 +106,7 @@ func (s *Sender) SendVerificationLink(ctx context.Context, f *verification.Flow,
 				WithField("via", via).
 				WithSensitiveField("email_address", address).
 				Info("Sending out invalid verification email because address is unknown.")
-			if err := s.send(ctx, string(via), templates.NewVerificationInvalid(s.r.Config(ctx), &templates.VerificationInvalidModel{To: to})); err != nil {
+			if err := s.send(ctx, string(via), templates.NewVerificationInvalid(s.r, &templates.VerificationInvalidModel{To: to})); err != nil {
 				return err
 			}
 			return errors.Cause(ErrUnknownAddress)
@@ -138,7 +145,7 @@ func (s *Sender) SendRecoveryTokenTo(ctx context.Context, f *recovery.Flow, i *i
 		return err
 	}
 
-	return s.send(ctx, string(address.Via), templates.NewRecoveryValid(s.r.Config(ctx),
+	return s.send(ctx, string(address.Via), templates.NewRecoveryValid(s.r,
 		&templates.RecoveryValidModel{To: address.Value, RecoveryURL: urlx.CopyWithQuery(
 			urlx.AppendPaths(s.r.Config(ctx).SelfServiceLinkMethodBaseURL(), recovery.RouteSubmitFlow),
 			url.Values{
@@ -161,7 +168,7 @@ func (s *Sender) SendVerificationTokenTo(ctx context.Context, f *verification.Fl
 		return err
 	}
 
-	if err := s.send(ctx, string(address.Via), templates.NewVerificationValid(s.r.Config(ctx),
+	if err := s.send(ctx, string(address.Via), templates.NewVerificationValid(s.r,
 		&templates.VerificationValidModel{To: address.Value, VerificationURL: urlx.CopyWithQuery(
 			urlx.AppendPaths(s.r.Config(ctx).SelfServiceLinkMethodBaseURL(), verification.RouteSubmitFlow),
 			url.Values{
