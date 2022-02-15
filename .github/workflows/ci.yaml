@@ -72,7 +72,7 @@ jobs:
           docker start hydra
           docker logs -f hydra &> /tmp/hydra.log &
         name: Start Hydra
-      - uses: actions/checkout@v2
+      - uses: ory/ci/checkout@master
         with:
           fetch-depth: 2
       - uses: actions/setup-go@v2
@@ -150,7 +150,7 @@ jobs:
         name: Install Firefox
       - uses: browser-actions/setup-geckodriver@latest
         name: Install Geckodriver
-      - uses: actions/checkout@v2
+      - uses: ory/ci/checkout@master
         with:
           fetch-depth: 2
       - run: |
@@ -202,6 +202,7 @@ jobs:
       - uses: ory/ci/docs/cli-next@master
         with:
           token: ${{ secrets.ORY_BOT_PAT }}
+          output-dir: docs/kratos/cli
 
   changelog:
     name: Generate changelog
