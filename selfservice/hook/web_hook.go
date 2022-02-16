@@ -117,7 +117,7 @@ func (e *WebHook) ExecuteSettingsPostPersistHook(_ http.ResponseWriter, req *htt
 }
 
 func (e *WebHook) execute(ctx context.Context, data *templateContext) error {
-	builder, err := request.NewBuilder(e.conf, e.deps.Logger())
+	builder, err := request.NewBuilder(e.conf, e.deps.HTTPClient(ctx), e.deps.Logger())
 	if err != nil {
 		return err
 	}

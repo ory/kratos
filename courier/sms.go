@@ -19,7 +19,6 @@ type sendSMSRequestBody struct {
 
 type smsClient struct {
 	*http.Client
-	Host          string
 	RequestConfig json.RawMessage
 
 	GetTemplateType        func(t SMSTemplate) (TemplateType, error)
@@ -81,7 +80,7 @@ func (c *courier) dispatchSMS(ctx context.Context, msg Message) error {
 		return err
 	}
 
-	builder, err := request.NewBuilder(c.smsClient.RequestConfig, c.deps.Logger())
+	builder, err := request.NewBuilder(c.smsClient.RequestConfig, c.deps.HTTPClient(ctx), c.deps.Logger())
 	if err != nil {
 		return err
 	}

@@ -10,6 +10,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/gofrs/uuid"
+	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -17,7 +19,7 @@ import (
 	"github.com/ory/kratos/courier/template/sms"
 	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/internal"
-	"github.com/ory/kratos/x"
+	"github.com/ory/x/resilience"
 )
 
 func TestQueueSMS(t *testing.T) {
@@ -89,14 +91,20 @@ func TestQueueSMS(t *testing.T) {
 	for _, message := range expectedSMS {
 		id, err := c.QueueSMS(ctx, sms.NewTestStub(reg, message))
 		require.NoError(t, err)
-		x.RequireNotNilUUID(t, id)
+		require.NotEqual(t, uuid.Nil, id)
 	}
 
 	go func() {
 		require.NoError(t, c.Work(ctx))
 	}()
 
-	time.Sleep(time.Second)
+	require.NoError(t, resilience.Retry(reg.Logger(), time.Millisecond*250, time.Second*10, func() error {
+		if len(actual) == len(expectedSMS) {
+			return nil
+		}
+		return errors.New("capacity not reached")
+	}))
+
 	for i, message := range actual {
 		expected := expectedSMS[i]
 

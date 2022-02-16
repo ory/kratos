@@ -11,6 +11,7 @@ import (
 	"strings"
 
 	"github.com/google/go-jsonnet"
+	"github.com/hashicorp/go-retryablehttp"
 
 	"github.com/ory/x/fetcher"
 	"github.com/ory/x/logrusx"
@@ -22,12 +23,13 @@ const (
 )
 
 type Builder struct {
-	r    *http.Request
-	log  *logrusx.Logger
-	conf *Config
+	r           *http.Request
+	log         *logrusx.Logger
+	conf        *Config
+	fetchClient *retryablehttp.Client
 }
 
-func NewBuilder(config json.RawMessage, l *logrusx.Logger) (*Builder, error) {
+func NewBuilder(config json.RawMessage, client *retryablehttp.Client, l *logrusx.Logger) (*Builder, error) {
 	c, err := parseConfig(config)
 	if err != nil {
 		return nil, err
@@ -39,9 +41,10 @@ func NewBuilder(config json.RawMessage, l *logrusx.Logger) (*Builder, error) {
 	}
 
 	return &Builder{
-		r:    r,
-		log:  l,
-		conf: c,
+		r:           r,
+		log:         l,
+		conf:        c,
+		fetchClient: client,
 	}, nil
 }
 
@@ -69,13 +72,18 @@ func (b *Builder) addBody(body interface{}) error {
 		return errors.New("got empty template path for request with body")
 	}
 
+	tpl, err := b.readTemplate()
+	if err != nil {
+		return err
+	}
+
 	switch contentType {
 	case ContentTypeForm:
-		if err := b.addURLEncodedBody(body); err != nil {
+		if err := b.addURLEncodedBody(tpl, body); err != nil {
 			return err
 		}
 	case ContentTypeJSON:
-		if err := b.addJSONBody(body); err != nil {
+		if err := b.addJSONBody(tpl, body); err != nil {
 			return err
 		}
 	default:
@@ -85,14 +93,7 @@ func (b *Builder) addBody(body interface{}) error {
 	return nil
 }
 
-func (b *Builder) addJSONBody(body interface{}) error {
-	tURL := b.conf.TemplateURI
-
-	tpl, err := readTemplate(tURL, b.log)
-	if err != nil {
-		return err
-	}
-
+func (b *Builder) addJSONBody(template *bytes.Buffer, body interface{}) error {
 	buf := new(bytes.Buffer)
 	enc := json.NewEncoder(buf)
 	enc.SetEscapeHTML(false)
@@ -105,7 +106,7 @@ func (b *Builder) addJSONBody(body interface{}) error {
 	vm := jsonnet.MakeVM()
 	vm.TLACode("ctx", buf.String())
 
-	res, err := vm.EvaluateAnonymousSnippet(tURL, tpl.String())
+	res, err := vm.EvaluateAnonymousSnippet(b.conf.TemplateURI, template.String())
 	if err != nil {
 		return err
 	}
@@ -117,13 +118,7 @@ func (b *Builder) addJSONBody(body interface{}) error {
 	return nil
 }
 
-func (b *Builder) addURLEncodedBody(body interface{}) error {
-	tURL := b.conf.TemplateURI
-	tpl, err := readTemplate(tURL, b.log)
-	if err != nil {
-		return err
-	}
-
+func (b *Builder) addURLEncodedBody(template *bytes.Buffer, body interface{}) error {
 	buf := new(bytes.Buffer)
 	enc := json.NewEncoder(buf)
 	enc.SetEscapeHTML(false)
@@ -136,7 +131,7 @@ func (b *Builder) addURLEncodedBody(body interface{}) error {
 	vm := jsonnet.MakeVM()
 	vm.TLACode("ctx", buf.String())
 
-	res, err := vm.EvaluateAnonymousSnippet(tURL, tpl.String())
+	res, err := vm.EvaluateAnonymousSnippet(b.conf.TemplateURI, template.String())
 	if err != nil {
 		return err
 	}
@@ -175,18 +170,20 @@ func (b *Builder) BuildRequest(body interface{}) (*http.Request, error) {
 	return b.r, nil
 }
 
-func readTemplate(templateURI string, l *logrusx.Logger) (*bytes.Buffer, error) {
+func (b *Builder) readTemplate() (*bytes.Buffer, error) {
+	templateURI := b.conf.TemplateURI
+
 	if templateURI == "" {
 		return nil, nil
 	}
 
-	f := fetcher.NewFetcher()
+	f := fetcher.NewFetcher(fetcher.WithClient(b.fetchClient))
 
 	tpl, err := f.Fetch(templateURI)
 	if errors.Is(err, fetcher.ErrUnknownScheme) {
 		// legacy filepath
 		templateURI = "file://" + templateURI
-		l.WithError(err).Warnf("support for filepaths without a 'file://' scheme will be dropped in the next release, please use %s instead in your config", templateURI)
+		b.log.WithError(err).Warnf("support for filepaths without a 'file://' scheme will be dropped in the next release, please use %s instead in your config", templateURI)
 
 		tpl, err = f.Fetch(templateURI)
 	}

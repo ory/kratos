@@ -238,7 +238,7 @@ func TestBuildRequest(t *testing.T) {
 		t.Run("request-type="+tc.name, func(t *testing.T) {
 			l := logrusx.New("kratos", "test")
 
-			rb, err := NewBuilder(json.RawMessage(tc.rawConfig), l)
+			rb, err := NewBuilder(json.RawMessage(tc.rawConfig), nil, l)
 			require.NoError(t, err)
 
 			assert.Equal(t, tc.bodyTemplateURI, rb.conf.TemplateURI)
