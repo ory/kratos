@@ -218,7 +218,7 @@ type submitSelfServiceLogoutFlow struct {
 //
 // This endpoint logs out an identity in a self-service manner.
 //
-// If the `Accept` HTTP header is not set to `application/json`, the browser will be redirected (HTTP 302 Found)
+// If the `Accept` HTTP header is not set to `application/json`, the browser will be redirected (HTTP 303 See Other)
 // to the `return_to` parameter of the initial request or fall back to `urls.default_return_to`.
 //
 // If the `Accept` HTTP header is set to `application/json`, a 204 No Content response
@@ -236,7 +236,7 @@ type submitSelfServiceLogoutFlow struct {
 //     Schemes: http, https
 //
 //     Responses:
-//       302: emptyResponse
+//       303: emptyResponse
 //       204: emptyResponse
 //       500: jsonError
 func (h *Handler) submitLogout(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {

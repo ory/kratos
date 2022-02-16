@@ -154,10 +154,12 @@ func TestInitFlow(t *testing.T) {
 			assertion(body, false, false)
 			assert.Contains(t, res.Request.URL.String(), recoveryTS.URL)
 		})
+
 		t.Run("case=fails on authenticated request", func(t *testing.T) {
 			res, _ := initAuthenticatedFlow(t, false, false)
 			assert.Contains(t, res.Request.URL.String(), "https://www.ory.sh")
 		})
+
 		t.Run("case=relative redirect when self-service recovery ui is a relative URL", func(t *testing.T) {
 			reg.Config(context.Background()).MustSet(config.ViperKeySelfServiceRecoveryUI, "/recovery-ts")
 			assert.Regexp(
@@ -167,6 +169,23 @@ func TestInitFlow(t *testing.T) {
 			)
 		})
 
+		t.Run("case=redirects with 303", func(t *testing.T) {
+			c := &http.Client{}
+			// don't get the reference, instead copy the values, so we don't alter the client directly.
+			*c = *publicTS.Client()
+			// prevent the redirect
+			c.CheckRedirect = func(req *http.Request, via []*http.Request) error {
+				return http.ErrUseLastResponse
+			}
+			req, err := http.NewRequest("GET", publicTS.URL+recovery.RouteInitBrowserFlow, nil)
+			require.NoError(t, err)
+
+			res, err := c.Do(req)
+			require.NoError(t, err)
+			// here we check that the redirect status is 303
+			require.Equal(t, http.StatusSeeOther, res.StatusCode)
+			defer res.Body.Close()
+		})
 	})
 }
 

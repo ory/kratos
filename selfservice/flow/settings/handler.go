@@ -86,7 +86,7 @@ func (h *Handler) RegisterPublicRoutes(public *x.RouterPublic) {
 		if x.IsJSONRequest(r) {
 			h.d.Writer().WriteError(w, r, session.NewErrNoActiveSessionFound())
 		} else {
-			http.Redirect(w, r, h.d.Config(r.Context()).SelfServiceFlowLoginUI().String(), http.StatusFound)
+			http.Redirect(w, r, h.d.Config(r.Context()).SelfServiceFlowLoginUI().String(), http.StatusSeeOther)
 		}
 	}))
 
@@ -255,7 +255,7 @@ type initializeSelfServiceSettingsFlowForBrowsers struct {
 //
 //     Responses:
 //       200: selfServiceSettingsFlow
-//       302: emptyResponse
+//       303: emptyResponse
 //       401: jsonError
 //       403: jsonError
 //       400: jsonError
@@ -427,20 +427,20 @@ type submitSelfServiceSettingsFlowBody struct{}
 //
 // API-initiated flows expect `application/json` to be sent in the body and respond with
 //   - HTTP 200 and an application/json body with the session token on success;
-//   - HTTP 302 redirect to a fresh settings flow if the original flow expired with the appropriate error messages set;
+//   - HTTP 303 redirect to a fresh settings flow if the original flow expired with the appropriate error messages set;
 //   - HTTP 400 on form validation errors.
 //   - HTTP 401 when the endpoint is called without a valid session token.
 //   - HTTP 403 when `selfservice.flows.settings.privileged_session_max_age` was reached or the session's AAL is too low.
 //     Implies that the user needs to re-authenticate.
 //
 // Browser flows without HTTP Header `Accept` or with `Accept: text/*` respond with
-//   - a HTTP 302 redirect to the post/after settings URL or the `return_to` value if it was set and if the flow succeeded;
-//   - a HTTP 302 redirect to the Settings UI URL with the flow ID containing the validation errors otherwise.
-//   - a HTTP 302 redirect to the login endpoint when `selfservice.flows.settings.privileged_session_max_age` was reached or the session's AAL is too low.
+//   - a HTTP 303 redirect to the post/after settings URL or the `return_to` value if it was set and if the flow succeeded;
+//   - a HTTP 303 redirect to the Settings UI URL with the flow ID containing the validation errors otherwise.
+//   - a HTTP 303 redirect to the login endpoint when `selfservice.flows.settings.privileged_session_max_age` was reached or the session's AAL is too low.
 //
 // Browser flows with HTTP Header `Accept: application/json` respond with
 //   - HTTP 200 and a application/json body with the signed in identity and a `Set-Cookie` header on success;
-//   - HTTP 302 redirect to a fresh login flow if the original flow expired with the appropriate error messages set;
+//   - HTTP 303 redirect to a fresh login flow if the original flow expired with the appropriate error messages set;
 //   - HTTP 401 when the endpoint is called without a valid session cookie.
 //   - HTTP 403 when the page is accessed without a session cookie or the session's AAL is too low.
 //   - HTTP 400 on form validation errors.
@@ -480,7 +480,7 @@ type submitSelfServiceSettingsFlowBody struct{}
 //
 //     Responses:
 //       200: selfServiceSettingsFlow
-//       302: emptyResponse
+//       303: emptyResponse
 //       400: selfServiceSettingsFlow
 //       401: jsonError
 //       403: jsonError

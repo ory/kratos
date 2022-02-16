@@ -319,7 +319,7 @@ type initializeSelfServiceLoginFlowForBrowsers struct {
 //
 //     Responses:
 //       200: selfServiceLoginFlow
-//       302: emptyResponse
+//       303: emptyResponse
 //       400: jsonError
 //       500: jsonError
 func (h *Handler) initBrowserFlow(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
@@ -476,16 +476,16 @@ type submitSelfServiceLoginFlowBody struct{}
 //
 // API flows expect `application/json` to be sent in the body and responds with
 //   - HTTP 200 and a application/json body with the session token on success;
-//   - HTTP 302 redirect to a fresh login flow if the original flow expired with the appropriate error messages set;
+//   - HTTP 303 redirect to a fresh login flow if the original flow expired with the appropriate error messages set;
 //   - HTTP 400 on form validation errors.
 //
 // Browser flows expect a Content-Type of `application/x-www-form-urlencoded` or `application/json` to be sent in the body and respond with
-//   - a HTTP 302 redirect to the post/after login URL or the `return_to` value if it was set and if the login succeeded;
-//   - a HTTP 302 redirect to the login UI URL with the flow ID containing the validation errors otherwise.
+//   - a HTTP 303 redirect to the post/after login URL or the `return_to` value if it was set and if the login succeeded;
+//   - a HTTP 303 redirect to the login UI URL with the flow ID containing the validation errors otherwise.
 //
 // Browser flows with an accept header of `application/json` will not redirect but instead respond with
 //   - HTTP 200 and a application/json body with the signed in identity and a `Set-Cookie` header on success;
-//   - HTTP 302 redirect to a fresh login flow if the original flow expired with the appropriate error messages set;
+//   - HTTP 303 redirect to a fresh login flow if the original flow expired with the appropriate error messages set;
 //   - HTTP 400 on form validation errors.
 //
 // If this endpoint is called with `Accept: application/json` in the header, the response contains the flow without a redirect. In the
@@ -513,7 +513,7 @@ type submitSelfServiceLoginFlowBody struct{}
 //
 //     Responses:
 //       200: successfulSelfServiceLoginWithoutBrowser
-//       302: emptyResponse
+//       303: emptyResponse
 //       400: selfServiceLoginFlow
 //       422: selfServiceBrowserLocationChangeRequiredError
 //       500: jsonError

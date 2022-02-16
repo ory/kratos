@@ -151,4 +151,25 @@ func TestGetFlow(t *testing.T) {
 		res, _ := x.EasyGet(t, client, public.URL+verification.RouteGetFlow+"?id="+x.NewUUID().String())
 		assert.EqualValues(t, http.StatusNotFound, res.StatusCode)
 	})
+
+	t.Run("case=redirects with 303", func(t *testing.T) {
+		router := x.NewRouterPublic()
+		ts, _ := testhelpers.NewKratosServerWithRouters(t, reg, router, x.NewRouterAdmin())
+
+		c := &http.Client{}
+		// don't get the reference, instead copy the values, so we don't alter the client directly.
+		*c = *ts.Client()
+		// prevent the redirect
+		c.CheckRedirect = func(req *http.Request, via []*http.Request) error {
+			return http.ErrUseLastResponse
+		}
+		req, err := http.NewRequest("GET", ts.URL+verification.RouteInitBrowserFlow, nil)
+		require.NoError(t, err)
+
+		res, err := c.Do(req)
+		require.NoError(t, err)
+		// here we check that the redirect status is 303
+		require.Equal(t, http.StatusSeeOther, res.StatusCode)
+		defer res.Body.Close()
+	})
 }

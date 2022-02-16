@@ -224,7 +224,7 @@ type initializeSelfServiceRegistrationFlowForBrowsers struct {
 //
 //     Responses:
 //       200: selfServiceRegistrationFlow
-//       302: emptyResponse
+//       303: emptyResponse
 //       500: jsonError
 func (h *Handler) initBrowserFlow(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	a, err := h.NewRegistrationFlow(w, r, flow.TypeBrowser)
@@ -375,16 +375,16 @@ type submitSelfServiceRegistrationFlowBody struct{}
 // API flows expect `application/json` to be sent in the body and respond with
 //   - HTTP 200 and a application/json body with the created identity success - if the session hook is configured the
 //     `session` and `session_token` will also be included;
-//   - HTTP 302 redirect to a fresh registration flow if the original flow expired with the appropriate error messages set;
+//   - HTTP 303 redirect to a fresh registration flow if the original flow expired with the appropriate error messages set;
 //   - HTTP 400 on form validation errors.
 //
 // Browser flows expect a Content-Type of `application/x-www-form-urlencoded` or `application/json` to be sent in the body and respond with
-//   - a HTTP 302 redirect to the post/after registration URL or the `return_to` value if it was set and if the registration succeeded;
-//   - a HTTP 302 redirect to the registration UI URL with the flow ID containing the validation errors otherwise.
+//   - a HTTP 303 redirect to the post/after registration URL or the `return_to` value if it was set and if the registration succeeded;
+//   - a HTTP 303 redirect to the registration UI URL with the flow ID containing the validation errors otherwise.
 //
 // Browser flows with an accept header of `application/json` will not redirect but instead respond with
 //   - HTTP 200 and a application/json body with the signed in identity and a `Set-Cookie` header on success;
-//   - HTTP 302 redirect to a fresh login flow if the original flow expired with the appropriate error messages set;
+//   - HTTP 303 redirect to a fresh login flow if the original flow expired with the appropriate error messages set;
 //   - HTTP 400 on form validation errors.
 //
 // If this endpoint is called with `Accept: application/json` in the header, the response contains the flow without a redirect. In the
@@ -409,7 +409,7 @@ type submitSelfServiceRegistrationFlowBody struct{}
 //
 //     Responses:
 //       200: successfulSelfServiceRegistrationWithoutBrowser
-//       302: emptyResponse
+//       303: emptyResponse
 //       400: selfServiceRegistrationFlow
 //       422: selfServiceBrowserLocationChangeRequiredError
 //       500: jsonError
@@ -428,7 +428,7 @@ func (h *Handler) submitFlow(w http.ResponseWriter, r *http.Request, _ httproute
 
 	if _, err := h.d.SessionManager().FetchFromRequest(r.Context(), r); err == nil {
 		if f.Type == flow.TypeBrowser {
-			http.Redirect(w, r, h.d.Config(r.Context()).SelfServiceBrowserDefaultReturnTo().String(), http.StatusFound)
+			http.Redirect(w, r, h.d.Config(r.Context()).SelfServiceBrowserDefaultReturnTo().String(), http.StatusSeeOther)
 			return
 		}
 

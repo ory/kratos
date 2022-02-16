@@ -159,6 +159,22 @@ func TestHandler(t *testing.T) {
 				assert.Contains(t, res.Request.URL.String(), reg.Config(context.Background()).SelfServiceFlowLoginUI().String())
 				assert.EqualValues(t, "Please complete the second authentication challenge.", gjson.GetBytes(body, "ui.messages.0.text").String(), "%s", body)
 			})
+
+			t.Run("case=redirects with 303", func(t *testing.T) {
+				c := testhelpers.NewHTTPClientWithArbitrarySessionCookie(t, reg)
+				// prevent the redirect
+				c.CheckRedirect = func(req *http.Request, via []*http.Request) error {
+					return http.ErrUseLastResponse
+				}
+				req, err := http.NewRequest("GET", publicTS.URL+settings.RouteInitBrowserFlow, nil)
+				require.NoError(t, err)
+
+				res, err := c.Do(req)
+				require.NoError(t, err)
+				// here we check that the redirect status is 303
+				require.Equal(t, http.StatusSeeOther, res.StatusCode)
+				defer res.Body.Close()
+			})
 		})
 
 		t.Run("description=init a flow as SPA", func(t *testing.T) {
