@@ -202,7 +202,8 @@ jobs:
       - uses: ory/ci/docs/cli-next@master
         with:
           token: ${{ secrets.ORY_BOT_PAT }}
-          output-dir: docs/kratos/cli
+          arg: '.'
+          output-dir: docs/kratos
 
   changelog:
     name: Generate changelog
