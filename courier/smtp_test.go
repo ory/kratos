@@ -8,6 +8,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/gofrs/uuid"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
@@ -70,7 +71,7 @@ func TestQueueEmail(t *testing.T) {
 	conf.MustSet(config.ViperKeyCourierSMTPFrom, "test-stub@ory.sh")
 	reg.Logger().Level = logrus.TraceLevel
 
-	c := reg.Courier(ctx) //???
+	c := reg.Courier(ctx)
 
 	ctx, cancel := context.WithCancel(ctx)
 	defer cancel()
@@ -81,7 +82,7 @@ func TestQueueEmail(t *testing.T) {
 		Body:    "test-body-1",
 	}))
 	require.NoError(t, err)
-	x.RequireNotNilUUID(t, id)
+	require.NotEqual(t, uuid.Nil, id)
 
 	id, err = c.QueueEmail(ctx, templates.NewTestStub(reg, &templates.TestStubModel{
 		To:      "test-recipient-2@example.org",
@@ -89,7 +90,7 @@ func TestQueueEmail(t *testing.T) {
 		Body:    "test-body-2",
 	}))
 	require.NoError(t, err)
-	x.RequireNotNilUUID(t, id)
+	require.NotEqual(t, uuid.Nil, id)
 
 	// The third email contains a sender name and custom headers
 	conf.MustSet(config.ViperKeyCourierSMTPFromName, "Bob")
@@ -103,7 +104,7 @@ func TestQueueEmail(t *testing.T) {
 		Body:    "test-body-3",
 	}))
 	require.NoError(t, err)
-	x.RequireNotNilUUID(t, id)
+	require.NotEqual(t, uuid.Nil, id)
 
 	go func() {
 		require.NoError(t, c.Work(ctx))

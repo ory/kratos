@@ -15,8 +15,9 @@ type (
 	}
 
 	TestStubModel struct {
-		To   string
-		Body string
+		To       string
+		Body     string
+		Identity map[string]interface{}
 	}
 )
 

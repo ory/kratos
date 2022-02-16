@@ -15,8 +15,9 @@ type (
 	}
 
 	OTPMessageModel struct {
-		To   string
-		Code string
+		To       string
+		Code     string
+		Identity map[string]interface{}
 	}
 )
 
