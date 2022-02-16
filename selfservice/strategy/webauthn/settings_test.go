@@ -375,6 +375,8 @@ func TestCompleteSettings(t *testing.T) {
 			require.NoError(t, err)
 			_, ok = actual.GetCredentials(identity.CredentialsTypeWebAuthn)
 			assert.False(t, ok)
+			_, ok = actual.GetCredentials(identity.CredentialsTypePassword)
+			assert.True(t, ok)
 		}
 
 		t.Run("type=browser", func(t *testing.T) {
