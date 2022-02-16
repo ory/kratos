@@ -119,7 +119,7 @@ func init() {
 }
 
 func main() {
-	if err := clidoc.Generate(cmd.NewRootCmd(), os.Args[1:]); err != nil {
+	if err := clidoc.Generate(cmd.NewRootCmd(), os.Args[2:]); err != nil {
 		_, _ = fmt.Fprintf(os.Stderr, "Unable to generate CLI docs: %+v", err)
 		os.Exit(1)
 	}
@@ -129,7 +129,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	if err := writeMessages(filepath.Join(os.Args[1], "docs/docs/concepts/ui-user-interface.mdx")); err != nil {
+	if err := writeMessages(filepath.Join(os.Args[2], "concepts/ui-user-interface.mdx")); err != nil {
 		_, _ = fmt.Fprintf(os.Stderr, "Unable to generate message table: %+v\n", err)
 		os.Exit(1)
 	}
