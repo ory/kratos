@@ -38,12 +38,11 @@ func (c *UpdateContext) UpdateIdentity(i *identity.Identity) {
 	c.toUpdate = i
 }
 
-func (c *UpdateContext) GetIdentityToUpdate() *identity.Identity {
+func (c *UpdateContext) GetIdentityToUpdate() (*identity.Identity, bool) {
 	if c.toUpdate == nil {
-		return c.GetSessionIdentity()
+		return nil, false
 	}
-
-	return c.toUpdate
+	return c.toUpdate, true
 }
 
 func (c UpdateContext) GetSessionIdentity() *identity.Identity {

@@ -6,11 +6,14 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/ory/herodot"
+
 	"github.com/ory/kratos/text"
 	"github.com/ory/kratos/ui/node"
 
-	"github.com/ory/kratos/schema"
 	"github.com/ory/x/sqlcon"
+
+	"github.com/ory/kratos/schema"
 
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
@@ -223,6 +226,12 @@ func (e *HookExecutor) PostSettingsHook(w http.ResponseWriter, r *http.Request, 
 		return nil
 	}
 
-	x.ContentNegotiationRedirection(w, r, ctxUpdate.GetIdentityToUpdate().CopyWithoutCredentials(), e.d.Writer(), returnTo.String())
+	i, ok := ctxUpdate.GetIdentityToUpdate()
+	if !ok {
+		// An identity to update must always be present.
+		return errors.WithStack(herodot.ErrInternalServerError.WithReasonf("Could not find a identity to update."))
+	}
+
+	x.ContentNegotiationRedirection(w, r, i.CopyWithoutCredentials(), e.d.Writer(), returnTo.String())
 	return nil
 }
