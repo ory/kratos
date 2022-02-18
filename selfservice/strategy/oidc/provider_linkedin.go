@@ -8,7 +8,6 @@ import (
 	"golang.org/x/oauth2/linkedin"
 	"io/ioutil"
 	"net/http"
-	"net/url"
 
 	"github.com/ory/herodot"
 )
@@ -58,16 +57,16 @@ const (
 
 type ProviderLinkedIn struct {
 	config *Configuration
-	public *url.URL
+	reg    dependencies
 }
 
 func NewProviderLinkedIn(
 	config *Configuration,
-	public *url.URL,
+	reg dependencies,
 ) *ProviderLinkedIn {
 	return &ProviderLinkedIn{
 		config: config,
-		public: public,
+		reg:    reg,
 	}
 }
 
@@ -75,18 +74,18 @@ func (l *ProviderLinkedIn) Config() *Configuration {
 	return l.config
 }
 
-func (l *ProviderLinkedIn) oauth2() *oauth2.Config {
+func (l *ProviderLinkedIn) oauth2(ctx context.Context) *oauth2.Config {
 	return &oauth2.Config{
 		ClientID:     l.config.ClientID,
 		ClientSecret: l.config.ClientSecret,
 		Endpoint:     linkedin.Endpoint,
 		Scopes:       l.config.Scope,
-		RedirectURL:  l.config.Redir(l.public),
+		RedirectURL:  l.config.Redir(l.reg.Config(ctx).SelfPublicURL()),
 	}
 }
 
 func (l *ProviderLinkedIn) OAuth2(ctx context.Context) (*oauth2.Config, error) {
-	return l.oauth2(), nil
+	return l.oauth2(ctx), nil
 }
 
 func (l *ProviderLinkedIn) AuthCodeURLOptions(r ider) []oauth2.AuthCodeOption {
