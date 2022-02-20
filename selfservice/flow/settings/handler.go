@@ -4,15 +4,14 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/ory/kratos/text"
-
-	"github.com/ory/kratos/ui/node"
-	"github.com/ory/x/sqlcon"
-
 	"github.com/julienschmidt/httprouter"
 	"github.com/pkg/errors"
 
 	"github.com/ory/herodot"
+	"github.com/ory/nosurf"
+	"github.com/ory/x/sqlcon"
+	"github.com/ory/x/urlx"
+
 	"github.com/ory/kratos/continuity"
 	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/identity"
@@ -20,9 +19,9 @@ import (
 	"github.com/ory/kratos/selfservice/errorx"
 	"github.com/ory/kratos/selfservice/flow"
 	"github.com/ory/kratos/session"
+	"github.com/ory/kratos/text"
+	"github.com/ory/kratos/ui/node"
 	"github.com/ory/kratos/x"
-	"github.com/ory/nosurf"
-	"github.com/ory/x/urlx"
 )
 
 const (
@@ -537,12 +536,18 @@ func (h *Handler) submitSettingsFlow(w http.ResponseWriter, r *http.Request, ps 
 	}
 
 	if updateContext == nil {
-		c := &UpdateContext{Session: ss, Flow: f}
-		h.d.SettingsFlowErrorHandler().WriteFlowError(w, r, node.DefaultGroup, f, c.GetIdentityToUpdate(), errors.WithStack(schema.NewNoSettingsStrategyResponsible()))
+		h.d.SettingsFlowErrorHandler().WriteFlowError(w, r, node.DefaultGroup, f, ss.Identity, errors.WithStack(schema.NewNoSettingsStrategyResponsible()))
 		return
 	}
 
-	if err := h.d.SettingsHookExecutor().PostSettingsHook(w, r, s, updateContext, updateContext.GetIdentityToUpdate()); err != nil {
+	i, err := updateContext.GetIdentityToUpdate()
+	if err != nil {
+		// An identity to update must always be present.
+		h.d.SettingsFlowErrorHandler().WriteFlowError(w, r, node.DefaultGroup, f, ss.Identity, err)
+		return
+	}
+
+	if err := h.d.SettingsHookExecutor().PostSettingsHook(w, r, s, updateContext, i); err != nil {
 		h.d.SettingsFlowErrorHandler().WriteFlowError(w, r, node.DefaultGroup, f, ss.Identity, err)
 		return
 	}

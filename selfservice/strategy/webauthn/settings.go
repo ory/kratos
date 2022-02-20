@@ -192,6 +192,7 @@ func (s *Strategy) continueSettingsFlowRemove(w http.ResponseWriter, r *http.Req
 	}
 	if len(updated) == 0 {
 		i.DeleteCredentialsType(identity.CredentialsTypeWebAuthn)
+		ctxUpdate.UpdateIdentity(i)
 		return nil
 	}
 
