@@ -539,10 +539,11 @@ func (h *Handler) submitSettingsFlow(w http.ResponseWriter, r *http.Request, ps 
 		h.d.SettingsFlowErrorHandler().WriteFlowError(w, r, node.DefaultGroup, f, ss.Identity, errors.WithStack(schema.NewNoSettingsStrategyResponsible()))
 		return
 	}
-	i, ok := updateContext.GetIdentityToUpdate()
-	if !ok {
+
+	i, err := updateContext.GetIdentityToUpdate()
+	if err != nil {
 		// An identity to update must always be present.
-		h.d.SettingsFlowErrorHandler().WriteFlowError(w, r, node.DefaultGroup, f, ss.Identity, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("Could not find a identity to update.")))
+		h.d.SettingsFlowErrorHandler().WriteFlowError(w, r, node.DefaultGroup, f, ss.Identity, err)
 		return
 	}
 

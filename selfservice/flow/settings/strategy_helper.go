@@ -38,11 +38,11 @@ func (c *UpdateContext) UpdateIdentity(i *identity.Identity) {
 	c.toUpdate = i
 }
 
-func (c *UpdateContext) GetIdentityToUpdate() (*identity.Identity, bool) {
+func (c *UpdateContext) GetIdentityToUpdate() (*identity.Identity, error) {
 	if c.toUpdate == nil {
-		return nil, false
+		return nil, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("Could not find a identity to update."))
 	}
-	return c.toUpdate, true
+	return c.toUpdate, nil
 }
 
 func (c UpdateContext) GetSessionIdentity() *identity.Identity {
