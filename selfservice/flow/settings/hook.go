@@ -6,8 +6,6 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/ory/herodot"
-
 	"github.com/ory/kratos/text"
 	"github.com/ory/kratos/ui/node"
 
@@ -224,12 +222,6 @@ func (e *HookExecutor) PostSettingsHook(w http.ResponseWriter, r *http.Request, 
 
 		e.d.Writer().Write(w, r, updatedFlow)
 		return nil
-	}
-
-	i, ok := ctxUpdate.GetIdentityToUpdate()
-	if !ok {
-		// An identity to update must always be present.
-		return errors.WithStack(herodot.ErrInternalServerError.WithReasonf("Could not find a identity to update."))
 	}
 
 	x.ContentNegotiationRedirection(w, r, i.CopyWithoutCredentials(), e.d.Writer(), returnTo.String())
