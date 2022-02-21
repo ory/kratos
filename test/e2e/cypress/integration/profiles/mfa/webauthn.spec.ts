@@ -9,7 +9,6 @@ context('2FA WebAuthn', () => {
   after(() => {
     cy.task('resetCRI', {})
   })
-
   ;[
     {
       login: express.login,

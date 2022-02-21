@@ -3,9 +3,10 @@ package config
 import (
 	"crypto/sha256"
 	"fmt"
+	"net/http"
+
 	"github.com/julienschmidt/httprouter"
 	"github.com/knadh/koanf/parsers/json"
-	"net/http"
 )
 
 func NewConfigHashHandler(c Provider, router *httprouter.Router) {

@@ -10,7 +10,6 @@ context('2FA with various methods', () => {
   after(() => {
     cy.task('resetCRI', {})
   })
-
   ;[
     {
       login: react.login,
