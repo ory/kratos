@@ -23,14 +23,19 @@ module.exports = (on) => {
     // Reset chrome remote interface for clean state
     async resetCRI() {
       if (criClient) {
-        await criClient.close()
+        const c = criClient
         criClient = null
+        await c.close()
       }
+
       return Promise.resolve(true)
     },
     // Execute CRI command
     async sendCRI(args) {
-      criClient = criClient || (await CRI({ port: criPort }))
+      if (!criClient) {
+        criClient = await CRI({ port: criPort })
+      }
+
       return criClient.send(args.query, args.opts)
     }
   })
