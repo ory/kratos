@@ -5,7 +5,10 @@ import { routes as express } from '../../../helpers/express'
 
 context('2FA with various methods', () => {
   before(() => {
-    // cy.task('resetCRI', {})
+    cy.task('resetCRI', {})
+  })
+  after(() => {
+    cy.task('resetCRI', {})
   })
 
   ;[

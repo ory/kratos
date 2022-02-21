@@ -46,16 +46,7 @@ Cypress.Commands.add('useConfigProfile', (profile: string) => {
 Cypress.Commands.add('proxy', (app: string) => {
   console.log('Switching proxy profile to:', app)
   cy.writeFile(`proxy.json`, `"${app}"`)
-  cy.readFile(`proxy.json`).should('eq', app)
-  cy.wait(200)
-  if (app === 'react') {
-    cy.intercept('/api/.ory/**').as('proxyDataFetch')
-  }
-  cy.visit(APP_URL + '/')
-  if (app === 'react') {
-    cy.wait('@proxyDataFetch')
-  }
-  cy.get(`[data-testid="app-${app}"]`).should('exist')
+  cy.request(APP_URL+'/').its('body').should('contain', `data-testid="app-${app}"`)
 })
 
 Cypress.Commands.add('shortPrivilegedSessionTime', ({} = {}) => {
