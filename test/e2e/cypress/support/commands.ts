@@ -28,29 +28,48 @@ const mergeFields = (form, fields) => {
   return { ...result, ...fields }
 }
 
+function checkConfigVersion(previous, tries = 0) {
+  cy.wait(10)
+  cy.request('GET', KRATOS_ADMIN + '/health/config').then(({ body }) => {
+    if (previous !== body) {
+      return
+    } else if (tries > 5) {
+      console.warn(
+        'Config version did not change after 5 tries, maybe the changes did not have an effect?'
+      )
+      return
+    }
+    cy.wait(50)
+    checkConfigVersion(previous, tries + 1)
+  })
+}
+
 const updateConfigFile = (cb: (arg: any) => any) => {
-  cy.readFile(configFile).then((contents) => {
-    cy.writeFile(configFile, YAML.stringify(cb(YAML.parse(contents))))
-    cy.wait(500)
+  cy.request('GET', KRATOS_ADMIN + '/health/config').then(({ body }) => {
+    cy.readFile(configFile).then((contents) => {
+      cy.writeFile(configFile, YAML.stringify(cb(YAML.parse(contents))))
+      cy.wait(500)
+    })
+    checkConfigVersion(body)
   })
 }
 
 Cypress.Commands.add('useConfigProfile', (profile: string) => {
-  console.log('Switching config profile to:', profile)
-  cy.readFile(`kratos.${profile}.yml`).then((contents) =>
-    cy.writeFile(configFile, contents)
-  )
-  cy.wait(500)
+  cy.request('GET', KRATOS_ADMIN + '/health/config').then(({ body }) => {
+    console.log('Switching config profile to:', profile)
+    cy.readFile(`kratos.${profile}.yml`).then((contents) =>
+      cy.writeFile(configFile, contents)
+    )
+    checkConfigVersion(body)
+  })
 })
 
 Cypress.Commands.add('proxy', (app: string) => {
   console.log('Switching proxy profile to:', app)
   cy.writeFile(`proxy.json`, `"${app}"`)
-  cy.readFile(`proxy.json`).should('eq', app)
-  cy.wait(200)
-  cy.visit(APP_URL + '/')
-  cy.get(`[data-testid="app-${app}"]`).should('exist')
-  cy.wait(500)
+  cy.request(APP_URL + '/')
+    .its('body')
+    .should('contain', `data-testid="app-${app}"`)
 })
 
 Cypress.Commands.add('shortPrivilegedSessionTime', ({} = {}) => {
