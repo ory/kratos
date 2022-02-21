@@ -6,9 +6,7 @@ import (
 	"github.com/ory/kratos/ui/node"
 )
 
-var ctx = context.Background()
-
-func sortNodes(n node.Nodes, schemaRef string) error {
+func sortNodes(ctx context.Context, n node.Nodes, schemaRef string) error {
 	return n.SortBySchema(ctx,
 		node.SortBySchema(schemaRef),
 		node.SortByGroups([]node.Group{

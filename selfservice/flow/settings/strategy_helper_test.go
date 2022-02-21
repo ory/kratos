@@ -1,10 +1,12 @@
 package settings
 
 import (
+	"testing"
+
+	"github.com/stretchr/testify/require"
+
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/x"
-	"github.com/stretchr/testify/require"
-	"testing"
 )
 
 func TestGetIdentityToUpdate(t *testing.T) {

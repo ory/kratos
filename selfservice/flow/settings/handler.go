@@ -126,7 +126,7 @@ func (h *Handler) NewFlow(w http.ResponseWriter, r *http.Request, i *identity.Id
 		return nil, err
 	}
 
-	if err := sortNodes(f.UI.Nodes, ds.String()); err != nil {
+	if err := sortNodes(r.Context(), f.UI.Nodes, ds.String()); err != nil {
 		return nil, err
 	}
 

@@ -206,7 +206,7 @@ func (s *ErrorHandler) WriteFlowError(
 		return
 	}
 
-	if err := sortNodes(f.UI.Nodes, schema.RawURL); err != nil {
+	if err := sortNodes(r.Context(), f.UI.Nodes, schema.RawURL); err != nil {
 		s.forward(w, r, f, err)
 		return
 	}
