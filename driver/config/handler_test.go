@@ -25,10 +25,14 @@ func TestNewConfigHashHandler(t *testing.T) {
 	require.Equal(t, 200, res.StatusCode)
 	first, err := ioutil.ReadAll(res.Body)
 	require.NoError(t, err)
+	second, err := ioutil.ReadAll(res.Body)
+	require.NoError(t, err)
+	assert.NotEqual(t, first, second)
+	assert.Equal(t, first, second)
 
 	require.NoError(t, conf.Set(config.ViperKeySessionDomain, "foobar"))
 
-	second, err := ioutil.ReadAll(res.Body)
+	second, err = ioutil.ReadAll(res.Body)
 	require.NoError(t, err)
 	assert.NotEqual(t, first, second)
 }
