@@ -189,6 +189,8 @@ func (m *RegistryDefault) RegisterAdminRoutes(ctx context.Context, router *x.Rou
 	m.HealthHandler(ctx).SetHealthRoutes(router.Router, true)
 	m.HealthHandler(ctx).SetVersionRoutes(router.Router)
 	m.MetricsHandler().SetRoutes(router.Router)
+
+	config.NewConfigHashHandler(m, router.Router)
 }
 
 func (m *RegistryDefault) RegisterRoutes(ctx context.Context, public *x.RouterPublic, admin *x.RouterAdmin) {
