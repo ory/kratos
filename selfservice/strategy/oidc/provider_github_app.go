@@ -3,6 +3,7 @@ package oidc
 import (
 	"context"
 	"fmt"
+	"net/url"
 
 	"github.com/ory/kratos/x"
 
@@ -52,7 +53,7 @@ func (g *ProviderGitHubApp) AuthCodeURLOptions(r ider) []oauth2.AuthCodeOption {
 	return []oauth2.AuthCodeOption{}
 }
 
-func (g *ProviderGitHubApp) Claims(ctx context.Context, exchange *oauth2.Token) (*Claims, error) {
+func (g *ProviderGitHubApp) Claims(ctx context.Context, exchange *oauth2.Token, query url.Values) (*Claims, error) {
 	gh := ghapi.NewClient(g.oauth2(ctx).Client(ctx, exchange))
 
 	user, _, err := gh.Users.Get(ctx, "")

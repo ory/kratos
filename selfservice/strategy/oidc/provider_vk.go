@@ -3,6 +3,7 @@ package oidc
 import (
 	"context"
 	"encoding/json"
+	"net/url"
 	"strconv"
 
 	"github.com/hashicorp/go-retryablehttp"
@@ -55,7 +56,7 @@ func (g *ProviderVK) OAuth2(ctx context.Context) (*oauth2.Config, error) {
 	return g.oauth2(ctx), nil
 }
 
-func (g *ProviderVK) Claims(ctx context.Context, exchange *oauth2.Token) (*Claims, error) {
+func (g *ProviderVK) Claims(ctx context.Context, exchange *oauth2.Token, query url.Values) (*Claims, error) {
 
 	o, err := g.OAuth2(ctx)
 	if err != nil {

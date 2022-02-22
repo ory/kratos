@@ -3,6 +3,7 @@ package oidc
 import (
 	"context"
 	"fmt"
+	"net/url"
 
 	"golang.org/x/oauth2/spotify"
 
@@ -55,7 +56,7 @@ func (g *ProviderSpotify) AuthCodeURLOptions(r ider) []oauth2.AuthCodeOption {
 	return []oauth2.AuthCodeOption{}
 }
 
-func (g *ProviderSpotify) Claims(ctx context.Context, exchange *oauth2.Token) (*Claims, error) {
+func (g *ProviderSpotify) Claims(ctx context.Context, exchange *oauth2.Token, query url.Values) (*Claims, error) {
 	grantedScopes := stringsx.Splitx(fmt.Sprintf("%s", exchange.Extra("scope")), " ")
 	for _, check := range g.Config().Scope {
 		if !stringslice.Has(grantedScopes, check) {
