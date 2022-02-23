@@ -20,8 +20,6 @@ import (
 
 	kratos "github.com/ory/kratos-client-go"
 	"github.com/ory/kratos/hash"
-	"github.com/ory/kratos/selfservice/strategy/password"
-
 	"github.com/ory/x/assertx"
 	"github.com/ory/x/errorsx"
 	"github.com/ory/x/ioutilx"
@@ -772,7 +770,7 @@ func TestCompleteLogin(t *testing.T) {
 		// check if password hash algorithm is upgraded
 		_, c, err := reg.PrivilegedIdentityPool().FindByCredentialsIdentifier(context.Background(), identity.CredentialsTypePassword, identifier)
 		require.NoError(t, err)
-		var o password.CredentialsConfig
+		var o identity.CredentialsPassword
 		require.NoError(t, json.NewDecoder(bytes.NewBuffer(c.Config)).Decode(&o))
 		assert.True(t, reg.Hasher().Understands([]byte(o.HashedPassword)), "%s", o.HashedPassword)
 		assert.True(t, hash.IsBcryptHash([]byte(o.HashedPassword)), "%s", o.HashedPassword)

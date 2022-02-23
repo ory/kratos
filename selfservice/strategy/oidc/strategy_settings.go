@@ -78,7 +78,7 @@ func (s *Strategy) linkedProviders(ctx context.Context, r *http.Request, conf *C
 		return nil, nil
 	}
 
-	var available CredentialsConfig
+	var available identity.CredentialsOIDC
 	if err := json.Unmarshal(creds.Config, &available); err != nil {
 		return nil, errors.WithStack(err)
 	}
@@ -115,7 +115,7 @@ func (s *Strategy) linkedProviders(ctx context.Context, r *http.Request, conf *C
 }
 
 func (s *Strategy) linkableProviders(ctx context.Context, r *http.Request, conf *ConfigurationCollection, confidential *identity.Identity) ([]Provider, error) {
-	var available CredentialsConfig
+	var available identity.CredentialsOIDC
 	creds, ok := confidential.GetCredentials(s.ID())
 	if ok {
 		if err := json.Unmarshal(creds.Config, &available); err != nil {
@@ -394,18 +394,18 @@ func (s *Strategy) linkProvider(w http.ResponseWriter, r *http.Request, ctxUpdat
 		return s.handleSettingsError(w, r, ctxUpdate, p, err)
 	}
 
-	var conf CredentialsConfig
+	var conf identity.CredentialsOIDC
 	creds, err := i.ParseCredentials(s.ID(), &conf)
 	if errors.Is(err, herodot.ErrNotFound) {
 		var err error
-		if creds, err = NewCredentials(it, cat, crt, provider.Config().ID, claims.Subject); err != nil {
+		if creds, err = identity.NewCredentialsOIDC(it, cat, crt, provider.Config().ID, claims.Subject); err != nil {
 			return s.handleSettingsError(w, r, ctxUpdate, p, err)
 		}
 	} else if err != nil {
 		return s.handleSettingsError(w, r, ctxUpdate, p, err)
 	} else {
-		creds.Identifiers = append(creds.Identifiers, uid(provider.Config().ID, claims.Subject))
-		conf.Providers = append(conf.Providers, ProviderCredentialsConfig{
+		creds.Identifiers = append(creds.Identifiers, identity.OIDCUniqueID(provider.Config().ID, claims.Subject))
+		conf.Providers = append(conf.Providers, identity.CredentialsOIDCProvider{
 			Subject: claims.Subject, Provider: provider.Config().ID,
 			InitialAccessToken:  cat,
 			InitialRefreshToken: crt,
@@ -448,20 +448,20 @@ func (s *Strategy) unlinkProvider(w http.ResponseWriter, r *http.Request, ctxUpd
 		return s.handleSettingsError(w, r, ctxUpdate, p, err)
 	}
 
-	var cc CredentialsConfig
+	var cc identity.CredentialsOIDC
 	creds, err := i.ParseCredentials(s.ID(), &cc)
 	if err != nil {
 		return s.handleSettingsError(w, r, ctxUpdate, p, errors.WithStack(UnknownConnectionValidationError))
 	}
 
 	var found bool
-	var updatedProviders []ProviderCredentialsConfig
+	var updatedProviders []identity.CredentialsOIDCProvider
 	var updatedIdentifiers []string
 	for _, available := range availableProviders {
 		if p.Unlink == available.Config().ID {
 			for _, link := range cc.Providers {
 				if link.Provider != p.Unlink {
-					updatedIdentifiers = append(updatedIdentifiers, uid(link.Provider, link.Subject))
+					updatedIdentifiers = append(updatedIdentifiers, identity.OIDCUniqueID(link.Provider, link.Subject))
 					updatedProviders = append(updatedProviders, link)
 				} else {
 					found = true
@@ -475,7 +475,7 @@ func (s *Strategy) unlinkProvider(w http.ResponseWriter, r *http.Request, ctxUpd
 	}
 
 	creds.Identifiers = updatedIdentifiers
-	creds.Config, err = json.Marshal(&CredentialsConfig{updatedProviders})
+	creds.Config, err = json.Marshal(&identity.CredentialsOIDC{updatedProviders})
 	if err != nil {
 		return s.handleSettingsError(w, r, ctxUpdate, p, errors.WithStack(err))
 

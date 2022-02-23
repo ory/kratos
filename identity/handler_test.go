@@ -11,8 +11,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/ory/kratos/selfservice/strategy/oidc"
-
 	"github.com/bxcodec/faker/v3"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -174,7 +172,7 @@ func TestHandler(t *testing.T) {
 			}
 
 			iId := x.NewUUID()
-			toJson := func(c oidc.CredentialsConfig) []byte {
+			toJson := func(c identity.CredentialsOIDC) []byte {
 				out, err := json.Marshal(&c)
 				require.NoError(t, err)
 				return out
@@ -186,7 +184,7 @@ func TestHandler(t *testing.T) {
 					identity.CredentialsTypeOIDC: {
 						Type:        identity.CredentialsTypeOIDC,
 						Identifiers: []string{"bar:" + identifier},
-						Config: toJson(oidc.CredentialsConfig{Providers: []oidc.ProviderCredentialsConfig{
+						Config: toJson(identity.CredentialsOIDC{Providers: []identity.CredentialsOIDCProvider{
 							{
 								Subject:             "foo",
 								Provider:            "bar",

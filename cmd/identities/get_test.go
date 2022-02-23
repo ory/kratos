@@ -7,8 +7,6 @@ import (
 	"testing"
 
 	"github.com/ory/kratos/cmd/identities"
-	"github.com/ory/kratos/selfservice/strategy/oidc"
-
 	"github.com/ory/x/assertx"
 
 	"github.com/ory/kratos/x"
@@ -55,7 +53,7 @@ func TestGetCmd(t *testing.T) {
 
 	t.Run("case=gets a single identity with oidc credentials", func(t *testing.T) {
 		applyCredentials := func(identifier, accessToken, refreshToken, idToken string, encrypt bool) identity.Credentials {
-			toJson := func(c oidc.CredentialsConfig) []byte {
+			toJson := func(c identity.CredentialsOIDC) []byte {
 				out, err := json.Marshal(&c)
 				require.NoError(t, err)
 				return out
@@ -69,7 +67,7 @@ func TestGetCmd(t *testing.T) {
 			return identity.Credentials{
 				Type:        identity.CredentialsTypeOIDC,
 				Identifiers: []string{"bar:" + identifier},
-				Config: toJson(oidc.CredentialsConfig{Providers: []oidc.ProviderCredentialsConfig{
+				Config: toJson(identity.CredentialsOIDC{Providers: []identity.CredentialsOIDCProvider{
 					{
 						Subject:             "foo",
 						Provider:            "bar",
