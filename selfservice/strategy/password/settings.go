@@ -1,7 +1,6 @@
 package password
 
 import (
-	"encoding/json"
 	"net/http"
 	"time"
 
@@ -14,7 +13,6 @@ import (
 	"github.com/gofrs/uuid"
 	"github.com/pkg/errors"
 
-	"github.com/ory/herodot"
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/schema"
 	"github.com/ory/kratos/selfservice/flow"
@@ -124,11 +122,6 @@ func (s *Strategy) continueSettingsFlow(
 		return err
 	}
 
-	co, err := json.Marshal(&CredentialsConfig{HashedPassword: string(hpw)})
-	if err != nil {
-		return errors.WithStack(herodot.ErrInternalServerError.WithReasonf("Unable to encode password options to JSON: %s", err))
-	}
-
 	i, err := s.d.PrivilegedIdentityPool().GetIdentityConfidential(r.Context(), ctxUpdate.Session.Identity.ID)
 	if err != nil {
 		return err
@@ -141,8 +134,10 @@ func (s *Strategy) continueSettingsFlow(
 			Identifiers: []string{x.NewUUID().String()}}
 	}
 
-	c.Config = co
-	i.SetCredentials(s.ID(), *c)
+	if err := i.SetCredentialsWithConfig(s.ID(), *c, &identity.CredentialsPassword{HashedPassword: string(hpw)}); err != nil {
+		return err
+	}
+
 	if err := s.validateCredentials(r.Context(), i, p.Password); err != nil {
 		return err
 	}

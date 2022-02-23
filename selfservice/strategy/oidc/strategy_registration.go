@@ -154,7 +154,7 @@ func (s *Strategy) Register(w http.ResponseWriter, r *http.Request, f *registrat
 }
 
 func (s *Strategy) processRegistration(w http.ResponseWriter, r *http.Request, a *registration.Flow, token *oauth2.Token, claims *Claims, provider Provider, container *authCodeContainer) (*login.Flow, error) {
-	if _, _, err := s.d.PrivilegedIdentityPool().FindByCredentialsIdentifier(r.Context(), identity.CredentialsTypeOIDC, uid(provider.Config().ID, claims.Subject)); err == nil {
+	if _, _, err := s.d.PrivilegedIdentityPool().FindByCredentialsIdentifier(r.Context(), identity.CredentialsTypeOIDC, identity.OIDCUniqueID(provider.Config().ID, claims.Subject)); err == nil {
 		// If the identity already exists, we should perform the login flow instead.
 
 		// That will execute the "pre registration" hook which allows to e.g. disallow this flow. The registration
@@ -254,7 +254,7 @@ func (s *Strategy) processRegistration(w http.ResponseWriter, r *http.Request, a
 		return nil, s.handleError(w, r, a, provider.Config().ID, i.Traits, err)
 	}
 
-	creds, err := NewCredentials(it, cat, crt, provider.Config().ID, claims.Subject)
+	creds, err := identity.NewCredentialsOIDC(it, cat, crt, provider.Config().ID, claims.Subject)
 	if err != nil {
 		return nil, s.handleError(w, r, a, provider.Config().ID, i.Traits, err)
 	}

@@ -212,7 +212,7 @@ func TestSettingsStrategy(t *testing.T) {
 		actual, err := reg.PrivilegedIdentityPool().GetIdentityConfidential(context.Background(), iid)
 		require.NoError(t, err)
 
-		var cc oidc.CredentialsConfig
+		var cc identity.CredentialsOIDC
 		creds, err := actual.ParseCredentials(identity.CredentialsTypeOIDC, &cc)
 		require.NoError(t, err)
 
