@@ -150,7 +150,7 @@ func TestDefaultPasswordValidationStrategy(t *testing.T) {
 				cs:   "is missing hash count",
 				pw:   "bofulosasm",
 				res:  "1D29CF237A57F6FEA8F29E8D907DCF1EBBA\n026364A8EE59DEDCF9E2DC80B9D7BAB7389:2",
-				pass: false,
+				pass: true,
 			},
 			{
 				cs:   "response contains no matches",
