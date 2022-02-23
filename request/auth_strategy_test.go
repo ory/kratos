@@ -4,12 +4,14 @@ import (
 	"net/http"
 	"testing"
 
+	"github.com/hashicorp/go-retryablehttp"
+
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
 func TestNoopAuthStrategy(t *testing.T) {
-	req := http.Request{Header: map[string][]string{}}
+	req := retryablehttp.Request{Request: &http.Request{Header: map[string][]string{}}}
 	auth := noopAuthStrategy{}
 
 	auth.apply(&req)
@@ -18,7 +20,7 @@ func TestNoopAuthStrategy(t *testing.T) {
 }
 
 func TestBasicAuthStrategy(t *testing.T) {
-	req := http.Request{Header: map[string][]string{}}
+	req := retryablehttp.Request{Request: &http.Request{Header: map[string][]string{}}}
 	auth := basicAuthStrategy{
 		user:     "test-user",
 		password: "test-pass",
@@ -34,7 +36,7 @@ func TestBasicAuthStrategy(t *testing.T) {
 }
 
 func TestApiKeyInHeaderStrategy(t *testing.T) {
-	req := http.Request{Header: map[string][]string{}}
+	req := retryablehttp.Request{Request: &http.Request{Header: map[string][]string{}}}
 	auth := apiKeyStrategy{
 		in:    "header",
 		name:  "my-api-key-name",
@@ -50,7 +52,7 @@ func TestApiKeyInHeaderStrategy(t *testing.T) {
 }
 
 func TestApiKeyInCookieStrategy(t *testing.T) {
-	req := http.Request{Header: map[string][]string{}}
+	req := retryablehttp.Request{Request: &http.Request{Header: map[string][]string{}}}
 	auth := apiKeyStrategy{
 		in:    "cookie",
 		name:  "my-api-key-name",

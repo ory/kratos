@@ -52,6 +52,9 @@ func (c *courier) DispatchQueue(ctx context.Context) error {
 		if err := c.DispatchMessage(ctx, msg); err != nil {
 			for _, replace := range messages[k:] {
 				if err := c.deps.CourierPersister().SetMessageStatus(ctx, replace.ID, MessageStatusQueued); err != nil {
+					if c.failOnError {
+						return err
+					}
 					c.deps.Logger().
 						WithError(err).
 						WithField("message_id", replace.ID).

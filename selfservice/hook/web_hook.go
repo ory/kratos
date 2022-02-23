@@ -6,8 +6,6 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/hashicorp/go-retryablehttp"
-
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/request"
 	"github.com/ory/kratos/selfservice/flow"
@@ -127,13 +125,7 @@ func (e *WebHook) execute(ctx context.Context, data *templateContext) error {
 		return err
 	}
 
-	httpClient := e.deps.HTTPClient(ctx)
-	r, err := retryablehttp.FromRequest(req)
-	if err != nil {
-		return err
-	}
-
-	resp, err := httpClient.Do(r)
+	resp, err := e.deps.HTTPClient(ctx).Do(req)
 	if err != nil {
 		return err
 	}
