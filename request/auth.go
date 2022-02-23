@@ -3,12 +3,13 @@ package request
 import (
 	"encoding/json"
 	"fmt"
-	"net/http"
+
+	"github.com/hashicorp/go-retryablehttp"
 )
 
 type (
 	AuthStrategy interface {
-		apply(req *http.Request)
+		apply(req *retryablehttp.Request)
 	}
 
 	authStrategyFactory func(c json.RawMessage) (AuthStrategy, error)

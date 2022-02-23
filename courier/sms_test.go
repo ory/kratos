@@ -114,3 +114,31 @@ func TestQueueSMS(t *testing.T) {
 
 	srv.Close()
 }
+
+func TestDisallowedInternalNetwork(t *testing.T) {
+	conf, reg := internal.NewFastRegistryWithMocks(t)
+	conf.MustSet(config.ViperKeyCourierSMSRequestConfig, fmt.Sprintf(`{
+		"url": "http://127.0.0.1/",
+		"method": "GET",
+		"body": "file://./stub/request.config.twilio.jsonnet"
+	}`))
+	conf.MustSet(config.ViperKeyCourierSMSEnabled, true)
+	conf.MustSet(config.ViperKeyCourierSMTPURL, "http://foo.url")
+	conf.MustSet(config.ViperKeyClientHTTPNoPrivateIPRanges, true)
+	reg.Logger().Level = logrus.TraceLevel
+
+	ctx := context.Background()
+	c := reg.Courier(ctx)
+	c.(interface {
+		FailOnDispatchError()
+	}).FailOnDispatchError()
+	_, err := c.QueueSMS(ctx, sms.NewTestStub(reg, &sms.TestStubModel{
+		To:   "+12065550101",
+		Body: "test-sms-body-1",
+	}))
+	require.NoError(t, err)
+
+	err = c.DispatchQueue(ctx)
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "ip 127.0.0.1 is in the 127.0.0.0/8 range")
+}

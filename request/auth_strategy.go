@@ -3,6 +3,8 @@ package request
 import (
 	"encoding/json"
 	"net/http"
+
+	"github.com/hashicorp/go-retryablehttp"
 )
 
 type (
@@ -24,7 +26,7 @@ func newNoopAuthStrategy(_ json.RawMessage) (AuthStrategy, error) {
 	return &noopAuthStrategy{}, nil
 }
 
-func (c *noopAuthStrategy) apply(_ *http.Request) {}
+func (c *noopAuthStrategy) apply(_ *retryablehttp.Request) {}
 
 func newBasicAuthStrategy(raw json.RawMessage) (AuthStrategy, error) {
 	type config struct {
@@ -43,7 +45,7 @@ func newBasicAuthStrategy(raw json.RawMessage) (AuthStrategy, error) {
 	}, nil
 }
 
-func (c *basicAuthStrategy) apply(req *http.Request) {
+func (c *basicAuthStrategy) apply(req *retryablehttp.Request) {
 	req.SetBasicAuth(c.user, c.password)
 }
 
@@ -66,7 +68,7 @@ func newApiKeyStrategy(raw json.RawMessage) (AuthStrategy, error) {
 	}, nil
 }
 
-func (c *apiKeyStrategy) apply(req *http.Request) {
+func (c *apiKeyStrategy) apply(req *retryablehttp.Request) {
 	switch c.in {
 	case "cookie":
 		req.AddCookie(&http.Cookie{Name: c.name, Value: c.value})

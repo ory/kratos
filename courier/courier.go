@@ -28,6 +28,7 @@ type (
 		QueueEmail(ctx context.Context, t EmailTemplate) (uuid.UUID, error)
 		QueueSMS(ctx context.Context, t SMSTemplate) (uuid.UUID, error)
 		SmtpDialer() *gomail.Dialer
+		DispatchQueue(ctx context.Context) error
 	}
 
 	Provider interface {
@@ -39,9 +40,10 @@ type (
 	}
 
 	courier struct {
-		smsClient  *smsClient
-		smtpClient *smtpClient
-		deps       Dependencies
+		smsClient   *smsClient
+		smtpClient  *smtpClient
+		deps        Dependencies
+		failOnError bool
 	}
 )
 
@@ -51,6 +53,10 @@ func NewCourier(ctx context.Context, deps Dependencies) Courier {
 		smtpClient: newSMTP(ctx, deps),
 		deps:       deps,
 	}
+}
+
+func (c *courier) FailOnDispatchError() {
+	c.failOnError = true
 }
 
 func (c *courier) Work(ctx context.Context) error {

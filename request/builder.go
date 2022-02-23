@@ -23,7 +23,7 @@ const (
 )
 
 type Builder struct {
-	r           *http.Request
+	r           *retryablehttp.Request
 	log         *logrusx.Logger
 	conf        *Config
 	fetchClient *retryablehttp.Client
@@ -35,7 +35,7 @@ func NewBuilder(config json.RawMessage, client *retryablehttp.Client, l *logrusx
 		return nil, err
 	}
 
-	r, err := http.NewRequest(c.Method, c.URL, nil)
+	r, err := retryablehttp.NewRequest(c.Method, c.URL, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -153,7 +153,7 @@ func (b *Builder) addURLEncodedBody(template *bytes.Buffer, body interface{}) er
 	return nil
 }
 
-func (b *Builder) BuildRequest(body interface{}) (*http.Request, error) {
+func (b *Builder) BuildRequest(body interface{}) (*retryablehttp.Request, error) {
 	b.r.Header = b.conf.Header
 	if err := b.addAuth(); err != nil {
 		return nil, err
