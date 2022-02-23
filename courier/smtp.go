@@ -8,6 +8,8 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/ory/kratos/driver/config"
+
 	"github.com/gofrs/uuid"
 	"github.com/pkg/errors"
 
@@ -117,7 +119,7 @@ func (c *courier) QueueEmail(ctx context.Context, t EmailTemplate) (uuid.UUID, e
 
 func (c *courier) dispatchEmail(ctx context.Context, msg Message) error {
 	if c.smtpClient.Host == "" {
-		return errors.WithStack(herodot.ErrInternalServerError.WithReasonf("Courier tried to deliver an email but courier.smtp_url is not set!"))
+		return errors.WithStack(herodot.ErrInternalServerError.WithReasonf("Courier tried to deliver an email but %s is not set!", config.ViperKeyCourierSMTPURL))
 	}
 
 	from := c.deps.CourierConfig(ctx).CourierSMTPFrom()
