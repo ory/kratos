@@ -18,10 +18,8 @@ import (
 	"github.com/pkg/errors"
 
 	"github.com/ory/herodot"
-	"github.com/ory/x/httpx"
-	"github.com/ory/x/stringsx"
-
 	"github.com/ory/kratos/driver/config"
+	"github.com/ory/x/httpx"
 )
 
 // Validator implements a validation strategy for passwords. One example is that the password
@@ -118,15 +116,18 @@ func (s *DefaultPasswordValidator) fetch(hpw []byte, apiDNSName string) error {
 	sc := bufio.NewScanner(res.Body)
 	for sc.Scan() {
 		row := sc.Text()
-		result := stringsx.Splitx(strings.TrimSpace(row), ":")
+		result := strings.Split(strings.TrimSpace(row), ":")
 
-		if len(result) != 2 {
-			return errors.WithStack(herodot.ErrInternalServerError.WithReasonf("Expected password hash from remote to contain two parts separated by a double dot but got: %v (%s)", result, row))
-		}
-
-		count, err := strconv.ParseInt(result[1], 10, 64)
-		if err != nil {
-			return errors.WithStack(herodot.ErrInternalServerError.WithReasonf("Expected password hash to contain a count formatted as int but got: %s", result[1]))
+		// We assume a count of 1. HIBP API sometimes responds without the
+		// colon, so we just assume that the leak count is one.
+		//
+		// See https://github.com/ory/kratos/issues/2145
+		count := int64(1)
+		if len(result) == 2 {
+			count, err = strconv.ParseInt(result[1], 10, 64)
+			if err != nil {
+				return errors.WithStack(herodot.ErrInternalServerError.WithReasonf("Expected password hash to contain a count formatted as int but got: %s", result[1]))
+			}
 		}
 
 		s.Lock()
