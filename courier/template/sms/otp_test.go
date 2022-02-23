@@ -22,7 +22,7 @@ func TestNewOTPMessage(t *testing.T) {
 
 	tpl := sms.NewOTPMessage(reg, &sms.OTPMessageModel{To: expectedPhone, Code: otp})
 
-	expectedBody := fmt.Sprintf("Hi, please verify your account using following code:\n\n%s\n", otp)
+	expectedBody := fmt.Sprintf("Your verification code is: %s\n", otp)
 
 	actualBody, err := tpl.SMSBody(context.Background())
 	require.NoError(t, err)
