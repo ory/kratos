@@ -129,10 +129,16 @@ func TestDefaultPasswordValidationStrategy(t *testing.T) {
 			pass bool
 		}{
 			{
-				cs:   "contains invalid data",
+				cs:   "contains invalid data which is ignored",
 				pw:   "lufsokpugo",
 				res:  "0225BDB8F106B1B4A5DF4C31B80AC695874:2\ninvalid",
-				pass: false,
+				pass: true,
+			},
+			{
+				cs:   "is missing a colon",
+				pw:   "lufsokpugo",
+				res:  "0225BDB8F106B1B4A5DF4C31B80AC695874",
+				pass: true,
 			},
 			{
 				cs:   "contains invalid hash count",
