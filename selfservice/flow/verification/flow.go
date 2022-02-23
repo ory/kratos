@@ -133,7 +133,12 @@ func NewFlow(conf *config.Config, exp time.Duration, csrf string, r *http.Reques
 }
 
 func FromOldFlow(conf *config.Config, exp time.Duration, csrf string, r *http.Request, strategies Strategies, of *Flow) (*Flow, error) {
-	nf, err := NewFlow(conf, exp, csrf, r, strategies, of.Type)
+	f := of.Type
+	// Using the same flow in the recovery/verification context can lead to using API flow in a verification/recovery email
+	if of.Type == flow.TypeAPI {
+		f = flow.TypeBrowser
+	}
+	nf, err := NewFlow(conf, exp, csrf, r, strategies, f)
 	if err != nil {
 		return nil, err
 	}
