@@ -402,6 +402,44 @@ Cypress.Commands.add('recoverApi', ({ email, returnTo }) => {
     })
 })
 
+Cypress.Commands.add('verificationApi', ({ email, returnTo }) => {
+  let url = APP_URL + '/self-service/verification/api'
+  if (returnTo) {
+    url += '?return_to=' + returnTo
+  }
+  cy.request({ url })
+    .then(({ body }) => {
+      const form = body.ui
+      return cy.request({
+        method: form.method,
+        body: mergeFields(form, { email, method: 'link' }),
+        url: form.action
+      })
+    })
+    .then(({ body }) => {
+      expect(body.state).to.contain('sent_email')
+    })
+})
+
+Cypress.Commands.add('verificationBrowser', ({ email, returnTo }) => {
+  let url = APP_URL + '/self-service/verification/browser'
+  if (returnTo) {
+    url += '?return_to=' + returnTo
+  }
+  cy.request({ url })
+    .then(({ body }) => {
+      const form = body.ui
+      return cy.request({
+        method: form.method,
+        body: mergeFields(form, { email, method: 'link' }),
+        url: form.action
+      })
+    })
+    .then(({ body }) => {
+      expect(body.state).to.contain('sent_email')
+    })
+})
+
 Cypress.Commands.add(
   'registerOidc',
   ({

@@ -111,6 +111,20 @@ declare global {
       recoverApi(opts: { email: string; returnTo?: string }): Chainable<void>
 
       /**
+       * Submits a verification flow via the API
+       *
+       * @param opts
+       */
+      verificationApi(opts: { email: string; returnTo?: string }): Chainable<void>
+
+      /**
+       * Submits a verification flow via the Browser
+       *
+       * @param opts
+       */
+      verificationBrowser(opts: { email: string; returnTo?: string }): Chainable<void>
+
+      /**
        * Changes the config so that the login flow lifespan is very short.
        *
        *
@@ -300,11 +314,20 @@ declare global {
       /**
        * Changes the config so that the verification privileged lifespan is very long.
        *
+       * Useful when testing recovery/verification flows.
+       *
+       * @see shortLinkLifespan()
+       */
+      longVerificationLifespan(): Chainable<void>
+
+      /**
+       * Changes the config so that the verification privileged lifespan is very short.
+       *
        * Useful when testing privileged verification flows.
        *
        * @see shortPrivilegedVerificationTime()
        */
-      longVerificationLifespan(): Chainable<void>
+      shortVerificationLifespan(): Chainable<void>
 
       /**
        * Log a user out

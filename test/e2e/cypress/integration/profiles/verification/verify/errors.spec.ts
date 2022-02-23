@@ -58,7 +58,22 @@ context('Account Verification Error', () => {
           'contain.text',
           'An email containing a verification'
         )
+        cy.get('[name="method"][value="link"]').should('exist')
+        cy.verifyEmailButExpired({ expect: { email: identity.email } })
+      })
 
+      it('is unable to verify the email address if the verification link is expired 2', () => {
+        //cy.shortVerificationLifespan()
+        cy.verificationBrowser({ email: identity.email, returnTo: "https://www.ory.sh/"})
+        cy.visit(verification)
+        cy.get('input[name="email"]').type(identity.email)
+        cy.get('button[value="link"]').click()
+
+        cy.get('[data-testid="ui/message/1080001"]').should(
+          'contain.text',
+          'An email containing a verification'
+        )
+        cy.get('[name="method"][value="link"]').should('exist')
         cy.verifyEmailButExpired({ expect: { email: identity.email } })
       })
 
