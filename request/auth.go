@@ -27,5 +27,4 @@ func authStrategy(name string, config json.RawMessage) (AuthStrategy, error) {
 	}
 
 	return nil, fmt.Errorf("unsupported auth type: %s", name)
-
 }
