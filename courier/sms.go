@@ -15,9 +15,9 @@ import (
 )
 
 type sendSMSRequestBody struct {
-	To   string
-	From string
-	Body string
+	From string `json:"from"`
+	To   string `json:"to"`
+	Body string `json:"body"`
 }
 
 type smsClient struct {
