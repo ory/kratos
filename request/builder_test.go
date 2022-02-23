@@ -30,7 +30,7 @@ func TestBuildRequest(t *testing.T) {
 		method          string
 		url             string
 		authStrategy    string
-		header          http.Header
+		expectedHeader  http.Header
 		bodyTemplateURI string
 		body            *testRequestBody
 		expectedBody    string
@@ -93,7 +93,7 @@ func TestBuildRequest(t *testing.T) {
 			method:          "POST",
 			url:             "https://test.kratos.ory.sh/my_endpoint2",
 			authStrategy:    "",
-			header:          map[string][]string{"Custom-Header": {"test"}},
+			expectedHeader:  map[string][]string{"Custom-Header": {"test"}},
 			bodyTemplateURI: "file://./stub/test_body.jsonnet",
 			body: &testRequestBody{
 				To:   "+12127110378",
@@ -184,7 +184,7 @@ func TestBuildRequest(t *testing.T) {
 			url:             "https://test.kratos.ory.sh/my_endpoint6",
 			bodyTemplateURI: "file://./stub/test_body.jsonnet",
 			authStrategy:    "api_key",
-			header:          map[string][]string{"Content-Type": {ContentTypeForm}},
+			expectedHeader:  map[string][]string{"Content-Type": {ContentTypeForm}},
 			body: &testRequestBody{
 				To:   "+14134242223",
 				From: "+13104661805",
@@ -214,7 +214,7 @@ func TestBuildRequest(t *testing.T) {
 			url:             "https://test.kratos.ory.sh/my_endpoint7",
 			bodyTemplateURI: "file://./stub/test_body.jsonnet",
 			authStrategy:    "basic_auth",
-			header:          map[string][]string{"Content-Type": {ContentTypeJSON}},
+			expectedHeader:  map[string][]string{"Content-Type": {ContentTypeJSON}},
 			body: &testRequestBody{
 				To:   "+14134242223",
 				From: "+13104661805",
@@ -257,8 +257,8 @@ func TestBuildRequest(t *testing.T) {
 				assert.Equal(t, tc.expectedBody, string(requestBody))
 			}
 
-			if tc.header != nil {
-				mustContainHeader(t, tc.header, req.Header)
+			if tc.expectedHeader != nil {
+				mustContainHeader(t, tc.expectedHeader, req.Header)
 			}
 		})
 	}
