@@ -16,6 +16,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/ory/x/snapshotx"
+
 	"github.com/ghodss/yaml"
 	"github.com/spf13/cobra"
 
@@ -1043,6 +1045,26 @@ func TestChangeMinPasswordLength(t *testing.T) {
 			configx.WithValue(config.ViperKeyPasswordMinLength, 9))
 
 		assert.NoError(t, err)
+	})
+}
+
+func TestCourierSMS(t *testing.T) {
+	ctx := context.Background()
+
+	t.Run("case=configs set", func(t *testing.T) {
+		conf, _ := config.New(ctx, logrusx.New("", ""), os.Stderr,
+			configx.WithConfigFiles("stub/.kratos.courier.sms.yaml"), configx.SkipValidation())
+		assert.True(t, conf.CourierSMSEnabled())
+		snapshotx.SnapshotTExcept(t, conf.CourierSMSRequestConfig(), nil)
+		assert.Equal(t, "+49123456789", conf.CourierSMSFrom())
+	})
+
+	t.Run("case=defaults", func(t *testing.T) {
+		conf, _ := config.New(ctx, logrusx.New("", ""), os.Stderr, configx.SkipValidation())
+
+		assert.False(t, conf.CourierSMSEnabled())
+		snapshotx.SnapshotTExcept(t, conf.CourierSMSRequestConfig(), nil)
+		assert.Equal(t, "Ory Kratos", conf.CourierSMSFrom())
 	})
 }
 

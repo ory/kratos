@@ -3,8 +3,11 @@ package courier
 import (
 	"context"
 	"encoding/json"
-	"errors"
 	"net/http"
+
+	"github.com/pkg/errors"
+
+	"github.com/ory/herodot"
 
 	"github.com/gofrs/uuid"
 
@@ -25,10 +28,6 @@ type smsClient struct {
 }
 
 func newSMS(ctx context.Context, deps Dependencies) *smsClient {
-	if !deps.CourierConfig(ctx).CourierSMSEnabled() {
-		deps.Logger().Error("messages will not be sent - no sms gate server address is set in config")
-	}
-
 	return &smsClient{
 		RequestConfig: deps.CourierConfig(ctx).CourierSMSRequestConfig(),
 
@@ -68,6 +67,10 @@ func (c *courier) QueueSMS(ctx context.Context, t SMSTemplate) (uuid.UUID, error
 }
 
 func (c *courier) dispatchSMS(ctx context.Context, msg Message) error {
+	if !c.deps.CourierConfig(ctx).CourierSMSEnabled() {
+		return errors.WithStack(herodot.ErrInternalServerError.WithReasonf("Courier tried to deliver an sms but courier.sms.enabled is set to false!"))
+	}
+
 	tmpl, err := c.smsClient.NewTemplateFromMessage(c.deps, msg)
 	if err != nil {
 		return err
