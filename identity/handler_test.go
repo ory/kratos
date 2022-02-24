@@ -5,14 +5,16 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/gofrs/uuid"
-	"github.com/ory/kratos/hash"
-	"github.com/ory/x/snapshotx"
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
 	"testing"
 	"time"
+
+	"github.com/gofrs/uuid"
+
+	"github.com/ory/kratos/hash"
+	"github.com/ory/x/snapshotx"
 
 	"github.com/bxcodec/faker/v3"
 	"github.com/stretchr/testify/assert"
