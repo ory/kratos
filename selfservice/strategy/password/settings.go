@@ -129,9 +129,7 @@ func (s *Strategy) continueSettingsFlow(
 
 	c, ok := i.GetCredentials(s.ID())
 	if !ok {
-		c = &identity.Credentials{Type: s.ID(),
-			// We need to insert a random identifier now...
-			Identifiers: []string{x.NewUUID().String()}}
+		c = &identity.Credentials{Type: s.ID()}
 	}
 
 	if err := i.SetCredentialsWithConfig(s.ID(), *c, &identity.CredentialsPassword{HashedPassword: string(hpw)}); err != nil {

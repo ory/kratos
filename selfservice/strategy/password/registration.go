@@ -139,6 +139,12 @@ func (s *Strategy) validateCredentials(ctx context.Context, i *identity.Identity
 		return schema.NewMissingIdentifierError()
 	}
 
+	// Sometimes, no identifier is set, but we still want to validate the password!
+	ids := c.Identifiers
+	if len(ids) == 0 {
+		ids = []string{""}
+	}
+
 	for _, id := range c.Identifiers {
 		if err := s.d.PasswordValidator().Validate(ctx, id, pw); err != nil {
 			if _, ok := errorsx.Cause(err).(*herodot.DefaultError); ok {

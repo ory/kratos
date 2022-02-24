@@ -3,6 +3,7 @@ package identity
 import (
 	"context"
 	"encoding/json"
+	"github.com/ory/kratos/hash"
 	"net/http"
 	"time"
 
@@ -34,6 +35,7 @@ type (
 		config.Provider
 		x.CSRFProvider
 		cipher.Provider
+		hash.HashProvider
 	}
 	HandlerProvider interface {
 		IdentityHandler() *Handler
@@ -236,7 +238,7 @@ type AdminIdentityImportCredentials struct {
 	OIDC *AdminIdentityImportCredentialsOIDC `json:"oidc,omitempty"`
 }
 
-// swagger:model AdminCreateIdentityImportCredentialsPassword
+// swagger:model adminCreateIdentityImportCredentialsPassword
 type AdminIdentityImportCredentialsPassword struct {
 	// The hashed password in [PHC format]( https://www.ory.sh/docs/kratos/concepts/credentials/username-email-password#hashed-password-format)
 	HashedPassword string `json:"hashed_password"`
@@ -245,12 +247,22 @@ type AdminIdentityImportCredentialsPassword struct {
 	Password string `json:"password"`
 }
 
-// swagger:model AdminCreateIdentityImportCredentialsOIDC
+// swagger:model adminCreateIdentityImportCredentialsOidc
 type AdminIdentityImportCredentialsOIDC struct {
+	// A list of OpenID Connect Providers
+	Providers []AdminCreateIdentityImportCredentialsOidcProvider `json:"providers"`
+}
+
+// swagger:model adminCreateIdentityImportCredentialsOidcProvider
+type AdminCreateIdentityImportCredentialsOidcProvider struct {
 	// The subject (`sub`) of the OpenID Connect connection. Usually the `sub` field of the ID Token.
+	//
+	// required: true
 	Subject string `json:"subject"`
 
 	// The OpenID Connect provider to link the subject to. Usually something like `google` or `github`.
+	//
+	// required: true
 	Provider string `json:"provider"`
 }
 
@@ -297,16 +309,18 @@ func (h *Handler) create(w http.ResponseWriter, r *http.Request, _ httprouter.Pa
 	}
 
 	i := &Identity{
-		SchemaID:       cr.SchemaID,
-		Traits:         []byte(cr.Traits),
-		State:          state,
-		StateChangedAt: &stateChangedAt,
-		//Credentials:         cr.Credentials,
+		SchemaID:            cr.SchemaID,
+		Traits:              []byte(cr.Traits),
+		State:               state,
+		StateChangedAt:      &stateChangedAt,
 		VerifiableAddresses: cr.VerifiableAddresses,
 		RecoveryAddresses:   cr.RecoveryAddresses,
 	}
-	//i.Traits = identity.Traits(p.Traits)
-	//i.SetCredentials(s.ID(), identity.Credentials{Type: s.ID(), Identifiers: []string{}, Config: co})
+
+	if err := h.importCredentials(r.Context(), i, cr.Credentials); err != nil {
+		h.r.Writer().WriteError(w, r, err)
+		return
+	}
 
 	if err := h.r.IdentityManager().Create(r.Context(), i); err != nil {
 		h.r.Writer().WriteError(w, r, err)
@@ -339,6 +353,8 @@ type adminUpdateIdentity struct {
 type AdminUpdateIdentityBody struct {
 	// SchemaID is the ID of the JSON Schema to be used for validating the identity's traits. If set
 	// will update the Identity's SchemaID.
+	//
+	// required: true
 	SchemaID string `json:"schema_id"`
 
 	// Traits represent an identity's traits. The identity is able to create, modify, and delete traits
