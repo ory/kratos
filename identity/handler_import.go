@@ -3,10 +3,12 @@ package identity
 import (
 	"context"
 	"encoding/json"
+
+	"github.com/pkg/errors"
+
 	"github.com/ory/herodot"
 	"github.com/ory/kratos/hash"
 	"github.com/ory/kratos/x"
-	"github.com/pkg/errors"
 )
 
 func (h *Handler) importCredentials(ctx context.Context, i *Identity, creds *AdminIdentityImportCredentials) error {

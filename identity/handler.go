@@ -3,9 +3,10 @@ package identity
 import (
 	"context"
 	"encoding/json"
-	"github.com/ory/kratos/hash"
 	"net/http"
 	"time"
+
+	"github.com/ory/kratos/hash"
 
 	"github.com/ory/kratos/x"
 
