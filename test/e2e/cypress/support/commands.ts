@@ -402,7 +402,7 @@ Cypress.Commands.add('recoverApi', ({ email, returnTo }) => {
     })
 })
 
-Cypress.Commands.add('verificationApi', ({ email, returnTo }) => {
+Cypress.Commands.add('verificationApiExpired', ({ email, returnTo }) => {
   let url = APP_URL + '/self-service/verification/api'
   if (returnTo) {
     url += '?return_to=' + returnTo
@@ -413,11 +413,18 @@ Cypress.Commands.add('verificationApi', ({ email, returnTo }) => {
       return cy.request({
         method: form.method,
         body: mergeFields(form, { email, method: 'link' }),
-        url: form.action
+        url: form.action,
+        failOnStatusCode: false
       })
     })
-    .then(({ body }) => {
-      expect(body.state).to.contain('sent_email')
+    .then((response) => {
+      expect(response.status).to.eq(410)
+      expect(response.body.error.reason).to.eq(
+        'The verification flow has expired. Redirect the user to the verification flow init endpoint to initialize a new verification flow.'
+      )
+      expect(response.body.error.details.redirect_to).to.eq(
+        'http://localhost:4455/self-service/verification/browser'
+      )
     })
 })
 

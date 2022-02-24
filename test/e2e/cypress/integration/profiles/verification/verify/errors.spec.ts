@@ -62,19 +62,17 @@ context('Account Verification Error', () => {
         cy.verifyEmailButExpired({ expect: { email: identity.email } })
       })
 
-      it('is unable to verify the email address if the verification link is expired 2', () => {
-        //cy.shortVerificationLifespan()
-        cy.verificationBrowser({ email: identity.email, returnTo: "https://www.ory.sh/"})
-        cy.visit(verification)
-        cy.get('input[name="email"]').type(identity.email)
-        cy.get('button[value="link"]').click()
-
-        cy.get('[data-testid="ui/message/1080001"]').should(
-          'contain.text',
-          'An email containing a verification'
-        )
-        cy.get('[name="method"][value="link"]').should('exist')
-        cy.verifyEmailButExpired({ expect: { email: identity.email } })
+      it('create a new browser flow, if original api flow expired', () => {
+        cy.longLinkLifespan()
+        cy.shortVerificationLifespan()
+        cy.browserReturnUrlOry()
+        // Init expired flow
+        cy.verificationApiExpired({
+          email: identity.email,
+          returnTo: 'https://www.ory.sh/'
+        })
+        // Should redirect to verification page with a new flow
+        cy.location('pathname').should('include', 'verification')
       })
 
       it('is unable to verify the email address if the code is incorrect', () => {
