@@ -1,0 +1,86 @@
+package identity
+
+import (
+	"context"
+	"encoding/json"
+	"github.com/ory/herodot"
+	"github.com/ory/kratos/hash"
+	"github.com/ory/kratos/x"
+	"github.com/pkg/errors"
+)
+
+func (h *Handler) importCredentials(ctx context.Context, i *Identity, creds *AdminIdentityImportCredentials) error {
+	if creds == nil {
+		return nil
+	}
+
+	if creds.Password != nil {
+		if err := h.importPasswordCredentials(ctx, i, creds.Password); err != nil {
+			return err
+		}
+	}
+
+	if creds.OIDC != nil {
+		if err := h.importOIDCCredentials(ctx, i, creds.OIDC); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func (h *Handler) importPasswordCredentials(ctx context.Context, i *Identity, creds *AdminIdentityImportCredentialsPassword) (err error) {
+	// In here we deliberately ignore any password policies as the point here is to import passwords, even if they
+	// are not matching the policy, as the user needs to able to sign in with their old password.
+	hashed := []byte(creds.HashedPassword)
+	if len(creds.Password) > 0 {
+		// Importing a clear text password
+		hashed, err = h.r.Hasher().Generate(ctx, []byte(creds.Password))
+		if err != nil {
+			return err
+		}
+
+		creds.HashedPassword = string(hashed)
+	}
+
+	if !(hash.IsArgon2idHash(hashed) || hash.IsBcryptHash(hashed) || hash.IsPbkdf2Hash(hashed)) {
+		return errors.WithStack(herodot.ErrBadRequest.WithReasonf("The imported password does not match any known hash format. For more information see https://www.ory.sh/dr/2"))
+	}
+
+	return i.SetCredentialsWithConfig(CredentialsTypePassword, Credentials{}, CredentialsPassword{HashedPassword: string(hashed)})
+}
+
+func (h *Handler) importOIDCCredentials(_ context.Context, i *Identity, creds *AdminIdentityImportCredentialsOIDC) error {
+	var target CredentialsOIDC
+	c, ok := i.GetCredentials(CredentialsTypeOIDC)
+	if !ok {
+		var providers []CredentialsOIDCProvider
+		var ids []string
+		for _, p := range creds.Providers {
+			ids = append(ids, OIDCUniqueID(p.Provider, p.Subject))
+			providers = append(providers, CredentialsOIDCProvider{
+				Subject:  p.Subject,
+				Provider: p.Provider,
+			})
+		}
+
+		return i.SetCredentialsWithConfig(
+			CredentialsTypeOIDC,
+			Credentials{Identifiers: ids},
+			CredentialsOIDC{Providers: providers},
+		)
+	}
+
+	if err := json.Unmarshal(c.Config, &target); err != nil {
+		return errors.WithStack(x.PseudoPanic.WithWrap(err))
+	}
+
+	for _, p := range creds.Providers {
+		c.Identifiers = append(c.Identifiers, OIDCUniqueID(p.Provider, p.Subject))
+		target.Providers = append(target.Providers, CredentialsOIDCProvider{
+			Subject:  p.Subject,
+			Provider: p.Provider,
+		})
+	}
+	return i.SetCredentialsWithConfig(CredentialsTypeOIDC, *c, &target)
+}
