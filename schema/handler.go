@@ -90,7 +90,12 @@ func (h *Handler) getByID(w http.ResponseWriter, r *http.Request, ps httprouter.
 		return
 	}
 
-	s, err := ss.GetByID(ps.ByName("id"))
+	id := ps.ByName("id")
+	if dec, err := base64.RawURLEncoding.DecodeString(ps.ByName("id")); err == nil {
+		id = string(dec)
+	}
+
+	s, err := ss.GetByID(id)
 	if err != nil {
 		h.r.Writer().WriteError(w, r, errors.WithStack(herodot.ErrNotFound.WithDebugf("%+v", err)))
 		return
