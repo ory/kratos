@@ -2,6 +2,7 @@ package courier
 
 import (
 	"context"
+	"time"
 
 	"github.com/pkg/errors"
 )
@@ -47,22 +48,35 @@ func (c *courier) DispatchQueue(ctx context.Context) error {
 		return err
 	}
 
-	for k := range messages {
-		var msg = messages[k]
-		if err := c.DispatchMessage(ctx, msg); err != nil {
-			for _, replace := range messages[k:] {
-				if err := c.deps.CourierPersister().SetMessageStatus(ctx, replace.ID, MessageStatusQueued); err != nil {
-					if c.failOnError {
-						return err
-					}
-					c.deps.Logger().
-						WithError(err).
-						WithField("message_id", replace.ID).
-						Error(`Unable to reset the failed message's status to "queued".`)
-				}
-			}
+	ttl := c.deps.CourierConfig(ctx).CourierMessageTTL()
 
-			return err
+	for k, msg := range messages {
+		if time.Now().After(msg.CreatedAt.Add(ttl)) {
+			if err := c.deps.CourierPersister().SetMessageStatus(ctx, msg.ID, MessageStatusAbandoned); err != nil {
+				if c.failOnError {
+					return err
+				}
+				c.deps.Logger().
+					WithError(err).
+					WithField("message_id", msg.ID).
+					Error(`Unable to reset the timed out message's status to "abandoned".`)
+			}
+		} else {
+			if err := c.DispatchMessage(ctx, msg); err != nil {
+				for _, replace := range messages[k:] {
+					if err := c.deps.CourierPersister().SetMessageStatus(ctx, replace.ID, MessageStatusQueued); err != nil {
+						if c.failOnError {
+							return err
+						}
+						c.deps.Logger().
+							WithError(err).
+							WithField("message_id", replace.ID).
+							Error(`Unable to reset the failed message's status to "queued".`)
+					}
+				}
+
+				return err
+			}
 		}
 	}
 
