@@ -2,6 +2,7 @@ package schema
 
 import (
 	"context"
+	"encoding/base64"
 	"io/ioutil"
 	"net/url"
 	"strings"
@@ -100,5 +101,5 @@ type Schema struct {
 }
 
 func (s *Schema) SchemaURL(host *url.URL) *url.URL {
-	return urlx.AppendPaths(host, SchemasPath, s.ID)
+	return urlx.AppendPaths(host, SchemasPath, base64.RawURLEncoding.EncodeToString([]byte(s.ID)))
 }

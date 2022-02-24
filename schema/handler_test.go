@@ -61,6 +61,11 @@ func TestHandler(t *testing.T) {
 			URL:    urlx.ParseOrPanic("file://./stub"),
 			RawURL: "file://./stub",
 		},
+		{
+			ID:     "preset://email",
+			URL:    urlx.ParseOrPanic("file://./stub/identity-2.schema.json"),
+			RawURL: "file://./stub/identity-2.schema.json",
+		},
 	}
 
 	getSchemaById := func(id string) *schema.Schema {
@@ -134,6 +139,12 @@ func TestHandler(t *testing.T) {
 	t.Run("case=get base64 schema", func(t *testing.T) {
 		server := getFromTSById("base64", http.StatusOK)
 		file := getFromFS("base64")
+		require.JSONEq(t, string(file), string(server))
+	})
+
+	t.Run("case=get encoded schema", func(t *testing.T) {
+		server := getFromTSById("cHJlc2V0Oi8vZW1haWw", http.StatusOK)
+		file := getFromFS("preset://email")
 		require.JSONEq(t, string(file), string(server))
 	})
 
