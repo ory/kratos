@@ -66,10 +66,10 @@ hashers:
     cost: 8
 
 identity:
-  default_schema_id: default
+  default_schema_id: preset://email
   schemas:
-    - id: default
-      schema: file:///etc/config/kratos/identity.schema.json
+    - id: preset://email
+      url: file:///etc/config/kratos/identity.schema.json
 
 courier:
   smtp:
