@@ -136,16 +136,16 @@ func (s *Strategy) validateCredentials(ctx context.Context, i *identity.Identity
 		// This should never happen
 		return errors.WithStack(x.PseudoPanic.WithReasonf("identity object did not provide the %s CredentialType unexpectedly", identity.CredentialsTypePassword))
 	} else if len(c.Identifiers) == 0 {
-		return schema.NewMissingIdentifierError()
+		if err := s.d.PasswordValidator().Validate(ctx, "", pw); err != nil {
+			if _, ok := errorsx.Cause(err).(*herodot.DefaultError); ok {
+				return err
+			}
+			return schema.NewPasswordPolicyViolationError("#/password", err.Error())
+		}
+		return nil
 	}
 
-	// Sometimes, no identifier is set, but we still want to validate the password!
-	ids := c.Identifiers
-	if len(ids) == 0 {
-		ids = []string{""}
-	}
-
-	for _, id := range ids {
+	for _, id := range c.Identifiers {
 		if err := s.d.PasswordValidator().Validate(ctx, id, pw); err != nil {
 			if _, ok := errorsx.Cause(err).(*herodot.DefaultError); ok {
 				return err

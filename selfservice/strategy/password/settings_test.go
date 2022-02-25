@@ -59,6 +59,15 @@ func newEmptyIdentity() *identity.Identity {
 	}
 }
 
+func newIdentityWithoutCredentials(email string) *identity.Identity {
+	return &identity.Identity{
+		ID:       x.NewUUID(),
+		State:    identity.StateActive,
+		Traits:   identity.Traits(`{"email":"` + email + `"}`),
+		SchemaID: config.DefaultIdentityTraitsSchemaID,
+	}
+}
+
 func TestSettings(t *testing.T) {
 	conf, reg := internal.NewFastRegistryWithMocks(t)
 	conf.MustSet(config.ViperKeySelfServiceBrowserDefaultReturnTo, "https://www.ory.sh/")
@@ -321,6 +330,7 @@ func TestSettings(t *testing.T) {
 	}
 
 	t.Run("description=should update the password even if no password was set before", func(t *testing.T) {
+		email := fmt.Sprintf("test+%s@ory.sh", x.NewUUID())
 		var check = func(t *testing.T, actual string, id *identity.Identity) {
 			assert.Equal(t, "success", gjson.Get(actual, "state").String(), "%s", actual)
 			assert.Empty(t, gjson.Get(actual, "ui.nodes.#(name==password).attributes.value").String(), "%s", actual)
@@ -330,7 +340,7 @@ func TestSettings(t *testing.T) {
 			cfg := string(actualIdentity.Credentials[identity.CredentialsTypePassword].Config)
 			assert.Contains(t, cfg, "hashed_password", "%+v", actualIdentity.Credentials)
 			require.Len(t, actualIdentity.Credentials[identity.CredentialsTypePassword].Identifiers, 1)
-			assert.Contains(t, actualIdentity.Credentials[identity.CredentialsTypePassword].Identifiers[0], "-4")
+			assert.Equal(t, email, actualIdentity.Credentials[identity.CredentialsTypePassword].Identifiers[0])
 		}
 
 		var payload = func(v url.Values) {
@@ -338,19 +348,23 @@ func TestSettings(t *testing.T) {
 			v.Set("password", randx.MustString(16, randx.AlphaNum))
 		}
 
+		id := newIdentityWithoutCredentials(email)
+		browserUser := testhelpers.NewHTTPClientWithIdentitySessionCookie(t, reg, id)
+		apiUser := testhelpers.NewHTTPClientWithIdentitySessionToken(t, reg, id)
+
 		t.Run("type=api", func(t *testing.T) {
-			actual := expectSuccess(t, true, false, apiUser2, payload)
-			check(t, actual, apiIdentity2)
+			actual := expectSuccess(t, true, false, apiUser, payload)
+			check(t, actual, id)
 		})
 
 		t.Run("type=spa", func(t *testing.T) {
-			actual := expectSuccess(t, false, true, browserUser2, payload)
-			check(t, actual, browserIdentity2)
+			actual := expectSuccess(t, false, true, browserUser, payload)
+			check(t, actual, id)
 		})
 
 		t.Run("type=browser", func(t *testing.T) {
-			actual := expectSuccess(t, false, false, browserUser2, payload)
-			check(t, actual, browserIdentity2)
+			actual := expectSuccess(t, false, false, browserUser, payload)
+			check(t, actual, id)
 		})
 	})
 

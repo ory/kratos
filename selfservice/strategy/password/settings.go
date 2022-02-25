@@ -141,7 +141,6 @@ func (s *Strategy) continueSettingsFlow(
 	}
 
 	ctxUpdate.UpdateIdentity(i)
-
 	return nil
 }
 
