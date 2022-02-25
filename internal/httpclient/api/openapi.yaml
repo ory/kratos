@@ -4050,14 +4050,18 @@ components:
     submitSelfServiceLoginFlowBody:
       discriminator:
         mapping:
+          lookup_secret: '#/components/schemas/submitSelfServiceLoginFlowWithLookupSecretMethodBody'
           oidc: '#/components/schemas/submitSelfServiceLoginFlowWithOidcMethodBody'
           password: '#/components/schemas/submitSelfServiceLoginFlowWithPasswordMethodBody'
           totp: '#/components/schemas/submitSelfServiceLoginFlowWithTotpMethodBody'
+          webAuthn: '#/components/schemas/submitSelfServiceLoginFlowWithWebAuthnMethodBody'
         propertyName: method
       oneOf:
+      - $ref: '#/components/schemas/submitSelfServiceLoginFlowWithLookupSecretMethodBody'
       - $ref: '#/components/schemas/submitSelfServiceLoginFlowWithPasswordMethodBody'
       - $ref: '#/components/schemas/submitSelfServiceLoginFlowWithOidcMethodBody'
       - $ref: '#/components/schemas/submitSelfServiceLoginFlowWithTotpMethodBody'
+      - $ref: '#/components/schemas/submitSelfServiceLoginFlowWithWebAuthnMethodBody'
     submitSelfServiceLoginFlowWithLookupSecretMethodBody:
       properties:
         csrf_token:
@@ -4269,17 +4273,21 @@ components:
     submitSelfServiceSettingsFlowBody:
       discriminator:
         mapping:
+          lookup_secret: '#/components/schemas/submitSelfServiceSettingsFlowWithLookupMethodBody'
           oidc: '#/components/schemas/submitSelfServiceSettingsFlowWithOidcMethodBody'
           password: '#/components/schemas/submitSelfServiceSettingsFlowWithPasswordMethodBody'
           profile: '#/components/schemas/submitSelfServiceSettingsFlowWithProfileMethodBody'
           totp: '#/components/schemas/submitSelfServiceSettingsFlowWithTotpMethodBody'
+          webAuthn: '#/components/schemas/submitSelfServiceSettingsFlowWithWebAuthnMethodBody'
         propertyName: method
       oneOf:
+      - $ref: '#/components/schemas/submitSelfServiceSettingsFlowWithLookupMethodBody'
       - $ref: '#/components/schemas/submitSelfServiceSettingsFlowWithPasswordMethodBody'
       - $ref: '#/components/schemas/submitSelfServiceSettingsFlowWithProfileMethodBody'
       - $ref: '#/components/schemas/submitSelfServiceSettingsFlowWithOidcMethodBody'
       - $ref: '#/components/schemas/submitSelfServiceSettingsFlowWithOidcMethodBody'
       - $ref: '#/components/schemas/submitSelfServiceSettingsFlowWithTotpMethodBody'
+      - $ref: '#/components/schemas/submitSelfServiceSettingsFlowWithWebAuthnMethodBody'
     submitSelfServiceSettingsFlowWithLookupMethodBody:
       properties:
         csrf_token:
