@@ -34,15 +34,15 @@ func (h *Handler) importCredentials(ctx context.Context, i *Identity, creds *Adm
 func (h *Handler) importPasswordCredentials(ctx context.Context, i *Identity, creds *AdminIdentityImportCredentialsPassword) (err error) {
 	// In here we deliberately ignore any password policies as the point here is to import passwords, even if they
 	// are not matching the policy, as the user needs to able to sign in with their old password.
-	hashed := []byte(creds.HashedPassword)
-	if len(creds.Password) > 0 {
+	hashed := []byte(creds.Config.HashedPassword)
+	if len(creds.Config.Password) > 0 {
 		// Importing a clear text password
-		hashed, err = h.r.Hasher().Generate(ctx, []byte(creds.Password))
+		hashed, err = h.r.Hasher().Generate(ctx, []byte(creds.Config.Password))
 		if err != nil {
 			return err
 		}
 
-		creds.HashedPassword = string(hashed)
+		creds.Config.HashedPassword = string(hashed)
 	}
 
 	if !(hash.IsArgon2idHash(hashed) || hash.IsBcryptHash(hashed) || hash.IsPbkdf2Hash(hashed)) {
@@ -58,7 +58,7 @@ func (h *Handler) importOIDCCredentials(_ context.Context, i *Identity, creds *A
 	if !ok {
 		var providers []CredentialsOIDCProvider
 		var ids []string
-		for _, p := range creds.Providers {
+		for _, p := range creds.Config.Providers {
 			ids = append(ids, OIDCUniqueID(p.Provider, p.Subject))
 			providers = append(providers, CredentialsOIDCProvider{
 				Subject:  p.Subject,
@@ -77,7 +77,7 @@ func (h *Handler) importOIDCCredentials(_ context.Context, i *Identity, creds *A
 		return errors.WithStack(x.PseudoPanic.WithWrap(err))
 	}
 
-	for _, p := range creds.Providers {
+	for _, p := range creds.Config.Providers {
 		c.Identifiers = append(c.Identifiers, OIDCUniqueID(p.Provider, p.Subject))
 		target.Providers = append(target.Providers, CredentialsOIDCProvider{
 			Subject:  p.Subject,
