@@ -115,6 +115,23 @@ declare global {
        *
        * @param opts
        */
+      verificationApi(opts: {
+        email: string
+        returnTo?: string
+      }): Chainable<void>
+
+      /**
+       * Update the config file
+       *
+       * @param cb
+       */
+      updateConfigFile(cb: (arg: any) => any): Chainable<any>
+
+      /**
+       * Submits a verification flow via the API
+       *
+       * @param opts
+       */
       verificationApiExpired(opts: {
         email: string
         returnTo?: string
