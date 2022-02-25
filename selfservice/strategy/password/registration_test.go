@@ -389,37 +389,6 @@ func TestRegistration(t *testing.T) {
 			})
 		})
 
-		t.Run("case=should fail because schema did not specify an identifier", func(t *testing.T) {
-			testhelpers.SetDefaultIdentitySchema(conf, "file://./stub/missing-identifier.schema.json")
-
-			values := func(values url.Values) {
-				values.Set("method", "password")
-				values.Set("traits.username", "registration-identifier-6")
-				values.Set("password", x.NewUUID().String())
-				values.Set("traits.foobar", "bar")
-			}
-
-			t.Run("type=api", func(t *testing.T) {
-				body := testhelpers.SubmitRegistrationForm(t, true, apiClient, publicTS, values,
-					false, http.StatusBadRequest,
-					publicTS.URL+registration.RouteSubmitFlow)
-				assert.Contains(t, gjson.Get(body, "ui.messages.0.text").String(), "Could not find any login identifiers. Did you forget to set them?", "%s", body)
-			})
-
-			t.Run("type=spa", func(t *testing.T) {
-				browserClient := testhelpers.NewClientWithCookies(t)
-				body := testhelpers.SubmitRegistrationForm(t, false, browserClient, publicTS, values,
-					true, http.StatusBadRequest,
-					publicTS.URL+registration.RouteSubmitFlow)
-				assert.Contains(t, gjson.Get(body, "ui.messages.0.text").String(), "Could not find any login identifiers. Did you forget to set them?", "%s", body)
-			})
-
-			t.Run("type=browser", func(t *testing.T) {
-				body := expectValidationError(t, false, false, values)
-				assert.Contains(t, gjson.Get(body, "ui.messages.0.text").String(), "Could not find any login identifiers. Did you forget to set them?", "%s", body)
-			})
-		})
-
 		t.Run("case=should fail because schema does not exist", func(t *testing.T) {
 			var check = func(t *testing.T, actual string) {
 				assert.Equal(t, int64(http.StatusInternalServerError), gjson.Get(actual, "code").Int(), "%s", actual)
