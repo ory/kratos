@@ -64,7 +64,6 @@ context('Account Verification Error', () => {
 
       it('create a new browser flow, if original api flow expired', () => {
         cy.longLinkLifespan()
-        cy.shortVerificationLifespan()
         cy.browserReturnUrlOry()
         // Init expired flow
         cy.verificationApiExpired({

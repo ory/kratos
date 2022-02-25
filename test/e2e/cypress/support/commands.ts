@@ -403,6 +403,7 @@ Cypress.Commands.add('recoverApi', ({ email, returnTo }) => {
 })
 
 Cypress.Commands.add('verificationApiExpired', ({ email, returnTo }) => {
+  cy.shortVerificationLifespan()
   let url = APP_URL + '/self-service/verification/api'
   if (returnTo) {
     url += '?return_to=' + returnTo
