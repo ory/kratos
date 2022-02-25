@@ -149,7 +149,7 @@ func (s *DefaultPasswordValidator) Validate(ctx context.Context, identifier, pas
 		return errors.Errorf("password length must be at least %d characters but only got %d", passwordPolicyConfig.MinPasswordLength, len(password))
 	}
 
-	if passwordPolicyConfig.IdentifierSimilarityCheckEnabled {
+	if passwordPolicyConfig.IdentifierSimilarityCheckEnabled && len(identifier) > 0 {
 		compIdentifier, compPassword := strings.ToLower(identifier), strings.ToLower(password)
 		dist := levenshtein.Distance(compIdentifier, compPassword)
 		lcs := float32(lcsLength(compIdentifier, compPassword)) / float32(len(compPassword))
