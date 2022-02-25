@@ -145,7 +145,7 @@ func (s *Strategy) validateCredentials(ctx context.Context, i *identity.Identity
 		ids = []string{""}
 	}
 
-	for _, id := range c.Identifiers {
+	for _, id := range ids {
 		if err := s.d.PasswordValidator().Validate(ctx, id, pw); err != nil {
 			if _, ok := errorsx.Cause(err).(*herodot.DefaultError); ok {
 				return err

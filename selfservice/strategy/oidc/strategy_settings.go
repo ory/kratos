@@ -475,7 +475,7 @@ func (s *Strategy) unlinkProvider(w http.ResponseWriter, r *http.Request, ctxUpd
 	}
 
 	creds.Identifiers = updatedIdentifiers
-	creds.Config, err = json.Marshal(&identity.CredentialsOIDC{updatedProviders})
+	creds.Config, err = json.Marshal(&identity.CredentialsOIDC{Providers: updatedProviders})
 	if err != nil {
 		return s.handleSettingsError(w, r, ctxUpdate, p, errors.WithStack(err))
 
