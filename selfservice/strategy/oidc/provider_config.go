@@ -57,21 +57,21 @@ type Configuration struct {
 	// Tenant is the Azure AD Tenant to use for authentication, and must be set when `provider` is set to `microsoft`.
 	// Can be either `common`, `organizations`, `consumers` for a multitenant application or a specific tenant like
 	// `8eaef023-2b34-4da1-9baa-8bc8c9d6a490` or `contoso.onmicrosoft.com`.
-	Tenant string `json:"tenant"`
+	Tenant string `json:"microsoft_tenant"`
 
 	// TeamId is the Apple Developer Team ID that's needed for the `apple` `provider` to work.
-	// It can be found Apple Developer website and combined with `private_key` and `private_key_id`
+	// It can be found Apple Developer website and combined with `apple_private_key` and `apple_private_key_id`
 	// is used to generate `client_secret`
-	TeamId string `json:"team_id"`
+	TeamId string `json:"apple_team_id"`
 
 	// PrivateKeyId is the private Apple key identifier. Keys can be generated via developer.apple.com.
 	// This key should be generated with the `Sign In with Apple` option checked.
 	// This is needed when `provider` is set to `apple`
-	PrivateKeyId string `json:"private_key_id"`
+	PrivateKeyId string `json:"apple_private_key_id"`
 
 	// PrivateKeyId is the Apple private key identifier that can be downloaded during key generation.
 	// This is needed when `provider` is set to `apple`
-	PrivateKey string `json:"private_key"`
+	PrivateKey string `json:"apple_private_key"`
 
 	// Scope specifies optional requested permissions.
 	Scope []string `json:"scope"`
