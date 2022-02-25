@@ -165,12 +165,16 @@ func TestHandler(t *testing.T) {
 			res := send(t, adminTS, "POST", "/identities", http.StatusCreated, identity.AdminCreateIdentityBody{Traits: []byte(`{"email": "import-2@ory.sh"}`),
 				Credentials: &identity.AdminIdentityImportCredentials{
 					Password: &identity.AdminIdentityImportCredentialsPassword{
-						Password: "123456",
+						Config: identity.AdminIdentityImportCredentialsPasswordConfig{
+							Password: "123456",
+						},
 					},
 					OIDC: &identity.AdminIdentityImportCredentialsOIDC{
-						Providers: []identity.AdminCreateIdentityImportCredentialsOidcProvider{
-							{Subject: "import-2", Provider: "google"},
-							{Subject: "import-2", Provider: "github"},
+						Config: identity.AdminIdentityImportCredentialsOIDCConfig{
+							Providers: []identity.AdminCreateIdentityImportCredentialsOidcProvider{
+								{Subject: "import-2", Provider: "google"},
+								{Subject: "import-2", Provider: "github"},
+							},
 						},
 					},
 				},
@@ -187,7 +191,7 @@ func TestHandler(t *testing.T) {
 		t.Run("with pkbdf2 password", func(t *testing.T) {
 			res := send(t, adminTS, "POST", "/identities", http.StatusCreated, identity.AdminCreateIdentityBody{Traits: []byte(`{"email": "import-3@ory.sh"}`),
 				Credentials: &identity.AdminIdentityImportCredentials{Password: &identity.AdminIdentityImportCredentialsPassword{
-					HashedPassword: "$pbkdf2-sha256$i=1000,l=128$e8/arsEf4cvQihdNgqj0Nw$5xQQKNTyeTHx2Ld5/JDE7A"}}})
+					Config: identity.AdminIdentityImportCredentialsPasswordConfig{HashedPassword: "$pbkdf2-sha256$i=1000,l=128$e8/arsEf4cvQihdNgqj0Nw$5xQQKNTyeTHx2Ld5/JDE7A"}}}})
 			actual, err := reg.PrivilegedIdentityPool().GetIdentityConfidential(ctx, uuid.FromStringOrNil(res.Get("id").String()))
 			require.NoError(t, err)
 
@@ -199,7 +203,7 @@ func TestHandler(t *testing.T) {
 		t.Run("with bcrypt2 password", func(t *testing.T) {
 			res := send(t, adminTS, "POST", "/identities", http.StatusCreated, identity.AdminCreateIdentityBody{Traits: []byte(`{"email": "import-4@ory.sh"}`),
 				Credentials: &identity.AdminIdentityImportCredentials{Password: &identity.AdminIdentityImportCredentialsPassword{
-					HashedPassword: "$2a$10$ZsCsoVQ3xfBG/K2z2XpBf.tm90GZmtOqtqWcB5.pYd5Eq8y7RlDyq"}}})
+					Config: identity.AdminIdentityImportCredentialsPasswordConfig{HashedPassword: "$2a$10$ZsCsoVQ3xfBG/K2z2XpBf.tm90GZmtOqtqWcB5.pYd5Eq8y7RlDyq"}}}})
 			actual, err := reg.PrivilegedIdentityPool().GetIdentityConfidential(ctx, uuid.FromStringOrNil(res.Get("id").String()))
 			require.NoError(t, err)
 
@@ -211,7 +215,7 @@ func TestHandler(t *testing.T) {
 		t.Run("with argon2id password", func(t *testing.T) {
 			res := send(t, adminTS, "POST", "/identities", http.StatusCreated, identity.AdminCreateIdentityBody{Traits: []byte(`{"email": "import-5@ory.sh"}`),
 				Credentials: &identity.AdminIdentityImportCredentials{Password: &identity.AdminIdentityImportCredentialsPassword{
-					HashedPassword: "$argon2id$v=19$m=16,t=2,p=1$bVI1aE1SaTV6SGQ3bzdXdw$fnjCcZYmEPOUOjYXsT92Cg"}}})
+					Config: identity.AdminIdentityImportCredentialsPasswordConfig{HashedPassword: "$argon2id$v=19$m=16,t=2,p=1$bVI1aE1SaTV6SGQ3bzdXdw$fnjCcZYmEPOUOjYXsT92Cg"}}}})
 			actual, err := reg.PrivilegedIdentityPool().GetIdentityConfidential(ctx, uuid.FromStringOrNil(res.Get("id").String()))
 			require.NoError(t, err)
 
@@ -491,7 +495,7 @@ func TestHandler(t *testing.T) {
 				assert.JSONEq(t, string(cr.Traits), res.Get("traits").Raw, "%s", res.Raw)
 				assert.EqualValues(t, "employee", res.Get("schema_id").String(), "%s", res.Raw)
 				assert.EqualValues(t, identity.StateActive, res.Get("state").String(), "%s", res.Raw)
-				assert.EqualValues(t, mockServerURL.String()+"/schemas/employee", res.Get("schema_url").String(), "%s", res.Raw)
+				assert.EqualValues(t, mockServerURL.String()+"/schemas/ZW1wbG95ZWU", res.Get("schema_url").String(), "%s", res.Raw)
 			})
 		}
 	})
@@ -508,7 +512,7 @@ func TestHandler(t *testing.T) {
 				assert.JSONEq(t, string(cr.Traits), res.Get("traits").Raw, "%s", res.Raw)
 				assert.EqualValues(t, "employee", res.Get("schema_id").String(), "%s", res.Raw)
 				assert.EqualValues(t, identity.StateActive, res.Get("state").String(), "%s", res.Raw)
-				assert.EqualValues(t, mockServerURL.String()+"/schemas/employee", res.Get("schema_url").String(), "%s", res.Raw)
+				assert.EqualValues(t, mockServerURL.String()+"/schemas/ZW1wbG95ZWU", res.Get("schema_url").String(), "%s", res.Raw)
 			})
 		}
 	})
@@ -525,7 +529,7 @@ func TestHandler(t *testing.T) {
 				assert.JSONEq(t, string(cr.Traits), res.Get("traits").Raw, "%s", res.Raw)
 				assert.EqualValues(t, "employee", res.Get("schema_id").String(), "%s", res.Raw)
 				assert.EqualValues(t, identity.StateInactive, res.Get("state").String(), "%s", res.Raw)
-				assert.EqualValues(t, mockServerURL.String()+"/schemas/employee", res.Get("schema_url").String(), "%s", res.Raw)
+				assert.EqualValues(t, mockServerURL.String()+"/schemas/ZW1wbG95ZWU", res.Get("schema_url").String(), "%s", res.Raw)
 			})
 		}
 	})
@@ -548,7 +552,7 @@ func TestHandler(t *testing.T) {
 				})
 
 				assert.EqualValues(t, "employee", res.Get("schema_id").String(), "%s", res.Raw)
-				assert.EqualValues(t, mockServerURL.String()+"/schemas/employee", res.Get("schema_url").String(), "%s", res.Raw)
+				assert.EqualValues(t, mockServerURL.String()+"/schemas/ZW1wbG95ZWU", res.Get("schema_url").String(), "%s", res.Raw)
 				assert.EqualValues(t, updatedEmail, res.Get("traits.email").String(), "%s", res.Raw)
 				assert.EqualValues(t, "ory", res.Get("traits.department").String(), "%s", res.Raw)
 				assert.EqualValues(t, updatedEmail, res.Get("recovery_addresses.0.value").String(), "%s", res.Raw)

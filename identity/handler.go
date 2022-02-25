@@ -233,14 +233,20 @@ type AdminCreateIdentityBody struct {
 // swagger:model adminIdentityImportCredentials
 type AdminIdentityImportCredentials struct {
 	// Password if set will import a password credential.
-	Password *AdminIdentityImportCredentialsPassword `json:"password,omitempty"`
+	Password *AdminIdentityImportCredentialsPassword `json:"password"`
 
 	// OIDC if set will import an OIDC credential.
-	OIDC *AdminIdentityImportCredentialsOIDC `json:"oidc,omitempty"`
+	OIDC *AdminIdentityImportCredentialsOIDC `json:"oidc"`
 }
 
 // swagger:model adminCreateIdentityImportCredentialsPassword
 type AdminIdentityImportCredentialsPassword struct {
+	// Configuration options for the import.
+	Config AdminIdentityImportCredentialsPasswordConfig `json:"config"`
+}
+
+// swagger:model adminCreateIdentityImportCredentialsPasswordConfig
+type AdminIdentityImportCredentialsPasswordConfig struct {
 	// The hashed password in [PHC format]( https://www.ory.sh/docs/kratos/concepts/credentials/username-email-password#hashed-password-format)
 	HashedPassword string `json:"hashed_password"`
 
@@ -250,6 +256,14 @@ type AdminIdentityImportCredentialsPassword struct {
 
 // swagger:model adminCreateIdentityImportCredentialsOidc
 type AdminIdentityImportCredentialsOIDC struct {
+	// Configuration options for the import.
+	Config AdminIdentityImportCredentialsOIDCConfig `json:"config"`
+}
+
+// swagger:model adminCreateIdentityImportCredentialsOidcConfig
+type AdminIdentityImportCredentialsOIDCConfig struct {
+	// Configuration options for the import.
+	Config AdminIdentityImportCredentialsPasswordConfig `json:"config"`
 	// A list of OpenID Connect Providers
 	Providers []AdminCreateIdentityImportCredentialsOidcProvider `json:"providers"`
 }
