@@ -384,7 +384,7 @@
             ]
           }
         },
-        "tenant": {
+        "microsoft_tenant": {
           "title": "Azure AD Tenant",
           "description": "The Azure AD Tenant to use for authentication.",
           "type": "string",
@@ -396,7 +396,7 @@
             "contoso.onmicrosoft.com"
           ]
         },
-        "team_id": {
+        "apple_team_id": {
           "title": "Apple Developer Team ID",
           "description": "Apple Developer Team ID needed for generating a JWT token for client secret",
           "type": "string",
@@ -404,7 +404,7 @@
             "KP76DQS54M"
           ]
         },
-        "private_key_id": {
+        "apple_private_key_id": {
           "title": "Apple Private Key Identifier",
           "description": "Sign In with Apple Private Key Identifier needed for generating a JWT token for client secret",
           "type": "string",
@@ -412,7 +412,7 @@
             "UX56C66723"
           ]
         },
-        "private_key": {
+        "apple_private_key": {
           "title": "Apple Private Key",
           "description": "Sign In with Apple Private Key needed for generating a JWT token for client secret",
           "type": "string",
@@ -445,16 +445,16 @@
           },
           "then": {
             "required": [
-              "tenant"
+              "microsoft_tenant"
             ]
           },
           "else": {
             "not": {
               "properties": {
-                "tenant": {}
+                "microsoft_tenant": {}
               },
               "required": [
-                "tenant"
+                "microsoft_tenant"
               ]
             }
           }
@@ -480,9 +480,9 @@
               ]
             },
             "required": [
-              "private_key_id",
-              "private_key",
-              "team_id"
+              "apple_private_key_id",
+              "apple_private_key",
+              "apple_team_id"
             ]
           },
           "else": {
@@ -493,30 +493,30 @@
               {
                 "not": {
                   "properties": {
-                    "team_id": {}
+                    "apple_team_id": {}
                   },
                   "required": [
-                    "team_id"
+                    "apple_team_id"
                   ]
                 }
               },
               {
                 "not": {
                   "properties": {
-                    "private_key_id": {}
+                    "apple_private_key_id": {}
                   },
                   "required": [
-                    "private_key_id"
+                    "apple_private_key_id"
                   ]
                 }
               },
               {
                 "not": {
                   "properties": {
-                    "private_key": {}
+                    "apple_private_key": {}
                   },
                   "required": [
-                    "private_key"
+                    "apple_private_key"
                   ]
                 }
               }
