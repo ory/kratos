@@ -159,7 +159,7 @@ func (s *Strategy) createRecoveryLink(w http.ResponseWriter, r *http.Request, _ 
 	}
 
 	id, err := s.d.IdentityPool().GetIdentity(r.Context(), p.IdentityID)
-	if errors.Is(err, herodot.ErrNotFound) {
+	if errors.Is(err, sqlcon.ErrNoRows) {
 		s.d.Writer().WriteError(w, r, errors.WithStack(herodot.ErrBadRequest.WithReasonf("The requested identity id does not exist.").WithWrap(err)))
 		return
 	} else if err != nil {
