@@ -14,4 +14,6 @@ test/e2e/.bin
 pkged.go
 coverage.*
 schema.sql
-
+heap_profiler/
+goroutine_dump/
+inflight_trace_dump/
