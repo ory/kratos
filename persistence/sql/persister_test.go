@@ -1,9 +1,12 @@
 package sql_test
 
 import (
-	"bytes"
 	"context"
 	"fmt"
+	"github.com/ory/kratos/driver/config"
+	"github.com/ory/kratos/schema"
+	"github.com/ory/x/sqlxx"
+	"github.com/ory/x/urlx"
 	"os"
 	"path/filepath"
 	"sync"
@@ -94,9 +97,10 @@ func createCleanDatabases(t *testing.T) map[string]*driver.RegistryDefault {
 	var l sync.Mutex
 	if !testing.Short() {
 		funcs := map[string]func(t testing.TB) string{
-			"postgres":  dockertest.RunTestPostgreSQL,
-			"mysql":     dockertest.RunTestMySQL,
-			"cockroach": dockertest.RunTestCockroachDB}
+			"postgres": dockertest.RunTestPostgreSQL,
+			// "mysql":     dockertest.RunTestMySQL,
+			"cockroach": dockertest.NewLocalTestCRDBServer,
+		}
 
 		var wg sync.WaitGroup
 		wg.Add(len(funcs))
@@ -117,30 +121,40 @@ func createCleanDatabases(t *testing.T) map[string]*driver.RegistryDefault {
 	t.Logf("sqlite: %s", sqlite)
 
 	ps := make(map[string]*driver.RegistryDefault, len(conns))
+	var wg sync.WaitGroup
+	wg.Add(len(conns))
 	for name, dsn := range conns {
-		_, reg := internal.NewRegistryDefaultWithDSN(t, dsn)
-		p := reg.Persister().(*sql.Persister)
+		go func(name, dsn string) {
+			defer wg.Done()
+			t.Logf("Connecting to %s", name)
+			_, reg := internal.NewRegistryDefaultWithDSN(t, dsn)
+			p := reg.Persister().(*sql.Persister)
 
-		_ = os.Remove("migrations/schema.sql")
-		xsql.CleanSQL(t, p.Connection(context.Background()))
-		t.Cleanup(func() {
-			xsql.CleanSQL(t, p.Connection(context.Background()))
+			t.Logf("Cleaning up %s", name)
 			_ = os.Remove("migrations/schema.sql")
-		})
+			xsql.CleanSQL(t, p.Connection(context.Background()))
+			t.Cleanup(func() {
+				xsql.CleanSQL(t, p.Connection(context.Background()))
+				_ = os.Remove("migrations/schema.sql")
+			})
 
-		pop.SetLogger(pl(t))
-		require.NoError(t, p.MigrateUp(context.Background()))
-		status, err := p.MigrationStatus(context.Background())
-		require.NoError(t, err)
-		require.False(t, status.HasPending())
+			t.Logf("Applying %s migrations", name)
+			pop.SetLogger(pl(t))
+			require.NoError(t, p.MigrateUp(context.Background()))
+			t.Logf("%s migrations applied", name)
+			status, err := p.MigrationStatus(context.Background())
+			require.NoError(t, err)
+			require.False(t, status.HasPending())
 
-		var b bytes.Buffer
-		require.NoError(t, status.Write(&b))
-		t.Logf("%s", b.String())
+			l.Lock()
+			ps[name] = reg
+			l.Unlock()
 
-		ps[name] = reg
+			t.Logf("Database %s initialized successfully", name)
+		}(name, dsn)
 	}
 
+	wg.Wait()
 	return ps
 }
 
@@ -150,10 +164,53 @@ func TestPersister(t *testing.T) {
 
 	for name, reg := range conns {
 		t.Run(fmt.Sprintf("database=%s", name), func(t *testing.T) {
+			t.Parallel()
+
 			_, p := testhelpers.NewNetwork(t, ctx, reg.Persister())
 			conf := reg.Config(context.Background())
 
 			t.Logf("DSN: %s", conf.DSN())
+
+			// This test must remain the first test in the test suite!
+			t.Run("racy identity creation", func(t *testing.T) {
+				defaultSchema := schema.Schema{
+					ID:     config.DefaultIdentityTraitsSchemaID,
+					URL:    urlx.ParseOrPanic("file://./stub/identity.schema.json"),
+					RawURL: "file://./stub/identity.schema.json",
+				}
+
+				var wg sync.WaitGroup
+				testhelpers.SetDefaultIdentitySchema(reg.Config(context.Background()), defaultSchema.RawURL)
+				_, ps := testhelpers.NewNetwork(t, ctx, reg.Persister())
+
+				for i := 0; i < 10; i++ {
+					wg.Add(1)
+					// capture i
+					ii := i
+					go func() {
+						defer wg.Done()
+
+						id := ri.NewIdentity("")
+						id.SetCredentials(ri.CredentialsTypePassword, ri.Credentials{
+							Type:        ri.CredentialsTypePassword,
+							Identifiers: []string{fmt.Sprintf("racy identity %d", ii)},
+							Config:      sqlxx.JSONRawMessage(`{"foo":"bar"}`),
+						})
+						id.Traits = ri.Traits("{}")
+
+						require.NoError(t, ps.CreateIdentity(context.Background(), id))
+					}()
+				}
+
+				wg.Wait()
+			})
+
+			t.Run("case=credentials types", func(t *testing.T) {
+				for _, ct := range []ri.CredentialsType{ri.CredentialsTypeOIDC, ri.CredentialsTypePassword} {
+					require.NoError(t, p.(*sql.Persister).Connection(context.Background()).Where("name = ?", ct).First(&ri.CredentialsTypeTable{}))
+				}
+			})
+
 			t.Run("contract=identity.TestPool", func(t *testing.T) {
 				pop.SetLogger(pl(t))
 				identity.TestPool(ctx, conf, p)(t)
