@@ -9,7 +9,9 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"strconv"
+	"sync"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/require"
 
@@ -351,6 +353,33 @@ func TestWebHooks(t *testing.T) {
 			return ""
 		}
 	}
+
+	t.Run("ignores the response and is async", func(t *testing.T) {
+		var wg sync.WaitGroup
+		wg.Add(1)
+		waitTime := time.Millisecond * 100
+		ts := newServer(func(w http.ResponseWriter, _ *http.Request, _ httprouter.Params) {
+			defer wg.Done()
+			time.Sleep(waitTime)
+			w.WriteHeader(http.StatusBadRequest)
+		})
+
+		req := &http.Request{
+			Header:     map[string][]string{"Some-Header": {"Some-Value"}},
+			RequestURI: "https://www.ory.sh/some_end_point",
+			Method:     http.MethodPost,
+		}
+		f := &login.Flow{ID: x.NewUUID()}
+		conf := json.RawMessage(fmt.Sprintf(`{"url": "%s", "method": "GET", "body": "./stub/test_body.jsonnet", "response": {"ignore": true}}`, ts.URL+path))
+		wh := hook.NewWebHook(reg, conf)
+
+		start := time.Now()
+		err := wh.ExecuteLoginPreHook(nil, req, f)
+		assert.NoError(t, err)
+		assert.True(t, time.Since(start) < waitTime)
+
+		wg.Wait()
+	})
 
 	for _, tc := range []struct {
 		code        int
