@@ -3,6 +3,7 @@ package sql_test
 import (
 	"context"
 	"fmt"
+	"github.com/ory/x/dbal"
 	"os"
 	"path/filepath"
 	"sync"
@@ -93,7 +94,7 @@ func pl(t *testing.T) func(lvl logging.Level, s string, args ...interface{}) {
 }
 
 func createCleanDatabases(t *testing.T) map[string]*driver.RegistryDefault {
-	conns := map[string]string{"sqlite": sqlite}
+	conns := map[string]string{"sqlite": dbal.SQLiteSharedInMemory}
 
 	var l sync.Mutex
 	if !testing.Short() {
@@ -118,8 +119,6 @@ func createCleanDatabases(t *testing.T) map[string]*driver.RegistryDefault {
 
 		wg.Wait()
 	}
-
-	t.Logf("sqlite: %s", sqlite)
 
 	ps := make(map[string]*driver.RegistryDefault, len(conns))
 	var wg sync.WaitGroup
