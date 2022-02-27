@@ -3,14 +3,15 @@ package sql_test
 import (
 	"context"
 	"fmt"
-	"github.com/ory/kratos/driver/config"
-	"github.com/ory/kratos/schema"
-	"github.com/ory/x/sqlxx"
-	"github.com/ory/x/urlx"
 	"os"
 	"path/filepath"
 	"sync"
 	"testing"
+
+	"github.com/ory/kratos/driver/config"
+	"github.com/ory/kratos/schema"
+	"github.com/ory/x/sqlxx"
+	"github.com/ory/x/urlx"
 
 	"github.com/ory/kratos/x/xsql"
 

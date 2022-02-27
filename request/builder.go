@@ -3,12 +3,13 @@ package request
 import (
 	"bytes"
 	"encoding/json"
-	"errors"
 	"io"
 	"net/http"
 	"net/url"
 	"reflect"
 	"strings"
+
+	"github.com/pkg/errors"
 
 	"github.com/google/go-jsonnet"
 	"github.com/hashicorp/go-retryablehttp"
@@ -16,6 +17,8 @@ import (
 	"github.com/ory/x/fetcher"
 	"github.com/ory/x/logrusx"
 )
+
+var ErrCancel = errors.New("request cancel by JsonNet")
 
 const (
 	ContentTypeForm = "application/x-www-form-urlencoded"
@@ -100,7 +103,7 @@ func (b *Builder) addJSONBody(template *bytes.Buffer, body interface{}) error {
 	enc.SetIndent("", "")
 
 	if err := enc.Encode(body); err != nil {
-		return err
+		return errors.WithStack(err)
 	}
 
 	vm := jsonnet.MakeVM()
@@ -108,7 +111,13 @@ func (b *Builder) addJSONBody(template *bytes.Buffer, body interface{}) error {
 
 	res, err := vm.EvaluateAnonymousSnippet(b.conf.TemplateURI, template.String())
 	if err != nil {
-		return err
+		// Unfortunately we can not use errors.As / errors.Is, see:
+		// https://github.com/google/go-jsonnet/issues/592
+		if strings.Contains(err.Error(), (&jsonnet.RuntimeError{Msg: "cancel"}).Error()) {
+			return errors.WithStack(ErrCancel)
+		}
+
+		return errors.WithStack(err)
 	}
 
 	rb := strings.NewReader(res)

@@ -262,6 +262,20 @@ func TestBuildRequest(t *testing.T) {
 			}
 		})
 	}
+
+	t.Run("cancel request", func(t *testing.T) {
+		l := logrusx.New("kratos", "test")
+
+		rb, err := NewBuilder(json.RawMessage(`{
+	"url": "https://test.kratos.ory.sh/my_endpoint6",
+	"method": "POST",
+	"body": "file://./stub/cancel_body.jsonnet"
+}`), nil, l)
+		require.NoError(t, err)
+
+		_, err = rb.BuildRequest(json.RawMessage(`{}`))
+		require.ErrorIs(t, err, ErrCancel)
+	})
 }
 
 func mustContainHeader(t *testing.T, expected http.Header, actual http.Header) {

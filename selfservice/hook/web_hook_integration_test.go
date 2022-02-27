@@ -293,7 +293,7 @@ func TestWebHooks(t *testing.T) {
 		})
 	}
 
-	t.Run("Must error when config is erroneous", func(t *testing.T) {
+	t.Run("must error when config is erroneous", func(t *testing.T) {
 		req := &http.Request{
 			Header:     map[string][]string{"Some-Header": {"Some-Value"}},
 			RequestURI: "https://www.ory.sh/some_end_point",
@@ -307,7 +307,7 @@ func TestWebHooks(t *testing.T) {
 		assert.Error(t, err)
 	})
 
-	t.Run("Must error when template is erroneous", func(t *testing.T) {
+	t.Run("must error when template is erroneous", func(t *testing.T) {
 		ts := newServer(webHookHttpCodeEndPoint(200))
 		req := &http.Request{
 			Header:     map[string][]string{"Some-Header": {"Some-Value"}},
@@ -324,6 +324,24 @@ func TestWebHooks(t *testing.T) {
 
 		err := wh.ExecuteLoginPreHook(nil, req, f)
 		assert.Error(t, err)
+	})
+
+	t.Run("must not make request", func(t *testing.T) {
+		req := &http.Request{
+			Header:     map[string][]string{"Some-Header": {"Some-Value"}},
+			RequestURI: "https://www.ory.sh/some_end_point",
+			Method:     http.MethodPost,
+		}
+		f := &login.Flow{ID: x.NewUUID()}
+		conf := json.RawMessage(`{
+	"url": "https://i-do-not-exist/",
+	"method": "POST",
+	"body": "./stub/cancel_template.jsonnet"
+}`)
+		wh := hook.NewWebHook(reg, conf)
+
+		err := wh.ExecuteLoginPreHook(nil, req, f)
+		assert.NoError(t, err)
 	})
 
 	boolToString := func(f bool) string {
