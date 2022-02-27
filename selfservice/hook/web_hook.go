@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/pkg/errors"
+
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/request"
 	"github.com/ory/kratos/selfservice/flow"
@@ -121,7 +123,9 @@ func (e *WebHook) execute(ctx context.Context, data *templateContext) error {
 	}
 
 	req, err := builder.BuildRequest(data)
-	if err != nil {
+	if errors.Is(err, request.ErrCancel) {
+		return nil
+	} else if err != nil {
 		return err
 	}
 
