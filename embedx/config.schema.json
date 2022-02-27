@@ -164,6 +164,19 @@
           "title": "Web-Hook Configuration",
           "description": "Define what the hook should do",
           "properties": {
+            "response": {
+              "title": "Response Handling",
+              "description": "How the web hook should handle the response",
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "ignore": {
+                  "type": "boolean",
+                  "description": "Ignore the response from the web hook. If enabled the request will be made asynchronously which can be useful if you only wish to notify another system but do not parse the response.",
+                  "default": false
+                }
+              }
+            },
             "url": {
               "type": "string",
               "description": "The URL the Web-Hook should call",
