@@ -25,7 +25,7 @@ paths:
         <script src="https://public-kratos.example.org/.well-known/ory/webauthn.js" type="script" async />
         ```
 
-        More information can be found at [Ory Kratos User Login and User Registration Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-login-user-registration).
+        More information can be found at [Ory Kratos User Login](https://www.ory.sh/docs/kratos/self-service/flows/user-login) and [User Registration Documentation](https://www.ory.sh/docs/kratos/self-service/flows/user-registration).
       operationId: getWebAuthnJavaScript
       responses:
         "200":
@@ -677,7 +677,7 @@ paths:
         `browser_location_change_required`: Usually sent when an AJAX request indicates that the browser needs to open a specific URL.
         Most likely used in Social Sign In flows.
 
-        More information can be found at [Ory Kratos User Login and User Registration Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-login-user-registration).
+        More information can be found at [Ory Kratos User Login](https://www.ory.sh/docs/kratos/self-service/flows/user-login) and [User Registration Documentation](https://www.ory.sh/docs/kratos/self-service/flows/user-registration).
       operationId: submitSelfServiceLoginFlow
       parameters:
       - description: |-
@@ -762,7 +762,7 @@ paths:
 
         This endpoint MUST ONLY be used in scenarios such as native mobile apps (React Native, Objective C, Swift, Java, ...).
 
-        More information can be found at [Ory Kratos User Login and User Registration Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-login-user-registration).
+        More information can be found at [Ory Kratos User Login](https://www.ory.sh/docs/kratos/self-service/flows/user-login) and [User Registration Documentation](https://www.ory.sh/docs/kratos/self-service/flows/user-registration).
       operationId: initializeSelfServiceLoginFlowWithoutBrowser
       parameters:
       - description: |-
@@ -843,7 +843,7 @@ paths:
 
         This endpoint is NOT INTENDED for clients that do not have a browser (Chrome, Firefox, ...) as cookies are needed.
 
-        More information can be found at [Ory Kratos User Login and User Registration Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-login-user-registration).
+        More information can be found at [Ory Kratos User Login](https://www.ory.sh/docs/kratos/self-service/flows/user-login) and [User Registration Documentation](https://www.ory.sh/docs/kratos/self-service/flows/user-registration).
       operationId: initializeSelfServiceLoginFlowForBrowsers
       parameters:
       - description: |-
@@ -931,7 +931,7 @@ paths:
         `session_already_available`: The user is already signed in.
         `self_service_flow_expired`: The flow is expired and you should request a new one.
 
-        More information can be found at [Ory Kratos User Login and User Registration Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-login-user-registration).
+        More information can be found at [Ory Kratos User Login](https://www.ory.sh/docs/kratos/self-service/flows/user-login) and [User Registration Documentation](https://www.ory.sh/docs/kratos/self-service/flows/user-registration).
       operationId: getSelfServiceLoginFlow
       parameters:
       - description: |-
@@ -1407,7 +1407,7 @@ paths:
         `browser_location_change_required`: Usually sent when an AJAX request indicates that the browser needs to open a specific URL.
         Most likely used in Social Sign In flows.
 
-        More information can be found at [Ory Kratos User Login and User Registration Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-login-user-registration).
+        More information can be found at [Ory Kratos User Login](https://www.ory.sh/docs/kratos/self-service/flows/user-login) and [User Registration Documentation](https://www.ory.sh/docs/kratos/self-service/flows/user-registration).
       operationId: submitSelfServiceRegistrationFlow
       parameters:
       - description: |-
@@ -1483,7 +1483,7 @@ paths:
 
         This endpoint MUST ONLY be used in scenarios such as native mobile apps (React Native, Objective C, Swift, Java, ...).
 
-        More information can be found at [Ory Kratos User Login and User Registration Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-login-user-registration).
+        More information can be found at [Ory Kratos User Login](https://www.ory.sh/docs/kratos/self-service/flows/user-login) and [User Registration Documentation](https://www.ory.sh/docs/kratos/self-service/flows/user-registration).
       operationId: initializeSelfServiceRegistrationFlowWithoutBrowser
       responses:
         "200":
@@ -1534,7 +1534,7 @@ paths:
 
         This endpoint is NOT INTENDED for clients that do not have a browser (Chrome, Firefox, ...) as cookies are needed.
 
-        More information can be found at [Ory Kratos User Login and User Registration Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-login-user-registration).
+        More information can be found at [Ory Kratos User Login](https://www.ory.sh/docs/kratos/self-service/flows/user-login) and [User Registration Documentation](https://www.ory.sh/docs/kratos/self-service/flows/user-registration).
       operationId: initializeSelfServiceRegistrationFlowForBrowsers
       parameters:
       - description: The URL to return the browser to after the flow was completed.
@@ -1589,7 +1589,7 @@ paths:
         `session_already_available`: The user is already signed in.
         `self_service_flow_expired`: The flow is expired and you should request a new one.
 
-        More information can be found at [Ory Kratos User Login and User Registration Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-login-user-registration).
+        More information can be found at [Ory Kratos User Login](https://www.ory.sh/docs/kratos/self-service/flows/user-login) and [User Registration Documentation](https://www.ory.sh/docs/kratos/self-service/flows/user-registration).
       operationId: getSelfServiceRegistrationFlow
       parameters:
       - description: |-
@@ -2589,6 +2589,7 @@ components:
             in `schema_id`.
           type: object
       required:
+      - schema_id
       - state
       - traits
       type: object
@@ -2641,6 +2642,18 @@ components:
       type: string
     adminCreateIdentityBody:
       properties:
+        credentials:
+          $ref: '#/components/schemas/adminIdentityImportCredentials'
+        recovery_addresses:
+          description: |-
+            RecoveryAddresses contains all the addresses that can be used to recover an identity.
+
+            Use this structure to import recovery addresses for an identity. Please keep in mind
+            that the address needs to be represented in the Identity Schema or this field will be overwritten
+            on the next identity update.
+          items:
+            $ref: '#/components/schemas/RecoveryAddress'
+          type: array
         schema_id:
           description: SchemaID is the ID of the JSON Schema to be used for validating
             the identity's traits.
@@ -2653,9 +2666,62 @@ components:
             in a self-service manner. The input will always be validated against the JSON Schema defined
             in `schema_url`.
           type: object
+        verifiable_addresses:
+          description: |-
+            VerifiableAddresses contains all the addresses that can be verified by the user.
+
+            Use this structure to import verified addresses for an identity. Please keep in mind
+            that the address needs to be represented in the Identity Schema or this field will be overwritten
+            on the next identity update.
+          items:
+            $ref: '#/components/schemas/verifiableIdentityAddress'
+          type: array
       required:
       - schema_id
       - traits
+      type: object
+    adminCreateIdentityImportCredentialsOidc:
+      properties:
+        config:
+          $ref: '#/components/schemas/adminCreateIdentityImportCredentialsOidcConfig'
+      type: object
+    adminCreateIdentityImportCredentialsOidcConfig:
+      properties:
+        config:
+          $ref: '#/components/schemas/adminCreateIdentityImportCredentialsPasswordConfig'
+        providers:
+          description: A list of OpenID Connect Providers
+          items:
+            $ref: '#/components/schemas/adminCreateIdentityImportCredentialsOidcProvider'
+          type: array
+      type: object
+    adminCreateIdentityImportCredentialsOidcProvider:
+      properties:
+        provider:
+          description: The OpenID Connect provider to link the subject to. Usually
+            something like `google` or `github`.
+          type: string
+        subject:
+          description: The subject (`sub`) of the OpenID Connect connection. Usually
+            the `sub` field of the ID Token.
+          type: string
+      required:
+      - provider
+      - subject
+      type: object
+    adminCreateIdentityImportCredentialsPassword:
+      properties:
+        config:
+          $ref: '#/components/schemas/adminCreateIdentityImportCredentialsPasswordConfig'
+      type: object
+    adminCreateIdentityImportCredentialsPasswordConfig:
+      properties:
+        hashed_password:
+          description: The hashed password in [PHC format]( https://www.ory.sh/docs/kratos/concepts/credentials/username-email-password#hashed-password-format)
+          type: string
+        password:
+          description: The password in plain text if no hash is available.
+          type: string
       type: object
     adminCreateSelfServiceRecoveryLinkBody:
       properties:
@@ -2672,6 +2738,13 @@ components:
           type: string
       required:
       - identity_id
+      type: object
+    adminIdentityImportCredentials:
+      properties:
+        oidc:
+          $ref: '#/components/schemas/adminCreateIdentityImportCredentialsOidc'
+        password:
+          $ref: '#/components/schemas/adminCreateIdentityImportCredentialsPassword'
       type: object
     authenticatorAssuranceLevel:
       description: |-
@@ -2948,6 +3021,38 @@ components:
           description: UpdatedAt is a helper struct field for gobuffalo.pop.
           format: date-time
           type: string
+      type: object
+    identityCredentialsOidc:
+      properties:
+        providers:
+          items:
+            $ref: '#/components/schemas/identityCredentialsOidcProvider'
+          type: array
+      title: CredentialsOIDC is contains the configuration for credentials of the
+        type oidc.
+      type: object
+    identityCredentialsOidcProvider:
+      properties:
+        initial_access_token:
+          type: string
+        initial_id_token:
+          type: string
+        initial_refresh_token:
+          type: string
+        provider:
+          type: string
+        subject:
+          type: string
+      title: CredentialsOIDCProvider is contains a specific OpenID COnnect credential
+        for a particular connection (e.g. Google).
+      type: object
+    identityCredentialsPassword:
+      properties:
+        hashed_password:
+          description: HashedPassword is a hash-representation of the password.
+          type: string
+      title: CredentialsPassword is contains the configuration for credentials of
+        the type password.
       type: object
     identityCredentialsType:
       description: and so on.
@@ -4005,6 +4110,7 @@ components:
           - totp
           - oidc
           - webauthn
+          - lookup_secret
           title: The method used
           type: string
       title: AuthenticationMethod identifies an authentication method

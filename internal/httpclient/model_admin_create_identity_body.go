@@ -17,11 +17,16 @@ import (
 
 // AdminCreateIdentityBody struct for AdminCreateIdentityBody
 type AdminCreateIdentityBody struct {
+	Credentials *AdminIdentityImportCredentials `json:"credentials,omitempty"`
+	// RecoveryAddresses contains all the addresses that can be used to recover an identity.  Use this structure to import recovery addresses for an identity. Please keep in mind that the address needs to be represented in the Identity Schema or this field will be overwritten on the next identity update.
+	RecoveryAddresses []RecoveryAddress `json:"recovery_addresses,omitempty"`
 	// SchemaID is the ID of the JSON Schema to be used for validating the identity's traits.
 	SchemaId string         `json:"schema_id"`
 	State    *IdentityState `json:"state,omitempty"`
 	// Traits represent an identity's traits. The identity is able to create, modify, and delete traits in a self-service manner. The input will always be validated against the JSON Schema defined in `schema_url`.
 	Traits map[string]interface{} `json:"traits"`
+	// VerifiableAddresses contains all the addresses that can be verified by the user.  Use this structure to import verified addresses for an identity. Please keep in mind that the address needs to be represented in the Identity Schema or this field will be overwritten on the next identity update.
+	VerifiableAddresses []VerifiableIdentityAddress `json:"verifiable_addresses,omitempty"`
 }
 
 // NewAdminCreateIdentityBody instantiates a new AdminCreateIdentityBody object
@@ -41,6 +46,70 @@ func NewAdminCreateIdentityBody(schemaId string, traits map[string]interface{}) 
 func NewAdminCreateIdentityBodyWithDefaults() *AdminCreateIdentityBody {
 	this := AdminCreateIdentityBody{}
 	return &this
+}
+
+// GetCredentials returns the Credentials field value if set, zero value otherwise.
+func (o *AdminCreateIdentityBody) GetCredentials() AdminIdentityImportCredentials {
+	if o == nil || o.Credentials == nil {
+		var ret AdminIdentityImportCredentials
+		return ret
+	}
+	return *o.Credentials
+}
+
+// GetCredentialsOk returns a tuple with the Credentials field value if set, nil otherwise
+// and a boolean to check if the value has been set.
+func (o *AdminCreateIdentityBody) GetCredentialsOk() (*AdminIdentityImportCredentials, bool) {
+	if o == nil || o.Credentials == nil {
+		return nil, false
+	}
+	return o.Credentials, true
+}
+
+// HasCredentials returns a boolean if a field has been set.
+func (o *AdminCreateIdentityBody) HasCredentials() bool {
+	if o != nil && o.Credentials != nil {
+		return true
+	}
+
+	return false
+}
+
+// SetCredentials gets a reference to the given AdminIdentityImportCredentials and assigns it to the Credentials field.
+func (o *AdminCreateIdentityBody) SetCredentials(v AdminIdentityImportCredentials) {
+	o.Credentials = &v
+}
+
+// GetRecoveryAddresses returns the RecoveryAddresses field value if set, zero value otherwise.
+func (o *AdminCreateIdentityBody) GetRecoveryAddresses() []RecoveryAddress {
+	if o == nil || o.RecoveryAddresses == nil {
+		var ret []RecoveryAddress
+		return ret
+	}
+	return o.RecoveryAddresses
+}
+
+// GetRecoveryAddressesOk returns a tuple with the RecoveryAddresses field value if set, nil otherwise
+// and a boolean to check if the value has been set.
+func (o *AdminCreateIdentityBody) GetRecoveryAddressesOk() ([]RecoveryAddress, bool) {
+	if o == nil || o.RecoveryAddresses == nil {
+		return nil, false
+	}
+	return o.RecoveryAddresses, true
+}
+
+// HasRecoveryAddresses returns a boolean if a field has been set.
+func (o *AdminCreateIdentityBody) HasRecoveryAddresses() bool {
+	if o != nil && o.RecoveryAddresses != nil {
+		return true
+	}
+
+	return false
+}
+
+// SetRecoveryAddresses gets a reference to the given []RecoveryAddress and assigns it to the RecoveryAddresses field.
+func (o *AdminCreateIdentityBody) SetRecoveryAddresses(v []RecoveryAddress) {
+	o.RecoveryAddresses = v
 }
 
 // GetSchemaId returns the SchemaId field value
@@ -123,8 +192,46 @@ func (o *AdminCreateIdentityBody) SetTraits(v map[string]interface{}) {
 	o.Traits = v
 }
 
+// GetVerifiableAddresses returns the VerifiableAddresses field value if set, zero value otherwise.
+func (o *AdminCreateIdentityBody) GetVerifiableAddresses() []VerifiableIdentityAddress {
+	if o == nil || o.VerifiableAddresses == nil {
+		var ret []VerifiableIdentityAddress
+		return ret
+	}
+	return o.VerifiableAddresses
+}
+
+// GetVerifiableAddressesOk returns a tuple with the VerifiableAddresses field value if set, nil otherwise
+// and a boolean to check if the value has been set.
+func (o *AdminCreateIdentityBody) GetVerifiableAddressesOk() ([]VerifiableIdentityAddress, bool) {
+	if o == nil || o.VerifiableAddresses == nil {
+		return nil, false
+	}
+	return o.VerifiableAddresses, true
+}
+
+// HasVerifiableAddresses returns a boolean if a field has been set.
+func (o *AdminCreateIdentityBody) HasVerifiableAddresses() bool {
+	if o != nil && o.VerifiableAddresses != nil {
+		return true
+	}
+
+	return false
+}
+
+// SetVerifiableAddresses gets a reference to the given []VerifiableIdentityAddress and assigns it to the VerifiableAddresses field.
+func (o *AdminCreateIdentityBody) SetVerifiableAddresses(v []VerifiableIdentityAddress) {
+	o.VerifiableAddresses = v
+}
+
 func (o AdminCreateIdentityBody) MarshalJSON() ([]byte, error) {
 	toSerialize := map[string]interface{}{}
+	if o.Credentials != nil {
+		toSerialize["credentials"] = o.Credentials
+	}
+	if o.RecoveryAddresses != nil {
+		toSerialize["recovery_addresses"] = o.RecoveryAddresses
+	}
 	if true {
 		toSerialize["schema_id"] = o.SchemaId
 	}
@@ -133,6 +240,9 @@ func (o AdminCreateIdentityBody) MarshalJSON() ([]byte, error) {
 	}
 	if true {
 		toSerialize["traits"] = o.Traits
+	}
+	if o.VerifiableAddresses != nil {
+		toSerialize["verifiable_addresses"] = o.VerifiableAddresses
 	}
 	return json.Marshal(toSerialize)
 }
