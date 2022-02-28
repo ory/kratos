@@ -25,16 +25,19 @@ func TestSchemaExtensionCredentials(t *testing.T) {
 		doc       string
 		expect    []string
 		existing  *identity.Credentials
+		ct        identity.CredentialsType
 	}{
 		{
 			doc:    `{"email":"foo@ory.sh"}`,
 			schema: "file://./stub/extension/credentials/schema.json",
 			expect: []string{"foo@ory.sh"},
+			ct:     identity.CredentialsTypePassword,
 		},
 		{
 			doc:    `{"emails":["foo@ory.sh","foo@ory.sh","bar@ory.sh"], "username": "foobar"}`,
 			schema: "file://./stub/extension/credentials/multi.schema.json",
 			expect: []string{"foo@ory.sh", "bar@ory.sh", "foobar"},
+			ct:     identity.CredentialsTypePassword,
 		},
 		{
 			doc:    `{"emails":["foo@ory.sh","bar@ory.sh"], "username": "foobar"}`,
@@ -43,6 +46,22 @@ func TestSchemaExtensionCredentials(t *testing.T) {
 			existing: &identity.Credentials{
 				Identifiers: []string{"not-foo@ory.sh"},
 			},
+			ct: identity.CredentialsTypePassword,
+		},
+		{
+			doc:    `{"email":"foo@ory.sh"}`,
+			schema: "file://./stub/extension/credentials/webauthn.schema.json",
+			expect: []string{"foo@ory.sh"},
+			ct:     identity.CredentialsTypeWebAuthn,
+		},
+		{
+			doc:    `{"email":"foo@ory.sh"}`,
+			schema: "file://./stub/extension/credentials/webauthn.schema.json",
+			expect: []string{"foo@ory.sh"},
+			existing: &identity.Credentials{
+				Identifiers: []string{"not-foo@ory.sh"},
+			},
+			ct: identity.CredentialsTypeWebAuthn,
 		},
 	} {
 		t.Run(fmt.Sprintf("case=%d", k), func(t *testing.T) {
@@ -53,7 +72,7 @@ func TestSchemaExtensionCredentials(t *testing.T) {
 			i := new(identity.Identity)
 			e := identity.NewSchemaExtensionCredentials(i)
 			if tc.existing != nil {
-				i.SetCredentials(identity.CredentialsTypePassword, *tc.existing)
+				i.SetCredentials(tc.ct, *tc.existing)
 			}
 
 			runner.AddRunner(e).Register(c)
@@ -63,7 +82,7 @@ func TestSchemaExtensionCredentials(t *testing.T) {
 			}
 			require.NoError(t, e.Finish())
 
-			credentials, ok := i.GetCredentials(identity.CredentialsTypePassword)
+			credentials, ok := i.GetCredentials(tc.ct)
 			require.True(t, ok)
 			assert.ElementsMatch(t, tc.expect, credentials.Identifiers)
 		})
