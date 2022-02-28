@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"github.com/ory/x/stringsx"
 	"net/http"
 	"time"
 
@@ -32,7 +33,7 @@ func (s *Strategy) RegisterLoginRoutes(r *x.RouterPublic) {
 func (s *Strategy) handleLoginError(w http.ResponseWriter, r *http.Request, f *login.Flow, payload *submitSelfServiceLoginFlowWithPasswordMethodBody, err error) error {
 	if f != nil {
 		f.UI.Nodes.ResetNodes("password")
-		f.UI.Nodes.SetValueAttribute("password_identifier", payload.Identifier)
+		f.UI.Nodes.SetValueAttribute("identifier", payload.Identifier)
 		if f.Type == flow.TypeBrowser {
 			f.UI.SetCSRF(s.d.GenerateCSRFToken(r))
 		}
@@ -62,7 +63,7 @@ func (s *Strategy) Login(w http.ResponseWriter, r *http.Request, f *login.Flow, 
 		return nil, s.handleLoginError(w, r, f, &p, err)
 	}
 
-	i, c, err := s.d.PrivilegedIdentityPool().FindByCredentialsIdentifier(r.Context(), s.ID(), p.Identifier)
+	i, c, err := s.d.PrivilegedIdentityPool().FindByCredentialsIdentifier(r.Context(), s.ID(), stringsx.Coalesce(p.Identifier, p.LegacyIdentifier))
 	if err != nil {
 		time.Sleep(x.RandomDelay(s.d.Config(r.Context()).HasherArgon2().ExpectedDuration, s.d.Config(r.Context()).HasherArgon2().ExpectedDeviation))
 		return nil, s.handleLoginError(w, r, f, &p, errors.WithStack(schema.NewInvalidCredentialsError()))
@@ -142,7 +143,7 @@ func (s *Strategy) PopulateLoginMethod(r *http.Request, requestedAAL identity.Au
 	}
 
 	sr.UI.SetCSRF(s.d.GenerateCSRFToken(r))
-	sr.UI.SetNode(node.NewInputField("password_identifier", identifier, node.PasswordGroup, node.InputAttributeTypeText, node.WithRequiredInputAttribute).WithMetaLabel(text.NewInfoNodeLabelID()))
+	sr.UI.SetNode(node.NewInputField("identifier", identifier, node.DefaultGroup, node.InputAttributeTypeText, node.WithRequiredInputAttribute).WithMetaLabel(text.NewInfoNodeLabelID()))
 	sr.UI.SetNode(NewPasswordNode("password"))
 	sr.UI.GetNodes().Append(node.NewInputField("method", "password", node.PasswordGroup, node.InputAttributeTypeSubmit).WithMetaLabel(text.NewInfoLogin()))
 
