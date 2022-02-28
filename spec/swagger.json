@@ -2263,6 +2263,7 @@
     "AdminUpdateIdentityBody": {
       "type": "object",
       "required": [
+        "schema_id",
         "traits",
         "state"
       ],
@@ -2333,6 +2334,16 @@
         "traits"
       ],
       "properties": {
+        "credentials": {
+          "$ref": "#/definitions/adminIdentityImportCredentials"
+        },
+        "recovery_addresses": {
+          "description": "RecoveryAddresses contains all the addresses that can be used to recover an identity.\n\nUse this structure to import recovery addresses for an identity. Please keep in mind\nthat the address needs to be represented in the Identity Schema or this field will be overwritten\non the next identity update.",
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/RecoveryAddress"
+          }
+        },
         "schema_id": {
           "description": "SchemaID is the ID of the JSON Schema to be used for validating the identity's traits.",
           "type": "string"
@@ -2343,6 +2354,74 @@
         "traits": {
           "description": "Traits represent an identity's traits. The identity is able to create, modify, and delete traits\nin a self-service manner. The input will always be validated against the JSON Schema defined\nin `schema_url`.",
           "type": "object"
+        },
+        "verifiable_addresses": {
+          "description": "VerifiableAddresses contains all the addresses that can be verified by the user.\n\nUse this structure to import verified addresses for an identity. Please keep in mind\nthat the address needs to be represented in the Identity Schema or this field will be overwritten\non the next identity update.",
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/verifiableIdentityAddress"
+          }
+        }
+      }
+    },
+    "adminCreateIdentityImportCredentialsOidc": {
+      "type": "object",
+      "properties": {
+        "config": {
+          "$ref": "#/definitions/adminCreateIdentityImportCredentialsOidcConfig"
+        }
+      }
+    },
+    "adminCreateIdentityImportCredentialsOidcConfig": {
+      "type": "object",
+      "properties": {
+        "config": {
+          "$ref": "#/definitions/adminCreateIdentityImportCredentialsPasswordConfig"
+        },
+        "providers": {
+          "description": "A list of OpenID Connect Providers",
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/adminCreateIdentityImportCredentialsOidcProvider"
+          }
+        }
+      }
+    },
+    "adminCreateIdentityImportCredentialsOidcProvider": {
+      "type": "object",
+      "required": [
+        "subject",
+        "provider"
+      ],
+      "properties": {
+        "provider": {
+          "description": "The OpenID Connect provider to link the subject to. Usually something like `google` or `github`.",
+          "type": "string"
+        },
+        "subject": {
+          "description": "The subject (`sub`) of the OpenID Connect connection. Usually the `sub` field of the ID Token.",
+          "type": "string"
+        }
+      }
+    },
+    "adminCreateIdentityImportCredentialsPassword": {
+      "type": "object",
+      "properties": {
+        "config": {
+          "$ref": "#/definitions/adminCreateIdentityImportCredentialsPasswordConfig"
+        }
+      }
+    },
+    "adminCreateIdentityImportCredentialsPasswordConfig": {
+      "type": "object",
+      "properties": {
+        "hashed_password": {
+          "description": "The hashed password in [PHC format]( https://www.ory.sh/docs/kratos/concepts/credentials/username-email-password#hashed-password-format)",
+          "type": "string"
+        },
+        "password": {
+          "description": "The password in plain text if no hash is available.",
+          "type": "string"
         }
       }
     },
@@ -2359,6 +2438,17 @@
         },
         "identity_id": {
           "$ref": "#/definitions/UUID"
+        }
+      }
+    },
+    "adminIdentityImportCredentials": {
+      "type": "object",
+      "properties": {
+        "oidc": {
+          "$ref": "#/definitions/adminCreateIdentityImportCredentialsOidc"
+        },
+        "password": {
+          "$ref": "#/definitions/adminCreateIdentityImportCredentialsPassword"
         }
       }
     },
@@ -2580,6 +2670,49 @@
           "description": "UpdatedAt is a helper struct field for gobuffalo.pop.",
           "type": "string",
           "format": "date-time"
+        }
+      }
+    },
+    "identityCredentialsOidc": {
+      "type": "object",
+      "title": "CredentialsOIDC is contains the configuration for credentials of the type oidc.",
+      "properties": {
+        "providers": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/identityCredentialsOidcProvider"
+          }
+        }
+      }
+    },
+    "identityCredentialsOidcProvider": {
+      "type": "object",
+      "title": "CredentialsOIDCProvider is contains a specific OpenID COnnect credential for a particular connection (e.g. Google).",
+      "properties": {
+        "initial_access_token": {
+          "type": "string"
+        },
+        "initial_id_token": {
+          "type": "string"
+        },
+        "initial_refresh_token": {
+          "type": "string"
+        },
+        "provider": {
+          "type": "string"
+        },
+        "subject": {
+          "type": "string"
+        }
+      }
+    },
+    "identityCredentialsPassword": {
+      "type": "object",
+      "title": "CredentialsPassword is contains the configuration for credentials of the type password.",
+      "properties": {
+        "hashed_password": {
+          "description": "HashedPassword is a hash-representation of the password.",
+          "type": "string"
         }
       }
     },

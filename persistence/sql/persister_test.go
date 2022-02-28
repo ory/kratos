@@ -3,11 +3,12 @@ package sql_test
 import (
 	"context"
 	"fmt"
-	"github.com/ory/x/dbal"
 	"os"
 	"path/filepath"
 	"sync"
 	"testing"
+
+	"github.com/ory/x/dbal"
 
 	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/schema"
