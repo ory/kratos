@@ -29,6 +29,7 @@ type (
 		QueueSMS(ctx context.Context, t SMSTemplate) (uuid.UUID, error)
 		SmtpDialer() *gomail.Dialer
 		DispatchQueue(ctx context.Context) error
+		DispatchMessage(ctx context.Context, msg Message) error
 	}
 
 	Provider interface {
