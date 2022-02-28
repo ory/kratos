@@ -12,9 +12,9 @@ func sortNodes(n node.Nodes) error {
 	return n.SortBySchema(ctx,
 		node.SortByGroups([]node.Group{
 			node.DefaultGroup,
+			node.WebAuthnGroup,
 			node.OpenIDConnectGroup,
 			node.PasswordGroup,
-			node.WebAuthnGroup,
 			node.TOTPGroup,
 			node.LookupGroup,
 		}),
