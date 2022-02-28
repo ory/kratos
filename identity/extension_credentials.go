@@ -25,6 +25,7 @@ func NewSchemaExtensionCredentials(i *Identity) *SchemaExtensionCredentials {
 func (r *SchemaExtensionCredentials) Run(_ jsonschema.ValidationContext, s schema.ExtensionConfig, value interface{}) error {
 	r.l.Lock()
 	defer r.l.Unlock()
+
 	if s.Credentials.Password.Identifier {
 		cred, ok := r.i.GetCredentials(CredentialsTypePassword)
 		if !ok {
@@ -39,6 +40,22 @@ func (r *SchemaExtensionCredentials) Run(_ jsonschema.ValidationContext, s schem
 		cred.Identifiers = r.v
 		r.i.SetCredentials(CredentialsTypePassword, *cred)
 	}
+
+	if s.Credentials.WebAuthn.Identifier {
+		cred, ok := r.i.GetCredentials(CredentialsTypeWebAuthn)
+		if !ok {
+			cred = &Credentials{
+				Type:        CredentialsTypeWebAuthn,
+				Identifiers: []string{},
+				Config:      sqlxx.JSONRawMessage{},
+			}
+		}
+
+		r.v = stringslice.Unique(append(r.v, strings.ToLower(fmt.Sprintf("%s", value))))
+		cred.Identifiers = r.v
+		r.i.SetCredentials(CredentialsTypeWebAuthn, *cred)
+	}
+
 	return nil
 }
 
