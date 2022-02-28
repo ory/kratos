@@ -5,6 +5,7 @@ func DetermineAAL(cts []CredentialsType) AuthenticatorAssuranceLevel {
 
 	var firstFactor bool
 	var secondFactor bool
+	var foundWebAuthn bool
 	for _, a := range cts {
 		switch a {
 		case CredentialsTypeRecoveryLink:
@@ -21,12 +22,16 @@ func DetermineAAL(cts []CredentialsType) AuthenticatorAssuranceLevel {
 			secondFactor = true
 		case CredentialsTypeWebAuthn:
 			secondFactor = true
+			foundWebAuthn = true
 		}
 	}
 
 	if firstFactor && secondFactor {
 		aal = AuthenticatorAssuranceLevel2
 	} else if firstFactor {
+		aal = AuthenticatorAssuranceLevel1
+	} else if foundWebAuthn {
+		// If none of the above match but WebAuthn is set, we have AAL1
 		aal = AuthenticatorAssuranceLevel1
 	}
 
