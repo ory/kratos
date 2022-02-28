@@ -160,7 +160,7 @@ func (h *Handler) FromOldFlow(w http.ResponseWriter, r *http.Request, of Flow) (
 //
 // This endpoint MUST ONLY be used in scenarios such as native mobile apps (React Native, Objective C, Swift, Java, ...).
 //
-// More information can be found at [Ory Kratos User Login and User Registration Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-login-user-registration).
+// More information can be found at [Ory Kratos User Login](https://www.ory.sh/docs/kratos/self-service/flows/user-login) and [User Registration Documentation](https://www.ory.sh/docs/kratos/self-service/flows/user-registration).
 //
 //     Schemes: http, https
 //
@@ -215,7 +215,7 @@ type initializeSelfServiceRegistrationFlowForBrowsers struct {
 //
 // This endpoint is NOT INTENDED for clients that do not have a browser (Chrome, Firefox, ...) as cookies are needed.
 //
-// More information can be found at [Ory Kratos User Login and User Registration Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-login-user-registration).
+// More information can be found at [Ory Kratos User Login](https://www.ory.sh/docs/kratos/self-service/flows/user-login) and [User Registration Documentation](https://www.ory.sh/docs/kratos/self-service/flows/user-registration).
 //
 //     Schemes: http, https
 //
@@ -295,7 +295,7 @@ type getSelfServiceRegistrationFlow struct {
 // - `session_already_available`: The user is already signed in.
 // - `self_service_flow_expired`: The flow is expired and you should request a new one.
 //
-// More information can be found at [Ory Kratos User Login and User Registration Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-login-user-registration).
+// More information can be found at [Ory Kratos User Login](https://www.ory.sh/docs/kratos/self-service/flows/user-login) and [User Registration Documentation](https://www.ory.sh/docs/kratos/self-service/flows/user-registration).
 //
 //     Produces:
 //     - application/json
@@ -396,7 +396,7 @@ type submitSelfServiceRegistrationFlowBody struct{}
 // - `browser_location_change_required`: Usually sent when an AJAX request indicates that the browser needs to open a specific URL.
 //		Most likely used in Social Sign In flows.
 //
-// More information can be found at [Ory Kratos User Login and User Registration Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-login-user-registration).
+// More information can be found at [Ory Kratos User Login](https://www.ory.sh/docs/kratos/self-service/flows/user-login) and [User Registration Documentation](https://www.ory.sh/docs/kratos/self-service/flows/user-registration).
 //
 //     Schemes: http, https
 //
