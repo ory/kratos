@@ -162,6 +162,7 @@ const (
 	ViperKeyWebAuthnRPID                                     = "selfservice.methods.webauthn.config.rp.id"
 	ViperKeyWebAuthnRPOrigin                                 = "selfservice.methods.webauthn.config.rp.origin"
 	ViperKeyWebAuthnRPIcon                                   = "selfservice.methods.webauthn.config.rp.issuer"
+	ViperKeyWebAuthnPasswordless                             = "selfservice.methods.webauthn.config.passwordless"
 	ViperKeyClientHTTPNoPrivateIPRanges                      = "clients.http.disallow_private_ip_ranges"
 	ViperKeyVersion                                          = "version"
 )
@@ -1162,6 +1163,10 @@ func (p *Config) PasswordPolicyConfig() *PasswordPolicy {
 	}
 }
 
+func (p *Config) WebAuthnForPasswordless() bool {
+	return p.p.BoolF(ViperKeyWebAuthnPasswordless, false)
+}
+
 func (p *Config) WebAuthnConfig() *webauthn.Config {
 	return &webauthn.Config{
 		RPDisplayName: p.p.String(ViperKeyWebAuthnRPDisplayName),
@@ -1197,7 +1202,6 @@ func (p *Config) CipherAlgorithm() string {
 		fallthrough
 	default:
 		return configValue
-
 	}
 }
 
