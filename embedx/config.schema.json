@@ -720,6 +720,9 @@
         "password": {
           "$ref": "#/definitions/selfServiceAfterRegistrationMethod"
         },
+        "webauthn": {
+          "$ref": "#/definitions/selfServiceAfterRegistrationMethod"
+        },
         "oidc": {
           "$ref": "#/definitions/selfServiceAfterRegistrationMethod"
         },
@@ -1277,6 +1280,11 @@
                   "type": "object",
                   "title": "WebAuthn Configuration",
                   "properties": {
+                    "passwordless": {
+                      "type": "boolean",
+                      "title": "Use For Passwordless Flows",
+                      "description": "If enabled will have the effect that WebAuthn is used for passwordless flows (as a first factor) and not for multi-factor set ups. With this set to true, users will see an option to sign up with WebAuthn on the registration screen."
+                    },
                     "rp": {
                       "title": "Relying Party (RP) Config",
                       "required": [
