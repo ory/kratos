@@ -107,6 +107,13 @@ func TestDetermineAAL(t *testing.T) {
 			},
 			expected: AuthenticatorAssuranceLevel2,
 		},
+		{
+			d: "webauthn only is aal1",
+			methods: []CredentialsType{
+				CredentialsTypeWebAuthn,
+			},
+			expected: AuthenticatorAssuranceLevel1,
+		},
 	} {
 		t.Run("case="+tc.d, func(t *testing.T) {
 			assert.Equal(t, tc.expected, DetermineAAL(tc.methods))
