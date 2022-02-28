@@ -12,8 +12,15 @@ func SortNodes(ctx context.Context, n node.Nodes, schemaRef string) error {
 		node.SortByGroups([]node.Group{
 			node.DefaultGroup,
 			node.OpenIDConnectGroup,
+			node.WebAuthnGroup,
 			node.PasswordGroup,
 		}),
 		node.SortUpdateOrder(node.PasswordLoginOrder),
+		node.SortUseOrderAppend([]string{
+			// WebAuthn
+			node.WebAuthnRemove,
+			node.WebAuthnRegisterDisplayName,
+			node.WebAuthnRegister,
+		}),
 	)
 }
