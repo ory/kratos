@@ -4,7 +4,6 @@
   "type": "object",
   "required": [
     "password",
-    "password_identifier",
     "method"
   ],
   "properties": {
@@ -22,5 +21,25 @@
     "method": {
       "type": "string"
     }
+  },
+  "if": {
+    "properties": {
+      "password_identifier": {
+        "minLength": 1
+      }
+    },
+    "required": [
+      "password_identifier"
+    ]
+  },
+  "then": {
+    "required": [
+      "password_identifier"
+    ]
+  },
+  "else": {
+    "required": [
+      "identifier"
+    ]
   }
 }
