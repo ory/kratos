@@ -30,7 +30,7 @@ errors:
     redirect:
       enabled: true
       config:
-        to: http://127.0.0.1:4455/auth/login
+        to: http://127.0.0.1:4455/login
         when:
           -
             error:
