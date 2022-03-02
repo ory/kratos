@@ -83,17 +83,9 @@ func (s *Strategy) linkedProviders(ctx context.Context, r *http.Request, conf *C
 		return nil, errors.WithStack(err)
 	}
 
-	var count int
-	for _, strategy := range s.d.ActiveCredentialsCounterStrategies(ctx) {
-		current, err := strategy.CountActiveCredentials(confidential.Credentials)
-		if err != nil {
-			return nil, err
-		}
-
-		count += current
-		if count > 1 {
-			break
-		}
+	count, err := s.d.CountActiveCredentials(ctx, confidential)
+	if err != nil {
+		return nil, err
 	}
 
 	if count < 2 {
