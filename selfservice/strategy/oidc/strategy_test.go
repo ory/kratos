@@ -497,7 +497,7 @@ func TestStrategy(t *testing.T) {
 	})
 }
 
-func TestCountActiveCredentials(t *testing.T) {
+func TestCountActiveFirstFactorCredentials(t *testing.T) {
 	_, reg := internal.NewFastRegistryWithMocks(t)
 	strategy := oidc.NewStrategy(reg)
 
@@ -586,7 +586,7 @@ func TestCountActiveCredentials(t *testing.T) {
 			for _, v := range tc.in {
 				in[v.Type] = v
 			}
-			actual, err := strategy.CountActiveCredentials(in)
+			actual, err := strategy.CountActiveFirstFactorCredentials(in)
 			require.NoError(t, err)
 			assert.Equal(t, tc.expected, actual)
 		})

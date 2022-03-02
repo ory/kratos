@@ -83,7 +83,7 @@ func (s *Strategy) linkedProviders(ctx context.Context, r *http.Request, conf *C
 		return nil, errors.WithStack(err)
 	}
 
-	count, err := s.d.CountActiveCredentials(ctx, confidential)
+	count, err := s.d.IdentityManager().CountActiveFirstFactorCredentials(ctx, confidential)
 	if err != nil {
 		return nil, err
 	}
