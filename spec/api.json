@@ -476,7 +476,9 @@
         "enum": [
           "password",
           "totp",
-          "oidc"
+          "oidc",
+          "webauthn",
+          "lookup_secret"
         ],
         "title": "CredentialsType  represents several different credential types, like password credentials, passwordless credentials,",
         "type": "string"
