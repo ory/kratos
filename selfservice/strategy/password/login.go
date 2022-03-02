@@ -4,9 +4,11 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
-	"github.com/ory/x/stringsx"
+	"github.com/ory/kratos/selfservice/flowhelpers"
 	"net/http"
 	"time"
+
+	"github.com/ory/x/stringsx"
 
 	"github.com/gofrs/uuid"
 
@@ -33,7 +35,7 @@ func (s *Strategy) RegisterLoginRoutes(r *x.RouterPublic) {
 func (s *Strategy) handleLoginError(w http.ResponseWriter, r *http.Request, f *login.Flow, payload *submitSelfServiceLoginFlowWithPasswordMethodBody, err error) error {
 	if f != nil {
 		f.UI.Nodes.ResetNodes("password")
-		f.UI.Nodes.SetValueAttribute("identifier", payload.Identifier)
+		f.UI.Nodes.SetValueAttribute("identifier", stringsx.Coalesce(payload.Identifier, payload.LegacyIdentifier))
 		if f.Type == flow.TypeBrowser {
 			f.UI.SetCSRF(s.d.GenerateCSRFToken(r))
 		}
@@ -126,21 +128,7 @@ func (s *Strategy) PopulateLoginMethod(r *http.Request, requestedAAL identity.Au
 		return nil
 	}
 
-	// This block adds the identifier to the method when the request is forced - as a hint for the user.
-	var identifier string
-	if !sr.IsForced() {
-		// do nothing
-	} else if sess, err := s.d.SessionManager().FetchFromRequest(r.Context(), r); err != nil {
-		// do nothing
-	} else if id, err := s.d.PrivilegedIdentityPool().GetIdentityConfidential(r.Context(), sess.IdentityID); err != nil {
-		// do nothing
-	} else if creds, ok := id.GetCredentials(s.ID()); !ok {
-		// do nothing
-	} else if len(creds.Identifiers) == 0 {
-		// do nothing
-	} else {
-		identifier = creds.Identifiers[0]
-	}
+	identifier := flowhelpers.GuessForcedLoginIdentifier(r, s.d, sr, s.ID())
 
 	sr.UI.SetCSRF(s.d.GenerateCSRFToken(r))
 	sr.UI.SetNode(node.NewInputField("identifier", identifier, node.DefaultGroup, node.InputAttributeTypeText, node.WithRequiredInputAttribute).WithMetaLabel(text.NewInfoNodeLabelID()))
