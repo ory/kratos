@@ -5,6 +5,7 @@ import (
 	_ "embed"
 	"encoding/json"
 	"fmt"
+	"github.com/ory/x/snapshotx"
 	"net/http"
 	"net/url"
 	"testing"
@@ -103,6 +104,8 @@ func ensureReplacement(t *testing.T, index string, ui kratos.UiContainer, expect
 	require.NoError(t, err)
 	assert.Contains(t, gjson.GetBytes(actual, index+".attributes.onclick").String(), expected, "ensure that the replacement works")
 }
+
+var ctx = context.Background()
 
 func TestCompleteSettings(t *testing.T) {
 	conf, reg := internal.NewFastRegistryWithMocks(t)
@@ -337,6 +340,90 @@ func TestCompleteSettings(t *testing.T) {
 			assert.Empty(t, gjson.GetBytes(actualFlow.InternalContext, flow.PrefixInternalContextKey(identity.CredentialsTypeWebAuthn, webauthn.InternalContextKeySessionData)))
 
 			testhelpers.EnsureAAL(t, browserClient, publicTS, "aal2", string(identity.CredentialsTypeWebAuthn))
+		}
+
+		t.Run("type=browser", func(t *testing.T) {
+			run(t, false)
+		})
+
+		t.Run("type=spa", func(t *testing.T) {
+			run(t, true)
+		})
+	})
+
+	t.Run("case=fails to remove security key if it is passwordless and the last credential available", func(t *testing.T) {
+		conf.MustSet(config.ViperKeyWebAuthnPasswordless, true)
+		t.Cleanup(func() {
+			conf.MustSet(config.ViperKeyWebAuthnPasswordless, false)
+		})
+
+		run := func(t *testing.T, spa bool) {
+			id := createIdentity(t, reg)
+			id.DeleteCredentialsType(identity.CredentialsTypePassword)
+			conf := sqlxx.JSONRawMessage(`{"credentials":[{"id":"Zm9vZm9v","display_name":"foo","is_passwordless":true}]}`)
+			id.UpsertCredentialsConfig(identity.CredentialsTypeWebAuthn, conf)
+			require.NoError(t, reg.IdentityManager().Update(ctx, id, identity.ManagerAllowWriteProtectedTraits))
+
+			body, res := doBrowserFlow(t, spa, func(v url.Values) {
+				// The remove key should be empty
+				snapshotx.SnapshotTExcept(t, v, []string{"csrf_token"})
+
+				v.Set(node.WebAuthnRemove, fmt.Sprintf("666f6f666f6f"))
+			}, id)
+
+			if spa {
+				assert.Contains(t, res.Request.URL.String(), publicTS.URL+settings.RouteSubmitFlow)
+			} else {
+				assert.Contains(t, res.Request.URL.String(), uiTS.URL)
+			}
+
+			t.Run("response", func(t *testing.T) {
+				assert.EqualValues(t, settings.StateShowForm, gjson.Get(body, "state").String(), body)
+				snapshotx.SnapshotTExcept(t, json.RawMessage(gjson.Get(body, "ui.nodes.#(attributes.name==webauthn_remove)").String()), nil)
+
+				actual, err := reg.Persister().GetIdentityConfidential(context.Background(), id.ID)
+				require.NoError(t, err)
+				cred, ok := actual.GetCredentials(identity.CredentialsTypeWebAuthn)
+				assert.True(t, ok)
+				assert.Len(t, gjson.GetBytes(cred.Config, "credentials").Array(), 1)
+			})
+		}
+
+		t.Run("type=browser", func(t *testing.T) {
+			run(t, false)
+		})
+
+		t.Run("type=spa", func(t *testing.T) {
+			run(t, true)
+		})
+	})
+
+	t.Run("case=possible to remove webauthn credential if it is MFA at all times", func(t *testing.T) {
+		run := func(t *testing.T, spa bool) {
+			id := createIdentity(t, reg)
+			id.DeleteCredentialsType(identity.CredentialsTypePassword)
+			id.UpsertCredentialsConfig(identity.CredentialsTypeWebAuthn, sqlxx.JSONRawMessage(`{"credentials":[{"id":"Zm9vZm9v","display_name":"foo","is_passwordless":false}]}`))
+			require.NoError(t, reg.IdentityManager().Update(ctx, id, identity.ManagerAllowWriteProtectedTraits))
+
+			body, res := doBrowserFlow(t, spa, func(v url.Values) {
+				// The remove key should be set
+				snapshotx.SnapshotTExcept(t, v, []string{"csrf_token"})
+				v.Set(node.WebAuthnRemove, fmt.Sprintf("666f6f666f6f"))
+			}, id)
+
+			if spa {
+				assert.Contains(t, res.Request.URL.String(), publicTS.URL+settings.RouteSubmitFlow)
+			} else {
+				assert.Contains(t, res.Request.URL.String(), uiTS.URL)
+			}
+
+			t.Run("response", func(t *testing.T) {
+				assert.EqualValues(t, settings.StateSuccess, gjson.Get(body, "state").String(), body)
+				actual, err := reg.Persister().GetIdentityConfidential(context.Background(), id.ID)
+				require.NoError(t, err)
+				_, ok := actual.GetCredentials(identity.CredentialsTypeWebAuthn)
+				assert.False(t, ok)
+			})
 		}
 
 		t.Run("type=browser", func(t *testing.T) {
