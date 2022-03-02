@@ -7,6 +7,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/ory/kratos/credentialmigrate"
+
 	"github.com/ory/kratos/corp"
 
 	"github.com/ory/jsonschema/v3"
@@ -384,6 +386,10 @@ func (p *Persister) GetIdentityConfidential(ctx context.Context, id uuid.UUID) (
 		}
 
 		i.Credentials[cred.Type] = *cred
+	}
+
+	if err := credentialmigrate.UpgradeCredentials(&i); err != nil {
+		return nil, err
 	}
 
 	if err := p.findRecoveryAddresses(ctx, &i); err != nil {
