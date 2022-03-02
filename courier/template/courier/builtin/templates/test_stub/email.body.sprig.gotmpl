@@ -1,0 +1,5 @@
+{{ $t1 := title .input }}
+{{ $t1 := nospace $t1 }}
+{{ $t2 := upper $t1 }}
+{{ $t3 := cat $t1 "," $t2 }}
+{{ nospace $t3 }}

@@ -54,7 +54,7 @@ func TestCompleteLogin(t *testing.T) {
 	conf.MustSet(config.ViperKeySelfServiceErrorUI, errTS.URL+"/error-ts")
 	conf.MustSet(config.ViperKeySelfServiceLoginUI, uiTS.URL+"/login-ts")
 
-	conf.MustSet(config.ViperKeyDefaultIdentitySchemaURL, "file://./stub/login.schema.json")
+	testhelpers.SetDefaultIdentitySchema(conf, "file://./stub/login.schema.json")
 	conf.MustSet(config.ViperKeySecretsDefault, []string{"not-a-secure-session-key"})
 
 	t.Run("case=webauthn payload is set when identity has webauthn", func(t *testing.T) {
@@ -67,6 +67,7 @@ func TestCompleteLogin(t *testing.T) {
 			"1.attributes.onclick",
 			"1.attributes.onload",
 			"3.attributes.src",
+			"3.attributes.nonce",
 		})
 		ensureReplacement(t, "1", f.Ui, "allowCredentials")
 	})

@@ -33,7 +33,7 @@ func NewJsonnetLintCmd() *cobra.Command {
 					cmdx.Must(err, `Unable to read file "%s" because: %s`, file, err)
 
 					var outBuilder strings.Builder
-					errorsFound := linter.LintSnippet(vm, &outBuilder, file, string(content))
+					errorsFound := linter.LintSnippet(vm, &outBuilder, []linter.Snippet{{FileName: file, Code: string(content)}})
 
 					if errorsFound {
 						_, _ = fmt.Fprintf(os.Stderr, "Linter found issues.")

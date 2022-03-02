@@ -2,6 +2,7 @@ package schema
 
 import (
 	"bytes"
+	"context"
 	"fmt"
 	"testing"
 
@@ -31,6 +32,8 @@ func (r *extensionStub) Finish() error {
 	return nil
 }
 
+var ctx = context.Background()
+
 func TestExtensionRunner(t *testing.T) {
 	t.Run("method=get identifier", func(t *testing.T) {
 		for k, tc := range []struct {
@@ -52,13 +55,13 @@ func TestExtensionRunner(t *testing.T) {
 		} {
 			t.Run(fmt.Sprintf("case=%d", k), func(t *testing.T) {
 				c := jsonschema.NewCompiler()
-				runner, err := NewExtensionRunner()
+				runner, err := NewExtensionRunner(ctx)
 				require.NoError(t, err)
 
 				r := new(extensionStub)
 				runner.AddRunner(r).Register(c)
 
-				err = c.MustCompile(tc.schema).Validate(bytes.NewBufferString(tc.doc))
+				err = c.MustCompile(ctx, tc.schema).Validate(bytes.NewBufferString(tc.doc))
 				if tc.expectErr != nil {
 					require.EqualError(t, err, tc.expectErr.Error())
 				}
@@ -71,12 +74,12 @@ func TestExtensionRunner(t *testing.T) {
 
 	t.Run("method=applies meta schema", func(t *testing.T) {
 		c := jsonschema.NewCompiler()
-		runner, err := NewExtensionRunner()
+		runner, err := NewExtensionRunner(ctx)
 		require.NoError(t, err)
 
 		runner.Register(c)
 
-		_, err = c.Compile("file://./stub/extension/invalid.schema.json")
+		_, err = c.Compile(ctx, "file://./stub/extension/invalid.schema.json")
 		assert.Error(t, err)
 		assert.Contains(t, err.Error(), "expected boolean, but got number")
 	})

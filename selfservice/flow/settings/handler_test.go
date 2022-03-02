@@ -9,6 +9,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/ory/kratos/text"
+
 	"github.com/ory/x/assertx"
 
 	"github.com/ory/kratos/session"
@@ -43,7 +45,7 @@ func init() {
 
 func TestHandler(t *testing.T) {
 	conf, reg := internal.NewFastRegistryWithMocks(t)
-	conf.MustSet(config.ViperKeyDefaultIdentitySchemaURL, "file://./stub/identity.schema.json")
+	testhelpers.SetDefaultIdentitySchema(conf, "file://./stub/identity.schema.json")
 	testhelpers.StrategyEnable(t, conf, identity.CredentialsTypePassword.String(), true)
 	testhelpers.StrategyEnable(t, conf, settings.StrategyProfile, true)
 
@@ -116,6 +118,12 @@ func TestHandler(t *testing.T) {
 
 	t.Run("endpoint=init", func(t *testing.T) {
 		t.Run("description=init a flow as API", func(t *testing.T) {
+			t.Run("description=without privileges", func(t *testing.T) {
+				res, body := initFlow(t, new(http.Client), true)
+				assert.Equal(t, http.StatusUnauthorized, res.StatusCode, "%s", body)
+				assert.Equal(t, text.ErrNoActiveSession, gjson.GetBytes(body, "error.id").String(), "%s", body)
+			})
+
 			t.Run("description=success", func(t *testing.T) {
 				user1 := testhelpers.NewHTTPClientWithArbitrarySessionToken(t, reg)
 				res, body := initFlow(t, user1, true)
@@ -132,6 +140,12 @@ func TestHandler(t *testing.T) {
 		})
 
 		t.Run("description=init a flow as browser", func(t *testing.T) {
+			t.Run("description=without privileges", func(t *testing.T) {
+				res, body := initSPAFlow(t, new(http.Client))
+				assert.Equal(t, http.StatusUnauthorized, res.StatusCode, "%s", body)
+				assert.Equal(t, text.ErrNoActiveSession, gjson.GetBytes(body, "error.id").String(), "%s", body)
+			})
+
 			t.Run("description=success", func(t *testing.T) {
 				user1 := testhelpers.NewHTTPClientWithArbitrarySessionCookie(t, reg)
 				res, body := initFlow(t, user1, false)
@@ -144,6 +158,22 @@ func TestHandler(t *testing.T) {
 				res, body := initFlow(t, aal2Identity, false)
 				assert.Contains(t, res.Request.URL.String(), reg.Config(context.Background()).SelfServiceFlowLoginUI().String())
 				assert.EqualValues(t, "Please complete the second authentication challenge.", gjson.GetBytes(body, "ui.messages.0.text").String(), "%s", body)
+			})
+
+			t.Run("case=redirects with 303", func(t *testing.T) {
+				c := testhelpers.NewHTTPClientWithArbitrarySessionCookie(t, reg)
+				// prevent the redirect
+				c.CheckRedirect = func(req *http.Request, via []*http.Request) error {
+					return http.ErrUseLastResponse
+				}
+				req, err := http.NewRequest("GET", publicTS.URL+settings.RouteInitBrowserFlow, nil)
+				require.NoError(t, err)
+
+				res, err := c.Do(req)
+				require.NoError(t, err)
+				// here we check that the redirect status is 303
+				require.Equal(t, http.StatusSeeOther, res.StatusCode)
+				defer res.Body.Close()
 			})
 		})
 
@@ -172,7 +202,7 @@ func TestHandler(t *testing.T) {
 	})
 
 	t.Run("endpoint=fetch", func(t *testing.T) {
-		t.Run("description=fetching a non-existent flow should return a 403 error", func(t *testing.T) {
+		t.Run("description=fetching a non-existent flow should return a 404 error", func(t *testing.T) {
 			_, _, err := testhelpers.NewSDKCustomClient(publicTS, otherUser).V0alpha2Api.GetSelfServiceSettingsFlow(context.Background()).Id("i-do-not-exist").Execute()
 			require.Error(t, err)
 
@@ -362,5 +392,16 @@ func TestHandler(t *testing.T) {
 				assert.Equal(t, "You must restart the flow because the resumable session was initiated by another person.", gjson.Get(actual, "ui.messages.0.text").String(), actual)
 			})
 		})
+	})
+
+	t.Run("case=relative redirect when self-service settings ui is a relative url", func(t *testing.T) {
+		reg.Config(context.Background()).MustSet(config.ViperKeySelfServiceSettingsURL, "/settings-ts")
+		user1 := testhelpers.NewNoRedirectHTTPClientWithArbitrarySessionCookie(t, reg)
+		res, _ := initFlow(t, user1, false)
+		assert.Regexp(
+			t,
+			"^/settings-ts.*$",
+			res.Header.Get("Location"),
+		)
 	})
 }

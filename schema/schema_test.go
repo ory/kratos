@@ -114,7 +114,7 @@ func TestGetKeysInOrder(t *testing.T) {
 			"fruits", "vegetables"}},
 	} {
 		t.Run(fmt.Sprintf("case=%d schemaRef=%s", i, tc.schemaRef), func(t *testing.T) {
-			actual, err := GetKeysInOrder(tc.schemaRef)
+			actual, err := GetKeysInOrder(ctx, tc.schemaRef)
 			require.NoError(t, err)
 			assert.Equal(t, tc.keys, actual)
 		})

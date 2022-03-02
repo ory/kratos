@@ -42,11 +42,26 @@ func (e *SessionIssuer) ExecutePostRegistrationPostPersistHook(w http.ResponseWr
 
 	if a.Type == flow.TypeAPI {
 		e.r.Writer().Write(w, r, &registration.APIFlowResponse{
-			Session: s, Token: s.Token,
+			Session:  s,
+			Token:    s.Token,
 			Identity: s.Identity,
 		})
 		return errors.WithStack(registration.ErrHookAbortFlow)
 	}
 
-	return e.r.SessionManager().IssueCookie(r.Context(), w, r, s)
+	// cookie is issued both for browser and for SPA flows
+	if err := e.r.SessionManager().IssueCookie(r.Context(), w, r, s); err != nil {
+		return err
+	}
+
+	// SPA flows additionally send the session
+	if x.IsJSONRequest(r) {
+		e.r.Writer().Write(w, r, &registration.APIFlowResponse{
+			Session:  s,
+			Identity: s.Identity,
+		})
+		return errors.WithStack(registration.ErrHookAbortFlow)
+	}
+
+	return nil
 }

@@ -6,6 +6,7 @@ import (
 	kratos "github.com/ory/kratos-client-go"
 	"github.com/ory/kratos/x"
 	"github.com/ory/x/cmdx"
+	"github.com/ory/x/stringsx"
 
 	"github.com/ory/kratos/internal/clihelpers"
 
@@ -14,8 +15,16 @@ import (
 	"github.com/ory/kratos/cmd/cliclient"
 )
 
+const (
+	FlagIncludeCreds = "include-credentials"
+)
+
 func NewGetCmd() *cobra.Command {
-	return &cobra.Command{
+	var (
+		includeCreds []string
+	)
+
+	cmd := &cobra.Command{
 		Use:   "get <id-0 [id-1 ...]>",
 		Short: "Get one or more identities by ID",
 		Long: fmt.Sprintf(`This command gets all the details about an identity. To get an identity by some selector, e.g. the recovery email address, use the list command in combination with jq.
@@ -29,10 +38,23 @@ func NewGetCmd() *cobra.Command {
 		RunE: func(cmd *cobra.Command, args []string) error {
 			c := cliclient.NewClient(cmd)
 
+			// we check includeCreds argument is valid
+			for _, opt := range includeCreds {
+				e := stringsx.SwitchExact(opt)
+				if !e.AddCase("oidc") {
+					cmd.PrintErrln(`You have to put a valid value of credentials type to be included, try --help for details.`)
+					return cmdx.FailSilently(cmd)
+				}
+			}
+
 			identities := make([]kratos.Identity, 0, len(args))
 			failed := make(map[string]error)
 			for _, id := range args {
-				identity, _, err := c.V0alpha2Api.AdminGetIdentity(cmd.Context(), id).Execute()
+				identity, _, err := c.V0alpha2Api.
+					AdminGetIdentity(cmd.Context(), id).
+					IncludeCredential(includeCreds).
+					Execute()
+
 				if x.SDKError(err) != nil {
 					failed[id] = err
 					continue
@@ -54,4 +76,9 @@ func NewGetCmd() *cobra.Command {
 			return nil
 		},
 	}
+
+	flags := cmd.Flags()
+	// include credential flag to add third party tokens in returned data
+	flags.StringArrayVarP(&includeCreds, FlagIncludeCreds, "i", []string{}, `Include third party tokens (only "oidc" supported) `)
+	return cmd
 }

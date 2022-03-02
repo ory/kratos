@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
-	"fmt"
 	"net/http"
 	"path/filepath"
 	"strings"
@@ -24,8 +23,6 @@ import (
 	"github.com/tidwall/gjson"
 
 	"github.com/ory/x/jsonx"
-
-	"github.com/ory/x/fetcher"
 
 	"github.com/ory/herodot"
 	"github.com/ory/kratos/continuity"
@@ -62,6 +59,7 @@ type dependencies interface {
 	x.CSRFProvider
 	x.CSRFTokenGeneratorProvider
 	x.WriterProvider
+	x.HTTPClientProvider
 
 	identity.ValidationProvider
 	identity.PrivilegedPoolProvider
@@ -104,7 +102,6 @@ func isForced(req interface{}) bool {
 // It supports login, registration and settings via OpenID Providers.
 type Strategy struct {
 	d         dependencies
-	f         *fetcher.Fetcher
 	validator *schema.Validator
 	dec       *decoderx.HTTP
 }
@@ -118,7 +115,7 @@ type authCodeContainer struct {
 func (s *Strategy) CountActiveCredentials(cc map[identity.CredentialsType]identity.Credentials) (count int, err error) {
 	for _, c := range cc {
 		if c.Type == s.ID() && gjson.ValidBytes(c.Config) {
-			var conf CredentialsConfig
+			var conf identity.CredentialsOIDC
 			if err = json.Unmarshal(c.Config, &conf); err != nil {
 				return 0, errors.WithStack(err)
 			}
@@ -162,7 +159,7 @@ func (s *Strategy) setRoutes(r *x.RouterPublic) {
 
 // Redirect POST request to GET rewriting form fields to query params.
 func (s *Strategy) redirectToGET(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
-	publicUrl := s.d.Config(r.Context()).SelfPublicURL(r)
+	publicUrl := s.d.Config(r.Context()).SelfPublicURL()
 	dest := *r.URL
 	dest.Host = publicUrl.Host
 	dest.Scheme = publicUrl.Scheme
@@ -183,7 +180,6 @@ func (s *Strategy) redirectToGET(w http.ResponseWriter, r *http.Request, _ httpr
 func NewStrategy(d dependencies) *Strategy {
 	return &Strategy{
 		d:         d,
-		f:         fetcher.NewFetcher(),
 		validator: schema.NewValidator(),
 	}
 }
@@ -314,7 +310,7 @@ func (s *Strategy) handleCallback(w http.ResponseWriter, r *http.Request, ps htt
 		return
 	}
 
-	conf, err := provider.OAuth2(context.Background())
+	conf, err := provider.OAuth2(r.Context())
 	if err != nil {
 		s.forwardError(w, r, req, s.handleError(w, r, req, pid, nil, err))
 		return
@@ -369,10 +365,6 @@ func (s *Strategy) handleCallback(w http.ResponseWriter, r *http.Request, ps htt
 	}
 }
 
-func uid(provider, subject string) string {
-	return fmt.Sprintf("%s:%s", provider, subject)
-}
-
 func (s *Strategy) populateMethod(r *http.Request, c *container.Container, message func(provider string) *text.Message) error {
 	conf, err := s.Config(r.Context())
 	if err != nil {
@@ -403,7 +395,7 @@ func (s *Strategy) Config(ctx context.Context) (*ConfigurationCollection, error)
 func (s *Strategy) provider(ctx context.Context, r *http.Request, id string) (Provider, error) {
 	if c, err := s.Config(ctx); err != nil {
 		return nil, err
-	} else if provider, err := c.Provider(id, s.d.Config(ctx).SelfPublicURL(r)); err != nil {
+	} else if provider, err := c.Provider(id, s.d); err != nil {
 		return nil, err
 	} else {
 		return provider, nil
@@ -442,8 +434,12 @@ func (s *Strategy) handleError(w http.ResponseWriter, r *http.Request, f flow.Fl
 		AddProvider(rf.UI, provider, text.NewInfoRegistrationContinue())
 
 		if traits != nil {
-			traitNodes, err := container.NodesFromJSONSchema(node.OpenIDConnectGroup,
-				s.d.Config(r.Context()).DefaultIdentityTraitsSchemaURL().String(), "", nil)
+			ds, err := s.d.Config(r.Context()).DefaultIdentityTraitsSchemaURL()
+			if err != nil {
+				return err
+			}
+
+			traitNodes, err := container.NodesFromJSONSchema(r.Context(), node.OpenIDConnectGroup, ds.String(), "", nil)
 			if err != nil {
 				return err
 			}

@@ -57,6 +57,14 @@ func SecureRedirectOverrideDefaultReturnTo(defaultReturnTo *url.URL) SecureRedir
 	}
 }
 
+// SecureRedirectToIsWhitelisted validates if the redirect_to param is allowed for a given wildcard
+func SecureRedirectToIsWhiteListedHost(returnTo *url.URL, allowed url.URL) bool {
+	if allowed.Host != "" && allowed.Host[:1] == "*" {
+		return strings.HasSuffix(strings.ToLower(returnTo.Host), strings.ToLower(allowed.Host)[1:])
+	}
+	return strings.EqualFold(allowed.Host, returnTo.Host)
+}
+
 // SecureRedirectTo implements a HTTP redirector who mitigates open redirect vulnerabilities by
 // working with whitelisting.
 func SecureRedirectTo(r *http.Request, defaultReturnTo *url.URL, opts ...SecureRedirectOption) (returnTo *url.URL, err error) {
@@ -79,7 +87,7 @@ func SecureRedirectTo(r *http.Request, defaultReturnTo *url.URL, opts ...SecureR
 
 	if len(source.Query().Get("return_to")) == 0 {
 		return o.defaultReturnTo, nil
-	} else if returnTo, err = url.ParseRequestURI(source.Query().Get("return_to")); err != nil {
+	} else if returnTo, err = url.Parse(source.Query().Get("return_to")); err != nil {
 		return nil, herodot.ErrInternalServerError.WithWrap(err).WithReasonf("Unable to parse the return_to query parameter as an URL: %s", err)
 	}
 
@@ -89,7 +97,7 @@ func SecureRedirectTo(r *http.Request, defaultReturnTo *url.URL, opts ...SecureR
 	var found bool
 	for _, allowed := range o.whitelist {
 		if strings.EqualFold(allowed.Scheme, returnTo.Scheme) &&
-			strings.EqualFold(allowed.Host, returnTo.Host) &&
+			SecureRedirectToIsWhiteListedHost(returnTo, allowed) &&
 			strings.HasPrefix(
 				stringsx.Coalesce(returnTo.Path, "/"),
 				stringsx.Coalesce(allowed.Path, "/")) {
@@ -125,7 +133,7 @@ func SecureContentNegotiationRedirection(
 			append([]SecureRedirectOption{
 				SecureRedirectUseSourceURL(requestURL),
 				SecureRedirectAllowURLs(c.SelfServiceBrowserWhitelistedReturnToDomains()),
-				SecureRedirectAllowSelfServiceURLs(c.SelfPublicURL(r)),
+				SecureRedirectAllowSelfServiceURLs(c.SelfPublicURL()),
 			}, opts...)...,
 		)
 		if err != nil {

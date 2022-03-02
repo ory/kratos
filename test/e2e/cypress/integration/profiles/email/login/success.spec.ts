@@ -42,14 +42,16 @@ describe('Basic email profile with succeeding login flows', () => {
           const { identity } = session
           expect(identity.id).to.not.be.empty
           expect(identity.schema_id).to.equal('default')
-          expect(identity.schema_url).to.equal(`${APP_URL}/schemas/default`)
+          expect(identity.schema_url).to.equal(`${APP_URL}/schemas/ZGVmYXVsdA`)
           expect(identity.traits.website).to.equal(website)
           expect(identity.traits.email).to.equal(email)
         })
       })
 
-      it('should sign in with case insensitive identifier', () => {
-        cy.get('input[name="password_identifier"]').type(email.toUpperCase())
+      it('should sign in with case insensitive identifier surrounded by whitespace', () => {
+        cy.get('input[name="password_identifier"]').type(
+          '  ' + email.toUpperCase() + '  '
+        )
         cy.get('input[name="password"]').type(password)
         cy.submitPasswordForm()
         cy.location('pathname').should('not.contain', '/login')
@@ -58,7 +60,7 @@ describe('Basic email profile with succeeding login flows', () => {
           const { identity } = session
           expect(identity.id).to.not.be.empty
           expect(identity.schema_id).to.equal('default')
-          expect(identity.schema_url).to.equal(`${APP_URL}/schemas/default`)
+          expect(identity.schema_url).to.equal(`${APP_URL}/schemas/ZGVmYXVsdA`)
           expect(identity.traits.website).to.equal(website)
           expect(identity.traits.email).to.equal(email)
         })
@@ -82,17 +84,21 @@ describe('Basic email profile with succeeding login flows', () => {
       cy.proxy('express')
       cy.useConfigProfile('email')
 
-      cy.shortLoginLifespan()
       cy.browserReturnUrlOry()
     })
 
     beforeEach(() => {
       cy.clearAllCookies()
-      cy.visit(express.login + '?return_to=https://www.ory.sh/')
     })
 
     it('should redirect to return_to when retrying expired flow', () => {
+      cy.shortLoginLifespan()
+      cy.wait(500)
+
+      cy.visit(express.login + '?return_to=https://www.ory.sh/')
+
       cy.longLoginLifespan()
+
       cy.get(appPrefix('express') + 'input[name="password_identifier"]').type(
         email.toUpperCase()
       )

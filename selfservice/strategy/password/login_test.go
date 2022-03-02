@@ -20,8 +20,6 @@ import (
 
 	kratos "github.com/ory/kratos-client-go"
 	"github.com/ory/kratos/hash"
-	"github.com/ory/kratos/selfservice/strategy/password"
-
 	"github.com/ory/x/assertx"
 	"github.com/ory/x/errorsx"
 	"github.com/ory/x/ioutilx"
@@ -56,7 +54,7 @@ func TestCompleteLogin(t *testing.T) {
 	conf.MustSet(config.ViperKeySelfServiceErrorUI, errTS.URL+"/error-ts")
 	conf.MustSet(config.ViperKeySelfServiceLoginUI, uiTS.URL+"/login-ts")
 
-	conf.MustSet(config.ViperKeyDefaultIdentitySchemaURL, "file://./stub/login.schema.json")
+	testhelpers.SetDefaultIdentitySchema(conf, "file://./stub/login.schema.json")
 	conf.MustSet(config.ViperKeySecretsDefault, []string{"not-a-secure-session-key"})
 
 	ensureFieldsExist := func(t *testing.T, body []byte) {
@@ -584,7 +582,7 @@ func TestCompleteLogin(t *testing.T) {
 	})
 
 	t.Run("case=should return an error because not passing validation and reset previous errors and values", func(t *testing.T) {
-		conf.MustSet(config.ViperKeyDefaultIdentitySchemaURL, "file://./stub/login.schema.json")
+		testhelpers.SetDefaultIdentitySchema(conf, "file://./stub/login.schema.json")
 
 		var check = func(t *testing.T, actual string) {
 			assert.NotEmpty(t, gjson.Get(actual, "id").String(), "%s", actual)
@@ -668,13 +666,25 @@ func TestCompleteLogin(t *testing.T) {
 
 		values := url.Values{"method": {"password"}, "password_identifier": {strings.ToUpper(identifier)}, "password": {pwd}, "csrf_token": {x.FakeCSRFToken}}.Encode()
 
-		_, res := testhelpers.LoginMakeRequest(t, false, false, f, browserClient, values)
+		body, res := testhelpers.LoginMakeRequest(t, false, false, f, browserClient, values)
+
 		assert.EqualValues(t, http.StatusOK, res.StatusCode)
+		assert.Equal(t, identifier, gjson.Get(body, "identity.traits.subject").String(), "%s", body)
+	})
 
-		f = testhelpers.InitializeLoginFlowViaBrowser(t, browserClient, publicTS, true, false)
-		body2, res := testhelpers.LoginMakeRequest(t, false, false, f, browserClient, values)
+	t.Run("should login same identity regardless of leading or trailing whitespace", func(t *testing.T) {
+		identifier, pwd := x.NewUUID().String(), "password"
+		createIdentity(identifier, pwd)
 
-		assert.Equal(t, identifier, gjson.Get(body2, "identity.traits.subject").String(), "%s", body2)
+		browserClient := testhelpers.NewClientWithCookies(t)
+		f := testhelpers.InitializeLoginFlowViaBrowser(t, browserClient, publicTS, false, false)
+
+		values := url.Values{"method": {"password"}, "password_identifier": {"  " + identifier + "  "}, "password": {pwd}, "csrf_token": {x.FakeCSRFToken}}.Encode()
+
+		body, res := testhelpers.LoginMakeRequest(t, false, false, f, browserClient, values)
+
+		assert.EqualValues(t, http.StatusOK, res.StatusCode)
+		assert.Equal(t, identifier, gjson.Get(body, "identity.traits.subject").String(), "%s", body)
 	})
 
 	t.Run("should fail as email is not yet verified", func(t *testing.T) {
@@ -760,7 +770,7 @@ func TestCompleteLogin(t *testing.T) {
 		// check if password hash algorithm is upgraded
 		_, c, err := reg.PrivilegedIdentityPool().FindByCredentialsIdentifier(context.Background(), identity.CredentialsTypePassword, identifier)
 		require.NoError(t, err)
-		var o password.CredentialsConfig
+		var o identity.CredentialsPassword
 		require.NoError(t, json.NewDecoder(bytes.NewBuffer(c.Config)).Decode(&o))
 		assert.True(t, reg.Hasher().Understands([]byte(o.HashedPassword)), "%s", o.HashedPassword)
 		assert.True(t, hash.IsBcryptHash([]byte(o.HashedPassword)), "%s", o.HashedPassword)

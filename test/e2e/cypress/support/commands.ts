@@ -28,32 +28,48 @@ const mergeFields = (form, fields) => {
   return { ...result, ...fields }
 }
 
-const updateConfigFile = (cb: (arg: any) => any) => {
-  cy.readFile(configFile).then((contents) => {
-    let config = YAML.parse(contents)
-    config = cb(config)
-    cy.writeFile(configFile, YAML.stringify(config))
+function checkConfigVersion(previous, tries = 0) {
+  cy.wait(10)
+  cy.request('GET', KRATOS_ADMIN + '/health/config').then(({ body }) => {
+    if (previous !== body) {
+      return
+    } else if (tries > 5) {
+      console.warn(
+        'Config version did not change after 5 tries, maybe the changes did not have an effect?'
+      )
+      return
+    }
+    cy.wait(50)
+    checkConfigVersion(previous, tries + 1)
   })
-  cy.wait(200)
+}
+
+const updateConfigFile = (cb: (arg: any) => any) => {
+  cy.request('GET', KRATOS_ADMIN + '/health/config').then(({ body }) => {
+    cy.readFile(configFile).then((contents) => {
+      cy.writeFile(configFile, YAML.stringify(cb(YAML.parse(contents))))
+      cy.wait(500)
+    })
+    checkConfigVersion(body)
+  })
 }
 
 Cypress.Commands.add('useConfigProfile', (profile: string) => {
-  console.log('Switching config profile to:', profile)
-  cy.readFile(`kratos.${profile}.yml`).then((contents) =>
-    cy.writeFile(configFile, contents)
-  )
-  cy.wait(200)
+  cy.request('GET', KRATOS_ADMIN + '/health/config').then(({ body }) => {
+    console.log('Switching config profile to:', profile)
+    cy.readFile(`kratos.${profile}.yml`).then((contents) =>
+      cy.writeFile(configFile, contents)
+    )
+    checkConfigVersion(body)
+  })
 })
 
 Cypress.Commands.add('proxy', (app: string) => {
   console.log('Switching proxy profile to:', app)
   cy.writeFile(`proxy.json`, `"${app}"`)
-  cy.readFile(`proxy.json`).should('eq', app)
-  cy.wait(200)
-  cy.visit(APP_URL + '/')
-  cy.get(`[data-testid="app-${app}"]`).should('exist')
-  cy.clearAllCookies()
-  cy.visit(APP_URL + '/')
+  cy.request(APP_URL + '/')
+    .its('body')
+    .should('contain', `data-testid="app-${app}"`)
 })
 
 Cypress.Commands.add('shortPrivilegedSessionTime', ({} = {}) => {
@@ -65,7 +81,22 @@ Cypress.Commands.add('shortPrivilegedSessionTime', ({} = {}) => {
 
 Cypress.Commands.add('setIdentitySchema', (schema: string) => {
   updateConfigFile((config) => {
-    config.identity.default_schema_url = schema
+    const id = gen.password()
+    config.identity.default_schema_id = id
+    config.identity.schemas = [
+      ...(config.identity.schemas || []),
+      {
+        id,
+        url: schema
+      }
+    ]
+    return config
+  })
+})
+
+Cypress.Commands.add('setDefaultIdentitySchema', (id: string) => {
+  updateConfigFile((config) => {
+    config.identity.default_schema_id = id
     return config
   })
 })
@@ -193,12 +224,30 @@ Cypress.Commands.add('disableRecovery', ({} = {}) => {
   })
 })
 
+Cypress.Commands.add('disableRegistration', ({} = {}) => {
+  updateConfigFile((config) => {
+    config.selfservice.flows.registration.enabled = false
+    return config
+  })
+})
+
+Cypress.Commands.add('enableRegistration', ({} = {}) => {
+  updateConfigFile((config) => {
+    config.selfservice.flows.registration.enabled = true
+    return config
+  })
+})
+
 Cypress.Commands.add('useLaxAal', ({} = {}) => {
   updateConfigFile((config) => {
     config.selfservice.flows.settings.required_aal = 'aal1'
     config.session.whoami.required_aal = 'aal1'
     return config
   })
+})
+
+Cypress.Commands.add('updateConfigFile', (cb: (arg: any) => any) => {
+  updateConfigFile(cb)
 })
 
 Cypress.Commands.add(
@@ -338,11 +387,12 @@ Cypress.Commands.add('loginApiWithoutCookies', ({ email, password } = {}) => {
   })
 })
 
-Cypress.Commands.add('recoverApi', ({ email }) =>
-  cy
-    .request({
-      url: APP_URL + '/self-service/recovery/api'
-    })
+Cypress.Commands.add('recoverApi', ({ email, returnTo }) => {
+  let url = APP_URL + '/self-service/recovery/api'
+  if (returnTo) {
+    url += '?return_to=' + returnTo
+  }
+  cy.request({ url })
     .then(({ body }) => {
       const form = body.ui
       return cy.request({
@@ -354,7 +404,72 @@ Cypress.Commands.add('recoverApi', ({ email }) =>
     .then(({ body }) => {
       expect(body.state).to.contain('sent_email')
     })
-)
+})
+
+Cypress.Commands.add('verificationApi', ({ email, returnTo }) => {
+  let url = APP_URL + '/self-service/verification/api'
+  if (returnTo) {
+    url += '?return_to=' + returnTo
+  }
+  cy.request({ url })
+    .then(({ body }) => {
+      const form = body.ui
+      return cy.request({
+        method: form.method,
+        body: mergeFields(form, { email, method: 'link' }),
+        url: form.action
+      })
+    })
+    .then(({ body }) => {
+      expect(body.state).to.contain('sent_email')
+    })
+})
+
+Cypress.Commands.add('verificationApiExpired', ({ email, returnTo }) => {
+  cy.shortVerificationLifespan()
+  let url = APP_URL + '/self-service/verification/api'
+  if (returnTo) {
+    url += '?return_to=' + returnTo
+  }
+  cy.request({ url })
+    .then(({ body }) => {
+      const form = body.ui
+      return cy.request({
+        method: form.method,
+        body: mergeFields(form, { email, method: 'link' }),
+        url: form.action,
+        failOnStatusCode: false
+      })
+    })
+    .then((response) => {
+      expect(response.status).to.eq(410)
+      expect(response.body.error.reason).to.eq(
+        'The verification flow has expired. Redirect the user to the verification flow init endpoint to initialize a new verification flow.'
+      )
+      expect(response.body.error.details.redirect_to).to.eq(
+        'http://localhost:4455/self-service/verification/browser'
+      )
+    })
+})
+
+Cypress.Commands.add('verificationBrowser', ({ email, returnTo }) => {
+  let url = APP_URL + '/self-service/verification/browser'
+  if (returnTo) {
+    url += '?return_to=' + returnTo
+  }
+  cy.request({ url })
+    .then(({ body }) => {
+      const form = body.ui
+      return cy.request({
+        method: form.method,
+        body: mergeFields(form, { email, method: 'link' }),
+        url: form.action
+      })
+    })
+    .then(({ body }) => {
+      expect(body.state).to.contain('sent_email')
+    })
+})
 
 Cypress.Commands.add(
   'registerOidc',
@@ -431,6 +546,36 @@ Cypress.Commands.add('longRegisterLifespan', ({} = {}) => {
 Cypress.Commands.add('browserReturnUrlOry', ({} = {}) => {
   updateConfigFile((config) => {
     config.selfservice.whitelisted_return_urls = ['https://www.ory.sh/']
+    return config
+  })
+})
+
+Cypress.Commands.add('remoteCourierRecoveryTemplates', ({} = {}) => {
+  updateConfigFile((config) => {
+    config.courier.templates = {
+      recovery: {
+        invalid: {
+          email: {
+            body: {
+              html: 'base64://SGksCgp0aGlzIGlzIGEgcmVtb3RlIGludmFsaWQgcmVjb3ZlcnkgdGVtcGxhdGU=',
+              plaintext:
+                'base64://SGksCgp0aGlzIGlzIGEgcmVtb3RlIGludmFsaWQgcmVjb3ZlcnkgdGVtcGxhdGU='
+            },
+            subject: 'base64://QWNjb3VudCBBY2Nlc3MgQXR0ZW1wdGVk'
+          }
+        },
+        valid: {
+          email: {
+            body: {
+              html: 'base64://SGksCgp0aGlzIGlzIGEgcmVtb3RlIHRlbXBsYXRlCnBsZWFzZSByZWNvdmVyIGFjY2VzcyB0byB5b3VyIGFjY291bnQgYnkgY2xpY2tpbmcgdGhlIGZvbGxvd2luZyBsaW5rOgo8YSBocmVmPSJ7eyAuUmVjb3ZlcnlVUkwgfX0iPnt7IC5SZWNvdmVyeVVSTCB9fTwvYT4=',
+              plaintext:
+                'base64://SGksCgp0aGlzIGlzIGEgcmVtb3RlIHRlbXBsYXRlCnBsZWFzZSByZWNvdmVyIGFjY2VzcyB0byB5b3VyIGFjY291bnQgYnkgY2xpY2tpbmcgdGhlIGZvbGxvd2luZyBsaW5rOgp7eyAuUmVjb3ZlcnlVUkwgfX0='
+            },
+            subject: 'base64://UmVjb3ZlciBhY2Nlc3MgdG8geW91ciBhY2NvdW50'
+          }
+        }
+      }
+    }
     return config
   })
 })
@@ -876,6 +1021,20 @@ Cypress.Commands.add(
   }
 )
 
-Cypress.Commands.add('triggerOidc', (provider: string = 'hydra') => {
-  cy.get('[name="provider"][value="' + provider + '"]').click()
-})
+Cypress.Commands.add(
+  'triggerOidc',
+  (app: 'react' | 'express', provider: string = 'hydra') => {
+    let initial, didHaveSearch
+    cy.location().then((loc) => {
+      didHaveSearch = loc.search.length > 0
+      initial = loc.pathname + loc.search
+    })
+    cy.get('[name="provider"][value="' + provider + '"]').click()
+    cy.location().then((loc) => {
+      if (app === 'express' || didHaveSearch) {
+        return
+      }
+      expect(loc.pathname + loc.search).not.to.eql(initial)
+    })
+  }
+)

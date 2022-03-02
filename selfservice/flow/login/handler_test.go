@@ -48,7 +48,7 @@ func TestFlowLifecycle(t *testing.T) {
 
 	errorTS := testhelpers.NewErrorTestServer(t, reg)
 	conf.MustSet(config.ViperKeySelfServiceBrowserDefaultReturnTo, "https://www.ory.sh")
-	conf.MustSet(config.ViperKeyDefaultIdentitySchemaURL, "file://./stub/password.schema.json")
+	testhelpers.SetDefaultIdentitySchema(conf, "file://./stub/password.schema.json")
 
 	assertion := func(body []byte, isForced, isApi bool) {
 		r := gjson.GetBytes(body, "refresh")
@@ -462,6 +462,33 @@ func TestFlowLifecycle(t *testing.T) {
 				assertion(body, true, false)
 				assert.Contains(t, res.Request.URL.String(), loginTS.URL)
 			})
+
+			t.Run("case=redirects with 303", func(t *testing.T) {
+				c := &http.Client{}
+				// don't get the reference, instead copy the values, so we don't alter the client directly.
+				*c = *ts.Client()
+				// prevent the redirect
+				c.CheckRedirect = func(req *http.Request, via []*http.Request) error {
+					return http.ErrUseLastResponse
+				}
+				req, err := http.NewRequest("GET", ts.URL+login.RouteInitBrowserFlow, nil)
+				require.NoError(t, err)
+
+				res, err := c.Do(req)
+				require.NoError(t, err)
+				// here we check that the redirect status is 303
+				require.Equal(t, http.StatusSeeOther, res.StatusCode)
+				defer res.Body.Close()
+			})
+		})
+
+		t.Run("case=relative redirect when self-service login ui is a relative URL", func(t *testing.T) {
+			reg.Config(context.Background()).MustSet(config.ViperKeySelfServiceLoginUI, "/login-ts")
+			assert.Regexp(
+				t,
+				"^/login-ts.*$",
+				testhelpers.GetSelfServiceRedirectLocation(t, ts.URL+login.RouteInitBrowserFlow),
+			)
 		})
 	})
 }
@@ -548,5 +575,13 @@ func TestGetFlow(t *testing.T) {
 		f, err = reg.LoginFlowPersister().GetLoginFlow(context.Background(), uuid.FromStringOrNil(gjson.GetBytes(resBody, "id").String()))
 		require.NoError(t, err)
 		assert.Equal(t, public.URL+login.RouteInitBrowserFlow+"?return_to=https://www.ory.sh", f.RequestURL)
+	})
+
+	t.Run("case=not found", func(t *testing.T) {
+		client := testhelpers.NewClientWithCookies(t)
+		setupLoginUI(t, client)
+
+		res, _ := x.EasyGet(t, client, public.URL+login.RouteGetFlow+"?id="+x.NewUUID().String())
+		assert.EqualValues(t, http.StatusNotFound, res.StatusCode)
 	})
 }

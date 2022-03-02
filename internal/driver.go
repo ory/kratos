@@ -23,8 +23,6 @@ import (
 	"github.com/ory/kratos/x"
 )
 
-const UnsetDefaultIdentitySchema = "file://not-set.schema.json"
-
 func init() {
 	corp.SetContextualizer(new(corp.ContextNoOp))
 	dbal.RegisterDriver(func() dbal.Driver {
@@ -46,7 +44,6 @@ func NewConfigurationWithDefaults(t *testing.T) *config.Config {
 			config.ViperKeyHasherArgon2ConfigKeyLength:       16,
 			config.ViperKeyCourierSMTPURL:                    "smtp://foo:bar@baz.com/",
 			config.ViperKeySelfServiceBrowserDefaultReturnTo: "https://www.ory.sh/redirect-not-set",
-			config.ViperKeyDefaultIdentitySchemaURL:          UnsetDefaultIdentitySchema,
 			config.ViperKeySecretsCipher:                     []string{"secret-thirty-two-character-long"},
 		}),
 		configx.SkipValidation(),
@@ -80,7 +77,7 @@ func NewRegistryDefaultWithDSN(t *testing.T, dsn string) (*config.Config, *drive
 	require.NoError(t, err)
 	reg.Config(context.Background()).MustSet("dev", true)
 	require.NoError(t, reg.Init(context.Background(), driver.SkipNetworkInit))
-	require.NoError(t, reg.Persister().NetworkMigrateUp(context.Background()))
+	require.NoError(t, reg.Persister().MigrateUp(context.Background())) // always migrate up
 
 	actual, err := reg.Persister().DetermineNetwork(context.Background())
 	require.NoError(t, err)

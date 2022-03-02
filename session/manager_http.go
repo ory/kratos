@@ -72,7 +72,7 @@ func (s *ManagerHTTP) IssueCookie(ctx context.Context, w http.ResponseWriter, r 
 		cookie.Options.Domain = domain
 	}
 
-	if alias := s.r.Config(ctx).SelfPublicURL(r); s.r.Config(ctx).SelfPublicURL(nil).String() != alias.String() {
+	if alias := s.r.Config(ctx).SelfPublicURL(); s.r.Config(ctx).SelfPublicURL().String() != alias.String() {
 		// If a domain alias is detected use that instead.
 		cookie.Options.Domain = alias.Hostname()
 		cookie.Options.Path = alias.Path
@@ -132,19 +132,19 @@ func (s *ManagerHTTP) extractToken(r *http.Request) string {
 func (s *ManagerHTTP) FetchFromRequest(ctx context.Context, r *http.Request) (*Session, error) {
 	token := s.extractToken(r)
 	if token == "" {
-		return nil, errors.WithStack(ErrNoActiveSessionFound)
+		return nil, errors.WithStack(NewErrNoActiveSessionFound())
 	}
 
 	se, err := s.r.SessionPersister().GetSessionByToken(ctx, token)
 	if err != nil {
 		if errors.Is(err, herodot.ErrNotFound) || errors.Is(err, sqlcon.ErrNoRows) {
-			return nil, errors.WithStack(ErrNoActiveSessionFound)
+			return nil, errors.WithStack(NewErrNoActiveSessionFound())
 		}
 		return nil, err
 	}
 
 	if !se.IsActive() {
-		return nil, errors.WithStack(ErrNoActiveSessionFound)
+		return nil, errors.WithStack(NewErrNoActiveSessionFound())
 	}
 
 	se.Identity = se.Identity.CopyWithoutCredentials()
@@ -197,7 +197,7 @@ func (s *ManagerHTTP) DoesSessionSatisfy(r *http.Request, sess *Session, request
 		}
 
 		return NewErrAALNotSatisfied(
-			urlx.CopyWithQuery(urlx.AppendPaths(s.r.Config(r.Context()).SelfPublicURL(r), "/self-service/login/browser"), url.Values{"aal": {"aal2"}}).String())
+			urlx.CopyWithQuery(urlx.AppendPaths(s.r.Config(r.Context()).SelfPublicURL(), "/self-service/login/browser"), url.Values{"aal": {"aal2"}}).String())
 	}
 	return errors.Errorf("requested unknown aal: %s", requestedAAL)
 }

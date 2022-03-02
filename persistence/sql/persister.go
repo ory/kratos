@@ -5,10 +5,12 @@ import (
 	"embed"
 	"fmt"
 
+	"github.com/ory/x/fsx"
+
 	"github.com/ory/kratos/corp"
 
-	"github.com/gobuffalo/pop/v5"
-	"github.com/gobuffalo/pop/v5/columns"
+	"github.com/gobuffalo/pop/v6"
+	"github.com/gobuffalo/pop/v6/columns"
 	"github.com/gofrs/uuid"
 	"github.com/pkg/errors"
 
@@ -31,7 +33,7 @@ var migrations embed.FS
 
 type (
 	persisterDependencies interface {
-		IdentityTraitsSchemas(ctx context.Context) schema.Schemas
+		IdentityTraitsSchemas(ctx context.Context) (schema.Schemas, error)
 		identity.ValidationProvider
 		x.LoggingProvider
 		config.Provider
@@ -49,10 +51,11 @@ type (
 )
 
 func NewPersister(ctx context.Context, r persisterDependencies, c *pop.Connection) (*Persister, error) {
-	m, err := popx.NewMigrationBox(migrations, popx.NewMigrator(c, r.Logger(), r.Tracer(ctx), 0))
+	m, err := popx.NewMigrationBox(fsx.Merge(migrations, networkx.Migrations), popx.NewMigrator(c, r.Logger(), r.Tracer(ctx), 0))
 	if err != nil {
 		return nil, err
 	}
+	m.DumpMigrations = false
 
 	return &Persister{
 		c: c, mb: m, r: r, isSQLite: c.Dialect.Name() == "sqlite3",
@@ -102,17 +105,7 @@ func (p *Persister) MigrateDown(ctx context.Context, steps int) error {
 	return p.mb.Down(ctx, steps)
 }
 
-func (p *Persister) NetworkMigrateUp(ctx context.Context) error {
-	// nolint
-	return p.p.MigrateUp(ctx)
-}
-
 func (p *Persister) MigrateUp(ctx context.Context) error {
-	// nolint
-	if err := p.p.MigrateUp(ctx); err != nil {
-		return err
-	}
-
 	return p.mb.Up(ctx)
 }
 

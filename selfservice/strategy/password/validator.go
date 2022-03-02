@@ -3,11 +3,6 @@ package password
 import (
 	"bufio"
 	"context"
-	"time"
-
-	"github.com/hashicorp/go-retryablehttp"
-
-	"github.com/ory/kratos/driver/config"
 
 	/* #nosec G505 sha1 is used for k-anonymity */
 	"crypto/sha1"
@@ -16,15 +11,15 @@ import (
 	"strconv"
 	"strings"
 	"sync"
+	"time"
 
 	"github.com/arbovm/levenshtein"
-
-	"github.com/ory/x/httpx"
-
+	"github.com/hashicorp/go-retryablehttp"
 	"github.com/pkg/errors"
 
 	"github.com/ory/herodot"
-	"github.com/ory/x/stringsx"
+	"github.com/ory/kratos/driver/config"
+	"github.com/ory/x/httpx"
 )
 
 // Validator implements a validation strategy for passwords. One example is that the password
@@ -121,15 +116,18 @@ func (s *DefaultPasswordValidator) fetch(hpw []byte, apiDNSName string) error {
 	sc := bufio.NewScanner(res.Body)
 	for sc.Scan() {
 		row := sc.Text()
-		result := stringsx.Splitx(strings.TrimSpace(row), ":")
+		result := strings.Split(strings.TrimSpace(row), ":")
 
-		if len(result) != 2 {
-			return errors.WithStack(herodot.ErrInternalServerError.WithReasonf("Expected password hash from remote to contain two parts separated by a double dot but got: %v (%s)", result, row))
-		}
-
-		count, err := strconv.ParseInt(result[1], 10, 64)
-		if err != nil {
-			return errors.WithStack(herodot.ErrInternalServerError.WithReasonf("Expected password hash to contain a count formatted as int but got: %s", result[1]))
+		// We assume a count of 1. HIBP API sometimes responds without the
+		// colon, so we just assume that the leak count is one.
+		//
+		// See https://github.com/ory/kratos/issues/2145
+		count := int64(1)
+		if len(result) == 2 {
+			count, err = strconv.ParseInt(result[1], 10, 64)
+			if err != nil {
+				return errors.WithStack(herodot.ErrInternalServerError.WithReasonf("Expected password hash to contain a count formatted as int but got: %s", result[1]))
+			}
 		}
 
 		s.Lock()
@@ -145,18 +143,20 @@ func (s *DefaultPasswordValidator) fetch(hpw []byte, apiDNSName string) error {
 }
 
 func (s *DefaultPasswordValidator) Validate(ctx context.Context, identifier, password string) error {
-	if len(password) < 6 {
-		return errors.Errorf("password length must be at least 6 characters but only got %d", len(password))
-	}
-
-	compIdentifier, compPassword := strings.ToLower(identifier), strings.ToLower(password)
-	dist := levenshtein.Distance(compIdentifier, compPassword)
-	lcs := float32(lcsLength(compIdentifier, compPassword)) / float32(len(compPassword))
-	if dist < s.minIdentifierPasswordDist || lcs > s.maxIdentifierPasswordSubstrThreshold {
-		return errors.Errorf("the password is too similar to the user identifier")
-	}
-
 	passwordPolicyConfig := s.reg.Config(ctx).PasswordPolicyConfig()
+
+	if len(password) < int(passwordPolicyConfig.MinPasswordLength) {
+		return errors.Errorf("password length must be at least %d characters but only got %d", passwordPolicyConfig.MinPasswordLength, len(password))
+	}
+
+	if passwordPolicyConfig.IdentifierSimilarityCheckEnabled && len(identifier) > 0 {
+		compIdentifier, compPassword := strings.ToLower(identifier), strings.ToLower(password)
+		dist := levenshtein.Distance(compIdentifier, compPassword)
+		lcs := float32(lcsLength(compIdentifier, compPassword)) / float32(len(compPassword))
+		if dist < s.minIdentifierPasswordDist || lcs > s.maxIdentifierPasswordSubstrThreshold {
+			return errors.Errorf("the password is too similar to the user identifier")
+		}
+	}
 
 	if !passwordPolicyConfig.HaveIBeenPwnedEnabled {
 		return nil

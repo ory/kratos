@@ -23,7 +23,7 @@ var (
 				WithID(text.ErrIDCSRF).
 				WithError("the request was rejected to protect you from Cross-Site-Request-Forgery").
 				WithDetail("docs", "https://www.ory.sh/kratos/docs/debug/csrf").
-				WithReason("The request was rejected to protect you from Cross-Site-Request-Forgery (CSRF) which could cause account takeover, leaking personal information, and other serious security issues.")
+				WithReason("Please retry the flow and optionally clear your cookies. The request was rejected to protect you from Cross-Site-Request-Forgery (CSRF) which could cause account takeover, leaking personal information, and other serious security issues.")
 	ErrGone = herodot.DefaultError{
 		CodeField:    http.StatusGone,
 		StatusField:  http.StatusText(http.StatusGone),
@@ -83,7 +83,7 @@ func FakeCSRFTokenGeneratorWithToken(token string) func(r *http.Request) string 
 	}
 }
 
-var _ CSRFHandler = new(FakeCSRFHandler)
+var _ nosurf.Handler = new(FakeCSRFHandler)
 
 type FakeCSRFHandler struct{ name string }
 
@@ -91,6 +91,15 @@ func NewFakeCSRFHandler(name string) *FakeCSRFHandler {
 	return &FakeCSRFHandler{
 		name: name,
 	}
+}
+
+func (f *FakeCSRFHandler) DisablePath(s string) {
+}
+
+func (f *FakeCSRFHandler) DisableGlob(s string) {
+}
+
+func (f *FakeCSRFHandler) DisableGlobs(s ...string) {
 }
 
 func (f *FakeCSRFHandler) ExemptPath(s string) {
@@ -113,22 +122,13 @@ func (f *FakeCSRFHandler) RegenerateToken(w http.ResponseWriter, r *http.Request
 }
 
 type CSRFProvider interface {
-	CSRFHandler() CSRFHandler
-}
-
-type CSRFHandler interface {
-	http.Handler
-	RegenerateToken(w http.ResponseWriter, r *http.Request) string
-	ExemptPath(string)
-	IgnorePath(string)
-	IgnoreGlob(string)
-	IgnoreGlobs(...string)
+	CSRFHandler() nosurf.Handler
 }
 
 func CSRFCookieName(reg interface {
 	config.Provider
 }, r *http.Request) string {
-	return "csrf_token_" + fmt.Sprintf("%x", sha256.Sum256([]byte(reg.Config(r.Context()).SelfPublicURL(r).String())))
+	return "csrf_token_" + fmt.Sprintf("%x", sha256.Sum256([]byte(reg.Config(r.Context()).SelfPublicURL().String())))
 }
 
 func NosurfBaseCookieHandler(reg interface {
@@ -158,7 +158,7 @@ func NosurfBaseCookieHandler(reg interface {
 			SameSite: sameSite,
 		}
 
-		if alias := reg.Config(r.Context()).SelfPublicURL(r); reg.Config(r.Context()).SelfPublicURL(nil).String() != alias.String() {
+		if alias := reg.Config(r.Context()).SelfPublicURL(); reg.Config(r.Context()).SelfPublicURL().String() != alias.String() {
 			// If a domain alias is detected use that instead.
 			cookie.Domain = alias.Hostname()
 			cookie.Path = alias.Path
@@ -233,7 +233,7 @@ func NewCSRFHandler(
 }
 
 func NewTestCSRFHandler(router http.Handler, reg interface {
-	WithCSRFHandler(CSRFHandler)
+	WithCSRFHandler(handler nosurf.Handler)
 	WithCSRFTokenGenerator(CSRFToken)
 	WriterProvider
 	LoggingProvider

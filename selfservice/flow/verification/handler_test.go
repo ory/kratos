@@ -27,7 +27,7 @@ func TestGetFlow(t *testing.T) {
 	conf.MustSet(config.ViperKeySelfServiceVerificationEnabled, true)
 	conf.MustSet(config.ViperKeySelfServiceStrategyConfig+"."+verification.StrategyVerificationLinkName,
 		map[string]interface{}{"enabled": true})
-	conf.MustSet(config.ViperKeyDefaultIdentitySchemaURL, "file://./stub/identity.schema.json")
+	testhelpers.SetDefaultIdentitySchema(conf, "file://./stub/identity.schema.json")
 
 	public, _ := testhelpers.NewKratosServerWithCSRF(t, reg)
 	_ = testhelpers.NewErrorTestServer(t, reg)
@@ -131,5 +131,45 @@ func TestGetFlow(t *testing.T) {
 		f, err = reg.VerificationFlowPersister().GetVerificationFlow(context.Background(), uuid.FromStringOrNil(gjson.GetBytes(resBody, "id").String()))
 		require.NoError(t, err)
 		assert.Equal(t, public.URL+verification.RouteInitBrowserFlow+"?return_to=https://www.ory.sh", f.RequestURL)
+	})
+
+	t.Run("case=relative redirect when self-service verification ui is a relative URL", func(t *testing.T) {
+		router := x.NewRouterPublic()
+		ts, _ := testhelpers.NewKratosServerWithRouters(t, reg, router, x.NewRouterAdmin())
+		reg.Config(context.Background()).MustSet(config.ViperKeySelfServiceVerificationUI, "/verification-ts")
+		assert.Regexp(
+			t,
+			"^/verification-ts.*$",
+			testhelpers.GetSelfServiceRedirectLocation(t, ts.URL+verification.RouteInitBrowserFlow),
+		)
+	})
+
+	t.Run("case=not found", func(t *testing.T) {
+		client := testhelpers.NewClientWithCookies(t)
+		_ = setupVerificationUI(t, client)
+
+		res, _ := x.EasyGet(t, client, public.URL+verification.RouteGetFlow+"?id="+x.NewUUID().String())
+		assert.EqualValues(t, http.StatusNotFound, res.StatusCode)
+	})
+
+	t.Run("case=redirects with 303", func(t *testing.T) {
+		router := x.NewRouterPublic()
+		ts, _ := testhelpers.NewKratosServerWithRouters(t, reg, router, x.NewRouterAdmin())
+
+		c := &http.Client{}
+		// don't get the reference, instead copy the values, so we don't alter the client directly.
+		*c = *ts.Client()
+		// prevent the redirect
+		c.CheckRedirect = func(req *http.Request, via []*http.Request) error {
+			return http.ErrUseLastResponse
+		}
+		req, err := http.NewRequest("GET", ts.URL+verification.RouteInitBrowserFlow, nil)
+		require.NoError(t, err)
+
+		res, err := c.Do(req)
+		require.NoError(t, err)
+		// here we check that the redirect status is 303
+		require.Equal(t, http.StatusSeeOther, res.StatusCode)
+		defer res.Body.Close()
 	})
 }

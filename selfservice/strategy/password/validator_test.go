@@ -12,9 +12,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/ory/x/httpx"
-
 	"github.com/stretchr/testify/require"
+
+	"github.com/ory/x/httpx"
 
 	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/internal"
@@ -42,6 +42,7 @@ func TestDefaultPasswordValidationStrategy(t *testing.T) {
 			{pw: "password", pass: false},
 			{pw: "1234567890", pass: false},
 			{pw: "qwertyui", pass: false},
+			{pw: "l3f9to", pass: false},
 			{pw: "l3f9toh1uaf81n21", pass: true},
 			{pw: "l3f9toh1uaf81n21", id: "l3f9toh1uaf81n21", pass: false},
 			{pw: "l3f9toh1", pass: true},
@@ -56,19 +57,21 @@ func TestDefaultPasswordValidationStrategy(t *testing.T) {
 			{id: "hello@example.com", pw: "h3ll0@example", pass: false},
 			{pw: "hello@example.com", id: "hello@exam", pass: false},
 			{id: "abcd", pw: "9d3c8a1b", pass: true},
-			{id: "a", pw: "kjOkla", pass: true},
+			{id: "a", pw: "kjOklafe", pass: true},
 			{id: "ab", pw: "0000ab0000", pass: true},
 			// longest common substring with long password
 			{id: "d4f6090b-5a84", pw: "d4f6090b-5a84-2184-4404-8d1b-8da3eb00ebbe", pass: true},
 			{id: "asdflasdflasdf", pw: "asdflasdflpiuhefnciluaksdzuföfhg", pass: true},
 		} {
 			t.Run(fmt.Sprintf("case=%d", k), func(t *testing.T) {
+				c := tc
 				t.Parallel()
-				err := s.Validate(context.Background(), tc.id, tc.pw)
-				if tc.pass {
-					require.NoError(t, err, "err: %+v, id: %s, pw: %s", err, tc.id, tc.pw)
+
+				err := s.Validate(context.Background(), c.id, c.pw)
+				if c.pass {
+					require.NoError(t, err, "err: %+v, id: %s, pw: %s", err, c.id, c.pw)
 				} else {
-					require.Error(t, err, "id: %s, pw: %s", tc.id, tc.pw)
+					require.Error(t, err, "id: %s, pw: %s", c.id, c.pw)
 				}
 			})
 		}
@@ -126,10 +129,16 @@ func TestDefaultPasswordValidationStrategy(t *testing.T) {
 			pass bool
 		}{
 			{
-				cs:   "contains invalid data",
+				cs:   "contains invalid data which is ignored",
 				pw:   "lufsokpugo",
 				res:  "0225BDB8F106B1B4A5DF4C31B80AC695874:2\ninvalid",
-				pass: false,
+				pass: true,
+			},
+			{
+				cs:   "is missing a colon",
+				pw:   "lufsokpugo",
+				res:  "0225BDB8F106B1B4A5DF4C31B80AC695874",
+				pass: true,
 			},
 			{
 				cs:   "contains invalid hash count",
@@ -141,7 +150,7 @@ func TestDefaultPasswordValidationStrategy(t *testing.T) {
 				cs:   "is missing hash count",
 				pw:   "bofulosasm",
 				res:  "1D29CF237A57F6FEA8F29E8D907DCF1EBBA\n026364A8EE59DEDCF9E2DC80B9D7BAB7389:2",
-				pass: false,
+				pass: true,
 			},
 			{
 				cs:   "response contains no matches",
@@ -211,6 +220,35 @@ func TestDisableHaveIBeenPwnedValidationHost(t *testing.T) {
 	t.Run("case=should not send request to test server", func(t *testing.T) {
 		require.NoError(t, s.Validate(context.Background(), "mohutdesub", "damrumukuh"))
 		require.Empty(t, fakeClient.RequestedURLs())
+	})
+}
+
+func TestChangeMinPasswordLength(t *testing.T) {
+	conf, reg := internal.NewFastRegistryWithMocks(t)
+	s := password.NewDefaultPasswordValidatorStrategy(reg)
+	conf.MustSet(config.ViperKeyPasswordMinLength, 10)
+
+	t.Run("case=should not fail if password is longer than min length", func(t *testing.T) {
+		require.NoError(t, s.Validate(context.Background(), "", "kuobahcaas"))
+	})
+
+	t.Run("case=should fail if password is shorter than min length", func(t *testing.T) {
+		require.Error(t, s.Validate(context.Background(), "", "rfqyfjied"))
+	})
+}
+
+func TestChangeIdentifierSimilarityCheckEnabled(t *testing.T) {
+	conf, reg := internal.NewFastRegistryWithMocks(t)
+	s := password.NewDefaultPasswordValidatorStrategy(reg)
+
+	t.Run("case=should not fail if password is similar to identifier", func(t *testing.T) {
+		conf.MustSet(config.ViperKeyPasswordIdentifierSimilarityCheckEnabled, false)
+		require.NoError(t, s.Validate(context.Background(), "bosqwfaxee", "bosqwfaxee"))
+	})
+
+	t.Run("case=should fail if password is similar to identifier", func(t *testing.T) {
+		conf.MustSet(config.ViperKeyPasswordIdentifierSimilarityCheckEnabled, true)
+		require.Error(t, s.Validate(context.Background(), "bosqwfaxee", "bosqwfaxee"))
 	})
 }
 

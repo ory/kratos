@@ -1,12 +1,14 @@
 package schema
 
 import (
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"io"
 	"io/ioutil"
 	"net/http"
 	"os"
+	"strings"
 
 	"github.com/ory/kratos/driver/config"
 	"github.com/ory/x/urlx"
@@ -49,6 +51,7 @@ func (h *Handler) RegisterPublicRoutes(public *x.RouterPublic) {
 
 func (h *Handler) RegisterAdminRoutes(admin *x.RouterAdmin) {
 	admin.GET(fmt.Sprintf("/%s/:id", SchemasPath), x.RedirectToPublicRoute(h.r))
+	admin.GET(fmt.Sprintf("/%s", SchemasPath), x.RedirectToPublicRoute(h.r))
 }
 
 // Raw JSON Schema
@@ -81,10 +84,25 @@ type getJsonSchema struct {
 //       404: jsonError
 //       500: jsonError
 func (h *Handler) getByID(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	s, err := h.r.IdentityTraitsSchemas(r.Context()).GetByID(ps.ByName("id"))
+	ss, err := h.r.IdentityTraitsSchemas(r.Context())
 	if err != nil {
-		h.r.Writer().WriteError(w, r, errors.WithStack(herodot.ErrNotFound.WithDebugf("%+v", err)))
+		h.r.Writer().WriteError(w, r, errors.WithStack(herodot.ErrInternalServerError.WithWrap(err)))
 		return
+	}
+
+	id := ps.ByName("id")
+	s, err := ss.GetByID(id)
+	if err != nil {
+		// Maybe it is a base64 encoded ID?
+		if dec, err := base64.RawURLEncoding.DecodeString(id); err == nil {
+			id = string(dec)
+		}
+
+		s, err = ss.GetByID(id)
+		if err != nil {
+			h.r.Writer().WriteError(w, r, errors.WithStack(herodot.ErrNotFound.WithDebugf("%+v", err)))
+			return
+		}
 	}
 
 	src, err := ReadSchema(s)
@@ -117,24 +135,7 @@ type identitySchema struct {
 // nolint:deadcode,unused
 // swagger:parameters listIdentitySchemas
 type listIdentitySchemas struct {
-	// Items per Page
-	//
-	// This is the number of items per page.
-	//
-	// required: false
-	// in: query
-	// default: 100
-	// min: 1
-	// max: 500
-	PerPage int `json:"per_page"`
-
-	// Pagination Page
-	//
-	// required: false
-	// in: query
-	// default: 0
-	// min: 0
-	Page int `json:"page"`
+	x.PaginationParams
 }
 
 // swagger:route GET /schemas v0alpha2 listIdentitySchemas
@@ -152,38 +153,37 @@ type listIdentitySchemas struct {
 func (h *Handler) getAll(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	page, itemsPerPage := x.ParsePagination(r)
 
-	schemas := h.r.IdentityTraitsSchemas(r.Context()).List(page, itemsPerPage)
-	total := h.r.IdentityTraitsSchemas(r.Context()).Total()
+	allSchemas, err := h.r.IdentityTraitsSchemas(r.Context())
+	if err != nil {
+		h.r.Writer().WriteError(w, r, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("Unable to load identity schemas").WithWrap(err)))
+		return
+	}
+	total := allSchemas.Total()
+	schemas := allSchemas.List(page, itemsPerPage)
 
 	var ss IdentitySchemas
-
-	for _, schema := range schemas {
-		s, err := h.r.IdentityTraitsSchemas(r.Context()).GetByID(schema.ID)
-		if err != nil {
-			h.r.Writer().WriteError(w, r, errors.WithStack(herodot.ErrNotFound.WithDebugf("%+v", err)))
-			return
-		}
-
-		src, err := ReadSchema(s)
+	for k := range schemas {
+		schema := schemas[k]
+		src, err := ReadSchema(&schema)
 		if err != nil {
 			h.r.Writer().WriteError(w, r, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("The file for this JSON Schema ID could not be found or opened. This is a configuration issue.").WithDebugf("%+v", err)))
 			return
 		}
-		defer src.Close()
 
 		raw, err := ioutil.ReadAll(src)
+		_ = src.Close()
 		if err != nil {
 			h.r.Writer().WriteError(w, r, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("The file for this JSON Schema ID could not be found or opened. This is a configuration issue.").WithDebugf("%+v", err)))
 			return
 		}
 
 		ss = append(ss, identitySchema{
-			ID:     s.ID,
+			ID:     schema.ID,
 			Schema: raw,
 		})
 	}
 
-	x.PaginationHeader(w, urlx.AppendPaths(h.r.Config(r.Context()).SelfPublicURL(r), fmt.Sprintf("/%s", SchemasPath)), int64(total), page, itemsPerPage)
+	x.PaginationHeader(w, urlx.AppendPaths(h.r.Config(r.Context()).SelfPublicURL(), fmt.Sprintf("/%s", SchemasPath)), int64(total), page, itemsPerPage)
 	h.r.Writer().Write(w, r, ss)
 }
 
@@ -193,6 +193,12 @@ func ReadSchema(schema *Schema) (src io.ReadCloser, err error) {
 		if err != nil {
 			return nil, errors.WithStack(err)
 		}
+	} else if schema.URL.Scheme == "base64" {
+		data, err := base64.StdEncoding.DecodeString(strings.TrimPrefix(schema.RawURL, "base64://"))
+		if err != nil {
+			return nil, errors.WithStack(err)
+		}
+		src = io.NopCloser(strings.NewReader(string(data)))
 	} else {
 		resp, err := http.Get(schema.URL.String())
 		if err != nil {

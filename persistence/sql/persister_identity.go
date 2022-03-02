@@ -12,11 +12,10 @@ import (
 	"github.com/ory/jsonschema/v3"
 	"github.com/ory/x/sqlxx"
 
-	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/otp"
 	"github.com/ory/kratos/x"
 
-	"github.com/gobuffalo/pop/v5"
+	"github.com/gobuffalo/pop/v6"
 	"github.com/gofrs/uuid"
 	"github.com/pkg/errors"
 
@@ -58,9 +57,9 @@ func (p *Persister) FindByCredentialsIdentifier(ctx context.Context, ct identity
 		IdentityID uuid.UUID `db:"identity_id"`
 	}
 
-	// Force case-insensitivity for identifiers
+	// Force case-insensitivity and trimming for identifiers
 	if ct == identity.CredentialsTypePassword {
-		match = strings.ToLower(match)
+		match = strings.ToLower(strings.TrimSpace(match))
 	}
 
 	// #nosec G201
@@ -134,9 +133,9 @@ func (p *Persister) createIdentityCredentials(ctx context.Context, i *identity.I
 		}
 
 		for _, ids := range cred.Identifiers {
-			// Force case-insensitivity for identifiers
+			// Force case-insensitivity and trimming for identifiers
 			if cred.Type == identity.CredentialsTypePassword {
-				ids = strings.ToLower(ids)
+				ids = strings.ToLower(strings.TrimSpace(ids))
 			}
 
 			if len(ids) == 0 {
@@ -211,7 +210,7 @@ func (p *Persister) CreateIdentity(ctx context.Context, i *identity.Identity) er
 	i.NID = corp.ContextualizeNID(ctx, p.nid)
 
 	if i.SchemaID == "" {
-		i.SchemaID = config.DefaultIdentityTraitsSchemaID
+		i.SchemaID = p.r.Config(ctx).DefaultIdentityTraitsSchemaID()
 	}
 
 	stateChangedAt := sqlxx.NullTime(time.Now())
@@ -466,11 +465,15 @@ func (p *Persister) validateIdentity(ctx context.Context, i *identity.Identity) 
 }
 
 func (p *Persister) injectTraitsSchemaURL(ctx context.Context, i *identity.Identity) error {
-	s, err := p.r.IdentityTraitsSchemas(ctx).GetByID(i.SchemaID)
+	ss, err := p.r.IdentityTraitsSchemas(ctx)
+	if err != nil {
+		return err
+	}
+	s, err := ss.GetByID(i.SchemaID)
 	if err != nil {
 		return errors.WithStack(herodot.ErrInternalServerError.WithReasonf(
 			`The JSON Schema "%s" for this identity's traits could not be found.`, i.SchemaID))
 	}
-	i.SchemaURL = s.SchemaURL(p.r.Config(ctx).SelfPublicURL(nil)).String()
+	i.SchemaURL = s.SchemaURL(p.r.Config(ctx).SelfPublicURL()).String()
 	return nil
 }

@@ -18,7 +18,7 @@ import (
 // AdminUpdateIdentityBody struct for AdminUpdateIdentityBody
 type AdminUpdateIdentityBody struct {
 	// SchemaID is the ID of the JSON Schema to be used for validating the identity's traits. If set will update the Identity's SchemaID.
-	SchemaId *string       `json:"schema_id,omitempty"`
+	SchemaId string        `json:"schema_id"`
 	State    IdentityState `json:"state"`
 	// Traits represent an identity's traits. The identity is able to create, modify, and delete traits in a self-service manner. The input will always be validated against the JSON Schema defined in `schema_id`.
 	Traits map[string]interface{} `json:"traits"`
@@ -28,8 +28,9 @@ type AdminUpdateIdentityBody struct {
 // This constructor will assign default values to properties that have it defined,
 // and makes sure properties required by API are set, but the set of arguments
 // will change when the set of required properties is changed
-func NewAdminUpdateIdentityBody(state IdentityState, traits map[string]interface{}) *AdminUpdateIdentityBody {
+func NewAdminUpdateIdentityBody(schemaId string, state IdentityState, traits map[string]interface{}) *AdminUpdateIdentityBody {
 	this := AdminUpdateIdentityBody{}
+	this.SchemaId = schemaId
 	this.State = state
 	this.Traits = traits
 	return &this
@@ -43,36 +44,28 @@ func NewAdminUpdateIdentityBodyWithDefaults() *AdminUpdateIdentityBody {
 	return &this
 }
 
-// GetSchemaId returns the SchemaId field value if set, zero value otherwise.
+// GetSchemaId returns the SchemaId field value
 func (o *AdminUpdateIdentityBody) GetSchemaId() string {
-	if o == nil || o.SchemaId == nil {
+	if o == nil {
 		var ret string
 		return ret
 	}
-	return *o.SchemaId
+
+	return o.SchemaId
 }
 
-// GetSchemaIdOk returns a tuple with the SchemaId field value if set, nil otherwise
+// GetSchemaIdOk returns a tuple with the SchemaId field value
 // and a boolean to check if the value has been set.
 func (o *AdminUpdateIdentityBody) GetSchemaIdOk() (*string, bool) {
-	if o == nil || o.SchemaId == nil {
+	if o == nil {
 		return nil, false
 	}
-	return o.SchemaId, true
+	return &o.SchemaId, true
 }
 
-// HasSchemaId returns a boolean if a field has been set.
-func (o *AdminUpdateIdentityBody) HasSchemaId() bool {
-	if o != nil && o.SchemaId != nil {
-		return true
-	}
-
-	return false
-}
-
-// SetSchemaId gets a reference to the given string and assigns it to the SchemaId field.
+// SetSchemaId sets field value
 func (o *AdminUpdateIdentityBody) SetSchemaId(v string) {
-	o.SchemaId = &v
+	o.SchemaId = v
 }
 
 // GetState returns the State field value
@@ -125,7 +118,7 @@ func (o *AdminUpdateIdentityBody) SetTraits(v map[string]interface{}) {
 
 func (o AdminUpdateIdentityBody) MarshalJSON() ([]byte, error) {
 	toSerialize := map[string]interface{}{}
-	if o.SchemaId != nil {
+	if true {
 		toSerialize["schema_id"] = o.SchemaId
 	}
 	if true {

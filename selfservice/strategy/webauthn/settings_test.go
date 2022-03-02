@@ -24,14 +24,15 @@ import (
 
 	"github.com/stretchr/testify/require"
 
+	"github.com/ory/x/assertx"
+	"github.com/ory/x/sqlxx"
+
 	"github.com/ory/kratos/driver"
 	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/internal"
 	"github.com/ory/kratos/internal/testhelpers"
 	"github.com/ory/kratos/x"
-	"github.com/ory/x/assertx"
-	"github.com/ory/x/sqlxx"
 )
 
 //go:embed fixtures/settings/has_webauth.json
@@ -120,7 +121,7 @@ func TestCompleteSettings(t *testing.T) {
 
 	conf.MustSet(config.ViperKeySelfServiceSettingsPrivilegedAuthenticationAfter, "1m")
 
-	conf.MustSet(config.ViperKeyDefaultIdentitySchemaURL, "file://./stub/login.schema.json")
+	testhelpers.SetDefaultIdentitySchema(conf, "file://./stub/login.schema.json")
 	conf.MustSet(config.ViperKeySecretsDefault, []string{"not-a-secure-session-key"})
 
 	t.Run("case=a device is shown which can be unlinked", func(t *testing.T) {
@@ -133,6 +134,7 @@ func TestCompleteSettings(t *testing.T) {
 			"0.attributes.value",
 			"4.attributes.onclick",
 			"6.attributes.src",
+			"6.attributes.nonce",
 		})
 		ensureReplacement(t, "4", f.Ui, "Ory Corp")
 	})
@@ -149,6 +151,7 @@ func TestCompleteSettings(t *testing.T) {
 			"2.attributes.onload",
 			"2.attributes.onclick",
 			"4.attributes.src",
+			"4.attributes.nonce",
 		})
 		ensureReplacement(t, "2", f.Ui, "Ory Corp")
 	})
@@ -334,6 +337,47 @@ func TestCompleteSettings(t *testing.T) {
 			assert.Empty(t, gjson.GetBytes(actualFlow.InternalContext, flow.PrefixInternalContextKey(identity.CredentialsTypeWebAuthn, webauthn.InternalContextKeySessionData)))
 
 			testhelpers.EnsureAAL(t, browserClient, publicTS, "aal2", string(identity.CredentialsTypeWebAuthn))
+		}
+
+		t.Run("type=browser", func(t *testing.T) {
+			run(t, false)
+		})
+
+		t.Run("type=spa", func(t *testing.T) {
+			run(t, true)
+		})
+	})
+
+	t.Run("case=remove all security keys", func(t *testing.T) {
+		run := func(t *testing.T, spa bool) {
+			id := createIdentity(t, reg)
+			allCred, ok := id.GetCredentials(identity.CredentialsTypeWebAuthn)
+			assert.True(t, ok)
+
+			var cc webauthn.CredentialsConfig
+			require.NoError(t, json.Unmarshal(allCred.Config, &cc))
+			require.Len(t, cc.Credentials, 2)
+
+			for _, cred := range cc.Credentials {
+				body, res := doBrowserFlow(t, spa, func(v url.Values) {
+					v.Set(node.WebAuthnRemove, fmt.Sprintf("%x", cred.ID))
+				}, id)
+
+				if spa {
+					assert.Contains(t, res.Request.URL.String(), publicTS.URL+settings.RouteSubmitFlow)
+				} else {
+					assert.Contains(t, res.Request.URL.String(), uiTS.URL)
+				}
+				assert.EqualValues(t, settings.StateSuccess, gjson.Get(body, "state").String(), body)
+			}
+
+			actual, err := reg.Persister().GetIdentityConfidential(context.Background(), id.ID)
+			require.NoError(t, err)
+			_, ok = actual.GetCredentials(identity.CredentialsTypeWebAuthn)
+			assert.False(t, ok)
+			// Check not to remove other credentials with webauthn
+			_, ok = actual.GetCredentials(identity.CredentialsTypePassword)
+			assert.True(t, ok)
 		}
 
 		t.Run("type=browser", func(t *testing.T) {

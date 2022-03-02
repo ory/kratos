@@ -57,9 +57,26 @@ func NewRedirSessionEchoTS(t *testing.T, reg interface {
 	config.Provider
 }) *httptest.Server {
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		// verify that the client has a session, and echo it back
 		sess, err := reg.SessionManager().FetchFromRequest(r.Context(), r)
 		require.NoError(t, err, "Headers: %+v", r.Header)
 		reg.Writer().Write(w, r, sess)
+	}))
+	t.Cleanup(ts.Close)
+	reg.Config(context.Background()).MustSet(config.ViperKeySelfServiceBrowserDefaultReturnTo, ts.URL+"/return-ts")
+	return ts
+}
+
+func NewRedirNoSessionTS(t *testing.T, reg interface {
+	x.WriterProvider
+	session.ManagementProvider
+	config.Provider
+}) *httptest.Server {
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		// verify that the client DOES NOT have a session
+		_, err := reg.SessionManager().FetchFromRequest(r.Context(), r)
+		require.Error(t, err, "Headers: %+v", r.Header)
+		reg.Writer().Write(w, r, nil)
 	}))
 	t.Cleanup(ts.Close)
 	reg.Config(context.Background()).MustSet(config.ViperKeySelfServiceBrowserDefaultReturnTo, ts.URL+"/return-ts")

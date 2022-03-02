@@ -70,5 +70,5 @@ func (m *Manager) Forward(ctx context.Context, w http.ResponseWriter, r *http.Re
 		return
 	}
 
-	http.Redirect(w, r, to, http.StatusFound)
+	http.Redirect(w, r, to, http.StatusSeeOther)
 }

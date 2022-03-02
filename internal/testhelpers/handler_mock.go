@@ -8,8 +8,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/ory/kratos/internal"
-
 	"github.com/bxcodec/faker/v3"
 	"github.com/google/uuid"
 	"github.com/julienschmidt/httprouter"
@@ -81,6 +79,17 @@ func NewClientWithCookies(t *testing.T) *http.Client {
 	return &http.Client{Jar: cj}
 }
 
+func NewNoRedirectClientWithCookies(t *testing.T) *http.Client {
+	cj, err := cookiejar.New(&cookiejar.Options{})
+	require.NoError(t, err)
+	return &http.Client{
+		Jar: cj,
+		CheckRedirect: func(req *http.Request, via []*http.Request) error {
+			return http.ErrUseLastResponse
+		},
+	}
+}
+
 func MockHydrateCookieClient(t *testing.T, c *http.Client, u string) {
 	res, err := c.Get(u)
 	require.NoError(t, err)
@@ -113,8 +122,8 @@ func MockSessionCreateHandlerWithIdentityAndAMR(t *testing.T, reg mockDeps, i *i
 	}
 	sess.SetAuthenticatorAssuranceLevel()
 
-	if reg.Config(context.Background()).Source().String(config.ViperKeyDefaultIdentitySchemaURL) == internal.UnsetDefaultIdentitySchema {
-		reg.Config(context.Background()).MustSet(config.ViperKeyDefaultIdentitySchemaURL, "file://./stub/fake-session.schema.json")
+	if _, err := reg.Config(context.Background()).DefaultIdentityTraitsSchemaURL(); err != nil {
+		SetDefaultIdentitySchema(reg.Config(context.Background()), "file://./stub/fake-session.schema.json")
 	}
 
 	require.NoError(t, reg.PrivilegedIdentityPool().CreateIdentity(context.Background(), i))

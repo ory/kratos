@@ -3,4 +3,4 @@ provider: github
 client_id: asdf
 client_secret: asdf
 mapper_url: file://./mapper_file
-tenant: org
+microsoft_tenant: org

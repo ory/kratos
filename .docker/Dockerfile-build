@@ -1,4 +1,5 @@
-FROM golang:1.16-alpine AS builder
+# syntax = docker/dockerfile:1-experimental
+FROM golang:1.17-alpine3.15 AS base
 
 RUN apk -U --no-cache add build-base git gcc bash
 
@@ -19,17 +20,17 @@ ARG VERSION
 ARG COMMIT
 ARG BUILD_DATE
 
-RUN go build -tags sqlite \
+RUN --mount=type=cache,target=/root/.cache/go-build go build -tags sqlite \
     -ldflags="-X 'github.com/ory/kratos/driver/config.Version=${VERSION}' -X 'github.com/ory/kratos/driver/config.Date=${BUILD_DATE}' -X 'github.com/ory/kratos/driver/config.Commit=${COMMIT}'" \
     -o /usr/bin/kratos
 
-FROM alpine:3.14.2
+FROM alpine:3.15.0
 
 RUN addgroup -S ory; \
     adduser -S ory -G ory -D -u 10000 -h /home/ory -s /bin/nologin; \
     chown -R ory:ory /home/ory
 
-COPY --from=builder /usr/bin/kratos /usr/bin/kratos
+COPY --from=base /usr/bin/kratos /usr/bin/kratos
 
 # By creating the sqlite folder as the ory user, the mounted volume will be owned by ory:ory, which
 # is required for read/write of SQLite.

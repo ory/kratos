@@ -1,0 +1,5 @@
+sms:
+  request_config:
+    url: "malformed uri"
+    method: POST
+    body: "malformed uri"

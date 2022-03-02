@@ -1,7 +1,6 @@
 package settings
 
 import (
-	"fmt"
 	"net/http"
 	"runtime/debug"
 	"time"
@@ -39,12 +38,11 @@ func (c *UpdateContext) UpdateIdentity(i *identity.Identity) {
 	c.toUpdate = i
 }
 
-func (c *UpdateContext) GetIdentityToUpdate() *identity.Identity {
+func (c *UpdateContext) GetIdentityToUpdate() (*identity.Identity, error) {
 	if c.toUpdate == nil {
-		return c.GetSessionIdentity()
+		return nil, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("Could not find a identity to update."))
 	}
-
-	return c.toUpdate
+	return c.toUpdate, nil
 }
 
 func (c UpdateContext) GetSessionIdentity() *identity.Identity {
@@ -70,7 +68,7 @@ func PrepareUpdate(d interface {
 		}
 		d.Logger().
 			WithField("package", pkgName).
-			WithField("stack_trace", fmt.Sprintf("%s", debug.Stack())).
+			WithField("stack_trace", string(debug.Stack())).
 			WithField("expected_request_id", payload.GetFlowID()).
 			WithField("actual_request_id", f.ID).
 			Debug("Flow ID from continuity manager does not match Flow ID from request.")

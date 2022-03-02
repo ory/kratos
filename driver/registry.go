@@ -9,6 +9,8 @@ import (
 	"github.com/gorilla/sessions"
 	"github.com/pkg/errors"
 
+	"github.com/ory/nosurf"
+
 	"github.com/ory/x/logrusx"
 
 	"github.com/ory/kratos/continuity"
@@ -45,13 +47,13 @@ type Registry interface {
 
 	WithLogger(l *logrusx.Logger) Registry
 
-	WithCSRFHandler(c x.CSRFHandler)
+	WithCSRFHandler(c nosurf.Handler)
 	WithCSRFTokenGenerator(cg x.CSRFToken)
 
-	HealthHandler(ctx context.Context) *healthx.Handler
-	CookieManager(ctx context.Context) sessions.Store
 	MetricsHandler() *prometheus.Handler
-	ContinuityCookieManager(ctx context.Context) sessions.Store
+	HealthHandler(ctx context.Context) *healthx.Handler
+	CookieManager(ctx context.Context) sessions.StoreExact
+	ContinuityCookieManager(ctx context.Context) sessions.StoreExact
 
 	RegisterRoutes(ctx context.Context, public *x.RouterPublic, admin *x.RouterAdmin)
 	RegisterPublicRoutes(ctx context.Context, public *x.RouterPublic)
@@ -60,11 +62,13 @@ type Registry interface {
 	Tracer(context.Context) *tracing.Tracer
 
 	config.Provider
+	CourierConfig(ctx context.Context) config.CourierConfigs
 	WithConfig(c *config.Config) Registry
 
 	x.CSRFProvider
 	x.WriterProvider
 	x.LoggingProvider
+	x.HTTPClientProvider
 
 	continuity.ManagementProvider
 	continuity.PersistenceProvider

@@ -20,16 +20,18 @@ import (
 	"github.com/tidwall/sjson"
 
 	"github.com/ory/herodot"
+
 	"github.com/ory/kratos/session"
 
 	"github.com/gofrs/uuid"
 	"github.com/pkg/errors"
 
+	"github.com/ory/x/decoderx"
+
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/selfservice/flow"
 	"github.com/ory/kratos/selfservice/flow/settings"
 	"github.com/ory/kratos/x"
-	"github.com/ory/x/decoderx"
 )
 
 func (s *Strategy) RegisterSettingsRoutes(_ *x.RouterPublic) {
@@ -188,6 +190,11 @@ func (s *Strategy) continueSettingsFlowRemove(w http.ResponseWriter, r *http.Req
 	if len(updated) == len(cc.Credentials) {
 		return errors.WithStack(herodot.ErrBadRequest.WithReasonf("You tried to remove a WebAuthn credential which does not exist."))
 	}
+	if len(updated) == 0 {
+		i.DeleteCredentialsType(identity.CredentialsTypeWebAuthn)
+		ctxUpdate.UpdateIdentity(i)
+		return nil
+	}
 
 	cc.Credentials = updated
 	cred.Config, err = json.Marshal(cc)
@@ -328,7 +335,7 @@ func (s *Strategy) PopulateSettingsMethod(r *http.Request, id *identity.Identity
 		return errors.WithStack(err)
 	}
 
-	f.UI.Nodes.Upsert(NewWebAuthnScript(urlx.AppendPaths(s.d.Config(r.Context()).SelfPublicURL(r), webAuthnRoute).String(), jsOnLoad))
+	f.UI.Nodes.Upsert(NewWebAuthnScript(urlx.AppendPaths(s.d.Config(r.Context()).SelfPublicURL(), webAuthnRoute).String(), jsOnLoad))
 	f.UI.Nodes.Upsert(NewWebAuthnConnectionName())
 	f.UI.Nodes.Upsert(NewWebAuthnConnectionTrigger(string(injectWebAuthnOptions)))
 	f.UI.Nodes.Upsert(NewWebAuthnConnectionInput())

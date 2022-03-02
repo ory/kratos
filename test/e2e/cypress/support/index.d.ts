@@ -108,7 +108,44 @@ declare global {
        *
        * @param opts
        */
-      recoverApi(opts: { email: string }): Chainable<void>
+      recoverApi(opts: { email: string; returnTo?: string }): Chainable<void>
+
+      /**
+       * Submits a verification flow via the API
+       *
+       * @param opts
+       */
+      verificationApi(opts: {
+        email: string
+        returnTo?: string
+      }): Chainable<void>
+
+      /**
+       * Update the config file
+       *
+       * @param cb
+       */
+      updateConfigFile(cb: (arg: any) => any): Chainable<any>
+
+      /**
+       * Submits a verification flow via the API
+       *
+       * @param opts
+       */
+      verificationApiExpired(opts: {
+        email: string
+        returnTo?: string
+      }): Chainable<void>
+
+      /**
+       * Submits a verification flow via the Browser
+       *
+       * @param opts
+       */
+      verificationBrowser(opts: {
+        email: string
+        returnTo?: string
+      }): Chainable<void>
 
       /**
        * Changes the config so that the login flow lifespan is very short.
@@ -132,6 +169,11 @@ declare global {
        * Change the config so that `https://www.ory.sh/` is a allowed return to URL.
        */
       browserReturnUrlOry(): Chainable<void>
+
+      /**
+       * Change the courier recovery invalid and valid templates to remote base64 strings
+       */
+      remoteCourierRecoveryTemplates(): Chainable<void>
 
       /**
        * Changes the config so that the registration flow lifespan is very short.
@@ -278,9 +320,10 @@ declare global {
       /**
        * Triggers a Social Sign In flow for the given provider
        *
+       * @param app
        * @param provider
        */
-      triggerOidc(provider?: string): Chainable<void>
+      triggerOidc(app: 'react' | 'express', provider?: string): Chainable<void>
 
       /**
        * Changes the config so that the recovery privileged lifespan is very long.
@@ -292,13 +335,31 @@ declare global {
       longRecoveryLifespan(): Chainable<void>
 
       /**
+       * Changes the config so that the recovery privileged lifespan is very short.
+       *
+       * Useful when testing privileged recovery flows.
+       *
+       * @see shortPrivilegedRecoveryTime()
+       */
+      shortRecoveryLifespan(): Chainable<void>
+
+      /**
        * Changes the config so that the verification privileged lifespan is very long.
+       *
+       * Useful when testing recovery/verification flows.
+       *
+       * @see shortLinkLifespan()
+       */
+      longVerificationLifespan(): Chainable<void>
+
+      /**
+       * Changes the config so that the verification privileged lifespan is very short.
        *
        * Useful when testing privileged verification flows.
        *
        * @see shortPrivilegedVerificationTime()
        */
-      longVerificationLifespan(): Chainable<void>
+      shortVerificationLifespan(): Chainable<void>
 
       /**
        * Log a user out
@@ -369,6 +430,16 @@ declare global {
       disableRecovery(): Chainable<void>
 
       /**
+       * Disables registration
+       */
+      disableRegistration(): Chainable<void>
+
+      /**
+       * Enables registration
+       */
+      enableRegistration(): Chainable<void>
+
+      /**
        * Expect a recovery email which is valid.
        *
        * @param opts
@@ -430,6 +501,12 @@ declare global {
        * @param schema
        */
       setIdentitySchema(schema: string): Chainable<void>
+
+      /**
+       * Set the default schema
+       * @param id
+       */
+      setDefaultIdentitySchema(id: string): Chainable<void>
     }
   }
 }

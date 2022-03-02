@@ -21,3 +21,5 @@
       - password
       - totp
       - oidc
+      - webauthn
+      - lookup_secret

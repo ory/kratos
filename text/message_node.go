@@ -1,15 +1,5 @@
 package text
 
-const (
-	InfoNodeLabel              ID = 1070000 + iota // 1070000
-	InfoNodeLabelInputPassword                     // 1070001
-	InfoNodeLabelGenerated                         // 1070002
-	InfoNodeLabelSave                              // 1070003
-	InfoNodeLabelID                                // 1070004
-	InfoNodeLabelSubmit                            // 1070005
-	InfoNodeLabelVerifyOTP                         // 1070006
-)
-
 func NewInfoNodeLabelVerifyOTP() *Message {
 	return &Message{
 		ID:   InfoNodeLabelVerifyOTP,
@@ -54,6 +44,14 @@ func NewInfoNodeLabelID() *Message {
 	return &Message{
 		ID:   InfoNodeLabelID,
 		Text: "ID",
+		Type: Info,
+	}
+}
+
+func NewInfoNodeInputEmail() *Message {
+	return &Message{
+		ID:   InfoNodeLabelEmail,
+		Text: "Email",
 		Type: Info,
 	}
 }

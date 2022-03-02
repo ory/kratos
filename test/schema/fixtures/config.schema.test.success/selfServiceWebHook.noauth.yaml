@@ -1,0 +1,7 @@
+hook: web_hook
+config:
+  url: https://foo/bar
+  method: POST
+  body: base64://asdf
+  response:
+    ignore: false

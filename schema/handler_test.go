@@ -1,6 +1,7 @@
 package schema_test
 
 import (
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
@@ -41,6 +42,11 @@ func TestHandler(t *testing.T) {
 			RawURL: "file://./stub/identity-2.schema.json",
 		},
 		{
+			ID:     "base64",
+			URL:    urlx.ParseOrPanic("base64://ewogICIkc2NoZW1hIjogImh0dHA6Ly9qc29uLXNjaGVtYS5vcmcvZHJhZnQtMDcvc2NoZW1hIyIsCiAgInR5cGUiOiAib2JqZWN0IiwKICAicHJvcGVydGllcyI6IHsKICAgICJiYXIiOiB7CiAgICAgICJ0eXBlIjogInN0cmluZyIKICAgIH0KICB9LAogICJyZXF1aXJlZCI6IFsKICAgICJiYXIiCiAgXQp9"),
+			RawURL: "base64://ewogICIkc2NoZW1hIjogImh0dHA6Ly9qc29uLXNjaGVtYS5vcmcvZHJhZnQtMDcvc2NoZW1hIyIsCiAgInR5cGUiOiAib2JqZWN0IiwKICAicHJvcGVydGllcyI6IHsKICAgICJiYXIiOiB7CiAgICAgICJ0eXBlIjogInN0cmluZyIKICAgIH0KICB9LAogICJyZXF1aXJlZCI6IFsKICAgICJiYXIiCiAgXQp9",
+		},
+		{
 			ID:     "unreachable",
 			URL:    urlx.ParseOrPanic("http://127.0.0.1:12345/unreachable-schema"),
 			RawURL: "http://127.0.0.1:12345/unreachable-schema",
@@ -54,6 +60,11 @@ func TestHandler(t *testing.T) {
 			ID:     "directory",
 			URL:    urlx.ParseOrPanic("file://./stub"),
 			RawURL: "file://./stub",
+		},
+		{
+			ID:     "preset://email",
+			URL:    urlx.ParseOrPanic("file://./stub/identity-2.schema.json"),
+			RawURL: "file://./stub/identity-2.schema.json",
 		},
 	}
 
@@ -72,7 +83,6 @@ func TestHandler(t *testing.T) {
 
 		require.EqualValues(t, expectCode, res.StatusCode, "%s", body)
 		return body
-
 	}
 
 	getFromTSById := func(id string, expectCode int) []byte {
@@ -84,27 +94,34 @@ func TestHandler(t *testing.T) {
 	}
 
 	getFromFS := func(id string) []byte {
-		raw, err := os.ReadFile(strings.TrimPrefix(getSchemaById(id).RawURL, "file://"))
-		require.NoError(t, err)
-		return raw
+		schema := getSchemaById(id)
+
+		if schema.URL.Scheme == "file" {
+			raw, err := os.ReadFile(strings.TrimPrefix(schema.RawURL, "file://"))
+			require.NoError(t, err)
+			return raw
+		} else if schema.URL.Scheme == "base64" {
+			data, err := base64.StdEncoding.DecodeString(strings.TrimPrefix(schema.RawURL, "base64://"))
+			require.NoError(t, err)
+			return data
+		}
+		return nil
 	}
 
 	setSchemas := func(newSchemas schema.Schemas) {
 		schemas = newSchemas
 		var schemasConfig []config.Schema
 		for _, s := range schemas {
-			if s.ID != config.DefaultIdentityTraitsSchemaID {
-				schemasConfig = append(schemasConfig, config.Schema{
-					ID:  s.ID,
-					URL: s.RawURL,
-				})
-			}
+			schemasConfig = append(schemasConfig, config.Schema{
+				ID:  s.ID,
+				URL: s.RawURL,
+			})
 		}
 		conf.MustSet(config.ViperKeyIdentitySchemas, schemasConfig)
 	}
 
 	conf.MustSet(config.ViperKeyPublicBaseURL, ts.URL)
-	conf.MustSet(config.ViperKeyDefaultIdentitySchemaURL, getSchemaById(config.DefaultIdentityTraitsSchemaID).RawURL)
+	conf.MustSet(config.ViperKeyDefaultIdentitySchemaID, config.DefaultIdentityTraitsSchemaID)
 	setSchemas(schemas)
 
 	t.Run("case=get default schema", func(t *testing.T) {
@@ -116,6 +133,18 @@ func TestHandler(t *testing.T) {
 	t.Run("case=get other schema", func(t *testing.T) {
 		server := getFromTSById("identity2", http.StatusOK)
 		file := getFromFS("identity2")
+		require.JSONEq(t, string(file), string(server))
+	})
+
+	t.Run("case=get base64 schema", func(t *testing.T) {
+		server := getFromTSById("base64", http.StatusOK)
+		file := getFromFS("base64")
+		require.JSONEq(t, string(file), string(server))
+	})
+
+	t.Run("case=get encoded schema", func(t *testing.T) {
+		server := getFromTSById("cHJlc2V0Oi8vZW1haWw", http.StatusOK)
+		file := getFromFS("preset://email")
 		require.JSONEq(t, string(file), string(server))
 	})
 

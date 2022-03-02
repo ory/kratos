@@ -37,7 +37,7 @@ context('Social Sign In Settings Success', () => {
         cy.get('#accept').click()
 
         cy.get('input[name="traits.website"]').clear().type(website)
-        cy.triggerOidc('hydra')
+        cy.triggerOidc(app, 'hydra')
 
         cy.get('[data-testid="ui/message/4000007"]').should(
           'contain.text',

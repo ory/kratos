@@ -40,7 +40,7 @@ import (
 
 func TestHandleError(t *testing.T) {
 	conf, reg := internal.NewFastRegistryWithMocks(t)
-	conf.MustSet(config.ViperKeyDefaultIdentitySchemaURL, "file://./stub/identity.schema.json")
+	testhelpers.SetDefaultIdentitySchema(conf, "file://./stub/identity.schema.json")
 
 	_, admin := testhelpers.NewKratosServer(t, reg)
 
@@ -203,7 +203,7 @@ func TestHandleError(t *testing.T) {
 
 				settingsFlow = newFlow(t, time.Minute, flow.TypeBrowser)
 				settingsFlow.IdentityID = id.ID
-				flowError = errors.WithStack(session.ErrNoActiveSessionFound)
+				flowError = errors.WithStack(session.NewErrNoActiveSessionFound())
 				flowMethod = settings.StrategyProfile
 
 				res, err := ts.Client().Do(testhelpers.NewHTTPGetJSONRequest(t, ts.URL+"/error"))
@@ -213,7 +213,7 @@ func TestHandleError(t *testing.T) {
 
 				body, err := ioutil.ReadAll(res.Body)
 				require.NoError(t, err)
-				assert.Equal(t, session.ErrNoActiveSessionFound.Reason(), gjson.GetBytes(body, "error.reason").String(), "%s", body)
+				assert.Equal(t, session.NewErrNoActiveSessionFound().Reason(), gjson.GetBytes(body, "error.reason").String(), "%s", body)
 			})
 
 			t.Run("case=aal too low", func(t *testing.T) {
@@ -294,7 +294,7 @@ func TestHandleError(t *testing.T) {
 
 			settingsFlow = newFlow(t, time.Minute, flow.TypeBrowser)
 			settingsFlow.IdentityID = id.ID
-			flowError = errors.WithStack(session.ErrNoActiveSessionFound)
+			flowError = errors.WithStack(session.NewErrNoActiveSessionFound())
 			flowMethod = settings.StrategyProfile
 
 			res, err := ts.Client().Get(ts.URL + "/error")
@@ -326,7 +326,7 @@ func TestHandleError(t *testing.T) {
 		})
 
 		t.Run("case=session old error", func(t *testing.T) {
-			conf.MustSet(config.ViperKeyURLsWhitelistedReturnToDomains, []string{urlx.AppendPaths(conf.SelfPublicURL(nil), "/error").String()})
+			conf.MustSet(config.ViperKeyURLsWhitelistedReturnToDomains, []string{urlx.AppendPaths(conf.SelfPublicURL(), "/error").String()})
 			t.Cleanup(reset)
 
 			settingsFlow = &settings.Flow{Type: flow.TypeBrowser}

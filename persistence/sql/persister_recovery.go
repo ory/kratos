@@ -6,16 +6,14 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/ory/kratos/corp"
-	"github.com/ory/kratos/identity"
-
-	"github.com/gobuffalo/pop/v5"
+	"github.com/gobuffalo/pop/v6"
 	"github.com/gofrs/uuid"
 
-	"github.com/ory/x/sqlcon"
-
+	"github.com/ory/kratos/corp"
+	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/selfservice/flow/recovery"
 	"github.com/ory/kratos/selfservice/strategy/link"
+	"github.com/ory/x/sqlcon"
 )
 
 var _ recovery.FlowPersister = new(Persister)
@@ -76,9 +74,10 @@ func (p *Persister) UseRecoveryToken(ctx context.Context, token string) (*link.R
 
 		var ra identity.RecoveryAddress
 		if err := tx.Where("id = ? AND nid = ?", rt.RecoveryAddressID, nid).First(&ra); err != nil {
-			return sqlcon.HandleError(err)
+			if !errors.Is(sqlcon.HandleError(err), sqlcon.ErrNoRows) {
+				return err
+			}
 		}
-
 		rt.RecoveryAddress = &ra
 
 		/* #nosec G201 TableName is static */

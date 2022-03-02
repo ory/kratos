@@ -60,10 +60,18 @@ func NewHookExecutor(d executorDependencies) *HookExecutor {
 	return &HookExecutor{d: d}
 }
 
-func (e *HookExecutor) requiresAAL2(r *http.Request, s *session.Session) (*session.ErrAALNotSatisfied, bool) {
+func (e *HookExecutor) requiresAAL2(r *http.Request, s *session.Session, a *Flow) (*session.ErrAALNotSatisfied, bool) {
 	var aalErr *session.ErrAALNotSatisfied
 	err := e.d.SessionManager().DoesSessionSatisfy(r, s, e.d.Config(r.Context()).SessionWhoAmIAAL())
-	return aalErr, errors.As(err, &aalErr)
+	if ok := errors.As(err, &aalErr); !ok {
+		return nil, false
+	}
+
+	if err := aalErr.PassReturnToParameter(a.RequestURL); err != nil {
+		return nil, false
+	}
+
+	return aalErr, true
 }
 
 func (e *HookExecutor) PostLoginHook(w http.ResponseWriter, r *http.Request, a *Flow, i *identity.Identity, s *session.Session) error {
@@ -76,7 +84,7 @@ func (e *HookExecutor) PostLoginHook(w http.ResponseWriter, r *http.Request, a *
 	returnTo, err := x.SecureRedirectTo(r, c.SelfServiceBrowserDefaultReturnTo(),
 		x.SecureRedirectUseSourceURL(a.RequestURL),
 		x.SecureRedirectAllowURLs(c.SelfServiceBrowserWhitelistedReturnToDomains()),
-		x.SecureRedirectAllowSelfServiceURLs(c.SelfPublicURL(r)),
+		x.SecureRedirectAllowSelfServiceURLs(c.SelfPublicURL()),
 		x.SecureRedirectOverrideDefaultReturnTo(e.d.Config(r.Context()).SelfServiceFlowLoginReturnTo(a.Active.String())),
 	)
 	if err != nil {
@@ -127,7 +135,7 @@ func (e *HookExecutor) PostLoginHook(w http.ResponseWriter, r *http.Request, a *
 			Info("Identity authenticated successfully and was issued an Ory Kratos Session Token.")
 
 		response := &APIFlowResponse{Session: s, Token: s.Token}
-		if _, required := e.requiresAAL2(r, s); required {
+		if _, required := e.requiresAAL2(r, s, a); required {
 			// If AAL is not satisfied, we omit the identity to preserve the user's privacy in case of a phishing attack.
 			response.Session.Identity = nil
 		}
@@ -151,7 +159,7 @@ func (e *HookExecutor) PostLoginHook(w http.ResponseWriter, r *http.Request, a *
 		s.Token = ""
 
 		response := &APIFlowResponse{Session: s}
-		if _, required := e.requiresAAL2(r, s); required {
+		if _, required := e.requiresAAL2(r, s, a); required {
 			// If AAL is not satisfied, we omit the identity to preserve the user's privacy in case of a phishing attack.
 			response.Session.Identity = nil
 		}
@@ -160,7 +168,7 @@ func (e *HookExecutor) PostLoginHook(w http.ResponseWriter, r *http.Request, a *
 	}
 
 	// If we detect that whoami would require a higher AAL, we redirect!
-	if aalErr, required := e.requiresAAL2(r, s); required {
+	if aalErr, required := e.requiresAAL2(r, s, a); required {
 		http.Redirect(w, r, aalErr.RedirectTo, http.StatusSeeOther)
 		return nil
 	}

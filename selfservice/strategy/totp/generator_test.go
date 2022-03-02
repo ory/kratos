@@ -18,7 +18,7 @@ func TestGenerator(t *testing.T) {
 
 	key, err := totp.NewKey(context.Background(), "foo", reg)
 	require.NoError(t, err)
-	assert.Equal(t, conf.SelfPublicURL(nil).Hostname(), key.Issuer(), "if issuer is not set explicitly it should be the public URL")
+	assert.Equal(t, conf.SelfPublicURL().Hostname(), key.Issuer(), "if issuer is not set explicitly it should be the public URL")
 
 	require.NoError(t, conf.Set(config.ViperKeyTOTPIssuer, "foobar.com"))
 

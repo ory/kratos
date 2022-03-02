@@ -2,6 +2,7 @@ package schema
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 
 	"github.com/pkg/errors"
@@ -53,7 +54,7 @@ type (
 	}
 )
 
-func NewExtensionRunner(runners ...Extension) (*ExtensionRunner, error) {
+func NewExtensionRunner(ctx context.Context, runners ...Extension) (*ExtensionRunner, error) {
 	var err error
 	r := new(ExtensionRunner)
 	c := jsonschema.NewCompiler()
@@ -62,7 +63,7 @@ func NewExtensionRunner(runners ...Extension) (*ExtensionRunner, error) {
 		return nil, errors.WithStack(err)
 	}
 
-	r.meta, err = c.Compile(embedx.IdentityExtension.GetSchemaID())
+	r.meta, err = c.Compile(ctx, embedx.IdentityExtension.GetSchemaID())
 	if err != nil {
 		return nil, errors.WithStack(err)
 	}
