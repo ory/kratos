@@ -29,6 +29,30 @@ func TestNewIdentity(t *testing.T) {
 	assert.True(t, i.IsActive())
 }
 
+func TestIdentityCredentialsOr(t *testing.T) {
+	i := NewIdentity(config.DefaultIdentityTraitsSchemaID)
+	i.Credentials = nil
+
+	expected := &Credentials{ID: x.NewUUID(), Type: CredentialsTypePassword}
+	assert.Equal(t, expected, i.GetCredentialsOr(CredentialsTypePassword, expected))
+
+	expected = &Credentials{ID: x.NewUUID(), Type: CredentialsTypeWebAuthn}
+	i.SetCredentials(CredentialsTypeWebAuthn, *expected)
+
+	assert.Equal(t, expected, i.GetCredentialsOr(CredentialsTypeWebAuthn, nil))
+}
+
+func TestIdentityCredentialsOrCreate(t *testing.T) {
+	i := NewIdentity(config.DefaultIdentityTraitsSchemaID)
+	i.Credentials = nil
+
+	expected := &Credentials{Config: []byte("true"), IdentityID: i.ID, Type: CredentialsTypePassword}
+	i.UpsertCredentialsConfig(CredentialsTypePassword, []byte("true"))
+	actual, ok := i.GetCredentials(CredentialsTypePassword)
+	assert.True(t, ok)
+	assert.Equal(t, expected, actual)
+}
+
 func TestIdentityCredentials(t *testing.T) {
 	i := NewIdentity(config.DefaultIdentityTraitsSchemaID)
 	i.Credentials = nil

@@ -216,6 +216,27 @@ func (i *Identity) DeleteCredentialsType(t CredentialsType) {
 	delete(i.Credentials, t)
 }
 
+func (i *Identity) GetCredentialsOr(t CredentialsType, or *Credentials) *Credentials {
+	c, ok := i.GetCredentials(t)
+	if !ok {
+		return or
+	}
+	return c
+}
+
+func (i *Identity) UpsertCredentialsConfig(t CredentialsType, conf []byte) {
+	c, ok := i.GetCredentials(t)
+	if !ok {
+		c = &Credentials{}
+	}
+
+	c.Type = t
+	c.IdentityID = i.ID
+	c.Config = conf
+
+	i.SetCredentials(t, *c)
+}
+
 func (i *Identity) GetCredentials(t CredentialsType) (*Credentials, bool) {
 	i.lock().RLock()
 	defer i.lock().RUnlock()
