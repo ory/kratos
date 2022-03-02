@@ -64,6 +64,7 @@ type dependencies interface {
 	identity.ValidationProvider
 	identity.PrivilegedPoolProvider
 	identity.ActiveCredentialsCounterStrategyProvider
+	identity.ManagementProvider
 
 	session.ManagementProvider
 	session.HandlerProvider
@@ -112,7 +113,7 @@ type authCodeContainer struct {
 	Traits json.RawMessage `json:"traits"`
 }
 
-func (s *Strategy) CountActiveCredentials(cc map[identity.CredentialsType]identity.Credentials) (count int, err error) {
+func (s *Strategy) CountActiveFirstFactorCredentials(cc map[identity.CredentialsType]identity.Credentials) (count int, err error) {
 	for _, c := range cc {
 		if c.Type == s.ID() && gjson.ValidBytes(c.Config) {
 			var conf identity.CredentialsOIDC
