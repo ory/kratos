@@ -246,3 +246,13 @@ func NewNoWebAuthnRegistered() error {
 		Messages: new(text.Messages).Add(text.NewErrorValidationNoWebAuthnDevice()),
 	})
 }
+
+func NewNoWebAuthnCredentials() error {
+	return errors.WithStack(&ValidationError{
+		ValidationError: &jsonschema.ValidationError{
+			Message:     `account does not exist or has no security key set up`,
+			InstancePtr: "#/",
+		},
+		Messages: new(text.Messages).Add(text.NewErrorValidationSuchNoWebAuthnUser()),
+	})
+}
