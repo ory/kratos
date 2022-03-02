@@ -10,14 +10,16 @@ import (
 type CredentialsConfig struct {
 	// List of webauthn credentials.
 	Credentials Credentials `json:"credentials"`
+	UserHandle  []byte      `json:"user_handle"`
 }
 
 type Credentials []Credential
 
-func CredentialFromWebAuthn(credential *webauthn.Credential) *Credential {
+func CredentialFromWebAuthn(credential *webauthn.Credential, isPasswordless bool) *Credential {
 	return &Credential{
 		ID:              credential.ID,
 		PublicKey:       credential.PublicKey,
+		IsPasswordless:  isPasswordless,
 		AttestationType: credential.AttestationType,
 		Authenticator: Authenticator{
 			AAGUID:       credential.Authenticator.AAGUID,
@@ -55,6 +57,7 @@ type Credential struct {
 	Authenticator   Authenticator `json:"authenticator"`
 	DisplayName     string        `json:"display_name"`
 	AddedAt         time.Time     `json:"added_at"`
+	IsPasswordless  bool          `json:"is_passwordless"`
 }
 
 type Authenticator struct {

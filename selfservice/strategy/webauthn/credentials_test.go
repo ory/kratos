@@ -19,9 +19,14 @@ func TestCredentialConversion(t *testing.T) {
 		},
 	}
 
-	actual := CredentialFromWebAuthn(expected).ToWebAuthn()
+	actual := CredentialFromWebAuthn(expected, false).ToWebAuthn()
 	assert.Equal(t, expected, actual)
 
-	actualList := Credentials{*CredentialFromWebAuthn(expected)}.ToWebAuthn()
+	actualList := Credentials{*CredentialFromWebAuthn(expected, false)}.ToWebAuthn()
 	assert.Equal(t, []webauthn.Credential{*expected}, actualList)
+
+	fromWebAuthn := CredentialFromWebAuthn(expected, true)
+	assert.True(t, fromWebAuthn.IsPasswordless)
+	fromWebAuthn = CredentialFromWebAuthn(expected, false)
+	assert.False(t, fromWebAuthn.IsPasswordless)
 }
