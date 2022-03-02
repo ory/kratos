@@ -204,7 +204,7 @@ run() {
   ! nc -zv localhost 4433
 
   ls -la .
-  for profile in email mobile oidc recovery verification mfa spa network; do
+  for profile in email mobile oidc recovery verification mfa spa network passwordless; do
     yq ea '. as $item ireduce ({}; . * $item )' test/e2e/profiles/kratos.base.yml "test/e2e/profiles/${profile}/.kratos.yml" > test/e2e/kratos.${profile}.yml
     cp test/e2e/kratos.email.yml test/e2e/kratos.generated.yml
   done
