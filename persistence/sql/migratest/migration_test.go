@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/ory/kratos/identity"
 	"os"
 	"path/filepath"
 	"testing"
@@ -149,7 +150,7 @@ func TestMigrations(t *testing.T) {
 						// Prevents ordering to get in the way.
 						actual.VerifiableAddresses = nil
 						actual.RecoveryAddresses = nil
-						CompareWithFixture(t, actual, "identity", id.ID.String())
+						CompareWithFixture(t, identity.WithCredentialsInJSON(*actual), "identity", id.ID.String())
 					}
 
 					migratest.ContainsExpectedIds(t, filepath.Join("fixtures", "identity"), found)
