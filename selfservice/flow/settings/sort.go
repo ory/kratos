@@ -25,7 +25,7 @@ func sortNodes(ctx context.Context, n node.Nodes, schemaRef string) error {
 			node.LookupCodes,
 			node.LookupConfirm,
 
-			// Lookup
+			// WebAuthn
 			node.WebAuthnRemove,
 			node.WebAuthnRegisterDisplayName,
 			node.WebAuthnRegister,
