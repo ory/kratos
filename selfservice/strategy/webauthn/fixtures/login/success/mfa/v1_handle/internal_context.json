@@ -1,0 +1,10 @@
+{
+  "webauthn_session_data": {
+    "challenge": "WzZCWULmaq5xTAlA0YYHlqoubqAhe1AWdLRZCIBAMcM",
+    "user_id": "RPwiyauuTD6lazfHs42XPg==",
+    "allowed_credentials": [
+      "OE7fnoAeqaydiBM4+fQsbYMiO+EObq97WYb/c1HuX8Crbsb2777xs+upv7muXE8hOLkm6lQHC1ahegnzw+aIsQ=="
+    ],
+    "userVerification": ""
+  }
+}
