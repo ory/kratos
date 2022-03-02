@@ -1,6 +1,7 @@
 package webauthn
 
 import (
+	"github.com/ory/kratos/identity"
 	"time"
 
 	"github.com/duo-labs/webauthn/webauthn"
@@ -29,10 +30,15 @@ func CredentialFromWebAuthn(credential *webauthn.Credential, isPasswordless bool
 	}
 }
 
-func (c Credentials) ToWebAuthn() []webauthn.Credential {
-	result := make([]webauthn.Credential, len(c))
-	for k := range c {
-		result[k] = *c[k].ToWebAuthn()
+func (c Credentials) ToWebAuthn(aal identity.AuthenticatorAssuranceLevel) (result []webauthn.Credential) {
+	for k, cc := range c {
+		if aal == identity.AuthenticatorAssuranceLevel1 && !cc.IsPasswordless {
+			continue
+		} else if aal == identity.AuthenticatorAssuranceLevel2 && cc.IsPasswordless {
+			continue
+		}
+
+		result = append(result, *c[k].ToWebAuthn())
 	}
 	return result
 }
