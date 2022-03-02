@@ -17,17 +17,7 @@
       "minLength": 1
     }
   },
-  "oneOf": [
-    {
-      "required": [
-        "webauthn_login"
-      ]
-    },
-    {
-      "required": [
-        "identifier",
-        "method"
-      ]
-    }
+  "required": [
+    "identifier"
   ]
 }
