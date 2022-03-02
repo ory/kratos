@@ -23,6 +23,15 @@ func NewInfoLoginMFA() *Message {
 	}
 }
 
+func NewInfoLoginWebAuthnPasswordless() *Message {
+	return &Message{
+		ID:      InfoSelfServiceLoginWebAuthnPasswordless,
+		Type:    Info,
+		Text:    "Prepare your WebAuthn device (e.g. security key, biometrics scanner, ...) and press continue.",
+		Context: context(nil),
+	}
+}
+
 func NewInfoLoginTOTPLabel() *Message {
 	return &Message{
 		ID:      InfoSelfServiceLoginTOTPLabel,
@@ -45,6 +54,15 @@ func NewInfoLogin() *Message {
 	return &Message{
 		ID:      InfoSelfServiceLogin,
 		Text:    "Sign in",
+		Type:    Info,
+		Context: context(map[string]interface{}{}),
+	}
+}
+
+func NewInfoLoginPasswordlessWebAuthn() *Message {
+	return &Message{
+		ID:      InfoSelfServiceLogin,
+		Text:    "Sign in with security key",
 		Type:    Info,
 		Context: context(map[string]interface{}{}),
 	}
@@ -143,6 +161,22 @@ func NewInfoSelfServiceLoginWebAuthn() *Message {
 	return &Message{
 		ID:   InfoSelfServiceLoginWebAuthn,
 		Text: "Use security key",
+		Type: Info,
+	}
+}
+
+func NewInfoSelfServiceContinueLoginWebAuthn() *Message {
+	return &Message{
+		ID:   InfoSelfServiceLoginContinueWebAuthn,
+		Text: "Continue with security key",
+		Type: Info,
+	}
+}
+
+func NewInfoSelfServiceLoginContinue() *Message {
+	return &Message{
+		ID:   InfoSelfServiceLoginContinue,
+		Text: "Continue",
 		Type: Info,
 	}
 }

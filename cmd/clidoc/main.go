@@ -63,7 +63,7 @@ func init() {
 		"NewInfoSelfServiceSettingsLookupSecretsLabel":            text.NewInfoSelfServiceSettingsLookupSecretsLabel(),
 		"NewInfoSelfServiceSettingsUpdateLinkOIDC":                text.NewInfoSelfServiceSettingsUpdateLinkOIDC("{provider}"),
 		"NewInfoSelfServiceSettingsUpdateUnlinkOIDC":              text.NewInfoSelfServiceSettingsUpdateUnlinkOIDC("{provider}"),
-		"NewInfoSelfServiceRegisterWebAuthn":                      text.NewInfoSelfServiceRegisterWebAuthn(),
+		"NewInfoSelfServiceRegisterWebAuthn":                      text.NewInfoSelfServiceSettingsRegisterWebAuthn(),
 		"NewInfoSelfServiceRegisterWebAuthnDisplayName":           text.NewInfoSelfServiceRegisterWebAuthnDisplayName(),
 		"NewInfoSelfServiceRemoveWebAuthn":                        text.NewInfoSelfServiceRemoveWebAuthn("{name}", aSecondAgo),
 		"NewErrorValidationVerificationFlowExpired":               text.NewErrorValidationVerificationFlowExpired(-time.Second),
@@ -115,6 +115,13 @@ func init() {
 		"NewErrorValidationRecoveryRetrySuccess":                  text.NewErrorValidationRecoveryRetrySuccess(),
 		"NewErrorValidationRecoveryStateFailure":                  text.NewErrorValidationRecoveryStateFailure(),
 		"NewInfoNodeInputEmail":                                   text.NewInfoNodeInputEmail(),
+		"NewInfoSelfServiceSettingsRegisterWebAuthn":              text.NewInfoSelfServiceSettingsRegisterWebAuthn(),
+		"NewInfoLoginWebAuthnPasswordless":                        text.NewInfoLoginWebAuthnPasswordless(),
+		"NewInfoSelfServiceRegistrationRegisterWebAuthn":          text.NewInfoSelfServiceRegistrationRegisterWebAuthn(),
+		"NewInfoLoginPasswordlessWebAuthn":                        text.NewInfoLoginPasswordlessWebAuthn(),
+		"NewInfoSelfServiceContinueLoginWebAuthn":                 text.NewInfoSelfServiceContinueLoginWebAuthn(),
+		"NewInfoSelfServiceLoginContinue":                         text.NewInfoSelfServiceLoginContinue(),
+		"NewErrorValidationSuchNoWebAuthnUser":                    text.NewErrorValidationSuchNoWebAuthnUser(),
 	}
 }
 
