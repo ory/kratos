@@ -78,7 +78,7 @@ func NewStrategy(d registrationStrategyDependencies) *Strategy {
 	}
 }
 
-func (s *Strategy) CountActiveCredentials(cc map[identity.CredentialsType]identity.Credentials) (count int, err error) {
+func (s *Strategy) CountActiveFirstFactorCredentials(cc map[identity.CredentialsType]identity.Credentials) (count int, err error) {
 	for _, c := range cc {
 		if c.Type == s.ID() && len(c.Config) > 0 {
 			var conf identity.CredentialsPassword

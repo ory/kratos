@@ -15,7 +15,7 @@ import (
 	"github.com/ory/kratos/selfservice/strategy/password"
 )
 
-func TestCountActiveCredentials(t *testing.T) {
+func TestCountActiveFirstFactorCredentials(t *testing.T) {
 	_, reg := internal.NewFastRegistryWithMocks(t)
 	strategy := password.NewStrategy(reg)
 
@@ -91,7 +91,7 @@ func TestCountActiveCredentials(t *testing.T) {
 				cc[c.Type] = c
 			}
 
-			actual, err := strategy.CountActiveCredentials(cc)
+			actual, err := strategy.CountActiveFirstFactorCredentials(cc)
 			require.NoError(t, err)
 			assert.Equal(t, tc.expected, actual)
 		})
