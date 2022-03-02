@@ -2,12 +2,14 @@ package credentialmigrate
 
 import (
 	_ "embed"
+	"testing"
+
 	"github.com/gofrs/uuid"
-	"github.com/ory/kratos/identity"
-	"github.com/ory/x/snapshotx"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"testing"
+
+	"github.com/ory/kratos/identity"
+	"github.com/ory/x/snapshotx"
 )
 
 //go:embed stub/webauthn/v0.json
