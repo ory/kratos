@@ -2,19 +2,21 @@ package credentialmigrate
 
 import (
 	"encoding/json"
+
+	"github.com/pkg/errors"
+
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/selfservice/strategy/webauthn"
-	"github.com/pkg/errors"
 )
 
 // UpgradeWebAuthnCredential migrates a webauthn credential from an older version to a newer version.
 func UpgradeWebAuthnCredential(i *identity.Identity, ic *identity.Credentials, c *webauthn.CredentialsConfig) {
 	if ic.Version == 0 {
-		for k := range c.Credentials {
-			c.Credentials[k].UserHandle = i.ID.String()
-
-			// We do not set c.IsPasswordless  as it defaults to false anyways, which is the correct migration .
+		if len(c.UserHandle) == 0 {
+			c.UserHandle = i.ID[:]
 		}
+
+		// We do not set c.IsPasswordless as it defaults to false anyways, which is the correct migration .
 
 		ic.Version = 1
 	}
