@@ -153,7 +153,7 @@ func NewInfoSelfServiceSettingsUpdateUnlinkOIDC(provider string) *Message {
 	}
 }
 
-func NewInfoSelfServiceRegisterWebAuthn() *Message {
+func NewInfoSelfServiceSettingsRegisterWebAuthn() *Message {
 	return &Message{
 		ID:   InfoSelfServiceSettingsRegisterWebAuthn,
 		Text: "Add security key",
