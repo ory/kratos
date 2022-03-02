@@ -8,6 +8,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/tidwall/gjson"
+
 	"github.com/ory/x/assertx"
 
 	"github.com/ory/kratos/internal/testhelpers"
@@ -69,6 +71,15 @@ func TestPool(ctx context.Context, conf *config.Config, p interface {
 			i.SetCredentials(identity.CredentialsTypePassword, identity.Credentials{
 				Type: identity.CredentialsTypePassword, Identifiers: []string{credentialsID},
 				Config: sqlxx.JSONRawMessage(`{"foo":"bar"}`),
+			})
+			return i
+		}
+
+		var webAuthnIdentity = func(schemaID string, credentialsID string) *identity.Identity {
+			i := identity.NewIdentity(schemaID)
+			i.SetCredentials(identity.CredentialsTypeWebAuthn, identity.Credentials{
+				Type: identity.CredentialsTypeWebAuthn, Identifiers: []string{credentialsID},
+				Config: sqlxx.JSONRawMessage(`{"credentials":[{}]}`),
 			})
 			return i
 		}
@@ -149,6 +160,18 @@ func TestPool(ctx context.Context, conf *config.Config, p interface {
 
 			_, err = p.GetIdentityConfidential(ctx, x.NewUUID())
 			require.Error(t, err)
+		})
+
+		t.Run("case=run migrations when fetching credentials", func(t *testing.T) {
+			expected := webAuthnIdentity(altSchema.ID, "webauthn")
+			require.NoError(t, p.CreateIdentity(ctx, expected))
+			createdIDs = append(createdIDs, expected.ID)
+
+			actual, err := p.GetIdentityConfidential(ctx, expected.ID)
+			require.NoError(t, err)
+			c := actual.GetCredentialsOr(identity.CredentialsTypeWebAuthn, &identity.Credentials{})
+			assert.True(t, gjson.GetBytes(c.Config, "credentials.0.is_passwordless").Exists())
+			assert.Equal(t, expected.ID.String(), gjson.GetBytes(c.Config, "credentials.0.user_handle").String())
 		})
 
 		t.Run("case=create and keep set values", func(t *testing.T) {
