@@ -13,7 +13,7 @@ import (
 	"github.com/ory/kratos/internal"
 )
 
-func TestCountActiveCredentials(t *testing.T) {
+func TestCountActiveFirstFactorCredentials(t *testing.T) {
 	_, reg := internal.NewFastRegistryWithMocks(t)
 	strategy := webauthn.NewStrategy(reg)
 
@@ -41,7 +41,23 @@ func TestCountActiveCredentials(t *testing.T) {
 				Identifiers: []string{"foo"},
 				Config:      []byte(`{"credentials": [{}]}`),
 			}},
+			expected: 0,
+		},
+		{
+			in: identity.CredentialsCollection{{
+				Type:        strategy.ID(),
+				Identifiers: []string{"foo"},
+				Config:      []byte(`{"credentials": [{"is_passwordless": true}]}`),
+			}},
 			expected: 1,
+		},
+		{
+			in: identity.CredentialsCollection{{
+				Type:        strategy.ID(),
+				Identifiers: []string{"foo"},
+				Config:      []byte(`{"credentials": [{"is_passwordless": true}, {"is_passwordless": true}]}`),
+			}},
+			expected: 2,
 		},
 		{
 			in: identity.CredentialsCollection{{
@@ -61,7 +77,7 @@ func TestCountActiveCredentials(t *testing.T) {
 				cc[c.Type] = c
 			}
 
-			actual, err := strategy.CountActiveCredentials(cc)
+			actual, err := strategy.CountActiveFirstFactorCredentials(cc)
 			require.NoError(t, err)
 			assert.Equal(t, tc.expected, actual)
 		})

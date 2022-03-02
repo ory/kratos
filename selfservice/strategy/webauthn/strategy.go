@@ -58,6 +58,8 @@ type registrationStrategyDependencies interface {
 
 	identity.PrivilegedPoolProvider
 	identity.ValidationProvider
+	identity.ActiveCredentialsCounterStrategyProvider
+	identity.ManagementProvider
 
 	session.HandlerProvider
 	session.ManagementProvider
@@ -75,7 +77,7 @@ func NewStrategy(d registrationStrategyDependencies) *Strategy {
 	}
 }
 
-func (s *Strategy) CountActiveCredentials(cc map[identity.CredentialsType]identity.Credentials) (count int, err error) {
+func (s *Strategy) CountActiveFirstFactorCredentials(cc map[identity.CredentialsType]identity.Credentials) (count int, err error) {
 	for _, c := range cc {
 		if c.Type == s.ID() && len(c.Config) > 0 {
 			var conf CredentialsConfig
@@ -83,8 +85,10 @@ func (s *Strategy) CountActiveCredentials(cc map[identity.CredentialsType]identi
 				return 0, errors.WithStack(err)
 			}
 
-			if len(conf.Credentials) > 0 {
-				count++
+			for _, c := range conf.Credentials {
+				if c.IsPasswordless {
+					count++
+				}
 			}
 		}
 	}
