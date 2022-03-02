@@ -14,7 +14,7 @@
       "type": "string",
       "minLength": 1
     },
-    "password_identifier": {
+    "identifier": {
       "type": "string",
       "minLength": 1
     },
@@ -25,6 +25,7 @@
   "if": {
     "properties": {
       "password_identifier": {
+        "type": "string",
         "minLength": 1
       }
     },

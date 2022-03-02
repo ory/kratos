@@ -330,7 +330,13 @@ func TestSettings(t *testing.T) {
 	}
 
 	t.Run("description=should update the password even if no password was set before", func(t *testing.T) {
-		email := fmt.Sprintf("test+%s@ory.sh", x.NewUUID())
+		bi := newIdentityWithoutCredentials(x.NewUUID().String() + "@ory.sh")
+		si := newIdentityWithoutCredentials(x.NewUUID().String() + "@ory.sh")
+		ai := newIdentityWithoutCredentials(x.NewUUID().String() + "@ory.sh")
+		browserUser := testhelpers.NewHTTPClientWithIdentitySessionCookie(t, reg, bi)
+		spaUser := testhelpers.NewHTTPClientWithIdentitySessionCookie(t, reg, si)
+		apiUser := testhelpers.NewHTTPClientWithIdentitySessionToken(t, reg, ai)
+
 		var check = func(t *testing.T, actual string, id *identity.Identity) {
 			assert.Equal(t, "success", gjson.Get(actual, "state").String(), "%s", actual)
 			assert.Empty(t, gjson.Get(actual, "ui.nodes.#(name==password).attributes.value").String(), "%s", actual)
@@ -340,7 +346,7 @@ func TestSettings(t *testing.T) {
 			cfg := string(actualIdentity.Credentials[identity.CredentialsTypePassword].Config)
 			assert.Contains(t, cfg, "hashed_password", "%+v", actualIdentity.Credentials)
 			require.Len(t, actualIdentity.Credentials[identity.CredentialsTypePassword].Identifiers, 1)
-			assert.Equal(t, email, actualIdentity.Credentials[identity.CredentialsTypePassword].Identifiers[0])
+			assert.Contains(t, actualIdentity.Credentials[identity.CredentialsTypePassword].Identifiers[0], "-4")
 		}
 
 		var payload = func(v url.Values) {
@@ -348,23 +354,19 @@ func TestSettings(t *testing.T) {
 			v.Set("password", randx.MustString(16, randx.AlphaNum))
 		}
 
-		id := newIdentityWithoutCredentials(email)
-		browserUser := testhelpers.NewHTTPClientWithIdentitySessionCookie(t, reg, id)
-		apiUser := testhelpers.NewHTTPClientWithIdentitySessionToken(t, reg, id)
-
 		t.Run("type=api", func(t *testing.T) {
 			actual := expectSuccess(t, true, false, apiUser, payload)
-			check(t, actual, id)
+			check(t, actual, ai)
 		})
 
 		t.Run("type=spa", func(t *testing.T) {
-			actual := expectSuccess(t, false, true, browserUser, payload)
-			check(t, actual, id)
+			actual := expectSuccess(t, false, true, spaUser, payload)
+			check(t, actual, si)
 		})
 
 		t.Run("type=browser", func(t *testing.T) {
 			actual := expectSuccess(t, false, false, browserUser, payload)
-			check(t, actual, id)
+			check(t, actual, bi)
 		})
 	})
 
