@@ -8,6 +8,26 @@
     },
     "webauthn_login": {
       "type": "string"
+    },
+    "method": {
+      "type": "string"
+    },
+    "identifier": {
+      "type": "string",
+      "minLength": 1
     }
-  }
+  },
+  "oneOf": [
+    {
+      "required": [
+        "webauthn_login"
+      ]
+    },
+    {
+      "required": [
+        "identifier",
+        "method"
+      ]
+    }
+  ]
 }
