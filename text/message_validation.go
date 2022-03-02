@@ -146,3 +146,12 @@ func NewErrorValidationNoWebAuthnDevice() *Message {
 		Context: context(nil),
 	}
 }
+
+func NewErrorValidationSuchNoWebAuthnUser() *Message {
+	return &Message{
+		ID:      ErrorValidationSuchNoWebAuthnUser,
+		Text:    "This account does not exist or has no security key set up.",
+		Type:    Error,
+		Context: context(nil),
+	}
+}
