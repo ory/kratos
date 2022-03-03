@@ -17,7 +17,43 @@
       "minLength": 1
     }
   },
-  "required": [
-    "identifier"
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "method": {
+            "const": "webauthn"
+          }
+        },
+        "required": [
+          "method"
+        ]
+      },
+      "then": {
+        "required": [
+          "method",
+          "identifier"
+        ]
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "webauthn_login": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "required": [
+          "webauthn_login"
+        ]
+      },
+      "then": {
+        "required": [
+          "webauthn_login",
+          "identifier"
+        ]
+      }
+    }
   ]
 }
