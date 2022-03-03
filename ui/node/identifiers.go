@@ -19,7 +19,6 @@ const (
 const (
 	WebAuthnRegisterTrigger     = "webauthn_register_trigger"
 	WebAuthnRegister            = "webauthn_register"
-	WebAuthnIdentifier          = "webauthn_identifier"
 	WebAuthnLogin               = "webauthn_login"
 	WebAuthnLoginTrigger        = "webauthn_login_trigger"
 	WebAuthnRegisterDisplayName = "webauthn_register_displayname"

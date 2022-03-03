@@ -1,10 +1,22 @@
 package registrationhelpers
 
 import (
+	"bytes"
 	"context"
 	_ "embed"
 	"encoding/json"
 	"fmt"
+	"net/http"
+	"net/http/httptest"
+	"net/url"
+	"strings"
+	"testing"
+	"time"
+
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+	"github.com/tidwall/gjson"
+
 	kratos "github.com/ory/kratos-client-go"
 	"github.com/ory/kratos/driver"
 	"github.com/ory/kratos/driver/config"
@@ -16,15 +28,7 @@ import (
 	"github.com/ory/x/assertx"
 	"github.com/ory/x/httpx"
 	"github.com/ory/x/ioutilx"
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
-	"github.com/tidwall/gjson"
-	"net/http"
-	"net/http/httptest"
-	"net/url"
-	"strings"
-	"testing"
-	"time"
+	"github.com/ory/x/stringslice"
 )
 
 func setupServer(t *testing.T, reg *driver.RegistryDefault) *httptest.Server {
@@ -78,8 +82,166 @@ var basicSchema []byte
 //go:embed stub/multifield.schema.json
 var multifieldSchema []byte
 
-func AssertRegistrationRespectsValidation(t *testing.T, flows []string, payload func(url.Values)) {
-	conf, reg := internal.NewFastRegistryWithMocks(t)
+var skipIfNotEnabled = func(t *testing.T, flows []string, flow string) {
+	if !stringslice.Has(flows, flow) {
+		t.Skipf("Skipping for %s flow because it was not included in the list of flows to be executed.", flow)
+	}
+}
+
+func AssertSchemDoesNotExist(t *testing.T, reg *driver.RegistryDefault, flows []string, payload func(v url.Values)) {
+	conf := reg.Config(context.Background())
+	_ = testhelpers.NewRegistrationUIFlowEchoServer(t, reg)
+	publicTS := setupServer(t, reg)
+	apiClient := testhelpers.NewDebugClient(t)
+	errTS := testhelpers.NewErrorTestServer(t, reg)
+
+	reset := func() {
+		testhelpers.SetDefaultIdentitySchemaFromRaw(conf, basicSchema)
+	}
+	reset()
+
+	t.Run("case=should fail because schema does not exist", func(t *testing.T) {
+		var check = func(t *testing.T, actual string) {
+			assert.Equal(t, int64(http.StatusInternalServerError), gjson.Get(actual, "code").Int(), "%s", actual)
+			assert.Equal(t, "Internal Server Error", gjson.Get(actual, "status").String(), "%s", actual)
+			assert.Contains(t, gjson.Get(actual, "reason").String(), "no such file or directory", "%s", actual)
+		}
+
+		values := url.Values{
+			"traits.username": {testhelpers.RandomEmail()},
+			"traits.foobar":   {"bar"},
+			"csrf_token":      {x.FakeCSRFToken},
+		}
+		payload(values)
+
+		t.Run("type=api", func(t *testing.T) {
+			skipIfNotEnabled(t, flows, "api")
+			f := testhelpers.InitializeRegistrationFlowViaAPI(t, apiClient, publicTS)
+			testhelpers.SetDefaultIdentitySchema(conf, "file://./stub/i-do-not-exist.schema.json")
+			t.Cleanup(reset)
+
+			body, res := testhelpers.RegistrationMakeRequest(t, false, false, f, apiClient, values.Encode())
+			assert.Contains(t, res.Request.URL.String(), publicTS.URL)
+			check(t, gjson.Get(body, "error").Raw)
+		})
+
+		t.Run("type=spa", func(t *testing.T) {
+			skipIfNotEnabled(t, flows, "spa")
+			browserClient := testhelpers.NewClientWithCookies(t)
+			f := testhelpers.InitializeRegistrationFlowViaBrowser(t, browserClient, publicTS, true)
+			testhelpers.SetDefaultIdentitySchema(conf, "file://./stub/i-do-not-exist.schema.json")
+			t.Cleanup(reset)
+
+			body, res := testhelpers.RegistrationMakeRequest(t, false, true, f, apiClient, values.Encode())
+			assert.Contains(t, res.Request.URL.String(), publicTS.URL)
+			check(t, gjson.Get(body, "error").Raw)
+		})
+
+		t.Run("type=browser", func(t *testing.T) {
+			skipIfNotEnabled(t, flows, "browser")
+			browserClient := testhelpers.NewClientWithCookies(t)
+			f := testhelpers.InitializeRegistrationFlowViaBrowser(t, browserClient, publicTS, false)
+			testhelpers.SetDefaultIdentitySchema(conf, "file://./stub/i-do-not-exist.schema.json")
+			t.Cleanup(reset)
+
+			body, res := testhelpers.RegistrationMakeRequest(t, false, false, f, apiClient, values.Encode())
+			assert.Contains(t, res.Request.URL.String(), errTS.URL)
+			check(t, body)
+		})
+	})
+}
+
+func AssertCSRFFailures(t *testing.T, reg *driver.RegistryDefault, flows []string, payload func(v url.Values)) {
+	conf := reg.Config(context.Background())
+	testhelpers.SetDefaultIdentitySchemaFromRaw(conf, multifieldSchema)
+	_ = testhelpers.NewRegistrationUIFlowEchoServer(t, reg)
+	publicTS := setupServer(t, reg)
+	apiClient := testhelpers.NewDebugClient(t)
+	_ = testhelpers.NewErrorTestServer(t, reg)
+
+	var values = url.Values{
+		"csrf_token":      {"invalid_token"},
+		"traits.username": {testhelpers.RandomEmail()},
+		"traits.foobar":   {"bar"},
+	}
+
+	payload(values)
+
+	t.Run("case=should fail because of missing CSRF token/type=browser", func(t *testing.T) {
+		skipIfNotEnabled(t, flows, "browser")
+
+		browserClient := testhelpers.NewClientWithCookies(t)
+		f := testhelpers.InitializeRegistrationFlowViaBrowser(t, browserClient, publicTS, false)
+
+		actual, res := testhelpers.RegistrationMakeRequest(t, false, false, f, browserClient, values.Encode())
+		assert.EqualValues(t, http.StatusOK, res.StatusCode)
+		assertx.EqualAsJSON(t, x.ErrInvalidCSRFToken,
+			json.RawMessage(actual), "%s", actual)
+	})
+
+	t.Run("case=should fail because of missing CSRF token/type=spa", func(t *testing.T) {
+		skipIfNotEnabled(t, flows, "spa")
+
+		browserClient := testhelpers.NewClientWithCookies(t)
+		f := testhelpers.InitializeRegistrationFlowViaBrowser(t, browserClient, publicTS, true)
+
+		actual, res := testhelpers.RegistrationMakeRequest(t, false, true, f, browserClient, values.Encode())
+		assert.EqualValues(t, http.StatusForbidden, res.StatusCode)
+		assertx.EqualAsJSON(t, x.ErrInvalidCSRFToken,
+			json.RawMessage(gjson.Get(actual, "error").Raw), "%s", actual)
+	})
+
+	t.Run("case=should pass even without CSRF token/type=api", func(t *testing.T) {
+		skipIfNotEnabled(t, flows, "api")
+
+		f := testhelpers.InitializeRegistrationFlowViaAPI(t, apiClient, publicTS)
+
+		actual, res := testhelpers.RegistrationMakeRequest(t, true, false, f, apiClient, testhelpers.EncodeFormAsJSON(t, true, values))
+		assert.EqualValues(t, http.StatusOK, res.StatusCode)
+		assert.NotEmpty(t, gjson.Get(actual, "identity.id").Raw, "%s", actual) // registration successful
+	})
+
+	t.Run("case=should fail with correct CSRF error cause/type=api", func(t *testing.T) {
+		skipIfNotEnabled(t, flows, "api")
+
+		for k, tc := range []struct {
+			mod func(http.Header)
+			exp string
+		}{
+			{
+				mod: func(h http.Header) {
+					h.Add("Cookie", "name=bar")
+				},
+				exp: "The HTTP Request Header included the \\\"Cookie\\\" key",
+			},
+			{
+				mod: func(h http.Header) {
+					h.Add("Origin", "www.bar.com")
+				},
+				exp: "The HTTP Request Header included the \\\"Origin\\\" key",
+			},
+		} {
+			t.Run(fmt.Sprintf("case=%d", k), func(t *testing.T) {
+				f := testhelpers.InitializeRegistrationFlowViaAPI(t, apiClient, publicTS)
+				c := f.Ui
+
+				req := testhelpers.NewRequest(t, true, "POST", c.Action, bytes.NewBufferString(testhelpers.EncodeFormAsJSON(t, true, values)))
+				tc.mod(req.Header)
+
+				res, err := apiClient.Do(req)
+				require.NoError(t, err)
+				defer res.Body.Close()
+
+				actual := string(ioutilx.MustReadAll(res.Body))
+				assert.EqualValues(t, http.StatusBadRequest, res.StatusCode)
+				assert.Contains(t, actual, tc.exp)
+			})
+		}
+	})
+}
+
+func AssertRegistrationRespectsValidation(t *testing.T, reg *driver.RegistryDefault, flows []string, payload func(url.Values)) {
+	conf := reg.Config(context.Background())
 	testhelpers.SetDefaultIdentitySchemaFromRaw(conf, multifieldSchema)
 	_ = testhelpers.NewRegistrationUIFlowEchoServer(t, reg)
 	publicTS := setupServer(t, reg)
@@ -108,7 +270,7 @@ func AssertRegistrationRespectsValidation(t *testing.T, flows []string, payload 
 	})
 }
 
-func AssertCommonErrorCases(t *testing.T, flows []string) {
+func AssertCommonErrorCases(t *testing.T, reg *driver.RegistryDefault, flows []string) {
 	conf, reg := internal.NewFastRegistryWithMocks(t)
 	testhelpers.SetDefaultIdentitySchemaFromRaw(conf, basicSchema)
 	uiTS := testhelpers.NewRegistrationUIFlowEchoServer(t, reg)

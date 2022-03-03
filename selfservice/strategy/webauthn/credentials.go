@@ -1,8 +1,9 @@
 package webauthn
 
 import (
-	"github.com/ory/kratos/identity"
 	"time"
+
+	"github.com/ory/kratos/identity"
 
 	"github.com/duo-labs/webauthn/webauthn"
 )

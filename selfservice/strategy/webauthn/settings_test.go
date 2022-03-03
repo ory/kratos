@@ -5,11 +5,12 @@ import (
 	_ "embed"
 	"encoding/json"
 	"fmt"
-	"github.com/ory/x/snapshotx"
 	"net/http"
 	"net/url"
 	"testing"
 	"time"
+
+	"github.com/ory/x/snapshotx"
 
 	"github.com/ory/kratos/selfservice/flow"
 	"github.com/ory/kratos/selfservice/strategy/webauthn"
@@ -36,12 +37,6 @@ import (
 	"github.com/ory/kratos/x"
 )
 
-//go:embed fixtures/settings/has_webauth.json
-var settingsFixtureHasWebAuthn []byte
-
-//go:embed fixtures/settings/no_webauth.json
-var settingsFixtureNoWebauthn []byte
-
 //go:embed fixtures/settings/success/identity.json
 var settingsFixtureSuccessIdentity []byte
 
@@ -60,7 +55,7 @@ func createIdentityWithoutWebAuthn(t *testing.T, reg driver.Registry) *identity.
 	return id
 }
 
-func createIdentity(t *testing.T, reg driver.Registry) *identity.Identity {
+func createIdentityAndReturnIdentifier(t *testing.T, reg driver.Registry, conf []byte) (*identity.Identity, string) {
 	identifier := x.NewUUID().String() + "@ory.sh"
 	password := x.NewUUID().String()
 	p, err := reg.Hasher().Generate(context.Background(), []byte(password))
@@ -75,6 +70,9 @@ func createIdentity(t *testing.T, reg driver.Registry) *identity.Identity {
 			},
 		},
 	}
+	if conf == nil {
+		conf = []byte(`{"credentials":[{"id":"Zm9vZm9v","display_name":"foo"},{"id":"YmFyYmFy","display_name":"bar"}]}`)
+	}
 	require.NoError(t, reg.PrivilegedIdentityPool().CreateIdentity(context.Background(), i))
 	i.Credentials = map[identity.CredentialsType]identity.Credentials{
 		identity.CredentialsTypePassword: {
@@ -84,12 +82,17 @@ func createIdentity(t *testing.T, reg driver.Registry) *identity.Identity {
 		},
 		identity.CredentialsTypeWebAuthn: {
 			Type:        identity.CredentialsTypeWebAuthn,
-			Identifiers: []string{i.ID.String()},
-			Config:      sqlxx.JSONRawMessage(`{"credentials":[{"id":"Zm9vZm9v","display_name":"foo"},{"id":"YmFyYmFy","display_name":"bar"}]}`),
+			Identifiers: []string{identifier},
+			Config:      conf,
 		},
 	}
 	require.NoError(t, reg.PrivilegedIdentityPool().UpdateIdentity(context.Background(), i))
-	return i
+	return i, identifier
+}
+
+func createIdentity(t *testing.T, reg driver.Registry) *identity.Identity {
+	id, _ := createIdentityAndReturnIdentifier(t, reg, nil)
+	return id
 }
 
 func enableWebAuthn(conf *config.Config) {

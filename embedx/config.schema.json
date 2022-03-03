@@ -571,7 +571,7 @@
         }
       }
     },
-    "selfServiceAfterPasswordLoginMethod": {
+    "selfServiceAfterDefaultLoginMethod": {
       "type": "object",
       "additionalProperties": false,
       "properties": {
@@ -691,7 +691,10 @@
           "$ref": "#/definitions/defaultReturnTo"
         },
         "password": {
-          "$ref": "#/definitions/selfServiceAfterPasswordLoginMethod"
+          "$ref": "#/definitions/selfServiceAfterDefaultLoginMethod"
+        },
+        "webauthn": {
+          "$ref": "#/definitions/selfServiceAfterDefaultLoginMethod"
         },
         "oidc": {
           "$ref": "#/definitions/selfServiceAfterOIDCLoginMethod"
