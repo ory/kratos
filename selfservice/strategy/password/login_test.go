@@ -6,13 +6,14 @@ import (
 	_ "embed"
 	"encoding/json"
 	"fmt"
-	"github.com/ory/kratos/internal/registrationhelpers"
 	"io/ioutil"
 	"net/http"
 	"net/url"
 	"strings"
 	"testing"
 	"time"
+
+	"github.com/ory/kratos/internal/registrationhelpers"
 
 	"github.com/ory/kratos/selfservice/flow"
 
