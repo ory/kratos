@@ -1,10 +1,8 @@
 package password_test
 
 import (
-	"bytes"
-	"encoding/json"
+	"context"
 	"fmt"
-	"github.com/ory/kratos/internal/registrationhelpers"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
@@ -12,15 +10,16 @@ import (
 	"testing"
 	"time"
 
+	"github.com/ory/kratos/driver"
+	"github.com/ory/kratos/internal/registrationhelpers"
+
 	"github.com/ory/kratos/text"
 	"github.com/ory/kratos/ui/node"
 
-	"github.com/ory/kratos/ui/container"
-	"github.com/ory/x/ioutilx"
-
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 	"github.com/tidwall/gjson"
+
+	"github.com/ory/kratos/ui/container"
 
 	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/identity"
@@ -30,6 +29,7 @@ import (
 	"github.com/ory/x/assertx"
 
 	_ "embed"
+
 	"github.com/ory/kratos/x"
 )
 
@@ -38,16 +38,22 @@ var flows = []string{"spa", "api", "browser"}
 //go:embed stub/registration.schema.json
 var registrationSchema []byte
 
+func newRegistrationRegistry(t *testing.T) *driver.RegistryDefault {
+	conf, reg := internal.NewFastRegistryWithMocks(t)
+	conf.MustSet(config.ViperKeySelfServiceStrategyConfig+"."+string(identity.CredentialsTypePassword), map[string]interface{}{"enabled": true})
+	return reg
+}
+
 func TestRegistration(t *testing.T) {
 	t.Run("case=registration", func(t *testing.T) {
-		conf, reg := internal.NewFastRegistryWithMocks(t)
+		reg := newRegistrationRegistry(t)
+		conf := reg.Config(context.Background())
 
 		router := x.NewRouterPublic()
 		admin := x.NewRouterAdmin()
-		conf.MustSet(config.ViperKeySelfServiceStrategyConfig+"."+string(identity.CredentialsTypePassword), map[string]interface{}{"enabled": true})
 
 		publicTS, _ := testhelpers.NewKratosServerWithRouters(t, reg, router, admin)
-		errTS := testhelpers.NewErrorTestServer(t, reg)
+		_ = testhelpers.NewErrorTestServer(t, reg)
 		_ = testhelpers.NewRegistrationUIFlowEchoServer(t, reg)
 		redirTS := testhelpers.NewRedirSessionEchoTS(t, reg)
 		redirNoSessionTS := testhelpers.NewRedirNoSessionTS(t, reg)
@@ -65,142 +71,30 @@ func TestRegistration(t *testing.T) {
 		apiClient := testhelpers.NewDebugClient(t)
 
 		t.Run("AssertCommonErrorCases", func(t *testing.T) {
-			registrationhelpers.AssertCommonErrorCases(t, flows)
+			reg := newRegistrationRegistry(t)
+			registrationhelpers.AssertCommonErrorCases(t, reg, flows)
 		})
 
 		t.Run("AssertRegistrationRespectsValidation", func(t *testing.T) {
-			registrationhelpers.AssertRegistrationRespectsValidation(t, flows, func(v url.Values) {
+			reg := newRegistrationRegistry(t)
+			registrationhelpers.AssertRegistrationRespectsValidation(t, reg, flows, func(v url.Values) {
 				v.Del("traits.foobar")
 			})
 		})
 
-		t.Run("case=should have correct CSRF behavior", func(t *testing.T) {
-			var values = url.Values{
-				"method":          {"password"},
-				"csrf_token":      {"invalid_token"},
-				"traits.username": {"registration-identifier-csrf-browser"},
-				"password":        {x.NewUUID().String()},
-				"traits.foobar":   {"bar"},
-			}
-
-			t.Run("case=should fail because of missing CSRF token/type=browser", func(t *testing.T) {
-				browserClient := testhelpers.NewClientWithCookies(t)
-				f := testhelpers.InitializeRegistrationFlowViaBrowser(t, browserClient, publicTS, false)
-
-				actual, res := testhelpers.RegistrationMakeRequest(t, false, false, f, browserClient, values.Encode())
-				assert.EqualValues(t, http.StatusOK, res.StatusCode)
-				assertx.EqualAsJSON(t, x.ErrInvalidCSRFToken,
-					json.RawMessage(actual), "%s", actual)
-			})
-
-			t.Run("case=should fail because of missing CSRF token/type=spa", func(t *testing.T) {
-				browserClient := testhelpers.NewClientWithCookies(t)
-				f := testhelpers.InitializeRegistrationFlowViaBrowser(t, browserClient, publicTS, true)
-
-				actual, res := testhelpers.RegistrationMakeRequest(t, false, true, f, browserClient, values.Encode())
-				assert.EqualValues(t, http.StatusForbidden, res.StatusCode)
-				assertx.EqualAsJSON(t, x.ErrInvalidCSRFToken,
-					json.RawMessage(gjson.Get(actual, "error").Raw), "%s", actual)
-			})
-
-			t.Run("case=should pass even without CSRF token/type=api", func(t *testing.T) {
-				f := testhelpers.InitializeRegistrationFlowViaAPI(t, apiClient, publicTS)
-
-				actual, res := testhelpers.RegistrationMakeRequest(t, true, false, f, apiClient, testhelpers.EncodeFormAsJSON(t, true, values))
-				assert.EqualValues(t, http.StatusOK, res.StatusCode)
-				assert.NotEmpty(t, gjson.Get(actual, "identity.id").Raw, "%s", actual) // registration successful
-			})
-
-			t.Run("case=should fail with correct CSRF error cause/type=api", func(t *testing.T) {
-				for k, tc := range []struct {
-					mod func(http.Header)
-					exp string
-				}{
-					{
-						mod: func(h http.Header) {
-							h.Add("Cookie", "name=bar")
-						},
-						exp: "The HTTP Request Header included the \\\"Cookie\\\" key",
-					},
-					{
-						mod: func(h http.Header) {
-							h.Add("Origin", "www.bar.com")
-						},
-						exp: "The HTTP Request Header included the \\\"Origin\\\" key",
-					},
-				} {
-					t.Run(fmt.Sprintf("case=%d", k), func(t *testing.T) {
-						f := testhelpers.InitializeRegistrationFlowViaAPI(t, apiClient, publicTS)
-						c := f.Ui
-
-						req := testhelpers.NewRequest(t, true, "POST", c.Action, bytes.NewBufferString(testhelpers.EncodeFormAsJSON(t, true, values)))
-						tc.mod(req.Header)
-
-						res, err := apiClient.Do(req)
-						require.NoError(t, err)
-						defer res.Body.Close()
-
-						actual := string(ioutilx.MustReadAll(res.Body))
-						assert.EqualValues(t, http.StatusBadRequest, res.StatusCode)
-						assert.Contains(t, actual, tc.exp)
-					})
-				}
+		t.Run("AssertCSRFFailures", func(t *testing.T) {
+			reg := newRegistrationRegistry(t)
+			registrationhelpers.AssertCSRFFailures(t, reg, flows, func(v url.Values) {
+				v.Set("password", x.NewUUID().String())
+				v.Set("method", identity.CredentialsTypePassword.String())
 			})
 		})
 
-		t.Run("case=should fail because schema does not exist", func(t *testing.T) {
-			var check = func(t *testing.T, actual string) {
-				assert.Equal(t, int64(http.StatusInternalServerError), gjson.Get(actual, "code").Int(), "%s", actual)
-				assert.Equal(t, "Internal Server Error", gjson.Get(actual, "status").String(), "%s", actual)
-				assert.Contains(t, gjson.Get(actual, "reason").String(), "no such file or directory", "%s", actual)
-			}
-
-			values := url.Values{
-				"method":          {"password"},
-				"traits.username": {"registration-identifier-7"},
-				"password":        {x.NewUUID().String()},
-				"traits.foobar":   {"bar"},
-				"csrf_token":      {x.FakeCSRFToken},
-			}
-
-			t.Run("type=api", func(t *testing.T) {
-				f := testhelpers.InitializeRegistrationFlowViaAPI(t, apiClient, publicTS)
-
-				testhelpers.SetDefaultIdentitySchema(conf, "file://./stub/i-do-not-exist.schema.json")
-				t.Cleanup(func() {
-					testhelpers.SetDefaultIdentitySchema(conf, "file://./stub/registration.schema.json")
-				})
-
-				body, res := testhelpers.RegistrationMakeRequest(t, false, false, f, apiClient, values.Encode())
-				assert.Contains(t, res.Request.URL.String(), publicTS.URL)
-				check(t, gjson.Get(body, "error").Raw)
-			})
-
-			t.Run("type=spa", func(t *testing.T) {
-				browserClient := testhelpers.NewClientWithCookies(t)
-				f := testhelpers.InitializeRegistrationFlowViaBrowser(t, browserClient, publicTS, true)
-
-				testhelpers.SetDefaultIdentitySchema(conf, "file://./stub/i-do-not-exist.schema.json")
-				t.Cleanup(func() {
-					testhelpers.SetDefaultIdentitySchema(conf, "file://./stub/registration.schema.json")
-				})
-
-				body, res := testhelpers.RegistrationMakeRequest(t, false, true, f, apiClient, values.Encode())
-				assert.Contains(t, res.Request.URL.String(), publicTS.URL)
-				check(t, gjson.Get(body, "error").Raw)
-			})
-
-			t.Run("type=browser", func(t *testing.T) {
-				browserClient := testhelpers.NewClientWithCookies(t)
-				f := testhelpers.InitializeRegistrationFlowViaBrowser(t, browserClient, publicTS, false)
-
-				testhelpers.SetDefaultIdentitySchema(conf, "file://./stub/i-do-not-exist.schema.json")
-				t.Cleanup(func() {
-					testhelpers.SetDefaultIdentitySchema(conf, "file://./stub/registration.schema.json")
-				})
-				body, res := testhelpers.RegistrationMakeRequest(t, false, false, f, apiClient, values.Encode())
-				assert.Contains(t, res.Request.URL.String(), errTS.URL)
-				check(t, body)
+		t.Run("AssertSchemDoesNotExist", func(t *testing.T) {
+			reg := newRegistrationRegistry(t)
+			registrationhelpers.AssertSchemDoesNotExist(t, reg, flows, func(v url.Values) {
+				v.Set("password", x.NewUUID().String())
+				v.Set("method", identity.CredentialsTypePassword.String())
 			})
 		})
 
@@ -406,8 +300,8 @@ func TestRegistration(t *testing.T) {
 			var checkSecond = func(t *testing.T, actual string) {
 				check(t, actual)
 				assert.EqualValues(t, "registration-identifier-9", gjson.Get(actual, "ui.nodes.#(attributes.name==traits.username).attributes.value").String(), "%s", actual)
-				assert.Empty(t, gjson.Get(actual, "ui.nodes.#(attributes.name==traits.username).attributes.error").Raw)
-				assert.Empty(t, gjson.Get(actual, "ui.nodes.error").Raw)
+				assert.Empty(t, gjson.Get(actual, "ui.nodes.#(attributes.name==traits.username).messages").Array())
+				assert.Empty(t, gjson.Get(actual, "ui.nodes.messages").Array())
 				assert.Contains(t, gjson.Get(actual, "ui.nodes.#(attributes.name==traits.foobar).messages.0").String(), `Property foobar is missing`, "%s", actual)
 			}
 
