@@ -158,7 +158,7 @@ func TestMarshalIdentityWithCredentials(t *testing.T) {
 	credentialsInJson := gjson.Get(b.String(), "credentials")
 	assert.True(t, credentialsInJson.Exists())
 
-	assert.JSONEq(t, "{\"password\":{\"type\":\"password\",\"identifiers\":null,\"updated_at\":\"0001-01-01T00:00:00Z\",\"created_at\":\"0001-01-01T00:00:00Z\"}}", credentialsInJson.Raw)
+	assert.JSONEq(t, "{\"password\":{\"type\":\"password\",\"identifiers\":null,\"updated_at\":\"0001-01-01T00:00:00Z\",\"created_at\":\"0001-01-01T00:00:00Z\",\"version\":0}}", credentialsInJson.Raw)
 	assert.Equal(t, credentials, i.Credentials, "Original credentials should not be touched by marshalling")
 }
 
