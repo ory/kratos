@@ -8,7 +8,6 @@ import (
 	"github.com/ory/kratos/text"
 
 	"github.com/pkg/errors"
-	"github.com/tidwall/sjson"
 
 	"github.com/ory/herodot"
 	"github.com/ory/kratos/identity"
@@ -18,7 +17,6 @@ import (
 	"github.com/ory/kratos/ui/container"
 	"github.com/ory/kratos/ui/node"
 	"github.com/ory/kratos/x"
-	"github.com/ory/x/decoderx"
 	"github.com/ory/x/errorsx"
 )
 
@@ -69,22 +67,7 @@ func (s *Strategy) handleRegistrationError(_ http.ResponseWriter, r *http.Reques
 }
 
 func (s *Strategy) decode(p *SubmitSelfServiceRegistrationFlowWithPasswordMethodBody, r *http.Request) error {
-	ds, err := s.d.Config(r.Context()).DefaultIdentityTraitsSchemaURL()
-	if err != nil {
-		return err
-	}
-	raw, err := sjson.SetBytes(registrationSchema,
-		"properties.traits.$ref", ds.String()+"#/properties/traits")
-	if err != nil {
-		return errors.WithStack(err)
-	}
-
-	compiler, err := decoderx.HTTPRawJSONSchemaCompiler(raw)
-	if err != nil {
-		return errors.WithStack(err)
-	}
-
-	return s.hd.Decode(r, p, compiler, decoderx.HTTPDecoderSetValidatePayloads(true), decoderx.HTTPDecoderJSONFollowsFormFormat())
+	return registration.DecodeBody(p, r, s.hd, s.d.Config(r.Context()), registrationSchema)
 }
 
 func (s *Strategy) Register(w http.ResponseWriter, r *http.Request, f *registration.Flow, i *identity.Identity) (err error) {

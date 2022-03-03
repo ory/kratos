@@ -4,9 +4,10 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
-	"github.com/ory/kratos/selfservice/flowhelpers"
 	"net/http"
 	"time"
+
+	"github.com/ory/kratos/selfservice/flowhelpers"
 
 	"github.com/ory/x/stringsx"
 

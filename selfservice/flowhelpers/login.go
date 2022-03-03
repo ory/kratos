@@ -1,9 +1,10 @@
 package flowhelpers
 
 import (
+	"net/http"
+
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/session"
-	"net/http"
 )
 
 // GuessForcedLoginIdentifier returns the identifier for login flows where the identity needs to refresh the session.
