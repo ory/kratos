@@ -107,7 +107,7 @@ func NewErrorValidationLookupInvalid() *Message {
 func NewErrorValidationIdentifierMissing() *Message {
 	return &Message{
 		ID:   ErrorValidationIdentifierMissing,
-		Text: "Could not find any login identifiers. Did you forget to set them?",
+		Text: "Could not find any login identifiers. Did you forget to set them? This could also be caused by a server misconfiguration.",
 		Type: Error,
 	}
 }

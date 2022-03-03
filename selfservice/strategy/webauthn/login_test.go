@@ -4,13 +4,15 @@ import (
 	"context"
 	_ "embed"
 	"encoding/json"
-	"github.com/duo-labs/webauthn/protocol"
-	kratos "github.com/ory/kratos-client-go"
-	"github.com/ory/kratos/text"
-	"github.com/ory/x/snapshotx"
 	"net/http"
 	"net/url"
 	"testing"
+
+	"github.com/duo-labs/webauthn/protocol"
+
+	kratos "github.com/ory/kratos-client-go"
+	"github.com/ory/kratos/text"
+	"github.com/ory/x/snapshotx"
 
 	"github.com/ory/kratos/selfservice/flow"
 	"github.com/ory/kratos/selfservice/strategy/webauthn"

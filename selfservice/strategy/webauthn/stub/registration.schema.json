@@ -1,0 +1,35 @@
+{
+  "$id": "https://example.com/person.schema.json",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Person",
+  "type": "object",
+  "properties": {
+    "traits": {
+      "type": "object",
+      "properties": {
+        "foobar": {
+          "type": "string",
+          "minLength": 2
+        },
+        "username": {
+          "type": "string",
+          "ory.sh/kratos": {
+            "credentials": {
+              "password": {
+                "identifier": true
+              },
+              "webauthn": {
+                "identifier": true
+              }
+            }
+          }
+        }
+      },
+      "required": [
+        "foobar",
+        "username"
+      ]
+    }
+  },
+  "additionalProperties": false
+}
