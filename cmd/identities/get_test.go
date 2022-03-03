@@ -98,7 +98,7 @@ func TestGetCmd(t *testing.T) {
 		ij, err := json.Marshal(identity.WithCredentialsInJSON(*di))
 		require.NoError(t, err)
 
-		ii := []string{"schema_url", "state_changed_at", "created_at", "updated_at", "credentials.oidc.created_at", "credentials.oidc.updated_at"}
+		ii := []string{"schema_url", "state_changed_at", "created_at", "updated_at", "credentials.oidc.created_at", "credentials.oidc.updated_at", "credentials.oidc.version"}
 		assertx.EqualAsJSONExcept(t, json.RawMessage(ij), json.RawMessage(stdOut), ii)
 	})
 }
