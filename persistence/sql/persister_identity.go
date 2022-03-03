@@ -47,6 +47,25 @@ func (p *Persister) ListRecoveryAddresses(ctx context.Context, page, itemsPerPag
 	return a, err
 }
 
+func (p *Persister) normalizeIdentifier(ct identity.CredentialsType, match string) string {
+	switch ct {
+	case identity.CredentialsTypeLookup:
+		// lookup credentials are case-sensitive
+		return match
+	case identity.CredentialsTypeTOTP:
+		// totp credentials are case-sensitive
+		return match
+	case identity.CredentialsTypeOIDC:
+		// OIDC credentials are case-sensitive
+		return match
+	case identity.CredentialsTypePassword:
+		fallthrough
+	case identity.CredentialsTypeWebAuthn:
+		return strings.ToLower(strings.TrimSpace(match))
+	}
+	return match
+}
+
 func (p *Persister) FindByCredentialsIdentifier(ctx context.Context, ct identity.CredentialsType, match string) (*identity.Identity, *identity.Credentials, error) {
 	nid := corp.ContextualizeNID(ctx, p.nid)
 
@@ -60,9 +79,7 @@ func (p *Persister) FindByCredentialsIdentifier(ctx context.Context, ct identity
 	}
 
 	// Force case-insensitivity and trimming for identifiers
-	if ct == identity.CredentialsTypePassword {
-		match = strings.ToLower(strings.TrimSpace(match))
-	}
+	match = p.normalizeIdentifier(ct, match)
 
 	// #nosec G201
 	if err := p.GetConnection(ctx).RawQuery(fmt.Sprintf(`SELECT
@@ -136,9 +153,7 @@ func (p *Persister) createIdentityCredentials(ctx context.Context, i *identity.I
 
 		for _, ids := range cred.Identifiers {
 			// Force case-insensitivity and trimming for identifiers
-			if cred.Type == identity.CredentialsTypePassword {
-				ids = strings.ToLower(strings.TrimSpace(ids))
-			}
+			ids = p.normalizeIdentifier(cred.Type, ids)
 
 			if len(ids) == 0 {
 				return errors.WithStack(herodot.ErrInternalServerError.WithReasonf("Unable to create identity credentials with missing or empty identifier."))
