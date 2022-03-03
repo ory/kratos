@@ -348,6 +348,7 @@ func TestCompleteLogin(t *testing.T) {
 
 		var values = func(v url.Values) {
 			v.Del("identifier")
+			v.Set("method", identity.CredentialsTypePassword.String())
 			v.Set("password", "password")
 		}
 
