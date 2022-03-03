@@ -1,8 +1,9 @@
 package webauthn
 
 import (
-	"github.com/ory/jsonschema/v3"
 	"github.com/pkg/errors"
+
+	"github.com/ory/jsonschema/v3"
 )
 
 var ErrNotEnoughCredentials = &jsonschema.ValidationError{

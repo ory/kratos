@@ -26,6 +26,9 @@
       ]
     },
     {
+      "method": {
+        "const": "webauthn"
+      },
       "required": [
         "identifier",
         "method"

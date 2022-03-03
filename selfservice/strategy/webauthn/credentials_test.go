@@ -1,8 +1,9 @@
 package webauthn
 
 import (
-	"github.com/ory/kratos/identity"
 	"testing"
+
+	"github.com/ory/kratos/identity"
 
 	"github.com/duo-labs/webauthn/webauthn"
 	"github.com/stretchr/testify/assert"

@@ -1,0 +1,146 @@
+[
+  {
+    "attributes": {
+      "disabled": false,
+      "name": "traits.foobar",
+      "node_type": "input",
+      "required": true,
+      "type": "text"
+    },
+    "group": "default",
+    "messages": [],
+    "meta": {},
+    "type": "input"
+  },
+  {
+    "attributes": {
+      "disabled": false,
+      "name": "traits.username",
+      "node_type": "input",
+      "required": true,
+      "type": "text"
+    },
+    "group": "default",
+    "messages": [],
+    "meta": {},
+    "type": "input"
+  },
+  {
+    "attributes": {
+      "disabled": false,
+      "name": "csrf_token",
+      "node_type": "input",
+      "required": true,
+      "type": "hidden"
+    },
+    "group": "default",
+    "messages": [],
+    "meta": {},
+    "type": "input"
+  },
+  {
+    "attributes": {
+      "disabled": false,
+      "name": "webauthn_register_displayname",
+      "node_type": "input",
+      "type": "text",
+      "value": ""
+    },
+    "group": "webauthn",
+    "messages": [],
+    "meta": {
+      "label": {
+        "id": 1050013,
+        "text": "Name of the security key",
+        "type": "info"
+      }
+    },
+    "type": "input"
+  },
+  {
+    "attributes": {
+      "disabled": false,
+      "name": "webauthn_register",
+      "node_type": "input",
+      "type": "hidden",
+      "value": ""
+    },
+    "group": "webauthn",
+    "messages": [],
+    "meta": {},
+    "type": "input"
+  },
+  {
+    "attributes": {
+      "disabled": false,
+      "name": "webauthn_register_trigger",
+      "node_type": "input",
+      "type": "button",
+      "value": ""
+    },
+    "group": "webauthn",
+    "messages": [],
+    "meta": {
+      "label": {
+        "id": 1040004,
+        "text": "Sign up with security key",
+        "type": "info"
+      }
+    },
+    "type": "input"
+  },
+  {
+    "attributes": {
+      "async": true,
+      "crossorigin": "anonymous",
+      "id": "webauthn_script",
+      "integrity": "sha512-E3ctShTQEYTkfWrjztRCbP77lN7L0jJC2IOd6j8vqUKslvqhX/Ho3QxlQJIeTI78krzAWUQlDXd9JQ0PZlKhzQ==",
+      "node_type": "script",
+      "referrerpolicy": "no-referrer",
+      "type": "text/javascript"
+    },
+    "group": "webauthn",
+    "messages": [],
+    "meta": {},
+    "type": "script"
+  },
+  {
+    "attributes": {
+      "disabled": false,
+      "name": "password",
+      "node_type": "input",
+      "required": true,
+      "type": "password"
+    },
+    "group": "password",
+    "messages": [],
+    "meta": {
+      "label": {
+        "id": 1070001,
+        "text": "Password",
+        "type": "info"
+      }
+    },
+    "type": "input"
+  },
+  {
+    "attributes": {
+      "disabled": false,
+      "name": "method",
+      "node_type": "input",
+      "type": "submit",
+      "value": "password"
+    },
+    "group": "password",
+    "messages": [],
+    "meta": {
+      "label": {
+        "context": {},
+        "id": 1040001,
+        "text": "Sign up",
+        "type": "info"
+      }
+    },
+    "type": "input"
+  }
+]
