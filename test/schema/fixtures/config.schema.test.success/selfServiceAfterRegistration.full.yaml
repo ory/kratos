@@ -1,3 +1,4 @@
 default_browser_return_url: "#/definitions/defaultReturnTo"
 password: "#/definitions/selfServiceAfterRegistrationMethod"
+webauthn: "#/definitions/selfServiceAfterRegistrationMethod"
 oidc: "#/definitions/selfServiceAfterRegistrationMethod"
