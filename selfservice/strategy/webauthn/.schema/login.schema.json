@@ -17,9 +17,9 @@
       "minLength": 1
     }
   },
-  "allOf": [
-    {
-      "if": {
+  "if": {
+    "anyOf": [
+      {
         "properties": {
           "method": {
             "const": "webauthn"
@@ -29,15 +29,7 @@
           "method"
         ]
       },
-      "then": {
-        "required": [
-          "method",
-          "identifier"
-        ]
-      }
-    },
-    {
-      "if": {
+      {
         "properties": {
           "webauthn_login": {
             "type": "string",
@@ -47,13 +39,12 @@
         "required": [
           "webauthn_login"
         ]
-      },
-      "then": {
-        "required": [
-          "webauthn_login",
-          "identifier"
-        ]
       }
-    }
-  ]
+    ]
+  },
+  "then": {
+    "required": [
+      "identifier"
+    ]
+  }
 }
