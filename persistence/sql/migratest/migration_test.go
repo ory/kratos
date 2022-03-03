@@ -5,10 +5,11 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/ory/kratos/identity"
 	"os"
 	"path/filepath"
 	"testing"
+
+	"github.com/ory/kratos/identity"
 
 	"github.com/bradleyjkemp/cupaloy/v2"
 	"github.com/stretchr/testify/assert"
