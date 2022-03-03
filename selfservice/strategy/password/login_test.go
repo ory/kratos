@@ -3,8 +3,10 @@ package password_test
 import (
 	"bytes"
 	"context"
+	_ "embed"
 	"encoding/json"
 	"fmt"
+	"github.com/ory/kratos/internal/registrationhelpers"
 	"io/ioutil"
 	"net/http"
 	"net/url"
@@ -39,6 +41,9 @@ import (
 	"github.com/ory/kratos/x"
 )
 
+//go:embed stub/login.schema.json
+var loginSchema []byte
+
 func TestCompleteLogin(t *testing.T) {
 	conf, reg := internal.NewFastRegistryWithMocks(t)
 	conf.MustSet(config.ViperKeySelfServiceStrategyConfig+"."+string(identity.CredentialsTypePassword),
@@ -54,11 +59,11 @@ func TestCompleteLogin(t *testing.T) {
 	conf.MustSet(config.ViperKeySelfServiceErrorUI, errTS.URL+"/error-ts")
 	conf.MustSet(config.ViperKeySelfServiceLoginUI, uiTS.URL+"/login-ts")
 
-	testhelpers.SetDefaultIdentitySchema(conf, "file://./stub/login.schema.json")
+	testhelpers.SetDefaultIdentitySchemaFromRaw(conf, loginSchema)
 	conf.MustSet(config.ViperKeySecretsDefault, []string{"not-a-secure-session-key"})
 
 	ensureFieldsExist := func(t *testing.T, body []byte) {
-		checkFormContent(t, body, "identifier",
+		registrationhelpers.CheckFormContent(t, body, "identifier",
 			"password",
 			"csrf_token")
 	}
