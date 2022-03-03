@@ -2,6 +2,7 @@ package test
 
 import (
 	"context"
+	"encoding/base64"
 	"fmt"
 	"strconv"
 	"strings"
@@ -171,7 +172,7 @@ func TestPool(ctx context.Context, conf *config.Config, p interface {
 			require.NoError(t, err)
 			c := actual.GetCredentialsOr(identity.CredentialsTypeWebAuthn, &identity.Credentials{})
 			assert.True(t, gjson.GetBytes(c.Config, "credentials.0.is_passwordless").Exists())
-			assert.Equal(t, expected.ID.String(), gjson.GetBytes(c.Config, "credentials.0.user_handle").String())
+			assert.Equal(t, base64.StdEncoding.EncodeToString(expected.ID[:]), gjson.GetBytes(c.Config, "user_handle").String())
 		})
 
 		t.Run("case=create and keep set values", func(t *testing.T) {
@@ -467,6 +468,60 @@ func TestPool(ctx context.Context, conf *config.Config, p interface {
 				_, p := testhelpers.NewNetwork(t, ctx, p)
 				_, _, err := p.FindByCredentialsIdentifier(ctx, identity.CredentialsTypePassword, "find-credentials-identifier@ory.sh")
 				require.ErrorIs(t, err, sqlcon.ErrNoRows)
+			})
+		})
+
+		t.Run("case=find identity by its credentials respects cases", func(t *testing.T) {
+			caseSensitive := "6Q(%ZKd~8u_(5uea@ory.sh"
+			caseInsensitiveWithSpaces := " 6Q(%ZKD~8U_(5uea@ORY.sh "
+
+			expected := identity.NewIdentity("")
+			for _, c := range []identity.CredentialsType{
+				identity.CredentialsTypePassword,
+				identity.CredentialsTypeOIDC,
+				identity.CredentialsTypeTOTP,
+				identity.CredentialsTypeLookup,
+				identity.CredentialsTypeWebAuthn,
+			} {
+				expected.SetCredentials(c, identity.Credentials{Type: c, Identifiers: []string{caseSensitive}, Config: sqlxx.JSONRawMessage(`{}`)})
+			}
+			require.NoError(t, p.CreateIdentity(ctx, expected))
+			createdIDs = append(createdIDs, expected.ID)
+
+			t.Run("case sensitive", func(t *testing.T) {
+				for _, ct := range []identity.CredentialsType{
+					identity.CredentialsTypeOIDC,
+					identity.CredentialsTypeTOTP,
+					identity.CredentialsTypeLookup,
+				} {
+					t.Run(ct.String(), func(t *testing.T) {
+						_, _, err := p.FindByCredentialsIdentifier(ctx, ct, caseInsensitiveWithSpaces)
+						require.Error(t, err)
+
+						actual, creds, err := p.FindByCredentialsIdentifier(ctx, ct, caseSensitive)
+						require.NoError(t, err)
+						assertx.EqualAsJSONExcept(t, expected.Credentials[ct], creds, []string{"created_at", "updated_at", "id"})
+						assertx.EqualAsJSONExcept(t, expected, actual, []string{"created_at", "updated_at", "id"})
+					})
+				}
+			})
+
+			t.Run("case insensitive", func(t *testing.T) {
+				for _, ct := range []identity.CredentialsType{
+					identity.CredentialsTypePassword,
+					identity.CredentialsTypeWebAuthn,
+				} {
+					t.Run(ct.String(), func(t *testing.T) {
+						for _, cs := range []string{caseSensitive, caseInsensitiveWithSpaces} {
+							actual, creds, err := p.FindByCredentialsIdentifier(ctx, ct, cs)
+							require.NoError(t, err)
+							ec := expected.Credentials[ct]
+							ec.Identifiers = []string{strings.ToLower(caseSensitive)}
+							assertx.EqualAsJSONExcept(t, ec, creds, []string{"created_at", "updated_at", "id", "config.user_handle", "config.credentials", "version"})
+							assertx.EqualAsJSONExcept(t, expected, actual, []string{"created_at", "updated_at", "id"})
+						}
+					})
+				}
 			})
 		})
 
