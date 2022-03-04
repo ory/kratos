@@ -3,4 +3,4 @@ provider: github
 client_id: asdf
 client_secret: asdf
 mapper_url: file://./mapper_file
-private_key_id: org
+apple_private_key_id: org

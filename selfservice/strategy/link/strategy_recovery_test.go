@@ -93,7 +93,7 @@ func TestAdminStrategy(t *testing.T) {
 			IdentityId: x.NewUUID().String(),
 		}).Execute()
 		require.IsType(t, err, new(kratos.GenericOpenAPIError), "%T", err)
-		assert.EqualError(t, err.(*kratos.GenericOpenAPIError), "404 Not Found")
+		assert.EqualError(t, err.(*kratos.GenericOpenAPIError), "400 Bad Request")
 	})
 
 	t.Run("description=should create a valid recovery link without email", func(t *testing.T) {

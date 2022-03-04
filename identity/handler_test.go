@@ -11,7 +11,10 @@ import (
 	"testing"
 	"time"
 
-	"github.com/ory/kratos/selfservice/strategy/oidc"
+	"github.com/gofrs/uuid"
+
+	"github.com/ory/kratos/hash"
+	"github.com/ory/x/snapshotx"
 
 	"github.com/bxcodec/faker/v3"
 	"github.com/stretchr/testify/assert"
@@ -95,17 +98,14 @@ func TestHandler(t *testing.T) {
 	})
 
 	t.Run("case=should return 404 on a non-existing resource", func(t *testing.T) {
-
 		for name, ts := range map[string]*httptest.Server{"public": publicTS, "admin": adminTS} {
 			t.Run("endpoint="+name, func(t *testing.T) {
 				_ = get(t, ts, "/identities/does-not-exist", http.StatusNotFound)
-
 			})
 		}
 	})
 
 	t.Run("case=should fail to create an identity because schema id does not exist", func(t *testing.T) {
-
 		for name, ts := range map[string]*httptest.Server{"public": publicTS, "admin": adminTS} {
 			t.Run("endpoint="+name, func(t *testing.T) {
 				var i identity.AdminCreateIdentityBody
@@ -124,7 +124,6 @@ func TestHandler(t *testing.T) {
 				i.Traits = []byte(`{"bar":123}`)
 				res := send(t, ts, "POST", "/identities", http.StatusBadRequest, &i)
 				assert.Contains(t, res.Get("error.reason").String(), "I[#/traits/bar] S[#/properties/traits/properties/bar/type] expected string, but got number")
-
 			})
 		}
 	})
@@ -152,6 +151,80 @@ func TestHandler(t *testing.T) {
 		}
 	})
 
+	t.Run("case=should be able to import users", func(t *testing.T) {
+		ignoreDefault := []string{"id", "schema_url", "state_changed_at", "created_at", "updated_at"}
+		t.Run("without any credentials", func(t *testing.T) {
+			res := send(t, adminTS, "POST", "/identities", http.StatusCreated, identity.AdminCreateIdentityBody{Traits: []byte(`{"email": "import-1@ory.sh"}`)})
+			actual, err := reg.PrivilegedIdentityPool().GetIdentityConfidential(ctx, uuid.FromStringOrNil(res.Get("id").String()))
+			require.NoError(t, err)
+
+			snapshotx.SnapshotTExceptMatchingKeys(t, identity.WithCredentialsInJSON(*actual), ignoreDefault)
+		})
+
+		t.Run("with cleartext password and oidc credentials", func(t *testing.T) {
+			res := send(t, adminTS, "POST", "/identities", http.StatusCreated, identity.AdminCreateIdentityBody{Traits: []byte(`{"email": "import-2@ory.sh"}`),
+				Credentials: &identity.AdminIdentityImportCredentials{
+					Password: &identity.AdminIdentityImportCredentialsPassword{
+						Config: identity.AdminIdentityImportCredentialsPasswordConfig{
+							Password: "123456",
+						},
+					},
+					OIDC: &identity.AdminIdentityImportCredentialsOIDC{
+						Config: identity.AdminIdentityImportCredentialsOIDCConfig{
+							Providers: []identity.AdminCreateIdentityImportCredentialsOidcProvider{
+								{Subject: "import-2", Provider: "google"},
+								{Subject: "import-2", Provider: "github"},
+							},
+						},
+					},
+				},
+			})
+
+			actual, err := reg.PrivilegedIdentityPool().GetIdentityConfidential(ctx, uuid.FromStringOrNil(res.Get("id").String()))
+			require.NoError(t, err)
+
+			snapshotx.SnapshotTExceptMatchingKeys(t, identity.WithCredentialsInJSON(*actual), append(ignoreDefault, "hashed_password"))
+
+			require.NoError(t, hash.Compare(ctx, []byte("123456"), []byte(gjson.GetBytes(actual.Credentials[identity.CredentialsTypePassword].Config, "hashed_password").String())))
+		})
+
+		t.Run("with pkbdf2 password", func(t *testing.T) {
+			res := send(t, adminTS, "POST", "/identities", http.StatusCreated, identity.AdminCreateIdentityBody{Traits: []byte(`{"email": "import-3@ory.sh"}`),
+				Credentials: &identity.AdminIdentityImportCredentials{Password: &identity.AdminIdentityImportCredentialsPassword{
+					Config: identity.AdminIdentityImportCredentialsPasswordConfig{HashedPassword: "$pbkdf2-sha256$i=1000,l=128$e8/arsEf4cvQihdNgqj0Nw$5xQQKNTyeTHx2Ld5/JDE7A"}}}})
+			actual, err := reg.PrivilegedIdentityPool().GetIdentityConfidential(ctx, uuid.FromStringOrNil(res.Get("id").String()))
+			require.NoError(t, err)
+
+			snapshotx.SnapshotTExceptMatchingKeys(t, identity.WithCredentialsInJSON(*actual), append(ignoreDefault, "hashed_password"))
+
+			require.NoError(t, hash.Compare(ctx, []byte("123456"), []byte(gjson.GetBytes(actual.Credentials[identity.CredentialsTypePassword].Config, "hashed_password").String())))
+		})
+
+		t.Run("with bcrypt2 password", func(t *testing.T) {
+			res := send(t, adminTS, "POST", "/identities", http.StatusCreated, identity.AdminCreateIdentityBody{Traits: []byte(`{"email": "import-4@ory.sh"}`),
+				Credentials: &identity.AdminIdentityImportCredentials{Password: &identity.AdminIdentityImportCredentialsPassword{
+					Config: identity.AdminIdentityImportCredentialsPasswordConfig{HashedPassword: "$2a$10$ZsCsoVQ3xfBG/K2z2XpBf.tm90GZmtOqtqWcB5.pYd5Eq8y7RlDyq"}}}})
+			actual, err := reg.PrivilegedIdentityPool().GetIdentityConfidential(ctx, uuid.FromStringOrNil(res.Get("id").String()))
+			require.NoError(t, err)
+
+			snapshotx.SnapshotTExceptMatchingKeys(t, identity.WithCredentialsInJSON(*actual), append(ignoreDefault, "hashed_password"))
+
+			require.NoError(t, hash.Compare(ctx, []byte("123456"), []byte(gjson.GetBytes(actual.Credentials[identity.CredentialsTypePassword].Config, "hashed_password").String())))
+		})
+
+		t.Run("with argon2id password", func(t *testing.T) {
+			res := send(t, adminTS, "POST", "/identities", http.StatusCreated, identity.AdminCreateIdentityBody{Traits: []byte(`{"email": "import-5@ory.sh"}`),
+				Credentials: &identity.AdminIdentityImportCredentials{Password: &identity.AdminIdentityImportCredentialsPassword{
+					Config: identity.AdminIdentityImportCredentialsPasswordConfig{HashedPassword: "$argon2id$v=19$m=16,t=2,p=1$bVI1aE1SaTV6SGQ3bzdXdw$fnjCcZYmEPOUOjYXsT92Cg"}}}})
+			actual, err := reg.PrivilegedIdentityPool().GetIdentityConfidential(ctx, uuid.FromStringOrNil(res.Get("id").String()))
+			require.NoError(t, err)
+
+			snapshotx.SnapshotTExceptMatchingKeys(t, identity.WithCredentialsInJSON(*actual), append(ignoreDefault, "hashed_password"))
+
+			require.NoError(t, hash.Compare(ctx, []byte("123456"), []byte(gjson.GetBytes(actual.Credentials[identity.CredentialsTypePassword].Config, "hashed_password").String())))
+		})
+	})
+
 	t.Run("case=unable to set ID itself", func(t *testing.T) {
 		for name, ts := range map[string]*httptest.Server{"public": publicTS, "admin": adminTS} {
 			t.Run("endpoint="+name, func(t *testing.T) {
@@ -174,7 +247,7 @@ func TestHandler(t *testing.T) {
 			}
 
 			iId := x.NewUUID()
-			toJson := func(c oidc.CredentialsConfig) []byte {
+			toJson := func(c identity.CredentialsOIDC) []byte {
 				out, err := json.Marshal(&c)
 				require.NoError(t, err)
 				return out
@@ -186,7 +259,7 @@ func TestHandler(t *testing.T) {
 					identity.CredentialsTypeOIDC: {
 						Type:        identity.CredentialsTypeOIDC,
 						Identifiers: []string{"bar:" + identifier},
-						Config: toJson(oidc.CredentialsConfig{Providers: []oidc.ProviderCredentialsConfig{
+						Config: toJson(identity.CredentialsOIDC{Providers: []identity.CredentialsOIDCProvider{
 							{
 								Subject:             "foo",
 								Provider:            "bar",
@@ -422,7 +495,7 @@ func TestHandler(t *testing.T) {
 				assert.JSONEq(t, string(cr.Traits), res.Get("traits").Raw, "%s", res.Raw)
 				assert.EqualValues(t, "employee", res.Get("schema_id").String(), "%s", res.Raw)
 				assert.EqualValues(t, identity.StateActive, res.Get("state").String(), "%s", res.Raw)
-				assert.EqualValues(t, mockServerURL.String()+"/schemas/employee", res.Get("schema_url").String(), "%s", res.Raw)
+				assert.EqualValues(t, mockServerURL.String()+"/schemas/ZW1wbG95ZWU", res.Get("schema_url").String(), "%s", res.Raw)
 			})
 		}
 	})
@@ -439,7 +512,7 @@ func TestHandler(t *testing.T) {
 				assert.JSONEq(t, string(cr.Traits), res.Get("traits").Raw, "%s", res.Raw)
 				assert.EqualValues(t, "employee", res.Get("schema_id").String(), "%s", res.Raw)
 				assert.EqualValues(t, identity.StateActive, res.Get("state").String(), "%s", res.Raw)
-				assert.EqualValues(t, mockServerURL.String()+"/schemas/employee", res.Get("schema_url").String(), "%s", res.Raw)
+				assert.EqualValues(t, mockServerURL.String()+"/schemas/ZW1wbG95ZWU", res.Get("schema_url").String(), "%s", res.Raw)
 			})
 		}
 	})
@@ -456,7 +529,7 @@ func TestHandler(t *testing.T) {
 				assert.JSONEq(t, string(cr.Traits), res.Get("traits").Raw, "%s", res.Raw)
 				assert.EqualValues(t, "employee", res.Get("schema_id").String(), "%s", res.Raw)
 				assert.EqualValues(t, identity.StateInactive, res.Get("state").String(), "%s", res.Raw)
-				assert.EqualValues(t, mockServerURL.String()+"/schemas/employee", res.Get("schema_url").String(), "%s", res.Raw)
+				assert.EqualValues(t, mockServerURL.String()+"/schemas/ZW1wbG95ZWU", res.Get("schema_url").String(), "%s", res.Raw)
 			})
 		}
 	})
@@ -479,7 +552,7 @@ func TestHandler(t *testing.T) {
 				})
 
 				assert.EqualValues(t, "employee", res.Get("schema_id").String(), "%s", res.Raw)
-				assert.EqualValues(t, mockServerURL.String()+"/schemas/employee", res.Get("schema_url").String(), "%s", res.Raw)
+				assert.EqualValues(t, mockServerURL.String()+"/schemas/ZW1wbG95ZWU", res.Get("schema_url").String(), "%s", res.Raw)
 				assert.EqualValues(t, updatedEmail, res.Get("traits.email").String(), "%s", res.Raw)
 				assert.EqualValues(t, "ory", res.Get("traits.department").String(), "%s", res.Raw)
 				assert.EqualValues(t, updatedEmail, res.Get("recovery_addresses.0.value").String(), "%s", res.Raw)

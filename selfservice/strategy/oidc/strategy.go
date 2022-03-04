@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
-	"fmt"
 	"net/http"
 	"path/filepath"
 	"strings"
@@ -116,7 +115,7 @@ type authCodeContainer struct {
 func (s *Strategy) CountActiveCredentials(cc map[identity.CredentialsType]identity.Credentials) (count int, err error) {
 	for _, c := range cc {
 		if c.Type == s.ID() && gjson.ValidBytes(c.Config) {
-			var conf CredentialsConfig
+			var conf identity.CredentialsOIDC
 			if err = json.Unmarshal(c.Config, &conf); err != nil {
 				return 0, errors.WithStack(err)
 			}
@@ -364,10 +363,6 @@ func (s *Strategy) handleCallback(w http.ResponseWriter, r *http.Request, ps htt
 			WithDetailf("cause", "Unexpected type in OpenID Connect flow: %T", a))))
 		return
 	}
-}
-
-func uid(provider, subject string) string {
-	return fmt.Sprintf("%s:%s", provider, subject)
 }
 
 func (s *Strategy) populateMethod(r *http.Request, c *container.Container, message func(provider string) *text.Message) error {

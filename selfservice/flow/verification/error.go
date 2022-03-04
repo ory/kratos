@@ -81,7 +81,10 @@ func (s *ErrorHandler) WriteFlowError(
 			return
 		}
 
-		if f.Type == flow.TypeAPI || x.IsJSONRequest(r) {
+		// We need to use the new flow, as that flow will be a browser flow. Bug fix for:
+		//
+		// https://github.com/ory/kratos/issues/2049!!
+		if a.Type == flow.TypeAPI || x.IsJSONRequest(r) {
 			http.Redirect(w, r, urlx.CopyWithQuery(urlx.AppendPaths(s.d.Config(r.Context()).SelfPublicURL(),
 				RouteGetFlow), url.Values{"id": {a.ID.String()}}).String(), http.StatusSeeOther)
 		} else {

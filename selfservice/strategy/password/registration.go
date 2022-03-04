@@ -114,13 +114,10 @@ func (s *Strategy) Register(w http.ResponseWriter, r *http.Request, f *registrat
 		return s.handleRegistrationError(w, r, f, &p, err)
 	}
 
-	co, err := json.Marshal(&CredentialsConfig{HashedPassword: string(hpw)})
-	if err != nil {
-		return s.handleRegistrationError(w, r, f, &p, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("Unable to encode password options to JSON: %s", err)))
-	}
-
 	i.Traits = identity.Traits(p.Traits)
-	i.SetCredentials(s.ID(), identity.Credentials{Type: s.ID(), Identifiers: []string{}, Config: co})
+	if err := i.SetCredentialsWithConfig(s.ID(), identity.Credentials{Type: s.ID(), Identifiers: []string{}}, &identity.CredentialsPassword{HashedPassword: string(hpw)}); err != nil {
+		return s.handleRegistrationError(w, r, f, &p, err)
+	}
 
 	if err := s.validateCredentials(r.Context(), i, p.Password); err != nil {
 		return s.handleRegistrationError(w, r, f, &p, err)
@@ -139,7 +136,13 @@ func (s *Strategy) validateCredentials(ctx context.Context, i *identity.Identity
 		// This should never happen
 		return errors.WithStack(x.PseudoPanic.WithReasonf("identity object did not provide the %s CredentialType unexpectedly", identity.CredentialsTypePassword))
 	} else if len(c.Identifiers) == 0 {
-		return schema.NewMissingIdentifierError()
+		if err := s.d.PasswordValidator().Validate(ctx, "", pw); err != nil {
+			if _, ok := errorsx.Cause(err).(*herodot.DefaultError); ok {
+				return err
+			}
+			return schema.NewPasswordPolicyViolationError("#/password", err.Error())
+		}
+		return nil
 	}
 
 	for _, id := range c.Identifiers {

@@ -246,6 +246,10 @@ Cypress.Commands.add('useLaxAal', ({} = {}) => {
   })
 })
 
+Cypress.Commands.add('updateConfigFile', (cb: (arg: any) => any) => {
+  updateConfigFile(cb)
+})
+
 Cypress.Commands.add(
   'register',
   ({
@@ -385,6 +389,71 @@ Cypress.Commands.add('loginApiWithoutCookies', ({ email, password } = {}) => {
 
 Cypress.Commands.add('recoverApi', ({ email, returnTo }) => {
   let url = APP_URL + '/self-service/recovery/api'
+  if (returnTo) {
+    url += '?return_to=' + returnTo
+  }
+  cy.request({ url })
+    .then(({ body }) => {
+      const form = body.ui
+      return cy.request({
+        method: form.method,
+        body: mergeFields(form, { email, method: 'link' }),
+        url: form.action
+      })
+    })
+    .then(({ body }) => {
+      expect(body.state).to.contain('sent_email')
+    })
+})
+
+Cypress.Commands.add('verificationApi', ({ email, returnTo }) => {
+  let url = APP_URL + '/self-service/verification/api'
+  if (returnTo) {
+    url += '?return_to=' + returnTo
+  }
+  cy.request({ url })
+    .then(({ body }) => {
+      const form = body.ui
+      return cy.request({
+        method: form.method,
+        body: mergeFields(form, { email, method: 'link' }),
+        url: form.action
+      })
+    })
+    .then(({ body }) => {
+      expect(body.state).to.contain('sent_email')
+    })
+})
+
+Cypress.Commands.add('verificationApiExpired', ({ email, returnTo }) => {
+  cy.shortVerificationLifespan()
+  let url = APP_URL + '/self-service/verification/api'
+  if (returnTo) {
+    url += '?return_to=' + returnTo
+  }
+  cy.request({ url })
+    .then(({ body }) => {
+      const form = body.ui
+      return cy.request({
+        method: form.method,
+        body: mergeFields(form, { email, method: 'link' }),
+        url: form.action,
+        failOnStatusCode: false
+      })
+    })
+    .then((response) => {
+      expect(response.status).to.eq(410)
+      expect(response.body.error.reason).to.eq(
+        'The verification flow has expired. Redirect the user to the verification flow init endpoint to initialize a new verification flow.'
+      )
+      expect(response.body.error.details.redirect_to).to.eq(
+        'http://localhost:4455/self-service/verification/browser'
+      )
+    })
+})
+
+Cypress.Commands.add('verificationBrowser', ({ email, returnTo }) => {
+  let url = APP_URL + '/self-service/verification/browser'
   if (returnTo) {
     url += '?return_to=' + returnTo
   }

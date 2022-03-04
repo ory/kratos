@@ -130,7 +130,13 @@ Class | Method | HTTP request | Description
 ## Documentation For Models
 
  - [AdminCreateIdentityBody](docs/AdminCreateIdentityBody.md)
+ - [AdminCreateIdentityImportCredentialsOidc](docs/AdminCreateIdentityImportCredentialsOidc.md)
+ - [AdminCreateIdentityImportCredentialsOidcConfig](docs/AdminCreateIdentityImportCredentialsOidcConfig.md)
+ - [AdminCreateIdentityImportCredentialsOidcProvider](docs/AdminCreateIdentityImportCredentialsOidcProvider.md)
+ - [AdminCreateIdentityImportCredentialsPassword](docs/AdminCreateIdentityImportCredentialsPassword.md)
+ - [AdminCreateIdentityImportCredentialsPasswordConfig](docs/AdminCreateIdentityImportCredentialsPasswordConfig.md)
  - [AdminCreateSelfServiceRecoveryLinkBody](docs/AdminCreateSelfServiceRecoveryLinkBody.md)
+ - [AdminIdentityImportCredentials](docs/AdminIdentityImportCredentials.md)
  - [AdminUpdateIdentityBody](docs/AdminUpdateIdentityBody.md)
  - [AuthenticatorAssuranceLevel](docs/AuthenticatorAssuranceLevel.md)
  - [ErrorAuthenticatorAssuranceLevelNotSatisfied](docs/ErrorAuthenticatorAssuranceLevelNotSatisfied.md)
@@ -139,6 +145,9 @@ Class | Method | HTTP request | Description
  - [HealthStatus](docs/HealthStatus.md)
  - [Identity](docs/Identity.md)
  - [IdentityCredentials](docs/IdentityCredentials.md)
+ - [IdentityCredentialsOidc](docs/IdentityCredentialsOidc.md)
+ - [IdentityCredentialsOidcProvider](docs/IdentityCredentialsOidcProvider.md)
+ - [IdentityCredentialsPassword](docs/IdentityCredentialsPassword.md)
  - [IdentityCredentialsType](docs/IdentityCredentialsType.md)
  - [IdentitySchema](docs/IdentitySchema.md)
  - [IdentityState](docs/IdentityState.md)

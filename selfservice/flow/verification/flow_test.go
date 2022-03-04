@@ -119,3 +119,20 @@ func TestFlowEncodeJSON(t *testing.T) {
 	assert.EqualValues(t, "/bar", gjson.Get(jsonx.TestMarshalJSONString(t, &verification.Flow{RequestURL: "https://foo.bar?return_to=/bar"}), "return_to").String())
 	assert.EqualValues(t, "/bar", gjson.Get(jsonx.TestMarshalJSONString(t, verification.Flow{RequestURL: "https://foo.bar?return_to=/bar"}), "return_to").String())
 }
+
+func TestFromOldFlow(t *testing.T) {
+	conf := internal.NewConfigurationWithDefaults(t)
+	r := http.Request{URL: &url.URL{Path: "/", RawQuery: "return_to=" + urlx.AppendPaths(conf.SelfPublicURL(), "/self-service/login/browser").String()}, Host: "ory.sh"}
+	for _, ft := range []flow.Type{
+		flow.TypeAPI,
+		flow.TypeBrowser,
+	} {
+		t.Run(fmt.Sprintf("case=original flow is %s", ft), func(t *testing.T) {
+			f, err := verification.NewFlow(conf, 0, "csrf", &r, nil, ft)
+			require.NoError(t, err)
+			nf, err := verification.FromOldFlow(conf, time.Duration(time.Hour), f.CSRFToken, &r, []verification.Strategy{}, f)
+			require.NoError(t, err)
+			require.Equal(t, flow.TypeBrowser, nf.Type)
+		})
+	}
+}

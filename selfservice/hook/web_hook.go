@@ -6,6 +6,9 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/pkg/errors"
+	"github.com/tidwall/gjson"
+
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/request"
 	"github.com/ory/kratos/selfservice/flow"
@@ -121,18 +124,37 @@ func (e *WebHook) execute(ctx context.Context, data *templateContext) error {
 	}
 
 	req, err := builder.BuildRequest(data)
-	if err != nil {
+	if errors.Is(err, request.ErrCancel) {
+		return nil
+	} else if err != nil {
 		return err
 	}
 
-	resp, err := e.deps.HTTPClient(ctx).Do(req)
-	if err != nil {
-		return err
+	errChan := make(chan error, 1)
+	go func() {
+		defer close(errChan)
+
+		resp, err := e.deps.HTTPClient(ctx).Do(req)
+		if err != nil {
+			errChan <- err
+			return
+		}
+
+		if resp.StatusCode >= http.StatusBadRequest {
+			errChan <- fmt.Errorf("web hook failed with status code %v", resp.StatusCode)
+			return
+		}
+
+		errChan <- nil
+	}()
+
+	if gjson.GetBytes(e.conf, "response.ignore").Bool() {
+		go func() {
+			err := <-errChan
+			e.deps.Logger().WithError(err).Warning("A web hook request failed but the error was ignored because the configuration indicated that the upstream response should be ignored.")
+		}()
+		return nil
 	}
 
-	if resp.StatusCode >= http.StatusBadRequest {
-		return fmt.Errorf("web hook failed with status code %v", resp.StatusCode)
-	}
-
-	return nil
+	return <-errChan
 }
