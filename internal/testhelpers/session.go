@@ -114,7 +114,7 @@ func NewHTTPClientWithArbitrarySessionToken(t *testing.T, reg *driver.RegistryDe
 		NewSessionLifespanProvider(time.Hour),
 		time.Now(),
 		identity.CredentialsTypePassword,
-		reg.Config(context.Background()).PasswordlessMethods(),
+		identity.AuthenticatorAssuranceLevel1,
 	)
 	require.NoError(t, err, "Could not initialize session from identity.")
 
@@ -127,7 +127,7 @@ func NewHTTPClientWithArbitrarySessionCookie(t *testing.T, reg *driver.RegistryD
 		NewSessionLifespanProvider(time.Hour),
 		time.Now(),
 		identity.CredentialsTypePassword,
-		reg.Config(context.Background()).PasswordlessMethods(),
+		identity.AuthenticatorAssuranceLevel1,
 	)
 	require.NoError(t, err, "Could not initialize session from identity.")
 
@@ -140,7 +140,7 @@ func NewNoRedirectHTTPClientWithArbitrarySessionCookie(t *testing.T, reg *driver
 		NewSessionLifespanProvider(time.Hour),
 		time.Now(),
 		identity.CredentialsTypePassword,
-		reg.Config(context.Background()).PasswordlessMethods(),
+		identity.AuthenticatorAssuranceLevel1,
 	)
 	require.NoError(t, err, "Could not initialize session from identity.")
 
@@ -152,7 +152,8 @@ func NewHTTPClientWithIdentitySessionCookie(t *testing.T, reg *driver.RegistryDe
 		NewSessionLifespanProvider(time.Hour),
 		time.Now(),
 		identity.CredentialsTypePassword,
-		reg.Config(context.Background()).PasswordlessMethods())
+		identity.AuthenticatorAssuranceLevel1,
+	)
 	require.NoError(t, err, "Could not initialize session from identity.")
 
 	return NewHTTPClientWithSessionCookie(t, reg, s)
@@ -163,7 +164,8 @@ func NewHTTPClientWithIdentitySessionToken(t *testing.T, reg *driver.RegistryDef
 		NewSessionLifespanProvider(time.Hour),
 		time.Now(),
 		identity.CredentialsTypePassword,
-		reg.Config(context.Background()).PasswordlessMethods())
+		identity.AuthenticatorAssuranceLevel1,
+	)
 	require.NoError(t, err, "Could not initialize session from identity.")
 
 	return NewHTTPClientWithSessionToken(t, reg, s)

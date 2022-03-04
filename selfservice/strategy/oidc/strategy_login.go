@@ -110,7 +110,7 @@ func (s *Strategy) processLogin(w http.ResponseWriter, r *http.Request, a *login
 	}
 
 	sess := session.NewInactiveSession()
-	sess.CompletedLoginFor(s.ID())
+	sess.CompletedLoginFor(s.ID(), identity.AuthenticatorAssuranceLevel1)
 	for _, c := range o.Providers {
 		if c.Subject == claims.Subject && c.Provider == provider.Config().ID {
 			if err = s.d.LoginHookExecutor().PostLoginHook(w, r, a, i, sess); err != nil {

@@ -132,14 +132,17 @@ func (s *Strategy) PopulateLoginMethod(r *http.Request, requestedAAL identity.Au
 	if sr.IsForced() {
 		// We only show this method on a refresh request if the user has indeed a password set.
 		identifier, id, _ := flowhelpers.GuessForcedLoginIdentifier(r, s.d, sr, s.ID())
+		if identifier == "" {
+			return nil
+		}
+		
 		count, err := s.CountActiveFirstFactorCredentials(id.Credentials)
 		if err != nil {
 			return err
-		} else if identifier == "" {
-			return nil
 		} else if count == 0 {
 			return nil
 		}
+
 		sr.UI.SetCSRF(s.d.GenerateCSRFToken(r))
 		sr.UI.SetNode(node.NewInputField("identifier", identifier, node.DefaultGroup, node.InputAttributeTypeHidden))
 	} else {

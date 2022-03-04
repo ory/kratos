@@ -52,7 +52,7 @@ func TestLoginExecutor(t *testing.T) {
 					a.Active = identity.CredentialsType(strategy)
 					a.RequestURL = x.RequestURL(r).String()
 					sess := session.NewInactiveSession()
-					sess.CompletedLoginFor(identity.CredentialsTypePassword)
+					sess.CompletedLoginFor(identity.CredentialsTypePassword, identity.AuthenticatorAssuranceLevel1)
 					if useIdentity == nil {
 						useIdentity = testhelpers.SelfServiceHookCreateFakeIdentity(t, reg)
 					}

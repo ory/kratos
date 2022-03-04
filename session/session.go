@@ -96,24 +96,48 @@ func (s Session) TableName(ctx context.Context) string {
 	return corp.ContextualizeTableName(ctx, "sessions")
 }
 
-func (s *Session) CompletedLoginFor(method identity.CredentialsType) {
-	s.AMR = append(s.AMR,
-		AuthenticationMethod{Method: method, CompletedAt: time.Now().UTC()})
+func (s *Session) CompletedLoginFor(method identity.CredentialsType, aal identity.AuthenticatorAssuranceLevel) {
+	s.AMR = append(s.AMR, AuthenticationMethod{Method: method, AAL: aal, CompletedAt: time.Now().UTC()})
 }
 
-func (s *Session) SetAuthenticatorAssuranceLevel(passwordlessMethods []string) {
-	cts := make([]identity.CredentialsType, len(s.AMR))
-	for k := range s.AMR {
-		cts[k] = s.AMR[k].Method
+func (s *Session) SetAuthenticatorAssuranceLevel() {
+	if len(s.AMR) == 0 {
+		// No AMR is set
+		s.AuthenticatorAssuranceLevel = identity.NoAuthenticatorAssuranceLevel
 	}
 
-	s.AuthenticatorAssuranceLevel = identity.DetermineAAL(cts, passwordlessMethods)
+	var isAAL1, isAAL2 bool
+	for _, amr := range s.AMR {
+		switch amr.AAL {
+		case identity.AuthenticatorAssuranceLevel1:
+			isAAL1 = true
+		case identity.AuthenticatorAssuranceLevel2:
+			isAAL2 = true
+		case "":
+			// Empty means that we are migrating an old session. In this case, AAL is not set.
+			isAAL1 = isAAL1 || identity.IsCredentialAAL1(identity.Credentials{Type: amr.Method}, false)
+
+			// AAL is empty for sessions which have been created before passwordless. Thus,
+			// all credentials that can today be used for passwordless were used for MFA
+			// before. For this reason, we just assume the default (not passwordless) here.
+			isAAL2 = isAAL2 || identity.IsCredentialAAL2(identity.Credentials{Type: amr.Method}, false)
+		}
+	}
+
+	if isAAL1 && isAAL2 {
+		s.AuthenticatorAssuranceLevel = identity.AuthenticatorAssuranceLevel2
+	} else if isAAL1 {
+		s.AuthenticatorAssuranceLevel = identity.AuthenticatorAssuranceLevel1
+	} else if len(s.AMR) > 0 {
+		// A fallback. If an AMR is set but we did not satisfy the above, gracefully fall back to level 1.
+		s.AuthenticatorAssuranceLevel = identity.AuthenticatorAssuranceLevel1
+	}
 }
 
-func NewActiveSession(i *identity.Identity, c lifespanProvider, authenticatedAt time.Time, completedLoginFor identity.CredentialsType, passwordlessMethods []string) (*Session, error) {
+func NewActiveSession(i *identity.Identity, c lifespanProvider, authenticatedAt time.Time, completedLoginFor identity.CredentialsType, completedLoginAAL identity.AuthenticatorAssuranceLevel) (*Session, error) {
 	s := NewInactiveSession()
-	s.CompletedLoginFor(completedLoginFor)
-	if err := s.Activate(i, c, authenticatedAt, passwordlessMethods); err != nil {
+	s.CompletedLoginFor(completedLoginFor, completedLoginAAL)
+	if err := s.Activate(i, c, authenticatedAt); err != nil {
 		return nil, err
 	}
 	return s, nil
@@ -129,7 +153,7 @@ func NewInactiveSession() *Session {
 	}
 }
 
-func (s *Session) Activate(i *identity.Identity, c lifespanProvider, authenticatedAt time.Time, passwordlessMethods []string) error {
+func (s *Session) Activate(i *identity.Identity, c lifespanProvider, authenticatedAt time.Time) error {
 	if i != nil && !i.IsActive() {
 		return ErrIdentityDisabled
 	}
@@ -141,7 +165,7 @@ func (s *Session) Activate(i *identity.Identity, c lifespanProvider, authenticat
 	s.Identity = i
 	s.IdentityID = i.ID
 
-	s.SetAuthenticatorAssuranceLevel(passwordlessMethods)
+	s.SetAuthenticatorAssuranceLevel()
 	return nil
 }
 
@@ -175,6 +199,9 @@ type AuthenticationMethods []AuthenticationMethod
 type AuthenticationMethod struct {
 	// The method used in this authenticator.
 	Method identity.CredentialsType `json:"method"`
+
+	// The AAL this method introduced.
+	AAL identity.AuthenticatorAssuranceLevel `json:"aal"`
 
 	// When the authentication challenge was completed.
 	CompletedAt time.Time `json:"completed_at"`

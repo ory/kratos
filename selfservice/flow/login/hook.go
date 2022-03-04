@@ -75,7 +75,7 @@ func (e *HookExecutor) requiresAAL2(r *http.Request, s *session.Session, a *Flow
 }
 
 func (e *HookExecutor) PostLoginHook(w http.ResponseWriter, r *http.Request, a *Flow, i *identity.Identity, s *session.Session) error {
-	if err := s.Activate(i, e.d.Config(r.Context()), time.Now().UTC(), e.d.Config(r.Context()).PasswordlessMethods()); err != nil {
+	if err := s.Activate(i, e.d.Config(r.Context()), time.Now().UTC()); err != nil {
 		return err
 	}
 
