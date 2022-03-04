@@ -129,7 +129,7 @@ func TestJsonNetSupport(t *testing.T) {
 		},
 		{
 			desc:     "legacy filepath without scheme",
-			template: "./stub/test_body.jsonnet",
+			template: "file://./stub/test_body.jsonnet",
 			data: &templateContext{
 				Flow: f,
 				RequestHeaders: http.Header{
@@ -531,7 +531,7 @@ func TestWebHooks(t *testing.T) {
 								"method": "%s",
 								"body": "%s",
 								"auth": %s
-							}`, ts.URL+path, method, "./stub/test_body.jsonnet", auth.createAuthConfig()))
+							}`, ts.URL+path, method, "file://./stub/test_body.jsonnet", auth.createAuthConfig()))
 
 							wh := NewWebHook(&x.SimpleLoggerWithClient{L: logrusx.New("kratos", "test"), C: httpx.NewResilientClient()}, conf)
 
@@ -570,20 +570,20 @@ func TestWebHooks(t *testing.T) {
 
 	webHookResponse := []byte(
 		`{
-			"Messages": [{
-				"InstancePtr": "#/traits/username",
-				"Message": "validation error",
-				"DetailedMessages": [{
-					"ID": 1234,
-					"Text": "error message",
-					"Type": "validation"
+			"messages": [{
+				"instance_ptr": "#/traits/username",
+				"message": "validation error",
+				"detailed_messages": [{
+					"id": 1234,
+					"text": "error message",
+					"type": "info"
 				}]
 			}]
 		}`,
 	)
 
 	webhookError := schema.NewValidationListError()
-	webhookError.WithError("#/traits/username", "validation error", text.Messages{{ID: 1234, Type: "validation", Text: "error message"}})
+	webhookError.WithError("#/traits/username", "validation error", text.Messages{{ID: 1234, Type: "info", Text: "error message"}})
 
 	for _, tc := range []struct {
 		uc              string
@@ -797,7 +797,7 @@ func TestWebHooks(t *testing.T) {
 
 					var validationError *schema.ValidationListError
 					if assert.ErrorAs(t, err, &validationError) {
-						assert.Equal(t, validationError, tc.expectedError)
+						assert.Equal(t, tc.expectedError, validationError)
 					}
 				})
 			}
@@ -830,7 +830,7 @@ func TestWebHooks(t *testing.T) {
 					"url": "%s",
 					"method": "%s",
 					"body": "%s"
-				}`, ts.URL+path, "POST", "./stub/bad_template.jsonnet"))
+				}`, ts.URL+path, "POST", "file://./stub/bad_template.jsonnet"))
 		wh := NewWebHook(&x.SimpleLoggerWithClient{L: logrusx.New("kratos", "test"), C: httpx.NewResilientClient()}, conf)
 
 		err := wh.ExecuteLoginPreHook(nil, req, f)
@@ -870,7 +870,7 @@ func TestWebHooks(t *testing.T) {
 					"url": "%s",
 					"method": "%s",
 					"body": "%s"
-				}`, ts.URL+path, "POST", "./stub/test_body.jsonnet"))
+				}`, ts.URL+path, "POST", "file://./stub/test_body.jsonnet"))
 			wh := NewWebHook(&x.SimpleLoggerWithClient{L: logrusx.New("kratos", "test"), C: httpx.NewResilientClient()}, conf)
 
 			err := wh.ExecuteLoginPreHook(nil, req, f)

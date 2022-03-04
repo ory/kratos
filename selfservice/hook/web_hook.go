@@ -380,7 +380,6 @@ func parseResponse(resp *http.Response) (err error) {
 	if resp == nil {
 		return errors.Errorf("empty response provided from the webhook")
 	}
-
 	var hookResponse rawHookResponse
 	if err := json.NewDecoder(resp.Body).Decode(&hookResponse); err != nil {
 		return errors.Wrap(err, "hook response could not be unmarshalled properly from JSON")
