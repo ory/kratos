@@ -205,6 +205,31 @@ func TestManagerHTTP(t *testing.T) {
 			assert.EqualValues(t, http.StatusOK, res.StatusCode)
 		})
 
+		t.Run("case=key rotation", func(t *testing.T) {
+			original := conf.Source().Strings(config.ViperKeySecretsCookie)
+			t.Cleanup(func() {
+				conf.MustSet(config.ViperKeySecretsCookie, original)
+			})
+			conf.MustSet(config.ViperKeySessionLifespan, "1m")
+			conf.MustSet(config.ViperKeySecretsCookie, []string{"foo"})
+
+			i := identity.Identity{Traits: []byte("{}")}
+			require.NoError(t, reg.PrivilegedIdentityPool().CreateIdentity(context.Background(), &i))
+			s, _ = session.NewActiveSession(&i, conf, time.Now(), identity.CredentialsTypePassword)
+
+			c := testhelpers.NewClientWithCookies(t)
+			testhelpers.MockHydrateCookieClient(t, c, pts.URL+"/session/set")
+
+			res, err := c.Get(pts.URL + "/session/get")
+			require.NoError(t, err)
+			assert.EqualValues(t, http.StatusOK, res.StatusCode)
+
+			conf.MustSet(config.ViperKeySecretsCookie, []string{"bar", "foo"})
+			res, err = c.Get(pts.URL + "/session/get")
+			require.NoError(t, err)
+			assert.EqualValues(t, http.StatusOK, res.StatusCode)
+		})
+
 		t.Run("case=no panic on invalid cookie name", func(t *testing.T) {
 			conf.MustSet(config.ViperKeySessionLifespan, "1m")
 			conf.MustSet(config.ViperKeySessionName, "$%˜\"")
