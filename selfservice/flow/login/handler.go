@@ -588,7 +588,8 @@ continueLogin:
 			sess = session.NewInactiveSession()
 		}
 
-		sess.CompletedLoginFor(ss.ID())
+		method := ss.CompletedAuthenticationMethod(ctx)
+		sess.CompletedLoginFor(method.Method, method.AAL)
 		i = interim
 		break
 	}

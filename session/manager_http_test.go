@@ -144,9 +144,17 @@ func TestManagerHTTP(t *testing.T) {
 		i := &identity.Identity{Traits: []byte("{}"), State: identity.StateActive}
 		require.NoError(t, reg.PrivilegedIdentityPool().CreateIdentity(context.Background(), i))
 		sess := session.NewInactiveSession()
-		require.NoError(t, sess.Activate(i, conf, time.Now(), nil))
+		require.NoError(t, sess.Activate(i, conf, time.Now()))
 		require.NoError(t, reg.SessionPersister().UpsertSession(context.Background(), sess))
-		require.NoError(t, reg.SessionManager().SessionAddAuthenticationMethod(context.Background(), sess.ID, identity.CredentialsTypeOIDC, identity.CredentialsTypeWebAuthn))
+		require.NoError(t, reg.SessionManager().SessionAddAuthenticationMethods(context.Background(), sess.ID,
+			session.AuthenticationMethod{
+				Method: identity.CredentialsTypeOIDC,
+				AAL:    identity.AuthenticatorAssuranceLevel1,
+			},
+			session.AuthenticationMethod{
+				Method: identity.CredentialsTypeWebAuthn,
+				AAL:    identity.AuthenticatorAssuranceLevel2,
+			}))
 		assert.Len(t, sess.AMR, 0)
 
 		actual, err := reg.SessionPersister().GetSession(context.Background(), sess.ID)
@@ -195,7 +203,7 @@ func TestManagerHTTP(t *testing.T) {
 
 			i := identity.Identity{Traits: []byte("{}")}
 			require.NoError(t, reg.PrivilegedIdentityPool().CreateIdentity(context.Background(), &i))
-			s, _ = session.NewActiveSession(&i, conf, time.Now(), identity.CredentialsTypePassword, nil)
+			s, _ = session.NewActiveSession(&i, conf, time.Now(), identity.CredentialsTypePassword, identity.AuthenticatorAssuranceLevel1)
 
 			c := testhelpers.NewClientWithCookies(t)
 			testhelpers.MockHydrateCookieClient(t, c, pts.URL+"/session/set")
@@ -215,7 +223,7 @@ func TestManagerHTTP(t *testing.T) {
 
 			i := identity.Identity{Traits: []byte("{}")}
 			require.NoError(t, reg.PrivilegedIdentityPool().CreateIdentity(context.Background(), &i))
-			s, _ = session.NewActiveSession(&i, conf, time.Now(), identity.CredentialsTypePassword, nil)
+			s, _ = session.NewActiveSession(&i, conf, time.Now(), identity.CredentialsTypePassword, identity.AuthenticatorAssuranceLevel1)
 
 			c := testhelpers.NewClientWithCookies(t)
 			testhelpers.MockHydrateCookieClient(t, c, pts.URL+"/session/set")
@@ -244,7 +252,7 @@ func TestManagerHTTP(t *testing.T) {
 
 			i := identity.Identity{Traits: []byte("{}")}
 			require.NoError(t, reg.PrivilegedIdentityPool().CreateIdentity(context.Background(), &i))
-			s, _ = session.NewActiveSession(&i, conf, time.Now(), identity.CredentialsTypePassword, nil)
+			s, _ = session.NewActiveSession(&i, conf, time.Now(), identity.CredentialsTypePassword, identity.AuthenticatorAssuranceLevel1)
 
 			c := testhelpers.NewClientWithCookies(t)
 			res, err := c.Get(pts.URL + "/session/set/invalid")
@@ -257,7 +265,7 @@ func TestManagerHTTP(t *testing.T) {
 
 			i := identity.Identity{Traits: []byte("{}")}
 			require.NoError(t, reg.PrivilegedIdentityPool().CreateIdentity(context.Background(), &i))
-			s, _ = session.NewActiveSession(&i, conf, time.Now(), identity.CredentialsTypePassword, nil)
+			s, _ = session.NewActiveSession(&i, conf, time.Now(), identity.CredentialsTypePassword, identity.AuthenticatorAssuranceLevel1)
 
 			c := testhelpers.NewClientWithCookies(t)
 			testhelpers.MockHydrateCookieClient(t, c, pts.URL+"/session/set")
@@ -290,7 +298,7 @@ func TestManagerHTTP(t *testing.T) {
 
 			i := identity.Identity{Traits: []byte("{}"), State: identity.StateActive}
 			require.NoError(t, reg.PrivilegedIdentityPool().CreateIdentity(context.Background(), &i))
-			s, err := session.NewActiveSession(&i, conf, time.Now(), identity.CredentialsTypePassword, nil)
+			s, err := session.NewActiveSession(&i, conf, time.Now(), identity.CredentialsTypePassword, identity.AuthenticatorAssuranceLevel1)
 			require.NoError(t, err)
 			require.NoError(t, reg.SessionPersister().UpsertSession(context.Background(), s))
 			require.NotEmpty(t, s.Token)
@@ -310,7 +318,7 @@ func TestManagerHTTP(t *testing.T) {
 
 			i := identity.Identity{Traits: []byte("{}"), State: identity.StateActive}
 			require.NoError(t, reg.PrivilegedIdentityPool().CreateIdentity(context.Background(), &i))
-			s, err := session.NewActiveSession(&i, conf, time.Now(), identity.CredentialsTypePassword, nil)
+			s, err := session.NewActiveSession(&i, conf, time.Now(), identity.CredentialsTypePassword, identity.AuthenticatorAssuranceLevel1)
 			require.NoError(t, err)
 			require.NoError(t, reg.SessionPersister().UpsertSession(context.Background(), s))
 
@@ -333,7 +341,7 @@ func TestManagerHTTP(t *testing.T) {
 
 			i := identity.Identity{Traits: []byte("{}")}
 			require.NoError(t, reg.PrivilegedIdentityPool().CreateIdentity(context.Background(), &i))
-			s, _ = session.NewActiveSession(&i, conf, time.Now(), identity.CredentialsTypePassword, nil)
+			s, _ = session.NewActiveSession(&i, conf, time.Now(), identity.CredentialsTypePassword, identity.AuthenticatorAssuranceLevel1)
 
 			c := testhelpers.NewClientWithCookies(t)
 			testhelpers.MockHydrateCookieClient(t, c, pts.URL+"/session/set")
@@ -348,9 +356,9 @@ func TestManagerHTTP(t *testing.T) {
 		t.Run("case=revoked", func(t *testing.T) {
 			i := identity.Identity{Traits: []byte("{}")}
 			require.NoError(t, reg.PrivilegedIdentityPool().CreateIdentity(context.Background(), &i))
-			s, _ = session.NewActiveSession(&i, conf, time.Now(), identity.CredentialsTypePassword, nil)
+			s, _ = session.NewActiveSession(&i, conf, time.Now(), identity.CredentialsTypePassword, identity.AuthenticatorAssuranceLevel1)
 
-			s, _ = session.NewActiveSession(&i, conf, time.Now(), identity.CredentialsTypePassword, nil)
+			s, _ = session.NewActiveSession(&i, conf, time.Now(), identity.CredentialsTypePassword, identity.AuthenticatorAssuranceLevel1)
 
 			c := testhelpers.NewClientWithCookies(t)
 			testhelpers.MockHydrateCookieClient(t, c, pts.URL+"/session/set")
@@ -376,9 +384,9 @@ func TestManagerHTTP(t *testing.T) {
 				run := func(t *testing.T, complete []identity.CredentialsType, requested string, i *identity.Identity, expectedError error) {
 					s := session.NewInactiveSession()
 					for _, m := range complete {
-						s.CompletedLoginFor(m)
+						s.CompletedLoginFor(m, "")
 					}
-					require.NoError(t, s.Activate(i, conf, time.Now().UTC(), nil))
+					require.NoError(t, s.Activate(i, conf, time.Now().UTC()))
 					err := reg.SessionManager().DoesSessionSatisfy((&http.Request{}).WithContext(context.Background()), s, requested)
 					if expectedError != nil {
 						require.ErrorAs(t, err, &expectedError)

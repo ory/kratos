@@ -304,7 +304,10 @@ func (s *Strategy) continueSettingsFlowConfirm(w http.ResponseWriter, r *http.Re
 	}
 
 	// Since we added the method, it also means that we have authenticated it
-	if err := s.d.SessionManager().SessionAddAuthenticationMethod(r.Context(), ctxUpdate.Session.ID, s.ID()); err != nil {
+	if err := s.d.SessionManager().SessionAddAuthenticationMethods(r.Context(), ctxUpdate.Session.ID, session.AuthenticationMethod{
+		Method: s.ID(),
+		AAL:    identity.AuthenticatorAssuranceLevel2,
+	}); err != nil {
 		return err
 	}
 

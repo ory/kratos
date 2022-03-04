@@ -1033,10 +1033,8 @@ func TestPasswordless(t *testing.T) {
 		configx.WithValue(config.ViperKeyWebAuthnPasswordless, true))
 	require.NoError(t, err)
 
-	assert.Equal(t, []string{"webauthn"}, conf.PasswordlessMethods())
 	assert.True(t, conf.WebAuthnForPasswordless())
 	conf.MustSet(config.ViperKeyWebAuthnPasswordless, false)
-	assert.Empty(t, conf.PasswordlessMethods())
 	assert.False(t, conf.WebAuthnForPasswordless())
 }
 
