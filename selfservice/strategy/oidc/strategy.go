@@ -460,3 +460,10 @@ func (s *Strategy) handleError(w http.ResponseWriter, r *http.Request, f flow.Fl
 func (s *Strategy) NodeGroup() node.Group {
 	return node.OpenIDConnectGroup
 }
+
+func (s *Strategy) CompletedAuthenticationMethod(ctx context.Context) session.AuthenticationMethod {
+	return session.AuthenticationMethod{
+		Method: s.ID(),
+		AAL:    identity.AuthenticatorAssuranceLevel1,
+	}
+}

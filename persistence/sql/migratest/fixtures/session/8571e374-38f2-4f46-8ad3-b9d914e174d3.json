@@ -7,6 +7,7 @@
   "authentication_methods": [
     {
       "method": "v0.6_legacy_session",
+      "aal": "",
       "completed_at": "0001-01-01T00:00:00Z"
     }
   ],

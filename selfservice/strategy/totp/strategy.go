@@ -1,6 +1,7 @@
 package totp
 
 import (
+	"context"
 	"encoding/json"
 
 	"github.com/pkg/errors"
@@ -101,4 +102,11 @@ func (s *Strategy) ID() identity.CredentialsType {
 
 func (s *Strategy) NodeGroup() node.Group {
 	return node.TOTPGroup
+}
+
+func (s *Strategy) CompletedAuthenticationMethod(ctx context.Context) session.AuthenticationMethod {
+	return session.AuthenticationMethod{
+		Method: s.ID(),
+		AAL:    identity.AuthenticatorAssuranceLevel2,
+	}
 }

@@ -22,13 +22,14 @@ func TestGuessForcedLoginIdentifier(t *testing.T) {
 	testhelpers.SetDefaultIdentitySchema(conf, "file://./stub/login.schema.json")
 
 	i := identity.NewIdentity("")
-	i.Credentials[identity.CredentialsTypePassword] = identity.Credentials{
+	ic := identity.Credentials{
 		Type:        identity.CredentialsTypePassword,
 		Identifiers: []string{"foobar"},
 	}
+	i.Credentials[identity.CredentialsTypePassword] = ic
 	require.NoError(t, reg.IdentityManager().Create(context.Background(), i))
 
-	sess, err := session.NewActiveSession(i, conf, time.Now(), identity.CredentialsTypePassword)
+	sess, err := session.NewActiveSession(i, conf, time.Now(), identity.CredentialsTypePassword, identity.AuthenticatorAssuranceLevel1)
 	require.NoError(t, err)
 	reg.SessionPersister().UpsertSession(context.Background(), sess)
 
@@ -38,5 +39,9 @@ func TestGuessForcedLoginIdentifier(t *testing.T) {
 	var f login.Flow
 	f.Refresh = true
 
-	assert.Equal(t, "foobar", flowhelpers.GuessForcedLoginIdentifier(r, reg, &f, identity.CredentialsTypePassword))
+	identifier, id, creds := flowhelpers.GuessForcedLoginIdentifier(r, reg, &f, identity.CredentialsTypePassword)
+	assert.Equal(t, "foobar", identifier)
+	assert.EqualValues(t, ic.Type, creds.Type)
+	assert.EqualValues(t, ic.Identifiers, creds.Identifiers)
+	assert.EqualValues(t, id.ID, id.ID)
 }

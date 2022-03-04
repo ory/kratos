@@ -9,8 +9,6 @@ import (
 
 	"github.com/gofrs/uuid"
 
-	"github.com/ory/kratos/identity"
-
 	"github.com/ory/herodot"
 )
 
@@ -102,8 +100,8 @@ type Manager interface {
 	// DoesSessionSatisfy answers if a session is satisfying the AAL.
 	DoesSessionSatisfy(r *http.Request, sess *Session, requestedAAL string) error
 
-	// SessionAddAuthenticationMethod adds one or more authentication method to the session.
-	SessionAddAuthenticationMethod(ctx context.Context, sid uuid.UUID, method ...identity.CredentialsType) error
+	// SessionAddAuthenticationMethods adds one or more authentication method to the session.
+	SessionAddAuthenticationMethods(ctx context.Context, sid uuid.UUID, methods ...AuthenticationMethod) error
 }
 
 type ManagementProvider interface {
