@@ -97,7 +97,7 @@ func NewErrorValidationLookupAlreadyUsed() *Message {
 
 func NewErrorValidationLookupInvalid() *Message {
 	return &Message{
-		ID:      ErrorValidationLookupAlreadyUsed,
+		ID:      ErrorValidationLookupInvalid,
 		Text:    "The backup recovery code is not valid.",
 		Type:    Error,
 		Context: context(nil),
