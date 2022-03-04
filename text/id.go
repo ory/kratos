@@ -57,6 +57,7 @@ const (
 	InfoSelfServiceSettingsLookupSecretList
 	InfoSelfServiceSettingsDisableLookup
 	InfoSelfServiceSettingsTOTPSecretLabel
+	InfoSelfServiceSettingsRemoveWebAuthn
 )
 
 const (
@@ -99,6 +100,7 @@ const (
 	ErrorValidationNoWebAuthnDevice
 	ErrorValidationNoLookup
 	ErrorValidationSuchNoWebAuthnUser
+	ErrorValidationLookupInvalid
 )
 
 const (
