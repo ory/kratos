@@ -101,19 +101,19 @@ func (s *Session) CompletedLoginFor(method identity.CredentialsType) {
 		AuthenticationMethod{Method: method, CompletedAt: time.Now().UTC()})
 }
 
-func (s *Session) SetAuthenticatorAssuranceLevel() {
+func (s *Session) SetAuthenticatorAssuranceLevel(passwordlessMethods []string) {
 	cts := make([]identity.CredentialsType, len(s.AMR))
 	for k := range s.AMR {
 		cts[k] = s.AMR[k].Method
 	}
 
-	s.AuthenticatorAssuranceLevel = identity.DetermineAAL(cts)
+	s.AuthenticatorAssuranceLevel = identity.DetermineAAL(cts, passwordlessMethods)
 }
 
-func NewActiveSession(i *identity.Identity, c lifespanProvider, authenticatedAt time.Time, completedLoginFor identity.CredentialsType) (*Session, error) {
+func NewActiveSession(i *identity.Identity, c lifespanProvider, authenticatedAt time.Time, completedLoginFor identity.CredentialsType, passwordlessMethods []string) (*Session, error) {
 	s := NewInactiveSession()
 	s.CompletedLoginFor(completedLoginFor)
-	if err := s.Activate(i, c, authenticatedAt); err != nil {
+	if err := s.Activate(i, c, authenticatedAt, passwordlessMethods); err != nil {
 		return nil, err
 	}
 	return s, nil
@@ -129,7 +129,7 @@ func NewInactiveSession() *Session {
 	}
 }
 
-func (s *Session) Activate(i *identity.Identity, c lifespanProvider, authenticatedAt time.Time) error {
+func (s *Session) Activate(i *identity.Identity, c lifespanProvider, authenticatedAt time.Time, passwordlessMethods []string) error {
 	if i != nil && !i.IsActive() {
 		return ErrIdentityDisabled
 	}
@@ -141,7 +141,7 @@ func (s *Session) Activate(i *identity.Identity, c lifespanProvider, authenticat
 	s.Identity = i
 	s.IdentityID = i.ID
 
-	s.SetAuthenticatorAssuranceLevel()
+	s.SetAuthenticatorAssuranceLevel(passwordlessMethods)
 	return nil
 }
 
