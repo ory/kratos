@@ -2,6 +2,7 @@ package driver
 
 import (
 	"context"
+	"crypto/sha256"
 	"net/http"
 	"strings"
 	"sync"
@@ -426,7 +427,13 @@ func (m *RegistryDefault) SelfServiceErrorHandler() *errorx.Handler {
 }
 
 func (m *RegistryDefault) CookieManager(ctx context.Context) sessions.StoreExact {
-	cs := sessions.NewCookieStore(m.Config(ctx).SecretsSession()...)
+	var keys [][]byte
+	for _, k := range m.Config(ctx).SecretsSession() {
+		encrypt := sha256.Sum256(k)
+		keys = append(keys, k, encrypt[:])
+	}
+
+	cs := sessions.NewCookieStore(keys...)
 	cs.Options.Secure = !m.Config(ctx).IsInsecureDevMode()
 	cs.Options.HttpOnly = true
 
