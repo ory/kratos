@@ -9,7 +9,6 @@ import (
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/selfservice/flow"
 	"github.com/ory/kratos/session"
-	"github.com/ory/kratos/ui/container"
 	"github.com/ory/kratos/ui/node"
 	"github.com/ory/kratos/x"
 )
@@ -62,29 +61,6 @@ func NewHookExecutor(d executorDependencies) *HookExecutor {
 	return &HookExecutor{
 		d: d,
 	}
-}
-
-func (e *HookExecutor) handleVerificationError(_ http.ResponseWriter, r *http.Request, f *Flow, i *identity.Identity, flowError error) error {
-	if f != nil {
-		if i != nil {
-			cont, err := container.NewFromStruct("", node.RecoveryLinkGroup, i.Traits, "traits")
-			if err != nil {
-				e.d.Logger().WithError(err).Error("could not update flow UI")
-				return err
-			}
-
-			for _, n := range cont.Nodes {
-				// we only set the value and not the whole field because we want to keep types from the initial form generation
-				f.UI.Nodes.SetValueAttribute(n.ID(), n.Attributes.GetValue())
-			}
-		}
-
-		if f.Type == flow.TypeBrowser {
-			f.UI.SetCSRF(e.d.GenerateCSRFToken(r))
-		}
-	}
-
-	return flowError
 }
 
 func (e *HookExecutor) PostVerificationHook(w http.ResponseWriter, r *http.Request, a *Flow, i *identity.Identity) error {
