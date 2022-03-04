@@ -20,14 +20,14 @@ func TestSession(t *testing.T) {
 	t.Run("case=active session", func(t *testing.T) {
 		i := new(identity.Identity)
 		i.State = identity.StateActive
-		s, _ := session.NewActiveSession(i, conf, authAt, identity.CredentialsTypePassword)
+		s, _ := session.NewActiveSession(i, conf, authAt, identity.CredentialsTypePassword, nil)
 		assert.True(t, s.IsActive())
 		require.NotEmpty(t, s.Token)
 		require.NotEmpty(t, s.LogoutToken)
 		assert.EqualValues(t, identity.CredentialsTypePassword, s.AMR[0].Method)
 
 		i = new(identity.Identity)
-		s, err := session.NewActiveSession(i, conf, authAt, identity.CredentialsTypePassword)
+		s, err := session.NewActiveSession(i, conf, authAt, identity.CredentialsTypePassword, nil)
 		assert.Nil(t, s)
 		assert.ErrorIs(t, err, session.ErrIdentityDisabled)
 	})
@@ -48,13 +48,13 @@ func TestSession(t *testing.T) {
 
 	t.Run("case=activate", func(t *testing.T) {
 		s := session.NewInactiveSession()
-		require.NoError(t, s.Activate(&identity.Identity{State: identity.StateActive}, conf, authAt))
+		require.NoError(t, s.Activate(&identity.Identity{State: identity.StateActive}, conf, authAt, nil))
 		assert.True(t, s.Active)
 		assert.Equal(t, identity.NoAuthenticatorAssuranceLevel, s.AuthenticatorAssuranceLevel)
 		assert.Equal(t, authAt, s.AuthenticatedAt)
 
 		s = session.NewInactiveSession()
-		require.ErrorIs(t, s.Activate(&identity.Identity{State: identity.StateInactive}, conf, authAt), session.ErrIdentityDisabled)
+		require.ErrorIs(t, s.Activate(&identity.Identity{State: identity.StateInactive}, conf, authAt, nil), session.ErrIdentityDisabled)
 		assert.False(t, s.Active)
 		assert.Equal(t, identity.NoAuthenticatorAssuranceLevel, s.AuthenticatorAssuranceLevel)
 		assert.Empty(t, s.AuthenticatedAt)
@@ -62,9 +62,10 @@ func TestSession(t *testing.T) {
 
 	t.Run("case=aal", func(t *testing.T) {
 		for _, tc := range []struct {
-			d        string
-			methods  []identity.CredentialsType
-			expected identity.AuthenticatorAssuranceLevel
+			d            string
+			methods      []identity.CredentialsType
+			passwordless []string
+			expected     identity.AuthenticatorAssuranceLevel
 		}{
 			{
 				d:        "no amr means no assurance",
@@ -147,6 +148,15 @@ func TestSession(t *testing.T) {
 				},
 				expected: identity.AuthenticatorAssuranceLevel2,
 			},
+			{
+				d: "recovery link + passwordless webauth is aal1",
+				methods: []identity.CredentialsType{
+					identity.CredentialsTypeRecoveryLink,
+					identity.CredentialsTypeWebAuthn,
+				},
+				passwordless: []string{identity.CredentialsTypeWebAuthn.String()},
+				expected:     identity.AuthenticatorAssuranceLevel1,
+			},
 		} {
 			t.Run("case="+tc.d, func(t *testing.T) {
 				s := session.NewInactiveSession()
@@ -154,7 +164,7 @@ func TestSession(t *testing.T) {
 					s.CompletedLoginFor(m)
 				}
 
-				s.SetAuthenticatorAssuranceLevel()
+				s.SetAuthenticatorAssuranceLevel(tc.passwordless)
 				assert.Equal(t, tc.expected, s.AuthenticatorAssuranceLevel)
 			})
 		}

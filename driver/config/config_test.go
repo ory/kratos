@@ -1026,6 +1026,20 @@ func TestIdentitySchemaValidation(t *testing.T) {
 	})
 }
 
+func TestPasswordless(t *testing.T) {
+	ctx := context.Background()
+	conf, err := config.New(ctx, logrusx.New("", ""), os.Stderr,
+		configx.SkipValidation(),
+		configx.WithValue(config.ViperKeyWebAuthnPasswordless, true))
+	require.NoError(t, err)
+
+	assert.Equal(t, []string{"webauthn"}, conf.PasswordlessMethods())
+	assert.True(t, conf.WebAuthnForPasswordless())
+	conf.MustSet(config.ViperKeyWebAuthnPasswordless, false)
+	assert.Empty(t, conf.PasswordlessMethods())
+	assert.False(t, conf.WebAuthnForPasswordless())
+}
+
 func TestChangeMinPasswordLength(t *testing.T) {
 	t.Run("case=must fail on minimum password length below enforced minimum", func(t *testing.T) {
 		ctx := context.Background()
