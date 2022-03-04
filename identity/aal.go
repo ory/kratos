@@ -1,11 +1,10 @@
 package identity
 
-func DetermineAAL(cts []CredentialsType) AuthenticatorAssuranceLevel {
+func DetermineAAL(cts []CredentialsType, passwordless []string) AuthenticatorAssuranceLevel {
 	aal := NoAuthenticatorAssuranceLevel
 
 	var firstFactor bool
 	var secondFactor bool
-	var foundWebAuthn bool
 	for _, a := range cts {
 		switch a {
 		case CredentialsTypeRecoveryLink:
@@ -21,17 +20,24 @@ func DetermineAAL(cts []CredentialsType) AuthenticatorAssuranceLevel {
 		case CredentialsTypeLookup:
 			secondFactor = true
 		case CredentialsTypeWebAuthn:
-			secondFactor = true
-			foundWebAuthn = true
+			var wasFirstFactor bool
+			for _, pl := range passwordless {
+				if pl == CredentialsTypeWebAuthn.String() {
+					firstFactor = true
+					wasFirstFactor = true
+					break
+				}
+			}
+
+			if !wasFirstFactor {
+				secondFactor = true
+			}
 		}
 	}
 
 	if firstFactor && secondFactor {
 		aal = AuthenticatorAssuranceLevel2
 	} else if firstFactor {
-		aal = AuthenticatorAssuranceLevel1
-	} else if foundWebAuthn {
-		// If none of the above match but WebAuthn is set, we have AAL1
 		aal = AuthenticatorAssuranceLevel1
 	}
 

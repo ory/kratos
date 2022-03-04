@@ -502,7 +502,31 @@ func TestCompleteLogin(t *testing.T) {
 					assert.True(t, gjson.GetBytes(body, "refresh").Bool())
 					assert.Equal(t, identifier, gjson.GetBytes(body, "ui.nodes.#(attributes.name==identifier).attributes.value").String(), "%s", body)
 					assert.Empty(t, gjson.GetBytes(body, "ui.nodes.#(attributes.name==password).attributes.value").String(), "%s", body)
+					assert.True(t, gjson.GetBytes(body, "ui.nodes.#(attributes.name==password)").Exists(), "%s", body)
 				})
+			})
+
+			t.Run("do not show password method if identity has no password set", func(t *testing.T) {
+				id := identity.NewIdentity("")
+				browserClient := testhelpers.NewHTTPClientWithIdentitySessionCookie(t, reg, id)
+
+				res, err := browserClient.Get(publicTS.URL + login.RouteInitBrowserFlow + "?refresh=true")
+				require.NoError(t, err)
+				require.EqualValues(t, http.StatusOK, res.StatusCode)
+
+				rid := res.Request.URL.Query().Get("flow")
+				assert.NotEmpty(t, rid, "%s", res.Request.URL)
+
+				res, err = browserClient.Get(publicTS.URL + login.RouteGetFlow + "?id=" + rid)
+				require.NoError(t, err)
+				require.EqualValues(t, http.StatusOK, res.StatusCode)
+
+				body, err := ioutil.ReadAll(res.Body)
+				require.NoError(t, err)
+				assert.True(t, gjson.GetBytes(body, "refresh").Bool())
+				assert.False(t, gjson.GetBytes(body, "ui.nodes.#(attributes.name==identifier)").Exists(), "%s", body)
+				assert.False(t, gjson.GetBytes(body, "ui.nodes.#(attributes.name==identifier)").Exists(), "%s", body)
+				assert.False(t, gjson.GetBytes(body, "ui.nodes.#(attributes.name==password)").Exists(), "%s", body)
 			})
 		})
 
@@ -540,6 +564,21 @@ func TestCompleteLogin(t *testing.T) {
 					assert.Equal(t, identifier, gjson.GetBytes(body, "ui.nodes.#(attributes.name==identifier).attributes.value").String(), "%s", body)
 					assert.Empty(t, gjson.GetBytes(body, "ui.nodes.#(attributes.name==password).attributes.value").String(), "%s", body)
 				})
+			})
+
+			t.Run("do not show password method if identity has no password set", func(t *testing.T) {
+				id := identity.NewIdentity("")
+				hc := testhelpers.NewHTTPClientWithIdentitySessionCookie(t, reg, id)
+
+				res, err := hc.Do(testhelpers.NewHTTPGetAJAXRequest(t, publicTS.URL+login.RouteInitBrowserFlow+"?refresh=true"))
+				require.NoError(t, err)
+				defer res.Body.Close()
+				body := ioutilx.MustReadAll(res.Body)
+
+				assert.True(t, gjson.GetBytes(body, "refresh").Bool())
+				assert.False(t, gjson.GetBytes(body, "ui.nodes.#(attributes.name==identifier)").Exists(), "%s", body)
+				assert.False(t, gjson.GetBytes(body, "ui.nodes.#(attributes.name==identifier)").Exists(), "%s", body)
+				assert.False(t, gjson.GetBytes(body, "ui.nodes.#(attributes.name==password)").Exists(), "%s", body)
 			})
 		})
 
@@ -584,6 +623,21 @@ func TestCompleteLogin(t *testing.T) {
 					assert.True(t, gjson.GetBytes(body, "refresh").Bool())
 					assert.Contains(t, gjson.GetBytes(body, "ui.messages.0.text").String(), "verifying that", "%s", body)
 				})
+			})
+
+			t.Run("do not show password method if identity has no password set", func(t *testing.T) {
+				id := identity.NewIdentity("")
+				hc := testhelpers.NewHTTPClientWithIdentitySessionToken(t, reg, id)
+
+				res, err := hc.Do(testhelpers.NewHTTPGetAJAXRequest(t, publicTS.URL+login.RouteInitAPIFlow+"?refresh=true"))
+				require.NoError(t, err)
+				defer res.Body.Close()
+				body := ioutilx.MustReadAll(res.Body)
+
+				assert.True(t, gjson.GetBytes(body, "refresh").Bool())
+				assert.False(t, gjson.GetBytes(body, "ui.nodes.#(attributes.name==identifier)").Exists(), "%s", body)
+				assert.False(t, gjson.GetBytes(body, "ui.nodes.#(attributes.name==identifier)").Exists(), "%s", body)
+				assert.False(t, gjson.GetBytes(body, "ui.nodes.#(attributes.name==password)").Exists(), "%s", body)
 			})
 		})
 	})
@@ -779,6 +833,7 @@ func TestCompleteLogin(t *testing.T) {
 
 		var values = func(v url.Values) {
 			v.Set("identifier", identifier)
+			v.Set("method", identity.CredentialsTypePassword.String())
 			v.Set("password", pwd)
 		}
 

@@ -9,9 +9,10 @@ import (
 func TestDetermineAAL(t *testing.T) {
 
 	for _, tc := range []struct {
-		d        string
-		methods  []CredentialsType
-		expected AuthenticatorAssuranceLevel
+		d            string
+		methods      []CredentialsType
+		passwordless []string
+		expected     AuthenticatorAssuranceLevel
 	}{
 		{
 			d:        "no amr means no assurance",
@@ -108,15 +109,32 @@ func TestDetermineAAL(t *testing.T) {
 			expected: AuthenticatorAssuranceLevel2,
 		},
 		{
-			d: "webauthn only is aal1",
+			d: "webauthn only is aal1 if passwordless is set",
 			methods: []CredentialsType{
 				CredentialsTypeWebAuthn,
 			},
-			expected: AuthenticatorAssuranceLevel1,
+			passwordless: []string{CredentialsTypeWebAuthn.String()},
+			expected:     AuthenticatorAssuranceLevel1,
+		},
+		{
+			d: "webauthn and another method is aal1 if passwordless is set",
+			methods: []CredentialsType{
+				CredentialsTypePassword,
+				CredentialsTypeWebAuthn,
+			},
+			passwordless: []string{CredentialsTypeWebAuthn.String()},
+			expected:     AuthenticatorAssuranceLevel1,
+		},
+		{
+			d: "webauthn only is unknown if passwordless is not set",
+			methods: []CredentialsType{
+				CredentialsTypeWebAuthn,
+			},
+			expected: NoAuthenticatorAssuranceLevel,
 		},
 	} {
 		t.Run("case="+tc.d, func(t *testing.T) {
-			assert.Equal(t, tc.expected, DetermineAAL(tc.methods))
+			assert.Equal(t, tc.expected, DetermineAAL(tc.methods, tc.passwordless))
 		})
 	}
 }

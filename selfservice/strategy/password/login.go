@@ -129,10 +129,24 @@ func (s *Strategy) PopulateLoginMethod(r *http.Request, requestedAAL identity.Au
 		return nil
 	}
 
-	identifier := flowhelpers.GuessForcedLoginIdentifier(r, s.d, sr, s.ID())
+	if sr.IsForced() {
+		// We only show this method on a refresh request if the user has indeed a password set.
+		identifier, id, _ := flowhelpers.GuessForcedLoginIdentifier(r, s.d, sr, s.ID())
+		count, err := s.CountActiveFirstFactorCredentials(id.Credentials)
+		if err != nil {
+			return err
+		} else if identifier == "" {
+			return nil
+		} else if count == 0 {
+			return nil
+		}
+		sr.UI.SetCSRF(s.d.GenerateCSRFToken(r))
+		sr.UI.SetNode(node.NewInputField("identifier", identifier, node.DefaultGroup, node.InputAttributeTypeHidden))
+	} else {
+		sr.UI.SetNode(node.NewInputField("identifier", "", node.DefaultGroup, node.InputAttributeTypeText, node.WithRequiredInputAttribute).WithMetaLabel(text.NewInfoNodeLabelID()))
+	}
 
 	sr.UI.SetCSRF(s.d.GenerateCSRFToken(r))
-	sr.UI.SetNode(node.NewInputField("identifier", identifier, node.DefaultGroup, node.InputAttributeTypeText, node.WithRequiredInputAttribute).WithMetaLabel(text.NewInfoNodeLabelID()))
 	sr.UI.SetNode(NewPasswordNode("password"))
 	sr.UI.GetNodes().Append(node.NewInputField("method", "password", node.PasswordGroup, node.InputAttributeTypeSubmit).WithMetaLabel(text.NewInfoLogin()))
 

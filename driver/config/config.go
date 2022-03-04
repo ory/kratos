@@ -1238,3 +1238,12 @@ func (p *Config) getTSLCertificates(daemon, certBase64, keyBase64, certPath, key
 	p.l.Infof("TLS has not been configured for %s, skipping", daemon)
 	return nil
 }
+
+func (p *Config) PasswordlessMethods() []string {
+	if p.WebAuthnForPasswordless() {
+		return []string{
+			"webauthn",
+		}
+	}
+	return nil
+}

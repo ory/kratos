@@ -174,7 +174,7 @@ func (s *ManagerHTTP) PurgeFromRequest(ctx context.Context, w http.ResponseWrite
 }
 
 func (s *ManagerHTTP) DoesSessionSatisfy(r *http.Request, sess *Session, requestedAAL string) error {
-	sess.SetAuthenticatorAssuranceLevel()
+	sess.SetAuthenticatorAssuranceLevel(s.r.Config(r.Context()).PasswordlessMethods())
 	switch requestedAAL {
 	case string(identity.AuthenticatorAssuranceLevel1):
 		if sess.AuthenticatorAssuranceLevel >= identity.AuthenticatorAssuranceLevel1 {
@@ -191,7 +191,7 @@ func (s *ManagerHTTP) DoesSessionSatisfy(r *http.Request, sess *Session, request
 			hasCredentials = append(hasCredentials, ct)
 		}
 
-		available := identity.DetermineAAL(hasCredentials)
+		available := identity.DetermineAAL(hasCredentials, s.r.Config(r.Context()).PasswordlessMethods())
 		if sess.AuthenticatorAssuranceLevel >= available {
 			return nil
 		}
@@ -211,6 +211,6 @@ func (s *ManagerHTTP) SessionAddAuthenticationMethod(ctx context.Context, sid uu
 	for _, m := range methods {
 		sess.CompletedLoginFor(m)
 	}
-	sess.SetAuthenticatorAssuranceLevel()
+	sess.SetAuthenticatorAssuranceLevel(s.r.Config(ctx).PasswordlessMethods())
 	return s.r.SessionPersister().UpsertSession(ctx, sess)
 }
