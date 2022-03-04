@@ -47,6 +47,10 @@ func (p *Persister) ListRecoveryAddresses(ctx context.Context, page, itemsPerPag
 	return a, err
 }
 
+func stringToLowerTrim(match string) string {
+	return strings.ToLower(strings.TrimSpace(match))
+}
+
 func (p *Persister) normalizeIdentifier(ct identity.CredentialsType, match string) string {
 	switch ct {
 	case identity.CredentialsTypeLookup:
@@ -61,7 +65,7 @@ func (p *Persister) normalizeIdentifier(ct identity.CredentialsType, match strin
 	case identity.CredentialsTypePassword:
 		fallthrough
 	case identity.CredentialsTypeWebAuthn:
-		return strings.ToLower(strings.TrimSpace(match))
+		return stringToLowerTrim(match)
 	}
 	return match
 }
@@ -179,6 +183,7 @@ func (p *Persister) createVerifiableAddresses(ctx context.Context, i *identity.I
 	for k := range i.VerifiableAddresses {
 		i.VerifiableAddresses[k].IdentityID = i.ID
 		i.VerifiableAddresses[k].NID = corp.ContextualizeNID(ctx, p.nid)
+		i.VerifiableAddresses[k].Value = stringToLowerTrim(i.VerifiableAddresses[k].Value)
 		if err := p.GetConnection(ctx).Create(&i.VerifiableAddresses[k]); err != nil {
 			return err
 		}
@@ -190,6 +195,7 @@ func (p *Persister) createRecoveryAddresses(ctx context.Context, i *identity.Ide
 	for k := range i.RecoveryAddresses {
 		i.RecoveryAddresses[k].IdentityID = i.ID
 		i.RecoveryAddresses[k].NID = corp.ContextualizeNID(ctx, p.nid)
+		i.RecoveryAddresses[k].Value = stringToLowerTrim(i.RecoveryAddresses[k].Value)
 		if err := p.GetConnection(ctx).Create(&i.RecoveryAddresses[k]); err != nil {
 			return err
 		}
@@ -423,7 +429,7 @@ func (p *Persister) GetIdentityConfidential(ctx context.Context, id uuid.UUID) (
 
 func (p *Persister) FindVerifiableAddressByValue(ctx context.Context, via identity.VerifiableAddressType, value string) (*identity.VerifiableAddress, error) {
 	var address identity.VerifiableAddress
-	if err := p.GetConnection(ctx).Where("nid = ? AND via = ? AND LOWER(value) = ?", corp.ContextualizeNID(ctx, p.nid), via, strings.ToLower(value)).First(&address); err != nil {
+	if err := p.GetConnection(ctx).Where("nid = ? AND via = ? AND value = ?", corp.ContextualizeNID(ctx, p.nid), via, stringToLowerTrim(value)).First(&address); err != nil {
 		return nil, sqlcon.HandleError(err)
 	}
 
@@ -432,7 +438,7 @@ func (p *Persister) FindVerifiableAddressByValue(ctx context.Context, via identi
 
 func (p *Persister) FindRecoveryAddressByValue(ctx context.Context, via identity.RecoveryAddressType, value string) (*identity.RecoveryAddress, error) {
 	var address identity.RecoveryAddress
-	if err := p.GetConnection(ctx).Where("nid = ? AND via = ? AND LOWER(value) = ?", corp.ContextualizeNID(ctx, p.nid), via, strings.ToLower(value)).First(&address); err != nil {
+	if err := p.GetConnection(ctx).Where("nid = ? AND via = ? AND value = ?", corp.ContextualizeNID(ctx, p.nid), via, stringToLowerTrim(value)).First(&address); err != nil {
 		return nil, sqlcon.HandleError(err)
 	}
 
@@ -471,6 +477,7 @@ func (p *Persister) VerifyAddress(ctx context.Context, code string) error {
 
 func (p *Persister) UpdateVerifiableAddress(ctx context.Context, address *identity.VerifiableAddress) error {
 	address.NID = corp.ContextualizeNID(ctx, p.nid)
+	address.Value = stringToLowerTrim(address.Value)
 	return p.update(ctx, address)
 }
 
