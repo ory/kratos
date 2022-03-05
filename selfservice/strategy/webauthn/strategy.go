@@ -112,3 +112,14 @@ func (s *Strategy) newWebAuthn(ctx context.Context) (*webauthn.WebAuthn, error) 
 
 	return web, nil
 }
+
+func (s *Strategy) CompletedAuthenticationMethod(ctx context.Context) session.AuthenticationMethod {
+	aal := identity.AuthenticatorAssuranceLevel1
+	if !s.d.Config(ctx).WebAuthnForPasswordless() {
+		aal = identity.AuthenticatorAssuranceLevel2
+	}
+	return session.AuthenticationMethod{
+		Method: s.ID(),
+		AAL:    aal,
+	}
+}

@@ -28,7 +28,7 @@
           "added_at": "0001-01-01T00:00:00Z",
           "display_name": "bar"
         },
-        "id": 1050012,
+        "id": 1050018,
         "text": "Remove security key \"bar\"",
         "type": "info"
       }
@@ -51,7 +51,7 @@
           "added_at": "0001-01-01T00:00:00Z",
           "display_name": "foo"
         },
-        "id": 1050012,
+        "id": 1050018,
         "text": "Remove security key \"foo\"",
         "type": "info"
       }

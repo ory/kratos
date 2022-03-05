@@ -31,7 +31,14 @@ func CredentialFromWebAuthn(credential *webauthn.Credential, isPasswordless bool
 	}
 }
 
-func (c Credentials) ToWebAuthn(aal identity.AuthenticatorAssuranceLevel) (result []webauthn.Credential) {
+func (c Credentials) ToWebAuthn() (result []webauthn.Credential) {
+	for k := range c {
+		result = append(result, *c[k].ToWebAuthn())
+	}
+	return result
+}
+
+func (c Credentials) ToWebAuthnFiltered(aal identity.AuthenticatorAssuranceLevel) (result []webauthn.Credential) {
 	for k, cc := range c {
 		if aal == identity.AuthenticatorAssuranceLevel1 && !cc.IsPasswordless {
 			continue
