@@ -1,10 +1,13 @@
 package webauthn_test
 
 import (
+	"context"
 	"fmt"
 	"testing"
 
+	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/selfservice/strategy/webauthn"
+	"github.com/ory/kratos/session"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -12,6 +15,22 @@ import (
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/internal"
 )
+
+func TestCompletedAuthenticationMethod(t *testing.T) {
+	conf, reg := internal.NewFastRegistryWithMocks(t)
+	strategy := webauthn.NewStrategy(reg)
+
+	assert.Equal(t, session.AuthenticationMethod{
+		Method: strategy.ID(),
+		AAL:    identity.AuthenticatorAssuranceLevel2,
+	}, strategy.CompletedAuthenticationMethod(context.Background()))
+
+	conf.MustSet(config.ViperKeyWebAuthnPasswordless, true)
+	assert.Equal(t, session.AuthenticationMethod{
+		Method: strategy.ID(),
+		AAL:    identity.AuthenticatorAssuranceLevel1,
+	}, strategy.CompletedAuthenticationMethod(context.Background()))
+}
 
 func TestCountActiveFirstFactorCredentials(t *testing.T) {
 	_, reg := internal.NewFastRegistryWithMocks(t)

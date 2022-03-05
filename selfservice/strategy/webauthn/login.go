@@ -37,9 +37,21 @@ func (s *Strategy) PopulateLoginMethod(r *http.Request, requestedAAL identity.Au
 		return nil
 	}
 
-	if s.d.Config(r.Context()).WebAuthnForPasswordless() && requestedAAL == identity.AuthenticatorAssuranceLevel1 {
-		return s.populateLoginMethodForPasswordless(r, sr)
-	} else if !s.d.Config(r.Context()).WebAuthnForPasswordless() && requestedAAL == identity.AuthenticatorAssuranceLevel2 {
+	if s.d.Config(r.Context()).WebAuthnForPasswordless() && (requestedAAL == identity.AuthenticatorAssuranceLevel1) {
+		if err := s.populateLoginMethodForPasswordless(r, sr); errors.Is(err, ErrNoCredentials) {
+			return nil
+		} else if err != nil {
+			return err
+		}
+		return nil
+	} else if sr.IsForced() {
+		if err := s.populateLoginMethodForPasswordless(r, sr); errors.Is(err, ErrNoCredentials) {
+			return nil
+		} else if err != nil {
+			return err
+		}
+		return nil
+	} else if !s.d.Config(r.Context()).WebAuthnForPasswordless() && (requestedAAL == identity.AuthenticatorAssuranceLevel2) {
 		// We have done proper validation before so this should never error
 		sess, err := s.d.SessionManager().FetchFromRequest(r.Context(), r)
 		if err != nil {
@@ -59,9 +71,31 @@ func (s *Strategy) PopulateLoginMethod(r *http.Request, requestedAAL identity.Au
 }
 
 func (s *Strategy) populateLoginMethodForPasswordless(r *http.Request, sr *login.Flow) error {
-	identifier := flowhelpers.GuessForcedLoginIdentifier(r, s.d, sr, s.ID())
+	if sr.IsForced() {
+		identifier, id, _ := flowhelpers.GuessForcedLoginIdentifier(r, s.d, sr, s.ID())
+		if identifier == "" {
+			return nil
+		}
 
-	sr.UI.SetNode(node.NewInputField("identifier", identifier, node.DefaultGroup, node.InputAttributeTypeText, node.WithRequiredInputAttribute).WithMetaLabel(text.NewInfoNodeLabelID()))
+		for _, aal := range []identity.AuthenticatorAssuranceLevel{
+			identity.AuthenticatorAssuranceLevel1,
+			identity.AuthenticatorAssuranceLevel2,
+		} {
+			if err := s.populateLoginMethod(r, sr, id, text.NewInfoSelfServiceLoginWebAuthn(), aal); errors.Is(err, ErrNoCredentials) {
+				continue
+			} else if err != nil {
+				return err
+			} else {
+				sr.UI.SetCSRF(s.d.GenerateCSRFToken(r))
+				sr.UI.SetNode(node.NewInputField("identifier", identifier, node.DefaultGroup, node.InputAttributeTypeHidden))
+				break
+			}
+		}
+		return nil
+	}
+
+	sr.UI.SetCSRF(s.d.GenerateCSRFToken(r))
+	sr.UI.SetNode(node.NewInputField("identifier", "", node.DefaultGroup, node.InputAttributeTypeText, node.WithRequiredInputAttribute).WithMetaLabel(text.NewInfoNodeLabelID()))
 	sr.UI.GetNodes().Append(node.NewInputField("method", "webauthn", node.WebAuthnGroup, node.InputAttributeTypeSubmit).WithMetaLabel(text.NewInfoLoginPasswordlessWebAuthn()))
 	return nil
 }
@@ -83,7 +117,11 @@ func (s *Strategy) populateLoginMethod(r *http.Request, sr *login.Flow, i *ident
 		return errors.WithStack(err)
 	}
 
-	webAuthCreds := conf.Credentials.ToWebAuthn(aal)
+	webAuthCreds := conf.Credentials.ToWebAuthnFiltered(aal)
+	if sr.IsForced() {
+		webAuthCreds = conf.Credentials.ToWebAuthn()
+	}
+
 	if len(webAuthCreds) == 0 {
 		// Identity has no webauth
 		return ErrNoCredentials
@@ -181,16 +219,16 @@ func (s *Strategy) Login(w http.ResponseWriter, r *http.Request, f *login.Flow, 
 		return nil, s.handleLoginError(r, f, err)
 	}
 
-	if !s.d.Config(r.Context()).WebAuthnForPasswordless() {
-		return s.loginMultiFactor(w, r, f, ss, &p)
+	if s.d.Config(r.Context()).WebAuthnForPasswordless() || f.IsForced() {
+		return s.loginPasswordless(w, r, f, ss, &p)
 	}
 
-	return s.loginPasswordless(w, r, f, ss, &p)
+	return s.loginMultiFactor(w, r, f, ss, &p)
 }
 
 func (s *Strategy) loginPasswordless(w http.ResponseWriter, r *http.Request, f *login.Flow, ss *session.Session, p *submitSelfServiceLoginFlowWithWebAuthnMethodBody) (i *identity.Identity, err error) {
 	if err := login.CheckAAL(f, identity.AuthenticatorAssuranceLevel1); err != nil {
-		return nil, err
+		return nil, s.handleLoginError(r, f, err)
 	}
 
 	if err := flow.EnsureCSRF(s.d, r, f.Type, s.d.Config(r.Context()).DisableAPIFlowEnforcement(), s.d.GenerateCSRFToken, p.CSRFToken); err != nil {
@@ -270,17 +308,12 @@ func (s *Strategy) loginAuthenticate(w http.ResponseWriter, r *http.Request, f *
 		return nil, s.handleLoginError(r, f, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("Expected WebAuthN in internal context to be an object but got: %s", err)))
 	}
 
-	var creds Credentials
-	for k := range o.Credentials {
-		if aal == identity.AuthenticatorAssuranceLevel1 && !o.Credentials[k].IsPasswordless {
-			continue
-		} else if aal == identity.AuthenticatorAssuranceLevel2 && o.Credentials[k].IsPasswordless {
-			continue
-		}
-		creds = append(creds, o.Credentials[k])
+	webAuthCreds := o.Credentials.ToWebAuthnFiltered(aal)
+	if f.IsForced() {
+		webAuthCreds = o.Credentials.ToWebAuthn()
 	}
 
-	if _, err := web.ValidateLogin(&wrappedUser{id: o.UserHandle, c: creds.ToWebAuthn(aal)}, webAuthnSess, webAuthnResponse); err != nil {
+	if _, err := web.ValidateLogin(&wrappedUser{id: o.UserHandle, c: webAuthCreds}, webAuthnSess, webAuthnResponse); err != nil {
 		return nil, s.handleLoginError(r, f, errors.WithStack(schema.NewWebAuthnVerifierWrongError("#/")))
 	}
 
