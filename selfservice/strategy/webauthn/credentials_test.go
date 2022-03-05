@@ -24,16 +24,16 @@ func TestCredentialConversion(t *testing.T) {
 	actual := CredentialFromWebAuthn(expected, false).ToWebAuthn()
 	assert.Equal(t, expected, actual)
 
-	actualList := Credentials{*CredentialFromWebAuthn(expected, false)}.ToWebAuthn(identity.AuthenticatorAssuranceLevel2)
+	actualList := Credentials{*CredentialFromWebAuthn(expected, false)}.ToWebAuthnFiltered(identity.AuthenticatorAssuranceLevel2)
 	assert.Equal(t, []webauthn.Credential{*expected}, actualList)
 
-	actualList = Credentials{*CredentialFromWebAuthn(expected, true)}.ToWebAuthn(identity.AuthenticatorAssuranceLevel1)
+	actualList = Credentials{*CredentialFromWebAuthn(expected, true)}.ToWebAuthnFiltered(identity.AuthenticatorAssuranceLevel1)
 	assert.Equal(t, []webauthn.Credential{*expected}, actualList)
 
-	actualList = Credentials{*CredentialFromWebAuthn(expected, true)}.ToWebAuthn(identity.AuthenticatorAssuranceLevel2)
+	actualList = Credentials{*CredentialFromWebAuthn(expected, true)}.ToWebAuthnFiltered(identity.AuthenticatorAssuranceLevel2)
 	assert.Len(t, actualList, 0)
 
-	actualList = Credentials{*CredentialFromWebAuthn(expected, false)}.ToWebAuthn(identity.AuthenticatorAssuranceLevel1)
+	actualList = Credentials{*CredentialFromWebAuthn(expected, false)}.ToWebAuthnFiltered(identity.AuthenticatorAssuranceLevel1)
 	assert.Len(t, actualList, 0)
 
 	fromWebAuthn := CredentialFromWebAuthn(expected, true)

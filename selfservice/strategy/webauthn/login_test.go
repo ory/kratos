@@ -4,6 +4,7 @@ import (
 	"context"
 	_ "embed"
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"net/url"
 	"testing"
@@ -125,9 +126,7 @@ func TestCompleteLogin(t *testing.T) {
 		return &id
 	}
 
-	submitWebAuthnLoginWithClient := func(t *testing.T, isSPA bool, id *identity.Identity, contextFixture []byte, client *http.Client, cb func(values url.Values), opts ...testhelpers.InitFlowWithOption) (string, *http.Response, *kratos.SelfServiceLoginFlow) {
-		f := testhelpers.InitializeLoginFlowViaBrowser(t, client, publicTS, false, isSPA, opts...)
-
+	submitWebAuthnLoginFlowWithClient := func(t *testing.T, isSPA bool, f *kratos.SelfServiceLoginFlow, contextFixture []byte, client *http.Client, cb func(values url.Values)) (string, *http.Response, *kratos.SelfServiceLoginFlow) {
 		// We inject the session to replay
 		interim, err := reg.LoginFlowPersister().GetLoginFlow(context.Background(), uuid.FromStringOrNil(f.Id))
 		require.NoError(t, err)
@@ -142,10 +141,128 @@ func TestCompleteLogin(t *testing.T) {
 		return body, res, f
 	}
 
+	submitWebAuthnLoginWithClient := func(t *testing.T, isSPA bool, id *identity.Identity, contextFixture []byte, client *http.Client, cb func(values url.Values), opts ...testhelpers.InitFlowWithOption) (string, *http.Response, *kratos.SelfServiceLoginFlow) {
+		f := testhelpers.InitializeLoginFlowViaBrowser(t, client, publicTS, false, isSPA, opts...)
+		return submitWebAuthnLoginFlowWithClient(t, isSPA, f, contextFixture, client, cb)
+	}
+
 	submitWebAuthnLogin := func(t *testing.T, isSPA bool, id *identity.Identity, contextFixture []byte, cb func(values url.Values), opts ...testhelpers.InitFlowWithOption) (string, *http.Response, *kratos.SelfServiceLoginFlow) {
 		browserClient := testhelpers.NewHTTPClientWithIdentitySessionCookie(t, reg, id)
 		return submitWebAuthnLoginWithClient(t, isSPA, id, contextFixture, browserClient, cb, opts...)
 	}
+
+	t.Run("flow=refresh", func(t *testing.T) {
+		run := func(t *testing.T, id *identity.Identity, context, response []byte, isSPA bool, expectedAAL identity.AuthenticatorAssuranceLevel) {
+			body, res, f := submitWebAuthnLogin(t, isSPA, id, context, func(values url.Values) {
+				values.Set("identifier", loginFixtureSuccessEmail)
+				values.Set(node.WebAuthnLogin, string(response))
+			}, testhelpers.InitFlowWithRefresh())
+			snapshotx.SnapshotTExcept(t, f.Ui.Nodes, []string{
+				"0.attributes.value",
+				"2.attributes.onclick",
+				"4.attributes.nonce",
+				"4.attributes.src",
+			})
+			nodes, err := json.Marshal(f.Ui.Nodes)
+			require.NoError(t, err)
+			assert.Equal(t, loginFixtureSuccessEmail, gjson.GetBytes(nodes, "#(attributes.name==identifier).attributes.value").String(), "%s", nodes)
+
+			prefix := ""
+			if isSPA {
+				assert.Contains(t, res.Request.URL.String(), publicTS.URL+login.RouteSubmitFlow)
+				prefix = "session."
+			} else {
+				assert.Contains(t, res.Request.URL.String(), redirTS.URL)
+			}
+
+			assert.True(t, gjson.Get(body, prefix+"active").Bool(), "%s", body)
+
+			assert.EqualValues(t, expectedAAL, gjson.Get(body, prefix+"authenticator_assurance_level").String(), "%s", body)
+			assert.EqualValues(t, identity.CredentialsTypeWebAuthn, gjson.Get(body, prefix+"authentication_methods.#(method==webauthn).method").String(), "%s", body)
+			assert.Len(t, gjson.Get(body, prefix+"authentication_methods").Array(), 2, "%s", body)
+			assert.EqualValues(t, id.ID.String(), gjson.Get(body, prefix+"identity.id").String(), "%s", body)
+		}
+
+		t.Run("case=passwordless", func(t *testing.T) {
+			for _, e := range []bool{true, false} {
+				conf.MustSet(config.ViperKeyWebAuthnPasswordless, e)
+				expectedAAL := identity.AuthenticatorAssuranceLevel1
+				if !e {
+					// If passwordless is disabled, using WebAuthn means that we have a second factor enabled.
+					// Thus, AAL2 :)
+					expectedAAL = identity.AuthenticatorAssuranceLevel2
+				}
+
+				for _, tc := range []struct {
+					creds    identity.Credentials
+					response []byte
+					context  []byte
+					descript string
+				}{
+					{
+						creds: identity.Credentials{
+							Config:  loginFixtureSuccessV0Credentials,
+							Version: 0,
+						},
+						context:  loginFixtureSuccessV0Context,
+						response: loginFixtureSuccessV0Response,
+						descript: "mfa v0 credentials",
+					},
+					{
+						creds: identity.Credentials{
+							Config:  loginFixtureSuccessV1Credentials,
+							Version: 1,
+						},
+						context:  loginFixtureSuccessV1Context,
+						response: loginFixtureSuccessV1Response,
+						descript: "mfa v1 credentials",
+					},
+					{
+						creds: identity.Credentials{
+							Config:  loginFixtureSuccessV1PasswordlessCredentials,
+							Version: 1,
+						},
+						context:  loginFixtureSuccessV1PasswordlessContext,
+						response: loginFixtureSuccessV1PasswordlessResponse,
+						descript: "passwordless credentials",
+					},
+				} {
+					t.Run(fmt.Sprintf("case=mfa v0 credentials/passwordless enabled=%v", e), func(t *testing.T) {
+						id := createIdentityWithWebAuthn(t, tc.creds)
+
+						for _, f := range []string{"browser", "spa"} {
+							t.Run(f, func(t *testing.T) {
+								run(t, id, tc.context, tc.response, f == "spa", expectedAAL)
+							})
+						}
+					})
+				}
+			}
+		})
+
+		t.Run("case=no webauth credentials", func(t *testing.T) {
+			for _, e := range []bool{true, false} {
+				conf.MustSet(config.ViperKeyWebAuthnPasswordless, e)
+				t.Run(fmt.Sprintf("passwordless=%v", e), func(t *testing.T) {
+					for _, f := range []string{"browser", "spa"} {
+						t.Run(f, func(t *testing.T) {
+							id := identity.NewIdentity("")
+							client := testhelpers.NewHTTPClientWithIdentitySessionCookie(t, reg, id)
+
+							f := testhelpers.InitializeLoginFlowViaBrowser(t, client, publicTS, true, f == "spa")
+							snapshotx.SnapshotTExcept(t, f.Ui.Nodes, []string{
+								"0.attributes.value",
+							})
+							nodes, err := json.Marshal(f.Ui.Nodes)
+							require.NoError(t, err)
+							assert.False(t, gjson.GetBytes(nodes, "#(attributes.name==identifier).attributes.value").Bool(), "%s", nodes)
+							assert.False(t, gjson.GetBytes(nodes, "#(attributes.name=="+node.WebAuthnLoginTrigger+").attributes.value").Bool(), "%s", nodes)
+						})
+					}
+				})
+			}
+		})
+	})
 
 	t.Run("flow=passwordless", func(t *testing.T) {
 		conf.MustSet(config.ViperKeyWebAuthnPasswordless, true)
@@ -156,7 +273,7 @@ func TestCompleteLogin(t *testing.T) {
 		t.Run("case=webauthn button exists", func(t *testing.T) {
 			client := testhelpers.NewClientWithCookies(t)
 			f := testhelpers.InitializeLoginFlowViaBrowser(t, client, publicTS, false, true)
-			testhelpers.SnapshotTExcept(t, f.Ui.Nodes, []string{"2.attributes.value"})
+			testhelpers.SnapshotTExcept(t, f.Ui.Nodes, []string{"1.attributes.value"})
 		})
 
 		t.Run("case=webauthn shows error if user tries to sign in but no such user exists", func(t *testing.T) {

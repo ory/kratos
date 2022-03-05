@@ -4,11 +4,12 @@ import (
 	"context"
 	"encoding/base64"
 	"fmt"
-	"github.com/ory/x/randx"
 	"strconv"
 	"strings"
 	"testing"
 	"time"
+
+	"github.com/ory/x/randx"
 
 	"github.com/tidwall/gjson"
 

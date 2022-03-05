@@ -135,7 +135,7 @@ func (s *Strategy) PopulateLoginMethod(r *http.Request, requestedAAL identity.Au
 		if identifier == "" {
 			return nil
 		}
-		
+
 		count, err := s.CountActiveFirstFactorCredentials(id.Credentials)
 		if err != nil {
 			return err

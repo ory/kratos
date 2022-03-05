@@ -283,8 +283,16 @@ func (s *Strategy) continueSettingsFlowAdd(w http.ResponseWriter, r *http.Reques
 		return err
 	}
 
+	aal := identity.AuthenticatorAssuranceLevel1
+	if !s.d.Config(r.Context()).WebAuthnForPasswordless() {
+		aal = identity.AuthenticatorAssuranceLevel2
+	}
+
 	// Since we added the method, it also means that we have authenticated it
-	if err := s.d.SessionManager().SessionAddAuthenticationMethod(r.Context(), ctxUpdate.Session.ID, s.ID()); err != nil {
+	if err := s.d.SessionManager().SessionAddAuthenticationMethods(r.Context(), ctxUpdate.Session.ID, session.AuthenticationMethod{
+		Method: s.ID(),
+		AAL:    aal,
+	}); err != nil {
 		return err
 	}
 
