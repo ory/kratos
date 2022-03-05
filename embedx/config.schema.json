@@ -550,6 +550,21 @@
       "uniqueItems": true,
       "additionalItems": false
     },
+    "selfServiceAfterRecoveryHooks": {
+      "type": "array",
+      "items": {
+        "anyOf": [
+          {
+            "$ref": "#/definitions/selfServiceWebHook"
+          },
+          {
+            "$ref": "#/definitions/selfServiceSessionRevokerHook"
+          }
+        ]
+      },
+      "uniqueItems": true,
+      "additionalItems": false
+    },
     "selfServiceAfterSettingsMethod": {
       "type": "object",
       "additionalProperties": false,
@@ -742,7 +757,7 @@
           "$ref": "#/definitions/defaultReturnTo"
         },
         "hooks": {
-          "$ref": "#/definitions/selfServiceHooks"
+          "$ref": "#/definitions/selfServiceAfterRecoveryHooks"
         }
       }
     },
