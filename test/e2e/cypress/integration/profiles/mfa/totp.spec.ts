@@ -65,7 +65,7 @@ context('2FA lookup secrets', () => {
         cy.clearAllCookies()
         cy.visit(login)
 
-        cy.get('input[name="password_identifier"]').type(email)
+        cy.get('input[name="identifier"]').type(email)
         cy.get('input[name="password"]').type(password)
         cy.submitPasswordForm()
 
@@ -120,7 +120,7 @@ context('2FA lookup secrets', () => {
         cy.clearAllCookies()
         cy.visit(`${login}?return_to=https://www.ory.sh/`)
 
-        cy.get('input[name="password_identifier"]').type(email)
+        cy.get('input[name="identifier"]').type(email)
         cy.get('input[name="password"]').type(password)
         cy.submitPasswordForm()
 

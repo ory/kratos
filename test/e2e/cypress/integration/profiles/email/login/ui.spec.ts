@@ -26,7 +26,7 @@ context('UI tests using the email profile', () => {
       })
 
       it('should use the json schema titles', () => {
-        cy.get(`${appPrefix(app)}input[name="password_identifier"]`)
+        cy.get(`${appPrefix(app)}input[name="identifier"]`)
           .parent()
           .should('contain.text', 'ID')
         cy.get('input[name="password"]')
