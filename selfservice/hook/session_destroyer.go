@@ -1,6 +1,7 @@
 package hook
 
 import (
+	"github.com/ory/kratos/selfservice/flow/recovery"
 	"net/http"
 
 	"github.com/ory/kratos/selfservice/flow/login"
@@ -8,6 +9,7 @@ import (
 )
 
 var _ login.PostHookExecutor = new(SessionDestroyer)
+var _ recovery.PostHookExecutor = new(SessionDestroyer)
 
 type (
 	sessionDestroyerDependencies interface {
@@ -24,7 +26,14 @@ func NewSessionDestroyer(r sessionDestroyerDependencies) *SessionDestroyer {
 }
 
 func (e *SessionDestroyer) ExecuteLoginPostHook(_ http.ResponseWriter, r *http.Request, _ *login.Flow, s *session.Session) error {
-	if err := e.r.SessionPersister().DeleteSessionsByIdentity(r.Context(), s.Identity.ID); err != nil {
+	if _, err := e.r.SessionPersister().RevokeSessionsIdentityExcept(r.Context(), s.Identity.ID, s.ID); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (e *SessionDestroyer) ExecutePostRecoveryHook(_ http.ResponseWriter, r *http.Request, _ *recovery.Flow, s *session.Session) error {
+	if _, err := e.r.SessionPersister().RevokeSessionsIdentityExcept(r.Context(), s.Identity.ID, s.ID); err != nil {
 		return err
 	}
 	return nil
