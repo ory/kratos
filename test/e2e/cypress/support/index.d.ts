@@ -209,6 +209,16 @@ declare global {
        */
       reauth(opts: {
         expect: { email; success?: boolean }
+      }): Chainable<void>
+
+      /**
+       * Re-authenticates a user.
+       *
+       * @param opts
+       */
+      reauthWithOtherAccount(opts: {
+        previousUrl: string,
+        expect: { email; success?: boolean }
         type: { email?: string; password?: string }
       }): Chainable<void>
 

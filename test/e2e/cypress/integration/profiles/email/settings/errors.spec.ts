@@ -1,6 +1,6 @@
-import { appPrefix, gen, website } from '../../../../helpers'
-import { routes as react } from '../../../../helpers/react'
-import { routes as express } from '../../../../helpers/express'
+import {appPrefix, gen, website} from '../../../../helpers'
+import {routes as react} from '../../../../helpers/react'
+import {routes as express} from '../../../../helpers/express'
 
 context('Settings failures with email profile', () => {
   ;[
@@ -16,8 +16,8 @@ context('Settings failures with email profile', () => {
       app: 'react' as 'react',
       profile: 'spa'
     }
-  ].forEach(({ route, profile, app, base }) => {
-    describe(`for app ${app}`, () => {
+  ].forEach(({route, profile, app, base}) => {
+    describe.only(`for app ${app}`, () => {
       let email = gen.email()
       let password = gen.password()
 
@@ -32,12 +32,12 @@ context('Settings failures with email profile', () => {
         cy.registerApi({
           email: emailSecond,
           password: passwordSecond,
-          fields: { 'traits.website': 'https://github.com/ory/kratos' }
+          fields: {'traits.website': 'https://github.com/ory/kratos'}
         })
         cy.registerApi({
           email,
           password,
-          fields: { 'traits.website': website }
+          fields: {'traits.website': website}
         })
       })
 
@@ -47,7 +47,7 @@ context('Settings failures with email profile', () => {
         cy.visit(base)
         cy.clearAllCookies()
 
-        cy.login({ email, password, cookieUrl: base })
+        cy.login({email, password, cookieUrl: base})
         cy.visit(route)
       })
 
@@ -66,13 +66,20 @@ context('Settings failures with email profile', () => {
         })
 
         it('fails because reauth is another person', () => {
+          // Force this because it is hidden
           cy.get('input[name="traits.email"]').clear().type(up(email))
           cy.shortPrivilegedSessionTime()
-          cy.get('button[value="profile"]').click()
 
-          cy.reauth({
-            expect: { email },
-            type: { email: emailSecond, password: passwordSecond }
+          cy.location().then((loc) => {
+            cy.get('button[value="profile"]').click()
+
+            cy.reauthWithOtherAccount({
+              previousUrl: loc.toString(),
+              expect: {email},
+              type: {email: emailSecond, password: passwordSecond}
+            })
+
+            cy.location('pathname').should('contain', '/settings')
           })
 
           // We end up in a new settings flow for the second user
@@ -94,10 +101,10 @@ context('Settings failures with email profile', () => {
           cy.get('button[value="profile"]').click()
 
           cy.clearAllCookies()
-          cy.login({ email, password, cookieUrl: base })
+          cy.login({email, password, cookieUrl: base})
 
           cy.getSession().should((session) => {
-            const { identity } = session
+            const {identity} = session
             expect(identity.traits.email).to.equal(email)
           })
         })
@@ -110,7 +117,7 @@ context('Settings failures with email profile', () => {
           cy.visit(base)
 
           cy.getSession().should((session) => {
-            const { identity } = session
+            const {identity} = session
             expect(identity.traits.email).to.equal(email)
           })
         })
@@ -130,7 +137,7 @@ context('Settings failures with email profile', () => {
           cy.expectSettingsSaved()
 
           cy.getSession().should((session) => {
-            const { identity } = session
+            const {identity} = session
             expect(identity.traits.email).to.equal(email) // this is NOT up(email)
             expect(identity.traits.website).to.equal(
               'http://github.com/aeneasr'
@@ -158,6 +165,7 @@ context('Settings failures with email profile', () => {
         })
 
         it('fails because reauth is another person', () => {
+          cy.shortPrivilegedSessionTime() // wait for the privileged session to time out
           cy.get('input[name="password"]').clear().type(up(password))
 
           let firstSession
@@ -165,12 +173,16 @@ context('Settings failures with email profile', () => {
             firstSession = session
           })
 
-          cy.shortPrivilegedSessionTime() // wait for the privileged session to time out
-          cy.get('button[value="password"]').click()
+          cy.location().then((loc) => {
+            cy.get('button[value="password"]').click()
 
-          cy.reauth({
-            expect: { email },
-            type: { email: emailSecond, password: passwordSecond }
+            cy.reauthWithOtherAccount({
+              previousUrl: loc.toString(),
+              expect: {email},
+              type: {email: emailSecond, password: passwordSecond}
+            })
+
+            cy.location('pathname').should('contain', '/settings')
           })
 
           // We want to ensure that the reauth session is completely different from the one we had in the first place.
@@ -218,7 +230,7 @@ context('Settings failures with email profile', () => {
           cy.get('button[value="password"]').click()
 
           cy.clearAllCookies()
-          cy.login({ email, password, cookieUrl: base })
+          cy.login({email, password, cookieUrl: base})
           cy.clearAllCookies()
           cy.login({
             email,
@@ -235,7 +247,7 @@ context('Settings failures with email profile', () => {
           cy.register({
             email,
             password,
-            fields: { 'traits.website': website }
+            fields: {'traits.website': website}
           })
           cy.visit(route)
 
@@ -252,14 +264,14 @@ context('Settings failures with email profile', () => {
           cy.get('button[value="password"]').click()
 
           cy.location('pathname').should('include', '/login')
-          cy.reauth({ expect: { email }, type: { password: password } })
+          cy.reauth({expect: {email}, type: {password: password}})
 
           cy.location('pathname').should('include', '/settings')
           cy.get('input[name="password"]').should('exist')
 
           // This should pass because it is the correct password
           cy.clearAllCookies()
-          cy.login({ email, password: validPassword, cookieUrl: base })
+          cy.login({email, password: validPassword, cookieUrl: base})
 
           // This should fail because it is the wrong password
           cy.clearAllCookies()
@@ -283,13 +295,13 @@ context('Settings failures with email profile', () => {
       describe('global errors', () => {
         it('fails when CSRF is incorrect', () => {
           cy.get(appPrefix(app) + 'input[name="password"]').type('12345678')
-          cy.shouldHaveCsrfError({ app })
+          cy.shouldHaveCsrfError({app})
         })
 
         it('fails when a disallowed return_to url is requested', () => {
           cy.shouldErrorOnDisallowedReturnTo(
             route + '?return_to=https://not-allowed',
-            { app }
+            {app}
           )
         })
       })
