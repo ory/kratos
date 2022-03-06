@@ -1,6 +1,7 @@
 package webauthn
 
 // swagger:model submitSelfServiceFlowWithWebAuthnRegistrationMethod
+// nolint:deadcode,unused
 type submitSelfServiceFlowWithWebAuthnRegistrationMethod struct {
 	// Register a WebAuthn Security Key
 	//
