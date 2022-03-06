@@ -5,6 +5,7 @@
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
 **CsrfToken** | Pointer to **string** | Sending the anti-csrf token is only required for browser login flows. | [optional] 
+**Identifier** | Pointer to **string** | Identifier is the email or username of the user trying to log in. This field is only required when using WebAuthn for passwordless login. When using WebAuthn for multi-factor authentication, it is not needed. | [optional] 
 **Method** | **string** | Method should be set to \&quot;webAuthn\&quot; when logging in using the WebAuthn strategy. | 
 **WebauthnLogin** | Pointer to **string** | Login a WebAuthn Security Key  This must contain the ID of the WebAuthN connection. | [optional] 
 
@@ -51,6 +52,31 @@ SetCsrfToken sets CsrfToken field to given value.
 `func (o *SubmitSelfServiceLoginFlowWithWebAuthnMethodBody) HasCsrfToken() bool`
 
 HasCsrfToken returns a boolean if a field has been set.
+
+### GetIdentifier
+
+`func (o *SubmitSelfServiceLoginFlowWithWebAuthnMethodBody) GetIdentifier() string`
+
+GetIdentifier returns the Identifier field if non-nil, zero value otherwise.
+
+### GetIdentifierOk
+
+`func (o *SubmitSelfServiceLoginFlowWithWebAuthnMethodBody) GetIdentifierOk() (*string, bool)`
+
+GetIdentifierOk returns a tuple with the Identifier field if it's non-nil, zero value otherwise
+and a boolean to check if the value has been set.
+
+### SetIdentifier
+
+`func (o *SubmitSelfServiceLoginFlowWithWebAuthnMethodBody) SetIdentifier(v string)`
+
+SetIdentifier sets Identifier field to given value.
+
+### HasIdentifier
+
+`func (o *SubmitSelfServiceLoginFlowWithWebAuthnMethodBody) HasIdentifier() bool`
+
+HasIdentifier returns a boolean if a field has been set.
 
 ### GetMethod
 

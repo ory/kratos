@@ -16,6 +16,7 @@
   value:
     - "$ref": "#/components/schemas/submitSelfServiceRegistrationFlowWithPasswordMethodBody"
     - "$ref": "#/components/schemas/submitSelfServiceRegistrationFlowWithOidcMethodBody"
+    - "$ref": "#/components/schemas/submitSelfServiceRegistrationFlowWithWebAuthnMethodBody"
 - op: add
   path: /components/schemas/submitSelfServiceRegistrationFlowBody/discriminator
   value:
@@ -23,6 +24,7 @@
     mapping:
       password: "#/components/schemas/submitSelfServiceRegistrationFlowWithPasswordMethodBody"
       oidc: "#/components/schemas/submitSelfServiceRegistrationFlowWithOidcMethodBody"
+      webauthn: "#/components/schemas/submitSelfServiceRegistrationFlowWithWebAuthnMethodBody"
 # end
 
 # All modifications for the login flow
@@ -34,6 +36,8 @@
     - "$ref": "#/components/schemas/submitSelfServiceLoginFlowWithPasswordMethodBody"
     - "$ref": "#/components/schemas/submitSelfServiceLoginFlowWithOidcMethodBody"
     - "$ref": "#/components/schemas/submitSelfServiceLoginFlowWithTotpMethodBody"
+    - "$ref": "#/components/schemas/submitSelfServiceLoginFlowWithWebAuthnMethodBody"
+    - "$ref": "#/components/schemas/submitSelfServiceLoginFlowWithLookupSecretMethodBody"
 - op: add
   path: /components/schemas/submitSelfServiceLoginFlowBody/discriminator
   value:
@@ -42,6 +46,8 @@
       password: "#/components/schemas/submitSelfServiceLoginFlowWithPasswordMethodBody"
       oidc: "#/components/schemas/submitSelfServiceLoginFlowWithOidcMethodBody"
       totp: "#/components/schemas/submitSelfServiceLoginFlowWithTotpMethodBody"
+      webauthn: "#/components/schemas/submitSelfServiceLoginFlowWithWebAuthnMethodBody"
+      lookup_secret: "#/components/schemas/submitSelfServiceLoginFlowWithLookupSecretMethodBody"
 # end
 
 # All modifications for the recovery flow
@@ -97,6 +103,8 @@
     - "$ref": "#/components/schemas/submitSelfServiceSettingsFlowWithOidcMethodBody"
     - "$ref": "#/components/schemas/submitSelfServiceSettingsFlowWithOidcMethodBody"
     - "$ref": "#/components/schemas/submitSelfServiceSettingsFlowWithTotpMethodBody"
+    - "$ref": "#/components/schemas/submitSelfServiceSettingsFlowWithWebAuthnMethodBody"
+    - "$ref": "#/components/schemas/submitSelfServiceSettingsFlowWithLookupMethodBody"
 - op: add
   path: /components/schemas/submitSelfServiceSettingsFlowBody/discriminator
   value:
@@ -106,6 +114,8 @@
       profile: "#/components/schemas/submitSelfServiceSettingsFlowWithProfileMethodBody"
       oidc: "#/components/schemas/submitSelfServiceSettingsFlowWithOidcMethodBody"
       totp: "#/components/schemas/submitSelfServiceSettingsFlowWithTotpMethodBody"
+      webauthn: "#/components/schemas/submitSelfServiceSettingsFlowWithWebAuthnMethodBody"
+      lookup_secret: "#/components/schemas/submitSelfServiceSettingsFlowWithLookupMethodBody"
 - op: add
   path: /components/schemas/selfServiceSettingsFlowState/enum
   value:

@@ -129,10 +129,10 @@
             "in": "query"
           },
           {
-            "minimum": 0,
+            "minimum": 1,
             "type": "integer",
             "format": "int64",
-            "default": 0,
+            "default": 1,
             "description": "Pagination Page",
             "name": "page",
             "in": "query"
@@ -428,10 +428,10 @@
             "in": "query"
           },
           {
-            "minimum": 0,
+            "minimum": 1,
             "type": "integer",
             "format": "int64",
-            "default": 0,
+            "default": 1,
             "description": "Pagination Page",
             "name": "page",
             "in": "query"
@@ -613,10 +613,10 @@
             "in": "query"
           },
           {
-            "minimum": 0,
+            "minimum": 1,
             "type": "integer",
             "format": "int64",
-            "default": 0,
+            "default": 1,
             "description": "Pagination Page",
             "name": "page",
             "in": "query"
@@ -2033,10 +2033,10 @@
             "in": "query"
           },
           {
-            "minimum": 0,
+            "minimum": 1,
             "type": "integer",
             "format": "int64",
-            "default": 0,
+            "default": 1,
             "description": "Pagination Page",
             "name": "page",
             "in": "query"
@@ -2670,6 +2670,11 @@
           "description": "UpdatedAt is a helper struct field for gobuffalo.pop.",
           "type": "string",
           "format": "date-time"
+        },
+        "version": {
+          "description": "Version refers to the version of the credential. Useful when changing the config schema.",
+          "type": "integer",
+          "format": "int64"
         }
       }
     },
@@ -2848,8 +2853,8 @@
           "description": "Pagination Page",
           "type": "integer",
           "format": "int64",
-          "default": 0,
-          "minimum": 0
+          "default": 1,
+          "minimum": 1
         },
         "per_page": {
           "description": "Items per Page\n\nThis is the number of items per page.",
@@ -3357,6 +3362,9 @@
       "type": "object",
       "title": "AuthenticationMethod identifies an authentication method",
       "properties": {
+        "aal": {
+          "$ref": "#/definitions/authenticatorAssuranceLevel"
+        },
         "completed_at": {
           "description": "When the authentication challenge was completed.",
           "type": "string",
@@ -3411,6 +3419,19 @@
         },
         "nodes": {
           "$ref": "#/definitions/uiNodes"
+        }
+      }
+    },
+    "submitSelfServiceFlowWithWebAuthnRegistrationMethod": {
+      "type": "object",
+      "properties": {
+        "webauthn_register": {
+          "description": "Register a WebAuthn Security Key\n\nIt is expected that the JSON returned by the WebAuthn registration process\nis included here.",
+          "type": "string"
+        },
+        "webauthn_register_displayname": {
+          "description": "Name of the WebAuthn Security Key to be Added\n\nA human-readable name for the security key which will be added.",
+          "type": "string"
         }
       }
     },
@@ -3471,11 +3492,16 @@
       "required": [
         "method",
         "password",
-        "password_identifier"
+        "password_identifier",
+        "identifier"
       ],
       "properties": {
         "csrf_token": {
           "description": "Sending the anti-csrf token is only required for browser login flows.",
+          "type": "string"
+        },
+        "identifier": {
+          "description": "Identifier is the email or username of the user trying to log in.",
           "type": "string"
         },
         "method": {
@@ -3487,7 +3513,7 @@
           "type": "string"
         },
         "password_identifier": {
-          "description": "Identifier is the email or username of the user trying to log in.",
+          "description": "Identifier is the email or username of the user trying to log in.\nThis field is deprecated!",
           "type": "string"
         }
       }
@@ -3523,6 +3549,10 @@
       "properties": {
         "csrf_token": {
           "description": "Sending the anti-csrf token is only required for browser login flows.",
+          "type": "string"
+        },
+        "identifier": {
+          "description": "Identifier is the email or username of the user trying to log in. This field is\nonly required when using WebAuthn for passwordless login. When using WebAuthn\nfor multi-factor authentication, it is not needed.",
           "type": "string"
         },
         "method": {
@@ -3625,6 +3655,35 @@
         "traits": {
           "description": "The identity's traits",
           "type": "object"
+        }
+      }
+    },
+    "submitSelfServiceRegistrationFlowWithWebAuthnMethodBody": {
+      "type": "object",
+      "required": [
+        "traits",
+        "method"
+      ],
+      "properties": {
+        "csrf_token": {
+          "description": "CSRFToken is the anti-CSRF token",
+          "type": "string"
+        },
+        "method": {
+          "description": "Method\n\nShould be set to \"webauthn\" when trying to add, update, or remove a webAuthn pairing.",
+          "type": "string"
+        },
+        "traits": {
+          "description": "The identity's traits",
+          "type": "object"
+        },
+        "webauthn_register": {
+          "description": "Register a WebAuthn Security Key\n\nIt is expected that the JSON returned by the WebAuthn registration process\nis included here.",
+          "type": "string"
+        },
+        "webauthn_register_displayname": {
+          "description": "Name of the WebAuthn Security Key to be Added\n\nA human-readable name for the security key which will be added.",
+          "type": "string"
         }
       }
     },
