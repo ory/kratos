@@ -4,6 +4,8 @@ import (
 	"context"
 	"encoding/json"
 
+	"github.com/ory/kratos/courier/template"
+
 	"github.com/pkg/errors"
 
 	"github.com/ory/kratos/courier/template/email"
@@ -47,7 +49,7 @@ func GetEmailTemplateType(t EmailTemplate) (TemplateType, error) {
 	}
 }
 
-func NewEmailTemplateFromMessage(d Dependencies, msg Message) (EmailTemplate, error) {
+func NewEmailTemplateFromMessage(d template.Dependencies, msg Message) (EmailTemplate, error) {
 	switch msg.TemplateType {
 	case TypeRecoveryInvalid:
 		var t email.RecoveryInvalidModel
