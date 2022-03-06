@@ -30,6 +30,8 @@ type (
 		SmtpDialer() *gomail.Dialer
 		DispatchQueue(ctx context.Context) error
 		DispatchMessage(ctx context.Context, msg Message) error
+		SetGetEmailTemplateType(f func(t EmailTemplate) (TemplateType, error))
+		SetNewEmailTemplateFromMessage(f func(d Dependencies, msg Message) (EmailTemplate, error))
 	}
 
 	Provider interface {

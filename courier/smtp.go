@@ -70,6 +70,14 @@ func newSMTP(ctx context.Context, deps Dependencies) *smtpClient {
 	}
 }
 
+func (c *courier) SetGetEmailTemplateType(f func(t EmailTemplate) (TemplateType, error)) {
+	c.smtpClient.GetTemplateType = f
+}
+
+func (c *courier) SetNewEmailTemplateFromMessage(f func(d Dependencies, msg Message) (EmailTemplate, error)) {
+	c.smtpClient.NewTemplateFromMessage = f
+}
+
 func (c *courier) SmtpDialer() *gomail.Dialer {
 	return c.smtpClient.Dialer
 }
