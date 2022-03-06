@@ -37,22 +37,21 @@ func TestCountActiveFirstFactorCredentials(t *testing.T) {
 	strategy := webauthn.NewStrategy(reg)
 
 	for k, tc := range []struct {
-		in       identity.CredentialsCollection
-		expected int
+		in            identity.CredentialsCollection
+		expectedFirst int
+		expectedMulti int
 	}{
 		{
 			in: identity.CredentialsCollection{{
 				Type:   strategy.ID(),
 				Config: []byte{},
 			}},
-			expected: 0,
 		},
 		{
 			in: identity.CredentialsCollection{{
 				Type:   strategy.ID(),
 				Config: []byte(`{"credentials": []}`),
 			}},
-			expected: 0,
 		},
 		{
 			in: identity.CredentialsCollection{{
@@ -60,7 +59,7 @@ func TestCountActiveFirstFactorCredentials(t *testing.T) {
 				Identifiers: []string{"foo"},
 				Config:      []byte(`{"credentials": [{}]}`),
 			}},
-			expected: 0,
+			expectedMulti: 1,
 		},
 		{
 			in: identity.CredentialsCollection{{
@@ -68,7 +67,7 @@ func TestCountActiveFirstFactorCredentials(t *testing.T) {
 				Identifiers: []string{"foo"},
 				Config:      []byte(`{"credentials": [{"is_passwordless": true}]}`),
 			}},
-			expected: 1,
+			expectedFirst: 1,
 		},
 		{
 			in: identity.CredentialsCollection{{
@@ -76,18 +75,25 @@ func TestCountActiveFirstFactorCredentials(t *testing.T) {
 				Identifiers: []string{"foo"},
 				Config:      []byte(`{"credentials": [{"is_passwordless": true}, {"is_passwordless": true}]}`),
 			}},
-			expected: 2,
+			expectedFirst: 2,
+		},
+		{
+			in: identity.CredentialsCollection{{
+				Type:        strategy.ID(),
+				Identifiers: []string{"foo"},
+				Config:      []byte(`{"credentials": [{"is_passwordless": true}, {"is_passwordless": false}]}`),
+			}},
+			expectedFirst: 1,
+			expectedMulti: 1,
 		},
 		{
 			in: identity.CredentialsCollection{{
 				Type:   strategy.ID(),
 				Config: []byte(`{}`),
 			}},
-			expected: 0,
 		},
 		{
-			in:       identity.CredentialsCollection{{}, {}},
-			expected: 0,
+			in: identity.CredentialsCollection{{}, {}},
 		},
 	} {
 		t.Run(fmt.Sprintf("case=%d", k), func(t *testing.T) {
@@ -98,7 +104,11 @@ func TestCountActiveFirstFactorCredentials(t *testing.T) {
 
 			actual, err := strategy.CountActiveFirstFactorCredentials(cc)
 			require.NoError(t, err)
-			assert.Equal(t, tc.expected, actual)
+			assert.Equal(t, tc.expectedFirst, actual)
+
+			actual, err = strategy.CountActiveMultiFactorCredentials(cc)
+			require.NoError(t, err)
+			assert.Equal(t, tc.expectedMulti, actual)
 		})
 	}
 }

@@ -5,6 +5,7 @@ import (
 	_ "embed"
 	"encoding/json"
 	"fmt"
+	"github.com/ory/kratos/selfservice/flow"
 	"net/http"
 	"net/url"
 	"testing"
@@ -12,7 +13,6 @@ import (
 
 	"github.com/ory/x/snapshotx"
 
-	"github.com/ory/kratos/selfservice/flow"
 	"github.com/ory/kratos/selfservice/strategy/webauthn"
 
 	"github.com/gofrs/uuid"
@@ -127,7 +127,7 @@ func TestCompleteSettings(t *testing.T) {
 
 	conf.MustSet(config.ViperKeySelfServiceSettingsPrivilegedAuthenticationAfter, "1m")
 
-	testhelpers.SetDefaultIdentitySchema(conf, "file://./stub/login.schema.json")
+	testhelpers.SetDefaultIdentitySchema(conf, "file://./stub/settings.schema.json")
 	conf.MustSet(config.ViperKeySecretsDefault, []string{"not-a-secure-session-key"})
 
 	t.Run("case=a device is shown which can be unlinked", func(t *testing.T) {
@@ -364,7 +364,7 @@ func TestCompleteSettings(t *testing.T) {
 			id := createIdentity(t, reg)
 			id.DeleteCredentialsType(identity.CredentialsTypePassword)
 			conf := sqlxx.JSONRawMessage(`{"credentials":[{"id":"Zm9vZm9v","display_name":"foo","is_passwordless":true}]}`)
-			id.UpsertCredentialsConfig(identity.CredentialsTypeWebAuthn, conf)
+			id.UpsertCredentialsConfig(identity.CredentialsTypeWebAuthn, conf, 0)
 			require.NoError(t, reg.IdentityManager().Update(ctx, id, identity.ManagerAllowWriteProtectedTraits))
 
 			body, res := doBrowserFlow(t, spa, func(v url.Values) {
@@ -405,7 +405,7 @@ func TestCompleteSettings(t *testing.T) {
 		run := func(t *testing.T, spa bool) {
 			id := createIdentity(t, reg)
 			id.DeleteCredentialsType(identity.CredentialsTypePassword)
-			id.UpsertCredentialsConfig(identity.CredentialsTypeWebAuthn, sqlxx.JSONRawMessage(`{"credentials":[{"id":"Zm9vZm9v","display_name":"foo","is_passwordless":false}]}`))
+			id.UpsertCredentialsConfig(identity.CredentialsTypeWebAuthn, sqlxx.JSONRawMessage(`{"credentials":[{"id":"Zm9vZm9v","display_name":"foo","is_passwordless":false}]}`), 0)
 			require.NoError(t, reg.IdentityManager().Update(ctx, id, identity.ManagerAllowWriteProtectedTraits))
 
 			body, res := doBrowserFlow(t, spa, func(v url.Values) {
@@ -508,5 +508,35 @@ func TestCompleteSettings(t *testing.T) {
 		t.Run("type=spa", func(t *testing.T) {
 			run(t, true)
 		})
+	})
+
+	t.Run("case=should fail if no identifier was set in the schema", func(t *testing.T) {
+		testhelpers.SetDefaultIdentitySchema(conf, "file://stub/missing-identifier.schema.json")
+
+		for _, f := range []string{"spa", "browser"} {
+			t.Run("type="+f, func(t *testing.T) {
+				isSPA := f == "spa"
+
+				var id identity.Identity
+				require.NoError(t, json.Unmarshal(settingsFixtureSuccessIdentity, &id))
+				_ = reg.PrivilegedIdentityPool().DeleteIdentity(context.Background(), id.ID)
+				browserClient := testhelpers.NewHTTPClientWithIdentitySessionCookie(t, reg, &id)
+				f := testhelpers.InitializeSettingsFlowViaBrowser(t, browserClient, isSPA, publicTS)
+
+				// We inject the session to replay
+				interim, err := reg.SettingsFlowPersister().GetSettingsFlow(context.Background(), uuid.FromStringOrNil(f.Id))
+				require.NoError(t, err)
+				interim.InternalContext = settingsFixtureSuccessInternalContext
+				require.NoError(t, reg.SettingsFlowPersister().UpdateSettingsFlow(context.Background(), interim))
+
+				values := testhelpers.SDKFormFieldsToURLValues(f.Ui.Nodes)
+
+				// We use the response replay
+				values.Set(node.WebAuthnRegister, string(settingsFixtureSuccessResponse))
+				values.Set(node.WebAuthnRegisterDisplayName, "foobar")
+				actual, _ := testhelpers.SettingsMakeRequest(t, false, isSPA, f, browserClient, testhelpers.EncodeFormAsJSON(t, isSPA, values))
+				assert.Equal(t, text.NewErrorValidationIdentifierMissing().Text, gjson.Get(actual, "ui.messages.0.text").String(), "%s", actual)
+			})
+		}
 	})
 }

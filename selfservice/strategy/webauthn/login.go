@@ -77,20 +77,14 @@ func (s *Strategy) populateLoginMethodForPasswordless(r *http.Request, sr *login
 			return nil
 		}
 
-		for _, aal := range []identity.AuthenticatorAssuranceLevel{
-			identity.AuthenticatorAssuranceLevel1,
-			identity.AuthenticatorAssuranceLevel2,
-		} {
-			if err := s.populateLoginMethod(r, sr, id, text.NewInfoSelfServiceLoginWebAuthn(), aal); errors.Is(err, ErrNoCredentials) {
-				continue
-			} else if err != nil {
-				return err
-			} else {
-				sr.UI.SetCSRF(s.d.GenerateCSRFToken(r))
-				sr.UI.SetNode(node.NewInputField("identifier", identifier, node.DefaultGroup, node.InputAttributeTypeHidden))
-				break
-			}
+		if err := s.populateLoginMethod(r, sr, id, text.NewInfoSelfServiceLoginWebAuthn(), ""); errors.Is(err, ErrNoCredentials) {
+			return nil
+		} else if err != nil {
+			return err
 		}
+
+		sr.UI.SetCSRF(s.d.GenerateCSRFToken(r))
+		sr.UI.SetNode(node.NewInputField("identifier", identifier, node.DefaultGroup, node.InputAttributeTypeHidden))
 		return nil
 	}
 
@@ -117,9 +111,9 @@ func (s *Strategy) populateLoginMethod(r *http.Request, sr *login.Flow, i *ident
 		return errors.WithStack(err)
 	}
 
-	webAuthCreds := conf.Credentials.ToWebAuthnFiltered(aal)
-	if sr.IsForced() {
-		webAuthCreds = conf.Credentials.ToWebAuthn()
+	webAuthCreds := conf.Credentials.ToWebAuthn()
+	if !sr.IsForced() {
+		webAuthCreds = conf.Credentials.ToWebAuthnFiltered(aal)
 	}
 
 	if len(webAuthCreds) == 0 {
@@ -219,14 +213,14 @@ func (s *Strategy) Login(w http.ResponseWriter, r *http.Request, f *login.Flow, 
 		return nil, s.handleLoginError(r, f, err)
 	}
 
-	if s.d.Config(r.Context()).WebAuthnForPasswordless() || f.IsForced() {
+	if s.d.Config(r.Context()).WebAuthnForPasswordless() || f.IsForced() && f.RequestedAAL == identity.AuthenticatorAssuranceLevel1 {
 		return s.loginPasswordless(w, r, f, ss, &p)
 	}
 
 	return s.loginMultiFactor(w, r, f, ss, &p)
 }
 
-func (s *Strategy) loginPasswordless(w http.ResponseWriter, r *http.Request, f *login.Flow, ss *session.Session, p *submitSelfServiceLoginFlowWithWebAuthnMethodBody) (i *identity.Identity, err error) {
+func (s *Strategy) loginPasswordless(w http.ResponseWriter, r *http.Request, f *login.Flow, _ *session.Session, p *submitSelfServiceLoginFlowWithWebAuthnMethodBody) (i *identity.Identity, err error) {
 	if err := login.CheckAAL(f, identity.AuthenticatorAssuranceLevel1); err != nil {
 		return nil, s.handleLoginError(r, f, err)
 	}
@@ -277,7 +271,7 @@ func (s *Strategy) loginPasswordless(w http.ResponseWriter, r *http.Request, f *
 	return s.loginAuthenticate(w, r, f, i.ID, p, identity.AuthenticatorAssuranceLevel1)
 }
 
-func (s *Strategy) loginAuthenticate(w http.ResponseWriter, r *http.Request, f *login.Flow, identityID uuid.UUID, p *submitSelfServiceLoginFlowWithWebAuthnMethodBody, aal identity.AuthenticatorAssuranceLevel) (*identity.Identity, error) {
+func (s *Strategy) loginAuthenticate(_ http.ResponseWriter, r *http.Request, f *login.Flow, identityID uuid.UUID, p *submitSelfServiceLoginFlowWithWebAuthnMethodBody, aal identity.AuthenticatorAssuranceLevel) (*identity.Identity, error) {
 	i, err := s.d.PrivilegedIdentityPool().GetIdentityConfidential(r.Context(), identityID)
 	if err != nil {
 		return nil, s.handleLoginError(r, f, errors.WithStack(schema.NewNoWebAuthnRegistered()))
@@ -335,6 +329,5 @@ func (s *Strategy) loginMultiFactor(w http.ResponseWriter, r *http.Request, f *l
 	if err := login.CheckAAL(f, identity.AuthenticatorAssuranceLevel2); err != nil {
 		return nil, err
 	}
-
 	return s.loginAuthenticate(w, r, f, ss.IdentityID, p, identity.AuthenticatorAssuranceLevel2)
 }

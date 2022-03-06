@@ -387,6 +387,21 @@ func TestRegistration(t *testing.T) {
 			})
 		})
 
+		t.Run("case=should fail if no identifier was set in the schema", func(t *testing.T) {
+			testhelpers.SetDefaultIdentitySchema(conf, "file://stub/missing-identifier.schema.json")
+
+			for _, f := range []string{"spa", "api", "browser"} {
+				t.Run("type="+f, func(t *testing.T) {
+					actual := registrationhelpers.ExpectValidationError(t, publicTS, conf, f, func(v url.Values) {
+						v.Set("traits.email", testhelpers.RandomEmail())
+						v.Set("password", x.NewUUID().String())
+						v.Set("method", "password")
+					})
+					assert.Equal(t, text.NewErrorValidationIdentifierMissing().Text, gjson.Get(actual, "ui.messages.0.text").String(), "%s", actual)
+				})
+			}
+		})
+
 		t.Run("case=should work with regular JSON", func(t *testing.T) {
 			testhelpers.SetDefaultIdentitySchema(conf, "file://stub/registration.schema.json")
 			conf.MustSet(config.HookStrategyKey(config.ViperKeySelfServiceRegistrationAfter, identity.CredentialsTypePassword.String()), []config.SelfServiceHook{{Name: "session"}})

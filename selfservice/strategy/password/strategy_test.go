@@ -94,6 +94,10 @@ func TestCountActiveFirstFactorCredentials(t *testing.T) {
 			actual, err := strategy.CountActiveFirstFactorCredentials(cc)
 			require.NoError(t, err)
 			assert.Equal(t, tc.expected, actual)
+
+			actual, err = strategy.CountActiveMultiFactorCredentials(cc)
+			require.NoError(t, err)
+			assert.Equal(t, 0, actual)
 		})
 	}
 }
