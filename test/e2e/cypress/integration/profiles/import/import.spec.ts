@@ -84,7 +84,7 @@ context('Import Identities', () => {
     })
   }
 
-  it.only(`should be able to sign in using imported oidc credentials`, () => {
+  it(`should be able to sign in using imported oidc credentials`, () => {
     const email = gen.email()
     const website = 'https://' + gen.password() + '.com'
     cy.request('POST', `${KRATOS_ADMIN}/identities`, {
