@@ -4,7 +4,7 @@
 
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
-**Page** | Pointer to **int64** | Pagination Page | [optional] [default to 0]
+**Page** | Pointer to **int64** | Pagination Page | [optional] [default to 1]
 **PerPage** | Pointer to **int64** | Items per Page  This is the number of items per page. | [optional] [default to 250]
 
 ## Methods

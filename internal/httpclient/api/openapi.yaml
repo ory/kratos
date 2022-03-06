@@ -122,9 +122,9 @@ paths:
         name: page
         required: false
         schema:
-          default: 0
+          default: 1
           format: int64
-          minimum: 0
+          minimum: 1
           type: integer
         style: form
       responses:
@@ -424,9 +424,9 @@ paths:
         name: page
         required: false
         schema:
-          default: 0
+          default: 1
           format: int64
-          minimum: 0
+          minimum: 1
           type: integer
         style: form
       - description: Active is a boolean flag that filters out sessions based on the
@@ -540,9 +540,9 @@ paths:
         name: page
         required: false
         schema:
-          default: 0
+          default: 1
           format: int64
-          minimum: 0
+          minimum: 1
           type: integer
         style: form
       responses:
@@ -2354,9 +2354,9 @@ paths:
         name: page
         required: false
         schema:
-          default: 0
+          default: 1
           format: int64
-          minimum: 0
+          minimum: 1
           type: integer
         style: form
       responses:
@@ -2909,6 +2909,7 @@ components:
             - identifiers
             created_at: 2000-01-23T04:56:07.000+00:00
             config: '{}'
+            version: 0
         verifiable_addresses:
         - updated_at: 2014-01-01T23:28:56.782Z
           verified_at: 2000-01-23T04:56:07.000+00:00
@@ -3000,6 +3001,7 @@ components:
         - identifiers
         created_at: 2000-01-23T04:56:07.000+00:00
         config: '{}'
+        version: 0
       properties:
         config:
           title: JSONRawMessage represents a json.RawMessage that works well with
@@ -3021,6 +3023,11 @@ components:
           description: UpdatedAt is a helper struct field for gobuffalo.pop.
           format: date-time
           type: string
+        version:
+          description: Version refers to the version of the credential. Useful when
+            changing the config schema.
+          format: int64
+          type: integer
       type: object
     identityCredentialsOidc:
       properties:
@@ -3183,10 +3190,10 @@ components:
     pagination:
       properties:
         page:
-          default: 0
+          default: 1
           description: Pagination Page
           format: int64
-          minimum: 0
+          minimum: 1
           type: integer
         per_page:
           default: 250
@@ -3792,6 +3799,7 @@ components:
               - identifiers
               created_at: 2000-01-23T04:56:07.000+00:00
               config: '{}'
+              version: 0
           verifiable_addresses:
           - updated_at: 2014-01-01T23:28:56.782Z
             verified_at: 2000-01-23T04:56:07.000+00:00
@@ -4025,6 +4033,7 @@ components:
               - identifiers
               created_at: 2000-01-23T04:56:07.000+00:00
               config: '{}'
+              version: 0
           verifiable_addresses:
           - updated_at: 2014-01-01T23:28:56.782Z
             verified_at: 2000-01-23T04:56:07.000+00:00
@@ -4101,6 +4110,8 @@ components:
         completed_at: 2000-01-23T04:56:07.000+00:00
         method: link_recovery
       properties:
+        aal:
+          $ref: '#/components/schemas/authenticatorAssuranceLevel'
         completed_at:
           description: When the authentication challenge was completed.
           format: date-time
@@ -4155,17 +4166,37 @@ components:
       - method
       - nodes
       type: object
+    submitSelfServiceFlowWithWebAuthnRegistrationMethod:
+      properties:
+        webauthn_register:
+          description: |-
+            Register a WebAuthn Security Key
+
+            It is expected that the JSON returned by the WebAuthn registration process
+            is included here.
+          type: string
+        webauthn_register_displayname:
+          description: |-
+            Name of the WebAuthn Security Key to be Added
+
+            A human-readable name for the security key which will be added.
+          type: string
+      type: object
     submitSelfServiceLoginFlowBody:
       discriminator:
         mapping:
+          lookup_secret: '#/components/schemas/submitSelfServiceLoginFlowWithLookupSecretMethodBody'
           oidc: '#/components/schemas/submitSelfServiceLoginFlowWithOidcMethodBody'
           password: '#/components/schemas/submitSelfServiceLoginFlowWithPasswordMethodBody'
           totp: '#/components/schemas/submitSelfServiceLoginFlowWithTotpMethodBody'
+          webauthn: '#/components/schemas/submitSelfServiceLoginFlowWithWebAuthnMethodBody'
         propertyName: method
       oneOf:
       - $ref: '#/components/schemas/submitSelfServiceLoginFlowWithPasswordMethodBody'
       - $ref: '#/components/schemas/submitSelfServiceLoginFlowWithOidcMethodBody'
       - $ref: '#/components/schemas/submitSelfServiceLoginFlowWithTotpMethodBody'
+      - $ref: '#/components/schemas/submitSelfServiceLoginFlowWithWebAuthnMethodBody'
+      - $ref: '#/components/schemas/submitSelfServiceLoginFlowWithLookupSecretMethodBody'
     submitSelfServiceLoginFlowWithLookupSecretMethodBody:
       properties:
         csrf_token:
@@ -4216,6 +4247,10 @@ components:
           description: Sending the anti-csrf token is only required for browser login
             flows.
           type: string
+        identifier:
+          description: Identifier is the email or username of the user trying to log
+            in.
+          type: string
         method:
           description: Method should be set to "password" when logging in using the
             identifier and password strategy.
@@ -4224,10 +4259,12 @@ components:
           description: The user's password.
           type: string
         password_identifier:
-          description: Identifier is the email or username of the user trying to log
-            in.
+          description: |-
+            Identifier is the email or username of the user trying to log in.
+            This field is deprecated!
           type: string
       required:
+      - identifier
       - method
       - password
       - password_identifier
@@ -4258,6 +4295,12 @@ components:
         csrf_token:
           description: Sending the anti-csrf token is only required for browser login
             flows.
+          type: string
+        identifier:
+          description: |-
+            Identifier is the email or username of the user trying to log in. This field is
+            only required when using WebAuthn for passwordless login. When using WebAuthn
+            for multi-factor authentication, it is not needed.
           type: string
         method:
           description: Method should be set to "webAuthn" when logging in using the
@@ -4321,10 +4364,12 @@ components:
         mapping:
           oidc: '#/components/schemas/submitSelfServiceRegistrationFlowWithOidcMethodBody'
           password: '#/components/schemas/submitSelfServiceRegistrationFlowWithPasswordMethodBody'
+          webauthn: '#/components/schemas/submitSelfServiceRegistrationFlowWithWebAuthnMethodBody'
         propertyName: method
       oneOf:
       - $ref: '#/components/schemas/submitSelfServiceRegistrationFlowWithPasswordMethodBody'
       - $ref: '#/components/schemas/submitSelfServiceRegistrationFlowWithOidcMethodBody'
+      - $ref: '#/components/schemas/submitSelfServiceRegistrationFlowWithWebAuthnMethodBody'
     submitSelfServiceRegistrationFlowWithOidcMethodBody:
       description: |-
         SubmitSelfServiceRegistrationFlowWithOidcMethodBody is used to decode the registration form payload
@@ -4374,13 +4419,46 @@ components:
       - password
       - traits
       type: object
+    submitSelfServiceRegistrationFlowWithWebAuthnMethodBody:
+      properties:
+        csrf_token:
+          description: CSRFToken is the anti-CSRF token
+          type: string
+        method:
+          description: |-
+            Method
+
+            Should be set to "webauthn" when trying to add, update, or remove a webAuthn pairing.
+          type: string
+        traits:
+          description: The identity's traits
+          type: object
+        webauthn_register:
+          description: |-
+            Register a WebAuthn Security Key
+
+            It is expected that the JSON returned by the WebAuthn registration process
+            is included here.
+          type: string
+        webauthn_register_displayname:
+          description: |-
+            Name of the WebAuthn Security Key to be Added
+
+            A human-readable name for the security key which will be added.
+          type: string
+      required:
+      - method
+      - traits
+      type: object
     submitSelfServiceSettingsFlowBody:
       discriminator:
         mapping:
+          lookup_secret: '#/components/schemas/submitSelfServiceSettingsFlowWithLookupMethodBody'
           oidc: '#/components/schemas/submitSelfServiceSettingsFlowWithOidcMethodBody'
           password: '#/components/schemas/submitSelfServiceSettingsFlowWithPasswordMethodBody'
           profile: '#/components/schemas/submitSelfServiceSettingsFlowWithProfileMethodBody'
           totp: '#/components/schemas/submitSelfServiceSettingsFlowWithTotpMethodBody'
+          webauthn: '#/components/schemas/submitSelfServiceSettingsFlowWithWebAuthnMethodBody'
         propertyName: method
       oneOf:
       - $ref: '#/components/schemas/submitSelfServiceSettingsFlowWithPasswordMethodBody'
@@ -4388,6 +4466,8 @@ components:
       - $ref: '#/components/schemas/submitSelfServiceSettingsFlowWithOidcMethodBody'
       - $ref: '#/components/schemas/submitSelfServiceSettingsFlowWithOidcMethodBody'
       - $ref: '#/components/schemas/submitSelfServiceSettingsFlowWithTotpMethodBody'
+      - $ref: '#/components/schemas/submitSelfServiceSettingsFlowWithWebAuthnMethodBody'
+      - $ref: '#/components/schemas/submitSelfServiceSettingsFlowWithLookupMethodBody'
     submitSelfServiceSettingsFlowWithLookupMethodBody:
       properties:
         csrf_token:
@@ -4616,6 +4696,7 @@ components:
                 - identifiers
                 created_at: 2000-01-23T04:56:07.000+00:00
                 config: '{}'
+                version: 0
             verifiable_addresses:
             - updated_at: 2014-01-01T23:28:56.782Z
               verified_at: 2000-01-23T04:56:07.000+00:00
@@ -4685,6 +4766,7 @@ components:
               - identifiers
               created_at: 2000-01-23T04:56:07.000+00:00
               config: '{}'
+              version: 0
           verifiable_addresses:
           - updated_at: 2014-01-01T23:28:56.782Z
             verified_at: 2000-01-23T04:56:07.000+00:00
@@ -4736,6 +4818,7 @@ components:
                 - identifiers
                 created_at: 2000-01-23T04:56:07.000+00:00
                 config: '{}'
+                version: 0
             verifiable_addresses:
             - updated_at: 2014-01-01T23:28:56.782Z
               verified_at: 2000-01-23T04:56:07.000+00:00

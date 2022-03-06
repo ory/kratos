@@ -424,6 +424,11 @@
             "description": "UpdatedAt is a helper struct field for gobuffalo.pop.",
             "format": "date-time",
             "type": "string"
+          },
+          "version": {
+            "description": "Version refers to the version of the credential. Useful when changing the config schema.",
+            "format": "int64",
+            "type": "integer"
           }
         },
         "type": "object"
@@ -609,10 +614,10 @@
       "pagination": {
         "properties": {
           "page": {
-            "default": 0,
+            "default": 1,
             "description": "Pagination Page",
             "format": "int64",
-            "minimum": 0,
+            "minimum": 1,
             "type": "integer"
           },
           "per_page": {
@@ -1133,6 +1138,9 @@
       "sessionAuthenticationMethod": {
         "description": "A singular authenticator used during authentication / login.",
         "properties": {
+          "aal": {
+            "$ref": "#/components/schemas/authenticatorAssuranceLevel"
+          },
           "completed_at": {
             "description": "When the authentication challenge was completed.",
             "format": "date-time",
@@ -1201,12 +1209,27 @@
         ],
         "type": "object"
       },
+      "submitSelfServiceFlowWithWebAuthnRegistrationMethod": {
+        "properties": {
+          "webauthn_register": {
+            "description": "Register a WebAuthn Security Key\n\nIt is expected that the JSON returned by the WebAuthn registration process\nis included here.",
+            "type": "string"
+          },
+          "webauthn_register_displayname": {
+            "description": "Name of the WebAuthn Security Key to be Added\n\nA human-readable name for the security key which will be added.",
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
       "submitSelfServiceLoginFlowBody": {
         "discriminator": {
           "mapping": {
+            "lookup_secret": "#/components/schemas/submitSelfServiceLoginFlowWithLookupSecretMethodBody",
             "oidc": "#/components/schemas/submitSelfServiceLoginFlowWithOidcMethodBody",
             "password": "#/components/schemas/submitSelfServiceLoginFlowWithPasswordMethodBody",
-            "totp": "#/components/schemas/submitSelfServiceLoginFlowWithTotpMethodBody"
+            "totp": "#/components/schemas/submitSelfServiceLoginFlowWithTotpMethodBody",
+            "webauthn": "#/components/schemas/submitSelfServiceLoginFlowWithWebAuthnMethodBody"
           },
           "propertyName": "method"
         },
@@ -1219,6 +1242,12 @@
           },
           {
             "$ref": "#/components/schemas/submitSelfServiceLoginFlowWithTotpMethodBody"
+          },
+          {
+            "$ref": "#/components/schemas/submitSelfServiceLoginFlowWithWebAuthnMethodBody"
+          },
+          {
+            "$ref": "#/components/schemas/submitSelfServiceLoginFlowWithLookupSecretMethodBody"
           }
         ]
       },
@@ -1276,6 +1305,10 @@
             "description": "Sending the anti-csrf token is only required for browser login flows.",
             "type": "string"
           },
+          "identifier": {
+            "description": "Identifier is the email or username of the user trying to log in.",
+            "type": "string"
+          },
           "method": {
             "description": "Method should be set to \"password\" when logging in using the identifier and password strategy.",
             "type": "string"
@@ -1285,14 +1318,15 @@
             "type": "string"
           },
           "password_identifier": {
-            "description": "Identifier is the email or username of the user trying to log in.",
+            "description": "Identifier is the email or username of the user trying to log in.\nThis field is deprecated!",
             "type": "string"
           }
         },
         "required": [
           "method",
           "password",
-          "password_identifier"
+          "password_identifier",
+          "identifier"
         ],
         "title": "submitSelfServiceLoginFlowWithPasswordMethodBody is used to decode the login form payload.",
         "type": "object"
@@ -1323,6 +1357,10 @@
         "properties": {
           "csrf_token": {
             "description": "Sending the anti-csrf token is only required for browser login flows.",
+            "type": "string"
+          },
+          "identifier": {
+            "description": "Identifier is the email or username of the user trying to log in. This field is\nonly required when using WebAuthn for passwordless login. When using WebAuthn\nfor multi-factor authentication, it is not needed.",
             "type": "string"
           },
           "method": {
@@ -1391,7 +1429,8 @@
         "discriminator": {
           "mapping": {
             "oidc": "#/components/schemas/submitSelfServiceRegistrationFlowWithOidcMethodBody",
-            "password": "#/components/schemas/submitSelfServiceRegistrationFlowWithPasswordMethodBody"
+            "password": "#/components/schemas/submitSelfServiceRegistrationFlowWithPasswordMethodBody",
+            "webauthn": "#/components/schemas/submitSelfServiceRegistrationFlowWithWebAuthnMethodBody"
           },
           "propertyName": "method"
         },
@@ -1401,6 +1440,9 @@
           },
           {
             "$ref": "#/components/schemas/submitSelfServiceRegistrationFlowWithOidcMethodBody"
+          },
+          {
+            "$ref": "#/components/schemas/submitSelfServiceRegistrationFlowWithWebAuthnMethodBody"
           }
         ]
       },
@@ -1457,13 +1499,44 @@
         ],
         "type": "object"
       },
+      "submitSelfServiceRegistrationFlowWithWebAuthnMethodBody": {
+        "properties": {
+          "csrf_token": {
+            "description": "CSRFToken is the anti-CSRF token",
+            "type": "string"
+          },
+          "method": {
+            "description": "Method\n\nShould be set to \"webauthn\" when trying to add, update, or remove a webAuthn pairing.",
+            "type": "string"
+          },
+          "traits": {
+            "description": "The identity's traits",
+            "type": "object"
+          },
+          "webauthn_register": {
+            "description": "Register a WebAuthn Security Key\n\nIt is expected that the JSON returned by the WebAuthn registration process\nis included here.",
+            "type": "string"
+          },
+          "webauthn_register_displayname": {
+            "description": "Name of the WebAuthn Security Key to be Added\n\nA human-readable name for the security key which will be added.",
+            "type": "string"
+          }
+        },
+        "required": [
+          "traits",
+          "method"
+        ],
+        "type": "object"
+      },
       "submitSelfServiceSettingsFlowBody": {
         "discriminator": {
           "mapping": {
+            "lookup_secret": "#/components/schemas/submitSelfServiceSettingsFlowWithLookupMethodBody",
             "oidc": "#/components/schemas/submitSelfServiceSettingsFlowWithOidcMethodBody",
             "password": "#/components/schemas/submitSelfServiceSettingsFlowWithPasswordMethodBody",
             "profile": "#/components/schemas/submitSelfServiceSettingsFlowWithProfileMethodBody",
-            "totp": "#/components/schemas/submitSelfServiceSettingsFlowWithTotpMethodBody"
+            "totp": "#/components/schemas/submitSelfServiceSettingsFlowWithTotpMethodBody",
+            "webauthn": "#/components/schemas/submitSelfServiceSettingsFlowWithWebAuthnMethodBody"
           },
           "propertyName": "method"
         },
@@ -1482,6 +1555,12 @@
           },
           {
             "$ref": "#/components/schemas/submitSelfServiceSettingsFlowWithTotpMethodBody"
+          },
+          {
+            "$ref": "#/components/schemas/submitSelfServiceSettingsFlowWithWebAuthnMethodBody"
+          },
+          {
+            "$ref": "#/components/schemas/submitSelfServiceSettingsFlowWithLookupMethodBody"
           }
         ]
       },
@@ -2247,9 +2326,9 @@
             "in": "query",
             "name": "page",
             "schema": {
-              "default": 0,
+              "default": 1,
               "format": "int64",
-              "minimum": 0,
+              "minimum": 1,
               "type": "integer"
             }
           }
@@ -2656,9 +2735,9 @@
             "in": "query",
             "name": "page",
             "schema": {
-              "default": 0,
+              "default": 1,
               "format": "int64",
-              "minimum": 0,
+              "minimum": 1,
               "type": "integer"
             }
           },
@@ -2818,9 +2897,9 @@
             "in": "query",
             "name": "page",
             "schema": {
-              "default": 0,
+              "default": 1,
               "format": "int64",
-              "minimum": 0,
+              "minimum": 1,
               "type": "integer"
             }
           }
@@ -4609,9 +4688,9 @@
             "in": "query",
             "name": "page",
             "schema": {
-              "default": 0,
+              "default": 1,
               "format": "int64",
-              "minimum": 0,
+              "minimum": 1,
               "type": "integer"
             }
           }

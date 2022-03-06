@@ -5,18 +5,21 @@
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
 **CsrfToken** | Pointer to **string** | Sending the anti-csrf token is only required for browser login flows. | [optional] 
-**Method** | **string** | Method should be set to \&quot;totp\&quot; when logging in using the TOTP strategy. | 
+**Identifier** | **string** | Identifier is the email or username of the user trying to log in. This field is only required when using WebAuthn for passwordless login. When using WebAuthn for multi-factor authentication, it is not needed. | 
+**Method** | **string** | Method should be set to \&quot;lookup_secret\&quot; when logging in using the lookup_secret strategy. | 
 **Password** | **string** | The user&#39;s password. | 
-**PasswordIdentifier** | **string** | Identifier is the email or username of the user trying to log in. | 
+**PasswordIdentifier** | **string** | Identifier is the email or username of the user trying to log in. This field is deprecated! | 
 **Provider** | **string** | The provider to register with | 
 **Traits** | Pointer to **map[string]interface{}** | The identity traits. This is a placeholder for the registration flow. | [optional] 
 **TotpCode** | **string** | The TOTP code. | 
+**WebauthnLogin** | Pointer to **string** | Login a WebAuthn Security Key  This must contain the ID of the WebAuthN connection. | [optional] 
+**LookupSecret** | **string** | The lookup secret. | 
 
 ## Methods
 
 ### NewSubmitSelfServiceLoginFlowBody
 
-`func NewSubmitSelfServiceLoginFlowBody(method string, password string, passwordIdentifier string, provider string, totpCode string, ) *SubmitSelfServiceLoginFlowBody`
+`func NewSubmitSelfServiceLoginFlowBody(identifier string, method string, password string, passwordIdentifier string, provider string, totpCode string, lookupSecret string, ) *SubmitSelfServiceLoginFlowBody`
 
 NewSubmitSelfServiceLoginFlowBody instantiates a new SubmitSelfServiceLoginFlowBody object
 This constructor will assign default values to properties that have it defined,
@@ -55,6 +58,26 @@ SetCsrfToken sets CsrfToken field to given value.
 `func (o *SubmitSelfServiceLoginFlowBody) HasCsrfToken() bool`
 
 HasCsrfToken returns a boolean if a field has been set.
+
+### GetIdentifier
+
+`func (o *SubmitSelfServiceLoginFlowBody) GetIdentifier() string`
+
+GetIdentifier returns the Identifier field if non-nil, zero value otherwise.
+
+### GetIdentifierOk
+
+`func (o *SubmitSelfServiceLoginFlowBody) GetIdentifierOk() (*string, bool)`
+
+GetIdentifierOk returns a tuple with the Identifier field if it's non-nil, zero value otherwise
+and a boolean to check if the value has been set.
+
+### SetIdentifier
+
+`func (o *SubmitSelfServiceLoginFlowBody) SetIdentifier(v string)`
+
+SetIdentifier sets Identifier field to given value.
+
 
 ### GetMethod
 
@@ -179,6 +202,51 @@ and a boolean to check if the value has been set.
 `func (o *SubmitSelfServiceLoginFlowBody) SetTotpCode(v string)`
 
 SetTotpCode sets TotpCode field to given value.
+
+
+### GetWebauthnLogin
+
+`func (o *SubmitSelfServiceLoginFlowBody) GetWebauthnLogin() string`
+
+GetWebauthnLogin returns the WebauthnLogin field if non-nil, zero value otherwise.
+
+### GetWebauthnLoginOk
+
+`func (o *SubmitSelfServiceLoginFlowBody) GetWebauthnLoginOk() (*string, bool)`
+
+GetWebauthnLoginOk returns a tuple with the WebauthnLogin field if it's non-nil, zero value otherwise
+and a boolean to check if the value has been set.
+
+### SetWebauthnLogin
+
+`func (o *SubmitSelfServiceLoginFlowBody) SetWebauthnLogin(v string)`
+
+SetWebauthnLogin sets WebauthnLogin field to given value.
+
+### HasWebauthnLogin
+
+`func (o *SubmitSelfServiceLoginFlowBody) HasWebauthnLogin() bool`
+
+HasWebauthnLogin returns a boolean if a field has been set.
+
+### GetLookupSecret
+
+`func (o *SubmitSelfServiceLoginFlowBody) GetLookupSecret() string`
+
+GetLookupSecret returns the LookupSecret field if non-nil, zero value otherwise.
+
+### GetLookupSecretOk
+
+`func (o *SubmitSelfServiceLoginFlowBody) GetLookupSecretOk() (*string, bool)`
+
+GetLookupSecretOk returns a tuple with the LookupSecret field if it's non-nil, zero value otherwise
+and a boolean to check if the value has been set.
+
+### SetLookupSecret
+
+`func (o *SubmitSelfServiceLoginFlowBody) SetLookupSecret(v string)`
+
+SetLookupSecret sets LookupSecret field to given value.
 
 
 
