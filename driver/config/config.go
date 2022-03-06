@@ -158,6 +158,7 @@ const (
 	ViperKeyPasswordIdentifierSimilarityCheckEnabled         = "selfservice.methods.password.config.identifier_similarity_check_enabled"
 	ViperKeyIgnoreNetworkErrors                              = "selfservice.methods.password.config.ignore_network_errors"
 	ViperKeyTOTPIssuer                                       = "selfservice.methods.totp.config.issuer"
+	ViperKeyOIDCBaseRedirectURL                              = "selfservice.methods.oidc.config.base_redirect_uri"
 	ViperKeyWebAuthnRPDisplayName                            = "selfservice.methods.webauthn.config.rp.display_name"
 	ViperKeyWebAuthnRPID                                     = "selfservice.methods.webauthn.config.rp.id"
 	ViperKeyWebAuthnRPOrigin                                 = "selfservice.methods.webauthn.config.rp.origin"
@@ -504,6 +505,10 @@ func (p *Config) DefaultIdentityTraitsSchemaID() string {
 
 func (p *Config) TOTPIssuer() string {
 	return p.Source().StringF(ViperKeyTOTPIssuer, p.SelfPublicURL().Hostname())
+}
+
+func (p *Config) OIDCRedirectURIBase() *url.URL {
+	return p.Source().URIF(ViperKeyOIDCBaseRedirectURL, p.SelfPublicURL())
 }
 
 func (p *Config) IdentityTraitsSchemas() (Schemas, error) {

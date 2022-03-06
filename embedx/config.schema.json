@@ -1382,6 +1382,15 @@
                   "type": "object",
                   "additionalProperties": false,
                   "properties": {
+                    "base_redirect_uri": {
+                      "type": "string",
+                      "title": "Base URL for OAuth2 Redirect URIs",
+                      "description": "Can be used to modify the base URL for OAuth2 Redirect URLs. If unset, the Public Base URL will be used.",
+                      "format": "uri",
+                      "examples": [
+                        "https://auth.myexample.org/"
+                      ]
+                    },
                     "providers": {
                       "title": "OpenID Connect and OAuth2 Providers",
                       "description": "A list and configuration of OAuth2 and OpenID Connect providers Ory Kratos should integrate with.",
