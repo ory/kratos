@@ -119,13 +119,7 @@ func (s *Strategy) validateCredentials(ctx context.Context, i *identity.Identity
 		// This should never happen
 		return errors.WithStack(x.PseudoPanic.WithReasonf("identity object did not provide the %s CredentialType unexpectedly", identity.CredentialsTypePassword))
 	} else if len(c.Identifiers) == 0 {
-		if err := s.d.PasswordValidator().Validate(ctx, "", pw); err != nil {
-			if _, ok := errorsx.Cause(err).(*herodot.DefaultError); ok {
-				return err
-			}
-			return schema.NewPasswordPolicyViolationError("#/password", err.Error())
-		}
-		return nil
+		return schema.NewMissingIdentifierError()
 	}
 
 	for _, id := range c.Identifiers {
