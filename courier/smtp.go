@@ -8,6 +8,8 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/ory/kratos/courier/template"
+
 	"github.com/ory/kratos/driver/config"
 
 	"github.com/gofrs/uuid"
@@ -21,7 +23,7 @@ type smtpClient struct {
 	*gomail.Dialer
 
 	GetTemplateType        func(t EmailTemplate) (TemplateType, error)
-	NewTemplateFromMessage func(d Dependencies, msg Message) (EmailTemplate, error)
+	NewTemplateFromMessage func(d template.Dependencies, msg Message) (EmailTemplate, error)
 }
 
 func newSMTP(ctx context.Context, deps Dependencies) *smtpClient {
@@ -74,7 +76,7 @@ func (c *courier) SetGetEmailTemplateType(f func(t EmailTemplate) (TemplateType,
 	c.smtpClient.GetTemplateType = f
 }
 
-func (c *courier) SetNewEmailTemplateFromMessage(f func(d Dependencies, msg Message) (EmailTemplate, error)) {
+func (c *courier) SetNewEmailTemplateFromMessage(f func(d template.Dependencies, msg Message) (EmailTemplate, error)) {
 	c.smtpClient.NewTemplateFromMessage = f
 }
 

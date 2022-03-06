@@ -4,15 +4,15 @@ import (
 	"context"
 	"time"
 
+	"github.com/ory/kratos/courier/template"
+
 	"github.com/cenkalti/backoff"
 	"github.com/gofrs/uuid"
-	"github.com/hashicorp/go-retryablehttp"
 	"github.com/pkg/errors"
 
 	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/x"
 	gomail "github.com/ory/mail/v3"
-	"github.com/ory/x/httpx"
 )
 
 type (
@@ -20,7 +20,7 @@ type (
 		PersistenceProvider
 		x.LoggingProvider
 		ConfigProvider
-		HTTPClient(ctx context.Context, opts ...httpx.ResilientOptions) *retryablehttp.Client
+		x.HTTPClientProvider
 	}
 
 	Courier interface {
@@ -31,7 +31,7 @@ type (
 		DispatchQueue(ctx context.Context) error
 		DispatchMessage(ctx context.Context, msg Message) error
 		SetGetEmailTemplateType(f func(t EmailTemplate) (TemplateType, error))
-		SetNewEmailTemplateFromMessage(f func(d Dependencies, msg Message) (EmailTemplate, error))
+		SetNewEmailTemplateFromMessage(f func(d template.Dependencies, msg Message) (EmailTemplate, error))
 	}
 
 	Provider interface {
