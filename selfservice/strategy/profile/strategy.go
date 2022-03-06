@@ -127,6 +127,7 @@ func (s *Strategy) Settings(w http.ResponseWriter, r *http.Request, f *settings.
 	}
 
 	if err := s.dc.Decode(r, &p, option,
+		decoderx.HTTPDecoderAllowedMethods("POST", "GET"),
 		decoderx.HTTPDecoderSetValidatePayloads(true),
 		decoderx.HTTPDecoderJSONFollowsFormFormat(),
 	); err != nil {

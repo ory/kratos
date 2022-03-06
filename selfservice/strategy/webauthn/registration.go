@@ -148,7 +148,7 @@ func (s *Strategy) Register(w http.ResponseWriter, r *http.Request, f *registrat
 		return s.handleRegistrationError(w, r, f, &p, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("Unable to encode identity credentials.").WithDebug(err.Error())))
 	}
 
-	i.UpsertCredentialsConfig(s.ID(), co)
+	i.UpsertCredentialsConfig(s.ID(), co, 1)
 	if err := s.validateCredentials(r.Context(), i); err != nil {
 		return s.handleRegistrationError(w, r, f, &p, err)
 	}

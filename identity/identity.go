@@ -224,7 +224,7 @@ func (i *Identity) GetCredentialsOr(t CredentialsType, or *Credentials) *Credent
 	return c
 }
 
-func (i *Identity) UpsertCredentialsConfig(t CredentialsType, conf []byte) {
+func (i *Identity) UpsertCredentialsConfig(t CredentialsType, conf []byte, version int) {
 	c, ok := i.GetCredentials(t)
 	if !ok {
 		c = &Credentials{}
@@ -233,6 +233,7 @@ func (i *Identity) UpsertCredentialsConfig(t CredentialsType, conf []byte) {
 	c.Type = t
 	c.IdentityID = i.ID
 	c.Config = conf
+	c.Version = version
 
 	i.SetCredentials(t, *c)
 }

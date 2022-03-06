@@ -138,6 +138,10 @@ func (s *Strategy) CountActiveFirstFactorCredentials(cc map[identity.Credentials
 	return
 }
 
+func (s *Strategy) CountActiveMultiFactorCredentials(cc map[identity.CredentialsType]identity.Credentials) (count int, err error) {
+	return 0, nil
+}
+
 func (s *Strategy) setRoutes(r *x.RouterPublic) {
 	wrappedHandleCallback := strategy.IsDisabled(s.d, s.ID().String(), s.handleCallback)
 	if handle, _, _ := r.Lookup("GET", RouteCallback); handle == nil {

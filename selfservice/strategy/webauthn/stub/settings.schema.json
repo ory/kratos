@@ -7,13 +7,24 @@
     "traits": {
       "type": "object",
       "properties": {
+        "website": {
+          "type": "string"
+        },
         "email": {
           "type": "string",
-          "format": "email"
+          "ory.sh/kratos": {
+            "credentials": {
+              "password": {
+                "identifier": true
+              },
+              "webauthn": {
+                "identifier": true
+              }
+            }
+          }
         }
       },
       "required": [
-        "email"
       ]
     }
   },

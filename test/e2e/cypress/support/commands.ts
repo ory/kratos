@@ -1083,7 +1083,7 @@ Cypress.Commands.add(
       initial = loc.pathname + loc.search
     })
     cy.get('[name="provider"][value="' + provider + '"]').click()
-    cy.location().then((loc) => {
+    cy.location().should((loc) => {
       if (app === 'express' || didHaveSearch) {
         return
       }

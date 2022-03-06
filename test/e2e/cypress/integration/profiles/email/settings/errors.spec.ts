@@ -17,7 +17,7 @@ context('Settings failures with email profile', () => {
       profile: 'spa'
     }
   ].forEach(({route, profile, app, base}) => {
-    describe.only(`for app ${app}`, () => {
+    describe(`for app ${app}`, () => {
       let email = gen.email()
       let password = gen.password()
 

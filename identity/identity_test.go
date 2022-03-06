@@ -47,7 +47,7 @@ func TestIdentityCredentialsOrCreate(t *testing.T) {
 	i.Credentials = nil
 
 	expected := &Credentials{Config: []byte("true"), IdentityID: i.ID, Type: CredentialsTypePassword}
-	i.UpsertCredentialsConfig(CredentialsTypePassword, []byte("true"))
+	i.UpsertCredentialsConfig(CredentialsTypePassword, []byte("true"), 0)
 	actual, ok := i.GetCredentials(CredentialsTypePassword)
 	assert.True(t, ok)
 	assert.Equal(t, expected, actual)

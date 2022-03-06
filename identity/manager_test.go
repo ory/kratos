@@ -170,6 +170,33 @@ func TestManager(t *testing.T) {
 		assert.Equal(t, 1, count)
 	})
 
+	t.Run("method=CountActiveMultiFactorCredentials", func(t *testing.T) {
+		id := identity.NewIdentity(config.DefaultIdentityTraitsSchemaID)
+		count, err := reg.IdentityManager().CountActiveFirstFactorCredentials(ctx, id)
+		require.NoError(t, err)
+		assert.Equal(t, 0, count)
+
+		id.Credentials[identity.CredentialsTypePassword] = identity.Credentials{
+			Type:        identity.CredentialsTypePassword,
+			Identifiers: []string{"foo"},
+			Config:      []byte(`{"hashed_password":"$argon2id$v=19$m=32,t=2,p=4$cm94YnRVOW5jZzFzcVE4bQ$MNzk5BtR2vUhrp6qQEjRNw"}`),
+		}
+
+		count, err = reg.IdentityManager().CountActiveFirstFactorCredentials(ctx, id)
+		require.NoError(t, err)
+		assert.Equal(t, 0, count)
+
+		id.Credentials[identity.CredentialsTypeWebAuthn] = identity.Credentials{
+			Type:        identity.CredentialsTypeWebAuthn,
+			Identifiers: []string{"foo"},
+			Config:      []byte(`{"credentials":[{"is_passwordless":false}]}`),
+		}
+
+		count, err = reg.IdentityManager().CountActiveFirstFactorCredentials(ctx, id)
+		require.NoError(t, err)
+		assert.Equal(t, 1, count)
+	})
+
 	t.Run("method=UpdateTraits", func(t *testing.T) {
 		t.Run("case=should update protected traits with option", func(t *testing.T) {
 			original := identity.NewIdentity(config.DefaultIdentityTraitsSchemaID)

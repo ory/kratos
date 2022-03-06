@@ -17,6 +17,9 @@
               "password": {
                 "identifier": true
               },
+              "webauthn": {
+                "identifier": true
+              },
               "totp": {
                 "account_name": true
               }

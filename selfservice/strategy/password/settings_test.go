@@ -5,6 +5,8 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/ory/kratos/internal/settingshelpers"
+	"github.com/ory/kratos/text"
 	"net/http"
 	"net/url"
 	"strings"
@@ -404,5 +406,27 @@ func TestSettings(t *testing.T) {
 			rs := testhelpers.InitializeSettingsFlowViaBrowser(t, browserUser1, false, publicTS)
 			run(t, rs, false, browserUser1, browserIdentity1)
 		})
+	})
+
+	t.Run("case=should fail if no identifier was set in the schema", func(t *testing.T) {
+		testhelpers.SetDefaultIdentitySchema(conf, "file://stub/missing-identifier.schema.json")
+
+		id := newIdentityWithoutCredentials(testhelpers.RandomEmail())
+		browser := testhelpers.NewHTTPClientWithIdentitySessionCookie(t, reg, id)
+		api := testhelpers.NewHTTPClientWithIdentitySessionToken(t, reg, id)
+
+		for _, f := range []string{"spa", "api", "browser"} {
+			t.Run("type="+f, func(t *testing.T) {
+				hc := browser
+				if f == "api" {
+					hc = api
+				}
+				actual := settingshelpers.ExpectValidationError(t, publicTS, hc, conf, f, func(v url.Values) {
+					v.Set("password", x.NewUUID().String())
+					v.Set("method", "password")
+				})
+				assert.Equal(t, text.NewErrorValidationIdentifierMissing().Text, gjson.Get(actual, "ui.messages.0.text").String(), "%s", actual)
+			})
+		}
 	})
 }
