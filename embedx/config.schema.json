@@ -486,7 +486,10 @@
           "then": {
             "not": {
               "properties": {
-                "client_secret": {}
+                "client_secret": {
+                  "type": "string",
+                  "minLength": 1
+                }
               },
               "required": [
                 "client_secret"
@@ -506,7 +509,10 @@
               {
                 "not": {
                   "properties": {
-                    "apple_team_id": {}
+                    "apple_team_id": {
+                      "type": "string",
+                      "minLength": 1
+                    }
                   },
                   "required": [
                     "apple_team_id"
@@ -516,7 +522,10 @@
               {
                 "not": {
                   "properties": {
-                    "apple_private_key_id": {}
+                    "apple_private_key_id": {
+                      "type": "string",
+                      "minLength": 1
+                    }
                   },
                   "required": [
                     "apple_private_key_id"
@@ -526,7 +535,10 @@
               {
                 "not": {
                   "properties": {
-                    "apple_private_key": {}
+                    "apple_private_key": {
+                      "type": "string",
+                      "minLength": 1
+                    }
                   },
                   "required": [
                     "apple_private_key"
