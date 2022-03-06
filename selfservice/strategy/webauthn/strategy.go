@@ -3,6 +3,7 @@ package webauthn
 import (
 	"context"
 	"encoding/json"
+
 	"github.com/duo-labs/webauthn/webauthn"
 
 	"github.com/pkg/errors"

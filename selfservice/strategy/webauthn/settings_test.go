@@ -5,11 +5,12 @@ import (
 	_ "embed"
 	"encoding/json"
 	"fmt"
-	"github.com/ory/kratos/selfservice/flow"
 	"net/http"
 	"net/url"
 	"testing"
 	"time"
+
+	"github.com/ory/kratos/selfservice/flow"
 
 	"github.com/ory/x/snapshotx"
 

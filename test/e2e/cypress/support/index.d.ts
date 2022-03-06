@@ -18,6 +18,11 @@ declare global {
       deleteMail(options: { atLeast?: boolean }): Chainable<void>
 
       /**
+       * Adds end enables a WebAuth authenticator key.
+       */
+      addVirtualAuthenticator(): Chainable<any>
+
+      /**
        * Fetch the browser's Ory Session.
        *
        * @param opts
@@ -207,9 +212,7 @@ declare global {
        *
        * @param opts
        */
-      reauth(opts: {
-        expect: { email; success?: boolean }
-      }): Chainable<void>
+      reauth(opts: { expect: { email; success?: boolean } }): Chainable<void>
 
       /**
        * Re-authenticates a user.
@@ -217,7 +220,7 @@ declare global {
        * @param opts
        */
       reauthWithOtherAccount(opts: {
-        previousUrl: string,
+        previousUrl: string
         expect: { email; success?: boolean }
         type: { email?: string; password?: string }
       }): Chainable<void>

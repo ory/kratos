@@ -37,6 +37,7 @@ selfservice:
       ui_url: http://localhost:4455/recovery
 
 identity:
+  default_schema_id: localhost
   schemas:
     - id: localhost
       url: http://localhost/

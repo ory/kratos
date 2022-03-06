@@ -72,9 +72,7 @@ context('2FA with various methods', () => {
           }).then(() => {
             cy.getSession({
               expectAal: 'aal1',
-              expectMethods: [
-                'password'
-              ]
+              expectMethods: ['password']
             })
 
             cy.visit(settings)
@@ -92,10 +90,7 @@ context('2FA with various methods', () => {
             cy.expectSettingsSaved()
             cy.getSession({
               expectAal: 'aal2',
-              expectMethods: [
-                'password',
-                'totp'
-              ]
+              expectMethods: ['password', 'totp']
             })
 
             // Set up lookup secrets
@@ -109,11 +104,7 @@ context('2FA with various methods', () => {
             cy.expectSettingsSaved()
             cy.getSession({
               expectAal: 'aal2',
-              expectMethods: [
-                'password',
-                'totp',
-                'lookup_secret'
-              ]
+              expectMethods: ['password', 'totp', 'lookup_secret']
             })
 
             // Set up WebAuthn
@@ -124,12 +115,7 @@ context('2FA with various methods', () => {
             cy.expectSettingsSaved()
             cy.getSession({
               expectAal: 'aal2',
-              expectMethods: [
-                'password',
-                'totp',
-                'webauthn',
-                'lookup_secret'
-              ]
+              expectMethods: ['password', 'totp', 'webauthn', 'lookup_secret']
             })
 
             cy.visit(login + '?aal=aal2&refresh=true')
