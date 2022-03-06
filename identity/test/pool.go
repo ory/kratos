@@ -503,7 +503,7 @@ func TestPool(ctx context.Context, conf *config.Config, p interface {
 						actual, creds, err := p.FindByCredentialsIdentifier(ctx, ct, caseSensitive)
 						require.NoError(t, err)
 						assertx.EqualAsJSONExcept(t, expected.Credentials[ct], creds, []string{"created_at", "updated_at", "id"})
-						assertx.EqualAsJSONExcept(t, expected, actual, []string{"created_at", "updated_at", "id"})
+						assertx.EqualAsJSONExcept(t, expected, actual, []string{"created_at", "state_changed_at", "updated_at", "id"})
 					})
 				}
 			})
@@ -520,7 +520,7 @@ func TestPool(ctx context.Context, conf *config.Config, p interface {
 							ec := expected.Credentials[ct]
 							ec.Identifiers = []string{strings.ToLower(caseSensitive)}
 							assertx.EqualAsJSONExcept(t, ec, creds, []string{"created_at", "updated_at", "id", "config.user_handle", "config.credentials", "version"})
-							assertx.EqualAsJSONExcept(t, expected, actual, []string{"created_at", "updated_at", "id"})
+							assertx.EqualAsJSONExcept(t, expected, actual, []string{"created_at", "state_changed_at", "updated_at", "id"})
 						}
 					})
 				}
