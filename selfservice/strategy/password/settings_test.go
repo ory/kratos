@@ -5,12 +5,13 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/ory/kratos/internal/settingshelpers"
-	"github.com/ory/kratos/text"
 	"net/http"
 	"net/url"
 	"strings"
 	"testing"
+
+	"github.com/ory/kratos/internal/settingshelpers"
+	"github.com/ory/kratos/text"
 
 	kratos "github.com/ory/kratos-client-go"
 

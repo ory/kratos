@@ -242,17 +242,18 @@ func (s *Strategy) loginPasswordless(w http.ResponseWriter, r *http.Request, f *
 	if len(p.Login) == 0 {
 		// Reset all nodes to not confuse users.
 		// This is kinda hacky and will probably need to be updated at some point.
+		previousNodes := f.UI.Nodes
 		f.UI.Nodes = node.Nodes{}
 
-		// Adds the "Continue" button
-		f.UI.SetCSRF(s.d.GenerateCSRFToken(r))
-
 		if err := s.populateLoginMethod(r, f, i, text.NewInfoSelfServiceLoginContinue(), identity.AuthenticatorAssuranceLevel1); errors.Is(err, ErrNoCredentials) {
+			f.UI.Nodes = previousNodes
 			return nil, s.handleLoginError(r, f, schema.NewNoWebAuthnCredentials())
 		} else if err != nil {
 			return nil, s.handleLoginError(r, f, err)
 		}
 
+		// Adds the "Continue" button
+		f.UI.SetCSRF(s.d.GenerateCSRFToken(r))
 		f.UI.Messages.Add(text.NewInfoLoginWebAuthnPasswordless())
 		f.UI.SetNode(node.NewInputField("identifier", p.Identifier, node.DefaultGroup, node.InputAttributeTypeHidden, node.WithRequiredInputAttribute))
 		if err := s.d.LoginFlowPersister().UpdateLoginFlow(r.Context(), f); err != nil {

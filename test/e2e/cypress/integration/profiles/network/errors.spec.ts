@@ -37,7 +37,7 @@ describe('Registration failures with email profile', () => {
   it('should not be able to verify because post webhook uses local jsonnet', () => {
     cy.setDefaultIdentitySchema('working')
     cy.visit(express.registration, { failOnStatusCode: false })
-    cy.get('[data-testid="node/input/traits.email"] input').type('foo@bar.com')
+    cy.get('[data-testid="node/input/traits.email"] input').type(gen.email())
     cy.get('[data-testid="node/input/traits.website"] input').type(
       'https://google.com/'
     )

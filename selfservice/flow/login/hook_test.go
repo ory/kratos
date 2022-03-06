@@ -194,8 +194,8 @@ func TestLoginExecutor(t *testing.T) {
 					t.Cleanup(testhelpers.SelfServiceHookConfigReset(t, conf))
 
 					useIdentity := &identity.Identity{Credentials: map[identity.CredentialsType]identity.Credentials{
-						identity.CredentialsTypePassword: {Type: identity.CredentialsTypePassword},
-						identity.CredentialsTypeTOTP:     {Type: identity.CredentialsTypeTOTP},
+						identity.CredentialsTypePassword: {Type: identity.CredentialsTypePassword, Config: []byte(`{"hashed_password": "$argon2id$v=19$m=32,t=2,p=4$cm94YnRVOW5jZzFzcVE4bQ$MNzk5BtR2vUhrp6qQEjRNw"}`), Identifiers: []string{testhelpers.RandomEmail()}},
+						identity.CredentialsTypeWebAuthn: {Type: identity.CredentialsTypeWebAuthn, Config: []byte(`{"credentials":[{"is_passwordless":false}]}`), Identifiers: []string{testhelpers.RandomEmail()}},
 					}}
 					require.NoError(t, reg.Persister().CreateIdentity(context.Background(), useIdentity))
 

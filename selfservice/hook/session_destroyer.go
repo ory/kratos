@@ -1,8 +1,9 @@
 package hook
 
 import (
-	"github.com/ory/kratos/selfservice/flow/recovery"
 	"net/http"
+
+	"github.com/ory/kratos/selfservice/flow/recovery"
 
 	"github.com/ory/kratos/selfservice/flow/login"
 	"github.com/ory/kratos/session"

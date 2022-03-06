@@ -172,7 +172,7 @@ func TestManager(t *testing.T) {
 
 	t.Run("method=CountActiveMultiFactorCredentials", func(t *testing.T) {
 		id := identity.NewIdentity(config.DefaultIdentityTraitsSchemaID)
-		count, err := reg.IdentityManager().CountActiveFirstFactorCredentials(ctx, id)
+		count, err := reg.IdentityManager().CountActiveMultiFactorCredentials(ctx, id)
 		require.NoError(t, err)
 		assert.Equal(t, 0, count)
 
@@ -182,7 +182,7 @@ func TestManager(t *testing.T) {
 			Config:      []byte(`{"hashed_password":"$argon2id$v=19$m=32,t=2,p=4$cm94YnRVOW5jZzFzcVE4bQ$MNzk5BtR2vUhrp6qQEjRNw"}`),
 		}
 
-		count, err = reg.IdentityManager().CountActiveFirstFactorCredentials(ctx, id)
+		count, err = reg.IdentityManager().CountActiveMultiFactorCredentials(ctx, id)
 		require.NoError(t, err)
 		assert.Equal(t, 0, count)
 
@@ -192,7 +192,7 @@ func TestManager(t *testing.T) {
 			Config:      []byte(`{"credentials":[{"is_passwordless":false}]}`),
 		}
 
-		count, err = reg.IdentityManager().CountActiveFirstFactorCredentials(ctx, id)
+		count, err = reg.IdentityManager().CountActiveMultiFactorCredentials(ctx, id)
 		require.NoError(t, err)
 		assert.Equal(t, 1, count)
 	})
