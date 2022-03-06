@@ -26,6 +26,7 @@ type (
 		config.Provider
 		identity.PoolProvider
 		identity.PrivilegedPoolProvider
+		identity.ManagementProvider
 		x.CookieProvider
 		x.CSRFProvider
 		PersistenceProvider
@@ -186,7 +187,19 @@ func (s *ManagerHTTP) DoesSessionSatisfy(r *http.Request, sess *Session, request
 			return err
 		}
 
-		available := identity.MaximumAAL(i.Credentials, s.r.Config(r.Context()))
+		available := identity.NoAuthenticatorAssuranceLevel
+		if firstCount, err := s.r.IdentityManager().CountActiveFirstFactorCredentials(r.Context(), i); err != nil {
+			return err
+		} else if firstCount > 0 {
+			available = identity.AuthenticatorAssuranceLevel1
+		}
+
+		if secondCount, err := s.r.IdentityManager().CountActiveMultiFactorCredentials(r.Context(), i); err != nil {
+			return err
+		} else if secondCount > 0 {
+			available = identity.AuthenticatorAssuranceLevel2
+		}
+
 		if sess.AuthenticatorAssuranceLevel >= available {
 			return nil
 		}

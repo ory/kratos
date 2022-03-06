@@ -120,6 +120,7 @@ type (
 	ActiveCredentialsCounter interface {
 		ID() CredentialsType
 		CountActiveFirstFactorCredentials(cc map[CredentialsType]Credentials) (int, error)
+		CountActiveMultiFactorCredentials(cc map[CredentialsType]Credentials) (int, error)
 	}
 
 	// swagger:ignore

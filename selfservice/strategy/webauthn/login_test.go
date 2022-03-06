@@ -152,6 +152,11 @@ func TestCompleteLogin(t *testing.T) {
 	}
 
 	t.Run("flow=refresh", func(t *testing.T) {
+		conf.MustSet(config.ViperKeySessionWhoAmIAAL, "aal1")
+		t.Cleanup(func() {
+			conf.MustSet(config.ViperKeySessionWhoAmIAAL, nil)
+		})
+
 		run := func(t *testing.T, id *identity.Identity, context, response []byte, isSPA bool, expectedAAL identity.AuthenticatorAssuranceLevel) {
 			body, res, f := submitWebAuthnLogin(t, isSPA, id, context, func(values url.Values) {
 				values.Set("identifier", loginFixtureSuccessEmail)
@@ -169,10 +174,10 @@ func TestCompleteLogin(t *testing.T) {
 
 			prefix := ""
 			if isSPA {
-				assert.Contains(t, res.Request.URL.String(), publicTS.URL+login.RouteSubmitFlow)
+				assert.Contains(t, res.Request.URL.String(), publicTS.URL+login.RouteSubmitFlow, "%s", body)
 				prefix = "session."
 			} else {
-				assert.Contains(t, res.Request.URL.String(), redirTS.URL)
+				assert.Contains(t, res.Request.URL.String(), redirTS.URL, "%s", body)
 			}
 
 			assert.True(t, gjson.Get(body, prefix+"active").Bool(), "%s", body)
@@ -184,7 +189,10 @@ func TestCompleteLogin(t *testing.T) {
 		}
 
 		t.Run("case=passwordless", func(t *testing.T) {
-			for _, e := range []bool{true, false} {
+			for _, e := range []bool{
+				true,
+				false,
+			} {
 				conf.MustSet(config.ViperKeyWebAuthnPasswordless, e)
 				expectedAAL := identity.AuthenticatorAssuranceLevel1
 				if !e {
@@ -230,7 +238,10 @@ func TestCompleteLogin(t *testing.T) {
 					t.Run(fmt.Sprintf("case=mfa v0 credentials/passwordless enabled=%v", e), func(t *testing.T) {
 						id := createIdentityWithWebAuthn(t, tc.creds)
 
-						for _, f := range []string{"browser", "spa"} {
+						for _, f := range []string{
+							"browser",
+							"spa",
+						} {
 							t.Run(f, func(t *testing.T) {
 								run(t, id, tc.context, tc.response, f == "spa", expectedAAL)
 							})

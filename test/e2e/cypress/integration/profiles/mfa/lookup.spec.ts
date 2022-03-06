@@ -128,7 +128,7 @@ context('2FA lookup secrets', () => {
         cy.get('input[name="lookup_secret"]').should('exist')
         cy.get('input[name="lookup_secret"]').type('invalid-code')
         cy.get('*[name="method"][value="lookup_secret"]').click()
-        cy.get('[data-testid="ui/message/4000012"]').should(
+        cy.get('[data-testid="ui/message/4000016"]').should(
           'contain.text',
           'The backup recovery code is not valid.'
         )
@@ -218,7 +218,7 @@ context('2FA lookup secrets', () => {
           cy.wrap($e).type(codes[3])
         })
         cy.get('*[name="method"][value="lookup_secret"]').click()
-        cy.get('[data-testid="ui/message/4000012"]').should('exist')
+        cy.get('[data-testid="ui/message/4000016"]').should('exist')
 
         // Using a new code succeeds
         cy.get('input[name="lookup_secret"]').then(($e) => {

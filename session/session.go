@@ -114,13 +114,24 @@ func (s *Session) SetAuthenticatorAssuranceLevel() {
 		case identity.AuthenticatorAssuranceLevel2:
 			isAAL2 = true
 		case "":
-			// Empty means that we are migrating an old session. In this case, AAL is not set.
-			isAAL1 = isAAL1 || identity.IsCredentialAAL1(identity.Credentials{Type: amr.Method}, false)
-
-			// AAL is empty for sessions which have been created before passwordless. Thus,
-			// all credentials that can today be used for passwordless were used for MFA
-			// before. For this reason, we just assume the default (not passwordless) here.
-			isAAL2 = isAAL2 || identity.IsCredentialAAL2(identity.Credentials{Type: amr.Method}, false)
+			// Sessions before Ory Kratos 0.9 did not have the AAL
+			// be part of the AMR.
+			switch amr.Method {
+			case identity.CredentialsTypeRecoveryLink:
+				isAAL1 = true
+			case identity.CredentialsTypeOIDC:
+				isAAL1 = true
+			case "v0.6_legacy_session":
+				isAAL1 = true
+			case identity.CredentialsTypePassword:
+				isAAL1 = true
+			case identity.CredentialsTypeWebAuthn:
+				isAAL2 = true
+			case identity.CredentialsTypeTOTP:
+				isAAL2 = true
+			case identity.CredentialsTypeLookup:
+				isAAL2 = true
+			}
 		}
 	}
 

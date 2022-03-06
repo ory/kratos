@@ -178,3 +178,15 @@ func (m *Manager) CountActiveFirstFactorCredentials(ctx context.Context, i *Iden
 	}
 	return count, nil
 }
+
+func (m *Manager) CountActiveMultiFactorCredentials(ctx context.Context, i *Identity) (count int, err error) {
+	for _, strategy := range m.r.ActiveCredentialsCounterStrategies(ctx) {
+		current, err := strategy.CountActiveMultiFactorCredentials(i.Credentials)
+		if err != nil {
+			return 0, err
+		}
+
+		count += current
+	}
+	return count, nil
+}

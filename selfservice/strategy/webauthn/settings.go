@@ -271,7 +271,10 @@ func (s *Strategy) continueSettingsFlowAdd(w http.ResponseWriter, r *http.Reques
 		return errors.WithStack(herodot.ErrInternalServerError.WithReasonf("Unable to encode identity credentials.").WithDebug(err.Error()))
 	}
 
-	i.UpsertCredentialsConfig(s.ID(), co)
+	i.UpsertCredentialsConfig(s.ID(), co, 1)
+	if err := s.validateCredentials(r.Context(), i); err != nil {
+		return err
+	}
 
 	// Remove the WebAuthn URL from the internal context now that it is set!
 	ctxUpdate.Flow.InternalContext, err = sjson.DeleteBytes(ctxUpdate.Flow.InternalContext, flow.PrefixInternalContextKey(s.ID(), InternalContextKeySessionData))

@@ -257,6 +257,7 @@ func TestRegistration(t *testing.T) {
 		}
 		return
 	}
+
 	t.Run("successful registration", func(t *testing.T) {
 		t.Cleanup(func() {
 			conf.MustSet(config.HookStrategyKey(config.ViperKeySelfServiceRegistrationAfter, identity.CredentialsTypeWebAuthn.String()), nil)
@@ -369,5 +370,20 @@ func TestRegistration(t *testing.T) {
 				})
 			}
 		})
+	})
+
+	t.Run("case=should fail if no identifier was set in the schema", func(t *testing.T) {
+		testhelpers.SetDefaultIdentitySchema(conf, "file://stub/missing-identifier.schema.json")
+
+		for _, f := range []string{"spa", "api", "browser"} {
+			t.Run("type="+f, func(t *testing.T) {
+				actual, _, _ := makeRegistration(t, f, func(v url.Values) {
+					v.Set("traits.email", testhelpers.RandomEmail())
+					v.Set(node.WebAuthnRegister, string(registrationFixtureSuccessResponse))
+					v.Del("method")
+				})
+				assert.Equal(t, text.NewErrorValidationIdentifierMissing().Text, gjson.Get(actual, "ui.messages.0.text").String(), "%s", actual)
+			})
+		}
 	})
 }

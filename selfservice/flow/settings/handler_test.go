@@ -112,8 +112,8 @@ func TestHandler(t *testing.T) {
 		State:  identity.StateActive,
 		Traits: []byte(`{"email":"foo@bar"}`),
 		Credentials: map[identity.CredentialsType]identity.Credentials{
-			identity.CredentialsTypePassword: {Type: identity.CredentialsTypePassword, Config: []byte("{}")},
-			identity.CredentialsTypeWebAuthn: {Type: identity.CredentialsTypeWebAuthn, Config: []byte("{}")},
+			identity.CredentialsTypePassword: {Type: identity.CredentialsTypePassword, Config: []byte(`{"hashed_password":"$argon2id$v=19$m=32,t=2,p=4$cm94YnRVOW5jZzFzcVE4bQ$MNzk5BtR2vUhrp6qQEjRNw"}`), Identifiers: []string{"foo@bar"}},
+			identity.CredentialsTypeWebAuthn: {Type: identity.CredentialsTypeWebAuthn, Config: []byte(`{"credentials":[{"is_passwordless":false}]}`), Identifiers: []string{"foo@bar"}},
 		}})
 
 	t.Run("endpoint=init", func(t *testing.T) {
@@ -186,13 +186,14 @@ func TestHandler(t *testing.T) {
 			})
 
 			t.Run("description=can not init if identity has aal2 but session has aal1", func(t *testing.T) {
+				email := testhelpers.RandomEmail()
 				conf.MustSet(config.ViperKeySelfServiceSettingsRequiredAAL, config.HighestAvailableAAL)
 				user1 := testhelpers.NewHTTPClientWithIdentitySessionCookie(t, reg, &identity.Identity{
 					State:  identity.StateActive,
-					Traits: []byte(`{"email":"foo@bar"}`),
+					Traits: []byte(`{"email":"` + email + `"}`),
 					Credentials: map[identity.CredentialsType]identity.Credentials{
-						identity.CredentialsTypePassword: {Type: identity.CredentialsTypePassword, Config: []byte("{}")},
-						identity.CredentialsTypeWebAuthn: {Type: identity.CredentialsTypeWebAuthn, Config: []byte("{}")},
+						identity.CredentialsTypePassword: {Type: identity.CredentialsTypePassword, Config: []byte(`{"hashed_password":"$argon2id$v=19$m=32,t=2,p=4$cm94YnRVOW5jZzFzcVE4bQ$MNzk5BtR2vUhrp6qQEjRNw"}`), Identifiers: []string{email}},
+						identity.CredentialsTypeWebAuthn: {Type: identity.CredentialsTypeWebAuthn, Config: []byte(`{"credentials":[{"is_passwordless":false}]}`), Identifiers: []string{email}},
 					}})
 				res, body := initSPAFlow(t, user1)
 				assert.Equal(t, http.StatusForbidden, res.StatusCode)

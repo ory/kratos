@@ -94,6 +94,7 @@ func (s *Strategy) decodeSettingsFlow(r *http.Request, dest interface{}) error {
 	}
 
 	return decoderx.NewHTTP().Decode(r, dest, compiler,
+		decoderx.HTTPDecoderAllowedMethods("POST", "GET"),
 		decoderx.HTTPDecoderSetValidatePayloads(true),
 		decoderx.HTTPDecoderJSONFollowsFormFormat(),
 	)
@@ -134,7 +135,7 @@ func (s *Strategy) continueSettingsFlow(
 		return err
 	}
 
-	i.UpsertCredentialsConfig(s.ID(), co)
+	i.UpsertCredentialsConfig(s.ID(), co, 0)
 	if err := s.validateCredentials(r.Context(), i, p.Password); err != nil {
 		return err
 	}
