@@ -274,7 +274,7 @@ func NewIdentity(traitsSchemaID string) *Identity {
 		traitsSchemaID = config.DefaultIdentityTraitsSchemaID
 	}
 
-	stateChangedAt := sqlxx.NullTime(time.Now())
+	stateChangedAt := sqlxx.NullTime(time.Now().UTC())
 	return &Identity{
 		ID:                  x.NewUUID(),
 		Credentials:         map[CredentialsType]Credentials{},
