@@ -5,6 +5,7 @@ import (
 	_ "embed"
 	"encoding/json"
 	"fmt"
+	"io"
 	"net/http"
 	"net/url"
 	"testing"
@@ -372,7 +373,22 @@ func TestCompleteLogin(t *testing.T) {
 				values.Set("method", identity.CredentialsTypeWebAuthn.String())
 				values.Set("identifier", subject)
 				body, res := testhelpers.LoginMakeRequest(t, false, spa, f, browserClient, values.Encode())
-				checkURL(t, !spa, res)
+				if spa {
+					assert.Equal(t, http.StatusUnprocessableEntity, res.StatusCode)
+					redir := gjson.Get(body, "redirect_browser_to").String()
+					assert.NotEmpty(t, redir)
+
+					res, err := browserClient.Get(redir)
+					require.NoError(t, err)
+
+					defer res.Body.Close()
+					raw, err := io.ReadAll(res.Body)
+					require.NoError(t, err)
+					body = string(raw)
+				} else {
+					checkURL(t, !spa, res)
+				}
+
 				assert.NotEmpty(t, gjson.Get(body, "id").String(), "%s", body)
 				snapshotx.SnapshotTExceptMatchingKeys(t, json.RawMessage(body), []string{"value", "src", "nonce", "action", "request_url", "issued_at", "expires_at", "created_at", "updated_at", "id", "onclick"})
 				assert.Equal(t, text.NewInfoLoginWebAuthnPasswordless().Text, gjson.Get(body, "ui.messages.0.text").String(), "%s", body)

@@ -260,8 +260,9 @@ func (s *Strategy) loginPasswordless(w http.ResponseWriter, r *http.Request, f *
 			return nil, s.handleLoginError(r, f, err)
 		}
 
+		redirectTo := f.AppendTo(s.d.Config(r.Context()).SelfServiceFlowLoginUI()).String()
 		if x.IsJSONRequest(r) {
-			s.d.Writer().Write(w, r, f)
+			s.d.Writer().WriteError(w, r, flow.NewBrowserLocationChangeRequiredError(redirectTo))
 		} else {
 			http.Redirect(w, r, f.AppendTo(s.d.Config(r.Context()).SelfServiceFlowLoginUI()).String(), http.StatusSeeOther)
 		}

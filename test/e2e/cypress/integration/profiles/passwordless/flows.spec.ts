@@ -1,5 +1,6 @@
 import { appPrefix, gen } from '../../../helpers'
 import { routes as express } from '../../../helpers/express'
+import { routes as react } from '../../../helpers/react'
 
 const signup = (registration: string, email = gen.email()) => {
   cy.visit(registration)
@@ -26,6 +27,14 @@ context('Passwordless registration', () => {
   })
   ;[
     {
+      login: react.login,
+      registration: express.registration,
+      settings: react.settings,
+      base: react.base,
+      app: 'react' as 'react',
+      profile: 'passwordless'
+    },
+    {
       login: express.login,
       registration: express.registration,
       settings: express.settings,
@@ -33,13 +42,6 @@ context('Passwordless registration', () => {
       app: 'express' as 'express',
       profile: 'passwordless'
     }
-    // {
-    //   login: react.login,
-    //   settings: react.settings,
-    //   base: react.base,
-    //   app: 'react' as 'react',
-    //   profile: 'passwordless'
-    // }
   ].forEach(({ registration, login, profile, app, base, settings }) => {
     describe(`for app ${app}`, () => {
       let authenticator
@@ -175,6 +177,7 @@ context('Passwordless registration', () => {
         cy.get('[name="password"]').type(password)
         cy.get('[name="traits.website"]').type('https://www.ory.sh')
         cy.get('[value="password"]').click()
+        cy.location('pathname').should('not.contain', '/registration')
         cy.getSession({
           expectAal: 'aal1',
           expectMethods: ['password']
@@ -188,6 +191,7 @@ context('Passwordless registration', () => {
         cy.visit(login + '?refresh=true')
         cy.get('[name="password"]').should('exist')
         cy.clickWebAuthButton('login')
+        cy.location('pathname').should('not.contain', '/login')
         cy.getSession({
           expectAal: 'aal1',
           expectMethods: ['password', 'webauthn', 'webauthn']
