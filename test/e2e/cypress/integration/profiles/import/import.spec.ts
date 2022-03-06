@@ -63,7 +63,7 @@ context('Import Identities', () => {
       cy.visit(express.login)
 
       // Try to sign in with an incorrect password
-      cy.get('input[name="password_identifier"]').type(email)
+      cy.get('input[name="identifier"]').type(email)
       cy.get('input[name="password"]').type('invalid-password')
       cy.submitPasswordForm()
       cy.get('*[data-testid="ui/message/4000006"]').should(
