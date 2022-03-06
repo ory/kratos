@@ -50,6 +50,24 @@ func makeAuthCodeURL(t *testing.T, r *login.Flow, reg *driver.RegistryDefault) s
 func TestProviderGenericOIDC_AddAuthCodeURLOptions(t *testing.T) {
 	conf, reg := internal.NewFastRegistryWithMocks(t)
 	conf.MustSet(config.ViperKeyPublicBaseURL, "https://ory.sh")
+	t.Run("case=redirectURI is public base url", func(t *testing.T) {
+		r := &login.Flow{ID: x.NewUUID(), Refresh: true}
+		actual, err := url.ParseRequestURI(makeAuthCodeURL(t, r, reg))
+		require.NoError(t, err)
+		assert.Contains(t, actual.Query().Get("redirect_uri"), "https://ory.sh")
+	})
+
+	t.Run("case=redirectURI is public base url", func(t *testing.T) {
+		conf.MustSet(config.ViperKeyOIDCBaseRedirectURL, "https://example.org")
+		t.Cleanup(func() {
+			conf.MustSet(config.ViperKeyOIDCBaseRedirectURL, nil)
+		})
+		r := &login.Flow{ID: x.NewUUID(), Refresh: true}
+		actual, err := url.ParseRequestURI(makeAuthCodeURL(t, r, reg))
+		require.NoError(t, err)
+		assert.Contains(t, actual.Query().Get("redirect_uri"), "https://example.org")
+	})
+
 	t.Run("case=expect prompt to be login with forced flag", func(t *testing.T) {
 		r := &login.Flow{
 			ID:      x.NewUUID(),

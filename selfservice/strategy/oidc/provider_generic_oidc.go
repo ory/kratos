@@ -56,7 +56,7 @@ func (g *ProviderGenericOIDC) oauth2ConfigFromEndpoint(ctx context.Context, endp
 		ClientSecret: g.config.ClientSecret,
 		Endpoint:     endpoint,
 		Scopes:       scope,
-		RedirectURL:  g.config.Redir(g.reg.Config(ctx).SelfPublicURL()),
+		RedirectURL:  g.config.Redir(g.reg.Config(ctx).OIDCRedirectURIBase()),
 	}
 }
 

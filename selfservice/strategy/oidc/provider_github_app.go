@@ -40,7 +40,7 @@ func (g *ProviderGitHubApp) oauth2(ctx context.Context) *oauth2.Config {
 		ClientSecret: g.config.ClientSecret,
 		Endpoint:     github.Endpoint,
 		Scopes:       g.config.Scope,
-		RedirectURL:  g.config.Redir(g.reg.Config(ctx).SelfPublicURL()),
+		RedirectURL:  g.config.Redir(g.reg.Config(ctx).OIDCRedirectURIBase()),
 	}
 }
 

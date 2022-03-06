@@ -44,7 +44,7 @@ func (d *ProviderSlack) oauth2(ctx context.Context) *oauth2.Config {
 			AuthURL:  "https://slack.com/oauth/authorize",
 			TokenURL: slack.APIURL + "oauth.access",
 		},
-		RedirectURL: d.config.Redir(d.reg.Config(ctx).SelfPublicURL()),
+		RedirectURL: d.config.Redir(d.reg.Config(ctx).OIDCRedirectURIBase()),
 		Scopes:      d.config.Scope,
 	}
 }

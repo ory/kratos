@@ -43,7 +43,7 @@ func (g *ProviderSpotify) oauth2(ctx context.Context) *oauth2.Config {
 		ClientSecret: g.config.ClientSecret,
 		Endpoint:     spotify.Endpoint,
 		Scopes:       g.config.Scope,
-		RedirectURL:  g.config.Redir(g.reg.Config(ctx).SelfPublicURL()),
+		RedirectURL:  g.config.Redir(g.reg.Config(ctx).OIDCRedirectURIBase()),
 	}
 }
 
@@ -64,7 +64,7 @@ func (g *ProviderSpotify) Claims(ctx context.Context, exchange *oauth2.Token) (*
 	}
 
 	auth := spotifyauth.New(
-		spotifyauth.WithRedirectURL(g.config.Redir(g.reg.Config(ctx).SelfPublicURL())),
+		spotifyauth.WithRedirectURL(g.config.Redir(g.reg.Config(ctx).OIDCRedirectURIBase())),
 		spotifyauth.WithScopes(spotifyauth.ScopeUserReadPrivate))
 
 	client := spotifyapi.New(auth.Client(ctx, exchange))
