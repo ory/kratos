@@ -1067,6 +1067,7 @@ func TestCourierSMS(t *testing.T) {
 		conf, _ := config.New(ctx, logrusx.New("", ""), os.Stderr,
 			configx.WithConfigFiles("stub/.kratos.courier.sms.yaml"), configx.SkipValidation())
 		assert.True(t, conf.CourierSMSEnabled())
+		assert.Equal(t, conf.CourierMessageTTL(), 300)
 		snapshotx.SnapshotTExcept(t, conf.CourierSMSRequestConfig(), nil)
 		assert.Equal(t, "+49123456789", conf.CourierSMSFrom())
 	})
@@ -1077,6 +1078,21 @@ func TestCourierSMS(t *testing.T) {
 		assert.False(t, conf.CourierSMSEnabled())
 		snapshotx.SnapshotTExcept(t, conf.CourierSMSRequestConfig(), nil)
 		assert.Equal(t, "Ory Kratos", conf.CourierSMSFrom())
+	})
+}
+
+func TestCourierMessageTTL(t *testing.T) {
+	ctx := context.Background()
+
+	t.Run("case=configs set", func(t *testing.T) {
+		conf, _ := config.New(ctx, logrusx.New("", ""), os.Stderr,
+			configx.WithConfigFiles("stub/.kratos.courier.messageTTL.yaml"), configx.SkipValidation())
+		assert.Equal(t, conf.CourierMessageTTL(), time.Duration(5*time.Minute))
+	})
+
+	t.Run("case=defaults", func(t *testing.T) {
+		conf, _ := config.New(ctx, logrusx.New("", ""), os.Stderr, configx.SkipValidation())
+		assert.Equal(t, conf.CourierMessageTTL(), time.Duration(1*time.Hour))
 	})
 }
 
