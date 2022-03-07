@@ -38,7 +38,7 @@ func TestHandleError(t *testing.T) {
 	conf, reg := internal.NewFastRegistryWithMocks(t)
 	conf.MustSet(config.ViperKeySelfServiceRecoveryEnabled, true)
 
-	public, admin := testhelpers.NewKratosServer(t, reg)
+	public, _ := testhelpers.NewKratosServer(t, reg)
 
 	router := httprouter.New()
 	ts := httptest.NewServer(router)
@@ -48,7 +48,7 @@ func TestHandleError(t *testing.T) {
 	testhelpers.NewErrorTestServer(t, reg)
 
 	h := reg.RecoveryFlowErrorHandler()
-	sdk := testhelpers.NewSDKClient(admin)
+	sdk := testhelpers.NewSDKClient(public)
 
 	var recoveryFlow *recovery.Flow
 	var flowError error

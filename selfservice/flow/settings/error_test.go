@@ -42,7 +42,7 @@ func TestHandleError(t *testing.T) {
 	conf, reg := internal.NewFastRegistryWithMocks(t)
 	testhelpers.SetDefaultIdentitySchema(conf, "file://./stub/identity.schema.json")
 
-	_, admin := testhelpers.NewKratosServer(t, reg)
+	public, _ := testhelpers.NewKratosServer(t, reg)
 
 	router := httprouter.New()
 	ts := httptest.NewServer(router)
@@ -53,7 +53,7 @@ func TestHandleError(t *testing.T) {
 	loginTS := testhelpers.NewLoginUIFlowEchoServer(t, reg)
 
 	h := reg.SettingsFlowErrorHandler()
-	sdk := testhelpers.NewSDKClient(admin)
+	sdk := testhelpers.NewSDKClient(public)
 
 	var settingsFlow *settings.Flow
 	var flowError error

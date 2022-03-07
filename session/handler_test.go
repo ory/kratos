@@ -379,7 +379,7 @@ func TestHandlerAdminSessionManagement(t *testing.T) {
 		require.NoError(t, reg.SessionPersister().UpsertSession(ctx, s))
 
 		t.Run("should list session", func(t *testing.T) {
-			req, _ := http.NewRequest("GET", ts.URL+"/identities/"+i.ID.String()+"/sessions", nil)
+			req, _ := http.NewRequest("GET", ts.URL+"/admin/identities/"+i.ID.String()+"/sessions", nil)
 			res, err := client.Do(req)
 			require.NoError(t, err)
 			assert.Equal(t, http.StatusOK, res.StatusCode)
@@ -390,7 +390,7 @@ func TestHandlerAdminSessionManagement(t *testing.T) {
 			assert.Equal(t, s.ID, sessions[0].ID)
 		})
 
-		req, _ := http.NewRequest("DELETE", ts.URL+"/identities/"+i.ID.String()+"/sessions", nil)
+		req, _ := http.NewRequest("DELETE", ts.URL+"/admin/identities/"+i.ID.String()+"/sessions", nil)
 		res, err := client.Do(req)
 		require.NoError(t, err)
 		require.Equal(t, http.StatusNoContent, res.StatusCode)
@@ -399,7 +399,7 @@ func TestHandlerAdminSessionManagement(t *testing.T) {
 		require.True(t, errors.Is(err, sqlcon.ErrNoRows))
 
 		t.Run("should not list session", func(t *testing.T) {
-			req, _ := http.NewRequest("GET", ts.URL+"/identities/"+i.ID.String()+"/sessions", nil)
+			req, _ := http.NewRequest("GET", ts.URL+"/admin/identities/"+i.ID.String()+"/sessions", nil)
 			res, err := client.Do(req)
 			require.NoError(t, err)
 			assert.Equal(t, http.StatusOK, res.StatusCode)
@@ -415,7 +415,7 @@ func TestHandlerAdminSessionManagement(t *testing.T) {
 
 		for _, method := range []string{http.MethodGet, http.MethodDelete} {
 			t.Run("http method="+method, func(t *testing.T) {
-				req, _ := http.NewRequest(method, ts.URL+"/identities/BADUUID/sessions", nil)
+				req, _ := http.NewRequest(method, ts.URL+"/admin/identities/BADUUID/sessions", nil)
 				res, err := client.Do(req)
 				require.NoError(t, err)
 				require.Equal(t, http.StatusBadRequest, res.StatusCode)
@@ -426,7 +426,7 @@ func TestHandlerAdminSessionManagement(t *testing.T) {
 	t.Run("case=should return 404 when deleting with unknown UUID", func(t *testing.T) {
 		client := testhelpers.NewClientWithCookies(t)
 		someID, _ := uuid.NewV4()
-		req, _ := http.NewRequest("DELETE", ts.URL+"/identities/"+someID.String()+"/sessions", nil)
+		req, _ := http.NewRequest("DELETE", ts.URL+"/admin/identities/"+someID.String()+"/sessions", nil)
 		res, err := client.Do(req)
 		require.NoError(t, err)
 		require.Equal(t, http.StatusNotFound, res.StatusCode)
@@ -463,7 +463,7 @@ func TestHandlerAdminSessionManagement(t *testing.T) {
 			},
 		} {
 			t.Run(fmt.Sprintf("active=%#v", tc.activeOnly), func(t *testing.T) {
-				reqURL := ts.URL + "/identities/" + i.ID.String() + "/sessions"
+				reqURL := ts.URL + "/admin/identities/" + i.ID.String() + "/sessions"
 				if tc.activeOnly != "" {
 					reqURL += "?active=" + tc.activeOnly
 				}

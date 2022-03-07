@@ -2210,101 +2210,7 @@
         ]
       }
     },
-    "/health/alive": {
-      "get": {
-        "description": "This endpoint returns a HTTP 200 status code when Ory Kratos is accepting incoming\nHTTP requests. This status does currently not include checks whether the database connection is working.\n\nIf the service supports TLS Edge Termination, this endpoint does not require the\n`X-Forwarded-Proto` header to be set.\n\nBe aware that if you are running multiple nodes of this service, the health status will never\nrefer to the cluster state, only to a single instance.",
-        "operationId": "isAlive",
-        "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "properties": {
-                    "status": {
-                      "description": "Always \"ok\".",
-                      "type": "string"
-                    }
-                  },
-                  "required": [
-                    "status"
-                  ],
-                  "type": "object"
-                }
-              }
-            },
-            "description": "Ory Kratos is ready to accept connections."
-          },
-          "500": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/genericError"
-                }
-              }
-            },
-            "description": "genericError"
-          }
-        },
-        "summary": "Check HTTP Server Status",
-        "tags": [
-          "metadata"
-        ]
-      }
-    },
-    "/health/ready": {
-      "get": {
-        "description": "This endpoint returns a HTTP 200 status code when Ory Kratos is up running and the environment dependencies (e.g.\nthe database) are responsive as well.\n\nIf the service supports TLS Edge Termination, this endpoint does not require the\n`X-Forwarded-Proto` header to be set.\n\nBe aware that if you are running multiple nodes of Ory Kratos, the health status will never\nrefer to the cluster state, only to a single instance.",
-        "operationId": "isReady",
-        "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "properties": {
-                    "status": {
-                      "description": "Always \"ok\".",
-                      "type": "string"
-                    }
-                  },
-                  "required": [
-                    "status"
-                  ],
-                  "type": "object"
-                }
-              }
-            },
-            "description": "Ory Kratos is ready to accept requests."
-          },
-          "503": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "properties": {
-                    "errors": {
-                      "additionalProperties": {
-                        "type": "string"
-                      },
-                      "description": "Errors contains a list of errors that caused the not ready status.",
-                      "type": "object"
-                    }
-                  },
-                  "required": [
-                    "errors"
-                  ],
-                  "type": "object"
-                }
-              }
-            },
-            "description": "Ory Kratos is not yet ready to accept requests."
-          }
-        },
-        "summary": "Check HTTP Server and Database Status",
-        "tags": [
-          "metadata"
-        ]
-      }
-    },
-    "/identities": {
+    "/admin/identities": {
       "get": {
         "description": "Lists all identities. Does not support search at the moment.\n\nLearn how identities work in [Ory Kratos' User And Identity Model Documentation](https://www.ory.sh/docs/next/kratos/concepts/identity-user-model).",
         "operationId": "adminListIdentities",
@@ -2431,7 +2337,7 @@
         ]
       }
     },
-    "/identities/{id}": {
+    "/admin/identities/{id}": {
       "delete": {
         "description": "Calling this endpoint irrecoverably and permanently deletes the identity given its ID. This action can not be undone.\nThis endpoint returns 204 when the identity was deleted or when the identity was not found, in which case it is\nassumed that is has been deleted already.\n\nLearn how identities work in [Ory Kratos' User And Identity Model Documentation](https://www.ory.sh/docs/next/kratos/concepts/identity-user-model).",
         "operationId": "adminDeleteIdentity",
@@ -2635,7 +2541,7 @@
         ]
       }
     },
-    "/identities/{id}/sessions": {
+    "/admin/identities/{id}/sessions": {
       "delete": {
         "description": "This endpoint is useful for:\n\nTo forcefully logout Identity from all devices and sessions",
         "operationId": "adminDeleteIdentitySessions",
@@ -2813,7 +2719,7 @@
         ]
       }
     },
-    "/recovery/link": {
+    "/admin/recovery/link": {
       "post": {
         "description": "This endpoint creates a recovery link which should be given to the user in order for them to recover\n(or activate) their account.",
         "operationId": "adminCreateSelfServiceRecoveryLink",
@@ -2872,6 +2778,100 @@
         "summary": "Create a Recovery Link",
         "tags": [
           "v0alpha2"
+        ]
+      }
+    },
+    "/health/alive": {
+      "get": {
+        "description": "This endpoint returns a HTTP 200 status code when Ory Kratos is accepting incoming\nHTTP requests. This status does currently not include checks whether the database connection is working.\n\nIf the service supports TLS Edge Termination, this endpoint does not require the\n`X-Forwarded-Proto` header to be set.\n\nBe aware that if you are running multiple nodes of this service, the health status will never\nrefer to the cluster state, only to a single instance.",
+        "operationId": "isAlive",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "status": {
+                      "description": "Always \"ok\".",
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "status"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Ory Kratos is ready to accept connections."
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/genericError"
+                }
+              }
+            },
+            "description": "genericError"
+          }
+        },
+        "summary": "Check HTTP Server Status",
+        "tags": [
+          "metadata"
+        ]
+      }
+    },
+    "/health/ready": {
+      "get": {
+        "description": "This endpoint returns a HTTP 200 status code when Ory Kratos is up running and the environment dependencies (e.g.\nthe database) are responsive as well.\n\nIf the service supports TLS Edge Termination, this endpoint does not require the\n`X-Forwarded-Proto` header to be set.\n\nBe aware that if you are running multiple nodes of Ory Kratos, the health status will never\nrefer to the cluster state, only to a single instance.",
+        "operationId": "isReady",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "status": {
+                      "description": "Always \"ok\".",
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "status"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Ory Kratos is ready to accept requests."
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "errors": {
+                      "additionalProperties": {
+                        "type": "string"
+                      },
+                      "description": "Errors contains a list of errors that caused the not ready status.",
+                      "type": "object"
+                    }
+                  },
+                  "required": [
+                    "errors"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Ory Kratos is not yet ready to accept requests."
+          }
+        },
+        "summary": "Check HTTP Server and Database Status",
+        "tags": [
+          "metadata"
         ]
       }
     },

@@ -5,6 +5,8 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/urfave/negroni"
+
 	"github.com/gobuffalo/httptest"
 
 	"github.com/ory/kratos/driver"
@@ -25,8 +27,11 @@ func NewKratosServerWithCSRFAndRouters(t *testing.T, reg driver.Registry) (publi
 	rp, ra = x.NewRouterPublic(), x.NewRouterAdmin()
 	csrfHandler := x.NewTestCSRFHandler(rp, reg)
 	reg.WithCSRFHandler(csrfHandler)
+	ran := negroni.New()
+	ran.UseFunc(x.RedirectAdminMiddleware)
+	ran.UseHandler(ra)
 	public = httptest.NewServer(x.NewTestCSRFHandler(rp, reg))
-	admin = httptest.NewServer(ra)
+	admin = httptest.NewServer(ran)
 
 	// Workaround for:
 	// - https://github.com/golang/go/issues/12610

@@ -187,11 +187,11 @@ func (m *RegistryDefault) RegisterAdminRoutes(ctx context.Context, router *x.Rou
 	m.VerificationHandler().RegisterAdminRoutes(router)
 	m.AllVerificationStrategies().RegisterAdminRoutes(router)
 
-	m.HealthHandler(ctx).SetHealthRoutes(router.Router, true)
-	m.HealthHandler(ctx).SetVersionRoutes(router.Router)
-	m.MetricsHandler().SetRoutes(router.Router)
+	m.HealthHandler(ctx).SetHealthRoutes(router, true)
+	m.HealthHandler(ctx).SetVersionRoutes(router)
+	m.MetricsHandler().SetRoutes(router)
 
-	config.NewConfigHashHandler(m, router.Router)
+	config.NewConfigHashHandler(m, router)
 }
 
 func (m *RegistryDefault) RegisterRoutes(ctx context.Context, public *x.RouterPublic, admin *x.RouterAdmin) {
