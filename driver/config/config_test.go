@@ -1067,7 +1067,6 @@ func TestCourierSMS(t *testing.T) {
 		conf, _ := config.New(ctx, logrusx.New("", ""), os.Stderr,
 			configx.WithConfigFiles("stub/.kratos.courier.sms.yaml"), configx.SkipValidation())
 		assert.True(t, conf.CourierSMSEnabled())
-		assert.Equal(t, conf.CourierMessageTTL(), 300)
 		snapshotx.SnapshotTExcept(t, conf.CourierSMSRequestConfig(), nil)
 		assert.Equal(t, "+49123456789", conf.CourierSMSFrom())
 	})
