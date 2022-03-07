@@ -104,7 +104,7 @@ type selfServiceRecoveryLink struct {
 	ExpiresAt time.Time `json:"expires_at"`
 }
 
-// swagger:route POST /recovery/link v0alpha2 adminCreateSelfServiceRecoveryLink
+// swagger:route POST /admin/recovery/link v0alpha2 adminCreateSelfServiceRecoveryLink
 //
 // Create a Recovery Link
 //

@@ -44,9 +44,14 @@ func NewHandler(r handlerDependencies) *Handler {
 const SchemasPath string = "schemas"
 
 func (h *Handler) RegisterPublicRoutes(public *x.RouterPublic) {
-	h.r.CSRFHandler().IgnoreGlobs(fmt.Sprintf("/%s/*", SchemasPath))
+	h.r.CSRFHandler().IgnoreGlobs(
+		"/"+SchemasPath+"/*",
+		x.AdminPrefix+"/"+SchemasPath+"/*",
+	)
 	public.GET(fmt.Sprintf("/%s/:id", SchemasPath), h.getByID)
 	public.GET(fmt.Sprintf("/%s", SchemasPath), h.getAll)
+	public.GET(fmt.Sprintf("%s/%s/:id", x.AdminPrefix, SchemasPath), h.getByID)
+	public.GET(fmt.Sprintf("%s/%s", x.AdminPrefix, SchemasPath), h.getAll)
 }
 
 func (h *Handler) RegisterAdminRoutes(admin *x.RouterAdmin) {

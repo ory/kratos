@@ -5,6 +5,8 @@ import (
 	"net/http"
 	"sync"
 
+	"github.com/ory/kratos/schema"
+
 	"github.com/ory/kratos/selfservice/flow/recovery"
 
 	"github.com/ory/x/reqlog"
@@ -162,6 +164,7 @@ func ServeAdmin(r driver.Registry, wg *sync.WaitGroup, cmd *cobra.Command, args 
 		adminLogger.ExcludePaths(healthx.AliveCheckPath, healthx.ReadyCheckPath)
 	}
 	n.Use(adminLogger)
+	n.UseFunc(x.RedirectAdminMiddleware)
 	n.Use(x.HTTPLoaderContextMiddleware(r))
 	n.Use(sqa(ctx, cmd, r))
 	n.Use(r.PrometheusManager())
@@ -234,7 +237,9 @@ func sqa(ctx stdctx.Context, cmd *cobra.Command, d driver.Registry) *metricsx.Se
 				registration.RouteSubmitFlow,
 
 				session.RouteWhoami,
-				identity.RouteCollection,
+
+				x.AdminPrefix + "/" + schema.SchemasPath,
+				x.AdminPrefix + identity.RouteCollection,
 
 				settings.RouteInitBrowserFlow,
 				settings.RouteInitAPIFlow,

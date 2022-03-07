@@ -37,7 +37,7 @@ import (
 
 func TestHandleError(t *testing.T) {
 	conf, reg := internal.NewFastRegistryWithMocks(t)
-	_, admin := testhelpers.NewKratosServer(t, reg)
+	public, _ := testhelpers.NewKratosServer(t, reg)
 
 	router := httprouter.New()
 	ts := httptest.NewServer(router)
@@ -47,7 +47,7 @@ func TestHandleError(t *testing.T) {
 	testhelpers.NewErrorTestServer(t, reg)
 
 	h := reg.LoginFlowErrorHandler()
-	sdk := testhelpers.NewSDKClient(admin)
+	sdk := testhelpers.NewSDKClient(public)
 
 	var loginFlow *login.Flow
 	var flowError error

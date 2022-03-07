@@ -205,7 +205,7 @@ type adminDeleteIdentitySessions struct {
 	ID string `json:"id"`
 }
 
-// swagger:route DELETE /identities/{id}/sessions v0alpha2 adminDeleteIdentitySessions
+// swagger:route DELETE /admin/identities/{id}/sessions v0alpha2 adminDeleteIdentitySessions
 //
 // Calling this endpoint irrecoverably and permanently deletes and invalidates all sessions that belong to the given Identity.
 //
@@ -251,7 +251,7 @@ type adminListIdentitySessions struct {
 	x.PaginationParams
 }
 
-// swagger:route GET /identities/{id}/sessions v0alpha2 adminListIdentitySessions
+// swagger:route GET /admin/identities/{id}/sessions v0alpha2 adminListIdentitySessions
 //
 // This endpoint returns all sessions that belong to the given Identity.
 //

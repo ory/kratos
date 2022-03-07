@@ -263,8 +263,7 @@ Cypress.Commands.add(
     console.log('Creating user account: ', { email, password })
 
     // see https://github.com/cypress-io/cypress/issues/408
-    cy.visit(APP_URL)
-    cy.clearCookies()
+    cy.clearAllCookies()
 
     cy.request({
       url: APP_URL + '/self-service/registration/browser',
@@ -292,6 +291,8 @@ Cypress.Commands.add(
       .then(({ body }) => {
         expect(body.identity.traits.email).to.contain(email)
       })
+
+    cy.getSession()
   }
 )
 
@@ -1040,6 +1041,9 @@ Cypress.Commands.add('clickWebAuthButton', (type: string) => {
 })
 
 Cypress.Commands.add('shouldShow2FAScreen', () => {
+  cy.location().should((loc) => {
+    expect(loc.pathname).to.include('/login')
+  })
   cy.get('h2').should('contain.text', 'Two-Factor Authentication')
   cy.get('[data-testid="ui/message/1010004"]').should(
     'contain.text',

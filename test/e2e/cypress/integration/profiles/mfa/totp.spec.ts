@@ -30,7 +30,8 @@ context('2FA lookup secrets', () => {
       let password = gen.password()
 
       beforeEach(() => {
-        cy.clearAllCookies()
+        cy.longPrivilegedSessionTime()
+        cy.useLaxAal()
         email = gen.email()
         password = gen.password()
 
@@ -39,9 +40,6 @@ context('2FA lookup secrets', () => {
           password,
           fields: { 'traits.website': website }
         })
-        cy.longPrivilegedSessionTime()
-
-        cy.useLaxAal()
       })
 
       it('should be be asked to sign in with 2fa if set up', () => {
@@ -70,9 +68,6 @@ context('2FA lookup secrets', () => {
         cy.submitPasswordForm()
 
         // MFA is now requested
-        cy.location('pathname').should((loc) => {
-          expect(loc).to.include('/login')
-        })
         cy.shouldShow2FAScreen()
 
         // If we visit settings page we still end up at 2fa screen
