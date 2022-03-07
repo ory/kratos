@@ -37,63 +37,7 @@ paths:
       summary: Get WebAuthn JavaScript
       tags:
       - v0alpha2
-  /health/alive:
-    get:
-      description: |-
-        This endpoint returns a HTTP 200 status code when Ory Kratos is accepting incoming
-        HTTP requests. This status does currently not include checks whether the database connection is working.
-
-        If the service supports TLS Edge Termination, this endpoint does not require the
-        `X-Forwarded-Proto` header to be set.
-
-        Be aware that if you are running multiple nodes of this service, the health status will never
-        refer to the cluster state, only to a single instance.
-      operationId: isAlive
-      responses:
-        "200":
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/inline_response_200'
-          description: Ory Kratos is ready to accept connections.
-        "500":
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/genericError'
-          description: genericError
-      summary: Check HTTP Server Status
-      tags:
-      - metadata
-  /health/ready:
-    get:
-      description: |-
-        This endpoint returns a HTTP 200 status code when Ory Kratos is up running and the environment dependencies (e.g.
-        the database) are responsive as well.
-
-        If the service supports TLS Edge Termination, this endpoint does not require the
-        `X-Forwarded-Proto` header to be set.
-
-        Be aware that if you are running multiple nodes of Ory Kratos, the health status will never
-        refer to the cluster state, only to a single instance.
-      operationId: isReady
-      responses:
-        "200":
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/inline_response_200'
-          description: Ory Kratos is ready to accept requests.
-        "503":
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/inline_response_503'
-          description: Ory Kratos is not yet ready to accept requests.
-      summary: Check HTTP Server and Database Status
-      tags:
-      - metadata
-  /identities:
+  /admin/identities:
     get:
       description: |-
         Lists all identities. Does not support search at the moment.
@@ -188,7 +132,7 @@ paths:
       summary: Create an Identity
       tags:
       - v0alpha2
-  /identities/{id}:
+  /admin/identities/{id}:
     delete:
       description: |-
         Calling this endpoint irrecoverably and permanently deletes the identity given its ID. This action can not be undone.
@@ -338,7 +282,7 @@ paths:
       summary: Update an Identity
       tags:
       - v0alpha2
-  /identities/{id}/sessions:
+  /admin/identities/{id}/sessions:
     delete:
       description: |-
         This endpoint is useful for:
@@ -474,7 +418,7 @@ paths:
       summary: This endpoint returns all sessions that belong to the given Identity.
       tags:
       - v0alpha2
-  /recovery/link:
+  /admin/recovery/link:
     post:
       description: |-
         This endpoint creates a recovery link which should be given to the user in order for them to recover
@@ -514,6 +458,62 @@ paths:
       summary: Create a Recovery Link
       tags:
       - v0alpha2
+  /health/alive:
+    get:
+      description: |-
+        This endpoint returns a HTTP 200 status code when Ory Kratos is accepting incoming
+        HTTP requests. This status does currently not include checks whether the database connection is working.
+
+        If the service supports TLS Edge Termination, this endpoint does not require the
+        `X-Forwarded-Proto` header to be set.
+
+        Be aware that if you are running multiple nodes of this service, the health status will never
+        refer to the cluster state, only to a single instance.
+      operationId: isAlive
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/inline_response_200'
+          description: Ory Kratos is ready to accept connections.
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/genericError'
+          description: genericError
+      summary: Check HTTP Server Status
+      tags:
+      - metadata
+  /health/ready:
+    get:
+      description: |-
+        This endpoint returns a HTTP 200 status code when Ory Kratos is up running and the environment dependencies (e.g.
+        the database) are responsive as well.
+
+        If the service supports TLS Edge Termination, this endpoint does not require the
+        `X-Forwarded-Proto` header to be set.
+
+        Be aware that if you are running multiple nodes of Ory Kratos, the health status will never
+        refer to the cluster state, only to a single instance.
+      operationId: isReady
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/inline_response_200'
+          description: Ory Kratos is ready to accept requests.
+        "503":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/inline_response_503'
+          description: Ory Kratos is not yet ready to accept requests.
+      summary: Check HTTP Server and Database Status
+      tags:
+      - metadata
   /schemas:
     get:
       description: Get all Identity Schemas

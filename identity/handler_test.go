@@ -385,6 +385,7 @@ func TestHandler(t *testing.T) {
 					assert.Contains(t, res.Raw, "Internal Server Error", res.Raw)
 				})
 			}
+
 			e, _ := reg.Cipher().Encrypt(context.Background(), []byte("foo_token"))
 			id = createOidcIdentity(t, "foo-failed-2.oidc@bar.com", e, "bar_token", "id_token", false)
 			for name, ts := range map[string]*httptest.Server{"public": publicTS, "admin": adminTS} {

@@ -40,7 +40,7 @@ func TestHandleError(t *testing.T) {
 	conf.MustSet(config.ViperKeySelfServiceRegistrationEnabled, true)
 	testhelpers.SetDefaultIdentitySchema(conf, "file://./stub/login.schema.json")
 
-	_, admin := testhelpers.NewKratosServer(t, reg)
+	public, _ := testhelpers.NewKratosServer(t, reg)
 
 	router := httprouter.New()
 	ts := httptest.NewServer(router)
@@ -50,7 +50,7 @@ func TestHandleError(t *testing.T) {
 	testhelpers.NewErrorTestServer(t, reg)
 
 	h := reg.RegistrationFlowErrorHandler()
-	sdk := testhelpers.NewSDKClient(admin)
+	sdk := testhelpers.NewSDKClient(public)
 
 	var registrationFlow *registration.Flow
 	var flowError error

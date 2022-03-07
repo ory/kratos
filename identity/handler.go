@@ -55,12 +55,22 @@ func NewHandler(r handlerDependencies) *Handler {
 }
 
 func (h *Handler) RegisterPublicRoutes(public *x.RouterPublic) {
-	h.r.CSRFHandler().IgnoreGlobs(RouteCollection, RouteCollection+"/*")
+	h.r.CSRFHandler().IgnoreGlobs(
+		RouteCollection, RouteCollection+"/*",
+		x.AdminPrefix+RouteCollection, x.AdminPrefix+RouteCollection+"/*",
+	)
+
 	public.GET(RouteCollection, x.RedirectToAdminRoute(h.r))
 	public.GET(RouteItem, x.RedirectToAdminRoute(h.r))
 	public.DELETE(RouteItem, x.RedirectToAdminRoute(h.r))
 	public.POST(RouteCollection, x.RedirectToAdminRoute(h.r))
 	public.PUT(RouteItem, x.RedirectToAdminRoute(h.r))
+
+	public.GET(x.AdminPrefix+RouteCollection, x.RedirectToAdminRoute(h.r))
+	public.GET(x.AdminPrefix+RouteItem, x.RedirectToAdminRoute(h.r))
+	public.DELETE(x.AdminPrefix+RouteItem, x.RedirectToAdminRoute(h.r))
+	public.POST(x.AdminPrefix+RouteCollection, x.RedirectToAdminRoute(h.r))
+	public.PUT(x.AdminPrefix+RouteItem, x.RedirectToAdminRoute(h.r))
 }
 
 func (h *Handler) RegisterAdminRoutes(admin *x.RouterAdmin) {
@@ -83,7 +93,7 @@ type adminListIdentities struct {
 	x.PaginationParams
 }
 
-// swagger:route GET /identities v0alpha2 adminListIdentities
+// swagger:route GET /admin/identities v0alpha2 adminListIdentities
 //
 // List Identities
 //
@@ -139,7 +149,7 @@ type adminGetIdentity struct {
 	DeclassifyCredentials []string `json:"include_credential"`
 }
 
-// swagger:route GET /identities/{id} v0alpha2 adminGetIdentity
+// swagger:route GET /admin/identities/{id} v0alpha2 adminGetIdentity
 //
 // Get an Identity
 //
@@ -281,7 +291,7 @@ type AdminCreateIdentityImportCredentialsOidcProvider struct {
 	Provider string `json:"provider"`
 }
 
-// swagger:route POST /identities v0alpha2 adminCreateIdentity
+// swagger:route POST /admin/identities v0alpha2 adminCreateIdentity
 //
 // Create an Identity
 //
@@ -385,7 +395,7 @@ type AdminUpdateIdentityBody struct {
 	State State `json:"state"`
 }
 
-// swagger:route PUT /identities/{id} v0alpha2 adminUpdateIdentity
+// swagger:route PUT /admin/identities/{id} v0alpha2 adminUpdateIdentity
 //
 // Update an Identity
 //
@@ -466,7 +476,7 @@ type adminDeleteIdentity struct {
 	ID string `json:"id"`
 }
 
-// swagger:route DELETE /identities/{id} v0alpha2 adminDeleteIdentity
+// swagger:route DELETE /admin/identities/{id} v0alpha2 adminDeleteIdentity
 //
 // Delete an Identity
 //
