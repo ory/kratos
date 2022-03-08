@@ -6,12 +6,13 @@ import (
 	"time"
 
 	"github.com/gofrs/uuid"
+	"github.com/sirupsen/logrus"
+	"github.com/stretchr/testify/require"
+
 	"github.com/ory/kratos/courier"
 	templates "github.com/ory/kratos/courier/template/email"
 	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/internal"
-	"github.com/sirupsen/logrus"
-	"github.com/stretchr/testify/require"
 )
 
 func TestMessageTTL(t *testing.T) {
