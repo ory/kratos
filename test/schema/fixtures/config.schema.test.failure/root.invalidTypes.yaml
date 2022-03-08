@@ -33,6 +33,7 @@ courier:
   smtp:
     connection_uri: 0
     from_address: 0
+  message_ttl: invalid-value
 
 serve:
   admin:

@@ -1080,6 +1080,21 @@ func TestCourierSMS(t *testing.T) {
 	})
 }
 
+func TestCourierMessageTTL(t *testing.T) {
+	ctx := context.Background()
+
+	t.Run("case=configs set", func(t *testing.T) {
+		conf, _ := config.New(ctx, logrusx.New("", ""), os.Stderr,
+			configx.WithConfigFiles("stub/.kratos.courier.messageTTL.yaml"), configx.SkipValidation())
+		assert.Equal(t, conf.CourierMessageTTL(), time.Duration(5*time.Minute))
+	})
+
+	t.Run("case=defaults", func(t *testing.T) {
+		conf, _ := config.New(ctx, logrusx.New("", ""), os.Stderr, configx.SkipValidation())
+		assert.Equal(t, conf.CourierMessageTTL(), time.Duration(1*time.Hour))
+	})
+}
+
 func TestCourierTemplatesConfig(t *testing.T) {
 	ctx := context.Background()
 

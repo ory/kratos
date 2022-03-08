@@ -1454,6 +1454,17 @@
             "/conf/courier-templates"
           ]
         },
+        "message_ttl": {
+          "description": "Defines a Time-To-Live for courier messages that could not be delivered. After the defined TTL has expired for a message that message is abandoned.",
+          "type": "string",
+          "pattern": "^([0-9]+(ns|us|ms|s|m|h))+$",
+          "default": "1h",
+          "examples": [
+            "1h",
+            "1m",
+            "1s"
+          ]
+        },
         "smtp": {
           "title": "SMTP Configuration",
           "description": "Configures outgoing emails using the SMTP protocol.",

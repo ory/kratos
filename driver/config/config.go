@@ -72,6 +72,7 @@ const (
 	ViperKeyCourierSMSRequestConfig                          = "courier.sms.request_config"
 	ViperKeyCourierSMSEnabled                                = "courier.sms.enabled"
 	ViperKeyCourierSMSFrom                                   = "courier.sms.from"
+	ViperKeyCourierMessageTTL                                = "courier.message_ttl"
 	ViperKeySecretsDefault                                   = "secrets.default"
 	ViperKeySecretsCookie                                    = "secrets.cookie"
 	ViperKeySecretsCipher                                    = "secrets.cipher"
@@ -248,6 +249,7 @@ type (
 		CourierTemplatesVerificationValid() *CourierEmailTemplate
 		CourierTemplatesRecoveryInvalid() *CourierEmailTemplate
 		CourierTemplatesRecoveryValid() *CourierEmailTemplate
+		CourierMessageTTL() time.Duration
 	}
 )
 
@@ -925,6 +927,10 @@ func (p *Config) CourierTemplatesRecoveryInvalid() *CourierEmailTemplate {
 
 func (p *Config) CourierTemplatesRecoveryValid() *CourierEmailTemplate {
 	return p.CourierTemplatesHelper(ViperKeyCourierTemplatesRecoveryValidEmail)
+}
+
+func (p *Config) CourierMessageTTL() time.Duration {
+	return p.p.DurationF(ViperKeyCourierMessageTTL, time.Hour)
 }
 
 func (p *Config) CourierSMTPHeaders() map[string]string {

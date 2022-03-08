@@ -9,6 +9,7 @@ identity:
       url: https://example.com
 
 courier:
+  message_ttl: 50m
   smtp:
     connection_uri: smtps://foo:bar@my-mailserver:1234/
     from_address: no-reply@ory.kratos.sh
