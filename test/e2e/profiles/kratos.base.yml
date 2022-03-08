@@ -32,7 +32,7 @@ serve:
         - Content-Type
         - X-Session-Token
   admin:
-    base_url: http://kratos:4434/
+    base_url: http://localhost:4434/
 
 hashers:
   algorithm: bcrypt
