@@ -163,7 +163,9 @@ func TestPersister(t *testing.T) {
 	conns := createCleanDatabases(t)
 	ctx := context.Background()
 
-	for name, reg := range conns {
+	for name := range conns {
+		name := name
+		reg := conns[name]
 		t.Run(fmt.Sprintf("database=%s", name), func(t *testing.T) {
 			t.Parallel()
 
