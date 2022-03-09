@@ -291,8 +291,6 @@ Cypress.Commands.add(
       .then(({ body }) => {
         expect(body.identity.traits.email).to.contain(email)
       })
-
-    cy.getSession()
   }
 )
 
