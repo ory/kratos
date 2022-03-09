@@ -769,7 +769,7 @@
           "$ref": "#/definitions/defaultReturnTo"
         },
         "hooks": {
-          "$ref": "#/definitions/selfServiceAfterRecoveryHooks"
+          "$ref": "#/definitions/selfServiceHooks"
         }
       }
     },
@@ -780,7 +780,7 @@
           "$ref": "#/definitions/defaultReturnTo"
         },
         "hooks": {
-          "$ref": "#/definitions/selfServiceHooks"
+          "$ref": "#/definitions/selfServiceAfterRecoveryHooks"
         }
       },
       "additionalProperties": false
