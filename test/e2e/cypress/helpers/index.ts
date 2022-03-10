@@ -1,4 +1,5 @@
 export const email = () => Math.random().toString(36) + '@ory.sh'
+export const blockedEmail = () => Math.random().toString(36) + '_blocked' + '@ory.sh'
 
 export const password = () => Math.random().toString(36)
 
@@ -61,6 +62,7 @@ export const website = 'https://www.ory.sh/'
 
 export const gen = {
   email,
+  blockedEmail,
   password,
   identity: () => ({ email: email(), password: password() }),
   identityWithWebsite: () => ({

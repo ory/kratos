@@ -204,9 +204,9 @@ run() {
   ! nc -zv localhost 4433
 
   ls -la .
-  for profile in email mobile oidc recovery verification mfa spa; do
-    yq merge test/e2e/profiles/kratos.base.yml "test/e2e/profiles/${profile}/.kratos.yml" > test/e2e/kratos.${profile}.yml
-    cp test/e2e/kratos.email.yml test/e2e/kratos.generated.yml
+  for profile in email mobile oidc recovery verification mfa spa webhooks; do
+    yq -v merge test/e2e/profiles/kratos.base.yml "test/e2e/profiles/${profile}/.kratos.yml" > test/e2e/kratos.${profile}.yml
+    cp -v test/e2e/kratos.email.yml test/e2e/kratos.generated.yml
   done
 
   (modd -f test/e2e/modd.conf >"${base}/test/e2e/kratos.e2e.log" 2>&1 &)
@@ -218,7 +218,8 @@ run() {
     http-get://127.0.0.1:4456/health/alive \
     http-get://127.0.0.1:4457/ \
     http-get://127.0.0.1:4437/mail \
-    http-get://127.0.0.1:4458/
+    http-get://127.0.0.1:4458/ \
+    http-get://127.0.0.1:8080/health
 
   if [[ $dev == "yes" ]]; then
     (cd test/e2e; npm run test:watch -- --config integrationFolder="cypress/integration")

@@ -153,7 +153,8 @@ preLoginHook:
 		f.UI.Messages.Add(text.NewInfoLoginMFA())
 	}
 
-	for _, s := range h.d.LoginStrategies(r.Context()) {
+	var s Strategy
+	for _, s = range h.d.LoginStrategies(r.Context()) {
 		if err := s.PopulateLoginMethod(r, f.RequestedAAL, f); err != nil {
 			return nil, err
 		}
@@ -168,7 +169,8 @@ preLoginHook:
 	}
 
 	if err := h.d.LoginHookExecutor().PreLoginHook(w, r, f); err != nil {
-		return nil, err
+		h.d.LoginFlowErrorHandler().WriteFlowError(w, r, f, s.NodeGroup(), err)
+		return f, nil
 	}
 
 	if err := h.d.LoginFlowPersister().CreateLoginFlow(r.Context(), f); err != nil {
