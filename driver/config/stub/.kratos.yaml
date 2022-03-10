@@ -49,7 +49,7 @@ ciphers:
 
 selfservice:
   default_browser_return_url: http://return-to-3-test.ory.sh/
-  whitelisted_return_urls:
+  allowed_return_urls:
     - http://return-to-1-test.ory.sh/
     - http://return-to-2-test.ory.sh/
     - http://*.wildcards.ory.sh

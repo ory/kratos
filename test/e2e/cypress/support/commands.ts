@@ -567,7 +567,7 @@ Cypress.Commands.add('longRegisterLifespan', ({} = {}) => {
 
 Cypress.Commands.add('browserReturnUrlOry', ({} = {}) => {
   updateConfigFile((config) => {
-    config.selfservice.whitelisted_return_urls = ['https://www.ory.sh/']
+    config.selfservice.allowed_return_urls = ['https://www.ory.sh/']
     return config
   })
 })
@@ -1063,7 +1063,7 @@ Cypress.Commands.add(
       cy.location('pathname').should('contain', 'error')
       cy.get('code').should(
         'contain.text',
-        'Requested return_to URL \\"https://not-allowed\\" is not whitelisted.'
+        'Requested return_to URL \\"https://not-allowed\\" is not allowed.'
       )
     }
   }

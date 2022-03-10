@@ -13,7 +13,7 @@ import (
 func initViper(t *testing.T, c *config.Config) {
 	testhelpers.SetDefaultIdentitySchema(c, "file://./stub/default.schema.json")
 	c.MustSet(config.ViperKeySelfServiceBrowserDefaultReturnTo, "https://www.ory.sh")
-	c.MustSet(config.ViperKeyURLsWhitelistedReturnToDomains, []string{"https://www.ory.sh"})
+	c.MustSet(config.ViperKeyURLsAllowedReturnToDomains, []string{"https://www.ory.sh"})
 	c.MustSet(config.ViperKeySelfServiceStrategyConfig+"."+identity.CredentialsTypePassword.String()+".enabled", true)
 	c.MustSet(config.ViperKeySelfServiceStrategyConfig+"."+recovery.StrategyRecoveryLinkName+".enabled", true)
 	c.MustSet(config.ViperKeySelfServiceRecoveryEnabled, true)

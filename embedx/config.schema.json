@@ -912,8 +912,8 @@
         "default_browser_return_url": {
           "$ref": "#/definitions/defaultReturnTo"
         },
-        "whitelisted_return_urls": {
-          "title": "Whitelisted Return To URLs",
+        "allowed_return_urls": {
+          "title": "Allowed Return To URLs",
           "description": "List of URLs that are allowed to be redirected to. A redirection request is made by appending `?return_to=...` to Login, Registration, and other self-service flows.",
           "type": "array",
           "items": {

@@ -12,7 +12,7 @@ serve:
 
 selfservice:
   default_browser_return_url: http://127.0.0.1:4455/
-  whitelisted_return_urls:
+  allowed_return_urls:
     - http://127.0.0.1:4455
 
   methods:

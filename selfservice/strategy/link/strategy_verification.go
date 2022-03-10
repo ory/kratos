@@ -257,7 +257,7 @@ func (s *Strategy) verificationUseToken(w http.ResponseWriter, r *http.Request, 
 
 	returnTo, err := x.SecureRedirectTo(&verificationRequest, defaultRedirectURL,
 		x.SecureRedirectAllowSelfServiceURLs(s.d.Config(r.Context()).SelfPublicURL()),
-		x.SecureRedirectAllowURLs(s.d.Config(r.Context()).SelfServiceBrowserWhitelistedReturnToDomains()),
+		x.SecureRedirectAllowURLs(s.d.Config(r.Context()).SelfServiceBrowserAllowedReturnToDomains()),
 	)
 	if err != nil {
 		s.d.Logger().Debugf("error parsing redirectTo from verification: %s\n", err)
