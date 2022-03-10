@@ -9,9 +9,9 @@ import (
 func sortNodes(ctx context.Context, n node.Nodes) error {
 	return n.SortBySchema(ctx,
 		node.SortByGroups([]node.Group{
+			node.OpenIDConnectGroup,
 			node.DefaultGroup,
 			node.WebAuthnGroup,
-			node.OpenIDConnectGroup,
 			node.PasswordGroup,
 			node.TOTPGroup,
 			node.LookupGroup,
