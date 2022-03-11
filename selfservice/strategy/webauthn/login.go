@@ -142,6 +142,10 @@ func (s *Strategy) populateLoginMethod(r *http.Request, sr *login.Flow, i *ident
 		return errors.WithStack(err)
 	}
 
+	if len(cred.Identifiers) > 0 {
+		sr.UI.SetNode(node.NewInputField("identifier", cred.Identifiers[0], node.DefaultGroup, node.InputAttributeTypeHidden))
+	}
+
 	sr.UI.SetCSRF(s.d.GenerateCSRFToken(r))
 	sr.UI.Nodes.Upsert(NewWebAuthnScript(urlx.AppendPaths(s.d.Config(r.Context()).SelfPublicURL(), webAuthnRoute).String(), jsOnLoad))
 	sr.UI.SetNode(NewWebAuthnLoginTrigger(string(injectWebAuthnOptions)).
