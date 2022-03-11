@@ -108,7 +108,7 @@ func (h *Handler) RegisterAdminRoutes(admin *x.RouterAdmin) {
 // This endpoint MUST ONLY be used in scenarios such as native mobile apps (React Native, Objective C, Swift, Java, ...).
 //
 //
-// More information can be found at [Ory Kratos Account Recovery Documentation](../self-service/flows/account-recovery.mdx).
+// More information can be found at [Ory Kratos Account Recovery Documentation](../self-service/flows/account-recovery).
 //
 //     Schemes: http, https
 //
@@ -158,7 +158,7 @@ type initializeSelfServiceRecoveryFlowWithoutBrowser struct {
 //
 // This endpoint is NOT INTENDED for clients that do not have a browser (Chrome, Firefox, ...) as cookies are needed.
 //
-// More information can be found at [Ory Kratos Account Recovery Documentation](../self-service/flows/account-recovery.mdx).
+// More information can be found at [Ory Kratos Account Recovery Documentation](../self-service/flows/account-recovery).
 //
 //     Schemes: http, https
 //
@@ -231,7 +231,7 @@ type getSelfServiceRecoveryFlow struct {
 //	})
 //	```
 //
-// More information can be found at [Ory Kratos Account Recovery Documentation](../self-service/flows/account-recovery.mdx).
+// More information can be found at [Ory Kratos Account Recovery Documentation](../self-service/flows/account-recovery).
 //
 //     Produces:
 //     - application/json
@@ -329,7 +329,7 @@ type submitSelfServiceRecoveryFlowBody struct{}
 //   (if the link was valid) and instructs the user to update their password, or a redirect to the Recover UI URL with
 //   a new Recovery Flow ID which contains an error message that the recovery link was invalid.
 //
-// More information can be found at [Ory Kratos Account Recovery Documentation](../self-service/flows/account-recovery.mdx).
+// More information can be found at [Ory Kratos Account Recovery Documentation](../self-service/flows/account-recovery).
 //
 //     Consumes:
 //     - application/json
