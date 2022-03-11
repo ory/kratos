@@ -34,6 +34,9 @@ type (
 		Recovery struct {
 			Via string `json:"via"`
 		} `json:"recovery"`
+		RequiredAAL struct {
+			Update string `json:"update"`
+		} `json:"required_aal"`
 		Mappings struct {
 			Identity struct {
 				Traits []struct {
