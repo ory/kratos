@@ -8,7 +8,7 @@ secrets:
 
 selfservice:
   default_browser_return_url: http://localhost:4455/
-  whitelisted_return_urls:
+  allowed_return_urls:
     - http://localhost:4455
     - https://www.ory.sh/
     - https://example.org/

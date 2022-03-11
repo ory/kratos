@@ -53,7 +53,7 @@ urls:
   default_return_to: 1
   registration_ui: 1
   error_ui: 1
-  whitelisted_return_to_urls:
+  allowed_return_urls:
     - 1
     - 1
 

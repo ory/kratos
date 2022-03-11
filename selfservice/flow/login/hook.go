@@ -83,7 +83,7 @@ func (e *HookExecutor) PostLoginHook(w http.ResponseWriter, r *http.Request, a *
 	c := e.d.Config(r.Context())
 	returnTo, err := x.SecureRedirectTo(r, c.SelfServiceBrowserDefaultReturnTo(),
 		x.SecureRedirectUseSourceURL(a.RequestURL),
-		x.SecureRedirectAllowURLs(c.SelfServiceBrowserWhitelistedReturnToDomains()),
+		x.SecureRedirectAllowURLs(c.SelfServiceBrowserAllowedReturnToDomains()),
 		x.SecureRedirectAllowSelfServiceURLs(c.SelfPublicURL()),
 		x.SecureRedirectOverrideDefaultReturnTo(e.d.Config(r.Context()).SelfServiceFlowLoginReturnTo(a.Active.String())),
 	)

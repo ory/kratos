@@ -223,7 +223,7 @@ func TestHandler(t *testing.T) {
 		})
 
 		t.Run("case=expired with return_to", func(t *testing.T) {
-			conf.MustSet(config.ViperKeyURLsWhitelistedReturnToDomains, []string{"https://www.ory.sh/"})
+			conf.MustSet(config.ViperKeyURLsAllowedReturnToDomains, []string{"https://www.ory.sh/"})
 			client := testhelpers.NewHTTPClientWithArbitrarySessionToken(t, reg)
 			body := x.EasyGetBody(t, client, publicTS.URL+settings.RouteInitBrowserFlow+"?return_to=https://www.ory.sh")
 

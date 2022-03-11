@@ -327,7 +327,7 @@ func (h *Handler) initBrowserFlow(w http.ResponseWriter, r *http.Request, ps htt
 	if errors.Is(err, ErrAlreadyLoggedIn) {
 		returnTo, redirErr := x.SecureRedirectTo(r, h.d.Config(r.Context()).SelfServiceBrowserDefaultReturnTo(),
 			x.SecureRedirectAllowSelfServiceURLs(h.d.Config(r.Context()).SelfPublicURL()),
-			x.SecureRedirectAllowURLs(h.d.Config(r.Context()).SelfServiceBrowserWhitelistedReturnToDomains()),
+			x.SecureRedirectAllowURLs(h.d.Config(r.Context()).SelfServiceBrowserAllowedReturnToDomains()),
 		)
 		if redirErr != nil {
 			h.d.SelfServiceErrorManager().Forward(r.Context(), w, r, redirErr)

@@ -125,7 +125,7 @@ func NewFlow(conf *config.Config, exp time.Duration, r *http.Request, i *identit
 	_, err := x.SecureRedirectTo(r,
 		conf.SelfServiceBrowserDefaultReturnTo(),
 		x.SecureRedirectUseSourceURL(requestURL),
-		x.SecureRedirectAllowURLs(conf.SelfServiceBrowserWhitelistedReturnToDomains()),
+		x.SecureRedirectAllowURLs(conf.SelfServiceBrowserAllowedReturnToDomains()),
 		x.SecureRedirectAllowSelfServiceURLs(conf.SelfPublicURL()),
 	)
 	if err != nil {

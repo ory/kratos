@@ -106,7 +106,7 @@ func (e *HookExecutor) PostSettingsHook(w http.ResponseWriter, r *http.Request, 
 	c := e.d.Config(r.Context())
 	returnTo, err := x.SecureRedirectTo(r, c.SelfServiceBrowserDefaultReturnTo(),
 		x.SecureRedirectUseSourceURL(ctxUpdate.Flow.RequestURL),
-		x.SecureRedirectAllowURLs(c.SelfServiceBrowserWhitelistedReturnToDomains()),
+		x.SecureRedirectAllowURLs(c.SelfServiceBrowserAllowedReturnToDomains()),
 		x.SecureRedirectAllowSelfServiceURLs(c.SelfPublicURL()),
 		x.SecureRedirectOverrideDefaultReturnTo(
 			e.d.Config(r.Context()).SelfServiceFlowSettingsReturnTo(settingsType,

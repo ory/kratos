@@ -273,7 +273,7 @@ func (h *Handler) completeLogout(w http.ResponseWriter, r *http.Request) {
 
 	ret, err := x.SecureRedirectTo(r, h.d.Config(r.Context()).SelfServiceFlowLogoutRedirectURL(),
 		x.SecureRedirectUseSourceURL(r.RequestURI),
-		x.SecureRedirectAllowURLs(h.d.Config(r.Context()).SelfServiceBrowserWhitelistedReturnToDomains()),
+		x.SecureRedirectAllowURLs(h.d.Config(r.Context()).SelfServiceBrowserAllowedReturnToDomains()),
 		x.SecureRedirectAllowSelfServiceURLs(h.d.Config(r.Context()).SelfPublicURL()),
 	)
 	if err != nil {

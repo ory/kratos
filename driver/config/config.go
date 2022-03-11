@@ -110,7 +110,7 @@ const (
 	ViperKeyCookiePath                                       = "cookies.path"
 	ViperKeySelfServiceStrategyConfig                        = "selfservice.methods"
 	ViperKeySelfServiceBrowserDefaultReturnTo                = "selfservice." + DefaultBrowserReturnURL
-	ViperKeyURLsWhitelistedReturnToDomains                   = "selfservice.whitelisted_return_urls"
+	ViperKeyURLsAllowedReturnToDomains                       = "selfservice.allowed_return_urls"
 	ViperKeySelfServiceRegistrationEnabled                   = "selfservice.flows.registration.enabled"
 	ViperKeySelfServiceRegistrationUI                        = "selfservice.flows.registration.ui_url"
 	ViperKeySelfServiceRegistrationRequestLifespan           = "selfservice.flows.registration.lifespan"
@@ -823,8 +823,8 @@ func (p *Config) SessionPersistentCookie() bool {
 	return p.p.Bool(ViperKeySessionPersistentCookie)
 }
 
-func (p *Config) SelfServiceBrowserWhitelistedReturnToDomains() (us []url.URL) {
-	src := p.p.Strings(ViperKeyURLsWhitelistedReturnToDomains)
+func (p *Config) SelfServiceBrowserAllowedReturnToDomains() (us []url.URL) {
+	src := p.p.Strings(ViperKeyURLsAllowedReturnToDomains)
 	for k, u := range src {
 		if len(u) == 0 {
 			continue
@@ -832,11 +832,11 @@ func (p *Config) SelfServiceBrowserWhitelistedReturnToDomains() (us []url.URL) {
 
 		parsed, err := url.ParseRequestURI(u)
 		if err != nil {
-			p.l.WithError(err).Warnf("Ignoring URL \"%s\" from configuration key \"%s.%d\".", u, ViperKeyURLsWhitelistedReturnToDomains, k)
+			p.l.WithError(err).Warnf("Ignoring URL \"%s\" from configuration key \"%s.%d\".", u, ViperKeyURLsAllowedReturnToDomains, k)
 			continue
 		}
 		if parsed.Host == "*" {
-			p.l.Warnf("Ignoring wildcard \"%s\" from configuration key \"%s.%d\".", u, ViperKeyURLsWhitelistedReturnToDomains, k)
+			p.l.Warnf("Ignoring wildcard \"%s\" from configuration key \"%s.%d\".", u, ViperKeyURLsAllowedReturnToDomains, k)
 			continue
 		}
 		eTLD, icann := publicsuffix.PublicSuffix(parsed.Host)
@@ -844,7 +844,7 @@ func (p *Config) SelfServiceBrowserWhitelistedReturnToDomains() (us []url.URL) {
 			parsed.Host[:1] == "*" &&
 			icann &&
 			parsed.Host == fmt.Sprintf("*.%s", eTLD) {
-			p.l.Warnf("Ignoring wildcard \"%s\" from configuration key \"%s.%d\".", u, ViperKeyURLsWhitelistedReturnToDomains, k)
+			p.l.Warnf("Ignoring wildcard \"%s\" from configuration key \"%s.%d\".", u, ViperKeyURLsAllowedReturnToDomains, k)
 			continue
 		}
 

@@ -1,7 +1,7 @@
 selfservice:
   default_browser_return_url: "#/definitions/defaultReturnTo"
 
-  whitelisted_return_urls:
+  allowed_return_urls:
     - https://foo.bar
     - /dashboard
 

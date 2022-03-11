@@ -99,7 +99,7 @@ func TestLoginExecutor(t *testing.T) {
 
 				t.Run("case=use return_to value", func(t *testing.T) {
 					t.Cleanup(testhelpers.SelfServiceHookConfigReset(t, conf))
-					conf.MustSet(config.ViperKeyURLsWhitelistedReturnToDomains, []string{"https://www.ory.sh/"})
+					conf.MustSet(config.ViperKeyURLsAllowedReturnToDomains, []string{"https://www.ory.sh/"})
 
 					res, _ := makeRequestPost(t, newServer(t, flow.TypeBrowser, nil), false, url.Values{"return_to": {"https://www.ory.sh/kratos/"}})
 					assert.EqualValues(t, http.StatusOK, res.StatusCode)

@@ -64,7 +64,7 @@ func TestViperProvider(t *testing.T) {
 			assert.Equal(t, "http://public.kratos.ory.sh", p.SelfPublicURL().String())
 
 			var ds []string
-			for _, v := range p.SelfServiceBrowserWhitelistedReturnToDomains() {
+			for _, v := range p.SelfServiceBrowserAllowedReturnToDomains() {
 				ds = append(ds, v.String())
 			}
 
