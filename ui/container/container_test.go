@@ -40,9 +40,8 @@ func newFormRequest(t *testing.T, values url.Values) *http.Request {
 	return req
 }
 
-var ctx = context.Background()
-
 func TestContainer(t *testing.T) {
+	var ctx = context.Background()
 	t.Run("method=NewFromJSON", func(t *testing.T) {
 		for k, tc := range []struct {
 			r      string

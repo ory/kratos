@@ -100,7 +100,7 @@ func (s *ErrorHandler) WriteFlowError(w http.ResponseWriter, r *http.Request, f 
 		return
 	}
 
-	if err := sortNodes(f.UI.Nodes); err != nil {
+	if err := sortNodes(r.Context(), f.UI.Nodes); err != nil {
 		s.forward(w, r, f, err)
 		return
 	}

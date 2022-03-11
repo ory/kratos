@@ -159,7 +159,7 @@ preLoginHook:
 		}
 	}
 
-	if err := sortNodes(f.UI.Nodes); err != nil {
+	if err := sortNodes(r.Context(), f.UI.Nodes); err != nil {
 		return nil, err
 	}
 
@@ -588,7 +588,7 @@ continueLogin:
 			sess = session.NewInactiveSession()
 		}
 
-		method := ss.CompletedAuthenticationMethod(ctx)
+		method := ss.CompletedAuthenticationMethod(r.Context())
 		sess.CompletedLoginFor(method.Method, method.AAL)
 		i = interim
 		break
