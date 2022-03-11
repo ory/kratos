@@ -458,14 +458,16 @@ func TestCompleteLogin(t *testing.T) {
 
 			apiClient := testhelpers.NewHTTPClientWithIdentitySessionToken(t, reg, id)
 			f := testhelpers.InitializeLoginFlowViaBrowser(t, apiClient, publicTS, false, true, testhelpers.InitFlowWithAAL(identity.AuthenticatorAssuranceLevel2))
+			assert.Equal(t, gjson.GetBytes(id.Traits, "subject").String(), f.Ui.Nodes[0].Attributes.UiNodeInputAttributes.Value)
 			testhelpers.SnapshotTExcept(t, f.Ui.Nodes, []string{
 				"0.attributes.value",
-				"1.attributes.onclick",
-				"1.attributes.onload",
-				"3.attributes.src",
-				"3.attributes.nonce",
+				"1.attributes.value",
+				"2.attributes.onclick",
+				"2.attributes.onload",
+				"4.attributes.src",
+				"4.attributes.nonce",
 			})
-			ensureReplacement(t, "1", f.Ui, "allowCredentials")
+			ensureReplacement(t, "2", f.Ui, "allowCredentials")
 		})
 
 		t.Run("case=webauthn payload is not set when identity has no webauthn", func(t *testing.T) {
