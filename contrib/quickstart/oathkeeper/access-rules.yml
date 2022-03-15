@@ -1,11 +1,10 @@
--
-  id: "ory:kratos:public"
+- id: 'ory:kratos:public'
   upstream:
     preserve_host: true
-    url: "http://kratos:4433"
+    url: 'http://kratos:4433'
     strip_path: /.ory/kratos/public
   match:
-    url: "http://127.0.0.1:4455/.ory/kratos/public/<**>"
+    url: 'http://127.0.0.1:4455/.ory/kratos/public/<**>'
     methods:
       - GET
       - POST
@@ -13,43 +12,37 @@
       - DELETE
       - PATCH
   authenticators:
-    -
-      handler: noop
+    - handler: noop
   authorizer:
     handler: allow
   mutators:
     - handler: noop
 
--
-  id: "ory:kratos-selfservice-ui-node:anonymous"
+- id: 'ory:kratos-selfservice-ui-node:anonymous'
   upstream:
     preserve_host: true
-    url: "http://kratos-selfservice-ui-node:4435"
+    url: 'http://kratos-selfservice-ui-node:4435'
   match:
-    url: "http://127.0.0.1:4455/<{registration,welcome,recovery,verification,login,**.css,**.js,**.png}>"
+    url: 'http://127.0.0.1:4455/<{registration,welcome,recovery,verification,login,**.css,**.js,**.png}>'
     methods:
       - GET
   authenticators:
-    -
-      handler: anonymous
+    - handler: anonymous
   authorizer:
     handler: allow
   mutators:
-    -
-      handler: noop
+    - handler: noop
 
--
-  id: "ory:kratos-selfservice-ui-node:protected"
+- id: 'ory:kratos-selfservice-ui-node:protected'
   upstream:
     preserve_host: true
-    url: "http://kratos-selfservice-ui-node:4435"
+    url: 'http://kratos-selfservice-ui-node:4435'
   match:
-    url: "http://127.0.0.1:4455/<{debug,dashboard,settings}>"
+    url: 'http://127.0.0.1:4455/<{debug,dashboard,settings}{/,}>'
     methods:
       - GET
   authenticators:
-    -
-      handler: cookie_session
+    - handler: cookie_session
   authorizer:
     handler: allow
   mutators:

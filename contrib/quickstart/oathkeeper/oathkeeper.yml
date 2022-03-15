@@ -32,13 +32,13 @@ errors:
       config:
         to: http://127.0.0.1:4455/login
         when:
-          -
-            error:
+          - error:
               - unauthorized
               - forbidden
             request:
               header:
                 accept:
+                  # We don't want this for application/json requests, only browser requests!
                   - text/html
     json:
       enabled: true
@@ -61,8 +61,8 @@ authenticators:
     config:
       check_session_url: http://kratos:4433/sessions/whoami
       preserve_path: true
-      extra_from: "@this"
-      subject_from: "identity.id"
+      extra_from: '@this'
+      subject_from: 'identity.id'
       only:
         - ory_kratos_session
 
