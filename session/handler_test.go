@@ -659,7 +659,7 @@ func TestHandlerRefreshSessionByIdentityID(t *testing.T) {
 
 	// set this intermediate because kratos needs some valid url for CRUDE operations
 	conf.MustSet(config.ViperKeyPublicBaseURL, "http://example.com")
-	testhelpers.SetDefaultIdentitySchema(t, conf, "file://./stub/identity.schema.json")
+	testhelpers.SetDefaultIdentitySchema(conf, "file://./stub/identity.schema.json")
 	conf.MustSet(config.ViperKeyPublicBaseURL, ts.URL)
 
 	t.Run("case=should return 200 after refreshing one session", func(t *testing.T) {
@@ -708,7 +708,7 @@ func TestHandlerRefreshCurrentSession(t *testing.T) {
 
 	adminTS.URL = strings.Replace(adminTS.URL, "127.0.0.1", "localhost", -1)
 	reg.Config(context.Background()).MustSet(config.ViperKeyAdminBaseURL, adminTS.URL)
-	testhelpers.SetDefaultIdentitySchema(t, conf, "file://./stub/identity.schema.json")
+	testhelpers.SetDefaultIdentitySchema(conf, "file://./stub/identity.schema.json")
 	testhelpers.SetIdentitySchemas(t, conf, map[string]string{
 		"customer": "file://./stub/handler/customer.schema.json",
 		"employee": "file://./stub/handler/employee.schema.json",
