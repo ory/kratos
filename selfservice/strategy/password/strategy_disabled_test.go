@@ -11,7 +11,6 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/internal"
 )
@@ -19,7 +18,7 @@ import (
 func TestDisabledEndpoint(t *testing.T) {
 	conf, reg := internal.NewFastRegistryWithMocks(t)
 	testhelpers.StrategyEnable(t, conf, identity.CredentialsTypePassword.String(), false)
-	conf.MustSet(config.ViperKeyDefaultIdentitySchemaURL, "file://stub/sort.schema.json")
+	testhelpers.SetDefaultIdentitySchema(conf, "file://stub/sort.schema.json")
 
 	publicTS, _ := testhelpers.NewKratosServer(t, reg)
 
@@ -49,7 +48,7 @@ func TestDisabledEndpoint(t *testing.T) {
 	})
 
 	t.Run("case=should not settings when password method is disabled", func(t *testing.T) {
-		require.NoError(t, conf.Set(config.ViperKeyDefaultIdentitySchemaURL, "file://stub/login.schema.json"))
+		testhelpers.SetDefaultIdentitySchema(conf, "file://stub/login.schema.json")
 		c := testhelpers.NewHTTPClientWithArbitrarySessionCookie(t, reg)
 
 		t.Run("method=GET", func(t *testing.T) {

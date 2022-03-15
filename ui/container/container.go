@@ -1,6 +1,7 @@
 package container
 
 import (
+	"context"
 	"database/sql/driver"
 	"encoding/json"
 	"errors"
@@ -89,9 +90,9 @@ func NewFromJSON(action string, group node.Group, raw json.RawMessage, prefix st
 
 // NewFromJSONSchema creates a new Container and populates the fields
 // using the provided JSON Schema.
-func NewFromJSONSchema(action string, group node.Group, jsonSchemaRef, prefix string, compiler *jsonschema.Compiler) (*Container, error) {
+func NewFromJSONSchema(ctx context.Context, action string, group node.Group, jsonSchemaRef, prefix string, compiler *jsonschema.Compiler) (*Container, error) {
 	c := New(action)
-	nodes, err := NodesFromJSONSchema(group, jsonSchemaRef, prefix, compiler)
+	nodes, err := NodesFromJSONSchema(ctx, group, jsonSchemaRef, prefix, compiler)
 	if err != nil {
 		return nil, err
 	}
@@ -100,8 +101,8 @@ func NewFromJSONSchema(action string, group node.Group, jsonSchemaRef, prefix st
 	return c, nil
 }
 
-func NodesFromJSONSchema(group node.Group, jsonSchemaRef, prefix string, compiler *jsonschema.Compiler) (node.Nodes, error) {
-	paths, err := jsonschemax.ListPaths(jsonSchemaRef, compiler)
+func NodesFromJSONSchema(ctx context.Context, group node.Group, jsonSchemaRef, prefix string, compiler *jsonschema.Compiler) (node.Nodes, error) {
+	paths, err := jsonschemax.ListPaths(ctx, jsonSchemaRef, compiler)
 	if err != nil {
 		return nil, err
 	}
@@ -123,8 +124,8 @@ func (c *Container) GetNodes() *node.Nodes {
 	return &c.Nodes
 }
 
-func (c *Container) SortNodes(opts ...node.SortOption) error {
-	return c.Nodes.SortBySchema(opts...)
+func (c *Container) SortNodes(ctx context.Context, opts ...node.SortOption) error {
+	return c.Nodes.SortBySchema(ctx, opts...)
 }
 
 // ResetMessages resets the container's own and its node's messages.

@@ -89,6 +89,10 @@ func TestPersister(ctx context.Context, newNetworkUnlessExisting NetworkWrapper,
 			require.NoError(t, p.SetMessageStatus(ctx, messages[0].ID, courier.MessageStatusSent))
 			_, err = p.NextMessages(ctx, 1)
 			require.ErrorIs(t, err, courier.ErrQueueEmpty)
+
+			require.NoError(t, p.SetMessageStatus(ctx, messages[0].ID, courier.MessageStatusAbandoned))
+			_, err = p.NextMessages(ctx, 1)
+			require.ErrorIs(t, err, courier.ErrQueueEmpty)
 		})
 
 		t.Run("case=network", func(t *testing.T) {

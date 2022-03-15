@@ -5,15 +5,16 @@
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
 **CsrfToken** | Pointer to **string** | Sending the anti-csrf token is only required for browser login flows. | [optional] 
+**Identifier** | **string** | Identifier is the email or username of the user trying to log in. | 
 **Method** | **string** | Method should be set to \&quot;password\&quot; when logging in using the identifier and password strategy. | 
 **Password** | **string** | The user&#39;s password. | 
-**PasswordIdentifier** | **string** | Identifier is the email or username of the user trying to log in. | 
+**PasswordIdentifier** | **string** | Identifier is the email or username of the user trying to log in. This field is deprecated! | 
 
 ## Methods
 
 ### NewSubmitSelfServiceLoginFlowWithPasswordMethodBody
 
-`func NewSubmitSelfServiceLoginFlowWithPasswordMethodBody(method string, password string, passwordIdentifier string, ) *SubmitSelfServiceLoginFlowWithPasswordMethodBody`
+`func NewSubmitSelfServiceLoginFlowWithPasswordMethodBody(identifier string, method string, password string, passwordIdentifier string, ) *SubmitSelfServiceLoginFlowWithPasswordMethodBody`
 
 NewSubmitSelfServiceLoginFlowWithPasswordMethodBody instantiates a new SubmitSelfServiceLoginFlowWithPasswordMethodBody object
 This constructor will assign default values to properties that have it defined,
@@ -52,6 +53,26 @@ SetCsrfToken sets CsrfToken field to given value.
 `func (o *SubmitSelfServiceLoginFlowWithPasswordMethodBody) HasCsrfToken() bool`
 
 HasCsrfToken returns a boolean if a field has been set.
+
+### GetIdentifier
+
+`func (o *SubmitSelfServiceLoginFlowWithPasswordMethodBody) GetIdentifier() string`
+
+GetIdentifier returns the Identifier field if non-nil, zero value otherwise.
+
+### GetIdentifierOk
+
+`func (o *SubmitSelfServiceLoginFlowWithPasswordMethodBody) GetIdentifierOk() (*string, bool)`
+
+GetIdentifierOk returns a tuple with the Identifier field if it's non-nil, zero value otherwise
+and a boolean to check if the value has been set.
+
+### SetIdentifier
+
+`func (o *SubmitSelfServiceLoginFlowWithPasswordMethodBody) SetIdentifier(v string)`
+
+SetIdentifier sets Identifier field to given value.
+
 
 ### GetMethod
 

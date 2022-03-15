@@ -1,0 +1,38 @@
+{
+  "$id": "https://schemas.ory.sh/kratos/selfservice/strategy/password/registration.schema.json",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "properties": {
+    "csrf_token": {
+      "type": "string"
+    },
+    "traits": {
+      "description": "This field will be overwritten in registration.go's decoder() method. Do not add anything to this field as it has no effect."
+    },
+    "method": {
+      "type": "string"
+    },
+    "webauthn_register": {
+      "type": "string"
+    },
+    "webauthn_register_displayname": {
+      "type": "string"
+    }
+  },
+  "oneOf": [
+    {
+      "required": [
+        "webauthn_register"
+      ]
+    },
+    {
+      "method": {
+        "const": "webauthn"
+      },
+      "required": [
+        "identifier",
+        "method"
+      ]
+    }
+  ]
+}

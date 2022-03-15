@@ -2,31 +2,35 @@ export const email = () => Math.random().toString(36) + '@ory.sh'
 
 export const password = () => Math.random().toString(36)
 
-export const assertVerifiableAddress = ({ isVerified, email }) => (session) => {
-  const { identity } = session
-  expect(identity).to.have.property('verifiable_addresses')
-  expect(identity.verifiable_addresses).to.have.length(1)
+export const assertVerifiableAddress =
+  ({ isVerified, email }) =>
+  (session) => {
+    const { identity } = session
+    expect(identity).to.have.property('verifiable_addresses')
+    expect(identity.verifiable_addresses).to.have.length(1)
 
-  const address = identity.verifiable_addresses[0]
-  expect(address.id).to.not.be.empty
-  expect(address.verified).to.equal(isVerified)
-  expect(address.value).to.equal(email)
+    const address = identity.verifiable_addresses[0]
+    expect(address.id).to.not.be.empty
+    expect(address.verified).to.equal(isVerified)
+    expect(address.value).to.equal(email)
 
-  if (isVerified) {
-    expect(address.verified_at).to.not.be.null
-  } else {
-    expect(address).to.not.have.property('verified_at')
+    if (isVerified) {
+      expect(address.verified_at).to.not.be.null
+    } else {
+      expect(address).to.not.have.property('verified_at')
+    }
   }
-}
 
-export const assertRecoveryAddress = ({ email }) => ({ identity }) => {
-  expect(identity).to.have.property('recovery_addresses')
-  expect(identity.recovery_addresses).to.have.length(1)
+export const assertRecoveryAddress =
+  ({ email }) =>
+  ({ identity }) => {
+    expect(identity).to.have.property('recovery_addresses')
+    expect(identity.recovery_addresses).to.have.length(1)
 
-  const address = identity.recovery_addresses[0]
-  expect(address.id).to.not.be.empty
-  expect(address.value).to.equal(email)
-}
+    const address = identity.recovery_addresses[0]
+    expect(address.id).to.not.be.empty
+    expect(address.value).to.equal(email)
+  }
 
 export const parseHtml = (html) =>
   new DOMParser().parseFromString(html, 'text/html')
@@ -71,7 +75,8 @@ export const gen = {
 }
 
 // Format is
-export const verifyHrefPattern = /^http:.*\/self-service\/verification\?(((&|)token|(&|)flow)=([\-a-zA-Z0-9]+)){2}$/
+export const verifyHrefPattern =
+  /^http:.*\/self-service\/verification\?(((&|)token|(&|)flow)=([\-a-zA-Z0-9]+)){2}$/
 
 // intervals define how long to wait for something,
 export const pollInterval = 250 // how long to wait before retry

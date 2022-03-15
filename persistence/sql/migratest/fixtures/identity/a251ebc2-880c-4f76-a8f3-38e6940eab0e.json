@@ -1,7 +1,21 @@
 {
   "id": "a251ebc2-880c-4f76-a8f3-38e6940eab0e",
+  "credentials": {
+    "password": {
+      "type": "password",
+      "identifiers": [
+        "foobar@ory.sh"
+      ],
+      "config": {
+        "hashed_password": "$argon2id$v=19$m=131072,t=2,p=1$lQFPaKxXqPL56/mU7vRi4w$6aldHyBnURt8sP8+xu41Ng"
+      },
+      "version": 0,
+      "created_at": "2013-10-07T08:23:19Z",
+      "updated_at": "2013-10-07T08:23:19Z"
+    }
+  },
   "schema_id": "default",
-  "schema_url": "https://www.ory.sh/schemas/default",
+  "schema_url": "https://www.ory.sh/schemas/ZGVmYXVsdA",
   "state": "active",
   "traits": {
     "email": "foobar@ory.sh"

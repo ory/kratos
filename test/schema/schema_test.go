@@ -2,6 +2,7 @@ package schema
 
 import (
 	"bytes"
+	"context"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -47,7 +48,7 @@ func (s schema) validate(path string) error {
 			return errors.WithStack(err)
 		}
 
-		sx, err := compiler.Compile(s.name)
+		sx, err := compiler.Compile(context.Background(), s.name)
 		if err != nil {
 			return errors.WithStack(err)
 		}

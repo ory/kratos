@@ -61,6 +61,11 @@ func TestHandler(t *testing.T) {
 			URL:    urlx.ParseOrPanic("file://./stub"),
 			RawURL: "file://./stub",
 		},
+		{
+			ID:     "preset://email",
+			URL:    urlx.ParseOrPanic("file://./stub/identity-2.schema.json"),
+			RawURL: "file://./stub/identity-2.schema.json",
+		},
 	}
 
 	getSchemaById := func(id string) *schema.Schema {
@@ -78,7 +83,6 @@ func TestHandler(t *testing.T) {
 
 		require.EqualValues(t, expectCode, res.StatusCode, "%s", body)
 		return body
-
 	}
 
 	getFromTSById := func(id string, expectCode int) []byte {
@@ -108,18 +112,16 @@ func TestHandler(t *testing.T) {
 		schemas = newSchemas
 		var schemasConfig []config.Schema
 		for _, s := range schemas {
-			if s.ID != config.DefaultIdentityTraitsSchemaID {
-				schemasConfig = append(schemasConfig, config.Schema{
-					ID:  s.ID,
-					URL: s.RawURL,
-				})
-			}
+			schemasConfig = append(schemasConfig, config.Schema{
+				ID:  s.ID,
+				URL: s.RawURL,
+			})
 		}
 		conf.MustSet(config.ViperKeyIdentitySchemas, schemasConfig)
 	}
 
 	conf.MustSet(config.ViperKeyPublicBaseURL, ts.URL)
-	conf.MustSet(config.ViperKeyDefaultIdentitySchemaURL, getSchemaById(config.DefaultIdentityTraitsSchemaID).RawURL)
+	conf.MustSet(config.ViperKeyDefaultIdentitySchemaID, config.DefaultIdentityTraitsSchemaID)
 	setSchemas(schemas)
 
 	t.Run("case=get default schema", func(t *testing.T) {
@@ -137,6 +139,12 @@ func TestHandler(t *testing.T) {
 	t.Run("case=get base64 schema", func(t *testing.T) {
 		server := getFromTSById("base64", http.StatusOK)
 		file := getFromFS("base64")
+		require.JSONEq(t, string(file), string(server))
+	})
+
+	t.Run("case=get encoded schema", func(t *testing.T) {
+		server := getFromTSById("cHJlc2V0Oi8vZW1haWw", http.StatusOK)
+		file := getFromFS("preset://email")
 		require.JSONEq(t, string(file), string(server))
 	})
 

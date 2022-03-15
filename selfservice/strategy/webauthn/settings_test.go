@@ -11,6 +11,9 @@ import (
 	"time"
 
 	"github.com/ory/kratos/selfservice/flow"
+
+	"github.com/ory/x/snapshotx"
+
 	"github.com/ory/kratos/selfservice/strategy/webauthn"
 
 	"github.com/gofrs/uuid"
@@ -35,12 +38,6 @@ import (
 	"github.com/ory/kratos/x"
 )
 
-//go:embed fixtures/settings/has_webauth.json
-var settingsFixtureHasWebAuthn []byte
-
-//go:embed fixtures/settings/no_webauth.json
-var settingsFixtureNoWebauthn []byte
-
 //go:embed fixtures/settings/success/identity.json
 var settingsFixtureSuccessIdentity []byte
 
@@ -59,7 +56,7 @@ func createIdentityWithoutWebAuthn(t *testing.T, reg driver.Registry) *identity.
 	return id
 }
 
-func createIdentity(t *testing.T, reg driver.Registry) *identity.Identity {
+func createIdentityAndReturnIdentifier(t *testing.T, reg driver.Registry, conf []byte) (*identity.Identity, string) {
 	identifier := x.NewUUID().String() + "@ory.sh"
 	password := x.NewUUID().String()
 	p, err := reg.Hasher().Generate(context.Background(), []byte(password))
@@ -74,6 +71,9 @@ func createIdentity(t *testing.T, reg driver.Registry) *identity.Identity {
 			},
 		},
 	}
+	if conf == nil {
+		conf = []byte(`{"credentials":[{"id":"Zm9vZm9v","display_name":"foo"},{"id":"YmFyYmFy","display_name":"bar"}]}`)
+	}
 	require.NoError(t, reg.PrivilegedIdentityPool().CreateIdentity(context.Background(), i))
 	i.Credentials = map[identity.CredentialsType]identity.Credentials{
 		identity.CredentialsTypePassword: {
@@ -83,12 +83,17 @@ func createIdentity(t *testing.T, reg driver.Registry) *identity.Identity {
 		},
 		identity.CredentialsTypeWebAuthn: {
 			Type:        identity.CredentialsTypeWebAuthn,
-			Identifiers: []string{i.ID.String()},
-			Config:      sqlxx.JSONRawMessage(`{"credentials":[{"id":"Zm9vZm9v","display_name":"foo"},{"id":"YmFyYmFy","display_name":"bar"}]}`),
+			Identifiers: []string{identifier},
+			Config:      conf,
 		},
 	}
 	require.NoError(t, reg.PrivilegedIdentityPool().UpdateIdentity(context.Background(), i))
-	return i
+	return i, identifier
+}
+
+func createIdentity(t *testing.T, reg driver.Registry) *identity.Identity {
+	id, _ := createIdentityAndReturnIdentifier(t, reg, nil)
+	return id
 }
 
 func enableWebAuthn(conf *config.Config) {
@@ -103,6 +108,8 @@ func ensureReplacement(t *testing.T, index string, ui kratos.UiContainer, expect
 	require.NoError(t, err)
 	assert.Contains(t, gjson.GetBytes(actual, index+".attributes.onclick").String(), expected, "ensure that the replacement works")
 }
+
+var ctx = context.Background()
 
 func TestCompleteSettings(t *testing.T) {
 	conf, reg := internal.NewFastRegistryWithMocks(t)
@@ -121,7 +128,7 @@ func TestCompleteSettings(t *testing.T) {
 
 	conf.MustSet(config.ViperKeySelfServiceSettingsPrivilegedAuthenticationAfter, "1m")
 
-	conf.MustSet(config.ViperKeyDefaultIdentitySchemaURL, "file://./stub/login.schema.json")
+	testhelpers.SetDefaultIdentitySchema(conf, "file://./stub/settings.schema.json")
 	conf.MustSet(config.ViperKeySecretsDefault, []string{"not-a-secure-session-key"})
 
 	t.Run("case=a device is shown which can be unlinked", func(t *testing.T) {
@@ -348,6 +355,90 @@ func TestCompleteSettings(t *testing.T) {
 		})
 	})
 
+	t.Run("case=fails to remove security key if it is passwordless and the last credential available", func(t *testing.T) {
+		conf.MustSet(config.ViperKeyWebAuthnPasswordless, true)
+		t.Cleanup(func() {
+			conf.MustSet(config.ViperKeyWebAuthnPasswordless, false)
+		})
+
+		run := func(t *testing.T, spa bool) {
+			id := createIdentity(t, reg)
+			id.DeleteCredentialsType(identity.CredentialsTypePassword)
+			conf := sqlxx.JSONRawMessage(`{"credentials":[{"id":"Zm9vZm9v","display_name":"foo","is_passwordless":true}]}`)
+			id.UpsertCredentialsConfig(identity.CredentialsTypeWebAuthn, conf, 0)
+			require.NoError(t, reg.IdentityManager().Update(ctx, id, identity.ManagerAllowWriteProtectedTraits))
+
+			body, res := doBrowserFlow(t, spa, func(v url.Values) {
+				// The remove key should be empty
+				snapshotx.SnapshotTExcept(t, v, []string{"csrf_token"})
+
+				v.Set(node.WebAuthnRemove, fmt.Sprintf("666f6f666f6f"))
+			}, id)
+
+			if spa {
+				assert.Contains(t, res.Request.URL.String(), publicTS.URL+settings.RouteSubmitFlow)
+			} else {
+				assert.Contains(t, res.Request.URL.String(), uiTS.URL)
+			}
+
+			t.Run("response", func(t *testing.T) {
+				assert.EqualValues(t, settings.StateShowForm, gjson.Get(body, "state").String(), body)
+				snapshotx.SnapshotTExcept(t, json.RawMessage(gjson.Get(body, "ui.nodes.#(attributes.name==webauthn_remove)").String()), nil)
+
+				actual, err := reg.Persister().GetIdentityConfidential(context.Background(), id.ID)
+				require.NoError(t, err)
+				cred, ok := actual.GetCredentials(identity.CredentialsTypeWebAuthn)
+				assert.True(t, ok)
+				assert.Len(t, gjson.GetBytes(cred.Config, "credentials").Array(), 1)
+			})
+		}
+
+		t.Run("type=browser", func(t *testing.T) {
+			run(t, false)
+		})
+
+		t.Run("type=spa", func(t *testing.T) {
+			run(t, true)
+		})
+	})
+
+	t.Run("case=possible to remove webauthn credential if it is MFA at all times", func(t *testing.T) {
+		run := func(t *testing.T, spa bool) {
+			id := createIdentity(t, reg)
+			id.DeleteCredentialsType(identity.CredentialsTypePassword)
+			id.UpsertCredentialsConfig(identity.CredentialsTypeWebAuthn, sqlxx.JSONRawMessage(`{"credentials":[{"id":"Zm9vZm9v","display_name":"foo","is_passwordless":false}]}`), 0)
+			require.NoError(t, reg.IdentityManager().Update(ctx, id, identity.ManagerAllowWriteProtectedTraits))
+
+			body, res := doBrowserFlow(t, spa, func(v url.Values) {
+				// The remove key should be set
+				snapshotx.SnapshotTExcept(t, v, []string{"csrf_token"})
+				v.Set(node.WebAuthnRemove, fmt.Sprintf("666f6f666f6f"))
+			}, id)
+
+			if spa {
+				assert.Contains(t, res.Request.URL.String(), publicTS.URL+settings.RouteSubmitFlow)
+			} else {
+				assert.Contains(t, res.Request.URL.String(), uiTS.URL)
+			}
+
+			t.Run("response", func(t *testing.T) {
+				assert.EqualValues(t, settings.StateSuccess, gjson.Get(body, "state").String(), body)
+				actual, err := reg.Persister().GetIdentityConfidential(context.Background(), id.ID)
+				require.NoError(t, err)
+				_, ok := actual.GetCredentials(identity.CredentialsTypeWebAuthn)
+				assert.False(t, ok)
+			})
+		}
+
+		t.Run("type=browser", func(t *testing.T) {
+			run(t, false)
+		})
+
+		t.Run("type=spa", func(t *testing.T) {
+			run(t, true)
+		})
+	})
+
 	t.Run("case=remove all security keys", func(t *testing.T) {
 		run := func(t *testing.T, spa bool) {
 			id := createIdentity(t, reg)
@@ -375,6 +466,9 @@ func TestCompleteSettings(t *testing.T) {
 			require.NoError(t, err)
 			_, ok = actual.GetCredentials(identity.CredentialsTypeWebAuthn)
 			assert.False(t, ok)
+			// Check not to remove other credentials with webauthn
+			_, ok = actual.GetCredentials(identity.CredentialsTypePassword)
+			assert.True(t, ok)
 		}
 
 		t.Run("type=browser", func(t *testing.T) {
@@ -415,5 +509,35 @@ func TestCompleteSettings(t *testing.T) {
 		t.Run("type=spa", func(t *testing.T) {
 			run(t, true)
 		})
+	})
+
+	t.Run("case=should fail if no identifier was set in the schema", func(t *testing.T) {
+		testhelpers.SetDefaultIdentitySchema(conf, "file://stub/missing-identifier.schema.json")
+
+		for _, f := range []string{"spa", "browser"} {
+			t.Run("type="+f, func(t *testing.T) {
+				isSPA := f == "spa"
+
+				var id identity.Identity
+				require.NoError(t, json.Unmarshal(settingsFixtureSuccessIdentity, &id))
+				_ = reg.PrivilegedIdentityPool().DeleteIdentity(context.Background(), id.ID)
+				browserClient := testhelpers.NewHTTPClientWithIdentitySessionCookie(t, reg, &id)
+				f := testhelpers.InitializeSettingsFlowViaBrowser(t, browserClient, isSPA, publicTS)
+
+				// We inject the session to replay
+				interim, err := reg.SettingsFlowPersister().GetSettingsFlow(context.Background(), uuid.FromStringOrNil(f.Id))
+				require.NoError(t, err)
+				interim.InternalContext = settingsFixtureSuccessInternalContext
+				require.NoError(t, reg.SettingsFlowPersister().UpdateSettingsFlow(context.Background(), interim))
+
+				values := testhelpers.SDKFormFieldsToURLValues(f.Ui.Nodes)
+
+				// We use the response replay
+				values.Set(node.WebAuthnRegister, string(settingsFixtureSuccessResponse))
+				values.Set(node.WebAuthnRegisterDisplayName, "foobar")
+				actual, _ := testhelpers.SettingsMakeRequest(t, false, isSPA, f, browserClient, testhelpers.EncodeFormAsJSON(t, isSPA, values))
+				assert.Equal(t, text.NewErrorValidationIdentifierMissing().Text, gjson.Get(actual, "ui.messages.0.text").String(), "%s", actual)
+			})
+		}
 	})
 }

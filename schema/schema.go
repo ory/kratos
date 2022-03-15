@@ -2,6 +2,7 @@ package schema
 
 import (
 	"context"
+	"encoding/base64"
 	"io/ioutil"
 	"net/url"
 	"strings"
@@ -12,9 +13,6 @@ import (
 
 	"github.com/ory/herodot"
 	"github.com/ory/jsonschema/v3"
-	_ "github.com/ory/jsonschema/v3/base64loader"
-	_ "github.com/ory/jsonschema/v3/fileloader"
-	_ "github.com/ory/jsonschema/v3/httploader"
 	"github.com/ory/kratos/driver/config"
 	"github.com/ory/x/pagination"
 	"github.com/ory/x/urlx"
@@ -22,7 +20,7 @@ import (
 
 type Schemas []Schema
 type IdentityTraitsProvider interface {
-	IdentityTraitsSchemas(ctx context.Context) Schemas
+	IdentityTraitsSchemas(ctx context.Context) (Schemas, error)
 }
 
 func (s Schemas) GetByID(id string) (*Schema, error) {
@@ -73,12 +71,12 @@ func computeKeyPositions(schema []byte, dest *[]string, parents []string) {
 	}
 }
 
-func GetKeysInOrder(schemaRef string) ([]string, error) {
+func GetKeysInOrder(ctx context.Context, schemaRef string) ([]string, error) {
 	orderedKeyCacheMutex.RLock()
 	keysInOrder, ok := orderedKeyCache[schemaRef]
 	orderedKeyCacheMutex.RUnlock()
 	if !ok {
-		sio, err := jsonschema.LoadURL(schemaRef)
+		sio, err := jsonschema.LoadURL(ctx, schemaRef)
 		if err != nil {
 			return nil, errors.WithStack(err)
 		}
@@ -103,5 +101,5 @@ type Schema struct {
 }
 
 func (s *Schema) SchemaURL(host *url.URL) *url.URL {
-	return urlx.AppendPaths(host, SchemasPath, s.ID)
+	return urlx.AppendPaths(host, SchemasPath, base64.RawURLEncoding.EncodeToString([]byte(s.ID)))
 }

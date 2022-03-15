@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/ory/kratos/internal/testhelpers"
+
 	"github.com/pkg/errors"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -17,7 +19,7 @@ import (
 
 func TestManager(t *testing.T) {
 	conf, reg := internal.NewFastRegistryWithMocks(t)
-	conf.MustSet(config.ViperKeyDefaultIdentitySchemaURL, "file://./stub/manager.schema.json")
+	testhelpers.SetDefaultIdentitySchema(conf, "file://./stub/manager.schema.json")
 	conf.MustSet(config.ViperKeyPublicBaseURL, "https://www.ory.sh/")
 	conf.MustSet(config.ViperKeyCourierSMTPURL, "smtp://foo@bar@dev.null/")
 
@@ -149,6 +151,50 @@ func TestManager(t *testing.T) {
 			}
 			require.True(t, foundVerifiableAddress)
 		})
+	})
+
+	t.Run("method=CountActiveFirstFactorCredentials", func(t *testing.T) {
+		id := identity.NewIdentity(config.DefaultIdentityTraitsSchemaID)
+		count, err := reg.IdentityManager().CountActiveFirstFactorCredentials(ctx, id)
+		require.NoError(t, err)
+		assert.Equal(t, 0, count)
+
+		id.Credentials[identity.CredentialsTypePassword] = identity.Credentials{
+			Type:        identity.CredentialsTypePassword,
+			Identifiers: []string{"foo"},
+			Config:      []byte(`{"hashed_password":"$argon2id$v=19$m=32,t=2,p=4$cm94YnRVOW5jZzFzcVE4bQ$MNzk5BtR2vUhrp6qQEjRNw"}`),
+		}
+
+		count, err = reg.IdentityManager().CountActiveFirstFactorCredentials(ctx, id)
+		require.NoError(t, err)
+		assert.Equal(t, 1, count)
+	})
+
+	t.Run("method=CountActiveMultiFactorCredentials", func(t *testing.T) {
+		id := identity.NewIdentity(config.DefaultIdentityTraitsSchemaID)
+		count, err := reg.IdentityManager().CountActiveMultiFactorCredentials(ctx, id)
+		require.NoError(t, err)
+		assert.Equal(t, 0, count)
+
+		id.Credentials[identity.CredentialsTypePassword] = identity.Credentials{
+			Type:        identity.CredentialsTypePassword,
+			Identifiers: []string{"foo"},
+			Config:      []byte(`{"hashed_password":"$argon2id$v=19$m=32,t=2,p=4$cm94YnRVOW5jZzFzcVE4bQ$MNzk5BtR2vUhrp6qQEjRNw"}`),
+		}
+
+		count, err = reg.IdentityManager().CountActiveMultiFactorCredentials(ctx, id)
+		require.NoError(t, err)
+		assert.Equal(t, 0, count)
+
+		id.Credentials[identity.CredentialsTypeWebAuthn] = identity.Credentials{
+			Type:        identity.CredentialsTypeWebAuthn,
+			Identifiers: []string{"foo"},
+			Config:      []byte(`{"credentials":[{"is_passwordless":false}]}`),
+		}
+
+		count, err = reg.IdentityManager().CountActiveMultiFactorCredentials(ctx, id)
+		require.NoError(t, err)
+		assert.Equal(t, 1, count)
 	})
 
 	t.Run("method=UpdateTraits", func(t *testing.T) {

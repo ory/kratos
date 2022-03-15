@@ -1,6 +1,7 @@
 package lookup
 
 import (
+	"context"
 	"encoding/json"
 
 	"github.com/pkg/errors"
@@ -72,7 +73,11 @@ func NewStrategy(d registrationStrategyDependencies) *Strategy {
 	}
 }
 
-func (s *Strategy) CountActiveCredentials(cc map[identity.CredentialsType]identity.Credentials) (count int, err error) {
+func (s *Strategy) CountActiveFirstFactorCredentials(cc map[identity.CredentialsType]identity.Credentials) (count int, err error) {
+	return 0, nil
+}
+
+func (s *Strategy) CountActiveMultiFactorCredentials(cc map[identity.CredentialsType]identity.Credentials) (count int, err error) {
 	for _, c := range cc {
 		if c.Type == s.ID() && len(c.Config) > 0 {
 			var conf CredentialsConfig
@@ -94,4 +99,11 @@ func (s *Strategy) ID() identity.CredentialsType {
 
 func (s *Strategy) NodeGroup() node.Group {
 	return node.LookupGroup
+}
+
+func (s *Strategy) CompletedAuthenticationMethod(ctx context.Context) session.AuthenticationMethod {
+	return session.AuthenticationMethod{
+		Method: s.ID(),
+		AAL:    identity.AuthenticatorAssuranceLevel2,
+	}
 }

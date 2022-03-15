@@ -26,6 +26,8 @@ type IdentityCredentials struct {
 	Type        *IdentityCredentialsType `json:"type,omitempty"`
 	// UpdatedAt is a helper struct field for gobuffalo.pop.
 	UpdatedAt *time.Time `json:"updated_at,omitempty"`
+	// Version refers to the version of the credential. Useful when changing the config schema.
+	Version *int64 `json:"version,omitempty"`
 }
 
 // NewIdentityCredentials instantiates a new IdentityCredentials object
@@ -205,6 +207,38 @@ func (o *IdentityCredentials) SetUpdatedAt(v time.Time) {
 	o.UpdatedAt = &v
 }
 
+// GetVersion returns the Version field value if set, zero value otherwise.
+func (o *IdentityCredentials) GetVersion() int64 {
+	if o == nil || o.Version == nil {
+		var ret int64
+		return ret
+	}
+	return *o.Version
+}
+
+// GetVersionOk returns a tuple with the Version field value if set, nil otherwise
+// and a boolean to check if the value has been set.
+func (o *IdentityCredentials) GetVersionOk() (*int64, bool) {
+	if o == nil || o.Version == nil {
+		return nil, false
+	}
+	return o.Version, true
+}
+
+// HasVersion returns a boolean if a field has been set.
+func (o *IdentityCredentials) HasVersion() bool {
+	if o != nil && o.Version != nil {
+		return true
+	}
+
+	return false
+}
+
+// SetVersion gets a reference to the given int64 and assigns it to the Version field.
+func (o *IdentityCredentials) SetVersion(v int64) {
+	o.Version = &v
+}
+
 func (o IdentityCredentials) MarshalJSON() ([]byte, error) {
 	toSerialize := map[string]interface{}{}
 	if o.Config != nil {
@@ -221,6 +255,9 @@ func (o IdentityCredentials) MarshalJSON() ([]byte, error) {
 	}
 	if o.UpdatedAt != nil {
 		toSerialize["updated_at"] = o.UpdatedAt
+	}
+	if o.Version != nil {
+		toSerialize["version"] = o.Version
 	}
 	return json.Marshal(toSerialize)
 }

@@ -2,6 +2,7 @@ package node
 
 import (
 	"bytes"
+	"context"
 	"fmt"
 	"io/ioutil"
 	"testing"
@@ -15,6 +16,8 @@ import (
 )
 
 func TestFieldFromPath(t *testing.T) {
+
+	var ctx = context.Background()
 	t.Run("all properties are properly transferred", func(t *testing.T) {
 		schema, err := ioutil.ReadFile("./fixtures/all_formats.schema.json")
 		require.NoError(t, err)
@@ -22,7 +25,7 @@ func TestFieldFromPath(t *testing.T) {
 		c := jsonschema.NewCompiler()
 		require.NoError(t, c.AddResource("test.json", bytes.NewBuffer(schema)))
 
-		paths, err := jsonschemax.ListPaths("test.json", c)
+		paths, err := jsonschemax.ListPaths(ctx, "test.json", c)
 		require.NoError(t, err)
 
 		for _, path := range paths {

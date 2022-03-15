@@ -44,9 +44,14 @@ func NewHandler(r handlerDependencies) *Handler {
 const SchemasPath string = "schemas"
 
 func (h *Handler) RegisterPublicRoutes(public *x.RouterPublic) {
-	h.r.CSRFHandler().IgnoreGlobs(fmt.Sprintf("/%s/*", SchemasPath))
+	h.r.CSRFHandler().IgnoreGlobs(
+		"/"+SchemasPath+"/*",
+		x.AdminPrefix+"/"+SchemasPath+"/*",
+	)
 	public.GET(fmt.Sprintf("/%s/:id", SchemasPath), h.getByID)
 	public.GET(fmt.Sprintf("/%s", SchemasPath), h.getAll)
+	public.GET(fmt.Sprintf("%s/%s/:id", x.AdminPrefix, SchemasPath), h.getByID)
+	public.GET(fmt.Sprintf("%s/%s", x.AdminPrefix, SchemasPath), h.getAll)
 }
 
 func (h *Handler) RegisterAdminRoutes(admin *x.RouterAdmin) {
@@ -84,10 +89,25 @@ type getJsonSchema struct {
 //       404: jsonError
 //       500: jsonError
 func (h *Handler) getByID(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	s, err := h.r.IdentityTraitsSchemas(r.Context()).GetByID(ps.ByName("id"))
+	ss, err := h.r.IdentityTraitsSchemas(r.Context())
 	if err != nil {
-		h.r.Writer().WriteError(w, r, errors.WithStack(herodot.ErrNotFound.WithDebugf("%+v", err)))
+		h.r.Writer().WriteError(w, r, errors.WithStack(herodot.ErrInternalServerError.WithWrap(err)))
 		return
+	}
+
+	id := ps.ByName("id")
+	s, err := ss.GetByID(id)
+	if err != nil {
+		// Maybe it is a base64 encoded ID?
+		if dec, err := base64.RawURLEncoding.DecodeString(id); err == nil {
+			id = string(dec)
+		}
+
+		s, err = ss.GetByID(id)
+		if err != nil {
+			h.r.Writer().WriteError(w, r, errors.WithStack(herodot.ErrNotFound.WithDebugf("%+v", err)))
+			return
+		}
 	}
 
 	src, err := ReadSchema(s)
@@ -138,33 +158,32 @@ type listIdentitySchemas struct {
 func (h *Handler) getAll(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	page, itemsPerPage := x.ParsePagination(r)
 
-	schemas := h.r.IdentityTraitsSchemas(r.Context()).List(page, itemsPerPage)
-	total := h.r.IdentityTraitsSchemas(r.Context()).Total()
+	allSchemas, err := h.r.IdentityTraitsSchemas(r.Context())
+	if err != nil {
+		h.r.Writer().WriteError(w, r, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("Unable to load identity schemas").WithWrap(err)))
+		return
+	}
+	total := allSchemas.Total()
+	schemas := allSchemas.List(page, itemsPerPage)
 
 	var ss IdentitySchemas
-
-	for _, schema := range schemas {
-		s, err := h.r.IdentityTraitsSchemas(r.Context()).GetByID(schema.ID)
-		if err != nil {
-			h.r.Writer().WriteError(w, r, errors.WithStack(herodot.ErrNotFound.WithDebugf("%+v", err)))
-			return
-		}
-
-		src, err := ReadSchema(s)
+	for k := range schemas {
+		schema := schemas[k]
+		src, err := ReadSchema(&schema)
 		if err != nil {
 			h.r.Writer().WriteError(w, r, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("The file for this JSON Schema ID could not be found or opened. This is a configuration issue.").WithDebugf("%+v", err)))
 			return
 		}
-		defer src.Close()
 
 		raw, err := ioutil.ReadAll(src)
+		_ = src.Close()
 		if err != nil {
 			h.r.Writer().WriteError(w, r, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("The file for this JSON Schema ID could not be found or opened. This is a configuration issue.").WithDebugf("%+v", err)))
 			return
 		}
 
 		ss = append(ss, identitySchema{
-			ID:     s.ID,
+			ID:     schema.ID,
 			Schema: raw,
 		})
 	}

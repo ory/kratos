@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"net/url"
+	"strings"
 	"testing"
 	"time"
 
@@ -93,7 +94,7 @@ func TestAdminStrategy(t *testing.T) {
 			IdentityId: x.NewUUID().String(),
 		}).Execute()
 		require.IsType(t, err, new(kratos.GenericOpenAPIError), "%T", err)
-		assert.EqualError(t, err.(*kratos.GenericOpenAPIError), "404 Not Found")
+		assert.EqualError(t, err.(*kratos.GenericOpenAPIError), "400 Bad Request")
 	})
 
 	t.Run("description=should create a valid recovery link without email", func(t *testing.T) {
@@ -194,7 +195,7 @@ func TestRecovery(t *testing.T) {
 
 	public, _ := testhelpers.NewKratosServerWithCSRF(t, reg)
 
-	var createIdentityToRecover = func(email string) {
+	var createIdentityToRecover = func(email string) *identity.Identity {
 		var id = &identity.Identity{
 			Credentials: map[identity.CredentialsType]identity.Credentials{
 				"password": {Type: "password", Identifiers: []string{email}, Config: sqlxx.JSONRawMessage(`{"hashed_password":"foo"}`)}},
@@ -208,6 +209,7 @@ func TestRecovery(t *testing.T) {
 		assert.False(t, addr.Verified)
 		assert.Nil(t, addr.VerifiedAt)
 		assert.Equal(t, identity.VerifiableAddressStatusPending, addr.Status)
+		return id
 	}
 
 	var expect = func(t *testing.T, hc *http.Client, isAPI, isSPA bool, values func(url.Values), c int) string {
@@ -503,6 +505,52 @@ func TestRecovery(t *testing.T) {
 			body := x.MustReadAll(actualRes.Body)
 			require.NoError(t, actualRes.Body.Close())
 			assert.Equal(t, http.StatusOK, actualRes.StatusCode, "%s", body)
+		}
+
+		var values = func(v url.Values) {
+			v.Set("email", recoveryEmail)
+		}
+
+		check(t, expectSuccess(t, nil, false, false, values))
+	})
+
+	t.Run("description=should recover and invalidate all other sessions if hook is set", func(t *testing.T) {
+		conf.MustSet(config.HookStrategyKey(config.ViperKeySelfServiceRecoveryAfter, config.HookGlobal), []config.SelfServiceHook{{Name: "revoke_active_sessions"}})
+		t.Cleanup(func() {
+			conf.MustSet(config.HookStrategyKey(config.ViperKeySelfServiceRegistrationAfter, identity.CredentialsTypePassword.String()), nil)
+		})
+
+		recoveryEmail := strings.ToLower(testhelpers.RandomEmail())
+		email := recoveryEmail
+		id := createIdentityToRecover(email)
+
+		sess, err := session.NewActiveSession(id, conf, time.Now(), identity.CredentialsTypePassword, identity.AuthenticatorAssuranceLevel1)
+		require.NoError(t, err)
+		require.NoError(t, reg.SessionPersister().UpsertSession(context.Background(), sess))
+
+		actualSession, err := reg.SessionPersister().GetSession(context.Background(), sess.ID)
+		require.NoError(t, err)
+		assert.True(t, actualSession.IsActive())
+
+		var check = func(t *testing.T, actual string) {
+			message := testhelpers.CourierExpectMessage(t, reg, recoveryEmail, "Recover access to your account")
+			recoveryLink := testhelpers.CourierExpectLinkInMessage(t, message, 1)
+
+			cl := testhelpers.NewClientWithCookies(t)
+			cl.CheckRedirect = func(req *http.Request, via []*http.Request) error {
+				return http.ErrUseLastResponse
+			}
+			res, err := cl.Get(recoveryLink)
+			require.NoError(t, err)
+			require.NoError(t, res.Body.Close())
+			assert.Equal(t, http.StatusSeeOther, res.StatusCode)
+			require.Len(t, cl.Jar.Cookies(urlx.ParseOrPanic(public.URL)), 2)
+			cookies := spew.Sdump(cl.Jar.Cookies(urlx.ParseOrPanic(public.URL)))
+			assert.Contains(t, cookies, "ory_kratos_session")
+
+			actualSession, err := reg.SessionPersister().GetSession(context.Background(), sess.ID)
+			require.NoError(t, err)
+			assert.False(t, actualSession.IsActive())
 		}
 
 		var values = func(v url.Values) {

@@ -3,3 +3,5 @@ config:
   url: https://foo/bar
   method: POST
   body: base64://asdf
+  response:
+    ignore: false

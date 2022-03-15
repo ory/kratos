@@ -17,7 +17,7 @@ func CreateSession(t *testing.T, reg driver.Registry) *session.Session {
 	ctx := context.Background()
 	i := identity.NewIdentity(config.DefaultIdentityTraitsSchemaID)
 	require.NoError(t, reg.PrivilegedIdentityPool().CreateIdentity(ctx, i))
-	sess, err := session.NewActiveSession(i, reg.Config(ctx), time.Now().UTC(), identity.CredentialsTypePassword)
+	sess, err := session.NewActiveSession(i, reg.Config(ctx), time.Now().UTC(), identity.CredentialsTypePassword, identity.AuthenticatorAssuranceLevel1)
 	require.NoError(t, err)
 	require.NoError(t, reg.SessionPersister().UpsertSession(ctx, sess))
 	return sess

@@ -7,6 +7,10 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/ory/kratos/selfservice/flowhelpers"
+
+	"github.com/ory/x/stringsx"
+
 	"github.com/gofrs/uuid"
 
 	"github.com/ory/kratos/session"
@@ -32,7 +36,7 @@ func (s *Strategy) RegisterLoginRoutes(r *x.RouterPublic) {
 func (s *Strategy) handleLoginError(w http.ResponseWriter, r *http.Request, f *login.Flow, payload *submitSelfServiceLoginFlowWithPasswordMethodBody, err error) error {
 	if f != nil {
 		f.UI.Nodes.ResetNodes("password")
-		f.UI.Nodes.SetValueAttribute("password_identifier", payload.Identifier)
+		f.UI.Nodes.SetValueAttribute("identifier", stringsx.Coalesce(payload.Identifier, payload.LegacyIdentifier))
 		if f.Type == flow.TypeBrowser {
 			f.UI.SetCSRF(s.d.GenerateCSRFToken(r))
 		}
@@ -62,13 +66,13 @@ func (s *Strategy) Login(w http.ResponseWriter, r *http.Request, f *login.Flow, 
 		return nil, s.handleLoginError(w, r, f, &p, err)
 	}
 
-	i, c, err := s.d.PrivilegedIdentityPool().FindByCredentialsIdentifier(r.Context(), s.ID(), p.Identifier)
+	i, c, err := s.d.PrivilegedIdentityPool().FindByCredentialsIdentifier(r.Context(), s.ID(), stringsx.Coalesce(p.Identifier, p.LegacyIdentifier))
 	if err != nil {
 		time.Sleep(x.RandomDelay(s.d.Config(r.Context()).HasherArgon2().ExpectedDuration, s.d.Config(r.Context()).HasherArgon2().ExpectedDeviation))
 		return nil, s.handleLoginError(w, r, f, &p, errors.WithStack(schema.NewInvalidCredentialsError()))
 	}
 
-	var o CredentialsConfig
+	var o identity.CredentialsPassword
 	d := json.NewDecoder(bytes.NewBuffer(c.Config))
 	if err := d.Decode(&o); err != nil {
 		return nil, herodot.ErrInternalServerError.WithReason("The password credentials could not be decoded properly").WithDebug(err.Error()).WithWrap(err)
@@ -79,9 +83,6 @@ func (s *Strategy) Login(w http.ResponseWriter, r *http.Request, f *login.Flow, 
 	}
 
 	if !s.d.Hasher().Understands([]byte(o.HashedPassword)) {
-		// Migrate password hash if not configured hasher.
-		// But Kratos doesn't have ability to import credentials now.
-		// see https://github.com/ory/kratos/issues/605
 		if err := s.migratePasswordHash(r.Context(), i.ID, []byte(p.Password)); err != nil {
 			return nil, s.handleLoginError(w, r, f, &p, err)
 		}
@@ -101,7 +102,7 @@ func (s *Strategy) migratePasswordHash(ctx context.Context, identifier uuid.UUID
 	if err != nil {
 		return err
 	}
-	co, err := json.Marshal(&CredentialsConfig{HashedPassword: string(hpw)})
+	co, err := json.Marshal(&identity.CredentialsPassword{HashedPassword: string(hpw)})
 	if err != nil {
 		return errors.Wrap(err, "unable to encode password configuration to JSON")
 	}
@@ -128,24 +129,27 @@ func (s *Strategy) PopulateLoginMethod(r *http.Request, requestedAAL identity.Au
 		return nil
 	}
 
-	// This block adds the identifier to the method when the request is forced - as a hint for the user.
-	var identifier string
-	if !sr.IsForced() {
-		// do nothing
-	} else if sess, err := s.d.SessionManager().FetchFromRequest(r.Context(), r); err != nil {
-		// do nothing
-	} else if id, err := s.d.PrivilegedIdentityPool().GetIdentityConfidential(r.Context(), sess.IdentityID); err != nil {
-		// do nothing
-	} else if creds, ok := id.GetCredentials(s.ID()); !ok {
-		// do nothing
-	} else if len(creds.Identifiers) == 0 {
-		// do nothing
+	if sr.IsForced() {
+		// We only show this method on a refresh request if the user has indeed a password set.
+		identifier, id, _ := flowhelpers.GuessForcedLoginIdentifier(r, s.d, sr, s.ID())
+		if identifier == "" {
+			return nil
+		}
+
+		count, err := s.CountActiveFirstFactorCredentials(id.Credentials)
+		if err != nil {
+			return err
+		} else if count == 0 {
+			return nil
+		}
+
+		sr.UI.SetCSRF(s.d.GenerateCSRFToken(r))
+		sr.UI.SetNode(node.NewInputField("identifier", identifier, node.DefaultGroup, node.InputAttributeTypeHidden))
 	} else {
-		identifier = creds.Identifiers[0]
+		sr.UI.SetNode(node.NewInputField("identifier", "", node.DefaultGroup, node.InputAttributeTypeText, node.WithRequiredInputAttribute).WithMetaLabel(text.NewInfoNodeLabelID()))
 	}
 
 	sr.UI.SetCSRF(s.d.GenerateCSRFToken(r))
-	sr.UI.SetNode(node.NewInputField("password_identifier", identifier, node.PasswordGroup, node.InputAttributeTypeText, node.WithRequiredInputAttribute).WithMetaLabel(text.NewInfoNodeLabelID()))
 	sr.UI.SetNode(NewPasswordNode("password"))
 	sr.UI.GetNodes().Append(node.NewInputField("method", "password", node.PasswordGroup, node.InputAttributeTypeSubmit).WithMetaLabel(text.NewInfoLogin()))
 

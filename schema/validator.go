@@ -2,6 +2,7 @@ package schema
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"sync"
 
@@ -35,6 +36,7 @@ func WithExtensionRunner(e *ExtensionRunner) func(*validatorOptions) {
 }
 
 func (v *Validator) Validate(
+	ctx context.Context,
 	href string,
 	document json.RawMessage,
 	opts ...func(*validatorOptions),
@@ -45,7 +47,7 @@ func (v *Validator) Validate(
 	}
 
 	compiler := jsonschema.NewCompiler()
-	resource, err := jsonschema.LoadURL(href)
+	resource, err := jsonschema.LoadURL(ctx, href)
 	if err != nil {
 		return errors.WithStack(herodot.ErrInternalServerError.WithReasonf("Unable to parse validate JSON object against JSON schema.").WithDebugf("%s", err))
 	}
@@ -58,7 +60,7 @@ func (v *Validator) Validate(
 		return errors.WithStack(herodot.ErrInternalServerError.WithReasonf("Unable to parse validate JSON object against JSON schema.").WithDebugf("%s", err))
 	}
 
-	schema, err := compiler.Compile(href)
+	schema, err := compiler.Compile(ctx, href)
 	if err != nil {
 		return errors.WithStack(herodot.ErrInternalServerError.WithReasonf("Unable to parse validate JSON object against JSON schema.").WithDebugf("%s", err))
 	}

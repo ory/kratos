@@ -114,6 +114,7 @@ func NewHTTPClientWithArbitrarySessionToken(t *testing.T, reg *driver.RegistryDe
 		NewSessionLifespanProvider(time.Hour),
 		time.Now(),
 		identity.CredentialsTypePassword,
+		identity.AuthenticatorAssuranceLevel1,
 	)
 	require.NoError(t, err, "Could not initialize session from identity.")
 
@@ -126,6 +127,7 @@ func NewHTTPClientWithArbitrarySessionCookie(t *testing.T, reg *driver.RegistryD
 		NewSessionLifespanProvider(time.Hour),
 		time.Now(),
 		identity.CredentialsTypePassword,
+		identity.AuthenticatorAssuranceLevel1,
 	)
 	require.NoError(t, err, "Could not initialize session from identity.")
 
@@ -138,6 +140,7 @@ func NewNoRedirectHTTPClientWithArbitrarySessionCookie(t *testing.T, reg *driver
 		NewSessionLifespanProvider(time.Hour),
 		time.Now(),
 		identity.CredentialsTypePassword,
+		identity.AuthenticatorAssuranceLevel1,
 	)
 	require.NoError(t, err, "Could not initialize session from identity.")
 
@@ -145,14 +148,24 @@ func NewNoRedirectHTTPClientWithArbitrarySessionCookie(t *testing.T, reg *driver
 }
 
 func NewHTTPClientWithIdentitySessionCookie(t *testing.T, reg *driver.RegistryDefault, id *identity.Identity) *http.Client {
-	s, err := session.NewActiveSession(id, NewSessionLifespanProvider(time.Hour), time.Now(), identity.CredentialsTypePassword)
+	s, err := session.NewActiveSession(id,
+		NewSessionLifespanProvider(time.Hour),
+		time.Now(),
+		identity.CredentialsTypePassword,
+		identity.AuthenticatorAssuranceLevel1,
+	)
 	require.NoError(t, err, "Could not initialize session from identity.")
 
 	return NewHTTPClientWithSessionCookie(t, reg, s)
 }
 
 func NewHTTPClientWithIdentitySessionToken(t *testing.T, reg *driver.RegistryDefault, id *identity.Identity) *http.Client {
-	s, err := session.NewActiveSession(id, NewSessionLifespanProvider(time.Hour), time.Now(), identity.CredentialsTypePassword)
+	s, err := session.NewActiveSession(id,
+		NewSessionLifespanProvider(time.Hour),
+		time.Now(),
+		identity.CredentialsTypePassword,
+		identity.AuthenticatorAssuranceLevel1,
+	)
 	require.NoError(t, err, "Could not initialize session from identity.")
 
 	return NewHTTPClientWithSessionToken(t, reg, s)

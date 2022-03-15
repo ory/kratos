@@ -9,7 +9,9 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"strconv"
+	"sync"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/require"
 
@@ -293,7 +295,7 @@ func TestWebHooks(t *testing.T) {
 		})
 	}
 
-	t.Run("Must error when config is erroneous", func(t *testing.T) {
+	t.Run("must error when config is erroneous", func(t *testing.T) {
 		req := &http.Request{
 			Header:     map[string][]string{"Some-Header": {"Some-Value"}},
 			RequestURI: "https://www.ory.sh/some_end_point",
@@ -307,7 +309,7 @@ func TestWebHooks(t *testing.T) {
 		assert.Error(t, err)
 	})
 
-	t.Run("Must error when template is erroneous", func(t *testing.T) {
+	t.Run("must error when template is erroneous", func(t *testing.T) {
 		ts := newServer(webHookHttpCodeEndPoint(200))
 		req := &http.Request{
 			Header:     map[string][]string{"Some-Header": {"Some-Value"}},
@@ -326,6 +328,24 @@ func TestWebHooks(t *testing.T) {
 		assert.Error(t, err)
 	})
 
+	t.Run("must not make request", func(t *testing.T) {
+		req := &http.Request{
+			Header:     map[string][]string{"Some-Header": {"Some-Value"}},
+			RequestURI: "https://www.ory.sh/some_end_point",
+			Method:     http.MethodPost,
+		}
+		f := &login.Flow{ID: x.NewUUID()}
+		conf := json.RawMessage(`{
+	"url": "https://i-do-not-exist/",
+	"method": "POST",
+	"body": "./stub/cancel_template.jsonnet"
+}`)
+		wh := hook.NewWebHook(reg, conf)
+
+		err := wh.ExecuteLoginPreHook(nil, req, f)
+		assert.NoError(t, err)
+	})
+
 	boolToString := func(f bool) string {
 		if f {
 			return " not"
@@ -333,6 +353,33 @@ func TestWebHooks(t *testing.T) {
 			return ""
 		}
 	}
+
+	t.Run("ignores the response and is async", func(t *testing.T) {
+		var wg sync.WaitGroup
+		wg.Add(1)
+		waitTime := time.Millisecond * 100
+		ts := newServer(func(w http.ResponseWriter, _ *http.Request, _ httprouter.Params) {
+			defer wg.Done()
+			time.Sleep(waitTime)
+			w.WriteHeader(http.StatusBadRequest)
+		})
+
+		req := &http.Request{
+			Header:     map[string][]string{"Some-Header": {"Some-Value"}},
+			RequestURI: "https://www.ory.sh/some_end_point",
+			Method:     http.MethodPost,
+		}
+		f := &login.Flow{ID: x.NewUUID()}
+		conf := json.RawMessage(fmt.Sprintf(`{"url": "%s", "method": "GET", "body": "./stub/test_body.jsonnet", "response": {"ignore": true}}`, ts.URL+path))
+		wh := hook.NewWebHook(reg, conf)
+
+		start := time.Now()
+		err := wh.ExecuteLoginPreHook(nil, req, f)
+		assert.NoError(t, err)
+		assert.True(t, time.Since(start) < waitTime)
+
+		wg.Wait()
+	})
 
 	for _, tc := range []struct {
 		code        int
@@ -383,12 +430,33 @@ func TestDisallowPrivateIPRanges(t *testing.T) {
 	}
 	s := &session.Session{ID: x.NewUUID(), Identity: &identity.Identity{ID: x.NewUUID()}}
 	f := &login.Flow{ID: x.NewUUID()}
-	wh := hook.NewWebHook(reg, json.RawMessage(`{
+
+	t.Run("not allowed to call url", func(t *testing.T) {
+		wh := hook.NewWebHook(reg, json.RawMessage(`{
   "url": "https://localhost:1234/",
   "method": "GET",
   "body": "file://stub/test_body.jsonnet"
 }`))
-	err := wh.ExecuteLoginPostHook(nil, req, f, s)
-	require.Error(t, err)
-	require.Contains(t, err.Error(), "ip 127.0.0.1 is in the 127.0.0.0/8 range")
+		err := wh.ExecuteLoginPostHook(nil, req, f, s)
+		require.Error(t, err)
+		require.Contains(t, err.Error(), "ip 127.0.0.1 is in the 127.0.0.0/8 range")
+
+	})
+	t.Run("not allowed to load from source", func(t *testing.T) {
+		req := &http.Request{
+			Header:     map[string][]string{"Some-Header": {"Some-Value"}},
+			RequestURI: "https://www.ory.sh/some_end_point",
+			Method:     http.MethodPost,
+		}
+		s := &session.Session{ID: x.NewUUID(), Identity: &identity.Identity{ID: x.NewUUID()}}
+		f := &login.Flow{ID: x.NewUUID()}
+		wh := hook.NewWebHook(reg, json.RawMessage(`{
+  "url": "https://www.google.com/",
+  "method": "GET",
+  "body": "http://192.168.178.0/test_body.jsonnet"
+}`))
+		err := wh.ExecuteLoginPostHook(nil, req, f, s)
+		require.Error(t, err)
+		require.Contains(t, err.Error(), "ip 192.168.178.0 is in the 192.168.0.0/16 range")
+	})
 }

@@ -4,13 +4,11 @@ includes:
 
 variables:
   brew_name: kratos
-
-  brew_description: "The Ory Kratos Identity Platform"
-
+  brew_description: "The Ory Identity Platform (Ory Kratos)"
   buildinfo_hash: "github.com/ory/kratos/driver/config.Commit"
   buildinfo_tag: "github.com/ory/kratos/driver/config.Version"
   buildinfo_date: "github.com/ory/kratos/driver/config.Date"
-  dockerfile: ".docker/Dockerfile"
+  dockerfile: ".docker/Dockerfile-alpine"
 
 project_name: kratos
 

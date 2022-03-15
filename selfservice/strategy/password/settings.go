@@ -94,6 +94,7 @@ func (s *Strategy) decodeSettingsFlow(r *http.Request, dest interface{}) error {
 	}
 
 	return decoderx.NewHTTP().Decode(r, dest, compiler,
+		decoderx.HTTPDecoderAllowedMethods("POST", "GET"),
 		decoderx.HTTPDecoderSetValidatePayloads(true),
 		decoderx.HTTPDecoderJSONFollowsFormFormat(),
 	)
@@ -124,7 +125,7 @@ func (s *Strategy) continueSettingsFlow(
 		return err
 	}
 
-	co, err := json.Marshal(&CredentialsConfig{HashedPassword: string(hpw)})
+	co, err := json.Marshal(&identity.CredentialsPassword{HashedPassword: string(hpw)})
 	if err != nil {
 		return errors.WithStack(herodot.ErrInternalServerError.WithReasonf("Unable to encode password options to JSON: %s", err))
 	}
@@ -134,19 +135,10 @@ func (s *Strategy) continueSettingsFlow(
 		return err
 	}
 
-	c, ok := i.GetCredentials(s.ID())
-	if !ok {
-		c = &identity.Credentials{Type: s.ID(),
-			// We need to insert a random identifier now...
-			Identifiers: []string{x.NewUUID().String()}}
-	}
-
-	c.Config = co
-	i.SetCredentials(s.ID(), *c)
+	i.UpsertCredentialsConfig(s.ID(), co, 0)
 	if err := s.validateCredentials(r.Context(), i, p.Password); err != nil {
 		return err
 	}
-
 	ctxUpdate.UpdateIdentity(i)
 
 	return nil

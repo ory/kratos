@@ -159,7 +159,7 @@ preLoginHook:
 		}
 	}
 
-	if err := sortNodes(f.UI.Nodes); err != nil {
+	if err := sortNodes(r.Context(), f.UI.Nodes); err != nil {
 		return nil, err
 	}
 
@@ -239,7 +239,7 @@ type initializeSelfServiceLoginFlowWithoutBrowser struct {
 //
 // This endpoint MUST ONLY be used in scenarios such as native mobile apps (React Native, Objective C, Swift, Java, ...).
 //
-// More information can be found at [Ory Kratos User Login and User Registration Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-login-user-registration).
+// More information can be found at [Ory Kratos User Login](https://www.ory.sh/docs/kratos/self-service/flows/user-login) and [User Registration Documentation](https://www.ory.sh/docs/kratos/self-service/flows/user-registration).
 //
 //     Produces:
 //     - application/json
@@ -310,7 +310,7 @@ type initializeSelfServiceLoginFlowForBrowsers struct {
 //
 // This endpoint is NOT INTENDED for clients that do not have a browser (Chrome, Firefox, ...) as cookies are needed.
 //
-// More information can be found at [Ory Kratos User Login and User Registration Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-login-user-registration).
+// More information can be found at [Ory Kratos User Login](https://www.ory.sh/docs/kratos/self-service/flows/user-login) and [User Registration Documentation](https://www.ory.sh/docs/kratos/self-service/flows/user-registration).
 //
 //     Produces:
 //     - application/json
@@ -319,7 +319,7 @@ type initializeSelfServiceLoginFlowForBrowsers struct {
 //
 //     Responses:
 //       200: selfServiceLoginFlow
-//       302: emptyResponse
+//       303: emptyResponse
 //       400: jsonError
 //       500: jsonError
 func (h *Handler) initBrowserFlow(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
@@ -327,7 +327,7 @@ func (h *Handler) initBrowserFlow(w http.ResponseWriter, r *http.Request, ps htt
 	if errors.Is(err, ErrAlreadyLoggedIn) {
 		returnTo, redirErr := x.SecureRedirectTo(r, h.d.Config(r.Context()).SelfServiceBrowserDefaultReturnTo(),
 			x.SecureRedirectAllowSelfServiceURLs(h.d.Config(r.Context()).SelfPublicURL()),
-			x.SecureRedirectAllowURLs(h.d.Config(r.Context()).SelfServiceBrowserWhitelistedReturnToDomains()),
+			x.SecureRedirectAllowURLs(h.d.Config(r.Context()).SelfServiceBrowserAllowedReturnToDomains()),
 		)
 		if redirErr != nil {
 			h.d.SelfServiceErrorManager().Forward(r.Context(), w, r, redirErr)
@@ -392,7 +392,7 @@ type getSelfServiceLoginFlow struct {
 // - `session_already_available`: The user is already signed in.
 // - `self_service_flow_expired`: The flow is expired and you should request a new one.
 //
-// More information can be found at [Ory Kratos User Login and User Registration Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-login-user-registration).
+// More information can be found at [Ory Kratos User Login](https://www.ory.sh/docs/kratos/self-service/flows/user-login) and [User Registration Documentation](https://www.ory.sh/docs/kratos/self-service/flows/user-registration).
 //
 //     Produces:
 //     - application/json
@@ -476,16 +476,16 @@ type submitSelfServiceLoginFlowBody struct{}
 //
 // API flows expect `application/json` to be sent in the body and responds with
 //   - HTTP 200 and a application/json body with the session token on success;
-//   - HTTP 302 redirect to a fresh login flow if the original flow expired with the appropriate error messages set;
+//   - HTTP 303 redirect to a fresh login flow if the original flow expired with the appropriate error messages set;
 //   - HTTP 400 on form validation errors.
 //
 // Browser flows expect a Content-Type of `application/x-www-form-urlencoded` or `application/json` to be sent in the body and respond with
-//   - a HTTP 302 redirect to the post/after login URL or the `return_to` value if it was set and if the login succeeded;
-//   - a HTTP 302 redirect to the login UI URL with the flow ID containing the validation errors otherwise.
+//   - a HTTP 303 redirect to the post/after login URL or the `return_to` value if it was set and if the login succeeded;
+//   - a HTTP 303 redirect to the login UI URL with the flow ID containing the validation errors otherwise.
 //
 // Browser flows with an accept header of `application/json` will not redirect but instead respond with
 //   - HTTP 200 and a application/json body with the signed in identity and a `Set-Cookie` header on success;
-//   - HTTP 302 redirect to a fresh login flow if the original flow expired with the appropriate error messages set;
+//   - HTTP 303 redirect to a fresh login flow if the original flow expired with the appropriate error messages set;
 //   - HTTP 400 on form validation errors.
 //
 // If this endpoint is called with `Accept: application/json` in the header, the response contains the flow without a redirect. In the
@@ -497,7 +497,7 @@ type submitSelfServiceLoginFlowBody struct{}
 // - `browser_location_change_required`: Usually sent when an AJAX request indicates that the browser needs to open a specific URL.
 //		Most likely used in Social Sign In flows.
 //
-// More information can be found at [Ory Kratos User Login and User Registration Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-login-user-registration).
+// More information can be found at [Ory Kratos User Login](https://www.ory.sh/docs/kratos/self-service/flows/user-login) and [User Registration Documentation](https://www.ory.sh/docs/kratos/self-service/flows/user-registration).
 //
 //     Schemes: http, https
 //
@@ -513,7 +513,7 @@ type submitSelfServiceLoginFlowBody struct{}
 //
 //     Responses:
 //       200: successfulSelfServiceLoginWithoutBrowser
-//       302: emptyResponse
+//       303: emptyResponse
 //       400: selfServiceLoginFlow
 //       422: selfServiceBrowserLocationChangeRequiredError
 //       500: jsonError
@@ -588,7 +588,8 @@ continueLogin:
 			sess = session.NewInactiveSession()
 		}
 
-		sess.CompletedLoginFor(ss.ID())
+		method := ss.CompletedAuthenticationMethod(r.Context())
+		sess.CompletedLoginFor(method.Method, method.AAL)
 		i = interim
 		break
 	}

@@ -6,6 +6,8 @@ import (
 	"encoding/base64"
 	"fmt"
 
+	"github.com/ory/x/stringsx"
+
 	"github.com/ory/kratos/text"
 	"github.com/ory/kratos/ui/node"
 )
@@ -14,8 +16,7 @@ func NewWebAuthnConnectionTrigger(options string) *node.Node {
 	return node.NewInputField(node.WebAuthnRegisterTrigger, "", node.WebAuthnGroup,
 		node.InputAttributeTypeButton, node.WithInputAttributes(func(a *node.InputAttributes) {
 			a.OnClick = "window.__oryWebAuthnRegistration(" + options + ")"
-		})).
-		WithMetaLabel(text.NewInfoSelfServiceRegisterWebAuthn())
+		}))
 }
 
 func NewWebAuthnScript(src string, contents []byte) *node.Node {
@@ -32,8 +33,7 @@ func NewWebAuthnLoginTrigger(options string) *node.Node {
 	return node.NewInputField(node.WebAuthnLoginTrigger, "", node.WebAuthnGroup,
 		node.InputAttributeTypeButton, node.WithInputAttributes(func(a *node.InputAttributes) {
 			a.OnClick = "window.__oryWebAuthnLogin(" + options + ")"
-		})).
-		WithMetaLabel(text.NewInfoSelfServiceLoginWebAuthn())
+		}))
 }
 
 func NewWebAuthnLoginInput() *node.Node {
@@ -49,5 +49,5 @@ func NewWebAuthnConnectionName() *node.Node {
 func NewWebAuthnUnlink(c *Credential) *node.Node {
 	return node.NewInputField(node.WebAuthnRemove, fmt.Sprintf("%x", c.ID), node.WebAuthnGroup,
 		node.InputAttributeTypeSubmit).
-		WithMetaLabel(text.NewInfoSelfServiceRemoveWebAuthn(c.DisplayName, c.AddedAt))
+		WithMetaLabel(text.NewInfoSelfServiceRemoveWebAuthn(stringsx.Coalesce(c.DisplayName, "unnamed"), c.AddedAt))
 }

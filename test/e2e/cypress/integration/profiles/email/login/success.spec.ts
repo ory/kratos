@@ -33,7 +33,7 @@ describe('Basic email profile with succeeding login flows', () => {
       })
 
       it('should sign in and be logged in', () => {
-        cy.get(`${appPrefix(app)}input[name="password_identifier"]`).type(email)
+        cy.get(`${appPrefix(app)}input[name="identifier"]`).type(email)
         cy.get('input[name="password"]').type(password)
         cy.submitPasswordForm()
         cy.location('pathname').should('not.contain', '/login')
@@ -42,14 +42,14 @@ describe('Basic email profile with succeeding login flows', () => {
           const { identity } = session
           expect(identity.id).to.not.be.empty
           expect(identity.schema_id).to.equal('default')
-          expect(identity.schema_url).to.equal(`${APP_URL}/schemas/default`)
+          expect(identity.schema_url).to.equal(`${APP_URL}/schemas/ZGVmYXVsdA`)
           expect(identity.traits.website).to.equal(website)
           expect(identity.traits.email).to.equal(email)
         })
       })
 
       it('should sign in with case insensitive identifier surrounded by whitespace', () => {
-        cy.get('input[name="password_identifier"]').type(
+        cy.get('input[name="identifier"]').type(
           '  ' + email.toUpperCase() + '  '
         )
         cy.get('input[name="password"]').type(password)
@@ -60,7 +60,7 @@ describe('Basic email profile with succeeding login flows', () => {
           const { identity } = session
           expect(identity.id).to.not.be.empty
           expect(identity.schema_id).to.equal('default')
-          expect(identity.schema_url).to.equal(`${APP_URL}/schemas/default`)
+          expect(identity.schema_url).to.equal(`${APP_URL}/schemas/ZGVmYXVsdA`)
           expect(identity.traits.website).to.equal(website)
           expect(identity.traits.email).to.equal(email)
         })
@@ -70,7 +70,7 @@ describe('Basic email profile with succeeding login flows', () => {
         cy.browserReturnUrlOry()
         cy.visit(route + '?return_to=https://www.ory.sh/')
 
-        cy.get('input[name="password_identifier"]').type(email.toUpperCase())
+        cy.get('input[name="identifier"]').type(email.toUpperCase())
         cy.get('input[name="password"]').type(password)
         cy.submitPasswordForm()
 
@@ -99,7 +99,7 @@ describe('Basic email profile with succeeding login flows', () => {
 
       cy.longLoginLifespan()
 
-      cy.get(appPrefix('express') + 'input[name="password_identifier"]').type(
+      cy.get(appPrefix('express') + 'input[name="identifier"]').type(
         email.toUpperCase()
       )
       cy.get('input[name="password"]').type(password)
@@ -111,7 +111,7 @@ describe('Basic email profile with succeeding login flows', () => {
       )
 
       // try again with long lifespan set
-      cy.get('input[name="password_identifier"]').type(email.toUpperCase())
+      cy.get('input[name="identifier"]').type(email.toUpperCase())
       cy.get('input[name="password"]').type(password)
       cy.submitPasswordForm()
 

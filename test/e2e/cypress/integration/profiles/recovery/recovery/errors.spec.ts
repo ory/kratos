@@ -1,4 +1,4 @@
-import { appPrefix, gen, parseHtml } from '../../../../helpers'
+import { APP_URL, appPrefix, gen, parseHtml } from '../../../../helpers'
 import { routes as react } from '../../../../helpers/react'
 import { routes as express } from '../../../../helpers/express'
 
@@ -28,6 +28,56 @@ context('Account Recovery Errors', () => {
         cy.longLinkLifespan()
         cy.disableVerification()
         cy.enableRecovery()
+      })
+
+      it('responds with a HTML response on link click of an API flow if the link is expired', () => {
+        cy.visit(recovery)
+
+        cy.shortLinkLifespan()
+
+        const identity = gen.identityWithWebsite()
+        cy.registerApi(identity)
+        cy.recoverApi({ email: identity.email })
+        cy.recoverEmailButExpired({ expect: { email: identity.email } })
+
+        cy.get('[data-testid="ui/message/4060005"]').should(
+          'contain.text',
+          'The recovery flow expired'
+        )
+
+        cy.noSession()
+      })
+
+      it('responds with a HTML response on link click of an API flow if the flow is expired', () => {
+        cy.visit(recovery)
+
+        cy.updateConfigFile((config) => {
+          config.selfservice.flows.recovery.lifespan = '1s'
+          return config
+        })
+
+        const identity = gen.identityWithWebsite()
+        cy.registerApi(identity)
+        cy.recoverApi({ email: identity.email })
+        cy.wait(1000)
+
+        cy.getMail().should((message) => {
+          expect(message.subject.trim()).to.equal(
+            'Recover access to your account'
+          )
+          expect(message.toAddresses[0].trim()).to.equal(identity.email)
+
+          const link = parseHtml(message.body).querySelector('a')
+          cy.longRecoveryLifespan()
+          cy.visit(link.href)
+        })
+
+        cy.get('[data-testid="ui/message/4060005"]').should(
+          'contain.text',
+          'The recovery flow expired'
+        )
+
+        cy.noSession()
       })
 
       it('should receive a stub email when recovering a non-existent account', () => {
@@ -120,6 +170,18 @@ context('Account Recovery Errors', () => {
             'The recovery token is invalid or has already been used. Please retry the flow.'
           )
           cy.noSession()
+        })
+      })
+
+      it('invalid remote recovery email template', () => {
+        cy.remoteCourierRecoveryTemplates()
+        const identity = gen.identityWithWebsite()
+        cy.recoverApi({ email: identity.email })
+
+        cy.getMail().then((mail) => {
+          expect(mail.body).to.include(
+            'this is a remote invalid recovery template'
+          )
         })
       })
     })

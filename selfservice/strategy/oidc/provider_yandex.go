@@ -3,27 +3,28 @@ package oidc
 import (
 	"context"
 	"encoding/json"
-	"net/http"
-	"net/url"
 
+	"github.com/hashicorp/go-retryablehttp"
 	"github.com/pkg/errors"
 	"golang.org/x/oauth2"
+
+	"github.com/ory/x/httpx"
 
 	"github.com/ory/herodot"
 )
 
 type ProviderYandex struct {
 	config *Configuration
-	public *url.URL
+	reg    dependencies
 }
 
 func NewProviderYandex(
 	config *Configuration,
-	public *url.URL,
+	reg dependencies,
 ) *ProviderYandex {
 	return &ProviderYandex{
 		config: config,
-		public: public,
+		reg:    reg,
 	}
 }
 
@@ -31,7 +32,7 @@ func (g *ProviderYandex) Config() *Configuration {
 	return g.config
 }
 
-func (g *ProviderYandex) oauth2() *oauth2.Config {
+func (g *ProviderYandex) oauth2(ctx context.Context) *oauth2.Config {
 	return &oauth2.Config{
 		ClientID:     g.config.ClientID,
 		ClientSecret: g.config.ClientSecret,
@@ -40,7 +41,7 @@ func (g *ProviderYandex) oauth2() *oauth2.Config {
 			TokenURL: "https://oauth.yandex.com/token",
 		},
 		Scopes:      g.config.Scope,
-		RedirectURL: g.config.Redir(g.public),
+		RedirectURL: g.config.Redir(g.reg.Config(ctx).OIDCRedirectURIBase()),
 	}
 }
 
@@ -49,7 +50,7 @@ func (g *ProviderYandex) AuthCodeURLOptions(r ider) []oauth2.AuthCodeOption {
 }
 
 func (g *ProviderYandex) OAuth2(ctx context.Context) (*oauth2.Config, error) {
-	return g.oauth2(), nil
+	return g.oauth2(ctx), nil
 }
 
 func (g *ProviderYandex) Claims(ctx context.Context, exchange *oauth2.Token) (*Claims, error) {
@@ -58,13 +59,8 @@ func (g *ProviderYandex) Claims(ctx context.Context, exchange *oauth2.Token) (*C
 		return nil, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("%s", err))
 	}
 
-	client := o.Client(ctx, exchange)
-
-	u, err := url.Parse("https://login.yandex.ru/info?format=json&oauth_token=" + exchange.AccessToken)
-	if err != nil {
-		return nil, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("%s", err))
-	}
-	req, err := http.NewRequest("GET", u.String(), nil)
+	client := g.reg.HTTPClient(ctx, httpx.ResilientClientDisallowInternalIPs(), httpx.ResilientClientWithClient(o.Client(ctx, exchange)))
+	req, err := retryablehttp.NewRequest("GET", "https://login.yandex.ru/info?format=json&oauth_token="+exchange.AccessToken, nil)
 	if err != nil {
 		return nil, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("%s", err))
 	}
@@ -97,7 +93,7 @@ func (g *ProviderYandex) Claims(ctx context.Context, exchange *oauth2.Token) (*C
 	}
 
 	return &Claims{
-		Issuer:     u.String(),
+		Issuer:     "https://login.yandex.ru/info",
 		Subject:    user.Id,
 		GivenName:  user.FirstName,
 		FamilyName: user.LastName,

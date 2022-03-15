@@ -66,13 +66,20 @@ context('Settings failures with email profile', () => {
         })
 
         it('fails because reauth is another person', () => {
+          // Force this because it is hidden
           cy.get('input[name="traits.email"]').clear().type(up(email))
           cy.shortPrivilegedSessionTime()
-          cy.get('button[value="profile"]').click()
 
-          cy.reauth({
-            expect: { email },
-            type: { email: emailSecond, password: passwordSecond }
+          cy.location().then((loc) => {
+            cy.get('button[value="profile"]').click()
+
+            cy.reauthWithOtherAccount({
+              previousUrl: loc.toString(),
+              expect: { email },
+              type: { email: emailSecond, password: passwordSecond }
+            })
+
+            cy.location('pathname').should('contain', '/settings')
           })
 
           // We end up in a new settings flow for the second user
@@ -158,6 +165,7 @@ context('Settings failures with email profile', () => {
         })
 
         it('fails because reauth is another person', () => {
+          cy.shortPrivilegedSessionTime() // wait for the privileged session to time out
           cy.get('input[name="password"]').clear().type(up(password))
 
           let firstSession
@@ -165,12 +173,16 @@ context('Settings failures with email profile', () => {
             firstSession = session
           })
 
-          cy.shortPrivilegedSessionTime() // wait for the privileged session to time out
-          cy.get('button[value="password"]').click()
+          cy.location().then((loc) => {
+            cy.get('button[value="password"]').click()
 
-          cy.reauth({
-            expect: { email },
-            type: { email: emailSecond, password: passwordSecond }
+            cy.reauthWithOtherAccount({
+              previousUrl: loc.toString(),
+              expect: { email },
+              type: { email: emailSecond, password: passwordSecond }
+            })
+
+            cy.location('pathname').should('contain', '/settings')
           })
 
           // We want to ensure that the reauth session is completely different from the one we had in the first place.
