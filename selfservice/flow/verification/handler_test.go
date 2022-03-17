@@ -85,9 +85,9 @@ func TestGetFlow(t *testing.T) {
 	})
 
 	t.Run("case=valid with return_to", func(t *testing.T) {
-		t.Run("type=browser", func(t *testing.T) {
-			conf.MustSet(config.ViperKeyURLsAllowedReturnToDomains, []string{"https://www.ory.sh/"})
+		conf.MustSet(config.ViperKeyURLsAllowedReturnToDomains, []string{"https://www.ory.sh/"})
 
+		t.Run("type=browser", func(t *testing.T) {
 			client := testhelpers.NewClientWithCookies(t)
 			_ = setupVerificationUI(t, client)
 			res, body := x.EasyGet(t, client, public.URL+verification.RouteInitBrowserFlow+"?return_to=https://www.ory.sh")
@@ -97,8 +97,6 @@ func TestGetFlow(t *testing.T) {
 		})
 
 		t.Run("type=spa", func(t *testing.T) {
-			conf.MustSet(config.ViperKeyURLsAllowedReturnToDomains, []string{"https://www.ory.sh/"})
-
 			client := testhelpers.NewClientWithCookies(t)
 			_ = setupVerificationUI(t, client)
 			res, body := x.EasyGetJSON(t, client, public.URL+verification.RouteInitBrowserFlow+"?return_to=https://www.ory.sh")
@@ -108,8 +106,6 @@ func TestGetFlow(t *testing.T) {
 		})
 
 		t.Run("type=api", func(t *testing.T) {
-			conf.MustSet(config.ViperKeyURLsAllowedReturnToDomains, []string{"https://www.ory.sh/"})
-
 			client := testhelpers.NewClientWithCookies(t)
 			_ = setupVerificationUI(t, client)
 			res, body := x.EasyGet(t, client, public.URL+verification.RouteInitAPIFlow+"?return_to=https://www.ory.sh")
