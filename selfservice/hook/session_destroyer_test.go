@@ -5,6 +5,8 @@ import (
 	"net/http"
 	"testing"
 
+	"github.com/ory/kratos/internal/testhelpers"
+
 	"github.com/ory/kratos/corpx"
 	"github.com/ory/kratos/ui/node"
 
@@ -19,7 +21,6 @@ import (
 	"github.com/ory/kratos/internal"
 	"github.com/ory/kratos/selfservice/hook"
 	"github.com/ory/kratos/session"
-	"github.com/ory/x/sqlcon"
 )
 
 func init() {
@@ -30,37 +31,69 @@ func TestSessionDestroyer(t *testing.T) {
 	conf, reg := internal.NewFastRegistryWithMocks(t)
 
 	conf.MustSet(config.ViperKeyPublicBaseURL, "http://localhost/")
-	conf.MustSet(config.ViperKeyDefaultIdentitySchemaURL, "file://./stub/stub.schema.json")
+	testhelpers.SetDefaultIdentitySchema(conf, "file://./stub/stub.schema.json")
 
 	h := hook.NewSessionDestroyer(reg)
 
-	t.Run("method=ExecuteLoginPostHook", func(t *testing.T) {
-		var i identity.Identity
-		require.NoError(t, faker.FakeData(&i))
-		require.NoError(t, reg.PrivilegedIdentityPool().CreateIdentity(context.Background(), &i))
+	for _, tc := range []struct {
+		name string
+		hook func(*identity.Identity) error
+	}{
+		{
+			name: "ExecuteLoginPostHook",
+			hook: func(i *identity.Identity) error {
+				return h.ExecuteLoginPostHook(
+					httptest.NewRecorder(),
+					new(http.Request),
+					node.DefaultGroup,
+					nil,
+					&session.Session{Identity: i},
+				)
+			},
+		},
+		{
+			name: "ExecutePostRecoveryHook",
+			hook: func(i *identity.Identity) error {
+				return h.ExecutePostRecoveryHook(
+					httptest.NewRecorder(),
+					new(http.Request),
+					nil,
+					&session.Session{Identity: i},
+				)
+			},
+		},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			var i identity.Identity
+			require.NoError(t, faker.FakeData(&i))
+			require.NoError(t, reg.PrivilegedIdentityPool().CreateIdentity(context.Background(), &i))
 
-		sessions := make([]session.Session, 5)
-		for k := range sessions {
-			s := sessions[k] // keep this for pointers' sake ;)
-			require.NoError(t, faker.FakeData(&s))
-			s.IdentityID = uuid.Nil
-			s.Identity = &i
+			sessions := make([]session.Session, 5)
+			for k := range sessions {
+				s := sessions[k] // keep this for pointers' sake ;)
+				require.NoError(t, faker.FakeData(&s))
+				s.IdentityID = uuid.Nil
+				s.Identity = &i
+				s.Active = true
 
-			require.NoError(t, reg.SessionPersister().UpsertSession(context.Background(), &s))
-		}
+				require.NoError(t, reg.SessionPersister().UpsertSession(context.Background(), &s))
+				sessions[k] = s
+			}
 
-		// Should revoke all the sessions.
-		require.NoError(t, h.ExecuteLoginPostHook(
-			httptest.NewRecorder(),
-			new(http.Request),
-			node.DefaultGroup,
-			nil,
-			&session.Session{Identity: &i},
-		))
+			for k := range sessions {
+				sess, err := reg.SessionPersister().GetSession(context.Background(), sessions[k].ID)
+				require.NoError(t, err)
+				assert.True(t, sess.IsActive())
+			}
 
-		for k := range sessions {
-			_, err := reg.SessionPersister().GetSession(context.Background(), sessions[k].ID)
-			assert.EqualError(t, err, sqlcon.ErrNoRows.Error())
-		}
-	})
+			// Should revoke all the sessions.
+			require.NoError(t, tc.hook(&i))
+
+			for k := range sessions {
+				sess, err := reg.SessionPersister().GetSession(context.Background(), sessions[k].ID)
+				require.NoError(t, err)
+				assert.False(t, sess.IsActive())
+			}
+		})
+	}
 }

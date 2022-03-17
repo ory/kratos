@@ -4,6 +4,7 @@
 
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
+**Aal** | Pointer to [**AuthenticatorAssuranceLevel**](AuthenticatorAssuranceLevel.md) |  | [optional] 
 **CompletedAt** | Pointer to **time.Time** | When the authentication challenge was completed. | [optional] 
 **Method** | Pointer to **string** |  | [optional] 
 
@@ -25,6 +26,31 @@ will change when the set of required properties is changed
 NewSessionAuthenticationMethodWithDefaults instantiates a new SessionAuthenticationMethod object
 This constructor will only assign default values to properties that have it defined,
 but it doesn't guarantee that properties required by API are set
+
+### GetAal
+
+`func (o *SessionAuthenticationMethod) GetAal() AuthenticatorAssuranceLevel`
+
+GetAal returns the Aal field if non-nil, zero value otherwise.
+
+### GetAalOk
+
+`func (o *SessionAuthenticationMethod) GetAalOk() (*AuthenticatorAssuranceLevel, bool)`
+
+GetAalOk returns a tuple with the Aal field if it's non-nil, zero value otherwise
+and a boolean to check if the value has been set.
+
+### SetAal
+
+`func (o *SessionAuthenticationMethod) SetAal(v AuthenticatorAssuranceLevel)`
+
+SetAal sets Aal field to given value.
+
+### HasAal
+
+`func (o *SessionAuthenticationMethod) HasAal() bool`
+
+HasAal returns a boolean if a field has been set.
 
 ### GetCompletedAt
 

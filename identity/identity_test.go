@@ -29,6 +29,30 @@ func TestNewIdentity(t *testing.T) {
 	assert.True(t, i.IsActive())
 }
 
+func TestIdentityCredentialsOr(t *testing.T) {
+	i := NewIdentity(config.DefaultIdentityTraitsSchemaID)
+	i.Credentials = nil
+
+	expected := &Credentials{ID: x.NewUUID(), Type: CredentialsTypePassword}
+	assert.Equal(t, expected, i.GetCredentialsOr(CredentialsTypePassword, expected))
+
+	expected = &Credentials{ID: x.NewUUID(), Type: CredentialsTypeWebAuthn}
+	i.SetCredentials(CredentialsTypeWebAuthn, *expected)
+
+	assert.Equal(t, expected, i.GetCredentialsOr(CredentialsTypeWebAuthn, nil))
+}
+
+func TestIdentityCredentialsOrCreate(t *testing.T) {
+	i := NewIdentity(config.DefaultIdentityTraitsSchemaID)
+	i.Credentials = nil
+
+	expected := &Credentials{Config: []byte("true"), IdentityID: i.ID, Type: CredentialsTypePassword}
+	i.UpsertCredentialsConfig(CredentialsTypePassword, []byte("true"), 0)
+	actual, ok := i.GetCredentials(CredentialsTypePassword)
+	assert.True(t, ok)
+	assert.Equal(t, expected, actual)
+}
+
 func TestIdentityCredentials(t *testing.T) {
 	i := NewIdentity(config.DefaultIdentityTraitsSchemaID)
 	i.Credentials = nil
@@ -134,7 +158,7 @@ func TestMarshalIdentityWithCredentials(t *testing.T) {
 	credentialsInJson := gjson.Get(b.String(), "credentials")
 	assert.True(t, credentialsInJson.Exists())
 
-	assert.JSONEq(t, "{\"password\":{\"type\":\"password\",\"identifiers\":null,\"updated_at\":\"0001-01-01T00:00:00Z\",\"created_at\":\"0001-01-01T00:00:00Z\"}}", credentialsInJson.Raw)
+	assert.JSONEq(t, "{\"password\":{\"type\":\"password\",\"identifiers\":null,\"updated_at\":\"0001-01-01T00:00:00Z\",\"created_at\":\"0001-01-01T00:00:00Z\",\"version\":0}}", credentialsInJson.Raw)
 	assert.Equal(t, credentials, i.Credentials, "Original credentials should not be touched by marshalling")
 }
 

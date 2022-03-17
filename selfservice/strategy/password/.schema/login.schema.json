@@ -2,11 +2,6 @@
   "$id": "https://schemas.ory.sh/kratos/selfservice/strategy/password/login.schema.json",
   "$schema": "http://json-schema.org/draft-07/schema#",
   "type": "object",
-  "required": [
-    "password",
-    "password_identifier",
-    "method"
-  ],
   "properties": {
     "csrf_token": {
       "type": "string"
@@ -15,12 +10,54 @@
       "type": "string",
       "minLength": 1
     },
-    "password_identifier": {
+    "identifier": {
       "type": "string",
       "minLength": 1
     },
     "method": {
       "type": "string"
     }
-  }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "method": {
+            "const": "password"
+          }
+        },
+        "required": [
+          "method"
+        ]
+      },
+      "then": {
+        "required": [
+          "password"
+        ]
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "password_identifier": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "required": [
+          "password_identifier"
+        ]
+      },
+      "then": {
+        "required": [
+          "password_identifier"
+        ]
+      },
+      "else": {
+        "required": [
+          "identifier"
+        ]
+      }
+    }
+  ]
 }

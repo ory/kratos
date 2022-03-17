@@ -12,7 +12,7 @@ serve:
 
 selfservice:
   default_browser_return_url: http://localhost:4455/ui/welcome
-  whitelisted_return_urls:
+  allowed_return_urls:
     - http://localhost:4455
 
   methods:
@@ -66,7 +66,10 @@ hashers:
     cost: 8
 
 identity:
-  default_schema_url: file:///etc/config/kratos/identity.schema.json
+  default_schema_id: preset://email
+  schemas:
+    - id: preset://email
+      url: file:///etc/config/kratos/identity.schema.json
 
 courier:
   smtp:

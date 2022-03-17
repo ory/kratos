@@ -2,11 +2,16 @@ package test
 
 import (
 	"context"
+	"encoding/base64"
 	"fmt"
 	"strconv"
 	"strings"
 	"testing"
 	"time"
+
+	"github.com/ory/x/randx"
+
+	"github.com/tidwall/gjson"
 
 	"github.com/ory/x/assertx"
 
@@ -51,11 +56,16 @@ func TestPool(ctx context.Context, conf *config.Config, p interface {
 			URL:    urlx.ParseOrPanic("file://./stub/identity-2.schema.json"),
 			RawURL: "file://./stub/identity-2.schema.json",
 		}
-		conf.MustSet(config.ViperKeyDefaultIdentitySchemaURL, defaultSchema.RawURL)
-		conf.MustSet(config.ViperKeyIdentitySchemas, []config.Schema{{
-			ID:  altSchema.ID,
-			URL: altSchema.RawURL,
-		}})
+		conf.MustSet(config.ViperKeyIdentitySchemas, []config.Schema{
+			{
+				ID:  altSchema.ID,
+				URL: altSchema.RawURL,
+			},
+			{
+				ID:  defaultSchema.ID,
+				URL: defaultSchema.RawURL,
+			},
+		})
 
 		var createdIDs []uuid.UUID
 
@@ -64,6 +74,15 @@ func TestPool(ctx context.Context, conf *config.Config, p interface {
 			i.SetCredentials(identity.CredentialsTypePassword, identity.Credentials{
 				Type: identity.CredentialsTypePassword, Identifiers: []string{credentialsID},
 				Config: sqlxx.JSONRawMessage(`{"foo":"bar"}`),
+			})
+			return i
+		}
+
+		var webAuthnIdentity = func(schemaID string, credentialsID string) *identity.Identity {
+			i := identity.NewIdentity(schemaID)
+			i.SetCredentials(identity.CredentialsTypeWebAuthn, identity.Credentials{
+				Type: identity.CredentialsTypeWebAuthn, Identifiers: []string{credentialsID},
+				Config: sqlxx.JSONRawMessage(`{"credentials":[{}]}`),
 			})
 			return i
 		}
@@ -144,6 +163,18 @@ func TestPool(ctx context.Context, conf *config.Config, p interface {
 
 			_, err = p.GetIdentityConfidential(ctx, x.NewUUID())
 			require.Error(t, err)
+		})
+
+		t.Run("case=run migrations when fetching credentials", func(t *testing.T) {
+			expected := webAuthnIdentity(altSchema.ID, "webauthn")
+			require.NoError(t, p.CreateIdentity(ctx, expected))
+			createdIDs = append(createdIDs, expected.ID)
+
+			actual, err := p.GetIdentityConfidential(ctx, expected.ID)
+			require.NoError(t, err)
+			c := actual.GetCredentialsOr(identity.CredentialsTypeWebAuthn, &identity.Credentials{})
+			assert.True(t, gjson.GetBytes(c.Config, "credentials.0.is_passwordless").Exists())
+			assert.Equal(t, base64.StdEncoding.EncodeToString(expected.ID[:]), gjson.GetBytes(c.Config, "user_handle").String())
 		})
 
 		t.Run("case=create and keep set values", func(t *testing.T) {
@@ -442,6 +473,60 @@ func TestPool(ctx context.Context, conf *config.Config, p interface {
 			})
 		})
 
+		t.Run("case=find identity by its credentials respects cases", func(t *testing.T) {
+			caseSensitive := "6Q(%ZKd~8u_(5uea@ory.sh"
+			caseInsensitiveWithSpaces := " 6Q(%ZKD~8U_(5uea@ORY.sh "
+
+			expected := identity.NewIdentity("")
+			for _, c := range []identity.CredentialsType{
+				identity.CredentialsTypePassword,
+				identity.CredentialsTypeOIDC,
+				identity.CredentialsTypeTOTP,
+				identity.CredentialsTypeLookup,
+				identity.CredentialsTypeWebAuthn,
+			} {
+				expected.SetCredentials(c, identity.Credentials{Type: c, Identifiers: []string{caseSensitive}, Config: sqlxx.JSONRawMessage(`{}`)})
+			}
+			require.NoError(t, p.CreateIdentity(ctx, expected))
+			createdIDs = append(createdIDs, expected.ID)
+
+			t.Run("case sensitive", func(t *testing.T) {
+				for _, ct := range []identity.CredentialsType{
+					identity.CredentialsTypeOIDC,
+					identity.CredentialsTypeTOTP,
+					identity.CredentialsTypeLookup,
+				} {
+					t.Run(ct.String(), func(t *testing.T) {
+						_, _, err := p.FindByCredentialsIdentifier(ctx, ct, caseInsensitiveWithSpaces)
+						require.Error(t, err)
+
+						actual, creds, err := p.FindByCredentialsIdentifier(ctx, ct, caseSensitive)
+						require.NoError(t, err)
+						assertx.EqualAsJSONExcept(t, expected.Credentials[ct], creds, []string{"created_at", "updated_at", "id"})
+						assertx.EqualAsJSONExcept(t, expected, actual, []string{"created_at", "state_changed_at", "updated_at", "id"})
+					})
+				}
+			})
+
+			t.Run("case insensitive", func(t *testing.T) {
+				for _, ct := range []identity.CredentialsType{
+					identity.CredentialsTypePassword,
+					identity.CredentialsTypeWebAuthn,
+				} {
+					t.Run(ct.String(), func(t *testing.T) {
+						for _, cs := range []string{caseSensitive, caseInsensitiveWithSpaces} {
+							actual, creds, err := p.FindByCredentialsIdentifier(ctx, ct, cs)
+							require.NoError(t, err)
+							ec := expected.Credentials[ct]
+							ec.Identifiers = []string{strings.ToLower(caseSensitive)}
+							assertx.EqualAsJSONExcept(t, ec, creds, []string{"created_at", "updated_at", "id", "config.user_handle", "config.credentials", "version"})
+							assertx.EqualAsJSONExcept(t, expected, actual, []string{"created_at", "state_changed_at", "updated_at", "id"})
+						}
+					})
+				}
+			})
+		})
+
 		t.Run("case=find identity by its credentials case insensitive", func(t *testing.T) {
 			identifier := x.NewUUID().String()
 			expected := passwordIdentity("", strings.ToUpper(identifier))
@@ -484,10 +569,25 @@ func TestPool(ctx context.Context, conf *config.Config, p interface {
 				require.Equal(t, sqlcon.ErrNoRows, errorsx.Cause(err))
 			})
 
+			transform := func(k int, value string) string {
+				switch k % 5 {
+				case 0:
+					value = strings.ToLower(value)
+				case 1:
+					value = strings.ToUpper(value)
+				case 2:
+					value = " " + value
+				case 3:
+					value = value + " "
+				}
+				return value
+			}
+
 			t.Run("case=create and find", func(t *testing.T) {
 				addresses := make([]identity.VerifiableAddress, 15)
 				for k := range addresses {
-					addresses[k] = createIdentityWithAddresses(t, "recovery.TestPersister.Create"+strconv.Itoa(k)+"@ory.sh")
+					value := randx.MustString(16, randx.AlphaLowerNum) + "@ory.sh"
+					addresses[k] = createIdentityWithAddresses(t, transform(k, value))
 					require.NotEmpty(t, addresses[k].ID)
 				}
 
@@ -496,19 +596,20 @@ func TestPool(ctx context.Context, conf *config.Config, p interface {
 					actual.UpdatedAt = actual.UpdatedAt.UTC().Truncate(time.Hour * 24)
 					expected.CreatedAt = expected.CreatedAt.UTC().Truncate(time.Hour * 24)
 					expected.UpdatedAt = expected.UpdatedAt.UTC().Truncate(time.Hour * 24)
+					expected.Value = strings.TrimSpace(strings.ToLower(expected.Value))
 					assert.EqualValues(t, expected, actual)
 				}
 
 				for k, expected := range addresses {
 					t.Run("method=FindVerifiableAddressByValue", func(t *testing.T) {
 						t.Run(fmt.Sprintf("case=%d", k), func(t *testing.T) {
-							actual, err := p.FindVerifiableAddressByValue(ctx, expected.Via, expected.Value)
+							actual, err := p.FindVerifiableAddressByValue(ctx, expected.Via, transform(k+1, expected.Value))
 							require.NoError(t, err)
 							compare(t, expected, *actual)
 
 							t.Run("not if on another network", func(t *testing.T) {
 								_, p := testhelpers.NewNetwork(t, ctx, p)
-								_, err := p.FindVerifiableAddressByValue(ctx, expected.Via, expected.Value)
+								_, err := p.FindVerifiableAddressByValue(ctx, expected.Via, transform(k+1, expected.Value))
 								require.ErrorIs(t, err, sqlcon.ErrNoRows)
 							})
 						})
@@ -517,9 +618,9 @@ func TestPool(ctx context.Context, conf *config.Config, p interface {
 			})
 
 			t.Run("case=update", func(t *testing.T) {
-				address := createIdentityWithAddresses(t, "verification.TestPersister.Update@ory.sh")
+				address := createIdentityWithAddresses(t, "verification.TestPersister.Update@ory.sh ")
 
-				address.Value = "new-code"
+				address.Value = "new-codE "
 				require.NoError(t, p.UpdateVerifiableAddress(ctx, &address))
 
 				t.Run("not if on another network", func(t *testing.T) {
@@ -565,7 +666,7 @@ func TestPool(ctx context.Context, conf *config.Config, p interface {
 				actual, err := p.FindVerifiableAddressByValue(ctx, identity.VerifiableAddressTypeEmail, "verification.TestPersister.Update-Identity-next@ory.sh")
 				require.NoError(t, err)
 				assert.Equal(t, identity.VerifiableAddressTypeEmail, actual.Via)
-				assert.Equal(t, "verification.TestPersister.Update-Identity-next@ory.sh", actual.Value)
+				assert.Equal(t, "verification.testpersister.update-identity-next@ory.sh", actual.Value)
 
 				t.Run("can not find if on another network", func(t *testing.T) {
 					_, p := testhelpers.NewNetwork(t, ctx, p)
@@ -607,7 +708,7 @@ func TestPool(ctx context.Context, conf *config.Config, p interface {
 				actual, err := p.FindVerifiableAddressByValue(ctx, identity.VerifiableAddressTypeEmail, strings.ToUpper("verification.TestPersister.Update-Identity-case-insensitive-next@ory.sh"))
 				require.NoError(t, err)
 				assert.Equal(t, identity.VerifiableAddressTypeEmail, actual.Via)
-				assert.Equal(t, "verification.TestPersister.Update-Identity-case-insensitive-next@ory.sh", actual.Value)
+				assert.Equal(t, "verification.testpersister.update-identity-case-insensitive-next@ory.sh", actual.Value)
 
 				t.Run("can not find if on another network", func(t *testing.T) {
 					_, p := testhelpers.NewNetwork(t, ctx, p)
@@ -692,7 +793,7 @@ func TestPool(ctx context.Context, conf *config.Config, p interface {
 				actual, err := p.FindRecoveryAddressByValue(ctx, identity.RecoveryAddressTypeEmail, "recovery.TestPersister.Update-next@ory.sh")
 				require.NoError(t, err)
 				assert.Equal(t, identity.RecoveryAddressTypeEmail, actual.Via)
-				assert.Equal(t, "recovery.TestPersister.Update-next@ory.sh", actual.Value)
+				assert.Equal(t, "recovery.testpersister.update-next@ory.sh", actual.Value)
 
 				t.Run("can not find if on another network", func(t *testing.T) {
 					_, p := testhelpers.NewNetwork(t, ctx, p)
@@ -728,7 +829,7 @@ func TestPool(ctx context.Context, conf *config.Config, p interface {
 				actual, err := p.FindRecoveryAddressByValue(ctx, identity.RecoveryAddressTypeEmail, strings.ToUpper("recovery.TestPersister.Update-case-insensitive-next@ory.sh"))
 				require.NoError(t, err)
 				assert.Equal(t, identity.RecoveryAddressTypeEmail, actual.Via)
-				assert.Equal(t, "recovery.TestPersister.Update-case-insensitive-next@ory.sh", actual.Value)
+				assert.Equal(t, "recovery.testpersister.update-case-insensitive-next@ory.sh", actual.Value)
 
 				t.Run("can not find if on another network", func(t *testing.T) {
 					_, p := testhelpers.NewNetwork(t, ctx, p)

@@ -81,7 +81,9 @@ selfservice:
           display_name: Ory
 
 identity:
-  default_schema_url: file://test/e2e/profiles/spa/identity.traits.schema.json
+  schemas:
+  - id: default
+    url: file://test/e2e/profiles/spa/identity.traits.schema.json
 
 session:
   whoami:

@@ -20,7 +20,6 @@ replace (
 )
 
 require (
-	github.com/Masterminds/semver v1.5.0 // indirect
 	github.com/Masterminds/sprig/v3 v3.0.0
 	github.com/arbovm/levenshtein v0.0.0-20160628152529-48b4e1c0c4d0
 	github.com/avast/retry-go/v3 v3.1.1
@@ -32,9 +31,9 @@ require (
 	github.com/cortesi/modd v0.0.0-20210323234521-b35eddab86cc
 	github.com/davecgh/go-spew v1.1.1
 	github.com/davidrjonas/semver-cli v0.0.0-20190116233701-ee19a9a0dda6
-	github.com/duo-labs/webauthn v0.0.0-20210727191636-9f1b88ef44cc
+	github.com/duo-labs/webauthn v0.0.0-20220212025243-7c9ee999e33e
 	github.com/fatih/color v1.13.0
-	github.com/form3tech-oss/jwt-go v3.2.2+incompatible
+	github.com/form3tech-oss/jwt-go v3.2.3+incompatible
 	github.com/ghodss/yaml v1.0.0
 	github.com/go-errors/errors v1.0.1
 	github.com/go-openapi/strfmt v0.20.3
@@ -49,22 +48,22 @@ require (
 	github.com/golang/mock v1.6.0
 	github.com/google/go-github/v27 v27.0.1
 	github.com/google/go-github/v38 v38.1.0
-	github.com/google/go-jsonnet v0.17.0
+	github.com/google/go-jsonnet v0.18.0
 	github.com/google/uuid v1.3.0
 	github.com/gorilla/sessions v1.2.1
 	github.com/gtank/cryptopasta v0.0.0-20170601214702-1f550f6f2f69
-	github.com/hashicorp/consul/api v1.5.0
+	github.com/hashicorp/consul/api v1.11.0
 	github.com/hashicorp/go-retryablehttp v0.7.0
 	github.com/hashicorp/golang-lru v0.5.4
 	github.com/imdario/mergo v0.3.12
 	github.com/inhies/go-bytesize v0.0.0-20210819104631-275770b98743
 	github.com/jteeuwen/go-bindata v3.0.7+incompatible
 	github.com/julienschmidt/httprouter v1.3.0
-	github.com/knadh/koanf v1.3.3
+	github.com/knadh/koanf v1.4.0
 	github.com/luna-duclos/instrumentedsql v1.1.3
 	github.com/luna-duclos/instrumentedsql/opentracing v0.0.0-20201103091713-40d03108b6f4
 	github.com/mattn/goveralls v0.0.7
-	github.com/mikefarah/yq v1.15.0
+	github.com/mikefarah/yq/v4 v4.19.1
 	github.com/mohae/deepcopy v0.0.0-20170929034955-c48cc78d4826
 	github.com/montanaflynn/stats v0.0.0-20171201202039-1bf9dbcd8cbe
 	github.com/ory/analytics-go/v4 v4.0.2
@@ -73,18 +72,18 @@ require (
 	github.com/ory/go-convenience v0.1.0
 	github.com/ory/graceful v0.1.1
 	github.com/ory/herodot v0.9.12
-	github.com/ory/jsonschema/v3 v3.0.5-0.20211222152031-b530fb44a010
+	github.com/ory/jsonschema/v3 v3.0.6
 	github.com/ory/kratos-client-go v0.6.3-alpha.1
 	github.com/ory/mail/v3 v3.0.0
 	github.com/ory/nosurf v1.2.7
-	github.com/ory/x v0.0.330
+	github.com/ory/x v0.0.353-0.20220307112550-60a38e67a6eb
 	github.com/phayes/freeport v0.0.0-20180830031419-95f893ade6f2
 	github.com/pkg/errors v0.9.1
 	github.com/pquerna/otp v1.3.0
 	github.com/rs/cors v1.8.0
 	github.com/sirupsen/logrus v1.8.1
 	github.com/slack-go/slack v0.7.4
-	github.com/spf13/cobra v1.2.1
+	github.com/spf13/cobra v1.3.0
 	github.com/spf13/pflag v1.0.5
 	github.com/sqs/goreturns v0.0.0-20181028201513-538ac6014518
 	github.com/stretchr/testify v1.7.0
@@ -94,7 +93,7 @@ require (
 	github.com/zmb3/spotify/v2 v2.0.0
 	golang.org/x/crypto v0.0.0-20210921155107-089bfa567519
 	golang.org/x/net v0.0.0-20211020060615-d418f374d309
-	golang.org/x/oauth2 v0.0.0-20210810183815-faf39c7919d5
+	golang.org/x/oauth2 v0.0.0-20211104180415-d3ed0bb246c8
 	golang.org/x/sync v0.0.0-20210220032951-036812b2e83c
 	golang.org/x/tools v0.1.7
 )

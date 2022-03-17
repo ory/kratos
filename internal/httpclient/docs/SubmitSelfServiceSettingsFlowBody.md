@@ -5,7 +5,7 @@
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
 **CsrfToken** | Pointer to **string** | CSRFToken is the anti-CSRF token | [optional] 
-**Method** | **string** | Method  Should be set to \&quot;totp\&quot; when trying to add, update, or remove a totp pairing. | 
+**Method** | **string** | Method  Should be set to \&quot;lookup\&quot; when trying to add, update, or remove a lookup pairing. | 
 **Password** | **string** | Password is the updated password | 
 **Traits** | **map[string]interface{}** | The identity&#39;s traits  in: body | 
 **Flow** | Pointer to **string** | Flow ID is the flow&#39;s ID.  in: query | [optional] 
@@ -13,6 +13,13 @@ Name | Type | Description | Notes
 **Unlink** | Pointer to **string** | Unlink this provider  Either this or &#x60;link&#x60; must be set.  type: string in: body | [optional] 
 **TotpCode** | Pointer to **string** | ValidationTOTP must contain a valid TOTP based on the | [optional] 
 **TotpUnlink** | Pointer to **bool** | UnlinkTOTP if true will remove the TOTP pairing, effectively removing the credential. This can be used to set up a new TOTP device. | [optional] 
+**WebauthnRegister** | Pointer to **string** | Register a WebAuthn Security Key  It is expected that the JSON returned by the WebAuthn registration process is included here. | [optional] 
+**WebauthnRegisterDisplayname** | Pointer to **string** | Name of the WebAuthn Security Key to be Added  A human-readable name for the security key which will be added. | [optional] 
+**WebauthnRemove** | Pointer to **string** | Remove a WebAuthn Security Key  This must contain the ID of the WebAuthN connection. | [optional] 
+**LookupSecretConfirm** | Pointer to **bool** | If set to true will save the regenerated lookup secrets | [optional] 
+**LookupSecretDisable** | Pointer to **bool** | Disables this method if true. | [optional] 
+**LookupSecretRegenerate** | Pointer to **bool** | If set to true will regenerate the lookup secrets | [optional] 
+**LookupSecretReveal** | Pointer to **bool** | If set to true will reveal the lookup secrets | [optional] 
 
 ## Methods
 
@@ -242,6 +249,181 @@ SetTotpUnlink sets TotpUnlink field to given value.
 `func (o *SubmitSelfServiceSettingsFlowBody) HasTotpUnlink() bool`
 
 HasTotpUnlink returns a boolean if a field has been set.
+
+### GetWebauthnRegister
+
+`func (o *SubmitSelfServiceSettingsFlowBody) GetWebauthnRegister() string`
+
+GetWebauthnRegister returns the WebauthnRegister field if non-nil, zero value otherwise.
+
+### GetWebauthnRegisterOk
+
+`func (o *SubmitSelfServiceSettingsFlowBody) GetWebauthnRegisterOk() (*string, bool)`
+
+GetWebauthnRegisterOk returns a tuple with the WebauthnRegister field if it's non-nil, zero value otherwise
+and a boolean to check if the value has been set.
+
+### SetWebauthnRegister
+
+`func (o *SubmitSelfServiceSettingsFlowBody) SetWebauthnRegister(v string)`
+
+SetWebauthnRegister sets WebauthnRegister field to given value.
+
+### HasWebauthnRegister
+
+`func (o *SubmitSelfServiceSettingsFlowBody) HasWebauthnRegister() bool`
+
+HasWebauthnRegister returns a boolean if a field has been set.
+
+### GetWebauthnRegisterDisplayname
+
+`func (o *SubmitSelfServiceSettingsFlowBody) GetWebauthnRegisterDisplayname() string`
+
+GetWebauthnRegisterDisplayname returns the WebauthnRegisterDisplayname field if non-nil, zero value otherwise.
+
+### GetWebauthnRegisterDisplaynameOk
+
+`func (o *SubmitSelfServiceSettingsFlowBody) GetWebauthnRegisterDisplaynameOk() (*string, bool)`
+
+GetWebauthnRegisterDisplaynameOk returns a tuple with the WebauthnRegisterDisplayname field if it's non-nil, zero value otherwise
+and a boolean to check if the value has been set.
+
+### SetWebauthnRegisterDisplayname
+
+`func (o *SubmitSelfServiceSettingsFlowBody) SetWebauthnRegisterDisplayname(v string)`
+
+SetWebauthnRegisterDisplayname sets WebauthnRegisterDisplayname field to given value.
+
+### HasWebauthnRegisterDisplayname
+
+`func (o *SubmitSelfServiceSettingsFlowBody) HasWebauthnRegisterDisplayname() bool`
+
+HasWebauthnRegisterDisplayname returns a boolean if a field has been set.
+
+### GetWebauthnRemove
+
+`func (o *SubmitSelfServiceSettingsFlowBody) GetWebauthnRemove() string`
+
+GetWebauthnRemove returns the WebauthnRemove field if non-nil, zero value otherwise.
+
+### GetWebauthnRemoveOk
+
+`func (o *SubmitSelfServiceSettingsFlowBody) GetWebauthnRemoveOk() (*string, bool)`
+
+GetWebauthnRemoveOk returns a tuple with the WebauthnRemove field if it's non-nil, zero value otherwise
+and a boolean to check if the value has been set.
+
+### SetWebauthnRemove
+
+`func (o *SubmitSelfServiceSettingsFlowBody) SetWebauthnRemove(v string)`
+
+SetWebauthnRemove sets WebauthnRemove field to given value.
+
+### HasWebauthnRemove
+
+`func (o *SubmitSelfServiceSettingsFlowBody) HasWebauthnRemove() bool`
+
+HasWebauthnRemove returns a boolean if a field has been set.
+
+### GetLookupSecretConfirm
+
+`func (o *SubmitSelfServiceSettingsFlowBody) GetLookupSecretConfirm() bool`
+
+GetLookupSecretConfirm returns the LookupSecretConfirm field if non-nil, zero value otherwise.
+
+### GetLookupSecretConfirmOk
+
+`func (o *SubmitSelfServiceSettingsFlowBody) GetLookupSecretConfirmOk() (*bool, bool)`
+
+GetLookupSecretConfirmOk returns a tuple with the LookupSecretConfirm field if it's non-nil, zero value otherwise
+and a boolean to check if the value has been set.
+
+### SetLookupSecretConfirm
+
+`func (o *SubmitSelfServiceSettingsFlowBody) SetLookupSecretConfirm(v bool)`
+
+SetLookupSecretConfirm sets LookupSecretConfirm field to given value.
+
+### HasLookupSecretConfirm
+
+`func (o *SubmitSelfServiceSettingsFlowBody) HasLookupSecretConfirm() bool`
+
+HasLookupSecretConfirm returns a boolean if a field has been set.
+
+### GetLookupSecretDisable
+
+`func (o *SubmitSelfServiceSettingsFlowBody) GetLookupSecretDisable() bool`
+
+GetLookupSecretDisable returns the LookupSecretDisable field if non-nil, zero value otherwise.
+
+### GetLookupSecretDisableOk
+
+`func (o *SubmitSelfServiceSettingsFlowBody) GetLookupSecretDisableOk() (*bool, bool)`
+
+GetLookupSecretDisableOk returns a tuple with the LookupSecretDisable field if it's non-nil, zero value otherwise
+and a boolean to check if the value has been set.
+
+### SetLookupSecretDisable
+
+`func (o *SubmitSelfServiceSettingsFlowBody) SetLookupSecretDisable(v bool)`
+
+SetLookupSecretDisable sets LookupSecretDisable field to given value.
+
+### HasLookupSecretDisable
+
+`func (o *SubmitSelfServiceSettingsFlowBody) HasLookupSecretDisable() bool`
+
+HasLookupSecretDisable returns a boolean if a field has been set.
+
+### GetLookupSecretRegenerate
+
+`func (o *SubmitSelfServiceSettingsFlowBody) GetLookupSecretRegenerate() bool`
+
+GetLookupSecretRegenerate returns the LookupSecretRegenerate field if non-nil, zero value otherwise.
+
+### GetLookupSecretRegenerateOk
+
+`func (o *SubmitSelfServiceSettingsFlowBody) GetLookupSecretRegenerateOk() (*bool, bool)`
+
+GetLookupSecretRegenerateOk returns a tuple with the LookupSecretRegenerate field if it's non-nil, zero value otherwise
+and a boolean to check if the value has been set.
+
+### SetLookupSecretRegenerate
+
+`func (o *SubmitSelfServiceSettingsFlowBody) SetLookupSecretRegenerate(v bool)`
+
+SetLookupSecretRegenerate sets LookupSecretRegenerate field to given value.
+
+### HasLookupSecretRegenerate
+
+`func (o *SubmitSelfServiceSettingsFlowBody) HasLookupSecretRegenerate() bool`
+
+HasLookupSecretRegenerate returns a boolean if a field has been set.
+
+### GetLookupSecretReveal
+
+`func (o *SubmitSelfServiceSettingsFlowBody) GetLookupSecretReveal() bool`
+
+GetLookupSecretReveal returns the LookupSecretReveal field if non-nil, zero value otherwise.
+
+### GetLookupSecretRevealOk
+
+`func (o *SubmitSelfServiceSettingsFlowBody) GetLookupSecretRevealOk() (*bool, bool)`
+
+GetLookupSecretRevealOk returns a tuple with the LookupSecretReveal field if it's non-nil, zero value otherwise
+and a boolean to check if the value has been set.
+
+### SetLookupSecretReveal
+
+`func (o *SubmitSelfServiceSettingsFlowBody) SetLookupSecretReveal(v bool)`
+
+SetLookupSecretReveal sets LookupSecretReveal field to given value.
+
+### HasLookupSecretReveal
+
+`func (o *SubmitSelfServiceSettingsFlowBody) HasLookupSecretReveal() bool`
+
+HasLookupSecretReveal returns a boolean if a field has been set.
 
 
 [[Back to Model list]](../README.md#documentation-for-models) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to README]](../README.md)

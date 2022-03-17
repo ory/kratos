@@ -1,0 +1,51 @@
+selfservice:
+  flows:
+    settings:
+      ui_url: http://localhost:4455/settings
+      privileged_session_max_age: 5m
+
+    logout:
+      after:
+        default_browser_return_url: http://localhost:4455/login
+
+    registration:
+      ui_url: http://localhost:4455/registration
+      after:
+        hooks:
+          - hook: web_hook
+            config:
+              method: GET
+              url: https://www.google.com/login/hook
+              body:  http://192.168.178.3:4455/body
+
+    login:
+      ui_url: http://localhost:4455/login
+      before:
+        hooks:
+          - hook: web_hook
+            config:
+              method: GET
+              url: http://192.168.178.2:4455/login/hook
+              body: file://test/e2e/profiles/network/webhook.jsonnet
+
+    error:
+      ui_url: http://localhost:4455/error
+    verification:
+      ui_url: http://localhost:4455/verification
+      enabled: true
+    recovery:
+      ui_url: http://localhost:4455/recovery
+
+identity:
+  default_schema_id: localhost
+  schemas:
+    - id: localhost
+      url: http://localhost/
+    - id: ref
+      url: file://test/e2e/profiles/network/identity.traits.schema.json
+    - id: working
+      url: file://test/e2e/profiles/email/identity.traits.schema.json
+
+clients:
+  http:
+    disallow_private_ip_ranges: true

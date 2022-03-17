@@ -27,7 +27,7 @@ func TestLogout(t *testing.T) {
 
 	errTS := testhelpers.NewErrorTestServer(t, reg)
 
-	conf.MustSet(config.ViperKeyDefaultIdentitySchemaURL, "file://./stub/identity.schema.json")
+	testhelpers.SetDefaultIdentitySchema(conf, "file://./stub/identity.schema.json")
 	public, _, publicRouter, _ := testhelpers.NewKratosServerWithCSRFAndRouters(t, reg)
 
 	publicRouter.GET("/session/browser/set", testhelpers.MockSetSession(t, reg, conf))
@@ -222,5 +222,23 @@ func TestLogout(t *testing.T) {
 		body, res := testhelpers.HTTPRequestJSON(t, http.DefaultClient, "GET", public.URL+"/self-service/logout/browser", nil)
 		assert.EqualValues(t, http.StatusUnauthorized, res.StatusCode)
 		assert.EqualValues(t, "No active session was found in this request.", gjson.GetBytes(body, "error.reason").String(), "%s", body)
+	})
+
+	t.Run("case=init logout through browser does 303 redirect", func(t *testing.T) {
+		// init the logout
+		hc, logoutUrl := getLogoutUrl(t)
+		// prevent the redirect, so we can get check the status code
+		hc.CheckRedirect = func(req *http.Request, via []*http.Request) error {
+			return http.ErrUseLastResponse
+		}
+		// submit the login
+		req, err := http.NewRequest("GET", logoutUrl, nil)
+		require.NoError(t, err)
+
+		res, err := hc.Do(req)
+		require.NoError(t, err)
+		// here we check that the redirect status is 303
+		require.Equal(t, http.StatusSeeOther, res.StatusCode)
+		defer res.Body.Close()
 	})
 }

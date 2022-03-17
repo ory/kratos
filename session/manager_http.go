@@ -26,6 +26,7 @@ type (
 		config.Provider
 		identity.PoolProvider
 		identity.PrivilegedPoolProvider
+		identity.ManagementProvider
 		x.CookieProvider
 		x.CSRFProvider
 		PersistenceProvider
@@ -186,12 +187,19 @@ func (s *ManagerHTTP) DoesSessionSatisfy(r *http.Request, sess *Session, request
 			return err
 		}
 
-		hasCredentials := make([]identity.CredentialsType, 0)
-		for ct := range i.Credentials {
-			hasCredentials = append(hasCredentials, ct)
+		available := identity.NoAuthenticatorAssuranceLevel
+		if firstCount, err := s.r.IdentityManager().CountActiveFirstFactorCredentials(r.Context(), i); err != nil {
+			return err
+		} else if firstCount > 0 {
+			available = identity.AuthenticatorAssuranceLevel1
 		}
 
-		available := identity.DetermineAAL(hasCredentials)
+		if secondCount, err := s.r.IdentityManager().CountActiveMultiFactorCredentials(r.Context(), i); err != nil {
+			return err
+		} else if secondCount > 0 {
+			available = identity.AuthenticatorAssuranceLevel2
+		}
+
 		if sess.AuthenticatorAssuranceLevel >= available {
 			return nil
 		}
@@ -202,14 +210,14 @@ func (s *ManagerHTTP) DoesSessionSatisfy(r *http.Request, sess *Session, request
 	return errors.Errorf("requested unknown aal: %s", requestedAAL)
 }
 
-func (s *ManagerHTTP) SessionAddAuthenticationMethod(ctx context.Context, sid uuid.UUID, methods ...identity.CredentialsType) error {
+func (s *ManagerHTTP) SessionAddAuthenticationMethods(ctx context.Context, sid uuid.UUID, ams ...AuthenticationMethod) error {
 	// Since we added the method, it also means that we have authenticated it
 	sess, err := s.r.SessionPersister().GetSession(ctx, sid)
 	if err != nil {
 		return err
 	}
-	for _, m := range methods {
-		sess.CompletedLoginFor(m)
+	for _, m := range ams {
+		sess.CompletedLoginFor(m.Method, m.AAL)
 	}
 	sess.SetAuthenticatorAssuranceLevel()
 	return s.r.SessionPersister().UpsertSession(ctx, sess)

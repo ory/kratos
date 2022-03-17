@@ -19,6 +19,8 @@ import (
 type SubmitSelfServiceLoginFlowWithWebAuthnMethodBody struct {
 	// Sending the anti-csrf token is only required for browser login flows.
 	CsrfToken *string `json:"csrf_token,omitempty"`
+	// Identifier is the email or username of the user trying to log in. This field is only required when using WebAuthn for passwordless login. When using WebAuthn for multi-factor authentication, it is not needed.
+	Identifier *string `json:"identifier,omitempty"`
 	// Method should be set to \"webAuthn\" when logging in using the WebAuthn strategy.
 	Method string `json:"method"`
 	// Login a WebAuthn Security Key  This must contain the ID of the WebAuthN connection.
@@ -73,6 +75,38 @@ func (o *SubmitSelfServiceLoginFlowWithWebAuthnMethodBody) HasCsrfToken() bool {
 // SetCsrfToken gets a reference to the given string and assigns it to the CsrfToken field.
 func (o *SubmitSelfServiceLoginFlowWithWebAuthnMethodBody) SetCsrfToken(v string) {
 	o.CsrfToken = &v
+}
+
+// GetIdentifier returns the Identifier field value if set, zero value otherwise.
+func (o *SubmitSelfServiceLoginFlowWithWebAuthnMethodBody) GetIdentifier() string {
+	if o == nil || o.Identifier == nil {
+		var ret string
+		return ret
+	}
+	return *o.Identifier
+}
+
+// GetIdentifierOk returns a tuple with the Identifier field value if set, nil otherwise
+// and a boolean to check if the value has been set.
+func (o *SubmitSelfServiceLoginFlowWithWebAuthnMethodBody) GetIdentifierOk() (*string, bool) {
+	if o == nil || o.Identifier == nil {
+		return nil, false
+	}
+	return o.Identifier, true
+}
+
+// HasIdentifier returns a boolean if a field has been set.
+func (o *SubmitSelfServiceLoginFlowWithWebAuthnMethodBody) HasIdentifier() bool {
+	if o != nil && o.Identifier != nil {
+		return true
+	}
+
+	return false
+}
+
+// SetIdentifier gets a reference to the given string and assigns it to the Identifier field.
+func (o *SubmitSelfServiceLoginFlowWithWebAuthnMethodBody) SetIdentifier(v string) {
+	o.Identifier = &v
 }
 
 // GetMethod returns the Method field value
@@ -135,6 +169,9 @@ func (o SubmitSelfServiceLoginFlowWithWebAuthnMethodBody) MarshalJSON() ([]byte,
 	toSerialize := map[string]interface{}{}
 	if o.CsrfToken != nil {
 		toSerialize["csrf_token"] = o.CsrfToken
+	}
+	if o.Identifier != nil {
+		toSerialize["identifier"] = o.Identifier
 	}
 	if true {
 		toSerialize["method"] = o.Method

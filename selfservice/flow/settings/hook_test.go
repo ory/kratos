@@ -32,7 +32,7 @@ func TestSettingsExecutor(t *testing.T) {
 		t.Run("strategy="+strategy, func(t *testing.T) {
 
 			conf, reg := internal.NewFastRegistryWithMocks(t)
-			conf.MustSet(config.ViperKeyDefaultIdentitySchemaURL, "file://./stub/identity.schema.json")
+			testhelpers.SetDefaultIdentitySchema(conf, "file://./stub/identity.schema.json")
 			conf.MustSet(config.ViperKeySelfServiceBrowserDefaultReturnTo, "https://www.ory.sh/")
 
 			reg.WithHooks(map[string]func(config.SelfServiceHook) interface{}{
@@ -46,7 +46,7 @@ func TestSettingsExecutor(t *testing.T) {
 				handleErr := testhelpers.SelfServiceHookSettingsErrorHandler
 				router.GET("/settings/post", func(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 					i := testhelpers.SelfServiceHookCreateFakeIdentity(t, reg)
-					sess, _ := session.NewActiveSession(i, conf, time.Now().UTC(), identity.CredentialsTypePassword)
+					sess, _ := session.NewActiveSession(i, conf, time.Now().UTC(), identity.CredentialsTypePassword, identity.AuthenticatorAssuranceLevel1)
 
 					a, err := settings.NewFlow(conf, time.Minute, r, sess.Identity, ft)
 					require.NoError(t, err)
@@ -101,7 +101,7 @@ func TestSettingsExecutor(t *testing.T) {
 
 				t.Run("case=use return_to value", func(t *testing.T) {
 					t.Cleanup(testhelpers.SelfServiceHookConfigReset(t, conf))
-					conf.MustSet(config.ViperKeyURLsWhitelistedReturnToDomains, []string{"https://www.ory.sh/"})
+					conf.MustSet(config.ViperKeyURLsAllowedReturnToDomains, []string{"https://www.ory.sh/"})
 					testhelpers.SelfServiceHookSettingsSetDefaultRedirectTo(t, conf, "https://www.ory.sh")
 
 					res, _ := makeRequestPost(t, newServer(t, flow.TypeBrowser), false, url.Values{"return_to": {"https://www.ory.sh/kratos/"}})

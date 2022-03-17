@@ -104,7 +104,7 @@ type selfServiceRecoveryLink struct {
 	ExpiresAt time.Time `json:"expires_at"`
 }
 
-// swagger:route POST /recovery/link v0alpha2 adminCreateSelfServiceRecoveryLink
+// swagger:route POST /admin/recovery/link v0alpha2 adminCreateSelfServiceRecoveryLink
 //
 // Create a Recovery Link
 //
@@ -121,8 +121,8 @@ type selfServiceRecoveryLink struct {
 //
 //     Responses:
 //       200: selfServiceRecoveryLink
-//       404: jsonError
 //       400: jsonError
+//       404: jsonError
 //       500: jsonError
 func (s *Strategy) createRecoveryLink(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 	var p adminCreateSelfServiceRecoveryLinkBody
@@ -159,10 +159,14 @@ func (s *Strategy) createRecoveryLink(w http.ResponseWriter, r *http.Request, _ 
 	}
 
 	id, err := s.d.IdentityPool().GetIdentity(r.Context(), p.IdentityID)
-	if err != nil {
+	if errors.Is(err, sqlcon.ErrNoRows) {
+		s.d.Writer().WriteError(w, r, errors.WithStack(herodot.ErrBadRequest.WithReasonf("The requested identity id does not exist.").WithWrap(err)))
+		return
+	} else if err != nil {
 		s.d.Writer().WriteError(w, r, err)
 		return
 	}
+
 	token := NewRecoveryToken(id.ID, expiresIn)
 	if err := s.d.RecoveryTokenPersister().CreateRecoveryToken(r.Context(), token); err != nil {
 		s.d.Writer().WriteError(w, r, err)
@@ -259,7 +263,7 @@ func (s *Strategy) recoveryIssueSession(w http.ResponseWriter, r *http.Request, 
 		return s.retryRecoveryFlowWithError(w, r, flow.TypeBrowser, err)
 	}
 
-	sess, err := session.NewActiveSession(id, s.d.Config(r.Context()), time.Now().UTC(), identity.CredentialsTypeRecoveryLink)
+	sess, err := session.NewActiveSession(id, s.d.Config(r.Context()), time.Now().UTC(), identity.CredentialsTypeRecoveryLink, identity.AuthenticatorAssuranceLevel1)
 	if err != nil {
 		return s.retryRecoveryFlowWithError(w, r, flow.TypeBrowser, err)
 	}

@@ -1,0 +1,18 @@
+{
+  "credentials": [
+    {
+      "id": "HQ4LaIJ9NiqS1r0CQpWY+K0gMvhOq4yk5BHuO/YlitcurSpBK7weDXOvBcuN4lvn6DAmjGfmj/J/6bpOmtdT8Q==",
+      "public_key": "pQECAyYgASFYILAYFLoH1T8bQMSbPrNBCMMS5U7OFWRwv2U+GkAoiBADIlggBv+8ni7XVZYBB8ufMbP/d9fDxbmOkVVHOgcJifnoOR4=",
+      "attestation_type": "none",
+      "authenticator": {
+        "aaguid": "AAAAAAAAAAAAAAAAAAAAAA==",
+        "sign_count": 4,
+        "clone_warning": false
+      },
+      "display_name": "asdf",
+      "added_at": "2022-02-28T16:40:39Z",
+      "is_passwordless": true
+    }
+  ],
+  "user_handle":"2gZaSs9fTEeGmsBlC4gfgg=="
+}

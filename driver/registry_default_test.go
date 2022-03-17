@@ -695,7 +695,7 @@ func TestDefaultRegistry_AllStrategies(t *testing.T) {
 	})
 
 	t.Run("case=all registration strategies", func(t *testing.T) {
-		expects := []string{"password", "oidc"}
+		expects := []string{"password", "oidc", "webauthn"}
 		s := reg.AllRegistrationStrategies()
 		require.Len(t, s, len(expects))
 		for k, e := range expects {

@@ -28,8 +28,7 @@ func TestFlowPersister(ctx context.Context, conf *config.Config, p interface {
 
 	return func(t *testing.T) {
 		nid, p := testhelpers.NewNetworkUnlessExisting(t, ctx, p)
-
-		conf.MustSet(config.ViperKeyDefaultIdentitySchemaURL, "file://./stub/identity.schema.json")
+		testhelpers.SetDefaultIdentitySchema(conf, "file://./stub/identity.schema.json")
 
 		t.Run("case=should error when the recovery request does not exist", func(t *testing.T) {
 			_, err := p.GetRecoveryFlow(ctx, x.NewUUID())

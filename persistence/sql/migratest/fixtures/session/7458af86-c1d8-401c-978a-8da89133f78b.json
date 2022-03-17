@@ -7,10 +7,12 @@
   "authentication_methods": [
     {
       "method": "password",
+      "aal": "",
       "completed_at": "0001-01-01T00:00:00Z"
     },
     {
       "method": "totp",
+      "aal": "",
       "completed_at": "0001-01-01T00:00:00Z"
     }
   ],
@@ -18,7 +20,7 @@
   "identity": {
     "id": "5ff66179-c240-4703-b0d8-494592cefff5",
     "schema_id": "default",
-    "schema_url": "https://www.ory.sh/schemas/default",
+    "schema_url": "https://www.ory.sh/schemas/ZGVmYXVsdA",
     "state": "active",
     "traits": {
       "email": "bazbar@ory.sh"

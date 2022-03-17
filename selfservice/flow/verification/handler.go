@@ -148,7 +148,7 @@ type initializeSelfServiceVerificationFlowForBrowsers struct {
 //
 //     Responses:
 //       200: selfServiceVerificationFlow
-//       302: emptyResponse
+//       303: emptyResponse
 //       500: jsonError
 func (h *Handler) initBrowserFlow(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	if !h.d.Config(r.Context()).SelfServiceFlowVerificationEnabled() {
@@ -302,12 +302,12 @@ type submitSelfServiceVerificationFlowBody struct{}
 // - `choose_method` expects `flow` (in the URL query) and `email` (in the body) to be sent
 //   and works with API- and Browser-initiated flows.
 //	 - For API clients and Browser clients with HTTP Header `Accept: application/json` it either returns a HTTP 200 OK when the form is valid and HTTP 400 OK when the form is invalid
-//     and a HTTP 302 Found redirect with a fresh verification flow if the flow was otherwise invalid (e.g. expired).
-//	 - For Browser clients without HTTP Header `Accept` or with `Accept: text/*` it returns a HTTP 302 Found redirect to the Verification UI URL with the Verification Flow ID appended.
+//     and a HTTP 303 See Other redirect with a fresh verification flow if the flow was otherwise invalid (e.g. expired).
+//	 - For Browser clients without HTTP Header `Accept` or with `Accept: text/*` it returns a HTTP 303 See Other redirect to the Verification UI URL with the Verification Flow ID appended.
 // - `sent_email` is the success state after `choose_method` when using the `link` method and allows the user to request another verification email. It
 //   works for both API and Browser-initiated flows and returns the same responses as the flow in `choose_method` state.
 // - `passed_challenge` expects a `token` to be sent in the URL query and given the nature of the flow ("sending a verification link")
-//   does not have any API capabilities. The server responds with a HTTP 302 Found redirect either to the Settings UI URL
+//   does not have any API capabilities. The server responds with a HTTP 303 See Other redirect either to the Settings UI URL
 //   (if the link was valid) and instructs the user to update their password, or a redirect to the Verification UI URL with
 //   a new Verification Flow ID which contains an error message that the verification link was invalid.
 //
@@ -325,7 +325,7 @@ type submitSelfServiceVerificationFlowBody struct{}
 //     Responses:
 //       200: selfServiceVerificationFlow
 //       400: selfServiceVerificationFlow
-//       302: emptyResponse
+//       303: emptyResponse
 //       500: jsonError
 func (h *Handler) submitFlow(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	rid, err := flow.GetFlowID(r)
@@ -372,7 +372,7 @@ func (h *Handler) submitFlow(w http.ResponseWriter, r *http.Request, ps httprout
 	}
 
 	if f.Type == flow.TypeBrowser && !x.IsJSONRequest(r) {
-		http.Redirect(w, r, f.AppendTo(h.d.Config(r.Context()).SelfServiceFlowVerificationUI()).String(), http.StatusFound)
+		http.Redirect(w, r, f.AppendTo(h.d.Config(r.Context()).SelfServiceFlowVerificationUI()).String(), http.StatusSeeOther)
 		return
 	}
 

@@ -8,7 +8,6 @@ import (
 	"github.com/ory/kratos/text"
 
 	"github.com/pkg/errors"
-	"github.com/tidwall/sjson"
 
 	"github.com/ory/herodot"
 	"github.com/ory/kratos/identity"
@@ -18,7 +17,6 @@ import (
 	"github.com/ory/kratos/ui/container"
 	"github.com/ory/kratos/ui/node"
 	"github.com/ory/kratos/x"
-	"github.com/ory/x/decoderx"
 	"github.com/ory/x/errorsx"
 )
 
@@ -54,7 +52,7 @@ func (s *Strategy) RegisterRegistrationRoutes(_ *x.RouterPublic) {
 func (s *Strategy) handleRegistrationError(_ http.ResponseWriter, r *http.Request, f *registration.Flow, p *SubmitSelfServiceRegistrationFlowWithPasswordMethodBody, err error) error {
 	if f != nil {
 		if p != nil {
-			for _, n := range container.NewFromJSON("", node.PasswordGroup, p.Traits, "traits").Nodes {
+			for _, n := range container.NewFromJSON("", node.ProfileGroup, p.Traits, "traits").Nodes {
 				// we only set the value and not the whole field because we want to keep types from the initial form generation
 				f.UI.Nodes.SetValueAttribute(n.ID(), n.Attributes.GetValue())
 			}
@@ -69,18 +67,7 @@ func (s *Strategy) handleRegistrationError(_ http.ResponseWriter, r *http.Reques
 }
 
 func (s *Strategy) decode(p *SubmitSelfServiceRegistrationFlowWithPasswordMethodBody, r *http.Request) error {
-	raw, err := sjson.SetBytes(registrationSchema,
-		"properties.traits.$ref", s.d.Config(r.Context()).DefaultIdentityTraitsSchemaURL().String()+"#/properties/traits")
-	if err != nil {
-		return errors.WithStack(err)
-	}
-
-	compiler, err := decoderx.HTTPRawJSONSchemaCompiler(raw)
-	if err != nil {
-		return errors.WithStack(err)
-	}
-
-	return s.hd.Decode(r, p, compiler, decoderx.HTTPDecoderSetValidatePayloads(true), decoderx.HTTPDecoderJSONFollowsFormFormat())
+	return registration.DecodeBody(p, r, s.hd, s.d.Config(r.Context()), registrationSchema)
 }
 
 func (s *Strategy) Register(w http.ResponseWriter, r *http.Request, f *registration.Flow, i *identity.Identity) (err error) {
@@ -110,13 +97,10 @@ func (s *Strategy) Register(w http.ResponseWriter, r *http.Request, f *registrat
 		return s.handleRegistrationError(w, r, f, &p, err)
 	}
 
-	co, err := json.Marshal(&CredentialsConfig{HashedPassword: string(hpw)})
-	if err != nil {
-		return s.handleRegistrationError(w, r, f, &p, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("Unable to encode password options to JSON: %s", err)))
-	}
-
 	i.Traits = identity.Traits(p.Traits)
-	i.SetCredentials(s.ID(), identity.Credentials{Type: s.ID(), Identifiers: []string{}, Config: co})
+	if err := i.SetCredentialsWithConfig(s.ID(), identity.Credentials{Type: s.ID(), Identifiers: []string{}}, &identity.CredentialsPassword{HashedPassword: string(hpw)}); err != nil {
+		return s.handleRegistrationError(w, r, f, &p, err)
+	}
 
 	if err := s.validateCredentials(r.Context(), i, p.Password); err != nil {
 		return s.handleRegistrationError(w, r, f, &p, err)
@@ -151,7 +135,12 @@ func (s *Strategy) validateCredentials(ctx context.Context, i *identity.Identity
 }
 
 func (s *Strategy) PopulateRegistrationMethod(r *http.Request, f *registration.Flow) error {
-	nodes, err := container.NodesFromJSONSchema(node.PasswordGroup, s.d.Config(r.Context()).DefaultIdentityTraitsSchemaURL().String(), "", nil)
+	ds, err := s.d.Config(r.Context()).DefaultIdentityTraitsSchemaURL()
+	if err != nil {
+		return err
+	}
+
+	nodes, err := container.NodesFromJSONSchema(r.Context(), node.PasswordGroup, ds.String(), "", nil)
 	if err != nil {
 		return err
 	}

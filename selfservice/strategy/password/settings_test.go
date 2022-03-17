@@ -10,6 +10,9 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/ory/kratos/internal/settingshelpers"
+	"github.com/ory/kratos/text"
+
 	kratos "github.com/ory/kratos-client-go"
 
 	"github.com/ory/kratos/corpx"
@@ -59,10 +62,19 @@ func newEmptyIdentity() *identity.Identity {
 	}
 }
 
+func newIdentityWithoutCredentials(email string) *identity.Identity {
+	return &identity.Identity{
+		ID:       x.NewUUID(),
+		State:    identity.StateActive,
+		Traits:   identity.Traits(`{"email":"` + email + `"}`),
+		SchemaID: config.DefaultIdentityTraitsSchemaID,
+	}
+}
+
 func TestSettings(t *testing.T) {
 	conf, reg := internal.NewFastRegistryWithMocks(t)
 	conf.MustSet(config.ViperKeySelfServiceBrowserDefaultReturnTo, "https://www.ory.sh/")
-	conf.MustSet(config.ViperKeyDefaultIdentitySchemaURL, "file://./stub/profile.schema.json")
+	testhelpers.SetDefaultIdentitySchema(conf, "file://./stub/profile.schema.json")
 	testhelpers.StrategyEnable(t, conf, identity.CredentialsTypePassword.String(), true)
 	testhelpers.StrategyEnable(t, conf, settings.StrategyProfile, true)
 
@@ -321,6 +333,13 @@ func TestSettings(t *testing.T) {
 	}
 
 	t.Run("description=should update the password even if no password was set before", func(t *testing.T) {
+		bi := newIdentityWithoutCredentials(x.NewUUID().String() + "@ory.sh")
+		si := newIdentityWithoutCredentials(x.NewUUID().String() + "@ory.sh")
+		ai := newIdentityWithoutCredentials(x.NewUUID().String() + "@ory.sh")
+		browserUser := testhelpers.NewHTTPClientWithIdentitySessionCookie(t, reg, bi)
+		spaUser := testhelpers.NewHTTPClientWithIdentitySessionCookie(t, reg, si)
+		apiUser := testhelpers.NewHTTPClientWithIdentitySessionToken(t, reg, ai)
+
 		var check = func(t *testing.T, actual string, id *identity.Identity) {
 			assert.Equal(t, "success", gjson.Get(actual, "state").String(), "%s", actual)
 			assert.Empty(t, gjson.Get(actual, "ui.nodes.#(name==password).attributes.value").String(), "%s", actual)
@@ -339,18 +358,18 @@ func TestSettings(t *testing.T) {
 		}
 
 		t.Run("type=api", func(t *testing.T) {
-			actual := expectSuccess(t, true, false, apiUser2, payload)
-			check(t, actual, apiIdentity2)
+			actual := expectSuccess(t, true, false, apiUser, payload)
+			check(t, actual, ai)
 		})
 
 		t.Run("type=spa", func(t *testing.T) {
-			actual := expectSuccess(t, false, true, browserUser2, payload)
-			check(t, actual, browserIdentity2)
+			actual := expectSuccess(t, false, true, spaUser, payload)
+			check(t, actual, si)
 		})
 
 		t.Run("type=browser", func(t *testing.T) {
-			actual := expectSuccess(t, false, false, browserUser2, payload)
-			check(t, actual, browserIdentity2)
+			actual := expectSuccess(t, false, false, browserUser, payload)
+			check(t, actual, bi)
 		})
 	})
 
@@ -388,5 +407,27 @@ func TestSettings(t *testing.T) {
 			rs := testhelpers.InitializeSettingsFlowViaBrowser(t, browserUser1, false, publicTS)
 			run(t, rs, false, browserUser1, browserIdentity1)
 		})
+	})
+
+	t.Run("case=should fail if no identifier was set in the schema", func(t *testing.T) {
+		testhelpers.SetDefaultIdentitySchema(conf, "file://stub/missing-identifier.schema.json")
+
+		id := newIdentityWithoutCredentials(testhelpers.RandomEmail())
+		browser := testhelpers.NewHTTPClientWithIdentitySessionCookie(t, reg, id)
+		api := testhelpers.NewHTTPClientWithIdentitySessionToken(t, reg, id)
+
+		for _, f := range []string{"spa", "api", "browser"} {
+			t.Run("type="+f, func(t *testing.T) {
+				hc := browser
+				if f == "api" {
+					hc = api
+				}
+				actual := settingshelpers.ExpectValidationError(t, publicTS, hc, conf, f, func(v url.Values) {
+					v.Set("password", x.NewUUID().String())
+					v.Set("method", "password")
+				})
+				assert.Equal(t, text.NewErrorValidationIdentifierMissing().Text, gjson.Get(actual, "ui.messages.0.text").String(), "%s", actual)
+			})
+		}
 	})
 }

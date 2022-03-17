@@ -97,7 +97,7 @@ func NewErrorValidationLookupAlreadyUsed() *Message {
 
 func NewErrorValidationLookupInvalid() *Message {
 	return &Message{
-		ID:      ErrorValidationLookupAlreadyUsed,
+		ID:      ErrorValidationLookupInvalid,
 		Text:    "The backup recovery code is not valid.",
 		Type:    Error,
 		Context: context(nil),
@@ -107,7 +107,7 @@ func NewErrorValidationLookupInvalid() *Message {
 func NewErrorValidationIdentifierMissing() *Message {
 	return &Message{
 		ID:   ErrorValidationIdentifierMissing,
-		Text: "Could not find any login identifiers. Did you forget to set them?",
+		Text: "Could not find any login identifiers. Did you forget to set them? This could also be caused by a server misconfiguration.",
 		Type: Error,
 	}
 }
@@ -142,6 +142,15 @@ func NewErrorValidationNoWebAuthnDevice() *Message {
 	return &Message{
 		ID:      ErrorValidationNoWebAuthnDevice,
 		Text:    "You have no WebAuthn device set up.",
+		Type:    Error,
+		Context: context(nil),
+	}
+}
+
+func NewErrorValidationSuchNoWebAuthnUser() *Message {
+	return &Message{
+		ID:      ErrorValidationSuchNoWebAuthnUser,
+		Text:    "This account does not exist or has no security key set up.",
 		Type:    Error,
 		Context: context(nil),
 	}

@@ -24,8 +24,8 @@ type PaginationParams struct {
 	//
 	// required: false
 	// in: query
-	// default: 0
-	// min: 0
+	// default: 1
+	// min: 1
 	Page int `json:"page"`
 }
 

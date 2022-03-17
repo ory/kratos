@@ -4,11 +4,14 @@ import (
 	"context"
 	"encoding/json"
 	"io/ioutil"
-	"net/http"
 	"net/url"
 	"path"
 	"strconv"
 	"time"
+
+	"github.com/hashicorp/go-retryablehttp"
+
+	"github.com/ory/x/httpx"
 
 	"github.com/pkg/errors"
 	"github.com/tidwall/gjson"
@@ -23,17 +26,17 @@ type ProviderAuth0 struct {
 
 func NewProviderAuth0(
 	config *Configuration,
-	public *url.URL,
+	reg dependencies,
 ) *ProviderAuth0 {
 	return &ProviderAuth0{
 		ProviderGenericOIDC: &ProviderGenericOIDC{
 			config: config,
-			public: public,
+			reg:    reg,
 		},
 	}
 }
 
-func (g *ProviderAuth0) oauth2() (*oauth2.Config, error) {
+func (g *ProviderAuth0) oauth2(ctx context.Context) (*oauth2.Config, error) {
 	endpoint, err := url.Parse(g.config.IssuerURL)
 	if err != nil {
 		return nil, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("%s", err))
@@ -53,31 +56,29 @@ func (g *ProviderAuth0) oauth2() (*oauth2.Config, error) {
 			TokenURL: tokenUrl.String(),
 		},
 		Scopes:      g.config.Scope,
-		RedirectURL: g.config.Redir(g.public),
+		RedirectURL: g.config.Redir(g.reg.Config(ctx).OIDCRedirectURIBase()),
 	}
 
 	return c, nil
 }
 
 func (g *ProviderAuth0) OAuth2(ctx context.Context) (*oauth2.Config, error) {
-	return g.oauth2()
+	return g.oauth2(ctx)
 }
 
 func (g *ProviderAuth0) Claims(ctx context.Context, exchange *oauth2.Token) (*Claims, error) {
 	o, err := g.OAuth2(ctx)
-
 	if err != nil {
 		return nil, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("%s", err))
 	}
 
-	client := o.Client(ctx, exchange)
-
+	client := g.reg.HTTPClient(ctx, httpx.ResilientClientWithClient(o.Client(ctx, exchange)))
 	u, err := url.Parse(g.config.IssuerURL)
 	if err != nil {
 		return nil, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("%s", err))
 	}
 	u.Path = path.Join(u.Path, "/userinfo")
-	req, err := http.NewRequest("GET", u.String(), nil)
+	req, err := retryablehttp.NewRequest("GET", u.String(), nil)
 	if err != nil {
 		return nil, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("%s", err))
 	}

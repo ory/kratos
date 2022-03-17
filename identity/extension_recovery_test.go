@@ -141,13 +141,13 @@ func TestSchemaExtensionRecovery(t *testing.T) {
 		t.Run(fmt.Sprintf("case=%d", k), func(t *testing.T) {
 			id := &Identity{ID: iid, RecoveryAddresses: tc.existing}
 			c := jsonschema.NewCompiler()
-			runner, err := schema.NewExtensionRunner()
+			runner, err := schema.NewExtensionRunner(ctx)
 			require.NoError(t, err)
 
 			e := NewSchemaExtensionRecovery(id)
 			runner.AddRunner(e).Register(c)
 
-			err = c.MustCompile(tc.schema).Validate(bytes.NewBufferString(tc.doc))
+			err = c.MustCompile(ctx, tc.schema).Validate(bytes.NewBufferString(tc.doc))
 			if tc.expectErr != nil {
 				require.EqualError(t, err, tc.expectErr.Error())
 				return

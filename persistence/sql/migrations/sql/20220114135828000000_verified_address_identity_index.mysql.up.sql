@@ -1,1 +1,0 @@
-CREATE INDEX `identity_verifiable_addresses_nid_identity_id_idx` ON `identity_verifiable_addresses` (`nid`, `identity_id`);

@@ -3,7 +3,6 @@ package oidc
 import (
 	"context"
 	"fmt"
-	"net/url"
 
 	"github.com/ory/kratos/x"
 
@@ -21,16 +20,16 @@ import (
 
 type ProviderGitHub struct {
 	config *Configuration
-	public *url.URL
+	reg    dependencies
 }
 
 func NewProviderGitHub(
 	config *Configuration,
-	public *url.URL,
+	reg dependencies,
 ) *ProviderGitHub {
 	return &ProviderGitHub{
 		config: config,
-		public: public,
+		reg:    reg,
 	}
 }
 
@@ -38,18 +37,18 @@ func (g *ProviderGitHub) Config() *Configuration {
 	return g.config
 }
 
-func (g *ProviderGitHub) oauth2() *oauth2.Config {
+func (g *ProviderGitHub) oauth2(ctx context.Context) *oauth2.Config {
 	return &oauth2.Config{
 		ClientID:     g.config.ClientID,
 		ClientSecret: g.config.ClientSecret,
 		Endpoint:     github.Endpoint,
 		Scopes:       g.config.Scope,
-		RedirectURL:  g.config.Redir(g.public),
+		RedirectURL:  g.config.Redir(g.reg.Config(ctx).OIDCRedirectURIBase()),
 	}
 }
 
 func (g *ProviderGitHub) OAuth2(ctx context.Context) (*oauth2.Config, error) {
-	return g.oauth2(), nil
+	return g.oauth2(ctx), nil
 }
 
 func (g *ProviderGitHub) AuthCodeURLOptions(r ider) []oauth2.AuthCodeOption {
@@ -64,7 +63,7 @@ func (g *ProviderGitHub) Claims(ctx context.Context, exchange *oauth2.Token) (*C
 		}
 	}
 
-	gh := ghapi.NewClient(g.oauth2().Client(ctx, exchange))
+	gh := ghapi.NewClient(g.oauth2(ctx).Client(ctx, exchange))
 
 	user, _, err := gh.Users.Get(ctx, "")
 	if err != nil {

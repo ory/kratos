@@ -8,4 +8,4 @@ token_url: not an URL
 mapper_url: not an URL
 scope:
   - 1
-tenant: 1
+microsoft_tenant: 1

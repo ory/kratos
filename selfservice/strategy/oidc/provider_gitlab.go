@@ -3,9 +3,12 @@ package oidc
 import (
 	"context"
 	"encoding/json"
-	"net/http"
 	"net/url"
 	"path"
+
+	"github.com/hashicorp/go-retryablehttp"
+
+	"github.com/ory/x/httpx"
 
 	"github.com/pkg/errors"
 	"golang.org/x/oauth2"
@@ -23,17 +26,17 @@ type ProviderGitLab struct {
 
 func NewProviderGitLab(
 	config *Configuration,
-	public *url.URL,
+	reg dependencies,
 ) *ProviderGitLab {
 	return &ProviderGitLab{
 		ProviderGenericOIDC: &ProviderGenericOIDC{
 			config: config,
-			public: public,
+			reg:    reg,
 		},
 	}
 }
 
-func (g *ProviderGitLab) oauth2() (*oauth2.Config, error) {
+func (g *ProviderGitLab) oauth2(ctx context.Context) (*oauth2.Config, error) {
 	endpoint, err := g.endpoint()
 	if err != nil {
 		return nil, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("%s", err))
@@ -53,12 +56,12 @@ func (g *ProviderGitLab) oauth2() (*oauth2.Config, error) {
 			TokenURL: tokenUrl.String(),
 		},
 		Scopes:      g.config.Scope,
-		RedirectURL: g.config.Redir(g.public),
+		RedirectURL: g.config.Redir(g.reg.Config(ctx).OIDCRedirectURIBase()),
 	}, nil
 }
 
 func (g *ProviderGitLab) OAuth2(ctx context.Context) (*oauth2.Config, error) {
-	return g.oauth2()
+	return g.oauth2(ctx)
 }
 
 func (g *ProviderGitLab) Claims(ctx context.Context, exchange *oauth2.Token) (*Claims, error) {
@@ -67,14 +70,14 @@ func (g *ProviderGitLab) Claims(ctx context.Context, exchange *oauth2.Token) (*C
 		return nil, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("%s", err))
 	}
 
-	client := o.Client(ctx, exchange)
+	client := g.reg.HTTPClient(ctx, httpx.ResilientClientDisallowInternalIPs(), httpx.ResilientClientWithClient(o.Client(ctx, exchange)))
 
 	u, err := g.endpoint()
 	if err != nil {
 		return nil, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("%s", err))
 	}
 	u.Path = path.Join(u.Path, "/oauth/userinfo")
-	req, err := http.NewRequest("GET", u.String(), nil)
+	req, err := retryablehttp.NewRequest("GET", u.String(), nil)
 	if err != nil {
 		return nil, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("%s", err))
 	}

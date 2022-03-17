@@ -27,7 +27,7 @@ describe('Basic email profile with failing login flows', () => {
       })
 
       it('fails when CSRF cookies are missing', () => {
-        cy.get(`${appPrefix(app)}input[name="password_identifier"]`).type(
+        cy.get(`${appPrefix(app)}input[name="identifier"]`).type(
           'i-do-not-exist'
         )
         cy.get('input[name="password"]').type('invalid-password')
@@ -47,7 +47,7 @@ describe('Basic email profile with failing login flows', () => {
           cy.submitPasswordForm()
           cy.get('*[data-testid="ui/message/4000002"]').should(
             'contain.text',
-            'Property password_identifier is missing'
+            'Property identifier is missing'
           )
           cy.get('*[data-testid="ui/message/4000002"]').should(
             'contain.text',
@@ -57,7 +57,7 @@ describe('Basic email profile with failing login flows', () => {
 
         it('should show an error when the password is missing', () => {
           const identity = gen.email()
-          cy.get('input[name="password_identifier"]')
+          cy.get('input[name="identifier"]')
             .type(identity)
             .should('have.value', identity)
 
@@ -73,7 +73,7 @@ describe('Basic email profile with failing login flows', () => {
         })
 
         it('should show fail to sign in', () => {
-          cy.get('input[name="password_identifier"]').type('i-do-not-exist')
+          cy.get('input[name="identifier"]').type('i-do-not-exist')
           cy.get('input[name="password"]').type('invalid-password')
 
           cy.submitPasswordForm()

@@ -4,7 +4,10 @@ import { routes as express } from '../../../helpers/express'
 
 context('2FA WebAuthn', () => {
   before(() => {
-    cy.task('resetCRI')
+    cy.task('resetCRI', {})
+  })
+  after(() => {
+    cy.task('resetCRI', {})
   })
   ;[
     {
@@ -212,6 +215,25 @@ context('2FA WebAuthn', () => {
             cy.expectSettingsSaved()
             cy.get('*[name="webauthn_remove"]').should('exist')
 
+            // Login without refresh
+            cy.login({ email, password })
+            cy.visit(login + '?aal=aal2')
+            cy.location().should((loc) => {
+              expect(loc.href).to.include('/login')
+            })
+
+            cy.get('*[name="webauthn_login_trigger"]').should('have.length', 1)
+            cy.clickWebAuthButton('login')
+            cy.location().should((loc) => {
+              expect(loc.href).to.not.include('/login')
+            })
+
+            cy.getSession({
+              expectAal: 'aal2',
+              expectMethods: ['password', 'webauthn']
+            })
+
+            // Login with refresh
             cy.visit(login + '?aal=aal2&refresh=true')
             cy.location().should((loc) => {
               expect(loc.href).to.include('/login')

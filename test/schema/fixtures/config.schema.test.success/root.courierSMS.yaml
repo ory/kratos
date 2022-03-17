@@ -1,0 +1,24 @@
+selfservice:
+  default_browser_return_url: "#/definitions/defaultReturnTo"
+
+dsn: foo
+
+identity:
+  schemas:
+    - id: default
+      url: https://example.com
+
+courier:
+  message_ttl: 50m
+  smtp:
+    connection_uri: smtps://foo:bar@my-mailserver:1234/
+    from_address: no-reply@ory.kratos.sh
+  sms:
+    enabled: true
+    from: "+19592155527"
+    request_config:
+      url: https://sms.example.com
+      method: POST
+      body: file://request.config.twilio.jsonnet
+      header:
+        'Content-Type': "application/x-www-form-urlencoded"

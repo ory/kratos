@@ -2,6 +2,7 @@ package node_test
 
 import (
 	"bytes"
+	"context"
 	"embed"
 	"encoding/json"
 	"path/filepath"
@@ -28,13 +29,14 @@ func init() {
 
 //go:embed fixtures/sort/*
 var sortFixtures embed.FS
+var ctx = context.Background()
 
 func TestNodesSort(t *testing.T) {
 	// use a schema compiler that disables identifiers
 	schemaCompiler := jsonschema.NewCompiler()
 	schemaPath := "fixtures/identity.schema.json"
 
-	f, err := container.NewFromJSONSchema("/foo", node.DefaultGroup, schemaPath, "", schemaCompiler)
+	f, err := container.NewFromJSONSchema(ctx, "/foo", node.DefaultGroup, schemaPath, "", schemaCompiler)
 	require.NoError(t, err)
 
 	f.UpdateNodeValuesFromJSON(json.RawMessage(`{}`), "traits", node.DefaultGroup)
@@ -119,7 +121,7 @@ func TestNodesSort(t *testing.T) {
 			require.NoError(t, json.NewDecoder(fi).Decode(&nodes))
 			require.NotEmpty(t, nodes)
 
-			require.NoError(t, nodes.SortBySchema(options[in.Name()]...))
+			require.NoError(t, nodes.SortBySchema(ctx, options[in.Name()]...))
 
 			fe, err := sortFixtures.ReadFile(filepath.Join("fixtures/sort/expected", in.Name()))
 			require.NoError(t, err)

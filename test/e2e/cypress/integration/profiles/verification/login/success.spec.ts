@@ -32,9 +32,7 @@ context('Account Verification Login Success', () => {
 
         cy.visit(login)
 
-        cy.get(appPrefix(app) + 'input[name="password_identifier"]').type(
-          identity.email
-        )
+        cy.get(appPrefix(app) + 'input[name="identifier"]').type(identity.email)
         cy.get('input[name="password"]').type(identity.password)
         cy.get('button[value="password"]').click()
 

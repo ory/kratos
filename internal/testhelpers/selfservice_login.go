@@ -51,6 +51,7 @@ func NewLoginUIWith401Response(t *testing.T, c *config.Config) *httptest.Server 
 type initFlowOptions struct {
 	aal      identity.AuthenticatorAssuranceLevel
 	returnTo string
+	refresh  bool
 }
 
 func (o *initFlowOptions) apply(opts []InitFlowWithOption) *initFlowOptions {
@@ -64,7 +65,7 @@ func getURLFromInitOptions(ts *httptest.Server, path string, forced bool, opts .
 	o := new(initFlowOptions).apply(opts)
 	q := url.Values{}
 
-	if forced {
+	if forced || o.refresh {
 		q.Set("refresh", "true")
 	}
 
@@ -88,9 +89,16 @@ func InitFlowWithAAL(aal identity.AuthenticatorAssuranceLevel) InitFlowWithOptio
 		o.aal = aal
 	}
 }
+
 func InitFlowWithReturnTo(returnTo string) InitFlowWithOption {
 	return func(o *initFlowOptions) {
 		o.returnTo = returnTo
+	}
+}
+
+func InitFlowWithRefresh() InitFlowWithOption {
+	return func(o *initFlowOptions) {
+		o.refresh = true
 	}
 }
 

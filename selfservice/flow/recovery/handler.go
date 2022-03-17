@@ -108,7 +108,7 @@ func (h *Handler) RegisterAdminRoutes(admin *x.RouterAdmin) {
 // This endpoint MUST ONLY be used in scenarios such as native mobile apps (React Native, Objective C, Swift, Java, ...).
 //
 //
-// More information can be found at [Ory Kratos Account Recovery Documentation](../self-service/flows/account-recovery.mdx).
+// More information can be found at [Ory Kratos Account Recovery Documentation](../self-service/flows/account-recovery).
 //
 //     Schemes: http, https
 //
@@ -158,13 +158,13 @@ type initializeSelfServiceRecoveryFlowWithoutBrowser struct {
 //
 // This endpoint is NOT INTENDED for clients that do not have a browser (Chrome, Firefox, ...) as cookies are needed.
 //
-// More information can be found at [Ory Kratos Account Recovery Documentation](../self-service/flows/account-recovery.mdx).
+// More information can be found at [Ory Kratos Account Recovery Documentation](../self-service/flows/account-recovery).
 //
 //     Schemes: http, https
 //
 //     Responses:
 //       200: selfServiceRecoveryFlow
-//       302: emptyResponse
+//       303: emptyResponse
 //       400: jsonError
 //       500: jsonError
 func (h *Handler) initBrowserFlow(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
@@ -231,7 +231,7 @@ type getSelfServiceRecoveryFlow struct {
 //	})
 //	```
 //
-// More information can be found at [Ory Kratos Account Recovery Documentation](../self-service/flows/account-recovery.mdx).
+// More information can be found at [Ory Kratos Account Recovery Documentation](../self-service/flows/account-recovery).
 //
 //     Produces:
 //     - application/json
@@ -320,16 +320,16 @@ type submitSelfServiceRecoveryFlowBody struct{}
 // - `choose_method` expects `flow` (in the URL query) and `email` (in the body) to be sent
 //   and works with API- and Browser-initiated flows.
 //	 - For API clients and Browser clients with HTTP Header `Accept: application/json` it either returns a HTTP 200 OK when the form is valid and HTTP 400 OK when the form is invalid.
-//     and a HTTP 302 Found redirect with a fresh recovery flow if the flow was otherwise invalid (e.g. expired).
-//	 - For Browser clients without HTTP Header `Accept` or with `Accept: text/*` it returns a HTTP 302 Found redirect to the Recovery UI URL with the Recovery Flow ID appended.
+//     and a HTTP 303 See Other redirect with a fresh recovery flow if the flow was otherwise invalid (e.g. expired).
+//	 - For Browser clients without HTTP Header `Accept` or with `Accept: text/*` it returns a HTTP 303 See Other redirect to the Recovery UI URL with the Recovery Flow ID appended.
 // - `sent_email` is the success state after `choose_method` for the `link` method and allows the user to request another recovery email. It
 //   works for both API and Browser-initiated flows and returns the same responses as the flow in `choose_method` state.
 // - `passed_challenge` expects a `token` to be sent in the URL query and given the nature of the flow ("sending a recovery link")
-//   does not have any API capabilities. The server responds with a HTTP 302 Found redirect either to the Settings UI URL
+//   does not have any API capabilities. The server responds with a HTTP 303 See Other redirect either to the Settings UI URL
 //   (if the link was valid) and instructs the user to update their password, or a redirect to the Recover UI URL with
 //   a new Recovery Flow ID which contains an error message that the recovery link was invalid.
 //
-// More information can be found at [Ory Kratos Account Recovery Documentation](../self-service/flows/account-recovery.mdx).
+// More information can be found at [Ory Kratos Account Recovery Documentation](../self-service/flows/account-recovery).
 //
 //     Consumes:
 //     - application/json
@@ -343,7 +343,7 @@ type submitSelfServiceRecoveryFlowBody struct{}
 //     Responses:
 //       200: selfServiceRecoveryFlow
 //       400: selfServiceRecoveryFlow
-//       302: emptyResponse
+//       303: emptyResponse
 //       500: jsonError
 func (h *Handler) submitFlow(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	rid, err := flow.GetFlowID(r)

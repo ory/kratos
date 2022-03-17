@@ -18,7 +18,7 @@ context('Mobile Profile', () => {
     })
 
     it('should sign up and be logged in', () => {
-      cy.get('input[data-testid="password_identifier"]').type(email)
+      cy.get('input[data-testid="identifier"]').type(email)
       cy.get('input[data-testid="password"]').type(password)
       cy.get('div[data-testid="submit-form"]').click()
 

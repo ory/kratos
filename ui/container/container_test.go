@@ -2,6 +2,7 @@ package container
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -40,6 +41,7 @@ func newFormRequest(t *testing.T, values url.Values) *http.Request {
 }
 
 func TestContainer(t *testing.T) {
+	var ctx = context.Background()
 	t.Run("method=NewFromJSON", func(t *testing.T) {
 		for k, tc := range []struct {
 			r      string
@@ -195,7 +197,7 @@ func TestContainer(t *testing.T) {
 			},
 		} {
 			t.Run(fmt.Sprintf("case=%d", k), func(t *testing.T) {
-				actual, err := NewFromJSONSchema("action",
+				actual, err := NewFromJSONSchema(ctx, "action",
 					node.DefaultGroup, tc.ref, tc.prefix, nil)
 				require.NoError(t, err)
 				assert.Equal(t, "action", actual.Action)

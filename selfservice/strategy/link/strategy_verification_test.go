@@ -357,7 +357,7 @@ func TestVerification(t *testing.T) {
 
 	t.Run("case=respects return_to URI parameter", func(t *testing.T) {
 		returnToURL := public.URL + "/after-verification"
-		conf.MustSet(config.ViperKeyURLsWhitelistedReturnToDomains, []string{returnToURL})
+		conf.MustSet(config.ViperKeyURLsAllowedReturnToDomains, []string{returnToURL})
 		client := &http.Client{
 			CheckRedirect: func(req *http.Request, via []*http.Request) error {
 				return http.ErrUseLastResponse

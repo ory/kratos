@@ -1,6 +1,7 @@
 package embedx
 
 import (
+	"context"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -57,7 +58,7 @@ func TestAddSchemaResources(t *testing.T) {
 
 			if !tc.mustFail {
 				for _, s := range append(tc.dependencies, tc.extraDependencies...) {
-					_, err := c.Compile(s.GetSchemaID())
+					_, err := c.Compile(context.Background(), s.GetSchemaID())
 					assert.NoError(t, err)
 				}
 			}

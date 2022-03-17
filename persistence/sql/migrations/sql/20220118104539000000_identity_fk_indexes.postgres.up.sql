@@ -1,0 +1,1 @@
+CREATE INDEX "identity_credentials_nid_identity_id_idx" ON "identity_credentials" (identity_id, nid);

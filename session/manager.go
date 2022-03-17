@@ -3,12 +3,11 @@ package session
 import (
 	"context"
 	"net/http"
+	"net/url"
 
 	"github.com/ory/kratos/text"
 
 	"github.com/gofrs/uuid"
-
-	"github.com/ory/kratos/identity"
 
 	"github.com/ory/herodot"
 )
@@ -39,6 +38,28 @@ type ErrAALNotSatisfied struct {
 
 func (e *ErrAALNotSatisfied) EnhanceJSONError() interface{} {
 	return e
+}
+
+func (e *ErrAALNotSatisfied) PassReturnToParameter(requestURL string) error {
+	req, err := url.Parse(requestURL)
+	if err != nil {
+		return err
+	}
+	returnTo := req.Query().Get("return_to")
+	if len(returnTo) == 0 {
+		return nil
+	}
+
+	u, err := url.Parse(e.RedirectTo)
+	if err != nil {
+		return err
+	}
+	q := u.Query()
+	q.Set("return_to", returnTo)
+	u.RawQuery = q.Encode()
+	e.RedirectTo = u.String()
+
+	return nil
 }
 
 // NewErrAALNotSatisfied creates a new ErrAALNotSatisfied.
@@ -79,8 +100,8 @@ type Manager interface {
 	// DoesSessionSatisfy answers if a session is satisfying the AAL.
 	DoesSessionSatisfy(r *http.Request, sess *Session, requestedAAL string) error
 
-	// SessionAddAuthenticationMethod adds one or more authentication method to the session.
-	SessionAddAuthenticationMethod(ctx context.Context, sid uuid.UUID, method ...identity.CredentialsType) error
+	// SessionAddAuthenticationMethods adds one or more authentication method to the session.
+	SessionAddAuthenticationMethods(ctx context.Context, sid uuid.UUID, methods ...AuthenticationMethod) error
 }
 
 type ManagementProvider interface {

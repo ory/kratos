@@ -62,11 +62,13 @@ type Registry interface {
 	Tracer(context.Context) *tracing.Tracer
 
 	config.Provider
+	CourierConfig(ctx context.Context) config.CourierConfigs
 	WithConfig(c *config.Config) Registry
 
 	x.CSRFProvider
 	x.WriterProvider
 	x.LoggingProvider
+	x.HTTPClientProvider
 
 	continuity.ManagementProvider
 	continuity.PersistenceProvider

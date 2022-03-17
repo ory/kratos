@@ -25,6 +25,17 @@
 
 Ory Kratos is the first cloud native Identity and User Management System in the world. Finally, it is no longer necessary to implement a User Login process for the umpteenth time!
 
+## Ory Cloud
+
+The easiest way to get started with Ory Software is in Ory Cloud! It is [**free for developers**](https://console.ory.sh/registration?utm_source=github&utm_medium=banner&utm_campaign=kratos-readme), forever, no credit card required!
+
+Ory Cloud has easy examples, administrative user interfaces, hosted pages (e.g. for login or registration), support for custom domains, collaborative features for your colleagues, and much more!
+
+### :mega: Community gets Ory Cloud for Free! :mega:
+
+Ory community members get the Ory Cloud Start Up plan **free for a year**, with all quality-of-life features available, such as custom domains and giving your team members access. [Sign up with your GitHub account](https://console.ory.sh/registration?preferred_plan=start-up&utm_source=github&utm_medium=banner&utm_campaign=kratos-readme-first900) and use the coupon code **`FIRST900`** on the *"Start-Up Plan"* checkout page to calim your free project now! Make sure to be signed up to the [Ory Community Slack](https://slack.ory.sh) when using the code!
+
+
 <!-- START doctoc generated TOC please keep comment here to allow auto update -->
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 **Table of Contents**
@@ -236,7 +247,19 @@ that your company deserves a spot here, reach out to
             <td>Sponsor</td>
             <td>Strivacity</td>
             <td align="center"><img height="16px" src="https://raw.githubusercontent.com/ory/meta/master/static/adopters/strivacity.svg" alt="Strivacity"></td>
-            <td><a href="https://strivacity.com/">strivacity</a></td>
+            <td><a href="https://strivacity.com/">strivacity.com</a></td>
+        </tr>
+        <tr>
+            <td>Adopter *</td>
+            <td>Hanko</td>
+            <td align="center"><img height="32px" src="https://raw.githubusercontent.com/ory/meta/master/static/adopters/hanko.svg" alt="Hanko"></td>
+            <td><a href="https://hanko.io/">hanko.io</a></td>
+        </tr>
+        <tr>
+            <td>Adopter *</td>
+            <td>Rabbit</td>
+            <td align="center"><img height="32px" src="https://raw.githubusercontent.com/ory/meta/master/static/adopters/rabbit.svg" alt="rabbit"></td>
+            <td><a href="https://rabbit.co.th/">rabbit.co.th</a></td>
         </tr>
     </tbody>
 </table>
@@ -503,6 +526,30 @@ For more details, run:
 <pre type="repo/executable">
 ./test/e2e/run.sh
 </pre>
+
+**Run only a singular test**
+
+Add `.only` to the test you would like to run.
+
+For example:
+
+```ts
+it.only('invalid remote recovery email template', () => {
+    ...
+})
+```
+
+**Run a subset of tests**
+
+This will require editing the `cypress.json` file located in the `test/e2e/` folder.
+
+Add the `testFiles` option and specify the test to run inside the `cypress/integration` folder.
+As an example we will add only the `network` tests.
+```json
+"testFiles": ["profiles/network/*"],
+```
+
+Now start the tests again using the run script or makefile.
 
 #### Build Docker
 

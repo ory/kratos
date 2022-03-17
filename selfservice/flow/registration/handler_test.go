@@ -40,7 +40,7 @@ func TestHandlerRedirectOnAuthenticated(t *testing.T) {
 
 	redirTS := testhelpers.NewRedirTS(t, "already authenticated", conf)
 	conf.MustSet(config.ViperKeySelfServiceRegistrationEnabled, true)
-	conf.MustSet(config.ViperKeyDefaultIdentitySchemaURL, "file://./stub/identity.schema.json")
+	testhelpers.SetDefaultIdentitySchema(conf, "file://./stub/identity.schema.json")
 
 	t.Run("does redirect to default on authenticated request", func(t *testing.T) {
 		body, res := testhelpers.MockMakeAuthenticatedRequest(t, reg, conf, router.Router, x.NewTestHTTPRequest(t, "GET", ts.URL+registration.RouteInitBrowserFlow, nil))
@@ -66,7 +66,7 @@ func TestInitFlow(t *testing.T) {
 
 	conf.MustSet(config.ViperKeySelfServiceRegistrationEnabled, true)
 	conf.MustSet(config.ViperKeySelfServiceBrowserDefaultReturnTo, "https://www.ory.sh")
-	conf.MustSet(config.ViperKeyDefaultIdentitySchemaURL, "file://./stub/login.schema.json")
+	testhelpers.SetDefaultIdentitySchema(conf, "file://./stub/login.schema.json")
 
 	assertion := func(body []byte, isForced, isApi bool) {
 		if isApi {
@@ -167,6 +167,24 @@ func TestInitFlow(t *testing.T) {
 				testhelpers.GetSelfServiceRedirectLocation(t, publicTS.URL+registration.RouteInitBrowserFlow),
 			)
 		})
+
+		t.Run("case=redirects with 303", func(t *testing.T) {
+			c := &http.Client{}
+			// don't get the reference, instead copy the values, so we don't alter the client directly.
+			*c = *publicTS.Client()
+			// prevent the redirect
+			c.CheckRedirect = func(req *http.Request, via []*http.Request) error {
+				return http.ErrUseLastResponse
+			}
+			req, err := http.NewRequest("GET", publicTS.URL+registration.RouteInitBrowserFlow, nil)
+			require.NoError(t, err)
+
+			res, err := c.Do(req)
+			require.NoError(t, err)
+			// here we check that the redirect status is 303
+			require.Equal(t, http.StatusSeeOther, res.StatusCode)
+			defer res.Body.Close()
+		})
 	})
 }
 
@@ -174,7 +192,7 @@ func TestDisabledFlow(t *testing.T) {
 	conf, reg := internal.NewFastRegistryWithMocks(t)
 
 	conf.MustSet(config.ViperKeySelfServiceRegistrationEnabled, false)
-	conf.MustSet(config.ViperKeyDefaultIdentitySchemaURL, "file://./stub/login.schema.json")
+	testhelpers.SetDefaultIdentitySchema(conf, "file://./stub/login.schema.json")
 	conf.MustSet(config.ViperKeySelfServiceStrategyConfig+"."+string(identity.CredentialsTypePassword),
 		map[string]interface{}{"enabled": true})
 
@@ -230,7 +248,7 @@ func TestDisabledFlow(t *testing.T) {
 func TestGetFlow(t *testing.T) {
 	conf, reg := internal.NewFastRegistryWithMocks(t)
 	conf.MustSet(config.ViperKeySelfServiceRegistrationEnabled, true)
-	conf.MustSet(config.ViperKeyDefaultIdentitySchemaURL, "file://./stub/registration.schema.json")
+	testhelpers.SetDefaultIdentitySchema(conf, "file://./stub/registration.schema.json")
 	conf.MustSet(config.ViperKeySelfServiceStrategyConfig+"."+string(identity.CredentialsTypePassword),
 		map[string]interface{}{"enabled": true})
 
@@ -285,7 +303,7 @@ func TestGetFlow(t *testing.T) {
 	})
 
 	t.Run("case=expired with return_to", func(t *testing.T) {
-		conf.MustSet(config.ViperKeyURLsWhitelistedReturnToDomains, []string{"https://www.ory.sh/"})
+		conf.MustSet(config.ViperKeyURLsAllowedReturnToDomains, []string{"https://www.ory.sh/"})
 		client := testhelpers.NewClientWithCookies(t)
 		setupRegistrationUI(t, client)
 		body := x.EasyGetBody(t, client, public.URL+registration.RouteInitBrowserFlow+"?return_to=https://www.ory.sh")

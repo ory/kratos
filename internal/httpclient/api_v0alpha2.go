@@ -244,7 +244,7 @@ type V0alpha2Api interface {
 		`session_already_available`: The user is already signed in.
 		`self_service_flow_expired`: The flow is expired and you should request a new one.
 
-		More information can be found at [Ory Kratos User Login and User Registration Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-login-user-registration).
+		More information can be found at [Ory Kratos User Login](https://www.ory.sh/docs/kratos/self-service/flows/user-login) and [User Registration Documentation](https://www.ory.sh/docs/kratos/self-service/flows/user-registration).
 			 * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
 			 * @return V0alpha2ApiApiGetSelfServiceLoginFlowRequest
 	*/
@@ -275,7 +275,7 @@ type V0alpha2Api interface {
 		})
 		```
 
-		More information can be found at [Ory Kratos Account Recovery Documentation](../self-service/flows/account-recovery.mdx).
+		More information can be found at [Ory Kratos Account Recovery Documentation](../self-service/flows/account-recovery).
 			 * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
 			 * @return V0alpha2ApiApiGetSelfServiceRecoveryFlowRequest
 	*/
@@ -311,7 +311,7 @@ type V0alpha2Api interface {
 		`session_already_available`: The user is already signed in.
 		`self_service_flow_expired`: The flow is expired and you should request a new one.
 
-		More information can be found at [Ory Kratos User Login and User Registration Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-login-user-registration).
+		More information can be found at [Ory Kratos User Login](https://www.ory.sh/docs/kratos/self-service/flows/user-login) and [User Registration Documentation](https://www.ory.sh/docs/kratos/self-service/flows/user-registration).
 			 * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
 			 * @return V0alpha2ApiApiGetSelfServiceRegistrationFlowRequest
 	*/
@@ -395,7 +395,7 @@ type V0alpha2Api interface {
 		<script src="https://public-kratos.example.org/.well-known/ory/webauthn.js" type="script" async />
 		```
 
-		More information can be found at [Ory Kratos User Login and User Registration Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-login-user-registration).
+		More information can be found at [Ory Kratos User Login](https://www.ory.sh/docs/kratos/self-service/flows/user-login) and [User Registration Documentation](https://www.ory.sh/docs/kratos/self-service/flows/user-registration).
 			 * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
 			 * @return V0alpha2ApiApiGetWebAuthnJavaScriptRequest
 	*/
@@ -427,7 +427,7 @@ type V0alpha2Api interface {
 
 		This endpoint is NOT INTENDED for clients that do not have a browser (Chrome, Firefox, ...) as cookies are needed.
 
-		More information can be found at [Ory Kratos User Login and User Registration Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-login-user-registration).
+		More information can be found at [Ory Kratos User Login](https://www.ory.sh/docs/kratos/self-service/flows/user-login) and [User Registration Documentation](https://www.ory.sh/docs/kratos/self-service/flows/user-registration).
 			 * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
 			 * @return V0alpha2ApiApiInitializeSelfServiceLoginFlowForBrowsersRequest
 	*/
@@ -460,7 +460,7 @@ type V0alpha2Api interface {
 
 		This endpoint MUST ONLY be used in scenarios such as native mobile apps (React Native, Objective C, Swift, Java, ...).
 
-		More information can be found at [Ory Kratos User Login and User Registration Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-login-user-registration).
+		More information can be found at [Ory Kratos User Login](https://www.ory.sh/docs/kratos/self-service/flows/user-login) and [User Registration Documentation](https://www.ory.sh/docs/kratos/self-service/flows/user-registration).
 			 * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
 			 * @return V0alpha2ApiApiInitializeSelfServiceLoginFlowWithoutBrowserRequest
 	*/
@@ -483,7 +483,7 @@ type V0alpha2Api interface {
 
 		This endpoint is NOT INTENDED for clients that do not have a browser (Chrome, Firefox, ...) as cookies are needed.
 
-		More information can be found at [Ory Kratos Account Recovery Documentation](../self-service/flows/account-recovery.mdx).
+		More information can be found at [Ory Kratos Account Recovery Documentation](../self-service/flows/account-recovery).
 			 * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
 			 * @return V0alpha2ApiApiInitializeSelfServiceRecoveryFlowForBrowsersRequest
 	*/
@@ -510,7 +510,7 @@ type V0alpha2Api interface {
 		This endpoint MUST ONLY be used in scenarios such as native mobile apps (React Native, Objective C, Swift, Java, ...).
 
 
-		More information can be found at [Ory Kratos Account Recovery Documentation](../self-service/flows/account-recovery.mdx).
+		More information can be found at [Ory Kratos Account Recovery Documentation](../self-service/flows/account-recovery).
 			 * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
 			 * @return V0alpha2ApiApiInitializeSelfServiceRecoveryFlowWithoutBrowserRequest
 	*/
@@ -548,7 +548,7 @@ type V0alpha2Api interface {
 
 		This endpoint is NOT INTENDED for clients that do not have a browser (Chrome, Firefox, ...) as cookies are needed.
 
-		More information can be found at [Ory Kratos User Login and User Registration Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-login-user-registration).
+		More information can be found at [Ory Kratos User Login](https://www.ory.sh/docs/kratos/self-service/flows/user-login) and [User Registration Documentation](https://www.ory.sh/docs/kratos/self-service/flows/user-registration).
 			 * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
 			 * @return V0alpha2ApiApiInitializeSelfServiceRegistrationFlowForBrowsersRequest
 	*/
@@ -580,7 +580,7 @@ type V0alpha2Api interface {
 
 		This endpoint MUST ONLY be used in scenarios such as native mobile apps (React Native, Objective C, Swift, Java, ...).
 
-		More information can be found at [Ory Kratos User Login and User Registration Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-login-user-registration).
+		More information can be found at [Ory Kratos User Login](https://www.ory.sh/docs/kratos/self-service/flows/user-login) and [User Registration Documentation](https://www.ory.sh/docs/kratos/self-service/flows/user-registration).
 			 * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
 			 * @return V0alpha2ApiApiInitializeSelfServiceRegistrationFlowWithoutBrowserRequest
 	*/
@@ -786,16 +786,16 @@ type V0alpha2Api interface {
 
 		API flows expect `application/json` to be sent in the body and responds with
 		HTTP 200 and a application/json body with the session token on success;
-		HTTP 302 redirect to a fresh login flow if the original flow expired with the appropriate error messages set;
+		HTTP 303 redirect to a fresh login flow if the original flow expired with the appropriate error messages set;
 		HTTP 400 on form validation errors.
 
 		Browser flows expect a Content-Type of `application/x-www-form-urlencoded` or `application/json` to be sent in the body and respond with
-		a HTTP 302 redirect to the post/after login URL or the `return_to` value if it was set and if the login succeeded;
-		a HTTP 302 redirect to the login UI URL with the flow ID containing the validation errors otherwise.
+		a HTTP 303 redirect to the post/after login URL or the `return_to` value if it was set and if the login succeeded;
+		a HTTP 303 redirect to the login UI URL with the flow ID containing the validation errors otherwise.
 
 		Browser flows with an accept header of `application/json` will not redirect but instead respond with
 		HTTP 200 and a application/json body with the signed in identity and a `Set-Cookie` header on success;
-		HTTP 302 redirect to a fresh login flow if the original flow expired with the appropriate error messages set;
+		HTTP 303 redirect to a fresh login flow if the original flow expired with the appropriate error messages set;
 		HTTP 400 on form validation errors.
 
 		If this endpoint is called with `Accept: application/json` in the header, the response contains the flow without a redirect. In the
@@ -807,7 +807,7 @@ type V0alpha2Api interface {
 		`browser_location_change_required`: Usually sent when an AJAX request indicates that the browser needs to open a specific URL.
 		Most likely used in Social Sign In flows.
 
-		More information can be found at [Ory Kratos User Login and User Registration Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-login-user-registration).
+		More information can be found at [Ory Kratos User Login](https://www.ory.sh/docs/kratos/self-service/flows/user-login) and [User Registration Documentation](https://www.ory.sh/docs/kratos/self-service/flows/user-registration).
 			 * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
 			 * @return V0alpha2ApiApiSubmitSelfServiceLoginFlowRequest
 	*/
@@ -823,7 +823,7 @@ type V0alpha2Api interface {
 			 * SubmitSelfServiceLogoutFlow Complete Self-Service Logout
 			 * This endpoint logs out an identity in a self-service manner.
 
-		If the `Accept` HTTP header is not set to `application/json`, the browser will be redirected (HTTP 302 Found)
+		If the `Accept` HTTP header is not set to `application/json`, the browser will be redirected (HTTP 303 See Other)
 		to the `return_to` parameter of the initial request or fall back to `urls.default_return_to`.
 
 		If the `Accept` HTTP header is set to `application/json`, a 204 No Content response
@@ -872,16 +872,16 @@ type V0alpha2Api interface {
 		`choose_method` expects `flow` (in the URL query) and `email` (in the body) to be sent
 		and works with API- and Browser-initiated flows.
 		For API clients and Browser clients with HTTP Header `Accept: application/json` it either returns a HTTP 200 OK when the form is valid and HTTP 400 OK when the form is invalid.
-		and a HTTP 302 Found redirect with a fresh recovery flow if the flow was otherwise invalid (e.g. expired).
-		For Browser clients without HTTP Header `Accept` or with `Accept: text/*` it returns a HTTP 302 Found redirect to the Recovery UI URL with the Recovery Flow ID appended.
+		and a HTTP 303 See Other redirect with a fresh recovery flow if the flow was otherwise invalid (e.g. expired).
+		For Browser clients without HTTP Header `Accept` or with `Accept: text/*` it returns a HTTP 303 See Other redirect to the Recovery UI URL with the Recovery Flow ID appended.
 		`sent_email` is the success state after `choose_method` for the `link` method and allows the user to request another recovery email. It
 		works for both API and Browser-initiated flows and returns the same responses as the flow in `choose_method` state.
 		`passed_challenge` expects a `token` to be sent in the URL query and given the nature of the flow ("sending a recovery link")
-		does not have any API capabilities. The server responds with a HTTP 302 Found redirect either to the Settings UI URL
+		does not have any API capabilities. The server responds with a HTTP 303 See Other redirect either to the Settings UI URL
 		(if the link was valid) and instructs the user to update their password, or a redirect to the Recover UI URL with
 		a new Recovery Flow ID which contains an error message that the recovery link was invalid.
 
-		More information can be found at [Ory Kratos Account Recovery Documentation](../self-service/flows/account-recovery.mdx).
+		More information can be found at [Ory Kratos Account Recovery Documentation](../self-service/flows/account-recovery).
 			 * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
 			 * @return V0alpha2ApiApiSubmitSelfServiceRecoveryFlowRequest
 	*/
@@ -901,16 +901,16 @@ type V0alpha2Api interface {
 		API flows expect `application/json` to be sent in the body and respond with
 		HTTP 200 and a application/json body with the created identity success - if the session hook is configured the
 		`session` and `session_token` will also be included;
-		HTTP 302 redirect to a fresh registration flow if the original flow expired with the appropriate error messages set;
+		HTTP 303 redirect to a fresh registration flow if the original flow expired with the appropriate error messages set;
 		HTTP 400 on form validation errors.
 
 		Browser flows expect a Content-Type of `application/x-www-form-urlencoded` or `application/json` to be sent in the body and respond with
-		a HTTP 302 redirect to the post/after registration URL or the `return_to` value if it was set and if the registration succeeded;
-		a HTTP 302 redirect to the registration UI URL with the flow ID containing the validation errors otherwise.
+		a HTTP 303 redirect to the post/after registration URL or the `return_to` value if it was set and if the registration succeeded;
+		a HTTP 303 redirect to the registration UI URL with the flow ID containing the validation errors otherwise.
 
 		Browser flows with an accept header of `application/json` will not redirect but instead respond with
 		HTTP 200 and a application/json body with the signed in identity and a `Set-Cookie` header on success;
-		HTTP 302 redirect to a fresh login flow if the original flow expired with the appropriate error messages set;
+		HTTP 303 redirect to a fresh login flow if the original flow expired with the appropriate error messages set;
 		HTTP 400 on form validation errors.
 
 		If this endpoint is called with `Accept: application/json` in the header, the response contains the flow without a redirect. In the
@@ -922,7 +922,7 @@ type V0alpha2Api interface {
 		`browser_location_change_required`: Usually sent when an AJAX request indicates that the browser needs to open a specific URL.
 		Most likely used in Social Sign In flows.
 
-		More information can be found at [Ory Kratos User Login and User Registration Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-login-user-registration).
+		More information can be found at [Ory Kratos User Login](https://www.ory.sh/docs/kratos/self-service/flows/user-login) and [User Registration Documentation](https://www.ory.sh/docs/kratos/self-service/flows/user-registration).
 			 * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
 			 * @return V0alpha2ApiApiSubmitSelfServiceRegistrationFlowRequest
 	*/
@@ -941,20 +941,20 @@ type V0alpha2Api interface {
 
 		API-initiated flows expect `application/json` to be sent in the body and respond with
 		HTTP 200 and an application/json body with the session token on success;
-		HTTP 302 redirect to a fresh settings flow if the original flow expired with the appropriate error messages set;
+		HTTP 303 redirect to a fresh settings flow if the original flow expired with the appropriate error messages set;
 		HTTP 400 on form validation errors.
 		HTTP 401 when the endpoint is called without a valid session token.
 		HTTP 403 when `selfservice.flows.settings.privileged_session_max_age` was reached or the session's AAL is too low.
 		Implies that the user needs to re-authenticate.
 
 		Browser flows without HTTP Header `Accept` or with `Accept: text/*` respond with
-		a HTTP 302 redirect to the post/after settings URL or the `return_to` value if it was set and if the flow succeeded;
-		a HTTP 302 redirect to the Settings UI URL with the flow ID containing the validation errors otherwise.
-		a HTTP 302 redirect to the login endpoint when `selfservice.flows.settings.privileged_session_max_age` was reached or the session's AAL is too low.
+		a HTTP 303 redirect to the post/after settings URL or the `return_to` value if it was set and if the flow succeeded;
+		a HTTP 303 redirect to the Settings UI URL with the flow ID containing the validation errors otherwise.
+		a HTTP 303 redirect to the login endpoint when `selfservice.flows.settings.privileged_session_max_age` was reached or the session's AAL is too low.
 
 		Browser flows with HTTP Header `Accept: application/json` respond with
 		HTTP 200 and a application/json body with the signed in identity and a `Set-Cookie` header on success;
-		HTTP 302 redirect to a fresh login flow if the original flow expired with the appropriate error messages set;
+		HTTP 303 redirect to a fresh login flow if the original flow expired with the appropriate error messages set;
 		HTTP 401 when the endpoint is called without a valid session cookie.
 		HTTP 403 when the page is accessed without a session cookie or the session's AAL is too low.
 		HTTP 400 on form validation errors.
@@ -998,12 +998,12 @@ type V0alpha2Api interface {
 		`choose_method` expects `flow` (in the URL query) and `email` (in the body) to be sent
 		and works with API- and Browser-initiated flows.
 		For API clients and Browser clients with HTTP Header `Accept: application/json` it either returns a HTTP 200 OK when the form is valid and HTTP 400 OK when the form is invalid
-		and a HTTP 302 Found redirect with a fresh verification flow if the flow was otherwise invalid (e.g. expired).
-		For Browser clients without HTTP Header `Accept` or with `Accept: text/*` it returns a HTTP 302 Found redirect to the Verification UI URL with the Verification Flow ID appended.
+		and a HTTP 303 See Other redirect with a fresh verification flow if the flow was otherwise invalid (e.g. expired).
+		For Browser clients without HTTP Header `Accept` or with `Accept: text/*` it returns a HTTP 303 See Other redirect to the Verification UI URL with the Verification Flow ID appended.
 		`sent_email` is the success state after `choose_method` when using the `link` method and allows the user to request another verification email. It
 		works for both API and Browser-initiated flows and returns the same responses as the flow in `choose_method` state.
 		`passed_challenge` expects a `token` to be sent in the URL query and given the nature of the flow ("sending a verification link")
-		does not have any API capabilities. The server responds with a HTTP 302 Found redirect either to the Settings UI URL
+		does not have any API capabilities. The server responds with a HTTP 303 See Other redirect either to the Settings UI URL
 		(if the link was valid) and instructs the user to update their password, or a redirect to the Verification UI URL with
 		a new Verification Flow ID which contains an error message that the verification link was invalid.
 
@@ -1134,7 +1134,7 @@ func (a *V0alpha2ApiService) AdminCreateIdentityExecute(r V0alpha2ApiApiAdminCre
 		return localVarReturnValue, nil, &GenericOpenAPIError{error: err.Error()}
 	}
 
-	localVarPath := localBasePath + "/identities"
+	localVarPath := localBasePath + "/admin/identities"
 
 	localVarHeaderParams := make(map[string]string)
 	localVarQueryParams := url.Values{}
@@ -1287,7 +1287,7 @@ func (a *V0alpha2ApiService) AdminCreateSelfServiceRecoveryLinkExecute(r V0alpha
 		return localVarReturnValue, nil, &GenericOpenAPIError{error: err.Error()}
 	}
 
-	localVarPath := localBasePath + "/recovery/link"
+	localVarPath := localBasePath + "/admin/recovery/link"
 
 	localVarHeaderParams := make(map[string]string)
 	localVarQueryParams := url.Values{}
@@ -1424,7 +1424,7 @@ func (a *V0alpha2ApiService) AdminDeleteIdentityExecute(r V0alpha2ApiApiAdminDel
 		return nil, &GenericOpenAPIError{error: err.Error()}
 	}
 
-	localVarPath := localBasePath + "/identities/{id}"
+	localVarPath := localBasePath + "/admin/identities/{id}"
 	localVarPath = strings.Replace(localVarPath, "{"+"id"+"}", url.PathEscape(parameterToString(r.id, "")), -1)
 
 	localVarHeaderParams := make(map[string]string)
@@ -1553,7 +1553,7 @@ func (a *V0alpha2ApiService) AdminDeleteIdentitySessionsExecute(r V0alpha2ApiApi
 		return nil, &GenericOpenAPIError{error: err.Error()}
 	}
 
-	localVarPath := localBasePath + "/identities/{id}/sessions"
+	localVarPath := localBasePath + "/admin/identities/{id}/sessions"
 	localVarPath = strings.Replace(localVarPath, "{"+"id"+"}", url.PathEscape(parameterToString(r.id, "")), -1)
 
 	localVarHeaderParams := make(map[string]string)
@@ -1708,7 +1708,7 @@ func (a *V0alpha2ApiService) AdminGetIdentityExecute(r V0alpha2ApiApiAdminGetIde
 		return localVarReturnValue, nil, &GenericOpenAPIError{error: err.Error()}
 	}
 
-	localVarPath := localBasePath + "/identities/{id}"
+	localVarPath := localBasePath + "/admin/identities/{id}"
 	localVarPath = strings.Replace(localVarPath, "{"+"id"+"}", url.PathEscape(parameterToString(r.id, "")), -1)
 
 	localVarHeaderParams := make(map[string]string)
@@ -1867,7 +1867,7 @@ func (a *V0alpha2ApiService) AdminListIdentitiesExecute(r V0alpha2ApiApiAdminLis
 		return localVarReturnValue, nil, &GenericOpenAPIError{error: err.Error()}
 	}
 
-	localVarPath := localBasePath + "/identities"
+	localVarPath := localBasePath + "/admin/identities"
 
 	localVarHeaderParams := make(map[string]string)
 	localVarQueryParams := url.Values{}
@@ -2018,7 +2018,7 @@ func (a *V0alpha2ApiService) AdminListIdentitySessionsExecute(r V0alpha2ApiApiAd
 		return localVarReturnValue, nil, &GenericOpenAPIError{error: err.Error()}
 	}
 
-	localVarPath := localBasePath + "/identities/{id}/sessions"
+	localVarPath := localBasePath + "/admin/identities/{id}/sessions"
 	localVarPath = strings.Replace(localVarPath, "{"+"id"+"}", url.PathEscape(parameterToString(r.id, "")), -1)
 
 	localVarHeaderParams := make(map[string]string)
@@ -2196,7 +2196,7 @@ func (a *V0alpha2ApiService) AdminUpdateIdentityExecute(r V0alpha2ApiApiAdminUpd
 		return localVarReturnValue, nil, &GenericOpenAPIError{error: err.Error()}
 	}
 
-	localVarPath := localBasePath + "/identities/{id}"
+	localVarPath := localBasePath + "/admin/identities/{id}"
 	localVarPath = strings.Replace(localVarPath, "{"+"id"+"}", url.PathEscape(parameterToString(r.id, "")), -1)
 
 	localVarHeaderParams := make(map[string]string)
@@ -2764,7 +2764,7 @@ This request may fail due to several reasons. The `error.id` can be one of:
 `session_already_available`: The user is already signed in.
 `self_service_flow_expired`: The flow is expired and you should request a new one.
 
-More information can be found at [Ory Kratos User Login and User Registration Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-login-user-registration).
+More information can be found at [Ory Kratos User Login](https://www.ory.sh/docs/kratos/self-service/flows/user-login) and [User Registration Documentation](https://www.ory.sh/docs/kratos/self-service/flows/user-registration).
  * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
  * @return V0alpha2ApiApiGetSelfServiceLoginFlowRequest
 */
@@ -2939,7 +2939,7 @@ res.render('recovery', flow)
 })
 ```
 
-More information can be found at [Ory Kratos Account Recovery Documentation](../self-service/flows/account-recovery.mdx).
+More information can be found at [Ory Kratos Account Recovery Documentation](../self-service/flows/account-recovery).
  * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
  * @return V0alpha2ApiApiGetSelfServiceRecoveryFlowRequest
 */
@@ -3109,7 +3109,7 @@ This request may fail due to several reasons. The `error.id` can be one of:
 `session_already_available`: The user is already signed in.
 `self_service_flow_expired`: The flow is expired and you should request a new one.
 
-More information can be found at [Ory Kratos User Login and User Registration Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-login-user-registration).
+More information can be found at [Ory Kratos User Login](https://www.ory.sh/docs/kratos/self-service/flows/user-login) and [User Registration Documentation](https://www.ory.sh/docs/kratos/self-service/flows/user-registration).
  * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
  * @return V0alpha2ApiApiGetSelfServiceRegistrationFlowRequest
 */
@@ -3622,7 +3622,7 @@ If you are building a JavaScript Browser App (e.g. in ReactJS or AngularJS) you 
 <script src="https://public-kratos.example.org/.well-known/ory/webauthn.js" type="script" async />
 ```
 
-More information can be found at [Ory Kratos User Login and User Registration Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-login-user-registration).
+More information can be found at [Ory Kratos User Login](https://www.ory.sh/docs/kratos/self-service/flows/user-login) and [User Registration Documentation](https://www.ory.sh/docs/kratos/self-service/flows/user-registration).
  * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
  * @return V0alpha2ApiApiGetWebAuthnJavaScriptRequest
 */
@@ -3757,7 +3757,7 @@ case of an error, the `error.id` of the JSON response body can be one of:
 
 This endpoint is NOT INTENDED for clients that do not have a browser (Chrome, Firefox, ...) as cookies are needed.
 
-More information can be found at [Ory Kratos User Login and User Registration Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-login-user-registration).
+More information can be found at [Ory Kratos User Login](https://www.ory.sh/docs/kratos/self-service/flows/user-login) and [User Registration Documentation](https://www.ory.sh/docs/kratos/self-service/flows/user-registration).
  * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
  * @return V0alpha2ApiApiInitializeSelfServiceLoginFlowForBrowsersRequest
 */
@@ -3921,7 +3921,7 @@ In the case of an error, the `error.id` of the JSON response body can be one of:
 
 This endpoint MUST ONLY be used in scenarios such as native mobile apps (React Native, Objective C, Swift, Java, ...).
 
-More information can be found at [Ory Kratos User Login and User Registration Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-login-user-registration).
+More information can be found at [Ory Kratos User Login](https://www.ory.sh/docs/kratos/self-service/flows/user-login) and [User Registration Documentation](https://www.ory.sh/docs/kratos/self-service/flows/user-registration).
  * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
  * @return V0alpha2ApiApiInitializeSelfServiceLoginFlowWithoutBrowserRequest
 */
@@ -4065,7 +4065,7 @@ or a 400 bad request error if the user is already authenticated.
 
 This endpoint is NOT INTENDED for clients that do not have a browser (Chrome, Firefox, ...) as cookies are needed.
 
-More information can be found at [Ory Kratos Account Recovery Documentation](../self-service/flows/account-recovery.mdx).
+More information can be found at [Ory Kratos Account Recovery Documentation](../self-service/flows/account-recovery).
  * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
  * @return V0alpha2ApiApiInitializeSelfServiceRecoveryFlowForBrowsersRequest
 */
@@ -4201,7 +4201,7 @@ you vulnerable to a variety of CSRF attacks.
 This endpoint MUST ONLY be used in scenarios such as native mobile apps (React Native, Objective C, Swift, Java, ...).
 
 
-More information can be found at [Ory Kratos Account Recovery Documentation](../self-service/flows/account-recovery.mdx).
+More information can be found at [Ory Kratos Account Recovery Documentation](../self-service/flows/account-recovery).
  * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
  * @return V0alpha2ApiApiInitializeSelfServiceRecoveryFlowWithoutBrowserRequest
 */
@@ -4351,7 +4351,7 @@ If this endpoint is called via an AJAX request, the response contains the regist
 
 This endpoint is NOT INTENDED for clients that do not have a browser (Chrome, Firefox, ...) as cookies are needed.
 
-More information can be found at [Ory Kratos User Login and User Registration Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-login-user-registration).
+More information can be found at [Ory Kratos User Login](https://www.ory.sh/docs/kratos/self-service/flows/user-login) and [User Registration Documentation](https://www.ory.sh/docs/kratos/self-service/flows/user-registration).
  * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
  * @return V0alpha2ApiApiInitializeSelfServiceRegistrationFlowForBrowsersRequest
 */
@@ -4482,7 +4482,7 @@ In the case of an error, the `error.id` of the JSON response body can be one of:
 
 This endpoint MUST ONLY be used in scenarios such as native mobile apps (React Native, Objective C, Swift, Java, ...).
 
-More information can be found at [Ory Kratos User Login and User Registration Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-login-user-registration).
+More information can be found at [Ory Kratos User Login](https://www.ory.sh/docs/kratos/self-service/flows/user-login) and [User Registration Documentation](https://www.ory.sh/docs/kratos/self-service/flows/user-registration).
  * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
  * @return V0alpha2ApiApiInitializeSelfServiceRegistrationFlowWithoutBrowserRequest
 */
@@ -5795,16 +5795,16 @@ behaves differently for API and browser flows.
 
 API flows expect `application/json` to be sent in the body and responds with
 HTTP 200 and a application/json body with the session token on success;
-HTTP 302 redirect to a fresh login flow if the original flow expired with the appropriate error messages set;
+HTTP 303 redirect to a fresh login flow if the original flow expired with the appropriate error messages set;
 HTTP 400 on form validation errors.
 
 Browser flows expect a Content-Type of `application/x-www-form-urlencoded` or `application/json` to be sent in the body and respond with
-a HTTP 302 redirect to the post/after login URL or the `return_to` value if it was set and if the login succeeded;
-a HTTP 302 redirect to the login UI URL with the flow ID containing the validation errors otherwise.
+a HTTP 303 redirect to the post/after login URL or the `return_to` value if it was set and if the login succeeded;
+a HTTP 303 redirect to the login UI URL with the flow ID containing the validation errors otherwise.
 
 Browser flows with an accept header of `application/json` will not redirect but instead respond with
 HTTP 200 and a application/json body with the signed in identity and a `Set-Cookie` header on success;
-HTTP 302 redirect to a fresh login flow if the original flow expired with the appropriate error messages set;
+HTTP 303 redirect to a fresh login flow if the original flow expired with the appropriate error messages set;
 HTTP 400 on form validation errors.
 
 If this endpoint is called with `Accept: application/json` in the header, the response contains the flow without a redirect. In the
@@ -5816,7 +5816,7 @@ case of an error, the `error.id` of the JSON response body can be one of:
 `browser_location_change_required`: Usually sent when an AJAX request indicates that the browser needs to open a specific URL.
 Most likely used in Social Sign In flows.
 
-More information can be found at [Ory Kratos User Login and User Registration Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-login-user-registration).
+More information can be found at [Ory Kratos User Login](https://www.ory.sh/docs/kratos/self-service/flows/user-login) and [User Registration Documentation](https://www.ory.sh/docs/kratos/self-service/flows/user-registration).
  * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
  * @return V0alpha2ApiApiSubmitSelfServiceLoginFlowRequest
 */
@@ -5968,7 +5968,7 @@ func (r V0alpha2ApiApiSubmitSelfServiceLogoutFlowRequest) Execute() (*http.Respo
  * SubmitSelfServiceLogoutFlow Complete Self-Service Logout
  * This endpoint logs out an identity in a self-service manner.
 
-If the `Accept` HTTP header is not set to `application/json`, the browser will be redirected (HTTP 302 Found)
+If the `Accept` HTTP header is not set to `application/json`, the browser will be redirected (HTTP 303 See Other)
 to the `return_to` parameter of the initial request or fall back to `urls.default_return_to`.
 
 If the `Accept` HTTP header is set to `application/json`, a 204 No Content response
@@ -6232,16 +6232,16 @@ behaves differently for API and browser flows and has several states:
 `choose_method` expects `flow` (in the URL query) and `email` (in the body) to be sent
 and works with API- and Browser-initiated flows.
 For API clients and Browser clients with HTTP Header `Accept: application/json` it either returns a HTTP 200 OK when the form is valid and HTTP 400 OK when the form is invalid.
-and a HTTP 302 Found redirect with a fresh recovery flow if the flow was otherwise invalid (e.g. expired).
-For Browser clients without HTTP Header `Accept` or with `Accept: text/*` it returns a HTTP 302 Found redirect to the Recovery UI URL with the Recovery Flow ID appended.
+and a HTTP 303 See Other redirect with a fresh recovery flow if the flow was otherwise invalid (e.g. expired).
+For Browser clients without HTTP Header `Accept` or with `Accept: text/*` it returns a HTTP 303 See Other redirect to the Recovery UI URL with the Recovery Flow ID appended.
 `sent_email` is the success state after `choose_method` for the `link` method and allows the user to request another recovery email. It
 works for both API and Browser-initiated flows and returns the same responses as the flow in `choose_method` state.
 `passed_challenge` expects a `token` to be sent in the URL query and given the nature of the flow ("sending a recovery link")
-does not have any API capabilities. The server responds with a HTTP 302 Found redirect either to the Settings UI URL
+does not have any API capabilities. The server responds with a HTTP 303 See Other redirect either to the Settings UI URL
 (if the link was valid) and instructs the user to update their password, or a redirect to the Recover UI URL with
 a new Recovery Flow ID which contains an error message that the recovery link was invalid.
 
-More information can be found at [Ory Kratos Account Recovery Documentation](../self-service/flows/account-recovery.mdx).
+More information can be found at [Ory Kratos Account Recovery Documentation](../self-service/flows/account-recovery).
  * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
  * @return V0alpha2ApiApiSubmitSelfServiceRecoveryFlowRequest
 */
@@ -6387,16 +6387,16 @@ behaves differently for API and browser flows.
 API flows expect `application/json` to be sent in the body and respond with
 HTTP 200 and a application/json body with the created identity success - if the session hook is configured the
 `session` and `session_token` will also be included;
-HTTP 302 redirect to a fresh registration flow if the original flow expired with the appropriate error messages set;
+HTTP 303 redirect to a fresh registration flow if the original flow expired with the appropriate error messages set;
 HTTP 400 on form validation errors.
 
 Browser flows expect a Content-Type of `application/x-www-form-urlencoded` or `application/json` to be sent in the body and respond with
-a HTTP 302 redirect to the post/after registration URL or the `return_to` value if it was set and if the registration succeeded;
-a HTTP 302 redirect to the registration UI URL with the flow ID containing the validation errors otherwise.
+a HTTP 303 redirect to the post/after registration URL or the `return_to` value if it was set and if the registration succeeded;
+a HTTP 303 redirect to the registration UI URL with the flow ID containing the validation errors otherwise.
 
 Browser flows with an accept header of `application/json` will not redirect but instead respond with
 HTTP 200 and a application/json body with the signed in identity and a `Set-Cookie` header on success;
-HTTP 302 redirect to a fresh login flow if the original flow expired with the appropriate error messages set;
+HTTP 303 redirect to a fresh login flow if the original flow expired with the appropriate error messages set;
 HTTP 400 on form validation errors.
 
 If this endpoint is called with `Accept: application/json` in the header, the response contains the flow without a redirect. In the
@@ -6408,7 +6408,7 @@ case of an error, the `error.id` of the JSON response body can be one of:
 `browser_location_change_required`: Usually sent when an AJAX request indicates that the browser needs to open a specific URL.
 Most likely used in Social Sign In flows.
 
-More information can be found at [Ory Kratos User Login and User Registration Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-login-user-registration).
+More information can be found at [Ory Kratos User Login](https://www.ory.sh/docs/kratos/self-service/flows/user-login) and [User Registration Documentation](https://www.ory.sh/docs/kratos/self-service/flows/user-registration).
  * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
  * @return V0alpha2ApiApiSubmitSelfServiceRegistrationFlowRequest
 */
@@ -6565,20 +6565,20 @@ behaves differently for API and browser flows.
 
 API-initiated flows expect `application/json` to be sent in the body and respond with
 HTTP 200 and an application/json body with the session token on success;
-HTTP 302 redirect to a fresh settings flow if the original flow expired with the appropriate error messages set;
+HTTP 303 redirect to a fresh settings flow if the original flow expired with the appropriate error messages set;
 HTTP 400 on form validation errors.
 HTTP 401 when the endpoint is called without a valid session token.
 HTTP 403 when `selfservice.flows.settings.privileged_session_max_age` was reached or the session's AAL is too low.
 Implies that the user needs to re-authenticate.
 
 Browser flows without HTTP Header `Accept` or with `Accept: text/*` respond with
-a HTTP 302 redirect to the post/after settings URL or the `return_to` value if it was set and if the flow succeeded;
-a HTTP 302 redirect to the Settings UI URL with the flow ID containing the validation errors otherwise.
-a HTTP 302 redirect to the login endpoint when `selfservice.flows.settings.privileged_session_max_age` was reached or the session's AAL is too low.
+a HTTP 303 redirect to the post/after settings URL or the `return_to` value if it was set and if the flow succeeded;
+a HTTP 303 redirect to the Settings UI URL with the flow ID containing the validation errors otherwise.
+a HTTP 303 redirect to the login endpoint when `selfservice.flows.settings.privileged_session_max_age` was reached or the session's AAL is too low.
 
 Browser flows with HTTP Header `Accept: application/json` respond with
 HTTP 200 and a application/json body with the signed in identity and a `Set-Cookie` header on success;
-HTTP 302 redirect to a fresh login flow if the original flow expired with the appropriate error messages set;
+HTTP 303 redirect to a fresh login flow if the original flow expired with the appropriate error messages set;
 HTTP 401 when the endpoint is called without a valid session cookie.
 HTTP 403 when the page is accessed without a session cookie or the session's AAL is too low.
 HTTP 400 on form validation errors.
@@ -6783,12 +6783,12 @@ behaves differently for API and browser flows and has several states:
 `choose_method` expects `flow` (in the URL query) and `email` (in the body) to be sent
 and works with API- and Browser-initiated flows.
 For API clients and Browser clients with HTTP Header `Accept: application/json` it either returns a HTTP 200 OK when the form is valid and HTTP 400 OK when the form is invalid
-and a HTTP 302 Found redirect with a fresh verification flow if the flow was otherwise invalid (e.g. expired).
-For Browser clients without HTTP Header `Accept` or with `Accept: text/*` it returns a HTTP 302 Found redirect to the Verification UI URL with the Verification Flow ID appended.
+and a HTTP 303 See Other redirect with a fresh verification flow if the flow was otherwise invalid (e.g. expired).
+For Browser clients without HTTP Header `Accept` or with `Accept: text/*` it returns a HTTP 303 See Other redirect to the Verification UI URL with the Verification Flow ID appended.
 `sent_email` is the success state after `choose_method` when using the `link` method and allows the user to request another verification email. It
 works for both API and Browser-initiated flows and returns the same responses as the flow in `choose_method` state.
 `passed_challenge` expects a `token` to be sent in the URL query and given the nature of the flow ("sending a verification link")
-does not have any API capabilities. The server responds with a HTTP 302 Found redirect either to the Settings UI URL
+does not have any API capabilities. The server responds with a HTTP 303 See Other redirect either to the Settings UI URL
 (if the link was valid) and instructs the user to update their password, or a redirect to the Verification UI URL with
 a new Verification Flow ID which contains an error message that the verification link was invalid.
 

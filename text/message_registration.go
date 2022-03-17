@@ -27,7 +27,7 @@ func NewInfoRegistrationWith(provider string) *Message {
 
 func NewInfoRegistrationContinue() *Message {
 	return &Message{
-		ID:   InfoRegistrationContinue,
+		ID:   InfoSelfServiceRegistrationContinue,
 		Text: "Continue",
 		Type: Info,
 	}
@@ -41,5 +41,13 @@ func NewErrorValidationRegistrationFlowExpired(ago time.Duration) *Message {
 		Context: context(map[string]interface{}{
 			"expired_at": Now().UTC().Add(ago),
 		}),
+	}
+}
+
+func NewInfoSelfServiceRegistrationRegisterWebAuthn() *Message {
+	return &Message{
+		ID:   InfoSelfServiceRegistrationRegisterWebAuthn,
+		Text: "Sign up with security key",
+		Type: Info,
 	}
 }

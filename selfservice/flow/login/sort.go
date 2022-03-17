@@ -1,14 +1,18 @@
 package login
 
-import "github.com/ory/kratos/ui/node"
+import (
+	"context"
 
-func sortNodes(n node.Nodes) error {
-	return n.SortBySchema(
+	"github.com/ory/kratos/ui/node"
+)
+
+func sortNodes(ctx context.Context, n node.Nodes) error {
+	return n.SortBySchema(ctx,
 		node.SortByGroups([]node.Group{
-			node.DefaultGroup,
 			node.OpenIDConnectGroup,
-			node.PasswordGroup,
+			node.DefaultGroup,
 			node.WebAuthnGroup,
+			node.PasswordGroup,
 			node.TOTPGroup,
 			node.LookupGroup,
 		}),

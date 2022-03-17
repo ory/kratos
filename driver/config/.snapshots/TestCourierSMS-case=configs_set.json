@@ -1,0 +1,15 @@
+{
+  "auth": {
+    "config": {
+      "password": "YourPass",
+      "user": "YourUsername"
+    },
+    "type": "basic_auth"
+  },
+  "body": "base64://e30=",
+  "header": {
+    "Content-Type": "application/x-www-form-urlencoded"
+  },
+  "method": "POST",
+  "url": "https://api.twilio.com/2010-04-01/Accounts/YourAccountID/Messages.json"
+}

@@ -27,7 +27,7 @@ context('Social Sign In Errors', () => {
       })
 
       it('should fail when the login request is rejected', () => {
-        cy.triggerOidc()
+        cy.triggerOidc(app)
         cy.get('#reject').click()
         cy.location('pathname').should('equal', '/login')
         cy.get(appPrefix(app) + '[data-testid="ui/message/4000001"]').should(
@@ -39,7 +39,7 @@ context('Social Sign In Errors', () => {
 
       it('should fail when the consent request is rejected', () => {
         const email = gen.email()
-        cy.triggerOidc()
+        cy.triggerOidc(app)
         cy.get('#username').type(email)
         cy.get('#accept').click()
         cy.get('#reject').click()
@@ -53,7 +53,7 @@ context('Social Sign In Errors', () => {
 
       it('should fail when the id_token is missing', () => {
         const email = gen.email()
-        cy.triggerOidc()
+        cy.triggerOidc(app)
         cy.get('#username').type(email)
         cy.get('#accept').click()
         cy.get('#website').type(website)
@@ -70,7 +70,7 @@ context('Social Sign In Errors', () => {
 
         const email = gen.email()
         cy.visit(login)
-        cy.triggerOidc()
+        cy.triggerOidc(app)
 
         cy.get('#username').clear().type(email)
         cy.get('#remember').click()

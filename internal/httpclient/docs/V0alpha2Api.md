@@ -4,14 +4,14 @@ All URIs are relative to *http://localhost*
 
 Method | HTTP request | Description
 ------------- | ------------- | -------------
-[**AdminCreateIdentity**](V0alpha2Api.md#AdminCreateIdentity) | **Post** /identities | Create an Identity
-[**AdminCreateSelfServiceRecoveryLink**](V0alpha2Api.md#AdminCreateSelfServiceRecoveryLink) | **Post** /recovery/link | Create a Recovery Link
-[**AdminDeleteIdentity**](V0alpha2Api.md#AdminDeleteIdentity) | **Delete** /identities/{id} | Delete an Identity
-[**AdminDeleteIdentitySessions**](V0alpha2Api.md#AdminDeleteIdentitySessions) | **Delete** /identities/{id}/sessions | Calling this endpoint irrecoverably and permanently deletes and invalidates all sessions that belong to the given Identity.
-[**AdminGetIdentity**](V0alpha2Api.md#AdminGetIdentity) | **Get** /identities/{id} | Get an Identity
-[**AdminListIdentities**](V0alpha2Api.md#AdminListIdentities) | **Get** /identities | List Identities
-[**AdminListIdentitySessions**](V0alpha2Api.md#AdminListIdentitySessions) | **Get** /identities/{id}/sessions | This endpoint returns all sessions that belong to the given Identity.
-[**AdminUpdateIdentity**](V0alpha2Api.md#AdminUpdateIdentity) | **Put** /identities/{id} | Update an Identity
+[**AdminCreateIdentity**](V0alpha2Api.md#AdminCreateIdentity) | **Post** /admin/identities | Create an Identity
+[**AdminCreateSelfServiceRecoveryLink**](V0alpha2Api.md#AdminCreateSelfServiceRecoveryLink) | **Post** /admin/recovery/link | Create a Recovery Link
+[**AdminDeleteIdentity**](V0alpha2Api.md#AdminDeleteIdentity) | **Delete** /admin/identities/{id} | Delete an Identity
+[**AdminDeleteIdentitySessions**](V0alpha2Api.md#AdminDeleteIdentitySessions) | **Delete** /admin/identities/{id}/sessions | Calling this endpoint irrecoverably and permanently deletes and invalidates all sessions that belong to the given Identity.
+[**AdminGetIdentity**](V0alpha2Api.md#AdminGetIdentity) | **Get** /admin/identities/{id} | Get an Identity
+[**AdminListIdentities**](V0alpha2Api.md#AdminListIdentities) | **Get** /admin/identities | List Identities
+[**AdminListIdentitySessions**](V0alpha2Api.md#AdminListIdentitySessions) | **Get** /admin/identities/{id}/sessions | This endpoint returns all sessions that belong to the given Identity.
+[**AdminUpdateIdentity**](V0alpha2Api.md#AdminUpdateIdentity) | **Put** /admin/identities/{id} | Update an Identity
 [**CreateSelfServiceLogoutFlowUrlForBrowsers**](V0alpha2Api.md#CreateSelfServiceLogoutFlowUrlForBrowsers) | **Get** /self-service/logout/browser | Create a Logout URL for Browsers
 [**GetJsonSchema**](V0alpha2Api.md#GetJsonSchema) | **Get** /schemas/{id} | 
 [**GetSelfServiceError**](V0alpha2Api.md#GetSelfServiceError) | **Get** /self-service/errors | Get Self-Service Errors
@@ -408,7 +408,7 @@ import (
 
 func main() {
     perPage := int64(789) // int64 | Items per Page  This is the number of items per page. (optional) (default to 250)
-    page := int64(789) // int64 | Pagination Page (optional) (default to 0)
+    page := int64(789) // int64 | Pagination Page (optional) (default to 1)
 
     configuration := openapiclient.NewConfiguration()
     apiClient := openapiclient.NewAPIClient(configuration)
@@ -434,7 +434,7 @@ Other parameters are passed through a pointer to a apiAdminListIdentitiesRequest
 Name | Type | Description  | Notes
 ------------- | ------------- | ------------- | -------------
  **perPage** | **int64** | Items per Page  This is the number of items per page. | [default to 250]
- **page** | **int64** | Pagination Page | [default to 0]
+ **page** | **int64** | Pagination Page | [default to 1]
 
 ### Return type
 
@@ -477,7 +477,7 @@ import (
 func main() {
     id := "id_example" // string | ID is the identity's ID.
     perPage := int64(789) // int64 | Items per Page  This is the number of items per page. (optional) (default to 250)
-    page := int64(789) // int64 | Pagination Page (optional) (default to 0)
+    page := int64(789) // int64 | Pagination Page (optional) (default to 1)
     active := true // bool | Active is a boolean flag that filters out sessions based on the state. If no value is provided, all sessions are returned. (optional)
 
     configuration := openapiclient.NewConfiguration()
@@ -509,7 +509,7 @@ Name | Type | Description  | Notes
 ------------- | ------------- | ------------- | -------------
 
  **perPage** | **int64** | Items per Page  This is the number of items per page. | [default to 250]
- **page** | **int64** | Pagination Page | [default to 0]
+ **page** | **int64** | Pagination Page | [default to 1]
  **active** | **bool** | Active is a boolean flag that filters out sessions based on the state. If no value is provided, all sessions are returned. | 
 
 ### Return type
@@ -552,7 +552,7 @@ import (
 
 func main() {
     id := "id_example" // string | ID must be set to the ID of identity you want to update
-    adminUpdateIdentityBody := *openapiclient.NewAdminUpdateIdentityBody(openapiclient.identityState("active"), map[string]interface{}(123)) // AdminUpdateIdentityBody |  (optional)
+    adminUpdateIdentityBody := *openapiclient.NewAdminUpdateIdentityBody("SchemaId_example", openapiclient.identityState("active"), map[string]interface{}(123)) // AdminUpdateIdentityBody |  (optional)
 
     configuration := openapiclient.NewConfiguration()
     apiClient := openapiclient.NewAPIClient(configuration)
@@ -1882,7 +1882,7 @@ import (
 
 func main() {
     perPage := int64(789) // int64 | Items per Page  This is the number of items per page. (optional) (default to 250)
-    page := int64(789) // int64 | Pagination Page (optional) (default to 0)
+    page := int64(789) // int64 | Pagination Page (optional) (default to 1)
 
     configuration := openapiclient.NewConfiguration()
     apiClient := openapiclient.NewAPIClient(configuration)
@@ -1908,7 +1908,7 @@ Other parameters are passed through a pointer to a apiListIdentitySchemasRequest
 Name | Type | Description  | Notes
 ------------- | ------------- | ------------- | -------------
  **perPage** | **int64** | Items per Page  This is the number of items per page. | [default to 250]
- **page** | **int64** | Pagination Page | [default to 0]
+ **page** | **int64** | Pagination Page | [default to 1]
 
 ### Return type
 
@@ -1952,7 +1952,7 @@ func main() {
     xSessionToken := "xSessionToken_example" // string | Set the Session Token when calling from non-browser clients. A session token has a format of `MP2YWEMeM8MxjkGKpH4dqOQ4Q4DlSPaj`. (optional)
     cookie := "cookie_example" // string | Set the Cookie Header. This is especially useful when calling this endpoint from a server-side application. In that scenario you must include the HTTP Cookie Header which originally was included in the request to your server. An example of a session in the HTTP Cookie Header is: `ory_kratos_session=a19iOVAbdzdgl70Rq1QZmrKmcjDtdsviCTZx7m9a9yHIUS8Wa9T7hvqyGTsLHi6Qifn2WUfpAKx9DWp0SJGleIn9vh2YF4A16id93kXFTgIgmwIOvbVAScyrx7yVl6bPZnCx27ec4WQDtaTewC1CpgudeDV2jQQnSaCP6ny3xa8qLH-QUgYqdQuoA_LF1phxgRCUfIrCLQOkolX5nv3ze_f==`.  It is ok if more than one cookie are included here as all other cookies will be ignored. (optional)
     perPage := int64(789) // int64 | Items per Page  This is the number of items per page. (optional) (default to 250)
-    page := int64(789) // int64 | Pagination Page (optional) (default to 0)
+    page := int64(789) // int64 | Pagination Page (optional) (default to 1)
 
     configuration := openapiclient.NewConfiguration()
     apiClient := openapiclient.NewAPIClient(configuration)
@@ -1980,7 +1980,7 @@ Name | Type | Description  | Notes
  **xSessionToken** | **string** | Set the Session Token when calling from non-browser clients. A session token has a format of &#x60;MP2YWEMeM8MxjkGKpH4dqOQ4Q4DlSPaj&#x60;. | 
  **cookie** | **string** | Set the Cookie Header. This is especially useful when calling this endpoint from a server-side application. In that scenario you must include the HTTP Cookie Header which originally was included in the request to your server. An example of a session in the HTTP Cookie Header is: &#x60;ory_kratos_session&#x3D;a19iOVAbdzdgl70Rq1QZmrKmcjDtdsviCTZx7m9a9yHIUS8Wa9T7hvqyGTsLHi6Qifn2WUfpAKx9DWp0SJGleIn9vh2YF4A16id93kXFTgIgmwIOvbVAScyrx7yVl6bPZnCx27ec4WQDtaTewC1CpgudeDV2jQQnSaCP6ny3xa8qLH-QUgYqdQuoA_LF1phxgRCUfIrCLQOkolX5nv3ze_f&#x3D;&#x3D;&#x60;.  It is ok if more than one cookie are included here as all other cookies will be ignored. | 
  **perPage** | **int64** | Items per Page  This is the number of items per page. | [default to 250]
- **page** | **int64** | Pagination Page | [default to 0]
+ **page** | **int64** | Pagination Page | [default to 1]
 
 ### Return type
 
@@ -2159,7 +2159,7 @@ import (
 func main() {
     flow := "flow_example" // string | The Login Flow ID  The value for this parameter comes from `flow` URL Query parameter sent to your application (e.g. `/login?flow=abcde`).
     xSessionToken := "xSessionToken_example" // string | The Session Token of the Identity performing the settings flow. (optional)
-    submitSelfServiceLoginFlowBody := openapiclient.submitSelfServiceLoginFlowBody{SubmitSelfServiceLoginFlowWithOidcMethodBody: openapiclient.NewSubmitSelfServiceLoginFlowWithOidcMethodBody("Method_example", "Provider_example")} // SubmitSelfServiceLoginFlowBody |  (optional)
+    submitSelfServiceLoginFlowBody := openapiclient.submitSelfServiceLoginFlowBody{SubmitSelfServiceLoginFlowWithLookupSecretMethodBody: openapiclient.NewSubmitSelfServiceLoginFlowWithLookupSecretMethodBody("LookupSecret_example", "Method_example")} // SubmitSelfServiceLoginFlowBody |  (optional)
 
     configuration := openapiclient.NewConfiguration()
     apiClient := openapiclient.NewAPIClient(configuration)
@@ -2497,7 +2497,7 @@ import (
 func main() {
     flow := "flow_example" // string | The Settings Flow ID  The value for this parameter comes from `flow` URL Query parameter sent to your application (e.g. `/settings?flow=abcde`).
     xSessionToken := "xSessionToken_example" // string | The Session Token of the Identity performing the settings flow. (optional)
-    submitSelfServiceSettingsFlowBody := openapiclient.submitSelfServiceSettingsFlowBody{SubmitSelfServiceSettingsFlowWithOidcMethodBody: openapiclient.NewSubmitSelfServiceSettingsFlowWithOidcMethodBody("Method_example")} // SubmitSelfServiceSettingsFlowBody |  (optional)
+    submitSelfServiceSettingsFlowBody := openapiclient.submitSelfServiceSettingsFlowBody{SubmitSelfServiceSettingsFlowWithLookupMethodBody: openapiclient.NewSubmitSelfServiceSettingsFlowWithLookupMethodBody("Method_example")} // SubmitSelfServiceSettingsFlowBody |  (optional)
 
     configuration := openapiclient.NewConfiguration()
     apiClient := openapiclient.NewAPIClient(configuration)

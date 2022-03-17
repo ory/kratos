@@ -3,6 +3,8 @@ package webauthn
 import (
 	"time"
 
+	"github.com/ory/kratos/identity"
+
 	"github.com/duo-labs/webauthn/webauthn"
 )
 
@@ -10,14 +12,16 @@ import (
 type CredentialsConfig struct {
 	// List of webauthn credentials.
 	Credentials Credentials `json:"credentials"`
+	UserHandle  []byte      `json:"user_handle"`
 }
 
 type Credentials []Credential
 
-func CredentialFromWebAuthn(credential *webauthn.Credential) *Credential {
+func CredentialFromWebAuthn(credential *webauthn.Credential, isPasswordless bool) *Credential {
 	return &Credential{
 		ID:              credential.ID,
 		PublicKey:       credential.PublicKey,
+		IsPasswordless:  isPasswordless,
 		AttestationType: credential.AttestationType,
 		Authenticator: Authenticator{
 			AAGUID:       credential.Authenticator.AAGUID,
@@ -27,10 +31,22 @@ func CredentialFromWebAuthn(credential *webauthn.Credential) *Credential {
 	}
 }
 
-func (c Credentials) ToWebAuthn() []webauthn.Credential {
-	result := make([]webauthn.Credential, len(c))
+func (c Credentials) ToWebAuthn() (result []webauthn.Credential) {
 	for k := range c {
-		result[k] = *c[k].ToWebAuthn()
+		result = append(result, *c[k].ToWebAuthn())
+	}
+	return result
+}
+
+func (c Credentials) ToWebAuthnFiltered(aal identity.AuthenticatorAssuranceLevel) (result []webauthn.Credential) {
+	for k, cc := range c {
+		if aal == identity.AuthenticatorAssuranceLevel1 && !cc.IsPasswordless {
+			continue
+		} else if aal == identity.AuthenticatorAssuranceLevel2 && cc.IsPasswordless {
+			continue
+		}
+
+		result = append(result, *c[k].ToWebAuthn())
 	}
 	return result
 }
@@ -55,6 +71,7 @@ type Credential struct {
 	Authenticator   Authenticator `json:"authenticator"`
 	DisplayName     string        `json:"display_name"`
 	AddedAt         time.Time     `json:"added_at"`
+	IsPasswordless  bool          `json:"is_passwordless"`
 }
 
 type Authenticator struct {

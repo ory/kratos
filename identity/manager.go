@@ -24,6 +24,7 @@ type (
 		PoolProvider
 		courier.Provider
 		ValidationProvider
+		ActiveCredentialsCounterStrategyProvider
 	}
 	ManagementProvider interface {
 		IdentityManager() *Manager
@@ -164,4 +165,28 @@ func (m *Manager) validate(ctx context.Context, i *Identity, o *managerOptions) 
 	}
 
 	return nil
+}
+
+func (m *Manager) CountActiveFirstFactorCredentials(ctx context.Context, i *Identity) (count int, err error) {
+	for _, strategy := range m.r.ActiveCredentialsCounterStrategies(ctx) {
+		current, err := strategy.CountActiveFirstFactorCredentials(i.Credentials)
+		if err != nil {
+			return 0, err
+		}
+
+		count += current
+	}
+	return count, nil
+}
+
+func (m *Manager) CountActiveMultiFactorCredentials(ctx context.Context, i *Identity) (count int, err error) {
+	for _, strategy := range m.r.ActiveCredentialsCounterStrategies(ctx) {
+		current, err := strategy.CountActiveMultiFactorCredentials(i.Credentials)
+		if err != nil {
+			return 0, err
+		}
+
+		count += current
+	}
+	return count, nil
 }

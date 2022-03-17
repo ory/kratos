@@ -2,10 +2,6 @@
   "$id": "https://schemas.ory.sh/kratos/selfservice/strategy/password/registration.schema.json",
   "$schema": "http://json-schema.org/draft-07/schema#",
   "type": "object",
-  "required": [
-    "method",
-    "password"
-  ],
   "properties": {
     "csrf_token": {
       "type": "string"
@@ -20,5 +16,20 @@
     "method": {
       "type": "string"
     }
+  },
+  "if": {
+    "properties": {
+      "method": {
+        "const": "password"
+      }
+    },
+    "required": [
+      "method"
+    ]
+  },
+  "then": {
+    "required": [
+      "password"
+    ]
   }
 }

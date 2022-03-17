@@ -34,7 +34,7 @@ func TestLoginExecutor(t *testing.T) {
 	} {
 		t.Run("strategy="+strategy, func(t *testing.T) {
 			conf, reg := internal.NewFastRegistryWithMocks(t)
-			conf.MustSet(config.ViperKeyDefaultIdentitySchemaURL, "file://./stub/login.schema.json")
+			testhelpers.SetDefaultIdentitySchema(conf, "file://./stub/login.schema.json")
 			conf.MustSet(config.ViperKeySelfServiceBrowserDefaultReturnTo, "https://www.ory.sh/")
 
 			newServer := func(t *testing.T, ft flow.Type, useIdentity *identity.Identity) *httptest.Server {
@@ -62,7 +62,7 @@ func TestLoginExecutor(t *testing.T) {
 					a.Active = identity.CredentialsType(strategy)
 					a.RequestURL = x.RequestURL(r).String()
 					sess := session.NewInactiveSession()
-					sess.CompletedLoginFor(identity.CredentialsTypePassword)
+					sess.CompletedLoginFor(identity.CredentialsTypePassword, identity.AuthenticatorAssuranceLevel1)
 					if useIdentity == nil {
 						useIdentity = testhelpers.SelfServiceHookCreateFakeIdentity(t, reg)
 					}
@@ -109,7 +109,7 @@ func TestLoginExecutor(t *testing.T) {
 
 				t.Run("case=use return_to value", func(t *testing.T) {
 					t.Cleanup(testhelpers.SelfServiceHookConfigReset(t, conf))
-					conf.MustSet(config.ViperKeyURLsWhitelistedReturnToDomains, []string{"https://www.ory.sh/"})
+					conf.MustSet(config.ViperKeyURLsAllowedReturnToDomains, []string{"https://www.ory.sh/"})
 
 					res, _ := makeRequestPost(t, newServer(t, flow.TypeBrowser, nil), false, url.Values{"return_to": {"https://www.ory.sh/kratos/"}})
 					assert.EqualValues(t, http.StatusOK, res.StatusCode)
@@ -204,8 +204,8 @@ func TestLoginExecutor(t *testing.T) {
 					t.Cleanup(testhelpers.SelfServiceHookConfigReset(t, conf))
 
 					useIdentity := &identity.Identity{Credentials: map[identity.CredentialsType]identity.Credentials{
-						identity.CredentialsTypePassword: {Type: identity.CredentialsTypePassword},
-						identity.CredentialsTypeTOTP:     {Type: identity.CredentialsTypeTOTP},
+						identity.CredentialsTypePassword: {Type: identity.CredentialsTypePassword, Config: []byte(`{"hashed_password": "$argon2id$v=19$m=32,t=2,p=4$cm94YnRVOW5jZzFzcVE4bQ$MNzk5BtR2vUhrp6qQEjRNw"}`), Identifiers: []string{testhelpers.RandomEmail()}},
+						identity.CredentialsTypeWebAuthn: {Type: identity.CredentialsTypeWebAuthn, Config: []byte(`{"credentials":[{"is_passwordless":false}]}`), Identifiers: []string{testhelpers.RandomEmail()}},
 					}}
 					require.NoError(t, reg.Persister().CreateIdentity(context.Background(), useIdentity))
 

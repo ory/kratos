@@ -1,9 +1,9 @@
 id: foo
 provider: apple
 client_id: foo
-team_id: foo
-private_key_id: foo
-private_key: foo
+apple_team_id: foo
+apple_private_key_id: foo
+apple_private_key: foo
 mapper_url: https://example.com
 scope:
   - foo
