@@ -831,9 +831,11 @@
       }
     },
     "courierTemplates": {
+      "additionalProperties": false,
       "type": "object",
       "properties": {
         "invalid": {
+          "additionalProperties": false,
           "type": "object",
           "properties": {
             "email": {
@@ -845,6 +847,7 @@
           ]
         },
         "valid": {
+          "additionalProperties": false,
           "type": "object",
           "properties": {
             "email": {
@@ -858,9 +861,11 @@
       }
     },
     "emailCourierTemplate": {
+      "additionalProperties": false,
       "type": "object",
       "properties": {
         "body": {
+          "additionalProperties": false,
           "type": "object",
           "properties": {
             "plaintext": {
@@ -1436,6 +1441,7 @@
       "description": "The courier is responsible for sending and delivering messages over email, sms, and other means.",
       "properties": {
         "templates": {
+          "additionalProperties": false,
           "type": "object",
           "properties": {
             "recovery": {
