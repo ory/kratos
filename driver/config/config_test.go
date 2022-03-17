@@ -771,7 +771,9 @@ func TestLoadingTLSConfig(t *testing.T) {
 		p := config.MustNew(t, logger, os.Stderr, configx.SkipValidation())
 		p.MustSet(config.ViperKeyPublicTLSKeyBase64, keyBase64)
 		p.MustSet(config.ViperKeyPublicTLSCertBase64, certBase64)
-		assert.NotNil(t, p.GetTSLCertificatesForPublic())
+		certs, location, _ := p.GetTSLCertificatesForPublic()
+		assert.NotNil(t, certs)
+		assert.Nil(t, location)
 		assert.Equal(t, "Setting up HTTPS for public", hook.LastEntry().Message)
 	})
 
@@ -784,7 +786,9 @@ func TestLoadingTLSConfig(t *testing.T) {
 		p := config.MustNew(t, logger, os.Stderr, configx.SkipValidation())
 		p.MustSet(config.ViperKeyPublicTLSKeyPath, keyPath)
 		p.MustSet(config.ViperKeyPublicTLSCertPath, certPath)
-		assert.NotNil(t, p.GetTSLCertificatesForPublic())
+		certs, location, _ := p.GetTSLCertificatesForPublic()
+		assert.NotNil(t, certs)
+		assert.NotNil(t, location)
 		assert.Equal(t, "Setting up HTTPS for public", hook.LastEntry().Message)
 	})
 
@@ -797,8 +801,10 @@ func TestLoadingTLSConfig(t *testing.T) {
 		p := config.MustNew(t, logger, os.Stderr, configx.SkipValidation())
 		p.MustSet(config.ViperKeyPublicTLSKeyBase64, "empty")
 		p.MustSet(config.ViperKeyPublicTLSCertBase64, certBase64)
-		assert.Nil(t, p.GetTSLCertificatesForPublic())
-		assert.Equal(t, "TLS has not been configured for public, skipping", hook.LastEntry().Message)
+		certs, location, err := p.GetTSLCertificatesForPublic()
+		assert.Nil(t, certs)
+		assert.Nil(t, location)
+		assert.NotNil(t, err)
 	})
 
 	t.Run("case=public: failing to load certificate from a file", func(t *testing.T) {
@@ -810,8 +816,10 @@ func TestLoadingTLSConfig(t *testing.T) {
 		p := config.MustNew(t, logger, os.Stderr, configx.SkipValidation())
 		p.MustSet(config.ViperKeyPublicTLSKeyPath, "/dev/null")
 		p.MustSet(config.ViperKeyPublicTLSCertPath, certPath)
-		assert.Nil(t, p.GetTSLCertificatesForPublic())
-		assert.Equal(t, "TLS has not been configured for public, skipping", hook.LastEntry().Message)
+		certs, location, err := p.GetTSLCertificatesForPublic()
+		assert.Nil(t, certs)
+		assert.Nil(t, location)
+		assert.NotNil(t, err)
 	})
 
 	t.Run("case=admin: loading inline base64 certificate", func(t *testing.T) {
@@ -823,7 +831,9 @@ func TestLoadingTLSConfig(t *testing.T) {
 		p := config.MustNew(t, logger, os.Stderr, configx.SkipValidation())
 		p.MustSet(config.ViperKeyAdminTLSKeyBase64, keyBase64)
 		p.MustSet(config.ViperKeyAdminTLSCertBase64, certBase64)
-		assert.NotNil(t, p.GetTSLCertificatesForAdmin())
+		certs, location, _ := p.GetTSLCertificatesForAdmin()
+		assert.NotNil(t, certs)
+		assert.Nil(t, location)
 		assert.Equal(t, "Setting up HTTPS for admin", hook.LastEntry().Message)
 	})
 
@@ -836,7 +846,9 @@ func TestLoadingTLSConfig(t *testing.T) {
 		p := config.MustNew(t, logger, os.Stderr, configx.SkipValidation())
 		p.MustSet(config.ViperKeyAdminTLSKeyPath, keyPath)
 		p.MustSet(config.ViperKeyAdminTLSCertPath, certPath)
-		assert.NotNil(t, p.GetTSLCertificatesForAdmin())
+		certs, location, _ := p.GetTSLCertificatesForAdmin()
+		assert.NotNil(t, certs)
+		assert.NotNil(t, location)
 		assert.Equal(t, "Setting up HTTPS for admin", hook.LastEntry().Message)
 	})
 
@@ -849,8 +861,10 @@ func TestLoadingTLSConfig(t *testing.T) {
 		p := config.MustNew(t, logger, os.Stderr, configx.SkipValidation())
 		p.MustSet(config.ViperKeyAdminTLSKeyBase64, "empty")
 		p.MustSet(config.ViperKeyAdminTLSCertBase64, certBase64)
-		assert.Nil(t, p.GetTSLCertificatesForAdmin())
-		assert.Equal(t, "TLS has not been configured for admin, skipping", hook.LastEntry().Message)
+		certs, location, err := p.GetTSLCertificatesForAdmin()
+		assert.Nil(t, certs)
+		assert.Nil(t, location)
+		assert.NotNil(t, err)
 	})
 
 	t.Run("case=admin: failing to load certificate from a file", func(t *testing.T) {
@@ -862,8 +876,10 @@ func TestLoadingTLSConfig(t *testing.T) {
 		p := config.MustNew(t, logger, os.Stderr, configx.SkipValidation())
 		p.MustSet(config.ViperKeyAdminTLSKeyPath, "/dev/null")
 		p.MustSet(config.ViperKeyAdminTLSCertPath, certPath)
-		assert.Nil(t, p.GetTSLCertificatesForAdmin())
-		assert.Equal(t, "TLS has not been configured for admin, skipping", hook.LastEntry().Message)
+		certs, location, err := p.GetTSLCertificatesForAdmin()
+		assert.Nil(t, certs)
+		assert.Nil(t, location)
+		assert.NotNil(t, err)
 	})
 
 }

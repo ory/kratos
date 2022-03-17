@@ -121,11 +121,23 @@ func ServePublic(r driver.Registry, wg *sync.WaitGroup, cmd *cobra.Command, args
 		handler = cors.New(options).Handler(handler)
 	}
 
-	certs := c.GetTSLCertificatesForPublic()
+	certs, location, err := c.GetTSLCertificatesForPublic()
+	if err != nil {
+		l.WithError(err).Fatalf("Unable to load HTTPS TLS Certificate")
+	}
+
 	server := graceful.WithDefaults(&http.Server{
 		Handler:   handler,
-		TLSConfig: &tls.Config{Certificates: certs, MinVersion: tls.VersionTLS12},
+		TLSConfig: &tls.Config{MinVersion: tls.VersionTLS12},
 	})
+	if location != nil {
+		server.TLSConfig.GetCertificate = newCertificatesProvider(certs, location, r, c.GetTSLCertificatesForPublic).getCertificate
+	} else {
+		server.TLSConfig.GetCertificate = func(*tls.ClientHelloInfo) (*tls.Certificate, error) {
+			return &certs[0], nil
+		}
+	}
+
 	addr := c.PublicListenOn()
 
 	l.Printf("Starting the public httpd on: %s", addr)
@@ -178,12 +190,24 @@ func ServeAdmin(r driver.Registry, wg *sync.WaitGroup, cmd *cobra.Command, args 
 	}
 
 	n.UseHandler(router)
-	certs := c.GetTSLCertificatesForAdmin()
+	certs, location, err := c.GetTSLCertificatesForAdmin()
+	if err != nil {
+		l.WithError(err).Fatalf("Unable to load HTTPS TLS Certificate")
+	}
+
 	server := graceful.WithDefaults(&http.Server{
 		Handler:   n,
-		TLSConfig: &tls.Config{Certificates: certs, MinVersion: tls.VersionTLS12},
+		TLSConfig: &tls.Config{MinVersion: tls.VersionTLS12},
 	})
 	addr := c.AdminListenOn()
+
+	if location != nil {
+		server.TLSConfig.GetCertificate = newCertificatesProvider(certs, location, r, c.GetTSLCertificatesForAdmin).getCertificate
+	} else {
+		server.TLSConfig.GetCertificate = func(*tls.ClientHelloInfo) (*tls.Certificate, error) {
+			return &certs[0], nil
+		}
+	}
 
 	l.Printf("Starting the admin httpd on: %s", addr)
 	if err := graceful.Graceful(func() error {

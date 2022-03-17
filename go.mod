@@ -34,6 +34,7 @@ require (
 	github.com/duo-labs/webauthn v0.0.0-20220212025243-7c9ee999e33e
 	github.com/fatih/color v1.13.0
 	github.com/form3tech-oss/jwt-go v3.2.3+incompatible
+	github.com/fsnotify/fsnotify v1.5.1 // indirect
 	github.com/ghodss/yaml v1.0.0
 	github.com/go-errors/errors v1.0.1
 	github.com/go-openapi/strfmt v0.20.3

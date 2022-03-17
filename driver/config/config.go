@@ -1216,7 +1216,7 @@ func (p *Config) CipherAlgorithm() string {
 	}
 }
 
-func (p *Config) GetTSLCertificatesForPublic() []tls.Certificate {
+func (p *Config) GetTSLCertificatesForPublic() ([]tls.Certificate, *CertLocation, error) {
 	return p.getTSLCertificates(
 		"public",
 		p.p.String(ViperKeyPublicTLSCertBase64),
@@ -1226,7 +1226,7 @@ func (p *Config) GetTSLCertificatesForPublic() []tls.Certificate {
 	)
 }
 
-func (p *Config) GetTSLCertificatesForAdmin() []tls.Certificate {
+func (p *Config) GetTSLCertificatesForAdmin() ([]tls.Certificate, *CertLocation, error) {
 	return p.getTSLCertificates(
 		"admin",
 		p.p.String(ViperKeyAdminTLSCertBase64),
@@ -1236,16 +1236,26 @@ func (p *Config) GetTSLCertificatesForAdmin() []tls.Certificate {
 	)
 }
 
-func (p *Config) getTSLCertificates(daemon, certBase64, keyBase64, certPath, keyPath string) []tls.Certificate {
-	cert, err := tlsx.Certificate(certBase64, keyBase64, certPath, keyPath)
+type CertLocation struct {
+	CertPath string
+	KeyPath  string
+}
+
+func (p *Config) getTSLCertificates(daemon, certBase64, keyBase64, certPath, keyPath string) ([]tls.Certificate, *CertLocation, error) {
+	certs, err := tlsx.Certificate(certBase64, keyBase64, certPath, keyPath)
 
 	if err == nil {
 		p.l.Infof("Setting up HTTPS for %s", daemon)
-		return cert
+
+		if certBase64 != "" && keyBase64 != "" {
+			return certs, nil, nil
+		}
+
+		return certs, &CertLocation{CertPath: certPath, KeyPath: keyPath}, nil
 	} else if !errors.Is(err, tlsx.ErrNoCertificatesConfigured) {
-		p.l.WithError(err).Fatalf("Unable to load HTTPS TLS Certificate")
+		return nil, nil, err
 	}
 
 	p.l.Infof("TLS has not been configured for %s, skipping", daemon)
-	return nil
+	return nil, nil, nil
 }
