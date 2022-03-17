@@ -272,20 +272,7 @@ func (h *Handler) fetch(w http.ResponseWriter, r *http.Request, _ httprouter.Par
 		reportErr := x.ErrGone.
 			WithReason("The verification flow has expired. Call the verification flow init API endpoint to initialize a new verification flow.")
 
-		requestURL := urlx.AppendPaths(h.d.Config(r.Context()).SelfPublicURL(), RouteInitAPIFlow)
-		query := requestURL.Query()
-		if req.GetReturnTo() != "" {
-			query.Set("return_to", req.GetReturnTo())
-		}
-		requestURL.RawQuery = query.Encode()
-		RequestUrl, err := url.PathUnescape(requestURL.String())
-
-		if err != nil {
-			h.d.Writer().WriteError(w, r, errors.WithStack(reportErr.WithDetail("api", requestURL.String())))
-			return
-		}
-
-		h.d.Writer().WriteError(w, r, errors.WithStack(reportErr.WithDetail("api", RequestUrl)))
+		h.d.Writer().WriteError(w, r, errors.WithStack(reportErr.WithDetail("original_return_to", req.GetReturnTo())))
 		return
 
 	}
