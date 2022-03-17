@@ -249,7 +249,8 @@ func (h *Handler) fetch(w http.ResponseWriter, r *http.Request, _ httprouter.Par
 
 	if req.ExpiresAt.Before(time.Now().UTC()) {
 		if req.Type == flow.TypeBrowser {
-			reason := "The verification flow has expired. Redirect the user to the verification flow init endpoint to initialize a new verification flow."
+			reportErr := x.ErrGone.
+				WithReason("The verification flow has expired. Redirect the user to the verification flow init endpoint to initialize a new verification flow.")
 
 			requestURL := urlx.AppendPaths(h.d.Config(r.Context()).SelfPublicURL(), RouteInitBrowserFlow)
 			query := requestURL.Query()
@@ -260,19 +261,16 @@ func (h *Handler) fetch(w http.ResponseWriter, r *http.Request, _ httprouter.Par
 			RequestUrl, err := url.PathUnescape(requestURL.String())
 
 			if err != nil {
-				h.d.Writer().WriteError(w, r, errors.WithStack(x.ErrGone.
-					WithReason(reason).
-					WithDetail("redirect_to", requestURL.String())))
+				h.d.Writer().WriteError(w, r, errors.WithStack(reportErr.WithDetail("redirect_to", requestURL.String())))
 				return
 			}
 
-			h.d.Writer().WriteError(w, r, errors.WithStack(x.ErrGone.
-				WithReason(reason).
-				WithDetail("redirect_to", RequestUrl)))
+			h.d.Writer().WriteError(w, r, errors.WithStack(reportErr.WithDetail("redirect_to", RequestUrl)))
 			return
 		}
 
-		reason := "The verification flow has expired. Call the verification flow init API endpoint to initialize a new verification flow."
+		reportErr := x.ErrGone.
+			WithReason("The verification flow has expired. Call the verification flow init API endpoint to initialize a new verification flow.")
 
 		requestURL := urlx.AppendPaths(h.d.Config(r.Context()).SelfPublicURL(), RouteInitAPIFlow)
 		query := requestURL.Query()
@@ -283,15 +281,11 @@ func (h *Handler) fetch(w http.ResponseWriter, r *http.Request, _ httprouter.Par
 		RequestUrl, err := url.PathUnescape(requestURL.String())
 
 		if err != nil {
-			h.d.Writer().WriteError(w, r, errors.WithStack(x.ErrGone.
-				WithReason(reason).
-				WithDetail("api", requestURL.String())))
+			h.d.Writer().WriteError(w, r, errors.WithStack(reportErr.WithDetail("api", requestURL.String())))
 			return
 		}
 
-		h.d.Writer().WriteError(w, r, errors.WithStack(x.ErrGone.
-			WithReason(reason).
-			WithDetail("api", RequestUrl)))
+		h.d.Writer().WriteError(w, r, errors.WithStack(reportErr.WithDetail("api", RequestUrl)))
 		return
 
 	}
