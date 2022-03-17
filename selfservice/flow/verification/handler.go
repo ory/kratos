@@ -2,6 +2,7 @@ package verification
 
 import (
 	"net/http"
+	"net/url"
 	"time"
 
 	"github.com/ory/nosurf"
@@ -248,15 +249,51 @@ func (h *Handler) fetch(w http.ResponseWriter, r *http.Request, _ httprouter.Par
 
 	if req.ExpiresAt.Before(time.Now().UTC()) {
 		if req.Type == flow.TypeBrowser {
+			reason := "The verification flow has expired. Redirect the user to the verification flow init endpoint to initialize a new verification flow."
+
+			requestURL := urlx.AppendPaths(h.d.Config(r.Context()).SelfPublicURL(), RouteInitBrowserFlow)
+			query := requestURL.Query()
+			if req.GetReturnTo() != "" {
+				query.Set("return_to", req.GetReturnTo())
+			}
+			requestURL.RawQuery = query.Encode()
+			RequestUrl, err := url.PathUnescape(requestURL.String())
+
+			if err != nil {
+				h.d.Writer().WriteError(w, r, errors.WithStack(x.ErrGone.
+					WithReason(reason).
+					WithDetail("redirect_to", requestURL.String())))
+				return
+			}
+
 			h.d.Writer().WriteError(w, r, errors.WithStack(x.ErrGone.
-				WithReason("The verification flow has expired. Redirect the user to the verification flow init endpoint to initialize a new verification flow.").
-				WithDetail("redirect_to", urlx.AppendPaths(h.d.Config(r.Context()).SelfPublicURL(), RouteInitBrowserFlow).String())))
+				WithReason(reason).
+				WithDetail("redirect_to", RequestUrl)))
 			return
 		}
+
+		reason := "The verification flow has expired. Call the verification flow init API endpoint to initialize a new verification flow."
+
+		requestURL := urlx.AppendPaths(h.d.Config(r.Context()).SelfPublicURL(), RouteInitAPIFlow)
+		query := requestURL.Query()
+		if req.GetReturnTo() != "" {
+			query.Set("return_to", req.GetReturnTo())
+		}
+		requestURL.RawQuery = query.Encode()
+		RequestUrl, err := url.PathUnescape(requestURL.String())
+
+		if err != nil {
+			h.d.Writer().WriteError(w, r, errors.WithStack(x.ErrGone.
+				WithReason(reason).
+				WithDetail("api", requestURL.String())))
+			return
+		}
+
 		h.d.Writer().WriteError(w, r, errors.WithStack(x.ErrGone.
-			WithReason("The verification flow has expired. Call the verification flow init API endpoint to initialize a new verification flow.").
-			WithDetail("api", urlx.AppendPaths(h.d.Config(r.Context()).SelfPublicURL(), RouteInitAPIFlow).String())))
+			WithReason(reason).
+			WithDetail("api", RequestUrl)))
 		return
+
 	}
 
 	h.d.Writer().Write(w, r, req)

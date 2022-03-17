@@ -195,3 +195,15 @@ func (f Flow) MarshalJSON() ([]byte, error) {
 	}
 	return json.Marshal(local(f))
 }
+
+func (f Flow) GetReturnTo() string {
+	if f.ReturnTo != "" {
+		// If ReturnTo already exists on the flow, use it
+		return f.ReturnTo
+	}
+	if u, err := url.Parse(f.RequestURL); err == nil {
+		// Get the return_to from the request url or return an empty string
+		return u.Query().Get("return_to")
+	}
+	return ""
+}

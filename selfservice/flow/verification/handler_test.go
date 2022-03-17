@@ -84,6 +84,40 @@ func TestGetFlow(t *testing.T) {
 		})
 	})
 
+	t.Run("case=valid with return_to", func(t *testing.T) {
+		t.Run("type=browser", func(t *testing.T) {
+			conf.MustSet(config.ViperKeyURLsAllowedReturnToDomains, []string{"https://www.ory.sh/"})
+
+			client := testhelpers.NewClientWithCookies(t)
+			_ = setupVerificationUI(t, client)
+			res, body := x.EasyGet(t, client, public.URL+verification.RouteInitBrowserFlow+"?return_to=https://www.ory.sh")
+			require.NotEqualValues(t, res.Request.URL.String(), public.URL+verification.RouteInitBrowserFlow+"?return_to=https://www.ory.sh")
+			assert.Equal(t, gjson.GetBytes(body, "return_to").String(), "https://www.ory.sh")
+			assertFlowPayload(t, body, false)
+		})
+
+		t.Run("type=spa", func(t *testing.T) {
+			conf.MustSet(config.ViperKeyURLsAllowedReturnToDomains, []string{"https://www.ory.sh/"})
+
+			client := testhelpers.NewClientWithCookies(t)
+			_ = setupVerificationUI(t, client)
+			res, body := x.EasyGetJSON(t, client, public.URL+verification.RouteInitBrowserFlow+"?return_to=https://www.ory.sh")
+			require.EqualValues(t, res.Request.URL.String(), public.URL+verification.RouteInitBrowserFlow+"?return_to=https://www.ory.sh")
+			assert.Equal(t, gjson.GetBytes(body, "return_to").String(), "https://www.ory.sh")
+			assertFlowPayload(t, body, false)
+		})
+
+		t.Run("type=api", func(t *testing.T) {
+			conf.MustSet(config.ViperKeyURLsAllowedReturnToDomains, []string{"https://www.ory.sh/"})
+
+			client := testhelpers.NewClientWithCookies(t)
+			_ = setupVerificationUI(t, client)
+			res, body := x.EasyGet(t, client, public.URL+verification.RouteInitAPIFlow+"?return_to=https://www.ory.sh")
+			assert.Len(t, res.Header.Get("Set-Cookie"), 0)
+			assert.Equal(t, gjson.GetBytes(body, "return_to").String(), "https://www.ory.sh")
+			assertFlowPayload(t, body, true)
+		})
+	})
 	t.Run("case=csrf cookie missing", func(t *testing.T) {
 		client := http.DefaultClient
 		_ = setupVerificationUI(t, client)
@@ -131,6 +165,11 @@ func TestGetFlow(t *testing.T) {
 		f, err = reg.VerificationFlowPersister().GetVerificationFlow(context.Background(), uuid.FromStringOrNil(gjson.GetBytes(resBody, "id").String()))
 		require.NoError(t, err)
 		assert.Equal(t, public.URL+verification.RouteInitBrowserFlow+"?return_to=https://www.ory.sh", f.RequestURL)
+
+		// get the expired flow
+		getResponse, getReqBody := x.EasyGet(t, client, public.URL+verification.RouteGetFlow+"?id="+gjson.GetBytes(body, "id").String())
+		assert.EqualValues(t, http.StatusGone, getResponse.StatusCode)
+		assert.Equal(t, public.URL+verification.RouteInitBrowserFlow+"?return_to=https://www.ory.sh", gjson.GetBytes(getReqBody, "error.details.redirect_to").String(), "%s", getReqBody)
 	})
 
 	t.Run("case=relative redirect when self-service verification ui is a relative URL", func(t *testing.T) {
