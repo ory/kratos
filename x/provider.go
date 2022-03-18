@@ -50,17 +50,3 @@ func (s *SimpleLoggerWithClient) HTTPClient(_ context.Context, _ ...httpx.Resili
 
 var _ LoggingProvider = (*SimpleLoggerWithClient)(nil)
 var _ HTTPClientProvider = (*SimpleLoggerWithClient)(nil)
-
-type ResilientHttpClient struct {
-	client *retryablehttp.Client
-}
-
-func (r *ResilientHttpClient) HTTPClient() *retryablehttp.Client {
-	return r.client
-}
-
-func NewResilientHttpClient(logger *logrusx.Logger) *ResilientHttpClient {
-	return &ResilientHttpClient{
-		client: httpx.NewResilientClient(httpx.ResilientClientWithLogger(logger)),
-	}
-}
