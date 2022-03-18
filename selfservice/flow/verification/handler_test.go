@@ -87,32 +87,49 @@ func TestGetFlow(t *testing.T) {
 	t.Run("case=valid with return_to", func(t *testing.T) {
 		conf.MustSet(config.ViperKeyURLsAllowedReturnToDomains, []string{"https://www.ory.sh/"})
 
-		t.Run("type=browser", func(t *testing.T) {
-			client := testhelpers.NewClientWithCookies(t)
-			_ = setupVerificationUI(t, client)
-			res, body := x.EasyGet(t, client, public.URL+verification.RouteInitBrowserFlow+"?return_to=https://www.ory.sh")
-			require.NotEqualValues(t, res.Request.URL.String(), public.URL+verification.RouteInitBrowserFlow+"?return_to=https://www.ory.sh")
-			assert.Equal(t, gjson.GetBytes(body, "return_to").String(), "https://www.ory.sh")
-			assertFlowPayload(t, body, false)
-		})
+		for _, tc := range []struct {
+			name string
+			get  func(*testing.T, *http.Client, string) (*http.Response, []byte)
+			url  string
+			expectPayload,
+			expectCookie bool
+		}{
+			{
+				name:          "browser",
+				get:           x.EasyGet,
+				url:           public.URL + verification.RouteInitBrowserFlow,
+				expectPayload: false,
+				expectCookie:  false,
+			},
+			{
+				name:          "spa",
+				get:           x.EasyGetJSON,
+				url:           public.URL + verification.RouteInitBrowserFlow,
+				expectPayload: false,
+				expectCookie:  true,
+			},
+			{
+				name:          "api",
+				get:           x.EasyGet,
+				url:           public.URL + verification.RouteInitAPIFlow,
+				expectPayload: true,
+				expectCookie:  false,
+			},
+		} {
+			t.Run("type="+tc.name, func(t *testing.T) {
+				client := testhelpers.NewClientWithCookies(t)
+				_ = setupVerificationUI(t, client)
+				res, body := tc.get(t, client, tc.url+"?return_to=https://www.ory.sh")
+				if tc.expectCookie {
+					assert.NotEmpty(t, res.Header.Get("Set-Cookie"))
+				} else {
+					assert.Empty(t, res.Header.Get("Set-Cookie"))
+				}
+				assert.Equal(t, gjson.GetBytes(body, "return_to").String(), "https://www.ory.sh")
+				assertFlowPayload(t, body, tc.expectPayload)
 
-		t.Run("type=spa", func(t *testing.T) {
-			client := testhelpers.NewClientWithCookies(t)
-			_ = setupVerificationUI(t, client)
-			res, body := x.EasyGetJSON(t, client, public.URL+verification.RouteInitBrowserFlow+"?return_to=https://www.ory.sh")
-			require.EqualValues(t, res.Request.URL.String(), public.URL+verification.RouteInitBrowserFlow+"?return_to=https://www.ory.sh")
-			assert.Equal(t, gjson.GetBytes(body, "return_to").String(), "https://www.ory.sh")
-			assertFlowPayload(t, body, false)
-		})
-
-		t.Run("type=api", func(t *testing.T) {
-			client := testhelpers.NewClientWithCookies(t)
-			_ = setupVerificationUI(t, client)
-			res, body := x.EasyGet(t, client, public.URL+verification.RouteInitAPIFlow+"?return_to=https://www.ory.sh")
-			assert.Len(t, res.Header.Get("Set-Cookie"), 0)
-			assert.Equal(t, gjson.GetBytes(body, "return_to").String(), "https://www.ory.sh")
-			assertFlowPayload(t, body, true)
-		})
+			})
+		}
 	})
 	t.Run("case=csrf cookie missing", func(t *testing.T) {
 		client := http.DefaultClient
