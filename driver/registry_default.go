@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/go-retryablehttp"
 
 	"github.com/ory/x/httpx"
+	"github.com/ory/x/otelx"
 
 	"github.com/gobuffalo/pop/v6"
 
@@ -49,8 +50,6 @@ import (
 	"github.com/ory/x/healthx"
 	"github.com/ory/x/sqlcon"
 
-	"github.com/ory/x/tracing"
-
 	"github.com/ory/x/logrusx"
 
 	"github.com/ory/kratos/courier"
@@ -78,7 +77,7 @@ type RegistryDefault struct {
 	injectedSelfserviceHooks map[string]func(config.SelfServiceHook) interface{}
 
 	nosurf         nosurf.Handler
-	trc            *tracing.Tracer
+	trc            *otelx.Tracer
 	pmm            *prometheus.MetricsManager
 	writer         herodot.Writer
 	healthxHandler *healthx.Handler
@@ -465,10 +464,10 @@ func (m *RegistryDefault) ContinuityCookieManager(ctx context.Context) sessions.
 	return cs
 }
 
-func (m *RegistryDefault) Tracer(ctx context.Context) *tracing.Tracer {
+func (m *RegistryDefault) Tracer(ctx context.Context) *otelx.Tracer {
 	if m.trc == nil {
 		// Tracing is initialized only once so it can not be hot reloaded or context-aware.
-		t, err := tracing.New(m.l, m.Config(ctx).Tracing())
+		t, err := otelx.New("Ory Kratos", m.l, m.Config(ctx).Tracing())
 		if err != nil {
 			m.Logger().WithError(err).Fatalf("Unable to initialize Tracer.")
 		}

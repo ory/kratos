@@ -6,6 +6,7 @@ import (
 
 	"github.com/spf13/cobra"
 	"github.com/urfave/negroni"
+	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 
 	"github.com/ory/graceful"
 	"github.com/ory/kratos/driver"
@@ -48,10 +49,11 @@ func ServeMetrics(ctx cx.Context, r driver.Registry) {
 	n.Use(r.PrometheusManager())
 
 	if tracer := r.Tracer(ctx); tracer.IsLoaded() {
-		n.Use(tracer)
+		otelHandler := otelhttp.NewHandler(router, "courier_serve_metrics")
+		n.UseHandler(otelHandler)
+	} else {
+		n.UseHandler(router)
 	}
-
-	n.UseHandler(router)
 
 	server := graceful.WithDefaults(&http.Server{
 		Addr:    c.MetricsListenOn(),
