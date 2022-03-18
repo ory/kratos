@@ -26,7 +26,7 @@ describe('Basic email profile with failing login flows with webhooks', () => {
         const password = gen.password()
 
         cy.registerApi({ email, password, fields: {} })
-        cy.get('input[name="password_identifier"]').type(email)
+        cy.get('input[name="identifier"]').type(email)
         cy.get('input[name="password"]').type(password)
 
         cy.submitPasswordForm()

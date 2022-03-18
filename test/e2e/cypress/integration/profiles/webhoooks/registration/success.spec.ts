@@ -36,7 +36,7 @@ context('Registration success with email profile with webhooks', () => {
           const { identity } = session
           expect(identity.id).to.not.be.empty
           expect(identity.schema_id).to.equal('default')
-          expect(identity.schema_url).to.equal(`${APP_URL}/schemas/default`)
+          expect(identity.schema_url).to.equal(`${APP_URL}/schemas/ZGVmYXVsdA`)
           expect(identity.traits.email).to.equal(email)
         })
       })
