@@ -1104,13 +1104,6 @@ func TestCourierTemplatesConfig(t *testing.T) {
 		assert.NoError(t, err)
 	})
 
-	t.Run("case=missing required body plaintext on invalid recovery template", func(t *testing.T) {
-		_, err := config.New(ctx, logrusx.New("", ""), os.Stderr,
-			configx.WithConfigFiles("stub/.kratos.courier.remote.invalid.body.yaml"))
-		assert.Error(t, err)
-		assert.Contains(t, err.Error(), "missing properties: \"plaintext\"")
-	})
-
 	t.Run("case=load remote template with fallback template overrides path", func(t *testing.T) {
 		_, err := config.New(ctx, logrusx.New("", ""), os.Stderr,
 			configx.WithConfigFiles("stub/.kratos.courier.remote.templates.yaml"))
