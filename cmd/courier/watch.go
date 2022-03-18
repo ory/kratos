@@ -48,17 +48,21 @@ func ServeMetrics(ctx cx.Context, r driver.Registry) {
 	n.Use(reqlog.NewMiddlewareFromLogger(l, "admin#"+c.SelfPublicURL().String()))
 	n.Use(r.PrometheusManager())
 
-	if tracer := r.Tracer(ctx); tracer.IsLoaded() {
-		otelHandler := otelhttp.NewHandler(router, "courier_serve_metrics")
-		n.UseHandler(otelHandler)
-	} else {
-		n.UseHandler(router)
-	}
+	n.UseHandler(router)
 
-	server := graceful.WithDefaults(&http.Server{
-		Addr:    c.MetricsListenOn(),
-		Handler: n,
-	})
+	var server *http.Server
+	if tracer := r.Tracer(ctx); tracer.IsLoaded() {
+		otelHandler := otelhttp.NewHandler(n, "courier_serve_metrics")
+		server = graceful.WithDefaults(&http.Server{
+			Addr:    c.MetricsListenOn(),
+			Handler: otelHandler,
+		})
+	} else {
+		server = graceful.WithDefaults(&http.Server{
+			Addr:    c.MetricsListenOn(),
+			Handler: n,
+		})
+	}
 
 	l.Printf("Starting the metrics httpd on: %s", server.Addr)
 	if err := graceful.Graceful(func() error {

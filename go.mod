@@ -94,6 +94,7 @@ require (
 	github.com/tidwall/sjson v1.2.2
 	github.com/urfave/negroni v1.0.0
 	github.com/zmb3/spotify/v2 v2.0.0
+	go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp v0.29.0
 	golang.org/x/crypto v0.0.0-20210921155107-089bfa567519
 	golang.org/x/net v0.0.0-20211020060615-d418f374d309
 	golang.org/x/oauth2 v0.0.0-20211104180415-d3ed0bb246c8

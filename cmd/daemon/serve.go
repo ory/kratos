@@ -6,6 +6,7 @@ import (
 	"sync"
 
 	"github.com/ory/kratos/schema"
+	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 
 	"github.com/ory/kratos/selfservice/flow/recovery"
 
@@ -94,9 +95,7 @@ func ServePublic(r driver.Registry, wg *sync.WaitGroup, cmd *cobra.Command, args
 	n.Use(publicLogger)
 	n.Use(x.HTTPLoaderContextMiddleware(r))
 	n.Use(sqa(ctx, cmd, r))
-	if tracer := r.Tracer(ctx); tracer.IsLoaded() {
-		n.Use(tracer)
-	}
+
 	n.Use(r.PrometheusManager())
 
 	router := x.NewRouterPublic()
@@ -122,10 +121,19 @@ func ServePublic(r driver.Registry, wg *sync.WaitGroup, cmd *cobra.Command, args
 	}
 
 	certs := c.GetTSLCertificatesForPublic()
-	server := graceful.WithDefaults(&http.Server{
-		Handler:   handler,
-		TLSConfig: &tls.Config{Certificates: certs, MinVersion: tls.VersionTLS12},
-	})
+	var server *http.Server
+	if tracer := r.Tracer(ctx); tracer.IsLoaded() {
+		otelHandler := otelhttp.NewHandler(handler, "serve_public")
+		server = graceful.WithDefaults(&http.Server{
+			Handler:   otelHandler,
+			TLSConfig: &tls.Config{Certificates: certs, MinVersion: tls.VersionTLS12},
+		})
+	} else {
+		server = graceful.WithDefaults(&http.Server{
+			Handler:   handler,
+			TLSConfig: &tls.Config{Certificates: certs, MinVersion: tls.VersionTLS12},
+		})
+	}
 	addr := c.PublicListenOn()
 
 	l.Printf("Starting the public httpd on: %s", addr)
@@ -173,16 +181,23 @@ func ServeAdmin(r driver.Registry, wg *sync.WaitGroup, cmd *cobra.Command, args 
 	r.RegisterAdminRoutes(ctx, router)
 	r.PrometheusManager().RegisterRouter(router.Router)
 
-	if tracer := r.Tracer(ctx); tracer.IsLoaded() {
-		n.Use(tracer)
-	}
-
 	n.UseHandler(router)
 	certs := c.GetTSLCertificatesForAdmin()
-	server := graceful.WithDefaults(&http.Server{
-		Handler:   n,
-		TLSConfig: &tls.Config{Certificates: certs, MinVersion: tls.VersionTLS12},
-	})
+
+	var server *http.Server
+	if tracer := r.Tracer(ctx); tracer.IsLoaded() {
+		otelHandler := otelhttp.NewHandler(n, "serve_admin")
+		server = graceful.WithDefaults(&http.Server{
+			Handler:   otelHandler,
+			TLSConfig: &tls.Config{Certificates: certs, MinVersion: tls.VersionTLS12},
+		})
+	} else {
+		server = graceful.WithDefaults(&http.Server{
+			Handler:   n,
+			TLSConfig: &tls.Config{Certificates: certs, MinVersion: tls.VersionTLS12},
+		})
+	}
+
 	addr := c.AdminListenOn()
 
 	l.Printf("Starting the admin httpd on: %s", addr)
