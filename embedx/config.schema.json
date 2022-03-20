@@ -1993,6 +1993,11 @@
           "title": "Leak Sensitive Log Values",
           "description": "If set will leak sensitive values (e.g. emails) in the logs."
         },
+        "redaction_text": {
+          "type": "string",
+          "title": "Sensitive log value redaction text",
+          "description": "Text to use, when redacting sensitive log value."
+        },
         "format": {
           "description": "The log format can either be text or JSON.",
           "type": "string",
