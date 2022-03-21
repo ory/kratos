@@ -286,7 +286,7 @@ func TestCompleteLogin(t *testing.T) {
 		t.Run("case=webauthn button exists", func(t *testing.T) {
 			client := testhelpers.NewClientWithCookies(t)
 			f := testhelpers.InitializeLoginFlowViaBrowser(t, client, publicTS, false, true)
-			testhelpers.SnapshotTExcept(t, f.Ui.Nodes, []string{"1.attributes.value"})
+			testhelpers.SnapshotTExcept(t, f.Ui.Nodes, []string{"0.attributes.value"})
 		})
 
 		t.Run("case=webauthn shows error if user tries to sign in but no such user exists", func(t *testing.T) {
@@ -459,7 +459,7 @@ func TestCompleteLogin(t *testing.T) {
 
 			apiClient := testhelpers.NewHTTPClientWithIdentitySessionToken(t, reg, id)
 			f := testhelpers.InitializeLoginFlowViaBrowser(t, apiClient, publicTS, false, true, testhelpers.InitFlowWithAAL(identity.AuthenticatorAssuranceLevel2))
-			assert.Equal(t, gjson.GetBytes(id.Traits, "subject").String(), f.Ui.Nodes[0].Attributes.UiNodeInputAttributes.Value, jsonx.TestMarshalJSONString(t, f.Ui))
+			assert.Equal(t, gjson.GetBytes(id.Traits, "subject").String(), f.Ui.Nodes[1].Attributes.UiNodeInputAttributes.Value, jsonx.TestMarshalJSONString(t, f.Ui))
 			testhelpers.SnapshotTExcept(t, f.Ui.Nodes, []string{
 				"0.attributes.value",
 				"1.attributes.value",
