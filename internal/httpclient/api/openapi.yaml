@@ -5042,9 +5042,11 @@ components:
           format: int64
           type: integer
       required:
+      - height
       - id
       - node_type
       - src
+      - width
       title: ImageAttributes represents the attributes of an image node.
       type: object
     uiNodeInputAttributeType:

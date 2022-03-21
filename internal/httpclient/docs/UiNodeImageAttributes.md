@@ -4,17 +4,17 @@
 
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
-**Height** | Pointer to **int64** | Height of the image | [optional] 
+**Height** | **int64** | Height of the image | 
 **Id** | **string** | A unique identifier | 
 **NodeType** | **string** |  | 
 **Src** | **string** | The image&#39;s source URL.  format: uri | 
-**Width** | Pointer to **int64** | Width of the image | [optional] 
+**Width** | **int64** | Width of the image | 
 
 ## Methods
 
 ### NewUiNodeImageAttributes
 
-`func NewUiNodeImageAttributes(id string, nodeType string, src string, ) *UiNodeImageAttributes`
+`func NewUiNodeImageAttributes(height int64, id string, nodeType string, src string, width int64, ) *UiNodeImageAttributes`
 
 NewUiNodeImageAttributes instantiates a new UiNodeImageAttributes object
 This constructor will assign default values to properties that have it defined,
@@ -48,11 +48,6 @@ and a boolean to check if the value has been set.
 
 SetHeight sets Height field to given value.
 
-### HasHeight
-
-`func (o *UiNodeImageAttributes) HasHeight() bool`
-
-HasHeight returns a boolean if a field has been set.
 
 ### GetId
 
@@ -133,11 +128,6 @@ and a boolean to check if the value has been set.
 
 SetWidth sets Width field to given value.
 
-### HasWidth
-
-`func (o *UiNodeImageAttributes) HasWidth() bool`
-
-HasWidth returns a boolean if a field has been set.
 
 
 [[Back to Model list]](../README.md#documentation-for-models) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to README]](../README.md)

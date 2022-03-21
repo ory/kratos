@@ -3999,6 +3999,8 @@
       "required": [
         "src",
         "id",
+        "width",
+        "height",
         "node_type"
       ],
       "properties": {
