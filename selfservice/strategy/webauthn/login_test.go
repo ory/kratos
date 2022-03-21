@@ -5,6 +5,7 @@ import (
 	_ "embed"
 	"encoding/json"
 	"fmt"
+	"github.com/ory/x/jsonx"
 	"io"
 	"net/http"
 	"net/url"
@@ -458,7 +459,7 @@ func TestCompleteLogin(t *testing.T) {
 
 			apiClient := testhelpers.NewHTTPClientWithIdentitySessionToken(t, reg, id)
 			f := testhelpers.InitializeLoginFlowViaBrowser(t, apiClient, publicTS, false, true, testhelpers.InitFlowWithAAL(identity.AuthenticatorAssuranceLevel2))
-			assert.Equal(t, gjson.GetBytes(id.Traits, "subject").String(), f.Ui.Nodes[0].Attributes.UiNodeInputAttributes.Value)
+			assert.Equal(t, gjson.GetBytes(id.Traits, "subject").String(), f.Ui.Nodes[0].Attributes.UiNodeInputAttributes.Value, jsonx.TestMarshalJSONString(t, f.Ui))
 			testhelpers.SnapshotTExcept(t, f.Ui.Nodes, []string{
 				"0.attributes.value",
 				"1.attributes.value",
