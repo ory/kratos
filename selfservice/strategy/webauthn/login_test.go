@@ -5,11 +5,12 @@ import (
 	_ "embed"
 	"encoding/json"
 	"fmt"
-	"github.com/ory/x/jsonx"
 	"io"
 	"net/http"
 	"net/url"
 	"testing"
+
+	"github.com/ory/x/jsonx"
 
 	"github.com/duo-labs/webauthn/protocol"
 
