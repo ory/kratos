@@ -144,7 +144,7 @@ func TestPool(ctx context.Context, conf *config.Config, p interface {
 			assert.EqualValues(t, 2, count)
 
 			t.Run("different network", func(t *testing.T) {
-				_, p := testhelpers.NewNetwork(t, ctx, p)
+				ctx := fakeContextWithNetwork(ctx, nid)
 				_, err := p.GetIdentity(ctx, expected.ID)
 				require.ErrorIs(t, err, sqlcon.ErrNoRows)
 
