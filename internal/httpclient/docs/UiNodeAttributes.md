@@ -15,9 +15,9 @@ Name | Type | Description | Notes
 **Value** | Pointer to **interface{}** | The input&#39;s value. | [optional] 
 **Id** | **string** | A unique identifier | 
 **Text** | [**UiText**](UiText.md) |  | 
-**Height** | Pointer to **int64** | Height of the image | [optional] 
+**Height** | **int64** | Height of the image | 
 **Src** | **string** | The script source | 
-**Width** | Pointer to **int64** | Width of the image | [optional] 
+**Width** | **int64** | Width of the image | 
 **Href** | **string** | The link&#39;s href (destination) URL.  format: uri | 
 **Title** | [**UiText**](UiText.md) |  | 
 **Async** | **bool** | The script async type | 
@@ -30,7 +30,7 @@ Name | Type | Description | Notes
 
 ### NewUiNodeAttributes
 
-`func NewUiNodeAttributes(disabled bool, name string, nodeType string, type_ string, id string, text UiText, src string, href string, title UiText, async bool, crossorigin string, integrity string, nonce string, referrerpolicy string, ) *UiNodeAttributes`
+`func NewUiNodeAttributes(disabled bool, name string, nodeType string, type_ string, id string, text UiText, height int64, src string, width int64, href string, title UiText, async bool, crossorigin string, integrity string, nonce string, referrerpolicy string, ) *UiNodeAttributes`
 
 NewUiNodeAttributes instantiates a new UiNodeAttributes object
 This constructor will assign default values to properties that have it defined,
@@ -319,11 +319,6 @@ and a boolean to check if the value has been set.
 
 SetHeight sets Height field to given value.
 
-### HasHeight
-
-`func (o *UiNodeAttributes) HasHeight() bool`
-
-HasHeight returns a boolean if a field has been set.
 
 ### GetSrc
 
@@ -364,11 +359,6 @@ and a boolean to check if the value has been set.
 
 SetWidth sets Width field to given value.
 
-### HasWidth
-
-`func (o *UiNodeAttributes) HasWidth() bool`
-
-HasWidth returns a boolean if a field has been set.
 
 ### GetHref
 

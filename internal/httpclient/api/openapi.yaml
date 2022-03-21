@@ -1151,7 +1151,7 @@ paths:
         (if the link was valid) and instructs the user to update their password, or a redirect to the Recover UI URL with
         a new Recovery Flow ID which contains an error message that the recovery link was invalid.
 
-        More information can be found at [Ory Kratos Account Recovery Documentation](../self-service/flows/account-recovery.mdx).
+        More information can be found at [Ory Kratos Account Recovery Documentation](../self-service/flows/account-recovery).
       operationId: submitSelfServiceRecoveryFlow
       parameters:
       - description: |-
@@ -1230,7 +1230,7 @@ paths:
         This endpoint MUST ONLY be used in scenarios such as native mobile apps (React Native, Objective C, Swift, Java, ...).
 
 
-        More information can be found at [Ory Kratos Account Recovery Documentation](../self-service/flows/account-recovery.mdx).
+        More information can be found at [Ory Kratos Account Recovery Documentation](../self-service/flows/account-recovery).
       operationId: initializeSelfServiceRecoveryFlowWithoutBrowser
       responses:
         "200":
@@ -1266,7 +1266,7 @@ paths:
 
         This endpoint is NOT INTENDED for clients that do not have a browser (Chrome, Firefox, ...) as cookies are needed.
 
-        More information can be found at [Ory Kratos Account Recovery Documentation](../self-service/flows/account-recovery.mdx).
+        More information can be found at [Ory Kratos Account Recovery Documentation](../self-service/flows/account-recovery).
       operationId: initializeSelfServiceRecoveryFlowForBrowsers
       parameters:
       - description: The URL to return the browser to after the flow was completed.
@@ -1322,7 +1322,7 @@ paths:
         })
         ```
 
-        More information can be found at [Ory Kratos Account Recovery Documentation](../self-service/flows/account-recovery.mdx).
+        More information can be found at [Ory Kratos Account Recovery Documentation](../self-service/flows/account-recovery).
       operationId: getSelfServiceRecoveryFlow
       parameters:
       - description: |-
@@ -5042,9 +5042,11 @@ components:
           format: int64
           type: integer
       required:
+      - height
       - id
       - node_type
       - src
+      - width
       title: ImageAttributes represents the attributes of an image node.
       type: object
     uiNodeInputAttributeType:
