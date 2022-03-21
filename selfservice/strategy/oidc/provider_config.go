@@ -96,7 +96,7 @@ func (p Configuration) Redir(public *url.URL) string {
 }
 
 type ConfigurationCollection struct {
-	BaseRedirectURL string          `json:"base_redirect_url"`
+	BaseRedirectURI string          `json:"base_redirect_uri"`
 	Providers       []Configuration `json:"providers"`
 }
 
