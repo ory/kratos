@@ -50,7 +50,6 @@ func EnsureCSRF(reg interface {
 
 		// Workaround for Cloudflare setting cookies that we can't control.
 		var hasCookie bool
-		// - __cfasdf
 		for _, c := range r.Cookies() {
 			if !strings.HasPrefix(c.Name, "__cf") {
 				hasCookie = true
