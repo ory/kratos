@@ -5,8 +5,9 @@ import (
 	"net/http"
 	"sync"
 
-	"github.com/ory/kratos/schema"
 	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
+
+	"github.com/ory/kratos/schema"
 
 	"github.com/ory/kratos/selfservice/flow/recovery"
 
