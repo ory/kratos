@@ -33,6 +33,8 @@ func (p *Persister) GetSettingsFlow(ctx context.Context, id uuid.UUID) (*setting
 		return nil, err
 	}
 
+	r.SetReturnTo()
+
 	return &r, nil
 }
 
