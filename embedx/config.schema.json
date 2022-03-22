@@ -1813,7 +1813,7 @@
       },
       "additionalProperties": false
     },
-    "otelx": {
+    "tracing": {
       "type": "object",
       "additionalProperties": false,
       "description": "Ory Kratos supports distributed tracing.",
