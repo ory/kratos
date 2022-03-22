@@ -230,6 +230,7 @@ jobs:
       - uses: ory/ci/sdk/release@master
         with:
           token: ${{ secrets.ORY_BOT_PAT }}
+          swag-spec-location: 'spec/api.json'
 
   release:
     name: Generate release
