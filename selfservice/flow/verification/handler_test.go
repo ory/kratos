@@ -106,6 +106,7 @@ func TestGetFlow(t *testing.T) {
 		res, body := x.EasyGet(t, client, public.URL+verification.RouteGetFlow+"?id="+f.ID.String())
 		assert.EqualValues(t, http.StatusGone, res.StatusCode)
 		assert.Equal(t, public.URL+verification.RouteInitBrowserFlow, gjson.GetBytes(body, "error.details.redirect_to").String(), "%s", body)
+		assert.Equal(t, gjson.GetBytes(body, "error.details.return_to").String, f.ReturnTo)
 	})
 
 	t.Run("case=expired with return_to", func(t *testing.T) {
