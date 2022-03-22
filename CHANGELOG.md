@@ -246,6 +246,7 @@
 
 ### Bug Fixes
 
+* Resolve issue where CF cookies would mingle with CSRF detection in API flows ([011219a](https://github.com/ory/kratos/commit/011219a40027d2c1b06c2797951a55e2f07c0845))
 * Update v0.9.0-alpha.2 config schema path ([#2328](https://github.com/ory/kratos/issues/2328)) ([55705c7](https://github.com/ory/kratos/commit/55705c7ce0ff76dc7ddda24524db919dcb51225a))
 
 
