@@ -4,10 +4,12 @@ import (
 	"context"
 	"crypto/ecdsa"
 	"crypto/x509"
+	"encoding/json"
 	"encoding/pem"
+	"github.com/golang-jwt/jwt/v4"
+	"net/url"
 	"time"
 
-	"github.com/form3tech-oss/jwt-go"
 	"github.com/pkg/errors"
 
 	"golang.org/x/oauth2"
@@ -49,10 +51,10 @@ func (a *ProviderApple) newClientSecret() (string, error) {
 	expirationTime := time.Now().Add(5 * time.Minute)
 
 	appleToken := jwt.NewWithClaims(jwt.SigningMethodES256,
-		jwt.StandardClaims{
+		jwt.RegisteredClaims{
 			Audience:  []string{a.config.IssuerURL},
-			ExpiresAt: expirationTime.Unix(),
-			IssuedAt:  now.Unix(),
+			ExpiresAt: jwt.NewNumericDate(expirationTime),
+			IssuedAt:  jwt.NewNumericDate(now),
 			Issuer:    a.config.TeamId,
 			Subject:   a.config.ClientID,
 		})
@@ -100,4 +102,38 @@ func (a *ProviderApple) AuthCodeURLOptions(r ider) []oauth2.AuthCodeOption {
 	}
 
 	return options
+}
+
+func (a *ProviderApple) Claims(ctx context.Context, exchange *oauth2.Token, query url.Values) (*Claims, error) {
+	claims, err := a.ProviderGenericOIDC.Claims(ctx, exchange, query)
+	if err != nil {
+		return claims, err
+	}
+
+	// https://developer.apple.com/documentation/sign_in_with_apple/sign_in_with_apple_js/configuring_your_webpage_for_sign_in_with_apple#3331292
+	// First name and last name are passed only once in an additional parameter to the redirect URL.
+	// There's no way to make sure they haven't been tampered with. Blame Apple.
+	var user struct {
+		Name *struct {
+			FirstName *string `json:"firstName"`
+			LastName  *string `json:"lastName"`
+		} `json:"name"`
+	}
+	if err := json.Unmarshal([]byte(query.Get("user")), &user); err == nil {
+		if name := user.Name; name != nil {
+			if firstName := name.FirstName; firstName != nil {
+				if claims.GivenName == "" {
+					claims.GivenName = *firstName
+				}
+				if claims.FamilyName == "" {
+					claims.FamilyName = *firstName
+				}
+			}
+			if lastName := name.LastName; lastName != nil && claims.LastName == "" {
+				claims.LastName = *lastName
+			}
+		}
+	}
+
+	return claims, nil
 }
