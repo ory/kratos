@@ -30,6 +30,8 @@ func (p Persister) GetRecoveryFlow(ctx context.Context, id uuid.UUID) (*recovery
 		return nil, sqlcon.HandleError(err)
 	}
 
+	r.SetReturnTo()
+
 	return &r, nil
 }
 
