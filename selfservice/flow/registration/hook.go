@@ -109,6 +109,14 @@ func (e *HookExecutor) PostRegistrationHook(w http.ResponseWriter, r *http.Reque
 				group = node.PasswordGroup
 			case identity.CredentialsTypeOIDC:
 				group = node.OpenIDConnectGroup
+			case identity.CredentialsTypeRecoveryLink:
+				group = node.RecoveryLinkGroup
+			case identity.CredentialsTypeLookup:
+				group = node.LookupGroup
+			case identity.CredentialsTypeTOTP:
+				group = node.TOTPGroup
+			case identity.CredentialsTypeWebAuthn:
+				group = node.WebAuthnGroup
 			}
 			var traits identity.Traits
 			if i != nil {
@@ -184,6 +192,14 @@ func (e *HookExecutor) PostRegistrationHook(w http.ResponseWriter, r *http.Reque
 				group = node.PasswordGroup
 			case identity.CredentialsTypeOIDC:
 				group = node.OpenIDConnectGroup
+			case identity.CredentialsTypeRecoveryLink:
+				group = node.RecoveryLinkGroup
+			case identity.CredentialsTypeLookup:
+				group = node.LookupGroup
+			case identity.CredentialsTypeTOTP:
+				group = node.TOTPGroup
+			case identity.CredentialsTypeWebAuthn:
+				group = node.WebAuthnGroup
 			}
 			var traits identity.Traits
 			if i != nil {
