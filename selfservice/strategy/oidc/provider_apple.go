@@ -6,9 +6,10 @@ import (
 	"crypto/x509"
 	"encoding/json"
 	"encoding/pem"
-	"github.com/golang-jwt/jwt/v4"
 	"net/url"
 	"time"
+
+	"github.com/golang-jwt/jwt/v4"
 
 	"github.com/pkg/errors"
 
