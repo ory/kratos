@@ -36,7 +36,7 @@ func (p *Persister) GetLoginFlow(ctx context.Context, id uuid.UUID) (*login.Flow
 	if err := conn.Where("id = ? AND nid = ?", id, corp.ContextualizeNID(ctx, p.nid)).First(&r); err != nil {
 		return nil, sqlcon.HandleError(err)
 	}
-	
+
 	r.SetReturnTo()
 
 	return &r, nil

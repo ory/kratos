@@ -128,7 +128,6 @@ func TestGetFlow(t *testing.T) {
 		getBody := x.EasyGetBody(t, client, getURL)
 		assert.Equal(t, gjson.GetBytes(getBody, "error.details.return_to").String(), returnTo)
 
-
 		// submit the flow but it is expired
 		u := public.URL + verification.RouteSubmitFlow + "?flow=" + f.ID.String()
 		res, err := client.PostForm(u, url.Values{"method": {"link"}, "csrf_token": {f.CSRFToken}, "email": {"email@ory.sh"}})

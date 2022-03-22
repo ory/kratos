@@ -241,7 +241,6 @@ func TestHandler(t *testing.T) {
 			getBody := x.EasyGetBody(t, client, getURL)
 			assert.Equal(t, gjson.GetBytes(getBody, "error.details.return_to").String(), returnTo)
 
-
 			// submit the flow but it is expired
 			u := publicTS.URL + settings.RouteSubmitFlow + "?flow=" + f.ID.String()
 			res, err := client.PostForm(u, url.Values{"method": {"password"}, "csrf_token": {"csrf"}, "password": {"password"}})
