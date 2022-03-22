@@ -311,6 +311,20 @@
                     "$ref": "https://raw.githubusercontent.com/ory/kratos/v0.8.2-alpha.1/embedx/config.schema.json"
                 }
             ]
+        },
+        {
+            "allOf": [
+                {
+                    "properties": {
+                        "version": {
+                            "const": "v0.9.0-alpha.2"
+                        }
+                    }
+                },
+                {
+                    "$ref": "https://raw.githubusercontent.com/ory/kratos/v0.9.0-alpha.2/spec/config.json"
+                }
+            ]
         }
     ]
 }
