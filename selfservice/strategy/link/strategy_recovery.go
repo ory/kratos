@@ -226,7 +226,11 @@ func (s *Strategy) Recover(w http.ResponseWriter, r *http.Request, f *recovery.F
 	}
 
 	if _, err := s.d.SessionManager().FetchFromRequest(r.Context(), r); err == nil {
-		session.RedirectOnAuthenticated(s.d)(w, r, nil)
+		if x.IsJSONRequest(r) {
+			session.RespondWithJSONErrorOnAuthenticated(s.d.Writer(), recovery.ErrAlreadyLoggedIn)(w, r, nil)
+		} else {
+			session.RedirectOnAuthenticated(s.d)(w, r, nil)
+		}
 		return errors.WithStack(flow.ErrCompletedByStrategy)
 	}
 

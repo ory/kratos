@@ -52,18 +52,6 @@ func TestHandlerRedirectOnAuthenticated(t *testing.T) {
 		assert.Contains(t, res.Request.URL.String(), recovery.RouteInitAPIFlow)
 		assertx.EqualAsJSON(t, recovery.ErrAlreadyLoggedIn, json.RawMessage(gjson.GetBytes(body, "error").Raw))
 	})
-
-	t.Run("does redirect to default on authenticated request", func(t *testing.T) {
-		req := x.NewTestHTTPRequest(t, "GET", ts.URL+recovery.RouteInitBrowserFlow, nil)
-		req.Header.Set("Accept", "application/json")
-		res, err := http.DefaultClient.Do(req)
-		require.NoError(t, err)
-		formLink := gjson.Get(string(x.MustReadAll(res.Body)), "ui.action").String()
-
-		body, res := testhelpers.MockMakeAuthenticatedRequest(t, reg, conf, router.Router, x.NewTestHTTPRequest(t, "GET", formLink, nil))
-		assert.Contains(t, res.Request.URL.String(), redirTS.URL, "%+v", res)
-		assert.EqualValues(t, "already authenticated", string(body))
-	})
 }
 
 func TestInitFlow(t *testing.T) {

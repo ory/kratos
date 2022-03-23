@@ -120,9 +120,7 @@ context('Account Recovery Success', () => {
 
     cy.visit(express.login)
 
-    cy.get(appPrefix(app) + 'input[name="password_identifier"]').type(
-      identity1.email
-    )
+    cy.get(appPrefix(app) + 'input[name="identifier"]').type(identity1.email)
     cy.get('input[name="password"]').type(identity1.password)
     cy.get('button[value="password"]').click()
 
