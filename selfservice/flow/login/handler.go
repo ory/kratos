@@ -515,6 +515,7 @@ type submitSelfServiceLoginFlowBody struct{}
 //       200: successfulSelfServiceLoginWithoutBrowser
 //       303: emptyResponse
 //       400: selfServiceLoginFlow
+//       410: jsonError
 //       422: selfServiceBrowserLocationChangeRequiredError
 //       500: jsonError
 func (h *Handler) submitFlow(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
