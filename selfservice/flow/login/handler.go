@@ -476,7 +476,7 @@ type submitSelfServiceLoginFlowBody struct{}
 //
 // API flows expect `application/json` to be sent in the body and responds with
 //   - HTTP 200 and a application/json body with the session token on success;
-//   - HTTP 303 redirect to a fresh login flow if the original flow expired with the appropriate error messages set;
+//   - HTTP 410 if the original flow expired with the appropriate error messages set and optionally a `use_flow_id` parameter in the body;
 //   - HTTP 400 on form validation errors.
 //
 // Browser flows expect a Content-Type of `application/x-www-form-urlencoded` or `application/json` to be sent in the body and respond with
