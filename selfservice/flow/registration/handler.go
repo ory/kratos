@@ -375,7 +375,7 @@ type submitSelfServiceRegistrationFlowBody struct{}
 // API flows expect `application/json` to be sent in the body and respond with
 //   - HTTP 200 and a application/json body with the created identity success - if the session hook is configured the
 //     `session` and `session_token` will also be included;
-//   - HTTP 303 redirect to a fresh registration flow if the original flow expired with the appropriate error messages set;
+//   - HTTP 410 if the original flow expired with the appropriate error messages set and optionally a `use_flow_id` parameter in the body;
 //   - HTTP 400 on form validation errors.
 //
 // Browser flows expect a Content-Type of `application/x-www-form-urlencoded` or `application/json` to be sent in the body and respond with
