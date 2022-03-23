@@ -3050,7 +3050,7 @@
     },
     "/self-service/login": {
       "post": {
-        "description": ":::info\n\nThis endpoint is EXPERIMENTAL and subject to potential breaking changes in the future.\n\n:::\n\nUse this endpoint to complete a login flow. This endpoint\nbehaves differently for API and browser flows.\n\nAPI flows expect `application/json` to be sent in the body and responds with\nHTTP 200 and a application/json body with the session token on success;\nHTTP 303 redirect to a fresh login flow if the original flow expired with the appropriate error messages set;\nHTTP 400 on form validation errors.\n\nBrowser flows expect a Content-Type of `application/x-www-form-urlencoded` or `application/json` to be sent in the body and respond with\na HTTP 303 redirect to the post/after login URL or the `return_to` value if it was set and if the login succeeded;\na HTTP 303 redirect to the login UI URL with the flow ID containing the validation errors otherwise.\n\nBrowser flows with an accept header of `application/json` will not redirect but instead respond with\nHTTP 200 and a application/json body with the signed in identity and a `Set-Cookie` header on success;\nHTTP 303 redirect to a fresh login flow if the original flow expired with the appropriate error messages set;\nHTTP 400 on form validation errors.\n\nIf this endpoint is called with `Accept: application/json` in the header, the response contains the flow without a redirect. In the\ncase of an error, the `error.id` of the JSON response body can be one of:\n\n`session_already_available`: The user is already signed in.\n`security_csrf_violation`: Unable to fetch the flow because a CSRF violation occurred.\n`security_identity_mismatch`: The requested `?return_to` address is not allowed to be used. Adjust this in the configuration!\n`browser_location_change_required`: Usually sent when an AJAX request indicates that the browser needs to open a specific URL.\nMost likely used in Social Sign In flows.\n\nMore information can be found at [Ory Kratos User Login](https://www.ory.sh/docs/kratos/self-service/flows/user-login) and [User Registration Documentation](https://www.ory.sh/docs/kratos/self-service/flows/user-registration).",
+        "description": ":::info\n\nThis endpoint is EXPERIMENTAL and subject to potential breaking changes in the future.\n\n:::\n\nUse this endpoint to complete a login flow. This endpoint\nbehaves differently for API and browser flows.\n\nAPI flows expect `application/json` to be sent in the body and responds with\nHTTP 200 and a application/json body with the session token on success;\nHTTP 410 if the original flow expired with the appropriate error messages set and optionally a `use_flow_id` parameter in the body;\nHTTP 400 on form validation errors.\n\nBrowser flows expect a Content-Type of `application/x-www-form-urlencoded` or `application/json` to be sent in the body and respond with\na HTTP 303 redirect to the post/after login URL or the `return_to` value if it was set and if the login succeeded;\na HTTP 303 redirect to the login UI URL with the flow ID containing the validation errors otherwise.\n\nBrowser flows with an accept header of `application/json` will not redirect but instead respond with\nHTTP 200 and a application/json body with the signed in identity and a `Set-Cookie` header on success;\nHTTP 303 redirect to a fresh login flow if the original flow expired with the appropriate error messages set;\nHTTP 400 on form validation errors.\n\nIf this endpoint is called with `Accept: application/json` in the header, the response contains the flow without a redirect. In the\ncase of an error, the `error.id` of the JSON response body can be one of:\n\n`session_already_available`: The user is already signed in.\n`security_csrf_violation`: Unable to fetch the flow because a CSRF violation occurred.\n`security_identity_mismatch`: The requested `?return_to` address is not allowed to be used. Adjust this in the configuration!\n`browser_location_change_required`: Usually sent when an AJAX request indicates that the browser needs to open a specific URL.\nMost likely used in Social Sign In flows.\n\nMore information can be found at [Ory Kratos User Login](https://www.ory.sh/docs/kratos/self-service/flows/user-login) and [User Registration Documentation](https://www.ory.sh/docs/kratos/self-service/flows/user-registration).",
         "operationId": "submitSelfServiceLoginFlow",
         "parameters": [
           {
@@ -3109,6 +3109,16 @@
               }
             },
             "description": "selfServiceLoginFlow"
+          },
+          "410": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/jsonError"
+                }
+              }
+            },
+            "description": "jsonError"
           },
           "422": {
             "content": {
@@ -3563,6 +3573,16 @@
             },
             "description": "selfServiceRecoveryFlow"
           },
+          "410": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/jsonError"
+                }
+              }
+            },
+            "description": "jsonError"
+          },
           "500": {
             "content": {
               "application/json": {
@@ -3750,7 +3770,7 @@
     },
     "/self-service/registration": {
       "post": {
-        "description": "Use this endpoint to complete a registration flow by sending an identity's traits and password. This endpoint\nbehaves differently for API and browser flows.\n\nAPI flows expect `application/json` to be sent in the body and respond with\nHTTP 200 and a application/json body with the created identity success - if the session hook is configured the\n`session` and `session_token` will also be included;\nHTTP 303 redirect to a fresh registration flow if the original flow expired with the appropriate error messages set;\nHTTP 400 on form validation errors.\n\nBrowser flows expect a Content-Type of `application/x-www-form-urlencoded` or `application/json` to be sent in the body and respond with\na HTTP 303 redirect to the post/after registration URL or the `return_to` value if it was set and if the registration succeeded;\na HTTP 303 redirect to the registration UI URL with the flow ID containing the validation errors otherwise.\n\nBrowser flows with an accept header of `application/json` will not redirect but instead respond with\nHTTP 200 and a application/json body with the signed in identity and a `Set-Cookie` header on success;\nHTTP 303 redirect to a fresh login flow if the original flow expired with the appropriate error messages set;\nHTTP 400 on form validation errors.\n\nIf this endpoint is called with `Accept: application/json` in the header, the response contains the flow without a redirect. In the\ncase of an error, the `error.id` of the JSON response body can be one of:\n\n`session_already_available`: The user is already signed in.\n`security_csrf_violation`: Unable to fetch the flow because a CSRF violation occurred.\n`security_identity_mismatch`: The requested `?return_to` address is not allowed to be used. Adjust this in the configuration!\n`browser_location_change_required`: Usually sent when an AJAX request indicates that the browser needs to open a specific URL.\nMost likely used in Social Sign In flows.\n\nMore information can be found at [Ory Kratos User Login](https://www.ory.sh/docs/kratos/self-service/flows/user-login) and [User Registration Documentation](https://www.ory.sh/docs/kratos/self-service/flows/user-registration).",
+        "description": "Use this endpoint to complete a registration flow by sending an identity's traits and password. This endpoint\nbehaves differently for API and browser flows.\n\nAPI flows expect `application/json` to be sent in the body and respond with\nHTTP 200 and a application/json body with the created identity success - if the session hook is configured the\n`session` and `session_token` will also be included;\nHTTP 410 if the original flow expired with the appropriate error messages set and optionally a `use_flow_id` parameter in the body;\nHTTP 400 on form validation errors.\n\nBrowser flows expect a Content-Type of `application/x-www-form-urlencoded` or `application/json` to be sent in the body and respond with\na HTTP 303 redirect to the post/after registration URL or the `return_to` value if it was set and if the registration succeeded;\na HTTP 303 redirect to the registration UI URL with the flow ID containing the validation errors otherwise.\n\nBrowser flows with an accept header of `application/json` will not redirect but instead respond with\nHTTP 200 and a application/json body with the signed in identity and a `Set-Cookie` header on success;\nHTTP 303 redirect to a fresh login flow if the original flow expired with the appropriate error messages set;\nHTTP 400 on form validation errors.\n\nIf this endpoint is called with `Accept: application/json` in the header, the response contains the flow without a redirect. In the\ncase of an error, the `error.id` of the JSON response body can be one of:\n\n`session_already_available`: The user is already signed in.\n`security_csrf_violation`: Unable to fetch the flow because a CSRF violation occurred.\n`security_identity_mismatch`: The requested `?return_to` address is not allowed to be used. Adjust this in the configuration!\n`browser_location_change_required`: Usually sent when an AJAX request indicates that the browser needs to open a specific URL.\nMost likely used in Social Sign In flows.\n\nMore information can be found at [Ory Kratos User Login](https://www.ory.sh/docs/kratos/self-service/flows/user-login) and [User Registration Documentation](https://www.ory.sh/docs/kratos/self-service/flows/user-registration).",
         "operationId": "submitSelfServiceRegistrationFlow",
         "parameters": [
           {
@@ -3801,6 +3821,16 @@
               }
             },
             "description": "selfServiceRegistrationFlow"
+          },
+          "410": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/jsonError"
+                }
+              }
+            },
+            "description": "jsonError"
           },
           "422": {
             "content": {
@@ -4070,6 +4100,16 @@
             "description": "jsonError"
           },
           "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/jsonError"
+                }
+              }
+            },
+            "description": "jsonError"
+          },
+          "410": {
             "content": {
               "application/json": {
                 "schema": {
@@ -4398,6 +4438,16 @@
               }
             },
             "description": "selfServiceVerificationFlow"
+          },
+          "410": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/jsonError"
+                }
+              }
+            },
+            "description": "jsonError"
           },
           "500": {
             "content": {

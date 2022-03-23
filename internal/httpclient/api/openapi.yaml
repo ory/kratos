@@ -656,7 +656,7 @@ paths:
 
         API flows expect `application/json` to be sent in the body and responds with
         HTTP 200 and a application/json body with the session token on success;
-        HTTP 303 redirect to a fresh login flow if the original flow expired with the appropriate error messages set;
+        HTTP 410 if the original flow expired with the appropriate error messages set and optionally a `use_flow_id` parameter in the body;
         HTTP 400 on form validation errors.
 
         Browser flows expect a Content-Type of `application/x-www-form-urlencoded` or `application/json` to be sent in the body and respond with
@@ -725,6 +725,12 @@ paths:
               schema:
                 $ref: '#/components/schemas/selfServiceLoginFlow'
           description: selfServiceLoginFlow
+        "410":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/jsonError'
+          description: jsonError
         "422":
           content:
             application/json:
@@ -1205,6 +1211,12 @@ paths:
               schema:
                 $ref: '#/components/schemas/selfServiceRecoveryFlow'
           description: selfServiceRecoveryFlow
+        "410":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/jsonError'
+          description: jsonError
         "500":
           content:
             application/json:
@@ -1386,7 +1398,7 @@ paths:
         API flows expect `application/json` to be sent in the body and respond with
         HTTP 200 and a application/json body with the created identity success - if the session hook is configured the
         `session` and `session_token` will also be included;
-        HTTP 303 redirect to a fresh registration flow if the original flow expired with the appropriate error messages set;
+        HTTP 410 if the original flow expired with the appropriate error messages set and optionally a `use_flow_id` parameter in the body;
         HTTP 400 on form validation errors.
 
         Browser flows expect a Content-Type of `application/x-www-form-urlencoded` or `application/json` to be sent in the body and respond with
@@ -1447,6 +1459,12 @@ paths:
               schema:
                 $ref: '#/components/schemas/selfServiceRegistrationFlow'
           description: selfServiceRegistrationFlow
+        "410":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/jsonError'
+          description: jsonError
         "422":
           content:
             application/json:
@@ -1750,6 +1768,12 @@ paths:
                 $ref: '#/components/schemas/jsonError'
           description: jsonError
         "403":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/jsonError'
+          description: jsonError
+        "410":
           content:
             application/json:
               schema:
@@ -2078,6 +2102,12 @@ paths:
               schema:
                 $ref: '#/components/schemas/selfServiceVerificationFlow'
           description: selfServiceVerificationFlow
+        "410":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/jsonError'
+          description: jsonError
         "500":
           content:
             application/json:
