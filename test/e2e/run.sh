@@ -189,8 +189,8 @@ prepare() {
 
   (
     cd test/e2e/hydra-login-consent
-    go build . &&
-      PORT=4446 HYDRA_ADMIN_URL=http://localhost:4445 ./hydra-login-consent >"${base}/test/e2e/hydra-ui.e2e.log" 2>&1 &
+    go build .
+    PORT=4446 HYDRA_ADMIN_URL=http://localhost:4445 ./hydra-login-consent >"${base}/test/e2e/hydra-ui.e2e.log" 2>&1 &
   )
 }
 

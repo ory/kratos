@@ -193,7 +193,7 @@ func TestRecovery(t *testing.T) {
 	_ = testhelpers.NewSettingsUIFlowEchoServer(t, reg)
 	_ = testhelpers.NewErrorTestServer(t, reg)
 
-	public, _ := testhelpers.NewKratosServerWithCSRF(t, reg)
+	public, _, publicRouter, _ := testhelpers.NewKratosServerWithCSRFAndRouters(t, reg)
 
 	var createIdentityToRecover = func(email string) *identity.Identity {
 		var id = &identity.Identity{
@@ -298,7 +298,59 @@ func TestRecovery(t *testing.T) {
 				check(t, expectValidationError(t, nil, true, false, values), email)
 			})
 		}
+	})
 
+	t.Run("description=should try to submit the form while authenticated", func(t *testing.T) {
+		run := func(t *testing.T, flow string) {
+			isAPI := flow == "api"
+			isSPA := flow == "spa"
+			hc := testhelpers.NewDebugClient(t)
+			if !isAPI {
+				hc = testhelpers.NewClientWithCookies(t)
+				hc.Transport = testhelpers.NewTransportWithLogger(http.DefaultTransport, t).RoundTripper
+			}
+
+			var f *kratos.SelfServiceRecoveryFlow
+			if isAPI {
+				f = testhelpers.InitializeRecoveryFlowViaAPI(t, hc, public)
+			} else {
+				f = testhelpers.InitializeRecoveryFlowViaBrowser(t, hc, isSPA, public, nil)
+			}
+
+			v := testhelpers.SDKFormFieldsToURLValues(f.Ui.Nodes)
+			v.Set("email", "some-email@example.org")
+			v.Set("method", "link")
+
+			authClient := testhelpers.NewHTTPClientWithArbitrarySessionToken(t, reg)
+			if isAPI {
+				s, err := session.NewActiveSession(
+					&identity.Identity{ID: x.NewUUID(), State: identity.StateActive},
+					testhelpers.NewSessionLifespanProvider(time.Hour),
+					time.Now(),
+					identity.CredentialsTypePassword,
+					identity.AuthenticatorAssuranceLevel1,
+				)
+				require.NoError(t, err)
+				authClient = testhelpers.NewHTTPClientWithSessionCookieLocalhost(t, reg, s)
+			}
+
+			body, res := testhelpers.RecoveryMakeRequest(t, isAPI || isSPA, f, authClient, testhelpers.EncodeFormAsJSON(t, isAPI || isSPA, v))
+
+			if isAPI || isSPA {
+				assert.EqualValues(t, http.StatusBadRequest, res.StatusCode, "%s", body)
+				assert.Contains(t, res.Request.URL.String(), recovery.RouteSubmitFlow, "%+v\n\t%s", res.Request, body)
+				assertx.EqualAsJSONExcept(t, recovery.ErrAlreadyLoggedIn, json.RawMessage(gjson.Get(body, "error").Raw), nil)
+			} else {
+				assert.EqualValues(t, http.StatusOK, res.StatusCode, "%s", body)
+				assert.Contains(t, res.Request.URL.String(), conf.SelfServiceBrowserDefaultReturnTo().String(), "%+v\n\t%s", res.Request, body)
+			}
+		}
+
+		for _, f := range []string{"browser", "spa", "api"} {
+			t.Run("type="+f, func(t *testing.T) {
+				run(t, f)
+			})
+		}
 	})
 
 	t.Run("description=should try to recover an email that does not exist", func(t *testing.T) {
@@ -480,17 +532,14 @@ func TestRecovery(t *testing.T) {
 	})
 
 	t.Run("description=should recover an account and set the csrf cookies", func(t *testing.T) {
-		recoveryEmail := "recoverme1@ory.sh"
-
-		var check = func(t *testing.T, actual string) {
+		var check = func(t *testing.T, actual, recoveryEmail string, cl *http.Client, do func(*http.Client, *http.Request) (*http.Response, error)) {
 			message := testhelpers.CourierExpectMessage(t, reg, recoveryEmail, "Recover access to your account")
 			recoveryLink := testhelpers.CourierExpectLinkInMessage(t, message, 1)
 
-			cl := testhelpers.NewClientWithCookies(t)
 			cl.CheckRedirect = func(req *http.Request, via []*http.Request) error {
 				return http.ErrUseLastResponse
 			}
-			res, err := cl.Get(recoveryLink)
+			res, err := do(cl, x.NewTestHTTPRequest(t, "GET", recoveryLink, nil))
 			require.NoError(t, err)
 			require.NoError(t, res.Body.Close())
 			assert.Equal(t, http.StatusSeeOther, res.StatusCode)
@@ -498,6 +547,9 @@ func TestRecovery(t *testing.T) {
 			cookies := spew.Sdump(cl.Jar.Cookies(urlx.ParseOrPanic(public.URL)))
 			assert.Contains(t, cookies, x.CSRFTokenName)
 			assert.Contains(t, cookies, "ory_kratos_session")
+			returnTo, err := res.Location()
+			require.NoError(t, err)
+			assert.Contains(t, returnTo.String(), conf.SelfServiceFlowSettingsUI().String(), "we end up at the settings screen")
 
 			rl := urlx.ParseOrPanic(recoveryLink)
 			actualRes, err := cl.Get(public.URL + recovery.RouteGetFlow + "?id=" + rl.Query().Get("flow"))
@@ -505,13 +557,41 @@ func TestRecovery(t *testing.T) {
 			body := x.MustReadAll(actualRes.Body)
 			require.NoError(t, actualRes.Body.Close())
 			assert.Equal(t, http.StatusOK, actualRes.StatusCode, "%s", body)
+			assert.Equal(t, string(recovery.StatePassedChallenge), gjson.GetBytes(body, "state").String(), "%s", body)
 		}
 
-		var values = func(v url.Values) {
-			v.Set("email", recoveryEmail)
-		}
+		email := x.NewUUID().String() + "@ory.sh"
+		id := createIdentityToRecover(email)
 
-		check(t, expectSuccess(t, nil, false, false, values))
+		t.Run("case=unauthenticated", func(t *testing.T) {
+			var values = func(v url.Values) {
+				v.Set("email", email)
+			}
+			check(t, expectSuccess(t, nil, false, false, values), email, testhelpers.NewClientWithCookies(t), (*http.Client).Do)
+		})
+
+		t.Run("case=already logged into another account", func(t *testing.T) {
+			var values = func(v url.Values) {
+				v.Set("email", email)
+			}
+
+			check(t, expectSuccess(t, nil, false, false, values), email, testhelpers.NewClientWithCookies(t), func(cl *http.Client, req *http.Request) (*http.Response, error) {
+				_, res := testhelpers.MockMakeAuthenticatedRequestWithClient(t, reg, conf, publicRouter.Router, req, cl)
+				return res, nil
+			})
+		})
+
+		t.Run("case=already logged into the account", func(t *testing.T) {
+			var values = func(v url.Values) {
+				v.Set("email", email)
+			}
+
+			cl := testhelpers.NewHTTPClientWithIdentitySessionCookie(t, reg, id)
+			check(t, expectSuccess(t, nil, false, false, values), email, cl, func(_ *http.Client, req *http.Request) (*http.Response, error) {
+				_, res := testhelpers.MockMakeAuthenticatedRequestWithClientAndID(t, reg, conf, publicRouter.Router, req, cl, id)
+				return res, nil
+			})
+		})
 	})
 
 	t.Run("description=should recover and invalidate all other sessions if hook is set", func(t *testing.T) {
