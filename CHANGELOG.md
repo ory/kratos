@@ -5,12 +5,13 @@
 **Table of Contents**
 
 - [ (2022-03-23)](#2022-03-23)
+  - [Breaking Changes](#breaking-changes)
     - [Bug Fixes](#bug-fixes)
 - [0.9.0-alpha.2 (2022-03-22)](#090-alpha2-2022-03-22)
     - [Bug Fixes](#bug-fixes-1)
     - [Code Generation](#code-generation)
 - [0.9.0-alpha.1 (2022-03-21)](#090-alpha1-2022-03-21)
-  - [Breaking Changes](#breaking-changes)
+  - [Breaking Changes](#breaking-changes-1)
     - [Bug Fixes](#bug-fixes-2)
     - [Code Generation](#code-generation-1)
     - [Code Refactoring](#code-refactoring)
@@ -23,7 +24,7 @@
     - [Code Generation](#code-generation-2)
     - [Documentation](#documentation-1)
 - [0.8.1-alpha.1 (2021-12-13)](#081-alpha1-2021-12-13)
-  - [Breaking Changes](#breaking-changes-1)
+  - [Breaking Changes](#breaking-changes-2)
     - [Bug Fixes](#bug-fixes-4)
     - [Code Generation](#code-generation-3)
     - [Documentation](#documentation-2)
@@ -35,7 +36,7 @@
 - [0.8.0-alpha.2 (2021-10-28)](#080-alpha2-2021-10-28)
     - [Code Generation](#code-generation-5)
 - [0.8.0-alpha.1 (2021-10-27)](#080-alpha1-2021-10-27)
-  - [Breaking Changes](#breaking-changes-2)
+  - [Breaking Changes](#breaking-changes-3)
     - [Bug Fixes](#bug-fixes-6)
     - [Code Generation](#code-generation-6)
     - [Code Refactoring](#code-refactoring-1)
@@ -65,7 +66,7 @@
     - [Documentation](#documentation-6)
     - [Tests](#tests-4)
 - [0.7.0-alpha.1 (2021-07-13)](#070-alpha1-2021-07-13)
-  - [Breaking Changes](#breaking-changes-3)
+  - [Breaking Changes](#breaking-changes-4)
     - [Bug Fixes](#bug-fixes-10)
     - [Code Generation](#code-generation-12)
     - [Code Refactoring](#code-refactoring-2)
@@ -74,7 +75,7 @@
     - [Tests](#tests-5)
     - [Unclassified](#unclassified-2)
 - [0.6.3-alpha.1 (2021-05-17)](#063-alpha1-2021-05-17)
-  - [Breaking Changes](#breaking-changes-4)
+  - [Breaking Changes](#breaking-changes-5)
     - [Bug Fixes](#bug-fixes-11)
     - [Code Generation](#code-generation-13)
     - [Code Refactoring](#code-refactoring-3)
@@ -89,7 +90,7 @@
     - [Code Generation](#code-generation-16)
     - [Features](#features-7)
 - [0.6.0-alpha.1 (2021-05-05)](#060-alpha1-2021-05-05)
-  - [Breaking Changes](#breaking-changes-5)
+  - [Breaking Changes](#breaking-changes-6)
     - [Bug Fixes](#bug-fixes-13)
     - [Code Generation](#code-generation-17)
     - [Code Refactoring](#code-refactoring-4)
@@ -129,7 +130,7 @@
     - [Tests](#tests-10)
     - [Unclassified](#unclassified-5)
 - [0.5.0-alpha.1 (2020-10-15)](#050-alpha1-2020-10-15)
-  - [Breaking Changes](#breaking-changes-6)
+  - [Breaking Changes](#breaking-changes-7)
     - [Bug Fixes](#bug-fixes-19)
     - [Code Generation](#code-generation-23)
     - [Code Refactoring](#code-refactoring-6)
@@ -154,7 +155,7 @@
     - [Bug Fixes](#bug-fixes-24)
     - [Code Generation](#code-generation-28)
 - [0.4.0-alpha.1 (2020-07-08)](#040-alpha1-2020-07-08)
-  - [Breaking Changes](#breaking-changes-7)
+  - [Breaking Changes](#breaking-changes-8)
     - [Bug Fixes](#bug-fixes-25)
     - [Code Generation](#code-generation-29)
     - [Code Refactoring](#code-refactoring-7)
@@ -162,7 +163,7 @@
     - [Features](#features-14)
     - [Unclassified](#unclassified-7)
 - [0.3.0-alpha.1 (2020-05-15)](#030-alpha1-2020-05-15)
-  - [Breaking Changes](#breaking-changes-8)
+  - [Breaking Changes](#breaking-changes-9)
     - [Bug Fixes](#bug-fixes-26)
     - [Chores](#chores)
     - [Code Refactoring](#code-refactoring-8)
@@ -173,7 +174,7 @@
     - [Chores](#chores-1)
     - [Documentation](#documentation-19)
 - [0.2.0-alpha.2 (2020-05-04)](#020-alpha2-2020-05-04)
-  - [Breaking Changes](#breaking-changes-9)
+  - [Breaking Changes](#breaking-changes-10)
     - [Bug Fixes](#bug-fixes-27)
     - [Chores](#chores-2)
     - [Code Refactoring](#code-refactoring-9)
@@ -242,9 +243,21 @@
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
 # [](https://github.com/ory/kratos/compare/v0.9.0-alpha.2...v) (2022-03-23)
+## Breaking Changes
+
+Calling /self-service/recovery without flow ID or with an invalid flow ID while authenticated will now respond with an error instead of redirecting to the default page.
+
+Closes https://github.com/ory-corp/cloud/issues/2173
+
+Co-authored-by: aeneasr <3372410+aeneasr@users.noreply.github.com>
+
 
 
 ### Bug Fixes
+
+* Accept recovery link from authenticated users ([#2195](https://github.com/ory/kratos/issues/2195)) ([0fa64dd](https://github.com/ory/kratos/commit/0fa64dd7fdaaadf92bddb600bbf201fb6e9d1fed)):
+
+    When a recovery link is opened while the user already has a session cookie (possibly for another account), the endpoint will now correctly complete the recovery process and issue new cookies.
 
 * Resolve issue where CF cookies would mingle with CSRF detection in API flows ([011219a](https://github.com/ory/kratos/commit/011219a40027d2c1b06c2797951a55e2f07c0845))
 * Typo in error message ([#2332](https://github.com/ory/kratos/issues/2332)) ([b075a5b](https://github.com/ory/kratos/commit/b075a5b30b47e79af1330238a3b5ea97a3c2ac4b))
