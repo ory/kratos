@@ -4,7 +4,7 @@
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 **Table of Contents**
 
-- [ (2022-03-22)](#2022-03-22)
+- [ (2022-03-23)](#2022-03-23)
     - [Bug Fixes](#bug-fixes)
 - [0.9.0-alpha.2 (2022-03-22)](#090-alpha2-2022-03-22)
     - [Bug Fixes](#bug-fixes-1)
@@ -241,13 +241,15 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# [](https://github.com/ory/kratos/compare/v0.9.0-alpha.2...v) (2022-03-22)
+# [](https://github.com/ory/kratos/compare/v0.9.0-alpha.2...v) (2022-03-23)
 
 
 ### Bug Fixes
 
 * Resolve issue where CF cookies would mingle with CSRF detection in API flows ([011219a](https://github.com/ory/kratos/commit/011219a40027d2c1b06c2797951a55e2f07c0845))
+* Typo in error message ([#2332](https://github.com/ory/kratos/issues/2332)) ([b075a5b](https://github.com/ory/kratos/commit/b075a5b30b47e79af1330238a3b5ea97a3c2ac4b))
 * Update v0.9.0-alpha.2 config schema path ([#2328](https://github.com/ory/kratos/issues/2328)) ([55705c7](https://github.com/ory/kratos/commit/55705c7ce0ff76dc7ddda24524db919dcb51225a))
+* **version schema:** Require version or fall back to latest ([52c9824](https://github.com/ory/kratos/commit/52c98247d4c170f79fa25a019d7f4a73b3e5fdc4))
 
 
 # [0.9.0-alpha.2](https://github.com/ory/kratos/compare/v0.9.0-alpha.1...v0.9.0-alpha.2) (2022-03-22)
