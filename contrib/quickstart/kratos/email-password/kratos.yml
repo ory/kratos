@@ -77,7 +77,7 @@ identity:
   default_schema_id: default
   schemas:
     - id: default
-      schema: file:///etc/config/kratos/identity.schema.json
+      url: file:///etc/config/kratos/identity.schema.json
 
 courier:
   smtp:
