@@ -4,6 +4,7 @@ import (
 	"context"
 	_ "embed"
 	"net/http"
+	"strings"
 
 	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/selfservice/strategy"
@@ -47,7 +48,16 @@ func EnsureCSRF(reg interface {
 			return errors.WithStack(ErrOriginHeaderNeedsBrowserFlow)
 		}
 
-		if len(r.Cookies()) > 0 {
+		// Workaround for Cloudflare setting cookies that we can't control.
+		var hasCookie bool
+		for _, c := range r.Cookies() {
+			if !strings.HasPrefix(c.Name, "__cf") {
+				hasCookie = true
+				break
+			}
+		}
+
+		if hasCookie {
 			return errors.WithStack(ErrCookieHeaderNeedsBrowserFlow)
 		}
 

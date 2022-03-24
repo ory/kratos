@@ -255,9 +255,9 @@ type initializeSelfServiceSettingsFlowForBrowsers struct {
 //     Responses:
 //       200: selfServiceSettingsFlow
 //       303: emptyResponse
+//       400: jsonError
 //       401: jsonError
 //       403: jsonError
-//       400: jsonError
 //       500: jsonError
 func (h *Handler) initBrowserFlow(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	s, err := h.d.SessionManager().FetchFromRequest(r.Context(), r)
@@ -483,6 +483,7 @@ type submitSelfServiceSettingsFlowBody struct{}
 //       400: selfServiceSettingsFlow
 //       401: jsonError
 //       403: jsonError
+//       410: jsonError
 //       422: selfServiceBrowserLocationChangeRequiredError
 //       500: jsonError
 func (h *Handler) submitSettingsFlow(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {

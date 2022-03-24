@@ -33,7 +33,7 @@ Ory Cloud has easy examples, administrative user interfaces, hosted pages (e.g. 
 
 ### :mega: Community gets Ory Cloud for Free! :mega:
 
-Ory community members get the Ory Cloud Start Up plan **free for a year**, with all quality-of-life features available, such as custom domains and giving your team members access. [Sign up with your GitHub account](https://console.ory.sh/registration?preferred_plan=start-up&utm_source=github&utm_medium=banner&utm_campaign=kratos-readme-first900) and use the coupon code **`FIRST900`** on the *"Start-Up Plan"* checkout page to calim your free project now! Make sure to be signed up to the [Ory Community Slack](https://slack.ory.sh) when using the code!
+Ory community members get the Ory Cloud Start Up plan **free for six months**, with all quality-of-life features available, such as custom domains and giving your team members access. [Sign up with your GitHub account](https://console.ory.sh/registration?preferred_plan=start-up&utm_source=github&utm_medium=banner&utm_campaign=kratos-readme-first900) and use the coupon code **`FIRST900`** on the *"Start-Up Plan"* checkout page to calim your free project now! Make sure to be signed up to the [Ory Community Slack](https://slack.ory.sh) when using the code!
 
 
 <!-- START doctoc generated TOC please keep comment here to allow auto update -->
@@ -258,8 +258,20 @@ that your company deserves a spot here, reach out to
         <tr>
             <td>Adopter *</td>
             <td>Rabbit</td>
-            <td align="center"><img height="32px" src="https://raw.githubusercontent.com/ory/meta/master/static/adopters/rabbit.svg" alt="rabbit"></td>
+            <td align="center"><img height="32px" src="https://raw.githubusercontent.com/ory/meta/master/static/adopters/rabbit.svg" alt="Rabbit"></td>
             <td><a href="https://rabbit.co.th/">rabbit.co.th</a></td>
+        </tr>
+        <tr>
+            <td>Adopter *</td>
+            <td>inMusic</td>
+            <td align="center"><img height="32px" src="https://raw.githubusercontent.com/ory/meta/master/static/adopters/inmusic.svg" alt="InMusic"></td>
+            <td><a href="https://inmusicbrands.com/">inmusicbrands.com</a></td>
+        </tr>
+        <tr>
+            <td>Adopter *</td>
+            <td>Buhta</td>
+            <td align="center"><img height="32px" src="https://raw.githubusercontent.com/ory/meta/master/static/adopters/buhta.svg" alt="Buhta"></td>
+            <td><a href="https://buhta.com/">buhta.com</a></td>
         </tr>
     </tbody>
 </table>

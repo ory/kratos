@@ -29,10 +29,16 @@ type mockDeps interface {
 }
 
 func MockSetSession(t *testing.T, reg mockDeps, conf *config.Config) httprouter.Handle {
-	return func(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+	return func(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 		i := identity.NewIdentity(config.DefaultIdentityTraitsSchemaID)
 		require.NoError(t, reg.PrivilegedIdentityPool().CreateIdentity(context.Background(), i))
 
+		MockSetSessionWithIdentity(t, reg, conf, i)(w, r, ps)
+	}
+}
+
+func MockSetSessionWithIdentity(t *testing.T, reg mockDeps, conf *config.Config, i *identity.Identity) httprouter.Handle {
+	return func(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 		activeSession, _ := session.NewActiveSession(i, conf, time.Now().UTC(), identity.CredentialsTypePassword, identity.AuthenticatorAssuranceLevel1)
 		if aal := r.URL.Query().Get("set_aal"); len(aal) > 0 {
 			activeSession.AuthenticatorAssuranceLevel = identity.AuthenticatorAssuranceLevel(aal)
@@ -56,10 +62,21 @@ func MockGetSession(t *testing.T, reg mockDeps) httprouter.Handle {
 }
 
 func MockMakeAuthenticatedRequest(t *testing.T, reg mockDeps, conf *config.Config, router *httprouter.Router, req *http.Request) ([]byte, *http.Response) {
-	set := "/" + uuid.New().String() + "/set"
-	router.GET(set, MockSetSession(t, reg, conf))
+	return MockMakeAuthenticatedRequestWithClient(t, reg, conf, router, req, NewClientWithCookies(t))
+}
 
-	client := NewClientWithCookies(t)
+func MockMakeAuthenticatedRequestWithClient(t *testing.T, reg mockDeps, conf *config.Config, router *httprouter.Router, req *http.Request, client *http.Client) ([]byte, *http.Response) {
+	return MockMakeAuthenticatedRequestWithClientAndID(t, reg, conf, router, req, client, nil)
+}
+
+func MockMakeAuthenticatedRequestWithClientAndID(t *testing.T, reg mockDeps, conf *config.Config, router *httprouter.Router, req *http.Request, client *http.Client, id *identity.Identity) ([]byte, *http.Response) {
+	set := "/" + uuid.New().String() + "/set"
+	if id == nil {
+		router.GET(set, MockSetSession(t, reg, conf))
+	} else {
+		router.GET(set, MockSetSessionWithIdentity(t, reg, conf, id))
+	}
+
 	MockHydrateCookieClient(t, client, "http://"+req.URL.Host+set+"?"+req.URL.Query().Encode())
 
 	res, err := client.Do(req)
@@ -94,6 +111,7 @@ func MockHydrateCookieClient(t *testing.T, c *http.Client, u string) {
 	res, err := c.Get(u)
 	require.NoError(t, err)
 	defer res.Body.Close()
+	body := x.MustReadAll(res.Body)
 	assert.EqualValues(t, http.StatusOK, res.StatusCode)
 
 	var found bool
@@ -102,7 +120,7 @@ func MockHydrateCookieClient(t *testing.T, c *http.Client, u string) {
 			found = true
 		}
 	}
-	require.True(t, found)
+	require.True(t, found, "got body: %s\ngot url: %s", body, res.Request.URL.String())
 }
 
 func MockSessionCreateHandlerWithIdentity(t *testing.T, reg mockDeps, i *identity.Identity) (httprouter.Handle, *session.Session) {

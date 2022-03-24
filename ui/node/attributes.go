@@ -97,10 +97,14 @@ type ImageAttributes struct {
 	Identifier string `json:"id"`
 
 	// Width of the image
-	Width int `json:"width,omitempty"`
+	//
+	// required: true
+	Width int `json:"width"`
 
 	// Height of the image
-	Height int `json:"height,omitempty"`
+	//
+	// required: true
+	Height int `json:"height"`
 
 	// NodeType represents this node's types. It is a mirror of `node.type` and
 	// is primarily used to allow compatibility with OpenAPI 3.0.
