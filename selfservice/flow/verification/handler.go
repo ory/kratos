@@ -255,6 +255,7 @@ func (h *Handler) fetch(w http.ResponseWriter, r *http.Request, _ httprouter.Par
 			}
 
 			h.d.Writer().WriteError(w, r, errors.WithStack(x.ErrGone.
+				WithReason("The verification flow has expired. Redirect the user to the verification flow init endpoint to initialize a new verification flow.").
 				WithDetail("redirect_to", redirectURL.String()).
 				WithDetail("return_to", req.ReturnTo)))
 			return
