@@ -2,6 +2,7 @@ package verification
 
 import (
 	"net/http"
+	"net/url"
 	"time"
 
 	"github.com/ory/nosurf"
@@ -250,9 +251,7 @@ func (h *Handler) fetch(w http.ResponseWriter, r *http.Request, _ httprouter.Par
 		if req.Type == flow.TypeBrowser {
 			redirectURL := urlx.AppendPaths(h.d.Config(r.Context()).SelfPublicURL(), RouteInitBrowserFlow)
 			if req.ReturnTo != "" {
-				query := redirectURL.Query()
-				query.Set("return_to", req.ReturnTo)
-				redirectURL.RawQuery = query.Encode()
+				redirectURL = urlx.CopyWithQuery(redirectURL, url.Values{"return_to": { req.ReturnTo }})
 			}
 
 			h.d.Writer().WriteError(w, r, errors.WithStack(x.ErrGone.

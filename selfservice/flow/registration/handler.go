@@ -2,6 +2,7 @@ package registration
 
 import (
 	"net/http"
+	"net/url"
 	"time"
 
 	"github.com/ory/kratos/text"
@@ -333,9 +334,7 @@ func (h *Handler) fetchFlow(w http.ResponseWriter, r *http.Request, ps httproute
 		if ar.Type == flow.TypeBrowser {
 			redirectURL := urlx.AppendPaths(h.d.Config(r.Context()).SelfPublicURL(), RouteInitBrowserFlow)
 			if ar.ReturnTo != "" {
-				query := redirectURL.Query()
-				query.Set("return_to", ar.ReturnTo)
-				redirectURL.RawQuery = query.Encode()
+				redirectURL = urlx.CopyWithQuery(redirectURL, url.Values{"return_to": { ar.ReturnTo }})
 			}
 
 			h.d.Writer().WriteError(w, r, errors.WithStack(x.ErrGone.WithID(text.ErrIDSelfServiceFlowExpired).
