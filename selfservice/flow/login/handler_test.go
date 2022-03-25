@@ -358,7 +358,7 @@ func TestFlowLifecycle(t *testing.T) {
 			t.Run("case=does not set forced flag on unauthenticated request with refresh=true", func(t *testing.T) {
 				res, body := initFlow(t, url.Values{"refresh": {"true"}}, true)
 				assert.Contains(t, res.Request.URL.String(), login.RouteInitAPIFlow)
-				assertion(body, true, true)
+				assertion(body, false, true)
 			})
 
 			t.Run("case=does not set forced flag on authenticated request without refresh=true", func(t *testing.T) {
