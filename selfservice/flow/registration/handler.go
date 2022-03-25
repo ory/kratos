@@ -334,7 +334,7 @@ func (h *Handler) fetchFlow(w http.ResponseWriter, r *http.Request, ps httproute
 		if ar.Type == flow.TypeBrowser {
 			redirectURL := urlx.AppendPaths(h.d.Config(r.Context()).SelfPublicURL(), RouteInitBrowserFlow)
 			if ar.ReturnTo != "" {
-				redirectURL = urlx.CopyWithQuery(redirectURL, url.Values{"return_to": { ar.ReturnTo }})
+				redirectURL = urlx.CopyWithQuery(redirectURL, url.Values{"return_to": {ar.ReturnTo}})
 			}
 
 			h.d.Writer().WriteError(w, r, errors.WithStack(x.ErrGone.WithID(text.ErrIDSelfServiceFlowExpired).

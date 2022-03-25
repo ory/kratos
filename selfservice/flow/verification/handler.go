@@ -251,7 +251,7 @@ func (h *Handler) fetch(w http.ResponseWriter, r *http.Request, _ httprouter.Par
 		if req.Type == flow.TypeBrowser {
 			redirectURL := urlx.AppendPaths(h.d.Config(r.Context()).SelfPublicURL(), RouteInitBrowserFlow)
 			if req.ReturnTo != "" {
-				redirectURL = urlx.CopyWithQuery(redirectURL, url.Values{"return_to": { req.ReturnTo }})
+				redirectURL = urlx.CopyWithQuery(redirectURL, url.Values{"return_to": {req.ReturnTo}})
 			}
 
 			h.d.Writer().WriteError(w, r, errors.WithStack(x.ErrGone.
