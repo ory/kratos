@@ -116,6 +116,9 @@ func (h *Handler) NewLoginFlow(w http.ResponseWriter, r *http.Request, ft flow.T
 			return nil, errors.WithStack(ErrSessionRequiredForHigherAAL)
 		}
 
+		// We are setting refresh to false if no session exists.
+		f.Refresh = false
+
 		goto preLoginHook
 	} else if err != nil {
 		// Some other error happened - return that one.
