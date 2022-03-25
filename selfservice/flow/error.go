@@ -3,9 +3,12 @@ package flow
 import (
 	"fmt"
 	"net/http"
+	"net/url"
 	"time"
 
+	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/x"
+	"github.com/ory/x/urlx"
 
 	"github.com/gofrs/uuid"
 	"github.com/pkg/errors"
@@ -85,4 +88,13 @@ func NewBrowserLocationChangeRequiredError(redirectTo string) *BrowserLocationCh
 			ErrorField:  "browser location change required",
 		},
 	}
+}
+
+func GetFlowExpiredRedirectURL(config *config.Config, route, returnTo string) *url.URL {
+	redirectURL := urlx.AppendPaths(config.SelfPublicURL(), route)
+	if returnTo != "" {
+		redirectURL = urlx.CopyWithQuery(redirectURL, url.Values{"return_to": {returnTo}})
+	}
+
+	return redirectURL
 }

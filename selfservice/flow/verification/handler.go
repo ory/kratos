@@ -2,7 +2,6 @@ package verification
 
 import (
 	"net/http"
-	"net/url"
 	"time"
 
 	"github.com/ory/nosurf"
@@ -249,10 +248,7 @@ func (h *Handler) fetch(w http.ResponseWriter, r *http.Request, _ httprouter.Par
 
 	if req.ExpiresAt.Before(time.Now().UTC()) {
 		if req.Type == flow.TypeBrowser {
-			redirectURL := urlx.AppendPaths(h.d.Config(r.Context()).SelfPublicURL(), RouteInitBrowserFlow)
-			if req.ReturnTo != "" {
-				redirectURL = urlx.CopyWithQuery(redirectURL, url.Values{"return_to": {req.ReturnTo}})
-			}
+			redirectURL := flow.GetFlowExpiredRedirectURL(h.d.Config(r.Context()), RouteInitBrowserFlow, req.ReturnTo)
 
 			h.d.Writer().WriteError(w, r, errors.WithStack(x.ErrGone.
 				WithReason("The verification flow has expired. Redirect the user to the verification flow init endpoint to initialize a new verification flow.").

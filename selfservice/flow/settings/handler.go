@@ -2,7 +2,6 @@ package settings
 
 import (
 	"net/http"
-	"net/url"
 	"time"
 
 	"github.com/julienschmidt/httprouter"
@@ -378,10 +377,8 @@ func (h *Handler) fetchFlow(w http.ResponseWriter, r *http.Request) error {
 
 	if pr.ExpiresAt.Before(time.Now().UTC()) {
 		if pr.Type == flow.TypeBrowser {
-			redirectURL := urlx.AppendPaths(h.d.Config(r.Context()).SelfPublicURL(), RouteInitBrowserFlow)
-			if pr.ReturnTo != "" {
-				redirectURL = urlx.CopyWithQuery(redirectURL, url.Values{"return_to": {pr.ReturnTo}})
-			}
+			redirectURL := flow.GetFlowExpiredRedirectURL(h.d.Config(r.Context()), RouteInitBrowserFlow, pr.ReturnTo)
+
 			h.d.Writer().WriteError(w, r, errors.WithStack(x.ErrGone.
 				WithReason("The settings flow has expired. Redirect the user to the settings flow init endpoint to initialize a new settings flow.").
 				WithDetail("redirect_to", redirectURL.String()).
