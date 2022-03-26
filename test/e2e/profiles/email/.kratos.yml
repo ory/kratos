@@ -11,10 +11,11 @@ selfservice:
     registration:
       ui_url: http://localhost:4455/registration
       after:
-        password:
-          hooks:
-            -
-              hook: session
+        post_persist:
+          password:
+            hooks:
+              -
+                hook: session
 
     login:
       ui_url: http://localhost:4455/login

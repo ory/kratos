@@ -189,7 +189,65 @@ selfservice:
               method: GET
       after:
         default_browser_return_url: https://self-service/registration/return_to
-        password:
+        pre_persist:
+          password:
+            hooks:
+              - hook: web_hook
+                config:
+                  url: https://test.kratos.ory.sh/after_registration_pre_password_hook
+                  method: POST
+                  body: /path/to/template.jsonnet
+          oidc:
+            default_browser_return_url: https://self-service/registration/oidc/return_to
+            hooks:
+              - hook: web_hook
+                config:
+                  url: https://test.kratos.ory.sh/after_registration_pre_oidc_hook
+                  method: GET
+                  body: /path/to/template.jsonnet
+          hooks:
+            - hook: web_hook
+              config:
+                url: https://test.kratos.ory.sh/after_registration_pre_global_hook
+                method: POST
+                body: /path/to/template.jsonnet
+                auth:
+                  type: api_key
+                  config:
+                    name: My-Key
+                    value: My-Key-Value
+                    in: header
+        post_persist:
+          password:
+            hooks:
+              - hook: session
+              - hook: web_hook
+                config:
+                  url: https://test.kratos.ory.sh/after_registration_post_password_hook
+                  method: POST
+                  body: /path/to/template.jsonnet
+          oidc:
+            default_browser_return_url: https://self-service/registration/oidc/return_to
+            hooks:
+              - hook: web_hook
+                config:
+                  url: https://test.kratos.ory.sh/after_registration_post_oidc_hook
+                  method: GET
+                  body: /path/to/template.jsonnet
+              - hook: session
+          hooks:
+            - hook: web_hook
+              config:
+                url: https://test.kratos.ory.sh/after_registration_post_global_hook
+                method: POST
+                body: /path/to/template.jsonnet
+                auth:
+                  type: api_key
+                  config:
+                    name: My-Key
+                    value: My-Key-Value
+                    in: header
+        password: # LEGACY
           hooks:
             - hook: session
             - hook: web_hook
@@ -197,7 +255,16 @@ selfservice:
                 url: https://test.kratos.ory.sh/after_registration_password_hook
                 method: POST
                 body: /path/to/template.jsonnet
-        hooks:
+        oidc: # LEGACY
+          default_browser_return_url: https://self-service/registration/oidc/return_to
+          hooks:
+            - hook: web_hook
+              config:
+                url: https://test.kratos.ory.sh/after_registration_oidc_hook
+                method: GET
+                body: /path/to/template.jsonnet
+            - hook: session
+        hooks: # LEGACY
           - hook: web_hook
             config:
               url: https://test.kratos.ory.sh/after_registration_global_hook
@@ -209,12 +276,3 @@ selfservice:
                   name: My-Key
                   value: My-Key-Value
                   in: header
-        oidc:
-          default_browser_return_url: https://self-service/registration/oidc/return_to
-          hooks:
-            - hook: web_hook
-              config:
-                url: https://test.kratos.ory.sh/after_registration_oidc_hook
-                method: GET
-                body: /path/to/template.jsonnet
-            - hook: session

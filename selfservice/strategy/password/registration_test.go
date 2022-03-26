@@ -138,9 +138,9 @@ func TestRegistration(t *testing.T) {
 
 		t.Run("case=should pass and set up a session", func(t *testing.T) {
 			testhelpers.SetDefaultIdentitySchema(conf, "file://./stub/registration.schema.json")
-			conf.MustSet(ctx, config.HookStrategyKey(config.ViperKeySelfServiceRegistrationAfter, identity.CredentialsTypePassword.String()), []config.SelfServiceHook{{Name: "session"}})
+			conf.MustSet(ctx, config.HookStrategyKey(config.ViperKeySelfServiceRegistrationPostPersist, identity.CredentialsTypePassword.String()), []config.SelfServiceHook{{Name: "session"}})
 			t.Cleanup(func() {
-				conf.MustSet(ctx, config.HookStrategyKey(config.ViperKeySelfServiceRegistrationAfter, identity.CredentialsTypePassword.String()), nil)
+				conf.MustSet(ctx, config.HookStrategyKey(config.ViperKeySelfServiceRegistrationPostPersist, identity.CredentialsTypePassword.String()), nil)
 			})
 
 			t.Run("type=api", func(t *testing.T) {
@@ -177,7 +177,7 @@ func TestRegistration(t *testing.T) {
 
 		t.Run("case=should not set up a session if hook is not configured", func(t *testing.T) {
 			testhelpers.SetDefaultIdentitySchema(conf, "file://./stub/registration.schema.json")
-			conf.MustSet(ctx, config.HookStrategyKey(config.ViperKeySelfServiceRegistrationAfter, identity.CredentialsTypePassword.String()), nil)
+			conf.MustSet(ctx, config.HookStrategyKey(config.ViperKeySelfServiceRegistrationPostPersist, identity.CredentialsTypePassword.String()), nil)
 
 			t.Run("type=api", func(t *testing.T) {
 				body := expectNoLogin(t, true, false, nil, func(v url.Values) {
@@ -209,9 +209,9 @@ func TestRegistration(t *testing.T) {
 
 		t.Run("case=should fail to register the same user again", func(t *testing.T) {
 			testhelpers.SetDefaultIdentitySchema(conf, "file://./stub/registration.schema.json")
-			conf.MustSet(ctx, config.HookStrategyKey(config.ViperKeySelfServiceRegistrationAfter, identity.CredentialsTypePassword.String()), []config.SelfServiceHook{{Name: "session"}})
+			conf.MustSet(ctx, config.HookStrategyKey(config.ViperKeySelfServiceRegistrationPostPersist, identity.CredentialsTypePassword.String()), []config.SelfServiceHook{{Name: "session"}})
 			t.Cleanup(func() {
-				conf.MustSet(ctx, config.HookStrategyKey(config.ViperKeySelfServiceRegistrationAfter, identity.CredentialsTypePassword.String()), nil)
+				conf.MustSet(ctx, config.HookStrategyKey(config.ViperKeySelfServiceRegistrationPostPersist, identity.CredentialsTypePassword.String()), nil)
 			})
 
 			var applyTransform = func(values, transform func(v url.Values)) func(v url.Values) {
@@ -359,9 +359,9 @@ func TestRegistration(t *testing.T) {
 
 		t.Run("case=should work even if password is just numbers", func(t *testing.T) {
 			testhelpers.SetDefaultIdentitySchema(conf, "file://stub/registration.schema.json")
-			conf.MustSet(ctx, config.HookStrategyKey(config.ViperKeySelfServiceRegistrationAfter, identity.CredentialsTypePassword.String()), []config.SelfServiceHook{{Name: "session"}})
+			conf.MustSet(ctx, config.HookStrategyKey(config.ViperKeySelfServiceRegistrationPostPersist, identity.CredentialsTypePassword.String()), []config.SelfServiceHook{{Name: "session"}})
 			t.Cleanup(func() {
-				conf.MustSet(ctx, config.HookStrategyKey(config.ViperKeySelfServiceRegistrationAfter, identity.CredentialsTypePassword.String()), nil)
+				conf.MustSet(ctx, config.HookStrategyKey(config.ViperKeySelfServiceRegistrationPostPersist, identity.CredentialsTypePassword.String()), nil)
 			})
 
 			t.Run("type=api", func(t *testing.T) {
@@ -409,9 +409,9 @@ func TestRegistration(t *testing.T) {
 
 		t.Run("case=should work with regular JSON", func(t *testing.T) {
 			testhelpers.SetDefaultIdentitySchema(conf, "file://stub/registration.schema.json")
-			conf.MustSet(ctx, config.HookStrategyKey(config.ViperKeySelfServiceRegistrationAfter, identity.CredentialsTypePassword.String()), []config.SelfServiceHook{{Name: "session"}})
+			conf.MustSet(ctx, config.HookStrategyKey(config.ViperKeySelfServiceRegistrationPostPersist, identity.CredentialsTypePassword.String()), []config.SelfServiceHook{{Name: "session"}})
 			t.Cleanup(func() {
-				conf.MustSet(ctx, config.HookStrategyKey(config.ViperKeySelfServiceRegistrationAfter, identity.CredentialsTypePassword.String()), nil)
+				conf.MustSet(ctx, config.HookStrategyKey(config.ViperKeySelfServiceRegistrationPostPersist, identity.CredentialsTypePassword.String()), nil)
 			})
 
 			hc := testhelpers.NewClientWithCookies(t)
@@ -440,7 +440,7 @@ func TestRegistration(t *testing.T) {
 				{ID: "does-not-exist", URL: "file://./stub/not-exists.schema.json"},
 				{ID: "advanced-user", URL: "file://./stub/registration.secondary.schema.json"},
 			})
-			conf.MustSet(ctx, config.HookStrategyKey(config.ViperKeySelfServiceRegistrationAfter, identity.CredentialsTypePassword.String()), nil)
+			conf.MustSet(ctx, config.HookStrategyKey(config.ViperKeySelfServiceRegistrationPostPersist, identity.CredentialsTypePassword.String()), nil)
 
 			username := "registration-custom-schema"
 			t.Run("type=api", func(t *testing.T) {

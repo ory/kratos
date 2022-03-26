@@ -822,6 +822,42 @@
         }
       }
     },
+    "selfServiceAfterRegistrationPrePersist": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "hooks": {
+          "$ref": "#/definitions/selfServiceHooks"
+        },
+        "password": {
+          "$ref": "#/definitions/selfServiceAfterRegistrationMethod"
+        },
+        "webauthn": {
+          "$ref": "#/definitions/selfServiceAfterRegistrationMethod"
+        },
+        "oidc": {
+          "$ref": "#/definitions/selfServiceAfterRegistrationMethod"
+        }
+      }
+    },
+    "selfServiceAfterRegistrationPostPersist": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "hooks": {
+          "$ref": "#/definitions/selfServiceHooks"
+        },
+        "password": {
+          "$ref": "#/definitions/selfServiceAfterRegistrationMethod"
+        },
+        "webauthn": {
+          "$ref": "#/definitions/selfServiceAfterRegistrationMethod"
+        },
+        "oidc": {
+          "$ref": "#/definitions/selfServiceAfterRegistrationMethod"
+        }
+      }
+    },
     "selfServiceAfterRegistration": {
       "type": "object",
       "additionalProperties": false,
@@ -837,6 +873,12 @@
         },
         "oidc": {
           "$ref": "#/definitions/selfServiceAfterRegistrationMethod"
+        },
+        "pre_persist": {
+          "$ref": "#/definitions/selfServiceAfterRegistrationPrePersist"
+        },
+        "post_persist": {
+          "$ref": "#/definitions/selfServiceAfterRegistrationPostPersist"
         },
         "hooks": {
           "$ref": "#/definitions/selfServiceHooks"

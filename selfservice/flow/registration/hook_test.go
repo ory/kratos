@@ -49,6 +49,16 @@ func TestRegistrationExecutor(t *testing.T) {
 					}
 				})
 
+				router.GET("/registration/pre-persist", func(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+					if i == nil {
+						i = testhelpers.SelfServiceHookFakeIdentity(t)
+					}
+					a, err := registration.NewFlow(conf, time.Minute, x.FakeCSRFToken, r, ft)
+					require.NoError(t, err)
+					a.RequestURL = x.RequestURL(r).String()
+					_ = handleErr(t, w, r, reg.RegistrationHookExecutor().PostRegistrationHook(w, r, identity.CredentialsType(strategy), a, i))
+				})
+
 				router.GET("/registration/post", func(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 					if i == nil {
 						i = testhelpers.SelfServiceHookFakeIdentity(t)
@@ -67,6 +77,7 @@ func TestRegistrationExecutor(t *testing.T) {
 
 			makeRequestPost := testhelpers.SelfServiceMakeRegistrationPostHookRequest
 			viperSetPost := testhelpers.SelfServiceHookRegistrationViperSetPost
+			viperSetPostPre := testhelpers.SelfServiceHookRegistrationViperSetPostPre
 			t.Run("method=PostRegistrationHook", func(t *testing.T) {
 				t.Run("case=pass without hooks", func(t *testing.T) {
 					t.Cleanup(testhelpers.SelfServiceHookConfigReset(t, conf))
@@ -93,7 +104,7 @@ func TestRegistrationExecutor(t *testing.T) {
 
 				t.Run("case=fail if hooks fail", func(t *testing.T) {
 					t.Cleanup(testhelpers.SelfServiceHookConfigReset(t, conf))
-					viperSetPost(t, conf, strategy, []config.SelfServiceHook{{Name: "err", Config: []byte(`{"ExecutePostRegistrationPrePersistHook": "abort"}`)}})
+					viperSetPostPre(t, conf, strategy, []config.SelfServiceHook{{Name: "err", Config: []byte(`{"ExecutePostRegistrationPrePersistHook": "abort"}`)}})
 					i := testhelpers.SelfServiceHookFakeIdentity(t)
 
 					res, body := makeRequestPost(t, newServer(t, i, flow.TypeBrowser), false, url.Values{})
@@ -102,6 +113,20 @@ func TestRegistrationExecutor(t *testing.T) {
 
 					_, err := reg.IdentityPool().GetIdentity(context.Background(), i.ID)
 					require.Error(t, err)
+				})
+
+				t.Run("case=fail if hooks fail, but still creates if post", func(t *testing.T) {
+					t.Cleanup(testhelpers.SelfServiceHookConfigReset(t, conf))
+					viperSetPost(t, conf, strategy, []config.SelfServiceHook{{Name: "err", Config: []byte(`{"ExecutePostRegistrationPostPersistHook": "abort"}`)}})
+					i := testhelpers.SelfServiceHookFakeIdentity(t)
+
+					res, body := makeRequestPost(t, newServer(t, i, flow.TypeBrowser), false, url.Values{})
+					assert.EqualValues(t, http.StatusOK, res.StatusCode)
+					assert.Equal(t, "", body)
+
+					actual, err := reg.IdentityPool().GetIdentity(context.Background(), i.ID)
+					require.NoError(t, err)
+					assert.Equal(t, actual.Traits, i.Traits)
 				})
 
 				t.Run("case=use return_to value", func(t *testing.T) {

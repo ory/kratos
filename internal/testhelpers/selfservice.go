@@ -103,6 +103,10 @@ func SelfServiceHookConfigReset(t *testing.T, conf *config.Config) func() {
 		conf.MustSet(ctx, config.ViperKeySelfServiceRecoveryAfter+".hooks", nil)
 		conf.MustSet(ctx, config.ViperKeySelfServiceRegistrationAfter, nil)
 		conf.MustSet(ctx, config.ViperKeySelfServiceRegistrationAfter+".hooks", nil)
+		conf.MustSet(ctx, config.ViperKeySelfServiceRegistrationPrePersist, nil)
+		conf.MustSet(ctx, config.ViperKeySelfServiceRegistrationPrePersist+".hooks", nil)
+		conf.MustSet(ctx, config.ViperKeySelfServiceRegistrationPostPersist, nil)
+		conf.MustSet(ctx, config.ViperKeySelfServiceRegistrationPostPersist+".hooks", nil)
 		conf.MustSet(ctx, config.ViperKeySelfServiceRegistrationBeforeHooks, nil)
 		conf.MustSet(ctx, config.ViperKeySelfServiceSettingsAfter, nil)
 		conf.MustSet(ctx, config.ViperKeySelfServiceSettingsAfter+".hooks", nil)
@@ -146,7 +150,12 @@ func SelfServiceHookLoginViperSetPost(t *testing.T, conf *config.Config, strateg
 
 func SelfServiceHookRegistrationViperSetPost(t *testing.T, conf *config.Config, strategy string, c []config.SelfServiceHook) {
 	ctx := context.Background()
-	conf.MustSet(ctx, config.HookStrategyKey(config.ViperKeySelfServiceRegistrationAfter, strategy), c)
+	conf.MustSet(ctx, config.HookStrategyKey(config.ViperKeySelfServiceRegistrationPostPersist, strategy), c)
+}
+
+func SelfServiceHookRegistrationViperSetPostPre(t *testing.T, conf *config.Config, strategy string, c []config.SelfServiceHook) {
+	ctx := context.Background()
+	conf.MustSet(ctx, config.HookStrategyKey(config.ViperKeySelfServiceRegistrationPrePersist, strategy), c)
 }
 
 func SelfServiceHookLoginErrorHandler(t *testing.T, w http.ResponseWriter, r *http.Request, err error) bool {
@@ -196,6 +205,10 @@ func SelfServiceMakeRecoveryPreHookRequest(t *testing.T, ts *httptest.Server) (*
 
 func SelfServiceMakeVerificationPreHookRequest(t *testing.T, ts *httptest.Server) (*http.Response, string) {
 	return SelfServiceMakeHookRequest(t, ts, "/verification/pre", false, url.Values{})
+}
+
+func SelfServiceMakeRegistrationPrePersistHookRequest(t *testing.T, ts *httptest.Server) (*http.Response, string) {
+	return SelfServiceMakeHookRequest(t, ts, "/registration/pre-persist", false, url.Values{})
 }
 
 func SelfServiceMakeRegistrationPostHookRequest(t *testing.T, ts *httptest.Server, asAPI bool, query url.Values) (*http.Response, string) {

@@ -86,7 +86,7 @@ func TestStrategy(t *testing.T) {
 
 	conf.MustSet(ctx, config.ViperKeySelfServiceRegistrationEnabled, true)
 	testhelpers.SetDefaultIdentitySchema(conf, "file://./stub/registration.schema.json")
-	conf.MustSet(ctx, config.HookStrategyKey(config.ViperKeySelfServiceRegistrationAfter,
+	conf.MustSet(ctx, config.HookStrategyKey(config.ViperKeySelfServiceRegistrationPostPersist,
 		identity.CredentialsTypeOIDC.String()), []config.SelfServiceHook{{Name: "session"}})
 
 	t.Logf("Kratos Public URL: %s", ts.URL)

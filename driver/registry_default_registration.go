@@ -12,9 +12,19 @@ import (
 )
 
 func (m *RegistryDefault) PostRegistrationPrePersistHooks(ctx context.Context, credentialsType identity.CredentialsType) (b []registration.PostHookPrePersistExecutor) {
-	for _, v := range m.getHooks(string(credentialsType), m.Config().SelfServiceFlowRegistrationAfterHooks(ctx, string(credentialsType))) {
+	for _, v := range m.getHooks(string(credentialsType), m.Config().SelfServiceFlowRegistrationPrePersistHooks(ctx, string(credentialsType))) {
 		if hook, ok := v.(registration.PostHookPrePersistExecutor); ok {
 			b = append(b, hook)
+		}
+	}
+
+	if len(b) == 0 {
+		// since we don't want merging hooks defined in a specific strategy and global hooks
+		// global hooks are added only if no strategy specific hooks are defined
+		for _, v := range m.getHooks(config.HookGlobal, m.Config().SelfServiceFlowRegistrationPrePersistHooks(ctx, config.HookGlobal)) {
+			if hook, ok := v.(registration.PostHookPrePersistExecutor); ok {
+				b = append(b, hook)
+			}
 		}
 	}
 

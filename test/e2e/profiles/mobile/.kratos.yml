@@ -13,6 +13,10 @@ selfservice:
         password:
           hooks:
             - hook: session
+        post_persist:
+          password:
+            hooks:
+              - hook: session
     recovery:
       enabled: true
 

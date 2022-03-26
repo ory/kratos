@@ -235,9 +235,36 @@ func TestViperProvider(t *testing.T) {
 
 				require.Len(t, hooks, 1)
 				assert.Equal(t, expHooks, hooks)
-				// assert.EqualValues(t, "redirect", hook.Name)
-				// assert.JSONEq(t, `{"allow_user_defined_redirect":false,"default_redirect_url":"http://test.kratos.ory.sh:4000/"}`, string(hook.Config))
 			})
+
+			for _, tc := range []struct {
+				strategy string
+				hooks    []config.SelfServiceHook
+			}{
+				{
+					strategy: "password",
+					hooks: []config.SelfServiceHook{
+						{Name: "web_hook", Config: json.RawMessage(`{"body":"/path/to/template.jsonnet","method":"POST","url":"https://test.kratos.ory.sh/after_registration_pre_password_hook"}`)},
+					},
+				},
+				{
+					strategy: "oidc",
+					hooks: []config.SelfServiceHook{
+						{Name: "web_hook", Config: json.RawMessage(`{"body":"/path/to/template.jsonnet","method":"GET","url":"https://test.kratos.ory.sh/after_registration_pre_oidc_hook"}`)},
+					},
+				},
+				{
+					strategy: config.HookGlobal,
+					hooks: []config.SelfServiceHook{
+						{Name: "web_hook", Config: json.RawMessage(`{"auth":{"config":{"in":"header","name":"My-Key","value":"My-Key-Value"},"type":"api_key"},"body":"/path/to/template.jsonnet","method":"POST","url":"https://test.kratos.ory.sh/after_registration_pre_global_hook"}`)},
+					},
+				},
+			} {
+				t.Run("hook=after.pre/strategy="+tc.strategy, func(t *testing.T) {
+					hooks := p.SelfServiceFlowRegistrationPrePersistHooks(ctx, tc.strategy)
+					assert.Equal(t, tc.hooks, hooks)
+				})
+			}
 
 			for _, tc := range []struct {
 				strategy string
@@ -248,27 +275,28 @@ func TestViperProvider(t *testing.T) {
 					hooks: []config.SelfServiceHook{
 						{Name: "session", Config: json.RawMessage(`{}`)},
 						{Name: "web_hook", Config: json.RawMessage(`{"body":"/path/to/template.jsonnet","method":"POST","url":"https://test.kratos.ory.sh/after_registration_password_hook"}`)},
-						// {Name: "verify", Config: json.RawMessage(`{}`)},
-						// {Name: "redirect", Config: json.RawMessage(`{"allow_user_defined_redirect":false,"default_redirect_url":"http://test.kratos.ory.sh:4000/"}`)},
+						{Name: "session", Config: json.RawMessage(`{}`)},
+						{Name: "web_hook", Config: json.RawMessage(`{"body":"/path/to/template.jsonnet","method":"POST","url":"https://test.kratos.ory.sh/after_registration_post_password_hook"}`)},
 					},
 				},
 				{
 					strategy: "oidc",
 					hooks: []config.SelfServiceHook{
-						// {Name: "verify", Config: json.RawMessage(`{}`)},
 						{Name: "web_hook", Config: json.RawMessage(`{"body":"/path/to/template.jsonnet","method":"GET","url":"https://test.kratos.ory.sh/after_registration_oidc_hook"}`)},
 						{Name: "session", Config: json.RawMessage(`{}`)},
-						// {Name: "redirect", Config: json.RawMessage(`{"allow_user_defined_redirect":false,"default_redirect_url":"http://test.kratos.ory.sh:4000/"}`)},
+						{Name: "web_hook", Config: json.RawMessage(`{"body":"/path/to/template.jsonnet","method":"GET","url":"https://test.kratos.ory.sh/after_registration_post_oidc_hook"}`)},
+						{Name: "session", Config: json.RawMessage(`{}`)},
 					},
 				},
 				{
 					strategy: config.HookGlobal,
 					hooks: []config.SelfServiceHook{
 						{Name: "web_hook", Config: json.RawMessage(`{"auth":{"config":{"in":"header","name":"My-Key","value":"My-Key-Value"},"type":"api_key"},"body":"/path/to/template.jsonnet","method":"POST","url":"https://test.kratos.ory.sh/after_registration_global_hook"}`)},
+						{Name: "web_hook", Config: json.RawMessage(`{"auth":{"config":{"in":"header","name":"My-Key","value":"My-Key-Value"},"type":"api_key"},"body":"/path/to/template.jsonnet","method":"POST","url":"https://test.kratos.ory.sh/after_registration_post_global_hook"}`)},
 					},
 				},
 			} {
-				t.Run("hook=after/strategy="+tc.strategy, func(t *testing.T) {
+				t.Run("hook=after.post/strategy="+tc.strategy, func(t *testing.T) {
 					hooks := p.SelfServiceFlowRegistrationAfterHooks(ctx, tc.strategy)
 					assert.Equal(t, tc.hooks, hooks)
 				})

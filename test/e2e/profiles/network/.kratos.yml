@@ -11,12 +11,13 @@ selfservice:
     registration:
       ui_url: http://localhost:4455/registration
       after:
-        hooks:
-          - hook: web_hook
-            config:
-              method: GET
-              url: https://www.google.com/login/hook
-              body:  http://192.168.178.3:4455/body
+        post_persist:
+          hooks:
+            - hook: web_hook
+              config:
+                method: GET
+                url: https://www.google.com/login/hook
+                body:  http://192.168.178.3:4455/body
 
     login:
       ui_url: http://localhost:4455/login

@@ -35,6 +35,10 @@ func NewVerifier(r verifierDependencies) *Verifier {
 	return &Verifier{r: r}
 }
 
+func (e *Verifier) ExecutePostRegistrationPrePersistHook(_ http.ResponseWriter, r *http.Request, f *registration.Flow, i *identity.Identity) error {
+	return e.do(r, i, f)
+}
+
 func (e *Verifier) ExecutePostRegistrationPostPersistHook(_ http.ResponseWriter, r *http.Request, f *registration.Flow, s *session.Session) error {
 	return e.do(r, s.Identity, f)
 }

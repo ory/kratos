@@ -181,6 +181,16 @@ func TestWebHooks(t *testing.T) {
 			},
 		},
 		{
+			uc:         "Pre Persist Registration Hook",
+			createFlow: func() flow.Flow { return &registration.Flow{ID: x.NewUUID()} },
+			callWebHook: func(wh *hook.WebHook, req *http.Request, f flow.Flow, s *session.Session) error {
+				return wh.ExecutePostRegistrationPrePersistHook(nil, req, f.(*registration.Flow), s.Identity)
+			},
+			expectedBody: func(req *http.Request, f flow.Flow, s *session.Session) string {
+				return bodyWithFlowAndIdentity(req, f, s)
+			},
+		},
+		{
 			uc:         "Post Registration Hook",
 			createFlow: func() flow.Flow { return &registration.Flow{ID: x.NewUUID()} },
 			callWebHook: func(wh *hook.WebHook, req *http.Request, f flow.Flow, s *session.Session) error {

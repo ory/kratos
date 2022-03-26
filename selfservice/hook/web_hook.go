@@ -179,10 +179,6 @@ func (e *WebHook) ExecuteRegistrationPreHook(_ http.ResponseWriter, req *http.Re
 
 func (e *WebHook) ExecutePostRegistrationPrePersistHook(_ http.ResponseWriter, req *http.Request, flow *registration.Flow, id *identity.Identity) error {
 	ctx, _ := e.deps.Tracer(req.Context()).Tracer().Start(req.Context(), "selfservice.hook.ExecutePostRegistrationPrePersistHook")
-	if !gjson.GetBytes(e.conf, "can_interrupt").Bool() {
-		return nil
-	}
-
 	return e.execute(ctx, &templateContext{
 		Flow:           flow,
 		RequestHeaders: req.Header,

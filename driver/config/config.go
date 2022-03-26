@@ -130,6 +130,8 @@ const (
 	ViperKeySelfServiceRegistrationUI                        = "selfservice.flows.registration.ui_url"
 	ViperKeySelfServiceRegistrationRequestLifespan           = "selfservice.flows.registration.lifespan"
 	ViperKeySelfServiceRegistrationAfter                     = "selfservice.flows.registration.after"
+	ViperKeySelfServiceRegistrationPrePersist                = "selfservice.flows.registration.after.pre_persist"
+	ViperKeySelfServiceRegistrationPostPersist               = "selfservice.flows.registration.after.post_persist"
 	ViperKeySelfServiceRegistrationBeforeHooks               = "selfservice.flows.registration.before.hooks"
 	ViperKeySelfServiceLoginUI                               = "selfservice.flows.login.ui_url"
 	ViperKeySelfServiceLoginRequestLifespan                  = "selfservice.flows.login.lifespan"
@@ -368,6 +370,16 @@ func New(ctx context.Context, l *logrusx.Logger, stdOutOrErr io.Writer, opts ...
 	l.UseConfig(p)
 
 	c = NewCustom(l, p, stdOutOrErr, &contextx.Default{})
+
+	hooks := append(
+		c.selfServiceHooks(ctx, HookStrategyKey(ViperKeySelfServiceRegistrationAfter, "global")),
+		append(c.selfServiceHooks(ctx, HookStrategyKey(ViperKeySelfServiceRegistrationAfter, "oidc")),
+			c.selfServiceHooks(ctx, HookStrategyKey(ViperKeySelfServiceRegistrationAfter, "password"))...)...,
+	)
+
+	if len(hooks) > 0 {
+		l.Warn("Depreciation notice: Move your after registration hooks to after.post_persist.")
+	}
 
 	if !p.SkipValidation() {
 		if err := c.validateIdentitySchemas(ctx); err != nil {
@@ -708,7 +720,12 @@ func (p *Config) SelfServiceFlowSettingsAfterHooks(ctx context.Context, strategy
 }
 
 func (p *Config) SelfServiceFlowRegistrationAfterHooks(ctx context.Context, strategy string) []SelfServiceHook {
-	return p.selfServiceHooks(ctx, HookStrategyKey(ViperKeySelfServiceRegistrationAfter, strategy))
+	return append(p.selfServiceHooks(ctx, HookStrategyKey(ViperKeySelfServiceRegistrationAfter, strategy)),
+		p.selfServiceHooks(ctx, HookStrategyKey(ViperKeySelfServiceRegistrationPostPersist, strategy))...)
+}
+
+func (p *Config) SelfServiceFlowRegistrationPrePersistHooks(ctx context.Context, strategy string) []SelfServiceHook {
+	return p.selfServiceHooks(ctx, HookStrategyKey(ViperKeySelfServiceRegistrationPrePersist, strategy))
 }
 
 func (p *Config) SelfServiceStrategy(ctx context.Context, strategy string) *SelfServiceStrategy {
