@@ -59,6 +59,13 @@ type Configuration struct {
 	// `8eaef023-2b34-4da1-9baa-8bc8c9d6a490` or `contoso.onmicrosoft.com`.
 	Tenant string `json:"microsoft_tenant"`
 
+	// SubjectSource is a flag which controls from which endpoint the subject identifier is taken by microsoft provider.
+	// Can be either `userinfo` or `me`.
+	// If the value is `uerinfo` then the subject identifier is taken from sub field of uderifo standard endpoint response.
+	// If the value is `me` then the `id` field of https://graph.microsoft.com/v1.0/me response is taken as subject.
+	// The default is `userinfo`.
+	SubjectSource string `json:"subject_source"`
+
 	// TeamId is the Apple Developer Team ID that's needed for the `apple` `provider` to work.
 	// It can be found Apple Developer website and combined with `apple_private_key` and `apple_private_key_id`
 	// is used to generate `client_secret`
