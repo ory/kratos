@@ -2250,12 +2250,6 @@
           "properties": {
             "required_aal": {
               "$ref": "#/definitions/featureRequiredAal"
-            },
-            "allow_extend": {
-              "title": "Allow session extension from whoami endpoint",
-              "description": "If true, allows the caller of `/session/whoami` to extend the expiry of a session by setting `?refresh=true` in the URL query parameter. The expiry will be extended by `session.lifespan`. This allows any user to extend their session indefinitely.",
-              "type": "boolean",
-              "default": false
             }
           },
           "additionalProperties": false

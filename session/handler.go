@@ -107,12 +107,6 @@ type toSession struct {
 	//
 	// in: header
 	Cookie string `json:"Cookie"`
-
-	// It also possible to extend the session lifespan of the current session by adding a `?extend=true` param to the
-	// request url query. This feature is disabled per default. To enable it set `session.whoami.allow_extend` to
-	// true in the config. After enabling this option any extend request will extend the session lifespan by the
-	// `session.lifespan` value. To reduce the amount of writes set a value for `session.earliest_possible_extend` in the config.
-	Extend bool `json:"extend"`
 }
 
 // swagger:route GET /sessions/whoami v0alpha2 toSession
@@ -123,11 +117,6 @@ type toSession struct {
 // Returns a session object in the body or 401 if the credentials are invalid or no credentials were sent.
 // Additionally when the request it successful it adds the user ID to the 'X-Kratos-Authenticated-Identity-Id' header
 // in the response.
-//
-// It also possible to extend the session lifespan of the current session by adding a `?extend=true` param to the
-// request url query. This feature is disabled per default. To enable it set `session.whoami.allow_extend` to
-// true in the config. After enabling this option any extend request will extend the session lifespan by the
-// `session.lifespan` value. To reduce the amount of writes set a value for `session.earliest_possible_extend` in the config.
 //
 // If you call this endpoint from a server-side application, you must forward the HTTP Cookie Header to this endpoint:
 //
@@ -202,20 +191,6 @@ func (h *Handler) whoami(w http.ResponseWriter, r *http.Request, ps httprouter.P
 		h.r.Audit().WithRequest(r).WithError(err).Info("No valid session cookie found.")
 		h.r.Writer().WriteError(w, r, herodot.ErrUnauthorized.WithWrap(err).WithReasonf("Unable to determine AAL."))
 		return
-	}
-
-	// Extend session if param was true
-	extend := r.URL.Query().Get("extend")
-	if c.SessionWhoAmIRefreshAllowed() && extend == "true" && s.CanBeRefreshed(c) {
-		s = s.Refresh(c)
-		if err := h.r.SessionPersister().UpsertSession(r.Context(), s); err != nil {
-			h.r.Writer().WriteError(w, r, err)
-			return
-		}
-		if err = h.r.SessionManager().IssueCookie(r.Context(), w, r, s); err != nil {
-			h.r.Writer().WriteError(w, r, err)
-			return
-		}
 	}
 
 	// s.Devices = nil

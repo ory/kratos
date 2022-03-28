@@ -159,40 +159,7 @@ func TestSessionWhoAmI(t *testing.T) {
 		}
 	})
 
-	t.Run("case=whoami refresh", func(t *testing.T) {
-		client := testhelpers.NewClientWithCookies(t)
-		conf.MustSet(config.ViperKeySessionWhoAmIRefreshAllowed, "true")
-
-		// No cookie yet -> 401
-		res, err := client.Get(ts.URL + RouteWhoami)
-		require.NoError(t, err)
-		assertNoCSRFCookieInResponse(t, ts, client, res) // Test that no CSRF cookie is ever set here.
-
-		// Set cookie
-		reg.CSRFHandler().IgnorePath("/set")
-		originalCookie := testhelpers.MockHydrateCookieClient(t, client, ts.URL+"/set")
-		originalCookie.Expires = originalCookie.Expires.Add(-time.Second)
-
-		// Cookie set -> 200 (GET)
-		req, err := http.NewRequest("GET", ts.URL+RouteWhoami+"?extend=true", nil)
-		require.NoError(t, err)
-
-		res, err = client.Do(req)
-		require.NoError(t, err)
-		assertNoCSRFCookieInResponse(t, ts, client, res) // Test that no CSRF cookie is ever set here.
-
-		assert.EqualValues(t, http.StatusOK, res.StatusCode)
-		assert.NotEmpty(t, res.Header.Get("X-Kratos-Authenticated-Identity-Id"))
-		updatedCookie := getSessionCookie(t, res)
-
-		require.NotEmpty(t, updatedCookie)
-		require.NotEqual(t, originalCookie.Expires, updatedCookie.Expires)
-		assert.True(t, originalCookie.Expires.Before(updatedCookie.Expires))
-	})
-
 	/*
-
-
 		t.Run("case=respects AAL config", func(t *testing.T) {
 			conf.MustSet(config.ViperKeySessionLifespan, "1m")
 
