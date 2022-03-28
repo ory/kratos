@@ -3,9 +3,11 @@ package oidc
 import (
 	"context"
 	"encoding/json"
-	"net/http"
-	"net/url"
 	"strings"
+
+	"github.com/hashicorp/go-retryablehttp"
+
+	"github.com/ory/x/httpx"
 
 	"github.com/gofrs/uuid"
 	"github.com/golang-jwt/jwt/v4"
@@ -84,20 +86,15 @@ func (m *ProviderMicrosoft) updateSubject(ctx context.Context, claims *Claims, e
 			return nil, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("%s", err))
 		}
 
-		client := o.Client(ctx, exchange)
-
-		u, err := url.Parse("https://graph.microsoft.com/v1.0/me")
-		if err != nil {
-			return nil, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("%s", err))
-		}
-		req, err := http.NewRequest("GET", u.String(), nil)
+		client := m.reg.HTTPClient(ctx, httpx.ResilientClientWithClient(o.Client(ctx, exchange)))
+		req, err := retryablehttp.NewRequest("GET", "https://graph.microsoft.com/v1.0/me", nil)
 		if err != nil {
 			return nil, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("%s", err))
 		}
 
 		resp, err := client.Do(req)
 		if err != nil {
-			return nil, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("%s", err))
+			return nil, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("Unable to fetch from `https://graph.microsoft.com/v1.0/me`: %s", err))
 		}
 		defer resp.Body.Close()
 
@@ -105,7 +102,7 @@ func (m *ProviderMicrosoft) updateSubject(ctx context.Context, claims *Claims, e
 			ID string `json:"id"`
 		}
 		if err := json.NewDecoder(resp.Body).Decode(&user); err != nil {
-			return nil, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("%s", err))
+			return nil, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("Unable to decode JSON from `https://graph.microsoft.com/v1.0/me`: %s", err))
 		}
 
 		claims.Subject = user.ID
