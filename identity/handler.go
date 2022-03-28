@@ -142,7 +142,7 @@ type adminGetIdentity struct {
 	// DeclassifyCredentials will declassify one or more identity's credentials
 	//
 	// Currently, only `oidc` is supported. This will return the initial OAuth 2.0 Access,
-	// Extend and (optionally) OpenID Connect ID Token.
+	// Refresh and (optionally) OpenID Connect ID Token.
 	//
 	// required: false
 	// in: query
