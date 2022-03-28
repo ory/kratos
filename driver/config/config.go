@@ -105,6 +105,7 @@ const (
 	ViperKeySessionPath                                      = "session.cookie.path"
 	ViperKeySessionPersistentCookie                          = "session.cookie.persistent"
 	ViperKeySessionWhoAmIAAL                                 = "session.whoami.required_aal"
+	ViperKeySessionRefreshMinTimeLeft                        = "session.earliest_possible_extend"
 	ViperKeyCookieSameSite                                   = "cookies.same_site"
 	ViperKeyCookieDomain                                     = "cookies.domain"
 	ViperKeyCookiePath                                       = "cookies.path"
@@ -1104,6 +1105,10 @@ func (p *Config) CookieDomain() string {
 
 func (p *Config) SessionWhoAmIAAL() string {
 	return p.p.String(ViperKeySessionWhoAmIAAL)
+}
+
+func (p *Config) SessionRefreshMinTimeLeft() time.Duration {
+	return p.p.DurationF(ViperKeySessionRefreshMinTimeLeft, p.SessionLifespan())
 }
 
 func (p *Config) SelfServiceSettingsRequiredAAL() string {
