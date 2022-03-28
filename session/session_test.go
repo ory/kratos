@@ -9,6 +9,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
+	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/internal"
 	"github.com/ory/kratos/session"
@@ -185,9 +186,22 @@ func TestSession(t *testing.T) {
 			for _, m := range tc.methods {
 				s.CompletedLoginFor(m.Method, m.AAL)
 			}
-
-			s.SetAuthenticatorAssuranceLevel()
-			assert.Equal(t, tc.expected, s.AuthenticatorAssuranceLevel)
 		})
 	}
+
+	t.Run("case=session refresh", func(t *testing.T) {
+		conf.MustSet(config.ViperKeySessionLifespan, "24h")
+		conf.MustSet(config.ViperKeySessionRefreshMinTimeLeft, "12h")
+		t.Cleanup(func() {
+			conf.MustSet(config.ViperKeySessionLifespan, "1m")
+			conf.MustSet(config.ViperKeySessionRefreshMinTimeLeft, "1m")
+		})
+		i := new(identity.Identity)
+		i.State = identity.StateActive
+		s, _ := session.NewActiveSession(i, conf, authAt, identity.CredentialsTypePassword, identity.AuthenticatorAssuranceLevel1)
+		assert.False(t, s.CanBeRefreshed(conf), "fresh session is not refreshable")
+
+		s.ExpiresAt = s.ExpiresAt.Add(-12 * time.Hour)
+		assert.True(t, s.CanBeRefreshed(conf), "session is refreshable after 12hrs")
+	})
 }

@@ -574,6 +574,10 @@ func TestSession(t *testing.T) {
 	p.MustSet(config.ViperKeySessionName, "ory_session")
 	assert.Equal(t, "ory_session", p.SessionName())
 
+	assert.Equal(t, time.Hour*24, p.SessionRefreshMinTimeLeft())
+	p.MustSet(config.ViperKeySessionRefreshMinTimeLeft, "1m")
+	assert.Equal(t, time.Minute, p.SessionRefreshMinTimeLeft())
+
 	assert.Equal(t, time.Hour*24, p.SessionLifespan())
 	p.MustSet(config.ViperKeySessionLifespan, "1m")
 	assert.Equal(t, time.Minute, p.SessionLifespan())

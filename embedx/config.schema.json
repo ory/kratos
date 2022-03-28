@@ -2303,6 +2303,18 @@
             }
           },
           "additionalProperties": false
+        },
+        "earliest_possible_extend": {
+          "title": "Earliest Possible Session Extension",
+          "description": "Sets when a session can be extended. Settings this value to `24h` will prevent the session from being extended before until 24 hours before it expires. This setting prevents excessive writes to the database. We highly recommend setting this value.",
+          "type": "string",
+          "pattern": "^([0-9]+(ns|us|ms|s|m|h))+$",
+          "default": "24h",
+          "examples": [
+            "1h",
+            "1m",
+            "1s"
+          ]
         }
       }
     },

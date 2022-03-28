@@ -46,25 +46,30 @@ func NewHandler(
 }
 
 const (
-	RouteCollection         = "/sessions"
-	RouteWhoami             = RouteCollection + "/whoami"
-	RouteSession            = RouteCollection + "/:id"
-	RouteIdentity           = "/identities"
-	RouteIdentitiesSessions = RouteIdentity + "/:id/sessions"
+	RouteCollection = "/sessions"
+	RouteWhoami     = RouteCollection + "/whoami"
+	RouteSession    = RouteCollection + "/:id"
+)
+
+const (
+	AdminRouteIdentity           = "/identities"
+	AdminRouteIdentitiesSessions = AdminRouteIdentity + "/:id/sessions"
+	AdminRouteSessionExtendId    = RouteSession + "/extend"
 )
 
 func (h *Handler) RegisterAdminRoutes(admin *x.RouterAdmin) {
-	for _, m := range []string{http.MethodGet, http.MethodHead, http.MethodPost, http.MethodPut, http.MethodPatch} {
-		// Redirect to public endpoint
-		admin.Handle(m, RouteWhoami, x.RedirectToPublicRoute(h.r))
-	}
+	admin.GET(AdminRouteIdentitiesSessions, h.adminListIdentitySessions)
+	admin.DELETE(AdminRouteIdentitiesSessions, h.adminDeleteIdentitySessions)
+	admin.PATCH(AdminRouteSessionExtendId, h.adminSessionExtend)
 
 	admin.DELETE(RouteCollection, x.RedirectToPublicRoute(h.r))
 	admin.DELETE(RouteSession, x.RedirectToPublicRoute(h.r))
 	admin.GET(RouteCollection, x.RedirectToPublicRoute(h.r))
 
-	admin.GET(RouteIdentitiesSessions, h.adminListIdentitySessions)
-	admin.DELETE(RouteIdentitiesSessions, h.adminDeleteIdentitySessions)
+	for _, m := range []string{http.MethodGet, http.MethodHead, http.MethodPost, http.MethodPut} {
+		// Redirect to public endpoint
+		admin.Handle(m, RouteWhoami, x.RedirectToPublicRoute(h.r))
+	}
 }
 
 func (h *Handler) RegisterPublicRoutes(public *x.RouterPublic) {
@@ -73,7 +78,7 @@ func (h *Handler) RegisterPublicRoutes(public *x.RouterPublic) {
 	h.r.CSRFHandler().IgnorePath(RouteWhoami)
 	h.r.CSRFHandler().IgnorePath(RouteCollection)
 	h.r.CSRFHandler().IgnoreGlob(RouteCollection + "/*")
-	h.r.CSRFHandler().IgnoreGlob(RouteIdentity + "/*/sessions")
+	h.r.CSRFHandler().IgnoreGlob(AdminRouteIdentity + "/*/sessions")
 
 	for _, m := range []string{http.MethodGet, http.MethodHead, http.MethodPost, http.MethodPut, http.MethodPatch, http.MethodConnect, http.MethodOptions, http.MethodTrace} {
 		public.Handle(m, RouteWhoami, h.whoami)
@@ -83,7 +88,7 @@ func (h *Handler) RegisterPublicRoutes(public *x.RouterPublic) {
 	public.DELETE(RouteSession, h.revokeSession)
 	public.GET(RouteCollection, h.listSessions)
 
-	public.DELETE(RouteIdentitiesSessions, x.RedirectToAdminRoute(h.r))
+	public.DELETE(AdminRouteIdentitiesSessions, x.RedirectToAdminRoute(h.r))
 }
 
 // nolint:deadcode,unused
@@ -110,7 +115,8 @@ type toSession struct {
 //
 // Uses the HTTP Headers in the GET request to determine (e.g. by using checking the cookies) who is authenticated.
 // Returns a session object in the body or 401 if the credentials are invalid or no credentials were sent.
-// Additionally when the request it successful it adds the user ID to the 'X-Kratos-Authenticated-Identity-Id' header in the response.
+// Additionally when the request it successful it adds the user ID to the 'X-Kratos-Authenticated-Identity-Id' header
+// in the response.
 //
 // If you call this endpoint from a server-side application, you must forward the HTTP Cookie Header to this endpoint:
 //
@@ -176,7 +182,8 @@ func (h *Handler) whoami(w http.ResponseWriter, r *http.Request, ps httprouter.P
 	}
 
 	var aalErr *ErrAALNotSatisfied
-	if err := h.r.SessionManager().DoesSessionSatisfy(r, s, h.r.Config(r.Context()).SessionWhoAmIAAL()); errors.As(err, &aalErr) {
+	c := h.r.Config(r.Context())
+	if err := h.r.SessionManager().DoesSessionSatisfy(r, s, c.SessionWhoAmIAAL()); errors.As(err, &aalErr) {
 		h.r.Audit().WithRequest(r).WithError(err).Info("Session was found but AAL is not satisfied for calling this endpoint.")
 		h.r.Writer().WriteError(w, r, err)
 		return
@@ -457,6 +464,57 @@ func (h *Handler) IsAuthenticated(wrap httprouter.Handle, onUnauthenticated http
 
 		wrap(w, r, ps)
 	}
+}
+
+// swagger:parameters adminExtendSession
+// nolint:deadcode,unused
+type adminExtendSession struct {
+	// ID is the session's ID.
+	//
+	// required: true
+	// in: path
+	ID string `json:"id"`
+}
+
+// swagger:route PATCH /admin/sessions/{id}/extend v0alpha2 adminExtendSession
+//
+// Calling this endpoint extends the given session ID. If `session.earliest_possible_extend` is set it
+// will only extend the session after the specified time has passed.
+//
+// Retrieve the session ID from the `/sessions/whoami` endpoint / `toSession` SDK method.
+//
+//     Schemes: http, https
+//
+//     Security:
+//       oryAccessToken:
+//
+//     Responses:
+//       200: session
+//       400: jsonError
+//       404: jsonError
+//       500: jsonError
+func (h *Handler) adminSessionExtend(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	iID, err := uuid.FromString(ps.ByName("id"))
+	if err != nil {
+		h.r.Writer().WriteError(w, r, errors.WithStack(herodot.ErrBadRequest.WithError(err.Error()).WithDebug("could not parse UUID")))
+		return
+	}
+
+	s, err := h.r.SessionPersister().GetSession(r.Context(), iID)
+	if err != nil {
+		h.r.Writer().WriteError(w, r, err)
+		return
+	}
+
+	c := h.r.Config(r.Context())
+	if s.CanBeRefreshed(c) {
+		if err := h.r.SessionPersister().UpsertSession(r.Context(), s.Refresh(c)); err != nil {
+			h.r.Writer().WriteError(w, r, err)
+			return
+		}
+	}
+
+	h.r.Writer().Write(w, r, s)
 }
 
 func (h *Handler) IsNotAuthenticated(wrap httprouter.Handle, onAuthenticated httprouter.Handle) httprouter.Handle {
