@@ -324,8 +324,9 @@ type submitSelfServiceVerificationFlowBody struct{}
 //
 //     Responses:
 //       200: selfServiceVerificationFlow
-//       400: selfServiceVerificationFlow
 //       303: emptyResponse
+//       400: selfServiceVerificationFlow
+//       410: jsonError
 //       500: jsonError
 func (h *Handler) submitFlow(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	rid, err := flow.GetFlowID(r)

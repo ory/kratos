@@ -79,8 +79,8 @@ func (h *Handler) RegisterPublicRoutes(public *x.RouterPublic) {
 
 	public.GET(RouteGetFlow, h.fetch)
 
-	public.GET(RouteSubmitFlow, h.d.SessionHandler().IsNotAuthenticated(h.submitFlow, redirect))
-	public.POST(RouteSubmitFlow, h.d.SessionHandler().IsNotAuthenticated(h.submitFlow, redirect))
+	public.GET(RouteSubmitFlow, h.submitFlow)
+	public.POST(RouteSubmitFlow, h.submitFlow)
 }
 
 func (h *Handler) RegisterAdminRoutes(admin *x.RouterAdmin) {
@@ -342,8 +342,9 @@ type submitSelfServiceRecoveryFlowBody struct{}
 //
 //     Responses:
 //       200: selfServiceRecoveryFlow
-//       400: selfServiceRecoveryFlow
 //       303: emptyResponse
+//       400: selfServiceRecoveryFlow
+//       410: jsonError
 //       500: jsonError
 func (h *Handler) submitFlow(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	rid, err := flow.GetFlowID(r)

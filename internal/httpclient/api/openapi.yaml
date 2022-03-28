@@ -656,7 +656,7 @@ paths:
 
         API flows expect `application/json` to be sent in the body and responds with
         HTTP 200 and a application/json body with the session token on success;
-        HTTP 303 redirect to a fresh login flow if the original flow expired with the appropriate error messages set;
+        HTTP 410 if the original flow expired with the appropriate error messages set and optionally a `use_flow_id` parameter in the body;
         HTTP 400 on form validation errors.
 
         Browser flows expect a Content-Type of `application/x-www-form-urlencoded` or `application/json` to be sent in the body and respond with
@@ -725,6 +725,12 @@ paths:
               schema:
                 $ref: '#/components/schemas/selfServiceLoginFlow'
           description: selfServiceLoginFlow
+        "410":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/jsonError'
+          description: jsonError
         "422":
           content:
             application/json:
@@ -1151,7 +1157,7 @@ paths:
         (if the link was valid) and instructs the user to update their password, or a redirect to the Recover UI URL with
         a new Recovery Flow ID which contains an error message that the recovery link was invalid.
 
-        More information can be found at [Ory Kratos Account Recovery Documentation](../self-service/flows/account-recovery.mdx).
+        More information can be found at [Ory Kratos Account Recovery Documentation](../self-service/flows/account-recovery).
       operationId: submitSelfServiceRecoveryFlow
       parameters:
       - description: |-
@@ -1205,6 +1211,12 @@ paths:
               schema:
                 $ref: '#/components/schemas/selfServiceRecoveryFlow'
           description: selfServiceRecoveryFlow
+        "410":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/jsonError'
+          description: jsonError
         "500":
           content:
             application/json:
@@ -1230,7 +1242,7 @@ paths:
         This endpoint MUST ONLY be used in scenarios such as native mobile apps (React Native, Objective C, Swift, Java, ...).
 
 
-        More information can be found at [Ory Kratos Account Recovery Documentation](../self-service/flows/account-recovery.mdx).
+        More information can be found at [Ory Kratos Account Recovery Documentation](../self-service/flows/account-recovery).
       operationId: initializeSelfServiceRecoveryFlowWithoutBrowser
       responses:
         "200":
@@ -1266,7 +1278,7 @@ paths:
 
         This endpoint is NOT INTENDED for clients that do not have a browser (Chrome, Firefox, ...) as cookies are needed.
 
-        More information can be found at [Ory Kratos Account Recovery Documentation](../self-service/flows/account-recovery.mdx).
+        More information can be found at [Ory Kratos Account Recovery Documentation](../self-service/flows/account-recovery).
       operationId: initializeSelfServiceRecoveryFlowForBrowsers
       parameters:
       - description: The URL to return the browser to after the flow was completed.
@@ -1322,7 +1334,7 @@ paths:
         })
         ```
 
-        More information can be found at [Ory Kratos Account Recovery Documentation](../self-service/flows/account-recovery.mdx).
+        More information can be found at [Ory Kratos Account Recovery Documentation](../self-service/flows/account-recovery).
       operationId: getSelfServiceRecoveryFlow
       parameters:
       - description: |-
@@ -1386,7 +1398,7 @@ paths:
         API flows expect `application/json` to be sent in the body and respond with
         HTTP 200 and a application/json body with the created identity success - if the session hook is configured the
         `session` and `session_token` will also be included;
-        HTTP 303 redirect to a fresh registration flow if the original flow expired with the appropriate error messages set;
+        HTTP 410 if the original flow expired with the appropriate error messages set and optionally a `use_flow_id` parameter in the body;
         HTTP 400 on form validation errors.
 
         Browser flows expect a Content-Type of `application/x-www-form-urlencoded` or `application/json` to be sent in the body and respond with
@@ -1447,6 +1459,12 @@ paths:
               schema:
                 $ref: '#/components/schemas/selfServiceRegistrationFlow'
           description: selfServiceRegistrationFlow
+        "410":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/jsonError'
+          description: jsonError
         "422":
           content:
             application/json:
@@ -1750,6 +1768,12 @@ paths:
                 $ref: '#/components/schemas/jsonError'
           description: jsonError
         "403":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/jsonError'
+          description: jsonError
+        "410":
           content:
             application/json:
               schema:
@@ -2078,6 +2102,12 @@ paths:
               schema:
                 $ref: '#/components/schemas/selfServiceVerificationFlow'
           description: selfServiceVerificationFlow
+        "410":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/jsonError'
+          description: jsonError
         "500":
           content:
             application/json:
@@ -5042,9 +5072,11 @@ components:
           format: int64
           type: integer
       required:
+      - height
       - id
       - node_type
       - src
+      - width
       title: ImageAttributes represents the attributes of an image node.
       type: object
     uiNodeInputAttributeType:

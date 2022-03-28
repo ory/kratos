@@ -18,25 +18,27 @@ import (
 // UiNodeImageAttributes struct for UiNodeImageAttributes
 type UiNodeImageAttributes struct {
 	// Height of the image
-	Height *int64 `json:"height,omitempty"`
+	Height int64 `json:"height"`
 	// A unique identifier
 	Id       string `json:"id"`
 	NodeType string `json:"node_type"`
 	// The image's source URL.  format: uri
 	Src string `json:"src"`
 	// Width of the image
-	Width *int64 `json:"width,omitempty"`
+	Width int64 `json:"width"`
 }
 
 // NewUiNodeImageAttributes instantiates a new UiNodeImageAttributes object
 // This constructor will assign default values to properties that have it defined,
 // and makes sure properties required by API are set, but the set of arguments
 // will change when the set of required properties is changed
-func NewUiNodeImageAttributes(id string, nodeType string, src string) *UiNodeImageAttributes {
+func NewUiNodeImageAttributes(height int64, id string, nodeType string, src string, width int64) *UiNodeImageAttributes {
 	this := UiNodeImageAttributes{}
+	this.Height = height
 	this.Id = id
 	this.NodeType = nodeType
 	this.Src = src
+	this.Width = width
 	return &this
 }
 
@@ -48,36 +50,28 @@ func NewUiNodeImageAttributesWithDefaults() *UiNodeImageAttributes {
 	return &this
 }
 
-// GetHeight returns the Height field value if set, zero value otherwise.
+// GetHeight returns the Height field value
 func (o *UiNodeImageAttributes) GetHeight() int64 {
-	if o == nil || o.Height == nil {
+	if o == nil {
 		var ret int64
 		return ret
 	}
-	return *o.Height
+
+	return o.Height
 }
 
-// GetHeightOk returns a tuple with the Height field value if set, nil otherwise
+// GetHeightOk returns a tuple with the Height field value
 // and a boolean to check if the value has been set.
 func (o *UiNodeImageAttributes) GetHeightOk() (*int64, bool) {
-	if o == nil || o.Height == nil {
+	if o == nil {
 		return nil, false
 	}
-	return o.Height, true
+	return &o.Height, true
 }
 
-// HasHeight returns a boolean if a field has been set.
-func (o *UiNodeImageAttributes) HasHeight() bool {
-	if o != nil && o.Height != nil {
-		return true
-	}
-
-	return false
-}
-
-// SetHeight gets a reference to the given int64 and assigns it to the Height field.
+// SetHeight sets field value
 func (o *UiNodeImageAttributes) SetHeight(v int64) {
-	o.Height = &v
+	o.Height = v
 }
 
 // GetId returns the Id field value
@@ -152,41 +146,33 @@ func (o *UiNodeImageAttributes) SetSrc(v string) {
 	o.Src = v
 }
 
-// GetWidth returns the Width field value if set, zero value otherwise.
+// GetWidth returns the Width field value
 func (o *UiNodeImageAttributes) GetWidth() int64 {
-	if o == nil || o.Width == nil {
+	if o == nil {
 		var ret int64
 		return ret
 	}
-	return *o.Width
+
+	return o.Width
 }
 
-// GetWidthOk returns a tuple with the Width field value if set, nil otherwise
+// GetWidthOk returns a tuple with the Width field value
 // and a boolean to check if the value has been set.
 func (o *UiNodeImageAttributes) GetWidthOk() (*int64, bool) {
-	if o == nil || o.Width == nil {
+	if o == nil {
 		return nil, false
 	}
-	return o.Width, true
+	return &o.Width, true
 }
 
-// HasWidth returns a boolean if a field has been set.
-func (o *UiNodeImageAttributes) HasWidth() bool {
-	if o != nil && o.Width != nil {
-		return true
-	}
-
-	return false
-}
-
-// SetWidth gets a reference to the given int64 and assigns it to the Width field.
+// SetWidth sets field value
 func (o *UiNodeImageAttributes) SetWidth(v int64) {
-	o.Width = &v
+	o.Width = v
 }
 
 func (o UiNodeImageAttributes) MarshalJSON() ([]byte, error) {
 	toSerialize := map[string]interface{}{}
-	if o.Height != nil {
+	if true {
 		toSerialize["height"] = o.Height
 	}
 	if true {
@@ -198,7 +184,7 @@ func (o UiNodeImageAttributes) MarshalJSON() ([]byte, error) {
 	if true {
 		toSerialize["src"] = o.Src
 	}
-	if o.Width != nil {
+	if true {
 		toSerialize["width"] = o.Width
 	}
 	return json.Marshal(toSerialize)

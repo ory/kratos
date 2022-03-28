@@ -96,7 +96,8 @@ func (p Configuration) Redir(public *url.URL) string {
 }
 
 type ConfigurationCollection struct {
-	Providers []Configuration `json:"providers"`
+	BaseRedirectURI string          `json:"base_redirect_uri"`
+	Providers       []Configuration `json:"providers"`
 }
 
 func (c ConfigurationCollection) Provider(id string, reg dependencies) (Provider, error) {

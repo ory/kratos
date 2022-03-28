@@ -225,6 +225,15 @@ func (s *Strategy) Recover(w http.ResponseWriter, r *http.Request, f *recovery.F
 		return s.recoveryUseToken(w, r, body)
 	}
 
+	if _, err := s.d.SessionManager().FetchFromRequest(r.Context(), r); err == nil {
+		if x.IsJSONRequest(r) {
+			session.RespondWithJSONErrorOnAuthenticated(s.d.Writer(), recovery.ErrAlreadyLoggedIn)(w, r, nil)
+		} else {
+			session.RedirectOnAuthenticated(s.d)(w, r, nil)
+		}
+		return errors.WithStack(flow.ErrCompletedByStrategy)
+	}
+
 	if err := flow.MethodEnabledAndAllowed(r.Context(), s.RecoveryStrategyID(), body.Method, s.d); err != nil {
 		return s.HandleRecoveryError(w, r, nil, body, err)
 	}
@@ -254,7 +263,7 @@ func (s *Strategy) Recover(w http.ResponseWriter, r *http.Request, f *recovery.F
 func (s *Strategy) recoveryIssueSession(w http.ResponseWriter, r *http.Request, f *recovery.Flow, id *identity.Identity) error {
 	f.UI.Messages.Clear()
 	f.State = recovery.StatePassedChallenge
-	f.SetCSRFToken(flow.GetCSRFToken(s.d, w, r, f.Type))
+	f.SetCSRFToken(s.d.CSRFHandler().RegenerateToken(w, r))
 	f.RecoveredIdentityID = uuid.NullUUID{
 		UUID:  id.ID,
 		Valid: true,

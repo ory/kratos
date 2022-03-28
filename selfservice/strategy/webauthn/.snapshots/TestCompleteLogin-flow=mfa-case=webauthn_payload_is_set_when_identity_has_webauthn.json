@@ -2,8 +2,9 @@
   {
     "attributes": {
       "disabled": false,
-      "name": "identifier",
+      "name": "csrf_token",
       "node_type": "input",
+      "required": true,
       "type": "hidden"
     },
     "group": "default",
@@ -14,9 +15,8 @@
   {
     "attributes": {
       "disabled": false,
-      "name": "csrf_token",
+      "name": "identifier",
       "node_type": "input",
-      "required": true,
       "type": "hidden"
     },
     "group": "default",
