@@ -425,9 +425,12 @@ func (h *Handler) fetchFlow(w http.ResponseWriter, r *http.Request, _ httprouter
 
 	if ar.ExpiresAt.Before(time.Now()) {
 		if ar.Type == flow.TypeBrowser {
+			redirectURL := flow.GetFlowExpiredRedirectURL(h.d.Config(r.Context()), RouteInitBrowserFlow, ar.ReturnTo)
+
 			h.d.Writer().WriteError(w, r, errors.WithStack(x.ErrGone.WithID(text.ErrIDSelfServiceFlowExpired).
 				WithReason("The login flow has expired. Redirect the user to the login flow init endpoint to initialize a new login flow.").
-				WithDetail("redirect_to", urlx.AppendPaths(h.d.Config(r.Context()).SelfPublicURL(), RouteInitBrowserFlow).String())))
+				WithDetail("redirect_to", redirectURL.String()).
+				WithDetail("return_to", ar.ReturnTo)))
 			return
 		}
 		h.d.Writer().WriteError(w, r, errors.WithStack(x.ErrGone.WithID(text.ErrIDSelfServiceFlowExpired).
