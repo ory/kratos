@@ -11,6 +11,7 @@ ADD internal/httpclient/go.* internal/httpclient/
 
 ENV GO111MODULE on
 ENV CGO_ENABLED 1
+ENV CGO_CPPFLAGS -DSQLITE_DEFAULT_FILE_PERMISSIONS=0600
 
 RUN go mod download
 
