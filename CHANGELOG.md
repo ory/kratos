@@ -263,6 +263,14 @@
 ### Features
 
 * Add session renew capabilities ([#2146](https://github.com/ory/kratos/issues/2146)) ([4348b86](https://github.com/ory/kratos/commit/4348b8640a282cd61fe30961faba5753e2af8bb0)), closes [#615](https://github.com/ory/kratos/issues/615)
+* Read subject id from https://graph.microsoft.com/v1.0/me for microsoft ([#2347](https://github.com/ory/kratos/issues/2347)) ([852f24f](https://github.com/ory/kratos/commit/852f24fb5cd8576f3f6d35017ce85e4fa1c51c95)):
+
+    Adds the ability to read the OIDC subject ID from the `https://graph.microsoft.com/v1.0/me` endpoint. This introduces a new field `subject_source` to the OIDC configuration.
+    
+    Closes https://github.com/ory/kratos/pull/2153
+    
+    
+
 
 ### Tests
 
