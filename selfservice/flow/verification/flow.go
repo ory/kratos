@@ -3,6 +3,7 @@ package verification
 import (
 	"context"
 	"encoding/json"
+	"github.com/gobuffalo/pop/v6"
 	"net/http"
 	"net/url"
 	"time"
@@ -198,4 +199,14 @@ func (f *Flow) SetReturnTo() {
 	if u, err := url.Parse(f.RequestURL); err == nil {
 		f.ReturnTo = u.Query().Get("return_to")
 	}
+}
+
+func (f *Flow) AfterFind(*pop.Connection) error {
+	f.SetReturnTo()
+	return nil
+}
+
+func (f *Flow) AfterSave(*pop.Connection) error {
+	f.SetReturnTo()
+	return nil
 }

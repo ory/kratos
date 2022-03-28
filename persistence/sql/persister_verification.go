@@ -33,8 +33,6 @@ func (p Persister) GetVerificationFlow(ctx context.Context, id uuid.UUID) (*veri
 		return nil, sqlcon.HandleError(err)
 	}
 
-	r.SetReturnTo()
-
 	return &r, nil
 }
 

@@ -32,7 +32,5 @@ func (p *Persister) GetRegistrationFlow(ctx context.Context, id uuid.UUID) (*reg
 		return nil, sqlcon.HandleError(err)
 	}
 
-	r.SetReturnTo()
-
 	return &r, nil
 }

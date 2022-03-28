@@ -37,8 +37,6 @@ func (p *Persister) GetLoginFlow(ctx context.Context, id uuid.UUID) (*login.Flow
 		return nil, sqlcon.HandleError(err)
 	}
 
-	r.SetReturnTo()
-
 	return &r, nil
 }
 
