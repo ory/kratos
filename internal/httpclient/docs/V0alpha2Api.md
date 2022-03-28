@@ -8,6 +8,7 @@ Method | HTTP request | Description
 [**AdminCreateSelfServiceRecoveryLink**](V0alpha2Api.md#AdminCreateSelfServiceRecoveryLink) | **Post** /admin/recovery/link | Create a Recovery Link
 [**AdminDeleteIdentity**](V0alpha2Api.md#AdminDeleteIdentity) | **Delete** /admin/identities/{id} | Delete an Identity
 [**AdminDeleteIdentitySessions**](V0alpha2Api.md#AdminDeleteIdentitySessions) | **Delete** /admin/identities/{id}/sessions | Calling this endpoint irrecoverably and permanently deletes and invalidates all sessions that belong to the given Identity.
+[**AdminExtendSession**](V0alpha2Api.md#AdminExtendSession) | **Patch** /admin/sessions/{id}/extend | Calling this endpoint extends the given session ID. If &#x60;session.earliest_possible_extend&#x60; is set it will only extend the session after the specified time has passed.
 [**AdminGetIdentity**](V0alpha2Api.md#AdminGetIdentity) | **Get** /admin/identities/{id} | Get an Identity
 [**AdminListIdentities**](V0alpha2Api.md#AdminListIdentities) | **Get** /admin/identities | List Identities
 [**AdminListIdentitySessions**](V0alpha2Api.md#AdminListIdentitySessions) | **Get** /admin/identities/{id}/sessions | This endpoint returns all sessions that belong to the given Identity.
@@ -299,6 +300,76 @@ Name | Type | Description  | Notes
 ### Return type
 
  (empty response body)
+
+### Authorization
+
+[oryAccessToken](../README.md#oryAccessToken)
+
+### HTTP request headers
+
+- **Content-Type**: Not defined
+- **Accept**: application/json
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints)
+[[Back to Model list]](../README.md#documentation-for-models)
+[[Back to README]](../README.md)
+
+
+## AdminExtendSession
+
+> Session AdminExtendSession(ctx, id).Execute()
+
+Calling this endpoint extends the given session ID. If `session.earliest_possible_extend` is set it will only extend the session after the specified time has passed.
+
+
+
+### Example
+
+```go
+package main
+
+import (
+    "context"
+    "fmt"
+    "os"
+    openapiclient "./openapi"
+)
+
+func main() {
+    id := "id_example" // string | ID is the session's ID.
+
+    configuration := openapiclient.NewConfiguration()
+    apiClient := openapiclient.NewAPIClient(configuration)
+    resp, r, err := apiClient.V0alpha2Api.AdminExtendSession(context.Background(), id).Execute()
+    if err != nil {
+        fmt.Fprintf(os.Stderr, "Error when calling `V0alpha2Api.AdminExtendSession``: %v\n", err)
+        fmt.Fprintf(os.Stderr, "Full HTTP response: %v\n", r)
+    }
+    // response from `AdminExtendSession`: Session
+    fmt.Fprintf(os.Stdout, "Response from `V0alpha2Api.AdminExtendSession`: %v\n", resp)
+}
+```
+
+### Path Parameters
+
+
+Name | Type | Description  | Notes
+------------- | ------------- | ------------- | -------------
+**ctx** | **context.Context** | context for authentication, logging, cancellation, deadlines, tracing, etc.
+**id** | **string** | ID is the session&#39;s ID. | 
+
+### Other Parameters
+
+Other parameters are passed through a pointer to a apiAdminExtendSessionRequest struct via the builder pattern
+
+
+Name | Type | Description  | Notes
+------------- | ------------- | ------------- | -------------
+
+
+### Return type
+
+[**Session**](Session.md)
 
 ### Authorization
 

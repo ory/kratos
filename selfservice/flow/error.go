@@ -3,12 +3,15 @@ package flow
 import (
 	"fmt"
 	"net/http"
+	"net/url"
 	"time"
 
+	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/ui/container"
 	"github.com/ory/kratos/ui/node"
 	"github.com/ory/kratos/x"
+	"github.com/ory/x/urlx"
 
 	"github.com/gofrs/uuid"
 	"github.com/pkg/errors"
@@ -111,4 +114,13 @@ func HandleHookError(_ http.ResponseWriter, r *http.Request, f Flow, traits iden
 	}
 
 	return flowError
+}
+
+func GetFlowExpiredRedirectURL(config *config.Config, route, returnTo string) *url.URL {
+	redirectURL := urlx.AppendPaths(config.SelfPublicURL(), route)
+	if returnTo != "" {
+		redirectURL = urlx.CopyWithQuery(redirectURL, url.Values{"return_to": {returnTo}})
+	}
+
+	return redirectURL
 }

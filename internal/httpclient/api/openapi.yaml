@@ -458,6 +458,52 @@ paths:
       summary: Create a Recovery Link
       tags:
       - v0alpha2
+  /admin/sessions/{id}/extend:
+    patch:
+      description: Retrieve the session ID from the `/sessions/whoami` endpoint /
+        `toSession` SDK method.
+      operationId: adminExtendSession
+      parameters:
+      - description: ID is the session's ID.
+        explode: false
+        in: path
+        name: id
+        required: true
+        schema:
+          type: string
+        style: simple
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/session'
+          description: session
+        "400":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/jsonError'
+          description: jsonError
+        "404":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/jsonError'
+          description: jsonError
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/jsonError'
+          description: jsonError
+      security:
+      - oryAccessToken: []
+      summary: |-
+        Calling this endpoint extends the given session ID. If `session.earliest_possible_extend` is set it
+        will only extend the session after the specified time has passed.
+      tags:
+      - v0alpha2
   /health/alive:
     get:
       description: |-
@@ -2430,7 +2476,8 @@ paths:
       description: |-
         Uses the HTTP Headers in the GET request to determine (e.g. by using checking the cookies) who is authenticated.
         Returns a session object in the body or 401 if the credentials are invalid or no credentials were sent.
-        Additionally when the request it successful it adds the user ID to the 'X-Kratos-Authenticated-Identity-Id' header in the response.
+        Additionally when the request it successful it adds the user ID to the 'X-Kratos-Authenticated-Identity-Id' header
+        in the response.
 
         If you call this endpoint from a server-side application, you must forward the HTTP Cookie Header to this endpoint:
 

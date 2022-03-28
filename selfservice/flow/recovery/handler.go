@@ -266,9 +266,12 @@ func (h *Handler) fetch(w http.ResponseWriter, r *http.Request, _ httprouter.Par
 
 	if f.ExpiresAt.Before(time.Now().UTC()) {
 		if f.Type == flow.TypeBrowser {
+			redirectURL := flow.GetFlowExpiredRedirectURL(h.d.Config(r.Context()), RouteInitBrowserFlow, f.ReturnTo)
+
 			h.d.Writer().WriteError(w, r, errors.WithStack(x.ErrGone.
 				WithReason("The recovery flow has expired. Redirect the user to the recovery flow init endpoint to initialize a new recovery flow.").
-				WithDetail("redirect_to", urlx.AppendPaths(h.d.Config(r.Context()).SelfPublicURL(), RouteInitBrowserFlow).String())))
+				WithDetail("redirect_to", redirectURL.String()).
+				WithDetail("return_to", f.ReturnTo)))
 			return
 		}
 		h.d.Writer().WriteError(w, r, errors.WithStack(x.ErrGone.
