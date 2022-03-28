@@ -3,10 +3,11 @@ package registration
 import (
 	"context"
 	"encoding/json"
-	"github.com/gobuffalo/pop/v6"
 	"net/http"
 	"net/url"
 	"time"
+
+	"github.com/gobuffalo/pop/v6"
 
 	"github.com/tidwall/gjson"
 

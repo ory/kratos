@@ -3,10 +3,11 @@ package recovery
 import (
 	"context"
 	"encoding/json"
-	"github.com/gobuffalo/pop/v6"
 	"net/http"
 	"net/url"
 	"time"
+
+	"github.com/gobuffalo/pop/v6"
 
 	"github.com/gofrs/uuid"
 	"github.com/pkg/errors"
