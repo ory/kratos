@@ -54,13 +54,13 @@ const (
 const (
 	AdminRouteIdentity           = "/identities"
 	AdminRouteIdentitiesSessions = AdminRouteIdentity + "/:id/sessions"
-	AdminRouteSessionRefreshId   = RouteSession + "/refresh"
+	AdminRouteSessionExtendId    = RouteSession + "/extend"
 )
 
 func (h *Handler) RegisterAdminRoutes(admin *x.RouterAdmin) {
 	admin.GET(AdminRouteIdentitiesSessions, h.adminListIdentitySessions)
 	admin.DELETE(AdminRouteIdentitiesSessions, h.adminDeleteIdentitySessions)
-	admin.PATCH(AdminRouteSessionRefreshId, h.adminSessionRefresh)
+	admin.PATCH(AdminRouteSessionExtendId, h.adminSessionExtend)
 
 	admin.DELETE(RouteCollection, x.RedirectToPublicRoute(h.r))
 	admin.DELETE(RouteSession, x.RedirectToPublicRoute(h.r))
@@ -108,11 +108,11 @@ type toSession struct {
 	// in: header
 	Cookie string `json:"Cookie"`
 
-	// It also possible to refresh the session lifespan of the current session by adding a `?refresh=true` param to the
-	// request url query. This feature is disabled per default. To enable it set `session.whoami.refresh_allowed` to
-	// true in the config. After enabling this option any refresh request will extend the session lifespan by the
-	// `session.lifespan` value. To reduce the amount of writes set a value for `session.earliest_refresh` in the config.
-	Refresh bool `json:"refresh"`
+	// It also possible to extend the session lifespan of the current session by adding a `?extend=true` param to the
+	// request url query. This feature is disabled per default. To enable it set `session.whoami.allow_extend` to
+	// true in the config. After enabling this option any extend request will extend the session lifespan by the
+	// `session.lifespan` value. To reduce the amount of writes set a value for `session.earliest_possible_extend` in the config.
+	Extend bool `json:"extend"`
 }
 
 // swagger:route GET /sessions/whoami v0alpha2 toSession
@@ -124,10 +124,10 @@ type toSession struct {
 // Additionally when the request it successful it adds the user ID to the 'X-Kratos-Authenticated-Identity-Id' header
 // in the response.
 //
-// It also possible to refresh the session lifespan of the current session by adding a `?refresh=true` param to the
-// request url query. This feature is disabled per default. To enable it set `session.whoami.refresh_allowed` to
-// true in the config. After enabling this option any refresh request will extend the session lifespan by the
-// `session.lifespan` value. To reduce the amount of writes set a value for `session.earliest_refresh` in the config.
+// It also possible to extend the session lifespan of the current session by adding a `?extend=true` param to the
+// request url query. This feature is disabled per default. To enable it set `session.whoami.allow_extend` to
+// true in the config. After enabling this option any extend request will extend the session lifespan by the
+// `session.lifespan` value. To reduce the amount of writes set a value for `session.earliest_possible_extend` in the config.
 //
 // If you call this endpoint from a server-side application, you must forward the HTTP Cookie Header to this endpoint:
 //
@@ -204,9 +204,9 @@ func (h *Handler) whoami(w http.ResponseWriter, r *http.Request, ps httprouter.P
 		return
 	}
 
-	// Refresh session if param was true
-	refresh := r.URL.Query().Get("refresh")
-	if c.SessionWhoAmIRefreshAllowed() && refresh == "true" && s.CanBeRefreshed(c) {
+	// Extend session if param was true
+	extend := r.URL.Query().Get("extend")
+	if c.SessionWhoAmIRefreshAllowed() && extend == "true" && s.CanBeRefreshed(c) {
 		s = s.Refresh(c)
 		if err := h.r.SessionPersister().UpsertSession(r.Context(), s); err != nil {
 			h.r.Writer().WriteError(w, r, err)
@@ -491,9 +491,9 @@ func (h *Handler) IsAuthenticated(wrap httprouter.Handle, onUnauthenticated http
 	}
 }
 
-// swagger:parameters adminRefreshSession
+// swagger:parameters adminExtendSession
 // nolint:deadcode,unused
-type adminRefreshSession struct {
+type adminExtendSession struct {
 	// ID is the session's ID.
 	//
 	// required: true
@@ -501,10 +501,10 @@ type adminRefreshSession struct {
 	ID string `json:"id"`
 }
 
-// swagger:route PATCH /admin/sessions/{id}/refresh v0alpha2 adminRefreshSession
+// swagger:route PATCH /admin/sessions/{id}/extend v0alpha2 adminExtendSession
 //
-// Calling this endpoint refreshes the given session ID. If `session.earliest_refresh` is set it
-// will only refresh the session after the specified time has passed.
+// Calling this endpoint extends the given session ID. If `session.earliest_possible_extend` is set it
+// will only extend the session after the specified time has passed.
 //
 // Retrieve the session ID from the `/sessions/whoami` endpoint / `toSession` SDK method.
 //
@@ -518,7 +518,7 @@ type adminRefreshSession struct {
 //       400: jsonError
 //       404: jsonError
 //       500: jsonError
-func (h *Handler) adminSessionRefresh(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+func (h *Handler) adminSessionExtend(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	iID, err := uuid.FromString(ps.ByName("id"))
 	if err != nil {
 		h.r.Writer().WriteError(w, r, errors.WithStack(herodot.ErrBadRequest.WithError(err.Error()).WithDebug("could not parse UUID")))

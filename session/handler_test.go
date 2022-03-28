@@ -174,7 +174,7 @@ func TestSessionWhoAmI(t *testing.T) {
 		originalCookie.Expires = originalCookie.Expires.Add(-time.Second)
 
 		// Cookie set -> 200 (GET)
-		req, err := http.NewRequest("GET", ts.URL+RouteWhoami+"?refresh=true", nil)
+		req, err := http.NewRequest("GET", ts.URL+RouteWhoami+"?extend=true", nil)
 		require.NoError(t, err)
 
 		res, err = client.Do(req)
@@ -668,7 +668,7 @@ func TestHandlerRefreshSessionBySessionID(t *testing.T) {
 		s := &Session{Identity: i, ExpiresAt: time.Now().Add(5 * time.Minute)}
 		require.NoError(t, reg.SessionPersister().UpsertSession(context.Background(), s))
 
-		req, _ := http.NewRequest("PATCH", ts.URL+"/admin/sessions/"+s.ID.String()+"/refresh", nil)
+		req, _ := http.NewRequest("PATCH", ts.URL+"/admin/sessions/"+s.ID.String()+"/extend", nil)
 		res, err := client.Do(req)
 		require.NoError(t, err)
 		require.Equal(t, http.StatusOK, res.StatusCode)
@@ -679,7 +679,7 @@ func TestHandlerRefreshSessionBySessionID(t *testing.T) {
 
 	t.Run("case=should return 400 when bad UUID is sent", func(t *testing.T) {
 		client := testhelpers.NewClientWithCookies(t)
-		req, _ := http.NewRequest("PATCH", ts.URL+"/admin/sessions/BADUUID/refresh", nil)
+		req, _ := http.NewRequest("PATCH", ts.URL+"/admin/sessions/BADUUID/extend", nil)
 		res, err := client.Do(req)
 		require.NoError(t, err)
 		require.Equal(t, http.StatusBadRequest, res.StatusCode)
@@ -688,7 +688,7 @@ func TestHandlerRefreshSessionBySessionID(t *testing.T) {
 	t.Run("case=should return 404 when calling with missing UUID", func(t *testing.T) {
 		client := testhelpers.NewClientWithCookies(t)
 		someID, _ := uuid.NewV4()
-		req, _ := http.NewRequest("PATCH", ts.URL+"/admin/sessions/"+someID.String()+"/refresh", nil)
+		req, _ := http.NewRequest("PATCH", ts.URL+"/admin/sessions/"+someID.String()+"/extend", nil)
 		res, err := client.Do(req)
 		require.NoError(t, err)
 		require.Equal(t, http.StatusNotFound, res.StatusCode)

@@ -2251,8 +2251,8 @@
             "required_aal": {
               "$ref": "#/definitions/featureRequiredAal"
             },
-            "allow_refresh": {
-              "title": "Allow session refresh from whoami endpoint",
+            "allow_extend": {
+              "title": "Allow session extension from whoami endpoint",
               "description": "If true, allows the caller of `/session/whoami` to extend the expiry of a session by setting `?refresh=true` in the URL query parameter. The expiry will be extended by `session.lifespan`. This allows any user to extend their session indefinitely.",
               "type": "boolean",
               "default": false
@@ -2310,9 +2310,9 @@
           },
           "additionalProperties": false
         },
-        "earliest_possible_refresh": {
-          "title": "Earliest Possible Session Refresh",
-          "description": "Sets when a session can be refreshed. Settings this value to `24h` will prevent the session from being refreshed before until 24 hours before it expires. This setting prevents excessive writes to the database. We highly recommend setting this value.",
+        "earliest_possible_extend": {
+          "title": "Earliest Possible Session Extension",
+          "description": "Sets when a session can be extended. Settings this value to `24h` will prevent the session from being extended before until 24 hours before it expires. This setting prevents excessive writes to the database. We highly recommend setting this value.",
           "type": "string",
           "pattern": "^([0-9]+(ns|us|ms|s|m|h))+$",
           "default": "24h",
