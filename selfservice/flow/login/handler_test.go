@@ -443,7 +443,7 @@ func TestFlowLifecycle(t *testing.T) {
 
 			t.Run("case=does not set forced flag on unauthenticated request with refresh=true", func(t *testing.T) {
 				res, body := initFlow(t, url.Values{"refresh": {"true"}}, false)
-				assertion(body, true, false)
+				assertion(body, false, false)
 				assert.Contains(t, res.Request.URL.String(), loginTS.URL)
 			})
 
