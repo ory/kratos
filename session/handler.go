@@ -46,29 +46,30 @@ func NewHandler(
 }
 
 const (
-	RouteCollection         = "/sessions"
-	RouteWhoami             = RouteCollection + "/whoami"
-	RouteSession            = RouteCollection + "/:id"
-	RouteSessionRefresh     = RouteCollection + "/refresh"
-	RouteSessionRefreshId   = RouteSessionRefresh + "/:id"
-	RouteIdentity           = "/identities"
-	RouteIdentitiesSessions = RouteIdentity + "/:id/sessions"
+	RouteCollection = "/sessions"
+	RouteWhoami     = RouteCollection + "/whoami"
+	RouteSession    = RouteCollection + "/:id"
+)
+
+const (
+	AdminRouteIdentity           = "/identities"
+	AdminRouteIdentitiesSessions = AdminRouteIdentity + "/:id/sessions"
+	AdminRouteSessionRefreshId   = RouteSession + "/refresh"
 )
 
 func (h *Handler) RegisterAdminRoutes(admin *x.RouterAdmin) {
-	for _, m := range []string{http.MethodGet, http.MethodHead, http.MethodPost, http.MethodPut, http.MethodPatch} {
-		// Redirect to public endpoint
-		admin.Handle(m, RouteWhoami, x.RedirectToPublicRoute(h.r))
-	}
+	admin.GET(AdminRouteIdentitiesSessions, h.adminListIdentitySessions)
+	admin.DELETE(AdminRouteIdentitiesSessions, h.adminDeleteIdentitySessions)
+	admin.PATCH(AdminRouteSessionRefreshId, h.adminSessionRefresh)
 
 	admin.DELETE(RouteCollection, x.RedirectToPublicRoute(h.r))
 	admin.DELETE(RouteSession, x.RedirectToPublicRoute(h.r))
 	admin.GET(RouteCollection, x.RedirectToPublicRoute(h.r))
 
-	admin.GET(RouteIdentitiesSessions, h.adminListIdentitySessions)
-	admin.DELETE(RouteIdentitiesSessions, h.adminDeleteIdentitySessions)
-	admin.PATCH(RouteSessionRefresh, h.adminCurrentSessionRefresh)
-	admin.PATCH(RouteSessionRefreshId, h.adminSessionRefresh)
+	for _, m := range []string{http.MethodGet, http.MethodHead, http.MethodPost, http.MethodPut} {
+		// Redirect to public endpoint
+		admin.Handle(m, RouteWhoami, x.RedirectToPublicRoute(h.r))
+	}
 }
 
 func (h *Handler) RegisterPublicRoutes(public *x.RouterPublic) {
@@ -77,7 +78,7 @@ func (h *Handler) RegisterPublicRoutes(public *x.RouterPublic) {
 	h.r.CSRFHandler().IgnorePath(RouteWhoami)
 	h.r.CSRFHandler().IgnorePath(RouteCollection)
 	h.r.CSRFHandler().IgnoreGlob(RouteCollection + "/*")
-	h.r.CSRFHandler().IgnoreGlob(RouteIdentity + "/*/sessions")
+	h.r.CSRFHandler().IgnoreGlob(AdminRouteIdentity + "/*/sessions")
 
 	for _, m := range []string{http.MethodGet, http.MethodHead, http.MethodPost, http.MethodPut, http.MethodPatch, http.MethodConnect, http.MethodOptions, http.MethodTrace} {
 		public.Handle(m, RouteWhoami, h.whoami)
@@ -87,7 +88,7 @@ func (h *Handler) RegisterPublicRoutes(public *x.RouterPublic) {
 	public.DELETE(RouteSession, h.revokeSession)
 	public.GET(RouteCollection, h.listSessions)
 
-	public.DELETE(RouteIdentitiesSessions, x.RedirectToAdminRoute(h.r))
+	public.DELETE(AdminRouteIdentitiesSessions, x.RedirectToAdminRoute(h.r))
 }
 
 // nolint:deadcode,unused
@@ -106,6 +107,12 @@ type toSession struct {
 	//
 	// in: header
 	Cookie string `json:"Cookie"`
+
+	// It also possible to refresh the session lifespan of the current session by adding a `?refresh=true` param to the
+	// request url query. This feature is disabled per default. To enable it set `session.whoami.refresh_allowed` to
+	// true in the config. After enabling this option any refresh request will extend the session lifespan by the
+	// `session.lifespan` value. To reduce the amount of writes set a value for `session.earliest_refresh` in the config.
+	Refresh bool `json:"refresh"`
 }
 
 // swagger:route GET /sessions/whoami v0alpha2 toSession
@@ -114,13 +121,13 @@ type toSession struct {
 //
 // Uses the HTTP Headers in the GET request to determine (e.g. by using checking the cookies) who is authenticated.
 // Returns a session object in the body or 401 if the credentials are invalid or no credentials were sent.
-// Additionally when the request it successful it adds the user ID to the 'X-Kratos-Authenticated-Identity-Id' header in the response.
+// Additionally when the request it successful it adds the user ID to the 'X-Kratos-Authenticated-Identity-Id' header
+// in the response.
 //
-// It is also possible to refresh the session lifespan of a current session by adding a `refresh=true` param to the request url.
-// By default session refresh on this endpoint is disabled.
-// Session refresh can be enabled only after setting `session.whoami.refresh_allowed` to true in the config.
-// After enabling this option any refresh request will set the session life equal to `session.lifespan`.
-// If you want to refresh the session only some time before session expiration you can set a proper value for `session.earliest_refresh`
+// It also possible to refresh the session lifespan of the current session by adding a `?refresh=true` param to the
+// request url query. This feature is disabled per default. To enable it set `session.whoami.refresh_allowed` to
+// true in the config. After enabling this option any refresh request will extend the session lifespan by the
+// `session.lifespan` value. To reduce the amount of writes set a value for `session.earliest_refresh` in the config.
 //
 // If you call this endpoint from a server-side application, you must forward the HTTP Cookie Header to this endpoint:
 //
@@ -153,7 +160,6 @@ type toSession struct {
 // - AJAX calls. Remember to send credentials and set up CORS correctly!
 // - Reverse proxies and API Gateways
 // - Server-side calls - use the `X-Session-Token` header!
-// - Session refresh
 //
 // This endpoint authenticates users by checking
 //
@@ -485,9 +491,9 @@ func (h *Handler) IsAuthenticated(wrap httprouter.Handle, onUnauthenticated http
 	}
 }
 
-// swagger:parameters adminSessionRefresh
+// swagger:parameters adminRefreshSession
 // nolint:deadcode,unused
-type adminSessionRefresh struct {
+type adminRefreshSession struct {
 	// ID is the session's ID.
 	//
 	// required: true
@@ -495,14 +501,12 @@ type adminSessionRefresh struct {
 	ID string `json:"id"`
 }
 
-// swagger:route PATCH /sessions/refresh/{id} v0alpha2 adminSessionRefresh
+// swagger:route PATCH /admin/sessions/{id}/refresh v0alpha2 adminRefreshSession
 //
-// Calling this endpoint refreshes a given session.
-// If `session.earliest_refresh` is set it will only refresh the session after this time has passed.
+// Calling this endpoint refreshes the given session ID. If `session.earliest_refresh` is set it
+// will only refresh the session after the specified time has passed.
 //
-// This endpoint is useful for:
-//
-// - Session refresh
+// Retrieve the session ID from the `/sessions/whoami` endpoint / `toSession` SDK method.
 //
 //     Schemes: http, https
 //
@@ -511,55 +515,22 @@ type adminSessionRefresh struct {
 //
 //     Responses:
 //       200: session
+//       400: jsonError
 //       404: jsonError
 //       500: jsonError
 func (h *Handler) adminSessionRefresh(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	iID, err := uuid.FromString(ps.ByName("id"))
 	if err != nil {
-		h.r.Writer().WriteError(w, r, herodot.ErrBadRequest.WithError(err.Error()).WithDebug("could not parse UUID"))
+		h.r.Writer().WriteError(w, r, errors.WithStack(herodot.ErrBadRequest.WithError(err.Error()).WithDebug("could not parse UUID")))
 		return
 	}
+
 	s, err := h.r.SessionPersister().GetSession(r.Context(), iID)
 	if err != nil {
 		h.r.Writer().WriteError(w, r, err)
 		return
 	}
-	c := h.r.Config(r.Context())
-	if s.CanBeRefreshed(c) {
-		if err := h.r.SessionPersister().UpsertSession(r.Context(), s.Refresh(c)); err != nil {
-			h.r.Writer().WriteError(w, r, err)
-			return
-		}
-	}
 
-	h.r.Writer().Write(w, r, s)
-}
-
-// swagger:route PATCH /sessions/refresh v0alpha2 adminCurrentSessionRefresh
-//
-// Calling this endpoint refreshes a given session.
-// If `session.earliest_refresh` is set it will only refresh the session after this time has passed.
-//
-// This endpoint is useful for:
-//
-// - Session refresh
-//
-//     Schemes: http, https
-//
-//     Security:
-//       oryAccessToken:
-//
-//     Responses:
-//       200: session
-//       404: jsonError
-//       500: jsonError
-func (h *Handler) adminCurrentSessionRefresh(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	s, err := h.r.SessionManager().FetchFromRequest(r.Context(), r)
-	if err != nil {
-		h.r.Audit().WithRequest(r).WithError(err).Info("No valid session cookie found.")
-		h.r.Writer().WriteError(w, r, herodot.ErrUnauthorized.WithWrap(err).WithReasonf("No valid session cookie found."))
-		return
-	}
 	c := h.r.Config(r.Context())
 	if s.CanBeRefreshed(c) {
 		if err := h.r.SessionPersister().UpsertSession(r.Context(), s.Refresh(c)); err != nil {

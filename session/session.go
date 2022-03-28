@@ -200,7 +200,7 @@ func (s *Session) IsActive() bool {
 }
 
 func (s *Session) Refresh(c lifespanProvider) *Session {
-	s.ExpiresAt = time.Now().Add(c.SessionLifespan())
+	s.ExpiresAt = time.Now().Add(c.SessionLifespan()).UTC()
 	return s
 }
 

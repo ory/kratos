@@ -188,6 +188,7 @@ func TestSession(t *testing.T) {
 			}
 		})
 	}
+
 	t.Run("case=session refresh", func(t *testing.T) {
 		conf.MustSet(config.ViperKeySessionLifespan, "24h")
 		conf.MustSet(config.ViperKeySessionRefreshMinTimeLeft, "12h")
@@ -202,6 +203,5 @@ func TestSession(t *testing.T) {
 
 		s.ExpiresAt = s.ExpiresAt.Add(-12 * time.Hour)
 		assert.True(t, s.CanBeRefreshed(conf), "session is refreshable after 12hrs")
-
 	})
 }

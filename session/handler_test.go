@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
-	"net/http/cookiejar"
 	"net/http/httptest"
 	"strings"
 	"testing"
@@ -653,7 +652,7 @@ func TestHandlerSelfServiceSessionManagement(t *testing.T) {
 	})
 }
 
-func TestHandlerRefreshSessionByIdentityID(t *testing.T) {
+func TestHandlerRefreshSessionBySessionID(t *testing.T) {
 	conf, reg := internal.NewFastRegistryWithMocks(t)
 	_, ts, _, _ := testhelpers.NewKratosServerWithCSRFAndRouters(t, reg)
 
@@ -669,7 +668,7 @@ func TestHandlerRefreshSessionByIdentityID(t *testing.T) {
 		s := &Session{Identity: i, ExpiresAt: time.Now().Add(5 * time.Minute)}
 		require.NoError(t, reg.SessionPersister().UpsertSession(context.Background(), s))
 
-		req, _ := http.NewRequest("PATCH", ts.URL+"/sessions/refresh/"+s.ID.String(), nil)
+		req, _ := http.NewRequest("PATCH", ts.URL+"/admin/sessions/"+s.ID.String()+"/refresh", nil)
 		res, err := client.Do(req)
 		require.NoError(t, err)
 		require.Equal(t, http.StatusOK, res.StatusCode)
@@ -680,7 +679,7 @@ func TestHandlerRefreshSessionByIdentityID(t *testing.T) {
 
 	t.Run("case=should return 400 when bad UUID is sent", func(t *testing.T) {
 		client := testhelpers.NewClientWithCookies(t)
-		req, _ := http.NewRequest("PATCH", ts.URL+"/sessions/refresh/BADUUID", nil)
+		req, _ := http.NewRequest("PATCH", ts.URL+"/admin/sessions/BADUUID/refresh", nil)
 		res, err := client.Do(req)
 		require.NoError(t, err)
 		require.Equal(t, http.StatusBadRequest, res.StatusCode)
@@ -689,66 +688,9 @@ func TestHandlerRefreshSessionByIdentityID(t *testing.T) {
 	t.Run("case=should return 404 when calling with missing UUID", func(t *testing.T) {
 		client := testhelpers.NewClientWithCookies(t)
 		someID, _ := uuid.NewV4()
-		req, _ := http.NewRequest("PATCH", ts.URL+"/sessions/refresh/"+someID.String(), nil)
+		req, _ := http.NewRequest("PATCH", ts.URL+"/admin/sessions/"+someID.String()+"/refresh", nil)
 		res, err := client.Do(req)
 		require.NoError(t, err)
 		require.Equal(t, http.StatusNotFound, res.StatusCode)
-	})
-}
-
-func TestHandlerRefreshCurrentSession(t *testing.T) {
-	conf, reg := internal.NewFastRegistryWithMocks(t)
-
-	// Start kratos server
-	publicTS, adminTS, r, _ := testhelpers.NewKratosServerWithCSRFAndRouters(t, reg)
-	h, _ := testhelpers.MockSessionCreateHandler(t, reg)
-	r.GET("/set", h)
-
-	mockServerURL := urlx.ParseOrPanic(publicTS.URL)
-
-	adminTS.URL = strings.Replace(adminTS.URL, "127.0.0.1", "localhost", -1)
-	reg.Config(context.Background()).MustSet(config.ViperKeyAdminBaseURL, adminTS.URL)
-	testhelpers.SetDefaultIdentitySchema(conf, "file://./stub/identity.schema.json")
-	testhelpers.SetIdentitySchemas(t, conf, map[string]string{
-		"customer": "file://./stub/handler/customer.schema.json",
-		"employee": "file://./stub/handler/employee.schema.json",
-	})
-	//conf.MustSet(config.ViperKeyPublicBaseURL, mockServerURL.String())
-
-	client := testhelpers.NewClientWithCookies(t)
-	// Set cookie
-	reg.CSRFHandler().IgnorePath("/set")
-	originalCookie := testhelpers.MockHydrateCookieClient(t, client, publicTS.URL+"/set")
-	originalCookie.Expires = originalCookie.Expires.Add(-time.Second)
-
-	session := func(t *testing.T, base *httptest.Server, href string, expectCode int) Session {
-		req, err := http.NewRequest("PATCH", base.URL+href, nil)
-		require.NoError(t, err)
-		cookies := client.Jar.Cookies(mockServerURL)
-		adminServerURL := urlx.ParseOrPanic(adminTS.URL)
-		cj, err := cookiejar.New(&cookiejar.Options{})
-		require.NoError(t, err)
-		cj.SetCookies(adminServerURL, cookies)
-		base.Client().Jar = cj
-
-		res, err := base.Client().Do(req)
-		require.NoError(t, err)
-
-		require.EqualValues(t, expectCode, res.StatusCode)
-		defer res.Body.Close()
-
-		var apiRes Session
-		err = json.NewDecoder(res.Body).Decode(&apiRes)
-		require.NoError(t, err)
-
-		return apiRes
-	}
-
-	t.Run("case=should return 200 after successful session refresh and return valid session and token", func(t *testing.T) {
-		res := session(t, adminTS, "/sessions/refresh", http.StatusOK)
-		s, err := reg.SessionPersister().GetSession(context.Background(), res.ID)
-		require.Empty(t, err)
-		require.True(t, res.ExpiresAt.After(originalCookie.Expires))
-		require.True(t, s.Active)
 	})
 }
