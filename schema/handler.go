@@ -106,7 +106,7 @@ func (h *Handler) getByID(w http.ResponseWriter, r *http.Request, ps httprouter.
 
 		s, err = ss.GetByID(id)
 		if err != nil {
-			h.r.Writer().WriteError(w, r, errors.WithStack(herodot.ErrNotFound.WithReasonf("Identity schema `%s` could not be found.", id))))
+			h.r.Writer().WriteError(w, r, errors.WithStack(herodot.ErrNotFound.WithReasonf("Identity schema `%s` could not be found.", id)))
 			return
 		}
 	}
