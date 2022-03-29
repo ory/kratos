@@ -4,7 +4,7 @@
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 **Table of Contents**
 
-- [ (2022-03-28)](#2022-03-28)
+- [ (2022-03-29)](#2022-03-29)
     - [Bug Fixes](#bug-fixes)
     - [Features](#features)
     - [Tests](#tests)
@@ -248,7 +248,7 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# [](https://github.com/ory/kratos/compare/v0.9.0-alpha.3...v) (2022-03-28)
+# [](https://github.com/ory/kratos/compare/v0.9.0-alpha.3...v) (2022-03-29)
 
 
 ### Bug Fixes
@@ -257,6 +257,7 @@
 
     The default mode is 0644, which is allows broader access than necessary.
 
+* **courier:** Add ability to specify backoff ([#2349](https://github.com/ory/kratos/issues/2349)) ([bf970f3](https://github.com/ory/kratos/commit/bf970f32f571164b8081f09f602a3473e079194e))
 * Load return_to and append to errors ([#2333](https://github.com/ory/kratos/issues/2333)) ([5efe4a3](https://github.com/ory/kratos/commit/5efe4a33e35e74d248d4eec43dc901b7b6334037)), closes [#2275](https://github.com/ory/kratos/issues/2275) [#2279](https://github.com/ory/kratos/issues/2279) [#2285](https://github.com/ory/kratos/issues/2285)
 * Refresh is always false when session exists ([d3436d7](https://github.com/ory/kratos/commit/d3436d7fa17589d91e25c9f0bd66bc3bb5b150fa)), closes [#2341](https://github.com/ory/kratos/issues/2341)
 
