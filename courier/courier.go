@@ -32,6 +32,7 @@ type (
 		DispatchMessage(ctx context.Context, msg Message) error
 		SetGetEmailTemplateType(f func(t EmailTemplate) (TemplateType, error))
 		SetNewEmailTemplateFromMessage(f func(d template.Dependencies, msg Message) (EmailTemplate, error))
+		UseBackoff(b backoff.BackOff)
 	}
 
 	Provider interface {
@@ -47,6 +48,7 @@ type (
 		smtpClient  *smtpClient
 		deps        Dependencies
 		failOnError bool
+		backoff     backoff.BackOff
 	}
 )
 
@@ -55,6 +57,7 @@ func NewCourier(ctx context.Context, deps Dependencies) Courier {
 		smsClient:  newSMS(ctx, deps),
 		smtpClient: newSMTP(ctx, deps),
 		deps:       deps,
+		backoff:    backoff.NewExponentialBackOff(),
 	}
 }
 
@@ -79,11 +82,16 @@ func (c *courier) Work(ctx context.Context) error {
 	}
 }
 
+func (c *courier) UseBackoff(b backoff.BackOff) {
+	c.backoff = b
+}
+
 func (c *courier) watchMessages(ctx context.Context, errChan chan error) {
+	c.backoff.Reset()
 	for {
 		if err := backoff.Retry(func() error {
 			return c.DispatchQueue(ctx)
-		}, backoff.NewExponentialBackOff()); err != nil {
+		}, c.backoff); err != nil {
 			errChan <- err
 			return
 		}
