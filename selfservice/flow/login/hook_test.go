@@ -56,6 +56,12 @@ func TestLoginExecutor(t *testing.T) {
 					group = node.PasswordGroup
 				case identity.CredentialsTypeOIDC.String():
 					group = node.OpenIDConnectGroup
+				case identity.CredentialsTypeTOTP.String():
+					group = node.TOTPGroup
+				case identity.CredentialsTypeWebAuthn.String():
+					group = node.WebAuthnGroup
+				default:
+					assert.Failf(t, "unknown strategy provided", "strategy: %s", strategy)
 				}
 
 				router.GET("/login/post", func(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
