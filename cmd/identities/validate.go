@@ -22,13 +22,24 @@ import (
 )
 
 func NewValidateCmd() *cobra.Command {
+	var cmd = &cobra.Command{
+		Use:   "validate",
+		Short: "Validate resources",
+	}
+	cmd.AddCommand(NewValidateIdentityCmd())
+	cliclient.RegisterClientFlags(cmd.PersistentFlags())
+	cmdx.RegisterFormatFlags(cmd.PersistentFlags())
+	return cmd
+
+}
+
+func NewValidateIdentityCmd() *cobra.Command {
 	var c = &cobra.Command{
-		Use:   "validate <file.json [file-2.json [file-3.json] ...]>",
+		Use:   "identity file.json [file-2.json] [file-3.json] [file-n.json]",
 		Short: "Validate local identity files",
 		Long: `This command allows validation of identity files.
 It validates against the payload of the API and the identity schema as configured in Ory Kratos.
-Identities can be supplied via STD_IN or JSON files containing a single or an array of identities.
-`,
+Identities can be supplied via STD_IN or JSON files containing a single or an array of identities.`,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			c := cliclient.NewClient(cmd)
 

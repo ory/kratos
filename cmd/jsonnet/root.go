@@ -1,9 +1,5 @@
 package jsonnet
 
-import (
-	"github.com/spf13/cobra"
-)
-
 const GlobHelp = `Glob Syntax:
 
     pattern:
@@ -28,20 +24,3 @@ const GlobHelp = `Glob Syntax:
     pattern-list:
         pattern { ',' pattern }
                     comma-separated (without spaces) patterns`
-
-func NewJsonnetCmd() *cobra.Command {
-	c := &cobra.Command{
-		Use:   "jsonnet",
-		Short: "Helpers for linting and formatting JSONNet code",
-	}
-
-	return c
-}
-
-func RegisterCommandRecursive(parent *cobra.Command) {
-	c := NewJsonnetCmd()
-	parent.AddCommand(c)
-
-	c.AddCommand(NewJsonnetFormatCmd())
-	c.AddCommand(NewJsonnetLintCmd())
-}
