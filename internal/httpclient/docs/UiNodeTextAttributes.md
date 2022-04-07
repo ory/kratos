@@ -5,14 +5,14 @@
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
 **Id** | **string** | A unique identifier | 
-**NodeType** | **interface{}** | NodeType represents this node&#39;s types. It is a mirror of &#x60;node.type&#x60; and is primarily used to allow compatibility with OpenAPI 3.0. | 
+**NodeType** | **string** | NodeType represents this node&#39;s types. It is a mirror of &#x60;node.type&#x60; and is primarily used to allow compatibility with OpenAPI 3.0. | 
 **Text** | [**UiText**](UiText.md) |  | 
 
 ## Methods
 
 ### NewUiNodeTextAttributes
 
-`func NewUiNodeTextAttributes(id string, nodeType interface{}, text UiText, ) *UiNodeTextAttributes`
+`func NewUiNodeTextAttributes(id string, nodeType string, text UiText, ) *UiNodeTextAttributes`
 
 NewUiNodeTextAttributes instantiates a new UiNodeTextAttributes object
 This constructor will assign default values to properties that have it defined,
@@ -49,34 +49,24 @@ SetId sets Id field to given value.
 
 ### GetNodeType
 
-`func (o *UiNodeTextAttributes) GetNodeType() interface{}`
+`func (o *UiNodeTextAttributes) GetNodeType() string`
 
 GetNodeType returns the NodeType field if non-nil, zero value otherwise.
 
 ### GetNodeTypeOk
 
-`func (o *UiNodeTextAttributes) GetNodeTypeOk() (*interface{}, bool)`
+`func (o *UiNodeTextAttributes) GetNodeTypeOk() (*string, bool)`
 
 GetNodeTypeOk returns a tuple with the NodeType field if it's non-nil, zero value otherwise
 and a boolean to check if the value has been set.
 
 ### SetNodeType
 
-`func (o *UiNodeTextAttributes) SetNodeType(v interface{})`
+`func (o *UiNodeTextAttributes) SetNodeType(v string)`
 
 SetNodeType sets NodeType field to given value.
 
 
-### SetNodeTypeNil
-
-`func (o *UiNodeTextAttributes) SetNodeTypeNil(b bool)`
-
- SetNodeTypeNil sets the value for NodeType to be an explicit nil
-
-### UnsetNodeType
-`func (o *UiNodeTextAttributes) UnsetNodeType()`
-
-UnsetNodeType ensures that no value is present for NodeType, not even an explicit nil
 ### GetText
 
 `func (o *UiNodeTextAttributes) GetText() UiText`

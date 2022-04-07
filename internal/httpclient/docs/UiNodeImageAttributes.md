@@ -6,7 +6,7 @@ Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
 **Height** | **int64** | Height of the image | 
 **Id** | **string** | A unique identifier | 
-**NodeType** | **interface{}** | NodeType represents this node&#39;s types. It is a mirror of &#x60;node.type&#x60; and is primarily used to allow compatibility with OpenAPI 3.0. | 
+**NodeType** | **string** | NodeType represents this node&#39;s types. It is a mirror of &#x60;node.type&#x60; and is primarily used to allow compatibility with OpenAPI 3.0. | 
 **Src** | **string** | The image&#39;s source URL.  format: uri | 
 **Width** | **int64** | Width of the image | 
 
@@ -14,7 +14,7 @@ Name | Type | Description | Notes
 
 ### NewUiNodeImageAttributes
 
-`func NewUiNodeImageAttributes(height int64, id string, nodeType interface{}, src string, width int64, ) *UiNodeImageAttributes`
+`func NewUiNodeImageAttributes(height int64, id string, nodeType string, src string, width int64, ) *UiNodeImageAttributes`
 
 NewUiNodeImageAttributes instantiates a new UiNodeImageAttributes object
 This constructor will assign default values to properties that have it defined,
@@ -71,34 +71,24 @@ SetId sets Id field to given value.
 
 ### GetNodeType
 
-`func (o *UiNodeImageAttributes) GetNodeType() interface{}`
+`func (o *UiNodeImageAttributes) GetNodeType() string`
 
 GetNodeType returns the NodeType field if non-nil, zero value otherwise.
 
 ### GetNodeTypeOk
 
-`func (o *UiNodeImageAttributes) GetNodeTypeOk() (*interface{}, bool)`
+`func (o *UiNodeImageAttributes) GetNodeTypeOk() (*string, bool)`
 
 GetNodeTypeOk returns a tuple with the NodeType field if it's non-nil, zero value otherwise
 and a boolean to check if the value has been set.
 
 ### SetNodeType
 
-`func (o *UiNodeImageAttributes) SetNodeType(v interface{})`
+`func (o *UiNodeImageAttributes) SetNodeType(v string)`
 
 SetNodeType sets NodeType field to given value.
 
 
-### SetNodeTypeNil
-
-`func (o *UiNodeImageAttributes) SetNodeTypeNil(b bool)`
-
- SetNodeTypeNil sets the value for NodeType to be an explicit nil
-
-### UnsetNodeType
-`func (o *UiNodeImageAttributes) UnsetNodeType()`
-
-UnsetNodeType ensures that no value is present for NodeType, not even an explicit nil
 ### GetSrc
 
 `func (o *UiNodeImageAttributes) GetSrc() string`

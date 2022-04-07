@@ -3461,7 +3461,7 @@ components:
               id: 0
               text: text
               type: type
-            type: ""
+            type: text
             group: default
           - meta:
               label:
@@ -3478,7 +3478,7 @@ components:
               id: 0
               text: text
               type: type
-            type: ""
+            type: text
             group: default
           method: method
           action: action
@@ -3593,7 +3593,7 @@ components:
               id: 0
               text: text
               type: type
-            type: ""
+            type: text
             group: default
           - meta:
               label:
@@ -3610,7 +3610,7 @@ components:
               id: 0
               text: text
               type: type
-            type: ""
+            type: text
             group: default
           method: method
           action: action
@@ -3728,7 +3728,7 @@ components:
               id: 0
               text: text
               type: type
-            type: ""
+            type: text
             group: default
           - meta:
               label:
@@ -3745,7 +3745,7 @@ components:
               id: 0
               text: text
               type: type
-            type: ""
+            type: text
             group: default
           method: method
           action: action
@@ -3826,7 +3826,7 @@ components:
               id: 0
               text: text
               type: type
-            type: ""
+            type: text
             group: default
           - meta:
               label:
@@ -3843,7 +3843,7 @@ components:
               id: 0
               text: text
               type: type
-            type: ""
+            type: text
             group: default
           method: method
           action: action
@@ -3991,7 +3991,7 @@ components:
               id: 0
               text: text
               type: type
-            type: ""
+            type: text
             group: default
           - meta:
               label:
@@ -4008,7 +4008,7 @@ components:
               id: 0
               text: text
               type: type
-            type: ""
+            type: text
             group: default
           method: method
           action: action
@@ -4967,7 +4967,7 @@ components:
             id: 0
             text: text
             type: type
-          type: ""
+          type: text
           group: default
         - meta:
             label:
@@ -4984,7 +4984,7 @@ components:
             id: 0
             text: text
             type: type
-          type: ""
+          type: text
           group: default
         method: method
         action: action
@@ -5038,7 +5038,7 @@ components:
           id: 0
           text: text
           type: type
-        type: ""
+        type: text
         group: default
       properties:
         attributes:
@@ -5064,6 +5064,13 @@ components:
           $ref: '#/components/schemas/uiNodeMeta'
         type:
           description: The node's type
+          enum:
+          - text
+          - input
+          - img
+          - a
+          - script
+          type: string
       required:
       - attributes
       - group
@@ -5087,6 +5094,13 @@ components:
           description: |-
             NodeType represents this node's types. It is a mirror of `node.type` and
             is primarily used to allow compatibility with OpenAPI 3.0.
+          enum:
+          - text
+          - input
+          - img
+          - a
+          - script
+          type: string
         title:
           $ref: '#/components/schemas/uiText'
       required:
@@ -5125,6 +5139,13 @@ components:
           description: |-
             NodeType represents this node's types. It is a mirror of `node.type` and
             is primarily used to allow compatibility with OpenAPI 3.0.
+          enum:
+          - text
+          - input
+          - img
+          - a
+          - script
+          type: string
         src:
           description: |-
             The image's source URL.
@@ -5160,6 +5181,13 @@ components:
           description: |-
             NodeType represents this node's types. It is a mirror of `node.type` and
             is primarily used to allow compatibility with OpenAPI 3.0.
+          enum:
+          - text
+          - input
+          - img
+          - a
+          - script
+          type: string
         onclick:
           description: |-
             OnClick may contain javascript which should be executed on click. This is primarily
@@ -5215,6 +5243,13 @@ components:
           description: |-
             NodeType represents this node's types. It is a mirror of `node.type` and
             is primarily used to allow compatibility with OpenAPI 3.0.
+          enum:
+          - text
+          - input
+          - img
+          - a
+          - script
+          type: string
         nonce:
           description: |-
             Nonce for CSP
@@ -5253,6 +5288,13 @@ components:
           description: |-
             NodeType represents this node's types. It is a mirror of `node.type` and
             is primarily used to allow compatibility with OpenAPI 3.0.
+          enum:
+          - text
+          - input
+          - img
+          - a
+          - script
+          type: string
         text:
           $ref: '#/components/schemas/uiText'
       required:

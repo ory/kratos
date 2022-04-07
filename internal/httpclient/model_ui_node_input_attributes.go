@@ -23,7 +23,7 @@ type UiNodeInputAttributes struct {
 	// The input's element name.
 	Name string `json:"name"`
 	// NodeType represents this node's types. It is a mirror of `node.type` and is primarily used to allow compatibility with OpenAPI 3.0.
-	NodeType interface{} `json:"node_type"`
+	NodeType string `json:"node_type"`
 	// OnClick may contain javascript which should be executed on click. This is primarily used for WebAuthn.
 	Onclick *string `json:"onclick,omitempty"`
 	// The input's pattern.
@@ -39,7 +39,7 @@ type UiNodeInputAttributes struct {
 // This constructor will assign default values to properties that have it defined,
 // and makes sure properties required by API are set, but the set of arguments
 // will change when the set of required properties is changed
-func NewUiNodeInputAttributes(disabled bool, name string, nodeType interface{}, type_ string) *UiNodeInputAttributes {
+func NewUiNodeInputAttributes(disabled bool, name string, nodeType string, type_ string) *UiNodeInputAttributes {
 	this := UiNodeInputAttributes{}
 	this.Disabled = disabled
 	this.Name = name
@@ -137,10 +137,9 @@ func (o *UiNodeInputAttributes) SetName(v string) {
 }
 
 // GetNodeType returns the NodeType field value
-// If the value is explicit nil, the zero value for interface{} will be returned
-func (o *UiNodeInputAttributes) GetNodeType() interface{} {
+func (o *UiNodeInputAttributes) GetNodeType() string {
 	if o == nil {
-		var ret interface{}
+		var ret string
 		return ret
 	}
 
@@ -149,16 +148,15 @@ func (o *UiNodeInputAttributes) GetNodeType() interface{} {
 
 // GetNodeTypeOk returns a tuple with the NodeType field value
 // and a boolean to check if the value has been set.
-// NOTE: If the value is an explicit nil, `nil, true` will be returned
-func (o *UiNodeInputAttributes) GetNodeTypeOk() (*interface{}, bool) {
-	if o == nil || o.NodeType == nil {
+func (o *UiNodeInputAttributes) GetNodeTypeOk() (*string, bool) {
+	if o == nil {
 		return nil, false
 	}
 	return &o.NodeType, true
 }
 
 // SetNodeType sets field value
-func (o *UiNodeInputAttributes) SetNodeType(v interface{}) {
+func (o *UiNodeInputAttributes) SetNodeType(v string) {
 	o.NodeType = v
 }
 
@@ -326,7 +324,7 @@ func (o UiNodeInputAttributes) MarshalJSON() ([]byte, error) {
 	if true {
 		toSerialize["name"] = o.Name
 	}
-	if o.NodeType != nil {
+	if true {
 		toSerialize["node_type"] = o.NodeType
 	}
 	if o.Onclick != nil {
