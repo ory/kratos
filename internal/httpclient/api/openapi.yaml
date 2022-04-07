@@ -3670,6 +3670,7 @@ components:
       - issued_at
       - request_url
       - state
+      - type
       - ui
       title: A Recovery Flow
       type: object
@@ -3797,6 +3798,7 @@ components:
       - id
       - issued_at
       - request_url
+      - type
       - ui
       type: object
     selfServiceSettingsFlow:
@@ -3949,6 +3951,7 @@ components:
       - issued_at
       - request_url
       - state
+      - type
       - ui
       title: Flow represents a Settings Flow
       type: object

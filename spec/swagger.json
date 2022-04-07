@@ -3183,6 +3183,7 @@
       "title": "A Recovery Flow",
       "required": [
         "id",
+        "type",
         "expires_at",
         "issued_at",
         "request_url",
@@ -3252,6 +3253,7 @@
       "type": "object",
       "required": [
         "id",
+        "type",
         "expires_at",
         "issued_at",
         "request_url",
@@ -3296,6 +3298,7 @@
       "title": "Flow represents a Settings Flow",
       "required": [
         "id",
+        "type",
         "expires_at",
         "issued_at",
         "request_url",

@@ -897,6 +897,7 @@
         },
         "required": [
           "id",
+          "type",
           "expires_at",
           "issued_at",
           "request_url",
@@ -968,6 +969,7 @@
         },
         "required": [
           "id",
+          "type",
           "expires_at",
           "issued_at",
           "request_url",
@@ -1018,6 +1020,7 @@
         },
         "required": [
           "id",
+          "type",
           "expires_at",
           "issued_at",
           "request_url",
