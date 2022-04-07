@@ -20,16 +20,17 @@ type UiNodeAnchorAttributes struct {
 	// The link's href (destination) URL.  format: uri
 	Href string `json:"href"`
 	// A unique identifier
-	Id       string `json:"id"`
-	NodeType string `json:"node_type"`
-	Title    UiText `json:"title"`
+	Id string `json:"id"`
+	// NodeType represents this node's types. It is a mirror of `node.type` and is primarily used to allow compatibility with OpenAPI 3.0.
+	NodeType interface{} `json:"node_type"`
+	Title    UiText      `json:"title"`
 }
 
 // NewUiNodeAnchorAttributes instantiates a new UiNodeAnchorAttributes object
 // This constructor will assign default values to properties that have it defined,
 // and makes sure properties required by API are set, but the set of arguments
 // will change when the set of required properties is changed
-func NewUiNodeAnchorAttributes(href string, id string, nodeType string, title UiText) *UiNodeAnchorAttributes {
+func NewUiNodeAnchorAttributes(href string, id string, nodeType interface{}, title UiText) *UiNodeAnchorAttributes {
 	this := UiNodeAnchorAttributes{}
 	this.Href = href
 	this.Id = id
@@ -95,9 +96,10 @@ func (o *UiNodeAnchorAttributes) SetId(v string) {
 }
 
 // GetNodeType returns the NodeType field value
-func (o *UiNodeAnchorAttributes) GetNodeType() string {
+// If the value is explicit nil, the zero value for interface{} will be returned
+func (o *UiNodeAnchorAttributes) GetNodeType() interface{} {
 	if o == nil {
-		var ret string
+		var ret interface{}
 		return ret
 	}
 
@@ -106,15 +108,16 @@ func (o *UiNodeAnchorAttributes) GetNodeType() string {
 
 // GetNodeTypeOk returns a tuple with the NodeType field value
 // and a boolean to check if the value has been set.
-func (o *UiNodeAnchorAttributes) GetNodeTypeOk() (*string, bool) {
-	if o == nil {
+// NOTE: If the value is an explicit nil, `nil, true` will be returned
+func (o *UiNodeAnchorAttributes) GetNodeTypeOk() (*interface{}, bool) {
+	if o == nil || o.NodeType == nil {
 		return nil, false
 	}
 	return &o.NodeType, true
 }
 
 // SetNodeType sets field value
-func (o *UiNodeAnchorAttributes) SetNodeType(v string) {
+func (o *UiNodeAnchorAttributes) SetNodeType(v interface{}) {
 	o.NodeType = v
 }
 
@@ -150,7 +153,7 @@ func (o UiNodeAnchorAttributes) MarshalJSON() ([]byte, error) {
 	if true {
 		toSerialize["id"] = o.Id
 	}
-	if true {
+	if o.NodeType != nil {
 		toSerialize["node_type"] = o.NodeType
 	}
 	if true {

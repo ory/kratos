@@ -25,7 +25,8 @@ type UiNodeScriptAttributes struct {
 	Id string `json:"id"`
 	// The script's integrity hash
 	Integrity string `json:"integrity"`
-	NodeType  string `json:"node_type"`
+	// NodeType represents this node's types. It is a mirror of `node.type` and is primarily used to allow compatibility with OpenAPI 3.0.
+	NodeType interface{} `json:"node_type"`
 	// Nonce for CSP  A nonce you may want to use to improve your Content Security Policy. You do not have to use this value but if you want to improve your CSP policies you may use it. You can also choose to use your own nonce value!
 	Nonce string `json:"nonce"`
 	// The script referrer policy
@@ -40,7 +41,7 @@ type UiNodeScriptAttributes struct {
 // This constructor will assign default values to properties that have it defined,
 // and makes sure properties required by API are set, but the set of arguments
 // will change when the set of required properties is changed
-func NewUiNodeScriptAttributes(async bool, crossorigin string, id string, integrity string, nodeType string, nonce string, referrerpolicy string, src string, type_ string) *UiNodeScriptAttributes {
+func NewUiNodeScriptAttributes(async bool, crossorigin string, id string, integrity string, nodeType interface{}, nonce string, referrerpolicy string, src string, type_ string) *UiNodeScriptAttributes {
 	this := UiNodeScriptAttributes{}
 	this.Async = async
 	this.Crossorigin = crossorigin
@@ -159,9 +160,10 @@ func (o *UiNodeScriptAttributes) SetIntegrity(v string) {
 }
 
 // GetNodeType returns the NodeType field value
-func (o *UiNodeScriptAttributes) GetNodeType() string {
+// If the value is explicit nil, the zero value for interface{} will be returned
+func (o *UiNodeScriptAttributes) GetNodeType() interface{} {
 	if o == nil {
-		var ret string
+		var ret interface{}
 		return ret
 	}
 
@@ -170,15 +172,16 @@ func (o *UiNodeScriptAttributes) GetNodeType() string {
 
 // GetNodeTypeOk returns a tuple with the NodeType field value
 // and a boolean to check if the value has been set.
-func (o *UiNodeScriptAttributes) GetNodeTypeOk() (*string, bool) {
-	if o == nil {
+// NOTE: If the value is an explicit nil, `nil, true` will be returned
+func (o *UiNodeScriptAttributes) GetNodeTypeOk() (*interface{}, bool) {
+	if o == nil || o.NodeType == nil {
 		return nil, false
 	}
 	return &o.NodeType, true
 }
 
 // SetNodeType sets field value
-func (o *UiNodeScriptAttributes) SetNodeType(v string) {
+func (o *UiNodeScriptAttributes) SetNodeType(v interface{}) {
 	o.NodeType = v
 }
 
@@ -292,7 +295,7 @@ func (o UiNodeScriptAttributes) MarshalJSON() ([]byte, error) {
 	if true {
 		toSerialize["integrity"] = o.Integrity
 	}
-	if true {
+	if o.NodeType != nil {
 		toSerialize["node_type"] = o.NodeType
 	}
 	if true {

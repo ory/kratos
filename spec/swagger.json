@@ -4040,7 +4040,7 @@
           "$ref": "#/definitions/uiNodeMeta"
         },
         "type": {
-          "$ref": "#/definitions/uiNodeType"
+          "description": "The node's type\n\nCan be one of: text, input, img, a"
         }
       }
     },
@@ -4063,7 +4063,7 @@
           "type": "string"
         },
         "node_type": {
-          "$ref": "#/definitions/uiNodeType"
+          "description": "NodeType represents this node's types. It is a mirror of `node.type` and\nis primarily used to allow compatibility with OpenAPI 3.0."
         },
         "title": {
           "$ref": "#/definitions/uiText"
@@ -4098,7 +4098,7 @@
           "type": "string"
         },
         "node_type": {
-          "$ref": "#/definitions/uiNodeType"
+          "description": "NodeType represents this node's types. It is a mirror of `node.type` and\nis primarily used to allow compatibility with OpenAPI 3.0."
         },
         "src": {
           "description": "The image's source URL.\n\nformat: uri",
@@ -4136,7 +4136,7 @@
           "type": "string"
         },
         "node_type": {
-          "$ref": "#/definitions/uiNodeType"
+          "description": "NodeType represents this node's types. It is a mirror of `node.type` and\nis primarily used to allow compatibility with OpenAPI 3.0."
         },
         "onclick": {
           "description": "OnClick may contain javascript which should be executed on click. This is primarily\nused for WebAuthn.",
@@ -4201,7 +4201,7 @@
           "type": "string"
         },
         "node_type": {
-          "$ref": "#/definitions/uiNodeType"
+          "description": "NodeType represents this node's types. It is a mirror of `node.type` and\nis primarily used to allow compatibility with OpenAPI 3.0."
         },
         "nonce": {
           "description": "Nonce for CSP\n\nA nonce you may want to use to improve your Content Security Policy.\nYou do not have to use this value but if you want to improve your CSP\npolicies you may use it. You can also choose to use your own nonce value!",
@@ -4235,15 +4235,12 @@
           "type": "string"
         },
         "node_type": {
-          "$ref": "#/definitions/uiNodeType"
+          "description": "NodeType represents this node's types. It is a mirror of `node.type` and\nis primarily used to allow compatibility with OpenAPI 3.0."
         },
         "text": {
           "$ref": "#/definitions/uiText"
         }
       }
-    },
-    "uiNodeType": {
-      "type": "string"
     },
     "uiNodes": {
       "type": "array",

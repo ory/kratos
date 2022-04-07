@@ -3461,7 +3461,7 @@ components:
               id: 0
               text: text
               type: type
-            type: type
+            type: ""
             group: group
           - meta:
               label:
@@ -3478,7 +3478,7 @@ components:
               id: 0
               text: text
               type: type
-            type: type
+            type: ""
             group: group
           method: method
           action: action
@@ -3593,7 +3593,7 @@ components:
               id: 0
               text: text
               type: type
-            type: type
+            type: ""
             group: group
           - meta:
               label:
@@ -3610,7 +3610,7 @@ components:
               id: 0
               text: text
               type: type
-            type: type
+            type: ""
             group: group
           method: method
           action: action
@@ -3727,7 +3727,7 @@ components:
               id: 0
               text: text
               type: type
-            type: type
+            type: ""
             group: group
           - meta:
               label:
@@ -3744,7 +3744,7 @@ components:
               id: 0
               text: text
               type: type
-            type: type
+            type: ""
             group: group
           method: method
           action: action
@@ -3824,7 +3824,7 @@ components:
               id: 0
               text: text
               type: type
-            type: type
+            type: ""
             group: group
           - meta:
               label:
@@ -3841,7 +3841,7 @@ components:
               id: 0
               text: text
               type: type
-            type: type
+            type: ""
             group: group
           method: method
           action: action
@@ -3988,7 +3988,7 @@ components:
               id: 0
               text: text
               type: type
-            type: type
+            type: ""
             group: group
           - meta:
               label:
@@ -4005,7 +4005,7 @@ components:
               id: 0
               text: text
               type: type
-            type: type
+            type: ""
             group: group
           method: method
           action: action
@@ -4964,7 +4964,7 @@ components:
             id: 0
             text: text
             type: type
-          type: type
+          type: ""
           group: group
         - meta:
             label:
@@ -4981,7 +4981,7 @@ components:
             id: 0
             text: text
             type: type
-          type: type
+          type: ""
           group: group
         method: method
         action: action
@@ -5035,7 +5035,7 @@ components:
           id: 0
           text: text
           type: type
-        type: type
+        type: ""
         group: group
       properties:
         attributes:
@@ -5049,7 +5049,10 @@ components:
         meta:
           $ref: '#/components/schemas/uiNodeMeta'
         type:
-          type: string
+          description: |-
+            The node's type
+
+            Can be one of: text, input, img, a
       required:
       - attributes
       - group
@@ -5070,7 +5073,9 @@ components:
           description: A unique identifier
           type: string
         node_type:
-          type: string
+          description: |-
+            NodeType represents this node's types. It is a mirror of `node.type` and
+            is primarily used to allow compatibility with OpenAPI 3.0.
         title:
           $ref: '#/components/schemas/uiText'
       required:
@@ -5108,7 +5113,9 @@ components:
           description: A unique identifier
           type: string
         node_type:
-          type: string
+          description: |-
+            NodeType represents this node's types. It is a mirror of `node.type` and
+            is primarily used to allow compatibility with OpenAPI 3.0.
         src:
           description: |-
             The image's source URL.
@@ -5141,7 +5148,9 @@ components:
           description: The input's element name.
           type: string
         node_type:
-          type: string
+          description: |-
+            NodeType represents this node's types. It is a mirror of `node.type` and
+            is primarily used to allow compatibility with OpenAPI 3.0.
         onclick:
           description: |-
             OnClick may contain javascript which should be executed on click. This is primarily
@@ -5194,7 +5203,9 @@ components:
           description: The script's integrity hash
           type: string
         node_type:
-          type: string
+          description: |-
+            NodeType represents this node's types. It is a mirror of `node.type` and
+            is primarily used to allow compatibility with OpenAPI 3.0.
         nonce:
           description: |-
             Nonce for CSP
@@ -5230,7 +5241,9 @@ components:
           description: A unique identifier
           type: string
         node_type:
-          type: string
+          description: |-
+            NodeType represents this node's types. It is a mirror of `node.type` and
+            is primarily used to allow compatibility with OpenAPI 3.0.
         text:
           $ref: '#/components/schemas/uiText'
       required:
@@ -5239,8 +5252,6 @@ components:
       - text
       title: TextAttributes represents the attributes of a text node.
       type: object
-    uiNodeType:
-      type: string
     uiNodes:
       items:
         $ref: '#/components/schemas/uiNode'

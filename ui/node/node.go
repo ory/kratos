@@ -17,8 +17,42 @@ import (
 	"github.com/ory/x/stringslice"
 )
 
-// swagger:model uiNodeType
+// swagger:enum uiNodeType
 type Type string
+
+const (
+	Text   Type = "text"
+	Input  Type = "input"
+	Image  Type = "img"
+	Anchor Type = "a"
+	Script Type = "script"
+)
+
+var (
+	ErrUnknownNodeType = errors.New("unknown node type")
+)
+
+func (t Type) String() string {
+	return string(t)
+}
+
+func (t *Type) UnmarshalJSON(v []byte) error {
+	switch string(v) {
+	case `"text"`:
+		*t = Text
+	case `"input"`:
+		*t = Input
+	case `"img"`:
+		*t = Image
+	case `"a"`:
+		*t = Anchor
+	case `"script"`:
+		*t = Script
+	default:
+		return ErrUnknownNodeType
+	}
+	return nil
+}
 
 // swagger:model uiNodeGroup
 type Group string
@@ -37,12 +71,6 @@ const (
 	TOTPGroup             Group = "totp"
 	LookupGroup           Group = "lookup_secret"
 	WebAuthnGroup         Group = "webauthn"
-
-	Text   Type = "text"
-	Input  Type = "input"
-	Image  Type = "img"
-	Anchor Type = "a"
-	Script Type = "script"
 )
 
 // swagger:model uiNodes

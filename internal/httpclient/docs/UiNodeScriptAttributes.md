@@ -8,7 +8,7 @@ Name | Type | Description | Notes
 **Crossorigin** | **string** | The script cross origin policy | 
 **Id** | **string** | A unique identifier | 
 **Integrity** | **string** | The script&#39;s integrity hash | 
-**NodeType** | **string** |  | 
+**NodeType** | **interface{}** | NodeType represents this node&#39;s types. It is a mirror of &#x60;node.type&#x60; and is primarily used to allow compatibility with OpenAPI 3.0. | 
 **Nonce** | **string** | Nonce for CSP  A nonce you may want to use to improve your Content Security Policy. You do not have to use this value but if you want to improve your CSP policies you may use it. You can also choose to use your own nonce value! | 
 **Referrerpolicy** | **string** | The script referrer policy | 
 **Src** | **string** | The script source | 
@@ -18,7 +18,7 @@ Name | Type | Description | Notes
 
 ### NewUiNodeScriptAttributes
 
-`func NewUiNodeScriptAttributes(async bool, crossorigin string, id string, integrity string, nodeType string, nonce string, referrerpolicy string, src string, type_ string, ) *UiNodeScriptAttributes`
+`func NewUiNodeScriptAttributes(async bool, crossorigin string, id string, integrity string, nodeType interface{}, nonce string, referrerpolicy string, src string, type_ string, ) *UiNodeScriptAttributes`
 
 NewUiNodeScriptAttributes instantiates a new UiNodeScriptAttributes object
 This constructor will assign default values to properties that have it defined,
@@ -115,24 +115,34 @@ SetIntegrity sets Integrity field to given value.
 
 ### GetNodeType
 
-`func (o *UiNodeScriptAttributes) GetNodeType() string`
+`func (o *UiNodeScriptAttributes) GetNodeType() interface{}`
 
 GetNodeType returns the NodeType field if non-nil, zero value otherwise.
 
 ### GetNodeTypeOk
 
-`func (o *UiNodeScriptAttributes) GetNodeTypeOk() (*string, bool)`
+`func (o *UiNodeScriptAttributes) GetNodeTypeOk() (*interface{}, bool)`
 
 GetNodeTypeOk returns a tuple with the NodeType field if it's non-nil, zero value otherwise
 and a boolean to check if the value has been set.
 
 ### SetNodeType
 
-`func (o *UiNodeScriptAttributes) SetNodeType(v string)`
+`func (o *UiNodeScriptAttributes) SetNodeType(v interface{})`
 
 SetNodeType sets NodeType field to given value.
 
 
+### SetNodeTypeNil
+
+`func (o *UiNodeScriptAttributes) SetNodeTypeNil(b bool)`
+
+ SetNodeTypeNil sets the value for NodeType to be an explicit nil
+
+### UnsetNodeType
+`func (o *UiNodeScriptAttributes) UnsetNodeType()`
+
+UnsetNodeType ensures that no value is present for NodeType, not even an explicit nil
 ### GetNonce
 
 `func (o *UiNodeScriptAttributes) GetNonce() string`
