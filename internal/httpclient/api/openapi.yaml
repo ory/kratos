@@ -5052,7 +5052,7 @@ components:
           description: |-
             The node's type
 
-            Can be one of: text, input, img, a
+            Can be one of: text, input, img, a, script
       required:
       - attributes
       - group

@@ -4040,7 +4040,7 @@
           "$ref": "#/definitions/uiNodeMeta"
         },
         "type": {
-          "description": "The node's type\n\nCan be one of: text, input, img, a"
+          "description": "The node's type\n\nCan be one of: text, input, img, a, script"
         }
       }
     },

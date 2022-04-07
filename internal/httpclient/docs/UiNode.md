@@ -8,7 +8,7 @@ Name | Type | Description | Notes
 **Group** | **string** |  | 
 **Messages** | [**[]UiText**](UiText.md) |  | 
 **Meta** | [**UiNodeMeta**](UiNodeMeta.md) |  | 
-**Type** | **interface{}** | The node&#39;s type  Can be one of: text, input, img, a | 
+**Type** | **interface{}** | The node&#39;s type  Can be one of: text, input, img, a, script | 
 
 ## Methods
 

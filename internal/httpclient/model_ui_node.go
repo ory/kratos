@@ -21,7 +21,7 @@ type UiNode struct {
 	Group      string           `json:"group"`
 	Messages   []UiText         `json:"messages"`
 	Meta       UiNodeMeta       `json:"meta"`
-	// The node's type  Can be one of: text, input, img, a
+	// The node's type  Can be one of: text, input, img, a, script
 	Type interface{} `json:"type"`
 }
 

@@ -85,7 +85,7 @@ type Nodes []*Node
 type Node struct {
 	// The node's type
 	//
-	// Can be one of: text, input, img, a
+	// Can be one of: text, input, img, a, script
 	//
 	// required: true
 	Type Type `json:"type" faker:"-"`
