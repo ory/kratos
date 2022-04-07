@@ -1901,8 +1901,8 @@
       "uiNodeAttributes": {
         "discriminator": {
           "mapping": {
-            "anchor": "#/components/schemas/uiNodeAnchorAttributes",
-            "image": "#/components/schemas/uiNodeImageAttributes",
+            "a": "#/components/schemas/uiNodeAnchorAttributes",
+            "img": "#/components/schemas/uiNodeImageAttributes",
             "input": "#/components/schemas/uiNodeInputAttributes",
             "script": "#/components/schemas/uiNodeScriptAttributes",
             "text": "#/components/schemas/uiNodeTextAttributes"
