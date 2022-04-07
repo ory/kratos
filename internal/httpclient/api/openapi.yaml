@@ -3461,8 +3461,8 @@ components:
               id: 0
               text: text
               type: type
-            type: ""
-            group: group
+            type: text
+            group: default
           - meta:
               label:
                 context: '{}'
@@ -3478,8 +3478,8 @@ components:
               id: 0
               text: text
               type: type
-            type: ""
-            group: group
+            type: text
+            group: default
           method: method
           action: action
           messages:
@@ -3593,8 +3593,8 @@ components:
               id: 0
               text: text
               type: type
-            type: ""
-            group: group
+            type: text
+            group: default
           - meta:
               label:
                 context: '{}'
@@ -3610,8 +3610,8 @@ components:
               id: 0
               text: text
               type: type
-            type: ""
-            group: group
+            type: text
+            group: default
           method: method
           action: action
           messages:
@@ -3727,8 +3727,8 @@ components:
               id: 0
               text: text
               type: type
-            type: ""
-            group: group
+            type: text
+            group: default
           - meta:
               label:
                 context: '{}'
@@ -3744,8 +3744,8 @@ components:
               id: 0
               text: text
               type: type
-            type: ""
-            group: group
+            type: text
+            group: default
           method: method
           action: action
           messages:
@@ -3824,8 +3824,8 @@ components:
               id: 0
               text: text
               type: type
-            type: ""
-            group: group
+            type: text
+            group: default
           - meta:
               label:
                 context: '{}'
@@ -3841,8 +3841,8 @@ components:
               id: 0
               text: text
               type: type
-            type: ""
-            group: group
+            type: text
+            group: default
           method: method
           action: action
           messages:
@@ -3988,8 +3988,8 @@ components:
               id: 0
               text: text
               type: type
-            type: ""
-            group: group
+            type: text
+            group: default
           - meta:
               label:
                 context: '{}'
@@ -4005,8 +4005,8 @@ components:
               id: 0
               text: text
               type: type
-            type: ""
-            group: group
+            type: text
+            group: default
           method: method
           action: action
           messages:
@@ -4964,8 +4964,8 @@ components:
             id: 0
             text: text
             type: type
-          type: ""
-          group: group
+          type: text
+          group: default
         - meta:
             label:
               context: '{}'
@@ -4981,8 +4981,8 @@ components:
             id: 0
             text: text
             type: type
-          type: ""
-          group: group
+          type: text
+          group: default
         method: method
         action: action
         messages:
@@ -5035,12 +5035,23 @@ components:
           id: 0
           text: text
           type: type
-        type: ""
-        group: group
+        type: text
+        group: default
       properties:
         attributes:
           $ref: '#/components/schemas/uiNodeAttributes'
         group:
+          description: Group specifies which group (e.g. password authenticator) this
+            node belongs to.
+          enum:
+          - default
+          - password
+          - oidc
+          - profile
+          - link
+          - totp
+          - lookup_secret
+          - webauthn
           type: string
         messages:
           items:
@@ -5053,6 +5064,13 @@ components:
             The node's type
 
             Can be one of: text, input, img, a, script
+          enum:
+          - text
+          - input
+          - img
+          - a
+          - script
+          type: string
       required:
       - attributes
       - group
@@ -5076,6 +5094,13 @@ components:
           description: |-
             NodeType represents this node's types. It is a mirror of `node.type` and
             is primarily used to allow compatibility with OpenAPI 3.0.
+          enum:
+          - text
+          - input
+          - img
+          - a
+          - script
+          type: string
         title:
           $ref: '#/components/schemas/uiText'
       required:
@@ -5101,8 +5126,6 @@ components:
       - $ref: '#/components/schemas/uiNodeAnchorAttributes'
       - $ref: '#/components/schemas/uiNodeScriptAttributes'
       title: Attributes represents a list of attributes (e.g. `href="foo"` for links).
-    uiNodeGroup:
-      type: string
     uiNodeImageAttributes:
       properties:
         height:
@@ -5116,6 +5139,13 @@ components:
           description: |-
             NodeType represents this node's types. It is a mirror of `node.type` and
             is primarily used to allow compatibility with OpenAPI 3.0.
+          enum:
+          - text
+          - input
+          - img
+          - a
+          - script
+          type: string
         src:
           description: |-
             The image's source URL.
@@ -5151,6 +5181,13 @@ components:
           description: |-
             NodeType represents this node's types. It is a mirror of `node.type` and
             is primarily used to allow compatibility with OpenAPI 3.0.
+          enum:
+          - text
+          - input
+          - img
+          - a
+          - script
+          type: string
         onclick:
           description: |-
             OnClick may contain javascript which should be executed on click. This is primarily
@@ -5206,6 +5243,13 @@ components:
           description: |-
             NodeType represents this node's types. It is a mirror of `node.type` and
             is primarily used to allow compatibility with OpenAPI 3.0.
+          enum:
+          - text
+          - input
+          - img
+          - a
+          - script
+          type: string
         nonce:
           description: |-
             Nonce for CSP
@@ -5244,6 +5288,13 @@ components:
           description: |-
             NodeType represents this node's types. It is a mirror of `node.type` and
             is primarily used to allow compatibility with OpenAPI 3.0.
+          enum:
+          - text
+          - input
+          - img
+          - a
+          - script
+          type: string
         text:
           $ref: '#/components/schemas/uiText'
       required:

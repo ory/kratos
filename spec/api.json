@@ -1823,7 +1823,18 @@
             "$ref": "#/components/schemas/uiNodeAttributes"
           },
           "group": {
-            "$ref": "#/components/schemas/uiNodeGroup"
+            "description": "Group specifies which group (e.g. password authenticator) this node belongs to.",
+            "enum": [
+              "default",
+              "password",
+              "oidc",
+              "profile",
+              "link",
+              "totp",
+              "lookup_secret",
+              "webauthn"
+            ],
+            "type": "string"
           },
           "messages": {
             "$ref": "#/components/schemas/uiTexts"
@@ -1832,7 +1843,15 @@
             "$ref": "#/components/schemas/uiNodeMeta"
           },
           "type": {
-            "description": "The node's type\n\nCan be one of: text, input, img, a, script"
+            "description": "The node's type\n\nCan be one of: text, input, img, a, script",
+            "enum": [
+              "text",
+              "input",
+              "img",
+              "a",
+              "script"
+            ],
+            "type": "string"
           }
         },
         "required": [
@@ -1856,7 +1875,15 @@
             "type": "string"
           },
           "node_type": {
-            "description": "NodeType represents this node's types. It is a mirror of `node.type` and\nis primarily used to allow compatibility with OpenAPI 3.0."
+            "description": "NodeType represents this node's types. It is a mirror of `node.type` and\nis primarily used to allow compatibility with OpenAPI 3.0.",
+            "enum": [
+              "text",
+              "input",
+              "img",
+              "a",
+              "script"
+            ],
+            "type": "string"
           },
           "title": {
             "$ref": "#/components/schemas/uiText"
@@ -1901,9 +1928,6 @@
         ],
         "title": "Attributes represents a list of attributes (e.g. `href=\"foo\"` for links)."
       },
-      "uiNodeGroup": {
-        "type": "string"
-      },
       "uiNodeImageAttributes": {
         "properties": {
           "height": {
@@ -1916,7 +1940,15 @@
             "type": "string"
           },
           "node_type": {
-            "description": "NodeType represents this node's types. It is a mirror of `node.type` and\nis primarily used to allow compatibility with OpenAPI 3.0."
+            "description": "NodeType represents this node's types. It is a mirror of `node.type` and\nis primarily used to allow compatibility with OpenAPI 3.0.",
+            "enum": [
+              "text",
+              "input",
+              "img",
+              "a",
+              "script"
+            ],
+            "type": "string"
           },
           "src": {
             "description": "The image's source URL.\n\nformat: uri",
@@ -1956,7 +1988,15 @@
             "type": "string"
           },
           "node_type": {
-            "description": "NodeType represents this node's types. It is a mirror of `node.type` and\nis primarily used to allow compatibility with OpenAPI 3.0."
+            "description": "NodeType represents this node's types. It is a mirror of `node.type` and\nis primarily used to allow compatibility with OpenAPI 3.0.",
+            "enum": [
+              "text",
+              "input",
+              "img",
+              "a",
+              "script"
+            ],
+            "type": "string"
           },
           "onclick": {
             "description": "OnClick may contain javascript which should be executed on click. This is primarily\nused for WebAuthn.",
@@ -2015,7 +2055,15 @@
             "type": "string"
           },
           "node_type": {
-            "description": "NodeType represents this node's types. It is a mirror of `node.type` and\nis primarily used to allow compatibility with OpenAPI 3.0."
+            "description": "NodeType represents this node's types. It is a mirror of `node.type` and\nis primarily used to allow compatibility with OpenAPI 3.0.",
+            "enum": [
+              "text",
+              "input",
+              "img",
+              "a",
+              "script"
+            ],
+            "type": "string"
           },
           "nonce": {
             "description": "Nonce for CSP\n\nA nonce you may want to use to improve your Content Security Policy.\nYou do not have to use this value but if you want to improve your CSP\npolicies you may use it. You can also choose to use your own nonce value!",
@@ -2055,7 +2103,15 @@
             "type": "string"
           },
           "node_type": {
-            "description": "NodeType represents this node's types. It is a mirror of `node.type` and\nis primarily used to allow compatibility with OpenAPI 3.0."
+            "description": "NodeType represents this node's types. It is a mirror of `node.type` and\nis primarily used to allow compatibility with OpenAPI 3.0.",
+            "enum": [
+              "text",
+              "input",
+              "img",
+              "a",
+              "script"
+            ],
+            "type": "string"
           },
           "text": {
             "$ref": "#/components/schemas/uiText"

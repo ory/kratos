@@ -17,61 +17,38 @@ import (
 	"github.com/ory/x/stringslice"
 )
 
-// swagger:enum uiNodeType
-type NodeType string
+// swagger:enum Type
+type Type string
 
 const (
-	Text   NodeType = "text"
-	Input  NodeType = "input"
-	Image  NodeType = "img"
-	Anchor NodeType = "a"
-	Script NodeType = "script"
+	Text   Type = "text"
+	Input  Type = "input"
+	Image  Type = "img"
+	Anchor Type = "a"
+	Script Type = "script"
 )
 
-var (
-	ErrUnknownNodeType = errors.New("unknown node type")
-)
-
-func (t NodeType) String() string {
+func (t Type) String() string {
 	return string(t)
 }
 
-func (t *NodeType) UnmarshalJSON(v []byte) error {
-	switch string(v) {
-	case `"text"`:
-		*t = Text
-	case `"input"`:
-		*t = Input
-	case `"img"`:
-		*t = Image
-	case `"a"`:
-		*t = Anchor
-	case `"script"`:
-		*t = Script
-	default:
-		return ErrUnknownNodeType
-	}
-	return nil
-}
-
-// swagger:model uiNodeGroup
+// swagger:enum Group
 type Group string
+
+const (
+	DefaultGroup       Group = "default"
+	PasswordGroup      Group = "password"
+	OpenIDConnectGroup Group = "oidc"
+	ProfileGroup       Group = "profile"
+	LinkGroup          Group = "link"
+	TOTPGroup          Group = "totp"
+	LookupGroup        Group = "lookup_secret"
+	WebAuthnGroup      Group = "webauthn"
+)
 
 func (g Group) String() string {
 	return string(g)
 }
-
-const (
-	DefaultGroup          Group = "default"
-	PasswordGroup         Group = "password"
-	OpenIDConnectGroup    Group = "oidc"
-	ProfileGroup          Group = "profile"
-	RecoveryLinkGroup     Group = "link"
-	VerificationLinkGroup Group = "link"
-	TOTPGroup             Group = "totp"
-	LookupGroup           Group = "lookup_secret"
-	WebAuthnGroup         Group = "webauthn"
-)
 
 // swagger:model uiNodes
 type Nodes []*Node
@@ -88,7 +65,7 @@ type Node struct {
 	// Can be one of: text, input, img, a, script
 	//
 	// required: true
-	Type NodeType `json:"type" faker:"-"`
+	Type Type `json:"type" faker:"-"`
 
 	// Group specifies which group (e.g. password authenticator) this node belongs to.
 	//
@@ -134,7 +111,7 @@ type Meta struct {
 
 // Used for en/decoding the Attributes field.
 type jsonRawNode struct {
-	Type       NodeType      `json:"type"`
+	Type       Type          `json:"type"`
 	Group      Group         `json:"group"`
 	Attributes Attributes    `json:"attributes"`
 	Messages   text.Messages `json:"messages"`
@@ -375,7 +352,7 @@ func (n *Nodes) Append(node *Node) {
 
 func (n *Node) UnmarshalJSON(data []byte) error {
 	var attr Attributes
-	switch t := gjson.GetBytes(data, "type").String(); NodeType(t) {
+	switch t := gjson.GetBytes(data, "type").String(); Type(t) {
 	case Text:
 		attr = &TextAttributes{
 			NodeType: Text,
@@ -416,7 +393,7 @@ func (n *Node) UnmarshalJSON(data []byte) error {
 }
 
 func (n *Node) MarshalJSON() ([]byte, error) {
-	var t NodeType
+	var t Type
 	if n.Attributes != nil {
 		switch attr := n.Attributes.(type) {
 		case *TextAttributes:

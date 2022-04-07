@@ -5,16 +5,16 @@
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
 **Attributes** | [**UiNodeAttributes**](UiNodeAttributes.md) |  | 
-**Group** | **string** |  | 
+**Group** | **string** | Group specifies which group (e.g. password authenticator) this node belongs to. | 
 **Messages** | [**[]UiText**](UiText.md) |  | 
 **Meta** | [**UiNodeMeta**](UiNodeMeta.md) |  | 
-**Type** | **interface{}** | The node&#39;s type  Can be one of: text, input, img, a, script | 
+**Type** | **string** | The node&#39;s type  Can be one of: text, input, img, a, script | 
 
 ## Methods
 
 ### NewUiNode
 
-`func NewUiNode(attributes UiNodeAttributes, group string, messages []UiText, meta UiNodeMeta, type_ interface{}, ) *UiNode`
+`func NewUiNode(attributes UiNodeAttributes, group string, messages []UiText, meta UiNodeMeta, type_ string, ) *UiNode`
 
 NewUiNode instantiates a new UiNode object
 This constructor will assign default values to properties that have it defined,
@@ -111,34 +111,24 @@ SetMeta sets Meta field to given value.
 
 ### GetType
 
-`func (o *UiNode) GetType() interface{}`
+`func (o *UiNode) GetType() string`
 
 GetType returns the Type field if non-nil, zero value otherwise.
 
 ### GetTypeOk
 
-`func (o *UiNode) GetTypeOk() (*interface{}, bool)`
+`func (o *UiNode) GetTypeOk() (*string, bool)`
 
 GetTypeOk returns a tuple with the Type field if it's non-nil, zero value otherwise
 and a boolean to check if the value has been set.
 
 ### SetType
 
-`func (o *UiNode) SetType(v interface{})`
+`func (o *UiNode) SetType(v string)`
 
 SetType sets Type field to given value.
 
 
-### SetTypeNil
-
-`func (o *UiNode) SetTypeNil(b bool)`
-
- SetTypeNil sets the value for Type to be an explicit nil
-
-### UnsetType
-`func (o *UiNode) UnsetType()`
-
-UnsetType ensures that no value is present for Type, not even an explicit nil
 
 [[Back to Model list]](../README.md#documentation-for-models) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to README]](../README.md)
 

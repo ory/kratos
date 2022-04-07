@@ -54,8 +54,8 @@ func TestNodesSort(t *testing.T) {
 				node.ProfileGroup,
 				node.OpenIDConnectGroup,
 				node.PasswordGroup,
-				node.RecoveryLinkGroup,
-				node.VerificationLinkGroup,
+				node.LinkGroup,
+				node.LinkGroup,
 			}),
 		},
 		"2.json": {
