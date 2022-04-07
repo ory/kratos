@@ -7,7 +7,7 @@ Name | Type | Description | Notes
 **Disabled** | **bool** | Sets the input&#39;s disabled field to true or false. | 
 **Label** | Pointer to [**UiText**](UiText.md) |  | [optional] 
 **Name** | **string** | The input&#39;s element name. | 
-**NodeType** | **string** | NodeType represents this node&#39;s types. It is a mirror of &#x60;node.type&#x60; and is primarily used to allow compatibility with OpenAPI 3.0. | 
+**NodeType** | **interface{}** | NodeType represents this node&#39;s types. It is a mirror of &#x60;node.type&#x60; and is primarily used to allow compatibility with OpenAPI 3.0. | 
 **Onclick** | Pointer to **string** | OnClick may contain javascript which should be executed on click. This is primarily used for WebAuthn. | [optional] 
 **Pattern** | Pointer to **string** | The input&#39;s pattern. | [optional] 
 **Required** | Pointer to **bool** | Mark this input field as required. | [optional] 
@@ -30,7 +30,7 @@ Name | Type | Description | Notes
 
 ### NewUiNodeAttributes
 
-`func NewUiNodeAttributes(disabled bool, name string, nodeType string, type_ string, id string, text UiText, height int64, src string, width int64, href string, title UiText, async bool, crossorigin string, integrity string, nonce string, referrerpolicy string, ) *UiNodeAttributes`
+`func NewUiNodeAttributes(disabled bool, name string, nodeType interface{}, type_ string, id string, text UiText, height int64, src string, width int64, href string, title UiText, async bool, crossorigin string, integrity string, nonce string, referrerpolicy string, ) *UiNodeAttributes`
 
 NewUiNodeAttributes instantiates a new UiNodeAttributes object
 This constructor will assign default values to properties that have it defined,
@@ -112,24 +112,34 @@ SetName sets Name field to given value.
 
 ### GetNodeType
 
-`func (o *UiNodeAttributes) GetNodeType() string`
+`func (o *UiNodeAttributes) GetNodeType() interface{}`
 
 GetNodeType returns the NodeType field if non-nil, zero value otherwise.
 
 ### GetNodeTypeOk
 
-`func (o *UiNodeAttributes) GetNodeTypeOk() (*string, bool)`
+`func (o *UiNodeAttributes) GetNodeTypeOk() (*interface{}, bool)`
 
 GetNodeTypeOk returns a tuple with the NodeType field if it's non-nil, zero value otherwise
 and a boolean to check if the value has been set.
 
 ### SetNodeType
 
-`func (o *UiNodeAttributes) SetNodeType(v string)`
+`func (o *UiNodeAttributes) SetNodeType(v interface{})`
 
 SetNodeType sets NodeType field to given value.
 
 
+### SetNodeTypeNil
+
+`func (o *UiNodeAttributes) SetNodeTypeNil(b bool)`
+
+ SetNodeTypeNil sets the value for NodeType to be an explicit nil
+
+### UnsetNodeType
+`func (o *UiNodeAttributes) UnsetNodeType()`
+
+UnsetNodeType ensures that no value is present for NodeType, not even an explicit nil
 ### GetOnclick
 
 `func (o *UiNodeAttributes) GetOnclick() string`

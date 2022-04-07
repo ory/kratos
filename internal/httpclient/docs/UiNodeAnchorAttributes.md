@@ -6,14 +6,14 @@ Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
 **Href** | **string** | The link&#39;s href (destination) URL.  format: uri | 
 **Id** | **string** | A unique identifier | 
-**NodeType** | **string** | NodeType represents this node&#39;s types. It is a mirror of &#x60;node.type&#x60; and is primarily used to allow compatibility with OpenAPI 3.0. | 
+**NodeType** | **interface{}** | NodeType represents this node&#39;s types. It is a mirror of &#x60;node.type&#x60; and is primarily used to allow compatibility with OpenAPI 3.0. | 
 **Title** | [**UiText**](UiText.md) |  | 
 
 ## Methods
 
 ### NewUiNodeAnchorAttributes
 
-`func NewUiNodeAnchorAttributes(href string, id string, nodeType string, title UiText, ) *UiNodeAnchorAttributes`
+`func NewUiNodeAnchorAttributes(href string, id string, nodeType interface{}, title UiText, ) *UiNodeAnchorAttributes`
 
 NewUiNodeAnchorAttributes instantiates a new UiNodeAnchorAttributes object
 This constructor will assign default values to properties that have it defined,
@@ -70,24 +70,34 @@ SetId sets Id field to given value.
 
 ### GetNodeType
 
-`func (o *UiNodeAnchorAttributes) GetNodeType() string`
+`func (o *UiNodeAnchorAttributes) GetNodeType() interface{}`
 
 GetNodeType returns the NodeType field if non-nil, zero value otherwise.
 
 ### GetNodeTypeOk
 
-`func (o *UiNodeAnchorAttributes) GetNodeTypeOk() (*string, bool)`
+`func (o *UiNodeAnchorAttributes) GetNodeTypeOk() (*interface{}, bool)`
 
 GetNodeTypeOk returns a tuple with the NodeType field if it's non-nil, zero value otherwise
 and a boolean to check if the value has been set.
 
 ### SetNodeType
 
-`func (o *UiNodeAnchorAttributes) SetNodeType(v string)`
+`func (o *UiNodeAnchorAttributes) SetNodeType(v interface{})`
 
 SetNodeType sets NodeType field to given value.
 
 
+### SetNodeTypeNil
+
+`func (o *UiNodeAnchorAttributes) SetNodeTypeNil(b bool)`
+
+ SetNodeTypeNil sets the value for NodeType to be an explicit nil
+
+### UnsetNodeType
+`func (o *UiNodeAnchorAttributes) UnsetNodeType()`
+
+UnsetNodeType ensures that no value is present for NodeType, not even an explicit nil
 ### GetTitle
 
 `func (o *UiNodeAnchorAttributes) GetTitle() UiText`

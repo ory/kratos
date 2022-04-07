@@ -18,17 +18,17 @@ import (
 )
 
 // swagger:enum Type
-type Type string
+type NodeType string
 
 const (
-	Text   Type = "text"
-	Input  Type = "input"
-	Image  Type = "img"
-	Anchor Type = "a"
-	Script Type = "script"
+	Text   NodeType = "text"
+	Input  NodeType = "input"
+	Image  NodeType = "img"
+	Anchor NodeType = "a"
+	Script NodeType = "script"
 )
 
-func (t Type) String() string {
+func (t NodeType) String() string {
 	return string(t)
 }
 
@@ -63,7 +63,7 @@ type Node struct {
 	// The node's type
 	//
 	// required: true
-	Type Type `json:"type" faker:"-"`
+	Type NodeType `json:"type" faker:"-"`
 
 	// Group specifies which group (e.g. password authenticator) this node belongs to.
 	//
@@ -109,7 +109,7 @@ type Meta struct {
 
 // Used for en/decoding the Attributes field.
 type jsonRawNode struct {
-	Type       Type          `json:"type"`
+	Type       NodeType      `json:"type"`
 	Group      Group         `json:"group"`
 	Attributes Attributes    `json:"attributes"`
 	Messages   text.Messages `json:"messages"`
@@ -350,7 +350,7 @@ func (n *Nodes) Append(node *Node) {
 
 func (n *Node) UnmarshalJSON(data []byte) error {
 	var attr Attributes
-	switch t := gjson.GetBytes(data, "type").String(); Type(t) {
+	switch t := gjson.GetBytes(data, "type").String(); NodeType(t) {
 	case Text:
 		attr = &TextAttributes{
 			NodeType: Text,
@@ -391,7 +391,7 @@ func (n *Node) UnmarshalJSON(data []byte) error {
 }
 
 func (n *Node) MarshalJSON() ([]byte, error) {
-	var t Type
+	var t NodeType
 	if n.Attributes != nil {
 		switch attr := n.Attributes.(type) {
 		case *TextAttributes:

@@ -22,7 +22,7 @@ type UiNodeImageAttributes struct {
 	// A unique identifier
 	Id string `json:"id"`
 	// NodeType represents this node's types. It is a mirror of `node.type` and is primarily used to allow compatibility with OpenAPI 3.0.
-	NodeType string `json:"node_type"`
+	NodeType interface{} `json:"node_type"`
 	// The image's source URL.  format: uri
 	Src string `json:"src"`
 	// Width of the image
@@ -33,7 +33,7 @@ type UiNodeImageAttributes struct {
 // This constructor will assign default values to properties that have it defined,
 // and makes sure properties required by API are set, but the set of arguments
 // will change when the set of required properties is changed
-func NewUiNodeImageAttributes(height int64, id string, nodeType string, src string, width int64) *UiNodeImageAttributes {
+func NewUiNodeImageAttributes(height int64, id string, nodeType interface{}, src string, width int64) *UiNodeImageAttributes {
 	this := UiNodeImageAttributes{}
 	this.Height = height
 	this.Id = id
@@ -100,9 +100,10 @@ func (o *UiNodeImageAttributes) SetId(v string) {
 }
 
 // GetNodeType returns the NodeType field value
-func (o *UiNodeImageAttributes) GetNodeType() string {
+// If the value is explicit nil, the zero value for interface{} will be returned
+func (o *UiNodeImageAttributes) GetNodeType() interface{} {
 	if o == nil {
-		var ret string
+		var ret interface{}
 		return ret
 	}
 
@@ -111,15 +112,16 @@ func (o *UiNodeImageAttributes) GetNodeType() string {
 
 // GetNodeTypeOk returns a tuple with the NodeType field value
 // and a boolean to check if the value has been set.
-func (o *UiNodeImageAttributes) GetNodeTypeOk() (*string, bool) {
-	if o == nil {
+// NOTE: If the value is an explicit nil, `nil, true` will be returned
+func (o *UiNodeImageAttributes) GetNodeTypeOk() (*interface{}, bool) {
+	if o == nil || o.NodeType == nil {
 		return nil, false
 	}
 	return &o.NodeType, true
 }
 
 // SetNodeType sets field value
-func (o *UiNodeImageAttributes) SetNodeType(v string) {
+func (o *UiNodeImageAttributes) SetNodeType(v interface{}) {
 	o.NodeType = v
 }
 
@@ -179,7 +181,7 @@ func (o UiNodeImageAttributes) MarshalJSON() ([]byte, error) {
 	if true {
 		toSerialize["id"] = o.Id
 	}
-	if true {
+	if o.NodeType != nil {
 		toSerialize["node_type"] = o.NodeType
 	}
 	if true {

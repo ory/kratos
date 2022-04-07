@@ -20,15 +20,15 @@ type UiNodeTextAttributes struct {
 	// A unique identifier
 	Id string `json:"id"`
 	// NodeType represents this node's types. It is a mirror of `node.type` and is primarily used to allow compatibility with OpenAPI 3.0.
-	NodeType string `json:"node_type"`
-	Text     UiText `json:"text"`
+	NodeType interface{} `json:"node_type"`
+	Text     UiText      `json:"text"`
 }
 
 // NewUiNodeTextAttributes instantiates a new UiNodeTextAttributes object
 // This constructor will assign default values to properties that have it defined,
 // and makes sure properties required by API are set, but the set of arguments
 // will change when the set of required properties is changed
-func NewUiNodeTextAttributes(id string, nodeType string, text UiText) *UiNodeTextAttributes {
+func NewUiNodeTextAttributes(id string, nodeType interface{}, text UiText) *UiNodeTextAttributes {
 	this := UiNodeTextAttributes{}
 	this.Id = id
 	this.NodeType = nodeType
@@ -69,9 +69,10 @@ func (o *UiNodeTextAttributes) SetId(v string) {
 }
 
 // GetNodeType returns the NodeType field value
-func (o *UiNodeTextAttributes) GetNodeType() string {
+// If the value is explicit nil, the zero value for interface{} will be returned
+func (o *UiNodeTextAttributes) GetNodeType() interface{} {
 	if o == nil {
-		var ret string
+		var ret interface{}
 		return ret
 	}
 
@@ -80,15 +81,16 @@ func (o *UiNodeTextAttributes) GetNodeType() string {
 
 // GetNodeTypeOk returns a tuple with the NodeType field value
 // and a boolean to check if the value has been set.
-func (o *UiNodeTextAttributes) GetNodeTypeOk() (*string, bool) {
-	if o == nil {
+// NOTE: If the value is an explicit nil, `nil, true` will be returned
+func (o *UiNodeTextAttributes) GetNodeTypeOk() (*interface{}, bool) {
+	if o == nil || o.NodeType == nil {
 		return nil, false
 	}
 	return &o.NodeType, true
 }
 
 // SetNodeType sets field value
-func (o *UiNodeTextAttributes) SetNodeType(v string) {
+func (o *UiNodeTextAttributes) SetNodeType(v interface{}) {
 	o.NodeType = v
 }
 
@@ -121,7 +123,7 @@ func (o UiNodeTextAttributes) MarshalJSON() ([]byte, error) {
 	if true {
 		toSerialize["id"] = o.Id
 	}
-	if true {
+	if o.NodeType != nil {
 		toSerialize["node_type"] = o.NodeType
 	}
 	if true {

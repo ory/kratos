@@ -23,14 +23,14 @@ type UiNode struct {
 	Messages []UiText   `json:"messages"`
 	Meta     UiNodeMeta `json:"meta"`
 	// The node's type
-	Type string `json:"type"`
+	Type interface{} `json:"type"`
 }
 
 // NewUiNode instantiates a new UiNode object
 // This constructor will assign default values to properties that have it defined,
 // and makes sure properties required by API are set, but the set of arguments
 // will change when the set of required properties is changed
-func NewUiNode(attributes UiNodeAttributes, group string, messages []UiText, meta UiNodeMeta, type_ string) *UiNode {
+func NewUiNode(attributes UiNodeAttributes, group string, messages []UiText, meta UiNodeMeta, type_ interface{}) *UiNode {
 	this := UiNode{}
 	this.Attributes = attributes
 	this.Group = group
@@ -145,9 +145,10 @@ func (o *UiNode) SetMeta(v UiNodeMeta) {
 }
 
 // GetType returns the Type field value
-func (o *UiNode) GetType() string {
+// If the value is explicit nil, the zero value for interface{} will be returned
+func (o *UiNode) GetType() interface{} {
 	if o == nil {
-		var ret string
+		var ret interface{}
 		return ret
 	}
 
@@ -156,15 +157,16 @@ func (o *UiNode) GetType() string {
 
 // GetTypeOk returns a tuple with the Type field value
 // and a boolean to check if the value has been set.
-func (o *UiNode) GetTypeOk() (*string, bool) {
-	if o == nil {
+// NOTE: If the value is an explicit nil, `nil, true` will be returned
+func (o *UiNode) GetTypeOk() (*interface{}, bool) {
+	if o == nil || o.Type == nil {
 		return nil, false
 	}
 	return &o.Type, true
 }
 
 // SetType sets field value
-func (o *UiNode) SetType(v string) {
+func (o *UiNode) SetType(v interface{}) {
 	o.Type = v
 }
 
@@ -182,7 +184,7 @@ func (o UiNode) MarshalJSON() ([]byte, error) {
 	if true {
 		toSerialize["meta"] = o.Meta
 	}
-	if true {
+	if o.Type != nil {
 		toSerialize["type"] = o.Type
 	}
 	return json.Marshal(toSerialize)
