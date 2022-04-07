@@ -1016,7 +1016,7 @@ func (p *Config) ParseURI(rawUrl string) (*url.URL, error) {
 }
 
 func (p *Config) Tracing() *otelx.Config {
-	return p.p.TracingConfigOtel("Ory Kratos")
+	return p.p.TracingConfig("Ory Kratos")
 }
 
 func (p *Config) IsInsecureDevMode() bool {
