@@ -1846,7 +1846,7 @@
             "$ref": "#/components/schemas/uiNodeMeta"
           },
           "type": {
-            "description": "The node's type\n\nCan be one of: text, input, img, a, script",
+            "description": "The node's type",
             "enum": [
               "text",
               "input",
