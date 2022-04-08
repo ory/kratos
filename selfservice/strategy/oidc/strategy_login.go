@@ -4,13 +4,15 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"net/http"
+	"time"
+
 	"github.com/google/go-jsonnet"
+	"github.com/tidwall/gjson"
+
 	"github.com/ory/kratos/schema"
 	"github.com/ory/x/decoderx"
 	"github.com/ory/x/fetcher"
-	"github.com/tidwall/gjson"
-	"net/http"
-	"time"
 
 	"golang.org/x/oauth2"
 

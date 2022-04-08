@@ -5,7 +5,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/ory/x/sqlxx"
 	"io/ioutil"
 	"net/http"
 	"net/http/cookiejar"
@@ -14,6 +13,8 @@ import (
 	"strings"
 	"testing"
 	"time"
+
+	"github.com/ory/x/sqlxx"
 
 	"github.com/ory/x/snapshotx"
 
