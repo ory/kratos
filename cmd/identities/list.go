@@ -38,7 +38,11 @@ func NewListIdentitiesCmd(root *cobra.Command) *cobra.Command {
 		},
 		Aliases: []string{"ls"},
 		RunE: func(cmd *cobra.Command, args []string) error {
-			c := cliclient.NewClient(cmd)
+			c, err := cliclient.NewClient(cmd)
+			if err != nil {
+				return err
+			}
+
 			req := c.V0alpha2Api.AdminListIdentities(cmd.Context())
 
 			if len(args) == 2 {
