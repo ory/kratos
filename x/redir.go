@@ -2,7 +2,7 @@ package x
 
 import (
 	"net/http"
-	"path/filepath"
+	"path"
 	"strings"
 
 	"github.com/julienschmidt/httprouter"
@@ -18,7 +18,7 @@ func RedirectToAdminRoute(reg config.Provider) httprouter.Handle {
 		dest.Host = admin.Host
 		dest.Scheme = admin.Scheme
 		dest.Path = strings.TrimPrefix(dest.Path, AdminPrefix)
-		dest.Path = filepath.Join(admin.Path, AdminPrefix, dest.Path)
+		dest.Path = path.Join(admin.Path, AdminPrefix, dest.Path)
 
 		http.Redirect(w, r, dest.String(), http.StatusTemporaryRedirect)
 	}
@@ -32,7 +32,7 @@ func RedirectToPublicRoute(reg config.Provider) httprouter.Handle {
 		dest.Host = public.Host
 		dest.Scheme = public.Scheme
 		dest.Path = strings.TrimPrefix(dest.Path, AdminPrefix)
-		dest.Path = filepath.Join(public.Path, dest.Path)
+		dest.Path = path.Join(public.Path, dest.Path)
 
 		http.Redirect(w, r, dest.String(), http.StatusTemporaryRedirect)
 	}
