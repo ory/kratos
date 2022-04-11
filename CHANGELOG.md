@@ -4,7 +4,7 @@
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 **Table of Contents**
 
-- [ (2022-04-05)](#2022-04-05)
+- [ (2022-04-11)](#2022-04-11)
   - [Breaking Changes](#breaking-changes)
     - [Bug Fixes](#bug-fixes)
     - [Code Refactoring](#code-refactoring)
@@ -250,7 +250,7 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# [](https://github.com/ory/kratos/compare/v0.9.0-alpha.3...v) (2022-04-05)
+# [](https://github.com/ory/kratos/compare/v0.9.0-alpha.3...v) (2022-04-11)
 ## Breaking Changes
 
 This patch moves several CLI command to comply with the Ory CLI command structure:
@@ -290,6 +290,7 @@ This patch moves several CLI command to comply with the Ory CLI command structur
 * Do not expose debug in a response when a schema is not found ([#2348](https://github.com/ory/kratos/issues/2348)) ([aee2b1e](https://github.com/ory/kratos/commit/aee2b1ed1189b57fcbb1aaa456444d5121be94b1))
 * Load return_to and append to errors ([#2333](https://github.com/ory/kratos/issues/2333)) ([5efe4a3](https://github.com/ory/kratos/commit/5efe4a33e35e74d248d4eec43dc901b7b6334037)), closes [#2275](https://github.com/ory/kratos/issues/2275) [#2279](https://github.com/ory/kratos/issues/2279) [#2285](https://github.com/ory/kratos/issues/2285)
 * Refresh is always false when session exists ([d3436d7](https://github.com/ory/kratos/commit/d3436d7fa17589d91e25c9f0bd66bc3bb5b150fa)), closes [#2341](https://github.com/ory/kratos/issues/2341)
+* Use `path` instead of `filepath` to join http route paths ([16b1244](https://github.com/ory/kratos/commit/16b12449c841bf7a237fe436b884b4b5012cd022)), closes [#2292](https://github.com/ory/kratos/issues/2292)
 
 ### Code Refactoring
 
