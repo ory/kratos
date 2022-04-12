@@ -3,6 +3,7 @@ package password
 import (
 	"bufio"
 	"context"
+
 	/* #nosec G505 sha1 is used for k-anonymity */
 	"crypto/sha1"
 	"fmt"
