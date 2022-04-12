@@ -2,6 +2,7 @@ package identity
 
 import (
 	"context"
+	"github.com/ory/kratos/driver/config"
 	"reflect"
 
 	"github.com/gofrs/uuid"
@@ -21,6 +22,7 @@ var ErrProtectedFieldModified = herodot.ErrForbidden.
 
 type (
 	managerDependencies interface {
+		config.Provider
 		PoolProvider
 		courier.Provider
 		ValidationProvider
@@ -62,6 +64,10 @@ func newManagerOptions(opts []ManagerOption) *managerOptions {
 }
 
 func (m *Manager) Create(ctx context.Context, i *Identity, opts ...ManagerOption) error {
+	if i.SchemaID == "" {
+		i.SchemaID = m.r.Config(ctx).DefaultIdentityTraitsSchemaID()
+	}
+
 	o := newManagerOptions(opts)
 	if err := m.validate(ctx, i, o); err != nil {
 		return err
