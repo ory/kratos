@@ -3,7 +3,6 @@ package password
 import (
 	"bufio"
 	"context"
-
 	/* #nosec G505 sha1 is used for k-anonymity */
 	"crypto/sha1"
 	"fmt"
@@ -65,9 +64,10 @@ type validatorDependencies interface {
 
 func NewDefaultPasswordValidatorStrategy(reg validatorDependencies) (*DefaultPasswordValidator, error) {
 	cache, err := ristretto.NewCache(&ristretto.Config{
-		NumCounters: 10 * 10000,
-		MaxCost:     60 * 10000, // BCrypt hash size is 60 bytes
-		BufferItems: 64,
+		NumCounters:        10 * 10000,
+		MaxCost:            60 * 10000, // BCrypt hash size is 60 bytes
+		BufferItems:        64,
+		IgnoreInternalCost: true,
 	})
 	// sanity check - this should never happen unless above configuration variables are invalid
 	if err != nil {
