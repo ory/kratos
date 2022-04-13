@@ -3,13 +3,15 @@ package oidc
 import (
 	"context"
 	"encoding/json"
-	"github.com/hashicorp/go-retryablehttp"
-	"github.com/ory/herodot"
-	"github.com/ory/x/httpx"
-	"github.com/pkg/errors"
-	"golang.org/x/oauth2"
 	"net/url"
 	"path"
+
+	"github.com/hashicorp/go-retryablehttp"
+	"github.com/pkg/errors"
+	"golang.org/x/oauth2"
+
+	"github.com/ory/herodot"
+	"github.com/ory/x/httpx"
 )
 
 const (
