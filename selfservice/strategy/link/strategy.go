@@ -79,10 +79,10 @@ func NewStrategy(d strategyDependencies) *Strategy {
 	return &Strategy{d: d, dx: decoderx.NewHTTP()}
 }
 
-func (s *Strategy) RecoveryNodeGroup() node.Group {
+func (s *Strategy) RecoveryNodeGroup() node.UiNodeGroup {
 	return node.LinkGroup
 }
 
-func (s *Strategy) VerificationNodeGroup() node.Group {
+func (s *Strategy) VerificationNodeGroup() node.UiNodeGroup {
 	return node.LinkGroup
 }

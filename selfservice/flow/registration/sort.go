@@ -9,7 +9,7 @@ import (
 func SortNodes(ctx context.Context, n node.Nodes, schemaRef string) error {
 	return n.SortBySchema(ctx,
 		node.SortBySchema(schemaRef),
-		node.SortByGroups([]node.Group{
+		node.SortByGroups([]node.UiNodeGroup{
 			node.DefaultGroup,
 			node.OpenIDConnectGroup,
 			node.WebAuthnGroup,

@@ -54,7 +54,7 @@ func TestHandleError(t *testing.T) {
 
 	var registrationFlow *registration.Flow
 	var flowError error
-	var group node.Group
+	var group node.UiNodeGroup
 	router.GET("/error", func(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 		h.WriteFlowError(w, r, registrationFlow, group, flowError)
 	})

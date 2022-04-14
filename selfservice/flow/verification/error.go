@@ -51,7 +51,7 @@ func (s *ErrorHandler) WriteFlowError(
 	w http.ResponseWriter,
 	r *http.Request,
 	f *Flow,
-	group node.Group,
+	group node.UiNodeGroup,
 	err error,
 ) {
 	s.d.Audit().

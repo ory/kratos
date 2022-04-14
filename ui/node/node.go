@@ -32,21 +32,21 @@ func (t UiNodeType) String() string {
 	return string(t)
 }
 
-// swagger:enum Group
-type Group string
+// swagger:enum UiNodeGroup
+type UiNodeGroup string
 
 const (
-	DefaultGroup       Group = "default"
-	PasswordGroup      Group = "password"
-	OpenIDConnectGroup Group = "oidc"
-	ProfileGroup       Group = "profile"
-	LinkGroup          Group = "link"
-	TOTPGroup          Group = "totp"
-	LookupGroup        Group = "lookup_secret"
-	WebAuthnGroup      Group = "webauthn"
+	DefaultGroup       UiNodeGroup = "default"
+	PasswordGroup      UiNodeGroup = "password"
+	OpenIDConnectGroup UiNodeGroup = "oidc"
+	ProfileGroup       UiNodeGroup = "profile"
+	LinkGroup          UiNodeGroup = "link"
+	TOTPGroup          UiNodeGroup = "totp"
+	LookupGroup        UiNodeGroup = "lookup_secret"
+	WebAuthnGroup      UiNodeGroup = "webauthn"
 )
 
-func (g Group) String() string {
+func (g UiNodeGroup) String() string {
 	return string(g)
 }
 
@@ -68,7 +68,7 @@ type Node struct {
 	// Group specifies which group (e.g. password authenticator) this node belongs to.
 	//
 	// required: true
-	Group Group `json:"group"`
+	Group UiNodeGroup `json:"group"`
 
 	// The node's attributes.
 	//
@@ -110,7 +110,7 @@ type Meta struct {
 // Used for en/decoding the Attributes field.
 type jsonRawNode struct {
 	Type       UiNodeType    `json:"type"`
-	Group      Group         `json:"group"`
+	Group      UiNodeGroup   `json:"group"`
 	Attributes Attributes    `json:"attributes"`
 	Messages   text.Messages `json:"messages"`
 	Meta       *Meta         `json:"meta"`
@@ -193,7 +193,7 @@ type sortOptions struct {
 
 type SortOption func(*sortOptions)
 
-func SortByGroups(orderByGroups []Group) func(*sortOptions) {
+func SortByGroups(orderByGroups []UiNodeGroup) func(*sortOptions) {
 	return func(options *sortOptions) {
 		options.orderByGroups = make([]string, len(orderByGroups))
 		for k := range orderByGroups {
