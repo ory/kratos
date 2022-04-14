@@ -66,7 +66,6 @@ func CompareArgon2id(_ context.Context, password []byte, hash []byte) error {
 	return errors.WithStack(ErrMismatchedHashAndPassword)
 }
 
-
 func CompareArgon2i(_ context.Context, password []byte, hash []byte) error {
 	// Extract the parameters, salt and derived key from the encoded password
 	// hash.
@@ -110,7 +109,7 @@ func ComparePbkdf2(_ context.Context, password []byte, hash []byte) error {
 var (
 	isBcryptHash   = regexp.MustCompile(`^\$2[abzy]?\$`)
 	isArgon2idHash = regexp.MustCompile(`^\$argon2id\$`)
-	isArgon2iHash = regexp.MustCompile(`^\$argon2i\$`)
+	isArgon2iHash  = regexp.MustCompile(`^\$argon2i\$`)
 	isPbkdf2Hash   = regexp.MustCompile(`^\$pbkdf2-sha[0-9]{1,3}\$`)
 )
 
