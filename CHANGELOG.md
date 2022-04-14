@@ -311,6 +311,7 @@ This patch moves several CLI command to comply with the Ory CLI command structur
     
     
 
+* Support argon2i password ([#2395](https://github.com/ory/kratos/issues/2395)) ([8fdadf9](https://github.com/ory/kratos/commit/8fdadf9d1724d28ae11996304703e06671549660))
 * Upgrade to Go 1.18 ([725d202](https://github.com/ory/kratos/commit/725d202e6ae15b3b5c3282e03c03a40480a2e310))
 
 ### Tests
