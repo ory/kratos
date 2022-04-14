@@ -331,9 +331,12 @@ func (h *Handler) fetchFlow(w http.ResponseWriter, r *http.Request, ps httproute
 
 	if ar.ExpiresAt.Before(time.Now()) {
 		if ar.Type == flow.TypeBrowser {
+			redirectURL := flow.GetFlowExpiredRedirectURL(h.d.Config(r.Context()), RouteInitBrowserFlow, ar.ReturnTo)
+
 			h.d.Writer().WriteError(w, r, errors.WithStack(x.ErrGone.WithID(text.ErrIDSelfServiceFlowExpired).
 				WithReason("The registration flow has expired. Redirect the user to the registration flow init endpoint to initialize a new registration flow.").
-				WithDetail("redirect_to", urlx.AppendPaths(h.d.Config(r.Context()).SelfPublicURL(), RouteInitBrowserFlow).String())))
+				WithDetail("redirect_to", redirectURL.String()).
+				WithDetail("return_to", ar.ReturnTo)))
 			return
 		}
 		h.d.Writer().WriteError(w, r, errors.WithStack(x.ErrGone.WithID(text.ErrIDSelfServiceFlowExpired).
@@ -375,7 +378,7 @@ type submitSelfServiceRegistrationFlowBody struct{}
 // API flows expect `application/json` to be sent in the body and respond with
 //   - HTTP 200 and a application/json body with the created identity success - if the session hook is configured the
 //     `session` and `session_token` will also be included;
-//   - HTTP 303 redirect to a fresh registration flow if the original flow expired with the appropriate error messages set;
+//   - HTTP 410 if the original flow expired with the appropriate error messages set and optionally a `use_flow_id` parameter in the body;
 //   - HTTP 400 on form validation errors.
 //
 // Browser flows expect a Content-Type of `application/x-www-form-urlencoded` or `application/json` to be sent in the body and respond with
@@ -411,6 +414,7 @@ type submitSelfServiceRegistrationFlowBody struct{}
 //       200: successfulSelfServiceRegistrationWithoutBrowser
 //       303: emptyResponse
 //       400: selfServiceRegistrationFlow
+//       410: jsonError
 //       422: selfServiceBrowserLocationChangeRequiredError
 //       500: jsonError
 func (h *Handler) submitFlow(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {

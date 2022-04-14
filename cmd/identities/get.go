@@ -19,21 +19,31 @@ const (
 	FlagIncludeCreds = "include-credentials"
 )
 
-func NewGetCmd() *cobra.Command {
+func NewGetCmd(root *cobra.Command) *cobra.Command {
+	var cmd = &cobra.Command{
+		Use:   "get",
+		Short: "Get resources",
+	}
+	cmd.AddCommand(NewGetIdentityCmd(root))
+	cliclient.RegisterClientFlags(cmd.PersistentFlags())
+	cmdx.RegisterFormatFlags(cmd.PersistentFlags())
+	return cmd
+}
+
+func NewGetIdentityCmd(root *cobra.Command) *cobra.Command {
 	var (
 		includeCreds []string
 	)
 
 	cmd := &cobra.Command{
-		Use:   "get <id-0 [id-1 ...]>",
-		Short: "Get one or more identities by ID",
+		Use:   "identity [id-1] [id-2] [id-n]",
+		Short: "Get one or more identities by their ID(s)",
 		Long: fmt.Sprintf(`This command gets all the details about an identity. To get an identity by some selector, e.g. the recovery email address, use the list command in combination with jq.
 
-%s
-`, clihelpers.WarningJQIsComplicated),
-		Example: `To get the identities with the recovery email address at the domain "ory.sh", run:
+%s`, clihelpers.WarningJQIsComplicated),
+		Example: fmt.Sprintf(`To get the identities with the recovery email address at the domain "ory.sh", run:
 
-	$ kratos identities get $(kratos identities list --format json | jq -r 'map(select(.recovery_addresses[].value | endswith("@ory.sh"))) | .[].id')`,
+	%s get identity $(%[1]s ls identities --format json | jq -r 'map(select(.recovery_addresses[].value | endswith("@ory.sh"))) | .[].id')`, root.Use),
 		Args: cobra.MinimumNArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			c := cliclient.NewClient(cmd)

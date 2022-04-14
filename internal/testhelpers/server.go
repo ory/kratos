@@ -76,6 +76,7 @@ func NewKratosServers(t *testing.T) (public, admin *httptest.Server) {
 	public = httptest.NewServer(x.NewRouterPublic())
 	admin = httptest.NewServer(x.NewRouterAdmin())
 
+	public.URL = strings.Replace(public.URL, "127.0.0.1", "localhost", -1)
 	t.Cleanup(public.Close)
 	t.Cleanup(admin.Close)
 	return
