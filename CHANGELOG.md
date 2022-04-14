@@ -4,7 +4,7 @@
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 **Table of Contents**
 
-- [ (2022-04-12)](#2022-04-12)
+- [ (2022-04-14)](#2022-04-14)
   - [Breaking Changes](#breaking-changes)
     - [Bug Fixes](#bug-fixes)
     - [Code Refactoring](#code-refactoring)
@@ -250,7 +250,7 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# [](https://github.com/ory/kratos/compare/v0.9.0-alpha.3...v) (2022-04-12)
+# [](https://github.com/ory/kratos/compare/v0.9.0-alpha.3...v) (2022-04-14)
 ## Breaking Changes
 
 This patch moves several CLI command to comply with the Ory CLI command structure:
@@ -282,6 +282,7 @@ This patch moves several CLI command to comply with the Ory CLI command structur
 
 ### Bug Fixes
 
+* Add legacy session value ([ecfd052](https://github.com/ory/kratos/commit/ecfd05216f5ebb70f1617595d2d398cf1fa3c660)), closes [#2398](https://github.com/ory/kratos/issues/2398)
 * Change SQLite database mode to 0600 ([#2344](https://github.com/ory/kratos/issues/2344)) ([0e5d3b7](https://github.com/ory/kratos/commit/0e5d3b7726a8923fbc2a4c10ec18f0ba97ffbcff)):
 
     The default mode is 0644, which is allows broader access than necessary.
