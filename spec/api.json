@@ -1153,7 +1153,8 @@
               "totp",
               "oidc",
               "webauthn",
-              "lookup_secret"
+              "lookup_secret",
+              "v0.6_legacy_session"
             ],
             "title": "The method used",
             "type": "string"
