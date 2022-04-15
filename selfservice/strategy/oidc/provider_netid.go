@@ -4,18 +4,20 @@ import (
 	"context"
 	"encoding/json"
 	"net/url"
-	"path"
 
 	"github.com/hashicorp/go-retryablehttp"
 	"github.com/pkg/errors"
 	"golang.org/x/oauth2"
+
+	"github.com/ory/x/urlx"
 
 	"github.com/ory/herodot"
 	"github.com/ory/x/httpx"
 )
 
 const (
-	defaultBrokerEndpoint = "https://broker.netid.de"
+	defaultBrokerScheme = "https"
+	defaultBrokerHost   = "broker.netid.de"
 )
 
 type ProviderNetID struct {
@@ -39,23 +41,17 @@ func (n *ProviderNetID) OAuth2(ctx context.Context) (*oauth2.Config, error) {
 }
 
 func (n *ProviderNetID) oAuth2(ctx context.Context) (*oauth2.Config, error) {
-	endpoint, err := n.endpoint()
-	if err != nil {
-		return nil, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("%s", err))
-	}
+	u := n.brokerURL()
 
-	authUrl := *endpoint
-	tokenUrl := *endpoint
-
-	authUrl.Path = path.Join(authUrl.Path, "/authorize")
-	tokenUrl.Path = path.Join(tokenUrl.Path, "/token")
+	authURL := urlx.AppendPaths(u, "/authorize")
+	tokenURL := urlx.AppendPaths(u, "/token")
 
 	return &oauth2.Config{
 		ClientID:     n.config.ClientID,
 		ClientSecret: n.config.ClientSecret,
 		Endpoint: oauth2.Endpoint{
-			AuthURL:  authUrl.String(),
-			TokenURL: tokenUrl.String(),
+			AuthURL:  authURL.String(),
+			TokenURL: tokenURL.String(),
 		},
 		Scopes:      n.config.Scope,
 		RedirectURL: n.config.Redir(n.reg.Config(ctx).OIDCRedirectURIBase()),
@@ -71,12 +67,12 @@ func (n *ProviderNetID) Claims(ctx context.Context, exchange *oauth2.Token) (*Cl
 
 	client := n.reg.HTTPClient(ctx, httpx.ResilientClientDisallowInternalIPs(), httpx.ResilientClientWithClient(o.Client(ctx, exchange)))
 
-	u, err := n.endpoint()
+	u := n.brokerURL()
 	if err != nil {
 		return nil, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("%s", err))
 	}
-	u.Path = path.Join(u.Path, "/userinfo")
-	req, err := retryablehttp.NewRequest("GET", u.String(), nil)
+	userInfoURL := urlx.AppendPaths(u, "/userinfo")
+	req, err := retryablehttp.NewRequest("GET", userInfoURL.String(), nil)
 	if err != nil {
 		return nil, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("%s", err))
 	}
@@ -95,6 +91,6 @@ func (n *ProviderNetID) Claims(ctx context.Context, exchange *oauth2.Token) (*Cl
 	return &claims, nil
 }
 
-func (n *ProviderNetID) endpoint() (*url.URL, error) {
-	return url.Parse(defaultBrokerEndpoint)
+func (n *ProviderNetID) brokerURL() *url.URL {
+	return &url.URL{Scheme: defaultBrokerScheme, Host: defaultBrokerHost}
 }
