@@ -31,7 +31,7 @@ type SelfServiceRecoveryFlow struct {
 	ReturnTo *string                      `json:"return_to,omitempty"`
 	State    SelfServiceRecoveryFlowState `json:"state"`
 	// The flow type can either be `api` or `browser`.
-	Type *string     `json:"type,omitempty"`
+	Type string      `json:"type"`
 	Ui   UiContainer `json:"ui"`
 }
 
@@ -39,13 +39,14 @@ type SelfServiceRecoveryFlow struct {
 // This constructor will assign default values to properties that have it defined,
 // and makes sure properties required by API are set, but the set of arguments
 // will change when the set of required properties is changed
-func NewSelfServiceRecoveryFlow(expiresAt time.Time, id string, issuedAt time.Time, requestUrl string, state SelfServiceRecoveryFlowState, ui UiContainer) *SelfServiceRecoveryFlow {
+func NewSelfServiceRecoveryFlow(expiresAt time.Time, id string, issuedAt time.Time, requestUrl string, state SelfServiceRecoveryFlowState, type_ string, ui UiContainer) *SelfServiceRecoveryFlow {
 	this := SelfServiceRecoveryFlow{}
 	this.ExpiresAt = expiresAt
 	this.Id = id
 	this.IssuedAt = issuedAt
 	this.RequestUrl = requestUrl
 	this.State = state
+	this.Type = type_
 	this.Ui = ui
 	return &this
 }
@@ -242,36 +243,28 @@ func (o *SelfServiceRecoveryFlow) SetState(v SelfServiceRecoveryFlowState) {
 	o.State = v
 }
 
-// GetType returns the Type field value if set, zero value otherwise.
+// GetType returns the Type field value
 func (o *SelfServiceRecoveryFlow) GetType() string {
-	if o == nil || o.Type == nil {
+	if o == nil {
 		var ret string
 		return ret
 	}
-	return *o.Type
+
+	return o.Type
 }
 
-// GetTypeOk returns a tuple with the Type field value if set, nil otherwise
+// GetTypeOk returns a tuple with the Type field value
 // and a boolean to check if the value has been set.
 func (o *SelfServiceRecoveryFlow) GetTypeOk() (*string, bool) {
-	if o == nil || o.Type == nil {
+	if o == nil {
 		return nil, false
 	}
-	return o.Type, true
+	return &o.Type, true
 }
 
-// HasType returns a boolean if a field has been set.
-func (o *SelfServiceRecoveryFlow) HasType() bool {
-	if o != nil && o.Type != nil {
-		return true
-	}
-
-	return false
-}
-
-// SetType gets a reference to the given string and assigns it to the Type field.
+// SetType sets field value
 func (o *SelfServiceRecoveryFlow) SetType(v string) {
-	o.Type = &v
+	o.Type = v
 }
 
 // GetUi returns the Ui field value
@@ -321,7 +314,7 @@ func (o SelfServiceRecoveryFlow) MarshalJSON() ([]byte, error) {
 	if true {
 		toSerialize["state"] = o.State
 	}
-	if o.Type != nil {
+	if true {
 		toSerialize["type"] = o.Type
 	}
 	if true {

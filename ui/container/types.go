@@ -9,7 +9,7 @@ type ErrorParser interface {
 	// ParseError type asserts the given error and sets the forms's errors or a
 	// field's errors and if the error is not something to be handled by the
 	// formUI Container itself, the error is returned for further propagation (e.g. showing a 502 status code).
-	ParseError(group node.Group, err error) error
+	ParseError(group node.UiNodeGroup, err error) error
 }
 
 type NodeSetter interface {

@@ -14,7 +14,7 @@ import (
 
 type Strategy interface {
 	ID() identity.CredentialsType
-	NodeGroup() node.Group
+	NodeGroup() node.UiNodeGroup
 	RegisterRegistrationRoutes(*x.RouterPublic)
 	PopulateRegistrationMethod(r *http.Request, sr *Flow) error
 	Register(w http.ResponseWriter, r *http.Request, f *Flow, i *identity.Identity) (err error)

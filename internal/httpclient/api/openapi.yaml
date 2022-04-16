@@ -3461,8 +3461,8 @@ components:
               id: 0
               text: text
               type: type
-            type: type
-            group: group
+            type: text
+            group: default
           - meta:
               label:
                 context: '{}'
@@ -3478,8 +3478,8 @@ components:
               id: 0
               text: text
               type: type
-            type: type
-            group: group
+            type: text
+            group: default
           method: method
           action: action
           messages:
@@ -3593,8 +3593,8 @@ components:
               id: 0
               text: text
               type: type
-            type: type
-            group: group
+            type: text
+            group: default
           - meta:
               label:
                 context: '{}'
@@ -3610,8 +3610,8 @@ components:
               id: 0
               text: text
               type: type
-            type: type
-            group: group
+            type: text
+            group: default
           method: method
           action: action
           messages:
@@ -3670,6 +3670,7 @@ components:
       - issued_at
       - request_url
       - state
+      - type
       - ui
       title: A Recovery Flow
       type: object
@@ -3727,8 +3728,8 @@ components:
               id: 0
               text: text
               type: type
-            type: type
-            group: group
+            type: text
+            group: default
           - meta:
               label:
                 context: '{}'
@@ -3744,8 +3745,8 @@ components:
               id: 0
               text: text
               type: type
-            type: type
-            group: group
+            type: text
+            group: default
           method: method
           action: action
           messages:
@@ -3797,6 +3798,7 @@ components:
       - id
       - issued_at
       - request_url
+      - type
       - ui
       type: object
     selfServiceSettingsFlow:
@@ -3824,8 +3826,8 @@ components:
               id: 0
               text: text
               type: type
-            type: type
-            group: group
+            type: text
+            group: default
           - meta:
               label:
                 context: '{}'
@@ -3841,8 +3843,8 @@ components:
               id: 0
               text: text
               type: type
-            type: type
-            group: group
+            type: text
+            group: default
           method: method
           action: action
           messages:
@@ -3949,6 +3951,7 @@ components:
       - issued_at
       - request_url
       - state
+      - type
       - ui
       title: Flow represents a Settings Flow
       type: object
@@ -3988,8 +3991,8 @@ components:
               id: 0
               text: text
               type: type
-            type: type
-            group: group
+            type: text
+            group: default
           - meta:
               label:
                 context: '{}'
@@ -4005,8 +4008,8 @@ components:
               id: 0
               text: text
               type: type
-            type: type
-            group: group
+            type: text
+            group: default
           method: method
           action: action
           messages:
@@ -4964,8 +4967,8 @@ components:
             id: 0
             text: text
             type: type
-          type: type
-          group: group
+          type: text
+          group: default
         - meta:
             label:
               context: '{}'
@@ -4981,8 +4984,8 @@ components:
             id: 0
             text: text
             type: type
-          type: type
-          group: group
+          type: text
+          group: default
         method: method
         action: action
         messages:
@@ -5035,12 +5038,23 @@ components:
           id: 0
           text: text
           type: type
-        type: type
-        group: group
+        type: text
+        group: default
       properties:
         attributes:
           $ref: '#/components/schemas/uiNodeAttributes'
         group:
+          description: Group specifies which group (e.g. password authenticator) this
+            node belongs to.
+          enum:
+          - default
+          - password
+          - oidc
+          - profile
+          - link
+          - totp
+          - lookup_secret
+          - webauthn
           type: string
         messages:
           items:
@@ -5049,6 +5063,13 @@ components:
         meta:
           $ref: '#/components/schemas/uiNodeMeta'
         type:
+          description: The node's type
+          enum:
+          - text
+          - input
+          - img
+          - a
+          - script
           type: string
       required:
       - attributes
@@ -5070,6 +5091,15 @@ components:
           description: A unique identifier
           type: string
         node_type:
+          description: |-
+            NodeType represents this node's types. It is a mirror of `node.type` and
+            is primarily used to allow compatibility with OpenAPI 3.0.
+          enum:
+          - text
+          - input
+          - img
+          - a
+          - script
           type: string
         title:
           $ref: '#/components/schemas/uiText'
@@ -5083,8 +5113,8 @@ components:
     uiNodeAttributes:
       discriminator:
         mapping:
-          anchor: '#/components/schemas/uiNodeAnchorAttributes'
-          image: '#/components/schemas/uiNodeImageAttributes'
+          a: '#/components/schemas/uiNodeAnchorAttributes'
+          img: '#/components/schemas/uiNodeImageAttributes'
           input: '#/components/schemas/uiNodeInputAttributes'
           script: '#/components/schemas/uiNodeScriptAttributes'
           text: '#/components/schemas/uiNodeTextAttributes'
@@ -5096,8 +5126,6 @@ components:
       - $ref: '#/components/schemas/uiNodeAnchorAttributes'
       - $ref: '#/components/schemas/uiNodeScriptAttributes'
       title: Attributes represents a list of attributes (e.g. `href="foo"` for links).
-    uiNodeGroup:
-      type: string
     uiNodeImageAttributes:
       properties:
         height:
@@ -5108,6 +5136,15 @@ components:
           description: A unique identifier
           type: string
         node_type:
+          description: |-
+            NodeType represents this node's types. It is a mirror of `node.type` and
+            is primarily used to allow compatibility with OpenAPI 3.0.
+          enum:
+          - text
+          - input
+          - img
+          - a
+          - script
           type: string
         src:
           description: |-
@@ -5141,6 +5178,15 @@ components:
           description: The input's element name.
           type: string
         node_type:
+          description: |-
+            NodeType represents this node's types. It is a mirror of `node.type` and
+            is primarily used to allow compatibility with OpenAPI 3.0.
+          enum:
+          - text
+          - input
+          - img
+          - a
+          - script
           type: string
         onclick:
           description: |-
@@ -5194,6 +5240,15 @@ components:
           description: The script's integrity hash
           type: string
         node_type:
+          description: |-
+            NodeType represents this node's types. It is a mirror of `node.type` and
+            is primarily used to allow compatibility with OpenAPI 3.0.
+          enum:
+          - text
+          - input
+          - img
+          - a
+          - script
           type: string
         nonce:
           description: |-
@@ -5230,6 +5285,15 @@ components:
           description: A unique identifier
           type: string
         node_type:
+          description: |-
+            NodeType represents this node's types. It is a mirror of `node.type` and
+            is primarily used to allow compatibility with OpenAPI 3.0.
+          enum:
+          - text
+          - input
+          - img
+          - a
+          - script
           type: string
         text:
           $ref: '#/components/schemas/uiText'
@@ -5239,8 +5303,6 @@ components:
       - text
       title: TextAttributes represents the attributes of a text node.
       type: object
-    uiNodeType:
-      type: string
     uiNodes:
       items:
         $ref: '#/components/schemas/uiNode'

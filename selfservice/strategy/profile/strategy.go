@@ -276,6 +276,6 @@ func (s *Strategy) newSettingsProfileDecoder(ctx context.Context, i *identity.Id
 	return o, nil
 }
 
-func (s *Strategy) NodeGroup() node.Group {
+func (s *Strategy) NodeGroup() node.UiNodeGroup {
 	return node.ProfileGroup
 }

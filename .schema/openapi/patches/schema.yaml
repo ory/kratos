@@ -8,8 +8,8 @@
     mapping:
       input: "#/components/schemas/uiNodeInputAttributes"
       text: "#/components/schemas/uiNodeTextAttributes"
-      image: "#/components/schemas/uiNodeImageAttributes"
-      anchor: "#/components/schemas/uiNodeAnchorAttributes"
+      img: "#/components/schemas/uiNodeImageAttributes"
+      a: "#/components/schemas/uiNodeAnchorAttributes"
       script: "#/components/schemas/uiNodeScriptAttributes"
 - op: add
   path: /components/schemas/uiNodeAttributes/oneOf

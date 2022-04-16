@@ -578,3 +578,12 @@ To prepare documentation tests, run `npm i` to install
 
 - test all documentation: <code type="make/command">make test-docs</code>
 - test an individual file: <code type="npm/installed-executable">text-run</code>
+
+#### Preview API documentation
+
+- update the SDK including the OpenAPI specification:
+  <code type="make/command">make sdk</code>
+- run preview server for API documentation: <code type="make/command">make
+  docs/api</code>
+- run preview server for swagger documentation: <code type="make/command">make
+  docs/swagger</code>

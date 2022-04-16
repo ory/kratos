@@ -18,7 +18,8 @@ import (
 // UiNodeTextAttributes struct for UiNodeTextAttributes
 type UiNodeTextAttributes struct {
 	// A unique identifier
-	Id       string `json:"id"`
+	Id string `json:"id"`
+	// NodeType represents this node's types. It is a mirror of `node.type` and is primarily used to allow compatibility with OpenAPI 3.0.
 	NodeType string `json:"node_type"`
 	Text     UiText `json:"text"`
 }

@@ -100,7 +100,7 @@ func (s *Strategy) ID() identity.CredentialsType {
 	return identity.CredentialsTypeTOTP
 }
 
-func (s *Strategy) NodeGroup() node.Group {
+func (s *Strategy) NodeGroup() node.UiNodeGroup {
 	return node.TOTPGroup
 }
 

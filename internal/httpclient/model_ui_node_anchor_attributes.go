@@ -20,7 +20,8 @@ type UiNodeAnchorAttributes struct {
 	// The link's href (destination) URL.  format: uri
 	Href string `json:"href"`
 	// A unique identifier
-	Id       string `json:"id"`
+	Id string `json:"id"`
+	// NodeType represents this node's types. It is a mirror of `node.type` and is primarily used to allow compatibility with OpenAPI 3.0.
 	NodeType string `json:"node_type"`
 	Title    UiText `json:"title"`
 }
