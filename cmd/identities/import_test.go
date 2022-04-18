@@ -8,6 +8,8 @@ import (
 	"io/ioutil"
 	"testing"
 
+	"github.com/spf13/cobra"
+
 	"github.com/ory/kratos/cmd/identities"
 
 	"github.com/gofrs/uuid"
@@ -21,7 +23,7 @@ import (
 )
 
 func TestImportCmd(t *testing.T) {
-	c := identities.NewImportCmd()
+	c := identities.NewImportIdentitiesCmd(new(cobra.Command))
 	reg := setup(t, c)
 
 	t.Run("case=imports a new identity from file", func(t *testing.T) {

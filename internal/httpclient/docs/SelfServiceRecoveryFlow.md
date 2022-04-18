@@ -11,14 +11,14 @@ Name | Type | Description | Notes
 **RequestUrl** | **string** | RequestURL is the initial URL that was requested from Ory Kratos. It can be used to forward information contained in the URL&#39;s path or query for example. | 
 **ReturnTo** | Pointer to **string** | ReturnTo contains the requested return_to URL. | [optional] 
 **State** | [**SelfServiceRecoveryFlowState**](SelfServiceRecoveryFlowState.md) |  | 
-**Type** | Pointer to **string** | The flow type can either be &#x60;api&#x60; or &#x60;browser&#x60;. | [optional] 
+**Type** | **string** | The flow type can either be &#x60;api&#x60; or &#x60;browser&#x60;. | 
 **Ui** | [**UiContainer**](UiContainer.md) |  | 
 
 ## Methods
 
 ### NewSelfServiceRecoveryFlow
 
-`func NewSelfServiceRecoveryFlow(expiresAt time.Time, id string, issuedAt time.Time, requestUrl string, state SelfServiceRecoveryFlowState, ui UiContainer, ) *SelfServiceRecoveryFlow`
+`func NewSelfServiceRecoveryFlow(expiresAt time.Time, id string, issuedAt time.Time, requestUrl string, state SelfServiceRecoveryFlowState, type_ string, ui UiContainer, ) *SelfServiceRecoveryFlow`
 
 NewSelfServiceRecoveryFlow instantiates a new SelfServiceRecoveryFlow object
 This constructor will assign default values to properties that have it defined,
@@ -202,11 +202,6 @@ and a boolean to check if the value has been set.
 
 SetType sets Type field to given value.
 
-### HasType
-
-`func (o *SelfServiceRecoveryFlow) HasType() bool`
-
-HasType returns a boolean if a field has been set.
 
 ### GetUi
 

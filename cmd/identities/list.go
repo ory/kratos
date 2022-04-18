@@ -11,11 +11,24 @@ import (
 	"github.com/ory/kratos/cmd/cliclient"
 )
 
-func NewListCmd() *cobra.Command {
+func NewListCmd(root *cobra.Command) *cobra.Command {
+	c := &cobra.Command{
+		Use:     "list",
+		Aliases: []string{"ls"},
+		Short:   "List resources",
+	}
+	c.AddCommand(NewListIdentitiesCmd(root))
+	cliclient.RegisterClientFlags(c.PersistentFlags())
+	cmdx.RegisterFormatFlags(c.PersistentFlags())
+	return c
+}
+
+func NewListIdentitiesCmd(root *cobra.Command) *cobra.Command {
 	return &cobra.Command{
-		Use:   "list [<page> <per-page>]",
-		Short: "List identities",
-		Long:  "List identities (paginated)",
+		Use:     "identities [<page> <per-page>]",
+		Short:   "List identities",
+		Long:    "List identities (paginated)",
+		Example: fmt.Sprintf("%[1]s ls identities 100 1", root.Use),
 		Args: func(cmd *cobra.Command, args []string) error {
 			// zero or exactly two args
 			if len(args) != 0 && len(args) != 2 {

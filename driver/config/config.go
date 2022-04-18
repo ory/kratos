@@ -61,6 +61,8 @@ const (
 	UnknownVersion                                           = "unknown version"
 	ViperKeyDSN                                              = "dsn"
 	ViperKeyCourierSMTPURL                                   = "courier.smtp.connection_uri"
+	ViperKeyCourierSMTPClientCertPath                        = "courier.smtp.client_cert_path"
+	ViperKeyCourierSMTPClientKeyPath                         = "courier.smtp.client_key_path"
 	ViperKeyCourierTemplatesPath                             = "courier.template_override_path"
 	ViperKeyCourierTemplatesRecoveryInvalidEmail             = "courier.templates.recovery.invalid.email"
 	ViperKeyCourierTemplatesRecoveryValidEmail               = "courier.templates.recovery.valid.email"
@@ -105,6 +107,7 @@ const (
 	ViperKeySessionPath                                      = "session.cookie.path"
 	ViperKeySessionPersistentCookie                          = "session.cookie.persistent"
 	ViperKeySessionWhoAmIAAL                                 = "session.whoami.required_aal"
+	ViperKeySessionRefreshMinTimeLeft                        = "session.earliest_possible_extend"
 	ViperKeyCookieSameSite                                   = "cookies.same_site"
 	ViperKeyCookieDomain                                     = "cookies.domain"
 	ViperKeyCookiePath                                       = "cookies.path"
@@ -238,6 +241,8 @@ type (
 	}
 	CourierConfigs interface {
 		CourierSMTPURL() *url.URL
+		CourierSMTPClientCertPath() string
+		CourierSMTPClientKeyPath() string
 		CourierSMTPFrom() string
 		CourierSMTPFromName() string
 		CourierSMTPHeaders() map[string]string
@@ -870,6 +875,14 @@ func (p *Config) SelfServiceFlowLogoutRedirectURL() *url.URL {
 	return p.p.RequestURIF(ViperKeySelfServiceLogoutBrowserDefaultReturnTo, p.SelfServiceBrowserDefaultReturnTo())
 }
 
+func (p *Config) CourierSMTPClientCertPath() string {
+	return p.p.StringF(ViperKeyCourierSMTPClientCertPath, "")
+}
+
+func (p *Config) CourierSMTPClientKeyPath() string {
+	return p.p.StringF(ViperKeyCourierSMTPClientKeyPath, "")
+}
+
 func (p *Config) CourierSMTPFrom() string {
 	return p.p.StringF(ViperKeyCourierSMTPFrom, "noreply@kratos.ory.sh")
 }
@@ -1104,6 +1117,10 @@ func (p *Config) CookieDomain() string {
 
 func (p *Config) SessionWhoAmIAAL() string {
 	return p.p.String(ViperKeySessionWhoAmIAAL)
+}
+
+func (p *Config) SessionRefreshMinTimeLeft() time.Duration {
+	return p.p.DurationF(ViperKeySessionRefreshMinTimeLeft, p.SessionLifespan())
 }
 
 func (p *Config) SelfServiceSettingsRequiredAAL() string {

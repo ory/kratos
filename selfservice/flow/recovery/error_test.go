@@ -52,7 +52,7 @@ func TestHandleError(t *testing.T) {
 
 	var recoveryFlow *recovery.Flow
 	var flowError error
-	var methodName node.Group
+	var methodName node.UiNodeGroup
 	router.GET("/error", func(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 		h.WriteFlowError(w, r, recoveryFlow, methodName, flowError)
 	})
@@ -195,7 +195,7 @@ func TestHandleError(t *testing.T) {
 
 			recoveryFlow = &recovery.Flow{Type: flow.TypeBrowser}
 			flowError = flow.NewFlowExpiredError(anHourAgo)
-			methodName = node.RecoveryLinkGroup
+			methodName = node.LinkGroup
 
 			lf, _ := expectRecoveryUI(t)
 			require.Len(t, lf.UI.Messages, 1, "%s", jsonx.TestMarshalJSONString(t, lf))
@@ -207,7 +207,7 @@ func TestHandleError(t *testing.T) {
 
 			recoveryFlow = newFlow(t, time.Minute, flow.TypeBrowser)
 			flowError = schema.NewInvalidCredentialsError()
-			methodName = node.RecoveryLinkGroup
+			methodName = node.LinkGroup
 
 			lf, _ := expectRecoveryUI(t)
 			require.NotEmpty(t, lf.UI, x.MustEncodeJSON(t, lf))
@@ -220,7 +220,7 @@ func TestHandleError(t *testing.T) {
 
 			recoveryFlow = newFlow(t, time.Minute, flow.TypeBrowser)
 			flowError = herodot.ErrInternalServerError.WithReason("system error")
-			methodName = node.RecoveryLinkGroup
+			methodName = node.LinkGroup
 
 			sse, _ := expectErrorUI(t)
 			assertx.EqualAsJSON(t, flowError, sse)

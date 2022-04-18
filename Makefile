@@ -39,6 +39,14 @@ $(call make-lint-dependency)
 docs/cli:
 		go run ./cmd/clidoc/. .
 
+.PHONY: docs/api
+docs/api:
+		npx @redocly/openapi-cli preview-docs spec/api.json
+
+.PHONY: docs/swagger
+docs/swagger:
+		npx @redocly/openapi-cli preview-docs spec/swagger.json
+
 .bin/ory: Makefile
 		bash <(curl https://raw.githubusercontent.com/ory/meta/master/install.sh) -d -b .bin ory v0.1.14
 		touch -a -m .bin/ory

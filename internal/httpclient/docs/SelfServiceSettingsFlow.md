@@ -12,14 +12,14 @@ Name | Type | Description | Notes
 **RequestUrl** | **string** | RequestURL is the initial URL that was requested from Ory Kratos. It can be used to forward information contained in the URL&#39;s path or query for example. | 
 **ReturnTo** | Pointer to **string** | ReturnTo contains the requested return_to URL. | [optional] 
 **State** | [**SelfServiceSettingsFlowState**](SelfServiceSettingsFlowState.md) |  | 
-**Type** | Pointer to **string** | The flow type can either be &#x60;api&#x60; or &#x60;browser&#x60;. | [optional] 
+**Type** | **string** | The flow type can either be &#x60;api&#x60; or &#x60;browser&#x60;. | 
 **Ui** | [**UiContainer**](UiContainer.md) |  | 
 
 ## Methods
 
 ### NewSelfServiceSettingsFlow
 
-`func NewSelfServiceSettingsFlow(expiresAt time.Time, id string, identity Identity, issuedAt time.Time, requestUrl string, state SelfServiceSettingsFlowState, ui UiContainer, ) *SelfServiceSettingsFlow`
+`func NewSelfServiceSettingsFlow(expiresAt time.Time, id string, identity Identity, issuedAt time.Time, requestUrl string, state SelfServiceSettingsFlowState, type_ string, ui UiContainer, ) *SelfServiceSettingsFlow`
 
 NewSelfServiceSettingsFlow instantiates a new SelfServiceSettingsFlow object
 This constructor will assign default values to properties that have it defined,
@@ -223,11 +223,6 @@ and a boolean to check if the value has been set.
 
 SetType sets Type field to given value.
 
-### HasType
-
-`func (o *SelfServiceSettingsFlow) HasType() bool`
-
-HasType returns a boolean if a field has been set.
 
 ### GetUi
 

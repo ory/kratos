@@ -6,6 +6,8 @@ import (
 	"encoding/json"
 	"testing"
 
+	"github.com/spf13/cobra"
+
 	"github.com/ory/kratos/cmd/identities"
 	"github.com/ory/x/assertx"
 
@@ -19,7 +21,7 @@ import (
 )
 
 func TestGetCmd(t *testing.T) {
-	c := identities.NewGetCmd()
+	c := identities.NewGetIdentityCmd(new(cobra.Command))
 	reg := setup(t, c)
 
 	t.Run("case=gets a single identity", func(t *testing.T) {

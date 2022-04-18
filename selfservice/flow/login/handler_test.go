@@ -3,6 +3,7 @@ package login_test
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"net/http"
 	"net/url"
@@ -358,7 +359,7 @@ func TestFlowLifecycle(t *testing.T) {
 			t.Run("case=does not set forced flag on unauthenticated request with refresh=true", func(t *testing.T) {
 				res, body := initFlow(t, url.Values{"refresh": {"true"}}, true)
 				assert.Contains(t, res.Request.URL.String(), login.RouteInitAPIFlow)
-				assertion(body, true, true)
+				assertion(body, false, true)
 			})
 
 			t.Run("case=does not set forced flag on authenticated request without refresh=true", func(t *testing.T) {
@@ -443,7 +444,7 @@ func TestFlowLifecycle(t *testing.T) {
 
 			t.Run("case=does not set forced flag on unauthenticated request with refresh=true", func(t *testing.T) {
 				res, body := initFlow(t, url.Values{"refresh": {"true"}}, false)
-				assertion(body, true, false)
+				assertion(body, false, false)
 				assert.Contains(t, res.Request.URL.String(), loginTS.URL)
 			})
 
@@ -553,17 +554,23 @@ func TestGetFlow(t *testing.T) {
 	})
 
 	t.Run("case=expired with return_to", func(t *testing.T) {
-		conf.MustSet(config.ViperKeyURLsAllowedReturnToDomains, []string{"https://www.ory.sh/"})
+		returnTo := "https://www.ory.sh"
+		conf.MustSet(config.ViperKeyURLsAllowedReturnToDomains, []string{returnTo})
 
 		client := testhelpers.NewClientWithCookies(t)
 		setupLoginUI(t, client)
-		body := x.EasyGetBody(t, client, public.URL+login.RouteInitBrowserFlow+"?return_to=https://www.ory.sh")
+		body := x.EasyGetBody(t, client, public.URL+login.RouteInitBrowserFlow+"?return_to="+returnTo)
 
 		// Expire the flow
 		f, err := reg.LoginFlowPersister().GetLoginFlow(context.Background(), uuid.FromStringOrNil(gjson.GetBytes(body, "id").String()))
 		require.NoError(t, err)
 		f.ExpiresAt = time.Now().Add(-time.Second)
 		require.NoError(t, reg.LoginFlowPersister().UpdateLoginFlow(context.Background(), f))
+
+		// Retrieve the flow and verify that return_to is in the response
+		getURL := fmt.Sprintf("%s%s?id=%s&return_to=%s", public.URL, login.RouteGetFlow, f.ID, returnTo)
+		getBody := x.EasyGetBody(t, client, getURL)
+		assert.Equal(t, gjson.GetBytes(getBody, "error.details.return_to").String(), returnTo)
 
 		// submit the flow but it is expired
 		u := public.URL + login.RouteSubmitFlow + "?flow=" + f.ID.String()
@@ -574,7 +581,7 @@ func TestGetFlow(t *testing.T) {
 
 		f, err = reg.LoginFlowPersister().GetLoginFlow(context.Background(), uuid.FromStringOrNil(gjson.GetBytes(resBody, "id").String()))
 		require.NoError(t, err)
-		assert.Equal(t, public.URL+login.RouteInitBrowserFlow+"?return_to=https://www.ory.sh", f.RequestURL)
+		assert.Equal(t, public.URL+login.RouteInitBrowserFlow+"?return_to="+returnTo, f.RequestURL)
 	})
 
 	t.Run("case=not found", func(t *testing.T) {

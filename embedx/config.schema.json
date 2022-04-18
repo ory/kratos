@@ -409,6 +409,19 @@
             "contoso.onmicrosoft.com"
           ]
         },
+        "subject_source": {
+          "title": "Microsoft subject source",
+          "description": "Controls which source the subject identifier is taken from by microsoft provider. If set to `userinfo` (the default) then the identifier is taken from the `sub` field of OIDC ID token or data received from `/userinfo` standard OIDC endpoint. If set to `me` then the `id` field of data structure received from `https://graph.microsoft.com/v1.0/me` is taken as an identifier.",
+          "type": "string",
+          "enum": [
+            "userinfo",
+            "me"
+          ],
+          "default": "userinfo",
+          "examples": [
+            "userinfo"
+          ]
+        },
         "apple_team_id": {
           "title": "Apple Developer Team ID",
           "description": "Apple Developer Team ID needed for generating a JWT token for client secret",
@@ -1481,10 +1494,23 @@
                 "smtp://foo:bar@my-mailserver:1234/ (Explicit StartTLS with certificate trust verification)",
                 "smtp://foo:bar@my-mailserver:1234/?skip_ssl_verify=true (NOT RECOMMENDED: Explicit StartTLS without certificate trust verification)",
                 "smtps://foo:bar@my-mailserver:1234/ (Implicit TLS with certificate trust verification)",
-                "smtps://foo:bar@my-mailserver:1234/?skip_ssl_verify=true (NOT RECOMMENDED: Implicit TLS without certificate trust verification)"
+                "smtps://foo:bar@my-mailserver:1234/?skip_ssl_verify=true (NOT RECOMMENDED: Implicit TLS without certificate trust verification)",
+                "smtps://subdomain.my-mailserver:1234/?server_name=my-mailserver (allows TLS to work if the server is hosted on a sudomain that uses a non-wildcard domain certificate)"
               ],
               "type": "string",
               "pattern": "^smtps?:\\/\\/.*"
+            },
+            "client_cert_path": {
+              "title": "SMTP Client certificate path",
+              "description": "Path of the client X.509 certificate, in case of certificate based client authentication to the SMTP server.",
+              "type": "string",
+              "default": ""
+            },
+            "client_key_path": {
+              "title": "SMTP Client private key path",
+              "description": "Path of the client certificate private key, in case of certificate based client authentication to the SMTP server",
+              "type": "string",
+              "default": ""
             },
             "from_address": {
               "title": "SMTP Sender Address",
@@ -2303,6 +2329,18 @@
             }
           },
           "additionalProperties": false
+        },
+        "earliest_possible_extend": {
+          "title": "Earliest Possible Session Extension",
+          "description": "Sets when a session can be extended. Settings this value to `24h` will prevent the session from being extended before until 24 hours before it expires. This setting prevents excessive writes to the database. We highly recommend setting this value.",
+          "type": "string",
+          "pattern": "^([0-9]+(ns|us|ms|s|m|h))+$",
+          "default": "24h",
+          "examples": [
+            "1h",
+            "1m",
+            "1s"
+          ]
         }
       }
     },

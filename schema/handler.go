@@ -10,8 +10,9 @@ import (
 	"os"
 	"strings"
 
-	"github.com/ory/kratos/driver/config"
 	"github.com/ory/x/urlx"
+
+	"github.com/ory/kratos/driver/config"
 
 	"github.com/julienschmidt/httprouter"
 	"github.com/pkg/errors"
@@ -105,7 +106,7 @@ func (h *Handler) getByID(w http.ResponseWriter, r *http.Request, ps httprouter.
 
 		s, err = ss.GetByID(id)
 		if err != nil {
-			h.r.Writer().WriteError(w, r, errors.WithStack(herodot.ErrNotFound.WithDebugf("%+v", err)))
+			h.r.Writer().WriteError(w, r, errors.WithStack(herodot.ErrNotFound.WithReasonf("Identity schema `%s` could not be found.", id)))
 			return
 		}
 	}

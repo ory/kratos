@@ -212,8 +212,20 @@ func TestHandler(t *testing.T) {
 			require.NoError(t, hash.Compare(ctx, []byte("123456"), []byte(gjson.GetBytes(actual.Credentials[identity.CredentialsTypePassword].Config, "hashed_password").String())))
 		})
 
-		t.Run("with argon2id password", func(t *testing.T) {
+		t.Run("with argon2i password", func(t *testing.T) {
 			res := send(t, adminTS, "POST", "/identities", http.StatusCreated, identity.AdminCreateIdentityBody{Traits: []byte(`{"email": "import-5@ory.sh"}`),
+				Credentials: &identity.AdminIdentityImportCredentials{Password: &identity.AdminIdentityImportCredentialsPassword{
+					Config: identity.AdminIdentityImportCredentialsPasswordConfig{HashedPassword: "$argon2i$v=19$m=65536,t=3,p=4$STVE4CQ9qQ1dK/j224VMbA$o8b+k5wdHgBqf7ES+aWG2K7Y9diQ6ahEhbW8zcstXGo"}}}})
+			actual, err := reg.PrivilegedIdentityPool().GetIdentityConfidential(ctx, uuid.FromStringOrNil(res.Get("id").String()))
+			require.NoError(t, err)
+
+			snapshotx.SnapshotTExceptMatchingKeys(t, identity.WithCredentialsInJSON(*actual), append(ignoreDefault, "hashed_password"))
+
+			require.NoError(t, hash.Compare(ctx, []byte("123456"), []byte(gjson.GetBytes(actual.Credentials[identity.CredentialsTypePassword].Config, "hashed_password").String())))
+		})
+
+		t.Run("with argon2id password", func(t *testing.T) {
+			res := send(t, adminTS, "POST", "/identities", http.StatusCreated, identity.AdminCreateIdentityBody{Traits: []byte(`{"email": "import-6@ory.sh"}`),
 				Credentials: &identity.AdminIdentityImportCredentials{Password: &identity.AdminIdentityImportCredentialsPassword{
 					Config: identity.AdminIdentityImportCredentialsPasswordConfig{HashedPassword: "$argon2id$v=19$m=16,t=2,p=1$bVI1aE1SaTV6SGQ3bzdXdw$fnjCcZYmEPOUOjYXsT92Cg"}}}})
 			actual, err := reg.PrivilegedIdentityPool().GetIdentityConfidential(ctx, uuid.FromStringOrNil(res.Get("id").String()))

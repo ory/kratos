@@ -79,8 +79,8 @@ func (h *Handler) RegisterPublicRoutes(public *x.RouterPublic) {
 
 	public.GET(RouteGetFlow, h.fetch)
 
-	public.GET(RouteSubmitFlow, h.d.SessionHandler().IsNotAuthenticated(h.submitFlow, redirect))
-	public.POST(RouteSubmitFlow, h.d.SessionHandler().IsNotAuthenticated(h.submitFlow, redirect))
+	public.GET(RouteSubmitFlow, h.submitFlow)
+	public.POST(RouteSubmitFlow, h.submitFlow)
 }
 
 func (h *Handler) RegisterAdminRoutes(admin *x.RouterAdmin) {
@@ -266,9 +266,12 @@ func (h *Handler) fetch(w http.ResponseWriter, r *http.Request, _ httprouter.Par
 
 	if f.ExpiresAt.Before(time.Now().UTC()) {
 		if f.Type == flow.TypeBrowser {
+			redirectURL := flow.GetFlowExpiredRedirectURL(h.d.Config(r.Context()), RouteInitBrowserFlow, f.ReturnTo)
+
 			h.d.Writer().WriteError(w, r, errors.WithStack(x.ErrGone.
 				WithReason("The recovery flow has expired. Redirect the user to the recovery flow init endpoint to initialize a new recovery flow.").
-				WithDetail("redirect_to", urlx.AppendPaths(h.d.Config(r.Context()).SelfPublicURL(), RouteInitBrowserFlow).String())))
+				WithDetail("redirect_to", redirectURL.String()).
+				WithDetail("return_to", f.ReturnTo)))
 			return
 		}
 		h.d.Writer().WriteError(w, r, errors.WithStack(x.ErrGone.
@@ -342,8 +345,9 @@ type submitSelfServiceRecoveryFlowBody struct{}
 //
 //     Responses:
 //       200: selfServiceRecoveryFlow
-//       400: selfServiceRecoveryFlow
 //       303: emptyResponse
+//       400: selfServiceRecoveryFlow
+//       410: jsonError
 //       500: jsonError
 func (h *Handler) submitFlow(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	rid, err := flow.GetFlowID(r)
@@ -366,7 +370,7 @@ func (h *Handler) submitFlow(w http.ResponseWriter, r *http.Request, ps httprout
 		return
 	}
 
-	var g node.Group
+	var g node.UiNodeGroup
 	var found bool
 	for _, ss := range h.d.AllRecoveryStrategies() {
 		err := ss.Recover(w, r, f)

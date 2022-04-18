@@ -107,7 +107,7 @@ func (s *Strategy) ID() identity.CredentialsType {
 	return identity.CredentialsTypeWebAuthn
 }
 
-func (s *Strategy) NodeGroup() node.Group {
+func (s *Strategy) NodeGroup() node.UiNodeGroup {
 	return node.WebAuthnGroup
 }
 

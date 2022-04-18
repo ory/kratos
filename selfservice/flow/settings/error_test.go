@@ -57,7 +57,7 @@ func TestHandleError(t *testing.T) {
 
 	var settingsFlow *settings.Flow
 	var flowError error
-	var flowMethod node.Group
+	var flowMethod node.UiNodeGroup
 	var id identity.Identity
 	require.NoError(t, faker.FakeData(&id))
 	id.SchemaID = "default"

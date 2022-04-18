@@ -7,6 +7,8 @@ import (
 	"net/url"
 	"time"
 
+	"github.com/gobuffalo/pop/v6"
+
 	"github.com/gofrs/uuid"
 	"github.com/pkg/errors"
 
@@ -36,6 +38,8 @@ type Flow struct {
 	ID uuid.UUID `json:"id" db:"id" faker:"-"`
 
 	// Type represents the flow's type which can be either "api" or "browser", depending on the flow interaction.
+	//
+	// required: true
 	Type flow.Type `json:"type" db:"type" faker:"flow_type"`
 
 	// ExpiresAt is the time (UTC) when the request expires. If the user still wishes to update the setting,
@@ -182,8 +186,22 @@ func (f *Flow) SetCSRFToken(token string) {
 
 func (f Flow) MarshalJSON() ([]byte, error) {
 	type local Flow
+	f.SetReturnTo()
+	return json.Marshal(local(f))
+}
+
+func (f *Flow) SetReturnTo() {
 	if u, err := url.Parse(f.RequestURL); err == nil {
 		f.ReturnTo = u.Query().Get("return_to")
 	}
-	return json.Marshal(local(f))
+}
+
+func (f *Flow) AfterFind(*pop.Connection) error {
+	f.SetReturnTo()
+	return nil
+}
+
+func (f *Flow) AfterSave(*pop.Connection) error {
+	f.SetReturnTo()
+	return nil
 }

@@ -1,5 +1,5 @@
 # syntax = docker/dockerfile:1-experimental
-FROM golang:1.17-alpine3.15 AS base
+FROM golang:1.18-alpine3.15 AS base
 
 RUN apk --no-cache --update-cache --upgrade --latest add build-base git gcc bash
 
@@ -11,6 +11,7 @@ ADD internal/httpclient/go.* internal/httpclient/
 
 ENV GO111MODULE on
 ENV CGO_ENABLED 1
+ENV CGO_CPPFLAGS -DSQLITE_DEFAULT_FILE_PERMISSIONS=0600
 
 RUN go mod download
 
@@ -24,7 +25,7 @@ RUN --mount=type=cache,target=/root/.cache/go-build go build -tags sqlite \
     -ldflags="-X 'github.com/ory/kratos/driver/config.Version=${VERSION}' -X 'github.com/ory/kratos/driver/config.Date=${BUILD_DATE}' -X 'github.com/ory/kratos/driver/config.Commit=${COMMIT}'" \
     -o /usr/bin/kratos
 
-FROM alpine:3.15.1
+FROM alpine:3.15.4
 
 RUN addgroup -S ory; \
     adduser -S ory -G ory -D -u 10000 -h /home/ory -s /bin/nologin; \
