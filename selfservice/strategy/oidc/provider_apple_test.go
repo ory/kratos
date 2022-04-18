@@ -28,6 +28,7 @@ func TestDecodeQuery(t *testing.T) {
 			assert.Equal(t, tc.familyName, tc.claims.FamilyName)
 			assert.Equal(t, tc.givenName, tc.claims.GivenName)
 			assert.Equal(t, tc.lastName, tc.claims.LastName)
+			// Never extract email from the query, as the same info can be extracted and verified from the ID token.
 			assert.Empty(t, tc.claims.Email)
 		})
 	}
