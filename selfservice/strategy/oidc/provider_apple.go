@@ -110,10 +110,16 @@ func (a *ProviderApple) Claims(ctx context.Context, exchange *oauth2.Token, quer
 	if err != nil {
 		return claims, err
 	}
+	decodeQuery(query, claims)
 
-	// https://developer.apple.com/documentation/sign_in_with_apple/sign_in_with_apple_js/configuring_your_webpage_for_sign_in_with_apple#3331292
-	// First name and last name are passed only once in an additional parameter to the redirect URL.
-	// There's no way to make sure they haven't been tampered with. Blame Apple.
+	return claims, nil
+}
+
+// decodeQuery decodes extra user info from Apple into the given `Claims`.
+// The info is sent as an extra query parameter to the redirect URL.
+// See https://developer.apple.com/documentation/sign_in_with_apple/sign_in_with_apple_js/configuring_your_webpage_for_sign_in_with_apple#3331292
+// Note that there's no way to make sure the info hasn't been tampered with.
+func decodeQuery(query url.Values, claims *Claims) {
 	var user struct {
 		Name *struct {
 			FirstName *string `json:"firstName"`
@@ -135,6 +141,4 @@ func (a *ProviderApple) Claims(ctx context.Context, exchange *oauth2.Token, quer
 			}
 		}
 	}
-
-	return claims, nil
 }
