@@ -1,7 +1,6 @@
 package sql_test
 
 import (
-	"bytes"
 	"context"
 	"fmt"
 	"os"
@@ -9,11 +8,18 @@ import (
 	"sync"
 	"testing"
 
+	"github.com/ory/x/dbal"
+
+	"github.com/ory/kratos/driver/config"
+	"github.com/ory/kratos/schema"
+	"github.com/ory/x/sqlxx"
+	"github.com/ory/x/urlx"
+
 	"github.com/ory/kratos/x/xsql"
 
 	"github.com/go-errors/errors"
-	"github.com/gobuffalo/pop/v5"
-	"github.com/gobuffalo/pop/v5/logging"
+	"github.com/gobuffalo/pop/v6"
+	"github.com/gobuffalo/pop/v6/logging"
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -27,6 +33,7 @@ import (
 	"github.com/ory/kratos/internal"
 	"github.com/ory/kratos/internal/testhelpers"
 	"github.com/ory/kratos/persistence/sql"
+	sqltesthelpers "github.com/ory/kratos/persistence/sql/testhelpers"
 	errorx "github.com/ory/kratos/selfservice/errorx/test"
 	lf "github.com/ory/kratos/selfservice/flow/login"
 	login "github.com/ory/kratos/selfservice/flow/login/test"
@@ -88,14 +95,15 @@ func pl(t *testing.T) func(lvl logging.Level, s string, args ...interface{}) {
 }
 
 func createCleanDatabases(t *testing.T) map[string]*driver.RegistryDefault {
-	conns := map[string]string{"sqlite": sqlite}
+	conns := map[string]string{"sqlite": dbal.SQLiteSharedInMemory}
 
 	var l sync.Mutex
 	if !testing.Short() {
 		funcs := map[string]func(t testing.TB) string{
 			"postgres":  dockertest.RunTestPostgreSQL,
 			"mysql":     dockertest.RunTestMySQL,
-			"cockroach": dockertest.RunTestCockroachDB}
+			"cockroach": dockertest.NewLocalTestCRDBServer,
+		}
 
 		var wg sync.WaitGroup
 		wg.Add(len(funcs))
@@ -113,33 +121,41 @@ func createCleanDatabases(t *testing.T) map[string]*driver.RegistryDefault {
 		wg.Wait()
 	}
 
-	t.Logf("sqlite: %s", sqlite)
-
 	ps := make(map[string]*driver.RegistryDefault, len(conns))
+	var wg sync.WaitGroup
+	wg.Add(len(conns))
 	for name, dsn := range conns {
-		_, reg := internal.NewRegistryDefaultWithDSN(t, dsn)
-		p := reg.Persister().(*sql.Persister)
+		go func(name, dsn string) {
+			defer wg.Done()
+			t.Logf("Connecting to %s", name)
+			_, reg := internal.NewRegistryDefaultWithDSN(t, dsn)
+			p := reg.Persister().(*sql.Persister)
 
-		_ = os.Remove("migrations/schema.sql")
-		xsql.CleanSQL(t, p.Connection(context.Background()))
-		t.Cleanup(func() {
-			xsql.CleanSQL(t, p.Connection(context.Background()))
+			t.Logf("Cleaning up %s", name)
 			_ = os.Remove("migrations/schema.sql")
-		})
+			xsql.CleanSQL(t, p.Connection(context.Background()))
+			t.Cleanup(func() {
+				xsql.CleanSQL(t, p.Connection(context.Background()))
+				_ = os.Remove("migrations/schema.sql")
+			})
 
-		pop.SetLogger(pl(t))
-		require.NoError(t, p.MigrateUp(context.Background()))
-		status, err := p.MigrationStatus(context.Background())
-		require.NoError(t, err)
-		require.False(t, status.HasPending())
+			t.Logf("Applying %s migrations", name)
+			pop.SetLogger(pl(t))
+			require.NoError(t, p.MigrateUp(context.Background()))
+			t.Logf("%s migrations applied", name)
+			status, err := p.MigrationStatus(context.Background())
+			require.NoError(t, err)
+			require.False(t, status.HasPending())
 
-		var b bytes.Buffer
-		require.NoError(t, status.Write(&b))
-		t.Logf("%s", b.String())
+			l.Lock()
+			ps[name] = reg
+			l.Unlock()
 
-		ps[name] = reg
+			t.Logf("Database %s initialized successfully", name)
+		}(name, dsn)
 	}
 
+	wg.Wait()
 	return ps
 }
 
@@ -147,12 +163,57 @@ func TestPersister(t *testing.T) {
 	conns := createCleanDatabases(t)
 	ctx := context.Background()
 
-	for name, reg := range conns {
+	for name := range conns {
+		name := name
+		reg := conns[name]
 		t.Run(fmt.Sprintf("database=%s", name), func(t *testing.T) {
+			t.Parallel()
+
 			_, p := testhelpers.NewNetwork(t, ctx, reg.Persister())
 			conf := reg.Config(context.Background())
 
 			t.Logf("DSN: %s", conf.DSN())
+
+			// This test must remain the first test in the test suite!
+			t.Run("racy identity creation", func(t *testing.T) {
+				defaultSchema := schema.Schema{
+					ID:     config.DefaultIdentityTraitsSchemaID,
+					URL:    urlx.ParseOrPanic("file://./stub/identity.schema.json"),
+					RawURL: "file://./stub/identity.schema.json",
+				}
+
+				var wg sync.WaitGroup
+				testhelpers.SetDefaultIdentitySchema(reg.Config(context.Background()), defaultSchema.RawURL)
+				_, ps := testhelpers.NewNetwork(t, ctx, reg.Persister())
+
+				for i := 0; i < 10; i++ {
+					wg.Add(1)
+					// capture i
+					ii := i
+					go func() {
+						defer wg.Done()
+
+						id := ri.NewIdentity("")
+						id.SetCredentials(ri.CredentialsTypePassword, ri.Credentials{
+							Type:        ri.CredentialsTypePassword,
+							Identifiers: []string{fmt.Sprintf("racy identity %d", ii)},
+							Config:      sqlxx.JSONRawMessage(`{"foo":"bar"}`),
+						})
+						id.Traits = ri.Traits("{}")
+
+						require.NoError(t, ps.CreateIdentity(context.Background(), id))
+					}()
+				}
+
+				wg.Wait()
+			})
+
+			t.Run("case=credentials types", func(t *testing.T) {
+				for _, ct := range []ri.CredentialsType{ri.CredentialsTypeOIDC, ri.CredentialsTypePassword} {
+					require.NoError(t, p.(*sql.Persister).Connection(context.Background()).Where("name = ?", ct).First(&ri.CredentialsTypeTable{}))
+				}
+			})
+
 			t.Run("contract=identity.TestPool", func(t *testing.T) {
 				pop.SetLogger(pl(t))
 				identity.TestPool(ctx, conf, p)(t)
@@ -179,7 +240,8 @@ func TestPersister(t *testing.T) {
 			})
 			t.Run("contract=courier.TestPersister", func(t *testing.T) {
 				pop.SetLogger(pl(t))
-				courier.TestPersister(ctx, p)(t)
+				upsert, insert := sqltesthelpers.DefaultNetworkWrapper(p)
+				courier.TestPersister(ctx, upsert, insert)(t)
 			})
 			t.Run("contract=verification.TestPersister", func(t *testing.T) {
 				pop.SetLogger(pl(t))

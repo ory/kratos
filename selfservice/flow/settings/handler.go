@@ -4,15 +4,14 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/ory/kratos/text"
-
-	"github.com/ory/kratos/ui/node"
-	"github.com/ory/x/sqlcon"
-
 	"github.com/julienschmidt/httprouter"
 	"github.com/pkg/errors"
 
 	"github.com/ory/herodot"
+	"github.com/ory/nosurf"
+	"github.com/ory/x/sqlcon"
+	"github.com/ory/x/urlx"
+
 	"github.com/ory/kratos/continuity"
 	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/identity"
@@ -20,9 +19,9 @@ import (
 	"github.com/ory/kratos/selfservice/errorx"
 	"github.com/ory/kratos/selfservice/flow"
 	"github.com/ory/kratos/session"
+	"github.com/ory/kratos/text"
+	"github.com/ory/kratos/ui/node"
 	"github.com/ory/kratos/x"
-	"github.com/ory/nosurf"
-	"github.com/ory/x/urlx"
 )
 
 const (
@@ -86,7 +85,7 @@ func (h *Handler) RegisterPublicRoutes(public *x.RouterPublic) {
 		if x.IsJSONRequest(r) {
 			h.d.Writer().WriteError(w, r, session.NewErrNoActiveSessionFound())
 		} else {
-			http.Redirect(w, r, h.d.Config(r.Context()).SelfServiceFlowLoginUI().String(), http.StatusFound)
+			http.Redirect(w, r, h.d.Config(r.Context()).SelfServiceFlowLoginUI().String(), http.StatusSeeOther)
 		}
 	}))
 
@@ -122,7 +121,12 @@ func (h *Handler) NewFlow(w http.ResponseWriter, r *http.Request, i *identity.Id
 		}
 	}
 
-	if err := sortNodes(f.UI.Nodes, h.d.Config(r.Context()).DefaultIdentityTraitsSchemaURL().String()); err != nil {
+	ds, err := h.d.Config(r.Context()).DefaultIdentityTraitsSchemaURL()
+	if err != nil {
+		return nil, err
+	}
+
+	if err := sortNodes(r.Context(), f.UI.Nodes, ds.String()); err != nil {
 		return nil, err
 	}
 
@@ -250,10 +254,10 @@ type initializeSelfServiceSettingsFlowForBrowsers struct {
 //
 //     Responses:
 //       200: selfServiceSettingsFlow
-//       302: emptyResponse
+//       303: emptyResponse
+//       400: jsonError
 //       401: jsonError
 //       403: jsonError
-//       400: jsonError
 //       500: jsonError
 func (h *Handler) initBrowserFlow(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	s, err := h.d.SessionManager().FetchFromRequest(r.Context(), r)
@@ -373,14 +377,17 @@ func (h *Handler) fetchFlow(w http.ResponseWriter, r *http.Request) error {
 
 	if pr.ExpiresAt.Before(time.Now().UTC()) {
 		if pr.Type == flow.TypeBrowser {
+			redirectURL := flow.GetFlowExpiredRedirectURL(h.d.Config(r.Context()), RouteInitBrowserFlow, pr.ReturnTo)
+
 			h.d.Writer().WriteError(w, r, errors.WithStack(x.ErrGone.
 				WithReason("The settings flow has expired. Redirect the user to the settings flow init endpoint to initialize a new settings flow.").
-				WithDetail("redirect_to", urlx.AppendPaths(h.d.Config(r.Context()).SelfPublicURL(r), RouteInitBrowserFlow).String())))
+				WithDetail("redirect_to", redirectURL.String()).
+				WithDetail("return_to", pr.ReturnTo)))
 			return nil
 		}
 		h.d.Writer().WriteError(w, r, errors.WithStack(x.ErrGone.
 			WithReason("The settings flow has expired. Call the settings flow init API endpoint to initialize a new settings flow.").
-			WithDetail("api", urlx.AppendPaths(h.d.Config(r.Context()).SelfPublicURL(r), RouteInitAPIFlow).String())))
+			WithDetail("api", urlx.AppendPaths(h.d.Config(r.Context()).SelfPublicURL(), RouteInitAPIFlow).String())))
 		return nil
 	}
 
@@ -422,20 +429,20 @@ type submitSelfServiceSettingsFlowBody struct{}
 //
 // API-initiated flows expect `application/json` to be sent in the body and respond with
 //   - HTTP 200 and an application/json body with the session token on success;
-//   - HTTP 302 redirect to a fresh settings flow if the original flow expired with the appropriate error messages set;
+//   - HTTP 303 redirect to a fresh settings flow if the original flow expired with the appropriate error messages set;
 //   - HTTP 400 on form validation errors.
 //   - HTTP 401 when the endpoint is called without a valid session token.
 //   - HTTP 403 when `selfservice.flows.settings.privileged_session_max_age` was reached or the session's AAL is too low.
 //     Implies that the user needs to re-authenticate.
 //
 // Browser flows without HTTP Header `Accept` or with `Accept: text/*` respond with
-//   - a HTTP 302 redirect to the post/after settings URL or the `return_to` value if it was set and if the flow succeeded;
-//   - a HTTP 302 redirect to the Settings UI URL with the flow ID containing the validation errors otherwise.
-//   - a HTTP 302 redirect to the login endpoint when `selfservice.flows.settings.privileged_session_max_age` was reached or the session's AAL is too low.
+//   - a HTTP 303 redirect to the post/after settings URL or the `return_to` value if it was set and if the flow succeeded;
+//   - a HTTP 303 redirect to the Settings UI URL with the flow ID containing the validation errors otherwise.
+//   - a HTTP 303 redirect to the login endpoint when `selfservice.flows.settings.privileged_session_max_age` was reached or the session's AAL is too low.
 //
 // Browser flows with HTTP Header `Accept: application/json` respond with
 //   - HTTP 200 and a application/json body with the signed in identity and a `Set-Cookie` header on success;
-//   - HTTP 302 redirect to a fresh login flow if the original flow expired with the appropriate error messages set;
+//   - HTTP 303 redirect to a fresh login flow if the original flow expired with the appropriate error messages set;
 //   - HTTP 401 when the endpoint is called without a valid session cookie.
 //   - HTTP 403 when the page is accessed without a session cookie or the session's AAL is too low.
 //   - HTTP 400 on form validation errors.
@@ -475,10 +482,11 @@ type submitSelfServiceSettingsFlowBody struct{}
 //
 //     Responses:
 //       200: selfServiceSettingsFlow
-//       302: emptyResponse
+//       303: emptyResponse
 //       400: selfServiceSettingsFlow
 //       401: jsonError
 //       403: jsonError
+//       410: jsonError
 //       422: selfServiceBrowserLocationChangeRequiredError
 //       500: jsonError
 func (h *Handler) submitSettingsFlow(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
@@ -532,12 +540,18 @@ func (h *Handler) submitSettingsFlow(w http.ResponseWriter, r *http.Request, ps 
 	}
 
 	if updateContext == nil {
-		c := &UpdateContext{Session: ss, Flow: f}
-		h.d.SettingsFlowErrorHandler().WriteFlowError(w, r, node.DefaultGroup, f, c.GetIdentityToUpdate(), errors.WithStack(schema.NewNoSettingsStrategyResponsible()))
+		h.d.SettingsFlowErrorHandler().WriteFlowError(w, r, node.DefaultGroup, f, ss.Identity, errors.WithStack(schema.NewNoSettingsStrategyResponsible()))
 		return
 	}
 
-	if err := h.d.SettingsHookExecutor().PostSettingsHook(w, r, s, updateContext, updateContext.GetIdentityToUpdate()); err != nil {
+	i, err := updateContext.GetIdentityToUpdate()
+	if err != nil {
+		// An identity to update must always be present.
+		h.d.SettingsFlowErrorHandler().WriteFlowError(w, r, node.DefaultGroup, f, ss.Identity, err)
+		return
+	}
+
+	if err := h.d.SettingsHookExecutor().PostSettingsHook(w, r, s, updateContext, i); err != nil {
 		h.d.SettingsFlowErrorHandler().WriteFlowError(w, r, node.DefaultGroup, f, ss.Identity, err)
 		return
 	}

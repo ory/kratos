@@ -9,6 +9,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/gobuffalo/pop/v6"
+
 	"github.com/tidwall/gjson"
 
 	"github.com/ory/x/sqlxx"
@@ -112,8 +114,8 @@ func NewFlow(conf *config.Config, exp time.Duration, csrf string, r *http.Reques
 	_, err := x.SecureRedirectTo(r,
 		conf.SelfServiceBrowserDefaultReturnTo(),
 		x.SecureRedirectUseSourceURL(requestURL),
-		x.SecureRedirectAllowURLs(conf.SelfServiceBrowserWhitelistedReturnToDomains()),
-		x.SecureRedirectAllowSelfServiceURLs(conf.SelfPublicURL(r)),
+		x.SecureRedirectAllowURLs(conf.SelfServiceBrowserAllowedReturnToDomains()),
+		x.SecureRedirectAllowSelfServiceURLs(conf.SelfPublicURL()),
 	)
 	if err != nil {
 		return nil, err
@@ -125,7 +127,7 @@ func NewFlow(conf *config.Config, exp time.Duration, csrf string, r *http.Reques
 		IssuedAt:  now,
 		UI: &container.Container{
 			Method: "POST",
-			Action: flow.AppendFlowTo(urlx.AppendPaths(conf.SelfPublicURL(r), RouteSubmitFlow), id).String(),
+			Action: flow.AppendFlowTo(urlx.AppendPaths(conf.SelfPublicURL(), RouteSubmitFlow), id).String(),
 		},
 		RequestURL: requestURL,
 		CSRFToken:  csrf,
@@ -185,8 +187,22 @@ func (f *Flow) EnsureInternalContext() {
 
 func (f Flow) MarshalJSON() ([]byte, error) {
 	type local Flow
+	f.SetReturnTo()
+	return json.Marshal(local(f))
+}
+
+func (f *Flow) SetReturnTo() {
 	if u, err := url.Parse(f.RequestURL); err == nil {
 		f.ReturnTo = u.Query().Get("return_to")
 	}
-	return json.Marshal(local(f))
+}
+
+func (f *Flow) AfterFind(*pop.Connection) error {
+	f.SetReturnTo()
+	return nil
+}
+
+func (f *Flow) AfterSave(*pop.Connection) error {
+	f.SetReturnTo()
+	return nil
 }

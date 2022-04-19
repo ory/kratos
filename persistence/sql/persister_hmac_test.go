@@ -12,7 +12,7 @@ import (
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/schema"
 
-	"github.com/gobuffalo/pop/v5"
+	"github.com/gobuffalo/pop/v6"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
@@ -26,7 +26,7 @@ type logRegistryOnly struct {
 	c *config.Config
 }
 
-func (l *logRegistryOnly) IdentityTraitsSchemas(ctx context.Context) schema.Schemas {
+func (l *logRegistryOnly) IdentityTraitsSchemas(ctx context.Context) (schema.Schemas, error) {
 	panic("implement me")
 }
 

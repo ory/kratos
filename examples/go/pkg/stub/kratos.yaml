@@ -9,7 +9,7 @@ serve:
 
 selfservice:
   default_browser_return_url: http://127.0.0.1:4455/
-  whitelisted_return_urls:
+  allowed_return_urls:
     - http://127.0.0.1:4455
 
   methods:
@@ -74,7 +74,10 @@ hashers:
     key_length: 16
 
 identity:
-  default_schema_url: file://../../pkg/stub/identity.schema.json
+  default_schema_id: default
+  schemas:
+    - id: default
+      url: file://../../pkg/stub/identity.schema.json
 
 courier:
   smtp:

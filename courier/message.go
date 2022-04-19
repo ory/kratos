@@ -4,9 +4,9 @@ import (
 	"context"
 	"time"
 
-	"github.com/ory/kratos/corp"
-
 	"github.com/gofrs/uuid"
+
+	"github.com/ory/kratos/corp"
 )
 
 type MessageStatus int
@@ -15,12 +15,14 @@ const (
 	MessageStatusQueued MessageStatus = iota + 1
 	MessageStatusSent
 	MessageStatusProcessing
+	MessageStatusAbandoned
 )
 
 type MessageType int
 
 const (
 	MessageTypeEmail MessageType = iota + 1
+	MessageTypePhone
 )
 
 // swagger:ignore

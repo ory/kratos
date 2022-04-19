@@ -51,7 +51,7 @@ func (s *ErrorHandler) WriteFlowError(
 	w http.ResponseWriter,
 	r *http.Request,
 	f *Flow,
-	group node.Group,
+	group node.UiNodeGroup,
 	err error,
 ) {
 	s.d.Audit().
@@ -81,8 +81,11 @@ func (s *ErrorHandler) WriteFlowError(
 			return
 		}
 
-		if f.Type == flow.TypeAPI || x.IsJSONRequest(r) {
-			http.Redirect(w, r, urlx.CopyWithQuery(urlx.AppendPaths(s.d.Config(r.Context()).SelfPublicURL(r),
+		// We need to use the new flow, as that flow will be a browser flow. Bug fix for:
+		//
+		// https://github.com/ory/kratos/issues/2049!!
+		if a.Type == flow.TypeAPI || x.IsJSONRequest(r) {
+			http.Redirect(w, r, urlx.CopyWithQuery(urlx.AppendPaths(s.d.Config(r.Context()).SelfPublicURL(),
 				RouteGetFlow), url.Values{"id": {a.ID.String()}}).String(), http.StatusSeeOther)
 		} else {
 			http.Redirect(w, r, a.AppendTo(s.d.Config(r.Context()).SelfServiceFlowVerificationUI()).String(), http.StatusSeeOther)

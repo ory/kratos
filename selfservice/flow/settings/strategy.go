@@ -23,7 +23,7 @@ var pkgName = reflect.TypeOf(Strategies{}).PkgPath()
 
 type Strategy interface {
 	SettingsStrategyID() string
-	NodeGroup() node.Group
+	NodeGroup() node.UiNodeGroup
 	RegisterSettingsRoutes(*x.RouterPublic)
 	PopulateSettingsMethod(*http.Request, *identity.Identity, *Flow) error
 	Settings(w http.ResponseWriter, r *http.Request, f *Flow, s *session.Session) (*UpdateContext, error)

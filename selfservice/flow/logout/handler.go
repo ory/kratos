@@ -124,7 +124,7 @@ func (h *Handler) createSelfServiceLogoutUrlForBrowsers(w http.ResponseWriter, r
 
 	h.d.Writer().Write(w, r, &selfServiceLogoutUrl{
 		LogoutToken: sess.LogoutToken,
-		LogoutURL: urlx.CopyWithQuery(urlx.AppendPaths(h.d.Config(r.Context()).SelfPublicURL(r), RouteSubmitFlow),
+		LogoutURL: urlx.CopyWithQuery(urlx.AppendPaths(h.d.Config(r.Context()).SelfPublicURL(), RouteSubmitFlow),
 			url.Values{"token": {sess.LogoutToken}}).String(),
 	})
 }
@@ -218,7 +218,7 @@ type submitSelfServiceLogoutFlow struct {
 //
 // This endpoint logs out an identity in a self-service manner.
 //
-// If the `Accept` HTTP header is not set to `application/json`, the browser will be redirected (HTTP 302 Found)
+// If the `Accept` HTTP header is not set to `application/json`, the browser will be redirected (HTTP 303 See Other)
 // to the `return_to` parameter of the initial request or fall back to `urls.default_return_to`.
 //
 // If the `Accept` HTTP header is set to `application/json`, a 204 No Content response
@@ -236,7 +236,7 @@ type submitSelfServiceLogoutFlow struct {
 //     Schemes: http, https
 //
 //     Responses:
-//       302: emptyResponse
+//       303: emptyResponse
 //       204: emptyResponse
 //       500: jsonError
 func (h *Handler) submitLogout(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
@@ -273,8 +273,8 @@ func (h *Handler) completeLogout(w http.ResponseWriter, r *http.Request) {
 
 	ret, err := x.SecureRedirectTo(r, h.d.Config(r.Context()).SelfServiceFlowLogoutRedirectURL(),
 		x.SecureRedirectUseSourceURL(r.RequestURI),
-		x.SecureRedirectAllowURLs(h.d.Config(r.Context()).SelfServiceBrowserWhitelistedReturnToDomains()),
-		x.SecureRedirectAllowSelfServiceURLs(h.d.Config(r.Context()).SelfPublicURL(r)),
+		x.SecureRedirectAllowURLs(h.d.Config(r.Context()).SelfServiceBrowserAllowedReturnToDomains()),
+		x.SecureRedirectAllowSelfServiceURLs(h.d.Config(r.Context()).SelfPublicURL()),
 	)
 	if err != nil {
 		h.d.SelfServiceErrorManager().Forward(r.Context(), w, r, err)

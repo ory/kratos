@@ -30,7 +30,8 @@ context('2FA lookup secrets', () => {
       let password = gen.password()
 
       beforeEach(() => {
-        cy.clearAllCookies()
+        cy.longPrivilegedSessionTime()
+        cy.useLaxAal()
         email = gen.email()
         password = gen.password()
 
@@ -39,9 +40,6 @@ context('2FA lookup secrets', () => {
           password,
           fields: { 'traits.website': website }
         })
-        cy.longPrivilegedSessionTime()
-
-        cy.useLaxAal()
       })
 
       it('should be be asked to sign in with 2fa if set up', () => {
@@ -65,14 +63,11 @@ context('2FA lookup secrets', () => {
         cy.clearAllCookies()
         cy.visit(login)
 
-        cy.get('input[name="password_identifier"]').type(email)
+        cy.get('input[name="identifier"]').type(email)
         cy.get('input[name="password"]').type(password)
         cy.submitPasswordForm()
 
         // MFA is now requested
-        cy.location('pathname').should((loc) => {
-          expect(loc).to.include('/login')
-        })
         cy.shouldShow2FAScreen()
 
         // If we visit settings page we still end up at 2fa screen
@@ -93,6 +88,53 @@ context('2FA lookup secrets', () => {
           expectAal: 'aal2',
           expectMethods: ['password', 'totp']
         })
+      })
+
+      it('signin with 2fa and be redirected', () => {
+        if (app !== 'express') {
+          return
+        }
+
+        cy.visit(settings)
+        cy.requireStrictAal()
+
+        let secret
+        cy.get('[data-testid="node/text/totp_secret_key/text"]').then(($e) => {
+          secret = $e.text().trim()
+        })
+        cy.get('input[name="totp_code"]').then(($e) => {
+          cy.wrap($e).type(authenticator.generate(secret))
+        })
+        cy.get('*[name="method"][value="totp"]').click()
+        cy.expectSettingsSaved()
+        cy.getSession({
+          expectAal: 'aal2',
+          expectMethods: ['password', 'totp']
+        })
+
+        cy.clearAllCookies()
+        cy.visit(`${login}?return_to=https://www.ory.sh/`)
+
+        cy.get('input[name="identifier"]').type(email)
+        cy.get('input[name="password"]').type(password)
+        cy.submitPasswordForm()
+
+        // MFA is now requested
+        cy.location('pathname').should((loc) => {
+          expect(loc).to.include('/login')
+        })
+        cy.shouldShow2FAScreen()
+
+        cy.location('pathname').should((loc) => {
+          expect(loc).to.include('/login')
+        })
+
+        cy.shouldShow2FAScreen()
+        cy.get('input[name="totp_code"]').then(($e) => {
+          cy.wrap($e).type(authenticator.generate(secret))
+        })
+        cy.get('*[name="method"][value="totp"]').click()
+        cy.url().should('eq', 'https://www.ory.sh/')
       })
 
       it('should go through several totp lifecycles', () => {

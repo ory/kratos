@@ -3,6 +3,7 @@ package settings_test
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"net/http"
 	"net/url"
@@ -45,7 +46,7 @@ func init() {
 
 func TestHandler(t *testing.T) {
 	conf, reg := internal.NewFastRegistryWithMocks(t)
-	conf.MustSet(config.ViperKeyDefaultIdentitySchemaURL, "file://./stub/identity.schema.json")
+	testhelpers.SetDefaultIdentitySchema(conf, "file://./stub/identity.schema.json")
 	testhelpers.StrategyEnable(t, conf, identity.CredentialsTypePassword.String(), true)
 	testhelpers.StrategyEnable(t, conf, settings.StrategyProfile, true)
 
@@ -112,8 +113,8 @@ func TestHandler(t *testing.T) {
 		State:  identity.StateActive,
 		Traits: []byte(`{"email":"foo@bar"}`),
 		Credentials: map[identity.CredentialsType]identity.Credentials{
-			identity.CredentialsTypePassword: {Type: identity.CredentialsTypePassword, Config: []byte("{}")},
-			identity.CredentialsTypeWebAuthn: {Type: identity.CredentialsTypeWebAuthn, Config: []byte("{}")},
+			identity.CredentialsTypePassword: {Type: identity.CredentialsTypePassword, Config: []byte(`{"hashed_password":"$argon2id$v=19$m=32,t=2,p=4$cm94YnRVOW5jZzFzcVE4bQ$MNzk5BtR2vUhrp6qQEjRNw"}`), Identifiers: []string{"foo@bar"}},
+			identity.CredentialsTypeWebAuthn: {Type: identity.CredentialsTypeWebAuthn, Config: []byte(`{"credentials":[{"is_passwordless":false}]}`), Identifiers: []string{"foo@bar"}},
 		}})
 
 	t.Run("endpoint=init", func(t *testing.T) {
@@ -159,6 +160,22 @@ func TestHandler(t *testing.T) {
 				assert.Contains(t, res.Request.URL.String(), reg.Config(context.Background()).SelfServiceFlowLoginUI().String())
 				assert.EqualValues(t, "Please complete the second authentication challenge.", gjson.GetBytes(body, "ui.messages.0.text").String(), "%s", body)
 			})
+
+			t.Run("case=redirects with 303", func(t *testing.T) {
+				c := testhelpers.NewHTTPClientWithArbitrarySessionCookie(t, reg)
+				// prevent the redirect
+				c.CheckRedirect = func(req *http.Request, via []*http.Request) error {
+					return http.ErrUseLastResponse
+				}
+				req, err := http.NewRequest("GET", publicTS.URL+settings.RouteInitBrowserFlow, nil)
+				require.NoError(t, err)
+
+				res, err := c.Do(req)
+				require.NoError(t, err)
+				// here we check that the redirect status is 303
+				require.Equal(t, http.StatusSeeOther, res.StatusCode)
+				defer res.Body.Close()
+			})
 		})
 
 		t.Run("description=init a flow as SPA", func(t *testing.T) {
@@ -170,13 +187,14 @@ func TestHandler(t *testing.T) {
 			})
 
 			t.Run("description=can not init if identity has aal2 but session has aal1", func(t *testing.T) {
+				email := testhelpers.RandomEmail()
 				conf.MustSet(config.ViperKeySelfServiceSettingsRequiredAAL, config.HighestAvailableAAL)
 				user1 := testhelpers.NewHTTPClientWithIdentitySessionCookie(t, reg, &identity.Identity{
 					State:  identity.StateActive,
-					Traits: []byte(`{"email":"foo@bar"}`),
+					Traits: []byte(`{"email":"` + email + `"}`),
 					Credentials: map[identity.CredentialsType]identity.Credentials{
-						identity.CredentialsTypePassword: {Type: identity.CredentialsTypePassword, Config: []byte("{}")},
-						identity.CredentialsTypeWebAuthn: {Type: identity.CredentialsTypeWebAuthn, Config: []byte("{}")},
+						identity.CredentialsTypePassword: {Type: identity.CredentialsTypePassword, Config: []byte(`{"hashed_password":"$argon2id$v=19$m=32,t=2,p=4$cm94YnRVOW5jZzFzcVE4bQ$MNzk5BtR2vUhrp6qQEjRNw"}`), Identifiers: []string{email}},
+						identity.CredentialsTypeWebAuthn: {Type: identity.CredentialsTypeWebAuthn, Config: []byte(`{"credentials":[{"is_passwordless":false}]}`), Identifiers: []string{email}},
 					}})
 				res, body := initSPAFlow(t, user1)
 				assert.Equal(t, http.StatusForbidden, res.StatusCode)
@@ -186,7 +204,7 @@ func TestHandler(t *testing.T) {
 	})
 
 	t.Run("endpoint=fetch", func(t *testing.T) {
-		t.Run("description=fetching a non-existent flow should return a 403 error", func(t *testing.T) {
+		t.Run("description=fetching a non-existent flow should return a 404 error", func(t *testing.T) {
 			_, _, err := testhelpers.NewSDKCustomClient(publicTS, otherUser).V0alpha2Api.GetSelfServiceSettingsFlow(context.Background()).Id("i-do-not-exist").Execute()
 			require.Error(t, err)
 
@@ -206,15 +224,22 @@ func TestHandler(t *testing.T) {
 		})
 
 		t.Run("case=expired with return_to", func(t *testing.T) {
-			conf.MustSet(config.ViperKeyURLsWhitelistedReturnToDomains, []string{"https://www.ory.sh/"})
+			returnTo := "https://www.ory.sh"
+			conf.MustSet(config.ViperKeyURLsAllowedReturnToDomains, []string{returnTo})
+
 			client := testhelpers.NewHTTPClientWithArbitrarySessionToken(t, reg)
-			body := x.EasyGetBody(t, client, publicTS.URL+settings.RouteInitBrowserFlow+"?return_to=https://www.ory.sh")
+			body := x.EasyGetBody(t, client, publicTS.URL+settings.RouteInitBrowserFlow+"?return_to="+returnTo)
 
 			// Expire the flow
 			f, err := reg.SettingsFlowPersister().GetSettingsFlow(context.Background(), uuid.FromStringOrNil(gjson.GetBytes(body, "id").String()))
 			require.NoError(t, err)
 			f.ExpiresAt = time.Now().Add(-time.Second)
 			require.NoError(t, reg.SettingsFlowPersister().UpdateSettingsFlow(context.Background(), f))
+
+			// Retrieve the flow and verify that return_to is in the response
+			getURL := fmt.Sprintf("%s%s?id=%s&return_to=%s", publicTS.URL, settings.RouteGetFlow, f.ID, returnTo)
+			getBody := x.EasyGetBody(t, client, getURL)
+			assert.Equal(t, gjson.GetBytes(getBody, "error.details.return_to").String(), returnTo)
 
 			// submit the flow but it is expired
 			u := publicTS.URL + settings.RouteSubmitFlow + "?flow=" + f.ID.String()
@@ -225,7 +250,7 @@ func TestHandler(t *testing.T) {
 
 			f, err = reg.SettingsFlowPersister().GetSettingsFlow(context.Background(), uuid.FromStringOrNil(gjson.GetBytes(resBody, "id").String()))
 			require.NoError(t, err)
-			assert.Equal(t, publicTS.URL+settings.RouteInitBrowserFlow+"?return_to=https://www.ory.sh", f.RequestURL)
+			assert.Equal(t, publicTS.URL+settings.RouteInitBrowserFlow+"?return_to="+returnTo, f.RequestURL)
 		})
 
 		t.Run("description=should fail to fetch request if identity changed", func(t *testing.T) {

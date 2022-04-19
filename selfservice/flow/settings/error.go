@@ -37,7 +37,7 @@ type (
 
 		HandlerProvider
 		FlowPersistenceProvider
-		IdentityTraitsSchemas(ctx context.Context) schema.Schemas
+		IdentityTraitsSchemas(ctx context.Context) (schema.Schemas, error)
 	}
 
 	ErrorHandlerProvider interface{ SettingsFlowErrorHandler() *ErrorHandler }
@@ -79,8 +79,8 @@ func (s *ErrorHandler) reauthenticate(
 	f *Flow,
 	err *FlowNeedsReAuth,
 ) {
-	returnTo := urlx.CopyWithQuery(urlx.AppendPaths(s.d.Config(r.Context()).SelfPublicURL(r), r.URL.Path), r.URL.Query())
-	redirectTo := urlx.AppendPaths(urlx.CopyWithQuery(s.d.Config(r.Context()).SelfPublicURL(r),
+	returnTo := urlx.CopyWithQuery(urlx.AppendPaths(s.d.Config(r.Context()).SelfPublicURL(), r.URL.Path), r.URL.Query())
+	redirectTo := urlx.AppendPaths(urlx.CopyWithQuery(s.d.Config(r.Context()).SelfPublicURL(),
 		url.Values{"refresh": {"true"}, "return_to": {returnTo.String()}}),
 		login.RouteInitBrowserFlow).String()
 	err.RedirectBrowserTo = redirectTo
@@ -115,7 +115,7 @@ func (s *ErrorHandler) PrepareReplacementForExpiredFlow(w http.ResponseWriter, r
 func (s *ErrorHandler) WriteFlowError(
 	w http.ResponseWriter,
 	r *http.Request,
-	group node.Group,
+	group node.UiNodeGroup,
 	f *Flow,
 	id *identity.Identity,
 	err error,
@@ -135,7 +135,7 @@ func (s *ErrorHandler) WriteFlowError(
 		if shouldRespondWithJSON {
 			s.d.Writer().WriteError(w, r, err)
 		} else {
-			http.Redirect(w, r, urlx.AppendPaths(s.d.Config(r.Context()).SelfPublicURL(r), login.RouteInitBrowserFlow).String(), http.StatusSeeOther)
+			http.Redirect(w, r, urlx.AppendPaths(s.d.Config(r.Context()).SelfPublicURL(), login.RouteInitBrowserFlow).String(), http.StatusSeeOther)
 		}
 		return
 	}
@@ -145,7 +145,7 @@ func (s *ErrorHandler) WriteFlowError(
 			s.d.Writer().WriteError(w, r, aalErr)
 		} else {
 			http.Redirect(w, r, urlx.CopyWithQuery(
-				urlx.AppendPaths(s.d.Config(r.Context()).SelfPublicURL(r), login.RouteInitBrowserFlow),
+				urlx.AppendPaths(s.d.Config(r.Context()).SelfPublicURL(), login.RouteInitBrowserFlow),
 				url.Values{"aal": {string(identity.AuthenticatorAssuranceLevel2)}}).String(), http.StatusSeeOther)
 		}
 		return
@@ -194,13 +194,19 @@ func (s *ErrorHandler) WriteFlowError(
 
 	// Lookup the schema from the loaded configuration. This local schema
 	// URL is needed for sorting the UI nodes, instead of the public URL.
-	schema, err := s.d.IdentityTraitsSchemas(r.Context()).GetByID(id.SchemaID)
+	schemas, err := s.d.IdentityTraitsSchemas(r.Context())
 	if err != nil {
 		s.forward(w, r, f, err)
 		return
 	}
 
-	if err := sortNodes(f.UI.Nodes, schema.RawURL); err != nil {
+	schema, err := schemas.GetByID(id.SchemaID)
+	if err != nil {
+		s.forward(w, r, f, err)
+		return
+	}
+
+	if err := sortNodes(r.Context(), f.UI.Nodes, schema.RawURL); err != nil {
 		s.forward(w, r, f, err)
 		return
 	}

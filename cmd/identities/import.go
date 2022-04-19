@@ -15,23 +15,38 @@ import (
 	"github.com/ory/kratos/cmd/cliclient"
 )
 
-// NewImportCmd represents the import command
-func NewImportCmd() *cobra.Command {
-	return &cobra.Command{
-		Use:   "import <file.json [file-2.json [file-3.json] ...]>",
-		Short: "Import identities from files or STD_IN",
-		Example: `$ cat > ./file.json <<EOF
-{
-    "schema_id": "default",
-    "traits": {
-        "email": "foo@example.com"
-    }
+func NewImportCmd(root *cobra.Command) *cobra.Command {
+	var cmd = &cobra.Command{
+		Use:   "import",
+		Short: "Import resources",
+	}
+	cmd.AddCommand(NewImportIdentitiesCmd(root))
+	cliclient.RegisterClientFlags(cmd.PersistentFlags())
+	cmdx.RegisterFormatFlags(cmd.PersistentFlags())
+	return cmd
 }
-EOF
 
-$ kratos identities import file.json
-# Alternatively:
-$ cat file.json | kratos identities import`,
+// NewImportIdentitiesCmd represents the import command
+func NewImportIdentitiesCmd(root *cobra.Command) *cobra.Command {
+	return &cobra.Command{
+		Use:   "identities file-1.json [file-2.json] [file-3.json] [file-n.json]",
+		Short: "Import one or more identities from files or STD_IN",
+		Example: fmt.Sprintf(`Create an example identity:
+
+	cat > ./file.json <<EOF
+	{
+	    "schema_id": "default",
+	    "traits": {
+	        "email": "foo@example.com"
+	    }
+	}
+	EOF
+
+	%[1]s import identities file.json
+
+Alternatively:
+
+	cat file.json | %[1]s import identities`, root.Use),
 		Long: `Import identities from files or STD_IN.
 
 Files can contain only a single or an array of identities. The validity of files can be tested beforehand using "... identities validate".

@@ -24,6 +24,8 @@ func Compare(ctx context.Context, password []byte, hash []byte) error {
 		return CompareBcrypt(ctx, password, hash)
 	case IsArgon2idHash(hash):
 		return CompareArgon2id(ctx, password, hash)
+	case IsArgon2iHash(hash):
+		return CompareArgon2i(ctx, password, hash)
 	case IsPbkdf2Hash(hash):
 		return ComparePbkdf2(ctx, password, hash)
 	default:
@@ -64,6 +66,26 @@ func CompareArgon2id(_ context.Context, password []byte, hash []byte) error {
 	return errors.WithStack(ErrMismatchedHashAndPassword)
 }
 
+func CompareArgon2i(_ context.Context, password []byte, hash []byte) error {
+	// Extract the parameters, salt and derived key from the encoded password
+	// hash.
+	p, salt, hash, err := decodeArgon2idHash(string(hash))
+	if err != nil {
+		return err
+	}
+
+	// Derive the key from the other password using the same parameters.
+	otherHash := argon2.Key([]byte(password), salt, p.Iterations, uint32(p.Memory), p.Parallelism, p.KeyLength)
+
+	// Check that the contents of the hashed passwords are identical. Note
+	// that we are using the subtle.ConstantTimeCompare() function for this
+	// to help prevent timing attacks.
+	if subtle.ConstantTimeCompare(hash, otherHash) == 1 {
+		return nil
+	}
+	return errors.WithStack(ErrMismatchedHashAndPassword)
+}
+
 func ComparePbkdf2(_ context.Context, password []byte, hash []byte) error {
 	// Extract the parameters, salt and derived key from the encoded password
 	// hash.
@@ -87,6 +109,7 @@ func ComparePbkdf2(_ context.Context, password []byte, hash []byte) error {
 var (
 	isBcryptHash   = regexp.MustCompile(`^\$2[abzy]?\$`)
 	isArgon2idHash = regexp.MustCompile(`^\$argon2id\$`)
+	isArgon2iHash  = regexp.MustCompile(`^\$argon2i\$`)
 	isPbkdf2Hash   = regexp.MustCompile(`^\$pbkdf2-sha[0-9]{1,3}\$`)
 )
 
@@ -96,6 +119,10 @@ func IsBcryptHash(hash []byte) bool {
 
 func IsArgon2idHash(hash []byte) bool {
 	return isArgon2idHash.Match(hash)
+}
+
+func IsArgon2iHash(hash []byte) bool {
+	return isArgon2iHash.Match(hash)
 }
 
 func IsPbkdf2Hash(hash []byte) bool {

@@ -164,6 +164,19 @@
           "title": "Web-Hook Configuration",
           "description": "Define what the hook should do",
           "properties": {
+            "response": {
+              "title": "Response Handling",
+              "description": "How the web hook should handle the response",
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "ignore": {
+                  "type": "boolean",
+                  "description": "Ignore the response from the web hook. If enabled the request will be made asynchronously which can be useful if you only wish to notify another system but do not parse the response.",
+                  "default": false
+                }
+              }
+            },
             "url": {
               "type": "string",
               "description": "The URL the Web-Hook should call",
@@ -384,7 +397,7 @@
             ]
           }
         },
-        "tenant": {
+        "microsoft_tenant": {
           "title": "Azure AD Tenant",
           "description": "The Azure AD Tenant to use for authentication.",
           "type": "string",
@@ -396,7 +409,20 @@
             "contoso.onmicrosoft.com"
           ]
         },
-        "team_id": {
+        "subject_source": {
+          "title": "Microsoft subject source",
+          "description": "Controls which source the subject identifier is taken from by microsoft provider. If set to `userinfo` (the default) then the identifier is taken from the `sub` field of OIDC ID token or data received from `/userinfo` standard OIDC endpoint. If set to `me` then the `id` field of data structure received from `https://graph.microsoft.com/v1.0/me` is taken as an identifier.",
+          "type": "string",
+          "enum": [
+            "userinfo",
+            "me"
+          ],
+          "default": "userinfo",
+          "examples": [
+            "userinfo"
+          ]
+        },
+        "apple_team_id": {
           "title": "Apple Developer Team ID",
           "description": "Apple Developer Team ID needed for generating a JWT token for client secret",
           "type": "string",
@@ -404,7 +430,7 @@
             "KP76DQS54M"
           ]
         },
-        "private_key_id": {
+        "apple_private_key_id": {
           "title": "Apple Private Key Identifier",
           "description": "Sign In with Apple Private Key Identifier needed for generating a JWT token for client secret",
           "type": "string",
@@ -412,7 +438,7 @@
             "UX56C66723"
           ]
         },
-        "private_key": {
+        "apple_private_key": {
           "title": "Apple Private Key",
           "description": "Sign In with Apple Private Key needed for generating a JWT token for client secret",
           "type": "string",
@@ -445,16 +471,16 @@
           },
           "then": {
             "required": [
-              "tenant"
+              "microsoft_tenant"
             ]
           },
           "else": {
             "not": {
               "properties": {
-                "tenant": {}
+                "microsoft_tenant": {}
               },
               "required": [
-                "tenant"
+                "microsoft_tenant"
               ]
             }
           }
@@ -473,16 +499,19 @@
           "then": {
             "not": {
               "properties": {
-                "client_secret": {}
+                "client_secret": {
+                  "type": "string",
+                  "minLength": 1
+                }
               },
               "required": [
                 "client_secret"
               ]
             },
             "required": [
-              "private_key_id",
-              "private_key",
-              "team_id"
+              "apple_private_key_id",
+              "apple_private_key",
+              "apple_team_id"
             ]
           },
           "else": {
@@ -493,30 +522,39 @@
               {
                 "not": {
                   "properties": {
-                    "team_id": {}
+                    "apple_team_id": {
+                      "type": "string",
+                      "minLength": 1
+                    }
                   },
                   "required": [
-                    "team_id"
+                    "apple_team_id"
                   ]
                 }
               },
               {
                 "not": {
                   "properties": {
-                    "private_key_id": {}
+                    "apple_private_key_id": {
+                      "type": "string",
+                      "minLength": 1
+                    }
                   },
                   "required": [
-                    "private_key_id"
+                    "apple_private_key_id"
                   ]
                 }
               },
               {
                 "not": {
                   "properties": {
-                    "private_key": {}
+                    "apple_private_key": {
+                      "type": "string",
+                      "minLength": 1
+                    }
                   },
                   "required": [
-                    "private_key"
+                    "apple_private_key"
                   ]
                 }
               }
@@ -531,6 +569,21 @@
         "anyOf": [
           {
             "$ref": "#/definitions/selfServiceWebHook"
+          }
+        ]
+      },
+      "uniqueItems": true,
+      "additionalItems": false
+    },
+    "selfServiceAfterRecoveryHooks": {
+      "type": "array",
+      "items": {
+        "anyOf": [
+          {
+            "$ref": "#/definitions/selfServiceWebHook"
+          },
+          {
+            "$ref": "#/definitions/selfServiceSessionRevokerHook"
           }
         ]
       },
@@ -558,7 +611,7 @@
         }
       }
     },
-    "selfServiceAfterPasswordLoginMethod": {
+    "selfServiceAfterDefaultLoginMethod": {
       "type": "object",
       "additionalProperties": false,
       "properties": {
@@ -678,7 +731,10 @@
           "$ref": "#/definitions/defaultReturnTo"
         },
         "password": {
-          "$ref": "#/definitions/selfServiceAfterPasswordLoginMethod"
+          "$ref": "#/definitions/selfServiceAfterDefaultLoginMethod"
+        },
+        "webauthn": {
+          "$ref": "#/definitions/selfServiceAfterDefaultLoginMethod"
         },
         "oidc": {
           "$ref": "#/definitions/selfServiceAfterOIDCLoginMethod"
@@ -705,6 +761,9 @@
           "$ref": "#/definitions/defaultReturnTo"
         },
         "password": {
+          "$ref": "#/definitions/selfServiceAfterRegistrationMethod"
+        },
+        "webauthn": {
           "$ref": "#/definitions/selfServiceAfterRegistrationMethod"
         },
         "oidc": {
@@ -734,7 +793,7 @@
           "$ref": "#/definitions/defaultReturnTo"
         },
         "hooks": {
-          "$ref": "#/definitions/selfServiceHooks"
+          "$ref": "#/definitions/selfServiceAfterRecoveryHooks"
         }
       },
       "additionalProperties": false
@@ -783,6 +842,77 @@
           ]
         }
       }
+    },
+    "courierTemplates": {
+      "additionalProperties": false,
+      "type": "object",
+      "properties": {
+        "invalid": {
+          "additionalProperties": false,
+          "type": "object",
+          "properties": {
+            "email": {
+              "$ref": "#/definitions/emailCourierTemplate"
+            }
+          },
+          "required": [
+            "email"
+          ]
+        },
+        "valid": {
+          "additionalProperties": false,
+          "type": "object",
+          "properties": {
+            "email": {
+              "$ref": "#/definitions/emailCourierTemplate"
+            }
+          },
+          "required": [
+            "email"
+          ]
+        }
+      }
+    },
+    "emailCourierTemplate": {
+      "additionalProperties": false,
+      "type": "object",
+      "properties": {
+        "body": {
+          "additionalProperties": false,
+          "type": "object",
+          "properties": {
+            "plaintext": {
+              "type": "string",
+              "description": "The fallback template for email clients that do not support html.",
+              "format": "uri",
+              "examples": [
+                "file://path/to/body.plaintext.gotmpl",
+                "https://foo.bar.com/path/to/body.plaintext.gotmpl",
+                "base64://e3sgZGVmaW5lIGFmLVpBIH19CkhhbGxvLAoKSGVyc3RlbCBqb3UgcmVrZW5pbmcgZGV1ciBoaWVyZGllIHNrYWtlbCB0ZSB2b2xnOgp7ey0gZW5kIC19fQoKe3sgZGVmaW5lIGVuLVVTIH19CkhpLAoKcGxlYXNlIHJlY292ZXIgYWNjZXNzIHRvIHlvdXIgYWNjb3VudCBieSBjbGlja2luZyB0aGUgZm9sbG93aW5nIGxpbms6Cnt7LSBlbmQgLX19Cgp7ey0gaWYgZXEgLmxhbmcgImFmLVpBIiAtfX0KCnt7IHRlbXBsYXRlICJhZi1aQSIgLiB9fQoKe3stIGVsc2UgLX19Cgp7eyB0ZW1wbGF0ZSAiZW4tVVMiIH19Cgp7ey0gZW5kIC19fQp7eyAuUmVjb3ZlcnlVUkwgfX0K"
+              ]
+            },
+            "html": {
+              "type": "string",
+              "description": "The default template used for sending out emails. The template can contain HTML ",
+              "format": "uri",
+              "examples": [
+                "file://path/to/body.html.gotmpl",
+                "https://foo.bar.com/path/to/body.html.gotmpl",
+                "base64://e3sgZGVmaW5lIGFmLVpBIH19CkhhbGxvLAoKSGVyc3RlbCBqb3UgcmVrZW5pbmcgZGV1ciBoaWVyZGllIHNrYWtlbCB0ZSB2b2xnOgp7ey0gZW5kIC19fQoKe3sgZGVmaW5lIGVuLVVTIH19CkhpLAoKcGxlYXNlIHJlY292ZXIgYWNjZXNzIHRvIHlvdXIgYWNjb3VudCBieSBjbGlja2luZyB0aGUgZm9sbG93aW5nIGxpbms6Cnt7LSBlbmQgLX19Cgp7ey0gaWYgZXEgLmxhbmcgImFmLVpBIiAtfX0KCnt7IHRlbXBsYXRlICJhZi1aQSIgLiB9fQoKe3stIGVsc2UgLX19Cgp7eyB0ZW1wbGF0ZSAiZW4tVVMiIH19Cgp7ey0gZW5kIC19fQo8YSBocmVmPSJ7eyAuUmVjb3ZlcnlVUkwgfX0iPnt7IC5SZWNvdmVyeVVSTCB9fTwvYT4"
+              ]
+            }
+          }
+        },
+        "subject": {
+          "type": "string",
+          "format": "uri",
+          "examples": [
+            "file://path/to/subject.gotmpl",
+            "https://foo.bar.com/path/to/subject.gotmpl",
+            "base64://e3sgZGVmaW5lIGFmLVpBIH19CkhhbGxvLAoKSGVyc3RlbCBqb3UgcmVrZW5pbmcgZGV1ciBoaWVyZGllIHNrYWtlbCB0ZSB2b2xnOgp7ey0gZW5kIC19fQoKe3sgZGVmaW5lIGVuLVVTIH19CkhpLAoKcGxlYXNlIHJlY292ZXIgYWNjZXNzIHRvIHlvdXIgYWNjb3VudCBieSBjbGlja2luZyB0aGUgZm9sbG93aW5nIGxpbms6Cnt7LSBlbmQgLX19Cgp7ey0gaWYgZXEgLmxhbmcgImFmLVpBIiAtfX0KCnt7IHRlbXBsYXRlICJhZi1aQSIgLiB9fQoKe3stIGVsc2UgLX19Cgp7eyB0ZW1wbGF0ZSAiZW4tVVMiIH19Cgp7ey0gZW5kIC19fQo8YSBocmVmPSJ7eyAuUmVjb3ZlcnlVUkwgfX0iPnt7IC5SZWNvdmVyeVVSTCB9fTwvYT4"
+          ]
+        }
+      }
     }
   },
   "properties": {
@@ -796,8 +926,8 @@
         "default_browser_return_url": {
           "$ref": "#/definitions/defaultReturnTo"
         },
-        "whitelisted_return_urls": {
-          "title": "Whitelisted Return To URLs",
+        "allowed_return_urls": {
+          "title": "Allowed Return To URLs",
           "description": "List of URLs that are allowed to be redirected to. A redirection request is made by appending `?return_to=...` to Login, Registration, and other self-service flows.",
           "type": "array",
           "items": {
@@ -878,6 +1008,12 @@
               "type": "object",
               "additionalProperties": false,
               "properties": {
+                "enabled": {
+                  "type": "boolean",
+                  "title": "Enable User Registration",
+                  "description": "If set to true will enable [User Registration](https://www.ory.sh/kratos/docs/self-service/flows/user-registration/).",
+                  "default": true
+                },
                 "ui_url": {
                   "title": "Registration UI URL",
                   "description": "URL where the Registration UI is hosted. Check the [reference implementation](https://github.com/ory/kratos-selfservice-ui-node).",
@@ -1061,6 +1197,13 @@
                   "title": "Link Configuration",
                   "description": "Additional configuration for the link strategy.",
                   "properties": {
+                    "base_url": {
+                      "title": "Override the base URL which should be used as the base for recovery and verification links.",
+                      "type": "string",
+                      "examples": [
+                        "https://my-app.com"
+                      ]
+                    },
                     "lifespan": {
                       "title": "How long a link is valid for",
                       "type": "string",
@@ -1113,6 +1256,19 @@
                     "ignore_network_errors": {
                       "title": "Ignore Lookup Network Errors",
                       "description": "If set to false the password validation fails when the network or the Have I Been Pwnd API is down.",
+                      "type": "boolean",
+                      "default": true
+                    },
+                    "min_password_length": {
+                      "title": "Minimum Password Length",
+                      "description": "Defines the minimum length of the password.",
+                      "type": "integer",
+                      "default": 8,
+                      "minimum": 6
+                    },
+                    "identifier_similarity_check_enabled": {
+                      "title": "Enable password-identifier similarity check",
+                      "description": "If set to false the password validation does not check for similarity between the password and the user identifier.",
                       "type": "boolean",
                       "default": true
                     }
@@ -1168,6 +1324,11 @@
                   "type": "object",
                   "title": "WebAuthn Configuration",
                   "properties": {
+                    "passwordless": {
+                      "type": "boolean",
+                      "title": "Use For Passwordless Flows",
+                      "description": "If enabled will have the effect that WebAuthn is used for passwordless flows (as a first factor) and not for multi-factor set ups. With this set to true, users will see an option to sign up with WebAuthn on the registration screen."
+                    },
                     "rp": {
                       "title": "Relying Party (RP) Config",
                       "required": [
@@ -1247,6 +1408,15 @@
                   "type": "object",
                   "additionalProperties": false,
                   "properties": {
+                    "base_redirect_uri": {
+                      "type": "string",
+                      "title": "Base URL for OAuth2 Redirect URIs",
+                      "description": "Can be used to modify the base URL for OAuth2 Redirect URLs. If unset, the Public Base URL will be used.",
+                      "format": "uri",
+                      "examples": [
+                        "https://auth.myexample.org/"
+                      ]
+                    },
                     "providers": {
                       "title": "OpenID Connect and OAuth2 Providers",
                       "description": "A list and configuration of OAuth2 and OpenID Connect providers Ory Kratos should integrate with.",
@@ -1279,12 +1449,35 @@
       "title": "Courier configuration",
       "description": "The courier is responsible for sending and delivering messages over email, sms, and other means.",
       "properties": {
+        "templates": {
+          "additionalProperties": false,
+          "type": "object",
+          "properties": {
+            "recovery": {
+              "$ref": "#/definitions/courierTemplates"
+            },
+            "verification": {
+              "$ref": "#/definitions/courierTemplates"
+            }
+          }
+        },
         "template_override_path": {
           "type": "string",
           "title": "Override message templates",
           "description": "You can override certain or all message templates by pointing this key to the path where the templates are located.",
           "examples": [
             "/conf/courier-templates"
+          ]
+        },
+        "message_ttl": {
+          "description": "Defines a Time-To-Live for courier messages that could not be delivered. After the defined TTL has expired for a message that message is abandoned.",
+          "type": "string",
+          "pattern": "^([0-9]+(ns|us|ms|s|m|h))+$",
+          "default": "1h",
+          "examples": [
+            "1h",
+            "1m",
+            "1s"
           ]
         },
         "smtp": {
@@ -1301,10 +1494,23 @@
                 "smtp://foo:bar@my-mailserver:1234/ (Explicit StartTLS with certificate trust verification)",
                 "smtp://foo:bar@my-mailserver:1234/?skip_ssl_verify=true (NOT RECOMMENDED: Explicit StartTLS without certificate trust verification)",
                 "smtps://foo:bar@my-mailserver:1234/ (Implicit TLS with certificate trust verification)",
-                "smtps://foo:bar@my-mailserver:1234/?skip_ssl_verify=true (NOT RECOMMENDED: Implicit TLS without certificate trust verification)"
+                "smtps://foo:bar@my-mailserver:1234/?skip_ssl_verify=true (NOT RECOMMENDED: Implicit TLS without certificate trust verification)",
+                "smtps://subdomain.my-mailserver:1234/?server_name=my-mailserver (allows TLS to work if the server is hosted on a sudomain that uses a non-wildcard domain certificate)"
               ],
               "type": "string",
               "pattern": "^smtps?:\\/\\/.*"
+            },
+            "client_cert_path": {
+              "title": "SMTP Client certificate path",
+              "description": "Path of the client X.509 certificate, in case of certificate based client authentication to the SMTP server.",
+              "type": "string",
+              "default": ""
+            },
+            "client_key_path": {
+              "title": "SMTP Client private key path",
+              "description": "Path of the client certificate private key, in case of certificate based client authentication to the SMTP server",
+              "type": "string",
+              "default": ""
             },
             "from_address": {
               "title": "SMTP Sender Address",
@@ -1337,6 +1543,81 @@
           "required": [
             "connection_uri"
           ],
+          "additionalProperties": false
+        },
+        "sms": {
+          "title": "SMS sender configuration",
+          "description": "Configures outgoing sms messages using HTTP protocol with generic SMS provider",
+          "type": "object",
+          "properties": {
+            "enabled": {
+              "description": "Determines if SMS functionality is enabled",
+              "type": "boolean",
+              "default": false
+            },
+            "from": {
+              "title": "SMS Sender Address",
+              "description": "The recipient of a sms will see this as the sender address.",
+              "type": "string",
+              "default": "Ory Kratos"
+            },
+            "request_config": {
+              "type": "object",
+              "properties": {
+                "url": {
+                  "title": "HTTP address of API endpoint",
+                  "description": "This URL will be used to connect to the SMS provider.",
+                  "examples": [
+                    "https://api.twillio.com/sms/send"
+                  ],
+                  "type": "string",
+                  "pattern": "^https?:\\/\\/.*"
+                },
+                "method": {
+                  "type": "string",
+                  "description": "The HTTP method to use (GET, POST, etc)."
+                },
+                "header": {
+                  "type": "object",
+                  "description": "The HTTP headers that must be applied to request",
+                  "additionalProperties": {
+                    "type": "string"
+                  }
+                },
+                "body": {
+                  "type": "string",
+                  "format": "uri",
+                  "pattern": "^(http|https|file|base64)://",
+                  "description": "URI pointing to the jsonnet template used for payload generation. Only used for those HTTP methods, which support HTTP body payloads",
+                  "examples": [
+                    "file:///path/to/body.jsonnet",
+                    "file://./body.jsonnet",
+                    "base64://ZnVuY3Rpb24oY3R4KSB7CiAgaWRlbnRpdHlfaWQ6IGlmIGN0eFsiaWRlbnRpdHkiXSAhPSBudWxsIHRoZW4gY3R4LmlkZW50aXR5LmlkLAp9=",
+                    "https://oryapis.com/default_body.jsonnet"
+                  ]
+                },
+                "auth": {
+                  "type": "object",
+                  "title": "Auth mechanisms",
+                  "description": "Define which auth mechanism to use for auth with the SMS provider",
+                  "oneOf": [
+                    {
+                      "$ref": "#/definitions/webHookAuthApiKeyProperties"
+                    },
+                    {
+                      "$ref": "#/definitions/webHookAuthBasicAuthProperties"
+                    }
+                  ]
+                },
+                "additionalProperties": false
+              },
+              "required": [
+                "url",
+                "method"
+              ],
+              "additionalProperties": false
+            }
+          },
           "additionalProperties": false
         }
       },
@@ -1436,6 +1717,7 @@
                     },
                     "anyOf": [
                       {
+                        "type": "string",
                         "format": "uri"
                       },
                       {
@@ -1527,55 +1809,6 @@
             },
             "base_url": {
               "$ref": "#/definitions/baseUrl"
-            },
-            "domain_aliases": {
-              "title": "Domain Aliases",
-              "description": "Adds an alias domain. If a request with the hostname (FQDN) matching the hostname in the alias is found, that URL is used as the base URL.",
-              "type": "array",
-              "items": [
-                {
-                  "additionalProperties": false,
-                  "type": "object",
-                  "required": [
-                    "match_domain",
-                    "base_path",
-                    "scheme"
-                  ],
-                  "properties": {
-                    "match_domain": {
-                      "minLength": 1,
-                      "title": "Matching Domain",
-                      "description": "Sets the matching domain. If the domain matches with this entry, the accompanying base_url will be used.",
-                      "type": "string",
-                      "examples": [
-                        "localhost",
-                        "my-domain.com"
-                      ]
-                    },
-                    "scheme": {
-                      "title": "Scheme",
-                      "description": "Sets the scheme, for example https or http.",
-                      "type": "string",
-                      "enum": [
-                        "http",
-                        "https"
-                      ]
-                    },
-                    "base_path": {
-                      "minLength": 1,
-                      "title": "Base Path",
-                      "description": "Sets the base path for the matched domain.",
-                      "type": "string",
-                      "default": "/",
-                      "pattern": "^/.*$",
-                      "examples": [
-                        "/",
-                        "/.ory/kratos"
-                      ]
-                    }
-                  }
-                }
-              ]
             },
             "host": {
               "title": "Public Host",
@@ -1786,6 +2019,11 @@
           "title": "Leak Sensitive Log Values",
           "description": "If set will leak sensitive values (e.g. emails) in the logs."
         },
+        "redaction_text": {
+          "type": "string",
+          "title": "Sensitive log value redaction text",
+          "description": "Text to use, when redacting sensitive log value."
+        },
         "format": {
           "description": "The log format can either be text or JSON.",
           "type": "string",
@@ -1800,20 +2038,15 @@
     "identity": {
       "type": "object",
       "properties": {
-        "default_schema_url": {
-          "title": "JSON Schema URL for default identity traits",
-          "description": "URL for JSON Schema which describes a default identity's traits. Can be a file path, a https URL, or a base64 encoded string. Will have ID: \"default\"",
+        "default_schema_id": {
+          "title": "The default Identity Schema",
+          "description": "This Identity Schema will be used as the default for self-service flows. Its ID needs to exist in the \"schemas\" list.",
           "type": "string",
-          "format": "uri",
-          "examples": [
-            "file://path/to/identity.traits.schema.json",
-            "https://foo.bar.com/path/to/identity.traits.schema.json",
-            "base64://ewogICIkc2NoZW1hIjogImh0dHA6Ly9qc29uLXNjaGVtYS5vcmcvZHJhZnQtMDcvc2NoZW1hIyIsCiAgInR5cGUiOiAib2JqZWN0IiwKICAicHJvcGVydGllcyI6IHsKICAgICJiYXIiOiB7CiAgICAgICJ0eXBlIjogInN0cmluZyIKICAgIH0KICB9LAogICJyZXF1aXJlZCI6IFsKICAgICJiYXIiCiAgXQp9"
-          ]
+          "default": "default"
         },
         "schemas": {
           "type": "array",
-          "title": "Additional JSON Schemas for Identity Traits",
+          "title": "All JSON Schemas for Identity Traits",
           "examples": [
             [
               {
@@ -1830,6 +2063,7 @@
               }
             ]
           ],
+          "minItems": 1,
           "items": {
             "type": "object",
             "properties": {
@@ -1855,21 +2089,12 @@
             "required": [
               "id",
               "url"
-            ],
-            "not": {
-              "type": "object",
-              "properties": {
-                "id": {
-                  "const": "default"
-                }
-              },
-              "additionalProperties": true
-            }
+            ]
           }
         }
       },
       "required": [
-        "default_schema_url"
+        "schemas"
       ],
       "additionalProperties": false
     },
@@ -1993,7 +2218,7 @@
       },
       "additionalProperties": false
     },
-    "ciphers" : {
+    "ciphers": {
       "title": "Cipher Algorithm Configuration",
       "type": "object",
       "properties": {
@@ -2104,6 +2329,18 @@
             }
           },
           "additionalProperties": false
+        },
+        "earliest_possible_extend": {
+          "title": "Earliest Possible Session Extension",
+          "description": "Sets when a session can be extended. Settings this value to `24h` will prevent the session from being extended before until 24 hours before it expires. This setting prevents excessive writes to the database. We highly recommend setting this value.",
+          "type": "string",
+          "pattern": "^([0-9]+(ns|us|ms|s|m|h))+$",
+          "default": "24h",
+          "examples": [
+            "1h",
+            "1m",
+            "1s"
+          ]
         }
       }
     },
@@ -2111,7 +2348,7 @@
       "title": "The kratos version this config is written for.",
       "description": "SemVer according to https://semver.org/ prefixed with `v` as in our releases.",
       "type": "string",
-      "pattern": "^v(0|[1-9]\\d*)\\.(0|[1-9]\\d*)\\.(0|[1-9]\\d*)(?:-((?:0|[1-9]\\d*|\\d*[a-zA-Z-][0-9a-zA-Z-]*)(?:\\.(?:0|[1-9]\\d*|\\d*[a-zA-Z-][0-9a-zA-Z-]*))*))?(?:\\+([0-9a-zA-Z-]+(?:\\.[0-9a-zA-Z-]+)*))?$",
+      "pattern": "^(v(0|[1-9]\\d*)\\.(0|[1-9]\\d*)\\.(0|[1-9]\\d*)(?:-((?:0|[1-9]\\d*|\\d*[a-zA-Z-][0-9a-zA-Z-]*)(?:\\.(?:0|[1-9]\\d*|\\d*[a-zA-Z-][0-9a-zA-Z-]*))*))?(?:\\+([0-9a-zA-Z-]+(?:\\.[0-9a-zA-Z-]+)*))?)|$",
       "examples": [
         "v0.5.0-alpha.1"
       ]
@@ -2149,6 +2386,26 @@
         "type": "string"
       },
       "description": "This is a CLI flag and environment variable and can not be set using the config file."
+    },
+    "clients": {
+      "title": "Global outgoing network settings",
+      "description": "Configure how outgoing network calls behave.",
+      "type": "object",
+      "properties": {
+        "http": {
+          "title": "Global HTTP client configuration",
+          "description": "Configure how outgoing HTTP calls behave.",
+          "type": "object",
+          "properties": {
+            "disallow_private_ip_ranges": {
+              "title": "Disallow private IP ranges",
+              "description": "Disallow all outgoing HTTP calls to private IP ranges. This feature can help protect against SSRF attacks.",
+              "type": "boolean",
+              "default": false
+            }
+          }
+        }
+      }
     }
   },
   "allOf": [
@@ -2214,7 +2471,7 @@
     {
       "if": {
         "properties": {
-          "ciphers" : {
+          "ciphers": {
             "properties": {
               "algorithm": {
                 "oneOf": [
@@ -2227,16 +2484,24 @@
                 ]
               }
             },
-            "required": ["algorithm"]
+            "required": [
+              "algorithm"
+            ]
           }
         },
-        "required": ["ciphers"]
+        "required": [
+          "ciphers"
+        ]
       },
       "then": {
-        "required": ["secrets"],
+        "required": [
+          "secrets"
+        ],
         "properties": {
           "secrets": {
-            "required": ["cipher"]
+            "required": [
+              "cipher"
+            ]
           }
         }
       }

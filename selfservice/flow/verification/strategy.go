@@ -18,7 +18,7 @@ const (
 type (
 	Strategy interface {
 		VerificationStrategyID() string
-		VerificationNodeGroup() node.Group
+		VerificationNodeGroup() node.UiNodeGroup
 		PopulateVerificationMethod(*http.Request, *Flow) error
 		Verify(w http.ResponseWriter, r *http.Request, f *Flow) (err error)
 	}

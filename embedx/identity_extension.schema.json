@@ -21,6 +21,15 @@
                     }
                   }
                 },
+                "webauthn": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "identifier": {
+                      "type": "boolean"
+                    }
+                  }
+                },
                 "totp": {
                   "type": "object",
                   "additionalProperties": false,
@@ -39,7 +48,8 @@
                 "via": {
                   "type": "string",
                   "enum": [
-                    "email"
+                    "email",
+                    "phone"
                   ]
                 }
               }

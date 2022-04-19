@@ -40,9 +40,9 @@ import (
 
 func TestHandleError(t *testing.T) {
 	conf, reg := internal.NewFastRegistryWithMocks(t)
-	conf.MustSet(config.ViperKeyDefaultIdentitySchemaURL, "file://./stub/identity.schema.json")
+	testhelpers.SetDefaultIdentitySchema(conf, "file://./stub/identity.schema.json")
 
-	_, admin := testhelpers.NewKratosServer(t, reg)
+	public, _ := testhelpers.NewKratosServer(t, reg)
 
 	router := httprouter.New()
 	ts := httptest.NewServer(router)
@@ -53,11 +53,11 @@ func TestHandleError(t *testing.T) {
 	loginTS := testhelpers.NewLoginUIFlowEchoServer(t, reg)
 
 	h := reg.SettingsFlowErrorHandler()
-	sdk := testhelpers.NewSDKClient(admin)
+	sdk := testhelpers.NewSDKClient(public)
 
 	var settingsFlow *settings.Flow
 	var flowError error
-	var flowMethod node.Group
+	var flowMethod node.UiNodeGroup
 	var id identity.Identity
 	require.NoError(t, faker.FakeData(&id))
 	id.SchemaID = "default"
@@ -141,7 +141,7 @@ func TestHandleError(t *testing.T) {
 				t.Cleanup(reset)
 
 				// This needs an authenticated client in order to call the RouteGetFlow endpoint
-				s, err := session.NewActiveSession(&id, testhelpers.NewSessionLifespanProvider(time.Hour), time.Now(), identity.CredentialsTypePassword)
+				s, err := session.NewActiveSession(&id, testhelpers.NewSessionLifespanProvider(time.Hour), time.Now(), identity.CredentialsTypePassword, identity.AuthenticatorAssuranceLevel1)
 				require.NoError(t, err)
 				c := testhelpers.NewHTTPClientWithSessionToken(t, reg, s)
 
@@ -326,7 +326,7 @@ func TestHandleError(t *testing.T) {
 		})
 
 		t.Run("case=session old error", func(t *testing.T) {
-			conf.MustSet(config.ViperKeyURLsWhitelistedReturnToDomains, []string{urlx.AppendPaths(conf.SelfPublicURL(nil), "/error").String()})
+			conf.MustSet(config.ViperKeyURLsAllowedReturnToDomains, []string{urlx.AppendPaths(conf.SelfPublicURL(), "/error").String()})
 			t.Cleanup(reset)
 
 			settingsFlow = &settings.Flow{Type: flow.TypeBrowser}

@@ -17,8 +17,9 @@ import (
 )
 
 var (
-	ErrHookAbortFlow   = errors.New("aborted registration hook execution")
-	ErrAlreadyLoggedIn = herodot.ErrBadRequest.WithID(text.ErrIDAlreadyLoggedIn).WithError("you are already logged in").WithReason("A valid session was detected and thus registration is not possible.")
+	ErrHookAbortFlow        = errors.New("aborted registration hook execution")
+	ErrAlreadyLoggedIn      = herodot.ErrBadRequest.WithID(text.ErrIDAlreadyLoggedIn).WithError("you are already logged in").WithReason("A valid session was detected and thus registration is not possible.")
+	ErrRegistrationDisabled = herodot.ErrBadRequest.WithID(text.ErrIDSelfServiceFlowDisabled).WithError("registration flow disabled").WithReason("Registration is not allowed because it was disabled.")
 )
 
 type (
@@ -65,7 +66,7 @@ func (s *ErrorHandler) WriteFlowError(
 	w http.ResponseWriter,
 	r *http.Request,
 	f *Flow,
-	group node.Group,
+	group node.UiNodeGroup,
 	err error,
 ) {
 	s.d.Audit().
@@ -97,7 +98,13 @@ func (s *ErrorHandler) WriteFlowError(
 		return
 	}
 
-	if err := SortNodes(f.UI.Nodes, s.d.Config(r.Context()).DefaultIdentityTraitsSchemaURL().String()); err != nil {
+	ds, err := s.d.Config(r.Context()).DefaultIdentityTraitsSchemaURL()
+	if err != nil {
+		s.forward(w, r, f, err)
+		return
+	}
+
+	if err := SortNodes(r.Context(), f.UI.Nodes, ds.String()); err != nil {
 		s.forward(w, r, f, err)
 		return
 	}

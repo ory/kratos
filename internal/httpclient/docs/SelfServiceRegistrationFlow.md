@@ -10,14 +10,14 @@ Name | Type | Description | Notes
 **IssuedAt** | **time.Time** | IssuedAt is the time (UTC) when the flow occurred. | 
 **RequestUrl** | **string** | RequestURL is the initial URL that was requested from Ory Kratos. It can be used to forward information contained in the URL&#39;s path or query for example. | 
 **ReturnTo** | Pointer to **string** | ReturnTo contains the requested return_to URL. | [optional] 
-**Type** | Pointer to **string** | The flow type can either be &#x60;api&#x60; or &#x60;browser&#x60;. | [optional] 
+**Type** | **string** | The flow type can either be &#x60;api&#x60; or &#x60;browser&#x60;. | 
 **Ui** | [**UiContainer**](UiContainer.md) |  | 
 
 ## Methods
 
 ### NewSelfServiceRegistrationFlow
 
-`func NewSelfServiceRegistrationFlow(expiresAt time.Time, id string, issuedAt time.Time, requestUrl string, ui UiContainer, ) *SelfServiceRegistrationFlow`
+`func NewSelfServiceRegistrationFlow(expiresAt time.Time, id string, issuedAt time.Time, requestUrl string, type_ string, ui UiContainer, ) *SelfServiceRegistrationFlow`
 
 NewSelfServiceRegistrationFlow instantiates a new SelfServiceRegistrationFlow object
 This constructor will assign default values to properties that have it defined,
@@ -181,11 +181,6 @@ and a boolean to check if the value has been set.
 
 SetType sets Type field to given value.
 
-### HasType
-
-`func (o *SelfServiceRegistrationFlow) HasType() bool`
-
-HasType returns a boolean if a field has been set.
 
 ### GetUi
 

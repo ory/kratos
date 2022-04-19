@@ -28,7 +28,7 @@ func TestDefaultPasswordValidationStrategy(t *testing.T) {
 
 	t.Run("default strategy", func(t *testing.T) {
 		_, reg := internal.NewFastRegistryWithMocks(t)
-		s := password.NewDefaultPasswordValidatorStrategy(reg)
+		s, _ := password.NewDefaultPasswordValidatorStrategy(reg)
 		for k, tc := range []struct {
 			id   string
 			pw   string
@@ -80,7 +80,7 @@ func TestDefaultPasswordValidationStrategy(t *testing.T) {
 
 	t.Run("failure cases", func(t *testing.T) {
 		conf, reg := internal.NewFastRegistryWithMocks(t)
-		s := password.NewDefaultPasswordValidatorStrategy(reg)
+		s, _ := password.NewDefaultPasswordValidatorStrategy(reg)
 		fakeClient := NewFakeHTTPClient()
 		s.Client = httpx.NewResilientClient(httpx.ResilientClientWithClient(&fakeClient.Client), httpx.ResilientClientWithMaxRetry(1), httpx.ResilientClientWithConnectionTimeout(time.Millisecond), httpx.ResilientClientWithMaxRetryWait(time.Millisecond))
 
@@ -117,7 +117,7 @@ func TestDefaultPasswordValidationStrategy(t *testing.T) {
 
 	t.Run("max breaches", func(t *testing.T) {
 		conf, reg := internal.NewFastRegistryWithMocks(t)
-		s := password.NewDefaultPasswordValidatorStrategy(reg)
+		s, _ := password.NewDefaultPasswordValidatorStrategy(reg)
 		fakeClient := NewFakeHTTPClient()
 		s.Client = httpx.NewResilientClient(httpx.ResilientClientWithClient(&fakeClient.Client), httpx.ResilientClientWithMaxRetry(1), httpx.ResilientClientWithConnectionTimeout(time.Millisecond))
 
@@ -129,10 +129,16 @@ func TestDefaultPasswordValidationStrategy(t *testing.T) {
 			pass bool
 		}{
 			{
-				cs:   "contains invalid data",
+				cs:   "contains invalid data which is ignored",
 				pw:   "lufsokpugo",
 				res:  "0225BDB8F106B1B4A5DF4C31B80AC695874:2\ninvalid",
-				pass: false,
+				pass: true,
+			},
+			{
+				cs:   "is missing a colon",
+				pw:   "lufsokpugo",
+				res:  "0225BDB8F106B1B4A5DF4C31B80AC695874",
+				pass: true,
 			},
 			{
 				cs:   "contains invalid hash count",
@@ -144,7 +150,7 @@ func TestDefaultPasswordValidationStrategy(t *testing.T) {
 				cs:   "is missing hash count",
 				pw:   "bofulosasm",
 				res:  "1D29CF237A57F6FEA8F29E8D907DCF1EBBA\n026364A8EE59DEDCF9E2DC80B9D7BAB7389:2",
-				pass: false,
+				pass: true,
 			},
 			{
 				cs:   "response contains no matches",
@@ -188,7 +194,7 @@ func TestChangeHaveIBeenPwnedValidationHost(t *testing.T) {
 	testServer.StartTLS()
 	testServerURL, _ := url.Parse(testServer.URL)
 	conf, reg := internal.NewFastRegistryWithMocks(t)
-	s := password.NewDefaultPasswordValidatorStrategy(reg)
+	s, _ := password.NewDefaultPasswordValidatorStrategy(reg)
 	conf.MustSet(config.ViperKeyPasswordHaveIBeenPwnedHost, testServerURL.Host)
 
 	fakeClient := NewFakeHTTPClient()
@@ -205,7 +211,7 @@ func TestChangeHaveIBeenPwnedValidationHost(t *testing.T) {
 
 func TestDisableHaveIBeenPwnedValidationHost(t *testing.T) {
 	conf, reg := internal.NewFastRegistryWithMocks(t)
-	s := password.NewDefaultPasswordValidatorStrategy(reg)
+	s, _ := password.NewDefaultPasswordValidatorStrategy(reg)
 	conf.MustSet(config.ViperKeyPasswordHaveIBeenPwnedEnabled, false)
 
 	fakeClient := NewFakeHTTPClient()
@@ -214,6 +220,35 @@ func TestDisableHaveIBeenPwnedValidationHost(t *testing.T) {
 	t.Run("case=should not send request to test server", func(t *testing.T) {
 		require.NoError(t, s.Validate(context.Background(), "mohutdesub", "damrumukuh"))
 		require.Empty(t, fakeClient.RequestedURLs())
+	})
+}
+
+func TestChangeMinPasswordLength(t *testing.T) {
+	conf, reg := internal.NewFastRegistryWithMocks(t)
+	s, _ := password.NewDefaultPasswordValidatorStrategy(reg)
+	conf.MustSet(config.ViperKeyPasswordMinLength, 10)
+
+	t.Run("case=should not fail if password is longer than min length", func(t *testing.T) {
+		require.NoError(t, s.Validate(context.Background(), "", "kuobahcaas"))
+	})
+
+	t.Run("case=should fail if password is shorter than min length", func(t *testing.T) {
+		require.Error(t, s.Validate(context.Background(), "", "rfqyfjied"))
+	})
+}
+
+func TestChangeIdentifierSimilarityCheckEnabled(t *testing.T) {
+	conf, reg := internal.NewFastRegistryWithMocks(t)
+	s, _ := password.NewDefaultPasswordValidatorStrategy(reg)
+
+	t.Run("case=should not fail if password is similar to identifier", func(t *testing.T) {
+		conf.MustSet(config.ViperKeyPasswordIdentifierSimilarityCheckEnabled, false)
+		require.NoError(t, s.Validate(context.Background(), "bosqwfaxee", "bosqwfaxee"))
+	})
+
+	t.Run("case=should fail if password is similar to identifier", func(t *testing.T) {
+		conf.MustSet(config.ViperKeyPasswordIdentifierSimilarityCheckEnabled, true)
+		require.Error(t, s.Validate(context.Background(), "bosqwfaxee", "bosqwfaxee"))
 	})
 }
 

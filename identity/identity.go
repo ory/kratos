@@ -189,6 +189,23 @@ func (i *Identity) SetCredentials(t CredentialsType, c Credentials) {
 	i.Credentials[t] = c
 }
 
+func (i *Identity) SetCredentialsWithConfig(t CredentialsType, c Credentials, conf interface{}) (err error) {
+	i.lock().Lock()
+	defer i.lock().Unlock()
+	if i.Credentials == nil {
+		i.Credentials = make(map[CredentialsType]Credentials)
+	}
+
+	c.Config, err = json.Marshal(conf)
+	if err != nil {
+		return errors.WithStack(herodot.ErrInternalServerError.WithReasonf("Unable to encode %s credentials to JSON: %s", t, err))
+	}
+
+	c.Type = t
+	i.Credentials[t] = c
+	return nil
+}
+
 func (i *Identity) DeleteCredentialsType(t CredentialsType) {
 	i.lock().Lock()
 	defer i.lock().Unlock()
@@ -197,6 +214,28 @@ func (i *Identity) DeleteCredentialsType(t CredentialsType) {
 	}
 
 	delete(i.Credentials, t)
+}
+
+func (i *Identity) GetCredentialsOr(t CredentialsType, or *Credentials) *Credentials {
+	c, ok := i.GetCredentials(t)
+	if !ok {
+		return or
+	}
+	return c
+}
+
+func (i *Identity) UpsertCredentialsConfig(t CredentialsType, conf []byte, version int) {
+	c, ok := i.GetCredentials(t)
+	if !ok {
+		c = &Credentials{}
+	}
+
+	c.Type = t
+	c.IdentityID = i.ID
+	c.Config = conf
+	c.Version = version
+
+	i.SetCredentials(t, *c)
 }
 
 func (i *Identity) GetCredentials(t CredentialsType) (*Credentials, bool) {
@@ -235,7 +274,7 @@ func NewIdentity(traitsSchemaID string) *Identity {
 		traitsSchemaID = config.DefaultIdentityTraitsSchemaID
 	}
 
-	stateChangedAt := sqlxx.NullTime(time.Now())
+	stateChangedAt := sqlxx.NullTime(time.Now().UTC())
 	return &Identity{
 		ID:                  x.NewUUID(),
 		Credentials:         map[CredentialsType]Credentials{},

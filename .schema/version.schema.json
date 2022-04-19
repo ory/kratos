@@ -1,9 +1,41 @@
 {
     "$id": "https://github.com/ory/kratos/.schema/versions.config.schema.json",
-    "$schema": "https://raw.githubusercontent.com/ory/cli/v0.0.21/.schema/version_meta.schema.json#",
-    "title": "All Versions for Ory Kratos Configuration",
-    "type": "object",
+    "$schema": "http://json-schema.org/draft-07/schema#",
     "oneOf": [
+        {
+            "allOf": [
+                {
+                    "properties": {
+                        "version": {
+                            "const": "v0.9.0-alpha.3"
+                        }
+                    },
+                    "required": [
+                        "version"
+                    ]
+                },
+                {
+                    "$ref": "https://raw.githubusercontent.com/ory/kratos/v0.9.0-alpha.3/embedx/config.schema.json"
+                }
+            ]
+        },
+        {
+            "allOf": [
+                {
+                    "properties": {
+                        "version": {
+                            "const": "v0.9.0-alpha.2"
+                        }
+                    },
+                    "required": [
+                        "version"
+                    ]
+                },
+                {
+                    "$ref": "https://raw.githubusercontent.com/ory/kratos/v0.9.0-alpha.2/embedx/config.schema.json"
+                }
+            ]
+        },
         {
             "allOf": [
                 {
@@ -11,7 +43,10 @@
                         "version": {
                             "const": "v0.4.6-alpha.1"
                         }
-                    }
+                    },
+                    "required": [
+                        "version"
+                    ]
                 },
                 {
                     "$ref": "https://raw.githubusercontent.com/ory/kratos/v0.4.6-alpha.1/.schema/config.schema.json"
@@ -25,7 +60,10 @@
                         "version": {
                             "const": "v0.5.0-alpha.1"
                         }
-                    }
+                    },
+                    "required": [
+                        "version"
+                    ]
                 },
                 {
                     "$ref": "https://raw.githubusercontent.com/ory/kratos/v0.5.0-alpha.1/.schema/config.schema.json"
@@ -39,7 +77,10 @@
                         "version": {
                             "const": "v0.5.1-alpha.1"
                         }
-                    }
+                    },
+                    "required": [
+                        "version"
+                    ]
                 },
                 {
                     "$ref": "https://raw.githubusercontent.com/ory/kratos/v0.5.1-alpha.1/.schema/config.schema.json"
@@ -53,7 +94,10 @@
                         "version": {
                             "const": "v0.5.2-alpha.1"
                         }
-                    }
+                    },
+                    "required": [
+                        "version"
+                    ]
                 },
                 {
                     "$ref": "https://raw.githubusercontent.com/ory/kratos/v0.5.2-alpha.1/.schema/config.schema.json"
@@ -67,7 +111,10 @@
                         "version": {
                             "const": "v0.5.3-alpha.1"
                         }
-                    }
+                    },
+                    "required": [
+                        "version"
+                    ]
                 },
                 {
                     "$ref": "https://raw.githubusercontent.com/ory/kratos/v0.5.3-alpha.1/.schema/config.schema.json"
@@ -81,7 +128,10 @@
                         "version": {
                             "const": "v0.5.4-alpha.1"
                         }
-                    }
+                    },
+                    "required": [
+                        "version"
+                    ]
                 },
                 {
                     "$ref": "https://raw.githubusercontent.com/ory/kratos/v0.5.4-alpha.1/.schema/config.schema.json"
@@ -95,7 +145,10 @@
                         "version": {
                             "const": "v0.5.5-alpha.1"
                         }
-                    }
+                    },
+                    "required": [
+                        "version"
+                    ]
                 },
                 {
                     "$ref": "https://raw.githubusercontent.com/ory/kratos/v0.5.5-alpha.1/.schema/config.schema.json"
@@ -109,7 +162,10 @@
                         "version": {
                             "const": "v0.6.0-alpha.1"
                         }
-                    }
+                    },
+                    "required": [
+                        "version"
+                    ]
                 },
                 {
                     "$ref": "https://raw.githubusercontent.com/ory/kratos/v0.6.0-alpha.1/driver/config/.schema/config.schema.json"
@@ -123,7 +179,10 @@
                         "version": {
                             "const": "v0.6.0-alpha.2"
                         }
-                    }
+                    },
+                    "required": [
+                        "version"
+                    ]
                 },
                 {
                     "$ref": "https://raw.githubusercontent.com/ory/kratos/v0.6.0-alpha.2/driver/config/.schema/config.schema.json"
@@ -137,7 +196,10 @@
                         "version": {
                             "const": "v0.6.1-alpha.1"
                         }
-                    }
+                    },
+                    "required": [
+                        "version"
+                    ]
                 },
                 {
                     "$ref": "https://raw.githubusercontent.com/ory/kratos/v0.6.1-alpha.1/driver/config/.schema/config.schema.json"
@@ -151,7 +213,10 @@
                         "version": {
                             "const": "v0.6.2-alpha.1"
                         }
-                    }
+                    },
+                    "required": [
+                        "version"
+                    ]
                 },
                 {
                     "$ref": "https://raw.githubusercontent.com/ory/kratos/v0.6.2-alpha.1/driver/config/.schema/config.schema.json"
@@ -165,7 +230,10 @@
                         "version": {
                             "const": "v0.6.3-alpha.1"
                         }
-                    }
+                    },
+                    "required": [
+                        "version"
+                    ]
                 },
                 {
                     "$ref": "https://raw.githubusercontent.com/ory/kratos/v0.6.3-alpha.1/driver/config/.schema/config.schema.json"
@@ -179,7 +247,10 @@
                         "version": {
                             "const": "v0.7.0-alpha.1"
                         }
-                    }
+                    },
+                    "required": [
+                        "version"
+                    ]
                 },
                 {
                     "$ref": "https://raw.githubusercontent.com/ory/kratos/v0.7.0-alpha.1/driver/config/.schema/config.schema.json"
@@ -193,7 +264,10 @@
                         "version": {
                             "const": "v0.7.1-alpha.1"
                         }
-                    }
+                    },
+                    "required": [
+                        "version"
+                    ]
                 },
                 {
                     "$ref": "https://raw.githubusercontent.com/ory/kratos/v0.7.1-alpha.1/driver/config/.schema/config.schema.json"
@@ -207,7 +281,10 @@
                         "version": {
                             "const": "v0.7.3-alpha.1"
                         }
-                    }
+                    },
+                    "required": [
+                        "version"
+                    ]
                 },
                 {
                     "$ref": "https://raw.githubusercontent.com/ory/kratos/v0.7.3-alpha.1/driver/config/.schema/config.schema.json"
@@ -221,7 +298,10 @@
                         "version": {
                             "const": "v0.7.4-alpha.1"
                         }
-                    }
+                    },
+                    "required": [
+                        "version"
+                    ]
                 },
                 {
                     "$ref": "https://raw.githubusercontent.com/ory/kratos/v0.7.4-alpha.1/driver/config/.schema/config.schema.json"
@@ -235,7 +315,10 @@
                         "version": {
                             "const": "v0.7.5-alpha.1"
                         }
-                    }
+                    },
+                    "required": [
+                        "version"
+                    ]
                 },
                 {
                     "$ref": "https://raw.githubusercontent.com/ory/kratos/v0.7.5-alpha.1/driver/config/.schema/config.schema.json"
@@ -249,7 +332,10 @@
                         "version": {
                             "const": "v0.7.6-alpha.1"
                         }
-                    }
+                    },
+                    "required": [
+                        "version"
+                    ]
                 },
                 {
                     "$ref": "https://raw.githubusercontent.com/ory/kratos/v0.7.6-alpha.1/driver/config/.schema/config.schema.json"
@@ -263,7 +349,10 @@
                         "version": {
                             "const": "v0.8.0-alpha.1"
                         }
-                    }
+                    },
+                    "required": [
+                        "version"
+                    ]
                 },
                 {
                     "$ref": "https://raw.githubusercontent.com/ory/kratos/v0.8.0-alpha.1/embedx/config.schema.json"
@@ -277,7 +366,10 @@
                         "version": {
                             "const": "v0.8.0-alpha.2"
                         }
-                    }
+                    },
+                    "required": [
+                        "version"
+                    ]
                 },
                 {
                     "$ref": "https://raw.githubusercontent.com/ory/kratos/v0.8.0-alpha.2/embedx/config.schema.json"
@@ -291,7 +383,10 @@
                         "version": {
                             "const": "v0.8.0-alpha.3"
                         }
-                    }
+                    },
+                    "required": [
+                        "version"
+                    ]
                 },
                 {
                     "$ref": "https://raw.githubusercontent.com/ory/kratos/v0.8.0-alpha.3/embedx/config.schema.json"
@@ -305,12 +400,49 @@
                         "version": {
                             "const": "v0.8.2-alpha.1"
                         }
-                    }
+                    },
+                    "required": [
+                        "version"
+                    ]
                 },
                 {
                     "$ref": "https://raw.githubusercontent.com/ory/kratos/v0.8.2-alpha.1/embedx/config.schema.json"
                 }
             ]
+        },
+        {
+            "allOf": [
+                {
+                    "oneOf": [
+                        {
+                            "properties": {
+                                "version": {
+                                    "type": "string",
+                                    "maxLength": 0
+                                }
+                            },
+                            "required": [
+                                "version"
+                            ]
+                        },
+                        {
+                            "not": {
+                                "properties": {
+                                    "version": {}
+                                },
+                                "required": [
+                                    "version"
+                                ]
+                            }
+                        }
+                    ]
+                },
+                {
+                    "$ref": "#/oneOf/0/allOf/1"
+                }
+            ]
         }
-    ]
+    ],
+    "title": "All Versions for Ory Kratos Configuration",
+    "type": "object"
 }

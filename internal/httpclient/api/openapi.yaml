@@ -25,7 +25,7 @@ paths:
         <script src="https://public-kratos.example.org/.well-known/ory/webauthn.js" type="script" async />
         ```
 
-        More information can be found at [Ory Kratos User Login and User Registration Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-login-user-registration).
+        More information can be found at [Ory Kratos User Login](https://www.ory.sh/docs/kratos/self-service/flows/user-login) and [User Registration Documentation](https://www.ory.sh/docs/kratos/self-service/flows/user-registration).
       operationId: getWebAuthnJavaScript
       responses:
         "200":
@@ -37,63 +37,7 @@ paths:
       summary: Get WebAuthn JavaScript
       tags:
       - v0alpha2
-  /health/alive:
-    get:
-      description: |-
-        This endpoint returns a HTTP 200 status code when Ory Kratos is accepting incoming
-        HTTP requests. This status does currently not include checks whether the database connection is working.
-
-        If the service supports TLS Edge Termination, this endpoint does not require the
-        `X-Forwarded-Proto` header to be set.
-
-        Be aware that if you are running multiple nodes of this service, the health status will never
-        refer to the cluster state, only to a single instance.
-      operationId: isAlive
-      responses:
-        "200":
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/inline_response_200'
-          description: Ory Kratos is ready to accept connections.
-        "500":
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/genericError'
-          description: genericError
-      summary: Check HTTP Server Status
-      tags:
-      - metadata
-  /health/ready:
-    get:
-      description: |-
-        This endpoint returns a HTTP 200 status code when Ory Kratos is up running and the environment dependencies (e.g.
-        the database) are responsive as well.
-
-        If the service supports TLS Edge Termination, this endpoint does not require the
-        `X-Forwarded-Proto` header to be set.
-
-        Be aware that if you are running multiple nodes of Ory Kratos, the health status will never
-        refer to the cluster state, only to a single instance.
-      operationId: isReady
-      responses:
-        "200":
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/inline_response_200'
-          description: Ory Kratos is ready to accept requests.
-        "503":
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/inline_response_503'
-          description: Ory Kratos is not yet ready to accept requests.
-      summary: Check HTTP Server and Database Status
-      tags:
-      - metadata
-  /identities:
+  /admin/identities:
     get:
       description: |-
         Lists all identities.
@@ -114,9 +58,9 @@ paths:
         name: per_page
         required: false
         schema:
-          default: 100
+          default: 250
           format: int64
-          maximum: 500
+          maximum: 1000
           minimum: 1
           type: integer
         style: form
@@ -126,9 +70,9 @@ paths:
         name: page
         required: false
         schema:
-          default: 0
+          default: 1
           format: int64
-          minimum: 0
+          minimum: 1
           type: integer
         style: form
       - description: |-
@@ -211,7 +155,7 @@ paths:
       summary: Create an Identity
       tags:
       - v0alpha2
-  /identities/{id}:
+  /admin/identities/{id}:
     delete:
       description: |-
         Calling this endpoint irrecoverably and permanently deletes the identity given its ID. This action can not be undone.
@@ -361,7 +305,7 @@ paths:
       summary: Update an Identity
       tags:
       - v0alpha2
-  /identities/{id}/sessions:
+  /admin/identities/{id}/sessions:
     delete:
       description: |-
         This endpoint is useful for:
@@ -411,7 +355,93 @@ paths:
         all sessions that belong to the given Identity.
       tags:
       - v0alpha2
-  /recovery/link:
+    get:
+      description: |-
+        This endpoint is useful for:
+
+        Listing all sessions that belong to an Identity in an administrative context.
+      operationId: adminListIdentitySessions
+      parameters:
+      - description: ID is the identity's ID.
+        explode: false
+        in: path
+        name: id
+        required: true
+        schema:
+          type: string
+        style: simple
+      - description: |-
+          Items per Page
+
+          This is the number of items per page.
+        explode: true
+        in: query
+        name: per_page
+        required: false
+        schema:
+          default: 250
+          format: int64
+          maximum: 1000
+          minimum: 1
+          type: integer
+        style: form
+      - description: Pagination Page
+        explode: true
+        in: query
+        name: page
+        required: false
+        schema:
+          default: 1
+          format: int64
+          minimum: 1
+          type: integer
+        style: form
+      - description: Active is a boolean flag that filters out sessions based on the
+          state. If no value is provided, all sessions are returned.
+        explode: true
+        in: query
+        name: active
+        required: false
+        schema:
+          type: boolean
+        style: form
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/sessionList'
+          description: sessionList
+        "400":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/jsonError'
+          description: jsonError
+        "401":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/jsonError'
+          description: jsonError
+        "404":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/jsonError'
+          description: jsonError
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/jsonError'
+          description: jsonError
+      security:
+      - oryAccessToken: []
+      summary: This endpoint returns all sessions that belong to the given Identity.
+      tags:
+      - v0alpha2
+  /admin/recovery/link:
     post:
       description: |-
         This endpoint creates a recovery link which should be given to the user in order for them to recover
@@ -451,6 +481,108 @@ paths:
       summary: Create a Recovery Link
       tags:
       - v0alpha2
+  /admin/sessions/{id}/extend:
+    patch:
+      description: Retrieve the session ID from the `/sessions/whoami` endpoint /
+        `toSession` SDK method.
+      operationId: adminExtendSession
+      parameters:
+      - description: ID is the session's ID.
+        explode: false
+        in: path
+        name: id
+        required: true
+        schema:
+          type: string
+        style: simple
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/session'
+          description: session
+        "400":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/jsonError'
+          description: jsonError
+        "404":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/jsonError'
+          description: jsonError
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/jsonError'
+          description: jsonError
+      security:
+      - oryAccessToken: []
+      summary: |-
+        Calling this endpoint extends the given session ID. If `session.earliest_possible_extend` is set it
+        will only extend the session after the specified time has passed.
+      tags:
+      - v0alpha2
+  /health/alive:
+    get:
+      description: |-
+        This endpoint returns a HTTP 200 status code when Ory Kratos is accepting incoming
+        HTTP requests. This status does currently not include checks whether the database connection is working.
+
+        If the service supports TLS Edge Termination, this endpoint does not require the
+        `X-Forwarded-Proto` header to be set.
+
+        Be aware that if you are running multiple nodes of this service, the health status will never
+        refer to the cluster state, only to a single instance.
+      operationId: isAlive
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/inline_response_200'
+          description: Ory Kratos is ready to accept connections.
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/genericError'
+          description: genericError
+      summary: Check HTTP Server Status
+      tags:
+      - metadata
+  /health/ready:
+    get:
+      description: |-
+        This endpoint returns a HTTP 200 status code when Ory Kratos is up running and the environment dependencies (e.g.
+        the database) are responsive as well.
+
+        If the service supports TLS Edge Termination, this endpoint does not require the
+        `X-Forwarded-Proto` header to be set.
+
+        Be aware that if you are running multiple nodes of Ory Kratos, the health status will never
+        refer to the cluster state, only to a single instance.
+      operationId: isReady
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/inline_response_200'
+          description: Ory Kratos is ready to accept requests.
+        "503":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/inline_response_503'
+          description: Ory Kratos is not yet ready to accept requests.
+      summary: Check HTTP Server and Database Status
+      tags:
+      - metadata
   /schemas:
     get:
       description: Get all Identity Schemas
@@ -465,9 +597,9 @@ paths:
         name: per_page
         required: false
         schema:
-          default: 100
+          default: 250
           format: int64
-          maximum: 500
+          maximum: 1000
           minimum: 1
           type: integer
         style: form
@@ -477,9 +609,9 @@ paths:
         name: page
         required: false
         schema:
-          default: 0
+          default: 1
           format: int64
-          minimum: 0
+          minimum: 1
           type: integer
         style: form
       responses:
@@ -593,16 +725,16 @@ paths:
 
         API flows expect `application/json` to be sent in the body and responds with
         HTTP 200 and a application/json body with the session token on success;
-        HTTP 302 redirect to a fresh login flow if the original flow expired with the appropriate error messages set;
+        HTTP 410 if the original flow expired with the appropriate error messages set and optionally a `use_flow_id` parameter in the body;
         HTTP 400 on form validation errors.
 
         Browser flows expect a Content-Type of `application/x-www-form-urlencoded` or `application/json` to be sent in the body and respond with
-        a HTTP 302 redirect to the post/after login URL or the `return_to` value if it was set and if the login succeeded;
-        a HTTP 302 redirect to the login UI URL with the flow ID containing the validation errors otherwise.
+        a HTTP 303 redirect to the post/after login URL or the `return_to` value if it was set and if the login succeeded;
+        a HTTP 303 redirect to the login UI URL with the flow ID containing the validation errors otherwise.
 
         Browser flows with an accept header of `application/json` will not redirect but instead respond with
         HTTP 200 and a application/json body with the signed in identity and a `Set-Cookie` header on success;
-        HTTP 302 redirect to a fresh login flow if the original flow expired with the appropriate error messages set;
+        HTTP 303 redirect to a fresh login flow if the original flow expired with the appropriate error messages set;
         HTTP 400 on form validation errors.
 
         If this endpoint is called with `Accept: application/json` in the header, the response contains the flow without a redirect. In the
@@ -614,7 +746,7 @@ paths:
         `browser_location_change_required`: Usually sent when an AJAX request indicates that the browser needs to open a specific URL.
         Most likely used in Social Sign In flows.
 
-        More information can be found at [Ory Kratos User Login and User Registration Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-login-user-registration).
+        More information can be found at [Ory Kratos User Login](https://www.ory.sh/docs/kratos/self-service/flows/user-login) and [User Registration Documentation](https://www.ory.sh/docs/kratos/self-service/flows/user-registration).
       operationId: submitSelfServiceLoginFlow
       parameters:
       - description: |-
@@ -653,7 +785,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/successfulSelfServiceLoginWithoutBrowser'
           description: successfulSelfServiceLoginWithoutBrowser
-        "302":
+        "303":
           description: Empty responses are sent when, for example, resources are deleted.
             The HTTP status code for empty responses is typically 201.
         "400":
@@ -662,6 +794,12 @@ paths:
               schema:
                 $ref: '#/components/schemas/selfServiceLoginFlow'
           description: selfServiceLoginFlow
+        "410":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/jsonError'
+          description: jsonError
         "422":
           content:
             application/json:
@@ -699,7 +837,7 @@ paths:
 
         This endpoint MUST ONLY be used in scenarios such as native mobile apps (React Native, Objective C, Swift, Java, ...).
 
-        More information can be found at [Ory Kratos User Login and User Registration Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-login-user-registration).
+        More information can be found at [Ory Kratos User Login](https://www.ory.sh/docs/kratos/self-service/flows/user-login) and [User Registration Documentation](https://www.ory.sh/docs/kratos/self-service/flows/user-registration).
       operationId: initializeSelfServiceLoginFlowWithoutBrowser
       parameters:
       - description: |-
@@ -780,7 +918,7 @@ paths:
 
         This endpoint is NOT INTENDED for clients that do not have a browser (Chrome, Firefox, ...) as cookies are needed.
 
-        More information can be found at [Ory Kratos User Login and User Registration Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-login-user-registration).
+        More information can be found at [Ory Kratos User Login](https://www.ory.sh/docs/kratos/self-service/flows/user-login) and [User Registration Documentation](https://www.ory.sh/docs/kratos/self-service/flows/user-registration).
       operationId: initializeSelfServiceLoginFlowForBrowsers
       parameters:
       - description: |-
@@ -825,7 +963,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/selfServiceLoginFlow'
           description: selfServiceLoginFlow
-        "302":
+        "303":
           description: Empty responses are sent when, for example, resources are deleted.
             The HTTP status code for empty responses is typically 201.
         "400":
@@ -868,7 +1006,7 @@ paths:
         `session_already_available`: The user is already signed in.
         `self_service_flow_expired`: The flow is expired and you should request a new one.
 
-        More information can be found at [Ory Kratos User Login and User Registration Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-login-user-registration).
+        More information can be found at [Ory Kratos User Login](https://www.ory.sh/docs/kratos/self-service/flows/user-login) and [User Registration Documentation](https://www.ory.sh/docs/kratos/self-service/flows/user-registration).
       operationId: getSelfServiceLoginFlow
       parameters:
       - description: |-
@@ -934,7 +1072,7 @@ paths:
       description: |-
         This endpoint logs out an identity in a self-service manner.
 
-        If the `Accept` HTTP header is not set to `application/json`, the browser will be redirected (HTTP 302 Found)
+        If the `Accept` HTTP header is not set to `application/json`, the browser will be redirected (HTTP 303 See Other)
         to the `return_to` parameter of the initial request or fall back to `urls.default_return_to`.
 
         If the `Accept` HTTP header is set to `application/json`, a 204 No Content response
@@ -971,7 +1109,7 @@ paths:
         "204":
           description: Empty responses are sent when, for example, resources are deleted.
             The HTTP status code for empty responses is typically 201.
-        "302":
+        "303":
           description: Empty responses are sent when, for example, resources are deleted.
             The HTTP status code for empty responses is typically 201.
         "500":
@@ -1079,16 +1217,16 @@ paths:
         `choose_method` expects `flow` (in the URL query) and `email` (in the body) to be sent
         and works with API- and Browser-initiated flows.
         For API clients and Browser clients with HTTP Header `Accept: application/json` it either returns a HTTP 200 OK when the form is valid and HTTP 400 OK when the form is invalid.
-        and a HTTP 302 Found redirect with a fresh recovery flow if the flow was otherwise invalid (e.g. expired).
-        For Browser clients without HTTP Header `Accept` or with `Accept: text/*` it returns a HTTP 302 Found redirect to the Recovery UI URL with the Recovery Flow ID appended.
+        and a HTTP 303 See Other redirect with a fresh recovery flow if the flow was otherwise invalid (e.g. expired).
+        For Browser clients without HTTP Header `Accept` or with `Accept: text/*` it returns a HTTP 303 See Other redirect to the Recovery UI URL with the Recovery Flow ID appended.
         `sent_email` is the success state after `choose_method` for the `link` method and allows the user to request another recovery email. It
         works for both API and Browser-initiated flows and returns the same responses as the flow in `choose_method` state.
         `passed_challenge` expects a `token` to be sent in the URL query and given the nature of the flow ("sending a recovery link")
-        does not have any API capabilities. The server responds with a HTTP 302 Found redirect either to the Settings UI URL
+        does not have any API capabilities. The server responds with a HTTP 303 See Other redirect either to the Settings UI URL
         (if the link was valid) and instructs the user to update their password, or a redirect to the Recover UI URL with
         a new Recovery Flow ID which contains an error message that the recovery link was invalid.
 
-        More information can be found at [Ory Kratos Account Recovery Documentation](../self-service/flows/account-recovery.mdx).
+        More information can be found at [Ory Kratos Account Recovery Documentation](../self-service/flows/account-recovery).
       operationId: submitSelfServiceRecoveryFlow
       parameters:
       - description: |-
@@ -1133,7 +1271,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/selfServiceRecoveryFlow'
           description: selfServiceRecoveryFlow
-        "302":
+        "303":
           description: Empty responses are sent when, for example, resources are deleted.
             The HTTP status code for empty responses is typically 201.
         "400":
@@ -1142,6 +1280,12 @@ paths:
               schema:
                 $ref: '#/components/schemas/selfServiceRecoveryFlow'
           description: selfServiceRecoveryFlow
+        "410":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/jsonError'
+          description: jsonError
         "500":
           content:
             application/json:
@@ -1167,7 +1311,7 @@ paths:
         This endpoint MUST ONLY be used in scenarios such as native mobile apps (React Native, Objective C, Swift, Java, ...).
 
 
-        More information can be found at [Ory Kratos Account Recovery Documentation](../self-service/flows/account-recovery.mdx).
+        More information can be found at [Ory Kratos Account Recovery Documentation](../self-service/flows/account-recovery).
       operationId: initializeSelfServiceRecoveryFlowWithoutBrowser
       responses:
         "200":
@@ -1203,7 +1347,7 @@ paths:
 
         This endpoint is NOT INTENDED for clients that do not have a browser (Chrome, Firefox, ...) as cookies are needed.
 
-        More information can be found at [Ory Kratos Account Recovery Documentation](../self-service/flows/account-recovery.mdx).
+        More information can be found at [Ory Kratos Account Recovery Documentation](../self-service/flows/account-recovery).
       operationId: initializeSelfServiceRecoveryFlowForBrowsers
       parameters:
       - description: The URL to return the browser to after the flow was completed.
@@ -1221,7 +1365,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/selfServiceRecoveryFlow'
           description: selfServiceRecoveryFlow
-        "302":
+        "303":
           description: Empty responses are sent when, for example, resources are deleted.
             The HTTP status code for empty responses is typically 201.
         "400":
@@ -1259,7 +1403,7 @@ paths:
         })
         ```
 
-        More information can be found at [Ory Kratos Account Recovery Documentation](../self-service/flows/account-recovery.mdx).
+        More information can be found at [Ory Kratos Account Recovery Documentation](../self-service/flows/account-recovery).
       operationId: getSelfServiceRecoveryFlow
       parameters:
       - description: |-
@@ -1323,16 +1467,16 @@ paths:
         API flows expect `application/json` to be sent in the body and respond with
         HTTP 200 and a application/json body with the created identity success - if the session hook is configured the
         `session` and `session_token` will also be included;
-        HTTP 302 redirect to a fresh registration flow if the original flow expired with the appropriate error messages set;
+        HTTP 410 if the original flow expired with the appropriate error messages set and optionally a `use_flow_id` parameter in the body;
         HTTP 400 on form validation errors.
 
         Browser flows expect a Content-Type of `application/x-www-form-urlencoded` or `application/json` to be sent in the body and respond with
-        a HTTP 302 redirect to the post/after registration URL or the `return_to` value if it was set and if the registration succeeded;
-        a HTTP 302 redirect to the registration UI URL with the flow ID containing the validation errors otherwise.
+        a HTTP 303 redirect to the post/after registration URL or the `return_to` value if it was set and if the registration succeeded;
+        a HTTP 303 redirect to the registration UI URL with the flow ID containing the validation errors otherwise.
 
         Browser flows with an accept header of `application/json` will not redirect but instead respond with
         HTTP 200 and a application/json body with the signed in identity and a `Set-Cookie` header on success;
-        HTTP 302 redirect to a fresh login flow if the original flow expired with the appropriate error messages set;
+        HTTP 303 redirect to a fresh login flow if the original flow expired with the appropriate error messages set;
         HTTP 400 on form validation errors.
 
         If this endpoint is called with `Accept: application/json` in the header, the response contains the flow without a redirect. In the
@@ -1344,7 +1488,7 @@ paths:
         `browser_location_change_required`: Usually sent when an AJAX request indicates that the browser needs to open a specific URL.
         Most likely used in Social Sign In flows.
 
-        More information can be found at [Ory Kratos User Login and User Registration Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-login-user-registration).
+        More information can be found at [Ory Kratos User Login](https://www.ory.sh/docs/kratos/self-service/flows/user-login) and [User Registration Documentation](https://www.ory.sh/docs/kratos/self-service/flows/user-registration).
       operationId: submitSelfServiceRegistrationFlow
       parameters:
       - description: |-
@@ -1375,7 +1519,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/successfulSelfServiceRegistrationWithoutBrowser'
           description: successfulSelfServiceRegistrationWithoutBrowser
-        "302":
+        "303":
           description: Empty responses are sent when, for example, resources are deleted.
             The HTTP status code for empty responses is typically 201.
         "400":
@@ -1384,6 +1528,12 @@ paths:
               schema:
                 $ref: '#/components/schemas/selfServiceRegistrationFlow'
           description: selfServiceRegistrationFlow
+        "410":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/jsonError'
+          description: jsonError
         "422":
           content:
             application/json:
@@ -1420,7 +1570,7 @@ paths:
 
         This endpoint MUST ONLY be used in scenarios such as native mobile apps (React Native, Objective C, Swift, Java, ...).
 
-        More information can be found at [Ory Kratos User Login and User Registration Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-login-user-registration).
+        More information can be found at [Ory Kratos User Login](https://www.ory.sh/docs/kratos/self-service/flows/user-login) and [User Registration Documentation](https://www.ory.sh/docs/kratos/self-service/flows/user-registration).
       operationId: initializeSelfServiceRegistrationFlowWithoutBrowser
       responses:
         "200":
@@ -1471,7 +1621,7 @@ paths:
 
         This endpoint is NOT INTENDED for clients that do not have a browser (Chrome, Firefox, ...) as cookies are needed.
 
-        More information can be found at [Ory Kratos User Login and User Registration Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-login-user-registration).
+        More information can be found at [Ory Kratos User Login](https://www.ory.sh/docs/kratos/self-service/flows/user-login) and [User Registration Documentation](https://www.ory.sh/docs/kratos/self-service/flows/user-registration).
       operationId: initializeSelfServiceRegistrationFlowForBrowsers
       parameters:
       - description: The URL to return the browser to after the flow was completed.
@@ -1489,7 +1639,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/selfServiceRegistrationFlow'
           description: selfServiceRegistrationFlow
-        "302":
+        "303":
           description: Empty responses are sent when, for example, resources are deleted.
             The HTTP status code for empty responses is typically 201.
         "500":
@@ -1526,7 +1676,7 @@ paths:
         `session_already_available`: The user is already signed in.
         `self_service_flow_expired`: The flow is expired and you should request a new one.
 
-        More information can be found at [Ory Kratos User Login and User Registration Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-login-user-registration).
+        More information can be found at [Ory Kratos User Login](https://www.ory.sh/docs/kratos/self-service/flows/user-login) and [User Registration Documentation](https://www.ory.sh/docs/kratos/self-service/flows/user-registration).
       operationId: getSelfServiceRegistrationFlow
       parameters:
       - description: |-
@@ -1595,20 +1745,20 @@ paths:
 
         API-initiated flows expect `application/json` to be sent in the body and respond with
         HTTP 200 and an application/json body with the session token on success;
-        HTTP 302 redirect to a fresh settings flow if the original flow expired with the appropriate error messages set;
+        HTTP 303 redirect to a fresh settings flow if the original flow expired with the appropriate error messages set;
         HTTP 400 on form validation errors.
         HTTP 401 when the endpoint is called without a valid session token.
         HTTP 403 when `selfservice.flows.settings.privileged_session_max_age` was reached or the session's AAL is too low.
         Implies that the user needs to re-authenticate.
 
         Browser flows without HTTP Header `Accept` or with `Accept: text/*` respond with
-        a HTTP 302 redirect to the post/after settings URL or the `return_to` value if it was set and if the flow succeeded;
-        a HTTP 302 redirect to the Settings UI URL with the flow ID containing the validation errors otherwise.
-        a HTTP 302 redirect to the login endpoint when `selfservice.flows.settings.privileged_session_max_age` was reached or the session's AAL is too low.
+        a HTTP 303 redirect to the post/after settings URL or the `return_to` value if it was set and if the flow succeeded;
+        a HTTP 303 redirect to the Settings UI URL with the flow ID containing the validation errors otherwise.
+        a HTTP 303 redirect to the login endpoint when `selfservice.flows.settings.privileged_session_max_age` was reached or the session's AAL is too low.
 
         Browser flows with HTTP Header `Accept: application/json` respond with
         HTTP 200 and a application/json body with the signed in identity and a `Set-Cookie` header on success;
-        HTTP 302 redirect to a fresh login flow if the original flow expired with the appropriate error messages set;
+        HTTP 303 redirect to a fresh login flow if the original flow expired with the appropriate error messages set;
         HTTP 401 when the endpoint is called without a valid session cookie.
         HTTP 403 when the page is accessed without a session cookie or the session's AAL is too low.
         HTTP 400 on form validation errors.
@@ -1671,7 +1821,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/selfServiceSettingsFlow'
           description: selfServiceSettingsFlow
-        "302":
+        "303":
           description: Empty responses are sent when, for example, resources are deleted.
             The HTTP status code for empty responses is typically 201.
         "400":
@@ -1687,6 +1837,12 @@ paths:
                 $ref: '#/components/schemas/jsonError'
           description: jsonError
         "403":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/jsonError'
+          description: jsonError
+        "410":
           content:
             application/json:
               schema:
@@ -1812,7 +1968,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/selfServiceSettingsFlow'
           description: selfServiceSettingsFlow
-        "302":
+        "303":
           description: Empty responses are sent when, for example, resources are deleted.
             The HTTP status code for empty responses is typically 201.
         "400":
@@ -1952,12 +2108,12 @@ paths:
         `choose_method` expects `flow` (in the URL query) and `email` (in the body) to be sent
         and works with API- and Browser-initiated flows.
         For API clients and Browser clients with HTTP Header `Accept: application/json` it either returns a HTTP 200 OK when the form is valid and HTTP 400 OK when the form is invalid
-        and a HTTP 302 Found redirect with a fresh verification flow if the flow was otherwise invalid (e.g. expired).
-        For Browser clients without HTTP Header `Accept` or with `Accept: text/*` it returns a HTTP 302 Found redirect to the Verification UI URL with the Verification Flow ID appended.
+        and a HTTP 303 See Other redirect with a fresh verification flow if the flow was otherwise invalid (e.g. expired).
+        For Browser clients without HTTP Header `Accept` or with `Accept: text/*` it returns a HTTP 303 See Other redirect to the Verification UI URL with the Verification Flow ID appended.
         `sent_email` is the success state after `choose_method` when using the `link` method and allows the user to request another verification email. It
         works for both API and Browser-initiated flows and returns the same responses as the flow in `choose_method` state.
         `passed_challenge` expects a `token` to be sent in the URL query and given the nature of the flow ("sending a verification link")
-        does not have any API capabilities. The server responds with a HTTP 302 Found redirect either to the Settings UI URL
+        does not have any API capabilities. The server responds with a HTTP 303 See Other redirect either to the Settings UI URL
         (if the link was valid) and instructs the user to update their password, or a redirect to the Verification UI URL with
         a new Verification Flow ID which contains an error message that the verification link was invalid.
 
@@ -2006,7 +2162,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/selfServiceVerificationFlow'
           description: selfServiceVerificationFlow
-        "302":
+        "303":
           description: Empty responses are sent when, for example, resources are deleted.
             The HTTP status code for empty responses is typically 201.
         "400":
@@ -2015,6 +2171,12 @@ paths:
               schema:
                 $ref: '#/components/schemas/selfServiceVerificationFlow'
           description: selfServiceVerificationFlow
+        "410":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/jsonError'
+          description: jsonError
         "500":
           content:
             application/json:
@@ -2089,7 +2251,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/selfServiceVerificationFlow'
           description: selfServiceVerificationFlow
-        "302":
+        "303":
           description: Empty responses are sent when, for example, resources are deleted.
             The HTTP status code for empty responses is typically 201.
         "500":
@@ -2175,12 +2337,170 @@ paths:
       summary: Get Verification Flow
       tags:
       - v0alpha2
+  /sessions:
+    delete:
+      description: |-
+        This endpoint is useful for:
+
+        To forcefully logout the current user from all other devices and sessions
+      operationId: revokeSessions
+      parameters:
+      - description: Set the Session Token when calling from non-browser clients.
+          A session token has a format of `MP2YWEMeM8MxjkGKpH4dqOQ4Q4DlSPaj`.
+        explode: false
+        in: header
+        name: X-Session-Token
+        required: false
+        schema:
+          type: string
+        style: simple
+      - description: |-
+          Set the Cookie Header. This is especially useful when calling this endpoint from a server-side application. In that
+          scenario you must include the HTTP Cookie Header which originally was included in the request to your server.
+          An example of a session in the HTTP Cookie Header is: `ory_kratos_session=a19iOVAbdzdgl70Rq1QZmrKmcjDtdsviCTZx7m9a9yHIUS8Wa9T7hvqyGTsLHi6Qifn2WUfpAKx9DWp0SJGleIn9vh2YF4A16id93kXFTgIgmwIOvbVAScyrx7yVl6bPZnCx27ec4WQDtaTewC1CpgudeDV2jQQnSaCP6ny3xa8qLH-QUgYqdQuoA_LF1phxgRCUfIrCLQOkolX5nv3ze_f==`.
+
+          It is ok if more than one cookie are included here as all other cookies will be ignored.
+        explode: false
+        in: header
+        name: Cookie
+        required: false
+        schema:
+          type: string
+        style: simple
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/revokedSessions'
+          description: revokedSessions
+        "400":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/jsonError'
+          description: jsonError
+        "401":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/jsonError'
+          description: jsonError
+        "404":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/jsonError'
+          description: jsonError
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/jsonError'
+          description: jsonError
+      summary: |-
+        Calling this endpoint invalidates all except the current session that belong to the logged-in user.
+        Session data are not deleted.
+      tags:
+      - v0alpha2
+    get:
+      description: |-
+        This endpoint is useful for:
+
+        Displaying all other sessions that belong to the logged-in user
+      operationId: listSessions
+      parameters:
+      - description: Set the Session Token when calling from non-browser clients.
+          A session token has a format of `MP2YWEMeM8MxjkGKpH4dqOQ4Q4DlSPaj`.
+        explode: false
+        in: header
+        name: X-Session-Token
+        required: false
+        schema:
+          type: string
+        style: simple
+      - description: |-
+          Set the Cookie Header. This is especially useful when calling this endpoint from a server-side application. In that
+          scenario you must include the HTTP Cookie Header which originally was included in the request to your server.
+          An example of a session in the HTTP Cookie Header is: `ory_kratos_session=a19iOVAbdzdgl70Rq1QZmrKmcjDtdsviCTZx7m9a9yHIUS8Wa9T7hvqyGTsLHi6Qifn2WUfpAKx9DWp0SJGleIn9vh2YF4A16id93kXFTgIgmwIOvbVAScyrx7yVl6bPZnCx27ec4WQDtaTewC1CpgudeDV2jQQnSaCP6ny3xa8qLH-QUgYqdQuoA_LF1phxgRCUfIrCLQOkolX5nv3ze_f==`.
+
+          It is ok if more than one cookie are included here as all other cookies will be ignored.
+        explode: false
+        in: header
+        name: Cookie
+        required: false
+        schema:
+          type: string
+        style: simple
+      - description: |-
+          Items per Page
+
+          This is the number of items per page.
+        explode: true
+        in: query
+        name: per_page
+        required: false
+        schema:
+          default: 250
+          format: int64
+          maximum: 1000
+          minimum: 1
+          type: integer
+        style: form
+      - description: Pagination Page
+        explode: true
+        in: query
+        name: page
+        required: false
+        schema:
+          default: 1
+          format: int64
+          minimum: 1
+          type: integer
+        style: form
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/sessionList'
+          description: sessionList
+        "400":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/jsonError'
+          description: jsonError
+        "401":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/jsonError'
+          description: jsonError
+        "404":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/jsonError'
+          description: jsonError
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/jsonError'
+          description: jsonError
+      summary: |-
+        This endpoints returns all other active sessions that belong to the logged-in user.
+        The current session can be retrieved by calling the `/sessions/whoami` endpoint.
+      tags:
+      - v0alpha2
   /sessions/whoami:
     get:
       description: |-
         Uses the HTTP Headers in the GET request to determine (e.g. by using checking the cookies) who is authenticated.
         Returns a session object in the body or 401 if the credentials are invalid or no credentials were sent.
-        Additionally when the request it successful it adds the user ID to the 'X-Kratos-Authenticated-Identity-Id' header in the response.
+        Additionally when the request it successful it adds the user ID to the 'X-Kratos-Authenticated-Identity-Id' header
+        in the response.
 
         If you call this endpoint from a server-side application, you must forward the HTTP Cookie Header to this endpoint:
 
@@ -2280,6 +2600,49 @@ paths:
       summary: Check Who the Current HTTP Session Belongs To
       tags:
       - v0alpha2
+  /sessions/{id}:
+    delete:
+      description: |-
+        This endpoint is useful for:
+
+        To forcefully logout the current user from another device or session
+      operationId: revokeSession
+      parameters:
+      - description: ID is the session's ID.
+        explode: false
+        in: path
+        name: id
+        required: true
+        schema:
+          type: string
+        style: simple
+      responses:
+        "204":
+          description: Empty responses are sent when, for example, resources are deleted.
+            The HTTP status code for empty responses is typically 201.
+        "400":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/jsonError'
+          description: jsonError
+        "401":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/jsonError'
+          description: jsonError
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/jsonError'
+          description: jsonError
+      summary: |-
+        Calling this endpoint invalidates the specified session. The current session cannot be revoked.
+        Session data are not deleted.
+      tags:
+      - v0alpha2
   /version:
     get:
       description: |-
@@ -2326,6 +2689,7 @@ components:
             in `schema_id`.
           type: object
       required:
+      - schema_id
       - state
       - traits
       type: object
@@ -2378,6 +2742,18 @@ components:
       type: string
     adminCreateIdentityBody:
       properties:
+        credentials:
+          $ref: '#/components/schemas/adminIdentityImportCredentials'
+        recovery_addresses:
+          description: |-
+            RecoveryAddresses contains all the addresses that can be used to recover an identity.
+
+            Use this structure to import recovery addresses for an identity. Please keep in mind
+            that the address needs to be represented in the Identity Schema or this field will be overwritten
+            on the next identity update.
+          items:
+            $ref: '#/components/schemas/RecoveryAddress'
+          type: array
         schema_id:
           description: SchemaID is the ID of the JSON Schema to be used for validating
             the identity's traits.
@@ -2390,9 +2766,62 @@ components:
             in a self-service manner. The input will always be validated against the JSON Schema defined
             in `schema_url`.
           type: object
+        verifiable_addresses:
+          description: |-
+            VerifiableAddresses contains all the addresses that can be verified by the user.
+
+            Use this structure to import verified addresses for an identity. Please keep in mind
+            that the address needs to be represented in the Identity Schema or this field will be overwritten
+            on the next identity update.
+          items:
+            $ref: '#/components/schemas/verifiableIdentityAddress'
+          type: array
       required:
       - schema_id
       - traits
+      type: object
+    adminCreateIdentityImportCredentialsOidc:
+      properties:
+        config:
+          $ref: '#/components/schemas/adminCreateIdentityImportCredentialsOidcConfig'
+      type: object
+    adminCreateIdentityImportCredentialsOidcConfig:
+      properties:
+        config:
+          $ref: '#/components/schemas/adminCreateIdentityImportCredentialsPasswordConfig'
+        providers:
+          description: A list of OpenID Connect Providers
+          items:
+            $ref: '#/components/schemas/adminCreateIdentityImportCredentialsOidcProvider'
+          type: array
+      type: object
+    adminCreateIdentityImportCredentialsOidcProvider:
+      properties:
+        provider:
+          description: The OpenID Connect provider to link the subject to. Usually
+            something like `google` or `github`.
+          type: string
+        subject:
+          description: The subject (`sub`) of the OpenID Connect connection. Usually
+            the `sub` field of the ID Token.
+          type: string
+      required:
+      - provider
+      - subject
+      type: object
+    adminCreateIdentityImportCredentialsPassword:
+      properties:
+        config:
+          $ref: '#/components/schemas/adminCreateIdentityImportCredentialsPasswordConfig'
+      type: object
+    adminCreateIdentityImportCredentialsPasswordConfig:
+      properties:
+        hashed_password:
+          description: The hashed password in [PHC format]( https://www.ory.sh/docs/kratos/concepts/credentials/username-email-password#hashed-password-format)
+          type: string
+        password:
+          description: The password in plain text if no hash is available.
+          type: string
       type: object
     adminCreateSelfServiceRecoveryLinkBody:
       properties:
@@ -2409,6 +2838,13 @@ components:
           type: string
       required:
       - identity_id
+      type: object
+    adminIdentityImportCredentials:
+      properties:
+        oidc:
+          $ref: '#/components/schemas/adminCreateIdentityImportCredentialsOidc'
+        password:
+          $ref: '#/components/schemas/adminCreateIdentityImportCredentialsPassword'
       type: object
     authenticatorAssuranceLevel:
       description: |-
@@ -2573,6 +3009,7 @@ components:
             - identifiers
             created_at: 2000-01-23T04:56:07.000+00:00
             config: '{}'
+            version: 0
         verifiable_addresses:
         - updated_at: 2014-01-01T23:28:56.782Z
           verified_at: 2000-01-23T04:56:07.000+00:00
@@ -2664,6 +3101,7 @@ components:
         - identifiers
         created_at: 2000-01-23T04:56:07.000+00:00
         config: '{}'
+        version: 0
       properties:
         config:
           title: JSONRawMessage represents a json.RawMessage that works well with
@@ -2685,6 +3123,43 @@ components:
           description: UpdatedAt is a helper struct field for gobuffalo.pop.
           format: date-time
           type: string
+        version:
+          description: Version refers to the version of the credential. Useful when
+            changing the config schema.
+          format: int64
+          type: integer
+      type: object
+    identityCredentialsOidc:
+      properties:
+        providers:
+          items:
+            $ref: '#/components/schemas/identityCredentialsOidcProvider'
+          type: array
+      title: CredentialsOIDC is contains the configuration for credentials of the
+        type oidc.
+      type: object
+    identityCredentialsOidcProvider:
+      properties:
+        initial_access_token:
+          type: string
+        initial_id_token:
+          type: string
+        initial_refresh_token:
+          type: string
+        provider:
+          type: string
+        subject:
+          type: string
+      title: CredentialsOIDCProvider is contains a specific OpenID COnnect credential
+        for a particular connection (e.g. Google).
+      type: object
+    identityCredentialsPassword:
+      properties:
+        hashed_password:
+          description: HashedPassword is a hash-representation of the password.
+          type: string
+      title: CredentialsPassword is contains the configuration for credentials of
+        the type password.
       type: object
     identityCredentialsType:
       description: and so on.
@@ -2692,6 +3167,8 @@ components:
       - password
       - totp
       - oidc
+      - webauthn
+      - lookup_secret
       title: CredentialsType  represents several different credential types, like
         password credentials, passwordless credentials,
       type: string
@@ -2811,6 +3288,34 @@ components:
       format: date-time
       title: NullTime implements sql.NullTime functionality.
       type: string
+    pagination:
+      properties:
+        page:
+          default: 1
+          description: Pagination Page
+          format: int64
+          minimum: 1
+          type: integer
+        per_page:
+          default: 250
+          description: |-
+            Items per Page
+
+            This is the number of items per page.
+          format: int64
+          maximum: 1000
+          minimum: 1
+          type: integer
+      type: object
+    revokedSessions:
+      example:
+        count: 0
+      properties:
+        count:
+          description: The number of sessions that were revoked.
+          format: int64
+          type: integer
+      type: object
     selfServiceBrowserLocationChangeRequiredError:
       properties:
         code:
@@ -2980,8 +3485,8 @@ components:
               id: 0
               text: text
               type: type
-            type: type
-            group: group
+            type: text
+            group: default
           - meta:
               label:
                 context: '{}'
@@ -2997,8 +3502,8 @@ components:
               id: 0
               text: text
               type: type
-            type: type
-            group: group
+            type: text
+            group: default
           method: method
           action: action
           messages:
@@ -3112,8 +3617,8 @@ components:
               id: 0
               text: text
               type: type
-            type: type
-            group: group
+            type: text
+            group: default
           - meta:
               label:
                 context: '{}'
@@ -3129,8 +3634,8 @@ components:
               id: 0
               text: text
               type: type
-            type: type
-            group: group
+            type: text
+            group: default
           method: method
           action: action
           messages:
@@ -3189,6 +3694,7 @@ components:
       - issued_at
       - request_url
       - state
+      - type
       - ui
       title: A Recovery Flow
       type: object
@@ -3246,8 +3752,8 @@ components:
               id: 0
               text: text
               type: type
-            type: type
-            group: group
+            type: text
+            group: default
           - meta:
               label:
                 context: '{}'
@@ -3263,8 +3769,8 @@ components:
               id: 0
               text: text
               type: type
-            type: type
-            group: group
+            type: text
+            group: default
           method: method
           action: action
           messages:
@@ -3316,6 +3822,7 @@ components:
       - id
       - issued_at
       - request_url
+      - type
       - ui
       type: object
     selfServiceSettingsFlow:
@@ -3343,8 +3850,8 @@ components:
               id: 0
               text: text
               type: type
-            type: type
-            group: group
+            type: text
+            group: default
           - meta:
               label:
                 context: '{}'
@@ -3360,8 +3867,8 @@ components:
               id: 0
               text: text
               type: type
-            type: type
-            group: group
+            type: text
+            group: default
           method: method
           action: action
           messages:
@@ -3395,6 +3902,7 @@ components:
               - identifiers
               created_at: 2000-01-23T04:56:07.000+00:00
               config: '{}'
+              version: 0
           verifiable_addresses:
           - updated_at: 2014-01-01T23:28:56.782Z
             verified_at: 2000-01-23T04:56:07.000+00:00
@@ -3467,6 +3975,7 @@ components:
       - issued_at
       - request_url
       - state
+      - type
       - ui
       title: Flow represents a Settings Flow
       type: object
@@ -3506,8 +4015,8 @@ components:
               id: 0
               text: text
               type: type
-            type: type
-            group: group
+            type: text
+            group: default
           - meta:
               label:
                 context: '{}'
@@ -3523,8 +4032,8 @@ components:
               id: 0
               text: text
               type: type
-            type: type
-            group: group
+            type: text
+            group: default
           method: method
           action: action
           messages:
@@ -3628,6 +4137,7 @@ components:
               - identifiers
               created_at: 2000-01-23T04:56:07.000+00:00
               config: '{}'
+              version: 0
           verifiable_addresses:
           - updated_at: 2014-01-01T23:28:56.782Z
             verified_at: 2000-01-23T04:56:07.000+00:00
@@ -3704,6 +4214,8 @@ components:
         completed_at: 2000-01-23T04:56:07.000+00:00
         method: link_recovery
       properties:
+        aal:
+          $ref: '#/components/schemas/authenticatorAssuranceLevel'
         completed_at:
           description: When the authentication challenge was completed.
           format: date-time
@@ -3715,6 +4227,8 @@ components:
           - totp
           - oidc
           - webauthn
+          - lookup_secret
+          - v0.6_legacy_session
           title: The method used
           type: string
       title: AuthenticationMethod identifies an authentication method
@@ -3731,6 +4245,10 @@ components:
           description: UserAgent of this device
           type: string
       type: object
+    sessionList:
+      items:
+        $ref: '#/components/schemas/session'
+      type: array
     settingsProfileFormConfig:
       properties:
         action:
@@ -3753,17 +4271,37 @@ components:
       - method
       - nodes
       type: object
+    submitSelfServiceFlowWithWebAuthnRegistrationMethod:
+      properties:
+        webauthn_register:
+          description: |-
+            Register a WebAuthn Security Key
+
+            It is expected that the JSON returned by the WebAuthn registration process
+            is included here.
+          type: string
+        webauthn_register_displayname:
+          description: |-
+            Name of the WebAuthn Security Key to be Added
+
+            A human-readable name for the security key which will be added.
+          type: string
+      type: object
     submitSelfServiceLoginFlowBody:
       discriminator:
         mapping:
+          lookup_secret: '#/components/schemas/submitSelfServiceLoginFlowWithLookupSecretMethodBody'
           oidc: '#/components/schemas/submitSelfServiceLoginFlowWithOidcMethodBody'
           password: '#/components/schemas/submitSelfServiceLoginFlowWithPasswordMethodBody'
           totp: '#/components/schemas/submitSelfServiceLoginFlowWithTotpMethodBody'
+          webauthn: '#/components/schemas/submitSelfServiceLoginFlowWithWebAuthnMethodBody'
         propertyName: method
       oneOf:
       - $ref: '#/components/schemas/submitSelfServiceLoginFlowWithPasswordMethodBody'
       - $ref: '#/components/schemas/submitSelfServiceLoginFlowWithOidcMethodBody'
       - $ref: '#/components/schemas/submitSelfServiceLoginFlowWithTotpMethodBody'
+      - $ref: '#/components/schemas/submitSelfServiceLoginFlowWithWebAuthnMethodBody'
+      - $ref: '#/components/schemas/submitSelfServiceLoginFlowWithLookupSecretMethodBody'
     submitSelfServiceLoginFlowWithLookupSecretMethodBody:
       properties:
         csrf_token:
@@ -3814,6 +4352,10 @@ components:
           description: Sending the anti-csrf token is only required for browser login
             flows.
           type: string
+        identifier:
+          description: Identifier is the email or username of the user trying to log
+            in.
+          type: string
         method:
           description: Method should be set to "password" when logging in using the
             identifier and password strategy.
@@ -3822,10 +4364,12 @@ components:
           description: The user's password.
           type: string
         password_identifier:
-          description: Identifier is the email or username of the user trying to log
-            in.
+          description: |-
+            Identifier is the email or username of the user trying to log in.
+            This field is deprecated!
           type: string
       required:
+      - identifier
       - method
       - password
       - password_identifier
@@ -3856,6 +4400,12 @@ components:
         csrf_token:
           description: Sending the anti-csrf token is only required for browser login
             flows.
+          type: string
+        identifier:
+          description: |-
+            Identifier is the email or username of the user trying to log in. This field is
+            only required when using WebAuthn for passwordless login. When using WebAuthn
+            for multi-factor authentication, it is not needed.
           type: string
         method:
           description: Method should be set to "webAuthn" when logging in using the
@@ -3919,10 +4469,12 @@ components:
         mapping:
           oidc: '#/components/schemas/submitSelfServiceRegistrationFlowWithOidcMethodBody'
           password: '#/components/schemas/submitSelfServiceRegistrationFlowWithPasswordMethodBody'
+          webauthn: '#/components/schemas/submitSelfServiceRegistrationFlowWithWebAuthnMethodBody'
         propertyName: method
       oneOf:
       - $ref: '#/components/schemas/submitSelfServiceRegistrationFlowWithPasswordMethodBody'
       - $ref: '#/components/schemas/submitSelfServiceRegistrationFlowWithOidcMethodBody'
+      - $ref: '#/components/schemas/submitSelfServiceRegistrationFlowWithWebAuthnMethodBody'
     submitSelfServiceRegistrationFlowWithOidcMethodBody:
       description: |-
         SubmitSelfServiceRegistrationFlowWithOidcMethodBody is used to decode the registration form payload
@@ -3972,13 +4524,46 @@ components:
       - password
       - traits
       type: object
+    submitSelfServiceRegistrationFlowWithWebAuthnMethodBody:
+      properties:
+        csrf_token:
+          description: CSRFToken is the anti-CSRF token
+          type: string
+        method:
+          description: |-
+            Method
+
+            Should be set to "webauthn" when trying to add, update, or remove a webAuthn pairing.
+          type: string
+        traits:
+          description: The identity's traits
+          type: object
+        webauthn_register:
+          description: |-
+            Register a WebAuthn Security Key
+
+            It is expected that the JSON returned by the WebAuthn registration process
+            is included here.
+          type: string
+        webauthn_register_displayname:
+          description: |-
+            Name of the WebAuthn Security Key to be Added
+
+            A human-readable name for the security key which will be added.
+          type: string
+      required:
+      - method
+      - traits
+      type: object
     submitSelfServiceSettingsFlowBody:
       discriminator:
         mapping:
+          lookup_secret: '#/components/schemas/submitSelfServiceSettingsFlowWithLookupMethodBody'
           oidc: '#/components/schemas/submitSelfServiceSettingsFlowWithOidcMethodBody'
           password: '#/components/schemas/submitSelfServiceSettingsFlowWithPasswordMethodBody'
           profile: '#/components/schemas/submitSelfServiceSettingsFlowWithProfileMethodBody'
           totp: '#/components/schemas/submitSelfServiceSettingsFlowWithTotpMethodBody'
+          webauthn: '#/components/schemas/submitSelfServiceSettingsFlowWithWebAuthnMethodBody'
         propertyName: method
       oneOf:
       - $ref: '#/components/schemas/submitSelfServiceSettingsFlowWithPasswordMethodBody'
@@ -3986,6 +4571,8 @@ components:
       - $ref: '#/components/schemas/submitSelfServiceSettingsFlowWithOidcMethodBody'
       - $ref: '#/components/schemas/submitSelfServiceSettingsFlowWithOidcMethodBody'
       - $ref: '#/components/schemas/submitSelfServiceSettingsFlowWithTotpMethodBody'
+      - $ref: '#/components/schemas/submitSelfServiceSettingsFlowWithWebAuthnMethodBody'
+      - $ref: '#/components/schemas/submitSelfServiceSettingsFlowWithLookupMethodBody'
     submitSelfServiceSettingsFlowWithLookupMethodBody:
       properties:
         csrf_token:
@@ -4214,6 +4801,7 @@ components:
                 - identifiers
                 created_at: 2000-01-23T04:56:07.000+00:00
                 config: '{}'
+                version: 0
             verifiable_addresses:
             - updated_at: 2014-01-01T23:28:56.782Z
               verified_at: 2000-01-23T04:56:07.000+00:00
@@ -4283,6 +4871,7 @@ components:
               - identifiers
               created_at: 2000-01-23T04:56:07.000+00:00
               config: '{}'
+              version: 0
           verifiable_addresses:
           - updated_at: 2014-01-01T23:28:56.782Z
             verified_at: 2000-01-23T04:56:07.000+00:00
@@ -4334,6 +4923,7 @@ components:
                 - identifiers
                 created_at: 2000-01-23T04:56:07.000+00:00
                 config: '{}'
+                version: 0
             verifiable_addresses:
             - updated_at: 2014-01-01T23:28:56.782Z
               verified_at: 2000-01-23T04:56:07.000+00:00
@@ -4401,8 +4991,8 @@ components:
             id: 0
             text: text
             type: type
-          type: type
-          group: group
+          type: text
+          group: default
         - meta:
             label:
               context: '{}'
@@ -4418,8 +5008,8 @@ components:
             id: 0
             text: text
             type: type
-          type: type
-          group: group
+          type: text
+          group: default
         method: method
         action: action
         messages:
@@ -4472,12 +5062,23 @@ components:
           id: 0
           text: text
           type: type
-        type: type
-        group: group
+        type: text
+        group: default
       properties:
         attributes:
           $ref: '#/components/schemas/uiNodeAttributes'
         group:
+          description: Group specifies which group (e.g. password authenticator) this
+            node belongs to.
+          enum:
+          - default
+          - password
+          - oidc
+          - profile
+          - link
+          - totp
+          - lookup_secret
+          - webauthn
           type: string
         messages:
           items:
@@ -4486,6 +5087,13 @@ components:
         meta:
           $ref: '#/components/schemas/uiNodeMeta'
         type:
+          description: The node's type
+          enum:
+          - text
+          - input
+          - img
+          - a
+          - script
           type: string
       required:
       - attributes
@@ -4507,6 +5115,15 @@ components:
           description: A unique identifier
           type: string
         node_type:
+          description: |-
+            NodeType represents this node's types. It is a mirror of `node.type` and
+            is primarily used to allow compatibility with OpenAPI 3.0.
+          enum:
+          - text
+          - input
+          - img
+          - a
+          - script
           type: string
         title:
           $ref: '#/components/schemas/uiText'
@@ -4520,8 +5137,8 @@ components:
     uiNodeAttributes:
       discriminator:
         mapping:
-          anchor: '#/components/schemas/uiNodeAnchorAttributes'
-          image: '#/components/schemas/uiNodeImageAttributes'
+          a: '#/components/schemas/uiNodeAnchorAttributes'
+          img: '#/components/schemas/uiNodeImageAttributes'
           input: '#/components/schemas/uiNodeInputAttributes'
           script: '#/components/schemas/uiNodeScriptAttributes'
           text: '#/components/schemas/uiNodeTextAttributes'
@@ -4533,8 +5150,6 @@ components:
       - $ref: '#/components/schemas/uiNodeAnchorAttributes'
       - $ref: '#/components/schemas/uiNodeScriptAttributes'
       title: Attributes represents a list of attributes (e.g. `href="foo"` for links).
-    uiNodeGroup:
-      type: string
     uiNodeImageAttributes:
       properties:
         height:
@@ -4545,6 +5160,15 @@ components:
           description: A unique identifier
           type: string
         node_type:
+          description: |-
+            NodeType represents this node's types. It is a mirror of `node.type` and
+            is primarily used to allow compatibility with OpenAPI 3.0.
+          enum:
+          - text
+          - input
+          - img
+          - a
+          - script
           type: string
         src:
           description: |-
@@ -4557,9 +5181,11 @@ components:
           format: int64
           type: integer
       required:
+      - height
       - id
       - node_type
       - src
+      - width
       title: ImageAttributes represents the attributes of an image node.
       type: object
     uiNodeInputAttributeType:
@@ -4576,6 +5202,15 @@ components:
           description: The input's element name.
           type: string
         node_type:
+          description: |-
+            NodeType represents this node's types. It is a mirror of `node.type` and
+            is primarily used to allow compatibility with OpenAPI 3.0.
+          enum:
+          - text
+          - input
+          - img
+          - a
+          - script
           type: string
         onclick:
           description: |-
@@ -4629,6 +5264,23 @@ components:
           description: The script's integrity hash
           type: string
         node_type:
+          description: |-
+            NodeType represents this node's types. It is a mirror of `node.type` and
+            is primarily used to allow compatibility with OpenAPI 3.0.
+          enum:
+          - text
+          - input
+          - img
+          - a
+          - script
+          type: string
+        nonce:
+          description: |-
+            Nonce for CSP
+
+            A nonce you may want to use to improve your Content Security Policy.
+            You do not have to use this value but if you want to improve your CSP
+            policies you may use it. You can also choose to use your own nonce value!
           type: string
         referrerpolicy:
           description: The script referrer policy
@@ -4645,6 +5297,7 @@ components:
       - id
       - integrity
       - node_type
+      - nonce
       - referrerpolicy
       - src
       - type
@@ -4656,6 +5309,15 @@ components:
           description: A unique identifier
           type: string
         node_type:
+          description: |-
+            NodeType represents this node's types. It is a mirror of `node.type` and
+            is primarily used to allow compatibility with OpenAPI 3.0.
+          enum:
+          - text
+          - input
+          - img
+          - a
+          - script
           type: string
         text:
           $ref: '#/components/schemas/uiText'
@@ -4665,8 +5327,6 @@ components:
       - text
       title: TextAttributes represents the attributes of a text node.
       type: object
-    uiNodeType:
-      type: string
     uiNodes:
       items:
         $ref: '#/components/schemas/uiNode'

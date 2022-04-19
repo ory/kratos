@@ -80,14 +80,19 @@ func (s *Strategy) SettingsStrategyID() string {
 func (s *Strategy) RegisterSettingsRoutes(public *x.RouterPublic) {}
 
 func (s *Strategy) PopulateSettingsMethod(r *http.Request, id *identity.Identity, f *settings.Flow) error {
-	traitsSchema, err := s.d.Config(r.Context()).IdentityTraitsSchemas().FindSchemaByID(id.SchemaID)
+	schemas, err := s.d.Config(r.Context()).IdentityTraitsSchemas()
+	if err != nil {
+		return err
+	}
+
+	traitsSchema, err := schemas.FindSchemaByID(id.SchemaID)
 	if err != nil {
 		return err
 	}
 
 	// use a schema compiler that disables identifiers
 	schemaCompiler := jsonschema.NewCompiler()
-	nodes, err := container.NodesFromJSONSchema(node.ProfileGroup, traitsSchema.URL, "", schemaCompiler)
+	nodes, err := container.NodesFromJSONSchema(r.Context(), node.ProfileGroup, traitsSchema.URL, "", schemaCompiler)
 	if err != nil {
 		return err
 	}
@@ -122,6 +127,7 @@ func (s *Strategy) Settings(w http.ResponseWriter, r *http.Request, f *settings.
 	}
 
 	if err := s.dc.Decode(r, &p, option,
+		decoderx.HTTPDecoderAllowedMethods("POST", "GET"),
 		decoderx.HTTPDecoderSetValidatePayloads(true),
 		decoderx.HTTPDecoderJSONFollowsFormFormat(),
 	); err != nil {
@@ -248,7 +254,11 @@ func (s *Strategy) handleSettingsError(w http.ResponseWriter, r *http.Request, p
 // newSettingsProfileDecoder returns a decoderx.HTTPDecoderOption with a JSON Schema for type assertion and
 // validation.
 func (s *Strategy) newSettingsProfileDecoder(ctx context.Context, i *identity.Identity) (decoderx.HTTPDecoderOption, error) {
-	ss, err := s.d.IdentityTraitsSchemas(ctx).GetByID(i.SchemaID)
+	schemas, err := s.d.IdentityTraitsSchemas(ctx)
+	if err != nil {
+		return nil, err
+	}
+	ss, err := schemas.GetByID(i.SchemaID)
 	if err != nil {
 		return nil, err
 	}
@@ -266,6 +276,6 @@ func (s *Strategy) newSettingsProfileDecoder(ctx context.Context, i *identity.Id
 	return o, nil
 }
 
-func (s *Strategy) NodeGroup() node.Group {
+func (s *Strategy) NodeGroup() node.UiNodeGroup {
 	return node.ProfileGroup
 }

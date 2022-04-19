@@ -9,8 +9,8 @@ import (
 
 	"github.com/ory/kratos/corp"
 
-	"github.com/gobuffalo/pop/v5"
-	"github.com/gobuffalo/pop/v5/columns"
+	"github.com/gobuffalo/pop/v6"
+	"github.com/gobuffalo/pop/v6/columns"
 	"github.com/gofrs/uuid"
 	"github.com/pkg/errors"
 
@@ -33,7 +33,7 @@ var migrations embed.FS
 
 type (
 	persisterDependencies interface {
-		IdentityTraitsSchemas(ctx context.Context) schema.Schemas
+		IdentityTraitsSchemas(ctx context.Context) (schema.Schemas, error)
 		identity.ValidationProvider
 		x.LoggingProvider
 		config.Provider

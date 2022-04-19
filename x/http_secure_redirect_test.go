@@ -42,7 +42,7 @@ func TestSecureContentNegotiationRedirection(t *testing.T) {
 	defaultReturnTo := ts.URL + "/default-return-to"
 	conf.MustSet(config.ViperKeySelfServiceBrowserDefaultReturnTo, defaultReturnTo)
 	conf.MustSet(config.ViperKeyPublicBaseURL, ts.URL)
-	conf.MustSet(config.ViperKeyURLsWhitelistedReturnToDomains, []string{ts.URL})
+	conf.MustSet(config.ViperKeyURLsAllowedReturnToDomains, []string{ts.URL})
 
 	run := func(t *testing.T, href string, contentType string) (*http.Response, string) {
 		req, err := http.NewRequest("GET", href, nil)
@@ -73,27 +73,27 @@ func TestSecureContentNegotiationRedirection(t *testing.T) {
 	})
 }
 
-func TestSecureRedirectToIsWhiteListedHost(t *testing.T) {
+func TestSecureRedirectToIsAllowedHost(t *testing.T) {
 	type testCase struct {
-		whitelistedURL string
-		redirectURL    string
-		valid          bool
+		allowedURL  string
+		redirectURL string
+		valid       bool
 	}
 	tests := map[string]testCase{
-		"case=Domain is whitelisted":              {whitelistedURL: "https://foo.bar", redirectURL: "https://foo.bar/redir", valid: true},
-		"case=Domain prefix is whitelisted":       {whitelistedURL: "https://*.bar", redirectURL: "https://foo.bar/redir", valid: true},
-		"case=Subdomain prefix is whitelisted":    {whitelistedURL: "https://*.foo.bar", redirectURL: "https://auth.foo.bar/redir", valid: true},
-		"case=Domain is not whitelisted":          {whitelistedURL: "https://foo.baz", redirectURL: "https://foo.bar/redir", valid: false},
-		"case=Domain wildcard is not whitelisted": {whitelistedURL: "https://*.foo.baz", redirectURL: "https://foo.bar/redir", valid: false},
-		"case=Subdomain is not whitelisted":       {whitelistedURL: "https://*.foo.baz", redirectURL: "https://auth.foo.bar/redir", valid: false},
+		"case=Domain is allowed":              {allowedURL: "https://foo.bar", redirectURL: "https://foo.bar/redir", valid: true},
+		"case=Domain prefix is allowed":       {allowedURL: "https://*.bar", redirectURL: "https://foo.bar/redir", valid: true},
+		"case=Subdomain prefix is allowed":    {allowedURL: "https://*.foo.bar", redirectURL: "https://auth.foo.bar/redir", valid: true},
+		"case=Domain is not allowed":          {allowedURL: "https://foo.baz", redirectURL: "https://foo.bar/redir", valid: false},
+		"case=Domain wildcard is not allowed": {allowedURL: "https://*.foo.baz", redirectURL: "https://foo.bar/redir", valid: false},
+		"case=Subdomain is not allowed":       {allowedURL: "https://*.foo.baz", redirectURL: "https://auth.foo.bar/redir", valid: false},
 	}
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			whitelistedURL, err := url.Parse(tc.whitelistedURL)
+			allowedURL, err := url.Parse(tc.allowedURL)
 			require.NoError(t, err)
 			redirectURL, err := url.Parse(tc.redirectURL)
 			require.NoError(t, err)
-			assert.Equal(t, x.SecureRedirectToIsWhiteListedHost(redirectURL, *whitelistedURL), tc.valid)
+			assert.Equal(t, x.SecureRedirectToIsAllowedHost(redirectURL, *allowedURL), tc.valid)
 		})
 	}
 }
@@ -143,6 +143,14 @@ func TestSecureRedirectTo(t *testing.T) {
 		return res, string(body)
 	}
 
+	t.Run("case=return to a relative path with anchor works", func(t *testing.T) {
+		s := newServer(t, false, true, false, func(ts *httptest.Server) []x.SecureRedirectOption {
+			return []x.SecureRedirectOption{x.SecureRedirectAllowURLs([]url.URL{*urlx.ParseOrPanic("/foo")})}
+		})
+		_, body := makeRequest(t, s, "?return_to=/foo/kratos%23abcd")
+		assert.Equal(t, body, "/foo/kratos#abcd")
+	})
+
 	t.Run("case=return to default URL if nothing is allowed", func(t *testing.T) {
 		s := newServer(t, false, false, false, nil)
 		_, body := makeRequest(t, s, "?return_to=/foo")
@@ -165,7 +173,7 @@ func TestSecureRedirectTo(t *testing.T) {
 		assert.Equal(t, body, "/foo/kratos")
 	})
 
-	t.Run("case=return to a fully qualified domain is forbidden if whitelist is relative", func(t *testing.T) {
+	t.Run("case=return to a fully qualified domain is forbidden if allowlist is relative", func(t *testing.T) {
 		s := newServer(t, false, true, true, func(ts *httptest.Server) []x.SecureRedirectOption {
 			return []x.SecureRedirectOption{x.SecureRedirectAllowURLs([]url.URL{*urlx.ParseOrPanic("/foo")})}
 		})

@@ -1,7 +1,7 @@
 {
   "id": "359963ec-b09b-4ea0-aece-fb4dd95f304a",
   "schema_id": "default",
-  "schema_url": "https://www.ory.sh/schemas/default",
+  "schema_url": "https://www.ory.sh/schemas/ZGVmYXVsdA",
   "state": "active",
   "traits": {
     "email": "d7b11@ory.sh"

@@ -3,6 +3,7 @@ package session_test
 import (
 	"context"
 	"errors"
+	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -61,15 +62,15 @@ func (f *mockCSRFHandler) RegenerateToken(w http.ResponseWriter, r *http.Request
 
 func createAAL2Identity(t *testing.T, reg driver.Registry) *identity.Identity {
 	idAAL2 := identity.Identity{Traits: []byte("{}"), State: identity.StateActive, Credentials: map[identity.CredentialsType]identity.Credentials{
-		identity.CredentialsTypePassword: {Type: identity.CredentialsTypePassword, Config: []byte("{}")},
-		identity.CredentialsTypeWebAuthn: {Type: identity.CredentialsTypeWebAuthn, Config: []byte("{}")},
+		identity.CredentialsTypePassword: {Type: identity.CredentialsTypePassword, Config: []byte(`{"hashed_password": "$argon2id$v=19$m=32,t=2,p=4$cm94YnRVOW5jZzFzcVE4bQ$MNzk5BtR2vUhrp6qQEjRNw"}`), Identifiers: []string{testhelpers.RandomEmail()}},
+		identity.CredentialsTypeWebAuthn: {Type: identity.CredentialsTypeWebAuthn, Config: []byte(`{"credentials":[{"is_passwordless":false}]}`), Identifiers: []string{testhelpers.RandomEmail()}},
 	}}
 	return &idAAL2
 }
 
 func createAAL1Identity(t *testing.T, reg driver.Registry) *identity.Identity {
 	idAAL1 := identity.Identity{Traits: []byte("{}"), State: identity.StateActive, Credentials: map[identity.CredentialsType]identity.Credentials{
-		identity.CredentialsTypePassword: {Type: identity.CredentialsTypePassword, Config: []byte("{}")},
+		identity.CredentialsTypePassword: {Type: identity.CredentialsTypePassword, Config: []byte(`{"hashed_password": "$argon2id$v=19$m=32,t=2,p=4$cm94YnRVOW5jZzFzcVE4bQ$MNzk5BtR2vUhrp6qQEjRNw"}`), Identifiers: []string{testhelpers.RandomEmail()}},
 	}}
 	return &idAAL1
 }
@@ -93,7 +94,6 @@ func TestManagerHTTP(t *testing.T) {
 		s := &session.Session{Identity: new(identity.Identity)}
 
 		require.NoError(t, conf.Source().Set(config.ViperKeyPublicBaseURL, "https://baseurl.com/base_url"))
-		require.NoError(t, conf.Source().Set(config.ViperKeyPublicDomainAliases, [...]config.DomainAlias{{MatchDomain: "alias.com", BasePath: "/bar", Scheme: "http"}}))
 
 		var getCookie = func(t *testing.T, req *http.Request) *http.Cookie {
 			rec := httptest.NewRecorder()
@@ -136,27 +136,26 @@ func TestManagerHTTP(t *testing.T) {
 			assert.EqualValues(t, true, actual.HttpOnly)
 			assert.EqualValues(t, true, actual.Secure)
 		})
-
-		t.Run("case=request from alias domain", func(t *testing.T) {
-			actual := getCookie(t, httptest.NewRequest("GET", "https://alias.com/bar", nil))
-			assert.EqualValues(t, "alias.com", actual.Domain, "Domain is alias.com")
-			assert.EqualValues(t, "/bar", actual.Path, "Path is the from alias")
-			assert.EqualValues(t, http.SameSiteNoneMode, actual.SameSite)
-			assert.EqualValues(t, true, actual.HttpOnly)
-			assert.EqualValues(t, true, actual.Secure)
-		})
 	})
 
 	t.Run("suite=SessionAddAuthenticationMethod", func(t *testing.T) {
 		conf, reg := internal.NewFastRegistryWithMocks(t)
-		conf.MustSet(config.ViperKeyDefaultIdentitySchemaURL, "file://./stub/identity.schema.json")
+		testhelpers.SetDefaultIdentitySchema(conf, "file://./stub/identity.schema.json")
 
 		i := &identity.Identity{Traits: []byte("{}"), State: identity.StateActive}
 		require.NoError(t, reg.PrivilegedIdentityPool().CreateIdentity(context.Background(), i))
 		sess := session.NewInactiveSession()
 		require.NoError(t, sess.Activate(i, conf, time.Now()))
 		require.NoError(t, reg.SessionPersister().UpsertSession(context.Background(), sess))
-		require.NoError(t, reg.SessionManager().SessionAddAuthenticationMethod(context.Background(), sess.ID, identity.CredentialsTypeOIDC, identity.CredentialsTypeWebAuthn))
+		require.NoError(t, reg.SessionManager().SessionAddAuthenticationMethods(context.Background(), sess.ID,
+			session.AuthenticationMethod{
+				Method: identity.CredentialsTypeOIDC,
+				AAL:    identity.AuthenticatorAssuranceLevel1,
+			},
+			session.AuthenticationMethod{
+				Method: identity.CredentialsTypeWebAuthn,
+				AAL:    identity.AuthenticatorAssuranceLevel2,
+			}))
 		assert.Len(t, sess.AMR, 0)
 
 		actual, err := reg.SessionPersister().GetSession(context.Background(), sess.ID)
@@ -171,7 +170,7 @@ func TestManagerHTTP(t *testing.T) {
 	t.Run("suite=lifecycle", func(t *testing.T) {
 		conf, reg := internal.NewFastRegistryWithMocks(t)
 		conf.MustSet(config.ViperKeySelfServiceLoginUI, "https://www.ory.sh")
-		conf.MustSet(config.ViperKeyDefaultIdentitySchemaURL, "file://./stub/fake-session.schema.json")
+		testhelpers.SetDefaultIdentitySchema(conf, "file://./stub/fake-session.schema.json")
 
 		var s *session.Session
 		rp := x.NewRouterPublic()
@@ -205,12 +204,37 @@ func TestManagerHTTP(t *testing.T) {
 
 			i := identity.Identity{Traits: []byte("{}")}
 			require.NoError(t, reg.PrivilegedIdentityPool().CreateIdentity(context.Background(), &i))
-			s, _ = session.NewActiveSession(&i, conf, time.Now(), identity.CredentialsTypePassword)
+			s, _ = session.NewActiveSession(&i, conf, time.Now(), identity.CredentialsTypePassword, identity.AuthenticatorAssuranceLevel1)
 
 			c := testhelpers.NewClientWithCookies(t)
 			testhelpers.MockHydrateCookieClient(t, c, pts.URL+"/session/set")
 
 			res, err := c.Get(pts.URL + "/session/get")
+			require.NoError(t, err)
+			assert.EqualValues(t, http.StatusOK, res.StatusCode)
+		})
+
+		t.Run("case=key rotation", func(t *testing.T) {
+			original := conf.Source().Strings(config.ViperKeySecretsCookie)
+			t.Cleanup(func() {
+				conf.MustSet(config.ViperKeySecretsCookie, original)
+			})
+			conf.MustSet(config.ViperKeySessionLifespan, "1m")
+			conf.MustSet(config.ViperKeySecretsCookie, []string{"foo"})
+
+			i := identity.Identity{Traits: []byte("{}")}
+			require.NoError(t, reg.PrivilegedIdentityPool().CreateIdentity(context.Background(), &i))
+			s, _ = session.NewActiveSession(&i, conf, time.Now(), identity.CredentialsTypePassword, identity.AuthenticatorAssuranceLevel1)
+
+			c := testhelpers.NewClientWithCookies(t)
+			testhelpers.MockHydrateCookieClient(t, c, pts.URL+"/session/set")
+
+			res, err := c.Get(pts.URL + "/session/get")
+			require.NoError(t, err)
+			assert.EqualValues(t, http.StatusOK, res.StatusCode)
+
+			conf.MustSet(config.ViperKeySecretsCookie, []string{"bar", "foo"})
+			res, err = c.Get(pts.URL + "/session/get")
 			require.NoError(t, err)
 			assert.EqualValues(t, http.StatusOK, res.StatusCode)
 		})
@@ -229,7 +253,7 @@ func TestManagerHTTP(t *testing.T) {
 
 			i := identity.Identity{Traits: []byte("{}")}
 			require.NoError(t, reg.PrivilegedIdentityPool().CreateIdentity(context.Background(), &i))
-			s, _ = session.NewActiveSession(&i, conf, time.Now(), identity.CredentialsTypePassword)
+			s, _ = session.NewActiveSession(&i, conf, time.Now(), identity.CredentialsTypePassword, identity.AuthenticatorAssuranceLevel1)
 
 			c := testhelpers.NewClientWithCookies(t)
 			res, err := c.Get(pts.URL + "/session/set/invalid")
@@ -242,7 +266,7 @@ func TestManagerHTTP(t *testing.T) {
 
 			i := identity.Identity{Traits: []byte("{}")}
 			require.NoError(t, reg.PrivilegedIdentityPool().CreateIdentity(context.Background(), &i))
-			s, _ = session.NewActiveSession(&i, conf, time.Now(), identity.CredentialsTypePassword)
+			s, _ = session.NewActiveSession(&i, conf, time.Now(), identity.CredentialsTypePassword, identity.AuthenticatorAssuranceLevel1)
 
 			c := testhelpers.NewClientWithCookies(t)
 			testhelpers.MockHydrateCookieClient(t, c, pts.URL+"/session/set")
@@ -275,7 +299,7 @@ func TestManagerHTTP(t *testing.T) {
 
 			i := identity.Identity{Traits: []byte("{}"), State: identity.StateActive}
 			require.NoError(t, reg.PrivilegedIdentityPool().CreateIdentity(context.Background(), &i))
-			s, err := session.NewActiveSession(&i, conf, time.Now(), identity.CredentialsTypePassword)
+			s, err := session.NewActiveSession(&i, conf, time.Now(), identity.CredentialsTypePassword, identity.AuthenticatorAssuranceLevel1)
 			require.NoError(t, err)
 			require.NoError(t, reg.SessionPersister().UpsertSession(context.Background(), s))
 			require.NotEmpty(t, s.Token)
@@ -295,7 +319,7 @@ func TestManagerHTTP(t *testing.T) {
 
 			i := identity.Identity{Traits: []byte("{}"), State: identity.StateActive}
 			require.NoError(t, reg.PrivilegedIdentityPool().CreateIdentity(context.Background(), &i))
-			s, err := session.NewActiveSession(&i, conf, time.Now(), identity.CredentialsTypePassword)
+			s, err := session.NewActiveSession(&i, conf, time.Now(), identity.CredentialsTypePassword, identity.AuthenticatorAssuranceLevel1)
 			require.NoError(t, err)
 			require.NoError(t, reg.SessionPersister().UpsertSession(context.Background(), s))
 
@@ -318,7 +342,7 @@ func TestManagerHTTP(t *testing.T) {
 
 			i := identity.Identity{Traits: []byte("{}")}
 			require.NoError(t, reg.PrivilegedIdentityPool().CreateIdentity(context.Background(), &i))
-			s, _ = session.NewActiveSession(&i, conf, time.Now(), identity.CredentialsTypePassword)
+			s, _ = session.NewActiveSession(&i, conf, time.Now(), identity.CredentialsTypePassword, identity.AuthenticatorAssuranceLevel1)
 
 			c := testhelpers.NewClientWithCookies(t)
 			testhelpers.MockHydrateCookieClient(t, c, pts.URL+"/session/set")
@@ -333,9 +357,9 @@ func TestManagerHTTP(t *testing.T) {
 		t.Run("case=revoked", func(t *testing.T) {
 			i := identity.Identity{Traits: []byte("{}")}
 			require.NoError(t, reg.PrivilegedIdentityPool().CreateIdentity(context.Background(), &i))
-			s, _ = session.NewActiveSession(&i, conf, time.Now(), identity.CredentialsTypePassword)
+			s, _ = session.NewActiveSession(&i, conf, time.Now(), identity.CredentialsTypePassword, identity.AuthenticatorAssuranceLevel1)
 
-			s, _ = session.NewActiveSession(&i, conf, time.Now(), identity.CredentialsTypePassword)
+			s, _ = session.NewActiveSession(&i, conf, time.Now(), identity.CredentialsTypePassword, identity.AuthenticatorAssuranceLevel1)
 
 			c := testhelpers.NewClientWithCookies(t)
 			testhelpers.MockHydrateCookieClient(t, c, pts.URL+"/session/set")
@@ -361,7 +385,7 @@ func TestManagerHTTP(t *testing.T) {
 				run := func(t *testing.T, complete []identity.CredentialsType, requested string, i *identity.Identity, expectedError error) {
 					s := session.NewInactiveSession()
 					for _, m := range complete {
-						s.CompletedLoginFor(m)
+						s.CompletedLoginFor(m, "")
 					}
 					require.NoError(t, s.Activate(i, conf, time.Now().UTC()))
 					err := reg.SessionManager().DoesSessionSatisfy((&http.Request{}).WithContext(context.Background()), s, requested)
@@ -394,4 +418,149 @@ func TestManagerHTTP(t *testing.T) {
 			})
 		})
 	})
+
+}
+
+func TestDoesSessionSatisfy(t *testing.T) {
+	conf, reg := internal.NewFastRegistryWithMocks(t)
+	testhelpers.SetDefaultIdentitySchema(conf, "file://./stub/identity.schema.json")
+
+	password := identity.Credentials{
+		Type:        identity.CredentialsTypePassword,
+		Identifiers: []string{testhelpers.RandomEmail()},
+		Config:      []byte(`{"hashed_password": "$argon2id$v=19$m=32,t=2,p=4$cm94YnRVOW5jZzFzcVE4bQ$MNzk5BtR2vUhrp6qQEjRNw"}`),
+	}
+	oidc := identity.Credentials{
+		Type:        identity.CredentialsTypeOIDC,
+		Config:      []byte(`{"providers":[{"subject":"0.fywegkf7hd@ory.sh","provider":"hydra","initial_id_token":"65794a68624763694f694a53557a49314e694973496d74705a434936496e4231596d7870597a706f6557527959533576634756756157517561575174644739725a5734694c434a30655841694f694a4b5631516966512e65794a686446396f59584e6f496a6f6956484650616b6f324e6c397a613046436555643662315679576b466655534973496d46315a43493657794a72636d463062334d74593278705a573530496c3073496d46316447686664476c745a5349364d5459304e6a55314e6a59784e4377695a586877496a6f784e6a51324e5459774d6a45314c434a70595851694f6a45324e4459314e5459324d545573496d6c7a63794936496d6830644841364c79397362324e6862476876633351364e4451304e4338694c434a7164476b694f694a6a596a4d784d6a51794e6930314e7a4d774c5451314d546374596a51335a53316b4d446379596a51334d6a6b344d4759694c434a79595851694f6a45324e4459314e5459324d544d73496e4e705a434936496a677a4e5755344e47526a4c5463344d544d744e4749324f4330354d544a6d4c5446684d7a646d4e444d354d4463304e534973496e4e3159694936496a41755a6e6c335a5764725a6a646f5a454276636e6b75633267694c434a335a574a7a6158526c496a6f696148523063484d364c7939336433637562334a354c6e4e6f4c794a392e506850623770456358544c3456647730427959686f30794a7232714b794b4f7373646c4b6c74716b4953693762414e58776a7635686538506e6d7a586e713538556f5739657754584a485a33425651614d4e79612d755f5933584a4a61665673543347476c52776f376f5261707a6a564836502d72447657385649524d5361356f783242397164416d796659505734376e56782d4e68787247564c56464b526b5866324e4448534e6d435968524963455539724331366235385331344c314367776972624d507662797870644c63764f4a4546554238324c794574525a786f644748354c69394d6b5f4d6137363969583254776758434179306734475a625957337137317466574c37736d5342394669785076434b6a3738433753546b762d764f737a4e6533523864676133775471466e6253797a6a614f4b47626e424a4a77423869306e416c48496d425337587146645f666d556d4e62377a372d63716e593374395069306248466b46596e6746545279664d4c6f466f576956784842704b4d6c6b304d4e7a5155414e5368546e346769544d5547454a4f6372346f6f445f6770344768734c44542d54465f6f73486c304832544237777a6d546d735f3150506547424e716a316b61576a467038567247726e4a6b354f594c643152473152464c794535544c4d47315f62744762447137334450784c334b3657387348507242504b654133344377373371584e5247724e73574e69496e775f4e596a65554d484b6351436c4e51445a49725339794962456a485a78476a34546e4367664f5974694e76527a4c6c36616a73614265464b7a45592d6348416e6e42694c75744439373168697241684f5463544a42783672716f67717764755356726551456f565a5735616e4a7a7575775234685453354d44314d64457045437471526d416c71555459644e5a365778514d","initial_access_token":"52344752743736552d634a2d4a2d424372447159634967464652446c6455455a6a526e534d62336e3242732e47324f444d64303544774b4e67395649476e306e496b3877324e72444f48384a78635042635a4a58336d63","initial_refresh_token":"327872337a4d382d654273674b6d61644a624e5a497572473374545154615070313264514a314476544d632e77326d34747a6e7950584c38324b794563716468685068635156314f77386a535a345355496f3544744a51"}]}`),
+		Identifiers: []string{"hydra:0.fywegkf7hd@ory.sh"},
+	}
+	mfaWebAuth := identity.Credentials{
+		Type:        identity.CredentialsTypeWebAuthn,
+		Config:      []byte(`{"credentials":[{"is_passwordless":false}]}`),
+		Identifiers: []string{testhelpers.RandomEmail()},
+	}
+	passwordlessWebAuth := identity.Credentials{
+		Type:        identity.CredentialsTypeWebAuthn,
+		Config:      []byte(`{"credentials":[{"is_passwordless":true}]}`),
+		Identifiers: []string{testhelpers.RandomEmail()},
+	}
+	webAuthEmpty := identity.Credentials{Type: identity.CredentialsTypeWebAuthn, Config: []byte(`{}`), Identifiers: []string{testhelpers.RandomEmail()}}
+	passwordEmpty := identity.Credentials{Type: identity.CredentialsTypePassword, Config: []byte(`{}`), Identifiers: []string{testhelpers.RandomEmail()}}
+
+	amrPassword := session.AuthenticationMethod{Method: identity.CredentialsTypePassword, AAL: identity.AuthenticatorAssuranceLevel1}
+
+	for k, tc := range []struct {
+		d         string
+		err       error
+		requested identity.AuthenticatorAssuranceLevel
+		creds     []identity.Credentials
+		amr       session.AuthenticationMethods
+	}{
+		{
+			d:         "has=aal1, requested=highest, available=aal1, credential=password",
+			requested: config.HighestAvailableAAL,
+			creds:     []identity.Credentials{password},
+			amr:       session.AuthenticationMethods{amrPassword},
+		},
+		{
+			d:         "has=aal1, requested=highest, available=aal1, credential=password, legacy=true",
+			requested: config.HighestAvailableAAL,
+			creds:     []identity.Credentials{password},
+			amr:       session.AuthenticationMethods{{Method: identity.CredentialsTypePassword}},
+		},
+		{
+			d:         "has=aal1, requested=highest, available=aal1, credential=password+webauth_empty",
+			requested: config.HighestAvailableAAL,
+			creds:     []identity.Credentials{password, webAuthEmpty},
+			amr:       session.AuthenticationMethods{amrPassword},
+		},
+		{
+			d:         "has=aal1, requested=highest, available=aal1, credential=password+webauth_empty, legacy=true",
+			requested: config.HighestAvailableAAL,
+			creds:     []identity.Credentials{password, webAuthEmpty},
+			amr:       session.AuthenticationMethods{{Method: identity.CredentialsTypePassword}},
+		},
+		{
+			d:         "has=aal1, requested=highest, available=aal1, credential=password+webauth_passwordless",
+			requested: config.HighestAvailableAAL,
+			creds:     []identity.Credentials{password, passwordlessWebAuth},
+			amr:       session.AuthenticationMethods{amrPassword},
+		},
+		{
+			d:         "has=aal1, requested=highest, available=aal1, credential=password+webauth_passwordless, legacy=true",
+			requested: config.HighestAvailableAAL,
+			creds:     []identity.Credentials{password, passwordlessWebAuth},
+			amr:       session.AuthenticationMethods{{Method: identity.CredentialsTypePassword}},
+		},
+		{
+			d:         "has=aal1, requested=highest, available=aal2, credential=password+webauth_mfa",
+			requested: config.HighestAvailableAAL,
+			creds:     []identity.Credentials{password, mfaWebAuth},
+			amr:       session.AuthenticationMethods{amrPassword},
+			err:       new(session.ErrAALNotSatisfied),
+		},
+		{
+			d:         "has=aal1, requested=highest, available=aal2, credential=password+webauth_mfa, legacy=true",
+			requested: config.HighestAvailableAAL,
+			creds:     []identity.Credentials{password, mfaWebAuth},
+			amr:       session.AuthenticationMethods{{Method: identity.CredentialsTypePassword}},
+			err:       new(session.ErrAALNotSatisfied),
+		},
+		{
+			d:         "has=aal1, requested=highest, available=aal2, credential=password+webauth_mfa",
+			requested: config.HighestAvailableAAL,
+			creds:     []identity.Credentials{password, mfaWebAuth},
+			amr:       session.AuthenticationMethods{amrPassword, {Method: identity.CredentialsTypeWebAuthn, AAL: identity.AuthenticatorAssuranceLevel1}},
+			err:       new(session.ErrAALNotSatisfied),
+		},
+		{
+			d:         "has=aal1, requested=highest, available=aal2, credential=password+webauth_passwordless",
+			requested: config.HighestAvailableAAL,
+			creds:     []identity.Credentials{password, passwordlessWebAuth},
+			amr:       session.AuthenticationMethods{amrPassword, {Method: identity.CredentialsTypeWebAuthn, AAL: identity.AuthenticatorAssuranceLevel1}},
+		},
+		{
+			d:         "has=aal2, requested=highest, available=aal2, credential=password+webauth_mfa",
+			requested: config.HighestAvailableAAL,
+			creds:     []identity.Credentials{password, mfaWebAuth},
+			amr:       session.AuthenticationMethods{amrPassword, {Method: identity.CredentialsTypeWebAuthn, AAL: identity.AuthenticatorAssuranceLevel2}},
+		},
+		{
+			d:         "has=aal2, requested=highest, available=aal2, credential=password+webauth_mfa, legacy=true",
+			requested: config.HighestAvailableAAL,
+			creds:     []identity.Credentials{password, mfaWebAuth},
+			amr:       session.AuthenticationMethods{amrPassword, {Method: identity.CredentialsTypeWebAuthn}},
+		},
+		{
+			d:         "has=aal1, requested=highest, available=aal1, credential=oidc_and_empties",
+			requested: config.HighestAvailableAAL,
+			creds:     []identity.Credentials{oidc, webAuthEmpty, passwordEmpty},
+			amr:       session.AuthenticationMethods{{Method: identity.CredentialsTypeOIDC, AAL: identity.AuthenticatorAssuranceLevel1}},
+		},
+	} {
+		t.Run(fmt.Sprintf("run=%d/desc=%s", k, tc.d), func(t *testing.T) {
+			id := identity.NewIdentity("")
+			for _, c := range tc.creds {
+				id.SetCredentials(c.Type, c)
+			}
+			require.NoError(t, reg.PrivilegedIdentityPool().CreateIdentity(context.Background(), id))
+			t.Cleanup(func() {
+				require.NoError(t, reg.PrivilegedIdentityPool().DeleteIdentity(context.Background(), id.ID))
+			})
+
+			s := session.NewInactiveSession()
+			for _, m := range tc.amr {
+				s.CompletedLoginFor(m.Method, m.AAL)
+			}
+			require.NoError(t, s.Activate(id, conf, time.Now().UTC()))
+
+			err := reg.SessionManager().DoesSessionSatisfy((&http.Request{}).WithContext(context.Background()), s, string(tc.requested))
+			if tc.err != nil {
+				require.ErrorAs(t, err, &tc.err)
+			} else {
+				require.NoError(t, err)
+			}
+		})
+	}
 }

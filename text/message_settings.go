@@ -37,7 +37,7 @@ func NewInfoSelfServiceSettingsTOTPSecret(secret string) *Message {
 }
 func NewInfoSelfServiceSettingsTOTPSecretLabel() *Message {
 	return &Message{
-		ID:   InfoSelfServiceSettingsTOTPSecret,
+		ID:   InfoSelfServiceSettingsTOTPSecretLabel,
 		Text: "This is your authenticator app secret. Use it if you can not scan the QR code.",
 		Type: Info,
 	}
@@ -153,7 +153,7 @@ func NewInfoSelfServiceSettingsUpdateUnlinkOIDC(provider string) *Message {
 	}
 }
 
-func NewInfoSelfServiceRegisterWebAuthn() *Message {
+func NewInfoSelfServiceSettingsRegisterWebAuthn() *Message {
 	return &Message{
 		ID:   InfoSelfServiceSettingsRegisterWebAuthn,
 		Text: "Add security key",
@@ -171,7 +171,7 @@ func NewInfoSelfServiceRegisterWebAuthnDisplayName() *Message {
 
 func NewInfoSelfServiceRemoveWebAuthn(name string, createdAt time.Time) *Message {
 	return &Message{
-		ID:   InfoSelfServiceSettingsRegisterWebAuthn,
+		ID:   InfoSelfServiceSettingsRemoveWebAuthn,
 		Text: fmt.Sprintf("Remove security key \"%s\"", name),
 		Type: Info,
 		Context: context(map[string]interface{}{

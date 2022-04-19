@@ -2,12 +2,17 @@ package driver
 
 import (
 	"context"
+	"crypto/sha256"
 	"net/http"
 	"strings"
 	"sync"
 	"time"
 
-	"github.com/gobuffalo/pop/v5"
+	"github.com/hashicorp/go-retryablehttp"
+
+	"github.com/ory/x/httpx"
+
+	"github.com/gobuffalo/pop/v6"
 
 	"github.com/ory/nosurf"
 
@@ -182,9 +187,11 @@ func (m *RegistryDefault) RegisterAdminRoutes(ctx context.Context, router *x.Rou
 	m.VerificationHandler().RegisterAdminRoutes(router)
 	m.AllVerificationStrategies().RegisterAdminRoutes(router)
 
-	m.HealthHandler(ctx).SetHealthRoutes(router.Router, true)
-	m.HealthHandler(ctx).SetVersionRoutes(router.Router)
-	m.MetricsHandler().SetRoutes(router.Router)
+	m.HealthHandler(ctx).SetHealthRoutes(router, true)
+	m.HealthHandler(ctx).SetVersionRoutes(router)
+	m.MetricsHandler().SetRoutes(router)
+
+	config.NewConfigHashHandler(m, router)
 }
 
 func (m *RegistryDefault) RegisterRoutes(ctx context.Context, public *x.RouterPublic, admin *x.RouterAdmin) {
@@ -259,11 +266,7 @@ func (m *RegistryDefault) Config(ctx context.Context) *config.Config {
 	return corp.ContextualizeConfig(ctx, m.c)
 }
 
-func (m *RegistryDefault) CourierConfig(ctx context.Context) courier.SMTPConfig {
-	return m.Config(ctx)
-}
-
-func (m *RegistryDefault) SMTPConfig(ctx context.Context) courier.SMTPConfig {
+func (m *RegistryDefault) CourierConfig(ctx context.Context) config.CourierConfigs {
 	return m.Config(ctx)
 }
 
@@ -411,7 +414,11 @@ func (m *RegistryDefault) Hasher() hash.Hasher {
 
 func (m *RegistryDefault) PasswordValidator() password2.Validator {
 	if m.passwordValidator == nil {
-		m.passwordValidator = password2.NewDefaultPasswordValidatorStrategy(m)
+		var err error
+		m.passwordValidator, err = password2.NewDefaultPasswordValidatorStrategy(m)
+		if err != nil {
+			m.Logger().WithError(err).Fatal("could not initialize DefaultPasswordValidator")
+		}
 	}
 	return m.passwordValidator
 }
@@ -423,8 +430,14 @@ func (m *RegistryDefault) SelfServiceErrorHandler() *errorx.Handler {
 	return m.errorHandler
 }
 
-func (m *RegistryDefault) CookieManager(ctx context.Context) sessions.Store {
-	cs := sessions.NewCookieStore(m.Config(ctx).SecretsSession()...)
+func (m *RegistryDefault) CookieManager(ctx context.Context) sessions.StoreExact {
+	var keys [][]byte
+	for _, k := range m.Config(ctx).SecretsSession() {
+		encrypt := sha256.Sum256(k)
+		keys = append(keys, k, encrypt[:])
+	}
+
+	cs := sessions.NewCookieStore(keys...)
 	cs.Options.Secure = !m.Config(ctx).IsInsecureDevMode()
 	cs.Options.HttpOnly = true
 
@@ -447,7 +460,7 @@ func (m *RegistryDefault) CookieManager(ctx context.Context) sessions.Store {
 	return cs
 }
 
-func (m *RegistryDefault) ContinuityCookieManager(ctx context.Context) sessions.Store {
+func (m *RegistryDefault) ContinuityCookieManager(ctx context.Context) sessions.StoreExact {
 	// To support hot reloading, this can not be instantiated only once.
 	cs := sessions.NewCookieStore(m.Config(ctx).SecretsSession()...)
 	cs.Options.Secure = !m.Config(ctx).IsInsecureDevMode()
@@ -586,8 +599,8 @@ func (m *RegistryDefault) SetPersister(p persistence.Persister) {
 	m.persister = p
 }
 
-func (m *RegistryDefault) Courier(ctx context.Context) *courier.Courier {
-	return courier.NewSMTP(ctx, m)
+func (m *RegistryDefault) Courier(ctx context.Context) courier.Courier {
+	return courier.NewCourier(ctx, m)
 }
 
 func (m *RegistryDefault) ContinuityManager() continuity.Manager {
@@ -678,4 +691,21 @@ func (m *RegistryDefault) PrometheusManager() *prometheus.MetricsManager {
 		m.pmm = prometheus.NewMetricsManagerWithPrefix("kratos", prometheus.HTTPMetrics, m.buildVersion, m.buildHash, m.buildDate)
 	}
 	return m.pmm
+}
+
+func (m *RegistryDefault) HTTPClient(ctx context.Context, opts ...httpx.ResilientOptions) *retryablehttp.Client {
+	opts = append(opts,
+		httpx.ResilientClientWithLogger(m.Logger()),
+		httpx.ResilientClientWithMaxRetry(2),
+		httpx.ResilientClientWithConnectionTimeout(30*time.Second))
+
+	tracer := m.Tracer(ctx)
+	if tracer.IsLoaded() {
+		opts = append(opts, httpx.ResilientClientWithTracer(tracer.Tracer()))
+	}
+
+	if m.Config(ctx).ClientHTTPNoPrivateIPRanges() {
+		opts = append(opts, httpx.ResilientClientDisallowInternalIPs())
+	}
+	return httpx.NewResilientClient(opts...)
 }

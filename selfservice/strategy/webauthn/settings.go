@@ -1,12 +1,13 @@
 package webauthn
 
 import (
-	"context"
 	"encoding/json"
 	"fmt"
 	"net/http"
 	"strings"
 	"time"
+
+	"github.com/ory/kratos/text"
 
 	"github.com/ory/x/urlx"
 
@@ -20,16 +21,18 @@ import (
 	"github.com/tidwall/sjson"
 
 	"github.com/ory/herodot"
+
 	"github.com/ory/kratos/session"
 
 	"github.com/gofrs/uuid"
 	"github.com/pkg/errors"
 
+	"github.com/ory/x/decoderx"
+
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/selfservice/flow"
 	"github.com/ory/kratos/selfservice/flow/settings"
 	"github.com/ory/kratos/x"
-	"github.com/ory/x/decoderx"
 )
 
 func (s *Strategy) RegisterSettingsRoutes(_ *x.RouterPublic) {
@@ -178,15 +181,33 @@ func (s *Strategy) continueSettingsFlowRemove(w http.ResponseWriter, r *http.Req
 		return errors.WithStack(herodot.ErrInternalServerError.WithReasonf("Unable to decode identity credentials.").WithDebug(err.Error()))
 	}
 
+	var wasPasswordless bool
 	updated := make([]Credential, 0)
 	for k, cred := range cc.Credentials {
 		if fmt.Sprintf("%x", cred.ID) != p.Remove {
 			updated = append(updated, cc.Credentials[k])
+		} else if cred.IsPasswordless {
+			wasPasswordless = true
 		}
 	}
 
 	if len(updated) == len(cc.Credentials) {
 		return errors.WithStack(herodot.ErrBadRequest.WithReasonf("You tried to remove a WebAuthn credential which does not exist."))
+	}
+
+	count, err := s.d.IdentityManager().CountActiveFirstFactorCredentials(r.Context(), i)
+	if err != nil {
+		return err
+	}
+
+	if count < 2 && wasPasswordless {
+		return s.handleSettingsError(w, r, ctxUpdate, p, errors.WithStack(ErrNotEnoughCredentials))
+	}
+
+	if len(updated) == 0 {
+		i.DeleteCredentialsType(identity.CredentialsTypeWebAuthn)
+		ctxUpdate.UpdateIdentity(i)
+		return nil
 	}
 
 	cc.Credentials = updated
@@ -221,7 +242,7 @@ func (s *Strategy) continueSettingsFlowAdd(w http.ResponseWriter, r *http.Reques
 		return errors.WithStack(herodot.ErrInternalServerError.WithReasonf("Unable to get webAuthn config.").WithDebug(err.Error()))
 	}
 
-	credential, err := web.CreateCredential(&wrappedUser{id: ctxUpdate.Session.IdentityID}, webAuthnSess, webAuthnResponse)
+	credential, err := web.CreateCredential(&wrappedUser{id: ctxUpdate.Session.IdentityID[:]}, webAuthnSess, webAuthnResponse)
 	if err != nil {
 		return errors.WithStack(herodot.ErrInternalServerError.WithReasonf("Unable to create WebAuthn credential: %s", err))
 	}
@@ -231,32 +252,29 @@ func (s *Strategy) continueSettingsFlowAdd(w http.ResponseWriter, r *http.Reques
 		return err
 	}
 
-	cred, ok := i.GetCredentials(s.ID())
-	if !ok {
-		cred = &identity.Credentials{
-			Type:        s.ID(),
-			Identifiers: []string{ctxUpdate.Session.IdentityID.String()},
-			IdentityID:  ctxUpdate.Session.IdentityID,
-			Config:      sqlxx.JSONRawMessage("{}"),
-		}
-	}
+	cred := i.GetCredentialsOr(s.ID(), &identity.Credentials{Config: sqlxx.JSONRawMessage("{}")})
 
 	var cc CredentialsConfig
 	if err := json.Unmarshal(cred.Config, &cc); err != nil {
 		return errors.WithStack(herodot.ErrInternalServerError.WithReasonf("Unable to decode identity credentials.").WithDebug(err.Error()))
 	}
 
-	wc := CredentialFromWebAuthn(credential)
+	wc := CredentialFromWebAuthn(credential, s.d.Config(r.Context()).WebAuthnForPasswordless())
 	wc.AddedAt = time.Now().UTC().Round(time.Second)
 	wc.DisplayName = p.RegisterDisplayName
+	wc.IsPasswordless = s.d.Config(r.Context()).WebAuthnForPasswordless()
+	cc.UserHandle = ctxUpdate.Session.IdentityID[:]
 
 	cc.Credentials = append(cc.Credentials, *wc)
-	cred.Config, err = json.Marshal(cc)
+	co, err := json.Marshal(cc)
 	if err != nil {
 		return errors.WithStack(herodot.ErrInternalServerError.WithReasonf("Unable to encode identity credentials.").WithDebug(err.Error()))
 	}
 
-	i.SetCredentials(s.ID(), *cred)
+	i.UpsertCredentialsConfig(s.ID(), co, 1)
+	if err := s.validateCredentials(r.Context(), i); err != nil {
+		return err
+	}
 
 	// Remove the WebAuthn URL from the internal context now that it is set!
 	ctxUpdate.Flow.InternalContext, err = sjson.DeleteBytes(ctxUpdate.Flow.InternalContext, flow.PrefixInternalContextKey(s.ID(), InternalContextKeySessionData))
@@ -268,8 +286,16 @@ func (s *Strategy) continueSettingsFlowAdd(w http.ResponseWriter, r *http.Reques
 		return err
 	}
 
+	aal := identity.AuthenticatorAssuranceLevel1
+	if !s.d.Config(r.Context()).WebAuthnForPasswordless() {
+		aal = identity.AuthenticatorAssuranceLevel2
+	}
+
 	// Since we added the method, it also means that we have authenticated it
-	if err := s.d.SessionManager().SessionAddAuthenticationMethod(r.Context(), ctxUpdate.Session.ID, s.ID()); err != nil {
+	if err := s.d.SessionManager().SessionAddAuthenticationMethods(r.Context(), ctxUpdate.Session.ID, session.AuthenticationMethod{
+		Method: s.ID(),
+		AAL:    aal,
+	}); err != nil {
 		return err
 	}
 
@@ -277,10 +303,10 @@ func (s *Strategy) continueSettingsFlowAdd(w http.ResponseWriter, r *http.Reques
 	return nil
 }
 
-func (s *Strategy) identityListWebAuthn(ctx context.Context, id uuid.UUID) (*CredentialsConfig, error) {
-	_, cred, err := s.d.PrivilegedIdentityPool().FindByCredentialsIdentifier(ctx, s.ID(), id.String())
-	if err != nil {
-		return nil, err
+func (s *Strategy) identityListWebAuthn(id *identity.Identity) (*CredentialsConfig, error) {
+	cred, ok := id.GetCredentials(s.ID())
+	if !ok {
+		return nil, errors.WithStack(sqlcon.ErrNoRows)
 	}
 
 	var cc CredentialsConfig
@@ -298,13 +324,30 @@ func (s *Strategy) PopulateSettingsMethod(r *http.Request, id *identity.Identity
 
 	f.UI.SetCSRF(s.d.GenerateCSRFToken(r))
 
-	if webAuthns, err := s.identityListWebAuthn(r.Context(), id.ID); errors.Is(err, sqlcon.ErrNoRows) {
+	confidentialIdentity, err := s.d.PrivilegedIdentityPool().GetIdentityConfidential(r.Context(), id.ID)
+	if err != nil {
+		return err
+	}
+
+	count, err := s.d.IdentityManager().CountActiveFirstFactorCredentials(r.Context(), confidentialIdentity)
+	if err != nil {
+		return err
+	}
+
+	if webAuthns, err := s.identityListWebAuthn(confidentialIdentity); errors.Is(err, sqlcon.ErrNoRows) {
 		// Do nothing
 	} else if err != nil {
 		return err
 	} else {
 		for k := range webAuthns.Credentials {
-			f.UI.Nodes.Append(NewWebAuthnUnlink(&webAuthns.Credentials[k]))
+			// We only show the option to remove a credential, if it is not the last one when passwordless,
+			// or, if it is for MFA we show it always.
+			cred := &webAuthns.Credentials[k]
+			if cred.IsPasswordless && count < 2 {
+				// Do not remove this node because it is the last credential the identity can sign in with.
+				continue
+			}
+			f.UI.Nodes.Append(NewWebAuthnUnlink(cred))
 		}
 	}
 
@@ -313,7 +356,7 @@ func (s *Strategy) PopulateSettingsMethod(r *http.Request, id *identity.Identity
 		return err
 	}
 
-	option, sessionData, err := web.BeginRegistration(&wrappedUser{id: id.ID})
+	option, sessionData, err := web.BeginRegistration(&wrappedUser{id: id.ID[:]})
 	if err != nil {
 		return errors.WithStack(err)
 	}
@@ -328,9 +371,10 @@ func (s *Strategy) PopulateSettingsMethod(r *http.Request, id *identity.Identity
 		return errors.WithStack(err)
 	}
 
-	f.UI.Nodes.Upsert(NewWebAuthnScript(urlx.AppendPaths(s.d.Config(r.Context()).SelfPublicURL(r), webAuthnRoute).String(), jsOnLoad))
+	f.UI.Nodes.Upsert(NewWebAuthnScript(urlx.AppendPaths(s.d.Config(r.Context()).SelfPublicURL(), webAuthnRoute).String(), jsOnLoad))
 	f.UI.Nodes.Upsert(NewWebAuthnConnectionName())
-	f.UI.Nodes.Upsert(NewWebAuthnConnectionTrigger(string(injectWebAuthnOptions)))
+	f.UI.Nodes.Upsert(NewWebAuthnConnectionTrigger(string(injectWebAuthnOptions)).
+		WithMetaLabel(text.NewInfoSelfServiceSettingsRegisterWebAuthn()))
 	f.UI.Nodes.Upsert(NewWebAuthnConnectionInput())
 	return nil
 }

@@ -24,6 +24,10 @@ type lifespanProvider interface {
 	SessionLifespan() time.Duration
 }
 
+type refreshWindowProvider interface {
+	SessionRefreshMinTimeLeft() time.Duration
+}
+
 // A Session
 //
 // swagger:model session
@@ -96,23 +100,58 @@ func (s Session) TableName(ctx context.Context) string {
 	return corp.ContextualizeTableName(ctx, "sessions")
 }
 
-func (s *Session) CompletedLoginFor(method identity.CredentialsType) {
-	s.AMR = append(s.AMR,
-		AuthenticationMethod{Method: method, CompletedAt: time.Now().UTC()})
+func (s *Session) CompletedLoginFor(method identity.CredentialsType, aal identity.AuthenticatorAssuranceLevel) {
+	s.AMR = append(s.AMR, AuthenticationMethod{Method: method, AAL: aal, CompletedAt: time.Now().UTC()})
 }
 
 func (s *Session) SetAuthenticatorAssuranceLevel() {
-	cts := make([]identity.CredentialsType, len(s.AMR))
-	for k := range s.AMR {
-		cts[k] = s.AMR[k].Method
+	if len(s.AMR) == 0 {
+		// No AMR is set
+		s.AuthenticatorAssuranceLevel = identity.NoAuthenticatorAssuranceLevel
 	}
 
-	s.AuthenticatorAssuranceLevel = identity.DetermineAAL(cts)
+	var isAAL1, isAAL2 bool
+	for _, amr := range s.AMR {
+		switch amr.AAL {
+		case identity.AuthenticatorAssuranceLevel1:
+			isAAL1 = true
+		case identity.AuthenticatorAssuranceLevel2:
+			isAAL2 = true
+		case "":
+			// Sessions before Ory Kratos 0.9 did not have the AAL
+			// be part of the AMR.
+			switch amr.Method {
+			case identity.CredentialsTypeRecoveryLink:
+				isAAL1 = true
+			case identity.CredentialsTypeOIDC:
+				isAAL1 = true
+			case "v0.6_legacy_session":
+				isAAL1 = true
+			case identity.CredentialsTypePassword:
+				isAAL1 = true
+			case identity.CredentialsTypeWebAuthn:
+				isAAL2 = true
+			case identity.CredentialsTypeTOTP:
+				isAAL2 = true
+			case identity.CredentialsTypeLookup:
+				isAAL2 = true
+			}
+		}
+	}
+
+	if isAAL1 && isAAL2 {
+		s.AuthenticatorAssuranceLevel = identity.AuthenticatorAssuranceLevel2
+	} else if isAAL1 {
+		s.AuthenticatorAssuranceLevel = identity.AuthenticatorAssuranceLevel1
+	} else if len(s.AMR) > 0 {
+		// A fallback. If an AMR is set but we did not satisfy the above, gracefully fall back to level 1.
+		s.AuthenticatorAssuranceLevel = identity.AuthenticatorAssuranceLevel1
+	}
 }
 
-func NewActiveSession(i *identity.Identity, c lifespanProvider, authenticatedAt time.Time, completedLoginFor identity.CredentialsType) (*Session, error) {
+func NewActiveSession(i *identity.Identity, c lifespanProvider, authenticatedAt time.Time, completedLoginFor identity.CredentialsType, completedLoginAAL identity.AuthenticatorAssuranceLevel) (*Session, error) {
 	s := NewInactiveSession()
-	s.CompletedLoginFor(completedLoginFor)
+	s.CompletedLoginFor(completedLoginFor, completedLoginAAL)
 	if err := s.Activate(i, c, authenticatedAt); err != nil {
 		return nil, err
 	}
@@ -160,6 +199,15 @@ func (s *Session) IsActive() bool {
 	return s.Active && s.ExpiresAt.After(time.Now()) && (s.Identity == nil || s.Identity.IsActive())
 }
 
+func (s *Session) Refresh(c lifespanProvider) *Session {
+	s.ExpiresAt = time.Now().Add(c.SessionLifespan()).UTC()
+	return s
+}
+
+func (s *Session) CanBeRefreshed(c refreshWindowProvider) bool {
+	return s.ExpiresAt.Add(-c.SessionRefreshMinTimeLeft()).Before(time.Now())
+}
+
 // List of (Used) AuthenticationMethods
 //
 // A list of authenticators which were used to authenticate the session.
@@ -175,6 +223,9 @@ type AuthenticationMethods []AuthenticationMethod
 type AuthenticationMethod struct {
 	// The method used in this authenticator.
 	Method identity.CredentialsType `json:"method"`
+
+	// The AAL this method introduced.
+	AAL identity.AuthenticatorAssuranceLevel `json:"aal"`
 
 	// When the authentication challenge was completed.
 	CompletedAt time.Time `json:"completed_at"`

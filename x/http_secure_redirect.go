@@ -18,17 +18,17 @@ import (
 )
 
 type secureRedirectOptions struct {
-	whitelist       []url.URL
+	allowlist       []url.URL
 	defaultReturnTo *url.URL
 	sourceURL       string
 }
 
 type SecureRedirectOption func(*secureRedirectOptions)
 
-// SecureRedirectAllowURLs whitelists the given URLs for redirects.
+// SecureRedirectAllowURLs allows the given URLs for redirects.
 func SecureRedirectAllowURLs(urls []url.URL) SecureRedirectOption {
 	return func(o *secureRedirectOptions) {
-		o.whitelist = append(o.whitelist, urls...)
+		o.allowlist = append(o.allowlist, urls...)
 	}
 }
 
@@ -45,7 +45,7 @@ func SecureRedirectUseSourceURL(source string) SecureRedirectOption {
 // to the login endpoint, for example.
 func SecureRedirectAllowSelfServiceURLs(publicURL *url.URL) SecureRedirectOption {
 	return func(o *secureRedirectOptions) {
-		o.whitelist = append(o.whitelist, *urlx.AppendPaths(publicURL, "/self-service"))
+		o.allowlist = append(o.allowlist, *urlx.AppendPaths(publicURL, "/self-service"))
 	}
 }
 
@@ -57,8 +57,8 @@ func SecureRedirectOverrideDefaultReturnTo(defaultReturnTo *url.URL) SecureRedir
 	}
 }
 
-// SecureRedirectToIsWhitelisted validates if the redirect_to param is allowed for a given wildcard
-func SecureRedirectToIsWhiteListedHost(returnTo *url.URL, allowed url.URL) bool {
+// SecureRedirectToIsAllowedHost validates if the redirect_to param is allowed for a given wildcard
+func SecureRedirectToIsAllowedHost(returnTo *url.URL, allowed url.URL) bool {
 	if allowed.Host != "" && allowed.Host[:1] == "*" {
 		return strings.HasSuffix(strings.ToLower(returnTo.Host), strings.ToLower(allowed.Host)[1:])
 	}
@@ -66,14 +66,14 @@ func SecureRedirectToIsWhiteListedHost(returnTo *url.URL, allowed url.URL) bool 
 }
 
 // SecureRedirectTo implements a HTTP redirector who mitigates open redirect vulnerabilities by
-// working with whitelisting.
+// working with allow lists.
 func SecureRedirectTo(r *http.Request, defaultReturnTo *url.URL, opts ...SecureRedirectOption) (returnTo *url.URL, err error) {
 	o := &secureRedirectOptions{defaultReturnTo: defaultReturnTo}
 	for _, opt := range opts {
 		opt(o)
 	}
 
-	if len(o.whitelist) == 0 {
+	if len(o.allowlist) == 0 {
 		return o.defaultReturnTo, nil
 	}
 
@@ -87,7 +87,7 @@ func SecureRedirectTo(r *http.Request, defaultReturnTo *url.URL, opts ...SecureR
 
 	if len(source.Query().Get("return_to")) == 0 {
 		return o.defaultReturnTo, nil
-	} else if returnTo, err = url.ParseRequestURI(source.Query().Get("return_to")); err != nil {
+	} else if returnTo, err = url.Parse(source.Query().Get("return_to")); err != nil {
 		return nil, herodot.ErrInternalServerError.WithWrap(err).WithReasonf("Unable to parse the return_to query parameter as an URL: %s", err)
 	}
 
@@ -95,9 +95,9 @@ func SecureRedirectTo(r *http.Request, defaultReturnTo *url.URL, opts ...SecureR
 	returnTo.Scheme = stringsx.Coalesce(returnTo.Scheme, o.defaultReturnTo.Scheme)
 
 	var found bool
-	for _, allowed := range o.whitelist {
+	for _, allowed := range o.allowlist {
 		if strings.EqualFold(allowed.Scheme, returnTo.Scheme) &&
-			SecureRedirectToIsWhiteListedHost(returnTo, allowed) &&
+			SecureRedirectToIsAllowedHost(returnTo, allowed) &&
 			strings.HasPrefix(
 				stringsx.Coalesce(returnTo.Path, "/"),
 				stringsx.Coalesce(allowed.Path, "/")) {
@@ -108,8 +108,8 @@ func SecureRedirectTo(r *http.Request, defaultReturnTo *url.URL, opts ...SecureR
 	if !found {
 		return nil, errors.WithStack(herodot.ErrBadRequest.
 			WithID(text.ErrIDRedirectURLNotAllowed).
-			WithReasonf("Requested return_to URL \"%s\" is not whitelisted.", returnTo).
-			WithDebugf("Whitelisted domains are: %v", o.whitelist))
+			WithReasonf("Requested return_to URL \"%s\" is not allowed.", returnTo).
+			WithDebugf("Allowed domains are: %v", o.allowlist))
 	}
 
 	return returnTo, nil
@@ -132,8 +132,8 @@ func SecureContentNegotiationRedirection(
 		ret, err := SecureRedirectTo(r, c.SelfServiceBrowserDefaultReturnTo(),
 			append([]SecureRedirectOption{
 				SecureRedirectUseSourceURL(requestURL),
-				SecureRedirectAllowURLs(c.SelfServiceBrowserWhitelistedReturnToDomains()),
-				SecureRedirectAllowSelfServiceURLs(c.SelfPublicURL(r)),
+				SecureRedirectAllowURLs(c.SelfServiceBrowserAllowedReturnToDomains()),
+				SecureRedirectAllowSelfServiceURLs(c.SelfPublicURL()),
 			}, opts...)...,
 		)
 		if err != nil {

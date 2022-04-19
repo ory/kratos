@@ -16,6 +16,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/ory/x/snapshotx"
+
 	"github.com/ghodss/yaml"
 	"github.com/spf13/cobra"
 
@@ -46,6 +48,12 @@ func TestViperProvider(t *testing.T) {
 		p := config.MustNew(t, logrusx.New("", ""), os.Stderr,
 			configx.WithConfigFiles("stub/.kratos.yaml"))
 
+		t.Run("gourp=client config", func(t *testing.T) {
+			assert.False(t, p.ClientHTTPNoPrivateIPRanges(), "Should not have private IP ranges disabled per default")
+			p.MustSet(config.ViperKeyClientHTTPNoPrivateIPRanges, true)
+			assert.True(t, p.ClientHTTPNoPrivateIPRanges(), "Should disallow private IP ranges if set")
+		})
+
 		t.Run("group=urls", func(t *testing.T) {
 			assert.Equal(t, "http://test.kratos.ory.sh/login", p.SelfServiceFlowLoginUI().String())
 			assert.Equal(t, "http://test.kratos.ory.sh/settings", p.SelfServiceFlowSettingsUI().String())
@@ -53,10 +61,10 @@ func TestViperProvider(t *testing.T) {
 			assert.Equal(t, "http://test.kratos.ory.sh/error", p.SelfServiceFlowErrorURL().String())
 
 			assert.Equal(t, "http://admin.kratos.ory.sh", p.SelfAdminURL().String())
-			assert.Equal(t, "http://public.kratos.ory.sh", p.SelfPublicURL(nil).String())
+			assert.Equal(t, "http://public.kratos.ory.sh", p.SelfPublicURL().String())
 
 			var ds []string
-			for _, v := range p.SelfServiceBrowserWhitelistedReturnToDomains() {
+			for _, v := range p.SelfServiceBrowserAllowedReturnToDomains() {
 				ds = append(ds, v.String())
 			}
 
@@ -103,7 +111,6 @@ func TestViperProvider(t *testing.T) {
 				"#/login",
 				"test.kratos.ory.sh/login",
 			} {
-
 				logger := logrusx.New("", "")
 				logger.Logger.ExitFunc = func(code int) { panic("") }
 				hook := new(test.Hook)
@@ -145,9 +152,12 @@ func TestViperProvider(t *testing.T) {
 				configx.WithConfigFiles("stub/.kratos.mock.identities.yaml"),
 				configx.SkipValidation())
 
-			assert.Equal(t, "http://test.kratos.ory.sh/default-identity.schema.json", c.DefaultIdentityTraitsSchemaURL().String())
+			ds, err := c.DefaultIdentityTraitsSchemaURL()
+			require.NoError(t, err)
+			assert.Equal(t, "http://test.kratos.ory.sh/default-identity.schema.json", ds.String())
 
-			ss := c.IdentityTraitsSchemas()
+			ss, err := c.IdentityTraitsSchemas()
+			require.NoError(t, err)
 			assert.Equal(t, 2, len(ss))
 
 			assert.Contains(t, ss, config.Schema{
@@ -189,7 +199,7 @@ func TestViperProvider(t *testing.T) {
 				config  string
 				enabled bool
 			}{
-				{id: "password", enabled: true, config: `{"haveibeenpwned_host":"api.pwnedpasswords.com","haveibeenpwned_enabled":true,"ignore_network_errors":true,"max_breaches":0}`},
+				{id: "password", enabled: true, config: `{"haveibeenpwned_host":"api.pwnedpasswords.com","haveibeenpwned_enabled":true,"ignore_network_errors":true,"max_breaches":0,"min_password_length":8,"identifier_similarity_check_enabled":true}`},
 				{id: "oidc", enabled: true, config: `{"providers":[{"client_id":"a","client_secret":"b","id":"github","provider":"github","mapper_url":"http://test.kratos.ory.sh/default-identity.schema.json"}]}`},
 				{id: "totp", enabled: true, config: `{"issuer":"issuer.ory.sh"}`},
 			} {
@@ -200,6 +210,7 @@ func TestViperProvider(t *testing.T) {
 		})
 
 		t.Run("method=registration", func(t *testing.T) {
+			assert.Equal(t, true, p.SelfServiceFlowRegistrationEnabled())
 			assert.Equal(t, time.Minute*98, p.SelfServiceFlowRegistrationRequestLifespan())
 
 			t.Run("hook=before", func(t *testing.T) {
@@ -403,73 +414,36 @@ func TestProviderBaseURLs(t *testing.T) {
 	}
 
 	p := config.MustNew(t, logrusx.New("", ""), os.Stderr, configx.SkipValidation())
-	assert.Equal(t, "https://"+machineHostname+":4433/", p.SelfPublicURL(nil).String())
+	assert.Equal(t, "https://"+machineHostname+":4433/", p.SelfPublicURL().String())
 	assert.Equal(t, "https://"+machineHostname+":4434/", p.SelfAdminURL().String())
 
 	p.MustSet(config.ViperKeyPublicPort, 4444)
 	p.MustSet(config.ViperKeyAdminPort, 4445)
-	assert.Equal(t, "https://"+machineHostname+":4444/", p.SelfPublicURL(nil).String())
+	assert.Equal(t, "https://"+machineHostname+":4444/", p.SelfPublicURL().String())
 	assert.Equal(t, "https://"+machineHostname+":4445/", p.SelfAdminURL().String())
 
 	p.MustSet(config.ViperKeyPublicHost, "public.ory.sh")
 	p.MustSet(config.ViperKeyAdminHost, "admin.ory.sh")
-	assert.Equal(t, "https://public.ory.sh:4444/", p.SelfPublicURL(nil).String())
+	assert.Equal(t, "https://public.ory.sh:4444/", p.SelfPublicURL().String())
 	assert.Equal(t, "https://admin.ory.sh:4445/", p.SelfAdminURL().String())
 
 	// Set to dev mode
 	p.MustSet("dev", true)
-	assert.Equal(t, "http://public.ory.sh:4444/", p.SelfPublicURL(nil).String())
+	assert.Equal(t, "http://public.ory.sh:4444/", p.SelfPublicURL().String())
 	assert.Equal(t, "http://admin.ory.sh:4445/", p.SelfAdminURL().String())
+}
 
-	// Check domain aliases
-	p.MustSet(config.ViperKeyPublicDomainAliases, []config.DomainAlias{
-		{
-			MatchDomain: "www.google.com",
-			BasePath:    "/.ory/",
-			Scheme:      "https",
-		},
-		{
-			MatchDomain: "www.amazon.com",
-			BasePath:    "/",
-			Scheme:      "http",
-		},
-		{
-			MatchDomain: "ory.sh:1234",
-			BasePath:    "/",
-			Scheme:      "https",
-		},
-	})
-	assert.Equal(t, "http://public.ory.sh:4444/", p.SelfPublicURL(nil).String())
-	assert.Equal(t, "http://public.ory.sh:4444/", p.SelfPublicURL(&http.Request{
-		URL:  new(url.URL),
-		Host: "www.not-google.com",
-	}).String())
-	assert.Equal(t, "https://www.GooGle.com:312/.ory/", p.SelfPublicURL(&http.Request{
-		URL:  new(url.URL),
-		Host: "www.GooGle.com:312",
-	}).String())
-	assert.Equal(t, "http://www.amazon.com/", p.SelfPublicURL(&http.Request{
-		URL:  new(url.URL),
-		Host: "www.amazon.com",
-	}).String())
+func TestProviderSelfServiceLinkMethodBaseURL(t *testing.T) {
+	machineHostname, err := os.Hostname()
+	if err != nil {
+		machineHostname = "127.0.0.1"
+	}
 
-	// Check domain aliases with alias query param
-	assert.Equal(t, "http://www.amazon.com/", p.SelfPublicURL(&http.Request{
-		URL:  &url.URL{RawQuery: url.Values{"alias": {"www.amazon.com"}}.Encode()},
-		Host: "www.GooGle.com:312",
-	}).String())
-	assert.Equal(t, "https://ory.sh:1234/", p.SelfPublicURL(&http.Request{
-		URL:  &url.URL{RawQuery: url.Values{"alias": {"ory.sh:1234"}}.Encode()},
-		Host: "www.amazon.com",
-	}).String())
-	assert.Equal(t, "http://www.amazon.com:8181/", p.SelfPublicURL(&http.Request{
-		URL:  new(url.URL),
-		Host: "www.amazon.com:8181",
-	}).String())
-	assert.Equal(t, "http://www.amazon.com:8181/", p.SelfPublicURL(&http.Request{
-		URL:  &url.URL{RawQuery: url.Values{"alias": {"www.amazon.com:8181"}}.Encode()},
-		Host: "www.GooGle.com:312",
-	}).String())
+	p := config.MustNew(t, logrusx.New("", ""), os.Stderr, configx.SkipValidation())
+	assert.Equal(t, "https://"+machineHostname+":4433/", p.SelfServiceLinkMethodBaseURL().String())
+
+	p.MustSet(config.ViperKeyLinkBaseURL, "https://example.org/bar")
+	assert.Equal(t, "https://example.org/bar", p.SelfServiceLinkMethodBaseURL().String())
 }
 
 func TestViperProvider_Secrets(t *testing.T) {
@@ -516,6 +490,7 @@ func TestViperProvider_Defaults(t *testing.T) {
 			expect: func(t *testing.T, p *config.Config) {
 				assert.True(t, p.SelfServiceFlowRecoveryEnabled())
 				assert.False(t, p.SelfServiceFlowVerificationEnabled())
+				assert.True(t, p.SelfServiceFlowRegistrationEnabled())
 				assert.True(t, p.SelfServiceStrategy("password").Enabled)
 				assert.True(t, p.SelfServiceStrategy("profile").Enabled)
 				assert.True(t, p.SelfServiceStrategy("link").Enabled)
@@ -529,6 +504,7 @@ func TestViperProvider_Defaults(t *testing.T) {
 			expect: func(t *testing.T, p *config.Config) {
 				assert.False(t, p.SelfServiceFlowRecoveryEnabled())
 				assert.True(t, p.SelfServiceFlowVerificationEnabled())
+				assert.True(t, p.SelfServiceFlowRegistrationEnabled())
 				assert.True(t, p.SelfServiceStrategy("password").Enabled)
 				assert.True(t, p.SelfServiceStrategy("profile").Enabled)
 				assert.True(t, p.SelfServiceStrategy("link").Enabled)
@@ -597,6 +573,10 @@ func TestSession(t *testing.T) {
 	assert.Equal(t, "ory_kratos_session", p.SessionName())
 	p.MustSet(config.ViperKeySessionName, "ory_session")
 	assert.Equal(t, "ory_session", p.SessionName())
+
+	assert.Equal(t, time.Hour*24, p.SessionRefreshMinTimeLeft())
+	p.MustSet(config.ViperKeySessionRefreshMinTimeLeft, "1m")
+	assert.Equal(t, time.Minute, p.SessionRefreshMinTimeLeft())
 
 	assert.Equal(t, time.Hour*24, p.SessionLifespan())
 	p.MustSet(config.ViperKeySessionLifespan, "1m")
@@ -896,8 +876,7 @@ func TestIdentitySchemaValidation(t *testing.T) {
 	files := []string{"stub/.identity.test.json", "stub/.identity.other.json"}
 
 	type identity struct {
-		DefaultSchemaUrl string   `json:"default_schema_url"`
-		Schemas          []string `json:"schemas"`
+		Schemas []map[string]string `json:"schemas"`
 	}
 
 	type configFile struct {
@@ -923,8 +902,7 @@ func TestIdentitySchemaValidation(t *testing.T) {
 			},
 			DSN: "memory",
 			Identity: &identity{
-				DefaultSchemaUrl: "base64://" + base64.StdEncoding.EncodeToString(identityTest),
-				Schemas:          []string{},
+				Schemas: []map[string]string{{"id": "default", "url": "base64://" + base64.StdEncoding.EncodeToString(identityTest)}},
 			},
 		}
 	}
@@ -1022,7 +1000,7 @@ func TestIdentitySchemaValidation(t *testing.T) {
 
 				_, hook, tmpConfig, i, c := testWatch(t, ctx, &cobra.Command{}, i)
 				// Change the identity config to an invalid file
-				i.Identity.DefaultSchemaUrl = invalidIdentity.Identity.DefaultSchemaUrl
+				i.Identity.Schemas = invalidIdentity.Identity.Schemas
 
 				t.Cleanup(func() {
 					cancel()
@@ -1049,5 +1027,128 @@ func TestIdentitySchemaValidation(t *testing.T) {
 				wg.Wait()
 			})
 		}
+	})
+}
+
+func TestPasswordless(t *testing.T) {
+	ctx := context.Background()
+	conf, err := config.New(ctx, logrusx.New("", ""), os.Stderr,
+		configx.SkipValidation(),
+		configx.WithValue(config.ViperKeyWebAuthnPasswordless, true))
+	require.NoError(t, err)
+
+	assert.True(t, conf.WebAuthnForPasswordless())
+	conf.MustSet(config.ViperKeyWebAuthnPasswordless, false)
+	assert.False(t, conf.WebAuthnForPasswordless())
+}
+
+func TestChangeMinPasswordLength(t *testing.T) {
+	t.Run("case=must fail on minimum password length below enforced minimum", func(t *testing.T) {
+		ctx := context.Background()
+
+		_, err := config.New(ctx, logrusx.New("", ""), os.Stderr,
+			configx.WithConfigFiles("stub/.kratos.yaml"),
+			configx.WithValue(config.ViperKeyPasswordMinLength, 5))
+
+		assert.Error(t, err)
+	})
+
+	t.Run("case=must not fail on minimum password length above enforced minimum", func(t *testing.T) {
+		ctx := context.Background()
+
+		_, err := config.New(ctx, logrusx.New("", ""), os.Stderr,
+			configx.WithConfigFiles("stub/.kratos.yaml"),
+			configx.WithValue(config.ViperKeyPasswordMinLength, 9))
+
+		assert.NoError(t, err)
+	})
+}
+
+func TestCourierSMS(t *testing.T) {
+	ctx := context.Background()
+
+	t.Run("case=configs set", func(t *testing.T) {
+		conf, _ := config.New(ctx, logrusx.New("", ""), os.Stderr,
+			configx.WithConfigFiles("stub/.kratos.courier.sms.yaml"), configx.SkipValidation())
+		assert.True(t, conf.CourierSMSEnabled())
+		snapshotx.SnapshotTExcept(t, conf.CourierSMSRequestConfig(), nil)
+		assert.Equal(t, "+49123456789", conf.CourierSMSFrom())
+	})
+
+	t.Run("case=defaults", func(t *testing.T) {
+		conf, _ := config.New(ctx, logrusx.New("", ""), os.Stderr, configx.SkipValidation())
+
+		assert.False(t, conf.CourierSMSEnabled())
+		snapshotx.SnapshotTExcept(t, conf.CourierSMSRequestConfig(), nil)
+		assert.Equal(t, "Ory Kratos", conf.CourierSMSFrom())
+	})
+}
+
+func TestCourierMessageTTL(t *testing.T) {
+	ctx := context.Background()
+
+	t.Run("case=configs set", func(t *testing.T) {
+		conf, _ := config.New(ctx, logrusx.New("", ""), os.Stderr,
+			configx.WithConfigFiles("stub/.kratos.courier.messageTTL.yaml"), configx.SkipValidation())
+		assert.Equal(t, conf.CourierMessageTTL(), time.Duration(5*time.Minute))
+	})
+
+	t.Run("case=defaults", func(t *testing.T) {
+		conf, _ := config.New(ctx, logrusx.New("", ""), os.Stderr, configx.SkipValidation())
+		assert.Equal(t, conf.CourierMessageTTL(), time.Duration(1*time.Hour))
+	})
+}
+
+func TestCourierTemplatesConfig(t *testing.T) {
+	ctx := context.Background()
+
+	t.Run("case=partial template update allowed", func(t *testing.T) {
+		_, err := config.New(ctx, logrusx.New("", ""), os.Stderr,
+			configx.WithConfigFiles("stub/.kratos.courier.remote.partial.templates.yaml"))
+		assert.NoError(t, err)
+	})
+
+	t.Run("case=load remote template with fallback template overrides path", func(t *testing.T) {
+		_, err := config.New(ctx, logrusx.New("", ""), os.Stderr,
+			configx.WithConfigFiles("stub/.kratos.courier.remote.templates.yaml"))
+		assert.NoError(t, err)
+	})
+
+	t.Run("case=courier template helper", func(t *testing.T) {
+		c, err := config.New(ctx, logrusx.New("", ""), os.Stderr,
+			configx.WithConfigFiles("stub/.kratos.courier.remote.templates.yaml"))
+
+		assert.NoError(t, err)
+
+		courierTemplateConfig := &config.CourierEmailTemplate{
+			Body: &config.CourierEmailBodyTemplate{
+				PlainText: "",
+				HTML:      "",
+			},
+			Subject: "",
+		}
+
+		assert.Equal(t, courierTemplateConfig, c.CourierTemplatesHelper(config.ViperKeyCourierTemplatesVerificationInvalidEmail))
+		assert.Equal(t, courierTemplateConfig, c.CourierTemplatesHelper(config.ViperKeyCourierTemplatesVerificationValidEmail))
+		// this should return an empty courierEmailTemplate as the key does not exist
+		assert.Equal(t, courierTemplateConfig, c.CourierTemplatesHelper("a_random_key"))
+
+		courierTemplateConfig = &config.CourierEmailTemplate{
+			Body: &config.CourierEmailBodyTemplate{
+				PlainText: "base64://SGksCgp5b3UgKG9yIHNvbWVvbmUgZWxzZSkgZW50ZXJlZCB0aGlzIGVtYWlsIGFkZHJlc3Mgd2hlbiB0cnlpbmcgdG8gcmVjb3ZlciBhY2Nlc3MgdG8gYW4gYWNjb3VudC4KCkhvd2V2ZXIsIHRoaXMgZW1haWwgYWRkcmVzcyBpcyBub3Qgb24gb3VyIGRhdGFiYXNlIG9mIHJlZ2lzdGVyZWQgdXNlcnMgYW5kIHRoZXJlZm9yZSB0aGUgYXR0ZW1wdCBoYXMgZmFpbGVkLgoKSWYgdGhpcyB3YXMgeW91LCBjaGVjayBpZiB5b3Ugc2lnbmVkIHVwIHVzaW5nIGEgZGlmZmVyZW50IGFkZHJlc3MuCgpJZiB0aGlzIHdhcyBub3QgeW91LCBwbGVhc2UgaWdub3JlIHRoaXMgZW1haWwu",
+				HTML:      "base64://SGksCgp5b3UgKG9yIHNvbWVvbmUgZWxzZSkgZW50ZXJlZCB0aGlzIGVtYWlsIGFkZHJlc3Mgd2hlbiB0cnlpbmcgdG8gcmVjb3ZlciBhY2Nlc3MgdG8gYW4gYWNjb3VudC4KCkhvd2V2ZXIsIHRoaXMgZW1haWwgYWRkcmVzcyBpcyBub3Qgb24gb3VyIGRhdGFiYXNlIG9mIHJlZ2lzdGVyZWQgdXNlcnMgYW5kIHRoZXJlZm9yZSB0aGUgYXR0ZW1wdCBoYXMgZmFpbGVkLgoKSWYgdGhpcyB3YXMgeW91LCBjaGVjayBpZiB5b3Ugc2lnbmVkIHVwIHVzaW5nIGEgZGlmZmVyZW50IGFkZHJlc3MuCgpJZiB0aGlzIHdhcyBub3QgeW91LCBwbGVhc2UgaWdub3JlIHRoaXMgZW1haWwu",
+			},
+			Subject: "base64://QWNjb3VudCBBY2Nlc3MgQXR0ZW1wdGVk",
+		}
+		assert.Equal(t, courierTemplateConfig, c.CourierTemplatesHelper(config.ViperKeyCourierTemplatesRecoveryInvalidEmail))
+
+		courierTemplateConfig = &config.CourierEmailTemplate{
+			Body: &config.CourierEmailBodyTemplate{
+				PlainText: "base64://e3sgZGVmaW5lIGFmLVpBIH19CkhhbGxvLAoKSGVyc3RlbCBqb3UgcmVrZW5pbmcgZGV1ciBoaWVyZGllIHNrYWtlbCB0ZSB2b2xnOgp7ey0gZW5kIC19fQoKe3sgZGVmaW5lIGVuLVVTIH19CkhpLAoKcGxlYXNlIHJlY292ZXIgYWNjZXNzIHRvIHlvdXIgYWNjb3VudCBieSBjbGlja2luZyB0aGUgZm9sbG93aW5nIGxpbms6Cnt7LSBlbmQgLX19Cgp7ey0gaWYgZXEgLmxhbmcgImFmLVpBIiAtfX0KCnt7IHRlbXBsYXRlICJhZi1aQSIgLiB9fQoKe3stIGVsc2UgLX19Cgp7eyB0ZW1wbGF0ZSAiZW4tVVMiIH19Cgp7ey0gZW5kIC19fQp7eyAuUmVjb3ZlcnlVUkwgfX0K",
+				HTML:      "base64://e3sgZGVmaW5lIGFmLVpBIH19CkhhbGxvLAoKSGVyc3RlbCBqb3UgcmVrZW5pbmcgZGV1ciBoaWVyZGllIHNrYWtlbCB0ZSB2b2xnOgp7ey0gZW5kIC19fQoKe3sgZGVmaW5lIGVuLVVTIH19CkhpLAoKcGxlYXNlIHJlY292ZXIgYWNjZXNzIHRvIHlvdXIgYWNjb3VudCBieSBjbGlja2luZyB0aGUgZm9sbG93aW5nIGxpbms6Cnt7LSBlbmQgLX19Cgp7ey0gaWYgZXEgLmxhbmcgImFmLVpBIiAtfX0KCnt7IHRlbXBsYXRlICJhZi1aQSIgLiB9fQoKe3stIGVsc2UgLX19Cgp7eyB0ZW1wbGF0ZSAiZW4tVVMiIH19Cgp7ey0gZW5kIC19fQo8YSBocmVmPSJ7eyAuUmVjb3ZlcnlVUkwgfX0iPnt7IC5SZWNvdmVyeVVSTCB9fTwvYT4=",
+			},
+			Subject: "base64://UmVjb3ZlciBhY2Nlc3MgdG8geW91ciBhY2NvdW50",
+		}
+		assert.Equal(t, courierTemplateConfig, c.CourierTemplatesHelper(config.ViperKeyCourierTemplatesRecoveryValidEmail))
 	})
 }

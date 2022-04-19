@@ -5,6 +5,7 @@ package text
 const (
 	ErrIDNeedsPrivilegedSession                        = "session_refresh_required"
 	ErrIDSelfServiceFlowExpired                        = "self_service_flow_expired"
+	ErrIDSelfServiceFlowDisabled                       = "self_service_flow_disabled"
 	ErrIDSelfServiceBrowserLocationChangeRequiredError = "browser_location_change_required"
 
 	ErrIDAlreadyLoggedIn             = "session_already_available"

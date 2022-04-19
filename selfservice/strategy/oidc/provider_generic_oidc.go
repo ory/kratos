@@ -2,7 +2,6 @@ package oidc
 
 import (
 	"context"
-	"net/url"
 
 	"github.com/pkg/errors"
 	"golang.org/x/oauth2"
@@ -18,16 +17,16 @@ var _ Provider = new(ProviderGenericOIDC)
 type ProviderGenericOIDC struct {
 	p      *gooidc.Provider
 	config *Configuration
-	public *url.URL
+	reg    dependencies
 }
 
 func NewProviderGenericOIDC(
 	config *Configuration,
-	public *url.URL,
+	reg dependencies,
 ) *ProviderGenericOIDC {
 	return &ProviderGenericOIDC{
 		config: config,
-		public: public,
+		reg:    reg,
 	}
 }
 
@@ -37,7 +36,7 @@ func (g *ProviderGenericOIDC) Config() *Configuration {
 
 func (g *ProviderGenericOIDC) provider(ctx context.Context) (*gooidc.Provider, error) {
 	if g.p == nil {
-		p, err := gooidc.NewProvider(ctx, g.config.IssuerURL)
+		p, err := gooidc.NewProvider(context.WithValue(ctx, oauth2.HTTPClient, g.reg.HTTPClient(ctx).HTTPClient), g.config.IssuerURL)
 		if err != nil {
 			return nil, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("Unable to initialize OpenID Connect Provider: %s", err))
 		}
@@ -46,7 +45,7 @@ func (g *ProviderGenericOIDC) provider(ctx context.Context) (*gooidc.Provider, e
 	return g.p, nil
 }
 
-func (g *ProviderGenericOIDC) oauth2ConfigFromEndpoint(endpoint oauth2.Endpoint) *oauth2.Config {
+func (g *ProviderGenericOIDC) oauth2ConfigFromEndpoint(ctx context.Context, endpoint oauth2.Endpoint) *oauth2.Config {
 	scope := g.config.Scope
 	if !stringslice.Has(scope, gooidc.ScopeOpenID) {
 		scope = append(scope, gooidc.ScopeOpenID)
@@ -57,7 +56,7 @@ func (g *ProviderGenericOIDC) oauth2ConfigFromEndpoint(endpoint oauth2.Endpoint)
 		ClientSecret: g.config.ClientSecret,
 		Endpoint:     endpoint,
 		Scopes:       scope,
-		RedirectURL:  g.config.Redir(g.public),
+		RedirectURL:  g.config.Redir(g.reg.Config(ctx).OIDCRedirectURIBase()),
 	}
 }
 
@@ -68,8 +67,7 @@ func (g *ProviderGenericOIDC) OAuth2(ctx context.Context) (*oauth2.Config, error
 	}
 
 	endpoint := p.Endpoint()
-
-	return g.oauth2ConfigFromEndpoint(endpoint), nil
+	return g.oauth2ConfigFromEndpoint(ctx, endpoint), nil
 }
 
 func (g *ProviderGenericOIDC) AuthCodeURLOptions(r ider) []oauth2.AuthCodeOption {
@@ -86,11 +84,7 @@ func (g *ProviderGenericOIDC) AuthCodeURLOptions(r ider) []oauth2.AuthCodeOption
 }
 
 func (g *ProviderGenericOIDC) verifyAndDecodeClaimsWithProvider(ctx context.Context, provider *gooidc.Provider, raw string) (*Claims, error) {
-	token, err := provider.
-		Verifier(&gooidc.Config{
-			ClientID: g.config.ClientID,
-		}).
-		Verify(ctx, raw)
+	token, err := provider.Verifier(&gooidc.Config{ClientID: g.config.ClientID}).Verify(ctx, raw)
 	if err != nil {
 		return nil, errors.WithStack(herodot.ErrBadRequest.WithReasonf("%s", err))
 	}

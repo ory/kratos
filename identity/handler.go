@@ -7,6 +7,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/ory/kratos/hash"
+
 	"github.com/ory/kratos/x"
 
 	"github.com/ory/kratos/cipher"
@@ -35,6 +37,7 @@ type (
 		config.Provider
 		x.CSRFProvider
 		cipher.Provider
+		hash.HashProvider
 	}
 	HandlerProvider interface {
 		IdentityHandler() *Handler
@@ -53,12 +56,22 @@ func NewHandler(r handlerDependencies) *Handler {
 }
 
 func (h *Handler) RegisterPublicRoutes(public *x.RouterPublic) {
-	h.r.CSRFHandler().IgnoreGlobs(RouteCollection, RouteCollection+"/*")
+	h.r.CSRFHandler().IgnoreGlobs(
+		RouteCollection, RouteCollection+"/*",
+		x.AdminPrefix+RouteCollection, x.AdminPrefix+RouteCollection+"/*",
+	)
+
 	public.GET(RouteCollection, x.RedirectToAdminRoute(h.r))
 	public.GET(RouteItem, x.RedirectToAdminRoute(h.r))
 	public.DELETE(RouteItem, x.RedirectToAdminRoute(h.r))
 	public.POST(RouteCollection, x.RedirectToAdminRoute(h.r))
 	public.PUT(RouteItem, x.RedirectToAdminRoute(h.r))
+
+	public.GET(x.AdminPrefix+RouteCollection, x.RedirectToAdminRoute(h.r))
+	public.GET(x.AdminPrefix+RouteItem, x.RedirectToAdminRoute(h.r))
+	public.DELETE(x.AdminPrefix+RouteItem, x.RedirectToAdminRoute(h.r))
+	public.POST(x.AdminPrefix+RouteCollection, x.RedirectToAdminRoute(h.r))
+	public.PUT(x.AdminPrefix+RouteItem, x.RedirectToAdminRoute(h.r))
 }
 
 func (h *Handler) RegisterAdminRoutes(admin *x.RouterAdmin) {
@@ -78,27 +91,10 @@ type identityList []Identity
 // swagger:parameters adminListIdentities
 // nolint:deadcode,unused
 type adminListIdentities struct {
-	// Items per Page
-	//
-	// This is the number of items per page.
-	//
-	// required: false
-	// in: query
-	// default: 100
-	// min: 1
-	// max: 500
-	PerPage int `json:"per_page"`
-
-	// Pagination Page
-	//
-	// required: false
-	// in: query
-	// default: 0
-	// min: 0
-	Page int `json:"page"`
+	x.PaginationParams
 }
 
-// swagger:route GET /identities v0alpha2 adminListIdentities
+// swagger:route GET /admin/identities v0alpha2 adminListIdentities
 //
 // List Identities
 //
@@ -169,7 +165,7 @@ type adminGetIdentity struct {
 	DeclassifyCredentials []string `json:"include_credential"`
 }
 
-// swagger:route GET /identities/{id} v0alpha2 adminGetIdentity
+// swagger:route GET /admin/identities/{id} v0alpha2 adminGetIdentity
 //
 // Get an Identity
 //
@@ -235,13 +231,83 @@ type AdminCreateIdentityBody struct {
 	// required: true
 	Traits json.RawMessage `json:"traits"`
 
+	// Credentials represents all credentials that can be used for authenticating this identity.
+	//
+	// Use this structure to import credentials for a user.
+	Credentials *AdminIdentityImportCredentials `json:"credentials"`
+
+	// VerifiableAddresses contains all the addresses that can be verified by the user.
+	//
+	// Use this structure to import verified addresses for an identity. Please keep in mind
+	// that the address needs to be represented in the Identity Schema or this field will be overwritten
+	// on the next identity update.
+	VerifiableAddresses []VerifiableAddress `json:"verifiable_addresses"`
+
+	// RecoveryAddresses contains all the addresses that can be used to recover an identity.
+	//
+	// Use this structure to import recovery addresses for an identity. Please keep in mind
+	// that the address needs to be represented in the Identity Schema or this field will be overwritten
+	// on the next identity update.
+	RecoveryAddresses []RecoveryAddress `json:"recovery_addresses"`
+
 	// State is the identity's state.
 	//
 	// required: false
 	State State `json:"state"`
 }
 
-// swagger:route POST /identities v0alpha2 adminCreateIdentity
+// swagger:model adminIdentityImportCredentials
+type AdminIdentityImportCredentials struct {
+	// Password if set will import a password credential.
+	Password *AdminIdentityImportCredentialsPassword `json:"password"`
+
+	// OIDC if set will import an OIDC credential.
+	OIDC *AdminIdentityImportCredentialsOIDC `json:"oidc"`
+}
+
+// swagger:model adminCreateIdentityImportCredentialsPassword
+type AdminIdentityImportCredentialsPassword struct {
+	// Configuration options for the import.
+	Config AdminIdentityImportCredentialsPasswordConfig `json:"config"`
+}
+
+// swagger:model adminCreateIdentityImportCredentialsPasswordConfig
+type AdminIdentityImportCredentialsPasswordConfig struct {
+	// The hashed password in [PHC format]( https://www.ory.sh/docs/kratos/concepts/credentials/username-email-password#hashed-password-format)
+	HashedPassword string `json:"hashed_password"`
+
+	// The password in plain text if no hash is available.
+	Password string `json:"password"`
+}
+
+// swagger:model adminCreateIdentityImportCredentialsOidc
+type AdminIdentityImportCredentialsOIDC struct {
+	// Configuration options for the import.
+	Config AdminIdentityImportCredentialsOIDCConfig `json:"config"`
+}
+
+// swagger:model adminCreateIdentityImportCredentialsOidcConfig
+type AdminIdentityImportCredentialsOIDCConfig struct {
+	// Configuration options for the import.
+	Config AdminIdentityImportCredentialsPasswordConfig `json:"config"`
+	// A list of OpenID Connect Providers
+	Providers []AdminCreateIdentityImportCredentialsOidcProvider `json:"providers"`
+}
+
+// swagger:model adminCreateIdentityImportCredentialsOidcProvider
+type AdminCreateIdentityImportCredentialsOidcProvider struct {
+	// The subject (`sub`) of the OpenID Connect connection. Usually the `sub` field of the ID Token.
+	//
+	// required: true
+	Subject string `json:"subject"`
+
+	// The OpenID Connect provider to link the subject to. Usually something like `google` or `github`.
+	//
+	// required: true
+	Provider string `json:"provider"`
+}
+
+// swagger:route POST /admin/identities v0alpha2 adminCreateIdentity
 //
 // Create an Identity
 //
@@ -282,7 +348,21 @@ func (h *Handler) create(w http.ResponseWriter, r *http.Request, _ httprouter.Pa
 		}
 		state = cr.State
 	}
-	i := &Identity{SchemaID: cr.SchemaID, Traits: []byte(cr.Traits), State: state, StateChangedAt: &stateChangedAt}
+
+	i := &Identity{
+		SchemaID:            cr.SchemaID,
+		Traits:              []byte(cr.Traits),
+		State:               state,
+		StateChangedAt:      &stateChangedAt,
+		VerifiableAddresses: cr.VerifiableAddresses,
+		RecoveryAddresses:   cr.RecoveryAddresses,
+	}
+
+	if err := h.importCredentials(r.Context(), i, cr.Credentials); err != nil {
+		h.r.Writer().WriteError(w, r, err)
+		return
+	}
+
 	if err := h.r.IdentityManager().Create(r.Context(), i); err != nil {
 		h.r.Writer().WriteError(w, r, err)
 		return
@@ -314,6 +394,8 @@ type adminUpdateIdentity struct {
 type AdminUpdateIdentityBody struct {
 	// SchemaID is the ID of the JSON Schema to be used for validating the identity's traits. If set
 	// will update the Identity's SchemaID.
+	//
+	// required: true
 	SchemaID string `json:"schema_id"`
 
 	// Traits represent an identity's traits. The identity is able to create, modify, and delete traits
@@ -329,7 +411,7 @@ type AdminUpdateIdentityBody struct {
 	State State `json:"state"`
 }
 
-// swagger:route PUT /identities/{id} v0alpha2 adminUpdateIdentity
+// swagger:route PUT /admin/identities/{id} v0alpha2 adminUpdateIdentity
 //
 // Update an Identity
 //
@@ -410,7 +492,7 @@ type adminDeleteIdentity struct {
 	ID string `json:"id"`
 }
 
-// swagger:route DELETE /identities/{id} v0alpha2 adminDeleteIdentity
+// swagger:route DELETE /admin/identities/{id} v0alpha2 adminDeleteIdentity
 //
 // Delete an Identity
 //

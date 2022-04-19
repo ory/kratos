@@ -66,7 +66,7 @@ func TestSettingsStrategy(t *testing.T) {
 		newOIDCProvider(t, publicTS, remotePublic, remoteAdmin, "github", "github"),
 	)
 	testhelpers.InitKratosServers(t, reg, publicTS, adminTS)
-	conf.MustSet(config.ViperKeyDefaultIdentitySchemaURL, "file://./stub/settings.schema.json")
+	testhelpers.SetDefaultIdentitySchema(conf, "file://./stub/settings.schema.json")
 	conf.MustSet(config.ViperKeySelfServiceBrowserDefaultReturnTo, "https://www.ory.sh/kratos")
 
 	// Make test data for this test run unique
@@ -212,7 +212,7 @@ func TestSettingsStrategy(t *testing.T) {
 		actual, err := reg.PrivilegedIdentityPool().GetIdentityConfidential(context.Background(), iid)
 		require.NoError(t, err)
 
-		var cc oidc.CredentialsConfig
+		var cc identity.CredentialsOIDC
 		creds, err := actual.ParseCredentials(identity.CredentialsTypeOIDC, &cc)
 		require.NoError(t, err)
 
@@ -504,7 +504,7 @@ func TestPopulateSettingsMethod(t *testing.T) {
 	nreg := func(t *testing.T, conf *oidc.ConfigurationCollection) *driver.RegistryDefault {
 		c, reg := internal.NewFastRegistryWithMocks(t)
 
-		c.MustSet(config.ViperKeyDefaultIdentitySchemaURL, "file://stub/registration.schema.json")
+		testhelpers.SetDefaultIdentitySchema(c, "file://stub/registration.schema.json")
 		c.MustSet(config.ViperKeyPublicBaseURL, "https://www.ory.sh/")
 
 		// Enabled per default:

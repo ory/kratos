@@ -22,3 +22,5 @@
       - totp
       - oidc
       - webauthn
+      - lookup_secret
+      - v0.6_legacy_session

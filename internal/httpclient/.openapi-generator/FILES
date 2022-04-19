@@ -8,7 +8,13 @@ api_v0alpha2.go
 client.go
 configuration.go
 docs/AdminCreateIdentityBody.md
+docs/AdminCreateIdentityImportCredentialsOidc.md
+docs/AdminCreateIdentityImportCredentialsOidcConfig.md
+docs/AdminCreateIdentityImportCredentialsOidcProvider.md
+docs/AdminCreateIdentityImportCredentialsPassword.md
+docs/AdminCreateIdentityImportCredentialsPasswordConfig.md
 docs/AdminCreateSelfServiceRecoveryLinkBody.md
+docs/AdminIdentityImportCredentials.md
 docs/AdminUpdateIdentityBody.md
 docs/AuthenticatorAssuranceLevel.md
 docs/ErrorAuthenticatorAssuranceLevelNotSatisfied.md
@@ -17,6 +23,9 @@ docs/HealthNotReadyStatus.md
 docs/HealthStatus.md
 docs/Identity.md
 docs/IdentityCredentials.md
+docs/IdentityCredentialsOidc.md
+docs/IdentityCredentialsOidcProvider.md
+docs/IdentityCredentialsPassword.md
 docs/IdentityCredentialsType.md
 docs/IdentitySchema.md
 docs/IdentityState.md
@@ -26,7 +35,9 @@ docs/InlineResponse503.md
 docs/JsonError.md
 docs/MetadataApi.md
 docs/NeedsPrivilegedSessionError.md
+docs/Pagination.md
 docs/RecoveryAddress.md
+docs/RevokedSessions.md
 docs/SelfServiceBrowserLocationChangeRequiredError.md
 docs/SelfServiceError.md
 docs/SelfServiceFlowExpiredError.md
@@ -44,6 +55,7 @@ docs/Session.md
 docs/SessionAuthenticationMethod.md
 docs/SessionDevice.md
 docs/SettingsProfileFormConfig.md
+docs/SubmitSelfServiceFlowWithWebAuthnRegistrationMethod.md
 docs/SubmitSelfServiceLoginFlowBody.md
 docs/SubmitSelfServiceLoginFlowWithLookupSecretMethodBody.md
 docs/SubmitSelfServiceLoginFlowWithOidcMethodBody.md
@@ -56,6 +68,7 @@ docs/SubmitSelfServiceRecoveryFlowWithLinkMethodBody.md
 docs/SubmitSelfServiceRegistrationFlowBody.md
 docs/SubmitSelfServiceRegistrationFlowWithOidcMethodBody.md
 docs/SubmitSelfServiceRegistrationFlowWithPasswordMethodBody.md
+docs/SubmitSelfServiceRegistrationFlowWithWebAuthnMethodBody.md
 docs/SubmitSelfServiceSettingsFlowBody.md
 docs/SubmitSelfServiceSettingsFlowWithLookupMethodBody.md
 docs/SubmitSelfServiceSettingsFlowWithOidcMethodBody.md
@@ -84,7 +97,13 @@ git_push.sh
 go.mod
 go.sum
 model_admin_create_identity_body.go
+model_admin_create_identity_import_credentials_oidc.go
+model_admin_create_identity_import_credentials_oidc_config.go
+model_admin_create_identity_import_credentials_oidc_provider.go
+model_admin_create_identity_import_credentials_password.go
+model_admin_create_identity_import_credentials_password_config.go
 model_admin_create_self_service_recovery_link_body.go
+model_admin_identity_import_credentials.go
 model_admin_update_identity_body.go
 model_authenticator_assurance_level.go
 model_error_authenticator_assurance_level_not_satisfied.go
@@ -93,6 +112,9 @@ model_health_not_ready_status.go
 model_health_status.go
 model_identity.go
 model_identity_credentials.go
+model_identity_credentials_oidc.go
+model_identity_credentials_oidc_provider.go
+model_identity_credentials_password.go
 model_identity_credentials_type.go
 model_identity_schema.go
 model_identity_state.go
@@ -101,7 +123,9 @@ model_inline_response_200_1.go
 model_inline_response_503.go
 model_json_error.go
 model_needs_privileged_session_error.go
+model_pagination.go
 model_recovery_address.go
+model_revoked_sessions.go
 model_self_service_browser_location_change_required_error.go
 model_self_service_error.go
 model_self_service_flow_expired_error.go
@@ -119,6 +143,7 @@ model_session.go
 model_session_authentication_method.go
 model_session_device.go
 model_settings_profile_form_config.go
+model_submit_self_service_flow_with_web_authn_registration_method.go
 model_submit_self_service_login_flow_body.go
 model_submit_self_service_login_flow_with_lookup_secret_method_body.go
 model_submit_self_service_login_flow_with_oidc_method_body.go
@@ -131,6 +156,7 @@ model_submit_self_service_recovery_flow_with_link_method_body.go
 model_submit_self_service_registration_flow_body.go
 model_submit_self_service_registration_flow_with_oidc_method_body.go
 model_submit_self_service_registration_flow_with_password_method_body.go
+model_submit_self_service_registration_flow_with_web_authn_method_body.go
 model_submit_self_service_settings_flow_body.go
 model_submit_self_service_settings_flow_with_lookup_method_body.go
 model_submit_self_service_settings_flow_with_oidc_method_body.go

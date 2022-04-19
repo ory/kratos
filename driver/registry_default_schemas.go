@@ -4,17 +4,22 @@ import (
 	"context"
 	"net/url"
 
+	"github.com/pkg/errors"
+
 	"github.com/ory/kratos/schema"
 )
 
-func (m *RegistryDefault) IdentityTraitsSchemas(ctx context.Context) schema.Schemas {
-	ms := m.Config(ctx).IdentityTraitsSchemas()
-	var ss schema.Schemas
+func (m *RegistryDefault) IdentityTraitsSchemas(ctx context.Context) (schema.Schemas, error) {
+	ms, err := m.Config(ctx).IdentityTraitsSchemas()
+	if err != nil {
+		return nil, err
+	}
 
+	var ss schema.Schemas
 	for _, s := range ms {
 		surl, err := url.Parse(s.URL)
 		if err != nil {
-			m.l.Fatalf("Could not parse url %s for schema %s", s.URL, s.ID)
+			return nil, errors.WithStack(err)
 		}
 
 		ss = append(ss, schema.Schema{
@@ -24,5 +29,5 @@ func (m *RegistryDefault) IdentityTraitsSchemas(ctx context.Context) schema.Sche
 		})
 	}
 
-	return ss
+	return ss, nil
 }

@@ -30,9 +30,7 @@ context('Account Verification Login Errors', () => {
         cy.registerApi(identity)
         cy.visit(login)
 
-        cy.get(appPrefix(app) + '[name="password_identifier"]').type(
-          identity.email
-        )
+        cy.get(appPrefix(app) + '[name="identifier"]').type(identity.email)
         cy.get('[name="password"]').type(identity.password)
         cy.get('[value="password"]').click()
 

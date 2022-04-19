@@ -79,7 +79,9 @@ func TestStrategy(t *testing.T) {
 			Mapper:       "file://./stub/oidc.hydra.jsonnet",
 		},
 	)
-	conf.MustSet(config.ViperKeyDefaultIdentitySchemaURL, "file://./stub/registration.schema.json")
+
+	conf.MustSet(config.ViperKeySelfServiceRegistrationEnabled, true)
+	testhelpers.SetDefaultIdentitySchema(conf, "file://./stub/registration.schema.json")
 	conf.MustSet(config.HookStrategyKey(config.ViperKeySelfServiceRegistrationAfter,
 		identity.CredentialsTypeOIDC.String()), []config.SelfServiceHook{{Name: "session"}})
 
@@ -275,9 +277,9 @@ func TestStrategy(t *testing.T) {
 	})
 
 	t.Run("case=should fail because password can not handle AAL2", func(t *testing.T) {
-		conf.MustSet(config.ViperKeyDefaultIdentitySchemaURL, "file://./stub/registration-aal.schema.json")
+		testhelpers.SetDefaultIdentitySchema(conf, "file://./stub/registration-aal.schema.json")
 		t.Cleanup(func() {
-			conf.MustSet(config.ViperKeyDefaultIdentitySchemaURL, "file://./stub/registration.schema.json")
+			testhelpers.SetDefaultIdentitySchema(conf, "file://./stub/registration.schema.json")
 		})
 		bc := testhelpers.NewDebugClient(t)
 		f := testhelpers.InitializeLoginFlowViaAPI(t, bc, ts, false)
@@ -495,11 +497,11 @@ func TestStrategy(t *testing.T) {
 	})
 }
 
-func TestCountActiveCredentials(t *testing.T) {
+func TestCountActiveFirstFactorCredentials(t *testing.T) {
 	_, reg := internal.NewFastRegistryWithMocks(t)
 	strategy := oidc.NewStrategy(reg)
 
-	toJson := func(c oidc.CredentialsConfig) []byte {
+	toJson := func(c identity.CredentialsOIDC) []byte {
 		out, err := json.Marshal(&c)
 		require.NoError(t, err)
 		return out
@@ -518,7 +520,7 @@ func TestCountActiveCredentials(t *testing.T) {
 		{
 			in: identity.CredentialsCollection{{
 				Type: strategy.ID(),
-				Config: toJson(oidc.CredentialsConfig{Providers: []oidc.ProviderCredentialsConfig{
+				Config: toJson(identity.CredentialsOIDC{Providers: []identity.CredentialsOIDCProvider{
 					{Subject: "foo", Provider: "bar"},
 				}}),
 			}},
@@ -527,7 +529,7 @@ func TestCountActiveCredentials(t *testing.T) {
 			in: identity.CredentialsCollection{{
 				Type:        strategy.ID(),
 				Identifiers: []string{""},
-				Config: toJson(oidc.CredentialsConfig{Providers: []oidc.ProviderCredentialsConfig{
+				Config: toJson(identity.CredentialsOIDC{Providers: []identity.CredentialsOIDCProvider{
 					{Subject: "foo", Provider: "bar"},
 				}}),
 			}},
@@ -536,7 +538,7 @@ func TestCountActiveCredentials(t *testing.T) {
 			in: identity.CredentialsCollection{{
 				Type:        strategy.ID(),
 				Identifiers: []string{"bar:"},
-				Config: toJson(oidc.CredentialsConfig{Providers: []oidc.ProviderCredentialsConfig{
+				Config: toJson(identity.CredentialsOIDC{Providers: []identity.CredentialsOIDCProvider{
 					{Subject: "foo", Provider: "bar"},
 				}}),
 			}},
@@ -545,7 +547,7 @@ func TestCountActiveCredentials(t *testing.T) {
 			in: identity.CredentialsCollection{{
 				Type:        strategy.ID(),
 				Identifiers: []string{":foo"},
-				Config: toJson(oidc.CredentialsConfig{Providers: []oidc.ProviderCredentialsConfig{
+				Config: toJson(identity.CredentialsOIDC{Providers: []identity.CredentialsOIDCProvider{
 					{Subject: "foo", Provider: "bar"},
 				}}),
 			}},
@@ -554,7 +556,7 @@ func TestCountActiveCredentials(t *testing.T) {
 			in: identity.CredentialsCollection{{
 				Type:        strategy.ID(),
 				Identifiers: []string{"not-bar:foo"},
-				Config: toJson(oidc.CredentialsConfig{Providers: []oidc.ProviderCredentialsConfig{
+				Config: toJson(identity.CredentialsOIDC{Providers: []identity.CredentialsOIDCProvider{
 					{Subject: "foo", Provider: "bar"},
 				}}),
 			}},
@@ -563,7 +565,7 @@ func TestCountActiveCredentials(t *testing.T) {
 			in: identity.CredentialsCollection{{
 				Type:        strategy.ID(),
 				Identifiers: []string{"bar:not-foo"},
-				Config: toJson(oidc.CredentialsConfig{Providers: []oidc.ProviderCredentialsConfig{
+				Config: toJson(identity.CredentialsOIDC{Providers: []identity.CredentialsOIDCProvider{
 					{Subject: "foo", Provider: "bar"},
 				}}),
 			}},
@@ -572,7 +574,7 @@ func TestCountActiveCredentials(t *testing.T) {
 			in: identity.CredentialsCollection{{
 				Type:        strategy.ID(),
 				Identifiers: []string{"bar:foo"},
-				Config: toJson(oidc.CredentialsConfig{Providers: []oidc.ProviderCredentialsConfig{
+				Config: toJson(identity.CredentialsOIDC{Providers: []identity.CredentialsOIDCProvider{
 					{Subject: "foo", Provider: "bar"},
 				}}),
 			}},
@@ -584,7 +586,7 @@ func TestCountActiveCredentials(t *testing.T) {
 			for _, v := range tc.in {
 				in[v.Type] = v
 			}
-			actual, err := strategy.CountActiveCredentials(in)
+			actual, err := strategy.CountActiveFirstFactorCredentials(in)
 			require.NoError(t, err)
 			assert.Equal(t, tc.expected, actual)
 		})
@@ -611,7 +613,7 @@ func TestDisabledEndpoint(t *testing.T) {
 		c := testhelpers.NewClientWithCookies(t)
 
 		t.Run("flow=settings", func(t *testing.T) {
-			require.NoError(t, conf.Set(config.ViperKeyDefaultIdentitySchemaURL, "file://stub/stub.schema.json"))
+			testhelpers.SetDefaultIdentitySchema(conf, "file://stub/stub.schema.json")
 			c := testhelpers.NewHTTPClientWithArbitrarySessionCookie(t, reg)
 			f := testhelpers.InitializeSettingsFlowViaAPI(t, c, publicTS)
 

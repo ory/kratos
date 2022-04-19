@@ -80,7 +80,7 @@ func applyScriptAttributes(opts ScriptAttributesModifiers, attributes *ScriptAtt
 	return attributes
 }
 
-func NewInputFieldFromJSON(name string, value interface{}, group Group, opts ...InputAttributesModifier) *Node {
+func NewInputFieldFromJSON(name string, value interface{}, group UiNodeGroup, opts ...InputAttributesModifier) *Node {
 	return &Node{
 		Type:       Input,
 		Group:      group,
@@ -89,7 +89,7 @@ func NewInputFieldFromJSON(name string, value interface{}, group Group, opts ...
 	}
 }
 
-func NewInputField(name string, value interface{}, group Group, inputType InputAttributeType, opts ...InputAttributesModifier) *Node {
+func NewInputField(name string, value interface{}, group UiNodeGroup, inputType InputAttributeType, opts ...InputAttributesModifier) *Node {
 	return &Node{
 		Type:       Input,
 		Group:      group,
@@ -98,7 +98,7 @@ func NewInputField(name string, value interface{}, group Group, inputType InputA
 	}
 }
 
-func NewImageField(id string, src string, group Group, opts ...ImageAttributesModifier) *Node {
+func NewImageField(id string, src string, group UiNodeGroup, opts ...ImageAttributesModifier) *Node {
 	return &Node{
 		Type:       Image,
 		Group:      group,
@@ -107,7 +107,7 @@ func NewImageField(id string, src string, group Group, opts ...ImageAttributesMo
 	}
 }
 
-func NewTextField(id string, text *text.Message, group Group) *Node {
+func NewTextField(id string, text *text.Message, group UiNodeGroup) *Node {
 	return &Node{
 		Type:       Text,
 		Group:      group,
@@ -116,7 +116,7 @@ func NewTextField(id string, text *text.Message, group Group) *Node {
 	}
 }
 
-func NewAnchorField(id string, href string, group Group, title *text.Message) *Node {
+func NewAnchorField(id string, href string, group UiNodeGroup, title *text.Message) *Node {
 	return &Node{
 		Type:       Anchor,
 		Group:      group,
@@ -125,7 +125,7 @@ func NewAnchorField(id string, href string, group Group, title *text.Message) *N
 	}
 }
 
-func NewScriptField(name string, src string, group Group, integrity string, opts ...ScriptAttributesModifier) *Node {
+func NewScriptField(name string, src string, group UiNodeGroup, integrity string, opts ...ScriptAttributesModifier) *Node {
 	return &Node{
 		Type:  Script,
 		Group: group,
@@ -137,12 +137,13 @@ func NewScriptField(name string, src string, group Group, integrity string, opts
 			ReferrerPolicy: "no-referrer",
 			CrossOrigin:    "anonymous",
 			Integrity:      integrity,
+			Nonce:          x.NewUUID().String(),
 		}),
 		Meta: &Meta{},
 	}
 }
 
-func NewInputFieldFromSchema(name string, group Group, p jsonschemax.Path, opts ...InputAttributesModifier) *Node {
+func NewInputFieldFromSchema(name string, group UiNodeGroup, p jsonschemax.Path, opts ...InputAttributesModifier) *Node {
 	attr := &InputAttributes{
 		Name:     name,
 		Type:     toFormType(p.Name, p.Type),

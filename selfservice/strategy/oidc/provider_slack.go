@@ -3,7 +3,6 @@ package oidc
 import (
 	"context"
 	"fmt"
-	"net/url"
 
 	"github.com/ory/herodot"
 
@@ -18,16 +17,16 @@ import (
 
 type ProviderSlack struct {
 	config *Configuration
-	public *url.URL
+	reg    dependencies
 }
 
 func NewProviderSlack(
 	config *Configuration,
-	public *url.URL,
+	reg dependencies,
 ) *ProviderSlack {
 	return &ProviderSlack{
 		config: config,
-		public: public,
+		reg:    reg,
 	}
 }
 
@@ -35,7 +34,7 @@ func (d *ProviderSlack) Config() *Configuration {
 	return d.config
 }
 
-func (d *ProviderSlack) oauth2() *oauth2.Config {
+func (d *ProviderSlack) oauth2(ctx context.Context) *oauth2.Config {
 	return &oauth2.Config{
 		ClientID:     d.config.ClientID,
 		ClientSecret: d.config.ClientSecret,
@@ -45,13 +44,13 @@ func (d *ProviderSlack) oauth2() *oauth2.Config {
 			AuthURL:  "https://slack.com/oauth/authorize",
 			TokenURL: slack.APIURL + "oauth.access",
 		},
-		RedirectURL: d.config.Redir(d.public),
+		RedirectURL: d.config.Redir(d.reg.Config(ctx).OIDCRedirectURIBase()),
 		Scopes:      d.config.Scope,
 	}
 }
 
 func (d *ProviderSlack) OAuth2(ctx context.Context) (*oauth2.Config, error) {
-	return d.oauth2(), nil
+	return d.oauth2(ctx), nil
 }
 
 func (d *ProviderSlack) AuthCodeURLOptions(r ider) []oauth2.AuthCodeOption {

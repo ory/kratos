@@ -2,6 +2,7 @@ package verification_test
 
 import (
 	"context"
+	"fmt"
 	"io/ioutil"
 	"net/http"
 	"net/url"
@@ -27,7 +28,7 @@ func TestGetFlow(t *testing.T) {
 	conf.MustSet(config.ViperKeySelfServiceVerificationEnabled, true)
 	conf.MustSet(config.ViperKeySelfServiceStrategyConfig+"."+verification.StrategyVerificationLinkName,
 		map[string]interface{}{"enabled": true})
-	conf.MustSet(config.ViperKeyDefaultIdentitySchemaURL, "file://./stub/identity.schema.json")
+	testhelpers.SetDefaultIdentitySchema(conf, "file://./stub/identity.schema.json")
 
 	public, _ := testhelpers.NewKratosServerWithCSRF(t, reg)
 	_ = testhelpers.NewErrorTestServer(t, reg)
@@ -109,17 +110,23 @@ func TestGetFlow(t *testing.T) {
 	})
 
 	t.Run("case=expired with return_to", func(t *testing.T) {
-		conf.MustSet(config.ViperKeyURLsWhitelistedReturnToDomains, []string{"https://www.ory.sh/"})
+		returnTo := "https://www.ory.sh"
+		conf.MustSet(config.ViperKeyURLsAllowedReturnToDomains, []string{returnTo})
 
 		client := testhelpers.NewClientWithCookies(t)
 		_ = setupVerificationUI(t, client)
-		body := x.EasyGetBody(t, client, public.URL+verification.RouteInitBrowserFlow+"?return_to=https://www.ory.sh")
+		body := x.EasyGetBody(t, client, public.URL+verification.RouteInitBrowserFlow+"?return_to="+returnTo)
 
 		// Expire the flow
 		f, err := reg.VerificationFlowPersister().GetVerificationFlow(context.Background(), uuid.FromStringOrNil(gjson.GetBytes(body, "id").String()))
 		require.NoError(t, err)
 		f.ExpiresAt = time.Now().Add(-time.Second)
 		require.NoError(t, reg.VerificationFlowPersister().UpdateVerificationFlow(context.Background(), f))
+
+		// Retrieve the flow and verify that return_to is in the response
+		getURL := fmt.Sprintf("%s%s?id=%s&return_to=%s", public.URL, verification.RouteGetFlow, f.ID, returnTo)
+		getBody := x.EasyGetBody(t, client, getURL)
+		assert.Equal(t, gjson.GetBytes(getBody, "error.details.return_to").String(), returnTo)
 
 		// submit the flow but it is expired
 		u := public.URL + verification.RouteSubmitFlow + "?flow=" + f.ID.String()
@@ -130,8 +137,9 @@ func TestGetFlow(t *testing.T) {
 
 		f, err = reg.VerificationFlowPersister().GetVerificationFlow(context.Background(), uuid.FromStringOrNil(gjson.GetBytes(resBody, "id").String()))
 		require.NoError(t, err)
-		assert.Equal(t, public.URL+verification.RouteInitBrowserFlow+"?return_to=https://www.ory.sh", f.RequestURL)
+		assert.Equal(t, public.URL+verification.RouteInitBrowserFlow+"?return_to="+returnTo, f.RequestURL)
 	})
+
 	t.Run("case=relative redirect when self-service verification ui is a relative URL", func(t *testing.T) {
 		router := x.NewRouterPublic()
 		ts, _ := testhelpers.NewKratosServerWithRouters(t, reg, router, x.NewRouterAdmin())
@@ -141,5 +149,34 @@ func TestGetFlow(t *testing.T) {
 			"^/verification-ts.*$",
 			testhelpers.GetSelfServiceRedirectLocation(t, ts.URL+verification.RouteInitBrowserFlow),
 		)
+	})
+
+	t.Run("case=not found", func(t *testing.T) {
+		client := testhelpers.NewClientWithCookies(t)
+		_ = setupVerificationUI(t, client)
+
+		res, _ := x.EasyGet(t, client, public.URL+verification.RouteGetFlow+"?id="+x.NewUUID().String())
+		assert.EqualValues(t, http.StatusNotFound, res.StatusCode)
+	})
+
+	t.Run("case=redirects with 303", func(t *testing.T) {
+		router := x.NewRouterPublic()
+		ts, _ := testhelpers.NewKratosServerWithRouters(t, reg, router, x.NewRouterAdmin())
+
+		c := &http.Client{}
+		// don't get the reference, instead copy the values, so we don't alter the client directly.
+		*c = *ts.Client()
+		// prevent the redirect
+		c.CheckRedirect = func(req *http.Request, via []*http.Request) error {
+			return http.ErrUseLastResponse
+		}
+		req, err := http.NewRequest("GET", ts.URL+verification.RouteInitBrowserFlow, nil)
+		require.NoError(t, err)
+
+		res, err := c.Do(req)
+		require.NoError(t, err)
+		// here we check that the redirect status is 303
+		require.Equal(t, http.StatusSeeOther, res.StatusCode)
+		defer res.Body.Close()
 	})
 }

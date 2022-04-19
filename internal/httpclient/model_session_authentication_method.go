@@ -18,6 +18,7 @@ import (
 
 // SessionAuthenticationMethod A singular authenticator used during authentication / login.
 type SessionAuthenticationMethod struct {
+	Aal *AuthenticatorAssuranceLevel `json:"aal,omitempty"`
 	// When the authentication challenge was completed.
 	CompletedAt *time.Time `json:"completed_at,omitempty"`
 	Method      *string    `json:"method,omitempty"`
@@ -38,6 +39,38 @@ func NewSessionAuthenticationMethod() *SessionAuthenticationMethod {
 func NewSessionAuthenticationMethodWithDefaults() *SessionAuthenticationMethod {
 	this := SessionAuthenticationMethod{}
 	return &this
+}
+
+// GetAal returns the Aal field value if set, zero value otherwise.
+func (o *SessionAuthenticationMethod) GetAal() AuthenticatorAssuranceLevel {
+	if o == nil || o.Aal == nil {
+		var ret AuthenticatorAssuranceLevel
+		return ret
+	}
+	return *o.Aal
+}
+
+// GetAalOk returns a tuple with the Aal field value if set, nil otherwise
+// and a boolean to check if the value has been set.
+func (o *SessionAuthenticationMethod) GetAalOk() (*AuthenticatorAssuranceLevel, bool) {
+	if o == nil || o.Aal == nil {
+		return nil, false
+	}
+	return o.Aal, true
+}
+
+// HasAal returns a boolean if a field has been set.
+func (o *SessionAuthenticationMethod) HasAal() bool {
+	if o != nil && o.Aal != nil {
+		return true
+	}
+
+	return false
+}
+
+// SetAal gets a reference to the given AuthenticatorAssuranceLevel and assigns it to the Aal field.
+func (o *SessionAuthenticationMethod) SetAal(v AuthenticatorAssuranceLevel) {
+	o.Aal = &v
 }
 
 // GetCompletedAt returns the CompletedAt field value if set, zero value otherwise.
@@ -106,6 +139,9 @@ func (o *SessionAuthenticationMethod) SetMethod(v string) {
 
 func (o SessionAuthenticationMethod) MarshalJSON() ([]byte, error) {
 	toSerialize := map[string]interface{}{}
+	if o.Aal != nil {
+		toSerialize["aal"] = o.Aal
+	}
 	if o.CompletedAt != nil {
 		toSerialize["completed_at"] = o.CompletedAt
 	}

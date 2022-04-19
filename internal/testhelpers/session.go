@@ -3,8 +3,11 @@ package testhelpers
 import (
 	"context"
 	"net/http"
+	"strings"
 	"testing"
 	"time"
+
+	"github.com/ory/nosurf"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/tidwall/gjson"
@@ -52,14 +55,39 @@ func maybePersistSession(t *testing.T, reg *driver.RegistryDefault, sess *sessio
 func NewHTTPClientWithSessionCookie(t *testing.T, reg *driver.RegistryDefault, sess *session.Session) *http.Client {
 	maybePersistSession(t, reg, sess)
 
-	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	var handler http.Handler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		require.NoError(t, reg.SessionManager().IssueCookie(context.Background(), w, r, sess))
-	}))
+	})
+
+	if _, ok := reg.CSRFHandler().(*nosurf.CSRFHandler); ok {
+		handler = nosurf.New(handler)
+	}
+
+	ts := httptest.NewServer(handler)
+	defer ts.Close()
+
+	c := NewClientWithCookies(t)
+	MockHydrateCookieClient(t, c, ts.URL)
+	return c
+}
+
+func NewHTTPClientWithSessionCookieLocalhost(t *testing.T, reg *driver.RegistryDefault, sess *session.Session) *http.Client {
+	maybePersistSession(t, reg, sess)
+
+	var handler http.Handler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		require.NoError(t, reg.SessionManager().IssueCookie(context.Background(), w, r, sess))
+	})
+
+	if _, ok := reg.CSRFHandler().(*nosurf.CSRFHandler); ok {
+		handler = nosurf.New(handler)
+	}
+
+	ts := httptest.NewServer(handler)
 	defer ts.Close()
 
 	c := NewClientWithCookies(t)
 
-	// This should work for other test servers as well because cookies ignore ports.
+	ts.URL = strings.Replace(ts.URL, "127.0.0.1", "localhost", 1)
 	MockHydrateCookieClient(t, c, ts.URL)
 	return c
 }
@@ -114,6 +142,7 @@ func NewHTTPClientWithArbitrarySessionToken(t *testing.T, reg *driver.RegistryDe
 		NewSessionLifespanProvider(time.Hour),
 		time.Now(),
 		identity.CredentialsTypePassword,
+		identity.AuthenticatorAssuranceLevel1,
 	)
 	require.NoError(t, err, "Could not initialize session from identity.")
 
@@ -126,6 +155,7 @@ func NewHTTPClientWithArbitrarySessionCookie(t *testing.T, reg *driver.RegistryD
 		NewSessionLifespanProvider(time.Hour),
 		time.Now(),
 		identity.CredentialsTypePassword,
+		identity.AuthenticatorAssuranceLevel1,
 	)
 	require.NoError(t, err, "Could not initialize session from identity.")
 
@@ -138,6 +168,7 @@ func NewNoRedirectHTTPClientWithArbitrarySessionCookie(t *testing.T, reg *driver
 		NewSessionLifespanProvider(time.Hour),
 		time.Now(),
 		identity.CredentialsTypePassword,
+		identity.AuthenticatorAssuranceLevel1,
 	)
 	require.NoError(t, err, "Could not initialize session from identity.")
 
@@ -145,14 +176,24 @@ func NewNoRedirectHTTPClientWithArbitrarySessionCookie(t *testing.T, reg *driver
 }
 
 func NewHTTPClientWithIdentitySessionCookie(t *testing.T, reg *driver.RegistryDefault, id *identity.Identity) *http.Client {
-	s, err := session.NewActiveSession(id, NewSessionLifespanProvider(time.Hour), time.Now(), identity.CredentialsTypePassword)
+	s, err := session.NewActiveSession(id,
+		NewSessionLifespanProvider(time.Hour),
+		time.Now(),
+		identity.CredentialsTypePassword,
+		identity.AuthenticatorAssuranceLevel1,
+	)
 	require.NoError(t, err, "Could not initialize session from identity.")
 
 	return NewHTTPClientWithSessionCookie(t, reg, s)
 }
 
 func NewHTTPClientWithIdentitySessionToken(t *testing.T, reg *driver.RegistryDefault, id *identity.Identity) *http.Client {
-	s, err := session.NewActiveSession(id, NewSessionLifespanProvider(time.Hour), time.Now(), identity.CredentialsTypePassword)
+	s, err := session.NewActiveSession(id,
+		NewSessionLifespanProvider(time.Hour),
+		time.Now(),
+		identity.CredentialsTypePassword,
+		identity.AuthenticatorAssuranceLevel1,
+	)
 	require.NoError(t, err, "Could not initialize session from identity.")
 
 	return NewHTTPClientWithSessionToken(t, reg, s)

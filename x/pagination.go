@@ -7,6 +7,28 @@ import (
 	"github.com/ory/x/pagination/pagepagination"
 )
 
+// swagger:model pagination
+type PaginationParams struct {
+	// Items per Page
+	//
+	// This is the number of items per page.
+	//
+	// required: false
+	// in: query
+	// default: 250
+	// min: 1
+	// max: 1000
+	PerPage int `json:"per_page"`
+
+	// Pagination Page
+	//
+	// required: false
+	// in: query
+	// default: 1
+	// min: 1
+	Page int `json:"page"`
+}
+
 const paginationMaxItems = 1000
 const paginationDefaultItems = 250
 

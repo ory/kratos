@@ -70,7 +70,7 @@ func (s *ErrorHandler) PrepareReplacementForExpiredFlow(w http.ResponseWriter, r
 	return e.WithFlow(a), nil
 }
 
-func (s *ErrorHandler) WriteFlowError(w http.ResponseWriter, r *http.Request, f *Flow, group node.Group, err error) {
+func (s *ErrorHandler) WriteFlowError(w http.ResponseWriter, r *http.Request, f *Flow, group node.UiNodeGroup, err error) {
 	s.d.Audit().
 		WithError(err).
 		WithRequest(r).
@@ -83,7 +83,7 @@ func (s *ErrorHandler) WriteFlowError(w http.ResponseWriter, r *http.Request, f 
 	}
 
 	if expired, inner := s.PrepareReplacementForExpiredFlow(w, r, f, err); inner != nil {
-		s.WriteFlowError(w, r, f, group, err)
+		s.WriteFlowError(w, r, f, group, inner)
 		return
 	} else if expired != nil {
 		if f.Type == flow.TypeAPI || x.IsJSONRequest(r) {
@@ -100,7 +100,7 @@ func (s *ErrorHandler) WriteFlowError(w http.ResponseWriter, r *http.Request, f 
 		return
 	}
 
-	if err := sortNodes(f.UI.Nodes); err != nil {
+	if err := sortNodes(r.Context(), f.UI.Nodes); err != nil {
 		s.forward(w, r, f, err)
 		return
 	}
@@ -111,7 +111,7 @@ func (s *ErrorHandler) WriteFlowError(w http.ResponseWriter, r *http.Request, f 
 	}
 
 	if f.Type == flow.TypeBrowser && !x.IsJSONRequest(r) {
-		http.Redirect(w, r, f.AppendTo(s.d.Config(r.Context()).SelfServiceFlowLoginUI()).String(), http.StatusFound)
+		http.Redirect(w, r, f.AppendTo(s.d.Config(r.Context()).SelfServiceFlowLoginUI()).String(), http.StatusSeeOther)
 		return
 	}
 

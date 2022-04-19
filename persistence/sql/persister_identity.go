@@ -8,16 +8,17 @@ import (
 	"strings"
 	"time"
 
+	"github.com/ory/kratos/credentialmigrate"
+
 	"github.com/ory/kratos/corp"
 
 	"github.com/ory/jsonschema/v3"
 	"github.com/ory/x/sqlxx"
 
-	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/otp"
 	"github.com/ory/kratos/x"
 
-	"github.com/gobuffalo/pop/v5"
+	"github.com/gobuffalo/pop/v6"
 	"github.com/gofrs/uuid"
 	"github.com/pkg/errors"
 
@@ -47,6 +48,29 @@ func (p *Persister) ListRecoveryAddresses(ctx context.Context, page, itemsPerPag
 	return a, err
 }
 
+func stringToLowerTrim(match string) string {
+	return strings.ToLower(strings.TrimSpace(match))
+}
+
+func (p *Persister) normalizeIdentifier(ct identity.CredentialsType, match string) string {
+	switch ct {
+	case identity.CredentialsTypeLookup:
+		// lookup credentials are case-sensitive
+		return match
+	case identity.CredentialsTypeTOTP:
+		// totp credentials are case-sensitive
+		return match
+	case identity.CredentialsTypeOIDC:
+		// OIDC credentials are case-sensitive
+		return match
+	case identity.CredentialsTypePassword:
+		fallthrough
+	case identity.CredentialsTypeWebAuthn:
+		return stringToLowerTrim(match)
+	}
+	return match
+}
+
 func (p *Persister) FindByCredentialsIdentifier(ctx context.Context, ct identity.CredentialsType, match string) (*identity.Identity, *identity.Credentials, error) {
 	nid := corp.ContextualizeNID(ctx, p.nid)
 
@@ -59,10 +83,8 @@ func (p *Persister) FindByCredentialsIdentifier(ctx context.Context, ct identity
 		IdentityID uuid.UUID `db:"identity_id"`
 	}
 
-	// Force case-insensitivity for identifiers
-	if ct == identity.CredentialsTypePassword {
-		match = strings.ToLower(match)
-	}
+	// Force case-insensitivity and trimming for identifiers
+	match = p.normalizeIdentifier(ct, match)
 
 	// #nosec G201
 	if err := p.GetConnection(ctx).RawQuery(fmt.Sprintf(`SELECT
@@ -135,10 +157,8 @@ func (p *Persister) createIdentityCredentials(ctx context.Context, i *identity.I
 		}
 
 		for _, ids := range cred.Identifiers {
-			// Force case-insensitivity for identifiers
-			if cred.Type == identity.CredentialsTypePassword {
-				ids = strings.ToLower(ids)
-			}
+			// Force case-insensitivity and trimming for identifiers
+			ids = p.normalizeIdentifier(cred.Type, ids)
 
 			if len(ids) == 0 {
 				return errors.WithStack(herodot.ErrInternalServerError.WithReasonf("Unable to create identity credentials with missing or empty identifier."))
@@ -164,6 +184,7 @@ func (p *Persister) createVerifiableAddresses(ctx context.Context, i *identity.I
 	for k := range i.VerifiableAddresses {
 		i.VerifiableAddresses[k].IdentityID = i.ID
 		i.VerifiableAddresses[k].NID = corp.ContextualizeNID(ctx, p.nid)
+		i.VerifiableAddresses[k].Value = stringToLowerTrim(i.VerifiableAddresses[k].Value)
 		if err := p.GetConnection(ctx).Create(&i.VerifiableAddresses[k]); err != nil {
 			return err
 		}
@@ -175,6 +196,7 @@ func (p *Persister) createRecoveryAddresses(ctx context.Context, i *identity.Ide
 	for k := range i.RecoveryAddresses {
 		i.RecoveryAddresses[k].IdentityID = i.ID
 		i.RecoveryAddresses[k].NID = corp.ContextualizeNID(ctx, p.nid)
+		i.RecoveryAddresses[k].Value = stringToLowerTrim(i.RecoveryAddresses[k].Value)
 		if err := p.GetConnection(ctx).Create(&i.RecoveryAddresses[k]); err != nil {
 			return err
 		}
@@ -212,7 +234,7 @@ func (p *Persister) CreateIdentity(ctx context.Context, i *identity.Identity) er
 	i.NID = corp.ContextualizeNID(ctx, p.nid)
 
 	if i.SchemaID == "" {
-		i.SchemaID = config.DefaultIdentityTraitsSchemaID
+		i.SchemaID = p.r.Config(ctx).DefaultIdentityTraitsSchemaID()
 	}
 
 	stateChangedAt := sqlxx.NullTime(time.Now())
@@ -418,6 +440,10 @@ func (p *Persister) GetIdentityConfidential(ctx context.Context, id uuid.UUID) (
 		i.Credentials[cred.Type] = *cred
 	}
 
+	if err := credentialmigrate.UpgradeCredentials(&i); err != nil {
+		return nil, err
+	}
+
 	if err := p.findRecoveryAddresses(ctx, &i); err != nil {
 		return nil, err
 	}
@@ -435,7 +461,7 @@ func (p *Persister) GetIdentityConfidential(ctx context.Context, id uuid.UUID) (
 
 func (p *Persister) FindVerifiableAddressByValue(ctx context.Context, via identity.VerifiableAddressType, value string) (*identity.VerifiableAddress, error) {
 	var address identity.VerifiableAddress
-	if err := p.GetConnection(ctx).Where("nid = ? AND via = ? AND LOWER(value) = ?", corp.ContextualizeNID(ctx, p.nid), via, strings.ToLower(value)).First(&address); err != nil {
+	if err := p.GetConnection(ctx).Where("nid = ? AND via = ? AND value = ?", corp.ContextualizeNID(ctx, p.nid), via, stringToLowerTrim(value)).First(&address); err != nil {
 		return nil, sqlcon.HandleError(err)
 	}
 
@@ -444,7 +470,7 @@ func (p *Persister) FindVerifiableAddressByValue(ctx context.Context, via identi
 
 func (p *Persister) FindRecoveryAddressByValue(ctx context.Context, via identity.RecoveryAddressType, value string) (*identity.RecoveryAddress, error) {
 	var address identity.RecoveryAddress
-	if err := p.GetConnection(ctx).Where("nid = ? AND via = ? AND LOWER(value) = ?", corp.ContextualizeNID(ctx, p.nid), via, strings.ToLower(value)).First(&address); err != nil {
+	if err := p.GetConnection(ctx).Where("nid = ? AND via = ? AND value = ?", corp.ContextualizeNID(ctx, p.nid), via, stringToLowerTrim(value)).First(&address); err != nil {
 		return nil, sqlcon.HandleError(err)
 	}
 
@@ -483,6 +509,7 @@ func (p *Persister) VerifyAddress(ctx context.Context, code string) error {
 
 func (p *Persister) UpdateVerifiableAddress(ctx context.Context, address *identity.VerifiableAddress) error {
 	address.NID = corp.ContextualizeNID(ctx, p.nid)
+	address.Value = stringToLowerTrim(address.Value)
 	return p.update(ctx, address)
 }
 
@@ -498,12 +525,16 @@ func (p *Persister) validateIdentity(ctx context.Context, i *identity.Identity) 
 }
 
 func (p *Persister) injectTraitsSchemaURL(ctx context.Context, i *identity.Identity) error {
-	s, err := p.r.IdentityTraitsSchemas(ctx).GetByID(i.SchemaID)
+	ss, err := p.r.IdentityTraitsSchemas(ctx)
+	if err != nil {
+		return err
+	}
+	s, err := ss.GetByID(i.SchemaID)
 	if err != nil {
 		return errors.WithStack(herodot.ErrInternalServerError.WithReasonf(
 			`The JSON Schema "%s" for this identity's traits could not be found.`, i.SchemaID))
 	}
-	i.SchemaURL = s.SchemaURL(p.r.Config(ctx).SelfPublicURL(nil)).String()
+	i.SchemaURL = s.SchemaURL(p.r.Config(ctx).SelfPublicURL()).String()
 	return nil
 }
 

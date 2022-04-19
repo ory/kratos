@@ -10,19 +10,19 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
-	"sync"
 	"time"
 
 	"github.com/arbovm/levenshtein"
+	"github.com/dgraph-io/ristretto"
 	"github.com/hashicorp/go-retryablehttp"
 	"github.com/pkg/errors"
 
 	"github.com/ory/herodot"
-	"github.com/ory/x/httpx"
-	"github.com/ory/x/stringsx"
-
 	"github.com/ory/kratos/driver/config"
+	"github.com/ory/x/httpx"
 )
+
+const hashCacheItemTTL = time.Hour
 
 // Validator implements a validation strategy for passwords. One example is that the password
 // has to have at least 6 characters and at least one lower and one uppercase password.
@@ -51,10 +51,9 @@ var ErrUnexpectedStatusCode = errors.New("unexpected status code")
 // [haveibeenpwnd](https://haveibeenpwned.com/API/v2#SearchingPwnedPasswordsByRange) service to check if the
 // password has been breached in a previous data leak using k-anonymity.
 type DefaultPasswordValidator struct {
-	sync.RWMutex
 	reg    validatorDependencies
 	Client *retryablehttp.Client
-	hashes map[string]int64
+	hashes *ristretto.Cache
 
 	minIdentifierPasswordDist            int
 	maxIdentifierPasswordSubstrThreshold float32
@@ -64,12 +63,22 @@ type validatorDependencies interface {
 	config.Provider
 }
 
-func NewDefaultPasswordValidatorStrategy(reg validatorDependencies) *DefaultPasswordValidator {
+func NewDefaultPasswordValidatorStrategy(reg validatorDependencies) (*DefaultPasswordValidator, error) {
+	cache, err := ristretto.NewCache(&ristretto.Config{
+		NumCounters:        10 * 10000,
+		MaxCost:            60 * 10000, // BCrypt hash size is 60 bytes
+		BufferItems:        64,
+		IgnoreInternalCost: true,
+	})
+	// sanity check - this should never happen unless above configuration variables are invalid
+	if err != nil {
+		return nil, errors.Wrap(err, "error while setting up validator cache")
+	}
 	return &DefaultPasswordValidator{
 		Client:                    httpx.NewResilientClient(httpx.ResilientClientWithConnectionTimeout(time.Second)),
 		reg:                       reg,
-		hashes:                    map[string]int64{},
-		minIdentifierPasswordDist: 5, maxIdentifierPasswordSubstrThreshold: 0.5}
+		hashes:                    cache,
+		minIdentifierPasswordDist: 5, maxIdentifierPasswordSubstrThreshold: 0.5}, nil
 }
 
 func b20(src []byte) string {
@@ -111,27 +120,26 @@ func (s *DefaultPasswordValidator) fetch(hpw []byte, apiDNSName string) error {
 		return errors.Wrapf(ErrUnexpectedStatusCode, "%d", res.StatusCode)
 	}
 
-	s.Lock()
-	s.hashes[b20(hpw)] = 0
-	s.Unlock()
+	s.hashes.SetWithTTL(b20(hpw), 0, 1, hashCacheItemTTL)
 
 	sc := bufio.NewScanner(res.Body)
 	for sc.Scan() {
 		row := sc.Text()
-		result := stringsx.Splitx(strings.TrimSpace(row), ":")
+		result := strings.Split(strings.TrimSpace(row), ":")
 
-		if len(result) != 2 {
-			return errors.WithStack(herodot.ErrInternalServerError.WithReasonf("Expected password hash from remote to contain two parts separated by a double dot but got: %v (%s)", result, row))
+		// We assume a count of 1. HIBP API sometimes responds without the
+		// colon, so we just assume that the leak count is one.
+		//
+		// See https://github.com/ory/kratos/issues/2145
+		count := int64(1)
+		if len(result) == 2 {
+			count, err = strconv.ParseInt(result[1], 10, 64)
+			if err != nil {
+				return errors.WithStack(herodot.ErrInternalServerError.WithReasonf("Expected password hash to contain a count formatted as int but got: %s", result[1]))
+			}
 		}
 
-		count, err := strconv.ParseInt(result[1], 10, 64)
-		if err != nil {
-			return errors.WithStack(herodot.ErrInternalServerError.WithReasonf("Expected password hash to contain a count formatted as int but got: %s", result[1]))
-		}
-
-		s.Lock()
-		s.hashes[(prefix + result[0])] = count
-		s.Unlock()
+		s.hashes.SetWithTTL(prefix+result[0], count, 1, hashCacheItemTTL)
 	}
 
 	if err := sc.Err(); err != nil {
@@ -142,18 +150,20 @@ func (s *DefaultPasswordValidator) fetch(hpw []byte, apiDNSName string) error {
 }
 
 func (s *DefaultPasswordValidator) Validate(ctx context.Context, identifier, password string) error {
-	if len(password) < 8 {
-		return errors.Errorf("password length must be at least 8 characters but only got %d", len(password))
-	}
-
-	compIdentifier, compPassword := strings.ToLower(identifier), strings.ToLower(password)
-	dist := levenshtein.Distance(compIdentifier, compPassword)
-	lcs := float32(lcsLength(compIdentifier, compPassword)) / float32(len(compPassword))
-	if dist < s.minIdentifierPasswordDist || lcs > s.maxIdentifierPasswordSubstrThreshold {
-		return errors.Errorf("the password is too similar to the user identifier")
-	}
-
 	passwordPolicyConfig := s.reg.Config(ctx).PasswordPolicyConfig()
+
+	if len(password) < int(passwordPolicyConfig.MinPasswordLength) {
+		return errors.Errorf("password length must be at least %d characters but only got %d", passwordPolicyConfig.MinPasswordLength, len(password))
+	}
+
+	if passwordPolicyConfig.IdentifierSimilarityCheckEnabled && len(identifier) > 0 {
+		compIdentifier, compPassword := strings.ToLower(identifier), strings.ToLower(password)
+		dist := levenshtein.Distance(compIdentifier, compPassword)
+		lcs := float32(lcsLength(compIdentifier, compPassword)) / float32(len(compPassword))
+		if dist < s.minIdentifierPasswordDist || lcs > s.maxIdentifierPasswordSubstrThreshold {
+			return errors.Errorf("the password is too similar to the user identifier")
+		}
+	}
 
 	if !passwordPolicyConfig.HaveIBeenPwnedEnabled {
 		return nil
@@ -166,10 +176,7 @@ func (s *DefaultPasswordValidator) Validate(ctx context.Context, identifier, pas
 	}
 	hpw := h.Sum(nil)
 
-	s.RLock()
-	c, ok := s.hashes[b20(hpw)]
-	s.RUnlock()
-
+	c, ok := s.hashes.Get(b20(hpw))
 	if !ok {
 		err := s.fetch(hpw, passwordPolicyConfig.HaveIBeenPwnedHost)
 		if (errors.Is(err, ErrNetworkFailure) || errors.Is(err, ErrUnexpectedStatusCode)) && passwordPolicyConfig.IgnoreNetworkErrors {
@@ -181,7 +188,8 @@ func (s *DefaultPasswordValidator) Validate(ctx context.Context, identifier, pas
 		return s.Validate(ctx, identifier, password)
 	}
 
-	if c > int64(s.reg.Config(ctx).PasswordPolicyConfig().MaxBreaches) {
+	v, ok := c.(int64)
+	if ok && v > int64(s.reg.Config(ctx).PasswordPolicyConfig().MaxBreaches) {
 		return errors.New("the password has been found in data breaches and must no longer be used")
 	}
 

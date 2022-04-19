@@ -75,6 +75,9 @@ type Credentials struct {
 	// for passwordless authentication or access_token and refresh tokens from OpenID Connect flows.
 	Config sqlxx.JSONRawMessage `json:"config,omitempty" db:"config"`
 
+	// Version refers to the version of the credential. Useful when changing the config schema.
+	Version int `json:"version" db:"version"`
+
 	IdentityID uuid.UUID `json:"-" faker:"-" db:"identity_id"`
 
 	// CreatedAt is a helper struct field for gobuffalo.pop.
@@ -116,7 +119,8 @@ type (
 	// swagger:ignore
 	ActiveCredentialsCounter interface {
 		ID() CredentialsType
-		CountActiveCredentials(cc map[CredentialsType]Credentials) (int, error)
+		CountActiveFirstFactorCredentials(cc map[CredentialsType]Credentials) (int, error)
+		CountActiveMultiFactorCredentials(cc map[CredentialsType]Credentials) (int, error)
 	}
 
 	// swagger:ignore

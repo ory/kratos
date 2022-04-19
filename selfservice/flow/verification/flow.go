@@ -7,6 +7,8 @@ import (
 	"net/url"
 	"time"
 
+	"github.com/gobuffalo/pop/v6"
+
 	"github.com/gofrs/uuid"
 	"github.com/pkg/errors"
 
@@ -37,6 +39,7 @@ type Flow struct {
 	ID uuid.UUID `json:"id" db:"id" faker:"-"`
 
 	// Type represents the flow's type which can be either "api" or "browser", depending on the flow interaction.
+	//
 	// required: true
 	Type flow.Type `json:"type" db:"type" faker:"flow_type"`
 
@@ -103,8 +106,8 @@ func NewFlow(conf *config.Config, exp time.Duration, csrf string, r *http.Reques
 	_, err := x.SecureRedirectTo(r,
 		conf.SelfServiceBrowserDefaultReturnTo(),
 		x.SecureRedirectUseSourceURL(requestURL),
-		x.SecureRedirectAllowURLs(conf.SelfServiceBrowserWhitelistedReturnToDomains()),
-		x.SecureRedirectAllowSelfServiceURLs(conf.SelfPublicURL(r)),
+		x.SecureRedirectAllowURLs(conf.SelfServiceBrowserAllowedReturnToDomains()),
+		x.SecureRedirectAllowSelfServiceURLs(conf.SelfPublicURL()),
 	)
 	if err != nil {
 		return nil, err
@@ -116,7 +119,7 @@ func NewFlow(conf *config.Config, exp time.Duration, csrf string, r *http.Reques
 		RequestURL: requestURL,
 		UI: &container.Container{
 			Method: "POST",
-			Action: flow.AppendFlowTo(urlx.AppendPaths(conf.SelfPublicURL(r), RouteSubmitFlow), id).String(),
+			Action: flow.AppendFlowTo(urlx.AppendPaths(conf.SelfPublicURL(), RouteSubmitFlow), id).String(),
 		},
 		CSRFToken: csrf,
 		State:     StateChooseMethod,
@@ -133,7 +136,12 @@ func NewFlow(conf *config.Config, exp time.Duration, csrf string, r *http.Reques
 }
 
 func FromOldFlow(conf *config.Config, exp time.Duration, csrf string, r *http.Request, strategies Strategies, of *Flow) (*Flow, error) {
-	nf, err := NewFlow(conf, exp, csrf, r, strategies, of.Type)
+	f := of.Type
+	// Using the same flow in the recovery/verification context can lead to using API flow in a verification/recovery email
+	if of.Type == flow.TypeAPI {
+		f = flow.TypeBrowser
+	}
+	nf, err := NewFlow(conf, exp, csrf, r, strategies, f)
 	if err != nil {
 		return nil, err
 	}
@@ -185,8 +193,22 @@ func (f *Flow) SetCSRFToken(token string) {
 
 func (f Flow) MarshalJSON() ([]byte, error) {
 	type local Flow
+	f.SetReturnTo()
+	return json.Marshal(local(f))
+}
+
+func (f *Flow) SetReturnTo() {
 	if u, err := url.Parse(f.RequestURL); err == nil {
 		f.ReturnTo = u.Query().Get("return_to")
 	}
-	return json.Marshal(local(f))
+}
+
+func (f *Flow) AfterFind(*pop.Connection) error {
+	f.SetReturnTo()
+	return nil
+}
+
+func (f *Flow) AfterSave(*pop.Connection) error {
+	f.SetReturnTo()
+	return nil
 }

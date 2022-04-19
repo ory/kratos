@@ -2,8 +2,12 @@ package oidc
 
 import (
 	"context"
-	"net/url"
+	"encoding/json"
 	"strings"
+
+	"github.com/hashicorp/go-retryablehttp"
+
+	"github.com/ory/x/httpx"
 
 	"github.com/gofrs/uuid"
 	"github.com/golang-jwt/jwt/v4"
@@ -21,12 +25,12 @@ type ProviderMicrosoft struct {
 
 func NewProviderMicrosoft(
 	config *Configuration,
-	public *url.URL,
+	reg dependencies,
 ) *ProviderMicrosoft {
 	return &ProviderMicrosoft{
 		ProviderGenericOIDC: &ProviderGenericOIDC{
 			config: config,
-			public: public,
+			reg:    reg,
 		},
 	}
 }
@@ -42,7 +46,7 @@ func (m *ProviderMicrosoft) OAuth2(ctx context.Context) (*oauth2.Config, error) 
 		TokenURL: endpointPrefix + "/oauth2/v2.0/token",
 	}
 
-	return m.oauth2ConfigFromEndpoint(endpoint), nil
+	return m.oauth2ConfigFromEndpoint(ctx, endpoint), nil
 }
 
 func (m *ProviderMicrosoft) Claims(ctx context.Context, exchange *oauth2.Token) (*Claims, error) {
@@ -67,7 +71,44 @@ func (m *ProviderMicrosoft) Claims(ctx context.Context, exchange *oauth2.Token) 
 		return nil, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("Unable to initialize OpenID Connect Provider: %s", err))
 	}
 
-	return m.verifyAndDecodeClaimsWithProvider(ctx, p, raw)
+	claims, err := m.verifyAndDecodeClaimsWithProvider(ctx, p, raw)
+	if err != nil {
+		return nil, err
+	}
+
+	return m.updateSubject(ctx, claims, exchange)
+}
+
+func (m *ProviderMicrosoft) updateSubject(ctx context.Context, claims *Claims, exchange *oauth2.Token) (*Claims, error) {
+	if m.config.SubjectSource == "me" {
+		o, err := m.OAuth2(ctx)
+		if err != nil {
+			return nil, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("%s", err))
+		}
+
+		client := m.reg.HTTPClient(ctx, httpx.ResilientClientWithClient(o.Client(ctx, exchange)))
+		req, err := retryablehttp.NewRequest("GET", "https://graph.microsoft.com/v1.0/me", nil)
+		if err != nil {
+			return nil, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("%s", err))
+		}
+
+		resp, err := client.Do(req)
+		if err != nil {
+			return nil, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("Unable to fetch from `https://graph.microsoft.com/v1.0/me`: %s", err))
+		}
+		defer resp.Body.Close()
+
+		var user struct {
+			ID string `json:"id"`
+		}
+		if err := json.NewDecoder(resp.Body).Decode(&user); err != nil {
+			return nil, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("Unable to decode JSON from `https://graph.microsoft.com/v1.0/me`: %s", err))
+		}
+
+		claims.Subject = user.ID
+	}
+
+	return claims, nil
 }
 
 type microsoftUnverifiedClaims struct {

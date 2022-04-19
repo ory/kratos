@@ -26,7 +26,7 @@
     preserve_host: true
     url: "http://kratos-selfservice-ui-node:4435"
   match:
-    url: "http://127.0.0.1:4455/<{welcome,registration,login,verification,error,recovery,verify,auth/*,**.css,**.js,**.png}{/,}>"
+    url: "http://127.0.0.1:4455/<{registration,welcome,recovery,verification,login,error,**.css,**.js,**.png,}>"
     methods:
       - GET
   authenticators:
@@ -44,7 +44,7 @@
     preserve_host: true
     url: "http://kratos-selfservice-ui-node:4435"
   match:
-    url: "http://127.0.0.1:4455/<{,debug,dashboard,settings}>"
+    url: "http://127.0.0.1:4455/<{debug,dashboard,settings}>"
     methods:
       - GET
   authenticators:
@@ -57,4 +57,4 @@
   errors:
     - handler: redirect
       config:
-        to: http://127.0.0.1:4455/auth/login
+        to: http://127.0.0.1:4455/login

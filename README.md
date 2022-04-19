@@ -25,6 +25,17 @@
 
 Ory Kratos is the first cloud native Identity and User Management System in the world. Finally, it is no longer necessary to implement a User Login process for the umpteenth time!
 
+## Ory Cloud
+
+The easiest way to get started with Ory Software is in Ory Cloud! It is [**free for developers**](https://console.ory.sh/registration?utm_source=github&utm_medium=banner&utm_campaign=kratos-readme), forever, no credit card required!
+
+Ory Cloud has easy examples, administrative user interfaces, hosted pages (e.g. for login or registration), support for custom domains, collaborative features for your colleagues, and much more!
+
+### :mega: Community gets Ory Cloud for Free! :mega:
+
+Ory community members get the Ory Cloud Start Up plan **free for six months**, with all quality-of-life features available, such as custom domains and giving your team members access. [Sign up with your GitHub account](https://console.ory.sh/registration?preferred_plan=start-up&utm_source=github&utm_medium=banner&utm_campaign=kratos-readme-first900) and use the coupon code **`FIRST900`** on the *"Start-Up Plan"* checkout page to calim your free project now! Make sure to be signed up to the [Ory Community Slack](https://slack.ory.sh) when using the code!
+
+
 <!-- START doctoc generated TOC please keep comment here to allow auto update -->
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 **Table of Contents**
@@ -236,7 +247,31 @@ that your company deserves a spot here, reach out to
             <td>Sponsor</td>
             <td>Strivacity</td>
             <td align="center"><img height="16px" src="https://raw.githubusercontent.com/ory/meta/master/static/adopters/strivacity.svg" alt="Strivacity"></td>
-            <td><a href="https://strivacity.com/">strivacity</a></td>
+            <td><a href="https://strivacity.com/">strivacity.com</a></td>
+        </tr>
+        <tr>
+            <td>Adopter *</td>
+            <td>Hanko</td>
+            <td align="center"><img height="32px" src="https://raw.githubusercontent.com/ory/meta/master/static/adopters/hanko.svg" alt="Hanko"></td>
+            <td><a href="https://hanko.io/">hanko.io</a></td>
+        </tr>
+        <tr>
+            <td>Adopter *</td>
+            <td>Rabbit</td>
+            <td align="center"><img height="32px" src="https://raw.githubusercontent.com/ory/meta/master/static/adopters/rabbit.svg" alt="Rabbit"></td>
+            <td><a href="https://rabbit.co.th/">rabbit.co.th</a></td>
+        </tr>
+        <tr>
+            <td>Adopter *</td>
+            <td>inMusic</td>
+            <td align="center"><img height="32px" src="https://raw.githubusercontent.com/ory/meta/master/static/adopters/inmusic.svg" alt="InMusic"></td>
+            <td><a href="https://inmusicbrands.com/">inmusicbrands.com</a></td>
+        </tr>
+        <tr>
+            <td>Adopter *</td>
+            <td>Buhta</td>
+            <td align="center"><img height="32px" src="https://raw.githubusercontent.com/ory/meta/master/static/adopters/buhta.svg" alt="Buhta"></td>
+            <td><a href="https://buhta.com/">buhta.com</a></td>
         </tr>
     </tbody>
 </table>
@@ -385,7 +420,7 @@ The HTTP API is documented [here](https://www.ory.sh/kratos/docs/sdk/api).
 ### Upgrading and Changelog
 
 New releases might introduce breaking changes. To help you identify and incorporate those changes, we document these
-changes in [UPGRADE.md](./UPGRADE.md) and [CHANGELOG.md](./CHANGELOG.md).
+changes in the [CHANGELOG.md](./CHANGELOG.md). For upgrading, please visit the [upgrade guide](https://www.ory.sh/kratos/docs/guides/upgrade).
 
 ### Command line documentation
 
@@ -504,6 +539,30 @@ For more details, run:
 ./test/e2e/run.sh
 </pre>
 
+**Run only a singular test**
+
+Add `.only` to the test you would like to run.
+
+For example:
+
+```ts
+it.only('invalid remote recovery email template', () => {
+    ...
+})
+```
+
+**Run a subset of tests**
+
+This will require editing the `cypress.json` file located in the `test/e2e/` folder.
+
+Add the `testFiles` option and specify the test to run inside the `cypress/integration` folder.
+As an example we will add only the `network` tests.
+```json
+"testFiles": ["profiles/network/*"],
+```
+
+Now start the tests again using the run script or makefile.
+
 #### Build Docker
 
 You can build a development Docker Image using:
@@ -519,3 +578,12 @@ To prepare documentation tests, run `npm i` to install
 
 - test all documentation: <code type="make/command">make test-docs</code>
 - test an individual file: <code type="npm/installed-executable">text-run</code>
+
+#### Preview API documentation
+
+- update the SDK including the OpenAPI specification:
+  <code type="make/command">make sdk</code>
+- run preview server for API documentation: <code type="make/command">make
+  docs/api</code>
+- run preview server for swagger documentation: <code type="make/command">make
+  docs/swagger</code>

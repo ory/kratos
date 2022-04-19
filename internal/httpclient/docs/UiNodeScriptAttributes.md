@@ -8,7 +8,8 @@ Name | Type | Description | Notes
 **Crossorigin** | **string** | The script cross origin policy | 
 **Id** | **string** | A unique identifier | 
 **Integrity** | **string** | The script&#39;s integrity hash | 
-**NodeType** | **string** |  | 
+**NodeType** | **string** | NodeType represents this node&#39;s types. It is a mirror of &#x60;node.type&#x60; and is primarily used to allow compatibility with OpenAPI 3.0. | 
+**Nonce** | **string** | Nonce for CSP  A nonce you may want to use to improve your Content Security Policy. You do not have to use this value but if you want to improve your CSP policies you may use it. You can also choose to use your own nonce value! | 
 **Referrerpolicy** | **string** | The script referrer policy | 
 **Src** | **string** | The script source | 
 **Type** | **string** | The script MIME type | 
@@ -17,7 +18,7 @@ Name | Type | Description | Notes
 
 ### NewUiNodeScriptAttributes
 
-`func NewUiNodeScriptAttributes(async bool, crossorigin string, id string, integrity string, nodeType string, referrerpolicy string, src string, type_ string, ) *UiNodeScriptAttributes`
+`func NewUiNodeScriptAttributes(async bool, crossorigin string, id string, integrity string, nodeType string, nonce string, referrerpolicy string, src string, type_ string, ) *UiNodeScriptAttributes`
 
 NewUiNodeScriptAttributes instantiates a new UiNodeScriptAttributes object
 This constructor will assign default values to properties that have it defined,
@@ -130,6 +131,26 @@ and a boolean to check if the value has been set.
 `func (o *UiNodeScriptAttributes) SetNodeType(v string)`
 
 SetNodeType sets NodeType field to given value.
+
+
+### GetNonce
+
+`func (o *UiNodeScriptAttributes) GetNonce() string`
+
+GetNonce returns the Nonce field if non-nil, zero value otherwise.
+
+### GetNonceOk
+
+`func (o *UiNodeScriptAttributes) GetNonceOk() (*string, bool)`
+
+GetNonceOk returns a tuple with the Nonce field if it's non-nil, zero value otherwise
+and a boolean to check if the value has been set.
+
+### SetNonce
+
+`func (o *UiNodeScriptAttributes) SetNonce(v string)`
+
+SetNonce sets Nonce field to given value.
 
 
 ### GetReferrerpolicy

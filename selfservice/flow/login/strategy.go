@@ -15,10 +15,11 @@ import (
 
 type Strategy interface {
 	ID() identity.CredentialsType
-	NodeGroup() node.Group
+	NodeGroup() node.UiNodeGroup
 	RegisterLoginRoutes(*x.RouterPublic)
 	PopulateLoginMethod(r *http.Request, requestedAAL identity.AuthenticatorAssuranceLevel, sr *Flow) error
 	Login(w http.ResponseWriter, r *http.Request, f *Flow, ss *session.Session) (i *identity.Identity, err error)
+	CompletedAuthenticationMethod(ctx context.Context) session.AuthenticationMethod
 }
 
 type Strategies []Strategy

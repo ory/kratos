@@ -16,7 +16,6 @@ GO_DEPENDENCIES = github.com/ory/go-acc \
 				  github.com/golang/mock/mockgen \
 				  github.com/go-swagger/go-swagger/cmd/swagger \
 				  golang.org/x/tools/cmd/goimports \
-				  github.com/mikefarah/yq \
 				  github.com/mattn/goveralls \
 				  github.com/cortesi/modd/cmd/modd
 
@@ -32,29 +31,36 @@ $(call make-lint-dependency)
 		echo "deprecated usage, use docs/cli instead"
 		go build -o .bin/clidoc ./cmd/clidoc/.
 
+.PHONY: .bin/yq
+.bin/yq:
+		go build -o .bin/yq github.com/mikefarah/yq/v4
+
 .PHONY: docs/cli
 docs/cli:
 		go run ./cmd/clidoc/. .
 
+.PHONY: docs/api
+docs/api:
+		npx @redocly/openapi-cli preview-docs spec/api.json
+
+.PHONY: docs/swagger
+docs/swagger:
+		npx @redocly/openapi-cli preview-docs spec/swagger.json
+
 .bin/ory: Makefile
-		bash <(curl https://raw.githubusercontent.com/ory/meta/master/install.sh) -d -b .bin ory v0.1.0
+		bash <(curl https://raw.githubusercontent.com/ory/meta/master/install.sh) -d -b .bin ory v0.1.14
 		touch -a -m .bin/ory
 
 node_modules: package.json Makefile
 		npm ci
 
-docs/node_modules: docs/package.json
-		cd docs; npm ci
 
 .bin/golangci-lint: Makefile
-		bash <(curl -sfL https://install.goreleaser.com/github.com/golangci/golangci-lint.sh) -d -b .bin v1.28.3
+		bash <(curl -sfL https://install.goreleaser.com/github.com/golangci/golangci-lint.sh) -d -b .bin v1.44.2
 
 .bin/hydra: Makefile
-		bash <(curl https://raw.githubusercontent.com/ory/hydra/master/install.sh) -d -b .bin v1.9.0-alpha.1
+		bash <(curl https://raw.githubusercontent.com/ory/meta/master/install.sh) -d -b .bin hydra v1.11.0
 
-.PHONY: docs
-docs: docs/node_modules
-		cd docs; npm run build
 
 .PHONY: lint
 lint: .bin/golangci-lint
@@ -118,18 +124,17 @@ sdk: .bin/swagger .bin/ory node_modules
 quickstart:
 		docker pull oryd/kratos:latest
 		docker pull oryd/kratos-selfservice-ui-node:latest
-		docker-compose -f quickstart.yml -f quickstart-standalone.yml up --build --force-recreate
+		quickstart -f quickstart.yml -f quickstart-standalone.yml up --build --force-recreate
 
 .PHONY: quickstart-dev
 quickstart-dev:
 		docker build -f .docker/Dockerfile-build -t oryd/kratos:latest .
-		docker-compose -f quickstart.yml -f quickstart-standalone.yml -f quickstart-latest.yml $(QUICKSTART_OPTIONS) up --build --force-recreate
+		quickstart -f quickstart.yml -f quickstart-standalone.yml -f quickstart-latest.yml $(QUICKSTART_OPTIONS) up --build --force-recreate
 
 # Formats the code
 .PHONY: format
-format: .bin/goimports docs/node_modules node_modules
+format: .bin/goimports node_modules
 		goimports -w -local github.com/ory .
-		cd docs; npm run format
 		npm run format
 
 # Build local docker image
@@ -169,3 +174,9 @@ migratest-refresh:
 .PHONY: test-update-snapshots
 test-update-snapshots:
 		UPDATE_SNAPSHOTS=true go test -p 4 -tags sqlite -short ./...
+
+.PHONY: post-release
+post-release: .bin/yq
+		cat quickstart.yml | yq '.services.kratos.image = "oryd/kratos:'$$DOCKER_TAG'"' | sponge quickstart.yml
+		cat quickstart.yml | yq '.services.kratos-migrate.image = "oryd/kratos:'$$DOCKER_TAG'"' | sponge quickstart.yml
+		cat quickstart.yml | yq '.services.kratos-selfservice-ui-node.image = "oryd/kratos-selfservice-ui-node:'$$DOCKER_TAG'"' | sponge quickstart.yml

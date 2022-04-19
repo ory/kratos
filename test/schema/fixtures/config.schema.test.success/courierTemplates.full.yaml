@@ -1,0 +1,4 @@
+invalid:
+  email: "#/definitions/emailCourierTemplate"
+valid:
+  email: "#/definitions/emailCourierTemplate"

@@ -47,7 +47,7 @@ context('Registration success with email profile', () => {
           expect(identity.id).to.not.be.empty
           expect(identity.verifiable_addresses).to.have.length(1)
           expect(identity.schema_id).to.equal('default')
-          expect(identity.schema_url).to.equal(`${APP_URL}/schemas/default`)
+          expect(identity.schema_url).to.equal(`${APP_URL}/schemas/ZGVmYXVsdA`)
           expect(identity.traits.website).to.equal(website)
           expect(identity.traits.email).to.equal(email)
           expect(identity.traits.age).to.equal(age)
@@ -73,7 +73,7 @@ context('Registration success with email profile', () => {
           expect(identity.id).to.not.be.empty
           expect(identity.verifiable_addresses).to.have.length(1)
           expect(identity.schema_id).to.equal('default')
-          expect(identity.schema_url).to.equal(`${APP_URL}/schemas/default`)
+          expect(identity.schema_url).to.equal(`${APP_URL}/schemas/ZGVmYXVsdA`)
           expect(identity.traits.website).to.equal(website)
           expect(identity.traits.email).to.equal(email)
           expect(identity.traits.age).to.be.undefined
