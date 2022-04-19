@@ -150,6 +150,8 @@ func (c ConfigurationCollection) Provider(id string, reg dependencies) (Provider
 				return NewProviderApple(&p, reg), nil
 			case addProviderName("spotify"):
 				return NewProviderSpotify(&p, reg), nil
+			case addProviderName("netid"):
+				return NewProviderNetID(&p, reg), nil
 			}
 			return nil, errors.Errorf("provider type %s is not supported, supported are: %v", p.Provider, providerNames)
 		}
