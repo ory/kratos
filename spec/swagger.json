@@ -2352,6 +2352,14 @@
         "state"
       ],
       "properties": {
+        "metadata_admin": {
+          "description": "Store metadata about the user which is only accessible through admin APIs such as `GET /admin/identities/\u003cid\u003e`.",
+          "type": "object"
+        },
+        "metadata_public": {
+          "description": "Store metadata about the identity which the identity itself can see when calling for example the\nsession endpoint. Do not store sensitive information (e.g. credit score) about the identity in this field.",
+          "type": "object"
+        },
         "schema_id": {
           "description": "SchemaID is the ID of the JSON Schema to be used for validating the identity's traits. If set\nwill update the Identity's SchemaID.",
           "type": "string"
@@ -2420,6 +2428,14 @@
       "properties": {
         "credentials": {
           "$ref": "#/definitions/adminIdentityImportCredentials"
+        },
+        "metadata_admin": {
+          "description": "Store metadata about the user which is only accessible through admin APIs such as `GET /admin/identities/\u003cid\u003e`.",
+          "type": "object"
+        },
+        "metadata_public": {
+          "description": "Store metadata about the identity which the identity itself can see when calling for example the\nsession endpoint. Do not store sensitive information (e.g. credit score) about the identity in this field.",
+          "type": "object"
         },
         "recovery_addresses": {
           "description": "RecoveryAddresses contains all the addresses that can be used to recover an identity.\n\nUse this structure to import recovery addresses for an identity. Please keep in mind\nthat the address needs to be represented in the Identity Schema or this field will be overwritten\non the next identity update.",
@@ -2688,6 +2704,12 @@
         "id": {
           "$ref": "#/definitions/UUID"
         },
+        "metadata_admin": {
+          "$ref": "#/definitions/nullJsonRawMessage"
+        },
+        "metadata_public": {
+          "$ref": "#/definitions/nullJsonRawMessage"
+        },
         "recovery_addresses": {
           "description": "RecoveryAddresses contains all the addresses that can be used to recover an identity.",
           "type": "array",
@@ -2924,6 +2946,10 @@
           "example": "Not Found"
         }
       }
+    },
+    "nullJsonRawMessage": {
+      "description": "NullJSONRawMessage represents a json.RawMessage that works well with JSON, SQL, and Swagger and is NULLable-",
+      "type": "object"
     },
     "nullTime": {
       "type": "string",

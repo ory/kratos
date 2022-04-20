@@ -183,7 +183,7 @@ func (h *Handler) get(w http.ResponseWriter, r *http.Request, ps httprouter.Para
 			h.r.Writer().WriteError(w, r, err)
 			return
 		}
-		h.r.Writer().Write(w, r, WithCredentialsInJSON(*emit))
+		h.r.Writer().Write(w, r, WithCredentialsAndAdminMetadataInJSON(*emit))
 		return
 	} else if len(declassify) > 0 {
 		h.r.Writer().WriteError(w, r, errors.WithStack(herodot.ErrBadRequest.WithReasonf("Invalid value `%s` for parameter `include_credential`.", declassify)))
@@ -191,7 +191,7 @@ func (h *Handler) get(w http.ResponseWriter, r *http.Request, ps httprouter.Para
 
 	}
 
-	h.r.Writer().Write(w, r, WithCredentialsMetadataInJSON(*i))
+	h.r.Writer().Write(w, r, WithCredentialsMetadataAndAdminMetadataInJSON(*i))
 }
 
 // swagger:parameters adminCreateIdentity
@@ -233,6 +233,13 @@ type AdminCreateIdentityBody struct {
 	// that the address needs to be represented in the Identity Schema or this field will be overwritten
 	// on the next identity update.
 	RecoveryAddresses []RecoveryAddress `json:"recovery_addresses"`
+
+	// Store metadata about the identity which the identity itself can see when calling for example the
+	// session endpoint. Do not store sensitive information (e.g. credit score) about the identity in this field.
+	MetadataPublic json.RawMessage `json:"metadata_public"`
+
+	// Store metadata about the user which is only accessible through admin APIs such as `GET /admin/identities/<id>`.
+	MetadataAdmin json.RawMessage `json:"metadata_admin,omitempty"`
 
 	// State is the identity's state.
 	//
@@ -340,6 +347,8 @@ func (h *Handler) create(w http.ResponseWriter, r *http.Request, _ httprouter.Pa
 		StateChangedAt:      &stateChangedAt,
 		VerifiableAddresses: cr.VerifiableAddresses,
 		RecoveryAddresses:   cr.RecoveryAddresses,
+		MetadataAdmin:       []byte(cr.MetadataAdmin),
+		MetadataPublic:      []byte(cr.MetadataPublic),
 	}
 
 	if err := h.importCredentials(r.Context(), i, cr.Credentials); err != nil {
@@ -358,7 +367,7 @@ func (h *Handler) create(w http.ResponseWriter, r *http.Request, _ httprouter.Pa
 			"identities",
 			i.ID.String(),
 		).String(),
-		i,
+		WithCredentialsMetadataAndAdminMetadataInJSON(*i),
 	)
 }
 
@@ -388,6 +397,13 @@ type AdminUpdateIdentityBody struct {
 	//
 	// required: true
 	Traits json.RawMessage `json:"traits"`
+
+	// Store metadata about the identity which the identity itself can see when calling for example the
+	// session endpoint. Do not store sensitive information (e.g. credit score) about the identity in this field.
+	MetadataPublic json.RawMessage `json:"metadata_public"`
+
+	// Store metadata about the user which is only accessible through admin APIs such as `GET /admin/identities/<id>`.
+	MetadataAdmin json.RawMessage `json:"metadata_admin,omitempty"`
 
 	// State is the identity's state.
 	//
@@ -454,6 +470,8 @@ func (h *Handler) update(w http.ResponseWriter, r *http.Request, ps httprouter.P
 	}
 
 	identity.Traits = []byte(ur.Traits)
+	identity.MetadataPublic = []byte(ur.MetadataPublic)
+	identity.MetadataAdmin = []byte(ur.MetadataAdmin)
 	if err := h.r.IdentityManager().Update(
 		r.Context(),
 		identity,
@@ -463,7 +481,7 @@ func (h *Handler) update(w http.ResponseWriter, r *http.Request, ps httprouter.P
 		return
 	}
 
-	h.r.Writer().Write(w, r, identity)
+	h.r.Writer().Write(w, r, WithCredentialsMetadataAndAdminMetadataInJSON(*identity))
 }
 
 // swagger:parameters adminDeleteIdentity

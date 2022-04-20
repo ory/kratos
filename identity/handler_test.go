@@ -133,7 +133,6 @@ func TestHandler(t *testing.T) {
 			t.Run("endpoint="+name, func(t *testing.T) {
 				res := send(t, ts, "POST", "/identities", http.StatusBadRequest, json.RawMessage(`{"schema_url":"12345","traits":{}}`))
 				assert.Contains(t, res.Get("error.message").String(), "schema_url")
-
 			})
 		}
 	})
@@ -151,6 +150,20 @@ func TestHandler(t *testing.T) {
 		}
 	})
 
+	t.Run("case=should create an identity with metadata", func(t *testing.T) {
+		for name, ts := range map[string]*httptest.Server{"public": publicTS, "admin": adminTS} {
+			t.Run("endpoint="+name, func(t *testing.T) {
+				var i identity.AdminCreateIdentityBody
+				i.Traits = []byte(`{"bar":"baz"}`)
+				i.MetadataPublic = []byte(`{"public":"baz"}`)
+				i.MetadataAdmin = []byte(`{"admin":"baz"}`)
+				res := send(t, ts, "POST", "/identities", http.StatusCreated, &i)
+				assert.EqualValues(t, "baz", res.Get("metadata_admin.admin").String(), "%s", res.Raw)
+				assert.EqualValues(t, "baz", res.Get("metadata_public.public").String(), "%s", res.Raw)
+			})
+		}
+	})
+
 	t.Run("case=should be able to import users", func(t *testing.T) {
 		ignoreDefault := []string{"id", "schema_url", "state_changed_at", "created_at", "updated_at"}
 		t.Run("without any credentials", func(t *testing.T) {
@@ -158,7 +171,7 @@ func TestHandler(t *testing.T) {
 			actual, err := reg.PrivilegedIdentityPool().GetIdentityConfidential(ctx, uuid.FromStringOrNil(res.Get("id").String()))
 			require.NoError(t, err)
 
-			snapshotx.SnapshotTExceptMatchingKeys(t, identity.WithCredentialsInJSON(*actual), ignoreDefault)
+			snapshotx.SnapshotTExceptMatchingKeys(t, identity.WithCredentialsAndAdminMetadataInJSON(*actual), ignoreDefault)
 		})
 
 		t.Run("with cleartext password and oidc credentials", func(t *testing.T) {
@@ -183,7 +196,7 @@ func TestHandler(t *testing.T) {
 			actual, err := reg.PrivilegedIdentityPool().GetIdentityConfidential(ctx, uuid.FromStringOrNil(res.Get("id").String()))
 			require.NoError(t, err)
 
-			snapshotx.SnapshotTExceptMatchingKeys(t, identity.WithCredentialsInJSON(*actual), append(ignoreDefault, "hashed_password"))
+			snapshotx.SnapshotTExceptMatchingKeys(t, identity.WithCredentialsAndAdminMetadataInJSON(*actual), append(ignoreDefault, "hashed_password"))
 
 			require.NoError(t, hash.Compare(ctx, []byte("123456"), []byte(gjson.GetBytes(actual.Credentials[identity.CredentialsTypePassword].Config, "hashed_password").String())))
 		})
@@ -195,7 +208,7 @@ func TestHandler(t *testing.T) {
 			actual, err := reg.PrivilegedIdentityPool().GetIdentityConfidential(ctx, uuid.FromStringOrNil(res.Get("id").String()))
 			require.NoError(t, err)
 
-			snapshotx.SnapshotTExceptMatchingKeys(t, identity.WithCredentialsInJSON(*actual), append(ignoreDefault, "hashed_password"))
+			snapshotx.SnapshotTExceptMatchingKeys(t, identity.WithCredentialsAndAdminMetadataInJSON(*actual), append(ignoreDefault, "hashed_password"))
 
 			require.NoError(t, hash.Compare(ctx, []byte("123456"), []byte(gjson.GetBytes(actual.Credentials[identity.CredentialsTypePassword].Config, "hashed_password").String())))
 		})
@@ -207,7 +220,7 @@ func TestHandler(t *testing.T) {
 			actual, err := reg.PrivilegedIdentityPool().GetIdentityConfidential(ctx, uuid.FromStringOrNil(res.Get("id").String()))
 			require.NoError(t, err)
 
-			snapshotx.SnapshotTExceptMatchingKeys(t, identity.WithCredentialsInJSON(*actual), append(ignoreDefault, "hashed_password"))
+			snapshotx.SnapshotTExceptMatchingKeys(t, identity.WithCredentialsAndAdminMetadataInJSON(*actual), append(ignoreDefault, "hashed_password"))
 
 			require.NoError(t, hash.Compare(ctx, []byte("123456"), []byte(gjson.GetBytes(actual.Credentials[identity.CredentialsTypePassword].Config, "hashed_password").String())))
 		})
@@ -219,7 +232,7 @@ func TestHandler(t *testing.T) {
 			actual, err := reg.PrivilegedIdentityPool().GetIdentityConfidential(ctx, uuid.FromStringOrNil(res.Get("id").String()))
 			require.NoError(t, err)
 
-			snapshotx.SnapshotTExceptMatchingKeys(t, identity.WithCredentialsInJSON(*actual), append(ignoreDefault, "hashed_password"))
+			snapshotx.SnapshotTExceptMatchingKeys(t, identity.WithCredentialsAndAdminMetadataInJSON(*actual), append(ignoreDefault, "hashed_password"))
 
 			require.NoError(t, hash.Compare(ctx, []byte("123456"), []byte(gjson.GetBytes(actual.Credentials[identity.CredentialsTypePassword].Config, "hashed_password").String())))
 		})
@@ -231,7 +244,7 @@ func TestHandler(t *testing.T) {
 			actual, err := reg.PrivilegedIdentityPool().GetIdentityConfidential(ctx, uuid.FromStringOrNil(res.Get("id").String()))
 			require.NoError(t, err)
 
-			snapshotx.SnapshotTExceptMatchingKeys(t, identity.WithCredentialsInJSON(*actual), append(ignoreDefault, "hashed_password"))
+			snapshotx.SnapshotTExceptMatchingKeys(t, identity.WithCredentialsAndAdminMetadataInJSON(*actual), append(ignoreDefault, "hashed_password"))
 
 			require.NoError(t, hash.Compare(ctx, []byte("123456"), []byte(gjson.GetBytes(actual.Credentials[identity.CredentialsTypePassword].Config, "hashed_password").String())))
 		})
@@ -326,7 +339,6 @@ func TestHandler(t *testing.T) {
 		})
 
 		t.Run("case=should be able to get the identity", func(t *testing.T) {
-			t.Logf("create oidc identity")
 			for name, ts := range map[string]*httptest.Server{"public": publicTS, "admin": adminTS} {
 				t.Run("endpoint="+name, func(t *testing.T) {
 					res := get(t, ts, "/identities/"+i.ID.String(), http.StatusOK)
@@ -414,23 +426,32 @@ func TestHandler(t *testing.T) {
 		})
 
 		t.Run("case=should update an identity and persist the changes", func(t *testing.T) {
+			i := &identity.Identity{Traits: identity.Traits(fmt.Sprintf(`{"subject":"%s"}`, x.NewUUID().String()))}
+			require.NoError(t, reg.PrivilegedIdentityPool().CreateIdentity(context.Background(), i))
+
 			for name, ts := range map[string]*httptest.Server{"public": publicTS, "admin": adminTS} {
 				t.Run("endpoint="+name, func(t *testing.T) {
 					ur := identity.AdminUpdateIdentityBody{
-						Traits:   []byte(`{"bar":"baz","foo":"baz"}`),
-						SchemaID: i.SchemaID,
-						State:    identity.StateInactive,
+						Traits:         []byte(`{"bar":"baz","foo":"baz"}`),
+						SchemaID:       i.SchemaID,
+						State:          identity.StateInactive,
+						MetadataPublic: []byte(`{"public":"metadata"}`),
+						MetadataAdmin:  []byte(`{"admin":"metadata"}`),
 					}
 
 					res := send(t, ts, "PUT", "/identities/"+i.ID.String(), http.StatusOK, &ur)
 					assert.EqualValues(t, "baz", res.Get("traits.bar").String(), "%s", res.Raw)
 					assert.EqualValues(t, "baz", res.Get("traits.foo").String(), "%s", res.Raw)
+					assert.EqualValues(t, "metadata", res.Get("metadata_admin.admin").String(), "%s", res.Raw)
+					assert.EqualValues(t, "metadata", res.Get("metadata_public.public").String(), "%s", res.Raw)
 					assert.EqualValues(t, identity.StateInactive, res.Get("state").String(), "%s", res.Raw)
 					assert.NotEqualValues(t, i.StateChangedAt, sqlxx.NullTime(res.Get("state_changed_at").Time()), "%s", res.Raw)
 
 					res = get(t, ts, "/identities/"+i.ID.String(), http.StatusOK)
 					assert.EqualValues(t, i.ID.String(), res.Get("id").String(), "%s", res.Raw)
 					assert.EqualValues(t, "baz", res.Get("traits.bar").String(), "%s", res.Raw)
+					assert.EqualValues(t, "metadata", res.Get("metadata_admin.admin").String(), "%s", res.Raw)
+					assert.EqualValues(t, "metadata", res.Get("metadata_public.public").String(), "%s", res.Raw)
 					assert.EqualValues(t, identity.StateInactive, res.Get("state").String(), "%s", res.Raw)
 					assert.NotEqualValues(t, i.StateChangedAt, sqlxx.NullTime(res.Get("state_changed_at").Time()), "%s", res.Raw)
 				})

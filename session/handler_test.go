@@ -74,7 +74,21 @@ func TestSessionWhoAmI(t *testing.T) {
 
 	// set this intermediate because kratos needs some valid url for CRUDE operations
 	conf.MustSet(config.ViperKeyPublicBaseURL, "http://example.com")
-	h, _ := testhelpers.MockSessionCreateHandler(t, reg)
+	i := &identity.Identity{
+		ID:    x.NewUUID(),
+		State: identity.StateActive,
+		Credentials: map[identity.CredentialsType]identity.Credentials{
+			identity.CredentialsTypePassword: {Type: identity.CredentialsTypePassword,
+				Identifiers: []string{x.NewUUID().String()},
+				Config:      []byte(`{"hashed_password":"$argon2id$v=19$m=32,t=2,p=4$cm94YnRVOW5jZzFzcVE4bQ$MNzk5BtR2vUhrp6qQEjRNw"}`),
+			},
+		},
+		Traits:         identity.Traits(`{"baz":"bar","foo":true,"bar":2.5}`),
+		MetadataAdmin:  []byte(`{"admin":"ma"}`),
+		MetadataPublic: []byte(`{"public":"mp"}`),
+	}
+	h, _ := testhelpers.MockSessionCreateHandlerWithIdentity(t, reg, i)
+
 	r.GET("/set", h)
 	conf.MustSet(config.ViperKeyPublicBaseURL, ts.URL)
 
@@ -151,10 +165,16 @@ func TestSessionWhoAmI(t *testing.T) {
 
 				res, err = client.Do(req)
 				require.NoError(t, err)
+				body, err := ioutil.ReadAll(res.Body)
+				require.NoError(t, err)
 				assertNoCSRFCookieInResponse(t, ts, client, res) // Test that no CSRF cookie is ever set here.
 
 				assert.EqualValues(t, http.StatusOK, res.StatusCode)
 				assert.NotEmpty(t, res.Header.Get("X-Kratos-Authenticated-Identity-Id"))
+
+				assert.Empty(t, gjson.GetBytes(body, "identity.credentials"))
+				assert.Equal(t, "mp", gjson.GetBytes(body, "identity.metadata_public.public").String(), "%s", body)
+				assert.False(t, gjson.GetBytes(body, "identity.metadata_admin").Exists())
 			})
 		}
 	})

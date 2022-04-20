@@ -7,6 +7,8 @@ Name | Type | Description | Notes
 **CreatedAt** | Pointer to **time.Time** | CreatedAt is a helper struct field for gobuffalo.pop. | [optional] 
 **Credentials** | Pointer to [**map[string]IdentityCredentials**](IdentityCredentials.md) | Credentials represents all credentials that can be used for authenticating this identity. | [optional] 
 **Id** | **string** |  | 
+**MetadataAdmin** | Pointer to **interface{}** | NullJSONRawMessage represents a json.RawMessage that works well with JSON, SQL, and Swagger and is NULLable- | [optional] 
+**MetadataPublic** | Pointer to **interface{}** | NullJSONRawMessage represents a json.RawMessage that works well with JSON, SQL, and Swagger and is NULLable- | [optional] 
 **RecoveryAddresses** | Pointer to [**[]RecoveryAddress**](RecoveryAddress.md) | RecoveryAddresses contains all the addresses that can be used to recover an identity. | [optional] 
 **SchemaId** | **string** | SchemaID is the ID of the JSON Schema to be used for validating the identity&#39;s traits. | 
 **SchemaUrl** | **string** | SchemaURL is the URL of the endpoint where the identity&#39;s traits schema can be fetched from.  format: url | 
@@ -105,6 +107,76 @@ and a boolean to check if the value has been set.
 SetId sets Id field to given value.
 
 
+### GetMetadataAdmin
+
+`func (o *Identity) GetMetadataAdmin() interface{}`
+
+GetMetadataAdmin returns the MetadataAdmin field if non-nil, zero value otherwise.
+
+### GetMetadataAdminOk
+
+`func (o *Identity) GetMetadataAdminOk() (*interface{}, bool)`
+
+GetMetadataAdminOk returns a tuple with the MetadataAdmin field if it's non-nil, zero value otherwise
+and a boolean to check if the value has been set.
+
+### SetMetadataAdmin
+
+`func (o *Identity) SetMetadataAdmin(v interface{})`
+
+SetMetadataAdmin sets MetadataAdmin field to given value.
+
+### HasMetadataAdmin
+
+`func (o *Identity) HasMetadataAdmin() bool`
+
+HasMetadataAdmin returns a boolean if a field has been set.
+
+### SetMetadataAdminNil
+
+`func (o *Identity) SetMetadataAdminNil(b bool)`
+
+ SetMetadataAdminNil sets the value for MetadataAdmin to be an explicit nil
+
+### UnsetMetadataAdmin
+`func (o *Identity) UnsetMetadataAdmin()`
+
+UnsetMetadataAdmin ensures that no value is present for MetadataAdmin, not even an explicit nil
+### GetMetadataPublic
+
+`func (o *Identity) GetMetadataPublic() interface{}`
+
+GetMetadataPublic returns the MetadataPublic field if non-nil, zero value otherwise.
+
+### GetMetadataPublicOk
+
+`func (o *Identity) GetMetadataPublicOk() (*interface{}, bool)`
+
+GetMetadataPublicOk returns a tuple with the MetadataPublic field if it's non-nil, zero value otherwise
+and a boolean to check if the value has been set.
+
+### SetMetadataPublic
+
+`func (o *Identity) SetMetadataPublic(v interface{})`
+
+SetMetadataPublic sets MetadataPublic field to given value.
+
+### HasMetadataPublic
+
+`func (o *Identity) HasMetadataPublic() bool`
+
+HasMetadataPublic returns a boolean if a field has been set.
+
+### SetMetadataPublicNil
+
+`func (o *Identity) SetMetadataPublicNil(b bool)`
+
+ SetMetadataPublicNil sets the value for MetadataPublic to be an explicit nil
+
+### UnsetMetadataPublic
+`func (o *Identity) UnsetMetadataPublic()`
+
+UnsetMetadataPublic ensures that no value is present for MetadataPublic, not even an explicit nil
 ### GetRecoveryAddresses
 
 `func (o *Identity) GetRecoveryAddresses() []RecoveryAddress`

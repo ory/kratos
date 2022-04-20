@@ -151,7 +151,7 @@ func TestMigrations(t *testing.T) {
 						// Prevents ordering to get in the way.
 						actual.VerifiableAddresses = nil
 						actual.RecoveryAddresses = nil
-						CompareWithFixture(t, identity.WithCredentialsInJSON(*actual), "identity", id.ID.String())
+						CompareWithFixture(t, identity.WithCredentialsAndAdminMetadataInJSON(*actual), "identity", id.ID.String())
 					}
 
 					migratest.ContainsExpectedIds(t, filepath.Join("fixtures", "identity"), found)
