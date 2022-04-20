@@ -8,7 +8,7 @@ Name | Type | Description | Notes
 **Identifier** | **string** | Identifier is the email or username of the user trying to log in. This field is only required when using WebAuthn for passwordless login. When using WebAuthn for multi-factor authentication, it is not needed. | 
 **Method** | **string** | Method should be set to \&quot;lookup_secret\&quot; when logging in using the lookup_secret strategy. | 
 **Password** | **string** | The user&#39;s password. | 
-**PasswordIdentifier** | **string** | Identifier is the email or username of the user trying to log in. This field is deprecated! | 
+**PasswordIdentifier** | Pointer to **string** | Identifier is the email or username of the user trying to log in. This field is deprecated! | [optional] 
 **Provider** | **string** | The provider to register with | 
 **Traits** | Pointer to **map[string]interface{}** | The identity traits. This is a placeholder for the registration flow. | [optional] 
 **TotpCode** | **string** | The TOTP code. | 
@@ -19,7 +19,7 @@ Name | Type | Description | Notes
 
 ### NewSubmitSelfServiceLoginFlowBody
 
-`func NewSubmitSelfServiceLoginFlowBody(identifier string, method string, password string, passwordIdentifier string, provider string, totpCode string, lookupSecret string, ) *SubmitSelfServiceLoginFlowBody`
+`func NewSubmitSelfServiceLoginFlowBody(identifier string, method string, password string, provider string, totpCode string, lookupSecret string, ) *SubmitSelfServiceLoginFlowBody`
 
 NewSubmitSelfServiceLoginFlowBody instantiates a new SubmitSelfServiceLoginFlowBody object
 This constructor will assign default values to properties that have it defined,
@@ -138,6 +138,11 @@ and a boolean to check if the value has been set.
 
 SetPasswordIdentifier sets PasswordIdentifier field to given value.
 
+### HasPasswordIdentifier
+
+`func (o *SubmitSelfServiceLoginFlowBody) HasPasswordIdentifier() bool`
+
+HasPasswordIdentifier returns a boolean if a field has been set.
 
 ### GetProvider
 

@@ -1329,7 +1329,6 @@
         "required": [
           "method",
           "password",
-          "password_identifier",
           "identifier"
         ],
         "title": "submitSelfServiceLoginFlowWithPasswordMethodBody is used to decode the login form payload.",

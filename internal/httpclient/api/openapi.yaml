@@ -4348,7 +4348,6 @@ components:
       - identifier
       - method
       - password
-      - password_identifier
       title: submitSelfServiceLoginFlowWithPasswordMethodBody is used to decode the
         login form payload.
       type: object

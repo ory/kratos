@@ -3579,7 +3579,6 @@
       "required": [
         "method",
         "password",
-        "password_identifier",
         "identifier"
       ],
       "properties": {
