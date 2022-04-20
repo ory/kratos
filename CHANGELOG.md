@@ -4,12 +4,14 @@
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 **Table of Contents**
 
-- [ (2022-03-29)](#2022-03-29)
+- [ (2022-04-16)](#2022-04-16)
+  - [Breaking Changes](#breaking-changes)
     - [Bug Fixes](#bug-fixes)
+    - [Code Refactoring](#code-refactoring)
     - [Features](#features)
     - [Tests](#tests)
 - [0.9.0-alpha.3 (2022-03-25)](#090-alpha3-2022-03-25)
-  - [Breaking Changes](#breaking-changes)
+  - [Breaking Changes](#breaking-changes-1)
     - [Bug Fixes](#bug-fixes-1)
     - [Code Generation](#code-generation)
     - [Documentation](#documentation)
@@ -17,10 +19,10 @@
     - [Bug Fixes](#bug-fixes-2)
     - [Code Generation](#code-generation-1)
 - [0.9.0-alpha.1 (2022-03-21)](#090-alpha1-2022-03-21)
-  - [Breaking Changes](#breaking-changes-1)
+  - [Breaking Changes](#breaking-changes-2)
     - [Bug Fixes](#bug-fixes-3)
     - [Code Generation](#code-generation-2)
-    - [Code Refactoring](#code-refactoring)
+    - [Code Refactoring](#code-refactoring-1)
     - [Documentation](#documentation-1)
     - [Features](#features-1)
     - [Tests](#tests-1)
@@ -30,7 +32,7 @@
     - [Code Generation](#code-generation-3)
     - [Documentation](#documentation-2)
 - [0.8.1-alpha.1 (2021-12-13)](#081-alpha1-2021-12-13)
-  - [Breaking Changes](#breaking-changes-2)
+  - [Breaking Changes](#breaking-changes-3)
     - [Bug Fixes](#bug-fixes-5)
     - [Code Generation](#code-generation-4)
     - [Documentation](#documentation-3)
@@ -42,10 +44,10 @@
 - [0.8.0-alpha.2 (2021-10-28)](#080-alpha2-2021-10-28)
     - [Code Generation](#code-generation-6)
 - [0.8.0-alpha.1 (2021-10-27)](#080-alpha1-2021-10-27)
-  - [Breaking Changes](#breaking-changes-3)
+  - [Breaking Changes](#breaking-changes-4)
     - [Bug Fixes](#bug-fixes-7)
     - [Code Generation](#code-generation-7)
-    - [Code Refactoring](#code-refactoring-1)
+    - [Code Refactoring](#code-refactoring-2)
     - [Documentation](#documentation-4)
     - [Features](#features-3)
     - [Reverts](#reverts)
@@ -72,19 +74,19 @@
     - [Documentation](#documentation-7)
     - [Tests](#tests-5)
 - [0.7.0-alpha.1 (2021-07-13)](#070-alpha1-2021-07-13)
-  - [Breaking Changes](#breaking-changes-4)
+  - [Breaking Changes](#breaking-changes-5)
     - [Bug Fixes](#bug-fixes-11)
     - [Code Generation](#code-generation-13)
-    - [Code Refactoring](#code-refactoring-2)
+    - [Code Refactoring](#code-refactoring-3)
     - [Documentation](#documentation-8)
     - [Features](#features-6)
     - [Tests](#tests-6)
     - [Unclassified](#unclassified-2)
 - [0.6.3-alpha.1 (2021-05-17)](#063-alpha1-2021-05-17)
-  - [Breaking Changes](#breaking-changes-5)
+  - [Breaking Changes](#breaking-changes-6)
     - [Bug Fixes](#bug-fixes-12)
     - [Code Generation](#code-generation-14)
-    - [Code Refactoring](#code-refactoring-3)
+    - [Code Refactoring](#code-refactoring-4)
 - [0.6.2-alpha.1 (2021-05-14)](#062-alpha1-2021-05-14)
     - [Code Generation](#code-generation-15)
     - [Documentation](#documentation-9)
@@ -96,10 +98,10 @@
     - [Code Generation](#code-generation-17)
     - [Features](#features-8)
 - [0.6.0-alpha.1 (2021-05-05)](#060-alpha1-2021-05-05)
-  - [Breaking Changes](#breaking-changes-6)
+  - [Breaking Changes](#breaking-changes-7)
     - [Bug Fixes](#bug-fixes-14)
     - [Code Generation](#code-generation-18)
-    - [Code Refactoring](#code-refactoring-4)
+    - [Code Refactoring](#code-refactoring-5)
     - [Documentation](#documentation-10)
     - [Features](#features-9)
     - [Tests](#tests-7)
@@ -114,7 +116,7 @@
 - [0.5.4-alpha.1 (2020-11-11)](#054-alpha1-2020-11-11)
     - [Bug Fixes](#bug-fixes-16)
     - [Code Generation](#code-generation-20)
-    - [Code Refactoring](#code-refactoring-5)
+    - [Code Refactoring](#code-refactoring-6)
     - [Documentation](#documentation-12)
     - [Features](#features-11)
 - [0.5.3-alpha.1 (2020-10-27)](#053-alpha1-2020-10-27)
@@ -136,10 +138,10 @@
     - [Tests](#tests-11)
     - [Unclassified](#unclassified-5)
 - [0.5.0-alpha.1 (2020-10-15)](#050-alpha1-2020-10-15)
-  - [Breaking Changes](#breaking-changes-7)
+  - [Breaking Changes](#breaking-changes-8)
     - [Bug Fixes](#bug-fixes-20)
     - [Code Generation](#code-generation-24)
-    - [Code Refactoring](#code-refactoring-6)
+    - [Code Refactoring](#code-refactoring-7)
     - [Documentation](#documentation-16)
     - [Features](#features-14)
     - [Tests](#tests-12)
@@ -161,18 +163,18 @@
     - [Bug Fixes](#bug-fixes-25)
     - [Code Generation](#code-generation-29)
 - [0.4.0-alpha.1 (2020-07-08)](#040-alpha1-2020-07-08)
-  - [Breaking Changes](#breaking-changes-8)
+  - [Breaking Changes](#breaking-changes-9)
     - [Bug Fixes](#bug-fixes-26)
     - [Code Generation](#code-generation-30)
-    - [Code Refactoring](#code-refactoring-7)
+    - [Code Refactoring](#code-refactoring-8)
     - [Documentation](#documentation-18)
     - [Features](#features-15)
     - [Unclassified](#unclassified-7)
 - [0.3.0-alpha.1 (2020-05-15)](#030-alpha1-2020-05-15)
-  - [Breaking Changes](#breaking-changes-9)
+  - [Breaking Changes](#breaking-changes-10)
     - [Bug Fixes](#bug-fixes-27)
     - [Chores](#chores)
-    - [Code Refactoring](#code-refactoring-8)
+    - [Code Refactoring](#code-refactoring-9)
     - [Documentation](#documentation-19)
     - [Features](#features-16)
     - [Unclassified](#unclassified-8)
@@ -180,20 +182,20 @@
     - [Chores](#chores-1)
     - [Documentation](#documentation-20)
 - [0.2.0-alpha.2 (2020-05-04)](#020-alpha2-2020-05-04)
-  - [Breaking Changes](#breaking-changes-10)
+  - [Breaking Changes](#breaking-changes-11)
     - [Bug Fixes](#bug-fixes-28)
     - [Chores](#chores-2)
-    - [Code Refactoring](#code-refactoring-9)
+    - [Code Refactoring](#code-refactoring-10)
     - [Documentation](#documentation-21)
     - [Features](#features-17)
     - [Unclassified](#unclassified-9)
 - [0.1.1-alpha.1 (2020-02-18)](#011-alpha1-2020-02-18)
     - [Bug Fixes](#bug-fixes-29)
-    - [Code Refactoring](#code-refactoring-10)
+    - [Code Refactoring](#code-refactoring-11)
     - [Documentation](#documentation-22)
 - [0.1.0-alpha.6 (2020-02-16)](#010-alpha6-2020-02-16)
     - [Bug Fixes](#bug-fixes-30)
-    - [Code Refactoring](#code-refactoring-11)
+    - [Code Refactoring](#code-refactoring-12)
     - [Documentation](#documentation-23)
     - [Features](#features-18)
 - [0.1.0-alpha.5 (2020-02-06)](#010-alpha5-2020-02-06)
@@ -248,21 +250,60 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# [](https://github.com/ory/kratos/compare/v0.9.0-alpha.3...v) (2022-03-29)
+# [](https://github.com/ory/kratos/compare/v0.9.0-alpha.3...v) (2022-04-16)
+## Breaking Changes
+
+This patch moves several CLI command to comply with the Ory CLI command structure:
+
+```patch
+- ory identities get ...
++ ory get identity ...
+
+- ory identities delete ...
++ ory delete identity ...
+
+- ory identities import ...
++ ory import identity ...
+
+- ory identities list ...
++ ory list identities ...
+
+- ory identities validate ...
++ ory validate identity ...
+
+- ory jsonnet format ...
++ ory format jsonnet ...
+
+- ory jsonnet lint ...
++ ory lint jsonnet ...
+```
+
 
 
 ### Bug Fixes
 
+* Add legacy session value ([ecfd052](https://github.com/ory/kratos/commit/ecfd05216f5ebb70f1617595d2d398cf1fa3c660)), closes [#2398](https://github.com/ory/kratos/issues/2398)
+* Avoid excessive memory allocations in HIBP cache ([#2389](https://github.com/ory/kratos/issues/2389)) ([ee2d410](https://github.com/ory/kratos/commit/ee2d41057a7e6cb2c57c6304c2e7bbf5ad7c56da)), closes [#2354](https://github.com/ory/kratos/issues/2354)
 * Change SQLite database mode to 0600 ([#2344](https://github.com/ory/kratos/issues/2344)) ([0e5d3b7](https://github.com/ory/kratos/commit/0e5d3b7726a8923fbc2a4c10ec18f0ba97ffbcff)):
 
     The default mode is 0644, which is allows broader access than necessary.
 
 * **courier:** Add ability to specify backoff ([#2349](https://github.com/ory/kratos/issues/2349)) ([bf970f3](https://github.com/ory/kratos/commit/bf970f32f571164b8081f09f602a3473e079194e))
+* Do not expose debug in a response when a schema is not found ([#2348](https://github.com/ory/kratos/issues/2348)) ([aee2b1e](https://github.com/ory/kratos/commit/aee2b1ed1189b57fcbb1aaa456444d5121be94b1))
+* **Dockerfile:** Use existing builder base image ([#2390](https://github.com/ory/kratos/issues/2390)) ([37de25a](https://github.com/ory/kratos/commit/37de25a541a24e03407ecf344fb750775e48c782))
 * Load return_to and append to errors ([#2333](https://github.com/ory/kratos/issues/2333)) ([5efe4a3](https://github.com/ory/kratos/commit/5efe4a33e35e74d248d4eec43dc901b7b6334037)), closes [#2275](https://github.com/ory/kratos/issues/2275) [#2279](https://github.com/ory/kratos/issues/2279) [#2285](https://github.com/ory/kratos/issues/2285)
 * Refresh is always false when session exists ([d3436d7](https://github.com/ory/kratos/commit/d3436d7fa17589d91e25c9f0bd66bc3bb5b150fa)), closes [#2341](https://github.com/ory/kratos/issues/2341)
+* **sdk:** Improved OpenAPI specifications for UI nodes ([#2375](https://github.com/ory/kratos/issues/2375)) ([a42a0f7](https://github.com/ory/kratos/commit/a42a0f772af3625c457032d6dcc34289a62acc61)), closes [#2357](https://github.com/ory/kratos/issues/2357)
+* Serve.admin.request_log.disable_for_health behaviour ([#2399](https://github.com/ory/kratos/issues/2399)) ([0a381fa](https://github.com/ory/kratos/commit/0a381fa3d702f77e614d0492dafa3ac2cd102c7e))
+* Use `path` instead of `filepath` to join http route paths ([16b1244](https://github.com/ory/kratos/commit/16b12449c841bf7a237fe436b884b4b5012cd022)), closes [#2292](https://github.com/ory/kratos/issues/2292)
+
+### Code Refactoring
+
+* Move CLI commands to match Ory CLI structure ([73910a3](https://github.com/ory/kratos/commit/73910a329b1ee46de2607c7ab1958ef2fb6de5f4))
 
 ### Features
 
+* Add certificate based authentication for smtp client ([#2351](https://github.com/ory/kratos/issues/2351)) ([7200037](https://github.com/ory/kratos/commit/72000375c028f5f7f9cb0d0b1b02f8aa09503e4f))
 * Add session renew capabilities ([#2146](https://github.com/ory/kratos/issues/2146)) ([4348b86](https://github.com/ory/kratos/commit/4348b8640a282cd61fe30961faba5753e2af8bb0)), closes [#615](https://github.com/ory/kratos/issues/615)
 * Read subject id from https://graph.microsoft.com/v1.0/me for microsoft ([#2347](https://github.com/ory/kratos/issues/2347)) ([852f24f](https://github.com/ory/kratos/commit/852f24fb5cd8576f3f6d35017ce85e4fa1c51c95)):
 
@@ -272,6 +313,8 @@
     
     
 
+* Support argon2i password ([#2395](https://github.com/ory/kratos/issues/2395)) ([8fdadf9](https://github.com/ory/kratos/commit/8fdadf9d1724d28ae11996304703e06671549660))
+* Upgrade to Go 1.18 ([725d202](https://github.com/ory/kratos/commit/725d202e6ae15b3b5c3282e03c03a40480a2e310))
 
 ### Tests
 

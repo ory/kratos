@@ -71,6 +71,7 @@ func TestProviderPrivateIP(t *testing.T) {
 		// Spotify uses a fixed token URL and does not use the issuer.
 		// VK uses a fixed token URL and does not use the issuer.
 		// Yandex uses a fixed token URL and does not use the issuer.
+		// NetID uses a fixed token URL and does not use the issuer.
 	} {
 		t.Run(fmt.Sprintf("case=%d", k), func(t *testing.T) {
 			p := tc.p(tc.c)

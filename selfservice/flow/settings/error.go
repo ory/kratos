@@ -115,7 +115,7 @@ func (s *ErrorHandler) PrepareReplacementForExpiredFlow(w http.ResponseWriter, r
 func (s *ErrorHandler) WriteFlowError(
 	w http.ResponseWriter,
 	r *http.Request,
-	group node.Group,
+	group node.UiNodeGroup,
 	f *Flow,
 	id *identity.Identity,
 	err error,

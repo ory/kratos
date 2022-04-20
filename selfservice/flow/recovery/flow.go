@@ -38,6 +38,8 @@ type Flow struct {
 	ID uuid.UUID `json:"id" db:"id" faker:"-"`
 
 	// Type represents the flow's type which can be either "api" or "browser", depending on the flow interaction.
+	//
+	// required: true
 	Type flow.Type `json:"type" db:"type" faker:"flow_type"`
 
 	// ExpiresAt is the time (UTC) when the request expires. If the user still wishes to update the setting,

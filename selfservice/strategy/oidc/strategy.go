@@ -461,7 +461,7 @@ func (s *Strategy) handleError(w http.ResponseWriter, r *http.Request, f flow.Fl
 	return err
 }
 
-func (s *Strategy) NodeGroup() node.Group {
+func (s *Strategy) NodeGroup() node.UiNodeGroup {
 	return node.OpenIDConnectGroup
 }
 

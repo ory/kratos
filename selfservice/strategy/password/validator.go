@@ -10,10 +10,10 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
-	"sync"
 	"time"
 
 	"github.com/arbovm/levenshtein"
+	"github.com/dgraph-io/ristretto"
 	"github.com/hashicorp/go-retryablehttp"
 	"github.com/pkg/errors"
 
@@ -21,6 +21,8 @@ import (
 	"github.com/ory/kratos/driver/config"
 	"github.com/ory/x/httpx"
 )
+
+const hashCacheItemTTL = time.Hour
 
 // Validator implements a validation strategy for passwords. One example is that the password
 // has to have at least 6 characters and at least one lower and one uppercase password.
@@ -49,10 +51,9 @@ var ErrUnexpectedStatusCode = errors.New("unexpected status code")
 // [haveibeenpwnd](https://haveibeenpwned.com/API/v2#SearchingPwnedPasswordsByRange) service to check if the
 // password has been breached in a previous data leak using k-anonymity.
 type DefaultPasswordValidator struct {
-	sync.RWMutex
 	reg    validatorDependencies
 	Client *retryablehttp.Client
-	hashes map[string]int64
+	hashes *ristretto.Cache
 
 	minIdentifierPasswordDist            int
 	maxIdentifierPasswordSubstrThreshold float32
@@ -62,12 +63,22 @@ type validatorDependencies interface {
 	config.Provider
 }
 
-func NewDefaultPasswordValidatorStrategy(reg validatorDependencies) *DefaultPasswordValidator {
+func NewDefaultPasswordValidatorStrategy(reg validatorDependencies) (*DefaultPasswordValidator, error) {
+	cache, err := ristretto.NewCache(&ristretto.Config{
+		NumCounters:        10 * 10000,
+		MaxCost:            60 * 10000, // BCrypt hash size is 60 bytes
+		BufferItems:        64,
+		IgnoreInternalCost: true,
+	})
+	// sanity check - this should never happen unless above configuration variables are invalid
+	if err != nil {
+		return nil, errors.Wrap(err, "error while setting up validator cache")
+	}
 	return &DefaultPasswordValidator{
 		Client:                    httpx.NewResilientClient(httpx.ResilientClientWithConnectionTimeout(time.Second)),
 		reg:                       reg,
-		hashes:                    map[string]int64{},
-		minIdentifierPasswordDist: 5, maxIdentifierPasswordSubstrThreshold: 0.5}
+		hashes:                    cache,
+		minIdentifierPasswordDist: 5, maxIdentifierPasswordSubstrThreshold: 0.5}, nil
 }
 
 func b20(src []byte) string {
@@ -109,9 +120,7 @@ func (s *DefaultPasswordValidator) fetch(hpw []byte, apiDNSName string) error {
 		return errors.Wrapf(ErrUnexpectedStatusCode, "%d", res.StatusCode)
 	}
 
-	s.Lock()
-	s.hashes[b20(hpw)] = 0
-	s.Unlock()
+	s.hashes.SetWithTTL(b20(hpw), 0, 1, hashCacheItemTTL)
 
 	sc := bufio.NewScanner(res.Body)
 	for sc.Scan() {
@@ -130,9 +139,7 @@ func (s *DefaultPasswordValidator) fetch(hpw []byte, apiDNSName string) error {
 			}
 		}
 
-		s.Lock()
-		s.hashes[(prefix + result[0])] = count
-		s.Unlock()
+		s.hashes.SetWithTTL(prefix+result[0], count, 1, hashCacheItemTTL)
 	}
 
 	if err := sc.Err(); err != nil {
@@ -169,10 +176,7 @@ func (s *DefaultPasswordValidator) Validate(ctx context.Context, identifier, pas
 	}
 	hpw := h.Sum(nil)
 
-	s.RLock()
-	c, ok := s.hashes[b20(hpw)]
-	s.RUnlock()
-
+	c, ok := s.hashes.Get(b20(hpw))
 	if !ok {
 		err := s.fetch(hpw, passwordPolicyConfig.HaveIBeenPwnedHost)
 		if (errors.Is(err, ErrNetworkFailure) || errors.Is(err, ErrUnexpectedStatusCode)) && passwordPolicyConfig.IgnoreNetworkErrors {
@@ -184,7 +188,8 @@ func (s *DefaultPasswordValidator) Validate(ctx context.Context, identifier, pas
 		return s.Validate(ctx, identifier, password)
 	}
 
-	if c > int64(s.reg.Config(ctx).PasswordPolicyConfig().MaxBreaches) {
+	v, ok := c.(int64)
+	if ok && v > int64(s.reg.Config(ctx).PasswordPolicyConfig().MaxBreaches) {
 		return errors.New("the password has been found in data breaches and must no longer be used")
 	}
 

@@ -33,7 +33,7 @@ Ory Cloud has easy examples, administrative user interfaces, hosted pages (e.g. 
 
 ### :mega: Community gets Ory Cloud for Free! :mega:
 
-Ory community members get the Ory Cloud Start Up plan **free for six months**, with all quality-of-life features available, such as custom domains and giving your team members access. [Sign up with your GitHub account](https://console.ory.sh/registration?preferred_plan=start-up&utm_source=github&utm_medium=banner&utm_campaign=kratos-readme-first900) and use the coupon code **`FIRST900`** on the *"Start-Up Plan"* checkout page to calim your free project now! Make sure to be signed up to the [Ory Community Slack](https://slack.ory.sh) when using the code!
+Ory community members get the Ory Cloud Start Up plan **free for six months**, with all quality-of-life features available, such as custom domains and giving your team members access. [Sign up with your GitHub account](https://console.ory.sh/registration?preferred_plan=start-up&utm_source=github&utm_medium=banner&utm_campaign=kratos-readme-first900) and use the coupon code **`FIRST900`** on the *"Start-Up Plan"* checkout page to claim your free project now! Make sure to be signed up to the [Ory Community Slack](https://slack.ory.sh) when using the code!
 
 
 <!-- START doctoc generated TOC please keep comment here to allow auto update -->
@@ -578,3 +578,12 @@ To prepare documentation tests, run `npm i` to install
 
 - test all documentation: <code type="make/command">make test-docs</code>
 - test an individual file: <code type="npm/installed-executable">text-run</code>
+
+#### Preview API documentation
+
+- update the SDK including the OpenAPI specification:
+  <code type="make/command">make sdk</code>
+- run preview server for API documentation: <code type="make/command">make
+  docs/api</code>
+- run preview server for swagger documentation: <code type="make/command">make
+  docs/swagger</code>

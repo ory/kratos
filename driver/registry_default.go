@@ -414,7 +414,11 @@ func (m *RegistryDefault) Hasher() hash.Hasher {
 
 func (m *RegistryDefault) PasswordValidator() password2.Validator {
 	if m.passwordValidator == nil {
-		m.passwordValidator = password2.NewDefaultPasswordValidatorStrategy(m)
+		var err error
+		m.passwordValidator, err = password2.NewDefaultPasswordValidatorStrategy(m)
+		if err != nil {
+			m.Logger().WithError(err).Fatal("could not initialize DefaultPasswordValidator")
+		}
 	}
 	return m.passwordValidator
 }

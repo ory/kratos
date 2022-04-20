@@ -3183,6 +3183,7 @@
       "title": "A Recovery Flow",
       "required": [
         "id",
+        "type",
         "expires_at",
         "issued_at",
         "request_url",
@@ -3252,6 +3253,7 @@
       "type": "object",
       "required": [
         "id",
+        "type",
         "expires_at",
         "issued_at",
         "request_url",
@@ -3296,6 +3298,7 @@
       "title": "Flow represents a Settings Flow",
       "required": [
         "id",
+        "type",
         "expires_at",
         "issued_at",
         "request_url",
@@ -4031,7 +4034,18 @@
           "$ref": "#/definitions/uiNodeAttributes"
         },
         "group": {
-          "$ref": "#/definitions/uiNodeGroup"
+          "description": "Group specifies which group (e.g. password authenticator) this node belongs to.",
+          "type": "string",
+          "enum": [
+            "default",
+            "password",
+            "oidc",
+            "profile",
+            "link",
+            "totp",
+            "lookup_secret",
+            "webauthn"
+          ]
         },
         "messages": {
           "$ref": "#/definitions/uiTexts"
@@ -4040,7 +4054,15 @@
           "$ref": "#/definitions/uiNodeMeta"
         },
         "type": {
-          "$ref": "#/definitions/uiNodeType"
+          "description": "The node's type",
+          "type": "string",
+          "enum": [
+            "text",
+            "input",
+            "img",
+            "a",
+            "script"
+          ]
         }
       }
     },
@@ -4063,7 +4085,15 @@
           "type": "string"
         },
         "node_type": {
-          "$ref": "#/definitions/uiNodeType"
+          "description": "NodeType represents this node's types. It is a mirror of `node.type` and\nis primarily used to allow compatibility with OpenAPI 3.0.",
+          "type": "string",
+          "enum": [
+            "text",
+            "input",
+            "img",
+            "a",
+            "script"
+          ]
         },
         "title": {
           "$ref": "#/definitions/uiText"
@@ -4073,9 +4103,6 @@
     "uiNodeAttributes": {
       "type": "object",
       "title": "Attributes represents a list of attributes (e.g. `href=\"foo\"` for links)."
-    },
-    "uiNodeGroup": {
-      "type": "string"
     },
     "uiNodeImageAttributes": {
       "type": "object",
@@ -4098,7 +4125,15 @@
           "type": "string"
         },
         "node_type": {
-          "$ref": "#/definitions/uiNodeType"
+          "description": "NodeType represents this node's types. It is a mirror of `node.type` and\nis primarily used to allow compatibility with OpenAPI 3.0.",
+          "type": "string",
+          "enum": [
+            "text",
+            "input",
+            "img",
+            "a",
+            "script"
+          ]
         },
         "src": {
           "description": "The image's source URL.\n\nformat: uri",
@@ -4136,7 +4171,15 @@
           "type": "string"
         },
         "node_type": {
-          "$ref": "#/definitions/uiNodeType"
+          "description": "NodeType represents this node's types. It is a mirror of `node.type` and\nis primarily used to allow compatibility with OpenAPI 3.0.",
+          "type": "string",
+          "enum": [
+            "text",
+            "input",
+            "img",
+            "a",
+            "script"
+          ]
         },
         "onclick": {
           "description": "OnClick may contain javascript which should be executed on click. This is primarily\nused for WebAuthn.",
@@ -4201,7 +4244,15 @@
           "type": "string"
         },
         "node_type": {
-          "$ref": "#/definitions/uiNodeType"
+          "description": "NodeType represents this node's types. It is a mirror of `node.type` and\nis primarily used to allow compatibility with OpenAPI 3.0.",
+          "type": "string",
+          "enum": [
+            "text",
+            "input",
+            "img",
+            "a",
+            "script"
+          ]
         },
         "nonce": {
           "description": "Nonce for CSP\n\nA nonce you may want to use to improve your Content Security Policy.\nYou do not have to use this value but if you want to improve your CSP\npolicies you may use it. You can also choose to use your own nonce value!",
@@ -4235,15 +4286,20 @@
           "type": "string"
         },
         "node_type": {
-          "$ref": "#/definitions/uiNodeType"
+          "description": "NodeType represents this node's types. It is a mirror of `node.type` and\nis primarily used to allow compatibility with OpenAPI 3.0.",
+          "type": "string",
+          "enum": [
+            "text",
+            "input",
+            "img",
+            "a",
+            "script"
+          ]
         },
         "text": {
           "$ref": "#/definitions/uiText"
         }
       }
-    },
-    "uiNodeType": {
-      "type": "string"
     },
     "uiNodes": {
       "type": "array",
