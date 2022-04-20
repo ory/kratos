@@ -1,13 +1,17 @@
 {
-  "id": "ed253b2c-48ed-4c58-9b6f-1dc963c30a66",
+  "id": "308929d3-41a2-43fe-a33c-75308539d841",
   "schema_id": "default",
   "schema_url": "https://www.ory.sh/schemas/ZGVmYXVsdA",
   "state": "active",
   "traits": {
     "email": "bazbar@ory.sh"
   },
-  "metadata_public": null,
-  "metadata_admin": null,
+  "metadata_public": {
+    "foo": "bar"
+  },
+  "metadata_admin": {
+    "baz": "bar"
+  },
   "created_at": "2013-10-07T08:23:19Z",
   "updated_at": "2013-10-07T08:23:19Z"
 }

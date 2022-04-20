@@ -2649,9 +2649,18 @@ components:
   schemas:
     AdminUpdateIdentityBody:
       example:
+        metadata_admin: ""
         traits: '{}'
         schema_id: schema_id
+        metadata_public: ""
       properties:
+        metadata_admin:
+          description: Store metadata about the user which is only accessible through
+            admin APIs such as `GET /admin/identities/<id>`.
+        metadata_public:
+          description: |-
+            Store metadata about the identity which the identity itself can see when calling for example the
+            session endpoint. Do not store sensitive information (e.g. credit score) about the identity in this field.
         schema_id:
           description: |-
             SchemaID is the ID of the JSON Schema to be used for validating the identity's traits. If set
@@ -2721,6 +2730,13 @@ components:
       properties:
         credentials:
           $ref: '#/components/schemas/adminIdentityImportCredentials'
+        metadata_admin:
+          description: Store metadata about the user which is only accessible through
+            admin APIs such as `GET /admin/identities/<id>`.
+        metadata_public:
+          description: |-
+            Store metadata about the identity which the identity itself can see when calling for example the
+            session endpoint. Do not store sensitive information (e.g. credit score) about the identity in this field.
         recovery_addresses:
           description: |-
             RecoveryAddresses contains all the addresses that can be used to recover an identity.
@@ -2965,6 +2981,18 @@ components:
         An identity can be a real human, a service, an IoT device - everything that
         can be described as an "actor" in a system.
       example:
+        traits: ""
+        credentials:
+          key:
+            updated_at: 2000-01-23T04:56:07.000+00:00
+            identifiers:
+            - identifiers
+            - identifiers
+            created_at: 2000-01-23T04:56:07.000+00:00
+            config: '{}'
+            version: 0
+        state_changed_at: 2000-01-23T04:56:07.000+00:00
+        created_at: 2000-01-23T04:56:07.000+00:00
         recovery_addresses:
         - updated_at: 2000-01-23T04:56:07.000+00:00
           created_at: 2000-01-23T04:56:07.000+00:00
@@ -2976,17 +3004,8 @@ components:
           id: id
           value: value
           via: via
-        traits: ""
+        metadata_admin: ""
         updated_at: 2000-01-23T04:56:07.000+00:00
-        credentials:
-          key:
-            updated_at: 2000-01-23T04:56:07.000+00:00
-            identifiers:
-            - identifiers
-            - identifiers
-            created_at: 2000-01-23T04:56:07.000+00:00
-            config: '{}'
-            version: 0
         verifiable_addresses:
         - updated_at: 2014-01-01T23:28:56.782Z
           verified_at: 2000-01-23T04:56:07.000+00:00
@@ -3005,10 +3024,9 @@ components:
           status: status
           via: via
         schema_id: schema_id
-        state_changed_at: 2000-01-23T04:56:07.000+00:00
-        created_at: 2000-01-23T04:56:07.000+00:00
         schema_url: schema_url
         id: id
+        metadata_public: ""
       properties:
         created_at:
           description: CreatedAt is a helper struct field for gobuffalo.pop.
@@ -3023,6 +3041,12 @@ components:
         id:
           format: uuid4
           type: string
+        metadata_admin:
+          description: NullJSONRawMessage represents a json.RawMessage that works
+            well with JSON, SQL, and Swagger and is NULLable-
+        metadata_public:
+          description: NullJSONRawMessage represents a json.RawMessage that works
+            well with JSON, SQL, and Swagger and is NULLable-
         recovery_addresses:
           description: RecoveryAddresses contains all the addresses that can be used
             to recover an identity.
@@ -3260,6 +3284,9 @@ components:
       title: Is sent when a privileged session is required to perform the settings
         update.
       type: object
+    nullJsonRawMessage:
+      description: NullJSONRawMessage represents a json.RawMessage that works well
+        with JSON, SQL, and Swagger and is NULLable-
     nullTime:
       format: date-time
       title: NullTime implements sql.NullTime functionality.
@@ -3857,6 +3884,18 @@ components:
             text: text
             type: type
         identity:
+          traits: ""
+          credentials:
+            key:
+              updated_at: 2000-01-23T04:56:07.000+00:00
+              identifiers:
+              - identifiers
+              - identifiers
+              created_at: 2000-01-23T04:56:07.000+00:00
+              config: '{}'
+              version: 0
+          state_changed_at: 2000-01-23T04:56:07.000+00:00
+          created_at: 2000-01-23T04:56:07.000+00:00
           recovery_addresses:
           - updated_at: 2000-01-23T04:56:07.000+00:00
             created_at: 2000-01-23T04:56:07.000+00:00
@@ -3868,17 +3907,8 @@ components:
             id: id
             value: value
             via: via
-          traits: ""
+          metadata_admin: ""
           updated_at: 2000-01-23T04:56:07.000+00:00
-          credentials:
-            key:
-              updated_at: 2000-01-23T04:56:07.000+00:00
-              identifiers:
-              - identifiers
-              - identifiers
-              created_at: 2000-01-23T04:56:07.000+00:00
-              config: '{}'
-              version: 0
           verifiable_addresses:
           - updated_at: 2014-01-01T23:28:56.782Z
             verified_at: 2000-01-23T04:56:07.000+00:00
@@ -3897,10 +3927,9 @@ components:
             status: status
             via: via
           schema_id: schema_id
-          state_changed_at: 2000-01-23T04:56:07.000+00:00
-          created_at: 2000-01-23T04:56:07.000+00:00
           schema_url: schema_url
           id: id
+          metadata_public: ""
         active: active
         return_to: return_to
         id: id
@@ -4092,6 +4121,18 @@ components:
         - completed_at: 2000-01-23T04:56:07.000+00:00
           method: link_recovery
         identity:
+          traits: ""
+          credentials:
+            key:
+              updated_at: 2000-01-23T04:56:07.000+00:00
+              identifiers:
+              - identifiers
+              - identifiers
+              created_at: 2000-01-23T04:56:07.000+00:00
+              config: '{}'
+              version: 0
+          state_changed_at: 2000-01-23T04:56:07.000+00:00
+          created_at: 2000-01-23T04:56:07.000+00:00
           recovery_addresses:
           - updated_at: 2000-01-23T04:56:07.000+00:00
             created_at: 2000-01-23T04:56:07.000+00:00
@@ -4103,17 +4144,8 @@ components:
             id: id
             value: value
             via: via
-          traits: ""
+          metadata_admin: ""
           updated_at: 2000-01-23T04:56:07.000+00:00
-          credentials:
-            key:
-              updated_at: 2000-01-23T04:56:07.000+00:00
-              identifiers:
-              - identifiers
-              - identifiers
-              created_at: 2000-01-23T04:56:07.000+00:00
-              config: '{}'
-              version: 0
           verifiable_addresses:
           - updated_at: 2014-01-01T23:28:56.782Z
             verified_at: 2000-01-23T04:56:07.000+00:00
@@ -4132,10 +4164,9 @@ components:
             status: status
             via: via
           schema_id: schema_id
-          state_changed_at: 2000-01-23T04:56:07.000+00:00
-          created_at: 2000-01-23T04:56:07.000+00:00
           schema_url: schema_url
           id: id
+          metadata_public: ""
         authenticated_at: 2000-01-23T04:56:07.000+00:00
         active: true
         id: id
@@ -4755,6 +4786,18 @@ components:
           - completed_at: 2000-01-23T04:56:07.000+00:00
             method: link_recovery
           identity:
+            traits: ""
+            credentials:
+              key:
+                updated_at: 2000-01-23T04:56:07.000+00:00
+                identifiers:
+                - identifiers
+                - identifiers
+                created_at: 2000-01-23T04:56:07.000+00:00
+                config: '{}'
+                version: 0
+            state_changed_at: 2000-01-23T04:56:07.000+00:00
+            created_at: 2000-01-23T04:56:07.000+00:00
             recovery_addresses:
             - updated_at: 2000-01-23T04:56:07.000+00:00
               created_at: 2000-01-23T04:56:07.000+00:00
@@ -4766,17 +4809,8 @@ components:
               id: id
               value: value
               via: via
-            traits: ""
+            metadata_admin: ""
             updated_at: 2000-01-23T04:56:07.000+00:00
-            credentials:
-              key:
-                updated_at: 2000-01-23T04:56:07.000+00:00
-                identifiers:
-                - identifiers
-                - identifiers
-                created_at: 2000-01-23T04:56:07.000+00:00
-                config: '{}'
-                version: 0
             verifiable_addresses:
             - updated_at: 2014-01-01T23:28:56.782Z
               verified_at: 2000-01-23T04:56:07.000+00:00
@@ -4795,10 +4829,9 @@ components:
               status: status
               via: via
             schema_id: schema_id
-            state_changed_at: 2000-01-23T04:56:07.000+00:00
-            created_at: 2000-01-23T04:56:07.000+00:00
             schema_url: schema_url
             id: id
+            metadata_public: ""
           authenticated_at: 2000-01-23T04:56:07.000+00:00
           active: true
           id: id
@@ -4825,6 +4858,18 @@ components:
       example:
         session_token: session_token
         identity:
+          traits: ""
+          credentials:
+            key:
+              updated_at: 2000-01-23T04:56:07.000+00:00
+              identifiers:
+              - identifiers
+              - identifiers
+              created_at: 2000-01-23T04:56:07.000+00:00
+              config: '{}'
+              version: 0
+          state_changed_at: 2000-01-23T04:56:07.000+00:00
+          created_at: 2000-01-23T04:56:07.000+00:00
           recovery_addresses:
           - updated_at: 2000-01-23T04:56:07.000+00:00
             created_at: 2000-01-23T04:56:07.000+00:00
@@ -4836,17 +4881,8 @@ components:
             id: id
             value: value
             via: via
-          traits: ""
+          metadata_admin: ""
           updated_at: 2000-01-23T04:56:07.000+00:00
-          credentials:
-            key:
-              updated_at: 2000-01-23T04:56:07.000+00:00
-              identifiers:
-              - identifiers
-              - identifiers
-              created_at: 2000-01-23T04:56:07.000+00:00
-              config: '{}'
-              version: 0
           verifiable_addresses:
           - updated_at: 2014-01-01T23:28:56.782Z
             verified_at: 2000-01-23T04:56:07.000+00:00
@@ -4865,10 +4901,9 @@ components:
             status: status
             via: via
           schema_id: schema_id
-          state_changed_at: 2000-01-23T04:56:07.000+00:00
-          created_at: 2000-01-23T04:56:07.000+00:00
           schema_url: schema_url
           id: id
+          metadata_public: ""
         session:
           expires_at: 2000-01-23T04:56:07.000+00:00
           authentication_methods:
@@ -4877,6 +4912,18 @@ components:
           - completed_at: 2000-01-23T04:56:07.000+00:00
             method: link_recovery
           identity:
+            traits: ""
+            credentials:
+              key:
+                updated_at: 2000-01-23T04:56:07.000+00:00
+                identifiers:
+                - identifiers
+                - identifiers
+                created_at: 2000-01-23T04:56:07.000+00:00
+                config: '{}'
+                version: 0
+            state_changed_at: 2000-01-23T04:56:07.000+00:00
+            created_at: 2000-01-23T04:56:07.000+00:00
             recovery_addresses:
             - updated_at: 2000-01-23T04:56:07.000+00:00
               created_at: 2000-01-23T04:56:07.000+00:00
@@ -4888,17 +4935,8 @@ components:
               id: id
               value: value
               via: via
-            traits: ""
+            metadata_admin: ""
             updated_at: 2000-01-23T04:56:07.000+00:00
-            credentials:
-              key:
-                updated_at: 2000-01-23T04:56:07.000+00:00
-                identifiers:
-                - identifiers
-                - identifiers
-                created_at: 2000-01-23T04:56:07.000+00:00
-                config: '{}'
-                version: 0
             verifiable_addresses:
             - updated_at: 2014-01-01T23:28:56.782Z
               verified_at: 2000-01-23T04:56:07.000+00:00
@@ -4917,10 +4955,9 @@ components:
               status: status
               via: via
             schema_id: schema_id
-            state_changed_at: 2000-01-23T04:56:07.000+00:00
-            created_at: 2000-01-23T04:56:07.000+00:00
             schema_url: schema_url
             id: id
+            metadata_public: ""
           authenticated_at: 2000-01-23T04:56:07.000+00:00
           active: true
           id: id
