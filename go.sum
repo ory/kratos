@@ -1406,7 +1406,6 @@ github.com/opentracing-contrib/go-observer v0.0.0-20170622124052-a52f23424492/go
 github.com/opentracing/basictracer-go v1.0.0/go.mod h1:QfBfYuafItcjQuMwinw9GhYKwFXS9KnPs5lxoYwgW74=
 github.com/opentracing/opentracing-go v1.0.2/go.mod h1:UkNAQd3GIcIGf0SeVgPpRdFStlNbqXla1AfSYxPUl2o=
 github.com/opentracing/opentracing-go v1.1.0/go.mod h1:UkNAQd3GIcIGf0SeVgPpRdFStlNbqXla1AfSYxPUl2o=
-github.com/opentracing/opentracing-go v1.2.0 h1:uEJPy/1a5RIPAJ0Ov+OIO8OxWu77jEv+1B0VhjKrZUs=
 github.com/opentracing/opentracing-go v1.2.0/go.mod h1:GxEUsuufX4nBwe+T+Wl9TAgYrxe9dPLANfrWvHYVTgc=
 github.com/openzipkin-contrib/zipkin-go-opentracing v0.4.5/go.mod h1:/wsWhb9smxSfWAKL3wpBW7V8scJMt8N8gnaMCS9E/cA=
 github.com/openzipkin/zipkin-go v0.1.6/go.mod h1:QgAqvLzwWbR/WpD4A3cGpPtJrZXNIiJc5AZX7/PBEpw=
@@ -1428,8 +1427,6 @@ github.com/ory/herodot v0.9.13 h1:cN/Z4eOkErl/9W7hDIDLb79IO/bfsH+8yscBjRpB4IU=
 github.com/ory/herodot v0.9.13/go.mod h1:IWDs9kSvFQqw/cQ8zi5ksyYvITiUU4dI7glUrhZcJYo=
 github.com/ory/instrumentedsql v1.2.0 h1:7VqI6sVRAEVmIp+mVbeICMTi27EJQuq5k9crlt3rs10=
 github.com/ory/instrumentedsql v1.2.0/go.mod h1:wT//5kSu12gfOhU8yDf6IC69yQ+Tc8MufpwzYliRRx8=
-github.com/ory/instrumentedsql/opentracing v0.0.0-20210903114257-c8963b546c5c h1:eek/2FXUZEnRXaRQtqw8MQMxcPX7Qr3tACKI5pe71n0=
-github.com/ory/instrumentedsql/opentracing v0.0.0-20210903114257-c8963b546c5c/go.mod h1:61Z4zNpOoshtEmLmp6T13G9adSk66/dYTfTBEnCLwVQ=
 github.com/ory/jsonschema/v3 v3.0.7 h1:GQ9qfZDiJqs4l2d3p56dozCChvejQFZyLKGHYzDzOSo=
 github.com/ory/jsonschema/v3 v3.0.7/go.mod h1:g8c8YOtN4TrR2wYeMdT02GDmzJDI0fEW2nI26BECafY=
 github.com/ory/mail v2.3.1+incompatible/go.mod h1:87D9/1gB6ewElQoN0lXJ0ayfqcj3cW3qCTXh+5E9mfU=

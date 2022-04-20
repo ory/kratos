@@ -12,6 +12,7 @@ import (
 
 	"github.com/ory/x/httpx"
 	"github.com/ory/x/otelx"
+	otelsql "github.com/ory/x/otelx/sql"
 
 	"github.com/gobuffalo/pop/v6"
 
@@ -24,7 +25,6 @@ import (
 	"github.com/ory/kratos/selfservice/strategy/totp"
 
 	"github.com/luna-duclos/instrumentedsql"
-	"github.com/luna-duclos/instrumentedsql/opentracing"
 
 	"github.com/ory/kratos/corp"
 
@@ -523,7 +523,7 @@ func (m *RegistryDefault) Init(ctx context.Context, opts ...RegistryOption) erro
 			var opts []instrumentedsql.Opt
 			if m.Tracer(ctx).IsLoaded() {
 				opts = []instrumentedsql.Opt{
-					instrumentedsql.WithTracer(opentracing.NewTracer(true)),
+					instrumentedsql.WithTracer(otelsql.NewTracer()),
 				}
 			}
 

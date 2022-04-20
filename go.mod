@@ -62,7 +62,6 @@ require (
 	github.com/julienschmidt/httprouter v1.3.0
 	github.com/knadh/koanf v1.4.0
 	github.com/luna-duclos/instrumentedsql v1.1.3
-	github.com/luna-duclos/instrumentedsql/opentracing v0.0.0-20201103091713-40d03108b6f4
 	github.com/mattn/goveralls v0.0.7
 	github.com/mikefarah/yq/v4 v4.19.1
 	github.com/mohae/deepcopy v0.0.0-20170929034955-c48cc78d4826
@@ -243,7 +242,6 @@ require (
 	github.com/opencontainers/go-digest v1.0.0 // indirect
 	github.com/opencontainers/image-spec v1.0.2 // indirect
 	github.com/opencontainers/runc v1.0.2 // indirect
-	github.com/opentracing/opentracing-go v1.2.0 // indirect
 	github.com/ory/viper v1.7.5 // indirect
 	github.com/pborman/uuid v1.2.1 // indirect
 	github.com/pelletier/go-toml v1.9.4 // indirect
