@@ -6,12 +6,12 @@ import (
 
 	"github.com/spf13/cobra"
 	"github.com/urfave/negroni"
-	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 
 	"github.com/ory/graceful"
 	"github.com/ory/kratos/driver"
 	"github.com/ory/kratos/x"
 	"github.com/ory/x/configx"
+	"github.com/ory/x/otelx"
 	"github.com/ory/x/reqlog"
 )
 
@@ -52,7 +52,7 @@ func ServeMetrics(ctx cx.Context, r driver.Registry) {
 
 	var server *http.Server
 	if tracer := r.Tracer(ctx); tracer.IsLoaded() {
-		otelHandler := otelhttp.NewHandler(n, "courier_serve_metrics")
+		otelHandler := otelx.NewHandler(n, "cmd.courier.ServeMetrics")
 		server = graceful.WithDefaults(&http.Server{
 			Addr:    c.MetricsListenOn(),
 			Handler: otelHandler,

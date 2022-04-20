@@ -5,12 +5,11 @@ import (
 	"net/http"
 	"sync"
 
-	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
-
 	"github.com/ory/kratos/schema"
 
 	"github.com/ory/kratos/selfservice/flow/recovery"
 
+	"github.com/ory/x/otelx"
 	"github.com/ory/x/reqlog"
 
 	"github.com/ory/kratos/cmd/courier"
@@ -124,7 +123,7 @@ func ServePublic(r driver.Registry, wg *sync.WaitGroup, cmd *cobra.Command, args
 	certs := c.GetTSLCertificatesForPublic()
 	var server *http.Server
 	if tracer := r.Tracer(ctx); tracer.IsLoaded() {
-		otelHandler := otelhttp.NewHandler(handler, "serve_public")
+		otelHandler := otelx.NewHandler(handler, "cmd.daemon.ServePublic")
 		server = graceful.WithDefaults(&http.Server{
 			Handler:   otelHandler,
 			TLSConfig: &tls.Config{Certificates: certs, MinVersion: tls.VersionTLS12},
@@ -187,7 +186,7 @@ func ServeAdmin(r driver.Registry, wg *sync.WaitGroup, cmd *cobra.Command, args 
 
 	var server *http.Server
 	if tracer := r.Tracer(ctx); tracer.IsLoaded() {
-		otelHandler := otelhttp.NewHandler(n, "serve_admin")
+		otelHandler := otelx.NewHandler(n, "cmd.daemon.ServeAdmin")
 		server = graceful.WithDefaults(&http.Server{
 			Handler:   otelHandler,
 			TLSConfig: &tls.Config{Certificates: certs, MinVersion: tls.VersionTLS12},
