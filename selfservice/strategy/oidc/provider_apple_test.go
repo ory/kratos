@@ -2,9 +2,10 @@ package oidc
 
 import (
 	"fmt"
-	"github.com/stretchr/testify/assert"
 	"net/url"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func TestDecodeQuery(t *testing.T) {
