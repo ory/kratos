@@ -302,10 +302,7 @@ type AdminCreateIdentityImportCredentialsOidcProvider struct {
 //
 // Create an Identity
 //
-// This endpoint creates an identity. It is NOT possible to set an identity's credentials (password, ...)
-// using this method! A way to achieve that will be introduced in the future.
-//
-// Learn how identities work in [Ory Kratos' User And Identity Model Documentation](https://www.ory.sh/docs/next/kratos/concepts/identity-user-model).
+// This endpoint creates an identity. Learn how identities work in [Ory Kratos' User And Identity Model Documentation](https://www.ory.sh/docs/next/kratos/concepts/identity-user-model).
 //
 //     Consumes:
 //     - application/json
@@ -415,10 +412,7 @@ type AdminUpdateIdentityBody struct {
 //
 // Update an Identity
 //
-// This endpoint updates an identity. It is NOT possible to set an identity's credentials (password, ...)
-// using this method! A way to achieve that will be introduced in the future.
-//
-// The full identity payload (except credentials) is expected. This endpoint does not support patching.
+// This endpoint updates an identity. The full identity payload (except credentials) is expected. This endpoint does not support patching.
 //
 // Learn how identities work in [Ory Kratos' User And Identity Model Documentation](https://www.ory.sh/docs/next/kratos/concepts/identity-user-model).
 //
