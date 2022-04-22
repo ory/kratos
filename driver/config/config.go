@@ -156,7 +156,6 @@ const (
 	ViperKeyHasherBcryptCost                                 = "hashers.bcrypt.cost"
 	ViperKeyCipherAlgorithm                                  = "ciphers.algorithm"
 	ViperKeyDatabaseCleanupBatchSize                         = "database.cleanup.batch_size"
-	ViperKeyDatabaseCleanupOlderThan                         = "database.cleanup.older_than"
 	ViperKeyDatabaseCleanupSleepTables                       = "database.cleanup.sleep.tables"
 	ViperKeyLinkLifespan                                     = "selfservice.methods.link.config.lifespan"
 	ViperKeyLinkBaseURL                                      = "selfservice.methods.link.config.base_url"
@@ -1091,10 +1090,6 @@ func (p *Config) DatabaseCleanupBatchSize() int {
 
 func (p *Config) DatabaseCleanupSleepTables() time.Duration {
 	return p.p.DurationF(ViperKeyDatabaseCleanupSleepTables, 1*time.Minute)
-}
-
-func (p *Config) DatabaseCleanupOlderThan() time.Duration {
-	return p.p.DurationF(ViperKeyDatabaseCleanupOlderThan, 0)
 }
 
 func (p *Config) SelfServiceFlowRecoveryAfterHooks(strategy string) []SelfServiceHook {

@@ -48,7 +48,6 @@ func NewConfigurationWithDefaults(t *testing.T) *config.Config {
 			config.ViperKeySecretsCipher:                     []string{"secret-thirty-two-character-long"},
 			config.ViperKeyDatabaseCleanupBatchSize:          100,
 			config.ViperKeyDatabaseCleanupSleepTables:        1 * time.Minute,
-			config.ViperKeyDatabaseCleanupOlderThan:          1 * time.Minute,
 		}),
 		configx.SkipValidation(),
 	)
