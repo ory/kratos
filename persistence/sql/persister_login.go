@@ -2,6 +2,8 @@ package sql
 
 import (
 	"context"
+	"fmt"
+	"time"
 
 	"github.com/ory/kratos/corp"
 
@@ -50,4 +52,19 @@ func (p *Persister) ForceLoginFlow(ctx context.Context, id uuid.UUID) error {
 		lr.Refresh = true
 		return tx.Save(lr, "nid")
 	})
+}
+
+func (p *Persister) DeleteExpiredLoginFlows(ctx context.Context, expiresAt time.Time, limit int) error {
+	// #nosec G201
+	err := p.GetConnection(ctx).RawQuery(fmt.Sprintf(
+		"DELETE FROM %s WHERE expires_at <= ? LIMIT ?",
+		new(login.Flow).TableName(ctx),
+	),
+		expiresAt,
+		limit,
+	).Exec()
+	if err != nil {
+		return sqlcon.HandleError(err)
+	}
+	return nil
 }

@@ -15,6 +15,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/santhosh-tekuri/jsonschema"
+
 	"github.com/ory/jsonschema/v3/httploader"
 	"github.com/ory/x/httpx"
 
@@ -153,6 +155,9 @@ const (
 	ViperKeyHasherArgon2ConfigDedicatedMemory                = "hashers.argon2.dedicated_memory"
 	ViperKeyHasherBcryptCost                                 = "hashers.bcrypt.cost"
 	ViperKeyCipherAlgorithm                                  = "ciphers.algorithm"
+	ViperKeyDatabaseCleanupBatchSize                         = "database.cleanup.batch_size"
+	ViperKeyDatabaseCleanupOlderThan                         = "database.cleanup.older_than"
+	ViperKeyDatabaseCleanupSleepTables                       = "database.cleanup.sleep.tables"
 	ViperKeyLinkLifespan                                     = "selfservice.methods.link.config.lifespan"
 	ViperKeyLinkBaseURL                                      = "selfservice.methods.link.config.base_url"
 	ViperKeyPasswordHaveIBeenPwnedHost                       = "selfservice.methods.password.config.haveibeenpwned_host"
@@ -1078,6 +1083,18 @@ func (p *Config) SelfServiceLinkMethodLifespan() time.Duration {
 
 func (p *Config) SelfServiceLinkMethodBaseURL() *url.URL {
 	return p.p.RequestURIF(ViperKeyLinkBaseURL, p.SelfPublicURL())
+}
+
+func (p *Config) DatabaseCleanupBatchSize() int {
+	return p.p.IntF(ViperKeyDatabaseCleanupBatchSize, 100)
+}
+
+func (p *Config) DatabaseCleanupSleepTables() time.Duration {
+	return p.p.DurationF(ViperKeyDatabaseCleanupSleepTables, 1*time.Minute)
+}
+
+func (p *Config) DatabaseCleanupOlderThan() time.Duration {
+	return p.p.DurationF(ViperKeyDatabaseCleanupOlderThan, 0)
 }
 
 func (p *Config) SelfServiceFlowRecoveryAfterHooks(strategy string) []SelfServiceHook {

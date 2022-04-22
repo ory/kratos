@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"time"
 
 	"github.com/gobuffalo/pop/v6"
 
@@ -195,4 +196,19 @@ func (p *Persister) RevokeSessionsIdentityExcept(ctx context.Context, iID, sID u
 		return 0, sqlcon.HandleError(err)
 	}
 	return count, nil
+}
+
+func (p *Persister) DeleteExpiredSessions(ctx context.Context, expiresAt time.Time, limit int) error {
+	// #nosec G201
+	err := p.GetConnection(ctx).RawQuery(fmt.Sprintf(
+		"DELETE FROM %s WHERE expires_at <= ? LIMIT ?",
+		corp.ContextualizeTableName(ctx, "sessions"),
+	),
+		expiresAt,
+		limit,
+	).Exec()
+	if err != nil {
+		return sqlcon.HandleError(err)
+	}
+	return nil
 }
