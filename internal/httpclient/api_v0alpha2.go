@@ -29,14 +29,11 @@ var (
 type V0alpha2Api interface {
 
 	/*
-			 * AdminCreateIdentity Create an Identity
-			 * This endpoint creates an identity. It is NOT possible to set an identity's credentials (password, ...)
-		using this method! A way to achieve that will be introduced in the future.
-
-		Learn how identities work in [Ory Kratos' User And Identity Model Documentation](https://www.ory.sh/docs/next/kratos/concepts/identity-user-model).
-			 * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
-			 * @return V0alpha2ApiApiAdminCreateIdentityRequest
-	*/
+	 * AdminCreateIdentity Create an Identity
+	 * This endpoint creates an identity. Learn how identities work in [Ory Kratos' User And Identity Model Documentation](https://www.ory.sh/docs/next/kratos/concepts/identity-user-model).
+	 * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
+	 * @return V0alpha2ApiApiAdminCreateIdentityRequest
+	 */
 	AdminCreateIdentity(ctx context.Context) V0alpha2ApiApiAdminCreateIdentityRequest
 
 	/*
@@ -159,10 +156,7 @@ type V0alpha2Api interface {
 
 	/*
 			 * AdminUpdateIdentity Update an Identity
-			 * This endpoint updates an identity. It is NOT possible to set an identity's credentials (password, ...)
-		using this method! A way to achieve that will be introduced in the future.
-
-		The full identity payload (except credentials) is expected. This endpoint does not support patching.
+			 * This endpoint updates an identity. The full identity payload (except credentials) is expected. This endpoint does not support patching.
 
 		Learn how identities work in [Ory Kratos' User And Identity Model Documentation](https://www.ory.sh/docs/next/kratos/concepts/identity-user-model).
 			 * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
@@ -1117,13 +1111,10 @@ func (r V0alpha2ApiApiAdminCreateIdentityRequest) Execute() (*Identity, *http.Re
 
 /*
  * AdminCreateIdentity Create an Identity
- * This endpoint creates an identity. It is NOT possible to set an identity's credentials (password, ...)
-using this method! A way to achieve that will be introduced in the future.
-
-Learn how identities work in [Ory Kratos' User And Identity Model Documentation](https://www.ory.sh/docs/next/kratos/concepts/identity-user-model).
+ * This endpoint creates an identity. Learn how identities work in [Ory Kratos' User And Identity Model Documentation](https://www.ory.sh/docs/next/kratos/concepts/identity-user-model).
  * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
  * @return V0alpha2ApiApiAdminCreateIdentityRequest
-*/
+ */
 func (a *V0alpha2ApiService) AdminCreateIdentity(ctx context.Context) V0alpha2ApiApiAdminCreateIdentityRequest {
 	return V0alpha2ApiApiAdminCreateIdentityRequest{
 		ApiService: a,
@@ -2323,10 +2314,7 @@ func (r V0alpha2ApiApiAdminUpdateIdentityRequest) Execute() (*Identity, *http.Re
 
 /*
  * AdminUpdateIdentity Update an Identity
- * This endpoint updates an identity. It is NOT possible to set an identity's credentials (password, ...)
-using this method! A way to achieve that will be introduced in the future.
-
-The full identity payload (except credentials) is expected. This endpoint does not support patching.
+ * This endpoint updates an identity. The full identity payload (except credentials) is expected. This endpoint does not support patching.
 
 Learn how identities work in [Ory Kratos' User And Identity Model Documentation](https://www.ory.sh/docs/next/kratos/concepts/identity-user-model).
  * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
