@@ -59,7 +59,7 @@ func (n *ProviderNetID) oAuth2(ctx context.Context) (*oauth2.Config, error) {
 
 }
 
-func (n *ProviderNetID) Claims(ctx context.Context, exchange *oauth2.Token) (*Claims, error) {
+func (n *ProviderNetID) Claims(ctx context.Context, exchange *oauth2.Token, _ url.Values) (*Claims, error) {
 	o, err := n.OAuth2(ctx)
 	if err != nil {
 		return nil, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("%s", err))
