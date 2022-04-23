@@ -436,9 +436,9 @@ type AdminUpdateIdentityBody struct {
 //       500: jsonError
 func (h *Handler) update(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	var ur AdminUpdateIdentityBody
-        if err := errors.WithStack(jsonx.NewStrictDecoder(r.Body).Decode(&ur)); err == io.EOF {
-               h.r.Writer().WriteError(w, r, errors.WithStack(herodot.ErrBadRequest.WithReasonf(`Empty input json or file does not exits`).WithWrap(err)))
-               return
+        if err := errors.WithStack(jsonx.NewStrictDecoder(r.Body).Decode(&ur)); errors.Is(err, io.EOF) {
+                h.r.Writer().WriteError(w, r, errors.WithStack(herodot.ErrBadRequest.WithReasonf(`Empty input json or file does not exist`).WithWrap(err)))
+                return
         } else if err != nil {
                 h.r.Writer().WriteError(w, r, err)
                 return
