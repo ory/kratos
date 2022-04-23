@@ -4,7 +4,7 @@
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 **Table of Contents**
 
-- [ (2022-04-16)](#2022-04-16)
+- [ (2022-04-20)](#2022-04-20)
   - [Breaking Changes](#breaking-changes)
     - [Bug Fixes](#bug-fixes)
     - [Code Refactoring](#code-refactoring)
@@ -250,7 +250,7 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# [](https://github.com/ory/kratos/compare/v0.9.0-alpha.3...v) (2022-04-16)
+# [](https://github.com/ory/kratos/compare/v0.9.0-alpha.3...v) (2022-04-20)
 ## Breaking Changes
 
 This patch moves several CLI command to comply with the Ory CLI command structure:
@@ -293,6 +293,7 @@ This patch moves several CLI command to comply with the Ory CLI command structur
 * **Dockerfile:** Use existing builder base image ([#2390](https://github.com/ory/kratos/issues/2390)) ([37de25a](https://github.com/ory/kratos/commit/37de25a541a24e03407ecf344fb750775e48c782))
 * Load return_to and append to errors ([#2333](https://github.com/ory/kratos/issues/2333)) ([5efe4a3](https://github.com/ory/kratos/commit/5efe4a33e35e74d248d4eec43dc901b7b6334037)), closes [#2275](https://github.com/ory/kratos/issues/2275) [#2279](https://github.com/ory/kratos/issues/2279) [#2285](https://github.com/ory/kratos/issues/2285)
 * Refresh is always false when session exists ([d3436d7](https://github.com/ory/kratos/commit/d3436d7fa17589d91e25c9f0bd66bc3bb5b150fa)), closes [#2341](https://github.com/ory/kratos/issues/2341)
+* Remove required legacy field ([#2410](https://github.com/ory/kratos/issues/2410)) ([638d45c](https://github.com/ory/kratos/commit/638d45caf480b7287c9762cbf3c593217f40e3e8))
 * **sdk:** Improved OpenAPI specifications for UI nodes ([#2375](https://github.com/ory/kratos/issues/2375)) ([a42a0f7](https://github.com/ory/kratos/commit/a42a0f772af3625c457032d6dcc34289a62acc61)), closes [#2357](https://github.com/ory/kratos/issues/2357)
 * Serve.admin.request_log.disable_for_health behaviour ([#2399](https://github.com/ory/kratos/issues/2399)) ([0a381fa](https://github.com/ory/kratos/commit/0a381fa3d702f77e614d0492dafa3ac2cd102c7e))
 * Use `path` instead of `filepath` to join http route paths ([16b1244](https://github.com/ory/kratos/commit/16b12449c841bf7a237fe436b884b4b5012cd022)), closes [#2292](https://github.com/ory/kratos/issues/2292)
@@ -305,6 +306,7 @@ This patch moves several CLI command to comply with the Ory CLI command structur
 
 * Add certificate based authentication for smtp client ([#2351](https://github.com/ory/kratos/issues/2351)) ([7200037](https://github.com/ory/kratos/commit/72000375c028f5f7f9cb0d0b1b02f8aa09503e4f))
 * Add session renew capabilities ([#2146](https://github.com/ory/kratos/issues/2146)) ([4348b86](https://github.com/ory/kratos/commit/4348b8640a282cd61fe30961faba5753e2af8bb0)), closes [#615](https://github.com/ory/kratos/issues/615)
+* Add support for netID provider  ([#2394](https://github.com/ory/kratos/issues/2394)) ([ee7fc79](https://github.com/ory/kratos/commit/ee7fc79d49cd6d8f2985809585d1675c8e2ed376))
 * Read subject id from https://graph.microsoft.com/v1.0/me for microsoft ([#2347](https://github.com/ory/kratos/issues/2347)) ([852f24f](https://github.com/ory/kratos/commit/852f24fb5cd8576f3f6d35017ce85e4fa1c51c95)):
 
     Adds the ability to read the OIDC subject ID from the `https://graph.microsoft.com/v1.0/me` endpoint. This introduces a new field `subject_source` to the OIDC configuration.

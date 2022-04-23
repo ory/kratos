@@ -24,7 +24,7 @@ func TestUpgradeCredentials(t *testing.T) {
 
 		err := UpgradeCredentials(i)
 		require.NoError(t, err)
-		wc := identity.WithCredentialsInJSON(*i)
+		wc := identity.WithCredentialsAndAdminMetadataInJSON(*i)
 		snapshotx.SnapshotTExcept(t, &wc, nil)
 	})
 
@@ -43,7 +43,7 @@ func TestUpgradeCredentials(t *testing.T) {
 			}
 
 			require.NoError(t, UpgradeCredentials(i))
-			wc := identity.WithCredentialsInJSON(*i)
+			wc := identity.WithCredentialsAndAdminMetadataInJSON(*i)
 			snapshotx.SnapshotTExcept(t, &wc, nil)
 
 			assert.Equal(t, 1, i.Credentials[identity.CredentialsTypeWebAuthn].Version)
@@ -61,7 +61,7 @@ func TestUpgradeCredentials(t *testing.T) {
 			}
 
 			require.NoError(t, UpgradeCredentials(i))
-			wc := identity.WithCredentialsInJSON(*i)
+			wc := identity.WithCredentialsAndAdminMetadataInJSON(*i)
 			snapshotx.SnapshotTExcept(t, &wc, nil)
 
 			assert.Equal(t, 1, i.Credentials[identity.CredentialsTypeWebAuthn].Version)

@@ -26,19 +26,18 @@ type SubmitSelfServiceLoginFlowWithPasswordMethodBody struct {
 	// The user's password.
 	Password string `json:"password"`
 	// Identifier is the email or username of the user trying to log in. This field is deprecated!
-	PasswordIdentifier string `json:"password_identifier"`
+	PasswordIdentifier *string `json:"password_identifier,omitempty"`
 }
 
 // NewSubmitSelfServiceLoginFlowWithPasswordMethodBody instantiates a new SubmitSelfServiceLoginFlowWithPasswordMethodBody object
 // This constructor will assign default values to properties that have it defined,
 // and makes sure properties required by API are set, but the set of arguments
 // will change when the set of required properties is changed
-func NewSubmitSelfServiceLoginFlowWithPasswordMethodBody(identifier string, method string, password string, passwordIdentifier string) *SubmitSelfServiceLoginFlowWithPasswordMethodBody {
+func NewSubmitSelfServiceLoginFlowWithPasswordMethodBody(identifier string, method string, password string) *SubmitSelfServiceLoginFlowWithPasswordMethodBody {
 	this := SubmitSelfServiceLoginFlowWithPasswordMethodBody{}
 	this.Identifier = identifier
 	this.Method = method
 	this.Password = password
-	this.PasswordIdentifier = passwordIdentifier
 	return &this
 }
 
@@ -154,28 +153,36 @@ func (o *SubmitSelfServiceLoginFlowWithPasswordMethodBody) SetPassword(v string)
 	o.Password = v
 }
 
-// GetPasswordIdentifier returns the PasswordIdentifier field value
+// GetPasswordIdentifier returns the PasswordIdentifier field value if set, zero value otherwise.
 func (o *SubmitSelfServiceLoginFlowWithPasswordMethodBody) GetPasswordIdentifier() string {
-	if o == nil {
+	if o == nil || o.PasswordIdentifier == nil {
 		var ret string
 		return ret
 	}
-
-	return o.PasswordIdentifier
+	return *o.PasswordIdentifier
 }
 
-// GetPasswordIdentifierOk returns a tuple with the PasswordIdentifier field value
+// GetPasswordIdentifierOk returns a tuple with the PasswordIdentifier field value if set, nil otherwise
 // and a boolean to check if the value has been set.
 func (o *SubmitSelfServiceLoginFlowWithPasswordMethodBody) GetPasswordIdentifierOk() (*string, bool) {
-	if o == nil {
+	if o == nil || o.PasswordIdentifier == nil {
 		return nil, false
 	}
-	return &o.PasswordIdentifier, true
+	return o.PasswordIdentifier, true
 }
 
-// SetPasswordIdentifier sets field value
+// HasPasswordIdentifier returns a boolean if a field has been set.
+func (o *SubmitSelfServiceLoginFlowWithPasswordMethodBody) HasPasswordIdentifier() bool {
+	if o != nil && o.PasswordIdentifier != nil {
+		return true
+	}
+
+	return false
+}
+
+// SetPasswordIdentifier gets a reference to the given string and assigns it to the PasswordIdentifier field.
 func (o *SubmitSelfServiceLoginFlowWithPasswordMethodBody) SetPasswordIdentifier(v string) {
-	o.PasswordIdentifier = v
+	o.PasswordIdentifier = &v
 }
 
 func (o SubmitSelfServiceLoginFlowWithPasswordMethodBody) MarshalJSON() ([]byte, error) {
@@ -192,7 +199,7 @@ func (o SubmitSelfServiceLoginFlowWithPasswordMethodBody) MarshalJSON() ([]byte,
 	if true {
 		toSerialize["password"] = o.Password
 	}
-	if true {
+	if o.PasswordIdentifier != nil {
 		toSerialize["password_identifier"] = o.PasswordIdentifier
 	}
 	return json.Marshal(toSerialize)

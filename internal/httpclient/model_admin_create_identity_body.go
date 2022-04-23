@@ -18,6 +18,10 @@ import (
 // AdminCreateIdentityBody struct for AdminCreateIdentityBody
 type AdminCreateIdentityBody struct {
 	Credentials *AdminIdentityImportCredentials `json:"credentials,omitempty"`
+	// Store metadata about the user which is only accessible through admin APIs such as `GET /admin/identities/<id>`.
+	MetadataAdmin interface{} `json:"metadata_admin,omitempty"`
+	// Store metadata about the identity which the identity itself can see when calling for example the session endpoint. Do not store sensitive information (e.g. credit score) about the identity in this field.
+	MetadataPublic interface{} `json:"metadata_public,omitempty"`
 	// RecoveryAddresses contains all the addresses that can be used to recover an identity.  Use this structure to import recovery addresses for an identity. Please keep in mind that the address needs to be represented in the Identity Schema or this field will be overwritten on the next identity update.
 	RecoveryAddresses []RecoveryAddress `json:"recovery_addresses,omitempty"`
 	// SchemaID is the ID of the JSON Schema to be used for validating the identity's traits.
@@ -78,6 +82,72 @@ func (o *AdminCreateIdentityBody) HasCredentials() bool {
 // SetCredentials gets a reference to the given AdminIdentityImportCredentials and assigns it to the Credentials field.
 func (o *AdminCreateIdentityBody) SetCredentials(v AdminIdentityImportCredentials) {
 	o.Credentials = &v
+}
+
+// GetMetadataAdmin returns the MetadataAdmin field value if set, zero value otherwise (both if not set or set to explicit null).
+func (o *AdminCreateIdentityBody) GetMetadataAdmin() interface{} {
+	if o == nil {
+		var ret interface{}
+		return ret
+	}
+	return o.MetadataAdmin
+}
+
+// GetMetadataAdminOk returns a tuple with the MetadataAdmin field value if set, nil otherwise
+// and a boolean to check if the value has been set.
+// NOTE: If the value is an explicit nil, `nil, true` will be returned
+func (o *AdminCreateIdentityBody) GetMetadataAdminOk() (*interface{}, bool) {
+	if o == nil || o.MetadataAdmin == nil {
+		return nil, false
+	}
+	return &o.MetadataAdmin, true
+}
+
+// HasMetadataAdmin returns a boolean if a field has been set.
+func (o *AdminCreateIdentityBody) HasMetadataAdmin() bool {
+	if o != nil && o.MetadataAdmin != nil {
+		return true
+	}
+
+	return false
+}
+
+// SetMetadataAdmin gets a reference to the given interface{} and assigns it to the MetadataAdmin field.
+func (o *AdminCreateIdentityBody) SetMetadataAdmin(v interface{}) {
+	o.MetadataAdmin = v
+}
+
+// GetMetadataPublic returns the MetadataPublic field value if set, zero value otherwise (both if not set or set to explicit null).
+func (o *AdminCreateIdentityBody) GetMetadataPublic() interface{} {
+	if o == nil {
+		var ret interface{}
+		return ret
+	}
+	return o.MetadataPublic
+}
+
+// GetMetadataPublicOk returns a tuple with the MetadataPublic field value if set, nil otherwise
+// and a boolean to check if the value has been set.
+// NOTE: If the value is an explicit nil, `nil, true` will be returned
+func (o *AdminCreateIdentityBody) GetMetadataPublicOk() (*interface{}, bool) {
+	if o == nil || o.MetadataPublic == nil {
+		return nil, false
+	}
+	return &o.MetadataPublic, true
+}
+
+// HasMetadataPublic returns a boolean if a field has been set.
+func (o *AdminCreateIdentityBody) HasMetadataPublic() bool {
+	if o != nil && o.MetadataPublic != nil {
+		return true
+	}
+
+	return false
+}
+
+// SetMetadataPublic gets a reference to the given interface{} and assigns it to the MetadataPublic field.
+func (o *AdminCreateIdentityBody) SetMetadataPublic(v interface{}) {
+	o.MetadataPublic = v
 }
 
 // GetRecoveryAddresses returns the RecoveryAddresses field value if set, zero value otherwise.
@@ -228,6 +298,12 @@ func (o AdminCreateIdentityBody) MarshalJSON() ([]byte, error) {
 	toSerialize := map[string]interface{}{}
 	if o.Credentials != nil {
 		toSerialize["credentials"] = o.Credentials
+	}
+	if o.MetadataAdmin != nil {
+		toSerialize["metadata_admin"] = o.MetadataAdmin
+	}
+	if o.MetadataPublic != nil {
+		toSerialize["metadata_public"] = o.MetadataPublic
 	}
 	if o.RecoveryAddresses != nil {
 		toSerialize["recovery_addresses"] = o.RecoveryAddresses

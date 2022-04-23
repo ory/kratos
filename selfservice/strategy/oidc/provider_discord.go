@@ -3,6 +3,7 @@ package oidc
 import (
 	"context"
 	"fmt"
+	"net/url"
 
 	"github.com/ory/kratos/x"
 
@@ -62,7 +63,7 @@ func (d *ProviderDiscord) AuthCodeURLOptions(r ider) []oauth2.AuthCodeOption {
 	}
 }
 
-func (d *ProviderDiscord) Claims(ctx context.Context, exchange *oauth2.Token) (*Claims, error) {
+func (d *ProviderDiscord) Claims(ctx context.Context, exchange *oauth2.Token, query url.Values) (*Claims, error) {
 	grantedScopes := stringsx.Splitx(fmt.Sprintf("%s", exchange.Extra("scope")), " ")
 	for _, check := range d.Config().Scope {
 		if !stringslice.Has(grantedScopes, check) {

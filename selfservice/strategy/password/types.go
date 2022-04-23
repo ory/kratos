@@ -23,8 +23,6 @@ type submitSelfServiceLoginFlowWithPasswordMethodBody struct {
 
 	// Identifier is the email or username of the user trying to log in.
 	// This field is deprecated!
-	//
-	// required: true
 	LegacyIdentifier string `json:"password_identifier"`
 
 	// Identifier is the email or username of the user trying to log in.

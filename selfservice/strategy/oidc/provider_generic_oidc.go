@@ -2,6 +2,7 @@ package oidc
 
 import (
 	"context"
+	"net/url"
 
 	"github.com/pkg/errors"
 	"golang.org/x/oauth2"
@@ -97,7 +98,7 @@ func (g *ProviderGenericOIDC) verifyAndDecodeClaimsWithProvider(ctx context.Cont
 	return &claims, nil
 }
 
-func (g *ProviderGenericOIDC) Claims(ctx context.Context, exchange *oauth2.Token) (*Claims, error) {
+func (g *ProviderGenericOIDC) Claims(ctx context.Context, exchange *oauth2.Token, query url.Values) (*Claims, error) {
 	raw, ok := exchange.Extra("id_token").(string)
 	if !ok || len(raw) == 0 {
 		return nil, errors.WithStack(ErrIDTokenMissing)

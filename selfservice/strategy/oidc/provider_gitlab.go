@@ -64,7 +64,7 @@ func (g *ProviderGitLab) OAuth2(ctx context.Context) (*oauth2.Config, error) {
 	return g.oauth2(ctx)
 }
 
-func (g *ProviderGitLab) Claims(ctx context.Context, exchange *oauth2.Token) (*Claims, error) {
+func (g *ProviderGitLab) Claims(ctx context.Context, exchange *oauth2.Token, query url.Values) (*Claims, error) {
 	o, err := g.OAuth2(ctx)
 	if err != nil {
 		return nil, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("%s", err))
