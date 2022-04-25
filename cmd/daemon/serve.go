@@ -114,6 +114,10 @@ func ServePublic(r driver.Registry, wg *sync.WaitGroup, cmd *cobra.Command, args
 	r.RegisterPublicRoutes(ctx, router)
 	r.PrometheusManager().RegisterRouter(router.Router)
 
+	if tracer := r.Tracer(ctx); tracer.IsLoaded() {
+		n.UseHandler(otelx.NewHandler(n, "cmd.daemon.ServePublic"))
+	}
+
 	var handler http.Handler = n
 	options, enabled := r.Config(ctx).CORS("public")
 	if enabled {
@@ -121,10 +125,6 @@ func ServePublic(r driver.Registry, wg *sync.WaitGroup, cmd *cobra.Command, args
 	}
 
 	certs := c.GetTSLCertificatesForPublic()
-
-	if tracer := r.Tracer(ctx); tracer.IsLoaded() {
-		n.UseHandler(otelx.NewHandler(handler, "cmd.daemon.ServePublic"))
-	}
 
 	server := graceful.WithDefaults(&http.Server{
 		Handler:   handler,
