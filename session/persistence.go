@@ -42,7 +42,7 @@ type Persister interface {
 	GetSessionByToken(context.Context, string) (*Session, error)
 
 	// DeleteExpiredSessions deletes sessions that expired before the given time.
-	DeleteExpiredSessions(context.Context, time.Time, int) error
+	DeleteExpiredSessions(context.Context, time.Time) error
 
 	// DeleteSessionByToken deletes a session associated with the given token.
 	//

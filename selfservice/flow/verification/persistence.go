@@ -15,6 +15,6 @@ type (
 		CreateVerificationFlow(context.Context, *Flow) error
 		GetVerificationFlow(ctx context.Context, id uuid.UUID) (*Flow, error)
 		UpdateVerificationFlow(context.Context, *Flow) error
-		DeleteExpiredVerificationFlows(context.Context, time.Time, int) error
+		DeleteExpiredVerificationFlows(context.Context, time.Time) error
 	}
 )

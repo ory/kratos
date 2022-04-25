@@ -198,14 +198,13 @@ func (p *Persister) RevokeSessionsIdentityExcept(ctx context.Context, iID, sID u
 	return count, nil
 }
 
-func (p *Persister) DeleteExpiredSessions(ctx context.Context, expiresAt time.Time, limit int) error {
+func (p *Persister) DeleteExpiredSessions(ctx context.Context, expiresAt time.Time) error {
 	// #nosec G201
 	err := p.GetConnection(ctx).RawQuery(fmt.Sprintf(
-		"DELETE FROM %s WHERE expires_at <= ? LIMIT ?",
+		"DELETE FROM %s WHERE expires_at <= ?",
 		corp.ContextualizeTableName(ctx, "sessions"),
 	),
 		expiresAt,
-		limit,
 	).Exec()
 	if err != nil {
 		return sqlcon.HandleError(err)

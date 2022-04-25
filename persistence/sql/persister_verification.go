@@ -96,14 +96,13 @@ func (p *Persister) DeleteVerificationToken(ctx context.Context, token string) e
 	return p.GetConnection(ctx).RawQuery(fmt.Sprintf("DELETE FROM %s WHERE token=? AND nid = ?", new(link.VerificationToken).TableName(ctx)), token, nid).Exec()
 }
 
-func (p *Persister) DeleteExpiredVerificationFlows(ctx context.Context, expiresAt time.Time, limit int) error {
+func (p *Persister) DeleteExpiredVerificationFlows(ctx context.Context, expiresAt time.Time) error {
 	// #nosec G201
 	err := p.GetConnection(ctx).RawQuery(fmt.Sprintf(
-		"DELETE FROM %s WHERE expires_at <= ? LIMIT ?",
+		"DELETE FROM %s WHERE expires_at <= ?",
 		new(verification.Flow).TableName(ctx),
 	),
 		expiresAt,
-		limit,
 	).Exec()
 	if err != nil {
 		return sqlcon.HandleError(err)

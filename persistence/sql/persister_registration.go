@@ -37,14 +37,13 @@ func (p *Persister) GetRegistrationFlow(ctx context.Context, id uuid.UUID) (*reg
 	return &r, nil
 }
 
-func (p *Persister) DeleteExpiredRegistrationFlows(ctx context.Context, expiresAt time.Time, limit int) error {
+func (p *Persister) DeleteExpiredRegistrationFlows(ctx context.Context, expiresAt time.Time) error {
 	// #nosec G201
 	err := p.GetConnection(ctx).RawQuery(fmt.Sprintf(
-		"DELETE FROM %s WHERE expires_at <= ? LIMIT ?",
+		"DELETE FROM %s WHERE expires_at <= ?",
 		new(registration.Flow).TableName(ctx),
 	),
 		expiresAt,
-		limit,
 	).Exec()
 	if err != nil {
 		return sqlcon.HandleError(err)

@@ -45,14 +45,13 @@ func (p *Persister) UpdateSettingsFlow(ctx context.Context, r *settings.Flow) er
 	return p.update(ctx, cp)
 }
 
-func (p *Persister) DeleteExpiredSettingsFlows(ctx context.Context, expiresAt time.Time, limit int) error {
+func (p *Persister) DeleteExpiredSettingsFlows(ctx context.Context, expiresAt time.Time) error {
 	// #nosec G201
 	err := p.GetConnection(ctx).RawQuery(fmt.Sprintf(
-		"DELETE FROM %s WHERE expires_at <= ? LIMIT ?",
+		"DELETE FROM %s WHERE expires_at <= ?",
 		new(settings.Flow).TableName(ctx),
 	),
 		expiresAt,
-		limit,
 	).Exec()
 	if err != nil {
 		return sqlcon.HandleError(err)

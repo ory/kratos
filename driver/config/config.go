@@ -155,7 +155,6 @@ const (
 	ViperKeyHasherArgon2ConfigDedicatedMemory                = "hashers.argon2.dedicated_memory"
 	ViperKeyHasherBcryptCost                                 = "hashers.bcrypt.cost"
 	ViperKeyCipherAlgorithm                                  = "ciphers.algorithm"
-	ViperKeyDatabaseCleanupBatchSize                         = "database.cleanup.batch_size"
 	ViperKeyDatabaseCleanupSleepTables                       = "database.cleanup.sleep.tables"
 	ViperKeyLinkLifespan                                     = "selfservice.methods.link.config.lifespan"
 	ViperKeyLinkBaseURL                                      = "selfservice.methods.link.config.base_url"
@@ -1082,10 +1081,6 @@ func (p *Config) SelfServiceLinkMethodLifespan() time.Duration {
 
 func (p *Config) SelfServiceLinkMethodBaseURL() *url.URL {
 	return p.p.RequestURIF(ViperKeyLinkBaseURL, p.SelfPublicURL())
-}
-
-func (p *Config) DatabaseCleanupBatchSize() int {
-	return p.p.IntF(ViperKeyDatabaseCleanupBatchSize, 100)
 }
 
 func (p *Config) DatabaseCleanupSleepTables() time.Duration {
