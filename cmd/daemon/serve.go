@@ -121,19 +121,15 @@ func ServePublic(r driver.Registry, wg *sync.WaitGroup, cmd *cobra.Command, args
 	}
 
 	certs := c.GetTSLCertificatesForPublic()
-	var server *http.Server
+
 	if tracer := r.Tracer(ctx); tracer.IsLoaded() {
-		otelHandler := otelx.NewHandler(handler, "cmd.daemon.ServePublic")
-		server = graceful.WithDefaults(&http.Server{
-			Handler:   otelHandler,
-			TLSConfig: &tls.Config{Certificates: certs, MinVersion: tls.VersionTLS12},
-		})
-	} else {
-		server = graceful.WithDefaults(&http.Server{
-			Handler:   handler,
-			TLSConfig: &tls.Config{Certificates: certs, MinVersion: tls.VersionTLS12},
-		})
+		n.UseHandler(otelx.NewHandler(handler, "cmd.daemon.ServePublic"))
 	}
+
+	server := graceful.WithDefaults(&http.Server{
+		Handler:   handler,
+		TLSConfig: &tls.Config{Certificates: certs, MinVersion: tls.VersionTLS12},
+	})
 	addr := c.PublicListenOn()
 
 	l.Printf("Starting the public httpd on: %s", addr)
