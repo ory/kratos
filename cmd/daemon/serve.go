@@ -114,10 +114,6 @@ func ServePublic(r driver.Registry, wg *sync.WaitGroup, cmd *cobra.Command, args
 	r.RegisterPublicRoutes(ctx, router)
 	r.PrometheusManager().RegisterRouter(router.Router)
 
-	if tracer := r.Tracer(ctx); tracer.IsLoaded() {
-		n.UseHandler(otelx.NewHandler(n, "cmd.daemon.ServePublic"))
-	}
-
 	var handler http.Handler = n
 	options, enabled := r.Config(ctx).CORS("public")
 	if enabled {
@@ -125,6 +121,10 @@ func ServePublic(r driver.Registry, wg *sync.WaitGroup, cmd *cobra.Command, args
 	}
 
 	certs := c.GetTSLCertificatesForPublic()
+
+	if tracer := r.Tracer(ctx); tracer.IsLoaded() {
+		handler = otelx.NewHandler(n, "cmd.daemon.ServePublic")
+	}
 
 	server := graceful.WithDefaults(&http.Server{
 		Handler:   handler,
@@ -181,19 +181,15 @@ func ServeAdmin(r driver.Registry, wg *sync.WaitGroup, cmd *cobra.Command, args 
 	n.UseHandler(router)
 	certs := c.GetTSLCertificatesForAdmin()
 
-	var server *http.Server
+	var handler http.Handler = n
 	if tracer := r.Tracer(ctx); tracer.IsLoaded() {
-		otelHandler := otelx.NewHandler(n, "cmd.daemon.ServeAdmin")
-		server = graceful.WithDefaults(&http.Server{
-			Handler:   otelHandler,
-			TLSConfig: &tls.Config{Certificates: certs, MinVersion: tls.VersionTLS12},
-		})
-	} else {
-		server = graceful.WithDefaults(&http.Server{
-			Handler:   n,
-			TLSConfig: &tls.Config{Certificates: certs, MinVersion: tls.VersionTLS12},
-		})
+		handler = otelx.NewHandler(n, "cmd.daemon.ServeAdmin")
 	}
+
+	server := graceful.WithDefaults(&http.Server{
+		Handler:   handler,
+		TLSConfig: &tls.Config{Certificates: certs, MinVersion: tls.VersionTLS12},
+	})
 
 	addr := c.AdminListenOn()
 

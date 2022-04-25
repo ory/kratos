@@ -50,13 +50,14 @@ func ServeMetrics(ctx cx.Context, r driver.Registry) {
 
 	n.UseHandler(router)
 
+	var handler http.Handler = n
 	if tracer := r.Tracer(ctx); tracer.IsLoaded() {
-		n.UseHandler(otelx.NewHandler(n, "cmd.courier.ServeMetrics"))
+		handler = otelx.NewHandler(n, "cmd.courier.ServeMetrics")
 	}
 
 	server := graceful.WithDefaults(&http.Server{
 		Addr:    c.MetricsListenOn(),
-		Handler: n,
+		Handler: handler,
 	})
 
 	l.Printf("Starting the metrics httpd on: %s", server.Addr)
