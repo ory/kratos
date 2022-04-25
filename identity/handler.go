@@ -3,7 +3,6 @@ package identity
 import (
 	"context"
 	"encoding/json"
-	"io"
 	"net/http"
 	"time"
 
@@ -18,6 +17,7 @@ import (
 	"github.com/julienschmidt/httprouter"
 	"github.com/pkg/errors"
 
+	"github.com/ory/x/decoderx"
 	"github.com/ory/x/jsonx"
 	"github.com/ory/x/sqlxx"
 	"github.com/ory/x/urlx"
@@ -43,7 +43,8 @@ type (
 		IdentityHandler() *Handler
 	}
 	Handler struct {
-		r handlerDependencies
+		r  handlerDependencies
+		dx *decoderx.HTTP
 	}
 )
 
@@ -52,7 +53,10 @@ func (h *Handler) Config(ctx context.Context) *config.Config {
 }
 
 func NewHandler(r handlerDependencies) *Handler {
-	return &Handler{r: r}
+	return &Handler{
+		r:  r,
+		dx: decoderx.NewHTTP(),
+	}
 }
 
 func (h *Handler) RegisterPublicRoutes(public *x.RouterPublic) {
@@ -436,13 +440,11 @@ type AdminUpdateIdentityBody struct {
 //       500: jsonError
 func (h *Handler) update(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	var ur AdminUpdateIdentityBody
-        if err := errors.WithStack(jsonx.NewStrictDecoder(r.Body).Decode(&ur)); errors.Is(err, io.EOF) {
-                h.r.Writer().WriteError(w, r, errors.WithStack(herodot.ErrBadRequest.WithReasonf(`Empty input json or file does not exist`).WithWrap(err)))
-                return
-        } else if err != nil {
-                h.r.Writer().WriteError(w, r, err)
-                return
-        }
+	if err := h.dx.Decode(r, &ur,
+		decoderx.HTTPJSONDecoder()); err != nil {
+		h.r.Writer().WriteError(w, r, err)
+		return
+	}
 
 	id := x.ParseUUID(ps.ByName("id"))
 	identity, err := h.r.PrivilegedIdentityPool().GetIdentityConfidential(r.Context(), id)
