@@ -457,6 +457,46 @@ func TestHandler(t *testing.T) {
 				})
 			}
 		})
+		t.Run("case=should update an identity with credentials", func(t *testing.T) {
+			i := &identity.Identity{Traits: identity.Traits(fmt.Sprintf(`{"subject":"%s"}`, x.NewUUID().String()))}
+			require.NoError(t, reg.PrivilegedIdentityPool().CreateIdentity(context.Background(), i))
+
+			for name, ts := range map[string]*httptest.Server{"public": publicTS, "admin": adminTS} {
+				t.Run("endpoint="+name, func(t *testing.T) {
+					credentials := identity.AdminIdentityImportCredentials{
+						Password: &identity.AdminIdentityImportCredentialsPassword{
+							Config: identity.AdminIdentityImportCredentialsPasswordConfig{
+								Password: "pswd",
+							},
+						},
+					}
+					ur := identity.AdminUpdateIdentityBody{
+						Traits:         []byte(`{"bar":"baz","foo":"baz"}`),
+						SchemaID:       i.SchemaID,
+						State:          identity.StateInactive,
+						MetadataPublic: []byte(`{"public":"metadata"}`),
+						MetadataAdmin:  []byte(`{"admin":"metadata"}`),
+						Credentials:    &credentials,
+					}
+
+					res := send(t, ts, "PUT", "/identities/"+i.ID.String(), http.StatusOK, &ur)
+					assert.EqualValues(t, "baz", res.Get("traits.bar").String(), "%s", res.Raw)
+					assert.EqualValues(t, "baz", res.Get("traits.foo").String(), "%s", res.Raw)
+					assert.EqualValues(t, "metadata", res.Get("metadata_admin.admin").String(), "%s", res.Raw)
+					assert.EqualValues(t, "metadata", res.Get("metadata_public.public").String(), "%s", res.Raw)
+					assert.EqualValues(t, identity.StateInactive, res.Get("state").String(), "%s", res.Raw)
+					assert.NotEqualValues(t, i.StateChangedAt, sqlxx.NullTime(res.Get("state_changed_at").Time()), "%s", res.Raw)
+
+					res = get(t, ts, "/identities/"+i.ID.String(), http.StatusOK)
+					assert.EqualValues(t, i.ID.String(), res.Get("id").String(), "%s", res.Raw)
+					assert.EqualValues(t, "baz", res.Get("traits.bar").String(), "%s", res.Raw)
+					assert.EqualValues(t, "metadata", res.Get("metadata_admin.admin").String(), "%s", res.Raw)
+					assert.EqualValues(t, "metadata", res.Get("metadata_public.public").String(), "%s", res.Raw)
+					assert.EqualValues(t, identity.StateInactive, res.Get("state").String(), "%s", res.Raw)
+					assert.NotEqualValues(t, i.StateChangedAt, sqlxx.NullTime(res.Get("state_changed_at").Time()), "%s", res.Raw)
+				})
+			}
+		})
 
 		t.Run("case=should delete a user and no longer be able to retrieve it", func(t *testing.T) {
 			for name, ts := range map[string]*httptest.Server{"public": publicTS, "admin": adminTS} {
