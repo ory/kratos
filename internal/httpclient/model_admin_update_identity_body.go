@@ -17,6 +17,10 @@ import (
 
 // AdminUpdateIdentityBody struct for AdminUpdateIdentityBody
 type AdminUpdateIdentityBody struct {
+	// Store metadata about the user which is only accessible through admin APIs such as `GET /admin/identities/<id>`.
+	MetadataAdmin interface{} `json:"metadata_admin,omitempty"`
+	// Store metadata about the identity which the identity itself can see when calling for example the session endpoint. Do not store sensitive information (e.g. credit score) about the identity in this field.
+	MetadataPublic interface{} `json:"metadata_public,omitempty"`
 	// SchemaID is the ID of the JSON Schema to be used for validating the identity's traits. If set will update the Identity's SchemaID.
 	SchemaId string        `json:"schema_id"`
 	State    IdentityState `json:"state"`
@@ -42,6 +46,72 @@ func NewAdminUpdateIdentityBody(schemaId string, state IdentityState, traits map
 func NewAdminUpdateIdentityBodyWithDefaults() *AdminUpdateIdentityBody {
 	this := AdminUpdateIdentityBody{}
 	return &this
+}
+
+// GetMetadataAdmin returns the MetadataAdmin field value if set, zero value otherwise (both if not set or set to explicit null).
+func (o *AdminUpdateIdentityBody) GetMetadataAdmin() interface{} {
+	if o == nil {
+		var ret interface{}
+		return ret
+	}
+	return o.MetadataAdmin
+}
+
+// GetMetadataAdminOk returns a tuple with the MetadataAdmin field value if set, nil otherwise
+// and a boolean to check if the value has been set.
+// NOTE: If the value is an explicit nil, `nil, true` will be returned
+func (o *AdminUpdateIdentityBody) GetMetadataAdminOk() (*interface{}, bool) {
+	if o == nil || o.MetadataAdmin == nil {
+		return nil, false
+	}
+	return &o.MetadataAdmin, true
+}
+
+// HasMetadataAdmin returns a boolean if a field has been set.
+func (o *AdminUpdateIdentityBody) HasMetadataAdmin() bool {
+	if o != nil && o.MetadataAdmin != nil {
+		return true
+	}
+
+	return false
+}
+
+// SetMetadataAdmin gets a reference to the given interface{} and assigns it to the MetadataAdmin field.
+func (o *AdminUpdateIdentityBody) SetMetadataAdmin(v interface{}) {
+	o.MetadataAdmin = v
+}
+
+// GetMetadataPublic returns the MetadataPublic field value if set, zero value otherwise (both if not set or set to explicit null).
+func (o *AdminUpdateIdentityBody) GetMetadataPublic() interface{} {
+	if o == nil {
+		var ret interface{}
+		return ret
+	}
+	return o.MetadataPublic
+}
+
+// GetMetadataPublicOk returns a tuple with the MetadataPublic field value if set, nil otherwise
+// and a boolean to check if the value has been set.
+// NOTE: If the value is an explicit nil, `nil, true` will be returned
+func (o *AdminUpdateIdentityBody) GetMetadataPublicOk() (*interface{}, bool) {
+	if o == nil || o.MetadataPublic == nil {
+		return nil, false
+	}
+	return &o.MetadataPublic, true
+}
+
+// HasMetadataPublic returns a boolean if a field has been set.
+func (o *AdminUpdateIdentityBody) HasMetadataPublic() bool {
+	if o != nil && o.MetadataPublic != nil {
+		return true
+	}
+
+	return false
+}
+
+// SetMetadataPublic gets a reference to the given interface{} and assigns it to the MetadataPublic field.
+func (o *AdminUpdateIdentityBody) SetMetadataPublic(v interface{}) {
+	o.MetadataPublic = v
 }
 
 // GetSchemaId returns the SchemaId field value
@@ -118,6 +188,12 @@ func (o *AdminUpdateIdentityBody) SetTraits(v map[string]interface{}) {
 
 func (o AdminUpdateIdentityBody) MarshalJSON() ([]byte, error) {
 	toSerialize := map[string]interface{}{}
+	if o.MetadataAdmin != nil {
+		toSerialize["metadata_admin"] = o.MetadataAdmin
+	}
+	if o.MetadataPublic != nil {
+		toSerialize["metadata_public"] = o.MetadataPublic
+	}
 	if true {
 		toSerialize["schema_id"] = o.SchemaId
 	}

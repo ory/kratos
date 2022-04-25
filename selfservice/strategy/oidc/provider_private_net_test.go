@@ -3,6 +3,7 @@ package oidc_test
 import (
 	"context"
 	"fmt"
+	"net/url"
 	"testing"
 	"time"
 
@@ -71,12 +72,13 @@ func TestProviderPrivateIP(t *testing.T) {
 		// Spotify uses a fixed token URL and does not use the issuer.
 		// VK uses a fixed token URL and does not use the issuer.
 		// Yandex uses a fixed token URL and does not use the issuer.
+		// NetID uses a fixed token URL and does not use the issuer.
 	} {
 		t.Run(fmt.Sprintf("case=%d", k), func(t *testing.T) {
 			p := tc.p(tc.c)
 			_, err := p.Claims(context.Background(), (&oauth2.Token{RefreshToken: "foo", Expiry: time.Now().Add(-time.Hour)}).WithExtra(map[string]interface{}{
 				"id_token": tc.id,
-			}))
+			}), url.Values{})
 			require.Error(t, err)
 			assert.Contains(t, fmt.Sprintf("%+v", err), tc.e)
 		})

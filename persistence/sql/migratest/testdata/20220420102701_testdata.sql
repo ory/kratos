@@ -1,0 +1,1 @@
+INSERT INTO identities (id, nid, schema_id, traits, created_at, updated_at, metadata_public, metadata_admin) VALUES ('308929d3-41a2-43fe-a33c-75308539d841', '884f556e-eb3a-4b9f-bee3-11345642c6c0', 'default', '{"email":"bazbar@ory.sh"}', '2013-10-07 08:23:19', '2013-10-07 08:23:19', '{"foo":"bar"}', '{"baz":"bar"}');

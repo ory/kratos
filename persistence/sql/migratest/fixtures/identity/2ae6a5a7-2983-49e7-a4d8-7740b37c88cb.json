@@ -6,6 +6,8 @@
   "traits": {
     "email": "d7b10@ory.sh"
   },
+  "metadata_public": null,
+  "metadata_admin": null,
   "created_at": "2013-10-07T08:23:19Z",
   "updated_at": "2013-10-07T08:23:19Z"
 }

@@ -68,7 +68,7 @@ func New(action string) *Container {
 
 // NewFromHTTPRequest creates a new Container and populates fields by parsing the HTTP Request body.
 // A jsonSchemaRef needs to be added to allow HTTP Form Post Body parsing.
-func NewFromHTTPRequest(r *http.Request, group node.Group, action string, compiler decoderx.HTTPDecoderOption) (*Container, error) {
+func NewFromHTTPRequest(r *http.Request, group node.UiNodeGroup, action string, compiler decoderx.HTTPDecoderOption) (*Container, error) {
 	c := New(action)
 	raw := json.RawMessage(`{}`)
 	if err := decoder.Decode(r, &raw, compiler); err != nil {
@@ -82,7 +82,7 @@ func NewFromHTTPRequest(r *http.Request, group node.Group, action string, compil
 }
 
 // NewFromJSON creates a UI Container based on the provided JSON struct.
-func NewFromJSON(action string, group node.Group, raw json.RawMessage, prefix string) *Container {
+func NewFromJSON(action string, group node.UiNodeGroup, raw json.RawMessage, prefix string) *Container {
 	c := New(action)
 	c.UpdateNodeValuesFromJSON(raw, prefix, group)
 	return c
@@ -90,7 +90,7 @@ func NewFromJSON(action string, group node.Group, raw json.RawMessage, prefix st
 
 // NewFromJSONSchema creates a new Container and populates the fields
 // using the provided JSON Schema.
-func NewFromJSONSchema(ctx context.Context, action string, group node.Group, jsonSchemaRef, prefix string, compiler *jsonschema.Compiler) (*Container, error) {
+func NewFromJSONSchema(ctx context.Context, action string, group node.UiNodeGroup, jsonSchemaRef, prefix string, compiler *jsonschema.Compiler) (*Container, error) {
 	c := New(action)
 	nodes, err := NodesFromJSONSchema(ctx, group, jsonSchemaRef, prefix, compiler)
 	if err != nil {
@@ -101,7 +101,7 @@ func NewFromJSONSchema(ctx context.Context, action string, group node.Group, jso
 	return c, nil
 }
 
-func NodesFromJSONSchema(ctx context.Context, group node.Group, jsonSchemaRef, prefix string, compiler *jsonschema.Compiler) (node.Nodes, error) {
+func NodesFromJSONSchema(ctx context.Context, group node.UiNodeGroup, jsonSchemaRef, prefix string, compiler *jsonschema.Compiler) (node.Nodes, error) {
 	paths, err := jsonschemax.ListPaths(ctx, jsonSchemaRef, compiler)
 	if err != nil {
 		return nil, err
@@ -150,7 +150,7 @@ func (c *Container) Reset(exclude ...string) {
 // formUI Container, the error is returned.
 //
 // This method DOES NOT touch the values of the node values/names, only its errors.
-func (c *Container) ParseError(group node.Group, err error) error {
+func (c *Container) ParseError(group node.UiNodeGroup, err error) error {
 	if e := richError(nil); errors.As(err, &e) {
 		if e.StatusCode() == http.StatusBadRequest {
 			c.AddMessage(group, text.NewValidationErrorGeneric(e.Reason()))
@@ -195,7 +195,7 @@ func (c *Container) ParseError(group node.Group, err error) error {
 }
 
 // UpdateNodeValuesFromJSON sets the container's fields to the provided values.
-func (c *Container) UpdateNodeValuesFromJSON(raw json.RawMessage, prefix string, group node.Group) {
+func (c *Container) UpdateNodeValuesFromJSON(raw json.RawMessage, prefix string, group node.UiNodeGroup) {
 	for k, v := range jsonx.Flatten(raw) {
 		k = addPrefix(k, prefix, ".")
 
@@ -236,7 +236,7 @@ func (c *Container) SetValue(id string, n *node.Node) {
 
 // AddMessage adds the provided error, and if a non-empty names list is set,
 // adds the error on the corresponding field.
-func (c *Container) AddMessage(group node.Group, err *text.Message, setForFields ...string) {
+func (c *Container) AddMessage(group node.UiNodeGroup, err *text.Message, setForFields ...string) {
 	if len(stringslice.TrimSpaceEmptyFilter(setForFields)) == 0 {
 		c.Messages = append(c.Messages, *err)
 		return

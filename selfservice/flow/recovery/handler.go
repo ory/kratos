@@ -370,7 +370,7 @@ func (h *Handler) submitFlow(w http.ResponseWriter, r *http.Request, ps httprout
 		return
 	}
 
-	var g node.Group
+	var g node.UiNodeGroup
 	var found bool
 	for _, ss := range h.d.AllRecoveryStrategies() {
 		err := ss.Recover(w, r, f)

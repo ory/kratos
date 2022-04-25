@@ -49,19 +49,19 @@ func TestNodesSort(t *testing.T) {
 		"1.json": {
 			node.SortUseOrder([]string{"password_identifier"}),
 			node.SortUpdateOrder(node.PasswordLoginOrder),
-			node.SortByGroups([]node.Group{
+			node.SortByGroups([]node.UiNodeGroup{
 				node.DefaultGroup,
 				node.ProfileGroup,
 				node.OpenIDConnectGroup,
 				node.PasswordGroup,
-				node.RecoveryLinkGroup,
-				node.VerificationLinkGroup,
+				node.LinkGroup,
+				node.LinkGroup,
 			}),
 		},
 		"2.json": {
 			node.SortBySchema(filepath.Join("fixtures/sort/schema", "2.json")),
 			node.SortUpdateOrder(node.PasswordLoginOrder),
-			node.SortByGroups([]node.Group{
+			node.SortByGroups([]node.UiNodeGroup{
 				node.DefaultGroup,
 				node.OpenIDConnectGroup,
 				node.PasswordGroup,
@@ -69,7 +69,7 @@ func TestNodesSort(t *testing.T) {
 		},
 		"3.json": {
 			node.SortBySchema(filepath.Join("fixtures/sort/schema", "3.json")),
-			node.SortByGroups([]node.Group{
+			node.SortByGroups([]node.UiNodeGroup{
 				node.DefaultGroup,
 				node.OpenIDConnectGroup,
 				node.PasswordGroup,
@@ -77,7 +77,7 @@ func TestNodesSort(t *testing.T) {
 		},
 		"4.json": {
 			node.SortBySchema(filepath.Join("fixtures/sort/schema", "4.json")),
-			node.SortByGroups([]node.Group{
+			node.SortByGroups([]node.UiNodeGroup{
 				node.DefaultGroup,
 				node.ProfileGroup,
 				node.PasswordGroup,

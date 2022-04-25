@@ -41,7 +41,7 @@ func TestNodeEncode(t *testing.T) {
 }
 
 func TestNodeDecode(t *testing.T) {
-	for _, kind := range []Type{
+	for _, kind := range []UiNodeType{
 		Text,
 		Input,
 		Image,

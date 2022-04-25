@@ -5,6 +5,8 @@
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
 **Credentials** | Pointer to [**AdminIdentityImportCredentials**](AdminIdentityImportCredentials.md) |  | [optional] 
+**MetadataAdmin** | Pointer to **interface{}** | Store metadata about the user which is only accessible through admin APIs such as &#x60;GET /admin/identities/&lt;id&gt;&#x60;. | [optional] 
+**MetadataPublic** | Pointer to **interface{}** | Store metadata about the identity which the identity itself can see when calling for example the session endpoint. Do not store sensitive information (e.g. credit score) about the identity in this field. | [optional] 
 **RecoveryAddresses** | Pointer to [**[]RecoveryAddress**](RecoveryAddress.md) | RecoveryAddresses contains all the addresses that can be used to recover an identity.  Use this structure to import recovery addresses for an identity. Please keep in mind that the address needs to be represented in the Identity Schema or this field will be overwritten on the next identity update. | [optional] 
 **SchemaId** | **string** | SchemaID is the ID of the JSON Schema to be used for validating the identity&#39;s traits. | 
 **State** | Pointer to [**IdentityState**](IdentityState.md) |  | [optional] 
@@ -55,6 +57,76 @@ SetCredentials sets Credentials field to given value.
 
 HasCredentials returns a boolean if a field has been set.
 
+### GetMetadataAdmin
+
+`func (o *AdminCreateIdentityBody) GetMetadataAdmin() interface{}`
+
+GetMetadataAdmin returns the MetadataAdmin field if non-nil, zero value otherwise.
+
+### GetMetadataAdminOk
+
+`func (o *AdminCreateIdentityBody) GetMetadataAdminOk() (*interface{}, bool)`
+
+GetMetadataAdminOk returns a tuple with the MetadataAdmin field if it's non-nil, zero value otherwise
+and a boolean to check if the value has been set.
+
+### SetMetadataAdmin
+
+`func (o *AdminCreateIdentityBody) SetMetadataAdmin(v interface{})`
+
+SetMetadataAdmin sets MetadataAdmin field to given value.
+
+### HasMetadataAdmin
+
+`func (o *AdminCreateIdentityBody) HasMetadataAdmin() bool`
+
+HasMetadataAdmin returns a boolean if a field has been set.
+
+### SetMetadataAdminNil
+
+`func (o *AdminCreateIdentityBody) SetMetadataAdminNil(b bool)`
+
+ SetMetadataAdminNil sets the value for MetadataAdmin to be an explicit nil
+
+### UnsetMetadataAdmin
+`func (o *AdminCreateIdentityBody) UnsetMetadataAdmin()`
+
+UnsetMetadataAdmin ensures that no value is present for MetadataAdmin, not even an explicit nil
+### GetMetadataPublic
+
+`func (o *AdminCreateIdentityBody) GetMetadataPublic() interface{}`
+
+GetMetadataPublic returns the MetadataPublic field if non-nil, zero value otherwise.
+
+### GetMetadataPublicOk
+
+`func (o *AdminCreateIdentityBody) GetMetadataPublicOk() (*interface{}, bool)`
+
+GetMetadataPublicOk returns a tuple with the MetadataPublic field if it's non-nil, zero value otherwise
+and a boolean to check if the value has been set.
+
+### SetMetadataPublic
+
+`func (o *AdminCreateIdentityBody) SetMetadataPublic(v interface{})`
+
+SetMetadataPublic sets MetadataPublic field to given value.
+
+### HasMetadataPublic
+
+`func (o *AdminCreateIdentityBody) HasMetadataPublic() bool`
+
+HasMetadataPublic returns a boolean if a field has been set.
+
+### SetMetadataPublicNil
+
+`func (o *AdminCreateIdentityBody) SetMetadataPublicNil(b bool)`
+
+ SetMetadataPublicNil sets the value for MetadataPublic to be an explicit nil
+
+### UnsetMetadataPublic
+`func (o *AdminCreateIdentityBody) UnsetMetadataPublic()`
+
+UnsetMetadataPublic ensures that no value is present for MetadataPublic, not even an explicit nil
 ### GetRecoveryAddresses
 
 `func (o *AdminCreateIdentityBody) GetRecoveryAddresses() []RecoveryAddress`
