@@ -4,7 +4,7 @@
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 **Table of Contents**
 
-- [ (2022-04-24)](#2022-04-24)
+- [ (2022-04-26)](#2022-04-26)
   - [Breaking Changes](#breaking-changes)
     - [Bug Fixes](#bug-fixes)
     - [Code Refactoring](#code-refactoring)
@@ -251,7 +251,7 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# [](https://github.com/ory/kratos/compare/v0.9.0-alpha.3...v) (2022-04-24)
+# [](https://github.com/ory/kratos/compare/v0.9.0-alpha.3...v) (2022-04-26)
 ## Breaking Changes
 
 This patch moves several CLI command to comply with the Ory CLI command structure:
@@ -294,6 +294,7 @@ This patch moves several CLI command to comply with the Ory CLI command structur
 * Do not expose debug in a response when a schema is not found ([#2348](https://github.com/ory/kratos/issues/2348)) ([aee2b1e](https://github.com/ory/kratos/commit/aee2b1ed1189b57fcbb1aaa456444d5121be94b1))
 * **Dockerfile:** Use existing builder base image ([#2390](https://github.com/ory/kratos/issues/2390)) ([37de25a](https://github.com/ory/kratos/commit/37de25a541a24e03407ecf344fb750775e48c782))
 * Get user first name and last name from Apple ([#2331](https://github.com/ory/kratos/issues/2331)) ([4779909](https://github.com/ory/kratos/commit/47799098b35ea1cf5a1163f57d872a5bb2242d97))
+* Internal Server Error on Empty PUT /identities/id body ([#2417](https://github.com/ory/kratos/issues/2417)) ([5a50231](https://github.com/ory/kratos/commit/5a50231b553aaa64bd90a3d2cd1be9d2e3aba9ac))
 * Load return_to and append to errors ([#2333](https://github.com/ory/kratos/issues/2333)) ([5efe4a3](https://github.com/ory/kratos/commit/5efe4a33e35e74d248d4eec43dc901b7b6334037)), closes [#2275](https://github.com/ory/kratos/issues/2275) [#2279](https://github.com/ory/kratos/issues/2279) [#2285](https://github.com/ory/kratos/issues/2285)
 * Refresh is always false when session exists ([d3436d7](https://github.com/ory/kratos/commit/d3436d7fa17589d91e25c9f0bd66bc3bb5b150fa)), closes [#2341](https://github.com/ory/kratos/issues/2341)
 * Remove required legacy field ([#2410](https://github.com/ory/kratos/issues/2410)) ([638d45c](https://github.com/ory/kratos/commit/638d45caf480b7287c9762cbf3c593217f40e3e8))
