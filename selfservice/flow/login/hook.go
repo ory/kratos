@@ -23,7 +23,7 @@ type (
 	}
 
 	PostHookExecutor interface {
-		ExecuteLoginPostHook(w http.ResponseWriter, r *http.Request, g node.Group, a *Flow, s *session.Session) error
+		ExecuteLoginPostHook(w http.ResponseWriter, r *http.Request, g node.UiNodeGroup, a *Flow, s *session.Session) error
 	}
 
 	HooksProvider interface {
@@ -77,7 +77,7 @@ func (e *HookExecutor) requiresAAL2(r *http.Request, s *session.Session, a *Flow
 	return aalErr, true
 }
 
-func (e *HookExecutor) handleLoginError(_ http.ResponseWriter, r *http.Request, g node.Group, f *Flow, i *identity.Identity, flowError error) error {
+func (e *HookExecutor) handleLoginError(_ http.ResponseWriter, r *http.Request, g node.UiNodeGroup, f *Flow, i *identity.Identity, flowError error) error {
 	if f != nil {
 		if i != nil {
 			cont, err := container.NewFromStruct("", g, i.Traits, "traits")
@@ -100,7 +100,7 @@ func (e *HookExecutor) handleLoginError(_ http.ResponseWriter, r *http.Request, 
 	return flowError
 }
 
-func (e *HookExecutor) PostLoginHook(w http.ResponseWriter, r *http.Request, g node.Group, a *Flow, i *identity.Identity, s *session.Session) error {
+func (e *HookExecutor) PostLoginHook(w http.ResponseWriter, r *http.Request, g node.UiNodeGroup, a *Flow, i *identity.Identity, s *session.Session) error {
 	if err := s.Activate(i, e.d.Config(r.Context()), time.Now().UTC()); err != nil {
 		return err
 	}

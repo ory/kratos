@@ -580,7 +580,7 @@ continueLogin:
 	}
 
 	var i *identity.Identity
-	var group node.Group
+	var group node.UiNodeGroup
 	for _, ss := range h.d.AllLoginStrategies() {
 		interim, err := ss.Login(w, r, f, sess)
 		group = ss.NodeGroup()
