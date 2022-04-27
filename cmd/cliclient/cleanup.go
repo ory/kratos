@@ -30,9 +30,9 @@ func (h *CleanupHandler) CleanupSQL(cmd *cobra.Command, args []string) {
 			configx.WithFlags(cmd.Flags()),
 			configx.SkipValidation())
 		if len(d.Config(cmd.Context()).DSN()) == 0 {
-			fmt.Println(cmd.UsageString())
-			fmt.Println("")
-			fmt.Println("When using flag -e, environment variable DSN must be set")
+			fmt.Fprintln(cmd.OutOrStdout(), cmd.UsageString())
+			fmt.Fprintln(cmd.OutOrStdout(), "")
+			fmt.Fprintln(cmd.OutOrStdout(), "When using flag -e, environment variable DSN must be set")
 			os.Exit(1)
 			return
 		}
