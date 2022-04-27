@@ -52,7 +52,7 @@ func (e Error) ExecuteSettingsPostPersistHook(w http.ResponseWriter, r *http.Req
 	return e.err("ExecuteSettingsPostPersistHook", settings.ErrHookAbortRequest)
 }
 
-func (e Error) ExecuteLoginPostHook(w http.ResponseWriter, r *http.Request, g node.Group, a *login.Flow, s *session.Session) error {
+func (e Error) ExecuteLoginPostHook(w http.ResponseWriter, r *http.Request, g node.UiNodeGroup, a *login.Flow, s *session.Session) error {
 	return e.err("ExecuteLoginPostHook", login.ErrHookAbortFlow)
 }
 

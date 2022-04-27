@@ -100,7 +100,7 @@ func WithCallback(cb func(ctxUpdate *UpdateContext) error) func(o *postSettingsH
 func (e *HookExecutor) handleSettingsError(_ http.ResponseWriter, r *http.Request, settingsType string, f *Flow, i *identity.Identity, flowError error) error {
 	if f != nil {
 		if i != nil {
-			var group node.Group
+			var group node.UiNodeGroup
 			switch settingsType {
 			case "password":
 				group = node.PasswordGroup
@@ -169,7 +169,7 @@ func (e *HookExecutor) PostSettingsHook(w http.ResponseWriter, r *http.Request, 
 					Debug("A ExecuteSettingsPrePersistHook hook aborted early.")
 				return nil
 			}
-			var group node.Group
+			var group node.UiNodeGroup
 			switch settingsType {
 			case "password":
 				group = node.PasswordGroup

@@ -15,7 +15,6 @@ import (
 	"github.com/ory/kratos/schema"
 	"github.com/ory/kratos/selfservice/flow"
 	"github.com/ory/kratos/session"
-	"github.com/ory/kratos/ui/node"
 	"github.com/ory/kratos/x"
 )
 
@@ -103,26 +102,12 @@ func (e *HookExecutor) PostRegistrationHook(w http.ResponseWriter, r *http.Reque
 					Debug("A ExecutePostRegistrationPrePersistHook hook aborted early.")
 				return nil
 			}
-			var group node.Group
-			switch ct {
-			case identity.CredentialsTypePassword:
-				group = node.PasswordGroup
-			case identity.CredentialsTypeOIDC:
-				group = node.OpenIDConnectGroup
-			case identity.CredentialsTypeRecoveryLink:
-				group = node.RecoveryLinkGroup
-			case identity.CredentialsTypeLookup:
-				group = node.LookupGroup
-			case identity.CredentialsTypeTOTP:
-				group = node.TOTPGroup
-			case identity.CredentialsTypeWebAuthn:
-				group = node.WebAuthnGroup
-			}
+
 			var traits identity.Traits
 			if i != nil {
 				traits = i.Traits
 			}
-			return flow.HandleHookError(w, r, a, traits, group, err, e.d, e.d)
+			return flow.HandleHookError(w, r, a, traits, ct.ToUiNodeGroup(), err, e.d, e.d)
 		}
 
 		e.d.Logger().WithRequest(r).
@@ -186,26 +171,12 @@ func (e *HookExecutor) PostRegistrationHook(w http.ResponseWriter, r *http.Reque
 					Debug("A ExecutePostRegistrationPostPersistHook hook aborted early.")
 				return nil
 			}
-			var group node.Group
-			switch ct {
-			case identity.CredentialsTypePassword:
-				group = node.PasswordGroup
-			case identity.CredentialsTypeOIDC:
-				group = node.OpenIDConnectGroup
-			case identity.CredentialsTypeRecoveryLink:
-				group = node.RecoveryLinkGroup
-			case identity.CredentialsTypeLookup:
-				group = node.LookupGroup
-			case identity.CredentialsTypeTOTP:
-				group = node.TOTPGroup
-			case identity.CredentialsTypeWebAuthn:
-				group = node.WebAuthnGroup
-			}
+
 			var traits identity.Traits
 			if i != nil {
 				traits = i.Traits
 			}
-			return flow.HandleHookError(w, r, a, traits, group, err, e.d, e.d)
+			return flow.HandleHookError(w, r, a, traits, ct.ToUiNodeGroup(), err, e.d, e.d)
 		}
 
 		e.d.Logger().WithRequest(r).

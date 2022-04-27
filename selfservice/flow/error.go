@@ -93,7 +93,7 @@ func NewBrowserLocationChangeRequiredError(redirectTo string) *BrowserLocationCh
 	}
 }
 
-func HandleHookError(_ http.ResponseWriter, r *http.Request, f Flow, traits identity.Traits, group node.Group, flowError error, logger x.LoggingProvider, csrf x.CSRFTokenGeneratorProvider) error {
+func HandleHookError(_ http.ResponseWriter, r *http.Request, f Flow, traits identity.Traits, group node.UiNodeGroup, flowError error, logger x.LoggingProvider, csrf x.CSRFTokenGeneratorProvider) error {
 	if f != nil {
 		if traits != nil {
 			cont, err := container.NewFromStruct("", group, traits, "traits")

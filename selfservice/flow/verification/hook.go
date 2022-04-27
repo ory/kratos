@@ -74,7 +74,7 @@ func (e *HookExecutor) PostVerificationHook(w http.ResponseWriter, r *http.Reque
 			if i != nil {
 				traits = i.Traits
 			}
-			return flow.HandleHookError(w, r, a, traits, node.RecoveryLinkGroup, err, e.d, e.d)
+			return flow.HandleHookError(w, r, a, traits, node.LinkGroup, err, e.d, e.d)
 		}
 
 		e.d.Logger().WithRequest(r).
