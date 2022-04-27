@@ -13,6 +13,7 @@ limitations under the License.
 package cleanup
 
 import (
+	"fmt"
 	"time"
 
 	"github.com/ory/kratos/driver/config"
@@ -37,7 +38,10 @@ You can read in the database URL using the -e flag, for example:
 Before running this command on an existing database, create a back up!
 `,
 		Run: func(cmd *cobra.Command, args []string) {
-			cliclient.NewCleanupHandler().CleanupSQL(cmd, args)
+			err := cliclient.NewCleanupHandler().CleanupSQL(cmd, args)
+			if err != nil {
+				fmt.Fprintln(cmd.OutOrStdout(), err)
+			}
 		},
 	}
 

@@ -2,7 +2,8 @@ package cliclient
 
 import (
 	"fmt"
-	"os"
+
+	"github.com/pkg/errors"
 
 	"github.com/ory/x/configx"
 
@@ -20,7 +21,7 @@ func NewCleanupHandler() *CleanupHandler {
 	return &CleanupHandler{}
 }
 
-func (h *CleanupHandler) CleanupSQL(cmd *cobra.Command, args []string) {
+func (h *CleanupHandler) CleanupSQL(cmd *cobra.Command, args []string) error {
 	var d driver.Registry
 
 	if flagx.MustGetBool(cmd, "read-from-env") {
@@ -33,14 +34,12 @@ func (h *CleanupHandler) CleanupSQL(cmd *cobra.Command, args []string) {
 			fmt.Fprintln(cmd.OutOrStdout(), cmd.UsageString())
 			fmt.Fprintln(cmd.OutOrStdout(), "")
 			fmt.Fprintln(cmd.OutOrStdout(), "When using flag -e, environment variable DSN must be set")
-			os.Exit(1)
-			return
+			return cmdx.FailSilently(cmd)
 		}
 	} else {
 		if len(args) != 1 {
 			fmt.Println(cmd.UsageString())
-			os.Exit(1)
-			return
+			return cmdx.FailSilently(cmd)
 		}
 		d = driver.NewWithoutInit(
 			cmd.Context(),
@@ -51,11 +50,16 @@ func (h *CleanupHandler) CleanupSQL(cmd *cobra.Command, args []string) {
 	}
 
 	err := d.Init(cmd.Context(), driver.SkipNetworkInit)
-	cmdx.Must(err, "An error occurred initializing migrations: %s", err)
+	if err != nil {
+		return errors.Wrap(err, "An error occurred initializing cleanup")
+	}
 
 	keepLast := flagx.MustGetDuration(cmd, "keep-last")
 
 	err = d.Persister().CleanupDatabase(cmd.Context(), d.Config(cmd.Context()).DatabaseCleanupSleepTables(), keepLast)
-	cmdx.Must(err, "An error occurred while cleaning up expired data: %s", err)
+	if err != nil {
+		return errors.Wrap(err, "An error occurred while cleaning up expired data")
+	}
 
+	return nil
 }
