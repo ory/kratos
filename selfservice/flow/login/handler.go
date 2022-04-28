@@ -717,10 +717,11 @@ continueLogin:
 		method := ss.CompletedAuthenticationMethod(r.Context())
 		sess.CompletedLoginFor(method.Method, method.AAL)
 		i = interim
+		s = ss
 		break
 	}
 
-	if i == nil {
+	if i == nil || s == nil {
 		h.d.LoginFlowErrorHandler().WriteFlowError(w, r, f, node.DefaultGroup, errors.WithStack(schema.NewNoLoginStrategyResponsible()))
 		return
 	}

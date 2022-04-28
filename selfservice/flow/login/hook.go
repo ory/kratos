@@ -43,6 +43,7 @@ type (
 	executorDependencies interface {
 		config.Provider
 		hydra.HydraProvider
+		identity.ManagementProvider
 		session.ManagementProvider
 		session.PersistenceProvider
 		x.CSRFTokenGeneratorProvider
@@ -188,6 +189,15 @@ func (e *HookExecutor) PostLoginHook(w http.ResponseWriter, r *http.Request, g n
 		return nil
 	}
 
+	if ct == identity.CredentialsTypeOIDC {
+		options := []identity.ManagerOption{
+			identity.ManagerExposeValidationErrorsForInternalTypeAssertion,
+			identity.ManagerAllowWriteProtectedTraits,
+		}
+		if err := e.d.IdentityManager().Update(r.Context(), i, options...); err != nil {
+			return errors.WithStack(err)
+		}
+	}
 	if err := e.d.SessionManager().UpsertAndIssueCookie(r.Context(), w, r, s); err != nil {
 		return errors.WithStack(err)
 	}
