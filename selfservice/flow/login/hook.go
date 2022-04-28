@@ -33,6 +33,7 @@ type (
 type (
 	executorDependencies interface {
 		config.Provider
+		identity.ManagementProvider
 		session.ManagementProvider
 		session.PersistenceProvider
 		x.WriterProvider
@@ -74,7 +75,7 @@ func (e *HookExecutor) requiresAAL2(r *http.Request, s *session.Session, a *Flow
 	return aalErr, true
 }
 
-func (e *HookExecutor) PostLoginHook(w http.ResponseWriter, r *http.Request, a *Flow, i *identity.Identity, s *session.Session) error {
+func (e *HookExecutor) PostLoginHook(w http.ResponseWriter, r *http.Request, ct identity.CredentialsType, a *Flow, i *identity.Identity, s *session.Session) error {
 	if err := s.Activate(i, e.d.Config(r.Context()), time.Now().UTC()); err != nil {
 		return err
 	}
@@ -144,6 +145,15 @@ func (e *HookExecutor) PostLoginHook(w http.ResponseWriter, r *http.Request, a *
 		return nil
 	}
 
+	if ct == identity.CredentialsTypeOIDC {
+		options := []identity.ManagerOption{
+			identity.ManagerExposeValidationErrorsForInternalTypeAssertion,
+			identity.ManagerAllowWriteProtectedTraits,
+		}
+		if err := e.d.IdentityManager().Update(r.Context(), i, options...); err != nil {
+			return errors.WithStack(err)
+		}
+	}
 	if err := e.d.SessionManager().UpsertAndIssueCookie(r.Context(), w, r, s); err != nil {
 		return errors.WithStack(err)
 	}
