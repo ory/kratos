@@ -24,12 +24,13 @@ type (
 )
 
 const (
-	TypeRecoveryInvalid     TemplateType = "recovery_invalid"
-	TypeRecoveryValid       TemplateType = "recovery_valid"
-	TypeVerificationInvalid TemplateType = "verification_invalid"
-	TypeVerificationValid   TemplateType = "verification_valid"
-	TypeOTP                 TemplateType = "otp"
-	TypeTestStub            TemplateType = "stub"
+	TypeRecoveryInvalid      TemplateType = "recovery_invalid"
+	TypeRecoveryValid        TemplateType = "recovery_valid"
+	TypeRecoveryValidOTP     TemplateType = "recovery_valid_otp"
+	TypeVerificationInvalid  TemplateType = "verification_invalid"
+	TypeVerificationValid    TemplateType = "verification_valid"
+	TypeVerificationValidOTP TemplateType = "verification_valid_otp"
+	TypeTestStub             TemplateType = "stub"
 )
 
 func GetEmailTemplateType(t EmailTemplate) (TemplateType, error) {
@@ -42,6 +43,10 @@ func GetEmailTemplateType(t EmailTemplate) (TemplateType, error) {
 		return TypeVerificationInvalid, nil
 	case *email.VerificationValid:
 		return TypeVerificationValid, nil
+	case *email.RecoveryValidOTP:
+		return TypeRecoveryValidOTP, nil
+	case *email.VerificationValidOTP:
+		return TypeVerificationValidOTP, nil
 	case *email.TestStub:
 		return TypeTestStub, nil
 	default:
@@ -75,6 +80,18 @@ func NewEmailTemplateFromMessage(d template.Dependencies, msg Message) (EmailTem
 			return nil, err
 		}
 		return email.NewVerificationValid(d, &t), nil
+	case TypeRecoveryValidOTP:
+		var t email.RecoveryValidOTPModel
+		if err := json.Unmarshal(msg.TemplateData, &t); err != nil {
+			return nil, err
+		}
+		return email.NewRecoveryValidOTP(d, &t), nil
+	case TypeVerificationValidOTP:
+		var t email.VerificationValidOTPModel
+		if err := json.Unmarshal(msg.TemplateData, &t); err != nil {
+			return nil, err
+		}
+		return email.NewVerificationValidOTP(d, &t), nil
 	case TypeTestStub:
 		var t email.TestStubModel
 		if err := json.Unmarshal(msg.TemplateData, &t); err != nil {

@@ -684,30 +684,46 @@ func TestDriverDefault_Strategies(t *testing.T) {
 	})
 
 	t.Run("case=recovery", func(t *testing.T) {
-		for k, tc := range []struct {
+		for _, tc := range []struct {
+			name   string
 			prep   func(conf *config.Config)
 			expect []string
 		}{
 			{
+				name:   "default - otp and link methods are enabled",
+				prep:   func(conf *config.Config) {},
+				expect: []string{"otp", "link"},
+			},
+			{
+				name: "turn off otp and link recovery methods",
 				prep: func(conf *config.Config) {
 					conf.MustSet(ctx, config.ViperKeySelfServiceStrategyConfig+".link.enabled", false)
+					conf.MustSet(config.ViperKeySelfServiceStrategyConfig+".otp.enabled", false)
 				},
 			},
 			{
+				name: "turn on link method",
 				prep: func(conf *config.Config) {
 					conf.MustSet(ctx, config.ViperKeySelfServiceStrategyConfig+".link.enabled", true)
+					conf.MustSet(config.ViperKeySelfServiceStrategyConfig+".otp.enabled", false)
 				}, expect: []string{"link"},
 			},
+			{
+				name: "turn on otp method",
+				prep: func(conf *config.Config) {
+					conf.MustSet(config.ViperKeySelfServiceStrategyConfig+".link.enabled", false)
+					conf.MustSet(config.ViperKeySelfServiceStrategyConfig+".otp.enabled", true)
+				}, expect: []string{"otp"},
+			},
 		} {
-			t.Run(fmt.Sprintf("run=%d", k), func(t *testing.T) {
+			t.Run(fmt.Sprintf("run=%s", tc.name), func(t *testing.T) {
 				conf, reg := internal.NewFastRegistryWithMocks(t)
 				tc.prep(conf)
 
 				s := reg.RecoveryStrategies(context.Background())
 				require.Len(t, s, len(tc.expect))
-				for k, e := range tc.expect {
-					assert.Equal(t, e, s[k].RecoveryStrategyID())
-				}
+
+				assert.ElementsMatch(t, tc.expect, strategyToString(s))
 			})
 		}
 	})
@@ -831,11 +847,19 @@ func TestDefaultRegistry_AllStrategies(t *testing.T) {
 	})
 
 	t.Run("case=all recovery strategies", func(t *testing.T) {
-		expects := []string{"link"}
+		expects := []string{"otp", "link"}
 		s := reg.AllRecoveryStrategies()
 		require.Len(t, s, len(expects))
-		for k, e := range expects {
-			assert.Equal(t, e, s[k].RecoveryStrategyID())
-		}
+		assert.ElementsMatch(t, expects, strategyToString(s))
 	})
+}
+
+func strategyToString(s recovery.Strategies) []string {
+	actualStrategies := make([]string, 0, len(s))
+
+	for _, strategy := range s {
+		actualStrategies = append(actualStrategies, strategy.RecoveryStrategyID())
+	}
+
+	return actualStrategies
 }

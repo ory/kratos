@@ -10,6 +10,7 @@ const (
 	InputAttributeTypeHidden        UiNodeInputAttributeType = "hidden"
 	InputAttributeTypeEmail         UiNodeInputAttributeType = "email"
 	InputAttributeTypeTel           UiNodeInputAttributeType = "tel"
+	InputAttributeTypeIdentifier    UiNodeInputAttributeType = "identifier"
 	InputAttributeTypeSubmit        UiNodeInputAttributeType = "submit"
 	InputAttributeTypeButton        UiNodeInputAttributeType = "button"
 	InputAttributeTypeDateTimeLocal UiNodeInputAttributeType = "datetime-local"

@@ -3,9 +3,10 @@ package node
 import (
 	"encoding/json"
 
+	"github.com/ory/x/jsonschemax"
+
 	"github.com/ory/kratos/text"
 	"github.com/ory/kratos/x"
-	"github.com/ory/x/jsonschemax"
 )
 
 const DisableFormField = "disableFormField"

@@ -9,7 +9,7 @@
     "token": {
       "type": "string"
     },
-    "phone": {
+    "identifier": {
       "type": "string",
       "format": "tel"
     },

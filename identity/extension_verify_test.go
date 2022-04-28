@@ -19,8 +19,8 @@ import (
 )
 
 const (
-	emailSchemaPath = "file://./stub/extension/verify/email.schema.json"
-	phoneSchemaPath = "file://./stub/extension/verify/phone.schema.json"
+	emailVerificationSchemaPath = "file://./stub/extension/verify/email.schema.json"
+	phoneVerificationSchemaPath = "file://./stub/extension/verify/phone.schema.json"
 )
 
 var ctx = context.Background()
@@ -39,7 +39,7 @@ func TestSchemaExtensionVerification(t *testing.T) {
 		}{
 			{
 				name:   "email:must create new address",
-				schema: emailSchemaPath,
+				schema: emailVerificationSchemaPath,
 				doc:    `{"username":"foo@ory.sh"}`,
 				expect: []VerifiableAddress{
 					{
@@ -53,7 +53,7 @@ func TestSchemaExtensionVerification(t *testing.T) {
 			},
 			{
 				name:   "email:must create new address because new and existing doesn't match",
-				schema: emailSchemaPath,
+				schema: emailVerificationSchemaPath,
 				doc:    `{"username":"foo@ory.sh"}`,
 				existing: []VerifiableAddress{
 					{
@@ -76,7 +76,7 @@ func TestSchemaExtensionVerification(t *testing.T) {
 			},
 			{
 				name:   "email:must find existing address in case of match",
-				schema: emailSchemaPath,
+				schema: emailVerificationSchemaPath,
 				doc:    `{"emails":["baz@ory.sh","foo@ory.sh"]}`,
 				existing: []VerifiableAddress{
 					{
@@ -113,7 +113,7 @@ func TestSchemaExtensionVerification(t *testing.T) {
 			},
 			{
 				name:   "email:must return only one address in case of duplication",
-				schema: emailSchemaPath,
+				schema: emailVerificationSchemaPath,
 				doc:    `{"emails":["foo@ory.sh","foo@ory.sh","baz@ory.sh"]}`,
 				existing: []VerifiableAddress{
 					{
@@ -150,13 +150,13 @@ func TestSchemaExtensionVerification(t *testing.T) {
 			},
 			{
 				name:      "email:must return error for malformed input",
-				schema:    emailSchemaPath,
+				schema:    emailVerificationSchemaPath,
 				doc:       `{"emails":["foo@ory.sh","bar@ory.sh"], "username": "foobar"}`,
 				expectErr: errors.New("I[#/username] S[#/properties/username/format] \"foobar\" is not valid \"email\""),
 			},
 			{
 				name:   "email:must merge email addresses from multiple attributes",
-				schema: emailSchemaPath,
+				schema: emailVerificationSchemaPath,
 				doc:    `{"emails":["foo@ory.sh","bar@ory.sh","bar@ory.sh"], "username": "foobar@ory.sh"}`,
 				expect: []VerifiableAddress{
 					{
@@ -184,7 +184,7 @@ func TestSchemaExtensionVerification(t *testing.T) {
 			},
 			{
 				name:   "phone:must create new address",
-				schema: phoneSchemaPath,
+				schema: phoneVerificationSchemaPath,
 				doc:    `{"username":"+18004444444"}`,
 				expect: []VerifiableAddress{
 					{
@@ -198,7 +198,7 @@ func TestSchemaExtensionVerification(t *testing.T) {
 			},
 			{
 				name:   "phone:must create new address because new and existing doesn't match",
-				schema: phoneSchemaPath,
+				schema: phoneVerificationSchemaPath,
 				doc:    `{"username":"+18004444444"}`,
 				existing: []VerifiableAddress{
 					{
@@ -221,7 +221,7 @@ func TestSchemaExtensionVerification(t *testing.T) {
 			},
 			{
 				name:   "phone:must find existing addresses in case of match",
-				schema: phoneSchemaPath,
+				schema: phoneVerificationSchemaPath,
 				doc:    `{"phones":["+18004444444","+442087599036"]}`,
 				existing: []VerifiableAddress{
 					{
@@ -258,7 +258,7 @@ func TestSchemaExtensionVerification(t *testing.T) {
 			},
 			{
 				name:   "phone:must return only one address in case of duplication",
-				schema: phoneSchemaPath,
+				schema: phoneVerificationSchemaPath,
 				doc:    `{"phones": ["+18004444444","+18004444444","+442087599036"]}`,
 				existing: []VerifiableAddress{
 					{
@@ -295,7 +295,7 @@ func TestSchemaExtensionVerification(t *testing.T) {
 			},
 			{
 				name:   "phone:must merge phones from multiple attributes",
-				schema: phoneSchemaPath,
+				schema: phoneVerificationSchemaPath,
 				doc:    `{"phones": ["+18004444444","+18004444444","+442087599036"], "username": "+380634872774"}`,
 				expect: []VerifiableAddress{
 					{
@@ -323,7 +323,7 @@ func TestSchemaExtensionVerification(t *testing.T) {
 			},
 			{
 				name:      "phone:must return error for malformed input",
-				schema:    phoneSchemaPath,
+				schema:    phoneVerificationSchemaPath,
 				doc:       `{"phones":["+18004444444","+18004444444","12112112"], "username": "+380634872774"}`,
 				expectErr: errors.New("I[#/phones/2] S[#/properties/phones/items/format] \"12112112\" is not valid \"phone\""),
 			},
@@ -350,14 +350,14 @@ func TestSchemaExtensionVerification(t *testing.T) {
 				addresses := id.VerifiableAddresses
 				require.Len(t, addresses, len(tc.expect))
 
-				mustContainAddress(t, tc.expect, addresses)
+				mustContainVerifiableAddress(t, tc.expect, addresses)
 			})
 		}
 	})
 
 }
 
-func mustContainAddress(t *testing.T, expected, actual []VerifiableAddress) {
+func mustContainVerifiableAddress(t *testing.T, expected, actual []VerifiableAddress) {
 	for _, act := range actual {
 		var found bool
 		for _, expect := range expected {

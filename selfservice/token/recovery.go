@@ -93,7 +93,7 @@ func NewOTPRecovery(address *identity.RecoveryAddress, f *recovery.Flow, expires
 	}
 	return &RecoveryToken{
 		ID:                x.NewUUID(),
-		Token:             randx.MustString(6, randx.Numeric),
+		Token:             randx.MustString(8, randx.AlphaNum),
 		RecoveryAddress:   address,
 		ExpiresAt:         now.Add(expiresIn),
 		IssuedAt:          now,

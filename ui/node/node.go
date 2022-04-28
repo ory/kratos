@@ -13,8 +13,9 @@ import (
 
 	"github.com/ory/kratos/schema"
 
-	"github.com/ory/kratos/text"
 	"github.com/ory/x/stringslice"
+
+	"github.com/ory/kratos/text"
 )
 
 // swagger:enum UiNodeType
@@ -41,6 +42,7 @@ const (
 	OpenIDConnectGroup UiNodeGroup = "oidc"
 	ProfileGroup       UiNodeGroup = "profile"
 	LinkGroup          UiNodeGroup = "link"
+	OTPGroup           UiNodeGroup = "otp"
 	TOTPGroup          UiNodeGroup = "totp"
 	LookupGroup        UiNodeGroup = "lookup_secret"
 	WebAuthnGroup      UiNodeGroup = "webauthn"

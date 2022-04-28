@@ -1,6 +1,8 @@
 package otp
 
 import (
+	"github.com/ory/x/decoderx"
+
 	"github.com/ory/kratos/courier"
 	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/identity"
@@ -14,7 +16,6 @@ import (
 	"github.com/ory/kratos/ui/container"
 	"github.com/ory/kratos/ui/node"
 	"github.com/ory/kratos/x"
-	"github.com/ory/x/decoderx"
 )
 
 var _ recovery.Strategy = new(Strategy)
@@ -80,10 +81,10 @@ func NewStrategy(d strategyDependencies) *Strategy {
 	return &Strategy{d: d, dx: decoderx.NewHTTP()}
 }
 
-func (s *Strategy) RecoveryNodeGroup() node.Group {
-	return node.RecoveryOTPGroup
+func (s *Strategy) RecoveryNodeGroup() node.UiNodeGroup {
+	return node.OTPGroup
 }
 
-func (s *Strategy) VerificationNodeGroup() node.Group {
-	return node.VerificationOTPGroup
+func (s *Strategy) VerificationNodeGroup() node.UiNodeGroup {
+	return node.OTPGroup
 }

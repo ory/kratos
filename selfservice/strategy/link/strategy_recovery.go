@@ -497,7 +497,6 @@ type recoverySubmitPayload struct {
 	CSRFToken string `json:"csrf_token" form:"csrf_token"`
 	Flow      string `json:"flow" form:"flow"`
 	Email     string `json:"email" form:"email"`
-	Phone     string `json:"phone" form:"phone"`
 }
 
 func (s *Strategy) decodeRecovery(r *http.Request) (*recoverySubmitPayload, error) {

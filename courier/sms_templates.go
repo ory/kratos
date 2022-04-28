@@ -17,8 +17,10 @@ type SMSTemplate interface {
 
 func SMSTemplateType(t SMSTemplate) (TemplateType, error) {
 	switch t.(type) {
-	case *sms.OTPMessage:
-		return TypeOTP, nil
+	case *sms.RecoveryMessage:
+		return TypeRecoveryValid, nil
+	case *sms.VerificationMessage:
+		return TypeVerificationValid, nil
 	case *sms.TestStub:
 		return TypeTestStub, nil
 	default:
@@ -28,12 +30,18 @@ func SMSTemplateType(t SMSTemplate) (TemplateType, error) {
 
 func NewSMSTemplateFromMessage(d Dependencies, m Message) (SMSTemplate, error) {
 	switch m.TemplateType {
-	case TypeOTP:
-		var t sms.OTPMessageModel
+	case TypeRecoveryValid:
+		var t sms.RecoveryMessageModel
 		if err := json.Unmarshal(m.TemplateData, &t); err != nil {
 			return nil, err
 		}
-		return sms.NewOTPMessage(d, &t), nil
+		return sms.NewRecoveryOTPMessage(d, &t), nil
+	case TypeVerificationValid:
+		var t sms.VerificationMessageModel
+		if err := json.Unmarshal(m.TemplateData, &t); err != nil {
+			return nil, err
+		}
+		return sms.NewVerificationOTPMessage(d, &t), nil
 	case TypeTestStub:
 		var t sms.TestStubModel
 		if err := json.Unmarshal(m.TemplateData, &t); err != nil {

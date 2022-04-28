@@ -551,6 +551,24 @@ func (p *Persister) FindRecoveryAddressByValue(ctx context.Context, via identity
 	return &address, nil
 }
 
+func (p *Persister) FindVerifiableAddress(ctx context.Context, value string) (*identity.VerifiableAddress, error) {
+	var address identity.VerifiableAddress
+	if err := p.GetConnection(ctx).Where("nid = ? AND value = ?", corp.ContextualizeNID(ctx, p.nid), stringToLowerTrim(value)).First(&address); err != nil {
+		return nil, sqlcon.HandleError(err)
+	}
+
+	return &address, nil
+}
+
+func (p *Persister) FindRecoveryAddress(ctx context.Context, value string) (*identity.RecoveryAddress, error) {
+	var address identity.RecoveryAddress
+	if err := p.GetConnection(ctx).Where("nid = ? AND value = ?", corp.ContextualizeNID(ctx, p.nid), stringToLowerTrim(value)).First(&address); err != nil {
+		return nil, sqlcon.HandleError(err)
+	}
+
+	return &address, nil
+}
+
 func (p *Persister) VerifyAddress(ctx context.Context, code string) error {
 	ctx, span := p.r.Tracer(ctx).Tracer().Start(ctx, "persistence.sql.VerifyAddress")
 	defer span.End()

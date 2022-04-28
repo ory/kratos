@@ -54,29 +54,29 @@ func (r *SchemaExtensionVerification) Run(ctx jsonschema.ValidationContext, s sc
 	return ctx.Error("", "verification.via has unknown value %q", s.Verification.Via)
 }
 
-func (r *SchemaExtensionVerification) Finish() error {
-	r.i.VerifiableAddresses = r.v
-	return nil
-}
-
 func (r *SchemaExtensionVerification) appendAddress(address *VerifiableAddress) {
-	if h := has(r.i.VerifiableAddresses, address); h != nil {
-		if has(r.v, address) == nil {
+	if h := r.has(r.i.VerifiableAddresses, address); h != nil {
+		if r.has(r.v, address) == nil {
 			r.v = append(r.v, *h)
 		}
 		return
 	}
 
-	if has(r.v, address) == nil {
+	if r.has(r.v, address) == nil {
 		r.v = append(r.v, *address)
 	}
 }
 
-func has(haystack []VerifiableAddress, needle *VerifiableAddress) *VerifiableAddress {
+func (r *SchemaExtensionVerification) has(haystack []VerifiableAddress, needle *VerifiableAddress) *VerifiableAddress {
 	for _, has := range haystack {
 		if has.Value == needle.Value && has.Via == needle.Via {
 			return &has
 		}
 	}
+	return nil
+}
+
+func (r *SchemaExtensionVerification) Finish() error {
+	r.i.VerifiableAddresses = r.v
 	return nil
 }

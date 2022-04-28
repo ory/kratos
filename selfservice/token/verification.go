@@ -68,7 +68,7 @@ func NewOTPVerification(address *identity.VerifiableAddress, f *verification.Flo
 	now := time.Now().UTC()
 	return &VerificationToken{
 		ID:                x.NewUUID(),
-		Token:             randx.MustString(6, randx.Numeric),
+		Token:             randx.MustString(8, randx.AlphaNum),
 		VerifiableAddress: address,
 		ExpiresAt:         now.Add(expiresIn),
 		IssuedAt:          now,

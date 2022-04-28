@@ -14,8 +14,8 @@ import (
 
 	"github.com/ory/x/fsx"
 
-	"github.com/ory/kratos/selfservice/token"
 	"github.com/ory/kratos/identity"
+	"github.com/ory/kratos/selfservice/token"
 
 	"github.com/bradleyjkemp/cupaloy/v2"
 	"github.com/stretchr/testify/assert"

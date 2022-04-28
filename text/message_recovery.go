@@ -37,9 +37,9 @@ func NewRecoveryEmailSent() *Message {
 	}
 }
 
-func NewRecoveryPhoneSent() *Message {
+func NewRecoveryOTPSent() *Message {
 	return &Message{
-		ID:      InfoSelfServiceRecoverySMSSent,
+		ID:      InfoSelfServiceRecoveryOTPSent,
 		Type:    Info,
 		Text:    "An phone containing a recovery OTP has been sent to the phone number you provided.",
 		Context: context(nil),

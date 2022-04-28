@@ -1,7 +1,7 @@
 {
   "type": "object",
   "properties": {
-    "phone": {
+    "phones": {
       "type": "array",
       "items": {
         "type": "string",

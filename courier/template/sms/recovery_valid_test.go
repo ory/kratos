@@ -12,7 +12,7 @@ import (
 	"github.com/ory/kratos/internal"
 )
 
-func TestNewOTPMessage(t *testing.T) {
+func TestNewRecoveryOTPMessage(t *testing.T) {
 	_, reg := internal.NewFastRegistryWithMocks(t)
 
 	const (
@@ -20,9 +20,9 @@ func TestNewOTPMessage(t *testing.T) {
 		otp           = "012345"
 	)
 
-	tpl := sms.NewOTPMessage(reg, &sms.OTPMessageModel{To: expectedPhone, Code: otp})
+	tpl := sms.NewRecoveryOTPMessage(reg, &sms.RecoveryMessageModel{To: expectedPhone, Code: otp})
 
-	expectedBody := fmt.Sprintf("Your verification code is: %s\n", otp)
+	expectedBody := fmt.Sprintf("Your recovery code is: %s\n", otp)
 
 	actualBody, err := tpl.SMSBody(context.Background())
 	require.NoError(t, err)

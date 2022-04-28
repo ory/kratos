@@ -49,15 +49,6 @@ func (r *SchemaExtensionRecovery) Run(ctx jsonschema.ValidationContext, s schema
 	return ctx.Error("", "recovery.via has unknown value %q", s.Recovery.Via)
 }
 
-func (r *SchemaExtensionRecovery) has(haystack []RecoveryAddress, needle *RecoveryAddress) *RecoveryAddress {
-	for _, has := range haystack {
-		if has.Value == needle.Value && has.Via == needle.Via {
-			return &has
-		}
-	}
-	return nil
-}
-
 func (r *SchemaExtensionRecovery) appendAddress(address *RecoveryAddress) {
 	if has := r.has(r.i.RecoveryAddresses, address); has != nil {
 		if r.has(r.v, address) == nil {
@@ -69,8 +60,15 @@ func (r *SchemaExtensionRecovery) appendAddress(address *RecoveryAddress) {
 	if has := r.has(r.v, address); has == nil {
 		r.v = append(r.v, *address)
 	}
+}
 
-	return
+func (r *SchemaExtensionRecovery) has(haystack []RecoveryAddress, needle *RecoveryAddress) *RecoveryAddress {
+	for _, has := range haystack {
+		if has.Value == needle.Value && has.Via == needle.Via {
+			return &has
+		}
+	}
+	return nil
 }
 
 func (r *SchemaExtensionRecovery) Finish() error {

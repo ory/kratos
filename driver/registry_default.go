@@ -293,9 +293,9 @@ func (m *RegistryDefault) selfServiceStrategies() []interface{} {
 		m.selfserviceStrategies = []interface{}{
 			password2.NewStrategy(m),
 			oidc.NewStrategy(m),
-			otp.NewStrategy(m),
 			profile.NewStrategy(m),
 			link.NewStrategy(m),
+			otp.NewStrategy(m),
 			totp.NewStrategy(m),
 			webauthn.NewStrategy(m),
 			lookup.NewStrategy(m),

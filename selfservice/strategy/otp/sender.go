@@ -3,11 +3,14 @@ package otp
 import (
 	"context"
 	"net/http"
+	"reflect"
+	"strings"
 
 	"github.com/hashicorp/go-retryablehttp"
 	"github.com/pkg/errors"
 
 	"github.com/ory/kratos/courier"
+	"github.com/ory/kratos/courier/template/email"
 	templates "github.com/ory/kratos/courier/template/sms"
 	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/identity"
@@ -46,27 +49,39 @@ type (
 	}
 )
 
-var ErrUnknownPhone = errors.New("verification requested for unknown phone")
+var ErrUnknownIdentifier = errors.New("operation is requested for unknown identifier")
 
 func NewSender(r senderDependencies) *Sender {
 	return &Sender{r: r}
 }
 
-// SendRecoveryOTP sends a one time password to the specified phone number. If the address does not exist in the store, a sms is
-// still being sent to prevent account enumeration attacks. In that case, this function returns the ErrUnknownAddress
-// error.
-func (s *Sender) SendRecoveryOTP(ctx context.Context, r *http.Request, f *recovery.Flow, via identity.VerifiableAddressType, to string) error {
+// SendRecoveryOTP sends a recovery OTP to the specified address. If the address does not exist in the store,
+// this function returns the ErrUnknownAddress error.
+func (s *Sender) SendRecoveryOTP(ctx context.Context, r *http.Request, f *recovery.Flow, to string) error {
+	via := identifierType(to)
+
 	s.r.Logger().
 		WithField("via", via).
-		WithSensitiveField("phone_number", to).
-		Debug("Preparing verification OTP.")
+		WithSensitiveField("identifier", to).
+		Debug("Preparing recovery code.")
 
-	address, err := s.r.IdentityPool().FindRecoveryAddressByValue(ctx, identity.RecoveryAddressTypePhone, to)
-	if err != nil {
-		if err := s.send(ctx, string(via), templates.NewOTPMessage(s.r, &templates.OTPMessageModel{To: to})); err != nil {
-			return err
+	address, err := s.r.IdentityPool().FindRecoveryAddress(ctx, to)
+	switch errorsx.Cause(err) {
+	case sqlcon.ErrNoRows:
+		if via == identity.AddressTypeEmail {
+			s.r.Audit().
+				WithField("via", via).
+				WithSensitiveField("identifier", address).
+				Info("Sending out invalid recovery message because address is unknown.")
+
+			if err := s.send(ctx, email.NewRecoveryInvalid(s.r, &email.RecoveryInvalidModel{To: to})); err != nil {
+				return err
+			}
 		}
-		return errors.Cause(ErrUnknownPhone)
+		return errors.Cause(ErrUnknownIdentifier)
+	case nil:
+	default:
+		return err
 	}
 
 	tkn := token.NewOTPRecovery(address, f, s.r.Config(r.Context()).SelfServiceLinkMethodLifespan())
@@ -74,34 +89,39 @@ func (s *Sender) SendRecoveryOTP(ctx context.Context, r *http.Request, f *recove
 		return err
 	}
 
-	if err := s.sendRecoveryTokenTo(ctx, address, tkn); err != nil {
+	if err := s.sendRecoveryOtpTo(ctx, address, tkn); err != nil {
 		return err
 	}
 
 	return nil
 }
 
-// SendVerificationOTP sends a verification link to the specified address. If the address does not exist in the store, an email is
-// still being sent to prevent account enumeration attacks. In that case, this function returns the ErrUnknownAddress
-// error.
-func (s *Sender) SendVerificationOTP(ctx context.Context, f *verification.Flow, via identity.VerifiableAddressType, to string) error {
+// SendVerificationOTP sends a verification OTP to the specified address. If the address does not exist in the store,
+// this function returns the ErrUnknownAddress error.
+func (s *Sender) SendVerificationOTP(ctx context.Context, f *verification.Flow, to string) error {
+	via := identifierType(to)
+
 	s.r.Logger().
 		WithField("via", via).
-		WithSensitiveField("phone_number", to).
+		WithSensitiveField("identifier", to).
 		Debug("Preparing verification code.")
 
-	address, err := s.r.IdentityPool().FindVerifiableAddressByValue(ctx, via, to)
-	if err != nil {
-		if errorsx.Cause(err) == sqlcon.ErrNoRows {
+	address, err := s.r.IdentityPool().FindVerifiableAddress(ctx, to)
+	switch errorsx.Cause(err) {
+	case sqlcon.ErrNoRows:
+		if via == identity.AddressTypeEmail {
 			s.r.Audit().
 				WithField("via", via).
-				WithSensitiveField("phone_number", address).
-				Info("Sending out invalid verification email because address is unknown.")
-			if err := s.send(ctx, string(via), templates.NewOTPMessage(s.r, &templates.OTPMessageModel{To: to})); err != nil {
+				WithSensitiveField("identifier", address).
+				Info("Sending out invalid verification message because address is unknown.")
+
+			if err := s.send(ctx, email.NewVerificationInvalid(s.r, &email.VerificationInvalidModel{To: to})); err != nil {
 				return err
 			}
-			return errors.Cause(ErrUnknownPhone)
 		}
+		return errors.Cause(ErrUnknownIdentifier)
+	case nil:
+	default:
 		return err
 	}
 
@@ -113,25 +133,55 @@ func (s *Sender) SendVerificationOTP(ctx context.Context, f *verification.Flow, 
 	if err := s.SendVerificationTokenTo(ctx, address, tkn); err != nil {
 		return err
 	}
+
 	return nil
 }
 
-func (s *Sender) sendRecoveryTokenTo(ctx context.Context, address *identity.RecoveryAddress, tkn *token.RecoveryToken) error {
+func (s *Sender) sendRecoveryOtpTo(ctx context.Context, address *identity.RecoveryAddress, tkn *token.RecoveryToken) error {
 	s.r.Audit().
 		WithField("via", address.Via).
 		WithField("identity_id", address.IdentityID).
 		WithField("recovery_token_id", tkn.ID).
-		WithSensitiveField("phone_number", address.Value).
+		WithSensitiveField("identifier", address.Value).
 		WithSensitiveField("recovery_otp_token", tkn.Token).
-		Info("Sending out recovery sms with OTP.")
+		Info("Sending out recovery message with OTP.")
 
-	otpMessage := templates.NewOTPMessage(s.r, &templates.OTPMessageModel{To: address.Value, Code: tkn.Token})
+	otpMessage, err := s.newRecoveryOtpMessage(ctx, address, tkn)
+	if err != nil {
+		return err
+	}
 
-	if err := s.send(ctx, string(address.Via), otpMessage); err != nil {
+	if err := s.send(ctx, otpMessage); err != nil {
 		return err
 	}
 
 	return nil
+}
+
+func (s *Sender) newRecoveryOtpMessage(ctx context.Context, address *identity.RecoveryAddress, tkn *token.RecoveryToken) (interface{}, error) {
+	var msg interface{}
+
+	switch address.Via {
+	case identity.RecoveryAddressTypePhone:
+		msg = templates.NewRecoveryOTPMessage(s.r, &templates.RecoveryMessageModel{To: address.Value, Code: tkn.Token})
+	case identity.AddressTypeEmail:
+		fallthrough
+	default:
+		i, err := s.r.IdentityPool().GetIdentity(ctx, address.IdentityID)
+		if err != nil {
+			return nil, err
+		}
+
+		model, err := x.StructToMap(i)
+		if err != nil {
+			return nil, err
+		}
+
+		msg = email.NewRecoveryValidOTP(s.r, &email.RecoveryValidOTPModel{To: address.Value,
+			Code: tkn.Token, Identity: model})
+	}
+
+	return msg, nil
 }
 
 func (s *Sender) SendVerificationTokenTo(ctx context.Context, address *identity.VerifiableAddress, tkn *token.VerificationToken) error {
@@ -139,13 +189,16 @@ func (s *Sender) SendVerificationTokenTo(ctx context.Context, address *identity.
 		WithField("via", address.Via).
 		WithField("identity_id", address.IdentityID).
 		WithField("verification_token_id", tkn.ID).
-		WithSensitiveField("phone_number", address.Value).
+		WithSensitiveField("identifier", address.Value).
 		WithSensitiveField("verification_otp_token", tkn.Token).
-		Info("Sending out verification sms with OTP.")
+		Info("Sending out verification message with OTP.")
 
-	otpMessage := templates.NewOTPMessage(s.r, &templates.OTPMessageModel{To: address.Value, Code: tkn.Token})
+	otpMessage, err := s.newVerificationTokenMessage(ctx, address, tkn)
+	if err != nil {
+		return err
+	}
 
-	if err := s.send(ctx, string(address.Via), otpMessage); err != nil {
+	if err := s.send(ctx, otpMessage); err != nil {
 		return err
 	}
 
@@ -158,12 +211,49 @@ func (s *Sender) SendVerificationTokenTo(ctx context.Context, address *identity.
 	return nil
 }
 
-func (s *Sender) send(ctx context.Context, via string, t courier.SMSTemplate) error {
-	switch via {
-	case identity.AddressTypePhone:
-		_, err := s.r.Courier(ctx).QueueSMS(ctx, t)
+func (s *Sender) newVerificationTokenMessage(ctx context.Context, address *identity.VerifiableAddress, tkn *token.VerificationToken) (interface{}, error) {
+	var msg interface{}
+
+	switch address.Via {
+	case identity.VerifiableAddressTypePhone:
+		msg = templates.NewVerificationOTPMessage(s.r, &templates.VerificationMessageModel{To: address.Value, Code: tkn.Token})
+	case identity.AddressTypeEmail:
+		fallthrough
+	default:
+		i, err := s.r.IdentityPool().GetIdentity(ctx, address.IdentityID)
+		if err != nil {
+			return nil, err
+		}
+
+		model, err := x.StructToMap(i)
+		if err != nil {
+			return nil, err
+		}
+
+		msg = email.NewVerificationValidOTP(s.r, &email.VerificationValidOTPModel{To: address.Value,
+			Code: tkn.Token, Identity: model})
+	}
+
+	return msg, nil
+}
+
+func (s *Sender) send(ctx context.Context, t interface{}) error {
+	switch tt := t.(type) {
+	case courier.SMSTemplate:
+		_, err := s.r.Courier(ctx).QueueSMS(ctx, tt)
+		return err
+	case courier.EmailTemplate:
+		_, err := s.r.Courier(ctx).QueueEmail(ctx, tt)
 		return err
 	default:
-		return errors.Errorf("received unexpected via type: %s", via)
+		return errors.Errorf("received unexpected template type: %s", reflect.TypeOf(t).String())
 	}
+}
+
+func identifierType(identifier string) identity.VerifiableAddressType {
+	if strings.Contains(identifier, "@") {
+		return identity.AddressTypeEmail
+	}
+
+	return identity.AddressTypePhone
 }

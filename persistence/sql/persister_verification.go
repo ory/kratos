@@ -6,17 +6,14 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/ory/kratos/selfservice/token"
-
-	"github.com/ory/kratos/corp"
-	"github.com/ory/kratos/identity"
-
 	"github.com/gobuffalo/pop/v6"
 	"github.com/gofrs/uuid"
 
-	"github.com/ory/x/sqlcon"
-
+	"github.com/ory/kratos/corp"
+	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/selfservice/flow/verification"
+	"github.com/ory/kratos/selfservice/token"
+	"github.com/ory/x/sqlcon"
 )
 
 var _ verification.FlowPersister = new(Persister)

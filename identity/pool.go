@@ -23,6 +23,12 @@ type (
 
 		// FindRecoveryAddressByValue returns a matching address or sql.ErrNoRows if no address could be found.
 		FindRecoveryAddressByValue(ctx context.Context, via RecoveryAddressType, address string) (*RecoveryAddress, error)
+
+		// FindVerifiableAddress returns a matching address or sql.ErrNoRows if no address could be found.
+		FindVerifiableAddress(ctx context.Context, address string) (*VerifiableAddress, error)
+
+		// FindRecoveryAddress returns a matching address or sql.ErrNoRows if no address could be found.
+		FindRecoveryAddress(ctx context.Context, address string) (*RecoveryAddress, error)
 	}
 
 	PoolProvider interface {
