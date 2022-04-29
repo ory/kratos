@@ -11,3 +11,13 @@
     - oidc
     - webauthn
     - lookup_secret
+- op: remove
+  path: /components/schemas/AdminUpdateIdentityBody/properties/metadata_admin/type
+- op: remove
+  path: /components/schemas/AdminUpdateIdentityBody/properties/metadata_public/type
+- op: remove
+  path: /components/schemas/adminCreateIdentityBody/properties/metadata_admin/type
+- op: remove
+  path: /components/schemas/adminCreateIdentityBody/properties/metadata_public/type
+- op: remove
+  path: /components/schemas/nullJsonRawMessage/type

@@ -119,6 +119,13 @@ type Identity struct {
 	// ---
 	RecoveryAddresses []RecoveryAddress `json:"recovery_addresses,omitempty" faker:"-" has_many:"identity_recovery_addresses" fk_id:"identity_id"`
 
+	// Store metadata about the identity which the identity itself can see when calling for example the
+	// session endpoint. Do not store sensitive information (e.g. credit score) about the identity in this field.
+	MetadataPublic sqlxx.NullJSONRawMessage `json:"metadata_public" faker:"-" db:"metadata_public"`
+
+	// Store metadata about the user which is only accessible through admin APIs such as `GET /admin/identities/<id>`.
+	MetadataAdmin sqlxx.NullJSONRawMessage `json:"metadata_admin,omitempty" faker:"-" db:"metadata_admin"`
+
 	// CreatedAt is a helper struct field for gobuffalo.pop.
 	CreatedAt time.Time `json:"created_at" db:"created_at"`
 
@@ -298,6 +305,7 @@ func (i Identity) GetNID() uuid.UUID {
 func (i Identity) MarshalJSON() ([]byte, error) {
 	type localIdentity Identity
 	i.Credentials = nil
+	i.MetadataAdmin = nil
 	result, err := json.Marshal(localIdentity(i))
 	if err != nil {
 		return nil, err
@@ -309,19 +317,20 @@ func (i *Identity) UnmarshalJSON(b []byte) error {
 	type localIdentity Identity
 	err := json.Unmarshal(b, (*localIdentity)(i))
 	i.Credentials = nil
+	i.MetadataAdmin = nil
 	return err
 }
 
-type WithCredentialsInJSON Identity
+type WithCredentialsAndAdminMetadataInJSON Identity
 
-func (i WithCredentialsInJSON) MarshalJSON() ([]byte, error) {
+func (i WithCredentialsAndAdminMetadataInJSON) MarshalJSON() ([]byte, error) {
 	type localIdentity Identity
 	return json.Marshal(localIdentity(i))
 }
 
-type WithCredentialsMetadataInJSON Identity
+type WithCredentialsMetadataAndAdminMetadataInJSON Identity
 
-func (i WithCredentialsMetadataInJSON) MarshalJSON() ([]byte, error) {
+func (i WithCredentialsMetadataAndAdminMetadataInJSON) MarshalJSON() ([]byte, error) {
 	type localIdentity Identity
 	for k, v := range i.Credentials {
 		v.Config = nil

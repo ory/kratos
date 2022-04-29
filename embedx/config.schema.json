@@ -339,7 +339,8 @@
             "vk",
             "yandex",
             "apple",
-            "spotify"
+            "spotify",
+            "netid"
           ],
           "examples": [
             "google"

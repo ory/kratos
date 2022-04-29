@@ -33,7 +33,7 @@ func performLogin() *ory.SuccessfulSelfServiceLoginWithoutBrowser {
 		ory.SubmitSelfServiceLoginFlowWithPasswordMethodBodyAsSubmitSelfServiceLoginFlowBody(&ory.SubmitSelfServiceLoginFlowWithPasswordMethodBody{
 			Method:             "password",
 			Password:           password,
-			PasswordIdentifier: email,
+			PasswordIdentifier: &email,
 		}),
 	).Execute()
 	pkg.SDKExitOnError(err, res)

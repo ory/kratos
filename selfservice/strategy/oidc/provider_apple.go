@@ -4,10 +4,13 @@ import (
 	"context"
 	"crypto/ecdsa"
 	"crypto/x509"
+	"encoding/json"
 	"encoding/pem"
+	"net/url"
 	"time"
 
-	"github.com/form3tech-oss/jwt-go"
+	"github.com/golang-jwt/jwt/v4"
+
 	"github.com/pkg/errors"
 
 	"golang.org/x/oauth2"
@@ -49,10 +52,10 @@ func (a *ProviderApple) newClientSecret() (string, error) {
 	expirationTime := time.Now().Add(5 * time.Minute)
 
 	appleToken := jwt.NewWithClaims(jwt.SigningMethodES256,
-		jwt.StandardClaims{
-			Audience:  []string{a.config.IssuerURL},
-			ExpiresAt: expirationTime.Unix(),
-			IssuedAt:  now.Unix(),
+		jwt.RegisteredClaims{
+			Audience:  []string{"https://appleid.apple.com"},
+			ExpiresAt: jwt.NewNumericDate(expirationTime),
+			IssuedAt:  jwt.NewNumericDate(now),
 			Issuer:    a.config.TeamId,
 			Subject:   a.config.ClientID,
 		})
@@ -100,4 +103,42 @@ func (a *ProviderApple) AuthCodeURLOptions(r ider) []oauth2.AuthCodeOption {
 	}
 
 	return options
+}
+
+func (a *ProviderApple) Claims(ctx context.Context, exchange *oauth2.Token, query url.Values) (*Claims, error) {
+	claims, err := a.ProviderGenericOIDC.Claims(ctx, exchange, query)
+	if err != nil {
+		return claims, err
+	}
+	decodeQuery(query, claims)
+
+	return claims, nil
+}
+
+// decodeQuery decodes extra user info from Apple into the given `Claims`.
+// The info is sent as an extra query parameter to the redirect URL.
+// See https://developer.apple.com/documentation/sign_in_with_apple/sign_in_with_apple_js/configuring_your_webpage_for_sign_in_with_apple#3331292
+// Note that there's no way to make sure the info hasn't been tampered with.
+func decodeQuery(query url.Values, claims *Claims) {
+	var user struct {
+		Name *struct {
+			FirstName *string `json:"firstName"`
+			LastName  *string `json:"lastName"`
+		} `json:"name"`
+	}
+	if err := json.Unmarshal([]byte(query.Get("user")), &user); err == nil {
+		if name := user.Name; name != nil {
+			if firstName := name.FirstName; firstName != nil {
+				if claims.GivenName == "" {
+					claims.GivenName = *firstName
+				}
+				if claims.FamilyName == "" {
+					claims.FamilyName = *firstName
+				}
+			}
+			if lastName := name.LastName; lastName != nil && claims.LastName == "" {
+				claims.LastName = *lastName
+			}
+		}
+	}
 }

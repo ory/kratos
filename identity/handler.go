@@ -17,6 +17,7 @@ import (
 	"github.com/julienschmidt/httprouter"
 	"github.com/pkg/errors"
 
+	"github.com/ory/x/decoderx"
 	"github.com/ory/x/jsonx"
 	"github.com/ory/x/sqlxx"
 	"github.com/ory/x/urlx"
@@ -42,7 +43,8 @@ type (
 		IdentityHandler() *Handler
 	}
 	Handler struct {
-		r handlerDependencies
+		r  handlerDependencies
+		dx *decoderx.HTTP
 	}
 )
 
@@ -51,7 +53,10 @@ func (h *Handler) Config(ctx context.Context) *config.Config {
 }
 
 func NewHandler(r handlerDependencies) *Handler {
-	return &Handler{r: r}
+	return &Handler{
+		r:  r,
+		dx: decoderx.NewHTTP(),
+	}
 }
 
 func (h *Handler) RegisterPublicRoutes(public *x.RouterPublic) {
@@ -183,7 +188,7 @@ func (h *Handler) get(w http.ResponseWriter, r *http.Request, ps httprouter.Para
 			h.r.Writer().WriteError(w, r, err)
 			return
 		}
-		h.r.Writer().Write(w, r, WithCredentialsInJSON(*emit))
+		h.r.Writer().Write(w, r, WithCredentialsAndAdminMetadataInJSON(*emit))
 		return
 	} else if len(declassify) > 0 {
 		h.r.Writer().WriteError(w, r, errors.WithStack(herodot.ErrBadRequest.WithReasonf("Invalid value `%s` for parameter `include_credential`.", declassify)))
@@ -191,7 +196,7 @@ func (h *Handler) get(w http.ResponseWriter, r *http.Request, ps httprouter.Para
 
 	}
 
-	h.r.Writer().Write(w, r, WithCredentialsMetadataInJSON(*i))
+	h.r.Writer().Write(w, r, WithCredentialsMetadataAndAdminMetadataInJSON(*i))
 }
 
 // swagger:parameters adminCreateIdentity
@@ -233,6 +238,13 @@ type AdminCreateIdentityBody struct {
 	// that the address needs to be represented in the Identity Schema or this field will be overwritten
 	// on the next identity update.
 	RecoveryAddresses []RecoveryAddress `json:"recovery_addresses"`
+
+	// Store metadata about the identity which the identity itself can see when calling for example the
+	// session endpoint. Do not store sensitive information (e.g. credit score) about the identity in this field.
+	MetadataPublic json.RawMessage `json:"metadata_public"`
+
+	// Store metadata about the user which is only accessible through admin APIs such as `GET /admin/identities/<id>`.
+	MetadataAdmin json.RawMessage `json:"metadata_admin,omitempty"`
 
 	// State is the identity's state.
 	//
@@ -295,10 +307,7 @@ type AdminCreateIdentityImportCredentialsOidcProvider struct {
 //
 // Create an Identity
 //
-// This endpoint creates an identity. It is NOT possible to set an identity's credentials (password, ...)
-// using this method! A way to achieve that will be introduced in the future.
-//
-// Learn how identities work in [Ory Kratos' User And Identity Model Documentation](https://www.ory.sh/docs/next/kratos/concepts/identity-user-model).
+// This endpoint creates an identity. Learn how identities work in [Ory Kratos' User And Identity Model Documentation](https://www.ory.sh/docs/next/kratos/concepts/identity-user-model).
 //
 //     Consumes:
 //     - application/json
@@ -340,6 +349,8 @@ func (h *Handler) create(w http.ResponseWriter, r *http.Request, _ httprouter.Pa
 		StateChangedAt:      &stateChangedAt,
 		VerifiableAddresses: cr.VerifiableAddresses,
 		RecoveryAddresses:   cr.RecoveryAddresses,
+		MetadataAdmin:       []byte(cr.MetadataAdmin),
+		MetadataPublic:      []byte(cr.MetadataPublic),
 	}
 
 	if err := h.importCredentials(r.Context(), i, cr.Credentials); err != nil {
@@ -358,7 +369,7 @@ func (h *Handler) create(w http.ResponseWriter, r *http.Request, _ httprouter.Pa
 			"identities",
 			i.ID.String(),
 		).String(),
-		i,
+		WithCredentialsMetadataAndAdminMetadataInJSON(*i),
 	)
 }
 
@@ -389,6 +400,13 @@ type AdminUpdateIdentityBody struct {
 	// required: true
 	Traits json.RawMessage `json:"traits"`
 
+	// Store metadata about the identity which the identity itself can see when calling for example the
+	// session endpoint. Do not store sensitive information (e.g. credit score) about the identity in this field.
+	MetadataPublic json.RawMessage `json:"metadata_public"`
+
+	// Store metadata about the user which is only accessible through admin APIs such as `GET /admin/identities/<id>`.
+	MetadataAdmin json.RawMessage `json:"metadata_admin,omitempty"`
+
 	// State is the identity's state.
 	//
 	// required: true
@@ -399,10 +417,7 @@ type AdminUpdateIdentityBody struct {
 //
 // Update an Identity
 //
-// This endpoint updates an identity. It is NOT possible to set an identity's credentials (password, ...)
-// using this method! A way to achieve that will be introduced in the future.
-//
-// The full identity payload (except credentials) is expected. This endpoint does not support patching.
+// This endpoint updates an identity. The full identity payload (except credentials) is expected. This endpoint does not support patching.
 //
 // Learn how identities work in [Ory Kratos' User And Identity Model Documentation](https://www.ory.sh/docs/next/kratos/concepts/identity-user-model).
 //
@@ -425,7 +440,8 @@ type AdminUpdateIdentityBody struct {
 //       500: jsonError
 func (h *Handler) update(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	var ur AdminUpdateIdentityBody
-	if err := errors.WithStack(jsonx.NewStrictDecoder(r.Body).Decode(&ur)); err != nil {
+	if err := h.dx.Decode(r, &ur,
+		decoderx.HTTPJSONDecoder()); err != nil {
 		h.r.Writer().WriteError(w, r, err)
 		return
 	}
@@ -454,6 +470,8 @@ func (h *Handler) update(w http.ResponseWriter, r *http.Request, ps httprouter.P
 	}
 
 	identity.Traits = []byte(ur.Traits)
+	identity.MetadataPublic = []byte(ur.MetadataPublic)
+	identity.MetadataAdmin = []byte(ur.MetadataAdmin)
 	if err := h.r.IdentityManager().Update(
 		r.Context(),
 		identity,
@@ -463,7 +481,7 @@ func (h *Handler) update(w http.ResponseWriter, r *http.Request, ps httprouter.P
 		return
 	}
 
-	h.r.Writer().Write(w, r, identity)
+	h.r.Writer().Write(w, r, WithCredentialsMetadataAndAdminMetadataInJSON(*identity))
 }
 
 // swagger:parameters adminDeleteIdentity
