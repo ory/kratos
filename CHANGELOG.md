@@ -4,7 +4,7 @@
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 **Table of Contents**
 
-- [ (2022-04-26)](#2022-04-26)
+- [ (2022-04-29)](#2022-04-29)
   - [Breaking Changes](#breaking-changes)
     - [Bug Fixes](#bug-fixes)
     - [Code Refactoring](#code-refactoring)
@@ -251,7 +251,7 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# [](https://github.com/ory/kratos/compare/v0.9.0-alpha.3...v) (2022-04-26)
+# [](https://github.com/ory/kratos/compare/v0.9.0-alpha.3...v) (2022-04-29)
 ## Breaking Changes
 
 This patch moves several CLI command to comply with the Ory CLI command structure:
@@ -329,6 +329,7 @@ This patch moves several CLI command to comply with the Ory CLI command structur
     
 
 * Support argon2i password ([#2395](https://github.com/ory/kratos/issues/2395)) ([8fdadf9](https://github.com/ory/kratos/commit/8fdadf9d1724d28ae11996304703e06671549660))
+* Switch to opentelemetry tracing ([#2318](https://github.com/ory/kratos/issues/2318)) ([121a4d3](https://github.com/ory/kratos/commit/121a4d3fc0f396e8da50ad1985cacf68a5c85a12))
 * Upgrade to Go 1.18 ([725d202](https://github.com/ory/kratos/commit/725d202e6ae15b3b5c3282e03c03a40480a2e310))
 
 ### Tests
