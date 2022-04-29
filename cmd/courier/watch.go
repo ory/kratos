@@ -11,6 +11,7 @@ import (
 	"github.com/ory/kratos/driver"
 	"github.com/ory/kratos/x"
 	"github.com/ory/x/configx"
+	"github.com/ory/x/otelx"
 	"github.com/ory/x/reqlog"
 )
 
@@ -47,15 +48,16 @@ func ServeMetrics(ctx cx.Context, r driver.Registry) {
 	n.Use(reqlog.NewMiddlewareFromLogger(l, "admin#"+c.SelfPublicURL().String()))
 	n.Use(r.PrometheusManager())
 
-	if tracer := r.Tracer(ctx); tracer.IsLoaded() {
-		n.Use(tracer)
-	}
-
 	n.UseHandler(router)
+
+	var handler http.Handler = n
+	if tracer := r.Tracer(ctx); tracer.IsLoaded() {
+		handler = otelx.NewHandler(n, "cmd.courier.ServeMetrics")
+	}
 
 	server := graceful.WithDefaults(&http.Server{
 		Addr:    c.MetricsListenOn(),
-		Handler: n,
+		Handler: handler,
 	})
 
 	l.Printf("Starting the metrics httpd on: %s", server.Addr)

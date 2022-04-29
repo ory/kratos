@@ -3,8 +3,8 @@ package driver
 import (
 	"context"
 
+	"github.com/ory/x/otelx"
 	prometheus "github.com/ory/x/prometheusx"
-	"github.com/ory/x/tracing"
 
 	"github.com/gorilla/sessions"
 	"github.com/pkg/errors"
@@ -59,7 +59,7 @@ type Registry interface {
 	RegisterPublicRoutes(ctx context.Context, public *x.RouterPublic)
 	RegisterAdminRoutes(ctx context.Context, admin *x.RouterAdmin)
 	PrometheusManager() *prometheus.MetricsManager
-	Tracer(context.Context) *tracing.Tracer
+	Tracer(context.Context) *otelx.Tracer
 
 	config.Provider
 	CourierConfig(ctx context.Context) config.CourierConfigs

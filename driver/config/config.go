@@ -17,6 +17,7 @@ import (
 
 	"github.com/ory/jsonschema/v3/httploader"
 	"github.com/ory/x/httpx"
+	"github.com/ory/x/otelx"
 
 	"golang.org/x/net/publicsuffix"
 
@@ -49,7 +50,6 @@ import (
 	"github.com/ory/x/jsonx"
 	"github.com/ory/x/logrusx"
 	"github.com/ory/x/stringsx"
-	"github.com/ory/x/tracing"
 )
 
 const (
@@ -1028,7 +1028,7 @@ func (p *Config) ParseURI(rawUrl string) (*url.URL, error) {
 	return parsed, nil
 }
 
-func (p *Config) Tracing() *tracing.Config {
+func (p *Config) Tracing() *otelx.Config {
 	return p.p.TracingConfig("Ory Kratos")
 }
 
