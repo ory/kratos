@@ -50,7 +50,7 @@
             "oryAccessToken": []
           }
         ],
-        "description": "Lists all identities. Does not support search at the moment.\n\nLearn how identities work in [Ory Kratos' User And Identity Model Documentation](https://www.ory.sh/docs/next/kratos/concepts/identity-user-model).",
+        "description": "Lists all identities.\n\nFilter can be done by adding URL parameters\nFilter can be done by any field from identityList\nTo filter by credential this flag `with_credential` as to be set\n\nLearn how identities work in [Ory Kratos' User And Identity Model Documentation](https://www.ory.sh/docs/next/kratos/concepts/identity-user-model).",
         "produces": [
           "application/json"
         ],
@@ -81,6 +81,18 @@
             "default": 1,
             "description": "Pagination Page",
             "name": "page",
+            "in": "query"
+          },
+          {
+            "type": "boolean",
+            "description": "Filter by credentials\n\nrequired: true if filter on credentials elements",
+            "name": "with_credentials",
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "description": "Filter by credentials",
+            "name": "credentials",
             "in": "query"
           }
         ],
@@ -2895,9 +2907,8 @@
       }
     },
     "identityState": {
-      "description": "The state can either be `active` or `inactive`.",
-      "type": "string",
-      "title": "An Identity's State"
+      "description": "An Identity's State\nThe state can either be `active` or `inactive`.",
+      "type": "string"
     },
     "identityTraits": {
       "description": "Traits represent an identity's traits. The identity is able to create, modify, and delete traits\nin a self-service manner. The input will always be validated against the JSON Schema defined\nin `schema_url`.",

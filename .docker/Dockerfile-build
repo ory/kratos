@@ -17,11 +17,10 @@ RUN go mod download
 
 ADD . .
 
-ARG VERSION
 ARG COMMIT
 ARG BUILD_DATE
 
-RUN --mount=type=cache,target=/root/.cache/go-build go build -tags sqlite \
+RUN --mount=type=cache,target=/root/.cache/go-build go build -tags sqlite,json1 \
     -ldflags="-X 'github.com/ory/kratos/driver/config.Version=${VERSION}' -X 'github.com/ory/kratos/driver/config.Date=${BUILD_DATE}' -X 'github.com/ory/kratos/driver/config.Commit=${COMMIT}'" \
     -o /usr/bin/kratos
 

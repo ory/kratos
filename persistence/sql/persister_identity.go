@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"regexp"
 	"strings"
 	"time"
 
@@ -298,12 +299,34 @@ func (p *Persister) CreateIdentity(ctx context.Context, i *identity.Identity) er
 		return p.createIdentityCredentials(ctx, i)
 	})
 }
+func (p *Persister) setIdentitySchemas(ctx context.Context, is []identity.Identity) error {
+	var schemaCache = make(map[string]string)
+
+	for k := range is {
+		i := &is[k]
+		if err := i.ValidateNID(); err != nil {
+			return sqlcon.HandleError(err)
+		}
+
+		if u, ok := schemaCache[i.SchemaID]; ok {
+			i.SchemaURL = u
+		} else {
+			if err := p.injectTraitsSchemaURL(ctx, i); err != nil {
+				return err
+			}
+			schemaCache[i.SchemaID] = i.SchemaURL
+		}
+
+		is[k] = *i
+	}
+
+	return nil
+}
 
 func (p *Persister) ListIdentities(ctx context.Context, page, perPage int) ([]identity.Identity, error) {
 	ctx, span := p.r.Tracer(ctx).Tracer().Start(ctx, "persistence.sql.ListIdentities")
 	defer span.End()
-
-	is := make([]identity.Identity, 0)
+	is := []identity.Identity{}
 
 	/* #nosec G201 TableName is static */
 	if err := sqlcon.HandleError(p.GetConnection(ctx).Where("nid = ?", corp.ContextualizeNID(ctx, p.nid)).
@@ -313,24 +336,32 @@ func (p *Persister) ListIdentities(ctx context.Context, page, perPage int) ([]id
 		return nil, err
 	}
 
-	schemaCache := map[string]string{}
+	if err := p.setIdentitySchemas(ctx, is); err != nil {
+		return nil, err
+	}
 
-	for k := range is {
-		i := &is[k]
-		if err := i.ValidateNID(); err != nil {
-			return nil, sqlcon.HandleError(err)
-		}
+	return is, nil
+}
 
-		if u, ok := schemaCache[i.SchemaID]; ok {
-			i.SchemaURL = u
-		} else {
-			if err := p.injectTraitsSchemaURL(ctx, i); err != nil {
-				return nil, err
-			}
-			schemaCache[i.SchemaID] = i.SchemaURL
-		}
+func (p *Persister) ListIdentitiesFiltered(ctx context.Context, filters map[string][]string, page, perPage int) ([]identity.Identity, error) {
+	ctx, span := p.r.Tracer(ctx).Tracer().Start(ctx, "persistence.sql.ListIdentitiesFiltered")
+	defer span.End()
 
-		is[k] = *i
+	is := []identity.Identity{}
+	if err := sqlcon.HandleError(p.GetConnection(ctx).Where("identities.nid = ?", corp.ContextualizeNID(ctx, p.nid)).
+		LeftJoin("identity_credentials ic", "identities.id=ic.identity_id").
+		LeftJoin("identity_credential_types credential_types", "credential_types.id=ic.identity_credential_type_id").
+		LeftJoin("identity_credential_identifiers credential_identifiers", "credential_identifiers.identity_credential_id=ic.id").
+		EagerPreload("VerifiableAddresses", "RecoveryAddresses").
+		Paginate(page, perPage).
+		Order("identities.id DESC").
+		Scope(p.buildIdentitySearchScope(ctx, filters)).
+		All(&is)); err != nil {
+		return nil, err
+	}
+
+	if err := p.setIdentitySchemas(ctx, is); err != nil {
+		return nil, err
 	}
 
 	return is, nil
@@ -459,6 +490,7 @@ func (p *Persister) GetIdentityConfidential(ctx context.Context, id uuid.UUID) (
 	if err := p.findRecoveryAddresses(ctx, &i); err != nil {
 		return nil, err
 	}
+
 	if err := p.findVerifiableAddresses(ctx, &i); err != nil {
 		return nil, err
 	}
@@ -497,6 +529,7 @@ func (p *Persister) FindRecoveryAddressByValue(ctx context.Context, via identity
 func (p *Persister) VerifyAddress(ctx context.Context, code string) error {
 	ctx, span := p.r.Tracer(ctx).Tracer().Start(ctx, "persistence.sql.VerifyAddress")
 	defer span.End()
+
 	newCode, err := otp.New()
 	if err != nil {
 		return err
@@ -564,4 +597,104 @@ func (p *Persister) injectTraitsSchemaURL(ctx context.Context, i *identity.Ident
 	}
 	i.SchemaURL = s.SchemaURL(p.r.Config(ctx).SelfPublicURL()).String()
 	return nil
+}
+
+func (p *Persister) getJSONSearchQuery(ctx context.Context, field string, values []string) pop.ScopeFunc {
+	return func(q *pop.Query) *pop.Query {
+		// Removing this would allow SQL Injection. Never remove this.
+		if !validFields.MatchString(field) {
+			return q
+		}
+
+		prefix, key := extractFieldAndInnerFields(field)
+
+		switch p.Connection(ctx).Dialect.Name() {
+		case "sqlite3", "mysql", "mariadb":
+			for _, value := range values {
+				if key == "" {
+					q = q.Where(fmt.Sprintf(`json_extract(%s, '$') = ?`, prefix), value)
+				} else {
+					q = q.Where(fmt.Sprintf(`json_extract(%s, '$.%s') = ?`, prefix, key), value)
+				}
+			}
+			return q
+		case "postgres", "cockroach":
+			for _, value := range values {
+				param := fmt.Sprintf(`%s`, value)
+				if key != "" {
+					param = fmt.Sprintf(`{"%s":"%s"}`, key, value)
+				}
+				q = q.Where(fmt.Sprintf(`%s @> ?`, prefix), param)
+			}
+			return q
+		}
+
+		return q
+	}
+}
+
+func (p *Persister) searchCredentialQuery(field string, values []string) pop.ScopeFunc {
+	var innerField string
+	_, innerField = extractFieldAndInnerFields(field)
+	switch innerField {
+	case "type":
+		return func(q *pop.Query) *pop.Query { return q.Where("credential_types.name IN (?)", values) }
+	case "identifier":
+		return func(q *pop.Query) *pop.Query { return q.Where("credential_identifiers.identifier IN (?)", values) }
+	default:
+		return func(q *pop.Query) *pop.Query { return q }
+	}
+}
+
+func (p *Persister) buildIdentitySearchScope(ctx context.Context, filters map[string][]string) pop.ScopeFunc {
+	return func(q *pop.Query) *pop.Query {
+		for field, values := range filters {
+			// Removing this would allow SQL Injection. Never remove this.
+			if !validFields.MatchString(field) {
+				return q
+			}
+
+			if !p.validateFields(field) {
+				continue
+			}
+
+			if strings.HasPrefix(field, "traits.") {
+				q = q.Scope(p.getJSONSearchQuery(ctx, field, values))
+				continue
+			}
+
+			if strings.HasPrefix(field, "credentials") {
+				q = q.Scope(p.searchCredentialQuery(field, values))
+				continue
+			}
+
+			q = q.Where(fmt.Sprintf("%s IN (?)", field), values)
+		}
+		return q
+	}
+}
+
+func extractFieldAndInnerFields(field string) (string, string) {
+	if !strings.Contains(field, ".") {
+		return field, ""
+	}
+	dotIndex := strings.Index(field, ".")
+	return field[:dotIndex], field[dotIndex+1:]
+}
+
+var validFields = regexp.MustCompile(`[a-zA-Z0-9._]+`)
+
+func (p *Persister) validateFields(field string) bool {
+	return validFields.MatchString(field)
+}
+
+var validValues = regexp.MustCompile(`[%]+`)
+
+func (p *Persister) validateValues(values []string) bool {
+	for _, value := range values {
+		if validValues.MatchString(value) {
+			return false
+		}
+	}
+	return true
 }

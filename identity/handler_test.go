@@ -114,7 +114,6 @@ func TestHandler(t *testing.T) {
 				i.SchemaID = "does-not-exist"
 				res := send(t, ts, "POST", "/identities", http.StatusBadRequest, &i)
 				assert.Contains(t, res.Get("error.reason").String(), "does-not-exist", "%s", res)
-
 			})
 		}
 	})
@@ -320,6 +319,7 @@ func TestHandler(t *testing.T) {
 			}))
 			return iId.String()
 		}
+
 		t.Run("case=should create an identity with an ID which is ignored", func(t *testing.T) {
 			for name, ts := range map[string]*httptest.Server{"public": publicTS, "admin": adminTS} {
 				t.Run("endpoint="+name, func(t *testing.T) {
@@ -697,6 +697,36 @@ func TestHandler(t *testing.T) {
 				res := get(t, ts, "/identities", http.StatusOK)
 				assert.Empty(t, res.Get("0.credentials").String(), "%s", res.Raw)
 				assert.EqualValues(t, "baz", res.Get(`#(traits.bar=="baz").traits.bar`).String(), "%s", res.Raw)
+			})
+		}
+	})
+
+	t.Run("case=should list identities with filter", func(t *testing.T) {
+		for name, ts := range map[string]*httptest.Server{"public": publicTS, "admin": adminTS} {
+			t.Run("endpoint="+name, func(t *testing.T) {
+				res := get(t, ts, `/identities?traits.bar=baz&traits.foo=baz`, http.StatusOK)
+				assert.Equal(t, 1, len(res.Array()), "%s", res.Raw)
+				assert.Equal(t, "baz", res.Array()[0].Get("traits.foo").String(), res.Raw)
+			})
+		}
+	})
+
+	t.Run("case=try sql injection", func(t *testing.T) {
+		for name, ts := range map[string]*httptest.Server{"public": publicTS, "admin": adminTS} {
+			t.Run("endpoint="+name, func(t *testing.T) {
+				t.Run("statement=DROP TABLE", func(t *testing.T) {
+					_ = get(t, ts, `/identities?traits.bar=baz&traits.foo%3BDROP TABLE identities%2F*=baz`, http.StatusBadRequest)
+				})
+				t.Run("statement=OR", func(t *testing.T) {
+					_ = get(t, ts, `/identities?traits.bar=baz&traits.foo=baz' or '1'='1`, http.StatusBadRequest)
+				})
+				t.Run("statement=minus operator", func(t *testing.T) {
+					res := get(t, ts, `/identities?traits.foo=2-1`, http.StatusOK)
+					assert.Equal(t, 0, len(res.Array()), "list must be empty")
+				})
+				t.Run("statement=SELECT", func(t *testing.T) {
+					_ = get(t, ts, `/identities?traits.(SELECT id FROM identities)=baz`, http.StatusBadRequest)
+				})
 			})
 		}
 	})

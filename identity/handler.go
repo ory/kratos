@@ -4,25 +4,22 @@ import (
 	"context"
 	"encoding/json"
 	"net/http"
+	"strings"
 	"time"
 
-	"github.com/ory/kratos/hash"
-
-	"github.com/ory/kratos/x"
-
 	"github.com/ory/kratos/cipher"
-
-	"github.com/ory/herodot"
+	"github.com/ory/kratos/driver/config"
+	"github.com/ory/kratos/hash"
+	"github.com/ory/kratos/x"
 
 	"github.com/julienschmidt/httprouter"
 	"github.com/pkg/errors"
 
+	"github.com/ory/herodot"
 	"github.com/ory/x/decoderx"
 	"github.com/ory/x/jsonx"
 	"github.com/ory/x/sqlxx"
 	"github.com/ory/x/urlx"
-
-	"github.com/ory/kratos/driver/config"
 )
 
 const RouteCollection = "/identities"
@@ -102,7 +99,14 @@ type adminListIdentities struct {
 //
 // List Identities
 //
-// Lists all identities. Does not support search at the moment.
+// Lists all identities.
+//
+// This endpoint can filter identities using URL Query parameters. You can filter by traits and by credentials, for example:
+//
+// - `?traits.email=bar@example.org&with_traits.name=foo`: Returns only identities with the email `bar@example.org` and name `foo`.
+// - `?traits.consent=true`: Returns identities whose `consent` property is `true`.
+// - `?credentials.type=oidc`: Returns identities who have an `oidc` credential attached.
+// - `?credentials.type=password&credentials.identifier=bar@example.org`: Returns identities who use `bar@example.org` to sign in.
 //
 // Learn how identities work in [Ory Kratos' User And Identity Model Documentation](https://www.ory.sh/docs/next/kratos/concepts/identity-user-model).
 //
@@ -119,7 +123,18 @@ type adminListIdentities struct {
 //       500: jsonError
 func (h *Handler) list(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 	page, itemsPerPage := x.ParsePagination(r)
-	is, err := h.r.IdentityPool().ListIdentities(r.Context(), page, itemsPerPage)
+
+	filters := map[string][]string{}
+	for k, v := range r.URL.Query() {
+		if strings.HasPrefix(k, "traits.") || strings.HasPrefix(k, "credentials.") {
+			if _, ok := filters[k]; !ok {
+				filters[k] = []string{}
+			}
+			filters[k] = append(filters[k], v...)
+		}
+	}
+
+	is, err := h.r.IdentityPool().ListIdentitiesFiltered(r.Context(), filters, page, itemsPerPage)
 	if err != nil {
 		h.r.Writer().WriteError(w, r, err)
 		return
