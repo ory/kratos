@@ -4,8 +4,9 @@ import (
 	"bytes"
 	"io"
 
-	"github.com/ory/x/otelx"
 	"github.com/pkg/errors"
+
+	"github.com/ory/x/otelx"
 
 	"github.com/tidwall/gjson"
 
