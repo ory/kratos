@@ -46,7 +46,6 @@ import (
 	"github.com/tidwall/gjson"
 
 	"github.com/ory/x/configx"
-	"github.com/ory/x/dbal"
 	"github.com/ory/x/jsonx"
 	"github.com/ory/x/logrusx"
 	"github.com/ory/x/stringsx"
@@ -55,7 +54,7 @@ import (
 const (
 	DefaultIdentityTraitsSchemaID                            = "default"
 	DefaultBrowserReturnURL                                  = "default_browser_return_url"
-	DefaultSQLiteMemoryDSN                                   = dbal.SQLiteInMemory
+	DefaultSQLiteMemoryDSN                                   = "sqlite://file::memory:?_fk=true&cache=shared"
 	DefaultPasswordHashingAlgorithm                          = "argon2"
 	DefaultCipherAlgorithm                                   = "noop"
 	UnknownVersion                                           = "unknown version"
