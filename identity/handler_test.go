@@ -73,7 +73,9 @@ func TestHandler(t *testing.T) {
 
 	var send = func(t *testing.T, base *httptest.Server, method, href string, expectCode int, send interface{}) gjson.Result {
 		var b bytes.Buffer
-		require.NoError(t, json.NewEncoder(&b).Encode(send))
+		if send != nil {
+			require.NoError(t, json.NewEncoder(&b).Encode(send))
+		}
 		req, err := http.NewRequest(method, base.URL+href, &b)
 		require.NoError(t, err)
 		req.Header.Set("Content-Type", "application/json")
@@ -669,6 +671,22 @@ func TestHandler(t *testing.T) {
 						Traits:   []byte(`{}`),
 					})
 				}
+			})
+		}
+	})
+
+	t.Run("case=should fail to update identity if input json is empty or json file does not exist", func(t *testing.T) {
+		for name, ts := range map[string]*httptest.Server{"public": publicTS, "admin": adminTS} {
+			t.Run("endpoint="+name, func(t *testing.T) {
+				var cr identity.AdminCreateIdentityBody
+				cr.SchemaID = "employee"
+				cr.Traits = []byte(`{"email":"` + x.NewUUID().String() + `@ory.sh", "department": "ory"}`)
+				res := send(t, ts, "POST", "/identities", http.StatusCreated, &cr)
+
+				id := res.Get("id").String()
+				res = send(t, ts, "PUT", "/identities/"+id, http.StatusBadRequest, nil)
+				assert.Contains(t, res.Get("error.reason").String(), `Unable to decode HTTP Request Body because its HTTP `+
+					`Header "Content-Length" is zero`, "%s", res.Raw)
 			})
 		}
 	})
