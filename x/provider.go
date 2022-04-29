@@ -3,14 +3,13 @@ package x
 import (
 	"context"
 
-	"github.com/ory/x/httpx"
-	"github.com/ory/x/tracing"
-
 	"github.com/gorilla/sessions"
 	"github.com/hashicorp/go-retryablehttp"
 
 	"github.com/ory/herodot"
+	"github.com/ory/x/httpx"
 	"github.com/ory/x/logrusx"
+	"github.com/ory/x/otelx"
 )
 
 type LoggingProvider interface {
@@ -28,7 +27,7 @@ type CookieProvider interface {
 }
 
 type TracingProvider interface {
-	Tracer(ctx context.Context) *tracing.Tracer
+	Tracer(ctx context.Context) *otelx.Tracer
 }
 
 type SimpleLoggerWithClient struct {

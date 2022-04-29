@@ -9,6 +9,7 @@ import (
 
 	"github.com/ory/kratos/selfservice/flow/recovery"
 
+	"github.com/ory/x/otelx"
 	"github.com/ory/x/reqlog"
 
 	"github.com/ory/kratos/cmd/courier"
@@ -94,9 +95,7 @@ func ServePublic(r driver.Registry, wg *sync.WaitGroup, cmd *cobra.Command, args
 	n.Use(publicLogger)
 	n.Use(x.HTTPLoaderContextMiddleware(r))
 	n.Use(sqa(ctx, cmd, r))
-	if tracer := r.Tracer(ctx); tracer.IsLoaded() {
-		n.Use(tracer)
-	}
+
 	n.Use(r.PrometheusManager())
 
 	router := x.NewRouterPublic()
@@ -122,6 +121,11 @@ func ServePublic(r driver.Registry, wg *sync.WaitGroup, cmd *cobra.Command, args
 	}
 
 	certs := c.GetTSLCertificatesForPublic()
+
+	if tracer := r.Tracer(ctx); tracer.IsLoaded() {
+		handler = otelx.NewHandler(n, "cmd.daemon.ServePublic")
+	}
+
 	server := graceful.WithDefaults(&http.Server{
 		Handler:   handler,
 		TLSConfig: &tls.Config{Certificates: certs, MinVersion: tls.VersionTLS12},
@@ -174,16 +178,19 @@ func ServeAdmin(r driver.Registry, wg *sync.WaitGroup, cmd *cobra.Command, args 
 	r.RegisterAdminRoutes(ctx, router)
 	r.PrometheusManager().RegisterRouter(router.Router)
 
-	if tracer := r.Tracer(ctx); tracer.IsLoaded() {
-		n.Use(tracer)
-	}
-
 	n.UseHandler(router)
 	certs := c.GetTSLCertificatesForAdmin()
+
+	var handler http.Handler = n
+	if tracer := r.Tracer(ctx); tracer.IsLoaded() {
+		handler = otelx.NewHandler(n, "cmd.daemon.ServeAdmin")
+	}
+
 	server := graceful.WithDefaults(&http.Server{
-		Handler:   n,
+		Handler:   handler,
 		TLSConfig: &tls.Config{Certificates: certs, MinVersion: tls.VersionTLS12},
 	})
+
 	addr := c.AdminListenOn()
 
 	l.Printf("Starting the admin httpd on: %s", addr)
