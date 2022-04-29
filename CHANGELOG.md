@@ -303,6 +303,7 @@ This patch moves several CLI command to comply with the Ory CLI command structur
 * Serve.admin.request_log.disable_for_health behaviour ([#2399](https://github.com/ory/kratos/issues/2399)) ([0a381fa](https://github.com/ory/kratos/commit/0a381fa3d702f77e614d0492dafa3ac2cd102c7e))
 * Use `path` instead of `filepath` to join http route paths ([16b1244](https://github.com/ory/kratos/commit/16b12449c841bf7a237fe436b884b4b5012cd022)), closes [#2292](https://github.com/ory/kratos/issues/2292)
 * Use pointer of string for PasswordIdentifier in example code ([#2421](https://github.com/ory/kratos/issues/2421)) ([61f12e7](https://github.com/ory/kratos/commit/61f12e7579c7c337d0f415ac2b4029790c659c3d))
+* Use predictable SQLite in memory DSNs ([#2415](https://github.com/ory/kratos/issues/2415)) ([51a13f7](https://github.com/ory/kratos/commit/51a13f712d38a942772b3f4c014971ecb4658d7a)), closes [#2059](https://github.com/ory/kratos/issues/2059)
 
 ### Code Refactoring
 
