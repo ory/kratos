@@ -53,7 +53,10 @@ Files can contain only a single or an array of identities. The validity of files
 
 WARNING: Importing credentials is not yet supported.`,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			c := cliclient.NewClient(cmd)
+			c, err := cliclient.NewClient(cmd)
+			if err != nil {
+				return err
+			}
 
 			imported := make([]kratos.Identity, 0, len(args))
 			failed := make(map[string]error)
