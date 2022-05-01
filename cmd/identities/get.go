@@ -3,6 +3,8 @@ package identities
 import (
 	"fmt"
 
+	"github.com/ory/x/cloudx"
+
 	kratos "github.com/ory/kratos-client-go"
 	"github.com/ory/kratos/x"
 	"github.com/ory/x/cmdx"
@@ -69,7 +71,7 @@ func NewGetIdentityCmd(root *cobra.Command) *cobra.Command {
 					Execute()
 
 				if x.SDKError(err) != nil {
-					failed[id] = err
+					failed[id] = cloudx.PrintOpenAPIError(cmd, err)
 					continue
 				}
 
