@@ -41,7 +41,10 @@ func NewValidateIdentityCmd() *cobra.Command {
 It validates against the payload of the API and the identity schema as configured in Ory Kratos.
 Identities can be supplied via STD_IN or JSON files containing a single or an array of identities.`,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			c := cliclient.NewClient(cmd)
+			c, err := cliclient.NewClient(cmd)
+			if err != nil {
+				return err
+			}
 
 			is, err := readIdentities(cmd, args)
 			if err != nil {

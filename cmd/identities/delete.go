@@ -33,7 +33,10 @@ func NewDeleteIdentityCmd(root *cobra.Command) *cobra.Command {
 	%[1]s delete identity $(%[1]s list identities --format json | jq -r 'map(select(.recovery_addresses[].value == "foo@bar.com")) | .[].id')`, root.Use),
 		Args: cobra.MinimumNArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			c := cliclient.NewClient(cmd)
+			c, err := cliclient.NewClient(cmd)
+			if err != nil {
+				return err
+			}
 
 			var (
 				deleted = make([]string, 0, len(args))

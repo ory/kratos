@@ -38,7 +38,11 @@ func NewListIdentitiesCmd(root *cobra.Command) *cobra.Command {
 		},
 		Aliases: []string{"ls"},
 		RunE: func(cmd *cobra.Command, args []string) error {
-			c := cliclient.NewClient(cmd)
+			c, err := cliclient.NewClient(cmd)
+			if err != nil {
+				return err
+			}
+
 			req := c.V0alpha2Api.AdminListIdentities(cmd.Context())
 
 			if len(args) == 2 {
@@ -59,7 +63,7 @@ func NewListIdentitiesCmd(root *cobra.Command) *cobra.Command {
 
 			identities, _, err := req.Execute()
 			if err != nil {
-				_, _ = fmt.Fprintf(cmd.ErrOrStderr(), "Could not get the identities: %+v\n", err)
+				_, _ = fmt.Fprintf(cmd.ErrOrStderr(), "Could not list identities: %+v\n", err)
 				return cmdx.FailSilently(cmd)
 			}
 
