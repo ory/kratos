@@ -4,9 +4,10 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"net/http"
+
 	"github.com/ory/kratos/cmd/validate"
 	"github.com/ory/kratos/internal/clihelpers"
-	"net/http"
 
 	"github.com/spf13/cobra"
 

@@ -2,15 +2,17 @@ package list_test
 
 import (
 	"context"
+	"strings"
+	"testing"
+
+	"github.com/spf13/cobra"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+
 	"github.com/ory/kratos/cmd/list"
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/internal/testhelpers"
 	"github.com/ory/x/cmdx"
-	"github.com/spf13/cobra"
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
-	"strings"
-	"testing"
 )
 
 func TestListIdentityCmd(t *testing.T) {

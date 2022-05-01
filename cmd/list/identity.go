@@ -2,11 +2,13 @@ package list
 
 import (
 	"fmt"
+	"strconv"
+
+	"github.com/spf13/cobra"
+
 	"github.com/ory/kratos/cmd/cliclient"
 	"github.com/ory/kratos/cmd/definitions"
 	"github.com/ory/x/cmdx"
-	"github.com/spf13/cobra"
-	"strconv"
 )
 
 func NewListIdentityCmd(parent *cobra.Command) *cobra.Command {
