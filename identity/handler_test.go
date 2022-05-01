@@ -266,6 +266,57 @@ func TestHandler(t *testing.T) {
 
 			require.NoError(t, hash.Compare(ctx, []byte("123456"), []byte(gjson.GetBytes(actual.Credentials[identity.CredentialsTypePassword].Config, "hashed_password").String())))
 		})
+
+		t.Run("with cleartext password and totp credentials", func(t *testing.T) {
+			res := send(t, adminTS, "POST", "/identities", http.StatusCreated, identity.AdminCreateIdentityBody{Traits: []byte(`{"email": "import-7@ory.sh"}`),
+				Credentials: &identity.AdminIdentityImportCredentials{
+					Password: &identity.AdminIdentityImportCredentialsPassword{
+						Config: identity.AdminIdentityImportCredentialsPasswordConfig{
+							Password: "123456",
+						},
+					},
+					TOTP: &identity.AdminIdentityImportCredentialsTOTP{
+						Config: identity.AdminIdentityImportCredentialsTOTPConfig{
+							TOTPURL: "otpauth://totp/ory:import-7@ory.sh?secret=JBSWY3DPEHPK3PXP&issuer=ory",
+						},
+					},
+				},
+			})
+
+			actual, err := reg.PrivilegedIdentityPool().GetIdentityConfidential(ctx, uuid.FromStringOrNil(res.Get("id").String()))
+			require.NoError(t, err)
+
+			snapshotx.SnapshotTExceptMatchingKeys(t, identity.WithCredentialsAndAdminMetadataInJSON(*actual), append(ignoreDefault, "hashed_password"))
+
+			require.NoError(t, hash.Compare(ctx, []byte("123456"), []byte(gjson.GetBytes(actual.Credentials[identity.CredentialsTypePassword].Config, "hashed_password").String())))
+		})
+
+		t.Run("with cleartext password and lookup credentials", func(t *testing.T) {
+			res := send(t, adminTS, "POST", "/identities", http.StatusCreated, identity.AdminCreateIdentityBody{Traits: []byte(`{"email": "import-8@ory.sh"}`),
+				Credentials: &identity.AdminIdentityImportCredentials{
+					Password: &identity.AdminIdentityImportCredentialsPassword{
+						Config: identity.AdminIdentityImportCredentialsPasswordConfig{
+							Password: "123456",
+						},
+					},
+					Lookup: &identity.AdminIdentityImportCredentialsLookup{
+						Config: identity.AdminIdentityImportCredentialsLookupConfig{
+							RecoveryCodes: []identity.AdminIdentityImportCredentialsLookupConfigRecoveryCode{
+								{Code: "foo"},
+								{Code: "bar"},
+							},
+						},
+					},
+				},
+			})
+
+			actual, err := reg.PrivilegedIdentityPool().GetIdentityConfidential(ctx, uuid.FromStringOrNil(res.Get("id").String()))
+			require.NoError(t, err)
+
+			snapshotx.SnapshotTExceptMatchingKeys(t, identity.WithCredentialsAndAdminMetadataInJSON(*actual), append(ignoreDefault, "hashed_password"))
+
+			require.NoError(t, hash.Compare(ctx, []byte("123456"), []byte(gjson.GetBytes(actual.Credentials[identity.CredentialsTypePassword].Config, "hashed_password").String())))
+		})
 	})
 
 	t.Run("case=unable to set ID itself", func(t *testing.T) {
