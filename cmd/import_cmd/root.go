@@ -10,7 +10,7 @@ import (
 
 func NewImportCmd() *cobra.Command {
 	var cmd = &cobra.Command{
-		Use:   "import",
+		Use:   "import_cmd",
 		Short: "Import resources",
 	}
 	cliclient.RegisterClientFlags(cmd.PersistentFlags())

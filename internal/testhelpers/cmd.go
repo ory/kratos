@@ -11,13 +11,12 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/require"
 
-	"github.com/ory/x/cmdx"
-
 	"github.com/ory/kratos/cmd/cliclient"
 	"github.com/ory/kratos/driver"
 	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/internal"
+	"github.com/ory/x/cmdx"
 )
 
 //go:embed stub/identity.schema.json

@@ -8,10 +8,9 @@ import (
 	"github.com/google/go-jsonnet/formatter"
 	"github.com/spf13/cobra"
 
+	"github.com/ory/kratos/internal/clihelpers"
 	"github.com/ory/x/cmdx"
 	"github.com/ory/x/flagx"
-
-	"github.com/ory/kratos/internal/clihelpers"
 )
 
 func NewFormatJsonnetCmd() *cobra.Command {

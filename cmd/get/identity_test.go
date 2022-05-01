@@ -10,13 +10,12 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/ory/x/assertx"
-
 	"github.com/ory/kratos/cmd/get"
 	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/internal/testhelpers"
 	"github.com/ory/kratos/x"
+	"github.com/ory/x/assertx"
 )
 
 func TestGetIdentityCmd(t *testing.T) {

@@ -32,7 +32,7 @@ func (h *Handler) importCredentials(ctx context.Context, i *Identity, creds *Adm
 }
 
 func (h *Handler) importPasswordCredentials(ctx context.Context, i *Identity, creds *AdminIdentityImportCredentialsPassword) (err error) {
-	// In here we deliberately ignore any password policies as the point here is to import passwords, even if they
+	// In here we deliberately ignore any password policies as the point here is to import_cmd passwords, even if they
 	// are not matching the policy, as the user needs to able to sign in with their old password.
 	hashed := []byte(creds.Config.HashedPassword)
 	if len(creds.Config.Password) > 0 {

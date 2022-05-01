@@ -14,13 +14,11 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/tidwall/gjson"
 
-	"github.com/ory/x/cmdx"
-
 	kratos "github.com/ory/kratos-client-go"
-
-	"github.com/ory/kratos/cmd/import"
+	"github.com/ory/kratos/cmd/import_cmd"
 	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/internal/testhelpers"
+	"github.com/ory/x/cmdx"
 )
 
 func TestImportIdentityCmd(t *testing.T) {
@@ -125,7 +123,7 @@ func TestImportIdentityCmd(t *testing.T) {
 		assert.NoError(t, err)
 	})
 
-	t.Run("case=fails to import invalid identity", func(t *testing.T) {
+	t.Run("case=fails to import_cmd invalid identity", func(t *testing.T) {
 		// validation is further tested with the validate command
 		stdOut, stdErr, err := testhelpers.CmdExec(c, bytes.NewBufferString("{}"))
 		assert.True(t, errors.Is(err, cmdx.ErrNoPrintButFail))

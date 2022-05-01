@@ -12,12 +12,11 @@ import (
 	"github.com/tidwall/gjson"
 
 	"github.com/ory/jsonschema/v3"
-	"github.com/ory/x/cmdx"
-	"github.com/ory/x/jsonschemax"
-
 	"github.com/ory/kratos/cmd/cliclient"
 	"github.com/ory/kratos/internal/clihelpers"
 	"github.com/ory/kratos/spec"
+	"github.com/ory/x/cmdx"
+	"github.com/ory/x/jsonschemax"
 )
 
 func NewValidateIdentityCmd() *cobra.Command {

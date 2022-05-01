@@ -6,8 +6,6 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/ory/x/sqlcon"
-
 	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -17,6 +15,7 @@ import (
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/internal/testhelpers"
 	"github.com/ory/kratos/x"
+	"github.com/ory/x/sqlcon"
 )
 
 func TestDeleteIdentityCmd(t *testing.T) {

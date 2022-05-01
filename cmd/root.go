@@ -7,14 +7,12 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/ory/x/cmdx"
-
 	"github.com/ory/kratos/cmd/courier"
 	"github.com/ory/kratos/cmd/delete"
 	"github.com/ory/kratos/cmd/format"
 	"github.com/ory/kratos/cmd/get"
 	"github.com/ory/kratos/cmd/hashers"
-	"github.com/ory/kratos/cmd/import"
+	"github.com/ory/kratos/cmd/import_cmd"
 	"github.com/ory/kratos/cmd/lint"
 	"github.com/ory/kratos/cmd/list"
 	"github.com/ory/kratos/cmd/migrate"
@@ -22,6 +20,7 @@ import (
 	"github.com/ory/kratos/cmd/serve"
 	"github.com/ory/kratos/cmd/validate"
 	"github.com/ory/kratos/driver/config"
+	"github.com/ory/x/cmdx"
 )
 
 // RootCmd represents the base command when called without any subcommands

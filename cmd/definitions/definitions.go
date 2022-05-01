@@ -3,9 +3,8 @@ package definitions
 import (
 	"strings"
 
-	"github.com/ory/x/cmdx"
-
 	kratos "github.com/ory/kratos-client-go"
+	"github.com/ory/x/cmdx"
 )
 
 type (
