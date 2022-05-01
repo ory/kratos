@@ -222,19 +222,19 @@ type AdminCreateIdentityBody struct {
 
 	// Credentials represents all credentials that can be used for authenticating this identity.
 	//
-	// Use this structure to import_cmd credentials for a user.
+	// Use this structure to import credentials for a user.
 	Credentials *AdminIdentityImportCredentials `json:"credentials"`
 
 	// VerifiableAddresses contains all the addresses that can be verified by the user.
 	//
-	// Use this structure to import_cmd verified addresses for an identity. Please keep in mind
+	// Use this structure to import verified addresses for an identity. Please keep in mind
 	// that the address needs to be represented in the Identity Schema or this field will be overwritten
 	// on the next identity update.
 	VerifiableAddresses []VerifiableAddress `json:"verifiable_addresses"`
 
 	// RecoveryAddresses contains all the addresses that can be used to recover an identity.
 	//
-	// Use this structure to import_cmd recovery addresses for an identity. Please keep in mind
+	// Use this structure to import recovery addresses for an identity. Please keep in mind
 	// that the address needs to be represented in the Identity Schema or this field will be overwritten
 	// on the next identity update.
 	RecoveryAddresses []RecoveryAddress `json:"recovery_addresses"`
@@ -254,16 +254,16 @@ type AdminCreateIdentityBody struct {
 
 // swagger:model adminIdentityImportCredentials
 type AdminIdentityImportCredentials struct {
-	// Password if set will import_cmd a password credential.
+	// Password if set will import a password credential.
 	Password *AdminIdentityImportCredentialsPassword `json:"password"`
 
-	// OIDC if set will import_cmd an OIDC credential.
+	// OIDC if set will import an OIDC credential.
 	OIDC *AdminIdentityImportCredentialsOIDC `json:"oidc"`
 }
 
 // swagger:model adminCreateIdentityImportCredentialsPassword
 type AdminIdentityImportCredentialsPassword struct {
-	// Configuration options for the import_cmd.
+	// Configuration options for the import.
 	Config AdminIdentityImportCredentialsPasswordConfig `json:"config"`
 }
 
@@ -278,13 +278,13 @@ type AdminIdentityImportCredentialsPasswordConfig struct {
 
 // swagger:model adminCreateIdentityImportCredentialsOidc
 type AdminIdentityImportCredentialsOIDC struct {
-	// Configuration options for the import_cmd.
+	// Configuration options for the import.
 	Config AdminIdentityImportCredentialsOIDCConfig `json:"config"`
 }
 
 // swagger:model adminCreateIdentityImportCredentialsOidcConfig
 type AdminIdentityImportCredentialsOIDCConfig struct {
-	// Configuration options for the import_cmd.
+	// Configuration options for the import.
 	Config AdminIdentityImportCredentialsPasswordConfig `json:"config"`
 	// A list of OpenID Connect Providers
 	Providers []AdminCreateIdentityImportCredentialsOidcProvider `json:"providers"`
