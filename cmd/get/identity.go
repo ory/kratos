@@ -66,7 +66,7 @@ func NewGetIdentityCmd(parent *cobra.Command) *cobra.Command {
 			if len(identities) == 1 {
 				cmdx.PrintRow(cmd, (*definitions.OutputIdentity)(&identities[0]))
 			} else if len(identities) > 1 {
-				cmdx.PrintTable(cmd, &definitions.OutputIdentityCollection{identities})
+				cmdx.PrintTable(cmd, &definitions.OutputIdentityCollection{Identities: identities})
 			}
 			cmdx.PrintErrors(cmd, failed)
 
