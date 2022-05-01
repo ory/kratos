@@ -1,4 +1,4 @@
-package jsonnet
+package format
 
 import (
 	"fmt"
@@ -10,25 +10,18 @@ import (
 
 	"github.com/ory/x/cmdx"
 	"github.com/ory/x/flagx"
+
+	"github.com/ory/kratos/internal/clihelpers"
 )
 
-func NewFormatCmd() *cobra.Command {
-	c := &cobra.Command{
-		Use:   "format",
-		Short: "Helpers for formatting code",
-	}
-	c.AddCommand(NewJsonnetFormatCmd())
-	return c
-}
-
-func NewJsonnetFormatCmd() *cobra.Command {
+func NewFormatJsonnetCmd() *cobra.Command {
 	c := &cobra.Command{
 		Use: "jsonnet path/to/files/*.jsonnet [more/files.jsonnet] [supports/**/{foo,bar}.jsonnet]",
 		Long: `Formats JSONNet files using the official JSONNet formatter.
 
 Use -w or --write to write output back to files instead of stdout.
 
-` + GlobHelp,
+` + clihelpers.GlobHelp,
 		Args: cobra.MinimumNArgs(1),
 		Run: func(cmd *cobra.Command, args []string) {
 			for _, pattern := range args {

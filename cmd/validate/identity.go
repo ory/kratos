@@ -1,4 +1,4 @@
-package identities
+package validate
 
 import (
 	"bytes"
@@ -7,43 +7,31 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/ory/kratos/spec"
-
-	"github.com/ory/x/jsonschemax"
-
-	"github.com/ory/x/cmdx"
-
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 	"github.com/tidwall/gjson"
 
 	"github.com/ory/jsonschema/v3"
+	"github.com/ory/x/cmdx"
+	"github.com/ory/x/jsonschemax"
+
 	"github.com/ory/kratos/cmd/cliclient"
+	"github.com/ory/kratos/internal/clihelpers"
+	"github.com/ory/kratos/spec"
 )
-
-func NewValidateCmd() *cobra.Command {
-	var cmd = &cobra.Command{
-		Use:   "validate",
-		Short: "Validate resources",
-	}
-	cmd.AddCommand(NewValidateIdentityCmd())
-	cliclient.RegisterClientFlags(cmd.PersistentFlags())
-	cmdx.RegisterFormatFlags(cmd.PersistentFlags())
-	return cmd
-
-}
 
 func NewValidateIdentityCmd() *cobra.Command {
 	var c = &cobra.Command{
-		Use:   "identity file.json [file-2.json] [file-3.json] [file-n.json]",
-		Short: "Validate local identity files",
+		Use:     "identity file.json [file-2.json] [file-3.json] [file-n.json]",
+		Aliases: []string{"identities"},
+		Short:   "Validate local identity files",
 		Long: `This command allows validation of identity files.
 It validates against the payload of the API and the identity schema as configured in Ory Kratos.
 Identities can be supplied via STD_IN or JSON files containing a single or an array of identities.`,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			c := cliclient.NewClient(cmd)
 
-			is, err := readIdentities(cmd, args)
+			is, err := clihelpers.ReadIdentities(cmd, args)
 			if err != nil {
 				return err
 			}

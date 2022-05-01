@@ -1,25 +1,21 @@
-package identities_test
+package list_test
 
 import (
 	"context"
-	"strings"
-	"testing"
-
-	"github.com/spf13/cobra"
-
-	"github.com/ory/kratos/cmd/identities"
-
+	"github.com/ory/kratos/cmd/list"
+	"github.com/ory/kratos/identity"
+	"github.com/ory/kratos/internal/testhelpers"
 	"github.com/ory/x/cmdx"
-
+	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-
-	"github.com/ory/kratos/identity"
+	"strings"
+	"testing"
 )
 
-func TestListCmd(t *testing.T) {
-	c := identities.NewListIdentitiesCmd(new(cobra.Command))
-	reg := setup(t, c)
+func TestListIdentityCmd(t *testing.T) {
+	c := list.NewListIdentityCmd(new(cobra.Command))
+	reg := testhelpers.CmdSetup(t, c)
 	require.NoError(t, c.Flags().Set(cmdx.FlagQuiet, "true"))
 
 	var deleteIdentities = func(t *testing.T, is []*identity.Identity) {
@@ -29,10 +25,10 @@ func TestListCmd(t *testing.T) {
 	}
 
 	t.Run("case=lists all identities with default pagination", func(t *testing.T) {
-		is, ids := makeIdentities(t, reg, 5)
+		is, ids := testhelpers.CmdMakeIdentities(t, reg, 5)
 		defer deleteIdentities(t, is)
 
-		stdOut := execNoErr(t, c)
+		stdOut := testhelpers.CmdExecNoErr(t, c)
 
 		for _, i := range ids {
 			assert.Contains(t, stdOut, i)
@@ -40,11 +36,11 @@ func TestListCmd(t *testing.T) {
 	})
 
 	t.Run("case=lists all identities with pagination", func(t *testing.T) {
-		is, ids := makeIdentities(t, reg, 6)
+		is, ids := testhelpers.CmdMakeIdentities(t, reg, 6)
 		defer deleteIdentities(t, is)
 
-		stdoutP1 := execNoErr(t, c, "1", "3")
-		stdoutP2 := execNoErr(t, c, "2", "3")
+		stdoutP1 := testhelpers.CmdExecNoErr(t, c, "1", "3")
+		stdoutP2 := testhelpers.CmdExecNoErr(t, c, "2", "3")
 
 		for _, id := range ids {
 			// exactly one of page 1 and 2 should contain the id

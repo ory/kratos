@@ -1,34 +1,21 @@
-package identities
+package list
 
 import (
 	"fmt"
-	"strconv"
-
-	"github.com/ory/x/cmdx"
-
-	"github.com/spf13/cobra"
-
 	"github.com/ory/kratos/cmd/cliclient"
+	"github.com/ory/kratos/cmd/definitions"
+	"github.com/ory/x/cmdx"
+	"github.com/spf13/cobra"
+	"strconv"
 )
 
-func NewListCmd(root *cobra.Command) *cobra.Command {
-	c := &cobra.Command{
-		Use:     "list",
-		Aliases: []string{"ls"},
-		Short:   "List resources",
-	}
-	c.AddCommand(NewListIdentitiesCmd(root))
-	cliclient.RegisterClientFlags(c.PersistentFlags())
-	cmdx.RegisterFormatFlags(c.PersistentFlags())
-	return c
-}
-
-func NewListIdentitiesCmd(root *cobra.Command) *cobra.Command {
+func NewListIdentityCmd(parent *cobra.Command) *cobra.Command {
 	return &cobra.Command{
-		Use:     "identities [<page> <per-page>]",
+		Use:     "identity [<page> <per-page>]",
+		Aliases: []string{"identities"},
 		Short:   "List identities",
 		Long:    "List identities (paginated)",
-		Example: fmt.Sprintf("%[1]s ls identities 100 1", root.Use),
+		Example: fmt.Sprintf("%[1]s identities 100 1", parent.Root().Use),
 		Args: func(cmd *cobra.Command, args []string) error {
 			// zero or exactly two args
 			if len(args) != 0 && len(args) != 2 {
@@ -36,7 +23,6 @@ func NewListIdentitiesCmd(root *cobra.Command) *cobra.Command {
 			}
 			return nil
 		},
-		Aliases: []string{"ls"},
 		RunE: func(cmd *cobra.Command, args []string) error {
 			c := cliclient.NewClient(cmd)
 			req := c.V0alpha2Api.AdminListIdentities(cmd.Context())
@@ -63,8 +49,8 @@ func NewListIdentitiesCmd(root *cobra.Command) *cobra.Command {
 				return cmdx.FailSilently(cmd)
 			}
 
-			cmdx.PrintTable(cmd, &outputIdentityCollection{
-				identities: identities,
+			cmdx.PrintTable(cmd, &definitions.OutputIdentityCollection{
+				Identities: identities,
 			})
 
 			return nil

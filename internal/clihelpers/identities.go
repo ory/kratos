@@ -1,4 +1,4 @@
-package identities
+package clihelpers
 
 import (
 	"fmt"
@@ -10,7 +10,7 @@ import (
 	"github.com/ory/x/cmdx"
 )
 
-func parseIdentities(raw []byte) (rawIdentities []string) {
+func ParseIdentities(raw []byte) (rawIdentities []string) {
 	res := gjson.ParseBytes(raw)
 	if !res.IsArray() {
 		return []string{res.Raw}
@@ -22,7 +22,7 @@ func parseIdentities(raw []byte) (rawIdentities []string) {
 	return
 }
 
-func readIdentities(cmd *cobra.Command, args []string) (map[string]string, error) {
+func ReadIdentities(cmd *cobra.Command, args []string) (map[string]string, error) {
 	rawIdentities := make(map[string]string)
 	if len(args) == 0 {
 		fc, err := ioutil.ReadAll(cmd.InOrStdin())
@@ -30,7 +30,7 @@ func readIdentities(cmd *cobra.Command, args []string) (map[string]string, error
 			_, _ = fmt.Fprintf(cmd.ErrOrStderr(), "STD_IN: Could not read: %s\n", err)
 			return nil, cmdx.FailSilently(cmd)
 		}
-		for i, id := range parseIdentities(fc) {
+		for i, id := range ParseIdentities(fc) {
 			rawIdentities[fmt.Sprintf("STD_IN[%d]", i)] = id
 		}
 		return rawIdentities, nil
@@ -41,7 +41,7 @@ func readIdentities(cmd *cobra.Command, args []string) (map[string]string, error
 			_, _ = fmt.Fprintf(cmd.ErrOrStderr(), "%s: Could not open identity file: %s\n", fn, err)
 			return nil, cmdx.FailSilently(cmd)
 		}
-		for i, id := range parseIdentities(fc) {
+		for i, id := range ParseIdentities(fc) {
 			rawIdentities[fmt.Sprintf("%s[%d]", fn, i)] = id
 		}
 	}

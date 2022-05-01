@@ -1,4 +1,4 @@
-package identities_test
+package get_test
 
 import (
 	"context"
@@ -7,22 +7,21 @@ import (
 	"testing"
 
 	"github.com/spf13/cobra"
-
-	"github.com/ory/kratos/cmd/identities"
-	"github.com/ory/x/assertx"
-
-	"github.com/ory/kratos/x"
-
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
+	"github.com/ory/x/assertx"
+
+	"github.com/ory/kratos/cmd/get"
 	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/identity"
+	"github.com/ory/kratos/internal/testhelpers"
+	"github.com/ory/kratos/x"
 )
 
-func TestGetCmd(t *testing.T) {
-	c := identities.NewGetIdentityCmd(new(cobra.Command))
-	reg := setup(t, c)
+func TestGetIdentityCmd(t *testing.T) {
+	c := get.NewGetIdentityCmd(new(cobra.Command))
+	reg := testhelpers.CmdSetup(t, c)
 
 	t.Run("case=gets a single identity", func(t *testing.T) {
 		i := identity.NewIdentity(config.DefaultIdentityTraitsSchemaID)
@@ -30,7 +29,7 @@ func TestGetCmd(t *testing.T) {
 		i.MetadataAdmin = []byte(`"admin"`)
 		require.NoError(t, reg.Persister().CreateIdentity(context.Background(), i))
 
-		stdOut := execNoErr(t, c, i.ID.String())
+		stdOut := testhelpers.CmdExecNoErr(t, c, i.ID.String())
 
 		ij, err := json.Marshal(identity.WithCredentialsMetadataAndAdminMetadataInJSON(*i))
 		require.NoError(t, err)
@@ -39,9 +38,9 @@ func TestGetCmd(t *testing.T) {
 	})
 
 	t.Run("case=gets three identities", func(t *testing.T) {
-		is, ids := makeIdentities(t, reg, 3)
+		is, ids := testhelpers.CmdMakeIdentities(t, reg, 3)
 
-		stdOut := execNoErr(t, c, ids...)
+		stdOut := testhelpers.CmdExecNoErr(t, c, ids...)
 
 		isj, err := json.Marshal(is)
 		require.NoError(t, err)
@@ -50,7 +49,7 @@ func TestGetCmd(t *testing.T) {
 	})
 
 	t.Run("case=fails with unknown ID", func(t *testing.T) {
-		stdErr := execErr(t, c, x.NewUUID().String())
+		stdErr := testhelpers.CmdExecErr(t, c, x.NewUUID().String())
 
 		assert.Contains(t, stdErr, "404 Not Found", stdErr)
 	})
@@ -97,10 +96,10 @@ func TestGetCmd(t *testing.T) {
 		di := i.CopyWithoutCredentials()
 		di.SetCredentials(identity.CredentialsTypeOIDC, applyCredentials("uniqueIdentifier", "accessBar", "refreshBar", "idBar", false))
 
-		require.NoError(t, c.Flags().Set(identities.FlagIncludeCreds, "oidc"))
+		require.NoError(t, c.Flags().Set(get.FlagIncludeCreds, "oidc"))
 		require.NoError(t, reg.Persister().CreateIdentity(context.Background(), i))
 
-		stdOut := execNoErr(t, c, i.ID.String())
+		stdOut := testhelpers.CmdExecNoErr(t, c, i.ID.String())
 		ij, err := json.Marshal(identity.WithCredentialsAndAdminMetadataInJSON(*di))
 		require.NoError(t, err)
 

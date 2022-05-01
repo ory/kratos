@@ -1,25 +1,25 @@
-package identities
+package definitions
 
 import (
 	"strings"
 
-	kratos "github.com/ory/kratos-client-go"
-
 	"github.com/ory/x/cmdx"
+
+	kratos "github.com/ory/kratos-client-go"
 )
 
 type (
-	outputIdentity           kratos.Identity
-	outputIdentityCollection struct {
-		identities []kratos.Identity
+	OutputIdentity           kratos.Identity
+	OutputIdentityCollection struct {
+		Identities []kratos.Identity
 	}
 )
 
-func (_ *outputIdentity) Header() []string {
+func (_ *OutputIdentity) Header() []string {
 	return []string{"ID", "VERIFIED ADDRESSES", "RECOVERY ADDRESSES", "SCHEMA ID", "SCHEMA URL"}
 }
 
-func (i *outputIdentity) Columns() []string {
+func (i *OutputIdentity) Columns() []string {
 	data := [5]string{
 		i.Id,
 		cmdx.None,
@@ -49,17 +49,17 @@ func (i *outputIdentity) Columns() []string {
 	return data[:]
 }
 
-func (i *outputIdentity) Interface() interface{} {
+func (i *OutputIdentity) Interface() interface{} {
 	return i
 }
 
-func (_ *outputIdentityCollection) Header() []string {
+func (_ *OutputIdentityCollection) Header() []string {
 	return []string{"ID", "VERIFIED ADDRESS 1", "RECOVERY ADDRESS 1", "SCHEMA ID", "SCHEMA URL"}
 }
 
-func (c *outputIdentityCollection) Table() [][]string {
-	rows := make([][]string, len(c.identities))
-	for i, ident := range c.identities {
+func (c *OutputIdentityCollection) Table() [][]string {
+	rows := make([][]string, len(c.Identities))
+	for i, ident := range c.Identities {
 		data := [5]string{
 			ident.Id,
 			cmdx.None,
@@ -84,10 +84,10 @@ func (c *outputIdentityCollection) Table() [][]string {
 	return rows
 }
 
-func (c *outputIdentityCollection) Interface() interface{} {
-	return c.identities
+func (c *OutputIdentityCollection) Interface() interface{} {
+	return c.Identities
 }
 
-func (c *outputIdentityCollection) Len() int {
-	return len(c.identities)
+func (c *OutputIdentityCollection) Len() int {
+	return len(c.Identities)
 }
