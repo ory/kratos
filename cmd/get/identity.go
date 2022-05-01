@@ -5,7 +5,8 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/ory/kratos-client-go"
+	kratos "github.com/ory/kratos-client-go"
+
 	"github.com/ory/kratos/cmd/cliclient"
 	"github.com/ory/kratos/cmd/definitions"
 	"github.com/ory/kratos/internal/clihelpers"
@@ -46,7 +47,7 @@ func NewGetIdentityCmd(parent *cobra.Command) *cobra.Command {
 				}
 			}
 
-			identities := make([]client.Identity, 0, len(args))
+			identities := make([]kratos.Identity, 0, len(args))
 			failed := make(map[string]error)
 			for _, id := range args {
 				identity, _, err := c.V0alpha2Api.
