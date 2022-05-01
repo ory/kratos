@@ -1,13 +1,12 @@
 package identities
 
 import (
-	"context"
 	"encoding/json"
 	"fmt"
-	"net/http"
 
 	kratos "github.com/ory/kratos-client-go"
 
+	"github.com/ory/x/cloudx"
 	"github.com/ory/x/cmdx"
 
 	"github.com/spf13/cobra"
@@ -67,13 +66,6 @@ WARNING: Importing credentials is not yet supported.`,
 			}
 
 			for src, i := range is {
-				err = ValidateIdentity(cmd, src, i, func(ctx context.Context, id string) (map[string]interface{}, *http.Response, error) {
-					return c.V0alpha2Api.GetJsonSchema(ctx, id).Execute()
-				})
-				if err != nil {
-					return err
-				}
-
 				var params kratos.AdminCreateIdentityBody
 				err = json.Unmarshal([]byte(i), &params)
 				if err != nil {
@@ -83,11 +75,12 @@ WARNING: Importing credentials is not yet supported.`,
 
 				ident, _, err := c.V0alpha2Api.AdminCreateIdentity(cmd.Context()).AdminCreateIdentityBody(params).Execute()
 				if err != nil {
-					failed[src] = err
+					failed[src] = cloudx.PrintOpenAPIError(cmd, err)
 				} else {
 					imported = append(imported, *ident)
 				}
 			}
+
 			if len(imported) == 1 {
 				cmdx.PrintRow(cmd, (*outputIdentity)(&imported[0]))
 			} else {
