@@ -41,30 +41,30 @@ func NewDeleteIdentityCmd(root *cobra.Command) *cobra.Command {
 			}
 
 			var (
-				deleted = make([]string, 0, len(args))
-				errs    []error
+				deleted = make([]outputIder, 0, len(args))
+				failed  = make(map[string]error)
 			)
 
 			for _, a := range args {
 				_, err := c.V0alpha2Api.AdminDeleteIdentity(cmd.Context(), a).Execute()
 				if err != nil {
-					errs = append(errs, cloudx.PrintOpenAPIError(cmd, err))
+					failed[a] = cloudx.PrintOpenAPIError(cmd, err)
 					continue
 				}
-				deleted = append(deleted, a)
+				deleted = append(deleted, outputIder(a))
 			}
 
-			for _, d := range deleted {
-				_, _ = fmt.Fprintln(cmd.OutOrStdout(), d)
+			if len(deleted) == 1 {
+				cmdx.PrintRow(cmd, &deleted[0])
+			} else if len(deleted) > 1 {
+				cmdx.PrintTable(cmd, &outputIderCollection{deleted})
 			}
 
-			for _, err := range errs {
-				_, _ = fmt.Fprintf(cmd.ErrOrStderr(), "%+v\n", err)
-			}
-
-			if len(errs) != 0 {
+			cmdx.PrintErrors(cmd, failed)
+			if len(failed) != 0 {
 				return cmdx.FailSilently(cmd)
 			}
+
 			return nil
 		},
 	}
