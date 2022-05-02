@@ -54,6 +54,6 @@ func TestDeleteCmd(t *testing.T) {
 	t.Run("case=fails with unknown ID", func(t *testing.T) {
 		stdErr := execErr(t, c, x.NewUUID().String())
 
-		assert.Contains(t, stdErr, "404 Not Found", stdErr)
+		assert.Contains(t, stdErr, "Unable to locate the resource", stdErr)
 	})
 }
