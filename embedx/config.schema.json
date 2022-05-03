@@ -1539,6 +1539,12 @@
                   "X-SES-RETURN-PATH-ARN": "arn:aws:ses:us-west-2:123456789012:identity/example.com"
                 }
               ]
+            },
+            "local_name": {
+              "title": "SMTP HELO/EHLO name",
+              "description": "Identifier used in the SMTP HELO/EHLO command. Some SMTP relays require a unique identifier.",
+              "type": "string",
+              "default": "localhost"
             }
           },
           "required": [
