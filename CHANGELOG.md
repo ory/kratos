@@ -4,7 +4,7 @@
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 **Table of Contents**
 
-- [ (2022-04-29)](#2022-04-29)
+- [ (2022-05-08)](#2022-05-08)
   - [Breaking Changes](#breaking-changes)
     - [Bug Fixes](#bug-fixes)
     - [Code Refactoring](#code-refactoring)
@@ -252,8 +252,33 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# [](https://github.com/ory/kratos/compare/v0.9.0-alpha.3...v) (2022-04-29)
+# [](https://github.com/ory/kratos/compare/v0.9.0-alpha.3...v) (2022-05-08)
 ## Breaking Changes
+
+This patch moves several CLI command to comply with the Ory CLI command structure:
+
+```patch
+- ory identities get ...
++ ory get identity ...
+
+- ory identities delete ...
++ ory delete identity ...
+
+- ory identities import ...
++ ory import identity ...
+
+- ory identities list ...
++ ory list identities ...
+
+- ory identities validate ...
++ ory validate identity ...
+
+- ory jsonnet format ...
++ ory format jsonnet ...
+
+- ory jsonnet lint ...
++ ory lint jsonnet ...
+```
 
 This patch moves several CLI command to comply with the Ory CLI command structure:
 
@@ -295,10 +320,14 @@ This patch moves several CLI command to comply with the Ory CLI command structur
 * Do not expose debug in a response when a schema is not found ([#2348](https://github.com/ory/kratos/issues/2348)) ([aee2b1e](https://github.com/ory/kratos/commit/aee2b1ed1189b57fcbb1aaa456444d5121be94b1))
 * **Dockerfile:** Use existing builder base image ([#2390](https://github.com/ory/kratos/issues/2390)) ([37de25a](https://github.com/ory/kratos/commit/37de25a541a24e03407ecf344fb750775e48c782))
 * Get user first name and last name from Apple ([#2331](https://github.com/ory/kratos/issues/2331)) ([4779909](https://github.com/ory/kratos/commit/47799098b35ea1cf5a1163f57d872a5bb2242d97))
+* Improve error reporting from OpenAPI ([8a1009b](https://github.com/ory/kratos/commit/8a1009b16653df13485bab8e33926967c449bf4e))
 * Internal Server Error on Empty PUT /identities/id body ([#2417](https://github.com/ory/kratos/issues/2417)) ([5a50231](https://github.com/ory/kratos/commit/5a50231b553aaa64bd90a3d2cd1be9d2e3aba9ac))
 * Load return_to and append to errors ([#2333](https://github.com/ory/kratos/issues/2333)) ([5efe4a3](https://github.com/ory/kratos/commit/5efe4a33e35e74d248d4eec43dc901b7b6334037)), closes [#2275](https://github.com/ory/kratos/issues/2275) [#2279](https://github.com/ory/kratos/issues/2279) [#2285](https://github.com/ory/kratos/issues/2285)
+* Make delete formattable ([0005f35](https://github.com/ory/kratos/commit/0005f357a049ecbf94d76a1e73434837753a04ea))
+* New issue templates ([b9ad684](https://github.com/ory/kratos/commit/b9ad684311ee8c654b2fa382010315e892581f5c))
 * Refresh is always false when session exists ([d3436d7](https://github.com/ory/kratos/commit/d3436d7fa17589d91e25c9f0bd66bc3bb5b150fa)), closes [#2341](https://github.com/ory/kratos/issues/2341)
 * Remove required legacy field ([#2410](https://github.com/ory/kratos/issues/2410)) ([638d45c](https://github.com/ory/kratos/commit/638d45caf480b7287c9762cbf3c593217f40e3e8))
+* Remove wrong templates ([4fe2d25](https://github.com/ory/kratos/commit/4fe2d25dd68033a8d7b3dd5f62d87b23a7ba361d))
 * **sdk:** Improved OpenAPI specifications for UI nodes ([#2375](https://github.com/ory/kratos/issues/2375)) ([a42a0f7](https://github.com/ory/kratos/commit/a42a0f772af3625c457032d6dcc34289a62acc61)), closes [#2357](https://github.com/ory/kratos/issues/2357)
 * Serve.admin.request_log.disable_for_health behaviour ([#2399](https://github.com/ory/kratos/issues/2399)) ([0a381fa](https://github.com/ory/kratos/commit/0a381fa3d702f77e614d0492dafa3ac2cd102c7e))
 * Use `path` instead of `filepath` to join http route paths ([16b1244](https://github.com/ory/kratos/commit/16b12449c841bf7a237fe436b884b4b5012cd022)), closes [#2292](https://github.com/ory/kratos/issues/2292)
@@ -307,6 +336,7 @@ This patch moves several CLI command to comply with the Ory CLI command structur
 
 ### Code Refactoring
 
+* Move CLI commands to match Ory CLI structure ([d11a9a9](https://github.com/ory/kratos/commit/d11a9a9dafdebb53ed9a8359496eb70b8adb99dd))
 * Move CLI commands to match Ory CLI structure ([73910a3](https://github.com/ory/kratos/commit/73910a329b1ee46de2607c7ab1958ef2fb6de5f4))
 
 ### Documentation
@@ -337,6 +367,7 @@ This patch moves several CLI command to comply with the Ory CLI command structur
 ### Tests
 
 * Fix incorrect assertion ([b5b1361](https://github.com/ory/kratos/commit/b5b1361defa8faa6ea36d50a8d940c76f70c4ddd))
+* Resolve regressions ([dd44593](https://github.com/ory/kratos/commit/dd44593a51a9277c717170360f9794837e4f910c))
 
 ### Unclassified
 
