@@ -159,18 +159,6 @@ test-e2e: node_modules test-resetdb
 migrations-sync: .bin/ory
 		ory dev pop migration sync persistence/sql/migrations/templates persistence/sql/migratest/testdata
 
-.PHONY: migrations-render
-migrations-render: .bin/ory
-		ory dev pop migration render persistence/sql/migrations/templates persistence/sql/migrations/sql
-
-.PHONY: migrations-render-replace
-migrations-render-replace: .bin/ory
-		ory dev pop migration render -r persistence/sql/migrations/templates persistence/sql/migrations/sql
-
-.PHONY: migratest-refresh
-migratest-refresh:
-		cd persistence/sql/migratest; UPDATE_SNAPSHOTS=true go test -p 1 -tags sqlite -short .
-
 .PHONY: test-update-snapshots
 test-update-snapshots:
 		UPDATE_SNAPSHOTS=true go test -p 4 -tags sqlite -short ./...
