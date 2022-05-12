@@ -87,7 +87,7 @@ func (p *Persister) Connection(ctx context.Context) *pop.Connection {
 func (p *Persister) MigrationStatus(ctx context.Context) (popx.MigrationStatuses, error) {
 	ctx, span := p.r.Tracer(ctx).Tracer().Start(ctx, "persistence.sql.MigrationStatus")
 	defer span.End()
-	
+
 	if p.mbs != nil {
 		return p.mbs, nil
 	}
