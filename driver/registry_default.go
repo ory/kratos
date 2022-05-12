@@ -474,6 +474,7 @@ func (m *RegistryDefault) Tracer(ctx context.Context) *otelx.Tracer {
 		t, err := otelx.New("Ory Kratos", m.l, m.Config(ctx).Tracing())
 		if err != nil {
 			m.Logger().WithError(err).Fatalf("Unable to initialize Tracer.")
+			t = otelx.NewNoop(m.l, m.Config(ctx).Tracing())
 		}
 		m.trc = t
 	}

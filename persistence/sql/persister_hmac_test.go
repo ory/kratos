@@ -49,7 +49,7 @@ func (l *logRegistryOnly) Audit() *logrusx.Logger {
 }
 
 func (l *logRegistryOnly) Tracer(ctx context.Context) *otelx.Tracer {
-	return nil
+	return otelx.NewNoop(l.l, new(otelx.Config))
 }
 
 var _ persisterDependencies = &logRegistryOnly{}
