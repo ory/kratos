@@ -87,7 +87,7 @@ func (p *Persister) Clear(ctx context.Context, olderThan time.Duration, force bo
 }
 
 func (p *Persister) encodeSelfServiceErrors(ctx context.Context, e error) (*bytes.Buffer, error) {
-	ctx, span := p.r.Tracer(ctx).Tracer().Start(ctx, "persistence.sql.encodeSelfServiceErrors")
+	_, span := p.r.Tracer(ctx).Tracer().Start(ctx, "persistence.sql.encodeSelfServiceErrors")
 	defer span.End()
 
 	if e == nil {

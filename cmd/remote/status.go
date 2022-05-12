@@ -41,6 +41,10 @@ var statusCmd = &cobra.Command{
 	Args:  cobra.NoArgs,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		c, err := cliclient.NewClient(cmd)
+		if err != nil {
+			return err
+		}
+
 		state := &statusState{}
 		defer cmdx.PrintRow(cmd, state)
 

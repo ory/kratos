@@ -29,6 +29,9 @@ var versionCmd = &cobra.Command{
 	Args:  cobra.NoArgs,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		c, err := cliclient.NewClient(cmd)
+		if err != nil {
+			return err
+		}
 
 		resp, _, err := c.MetadataApi.GetVersion(cmd.Context()).Execute()
 		if err != nil {
