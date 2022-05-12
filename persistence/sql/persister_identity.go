@@ -73,11 +73,6 @@ func (p *Persister) normalizeIdentifier(ct identity.CredentialsType, match strin
 func (p *Persister) FindByCredentialsIdentifier(ctx context.Context, ct identity.CredentialsType, match string) (*identity.Identity, *identity.Credentials, error) {
 	nid := corp.ContextualizeNID(ctx, p.nid)
 
-	var cts []identity.CredentialsTypeTable
-	if err := p.GetConnection(ctx).All(&cts); err != nil {
-		return nil, nil, sqlcon.HandleError(err)
-	}
-
 	var find struct {
 		IdentityID uuid.UUID `db:"identity_id"`
 	}
@@ -90,7 +85,7 @@ func (p *Persister) FindByCredentialsIdentifier(ctx context.Context, ct identity
     ic.identity_id
 FROM %s ic
          INNER JOIN %s ict on ic.identity_credential_type_id = ict.id
-         INNER JOIN %s ici on ic.id = ici.identity_credential_id
+         INNER JOIN %s ici on ic.id = ici.identity_credential_id AND ici.identity_credential_type_id = ict.id
 WHERE ici.identifier = ?
   AND ic.nid = ?
   AND ici.nid = ?
