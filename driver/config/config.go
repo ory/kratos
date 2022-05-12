@@ -209,8 +209,8 @@ type (
 		Config  json.RawMessage `json:"config"`
 	}
 	Schema struct {
-		ID  string `json:"id"`
-		URL string `json:"url"`
+		ID  string `json:"id" koanf:"id"`
+		URL string `json:"url" koanf:"url"`
 	}
 	PasswordPolicy struct {
 		HaveIBeenPwnedHost               string `json:"haveibeenpwned_host"`
@@ -517,19 +517,8 @@ func (p *Config) OIDCRedirectURIBase() *url.URL {
 	return p.Source().URIF(ViperKeyOIDCBaseRedirectURL, p.SelfPublicURL())
 }
 
-func (p *Config) IdentityTraitsSchemas() (Schemas, error) {
-	var ss Schemas
-	out, err := p.p.Marshal(kjson.Parser())
-	if err != nil {
-		return ss, nil
-	}
-
-	config := gjson.GetBytes(out, ViperKeyIdentitySchemas).Raw
-	if len(config) == 0 {
-		return ss, nil
-	}
-
-	if err := json.NewDecoder(bytes.NewBufferString(config)).Decode(&ss); err != nil {
+func (p *Config) IdentityTraitsSchemas() (ss Schemas, err error) {
+	if err = p.Source().Koanf.Unmarshal(ViperKeyIdentitySchemas, &ss); err != nil {
 		return ss, nil
 	}
 
