@@ -347,7 +347,7 @@ func (p *Persister) DeleteIdentity(ctx context.Context, id uuid.UUID) error {
 
 func (p *Persister) GetIdentity(ctx context.Context, id uuid.UUID) (*identity.Identity, error) {
 	var i identity.Identity
-	if err := p.GetConnection(ctx).Where("id = ? AND nid = ?", id, corp.ContextualizeNID(ctx, p.nid)).First(&i); err != nil {
+	if err := p.GetConnection(ctx).EagerPreload("VerifiableAddresses", "RecoveryAddresses").Where("id = ? AND nid = ?", id, corp.ContextualizeNID(ctx, p.nid)).First(&i); err != nil {
 		return nil, sqlcon.HandleError(err)
 	}
 
