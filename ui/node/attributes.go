@@ -75,7 +75,7 @@ type InputAttributes struct {
 	OnClick string `json:"onclick,omitempty"`
 
 	// NodeType represents this node's types. It is a mirror of `node.type` and
-	// is primarily used to allow compatibility with OpenAPI 3.0.
+	// is primarily used to allow compatibility with OpenAPI 3.0.  In this struct it technically always is "input".
 	//
 	// required: true
 	NodeType string `json:"node_type"`
@@ -107,7 +107,7 @@ type ImageAttributes struct {
 	Height int `json:"height"`
 
 	// NodeType represents this node's types. It is a mirror of `node.type` and
-	// is primarily used to allow compatibility with OpenAPI 3.0.
+	// is primarily used to allow compatibility with OpenAPI 3.0.  In this struct it technically always is "img".
 	//
 	// required: true
 	NodeType string `json:"node_type"`
@@ -134,7 +134,7 @@ type AnchorAttributes struct {
 	Identifier string `json:"id"`
 
 	// NodeType represents this node's types. It is a mirror of `node.type` and
-	// is primarily used to allow compatibility with OpenAPI 3.0.
+	// is primarily used to allow compatibility with OpenAPI 3.0.  In this struct it technically always is "a".
 	//
 	// required: true
 	NodeType string `json:"node_type"`
@@ -156,7 +156,7 @@ type TextAttributes struct {
 	Identifier string `json:"id"`
 
 	// NodeType represents this node's types. It is a mirror of `node.type` and
-	// is primarily used to allow compatibility with OpenAPI 3.0.
+	// is primarily used to allow compatibility with OpenAPI 3.0.  In this struct it technically always is "text".
 	//
 	// required: true
 	NodeType string `json:"node_type"`
@@ -211,7 +211,7 @@ type ScriptAttributes struct {
 	Nonce string `json:"nonce"`
 
 	// NodeType represents this node's types. It is a mirror of `node.type` and
-	// is primarily used to allow compatibility with OpenAPI 3.0.
+	// is primarily used to allow compatibility with OpenAPI 3.0. In this struct it technically always is "script".
 	//
 	// required: true
 	NodeType string `json:"node_type"`
