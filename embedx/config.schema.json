@@ -1895,6 +1895,7 @@
         "schemas": {
           "type": "array",
           "title": "All JSON Schemas for Identity Traits",
+          "description": "Note that identities that used the \"default_schema_url\" field in older kratos versions will be corrupted unless you specify their schema url with the id \"default\" in this list.",
           "examples": [
             [
               {
