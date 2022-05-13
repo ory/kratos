@@ -1899,13 +1899,6 @@
           },
           "node_type": {
             "description": "NodeType represents this node's types. It is a mirror of `node.type` and\nis primarily used to allow compatibility with OpenAPI 3.0.",
-            "enum": [
-              "text",
-              "input",
-              "img",
-              "a",
-              "script"
-            ],
             "type": "string"
           },
           "title": {
@@ -1964,13 +1957,6 @@
           },
           "node_type": {
             "description": "NodeType represents this node's types. It is a mirror of `node.type` and\nis primarily used to allow compatibility with OpenAPI 3.0.",
-            "enum": [
-              "text",
-              "input",
-              "img",
-              "a",
-              "script"
-            ],
             "type": "string"
           },
           "src": {
@@ -2012,13 +1998,6 @@
           },
           "node_type": {
             "description": "NodeType represents this node's types. It is a mirror of `node.type` and\nis primarily used to allow compatibility with OpenAPI 3.0.",
-            "enum": [
-              "text",
-              "input",
-              "img",
-              "a",
-              "script"
-            ],
             "type": "string"
           },
           "onclick": {
@@ -2079,13 +2058,6 @@
           },
           "node_type": {
             "description": "NodeType represents this node's types. It is a mirror of `node.type` and\nis primarily used to allow compatibility with OpenAPI 3.0.",
-            "enum": [
-              "text",
-              "input",
-              "img",
-              "a",
-              "script"
-            ],
             "type": "string"
           },
           "nonce": {
@@ -2127,13 +2099,6 @@
           },
           "node_type": {
             "description": "NodeType represents this node's types. It is a mirror of `node.type` and\nis primarily used to allow compatibility with OpenAPI 3.0.",
-            "enum": [
-              "text",
-              "input",
-              "img",
-              "a",
-              "script"
-            ],
             "type": "string"
           },
           "text": {

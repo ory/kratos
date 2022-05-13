@@ -78,7 +78,7 @@ type InputAttributes struct {
 	// is primarily used to allow compatibility with OpenAPI 3.0.
 	//
 	// required: true
-	NodeType UiNodeType `json:"node_type"`
+	NodeType string `json:"node_type"`
 }
 
 // ImageAttributes represents the attributes of an image node.
@@ -110,7 +110,7 @@ type ImageAttributes struct {
 	// is primarily used to allow compatibility with OpenAPI 3.0.
 	//
 	// required: true
-	NodeType UiNodeType `json:"node_type"`
+	NodeType string `json:"node_type"`
 }
 
 // AnchorAttributes represents the attributes of an anchor node.
@@ -137,7 +137,7 @@ type AnchorAttributes struct {
 	// is primarily used to allow compatibility with OpenAPI 3.0.
 	//
 	// required: true
-	NodeType UiNodeType `json:"node_type"`
+	NodeType string `json:"node_type"`
 }
 
 // TextAttributes represents the attributes of a text node.
@@ -159,7 +159,7 @@ type TextAttributes struct {
 	// is primarily used to allow compatibility with OpenAPI 3.0.
 	//
 	// required: true
-	NodeType UiNodeType `json:"node_type"`
+	NodeType string `json:"node_type"`
 }
 
 // ScriptAttributes represent script nodes which load javascript.
@@ -214,7 +214,7 @@ type ScriptAttributes struct {
 	// is primarily used to allow compatibility with OpenAPI 3.0.
 	//
 	// required: true
-	NodeType UiNodeType `json:"node_type"`
+	NodeType string `json:"node_type"`
 }
 
 var (
@@ -302,21 +302,21 @@ func (a *ScriptAttributes) Reset() {
 }
 
 func (a *InputAttributes) GetNodeType() UiNodeType {
-	return a.NodeType
+	return UiNodeType(a.NodeType)
 }
 
 func (a *ImageAttributes) GetNodeType() UiNodeType {
-	return a.NodeType
+	return UiNodeType(a.NodeType)
 }
 
 func (a *AnchorAttributes) GetNodeType() UiNodeType {
-	return a.NodeType
+	return UiNodeType(a.NodeType)
 }
 
 func (a *TextAttributes) GetNodeType() UiNodeType {
-	return a.NodeType
+	return UiNodeType(a.NodeType)
 }
 
 func (a *ScriptAttributes) GetNodeType() UiNodeType {
-	return a.NodeType
+	return UiNodeType(a.NodeType)
 }

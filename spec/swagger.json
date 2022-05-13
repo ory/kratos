@@ -4111,14 +4111,7 @@
         },
         "node_type": {
           "description": "NodeType represents this node's types. It is a mirror of `node.type` and\nis primarily used to allow compatibility with OpenAPI 3.0.",
-          "type": "string",
-          "enum": [
-            "text",
-            "input",
-            "img",
-            "a",
-            "script"
-          ]
+          "type": "string"
         },
         "title": {
           "$ref": "#/definitions/uiText"
@@ -4151,14 +4144,7 @@
         },
         "node_type": {
           "description": "NodeType represents this node's types. It is a mirror of `node.type` and\nis primarily used to allow compatibility with OpenAPI 3.0.",
-          "type": "string",
-          "enum": [
-            "text",
-            "input",
-            "img",
-            "a",
-            "script"
-          ]
+          "type": "string"
         },
         "src": {
           "description": "The image's source URL.\n\nformat: uri",
@@ -4197,14 +4183,7 @@
         },
         "node_type": {
           "description": "NodeType represents this node's types. It is a mirror of `node.type` and\nis primarily used to allow compatibility with OpenAPI 3.0.",
-          "type": "string",
-          "enum": [
-            "text",
-            "input",
-            "img",
-            "a",
-            "script"
-          ]
+          "type": "string"
         },
         "onclick": {
           "description": "OnClick may contain javascript which should be executed on click. This is primarily\nused for WebAuthn.",
@@ -4270,14 +4249,7 @@
         },
         "node_type": {
           "description": "NodeType represents this node's types. It is a mirror of `node.type` and\nis primarily used to allow compatibility with OpenAPI 3.0.",
-          "type": "string",
-          "enum": [
-            "text",
-            "input",
-            "img",
-            "a",
-            "script"
-          ]
+          "type": "string"
         },
         "nonce": {
           "description": "Nonce for CSP\n\nA nonce you may want to use to improve your Content Security Policy.\nYou do not have to use this value but if you want to improve your CSP\npolicies you may use it. You can also choose to use your own nonce value!",
@@ -4312,14 +4284,7 @@
         },
         "node_type": {
           "description": "NodeType represents this node's types. It is a mirror of `node.type` and\nis primarily used to allow compatibility with OpenAPI 3.0.",
-          "type": "string",
-          "enum": [
-            "text",
-            "input",
-            "img",
-            "a",
-            "script"
-          ]
+          "type": "string"
         },
         "text": {
           "$ref": "#/definitions/uiText"
