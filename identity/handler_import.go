@@ -104,12 +104,12 @@ func (h *Handler) importTOTPCredentials(_ context.Context, i *Identity, creds *A
 }
 
 func (h *Handler) importLookupCredentials(_ context.Context, i *Identity, creds *AdminIdentityImportCredentialsLookup) error {
-	var target CredentialsLookup
+	var target CredentialsLookupSecrets
 	c, ok := i.GetCredentials(CredentialsTypeLookup)
 	if !ok {
-		var recoveryCodes []CredentialsLookupRecoveryCode
+		var recoveryCodes []CredentialsLookupSecret
 		for _, code := range creds.Config.RecoveryCodes {
-			recoveryCodes = append(recoveryCodes, CredentialsLookupRecoveryCode{
+			recoveryCodes = append(recoveryCodes, CredentialsLookupSecret{
 				Code:   code.Code,
 				UsedAt: code.UsedAt,
 			})
@@ -118,7 +118,7 @@ func (h *Handler) importLookupCredentials(_ context.Context, i *Identity, creds 
 		return i.SetCredentialsWithConfig(
 			CredentialsTypeLookup,
 			Credentials{Identifiers: []string{i.ID.String()}},
-			CredentialsLookup{RecoveryCodes: recoveryCodes},
+			CredentialsLookupSecrets{LookupSecrets: recoveryCodes},
 		)
 	}
 
@@ -128,7 +128,7 @@ func (h *Handler) importLookupCredentials(_ context.Context, i *Identity, creds 
 
 	c.Identifiers = []string{i.ID.String()}
 	for _, code := range creds.Config.RecoveryCodes {
-		target.RecoveryCodes = append(target.RecoveryCodes, CredentialsLookupRecoveryCode{
+		target.LookupSecrets = append(target.LookupSecrets, CredentialsLookupSecret{
 			Code:   code.Code,
 			UsedAt: code.UsedAt,
 		})

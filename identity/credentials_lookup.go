@@ -2,18 +2,18 @@ package identity
 
 import "github.com/ory/x/sqlxx"
 
-// CredentialsLookup is the struct that is being used as part of the identity credentials.
+// CredentialsLookupSecrets is the struct that is being used as part of the identity credentials.
 //
-// swagger:model identityCredentialsLookup
-type CredentialsLookup struct {
-	// RecoveryCodes is a list of recovery codes.
-	RecoveryCodes []CredentialsLookupRecoveryCode `json:"recovery_codes"`
+// swagger:model identityCredentialsLookupSecrets
+type CredentialsLookupSecrets struct {
+	// LookupSecrets is a list of recovery codes.
+	LookupSecrets []CredentialsLookupSecret `json:"lookup_secrets"`
 }
 
-// CredentialsLookupRecoveryCode is a container of recovery codes and their usage date.
+// CredentialsLookupSecret is a container of recovery codes and their usage date.
 //
-// swagger:model identityCredentialsLookupRecoveryCode
-type CredentialsLookupRecoveryCode struct {
+// swagger:model identityCredentialsLookupSecret
+type CredentialsLookupSecret struct {
 	// Code is a recovery code.
 	Code string `json:"code"`
 
