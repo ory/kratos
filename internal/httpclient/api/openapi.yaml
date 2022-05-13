@@ -5123,7 +5123,7 @@ components:
         node_type:
           description: |-
             NodeType represents this node's types. It is a mirror of `node.type` and
-            is primarily used to allow compatibility with OpenAPI 3.0.
+            is primarily used to allow compatibility with OpenAPI 3.0.  In this struct it technically always is "a".
           type: string
         title:
           $ref: '#/components/schemas/uiText'
@@ -5162,7 +5162,7 @@ components:
         node_type:
           description: |-
             NodeType represents this node's types. It is a mirror of `node.type` and
-            is primarily used to allow compatibility with OpenAPI 3.0.
+            is primarily used to allow compatibility with OpenAPI 3.0.  In this struct it technically always is "img".
           type: string
         src:
           description: |-
@@ -5198,7 +5198,7 @@ components:
         node_type:
           description: |-
             NodeType represents this node's types. It is a mirror of `node.type` and
-            is primarily used to allow compatibility with OpenAPI 3.0.
+            is primarily used to allow compatibility with OpenAPI 3.0.  In this struct it technically always is "input".
           type: string
         onclick:
           description: |-
@@ -5254,7 +5254,7 @@ components:
         node_type:
           description: |-
             NodeType represents this node's types. It is a mirror of `node.type` and
-            is primarily used to allow compatibility with OpenAPI 3.0.
+            is primarily used to allow compatibility with OpenAPI 3.0. In this struct it technically always is "script".
           type: string
         nonce:
           description: |-
@@ -5293,7 +5293,7 @@ components:
         node_type:
           description: |-
             NodeType represents this node's types. It is a mirror of `node.type` and
-            is primarily used to allow compatibility with OpenAPI 3.0.
+            is primarily used to allow compatibility with OpenAPI 3.0.  In this struct it technically always is "text".
           type: string
         text:
           $ref: '#/components/schemas/uiText'

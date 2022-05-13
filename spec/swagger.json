@@ -4110,7 +4110,7 @@
           "type": "string"
         },
         "node_type": {
-          "description": "NodeType represents this node's types. It is a mirror of `node.type` and\nis primarily used to allow compatibility with OpenAPI 3.0.",
+          "description": "NodeType represents this node's types. It is a mirror of `node.type` and\nis primarily used to allow compatibility with OpenAPI 3.0.  In this struct it technically always is \"a\".",
           "type": "string"
         },
         "title": {
@@ -4143,7 +4143,7 @@
           "type": "string"
         },
         "node_type": {
-          "description": "NodeType represents this node's types. It is a mirror of `node.type` and\nis primarily used to allow compatibility with OpenAPI 3.0.",
+          "description": "NodeType represents this node's types. It is a mirror of `node.type` and\nis primarily used to allow compatibility with OpenAPI 3.0.  In this struct it technically always is \"img\".",
           "type": "string"
         },
         "src": {
@@ -4182,7 +4182,7 @@
           "type": "string"
         },
         "node_type": {
-          "description": "NodeType represents this node's types. It is a mirror of `node.type` and\nis primarily used to allow compatibility with OpenAPI 3.0.",
+          "description": "NodeType represents this node's types. It is a mirror of `node.type` and\nis primarily used to allow compatibility with OpenAPI 3.0.  In this struct it technically always is \"input\".",
           "type": "string"
         },
         "onclick": {
@@ -4248,7 +4248,7 @@
           "type": "string"
         },
         "node_type": {
-          "description": "NodeType represents this node's types. It is a mirror of `node.type` and\nis primarily used to allow compatibility with OpenAPI 3.0.",
+          "description": "NodeType represents this node's types. It is a mirror of `node.type` and\nis primarily used to allow compatibility with OpenAPI 3.0. In this struct it technically always is \"script\".",
           "type": "string"
         },
         "nonce": {
@@ -4283,7 +4283,7 @@
           "type": "string"
         },
         "node_type": {
-          "description": "NodeType represents this node's types. It is a mirror of `node.type` and\nis primarily used to allow compatibility with OpenAPI 3.0.",
+          "description": "NodeType represents this node's types. It is a mirror of `node.type` and\nis primarily used to allow compatibility with OpenAPI 3.0.  In this struct it technically always is \"text\".",
           "type": "string"
         },
         "text": {
