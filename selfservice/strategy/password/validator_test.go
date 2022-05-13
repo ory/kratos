@@ -75,7 +75,6 @@ func TestDefaultPasswordValidationStrategy(t *testing.T) {
 				}
 			})
 		}
-
 	})
 
 	t.Run("failure cases", func(t *testing.T) {
@@ -117,11 +116,8 @@ func TestDefaultPasswordValidationStrategy(t *testing.T) {
 
 	t.Run("max breaches", func(t *testing.T) {
 		conf, reg := internal.NewFastRegistryWithMocks(t)
-		s, _ := password.NewDefaultPasswordValidatorStrategy(reg)
-		fakeClient := NewFakeHTTPClient()
-		s.Client = httpx.NewResilientClient(httpx.ResilientClientWithClient(&fakeClient.Client), httpx.ResilientClientWithMaxRetry(1), httpx.ResilientClientWithConnectionTimeout(time.Millisecond))
-
-		conf.MustSet(config.ViperKeyPasswordMaxBreaches, 5)
+		const maxBreaches = 5
+		conf.MustSet(config.ViperKeyPasswordMaxBreaches, maxBreaches)
 		for _, tc := range []struct {
 			cs   string
 			pw   string
@@ -161,22 +157,32 @@ func TestDefaultPasswordValidationStrategy(t *testing.T) {
 			{
 				cs:   "contains less than maxBreachesThreshold",
 				pw:   "tafpabdopa",
-				res:  fmt.Sprintf("280915F3B572F94217D86F1D63BED53F66A:%d\n0F76A7D21E7C3E653E98236897AD7888937:%d", conf.PasswordPolicyConfig().MaxBreaches, conf.PasswordPolicyConfig().MaxBreaches+1),
+				res:  fmt.Sprintf("280915F3B572F94217D86F1D63BED53F66A:%d\n0F76A7D21E7C3E653E98236897AD7888937:%d", maxBreaches, maxBreaches+1),
 				pass: true,
 			},
 			{
 				cs:   "contains more than maxBreachesThreshold",
 				pw:   "hicudsumla",
-				res:  fmt.Sprintf("5656812AA72561AAA6663E486A46D5711BE:%d", conf.PasswordPolicyConfig().MaxBreaches+1),
+				res:  fmt.Sprintf("5656812AA72561AAA6663E486A46D5711BE:%d", maxBreaches+2),
 				pass: false,
 			},
 		} {
-			fakeClient.RespondWith(http.StatusOK, tc.res)
+			tc := tc
 			format := "case=should not fail if response %s"
 			if !tc.pass {
 				format = "case=should fail if response %s"
 			}
+
 			t.Run(fmt.Sprintf(format, tc.cs), func(t *testing.T) {
+				t.Parallel()
+
+				s, _ := password.NewDefaultPasswordValidatorStrategy(reg)
+				fakeClient := NewFakeHTTPClient()
+				fakeClient.RespondWith(http.StatusOK, tc.res)
+				s.Client = httpx.NewResilientClient(httpx.ResilientClientWithClient(&fakeClient.Client),
+					httpx.ResilientClientWithMaxRetry(0),
+					httpx.ResilientClientWithConnectionTimeout(time.Nanosecond))
+
 				err := s.Validate(context.Background(), "", tc.pw)
 				if tc.pass {
 					require.NoError(t, err)

@@ -121,6 +121,7 @@ func (s *DefaultPasswordValidator) fetch(hpw []byte, apiDNSName string) error {
 	}
 
 	s.hashes.SetWithTTL(b20(hpw), 0, 1, hashCacheItemTTL)
+	s.hashes.Wait()
 
 	sc := bufio.NewScanner(res.Body)
 	for sc.Scan() {
@@ -142,6 +143,7 @@ func (s *DefaultPasswordValidator) fetch(hpw []byte, apiDNSName string) error {
 		s.hashes.SetWithTTL(prefix+result[0], count, 1, hashCacheItemTTL)
 	}
 
+	s.hashes.Wait()
 	if err := sc.Err(); err != nil {
 		return errors.WithStack(herodot.ErrInternalServerError.WithReasonf("Unable to initialize string scanner: %s", err))
 	}
