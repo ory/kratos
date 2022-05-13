@@ -833,8 +833,8 @@
           },
           {
             "type": "string",
-            "description": "CSRF Cookie\n\nThe CSRF cookie for browsers flow.",
-            "name": "cookie",
+            "description": "HTTP Cookies\n\nWhen using the SDK in a browser app, on the server side you must include the HTTP Cookie Header\nsent by the client to your server here. This ensures that CSRF and session cookies are respected.",
+            "name": "Cookie",
             "in": "header"
           }
         ],
@@ -1017,8 +1017,8 @@
           },
           {
             "type": "string",
-            "description": "HTTP Cookies\n\nWhen using the SDK on the server side you must include the HTTP Cookie Header\noriginally sent to your HTTP handler here.",
-            "name": "cookie",
+            "description": "HTTP Cookies\n\nWhen using the SDK in a browser app, on the server side you must include the HTTP Cookie Header\nsent by the client to your server here. This ensures that CSRF and session cookies are respected.",
+            "name": "Cookie",
             "in": "header"
           }
         ],
@@ -1232,6 +1232,12 @@
             "schema": {
               "$ref": "#/definitions/submitSelfServiceRecoveryFlowBody"
             }
+          },
+          {
+            "type": "string",
+            "description": "HTTP Cookies\n\nWhen using the SDK in a browser app, on the server side you must include the HTTP Cookie Header\nsent by the client to your server here. This ensures that CSRF and session cookies are respected.",
+            "name": "Cookie",
+            "in": "header"
           }
         ],
         "responses": {
@@ -1369,8 +1375,8 @@
           },
           {
             "type": "string",
-            "description": "HTTP Cookies\n\nWhen using the SDK on the server side you must include the HTTP Cookie Header\noriginally sent to your HTTP handler here.",
-            "name": "cookie",
+            "description": "HTTP Cookies\n\nWhen using the SDK in a browser app, on the server side you must include the HTTP Cookie Header\nsent by the client to your server here. This ensures that CSRF and session cookies are respected.",
+            "name": "Cookie",
             "in": "header"
           }
         ],
@@ -1435,6 +1441,12 @@
             "schema": {
               "$ref": "#/definitions/submitSelfServiceRegistrationFlowBody"
             }
+          },
+          {
+            "type": "string",
+            "description": "HTTP Cookies\n\nWhen using the SDK in a browser app, on the server side you must include the HTTP Cookie Header\nsent by the client to your server here. This ensures that CSRF and session cookies are respected.",
+            "name": "Cookie",
+            "in": "header"
           }
         ],
         "responses": {
@@ -1575,8 +1587,8 @@
           },
           {
             "type": "string",
-            "description": "HTTP Cookies\n\nWhen using the SDK on the server side you must include the HTTP Cookie Header\noriginally sent to your HTTP handler here.",
-            "name": "cookie",
+            "description": "HTTP Cookies\n\nWhen using the SDK in a browser app, on the server side you must include the HTTP Cookie Header\nsent by the client to your server here. This ensures that CSRF and session cookies are respected.",
+            "name": "Cookie",
             "in": "header"
           }
         ],
@@ -1657,6 +1669,12 @@
             "type": "string",
             "description": "The Session Token of the Identity performing the settings flow.",
             "name": "X-Session-Token",
+            "in": "header"
+          },
+          {
+            "type": "string",
+            "description": "HTTP Cookies\n\nWhen using the SDK in a browser app, on the server side you must include the HTTP Cookie Header\nsent by the client to your server here. This ensures that CSRF and session cookies are respected.",
+            "name": "Cookie",
             "in": "header"
           }
         ],
@@ -1839,8 +1857,8 @@
           },
           {
             "type": "string",
-            "description": "HTTP Cookies\n\nWhen using the SDK on the server side you must include the HTTP Cookie Header\noriginally sent to your HTTP handler here. You only need to do this for browser-\nbased flows.",
-            "name": "cookie",
+            "description": "HTTP Cookies\n\nWhen using the SDK in a browser app, on the server side you must include the HTTP Cookie Header\nsent by the client to your server here. This ensures that CSRF and session cookies are respected.",
+            "name": "Cookie",
             "in": "header"
           }
         ],
@@ -1923,6 +1941,12 @@
             "schema": {
               "$ref": "#/definitions/submitSelfServiceVerificationFlowBody"
             }
+          },
+          {
+            "type": "string",
+            "description": "HTTP Cookies\n\nWhen using the SDK in a browser app, on the server side you must include the HTTP Cookie Header\nsent by the client to your server here. This ensures that CSRF and session cookies are respected.",
+            "name": "Cookie",
+            "in": "header"
           }
         ],
         "responses": {
