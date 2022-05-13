@@ -17,6 +17,7 @@ RUN go mod download
 
 ADD . .
 
+ARG VERSION
 ARG COMMIT
 ARG BUILD_DATE
 
