@@ -461,6 +461,14 @@ type submitSelfServiceLoginFlow struct {
 	//
 	// in: header
 	SessionToken string `json:"X-Session-Token"`
+
+	// CSRF Cookie
+	//
+	// The CSRF cookie for browsers flow.
+	//
+	// in: header
+	// name: Cookie
+	Cookies string `json:"cookie"`
 }
 
 // swagger:model submitSelfServiceLoginFlowBody

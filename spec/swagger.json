@@ -830,6 +830,12 @@
             "description": "The Session Token of the Identity performing the settings flow.",
             "name": "X-Session-Token",
             "in": "header"
+          },
+          {
+            "type": "string",
+            "description": "CSRF Cookie\n\nThe CSRF cookie for browsers flow.",
+            "name": "cookie",
+            "in": "header"
           }
         ],
         "responses": {

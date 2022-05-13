@@ -3179,6 +3179,14 @@
             "schema": {
               "type": "string"
             }
+          },
+          {
+            "description": "CSRF Cookie\n\nThe CSRF cookie for browsers flow.",
+            "in": "header",
+            "name": "cookie",
+            "schema": {
+              "type": "string"
+            }
           }
         ],
         "requestBody": {

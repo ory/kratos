@@ -740,6 +740,17 @@ paths:
         schema:
           type: string
         style: simple
+      - description: |-
+          CSRF Cookie
+
+          The CSRF cookie for browsers flow.
+        explode: false
+        in: header
+        name: cookie
+        required: false
+        schema:
+          type: string
+        style: simple
       requestBody:
         content:
           application/json:
