@@ -466,7 +466,7 @@ func TestHandler(t *testing.T) {
 					credentials := identity.AdminIdentityImportCredentials{
 						Password: &identity.AdminIdentityImportCredentialsPassword{
 							Config: identity.AdminIdentityImportCredentialsPasswordConfig{
-								Password: "pswd",
+								Password: "pswd1234",
 							},
 						},
 					}
@@ -494,6 +494,9 @@ func TestHandler(t *testing.T) {
 					assert.EqualValues(t, "metadata", res.Get("metadata_public.public").String(), "%s", res.Raw)
 					assert.EqualValues(t, identity.StateInactive, res.Get("state").String(), "%s", res.Raw)
 					assert.NotEqualValues(t, i.StateChangedAt, sqlxx.NullTime(res.Get("state_changed_at").Time()), "%s", res.Raw)
+					actual, err := reg.PrivilegedIdentityPool().GetIdentityConfidential(context.Background(), i.ID)
+					require.NoError(t, err)
+					require.NoError(t, hash.Compare(ctx, []byte("pswd1234"), []byte(gjson.GetBytes(actual.Credentials[identity.CredentialsTypePassword].Config, "hashed_password").String())))
 				})
 			}
 		})

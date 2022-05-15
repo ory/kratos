@@ -398,6 +398,8 @@ type AdminUpdateIdentityBody struct {
 	// Credentials represents all credentials that can be used for authenticating this identity.
 	//
 	// Use this structure to import credentials for a user.
+	// Note: this wil override completely identity's credentials. If used incorrectly, this can cause a user to lose
+	// access to their account!
 	Credentials *AdminIdentityImportCredentials `json:"credentials"`
 
 	// Store metadata about the identity which the identity itself can see when calling for example the
