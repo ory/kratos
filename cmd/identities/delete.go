@@ -3,8 +3,6 @@ package identities
 import (
 	"fmt"
 
-	"github.com/ory/x/cloudx"
-
 	"github.com/spf13/cobra"
 
 	"github.com/ory/kratos/cmd/cliclient"
@@ -48,7 +46,7 @@ func NewDeleteIdentityCmd(root *cobra.Command) *cobra.Command {
 			for _, a := range args {
 				_, err := c.V0alpha2Api.AdminDeleteIdentity(cmd.Context(), a).Execute()
 				if err != nil {
-					failed[a] = cloudx.PrintOpenAPIError(cmd, err)
+					failed[a] = cmdx.PrintOpenAPIError(cmd, err)
 					continue
 				}
 				deleted = append(deleted, outputIder(a))

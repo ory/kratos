@@ -4,8 +4,6 @@ import (
 	"fmt"
 	"strconv"
 
-	"github.com/ory/x/cloudx"
-
 	"github.com/ory/x/cmdx"
 
 	"github.com/spf13/cobra"
@@ -65,7 +63,7 @@ func NewListIdentitiesCmd(root *cobra.Command) *cobra.Command {
 
 			identities, _, err := req.Execute()
 			if err != nil {
-				return cloudx.PrintOpenAPIError(cmd, err)
+				return cmdx.PrintOpenAPIError(cmd, err)
 			}
 
 			cmdx.PrintTable(cmd, &outputIdentityCollection{

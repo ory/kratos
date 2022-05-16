@@ -6,7 +6,6 @@ import (
 
 	kratos "github.com/ory/kratos-client-go"
 
-	"github.com/ory/x/cloudx"
 	"github.com/ory/x/cmdx"
 
 	"github.com/spf13/cobra"
@@ -75,7 +74,7 @@ WARNING: Importing credentials is not yet supported.`,
 
 				ident, _, err := c.V0alpha2Api.AdminCreateIdentity(cmd.Context()).AdminCreateIdentityBody(params).Execute()
 				if err != nil {
-					failed[src] = cloudx.PrintOpenAPIError(cmd, err)
+					failed[src] = cmdx.PrintOpenAPIError(cmd, err)
 				} else {
 					imported = append(imported, *ident)
 				}
