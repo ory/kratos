@@ -3,6 +3,7 @@ package password
 import (
 	"bufio"
 	"context"
+	stderrs "errors"
 
 	/* #nosec G505 sha1 is used for k-anonymity */
 	"crypto/sha1"
@@ -37,9 +38,12 @@ type ValidationProvider interface {
 	PasswordValidator() Validator
 }
 
-var _ Validator = new(DefaultPasswordValidator)
-var ErrNetworkFailure = errors.New("unable to check if password has been leaked because an unexpected network error occurred")
-var ErrUnexpectedStatusCode = errors.New("unexpected status code")
+var (
+	_                       Validator = new(DefaultPasswordValidator)
+	ErrNetworkFailure                 = stderrs.New("unable to check if password has been leaked because an unexpected network error occurred")
+	ErrUnexpectedStatusCode           = stderrs.New("unexpected status code")
+	ErrTooManyBreaches                = stderrs.New("the password has been found in data breaches and must no longer be used")
+)
 
 // DefaultPasswordValidator implements Validator. It is based on best
 // practices as defined in the following blog posts:
@@ -107,20 +111,20 @@ func lcsLength(a, b string) int {
 	return greatestLength
 }
 
-func (s *DefaultPasswordValidator) fetch(hpw []byte, apiDNSName string) error {
+func (s *DefaultPasswordValidator) fetch(hpw []byte, apiDNSName string) (int64, error) {
 	prefix := fmt.Sprintf("%X", hpw)[0:5]
 	loc := fmt.Sprintf("https://%s/range/%s", apiDNSName, prefix)
 	res, err := s.Client.Get(loc)
 	if err != nil {
-		return errors.Wrapf(ErrNetworkFailure, "%s", err)
+		return 0, errors.Wrapf(ErrNetworkFailure, "%s", err)
 	}
 	defer res.Body.Close()
 
 	if res.StatusCode != http.StatusOK {
-		return errors.Wrapf(ErrUnexpectedStatusCode, "%d", res.StatusCode)
+		return 0, errors.Wrapf(ErrUnexpectedStatusCode, "%d", res.StatusCode)
 	}
 
-	s.hashes.SetWithTTL(b20(hpw), 0, 1, hashCacheItemTTL)
+	var thisCount int64
 
 	sc := bufio.NewScanner(res.Body)
 	for sc.Scan() {
@@ -135,18 +139,22 @@ func (s *DefaultPasswordValidator) fetch(hpw []byte, apiDNSName string) error {
 		if len(result) == 2 {
 			count, err = strconv.ParseInt(result[1], 10, 64)
 			if err != nil {
-				return errors.WithStack(herodot.ErrInternalServerError.WithReasonf("Expected password hash to contain a count formatted as int but got: %s", result[1]))
+				return 0, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("Expected password hash to contain a count formatted as int but got: %s", result[1]))
 			}
 		}
 
 		s.hashes.SetWithTTL(prefix+result[0], count, 1, hashCacheItemTTL)
+		if prefix+result[0] == b20(hpw) {
+			thisCount = count
+		}
 	}
 
 	if err := sc.Err(); err != nil {
-		return errors.WithStack(herodot.ErrInternalServerError.WithReasonf("Unable to initialize string scanner: %s", err))
+		return 0, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("Unable to initialize string scanner: %s", err))
 	}
 
-	return nil
+	s.hashes.SetWithTTL(b20(hpw), thisCount, 1, hashCacheItemTTL)
+	return thisCount, nil
 }
 
 func (s *DefaultPasswordValidator) Validate(ctx context.Context, identifier, password string) error {
@@ -178,19 +186,18 @@ func (s *DefaultPasswordValidator) Validate(ctx context.Context, identifier, pas
 
 	c, ok := s.hashes.Get(b20(hpw))
 	if !ok {
-		err := s.fetch(hpw, passwordPolicyConfig.HaveIBeenPwnedHost)
+		var err error
+		c, err = s.fetch(hpw, passwordPolicyConfig.HaveIBeenPwnedHost)
 		if (errors.Is(err, ErrNetworkFailure) || errors.Is(err, ErrUnexpectedStatusCode)) && passwordPolicyConfig.IgnoreNetworkErrors {
 			return nil
 		} else if err != nil {
 			return err
 		}
-
-		return s.Validate(ctx, identifier, password)
 	}
 
 	v, ok := c.(int64)
 	if ok && v > int64(s.reg.Config(ctx).PasswordPolicyConfig().MaxBreaches) {
-		return errors.New("the password has been found in data breaches and must no longer be used")
+		return errors.WithStack(ErrTooManyBreaches)
 	}
 
 	return nil
