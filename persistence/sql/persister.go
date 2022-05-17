@@ -136,48 +136,48 @@ type node interface {
 	GetNID() uuid.UUID
 }
 
-func (p *Persister) CleanupDatabase(ctx context.Context, wait time.Duration, older time.Duration) error {
+func (p *Persister) CleanupDatabase(ctx context.Context, wait time.Duration, older time.Duration, batchSize int) error {
 	currentTime := time.Now().Add(-older)
 	p.r.Logger().Printf("Cleaning up records older than %s\n", currentTime)
 
 	p.r.Logger().Println("Cleaning up expired sessions")
-	if err := p.DeleteExpiredSessions(ctx, currentTime); err != nil {
+	if err := p.DeleteExpiredSessions(ctx, currentTime, batchSize); err != nil {
 		return err
 	}
 	time.Sleep(wait)
 
 	p.r.Logger().Println("Cleaning up expired continuity containers")
-	if err := p.DeleteExpiredContinuitySessions(ctx, currentTime); err != nil {
+	if err := p.DeleteExpiredContinuitySessions(ctx, currentTime, batchSize); err != nil {
 		return err
 	}
 	time.Sleep(wait)
 
 	p.r.Logger().Println("Cleaning up expired login flows")
-	if err := p.DeleteExpiredLoginFlows(ctx, currentTime); err != nil {
+	if err := p.DeleteExpiredLoginFlows(ctx, currentTime, batchSize); err != nil {
 		return err
 	}
 	time.Sleep(wait)
 
 	p.r.Logger().Println("Cleaning up expired recovery flows")
-	if err := p.DeleteExpiredRecoveryFlows(ctx, currentTime); err != nil {
+	if err := p.DeleteExpiredRecoveryFlows(ctx, currentTime, batchSize); err != nil {
 		return err
 	}
 	time.Sleep(wait)
 
 	p.r.Logger().Println("Cleaning up expired registation flows")
-	if err := p.DeleteExpiredRegistrationFlows(ctx, currentTime); err != nil {
+	if err := p.DeleteExpiredRegistrationFlows(ctx, currentTime, batchSize); err != nil {
 		return err
 	}
 	time.Sleep(wait)
 
 	p.r.Logger().Println("Cleaning up expired settings flows")
-	if err := p.DeleteExpiredSettingsFlows(ctx, currentTime); err != nil {
+	if err := p.DeleteExpiredSettingsFlows(ctx, currentTime, batchSize); err != nil {
 		return err
 	}
 	time.Sleep(wait)
 
 	p.r.Logger().Println("Cleaning up expired verification flows")
-	if err := p.DeleteExpiredVerificationFlows(ctx, currentTime); err != nil {
+	if err := p.DeleteExpiredVerificationFlows(ctx, currentTime, batchSize); err != nil {
 		return err
 	}
 	time.Sleep(wait)

@@ -15,8 +15,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/santhosh-tekuri/jsonschema"
-
 	"github.com/ory/jsonschema/v3/httploader"
 	"github.com/ory/x/httpx"
 
@@ -156,6 +154,7 @@ const (
 	ViperKeyHasherBcryptCost                                 = "hashers.bcrypt.cost"
 	ViperKeyCipherAlgorithm                                  = "ciphers.algorithm"
 	ViperKeyDatabaseCleanupSleepTables                       = "database.cleanup.sleep.tables"
+	ViperKeyDatabaseCleanupBatchSize                         = "database.cleanup.batch_size"
 	ViperKeyLinkLifespan                                     = "selfservice.methods.link.config.lifespan"
 	ViperKeyLinkBaseURL                                      = "selfservice.methods.link.config.base_url"
 	ViperKeyPasswordHaveIBeenPwnedHost                       = "selfservice.methods.password.config.haveibeenpwned_host"
@@ -1084,7 +1083,11 @@ func (p *Config) SelfServiceLinkMethodBaseURL() *url.URL {
 }
 
 func (p *Config) DatabaseCleanupSleepTables() time.Duration {
-	return p.p.DurationF(ViperKeyDatabaseCleanupSleepTables, 1*time.Minute)
+	return p.p.DurationF(ViperKeyDatabaseCleanupSleepTables, 5*time.Second)
+}
+
+func (p *Config) DatabaseCleanupBatchSize() int {
+	return p.p.IntF(ViperKeyDatabaseCleanupBatchSize, 100)
 }
 
 func (p *Config) SelfServiceFlowRecoveryAfterHooks(strategy string) []SelfServiceHook {

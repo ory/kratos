@@ -56,7 +56,11 @@ func (h *CleanupHandler) CleanupSQL(cmd *cobra.Command, args []string) error {
 
 	keepLast := flagx.MustGetDuration(cmd, "keep-last")
 
-	err = d.Persister().CleanupDatabase(cmd.Context(), d.Config(cmd.Context()).DatabaseCleanupSleepTables(), keepLast)
+	err = d.Persister().CleanupDatabase(
+		cmd.Context(),
+		d.Config(cmd.Context()).DatabaseCleanupSleepTables(),
+		keepLast,
+		d.Config(cmd.Context()).DatabaseCleanupBatchSize())
 	if err != nil {
 		return errors.Wrap(err, "An error occurred while cleaning up expired data")
 	}

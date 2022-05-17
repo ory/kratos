@@ -94,13 +94,16 @@ func (p *Persister) DeleteRecoveryToken(ctx context.Context, token string) error
 	return p.GetConnection(ctx).RawQuery(fmt.Sprintf("DELETE FROM %s WHERE token=? AND nid = ?", new(link.RecoveryToken).TableName(ctx)), token, corp.ContextualizeNID(ctx, p.nid)).Exec()
 }
 
-func (p *Persister) DeleteExpiredRecoveryFlows(ctx context.Context, expiresAt time.Time) error {
+func (p *Persister) DeleteExpiredRecoveryFlows(ctx context.Context, expiresAt time.Time, limit int) error {
 	// #nosec G201
 	err := p.GetConnection(ctx).RawQuery(fmt.Sprintf(
-		"DELETE FROM %s WHERE expires_at <= ?",
+		"DELETE FROM %s WHERE id in (SELECT id FROM (SELECT id FROM %s c WHERE expires_at <= ? and nid = ? ORDER BY expires_at ASC LIMIT %d ) AS s )",
 		new(recovery.Flow).TableName(ctx),
+		new(recovery.Flow).TableName(ctx),
+		limit,
 	),
 		expiresAt,
+		corp.ContextualizeNID(ctx, p.nid),
 	).Exec()
 	if err != nil {
 		return sqlcon.HandleError(err)

@@ -1,8 +1,9 @@
 package cleanup
 
 import (
-	"github.com/ory/x/configx"
 	"github.com/spf13/cobra"
+
+	"github.com/ory/x/configx"
 )
 
 func NewCleanupCmd() *cobra.Command {

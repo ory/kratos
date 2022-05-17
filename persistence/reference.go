@@ -44,7 +44,7 @@ type Persister interface {
 	link.RecoveryTokenPersister
 	link.VerificationTokenPersister
 
-	CleanupDatabase(context.Context, time.Duration, time.Duration) error
+	CleanupDatabase(context.Context, time.Duration, time.Duration, int) error
 	Close(context.Context) error
 	Ping() error
 	MigrationStatus(c context.Context) (popx.MigrationStatuses, error)

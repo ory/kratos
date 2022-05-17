@@ -54,13 +54,16 @@ func (p *Persister) ForceLoginFlow(ctx context.Context, id uuid.UUID) error {
 	})
 }
 
-func (p *Persister) DeleteExpiredLoginFlows(ctx context.Context, expiresAt time.Time) error {
+func (p *Persister) DeleteExpiredLoginFlows(ctx context.Context, expiresAt time.Time, limit int) error {
 	// #nosec G201
 	err := p.GetConnection(ctx).RawQuery(fmt.Sprintf(
-		"DELETE FROM %s WHERE expires_at <= ?",
+		"DELETE FROM %s WHERE id in (SELECT id FROM (SELECT id FROM %s c WHERE expires_at <= ? and nid = ? ORDER BY expires_at ASC LIMIT %d ) AS s )",
 		new(login.Flow).TableName(ctx),
+		new(login.Flow).TableName(ctx),
+		limit,
 	),
 		expiresAt,
+		corp.ContextualizeNID(ctx, p.nid),
 	).Exec()
 	if err != nil {
 		return sqlcon.HandleError(err)

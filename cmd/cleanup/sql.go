@@ -16,8 +16,9 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/ory/kratos/driver/config"
 	"github.com/spf13/cobra"
+
+	"github.com/ory/kratos/driver/config"
 
 	"github.com/ory/kratos/cmd/cliclient"
 	"github.com/ory/x/configx"
@@ -48,6 +49,7 @@ Before running this command on an existing database, create a back up!
 	configx.RegisterFlags(c.PersistentFlags())
 	c.Flags().BoolP("read-from-env", "e", true, "If set, reads the database connection string from the environment variable DSN or config file key dsn.")
 	c.Flags().Duration(config.ViperKeyDatabaseCleanupSleepTables, time.Minute, "How long to wait between each table cleanup")
+	c.Flags().IntP(config.ViperKeyDatabaseCleanupBatchSize, "b", 100, "Set the number of records to be cleaned per run")
 	c.Flags().Duration("keep-last", 0, "Don't remove records younger than")
 	return c
 }
