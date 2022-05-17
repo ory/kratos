@@ -265,7 +265,7 @@ func (s *Strategy) verificationUseToken(w http.ResponseWriter, r *http.Request, 
 		return errors.WithStack(flow.ErrCompletedByStrategy)
 	}
 
-	http.Redirect(w, r, returnTo.String(), http.StatusSeeOther)
+	http.Redirect(w, r, f.AppendTo(returnTo).String(), http.StatusSeeOther)
 	return errors.WithStack(flow.ErrCompletedByStrategy)
 }
 

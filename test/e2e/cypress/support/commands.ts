@@ -873,6 +873,8 @@ Cypress.Commands.add(
       expect(message.toAddresses[0].trim()).to.equal(email)
 
       const link = parseHtml(message.body).querySelector('a')
+      const flow = new URL(link.href).searchParams.get('flow')
+
       expect(link).to.not.be.null
       expect(link.href).to.contain(APP_URL)
 
@@ -880,7 +882,7 @@ Cypress.Commands.add(
         (response) => {
           expect(response.status).to.eq(303)
           if (redirectTo) {
-            expect(response.redirectedToUrl).to.eq(redirectTo)
+            expect(response.redirectedToUrl).to.eq(`${redirectTo}?flow=${flow}`)
           } else {
             expect(response.redirectedToUrl).to.not.contain('verification')
           }
