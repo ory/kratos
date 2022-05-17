@@ -5,9 +5,8 @@ import (
 	"os"
 	"testing"
 
-	"github.com/ory/x/tracing"
-
 	"github.com/ory/x/configx"
+	"github.com/ory/x/otelx"
 
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/schema"
@@ -49,8 +48,8 @@ func (l *logRegistryOnly) Audit() *logrusx.Logger {
 	panic("implement me")
 }
 
-func (l *logRegistryOnly) Tracer(ctx context.Context) *tracing.Tracer {
-	return nil
+func (l *logRegistryOnly) Tracer(ctx context.Context) *otelx.Tracer {
+	return otelx.NewNoop(l.l, new(otelx.Config))
 }
 
 var _ persisterDependencies = &logRegistryOnly{}

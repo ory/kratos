@@ -27,12 +27,18 @@ var versionCmd = &cobra.Command{
 	Use:   "version",
 	Short: "Print the version of an Ory Kratos instance",
 	Args:  cobra.NoArgs,
-	Run: func(cmd *cobra.Command, args []string) {
-		c := cliclient.NewClient(cmd)
+	RunE: func(cmd *cobra.Command, args []string) error {
+		c, err := cliclient.NewClient(cmd)
+		if err != nil {
+			return err
+		}
 
 		resp, _, err := c.MetadataApi.GetVersion(cmd.Context()).Execute()
-		cmdx.Must(err, "Could not get version: %s", err)
+		if err != nil {
+			return err
+		}
 
 		cmdx.PrintRow(cmd, &versionValue{Version: resp.Version})
+		return nil
 	},
 }

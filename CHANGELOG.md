@@ -4,13 +4,14 @@
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 **Table of Contents**
 
-- [ (2022-04-26)](#2022-04-26)
+- [ (2022-05-16)](#2022-05-16)
   - [Breaking Changes](#breaking-changes)
     - [Bug Fixes](#bug-fixes)
     - [Code Refactoring](#code-refactoring)
     - [Documentation](#documentation)
     - [Features](#features)
     - [Tests](#tests)
+    - [Unclassified](#unclassified)
 - [0.9.0-alpha.3 (2022-03-25)](#090-alpha3-2022-03-25)
   - [Breaking Changes](#breaking-changes-1)
     - [Bug Fixes](#bug-fixes-1)
@@ -27,7 +28,7 @@
     - [Documentation](#documentation-2)
     - [Features](#features-1)
     - [Tests](#tests-1)
-    - [Unclassified](#unclassified)
+    - [Unclassified](#unclassified-1)
 - [0.8.2-alpha.1 (2021-12-17)](#082-alpha1-2021-12-17)
     - [Bug Fixes](#bug-fixes-4)
     - [Code Generation](#code-generation-3)
@@ -53,7 +54,7 @@
     - [Features](#features-3)
     - [Reverts](#reverts)
     - [Tests](#tests-3)
-    - [Unclassified](#unclassified-1)
+    - [Unclassified](#unclassified-2)
 - [0.7.6-alpha.1 (2021-09-12)](#076-alpha1-2021-09-12)
     - [Code Generation](#code-generation-8)
 - [0.7.5-alpha.1 (2021-09-11)](#075-alpha1-2021-09-11)
@@ -82,7 +83,7 @@
     - [Documentation](#documentation-9)
     - [Features](#features-6)
     - [Tests](#tests-6)
-    - [Unclassified](#unclassified-2)
+    - [Unclassified](#unclassified-3)
 - [0.6.3-alpha.1 (2021-05-17)](#063-alpha1-2021-05-17)
   - [Breaking Changes](#breaking-changes-6)
     - [Bug Fixes](#bug-fixes-12)
@@ -106,14 +107,14 @@
     - [Documentation](#documentation-11)
     - [Features](#features-9)
     - [Tests](#tests-7)
-    - [Unclassified](#unclassified-3)
+    - [Unclassified](#unclassified-4)
 - [0.5.5-alpha.1 (2020-12-09)](#055-alpha1-2020-12-09)
     - [Bug Fixes](#bug-fixes-15)
     - [Code Generation](#code-generation-19)
     - [Documentation](#documentation-12)
     - [Features](#features-10)
     - [Tests](#tests-8)
-    - [Unclassified](#unclassified-4)
+    - [Unclassified](#unclassified-5)
 - [0.5.4-alpha.1 (2020-11-11)](#054-alpha1-2020-11-11)
     - [Bug Fixes](#bug-fixes-16)
     - [Code Generation](#code-generation-20)
@@ -137,7 +138,7 @@
     - [Documentation](#documentation-16)
     - [Features](#features-13)
     - [Tests](#tests-11)
-    - [Unclassified](#unclassified-5)
+    - [Unclassified](#unclassified-6)
 - [0.5.0-alpha.1 (2020-10-15)](#050-alpha1-2020-10-15)
   - [Breaking Changes](#breaking-changes-8)
     - [Bug Fixes](#bug-fixes-20)
@@ -146,7 +147,7 @@
     - [Documentation](#documentation-17)
     - [Features](#features-14)
     - [Tests](#tests-12)
-    - [Unclassified](#unclassified-6)
+    - [Unclassified](#unclassified-7)
 - [0.4.6-alpha.1 (2020-07-13)](#046-alpha1-2020-07-13)
     - [Bug Fixes](#bug-fixes-21)
     - [Code Generation](#code-generation-25)
@@ -170,7 +171,7 @@
     - [Code Refactoring](#code-refactoring-8)
     - [Documentation](#documentation-19)
     - [Features](#features-15)
-    - [Unclassified](#unclassified-7)
+    - [Unclassified](#unclassified-8)
 - [0.3.0-alpha.1 (2020-05-15)](#030-alpha1-2020-05-15)
   - [Breaking Changes](#breaking-changes-10)
     - [Bug Fixes](#bug-fixes-27)
@@ -178,7 +179,7 @@
     - [Code Refactoring](#code-refactoring-9)
     - [Documentation](#documentation-20)
     - [Features](#features-16)
-    - [Unclassified](#unclassified-8)
+    - [Unclassified](#unclassified-9)
 - [0.2.1-alpha.1 (2020-05-05)](#021-alpha1-2020-05-05)
     - [Chores](#chores-1)
     - [Documentation](#documentation-21)
@@ -189,7 +190,7 @@
     - [Code Refactoring](#code-refactoring-10)
     - [Documentation](#documentation-22)
     - [Features](#features-17)
-    - [Unclassified](#unclassified-9)
+    - [Unclassified](#unclassified-10)
 - [0.1.1-alpha.1 (2020-02-18)](#011-alpha1-2020-02-18)
     - [Bug Fixes](#bug-fixes-29)
     - [Code Refactoring](#code-refactoring-11)
@@ -211,48 +212,73 @@
     - [Bug Fixes](#bug-fixes-31)
     - [Documentation](#documentation-27)
     - [Features](#features-20)
-    - [Unclassified](#unclassified-10)
+    - [Unclassified](#unclassified-11)
 - [0.1.0-alpha.1 (2020-01-31)](#010-alpha1-2020-01-31)
     - [Documentation](#documentation-28)
 - [0.0.3-alpha.15 (2020-01-31)](#003-alpha15-2020-01-31)
-    - [Unclassified](#unclassified-11)
-- [0.0.3-alpha.14 (2020-01-31)](#003-alpha14-2020-01-31)
     - [Unclassified](#unclassified-12)
-- [0.0.3-alpha.13 (2020-01-31)](#003-alpha13-2020-01-31)
+- [0.0.3-alpha.14 (2020-01-31)](#003-alpha14-2020-01-31)
     - [Unclassified](#unclassified-13)
-- [0.0.3-alpha.11 (2020-01-31)](#003-alpha11-2020-01-31)
+- [0.0.3-alpha.13 (2020-01-31)](#003-alpha13-2020-01-31)
     - [Unclassified](#unclassified-14)
-- [0.0.3-alpha.10 (2020-01-31)](#003-alpha10-2020-01-31)
+- [0.0.3-alpha.11 (2020-01-31)](#003-alpha11-2020-01-31)
     - [Unclassified](#unclassified-15)
-- [0.0.3-alpha.7 (2020-01-30)](#003-alpha7-2020-01-30)
+- [0.0.3-alpha.10 (2020-01-31)](#003-alpha10-2020-01-31)
     - [Unclassified](#unclassified-16)
+- [0.0.3-alpha.7 (2020-01-30)](#003-alpha7-2020-01-30)
+    - [Unclassified](#unclassified-17)
 - [0.0.3-alpha.5 (2020-01-30)](#003-alpha5-2020-01-30)
     - [Continuous Integration](#continuous-integration-2)
-    - [Unclassified](#unclassified-17)
-- [0.0.3-alpha.4 (2020-01-30)](#003-alpha4-2020-01-30)
     - [Unclassified](#unclassified-18)
-- [0.0.3-alpha.2 (2020-01-30)](#003-alpha2-2020-01-30)
+- [0.0.3-alpha.4 (2020-01-30)](#003-alpha4-2020-01-30)
     - [Unclassified](#unclassified-19)
-- [0.0.3-alpha.1 (2020-01-30)](#003-alpha1-2020-01-30)
+- [0.0.3-alpha.2 (2020-01-30)](#003-alpha2-2020-01-30)
     - [Unclassified](#unclassified-20)
+- [0.0.3-alpha.1 (2020-01-30)](#003-alpha1-2020-01-30)
+    - [Unclassified](#unclassified-21)
 - [0.0.1-alpha.9 (2020-01-29)](#001-alpha9-2020-01-29)
     - [Continuous Integration](#continuous-integration-3)
 - [0.0.2-alpha.1 (2020-01-29)](#002-alpha1-2020-01-29)
-    - [Unclassified](#unclassified-21)
+    - [Unclassified](#unclassified-22)
 - [0.0.1-alpha.6 (2020-01-29)](#001-alpha6-2020-01-29)
     - [Continuous Integration](#continuous-integration-4)
 - [0.0.1-alpha.5 (2020-01-29)](#001-alpha5-2020-01-29)
     - [Continuous Integration](#continuous-integration-5)
-    - [Unclassified](#unclassified-22)
+    - [Unclassified](#unclassified-23)
 - [0.0.1-alpha.3 (2020-01-28)](#001-alpha3-2020-01-28)
     - [Continuous Integration](#continuous-integration-6)
     - [Documentation](#documentation-29)
-    - [Unclassified](#unclassified-23)
+    - [Unclassified](#unclassified-24)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# [](https://github.com/ory/kratos/compare/v0.9.0-alpha.3...v) (2022-04-26)
+# [](https://github.com/ory/kratos/compare/v0.9.0-alpha.3...v) (2022-05-16)
 ## Breaking Changes
+
+This patch moves several CLI command to comply with the Ory CLI command structure:
+
+```patch
+- ory identities get ...
++ ory get identity ...
+
+- ory identities delete ...
++ ory delete identity ...
+
+- ory identities import ...
++ ory import identity ...
+
+- ory identities list ...
++ ory list identities ...
+
+- ory identities validate ...
++ ory validate identity ...
+
+- ory jsonnet format ...
++ ory format jsonnet ...
+
+- ory jsonnet lint ...
++ ory lint jsonnet ...
+```
 
 This patch moves several CLI command to comply with the Ory CLI command structure:
 
@@ -283,6 +309,7 @@ This patch moves several CLI command to comply with the Ory CLI command structur
 
 ### Bug Fixes
 
+* Add indices for slow queries ([e0cdbc9](https://github.com/ory/kratos/commit/e0cdbc9ab3389de0f65b37758d86bea56d294d64))
 * Add legacy session value ([ecfd052](https://github.com/ory/kratos/commit/ecfd05216f5ebb70f1617595d2d398cf1fa3c660)), closes [#2398](https://github.com/ory/kratos/issues/2398)
 * Avoid excessive memory allocations in HIBP cache ([#2389](https://github.com/ory/kratos/issues/2389)) ([ee2d410](https://github.com/ory/kratos/commit/ee2d41057a7e6cb2c57c6304c2e7bbf5ad7c56da)), closes [#2354](https://github.com/ory/kratos/issues/2354)
 * Change SQLite database mode to 0600 ([#2344](https://github.com/ory/kratos/issues/2344)) ([0e5d3b7](https://github.com/ory/kratos/commit/0e5d3b7726a8923fbc2a4c10ec18f0ba97ffbcff)):
@@ -294,28 +321,46 @@ This patch moves several CLI command to comply with the Ory CLI command structur
 * Do not expose debug in a response when a schema is not found ([#2348](https://github.com/ory/kratos/issues/2348)) ([aee2b1e](https://github.com/ory/kratos/commit/aee2b1ed1189b57fcbb1aaa456444d5121be94b1))
 * **Dockerfile:** Use existing builder base image ([#2390](https://github.com/ory/kratos/issues/2390)) ([37de25a](https://github.com/ory/kratos/commit/37de25a541a24e03407ecf344fb750775e48c782))
 * Get user first name and last name from Apple ([#2331](https://github.com/ory/kratos/issues/2331)) ([4779909](https://github.com/ory/kratos/commit/47799098b35ea1cf5a1163f57d872a5bb2242d97))
+* Improve error reporting from OpenAPI ([8a1009b](https://github.com/ory/kratos/commit/8a1009b16653df13485bab8e33926967c449bf4e))
+* Improve performance of identity schema call ([af28de2](https://github.com/ory/kratos/commit/af28de267f21cd72953f3f353d8fd587937b2249))
 * Internal Server Error on Empty PUT /identities/id body ([#2417](https://github.com/ory/kratos/issues/2417)) ([5a50231](https://github.com/ory/kratos/commit/5a50231b553aaa64bd90a3d2cd1be9d2e3aba9ac))
 * Load return_to and append to errors ([#2333](https://github.com/ory/kratos/issues/2333)) ([5efe4a3](https://github.com/ory/kratos/commit/5efe4a33e35e74d248d4eec43dc901b7b6334037)), closes [#2275](https://github.com/ory/kratos/issues/2275) [#2279](https://github.com/ory/kratos/issues/2279) [#2285](https://github.com/ory/kratos/issues/2285)
+* Make delete formattable ([0005f35](https://github.com/ory/kratos/commit/0005f357a049ecbf94d76a1e73434837753a04ea))
+* New issue templates ([b9ad684](https://github.com/ory/kratos/commit/b9ad684311ee8c654b2fa382010315e892581f5c))
+* Openapi regression ([#2465](https://github.com/ory/kratos/issues/2465)) ([37a3369](https://github.com/ory/kratos/commit/37a3369cea8ed5af34e8324a291a7d7dba0eb43a))
 * Refresh is always false when session exists ([d3436d7](https://github.com/ory/kratos/commit/d3436d7fa17589d91e25c9f0bd66bc3bb5b150fa)), closes [#2341](https://github.com/ory/kratos/issues/2341)
 * Remove required legacy field ([#2410](https://github.com/ory/kratos/issues/2410)) ([638d45c](https://github.com/ory/kratos/commit/638d45caf480b7287c9762cbf3c593217f40e3e8))
+* Remove wrong templates ([4fe2d25](https://github.com/ory/kratos/commit/4fe2d25dd68033a8d7b3dd5f62d87b23a7ba361d))
+* Reorder transactions ([78ca4c6](https://github.com/ory/kratos/commit/78ca4c6ca5a49b0800d9c34954638a926d80078b))
+* Resolve index naming issues ([d5550b5](https://github.com/ory/kratos/commit/d5550b5ddc4e1677e4c4f808578f573760c6581e))
+* Resolve MySQL index issues ([50bdba9](https://github.com/ory/kratos/commit/50bdba9f1117c60e80e153416bc997187b4a60b7))
+* Resolve otelx panics ([6613a02](https://github.com/ory/kratos/commit/6613a02b8fd5f6f06e9b6301bdc39037771b3d9b))
 * **sdk:** Improved OpenAPI specifications for UI nodes ([#2375](https://github.com/ory/kratos/issues/2375)) ([a42a0f7](https://github.com/ory/kratos/commit/a42a0f772af3625c457032d6dcc34289a62acc61)), closes [#2357](https://github.com/ory/kratos/issues/2357)
 * Serve.admin.request_log.disable_for_health behaviour ([#2399](https://github.com/ory/kratos/issues/2399)) ([0a381fa](https://github.com/ory/kratos/commit/0a381fa3d702f77e614d0492dafa3ac2cd102c7e))
+* **sql:** Add additional join argument to resolve MySQL query issue ([854e5cb](https://github.com/ory/kratos/commit/854e5cba80cad52b58571587980c00c038ff6596)), closes [#2262](https://github.com/ory/kratos/issues/2262)
 * Use `path` instead of `filepath` to join http route paths ([16b1244](https://github.com/ory/kratos/commit/16b12449c841bf7a237fe436b884b4b5012cd022)), closes [#2292](https://github.com/ory/kratos/issues/2292)
+* Use JOIN instead of iterative queries ([0998cfb](https://github.com/ory/kratos/commit/0998cfb2fdda27ba8baeebcc603aae5fbe5c901f)), closes [#2402](https://github.com/ory/kratos/issues/2402)
 * Use pointer of string for PasswordIdentifier in example code ([#2421](https://github.com/ory/kratos/issues/2421)) ([61f12e7](https://github.com/ory/kratos/commit/61f12e7579c7c337d0f415ac2b4029790c659c3d))
+* Use predictable SQLite in memory DSNs ([#2415](https://github.com/ory/kratos/issues/2415)) ([51a13f7](https://github.com/ory/kratos/commit/51a13f712d38a942772b3f4c014971ecb4658d7a)), closes [#2059](https://github.com/ory/kratos/issues/2059)
 
 ### Code Refactoring
 
+* Deprecate fizz renderer ([5277668](https://github.com/ory/kratos/commit/5277668b1324173df95db5e9e4b96ed841ff088b))
+* Move CLI commands to match Ory CLI structure ([d11a9a9](https://github.com/ory/kratos/commit/d11a9a9dafdebb53ed9a8359496eb70b8adb99dd))
 * Move CLI commands to match Ory CLI structure ([73910a3](https://github.com/ory/kratos/commit/73910a329b1ee46de2607c7ab1958ef2fb6de5f4))
 
 ### Documentation
 
+* Add docs about change in default schema ([#2447](https://github.com/ory/kratos/issues/2447)) ([5093cd4](https://github.com/ory/kratos/commit/5093cd47f22311c2e1fdbffd82f0494806076f08))
 * Remove notice importing credentials not possible ([#2418](https://github.com/ory/kratos/issues/2418)) ([b80ed69](https://github.com/ory/kratos/commit/b80ed6955518003ae6b7f647dffd2d49cc999fbc))
 
 ### Features
 
 * Add certificate based authentication for smtp client ([#2351](https://github.com/ory/kratos/issues/2351)) ([7200037](https://github.com/ory/kratos/commit/72000375c028f5f7f9cb0d0b1b02f8aa09503e4f))
+* Add localName to smtp config ([#2445](https://github.com/ory/kratos/issues/2445)) ([27336b6](https://github.com/ory/kratos/commit/27336b63b0c11c1667d5a07230bed82283475aa4)), closes [#2425](https://github.com/ory/kratos/issues/2425)
 * Add session renew capabilities ([#2146](https://github.com/ory/kratos/issues/2146)) ([4348b86](https://github.com/ory/kratos/commit/4348b8640a282cd61fe30961faba5753e2af8bb0)), closes [#615](https://github.com/ory/kratos/issues/615)
 * Add support for netID provider  ([#2394](https://github.com/ory/kratos/issues/2394)) ([ee7fc79](https://github.com/ory/kratos/commit/ee7fc79d49cd6d8f2985809585d1675c8e2ed376))
+* Add tracing to persister ([391c54e](https://github.com/ory/kratos/commit/391c54eb3ba721e4912a7a4676acc2f630be2a72))
 * **identity:** Add admin and public metadata fields ([562e340](https://github.com/ory/kratos/commit/562e340fe980e7c65ab3fc41f82a2a8899a33bfa)), closes [#2388](https://github.com/ory/kratos/issues/2388) [#47](https://github.com/ory/kratos/issues/47):
 
     This patch adds two new keys to identities, `metadata_public` and `metadata_admin` that can be used to store additional metadata about identities in Ory.
@@ -328,12 +373,23 @@ This patch moves several CLI command to comply with the Ory CLI command structur
     
     
 
+* **sdk:** Add cookie headers to all form submissions ([#2467](https://github.com/ory/kratos/issues/2467)) ([9a969fd](https://github.com/ory/kratos/commit/9a969fd927ae8436a863e91ecb6574cb3bb1c3a6)), closes [#2003](https://github.com/ory/kratos/issues/2003) [#2454](https://github.com/ory/kratos/issues/2454)
+* **sdk:** Add csrf cookie for login flow submission ([#2454](https://github.com/ory/kratos/issues/2454)) ([2bffee8](https://github.com/ory/kratos/commit/2bffee81f0e8a98851a3e11b4fc4969d95e9b445))
 * Support argon2i password ([#2395](https://github.com/ory/kratos/issues/2395)) ([8fdadf9](https://github.com/ory/kratos/commit/8fdadf9d1724d28ae11996304703e06671549660))
+* Switch to opentelemetry tracing ([#2318](https://github.com/ory/kratos/issues/2318)) ([121a4d3](https://github.com/ory/kratos/commit/121a4d3fc0f396e8da50ad1985cacf68a5c85a12))
 * Upgrade to Go 1.18 ([725d202](https://github.com/ory/kratos/commit/725d202e6ae15b3b5c3282e03c03a40480a2e310))
 
 ### Tests
 
 * Fix incorrect assertion ([b5b1361](https://github.com/ory/kratos/commit/b5b1361defa8faa6ea36d50a8d940c76f70c4ddd))
+* Resolve regressions ([dd44593](https://github.com/ory/kratos/commit/dd44593a51a9277c717170360f9794837e4f910c))
+
+### Unclassified
+
+* BREAKING CHANGES: This patch group updates the tracing provider from OpenTracing to OpenTelemetry. Due to these changes, tracing providers Zipkin, DataDog, Elastic APM have been deactivated temporarily. The best way to re-add support for them is to make a pull request at https://github.com/ory/x/tree/master/otelx and check the status of https://github.com/ory/x/issues/499 ([7165fa0](https://github.com/ory/kratos/commit/7165fa04fa1c9442cad8da5c5814453e1ca0ba7b)):
+
+    The configuration has not changed, and thus no changes to your system are required if you use Jaeger.
+
 
 
 # [0.9.0-alpha.3](https://github.com/ory/kratos/compare/v0.9.0-alpha.2...v0.9.0-alpha.3) (2022-03-25)

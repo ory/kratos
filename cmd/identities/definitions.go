@@ -9,9 +9,13 @@ import (
 )
 
 type (
+	outputIder               string
 	outputIdentity           kratos.Identity
 	outputIdentityCollection struct {
 		identities []kratos.Identity
+	}
+	outputIderCollection struct {
+		ids []outputIder
 	}
 )
 
@@ -53,6 +57,18 @@ func (i *outputIdentity) Interface() interface{} {
 	return i
 }
 
+func (_ outputIder) Header() []string {
+	return []string{"ID"}
+}
+
+func (i outputIder) Columns() []string {
+	return []string{string(i)}
+}
+
+func (i outputIder) Interface() interface{} {
+	return i
+}
+
 func (_ *outputIdentityCollection) Header() []string {
 	return []string{"ID", "VERIFIED ADDRESS 1", "RECOVERY ADDRESS 1", "SCHEMA ID", "SCHEMA URL"}
 }
@@ -90,4 +106,24 @@ func (c *outputIdentityCollection) Interface() interface{} {
 
 func (c *outputIdentityCollection) Len() int {
 	return len(c.identities)
+}
+
+func (_ *outputIderCollection) Header() []string {
+	return []string{"ID"}
+}
+
+func (c *outputIderCollection) Table() [][]string {
+	rows := make([][]string, len(c.ids))
+	for i, ident := range c.ids {
+		rows[i] = []string{string(ident)}
+	}
+	return rows
+}
+
+func (c *outputIderCollection) Interface() interface{} {
+	return c.ids
+}
+
+func (c *outputIderCollection) Len() int {
+	return len(c.ids)
 }

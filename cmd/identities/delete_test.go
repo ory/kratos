@@ -6,6 +6,8 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/tidwall/gjson"
+
 	"github.com/spf13/cobra"
 
 	"github.com/ory/kratos/cmd/identities"
@@ -31,7 +33,7 @@ func TestDeleteCmd(t *testing.T) {
 		stdOut := execNoErr(t, c, i.ID.String())
 
 		// expect ID and no error
-		assert.Equal(t, i.ID.String()+"\n", stdOut)
+		assert.Equal(t, i.ID.String(), gjson.Parse(stdOut).String())
 
 		// expect identity to be deleted
 		_, err := reg.Persister().GetIdentity(context.Background(), i.ID)
@@ -43,7 +45,7 @@ func TestDeleteCmd(t *testing.T) {
 
 		stdOut := execNoErr(t, c, ids...)
 
-		assert.Equal(t, strings.Join(ids, "\n")+"\n", stdOut)
+		assert.Equal(t, `["`+strings.Join(ids, "\",\"")+"\"]\n", stdOut)
 
 		for _, i := range is {
 			_, err := reg.Persister().GetIdentity(context.Background(), i.ID)
@@ -54,6 +56,6 @@ func TestDeleteCmd(t *testing.T) {
 	t.Run("case=fails with unknown ID", func(t *testing.T) {
 		stdErr := execErr(t, c, x.NewUUID().String())
 
-		assert.Contains(t, stdErr, "404 Not Found", stdErr)
+		assert.Contains(t, stdErr, "Unable to locate the resource", stdErr)
 	})
 }

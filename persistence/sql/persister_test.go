@@ -95,7 +95,7 @@ func pl(t *testing.T) func(lvl logging.Level, s string, args ...interface{}) {
 }
 
 func createCleanDatabases(t *testing.T) map[string]*driver.RegistryDefault {
-	conns := map[string]string{"sqlite": dbal.SQLiteSharedInMemory}
+	conns := map[string]string{"sqlite": dbal.NewSQLiteTestDatabase(t)}
 
 	var l sync.Mutex
 	if !testing.Short() {

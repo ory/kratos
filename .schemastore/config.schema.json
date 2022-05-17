@@ -339,8 +339,7 @@
             "vk",
             "yandex",
             "apple",
-            "spotify",
-            "netid"
+            "spotify"
           ],
           "examples": [
             "google"
@@ -1434,49 +1433,6 @@
         }
       }
     },
-    "database":  {
-      "type": "object",
-      "title": "Database related configuration",
-      "description": "Miscellaneous settings used in database related tasks (cleanup, etc.)",
-      "properties": {
-        "cleanup": {
-          "type": "object",
-          "title": "Database cleanup settings",
-          "description": "Settings that controls how the database cleanup process is configured (delays, batch size, etc.)",
-          "properties": {
-            "batch_size" : {
-              "type": "integer",
-              "title": "Number of records to clean in one iteration",
-              "description": "Controls how many records should be purged from one table during database cleanup task",
-              "minimum": 1,
-              "default": 100
-            },
-            "sleep": {
-              "type": "object",
-              "title": "Delays between various database cleanup phases",
-              "description": "Configures delays between each step of the cleanup process. It is useful to tune the process so it will be efficient and performant.",
-              "properties": {
-                "tables": {
-                  "type": "string",
-                  "title": "Delay between each table cleanups",
-                  "description": "Controls the delay time between cleaning each table in one cleanup iteration",
-                  "pattern": "^[0-9]+(ns|us|ms|s|m|h)$",
-                  "default": "1m"
-                }
-              }
-            },
-            "older_than": {
-              "type": "string",
-              "title": "Remove records older than",
-              "description": "Controls how old records do we want to leave",
-              "pattern": "^[0-9]+(ns|us|ms|s|m|h)$",
-              "default": "0s"
-            }
-          }
-        }
-      },
-      "additionalProperties": false
-    },
     "dsn": {
       "type": "string",
       "title": "Data Source Name",
@@ -1538,23 +1494,10 @@
                 "smtp://foo:bar@my-mailserver:1234/ (Explicit StartTLS with certificate trust verification)",
                 "smtp://foo:bar@my-mailserver:1234/?skip_ssl_verify=true (NOT RECOMMENDED: Explicit StartTLS without certificate trust verification)",
                 "smtps://foo:bar@my-mailserver:1234/ (Implicit TLS with certificate trust verification)",
-                "smtps://foo:bar@my-mailserver:1234/?skip_ssl_verify=true (NOT RECOMMENDED: Implicit TLS without certificate trust verification)",
-                "smtps://subdomain.my-mailserver:1234/?server_name=my-mailserver (allows TLS to work if the server is hosted on a sudomain that uses a non-wildcard domain certificate)"
+                "smtps://foo:bar@my-mailserver:1234/?skip_ssl_verify=true (NOT RECOMMENDED: Implicit TLS without certificate trust verification)"
               ],
               "type": "string",
               "pattern": "^smtps?:\\/\\/.*"
-            },
-            "client_cert_path": {
-              "title": "SMTP Client certificate path",
-              "description": "Path of the client X.509 certificate, in case of certificate based client authentication to the SMTP server.",
-              "type": "string",
-              "default": ""
-            },
-            "client_key_path": {
-              "title": "SMTP Client private key path",
-              "description": "Path of the client certificate private key, in case of certificate based client authentication to the SMTP server",
-              "type": "string",
-              "default": ""
             },
             "from_address": {
               "title": "SMTP Sender Address",
@@ -1582,12 +1525,6 @@
                   "X-SES-RETURN-PATH-ARN": "arn:aws:ses:us-west-2:123456789012:identity/example.com"
                 }
               ]
-            },
-            "local_name": {
-              "title": "SMTP HELO/EHLO name",
-              "description": "Identifier used in the SMTP HELO/EHLO command. Some SMTP relays require a unique identifier.",
-              "type": "string",
-              "default": "localhost"
             }
           },
           "required": [
@@ -1890,7 +1827,7 @@
       "additionalProperties": false
     },
     "tracing": {
-      "$ref": "ory://tracing-config"
+      "$ref": "https://raw.githubusercontent.com/ory/x/v0.0.370/otelx/config.schema.json"
     },
     "log": {
       "title": "Log",
@@ -1944,7 +1881,6 @@
         "schemas": {
           "type": "array",
           "title": "All JSON Schemas for Identity Traits",
-          "description": "Note that identities that used the \"default_schema_url\" field in older kratos versions will be corrupted unless you specify their schema url with the id \"default\" in this list.",
           "examples": [
             [
               {

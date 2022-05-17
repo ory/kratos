@@ -19,12 +19,18 @@ import (
 var _ recovery.FlowPersister = new(Persister)
 var _ link.RecoveryTokenPersister = new(Persister)
 
-func (p Persister) CreateRecoveryFlow(ctx context.Context, r *recovery.Flow) error {
+func (p *Persister) CreateRecoveryFlow(ctx context.Context, r *recovery.Flow) error {
+	ctx, span := p.r.Tracer(ctx).Tracer().Start(ctx, "persistence.sql.CreateRecoveryFlow")
+	defer span.End()
+
 	r.NID = corp.ContextualizeNID(ctx, p.nid)
 	return p.GetConnection(ctx).Create(r)
 }
 
-func (p Persister) GetRecoveryFlow(ctx context.Context, id uuid.UUID) (*recovery.Flow, error) {
+func (p *Persister) GetRecoveryFlow(ctx context.Context, id uuid.UUID) (*recovery.Flow, error) {
+	ctx, span := p.r.Tracer(ctx).Tracer().Start(ctx, "persistence.sql.GetRecoveryFlow")
+	defer span.End()
+
 	var r recovery.Flow
 	if err := p.GetConnection(ctx).Where("id = ? AND nid = ?", id, corp.ContextualizeNID(ctx, p.nid)).First(&r); err != nil {
 		return nil, sqlcon.HandleError(err)
@@ -33,13 +39,19 @@ func (p Persister) GetRecoveryFlow(ctx context.Context, id uuid.UUID) (*recovery
 	return &r, nil
 }
 
-func (p Persister) UpdateRecoveryFlow(ctx context.Context, r *recovery.Flow) error {
+func (p *Persister) UpdateRecoveryFlow(ctx context.Context, r *recovery.Flow) error {
+	ctx, span := p.r.Tracer(ctx).Tracer().Start(ctx, "persistence.sql.UpdateRecoveryFlow")
+	defer span.End()
+
 	cp := *r
 	cp.NID = corp.ContextualizeNID(ctx, p.nid)
 	return p.update(ctx, cp)
 }
 
 func (p *Persister) CreateRecoveryToken(ctx context.Context, token *link.RecoveryToken) error {
+	ctx, span := p.r.Tracer(ctx).Tracer().Start(ctx, "persistence.sql.CreateRecoveryToken")
+	defer span.End()
+
 	t := token.Token
 	token.Token = p.hmacValue(ctx, t)
 	token.NID = corp.ContextualizeNID(ctx, p.nid)
@@ -55,12 +67,15 @@ func (p *Persister) CreateRecoveryToken(ctx context.Context, token *link.Recover
 }
 
 func (p *Persister) UseRecoveryToken(ctx context.Context, token string) (*link.RecoveryToken, error) {
+	ctx, span := p.r.Tracer(ctx).Tracer().Start(ctx, "persistence.sql.UseRecoveryToken")
+	defer span.End()
+
 	var rt link.RecoveryToken
 
 	nid := corp.ContextualizeNID(ctx, p.nid)
 	if err := sqlcon.HandleError(p.Transaction(ctx, func(ctx context.Context, tx *pop.Connection) (err error) {
 		for _, secret := range p.r.Config(ctx).SecretsSession() {
-			if err = tx.Where("token = ? AND nid = ? AND NOT used", p.hmacValueWithSecret(token, secret), nid).First(&rt); err != nil {
+			if err = tx.Where("token = ? AND nid = ? AND NOT used", p.hmacValueWithSecret(ctx, token, secret), nid).First(&rt); err != nil {
 				if !errors.Is(sqlcon.HandleError(err), sqlcon.ErrNoRows) {
 					return err
 				}
@@ -90,6 +105,9 @@ func (p *Persister) UseRecoveryToken(ctx context.Context, token string) (*link.R
 }
 
 func (p *Persister) DeleteRecoveryToken(ctx context.Context, token string) error {
+	ctx, span := p.r.Tracer(ctx).Tracer().Start(ctx, "persistence.sql.DeleteRecoveryToken")
+	defer span.End()
+
 	/* #nosec G201 TableName is static */
 	return p.GetConnection(ctx).RawQuery(fmt.Sprintf("DELETE FROM %s WHERE token=? AND nid = ?", new(link.RecoveryToken).TableName(ctx)), token, corp.ContextualizeNID(ctx, p.nid)).Exec()
 }

@@ -1,10 +1,8 @@
 package identities
 
 import (
-	"context"
 	"encoding/json"
 	"fmt"
-	"net/http"
 
 	kratos "github.com/ory/kratos-client-go"
 
@@ -53,7 +51,10 @@ Files can contain only a single or an array of identities. The validity of files
 
 WARNING: Importing credentials is not yet supported.`,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			c := cliclient.NewClient(cmd)
+			c, err := cliclient.NewClient(cmd)
+			if err != nil {
+				return err
+			}
 
 			imported := make([]kratos.Identity, 0, len(args))
 			failed := make(map[string]error)
@@ -64,13 +65,6 @@ WARNING: Importing credentials is not yet supported.`,
 			}
 
 			for src, i := range is {
-				err = ValidateIdentity(cmd, src, i, func(ctx context.Context, id string) (map[string]interface{}, *http.Response, error) {
-					return c.V0alpha2Api.GetJsonSchema(ctx, id).Execute()
-				})
-				if err != nil {
-					return err
-				}
-
 				var params kratos.AdminCreateIdentityBody
 				err = json.Unmarshal([]byte(i), &params)
 				if err != nil {
@@ -80,11 +74,12 @@ WARNING: Importing credentials is not yet supported.`,
 
 				ident, _, err := c.V0alpha2Api.AdminCreateIdentity(cmd.Context()).AdminCreateIdentityBody(params).Execute()
 				if err != nil {
-					failed[src] = err
+					failed[src] = cmdx.PrintOpenAPIError(cmd, err)
 				} else {
 					imported = append(imported, *ident)
 				}
 			}
+
 			if len(imported) == 1 {
 				cmdx.PrintRow(cmd, (*outputIdentity)(&imported[0]))
 			} else {

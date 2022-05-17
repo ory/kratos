@@ -740,6 +740,18 @@ paths:
         schema:
           type: string
         style: simple
+      - description: |-
+          HTTP Cookies
+
+          When using the SDK in a browser app, on the server side you must include the HTTP Cookie Header
+          sent by the client to your server here. This ensures that CSRF and session cookies are respected.
+        explode: false
+        in: header
+        name: Cookie
+        required: false
+        schema:
+          type: string
+        style: simple
       requestBody:
         content:
           application/json:
@@ -995,11 +1007,11 @@ paths:
       - description: |-
           HTTP Cookies
 
-          When using the SDK on the server side you must include the HTTP Cookie Header
-          originally sent to your HTTP handler here.
+          When using the SDK in a browser app, on the server side you must include the HTTP Cookie Header
+          sent by the client to your server here. This ensures that CSRF and session cookies are respected.
         explode: false
         in: header
-        name: cookie
+        name: Cookie
         required: false
         schema:
           type: string
@@ -1226,6 +1238,18 @@ paths:
         schema:
           type: string
         style: form
+      - description: |-
+          HTTP Cookies
+
+          When using the SDK in a browser app, on the server side you must include the HTTP Cookie Header
+          sent by the client to your server here. This ensures that CSRF and session cookies are respected.
+        explode: false
+        in: header
+        name: Cookie
+        required: false
+        schema:
+          type: string
+        style: simple
       requestBody:
         content:
           application/json:
@@ -1392,11 +1416,11 @@ paths:
       - description: |-
           HTTP Cookies
 
-          When using the SDK on the server side you must include the HTTP Cookie Header
-          originally sent to your HTTP handler here.
+          When using the SDK in a browser app, on the server side you must include the HTTP Cookie Header
+          sent by the client to your server here. This ensures that CSRF and session cookies are respected.
         explode: false
         in: header
-        name: cookie
+        name: Cookie
         required: false
         schema:
           type: string
@@ -1474,6 +1498,18 @@ paths:
         schema:
           type: string
         style: form
+      - description: |-
+          HTTP Cookies
+
+          When using the SDK in a browser app, on the server side you must include the HTTP Cookie Header
+          sent by the client to your server here. This ensures that CSRF and session cookies are respected.
+        explode: false
+        in: header
+        name: Cookie
+        required: false
+        schema:
+          type: string
+        style: simple
       requestBody:
         content:
           application/json:
@@ -1665,11 +1701,11 @@ paths:
       - description: |-
           HTTP Cookies
 
-          When using the SDK on the server side you must include the HTTP Cookie Header
-          originally sent to your HTTP handler here.
+          When using the SDK in a browser app, on the server side you must include the HTTP Cookie Header
+          sent by the client to your server here. This ensures that CSRF and session cookies are respected.
         explode: false
         in: header
-        name: cookie
+        name: Cookie
         required: false
         schema:
           type: string
@@ -1772,6 +1808,18 @@ paths:
         explode: false
         in: header
         name: X-Session-Token
+        required: false
+        schema:
+          type: string
+        style: simple
+      - description: |-
+          HTTP Cookies
+
+          When using the SDK in a browser app, on the server side you must include the HTTP Cookie Header
+          sent by the client to your server here. This ensures that CSRF and session cookies are respected.
+        explode: false
+        in: header
+        name: Cookie
         required: false
         schema:
           type: string
@@ -2020,12 +2068,11 @@ paths:
       - description: |-
           HTTP Cookies
 
-          When using the SDK on the server side you must include the HTTP Cookie Header
-          originally sent to your HTTP handler here. You only need to do this for browser-
-          based flows.
+          When using the SDK in a browser app, on the server side you must include the HTTP Cookie Header
+          sent by the client to your server here. This ensures that CSRF and session cookies are respected.
         explode: false
         in: header
-        name: cookie
+        name: Cookie
         required: false
         schema:
           type: string
@@ -2117,6 +2164,18 @@ paths:
         schema:
           type: string
         style: form
+      - description: |-
+          HTTP Cookies
+
+          When using the SDK in a browser app, on the server side you must include the HTTP Cookie Header
+          sent by the client to your server here. This ensures that CSRF and session cookies are respected.
+        explode: false
+        in: header
+        name: Cookie
+        required: false
+        schema:
+          type: string
+        style: simple
       requestBody:
         content:
           application/json:
@@ -5123,13 +5182,7 @@ components:
         node_type:
           description: |-
             NodeType represents this node's types. It is a mirror of `node.type` and
-            is primarily used to allow compatibility with OpenAPI 3.0.
-          enum:
-          - text
-          - input
-          - img
-          - a
-          - script
+            is primarily used to allow compatibility with OpenAPI 3.0.  In this struct it technically always is "a".
           type: string
         title:
           $ref: '#/components/schemas/uiText'
@@ -5168,13 +5221,7 @@ components:
         node_type:
           description: |-
             NodeType represents this node's types. It is a mirror of `node.type` and
-            is primarily used to allow compatibility with OpenAPI 3.0.
-          enum:
-          - text
-          - input
-          - img
-          - a
-          - script
+            is primarily used to allow compatibility with OpenAPI 3.0.  In this struct it technically always is "img".
           type: string
         src:
           description: |-
@@ -5210,13 +5257,7 @@ components:
         node_type:
           description: |-
             NodeType represents this node's types. It is a mirror of `node.type` and
-            is primarily used to allow compatibility with OpenAPI 3.0.
-          enum:
-          - text
-          - input
-          - img
-          - a
-          - script
+            is primarily used to allow compatibility with OpenAPI 3.0.  In this struct it technically always is "input".
           type: string
         onclick:
           description: |-
@@ -5272,13 +5313,7 @@ components:
         node_type:
           description: |-
             NodeType represents this node's types. It is a mirror of `node.type` and
-            is primarily used to allow compatibility with OpenAPI 3.0.
-          enum:
-          - text
-          - input
-          - img
-          - a
-          - script
+            is primarily used to allow compatibility with OpenAPI 3.0. In this struct it technically always is "script".
           type: string
         nonce:
           description: |-
@@ -5317,13 +5352,7 @@ components:
         node_type:
           description: |-
             NodeType represents this node's types. It is a mirror of `node.type` and
-            is primarily used to allow compatibility with OpenAPI 3.0.
-          enum:
-          - text
-          - input
-          - img
-          - a
-          - script
+            is primarily used to allow compatibility with OpenAPI 3.0.  In this struct it technically always is "text".
           type: string
         text:
           $ref: '#/components/schemas/uiText'

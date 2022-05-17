@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
-	"errors"
 	"io/ioutil"
 	"testing"
 
@@ -19,7 +18,6 @@ import (
 
 	kratos "github.com/ory/kratos-client-go"
 	"github.com/ory/kratos/driver/config"
-	"github.com/ory/x/cmdx"
 )
 
 func TestImportCmd(t *testing.T) {
@@ -122,13 +120,5 @@ func TestImportCmd(t *testing.T) {
 		require.NoError(t, err)
 		_, err = reg.Persister().GetIdentity(context.Background(), id)
 		assert.NoError(t, err)
-	})
-
-	t.Run("case=fails to import invalid identity", func(t *testing.T) {
-		// validation is further tested with the validate command
-		stdOut, stdErr, err := exec(c, bytes.NewBufferString("{}"))
-		assert.True(t, errors.Is(err, cmdx.ErrNoPrintButFail))
-		assert.Contains(t, stdErr, "STD_IN[0]: not valid")
-		assert.Len(t, stdOut, 0)
 	})
 }

@@ -202,12 +202,12 @@ type getSelfServiceRecoveryFlow struct {
 
 	// HTTP Cookies
 	//
-	// When using the SDK on the server side you must include the HTTP Cookie Header
-	// originally sent to your HTTP handler here.
+	// When using the SDK in a browser app, on the server side you must include the HTTP Cookie Header
+	// sent by the client to your server here. This ensures that CSRF and session cookies are respected.
 	//
 	// in: header
 	// name: Cookie
-	Cookies string `json:"cookie"`
+	Cookies string `json:"Cookie"`
 }
 
 // swagger:route GET /self-service/recovery/flows v0alpha2 getSelfServiceRecoveryFlow
@@ -307,6 +307,15 @@ type submitSelfServiceRecoveryFlow struct {
 
 	// in: body
 	Body submitSelfServiceRecoveryFlowBody
+
+	// HTTP Cookies
+	//
+	// When using the SDK in a browser app, on the server side you must include the HTTP Cookie Header
+	// sent by the client to your server here. This ensures that CSRF and session cookies are respected.
+	//
+	// in: header
+	// name: Cookie
+	Cookies string `json:"Cookie"`
 }
 
 // swagger:model submitSelfServiceRecoveryFlowBody

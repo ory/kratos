@@ -2974,7 +2974,7 @@ func (a *V0alpha2ApiService) GetSelfServiceLoginFlowExecute(r V0alpha2ApiApiGetS
 		localVarHeaderParams["Accept"] = localVarHTTPHeaderAccept
 	}
 	if r.cookie != nil {
-		localVarHeaderParams["cookie"] = parameterToString(*r.cookie, "")
+		localVarHeaderParams["Cookie"] = parameterToString(*r.cookie, "")
 	}
 	req, err := a.client.prepareRequest(r.ctx, localVarPath, localVarHTTPMethod, localVarPostBody, localVarHeaderParams, localVarQueryParams, localVarFormParams, localVarFormFileName, localVarFileName, localVarFileBytes)
 	if err != nil {
@@ -3149,7 +3149,7 @@ func (a *V0alpha2ApiService) GetSelfServiceRecoveryFlowExecute(r V0alpha2ApiApiG
 		localVarHeaderParams["Accept"] = localVarHTTPHeaderAccept
 	}
 	if r.cookie != nil {
-		localVarHeaderParams["cookie"] = parameterToString(*r.cookie, "")
+		localVarHeaderParams["Cookie"] = parameterToString(*r.cookie, "")
 	}
 	req, err := a.client.prepareRequest(r.ctx, localVarPath, localVarHTTPMethod, localVarPostBody, localVarHeaderParams, localVarQueryParams, localVarFormParams, localVarFormFileName, localVarFileName, localVarFileBytes)
 	if err != nil {
@@ -3319,7 +3319,7 @@ func (a *V0alpha2ApiService) GetSelfServiceRegistrationFlowExecute(r V0alpha2Api
 		localVarHeaderParams["Accept"] = localVarHTTPHeaderAccept
 	}
 	if r.cookie != nil {
-		localVarHeaderParams["cookie"] = parameterToString(*r.cookie, "")
+		localVarHeaderParams["Cookie"] = parameterToString(*r.cookie, "")
 	}
 	req, err := a.client.prepareRequest(r.ctx, localVarPath, localVarHTTPMethod, localVarPostBody, localVarHeaderParams, localVarQueryParams, localVarFormParams, localVarFormFileName, localVarFileName, localVarFileBytes)
 	if err != nil {
@@ -3503,7 +3503,7 @@ func (a *V0alpha2ApiService) GetSelfServiceSettingsFlowExecute(r V0alpha2ApiApiG
 		localVarHeaderParams["X-Session-Token"] = parameterToString(*r.xSessionToken, "")
 	}
 	if r.cookie != nil {
-		localVarHeaderParams["cookie"] = parameterToString(*r.cookie, "")
+		localVarHeaderParams["Cookie"] = parameterToString(*r.cookie, "")
 	}
 	req, err := a.client.prepareRequest(r.ctx, localVarPath, localVarHTTPMethod, localVarPostBody, localVarHeaderParams, localVarQueryParams, localVarFormParams, localVarFormFileName, localVarFileName, localVarFileBytes)
 	if err != nil {
@@ -5914,6 +5914,7 @@ type V0alpha2ApiApiSubmitSelfServiceLoginFlowRequest struct {
 	ApiService                     V0alpha2Api
 	flow                           *string
 	xSessionToken                  *string
+	cookie                         *string
 	submitSelfServiceLoginFlowBody *SubmitSelfServiceLoginFlowBody
 }
 
@@ -5923,6 +5924,10 @@ func (r V0alpha2ApiApiSubmitSelfServiceLoginFlowRequest) Flow(flow string) V0alp
 }
 func (r V0alpha2ApiApiSubmitSelfServiceLoginFlowRequest) XSessionToken(xSessionToken string) V0alpha2ApiApiSubmitSelfServiceLoginFlowRequest {
 	r.xSessionToken = &xSessionToken
+	return r
+}
+func (r V0alpha2ApiApiSubmitSelfServiceLoginFlowRequest) Cookie(cookie string) V0alpha2ApiApiSubmitSelfServiceLoginFlowRequest {
+	r.cookie = &cookie
 	return r
 }
 func (r V0alpha2ApiApiSubmitSelfServiceLoginFlowRequest) SubmitSelfServiceLoginFlowBody(submitSelfServiceLoginFlowBody SubmitSelfServiceLoginFlowBody) V0alpha2ApiApiSubmitSelfServiceLoginFlowRequest {
@@ -6027,6 +6032,9 @@ func (a *V0alpha2ApiService) SubmitSelfServiceLoginFlowExecute(r V0alpha2ApiApiS
 	}
 	if r.xSessionToken != nil {
 		localVarHeaderParams["X-Session-Token"] = parameterToString(*r.xSessionToken, "")
+	}
+	if r.cookie != nil {
+		localVarHeaderParams["Cookie"] = parameterToString(*r.cookie, "")
 	}
 	// body params
 	localVarPostBody = r.submitSelfServiceLoginFlowBody
@@ -6366,6 +6374,7 @@ type V0alpha2ApiApiSubmitSelfServiceRecoveryFlowRequest struct {
 	ApiService                        V0alpha2Api
 	flow                              *string
 	token                             *string
+	cookie                            *string
 	submitSelfServiceRecoveryFlowBody *SubmitSelfServiceRecoveryFlowBody
 }
 
@@ -6375,6 +6384,10 @@ func (r V0alpha2ApiApiSubmitSelfServiceRecoveryFlowRequest) Flow(flow string) V0
 }
 func (r V0alpha2ApiApiSubmitSelfServiceRecoveryFlowRequest) Token(token string) V0alpha2ApiApiSubmitSelfServiceRecoveryFlowRequest {
 	r.token = &token
+	return r
+}
+func (r V0alpha2ApiApiSubmitSelfServiceRecoveryFlowRequest) Cookie(cookie string) V0alpha2ApiApiSubmitSelfServiceRecoveryFlowRequest {
+	r.cookie = &cookie
 	return r
 }
 func (r V0alpha2ApiApiSubmitSelfServiceRecoveryFlowRequest) SubmitSelfServiceRecoveryFlowBody(submitSelfServiceRecoveryFlowBody SubmitSelfServiceRecoveryFlowBody) V0alpha2ApiApiSubmitSelfServiceRecoveryFlowRequest {
@@ -6463,6 +6476,9 @@ func (a *V0alpha2ApiService) SubmitSelfServiceRecoveryFlowExecute(r V0alpha2ApiA
 	if localVarHTTPHeaderAccept != "" {
 		localVarHeaderParams["Accept"] = localVarHTTPHeaderAccept
 	}
+	if r.cookie != nil {
+		localVarHeaderParams["Cookie"] = parameterToString(*r.cookie, "")
+	}
 	// body params
 	localVarPostBody = r.submitSelfServiceRecoveryFlowBody
 	req, err := a.client.prepareRequest(r.ctx, localVarPath, localVarHTTPMethod, localVarPostBody, localVarHeaderParams, localVarQueryParams, localVarFormParams, localVarFormFileName, localVarFileName, localVarFileBytes)
@@ -6535,11 +6551,16 @@ type V0alpha2ApiApiSubmitSelfServiceRegistrationFlowRequest struct {
 	ctx                                   context.Context
 	ApiService                            V0alpha2Api
 	flow                                  *string
+	cookie                                *string
 	submitSelfServiceRegistrationFlowBody *SubmitSelfServiceRegistrationFlowBody
 }
 
 func (r V0alpha2ApiApiSubmitSelfServiceRegistrationFlowRequest) Flow(flow string) V0alpha2ApiApiSubmitSelfServiceRegistrationFlowRequest {
 	r.flow = &flow
+	return r
+}
+func (r V0alpha2ApiApiSubmitSelfServiceRegistrationFlowRequest) Cookie(cookie string) V0alpha2ApiApiSubmitSelfServiceRegistrationFlowRequest {
+	r.cookie = &cookie
 	return r
 }
 func (r V0alpha2ApiApiSubmitSelfServiceRegistrationFlowRequest) SubmitSelfServiceRegistrationFlowBody(submitSelfServiceRegistrationFlowBody SubmitSelfServiceRegistrationFlowBody) V0alpha2ApiApiSubmitSelfServiceRegistrationFlowRequest {
@@ -6637,6 +6658,9 @@ func (a *V0alpha2ApiService) SubmitSelfServiceRegistrationFlowExecute(r V0alpha2
 	if localVarHTTPHeaderAccept != "" {
 		localVarHeaderParams["Accept"] = localVarHTTPHeaderAccept
 	}
+	if r.cookie != nil {
+		localVarHeaderParams["Cookie"] = parameterToString(*r.cookie, "")
+	}
 	// body params
 	localVarPostBody = r.submitSelfServiceRegistrationFlowBody
 	req, err := a.client.prepareRequest(r.ctx, localVarPath, localVarHTTPMethod, localVarPostBody, localVarHeaderParams, localVarQueryParams, localVarFormParams, localVarFormFileName, localVarFileName, localVarFileBytes)
@@ -6720,6 +6744,7 @@ type V0alpha2ApiApiSubmitSelfServiceSettingsFlowRequest struct {
 	ApiService                        V0alpha2Api
 	flow                              *string
 	xSessionToken                     *string
+	cookie                            *string
 	submitSelfServiceSettingsFlowBody *SubmitSelfServiceSettingsFlowBody
 }
 
@@ -6729,6 +6754,10 @@ func (r V0alpha2ApiApiSubmitSelfServiceSettingsFlowRequest) Flow(flow string) V0
 }
 func (r V0alpha2ApiApiSubmitSelfServiceSettingsFlowRequest) XSessionToken(xSessionToken string) V0alpha2ApiApiSubmitSelfServiceSettingsFlowRequest {
 	r.xSessionToken = &xSessionToken
+	return r
+}
+func (r V0alpha2ApiApiSubmitSelfServiceSettingsFlowRequest) Cookie(cookie string) V0alpha2ApiApiSubmitSelfServiceSettingsFlowRequest {
+	r.cookie = &cookie
 	return r
 }
 func (r V0alpha2ApiApiSubmitSelfServiceSettingsFlowRequest) SubmitSelfServiceSettingsFlowBody(submitSelfServiceSettingsFlowBody SubmitSelfServiceSettingsFlowBody) V0alpha2ApiApiSubmitSelfServiceSettingsFlowRequest {
@@ -6844,6 +6873,9 @@ func (a *V0alpha2ApiService) SubmitSelfServiceSettingsFlowExecute(r V0alpha2ApiA
 	if r.xSessionToken != nil {
 		localVarHeaderParams["X-Session-Token"] = parameterToString(*r.xSessionToken, "")
 	}
+	if r.cookie != nil {
+		localVarHeaderParams["Cookie"] = parameterToString(*r.cookie, "")
+	}
 	// body params
 	localVarPostBody = r.submitSelfServiceSettingsFlowBody
 	req, err := a.client.prepareRequest(r.ctx, localVarPath, localVarHTTPMethod, localVarPostBody, localVarHeaderParams, localVarQueryParams, localVarFormParams, localVarFormFileName, localVarFileName, localVarFileBytes)
@@ -6947,6 +6979,7 @@ type V0alpha2ApiApiSubmitSelfServiceVerificationFlowRequest struct {
 	ApiService                            V0alpha2Api
 	flow                                  *string
 	token                                 *string
+	cookie                                *string
 	submitSelfServiceVerificationFlowBody *SubmitSelfServiceVerificationFlowBody
 }
 
@@ -6956,6 +6989,10 @@ func (r V0alpha2ApiApiSubmitSelfServiceVerificationFlowRequest) Flow(flow string
 }
 func (r V0alpha2ApiApiSubmitSelfServiceVerificationFlowRequest) Token(token string) V0alpha2ApiApiSubmitSelfServiceVerificationFlowRequest {
 	r.token = &token
+	return r
+}
+func (r V0alpha2ApiApiSubmitSelfServiceVerificationFlowRequest) Cookie(cookie string) V0alpha2ApiApiSubmitSelfServiceVerificationFlowRequest {
+	r.cookie = &cookie
 	return r
 }
 func (r V0alpha2ApiApiSubmitSelfServiceVerificationFlowRequest) SubmitSelfServiceVerificationFlowBody(submitSelfServiceVerificationFlowBody SubmitSelfServiceVerificationFlowBody) V0alpha2ApiApiSubmitSelfServiceVerificationFlowRequest {
@@ -7043,6 +7080,9 @@ func (a *V0alpha2ApiService) SubmitSelfServiceVerificationFlowExecute(r V0alpha2
 	localVarHTTPHeaderAccept := selectHeaderAccept(localVarHTTPHeaderAccepts)
 	if localVarHTTPHeaderAccept != "" {
 		localVarHeaderParams["Accept"] = localVarHTTPHeaderAccept
+	}
+	if r.cookie != nil {
+		localVarHeaderParams["Cookie"] = parameterToString(*r.cookie, "")
 	}
 	// body params
 	localVarPostBody = r.submitSelfServiceVerificationFlowBody

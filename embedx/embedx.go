@@ -6,6 +6,8 @@ import (
 
 	"github.com/pkg/errors"
 
+	"github.com/ory/x/otelx"
+
 	"github.com/tidwall/gjson"
 
 	_ "embed"
@@ -85,6 +87,10 @@ func AddSchemaResources(c interface {
 	}
 
 	if err := addSchemaResources(c, sc); err != nil {
+		return err
+	}
+
+	if err := otelx.AddConfigSchema(c); err != nil {
 		return err
 	}
 

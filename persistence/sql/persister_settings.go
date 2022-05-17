@@ -17,12 +17,18 @@ import (
 var _ settings.FlowPersister = new(Persister)
 
 func (p *Persister) CreateSettingsFlow(ctx context.Context, r *settings.Flow) error {
+	ctx, span := p.r.Tracer(ctx).Tracer().Start(ctx, "persistence.sql.CreateSettingsFlow")
+	defer span.End()
+
 	r.NID = corp.ContextualizeNID(ctx, p.nid)
 	r.EnsureInternalContext()
 	return sqlcon.HandleError(p.GetConnection(ctx).Create(r))
 }
 
 func (p *Persister) GetSettingsFlow(ctx context.Context, id uuid.UUID) (*settings.Flow, error) {
+	ctx, span := p.r.Tracer(ctx).Tracer().Start(ctx, "persistence.sql.GetSettingsFlow")
+	defer span.End()
+
 	var r settings.Flow
 
 	err := p.GetConnection(ctx).Where("id = ? AND nid = ?", id, corp.ContextualizeNID(ctx, p.nid)).First(&r)
@@ -39,6 +45,9 @@ func (p *Persister) GetSettingsFlow(ctx context.Context, id uuid.UUID) (*setting
 }
 
 func (p *Persister) UpdateSettingsFlow(ctx context.Context, r *settings.Flow) error {
+	ctx, span := p.r.Tracer(ctx).Tracer().Start(ctx, "persistence.sql.UpdateSettingsFlow")
+	defer span.End()
+
 	r.EnsureInternalContext()
 	cp := *r
 	cp.NID = corp.ContextualizeNID(ctx, p.nid)

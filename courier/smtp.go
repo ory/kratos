@@ -43,14 +43,16 @@ func newSMTP(ctx context.Context, deps Dependencies) *smtpClient {
 		}
 	}
 
+	localName := deps.CourierConfig(ctx).CourierSMTPLocalName()
 	password, _ := uri.User.Password()
 	port, _ := strconv.ParseInt(uri.Port(), 10, 0)
 
 	dialer := &gomail.Dialer{
-		Host:     uri.Hostname(),
-		Port:     int(port),
-		Username: uri.User.Username(),
-		Password: password,
+		Host:      uri.Hostname(),
+		Port:      int(port),
+		Username:  uri.User.Username(),
+		Password:  password,
+		LocalName: localName,
 
 		Timeout:      time.Second * 10,
 		RetryFailure: true,

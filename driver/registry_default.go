@@ -11,6 +11,8 @@ import (
 	"github.com/hashicorp/go-retryablehttp"
 
 	"github.com/ory/x/httpx"
+	"github.com/ory/x/otelx"
+	otelsql "github.com/ory/x/otelx/sql"
 
 	"github.com/gobuffalo/pop/v6"
 
@@ -23,7 +25,6 @@ import (
 	"github.com/ory/kratos/selfservice/strategy/totp"
 
 	"github.com/luna-duclos/instrumentedsql"
-	"github.com/luna-duclos/instrumentedsql/opentracing"
 
 	"github.com/ory/kratos/corp"
 
@@ -48,8 +49,6 @@ import (
 	"github.com/ory/x/dbal"
 	"github.com/ory/x/healthx"
 	"github.com/ory/x/sqlcon"
-
-	"github.com/ory/x/tracing"
 
 	"github.com/ory/x/logrusx"
 
@@ -78,7 +77,7 @@ type RegistryDefault struct {
 	injectedSelfserviceHooks map[string]func(config.SelfServiceHook) interface{}
 
 	nosurf         nosurf.Handler
-	trc            *tracing.Tracer
+	trc            *otelx.Tracer
 	pmm            *prometheus.MetricsManager
 	writer         herodot.Writer
 	healthxHandler *healthx.Handler
@@ -469,12 +468,13 @@ func (m *RegistryDefault) ContinuityCookieManager(ctx context.Context) sessions.
 	return cs
 }
 
-func (m *RegistryDefault) Tracer(ctx context.Context) *tracing.Tracer {
+func (m *RegistryDefault) Tracer(ctx context.Context) *otelx.Tracer {
 	if m.trc == nil {
 		// Tracing is initialized only once so it can not be hot reloaded or context-aware.
-		t, err := tracing.New(m.l, m.Config(ctx).Tracing())
+		t, err := otelx.New("Ory Kratos", m.l, m.Config(ctx).Tracing())
 		if err != nil {
 			m.Logger().WithError(err).Fatalf("Unable to initialize Tracer.")
+			t = otelx.NewNoop(m.l, m.Config(ctx).Tracing())
 		}
 		m.trc = t
 	}
@@ -528,7 +528,7 @@ func (m *RegistryDefault) Init(ctx context.Context, opts ...RegistryOption) erro
 			var opts []instrumentedsql.Opt
 			if m.Tracer(ctx).IsLoaded() {
 				opts = []instrumentedsql.Opt{
-					instrumentedsql.WithTracer(opentracing.NewTracer(true)),
+					instrumentedsql.WithTracer(otelsql.NewTracer()),
 				}
 			}
 
@@ -570,7 +570,7 @@ func (m *RegistryDefault) Init(ctx context.Context, opts ...RegistryOption) erro
 			}
 
 			// if dsn is memory we have to run the migrations on every start
-			if dbal.IsMemorySQLite(m.Config(ctx).DSN()) || m.Config(ctx).DSN() == dbal.SQLiteInMemory || m.Config(ctx).DSN() == dbal.SQLiteSharedInMemory || m.Config(ctx).DSN() == "memory" {
+			if dbal.IsMemorySQLite(m.Config(ctx).DSN()) || m.Config(ctx).DSN() == "memory" {
 				m.Logger().Infoln("Ory Kratos is running migrations on every startup as DSN is memory. This means your data is lost when Kratos terminates.")
 				if err := p.MigrateUp(ctx); err != nil {
 					m.Logger().WithError(err).Warnf("Unable to run migrations, retrying.")
