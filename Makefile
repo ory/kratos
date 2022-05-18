@@ -158,6 +158,7 @@ test-e2e: node_modules test-resetdb
 .PHONY: migrations-sync
 migrations-sync: .bin/ory
 		ory dev pop migration sync persistence/sql/migrations/templates persistence/sql/migratest/testdata
+		script/add-down-migrations.sh
 
 .PHONY: test-update-snapshots
 test-update-snapshots:
