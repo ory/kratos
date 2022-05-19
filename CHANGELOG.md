@@ -4,7 +4,7 @@
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 **Table of Contents**
 
-- [ (2022-05-16)](#2022-05-16)
+- [ (2022-05-19)](#2022-05-19)
   - [Breaking Changes](#breaking-changes)
     - [Bug Fixes](#bug-fixes)
     - [Code Refactoring](#code-refactoring)
@@ -252,8 +252,10 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# [](https://github.com/ory/kratos/compare/v0.9.0-alpha.3...v) (2022-05-16)
+# [](https://github.com/ory/kratos/compare/v0.9.0-alpha.3...v) (2022-05-19)
 ## Breaking Changes
+
+Please be aware that the SDK method signatures for `submitSelfServiceRecoveryFlow`, `submitSelfServiceRegistrationFlow`, `submitSelfServiceLoginFlow`, `submitSelfServiceSettingsFlow`, `submitSelfServiceVerificationFlow` might have changed in your SDK.
 
 This patch moves several CLI command to comply with the Ory CLI command structure:
 
@@ -326,6 +328,7 @@ This patch moves several CLI command to comply with the Ory CLI command structur
 * Internal Server Error on Empty PUT /identities/id body ([#2417](https://github.com/ory/kratos/issues/2417)) ([5a50231](https://github.com/ory/kratos/commit/5a50231b553aaa64bd90a3d2cd1be9d2e3aba9ac))
 * Load return_to and append to errors ([#2333](https://github.com/ory/kratos/issues/2333)) ([5efe4a3](https://github.com/ory/kratos/commit/5efe4a33e35e74d248d4eec43dc901b7b6334037)), closes [#2275](https://github.com/ory/kratos/issues/2275) [#2279](https://github.com/ory/kratos/issues/2279) [#2285](https://github.com/ory/kratos/issues/2285)
 * Make delete formattable ([0005f35](https://github.com/ory/kratos/commit/0005f357a049ecbf94d76a1e73434837753a04ea))
+* Mark body as required ([#2479](https://github.com/ory/kratos/issues/2479)) ([c9ae117](https://github.com/ory/kratos/commit/c9ae1175340993cfc93db436c06462c80935ea2a))
 * New issue templates ([b9ad684](https://github.com/ory/kratos/commit/b9ad684311ee8c654b2fa382010315e892581f5c))
 * Openapi regression ([#2465](https://github.com/ory/kratos/issues/2465)) ([37a3369](https://github.com/ory/kratos/commit/37a3369cea8ed5af34e8324a291a7d7dba0eb43a))
 * Refresh is always false when session exists ([d3436d7](https://github.com/ory/kratos/commit/d3436d7fa17589d91e25c9f0bd66bc3bb5b150fa)), closes [#2341](https://github.com/ory/kratos/issues/2341)
@@ -338,6 +341,7 @@ This patch moves several CLI command to comply with the Ory CLI command structur
 * **sdk:** Improved OpenAPI specifications for UI nodes ([#2375](https://github.com/ory/kratos/issues/2375)) ([a42a0f7](https://github.com/ory/kratos/commit/a42a0f772af3625c457032d6dcc34289a62acc61)), closes [#2357](https://github.com/ory/kratos/issues/2357)
 * Serve.admin.request_log.disable_for_health behaviour ([#2399](https://github.com/ory/kratos/issues/2399)) ([0a381fa](https://github.com/ory/kratos/commit/0a381fa3d702f77e614d0492dafa3ac2cd102c7e))
 * **sql:** Add additional join argument to resolve MySQL query issue ([854e5cb](https://github.com/ory/kratos/commit/854e5cba80cad52b58571587980c00c038ff6596)), closes [#2262](https://github.com/ory/kratos/issues/2262)
+* Unreliable HIBP caching strategy ([#2468](https://github.com/ory/kratos/issues/2468)) ([93bf1e2](https://github.com/ory/kratos/commit/93bf1e2cd53f3a4de3ff414017c17813d36b56da))
 * Use `path` instead of `filepath` to join http route paths ([16b1244](https://github.com/ory/kratos/commit/16b12449c841bf7a237fe436b884b4b5012cd022)), closes [#2292](https://github.com/ory/kratos/issues/2292)
 * Use JOIN instead of iterative queries ([0998cfb](https://github.com/ory/kratos/commit/0998cfb2fdda27ba8baeebcc603aae5fbe5c901f)), closes [#2402](https://github.com/ory/kratos/issues/2402)
 * Use pointer of string for PasswordIdentifier in example code ([#2421](https://github.com/ory/kratos/issues/2421)) ([61f12e7](https://github.com/ory/kratos/commit/61f12e7579c7c337d0f415ac2b4029790c659c3d))
