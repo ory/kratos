@@ -760,6 +760,7 @@ paths:
           application/x-www-form-urlencoded:
             schema:
               $ref: '#/components/schemas/submitSelfServiceLoginFlowBody'
+        required: true
         x-originalParamName: Body
       responses:
         "200":
@@ -1258,6 +1259,7 @@ paths:
           application/x-www-form-urlencoded:
             schema:
               $ref: '#/components/schemas/submitSelfServiceRecoveryFlowBody'
+        required: true
         x-originalParamName: Body
       responses:
         "200":
@@ -1518,6 +1520,7 @@ paths:
           application/x-www-form-urlencoded:
             schema:
               $ref: '#/components/schemas/submitSelfServiceRegistrationFlowBody'
+        required: true
         x-originalParamName: Body
       responses:
         "200":
@@ -1832,6 +1835,7 @@ paths:
           application/x-www-form-urlencoded:
             schema:
               $ref: '#/components/schemas/submitSelfServiceSettingsFlowBody'
+        required: true
         x-originalParamName: Body
       responses:
         "200":
@@ -2184,6 +2188,7 @@ paths:
           application/x-www-form-urlencoded:
             schema:
               $ref: '#/components/schemas/submitSelfServiceVerificationFlowBody'
+        required: true
         x-originalParamName: Body
       responses:
         "200":

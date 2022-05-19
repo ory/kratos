@@ -361,6 +361,7 @@ type submitSelfServiceRegistrationFlow struct {
 	Flow string `json:"flow"`
 
 	// in: body
+	// required: true
 	Body submitSelfServiceRegistrationFlowBody
 
 	// HTTP Cookies

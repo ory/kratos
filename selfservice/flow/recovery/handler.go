@@ -306,6 +306,7 @@ type submitSelfServiceRecoveryFlow struct {
 	Token string `json:"token" form:"token"`
 
 	// in: body
+	// required: true
 	Body submitSelfServiceRecoveryFlowBody
 
 	// HTTP Cookies

@@ -407,6 +407,7 @@ type submitSelfServiceSettingsFlow struct {
 	Flow string `json:"flow"`
 
 	// in: body
+	// required: true
 	Body submitSelfServiceSettingsFlowBody
 
 	// The Session Token of the Identity performing the settings flow.
