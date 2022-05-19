@@ -67,13 +67,12 @@ func (p *Persister) CreateRecoveryToken(ctx context.Context, token *link.Recover
 }
 
 func (p *Persister) UseRecoveryToken(ctx context.Context, token string) (*link.RecoveryToken, error) {
-	ctx, span := p.r.Tracer(ctx).Tracer().Start(ctx, "persistence.sql.UseRecoveryToken")
-	defer span.End()
-
 	var rt link.RecoveryToken
 
 	nid := corp.ContextualizeNID(ctx, p.nid)
 	if err := sqlcon.HandleError(p.Transaction(ctx, func(ctx context.Context, tx *pop.Connection) (err error) {
+		ctx, span := p.r.Tracer(ctx).Tracer().Start(ctx, "persistence.sql.UseRecoveryToken")
+		defer span.End()
 		for _, secret := range p.r.Config(ctx).SecretsSession() {
 			if err = tx.Where("token = ? AND nid = ? AND NOT used", p.hmacValueWithSecret(ctx, token, secret), nid).First(&rt); err != nil {
 				if !errors.Is(sqlcon.HandleError(err), sqlcon.ErrNoRows) {

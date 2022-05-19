@@ -28,10 +28,9 @@ func (p *Persister) AddMessage(ctx context.Context, m *courier.Message) error {
 }
 
 func (p *Persister) NextMessages(ctx context.Context, limit uint8) (messages []courier.Message, err error) {
-	ctx, span := p.r.Tracer(ctx).Tracer().Start(ctx, "persistence.sql.NextMessages")
-	defer span.End()
-
 	if err := p.Transaction(ctx, func(ctx context.Context, tx *pop.Connection) error {
+		ctx, span := p.r.Tracer(ctx).Tracer().Start(ctx, "persistence.sql.NextMessages")
+		defer span.End()
 		var m []courier.Message
 		if err := tx.
 			Where("nid = ? AND status = ?",
@@ -75,7 +74,6 @@ func (p *Persister) NextMessages(ctx context.Context, limit uint8) (messages []c
 func (p *Persister) LatestQueuedMessage(ctx context.Context) (*courier.Message, error) {
 	ctx, span := p.r.Tracer(ctx).Tracer().Start(ctx, "persistence.sql.LatestQueuedMessage")
 	defer span.End()
-
 	var m courier.Message
 	if err := p.GetConnection(ctx).
 		Where("nid = ? AND status = ?",

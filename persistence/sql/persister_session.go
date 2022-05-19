@@ -43,13 +43,13 @@ func (p *Persister) GetSession(ctx context.Context, sid uuid.UUID) (*session.Ses
 
 // ListSessionsByIdentity retrieves sessions for an identity from the store.
 func (p *Persister) ListSessionsByIdentity(ctx context.Context, iID uuid.UUID, active *bool, page, perPage int, except uuid.UUID) ([]*session.Session, error) {
-	ctx, span := p.r.Tracer(ctx).Tracer().Start(ctx, "persistence.sql.ListSessionsByIdentity")
-	defer span.End()
-
 	var s []*session.Session
 	nid := corp.ContextualizeNID(ctx, p.nid)
 
 	if err := p.Transaction(ctx, func(ctx context.Context, c *pop.Connection) error {
+		ctx, span := p.r.Tracer(ctx).Tracer().Start(ctx, "persistence.sql.ListSessionsByIdentity")
+		defer span.End()
+
 		q := c.Where("identity_id = ? AND nid = ?", iID, nid).Paginate(page, perPage)
 		if except != uuid.Nil {
 			q = q.Where("id != ?", except)

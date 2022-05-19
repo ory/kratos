@@ -255,9 +255,6 @@ func (p *Persister) CountIdentities(ctx context.Context) (int64, error) {
 }
 
 func (p *Persister) CreateIdentity(ctx context.Context, i *identity.Identity) error {
-	ctx, span := p.r.Tracer(ctx).Tracer().Start(ctx, "persistence.sql.CreateIdentity")
-	defer span.End()
-
 	i.NID = corp.ContextualizeNID(ctx, p.nid)
 
 	if i.SchemaID == "" {
@@ -283,6 +280,9 @@ func (p *Persister) CreateIdentity(ctx context.Context, i *identity.Identity) er
 	}
 
 	return p.Transaction(ctx, func(ctx context.Context, tx *pop.Connection) error {
+		ctx, span := p.r.Tracer(ctx).Tracer().Start(ctx, "persistence.sql.CreateIdentity")
+		defer span.End()
+
 		if err := tx.Create(i); err != nil {
 			return sqlcon.HandleError(err)
 		}
@@ -346,6 +346,9 @@ func (p *Persister) UpdateIdentity(ctx context.Context, i *identity.Identity) er
 
 	i.NID = corp.ContextualizeNID(ctx, p.nid)
 	return sqlcon.HandleError(p.Transaction(ctx, func(ctx context.Context, tx *pop.Connection) error {
+		ctx, span := p.r.Tracer(ctx).Tracer().Start(ctx, "persistence.sql.UpdateIdentity")
+		defer span.End()
+
 		if count, err := tx.Where("id = ? AND nid = ?", i.ID, corp.ContextualizeNID(ctx, p.nid)).Count(i); err != nil {
 			return err
 		} else if count == 0 {
@@ -485,7 +488,6 @@ func (p *Persister) FindVerifiableAddressByValue(ctx context.Context, via identi
 func (p *Persister) FindRecoveryAddressByValue(ctx context.Context, via identity.RecoveryAddressType, value string) (*identity.RecoveryAddress, error) {
 	ctx, span := p.r.Tracer(ctx).Tracer().Start(ctx, "persistence.sql.FindRecoveryAddressByValue")
 	defer span.End()
-
 	var address identity.RecoveryAddress
 	if err := p.GetConnection(ctx).Where("nid = ? AND via = ? AND value = ?", corp.ContextualizeNID(ctx, p.nid), via, stringToLowerTrim(value)).First(&address); err != nil {
 		return nil, sqlcon.HandleError(err)
@@ -497,6 +499,7 @@ func (p *Persister) FindRecoveryAddressByValue(ctx context.Context, via identity
 func (p *Persister) VerifyAddress(ctx context.Context, code string) error {
 	ctx, span := p.r.Tracer(ctx).Tracer().Start(ctx, "persistence.sql.VerifyAddress")
 	defer span.End()
+
 	newCode, err := otp.New()
 	if err != nil {
 		return err
