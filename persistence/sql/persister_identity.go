@@ -255,6 +255,9 @@ func (p *Persister) CountIdentities(ctx context.Context) (int64, error) {
 }
 
 func (p *Persister) CreateIdentity(ctx context.Context, i *identity.Identity) error {
+	ctx, span := p.r.Tracer(ctx).Tracer().Start(ctx, "persistence.sql.CreateIdentity")
+	defer span.End()
+
 	i.NID = corp.ContextualizeNID(ctx, p.nid)
 
 	if i.SchemaID == "" {
@@ -280,9 +283,6 @@ func (p *Persister) CreateIdentity(ctx context.Context, i *identity.Identity) er
 	}
 
 	return p.Transaction(ctx, func(ctx context.Context, tx *pop.Connection) error {
-		ctx, span := p.r.Tracer(ctx).Tracer().Start(ctx, "persistence.sql.CreateIdentity")
-		defer span.End()
-
 		if err := tx.Create(i); err != nil {
 			return sqlcon.HandleError(err)
 		}
