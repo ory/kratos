@@ -76,7 +76,7 @@ require (
 	github.com/ory/kratos-client-go v0.6.3-alpha.1
 	github.com/ory/mail/v3 v3.0.0
 	github.com/ory/nosurf v1.2.7
-	github.com/ory/x v0.0.386
+	github.com/ory/x v0.0.392
 	github.com/phayes/freeport v0.0.0-20180830031419-95f893ade6f2
 	github.com/pkg/errors v0.9.1
 	github.com/pquerna/otp v1.3.0
@@ -91,8 +91,6 @@ require (
 	github.com/tidwall/sjson v1.2.4
 	github.com/urfave/negroni v1.0.0
 	github.com/zmb3/spotify/v2 v2.0.0
-	go.opentelemetry.io/otel v1.7.0
-	go.opentelemetry.io/otel/trace v1.7.0
 	golang.org/x/crypto v0.0.0-20211108221036-ceb1ce70b4fa
 	golang.org/x/net v0.0.0-20211020060615-d418f374d309
 	golang.org/x/oauth2 v0.0.0-20211104180415-d3ed0bb246c8
@@ -267,7 +265,7 @@ require (
 	github.com/sourcegraph/annotate v0.0.0-20160123013949-f4cad6c6324d // indirect
 	github.com/sourcegraph/syntaxhighlight v0.0.0-20170531221838-bd320f5d308e // indirect
 	github.com/spf13/afero v1.8.2 // indirect
-	github.com/spf13/cast v1.4.1 // indirect
+	github.com/spf13/cast v1.5.0 // indirect
 	github.com/spf13/jwalterweatherman v1.1.0 // indirect
 	github.com/spf13/viper v1.10.0 // indirect
 	github.com/subosito/gotenv v1.2.0 // indirect
@@ -301,6 +299,7 @@ require (
 	go.opentelemetry.io/contrib/propagators/b3 v1.4.0 // indirect
 	go.opentelemetry.io/contrib/propagators/jaeger v1.4.0 // indirect
 	go.opentelemetry.io/contrib/samplers/jaegerremote v0.0.0-20220314184135-32895002a444 // indirect
+	go.opentelemetry.io/otel v1.7.0 // indirect
 	go.opentelemetry.io/otel/exporters/jaeger v1.5.0 // indirect
 	go.opentelemetry.io/otel/exporters/otlp/internal/retry v1.6.3 // indirect
 	go.opentelemetry.io/otel/exporters/otlp/otlptrace v1.6.3 // indirect
@@ -309,16 +308,17 @@ require (
 	go.opentelemetry.io/otel/internal/metric v0.27.0 // indirect
 	go.opentelemetry.io/otel/metric v0.27.0 // indirect
 	go.opentelemetry.io/otel/sdk v1.7.0 // indirect
+	go.opentelemetry.io/otel/trace v1.7.0 // indirect
 	go.opentelemetry.io/proto/otlp v0.15.0 // indirect
 	go.uber.org/atomic v1.7.0 // indirect
 	go.uber.org/multierr v1.7.0 // indirect
 	go.uber.org/zap v1.17.0 // indirect
 	golang.org/x/mod v0.6.0-dev.0.20220106191415-9b9b3d81d5e3 // indirect
-	golang.org/x/sys v0.0.0-20220503163025-988cb79eb6c6 // indirect
+	golang.org/x/sys v0.0.0-20220517195934-5e4e11fc645e // indirect
 	golang.org/x/term v0.0.0-20210927222741-03fcf44c2211 // indirect
 	golang.org/x/text v0.3.7 // indirect
 	golang.org/x/time v0.0.0-20211116232009-f0f3c7e86c11 // indirect
-	golang.org/x/xerrors v0.0.0-20220411194840-2f41105eb62f // indirect
+	golang.org/x/xerrors v0.0.0-20220517211312-f3a8303e98df // indirect
 	google.golang.org/appengine v1.6.7 // indirect
 	google.golang.org/genproto v0.0.0-20211208223120-3a66f561d7aa // indirect
 	google.golang.org/grpc v1.45.0 // indirect
