@@ -3202,6 +3202,7 @@
               }
             }
           },
+          "required": true,
           "x-originalParamName": "Body"
         },
         "responses": {
@@ -3673,6 +3674,7 @@
               }
             }
           },
+          "required": true,
           "x-originalParamName": "Body"
         },
         "responses": {
@@ -3930,6 +3932,7 @@
               }
             }
           },
+          "required": true,
           "x-originalParamName": "Body"
         },
         "responses": {
@@ -4205,6 +4208,7 @@
               }
             }
           },
+          "required": true,
           "x-originalParamName": "Body"
         },
         "responses": {
@@ -4563,6 +4567,7 @@
               }
             }
           },
+          "required": true,
           "x-originalParamName": "Body"
         },
         "responses": {

@@ -821,6 +821,7 @@
           {
             "name": "Body",
             "in": "body",
+            "required": true,
             "schema": {
               "$ref": "#/definitions/submitSelfServiceLoginFlowBody"
             }
@@ -1229,6 +1230,7 @@
           {
             "name": "Body",
             "in": "body",
+            "required": true,
             "schema": {
               "$ref": "#/definitions/submitSelfServiceRecoveryFlowBody"
             }
@@ -1438,6 +1440,7 @@
           {
             "name": "Body",
             "in": "body",
+            "required": true,
             "schema": {
               "$ref": "#/definitions/submitSelfServiceRegistrationFlowBody"
             }
@@ -1661,6 +1664,7 @@
           {
             "name": "Body",
             "in": "body",
+            "required": true,
             "schema": {
               "$ref": "#/definitions/submitSelfServiceSettingsFlowBody"
             }
@@ -1938,6 +1942,7 @@
           {
             "name": "Body",
             "in": "body",
+            "required": true,
             "schema": {
               "$ref": "#/definitions/submitSelfServiceVerificationFlowBody"
             }

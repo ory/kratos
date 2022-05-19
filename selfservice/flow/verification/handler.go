@@ -288,6 +288,7 @@ type submitSelfServiceVerificationFlow struct {
 	Token string `json:"token" form:"token"`
 
 	// in: body
+	// required: true
 	Body submitSelfServiceVerificationFlowBody
 
 	// HTTP Cookies
