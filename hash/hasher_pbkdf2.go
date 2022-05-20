@@ -12,6 +12,8 @@ import (
 	"hash"
 
 	"github.com/pkg/errors"
+	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/codes"
 	"golang.org/x/crypto/pbkdf2"
 	"golang.org/x/crypto/sha3"
 )
@@ -23,7 +25,10 @@ type Pbkdf2 struct {
 	KeyLength  uint32
 }
 
-func (h *Pbkdf2) Generate(_ context.Context, password []byte) ([]byte, error) {
+func (h *Pbkdf2) Generate(ctx context.Context, password []byte) ([]byte, error) {
+	_, span := otel.GetTracerProvider().Tracer("").Start(ctx, "hash.Pbkdf2.Generate")
+	defer span.End()
+
 	salt := make([]byte, h.SaltLength)
 	if _, err := rand.Read(salt); err != nil {
 		return nil, err
@@ -41,6 +46,8 @@ func (h *Pbkdf2) Generate(_ context.Context, password []byte) ([]byte, error) {
 		base64.RawStdEncoding.EncodeToString(salt),
 		base64.RawStdEncoding.EncodeToString(key),
 	); err != nil {
+		span.RecordError(err)
+		span.SetStatus(codes.Error, err.Error())
 		return nil, errors.WithStack(err)
 	}
 

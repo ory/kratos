@@ -9,7 +9,6 @@ import (
 
 	"github.com/ory/kratos/selfservice/flow/recovery"
 
-	"github.com/ory/x/otelx"
 	"github.com/ory/x/reqlog"
 
 	"github.com/ory/kratos/cmd/courier"
@@ -123,7 +122,7 @@ func ServePublic(r driver.Registry, wg *sync.WaitGroup, cmd *cobra.Command, args
 	certs := c.GetTSLCertificatesForPublic()
 
 	if tracer := r.Tracer(ctx); tracer.IsLoaded() {
-		handler = otelx.NewHandler(n, "cmd.daemon.ServePublic")
+		handler = x.TraceHandler(handler)
 	}
 
 	server := graceful.WithDefaults(&http.Server{
@@ -183,7 +182,7 @@ func ServeAdmin(r driver.Registry, wg *sync.WaitGroup, cmd *cobra.Command, args 
 
 	var handler http.Handler = n
 	if tracer := r.Tracer(ctx); tracer.IsLoaded() {
-		handler = otelx.NewHandler(n, "cmd.daemon.ServeAdmin")
+		handler = x.TraceHandler(n)
 	}
 
 	server := graceful.WithDefaults(&http.Server{
