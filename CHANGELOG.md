@@ -4,7 +4,7 @@
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 **Table of Contents**
 
-- [ (2022-05-19)](#2022-05-19)
+- [ (2022-05-20)](#2022-05-20)
   - [Breaking Changes](#breaking-changes)
     - [Bug Fixes](#bug-fixes)
     - [Code Refactoring](#code-refactoring)
@@ -252,7 +252,7 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# [](https://github.com/ory/kratos/compare/v0.9.0-alpha.3...v) (2022-05-19)
+# [](https://github.com/ory/kratos/compare/v0.9.0-alpha.3...v) (2022-05-20)
 ## Breaking Changes
 
 Please be aware that the SDK method signatures for `submitSelfServiceRecoveryFlow`, `submitSelfServiceRegistrationFlow`, `submitSelfServiceLoginFlow`, `submitSelfServiceSettingsFlow`, `submitSelfServiceVerificationFlow` might have changed in your SDK.
@@ -381,6 +381,7 @@ This patch moves several CLI command to comply with the Ory CLI command structur
 * **sdk:** Add csrf cookie for login flow submission ([#2454](https://github.com/ory/kratos/issues/2454)) ([2bffee8](https://github.com/ory/kratos/commit/2bffee81f0e8a98851a3e11b4fc4969d95e9b445))
 * Support argon2i password ([#2395](https://github.com/ory/kratos/issues/2395)) ([8fdadf9](https://github.com/ory/kratos/commit/8fdadf9d1724d28ae11996304703e06671549660))
 * Switch to opentelemetry tracing ([#2318](https://github.com/ory/kratos/issues/2318)) ([121a4d3](https://github.com/ory/kratos/commit/121a4d3fc0f396e8da50ad1985cacf68a5c85a12))
+* **tracing:** Improved tracing for requests ([#2475](https://github.com/ory/kratos/issues/2475)) ([b90a558](https://github.com/ory/kratos/commit/b90a5582284f1ceb0e97575e3b3562603b65ec5f))
 * Upgrade to Go 1.18 ([725d202](https://github.com/ory/kratos/commit/725d202e6ae15b3b5c3282e03c03a40480a2e310))
 
 ### Tests
