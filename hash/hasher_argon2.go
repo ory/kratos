@@ -8,6 +8,7 @@ import (
 	"fmt"
 
 	"github.com/inhies/go-bytesize"
+	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/codes"
 
@@ -15,7 +16,6 @@ import (
 	"golang.org/x/crypto/argon2"
 
 	"github.com/ory/kratos/driver/config"
-	"github.com/ory/kratos/x"
 )
 
 var (
@@ -26,11 +26,6 @@ var (
 
 type Argon2 struct {
 	c Argon2Configuration
-	d argon2Dependencies
-}
-
-type argon2Dependencies interface {
-	x.TracingProvider
 }
 
 type Argon2Configuration interface {
@@ -46,7 +41,7 @@ func toKB(mem bytesize.ByteSize) uint32 {
 }
 
 func (h *Argon2) Generate(ctx context.Context, password []byte) ([]byte, error) {
-	ctx, span := h.d.Tracer(ctx).Tracer().Start(ctx, "hash.Argon2.Generate")
+	ctx, span := otel.GetTracerProvider().Tracer(tracingComponent).Start(ctx, "hash.Argon2.Generate")
 	defer span.End()
 	p := h.c.Config(ctx).HasherArgon2()
 	span.SetAttributes(attribute.String("argon2.config", fmt.Sprintf("#%v", p)))

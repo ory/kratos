@@ -16,3 +16,5 @@ type Hasher interface {
 type HashProvider interface {
 	Hasher() Hasher
 }
+
+const tracingComponent = "github.com/ory/kratos/hash"

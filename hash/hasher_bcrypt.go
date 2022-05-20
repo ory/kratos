@@ -3,11 +3,11 @@ package hash
 import (
 	"context"
 
+	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/codes"
 
 	"github.com/ory/kratos/schema"
-	"github.com/ory/kratos/x"
 
 	"golang.org/x/crypto/bcrypt"
 
@@ -16,11 +16,6 @@ import (
 
 type Bcrypt struct {
 	c BcryptConfiguration
-	d bcryptDependencies
-}
-
-type bcryptDependencies interface {
-	x.TracingProvider
 }
 
 type BcryptConfiguration interface {
@@ -32,7 +27,7 @@ func NewHasherBcrypt(c BcryptConfiguration) *Bcrypt {
 }
 
 func (h *Bcrypt) Generate(ctx context.Context, password []byte) ([]byte, error) {
-	ctx, span := h.d.Tracer(ctx).Tracer().Start(ctx, "hash.Bcrypt.Generate")
+	ctx, span := otel.GetTracerProvider().Tracer(tracingComponent).Start(ctx, "hash.Bcrypt.Generate")
 	defer span.End()
 
 	if err := validateBcryptPasswordLength(password); err != nil {
