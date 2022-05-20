@@ -26,7 +26,7 @@ type Pbkdf2 struct {
 }
 
 func (h *Pbkdf2) Generate(ctx context.Context, password []byte) ([]byte, error) {
-	ctx, span := otel.GetTracerProvider().Tracer("").Start(ctx, "hash.Pbkdf2.Generate")
+	_, span := otel.GetTracerProvider().Tracer("").Start(ctx, "hash.Pbkdf2.Generate")
 	defer span.End()
 
 	salt := make([]byte, h.SaltLength)

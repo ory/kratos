@@ -3,10 +3,11 @@ package hash
 import (
 	"context"
 
-	"github.com/ory/kratos/schema"
-	"github.com/ory/kratos/x"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/codes"
+
+	"github.com/ory/kratos/schema"
+	"github.com/ory/kratos/x"
 
 	"golang.org/x/crypto/bcrypt"
 
