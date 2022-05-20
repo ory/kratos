@@ -91,6 +91,8 @@ require (
 	github.com/tidwall/sjson v1.2.4
 	github.com/urfave/negroni v1.0.0
 	github.com/zmb3/spotify/v2 v2.0.0
+	go.opentelemetry.io/otel v1.7.0
+	go.opentelemetry.io/otel/trace v1.7.0
 	golang.org/x/crypto v0.0.0-20211108221036-ceb1ce70b4fa
 	golang.org/x/net v0.0.0-20211020060615-d418f374d309
 	golang.org/x/oauth2 v0.0.0-20211104180415-d3ed0bb246c8
@@ -299,7 +301,6 @@ require (
 	go.opentelemetry.io/contrib/propagators/b3 v1.4.0 // indirect
 	go.opentelemetry.io/contrib/propagators/jaeger v1.4.0 // indirect
 	go.opentelemetry.io/contrib/samplers/jaegerremote v0.0.0-20220314184135-32895002a444 // indirect
-	go.opentelemetry.io/otel v1.7.0 // indirect
 	go.opentelemetry.io/otel/exporters/jaeger v1.5.0 // indirect
 	go.opentelemetry.io/otel/exporters/otlp/internal/retry v1.6.3 // indirect
 	go.opentelemetry.io/otel/exporters/otlp/otlptrace v1.6.3 // indirect
@@ -308,7 +309,6 @@ require (
 	go.opentelemetry.io/otel/internal/metric v0.27.0 // indirect
 	go.opentelemetry.io/otel/metric v0.27.0 // indirect
 	go.opentelemetry.io/otel/sdk v1.7.0 // indirect
-	go.opentelemetry.io/otel/trace v1.7.0 // indirect
 	go.opentelemetry.io/proto/otlp v0.15.0 // indirect
 	go.uber.org/atomic v1.7.0 // indirect
 	go.uber.org/multierr v1.7.0 // indirect
