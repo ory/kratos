@@ -5,6 +5,7 @@ import (
 
 	"github.com/ory/kratos/schema"
 	"github.com/ory/kratos/x"
+	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/codes"
 
 	"golang.org/x/crypto/bcrypt"
@@ -14,11 +15,15 @@ import (
 
 type Bcrypt struct {
 	c BcryptConfiguration
+	d bcryptDependencies
+}
+
+type bcryptDependencies interface {
+	x.TracingProvider
 }
 
 type BcryptConfiguration interface {
 	config.Provider
-	x.TracingProvider
 }
 
 func NewHasherBcrypt(c BcryptConfiguration) *Bcrypt {
@@ -26,14 +31,18 @@ func NewHasherBcrypt(c BcryptConfiguration) *Bcrypt {
 }
 
 func (h *Bcrypt) Generate(ctx context.Context, password []byte) ([]byte, error) {
-	ctx, span := h.c.Tracer(ctx).Tracer().Start(ctx, "hash.Bcrypt.Generate")
+	ctx, span := h.d.Tracer(ctx).Tracer().Start(ctx, "hash.Bcrypt.Generate")
 	defer span.End()
 
 	if err := validateBcryptPasswordLength(password); err != nil {
+		span.RecordError(err)
+		span.SetStatus(codes.Error, err.Error())
 		return nil, err
 	}
 
-	hash, err := bcrypt.GenerateFromPassword(password, int(h.c.Config(ctx).HasherBcrypt().Cost))
+	cost := int(h.c.Config(ctx).HasherBcrypt().Cost)
+	span.SetAttributes(attribute.Int("bcrypt.cost", cost))
+	hash, err := bcrypt.GenerateFromPassword(password, cost)
 	if err != nil {
 		span.RecordError(err)
 		span.SetStatus(codes.Error, err.Error())

@@ -8,6 +8,7 @@ import (
 	"fmt"
 
 	"github.com/inhies/go-bytesize"
+	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/codes"
 
 	"github.com/pkg/errors"
@@ -25,11 +26,15 @@ var (
 
 type Argon2 struct {
 	c Argon2Configuration
+	d argon2Dependencies
+}
+
+type argon2Dependencies interface {
+	x.TracingProvider
 }
 
 type Argon2Configuration interface {
 	config.Provider
-	x.TracingProvider
 }
 
 func NewHasherArgon2(c Argon2Configuration) *Argon2 {
@@ -41,9 +46,10 @@ func toKB(mem bytesize.ByteSize) uint32 {
 }
 
 func (h *Argon2) Generate(ctx context.Context, password []byte) ([]byte, error) {
-	ctx, span := h.c.Tracer(ctx).Tracer().Start(ctx, "hash.Argon2.Generate")
+	ctx, span := h.d.Tracer(ctx).Tracer().Start(ctx, "hash.Argon2.Generate")
 	defer span.End()
 	p := h.c.Config(ctx).HasherArgon2()
+	span.SetAttributes(attribute.String("argon2.config", fmt.Sprintf("#%v", p)))
 
 	salt := make([]byte, p.SaltLength)
 	if _, err := rand.Read(salt); err != nil {
