@@ -4,7 +4,7 @@
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 **Table of Contents**
 
-- [ (2022-05-20)](#2022-05-20)
+- [ (2022-05-22)](#2022-05-22)
   - [Breaking Changes](#breaking-changes)
     - [Bug Fixes](#bug-fixes)
     - [Code Refactoring](#code-refactoring)
@@ -252,7 +252,7 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# [](https://github.com/ory/kratos/compare/v0.9.0-alpha.3...v) (2022-05-20)
+# [](https://github.com/ory/kratos/compare/v0.9.0-alpha.3...v) (2022-05-22)
 ## Breaking Changes
 
 Please be aware that the SDK method signatures for `submitSelfServiceRecoveryFlow`, `submitSelfServiceRegistrationFlow`, `submitSelfServiceLoginFlow`, `submitSelfServiceSettingsFlow`, `submitSelfServiceVerificationFlow` might have changed in your SDK.
@@ -361,6 +361,7 @@ This patch moves several CLI command to comply with the Ory CLI command structur
 ### Features
 
 * Add certificate based authentication for smtp client ([#2351](https://github.com/ory/kratos/issues/2351)) ([7200037](https://github.com/ory/kratos/commit/72000375c028f5f7f9cb0d0b1b02f8aa09503e4f))
+* Add ID to the recovery error when already logged in ([#2483](https://github.com/ory/kratos/issues/2483)) ([29e4a51](https://github.com/ory/kratos/commit/29e4a51cc5344dcb44839f8aa57197c41aeeb78d))
 * Add localName to smtp config ([#2445](https://github.com/ory/kratos/issues/2445)) ([27336b6](https://github.com/ory/kratos/commit/27336b63b0c11c1667d5a07230bed82283475aa4)), closes [#2425](https://github.com/ory/kratos/issues/2425)
 * Add session renew capabilities ([#2146](https://github.com/ory/kratos/issues/2146)) ([4348b86](https://github.com/ory/kratos/commit/4348b8640a282cd61fe30961faba5753e2af8bb0)), closes [#615](https://github.com/ory/kratos/issues/615)
 * Add support for netID provider  ([#2394](https://github.com/ory/kratos/issues/2394)) ([ee7fc79](https://github.com/ory/kratos/commit/ee7fc79d49cd6d8f2985809585d1675c8e2ed376))
