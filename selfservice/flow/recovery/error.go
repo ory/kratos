@@ -22,7 +22,7 @@ import (
 
 var (
 	ErrHookAbortFlow   = errors.New("aborted recovery hook execution")
-	ErrAlreadyLoggedIn = herodot.ErrBadRequest.WithReason("A valid session was detected and thus recovery is not possible.")
+	ErrAlreadyLoggedIn = herodot.ErrBadRequest.WithID(text.ErrIDAlreadyLoggedIn).WithReason("A valid session was detected and thus recovery is not possible.")
 )
 
 type (
