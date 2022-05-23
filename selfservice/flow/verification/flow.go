@@ -175,7 +175,9 @@ func (f *Flow) Valid() error {
 }
 
 func (f *Flow) AppendTo(src *url.URL) *url.URL {
-	return urlx.CopyWithQuery(src, url.Values{"flow": {f.ID.String()}})
+	values := src.Query()
+	values.Set("flow", f.ID.String())
+	return urlx.CopyWithQuery(src, values)
 }
 
 func (f Flow) GetID() uuid.UUID {
