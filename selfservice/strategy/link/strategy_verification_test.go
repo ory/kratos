@@ -380,6 +380,6 @@ func TestVerification(t *testing.T) {
 		assert.Equal(t, http.StatusSeeOther, res.StatusCode)
 		redirectURL, err := res.Location()
 		require.NoError(t, err)
-		assert.Equal(t, returnToURL + "?flow=" + flow.ID.String(), redirectURL.String())
+		assert.Equal(t, returnToURL+"?flow="+flow.ID.String(), redirectURL.String())
 	})
 }
