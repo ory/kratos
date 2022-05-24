@@ -172,7 +172,7 @@ preLoginHook:
 	}
 
 	if err := h.d.LoginHookExecutor().PreLoginHook(w, r, f); err != nil {
-		h.d.LoginFlowErrorHandler().WriteFlowError(w, r, f, s.NodeGroup(), err)
+		h.d.LoginFlowErrorHandler().WriteFlowError(w, r, f, node.DefaultGroup, err)
 		return f, nil
 	}
 
