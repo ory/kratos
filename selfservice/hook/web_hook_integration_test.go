@@ -323,9 +323,7 @@ func TestWebHooks(t *testing.T) {
 		}`,
 	)
 
-	webhookError := schema.NewValidationListError()
-	webhookError.WithError("#/traits/username", "validation error", text.Messages{{ID: 1234, Type: "info", Text: "error message"}})
-
+	webhookError := schema.NewValidationListError([]*schema.ValidationError{schema.NewHookValidationError("#/traits/username", "validation error", text.Messages{{ID: 1234, Type: "info", Text: "error message"}})})
 	for _, tc := range []struct {
 		uc              string
 		callWebHook     func(wh *hook.WebHook, req *http.Request, f flow.Flow, s *session.Session) error

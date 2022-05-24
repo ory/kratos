@@ -206,7 +206,7 @@ func parseWebhookResponse(resp *http.Response) (err error) {
 		return errors.Wrap(err, "hook response could not be unmarshalled properly from JSON")
 	}
 
-	validationErr := schema.NewValidationListError()
+	var validationErrs []*schema.ValidationError
 	for _, msg := range hookResponse.Messages {
 		messages := text.Messages{}
 		for _, detail := range msg.DetailedMessages {
@@ -223,12 +223,12 @@ func parseWebhookResponse(resp *http.Response) (err error) {
 				Context: detail.Context,
 			})
 		}
-		validationErr.Add(schema.NewHookValidationError(msg.InstancePtr, msg.Message, messages))
+		validationErrs = append(validationErrs, schema.NewHookValidationError(msg.InstancePtr, msg.Message, messages))
 	}
 
-	if !validationErr.HasErrors() {
+	if len(validationErrs) == 0 {
 		return errors.New("error while parsing hook response: got no validation errors")
 	}
 
-	return errors.WithStack(validationErr)
+	return schema.NewValidationListError(validationErrs)
 }

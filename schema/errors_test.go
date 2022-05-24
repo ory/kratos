@@ -11,7 +11,7 @@ import (
 )
 
 func TestListValidationErrors(t *testing.T) {
-	testErr := NewValidationListError()
+	testErr := ValidationListError{}
 
 	assert.False(t, testErr.HasErrors())
 

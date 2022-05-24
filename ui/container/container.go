@@ -201,7 +201,7 @@ func (c *Container) ParseError(group node.UiNodeGroup, err error) error {
 			}
 		}
 		return nil
-	} else if e := schema.NewValidationListError(); errors.As(err, &e) {
+	} else if e := new(schema.ValidationListError); errors.As(err, &e) {
 		for _, ee := range e.Validations {
 			if err := c.ParseError(group, ee); err != nil {
 				return err

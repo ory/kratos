@@ -287,8 +287,8 @@ func (e *ValidationListError) WithError(instancePtr, message string, details tex
 	})
 }
 
-func NewValidationListError() *ValidationListError {
-	return &ValidationListError{Validations: []*ValidationError{}}
+func NewValidationListError(errs []*ValidationError) error {
+	return errors.WithStack(&ValidationListError{Validations: errs})
 }
 
 func NewNoWebAuthnCredentials() error {

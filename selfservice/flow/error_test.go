@@ -107,8 +107,7 @@ func TestHandleHookError(t *testing.T) {
 	tr := prepareTraits("foo", "bar")
 
 	t.Run("case=fill_in_traits", func(t *testing.T) {
-		ve := schema.NewValidationListError()
-		ve.Add(schema.NewHookValidationError("traits.username", "invalid username", text.Messages{}))
+		ve := schema.NewValidationListError([]*schema.ValidationError{schema.NewHookValidationError("traits.username", "invalid username", text.Messages{})})
 
 		err := HandleHookError(nil, r, f, tr, node.PasswordGroup, ve, l, &csrf)
 		assert.ErrorIs(t, err, ve)
@@ -125,8 +124,7 @@ func TestHandleHookError(t *testing.T) {
 	})
 
 	t.Run("case=unmarshal_fail", func(t *testing.T) {
-		ve := schema.NewValidationListError()
-		ve.Add(schema.NewHookValidationError("traits.username", "invalid username", text.Messages{}))
+		ve := schema.NewValidationListError([]*schema.ValidationError{schema.NewHookValidationError("traits.username", "invalid username", text.Messages{})})
 
 		err := HandleHookError(nil, r, f, []byte("garbage"), node.PasswordGroup, ve, l, &csrf)
 		var jsonErr *json.SyntaxError
