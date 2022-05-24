@@ -108,11 +108,8 @@ func (h *Handler) importLookupCredentials(_ context.Context, i *Identity, creds 
 	c, ok := i.GetCredentials(CredentialsTypeLookup)
 	if !ok {
 		var lookupSecrets []CredentialsLookupSecret
-		for _, code := range creds.Config.LookupSecrets {
-			lookupSecrets = append(lookupSecrets, CredentialsLookupSecret{
-				Code:   code.Code,
-				UsedAt: code.UsedAt,
-			})
+		for _, s := range creds.Config.LookupSecrets {
+			lookupSecrets = append(lookupSecrets, CredentialsLookupSecret(s))
 		}
 
 		return i.SetCredentialsWithConfig(
@@ -127,11 +124,8 @@ func (h *Handler) importLookupCredentials(_ context.Context, i *Identity, creds 
 	}
 
 	c.Identifiers = []string{i.ID.String()}
-	for _, code := range creds.Config.LookupSecrets {
-		target.LookupSecrets = append(target.LookupSecrets, CredentialsLookupSecret{
-			Code:   code.Code,
-			UsedAt: code.UsedAt,
-		})
+	for _, s := range creds.Config.LookupSecrets {
+		target.LookupSecrets = append(target.LookupSecrets, CredentialsLookupSecret(s))
 	}
 
 	return i.SetCredentialsWithConfig(CredentialsTypeLookup, *c, &target)
