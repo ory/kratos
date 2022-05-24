@@ -11,14 +11,14 @@ import (
 
 // CredentialsConfig is the struct that is being used as part of the identity credentials.
 type CredentialsConfig struct {
-	// List of recovery codes
-	RecoveryCodes []RecoveryCode `json:"recovery_codes"`
+	// LookupSecrets is a list of recovery codes.
+	LookupSecrets []LookupSecret `json:"recovery_codes"`
 }
 
 func (c *CredentialsConfig) ToNode() *node.Node {
-	messages := make([]text.Message, len(c.RecoveryCodes))
-	formatted := make([]string, len(c.RecoveryCodes))
-	for k, code := range c.RecoveryCodes {
+	messages := make([]text.Message, len(c.LookupSecrets))
+	formatted := make([]string, len(c.LookupSecrets))
+	for k, code := range c.LookupSecrets {
 		if time.Time(code.UsedAt).IsZero() {
 			messages[k] = *text.NewInfoSelfServiceSettingsLookupSecret(code.Code)
 			formatted[k] = code.Code
@@ -32,7 +32,7 @@ func (c *CredentialsConfig) ToNode() *node.Node {
 		WithMetaLabel(text.NewInfoSelfServiceSettingsLookupSecretsLabel())
 }
 
-type RecoveryCode struct {
+type LookupSecret struct {
 	// A recovery code
 	Code string `json:"code"`
 

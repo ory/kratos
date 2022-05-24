@@ -267,7 +267,7 @@ func TestHandler(t *testing.T) {
 			require.NoError(t, hash.Compare(ctx, []byte("123456"), []byte(gjson.GetBytes(actual.Credentials[identity.CredentialsTypePassword].Config, "hashed_password").String())))
 		})
 
-		t.Run("with cleartext password and totp credentials", func(t *testing.T) {
+		t.Run("with totp credentials", func(t *testing.T) {
 			res := send(t, adminTS, "POST", "/identities", http.StatusCreated, identity.AdminCreateIdentityBody{Traits: []byte(`{"email": "import-7@ory.sh"}`),
 				Credentials: &identity.AdminIdentityImportCredentials{
 					TOTP: &identity.AdminIdentityImportCredentialsTOTP{
@@ -284,12 +284,12 @@ func TestHandler(t *testing.T) {
 			snapshotx.SnapshotTExceptMatchingKeys(t, identity.WithCredentialsAndAdminMetadataInJSON(*actual), ignoreDefault)
 		})
 
-		t.Run("with cleartext password and lookup credentials", func(t *testing.T) {
+		t.Run("with lookup credentials", func(t *testing.T) {
 			res := send(t, adminTS, "POST", "/identities", http.StatusCreated, identity.AdminCreateIdentityBody{Traits: []byte(`{"email": "import-8@ory.sh"}`),
 				Credentials: &identity.AdminIdentityImportCredentials{
 					Lookup: &identity.AdminIdentityImportCredentialsLookup{
 						Config: identity.AdminIdentityImportCredentialsLookupConfig{
-							RecoveryCodes: []identity.AdminIdentityImportCredentialsLookupConfigRecoveryCode{
+							LookupSecrets: []identity.AdminIdentityImportCredentialsLookupSecret{
 								{Code: "foo"},
 								{Code: "bar", UsedAt: sqlxx.NullTime(time.Date(1999, time.January, 1, 0, 0, 0, 0, time.UTC))},
 							},

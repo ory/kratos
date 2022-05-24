@@ -337,11 +337,11 @@ type AdminIdentityImportCredentialsLookup struct {
 
 // swagger:model AdminIdentityImportCredentialsLookupConfig
 type AdminIdentityImportCredentialsLookupConfig struct {
-	RecoveryCodes []AdminIdentityImportCredentialsLookupConfigRecoveryCode `json:"recovery_codes"`
+	LookupSecrets []AdminIdentityImportCredentialsLookupSecret `json:"lookup_secrets"`
 }
 
-// swagger:model AdminIdentityImportCredentialsLookupConfigRecoveryCode
-type AdminIdentityImportCredentialsLookupConfigRecoveryCode struct {
+// swagger:model AdminIdentityImportCredentialsLookupSecret
+type AdminIdentityImportCredentialsLookupSecret struct {
 	// Code is a recovery code.
 	//
 	// required: true

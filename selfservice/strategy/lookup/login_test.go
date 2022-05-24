@@ -221,7 +221,7 @@ func TestCompleteLogin(t *testing.T) {
 			require.NoError(t, json.Unmarshal(creds.Config, &conf))
 
 			var found bool
-			for _, rc := range conf.RecoveryCodes {
+			for _, rc := range conf.LookupSecrets {
 				if rc.Code == usedKey {
 					found = true
 					require.False(t, time.Time(rc.UsedAt).IsZero())

@@ -242,16 +242,16 @@ func (s *Strategy) continueSettingsFlowReveal(w http.ResponseWriter, r *http.Req
 }
 
 func (s *Strategy) continueSettingsFlowRegenerate(w http.ResponseWriter, r *http.Request, ctxUpdate *settings.UpdateContext, p *submitSelfServiceSettingsFlowWithLookupMethodBody) error {
-	codes := make([]RecoveryCode, numCodes)
+	codes := make([]LookupSecret, numCodes)
 	for k := range codes {
-		codes[k] = RecoveryCode{Code: randx.MustString(8, randx.AlphaLowerNum)}
+		codes[k] = LookupSecret{Code: randx.MustString(8, randx.AlphaLowerNum)}
 	}
 
 	for _, n := range allSettingsNodes {
 		ctxUpdate.Flow.UI.Nodes.Remove(n)
 	}
 
-	ctxUpdate.Flow.UI.Nodes.Upsert((&CredentialsConfig{RecoveryCodes: codes}).ToNode())
+	ctxUpdate.Flow.UI.Nodes.Upsert((&CredentialsConfig{LookupSecrets: codes}).ToNode())
 	ctxUpdate.Flow.UI.Nodes.Upsert(NewConfirmLookupNode())
 
 	var err error
@@ -273,12 +273,12 @@ func (s *Strategy) continueSettingsFlowConfirm(w http.ResponseWriter, r *http.Re
 		return errors.WithStack(herodot.ErrBadRequest.WithReasonf("You must (re-)generate recovery backup codes before you can save them."))
 	}
 
-	rc := make([]RecoveryCode, len(codes))
+	rc := make([]LookupSecret, len(codes))
 	for k := range rc {
-		rc[k] = RecoveryCode{Code: codes[k].Get("code").String()}
+		rc[k] = LookupSecret{Code: codes[k].Get("code").String()}
 	}
 
-	co, err := json.Marshal(&CredentialsConfig{RecoveryCodes: rc})
+	co, err := json.Marshal(&CredentialsConfig{LookupSecrets: rc})
 	if err != nil {
 		return errors.WithStack(herodot.ErrInternalServerError.WithReasonf("Unable to encode totp options to JSON: %s", err))
 	}
