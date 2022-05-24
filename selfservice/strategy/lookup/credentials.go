@@ -12,7 +12,7 @@ import (
 // CredentialsConfig is the struct that is being used as part of the identity credentials.
 type CredentialsConfig struct {
 	// LookupSecrets is a list of recovery codes.
-	LookupSecrets []LookupSecret `json:"recovery_codes"`
+	LookupSecrets []LookupSecret `json:"lookup_secrets"`
 }
 
 func (c *CredentialsConfig) ToNode() *node.Node {

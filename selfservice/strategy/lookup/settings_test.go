@@ -212,7 +212,7 @@ func TestCompleteSettings(t *testing.T) {
 		checkIdentity := func(t *testing.T) {
 			_, cred, err := reg.PrivilegedIdentityPool().FindByCredentialsIdentifier(context.Background(), identity.CredentialsTypeLookup, id.ID.String())
 			require.NoError(t, err)
-			assertx.EqualAsJSON(t, codes, json.RawMessage(gjson.GetBytes(cred.Config, "recovery_codes").Raw))
+			assertx.EqualAsJSON(t, codes, json.RawMessage(gjson.GetBytes(cred.Config, "lookup_secrets").Raw))
 		}
 
 		for _, tc := range []struct {
@@ -278,7 +278,7 @@ func TestCompleteSettings(t *testing.T) {
 		checkIdentity := func(t *testing.T) {
 			_, cred, err := reg.PrivilegedIdentityPool().FindByCredentialsIdentifier(context.Background(), identity.CredentialsTypeLookup, id.ID.String())
 			require.NoError(t, err)
-			assertx.EqualAsJSON(t, codes, json.RawMessage(gjson.GetBytes(cred.Config, "recovery_codes").Raw))
+			assertx.EqualAsJSON(t, codes, json.RawMessage(gjson.GetBytes(cred.Config, "lookup_secrets").Raw))
 		}
 
 		t.Run("type=api", func(t *testing.T) {
@@ -313,7 +313,7 @@ func TestCompleteSettings(t *testing.T) {
 		checkIdentity := func(t *testing.T) {
 			_, cred, err := reg.PrivilegedIdentityPool().FindByCredentialsIdentifier(context.Background(), identity.CredentialsTypeLookup, id.ID.String())
 			require.NoError(t, err)
-			assertx.EqualAsJSON(t, codes, json.RawMessage(gjson.GetBytes(cred.Config, "recovery_codes").Raw))
+			assertx.EqualAsJSON(t, codes, json.RawMessage(gjson.GetBytes(cred.Config, "lookup_secrets").Raw))
 		}
 
 		t.Run("type=api", func(t *testing.T) {
@@ -375,8 +375,8 @@ func TestCompleteSettings(t *testing.T) {
 				checkIdentity := func(t *testing.T, id *identity.Identity, f *kratos.SelfServiceSettingsFlow) {
 					_, cred, err := reg.PrivilegedIdentityPool().FindByCredentialsIdentifier(context.Background(), identity.CredentialsTypeLookup, id.ID.String())
 					require.NoError(t, err)
-					assert.NotContains(t, gjson.GetBytes(cred.Config, "recovery_codes").Raw, "key-1")
-					assert.NotContains(t, gjson.GetBytes(cred.Config, "recovery_codes").Raw, "key-0")
+					assert.NotContains(t, gjson.GetBytes(cred.Config, "lookup_secrets").Raw, "key-1")
+					assert.NotContains(t, gjson.GetBytes(cred.Config, "lookup_secrets").Raw, "key-0")
 
 					actualFlow, err := reg.SettingsFlowPersister().GetSettingsFlow(context.Background(), uuid.FromStringOrNil(f.Id))
 					require.NoError(t, err)
