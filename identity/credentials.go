@@ -53,6 +53,8 @@ func (c CredentialsType) ToUiNodeGroup() node.UiNodeGroup {
 		return node.TOTPGroup
 	case CredentialsTypeWebAuthn:
 		return node.WebAuthnGroup
+	case CredentialsTypeLookup:
+		return node.LookupGroup
 	default:
 		return node.DefaultGroup
 	}

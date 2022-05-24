@@ -31,6 +31,7 @@ func TestLoginExecutor(t *testing.T) {
 		identity.CredentialsTypeOIDC,
 		identity.CredentialsTypeTOTP,
 		identity.CredentialsTypeWebAuthn,
+		identity.CredentialsTypeLookup,
 	} {
 		t.Run("strategy="+strategy.String(), func(t *testing.T) {
 			conf, reg := internal.NewFastRegistryWithMocks(t)
