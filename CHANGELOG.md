@@ -4,7 +4,7 @@
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 **Table of Contents**
 
-- [ (2022-05-23)](#2022-05-23)
+- [ (2022-05-25)](#2022-05-25)
   - [Breaking Changes](#breaking-changes)
     - [Bug Fixes](#bug-fixes)
     - [Code Refactoring](#code-refactoring)
@@ -252,7 +252,7 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# [](https://github.com/ory/kratos/compare/v0.9.0-alpha.3...v) (2022-05-23)
+# [](https://github.com/ory/kratos/compare/v0.9.0-alpha.3...v) (2022-05-25)
 ## Breaking Changes
 
 Please be aware that the SDK method signatures for `submitSelfServiceRecoveryFlow`, `submitSelfServiceRegistrationFlow`, `submitSelfServiceLoginFlow`, `submitSelfServiceSettingsFlow`, `submitSelfServiceVerificationFlow` might have changed in your SDK.
@@ -332,6 +332,7 @@ This patch moves several CLI command to comply with the Ory CLI command structur
 * Mark body as required ([#2479](https://github.com/ory/kratos/issues/2479)) ([c9ae117](https://github.com/ory/kratos/commit/c9ae1175340993cfc93db436c06462c80935ea2a))
 * New issue templates ([b9ad684](https://github.com/ory/kratos/commit/b9ad684311ee8c654b2fa382010315e892581f5c))
 * Openapi regression ([#2465](https://github.com/ory/kratos/issues/2465)) ([37a3369](https://github.com/ory/kratos/commit/37a3369cea8ed5af34e8324a291a7d7dba0eb43a))
+* Quickstart docker-compose ([#2490](https://github.com/ory/kratos/issues/2490)) ([9717762](https://github.com/ory/kratos/commit/97177629c715028affbc294bdd432fd6c954d5ad)), closes [#2488](https://github.com/ory/kratos/issues/2488)
 * Refresh is always false when session exists ([d3436d7](https://github.com/ory/kratos/commit/d3436d7fa17589d91e25c9f0bd66bc3bb5b150fa)), closes [#2341](https://github.com/ory/kratos/issues/2341)
 * Remove required legacy field ([#2410](https://github.com/ory/kratos/issues/2410)) ([638d45c](https://github.com/ory/kratos/commit/638d45caf480b7287c9762cbf3c593217f40e3e8))
 * Remove wrong templates ([4fe2d25](https://github.com/ory/kratos/commit/4fe2d25dd68033a8d7b3dd5f62d87b23a7ba361d))
