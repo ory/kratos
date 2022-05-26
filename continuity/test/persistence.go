@@ -97,10 +97,10 @@ func TestPersister(ctx context.Context, p interface {
 
 		t.Run("case=cleanup", func(t *testing.T) {
 			id := x.NewUUID()
-			now := time.Now().Add(-24 * time.Hour).UTC().Truncate(time.Second)
+			yesterday := time.Now().Add(-24 * time.Hour).UTC().Truncate(time.Second)
 			m := sqlxx.NullJSONRawMessage(`{"foo": "bar"}`)
 			expected := continuity.Container{Name: "foo", IdentityID: x.PointToUUID(createIdentity(t).ID),
-				ExpiresAt: now,
+				ExpiresAt: yesterday,
 				Payload:   m,
 			}
 			expected.ID = id

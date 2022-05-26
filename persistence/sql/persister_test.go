@@ -315,12 +315,3 @@ func TestPersister_Transaction(t *testing.T) {
 		assert.Equal(t, sqlcon.ErrNoRows.Error(), err.Error())
 	})
 }
-
-func TestPersister_Cleanup(t *testing.T) {
-	_, reg := internal.NewFastRegistryWithMocks(t)
-	p := reg.Persister()
-
-	t.Run("case=should not throw error on cleanup", func(t *testing.T) {
-		assert.Nil(t, p.CleanupDatabase(context.Background(), 0, 0, reg.Config(context.Background()).DatabaseCleanupBatchSize()))
-	})
-}

@@ -1077,11 +1077,11 @@ func (p *Config) SelfServiceLinkMethodBaseURL() *url.URL {
 }
 
 func (p *Config) DatabaseCleanupSleepTables() time.Duration {
-	return p.p.DurationF(ViperKeyDatabaseCleanupSleepTables, 5*time.Second)
+	return p.p.Duration(ViperKeyDatabaseCleanupSleepTables)
 }
 
 func (p *Config) DatabaseCleanupBatchSize() int {
-	return p.p.IntF(ViperKeyDatabaseCleanupBatchSize, 100)
+	return p.p.Int(ViperKeyDatabaseCleanupBatchSize)
 }
 
 func (p *Config) SelfServiceFlowRecoveryAfterHooks(strategy string) []SelfServiceHook {

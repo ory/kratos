@@ -1159,10 +1159,10 @@ func TestCleanup(t *testing.T) {
 
 	t.Run("group=cleanup config", func(t *testing.T) {
 		assert.Equal(t, p.DatabaseCleanupSleepTables(), 1*time.Minute)
-		p.MustSet(config.ViperKeyDatabaseCleanupSleepTables, time.Second)
+		p.MustSet(config.ViperKeyDatabaseCleanupSleepTables, "1s")
 		assert.Equal(t, p.DatabaseCleanupSleepTables(), time.Second)
 		assert.Equal(t, p.DatabaseCleanupBatchSize(), 100)
-		p.MustSet(config.ViperKeyDatabaseCleanupBatchSize, 1)
-		assert.Equal(t, p.DatabaseCleanupSleepTables(), 1)
+		p.MustSet(config.ViperKeyDatabaseCleanupBatchSize, "1")
+		assert.Equal(t, p.DatabaseCleanupBatchSize(), 1)
 	})
 }

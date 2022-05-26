@@ -16,6 +16,8 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/ory/x/cmdx"
+
 	"github.com/spf13/cobra"
 
 	"github.com/ory/kratos/driver/config"
@@ -38,11 +40,13 @@ You can read in the database URL using the -e flag, for example:
 ### WARNING ###
 Before running this command on an existing database, create a back up!
 `,
-		Run: func(cmd *cobra.Command, args []string) {
+		RunE: func(cmd *cobra.Command, args []string) error {
 			err := cliclient.NewCleanupHandler().CleanupSQL(cmd, args)
 			if err != nil {
 				fmt.Fprintln(cmd.OutOrStdout(), err)
+				return cmdx.FailSilently(cmd)
 			}
+			return nil
 		},
 	}
 
