@@ -4,7 +4,7 @@
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 **Table of Contents**
 
-- [ (2022-05-25)](#2022-05-25)
+- [ (2022-05-27)](#2022-05-27)
   - [Breaking Changes](#breaking-changes)
     - [Bug Fixes](#bug-fixes)
     - [Code Refactoring](#code-refactoring)
@@ -252,7 +252,7 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# [](https://github.com/ory/kratos/compare/v0.9.0-alpha.3...v) (2022-05-25)
+# [](https://github.com/ory/kratos/compare/v0.9.0-alpha.3...v) (2022-05-27)
 ## Breaking Changes
 
 Please be aware that the SDK method signatures for `submitSelfServiceRecoveryFlow`, `submitSelfServiceRegistrationFlow`, `submitSelfServiceLoginFlow`, `submitSelfServiceSettingsFlow`, `submitSelfServiceVerificationFlow` might have changed in your SDK.
@@ -314,6 +314,7 @@ This patch moves several CLI command to comply with the Ory CLI command structur
 * Add flow id when return_to is passed to the verification ([#2482](https://github.com/ory/kratos/issues/2482)) ([c2b1c23](https://github.com/ory/kratos/commit/c2b1c2303cd0587b9419d500f2e3d5f9c9c80ad4))
 * Add indices for slow queries ([e0cdbc9](https://github.com/ory/kratos/commit/e0cdbc9ab3389de0f65b37758d86bea56d294d64))
 * Add legacy session value ([ecfd052](https://github.com/ory/kratos/commit/ecfd05216f5ebb70f1617595d2d398cf1fa3c660)), closes [#2398](https://github.com/ory/kratos/issues/2398)
+* **auth0:** Created_at workaround ([#2492](https://github.com/ory/kratos/issues/2492)) ([52a965d](https://github.com/ory/kratos/commit/52a965dc7e4ac868d21261cb44576846426bffa5)), closes [#2485](https://github.com/ory/kratos/issues/2485)
 * Avoid excessive memory allocations in HIBP cache ([#2389](https://github.com/ory/kratos/issues/2389)) ([ee2d410](https://github.com/ory/kratos/commit/ee2d41057a7e6cb2c57c6304c2e7bbf5ad7c56da)), closes [#2354](https://github.com/ory/kratos/issues/2354)
 * Change SQLite database mode to 0600 ([#2344](https://github.com/ory/kratos/issues/2344)) ([0e5d3b7](https://github.com/ory/kratos/commit/0e5d3b7726a8923fbc2a4c10ec18f0ba97ffbcff)):
 
