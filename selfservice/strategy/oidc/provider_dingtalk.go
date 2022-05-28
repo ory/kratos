@@ -3,8 +3,6 @@ package oidc
 import (
 	"context"
 	"encoding/json"
-	"io"
-	"io/ioutil"
 	"net/url"
 	"strings"
 	"time"
@@ -22,13 +20,6 @@ import (
 type ProviderDingTalk struct {
 	config *Configuration
 	reg    dependencies
-}
-
-type DingTalkAccessToken struct {
-	ErrCode     int    `json:"code"`
-	ErrMsg      string `json:"message"`
-	AccessToken string `json:"accessToken"` // Interface call credentials
-	ExpiresIn   int64  `json:"expireIn"`    // access_token interface call credential timeout time, unit (seconds)
 }
 
 func NewProviderDingTalk(
@@ -83,15 +74,33 @@ func (g *ProviderDingTalk) Exchange(ctx context.Context, code string) (*oauth2.T
 		Code         string `json:"code"`
 		GrantType    string `json:"grantType"`
 	}{conf.ClientID, conf.ClientSecret, code, "authorization_code"}
-
-	data, err := g.postWithBody(ctx, pTokenParams, conf.Endpoint.TokenURL)
+	bs, err := json.Marshal(pTokenParams)
 	if err != nil {
 		return nil, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("%s", err))
 	}
 
-	dToken := &DingTalkAccessToken{}
-	err = json.Unmarshal(data, dToken)
+	r := strings.NewReader(string(bs))
+	client := g.reg.HTTPClient(ctx, httpx.ResilientClientDisallowInternalIPs())
+	req, err := retryablehttp.NewRequest("POST", conf.Endpoint.TokenURL, r)
 	if err != nil {
+		return nil, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("%s", err))
+	}
+
+	req.Header.Add("Content-Type", "application/json;charset=UTF-8")
+	resp, err := client.Do(req)
+	if err != nil {
+		return nil, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("%s", err))
+	}
+	defer resp.Body.Close()
+
+	var dToken struct {
+		ErrCode     int    `json:"code"`
+		ErrMsg      string `json:"message"`
+		AccessToken string `json:"accessToken"` // Interface call credentials
+		ExpiresIn   int64  `json:"expireIn"`    // access_token interface call credential timeout time, unit (seconds)
+	}
+
+	if err := json.NewDecoder(resp.Body).Decode(&dToken); err != nil {
 		return nil, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("%s", err))
 	}
 
@@ -148,36 +157,4 @@ func (g *ProviderDingTalk) Claims(ctx context.Context, exchange *oauth2.Token, _
 		Picture:  user.AvatarUrl,
 		Email:    user.Email,
 	}, nil
-}
-
-func (g *ProviderDingTalk) postWithBody(ctx context.Context, body interface{}, url string) ([]byte, error) {
-	bs, err := json.Marshal(body)
-	if err != nil {
-		return nil, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("%s", err))
-	}
-
-	r := strings.NewReader(string(bs))
-	client := g.reg.HTTPClient(ctx, httpx.ResilientClientDisallowInternalIPs())
-	req, err := retryablehttp.NewRequest("POST", url, r)
-	if err != nil {
-		return nil, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("%s", err))
-	}
-
-	req.Header.Add("Content-Type", "application/json;charset=UTF-8")
-	resp, err := client.Do(req)
-	if err != nil {
-		return nil, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("%s", err))
-	}
-	data, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return nil, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("%s", err))
-	}
-	defer func(Body io.ReadCloser) {
-		err := Body.Close()
-		if err != nil {
-			return
-		}
-	}(resp.Body)
-
-	return data, nil
 }
