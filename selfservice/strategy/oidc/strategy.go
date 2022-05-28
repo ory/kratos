@@ -240,9 +240,28 @@ func (s *Strategy) validateFlow(ctx context.Context, r *http.Request, rid uuid.U
 	return ar, err // this must return the error
 }
 
+func (s *Strategy) extractAuthCode(m map[string][]string) string {
+	if m == nil {
+		return ""
+	}
+
+	params := [2]string{"code", "authCode"}
+	for _, e := range params {
+		vs := m[e]
+		if len(vs) == 0 {
+			continue
+		}
+		code := vs[0]
+		if len(code) != 0 {
+			return code
+		}
+	}
+	return ""
+}
+
 func (s *Strategy) validateCallback(w http.ResponseWriter, r *http.Request) (flow.Flow, *authCodeContainer, error) {
 	var (
-		code  = r.URL.Query().Get("code")
+		code  = s.extractAuthCode(r.URL.Query())
 		state = r.URL.Query().Get("state")
 	)
 
@@ -291,7 +310,7 @@ func (s *Strategy) alreadyAuthenticated(w http.ResponseWriter, r *http.Request, 
 
 func (s *Strategy) handleCallback(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	var (
-		code = r.URL.Query().Get("code")
+		code = s.extractAuthCode(r.URL.Query())
 		pid  = ps.ByName("provider")
 	)
 
@@ -315,13 +334,7 @@ func (s *Strategy) handleCallback(w http.ResponseWriter, r *http.Request, ps htt
 		return
 	}
 
-	conf, err := provider.OAuth2(r.Context())
-	if err != nil {
-		s.forwardError(w, r, req, s.handleError(w, r, req, pid, nil, err))
-		return
-	}
-
-	token, err := conf.Exchange(r.Context(), code)
+	token, err := provider.Exchange(r.Context(), code)
 	if err != nil {
 		s.forwardError(w, r, req, s.handleError(w, r, req, pid, nil, err))
 		return

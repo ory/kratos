@@ -59,6 +59,15 @@ func (n *ProviderNetID) oAuth2(ctx context.Context) (*oauth2.Config, error) {
 
 }
 
+func (g *ProviderNetID) Exchange(ctx context.Context, code string) (*oauth2.Token, error) {
+	conf, err := g.OAuth2(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	return conf.Exchange(ctx, code)
+}
+
 func (n *ProviderNetID) Claims(ctx context.Context, exchange *oauth2.Token, _ url.Values) (*Claims, error) {
 	o, err := n.OAuth2(ctx)
 	if err != nil {

@@ -50,6 +50,15 @@ func (m *ProviderMicrosoft) OAuth2(ctx context.Context) (*oauth2.Config, error) 
 	return m.oauth2ConfigFromEndpoint(ctx, endpoint), nil
 }
 
+func (g *ProviderMicrosoft) Exchange(ctx context.Context, code string) (*oauth2.Token, error) {
+	conf, err := g.OAuth2(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	return conf.Exchange(ctx, code)
+}
+
 func (m *ProviderMicrosoft) Claims(ctx context.Context, exchange *oauth2.Token, query url.Values) (*Claims, error) {
 	raw, ok := exchange.Extra("id_token").(string)
 	if !ok || len(raw) == 0 {

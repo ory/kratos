@@ -53,6 +53,15 @@ func (g *ProviderGitHubApp) AuthCodeURLOptions(r ider) []oauth2.AuthCodeOption {
 	return []oauth2.AuthCodeOption{}
 }
 
+func (g *ProviderGitHubApp) Exchange(ctx context.Context, code string) (*oauth2.Token, error) {
+	conf, err := g.OAuth2(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	return conf.Exchange(ctx, code)
+}
+
 func (g *ProviderGitHubApp) Claims(ctx context.Context, exchange *oauth2.Token, query url.Values) (*Claims, error) {
 	gh := ghapi.NewClient(g.oauth2(ctx).Client(ctx, exchange))
 
