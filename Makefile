@@ -48,19 +48,17 @@ docs/swagger:
 		npx @redocly/openapi-cli preview-docs spec/swagger.json
 
 .bin/ory: Makefile
-		bash <(curl https://raw.githubusercontent.com/ory/meta/master/install.sh) -d -b .bin ory v0.1.14
+		bash <(curl https://raw.githubusercontent.com/ory/meta/master/install.sh) -d -b .bin ory v0.1.33
 		touch -a -m .bin/ory
 
 node_modules: package.json Makefile
 		npm ci
-
 
 .bin/golangci-lint: Makefile
 		bash <(curl -sfL https://install.goreleaser.com/github.com/golangci/golangci-lint.sh) -d -b .bin v1.44.2
 
 .bin/hydra: Makefile
 		bash <(curl https://raw.githubusercontent.com/ory/meta/master/install.sh) -d -b .bin hydra v1.11.0
-
 
 .PHONY: lint
 lint: .bin/golangci-lint
