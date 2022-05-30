@@ -5,7 +5,7 @@
 **Table of Contents**
 
 - [ (2022-05-30)](#2022-05-30)
-- [0.10.0-pre.0 (2022-05-30)](#0100-pre0-2022-05-30)
+- [0.10.0 (2022-05-30)](#0100-2022-05-30)
   - [Breaking Changes](#breaking-changes)
     - [Bug Fixes](#bug-fixes)
     - [Code Generation](#code-generation)
@@ -254,13 +254,15 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# [](https://github.com/ory/kratos/compare/v0.10.0-pre.0...v) (2022-05-30)
+# [](https://github.com/ory/kratos/compare/v0.10.0...v) (2022-05-30)
 
 
 
-# [0.10.0-pre.0](https://github.com/ory/kratos/compare/v0.9.0-alpha.3...v0.10.0-pre.0) (2022-05-30)
+# [0.10.0](https://github.com/ory/kratos/compare/v0.9.0-alpha.3...v0.10.0) (2022-05-30)
 
-autogen: pin v0.10.0-pre.0 release commit
+We achieved a major milestone - Ory Kratos is out of alpha! Ory Kratos had no major changes in the APIs for the last months and feel confident that no large breaking changes will need to be introduced in the near future.
+
+This release focuses on quality-of-live improvements, resolves several bugs, irons out developer experience issues, and introduces session renew capabilities!
 
 
 
@@ -366,7 +368,7 @@ This patch moves several CLI command to comply with the Ory CLI command structur
 
 ### Code Generation
 
-* Pin v0.10.0-pre.0 release commit ([1fea802](https://github.com/ory/kratos/commit/1fea8021ef9360c804fb27b59ecd78185062f273))
+* Pin v0.10.0 release commit ([87e0de7](https://github.com/ory/kratos/commit/87e0de7a10b2a7478d8113ca028bfdb6525bc8e5))
 
 ### Code Refactoring
 
