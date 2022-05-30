@@ -10,4 +10,4 @@ git config user.email "60093411+ory-bot@users.noreply.github.com"
 git config user.name "ory-bot"
 
 git add embedx/config.schema.json
-git commit -m "autogen: render config schema"
+git commit -m "autogen: render config schema" || true
