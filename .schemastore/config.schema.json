@@ -339,7 +339,8 @@
             "vk",
             "yandex",
             "apple",
-            "spotify"
+            "spotify",
+            "netid"
           ],
           "examples": [
             "google"
@@ -1494,10 +1495,23 @@
                 "smtp://foo:bar@my-mailserver:1234/ (Explicit StartTLS with certificate trust verification)",
                 "smtp://foo:bar@my-mailserver:1234/?skip_ssl_verify=true (NOT RECOMMENDED: Explicit StartTLS without certificate trust verification)",
                 "smtps://foo:bar@my-mailserver:1234/ (Implicit TLS with certificate trust verification)",
-                "smtps://foo:bar@my-mailserver:1234/?skip_ssl_verify=true (NOT RECOMMENDED: Implicit TLS without certificate trust verification)"
+                "smtps://foo:bar@my-mailserver:1234/?skip_ssl_verify=true (NOT RECOMMENDED: Implicit TLS without certificate trust verification)",
+                "smtps://subdomain.my-mailserver:1234/?server_name=my-mailserver (allows TLS to work if the server is hosted on a sudomain that uses a non-wildcard domain certificate)"
               ],
               "type": "string",
               "pattern": "^smtps?:\\/\\/.*"
+            },
+            "client_cert_path": {
+              "title": "SMTP Client certificate path",
+              "description": "Path of the client X.509 certificate, in case of certificate based client authentication to the SMTP server.",
+              "type": "string",
+              "default": ""
+            },
+            "client_key_path": {
+              "title": "SMTP Client private key path",
+              "description": "Path of the client certificate private key, in case of certificate based client authentication to the SMTP server",
+              "type": "string",
+              "default": ""
             },
             "from_address": {
               "title": "SMTP Sender Address",
@@ -1525,6 +1539,12 @@
                   "X-SES-RETURN-PATH-ARN": "arn:aws:ses:us-west-2:123456789012:identity/example.com"
                 }
               ]
+            },
+            "local_name": {
+              "title": "SMTP HELO/EHLO name",
+              "description": "Identifier used in the SMTP HELO/EHLO command. Some SMTP relays require a unique identifier.",
+              "type": "string",
+              "default": "localhost"
             }
           },
           "required": [
@@ -1827,7 +1847,7 @@
       "additionalProperties": false
     },
     "tracing": {
-      "$ref": "https://raw.githubusercontent.com/ory/x/v0.0.370/otelx/config.schema.json"
+      "$ref": "https://raw.githubusercontent.com/ory/x/v0.0.392/otelx/config.schema.json"
     },
     "log": {
       "title": "Log",
@@ -1881,6 +1901,7 @@
         "schemas": {
           "type": "array",
           "title": "All JSON Schemas for Identity Traits",
+          "description": "Note that identities that used the \"default_schema_url\" field in older kratos versions will be corrupted unless you specify their schema url with the id \"default\" in this list.",
           "examples": [
             [
               {
