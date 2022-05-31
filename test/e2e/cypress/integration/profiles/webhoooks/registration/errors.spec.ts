@@ -1,6 +1,5 @@
-import { appPrefix, gen } from '../../../../helpers'
+import { gen } from '../../../../helpers'
 import { routes as express } from '../../../../helpers/express'
-import { routes as react } from '../../../../helpers/react'
 
 describe('Registration failures with email profile with webhooks', () => {
   ;[
