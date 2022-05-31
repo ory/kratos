@@ -33,6 +33,11 @@ type TracingProvider interface {
 type SimpleLoggerWithClient struct {
 	L *logrusx.Logger
 	C *retryablehttp.Client
+	T *otelx.Tracer
+}
+
+func (s *SimpleLoggerWithClient) Tracer(_ context.Context) *otelx.Tracer {
+	return s.T
 }
 
 func (s *SimpleLoggerWithClient) Logger() *logrusx.Logger {
@@ -49,3 +54,4 @@ func (s *SimpleLoggerWithClient) HTTPClient(_ context.Context, _ ...httpx.Resili
 
 var _ LoggingProvider = (*SimpleLoggerWithClient)(nil)
 var _ HTTPClientProvider = (*SimpleLoggerWithClient)(nil)
+var _ TracingProvider = (*SimpleLoggerWithClient)(nil)

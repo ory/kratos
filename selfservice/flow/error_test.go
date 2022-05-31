@@ -18,6 +18,7 @@ import (
 	"github.com/ory/kratos/x"
 	"github.com/ory/x/httpx"
 	"github.com/ory/x/logrusx"
+	"github.com/ory/x/otelx"
 )
 
 type testCSRFTokenGenerator struct{}
@@ -101,7 +102,8 @@ func prepareTraits(username, password string) identity.Traits {
 
 func TestHandleHookError(t *testing.T) {
 	r := &http.Request{URL: &url.URL{RawQuery: ""}}
-	l := &x.SimpleLoggerWithClient{L: logrusx.New("kratos", "test", logrusx.ForceLevel(logrus.FatalLevel)), C: httpx.NewResilientClient()}
+	logger := logrusx.New("kratos", "test", logrusx.ForceLevel(logrus.FatalLevel))
+	l := &x.SimpleLoggerWithClient{L: logger, C: httpx.NewResilientClient(), T: otelx.NewNoop(logger, &otelx.Config{ServiceName: "kratos"})}
 	csrf := testCSRFTokenGenerator{}
 	f := newTestFlow(r, TypeBrowser)
 	tr := prepareTraits("foo", "bar")

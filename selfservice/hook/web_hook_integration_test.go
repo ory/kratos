@@ -18,6 +18,7 @@ import (
 
 	"github.com/ory/kratos/schema"
 	"github.com/ory/kratos/text"
+	"github.com/ory/x/otelx"
 
 	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/internal"
@@ -46,7 +47,8 @@ import (
 
 func TestWebHooks(t *testing.T) {
 	_, reg := internal.NewFastRegistryWithMocks(t)
-	whDeps := x.SimpleLoggerWithClient{L: logrusx.New("kratos", "test"), C: reg.HTTPClient(context.Background())}
+	logger := logrusx.New("kratos", "test")
+	whDeps := x.SimpleLoggerWithClient{L: logger, C: reg.HTTPClient(context.Background()), T: otelx.NewNoop(logger, &otelx.Config{ServiceName: "kratos"})}
 	type WebHookRequest struct {
 		Body    string
 		Headers http.Header
@@ -76,7 +78,7 @@ func TestWebHooks(t *testing.T) {
 		return func(w http.ResponseWriter, _ *http.Request, _ httprouter.Params) {
 			w.WriteHeader(code)
 			_, err := w.Write(body)
-			assert.Error(t, err, "error while returning response from webHookHttpCodeWithBodyEndPoint")
+			assert.NoError(t, err, "error while returning response from webHookHttpCodeWithBodyEndPoint")
 		}
 	}
 
@@ -537,8 +539,9 @@ func TestWebHooks(t *testing.T) {
 					}
 
 					var validationError *schema.ValidationListError
-					if assert.ErrorAs(t, err, &validationError) {
-						assert.Equal(t, tc.expectedError, validationError)
+					var expectedError *schema.ValidationListError
+					if assert.ErrorAs(t, err, &validationError) && assert.ErrorAs(t, tc.expectedError, &expectedError) {
+						assert.Equal(t, expectedError, validationError)
 					}
 				})
 			}
@@ -672,7 +675,8 @@ func TestWebHooks(t *testing.T) {
 func TestDisallowPrivateIPRanges(t *testing.T) {
 	conf, reg := internal.NewFastRegistryWithMocks(t)
 	conf.MustSet(config.ViperKeyClientHTTPNoPrivateIPRanges, true)
-	whDeps := x.SimpleLoggerWithClient{L: logrusx.New("kratos", "test"), C: reg.HTTPClient(context.Background())}
+	logger := logrusx.New("kratos", "test")
+	whDeps := x.SimpleLoggerWithClient{L: logger, C: reg.HTTPClient(context.Background()), T: otelx.NewNoop(logger, conf.Tracing())}
 
 	req := &http.Request{
 		Header:     map[string][]string{"Some-Header": {"Some-Value"}},
