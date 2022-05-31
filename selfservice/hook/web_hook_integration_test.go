@@ -72,10 +72,11 @@ func TestWebHooks(t *testing.T) {
 		}
 	}
 
-	webHookHttpCodeWithBodyEndPoint := func(code int, body []byte) httprouter.Handle {
+	webHookHttpCodeWithBodyEndPoint := func(t *testing.T, code int, body []byte) httprouter.Handle {
 		return func(w http.ResponseWriter, _ *http.Request, _ httprouter.Params) {
 			w.WriteHeader(code)
-			_, _ = w.Write(body)
+			_, err := w.Write(body)
+			assert.Error(t, err, "error while returning response from webHookHttpCodeWithBodyEndPoint")
 		}
 	}
 
@@ -518,7 +519,8 @@ func TestWebHooks(t *testing.T) {
 						Method:     http.MethodPost,
 					}
 					s := &session.Session{ID: x.NewUUID(), Identity: &identity.Identity{ID: x.NewUUID()}}
-					ts := newServer(webHookHttpCodeWithBodyEndPoint(tc.webHookResponse()))
+					code, res := tc.webHookResponse()
+					ts := newServer(webHookHttpCodeWithBodyEndPoint(t, code, res))
 					conf := json.RawMessage(fmt.Sprintf(`{
 								"url": "%s",
 								"method": "%s",
