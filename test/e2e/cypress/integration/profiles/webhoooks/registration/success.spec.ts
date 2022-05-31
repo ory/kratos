@@ -1,6 +1,5 @@
 import { APP_URL, appPrefix, gen } from '../../../../helpers'
 import { routes as express } from '../../../../helpers/express'
-import { routes as react } from '../../../../helpers/react'
 
 context('Registration success with email profile with webhooks', () => {
   ;[
