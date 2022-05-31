@@ -21,7 +21,7 @@ type UiNodeImageAttributes struct {
 	Height int64 `json:"height"`
 	// A unique identifier
 	Id string `json:"id"`
-	// NodeType represents this node's types. It is a mirror of `node.type` and is primarily used to allow compatibility with OpenAPI 3.0.
+	// NodeType represents this node's types. It is a mirror of `node.type` and is primarily used to allow compatibility with OpenAPI 3.0.  In this struct it technically always is \"img\".
 	NodeType string `json:"node_type"`
 	// The image's source URL.  format: uri
 	Src string `json:"src"`

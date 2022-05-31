@@ -6,8 +6,9 @@ import (
 	"io/ioutil"
 	"net/url"
 	"path"
-	"strconv"
 	"time"
+
+	"github.com/tidwall/sjson"
 
 	"github.com/hashicorp/go-retryablehttp"
 
@@ -92,51 +93,15 @@ func (g *ProviderAuth0) Claims(ctx context.Context, exchange *oauth2.Token, quer
 	}
 	defer resp.Body.Close()
 
-	// There is a bug in the response from Auth0. The updated_at field may be a string and not an int64.
-	// https://community.auth0.com/t/oidc-id-token-claim-updated-at-violates-oidc-specification-breaks-rp-implementations/24098
-	// We work around this by reading the json generically (as map[string]inteface{} and looking at the updated_at field
-	// if it exists. If it's the wrong type (string), we fill out the claims by hand.
-
 	// Once auth0 fixes this bug, all this workaround can be removed.
 	b, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
 		return nil, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("%s", err))
 	}
 
-	// Force updatedAt to be an int if given as a string in the response.
-	if updatedAtField := gjson.GetBytes(b, "updated_at"); updatedAtField.Exists() {
-		v := updatedAtField.Value()
-		switch v.(type) {
-		case string:
-			t, err := time.Parse(time.RFC3339, updatedAtField.String())
-			if err != nil {
-				return nil, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("bad time format in updated_at"))
-			}
-			updatedAt := t.Unix()
-
-			// Unmarshal into generic map, replace the updated_at value with the correct type, then re-marshal.
-			var data map[string]interface{}
-			err = json.Unmarshal(b, &data)
-			if err != nil {
-				return nil, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("bad type in response"))
-			}
-
-			// convert the correct int64 type back to a string, so we can Marshal it.
-			data["updated_at"] = strconv.FormatInt(updatedAt, 10)
-
-			// now remarshal so the unmarshal into Claims works.
-			b, err = json.Marshal(data)
-			if err != nil {
-				return nil, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("%s", err))
-			}
-
-		case float64:
-			// nothing to do
-			break
-
-		default:
-			return nil, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("bad updated_at type"))
-		}
+	b, err = authZeroUpdatedAtWorkaround(b)
+	if err != nil {
+		return nil, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("%s", err))
 	}
 
 	// Once we get here, we know that if there is an updated_at field in the json, it is the correct type.
@@ -146,4 +111,23 @@ func (g *ProviderAuth0) Claims(ctx context.Context, exchange *oauth2.Token, quer
 	}
 
 	return &claims, nil
+}
+
+// There is a bug in the response from Auth0. The updated_at field may be a string and not an int64.
+// https://community.auth0.com/t/oidc-id-token-claim-updated-at-violates-oidc-specification-breaks-rp-implementations/24098
+// We work around this by reading the json generically (as map[string]inteface{} and looking at the updated_at field
+// if it exists. If it's the wrong type (string), we fill out the claims by hand.
+func authZeroUpdatedAtWorkaround(body []byte) ([]byte, error) {
+	// Force updatedAt to be an int if given as a string in the response.
+	if updatedAtField := gjson.GetBytes(body, "updated_at"); updatedAtField.Exists() && updatedAtField.Type == gjson.String {
+		t, err := time.Parse(time.RFC3339, updatedAtField.String())
+		if err != nil {
+			return nil, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("bad time format in updated_at"))
+		}
+		body, err = sjson.SetBytes(body, "updated_at", t.Unix())
+		if err != nil {
+			return nil, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("%s", err))
+		}
+	}
+	return body, nil
 }

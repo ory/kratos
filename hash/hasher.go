@@ -1,6 +1,8 @@
 package hash
 
-import "context"
+import (
+	"context"
+)
 
 // Hasher provides methods for generating and comparing password hashes.
 type Hasher interface {
@@ -14,3 +16,5 @@ type Hasher interface {
 type HashProvider interface {
 	Hasher() Hasher
 }
+
+const tracingComponent = "github.com/ory/kratos/hash"

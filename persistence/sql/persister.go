@@ -85,6 +85,9 @@ func (p *Persister) Connection(ctx context.Context) *pop.Connection {
 }
 
 func (p *Persister) MigrationStatus(ctx context.Context) (popx.MigrationStatuses, error) {
+	ctx, span := p.r.Tracer(ctx).Tracer().Start(ctx, "persistence.sql.MigrationStatus")
+	defer span.End()
+
 	if p.mbs != nil {
 		return p.mbs, nil
 	}
@@ -136,6 +139,9 @@ type node interface {
 }
 
 func (p *Persister) update(ctx context.Context, v node, columnNames ...string) error {
+	ctx, span := p.r.Tracer(ctx).Tracer().Start(ctx, "persistence.sql.update")
+	defer span.End()
+
 	c := p.GetConnection(ctx)
 	quoter, ok := c.Dialect.(quotable)
 	if !ok {
@@ -184,6 +190,9 @@ func (p *Persister) update(ctx context.Context, v node, columnNames ...string) e
 }
 
 func (p *Persister) delete(ctx context.Context, v interface{}, id uuid.UUID) error {
+	ctx, span := p.r.Tracer(ctx).Tracer().Start(ctx, "persistence.sql.delete")
+	defer span.End()
+
 	nid := corp.ContextualizeNID(ctx, p.nid)
 
 	tabler, ok := v.(interface {

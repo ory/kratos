@@ -25,7 +25,10 @@ import (
 var _ errorx.Persister = new(Persister)
 
 func (p *Persister) Add(ctx context.Context, csrfToken string, errs error) (uuid.UUID, error) {
-	buf, err := p.encodeSelfServiceErrors(errs)
+	ctx, span := p.r.Tracer(ctx).Tracer().Start(ctx, "persistence.sql.Add")
+	defer span.End()
+
+	buf, err := p.encodeSelfServiceErrors(ctx, errs)
 	if err != nil {
 		return uuid.Nil, err
 	}
@@ -46,6 +49,9 @@ func (p *Persister) Add(ctx context.Context, csrfToken string, errs error) (uuid
 }
 
 func (p *Persister) Read(ctx context.Context, id uuid.UUID) (*errorx.ErrorContainer, error) {
+	ctx, span := p.r.Tracer(ctx).Tracer().Start(ctx, "persistence.sql.Read")
+	defer span.End()
+
 	var ec errorx.ErrorContainer
 	if err := p.GetConnection(ctx).Where("id = ? AND nid = ?", id, corp.ContextualizeNID(ctx, p.nid)).First(&ec); err != nil {
 		return nil, sqlcon.HandleError(err)
@@ -62,6 +68,9 @@ func (p *Persister) Read(ctx context.Context, id uuid.UUID) (*errorx.ErrorContai
 }
 
 func (p *Persister) Clear(ctx context.Context, olderThan time.Duration, force bool) (err error) {
+	ctx, span := p.r.Tracer(ctx).Tracer().Start(ctx, "persistence.sql.Clear")
+	defer span.End()
+
 	if force {
 		// #nosec G201
 		err = p.GetConnection(ctx).RawQuery(
@@ -77,7 +86,10 @@ func (p *Persister) Clear(ctx context.Context, olderThan time.Duration, force bo
 	return sqlcon.HandleError(err)
 }
 
-func (p *Persister) encodeSelfServiceErrors(e error) (*bytes.Buffer, error) {
+func (p *Persister) encodeSelfServiceErrors(ctx context.Context, e error) (*bytes.Buffer, error) {
+	_, span := p.r.Tracer(ctx).Tracer().Start(ctx, "persistence.sql.encodeSelfServiceErrors")
+	defer span.End()
+
 	if e == nil {
 		return nil, errors.WithStack(herodot.ErrInternalServerError.WithDebug("A nil error was passed to the error manager which is most likely a code bug."))
 	}

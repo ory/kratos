@@ -2,4 +2,4 @@ project: kratos
 
 pre_release_hooks:
   - make sdk
-  - ./scripts/render-schemas.sh
+  - ./script/render-schemas.sh

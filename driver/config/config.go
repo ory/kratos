@@ -70,6 +70,7 @@ const (
 	ViperKeyCourierSMTPFrom                                  = "courier.smtp.from_address"
 	ViperKeyCourierSMTPFromName                              = "courier.smtp.from_name"
 	ViperKeyCourierSMTPHeaders                               = "courier.smtp.headers"
+	ViperKeyCourierSMTPLocalName                             = "courier.smtp.local_name"
 	ViperKeyCourierSMSRequestConfig                          = "courier.sms.request_config"
 	ViperKeyCourierSMSEnabled                                = "courier.sms.enabled"
 	ViperKeyCourierSMSFrom                                   = "courier.sms.from"
@@ -209,8 +210,8 @@ type (
 		Config  json.RawMessage `json:"config"`
 	}
 	Schema struct {
-		ID  string `json:"id"`
-		URL string `json:"url"`
+		ID  string `json:"id" koanf:"id"`
+		URL string `json:"url" koanf:"url"`
 	}
 	PasswordPolicy struct {
 		HaveIBeenPwnedHost               string `json:"haveibeenpwned_host"`
@@ -245,6 +246,7 @@ type (
 		CourierSMTPFrom() string
 		CourierSMTPFromName() string
 		CourierSMTPHeaders() map[string]string
+		CourierSMTPLocalName() string
 		CourierSMSEnabled() bool
 		CourierSMSFrom() string
 		CourierSMSRequestConfig() json.RawMessage
@@ -517,19 +519,8 @@ func (p *Config) OIDCRedirectURIBase() *url.URL {
 	return p.Source().URIF(ViperKeyOIDCBaseRedirectURL, p.SelfPublicURL())
 }
 
-func (p *Config) IdentityTraitsSchemas() (Schemas, error) {
-	var ss Schemas
-	out, err := p.p.Marshal(kjson.Parser())
-	if err != nil {
-		return ss, nil
-	}
-
-	config := gjson.GetBytes(out, ViperKeyIdentitySchemas).Raw
-	if len(config) == 0 {
-		return ss, nil
-	}
-
-	if err := json.NewDecoder(bytes.NewBufferString(config)).Decode(&ss); err != nil {
+func (p *Config) IdentityTraitsSchemas() (ss Schemas, err error) {
+	if err = p.Source().Koanf.Unmarshal(ViperKeyIdentitySchemas, &ss); err != nil {
 		return ss, nil
 	}
 
@@ -888,6 +879,10 @@ func (p *Config) CourierSMTPFrom() string {
 
 func (p *Config) CourierSMTPFromName() string {
 	return p.p.StringF(ViperKeyCourierSMTPFromName, "")
+}
+
+func (p *Config) CourierSMTPLocalName() string {
+	return p.p.StringF(ViperKeyCourierSMTPLocalName, "localhost")
 }
 
 func (p *Config) CourierTemplatesRoot() string {

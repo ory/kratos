@@ -48,19 +48,17 @@ docs/swagger:
 		npx @redocly/openapi-cli preview-docs spec/swagger.json
 
 .bin/ory: Makefile
-		bash <(curl https://raw.githubusercontent.com/ory/meta/master/install.sh) -d -b .bin ory v0.1.14
+		bash <(curl https://raw.githubusercontent.com/ory/meta/master/install.sh) -d -b .bin ory v0.1.33
 		touch -a -m .bin/ory
 
 node_modules: package.json Makefile
 		npm ci
-
 
 .bin/golangci-lint: Makefile
 		bash <(curl -sfL https://install.goreleaser.com/github.com/golangci/golangci-lint.sh) -d -b .bin v1.44.2
 
 .bin/hydra: Makefile
 		bash <(curl https://raw.githubusercontent.com/ory/meta/master/install.sh) -d -b .bin hydra v1.11.0
-
 
 .PHONY: lint
 lint: .bin/golangci-lint
@@ -124,12 +122,12 @@ sdk: .bin/swagger .bin/ory node_modules
 quickstart:
 		docker pull oryd/kratos:latest
 		docker pull oryd/kratos-selfservice-ui-node:latest
-		quickstart -f quickstart.yml -f quickstart-standalone.yml up --build --force-recreate
+		docker-compose -f quickstart.yml -f quickstart-standalone.yml up --build --force-recreate
 
 .PHONY: quickstart-dev
 quickstart-dev:
 		docker build -f .docker/Dockerfile-build -t oryd/kratos:latest .
-		quickstart -f quickstart.yml -f quickstart-standalone.yml -f quickstart-latest.yml $(QUICKSTART_OPTIONS) up --build --force-recreate
+		docker-compose -f quickstart.yml -f quickstart-standalone.yml -f quickstart-latest.yml $(QUICKSTART_OPTIONS) up --build --force-recreate
 
 # Formats the code
 .PHONY: format
@@ -158,18 +156,7 @@ test-e2e: node_modules test-resetdb
 .PHONY: migrations-sync
 migrations-sync: .bin/ory
 		ory dev pop migration sync persistence/sql/migrations/templates persistence/sql/migratest/testdata
-
-.PHONY: migrations-render
-migrations-render: .bin/ory
-		ory dev pop migration render persistence/sql/migrations/templates persistence/sql/migrations/sql
-
-.PHONY: migrations-render-replace
-migrations-render-replace: .bin/ory
-		ory dev pop migration render -r persistence/sql/migrations/templates persistence/sql/migrations/sql
-
-.PHONY: migratest-refresh
-migratest-refresh:
-		cd persistence/sql/migratest; UPDATE_SNAPSHOTS=true go test -p 1 -tags sqlite -short .
+		script/add-down-migrations.sh
 
 .PHONY: test-update-snapshots
 test-update-snapshots:
