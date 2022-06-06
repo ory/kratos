@@ -41,7 +41,6 @@ type VerifiableAddress struct {
 	// The address value
 	//
 	// example foo@user.com
-	// required: true
 	Value string `json:"value" db:"value"`
 
 	// Indicates if the address has already been verified
