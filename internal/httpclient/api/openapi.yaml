@@ -5448,7 +5448,6 @@ components:
             is the limitation in the SQL Schema
           type: string
       required:
-      - id
       - status
       - value
       - verified

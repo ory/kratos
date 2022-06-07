@@ -20,7 +20,7 @@ import (
 type VerifiableIdentityAddress struct {
 	// When this entry was created
 	CreatedAt *time.Time `json:"created_at,omitempty"`
-	Id        string     `json:"id"`
+	Id        *string    `json:"id,omitempty"`
 	// VerifiableAddressStatus must not exceed 16 characters as that is the limitation in the SQL Schema
 	Status string `json:"status"`
 	// When this entry was last updated
@@ -38,9 +38,8 @@ type VerifiableIdentityAddress struct {
 // This constructor will assign default values to properties that have it defined,
 // and makes sure properties required by API are set, but the set of arguments
 // will change when the set of required properties is changed
-func NewVerifiableIdentityAddress(id string, status string, value string, verified bool, via string) *VerifiableIdentityAddress {
+func NewVerifiableIdentityAddress(status string, value string, verified bool, via string) *VerifiableIdentityAddress {
 	this := VerifiableIdentityAddress{}
-	this.Id = id
 	this.Status = status
 	this.Value = value
 	this.Verified = verified
@@ -88,28 +87,36 @@ func (o *VerifiableIdentityAddress) SetCreatedAt(v time.Time) {
 	o.CreatedAt = &v
 }
 
-// GetId returns the Id field value
+// GetId returns the Id field value if set, zero value otherwise.
 func (o *VerifiableIdentityAddress) GetId() string {
-	if o == nil {
+	if o == nil || o.Id == nil {
 		var ret string
 		return ret
 	}
-
-	return o.Id
+	return *o.Id
 }
 
-// GetIdOk returns a tuple with the Id field value
+// GetIdOk returns a tuple with the Id field value if set, nil otherwise
 // and a boolean to check if the value has been set.
 func (o *VerifiableIdentityAddress) GetIdOk() (*string, bool) {
-	if o == nil {
+	if o == nil || o.Id == nil {
 		return nil, false
 	}
-	return &o.Id, true
+	return o.Id, true
 }
 
-// SetId sets field value
+// HasId returns a boolean if a field has been set.
+func (o *VerifiableIdentityAddress) HasId() bool {
+	if o != nil && o.Id != nil {
+		return true
+	}
+
+	return false
+}
+
+// SetId gets a reference to the given string and assigns it to the Id field.
 func (o *VerifiableIdentityAddress) SetId(v string) {
-	o.Id = v
+	o.Id = &v
 }
 
 // GetStatus returns the Status field value
@@ -277,7 +284,7 @@ func (o VerifiableIdentityAddress) MarshalJSON() ([]byte, error) {
 	if o.CreatedAt != nil {
 		toSerialize["created_at"] = o.CreatedAt
 	}
-	if true {
+	if o.Id != nil {
 		toSerialize["id"] = o.Id
 	}
 	if true {
