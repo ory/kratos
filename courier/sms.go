@@ -3,6 +3,7 @@ package courier
 import (
 	"context"
 	"encoding/json"
+	"io"
 	"net/http"
 
 	"github.com/pkg/errors"
@@ -106,8 +107,15 @@ func (c *courier) dispatchSMS(ctx context.Context, msg Message) error {
 	case http.StatusOK:
 	case http.StatusCreated:
 	default:
+		errMsg, err := io.ReadAll(res.Body)
+		if err != nil {
+			return err
+		}
+		c.deps.Logger().
+			WithField("message_id", msg.ID).
+			WithField("error_message", string(errMsg)).
+			Error(`Unable to send SMS.`)
 		return errors.New(http.StatusText(res.StatusCode))
 	}
-
 	return nil
 }
