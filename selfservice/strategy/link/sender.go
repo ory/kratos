@@ -4,10 +4,12 @@ import (
 	"context"
 	"net/http"
 	"net/url"
+	"reflect"
 
 	"github.com/hashicorp/go-retryablehttp"
 
 	"github.com/ory/kratos/courier/template/email"
+	"github.com/ory/kratos/courier/template/sms"
 
 	"github.com/ory/x/httpx"
 
@@ -67,7 +69,7 @@ func (s *Sender) SendRecoveryLink(ctx context.Context, r *http.Request, f *recov
 
 	address, err := s.r.IdentityPool().FindRecoveryAddressByValue(ctx, identity.RecoveryAddressTypeEmail, to)
 	if err != nil {
-		if err := s.send(ctx, string(via), email.NewRecoveryInvalid(s.r, &email.RecoveryInvalidModel{To: to})); err != nil {
+		if err := s.send(ctx, email.NewRecoveryInvalid(s.r, &email.RecoveryInvalidModel{To: to})); err != nil {
 			return err
 		}
 		return errors.Cause(ErrUnknownAddress)
@@ -107,9 +109,10 @@ func (s *Sender) SendVerificationLink(ctx context.Context, f *verification.Flow,
 				WithField("via", via).
 				WithSensitiveField("email_address", address).
 				Info("Sending out invalid verification email because address is unknown.")
-			if err := s.send(ctx, string(via), email.NewVerificationInvalid(s.r, &email.VerificationInvalidModel{To: to})); err != nil {
+			if err := s.send(ctx, email.NewVerificationInvalid(s.r, &email.VerificationInvalidModel{To: to})); err != nil {
 				return err
 			}
+
 			return errors.Cause(ErrUnknownAddress)
 		}
 		return err
@@ -146,7 +149,7 @@ func (s *Sender) SendRecoveryTokenTo(ctx context.Context, f *recovery.Flow, i *i
 		return err
 	}
 
-	return s.send(ctx, string(address.Via), email.NewRecoveryValid(s.r,
+	return s.send(ctx, email.NewRecoveryValid(s.r,
 		&email.RecoveryValidModel{To: address.Value, RecoveryURL: urlx.CopyWithQuery(
 			urlx.AppendPaths(s.r.Config(ctx).SelfServiceLinkMethodBaseURL(), recovery.RouteSubmitFlow),
 			url.Values{
@@ -160,24 +163,41 @@ func (s *Sender) SendVerificationTokenTo(ctx context.Context, f *verification.Fl
 		WithField("via", address.Via).
 		WithField("identity_id", address.IdentityID).
 		WithField("verification_link_id", token.ID).
-		WithSensitiveField("email_address", address.Value).
+		WithSensitiveField("target_address", address.Value).
 		WithSensitiveField("verification_link_token", token.Token).
-		Info("Sending out verification email with verification link.")
+		Info("Sending out verification email/sms with verification link.")
 
 	model, err := x.StructToMap(i)
 	if err != nil {
 		return err
 	}
 
-	if err := s.send(ctx, string(address.Via), email.NewVerificationValid(s.r,
-		&email.VerificationValidModel{To: address.Value, VerificationURL: urlx.CopyWithQuery(
-			urlx.AppendPaths(s.r.Config(ctx).SelfServiceLinkMethodBaseURL(), verification.RouteSubmitFlow),
-			url.Values{
-				"flow":  {f.ID.String()},
-				"token": {token.Token},
-			}).String(), Identity: model})); err != nil {
-		return err
+	switch address.Via {
+	case identity.AddressTypeEmail:
+		if err := s.send(ctx, email.NewVerificationValid(s.r,
+			&email.VerificationValidModel{To: address.Value, VerificationURL: urlx.CopyWithQuery(
+				urlx.AppendPaths(s.r.Config(ctx).SelfServiceLinkMethodBaseURL(), verification.RouteSubmitFlow),
+				url.Values{
+					"flow":  {f.ID.String()},
+					"token": {token.Token},
+				}).String(), Identity: model})); err != nil {
+			return err
+		}
+	case identity.AddressTypePhone:
+		if err := s.send(ctx, sms.NewVerificationMessage(s.r, &sms.VerificationMessageModel{
+			To: address.Value,
+			VerificationURL: urlx.CopyWithQuery(
+				urlx.AppendPaths(s.r.Config(ctx).SelfServiceLinkMethodBaseURL(), verification.RouteSubmitFlow),
+				url.Values{
+					"flow":  {f.ID.String()},
+					"token": {token.Token},
+				}).String()})); err != nil {
+			return err
+		}
+	default:
+		return errors.Errorf("received unexpected via type: %s", address.Via)
 	}
+
 	address.Status = identity.VerifiableAddressStatusSent
 	if err := s.r.PrivilegedIdentityPool().UpdateVerifiableAddress(ctx, address); err != nil {
 		return err
@@ -185,12 +205,15 @@ func (s *Sender) SendVerificationTokenTo(ctx context.Context, f *verification.Fl
 	return nil
 }
 
-func (s *Sender) send(ctx context.Context, via string, t courier.EmailTemplate) error {
-	switch via {
-	case identity.AddressTypeEmail:
+func (s *Sender) send(ctx context.Context, t interface{}) error {
+	switch t := t.(type) {
+	case courier.SMSTemplate:
+		_, err := s.r.Courier(ctx).QueueSMS(ctx, t)
+		return err
+	case courier.EmailTemplate:
 		_, err := s.r.Courier(ctx).QueueEmail(ctx, t)
 		return err
 	default:
-		return errors.Errorf("received unexpected via type: %s", via)
+		return errors.Errorf("received unexpected template type: %s", reflect.TypeOf(t))
 	}
 }
