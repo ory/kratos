@@ -4369,7 +4369,6 @@
       "description": "VerifiableAddress is an identity's verifiable address",
       "type": "object",
       "required": [
-        "id",
         "value",
         "verified",
         "via",

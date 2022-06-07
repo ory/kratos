@@ -2190,7 +2190,6 @@
           }
         },
         "required": [
-          "id",
           "value",
           "verified",
           "via",

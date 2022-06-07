@@ -35,7 +35,6 @@ type VerifiableAddressStatus string
 type VerifiableAddress struct {
 	// The ID
 	//
-	// required: true
 	ID uuid.UUID `json:"id" db:"id" faker:"-"`
 
 	// The address value
