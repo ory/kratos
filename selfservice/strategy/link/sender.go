@@ -109,10 +109,11 @@ func (s *Sender) SendVerificationLink(ctx context.Context, f *verification.Flow,
 				WithField("via", via).
 				WithSensitiveField("email_address", address).
 				Info("Sending out invalid verification email because address is unknown.")
-			if err := s.send(ctx, email.NewVerificationInvalid(s.r, &email.VerificationInvalidModel{To: to})); err != nil {
-				return err
+			if identity.AddressTypeEmail == via {
+				if err := s.send(ctx, email.NewVerificationInvalid(s.r, &email.VerificationInvalidModel{To: to})); err != nil {
+					return err
+				}
 			}
-
 			return errors.Cause(ErrUnknownAddress)
 		}
 		return err

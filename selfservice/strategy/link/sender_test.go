@@ -7,8 +7,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/ory/kratos/internal/testhelpers"
-
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
@@ -24,16 +22,23 @@ import (
 
 func TestManager(t *testing.T) {
 	conf, reg := internal.NewFastRegistryWithMocks(t)
-	testhelpers.SetDefaultIdentitySchema(conf, "file://./stub/default.schema.json")
 	conf.MustSet(config.ViperKeyPublicBaseURL, "https://www.ory.sh/")
 	conf.MustSet(config.ViperKeyCourierSMTPURL, "smtp://foo@bar@dev.null/")
 	conf.MustSet(config.ViperKeyLinkBaseURL, "https://link-url/")
+	conf.MustSet(config.ViperKeyIdentitySchemas, []config.Schema{
+		{ID: "default", URL: "file://./stub/default.schema.json"},
+		{ID: "phone", URL: "file://./stub/phone.schema.json"},
+	})
 
 	u := &http.Request{URL: urlx.ParseOrPanic("https://www.ory.sh/")}
 
 	i := identity.NewIdentity(config.DefaultIdentityTraitsSchemaID)
 	i.Traits = identity.Traits(`{"email": "tracked@ory.sh"}`)
 	require.NoError(t, reg.IdentityManager().Create(context.Background(), i))
+
+	i2 := identity.NewIdentity("phone")
+	i2.Traits = identity.Traits(`{"phone": "+12345678901"}`)
+	require.NoError(t, reg.IdentityManager().Create(context.Background(), i2))
 
 	hr := httptest.NewRequest("GET", "https://www.ory.sh", nil)
 
@@ -63,7 +68,7 @@ func TestManager(t *testing.T) {
 		assert.NotContains(t, messages[1].Body, "flow=")
 	})
 
-	t.Run("method=SendVerificationLink", func(t *testing.T) {
+	t.Run("method=SendVerificationLink for email", func(t *testing.T) {
 		f, err := verification.NewFlow(conf, time.Hour, "", u, reg.VerificationStrategies(context.Background()), flow.TypeBrowser)
 		require.NoError(t, err)
 
@@ -87,5 +92,23 @@ func TestManager(t *testing.T) {
 		address, err := reg.IdentityPool().FindVerifiableAddressByValue(context.Background(), identity.VerifiableAddressTypeEmail, "tracked@ory.sh")
 		require.NoError(t, err)
 		assert.EqualValues(t, identity.VerifiableAddressStatusSent, address.Status)
+	})
+
+	t.Run("method=SendVerificationLink for phone", func(t *testing.T) {
+		f, err := verification.NewFlow(conf, time.Hour, "", u, reg.VerificationStrategies(context.Background()), flow.TypeBrowser)
+		require.NoError(t, err)
+
+		require.NoError(t, reg.VerificationFlowPersister().CreateVerificationFlow(context.Background(), f))
+
+		require.NoError(t, reg.LinkSender().SendVerificationLink(context.Background(), f, "phone", "+12345678901"))
+		require.EqualError(t, reg.LinkSender().SendVerificationLink(context.Background(), f, "phone", "+6789012345"), link.ErrUnknownAddress.Error())
+		messages, err := reg.CourierPersister().NextMessages(context.Background(), 12)
+		require.NoError(t, err)
+		require.Len(t, messages, 1)
+
+		assert.EqualValues(t, "+12345678901", messages[0].Recipient)
+		assert.Contains(t, string(messages[0].TemplateData), urlx.AppendPaths(conf.SelfServiceLinkMethodBaseURL(), verification.RouteSubmitFlow).String()+"?")
+		assert.Contains(t, string(messages[0].TemplateData), "token=")
+		assert.Contains(t, string(messages[0].TemplateData), "flow=")
 	})
 }
