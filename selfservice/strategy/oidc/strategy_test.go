@@ -399,6 +399,15 @@ func TestStrategy(t *testing.T) {
 			res, body := makeRequest(t, "valid", action, url.Values{})
 			ai(t, res, body)
 		})
+
+		t.Run("case=should pass third time registration with return to", func(t *testing.T) {
+			returnTo := "/foo"
+			r := newLoginFlow(t, fmt.Sprintf("%s?return_to=%s", returnTS.URL, returnTo), time.Minute)
+			action := afv(t, r.ID, "valid")
+			res, body := makeRequest(t, "valid", action, url.Values{})
+			assert.True(t, strings.HasSuffix(res.Request.URL.String(), returnTo))
+			ai(t, res, body)
+		})
 	})
 
 	t.Run("case=register, merge, and complete data", func(t *testing.T) {
