@@ -87,17 +87,14 @@ func (s *Strategy) processLogin(w http.ResponseWriter, r *http.Request, a *login
 			// This is kinda hacky but the only way to ensure seamless login/registration flows when using OIDC.
 			s.d.Logger().WithField("provider", provider.Config().ID).WithField("subject", claims.Subject).Debug("Received successful OpenID Connect callback but user is not registered. Re-initializing registration flow now.")
 
-			// This flow only works for browsers anyways.
-			// Create a fake request to start the registraton flow.
-			rr, err := http.NewRequestWithContext(r.Context(), "GET", "/self-service/registration/browser", nil)
-			if err != nil {
-				return nil, s.handleError(w, r, a, provider.Config().ID, nil, errors.WithStack(err))
+			// If return_to was set before, we need to preserve it.
+			var opts []registration.FlowOption
+			if a.ReturnTo != "" {
+				opts = append(opts, registration.WithFlowReturnTo(a.ReturnTo))
 			}
 
-			q := rr.URL.Query()
-			q.Add("return_to", a.ReturnTo)
-			rr.URL.RawQuery = q.Encode()
-			aa, err := s.d.RegistrationHandler().NewRegistrationFlow(w, rr, flow.TypeBrowser)
+			// This flow only works for browsers anyways.
+			aa, err := s.d.RegistrationHandler().NewRegistrationFlow(w, r, flow.TypeBrowser, opts...)
 			if err != nil {
 				return nil, s.handleError(w, r, a, provider.Config().ID, nil, err)
 			}

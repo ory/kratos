@@ -91,8 +91,15 @@ func (h *Handler) RegisterAdminRoutes(admin *x.RouterAdmin) {
 	admin.GET(RouteSubmitFlow, x.RedirectToPublicRoute(h.d))
 }
 
-func (h *Handler) NewRegistrationFlow(w http.ResponseWriter, r *http.Request, ft flow.Type) (*Flow, error) {
+type FlowOption func(f *Flow)
 
+func WithFlowReturnTo(returnTo string) FlowOption {
+	return func(f *Flow) {
+		f.ReturnTo = returnTo
+	}
+}
+
+func (h *Handler) NewRegistrationFlow(w http.ResponseWriter, r *http.Request, ft flow.Type, opts ...FlowOption) (*Flow, error) {
 	if !h.d.Config(r.Context()).SelfServiceFlowRegistrationEnabled() {
 		return nil, errors.WithStack(ErrRegistrationDisabled)
 	}
@@ -100,6 +107,9 @@ func (h *Handler) NewRegistrationFlow(w http.ResponseWriter, r *http.Request, ft
 	f, err := NewFlow(h.d.Config(r.Context()), h.d.Config(r.Context()).SelfServiceFlowRegistrationRequestLifespan(), h.d.GenerateCSRFToken(r), r, ft)
 	if err != nil {
 		return nil, err
+	}
+	for _, o := range opts {
+		o(f)
 	}
 
 	for _, s := range h.d.RegistrationStrategies(r.Context()) {
