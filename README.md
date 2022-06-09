@@ -14,9 +14,8 @@
 ---
 
 <p align="left">
-    <a href="https://github.com/ory/kratos/actions/workflows/ci.yaml"><img src="https://github.com/ory/kratos/actions/workflows/ci.yaml/badge.svg" alt="CI Tasks for Ory Kratos"></a>
-    <a href="https://coveralls.io/github/ory/kratos?branch=master"> <img src="https://coveralls.io/repos/ory/kratos/badge.svg?branch=master&service=github" alt="Coverage Status"></a>
-    <a href="https://goreportcard.com/report/github.com/ory/kratos"><img src="https://goreportcard.com/badge/github.com/ory/kratos" alt="Go Report Card"></a>
+    <a href="https://github.com/ory/kratos/actions/workflows/ci.yaml"><img src="https://github.com/ory/kratos/actions/workflows/ci.yaml/badge.svg?branch=master&event=push" alt="CI Tasks for Ory Kratos"></a>
+    <a href="https://codecov.io/gh/ory/kratos"><img src="https://codecov.io/gh/ory/kratos/branch/master/graph/badge.svg?token=6t0QqOdurR"/></a>
     <a href="https://bestpractices.coreinfrastructure.org/projects/4979"><img src="https://bestpractices.coreinfrastructure.org/projects/4979/badge" alt="CII Best Practices"></a>
     <a href="https://opencollective.com/ory" alt="sponsors on Open Collective"><img src="https://opencollective.com/ory/backers/badge.svg" /></a>
     <a href="https://opencollective.com/ory" alt="Sponsors on Open Collective"><img src="https://opencollective.com/ory/sponsors/badge.svg" /></a>
