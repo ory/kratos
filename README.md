@@ -187,7 +187,7 @@ or <a href="https://opencollective.com/ory">Open Collective</a>.**
             <td>DataDetect</td>
             <td align="center"><img height="32px" src="https://raw.githubusercontent.com/ory/meta/master/static/adopters/datadetect.svg" alt="Datadetect"></td>
             <td><a href="https://unifiedglobalarchiving.com/data-detect/">unifiedglobalarchiving.com/data-detect/</a></td>
-        </tr>
+        </tr>        
         <tr>
             <td>Adopter *</td>
             <td>Sainsbury's</td>
@@ -205,13 +205,13 @@ or <a href="https://opencollective.com/ory">Open Collective</a>.**
             <td>Reyah</td>
             <td align="center"><img height="32px" src="https://raw.githubusercontent.com/ory/meta/master/static/adopters/reyah.svg" alt="Reyah"></td>
             <td><a href="https://reyah.eu/">reyah.eu</a></td>
-        </tr>
+        </tr>        
         <tr>
             <td>Adopter *</td>
             <td>Zero</td>
             <td align="center"><img height="32px" src="https://raw.githubusercontent.com/ory/meta/master/static/adopters/commitzero.svg" alt="Project Zero by Commit"></td>
             <td><a href="https://getzero.dev/">getzero.dev</a></td>
-        </tr>
+        </tr>        
         <tr>
             <td>Adopter *</td>
             <td>Padis</td>
@@ -229,7 +229,7 @@ or <a href="https://opencollective.com/ory">Open Collective</a>.**
             <td>Security Onion Solutions</td>
             <td align="center"><img height="32px" src="https://raw.githubusercontent.com/ory/meta/master/static/adopters/securityonion.svg" alt="Security Onion Solutions"></td>
             <td><a href="https://securityonionsolutions.com/">securityonionsolutions.com</a></td>
-        </tr>
+        </tr>        
         <tr>
             <td>Adopter *</td>
             <td>Factly</td>
@@ -253,7 +253,7 @@ or <a href="https://opencollective.com/ory">Open Collective</a>.**
             <td>Spiri.bo</td>
             <td align="center"><img height="32px" src="https://raw.githubusercontent.com/ory/meta/master/static/adopters/spiribo.svg" alt="Spiri.bo"></td>
             <td><a href="https://spiri.bo/">spiri.bo</a></td>
-        </tr>
+        </tr>        
         <tr>
             <td>Sponsor</td>
             <td>Strivacity</td>
