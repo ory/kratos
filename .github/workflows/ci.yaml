@@ -1,4 +1,4 @@
-name: CI Tasks for Ory Kratos
+name: CI
 on:
   push:
     branches:

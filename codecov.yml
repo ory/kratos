@@ -1,0 +1,6 @@
+codecov:
+  ignore:
+    - "test"
+    - "internal"
+    - "docs"
+    - "contrib"
