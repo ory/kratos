@@ -214,6 +214,8 @@ Class | Method | HTTP request | Description
  - [UiNodeInputAttributes](docs/UiNodeInputAttributes.md)
  - [UiNodeMeta](docs/UiNodeMeta.md)
  - [UiNodeScriptAttributes](docs/UiNodeScriptAttributes.md)
+ - [UiNodeSelectAttributes](docs/UiNodeSelectAttributes.md)
+ - [UiNodeSelectOption](docs/UiNodeSelectOption.md)
  - [UiNodeTextAttributes](docs/UiNodeTextAttributes.md)
  - [UiText](docs/UiText.md)
  - [VerifiableIdentityAddress](docs/VerifiableIdentityAddress.md)

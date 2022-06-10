@@ -16,6 +16,7 @@ func TestIDs(t *testing.T) {
 	assert.EqualValues(t, "foo", (&TextAttributes{Identifier: "foo"}).ID())
 	assert.EqualValues(t, "foo", (&InputAttributes{Name: "foo"}).ID())
 	assert.EqualValues(t, "foo", (&ScriptAttributes{Identifier: "foo"}).ID())
+	assert.EqualValues(t, "foo", (&SelectAttributes{Name: "foo"}).ID())
 }
 
 func TestNodeEncode(t *testing.T) {
@@ -38,6 +39,10 @@ func TestNodeEncode(t *testing.T) {
 	anchor := jsonx.TestMarshalJSONString(t, &Node{Attributes: &AnchorAttributes{}})
 	assert.EqualValues(t, Anchor, gjson.Get(anchor, "attributes.node_type").String())
 	assert.EqualValues(t, Anchor, gjson.Get(anchor, "type").String())
+
+	select_ := jsonx.TestMarshalJSONString(t, &Node{Attributes: &SelectAttributes{}})
+	assert.EqualValues(t, Select, gjson.Get(select_, "attributes.node_type").String())
+	assert.EqualValues(t, Select, gjson.Get(select_, "type").String())
 }
 
 func TestNodeDecode(t *testing.T) {

@@ -94,9 +94,10 @@ func TestContainer(t *testing.T) {
 		}{
 			{
 				ref: "./stub/simple.schema.json",
-				r:   newJSONRequest(t, `{"numby":1.5,"stringy":"foobar","objy":{"objy":{},"numby":1.5,"stringy":"foobar"}}`),
+				r:   newJSONRequest(t, `{"numby":1.5,"stringy":"foobar","objy":{"objy":{},"numby":1.5,"stringy":"foobar"},"enumby":"cricket"}`),
 				expect: &Container{
 					Nodes: node.Nodes{
+						node.NewInputFieldFromJSON("enumby", "cricket", node.DefaultGroup),
 						node.NewInputFieldFromJSON("numby", 1.5, node.DefaultGroup),
 						node.NewInputFieldFromJSON("objy.numby", 1.5, node.DefaultGroup),
 						node.NewInputFieldFromJSON("objy.stringy", "foobar", node.DefaultGroup),
@@ -111,9 +112,11 @@ func TestContainer(t *testing.T) {
 					"stringy":      {"foobar"},
 					"objy.numby":   {"1.5"},
 					"objy.stringy": {"foobar"},
+					"enumby":       {"cricket"},
 				}),
 				expect: &Container{
 					Nodes: node.Nodes{
+						node.NewInputFieldFromJSON("enumby", "cricket", node.DefaultGroup),
 						node.NewInputFieldFromJSON("numby", 1.5, node.DefaultGroup),
 						node.NewInputFieldFromJSON("objy.numby", 1.5, node.DefaultGroup),
 						node.NewInputFieldFromJSON("objy.stringy", "foobar", node.DefaultGroup),
@@ -160,6 +163,7 @@ func TestContainer(t *testing.T) {
 				prefix: "",
 				expect: &Container{
 					Nodes: node.Nodes{
+						node.NewSelectField("enumby", nil, node.DefaultGroup, []node.SelectAttributeOption{{Label: "baseball", Value: "baseball"}, {Label: "cricket", Value: "cricket"}}),
 						node.NewInputField("numby", nil, node.DefaultGroup, node.InputAttributeTypeNumber),
 						node.NewInputField("objy.numby", nil, node.DefaultGroup, node.InputAttributeTypeNumber),
 						node.NewInputField("objy.stringy", nil, node.DefaultGroup, node.InputAttributeTypeText),
@@ -172,6 +176,7 @@ func TestContainer(t *testing.T) {
 				prefix: "traits",
 				expect: &Container{
 					Nodes: node.Nodes{
+						node.NewSelectField("traits.enumby", nil, node.DefaultGroup, []node.SelectAttributeOption{{Label: "baseball", Value: "baseball"}, {Label: "cricket", Value: "cricket"}}),
 						node.NewInputField("traits.numby", nil, node.DefaultGroup, node.InputAttributeTypeNumber),
 						node.NewInputField("traits.objy.numby", nil, node.DefaultGroup, node.InputAttributeTypeNumber),
 						node.NewInputField("traits.objy.stringy", nil, node.DefaultGroup, node.InputAttributeTypeText),

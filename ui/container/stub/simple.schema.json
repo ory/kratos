@@ -24,6 +24,10 @@
           "properties": {}
         }
       }
+    },
+    "enumby": {
+      "type": "string",
+      "enum": ["baseball", "cricket"]
     }
   }
 }

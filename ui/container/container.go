@@ -125,7 +125,12 @@ func NodesFromJSONSchema(ctx context.Context, group node.UiNodeGroup, jsonSchema
 		}
 
 		name := addPrefix(value.Name, prefix, ".")
-		nodes = append(nodes, node.NewInputFieldFromSchema(name, group, value))
+
+		if value.Enum == nil {
+			nodes = append(nodes, node.NewInputFieldFromSchema(name, group, value))
+		} else {
+			nodes = append(nodes, node.NewSelectFieldFromSchema(name, group, value))
+		}
 	}
 
 	return nodes, nil

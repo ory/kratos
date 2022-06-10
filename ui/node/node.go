@@ -26,6 +26,7 @@ const (
 	Image  UiNodeType = "img"
 	Anchor UiNodeType = "a"
 	Script UiNodeType = "script"
+	Select UiNodeType = "select"
 )
 
 func (t UiNodeType) String() string {
@@ -371,6 +372,10 @@ func (n *Node) UnmarshalJSON(data []byte) error {
 		attr = &ScriptAttributes{
 			NodeType: string(Script),
 		}
+	case Select:
+		attr = &SelectAttributes{
+			NodeType: string(Select),
+		}
 	default:
 		return fmt.Errorf("unexpected node type: %s", t)
 	}
@@ -409,6 +414,9 @@ func (n *Node) MarshalJSON() ([]byte, error) {
 		case *ScriptAttributes:
 			t = Script
 			attr.NodeType = string(Script)
+		case *SelectAttributes:
+			t = Select
+			attr.NodeType = string(Select)
 		default:
 			return nil, errors.WithStack(fmt.Errorf("unknown node type: %T", n.Attributes))
 		}

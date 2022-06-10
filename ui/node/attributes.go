@@ -15,6 +15,7 @@ const (
 	InputAttributeTypeDateTimeLocal UiNodeInputAttributeType = "datetime-local"
 	InputAttributeTypeDate          UiNodeInputAttributeType = "date"
 	InputAttributeTypeURI           UiNodeInputAttributeType = "url"
+	InputAttributeTypeSelect        UiNodeInputAttributeType = "select"
 )
 
 const (
@@ -233,12 +234,63 @@ type ScriptAttributes struct {
 	NodeType string `json:"node_type"`
 }
 
+// SelectAttributes represents the attributes of a select node
+//
+// swagger:model uiNodeSelectAttributes
+type SelectAttributes struct {
+	// The input's element name.
+	//
+	// required: true
+	Name string `json:"name"`
+
+	// The input's value.
+	FieldValue interface{} `json:"value,omitempty" faker:"string"`
+
+	// Mark this input field as required.
+	Required bool `json:"required,omitempty"`
+
+	// The input's label text.
+	Label *text.Message `json:"label,omitempty"`
+
+	// Sets the input's disabled field to true or false.
+	//
+	// required: true
+	Disabled bool `json:"disabled"`
+
+	// NodeType represents this node's types. It is a mirror of `node.type` and
+	// is primarily used to allow compatibility with OpenAPI 3.0.  In this struct it technically always is "select".
+	//
+	// required: true
+	NodeType string `json:"node_type"`
+
+	// Options represents the options for a select node.
+	//
+	// required: true
+	Options []SelectAttributeOption `json:"options,omitempty"`
+}
+
+// InputAttributeOption represents an option for a Select node
+//
+// swagger:model uiNodeSelectOption
+type SelectAttributeOption struct {
+	// The label of the option for display
+	//
+	// required: true
+	Label string `json:"label"`
+
+	// The value of the option
+	//
+	// required: true
+	Value string `json:"value"`
+}
+
 var (
 	_ Attributes = new(InputAttributes)
 	_ Attributes = new(ImageAttributes)
 	_ Attributes = new(AnchorAttributes)
 	_ Attributes = new(TextAttributes)
 	_ Attributes = new(ScriptAttributes)
+	_ Attributes = new(SelectAttributes)
 )
 
 func (a *InputAttributes) ID() string {
@@ -261,6 +313,10 @@ func (a *ScriptAttributes) ID() string {
 	return a.Identifier
 }
 
+func (a *SelectAttributes) ID() string {
+	return a.Name
+}
+
 func (a *InputAttributes) SetValue(value interface{}) {
 	a.FieldValue = value
 }
@@ -279,6 +335,10 @@ func (a *TextAttributes) SetValue(value interface{}) {
 
 func (a *ScriptAttributes) SetValue(value interface{}) {
 	a.Source, _ = value.(string)
+}
+
+func (a *SelectAttributes) SetValue(value interface{}) {
+	a.FieldValue = value
 }
 
 func (a *InputAttributes) GetValue() interface{} {
@@ -301,6 +361,10 @@ func (a *ScriptAttributes) GetValue() interface{} {
 	return a.Source
 }
 
+func (a *SelectAttributes) GetValue() interface{} {
+	return a.FieldValue
+}
+
 func (a *InputAttributes) Reset() {
 	a.FieldValue = nil
 }
@@ -315,6 +379,10 @@ func (a *TextAttributes) Reset() {
 }
 
 func (a *ScriptAttributes) Reset() {
+}
+
+func (a *SelectAttributes) Reset() {
+	a.FieldValue = nil
 }
 
 func (a *InputAttributes) GetNodeType() UiNodeType {
@@ -334,5 +402,9 @@ func (a *TextAttributes) GetNodeType() UiNodeType {
 }
 
 func (a *ScriptAttributes) GetNodeType() UiNodeType {
+	return UiNodeType(a.NodeType)
+}
+
+func (a *SelectAttributes) GetNodeType() UiNodeType {
 	return UiNodeType(a.NodeType)
 }

@@ -182,6 +182,7 @@ func NewInputFieldFromSchema(name string, group UiNodeGroup, p jsonschemax.Path,
 	}
 
 	var meta Meta
+
 	if len(p.Title) > 0 {
 		meta.Label = text.NewInfoNodeLabelGenerated(p.Title)
 	}

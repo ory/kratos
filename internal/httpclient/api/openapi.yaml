@@ -5388,6 +5388,7 @@ components:
           - img
           - a
           - script
+          - select
           type: string
       required:
       - attributes
@@ -5522,6 +5523,7 @@ components:
           - datetime-local
           - date
           - url
+          - select
           type: string
         value:
           description: The input's value.
@@ -5594,6 +5596,52 @@ components:
       - src
       - type
       title: ScriptAttributes represent script nodes which load javascript.
+      type: object
+    uiNodeSelectAttributes:
+      description: SelectAttributes represents the attributes of a select node
+      properties:
+        disabled:
+          description: Sets the input's disabled field to true or false.
+          type: boolean
+        label:
+          $ref: '#/components/schemas/uiText'
+        name:
+          description: The input's element name.
+          type: string
+        node_type:
+          description: |-
+            NodeType represents this node's types. It is a mirror of `node.type` and
+            is primarily used to allow compatibility with OpenAPI 3.0.  In this struct it technically always is "select".
+          type: string
+        options:
+          description: Options represents the options for a select node.
+          items:
+            $ref: '#/components/schemas/uiNodeSelectOption'
+          type: array
+        required:
+          description: Mark this input field as required.
+          type: boolean
+        value:
+          description: The input's value.
+          type: object
+      required:
+      - disabled
+      - name
+      - node_type
+      - options
+      type: object
+    uiNodeSelectOption:
+      description: InputAttributeOption represents an option for a Select node
+      properties:
+        label:
+          description: The label of the option for display
+          type: string
+        value:
+          description: The value of the option
+          type: string
+      required:
+      - label
+      - value
       type: object
     uiNodeTextAttributes:
       properties:

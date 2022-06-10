@@ -4264,7 +4264,8 @@
             "input",
             "img",
             "a",
-            "script"
+            "script",
+            "select"
           ]
         }
       }
@@ -4399,7 +4400,8 @@
             "button",
             "datetime-local",
             "date",
-            "url"
+            "url",
+            "select"
           ]
         },
         "value": {
@@ -4467,6 +4469,66 @@
         },
         "type": {
           "description": "The script MIME type",
+          "type": "string"
+        }
+      }
+    },
+    "uiNodeSelectAttributes": {
+      "description": "SelectAttributes represents the attributes of a select node",
+      "type": "object",
+      "required": [
+        "name",
+        "disabled",
+        "node_type",
+        "options"
+      ],
+      "properties": {
+        "disabled": {
+          "description": "Sets the input's disabled field to true or false.",
+          "type": "boolean"
+        },
+        "label": {
+          "$ref": "#/definitions/uiText"
+        },
+        "name": {
+          "description": "The input's element name.",
+          "type": "string"
+        },
+        "node_type": {
+          "description": "NodeType represents this node's types. It is a mirror of `node.type` and\nis primarily used to allow compatibility with OpenAPI 3.0.  In this struct it technically always is \"select\".",
+          "type": "string"
+        },
+        "options": {
+          "description": "Options represents the options for a select node.",
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/uiNodeSelectOption"
+          }
+        },
+        "required": {
+          "description": "Mark this input field as required.",
+          "type": "boolean"
+        },
+        "value": {
+          "description": "The input's value.",
+          "type": "object"
+        }
+      }
+    },
+    "uiNodeSelectOption": {
+      "description": "InputAttributeOption represents an option for a Select node",
+      "type": "object",
+      "required": [
+        "label",
+        "value"
+      ],
+      "properties": {
+        "label": {
+          "description": "The label of the option for display",
+          "type": "string"
+        },
+        "value": {
+          "description": "The value of the option",
           "type": "string"
         }
       }
