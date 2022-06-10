@@ -228,6 +228,36 @@
             },
             "additionalProperties": false
           },
+          "anyOf": [
+            {
+              "not":
+              {
+                "properties": {
+                  "response": {
+                    "properties": {
+                      "ignore": {
+                        "enum": [
+                          true
+                        ]
+                      }
+                    },
+                    "required": ["ignore"]
+                  }
+                },
+                "required": ["response"]
+              }
+            },
+            {
+              "properties": {
+                "can_interrupt": {
+                  "enum": [
+                    false
+                  ]
+                }
+              },
+              "require": ["can_interrupt"]
+            }
+          ],
           "additionalProperties": false,
           "required": [
             "url",
