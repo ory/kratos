@@ -9,6 +9,7 @@ const (
 	InputAttributeTypeCheckbox      InputAttributeType = "checkbox"
 	InputAttributeTypeHidden        InputAttributeType = "hidden"
 	InputAttributeTypeEmail         InputAttributeType = "email"
+	InputAttributeTypeTel           InputAttributeType = "tel"
 	InputAttributeTypeSubmit        InputAttributeType = "submit"
 	InputAttributeTypeButton        InputAttributeType = "button"
 	InputAttributeTypeDateTimeLocal InputAttributeType = "datetime-local"
@@ -16,8 +17,20 @@ const (
 	InputAttributeTypeURI           InputAttributeType = "url"
 )
 
+const (
+	InputAttributeAutocompleteEmail           InputAttributeAutocomplete = "email"
+	InputAttributeAutocompleteTel             InputAttributeAutocomplete = "tel"
+	InputAttributeAutocompleteUrl             InputAttributeAutocomplete = "url"
+	InputAttributeAutocompleteCurrentPassword InputAttributeAutocomplete = "current-password"
+	InputAttributeAutocompleteNewPassword     InputAttributeAutocomplete = "new-password"
+	InputAttributeAutocompleteOneTimeCode     InputAttributeAutocomplete = "one-time-code"
+)
+
 // swagger:model uiNodeInputAttributeType
 type InputAttributeType string
+
+// swagger:enum InputAttributeAutocomplete
+type InputAttributeAutocomplete string
 
 // Attributes represents a list of attributes (e.g. `href="foo"` for links).
 //
@@ -58,6 +71,9 @@ type InputAttributes struct {
 
 	// Mark this input field as required.
 	Required bool `json:"required,omitempty"`
+
+	// The autocomplete attribute for the input.
+	Autocomplete InputAttributeAutocomplete `json:"autocomplete,omitempty"`
 
 	// The input's label text.
 	Label *text.Message `json:"label,omitempty"`

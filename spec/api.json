@@ -1985,6 +1985,18 @@
       "uiNodeInputAttributes": {
         "description": "InputAttributes represents the attributes of an input node",
         "properties": {
+          "autocomplete": {
+            "description": "The autocomplete attribute for the input.",
+            "enum": [
+              "email",
+              "tel",
+              "url",
+              "current-password",
+              "new-password",
+              "one-time-code"
+            ],
+            "type": "string"
+          },
           "disabled": {
             "description": "Sets the input's disabled field to true or false.",
             "type": "boolean"

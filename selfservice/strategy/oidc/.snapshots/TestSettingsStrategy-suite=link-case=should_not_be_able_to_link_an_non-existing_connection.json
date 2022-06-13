@@ -19,6 +19,7 @@
       "name": "traits.email",
       "type": "email",
       "required": true,
+      "autocomplete": "email",
       "disabled": false,
       "node_type": "input"
     },
@@ -63,6 +64,7 @@
       "name": "password",
       "type": "password",
       "required": true,
+      "autocomplete": "new-password",
       "disabled": false,
       "node_type": "input"
     },

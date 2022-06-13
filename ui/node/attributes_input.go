@@ -156,10 +156,15 @@ func NewInputFieldFromSchema(name string, group UiNodeGroup, p jsonschemax.Path,
 		attr.Type = InputAttributeTypeDateTimeLocal
 	case "email":
 		attr.Type = InputAttributeTypeEmail
+		attr.Autocomplete = InputAttributeAutocompleteEmail
+	case "tel":
+		attr.Type = InputAttributeTypeTel
+		attr.Autocomplete = InputAttributeAutocompleteTel
 	case "date":
 		attr.Type = InputAttributeTypeDate
 	case "uri":
 		attr.Type = InputAttributeTypeURI
+		attr.Autocomplete = InputAttributeAutocompleteUrl
 	case "regex":
 		attr.Type = InputAttributeTypeText
 	}
