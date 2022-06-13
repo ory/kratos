@@ -173,13 +173,7 @@ func writeMessages(path string) error {
 	})
 
 	var w bytes.Buffer
-	for _, m := range toSort {
-		w.WriteString(fmt.Sprintf(`###### %s (%d)
-
-%s
-
-`, m.Text, m.ID, "```json\n"+codeEncode(m)+"\n```"))
-	}
+	w.WriteString("\n\n```json\n" + codeEncode(toSort) + "\n```")
 
 	r := regexp.MustCompile(`(?s)<!-- START MESSAGE TABLE -->(.*?)<!-- END MESSAGE TABLE -->`)
 	result := r.ReplaceAllString(string(content), "<!-- START MESSAGE TABLE -->\n"+w.String()+"\n<!-- END MESSAGE TABLE -->")
