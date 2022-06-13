@@ -3491,7 +3491,7 @@
         "operationId": "submitSelfServiceLogoutFlow",
         "parameters": [
           {
-            "description": "A Valid Logout Token\n\nIf you do not have a logout token because you only have a session cookie,\ncall `/self-service/logout/urls` to generate a URL for this endpoint.",
+            "description": "A Valid Logout Token\n\nIf you do not have a logout token because you only have a session cookie,\ncall `/self-service/logout/browser` to generate a URL for this endpoint.",
             "in": "query",
             "name": "token",
             "schema": {
