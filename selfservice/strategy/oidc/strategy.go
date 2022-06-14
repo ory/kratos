@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"github.com/ory/x/stringsx"
 	"net/http"
 	"path/filepath"
 	"strings"
@@ -240,28 +241,9 @@ func (s *Strategy) validateFlow(ctx context.Context, r *http.Request, rid uuid.U
 	return ar, err // this must return the error
 }
 
-func (s *Strategy) extractAuthCode(m map[string][]string) string {
-	if m == nil {
-		return ""
-	}
-
-	params := [2]string{"code", "authCode"}
-	for _, e := range params {
-		vs := m[e]
-		if len(vs) == 0 {
-			continue
-		}
-		code := vs[0]
-		if len(code) != 0 {
-			return code
-		}
-	}
-	return ""
-}
-
 func (s *Strategy) validateCallback(w http.ResponseWriter, r *http.Request) (flow.Flow, *authCodeContainer, error) {
 	var (
-		code  = s.extractAuthCode(r.URL.Query())
+		code  = stringsx.Coalesce(r.URL.Query().Get("code"), r.URL.Query().Get("authCode"))
 		state = r.URL.Query().Get("state")
 	)
 
@@ -310,7 +292,7 @@ func (s *Strategy) alreadyAuthenticated(w http.ResponseWriter, r *http.Request, 
 
 func (s *Strategy) handleCallback(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	var (
-		code = s.extractAuthCode(r.URL.Query())
+		code = stringsx.Coalesce(r.URL.Query().Get("code"), r.URL.Query().Get("authCode"))
 		pid  = ps.ByName("provider")
 	)
 
@@ -334,7 +316,16 @@ func (s *Strategy) handleCallback(w http.ResponseWriter, r *http.Request, ps htt
 		return
 	}
 
-	token, err := provider.Exchange(r.Context(), code)
+	te, ok := provider.(TokenExchanger)
+	if !ok {
+		te, err = provider.OAuth2(r.Context())
+		if err != nil {
+			s.forwardError(w, r, req, s.handleError(w, r, req, pid, nil, err))
+			return
+		}
+	}
+
+	token, err := te.Exchange(r.Context(), code)
 	if err != nil {
 		s.forwardError(w, r, req, s.handleError(w, r, req, pid, nil, err))
 		return

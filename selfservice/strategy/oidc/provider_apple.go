@@ -105,15 +105,6 @@ func (a *ProviderApple) AuthCodeURLOptions(r ider) []oauth2.AuthCodeOption {
 	return options
 }
 
-func (g *ProviderApple) Exchange(ctx context.Context, code string) (*oauth2.Token, error) {
-	conf, err := g.OAuth2(ctx)
-	if err != nil {
-		return nil, err
-	}
-
-	return conf.Exchange(ctx, code)
-}
-
 func (a *ProviderApple) Claims(ctx context.Context, exchange *oauth2.Token, query url.Values) (*Claims, error) {
 	claims, err := a.ProviderGenericOIDC.Claims(ctx, exchange, query)
 	if err != nil {

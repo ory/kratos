@@ -46,15 +46,6 @@ func (g *ProviderFacebook) OAuth2(ctx context.Context) (*oauth2.Config, error) {
 	return g.oauth2ConfigFromEndpoint(ctx, endpoint), nil
 }
 
-func (g *ProviderFacebook) Exchange(ctx context.Context, code string) (*oauth2.Token, error) {
-	conf, err := g.OAuth2(ctx)
-	if err != nil {
-		return nil, err
-	}
-
-	return conf.Exchange(ctx, code)
-}
-
 func (g *ProviderFacebook) Claims(ctx context.Context, exchange *oauth2.Token, query url.Values) (*Claims, error) {
 	o, err := g.OAuth2(ctx)
 	if err != nil {

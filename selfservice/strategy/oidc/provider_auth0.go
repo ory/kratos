@@ -67,15 +67,6 @@ func (g *ProviderAuth0) OAuth2(ctx context.Context) (*oauth2.Config, error) {
 	return g.oauth2(ctx)
 }
 
-func (g *ProviderAuth0) Exchange(ctx context.Context, code string) (*oauth2.Token, error) {
-	conf, err := g.OAuth2(ctx)
-	if err != nil {
-		return nil, err
-	}
-
-	return conf.Exchange(ctx, code)
-}
-
 func (g *ProviderAuth0) Claims(ctx context.Context, exchange *oauth2.Token, query url.Values) (*Claims, error) {
 	o, err := g.OAuth2(ctx)
 	if err != nil {

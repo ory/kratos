@@ -84,15 +84,6 @@ func (g *ProviderGenericOIDC) AuthCodeURLOptions(r ider) []oauth2.AuthCodeOption
 	return options
 }
 
-func (g *ProviderGenericOIDC) Exchange(ctx context.Context, code string) (*oauth2.Token, error) {
-	conf, err := g.OAuth2(ctx)
-	if err != nil {
-		return nil, err
-	}
-
-	return conf.Exchange(ctx, code)
-}
-
 func (g *ProviderGenericOIDC) verifyAndDecodeClaimsWithProvider(ctx context.Context, provider *gooidc.Provider, raw string) (*Claims, error) {
 	token, err := provider.Verifier(&gooidc.Config{ClientID: g.config.ClientID}).Verify(ctx, raw)
 	if err != nil {

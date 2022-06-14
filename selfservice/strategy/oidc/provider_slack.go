@@ -58,15 +58,6 @@ func (d *ProviderSlack) AuthCodeURLOptions(r ider) []oauth2.AuthCodeOption {
 	return []oauth2.AuthCodeOption{}
 }
 
-func (g *ProviderSlack) Exchange(ctx context.Context, code string) (*oauth2.Token, error) {
-	conf, err := g.OAuth2(ctx)
-	if err != nil {
-		return nil, err
-	}
-
-	return conf.Exchange(ctx, code)
-}
-
 func (d *ProviderSlack) Claims(ctx context.Context, exchange *oauth2.Token, query url.Values) (*Claims, error) {
 	grantedScopes := stringsx.Splitx(fmt.Sprintf("%s", exchange.Extra("scope")), ",")
 	for _, check := range d.Config().Scope {
