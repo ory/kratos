@@ -201,7 +201,7 @@ type submitSelfServiceLogoutFlow struct {
 	// A Valid Logout Token
 	//
 	// If you do not have a logout token because you only have a session cookie,
-	// call `/self-service/logout/urls` to generate a URL for this endpoint.
+	// call `/self-service/logout/browser` to generate a URL for this endpoint.
 	//
 	// in: query
 	Token string `json:"token"`

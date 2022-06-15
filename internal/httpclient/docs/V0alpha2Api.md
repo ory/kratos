@@ -2300,7 +2300,7 @@ import (
 )
 
 func main() {
-    token := "token_example" // string | A Valid Logout Token  If you do not have a logout token because you only have a session cookie, call `/self-service/logout/urls` to generate a URL for this endpoint. (optional)
+    token := "token_example" // string | A Valid Logout Token  If you do not have a logout token because you only have a session cookie, call `/self-service/logout/browser` to generate a URL for this endpoint. (optional)
     returnTo := "returnTo_example" // string | The URL to return to after the logout was completed. (optional)
 
     configuration := openapiclient.NewConfiguration()
@@ -2324,7 +2324,7 @@ Other parameters are passed through a pointer to a apiSubmitSelfServiceLogoutFlo
 
 Name | Type | Description  | Notes
 ------------- | ------------- | ------------- | -------------
- **token** | **string** | A Valid Logout Token  If you do not have a logout token because you only have a session cookie, call &#x60;/self-service/logout/urls&#x60; to generate a URL for this endpoint. | 
+ **token** | **string** | A Valid Logout Token  If you do not have a logout token because you only have a session cookie, call &#x60;/self-service/logout/browser&#x60; to generate a URL for this endpoint. | 
  **returnTo** | **string** | The URL to return to after the logout was completed. | 
 
 ### Return type

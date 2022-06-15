@@ -5,7 +5,7 @@
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
 **CreatedAt** | Pointer to **time.Time** | When this entry was created | [optional] 
-**Id** | **string** |  | 
+**Id** | Pointer to **string** |  | [optional] 
 **Status** | **string** | VerifiableAddressStatus must not exceed 16 characters as that is the limitation in the SQL Schema | 
 **UpdatedAt** | Pointer to **time.Time** | When this entry was last updated | [optional] 
 **Value** | **string** | The address value  example foo@user.com | 
@@ -17,7 +17,7 @@ Name | Type | Description | Notes
 
 ### NewVerifiableIdentityAddress
 
-`func NewVerifiableIdentityAddress(id string, status string, value string, verified bool, via string, ) *VerifiableIdentityAddress`
+`func NewVerifiableIdentityAddress(status string, value string, verified bool, via string, ) *VerifiableIdentityAddress`
 
 NewVerifiableIdentityAddress instantiates a new VerifiableIdentityAddress object
 This constructor will assign default values to properties that have it defined,
@@ -76,6 +76,11 @@ and a boolean to check if the value has been set.
 
 SetId sets Id field to given value.
 
+### HasId
+
+`func (o *VerifiableIdentityAddress) HasId() bool`
+
+HasId returns a boolean if a field has been set.
 
 ### GetStatus
 
