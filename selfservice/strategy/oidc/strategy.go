@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
-	"github.com/ory/x/stringsx"
 	"net/http"
 	"path/filepath"
 	"strings"
@@ -15,6 +14,7 @@ import (
 
 	"github.com/ory/kratos/ui/container"
 	"github.com/ory/x/decoderx"
+	"github.com/ory/x/stringsx"
 
 	"github.com/ory/kratos/ui/node"
 
