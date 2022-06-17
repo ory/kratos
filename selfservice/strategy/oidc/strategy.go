@@ -14,6 +14,7 @@ import (
 
 	"github.com/ory/kratos/ui/container"
 	"github.com/ory/x/decoderx"
+	"github.com/ory/x/stringsx"
 
 	"github.com/ory/kratos/ui/node"
 
@@ -242,7 +243,7 @@ func (s *Strategy) validateFlow(ctx context.Context, r *http.Request, rid uuid.U
 
 func (s *Strategy) validateCallback(w http.ResponseWriter, r *http.Request) (flow.Flow, *authCodeContainer, error) {
 	var (
-		code  = r.URL.Query().Get("code")
+		code  = stringsx.Coalesce(r.URL.Query().Get("code"), r.URL.Query().Get("authCode"))
 		state = r.URL.Query().Get("state")
 	)
 
@@ -291,7 +292,7 @@ func (s *Strategy) alreadyAuthenticated(w http.ResponseWriter, r *http.Request, 
 
 func (s *Strategy) handleCallback(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	var (
-		code = r.URL.Query().Get("code")
+		code = stringsx.Coalesce(r.URL.Query().Get("code"), r.URL.Query().Get("authCode"))
 		pid  = ps.ByName("provider")
 	)
 
@@ -315,13 +316,16 @@ func (s *Strategy) handleCallback(w http.ResponseWriter, r *http.Request, ps htt
 		return
 	}
 
-	conf, err := provider.OAuth2(r.Context())
-	if err != nil {
-		s.forwardError(w, r, req, s.handleError(w, r, req, pid, nil, err))
-		return
+	te, ok := provider.(TokenExchanger)
+	if !ok {
+		te, err = provider.OAuth2(r.Context())
+		if err != nil {
+			s.forwardError(w, r, req, s.handleError(w, r, req, pid, nil, err))
+			return
+		}
 	}
 
-	token, err := conf.Exchange(r.Context(), code)
+	token, err := te.Exchange(r.Context(), code)
 	if err != nil {
 		s.forwardError(w, r, req, s.handleError(w, r, req, pid, nil, err))
 		return

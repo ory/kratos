@@ -16,6 +16,10 @@ type Provider interface {
 	AuthCodeURLOptions(r ider) []oauth2.AuthCodeOption
 }
 
+type TokenExchanger interface {
+	Exchange(ctx context.Context, code string, opts ...oauth2.AuthCodeOption) (*oauth2.Token, error)
+}
+
 // ConvertibleBoolean is used as Apple casually sends the email_verified field as a string.
 type Claims struct {
 	Issuer              string               `json:"iss,omitempty"`
