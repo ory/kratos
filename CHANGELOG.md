@@ -4,7 +4,7 @@
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 **Table of Contents**
 
-- [ (2022-06-17)](#2022-06-17)
+- [ (2022-06-18)](#2022-06-18)
     - [Bug Fixes](#bug-fixes)
     - [Documentation](#documentation)
     - [Features](#features)
@@ -260,7 +260,7 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# [](https://github.com/ory/kratos/compare/v0.10.1...v) (2022-06-17)
+# [](https://github.com/ory/kratos/compare/v0.10.1...v) (2022-06-18)
 
 
 ### Bug Fixes
@@ -273,9 +273,11 @@
 * **sdk:** Incorrect URL ([#2521](https://github.com/ory/kratos/issues/2521)) ([ac6c4cc](https://github.com/ory/kratos/commit/ac6c4ccfc1901d38855ecd9991ef8de80e9d7c40))
 * Update README ([5da4c6b](https://github.com/ory/kratos/commit/5da4c6b934b1b820d4a6ca67621855e87ecef773))
 * Update readme badges ([7136e94](https://github.com/ory/kratos/commit/7136e94028dc64877e887776a1ccafb8826ce23c))
+* Write messages as single json document ([#2519](https://github.com/ory/kratos/issues/2519)) ([3d8cf38](https://github.com/ory/kratos/commit/3d8cf38ef05c6ca5edf1161846c63bd3a23d9adc)), closes [#2498](https://github.com/ory/kratos/issues/2498)
 
 ### Features
 
+* Add autocomplete attributes ([#2523](https://github.com/ory/kratos/issues/2523)) ([6284a9a](https://github.com/ory/kratos/commit/6284a9a5152924018d85f306e5758e9d8d759283)), closes [#2396](https://github.com/ory/kratos/issues/2396)
 * Add codecov yaml ([90da0bb](https://github.com/ory/kratos/commit/90da0bb4aeb50ed697c998342300cc56de5d5e1c))
 * Add DingTalk social login ([#2494](https://github.com/ory/kratos/issues/2494)) ([7b966bd](https://github.com/ory/kratos/commit/7b966bd16333f419b2a57f2a0b8684d6d86b34e6))
 
