@@ -4,6 +4,7 @@
 
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
+**Autocomplete** | Pointer to **string** | The autocomplete attribute for the input. | [optional] 
 **Disabled** | **bool** | Sets the input&#39;s disabled field to true or false. | 
 **Label** | Pointer to [**UiText**](UiText.md) |  | [optional] 
 **Name** | **string** | The input&#39;s element name. | 
@@ -44,6 +45,31 @@ will change when the set of required properties is changed
 NewUiNodeAttributesWithDefaults instantiates a new UiNodeAttributes object
 This constructor will only assign default values to properties that have it defined,
 but it doesn't guarantee that properties required by API are set
+
+### GetAutocomplete
+
+`func (o *UiNodeAttributes) GetAutocomplete() string`
+
+GetAutocomplete returns the Autocomplete field if non-nil, zero value otherwise.
+
+### GetAutocompleteOk
+
+`func (o *UiNodeAttributes) GetAutocompleteOk() (*string, bool)`
+
+GetAutocompleteOk returns a tuple with the Autocomplete field if it's non-nil, zero value otherwise
+and a boolean to check if the value has been set.
+
+### SetAutocomplete
+
+`func (o *UiNodeAttributes) SetAutocomplete(v string)`
+
+SetAutocomplete sets Autocomplete field to given value.
+
+### HasAutocomplete
+
+`func (o *UiNodeAttributes) HasAutocomplete() bool`
+
+HasAutocomplete returns a boolean if a field has been set.
 
 ### GetDisabled
 

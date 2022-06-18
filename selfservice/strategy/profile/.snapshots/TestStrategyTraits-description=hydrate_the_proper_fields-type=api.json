@@ -112,6 +112,7 @@
     },
     {
       "attributes": {
+        "autocomplete": "new-password",
         "disabled": false,
         "name": "password",
         "node_type": "input",

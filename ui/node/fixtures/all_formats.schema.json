@@ -26,7 +26,14 @@
     "emailString": {
       "type": "string",
       "format": "email",
-      "test_expected_type": "email"
+      "test_expected_type": "email",
+      "test_expected_autocomplete": "email"
+    },
+    "phoneString": {
+      "type": "string",
+      "format": "tel",
+      "test_expected_type": "tel",
+      "test_expected_autocomplete": "tel"
     },
     "dateTimeString": {
       "type": "string",
@@ -46,7 +53,8 @@
     "uriString": {
       "type": "string",
       "format": "uri",
-      "test_expected_type": "url"
+      "test_expected_type": "url",
+      "test_expected_autocomplete": "url"
     },
     "patternString": {
       "type": "string",

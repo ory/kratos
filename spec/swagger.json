@@ -4205,6 +4205,18 @@
         "node_type"
       ],
       "properties": {
+        "autocomplete": {
+          "description": "The autocomplete attribute for the input.",
+          "type": "string",
+          "enum": [
+            "email",
+            "tel",
+            "url",
+            "current-password",
+            "new-password",
+            "one-time-code"
+          ]
+        },
         "disabled": {
           "description": "Sets the input's disabled field to true or false.",
           "type": "boolean"

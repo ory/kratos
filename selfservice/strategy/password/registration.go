@@ -150,7 +150,7 @@ func (s *Strategy) PopulateRegistrationMethod(r *http.Request, f *registration.F
 	}
 
 	f.UI.SetCSRF(s.d.GenerateCSRFToken(r))
-	f.UI.Nodes.Upsert(NewPasswordNode("password"))
+	f.UI.Nodes.Upsert(NewPasswordNode("password", node.InputAttributeAutocompleteNewPassword))
 	f.UI.Nodes.Append(node.NewInputField("method", "password", node.PasswordGroup, node.InputAttributeTypeSubmit).WithMetaLabel(text.NewInfoRegistration()))
 
 	return nil
