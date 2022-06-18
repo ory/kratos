@@ -512,6 +512,15 @@ Some tests use fixtures. If payloads change, you can update them with:
 make test-update-snapshots
 ```
 
+This will only update the snapshots of the short tests. To update all snapshots,
+run:
+
+```bash
+UPDATE_SNAPSHOTS=true go test -p 4 -tags sqlite ./...
+```
+
+You can also run this command from a sub folder.
+
 ##### End-to-End Tests
 
 We use [Cypress](https://www.cypress.io) to run our e2e tests.
