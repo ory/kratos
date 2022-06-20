@@ -400,6 +400,13 @@ type AdminUpdateIdentityBody struct {
 	// required: true
 	Traits json.RawMessage `json:"traits"`
 
+	// Credentials represents all credentials that can be used for authenticating this identity.
+	//
+	// Use this structure to import credentials for a user.
+	// Note: this wil override completely identity's credentials. If used incorrectly, this can cause a user to lose
+	// access to their account!
+	Credentials *AdminIdentityImportCredentials `json:"credentials"`
+
 	// Store metadata about the identity which the identity itself can see when calling for example the
 	// session endpoint. Do not store sensitive information (e.g. credit score) about the identity in this field.
 	MetadataPublic json.RawMessage `json:"metadata_public"`
@@ -472,6 +479,15 @@ func (h *Handler) update(w http.ResponseWriter, r *http.Request, ps httprouter.P
 	identity.Traits = []byte(ur.Traits)
 	identity.MetadataPublic = []byte(ur.MetadataPublic)
 	identity.MetadataAdmin = []byte(ur.MetadataAdmin)
+
+	// Although this is PUT and not PATCH, if the Credentials are not supplied keep the old one
+	if ur.Credentials != nil {
+		if err := h.importCredentials(r.Context(), identity, ur.Credentials); err != nil {
+			h.r.Writer().WriteError(w, r, err)
+			return
+		}
+	}
+
 	if err := h.r.IdentityManager().Update(
 		r.Context(),
 		identity,
