@@ -4,7 +4,7 @@
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 **Table of Contents**
 
-- [ (2022-06-18)](#2022-06-18)
+- [ (2022-06-20)](#2022-06-20)
     - [Bug Fixes](#bug-fixes)
     - [Documentation](#documentation)
     - [Features](#features)
@@ -260,7 +260,7 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# [](https://github.com/ory/kratos/compare/v0.10.1...v) (2022-06-18)
+# [](https://github.com/ory/kratos/compare/v0.10.1...v) (2022-06-20)
 
 
 ### Bug Fixes
@@ -280,6 +280,8 @@
 * Add autocomplete attributes ([#2523](https://github.com/ory/kratos/issues/2523)) ([6284a9a](https://github.com/ory/kratos/commit/6284a9a5152924018d85f306e5758e9d8d759283)), closes [#2396](https://github.com/ory/kratos/issues/2396)
 * Add codecov yaml ([90da0bb](https://github.com/ory/kratos/commit/90da0bb4aeb50ed697c998342300cc56de5d5e1c))
 * Add DingTalk social login ([#2494](https://github.com/ory/kratos/issues/2494)) ([7b966bd](https://github.com/ory/kratos/commit/7b966bd16333f419b2a57f2a0b8684d6d86b34e6))
+* **cli:** Helper for cleaning up stale records ([#2406](https://github.com/ory/kratos/issues/2406)) ([29d6376](https://github.com/ory/kratos/commit/29d6376e22e4de617ec63ca0a5dcb4dbf34c7c37)), closes [#952](https://github.com/ory/kratos/issues/952)
+* Handler for update API with credentials ([#2423](https://github.com/ory/kratos/issues/2423)) ([561187d](https://github.com/ory/kratos/commit/561187dafe2fea324d55c4efe3ffa6b65f9bed72)), closes [#2334](https://github.com/ory/kratos/issues/2334)
 
 
 # [0.10.1](https://github.com/ory/kratos/compare/v0.10.0...v0.10.1) (2022-06-01)
