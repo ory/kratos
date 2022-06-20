@@ -4,6 +4,7 @@
 
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
+**Credentials** | Pointer to [**AdminIdentityImportCredentials**](AdminIdentityImportCredentials.md) |  | [optional] 
 **MetadataAdmin** | Pointer to **interface{}** | Store metadata about the user which is only accessible through admin APIs such as &#x60;GET /admin/identities/&lt;id&gt;&#x60;. | [optional] 
 **MetadataPublic** | Pointer to **interface{}** | Store metadata about the identity which the identity itself can see when calling for example the session endpoint. Do not store sensitive information (e.g. credit score) about the identity in this field. | [optional] 
 **SchemaId** | **string** | SchemaID is the ID of the JSON Schema to be used for validating the identity&#39;s traits. If set will update the Identity&#39;s SchemaID. | 
@@ -28,6 +29,31 @@ will change when the set of required properties is changed
 NewAdminUpdateIdentityBodyWithDefaults instantiates a new AdminUpdateIdentityBody object
 This constructor will only assign default values to properties that have it defined,
 but it doesn't guarantee that properties required by API are set
+
+### GetCredentials
+
+`func (o *AdminUpdateIdentityBody) GetCredentials() AdminIdentityImportCredentials`
+
+GetCredentials returns the Credentials field if non-nil, zero value otherwise.
+
+### GetCredentialsOk
+
+`func (o *AdminUpdateIdentityBody) GetCredentialsOk() (*AdminIdentityImportCredentials, bool)`
+
+GetCredentialsOk returns a tuple with the Credentials field if it's non-nil, zero value otherwise
+and a boolean to check if the value has been set.
+
+### SetCredentials
+
+`func (o *AdminUpdateIdentityBody) SetCredentials(v AdminIdentityImportCredentials)`
+
+SetCredentials sets Credentials field to given value.
+
+### HasCredentials
+
+`func (o *AdminUpdateIdentityBody) HasCredentials() bool`
+
+HasCredentials returns a boolean if a field has been set.
 
 ### GetMetadataAdmin
 

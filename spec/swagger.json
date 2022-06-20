@@ -2387,6 +2387,9 @@
         "state"
       ],
       "properties": {
+        "credentials": {
+          "$ref": "#/definitions/adminIdentityImportCredentials"
+        },
         "metadata_admin": {
           "description": "Store metadata about the user which is only accessible through admin APIs such as `GET /admin/identities/\u003cid\u003e`.",
           "type": "object"
