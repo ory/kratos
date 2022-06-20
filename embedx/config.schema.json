@@ -1435,6 +1435,49 @@
         }
       }
     },
+    "database":  {
+      "type": "object",
+      "title": "Database related configuration",
+      "description": "Miscellaneous settings used in database related tasks (cleanup, etc.)",
+      "properties": {
+        "cleanup": {
+          "type": "object",
+          "title": "Database cleanup settings",
+          "description": "Settings that controls how the database cleanup process is configured (delays, batch size, etc.)",
+          "properties": {
+            "batch_size" : {
+              "type": "integer",
+              "title": "Number of records to clean in one iteration",
+              "description": "Controls how many records should be purged from one table during database cleanup task",
+              "minimum": 1,
+              "default": 100
+            },
+            "sleep": {
+              "type": "object",
+              "title": "Delays between various database cleanup phases",
+              "description": "Configures delays between each step of the cleanup process. It is useful to tune the process so it will be efficient and performant.",
+              "properties": {
+                "tables": {
+                  "type": "string",
+                  "title": "Delay between each table cleanups",
+                  "description": "Controls the delay time between cleaning each table in one cleanup iteration",
+                  "pattern": "^[0-9]+(ns|us|ms|s|m|h)$",
+                  "default": "1m"
+                }
+              }
+            },
+            "older_than": {
+              "type": "string",
+              "title": "Remove records older than",
+              "description": "Controls how old records do we want to leave",
+              "pattern": "^[0-9]+(ns|us|ms|s|m|h)$",
+              "default": "0s"
+            }
+          }
+        }
+      },
+      "additionalProperties": false
+    },
     "dsn": {
       "type": "string",
       "title": "Data Source Name",

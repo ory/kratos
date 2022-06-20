@@ -3,6 +3,7 @@ package sql
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"github.com/pkg/errors"
 
@@ -47,6 +48,23 @@ func (p *Persister) DeleteContinuitySession(ctx context.Context, id uuid.UUID) e
 		return sqlcon.HandleError(err)
 	} else if count == 0 {
 		return errors.WithStack(sqlcon.ErrNoRows)
+	}
+	return nil
+}
+
+func (p *Persister) DeleteExpiredContinuitySessions(ctx context.Context, expiresAt time.Time, limit int) error {
+	// #nosec G201
+	err := p.GetConnection(ctx).RawQuery(fmt.Sprintf(
+		"DELETE FROM %s WHERE id in (SELECT id FROM (SELECT id FROM %s c WHERE expires_at <= ? and nid = ? ORDER BY expires_at ASC LIMIT %d ) AS s )",
+		new(continuity.Container).TableName(ctx),
+		new(continuity.Container).TableName(ctx),
+		limit,
+	),
+		expiresAt,
+		corp.ContextualizeNID(ctx, p.nid),
+	).Exec()
+	if err != nil {
+		return sqlcon.HandleError(err)
 	}
 	return nil
 }

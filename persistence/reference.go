@@ -2,6 +2,7 @@ package persistence
 
 import (
 	"context"
+	"time"
 
 	"github.com/ory/x/networkx"
 
@@ -43,6 +44,7 @@ type Persister interface {
 	link.RecoveryTokenPersister
 	link.VerificationTokenPersister
 
+	CleanupDatabase(context.Context, time.Duration, time.Duration, int) error
 	Close(context.Context) error
 	Ping() error
 	MigrationStatus(c context.Context) (popx.MigrationStatuses, error)

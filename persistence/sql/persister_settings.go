@@ -2,6 +2,8 @@ package sql
 
 import (
 	"context"
+	"fmt"
+	"time"
 
 	"github.com/gofrs/uuid"
 
@@ -50,4 +52,21 @@ func (p *Persister) UpdateSettingsFlow(ctx context.Context, r *settings.Flow) er
 	cp := *r
 	cp.NID = corp.ContextualizeNID(ctx, p.nid)
 	return p.update(ctx, cp)
+}
+
+func (p *Persister) DeleteExpiredSettingsFlows(ctx context.Context, expiresAt time.Time, limit int) error {
+	// #nosec G201
+	err := p.GetConnection(ctx).RawQuery(fmt.Sprintf(
+		"DELETE FROM %s WHERE id in (SELECT id FROM (SELECT id FROM %s c WHERE expires_at <= ? and nid = ? ORDER BY expires_at ASC LIMIT %d ) AS s )",
+		new(settings.Flow).TableName(ctx),
+		new(settings.Flow).TableName(ctx),
+		limit,
+	),
+		expiresAt,
+		corp.ContextualizeNID(ctx, p.nid),
+	).Exec()
+	if err != nil {
+		return sqlcon.HandleError(err)
+	}
+	return nil
 }
