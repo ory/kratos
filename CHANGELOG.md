@@ -4,7 +4,7 @@
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 **Table of Contents**
 
-- [ (2022-06-20)](#2022-06-20)
+- [ (2022-06-24)](#2022-06-24)
     - [Bug Fixes](#bug-fixes)
     - [Documentation](#documentation)
     - [Features](#features)
@@ -260,7 +260,7 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# [](https://github.com/ory/kratos/compare/v0.10.1...v) (2022-06-20)
+# [](https://github.com/ory/kratos/compare/v0.10.1...v) (2022-06-24)
 
 
 ### Bug Fixes
