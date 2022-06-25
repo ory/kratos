@@ -26,29 +26,59 @@ import (
 )
 
 func NewVerificationUIFlowEchoServer(t *testing.T, reg driver.Registry) *httptest.Server {
-	ctx := context.Background()
-	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	return createVerificationUIFlowEchoServer(t, reg, func(w http.ResponseWriter, r *http.Request) {
 		e, err := reg.VerificationFlowPersister().GetVerificationFlow(r.Context(), x.ParseUUID(r.URL.Query().Get("flow")))
 		require.NoError(t, err)
 		reg.Writer().Write(w, r, e)
-	}))
+	})
+}
+func NewVerificationUIFlowEchoServerRespectAcceptHeader(t *testing.T, reg driver.Registry) *httptest.Server {
+	return createVerificationUIFlowEchoServer(t, reg, func(w http.ResponseWriter, r *http.Request) {
+		e, err := reg.VerificationFlowPersister().GetVerificationFlow(r.Context(), x.ParseUUID(r.URL.Query().Get("flow")))
+		require.NoError(t, err)
+		if x.AcceptsJSON(r) {
+			reg.Writer().Write(w, r, e)
+		} else {
+			type Html struct {
+				Flow *verification.Flow `json:"browser_flow"`
+			}
+			reg.Writer().Write(w, r, Html{Flow: e})
+		}
+	})
+}
+
+func createVerificationUIFlowEchoServer(t *testing.T, reg driver.Registry, handler http.HandlerFunc) *httptest.Server {
+	ctx := context.Background()
+	ts := httptest.NewServer(handler)
 	reg.Config().MustSet(ctx, config.ViperKeySelfServiceVerificationUI, ts.URL+"/verification-ts")
 	t.Cleanup(ts.Close)
 	return ts
 }
 
-func GetVerificationFlow(t *testing.T, client *http.Client, ts *httptest.Server) *kratos.VerificationFlow {
+func GetVerificationFlow(t *testing.T, client *http.Client, isAPI bool, ts *httptest.Server) *kratos.VerificationFlow {
 	publicClient := NewSDKCustomClient(ts, client)
 
-	res, err := client.Get(ts.URL + verification.RouteInitBrowserFlow)
+	var initFlowRoute string
+	if isAPI {
+		initFlowRoute = verification.RouteInitAPIFlow
+	} else {
+		initFlowRoute = verification.RouteInitBrowserFlow
+	}
+	res, err := client.Get(ts.URL + initFlowRoute)
 	require.NoError(t, err)
-	require.NoError(t, res.Body.Close())
+	defer res.Body.Close()
 
-	rs, _, err := publicClient.FrontendApi.GetVerificationFlow(context.Background()).Id(res.Request.URL.Query().Get("flow")).Execute()
-	require.NoError(t, err, "%s", res.Request.URL.String())
+	var rs kratos.VerificationFlow
+	if isAPI {
+		require.NoError(t, json.NewDecoder(res.Body).Decode(&rs))
+	} else {
+		f, _, err := publicClient.FrontendApi.GetVerificationFlow(context.Background()).Id(res.Request.URL.Query().Get("flow")).Execute()
+		require.NoError(t, err, "%s", res.Request.URL.String())
+		rs = *f
+	}
 	assert.NotEmpty(t, rs.Active)
 
-	return rs
+	return &rs
 }
 
 func InitializeVerificationFlowViaBrowser(t *testing.T, client *http.Client, isSPA bool, ts *httptest.Server) *kratos.VerificationFlow {

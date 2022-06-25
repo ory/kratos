@@ -113,7 +113,7 @@ func TestVerification(t *testing.T) {
 
 	t.Run("description=should set all the correct verification payloads", func(t *testing.T) {
 		c := testhelpers.NewClientWithCookies(t)
-		rs := testhelpers.GetVerificationFlow(t, c, public)
+		rs := testhelpers.GetVerificationFlow(t, c, false, public)
 
 		testhelpers.SnapshotTExcept(t, rs.Ui.Nodes, []string{"0.attributes.value"})
 		assert.EqualValues(t, public.URL+verification.RouteSubmitFlow+"?flow="+rs.Id, rs.Ui.Action)
@@ -122,7 +122,7 @@ func TestVerification(t *testing.T) {
 
 	t.Run("description=should not execute submit without correct method set", func(t *testing.T) {
 		c := testhelpers.NewClientWithCookies(t)
-		rs := testhelpers.GetVerificationFlow(t, c, public)
+		rs := testhelpers.GetVerificationFlow(t, c, false, public)
 
 		res, err := c.PostForm(rs.Ui.Action, url.Values{"method": {"not-link"}, "email": {verificationEmail}})
 		require.NoError(t, err)
@@ -252,7 +252,7 @@ func TestVerification(t *testing.T) {
 		})
 
 		c := testhelpers.NewClientWithCookies(t)
-		rs := testhelpers.GetVerificationFlow(t, c, public)
+		rs := testhelpers.GetVerificationFlow(t, c, false, public)
 
 		time.Sleep(time.Millisecond * 11)
 

@@ -189,6 +189,9 @@ func (s *Strategy) verificationUseToken(w http.ResponseWriter, r *http.Request, 
 	token, err := s.d.VerificationTokenPersister().UseVerificationToken(r.Context(), f.ID, body.Token)
 	if err != nil {
 		if errors.Is(err, sqlcon.ErrNoRows) {
+			if x.IsJSONRequest(r) {
+				return s.handleVerificationError(w, r, f, body, NewValidationVerificationTokenInvalidOrAlreadyUsedError())
+			}
 			return s.retryVerificationFlowWithMessage(w, r, flow.TypeBrowser, text.NewErrorValidationVerificationTokenInvalidOrAlreadyUsed())
 		}
 
@@ -224,6 +227,10 @@ func (s *Strategy) verificationUseToken(w http.ResponseWriter, r *http.Request, 
 	address.Status = identity.VerifiableAddressStatusCompleted
 	if err := s.d.PrivilegedIdentityPool().UpdateVerifiableAddress(r.Context(), address); err != nil {
 		return s.retryVerificationFlowWithError(w, r, flow.TypeBrowser, err)
+	}
+
+	if x.AcceptsJSON(r) {
+		return nil
 	}
 
 	defaultRedirectURL := s.d.Config().SelfServiceFlowVerificationReturnTo(r.Context(), f.AppendTo(s.d.Config().SelfServiceFlowVerificationUI(r.Context())))
@@ -264,7 +271,7 @@ func (s *Strategy) retryVerificationFlowWithMessage(w http.ResponseWriter, r *ht
 		return s.handleVerificationError(w, r, f, nil, err)
 	}
 
-	if ft == flow.TypeBrowser {
+	if !x.AcceptsJSON(r) {
 		http.Redirect(w, r, f.AppendTo(s.d.Config().SelfServiceFlowVerificationUI(r.Context())).String(), http.StatusSeeOther)
 	} else {
 		http.Redirect(w, r, urlx.CopyWithQuery(urlx.AppendPaths(s.d.Config().SelfPublicURL(r.Context()),
