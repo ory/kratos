@@ -4,7 +4,7 @@
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 **Table of Contents**
 
-- [ (2022-07-01)](#2022-07-01)
+- [ (2022-07-04)](#2022-07-04)
     - [Bug Fixes](#bug-fixes)
     - [Documentation](#documentation)
     - [Features](#features)
@@ -260,12 +260,13 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# [](https://github.com/ory/kratos/compare/v0.10.1...v) (2022-07-01)
+# [](https://github.com/ory/kratos/compare/v0.10.1...v) (2022-07-04)
 
 
 ### Bug Fixes
 
 * Make ID field in VerifiableAddress struct optional ([#2507](https://github.com/ory/kratos/issues/2507)) ([0844b47](https://github.com/ory/kratos/commit/0844b47c30851c548d46273927afee103cdc0e97)), closes [#2506](https://github.com/ory/kratos/issues/2506)
+* Return empty array not null when there are no sessions ([#2548](https://github.com/ory/kratos/issues/2548)) ([fffba47](https://github.com/ory/kratos/commit/fffba473440fec3118a3951b697d5a0d2d4e30d6))
 
 ### Documentation
 
