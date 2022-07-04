@@ -3,11 +3,15 @@ package oidc
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"time"
 
+	"github.com/google/go-jsonnet"
+
 	"github.com/ory/x/fetcher"
 
+	"github.com/tidwall/gjson"
 	"github.com/tidwall/sjson"
 
 	"github.com/ory/x/decoderx"
@@ -22,9 +26,6 @@ import (
 
 	"github.com/ory/kratos/continuity"
 
-	"github.com/google/go-jsonnet"
-	"github.com/tidwall/gjson"
-
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/selfservice/flow"
 	"github.com/ory/kratos/selfservice/flow/registration"
@@ -32,6 +33,13 @@ import (
 )
 
 var _ registration.Strategy = new(Strategy)
+
+type MetadataType string
+
+const (
+	PublicMetadata MetadataType = "public"
+	AdminMetadata  MetadataType = "admin"
+)
 
 func (s *Strategy) RegisterRegistrationRoutes(r *x.RouterPublic) {
 	s.setRoutes(r)
@@ -186,51 +194,10 @@ func (s *Strategy) processRegistration(w http.ResponseWriter, r *http.Request, a
 		return nil, s.handleError(w, r, a, provider.Config().ID, nil, err)
 	}
 
-	var jsonClaims bytes.Buffer
-	if err := json.NewEncoder(&jsonClaims).Encode(claims); err != nil {
-		return nil, s.handleError(w, r, a, provider.Config().ID, nil, err)
-	}
-
-	i := identity.NewIdentity(s.d.Config(r.Context()).DefaultIdentityTraitsSchemaID())
-
-	vm := jsonnet.MakeVM()
-	vm.ExtCode("claims", jsonClaims.String())
-	evaluated, err := vm.EvaluateAnonymousSnippet(provider.Config().Mapper, jn.String())
+	i, err := s.setIdentity(w, r, a, claims, provider, container, jn)
 	if err != nil {
-		return nil, s.handleError(w, r, a, provider.Config().ID, nil, err)
-	} else if traits := gjson.Get(evaluated, "identity.traits"); !traits.IsObject() {
-		i.Traits = []byte{'{', '}'}
-		s.d.Logger().
-			WithRequest(r).
-			WithField("oidc_provider", provider.Config().ID).
-			WithSensitiveField("oidc_claims", claims).
-			WithField("mapper_jsonnet_output", evaluated).
-			WithField("mapper_jsonnet_url", provider.Config().Mapper).
-			Error("OpenID Connect Jsonnet mapper did not return an object for key identity.traits. Please check your Jsonnet code!")
-	} else {
-		i.Traits = []byte(traits.Raw)
+		return nil, s.handleError(w, r, a, provider.Config().ID, i.Traits, err)
 	}
-
-	s.d.Logger().
-		WithRequest(r).
-		WithField("oidc_provider", provider.Config().ID).
-		WithSensitiveField("oidc_claims", claims).
-		WithSensitiveField("mapper_jsonnet_output", evaluated).
-		WithField("mapper_jsonnet_url", provider.Config().Mapper).
-		Debug("OpenID Connect Jsonnet mapper completed.")
-
-	i.Traits, err = merge(container.Traits, json.RawMessage(i.Traits))
-	if err != nil {
-		return nil, s.handleError(w, r, a, provider.Config().ID, nil, err)
-	}
-
-	s.d.Logger().
-		WithRequest(r).
-		WithField("oidc_provider", provider.Config().ID).
-		WithSensitiveField("identity_traits", i.Traits).
-		WithSensitiveField("mapper_jsonnet_output", evaluated).
-		WithField("mapper_jsonnet_url", provider.Config().Mapper).
-		Debug("Merged form values and OpenID Connect Jsonnet output.")
 
 	// Validate the identity itself
 	if err := s.d.IdentityValidator().Validate(r.Context(), i); err != nil {
@@ -265,4 +232,118 @@ func (s *Strategy) processRegistration(w http.ResponseWriter, r *http.Request, a
 	}
 
 	return nil, nil
+}
+
+func (s *Strategy) setIdentity(w http.ResponseWriter, r *http.Request, a *registration.Flow, claims *Claims, provider Provider, container *authCodeContainer, jn *bytes.Buffer) (*identity.Identity, error) {
+
+	i := identity.NewIdentity(s.d.Config(r.Context()).DefaultIdentityTraitsSchemaID())
+
+	var jsonClaims bytes.Buffer
+	if err := json.NewEncoder(&jsonClaims).Encode(claims); err != nil {
+		return nil, s.handleError(w, r, a, provider.Config().ID, nil, err)
+	}
+
+	vm := jsonnet.MakeVM()
+	vm.ExtCode("claims", jsonClaims.String())
+	evaluated, err := vm.EvaluateAnonymousSnippet(provider.Config().Mapper, jn.String())
+	if err != nil {
+		return nil, s.handleError(w, r, a, provider.Config().ID, nil, err)
+	}
+
+	if err := s.setTraits(w, r, a, claims, provider, container, evaluated, i); err != nil {
+		return nil, s.handleError(w, r, a, provider.Config().ID, nil, err)
+	}
+
+	if err := s.setMetadata(w, r, a, claims, provider, container, evaluated, i, PublicMetadata); err != nil {
+		return nil, s.handleError(w, r, a, provider.Config().ID, nil, err)
+	}
+
+	if err := s.setMetadata(w, r, a, claims, provider, container, evaluated, i, AdminMetadata); err != nil {
+		return nil, s.handleError(w, r, a, provider.Config().ID, nil, err)
+	}
+
+	s.d.Logger().
+		WithRequest(r).
+		WithField("oidc_provider", provider.Config().ID).
+		WithSensitiveField("oidc_claims", claims).
+		WithSensitiveField("mapper_jsonnet_output", evaluated).
+		WithField("mapper_jsonnet_url", provider.Config().Mapper).
+		Debug("OpenID Connect Jsonnet mapper completed.")
+
+	return i, nil
+}
+
+func (s *Strategy) setTraits(w http.ResponseWriter, r *http.Request, a *registration.Flow, claims *Claims, provider Provider, container *authCodeContainer, evaluated string, i *identity.Identity) error {
+
+	if traits := gjson.Get(evaluated, "identity.traits"); !traits.IsObject() {
+		i.Traits = []byte{'{', '}'}
+		s.d.Logger().
+			WithRequest(r).
+			WithField("oidc_provider", provider.Config().ID).
+			WithSensitiveField("oidc_claims", claims).
+			WithField("mapper_jsonnet_output", evaluated).
+			WithField("mapper_jsonnet_url", provider.Config().Mapper).
+			Error("OpenID Connect Jsonnet mapper did not return an object for key identity.traits. Please check your Jsonnet code!")
+	} else {
+		i.Traits = []byte(traits.Raw)
+	}
+
+	traits, err := merge(container.Traits, json.RawMessage(i.Traits))
+	if err != nil {
+		return s.handleError(w, r, a, provider.Config().ID, nil, err)
+	} else {
+		i.Traits = traits
+	}
+
+	s.d.Logger().
+		WithRequest(r).
+		WithField("oidc_provider", provider.Config().ID).
+		WithSensitiveField("identity_traits", i.Traits).
+		WithSensitiveField("mapper_jsonnet_output", evaluated).
+		WithField("mapper_jsonnet_url", provider.Config().Mapper).
+		Debug("Merged form values and OpenID Connect Jsonnet output.")
+
+	return nil
+}
+
+func (s *Strategy) setMetadata(w http.ResponseWriter, r *http.Request, a *registration.Flow, claims *Claims, provider Provider, container *authCodeContainer, evaluated string, i *identity.Identity, m MetadataType) error {
+
+	var path string
+	switch m {
+	case PublicMetadata:
+		path = "identity.metadata_public"
+	case AdminMetadata:
+		path = "identity.metadata_admin"
+	default:
+		return errors.New("undefined metadata type")
+	}
+
+	if metadata := gjson.Get(evaluated, path); !metadata.IsObject() {
+		switch m {
+		case PublicMetadata:
+			i.MetadataPublic = []byte{'{', '}'}
+		case AdminMetadata:
+			i.MetadataAdmin = []byte{'{', '}'}
+		default:
+			return errors.New("undefined metadata type")
+		}
+		s.d.Logger().
+			WithRequest(r).
+			WithField("oidc_provider", provider.Config().ID).
+			WithSensitiveField("oidc_claims", claims).
+			WithField("mapper_jsonnet_output", evaluated).
+			WithField("mapper_jsonnet_url", provider.Config().Mapper).
+			Error(fmt.Sprintf("OpenID Connect Jsonnet mapper did not return an object for key %s. Please check your Jsonnet code!", path))
+	} else {
+		switch m {
+		case PublicMetadata:
+			i.MetadataPublic = []byte(metadata.Raw)
+		case AdminMetadata:
+			i.MetadataAdmin = []byte(metadata.Raw)
+		default:
+			return errors.New("undefined metadata type")
+		}
+	}
+
+	return nil
 }
