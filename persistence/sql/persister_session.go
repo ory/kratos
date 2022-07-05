@@ -47,7 +47,7 @@ func (p *Persister) ListSessionsByIdentity(ctx context.Context, iID uuid.UUID, a
 	ctx, span := p.r.Tracer(ctx).Tracer().Start(ctx, "persistence.sql.ListSessionsByIdentity")
 	defer span.End()
 
-	var s []*session.Session
+	s := make([]*session.Session, 0)
 	nid := corp.ContextualizeNID(ctx, p.nid)
 
 	if err := p.Transaction(ctx, func(ctx context.Context, c *pop.Connection) error {

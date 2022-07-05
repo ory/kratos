@@ -32,6 +32,7 @@ import (
 	"github.com/ory/kratos/internal/testhelpers"
 	. "github.com/ory/kratos/session"
 	"github.com/ory/kratos/x"
+	"github.com/ory/x/ioutilx"
 	"github.com/ory/x/urlx"
 )
 
@@ -441,10 +442,7 @@ func TestHandlerAdminSessionManagement(t *testing.T) {
 			res, err := client.Do(req)
 			require.NoError(t, err)
 			assert.Equal(t, http.StatusOK, res.StatusCode)
-
-			var sessions []Session
-			require.NoError(t, json.NewDecoder(res.Body).Decode(&sessions))
-			assert.Len(t, sessions, 0)
+			assert.JSONEq(t, "[]", string(ioutilx.MustReadAll(res.Body)))
 		})
 	})
 

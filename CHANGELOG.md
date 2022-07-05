@@ -4,7 +4,7 @@
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 **Table of Contents**
 
-- [ (2022-06-24)](#2022-06-24)
+- [ (2022-07-04)](#2022-07-04)
     - [Bug Fixes](#bug-fixes)
     - [Documentation](#documentation)
     - [Features](#features)
@@ -260,12 +260,20 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# [](https://github.com/ory/kratos/compare/v0.10.1...v) (2022-06-24)
+# [](https://github.com/ory/kratos/compare/v0.10.1...v) (2022-07-04)
 
 
 ### Bug Fixes
 
+* Add issuerURL for apple id ([#2565](https://github.com/ory/kratos/issues/2565)) ([2aeb0a2](https://github.com/ory/kratos/commit/2aeb0a210e6e6433f1a9d9e6a75b21b8e3083239)):
+
+    No issuer url was specified when using the Apple ID provider,
+    this forced usersers to manually enter it in the provider config.
+    
+    This PR adds the Apple ID issuer url to the provider simplifying the setup.
+
 * Make ID field in VerifiableAddress struct optional ([#2507](https://github.com/ory/kratos/issues/2507)) ([0844b47](https://github.com/ory/kratos/commit/0844b47c30851c548d46273927afee103cdc0e97)), closes [#2506](https://github.com/ory/kratos/issues/2506)
+* Return empty array not null when there are no sessions ([#2548](https://github.com/ory/kratos/issues/2548)) ([fffba47](https://github.com/ory/kratos/commit/fffba473440fec3118a3951b697d5a0d2d4e30d6))
 
 ### Documentation
 
