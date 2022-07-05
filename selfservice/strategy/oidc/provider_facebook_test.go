@@ -9,11 +9,12 @@ import (
 
 	"github.com/jarcoal/httpmock"
 
-	"github.com/ory/kratos/internal"
-	"github.com/ory/kratos/selfservice/strategy/oidc"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"golang.org/x/oauth2"
+
+	"github.com/ory/kratos/internal"
+	"github.com/ory/kratos/selfservice/strategy/oidc"
 )
 
 const fakeIDToken = "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyLCJleHAiOjk5OTk5OTk5OTksImF1ZCI6ImFiY2QiLCJpc3MiOiJodHRwczovL3Jhdy5naXRodWJ1c2VyY29udGVudC5jb20vYWVuZWFzci9wcml2YXRlLW9pZGMvbWFzdGVyL3Rva2VuIn0.G9v8pJXJrEOgdJ5ecE6sIIcTH_p-RKkBaImfZY5DDVCl7h5GEis1n3GKKYbL_O3fj8Fu-WzI2mquI8S8BOVCQ6wN0XtrqJv22iX_nzeVHc4V_JWV1q7hg2gPpoFFcnF3KKtxZLvDOA8ujsDbAXmoBu0fEBdwCN56xLOOKQDzULyfijuAa8hrCwespZ9HaqcHzD3iHf_Utd4nHqlTM-6upWpKIMkplS_NGcxrfIRIWusZ0wob6ryy8jECD9QeZpdTGUozq-YM64lZfMOZzuLuqichH_PCMKFyB_tOZb6lDIiiSX4Irz7_YF-DP-LmfxgIW4934RqTCeFGGIP64h4xAA"
