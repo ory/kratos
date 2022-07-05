@@ -2,13 +2,11 @@ package identities
 
 import (
 	"fmt"
-	"strconv"
-
-	"github.com/ory/x/cmdx"
 
 	"github.com/spf13/cobra"
 
 	"github.com/ory/kratos/cmd/cliclient"
+	"github.com/ory/x/cmdx"
 )
 
 func NewListCmd(root *cobra.Command) *cobra.Command {
@@ -29,13 +27,7 @@ func NewListIdentitiesCmd(root *cobra.Command) *cobra.Command {
 		Short:   "List identities",
 		Long:    "List identities (paginated)",
 		Example: fmt.Sprintf("%[1]s ls identities 100 1", root.Use),
-		Args: func(cmd *cobra.Command, args []string) error {
-			// zero or exactly two args
-			if len(args) != 0 && len(args) != 2 {
-				return fmt.Errorf("expected zero or two args, got %d: %+v", len(args), args)
-			}
-			return nil
-		},
+		Args:    cmdx.ZeroOrTwoArgs,
 		Aliases: []string{"ls"},
 		RunE: func(cmd *cobra.Command, args []string) error {
 			c, err := cliclient.NewClient(cmd)
@@ -44,20 +36,13 @@ func NewListIdentitiesCmd(root *cobra.Command) *cobra.Command {
 			}
 
 			req := c.V0alpha2Api.AdminListIdentities(cmd.Context())
-
 			if len(args) == 2 {
-				page, err := strconv.ParseInt(args[0], 0, 64)
+				page, perPage, err := cmdx.ParsePaginationArgs(cmd, args[0], args[1])
 				if err != nil {
-					_, _ = fmt.Fprintf(cmd.ErrOrStderr(), "Could not parse page argument\"%s\": %s", args[0], err)
-					return cmdx.FailSilently(cmd)
+					return err
 				}
-				req = req.Page(page)
 
-				perPage, err := strconv.ParseInt(args[1], 0, 64)
-				if err != nil {
-					_, _ = fmt.Fprintf(cmd.ErrOrStderr(), "Could not parse per-page argument\"%s\": %s", args[1], err)
-					return cmdx.FailSilently(cmd)
-				}
+				req = req.Page(page)
 				req = req.PerPage(perPage)
 			}
 
@@ -66,10 +51,7 @@ func NewListIdentitiesCmd(root *cobra.Command) *cobra.Command {
 				return cmdx.PrintOpenAPIError(cmd, err)
 			}
 
-			cmdx.PrintTable(cmd, &outputIdentityCollection{
-				identities: identities,
-			})
-
+			cmdx.PrintTable(cmd, &outputIdentityCollection{identities: identities})
 			return nil
 		},
 	}
