@@ -4,7 +4,7 @@
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 **Table of Contents**
 
-- [ (2022-07-04)](#2022-07-04)
+- [ (2022-07-05)](#2022-07-05)
     - [Bug Fixes](#bug-fixes)
     - [Documentation](#documentation)
     - [Features](#features)
@@ -260,7 +260,7 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# [](https://github.com/ory/kratos/compare/v0.10.1...v) (2022-07-04)
+# [](https://github.com/ory/kratos/compare/v0.10.1...v) (2022-07-05)
 
 
 ### Bug Fixes
@@ -272,6 +272,8 @@
     
     This PR adds the Apple ID issuer url to the provider simplifying the setup.
 
+* Add support for verified Graph API calls for facebook oidc provider ([#2547](https://github.com/ory/kratos/issues/2547)) ([1ba7c66](https://github.com/ory/kratos/commit/1ba7c66fc4897b676690f0ac701a0b68aee4f151))
+* **identity:** Migrate identity_addresses to lower case ([#2517](https://github.com/ory/kratos/issues/2517)) ([c058e23](https://github.com/ory/kratos/commit/c058e23599d994e12b676e87f7282c1f2b2e089c)), closes [#2426](https://github.com/ory/kratos/issues/2426)
 * Make ID field in VerifiableAddress struct optional ([#2507](https://github.com/ory/kratos/issues/2507)) ([0844b47](https://github.com/ory/kratos/commit/0844b47c30851c548d46273927afee103cdc0e97)), closes [#2506](https://github.com/ory/kratos/issues/2506)
 * Return empty array not null when there are no sessions ([#2548](https://github.com/ory/kratos/issues/2548)) ([fffba47](https://github.com/ory/kratos/commit/fffba473440fec3118a3951b697d5a0d2d4e30d6))
 
