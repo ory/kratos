@@ -57,7 +57,6 @@ func TestProviderFacebook_Claims(t *testing.T) {
 	)
 
 	_, reg := internal.NewFastRegistryWithMocks(t)
-
 	c := &oidc.Configuration{
 		ID:           "facebook",
 		Provider:     "facebook",
@@ -68,12 +67,14 @@ func TestProviderFacebook_Claims(t *testing.T) {
 	}
 	facebook := oidc.NewProviderFacebook(c, reg)
 
-	claims, err := facebook.Claims(context.Background(), (&oauth2.Token{AccessToken: "foo", Expiry: time.Now().Add(+time.Hour)}).WithExtra(map[string]interface{}{
-		"id_token": fakeIDToken,
-	}), url.Values{})
+	actual, err := facebook.Claims(
+		context.Background(),
+		(&oauth2.Token{AccessToken: "foo", Expiry: time.Now().Add(time.Hour)}).WithExtra(map[string]interface{}{"id_token": fakeIDToken}),
+		url.Values{},
+	)
 	require.NoError(t, err)
 
-	expected := &oidc.Claims{
+	assert.Equal(t, &oidc.Claims{
 		Issuer:            "https://graph.facebook.com/me?fields=id,name,first_name,last_name,middle_name,email,picture,birthday,gender&appsecret_proof=773ba44693c7553d6ee20f61ea5d2757a9a4f4a44d2841ae4e95b52e4cd62db4",
 		Subject:           "123456789012345",
 		Name:              "John Doe",
@@ -84,7 +85,5 @@ func TestProviderFacebook_Claims(t *testing.T) {
 		Email:             "john.doe@example.com",
 		EmailVerified:     true,
 		Birthdate:         "01/01/1990",
-	}
-	assert.Equal(t, claims, expected)
-
+	}, actual)
 }
