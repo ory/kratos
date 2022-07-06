@@ -865,9 +865,7 @@ Cypress.Commands.add(
     expect: { email, redirectTo } = { email: undefined, redirectTo: undefined }
   } = {}) =>
     cy.getMail().then((message) => {
-      expect(message.subject.trim()).to.equal(
-        'Please verify your email address'
-      )
+      expect(message.subject).to.equal('Please verify your email address')
       expect(message.fromAddress.trim()).to.equal('no-reply@ory.kratos.sh')
       expect(message.toAddresses).to.have.length(1)
       expect(message.toAddresses[0].trim()).to.equal(email)
@@ -904,7 +902,7 @@ Cypress.Commands.add(
 // Uses the verification email but waits so that it expires
 Cypress.Commands.add('recoverEmailButExpired', ({ expect: { email } }) => {
   cy.getMail().should((message) => {
-    expect(message.subject.trim()).to.equal('Recover access to your account')
+    expect(message.subject).to.equal('Recover access to your account')
     expect(message.toAddresses[0].trim()).to.equal(email)
 
     const link = parseHtml(message.body).querySelector('a')
@@ -919,7 +917,7 @@ Cypress.Commands.add(
   'recoverEmail',
   ({ expect: { email }, shouldVisit = true }) =>
     cy.getMail().should((message) => {
-      expect(message.subject.trim()).to.equal('Recover access to your account')
+      expect(message.subject).to.equal('Recover access to your account')
       expect(message.fromAddress.trim()).to.equal('no-reply@ory.kratos.sh')
       expect(message.toAddresses).to.have.length(1)
       expect(message.toAddresses[0].trim()).to.equal(email)
@@ -940,9 +938,7 @@ Cypress.Commands.add(
   'verifyEmailButExpired',
   ({ expect: { email, password } }) =>
     cy.getMail().then((message) => {
-      expect(message.subject.trim()).to.equal(
-        'Please verify your email address'
-      )
+      expect(message.subject).to.equal('Please verify your email address')
 
       expect(message.fromAddress.trim()).to.equal('no-reply@ory.kratos.sh')
       expect(message.toAddresses).to.have.length(1)

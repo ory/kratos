@@ -62,9 +62,7 @@ context('Account Recovery Errors', () => {
         cy.wait(1000)
 
         cy.getMail().should((message) => {
-          expect(message.subject.trim()).to.equal(
-            'Recover access to your account'
-          )
+          expect(message.subject).to.equal('Recover access to your account')
           expect(message.toAddresses[0].trim()).to.equal(identity.email)
 
           const link = parseHtml(message.body).querySelector('a')
@@ -95,7 +93,7 @@ context('Account Recovery Errors', () => {
         cy.get('input[name="email"]').should('have.value', email)
 
         cy.getMail().should((message) => {
-          expect(message.subject.trim()).to.equal('Account access attempted')
+          expect(message.subject).to.equal('Account access attempted')
           expect(message.fromAddress.trim()).to.equal('no-reply@ory.kratos.sh')
           expect(message.toAddresses).to.have.length(1)
           expect(message.toAddresses[0].trim()).to.equal(email)
