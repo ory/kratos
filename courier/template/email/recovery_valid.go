@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"os"
+	"strings"
 
 	"github.com/ory/kratos/courier/template"
 )
@@ -29,7 +30,9 @@ func (t *RecoveryValid) EmailRecipient() (string, error) {
 }
 
 func (t *RecoveryValid) EmailSubject(ctx context.Context) (string, error) {
-	return template.LoadText(ctx, t.d, os.DirFS(t.d.CourierConfig(ctx).CourierTemplatesRoot()), "recovery/valid/email.subject.gotmpl", "recovery/valid/email.subject*", t.m, t.d.CourierConfig(ctx).CourierTemplatesRecoveryValid().Subject)
+	subject, err := template.LoadText(ctx, t.d, os.DirFS(t.d.CourierConfig(ctx).CourierTemplatesRoot()), "recovery/valid/email.subject.gotmpl", "recovery/valid/email.subject*", t.m, t.d.CourierConfig(ctx).CourierTemplatesRecoveryValid().Subject)
+
+	return strings.TrimSpace(subject), err
 }
 
 func (t *RecoveryValid) EmailBody(ctx context.Context) (string, error) {

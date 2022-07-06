@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"os"
+	"strings"
 
 	"github.com/ory/kratos/courier/template"
 )
@@ -27,7 +28,9 @@ func (t *VerificationInvalid) EmailRecipient() (string, error) {
 }
 
 func (t *VerificationInvalid) EmailSubject(ctx context.Context) (string, error) {
-	return template.LoadText(ctx, t.d, os.DirFS(t.d.CourierConfig(ctx).CourierTemplatesRoot()), "verification/invalid/email.subject.gotmpl", "verification/invalid/email.subject*", t.m, t.d.CourierConfig(ctx).CourierTemplatesVerificationInvalid().Subject)
+	subject, err := template.LoadText(ctx, t.d, os.DirFS(t.d.CourierConfig(ctx).CourierTemplatesRoot()), "verification/invalid/email.subject.gotmpl", "verification/invalid/email.subject*", t.m, t.d.CourierConfig(ctx).CourierTemplatesVerificationInvalid().Subject)
+
+	return strings.TrimSpace(subject), err
 }
 
 func (t *VerificationInvalid) EmailBody(ctx context.Context) (string, error) {

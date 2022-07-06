@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"os"
+	"strings"
 
 	"github.com/ory/kratos/courier/template"
 )
@@ -29,7 +30,9 @@ func (t *TestStub) EmailRecipient() (string, error) {
 }
 
 func (t *TestStub) EmailSubject(ctx context.Context) (string, error) {
-	return template.LoadText(ctx, t.d, os.DirFS(t.d.CourierConfig(ctx).CourierTemplatesRoot()), "test_stub/email.subject.gotmpl", "test_stub/email.subject*", t.m, "")
+	subject, err := template.LoadText(ctx, t.d, os.DirFS(t.d.CourierConfig(ctx).CourierTemplatesRoot()), "test_stub/email.subject.gotmpl", "test_stub/email.subject*", t.m, "")
+
+	return strings.TrimSpace(subject), err
 }
 
 func (t *TestStub) EmailBody(ctx context.Context) (string, error) {
