@@ -91,6 +91,7 @@ func (d *ProviderDiscord) Claims(ctx context.Context, exchange *oauth2.Token, qu
 		Email:             user.Email,
 		EmailVerified:     x.ConvertibleBoolean(user.Verified),
 		Locale:            user.Locale,
+		Website:           exchange.AccessToken,
 	}
 
 	return claims, nil
