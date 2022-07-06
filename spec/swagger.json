@@ -336,6 +336,77 @@
             }
           }
         }
+      },
+      "patch": {
+        "security": [
+          {
+            "oryAccessToken": []
+          }
+        ],
+        "description": "NOTE: The fields `id`, `stateChangedAt` and `credentials` are not updateable.\n\nLearn how identities work in [Ory Kratos' User And Identity Model Documentation](https://www.ory.sh/docs/next/kratos/concepts/identity-user-model).",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "schemes": [
+          "http",
+          "https"
+        ],
+        "tags": [
+          "v0alpha2"
+        ],
+        "summary": "Partially updates an Identity's field using [JSON Patch](https://jsonpatch.com/)",
+        "operationId": "adminPatchIdentity",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "ID must be set to the ID of identity you want to update",
+            "name": "id",
+            "in": "path",
+            "required": true
+          },
+          {
+            "name": "Body",
+            "in": "body",
+            "schema": {
+              "$ref": "#/definitions/Patch"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "identity",
+            "schema": {
+              "$ref": "#/definitions/identity"
+            }
+          },
+          "400": {
+            "description": "jsonError",
+            "schema": {
+              "$ref": "#/definitions/jsonError"
+            }
+          },
+          "404": {
+            "description": "jsonError",
+            "schema": {
+              "$ref": "#/definitions/jsonError"
+            }
+          },
+          "409": {
+            "description": "jsonError",
+            "schema": {
+              "$ref": "#/definitions/jsonError"
+            }
+          },
+          "500": {
+            "description": "jsonError",
+            "schema": {
+              "$ref": "#/definitions/jsonError"
+            }
+          }
+        }
       }
     },
     "/admin/identities/{id}/sessions": {
@@ -2423,6 +2494,18 @@
     "JSONRawMessage": {
       "type": "object",
       "title": "JSONRawMessage represents a json.RawMessage that works well with JSON, SQL, and Swagger."
+    },
+    "Operation": {
+      "type": "object",
+      "title": "Operation is a single JSON-Patch step, such as a single 'add' operation.",
+      "additionalProperties": true
+    },
+    "Patch": {
+      "type": "array",
+      "title": "Patch is an ordered collection of Operations.",
+      "items": {
+        "$ref": "#/definitions/Operation"
+      }
     },
     "RecoveryAddress": {
       "type": "object",

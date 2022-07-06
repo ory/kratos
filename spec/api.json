@@ -49,6 +49,18 @@
         "title": "JSONRawMessage represents a json.RawMessage that works well with JSON, SQL, and Swagger.",
         "type": "object"
       },
+      "Operation": {
+        "additionalProperties": true,
+        "title": "Operation is a single JSON-Patch step, such as a single 'add' operation.",
+        "type": "object"
+      },
+      "Patch": {
+        "items": {
+          "$ref": "#/components/schemas/Operation"
+        },
+        "title": "Patch is an ordered collection of Operations.",
+        "type": "array"
+      },
       "RecoveryAddress": {
         "properties": {
           "created_at": {
@@ -2521,6 +2533,92 @@
           }
         ],
         "summary": "Get an Identity",
+        "tags": [
+          "v0alpha2"
+        ]
+      },
+      "patch": {
+        "description": "NOTE: The fields `id`, `stateChangedAt` and `credentials` are not updateable.\n\nLearn how identities work in [Ory Kratos' User And Identity Model Documentation](https://www.ory.sh/docs/next/kratos/concepts/identity-user-model).",
+        "operationId": "adminPatchIdentity",
+        "parameters": [
+          {
+            "description": "ID must be set to the ID of identity you want to update",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Patch"
+              }
+            }
+          },
+          "x-originalParamName": "Body"
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/identity"
+                }
+              }
+            },
+            "description": "identity"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/jsonError"
+                }
+              }
+            },
+            "description": "jsonError"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/jsonError"
+                }
+              }
+            },
+            "description": "jsonError"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/jsonError"
+                }
+              }
+            },
+            "description": "jsonError"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/jsonError"
+                }
+              }
+            },
+            "description": "jsonError"
+          }
+        },
+        "security": [
+          {
+            "oryAccessToken": []
+          }
+        ],
+        "summary": "Partially updates an Identity's field using [JSON Patch](https://jsonpatch.com/)",
         "tags": [
           "v0alpha2"
         ]

@@ -225,6 +225,63 @@ paths:
       summary: Get an Identity
       tags:
       - v0alpha2
+    patch:
+      description: |-
+        NOTE: The fields `id`, `stateChangedAt` and `credentials` are not updateable.
+
+        Learn how identities work in [Ory Kratos' User And Identity Model Documentation](https://www.ory.sh/docs/next/kratos/concepts/identity-user-model).
+      operationId: adminPatchIdentity
+      parameters:
+      - description: ID must be set to the ID of identity you want to update
+        explode: false
+        in: path
+        name: id
+        required: true
+        schema:
+          type: string
+        style: simple
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Patch'
+        x-originalParamName: Body
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/identity'
+          description: identity
+        "400":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/jsonError'
+          description: jsonError
+        "404":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/jsonError'
+          description: jsonError
+        "409":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/jsonError'
+          description: jsonError
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/jsonError'
+          description: jsonError
+      security:
+      - oryAccessToken: []
+      summary: Partially updates an Identity's field using [JSON Patch](https://jsonpatch.com/)
+      tags:
+      - v0alpha2
     put:
       description: |-
         This endpoint updates an identity. The full identity payload (except credentials) is expected. This endpoint does not support patching.
@@ -2792,6 +2849,15 @@ components:
       title: JSONRawMessage represents a json.RawMessage that works well with JSON,
         SQL, and Swagger.
       type: object
+    Operation:
+      additionalProperties: true
+      title: Operation is a single JSON-Patch step, such as a single 'add' operation.
+      type: object
+    Patch:
+      items:
+        $ref: '#/components/schemas/Operation'
+      title: Patch is an ordered collection of Operations.
+      type: array
     RecoveryAddress:
       example:
         updated_at: 2000-01-23T04:56:07.000+00:00
