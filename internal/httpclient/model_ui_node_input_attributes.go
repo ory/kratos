@@ -31,8 +31,9 @@ type UiNodeInputAttributes struct {
 	// The input's pattern.
 	Pattern *string `json:"pattern,omitempty"`
 	// Mark this input field as required.
-	Required *bool  `json:"required,omitempty"`
-	Type     string `json:"type"`
+	Required *bool `json:"required,omitempty"`
+	// The input's element type.
+	Type string `json:"type"`
 	// The input's value.
 	Value interface{} `json:"value,omitempty"`
 }

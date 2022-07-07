@@ -4195,9 +4195,6 @@
         }
       }
     },
-    "uiNodeInputAttributeType": {
-      "type": "string"
-    },
     "uiNodeInputAttributes": {
       "description": "InputAttributes represents the attributes of an input node",
       "type": "object",
@@ -4248,7 +4245,22 @@
           "type": "boolean"
         },
         "type": {
-          "$ref": "#/definitions/uiNodeInputAttributeType"
+          "description": "The input's element type.",
+          "type": "string",
+          "enum": [
+            "text",
+            "password",
+            "number",
+            "checkbox",
+            "hidden",
+            "email",
+            "tel",
+            "submit",
+            "button",
+            "datetime-local",
+            "date",
+            "url"
+          ]
         },
         "value": {
           "description": "The input's value.",

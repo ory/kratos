@@ -5307,8 +5307,6 @@ components:
       - width
       title: ImageAttributes represents the attributes of an image node.
       type: object
-    uiNodeInputAttributeType:
-      type: string
     uiNodeInputAttributes:
       description: InputAttributes represents the attributes of an input node
       properties:
@@ -5347,6 +5345,20 @@ components:
           description: Mark this input field as required.
           type: boolean
         type:
+          description: The input's element type.
+          enum:
+          - text
+          - password
+          - number
+          - checkbox
+          - hidden
+          - email
+          - tel
+          - submit
+          - button
+          - datetime-local
+          - date
+          - url
           type: string
         value:
           description: The input's value.

@@ -12,7 +12,7 @@ Name | Type | Description | Notes
 **Onclick** | Pointer to **string** | OnClick may contain javascript which should be executed on click. This is primarily used for WebAuthn. | [optional] 
 **Pattern** | Pointer to **string** | The input&#39;s pattern. | [optional] 
 **Required** | Pointer to **bool** | Mark this input field as required. | [optional] 
-**Type** | **string** |  | 
+**Type** | **string** | The input&#39;s element type. | 
 **Value** | Pointer to **interface{}** | The input&#39;s value. | [optional] 
 
 ## Methods

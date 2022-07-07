@@ -3,34 +3,34 @@ package node
 import "github.com/ory/kratos/text"
 
 const (
-	InputAttributeTypeText          InputAttributeType = "text"
-	InputAttributeTypePassword      InputAttributeType = "password"
-	InputAttributeTypeNumber        InputAttributeType = "number"
-	InputAttributeTypeCheckbox      InputAttributeType = "checkbox"
-	InputAttributeTypeHidden        InputAttributeType = "hidden"
-	InputAttributeTypeEmail         InputAttributeType = "email"
-	InputAttributeTypeTel           InputAttributeType = "tel"
-	InputAttributeTypeSubmit        InputAttributeType = "submit"
-	InputAttributeTypeButton        InputAttributeType = "button"
-	InputAttributeTypeDateTimeLocal InputAttributeType = "datetime-local"
-	InputAttributeTypeDate          InputAttributeType = "date"
-	InputAttributeTypeURI           InputAttributeType = "url"
+	InputAttributeTypeText          UiNodeInputAttributeType = "text"
+	InputAttributeTypePassword      UiNodeInputAttributeType = "password"
+	InputAttributeTypeNumber        UiNodeInputAttributeType = "number"
+	InputAttributeTypeCheckbox      UiNodeInputAttributeType = "checkbox"
+	InputAttributeTypeHidden        UiNodeInputAttributeType = "hidden"
+	InputAttributeTypeEmail         UiNodeInputAttributeType = "email"
+	InputAttributeTypeTel           UiNodeInputAttributeType = "tel"
+	InputAttributeTypeSubmit        UiNodeInputAttributeType = "submit"
+	InputAttributeTypeButton        UiNodeInputAttributeType = "button"
+	InputAttributeTypeDateTimeLocal UiNodeInputAttributeType = "datetime-local"
+	InputAttributeTypeDate          UiNodeInputAttributeType = "date"
+	InputAttributeTypeURI           UiNodeInputAttributeType = "url"
 )
 
 const (
-	InputAttributeAutocompleteEmail           InputAttributeAutocomplete = "email"
-	InputAttributeAutocompleteTel             InputAttributeAutocomplete = "tel"
-	InputAttributeAutocompleteUrl             InputAttributeAutocomplete = "url"
-	InputAttributeAutocompleteCurrentPassword InputAttributeAutocomplete = "current-password"
-	InputAttributeAutocompleteNewPassword     InputAttributeAutocomplete = "new-password"
-	InputAttributeAutocompleteOneTimeCode     InputAttributeAutocomplete = "one-time-code"
+	InputAttributeAutocompleteEmail           UiNodeInputAttributeAutocomplete = "email"
+	InputAttributeAutocompleteTel             UiNodeInputAttributeAutocomplete = "tel"
+	InputAttributeAutocompleteUrl             UiNodeInputAttributeAutocomplete = "url"
+	InputAttributeAutocompleteCurrentPassword UiNodeInputAttributeAutocomplete = "current-password"
+	InputAttributeAutocompleteNewPassword     UiNodeInputAttributeAutocomplete = "new-password"
+	InputAttributeAutocompleteOneTimeCode     UiNodeInputAttributeAutocomplete = "one-time-code"
 )
 
-// swagger:model uiNodeInputAttributeType
-type InputAttributeType string
+// swagger:enum UiNodeInputAttributeType
+type UiNodeInputAttributeType string
 
-// swagger:enum InputAttributeAutocomplete
-type InputAttributeAutocomplete string
+// swagger:enum UiNodeInputAttributeAutocomplete
+type UiNodeInputAttributeAutocomplete string
 
 // Attributes represents a list of attributes (e.g. `href="foo"` for links).
 //
@@ -64,7 +64,7 @@ type InputAttributes struct {
 	// The input's element type.
 	//
 	// required: true
-	Type InputAttributeType `json:"type" faker:"-"`
+	Type UiNodeInputAttributeType `json:"type" faker:"-"`
 
 	// The input's value.
 	FieldValue interface{} `json:"value,omitempty" faker:"string"`
@@ -73,7 +73,7 @@ type InputAttributes struct {
 	Required bool `json:"required,omitempty"`
 
 	// The autocomplete attribute for the input.
-	Autocomplete InputAttributeAutocomplete `json:"autocomplete,omitempty"`
+	Autocomplete UiNodeInputAttributeAutocomplete `json:"autocomplete,omitempty"`
 
 	// The input's label text.
 	Label *text.Message `json:"label,omitempty"`

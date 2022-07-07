@@ -10,7 +10,7 @@ import (
 
 const DisableFormField = "disableFormField"
 
-func toFormType(n string, i interface{}) InputAttributeType {
+func toFormType(n string, i interface{}) UiNodeInputAttributeType {
 	switch n {
 	case x.CSRFTokenName:
 		return InputAttributeTypeHidden
@@ -89,7 +89,7 @@ func NewInputFieldFromJSON(name string, value interface{}, group UiNodeGroup, op
 	}
 }
 
-func NewInputField(name string, value interface{}, group UiNodeGroup, inputType InputAttributeType, opts ...InputAttributesModifier) *Node {
+func NewInputField(name string, value interface{}, group UiNodeGroup, inputType UiNodeInputAttributeType, opts ...InputAttributesModifier) *Node {
 	return &Node{
 		Type:       Input,
 		Group:      group,
