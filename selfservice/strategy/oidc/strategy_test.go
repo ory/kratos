@@ -53,12 +53,12 @@ func TestStrategy(t *testing.T) {
 	}
 
 	var (
-		conf, reg        = internal.NewFastRegistryWithMocks(t)
-		subject, website string
-		scope            []string
+		conf, reg                              = internal.NewFastRegistryWithMocks(t)
+		subject, website, picture, phoneNumber string
+		scope                                  []string
 	)
 
-	remoteAdmin, remotePublic, hydraIntegrationTSURL := newHydra(t, &subject, &website, &scope)
+	remoteAdmin, remotePublic, hydraIntegrationTSURL := newHydra(t, &subject, &website, &picture, &phoneNumber, &scope)
 	returnTS := newReturnTs(t, reg)
 	uiTS := newUI(t, reg)
 	errTS := testhelpers.NewErrorTestServer(t, reg)
@@ -176,6 +176,8 @@ func TestStrategy(t *testing.T) {
 	var ai = func(t *testing.T, res *http.Response, body []byte) {
 		assert.Contains(t, res.Request.URL.String(), returnTS.URL)
 		assert.Equal(t, subject, gjson.GetBytes(body, "identity.traits.subject").String(), "%s", body)
+		assert.Equal(t, website, gjson.GetBytes(body, "identity.traits.website").String(), "%s", body)
+		assert.Equal(t, picture, gjson.GetBytes(body, "identity.metadata_public.picture").String(), "%s", body)
 	}
 
 	var newLoginFlow = func(t *testing.T, redirectTo string, exp time.Duration) (req *login.Flow) {
@@ -387,6 +389,8 @@ func TestStrategy(t *testing.T) {
 		subject = "incomplete-data@ory.sh"
 		scope = []string{"openid"}
 		website = "https://www.ory.sh/kratos"
+		picture = "picture.png"
+		phoneNumber = "911"
 
 		t.Run("case=should fail registration on first attempt", func(t *testing.T) {
 			r := newRegistrationFlow(t, returnTS.URL, time.Minute)
@@ -649,13 +653,13 @@ func TestDisabledEndpoint(t *testing.T) {
 
 func TestPostEndpointRedirect(t *testing.T) {
 	var (
-		conf, reg        = internal.NewFastRegistryWithMocks(t)
-		subject, website string
-		scope            []string
+		conf, reg                              = internal.NewFastRegistryWithMocks(t)
+		subject, website, picture, phoneNumber string
+		scope                                  []string
 	)
 	testhelpers.StrategyEnable(t, conf, identity.CredentialsTypeOIDC.String(), true)
 
-	remoteAdmin, remotePublic, _ := newHydra(t, &subject, &website, &scope)
+	remoteAdmin, remotePublic, _ := newHydra(t, &subject, &website, &picture, &phoneNumber, &scope)
 
 	publicTS, adminTS := testhelpers.NewKratosServers(t)
 

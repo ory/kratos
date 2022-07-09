@@ -72,7 +72,7 @@ func createClient(t *testing.T, remote string, redir, id string) {
 	}))
 }
 
-func newHydraIntegration(t *testing.T, remote *string, subject, website *string, scope *[]string, addr string) (*http.Server, string) {
+func newHydraIntegration(t *testing.T, remote *string, subject, website *string, picture *string, phoneNumber *string, scope *[]string, addr string) (*http.Server, string) {
 	router := httprouter.New()
 
 	type p struct {
@@ -125,7 +125,7 @@ func newHydraIntegration(t *testing.T, remote *string, subject, website *string,
 		require.NotEmpty(t, challenge)
 
 		var b bytes.Buffer
-		require.NoError(t, json.NewEncoder(&b).Encode(&p{GrantScope: *scope, Session: json.RawMessage(`{"id_token":{"website":"` + *website + `"}}`)}))
+		require.NoError(t, json.NewEncoder(&b).Encode(&p{GrantScope: *scope, Session: json.RawMessage(`{"id_token":{"website":"` + *website + `","picture":"` + *picture + `","phone_number":"` + *phoneNumber + `"}}`)}))
 		href := urlx.MustJoin(*remote, "/oauth2/auth/requests/consent/accept") + "?consent_challenge=" + challenge
 		do(w, r, href, &b)
 	})
@@ -187,11 +187,11 @@ func newUI(t *testing.T, reg driver.Registry) *httptest.Server {
 	return ts
 }
 
-func newHydra(t *testing.T, subject, website *string, scope *[]string) (remoteAdmin, remotePublic, hydraIntegrationTSURL string) {
+func newHydra(t *testing.T, subject, website *string, picture *string, phoneNumber *string, scope *[]string) (remoteAdmin, remotePublic, hydraIntegrationTSURL string) {
 	remoteAdmin = os.Getenv("TEST_SELFSERVICE_OIDC_HYDRA_ADMIN")
 	remotePublic = os.Getenv("TEST_SELFSERVICE_OIDC_HYDRA_PUBLIC")
 
-	hydraIntegrationTS, hydraIntegrationTSURL := newHydraIntegration(t, &remoteAdmin, subject, website, scope, os.Getenv("TEST_SELFSERVICE_OIDC_HYDRA_INTEGRATION_ADDR"))
+	hydraIntegrationTS, hydraIntegrationTSURL := newHydraIntegration(t, &remoteAdmin, subject, website, picture, phoneNumber, scope, os.Getenv("TEST_SELFSERVICE_OIDC_HYDRA_INTEGRATION_ADDR"))
 	t.Cleanup(func() {
 		require.NoError(t, hydraIntegrationTS.Close())
 	})
