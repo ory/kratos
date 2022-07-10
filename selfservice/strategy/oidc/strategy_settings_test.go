@@ -47,13 +47,13 @@ func TestSettingsStrategy(t *testing.T) {
 	}
 
 	var (
-		conf, reg                     = internal.NewFastRegistryWithMocks(t)
-		subject                       string
-		website, picture, phoneNumber string
-		scope                         []string
+		conf, reg = internal.NewFastRegistryWithMocks(t)
+		subject   string
+		claims    idTokenClaims
+		scope     []string
 	)
 
-	remoteAdmin, remotePublic, _ := newHydra(t, &subject, &website, &picture, &phoneNumber, &scope)
+	remoteAdmin, remotePublic, _ := newHydra(t, &subject, &claims, &scope)
 	uiTS := newUI(t, reg)
 	errTS := testhelpers.NewErrorTestServer(t, reg)
 	publicTS, adminTS := testhelpers.NewKratosServers(t)
