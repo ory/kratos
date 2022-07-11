@@ -39,7 +39,6 @@ jobs:
             keto
             kratos
             stats
-            sdk
 
           requireScope: false
 
