@@ -402,11 +402,11 @@ func TestRecovery(t *testing.T) {
 			if isAPI {
 				assert.Equal(t, http.StatusUnauthorized, res.StatusCode)
 				assert.Contains(t, res.Request.URL.String(), public.URL+recovery.RouteSubmitFlow)
-				assertx.EqualAsJSON(t, session.ErrIdentityDisabled, json.RawMessage(gjson.GetBytes(body, "error").Raw), "%s", body)
+				assertx.EqualAsJSON(t, session.ErrIdentityDisabled.WithDetail("identity_id", addr.IdentityID), json.RawMessage(gjson.GetBytes(body, "error").Raw), "%s", body)
 			} else {
 				assert.Equal(t, http.StatusOK, res.StatusCode)
 				assert.Contains(t, res.Request.URL.String(), conf.SelfServiceFlowErrorURL().String())
-				assertx.EqualAsJSON(t, session.ErrIdentityDisabled, json.RawMessage(body), "%s", body)
+				assertx.EqualAsJSON(t, session.ErrIdentityDisabled.WithDetail("identity_id", addr.IdentityID), json.RawMessage(body), "%s", body)
 			}
 		}
 
