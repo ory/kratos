@@ -4,7 +4,7 @@
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 **Table of Contents**
 
-- [ (2022-07-07)](#2022-07-07)
+- [ (2022-07-12)](#2022-07-12)
     - [Bug Fixes](#bug-fixes)
     - [Documentation](#documentation)
     - [Features](#features)
@@ -260,7 +260,7 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# [](https://github.com/ory/kratos/compare/v0.10.1...v) (2022-07-07)
+# [](https://github.com/ory/kratos/compare/v0.10.1...v) (2022-07-12)
 
 
 ### Bug Fixes
@@ -278,6 +278,7 @@
 * Remove newline sign from email subject ([#2576](https://github.com/ory/kratos/issues/2576)) ([ca3d9c2](https://github.com/ory/kratos/commit/ca3d9c24e25ce501e9eae23547f87e1c35b2ea97))
 * Return empty array not null when there are no sessions ([#2548](https://github.com/ory/kratos/issues/2548)) ([fffba47](https://github.com/ory/kratos/commit/fffba473440fec3118a3951b697d5a0d2d4e30d6))
 * **sdk:** Make InputAttributes.Type an enum ([ff6190f](https://github.com/ory/kratos/commit/ff6190f31f538cf8ed735dfd1bb3b7afcd944c36))
+* Unable to find JSON Schema ID: default ([#2393](https://github.com/ory/kratos/issues/2393)) ([f43396b](https://github.com/ory/kratos/commit/f43396bdc03f89812f026c2a94b0b50100134c23))
 
 ### Documentation
 
@@ -292,6 +293,7 @@
 * Add autocomplete attributes ([#2523](https://github.com/ory/kratos/issues/2523)) ([6284a9a](https://github.com/ory/kratos/commit/6284a9a5152924018d85f306e5758e9d8d759283)), closes [#2396](https://github.com/ory/kratos/issues/2396)
 * Add codecov yaml ([90da0bb](https://github.com/ory/kratos/commit/90da0bb4aeb50ed697c998342300cc56de5d5e1c))
 * Add DingTalk social login ([#2494](https://github.com/ory/kratos/issues/2494)) ([7b966bd](https://github.com/ory/kratos/commit/7b966bd16333f419b2a57f2a0b8684d6d86b34e6))
+* Add identity id to "account disabled" error ([#2557](https://github.com/ory/kratos/issues/2557)) ([f09b1b3](https://github.com/ory/kratos/commit/f09b1b3701c6deda4d25cebb7ccf2e97089be32a))
 * **cli:** Helper for cleaning up stale records ([#2406](https://github.com/ory/kratos/issues/2406)) ([29d6376](https://github.com/ory/kratos/commit/29d6376e22e4de617ec63ca0a5dcb4dbf34c7c37)), closes [#952](https://github.com/ory/kratos/issues/952)
 * Handler for update API with credentials ([#2423](https://github.com/ory/kratos/issues/2423)) ([561187d](https://github.com/ory/kratos/commit/561187dafe2fea324d55c4efe3ffa6b65f9bed72)), closes [#2334](https://github.com/ory/kratos/issues/2334)
 
