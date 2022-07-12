@@ -2,8 +2,9 @@ package identity
 
 import (
 	"context"
-	"github.com/ory/kratos/driver/config"
 	"reflect"
+
+	"github.com/ory/kratos/driver/config"
 
 	"github.com/gofrs/uuid"
 
