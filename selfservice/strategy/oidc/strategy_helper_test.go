@@ -34,6 +34,18 @@ import (
 	"github.com/ory/x/urlx"
 )
 
+type idTokenClaims struct {
+	traits struct {
+		website string
+	}
+	metadataPublic struct {
+		picture string
+	}
+	metadataAdmin struct {
+		phoneNumber string
+	}
+}
+
 func createClient(t *testing.T, remote string, redir, id string) {
 	require.NoError(t, resilience.Retry(logrusx.New("", ""), time.Second*10, time.Minute*2, func() error {
 		if req, err := http.NewRequest("DELETE", remote+"/clients/"+id, nil); err != nil {
@@ -72,7 +84,7 @@ func createClient(t *testing.T, remote string, redir, id string) {
 	}))
 }
 
-func newHydraIntegration(t *testing.T, remote *string, subject, website *string, scope *[]string, addr string) (*http.Server, string) {
+func newHydraIntegration(t *testing.T, remote *string, subject *string, claims *idTokenClaims, scope *[]string, addr string) (*http.Server, string) {
 	router := httprouter.New()
 
 	type p struct {
@@ -125,7 +137,8 @@ func newHydraIntegration(t *testing.T, remote *string, subject, website *string,
 		require.NotEmpty(t, challenge)
 
 		var b bytes.Buffer
-		require.NoError(t, json.NewEncoder(&b).Encode(&p{GrantScope: *scope, Session: json.RawMessage(`{"id_token":{"website":"` + *website + `"}}`)}))
+		var msg = `{"id_token":{"website":"` + claims.traits.website + `","picture":"` + *&claims.metadataPublic.picture + `","phone_number":"` + *&claims.metadataAdmin.phoneNumber + `"}}`
+		require.NoError(t, json.NewEncoder(&b).Encode(&p{GrantScope: *scope, Session: json.RawMessage(msg)}))
 		href := urlx.MustJoin(*remote, "/oauth2/auth/requests/consent/accept") + "?consent_challenge=" + challenge
 		do(w, r, href, &b)
 	})
@@ -187,11 +200,11 @@ func newUI(t *testing.T, reg driver.Registry) *httptest.Server {
 	return ts
 }
 
-func newHydra(t *testing.T, subject, website *string, scope *[]string) (remoteAdmin, remotePublic, hydraIntegrationTSURL string) {
+func newHydra(t *testing.T, subject *string, claims *idTokenClaims, scope *[]string) (remoteAdmin, remotePublic, hydraIntegrationTSURL string) {
 	remoteAdmin = os.Getenv("TEST_SELFSERVICE_OIDC_HYDRA_ADMIN")
 	remotePublic = os.Getenv("TEST_SELFSERVICE_OIDC_HYDRA_PUBLIC")
 
-	hydraIntegrationTS, hydraIntegrationTSURL := newHydraIntegration(t, &remoteAdmin, subject, website, scope, os.Getenv("TEST_SELFSERVICE_OIDC_HYDRA_INTEGRATION_ADDR"))
+	hydraIntegrationTS, hydraIntegrationTSURL := newHydraIntegration(t, &remoteAdmin, subject, claims, scope, os.Getenv("TEST_SELFSERVICE_OIDC_HYDRA_INTEGRATION_ADDR"))
 	t.Cleanup(func() {
 		require.NoError(t, hydraIntegrationTS.Close())
 	})

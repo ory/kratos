@@ -9,5 +9,11 @@ else
         subject: claims.sub,
         [if "website" in claims then "website" else null]: claims.website,
       },
+      metadata_public: {
+        [if "picture" in claims then "picture" else null]: claims.picture,
+      },
+      metadata_admin: {
+        [if "phone_number" in claims then "phone_number" else null]: claims.phone_number,
+      }
     },
   }
