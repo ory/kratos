@@ -192,6 +192,10 @@ func (f Flow) MarshalJSON() ([]byte, error) {
 }
 
 func (f *Flow) SetReturnTo() {
+	// Return to is already set, do not overwrite it.
+	if f.ReturnTo != "" {
+		return
+	}
 	if u, err := url.Parse(f.RequestURL); err == nil {
 		f.ReturnTo = u.Query().Get("return_to")
 	}
