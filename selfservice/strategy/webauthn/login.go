@@ -170,9 +170,9 @@ func (s *Strategy) handleLoginError(r *http.Request, f *login.Flow, err error) e
 //
 // swagger:model submitSelfServiceLoginFlowWithWebAuthnMethodBody
 type submitSelfServiceLoginFlowWithWebAuthnMethodBody struct {
-	// Identifier is the email or username of the user trying to log in. This field is
-	// only required when using WebAuthn for passwordless login. When using WebAuthn
-	// for multi-factor authentication, it is not needed.
+	// Identifier is the email or username of the user trying to log in.
+	//
+	// required: true
 	Identifier string `json:"identifier"`
 
 	// Method should be set to "webAuthn" when logging in using the WebAuthn strategy.
