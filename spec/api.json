@@ -1387,7 +1387,7 @@
             "type": "string"
           },
           "identifier": {
-            "description": "Identifier is the email or username of the user trying to log in. This field is\nonly required when using WebAuthn for passwordless login. When using WebAuthn\nfor multi-factor authentication, it is not needed.",
+            "description": "Identifier is the email or username of the user trying to log in.",
             "type": "string"
           },
           "method": {
@@ -1400,6 +1400,7 @@
           }
         },
         "required": [
+          "identifier",
           "method"
         ],
         "title": "submitSelfServiceLoginFlowWithWebAuthnMethodBody is used to decode the login form payload.",

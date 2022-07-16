@@ -4527,10 +4527,8 @@ components:
             flows.
           type: string
         identifier:
-          description: |-
-            Identifier is the email or username of the user trying to log in. This field is
-            only required when using WebAuthn for passwordless login. When using WebAuthn
-            for multi-factor authentication, it is not needed.
+          description: Identifier is the email or username of the user trying to log
+            in.
           type: string
         method:
           description: Method should be set to "webAuthn" when logging in using the
@@ -4543,6 +4541,7 @@ components:
             This must contain the ID of the WebAuthN connection.
           type: string
       required:
+      - identifier
       - method
       title: submitSelfServiceLoginFlowWithWebAuthnMethodBody is used to decode the
         login form payload.
