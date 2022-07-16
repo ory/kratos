@@ -4,8 +4,8 @@
 
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
-**Page** | Pointer to **int64** | Pagination Page  This value is currently an integer, but it is not sequential. The value is not the page number, but a reference. The next page can be any number and some numbers might return an empty list.  For example, page 2 might not follow after page 1. And even if page 3 and 5 exist, but page 4 might not exist. | [optional] [default to 1]
-**PerPage** | Pointer to **int64** | Items per Page  This is the number of items per page. | [optional] [default to 250]
+**PageSize** | Pointer to **int64** | Items per page  This is the number of items per page to return. For details on pagination please head over to the [pagination documentation](https://www.ory.sh/docs/ecosystem/api-design#pagination). | [optional] [default to 250]
+**PageToken** | Pointer to **string** | Next Page Token  The next page token. For details on pagination please head over to the [pagination documentation](https://www.ory.sh/docs/ecosystem/api-design#pagination). | [optional] [default to "1"]
 
 ## Methods
 
@@ -26,55 +26,55 @@ NewPaginationWithDefaults instantiates a new Pagination object
 This constructor will only assign default values to properties that have it defined,
 but it doesn't guarantee that properties required by API are set
 
-### GetPage
+### GetPageSize
 
-`func (o *Pagination) GetPage() int64`
+`func (o *Pagination) GetPageSize() int64`
 
-GetPage returns the Page field if non-nil, zero value otherwise.
+GetPageSize returns the PageSize field if non-nil, zero value otherwise.
 
-### GetPageOk
+### GetPageSizeOk
 
-`func (o *Pagination) GetPageOk() (*int64, bool)`
+`func (o *Pagination) GetPageSizeOk() (*int64, bool)`
 
-GetPageOk returns a tuple with the Page field if it's non-nil, zero value otherwise
+GetPageSizeOk returns a tuple with the PageSize field if it's non-nil, zero value otherwise
 and a boolean to check if the value has been set.
 
-### SetPage
+### SetPageSize
 
-`func (o *Pagination) SetPage(v int64)`
+`func (o *Pagination) SetPageSize(v int64)`
 
-SetPage sets Page field to given value.
+SetPageSize sets PageSize field to given value.
 
-### HasPage
+### HasPageSize
 
-`func (o *Pagination) HasPage() bool`
+`func (o *Pagination) HasPageSize() bool`
 
-HasPage returns a boolean if a field has been set.
+HasPageSize returns a boolean if a field has been set.
 
-### GetPerPage
+### GetPageToken
 
-`func (o *Pagination) GetPerPage() int64`
+`func (o *Pagination) GetPageToken() string`
 
-GetPerPage returns the PerPage field if non-nil, zero value otherwise.
+GetPageToken returns the PageToken field if non-nil, zero value otherwise.
 
-### GetPerPageOk
+### GetPageTokenOk
 
-`func (o *Pagination) GetPerPageOk() (*int64, bool)`
+`func (o *Pagination) GetPageTokenOk() (*string, bool)`
 
-GetPerPageOk returns a tuple with the PerPage field if it's non-nil, zero value otherwise
+GetPageTokenOk returns a tuple with the PageToken field if it's non-nil, zero value otherwise
 and a boolean to check if the value has been set.
 
-### SetPerPage
+### SetPageToken
 
-`func (o *Pagination) SetPerPage(v int64)`
+`func (o *Pagination) SetPageToken(v string)`
 
-SetPerPage sets PerPage field to given value.
+SetPageToken sets PageToken field to given value.
 
-### HasPerPage
+### HasPageToken
 
-`func (o *Pagination) HasPerPage() bool`
+`func (o *Pagination) HasPageToken() bool`
 
-HasPerPage returns a boolean if a field has been set.
+HasPageToken returns a boolean if a field has been set.
 
 
 [[Back to Model list]](../README.md#documentation-for-models) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to README]](../README.md)

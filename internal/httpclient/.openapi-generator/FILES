@@ -33,9 +33,11 @@ docs/InlineResponse200.md
 docs/InlineResponse2001.md
 docs/InlineResponse503.md
 docs/JsonError.md
+docs/JsonPatch.md
 docs/MetadataApi.md
 docs/NeedsPrivilegedSessionError.md
 docs/Pagination.md
+docs/PaginationHeaders.md
 docs/RecoveryAddress.md
 docs/RevokedSessions.md
 docs/SelfServiceBrowserLocationChangeRequiredError.md
@@ -122,8 +124,10 @@ model_inline_response_200.go
 model_inline_response_200_1.go
 model_inline_response_503.go
 model_json_error.go
+model_json_patch.go
 model_needs_privileged_session_error.go
 model_pagination.go
+model_pagination_headers.go
 model_recovery_address.go
 model_revoked_sessions.go
 model_self_service_browser_location_change_required_error.go
