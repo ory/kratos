@@ -16,5 +16,6 @@ func TestNewRecoveryEmailAddress(t *testing.T) {
 
 	assert.Equal(t, a.Value, "foo@ory.sh")
 	assert.Equal(t, a.Via, RecoveryAddressTypeEmail)
+	assert.Equal(t, iid, a.IdentityID)
 	assert.Equal(t, uuid.Nil, a.ID)
 }
