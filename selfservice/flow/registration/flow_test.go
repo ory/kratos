@@ -29,7 +29,6 @@ func TestFakeFlow(t *testing.T) {
 	var r registration.Flow
 	require.NoError(t, faker.FakeData(&r))
 
-	assert.NotEmpty(t, r.ID)
 	assert.NotEmpty(t, r.IssuedAt)
 	assert.NotEmpty(t, r.ExpiresAt)
 	assert.NotEmpty(t, r.RequestURL)
