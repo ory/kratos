@@ -49,18 +49,6 @@
         "title": "JSONRawMessage represents a json.RawMessage that works well with JSON, SQL, and Swagger.",
         "type": "object"
       },
-      "Operation": {
-        "additionalProperties": true,
-        "title": "Operation is a single JSON-Patch step, such as a single 'add' operation.",
-        "type": "object"
-      },
-      "Patch": {
-        "items": {
-          "$ref": "#/components/schemas/Operation"
-        },
-        "title": "Patch is an ordered collection of Operations.",
-        "type": "array"
-      },
       "RecoveryAddress": {
         "properties": {
           "created_at": {
@@ -581,6 +569,42 @@
         "title": "JSON API Error Response",
         "type": "object"
       },
+      "jsonPatch": {
+        "description": "A JSONPatch document as defined by RFC 6902",
+        "properties": {
+          "from": {
+            "description": "This field is used together with operation \"move\" and uses JSON Pointer notation.\n\nLearn more [about JSON Pointers](https://datatracker.ietf.org/doc/html/rfc6901#section-5).",
+            "example": "/name",
+            "type": "string"
+          },
+          "op": {
+            "description": "The operation to be performed. One of \"add\", \"remove\", \"replace\", \"move\", \"copy\", or \"test\".",
+            "example": "replace",
+            "type": "string"
+          },
+          "path": {
+            "description": "The path to the target path. Uses JSON pointer notation.\n\nLearn more [about JSON Pointers](https://datatracker.ietf.org/doc/html/rfc6901#section-5).",
+            "example": "/name",
+            "type": "string"
+          },
+          "value": {
+            "description": "The value to be used within the operations.\n\nLearn more [about JSON Pointers](https://datatracker.ietf.org/doc/html/rfc6901#section-5).",
+            "example": "foobar"
+          }
+        },
+        "required": [
+          "op",
+          "path"
+        ],
+        "type": "object"
+      },
+      "jsonPatchDocument": {
+        "description": "A JSONPatchDocument request",
+        "items": {
+          "$ref": "#/components/schemas/jsonPatch"
+        },
+        "type": "array"
+      },
       "jsonSchema": {
         "description": "Raw JSON Schema",
         "type": "object"
@@ -649,20 +673,32 @@
       },
       "pagination": {
         "properties": {
-          "page": {
-            "default": 1,
-            "description": "Pagination Page\n\nThis value is currently an integer, but it is not sequential. The value is not the page number, but a\nreference. The next page can be any number and some numbers might return an empty list.\n\nFor example, page 2 might not follow after page 1. And even if page 3 and 5 exist, but page 4 might not exist.",
-            "format": "int64",
-            "minimum": 1,
-            "type": "integer"
-          },
-          "per_page": {
+          "page_size": {
             "default": 250,
-            "description": "Items per Page\n\nThis is the number of items per page.",
+            "description": "Items per page\n\nThis is the number of items per page to return.\nFor details on pagination please head over to the [pagination documentation](https://www.ory.sh/docs/ecosystem/api-design#pagination).",
             "format": "int64",
             "maximum": 1000,
             "minimum": 1,
             "type": "integer"
+          },
+          "page_token": {
+            "default": "1",
+            "description": "Next Page Token\n\nThe next page token.\nFor details on pagination please head over to the [pagination documentation](https://www.ory.sh/docs/ecosystem/api-design#pagination).",
+            "minimum": 1,
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "paginationHeaders": {
+        "properties": {
+          "link": {
+            "description": "The link header contains pagination links.\n\nFor details on pagination please head over to the [pagination documentation](https://www.ory.sh/docs/ecosystem/api-design#pagination).\n\nin: header",
+            "type": "string"
+          },
+          "x-total-count": {
+            "description": "The total number of clients.\n\nin: header",
+            "type": "string"
           }
         },
         "type": "object"
@@ -2555,7 +2591,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/Patch"
+                "$ref": "#/components/schemas/jsonPatchDocument"
               }
             }
           },

@@ -7,8 +7,6 @@ import (
 	"net/http"
 	"time"
 
-	jsonpatch "github.com/evanphx/json-patch"
-
 	"github.com/ory/kratos/hash"
 	"github.com/ory/kratos/x"
 
@@ -21,6 +19,7 @@ import (
 
 	"github.com/ory/x/decoderx"
 	"github.com/ory/x/jsonx"
+	"github.com/ory/x/openapix"
 	"github.com/ory/x/sqlxx"
 	"github.com/ory/x/urlx"
 
@@ -556,7 +555,7 @@ type adminPatchIdentity struct {
 	ID string `json:"id"`
 
 	// in: body
-	Body jsonpatch.Patch
+	Body openapix.JSONPatchDocument
 }
 
 // swagger:route PATCH /admin/identities/{id} v0alpha2 adminPatchIdentity

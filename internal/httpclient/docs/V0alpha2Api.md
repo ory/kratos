@@ -604,7 +604,7 @@ Name | Type | Description  | Notes
 
 ## AdminPatchIdentity
 
-> Identity AdminPatchIdentity(ctx, id).RequestBody(requestBody).Execute()
+> Identity AdminPatchIdentity(ctx, id).JsonPatch(jsonPatch).Execute()
 
 Partially updates an Identity's field using [JSON Patch](https://jsonpatch.com/)
 
@@ -624,11 +624,11 @@ import (
 
 func main() {
     id := "id_example" // string | ID must be set to the ID of identity you want to update
-    requestBody := []map[string]map[string]interface{}{map[string]map[string]interface{}{"key": map[string]interface{}(123)}} // []map[string]map[string]interface{} |  (optional)
+    jsonPatch := []openapiclient.JsonPatch{*openapiclient.NewJsonPatch("replace", "/name")} // []JsonPatch |  (optional)
 
     configuration := openapiclient.NewConfiguration()
     apiClient := openapiclient.NewAPIClient(configuration)
-    resp, r, err := apiClient.V0alpha2Api.AdminPatchIdentity(context.Background(), id).RequestBody(requestBody).Execute()
+    resp, r, err := apiClient.V0alpha2Api.AdminPatchIdentity(context.Background(), id).JsonPatch(jsonPatch).Execute()
     if err != nil {
         fmt.Fprintf(os.Stderr, "Error when calling `V0alpha2Api.AdminPatchIdentity``: %v\n", err)
         fmt.Fprintf(os.Stderr, "Full HTTP response: %v\n", r)
@@ -654,7 +654,7 @@ Other parameters are passed through a pointer to a apiAdminPatchIdentityRequest 
 Name | Type | Description  | Notes
 ------------- | ------------- | ------------- | -------------
 
- **requestBody** | **[]map[string]map[string]interface{}** |  | 
+ **jsonPatch** | [**[]JsonPatch**](JsonPatch.md) |  | 
 
 ### Return type
 

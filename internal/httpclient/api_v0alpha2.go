@@ -2314,14 +2314,14 @@ func (a *V0alpha2ApiService) AdminListIdentitySessionsExecute(r V0alpha2ApiApiAd
 }
 
 type V0alpha2ApiApiAdminPatchIdentityRequest struct {
-	ctx         context.Context
-	ApiService  V0alpha2Api
-	id          string
-	requestBody *[]map[string]map[string]interface{}
+	ctx        context.Context
+	ApiService V0alpha2Api
+	id         string
+	jsonPatch  *[]JsonPatch
 }
 
-func (r V0alpha2ApiApiAdminPatchIdentityRequest) RequestBody(requestBody []map[string]map[string]interface{}) V0alpha2ApiApiAdminPatchIdentityRequest {
-	r.requestBody = &requestBody
+func (r V0alpha2ApiApiAdminPatchIdentityRequest) JsonPatch(jsonPatch []JsonPatch) V0alpha2ApiApiAdminPatchIdentityRequest {
+	r.jsonPatch = &jsonPatch
 	return r
 }
 
@@ -2390,7 +2390,7 @@ func (a *V0alpha2ApiService) AdminPatchIdentityExecute(r V0alpha2ApiApiAdminPatc
 		localVarHeaderParams["Accept"] = localVarHTTPHeaderAccept
 	}
 	// body params
-	localVarPostBody = r.requestBody
+	localVarPostBody = r.jsonPatch
 	if r.ctx != nil {
 		// API Key Authentication
 		if auth, ok := r.ctx.Value(ContextAPIKeys).(map[string]APIKey); ok {
