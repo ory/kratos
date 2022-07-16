@@ -673,32 +673,20 @@
       },
       "pagination": {
         "properties": {
-          "page_size": {
+          "page": {
+            "default": 1,
+            "description": "Pagination Page\n\nThis value is currently an integer, but it is not sequential. The value is not the page number, but a\nreference. The next page can be any number and some numbers might return an empty list.\n\nFor example, page 2 might not follow after page 1. And even if page 3 and 5 exist, but page 4 might not exist.",
+            "format": "int64",
+            "minimum": 1,
+            "type": "integer"
+          },
+          "per_page": {
             "default": 250,
-            "description": "Items per page\n\nThis is the number of items per page to return.\nFor details on pagination please head over to the [pagination documentation](https://www.ory.sh/docs/ecosystem/api-design#pagination).",
+            "description": "Items per Page\n\nThis is the number of items per page.",
             "format": "int64",
             "maximum": 1000,
             "minimum": 1,
             "type": "integer"
-          },
-          "page_token": {
-            "default": "1",
-            "description": "Next Page Token\n\nThe next page token.\nFor details on pagination please head over to the [pagination documentation](https://www.ory.sh/docs/ecosystem/api-design#pagination).",
-            "minimum": 1,
-            "type": "string"
-          }
-        },
-        "type": "object"
-      },
-      "paginationHeaders": {
-        "properties": {
-          "link": {
-            "description": "The link header contains pagination links.\n\nFor details on pagination please head over to the [pagination documentation](https://www.ory.sh/docs/ecosystem/api-design#pagination).\n\nin: header",
-            "type": "string"
-          },
-          "x-total-count": {
-            "description": "The total number of clients.\n\nin: header",
-            "type": "string"
           }
         },
         "type": "object"
@@ -1864,6 +1852,38 @@
         "required": [
           "identity"
         ],
+        "type": "object"
+      },
+      "tokenPagination": {
+        "properties": {
+          "page_size": {
+            "default": 250,
+            "description": "Items per page\n\nThis is the number of items per page to return.\nFor details on pagination please head over to the [pagination documentation](https://www.ory.sh/docs/ecosystem/api-design#pagination).",
+            "format": "int64",
+            "maximum": 1000,
+            "minimum": 1,
+            "type": "integer"
+          },
+          "page_token": {
+            "default": "1",
+            "description": "Next Page Token\n\nThe next page token.\nFor details on pagination please head over to the [pagination documentation](https://www.ory.sh/docs/ecosystem/api-design#pagination).",
+            "minimum": 1,
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "tokenPaginationHeaders": {
+        "properties": {
+          "link": {
+            "description": "The link header contains pagination links.\n\nFor details on pagination please head over to the [pagination documentation](https://www.ory.sh/docs/ecosystem/api-design#pagination).\n\nin: header",
+            "type": "string"
+          },
+          "x-total-count": {
+            "description": "The total number of clients.\n\nin: header",
+            "type": "string"
+          }
+        },
         "type": "object"
       },
       "uiContainer": {
