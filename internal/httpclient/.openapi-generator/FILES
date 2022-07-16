@@ -37,7 +37,6 @@ docs/JsonPatch.md
 docs/MetadataApi.md
 docs/NeedsPrivilegedSessionError.md
 docs/Pagination.md
-docs/PaginationHeaders.md
 docs/RecoveryAddress.md
 docs/RevokedSessions.md
 docs/SelfServiceBrowserLocationChangeRequiredError.md
@@ -82,6 +81,8 @@ docs/SubmitSelfServiceVerificationFlowBody.md
 docs/SubmitSelfServiceVerificationFlowWithLinkMethodBody.md
 docs/SuccessfulSelfServiceLoginWithoutBrowser.md
 docs/SuccessfulSelfServiceRegistrationWithoutBrowser.md
+docs/TokenPagination.md
+docs/TokenPaginationHeaders.md
 docs/UiContainer.md
 docs/UiNode.md
 docs/UiNodeAnchorAttributes.md
@@ -127,7 +128,6 @@ model_json_error.go
 model_json_patch.go
 model_needs_privileged_session_error.go
 model_pagination.go
-model_pagination_headers.go
 model_recovery_address.go
 model_revoked_sessions.go
 model_self_service_browser_location_change_required_error.go
@@ -172,6 +172,8 @@ model_submit_self_service_verification_flow_body.go
 model_submit_self_service_verification_flow_with_link_method_body.go
 model_successful_self_service_login_without_browser.go
 model_successful_self_service_registration_without_browser.go
+model_token_pagination.go
+model_token_pagination_headers.go
 model_ui_container.go
 model_ui_node.go
 model_ui_node_anchor_attributes.go

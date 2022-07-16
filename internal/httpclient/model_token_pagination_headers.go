@@ -15,33 +15,33 @@ import (
 	"encoding/json"
 )
 
-// PaginationHeaders struct for PaginationHeaders
-type PaginationHeaders struct {
+// TokenPaginationHeaders struct for TokenPaginationHeaders
+type TokenPaginationHeaders struct {
 	// The link header contains pagination links.  For details on pagination please head over to the [pagination documentation](https://www.ory.sh/docs/ecosystem/api-design#pagination).  in: header
 	Link *string `json:"link,omitempty"`
 	// The total number of clients.  in: header
 	XTotalCount *string `json:"x-total-count,omitempty"`
 }
 
-// NewPaginationHeaders instantiates a new PaginationHeaders object
+// NewTokenPaginationHeaders instantiates a new TokenPaginationHeaders object
 // This constructor will assign default values to properties that have it defined,
 // and makes sure properties required by API are set, but the set of arguments
 // will change when the set of required properties is changed
-func NewPaginationHeaders() *PaginationHeaders {
-	this := PaginationHeaders{}
+func NewTokenPaginationHeaders() *TokenPaginationHeaders {
+	this := TokenPaginationHeaders{}
 	return &this
 }
 
-// NewPaginationHeadersWithDefaults instantiates a new PaginationHeaders object
+// NewTokenPaginationHeadersWithDefaults instantiates a new TokenPaginationHeaders object
 // This constructor will only assign default values to properties that have it defined,
 // but it doesn't guarantee that properties required by API are set
-func NewPaginationHeadersWithDefaults() *PaginationHeaders {
-	this := PaginationHeaders{}
+func NewTokenPaginationHeadersWithDefaults() *TokenPaginationHeaders {
+	this := TokenPaginationHeaders{}
 	return &this
 }
 
 // GetLink returns the Link field value if set, zero value otherwise.
-func (o *PaginationHeaders) GetLink() string {
+func (o *TokenPaginationHeaders) GetLink() string {
 	if o == nil || o.Link == nil {
 		var ret string
 		return ret
@@ -51,7 +51,7 @@ func (o *PaginationHeaders) GetLink() string {
 
 // GetLinkOk returns a tuple with the Link field value if set, nil otherwise
 // and a boolean to check if the value has been set.
-func (o *PaginationHeaders) GetLinkOk() (*string, bool) {
+func (o *TokenPaginationHeaders) GetLinkOk() (*string, bool) {
 	if o == nil || o.Link == nil {
 		return nil, false
 	}
@@ -59,7 +59,7 @@ func (o *PaginationHeaders) GetLinkOk() (*string, bool) {
 }
 
 // HasLink returns a boolean if a field has been set.
-func (o *PaginationHeaders) HasLink() bool {
+func (o *TokenPaginationHeaders) HasLink() bool {
 	if o != nil && o.Link != nil {
 		return true
 	}
@@ -68,12 +68,12 @@ func (o *PaginationHeaders) HasLink() bool {
 }
 
 // SetLink gets a reference to the given string and assigns it to the Link field.
-func (o *PaginationHeaders) SetLink(v string) {
+func (o *TokenPaginationHeaders) SetLink(v string) {
 	o.Link = &v
 }
 
 // GetXTotalCount returns the XTotalCount field value if set, zero value otherwise.
-func (o *PaginationHeaders) GetXTotalCount() string {
+func (o *TokenPaginationHeaders) GetXTotalCount() string {
 	if o == nil || o.XTotalCount == nil {
 		var ret string
 		return ret
@@ -83,7 +83,7 @@ func (o *PaginationHeaders) GetXTotalCount() string {
 
 // GetXTotalCountOk returns a tuple with the XTotalCount field value if set, nil otherwise
 // and a boolean to check if the value has been set.
-func (o *PaginationHeaders) GetXTotalCountOk() (*string, bool) {
+func (o *TokenPaginationHeaders) GetXTotalCountOk() (*string, bool) {
 	if o == nil || o.XTotalCount == nil {
 		return nil, false
 	}
@@ -91,7 +91,7 @@ func (o *PaginationHeaders) GetXTotalCountOk() (*string, bool) {
 }
 
 // HasXTotalCount returns a boolean if a field has been set.
-func (o *PaginationHeaders) HasXTotalCount() bool {
+func (o *TokenPaginationHeaders) HasXTotalCount() bool {
 	if o != nil && o.XTotalCount != nil {
 		return true
 	}
@@ -100,11 +100,11 @@ func (o *PaginationHeaders) HasXTotalCount() bool {
 }
 
 // SetXTotalCount gets a reference to the given string and assigns it to the XTotalCount field.
-func (o *PaginationHeaders) SetXTotalCount(v string) {
+func (o *TokenPaginationHeaders) SetXTotalCount(v string) {
 	o.XTotalCount = &v
 }
 
-func (o PaginationHeaders) MarshalJSON() ([]byte, error) {
+func (o TokenPaginationHeaders) MarshalJSON() ([]byte, error) {
 	toSerialize := map[string]interface{}{}
 	if o.Link != nil {
 		toSerialize["link"] = o.Link
@@ -115,38 +115,38 @@ func (o PaginationHeaders) MarshalJSON() ([]byte, error) {
 	return json.Marshal(toSerialize)
 }
 
-type NullablePaginationHeaders struct {
-	value *PaginationHeaders
+type NullableTokenPaginationHeaders struct {
+	value *TokenPaginationHeaders
 	isSet bool
 }
 
-func (v NullablePaginationHeaders) Get() *PaginationHeaders {
+func (v NullableTokenPaginationHeaders) Get() *TokenPaginationHeaders {
 	return v.value
 }
 
-func (v *NullablePaginationHeaders) Set(val *PaginationHeaders) {
+func (v *NullableTokenPaginationHeaders) Set(val *TokenPaginationHeaders) {
 	v.value = val
 	v.isSet = true
 }
 
-func (v NullablePaginationHeaders) IsSet() bool {
+func (v NullableTokenPaginationHeaders) IsSet() bool {
 	return v.isSet
 }
 
-func (v *NullablePaginationHeaders) Unset() {
+func (v *NullableTokenPaginationHeaders) Unset() {
 	v.value = nil
 	v.isSet = false
 }
 
-func NewNullablePaginationHeaders(val *PaginationHeaders) *NullablePaginationHeaders {
-	return &NullablePaginationHeaders{value: val, isSet: true}
+func NewNullableTokenPaginationHeaders(val *TokenPaginationHeaders) *NullableTokenPaginationHeaders {
+	return &NullableTokenPaginationHeaders{value: val, isSet: true}
 }
 
-func (v NullablePaginationHeaders) MarshalJSON() ([]byte, error) {
+func (v NullableTokenPaginationHeaders) MarshalJSON() ([]byte, error) {
 	return json.Marshal(v.value)
 }
 
-func (v *NullablePaginationHeaders) UnmarshalJSON(src []byte) error {
+func (v *NullableTokenPaginationHeaders) UnmarshalJSON(src []byte) error {
 	v.isSet = true
 	return json.Unmarshal(src, &v.value)
 }
