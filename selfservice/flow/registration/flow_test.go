@@ -8,6 +8,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/gofrs/uuid"
 	"github.com/tidwall/gjson"
 
 	"github.com/ory/x/jsonx"
@@ -29,6 +30,7 @@ func TestFakeFlow(t *testing.T) {
 	var r registration.Flow
 	require.NoError(t, faker.FakeData(&r))
 
+	assert.Equal(t, uuid.Nil, r.ID)
 	assert.NotEmpty(t, r.IssuedAt)
 	assert.NotEmpty(t, r.ExpiresAt)
 	assert.NotEmpty(t, r.RequestURL)

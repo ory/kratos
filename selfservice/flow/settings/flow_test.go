@@ -8,6 +8,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/gofrs/uuid"
 	"github.com/ory/kratos/selfservice/flow/registration"
 
 	"github.com/tidwall/gjson"
@@ -33,6 +34,7 @@ func TestFakeFlow(t *testing.T) {
 	var r settings.Flow
 	require.NoError(t, faker.FakeData(&r))
 
+	assert.Equal(t, uuid.Nil, r.ID)
 	assert.NotEmpty(t, r.IssuedAt)
 	assert.NotEmpty(t, r.ExpiresAt)
 	assert.NotEmpty(t, r.RequestURL)
