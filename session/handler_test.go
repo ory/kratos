@@ -635,6 +635,38 @@ func TestHandlerSelfServiceSessionManagement(t *testing.T) {
 			assert.Equal(t, http.StatusNoContent, resp.StatusCode, "case=%d", j)
 		}
 	})
+
+	t.Run("case=whoami should not issue cookie for up to date session", func(t *testing.T) {
+		client, _, _ := setup(t)
+
+		req, _ := http.NewRequest("GET", ts.URL+"/sessions/whoami", nil)
+		resp, err := client.Do(req)
+		require.NoError(t, err)
+		assert.Equal(t, http.StatusOK, resp.StatusCode)
+
+		assert.Empty(t, resp.Cookies())
+	})
+
+	t.Run("case=whoami should reissue cookie for outdated session", func(t *testing.T) {
+		client, _, session := setup(t)
+		oldExpires := session.ExpiresAt
+
+		time.Sleep(500)
+
+		c := reg.Config(context.Background())
+		err := reg.SessionPersister().UpsertSession(context.Background(), session.Refresh(c))
+		require.NoError(t, err)
+
+		newExpires := session.ExpiresAt
+		require.True(t, newExpires.After(oldExpires))
+
+		req, _ := http.NewRequest("GET", ts.URL+"/sessions/whoami", nil)
+		resp, err := client.Do(req)
+		require.NoError(t, err)
+		assert.Equal(t, http.StatusOK, resp.StatusCode)
+
+		assert.NotEmpty(t, resp.Cookies())
+	})
 }
 
 func TestHandlerRefreshSessionBySessionID(t *testing.T) {

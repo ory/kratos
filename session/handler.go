@@ -199,6 +199,8 @@ func (h *Handler) whoami(w http.ResponseWriter, r *http.Request, ps httprouter.P
 	// Set userId as the X-Kratos-Authenticated-Identity-Id header.
 	w.Header().Set("X-Kratos-Authenticated-Identity-Id", s.Identity.ID.String())
 
+	h.r.SessionManager().ReIssueRefreshedCookie(r.Context(), w, r, s)
+
 	h.r.Writer().Write(w, r, s)
 }
 
