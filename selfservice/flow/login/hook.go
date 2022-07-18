@@ -32,6 +32,7 @@ type (
 
 type (
 	executorDependencies interface {
+		identity.ManagementProvider
 		config.Provider
 		session.ManagementProvider
 		session.PersistenceProvider
@@ -98,6 +99,14 @@ func (e *HookExecutor) PostLoginHook(w http.ResponseWriter, r *http.Request, a *
 		WithField("identity_id", i.ID).
 		WithField("flow_method", a.Active).
 		Debug("Running ExecuteLoginPostHook.")
+
+	if err := e.d.IdentityManager().Update(r.Context(), i,
+		identity.ManagerExposeValidationErrorsForInternalTypeAssertion,
+		identity.ManagerAllowWriteProtectedTraits,
+	); err != nil {
+		return err
+	}
+
 	for k, executor := range e.d.PostLoginHooks(r.Context(), a.Active) {
 		if err := executor.ExecuteLoginPostHook(w, r, a, s); err != nil {
 			if errors.Is(err, ErrHookAbortFlow) {
