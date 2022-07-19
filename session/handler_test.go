@@ -661,7 +661,7 @@ func TestHandlerSelfServiceSessionManagement(t *testing.T) {
 
 		require.Len(t, resp.Cookies(), 1)
 		for _, c := range resp.Cookies() {
-			assert.True(t, session.ExpiresAt.Sub(c.Expires).Seconds() < 5, "Ensure the expiry does not deviate +- 5 seconds from the expiry of the session for cookie: %s", c.Name)
+			assert.WithinDuration(t, session.ExpiresAt, c.Expires, 5*time.Second, "Ensure the expiry does not deviate +- 5 seconds from the expiry of the session for cookie: %s", c.Name)
 			assert.NotEqual(t, oldExpires, c.Expires, "%s", c.Name)
 		}
 	})
