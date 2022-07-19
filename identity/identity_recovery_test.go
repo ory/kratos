@@ -1,6 +1,7 @@
 package identity
 
 import (
+	"github.com/gofrs/uuid"
 	"testing"
 
 	"github.com/gofrs/uuid"
