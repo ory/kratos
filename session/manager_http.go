@@ -116,7 +116,7 @@ func (s *ManagerHTTP) IssueCookie(ctx context.Context, w http.ResponseWriter, r 
 		if session.ExpiresAt.IsZero() {
 			cookie.Options.MaxAge = int(s.r.Config(ctx).SessionLifespan().Seconds())
 		} else {
-			cookie.Options.MaxAge = int(session.ExpiresAt.UTC().Sub(time.Now()).Seconds())
+			cookie.Options.MaxAge = int(time.Until(session.ExpiresAt).Seconds())
 		}
 	}
 
