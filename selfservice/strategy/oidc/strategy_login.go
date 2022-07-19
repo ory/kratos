@@ -89,7 +89,7 @@ func (s *Strategy) processLogin(w http.ResponseWriter, r *http.Request, a *login
 
 			// If return_to was set before, we need to preserve it.
 			var opts []registration.FlowOption
-			if a.ReturnTo != "" {
+			if len(a.ReturnTo) > 0 {
 				opts = append(opts, registration.WithFlowReturnTo(a.ReturnTo))
 			}
 
