@@ -158,6 +158,7 @@ func main() {
 	})
 
 	addr := ":" + osx.GetenvDefault("PORT", "4446")
+	// #nosec G112
 	server := &http.Server{Addr: addr, Handler: router}
 	fmt.Printf("Starting web server at %s\n", addr)
 	check(server.ListenAndServe())
