@@ -125,6 +125,7 @@ func ServePublic(r driver.Registry, wg *sync.WaitGroup, cmd *cobra.Command, args
 		handler = x.TraceHandler(handler)
 	}
 
+	// #nosec G112 - the correct settings are set by graceful.WithDefaults
 	server := graceful.WithDefaults(&http.Server{
 		Handler:   handler,
 		TLSConfig: &tls.Config{Certificates: certs, MinVersion: tls.VersionTLS12},
@@ -185,6 +186,7 @@ func ServeAdmin(r driver.Registry, wg *sync.WaitGroup, cmd *cobra.Command, args 
 		handler = x.TraceHandler(n)
 	}
 
+	// #nosec G112 - the correct settings are set by graceful.WithDefaults
 	server := graceful.WithDefaults(&http.Server{
 		Handler:   handler,
 		TLSConfig: &tls.Config{Certificates: certs, MinVersion: tls.VersionTLS12},
