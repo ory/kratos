@@ -1,6 +1,7 @@
 package identity
 
 import (
+	"github.com/gofrs/uuid"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -20,5 +21,5 @@ func TestNewVerifiableEmailAddress(t *testing.T) {
 	assert.Equal(t, a.Status, VerifiableAddressStatusPending)
 	assert.Equal(t, a.Verified, false)
 	assert.EqualValues(t, nullTime, a.VerifiedAt)
-	assert.NotEmpty(t, a.ID)
+	assert.Equal(t, uuid.Nil, a.ID)
 }
