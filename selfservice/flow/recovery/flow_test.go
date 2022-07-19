@@ -101,3 +101,13 @@ func TestFromOldFlow(t *testing.T) {
 		})
 	}
 }
+
+func TestFlowDontOverrideReturnTo(t *testing.T) {
+	f := &recovery.Flow{ReturnTo: "/foo"}
+	f.SetReturnTo()
+	assert.Equal(t, "/foo", f.ReturnTo)
+
+	f = &recovery.Flow{RequestURL: "https://foo.bar?return_to=/bar"}
+	f.SetReturnTo()
+	assert.Equal(t, "/bar", f.ReturnTo)
+}

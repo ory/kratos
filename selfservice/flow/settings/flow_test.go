@@ -166,3 +166,13 @@ func TestFlowEncodeJSON(t *testing.T) {
 	assert.EqualValues(t, "/bar", gjson.Get(jsonx.TestMarshalJSONString(t, &settings.Flow{RequestURL: "https://foo.bar?return_to=/bar"}), "return_to").String())
 	assert.EqualValues(t, "/bar", gjson.Get(jsonx.TestMarshalJSONString(t, settings.Flow{RequestURL: "https://foo.bar?return_to=/bar"}), "return_to").String())
 }
+
+func TestFlowDontOverrideReturnTo(t *testing.T) {
+	f := &settings.Flow{ReturnTo: "/foo"}
+	f.SetReturnTo()
+	assert.Equal(t, "/foo", f.ReturnTo)
+
+	f = &settings.Flow{RequestURL: "https://foo.bar?return_to=/bar"}
+	f.SetReturnTo()
+	assert.Equal(t, "/bar", f.ReturnTo)
+}
