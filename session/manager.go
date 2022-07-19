@@ -91,8 +91,8 @@ type Manager interface {
 	// Also regenerates CSRF tokens due to assumed principal change.
 	IssueCookie(context.Context, http.ResponseWriter, *http.Request, *Session) error
 
-	// Checks if the request uses an outdated cookie and re-issues the cookie if needed
-	ReIssueRefreshedCookie(context.Context, http.ResponseWriter, *http.Request, *Session) error
+	// RefreshCookie checks if the request uses an outdated cookie and refreshes the cookie if needed.
+	RefreshCookie(context.Context, http.ResponseWriter, *http.Request, *Session) error
 
 	// FetchFromRequest creates an HTTP session using cookies.
 	FetchFromRequest(context.Context, *http.Request) (*Session, error)

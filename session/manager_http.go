@@ -61,13 +61,13 @@ func (s *ManagerHTTP) UpsertAndIssueCookie(ctx context.Context, w http.ResponseW
 	return nil
 }
 
-func (s *ManagerHTTP) ReIssueRefreshedCookie(ctx context.Context, w http.ResponseWriter, r *http.Request, session *Session) error {
+func (s *ManagerHTTP) RefreshCookie(ctx context.Context, w http.ResponseWriter, r *http.Request, session *Session) error {
 	cookie, err := s.getCookie(r)
 	if err != nil {
 		return err
 	}
 
-	expiresAt := tryGetExpiresAt(cookie)
+	expiresAt := getCookieExpiry(cookie)
 	if expiresAt == nil || expiresAt.Before(session.ExpiresAt) {
 		if err := s.IssueCookie(ctx, w, r, session); err != nil {
 			return err
@@ -113,7 +113,11 @@ func (s *ManagerHTTP) IssueCookie(ctx context.Context, w http.ResponseWriter, r 
 
 	cookie.Options.MaxAge = 0
 	if s.r.Config(ctx).SessionPersistentCookie() {
-		cookie.Options.MaxAge = int(s.r.Config(ctx).SessionLifespan().Seconds())
+		if session.ExpiresAt.IsZero() {
+			cookie.Options.MaxAge = int(s.r.Config(ctx).SessionLifespan().Seconds())
+		} else {
+			cookie.Options.MaxAge = int(session.ExpiresAt.UTC().Sub(time.Now()).Seconds())
+		}
 	}
 
 	cookie.Values["session_token"] = session.Token
@@ -125,15 +129,17 @@ func (s *ManagerHTTP) IssueCookie(ctx context.Context, w http.ResponseWriter, r 
 	return nil
 }
 
-func tryGetExpiresAt(s *sessions.Session) *time.Time {
+func getCookieExpiry(s *sessions.Session) *time.Time {
 	expiresAt, ok := s.Values["expires_at"].(string)
-
-	if ok {
-		if n, err := time.Parse(time.RFC3339Nano, expiresAt); err == nil {
-			return &n
-		}
+	if !ok {
+		return nil
 	}
-	return nil
+
+	n, err := time.Parse(time.RFC3339Nano, expiresAt)
+	if err != nil {
+		return nil
+	}
+	return &n
 }
 
 func (s *ManagerHTTP) getCookie(r *http.Request) (*sessions.Session, error) {

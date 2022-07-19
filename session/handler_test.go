@@ -651,21 +651,19 @@ func TestHandlerSelfServiceSessionManagement(t *testing.T) {
 		client, _, session := setup(t)
 		oldExpires := session.ExpiresAt
 
-		time.Sleep(500)
-
-		c := reg.Config(context.Background())
-		err := reg.SessionPersister().UpsertSession(context.Background(), session.Refresh(c))
+		session.ExpiresAt = time.Now().Add(time.Hour * 24 * 30).UTC().Round(time.Hour)
+		err := reg.SessionPersister().UpsertSession(context.Background(), session)
 		require.NoError(t, err)
 
-		newExpires := session.ExpiresAt
-		require.True(t, newExpires.After(oldExpires))
-
-		req, _ := http.NewRequest("GET", ts.URL+"/sessions/whoami", nil)
-		resp, err := client.Do(req)
+		resp, err := client.Get(ts.URL + "/sessions/whoami")
 		require.NoError(t, err)
 		assert.Equal(t, http.StatusOK, resp.StatusCode)
 
-		assert.NotEmpty(t, resp.Cookies())
+		require.Len(t, resp.Cookies(), 1)
+		for _, c := range resp.Cookies() {
+			assert.True(t, session.ExpiresAt.Sub(c.Expires).Seconds() < 5, "Ensure the expiry does not deviate +- 5 seconds from the expiry of the session for cookie: %s", c.Name)
+			assert.NotEqual(t, oldExpires, c.Expires, "%s", c.Name)
+		}
 	})
 }
 
