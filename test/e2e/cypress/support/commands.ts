@@ -569,7 +569,7 @@ Cypress.Commands.add('browserReturnUrlOry', ({} = {}) => {
   updateConfigFile((config) => {
     config.selfservice.allowed_return_urls = [
       'https://www.ory.sh/',
-      'https://www.example.org/',
+      'https://www.example.org/'
     ]
     return config
   })
