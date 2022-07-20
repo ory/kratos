@@ -1,8 +1,9 @@
 package identity
 
 import (
-	"github.com/gofrs/uuid"
 	"testing"
+
+	"github.com/gofrs/uuid"
 
 	"github.com/stretchr/testify/assert"
 

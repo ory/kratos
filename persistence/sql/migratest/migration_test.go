@@ -5,11 +5,12 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/ory/x/fsx"
 	"os"
 	"path/filepath"
 	"testing"
 	"time"
+
+	"github.com/ory/x/fsx"
 
 	"github.com/ory/kratos/identity"
 
