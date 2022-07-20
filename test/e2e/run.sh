@@ -12,9 +12,9 @@ export PATH=.bin:$PATH
 export KRATOS_PUBLIC_URL=http://localhost:4433/
 export KRATOS_BROWSER_URL=http://localhost:4433/
 export KRATOS_ADMIN_URL=http://localhost:4434/
-export KRATOS_UI_URL=http://127.0.0.1:4456/
-export KRATOS_UI_REACT_URL=http://127.0.0.1:4458/
-export KRATOS_UI_REACT_NATIVE_URL=http://127.0.0.1:4457/
+export KRATOS_UI_URL=http://localhost:4456/
+export KRATOS_UI_REACT_URL=http://localhost:4458/
+export KRATOS_UI_REACT_NATIVE_URL=http://localhost:4457/
 export LOG_LEAK_SENSITIVE_VALUES=true
 export DEV_DISABLE_API_FLOW_ENFORCEMENT=true
 
@@ -113,13 +113,9 @@ prepare() {
       >"${base}/test/e2e/rn-profile-app.e2e.log" 2>&1 &
   )
 
-  DSN=memory URLS_SELF_ISSUER=http://localhost:4444 \
-    LOG_LEVEL=trace \
-    URLS_LOGIN=http://localhost:4446/login \
-    URLS_CONSENT=http://localhost:4446/consent \
-    hydra serve all --dangerous-force-http >"${base}/test/e2e/hydra.e2e.log" 2>&1 &
+  hydra serve all -c hydra.yml --dangerous-force-http >"${base}/test/e2e/hydra.e2e.log" 2>&1 &
 
-  (cd test/e2e; npm run wait-on -- -l -t 300000 http-get://127.0.0.1:4445/health/alive)
+  (cd test/e2e; npm run wait-on -- -l -t 300000 http-get://localhost:4445/health/alive)
 
   hydra clients delete \
     --endpoint http://localhost:4445 \
@@ -211,22 +207,22 @@ run() {
 
   (modd -f test/e2e/modd.conf >"${base}/test/e2e/kratos.e2e.log" 2>&1 &)
 
-  npm run wait-on -- -v -l -t 300000 http-get://127.0.0.1:4434/health/ready \
-    http-get://127.0.0.1:4455/health/ready \
-    http-get://127.0.0.1:4445/health/ready \
-    http-get://127.0.0.1:4446/ \
-    http-get://127.0.0.1:4456/health/alive \
-    http-get://127.0.0.1:4457/ \
-    http-get://127.0.0.1:4437/mail \
-    http-get://127.0.0.1:4458/
+  npm run wait-on -- -v -l -t 300000 http-get://localhost:4434/health/ready \
+    http-get://localhost:4455/health/ready \
+    http-get://localhost:4445/health/ready \
+    http-get://localhost:4446/ \
+    http-get://localhost:4456/health/alive \
+    http-get://localhost:4457/ \
+    http-get://localhost:4437/mail \
+    http-get://localhost:4458/
 
   if [[ $dev == "yes" ]]; then
-    (cd test/e2e; npm run test:watch -- --config integrationFolder="cypress/integration")
+    (cd test/e2e; npm run test:watch --)
   else
     if [ -z ${CYPRESS_RECORD_KEY+x} ]; then
-      (cd test/e2e; npm run test -- --config integrationFolder="cypress/integration")
+      (cd test/e2e; npm run test --)
     else
-      (cd test/e2e; npm run test -- --record --config integrationFolder="cypress/integration")
+      (cd test/e2e; npm run test -- --record)
     fi
   fi
 }
