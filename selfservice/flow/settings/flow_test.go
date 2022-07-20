@@ -3,11 +3,12 @@ package settings_test
 import (
 	"crypto/tls"
 	"fmt"
-	"github.com/gofrs/uuid"
 	"net/http"
 	"net/url"
 	"testing"
 	"time"
+
+	"github.com/gofrs/uuid"
 
 	"github.com/ory/kratos/selfservice/flow/registration"
 

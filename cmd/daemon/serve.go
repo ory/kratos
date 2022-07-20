@@ -2,9 +2,11 @@ package daemon
 
 import (
 	"crypto/tls"
-	"github.com/ory/kratos/schema"
-	"golang.org/x/sync/errgroup"
 	"net/http"
+
+	"golang.org/x/sync/errgroup"
+
+	"github.com/ory/kratos/schema"
 
 	"github.com/ory/kratos/selfservice/flow/recovery"
 
