@@ -197,7 +197,7 @@ func (s *Strategy) processRegistration(w http.ResponseWriter, r *http.Request, a
 
 	i, err := s.createIdentity(w, r, a, claims, provider, container, jn)
 	if err != nil {
-		return nil, s.handleError(w, r, a, provider.Config().ID, i.Traits, err)
+		return nil, s.handleError(w, r, a, provider.Config().ID, nil, err)
 	}
 
 	// Validate the identity itself
