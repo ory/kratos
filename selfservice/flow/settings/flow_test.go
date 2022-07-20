@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/gofrs/uuid"
+
 	"github.com/ory/kratos/selfservice/flow/registration"
 
 	"github.com/tidwall/gjson"
