@@ -113,7 +113,7 @@ context('2FA lookup secrets', () => {
         })
 
         cy.clearAllCookies()
-        cy.visit(`${login}?return_to=https://www.ory.sh/`)
+        cy.visit(`${login}?return_to=https://www.example.org/`)
 
         cy.get('input[name="identifier"]').type(email)
         cy.get('input[name="password"]').type(password)
@@ -134,7 +134,7 @@ context('2FA lookup secrets', () => {
           cy.wrap($e).type(authenticator.generate(secret))
         })
         cy.get('*[name="method"][value="totp"]').click()
-        cy.url().should('eq', 'https://www.ory.sh/')
+        cy.url().should('eq', 'https://www.example.org/')
       })
 
       it('should go through several totp lifecycles', () => {

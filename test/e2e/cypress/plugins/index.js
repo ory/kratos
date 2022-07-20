@@ -11,34 +11,6 @@ let criPort = 0,
 module.exports = (on) => {
   // `on` is used to hook into various events Cypress emits
   // `config` is the resolved Cypress config
-  on('before:browser:launch', (browser, args) => {
-    criPort = ensureRdpPort(args.args)
-    console.log('criPort is', criPort)
-  })
-
-  on('task', {
-    httpRequest(params) {
-      return got(params).then(({ body }) => body)
-    },
-    // Reset chrome remote interface for clean state
-    async resetCRI() {
-      if (criClient) {
-        const c = criClient
-        criClient = null
-        await c.close()
-      }
-
-      return Promise.resolve(true)
-    },
-    // Execute CRI command
-    async sendCRI(args) {
-      if (!criClient) {
-        criClient = await CRI({ port: criPort })
-      }
-
-      return criClient.send(args.query, args.opts)
-    }
-  })
 }
 
 function ensureRdpPort(args) {
