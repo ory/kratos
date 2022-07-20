@@ -74,18 +74,18 @@ func TestMigrations(t *testing.T) {
 	require.NoError(t, sqlite.Open())
 
 	connections := map[string]*pop.Connection{
-		"sqlite": sqlite,
+		//"sqlite": sqlite,
 	}
 	if !testing.Short() {
 		dockertest.Parallel([]func(){
 			func() {
-				connections["postgres"] = dockertest.ConnectToTestPostgreSQLPop(t)
+				//connections["postgres"] = dockertest.ConnectToTestPostgreSQLPop(t)
 			},
 			func() {
 				connections["mysql"] = dockertest.ConnectToTestMySQLPop(t)
 			},
 			func() {
-				connections["cockroach"] = dockertest.ConnectToTestCockroachDBPop(t)
+				//connections["cockroach"] = dockertest.ConnectToTestCockroachDBPop(t)
 			},
 		})
 	}
