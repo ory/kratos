@@ -44,8 +44,8 @@ jobs:
     env:
       TEST_MAILHOG_SMTP: "smtp://test:test@127.0.0.1:1025/?disable_starttls=true"
       TEST_MAILHOG_API: http://127.0.0.1:8025
-      TEST_SELFSERVICE_OIDC_HYDRA_ADMIN: http://127.0.0.1:4445
-      TEST_SELFSERVICE_OIDC_HYDRA_PUBLIC: http://127.0.0.1:4444
+      TEST_SELFSERVICE_OIDC_HYDRA_ADMIN: http://localhost:4445
+      TEST_SELFSERVICE_OIDC_HYDRA_PUBLIC: http://localhost:4444
       TEST_SELFSERVICE_OIDC_HYDRA_INTEGRATION_ADDR: http://127.0.0.1:4499
       TEST_DATABASE_POSTGRESQL: "postgres://test:test@localhost:5432/postgres?sslmode=disable"
       TEST_DATABASE_MYSQL: "mysql://root:test@(localhost:3306)/mysql?parseTime=true&multiStatements=true"
@@ -65,7 +65,7 @@ jobs:
       - run: |
           docker create --name hydra -p 4445:4445 -p 4444:4444 \
             -e DSN=memory \
-            -e URLS_SELF_ISSUER=http://127.0.0.1:4444/ \
+            -e URLS_SELF_ISSUER=http://localhost:4444/ \
             -e URLS_LOGIN=http://127.0.0.1:4499/login \
             -e URLS_CONSENT=http://127.0.0.1:4499/consent \
             oryd/hydra:v1.4.10 serve all --dangerous-force-http
