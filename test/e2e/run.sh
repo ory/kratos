@@ -113,7 +113,7 @@ prepare() {
       >"${base}/test/e2e/rn-profile-app.e2e.log" 2>&1 &
   )
 
-  hydra serve all -c hydra.yml --dangerous-force-http >"${base}/test/e2e/hydra.e2e.log" 2>&1 &
+  hydra serve all -c test/e2e/hydra.yml --dangerous-force-http >"${base}/test/e2e/hydra.e2e.log" 2>&1 &
 
   (cd test/e2e; npm run wait-on -- -l -t 300000 http-get://localhost:4445/health/alive)
 
