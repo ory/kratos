@@ -29,7 +29,7 @@ func NewServeCmd() (serveCmd *cobra.Command) {
 	serveCmd = &cobra.Command{
 		Use:   "serve",
 		Short: "Run the Ory Kratos server",
-		Run: func(cmd *cobra.Command, args []string) {
+		RunE: func(cmd *cobra.Command, args []string) error {
 			d := driver.New(cmd.Context(), cmd.ErrOrStderr(), configx.WithFlags(cmd.Flags()))
 
 			if d.Config(cmd.Context()).IsInsecureDevMode() {
@@ -50,7 +50,7 @@ DON'T DO THIS IN PRODUCTION!
 				d.Logger().Warnf("Config version is '%s' but kratos runs on version '%s'", configVersion, config.Version)
 			}
 
-			daemon.ServeAll(d)(cmd, args)
+			return daemon.ServeAll(d)(cmd, args)
 		},
 	}
 	configx.RegisterFlags(serveCmd.PersistentFlags())
