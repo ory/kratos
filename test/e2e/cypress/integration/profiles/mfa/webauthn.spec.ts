@@ -3,10 +3,7 @@ import { routes as react } from '../../../helpers/react'
 import { routes as express } from '../../../helpers/express'
 
 context('2FA WebAuthn', () => {
-  before(() => {
-    cy.task('resetCRI', {})
-  })
-  after(() => {
+  beforeEach(() => {
     cy.task('resetCRI', {})
   })
   ;[

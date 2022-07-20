@@ -2,7 +2,7 @@
   "name": "@ory/kratos-e2e-suite",
   "version": "0.0.1",
   "scripts": {
-    "test": "cypress run --browser chrome",
+    "test": "cypress run --browser chrome --e2e",
     "test:watch": "cypress open --browser chrome",
     "openapi-generator-cli": "openapi-generator-cli",
     "wait-on": "wait-on",
