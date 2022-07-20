@@ -26,6 +26,7 @@ func CleanSQL(t *testing.T, c *pop.Connection) {
 		new(continuity.Container).TableName(ctx),
 		new(courier.Message).TableName(ctx),
 
+		new(session.Session).TableName(ctx),
 		new(login.Flow).TableName(ctx),
 		new(registration.Flow).TableName(ctx),
 		new(settings.Flow).TableName(ctx),
@@ -39,7 +40,6 @@ func CleanSQL(t *testing.T, c *pop.Connection) {
 
 		new(errorx.ErrorContainer).TableName(ctx),
 
-		new(session.Session).TableName(ctx),
 		new(identity.CredentialIdentifierCollection).TableName(ctx),
 		new(identity.CredentialsCollection).TableName(ctx),
 		new(identity.VerifiableAddress).TableName(ctx),

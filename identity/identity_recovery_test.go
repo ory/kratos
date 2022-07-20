@@ -1,6 +1,7 @@
 package identity
 
 import (
+	"github.com/gofrs/uuid"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -14,5 +15,5 @@ func TestNewRecoveryEmailAddress(t *testing.T) {
 
 	assert.Equal(t, a.Value, "foo@ory.sh")
 	assert.Equal(t, a.Via, RecoveryAddressTypeEmail)
-	assert.NotEmpty(t, a.ID)
+	assert.Equal(t, uuid.Nil, a.ID)
 }

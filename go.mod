@@ -42,7 +42,7 @@ require (
 	github.com/go-swagger/go-swagger v0.26.1
 	github.com/gobuffalo/fizz v1.14.0
 	github.com/gobuffalo/httptest v1.0.2
-	github.com/gobuffalo/pop/v6 v6.0.4-0.20220524160009-195240e4a669
+	github.com/gobuffalo/pop/v6 v6.0.4-0.20220707121509-feb0eed33d86
 	github.com/gofrs/uuid v4.2.0+incompatible
 	github.com/golang-jwt/jwt/v4 v4.1.0
 	github.com/golang/gddo v0.0.0-20190904175337-72a348e765d2
@@ -77,17 +77,17 @@ require (
 	github.com/ory/kratos-client-go v0.6.3-alpha.1
 	github.com/ory/mail/v3 v3.0.0
 	github.com/ory/nosurf v1.2.7
-	github.com/ory/x v0.0.435
+	github.com/ory/x v0.0.445
 	github.com/phayes/freeport v0.0.0-20180830031419-95f893ade6f2
 	github.com/pkg/errors v0.9.1
 	github.com/pquerna/otp v1.3.0
 	github.com/rs/cors v1.8.2
 	github.com/sirupsen/logrus v1.8.1
 	github.com/slack-go/slack v0.7.4
-	github.com/spf13/cobra v1.4.0
+	github.com/spf13/cobra v1.5.0
 	github.com/spf13/pflag v1.0.5
 	github.com/sqs/goreturns v0.0.0-20181028201513-538ac6014518
-	github.com/stretchr/testify v1.7.1
+	github.com/stretchr/testify v1.8.0
 	github.com/tidwall/gjson v1.14.0
 	github.com/tidwall/sjson v1.2.4
 	github.com/urfave/negroni v1.0.0
@@ -95,9 +95,9 @@ require (
 	go.opentelemetry.io/otel v1.7.0
 	go.opentelemetry.io/otel/trace v1.7.0
 	golang.org/x/crypto v0.0.0-20220517005047-85d78b3ac167
-	golang.org/x/net v0.0.0-20211112202133-69e39bad7dc2
+	golang.org/x/net v0.0.0-20220225172249-27dd8689420f
 	golang.org/x/oauth2 v0.0.0-20211104180415-d3ed0bb246c8
-	golang.org/x/sync v0.0.0-20210220032951-036812b2e83c
+	golang.org/x/sync v0.0.0-20220601150217-0de741cfad7f
 	golang.org/x/tools v0.1.10
 )
 
@@ -136,7 +136,7 @@ require (
 	github.com/coreos/go-systemd/v22 v22.3.2 // indirect
 	github.com/cortesi/moddwatch v0.0.0-20210222043437-a6aaad86a36e // indirect
 	github.com/cortesi/termlog v0.0.0-20210222042314-a1eec763abec // indirect
-	github.com/cpuguy83/go-md2man/v2 v2.0.1 // indirect
+	github.com/cpuguy83/go-md2man/v2 v2.0.2 // indirect
 	github.com/docker/cli v20.10.14+incompatible // indirect
 	github.com/docker/distribution v2.8.1+incompatible // indirect
 	github.com/docker/docker v20.10.9+incompatible // indirect
@@ -174,7 +174,7 @@ require (
 	github.com/gobuffalo/github_flavored_markdown v1.1.1 // indirect
 	github.com/gobuffalo/helpers v0.6.4 // indirect
 	github.com/gobuffalo/nulls v0.4.1 // indirect
-	github.com/gobuffalo/plush/v4 v4.1.11 // indirect
+	github.com/gobuffalo/plush/v4 v4.1.12 // indirect
 	github.com/gobuffalo/tags/v3 v3.1.2 // indirect
 	github.com/gobuffalo/validate/v3 v3.3.1 // indirect
 	github.com/goccy/go-yaml v1.9.5 // indirect
@@ -332,7 +332,7 @@ require (
 	gopkg.in/op/go-logging.v1 v1.0.0-20160211212156-b2cb9fa56473 // indirect
 	gopkg.in/square/go-jose.v2 v2.6.0 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
-	gopkg.in/yaml.v3 v3.0.0-20210107192922-496545a6307b // indirect
+	gopkg.in/yaml.v3 v3.0.1 // indirect
 	mvdan.cc/sh/v3 v3.3.0-0.dev.0.20210224101809-fb5052e7a010 // indirect
 	sigs.k8s.io/yaml v1.2.0 // indirect
 )
