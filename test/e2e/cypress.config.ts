@@ -1,6 +1,6 @@
 import { defineConfig } from 'cypress'
 import got from 'got'
-import CRI from 'chrome-remote-interface'
+const CRI = require('chrome-remote-interface')
 let criPort = 0,
   criClient = null
 
