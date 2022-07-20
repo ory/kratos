@@ -12,6 +12,7 @@ selfservice:
     - http://localhost:4455
     - https://www.ory.sh/
     - https://example.org/
+    - https://www.example.org/
   methods:
     link:
       config:
