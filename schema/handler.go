@@ -49,9 +49,9 @@ func (h *Handler) RegisterPublicRoutes(public *x.RouterPublic) {
 		"/"+SchemasPath+"/*",
 		x.AdminPrefix+"/"+SchemasPath+"/*",
 	)
-	public.GET(fmt.Sprintf("/%s/:id", SchemasPath), h.getByID)
+	public.GET(fmt.Sprintf("/%s/:id", SchemasPath), h.getIdentitySchema)
 	public.GET(fmt.Sprintf("/%s", SchemasPath), h.getAll)
-	public.GET(fmt.Sprintf("%s/%s/:id", x.AdminPrefix, SchemasPath), h.getByID)
+	public.GET(fmt.Sprintf("%s/%s/:id", x.AdminPrefix, SchemasPath), h.getIdentitySchema)
 	public.GET(fmt.Sprintf("%s/%s", x.AdminPrefix, SchemasPath), h.getAll)
 }
 
@@ -62,13 +62,13 @@ func (h *Handler) RegisterAdminRoutes(admin *x.RouterAdmin) {
 
 // Raw JSON Schema
 //
-// swagger:model jsonSchema
+// swagger:model identitySchema
 // nolint:deadcode,unused
-type jsonSchema json.RawMessage
+type identitySchema json.RawMessage
 
 // nolint:deadcode,unused
-// swagger:parameters getJsonSchema
-type getJsonSchema struct {
+// swagger:parameters getIdentitySchema
+type getIdentitySchema struct {
 	// ID must be set to the ID of schema you want to get
 	//
 	// required: true
@@ -76,7 +76,7 @@ type getJsonSchema struct {
 	ID string `json:"id"`
 }
 
-// swagger:route GET /schemas/{id} v0alpha2 getJsonSchema
+// swagger:route GET /schemas/{id} v0alpha2 getIdentitySchema
 //
 // Get a JSON Schema
 //
@@ -86,10 +86,10 @@ type getJsonSchema struct {
 //     Schemes: http, https
 //
 //     Responses:
-//       200: jsonSchema
+//       200: identitySchema
 //       404: jsonError
 //       500: jsonError
-func (h *Handler) getByID(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+func (h *Handler) getIdentitySchema(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	ss, err := h.r.IdentityTraitsSchemas(r.Context())
 	if err != nil {
 		h.r.Writer().WriteError(w, r, errors.WithStack(herodot.ErrInternalServerError.WithWrap(err)))
@@ -128,14 +128,14 @@ func (h *Handler) getByID(w http.ResponseWriter, r *http.Request, ps httprouter.
 // Raw identity Schema list
 //
 // swagger:model identitySchemas
-type IdentitySchemas []identitySchema
+type IdentitySchemas []identitySchemaContainer
 
-// swagger:model identitySchema
-type identitySchema struct {
+// swagger:model identitySchemaContainer
+type identitySchemaContainer struct {
 	// The ID of the Identity JSON Schema
 	ID string `json:"id"`
 	// The actual Identity JSON Schema
-	Schema json.RawMessage `json:"schema"`
+	Schema identitySchema `json:"schema"`
 }
 
 // nolint:deadcode,unused
@@ -183,7 +183,7 @@ func (h *Handler) getAll(w http.ResponseWriter, r *http.Request, ps httprouter.P
 			return
 		}
 
-		ss = append(ss, identitySchema{
+		ss = append(ss, identitySchemaContainer{
 			ID:     schema.ID,
 			Schema: raw,
 		})

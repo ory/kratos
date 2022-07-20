@@ -53,7 +53,7 @@ Identities can be supplied via STD_IN or JSON files containing a single or an ar
 
 			for src, i := range is {
 				err = ValidateIdentity(cmd, src, i, func(ctx context.Context, id string) (map[string]interface{}, *http.Response, error) {
-					return c.V0alpha2Api.GetJsonSchema(ctx, id).Execute()
+					return c.V0alpha2Api.GetIdentitySchema(ctx, id).Execute()
 				})
 				if err != nil {
 					return err
