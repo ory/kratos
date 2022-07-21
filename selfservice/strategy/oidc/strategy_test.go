@@ -74,10 +74,11 @@ func TestStrategy(t *testing.T) {
 		oidc.Configuration{
 			Provider:     "generic",
 			ID:           "invalid-issuer",
-			ClientID:     "client",
+			ClientID:     "client-invalid",
 			ClientSecret: "secret",
-			IssuerURL:    strings.Replace(remotePublic, "127.0.0.1", "localhost", 1) + "/",
-			Mapper:       "file://./stub/oidc.hydra.jsonnet",
+			// We replace this URL to cause an issuer validation mismatch.
+			IssuerURL: strings.Replace(remotePublic, "localhost", "127.0.0.1", 1) + "/",
+			Mapper:    "file://./stub/oidc.hydra.jsonnet",
 		},
 	)
 
