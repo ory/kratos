@@ -153,6 +153,8 @@ const (
 	ViperKeyHasherArgon2ConfigDedicatedMemory                = "hashers.argon2.dedicated_memory"
 	ViperKeyHasherBcryptCost                                 = "hashers.bcrypt.cost"
 	ViperKeyCipherAlgorithm                                  = "ciphers.algorithm"
+	ViperKeyDatabaseCleanupSleepTables                       = "database.cleanup.sleep.tables"
+	ViperKeyDatabaseCleanupBatchSize                         = "database.cleanup.batch_size"
 	ViperKeyLinkLifespan                                     = "selfservice.methods.link.config.lifespan"
 	ViperKeyLinkBaseURL                                      = "selfservice.methods.link.config.base_url"
 	ViperKeyPasswordHaveIBeenPwnedHost                       = "selfservice.methods.password.config.haveibeenpwned_host"
@@ -468,8 +470,6 @@ func (p *Config) HasherArgon2() *Argon2 {
 }
 
 func (p *Config) HasherBcrypt() *Bcrypt {
-	// warn about usage of default values and point to the docs
-	// warning will require https://github.com/ory/viper/issues/19
 	cost := uint32(p.p.IntF(ViperKeyHasherBcryptCost, int(BcryptDefaultCost)))
 	if !p.IsInsecureDevMode() && cost < BcryptDefaultCost {
 		cost = BcryptDefaultCost
@@ -1072,6 +1072,14 @@ func (p *Config) SelfServiceLinkMethodLifespan() time.Duration {
 
 func (p *Config) SelfServiceLinkMethodBaseURL() *url.URL {
 	return p.p.RequestURIF(ViperKeyLinkBaseURL, p.SelfPublicURL())
+}
+
+func (p *Config) DatabaseCleanupSleepTables() time.Duration {
+	return p.p.Duration(ViperKeyDatabaseCleanupSleepTables)
+}
+
+func (p *Config) DatabaseCleanupBatchSize() int {
+	return p.p.Int(ViperKeyDatabaseCleanupBatchSize)
 }
 
 func (p *Config) SelfServiceFlowRecoveryAfterHooks(strategy string) []SelfServiceHook {

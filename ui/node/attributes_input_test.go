@@ -37,6 +37,12 @@ func TestFieldFromPath(t *testing.T) {
 			assert.EqualValues(t, gjson.GetBytes(schema, fmt.Sprintf("properties.%s.test_expected_type", path.Name)).String(), attr.Type)
 			assert.True(t, !gjson.GetBytes(schema, fmt.Sprintf("properties.%s.test_expected_pattern", path.Name)).Exists() ||
 				(gjson.GetBytes(schema, fmt.Sprintf("properties.%s.test_expected_pattern", path.Name)).Bool() && attr.Pattern != ""))
+
+			expectedAutocomplete := gjson.GetBytes(schema, fmt.Sprintf("properties.%s.test_expected_autocomplete", path.Name))
+
+			if expectedAutocomplete.Exists() {
+				assert.EqualValues(t, expectedAutocomplete.String(), attr.Autocomplete)
+			}
 		}
 	})
 }

@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"time"
 
 	"github.com/gobuffalo/pop/v6"
 
@@ -46,7 +47,7 @@ func (p *Persister) ListSessionsByIdentity(ctx context.Context, iID uuid.UUID, a
 	ctx, span := p.r.Tracer(ctx).Tracer().Start(ctx, "persistence.sql.ListSessionsByIdentity")
 	defer span.End()
 
-	var s []*session.Session
+	s := make([]*session.Session, 0)
 	nid := corp.ContextualizeNID(ctx, p.nid)
 
 	if err := p.Transaction(ctx, func(ctx context.Context, c *pop.Connection) error {
@@ -225,4 +226,20 @@ func (p *Persister) RevokeSessionsIdentityExcept(ctx context.Context, iID, sID u
 		return 0, sqlcon.HandleError(err)
 	}
 	return count, nil
+}
+
+func (p *Persister) DeleteExpiredSessions(ctx context.Context, expiresAt time.Time, limit int) error {
+	err := p.GetConnection(ctx).RawQuery(fmt.Sprintf(
+		"DELETE FROM %s WHERE id in (SELECT id FROM (SELECT id FROM %s c WHERE expires_at <= ? and nid = ? ORDER BY expires_at ASC LIMIT %d ) AS s )",
+		corp.ContextualizeTableName(ctx, "sessions"),
+		corp.ContextualizeTableName(ctx, "sessions"),
+		limit,
+	),
+		expiresAt,
+		corp.ContextualizeNID(ctx, p.nid),
+	).Exec()
+	if err != nil {
+		return sqlcon.HandleError(err)
+	}
+	return nil
 }

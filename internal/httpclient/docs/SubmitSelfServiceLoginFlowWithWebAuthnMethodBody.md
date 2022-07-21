@@ -5,7 +5,7 @@
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
 **CsrfToken** | Pointer to **string** | Sending the anti-csrf token is only required for browser login flows. | [optional] 
-**Identifier** | Pointer to **string** | Identifier is the email or username of the user trying to log in. This field is only required when using WebAuthn for passwordless login. When using WebAuthn for multi-factor authentication, it is not needed. | [optional] 
+**Identifier** | **string** | Identifier is the email or username of the user trying to log in. | 
 **Method** | **string** | Method should be set to \&quot;webAuthn\&quot; when logging in using the WebAuthn strategy. | 
 **WebauthnLogin** | Pointer to **string** | Login a WebAuthn Security Key  This must contain the ID of the WebAuthN connection. | [optional] 
 
@@ -13,7 +13,7 @@ Name | Type | Description | Notes
 
 ### NewSubmitSelfServiceLoginFlowWithWebAuthnMethodBody
 
-`func NewSubmitSelfServiceLoginFlowWithWebAuthnMethodBody(method string, ) *SubmitSelfServiceLoginFlowWithWebAuthnMethodBody`
+`func NewSubmitSelfServiceLoginFlowWithWebAuthnMethodBody(identifier string, method string, ) *SubmitSelfServiceLoginFlowWithWebAuthnMethodBody`
 
 NewSubmitSelfServiceLoginFlowWithWebAuthnMethodBody instantiates a new SubmitSelfServiceLoginFlowWithWebAuthnMethodBody object
 This constructor will assign default values to properties that have it defined,
@@ -72,11 +72,6 @@ and a boolean to check if the value has been set.
 
 SetIdentifier sets Identifier field to given value.
 
-### HasIdentifier
-
-`func (o *SubmitSelfServiceLoginFlowWithWebAuthnMethodBody) HasIdentifier() bool`
-
-HasIdentifier returns a boolean if a field has been set.
 
 ### GetMethod
 

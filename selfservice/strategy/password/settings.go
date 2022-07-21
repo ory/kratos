@@ -146,7 +146,7 @@ func (s *Strategy) continueSettingsFlow(
 
 func (s *Strategy) PopulateSettingsMethod(r *http.Request, _ *identity.Identity, f *settings.Flow) error {
 	f.UI.SetCSRF(s.d.GenerateCSRFToken(r))
-	f.UI.Nodes.Upsert(NewPasswordNode("password").WithMetaLabel(text.NewInfoNodeInputPassword()))
+	f.UI.Nodes.Upsert(NewPasswordNode("password", node.InputAttributeAutocompleteNewPassword).WithMetaLabel(text.NewInfoNodeInputPassword()))
 	f.UI.Nodes.Append(node.NewInputField("method", "password", node.PasswordGroup, node.InputAttributeTypeSubmit).WithMetaLabel(text.NewInfoNodeLabelSave()))
 
 	return nil

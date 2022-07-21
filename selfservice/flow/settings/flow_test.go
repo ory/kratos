@@ -8,6 +8,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/gofrs/uuid"
+
 	"github.com/ory/kratos/selfservice/flow/registration"
 
 	"github.com/tidwall/gjson"
@@ -33,7 +35,7 @@ func TestFakeFlow(t *testing.T) {
 	var r settings.Flow
 	require.NoError(t, faker.FakeData(&r))
 
-	assert.NotEmpty(t, r.ID)
+	assert.Equal(t, uuid.Nil, r.ID)
 	assert.NotEmpty(t, r.IssuedAt)
 	assert.NotEmpty(t, r.ExpiresAt)
 	assert.NotEmpty(t, r.RequestURL)
@@ -163,4 +165,14 @@ func TestFlowEncodeJSON(t *testing.T) {
 	assert.EqualValues(t, "", gjson.Get(jsonx.TestMarshalJSONString(t, &settings.Flow{RequestURL: "https://foo.bar?foo=bar"}), "return_to").String())
 	assert.EqualValues(t, "/bar", gjson.Get(jsonx.TestMarshalJSONString(t, &settings.Flow{RequestURL: "https://foo.bar?return_to=/bar"}), "return_to").String())
 	assert.EqualValues(t, "/bar", gjson.Get(jsonx.TestMarshalJSONString(t, settings.Flow{RequestURL: "https://foo.bar?return_to=/bar"}), "return_to").String())
+}
+
+func TestFlowDontOverrideReturnTo(t *testing.T) {
+	f := &settings.Flow{ReturnTo: "/foo"}
+	f.SetReturnTo()
+	assert.Equal(t, "/foo", f.ReturnTo)
+
+	f = &settings.Flow{RequestURL: "https://foo.bar?return_to=/bar"}
+	f.SetReturnTo()
+	assert.Equal(t, "/bar", f.ReturnTo)
 }

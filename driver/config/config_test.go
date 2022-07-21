@@ -48,7 +48,7 @@ func TestViperProvider(t *testing.T) {
 		p := config.MustNew(t, logrusx.New("", ""), os.Stderr,
 			configx.WithConfigFiles("stub/.kratos.yaml"))
 
-		t.Run("gourp=client config", func(t *testing.T) {
+		t.Run("group=client config", func(t *testing.T) {
 			assert.False(t, p.ClientHTTPNoPrivateIPRanges(), "Should not have private IP ranges disabled per default")
 			p.MustSet(config.ViperKeyClientHTTPNoPrivateIPRanges, true)
 			assert.True(t, p.ClientHTTPNoPrivateIPRanges(), "Should disallow private IP ranges if set")
@@ -1150,5 +1150,19 @@ func TestCourierTemplatesConfig(t *testing.T) {
 			Subject: "base64://UmVjb3ZlciBhY2Nlc3MgdG8geW91ciBhY2NvdW50",
 		}
 		assert.Equal(t, courierTemplateConfig, c.CourierTemplatesHelper(config.ViperKeyCourierTemplatesRecoveryValidEmail))
+	})
+}
+
+func TestCleanup(t *testing.T) {
+	p := config.MustNew(t, logrusx.New("", ""), os.Stderr,
+		configx.WithConfigFiles("stub/.kratos.yaml"))
+
+	t.Run("group=cleanup config", func(t *testing.T) {
+		assert.Equal(t, p.DatabaseCleanupSleepTables(), 1*time.Minute)
+		p.MustSet(config.ViperKeyDatabaseCleanupSleepTables, "1s")
+		assert.Equal(t, p.DatabaseCleanupSleepTables(), time.Second)
+		assert.Equal(t, p.DatabaseCleanupBatchSize(), 100)
+		p.MustSet(config.ViperKeyDatabaseCleanupBatchSize, "1")
+		assert.Equal(t, p.DatabaseCleanupBatchSize(), 1)
 	})
 }

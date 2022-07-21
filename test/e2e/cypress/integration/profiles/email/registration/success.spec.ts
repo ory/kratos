@@ -29,7 +29,7 @@ context('Registration success with email profile', () => {
       it('should sign up and be logged in', () => {
         const email = gen.email()
         const password = gen.password()
-        const website = 'https://www.ory.sh/'
+        const website = 'https://www.example.org/'
         const age = 30
 
         cy.get(appPrefix(app) + 'input[name="traits"]').should('not.exist')
@@ -62,7 +62,7 @@ context('Registration success with email profile', () => {
         cy.get('input[name="traits"]').should('not.exist')
         cy.get('input[name="traits.email"]').type(email)
         cy.get('input[name="password"]').type(password)
-        const website = 'https://www.ory.sh/'
+        const website = 'https://www.example.org/'
         cy.get('input[name="traits.website"]').type(website)
 
         cy.submitPasswordForm()
@@ -83,18 +83,18 @@ context('Registration success with email profile', () => {
 
       it('should sign up and be redirected', () => {
         cy.browserReturnUrlOry()
-        cy.visit(route + '?return_to=https://www.ory.sh/')
+        cy.visit(route + '?return_to=https://www.example.org/')
 
         const email = gen.email()
         const password = gen.password()
-        const website = 'https://www.ory.sh/'
+        const website = 'https://www.example.org/'
 
         cy.get('input[name="traits"]').should('not.exist')
         cy.get('input[name="traits.email"]').type(email)
         cy.get('input[name="traits.website').type(website)
         cy.get('input[name="password"]').type(password)
         cy.submitPasswordForm()
-        cy.url().should('eq', 'https://www.ory.sh/')
+        cy.url().should('eq', 'https://www.example.org/')
       })
     })
   })
@@ -106,12 +106,12 @@ context('Registration success with email profile', () => {
       cy.shortRegisterLifespan()
       cy.browserReturnUrlOry()
       cy.proxy('express')
-      cy.visit(express.registration + '?return_to=https://www.ory.sh/')
+      cy.visit(express.registration + '?return_to=https://www.example.org/')
       cy.wait(105)
 
       const email = gen.email()
       const password = gen.password()
-      const website = 'https://www.ory.sh/'
+      const website = 'https://www.example.org/'
 
       cy.get(appPrefix('express') + 'input[name="traits"]').should('not.exist')
       cy.get('input[name="traits.email"]').type(email)
@@ -133,7 +133,7 @@ context('Registration success with email profile', () => {
       cy.get('input[name="password"]').type(password)
       cy.submitPasswordForm()
 
-      cy.url().should('eq', 'https://www.ory.sh/')
+      cy.url().should('eq', 'https://www.example.org/')
     })
   })
 })

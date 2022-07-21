@@ -45,11 +45,6 @@ ory create project
 
 Ory Cloud ships administrative user interfaces, hosted pages (e.g. for login or registration), support for custom domains, collaborative features for your colleagues, integration services, and much more!
 
-### :mega: Community gets Ory Cloud for Free! :mega:
-
-Ory community members get the Ory Cloud Start Up plan **free for half a year**, with all quality-of-life features available, such as custom domains and giving your team members access. [Sign up with your GitHub account](https://console.ory.sh/registration?preferred_plan=start-up&utm_source=github&utm_medium=banner&utm_campaign=kratos-readme-first900) and use the coupon code **`FIRST900`** on the *"Start-Up Plan"* checkout page to claim your free project now! Make sure to be signed up to the [Ory Community Slack](https://slack.ory.sh) when using the code!
-
-
 <!-- START doctoc generated TOC please keep comment here to allow auto update -->
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 **Table of Contents**
@@ -118,17 +113,21 @@ from other products.
 
 <!--BEGIN ADOPTERS-->
 
-The Ory community stands on the shoulders of individuals, companies, and maintainers. We thank everyone involved - from submitting
-bug reports and feature requests, to contributing patches, to sponsoring our work. Our community is 1000+ strong and growing
-rapidly. The Ory stack protects 16.000.000.000+ API requests every month with over 250.000+ active service nodes. We would have
+The Ory community stands on the shoulders of individuals, companies, and
+maintainers. We thank everyone involved - from submitting bug reports and
+feature requests, to contributing patches, to sponsoring our work. Our community
+is 1000+ strong and growing rapidly. The Ory stack protects 16.000.000.000+ API
+requests every month with over 250.000+ active service nodes. We would have
 never been able to achieve this without each and everyone of you!
 
-The following list represents companies that have accompanied us along the way and that have made outstanding contributions to our
-ecosystem. _If you think that your company deserves a spot here, reach out to
+The following list represents companies that have accompanied us along the way
+and that have made outstanding contributions to our ecosystem. _If you think
+that your company deserves a spot here, reach out to
 <a href="mailto:office-muc@ory.sh">office-muc@ory.sh</a> now_!
 
-**Please consider giving back by becoming a sponsor of our open source work on <a href="https://www.patreon.com/_ory">Patreon</a>
-or <a href="https://opencollective.com/ory">Open Collective</a>.**
+**Please consider giving back by becoming a sponsor of our open source work on
+<a href="https://www.patreon.com/_ory">Patreon</a> or
+<a href="https://opencollective.com/ory">Open Collective</a>.**
 
 <table>
     <thead>
@@ -187,7 +186,7 @@ or <a href="https://opencollective.com/ory">Open Collective</a>.**
             <td>DataDetect</td>
             <td align="center"><img height="32px" src="https://raw.githubusercontent.com/ory/meta/master/static/adopters/datadetect.svg" alt="Datadetect"></td>
             <td><a href="https://unifiedglobalarchiving.com/data-detect/">unifiedglobalarchiving.com/data-detect/</a></td>
-        </tr>
+        </tr>        
         <tr>
             <td>Adopter *</td>
             <td>Sainsbury's</td>
@@ -205,13 +204,13 @@ or <a href="https://opencollective.com/ory">Open Collective</a>.**
             <td>Reyah</td>
             <td align="center"><img height="32px" src="https://raw.githubusercontent.com/ory/meta/master/static/adopters/reyah.svg" alt="Reyah"></td>
             <td><a href="https://reyah.eu/">reyah.eu</a></td>
-        </tr>
+        </tr>        
         <tr>
             <td>Adopter *</td>
             <td>Zero</td>
             <td align="center"><img height="32px" src="https://raw.githubusercontent.com/ory/meta/master/static/adopters/commitzero.svg" alt="Project Zero by Commit"></td>
             <td><a href="https://getzero.dev/">getzero.dev</a></td>
-        </tr>
+        </tr>        
         <tr>
             <td>Adopter *</td>
             <td>Padis</td>
@@ -229,7 +228,7 @@ or <a href="https://opencollective.com/ory">Open Collective</a>.**
             <td>Security Onion Solutions</td>
             <td align="center"><img height="32px" src="https://raw.githubusercontent.com/ory/meta/master/static/adopters/securityonion.svg" alt="Security Onion Solutions"></td>
             <td><a href="https://securityonionsolutions.com/">securityonionsolutions.com</a></td>
-        </tr>
+        </tr>        
         <tr>
             <td>Adopter *</td>
             <td>Factly</td>
@@ -253,7 +252,7 @@ or <a href="https://opencollective.com/ory">Open Collective</a>.**
             <td>Spiri.bo</td>
             <td align="center"><img height="32px" src="https://raw.githubusercontent.com/ory/meta/master/static/adopters/spiribo.svg" alt="Spiri.bo"></td>
             <td><a href="https://spiri.bo/">spiri.bo</a></td>
-        </tr>
+        </tr>        
         <tr>
             <td>Sponsor</td>
             <td>Strivacity</td>
@@ -284,6 +283,12 @@ or <a href="https://opencollective.com/ory">Open Collective</a>.**
             <td align="center"><img height="32px" src="https://raw.githubusercontent.com/ory/meta/master/static/adopters/buhta.svg" alt="Buhta"></td>
             <td><a href="https://buhta.com/">buhta.com</a></td>
         </tr>
+        <tr>
+            <td>Adopter *</td>
+            <td>Connctd</td>
+            <td align="center"><img height="32px" src="https://raw.githubusercontent.com/ory/meta/master/static/adopters/connctd.svg" alt="Connctd"></td>
+            <td><a href="https://connctd.com/">connctd.com</a></td>
+        </tr>
     </tbody>
 </table>
 
@@ -295,8 +300,10 @@ as well as all of our backers
 
 <a href="https://opencollective.com/ory#backers" target="_blank"><img src="https://opencollective.com/ory/backers.svg?width=890"></a>
 
-and past & current supporters (in alphabetical order) on [Patreon](https://www.patreon.com/_ory): Alexander Alimovs, Billy, Chancy
-Kennedy, Drozzy, Edwin Trejos, Howard Edidin, Ken Adler Oz Haven, Stefan Hans, TheCrealm.
+and past & current supporters (in alphabetical order) on
+[Patreon](https://www.patreon.com/_ory): Alexander Alimovs, Billy, Chancy
+Kennedy, Drozzy, Edwin Trejos, Howard Edidin, Ken Adler Oz Haven, Stefan Hans,
+TheCrealm.
 
 <em>\* Uses one of Ory's major projects in production.</em>
 
@@ -332,42 +339,51 @@ Head over to the [Ory Developer Documentation](https://www.ory.sh/kratos/docs/in
 
 <!--BEGIN ECOSYSTEM-->
 
-We build Ory on several guiding principles when it comes to our architecture design:
+We build Ory on several guiding principles when it comes to our architecture
+design:
 
 - Minimal dependencies
 - Runs everywhere
 - Scales without effort
 - Minimize room for human and network errors
 
-Ory's architecture is designed to run best on a Container Orchestration system such as Kubernetes, CloudFoundry, OpenShift, and
-similar projects. Binaries are small (5-15MB) and available for all popular processor types (ARM, AMD64, i386) and operating
-systems (FreeBSD, Linux, macOS, Windows) without system dependencies (Java, Node, Ruby, libxml, ...).
+Ory's architecture is designed to run best on a Container Orchestration system
+such as Kubernetes, CloudFoundry, OpenShift, and similar projects. Binaries are
+small (5-15MB) and available for all popular processor types (ARM, AMD64, i386)
+and operating systems (FreeBSD, Linux, macOS, Windows) without system
+dependencies (Java, Node, Ruby, libxml, ...).
 
 ### Ory Kratos: Identity and User Infrastructure and Management
 
-[Ory Kratos](https://github.com/ory/kratos) is an API-first Identity and User Management system that is built according to
-[cloud architecture best practices](https://www.ory.sh/docs/next/ecosystem/software-architecture-philosophy). It implements core
-use cases that almost every software application needs to deal with: Self-service Login and Registration, Multi-Factor
-Authentication (MFA/2FA), Account Recovery and Verification, Profile, and Account Management.
+[Ory Kratos](https://github.com/ory/kratos) is an API-first Identity and User
+Management system that is built according to
+[cloud architecture best practices](https://www.ory.sh/docs/next/ecosystem/software-architecture-philosophy).
+It implements core use cases that almost every software application needs to
+deal with: Self-service Login and Registration, Multi-Factor Authentication
+(MFA/2FA), Account Recovery and Verification, Profile, and Account Management.
 
 ### Ory Hydra: OAuth2 & OpenID Connect Server
 
-[Ory Hydra](https://github.com/ory/hydra) is an OpenID Certified™ OAuth2 and OpenID Connect Provider which easily connects to any
-existing identity system by writing a tiny "bridge" application. Gives absolute control over user interface and user experience
-flows.
+[Ory Hydra](https://github.com/ory/hydra) is an OpenID Certified™ OAuth2 and
+OpenID Connect Provider which easily connects to any existing identity system by
+writing a tiny "bridge" application. Gives absolute control over user interface
+and user experience flows.
 
 ### Ory Oathkeeper: Identity & Access Proxy
 
-[Ory Oathkeeper](https://github.com/ory/oathkeeper) is a BeyondCorp/Zero Trust Identity & Access Proxy (IAP) with configurable
-authentication, authorization, and request mutation rules for your web services: Authenticate JWT, Access Tokens, API Keys, mTLS;
-Check if the contained subject is allowed to perform the request; Encode resulting content into custom headers (`X-User-ID`), JSON
-Web Tokens and more!
+[Ory Oathkeeper](https://github.com/ory/oathkeeper) is a BeyondCorp/Zero Trust
+Identity & Access Proxy (IAP) with configurable authentication, authorization,
+and request mutation rules for your web services: Authenticate JWT, Access
+Tokens, API Keys, mTLS; Check if the contained subject is allowed to perform the
+request; Encode resulting content into custom headers (`X-User-ID`), JSON Web
+Tokens and more!
 
 ### Ory Keto: Access Control Policies as a Server
 
-[Ory Keto](https://github.com/ory/keto) is a policy decision point. It uses a set of access control policies, similar to AWS IAM
-Policies, in order to determine whether a subject (user, application, service, car, ...) is authorized to perform a certain action
-on a resource.
+[Ory Keto](https://github.com/ory/keto) is a policy decision point. It uses a
+set of access control policies, similar to AWS IAM Policies, in order to
+determine whether a subject (user, application, service, car, ...) is authorized
+to perform a certain action on a resource.
 
 <!--END ECOSYSTEM-->
 
@@ -511,6 +527,15 @@ Some tests use fixtures. If payloads change, you can update them with:
 ```
 make test-update-snapshots
 ```
+
+This will only update the snapshots of the short tests. To update all snapshots,
+run:
+
+```bash
+UPDATE_SNAPSHOTS=true go test -p 4 -tags sqlite ./...
+```
+
+You can also run this command from a sub folder.
 
 ##### End-to-End Tests
 

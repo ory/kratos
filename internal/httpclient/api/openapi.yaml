@@ -60,7 +60,13 @@ paths:
           minimum: 1
           type: integer
         style: form
-      - description: Pagination Page
+      - description: |-
+          Pagination Page
+
+          This value is currently an integer, but it is not sequential. The value is not the page number, but a
+          reference. The next page can be any number and some numbers might return an empty list.
+
+          For example, page 2 might not follow after page 1. And even if page 3 and 5 exist, but page 4 might not exist.
         explode: true
         in: query
         name: page
@@ -219,6 +225,63 @@ paths:
       summary: Get an Identity
       tags:
       - v0alpha2
+    patch:
+      description: |-
+        NOTE: The fields `id`, `stateChangedAt` and `credentials` are not updateable.
+
+        Learn how identities work in [Ory Kratos' User And Identity Model Documentation](https://www.ory.sh/docs/next/kratos/concepts/identity-user-model).
+      operationId: adminPatchIdentity
+      parameters:
+      - description: ID must be set to the ID of identity you want to update
+        explode: false
+        in: path
+        name: id
+        required: true
+        schema:
+          type: string
+        style: simple
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/jsonPatchDocument'
+        x-originalParamName: Body
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/identity'
+          description: identity
+        "400":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/jsonError'
+          description: jsonError
+        "404":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/jsonError'
+          description: jsonError
+        "409":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/jsonError'
+          description: jsonError
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/jsonError'
+          description: jsonError
+      security:
+      - oryAccessToken: []
+      summary: Partially updates an Identity's field using [JSON Patch](https://jsonpatch.com/)
+      tags:
+      - v0alpha2
     put:
       description: |-
         This endpoint updates an identity. The full identity payload (except credentials) is expected. This endpoint does not support patching.
@@ -356,7 +419,13 @@ paths:
           minimum: 1
           type: integer
         style: form
-      - description: Pagination Page
+      - description: |-
+          Pagination Page
+
+          This value is currently an integer, but it is not sequential. The value is not the page number, but a
+          reference. The next page can be any number and some numbers might return an empty list.
+
+          For example, page 2 might not follow after page 1. And even if page 3 and 5 exist, but page 4 might not exist.
         explode: true
         in: query
         name: page
@@ -574,7 +643,13 @@ paths:
           minimum: 1
           type: integer
         style: form
-      - description: Pagination Page
+      - description: |-
+          Pagination Page
+
+          This value is currently an integer, but it is not sequential. The value is not the page number, but a
+          reference. The next page can be any number and some numbers might return an empty list.
+
+          For example, page 2 might not follow after page 1. And even if page 3 and 5 exist, but page 4 might not exist.
         explode: true
         in: query
         name: page
@@ -1073,7 +1148,7 @@ paths:
           A Valid Logout Token
 
           If you do not have a logout token because you only have a session cookie,
-          call `/self-service/logout/urls` to generate a URL for this endpoint.
+          call `/self-service/logout/browser` to generate a URL for this endpoint.
         explode: true
         in: query
         name: token
@@ -2234,7 +2309,7 @@ paths:
 
         This endpoint MUST ONLY be used in scenarios such as native mobile apps (React Native, Objective C, Swift, Java, ...).
 
-        More information can be found at [Ory Kratos Email and Phone Verification Documentation](https://www.ory.sh/docs/kratos/selfservice/flows/verify-email-account-activation).
+        More information can be found at [Ory Kratos Email and Phone Verification Documentation](https://www.ory.sh/docs/kratos/self-service/flows/verify-email-account-activation).
       operationId: initializeSelfServiceVerificationFlowWithoutBrowser
       responses:
         "200":
@@ -2482,7 +2557,13 @@ paths:
           minimum: 1
           type: integer
         style: form
-      - description: Pagination Page
+      - description: |-
+          Pagination Page
+
+          This value is currently an integer, but it is not sequential. The value is not the page number, but a
+          reference. The next page can be any number and some numbers might return an empty list.
+
+          For example, page 2 might not follow after page 1. And even if page 3 and 5 exist, but page 4 might not exist.
         explode: true
         in: query
         name: page
@@ -2709,9 +2790,26 @@ components:
       example:
         metadata_admin: ""
         traits: '{}'
+        credentials:
+          password:
+            config:
+              hashed_password: hashed_password
+              password: password
+          oidc:
+            config:
+              config:
+                hashed_password: hashed_password
+                password: password
+              providers:
+              - provider: provider
+                subject: subject
+              - provider: provider
+                subject: subject
         schema_id: schema_id
         metadata_public: ""
       properties:
+        credentials:
+          $ref: '#/components/schemas/adminIdentityImportCredentials'
         metadata_admin:
           description: Store metadata about the user which is only accessible through
             admin APIs such as `GET /admin/identities/<id>`.
@@ -2832,11 +2930,30 @@ components:
       - traits
       type: object
     adminCreateIdentityImportCredentialsOidc:
+      example:
+        config:
+          config:
+            hashed_password: hashed_password
+            password: password
+          providers:
+          - provider: provider
+            subject: subject
+          - provider: provider
+            subject: subject
       properties:
         config:
           $ref: '#/components/schemas/adminCreateIdentityImportCredentialsOidcConfig'
       type: object
     adminCreateIdentityImportCredentialsOidcConfig:
+      example:
+        config:
+          hashed_password: hashed_password
+          password: password
+        providers:
+        - provider: provider
+          subject: subject
+        - provider: provider
+          subject: subject
       properties:
         config:
           $ref: '#/components/schemas/adminCreateIdentityImportCredentialsPasswordConfig'
@@ -2847,6 +2964,9 @@ components:
           type: array
       type: object
     adminCreateIdentityImportCredentialsOidcProvider:
+      example:
+        provider: provider
+        subject: subject
       properties:
         provider:
           description: The OpenID Connect provider to link the subject to. Usually
@@ -2861,11 +2981,18 @@ components:
       - subject
       type: object
     adminCreateIdentityImportCredentialsPassword:
+      example:
+        config:
+          hashed_password: hashed_password
+          password: password
       properties:
         config:
           $ref: '#/components/schemas/adminCreateIdentityImportCredentialsPasswordConfig'
       type: object
     adminCreateIdentityImportCredentialsPasswordConfig:
+      example:
+        hashed_password: hashed_password
+        password: password
       properties:
         hashed_password:
           description: The hashed password in [PHC format]( https://www.ory.sh/docs/kratos/concepts/credentials/username-email-password#hashed-password-format)
@@ -2891,6 +3018,21 @@ components:
       - identity_id
       type: object
     adminIdentityImportCredentials:
+      example:
+        password:
+          config:
+            hashed_password: hashed_password
+            password: password
+        oidc:
+          config:
+            config:
+              hashed_password: hashed_password
+              password: password
+            providers:
+            - provider: provider
+              subject: subject
+            - provider: provider
+              subject: subject
       properties:
         oidc:
           $ref: '#/components/schemas/adminCreateIdentityImportCredentialsOidc'
@@ -3282,6 +3424,43 @@ components:
       - error
       title: JSON API Error Response
       type: object
+    jsonPatch:
+      description: A JSONPatch document as defined by RFC 6902
+      properties:
+        from:
+          description: |-
+            This field is used together with operation "move" and uses JSON Pointer notation.
+
+            Learn more [about JSON Pointers](https://datatracker.ietf.org/doc/html/rfc6901#section-5).
+          example: /name
+          type: string
+        op:
+          description: The operation to be performed. One of "add", "remove", "replace",
+            "move", "copy", or "test".
+          example: replace
+          type: string
+        path:
+          description: |-
+            The path to the target path. Uses JSON pointer notation.
+
+            Learn more [about JSON Pointers](https://datatracker.ietf.org/doc/html/rfc6901#section-5).
+          example: /name
+          type: string
+        value:
+          description: |-
+            The value to be used within the operations.
+
+            Learn more [about JSON Pointers](https://datatracker.ietf.org/doc/html/rfc6901#section-5).
+          example: foobar
+      required:
+      - op
+      - path
+      type: object
+    jsonPatchDocument:
+      description: A JSONPatchDocument request
+      items:
+        $ref: '#/components/schemas/jsonPatch'
+      type: array
     jsonSchema:
       description: Raw JSON Schema
       type: object
@@ -3353,7 +3532,13 @@ components:
       properties:
         page:
           default: 1
-          description: Pagination Page
+          description: |-
+            Pagination Page
+
+            This value is currently an integer, but it is not sequential. The value is not the page number, but a
+            reference. The next page can be any number and some numbers might return an empty list.
+
+            For example, page 2 might not follow after page 1. And even if page 3 and 5 exist, but page 4 might not exist.
           format: int64
           minimum: 1
           type: integer
@@ -4466,10 +4651,8 @@ components:
             flows.
           type: string
         identifier:
-          description: |-
-            Identifier is the email or username of the user trying to log in. This field is
-            only required when using WebAuthn for passwordless login. When using WebAuthn
-            for multi-factor authentication, it is not needed.
+          description: Identifier is the email or username of the user trying to log
+            in.
           type: string
         method:
           description: Method should be set to "webAuthn" when logging in using the
@@ -4482,6 +4665,7 @@ components:
             This must contain the ID of the WebAuthN connection.
           type: string
       required:
+      - identifier
       - method
       title: submitSelfServiceLoginFlowWithWebAuthnMethodBody is used to decode the
         login form payload.
@@ -5041,6 +5225,46 @@ components:
       required:
       - identity
       type: object
+    tokenPagination:
+      properties:
+        page_size:
+          default: 250
+          description: |-
+            Items per page
+
+            This is the number of items per page to return.
+            For details on pagination please head over to the [pagination documentation](https://www.ory.sh/docs/ecosystem/api-design#pagination).
+          format: int64
+          maximum: 1000
+          minimum: 1
+          type: integer
+        page_token:
+          default: "1"
+          description: |-
+            Next Page Token
+
+            The next page token.
+            For details on pagination please head over to the [pagination documentation](https://www.ory.sh/docs/ecosystem/api-design#pagination).
+          minimum: 1
+          type: string
+      type: object
+    tokenPaginationHeaders:
+      properties:
+        link:
+          description: |-
+            The link header contains pagination links.
+
+            For details on pagination please head over to the [pagination documentation](https://www.ory.sh/docs/ecosystem/api-design#pagination).
+
+            in: header
+          type: string
+        x-total-count:
+          description: |-
+            The total number of clients.
+
+            in: header
+          type: string
+      type: object
     uiContainer:
       description: Container represents a HTML Form. The container can work with both
         HTTP Form and JSON requests
@@ -5246,11 +5470,19 @@ components:
       - width
       title: ImageAttributes represents the attributes of an image node.
       type: object
-    uiNodeInputAttributeType:
-      type: string
     uiNodeInputAttributes:
       description: InputAttributes represents the attributes of an input node
       properties:
+        autocomplete:
+          description: The autocomplete attribute for the input.
+          enum:
+          - email
+          - tel
+          - url
+          - current-password
+          - new-password
+          - one-time-code
+          type: string
         disabled:
           description: Sets the input's disabled field to true or false.
           type: boolean
@@ -5276,6 +5508,20 @@ components:
           description: Mark this input field as required.
           type: boolean
         type:
+          description: The input's element type.
+          enum:
+          - text
+          - password
+          - number
+          - checkbox
+          - hidden
+          - email
+          - tel
+          - submit
+          - button
+          - datetime-local
+          - date
+          - url
           type: string
         value:
           description: The input's value.

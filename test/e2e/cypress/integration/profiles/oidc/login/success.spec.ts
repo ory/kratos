@@ -40,13 +40,13 @@ context('Social Sign In Successes', () => {
         cy.registerOidc({
           email,
           website,
-          route: registration + '?return_to=https://example.org/'
+          route: registration + '?return_to=https://www.example.org/'
         })
-        cy.location('href').should('eq', 'https://example.org/')
+        cy.location('href').should('eq', 'https://www.example.org/')
         cy.logout()
         cy.noSession()
-        cy.loginOidc({ url: login + '?return_to=https://example.org/' })
-        cy.location('href').should('eq', 'https://example.org/')
+        cy.loginOidc({ url: login + '?return_to=https://www.example.org/' })
+        cy.location('href').should('eq', 'https://www.example.org/')
       })
     })
   })

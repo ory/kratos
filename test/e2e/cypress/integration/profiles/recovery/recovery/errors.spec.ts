@@ -62,9 +62,7 @@ context('Account Recovery Errors', () => {
         cy.wait(1000)
 
         cy.getMail().should((message) => {
-          expect(message.subject.trim()).to.equal(
-            'Recover access to your account'
-          )
+          expect(message.subject).to.equal('Recover access to your account')
           expect(message.toAddresses[0].trim()).to.equal(identity.email)
 
           const link = parseHtml(message.body).querySelector('a')
@@ -95,7 +93,7 @@ context('Account Recovery Errors', () => {
         cy.get('input[name="email"]').should('have.value', email)
 
         cy.getMail().should((message) => {
-          expect(message.subject.trim()).to.equal('Account access attempted')
+          expect(message.subject).to.equal('Account access attempted')
           expect(message.fromAddress.trim()).to.equal('no-reply@ory.kratos.sh')
           expect(message.toAddresses).to.have.length(1)
           expect(message.toAddresses[0].trim()).to.equal(email)
@@ -113,6 +111,22 @@ context('Account Recovery Errors', () => {
           'contain.text',
           'Property email is missing.'
         )
+        cy.get('[name="method"][value="link"]').should('exist')
+      })
+
+      it('should cause non-repeating form errors after submitting empty form twice. see: #2512', () => {
+        cy.visit(recovery)
+        cy.get('button[value="link"]').click()
+        cy.location('pathname').should('eq', '/recovery')
+
+        cy.get('button[value="link"]').click()
+        cy.get('[data-testid="ui/message/4000002"]').should(
+          'contain.text',
+          'Property email is missing.'
+        )
+        cy.get('form')
+          .find('[data-testid="ui/message/4000002"]')
+          .should('have.length', 1)
         cy.get('[name="method"][value="link"]').should('exist')
       })
 

@@ -170,7 +170,7 @@ func NewInactiveSession() *Session {
 
 func (s *Session) Activate(i *identity.Identity, c lifespanProvider, authenticatedAt time.Time) error {
 	if i != nil && !i.IsActive() {
-		return ErrIdentityDisabled
+		return ErrIdentityDisabled.WithDetail("identity_id", i.ID)
 	}
 
 	s.Active = true

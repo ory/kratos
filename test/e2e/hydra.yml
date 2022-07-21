@@ -1,0 +1,13 @@
+version: v1.11.7
+
+dsn: memory
+
+log:
+  level: trace
+
+urls:
+  self:
+    issuer: http://localhost:4444
+    public: http://localhost:4444
+  login: http://localhost:4446/login
+  consent: http://localhost:4446/consent

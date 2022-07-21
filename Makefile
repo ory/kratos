@@ -55,7 +55,7 @@ node_modules: package.json Makefile
 		npm ci
 
 .bin/golangci-lint: Makefile
-		bash <(curl -sfL https://install.goreleaser.com/github.com/golangci/golangci-lint.sh) -d -b .bin v1.44.2
+		curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -d -b .bin v1.47.0
 
 .bin/hydra: Makefile
 		bash <(curl https://raw.githubusercontent.com/ory/meta/master/install.sh) -d -b .bin hydra v1.11.0
@@ -89,7 +89,8 @@ test-coverage: .bin/go-acc .bin/goveralls
 sdk: .bin/swagger .bin/ory node_modules
 		swagger generate spec -m -o spec/swagger.json \
 			-c github.com/ory/kratos \
-			-c github.com/ory/x/healthx
+			-c github.com/ory/x/healthx \
+			-c github.com/ory/x/openapix
 		ory dev swagger sanitize ./spec/swagger.json
 		swagger validate ./spec/swagger.json
 		CIRCLE_PROJECT_USERNAME=ory CIRCLE_PROJECT_REPONAME=kratos \
@@ -103,6 +104,7 @@ sdk: .bin/swagger .bin/ory node_modules
 					-p file://.schema/openapi/patches/session.yaml \
 					-p file://.schema/openapi/patches/identity.yaml \
 					-p file://.schema/openapi/patches/generic_error.yaml \
+					-p file://.schema/openapi/patches/common.yaml \
 					spec/swagger.json spec/api.json
 
 		rm -rf internal/httpclient

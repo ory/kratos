@@ -3,7 +3,8 @@ package daemon
 import (
 	"crypto/tls"
 	"net/http"
-	"sync"
+
+	"golang.org/x/sync/errgroup"
 
 	"github.com/ory/kratos/schema"
 
@@ -50,7 +51,7 @@ type options struct {
 	ctx stdctx.Context
 }
 
-func newOptions(ctx stdctx.Context, opts []Option) *options {
+func NewOptions(ctx stdctx.Context, opts []Option) *options {
 	o := new(options)
 	o.ctx = ctx
 	for _, f := range opts {
@@ -73,9 +74,8 @@ func WithContext(ctx stdctx.Context) Option {
 	}
 }
 
-func ServePublic(r driver.Registry, wg *sync.WaitGroup, cmd *cobra.Command, args []string, opts ...Option) {
-	defer wg.Done()
-	modifiers := newOptions(cmd.Context(), opts)
+func ServePublic(r driver.Registry, cmd *cobra.Command, args []string, opts ...Option) error {
+	modifiers := NewOptions(cmd.Context(), opts)
 	ctx := modifiers.ctx
 
 	c := r.Config(cmd.Context())
@@ -125,6 +125,7 @@ func ServePublic(r driver.Registry, wg *sync.WaitGroup, cmd *cobra.Command, args
 		handler = x.TraceHandler(handler)
 	}
 
+	// #nosec G112 - the correct settings are set by graceful.WithDefaults
 	server := graceful.WithDefaults(&http.Server{
 		Handler:   handler,
 		TLSConfig: &tls.Config{Certificates: certs, MinVersion: tls.VersionTLS12},
@@ -143,14 +144,15 @@ func ServePublic(r driver.Registry, wg *sync.WaitGroup, cmd *cobra.Command, args
 		}
 		return server.ServeTLS(listener, "", "")
 	}, server.Shutdown); err != nil {
-		l.Fatalf("Failed to gracefully shutdown public httpd: %s", err)
+		l.Errorf("Failed to gracefully shutdown public httpd: %s", err)
+		return err
 	}
 	l.Println("Public httpd was shutdown gracefully")
+	return nil
 }
 
-func ServeAdmin(r driver.Registry, wg *sync.WaitGroup, cmd *cobra.Command, args []string, opts ...Option) {
-	defer wg.Done()
-	modifiers := newOptions(cmd.Context(), opts)
+func ServeAdmin(r driver.Registry, cmd *cobra.Command, args []string, opts ...Option) error {
+	modifiers := NewOptions(cmd.Context(), opts)
 	ctx := modifiers.ctx
 
 	c := r.Config(ctx)
@@ -185,6 +187,7 @@ func ServeAdmin(r driver.Registry, wg *sync.WaitGroup, cmd *cobra.Command, args 
 		handler = x.TraceHandler(n)
 	}
 
+	// #nosec G112 - the correct settings are set by graceful.WithDefaults
 	server := graceful.WithDefaults(&http.Server{
 		Handler:   handler,
 		TLSConfig: &tls.Config{Certificates: certs, MinVersion: tls.VersionTLS12},
@@ -204,9 +207,11 @@ func ServeAdmin(r driver.Registry, wg *sync.WaitGroup, cmd *cobra.Command, args 
 		}
 		return server.ServeTLS(listener, "", "")
 	}, server.Shutdown); err != nil {
-		l.Fatalf("Failed to gracefully shutdown admin httpd: %s", err)
+		l.Errorf("Failed to gracefully shutdown admin httpd: %s", err)
+		return err
 	}
 	l.Println("Admin httpd was shutdown gracefully")
+	return nil
 }
 
 func sqa(ctx stdctx.Context, cmd *cobra.Command, d driver.Registry) *metricsx.Service {
@@ -278,23 +283,34 @@ func sqa(ctx stdctx.Context, cmd *cobra.Command, d driver.Registry) *metricsx.Se
 	)
 }
 
-func bgTasks(d driver.Registry, wg *sync.WaitGroup, cmd *cobra.Command, args []string, opts ...Option) {
-	defer wg.Done()
-	modifiers := newOptions(cmd.Context(), opts)
+func bgTasks(d driver.Registry, cmd *cobra.Command, args []string, opts ...Option) error {
+	modifiers := NewOptions(cmd.Context(), opts)
 	ctx := modifiers.ctx
 
 	if d.Config(ctx).IsBackgroundCourierEnabled() {
 		go courier.Watch(ctx, d)
 	}
+	return nil
 }
 
-func ServeAll(d driver.Registry, opts ...Option) func(cmd *cobra.Command, args []string) {
-	return func(cmd *cobra.Command, args []string) {
-		var wg sync.WaitGroup
-		wg.Add(3)
-		go ServePublic(d, &wg, cmd, args, opts...)
-		go ServeAdmin(d, &wg, cmd, args, opts...)
-		go bgTasks(d, &wg, cmd, args, opts...)
-		wg.Wait()
+func ServeAll(d driver.Registry, opts ...Option) func(cmd *cobra.Command, args []string) error {
+	return func(cmd *cobra.Command, args []string) error {
+		mods := NewOptions(cmd.Context(), opts)
+		ctx := mods.ctx
+
+		g, ctx := errgroup.WithContext(ctx)
+		cmd.SetContext(ctx)
+		opts = append(opts, WithContext(ctx))
+
+		g.Go(func() error {
+			return ServePublic(d, cmd, args, opts...)
+		})
+		g.Go(func() error {
+			return ServeAdmin(d, cmd, args, opts...)
+		})
+		g.Go(func() error {
+			return bgTasks(d, cmd, args, opts...)
+		})
+		return g.Wait()
 	}
 }

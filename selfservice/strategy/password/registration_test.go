@@ -487,7 +487,9 @@ func TestRegistration(t *testing.T) {
 			Nodes: node.Nodes{
 				node.NewCSRFNode(x.FakeCSRFToken),
 				node.NewInputField("traits.username", nil, node.PasswordGroup, node.InputAttributeTypeText),
-				node.NewInputField("password", nil, node.PasswordGroup, node.InputAttributeTypePassword, node.WithRequiredInputAttribute).WithMetaLabel(text.NewInfoNodeInputPassword()),
+				node.NewInputField("password", nil, node.PasswordGroup, node.InputAttributeTypePassword, node.WithRequiredInputAttribute, node.WithInputAttributes(func(a *node.InputAttributes) {
+					a.Autocomplete = node.InputAttributeAutocompleteNewPassword
+				})).WithMetaLabel(text.NewInfoNodeInputPassword()),
 				node.NewInputField("traits.bar", nil, node.PasswordGroup, node.InputAttributeTypeText),
 				node.NewInputField("method", "password", node.PasswordGroup, node.InputAttributeTypeSubmit).WithMetaLabel(text.NewInfoRegistration()),
 			},

@@ -10,7 +10,7 @@ import (
 
 const DisableFormField = "disableFormField"
 
-func toFormType(n string, i interface{}) InputAttributeType {
+func toFormType(n string, i interface{}) UiNodeInputAttributeType {
 	switch n {
 	case x.CSRFTokenName:
 		return InputAttributeTypeHidden
@@ -89,7 +89,7 @@ func NewInputFieldFromJSON(name string, value interface{}, group UiNodeGroup, op
 	}
 }
 
-func NewInputField(name string, value interface{}, group UiNodeGroup, inputType InputAttributeType, opts ...InputAttributesModifier) *Node {
+func NewInputField(name string, value interface{}, group UiNodeGroup, inputType UiNodeInputAttributeType, opts ...InputAttributesModifier) *Node {
 	return &Node{
 		Type:       Input,
 		Group:      group,
@@ -156,10 +156,15 @@ func NewInputFieldFromSchema(name string, group UiNodeGroup, p jsonschemax.Path,
 		attr.Type = InputAttributeTypeDateTimeLocal
 	case "email":
 		attr.Type = InputAttributeTypeEmail
+		attr.Autocomplete = InputAttributeAutocompleteEmail
+	case "tel":
+		attr.Type = InputAttributeTypeTel
+		attr.Autocomplete = InputAttributeAutocompleteTel
 	case "date":
 		attr.Type = InputAttributeTypeDate
 	case "uri":
 		attr.Type = InputAttributeTypeURI
+		attr.Autocomplete = InputAttributeAutocompleteUrl
 	case "regex":
 		attr.Type = InputAttributeTypeText
 	}

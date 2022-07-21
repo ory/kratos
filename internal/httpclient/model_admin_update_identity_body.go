@@ -17,6 +17,7 @@ import (
 
 // AdminUpdateIdentityBody struct for AdminUpdateIdentityBody
 type AdminUpdateIdentityBody struct {
+	Credentials *AdminIdentityImportCredentials `json:"credentials,omitempty"`
 	// Store metadata about the user which is only accessible through admin APIs such as `GET /admin/identities/<id>`.
 	MetadataAdmin interface{} `json:"metadata_admin,omitempty"`
 	// Store metadata about the identity which the identity itself can see when calling for example the session endpoint. Do not store sensitive information (e.g. credit score) about the identity in this field.
@@ -46,6 +47,38 @@ func NewAdminUpdateIdentityBody(schemaId string, state IdentityState, traits map
 func NewAdminUpdateIdentityBodyWithDefaults() *AdminUpdateIdentityBody {
 	this := AdminUpdateIdentityBody{}
 	return &this
+}
+
+// GetCredentials returns the Credentials field value if set, zero value otherwise.
+func (o *AdminUpdateIdentityBody) GetCredentials() AdminIdentityImportCredentials {
+	if o == nil || o.Credentials == nil {
+		var ret AdminIdentityImportCredentials
+		return ret
+	}
+	return *o.Credentials
+}
+
+// GetCredentialsOk returns a tuple with the Credentials field value if set, nil otherwise
+// and a boolean to check if the value has been set.
+func (o *AdminUpdateIdentityBody) GetCredentialsOk() (*AdminIdentityImportCredentials, bool) {
+	if o == nil || o.Credentials == nil {
+		return nil, false
+	}
+	return o.Credentials, true
+}
+
+// HasCredentials returns a boolean if a field has been set.
+func (o *AdminUpdateIdentityBody) HasCredentials() bool {
+	if o != nil && o.Credentials != nil {
+		return true
+	}
+
+	return false
+}
+
+// SetCredentials gets a reference to the given AdminIdentityImportCredentials and assigns it to the Credentials field.
+func (o *AdminUpdateIdentityBody) SetCredentials(v AdminIdentityImportCredentials) {
+	o.Credentials = &v
 }
 
 // GetMetadataAdmin returns the MetadataAdmin field value if set, zero value otherwise (both if not set or set to explicit null).
@@ -188,6 +221,9 @@ func (o *AdminUpdateIdentityBody) SetTraits(v map[string]interface{}) {
 
 func (o AdminUpdateIdentityBody) MarshalJSON() ([]byte, error) {
 	toSerialize := map[string]interface{}{}
+	if o.Credentials != nil {
+		toSerialize["credentials"] = o.Credentials
+	}
 	if o.MetadataAdmin != nil {
 		toSerialize["metadata_admin"] = o.MetadataAdmin
 	}

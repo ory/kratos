@@ -39,7 +39,7 @@ func NewDeleteIdentityCmd(root *cobra.Command) *cobra.Command {
 			}
 
 			var (
-				deleted = make([]outputIder, 0, len(args))
+				deleted = make([]cmdx.OutputIder, 0, len(args))
 				failed  = make(map[string]error)
 			)
 
@@ -49,13 +49,13 @@ func NewDeleteIdentityCmd(root *cobra.Command) *cobra.Command {
 					failed[a] = cmdx.PrintOpenAPIError(cmd, err)
 					continue
 				}
-				deleted = append(deleted, outputIder(a))
+				deleted = append(deleted, cmdx.OutputIder(a))
 			}
 
 			if len(deleted) == 1 {
 				cmdx.PrintRow(cmd, &deleted[0])
 			} else if len(deleted) > 1 {
-				cmdx.PrintTable(cmd, &outputIderCollection{deleted})
+				cmdx.PrintTable(cmd, &cmdx.OutputIderCollection{Items: deleted})
 			}
 
 			cmdx.PrintErrors(cmd, failed)

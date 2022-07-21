@@ -57,9 +57,7 @@ context('Account Verification Error', () => {
         cy.shortVerificationLifespan()
 
         cy.getMail().then((message) => {
-          expect(message.subject.trim()).to.equal(
-            'Please verify your email address'
-          )
+          expect(message.subject).to.equal('Please verify your email address')
           expect(message.toAddresses[0].trim()).to.equal(identity.email)
 
           const link = parseHtml(message.body).querySelector('a')

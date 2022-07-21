@@ -8,6 +8,9 @@ import (
 	"os"
 	"path/filepath"
 	"testing"
+	"time"
+
+	"github.com/ory/x/fsx"
 
 	"github.com/ory/kratos/identity"
 
@@ -71,17 +74,19 @@ func TestMigrations(t *testing.T) {
 	require.NoError(t, err)
 	require.NoError(t, sqlite.Open())
 
-	connections := map[string]*pop.Connection{"sqlite": sqlite}
+	connections := map[string]*pop.Connection{
+		//"sqlite": sqlite,
+	}
 	if !testing.Short() {
 		dockertest.Parallel([]func(){
 			func() {
-				connections["postgres"] = dockertest.ConnectToTestPostgreSQLPop(t)
+				//connections["postgres"] = dockertest.ConnectToTestPostgreSQLPop(t)
 			},
 			func() {
 				connections["mysql"] = dockertest.ConnectToTestMySQLPop(t)
 			},
 			func() {
-				connections["cockroach"] = dockertest.ConnectToTestCockroachDBPop(t)
+				//connections["cockroach"] = dockertest.ConnectToTestCockroachDBPop(t)
 			},
 		})
 	}
@@ -112,7 +117,12 @@ func TestMigrations(t *testing.T) {
 			t.Logf("URL: %s", url)
 
 			t.Run("suite=up", func(t *testing.T) {
-				tm := popx.NewTestMigrator(t, c, os.DirFS("../migrations/sql"), os.DirFS("./testdata"), l)
+				tm, err := popx.NewMigrationBox(
+					fsx.Merge(os.DirFS("../migrations/sql")),
+					popx.NewMigrator(c, logrusx.New("", "", logrusx.ForceLevel(logrus.DebugLevel)), nil, 1*time.Minute),
+					popx.WithTestdata(t, os.DirFS("./testdata")),
+				)
+				require.NoError(t, err)
 				require.NoError(t, tm.Up(ctx))
 			})
 

@@ -34,7 +34,7 @@ context('Social Sign Out Successes', () => {
       })
 
       it('should sign out and be able to sign in again', () => {
-        cy.get(appPrefix(app) + '[data-testid=logout]').click()
+        cy.get(`${appPrefix(app)} [data-testid="logout"]:not(disabled)`).click()
         cy.noSession()
         cy.url().should('include', '/login')
       })

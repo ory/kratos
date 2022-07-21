@@ -2,6 +2,8 @@ package sql
 
 import (
 	"context"
+	"fmt"
+	"time"
 
 	"github.com/ory/kratos/corp"
 
@@ -42,4 +44,21 @@ func (p *Persister) GetRegistrationFlow(ctx context.Context, id uuid.UUID) (*reg
 	}
 
 	return &r, nil
+}
+
+func (p *Persister) DeleteExpiredRegistrationFlows(ctx context.Context, expiresAt time.Time, limit int) error {
+	// #nosec G201
+	err := p.GetConnection(ctx).RawQuery(fmt.Sprintf(
+		"DELETE FROM %s WHERE id in (SELECT id FROM (SELECT id FROM %s c WHERE expires_at <= ? and nid = ? ORDER BY expires_at ASC LIMIT %d ) AS s )",
+		new(registration.Flow).TableName(ctx),
+		new(registration.Flow).TableName(ctx),
+		limit,
+	),
+		expiresAt,
+		corp.ContextualizeNID(ctx, p.nid),
+	).Exec()
+	if err != nil {
+		return sqlcon.HandleError(err)
+	}
+	return nil
 }

@@ -4,6 +4,9 @@ import (
 	"context"
 	"fmt"
 	"testing"
+	"time"
+
+	"github.com/ory/x/sqlxx"
 
 	"github.com/ory/kratos/internal/testhelpers"
 
@@ -248,5 +251,25 @@ func TestManager(t *testing.T) {
 			// That is why we only check the identity in the store.
 			checkExtensionFields(fromStore, "email-updatetraits-1@ory.sh")(t)
 		})
+	})
+}
+
+func TestManagerNoDefaultNamedSchema(t *testing.T) {
+	conf, reg := internal.NewFastRegistryWithMocks(t)
+	conf.MustSet(config.ViperKeyDefaultIdentitySchemaID, "user_v0")
+	conf.MustSet(config.ViperKeyIdentitySchemas, config.Schemas{
+		{ID: "user_v0", URL: "file://./stub/manager.schema.json"},
+	})
+	conf.MustSet(config.ViperKeyPublicBaseURL, "https://www.ory.sh/")
+
+	t.Run("case=should create identity with default schema", func(t *testing.T) {
+		stateChangedAt := sqlxx.NullTime(time.Now().UTC())
+		original := &identity.Identity{
+			SchemaID:       "",
+			Traits:         []byte(identity.Traits(`{"email":"foo@ory.sh"}`)),
+			State:          identity.StateActive,
+			StateChangedAt: &stateChangedAt,
+		}
+		require.NoError(t, reg.IdentityManager().Create(context.Background(), original))
 	})
 }

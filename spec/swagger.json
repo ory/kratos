@@ -79,7 +79,7 @@
             "type": "integer",
             "format": "int64",
             "default": 1,
-            "description": "Pagination Page",
+            "description": "Pagination Page\n\nThis value is currently an integer, but it is not sequential. The value is not the page number, but a\nreference. The next page can be any number and some numbers might return an empty list.\n\nFor example, page 2 might not follow after page 1. And even if page 3 and 5 exist, but page 4 might not exist.",
             "name": "page",
             "in": "query"
           }
@@ -336,6 +336,77 @@
             }
           }
         }
+      },
+      "patch": {
+        "security": [
+          {
+            "oryAccessToken": []
+          }
+        ],
+        "description": "NOTE: The fields `id`, `stateChangedAt` and `credentials` are not updateable.\n\nLearn how identities work in [Ory Kratos' User And Identity Model Documentation](https://www.ory.sh/docs/next/kratos/concepts/identity-user-model).",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "schemes": [
+          "http",
+          "https"
+        ],
+        "tags": [
+          "v0alpha2"
+        ],
+        "summary": "Partially updates an Identity's field using [JSON Patch](https://jsonpatch.com/)",
+        "operationId": "adminPatchIdentity",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "ID must be set to the ID of identity you want to update",
+            "name": "id",
+            "in": "path",
+            "required": true
+          },
+          {
+            "name": "Body",
+            "in": "body",
+            "schema": {
+              "$ref": "#/definitions/jsonPatchDocument"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "identity",
+            "schema": {
+              "$ref": "#/definitions/identity"
+            }
+          },
+          "400": {
+            "description": "jsonError",
+            "schema": {
+              "$ref": "#/definitions/jsonError"
+            }
+          },
+          "404": {
+            "description": "jsonError",
+            "schema": {
+              "$ref": "#/definitions/jsonError"
+            }
+          },
+          "409": {
+            "description": "jsonError",
+            "schema": {
+              "$ref": "#/definitions/jsonError"
+            }
+          },
+          "500": {
+            "description": "jsonError",
+            "schema": {
+              "$ref": "#/definitions/jsonError"
+            }
+          }
+        }
       }
     },
     "/admin/identities/{id}/sessions": {
@@ -378,7 +449,7 @@
             "type": "integer",
             "format": "int64",
             "default": 1,
-            "description": "Pagination Page",
+            "description": "Pagination Page\n\nThis value is currently an integer, but it is not sequential. The value is not the page number, but a\nreference. The next page can be any number and some numbers might return an empty list.\n\nFor example, page 2 might not follow after page 1. And even if page 3 and 5 exist, but page 4 might not exist.",
             "name": "page",
             "in": "query"
           },
@@ -671,7 +742,7 @@
             "type": "integer",
             "format": "int64",
             "default": 1,
-            "description": "Pagination Page",
+            "description": "Pagination Page\n\nThis value is currently an integer, but it is not sequential. The value is not the page number, but a\nreference. The next page can be any number and some numbers might return an empty list.\n\nFor example, page 2 might not follow after page 1. And even if page 3 and 5 exist, but page 4 might not exist.",
             "name": "page",
             "in": "query"
           }
@@ -1075,7 +1146,7 @@
         "parameters": [
           {
             "type": "string",
-            "description": "A Valid Logout Token\n\nIf you do not have a logout token because you only have a session cookie,\ncall `/self-service/logout/urls` to generate a URL for this endpoint.",
+            "description": "A Valid Logout Token\n\nIf you do not have a logout token because you only have a session cookie,\ncall `/self-service/logout/browser` to generate a URL for this endpoint.",
             "name": "token",
             "in": "query"
           },
@@ -1987,7 +2058,7 @@
     },
     "/self-service/verification/api": {
       "get": {
-        "description": "This endpoint initiates a verification flow for API clients such as mobile devices, smart TVs, and so on.\n\nTo fetch an existing verification flow call `/self-service/verification/flows?flow=\u003cflow_id\u003e`.\n\nYou MUST NOT use this endpoint in client-side (Single Page Apps, ReactJS, AngularJS) nor server-side (Java Server\nPages, NodeJS, PHP, Golang, ...) browser applications. Using this endpoint in these applications will make\nyou vulnerable to a variety of CSRF attacks.\n\nThis endpoint MUST ONLY be used in scenarios such as native mobile apps (React Native, Objective C, Swift, Java, ...).\n\nMore information can be found at [Ory Kratos Email and Phone Verification Documentation](https://www.ory.sh/docs/kratos/selfservice/flows/verify-email-account-activation).",
+        "description": "This endpoint initiates a verification flow for API clients such as mobile devices, smart TVs, and so on.\n\nTo fetch an existing verification flow call `/self-service/verification/flows?flow=\u003cflow_id\u003e`.\n\nYou MUST NOT use this endpoint in client-side (Single Page Apps, ReactJS, AngularJS) nor server-side (Java Server\nPages, NodeJS, PHP, Golang, ...) browser applications. Using this endpoint in these applications will make\nyou vulnerable to a variety of CSRF attacks.\n\nThis endpoint MUST ONLY be used in scenarios such as native mobile apps (React Native, Objective C, Swift, Java, ...).\n\nMore information can be found at [Ory Kratos Email and Phone Verification Documentation](https://www.ory.sh/docs/kratos/self-service/flows/verify-email-account-activation).",
         "schemes": [
           "http",
           "https"
@@ -2156,7 +2227,7 @@
             "type": "integer",
             "format": "int64",
             "default": 1,
-            "description": "Pagination Page",
+            "description": "Pagination Page\n\nThis value is currently an integer, but it is not sequential. The value is not the page number, but a\nreference. The next page can be any number and some numbers might return an empty list.\n\nFor example, page 2 might not follow after page 1. And even if page 3 and 5 exist, but page 4 might not exist.",
             "name": "page",
             "in": "query"
           }
@@ -2387,6 +2458,9 @@
         "state"
       ],
       "properties": {
+        "credentials": {
+          "$ref": "#/definitions/adminIdentityImportCredentials"
+        },
         "metadata_admin": {
           "description": "Store metadata about the user which is only accessible through admin APIs such as `GET /admin/identities/\u003cid\u003e`.",
           "type": "object"
@@ -2924,6 +2998,43 @@
         }
       }
     },
+    "jsonPatch": {
+      "description": "A JSONPatch document as defined by RFC 6902",
+      "type": "object",
+      "required": [
+        "op",
+        "path"
+      ],
+      "properties": {
+        "from": {
+          "description": "This field is used together with operation \"move\" and uses JSON Pointer notation.\n\nLearn more [about JSON Pointers](https://datatracker.ietf.org/doc/html/rfc6901#section-5).",
+          "type": "string",
+          "example": "/name"
+        },
+        "op": {
+          "description": "The operation to be performed. One of \"add\", \"remove\", \"replace\", \"move\", \"copy\", or \"test\".",
+          "type": "string",
+          "example": "replace"
+        },
+        "path": {
+          "description": "The path to the target path. Uses JSON pointer notation.\n\nLearn more [about JSON Pointers](https://datatracker.ietf.org/doc/html/rfc6901#section-5).",
+          "type": "string",
+          "example": "/name"
+        },
+        "value": {
+          "description": "The value to be used within the operations.\n\nLearn more [about JSON Pointers](https://datatracker.ietf.org/doc/html/rfc6901#section-5).",
+          "type": "object",
+          "example": "foobar"
+        }
+      }
+    },
+    "jsonPatchDocument": {
+      "description": "A JSONPatchDocument request",
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/jsonPatch"
+      }
+    },
     "jsonSchema": {
       "description": "Raw JSON Schema",
       "type": "object"
@@ -2995,7 +3106,7 @@
       "type": "object",
       "properties": {
         "page": {
-          "description": "Pagination Page",
+          "description": "Pagination Page\n\nThis value is currently an integer, but it is not sequential. The value is not the page number, but a\nreference. The next page can be any number and some numbers might return an empty list.\n\nFor example, page 2 might not follow after page 1. And even if page 3 and 5 exist, but page 4 might not exist.",
           "type": "integer",
           "format": "int64",
           "default": 1,
@@ -3691,6 +3802,7 @@
       "type": "object",
       "title": "submitSelfServiceLoginFlowWithWebAuthnMethodBody is used to decode the login form payload.",
       "required": [
+        "identifier",
         "method"
       ],
       "properties": {
@@ -3699,7 +3811,7 @@
           "type": "string"
         },
         "identifier": {
-          "description": "Identifier is the email or username of the user trying to log in. This field is\nonly required when using WebAuthn for passwordless login. When using WebAuthn\nfor multi-factor authentication, it is not needed.",
+          "description": "Identifier is the email or username of the user trying to log in.",
           "type": "string"
         },
         "method": {
@@ -4053,6 +4165,38 @@
         }
       }
     },
+    "tokenPagination": {
+      "type": "object",
+      "properties": {
+        "page_size": {
+          "description": "Items per page\n\nThis is the number of items per page to return.\nFor details on pagination please head over to the [pagination documentation](https://www.ory.sh/docs/ecosystem/api-design#pagination).",
+          "type": "integer",
+          "format": "int64",
+          "default": 250,
+          "maximum": 1000,
+          "minimum": 1
+        },
+        "page_token": {
+          "description": "Next Page Token\n\nThe next page token.\nFor details on pagination please head over to the [pagination documentation](https://www.ory.sh/docs/ecosystem/api-design#pagination).",
+          "type": "string",
+          "default": "1",
+          "minimum": 1
+        }
+      }
+    },
+    "tokenPaginationHeaders": {
+      "type": "object",
+      "properties": {
+        "link": {
+          "description": "The link header contains pagination links.\n\nFor details on pagination please head over to the [pagination documentation](https://www.ory.sh/docs/ecosystem/api-design#pagination).\n\nin: header",
+          "type": "string"
+        },
+        "x-total-count": {
+          "description": "The total number of clients.\n\nin: header",
+          "type": "string"
+        }
+      }
+    },
     "uiContainer": {
       "description": "Container represents a HTML Form. The container can work with both HTTP Form and JSON requests",
       "type": "object",
@@ -4192,9 +4336,6 @@
         }
       }
     },
-    "uiNodeInputAttributeType": {
-      "type": "string"
-    },
     "uiNodeInputAttributes": {
       "description": "InputAttributes represents the attributes of an input node",
       "type": "object",
@@ -4205,6 +4346,18 @@
         "node_type"
       ],
       "properties": {
+        "autocomplete": {
+          "description": "The autocomplete attribute for the input.",
+          "type": "string",
+          "enum": [
+            "email",
+            "tel",
+            "url",
+            "current-password",
+            "new-password",
+            "one-time-code"
+          ]
+        },
         "disabled": {
           "description": "Sets the input's disabled field to true or false.",
           "type": "boolean"
@@ -4233,7 +4386,22 @@
           "type": "boolean"
         },
         "type": {
-          "$ref": "#/definitions/uiNodeInputAttributeType"
+          "description": "The input's element type.",
+          "type": "string",
+          "enum": [
+            "text",
+            "password",
+            "number",
+            "checkbox",
+            "hidden",
+            "email",
+            "tel",
+            "submit",
+            "button",
+            "datetime-local",
+            "date",
+            "url"
+          ]
         },
         "value": {
           "description": "The input's value.",
