@@ -665,6 +665,24 @@ func TestHandlerSelfServiceSessionManagement(t *testing.T) {
 			assert.NotEqual(t, oldExpires, c.Expires, "%s", c.Name)
 		}
 	})
+
+	t.Run("case=whoami should not issue cookie if request is token based", func(t *testing.T) {
+		_, _, session := setup(t)
+
+		session.ExpiresAt = time.Now().Add(time.Hour * 24 * 30).UTC().Round(time.Hour)
+		err := reg.SessionPersister().UpsertSession(context.Background(), session)
+		require.NoError(t, err)
+
+		req, err := http.NewRequest("GET", ts.URL+"/sessions/whoami", nil)
+		require.NoError(t, err)
+		req.Header.Set("Authorization", "Bearer "+session.Token)
+
+		resp, err := http.DefaultClient.Do(req)
+		require.NoError(t, err)
+		assert.Equal(t, http.StatusOK, resp.StatusCode)
+
+		require.Len(t, resp.Cookies(), 0)
+	})
 }
 
 func TestHandlerRefreshSessionBySessionID(t *testing.T) {

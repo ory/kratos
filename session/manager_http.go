@@ -62,6 +62,12 @@ func (s *ManagerHTTP) UpsertAndIssueCookie(ctx context.Context, w http.ResponseW
 }
 
 func (s *ManagerHTTP) RefreshCookie(ctx context.Context, w http.ResponseWriter, r *http.Request, session *Session) error {
+	// If it is a session token there is nothing to do.
+	token := s.extractToken(r)
+	if token != "" {
+		return nil
+	}
+
 	cookie, err := s.getCookie(r)
 	if err != nil {
 		return err
