@@ -177,8 +177,14 @@ func (s *Strategy) processRegistration(w http.ResponseWriter, r *http.Request, a
 			WithField("subject", claims.Subject).
 			Debug("Received successful OpenID Connect callback but user is already registered. Re-initializing login flow now.")
 
+		// If return_to was set before, we need to preserve it.
+		var opts []login.FlowOption
+		if len(a.ReturnTo) > 0 {
+			opts = append(opts, login.WithFlowReturnTo(a.ReturnTo))
+		}
+
 		// This endpoint only handles browser flow at the moment.
-		ar, err := s.d.LoginHandler().NewLoginFlow(w, r, flow.TypeBrowser)
+		ar, err := s.d.LoginHandler().NewLoginFlow(w, r, flow.TypeBrowser, opts...)
 		if err != nil {
 			return nil, s.handleError(w, r, a, provider.Config().ID, nil, err)
 		}

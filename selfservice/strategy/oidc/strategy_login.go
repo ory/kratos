@@ -85,11 +85,16 @@ func (s *Strategy) processLogin(w http.ResponseWriter, r *http.Request, a *login
 			// not need additional consent/login.
 
 			// This is kinda hacky but the only way to ensure seamless login/registration flows when using OIDC.
-
 			s.d.Logger().WithField("provider", provider.Config().ID).WithField("subject", claims.Subject).Debug("Received successful OpenID Connect callback but user is not registered. Re-initializing registration flow now.")
 
+			// If return_to was set before, we need to preserve it.
+			var opts []registration.FlowOption
+			if len(a.ReturnTo) > 0 {
+				opts = append(opts, registration.WithFlowReturnTo(a.ReturnTo))
+			}
+
 			// This flow only works for browsers anyways.
-			aa, err := s.d.RegistrationHandler().NewRegistrationFlow(w, r, flow.TypeBrowser)
+			aa, err := s.d.RegistrationHandler().NewRegistrationFlow(w, r, flow.TypeBrowser, opts...)
 			if err != nil {
 				return nil, s.handleError(w, r, a, provider.Config().ID, nil, err)
 			}
