@@ -4,8 +4,9 @@ import (
 	"testing"
 
 	"github.com/gofrs/uuid"
-	"github.com/ory/kratos/ui/node"
 	"github.com/stretchr/testify/assert"
+
+	"github.com/ory/kratos/ui/node"
 
 	"github.com/ory/herodot"
 

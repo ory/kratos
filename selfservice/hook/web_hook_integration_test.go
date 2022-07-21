@@ -316,8 +316,7 @@ func TestWebHooks(t *testing.T) {
 		`{
 			"messages": [{
 				"instance_ptr": "#/traits/username",
-				"message": "validation error",
-				"detailed_messages": [{
+				"messages": [{
 					"id": 1234,
 					"text": "error message",
 					"type": "info"
@@ -326,7 +325,7 @@ func TestWebHooks(t *testing.T) {
 		}`,
 	)
 
-	webhookError := schema.NewValidationListError([]*schema.ValidationError{schema.NewHookValidationError("#/traits/username", "validation error", text.Messages{{ID: 1234, Type: "info", Text: "error message"}})})
+	webhookError := schema.NewValidationListError([]*schema.ValidationError{schema.NewHookValidationError("#/traits/username", "a web-hook target returned an error", text.Messages{{ID: 1234, Type: "info", Text: "error message"}})})
 	for _, tc := range []struct {
 		uc              string
 		callWebHook     func(wh *hook.WebHook, req *http.Request, f flow.Flow, s *session.Session) error

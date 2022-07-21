@@ -27,7 +27,10 @@ describe('Registration failures with email profile with webhooks', () => {
         cy.get('input[name="password"]').type(password)
 
         cy.submitPasswordForm()
-        cy.get('input[name="traits.email"]').should('have.value', blockedIdentity)
+        cy.get('input[name="traits.email"]').should(
+          'have.value',
+          blockedIdentity
+        )
         cy.get('*[data-testid="ui/message/1234"]').should(
           'contain.text',
           'email could not be validated'
