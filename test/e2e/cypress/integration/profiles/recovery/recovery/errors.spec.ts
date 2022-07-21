@@ -114,6 +114,22 @@ context('Account Recovery Errors', () => {
         cy.get('[name="method"][value="link"]').should('exist')
       })
 
+      it('should cause non-repeating form errors after submitting empty form twice. see: #2512', () => {
+        cy.visit(recovery)
+        cy.get('button[value="link"]').click()
+        cy.location('pathname').should('eq', '/recovery')
+
+        cy.get('button[value="link"]').click()
+        cy.get('[data-testid="ui/message/4000002"]').should(
+          'contain.text',
+          'Property email is missing.'
+        )
+        cy.get('form')
+          .find('[data-testid="ui/message/4000002"]')
+          .should('have.length', 1)
+        cy.get('[name="method"][value="link"]').should('exist')
+      })
+
       it('is unable to recover the email address if the code is expired', () => {
         cy.shortLinkLifespan()
         const identity = gen.identityWithWebsite()
