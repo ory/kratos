@@ -635,6 +635,54 @@ func TestHandlerSelfServiceSessionManagement(t *testing.T) {
 			assert.Equal(t, http.StatusNoContent, resp.StatusCode, "case=%d", j)
 		}
 	})
+
+	t.Run("case=whoami should not issue cookie for up to date session", func(t *testing.T) {
+		client, _, _ := setup(t)
+
+		req, _ := http.NewRequest("GET", ts.URL+"/sessions/whoami", nil)
+		resp, err := client.Do(req)
+		require.NoError(t, err)
+		assert.Equal(t, http.StatusOK, resp.StatusCode)
+
+		assert.Empty(t, resp.Cookies())
+	})
+
+	t.Run("case=whoami should reissue cookie for outdated session", func(t *testing.T) {
+		client, _, session := setup(t)
+		oldExpires := session.ExpiresAt
+
+		session.ExpiresAt = time.Now().Add(time.Hour * 24 * 30).UTC().Round(time.Hour)
+		err := reg.SessionPersister().UpsertSession(context.Background(), session)
+		require.NoError(t, err)
+
+		resp, err := client.Get(ts.URL + "/sessions/whoami")
+		require.NoError(t, err)
+		assert.Equal(t, http.StatusOK, resp.StatusCode)
+
+		require.Len(t, resp.Cookies(), 1)
+		for _, c := range resp.Cookies() {
+			assert.WithinDuration(t, session.ExpiresAt, c.Expires, 5*time.Second, "Ensure the expiry does not deviate +- 5 seconds from the expiry of the session for cookie: %s", c.Name)
+			assert.NotEqual(t, oldExpires, c.Expires, "%s", c.Name)
+		}
+	})
+
+	t.Run("case=whoami should not issue cookie if request is token based", func(t *testing.T) {
+		_, _, session := setup(t)
+
+		session.ExpiresAt = time.Now().Add(time.Hour * 24 * 30).UTC().Round(time.Hour)
+		err := reg.SessionPersister().UpsertSession(context.Background(), session)
+		require.NoError(t, err)
+
+		req, err := http.NewRequest("GET", ts.URL+"/sessions/whoami", nil)
+		require.NoError(t, err)
+		req.Header.Set("Authorization", "Bearer "+session.Token)
+
+		resp, err := http.DefaultClient.Do(req)
+		require.NoError(t, err)
+		assert.Equal(t, http.StatusOK, resp.StatusCode)
+
+		require.Len(t, resp.Cookies(), 0)
+	})
 }
 
 func TestHandlerRefreshSessionBySessionID(t *testing.T) {
