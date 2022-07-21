@@ -63,8 +63,7 @@ type (
 
 	errorMessage struct {
 		InstancePtr      string            `json:"instance_ptr"`
-		Message          string            `json:"message"`
-		DetailedMessages []detailedMessage `json:"detailed_messages"`
+		DetailedMessages []detailedMessage `json:"messages"`
 	}
 
 	rawHookResponse struct {
@@ -168,7 +167,7 @@ func (e *WebHook) execute(ctx context.Context, data *templateContext) error {
 		"webhook.http.method":  data.RequestMethod,
 		"webhook.http.url":     data.RequestUrl,
 		"webhook.http.headers": fmt.Sprintf("%#v", data.RequestHeaders),
-		"webhook.identity":     fmt.Sprintf("%#v", data.Identity),
+		"webhook.identity.id":  fmt.Sprintf("%#v", data.Identity.ID),
 	}
 	span.SetAttributes(otelx.StringAttrs(attrs)...)
 	defer span.End()
@@ -194,6 +193,7 @@ func (e *WebHook) execute(ctx context.Context, data *templateContext) error {
 			errChan <- err
 			return
 		}
+		defer resp.Body.Close()
 
 		if resp.StatusCode >= http.StatusBadRequest {
 			if gjson.GetBytes(e.conf, "can_interrupt").Bool() {
@@ -246,7 +246,7 @@ func parseWebhookResponse(resp *http.Response) (err error) {
 				Context: detail.Context,
 			})
 		}
-		validationErrs = append(validationErrs, schema.NewHookValidationError(msg.InstancePtr, msg.Message, messages))
+		validationErrs = append(validationErrs, schema.NewHookValidationError(msg.InstancePtr, "a web-hook target returned an error", messages))
 	}
 
 	if len(validationErrs) == 0 {

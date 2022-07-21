@@ -22,9 +22,8 @@ type (
 	}
 
 	errorMessage struct {
-		InstancePtr      string            `json:"instance_ptr"`
-		Message          string            `json:"message"`
-		DetailedMessages []detailedMessage `json:"detailed_messages"`
+		InstancePtr string            `json:"instance_ptr"`
+		Messages    []detailedMessage `json:"messages"`
 	}
 
 	rawHookResponse struct {
@@ -125,7 +124,7 @@ func webhookHandler(w http.ResponseWriter, r *http.Request) {
 		Type: "error",
 		Text: "email could not be validated",
 	}
-	msg := errorMessage{InstancePtr: "#/traits.email", Message: "email not recognized by our system", DetailedMessages: []detailedMessage{detail}}
+	msg := errorMessage{InstancePtr: "#/traits/email", Messages: []detailedMessage{detail}}
 	resp := rawHookResponse{Messages: []errorMessage{msg}}
 	err := json.NewEncoder(w).Encode(&resp)
 	if err != nil {
