@@ -15,33 +15,33 @@ import (
 	"encoding/json"
 )
 
-// IdentitySchema struct for IdentitySchema
-type IdentitySchema struct {
+// IdentitySchemaContainer struct for IdentitySchemaContainer
+type IdentitySchemaContainer struct {
 	// The ID of the Identity JSON Schema
 	Id *string `json:"id,omitempty"`
-	// The actual Identity JSON Schema
+	// Raw JSON Schema
 	Schema map[string]interface{} `json:"schema,omitempty"`
 }
 
-// NewIdentitySchema instantiates a new IdentitySchema object
+// NewIdentitySchemaContainer instantiates a new IdentitySchemaContainer object
 // This constructor will assign default values to properties that have it defined,
 // and makes sure properties required by API are set, but the set of arguments
 // will change when the set of required properties is changed
-func NewIdentitySchema() *IdentitySchema {
-	this := IdentitySchema{}
+func NewIdentitySchemaContainer() *IdentitySchemaContainer {
+	this := IdentitySchemaContainer{}
 	return &this
 }
 
-// NewIdentitySchemaWithDefaults instantiates a new IdentitySchema object
+// NewIdentitySchemaContainerWithDefaults instantiates a new IdentitySchemaContainer object
 // This constructor will only assign default values to properties that have it defined,
 // but it doesn't guarantee that properties required by API are set
-func NewIdentitySchemaWithDefaults() *IdentitySchema {
-	this := IdentitySchema{}
+func NewIdentitySchemaContainerWithDefaults() *IdentitySchemaContainer {
+	this := IdentitySchemaContainer{}
 	return &this
 }
 
 // GetId returns the Id field value if set, zero value otherwise.
-func (o *IdentitySchema) GetId() string {
+func (o *IdentitySchemaContainer) GetId() string {
 	if o == nil || o.Id == nil {
 		var ret string
 		return ret
@@ -51,7 +51,7 @@ func (o *IdentitySchema) GetId() string {
 
 // GetIdOk returns a tuple with the Id field value if set, nil otherwise
 // and a boolean to check if the value has been set.
-func (o *IdentitySchema) GetIdOk() (*string, bool) {
+func (o *IdentitySchemaContainer) GetIdOk() (*string, bool) {
 	if o == nil || o.Id == nil {
 		return nil, false
 	}
@@ -59,7 +59,7 @@ func (o *IdentitySchema) GetIdOk() (*string, bool) {
 }
 
 // HasId returns a boolean if a field has been set.
-func (o *IdentitySchema) HasId() bool {
+func (o *IdentitySchemaContainer) HasId() bool {
 	if o != nil && o.Id != nil {
 		return true
 	}
@@ -68,12 +68,12 @@ func (o *IdentitySchema) HasId() bool {
 }
 
 // SetId gets a reference to the given string and assigns it to the Id field.
-func (o *IdentitySchema) SetId(v string) {
+func (o *IdentitySchemaContainer) SetId(v string) {
 	o.Id = &v
 }
 
 // GetSchema returns the Schema field value if set, zero value otherwise.
-func (o *IdentitySchema) GetSchema() map[string]interface{} {
+func (o *IdentitySchemaContainer) GetSchema() map[string]interface{} {
 	if o == nil || o.Schema == nil {
 		var ret map[string]interface{}
 		return ret
@@ -83,7 +83,7 @@ func (o *IdentitySchema) GetSchema() map[string]interface{} {
 
 // GetSchemaOk returns a tuple with the Schema field value if set, nil otherwise
 // and a boolean to check if the value has been set.
-func (o *IdentitySchema) GetSchemaOk() (map[string]interface{}, bool) {
+func (o *IdentitySchemaContainer) GetSchemaOk() (map[string]interface{}, bool) {
 	if o == nil || o.Schema == nil {
 		return nil, false
 	}
@@ -91,7 +91,7 @@ func (o *IdentitySchema) GetSchemaOk() (map[string]interface{}, bool) {
 }
 
 // HasSchema returns a boolean if a field has been set.
-func (o *IdentitySchema) HasSchema() bool {
+func (o *IdentitySchemaContainer) HasSchema() bool {
 	if o != nil && o.Schema != nil {
 		return true
 	}
@@ -100,11 +100,11 @@ func (o *IdentitySchema) HasSchema() bool {
 }
 
 // SetSchema gets a reference to the given map[string]interface{} and assigns it to the Schema field.
-func (o *IdentitySchema) SetSchema(v map[string]interface{}) {
+func (o *IdentitySchemaContainer) SetSchema(v map[string]interface{}) {
 	o.Schema = v
 }
 
-func (o IdentitySchema) MarshalJSON() ([]byte, error) {
+func (o IdentitySchemaContainer) MarshalJSON() ([]byte, error) {
 	toSerialize := map[string]interface{}{}
 	if o.Id != nil {
 		toSerialize["id"] = o.Id
@@ -115,38 +115,38 @@ func (o IdentitySchema) MarshalJSON() ([]byte, error) {
 	return json.Marshal(toSerialize)
 }
 
-type NullableIdentitySchema struct {
-	value *IdentitySchema
+type NullableIdentitySchemaContainer struct {
+	value *IdentitySchemaContainer
 	isSet bool
 }
 
-func (v NullableIdentitySchema) Get() *IdentitySchema {
+func (v NullableIdentitySchemaContainer) Get() *IdentitySchemaContainer {
 	return v.value
 }
 
-func (v *NullableIdentitySchema) Set(val *IdentitySchema) {
+func (v *NullableIdentitySchemaContainer) Set(val *IdentitySchemaContainer) {
 	v.value = val
 	v.isSet = true
 }
 
-func (v NullableIdentitySchema) IsSet() bool {
+func (v NullableIdentitySchemaContainer) IsSet() bool {
 	return v.isSet
 }
 
-func (v *NullableIdentitySchema) Unset() {
+func (v *NullableIdentitySchemaContainer) Unset() {
 	v.value = nil
 	v.isSet = false
 }
 
-func NewNullableIdentitySchema(val *IdentitySchema) *NullableIdentitySchema {
-	return &NullableIdentitySchema{value: val, isSet: true}
+func NewNullableIdentitySchemaContainer(val *IdentitySchemaContainer) *NullableIdentitySchemaContainer {
+	return &NullableIdentitySchemaContainer{value: val, isSet: true}
 }
 
-func (v NullableIdentitySchema) MarshalJSON() ([]byte, error) {
+func (v NullableIdentitySchemaContainer) MarshalJSON() ([]byte, error) {
 	return json.Marshal(v.value)
 }
 
-func (v *NullableIdentitySchema) UnmarshalJSON(src []byte) error {
+func (v *NullableIdentitySchemaContainer) UnmarshalJSON(src []byte) error {
 	v.isSet = true
 	return json.Unmarshal(src, &v.value)
 }
