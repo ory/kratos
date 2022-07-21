@@ -368,11 +368,23 @@ func (p *Config) getIdentitySchemaValidator(ctx context.Context) (*jsonschema.Sc
 	return p.identitySchema, nil
 }
 
+type validateIdentitySchemasContextKey int
+
+const validateIdentitySchemasClientKey validateIdentitySchemasContextKey = 1
+
+func SetValidateIdentitySchemaResilientClientOptions(ctx context.Context, options []httpx.ResilientOptions) context.Context {
+	return context.WithValue(ctx, validateIdentitySchemasClientKey, options)
+}
+
 func (p *Config) validateIdentitySchemas(ctx context.Context) error {
 	opts := []httpx.ResilientOptions{
 		httpx.ResilientClientWithLogger(p.l),
 		httpx.ResilientClientWithMaxRetry(2),
 		httpx.ResilientClientWithConnectionTimeout(30 * time.Second),
+	}
+
+	if o, ok := ctx.Value(validateIdentitySchemasClientKey).([]httpx.ResilientOptions); ok {
+		opts = o
 	}
 
 	if p.ClientHTTPNoPrivateIPRanges() {

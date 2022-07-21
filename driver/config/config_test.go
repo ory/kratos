@@ -6,6 +6,7 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
+	"github.com/ory/x/httpx"
 	"io"
 	"io/ioutil"
 	"net/http"
@@ -44,9 +45,15 @@ import (
 )
 
 func TestViperProvider(t *testing.T) {
+	ctx, cancel := context.WithCancel(context.Background())
+	t.Cleanup(cancel)
+	t.Parallel()
+
 	t.Run("suite=loaders", func(t *testing.T) {
 		p := config.MustNew(t, logrusx.New("", ""), os.Stderr,
-			configx.WithConfigFiles("stub/.kratos.yaml"))
+			configx.WithConfigFiles("stub/.kratos.yaml"),
+			configx.WithContext(ctx),
+		)
 
 		t.Run("group=client config", func(t *testing.T) {
 			assert.False(t, p.ClientHTTPNoPrivateIPRanges(), "Should not have private IP ranges disabled per default")
@@ -752,6 +759,8 @@ func TestViperProvider_HaveIBeenPwned(t *testing.T) {
 }
 
 func TestLoadingTLSConfig(t *testing.T) {
+	t.Parallel()
+
 	certPath := filepath.Join(os.TempDir(), "e2e_test_cert_"+x.NewUUID().String()+".pem")
 	keyPath := filepath.Join(os.TempDir(), "e2e_test_key_"+x.NewUUID().String()+".pem")
 
@@ -875,6 +884,12 @@ func TestLoadingTLSConfig(t *testing.T) {
 func TestIdentitySchemaValidation(t *testing.T) {
 	files := []string{"stub/.identity.test.json", "stub/.identity.other.json"}
 
+	ctx := context.Background()
+	ctx = config.SetValidateIdentitySchemaResilientClientOptions(ctx, []httpx.ResilientOptions{
+		httpx.ResilientClientWithMaxRetry(0),
+		httpx.ResilientClientWithConnectionTimeout(time.Millisecond * 100),
+	})
+
 	type identity struct {
 		Schemas []map[string]string `json:"schemas"`
 	}
@@ -947,7 +962,7 @@ func TestIdentitySchemaValidation(t *testing.T) {
 	}
 
 	t.Run("case=skip invalid schema validation", func(t *testing.T) {
-		ctx := context.Background()
+		ctx := ctx
 		_, err := config.New(ctx, logrusx.New("", ""), os.Stderr,
 			configx.WithConfigFiles("stub/.kratos.invalid.identities.yaml"),
 			configx.SkipValidation())
@@ -955,7 +970,7 @@ func TestIdentitySchemaValidation(t *testing.T) {
 	})
 
 	t.Run("case=invalid schema should throw error", func(t *testing.T) {
-		ctx := context.Background()
+		ctx := ctx
 		var stdErr bytes.Buffer
 		_, err := config.New(ctx, logrusx.New("", ""), &stdErr,
 			configx.WithConfigFiles("stub/.kratos.invalid.identities.yaml"))
@@ -965,7 +980,12 @@ func TestIdentitySchemaValidation(t *testing.T) {
 	})
 
 	t.Run("case=must fail on loading unreachable schemas", func(t *testing.T) {
-		ctx, cancel := context.WithTimeout(context.Background(), time.Second*30)
+		ctx = config.SetValidateIdentitySchemaResilientClientOptions(ctx, []httpx.ResilientOptions{
+			httpx.ResilientClientWithMaxRetry(0),
+			httpx.ResilientClientWithConnectionTimeout(time.Nanosecond),
+		})
+
+		ctx, cancel := context.WithTimeout(ctx, time.Second*30)
 		t.Cleanup(cancel)
 
 		err := make(chan error, 1)
@@ -980,7 +1000,7 @@ func TestIdentitySchemaValidation(t *testing.T) {
 			panic("the test could not complete as the context timed out before the identity schema loader timed out")
 		case e := <-err:
 			assert.Error(t, e)
-			assert.Contains(t, e.Error(), "no such host")
+			assert.Contains(t, e.Error(), "Client.Timeout")
 		}
 
 	})
@@ -996,7 +1016,7 @@ func TestIdentitySchemaValidation(t *testing.T) {
 
 		for _, i := range identities {
 			t.Run("test=identity file "+i.identityFileName, func(t *testing.T) {
-				ctx, cancel := context.WithTimeout(context.Background(), time.Second*30)
+				ctx, cancel := context.WithTimeout(ctx, time.Second*30)
 
 				_, hook, tmpConfig, i, c := testWatch(t, ctx, &cobra.Command{}, i)
 				// Change the identity config to an invalid file
