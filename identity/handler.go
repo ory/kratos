@@ -3,11 +3,11 @@ package identity
 import (
 	"context"
 	"encoding/json"
+	"io"
 	"net/http"
 	"time"
 
 	"github.com/ory/kratos/hash"
-
 	"github.com/ory/kratos/x"
 
 	"github.com/ory/kratos/cipher"
@@ -19,6 +19,7 @@ import (
 
 	"github.com/ory/x/decoderx"
 	"github.com/ory/x/jsonx"
+	"github.com/ory/x/openapix"
 	"github.com/ory/x/sqlxx"
 	"github.com/ory/x/urlx"
 
@@ -70,18 +71,21 @@ func (h *Handler) RegisterPublicRoutes(public *x.RouterPublic) {
 	public.DELETE(RouteItem, x.RedirectToAdminRoute(h.r))
 	public.POST(RouteCollection, x.RedirectToAdminRoute(h.r))
 	public.PUT(RouteItem, x.RedirectToAdminRoute(h.r))
+	public.PATCH(RouteItem, x.RedirectToAdminRoute(h.r))
 
 	public.GET(x.AdminPrefix+RouteCollection, x.RedirectToAdminRoute(h.r))
 	public.GET(x.AdminPrefix+RouteItem, x.RedirectToAdminRoute(h.r))
 	public.DELETE(x.AdminPrefix+RouteItem, x.RedirectToAdminRoute(h.r))
 	public.POST(x.AdminPrefix+RouteCollection, x.RedirectToAdminRoute(h.r))
 	public.PUT(x.AdminPrefix+RouteItem, x.RedirectToAdminRoute(h.r))
+	public.PATCH(x.AdminPrefix+RouteItem, x.RedirectToAdminRoute(h.r))
 }
 
 func (h *Handler) RegisterAdminRoutes(admin *x.RouterAdmin) {
 	admin.GET(RouteCollection, h.list)
 	admin.GET(RouteItem, h.get)
 	admin.DELETE(RouteItem, h.delete)
+	admin.PATCH(RouteItem, h.patch)
 
 	admin.POST(RouteCollection, h.create)
 	admin.PUT(RouteItem, h.update)
@@ -443,7 +447,7 @@ type AdminUpdateIdentityBody struct {
 //       200: identity
 //       400: jsonError
 //       404: jsonError
-//		 409: jsonError
+//       409: jsonError
 //       500: jsonError
 func (h *Handler) update(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	var ur AdminUpdateIdentityBody
@@ -539,4 +543,87 @@ func (h *Handler) delete(w http.ResponseWriter, r *http.Request, ps httprouter.P
 	}
 
 	w.WriteHeader(http.StatusNoContent)
+}
+
+// swagger:parameters adminPatchIdentity
+// nolint:deadcode,unused
+type adminPatchIdentity struct {
+	// ID must be set to the ID of identity you want to update
+	//
+	// required: true
+	// in: path
+	ID string `json:"id"`
+
+	// in: body
+	Body openapix.JSONPatchDocument
+}
+
+// swagger:route PATCH /admin/identities/{id} v0alpha2 adminPatchIdentity
+//
+// Partially updates an Identity's field using [JSON Patch](https://jsonpatch.com/)
+//
+// NOTE: The fields `id`, `stateChangedAt` and `credentials` are not updateable.
+//
+// Learn how identities work in [Ory Kratos' User And Identity Model Documentation](https://www.ory.sh/docs/next/kratos/concepts/identity-user-model).
+//
+//     Consumes:
+//     - application/json
+//
+//     Produces:
+//     - application/json
+//
+//     Schemes: http, https
+//
+//     Security:
+//       oryAccessToken:
+//
+//     Responses:
+//       200: identity
+//       400: jsonError
+//       404: jsonError
+//       409: jsonError
+//       500: jsonError
+func (h *Handler) patch(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	requestBody, err := io.ReadAll(r.Body)
+	if err != nil {
+		h.r.Writer().WriteError(w, r, err)
+		return
+	}
+
+	id := x.ParseUUID(ps.ByName("id"))
+	identity, err := h.r.PrivilegedIdentityPool().GetIdentityConfidential(r.Context(), id)
+	if err != nil {
+		h.r.Writer().WriteError(w, r, err)
+		return
+	}
+
+	oldState := identity.State
+
+	if err := jsonx.ApplyJSONPatch(requestBody, identity, "/id", "/stateChangedAt", "/credentials"); err != nil {
+		h.r.Writer().WriteError(w, r, errors.WithStack(herodot.ErrBadRequest.WithReasonf("%s", err).WithWrap(err)))
+		return
+	}
+
+	if oldState != identity.State {
+		// Check if the changed state was actually valid
+		if err := identity.State.IsValid(); err != nil {
+			h.r.Writer().WriteError(w, r, errors.WithStack(herodot.ErrBadRequest.WithReasonf("%s", err).WithWrap(err)))
+			return
+		}
+
+		// If the state changed, we need to update the timestamp of it
+		stateChangedAt := sqlxx.NullTime(time.Now())
+		identity.StateChangedAt = &stateChangedAt
+	}
+
+	if err := h.r.IdentityManager().Update(
+		r.Context(),
+		identity,
+		ManagerAllowWriteProtectedTraits,
+	); err != nil {
+		h.r.Writer().WriteError(w, r, err)
+		return
+	}
+
+	h.r.Writer().Write(w, r, WithCredentialsMetadataAndAdminMetadataInJSON(*identity))
 }

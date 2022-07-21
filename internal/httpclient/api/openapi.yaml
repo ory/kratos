@@ -225,6 +225,63 @@ paths:
       summary: Get an Identity
       tags:
       - v0alpha2
+    patch:
+      description: |-
+        NOTE: The fields `id`, `stateChangedAt` and `credentials` are not updateable.
+
+        Learn how identities work in [Ory Kratos' User And Identity Model Documentation](https://www.ory.sh/docs/next/kratos/concepts/identity-user-model).
+      operationId: adminPatchIdentity
+      parameters:
+      - description: ID must be set to the ID of identity you want to update
+        explode: false
+        in: path
+        name: id
+        required: true
+        schema:
+          type: string
+        style: simple
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/jsonPatchDocument'
+        x-originalParamName: Body
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/identity'
+          description: identity
+        "400":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/jsonError'
+          description: jsonError
+        "404":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/jsonError'
+          description: jsonError
+        "409":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/jsonError'
+          description: jsonError
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/jsonError'
+          description: jsonError
+      security:
+      - oryAccessToken: []
+      summary: Partially updates an Identity's field using [JSON Patch](https://jsonpatch.com/)
+      tags:
+      - v0alpha2
     put:
       description: |-
         This endpoint updates an identity. The full identity payload (except credentials) is expected. This endpoint does not support patching.
@@ -3367,6 +3424,43 @@ components:
       - error
       title: JSON API Error Response
       type: object
+    jsonPatch:
+      description: A JSONPatch document as defined by RFC 6902
+      properties:
+        from:
+          description: |-
+            This field is used together with operation "move" and uses JSON Pointer notation.
+
+            Learn more [about JSON Pointers](https://datatracker.ietf.org/doc/html/rfc6901#section-5).
+          example: /name
+          type: string
+        op:
+          description: The operation to be performed. One of "add", "remove", "replace",
+            "move", "copy", or "test".
+          example: replace
+          type: string
+        path:
+          description: |-
+            The path to the target path. Uses JSON pointer notation.
+
+            Learn more [about JSON Pointers](https://datatracker.ietf.org/doc/html/rfc6901#section-5).
+          example: /name
+          type: string
+        value:
+          description: |-
+            The value to be used within the operations.
+
+            Learn more [about JSON Pointers](https://datatracker.ietf.org/doc/html/rfc6901#section-5).
+          example: foobar
+      required:
+      - op
+      - path
+      type: object
+    jsonPatchDocument:
+      description: A JSONPatchDocument request
+      items:
+        $ref: '#/components/schemas/jsonPatch'
+      type: array
     jsonSchema:
       description: Raw JSON Schema
       type: object
@@ -5130,6 +5224,46 @@ components:
           type: string
       required:
       - identity
+      type: object
+    tokenPagination:
+      properties:
+        page_size:
+          default: 250
+          description: |-
+            Items per page
+
+            This is the number of items per page to return.
+            For details on pagination please head over to the [pagination documentation](https://www.ory.sh/docs/ecosystem/api-design#pagination).
+          format: int64
+          maximum: 1000
+          minimum: 1
+          type: integer
+        page_token:
+          default: "1"
+          description: |-
+            Next Page Token
+
+            The next page token.
+            For details on pagination please head over to the [pagination documentation](https://www.ory.sh/docs/ecosystem/api-design#pagination).
+          minimum: 1
+          type: string
+      type: object
+    tokenPaginationHeaders:
+      properties:
+        link:
+          description: |-
+            The link header contains pagination links.
+
+            For details on pagination please head over to the [pagination documentation](https://www.ory.sh/docs/ecosystem/api-design#pagination).
+
+            in: header
+          type: string
+        x-total-count:
+          description: |-
+            The total number of clients.
+
+            in: header
+          type: string
       type: object
     uiContainer:
       description: Container represents a HTML Form. The container can work with both
