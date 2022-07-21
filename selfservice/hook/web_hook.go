@@ -167,8 +167,14 @@ func (e *WebHook) execute(ctx context.Context, data *templateContext) error {
 		"webhook.http.method":  data.RequestMethod,
 		"webhook.http.url":     data.RequestUrl,
 		"webhook.http.headers": fmt.Sprintf("%#v", data.RequestHeaders),
-		"webhook.identity.id":  fmt.Sprintf("%#v", data.Identity.ID),
 	}
+
+	if data.Identity != nil {
+		attrs["webhook.identity.id"] = data.Identity.ID.String()
+	} else {
+		attrs["webhook.identity.id"] = ""
+	}
+
 	span.SetAttributes(otelx.StringAttrs(attrs)...)
 	defer span.End()
 
