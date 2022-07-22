@@ -215,7 +215,7 @@ run() {
     http-get://localhost:4457/ \
     http-get://localhost:4437/mail \
     http-get://localhost:4458/ \
-    http-get://127.0.0.1:8080/health
+    http-get://localhost:4459/health
 
   if [[ $dev == "yes" ]]; then
     (cd test/e2e; npm run test:watch --)

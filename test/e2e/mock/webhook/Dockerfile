@@ -15,5 +15,5 @@ COPY --from=build /build/app ./mock
 
 USER 65534:65534
 
-EXPOSE 8080
+EXPOSE 4459
 ENTRYPOINT ["/app/mock"]
