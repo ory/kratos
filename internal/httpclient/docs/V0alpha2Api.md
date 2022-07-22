@@ -15,7 +15,7 @@ Method | HTTP request | Description
 [**AdminPatchIdentity**](V0alpha2Api.md#AdminPatchIdentity) | **Patch** /admin/identities/{id} | Partially updates an Identity&#39;s field using [JSON Patch](https://jsonpatch.com/)
 [**AdminUpdateIdentity**](V0alpha2Api.md#AdminUpdateIdentity) | **Put** /admin/identities/{id} | Update an Identity
 [**CreateSelfServiceLogoutFlowUrlForBrowsers**](V0alpha2Api.md#CreateSelfServiceLogoutFlowUrlForBrowsers) | **Get** /self-service/logout/browser | Create a Logout URL for Browsers
-[**GetJsonSchema**](V0alpha2Api.md#GetJsonSchema) | **Get** /schemas/{id} | 
+[**GetIdentitySchema**](V0alpha2Api.md#GetIdentitySchema) | **Get** /schemas/{id} | 
 [**GetSelfServiceError**](V0alpha2Api.md#GetSelfServiceError) | **Get** /self-service/errors | Get Self-Service Errors
 [**GetSelfServiceLoginFlow**](V0alpha2Api.md#GetSelfServiceLoginFlow) | **Get** /self-service/login/flows | Get Login Flow
 [**GetSelfServiceRecoveryFlow**](V0alpha2Api.md#GetSelfServiceRecoveryFlow) | **Get** /self-service/recovery/flows | Get Recovery Flow
@@ -812,9 +812,9 @@ No authorization required
 [[Back to README]](../README.md)
 
 
-## GetJsonSchema
+## GetIdentitySchema
 
-> map[string]interface{} GetJsonSchema(ctx, id).Execute()
+> map[string]interface{} GetIdentitySchema(ctx, id).Execute()
 
 
 
@@ -837,13 +837,13 @@ func main() {
 
     configuration := openapiclient.NewConfiguration()
     apiClient := openapiclient.NewAPIClient(configuration)
-    resp, r, err := apiClient.V0alpha2Api.GetJsonSchema(context.Background(), id).Execute()
+    resp, r, err := apiClient.V0alpha2Api.GetIdentitySchema(context.Background(), id).Execute()
     if err != nil {
-        fmt.Fprintf(os.Stderr, "Error when calling `V0alpha2Api.GetJsonSchema``: %v\n", err)
+        fmt.Fprintf(os.Stderr, "Error when calling `V0alpha2Api.GetIdentitySchema``: %v\n", err)
         fmt.Fprintf(os.Stderr, "Full HTTP response: %v\n", r)
     }
-    // response from `GetJsonSchema`: map[string]interface{}
-    fmt.Fprintf(os.Stdout, "Response from `V0alpha2Api.GetJsonSchema`: %v\n", resp)
+    // response from `GetIdentitySchema`: map[string]interface{}
+    fmt.Fprintf(os.Stdout, "Response from `V0alpha2Api.GetIdentitySchema`: %v\n", resp)
 }
 ```
 
@@ -857,7 +857,7 @@ Name | Type | Description  | Notes
 
 ### Other Parameters
 
-Other parameters are passed through a pointer to a apiGetJsonSchemaRequest struct via the builder pattern
+Other parameters are passed through a pointer to a apiGetIdentitySchemaRequest struct via the builder pattern
 
 
 Name | Type | Description  | Notes
@@ -2006,7 +2006,7 @@ No authorization required
 
 ## ListIdentitySchemas
 
-> []IdentitySchema ListIdentitySchemas(ctx).PerPage(perPage).Page(page).Execute()
+> []IdentitySchemaContainer ListIdentitySchemas(ctx).PerPage(perPage).Page(page).Execute()
 
 
 
@@ -2035,7 +2035,7 @@ func main() {
         fmt.Fprintf(os.Stderr, "Error when calling `V0alpha2Api.ListIdentitySchemas``: %v\n", err)
         fmt.Fprintf(os.Stderr, "Full HTTP response: %v\n", r)
     }
-    // response from `ListIdentitySchemas`: []IdentitySchema
+    // response from `ListIdentitySchemas`: []IdentitySchemaContainer
     fmt.Fprintf(os.Stdout, "Response from `V0alpha2Api.ListIdentitySchemas`: %v\n", resp)
 }
 ```
@@ -2056,7 +2056,7 @@ Name | Type | Description  | Notes
 
 ### Return type
 
-[**[]IdentitySchema**](IdentitySchema.md)
+[**[]IdentitySchemaContainer**](IdentitySchemaContainer.md)
 
 ### Authorization
 

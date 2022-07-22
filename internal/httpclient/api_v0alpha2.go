@@ -212,19 +212,19 @@ type V0alpha2Api interface {
 	CreateSelfServiceLogoutFlowUrlForBrowsersExecute(r V0alpha2ApiApiCreateSelfServiceLogoutFlowUrlForBrowsersRequest) (*SelfServiceLogoutUrl, *http.Response, error)
 
 	/*
-	 * GetJsonSchema Method for GetJsonSchema
+	 * GetIdentitySchema Method for GetIdentitySchema
 	 * Get a JSON Schema
 	 * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
 	 * @param id ID must be set to the ID of schema you want to get
-	 * @return V0alpha2ApiApiGetJsonSchemaRequest
+	 * @return V0alpha2ApiApiGetIdentitySchemaRequest
 	 */
-	GetJsonSchema(ctx context.Context, id string) V0alpha2ApiApiGetJsonSchemaRequest
+	GetIdentitySchema(ctx context.Context, id string) V0alpha2ApiApiGetIdentitySchemaRequest
 
 	/*
-	 * GetJsonSchemaExecute executes the request
+	 * GetIdentitySchemaExecute executes the request
 	 * @return map[string]interface{}
 	 */
-	GetJsonSchemaExecute(r V0alpha2ApiApiGetJsonSchemaRequest) (map[string]interface{}, *http.Response, error)
+	GetIdentitySchemaExecute(r V0alpha2ApiApiGetIdentitySchemaRequest) (map[string]interface{}, *http.Response, error)
 
 	/*
 			 * GetSelfServiceError Get Self-Service Errors
@@ -747,9 +747,9 @@ type V0alpha2Api interface {
 
 	/*
 	 * ListIdentitySchemasExecute executes the request
-	 * @return []IdentitySchema
+	 * @return []IdentitySchemaContainer
 	 */
-	ListIdentitySchemasExecute(r V0alpha2ApiApiListIdentitySchemasRequest) ([]IdentitySchema, *http.Response, error)
+	ListIdentitySchemasExecute(r V0alpha2ApiApiListIdentitySchemasRequest) ([]IdentitySchemaContainer, *http.Response, error)
 
 	/*
 			 * ListSessions This endpoints returns all other active sessions that belong to the logged-in user. The current session can be retrieved by calling the `/sessions/whoami` endpoint.
@@ -2787,25 +2787,25 @@ func (a *V0alpha2ApiService) CreateSelfServiceLogoutFlowUrlForBrowsersExecute(r 
 	return localVarReturnValue, localVarHTTPResponse, nil
 }
 
-type V0alpha2ApiApiGetJsonSchemaRequest struct {
+type V0alpha2ApiApiGetIdentitySchemaRequest struct {
 	ctx        context.Context
 	ApiService V0alpha2Api
 	id         string
 }
 
-func (r V0alpha2ApiApiGetJsonSchemaRequest) Execute() (map[string]interface{}, *http.Response, error) {
-	return r.ApiService.GetJsonSchemaExecute(r)
+func (r V0alpha2ApiApiGetIdentitySchemaRequest) Execute() (map[string]interface{}, *http.Response, error) {
+	return r.ApiService.GetIdentitySchemaExecute(r)
 }
 
 /*
- * GetJsonSchema Method for GetJsonSchema
+ * GetIdentitySchema Method for GetIdentitySchema
  * Get a JSON Schema
  * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
  * @param id ID must be set to the ID of schema you want to get
- * @return V0alpha2ApiApiGetJsonSchemaRequest
+ * @return V0alpha2ApiApiGetIdentitySchemaRequest
  */
-func (a *V0alpha2ApiService) GetJsonSchema(ctx context.Context, id string) V0alpha2ApiApiGetJsonSchemaRequest {
-	return V0alpha2ApiApiGetJsonSchemaRequest{
+func (a *V0alpha2ApiService) GetIdentitySchema(ctx context.Context, id string) V0alpha2ApiApiGetIdentitySchemaRequest {
+	return V0alpha2ApiApiGetIdentitySchemaRequest{
 		ApiService: a,
 		ctx:        ctx,
 		id:         id,
@@ -2816,7 +2816,7 @@ func (a *V0alpha2ApiService) GetJsonSchema(ctx context.Context, id string) V0alp
  * Execute executes the request
  * @return map[string]interface{}
  */
-func (a *V0alpha2ApiService) GetJsonSchemaExecute(r V0alpha2ApiApiGetJsonSchemaRequest) (map[string]interface{}, *http.Response, error) {
+func (a *V0alpha2ApiService) GetIdentitySchemaExecute(r V0alpha2ApiApiGetIdentitySchemaRequest) (map[string]interface{}, *http.Response, error) {
 	var (
 		localVarHTTPMethod   = http.MethodGet
 		localVarPostBody     interface{}
@@ -2826,7 +2826,7 @@ func (a *V0alpha2ApiService) GetJsonSchemaExecute(r V0alpha2ApiApiGetJsonSchemaR
 		localVarReturnValue  map[string]interface{}
 	)
 
-	localBasePath, err := a.client.cfg.ServerURLWithContext(r.ctx, "V0alpha2ApiService.GetJsonSchema")
+	localBasePath, err := a.client.cfg.ServerURLWithContext(r.ctx, "V0alpha2ApiService.GetIdentitySchema")
 	if err != nil {
 		return localVarReturnValue, nil, &GenericOpenAPIError{error: err.Error()}
 	}
@@ -5524,7 +5524,7 @@ func (r V0alpha2ApiApiListIdentitySchemasRequest) Page(page int64) V0alpha2ApiAp
 	return r
 }
 
-func (r V0alpha2ApiApiListIdentitySchemasRequest) Execute() ([]IdentitySchema, *http.Response, error) {
+func (r V0alpha2ApiApiListIdentitySchemasRequest) Execute() ([]IdentitySchemaContainer, *http.Response, error) {
 	return r.ApiService.ListIdentitySchemasExecute(r)
 }
 
@@ -5543,16 +5543,16 @@ func (a *V0alpha2ApiService) ListIdentitySchemas(ctx context.Context) V0alpha2Ap
 
 /*
  * Execute executes the request
- * @return []IdentitySchema
+ * @return []IdentitySchemaContainer
  */
-func (a *V0alpha2ApiService) ListIdentitySchemasExecute(r V0alpha2ApiApiListIdentitySchemasRequest) ([]IdentitySchema, *http.Response, error) {
+func (a *V0alpha2ApiService) ListIdentitySchemasExecute(r V0alpha2ApiApiListIdentitySchemasRequest) ([]IdentitySchemaContainer, *http.Response, error) {
 	var (
 		localVarHTTPMethod   = http.MethodGet
 		localVarPostBody     interface{}
 		localVarFormFileName string
 		localVarFileName     string
 		localVarFileBytes    []byte
-		localVarReturnValue  []IdentitySchema
+		localVarReturnValue  []IdentitySchemaContainer
 	)
 
 	localBasePath, err := a.client.cfg.ServerURLWithContext(r.ctx, "V0alpha2ApiService.ListIdentitySchemas")

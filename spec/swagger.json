@@ -776,7 +776,7 @@
         "tags": [
           "v0alpha2"
         ],
-        "operationId": "getJsonSchema",
+        "operationId": "getIdentitySchema",
         "parameters": [
           {
             "type": "string",
@@ -788,9 +788,9 @@
         ],
         "responses": {
           "200": {
-            "description": "jsonSchema",
+            "description": "identitySchema",
             "schema": {
-              "$ref": "#/definitions/jsonSchema"
+              "$ref": "#/definitions/identitySchema"
             }
           },
           "404": {
@@ -2949,6 +2949,10 @@
       }
     },
     "identitySchema": {
+      "description": "Raw JSON Schema",
+      "type": "object"
+    },
+    "identitySchemaContainer": {
       "type": "object",
       "properties": {
         "id": {
@@ -2956,8 +2960,7 @@
           "type": "string"
         },
         "schema": {
-          "description": "The actual Identity JSON Schema",
-          "type": "object"
+          "$ref": "#/definitions/identitySchema"
         }
       }
     },
@@ -2965,7 +2968,7 @@
       "description": "Raw identity Schema list",
       "type": "array",
       "items": {
-        "$ref": "#/definitions/identitySchema"
+        "$ref": "#/definitions/identitySchemaContainer"
       }
     },
     "identityState": {
@@ -3034,10 +3037,6 @@
       "items": {
         "$ref": "#/definitions/jsonPatch"
       }
-    },
-    "jsonSchema": {
-      "description": "Raw JSON Schema",
-      "type": "object"
     },
     "needsPrivilegedSessionError": {
       "type": "object",

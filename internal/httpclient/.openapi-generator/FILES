@@ -27,7 +27,7 @@ docs/IdentityCredentialsOidc.md
 docs/IdentityCredentialsOidcProvider.md
 docs/IdentityCredentialsPassword.md
 docs/IdentityCredentialsType.md
-docs/IdentitySchema.md
+docs/IdentitySchemaContainer.md
 docs/IdentityState.md
 docs/InlineResponse200.md
 docs/InlineResponse2001.md
@@ -119,7 +119,7 @@ model_identity_credentials_oidc.go
 model_identity_credentials_oidc_provider.go
 model_identity_credentials_password.go
 model_identity_credentials_type.go
-model_identity_schema.go
+model_identity_schema_container.go
 model_identity_state.go
 model_inline_response_200.go
 model_inline_response_200_1.go

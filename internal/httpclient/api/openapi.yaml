@@ -678,7 +678,7 @@ paths:
   /schemas/{id}:
     get:
       description: Get a JSON Schema
-      operationId: getJsonSchema
+      operationId: getIdentitySchema
       parameters:
       - description: ID must be set to the ID of schema you want to get
         explode: false
@@ -693,8 +693,8 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/jsonSchema'
-          description: jsonSchema
+                $ref: '#/components/schemas/identitySchema'
+          description: identitySchema
         "404":
           content:
             application/json:
@@ -3379,6 +3379,9 @@ components:
       title: A list of identities.
       type: array
     identitySchema:
+      description: Raw JSON Schema
+      type: object
+    identitySchemaContainer:
       example:
         schema: '{}'
         id: id
@@ -3387,13 +3390,13 @@ components:
           description: The ID of the Identity JSON Schema
           type: string
         schema:
-          description: The actual Identity JSON Schema
+          description: Raw JSON Schema
           type: object
       type: object
     identitySchemas:
       description: Raw identity Schema list
       items:
-        $ref: '#/components/schemas/identitySchema'
+        $ref: '#/components/schemas/identitySchemaContainer'
       type: array
     identityState:
       description: The state can either be `active` or `inactive`.
@@ -3461,9 +3464,6 @@ components:
       items:
         $ref: '#/components/schemas/jsonPatch'
       type: array
-    jsonSchema:
-      description: Raw JSON Schema
-      type: object
     needsPrivilegedSessionError:
       properties:
         code:
