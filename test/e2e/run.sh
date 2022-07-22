@@ -200,7 +200,7 @@ run() {
   ! nc -zv localhost 4433
 
   ls -la .
-  for profile in email mobile oidc recovery verification mfa spa network passwordless; do
+  for profile in email mobile oidc recovery verification mfa spa network passwordless webhooks; do
     yq ea '. as $item ireduce ({}; . * $item )' test/e2e/profiles/kratos.base.yml "test/e2e/profiles/${profile}/.kratos.yml" > test/e2e/kratos.${profile}.yml
     cp test/e2e/kratos.email.yml test/e2e/kratos.generated.yml
   done
@@ -214,7 +214,8 @@ run() {
     http-get://localhost:4456/health/alive \
     http-get://localhost:4457/ \
     http-get://localhost:4437/mail \
-    http-get://localhost:4458/
+    http-get://localhost:4458/ \
+    http-get://localhost:4459/health
 
   if [[ $dev == "yes" ]]; then
     (cd test/e2e; npm run test:watch --)

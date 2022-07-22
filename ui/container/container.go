@@ -88,6 +88,17 @@ func NewFromJSON(action string, group node.UiNodeGroup, raw json.RawMessage, pre
 	return c
 }
 
+// NewFromStruct creates a UI Container based on serialized contents of the provided struct.
+func NewFromStruct(action string, group node.UiNodeGroup, v interface{}, prefix string) (*Container, error) {
+	c := New(action)
+	data, err := json.Marshal(v)
+	if err != nil {
+		return nil, err
+	}
+	c.UpdateNodeValuesFromJSON(data, prefix, group)
+	return c, nil
+}
+
 // NewFromJSONSchema creates a new Container and populates the fields
 // using the provided JSON Schema.
 func NewFromJSONSchema(ctx context.Context, action string, group node.UiNodeGroup, jsonSchemaRef, prefix string, compiler *jsonschema.Compiler) (*Container, error) {
@@ -187,6 +198,13 @@ func (c *Container) ParseError(group node.UiNodeGroup, err error) error {
 				if err := c.ParseError(group, ee); err != nil {
 					return err
 				}
+			}
+		}
+		return nil
+	} else if e := new(schema.ValidationListError); errors.As(err, &e) {
+		for _, ee := range e.Validations {
+			if err := c.ParseError(group, ee); err != nil {
+				return err
 			}
 		}
 		return nil

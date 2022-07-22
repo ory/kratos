@@ -6,6 +6,8 @@ import (
 	"github.com/gofrs/uuid"
 	"github.com/stretchr/testify/assert"
 
+	"github.com/ory/kratos/ui/node"
+
 	"github.com/ory/herodot"
 
 	"github.com/ory/kratos/identity"
@@ -77,7 +79,7 @@ func TestAddressVerifier(t *testing.T) {
 						Identity: &identity.Identity{ID: x.NewUUID(), VerifiableAddresses: uc.verifiableAddresses},
 					}
 
-					err := verifier.ExecuteLoginPostHook(nil, nil, tc.flow, sessions)
+					err := verifier.ExecuteLoginPostHook(nil, nil, node.DefaultGroup, tc.flow, sessions)
 
 					if tc.neverError || uc.expectedError == nil {
 						assert.NoError(t, err)

@@ -7,7 +7,9 @@ import (
 
 	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/identity"
+	"github.com/ory/kratos/selfservice/flow"
 	"github.com/ory/kratos/session"
+	"github.com/ory/kratos/ui/node"
 	"github.com/ory/kratos/x"
 )
 
@@ -41,6 +43,7 @@ type (
 		identity.ValidationProvider
 		session.PersistenceProvider
 		HooksProvider
+		x.CSRFTokenGeneratorProvider
 		x.LoggingProvider
 		x.WriterProvider
 	}
@@ -67,7 +70,11 @@ func (e *HookExecutor) PostRecoveryHook(w http.ResponseWriter, r *http.Request, 
 		Debug("Running ExecutePostRecoveryHooks.")
 	for k, executor := range e.d.PostRecoveryHooks(r.Context()) {
 		if err := executor.ExecutePostRecoveryHook(w, r, a, s); err != nil {
-			return err
+			var traits identity.Traits
+			if s.Identity != nil {
+				traits = s.Identity.Traits
+			}
+			return flow.HandleHookError(w, r, a, traits, node.LinkGroup, err, e.d, e.d)
 		}
 
 		e.d.Logger().WithRequest(r).
@@ -75,13 +82,13 @@ func (e *HookExecutor) PostRecoveryHook(w http.ResponseWriter, r *http.Request, 
 			WithField("executor_position", k).
 			WithField("executors", PostHookRecoveryExecutorNames(e.d.PostRecoveryHooks(r.Context()))).
 			WithField("identity_id", s.Identity.ID).
-			Debug("ExecutePostVerificationHook completed successfully.")
+			Debug("ExecutePostRecoveryHook completed successfully.")
 	}
 
 	e.d.Logger().
 		WithRequest(r).
 		WithField("identity_id", s.Identity.ID).
-		Debug("Post verification execution hooks completed successfully.")
+		Debug("Post recovery execution hooks completed successfully.")
 
 	return nil
 }

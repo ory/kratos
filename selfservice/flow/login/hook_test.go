@@ -26,11 +26,14 @@ import (
 )
 
 func TestLoginExecutor(t *testing.T) {
-	for _, strategy := range []string{
-		identity.CredentialsTypePassword.String(),
-		identity.CredentialsTypeOIDC.String(),
+	for _, strategy := range []identity.CredentialsType{
+		identity.CredentialsTypePassword,
+		identity.CredentialsTypeOIDC,
+		identity.CredentialsTypeTOTP,
+		identity.CredentialsTypeWebAuthn,
+		identity.CredentialsTypeLookup,
 	} {
-		t.Run("strategy="+strategy, func(t *testing.T) {
+		t.Run("strategy="+strategy.String(), func(t *testing.T) {
 			conf, reg := internal.NewFastRegistryWithMocks(t)
 			testhelpers.SetDefaultIdentitySchema(conf, "file://./stub/login.schema.json")
 			conf.MustSet(config.ViperKeySelfServiceBrowserDefaultReturnTo, "https://www.ory.sh/")
@@ -58,7 +61,7 @@ func TestLoginExecutor(t *testing.T) {
 					}
 
 					testhelpers.SelfServiceHookLoginErrorHandler(t, w, r,
-						reg.LoginHookExecutor().PostLoginHook(w, r, a, useIdentity, sess))
+						reg.LoginHookExecutor().PostLoginHook(w, r, strategy.ToUiNodeGroup(), a, useIdentity, sess))
 				})
 
 				ts := httptest.NewServer(router)
@@ -81,7 +84,7 @@ func TestLoginExecutor(t *testing.T) {
 
 				t.Run("case=pass if hooks pass", func(t *testing.T) {
 					t.Cleanup(testhelpers.SelfServiceHookConfigReset(t, conf))
-					viperSetPost(t, conf, strategy, []config.SelfServiceHook{{Name: "err", Config: []byte(`{}`)}})
+					viperSetPost(t, conf, strategy.String(), []config.SelfServiceHook{{Name: "err", Config: []byte(`{}`)}})
 
 					res, _ := makeRequestPost(t, newServer(t, flow.TypeBrowser, nil), false, url.Values{})
 					assert.EqualValues(t, http.StatusOK, res.StatusCode)
@@ -90,7 +93,7 @@ func TestLoginExecutor(t *testing.T) {
 
 				t.Run("case=fail if hooks fail", func(t *testing.T) {
 					t.Cleanup(testhelpers.SelfServiceHookConfigReset(t, conf))
-					viperSetPost(t, conf, strategy, []config.SelfServiceHook{{Name: "err", Config: []byte(`{"ExecuteLoginPostHook": "abort"}`)}})
+					viperSetPost(t, conf, strategy.String(), []config.SelfServiceHook{{Name: "err", Config: []byte(`{"ExecuteLoginPostHook": "abort"}`)}})
 
 					res, body := makeRequestPost(t, newServer(t, flow.TypeBrowser, nil), false, url.Values{})
 					assert.EqualValues(t, http.StatusOK, res.StatusCode)
@@ -118,7 +121,7 @@ func TestLoginExecutor(t *testing.T) {
 				t.Run("case=use nested config value", func(t *testing.T) {
 					t.Cleanup(testhelpers.SelfServiceHookConfigReset(t, conf))
 					testhelpers.SelfServiceHookLoginSetDefaultRedirectTo(t, conf, "https://www.ory.sh/not-kratos")
-					testhelpers.SelfServiceHookLoginSetDefaultRedirectToStrategy(t, conf, strategy, "https://www.ory.sh/kratos")
+					testhelpers.SelfServiceHookLoginSetDefaultRedirectToStrategy(t, conf, strategy.String(), "https://www.ory.sh/kratos")
 
 					res, _ := makeRequestPost(t, newServer(t, flow.TypeBrowser, nil), false, url.Values{})
 					assert.EqualValues(t, http.StatusOK, res.StatusCode)
@@ -127,7 +130,7 @@ func TestLoginExecutor(t *testing.T) {
 
 				t.Run("case=pass if hooks pass", func(t *testing.T) {
 					t.Cleanup(testhelpers.SelfServiceHookConfigReset(t, conf))
-					viperSetPost(t, conf, strategy, []config.SelfServiceHook{{Name: "err", Config: []byte(`{}`)}})
+					viperSetPost(t, conf, strategy.String(), []config.SelfServiceHook{{Name: "err", Config: []byte(`{}`)}})
 
 					res, _ := makeRequestPost(t, newServer(t, flow.TypeBrowser, nil), false, url.Values{})
 					assert.EqualValues(t, http.StatusOK, res.StatusCode)

@@ -167,7 +167,8 @@ preLoginHook:
 		f.UI.Messages.Add(text.NewInfoLoginMFA())
 	}
 
-	for _, s := range h.d.LoginStrategies(r.Context()) {
+	var s Strategy
+	for _, s = range h.d.LoginStrategies(r.Context()) {
 		if err := s.PopulateLoginMethod(r, f.RequestedAAL, f); err != nil {
 			return nil, err
 		}
@@ -182,7 +183,8 @@ preLoginHook:
 	}
 
 	if err := h.d.LoginHookExecutor().PreLoginHook(w, r, f); err != nil {
-		return nil, err
+		h.d.LoginFlowErrorHandler().WriteFlowError(w, r, f, node.DefaultGroup, err)
+		return f, nil
 	}
 
 	if err := h.d.LoginFlowPersister().CreateLoginFlow(r.Context(), f); err != nil {
@@ -599,14 +601,16 @@ continueLogin:
 	}
 
 	var i *identity.Identity
+	var group node.UiNodeGroup
 	for _, ss := range h.d.AllLoginStrategies() {
 		interim, err := ss.Login(w, r, f, sess)
+		group = ss.NodeGroup()
 		if errors.Is(err, flow.ErrStrategyNotResponsible) {
 			continue
 		} else if errors.Is(err, flow.ErrCompletedByStrategy) {
 			return
 		} else if err != nil {
-			h.d.LoginFlowErrorHandler().WriteFlowError(w, r, f, ss.NodeGroup(), err)
+			h.d.LoginFlowErrorHandler().WriteFlowError(w, r, f, group, err)
 			return
 		}
 
@@ -627,7 +631,7 @@ continueLogin:
 		return
 	}
 
-	if err := h.d.LoginHookExecutor().PostLoginHook(w, r, f, i, sess); err != nil {
+	if err := h.d.LoginHookExecutor().PostLoginHook(w, r, group, f, i, sess); err != nil {
 		if errors.Is(err, ErrAddressNotVerified) {
 			h.d.LoginFlowErrorHandler().WriteFlowError(w, r, f, node.DefaultGroup, errors.WithStack(schema.NewAddressNotVerifiedError()))
 			return

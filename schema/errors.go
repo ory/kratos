@@ -247,6 +247,50 @@ func NewNoWebAuthnRegistered() error {
 	})
 }
 
+func NewHookValidationError(instancePtr, message string, messages text.Messages) *ValidationError {
+	return &ValidationError{
+		ValidationError: &jsonschema.ValidationError{
+			Message:     message,
+			InstancePtr: instancePtr,
+		},
+		Messages: messages,
+	}
+}
+
+type ValidationListError struct {
+	Validations []*ValidationError
+}
+
+func (e ValidationListError) Error() string {
+	var detailError string
+	for pos, validationErr := range e.Validations {
+		detailError = detailError + fmt.Sprintf("\n(%d) %s", pos, validationErr.Error())
+	}
+	return fmt.Sprintf("%d validation errors occurred:%s", len(e.Validations), detailError)
+}
+
+func (e *ValidationListError) Add(v *ValidationError) {
+	e.Validations = append(e.Validations, v)
+}
+
+func (e ValidationListError) HasErrors() bool {
+	return len(e.Validations) > 0
+}
+
+func (e *ValidationListError) WithError(instancePtr, message string, details text.Messages) {
+	e.Validations = append(e.Validations, &ValidationError{
+		ValidationError: &jsonschema.ValidationError{
+			Message:     message,
+			InstancePtr: instancePtr,
+		},
+		Messages: details,
+	})
+}
+
+func NewValidationListError(errs []*ValidationError) error {
+	return errors.WithStack(&ValidationListError{Validations: errs})
+}
+
 func NewNoWebAuthnCredentials() error {
 	return errors.WithStack(&ValidationError{
 		ValidationError: &jsonschema.ValidationError{

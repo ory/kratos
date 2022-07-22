@@ -6,10 +6,6 @@ let criPort = 0,
 
 export default defineConfig({
   chromeWebSecurity: false,
-  retries: {
-    runMode: 6,
-    openMode: 1
-  },
   defaultCommandTimeout: 10000,
   requestTimeout: 10000,
   projectId: 'bc48bg',
@@ -17,6 +13,10 @@ export default defineConfig({
   videoCompression: false,
   screenshotOnRunFailure: true,
   e2e: {
+    retries: {
+      runMode: 6,
+      openMode: 1
+    },
     videosFolder: 'cypress/videos',
     screenshotsFolder: 'cypress/screenshots',
     excludeSpecPattern: '**/*snapshots.js',

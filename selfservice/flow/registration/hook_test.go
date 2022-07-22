@@ -26,6 +26,8 @@ func TestRegistrationExecutor(t *testing.T) {
 	for _, strategy := range []string{
 		identity.CredentialsTypePassword.String(),
 		identity.CredentialsTypeOIDC.String(),
+		identity.CredentialsTypeTOTP.String(),
+		identity.CredentialsTypeWebAuthn.String(),
 	} {
 		t.Run("strategy="+strategy, func(t *testing.T) {
 			conf, reg := internal.NewFastRegistryWithMocks(t)

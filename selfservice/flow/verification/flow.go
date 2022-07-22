@@ -214,3 +214,7 @@ func (f *Flow) AfterSave(*pop.Connection) error {
 	f.SetReturnTo()
 	return nil
 }
+
+func (f *Flow) GetUI() *container.Container {
+	return f.UI
+}

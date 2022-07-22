@@ -67,6 +67,7 @@ type (
 		session.PersistenceProvider
 		session.ManagementProvider
 		HooksProvider
+		x.CSRFTokenGeneratorProvider
 		x.LoggingProvider
 		x.WriterProvider
 	}
@@ -101,7 +102,12 @@ func (e *HookExecutor) PostRegistrationHook(w http.ResponseWriter, r *http.Reque
 					Debug("A ExecutePostRegistrationPrePersistHook hook aborted early.")
 				return nil
 			}
-			return err
+
+			var traits identity.Traits
+			if i != nil {
+				traits = i.Traits
+			}
+			return flow.HandleHookError(w, r, a, traits, ct.ToUiNodeGroup(), err, e.d, e.d)
 		}
 
 		e.d.Logger().WithRequest(r).
@@ -166,7 +172,12 @@ func (e *HookExecutor) PostRegistrationHook(w http.ResponseWriter, r *http.Reque
 					Debug("A ExecutePostRegistrationPostPersistHook hook aborted early.")
 				return nil
 			}
-			return err
+
+			var traits identity.Traits
+			if i != nil {
+				traits = i.Traits
+			}
+			return flow.HandleHookError(w, r, a, traits, ct.ToUiNodeGroup(), err, e.d, e.d)
 		}
 
 		e.d.Logger().WithRequest(r).

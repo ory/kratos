@@ -1,0 +1,57 @@
+selfservice:
+  flows:
+    settings:
+      ui_url: http://localhost:4455/settings
+      privileged_session_max_age: 5m
+
+    logout:
+      after:
+        default_browser_return_url: http://localhost:4455/login
+
+    registration:
+      ui_url: http://localhost:4455/registration
+      after:
+        password:
+          hooks:
+            - hook: session
+            - hook: web_hook
+              config:
+                url: http://127.0.0.1:4459/webhook
+                method: POST
+                body: file://test/e2e/profiles/webhooks/webhook_body.jsonnet
+                can_interrupt: true
+                auth:
+                  type: api_key
+                  config:
+                    name: X-Authorize-Request
+                    value: "1"
+                    in: header
+
+    login:
+      ui_url: http://localhost:4455/login
+      after:
+        password:
+          hooks:
+            - hook: web_hook
+              config:
+                url: http://127.0.0.1:4459/webhook
+                method: POST
+                body: file://test/e2e/profiles/webhooks/webhook_body.jsonnet
+                can_interrupt: true
+                auth:
+                  type: api_key
+                  config:
+                    name: X-Authorize-Request
+                    value: "1"
+                    in: header
+    error:
+      ui_url: http://localhost:4455/error
+    verification:
+      ui_url: http://localhost:4455/verify
+    recovery:
+      ui_url: http://localhost:4455/recovery
+
+identity:
+  schemas:
+    - id: default
+      url: file://test/e2e/profiles/webhooks/identity.traits.schema.json

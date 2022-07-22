@@ -208,6 +208,11 @@
                 }
               ]
             },
+            "can_interrupt": {
+              "type": "boolean",
+              "default": false,
+              "description": "If enabled allows the web hook to interrupt / abort the self-service flow. It only applies to certain flows (registration/verification/login/settings) and requires a valid response format."
+            },
             "auth": {
               "type": "object",
               "title": "Auth mechanisms",
@@ -223,6 +228,36 @@
             },
             "additionalProperties": false
           },
+          "anyOf": [
+            {
+              "not":
+              {
+                "properties": {
+                  "response": {
+                    "properties": {
+                      "ignore": {
+                        "enum": [
+                          true
+                        ]
+                      }
+                    },
+                    "required": ["ignore"]
+                  }
+                },
+                "required": ["response"]
+              }
+            },
+            {
+              "properties": {
+                "can_interrupt": {
+                  "enum": [
+                    false
+                  ]
+                }
+              },
+              "require": ["can_interrupt"]
+            }
+          ],
           "additionalProperties": false,
           "required": [
             "url",

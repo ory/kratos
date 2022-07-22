@@ -7,7 +7,9 @@ import (
 
 	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/identity"
+	"github.com/ory/kratos/selfservice/flow"
 	"github.com/ory/kratos/session"
+	"github.com/ory/kratos/ui/node"
 	"github.com/ory/kratos/x"
 )
 
@@ -41,6 +43,7 @@ type (
 		identity.ValidationProvider
 		session.PersistenceProvider
 		HooksProvider
+		x.CSRFTokenGeneratorProvider
 		x.LoggingProvider
 		x.WriterProvider
 	}
@@ -67,7 +70,11 @@ func (e *HookExecutor) PostVerificationHook(w http.ResponseWriter, r *http.Reque
 		Debug("Running ExecutePostVerificationHooks.")
 	for k, executor := range e.d.PostVerificationHooks(r.Context()) {
 		if err := executor.ExecutePostVerificationHook(w, r, a, i); err != nil {
-			return err
+			var traits identity.Traits
+			if i != nil {
+				traits = i.Traits
+			}
+			return flow.HandleHookError(w, r, a, traits, node.LinkGroup, err, e.d, e.d)
 		}
 
 		e.d.Logger().WithRequest(r).

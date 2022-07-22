@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/ory/kratos/corp"
+	"github.com/ory/kratos/ui/node"
 
 	"github.com/gofrs/uuid"
 
@@ -40,6 +41,23 @@ type CredentialsType string
 
 func (c CredentialsType) String() string {
 	return string(c)
+}
+
+func (c CredentialsType) ToUiNodeGroup() node.UiNodeGroup {
+	switch c {
+	case CredentialsTypePassword:
+		return node.PasswordGroup
+	case CredentialsTypeOIDC:
+		return node.OpenIDConnectGroup
+	case CredentialsTypeTOTP:
+		return node.TOTPGroup
+	case CredentialsTypeWebAuthn:
+		return node.WebAuthnGroup
+	case CredentialsTypeLookup:
+		return node.LookupGroup
+	default:
+		return node.DefaultGroup
+	}
 }
 
 // Please make sure to add all of these values to the test that ensures they are created during migration

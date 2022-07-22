@@ -5,11 +5,11 @@ import (
 	"errors"
 	"net/http"
 
-	"github.com/ory/kratos/selfservice/flow/verification"
+	"github.com/tidwall/gjson"
 
 	"github.com/ory/kratos/selfservice/flow/recovery"
-
-	"github.com/tidwall/gjson"
+	"github.com/ory/kratos/selfservice/flow/verification"
+	"github.com/ory/kratos/ui/node"
 
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/selfservice/flow/login"
@@ -52,7 +52,7 @@ func (e Error) ExecuteSettingsPostPersistHook(w http.ResponseWriter, r *http.Req
 	return e.err("ExecuteSettingsPostPersistHook", settings.ErrHookAbortRequest)
 }
 
-func (e Error) ExecuteLoginPostHook(w http.ResponseWriter, r *http.Request, a *login.Flow, s *session.Session) error {
+func (e Error) ExecuteLoginPostHook(w http.ResponseWriter, r *http.Request, g node.UiNodeGroup, a *login.Flow, s *session.Session) error {
 	return e.err("ExecuteLoginPostHook", login.ErrHookAbortFlow)
 }
 
