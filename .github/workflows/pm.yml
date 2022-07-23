@@ -13,7 +13,7 @@ jobs:
     name: Add issue to project
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/add-to-project@v0.2.0
+      - uses: actions/add-to-project@v0.3.0
         with:
           project-url: https://github.com/orgs/ory-corp/projects/5
           github-token: ${{ secrets.ORY_BOT_PAT }}
