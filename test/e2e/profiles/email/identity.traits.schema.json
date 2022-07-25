@@ -44,6 +44,11 @@
           "type": "number",
           "maximum": 300
         },
+        "color": {
+          "title": "Your color",
+          "type": "string",
+          "enum": ["blue", "green", "purple"]
+        },
         "consent": {
           "title": "Consent",
           "type": "boolean"
