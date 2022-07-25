@@ -396,6 +396,11 @@ Cypress.Commands.add('recoverApi', ({ email, returnTo }) => {
   cy.request({ url })
     .then(({ body }) => {
       const form = body.ui
+      // label should still exist after request, for more detail: #2591
+      expect(form.nodes[1].meta).to.not.be.null
+      expect(form.nodes[1].meta.label).to.not.be.null
+      expect(form.nodes[1].meta.label.text).to.equal('Email')
+
       return cy.request({
         method: form.method,
         body: mergeFields(form, { email, method: 'link' }),
@@ -415,6 +420,11 @@ Cypress.Commands.add('verificationApi', ({ email, returnTo }) => {
   cy.request({ url })
     .then(({ body }) => {
       const form = body.ui
+      // label should still exist after request, for more detail: #2591
+      expect(form.nodes[1].meta).to.not.be.null
+      expect(form.nodes[1].meta.label).to.not.be.null
+      expect(form.nodes[1].meta.label.text).to.equal('Email')
+
       return cy.request({
         method: form.method,
         body: mergeFields(form, { email, method: 'link' }),
