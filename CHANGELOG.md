@@ -4,7 +4,7 @@
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 **Table of Contents**
 
-- [ (2022-07-23)](#2022-07-23)
+- [ (2022-07-25)](#2022-07-25)
   - [Breaking Changes](#breaking-changes)
     - [Bug Fixes](#bug-fixes)
     - [Code Refactoring](#code-refactoring)
@@ -263,7 +263,7 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# [](https://github.com/ory/kratos/compare/v0.10.1...v) (2022-07-23)
+# [](https://github.com/ory/kratos/compare/v0.10.1...v) (2022-07-25)
 
 ## Breaking Changes
 
@@ -289,6 +289,12 @@ SDK Method `getJsonSchema` was renamed to `getIdentitySchema`.
   ([9ce2d26](https://github.com/ory/kratos/commit/9ce2d260338f020e2da077e81464e520883f582b))
 - **cli:** Dry up code ([#2572](https://github.com/ory/kratos/issues/2572))
   ([d1b6b40](https://github.com/ory/kratos/commit/d1b6b40aa9dcc7a3ec9237eec28c4fa55f0b8627))
+- Debugging Docker setup ([#2616](https://github.com/ory/kratos/issues/2616))
+  ([aaabe75](https://github.com/ory/kratos/commit/aaabe754659b96d2a5b727c4cada3ec300624434))
+- Disappearing title label on verification and recovery flow
+  ([#2613](https://github.com/ory/kratos/issues/2613))
+  ([29aa3b6](https://github.com/ory/kratos/commit/29aa3b6c37b3a173dcfeb02fdad4abc83774bc0b)),
+  closes [#2591](https://github.com/ory/kratos/issues/2591)
 - **docker:** Update images
   ([b5f80c1](https://github.com/ory/kratos/commit/b5f80c1198e4bb9ed392521daca934548eb21ee6))
 - Duplicate messages in recovery flow
