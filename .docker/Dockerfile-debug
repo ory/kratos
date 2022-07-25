@@ -2,7 +2,7 @@ FROM golang:1.18-buster
 ENV CGO_ENABLED 1
 
 RUN apt-get update && apt-get install -y --no-install-recommends inotify-tools psmisc
-RUN go get github.com/go-delve/delve/cmd/dlv
+RUN go install github.com/go-delve/delve/cmd/dlv@latest
 
 COPY script/debug-entrypoint.sh /entrypoint.sh
 
