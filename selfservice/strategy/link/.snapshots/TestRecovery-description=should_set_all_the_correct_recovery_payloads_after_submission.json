@@ -24,7 +24,13 @@
       "node_type": "input"
     },
     "messages": [],
-    "meta": {}
+    "meta": {
+      "label": {
+        "id": 1070007,
+        "text": "Email",
+        "type": "info"
+      }
+    }
   },
   {
     "type": "input",
