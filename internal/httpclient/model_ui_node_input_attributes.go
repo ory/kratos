@@ -33,7 +33,7 @@ type UiNodeInputAttributes struct {
 	// Mark this input field as required.
 	Required *bool `json:"required,omitempty"`
 	// The input's element type.
-	Type string `json:"type"`
+	Type *string `json:"type,omitempty"`
 	// The input's value.
 	Value interface{} `json:"value,omitempty"`
 }
@@ -42,12 +42,11 @@ type UiNodeInputAttributes struct {
 // This constructor will assign default values to properties that have it defined,
 // and makes sure properties required by API are set, but the set of arguments
 // will change when the set of required properties is changed
-func NewUiNodeInputAttributes(disabled bool, name string, nodeType string, type_ string) *UiNodeInputAttributes {
+func NewUiNodeInputAttributes(disabled bool, name string, nodeType string) *UiNodeInputAttributes {
 	this := UiNodeInputAttributes{}
 	this.Disabled = disabled
 	this.Name = name
 	this.NodeType = nodeType
-	this.Type = type_
 	return &this
 }
 
@@ -291,28 +290,36 @@ func (o *UiNodeInputAttributes) SetRequired(v bool) {
 	o.Required = &v
 }
 
-// GetType returns the Type field value
+// GetType returns the Type field value if set, zero value otherwise.
 func (o *UiNodeInputAttributes) GetType() string {
-	if o == nil {
+	if o == nil || o.Type == nil {
 		var ret string
 		return ret
 	}
-
-	return o.Type
+	return *o.Type
 }
 
-// GetTypeOk returns a tuple with the Type field value
+// GetTypeOk returns a tuple with the Type field value if set, nil otherwise
 // and a boolean to check if the value has been set.
 func (o *UiNodeInputAttributes) GetTypeOk() (*string, bool) {
-	if o == nil {
+	if o == nil || o.Type == nil {
 		return nil, false
 	}
-	return &o.Type, true
+	return o.Type, true
 }
 
-// SetType sets field value
+// HasType returns a boolean if a field has been set.
+func (o *UiNodeInputAttributes) HasType() bool {
+	if o != nil && o.Type != nil {
+		return true
+	}
+
+	return false
+}
+
+// SetType gets a reference to the given string and assigns it to the Type field.
 func (o *UiNodeInputAttributes) SetType(v string) {
-	o.Type = v
+	o.Type = &v
 }
 
 // GetValue returns the Value field value if set, zero value otherwise (both if not set or set to explicit null).
@@ -374,7 +381,7 @@ func (o UiNodeInputAttributes) MarshalJSON() ([]byte, error) {
 	if o.Required != nil {
 		toSerialize["required"] = o.Required
 	}
-	if true {
+	if o.Type != nil {
 		toSerialize["type"] = o.Type
 	}
 	if o.Value != nil {

@@ -5475,13 +5475,6 @@ components:
       properties:
         autocomplete:
           description: The autocomplete attribute for the input.
-          enum:
-          - email
-          - tel
-          - url
-          - current-password
-          - new-password
-          - one-time-code
           type: string
         disabled:
           description: Sets the input's disabled field to true or false.
@@ -5530,7 +5523,6 @@ components:
       - disabled
       - name
       - node_type
-      - type
       type: object
     uiNodeMeta:
       description: |-

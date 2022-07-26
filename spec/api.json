@@ -2055,14 +2055,6 @@
         "properties": {
           "autocomplete": {
             "description": "The autocomplete attribute for the input.",
-            "enum": [
-              "email",
-              "tel",
-              "url",
-              "current-password",
-              "new-password",
-              "one-time-code"
-            ],
             "type": "string"
           },
           "disabled": {
@@ -2117,7 +2109,6 @@
         },
         "required": [
           "name",
-          "type",
           "disabled",
           "node_type"
         ],
