@@ -62,8 +62,6 @@ type InputAttributes struct {
 	Name string `json:"name"`
 
 	// The input's element type.
-	//
-	// required: true
 	Type UiNodeInputAttributeType `json:"type" faker:"-"`
 
 	// The input's value.

@@ -23,6 +23,9 @@
 # Makes the uiNodeInputAttributes value attribute polymorph
 - op: remove
   path: /components/schemas/uiNodeInputAttributes/properties/value/type
+# Workaround until https://github.com/OpenAPITools/openapi-generator/issues/13020 is fixed
+- op: remove
+  path: /components/schemas/uiNodeInputAttributes/properties/autocomplete/enum
 - op: add
   path: /components/schemas/uiNodeInputAttributes/properties/value/nullable
   value: true
