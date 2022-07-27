@@ -4340,6 +4340,7 @@
       "type": "object",
       "required": [
         "name",
+        "type",
         "disabled",
         "node_type"
       ],
