@@ -4,7 +4,7 @@
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 **Table of Contents**
 
-- [ (2022-07-25)](#2022-07-25)
+- [ (2022-07-27)](#2022-07-27)
   - [Breaking Changes](#breaking-changes)
     - [Bug Fixes](#bug-fixes)
     - [Code Refactoring](#code-refactoring)
@@ -263,7 +263,7 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# [](https://github.com/ory/kratos/compare/v0.10.1...v) (2022-07-25)
+# [](https://github.com/ory/kratos/compare/v0.10.1...v) (2022-07-27)
 
 ## Breaking Changes
 
@@ -337,8 +337,14 @@ SDK Method `getJsonSchema` was renamed to `getIdentitySchema`.
 - Return empty array not null when there are no sessions
   ([#2548](https://github.com/ory/kratos/issues/2548))
   ([fffba47](https://github.com/ory/kratos/commit/fffba473440fec3118a3951b697d5a0d2d4e30d6))
+- Revert removal of required field in uiNodeInputAttributes
+  ([#2623](https://github.com/ory/kratos/issues/2623))
+  ([fee154b](https://github.com/ory/kratos/commit/fee154b28dfb3007f8d20a807cfd6d362c3bd9e7))
 - **sdk:** Make InputAttributes.Type an enum
   ([ff6190f](https://github.com/ory/kratos/commit/ff6190f31f538cf8ed735dfd1bb3b7afcd944c36))
+- **sdk:** Rust compile issue with required enum
+  ([#2619](https://github.com/ory/kratos/issues/2619))
+  ([8800085](https://github.com/ory/kratos/commit/8800085d5bde32367217170d00f7141b7ea46733))
 - Unable to find JSON Schema ID: default
   ([#2393](https://github.com/ory/kratos/issues/2393))
   ([f43396b](https://github.com/ory/kratos/commit/f43396bdc03f89812f026c2a94b0b50100134c23))
