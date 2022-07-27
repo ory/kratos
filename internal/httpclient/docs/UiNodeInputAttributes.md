@@ -12,14 +12,14 @@ Name | Type | Description | Notes
 **Onclick** | Pointer to **string** | OnClick may contain javascript which should be executed on click. This is primarily used for WebAuthn. | [optional] 
 **Pattern** | Pointer to **string** | The input&#39;s pattern. | [optional] 
 **Required** | Pointer to **bool** | Mark this input field as required. | [optional] 
-**Type** | Pointer to **string** | The input&#39;s element type. | [optional] 
+**Type** | **string** | The input&#39;s element type. | 
 **Value** | Pointer to **interface{}** | The input&#39;s value. | [optional] 
 
 ## Methods
 
 ### NewUiNodeInputAttributes
 
-`func NewUiNodeInputAttributes(disabled bool, name string, nodeType string, ) *UiNodeInputAttributes`
+`func NewUiNodeInputAttributes(disabled bool, name string, nodeType string, type_ string, ) *UiNodeInputAttributes`
 
 NewUiNodeInputAttributes instantiates a new UiNodeInputAttributes object
 This constructor will assign default values to properties that have it defined,
@@ -238,11 +238,6 @@ and a boolean to check if the value has been set.
 
 SetType sets Type field to given value.
 
-### HasType
-
-`func (o *UiNodeInputAttributes) HasType() bool`
-
-HasType returns a boolean if a field has been set.
 
 ### GetValue
 

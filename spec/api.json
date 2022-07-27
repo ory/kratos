@@ -2109,6 +2109,7 @@
         },
         "required": [
           "name",
+          "type",
           "disabled",
           "node_type"
         ],

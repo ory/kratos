@@ -5523,6 +5523,7 @@ components:
       - disabled
       - name
       - node_type
+      - type
       type: object
     uiNodeMeta:
       description: |-
