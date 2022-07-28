@@ -26,6 +26,9 @@ func TestRequestURL(t *testing.T) {
 	assert.EqualValues(t, RequestURL(&http.Request{
 		URL: urlx.ParseOrPanic("/foo"), Host: "foobar",
 	}).String(), "http://foobar/foo")
+	assert.EqualValues(t, RequestURL(&http.Request{
+		URL: urlx.ParseOrPanic("/foo"), Host: "foobar", Header: http.Header{"X-Forwarded-Host": []string{"notfoobar"}, "X-Forwarded-Proto": {"https"}},
+	}).String(), "https://notfoobar/foo")
 }
 
 func TestAcceptToRedirectOrJSON(t *testing.T) {
