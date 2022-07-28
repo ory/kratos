@@ -3,7 +3,9 @@ package oidc
 import (
 	"bytes"
 	"context"
+	"encoding/base64"
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"path/filepath"
 	"strings"
@@ -112,6 +114,11 @@ type authCodeContainer struct {
 	FlowID string          `json:"flow_id"`
 	State  string          `json:"state"`
 	Traits json.RawMessage `json:"traits"`
+}
+
+func generateState(flowID string) string {
+	state := x.NewUUID().String()
+	return base64.RawURLEncoding.EncodeToString([]byte(fmt.Sprintf("%s:%s", flowID, state)))
 }
 
 func (s *Strategy) CountActiveFirstFactorCredentials(cc map[identity.CredentialsType]identity.Credentials) (count int, err error) {
