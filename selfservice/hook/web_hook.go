@@ -196,7 +196,7 @@ func (e *WebHook) execute(ctx context.Context, data *templateContext) error {
 
 		resp, err := e.deps.HTTPClient(ctx).Do(req)
 		if err != nil {
-			errChan <- err
+			errChan <- errors.WithStack(err)
 			return
 		}
 		defer resp.Body.Close()
