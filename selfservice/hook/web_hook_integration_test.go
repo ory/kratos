@@ -2,6 +2,7 @@ package hook_test
 
 import (
 	"context"
+	"crypto/tls"
 	_ "embed"
 	"encoding/base64"
 	"encoding/json"
@@ -9,6 +10,7 @@ import (
 	"io"
 	"net/http"
 	"net/http/httptest"
+	"net/url"
 	"strconv"
 	"sync"
 	"testing"
@@ -108,7 +110,7 @@ func TestWebHooks(t *testing.T) {
    					"headers": %s,
 					"method": "%s",
 					"url": "%s"
-				}`, f.GetID(), string(h), req.Method, req.RequestURI)
+				}`, f.GetID(), string(h), req.Method, "http://www.ory.sh/some_end_point")
 	}
 
 	bodyWithFlowAndIdentity := func(req *http.Request, f flow.Flow, s *session.Session) string {
@@ -119,7 +121,7 @@ func TestWebHooks(t *testing.T) {
    					"headers": %s,
 					"method": "%s",
 					"url": "%s"
-				}`, f.GetID(), s.Identity.ID, string(h), req.Method, req.RequestURI)
+				}`, f.GetID(), s.Identity.ID, string(h), req.Method, "http://www.ory.sh/some_end_point")
 	}
 
 	for _, tc := range []struct {
@@ -263,9 +265,11 @@ func TestWebHooks(t *testing.T) {
 						t.Run("method="+method, func(t *testing.T) {
 							f := tc.createFlow()
 							req := &http.Request{
+								Host:       "www.ory.sh",
 								Header:     map[string][]string{"Some-Header": {"Some-Value"}},
-								RequestURI: "https://www.ory.sh/some_end_point",
+								RequestURI: "/some_end_point",
 								Method:     http.MethodPost,
+								URL:        &url.URL{Path: "/some_end_point"},
 							}
 							s := &session.Session{ID: x.NewUUID(), Identity: &identity.Identity{ID: x.NewUUID()}}
 							whr := &WebHookRequest{}
@@ -515,9 +519,13 @@ func TestWebHooks(t *testing.T) {
 				t.Run("method="+method, func(t *testing.T) {
 					f := tc.createFlow()
 					req := &http.Request{
-						Header:     map[string][]string{"Some-Header": {"Some-Value"}},
-						RequestURI: "https://www.ory.sh/some_end_point",
+						Host:       "www.ory.sh",
+						Header:     map[string][]string{"Some-Header": {"Some-Value"}, "X-Forwarded-Proto": {"https"}},
+						RequestURI: "/some_end_point",
 						Method:     http.MethodPost,
+						URL: &url.URL{
+							Path: "some_end_point",
+						},
 					}
 					s := &session.Session{ID: x.NewUUID(), Identity: &identity.Identity{ID: x.NewUUID()}}
 					code, res := tc.webHookResponse()
@@ -549,9 +557,12 @@ func TestWebHooks(t *testing.T) {
 
 	t.Run("must error when config is erroneous", func(t *testing.T) {
 		req := &http.Request{
-			Header:     map[string][]string{"Some-Header": {"Some-Value"}},
-			RequestURI: "https://www.ory.sh/some_end_point",
-			Method:     http.MethodPost,
+			Header: map[string][]string{"Some-Header": {"Some-Value"}},
+			Host:   "www.ory.sh",
+			TLS:    new(tls.ConnectionState),
+			URL:    &url.URL{Path: "/some_end_point"},
+
+			Method: http.MethodPost,
 		}
 		f := &login.Flow{ID: x.NewUUID()}
 		conf := json.RawMessage("not valid json")
@@ -564,9 +575,11 @@ func TestWebHooks(t *testing.T) {
 	t.Run("must error when template is erroneous", func(t *testing.T) {
 		ts := newServer(webHookHttpCodeEndPoint(200))
 		req := &http.Request{
-			Header:     map[string][]string{"Some-Header": {"Some-Value"}},
-			RequestURI: "https://www.ory.sh/some_end_point",
-			Method:     http.MethodPost,
+			Header: map[string][]string{"Some-Header": {"Some-Value"}},
+			Host:   "www.ory.sh",
+			TLS:    new(tls.ConnectionState),
+			URL:    &url.URL{Path: "/some_end_point"},
+			Method: http.MethodPost,
 		}
 		f := &login.Flow{ID: x.NewUUID()}
 		conf := json.RawMessage(fmt.Sprintf(`{
@@ -582,9 +595,12 @@ func TestWebHooks(t *testing.T) {
 
 	t.Run("must not make request", func(t *testing.T) {
 		req := &http.Request{
-			Header:     map[string][]string{"Some-Header": {"Some-Value"}},
-			RequestURI: "https://www.ory.sh/some_end_point",
-			Method:     http.MethodPost,
+			Header: map[string][]string{"Some-Header": {"Some-Value"}},
+			Host:   "www.ory.sh",
+			TLS:    new(tls.ConnectionState),
+			URL:    &url.URL{Path: "/some_end_point"},
+
+			Method: http.MethodPost,
 		}
 		f := &login.Flow{ID: x.NewUUID()}
 		conf := json.RawMessage(`{
@@ -617,9 +633,11 @@ func TestWebHooks(t *testing.T) {
 		})
 
 		req := &http.Request{
-			Header:     map[string][]string{"Some-Header": {"Some-Value"}},
-			RequestURI: "https://www.ory.sh/some_end_point",
-			Method:     http.MethodPost,
+			Header: map[string][]string{"Some-Header": {"Some-Value"}},
+			Host:   "www.ory.sh",
+			TLS:    new(tls.ConnectionState),
+			URL:    &url.URL{Path: "/some_end_point"},
+			Method: http.MethodPost,
 		}
 		f := &login.Flow{ID: x.NewUUID()}
 		conf := json.RawMessage(fmt.Sprintf(`{"url": "%s", "method": "GET", "body": "./stub/test_body.jsonnet", "response": {"ignore": true}}`, ts.URL+path))
@@ -647,9 +665,11 @@ func TestWebHooks(t *testing.T) {
 		})
 
 		req := &http.Request{
-			Header:     map[string][]string{"Some-Header": {"Some-Value"}},
-			RequestURI: "https://www.ory.sh/some_end_point",
-			Method:     http.MethodPost,
+			Header: map[string][]string{"Some-Header": {"Some-Value"}},
+			Host:   "www.ory.sh",
+			TLS:    new(tls.ConnectionState),
+			URL:    &url.URL{Path: "/some_end_point"},
+			Method: http.MethodPost,
 		}
 		f := &login.Flow{ID: x.NewUUID()}
 		conf := json.RawMessage(fmt.Sprintf(`{"url": "%s", "method": "GET", "body": "./stub/test_body.jsonnet"}`, ts.URL+path))
@@ -678,9 +698,11 @@ func TestWebHooks(t *testing.T) {
 		t.Run("Must"+boolToString(tc.mustSuccess)+" error when end point is returning "+strconv.Itoa(tc.code), func(t *testing.T) {
 			ts := newServer(webHookHttpCodeEndPoint(tc.code))
 			req := &http.Request{
-				Header:     map[string][]string{"Some-Header": {"Some-Value"}},
-				RequestURI: "https://www.ory.sh/some_end_point",
-				Method:     http.MethodPost,
+				Header: map[string][]string{"Some-Header": {"Some-Value"}},
+				Host:   "www.ory.sh",
+				TLS:    new(tls.ConnectionState),
+				URL:    &url.URL{Path: "/some_end_point"},
+				Method: http.MethodPost,
 			}
 			f := &login.Flow{ID: x.NewUUID()}
 			conf := json.RawMessage(fmt.Sprintf(`{
@@ -707,9 +729,11 @@ func TestDisallowPrivateIPRanges(t *testing.T) {
 	whDeps := x.SimpleLoggerWithClient{L: logger, C: reg.HTTPClient(context.Background()), T: otelx.NewNoop(logger, conf.Tracing())}
 
 	req := &http.Request{
-		Header:     map[string][]string{"Some-Header": {"Some-Value"}},
-		RequestURI: "https://www.ory.sh/some_end_point",
-		Method:     http.MethodPost,
+		Header: map[string][]string{"Some-Header": {"Some-Value"}},
+		Host:   "www.ory.sh",
+		TLS:    new(tls.ConnectionState),
+		URL:    &url.URL{Path: "/some_end_point"},
+		Method: http.MethodPost,
 	}
 	s := &session.Session{ID: x.NewUUID(), Identity: &identity.Identity{ID: x.NewUUID()}}
 	f := &login.Flow{ID: x.NewUUID()}
@@ -727,9 +751,11 @@ func TestDisallowPrivateIPRanges(t *testing.T) {
 	})
 	t.Run("not allowed to load from source", func(t *testing.T) {
 		req := &http.Request{
-			Header:     map[string][]string{"Some-Header": {"Some-Value"}},
-			RequestURI: "https://www.ory.sh/some_end_point",
-			Method:     http.MethodPost,
+			Header: map[string][]string{"Some-Header": {"Some-Value"}},
+			Host:   "www.ory.sh",
+			TLS:    new(tls.ConnectionState),
+			URL:    &url.URL{Path: "/some_end_point"},
+			Method: http.MethodPost,
 		}
 		s := &session.Session{ID: x.NewUUID(), Identity: &identity.Identity{ID: x.NewUUID()}}
 		f := &login.Flow{ID: x.NewUUID()}
