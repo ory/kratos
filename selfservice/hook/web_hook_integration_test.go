@@ -633,6 +633,35 @@ func TestWebHooks(t *testing.T) {
 		wg.Wait()
 	})
 
+	t.Run("does not error on 500 request with retry", func(t *testing.T) {
+		// This test essentially ensures that we do not regress on the bug we had where 500 status code
+		// would cause a retry, but because the body was incorrectly set we ended up with a ContentLength
+		// error.
+
+		var wg sync.WaitGroup
+		wg.Add(3) // HTTP client does 3 attempts
+		ts := newServer(func(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+			defer wg.Done()
+			w.WriteHeader(500)
+			_, _ = w.Write([]byte(`{"error":"some error"}`))
+		})
+
+		req := &http.Request{
+			Header:     map[string][]string{"Some-Header": {"Some-Value"}},
+			RequestURI: "https://www.ory.sh/some_end_point",
+			Method:     http.MethodPost,
+		}
+		f := &login.Flow{ID: x.NewUUID()}
+		conf := json.RawMessage(fmt.Sprintf(`{"url": "%s", "method": "GET", "body": "./stub/test_body.jsonnet"}`, ts.URL+path))
+		wh := hook.NewWebHook(&whDeps, conf)
+
+		err := wh.ExecuteLoginPreHook(nil, req, f)
+		require.Error(t, err)
+		assert.NotContains(t, err.Error(), "ContentLength")
+
+		wg.Wait()
+	})
+
 	for _, tc := range []struct {
 		code        int
 		mustSuccess bool
