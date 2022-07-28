@@ -61,7 +61,12 @@ func EasyCookieJar(t *testing.T, o *cookiejar.Options) *cookiejar.Jar {
 
 func RequestURL(r *http.Request) *url.URL {
 	source := *r.URL
-	source.Host = stringsx.Coalesce(source.Host, r.Host)
+	source.Host = stringsx.Coalesce(source.Host, r.Header.Get("X-Forwarded-Host"), r.Host)
+
+	if proto := r.Header.Get("X-Forwarded-Proto"); len(proto) > 0 {
+		source.Scheme = proto
+	}
+
 	if source.Scheme == "" {
 		source.Scheme = "https"
 		if r.TLS == nil {
