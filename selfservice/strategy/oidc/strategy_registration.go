@@ -141,7 +141,7 @@ func (s *Strategy) Register(w http.ResponseWriter, r *http.Request, f *registrat
 		return errors.WithStack(registration.ErrAlreadyLoggedIn)
 	}
 
-	state := x.NewUUID().String()
+	state := generateState(f.ID.String())
 	if err := s.d.ContinuityManager().Pause(r.Context(), w, r, sessionName,
 		continuity.WithPayload(&authCodeContainer{
 			State:  state,
