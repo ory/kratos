@@ -359,6 +359,9 @@ SDK Method `getJsonSchema` was renamed to `getIdentitySchema`.
   ([c36ca53](https://github.com/ory/kratos/commit/c36ca53d4552596e62ec323795c3bf21438d4f26))
 - Use errors instead of fatal for serve cmd
   ([02f7e9c](https://github.com/ory/kratos/commit/02f7e9cfd17ab60c3f38aab3ae977c427b26990d))
+- Wrap migration error in WithStack
+  ([#2636](https://github.com/ory/kratos/issues/2636))
+  ([4ce9f1e](https://github.com/ory/kratos/commit/4ce9f1ebb39cccfd36c4f0fb4a2ae2a17fbc18cc))
 
 ### Code Refactoring
 
