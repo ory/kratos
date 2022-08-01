@@ -8,6 +8,8 @@ import (
 	"sync"
 	"time"
 
+	"github.com/ory/x/popx"
+
 	"github.com/hashicorp/go-retryablehttp"
 
 	"github.com/ory/x/httpx"
@@ -83,7 +85,8 @@ type RegistryDefault struct {
 	healthxHandler *healthx.Handler
 	metricsHandler *prometheus.Handler
 
-	persister persistence.Persister
+	persister       persistence.Persister
+	migrationStatus popx.MigrationStatuses
 
 	hookVerifier         *hook.Verifier
 	hookSessionIssuer    *hook.SessionIssuer
@@ -222,6 +225,10 @@ func (m *RegistryDefault) HealthHandler(_ context.Context) *healthx.Handler {
 					return m.Ping()
 				},
 				"migrations": func(r *http.Request) error {
+					if m.migrationStatus != nil && !m.migrationStatus.HasPending() {
+						return nil
+					}
+
 					status, err := m.Persister().MigrationStatus(r.Context())
 					if err != nil {
 						return err
@@ -231,6 +238,7 @@ func (m *RegistryDefault) HealthHandler(_ context.Context) *healthx.Handler {
 						return errors.Errorf("migrations have not yet been fully applied")
 					}
 
+					m.migrationStatus = status
 					return nil
 				},
 			})
