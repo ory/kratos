@@ -47,7 +47,7 @@ func (p *Persister) ListSessionsByIdentity(ctx context.Context, iID uuid.UUID, a
 	ctx, span := p.r.Tracer(ctx).Tracer().Start(ctx, "persistence.sql.ListSessionsByIdentity")
 	defer span.End()
 
-	s := make([]*session.Session, 0)
+	var s []*session.Session
 	nid := corp.ContextualizeNID(ctx, p.nid)
 
 	if err := p.Transaction(ctx, func(ctx context.Context, c *pop.Connection) error {
@@ -73,6 +73,10 @@ func (p *Persister) ListSessionsByIdentity(ctx context.Context, iID uuid.UUID, a
 		return nil
 	}); err != nil {
 		return nil, err
+	}
+
+	if s == nil {
+		return []*session.Session{}, nil
 	}
 
 	return s, nil

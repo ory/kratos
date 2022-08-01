@@ -152,6 +152,7 @@ func TestPersister(ctx context.Context, conf *config.Config, p interface {
 						actual, err := p.ListSessionsByIdentity(ctx, i.ID, tc.active, 1, 10, tc.except)
 						require.NoError(t, err)
 
+						require.NotNil(t, actual)
 						require.Equal(t, len(tc.expected), len(actual))
 						for _, es := range tc.expected {
 							found := false
