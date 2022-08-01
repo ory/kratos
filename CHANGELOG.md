@@ -4,7 +4,7 @@
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 **Table of Contents**
 
-- [ (2022-07-27)](#2022-07-27)
+- [ (2022-08-01)](#2022-08-01)
   - [Breaking Changes](#breaking-changes)
     - [Bug Fixes](#bug-fixes)
     - [Code Refactoring](#code-refactoring)
@@ -263,7 +263,7 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# [](https://github.com/ory/kratos/compare/v0.10.1...v) (2022-07-27)
+# [](https://github.com/ory/kratos/compare/v0.10.1...v) (2022-08-01)
 
 ## Breaking Changes
 
@@ -287,6 +287,11 @@ SDK Method `getJsonSchema` was renamed to `getIdentitySchema`.
   ([071c885](https://github.com/ory/kratos/commit/071c885d8231a1a66051002ecfcff5c8e5237085))
 - Bump graceful to deal with http header timeouts
   ([9ce2d26](https://github.com/ory/kratos/commit/9ce2d260338f020e2da077e81464e520883f582b))
+- Cache migration status ([#2631](https://github.com/ory/kratos/issues/2631))
+  ([9020738](https://github.com/ory/kratos/commit/902073836e4dcf6dc87776921e7988d795943718)):
+
+  See https://github.com/ory-corp/cloud/issues/2691
+
 - **cli:** Dry up code ([#2572](https://github.com/ory/kratos/issues/2572))
   ([d1b6b40](https://github.com/ory/kratos/commit/d1b6b40aa9dcc7a3ec9237eec28c4fa55f0b8627))
 - Debugging Docker setup ([#2616](https://github.com/ory/kratos/issues/2616))
@@ -327,6 +332,8 @@ SDK Method `getJsonSchema` was renamed to `getIdentitySchema`.
   ([#2598](https://github.com/ory/kratos/issues/2598))
   ([bf6f27e](https://github.com/ory/kratos/commit/bf6f27e37b8aa342ae002e0a9f227a31e0f7c279)),
   closes [#2562](https://github.com/ory/kratos/issues/2562)
+- Remove jackc rewrites ([#2634](https://github.com/ory/kratos/issues/2634))
+  ([fe00c5b](https://github.com/ory/kratos/commit/fe00c5be72b0cdcc8d462a97aa04c413f758e8e3))
 - Remove newline sign from email subject
   ([#2576](https://github.com/ory/kratos/issues/2576))
   ([ca3d9c2](https://github.com/ory/kratos/commit/ca3d9c24e25ce501e9eae23547f87e1c35b2ea97))
