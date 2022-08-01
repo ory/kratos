@@ -95,7 +95,7 @@ func (p *Persister) MigrationStatus(ctx context.Context) (popx.MigrationStatuses
 
 	status, err := p.mb.Status(ctx)
 	if err != nil {
-		return nil, err
+		return nil, errors.WithStack(err)
 	}
 
 	if !status.HasPending() {
