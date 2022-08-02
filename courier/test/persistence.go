@@ -95,6 +95,18 @@ func TestPersister(ctx context.Context, newNetworkUnlessExisting NetworkWrapper,
 			require.ErrorIs(t, err, courier.ErrQueueEmpty)
 		})
 
+		t.Run("case=incrementing send count", func(t *testing.T) {
+			originalSendCount := messages[0].SendCount
+			require.NoError(t, p.SetMessageStatus(ctx, messages[0].ID, courier.MessageStatusQueued))
+
+			require.NoError(t, p.IncrementMessageSendCount(ctx, messages[0].ID))
+			ms, err := p.NextMessages(ctx, 1)
+			require.NoError(t, err)
+			require.Len(t, ms, 1)
+			assert.Equal(t, messages[0].ID, ms[0].ID)
+			assert.Equal(t, originalSendCount+1, ms[0].SendCount)
+		})
+
 		t.Run("case=network", func(t *testing.T) {
 			id := x.NewUUID()
 
