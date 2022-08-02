@@ -2,7 +2,6 @@ package courier
 
 import (
 	"context"
-	"time"
 
 	"github.com/pkg/errors"
 )
@@ -48,10 +47,10 @@ func (c *courier) DispatchQueue(ctx context.Context) error {
 		return err
 	}
 
-	ttl := c.deps.CourierConfig(ctx).CourierMessageTTL()
+	maxRetries := c.deps.CourierConfig(ctx).CourierMessageRetries()
 
 	for k, msg := range messages {
-		if time.Now().After(msg.CreatedAt.Add(ttl)) {
+		if msg.SendCount >= maxRetries {
 			if err := c.deps.CourierPersister().SetMessageStatus(ctx, msg.ID, MessageStatusAbandoned); err != nil {
 				if c.failOnError {
 					return err
@@ -62,6 +61,16 @@ func (c *courier) DispatchQueue(ctx context.Context) error {
 					Error(`Unable to reset the timed out message's status to "abandoned".`)
 			}
 		} else {
+			if err := c.deps.CourierPersister().IncrementMessageSendCount(ctx, msg.ID); err != nil {
+				if c.failOnError {
+					return err
+				}
+				c.deps.Logger().
+					WithError(err).
+					WithField("message_id", msg.ID).
+					Error(`Unable to increment the message's "send_count" field`)
+			}
+
 			if err := c.DispatchMessage(ctx, msg); err != nil {
 				for _, replace := range messages[k:] {
 					if err := c.deps.CourierPersister().SetMessageStatus(ctx, replace.ID, MessageStatusQueued); err != nil {

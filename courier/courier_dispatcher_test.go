@@ -3,9 +3,7 @@ package courier_test
 import (
 	"context"
 	"testing"
-	"time"
 
-	"github.com/gofrs/uuid"
 	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/require"
 
@@ -15,14 +13,11 @@ import (
 	"github.com/ory/kratos/internal"
 )
 
-func TestMessageTTL(t *testing.T) {
-	if testing.Short() {
-		t.SkipNow()
-	}
+func TestMessageRetries(t *testing.T) {
 	ctx := context.Background()
 
 	conf, reg := internal.NewRegistryDefaultWithDSN(t, "")
-	conf.MustSet(config.ViperKeyCourierMessageTTL, 1*time.Nanosecond)
+	conf.MustSet(config.ViperKeyCourierMessageRetries, 1)
 
 	reg.Logger().Level = logrus.TraceLevel
 
@@ -37,11 +32,13 @@ func TestMessageTTL(t *testing.T) {
 		Body:    "test-body-1",
 	}))
 	require.NoError(t, err)
-	require.NotEqual(t, uuid.Nil, id)
+	require.NotZero(t, id)
 
-	c.DispatchQueue(ctx)
+	err = c.DispatchQueue(ctx)
+	require.Error(t, err)
 
-	time.Sleep(1 * time.Second)
+	err = c.DispatchQueue(ctx)
+	require.NoError(t, err)
 
 	var message courier.Message
 	err = reg.Persister().GetConnection(ctx).

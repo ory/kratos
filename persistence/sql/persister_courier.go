@@ -117,3 +117,28 @@ func (p *Persister) SetMessageStatus(ctx context.Context, id uuid.UUID, ms couri
 
 	return nil
 }
+
+func (p *Persister) IncrementMessageSendCount(ctx context.Context, id uuid.UUID) error {
+	ctx, span := p.r.Tracer(ctx).Tracer().Start(ctx, "persistence.sql.SetMessageStatus")
+	defer span.End()
+
+	count, err := p.GetConnection(ctx).RawQuery(
+		// #nosec G201
+		fmt.Sprintf(
+			"UPDATE %s SET send_count = send_count + 1 WHERE id = ? AND nid = ?",
+			corp.ContextualizeTableName(ctx, "courier_messages"),
+		),
+		id,
+		corp.ContextualizeNID(ctx, p.nid),
+	).ExecWithCount()
+
+	if err != nil {
+		return sqlcon.HandleError(err)
+	}
+
+	if count == 0 {
+		return errors.WithStack(sqlcon.ErrNoRows)
+	}
+
+	return nil
+}

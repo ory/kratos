@@ -1,11 +1,26 @@
 # SQL Migrations
 
-To create a new [fizz](https://gobuffalo.io/en/docs/db/fizz/) migration run in the project root:
+Migrations consist of one `up` and one `down` file.
+To create these SQL migrations, copy the last migration in `./persistence/sql/migrations/sql` and change the timestamp to the current timestamp and the name to the desired name.
 
-```
-$ name=
-$ ory dev pop migration create ./persistence/sql/migrations/templates $name
-```
+If some logic is different for one of the database systems, add the id after the name to the file name.
+The content of that file will override the content of the "general" file for that particular DB system.
+
+Example:
+
+`20220802103909000000_courier_send_count.up.sql`
+and
+`20220802103909000000_courier_send_count.down.sql`
+
+With for example cockroach specific behavior:
+
+`20220802103909000000_courier_send_count.cockroach.up.sql`
+and
+`20220802103909000000_courier_send_count.cockroach.down.sql`
+
+Replace `cockroach` with `mysql`, `postgres` or `sqlite` if applicable.
+
+## Old Way
 
 To create SQL migrations, target each database individually and run
 
