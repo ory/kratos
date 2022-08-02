@@ -4,7 +4,7 @@
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 **Table of Contents**
 
-- [ (2022-08-01)](#2022-08-01)
+- [ (2022-08-02)](#2022-08-02)
   - [Breaking Changes](#breaking-changes)
     - [Bug Fixes](#bug-fixes)
     - [Code Refactoring](#code-refactoring)
@@ -263,7 +263,7 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# [](https://github.com/ory/kratos/compare/v0.10.1...v) (2022-08-01)
+# [](https://github.com/ory/kratos/compare/v0.10.1...v) (2022-08-02)
 
 ## Breaking Changes
 
@@ -313,6 +313,9 @@ SDK Method `getJsonSchema` was renamed to `getIdentitySchema`.
   ([#2517](https://github.com/ory/kratos/issues/2517))
   ([c058e23](https://github.com/ory/kratos/commit/c058e23599d994e12b676e87f7282c1f2b2e089c)),
   closes [#2426](https://github.com/ory/kratos/issues/2426)
+- Improve migration status speed
+  ([#2637](https://github.com/ory/kratos/issues/2637))
+  ([a2e3c41](https://github.com/ory/kratos/commit/a2e3c41f9e513e1de47f6320f6a10acd1fed5eea))
 - Make hydra consistently localhost
   ([70211a1](https://github.com/ory/kratos/commit/70211a17a452d5ced8317822afda3f8e6185cc71))
 - Make ID field in VerifiableAddress struct optional
