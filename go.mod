@@ -39,9 +39,9 @@ require (
 	github.com/go-openapi/strfmt v0.20.3
 	github.com/go-playground/validator/v10 v10.4.1
 	github.com/go-swagger/go-swagger v0.26.1
-	github.com/gobuffalo/fizz v1.14.0
+	github.com/gobuffalo/fizz v1.14.2
 	github.com/gobuffalo/httptest v1.0.2
-	github.com/gobuffalo/pop/v6 v6.0.4-0.20220707121509-feb0eed33d86
+	github.com/gobuffalo/pop/v6 v6.0.6
 	github.com/gofrs/uuid v4.2.0+incompatible
 	github.com/golang-jwt/jwt/v4 v4.1.0
 	github.com/golang/gddo v0.0.0-20190904175337-72a348e765d2
@@ -76,7 +76,7 @@ require (
 	github.com/ory/kratos-client-go v0.6.3-alpha.1
 	github.com/ory/mail/v3 v3.0.0
 	github.com/ory/nosurf v1.2.7
-	github.com/ory/x v0.0.445
+	github.com/ory/x v0.0.453
 	github.com/phayes/freeport v0.0.0-20180830031419-95f893ade6f2
 	github.com/pkg/errors v0.9.1
 	github.com/pquerna/otp v1.3.0
@@ -97,7 +97,7 @@ require (
 	golang.org/x/net v0.0.0-20220225172249-27dd8689420f
 	golang.org/x/oauth2 v0.0.0-20211104180415-d3ed0bb246c8
 	golang.org/x/sync v0.0.0-20220601150217-0de741cfad7f
-	golang.org/x/tools v0.1.10
+	golang.org/x/tools v0.1.11
 )
 
 require (
@@ -171,11 +171,11 @@ require (
 	github.com/gobuffalo/envy v1.10.1 // indirect
 	github.com/gobuffalo/flect v0.2.5 // indirect
 	github.com/gobuffalo/github_flavored_markdown v1.1.1 // indirect
-	github.com/gobuffalo/helpers v0.6.4 // indirect
+	github.com/gobuffalo/helpers v0.6.5 // indirect
 	github.com/gobuffalo/nulls v0.4.1 // indirect
-	github.com/gobuffalo/plush/v4 v4.1.12 // indirect
-	github.com/gobuffalo/tags/v3 v3.1.2 // indirect
-	github.com/gobuffalo/validate/v3 v3.3.1 // indirect
+	github.com/gobuffalo/plush/v4 v4.1.13 // indirect
+	github.com/gobuffalo/tags/v3 v3.1.3 // indirect
+	github.com/gobuffalo/validate/v3 v3.3.2 // indirect
 	github.com/goccy/go-yaml v1.9.5 // indirect
 	github.com/gofrs/flock v0.8.1 // indirect
 	github.com/gogo/protobuf v1.3.2 // indirect
@@ -314,7 +314,7 @@ require (
 	go.uber.org/atomic v1.7.0 // indirect
 	go.uber.org/multierr v1.7.0 // indirect
 	go.uber.org/zap v1.17.0 // indirect
-	golang.org/x/mod v0.6.0-dev.0.20220106191415-9b9b3d81d5e3 // indirect
+	golang.org/x/mod v0.6.0-dev.0.20220419223038-86c51ed26bb4 // indirect
 	golang.org/x/sys v0.0.0-20220517195934-5e4e11fc645e // indirect
 	golang.org/x/term v0.0.0-20210927222741-03fcf44c2211 // indirect
 	golang.org/x/text v0.3.7 // indirect
