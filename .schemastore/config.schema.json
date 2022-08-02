@@ -1471,15 +1471,13 @@
             "/conf/courier-templates"
           ]
         },
-        "message_ttl": {
-          "description": "Defines a Time-To-Live for courier messages that could not be delivered. After the defined TTL has expired for a message that message is abandoned.",
-          "type": "string",
-          "pattern": "^([0-9]+(ns|us|ms|s|m|h))+$",
-          "default": "1h",
+        "message_retries": {
+          "description": "Defines the maximum number of times the sending of a message is retried after it failed before it is marked as abandoned",
+          "type": "integer",
+          "default": 5,
           "examples": [
-            "1h",
-            "1m",
-            "1s"
+            10,
+            60
           ]
         },
         "smtp": {
