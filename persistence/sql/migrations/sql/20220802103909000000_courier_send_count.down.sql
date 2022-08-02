@@ -1,1 +1,1 @@
-ALTER TABLE "courier_messages" DROP COLUMN send_count;
+ALTER TABLE courier_messages DROP COLUMN send_count;
