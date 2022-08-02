@@ -4,6 +4,7 @@ import (
 	"context"
 	"testing"
 
+	"github.com/gofrs/uuid"
 	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/require"
 
@@ -32,11 +33,17 @@ func TestMessageRetries(t *testing.T) {
 		Body:    "test-body-1",
 	}))
 	require.NoError(t, err)
-	require.NotZero(t, id)
+	require.NotEqual(t, uuid.Nil, id)
 
+	// Fails to deliver the first time
 	err = c.DispatchQueue(ctx)
 	require.Error(t, err)
 
+	// Retry once, as we set above
+	err = c.DispatchQueue(ctx)
+	require.Error(t, err)
+
+	// Now it has been retried once, which means 2 > 1 is true and it is no longer tried
 	err = c.DispatchQueue(ctx)
 	require.NoError(t, err)
 

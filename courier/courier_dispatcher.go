@@ -50,7 +50,7 @@ func (c *courier) DispatchQueue(ctx context.Context) error {
 	maxRetries := c.deps.CourierConfig(ctx).CourierMessageRetries()
 
 	for k, msg := range messages {
-		if msg.SendCount >= maxRetries {
+		if msg.SendCount > maxRetries {
 			if err := c.deps.CourierPersister().SetMessageStatus(ctx, msg.ID, MessageStatusAbandoned); err != nil {
 				if c.failOnError {
 					return err
@@ -58,7 +58,7 @@ func (c *courier) DispatchQueue(ctx context.Context) error {
 				c.deps.Logger().
 					WithError(err).
 					WithField("message_id", msg.ID).
-					Error(`Unable to reset the timed out message's status to "abandoned".`)
+					Error(`Unable to reset the retried message's status to "abandoned".`)
 			}
 		} else {
 			if err := c.deps.CourierPersister().IncrementMessageSendCount(ctx, msg.ID); err != nil {
