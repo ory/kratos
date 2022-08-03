@@ -21,7 +21,7 @@ func (c *courier) DispatchMessage(ctx context.Context, msg Message) error {
 		// Skip the message
 		c.deps.Logger().
 			WithField("message_id", msg.ID).
-			Warnf(`Message was abandoned because it did not deliver after %d tries`, msg.SendCount)
+			Warnf(`Message was abandoned because it did not deliver after %d attempts`, msg.SendCount)
 		return nil
 	}
 
