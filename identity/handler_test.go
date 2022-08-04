@@ -41,14 +41,14 @@ func TestHandler(t *testing.T) {
 	mockServerURL := urlx.ParseOrPanic(publicTS.URL)
 	defaultSchemaExternalURL := (&schema.Schema{ID: "default"}).SchemaURL(mockServerURL).String()
 
-	conf.MustSet(config.ViperKeyAdminBaseURL, adminTS.URL)
+	conf.MustSet(ctx, config.ViperKeyAdminBaseURL, adminTS.URL)
 	testhelpers.SetIdentitySchemas(t, conf, map[string]string{
 		"default":  "file://./stub/identity.schema.json",
 		"customer": "file://./stub/handler/customer.schema.json",
 		"employee": "file://./stub/handler/employee.schema.json",
 	})
 
-	conf.MustSet(config.ViperKeyPublicBaseURL, mockServerURL.String())
+	conf.MustSet(ctx, config.ViperKeyPublicBaseURL, mockServerURL.String())
 
 	var get = func(t *testing.T, base *httptest.Server, href string, expectCode int) gjson.Result {
 		t.Helper()
@@ -284,7 +284,7 @@ func TestHandler(t *testing.T) {
 				if !encrypt {
 					return token
 				}
-				c, err := reg.Cipher().Encrypt(context.Background(), []byte(token))
+				c, err := reg.Cipher(ctx).Encrypt(context.Background(), []byte(token))
 				require.NoError(t, err)
 				return c
 			}
@@ -428,7 +428,7 @@ func TestHandler(t *testing.T) {
 				})
 			}
 
-			e, _ := reg.Cipher().Encrypt(context.Background(), []byte("foo_token"))
+			e, _ := reg.Cipher(ctx).Encrypt(context.Background(), []byte("foo_token"))
 			id = createOidcIdentity(t, "foo-failed-2.oidc@bar.com", e, "bar_token", "id_token", false)
 			for name, ts := range map[string]*httptest.Server{"public": publicTS, "admin": adminTS} {
 				t.Run("endpoint="+name, func(t *testing.T) {

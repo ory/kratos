@@ -3,6 +3,7 @@ package driver
 import (
 	"context"
 
+	"github.com/ory/x/contextx"
 	"github.com/ory/x/otelx"
 	prometheus "github.com/ory/x/prometheusx"
 
@@ -43,7 +44,7 @@ import (
 type Registry interface {
 	dbal.Driver
 
-	Init(ctx context.Context, opts ...RegistryOption) error
+	Init(ctx context.Context, ctxer contextx.Contextualizer, opts ...RegistryOption) error
 
 	WithLogger(l *logrusx.Logger) Registry
 
@@ -62,8 +63,9 @@ type Registry interface {
 	Tracer(context.Context) *otelx.Tracer
 
 	config.Provider
-	CourierConfig(ctx context.Context) config.CourierConfigs
+	CourierConfig() config.CourierConfigs
 	WithConfig(c *config.Config) Registry
+	WithContextualizer(ctxer contextx.Contextualizer) Registry
 
 	x.CSRFProvider
 	x.WriterProvider
@@ -136,8 +138,8 @@ type Registry interface {
 	x.CSRFTokenGeneratorProvider
 }
 
-func NewRegistryFromDSN(c *config.Config, l *logrusx.Logger) (Registry, error) {
-	driver, err := dbal.GetDriverFor(c.DSN())
+func NewRegistryFromDSN(ctx context.Context, c *config.Config, l *logrusx.Logger) (Registry, error) {
+	driver, err := dbal.GetDriverFor(c.DSN(ctx))
 	if err != nil {
 		return nil, errors.WithStack(err)
 	}

@@ -183,8 +183,8 @@ func (h *Handler) whoami(w http.ResponseWriter, r *http.Request, ps httprouter.P
 	}
 
 	var aalErr *ErrAALNotSatisfied
-	c := h.r.Config(r.Context())
-	if err := h.r.SessionManager().DoesSessionSatisfy(r, s, c.SessionWhoAmIAAL()); errors.As(err, &aalErr) {
+	c := h.r.Config()
+	if err := h.r.SessionManager().DoesSessionSatisfy(r, s, c.SessionWhoAmIAAL(r.Context())); errors.As(err, &aalErr) {
 		h.r.Audit().WithRequest(r).WithError(err).Info("Session was found but AAL is not satisfied for calling this endpoint.")
 		h.r.Writer().WriteError(w, r, err)
 		return
@@ -513,9 +513,9 @@ func (h *Handler) adminSessionExtend(w http.ResponseWriter, r *http.Request, ps 
 		return
 	}
 
-	c := h.r.Config(r.Context())
-	if s.CanBeRefreshed(c) {
-		if err := h.r.SessionPersister().UpsertSession(r.Context(), s.Refresh(c)); err != nil {
+	c := h.r.Config()
+	if s.CanBeRefreshed(r.Context(), c) {
+		if err := h.r.SessionPersister().UpsertSession(r.Context(), s.Refresh(r.Context(), c)); err != nil {
 			h.r.Writer().WriteError(w, r, err)
 			return
 		}
@@ -546,9 +546,10 @@ func (h *Handler) IsNotAuthenticated(wrap httprouter.Handle, onAuthenticated htt
 
 func RedirectOnAuthenticated(d interface{ config.Provider }) httprouter.Handle {
 	return func(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-		returnTo, err := x.SecureRedirectTo(r, d.Config(r.Context()).SelfServiceBrowserDefaultReturnTo(), x.SecureRedirectAllowSelfServiceURLs(d.Config(r.Context()).SelfPublicURL()))
+		ctx := r.Context()
+		returnTo, err := x.SecureRedirectTo(r, d.Config().SelfServiceBrowserDefaultReturnTo(ctx), x.SecureRedirectAllowSelfServiceURLs(d.Config().SelfPublicURL(ctx)))
 		if err != nil {
-			http.Redirect(w, r, d.Config(r.Context()).SelfServiceBrowserDefaultReturnTo().String(), http.StatusFound)
+			http.Redirect(w, r, d.Config().SelfServiceBrowserDefaultReturnTo(ctx).String(), http.StatusFound)
 			return
 		}
 

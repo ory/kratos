@@ -52,8 +52,8 @@ func (e *Verifier) do(r *http.Request, i *identity.Identity, f flow.Flow) error 
 		if address.Status != identity.VerifiableAddressStatusPending {
 			continue
 		}
-		verificationFlow, err := verification.NewPostHookFlow(e.r.Config(r.Context()),
-			e.r.Config(r.Context()).SelfServiceFlowVerificationRequestLifespan(),
+		verificationFlow, err := verification.NewPostHookFlow(e.r.Config(),
+			e.r.Config().SelfServiceFlowVerificationRequestLifespan(r.Context()),
 			e.r.GenerateCSRFToken(r), r, e.r.VerificationStrategies(r.Context()), f)
 		if err != nil {
 			return err
@@ -63,7 +63,7 @@ func (e *Verifier) do(r *http.Request, i *identity.Identity, f flow.Flow) error 
 			return err
 		}
 
-		token := link.NewSelfServiceVerificationToken(address, verificationFlow, e.r.Config(r.Context()).SelfServiceLinkMethodLifespan())
+		token := link.NewSelfServiceVerificationToken(address, verificationFlow, e.r.Config().SelfServiceLinkMethodLifespan(r.Context()))
 		if err := e.r.VerificationTokenPersister().CreateVerificationToken(r.Context(), token); err != nil {
 			return err
 		}

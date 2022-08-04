@@ -42,10 +42,11 @@ type persisterTestPayload struct {
 }
 
 func TestManager(t *testing.T) {
+	ctx := context.Background()
 	conf, reg := internal.NewFastRegistryWithMocks(t)
 
 	testhelpers.SetDefaultIdentitySchema(conf, "file://../test/stub/identity/empty.schema.json")
-	conf.MustSet(config.ViperKeyPublicBaseURL, "https://www.ory.sh")
+	conf.MustSet(ctx, config.ViperKeyPublicBaseURL, "https://www.ory.sh")
 	i := identity.NewIdentity("")
 	require.NoError(t, reg.PrivilegedIdentityPool().CreateIdentity(context.Background(), i))
 

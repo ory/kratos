@@ -79,7 +79,7 @@ func (s *Sender) SendRecoveryLink(ctx context.Context, r *http.Request, f *recov
 		return err
 	}
 
-	token := NewSelfServiceRecoveryToken(address, f, s.r.Config(r.Context()).SelfServiceLinkMethodLifespan())
+	token := NewSelfServiceRecoveryToken(address, f, s.r.Config().SelfServiceLinkMethodLifespan(r.Context()))
 	if err := s.r.RecoveryTokenPersister().CreateRecoveryToken(ctx, token); err != nil {
 		return err
 	}
@@ -121,7 +121,7 @@ func (s *Sender) SendVerificationLink(ctx context.Context, f *verification.Flow,
 		return err
 	}
 
-	token := NewSelfServiceVerificationToken(address, f, s.r.Config(ctx).SelfServiceLinkMethodLifespan())
+	token := NewSelfServiceVerificationToken(address, f, s.r.Config().SelfServiceLinkMethodLifespan(ctx))
 	if err := s.r.VerificationTokenPersister().CreateVerificationToken(ctx, token); err != nil {
 		return err
 	}
@@ -148,7 +148,7 @@ func (s *Sender) SendRecoveryTokenTo(ctx context.Context, f *recovery.Flow, i *i
 
 	return s.send(ctx, string(address.Via), email.NewRecoveryValid(s.r,
 		&email.RecoveryValidModel{To: address.Value, RecoveryURL: urlx.CopyWithQuery(
-			urlx.AppendPaths(s.r.Config(ctx).SelfServiceLinkMethodBaseURL(), recovery.RouteSubmitFlow),
+			urlx.AppendPaths(s.r.Config().SelfServiceLinkMethodBaseURL(ctx), recovery.RouteSubmitFlow),
 			url.Values{
 				"token": {token.Token},
 				"flow":  {f.ID.String()},
@@ -171,7 +171,7 @@ func (s *Sender) SendVerificationTokenTo(ctx context.Context, f *verification.Fl
 
 	if err := s.send(ctx, string(address.Via), email.NewVerificationValid(s.r,
 		&email.VerificationValidModel{To: address.Value, VerificationURL: urlx.CopyWithQuery(
-			urlx.AppendPaths(s.r.Config(ctx).SelfServiceLinkMethodBaseURL(), verification.RouteSubmitFlow),
+			urlx.AppendPaths(s.r.Config().SelfServiceLinkMethodBaseURL(ctx), verification.RouteSubmitFlow),
 			url.Values{
 				"flow":  {f.ID.String()},
 				"token": {token.Token},

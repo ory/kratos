@@ -6,6 +6,8 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/ory/jsonschema/v3"
+
 	"github.com/ory/kratos/text"
 
 	"github.com/gofrs/uuid"
@@ -13,7 +15,6 @@ import (
 	"github.com/tidwall/sjson"
 
 	"github.com/ory/herodot"
-	"github.com/ory/jsonschema/v3"
 	"github.com/ory/kratos/continuity"
 	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/identity"
@@ -80,7 +81,7 @@ func (s *Strategy) SettingsStrategyID() string {
 func (s *Strategy) RegisterSettingsRoutes(public *x.RouterPublic) {}
 
 func (s *Strategy) PopulateSettingsMethod(r *http.Request, id *identity.Identity, f *settings.Flow) error {
-	schemas, err := s.d.Config(r.Context()).IdentityTraitsSchemas()
+	schemas, err := s.d.Config().IdentityTraitsSchemas(r.Context())
 	if err != nil {
 		return err
 	}
@@ -149,7 +150,7 @@ func (s *Strategy) continueFlow(w http.ResponseWriter, r *http.Request, ctxUpdat
 		return err
 	}
 
-	if err := flow.EnsureCSRF(s.d, r, ctxUpdate.Flow.Type, s.d.Config(r.Context()).DisableAPIFlowEnforcement(), s.d.GenerateCSRFToken, p.CSRFToken); err != nil {
+	if err := flow.EnsureCSRF(s.d, r, ctxUpdate.Flow.Type, s.d.Config().DisableAPIFlowEnforcement(r.Context()), s.d.GenerateCSRFToken, p.CSRFToken); err != nil {
 		return err
 	}
 
@@ -162,7 +163,7 @@ func (s *Strategy) continueFlow(w http.ResponseWriter, r *http.Request, ctxUpdat
 	}
 
 	options := []identity.ManagerOption{identity.ManagerExposeValidationErrorsForInternalTypeAssertion}
-	ttl := s.d.Config(r.Context()).SelfServiceFlowSettingsPrivilegedSessionMaxAge()
+	ttl := s.d.Config().SelfServiceFlowSettingsPrivilegedSessionMaxAge(r.Context())
 	if ctxUpdate.Session.AuthenticatedAt.Add(ttl).After(time.Now()) {
 		options = append(options, identity.ManagerAllowWriteProtectedTraits)
 	}

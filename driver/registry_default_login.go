@@ -16,7 +16,7 @@ func (m *RegistryDefault) LoginHookExecutor() *login.HookExecutor {
 }
 
 func (m *RegistryDefault) PreLoginHooks(ctx context.Context) (b []login.PreHookExecutor) {
-	for _, v := range m.getHooks("", m.Config(ctx).SelfServiceFlowLoginBeforeHooks()) {
+	for _, v := range m.getHooks("", m.Config().SelfServiceFlowLoginBeforeHooks(ctx)) {
 		if hook, ok := v.(login.PreHookExecutor); ok {
 			b = append(b, hook)
 		}
@@ -25,7 +25,7 @@ func (m *RegistryDefault) PreLoginHooks(ctx context.Context) (b []login.PreHookE
 }
 
 func (m *RegistryDefault) PostLoginHooks(ctx context.Context, credentialsType identity.CredentialsType) (b []login.PostHookExecutor) {
-	for _, v := range m.getHooks(string(credentialsType), m.Config(ctx).SelfServiceFlowLoginAfterHooks(string(credentialsType))) {
+	for _, v := range m.getHooks(string(credentialsType), m.Config().SelfServiceFlowLoginAfterHooks(ctx, string(credentialsType))) {
 		if hook, ok := v.(login.PostHookExecutor); ok {
 			b = append(b, hook)
 		}
@@ -34,7 +34,7 @@ func (m *RegistryDefault) PostLoginHooks(ctx context.Context, credentialsType id
 	if len(b) == 0 {
 		// since we don't want merging hooks defined in a specific strategy and global hooks
 		// global hooks are added only if no strategy specific hooks are defined
-		for _, v := range m.getHooks(config.HookGlobal, m.Config(ctx).SelfServiceFlowLoginAfterHooks("global")) {
+		for _, v := range m.getHooks(config.HookGlobal, m.Config().SelfServiceFlowLoginAfterHooks(ctx, "global")) {
 			if hook, ok := v.(login.PostHookExecutor); ok {
 				b = append(b, hook)
 			}

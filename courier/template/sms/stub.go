@@ -30,7 +30,7 @@ func (t *TestStub) PhoneNumber() (string, error) {
 }
 
 func (t *TestStub) SMSBody(ctx context.Context) (string, error) {
-	return template.LoadText(ctx, t.d, os.DirFS(t.d.CourierConfig(ctx).CourierTemplatesRoot()), "otp/test_stub/sms.body.gotmpl", "otp/test_stub/sms.body*", t.m, "")
+	return template.LoadText(ctx, t.d, os.DirFS(t.d.CourierConfig().CourierTemplatesRoot(ctx)), "otp/test_stub/sms.body.gotmpl", "otp/test_stub/sms.body*", t.m, "")
 }
 
 func (t *TestStub) MarshalJSON() ([]byte, error) {

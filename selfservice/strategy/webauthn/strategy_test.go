@@ -25,7 +25,7 @@ func TestCompletedAuthenticationMethod(t *testing.T) {
 		AAL:    identity.AuthenticatorAssuranceLevel2,
 	}, strategy.CompletedAuthenticationMethod(context.Background()))
 
-	conf.MustSet(config.ViperKeyWebAuthnPasswordless, true)
+	conf.MustSet(ctx, config.ViperKeyWebAuthnPasswordless, true)
 	assert.Equal(t, session.AuthenticationMethod{
 		Method: strategy.ID(),
 		AAL:    identity.AuthenticatorAssuranceLevel1,

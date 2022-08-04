@@ -5,7 +5,7 @@ import (
 	"os"
 	"testing"
 
-	"github.com/ory/kratos/corp"
+	"github.com/ory/x/contextx"
 
 	"github.com/gofrs/uuid"
 
@@ -24,7 +24,6 @@ import (
 )
 
 func init() {
-	corp.SetContextualizer(new(corp.ContextNoOp))
 	dbal.RegisterDriver(func() dbal.Driver {
 		return driver.NewRegistryDefault()
 	})
@@ -64,27 +63,28 @@ func NewFastRegistryWithMocks(t *testing.T) (*config.Config, *driver.RegistryDef
 	})
 
 	require.NoError(t, reg.Persister().MigrateUp(context.Background()))
-	require.NotEqual(t, uuid.Nil, reg.Persister().NetworkID())
+	require.NotEqual(t, uuid.Nil, reg.Persister().NetworkID(context.Background()))
 	return conf, reg
 }
 
 // NewRegistryDefaultWithDSN returns a more standard registry without mocks. Good for e2e and advanced integration testing!
 func NewRegistryDefaultWithDSN(t *testing.T, dsn string) (*config.Config, *driver.RegistryDefault) {
+	ctx := context.Background()
 	c := NewConfigurationWithDefaults(t)
-	c.MustSet(config.ViperKeyDSN, stringsx.Coalesce(dsn, dbal.NewSQLiteTestDatabase(t)))
+	c.MustSet(ctx, config.ViperKeyDSN, stringsx.Coalesce(dsn, dbal.NewSQLiteTestDatabase(t)))
 
-	reg, err := driver.NewRegistryFromDSN(c, logrusx.New("", ""))
+	reg, err := driver.NewRegistryFromDSN(ctx, c, logrusx.New("", ""))
 	require.NoError(t, err)
-	reg.Config(context.Background()).MustSet("dev", true)
-	require.NoError(t, reg.Init(context.Background(), driver.SkipNetworkInit))
+	reg.Config().MustSet(ctx, "dev", true)
+	require.NoError(t, reg.Init(context.Background(), &contextx.Default{}, driver.SkipNetworkInit))
 	require.NoError(t, reg.Persister().MigrateUp(context.Background())) // always migrate up
 
 	actual, err := reg.Persister().DetermineNetwork(context.Background())
 	require.NoError(t, err)
 	reg.SetPersister(reg.Persister().WithNetworkID(actual.ID))
 
-	require.EqualValues(t, reg.Persister().NetworkID(), actual.ID)
-	require.NotEqual(t, uuid.Nil, reg.Persister().NetworkID())
+	require.EqualValues(t, reg.Persister().NetworkID(context.Background()), actual.ID)
+	require.NotEqual(t, uuid.Nil, reg.Persister().NetworkID(context.Background()))
 	reg.Persister()
 
 	return c, reg.(*driver.RegistryDefault)

@@ -16,15 +16,16 @@ import (
 )
 
 func TestConfig(t *testing.T) {
+	ctx := context.Background()
 	conf, reg := internal.NewFastRegistryWithMocks(t)
 
 	var c map[string]interface{}
 	require.NoError(t, json.NewDecoder(
 		bytes.NewBufferString(`{"config":{"providers": [{"provider": "generic"}]}}`)).Decode(&c))
-	conf.MustSet(config.ViperKeySelfServiceStrategyConfig+"."+string(identity.CredentialsTypeOIDC), c)
+	conf.MustSet(ctx, config.ViperKeySelfServiceStrategyConfig+"."+string(identity.CredentialsTypeOIDC), c)
 
 	s := oidc.NewStrategy(reg)
-	collection, err := s.Config(context.Background())
+	collection, err := s.Config(ctx)
 	require.NoError(t, err)
 
 	require.Len(t, collection.Providers, 1)

@@ -170,9 +170,9 @@ func TestPersister(t *testing.T) {
 			t.Parallel()
 
 			_, p := testhelpers.NewNetwork(t, ctx, reg.Persister())
-			conf := reg.Config(context.Background())
+			conf := reg.Config()
 
-			t.Logf("DSN: %s", conf.DSN())
+			t.Logf("DSN: %s", conf.DSN(ctx))
 
 			// This test must remain the first test in the test suite!
 			t.Run("racy identity creation", func(t *testing.T) {
@@ -183,7 +183,7 @@ func TestPersister(t *testing.T) {
 				}
 
 				var wg sync.WaitGroup
-				testhelpers.SetDefaultIdentitySchema(reg.Config(context.Background()), defaultSchema.RawURL)
+				testhelpers.SetDefaultIdentitySchema(reg.Config(), defaultSchema.RawURL)
 				_, ps := testhelpers.NewNetwork(t, ctx, reg.Persister())
 
 				for i := 0; i < 10; i++ {

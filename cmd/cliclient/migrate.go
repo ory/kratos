@@ -7,6 +7,10 @@ import (
 	"os"
 	"strings"
 
+	"github.com/pkg/errors"
+
+	"github.com/ory/x/contextx"
+
 	"github.com/ory/x/configx"
 
 	"github.com/spf13/cobra"
@@ -23,42 +27,52 @@ func NewMigrateHandler() *MigrateHandler {
 	return &MigrateHandler{}
 }
 
-func (h *MigrateHandler) MigrateSQL(cmd *cobra.Command, args []string) {
+func (h *MigrateHandler) MigrateSQL(cmd *cobra.Command, args []string) error {
 	var d driver.Registry
+	var err error
 
 	if flagx.MustGetBool(cmd, "read-from-env") {
-		d = driver.NewWithoutInit(
+		d, err = driver.NewWithoutInit(
 			cmd.Context(),
 			cmd.ErrOrStderr(),
 			configx.WithFlags(cmd.Flags()),
 			configx.SkipValidation())
-		if len(d.Config(cmd.Context()).DSN()) == 0 {
+		if len(d.Config().DSN(cmd.Context())) == 0 {
 			fmt.Println(cmd.UsageString())
 			fmt.Println("")
 			fmt.Println("When using flag -e, environment variable DSN must be set")
-			os.Exit(1)
-			return
+			return cmdx.FailSilently(cmd)
+		}
+		if err != nil {
+			return err
 		}
 	} else {
 		if len(args) != 1 {
 			fmt.Println(cmd.UsageString())
-			os.Exit(1)
-			return
+			return cmdx.FailSilently(cmd)
 		}
-		d = driver.NewWithoutInit(
+		d, err = driver.NewWithoutInit(
 			cmd.Context(),
 			cmd.ErrOrStderr(),
 			configx.WithFlags(cmd.Flags()),
 			configx.SkipValidation(),
 			configx.WithValue(config.ViperKeyDSN, args[0]))
+		if err != nil {
+			return err
+		}
 	}
 
-	err := d.Init(cmd.Context(), driver.SkipNetworkInit)
+	err = d.Init(cmd.Context(), &contextx.Default{}, driver.SkipNetworkInit)
 	cmdx.Must(err, "An error occurred initializing migrations: %s", err)
+	if err != nil {
+		return errors.Wrap(err, "an error occurred initializing migrations")
+	}
 
 	var plan bytes.Buffer
-	statuses, err := d.Persister().MigrationStatus(cmd.Context())
-	cmdx.Must(err, "An error occurred planning migrations:%s \n-- Migration Plan --\n%s", err, statuses.Write(&plan))
+	_, err = d.Persister().MigrationStatus(cmd.Context())
+	if err != nil {
+		return errors.Wrap(err, "an error occurred planning migrations:")
+	}
 
 	if !flagx.MustGetBool(cmd, "yes") {
 		fmt.Println("The following migration is planned:")
@@ -68,13 +82,14 @@ func (h *MigrateHandler) MigrateSQL(cmd *cobra.Command, args []string) {
 		fmt.Println("To skip the next question use flag --yes (at your own risk).")
 		if !askForConfirmation("Do you wish to execute this migration plan?") {
 			fmt.Println("Migration aborted.")
-			return
+			return cmdx.FailSilently(cmd)
 		}
 	}
 
 	err = d.Persister().MigrateUp(cmd.Context())
 	cmdx.Must(err, "An error occurred while connecting to SQL: %s", err)
 	fmt.Println("Successfully applied SQL migrations!")
+	return nil
 }
 
 func askForConfirmation(s string) bool {

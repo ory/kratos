@@ -4,12 +4,9 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
-
 	"github.com/gobuffalo/pop/v6"
 	"github.com/gofrs/uuid"
 	"github.com/pkg/errors"
-
-	"github.com/ory/kratos/corp"
 
 	"github.com/ory/x/sqlcon"
 
@@ -22,7 +19,7 @@ func (p *Persister) AddMessage(ctx context.Context, m *courier.Message) error {
 	ctx, span := p.r.Tracer(ctx).Tracer().Start(ctx, "persistence.sql.AddMessage")
 	defer span.End()
 
-	m.NID = corp.ContextualizeNID(ctx, p.nid)
+	m.NID = p.NetworkID(ctx)
 	m.Status = courier.MessageStatusQueued
 	return sqlcon.HandleError(p.GetConnection(ctx).Create(m)) // do not create eager to avoid identity injection.
 }
@@ -35,7 +32,7 @@ func (p *Persister) NextMessages(ctx context.Context, limit uint8) (messages []c
 		var m []courier.Message
 		if err := tx.
 			Where("nid = ? AND status = ?",
-				corp.ContextualizeNID(ctx, p.nid),
+				p.NetworkID(ctx),
 				courier.MessageStatusQueued,
 			).
 			Order("created_at ASC").
@@ -79,7 +76,7 @@ func (p *Persister) LatestQueuedMessage(ctx context.Context) (*courier.Message, 
 	var m courier.Message
 	if err := p.GetConnection(ctx).
 		Where("nid = ? AND status = ?",
-			corp.ContextualizeNID(ctx, p.nid),
+			p.NetworkID(ctx),
 			courier.MessageStatusQueued,
 		).
 		Order("created_at DESC").
@@ -101,11 +98,11 @@ func (p *Persister) SetMessageStatus(ctx context.Context, id uuid.UUID, ms couri
 		// #nosec G201
 		fmt.Sprintf(
 			"UPDATE %s SET status = ? WHERE id = ? AND nid = ?",
-			corp.ContextualizeTableName(ctx, "courier_messages"),
+			"courier_messages",
 		),
 		ms,
 		id,
-		corp.ContextualizeNID(ctx, p.nid),
+		p.NetworkID(ctx),
 	).ExecWithCount()
 	if err != nil {
 		return sqlcon.HandleError(err)
@@ -126,10 +123,10 @@ func (p *Persister) IncrementMessageSendCount(ctx context.Context, id uuid.UUID)
 		// #nosec G201
 		fmt.Sprintf(
 			"UPDATE %s SET send_count = send_count + 1 WHERE id = ? AND nid = ?",
-			corp.ContextualizeTableName(ctx, "courier_messages"),
+			"courier_messages",
 		),
 		id,
-		corp.ContextualizeNID(ctx, p.nid),
+		p.NetworkID(ctx),
 	).ExecWithCount()
 
 	if err != nil {

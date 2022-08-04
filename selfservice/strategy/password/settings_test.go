@@ -72,8 +72,9 @@ func newIdentityWithoutCredentials(email string) *identity.Identity {
 }
 
 func TestSettings(t *testing.T) {
+	ctx := context.Background()
 	conf, reg := internal.NewFastRegistryWithMocks(t)
-	conf.MustSet(config.ViperKeySelfServiceBrowserDefaultReturnTo, "https://www.ory.sh/")
+	conf.MustSet(ctx, config.ViperKeySelfServiceBrowserDefaultReturnTo, "https://www.ory.sh/")
 	testhelpers.SetDefaultIdentitySchema(conf, "file://./stub/profile.schema.json")
 	testhelpers.StrategyEnable(t, conf, identity.CredentialsTypePassword.String(), true)
 	testhelpers.StrategyEnable(t, conf, settings.StrategyProfile, true)
@@ -81,7 +82,7 @@ func TestSettings(t *testing.T) {
 	_ = testhelpers.NewSettingsUIFlowEchoServer(t, reg)
 	_ = testhelpers.NewErrorTestServer(t, reg)
 	_ = testhelpers.NewLoginUIWith401Response(t, conf)
-	conf.MustSet(config.ViperKeySelfServiceSettingsPrivilegedAuthenticationAfter, "1m")
+	conf.MustSet(ctx, config.ViperKeySelfServiceSettingsPrivilegedAuthenticationAfter, "1m")
 
 	browserIdentity1 := newIdentityWithPassword("john-browser@doe.com")
 	apiIdentity1 := newIdentityWithPassword("john-api@doe.com")
@@ -102,7 +103,7 @@ func TestSettings(t *testing.T) {
 			require.NoError(t, err)
 			defer res.Body.Close()
 			assert.EqualValues(t, http.StatusUnauthorized, res.StatusCode, "%+v", res.Request)
-			assert.Contains(t, res.Request.URL.String(), conf.Source().String(config.ViperKeySelfServiceLoginUI))
+			assert.Contains(t, res.Request.URL.String(), conf.GetProvider(ctx).String(config.ViperKeySelfServiceLoginUI))
 		})
 
 		t.Run("type=spa", func(t *testing.T) {
@@ -125,7 +126,7 @@ func TestSettings(t *testing.T) {
 	var expectValidationError = func(t *testing.T, isAPI, isSPA bool, hc *http.Client, values func(url.Values)) string {
 		return testhelpers.SubmitSettingsForm(t, isAPI, isSPA, hc, publicTS, values,
 			testhelpers.ExpectStatusCode(isAPI || isSPA, http.StatusBadRequest, http.StatusOK),
-			testhelpers.ExpectURL(isAPI || isSPA, publicTS.URL+settings.RouteSubmitFlow, conf.SelfServiceFlowSettingsUI().String()))
+			testhelpers.ExpectURL(isAPI || isSPA, publicTS.URL+settings.RouteSubmitFlow, conf.SelfServiceFlowSettingsUI(ctx).String()))
 	}
 
 	t.Run("description=should fail if password violates policy", func(t *testing.T) {
@@ -136,7 +137,7 @@ func TestSettings(t *testing.T) {
 		}
 
 		t.Run("session=with privileged session", func(t *testing.T) {
-			conf.MustSet(config.ViperKeySelfServiceSettingsPrivilegedAuthenticationAfter, "5m")
+			conf.MustSet(ctx, config.ViperKeySelfServiceSettingsPrivilegedAuthenticationAfter, "5m")
 
 			var payload = func(v url.Values) {
 				v.Set("password", "123456")
@@ -157,10 +158,10 @@ func TestSettings(t *testing.T) {
 		})
 
 		t.Run("session=needs reauthentication", func(t *testing.T) {
-			conf.MustSet(config.ViperKeySelfServiceSettingsPrivilegedAuthenticationAfter, "1ns")
+			conf.MustSet(ctx, config.ViperKeySelfServiceSettingsPrivilegedAuthenticationAfter, "1ns")
 			defer testhelpers.NewLoginUIWith401Response(t, conf)
 			t.Cleanup(func() {
-				conf.MustSet(config.ViperKeySelfServiceSettingsPrivilegedAuthenticationAfter, "5m")
+				conf.MustSet(ctx, config.ViperKeySelfServiceSettingsPrivilegedAuthenticationAfter, "5m")
 			})
 
 			var payload = func(v url.Values) {
@@ -246,7 +247,7 @@ func TestSettings(t *testing.T) {
 		})
 
 		t.Run("type=browser", func(t *testing.T) {
-			check(t, testhelpers.SubmitSettingsForm(t, false, false, browserUser1, publicTS, payload, http.StatusOK, conf.SelfServiceFlowSettingsUI().String()))
+			check(t, testhelpers.SubmitSettingsForm(t, false, false, browserUser1, publicTS, payload, http.StatusOK, conf.SelfServiceFlowSettingsUI(ctx).String()))
 		})
 	})
 
@@ -259,7 +260,7 @@ func TestSettings(t *testing.T) {
 
 		actual, res := testhelpers.SettingsMakeRequest(t, false, false, f, browserUser1, values.Encode())
 		assert.Equal(t, http.StatusOK, res.StatusCode)
-		assert.Contains(t, res.Request.URL.String(), conf.Source().String(config.ViperKeySelfServiceErrorUI))
+		assert.Contains(t, res.Request.URL.String(), conf.GetProvider(ctx).String(config.ViperKeySelfServiceErrorUI))
 
 		assertx.EqualAsJSON(t, x.ErrInvalidCSRFToken, json.RawMessage(actual), "%s", actual)
 	})
@@ -329,7 +330,7 @@ func TestSettings(t *testing.T) {
 
 	var expectSuccess = func(t *testing.T, isAPI, isSPA bool, hc *http.Client, values func(url.Values)) string {
 		return testhelpers.SubmitSettingsForm(t, isAPI, isSPA, hc, publicTS, values, http.StatusOK,
-			testhelpers.ExpectURL(isAPI || isSPA, publicTS.URL+settings.RouteSubmitFlow, conf.SelfServiceFlowSettingsUI().String()))
+			testhelpers.ExpectURL(isAPI || isSPA, publicTS.URL+settings.RouteSubmitFlow, conf.SelfServiceFlowSettingsUI(ctx).String()))
 	}
 
 	t.Run("description=should update the password even if no password was set before", func(t *testing.T) {
@@ -375,9 +376,9 @@ func TestSettings(t *testing.T) {
 
 	t.Run("description=should update the password and perform the correct redirection", func(t *testing.T) {
 		rts := testhelpers.NewRedirTS(t, "", conf)
-		conf.MustSet(config.ViperKeySelfServiceSettingsAfter+"."+config.DefaultBrowserReturnURL, rts.URL+"/return-ts")
+		conf.MustSet(ctx, config.ViperKeySelfServiceSettingsAfter+"."+config.DefaultBrowserReturnURL, rts.URL+"/return-ts")
 		t.Cleanup(func() {
-			conf.MustSet(config.ViperKeySelfServiceSettingsAfter, nil)
+			conf.MustSet(ctx, config.ViperKeySelfServiceSettingsAfter, nil)
 		})
 
 		var run = func(t *testing.T, f *kratos.SelfServiceSettingsFlow, isAPI bool, c *http.Client, id *identity.Identity) {

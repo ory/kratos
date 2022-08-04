@@ -5,6 +5,8 @@ import (
 	"context"
 	stderrs "errors"
 
+	"github.com/hashicorp/go-retryablehttp"
+
 	/* #nosec G505 sha1 is used for k-anonymity */
 	"crypto/sha1"
 	"fmt"
@@ -15,7 +17,6 @@ import (
 
 	"github.com/arbovm/levenshtein"
 	"github.com/dgraph-io/ristretto"
-	"github.com/hashicorp/go-retryablehttp"
 	"github.com/pkg/errors"
 
 	"github.com/ory/herodot"
@@ -158,7 +159,7 @@ func (s *DefaultPasswordValidator) fetch(hpw []byte, apiDNSName string) (int64, 
 }
 
 func (s *DefaultPasswordValidator) Validate(ctx context.Context, identifier, password string) error {
-	passwordPolicyConfig := s.reg.Config(ctx).PasswordPolicyConfig()
+	passwordPolicyConfig := s.reg.Config().PasswordPolicyConfig(ctx)
 
 	if len(password) < int(passwordPolicyConfig.MinPasswordLength) {
 		return errors.Errorf("password length must be at least %d characters but only got %d", passwordPolicyConfig.MinPasswordLength, len(password))
@@ -196,7 +197,7 @@ func (s *DefaultPasswordValidator) Validate(ctx context.Context, identifier, pas
 	}
 
 	v, ok := c.(int64)
-	if ok && v > int64(s.reg.Config(ctx).PasswordPolicyConfig().MaxBreaches) {
+	if ok && v > int64(s.reg.Config().PasswordPolicyConfig(ctx).MaxBreaches) {
 		return errors.WithStack(ErrTooManyBreaches)
 	}
 

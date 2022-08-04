@@ -25,6 +25,7 @@ import (
 )
 
 func TestRecoveryExecutor(t *testing.T) {
+	ctx := context.Background()
 	conf, reg := internal.NewFastRegistryWithMocks(t)
 
 	newServer := func(t *testing.T, i *identity.Identity, ft flow.Type) *httptest.Server {
@@ -33,7 +34,7 @@ func TestRecoveryExecutor(t *testing.T) {
 		router.GET("/recovery/post", func(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 			a, err := recovery.NewFlow(conf, time.Minute, x.FakeCSRFToken, r, reg.RecoveryStrategies(context.Background()), ft)
 			require.NoError(t, err)
-			s, _ := session.NewActiveSession(
+			s, _ := session.NewActiveSession(ctx,
 				i,
 				conf,
 				time.Now().UTC(),
@@ -48,7 +49,7 @@ func TestRecoveryExecutor(t *testing.T) {
 
 		ts := httptest.NewServer(router)
 		t.Cleanup(ts.Close)
-		conf.MustSet(config.ViperKeyPublicBaseURL, ts.URL)
+		conf.MustSet(ctx, config.ViperKeyPublicBaseURL, ts.URL)
 		return ts
 	}
 
@@ -65,7 +66,7 @@ func TestRecoveryExecutor(t *testing.T) {
 
 		t.Run("case=pass if hooks pass", func(t *testing.T) {
 			t.Cleanup(testhelpers.SelfServiceHookConfigReset(t, conf))
-			conf.MustSet(config.HookStrategyKey(config.ViperKeySelfServiceRecoveryAfter, config.HookGlobal),
+			conf.MustSet(ctx, config.HookStrategyKey(config.ViperKeySelfServiceRecoveryAfter, config.HookGlobal),
 				[]config.SelfServiceHook{{Name: "err", Config: []byte(`{}`)}})
 			i := testhelpers.SelfServiceHookFakeIdentity(t)
 			ts := newServer(t, i, flow.TypeBrowser)
@@ -77,7 +78,7 @@ func TestRecoveryExecutor(t *testing.T) {
 
 		t.Run("case=fail if hooks fail", func(t *testing.T) {
 			t.Cleanup(testhelpers.SelfServiceHookConfigReset(t, conf))
-			conf.MustSet(config.HookStrategyKey(config.ViperKeySelfServiceRecoveryAfter, config.HookGlobal),
+			conf.MustSet(ctx, config.HookStrategyKey(config.ViperKeySelfServiceRecoveryAfter, config.HookGlobal),
 				[]config.SelfServiceHook{{Name: "err", Config: []byte(`{"ExecutePostRecoveryHook": "abort"}`)}})
 			i := testhelpers.SelfServiceHookFakeIdentity(t)
 			ts := newServer(t, i, flow.TypeBrowser)

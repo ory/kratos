@@ -54,7 +54,7 @@ func (n *ProviderNetID) oAuth2(ctx context.Context) (*oauth2.Config, error) {
 			TokenURL: tokenURL.String(),
 		},
 		Scopes:      n.config.Scope,
-		RedirectURL: n.config.Redir(n.reg.Config(ctx).OIDCRedirectURIBase()),
+		RedirectURL: n.config.Redir(n.reg.Config().OIDCRedirectURIBase(ctx)),
 	}, nil
 
 }

@@ -4,8 +4,6 @@ import (
 	"context"
 	"time"
 
-	"github.com/ory/kratos/corp"
-
 	"github.com/gofrs/uuid"
 )
 
@@ -50,7 +48,7 @@ func (v RecoveryAddressType) HTMLFormInputType() string {
 }
 
 func (a RecoveryAddress) TableName(ctx context.Context) string {
-	return corp.ContextualizeTableName(ctx, "identity_recovery_addresses")
+	return "identity_recovery_addresses"
 }
 
 func (a RecoveryAddress) ValidateNID() error {

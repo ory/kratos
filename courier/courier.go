@@ -40,7 +40,7 @@ type (
 	}
 
 	ConfigProvider interface {
-		CourierConfig(ctx context.Context) config.CourierConfigs
+		CourierConfig() config.CourierConfigs
 	}
 
 	courier struct {

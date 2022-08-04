@@ -26,8 +26,9 @@ import (
 )
 
 func TestSessionIssuer(t *testing.T) {
+	ctx := context.Background()
 	conf, reg := internal.NewFastRegistryWithMocks(t)
-	conf.MustSet(config.ViperKeyPublicBaseURL, "http://localhost/")
+	conf.MustSet(ctx, config.ViperKeyPublicBaseURL, "http://localhost/")
 	testhelpers.SetDefaultIdentitySchema(conf, "file://./stub/stub.schema.json")
 
 	var r http.Request

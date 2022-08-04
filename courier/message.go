@@ -5,8 +5,6 @@ import (
 	"time"
 
 	"github.com/gofrs/uuid"
-
-	"github.com/ory/kratos/corp"
 )
 
 type MessageStatus int
@@ -45,7 +43,7 @@ type Message struct {
 }
 
 func (m Message) TableName(ctx context.Context) string {
-	return corp.ContextualizeTableName(ctx, "courier_messages")
+	return "courier_messages"
 }
 
 func (m *Message) GetID() uuid.UUID {

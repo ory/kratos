@@ -48,6 +48,7 @@ import (
 const debugRedirects = false
 
 func TestStrategy(t *testing.T) {
+	ctx := context.Background()
 	if testing.Short() {
 		t.Skip()
 	}
@@ -60,7 +61,7 @@ func TestStrategy(t *testing.T) {
 	)
 	remoteAdmin, remotePublic, hydraIntegrationTSURL := newHydra(t, &subject, &claims, &scope)
 	returnTS := newReturnTs(t, reg)
-	conf.MustSet(config.ViperKeyURLsAllowedReturnToDomains, []string{returnTS.URL})
+	conf.MustSet(ctx, config.ViperKeyURLsAllowedReturnToDomains, []string{returnTS.URL})
 	uiTS := newUI(t, reg)
 	errTS := testhelpers.NewErrorTestServer(t, reg)
 	routerP := x.NewRouterPublic()
@@ -82,9 +83,9 @@ func TestStrategy(t *testing.T) {
 		},
 	)
 
-	conf.MustSet(config.ViperKeySelfServiceRegistrationEnabled, true)
+	conf.MustSet(ctx, config.ViperKeySelfServiceRegistrationEnabled, true)
 	testhelpers.SetDefaultIdentitySchema(conf, "file://./stub/registration.schema.json")
-	conf.MustSet(config.HookStrategyKey(config.ViperKeySelfServiceRegistrationAfter,
+	conf.MustSet(ctx, config.HookStrategyKey(config.ViperKeySelfServiceRegistrationAfter,
 		identity.CredentialsTypeOIDC.String()), []config.SelfServiceHook{{Name: "session"}})
 
 	t.Logf("Kratos Public URL: %s", ts.URL)
@@ -507,7 +508,7 @@ func TestStrategy(t *testing.T) {
 	})
 
 	t.Run("method=TestPopulateSignUpMethod", func(t *testing.T) {
-		conf.MustSet(config.ViperKeyPublicBaseURL, "https://foo/")
+		conf.MustSet(ctx, config.ViperKeyPublicBaseURL, "https://foo/")
 
 		sr, err := registration.NewFlow(conf, time.Minute, "nosurf", &http.Request{URL: urlx.ParseOrPanic("/")}, flow.TypeBrowser)
 		require.NoError(t, err)
@@ -517,7 +518,7 @@ func TestStrategy(t *testing.T) {
 	})
 
 	t.Run("method=TestPopulateLoginMethod", func(t *testing.T) {
-		conf.MustSet(config.ViperKeyPublicBaseURL, "https://foo/")
+		conf.MustSet(ctx, config.ViperKeyPublicBaseURL, "https://foo/")
 
 		sr, err := login.NewFlow(conf, time.Minute, "nosurf", &http.Request{URL: urlx.ParseOrPanic("/")}, flow.TypeBrowser)
 		require.NoError(t, err)

@@ -38,8 +38,8 @@ func TestNewSMTP(t *testing.T) {
 	conf, reg := internal.NewFastRegistryWithMocks(t)
 
 	setupCourier := func(stringURL string) courier.Courier {
-		conf.MustSet(config.ViperKeyCourierSMTPURL, stringURL)
-		t.Logf("SMTP URL: %s", conf.CourierSMTPURL().String())
+		conf.MustSet(ctx, config.ViperKeyCourierSMTPURL, stringURL)
+		t.Logf("SMTP URL: %s", conf.CourierSMTPURL(ctx).String())
 
 		return courier.NewCourier(ctx, reg)
 	}
@@ -68,8 +68,8 @@ func TestNewSMTP(t *testing.T) {
 	defer os.Remove(clientCert.Name())
 	defer os.Remove(clientKey.Name())
 
-	conf.Set(config.ViperKeyCourierSMTPClientCertPath, clientCert.Name())
-	conf.Set(config.ViperKeyCourierSMTPClientKeyPath, clientKey.Name())
+	conf.Set(ctx, config.ViperKeyCourierSMTPClientCertPath, clientCert.Name())
+	conf.Set(ctx, config.ViperKeyCourierSMTPClientKeyPath, clientKey.Name())
 
 	clientPEM, err := tls.LoadX509KeyPair(clientCert.Name(), clientKey.Name())
 	require.NoError(t, err)
@@ -82,7 +82,7 @@ func TestNewSMTP(t *testing.T) {
 	assert.Contains(t, smtpWithCert.SmtpDialer().TLSConfig.Certificates, clientPEM, "TLS config should contain client pem")
 
 	//error case: invalid client key
-	conf.Set(config.ViperKeyCourierSMTPClientKeyPath, clientCert.Name()) //mixup client key and client cert
+	conf.Set(ctx, config.ViperKeyCourierSMTPClientKeyPath, clientCert.Name()) //mixup client key and client cert
 	smtpWithCert = setupCourier("smtps://subdomain.my-server:1234/?server_name=my-server")
 	assert.Equal(t, len(smtpWithCert.SmtpDialer().TLSConfig.Certificates), 0, "TLS config certificates should be empty")
 }
@@ -100,8 +100,8 @@ func TestQueueEmail(t *testing.T) {
 	ctx := context.Background()
 
 	conf, reg := internal.NewRegistryDefaultWithDSN(t, "")
-	conf.MustSet(config.ViperKeyCourierSMTPURL, smtp)
-	conf.MustSet(config.ViperKeyCourierSMTPFrom, "test-stub@ory.sh")
+	conf.MustSet(ctx, config.ViperKeyCourierSMTPURL, smtp)
+	conf.MustSet(ctx, config.ViperKeyCourierSMTPFrom, "test-stub@ory.sh")
 	reg.Logger().Level = logrus.TraceLevel
 
 	c := reg.Courier(ctx)
@@ -126,11 +126,12 @@ func TestQueueEmail(t *testing.T) {
 	require.NotEqual(t, uuid.Nil, id)
 
 	// The third email contains a sender name and custom headers
-	conf.MustSet(config.ViperKeyCourierSMTPFromName, "Bob")
-	conf.MustSet(config.ViperKeyCourierSMTPHeaders+".test-stub-header1", "foo")
-	conf.MustSet(config.ViperKeyCourierSMTPHeaders+".test-stub-header2", "bar")
-	customerHeaders := conf.CourierSMTPHeaders()
+	conf.MustSet(ctx, config.ViperKeyCourierSMTPFromName, "Bob")
+	conf.MustSet(ctx, config.ViperKeyCourierSMTPHeaders+".test-stub-header1", "foo")
+	conf.MustSet(ctx, config.ViperKeyCourierSMTPHeaders+".test-stub-header2", "bar")
+	customerHeaders := conf.CourierSMTPHeaders(ctx)
 	require.Len(t, customerHeaders, 2)
+
 	id, err = c.QueueEmail(ctx, templates.NewTestStub(reg, &templates.TestStubModel{
 		To:      "test-recipient-3@example.org",
 		Subject: "test-subject-3",

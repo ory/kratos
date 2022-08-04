@@ -35,6 +35,7 @@ import (
 )
 
 func TestVerification(t *testing.T) {
+	ctx := context.Background()
 	conf, reg := internal.NewFastRegistryWithMocks(t)
 	initViper(t, conf)
 
@@ -69,7 +70,7 @@ func TestVerification(t *testing.T) {
 		}
 
 		return testhelpers.SubmitVerificationForm(t, isAPI, isSPA, hc, public, values, c,
-			testhelpers.ExpectURL(isAPI || isSPA, public.URL+verification.RouteSubmitFlow, conf.SelfServiceFlowVerificationUI().String()))
+			testhelpers.ExpectURL(isAPI || isSPA, public.URL+verification.RouteSubmitFlow, conf.SelfServiceFlowVerificationUI(ctx).String()))
 	}
 
 	var expectValidationError = func(t *testing.T, hc *http.Client, isAPI, isSPA bool, values func(url.Values)) string {
@@ -103,7 +104,7 @@ func TestVerification(t *testing.T) {
 		res, err := c.PostForm(rs.Ui.Action, url.Values{"method": {"not-link"}, "email": {verificationEmail}})
 		require.NoError(t, err)
 		assert.EqualValues(t, http.StatusOK, res.StatusCode)
-		assert.Contains(t, res.Request.URL.String(), conf.SelfServiceFlowVerificationUI().String())
+		assert.Contains(t, res.Request.URL.String(), conf.SelfServiceFlowVerificationUI(ctx).String())
 
 		body := ioutilx.MustReadAll(res.Body)
 		require.NoError(t, res.Body.Close())
@@ -199,7 +200,7 @@ func TestVerification(t *testing.T) {
 		res, err := c.Get(public.URL + verification.RouteSubmitFlow + "?flow=" + f.Id + "&token=i-do-not-exist")
 		require.NoError(t, err)
 		assert.Equal(t, http.StatusOK, res.StatusCode)
-		assert.Contains(t, res.Request.URL.String(), conf.SelfServiceFlowVerificationUI().String()+"?flow=")
+		assert.Contains(t, res.Request.URL.String(), conf.SelfServiceFlowVerificationUI(ctx).String()+"?flow=")
 
 		sr, _, err := testhelpers.NewSDKCustomClient(public, c).V0alpha2Api.GetSelfServiceVerificationFlow(context.Background()).Id(res.Request.URL.Query().Get("flow")).Execute()
 		require.NoError(t, err)
@@ -209,9 +210,9 @@ func TestVerification(t *testing.T) {
 	})
 
 	t.Run("description=should not be able to use an outdated link", func(t *testing.T) {
-		conf.MustSet(config.ViperKeySelfServiceVerificationRequestLifespan, time.Millisecond*200)
+		conf.MustSet(ctx, config.ViperKeySelfServiceVerificationRequestLifespan, time.Millisecond*200)
 		t.Cleanup(func() {
-			conf.MustSet(config.ViperKeySelfServiceVerificationRequestLifespan, time.Minute)
+			conf.MustSet(ctx, config.ViperKeySelfServiceVerificationRequestLifespan, time.Minute)
 		})
 
 		c := testhelpers.NewClientWithCookies(t)
@@ -223,13 +224,13 @@ func TestVerification(t *testing.T) {
 		require.NoError(t, err)
 		assert.EqualValues(t, http.StatusOK, res.StatusCode)
 		assert.NotContains(t, res.Request.URL.String(), "flow="+rs.Id)
-		assert.Contains(t, res.Request.URL.String(), conf.SelfServiceFlowVerificationUI().String())
+		assert.Contains(t, res.Request.URL.String(), conf.SelfServiceFlowVerificationUI(ctx).String())
 	})
 
 	t.Run("description=should not be able to use an outdated flow", func(t *testing.T) {
-		conf.MustSet(config.ViperKeySelfServiceVerificationRequestLifespan, time.Millisecond*200)
+		conf.MustSet(ctx, config.ViperKeySelfServiceVerificationRequestLifespan, time.Millisecond*200)
 		t.Cleanup(func() {
-			conf.MustSet(config.ViperKeySelfServiceVerificationRequestLifespan, time.Minute)
+			conf.MustSet(ctx, config.ViperKeySelfServiceVerificationRequestLifespan, time.Minute)
 		})
 
 		c := testhelpers.NewClientWithCookies(t)
@@ -248,7 +249,7 @@ func TestVerification(t *testing.T) {
 		require.NoError(t, err)
 
 		assert.EqualValues(t, http.StatusOK, res.StatusCode)
-		assert.Contains(t, res.Request.URL.String(), conf.SelfServiceFlowVerificationUI().String())
+		assert.Contains(t, res.Request.URL.String(), conf.SelfServiceFlowVerificationUI(ctx).String())
 		assert.NotContains(t, res.Request.URL.String(), gjson.Get(body, "id").String())
 
 		sr, _, err := testhelpers.NewSDKCustomClient(public, c).V0alpha2Api.GetSelfServiceVerificationFlow(context.Background()).Id(res.Request.URL.Query().Get("flow")).Execute()
@@ -278,7 +279,7 @@ func TestVerification(t *testing.T) {
 			defer res.Body.Close()
 
 			assert.Equal(t, http.StatusOK, res.StatusCode)
-			assert.Contains(t, res.Request.URL.String(), conf.SelfServiceFlowVerificationUI().String())
+			assert.Contains(t, res.Request.URL.String(), conf.SelfServiceFlowVerificationUI(ctx).String())
 			body := string(ioutilx.MustReadAll(res.Body))
 			assert.EqualValues(t, "passed_challenge", gjson.Get(body, "state").String())
 			assert.EqualValues(t, text.NewInfoSelfServiceVerificationSuccessful().Text, gjson.Get(body, "ui.messages.0.text").String())
@@ -357,16 +358,16 @@ func TestVerification(t *testing.T) {
 
 	t.Run("case=respects return_to URI parameter", func(t *testing.T) {
 		returnToURL := public.URL + "/after-verification"
-		conf.MustSet(config.ViperKeyURLsAllowedReturnToDomains, []string{returnToURL})
+		conf.MustSet(ctx, config.ViperKeyURLsAllowedReturnToDomains, []string{returnToURL})
 		client := &http.Client{
 			CheckRedirect: func(req *http.Request, via []*http.Request) error {
 				return http.ErrUseLastResponse
 			},
 		}
 
-		conf.MustSet(config.ViperKeySelfServiceVerificationRequestLifespan, time.Millisecond*200)
+		conf.MustSet(ctx, config.ViperKeySelfServiceVerificationRequestLifespan, time.Millisecond*200)
 		t.Cleanup(func() {
-			conf.MustSet(config.ViperKeySelfServiceVerificationRequestLifespan, time.Minute)
+			conf.MustSet(ctx, config.ViperKeySelfServiceVerificationRequestLifespan, time.Minute)
 		})
 
 		flow, token := newValidFlow(t, public.URL+verification.RouteInitBrowserFlow+"?"+url.Values{"return_to": {returnToURL}}.Encode())

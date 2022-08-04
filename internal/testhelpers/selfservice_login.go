@@ -27,13 +27,14 @@ import (
 )
 
 func NewLoginUIFlowEchoServer(t *testing.T, reg driver.Registry) *httptest.Server {
+	ctx := context.Background()
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		e, err := reg.LoginFlowPersister().GetLoginFlow(r.Context(), x.ParseUUID(r.URL.Query().Get("flow")))
 		require.NoError(t, err)
 		reg.Writer().Write(w, r, e)
 	}))
 	ts.URL = strings.Replace(ts.URL, "127.0.0.1", "localhost", -1)
-	reg.Config(context.Background()).MustSet(config.ViperKeySelfServiceLoginUI, ts.URL+"/login-ts")
+	reg.Config().MustSet(ctx, config.ViperKeySelfServiceLoginUI, ts.URL+"/login-ts")
 	t.Cleanup(ts.Close)
 	return ts
 }
@@ -43,7 +44,8 @@ func NewLoginUIWith401Response(t *testing.T, c *config.Config) *httptest.Server 
 		w.WriteHeader(http.StatusUnauthorized)
 	}))
 	ts.URL = strings.Replace(ts.URL, "127.0.0.1", "localhost", -1)
-	c.MustSet(config.ViperKeySelfServiceLoginUI, ts.URL+"/login-ts")
+	ctx := context.Background()
+	c.MustSet(ctx, config.ViperKeySelfServiceLoginUI, ts.URL+"/login-ts")
 	t.Cleanup(ts.Close)
 	return ts
 }

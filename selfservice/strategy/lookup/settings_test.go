@@ -53,7 +53,7 @@ func createIdentity(t *testing.T, reg driver.Registry) (*identity.Identity, []lo
 	}
 	identifier := x.NewUUID().String() + "@ory.sh"
 	password := x.NewUUID().String()
-	p, err := reg.Hasher().Generate(context.Background(), []byte(password))
+	p, err := reg.Hasher(context.Background()).Generate(context.Background(), []byte(password))
 	require.NoError(t, err)
 	i := &identity.Identity{
 		Traits: identity.Traits(fmt.Sprintf(`{"subject":"%s"}`, identifier)),
@@ -87,11 +87,12 @@ func createIdentity(t *testing.T, reg driver.Registry) (*identity.Identity, []lo
 }
 
 func TestCompleteSettings(t *testing.T) {
+	ctx := context.Background()
 	conf, reg := internal.NewFastRegistryWithMocks(t)
-	conf.MustSet(config.ViperKeySelfServiceStrategyConfig+"."+string(identity.CredentialsTypePassword)+".enabled", false)
-	conf.MustSet(config.ViperKeySelfServiceStrategyConfig+".profile.enabled", false)
-	conf.MustSet(config.ViperKeySelfServiceStrategyConfig+"."+string(identity.CredentialsTypeLookup)+".enabled", true)
-	conf.MustSet(config.ViperKeySelfServiceSettingsRequiredAAL, "aal1")
+	conf.MustSet(ctx, config.ViperKeySelfServiceStrategyConfig+"."+string(identity.CredentialsTypePassword)+".enabled", false)
+	conf.MustSet(ctx, config.ViperKeySelfServiceStrategyConfig+".profile.enabled", false)
+	conf.MustSet(ctx, config.ViperKeySelfServiceStrategyConfig+"."+string(identity.CredentialsTypeLookup)+".enabled", true)
+	conf.MustSet(ctx, config.ViperKeySelfServiceSettingsRequiredAAL, "aal1")
 
 	router := x.NewRouterPublic()
 	publicTS, _ := testhelpers.NewKratosServerWithRouters(t, reg, router, x.NewRouterAdmin())
@@ -101,10 +102,10 @@ func TestCompleteSettings(t *testing.T) {
 	_ = testhelpers.NewRedirSessionEchoTS(t, reg)
 	loginTS := testhelpers.NewLoginUIFlowEchoServer(t, reg)
 
-	conf.MustSet(config.ViperKeySelfServiceSettingsPrivilegedAuthenticationAfter, "1m")
+	conf.MustSet(ctx, config.ViperKeySelfServiceSettingsPrivilegedAuthenticationAfter, "1m")
 
 	testhelpers.SetDefaultIdentitySchema(conf, "file://./stub/login.schema.json")
-	conf.MustSet(config.ViperKeySecretsDefault, []string{"not-a-secure-session-key"})
+	conf.MustSet(ctx, config.ViperKeySecretsDefault, []string{"not-a-secure-session-key"})
 
 	doAPIFlow := func(t *testing.T, v func(url.Values), id *identity.Identity) (string, *http.Response) {
 		apiClient := testhelpers.NewHTTPClientWithIdentitySessionToken(t, reg, id)
@@ -202,9 +203,9 @@ func TestCompleteSettings(t *testing.T) {
 	})
 
 	t.Run("type=can not reveal or regenerate or remove without privileged session", func(t *testing.T) {
-		conf.MustSet(config.ViperKeySelfServiceSettingsPrivilegedAuthenticationAfter, "1ns")
+		conf.MustSet(ctx, config.ViperKeySelfServiceSettingsPrivilegedAuthenticationAfter, "1ns")
 		t.Cleanup(func() {
-			conf.MustSet(config.ViperKeySelfServiceSettingsPrivilegedAuthenticationAfter, "5m")
+			conf.MustSet(ctx, config.ViperKeySelfServiceSettingsPrivilegedAuthenticationAfter, "5m")
 		})
 
 		id, codes := createIdentity(t, reg)

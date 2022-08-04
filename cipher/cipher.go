@@ -18,5 +18,5 @@ type Cipher interface {
 }
 
 type Provider interface {
-	Cipher() Cipher
+	Cipher(ctx context.Context) Cipher
 }

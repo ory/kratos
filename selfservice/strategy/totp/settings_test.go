@@ -38,11 +38,12 @@ import (
 )
 
 func TestCompleteSettings(t *testing.T) {
+	ctx := context.Background()
 	conf, reg := internal.NewFastRegistryWithMocks(t)
-	conf.MustSet(config.ViperKeySelfServiceStrategyConfig+"."+string(identity.CredentialsTypePassword), map[string]interface{}{"enabled": false})
-	conf.MustSet(config.ViperKeySelfServiceStrategyConfig+".profile", map[string]interface{}{"enabled": false})
-	conf.MustSet(config.ViperKeySelfServiceStrategyConfig+"."+string(identity.CredentialsTypeTOTP), map[string]interface{}{"enabled": true})
-	conf.MustSet(config.ViperKeySelfServiceSettingsRequiredAAL, "aal1")
+	conf.MustSet(ctx, config.ViperKeySelfServiceStrategyConfig+"."+string(identity.CredentialsTypePassword), map[string]interface{}{"enabled": false})
+	conf.MustSet(ctx, config.ViperKeySelfServiceStrategyConfig+".profile", map[string]interface{}{"enabled": false})
+	conf.MustSet(ctx, config.ViperKeySelfServiceStrategyConfig+"."+string(identity.CredentialsTypeTOTP), map[string]interface{}{"enabled": true})
+	conf.MustSet(ctx, config.ViperKeySelfServiceSettingsRequiredAAL, "aal1")
 
 	router := x.NewRouterPublic()
 	publicTS, _ := testhelpers.NewKratosServerWithRouters(t, reg, router, x.NewRouterAdmin())
@@ -52,10 +53,10 @@ func TestCompleteSettings(t *testing.T) {
 	_ = testhelpers.NewRedirSessionEchoTS(t, reg)
 	loginTS := testhelpers.NewLoginUIFlowEchoServer(t, reg)
 
-	conf.MustSet(config.ViperKeySelfServiceSettingsPrivilegedAuthenticationAfter, "1m")
+	conf.MustSet(ctx, config.ViperKeySelfServiceSettingsPrivilegedAuthenticationAfter, "1m")
 
 	testhelpers.SetDefaultIdentitySchema(conf, "file://./stub/settings.schema.json")
-	conf.MustSet(config.ViperKeySecretsDefault, []string{"not-a-secure-session-key"})
+	conf.MustSet(ctx, config.ViperKeySecretsDefault, []string{"not-a-secure-session-key"})
 
 	t.Run("case=device unlinking is available when identity has totp", func(t *testing.T) {
 		id, _, _ := createIdentity(t, reg)
@@ -138,9 +139,9 @@ func TestCompleteSettings(t *testing.T) {
 	})
 
 	t.Run("type=can not unlink without privileged session", func(t *testing.T) {
-		conf.MustSet(config.ViperKeySelfServiceSettingsPrivilegedAuthenticationAfter, "1ns")
+		conf.MustSet(ctx, config.ViperKeySelfServiceSettingsPrivilegedAuthenticationAfter, "1ns")
 		t.Cleanup(func() {
-			conf.MustSet(config.ViperKeySelfServiceSettingsPrivilegedAuthenticationAfter, "5m")
+			conf.MustSet(ctx, config.ViperKeySelfServiceSettingsPrivilegedAuthenticationAfter, "5m")
 		})
 
 		id, _, key := createIdentity(t, reg)
@@ -180,9 +181,9 @@ func TestCompleteSettings(t *testing.T) {
 	})
 
 	t.Run("type=can not set up new totp device without privileged session", func(t *testing.T) {
-		conf.MustSet(config.ViperKeySelfServiceSettingsPrivilegedAuthenticationAfter, "1ns")
+		conf.MustSet(ctx, config.ViperKeySelfServiceSettingsPrivilegedAuthenticationAfter, "1ns")
 		t.Cleanup(func() {
-			conf.MustSet(config.ViperKeySelfServiceSettingsPrivilegedAuthenticationAfter, "5m")
+			conf.MustSet(ctx, config.ViperKeySelfServiceSettingsPrivilegedAuthenticationAfter, "5m")
 		})
 
 		id := createIdentityWithoutTOTP(t, reg)

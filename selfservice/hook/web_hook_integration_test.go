@@ -723,10 +723,11 @@ func TestWebHooks(t *testing.T) {
 }
 
 func TestDisallowPrivateIPRanges(t *testing.T) {
+	ctx := context.Background()
 	conf, reg := internal.NewFastRegistryWithMocks(t)
-	conf.MustSet(config.ViperKeyClientHTTPNoPrivateIPRanges, true)
+	conf.MustSet(ctx, config.ViperKeyClientHTTPNoPrivateIPRanges, true)
 	logger := logrusx.New("kratos", "test")
-	whDeps := x.SimpleLoggerWithClient{L: logger, C: reg.HTTPClient(context.Background()), T: otelx.NewNoop(logger, conf.Tracing())}
+	whDeps := x.SimpleLoggerWithClient{L: logger, C: reg.HTTPClient(context.Background()), T: otelx.NewNoop(logger, conf.Tracing(ctx))}
 
 	req := &http.Request{
 		Header: map[string][]string{"Some-Header": {"Some-Value"}},

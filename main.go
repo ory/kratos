@@ -16,7 +16,6 @@
 package main
 
 import (
-	"github.com/ory/kratos/corp"
 	"github.com/ory/kratos/driver"
 	"github.com/ory/x/dbal"
 	"github.com/ory/x/profilex"
@@ -25,8 +24,6 @@ import (
 )
 
 func main() {
-	corp.SetContextualizer(new(corp.ContextNoOp))
-
 	defer profilex.Profile().Stop()
 	dbal.RegisterDriver(func() dbal.Driver {
 		return driver.NewRegistryDefault()

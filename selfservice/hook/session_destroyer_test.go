@@ -28,9 +28,10 @@ func init() {
 }
 
 func TestSessionDestroyer(t *testing.T) {
+	ctx := context.Background()
 	conf, reg := internal.NewFastRegistryWithMocks(t)
 
-	conf.MustSet(config.ViperKeyPublicBaseURL, "http://localhost/")
+	conf.MustSet(ctx, config.ViperKeyPublicBaseURL, "http://localhost/")
 	testhelpers.SetDefaultIdentitySchema(conf, "file://./stub/stub.schema.json")
 
 	h := hook.NewSessionDestroyer(reg)
