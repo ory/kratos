@@ -36,7 +36,7 @@ func (h *Bcrypt) Generate(ctx context.Context, password []byte) ([]byte, error) 
 		return nil, err
 	}
 
-	cost := int(h.c.Config(ctx).HasherBcrypt().Cost)
+	cost := int(h.c.Config().HasherBcrypt(ctx).Cost)
 	span.SetAttributes(attribute.Int("bcrypt.cost", cost))
 	hash, err := bcrypt.GenerateFromPassword(password, cost)
 	if err != nil {

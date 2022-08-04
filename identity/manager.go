@@ -66,7 +66,7 @@ func newManagerOptions(opts []ManagerOption) *managerOptions {
 
 func (m *Manager) Create(ctx context.Context, i *Identity, opts ...ManagerOption) error {
 	if i.SchemaID == "" {
-		i.SchemaID = m.r.Config(ctx).DefaultIdentityTraitsSchemaID()
+		i.SchemaID = m.r.Config().DefaultIdentityTraitsSchemaID(ctx)
 	}
 
 	o := newManagerOptions(opts)

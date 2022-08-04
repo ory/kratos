@@ -181,7 +181,7 @@ func TestLoadTextTemplate(t *testing.T) {
 		})
 
 		t.Run("case=disallowed resources", func(t *testing.T) {
-			require.NoError(t, reg.Config(ctx).Source().Set(config.ViperKeyClientHTTPNoPrivateIPRanges, true))
+			require.NoError(t, reg.Config().GetProvider(ctx).Set(config.ViperKeyClientHTTPNoPrivateIPRanges, true))
 			reg.HTTPClient(ctx).RetryMax = 1
 			reg.HTTPClient(ctx).RetryWaitMax = time.Millisecond
 

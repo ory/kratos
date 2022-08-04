@@ -24,9 +24,10 @@ import (
 )
 
 func TestGetFlow(t *testing.T) {
+	ctx := context.Background()
 	conf, reg := internal.NewFastRegistryWithMocks(t)
-	conf.MustSet(config.ViperKeySelfServiceVerificationEnabled, true)
-	conf.MustSet(config.ViperKeySelfServiceStrategyConfig+"."+verification.StrategyVerificationLinkName,
+	conf.MustSet(ctx, config.ViperKeySelfServiceVerificationEnabled, true)
+	conf.MustSet(ctx, config.ViperKeySelfServiceStrategyConfig+"."+verification.StrategyVerificationLinkName,
 		map[string]interface{}{"enabled": true})
 	testhelpers.SetDefaultIdentitySchema(conf, "file://./stub/identity.schema.json")
 
@@ -40,7 +41,7 @@ func TestGetFlow(t *testing.T) {
 			require.NoError(t, err)
 		}))
 		t.Cleanup(ts.Close)
-		conf.MustSet(config.ViperKeySelfServiceVerificationUI, ts.URL)
+		conf.MustSet(ctx, config.ViperKeySelfServiceVerificationUI, ts.URL)
 		return ts
 	}
 
@@ -111,7 +112,7 @@ func TestGetFlow(t *testing.T) {
 
 	t.Run("case=expired with return_to", func(t *testing.T) {
 		returnTo := "https://www.ory.sh"
-		conf.MustSet(config.ViperKeyURLsAllowedReturnToDomains, []string{returnTo})
+		conf.MustSet(ctx, config.ViperKeyURLsAllowedReturnToDomains, []string{returnTo})
 
 		client := testhelpers.NewClientWithCookies(t)
 		_ = setupVerificationUI(t, client)
@@ -143,7 +144,7 @@ func TestGetFlow(t *testing.T) {
 	t.Run("case=relative redirect when self-service verification ui is a relative URL", func(t *testing.T) {
 		router := x.NewRouterPublic()
 		ts, _ := testhelpers.NewKratosServerWithRouters(t, reg, router, x.NewRouterAdmin())
-		reg.Config(context.Background()).MustSet(config.ViperKeySelfServiceVerificationUI, "/verification-ts")
+		reg.Config().MustSet(ctx, config.ViperKeySelfServiceVerificationUI, "/verification-ts")
 		assert.Regexp(
 			t,
 			"^/verification-ts.*$",

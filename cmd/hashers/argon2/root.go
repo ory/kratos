@@ -76,7 +76,7 @@ func configProvider(cmd *cobra.Command, flagConf *argon2Config) (*argon2Config, 
 		_, _ = fmt.Fprintf(cmd.ErrOrStderr(), "Unable to initialize the config provider: %s\n", err)
 		return nil, cmdx.FailSilently(cmd)
 	}
-	conf.localConfig = *conf.config.HasherArgon2()
+	conf.localConfig = *conf.config.HasherArgon2(cmd.Context())
 
 	if cmd.Flags().Changed(FlagIterations) {
 		conf.localConfig.Iterations = flagConf.localConfig.Iterations
@@ -110,10 +110,11 @@ type (
 	argon2Config struct {
 		localConfig config.Argon2
 		config      *config.Config
+		ctx         context.Context
 	}
 )
 
-var _ cmdx.TableRow = &argon2Config{}
+var _ cmdx.TableRow = (*argon2Config)(nil)
 
 func (c *argon2Config) Header() []string {
 	var header []string
@@ -145,7 +146,7 @@ func (c *argon2Config) Interface() interface{} {
 	return i
 }
 
-func (c *argon2Config) Config(_ context.Context) *config.Config {
+func (c *argon2Config) Config() *config.Config {
 	ac, _ := c.HasherArgon2()
 	for k, v := range map[string]interface{}{
 		config.ViperKeyHasherArgon2ConfigIterations:        ac.Iterations,
@@ -157,7 +158,7 @@ func (c *argon2Config) Config(_ context.Context) *config.Config {
 		config.ViperKeyHasherArgon2ConfigExpectedDuration:  ac.ExpectedDuration,
 		config.ViperKeyHasherArgon2ConfigExpectedDeviation: ac.ExpectedDeviation,
 	} {
-		_ = c.config.Set(k, v)
+		_ = c.config.Set(c.ctx, k, v)
 	}
 	return c.config
 }

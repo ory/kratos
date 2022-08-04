@@ -37,7 +37,7 @@ func (h *Handler) importPasswordCredentials(ctx context.Context, i *Identity, cr
 	hashed := []byte(creds.Config.HashedPassword)
 	if len(creds.Config.Password) > 0 {
 		// Importing a clear text password
-		hashed, err = h.r.Hasher().Generate(ctx, []byte(creds.Config.Password))
+		hashed, err = h.r.Hasher(ctx).Generate(ctx, []byte(creds.Config.Password))
 		if err != nil {
 			return err
 		}

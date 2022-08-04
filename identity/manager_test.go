@@ -23,8 +23,8 @@ import (
 func TestManager(t *testing.T) {
 	conf, reg := internal.NewFastRegistryWithMocks(t)
 	testhelpers.SetDefaultIdentitySchema(conf, "file://./stub/manager.schema.json")
-	conf.MustSet(config.ViperKeyPublicBaseURL, "https://www.ory.sh/")
-	conf.MustSet(config.ViperKeyCourierSMTPURL, "smtp://foo@bar@dev.null/")
+	conf.MustSet(ctx, config.ViperKeyPublicBaseURL, "https://www.ory.sh/")
+	conf.MustSet(ctx, config.ViperKeyCourierSMTPURL, "smtp://foo@bar@dev.null/")
 
 	t.Run("case=should fail to create because validation fails", func(t *testing.T) {
 		i := identity.NewIdentity(config.DefaultIdentityTraitsSchemaID)
@@ -256,11 +256,11 @@ func TestManager(t *testing.T) {
 
 func TestManagerNoDefaultNamedSchema(t *testing.T) {
 	conf, reg := internal.NewFastRegistryWithMocks(t)
-	conf.MustSet(config.ViperKeyDefaultIdentitySchemaID, "user_v0")
-	conf.MustSet(config.ViperKeyIdentitySchemas, config.Schemas{
+	conf.MustSet(ctx, config.ViperKeyDefaultIdentitySchemaID, "user_v0")
+	conf.MustSet(ctx, config.ViperKeyIdentitySchemas, config.Schemas{
 		{ID: "user_v0", URL: "file://./stub/manager.schema.json"},
 	})
-	conf.MustSet(config.ViperKeyPublicBaseURL, "https://www.ory.sh/")
+	conf.MustSet(ctx, config.ViperKeyPublicBaseURL, "https://www.ory.sh/")
 
 	t.Run("case=should create identity with default schema", func(t *testing.T) {
 		stateChangedAt := sqlxx.NullTime(time.Now().UTC())

@@ -7,7 +7,7 @@ import (
 )
 
 func (c *courier) DispatchMessage(ctx context.Context, msg Message) error {
-	maxRetries := c.deps.CourierConfig(ctx).CourierMessageRetries()
+	maxRetries := c.deps.CourierConfig().CourierMessageRetries(ctx)
 
 	if msg.SendCount > maxRetries {
 		if err := c.deps.CourierPersister().SetMessageStatus(ctx, msg.ID, MessageStatusAbandoned); err != nil {

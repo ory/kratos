@@ -1,6 +1,7 @@
 package x_test
 
 import (
+	"context"
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
@@ -24,8 +25,9 @@ import (
 )
 
 func TestNosurfBaseCookieHandler(t *testing.T) {
+	ctx := context.Background()
 	conf, reg := internal.NewFastRegistryWithMocks(t)
-	require.NoError(t, conf.Source().Set(config.ViperKeyPublicBaseURL, "http://foo.com/bar"))
+	require.NoError(t, conf.Set(ctx, config.ViperKeyPublicBaseURL, "http://foo.com/bar"))
 
 	cookie := x.NosurfBaseCookieHandler(reg)(httptest.NewRecorder(), httptest.NewRequest("GET", "https://foo/bar", nil))
 	assert.EqualValues(t, "csrf_token_01c86631efd1537ee34a98e75884a6e21dd8e2d9e944934bca21204106bfd32f", cookie.Name, "base64 representation of http://foo.com/bar")
@@ -38,15 +40,15 @@ func TestNosurfBaseCookieHandler(t *testing.T) {
 
 	alNum := regexp.MustCompile("[a-zA-Z_0-9]+")
 	for i := 0; i < 10; i++ {
-		require.NoError(t, conf.Source().Set(config.ViperKeyPublicBaseURL, randx.MustString(16, randx.AlphaNum)))
+		require.NoError(t, conf.Set(ctx, config.ViperKeyPublicBaseURL, randx.MustString(16, randx.AlphaNum)))
 		cookie := x.NosurfBaseCookieHandler(reg)(httptest.NewRecorder(), httptest.NewRequest("GET", "https://foo/bar", nil))
 
 		assert.NotEqual(t, "aHR0cDovL2Zvby5jb20vYmFy_csrf_token", cookie.Name, "should no longer be http://foo.com/bar")
 		assert.True(t, alNum.MatchString(cookie.Name), "does not have any special chars")
 	}
 
-	require.NoError(t, conf.Set(config.ViperKeyCookieSameSite, "None"))
-	require.NoError(t, conf.Source().Set("dev", false))
+	require.NoError(t, conf.Set(ctx, config.ViperKeyCookieSameSite, "None"))
+	require.NoError(t, conf.Set(ctx, "dev", false))
 	cookie = x.NosurfBaseCookieHandler(reg)(httptest.NewRecorder(), httptest.NewRequest("GET", "https://foo/bar", nil))
 	assert.EqualValues(t, http.SameSiteNoneMode, cookie.SameSite, "can be none because https/secure is true")
 	assert.True(t, cookie.Secure, "true because secure mode")
@@ -54,17 +56,18 @@ func TestNosurfBaseCookieHandler(t *testing.T) {
 }
 
 func TestNosurfBaseCookieHandlerAliasing(t *testing.T) {
+	ctx := context.Background()
 	conf, reg := internal.NewFastRegistryWithMocks(t)
 
-	require.NoError(t, conf.Source().Set(config.ViperKeyPublicBaseURL, "http://foo.com/bar"))
+	require.NoError(t, conf.Set(ctx, config.ViperKeyPublicBaseURL, "http://foo.com/bar"))
 
 	cookie := x.NosurfBaseCookieHandler(reg)(httptest.NewRecorder(), httptest.NewRequest("GET", "http://foo.com/bar", nil))
 	assert.EqualValues(t, "", cookie.Domain, "remains unset")
 	assert.EqualValues(t, "/", cookie.Path, "cookie path is site root by default")
 
 	// Check root settings
-	require.NoError(t, conf.Source().Set(config.ViperKeyCookieDomain, "bar.com"))
-	require.NoError(t, conf.Source().Set(config.ViperKeyCookiePath, "/baz"))
+	require.NoError(t, conf.Set(ctx, config.ViperKeyCookieDomain, "bar.com"))
+	require.NoError(t, conf.Set(ctx, config.ViperKeyCookiePath, "/baz"))
 	cookie = x.NosurfBaseCookieHandler(reg)(httptest.NewRecorder(), httptest.NewRequest("GET", "http://foo.com/bar", nil))
 	assert.EqualValues(t, "bar.com", cookie.Domain, "domain doesn't change when request not from an alias but is overwritten by ViperKeyCookieDomain")
 	assert.EqualValues(t, "/baz", cookie.Path, "cookie path is site root by default but is overwritten by ViperKeyCookiePath")

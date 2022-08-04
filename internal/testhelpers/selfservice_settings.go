@@ -31,12 +31,13 @@ import (
 )
 
 func NewSettingsUIFlowEchoServer(t *testing.T, reg driver.Registry) *httptest.Server {
+	ctx := context.Background()
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		e, err := reg.SettingsFlowPersister().GetSettingsFlow(r.Context(), x.ParseUUID(r.URL.Query().Get("flow")))
 		require.NoError(t, err)
 		reg.Writer().Write(w, r, e)
 	}))
-	reg.Config(context.Background()).MustSet(config.ViperKeySelfServiceSettingsURL, ts.URL+"/settings-ts")
+	reg.Config().MustSet(ctx, config.ViperKeySelfServiceSettingsURL, ts.URL+"/settings-ts")
 	t.Cleanup(ts.Close)
 	return ts
 }
@@ -119,8 +120,9 @@ func NewSettingsUITestServer(t *testing.T, conf *config.Config) *httptest.Server
 	ts := httptest.NewServer(router)
 	t.Cleanup(ts.Close)
 
-	conf.MustSet(config.ViperKeySelfServiceSettingsURL, ts.URL+"/settings")
-	conf.MustSet(config.ViperKeySelfServiceLoginUI, ts.URL+"/login")
+	ctx := context.Background()
+	conf.MustSet(ctx, config.ViperKeySelfServiceSettingsURL, ts.URL+"/settings")
+	conf.MustSet(ctx, config.ViperKeySelfServiceLoginUI, ts.URL+"/login")
 
 	return ts
 }
@@ -139,8 +141,9 @@ func NewSettingsUIEchoServer(t *testing.T, reg *driver.RegistryDefault) *httptes
 	ts := httptest.NewServer(router)
 	t.Cleanup(ts.Close)
 
-	reg.Config(context.Background()).MustSet(config.ViperKeySelfServiceSettingsURL, ts.URL+"/settings")
-	reg.Config(context.Background()).MustSet(config.ViperKeySelfServiceLoginUI, ts.URL+"/login")
+	ctx := context.Background()
+	reg.Config().MustSet(ctx, config.ViperKeySelfServiceSettingsURL, ts.URL+"/settings")
+	reg.Config().MustSet(ctx, config.ViperKeySelfServiceLoginUI, ts.URL+"/login")
 
 	return ts
 }
@@ -151,7 +154,7 @@ func NewSettingsLoginAcceptAPIServer(t *testing.T, publicClient *kratos.APIClien
 		require.Equal(t, 0, called)
 		called++
 
-		conf.MustSet(config.ViperKeySelfServiceSettingsPrivilegedAuthenticationAfter, "5m")
+		conf.MustSet(r.Context(), config.ViperKeySelfServiceSettingsPrivilegedAuthenticationAfter, "5m")
 
 		res, _, err := publicClient.V0alpha2Api.GetSelfServiceLoginFlow(context.Background()).Id(r.URL.Query().Get("flow")).Execute()
 
@@ -165,11 +168,13 @@ func NewSettingsLoginAcceptAPIServer(t *testing.T, publicClient *kratos.APIClien
 	t.Cleanup(func() {
 		loginTS.Close()
 	})
-	conf.MustSet(config.ViperKeySelfServiceLoginUI, loginTS.URL+"/login")
+	ctx := context.Background()
+	conf.MustSet(ctx, config.ViperKeySelfServiceLoginUI, loginTS.URL+"/login")
 	return loginTS
 }
 
 func NewSettingsAPIServer(t *testing.T, reg *driver.RegistryDefault, ids map[string]*identity.Identity) (*httptest.Server, *httptest.Server, map[string]*http.Client) {
+	ctx := context.Background()
 	public, admin := x.NewRouterPublic(), x.NewRouterAdmin()
 	reg.SettingsHandler().RegisterAdminRoutes(admin)
 
@@ -188,8 +193,8 @@ func NewSettingsAPIServer(t *testing.T, reg *driver.RegistryDefault, ids map[str
 	t.Cleanup(tsp.Close)
 	t.Cleanup(tsa.Close)
 
-	reg.Config(context.Background()).MustSet(config.ViperKeyPublicBaseURL, tsp.URL)
-	reg.Config(context.Background()).MustSet(config.ViperKeyAdminBaseURL, tsa.URL)
+	reg.Config().MustSet(ctx, config.ViperKeyPublicBaseURL, tsp.URL)
+	reg.Config().MustSet(ctx, config.ViperKeyAdminBaseURL, tsa.URL)
 	// #nosec G112
 	return tsp, tsa, AddAndLoginIdentities(t, reg, &httptest.Server{Config: &http.Server{Handler: public}, URL: tsp.URL}, ids)
 }

@@ -15,6 +15,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/ory/x/contextx"
+
 	"github.com/ory/jsonschema/v3/httploader"
 	"github.com/ory/x/httpx"
 	"github.com/ory/x/otelx"
@@ -233,31 +235,32 @@ type (
 		Subject string                    `json:"subject"`
 	}
 	Config struct {
-		l              *logrusx.Logger
-		p              *configx.Provider
-		identitySchema *jsonschema.Schema
-		stdOutOrErr    io.Writer
+		l                  *logrusx.Logger
+		p                  *configx.Provider
+		c                  contextx.Contextualizer
+		identityMetaSchema *jsonschema.Schema
+		stdOutOrErr        io.Writer
 	}
 	Provider interface {
-		Config(ctx context.Context) *Config
+		Config() *Config
 	}
 	CourierConfigs interface {
-		CourierSMTPURL() *url.URL
-		CourierSMTPClientCertPath() string
-		CourierSMTPClientKeyPath() string
-		CourierSMTPFrom() string
-		CourierSMTPFromName() string
-		CourierSMTPHeaders() map[string]string
-		CourierSMTPLocalName() string
-		CourierSMSEnabled() bool
-		CourierSMSFrom() string
-		CourierSMSRequestConfig() json.RawMessage
-		CourierTemplatesRoot() string
-		CourierTemplatesVerificationInvalid() *CourierEmailTemplate
-		CourierTemplatesVerificationValid() *CourierEmailTemplate
-		CourierTemplatesRecoveryInvalid() *CourierEmailTemplate
-		CourierTemplatesRecoveryValid() *CourierEmailTemplate
-		CourierMessageRetries() int
+		CourierSMTPURL(ctx context.Context) *url.URL
+		CourierSMTPClientCertPath(ctx context.Context) string
+		CourierSMTPClientKeyPath(ctx context.Context) string
+		CourierSMTPFrom(ctx context.Context) string
+		CourierSMTPFromName(ctx context.Context) string
+		CourierSMTPHeaders(ctx context.Context) map[string]string
+		CourierSMTPLocalName(ctx context.Context) string
+		CourierSMSEnabled(ctx context.Context) bool
+		CourierSMSFrom(ctx context.Context) string
+		CourierSMSRequestConfig(ctx context.Context) json.RawMessage
+		CourierTemplatesRoot(ctx context.Context) string
+		CourierTemplatesVerificationInvalid(ctx context.Context) *CourierEmailTemplate
+		CourierTemplatesVerificationValid(ctx context.Context) *CourierEmailTemplate
+		CourierTemplatesRecoveryInvalid(ctx context.Context) *CourierEmailTemplate
+		CourierTemplatesRecoveryValid(ctx context.Context) *CourierEmailTemplate
+		CourierMessageRetries(ctx context.Context) int
 	}
 )
 
@@ -341,7 +344,7 @@ func New(ctx context.Context, l *logrusx.Logger, stdOutOrErr io.Writer, opts ...
 
 	l.UseConfig(p)
 
-	c = &Config{l: l, p: p, stdOutOrErr: stdOutOrErr}
+	c = NewCustom(l, p, stdOutOrErr, &contextx.Default{})
 
 	if !p.SkipValidation() {
 		if err := c.validateIdentitySchemas(ctx); err != nil {
@@ -352,20 +355,25 @@ func New(ctx context.Context, l *logrusx.Logger, stdOutOrErr io.Writer, opts ...
 	return c, nil
 }
 
+func NewCustom(l *logrusx.Logger, p *configx.Provider, stdOutOrErr io.Writer, ctxt contextx.Contextualizer) *Config {
+	l.UseConfig(p)
+	return &Config{l: l, p: p, c: ctxt, stdOutOrErr: stdOutOrErr}
+}
+
 func (p *Config) getIdentitySchemaValidator(ctx context.Context) (*jsonschema.Schema, error) {
-	if p.identitySchema == nil {
+	if p.identityMetaSchema == nil {
 		c := jsonschema.NewCompiler()
 		err := embedx.AddSchemaResources(c, embedx.IdentityMeta)
 		if err != nil {
 			return nil, err
 		}
-		p.identitySchema, err = c.Compile(ctx, embedx.IdentityMeta.GetSchemaID())
+		p.identityMetaSchema, err = c.Compile(ctx, embedx.IdentityMeta.GetSchemaID())
 		if err != nil {
 			return nil, errors.WithStack(err)
 		}
 	}
 
-	return p.identitySchema, nil
+	return p.identityMetaSchema, nil
 }
 
 type validateIdentitySchemasContextKey int
@@ -387,7 +395,7 @@ func (p *Config) validateIdentitySchemas(ctx context.Context) error {
 		opts = o
 	}
 
-	if p.ClientHTTPNoPrivateIPRanges() {
+	if p.ClientHTTPNoPrivateIPRanges(ctx) {
 		opts = append(opts, httpx.ResilientClientDisallowInternalIPs())
 	}
 
@@ -398,7 +406,7 @@ func (p *Config) validateIdentitySchemas(ctx context.Context) error {
 		return err
 	}
 
-	ss, err := p.IdentityTraitsSchemas()
+	ss, err := p.IdentityTraitsSchemas(ctx)
 	if err != nil {
 		return err
 	}
@@ -428,23 +436,23 @@ func (p *Config) formatJsonErrors(schema []byte, err error) {
 	jsonschemax.FormatValidationErrorForCLI(p.stdOutOrErr, schema, err)
 }
 
-func (p *Config) Source() *configx.Provider {
-	return p.p
-}
-
-func (p *Config) CORS(iface string) (cors.Options, bool) {
+func (p *Config) CORS(ctx context.Context, iface string) (cors.Options, bool) {
 	switch iface {
 	case "admin":
-		return p.cors("serve.admin")
+		return p.cors(ctx, "serve.admin")
 	case "public":
-		return p.cors("serve.public")
+		return p.cors(ctx, "serve.public")
 	default:
 		panic(fmt.Sprintf("Received unexpected CORS interface: %s", iface))
 	}
 }
 
-func (p *Config) cors(prefix string) (cors.Options, bool) {
-	return p.p.CORS(prefix, cors.Options{
+func (p *Config) SetTracer(ctx context.Context, t *otelx.Tracer) {
+	p.GetProvider(ctx).SetTracer(ctx, t)
+}
+
+func (p *Config) cors(ctx context.Context, prefix string) (cors.Options, bool) {
+	return p.GetProvider(ctx).CORS(prefix, cors.Options{
 		AllowedMethods:   []string{"GET", "POST", "PUT", "PATCH", "DELETE"},
 		AllowedHeaders:   []string{"Authorization", "Content-Type", "Cookie"},
 		ExposedHeaders:   []string{"Content-Type", "Set-Cookie"},
@@ -452,65 +460,66 @@ func (p *Config) cors(prefix string) (cors.Options, bool) {
 	})
 }
 
-func (p *Config) Set(key string, value interface{}) error {
-	return p.p.Set(key, value)
+func (p *Config) Set(ctx context.Context, key string, value interface{}) error {
+	return p.GetProvider(ctx).Set(key, value)
 }
 
-func (p *Config) MustSet(key string, value interface{}) {
-	if err := p.p.Set(key, value); err != nil {
+func (p *Config) MustSet(ctx context.Context, key string, value interface{}) {
+	if err := p.GetProvider(ctx).Set(key, value); err != nil {
 		p.l.WithError(err).Fatalf("Unable to set \"%s\" to \"%s\".", key, value)
 	}
 }
 
-func (p *Config) SessionName() string {
-	return stringsx.Coalesce(p.p.String(ViperKeySessionName), DefaultSessionCookieName)
+func (p *Config) SessionName(ctx context.Context) string {
+	return stringsx.Coalesce(p.GetProvider(ctx).String(ViperKeySessionName), DefaultSessionCookieName)
 }
 
-func (p *Config) HasherArgon2() *Argon2 {
+func (p *Config) HasherArgon2(ctx context.Context) *Argon2 {
 	// warn about usage of default values and point to the docs
 	// warning will require https://github.com/ory/viper/issues/19
 	return &Argon2{
-		Memory:            p.p.ByteSizeF(ViperKeyHasherArgon2ConfigMemory, Argon2DefaultMemory),
-		Iterations:        uint32(p.p.IntF(ViperKeyHasherArgon2ConfigIterations, int(Argon2DefaultIterations))),
-		Parallelism:       uint8(p.p.IntF(ViperKeyHasherArgon2ConfigParallelism, int(Argon2DefaultParallelism))),
-		SaltLength:        uint32(p.p.IntF(ViperKeyHasherArgon2ConfigSaltLength, int(Argon2DefaultSaltLength))),
-		KeyLength:         uint32(p.p.IntF(ViperKeyHasherArgon2ConfigKeyLength, int(Argon2DefaultKeyLength))),
-		ExpectedDuration:  p.p.DurationF(ViperKeyHasherArgon2ConfigExpectedDuration, Argon2DefaultDuration),
-		ExpectedDeviation: p.p.DurationF(ViperKeyHasherArgon2ConfigExpectedDeviation, Argon2DefaultDeviation),
-		DedicatedMemory:   p.p.ByteSizeF(ViperKeyHasherArgon2ConfigDedicatedMemory, Argon2DefaultDedicatedMemory),
+		Memory:            p.GetProvider(ctx).ByteSizeF(ViperKeyHasherArgon2ConfigMemory, Argon2DefaultMemory),
+		Iterations:        uint32(p.GetProvider(ctx).IntF(ViperKeyHasherArgon2ConfigIterations, int(Argon2DefaultIterations))),
+		Parallelism:       uint8(p.GetProvider(ctx).IntF(ViperKeyHasherArgon2ConfigParallelism, int(Argon2DefaultParallelism))),
+		SaltLength:        uint32(p.GetProvider(ctx).IntF(ViperKeyHasherArgon2ConfigSaltLength, int(Argon2DefaultSaltLength))),
+		KeyLength:         uint32(p.GetProvider(ctx).IntF(ViperKeyHasherArgon2ConfigKeyLength, int(Argon2DefaultKeyLength))),
+		ExpectedDuration:  p.GetProvider(ctx).DurationF(ViperKeyHasherArgon2ConfigExpectedDuration, Argon2DefaultDuration),
+		ExpectedDeviation: p.GetProvider(ctx).DurationF(ViperKeyHasherArgon2ConfigExpectedDeviation, Argon2DefaultDeviation),
+		DedicatedMemory:   p.GetProvider(ctx).ByteSizeF(ViperKeyHasherArgon2ConfigDedicatedMemory, Argon2DefaultDedicatedMemory),
 	}
 }
 
-func (p *Config) HasherBcrypt() *Bcrypt {
-	cost := uint32(p.p.IntF(ViperKeyHasherBcryptCost, int(BcryptDefaultCost)))
-	if !p.IsInsecureDevMode() && cost < BcryptDefaultCost {
+func (p *Config) HasherBcrypt(ctx context.Context) *Bcrypt {
+	cost := uint32(p.GetProvider(ctx).IntF(ViperKeyHasherBcryptCost, int(BcryptDefaultCost)))
+	if !p.IsInsecureDevMode(ctx) && cost < BcryptDefaultCost {
 		cost = BcryptDefaultCost
 	}
 
 	return &Bcrypt{Cost: cost}
 }
 
-func (p *Config) listenOn(key string) string {
+func (p *Config) listenOn(ctx context.Context, key string) string {
 	fb := 4433
 	if key == "admin" {
 		fb = 4434
 	}
 
-	port := p.p.IntF("serve."+key+".port", fb)
+	pp := p.GetProvider(ctx)
+	port := pp.IntF("serve."+key+".port", fb)
 	if port < 1 {
 		p.l.Fatalf("serve.%s.port can not be zero or negative", key)
 	}
 
-	return configx.GetAddress(p.p.String("serve."+key+".host"), port)
+	return configx.GetAddress(pp.String("serve."+key+".host"), port)
 }
 
-func (p *Config) DefaultIdentityTraitsSchemaURL() (*url.URL, error) {
-	ss, err := p.IdentityTraitsSchemas()
+func (p *Config) DefaultIdentityTraitsSchemaURL(ctx context.Context) (*url.URL, error) {
+	ss, err := p.IdentityTraitsSchemas(ctx)
 	if err != nil {
 		return nil, err
 	}
 
-	search := p.p.String(ViperKeyDefaultIdentitySchemaID)
+	search := p.GetProvider(ctx).String(ViperKeyDefaultIdentitySchemaID)
 	found, err := ss.FindSchemaByID(search)
 	if err != nil {
 		return nil, err
@@ -519,52 +528,55 @@ func (p *Config) DefaultIdentityTraitsSchemaURL() (*url.URL, error) {
 	return p.ParseURI(found.URL)
 }
 
-func (p *Config) DefaultIdentityTraitsSchemaID() string {
-	return p.p.String(ViperKeyDefaultIdentitySchemaID)
+func (p *Config) DefaultIdentityTraitsSchemaID(ctx context.Context) string {
+	return p.GetProvider(ctx).String(ViperKeyDefaultIdentitySchemaID)
 }
 
-func (p *Config) TOTPIssuer() string {
-	return p.Source().StringF(ViperKeyTOTPIssuer, p.SelfPublicURL().Hostname())
+func (p *Config) TOTPIssuer(ctx context.Context) string {
+	return p.GetProvider(ctx).StringF(ViperKeyTOTPIssuer, p.SelfPublicURL(ctx).Hostname())
 }
 
-func (p *Config) OIDCRedirectURIBase() *url.URL {
-	return p.Source().URIF(ViperKeyOIDCBaseRedirectURL, p.SelfPublicURL())
+func (p *Config) OIDCRedirectURIBase(ctx context.Context) *url.URL {
+	return p.GetProvider(ctx).URIF(ViperKeyOIDCBaseRedirectURL, p.SelfPublicURL(ctx))
 }
 
-func (p *Config) IdentityTraitsSchemas() (ss Schemas, err error) {
-	if err = p.Source().Koanf.Unmarshal(ViperKeyIdentitySchemas, &ss); err != nil {
+func (p *Config) IdentityTraitsSchemas(ctx context.Context) (ss Schemas, err error) {
+	if err = p.GetProvider(ctx).Koanf.Unmarshal(ViperKeyIdentitySchemas, &ss); err != nil {
 		return ss, nil
 	}
 
 	return ss, nil
 }
 
-func (p *Config) AdminListenOn() string {
-	return p.listenOn("admin")
+func (p *Config) AdminListenOn(ctx context.Context) string {
+	return p.listenOn(ctx, "admin")
 }
 
-func (p *Config) PublicListenOn() string {
-	return p.listenOn("public")
+func (p *Config) PublicListenOn(ctx context.Context) string {
+	return p.listenOn(ctx, "public")
 }
 
-func (p *Config) PublicSocketPermission() *configx.UnixPermission {
+func (p *Config) PublicSocketPermission(ctx context.Context) *configx.UnixPermission {
+	pp := p.GetProvider(ctx)
 	return &configx.UnixPermission{
-		Owner: p.p.String(ViperKeyPublicSocketOwner),
-		Group: p.p.String(ViperKeyPublicSocketGroup),
-		Mode:  os.FileMode(p.p.IntF(ViperKeyPublicSocketMode, 0755)),
+		Owner: pp.String(ViperKeyPublicSocketOwner),
+		Group: pp.String(ViperKeyPublicSocketGroup),
+		Mode:  os.FileMode(pp.IntF(ViperKeyPublicSocketMode, 0755)),
 	}
 }
 
-func (p *Config) AdminSocketPermission() *configx.UnixPermission {
+func (p *Config) AdminSocketPermission(ctx context.Context) *configx.UnixPermission {
+	pp := p.GetProvider(ctx)
 	return &configx.UnixPermission{
-		Owner: p.p.String(ViperKeyAdminSocketOwner),
-		Group: p.p.String(ViperKeyAdminSocketGroup),
-		Mode:  os.FileMode(p.p.IntF(ViperKeyAdminSocketMode, 0755)),
+		Owner: pp.String(ViperKeyAdminSocketOwner),
+		Group: pp.String(ViperKeyAdminSocketGroup),
+		Mode:  os.FileMode(pp.IntF(ViperKeyAdminSocketMode, 0755)),
 	}
 }
 
-func (p *Config) DSN() string {
-	dsn := p.p.String(ViperKeyDSN)
+func (p *Config) DSN(ctx context.Context) string {
+	pp := p.GetProvider(ctx)
+	dsn := pp.String(ViperKeyDSN)
 
 	if dsn == "memory" {
 		return DefaultSQLiteMemoryDSN
@@ -578,45 +590,47 @@ func (p *Config) DSN() string {
 	return ""
 }
 
-func (p *Config) DisableAPIFlowEnforcement() bool {
-	if p.IsInsecureDevMode() && os.Getenv("DEV_DISABLE_API_FLOW_ENFORCEMENT") == "true" {
+func (p *Config) DisableAPIFlowEnforcement(ctx context.Context) bool {
+	if p.IsInsecureDevMode(ctx) && os.Getenv("DEV_DISABLE_API_FLOW_ENFORCEMENT") == "true" {
 		p.l.Warn("Because \"DEV_DISABLE_API_FLOW_ENFORCEMENT=true\" and the \"--dev\" flag are set, self-service API flows will no longer check if the interaction is actually a browser flow. This is very dangerous as it allows bypassing of anti-CSRF measures, leaving the deployment highly vulnerable. This option should only be used for automated testing and never come close to real user data anywhere.")
 		return true
 	}
 	return false
 }
 
-func (p *Config) ClientHTTPNoPrivateIPRanges() bool {
-	return p.p.Bool(ViperKeyClientHTTPNoPrivateIPRanges)
+func (p *Config) ClientHTTPNoPrivateIPRanges(ctx context.Context) bool {
+	return p.GetProvider(ctx).Bool(ViperKeyClientHTTPNoPrivateIPRanges)
 }
 
-func (p *Config) SelfServiceFlowRegistrationEnabled() bool {
-	return p.p.Bool(ViperKeySelfServiceRegistrationEnabled)
+func (p *Config) SelfServiceFlowRegistrationEnabled(ctx context.Context) bool {
+	return p.GetProvider(ctx).Bool(ViperKeySelfServiceRegistrationEnabled)
 }
 
-func (p *Config) SelfServiceFlowVerificationEnabled() bool {
-	return p.p.Bool(ViperKeySelfServiceVerificationEnabled)
+func (p *Config) SelfServiceFlowVerificationEnabled(ctx context.Context) bool {
+	return p.GetProvider(ctx).Bool(ViperKeySelfServiceVerificationEnabled)
 }
 
-func (p *Config) SelfServiceFlowRecoveryEnabled() bool {
-	return p.p.Bool(ViperKeySelfServiceRecoveryEnabled)
+func (p *Config) SelfServiceFlowRecoveryEnabled(ctx context.Context) bool {
+	return p.GetProvider(ctx).Bool(ViperKeySelfServiceRecoveryEnabled)
 }
 
-func (p *Config) SelfServiceFlowLoginBeforeHooks() []SelfServiceHook {
-	return p.selfServiceHooks(ViperKeySelfServiceLoginBeforeHooks)
+func (p *Config) SelfServiceFlowLoginBeforeHooks(ctx context.Context) []SelfServiceHook {
+	return p.selfServiceHooks(ctx, ViperKeySelfServiceLoginBeforeHooks)
 }
 
-func (p *Config) SelfServiceFlowRegistrationBeforeHooks() []SelfServiceHook {
-	return p.selfServiceHooks(ViperKeySelfServiceRegistrationBeforeHooks)
+func (p *Config) SelfServiceFlowRegistrationBeforeHooks(ctx context.Context) []SelfServiceHook {
+	return p.selfServiceHooks(ctx, ViperKeySelfServiceRegistrationBeforeHooks)
 }
 
-func (p *Config) selfServiceHooks(key string) []SelfServiceHook {
+func (p *Config) selfServiceHooks(ctx context.Context, key string) []SelfServiceHook {
+	pp := p.GetProvider(ctx)
+
 	var hooks []SelfServiceHook
-	if !p.p.Exists(key) {
+	if !pp.Exists(key) {
 		return []SelfServiceHook{}
 	}
 
-	out, err := p.p.Marshal(kjson.Parser())
+	out, err := pp.Marshal(kjson.Parser())
 	if err != nil {
 		p.l.WithError(err).Fatalf("Unable to decode values from configuration key: %s", key)
 	}
@@ -639,21 +653,23 @@ func (p *Config) selfServiceHooks(key string) []SelfServiceHook {
 	return hooks
 }
 
-func (p *Config) SelfServiceFlowLoginAfterHooks(strategy string) []SelfServiceHook {
-	return p.selfServiceHooks(HookStrategyKey(ViperKeySelfServiceLoginAfter, strategy))
+func (p *Config) SelfServiceFlowLoginAfterHooks(ctx context.Context, strategy string) []SelfServiceHook {
+	return p.selfServiceHooks(ctx, HookStrategyKey(ViperKeySelfServiceLoginAfter, strategy))
 }
 
-func (p *Config) SelfServiceFlowSettingsAfterHooks(strategy string) []SelfServiceHook {
-	return p.selfServiceHooks(HookStrategyKey(ViperKeySelfServiceSettingsAfter, strategy))
+func (p *Config) SelfServiceFlowSettingsAfterHooks(ctx context.Context, strategy string) []SelfServiceHook {
+	return p.selfServiceHooks(ctx, HookStrategyKey(ViperKeySelfServiceSettingsAfter, strategy))
 }
 
-func (p *Config) SelfServiceFlowRegistrationAfterHooks(strategy string) []SelfServiceHook {
-	return p.selfServiceHooks(HookStrategyKey(ViperKeySelfServiceRegistrationAfter, strategy))
+func (p *Config) SelfServiceFlowRegistrationAfterHooks(ctx context.Context, strategy string) []SelfServiceHook {
+	return p.selfServiceHooks(ctx, HookStrategyKey(ViperKeySelfServiceRegistrationAfter, strategy))
 }
 
-func (p *Config) SelfServiceStrategy(strategy string) *SelfServiceStrategy {
+func (p *Config) SelfServiceStrategy(ctx context.Context, strategy string) *SelfServiceStrategy {
+	pp := p.GetProvider(ctx)
+
 	config := "{}"
-	out, err := p.p.Marshal(kjson.Parser())
+	out, err := pp.Marshal(kjson.Parser())
 	if err != nil {
 		p.l.WithError(err).Warn("Unable to marshal self service strategy configuration.")
 	} else if c := gjson.GetBytes(out,
@@ -663,13 +679,13 @@ func (p *Config) SelfServiceStrategy(strategy string) *SelfServiceStrategy {
 
 	enabledKey := fmt.Sprintf("%s.%s.enabled", ViperKeySelfServiceStrategyConfig, strategy)
 	s := &SelfServiceStrategy{
-		Enabled: p.p.Bool(enabledKey),
+		Enabled: pp.Bool(enabledKey),
 		Config:  json.RawMessage(config),
 	}
 
 	// The default value can easily be overwritten by setting e.g. `{"selfservice": "null"}` which means that
 	// we need to forcibly set these values here:
-	if !p.p.Exists(enabledKey) {
+	if !pp.Exists(enabledKey) {
 		switch strategy {
 		case "password":
 			fallthrough
@@ -687,12 +703,13 @@ func (p *Config) SelfServiceStrategy(strategy string) *SelfServiceStrategy {
 	return s
 }
 
-func (p *Config) SecretsDefault() [][]byte {
-	secrets := p.p.Strings(ViperKeySecretsDefault)
+func (p *Config) SecretsDefault(ctx context.Context) [][]byte {
+	pp := p.GetProvider(ctx)
+	secrets := pp.Strings(ViperKeySecretsDefault)
 
 	if len(secrets) == 0 {
 		secrets = []string{uuid.New().String()}
-		p.MustSet(ViperKeySecretsDefault, secrets)
+		p.MustSet(ctx, ViperKeySecretsDefault, secrets)
 	}
 
 	result := make([][]byte, len(secrets))
@@ -703,10 +720,10 @@ func (p *Config) SecretsDefault() [][]byte {
 	return result
 }
 
-func (p *Config) SecretsSession() [][]byte {
-	secrets := p.p.Strings(ViperKeySecretsCookie)
+func (p *Config) SecretsSession(ctx context.Context) [][]byte {
+	secrets := p.GetProvider(ctx).Strings(ViperKeySecretsCookie)
 	if len(secrets) == 0 {
-		return p.SecretsDefault()
+		return p.SecretsDefault(ctx)
 	}
 
 	result := make([][]byte, len(secrets))
@@ -717,8 +734,8 @@ func (p *Config) SecretsSession() [][]byte {
 	return result
 }
 
-func (p *Config) SecretsCipher() [][32]byte {
-	secrets := p.p.Strings(ViperKeySecretsCipher)
+func (p *Config) SecretsCipher(ctx context.Context) [][32]byte {
+	secrets := p.GetProvider(ctx).Strings(ViperKeySecretsCipher)
 	var cleanSecrets []string
 	for k := range secrets {
 		if len(secrets[k]) == 32 {
@@ -737,14 +754,14 @@ func (p *Config) SecretsCipher() [][32]byte {
 	return result
 }
 
-func (p *Config) SelfServiceBrowserDefaultReturnTo() *url.URL {
-	return p.ParseAbsoluteOrRelativeURIOrFail(ViperKeySelfServiceBrowserDefaultReturnTo)
+func (p *Config) SelfServiceBrowserDefaultReturnTo(ctx context.Context) *url.URL {
+	return p.ParseAbsoluteOrRelativeURIOrFail(ctx, ViperKeySelfServiceBrowserDefaultReturnTo)
 }
 
-func (p *Config) guessBaseURL(keyHost, keyPort string, defaultPort int) *url.URL {
-	port := p.p.IntF(keyPort, defaultPort)
+func (p *Config) guessBaseURL(ctx context.Context, keyHost, keyPort string, defaultPort int) *url.URL {
+	port := p.GetProvider(ctx).IntF(keyPort, defaultPort)
 
-	host := p.p.String(keyHost)
+	host := p.GetProvider(ctx).String(keyHost)
 	if host == "0.0.0.0" || len(host) == 0 {
 		var err error
 		host, err = os.Hostname()
@@ -755,15 +772,15 @@ func (p *Config) guessBaseURL(keyHost, keyPort string, defaultPort int) *url.URL
 	}
 
 	guess := url.URL{Host: fmt.Sprintf("%s:%d", host, port), Scheme: "https", Path: "/"}
-	if p.IsInsecureDevMode() {
+	if p.IsInsecureDevMode(ctx) {
 		guess.Scheme = "http"
 	}
 
 	return &guess
 }
 
-func (p *Config) baseURL(keyURL, keyHost, keyPort string, defaultPort int) *url.URL {
-	switch t := p.p.Get(keyURL).(type) {
+func (p *Config) baseURL(ctx context.Context, keyURL, keyHost, keyPort string, defaultPort int) *url.URL {
+	switch t := p.GetProvider(ctx).Get(keyURL).(type) {
 	case *url.URL:
 		return t
 	case url.URL:
@@ -772,66 +789,66 @@ func (p *Config) baseURL(keyURL, keyHost, keyPort string, defaultPort int) *url.
 		parsed, err := url.ParseRequestURI(t)
 		if err != nil {
 			p.l.WithError(err).Errorf("Configuration key %s is not a valid URL. Falling back to optimistically guessing the server's base URL. Please set a value to avoid problems with redirects and cookies.", keyURL)
-			return p.guessBaseURL(keyHost, keyPort, defaultPort)
+			return p.guessBaseURL(ctx, keyHost, keyPort, defaultPort)
 		}
 		return parsed
 	}
 
 	p.l.Warnf("Configuration key %s was left empty. Optimistically guessing the server's base URL. Please set a value to avoid problems with redirects and cookies.", keyURL)
-	return p.guessBaseURL(keyHost, keyPort, defaultPort)
+	return p.guessBaseURL(ctx, keyHost, keyPort, defaultPort)
 }
 
-func (p *Config) DisablePublicHealthRequestLog() bool {
-	return p.p.Bool(ViperKeyDisablePublicHealthRequestLog)
+func (p *Config) DisablePublicHealthRequestLog(ctx context.Context) bool {
+	return p.GetProvider(ctx).Bool(ViperKeyDisablePublicHealthRequestLog)
 }
 
-func (p *Config) SelfPublicURL() *url.URL {
-	return p.baseURL(ViperKeyPublicBaseURL, ViperKeyPublicHost, ViperKeyPublicPort, 4433)
+func (p *Config) SelfPublicURL(ctx context.Context) *url.URL {
+	return p.baseURL(ctx, ViperKeyPublicBaseURL, ViperKeyPublicHost, ViperKeyPublicPort, 4433)
 }
 
-func (p *Config) DisableAdminHealthRequestLog() bool {
-	return p.p.Bool(ViperKeyDisableAdminHealthRequestLog)
+func (p *Config) DisableAdminHealthRequestLog(ctx context.Context) bool {
+	return p.GetProvider(ctx).Bool(ViperKeyDisableAdminHealthRequestLog)
 }
 
-func (p *Config) SelfAdminURL() *url.URL {
-	return p.baseURL(ViperKeyAdminBaseURL, ViperKeyAdminHost, ViperKeyAdminPort, 4434)
+func (p *Config) SelfAdminURL(ctx context.Context) *url.URL {
+	return p.baseURL(ctx, ViperKeyAdminBaseURL, ViperKeyAdminHost, ViperKeyAdminPort, 4434)
 }
 
-func (p *Config) CourierSMTPURL() *url.URL {
-	return p.ParseURIOrFail(ViperKeyCourierSMTPURL)
+func (p *Config) CourierSMTPURL(ctx context.Context) *url.URL {
+	return p.ParseURIOrFail(ctx, ViperKeyCourierSMTPURL)
 }
 
-func (p *Config) SelfServiceFlowLoginUI() *url.URL {
-	return p.ParseAbsoluteOrRelativeURIOrFail(ViperKeySelfServiceLoginUI)
+func (p *Config) SelfServiceFlowLoginUI(ctx context.Context) *url.URL {
+	return p.ParseAbsoluteOrRelativeURIOrFail(ctx, ViperKeySelfServiceLoginUI)
 }
 
-func (p *Config) SelfServiceFlowSettingsUI() *url.URL {
-	return p.ParseAbsoluteOrRelativeURIOrFail(ViperKeySelfServiceSettingsURL)
+func (p *Config) SelfServiceFlowSettingsUI(ctx context.Context) *url.URL {
+	return p.ParseAbsoluteOrRelativeURIOrFail(ctx, ViperKeySelfServiceSettingsURL)
 }
 
-func (p *Config) SelfServiceFlowErrorURL() *url.URL {
-	return p.ParseAbsoluteOrRelativeURIOrFail(ViperKeySelfServiceErrorUI)
+func (p *Config) SelfServiceFlowErrorURL(ctx context.Context) *url.URL {
+	return p.ParseAbsoluteOrRelativeURIOrFail(ctx, ViperKeySelfServiceErrorUI)
 }
 
-func (p *Config) SelfServiceFlowRegistrationUI() *url.URL {
-	return p.ParseAbsoluteOrRelativeURIOrFail(ViperKeySelfServiceRegistrationUI)
+func (p *Config) SelfServiceFlowRegistrationUI(ctx context.Context) *url.URL {
+	return p.ParseAbsoluteOrRelativeURIOrFail(ctx, ViperKeySelfServiceRegistrationUI)
 }
 
-func (p *Config) SelfServiceFlowRecoveryUI() *url.URL {
-	return p.ParseAbsoluteOrRelativeURIOrFail(ViperKeySelfServiceRecoveryUI)
+func (p *Config) SelfServiceFlowRecoveryUI(ctx context.Context) *url.URL {
+	return p.ParseAbsoluteOrRelativeURIOrFail(ctx, ViperKeySelfServiceRecoveryUI)
 }
 
 // SessionLifespan returns nil when the value is not set.
-func (p *Config) SessionLifespan() time.Duration {
-	return p.p.DurationF(ViperKeySessionLifespan, time.Hour*24)
+func (p *Config) SessionLifespan(ctx context.Context) time.Duration {
+	return p.GetProvider(ctx).DurationF(ViperKeySessionLifespan, time.Hour*24)
 }
 
-func (p *Config) SessionPersistentCookie() bool {
-	return p.p.Bool(ViperKeySessionPersistentCookie)
+func (p *Config) SessionPersistentCookie(ctx context.Context) bool {
+	return p.GetProvider(ctx).Bool(ViperKeySessionPersistentCookie)
 }
 
-func (p *Config) SelfServiceBrowserAllowedReturnToDomains() (us []url.URL) {
-	src := p.p.Strings(ViperKeyURLsAllowedReturnToDomains)
+func (p *Config) SelfServiceBrowserAllowedReturnToDomains(ctx context.Context) (us []url.URL) {
+	src := p.GetProvider(ctx).Strings(ViperKeyURLsAllowedReturnToDomains)
 	for k, u := range src {
 		if len(u) == 0 {
 			continue
@@ -861,47 +878,47 @@ func (p *Config) SelfServiceBrowserAllowedReturnToDomains() (us []url.URL) {
 	return us
 }
 
-func (p *Config) SelfServiceFlowLoginRequestLifespan() time.Duration {
-	return p.p.DurationF(ViperKeySelfServiceLoginRequestLifespan, time.Hour)
+func (p *Config) SelfServiceFlowLoginRequestLifespan(ctx context.Context) time.Duration {
+	return p.GetProvider(ctx).DurationF(ViperKeySelfServiceLoginRequestLifespan, time.Hour)
 }
 
-func (p *Config) SelfServiceFlowSettingsFlowLifespan() time.Duration {
-	return p.p.DurationF(ViperKeySelfServiceSettingsRequestLifespan, time.Hour)
+func (p *Config) SelfServiceFlowSettingsFlowLifespan(ctx context.Context) time.Duration {
+	return p.GetProvider(ctx).DurationF(ViperKeySelfServiceSettingsRequestLifespan, time.Hour)
 }
 
-func (p *Config) SelfServiceFlowRegistrationRequestLifespan() time.Duration {
-	return p.p.DurationF(ViperKeySelfServiceRegistrationRequestLifespan, time.Hour)
+func (p *Config) SelfServiceFlowRegistrationRequestLifespan(ctx context.Context) time.Duration {
+	return p.GetProvider(ctx).DurationF(ViperKeySelfServiceRegistrationRequestLifespan, time.Hour)
 }
 
-func (p *Config) SelfServiceFlowLogoutRedirectURL() *url.URL {
-	return p.p.RequestURIF(ViperKeySelfServiceLogoutBrowserDefaultReturnTo, p.SelfServiceBrowserDefaultReturnTo())
+func (p *Config) SelfServiceFlowLogoutRedirectURL(ctx context.Context) *url.URL {
+	return p.GetProvider(ctx).RequestURIF(ViperKeySelfServiceLogoutBrowserDefaultReturnTo, p.SelfServiceBrowserDefaultReturnTo(ctx))
 }
 
-func (p *Config) CourierSMTPClientCertPath() string {
-	return p.p.StringF(ViperKeyCourierSMTPClientCertPath, "")
+func (p *Config) CourierSMTPClientCertPath(ctx context.Context) string {
+	return p.GetProvider(ctx).StringF(ViperKeyCourierSMTPClientCertPath, "")
 }
 
-func (p *Config) CourierSMTPClientKeyPath() string {
-	return p.p.StringF(ViperKeyCourierSMTPClientKeyPath, "")
+func (p *Config) CourierSMTPClientKeyPath(ctx context.Context) string {
+	return p.GetProvider(ctx).StringF(ViperKeyCourierSMTPClientKeyPath, "")
 }
 
-func (p *Config) CourierSMTPFrom() string {
-	return p.p.StringF(ViperKeyCourierSMTPFrom, "noreply@kratos.ory.sh")
+func (p *Config) CourierSMTPFrom(ctx context.Context) string {
+	return p.GetProvider(ctx).StringF(ViperKeyCourierSMTPFrom, "noreply@kratos.ory.sh")
 }
 
-func (p *Config) CourierSMTPFromName() string {
-	return p.p.StringF(ViperKeyCourierSMTPFromName, "")
+func (p *Config) CourierSMTPFromName(ctx context.Context) string {
+	return p.GetProvider(ctx).StringF(ViperKeyCourierSMTPFromName, "")
 }
 
-func (p *Config) CourierSMTPLocalName() string {
-	return p.p.StringF(ViperKeyCourierSMTPLocalName, "localhost")
+func (p *Config) CourierSMTPLocalName(ctx context.Context) string {
+	return p.GetProvider(ctx).StringF(ViperKeyCourierSMTPLocalName, "localhost")
 }
 
-func (p *Config) CourierTemplatesRoot() string {
-	return p.p.StringF(ViperKeyCourierTemplatesPath, "courier/builtin/templates")
+func (p *Config) CourierTemplatesRoot(ctx context.Context) string {
+	return p.GetProvider(ctx).StringF(ViperKeyCourierTemplatesPath, "courier/builtin/templates")
 }
 
-func (p *Config) CourierTemplatesHelper(key string) *CourierEmailTemplate {
+func (p *Config) CourierTemplatesHelper(ctx context.Context, key string) *CourierEmailTemplate {
 	courierTemplate := &CourierEmailTemplate{
 		Body: &CourierEmailBodyTemplate{
 			PlainText: "",
@@ -910,11 +927,11 @@ func (p *Config) CourierTemplatesHelper(key string) *CourierEmailTemplate {
 		Subject: "",
 	}
 
-	if !p.p.Exists(key) {
+	if !p.GetProvider(ctx).Exists(key) {
 		return courierTemplate
 	}
 
-	out, err := p.p.Marshal(kjson.Parser())
+	out, err := p.GetProvider(ctx).Marshal(kjson.Parser())
 	if err != nil {
 		p.l.WithError(err).Fatalf("Unable to dencode values from %s.", key)
 		return courierTemplate
@@ -932,36 +949,36 @@ func (p *Config) CourierTemplatesHelper(key string) *CourierEmailTemplate {
 	return courierTemplate
 }
 
-func (p *Config) CourierTemplatesVerificationInvalid() *CourierEmailTemplate {
-	return p.CourierTemplatesHelper(ViperKeyCourierTemplatesVerificationInvalidEmail)
+func (p *Config) CourierTemplatesVerificationInvalid(ctx context.Context) *CourierEmailTemplate {
+	return p.CourierTemplatesHelper(ctx, ViperKeyCourierTemplatesVerificationInvalidEmail)
 }
 
-func (p *Config) CourierTemplatesVerificationValid() *CourierEmailTemplate {
-	return p.CourierTemplatesHelper(ViperKeyCourierTemplatesVerificationValidEmail)
+func (p *Config) CourierTemplatesVerificationValid(ctx context.Context) *CourierEmailTemplate {
+	return p.CourierTemplatesHelper(ctx, ViperKeyCourierTemplatesVerificationValidEmail)
 }
 
-func (p *Config) CourierTemplatesRecoveryInvalid() *CourierEmailTemplate {
-	return p.CourierTemplatesHelper(ViperKeyCourierTemplatesRecoveryInvalidEmail)
+func (p *Config) CourierTemplatesRecoveryInvalid(ctx context.Context) *CourierEmailTemplate {
+	return p.CourierTemplatesHelper(ctx, ViperKeyCourierTemplatesRecoveryInvalidEmail)
 }
 
-func (p *Config) CourierTemplatesRecoveryValid() *CourierEmailTemplate {
-	return p.CourierTemplatesHelper(ViperKeyCourierTemplatesRecoveryValidEmail)
+func (p *Config) CourierTemplatesRecoveryValid(ctx context.Context) *CourierEmailTemplate {
+	return p.CourierTemplatesHelper(ctx, ViperKeyCourierTemplatesRecoveryValidEmail)
 }
 
-func (p *Config) CourierMessageRetries() int {
-	return p.p.IntF(ViperKeyCourierMessageRetries, 5)
+func (p *Config) CourierMessageRetries(ctx context.Context) int {
+	return p.GetProvider(ctx).IntF(ViperKeyCourierMessageRetries, 5)
 }
 
-func (p *Config) CourierSMTPHeaders() map[string]string {
-	return p.p.StringMap(ViperKeyCourierSMTPHeaders)
+func (p *Config) CourierSMTPHeaders(ctx context.Context) map[string]string {
+	return p.GetProvider(ctx).StringMap(ViperKeyCourierSMTPHeaders)
 }
 
-func (p *Config) CourierSMSRequestConfig() json.RawMessage {
-	if !p.p.Bool(ViperKeyCourierSMSEnabled) {
+func (p *Config) CourierSMSRequestConfig(ctx context.Context) json.RawMessage {
+	if !p.GetProvider(ctx).Bool(ViperKeyCourierSMSEnabled) {
 		return nil
 	}
 
-	out, err := p.p.Marshal(kjson.Parser())
+	out, err := p.GetProvider(ctx).Marshal(kjson.Parser())
 	if err != nil {
 		p.l.WithError(err).Warn("Unable to marshal self service strategy configuration.")
 		return nil
@@ -975,12 +992,12 @@ func (p *Config) CourierSMSRequestConfig() json.RawMessage {
 	return json.RawMessage(config)
 }
 
-func (p *Config) CourierSMSFrom() string {
-	return p.p.StringF(ViperKeyCourierSMSFrom, "Ory Kratos")
+func (p *Config) CourierSMSFrom(ctx context.Context) string {
+	return p.GetProvider(ctx).StringF(ViperKeyCourierSMSFrom, "Ory Kratos")
 }
 
-func (p *Config) CourierSMSEnabled() bool {
-	return p.p.Bool(ViperKeyCourierSMSEnabled)
+func (p *Config) CourierSMSEnabled(ctx context.Context) bool {
+	return p.GetProvider(ctx).Bool(ViperKeyCourierSMSEnabled)
 }
 
 func splitUrlAndFragment(s string) (string, string) {
@@ -991,20 +1008,20 @@ func splitUrlAndFragment(s string) (string, string) {
 	return s[:i], s[i+1:]
 }
 
-func (p *Config) ParseAbsoluteOrRelativeURIOrFail(key string) *url.URL {
-	parsed, err := p.ParseAbsoluteOrRelativeURI(p.p.String(key))
+func (p *Config) ParseAbsoluteOrRelativeURIOrFail(ctx context.Context, key string) *url.URL {
+	parsed, err := p.ParseAbsoluteOrRelativeURI(p.GetProvider(ctx).String(key))
 	if err != nil {
 		p.l.WithError(errors.WithStack(err)).
-			Fatalf("Configuration value from key %s is not a valid URL: %s", key, p.p.String(key))
+			Fatalf("Configuration value from key %s is not a valid URL: %s", key, p.GetProvider(ctx).String(key))
 	}
 	return parsed
 }
 
-func (p *Config) ParseURIOrFail(key string) *url.URL {
-	parsed, err := p.ParseURI(p.p.String(key))
+func (p *Config) ParseURIOrFail(ctx context.Context, key string) *url.URL {
+	parsed, err := p.ParseURI(p.GetProvider(ctx).String(key))
 	if err != nil {
 		p.l.WithField("reason", "expected scheme to be set").
-			Fatalf("Configuration value from key %s is not a valid URL: %s", key, p.p.String(key))
+			Fatalf("Configuration value from key %s is not a valid URL: %s", key, p.GetProvider(ctx).String(key))
 	}
 	return parsed
 }
@@ -1034,80 +1051,80 @@ func (p *Config) ParseURI(rawUrl string) (*url.URL, error) {
 	return parsed, nil
 }
 
-func (p *Config) Tracing() *otelx.Config {
-	return p.p.TracingConfig("Ory Kratos")
+func (p *Config) Tracing(ctx context.Context) *otelx.Config {
+	return p.GetProvider(ctx).TracingConfig("Ory Kratos")
 }
 
-func (p *Config) IsInsecureDevMode() bool {
-	return p.Source().Bool("dev")
+func (p *Config) IsInsecureDevMode(ctx context.Context) bool {
+	return p.GetProvider(ctx).Bool("dev")
 }
 
-func (p *Config) IsBackgroundCourierEnabled() bool {
-	return p.Source().Bool("watch-courier")
+func (p *Config) IsBackgroundCourierEnabled(ctx context.Context) bool {
+	return p.GetProvider(ctx).Bool("watch-courier")
 }
 
-func (p *Config) CourierExposeMetricsPort() int {
-	return p.Source().Int("expose-metrics-port")
+func (p *Config) CourierExposeMetricsPort(ctx context.Context) int {
+	return p.GetProvider(ctx).Int("expose-metrics-port")
 }
 
-func (p *Config) MetricsListenOn() string {
-	return strings.Replace(p.AdminListenOn(), ":4434", fmt.Sprintf(":%d", p.CourierExposeMetricsPort()), 1)
+func (p *Config) MetricsListenOn(ctx context.Context) string {
+	return strings.Replace(p.AdminListenOn(ctx), ":4434", fmt.Sprintf(":%d", p.CourierExposeMetricsPort(ctx)), 1)
 }
 
-func (p *Config) SelfServiceFlowVerificationUI() *url.URL {
-	return p.ParseAbsoluteOrRelativeURIOrFail(ViperKeySelfServiceVerificationUI)
+func (p *Config) SelfServiceFlowVerificationUI(ctx context.Context) *url.URL {
+	return p.ParseAbsoluteOrRelativeURIOrFail(ctx, ViperKeySelfServiceVerificationUI)
 }
 
-func (p *Config) SelfServiceFlowVerificationRequestLifespan() time.Duration {
-	return p.p.DurationF(ViperKeySelfServiceVerificationRequestLifespan, time.Hour)
+func (p *Config) SelfServiceFlowVerificationRequestLifespan(ctx context.Context) time.Duration {
+	return p.GetProvider(ctx).DurationF(ViperKeySelfServiceVerificationRequestLifespan, time.Hour)
 }
 
-func (p *Config) SelfServiceFlowVerificationReturnTo(defaultReturnTo *url.URL) *url.URL {
-	return p.p.RequestURIF(ViperKeySelfServiceVerificationBrowserDefaultReturnTo, defaultReturnTo)
+func (p *Config) SelfServiceFlowVerificationReturnTo(ctx context.Context, defaultReturnTo *url.URL) *url.URL {
+	return p.GetProvider(ctx).RequestURIF(ViperKeySelfServiceVerificationBrowserDefaultReturnTo, defaultReturnTo)
 }
 
-func (p *Config) SelfServiceFlowVerificationAfterHooks(strategy string) []SelfServiceHook {
-	return p.selfServiceHooks(HookStrategyKey(ViperKeySelfServiceVerificationAfter, strategy))
+func (p *Config) SelfServiceFlowVerificationAfterHooks(ctx context.Context, strategy string) []SelfServiceHook {
+	return p.selfServiceHooks(ctx, HookStrategyKey(ViperKeySelfServiceVerificationAfter, strategy))
 }
 
-func (p *Config) SelfServiceFlowRecoveryReturnTo() *url.URL {
-	return p.p.RequestURIF(ViperKeySelfServiceRecoveryBrowserDefaultReturnTo, p.SelfServiceBrowserDefaultReturnTo())
+func (p *Config) SelfServiceFlowRecoveryReturnTo(ctx context.Context) *url.URL {
+	return p.GetProvider(ctx).RequestURIF(ViperKeySelfServiceRecoveryBrowserDefaultReturnTo, p.SelfServiceBrowserDefaultReturnTo(ctx))
 }
 
-func (p *Config) SelfServiceFlowRecoveryRequestLifespan() time.Duration {
-	return p.p.DurationF(ViperKeySelfServiceRecoveryRequestLifespan, time.Hour)
+func (p *Config) SelfServiceFlowRecoveryRequestLifespan(ctx context.Context) time.Duration {
+	return p.GetProvider(ctx).DurationF(ViperKeySelfServiceRecoveryRequestLifespan, time.Hour)
 }
 
-func (p *Config) SelfServiceLinkMethodLifespan() time.Duration {
-	return p.p.DurationF(ViperKeyLinkLifespan, time.Hour)
+func (p *Config) SelfServiceLinkMethodLifespan(ctx context.Context) time.Duration {
+	return p.GetProvider(ctx).DurationF(ViperKeyLinkLifespan, time.Hour)
 }
 
-func (p *Config) SelfServiceLinkMethodBaseURL() *url.URL {
-	return p.p.RequestURIF(ViperKeyLinkBaseURL, p.SelfPublicURL())
+func (p *Config) SelfServiceLinkMethodBaseURL(ctx context.Context) *url.URL {
+	return p.GetProvider(ctx).RequestURIF(ViperKeyLinkBaseURL, p.SelfPublicURL(ctx))
 }
 
-func (p *Config) DatabaseCleanupSleepTables() time.Duration {
-	return p.p.Duration(ViperKeyDatabaseCleanupSleepTables)
+func (p *Config) DatabaseCleanupSleepTables(ctx context.Context) time.Duration {
+	return p.GetProvider(ctx).Duration(ViperKeyDatabaseCleanupSleepTables)
 }
 
-func (p *Config) DatabaseCleanupBatchSize() int {
-	return p.p.Int(ViperKeyDatabaseCleanupBatchSize)
+func (p *Config) DatabaseCleanupBatchSize(ctx context.Context) int {
+	return p.GetProvider(ctx).Int(ViperKeyDatabaseCleanupBatchSize)
 }
 
-func (p *Config) SelfServiceFlowRecoveryAfterHooks(strategy string) []SelfServiceHook {
-	return p.selfServiceHooks(HookStrategyKey(ViperKeySelfServiceRecoveryAfter, strategy))
+func (p *Config) SelfServiceFlowRecoveryAfterHooks(ctx context.Context, strategy string) []SelfServiceHook {
+	return p.selfServiceHooks(ctx, HookStrategyKey(ViperKeySelfServiceRecoveryAfter, strategy))
 }
 
-func (p *Config) SelfServiceFlowSettingsPrivilegedSessionMaxAge() time.Duration {
-	return p.p.DurationF(ViperKeySelfServiceSettingsPrivilegedAuthenticationAfter, time.Hour)
+func (p *Config) SelfServiceFlowSettingsPrivilegedSessionMaxAge(ctx context.Context) time.Duration {
+	return p.GetProvider(ctx).DurationF(ViperKeySelfServiceSettingsPrivilegedAuthenticationAfter, time.Hour)
 }
 
-func (p *Config) SessionSameSiteMode() http.SameSite {
-	if !p.p.Exists(ViperKeySessionSameSite) {
-		return p.CookieSameSiteMode()
+func (p *Config) SessionSameSiteMode(ctx context.Context) http.SameSite {
+	if !p.GetProvider(ctx).Exists(ViperKeySessionSameSite) {
+		return p.CookieSameSiteMode(ctx)
 	}
 
-	switch p.p.StringF(ViperKeySessionSameSite, "Lax") {
+	switch p.GetProvider(ctx).StringF(ViperKeySessionSameSite, "Lax") {
 	case "Lax":
 		return http.SameSiteLaxMode
 	case "Strict":
@@ -1118,31 +1135,31 @@ func (p *Config) SessionSameSiteMode() http.SameSite {
 	return http.SameSiteDefaultMode
 }
 
-func (p *Config) SessionDomain() string {
-	if !p.p.Exists(ViperKeySessionDomain) {
-		return p.CookieDomain()
+func (p *Config) SessionDomain(ctx context.Context) string {
+	if !p.GetProvider(ctx).Exists(ViperKeySessionDomain) {
+		return p.CookieDomain(ctx)
 	}
-	return p.p.String(ViperKeySessionDomain)
+	return p.GetProvider(ctx).String(ViperKeySessionDomain)
 }
 
-func (p *Config) CookieDomain() string {
-	return p.p.String(ViperKeyCookieDomain)
+func (p *Config) CookieDomain(ctx context.Context) string {
+	return p.GetProvider(ctx).String(ViperKeyCookieDomain)
 }
 
-func (p *Config) SessionWhoAmIAAL() string {
-	return p.p.String(ViperKeySessionWhoAmIAAL)
+func (p *Config) SessionWhoAmIAAL(ctx context.Context) string {
+	return p.GetProvider(ctx).String(ViperKeySessionWhoAmIAAL)
 }
 
-func (p *Config) SessionRefreshMinTimeLeft() time.Duration {
-	return p.p.DurationF(ViperKeySessionRefreshMinTimeLeft, p.SessionLifespan())
+func (p *Config) SessionRefreshMinTimeLeft(ctx context.Context) time.Duration {
+	return p.GetProvider(ctx).DurationF(ViperKeySessionRefreshMinTimeLeft, p.SessionLifespan(ctx))
 }
 
-func (p *Config) SelfServiceSettingsRequiredAAL() string {
-	return p.p.String(ViperKeySelfServiceSettingsRequiredAAL)
+func (p *Config) SelfServiceSettingsRequiredAAL(ctx context.Context) string {
+	return p.GetProvider(ctx).String(ViperKeySelfServiceSettingsRequiredAAL)
 }
 
-func (p *Config) CookieSameSiteMode() http.SameSite {
-	switch p.p.StringF(ViperKeyCookieSameSite, "Lax") {
+func (p *Config) CookieSameSiteMode(ctx context.Context) http.SameSite {
+	switch p.GetProvider(ctx).StringF(ViperKeyCookieSameSite, "Lax") {
 	case "Lax":
 		return http.SameSiteLaxMode
 	case "Strict":
@@ -1153,76 +1170,76 @@ func (p *Config) CookieSameSiteMode() http.SameSite {
 	return http.SameSiteDefaultMode
 }
 
-func (p *Config) SessionPath() string {
-	if !p.p.Exists(ViperKeySessionPath) {
-		return p.CookiePath()
+func (p *Config) SessionPath(ctx context.Context) string {
+	if !p.GetProvider(ctx).Exists(ViperKeySessionPath) {
+		return p.CookiePath(ctx)
 	}
-	return p.p.String(ViperKeySessionPath)
+	return p.GetProvider(ctx).String(ViperKeySessionPath)
 }
 
-func (p *Config) CookiePath() string {
-	return p.p.String(ViperKeyCookiePath)
+func (p *Config) CookiePath(ctx context.Context) string {
+	return p.GetProvider(ctx).String(ViperKeyCookiePath)
 }
 
-func (p *Config) SelfServiceFlowLoginReturnTo(strategy string) *url.URL {
-	return p.selfServiceReturnTo(ViperKeySelfServiceLoginAfter, strategy)
+func (p *Config) SelfServiceFlowLoginReturnTo(ctx context.Context, strategy string) *url.URL {
+	return p.selfServiceReturnTo(ctx, ViperKeySelfServiceLoginAfter, strategy)
 }
 
-func (p *Config) SelfServiceFlowRegistrationReturnTo(strategy string) *url.URL {
-	return p.selfServiceReturnTo(ViperKeySelfServiceRegistrationAfter, strategy)
+func (p *Config) SelfServiceFlowRegistrationReturnTo(ctx context.Context, strategy string) *url.URL {
+	return p.selfServiceReturnTo(ctx, ViperKeySelfServiceRegistrationAfter, strategy)
 }
 
-func (p *Config) SelfServiceFlowSettingsReturnTo(strategy string, defaultReturnTo *url.URL) *url.URL {
-	return p.p.RequestURIF(
+func (p *Config) SelfServiceFlowSettingsReturnTo(ctx context.Context, strategy string, defaultReturnTo *url.URL) *url.URL {
+	return p.GetProvider(ctx).RequestURIF(
 		ViperKeySelfServiceSettingsAfter+"."+strategy+"."+DefaultBrowserReturnURL,
-		p.p.RequestURIF(ViperKeySelfServiceSettingsAfter+"."+DefaultBrowserReturnURL,
+		p.GetProvider(ctx).RequestURIF(ViperKeySelfServiceSettingsAfter+"."+DefaultBrowserReturnURL,
 			defaultReturnTo,
 		),
 	)
 }
 
-func (p *Config) selfServiceReturnTo(key string, strategy string) *url.URL {
-	return p.p.RequestURIF(
+func (p *Config) selfServiceReturnTo(ctx context.Context, key string, strategy string) *url.URL {
+	return p.GetProvider(ctx).RequestURIF(
 		key+"."+strategy+"."+DefaultBrowserReturnURL,
-		p.p.RequestURIF(key+"."+DefaultBrowserReturnURL,
-			p.SelfServiceBrowserDefaultReturnTo(),
+		p.GetProvider(ctx).RequestURIF(key+"."+DefaultBrowserReturnURL,
+			p.SelfServiceBrowserDefaultReturnTo(ctx),
 		),
 	)
 }
 
-func (p *Config) ConfigVersion() string {
-	return p.p.StringF(ViperKeyVersion, UnknownVersion)
+func (p *Config) ConfigVersion(ctx context.Context) string {
+	return p.GetProvider(ctx).StringF(ViperKeyVersion, UnknownVersion)
 }
 
-func (p *Config) PasswordPolicyConfig() *PasswordPolicy {
+func (p *Config) PasswordPolicyConfig(ctx context.Context) *PasswordPolicy {
 	return &PasswordPolicy{
-		HaveIBeenPwnedHost:               p.p.StringF(ViperKeyPasswordHaveIBeenPwnedHost, "api.pwnedpasswords.com"),
-		HaveIBeenPwnedEnabled:            p.p.BoolF(ViperKeyPasswordHaveIBeenPwnedEnabled, true),
-		MaxBreaches:                      uint(p.p.Int(ViperKeyPasswordMaxBreaches)),
-		IgnoreNetworkErrors:              p.p.BoolF(ViperKeyIgnoreNetworkErrors, true),
-		MinPasswordLength:                uint(p.p.IntF(ViperKeyPasswordMinLength, 8)),
-		IdentifierSimilarityCheckEnabled: p.p.BoolF(ViperKeyPasswordIdentifierSimilarityCheckEnabled, true),
+		HaveIBeenPwnedHost:               p.GetProvider(ctx).StringF(ViperKeyPasswordHaveIBeenPwnedHost, "api.pwnedpasswords.com"),
+		HaveIBeenPwnedEnabled:            p.GetProvider(ctx).BoolF(ViperKeyPasswordHaveIBeenPwnedEnabled, true),
+		MaxBreaches:                      uint(p.GetProvider(ctx).Int(ViperKeyPasswordMaxBreaches)),
+		IgnoreNetworkErrors:              p.GetProvider(ctx).BoolF(ViperKeyIgnoreNetworkErrors, true),
+		MinPasswordLength:                uint(p.GetProvider(ctx).IntF(ViperKeyPasswordMinLength, 8)),
+		IdentifierSimilarityCheckEnabled: p.GetProvider(ctx).BoolF(ViperKeyPasswordIdentifierSimilarityCheckEnabled, true),
 	}
 }
 
-func (p *Config) WebAuthnForPasswordless() bool {
-	return p.p.BoolF(ViperKeyWebAuthnPasswordless, false)
+func (p *Config) WebAuthnForPasswordless(ctx context.Context) bool {
+	return p.GetProvider(ctx).BoolF(ViperKeyWebAuthnPasswordless, false)
 }
 
-func (p *Config) WebAuthnConfig() *webauthn.Config {
+func (p *Config) WebAuthnConfig(ctx context.Context) *webauthn.Config {
 	return &webauthn.Config{
-		RPDisplayName: p.p.String(ViperKeyWebAuthnRPDisplayName),
-		RPID:          p.p.String(ViperKeyWebAuthnRPID),
-		RPOrigin:      p.p.String(ViperKeyWebAuthnRPOrigin),
-		RPIcon:        p.p.String(ViperKeyWebAuthnRPIcon),
+		RPDisplayName: p.GetProvider(ctx).String(ViperKeyWebAuthnRPDisplayName),
+		RPID:          p.GetProvider(ctx).String(ViperKeyWebAuthnRPID),
+		RPOrigin:      p.GetProvider(ctx).String(ViperKeyWebAuthnRPOrigin),
+		RPIcon:        p.GetProvider(ctx).String(ViperKeyWebAuthnRPIcon),
 		AuthenticatorSelection: protocol.AuthenticatorSelection{
 			UserVerification: protocol.VerificationDiscouraged,
 		},
 	}
 }
 
-func (p *Config) HasherPasswordHashingAlgorithm() string {
-	configValue := p.p.StringF(ViperKeyHasherAlgorithm, DefaultPasswordHashingAlgorithm)
+func (p *Config) HasherPasswordHashingAlgorithm(ctx context.Context) string {
+	configValue := p.GetProvider(ctx).StringF(ViperKeyHasherAlgorithm, DefaultPasswordHashingAlgorithm)
 	switch configValue {
 	case "bcrypt":
 		return configValue
@@ -1233,8 +1250,8 @@ func (p *Config) HasherPasswordHashingAlgorithm() string {
 	}
 }
 
-func (p *Config) CipherAlgorithm() string {
-	configValue := p.p.StringF(ViperKeyCipherAlgorithm, DefaultCipherAlgorithm)
+func (p *Config) CipherAlgorithm(ctx context.Context) string {
+	configValue := p.GetProvider(ctx).StringF(ViperKeyCipherAlgorithm, DefaultCipherAlgorithm)
 	switch configValue {
 	case "noop":
 		return configValue
@@ -1247,23 +1264,23 @@ func (p *Config) CipherAlgorithm() string {
 	}
 }
 
-func (p *Config) GetTSLCertificatesForPublic() []tls.Certificate {
+func (p *Config) GetTSLCertificatesForPublic(ctx context.Context) []tls.Certificate {
 	return p.getTSLCertificates(
 		"public",
-		p.p.String(ViperKeyPublicTLSCertBase64),
-		p.p.String(ViperKeyPublicTLSKeyBase64),
-		p.p.String(ViperKeyPublicTLSCertPath),
-		p.p.String(ViperKeyPublicTLSKeyPath),
+		p.GetProvider(ctx).String(ViperKeyPublicTLSCertBase64),
+		p.GetProvider(ctx).String(ViperKeyPublicTLSKeyBase64),
+		p.GetProvider(ctx).String(ViperKeyPublicTLSCertPath),
+		p.GetProvider(ctx).String(ViperKeyPublicTLSKeyPath),
 	)
 }
 
-func (p *Config) GetTSLCertificatesForAdmin() []tls.Certificate {
+func (p *Config) GetTSLCertificatesForAdmin(ctx context.Context) []tls.Certificate {
 	return p.getTSLCertificates(
 		"admin",
-		p.p.String(ViperKeyAdminTLSCertBase64),
-		p.p.String(ViperKeyAdminTLSKeyBase64),
-		p.p.String(ViperKeyAdminTLSCertPath),
-		p.p.String(ViperKeyAdminTLSKeyPath),
+		p.GetProvider(ctx).String(ViperKeyAdminTLSCertBase64),
+		p.GetProvider(ctx).String(ViperKeyAdminTLSKeyBase64),
+		p.GetProvider(ctx).String(ViperKeyAdminTLSCertPath),
+		p.GetProvider(ctx).String(ViperKeyAdminTLSKeyPath),
 	)
 }
 
@@ -1279,4 +1296,8 @@ func (p *Config) getTSLCertificates(daemon, certBase64, keyBase64, certPath, key
 
 	p.l.Infof("TLS has not been configured for %s, skipping", daemon)
 	return nil
+}
+
+func (p *Config) GetProvider(ctx context.Context) *configx.Provider {
+	return p.c.Config(ctx, p.p)
 }

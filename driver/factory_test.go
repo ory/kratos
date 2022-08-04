@@ -17,18 +17,20 @@ import (
 )
 
 func TestDriverNew(t *testing.T) {
-	r := driver.New(
+	ctx := context.Background()
+	r, err := driver.New(
 		context.Background(),
 		os.Stderr,
 		configx.WithValue(config.ViperKeyDSN, config.DefaultSQLiteMemoryDSN),
 		configx.SkipValidation())
+	require.NoError(t, err)
 
-	assert.EqualValues(t, config.DefaultSQLiteMemoryDSN, r.Config(context.Background()).DSN())
+	assert.EqualValues(t, config.DefaultSQLiteMemoryDSN, r.Config().DSN(ctx))
 	require.NoError(t, r.Persister().Ping())
 
-	assert.NotEqual(t, uuid.Nil.String(), r.Persister().NetworkID().String())
+	assert.NotEqual(t, uuid.Nil.String(), r.Persister().NetworkID(context.Background()).String())
 
 	n, err := r.Persister().DetermineNetwork(context.Background())
 	require.NoError(t, err)
-	assert.Equal(t, r.Persister().NetworkID(), n.ID)
+	assert.Equal(t, r.Persister().NetworkID(context.Background()), n.ID)
 }

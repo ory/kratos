@@ -39,7 +39,7 @@ func MockSetSession(t *testing.T, reg mockDeps, conf *config.Config) httprouter.
 
 func MockSetSessionWithIdentity(t *testing.T, reg mockDeps, conf *config.Config, i *identity.Identity) httprouter.Handle {
 	return func(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
-		activeSession, _ := session.NewActiveSession(i, conf, time.Now().UTC(), identity.CredentialsTypePassword, identity.AuthenticatorAssuranceLevel1)
+		activeSession, _ := session.NewActiveSession(r.Context(), i, conf, time.Now().UTC(), identity.CredentialsTypePassword, identity.AuthenticatorAssuranceLevel1)
 		if aal := r.URL.Query().Get("set_aal"); len(aal) > 0 {
 			activeSession.AuthenticatorAssuranceLevel = identity.AuthenticatorAssuranceLevel(aal)
 		}
@@ -143,8 +143,9 @@ func MockSessionCreateHandlerWithIdentityAndAMR(t *testing.T, reg mockDeps, i *i
 	}
 	sess.SetAuthenticatorAssuranceLevel()
 
-	if _, err := reg.Config(context.Background()).DefaultIdentityTraitsSchemaURL(); err != nil {
-		SetDefaultIdentitySchema(reg.Config(context.Background()), "file://./stub/fake-session.schema.json")
+	ctx := context.Background()
+	if _, err := reg.Config().DefaultIdentityTraitsSchemaURL(ctx); err != nil {
+		SetDefaultIdentitySchema(reg.Config(), "file://./stub/fake-session.schema.json")
 	}
 
 	require.NoError(t, reg.PrivilegedIdentityPool().CreateIdentity(context.Background(), i))

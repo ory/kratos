@@ -56,16 +56,17 @@ func newIdentityWithPassword(email string) *identity.Identity {
 }
 
 func TestStrategyTraits(t *testing.T) {
+	ctx := context.Background()
 	conf, reg := internal.NewFastRegistryWithMocks(t)
 	testhelpers.SetDefaultIdentitySchema(conf, "file://./stub/identity.schema.json")
-	conf.MustSet(config.ViperKeySelfServiceBrowserDefaultReturnTo, "https://www.ory.sh/")
+	conf.MustSet(ctx, config.ViperKeySelfServiceBrowserDefaultReturnTo, "https://www.ory.sh/")
 	testhelpers.StrategyEnable(t, conf, identity.CredentialsTypePassword.String(), true)
 	testhelpers.StrategyEnable(t, conf, settings.StrategyProfile, true)
 
 	setPrivilegedTime := func(t *testing.T, duration time.Duration) {
-		conf.MustSet(config.ViperKeySelfServiceSettingsPrivilegedAuthenticationAfter, duration.String())
+		conf.MustSet(ctx, config.ViperKeySelfServiceSettingsPrivilegedAuthenticationAfter, duration.String())
 		t.Cleanup(func() {
-			conf.MustSet(config.ViperKeySelfServiceSettingsPrivilegedAuthenticationAfter, "1ns")
+			conf.MustSet(ctx, config.ViperKeySelfServiceSettingsPrivilegedAuthenticationAfter, "1ns")
 		})
 	}
 
@@ -100,7 +101,7 @@ func TestStrategyTraits(t *testing.T) {
 			require.NoError(t, err)
 			defer res.Body.Close()
 			assert.EqualValues(t, http.StatusUnauthorized, res.StatusCode, "%+v", res.Request)
-			assert.Contains(t, res.Request.URL.String(), conf.Source().String(config.ViperKeySelfServiceLoginUI))
+			assert.Contains(t, res.Request.URL.String(), conf.GetProvider(ctx).String(config.ViperKeySelfServiceLoginUI))
 		})
 
 		t.Run("type=api/spa", func(t *testing.T) {
@@ -229,7 +230,7 @@ func TestStrategyTraits(t *testing.T) {
 	var expectValidationError = func(t *testing.T, isAPI, isSPA bool, hc *http.Client, values func(url.Values)) string {
 		return testhelpers.SubmitSettingsForm(t, isAPI, isSPA, hc, publicTS, values,
 			testhelpers.ExpectStatusCode(isAPI || isSPA, http.StatusBadRequest, http.StatusOK),
-			testhelpers.ExpectURL(isAPI || isSPA, publicTS.URL+settings.RouteSubmitFlow, conf.SelfServiceFlowSettingsUI().String()))
+			testhelpers.ExpectURL(isAPI || isSPA, publicTS.URL+settings.RouteSubmitFlow, conf.SelfServiceFlowSettingsUI(ctx).String()))
 	}
 
 	t.Run("description=should come back with form errors if some profile data is invalid", func(t *testing.T) {
@@ -320,7 +321,7 @@ func TestStrategyTraits(t *testing.T) {
 			f := testhelpers.InitializeSettingsFlowViaBrowser(t, browserUser1, true, publicTS)
 			res := run(t, f, true, browserUser1)
 			assert.EqualValues(t, http.StatusUnauthorized, res.StatusCode)
-			assert.Contains(t, res.Request.URL.String(), conf.Source().String(config.ViperKeySelfServiceLoginUI))
+			assert.Contains(t, res.Request.URL.String(), conf.GetProvider(ctx).String(config.ViperKeySelfServiceLoginUI))
 		})
 
 		t.Run("type=browser", func(t *testing.T) {
@@ -328,7 +329,7 @@ func TestStrategyTraits(t *testing.T) {
 			f := testhelpers.InitializeSettingsFlowViaBrowser(t, browserUser1, false, publicTS)
 			res := run(t, f, false, browserUser1)
 			assert.EqualValues(t, http.StatusUnauthorized, res.StatusCode)
-			assert.Contains(t, res.Request.URL.String(), conf.Source().String(config.ViperKeySelfServiceLoginUI))
+			assert.Contains(t, res.Request.URL.String(), conf.GetProvider(ctx).String(config.ViperKeySelfServiceLoginUI))
 
 			t.Run("should update when signed back in", func(t *testing.T) {
 				setPrivileged(t)
@@ -413,7 +414,7 @@ func TestStrategyTraits(t *testing.T) {
 	var expectSuccess = func(t *testing.T, isAPI, isSPA bool, hc *http.Client, values func(url.Values)) string {
 		return testhelpers.SubmitSettingsForm(t, isAPI, isSPA, hc, publicTS, values,
 			http.StatusOK,
-			testhelpers.ExpectURL(isAPI || isSPA, publicTS.URL+settings.RouteSubmitFlow, conf.SelfServiceFlowSettingsUI().String()))
+			testhelpers.ExpectURL(isAPI || isSPA, publicTS.URL+settings.RouteSubmitFlow, conf.SelfServiceFlowSettingsUI(ctx).String()))
 	}
 
 	t.Run("flow=succeed with final request", func(t *testing.T) {
@@ -516,10 +517,10 @@ func TestStrategyTraits(t *testing.T) {
 	t.Run("description=should send email with verifiable address", func(t *testing.T) {
 		setPrivileged(t)
 
-		conf.MustSet(config.ViperKeySelfServiceVerificationEnabled, true)
-		conf.MustSet(config.ViperKeyCourierSMTPURL, "smtp://foo:bar@irrelevant.com/")
+		conf.MustSet(ctx, config.ViperKeySelfServiceVerificationEnabled, true)
+		conf.MustSet(ctx, config.ViperKeyCourierSMTPURL, "smtp://foo:bar@irrelevant.com/")
 		t.Cleanup(func() {
-			conf.MustSet(config.HookStrategyKey(config.ViperKeySelfServiceSettingsAfter, settings.StrategyProfile), nil)
+			conf.MustSet(ctx, config.HookStrategyKey(config.ViperKeySelfServiceSettingsAfter, settings.StrategyProfile), nil)
 		})
 
 		var check = func(t *testing.T, actual, newEmail string) {

@@ -36,6 +36,7 @@ import (
 )
 
 func TestHandleError(t *testing.T) {
+	ctx := context.Background()
 	conf, reg := internal.NewFastRegistryWithMocks(t)
 	public, _ := testhelpers.NewKratosServer(t, reg)
 
@@ -79,7 +80,7 @@ func TestHandleError(t *testing.T) {
 		res, err := ts.Client().Get(ts.URL + "/error")
 		require.NoError(t, err)
 		defer res.Body.Close()
-		require.Contains(t, res.Request.URL.String(), conf.SelfServiceFlowErrorURL().String()+"?id=")
+		require.Contains(t, res.Request.URL.String(), conf.SelfServiceFlowErrorURL(ctx).String()+"?id=")
 
 		sse, _, err := sdk.V0alpha2Api.GetSelfServiceError(context.Background()).Id(res.Request.URL.Query().Get("id")).Execute()
 		require.NoError(t, err)
@@ -101,7 +102,7 @@ func TestHandleError(t *testing.T) {
 
 	t.Run("case=relative error", func(t *testing.T) {
 		t.Cleanup(reset)
-		reg.Config(context.Background()).MustSet(config.ViperKeySelfServiceErrorUI, "/login-ts")
+		reg.Config().MustSet(ctx, config.ViperKeySelfServiceErrorUI, "/login-ts")
 		flowError = herodot.ErrInternalServerError.WithReason("system error")
 		ct = node.PasswordGroup
 		assert.Regexp(
@@ -122,7 +123,7 @@ func TestHandleError(t *testing.T) {
 		require.NoError(t, err)
 		defer res.Body.Close()
 		assert.Contains(t, res.Header.Get("Content-Type"), "application/json")
-		assert.NotContains(t, res.Request.URL.String(), conf.SelfServiceFlowErrorURL().String()+"?id=")
+		assert.NotContains(t, res.Request.URL.String(), conf.SelfServiceFlowErrorURL(ctx).String()+"?id=")
 
 		body, err := io.ReadAll(res.Body)
 		require.NoError(t, err)
@@ -198,7 +199,7 @@ func TestHandleError(t *testing.T) {
 			res, err := http.DefaultClient.Get(ts.URL + "/error")
 			require.NoError(t, err)
 			defer res.Body.Close()
-			assert.Contains(t, res.Request.URL.String(), conf.SelfServiceFlowLoginUI().String()+"?flow=")
+			assert.Contains(t, res.Request.URL.String(), conf.SelfServiceFlowLoginUI(ctx).String()+"?flow=")
 
 			lf, err := reg.LoginFlowPersister().GetLoginFlow(context.Background(), uuid.FromStringOrNil(res.Request.URL.Query().Get("flow")))
 			require.NoError(t, err)

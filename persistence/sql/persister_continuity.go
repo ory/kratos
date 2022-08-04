@@ -7,8 +7,6 @@ import (
 
 	"github.com/pkg/errors"
 
-	"github.com/ory/kratos/corp"
-
 	"github.com/gofrs/uuid"
 
 	"github.com/ory/x/sqlcon"
@@ -22,7 +20,7 @@ func (p *Persister) SaveContinuitySession(ctx context.Context, c *continuity.Con
 	ctx, span := p.r.Tracer(ctx).Tracer().Start(ctx, "persistence.sql.SaveContinuitySession")
 	defer span.End()
 
-	c.NID = corp.ContextualizeNID(ctx, p.nid)
+	c.NID = p.NetworkID(ctx)
 	return sqlcon.HandleError(p.GetConnection(ctx).Create(c))
 }
 
@@ -31,7 +29,7 @@ func (p *Persister) GetContinuitySession(ctx context.Context, id uuid.UUID) (*co
 	defer span.End()
 
 	var c continuity.Container
-	if err := p.GetConnection(ctx).Where("id = ? AND nid = ?", id, corp.ContextualizeNID(ctx, p.nid)).First(&c); err != nil {
+	if err := p.GetConnection(ctx).Where("id = ? AND nid = ?", id, p.NetworkID(ctx)).First(&c); err != nil {
 		return nil, sqlcon.HandleError(err)
 	}
 	return &c, nil
@@ -44,7 +42,7 @@ func (p *Persister) DeleteContinuitySession(ctx context.Context, id uuid.UUID) e
 	if count, err := p.GetConnection(ctx).RawQuery(
 		// #nosec
 		fmt.Sprintf("DELETE FROM %s WHERE id=? AND nid=?",
-			new(continuity.Container).TableName(ctx)), id, corp.ContextualizeNID(ctx, p.nid)).ExecWithCount(); err != nil {
+			new(continuity.Container).TableName(ctx)), id, p.NetworkID(ctx)).ExecWithCount(); err != nil {
 		return sqlcon.HandleError(err)
 	} else if count == 0 {
 		return errors.WithStack(sqlcon.ErrNoRows)
@@ -61,7 +59,7 @@ func (p *Persister) DeleteExpiredContinuitySessions(ctx context.Context, expires
 		limit,
 	),
 		expiresAt,
-		corp.ContextualizeNID(ctx, p.nid),
+		p.NetworkID(ctx),
 	).Exec()
 	if err != nil {
 		return sqlcon.HandleError(err)

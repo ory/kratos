@@ -1,6 +1,7 @@
 package flow_test
 
 import (
+	"context"
 	"fmt"
 	"io"
 	"net/http"
@@ -48,6 +49,7 @@ func TestVerifyRequest(t *testing.T) {
 }
 
 func TestMethodEnabledAndAllowed(t *testing.T) {
+	ctx := context.Background()
 	conf, d := internal.NewFastRegistryWithMocks(t)
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if err := flow.MethodEnabledAndAllowedFromRequest(r, "password", d); err != nil {
@@ -76,7 +78,7 @@ func TestMethodEnabledAndAllowed(t *testing.T) {
 	})
 
 	t.Run("disabled", func(t *testing.T) {
-		require.NoError(t, conf.Set(fmt.Sprintf("%s.%s.enabled", config.ViperKeySelfServiceStrategyConfig, "password"), false))
+		require.NoError(t, conf.Set(ctx, fmt.Sprintf("%s.%s.enabled", config.ViperKeySelfServiceStrategyConfig, "password"), false))
 		res, err := ts.Client().PostForm(ts.URL, url.Values{"method": {"password"}})
 		require.NoError(t, err)
 		body, err := io.ReadAll(res.Body)

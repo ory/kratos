@@ -25,12 +25,13 @@ import (
 )
 
 func NewRecoveryUIFlowEchoServer(t *testing.T, reg driver.Registry) *httptest.Server {
+	ctx := context.Background()
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		e, err := reg.RecoveryFlowPersister().GetRecoveryFlow(r.Context(), x.ParseUUID(r.URL.Query().Get("flow")))
 		require.NoError(t, err)
 		reg.Writer().Write(w, r, e)
 	}))
-	reg.Config(context.Background()).MustSet(config.ViperKeySelfServiceRecoveryUI, ts.URL+"/recovery-ts")
+	reg.Config().MustSet(ctx, config.ViperKeySelfServiceRecoveryUI, ts.URL+"/recovery-ts")
 	t.Cleanup(ts.Close)
 	return ts
 }

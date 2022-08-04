@@ -17,7 +17,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/ory/kratos/corp"
 	"github.com/ory/kratos/driver"
 	"github.com/ory/x/dbal"
 
@@ -39,7 +38,6 @@ import (
 type ConfigOptions map[string]interface{}
 
 func init() {
-	corp.SetContextualizer(new(corp.ContextNoOp))
 	dbal.RegisterDriver(func() dbal.Driver {
 		return driver.NewRegistryDefault()
 	})

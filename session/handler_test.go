@@ -72,9 +72,10 @@ func assertNoCSRFCookieInResponse(t *testing.T, _ *httptest.Server, _ *http.Clie
 func TestSessionWhoAmI(t *testing.T) {
 	conf, reg := internal.NewFastRegistryWithMocks(t)
 	ts, _, r, _ := testhelpers.NewKratosServerWithCSRFAndRouters(t, reg)
+	ctx := context.Background()
 
 	// set this intermediate because kratos needs some valid url for CRUDE operations
-	conf.MustSet(config.ViperKeyPublicBaseURL, "http://example.com")
+	conf.MustSet(ctx, config.ViperKeyPublicBaseURL, "http://example.com")
 	i := &identity.Identity{
 		ID:    x.NewUUID(),
 		State: identity.StateActive,
@@ -91,7 +92,7 @@ func TestSessionWhoAmI(t *testing.T) {
 	h, _ := testhelpers.MockSessionCreateHandlerWithIdentity(t, reg, i)
 
 	r.GET("/set", h)
-	conf.MustSet(config.ViperKeyPublicBaseURL, ts.URL)
+	conf.MustSet(ctx, config.ViperKeyPublicBaseURL, ts.URL)
 
 	t.Run("case=aal requirements", func(t *testing.T) {
 		h1, _ := testhelpers.MockSessionCreateHandlerWithIdentityAndAMR(t, reg, createAAL2Identity(t, reg), []identity.CredentialsType{identity.CredentialsTypePassword, identity.CredentialsTypeWebAuthn})
@@ -115,28 +116,28 @@ func TestSessionWhoAmI(t *testing.T) {
 		}
 
 		t.Run("case=aal2-aal2", func(t *testing.T) {
-			conf.MustSet(config.ViperKeySessionWhoAmIAAL, config.HighestAvailableAAL)
+			conf.MustSet(ctx, config.ViperKeySessionWhoAmIAAL, config.HighestAvailableAAL)
 			run(t, "aal2-aal2", http.StatusOK)
 		})
 
 		t.Run("case=aal2-aal2", func(t *testing.T) {
-			conf.MustSet(config.ViperKeySessionWhoAmIAAL, "aal1")
+			conf.MustSet(ctx, config.ViperKeySessionWhoAmIAAL, "aal1")
 			run(t, "aal2-aal2", http.StatusOK)
 		})
 
 		t.Run("case=aal2-aal1", func(t *testing.T) {
-			conf.MustSet(config.ViperKeySessionWhoAmIAAL, config.HighestAvailableAAL)
+			conf.MustSet(ctx, config.ViperKeySessionWhoAmIAAL, config.HighestAvailableAAL)
 			body := run(t, "aal2-aal1", http.StatusForbidden)
 			assert.EqualValues(t, NewErrAALNotSatisfied("").Reason(), gjson.Get(body, "error.reason").String(), body)
 		})
 
 		t.Run("case=aal2-aal1", func(t *testing.T) {
-			conf.MustSet(config.ViperKeySessionWhoAmIAAL, "aal1")
+			conf.MustSet(ctx, config.ViperKeySessionWhoAmIAAL, "aal1")
 			run(t, "aal2-aal1", http.StatusOK)
 		})
 
 		t.Run("case=aal1-aal1", func(t *testing.T) {
-			conf.MustSet(config.ViperKeySessionWhoAmIAAL, config.HighestAvailableAAL)
+			conf.MustSet(ctx, config.ViperKeySessionWhoAmIAAL, config.HighestAvailableAAL)
 			run(t, "aal1-aal1", http.StatusOK)
 		})
 	})
@@ -182,10 +183,10 @@ func TestSessionWhoAmI(t *testing.T) {
 
 	/*
 		t.Run("case=respects AAL config", func(t *testing.T) {
-			conf.MustSet(config.ViperKeySessionLifespan, "1m")
+			conf.MustSet(ctx, config.ViperKeySessionLifespan, "1m")
 
 			t.Run("required_aal=aal1", func(t *testing.T) {
-				conf.MustSet(config.ViperKeySelfServiceSettingsRequiredAAL, "aal1")
+				conf.MustSet(ctx, config.ViperKeySelfServiceSettingsRequiredAAL, "aal1")
 
 				i := identity.Identity{Traits: []byte("{}"), State: identity.StateActive}
 				require.NoError(t, reg.PrivilegedIdentityPool().CreateIdentity(context.Background(), &i))
@@ -238,27 +239,27 @@ func TestSessionWhoAmI(t *testing.T) {
 				}
 
 				t.Run("fulfilled for aal2 if identity has aal2", func(t *testing.T) {
-					conf.MustSet(config.ViperKeySessionWhoAmIAAL, config.HighestAvailableAAL)
+					conf.MustSet(ctx, config.ViperKeySessionWhoAmIAAL, config.HighestAvailableAAL)
 					run(t, []identity.CredentialsType{identity.CredentialsTypePassword, identity.CredentialsTypeWebAuthn}, 200, &idAAL2)
 				})
 
 				t.Run("rejected for aal1 if identity has aal2", func(t *testing.T) {
-					conf.MustSet(config.ViperKeySessionWhoAmIAAL, config.HighestAvailableAAL)
+					conf.MustSet(ctx, config.ViperKeySessionWhoAmIAAL, config.HighestAvailableAAL)
 					run(t, []identity.CredentialsType{identity.CredentialsTypePassword}, 403, &idAAL2)
 				})
 
 				t.Run("fulfilled for aal1 if identity has aal2 but config is aal1", func(t *testing.T) {
-					conf.MustSet(config.ViperKeySessionWhoAmIAAL, "aal1")
+					conf.MustSet(ctx, config.ViperKeySessionWhoAmIAAL, "aal1")
 					run(t, []identity.CredentialsType{identity.CredentialsTypePassword}, 200, &idAAL2)
 				})
 
 				t.Run("fulfilled for aal2 if identity has aal1", func(t *testing.T) {
-					conf.MustSet(config.ViperKeySessionWhoAmIAAL, config.HighestAvailableAAL)
+					conf.MustSet(ctx, config.ViperKeySessionWhoAmIAAL, config.HighestAvailableAAL)
 					run(t, []identity.CredentialsType{identity.CredentialsTypePassword, identity.CredentialsTypeWebAuthn}, 200, &idAAL1)
 				})
 
 				t.Run("fulfilled for aal1 if identity has aal1", func(t *testing.T) {
-					conf.MustSet(config.ViperKeySessionWhoAmIAAL, config.HighestAvailableAAL)
+					conf.MustSet(ctx, config.ViperKeySessionWhoAmIAAL, config.HighestAvailableAAL)
 					run(t, []identity.CredentialsType{identity.CredentialsTypePassword}, 200, &idAAL1)
 				})
 			})
@@ -267,13 +268,14 @@ func TestSessionWhoAmI(t *testing.T) {
 }
 
 func TestIsNotAuthenticatedSecurecookie(t *testing.T) {
+	ctx := context.Background()
 	conf, reg := internal.NewFastRegistryWithMocks(t)
 	r := x.NewRouterPublic()
 	r.GET("/public/with-callback", reg.SessionHandler().IsNotAuthenticated(send(http.StatusOK), send(http.StatusBadRequest)))
 
 	ts := httptest.NewServer(r)
 	defer ts.Close()
-	conf.MustSet(config.ViperKeyPublicBaseURL, ts.URL)
+	conf.MustSet(ctx, config.ViperKeyPublicBaseURL, ts.URL)
 
 	c := testhelpers.NewClientWithCookies(t)
 	c.Jar.SetCookies(urlx.ParseOrPanic(ts.URL), []*http.Cookie{
@@ -294,10 +296,11 @@ func TestIsNotAuthenticatedSecurecookie(t *testing.T) {
 }
 
 func TestIsNotAuthenticated(t *testing.T) {
+	ctx := context.Background()
 	conf, reg := internal.NewFastRegistryWithMocks(t)
 	r := x.NewRouterPublic()
 	// set this intermediate because kratos needs some valid url for CRUDE operations
-	conf.MustSet(config.ViperKeyPublicBaseURL, "http://example.com")
+	conf.MustSet(ctx, config.ViperKeyPublicBaseURL, "http://example.com")
 
 	reg.WithCSRFHandler(new(x.FakeCSRFHandler))
 	h, _ := testhelpers.MockSessionCreateHandler(t, reg)
@@ -307,7 +310,7 @@ func TestIsNotAuthenticated(t *testing.T) {
 	ts := httptest.NewServer(r)
 	defer ts.Close()
 
-	conf.MustSet(config.ViperKeyPublicBaseURL, ts.URL)
+	conf.MustSet(ctx, config.ViperKeyPublicBaseURL, ts.URL)
 
 	sessionClient := testhelpers.NewClientWithCookies(t)
 	testhelpers.MockHydrateCookieClient(t, sessionClient, ts.URL+"/set")
@@ -349,6 +352,7 @@ func TestIsNotAuthenticated(t *testing.T) {
 }
 
 func TestIsAuthenticated(t *testing.T) {
+	ctx := context.Background()
 	conf, reg := internal.NewFastRegistryWithMocks(t)
 	reg.WithCSRFHandler(new(x.FakeCSRFHandler))
 	r := x.NewRouterPublic()
@@ -359,7 +363,7 @@ func TestIsAuthenticated(t *testing.T) {
 	r.GET("/privileged/without-callback", reg.SessionHandler().IsAuthenticated(send(http.StatusOK), nil))
 	ts := httptest.NewServer(r)
 	defer ts.Close()
-	conf.MustSet(config.ViperKeyPublicBaseURL, ts.URL)
+	conf.MustSet(ctx, config.ViperKeyPublicBaseURL, ts.URL)
 
 	sessionClient := testhelpers.NewClientWithCookies(t)
 	testhelpers.MockHydrateCookieClient(t, sessionClient, ts.URL+"/set")
@@ -406,9 +410,9 @@ func TestHandlerAdminSessionManagement(t *testing.T) {
 	_, ts, _, _ := testhelpers.NewKratosServerWithCSRFAndRouters(t, reg)
 
 	// set this intermediate because kratos needs some valid url for CRUDE operations
-	conf.MustSet(config.ViperKeyPublicBaseURL, "http://example.com")
+	conf.MustSet(ctx, config.ViperKeyPublicBaseURL, "http://example.com")
 	testhelpers.SetDefaultIdentitySchema(conf, "file://./stub/identity.schema.json")
-	conf.MustSet(config.ViperKeyPublicBaseURL, ts.URL)
+	conf.MustSet(ctx, config.ViperKeyPublicBaseURL, ts.URL)
 
 	t.Run("case=should return 202 after invalidating all sessions", func(t *testing.T) {
 		client := testhelpers.NewClientWithCookies(t)
@@ -530,9 +534,9 @@ func TestHandlerSelfServiceSessionManagement(t *testing.T) {
 	ts, _, r, _ := testhelpers.NewKratosServerWithCSRFAndRouters(t, reg)
 
 	// set this intermediate because kratos needs some valid url for CRUDE operations
-	conf.MustSet(config.ViperKeyPublicBaseURL, "http://example.com")
+	conf.MustSet(ctx, config.ViperKeyPublicBaseURL, "http://example.com")
 	testhelpers.SetDefaultIdentitySchema(conf, "file://./stub/identity.schema.json")
-	conf.MustSet(config.ViperKeyPublicBaseURL, ts.URL)
+	conf.MustSet(ctx, config.ViperKeyPublicBaseURL, ts.URL)
 
 	var setup func(t *testing.T) (*http.Client, *identity.Identity, *Session)
 	{
@@ -686,13 +690,14 @@ func TestHandlerSelfServiceSessionManagement(t *testing.T) {
 }
 
 func TestHandlerRefreshSessionBySessionID(t *testing.T) {
+	ctx := context.Background()
 	conf, reg := internal.NewFastRegistryWithMocks(t)
 	publicServer, adminServer, _, _ := testhelpers.NewKratosServerWithCSRFAndRouters(t, reg)
 
 	// set this intermediate because kratos needs some valid url for CRUDE operations
-	conf.MustSet(config.ViperKeyPublicBaseURL, "http://example.com")
+	conf.MustSet(ctx, config.ViperKeyPublicBaseURL, "http://example.com")
 	testhelpers.SetDefaultIdentitySchema(conf, "file://./stub/identity.schema.json")
-	conf.MustSet(config.ViperKeyPublicBaseURL, adminServer.URL)
+	conf.MustSet(ctx, config.ViperKeyPublicBaseURL, adminServer.URL)
 
 	i := identity.NewIdentity("")
 	require.NoError(t, reg.IdentityManager().Create(context.Background(), i))

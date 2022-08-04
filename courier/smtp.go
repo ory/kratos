@@ -28,10 +28,10 @@ type smtpClient struct {
 }
 
 func newSMTP(ctx context.Context, deps Dependencies) *smtpClient {
-	uri := deps.CourierConfig(ctx).CourierSMTPURL()
+	uri := deps.CourierConfig().CourierSMTPURL(ctx)
 	var tlsCertificates []tls.Certificate
-	clientCertPath := deps.CourierConfig(ctx).CourierSMTPClientCertPath()
-	clientKeyPath := deps.CourierConfig(ctx).CourierSMTPClientKeyPath()
+	clientCertPath := deps.CourierConfig().CourierSMTPClientCertPath(ctx)
+	clientKeyPath := deps.CourierConfig().CourierSMTPClientKeyPath(ctx)
 
 	if clientCertPath != "" && clientKeyPath != "" {
 		clientCert, err := tls.LoadX509KeyPair(clientCertPath, clientKeyPath)
@@ -44,7 +44,7 @@ func newSMTP(ctx context.Context, deps Dependencies) *smtpClient {
 		}
 	}
 
-	localName := deps.CourierConfig(ctx).CourierSMTPLocalName()
+	localName := deps.CourierConfig().CourierSMTPLocalName(ctx)
 	password, _ := uri.User.Password()
 	port, _ := strconv.ParseInt(uri.Port(), 10, 0)
 
@@ -154,8 +154,8 @@ func (c *courier) dispatchEmail(ctx context.Context, msg Message) error {
 		return errors.WithStack(herodot.ErrInternalServerError.WithReasonf("Courier tried to deliver an email but %s is not set!", config.ViperKeyCourierSMTPURL))
 	}
 
-	from := c.deps.CourierConfig(ctx).CourierSMTPFrom()
-	fromName := c.deps.CourierConfig(ctx).CourierSMTPFromName()
+	from := c.deps.CourierConfig().CourierSMTPFrom(ctx)
+	fromName := c.deps.CourierConfig().CourierSMTPFromName(ctx)
 
 	gm := gomail.NewMessage()
 	if fromName == "" {
@@ -167,7 +167,7 @@ func (c *courier) dispatchEmail(ctx context.Context, msg Message) error {
 	gm.SetHeader("To", msg.Recipient)
 	gm.SetHeader("Subject", msg.Subject)
 
-	headers := c.deps.CourierConfig(ctx).CourierSMTPHeaders()
+	headers := c.deps.CourierConfig().CourierSMTPHeaders(ctx)
 	for k, v := range headers {
 		gm.SetHeader(k, v)
 	}

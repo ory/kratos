@@ -11,7 +11,7 @@ import (
 )
 
 func DecodeBody(p interface{}, r *http.Request, dec *decoderx.HTTP, conf *config.Config, schema []byte) error {
-	ds, err := conf.DefaultIdentityTraitsSchemaURL()
+	ds, err := conf.DefaultIdentityTraitsSchemaURL(r.Context())
 	if err != nil {
 		return err
 	}

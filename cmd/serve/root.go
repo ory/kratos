@@ -30,9 +30,15 @@ func NewServeCmd() (serveCmd *cobra.Command) {
 		Use:   "serve",
 		Short: "Run the Ory Kratos server",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			d := driver.New(cmd.Context(), cmd.ErrOrStderr(), configx.WithFlags(cmd.Flags()))
+			ctx := cmd.Context()
+			opts := configx.ConfigOptionsFromContext(ctx)
 
-			if d.Config(cmd.Context()).IsInsecureDevMode() {
+			d, err := driver.New(ctx, cmd.ErrOrStderr(), append(opts, configx.WithFlags(cmd.Flags()))...)
+			if err != nil {
+				return err
+			}
+
+			if d.Config().IsInsecureDevMode(ctx) {
 				d.Logger().Warn(`
 
 YOU ARE RUNNING Ory KRATOS IN DEV MODE.
@@ -42,7 +48,7 @@ DON'T DO THIS IN PRODUCTION!
 `)
 			}
 
-			configVersion := d.Config(cmd.Context()).ConfigVersion()
+			configVersion := d.Config().ConfigVersion(ctx)
 			if configVersion == config.UnknownVersion {
 				d.Logger().Warn("The config has no version specified. Add the version to improve your development experience.")
 			} else if config.Version != "" &&
