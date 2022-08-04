@@ -4,7 +4,7 @@
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 **Table of Contents**
 
-- [ (2022-08-02)](#2022-08-02)
+- [ (2022-08-04)](#2022-08-04)
   - [Breaking Changes](#breaking-changes)
     - [Bug Fixes](#bug-fixes)
     - [Code Refactoring](#code-refactoring)
@@ -263,9 +263,15 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# [](https://github.com/ory/kratos/compare/v0.10.1...v) (2022-08-02)
+# [](https://github.com/ory/kratos/compare/v0.10.1...v) (2022-08-04)
 
 ## Breaking Changes
+
+This is a breaking change, as it removes the `courier.message_ttl` config key
+and replaces it with a counter `courier.message_retries`.
+
+Closes https://github.com/ory/kratos/issues/402 Closes
+https://github.com/ory/kratos/issues/1598
 
 SDK Method `getJsonSchema` was renamed to `getIdentitySchema`.
 
@@ -424,6 +430,13 @@ SDK Method `getJsonSchema` was renamed to `getIdentitySchema`.
   ([e48e9fa](https://github.com/ory/kratos/commit/e48e9fac7ab6a982e0e941bfea1d15569eb53582)),
   closes [#1724](https://github.com/ory/kratos/issues/1724)
   [#1483](https://github.com/ory/kratos/issues/1483)
+- Replace message_ttl with static max retry count
+  ([#2638](https://github.com/ory/kratos/issues/2638))
+  ([b341756](https://github.com/ory/kratos/commit/b341756130ee808ddcc003163884f09e3f006d0a)):
+
+  This PR replaces the `courier.message_ttl` configuration option with a
+  `courier.message_retries` option to limit how often the sending of a message
+  is retried before it is marked as `abandoned`.
 
 ### Tests
 
