@@ -2,12 +2,37 @@ package courier
 
 import (
 	"context"
-	"time"
 
 	"github.com/pkg/errors"
 )
 
 func (c *courier) DispatchMessage(ctx context.Context, msg Message) error {
+	maxRetries := c.deps.CourierConfig(ctx).CourierMessageRetries()
+
+	if msg.SendCount > maxRetries {
+		if err := c.deps.CourierPersister().SetMessageStatus(ctx, msg.ID, MessageStatusAbandoned); err != nil {
+			c.deps.Logger().
+				WithError(err).
+				WithField("message_id", msg.ID).
+				Error(`Unable to reset the retried message's status to "abandoned".`)
+			return err
+		}
+
+		// Skip the message
+		c.deps.Logger().
+			WithField("message_id", msg.ID).
+			Warnf(`Message was abandoned because it did not deliver after %d attempts`, msg.SendCount)
+		return nil
+	}
+
+	if err := c.deps.CourierPersister().IncrementMessageSendCount(ctx, msg.ID); err != nil {
+		c.deps.Logger().
+			WithError(err).
+			WithField("message_id", msg.ID).
+			Error(`Unable to increment the message's "send_count" field`)
+		return err
+	}
+
 	switch msg.Type {
 	case MessageTypeEmail:
 		if err := c.dispatchEmail(ctx, msg); err != nil {
@@ -48,35 +73,22 @@ func (c *courier) DispatchQueue(ctx context.Context) error {
 		return err
 	}
 
-	ttl := c.deps.CourierConfig(ctx).CourierMessageTTL()
-
 	for k, msg := range messages {
-		if time.Now().After(msg.CreatedAt.Add(ttl)) {
-			if err := c.deps.CourierPersister().SetMessageStatus(ctx, msg.ID, MessageStatusAbandoned); err != nil {
-				if c.failOnError {
-					return err
-				}
-				c.deps.Logger().
-					WithError(err).
-					WithField("message_id", msg.ID).
-					Error(`Unable to reset the timed out message's status to "abandoned".`)
-			}
-		} else {
-			if err := c.DispatchMessage(ctx, msg); err != nil {
-				for _, replace := range messages[k:] {
-					if err := c.deps.CourierPersister().SetMessageStatus(ctx, replace.ID, MessageStatusQueued); err != nil {
-						if c.failOnError {
-							return err
-						}
-						c.deps.Logger().
-							WithError(err).
-							WithField("message_id", replace.ID).
-							Error(`Unable to reset the failed message's status to "queued".`)
-					}
-				}
+		if err := c.DispatchMessage(ctx, msg); err != nil {
 
-				return err
+			for _, replace := range messages[k:] {
+				if err := c.deps.CourierPersister().SetMessageStatus(ctx, replace.ID, MessageStatusQueued); err != nil {
+					if c.failOnError {
+						return err
+					}
+					c.deps.Logger().
+						WithError(err).
+						WithField("message_id", replace.ID).
+						Error(`Unable to reset the failed message's status to "queued".`)
+				}
 			}
+
+			return err
 		}
 	}
 

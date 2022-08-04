@@ -18,6 +18,8 @@ type (
 		SetMessageStatus(context.Context, uuid.UUID, MessageStatus) error
 
 		LatestQueuedMessage(ctx context.Context) (*Message, error)
+
+		IncrementMessageSendCount(context.Context, uuid.UUID) error
 	}
 	PersistenceProvider interface {
 		CourierPersister() Persister

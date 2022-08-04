@@ -5,6 +5,7 @@ import (
 	"crypto/tls"
 	"encoding/json"
 	"fmt"
+	"net/textproto"
 	"strconv"
 	"time"
 
@@ -199,6 +200,19 @@ func (c *courier) dispatchEmail(ctx context.Context, msg Message) error {
 			// WithField("email_to", msg.Recipient).
 			WithField("message_from", from).
 			Error("Unable to send email using SMTP connection.")
+
+		var protoErr *textproto.Error
+		if containsProtoErr := errors.As(err, &protoErr); containsProtoErr && protoErr.Code >= 500 {
+			// See https://en.wikipedia.org/wiki/List_of_SMTP_server_return_codes
+			// If the SMTP server responds with 5xx, sending the message should not be retried (without changing something about the request)
+			if err := c.deps.CourierPersister().SetMessageStatus(ctx, msg.ID, MessageStatusAbandoned); err != nil {
+				c.deps.Logger().
+					WithError(err).
+					WithField("message_id", msg.ID).
+					Error(`Unable to reset the retried message's status to "abandoned".`)
+				return err
+			}
+		}
 		return errors.WithStack(err)
 	}
 

@@ -3,28 +3,75 @@ package courier_test
 import (
 	"context"
 	"testing"
-	"time"
 
 	"github.com/gofrs/uuid"
-	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/require"
 
 	"github.com/ory/kratos/courier"
+	"github.com/ory/kratos/courier/template"
 	templates "github.com/ory/kratos/courier/template/email"
 	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/internal"
 )
 
-func TestMessageTTL(t *testing.T) {
-	if testing.Short() {
-		t.SkipNow()
-	}
+func queueNewMessage(t *testing.T, ctx context.Context, c courier.Courier, d template.Dependencies) uuid.UUID {
+	t.Helper()
+	id, err := c.QueueEmail(ctx, templates.NewTestStub(d, &templates.TestStubModel{
+		To:      "test-recipient-1@example.org",
+		Subject: "test-subject-1",
+		Body:    "test-body-1",
+	}))
+	require.NoError(t, err)
+	return id
+}
+
+func TestDispatchMessageWithInvalidSMTP(t *testing.T) {
 	ctx := context.Background()
 
 	conf, reg := internal.NewRegistryDefaultWithDSN(t, "")
-	conf.MustSet(config.ViperKeyCourierMessageTTL, 1*time.Nanosecond)
+	conf.MustSet(config.ViperKeyCourierMessageRetries, 5)
+	conf.MustSet(config.ViperKeyCourierSMTPURL, "http://foo.url")
 
-	reg.Logger().Level = logrus.TraceLevel
+	ctx, cancel := context.WithCancel(ctx)
+	defer cancel()
+
+	c := reg.Courier(ctx)
+
+	t.Run("case=failed sending", func(t *testing.T) {
+		id := queueNewMessage(t, ctx, c, reg)
+		message, err := reg.CourierPersister().LatestQueuedMessage(ctx)
+		require.NoError(t, err)
+		require.Equal(t, id, message.ID)
+
+		err = c.DispatchMessage(ctx, *message)
+		// sending the email fails, because there is no SMTP server at foo.url
+		require.Error(t, err)
+
+		messages, err := reg.CourierPersister().NextMessages(ctx, 10)
+		require.Len(t, messages, 1)
+	})
+
+	t.Run("case=max retries reached", func(t *testing.T) {
+		id := queueNewMessage(t, ctx, c, reg)
+		message, err := reg.CourierPersister().LatestQueuedMessage(ctx)
+		require.NoError(t, err)
+		require.Equal(t, id, message.ID)
+		message.SendCount = 6
+
+		err = c.DispatchMessage(ctx, *message)
+		require.NoError(t, err)
+
+		messages, err := reg.CourierPersister().NextMessages(ctx, 1)
+		require.Empty(t, messages)
+	})
+
+}
+
+func TestDispatchMessage2(t *testing.T) {
+	ctx := context.Background()
+
+	conf, reg := internal.NewRegistryDefaultWithDSN(t, "")
+	conf.MustSet(config.ViperKeyCourierMessageRetries, 1)
 
 	c := reg.Courier(ctx)
 
@@ -39,9 +86,17 @@ func TestMessageTTL(t *testing.T) {
 	require.NoError(t, err)
 	require.NotEqual(t, uuid.Nil, id)
 
-	c.DispatchQueue(ctx)
+	// Fails to deliver the first time
+	err = c.DispatchQueue(ctx)
+	require.Error(t, err)
 
-	time.Sleep(1 * time.Second)
+	// Retry once, as we set above - still fails
+	err = c.DispatchQueue(ctx)
+	require.Error(t, err)
+
+	// Now it has been retried once, which means 2 > 1 is true and it is no longer tried
+	err = c.DispatchQueue(ctx)
+	require.NoError(t, err)
 
 	var message courier.Message
 	err = reg.Persister().GetConnection(ctx).

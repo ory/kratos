@@ -1110,13 +1110,13 @@ func TestCourierMessageTTL(t *testing.T) {
 
 	t.Run("case=configs set", func(t *testing.T) {
 		conf, _ := config.New(ctx, logrusx.New("", ""), os.Stderr,
-			configx.WithConfigFiles("stub/.kratos.courier.messageTTL.yaml"), configx.SkipValidation())
-		assert.Equal(t, conf.CourierMessageTTL(), time.Duration(5*time.Minute))
+			configx.WithConfigFiles("stub/.kratos.courier.message_retries.yaml"), configx.SkipValidation())
+		assert.Equal(t, conf.CourierMessageRetries(), 10)
 	})
 
 	t.Run("case=defaults", func(t *testing.T) {
 		conf, _ := config.New(ctx, logrusx.New("", ""), os.Stderr, configx.SkipValidation())
-		assert.Equal(t, conf.CourierMessageTTL(), time.Duration(1*time.Hour))
+		assert.Equal(t, conf.CourierMessageRetries(), 5)
 	})
 }
 
