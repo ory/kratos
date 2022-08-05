@@ -66,6 +66,10 @@ func TestRemoteTemplates(t *testing.T, basePath string, tmplType courier.Templat
 			return email.NewRecoveryInvalid(d, &email.RecoveryInvalidModel{})
 		case courier.TypeRecoveryValid:
 			return email.NewRecoveryValid(d, &email.RecoveryValidModel{})
+		case courier.TypeRecoveryCodeValid:
+			return email.NewRecoveryCodeValid(d, &email.RecoveryCodeValidModel{})
+		case courier.TypeRecoveryCodeInvalid:
+			return email.NewRecoveryCodeInvalid(d, &email.RecoveryCodeInvalidModel{})
 		case courier.TypeTestStub:
 			return email.NewTestStub(d, &email.TestStubModel{})
 		case courier.TypeVerificationInvalid:

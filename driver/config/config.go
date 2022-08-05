@@ -65,6 +65,8 @@ const (
 	ViperKeyCourierTemplatesPath                             = "courier.template_override_path"
 	ViperKeyCourierTemplatesRecoveryInvalidEmail             = "courier.templates.recovery.invalid.email"
 	ViperKeyCourierTemplatesRecoveryValidEmail               = "courier.templates.recovery.valid.email"
+	ViperKeyCourierTemplatesRecoveryCodeInvalidEmail         = "courier.templates.recovery_code.invalid.email"
+	ViperKeyCourierTemplatesRecoveryCodeValidEmail           = "courier.templates.recovery_code.valid.email"
 	ViperKeyCourierTemplatesVerificationInvalidEmail         = "courier.templates.verification.invalid.email"
 	ViperKeyCourierTemplatesVerificationValidEmail           = "courier.templates.verification.valid.email"
 	ViperKeyCourierSMTPFrom                                  = "courier.smtp.from_address"
@@ -257,6 +259,8 @@ type (
 		CourierTemplatesVerificationValid() *CourierEmailTemplate
 		CourierTemplatesRecoveryInvalid() *CourierEmailTemplate
 		CourierTemplatesRecoveryValid() *CourierEmailTemplate
+		CourierTemplatesRecoveryCodeInvalid() *CourierEmailTemplate
+		CourierTemplatesRecoveryCodeValid() *CourierEmailTemplate
 		CourierMessageRetries() int
 	}
 )
@@ -946,6 +950,14 @@ func (p *Config) CourierTemplatesRecoveryInvalid() *CourierEmailTemplate {
 
 func (p *Config) CourierTemplatesRecoveryValid() *CourierEmailTemplate {
 	return p.CourierTemplatesHelper(ViperKeyCourierTemplatesRecoveryValidEmail)
+}
+
+func (p *Config) CourierTemplatesRecoveryCodeInvalid() *CourierEmailTemplate {
+	return p.CourierTemplatesHelper(ViperKeyCourierTemplatesRecoveryCodeInvalidEmail)
+}
+
+func (p *Config) CourierTemplatesRecoveryCodeValid() *CourierEmailTemplate {
+	return p.CourierTemplatesHelper(ViperKeyCourierTemplatesRecoveryCodeValidEmail)
 }
 
 func (p *Config) CourierMessageRetries() int {
