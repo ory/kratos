@@ -189,6 +189,11 @@ func (s *Strategy) processRegistration(w http.ResponseWriter, r *http.Request, a
 			return nil, s.handleError(w, r, a, provider.Config().ID, nil, err)
 		}
 
+		ar.RequestURL, err = x.TakeOverReturnToParameter(a.RequestURL, ar.RequestURL)
+		if err != nil {
+			return nil, s.handleError(w, r, a, provider.Config().ID, nil, err)
+		}
+
 		if _, err := s.processLogin(w, r, ar, token, claims, provider, container); err != nil {
 			return ar, err
 		}
