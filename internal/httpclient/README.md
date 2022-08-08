@@ -87,6 +87,7 @@ Class | Method | HTTP request | Description
 *MetadataApi* | [**IsAlive**](docs/MetadataApi.md#isalive) | **Get** /health/alive | Check HTTP Server Status
 *MetadataApi* | [**IsReady**](docs/MetadataApi.md#isready) | **Get** /health/ready | Check HTTP Server and Database Status
 *V0alpha2Api* | [**AdminCreateIdentity**](docs/V0alpha2Api.md#admincreateidentity) | **Post** /admin/identities | Create an Identity
+*V0alpha2Api* | [**AdminCreateSelfServiceRecoveryCode**](docs/V0alpha2Api.md#admincreateselfservicerecoverycode) | **Post** /admin/recovery/code | # Create a Recovery Link
 *V0alpha2Api* | [**AdminCreateSelfServiceRecoveryLink**](docs/V0alpha2Api.md#admincreateselfservicerecoverylink) | **Post** /admin/recovery/link | Create a Recovery Link
 *V0alpha2Api* | [**AdminDeleteIdentity**](docs/V0alpha2Api.md#admindeleteidentity) | **Delete** /admin/identities/{id} | Delete an Identity
 *V0alpha2Api* | [**AdminDeleteIdentitySessions**](docs/V0alpha2Api.md#admindeleteidentitysessions) | **Delete** /admin/identities/{id}/sessions | Calling this endpoint irrecoverably and permanently deletes and invalidates all sessions that belong to the given Identity.
@@ -137,6 +138,7 @@ Class | Method | HTTP request | Description
  - [AdminCreateIdentityImportCredentialsOidcProvider](docs/AdminCreateIdentityImportCredentialsOidcProvider.md)
  - [AdminCreateIdentityImportCredentialsPassword](docs/AdminCreateIdentityImportCredentialsPassword.md)
  - [AdminCreateIdentityImportCredentialsPasswordConfig](docs/AdminCreateIdentityImportCredentialsPasswordConfig.md)
+ - [AdminCreateSelfServiceRecoveryCodeBody](docs/AdminCreateSelfServiceRecoveryCodeBody.md)
  - [AdminCreateSelfServiceRecoveryLinkBody](docs/AdminCreateSelfServiceRecoveryLinkBody.md)
  - [AdminIdentityImportCredentials](docs/AdminIdentityImportCredentials.md)
  - [AdminUpdateIdentityBody](docs/AdminUpdateIdentityBody.md)
@@ -167,6 +169,7 @@ Class | Method | HTTP request | Description
  - [SelfServiceFlowExpiredError](docs/SelfServiceFlowExpiredError.md)
  - [SelfServiceLoginFlow](docs/SelfServiceLoginFlow.md)
  - [SelfServiceLogoutUrl](docs/SelfServiceLogoutUrl.md)
+ - [SelfServiceRecoveryCode](docs/SelfServiceRecoveryCode.md)
  - [SelfServiceRecoveryFlow](docs/SelfServiceRecoveryFlow.md)
  - [SelfServiceRecoveryFlowState](docs/SelfServiceRecoveryFlowState.md)
  - [SelfServiceRecoveryLink](docs/SelfServiceRecoveryLink.md)
@@ -188,6 +191,7 @@ Class | Method | HTTP request | Description
  - [SubmitSelfServiceLoginFlowWithWebAuthnMethodBody](docs/SubmitSelfServiceLoginFlowWithWebAuthnMethodBody.md)
  - [SubmitSelfServiceLogoutFlowWithoutBrowserBody](docs/SubmitSelfServiceLogoutFlowWithoutBrowserBody.md)
  - [SubmitSelfServiceRecoveryFlowBody](docs/SubmitSelfServiceRecoveryFlowBody.md)
+ - [SubmitSelfServiceRecoveryFlowWithCodeMethodBody](docs/SubmitSelfServiceRecoveryFlowWithCodeMethodBody.md)
  - [SubmitSelfServiceRecoveryFlowWithLinkMethodBody](docs/SubmitSelfServiceRecoveryFlowWithLinkMethodBody.md)
  - [SubmitSelfServiceRegistrationFlowBody](docs/SubmitSelfServiceRegistrationFlowBody.md)
  - [SubmitSelfServiceRegistrationFlowWithOidcMethodBody](docs/SubmitSelfServiceRegistrationFlowWithOidcMethodBody.md)

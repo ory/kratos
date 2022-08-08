@@ -189,6 +189,22 @@
         },
         "type": "object"
       },
+      "adminCreateSelfServiceRecoveryCodeBody": {
+        "properties": {
+          "expires_in": {
+            "description": "Code Expires In\n\nThe recovery code will expire at that point in time. Defaults to the configuration value of\n`selfservice.flows.recovery.request_lifespan`.",
+            "pattern": "^[0-9]+(ns|us|ms|s|m|h)$",
+            "type": "string"
+          },
+          "identity_id": {
+            "$ref": "#/components/schemas/UUID"
+          }
+        },
+        "required": [
+          "identity_id"
+        ],
+        "type": "object"
+      },
       "adminCreateSelfServiceRecoveryLinkBody": {
         "properties": {
           "expires_in": {
@@ -916,6 +932,23 @@
         ],
         "type": "object"
       },
+      "selfServiceRecoveryCode": {
+        "properties": {
+          "expires_at": {
+            "description": "Recovery Link Expires At\n\nThe timestamp when the recovery link expires.",
+            "format": "date-time",
+            "type": "string"
+          },
+          "recovery_code": {
+            "description": "Recovery Link\n\nThis link can be used to recover the account.",
+            "type": "string"
+          }
+        },
+        "required": [
+          "recovery_code"
+        ],
+        "type": "object"
+      },
       "selfServiceRecoveryFlow": {
         "description": "This request is used when an identity wants to recover their account.\n\nWe recommend reading the [Account Recovery Documentation](../self-service/flows/password-reset-account-recovery)",
         "properties": {
@@ -1467,6 +1500,27 @@
           }
         ]
       },
+      "submitSelfServiceRecoveryFlowWithCodeMethodBody": {
+        "properties": {
+          "csrf_token": {
+            "description": "Sending the anti-csrf token is only required for browser login flows.",
+            "type": "string"
+          },
+          "email": {
+            "description": "Email to Recover\n\nNeeds to be set when initiating the flow. If the email is a registered\nrecovery email, a recovery link will be sent. If the email is not known,\na email with details on what happened will be sent instead.\n\nformat: email",
+            "type": "string"
+          },
+          "method": {
+            "description": "Method supports `link` only right now.",
+            "type": "string"
+          }
+        },
+        "required": [
+          "email",
+          "method"
+        ],
+        "type": "object"
+      },
       "submitSelfServiceRecoveryFlowWithLinkMethodBody": {
         "properties": {
           "csrf_token": {
@@ -1924,6 +1978,7 @@
               "oidc",
               "profile",
               "link",
+              "code",
               "totp",
               "lookup_secret",
               "webauthn"
@@ -2930,6 +2985,68 @@
           }
         ],
         "summary": "This endpoint returns all sessions that belong to the given Identity.",
+        "tags": [
+          "v0alpha2"
+        ]
+      }
+    },
+    "/admin/recovery/code": {
+      "post": {
+        "description": "This endpoint creates a recovery code which should be given to the user in order for them to recover\n(or activate) their account.",
+        "operationId": "adminCreateSelfServiceRecoveryCode",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/adminCreateSelfServiceRecoveryCodeBody"
+              }
+            }
+          },
+          "x-originalParamName": "Body"
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/selfServiceRecoveryCode"
+                }
+              }
+            },
+            "description": "selfServiceRecoveryCode"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/jsonError"
+                }
+              }
+            },
+            "description": "jsonError"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/jsonError"
+                }
+              }
+            },
+            "description": "jsonError"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/jsonError"
+                }
+              }
+            },
+            "description": "jsonError"
+          }
+        },
+        "summary": "# Create a Recovery Link",
         "tags": [
           "v0alpha2"
         ]

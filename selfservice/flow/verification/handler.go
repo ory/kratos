@@ -96,12 +96,12 @@ func (h *Handler) RegisterAdminRoutes(admin *x.RouterAdmin) {
 //
 // More information can be found at [Ory Kratos Email and Phone Verification Documentation](https://www.ory.sh/docs/kratos/self-service/flows/verify-email-account-activation).
 //
-//     Schemes: http, https
+//	Schemes: http, https
 //
-//     Responses:
-//       200: selfServiceVerificationFlow
-//       500: jsonError
-//       400: jsonError
+//	Responses:
+//	  200: selfServiceVerificationFlow
+//	  500: jsonError
+//	  400: jsonError
 func (h *Handler) initAPIFlow(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 	if !h.d.Config(r.Context()).SelfServiceFlowVerificationEnabled() {
 		h.d.SelfServiceErrorManager().Forward(r.Context(), w, r, errors.WithStack(herodot.ErrBadRequest.WithReasonf("Verification is not allowed because it was disabled.")))
@@ -133,7 +133,7 @@ type initializeSelfServiceVerificationFlowForBrowsers struct {
 
 // swagger:route GET /self-service/verification/browser v0alpha2 initializeSelfServiceVerificationFlowForBrowsers
 //
-// Initialize Verification Flow for Browser Clients
+// # Initialize Verification Flow for Browser Clients
 //
 // This endpoint initializes a browser-based account verification flow. Once initialized, the browser will be redirected to
 // `selfservice.flows.verification.ui_url` with the flow ID set as the query parameter `?flow=`.
@@ -144,12 +144,12 @@ type initializeSelfServiceVerificationFlowForBrowsers struct {
 //
 // More information can be found at [Ory Kratos Email and Phone Verification Documentation](https://www.ory.sh/docs/kratos/selfservice/flows/verify-email-account-activation).
 //
-//     Schemes: http, https
+//	Schemes: http, https
 //
-//     Responses:
-//       200: selfServiceVerificationFlow
-//       303: emptyResponse
-//       500: jsonError
+//	Responses:
+//	  200: selfServiceVerificationFlow
+//	  303: emptyResponse
+//	  500: jsonError
 func (h *Handler) initBrowserFlow(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	if !h.d.Config(r.Context()).SelfServiceFlowVerificationEnabled() {
 		h.d.SelfServiceErrorManager().Forward(r.Context(), w, r, errors.WithStack(herodot.ErrBadRequest.WithReasonf("Verification is not allowed because it was disabled.")))
@@ -195,7 +195,7 @@ type getSelfServiceVerificationFlow struct {
 
 // swagger:route GET /self-service/verification/flows v0alpha2 getSelfServiceVerificationFlow
 //
-// Get Verification Flow
+// # Get Verification Flow
 //
 // This endpoint returns a verification flow's context with, for example, error details and other information.
 //
@@ -205,26 +205,26 @@ type getSelfServiceVerificationFlow struct {
 // If you use the browser-flow for server-side apps, the services need to run on a common top-level-domain
 // and you need to forward the incoming HTTP Cookie header to this endpoint:
 //
-//	```js
-//	// pseudo-code example
-//	router.get('/recovery', async function (req, res) {
-//	  const flow = await client.getSelfServiceVerificationFlow(req.header('cookie'), req.query['flow'])
+//		```js
+//		// pseudo-code example
+//		router.get('/recovery', async function (req, res) {
+//		  const flow = await client.getSelfServiceVerificationFlow(req.header('cookie'), req.query['flow'])
 //
-//    res.render('verification', flow)
-//	})
+//	   res.render('verification', flow)
+//		})
 //
 // More information can be found at [Ory Kratos Email and Phone Verification Documentation](https://www.ory.sh/docs/kratos/selfservice/flows/verify-email-account-activation).
 //
-//     Produces:
-//     - application/json
+//	Produces:
+//	- application/json
 //
-//     Schemes: http, https
+//	Schemes: http, https
 //
-//     Responses:
-//       200: selfServiceVerificationFlow
-//       403: jsonError
-//       404: jsonError
-//       500: jsonError
+//	Responses:
+//	  200: selfServiceVerificationFlow
+//	  403: jsonError
+//	  404: jsonError
+//	  500: jsonError
 func (h *Handler) fetch(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 	if !h.d.Config(r.Context()).SelfServiceFlowVerificationEnabled() {
 		h.d.SelfServiceErrorManager().Forward(r.Context(), w, r, errors.WithStack(herodot.ErrBadRequest.WithReasonf("Verification is not allowed because it was disabled.")))
@@ -307,40 +307,40 @@ type submitSelfServiceVerificationFlowBody struct{}
 
 // swagger:route POST /self-service/verification v0alpha2 submitSelfServiceVerificationFlow
 //
-// Complete Verification Flow
+// # Complete Verification Flow
 //
 // Use this endpoint to complete a verification flow. This endpoint
 // behaves differently for API and browser flows and has several states:
 //
-// - `choose_method` expects `flow` (in the URL query) and `email` (in the body) to be sent
-//   and works with API- and Browser-initiated flows.
-//	 - For API clients and Browser clients with HTTP Header `Accept: application/json` it either returns a HTTP 200 OK when the form is valid and HTTP 400 OK when the form is invalid
+//   - `choose_method` expects `flow` (in the URL query) and `email` (in the body) to be sent
+//     and works with API- and Browser-initiated flows.
+//   - For API clients and Browser clients with HTTP Header `Accept: application/json` it either returns a HTTP 200 OK when the form is valid and HTTP 400 OK when the form is invalid
 //     and a HTTP 303 See Other redirect with a fresh verification flow if the flow was otherwise invalid (e.g. expired).
-//	 - For Browser clients without HTTP Header `Accept` or with `Accept: text/*` it returns a HTTP 303 See Other redirect to the Verification UI URL with the Verification Flow ID appended.
-// - `sent_email` is the success state after `choose_method` when using the `link` method and allows the user to request another verification email. It
-//   works for both API and Browser-initiated flows and returns the same responses as the flow in `choose_method` state.
-// - `passed_challenge` expects a `token` to be sent in the URL query and given the nature of the flow ("sending a verification link")
-//   does not have any API capabilities. The server responds with a HTTP 303 See Other redirect either to the Settings UI URL
-//   (if the link was valid) and instructs the user to update their password, or a redirect to the Verification UI URL with
-//   a new Verification Flow ID which contains an error message that the verification link was invalid.
+//   - For Browser clients without HTTP Header `Accept` or with `Accept: text/*` it returns a HTTP 303 See Other redirect to the Verification UI URL with the Verification Flow ID appended.
+//   - `sent_email` is the success state after `choose_method` when using the `link` method and allows the user to request another verification email. It
+//     works for both API and Browser-initiated flows and returns the same responses as the flow in `choose_method` state.
+//   - `passed_challenge` expects a `token` to be sent in the URL query and given the nature of the flow ("sending a verification link")
+//     does not have any API capabilities. The server responds with a HTTP 303 See Other redirect either to the Settings UI URL
+//     (if the link was valid) and instructs the user to update their password, or a redirect to the Verification UI URL with
+//     a new Verification Flow ID which contains an error message that the verification link was invalid.
 //
 // More information can be found at [Ory Kratos Email and Phone Verification Documentation](https://www.ory.sh/docs/kratos/selfservice/flows/verify-email-account-activation).
 //
-//     Consumes:
-//     - application/json
-//     - application/x-www-form-urlencoded
+//	Consumes:
+//	- application/json
+//	- application/x-www-form-urlencoded
 //
-//     Produces:
-//     - application/json
+//	Produces:
+//	- application/json
 //
-//     Schemes: http, https
+//	Schemes: http, https
 //
-//     Responses:
-//       200: selfServiceVerificationFlow
-//       303: emptyResponse
-//       400: selfServiceVerificationFlow
-//       410: jsonError
-//       500: jsonError
+//	Responses:
+//	  200: selfServiceVerificationFlow
+//	  303: emptyResponse
+//	  400: selfServiceVerificationFlow
+//	  410: jsonError
+//	  500: jsonError
 func (h *Handler) submitFlow(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	rid, err := flow.GetFlowID(r)
 	if err != nil {

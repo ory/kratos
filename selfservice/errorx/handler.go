@@ -64,7 +64,7 @@ type getSelfServiceError struct {
 
 // swagger:route GET /self-service/errors v0alpha2 getSelfServiceError
 //
-// Get Self-Service Errors
+// # Get Self-Service Errors
 //
 // This endpoint returns the error associated with a user-facing self service errors.
 //
@@ -74,16 +74,16 @@ type getSelfServiceError struct {
 //
 // More information can be found at [Ory Kratos User User Facing Error Documentation](https://www.ory.sh/docs/kratos/self-service/flows/user-facing-errors).
 //
-//     Produces:
-//     - application/json
+//	Produces:
+//	- application/json
 //
-//     Schemes: http, https
+//	Schemes: http, https
 //
-//     Responses:
-//       200: selfServiceError
-//       403: jsonError
-//       404: jsonError
-//       500: jsonError
+//	Responses:
+//	  200: selfServiceError
+//	  403: jsonError
+//	  404: jsonError
+//	  500: jsonError
 func (h *Handler) publicFetchError(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	if err := h.fetchError(w, r); err != nil {
 		h.r.Writer().WriteError(w, r, err)

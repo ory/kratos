@@ -549,6 +549,61 @@
         }
       }
     },
+    "/admin/recovery/code": {
+      "post": {
+        "description": "This endpoint creates a recovery code which should be given to the user in order for them to recover\n(or activate) their account.",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "schemes": [
+          "http",
+          "https"
+        ],
+        "tags": [
+          "v0alpha2"
+        ],
+        "summary": "# Create a Recovery Link",
+        "operationId": "adminCreateSelfServiceRecoveryCode",
+        "parameters": [
+          {
+            "name": "Body",
+            "in": "body",
+            "schema": {
+              "$ref": "#/definitions/adminCreateSelfServiceRecoveryCodeBody"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "selfServiceRecoveryCode",
+            "schema": {
+              "$ref": "#/definitions/selfServiceRecoveryCode"
+            }
+          },
+          "400": {
+            "description": "jsonError",
+            "schema": {
+              "$ref": "#/definitions/jsonError"
+            }
+          },
+          "404": {
+            "description": "jsonError",
+            "schema": {
+              "$ref": "#/definitions/jsonError"
+            }
+          },
+          "500": {
+            "description": "jsonError",
+            "schema": {
+              "$ref": "#/definitions/jsonError"
+            }
+          }
+        }
+      }
+    },
     "/admin/recovery/link": {
       "post": {
         "description": "This endpoint creates a recovery link which should be given to the user in order for them to recover\n(or activate) their account.",
@@ -2634,6 +2689,22 @@
         }
       }
     },
+    "adminCreateSelfServiceRecoveryCodeBody": {
+      "type": "object",
+      "required": [
+        "identity_id"
+      ],
+      "properties": {
+        "expires_in": {
+          "description": "Code Expires In\n\nThe recovery code will expire at that point in time. Defaults to the configuration value of\n`selfservice.flows.recovery.request_lifespan`.",
+          "type": "string",
+          "pattern": "^[0-9]+(ns|us|ms|s|m|h)$"
+        },
+        "identity_id": {
+          "$ref": "#/definitions/UUID"
+        }
+      }
+    },
     "adminCreateSelfServiceRecoveryLinkBody": {
       "type": "object",
       "required": [
@@ -3348,6 +3419,23 @@
         }
       }
     },
+    "selfServiceRecoveryCode": {
+      "type": "object",
+      "required": [
+        "recovery_code"
+      ],
+      "properties": {
+        "expires_at": {
+          "description": "Recovery Link Expires At\n\nThe timestamp when the recovery link expires.",
+          "type": "string",
+          "format": "date-time"
+        },
+        "recovery_code": {
+          "description": "Recovery Link\n\nThis link can be used to recover the account.",
+          "type": "string"
+        }
+      }
+    },
     "selfServiceRecoveryFlow": {
       "description": "This request is used when an identity wants to recover their account.\n\nWe recommend reading the [Account Recovery Documentation](../self-service/flows/password-reset-account-recovery)",
       "type": "object",
@@ -3839,6 +3927,27 @@
     "submitSelfServiceRecoveryFlowBody": {
       "type": "object"
     },
+    "submitSelfServiceRecoveryFlowWithCodeMethodBody": {
+      "type": "object",
+      "required": [
+        "email",
+        "method"
+      ],
+      "properties": {
+        "csrf_token": {
+          "description": "Sending the anti-csrf token is only required for browser login flows.",
+          "type": "string"
+        },
+        "email": {
+          "description": "Email to Recover\n\nNeeds to be set when initiating the flow. If the email is a registered\nrecovery email, a recovery link will be sent. If the email is not known,\na email with details on what happened will be sent instead.\n\nformat: email",
+          "type": "string"
+        },
+        "method": {
+          "description": "Method supports `link` only right now.",
+          "type": "string"
+        }
+      }
+    },
     "submitSelfServiceRecoveryFlowWithLinkMethodBody": {
       "type": "object",
       "required": [
@@ -4245,6 +4354,7 @@
             "oidc",
             "profile",
             "link",
+            "code",
             "totp",
             "lookup_secret",
             "webauthn"
