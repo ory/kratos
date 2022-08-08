@@ -13,6 +13,7 @@ import (
 
 const (
 	StrategyRecoveryLinkName = "link"
+	StrategyRecoveryCodeName = "code"
 )
 
 type (

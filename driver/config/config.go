@@ -1090,6 +1090,7 @@ func (p *Config) SelfServiceFlowRecoveryRequestLifespan() time.Duration {
 	return p.p.DurationF(ViperKeySelfServiceRecoveryRequestLifespan, time.Hour)
 }
 
+// TODO: Mirror this for codes?
 func (p *Config) SelfServiceLinkMethodLifespan() time.Duration {
 	return p.p.DurationF(ViperKeyLinkLifespan, time.Hour)
 }

@@ -5,6 +5,7 @@ import (
 
 	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/selfservice/flow/recovery"
+	"github.com/ory/kratos/selfservice/strategy/code"
 )
 
 func (m *RegistryDefault) RecoveryFlowErrorHandler() *recovery.ErrorHandler {
@@ -58,4 +59,12 @@ func (m *RegistryDefault) PostRecoveryHooks(ctx context.Context) (b []recovery.P
 	}
 
 	return
+}
+
+func (m *RegistryDefault) RecoveryCodeSender() *code.RecoveryCodeSender {
+	if m.selfserviceCodeSender == nil {
+		m.selfserviceCodeSender = code.NewSender(m)
+	}
+
+	return m.selfserviceCodeSender
 }

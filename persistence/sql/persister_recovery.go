@@ -12,6 +12,7 @@ import (
 	"github.com/ory/kratos/corp"
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/selfservice/flow/recovery"
+	"github.com/ory/kratos/selfservice/strategy/code"
 	"github.com/ory/kratos/selfservice/strategy/link"
 	"github.com/ory/x/sqlcon"
 )
@@ -127,4 +128,68 @@ func (p *Persister) DeleteExpiredRecoveryFlows(ctx context.Context, expiresAt ti
 		return sqlcon.HandleError(err)
 	}
 	return nil
+}
+
+func (p *Persister) CreateRecoveryCode(ctx context.Context, code *code.RecoveryCode) error {
+	ctx, span := p.r.Tracer(ctx).Tracer().Start(ctx, "persistence.sql.CreateRecoveryCode")
+	defer span.End()
+
+	t := code.Code
+	code.Code = p.hmacValue(ctx, t)
+	code.NID = corp.ContextualizeNID(ctx, p.nid)
+
+	// TODO: This should not create the request eagerly because otherwise we might accidentally create an address that isn't
+	// supposed to be in the database.
+	if err := p.GetConnection(ctx).Create(code); err != nil {
+		return err
+	}
+
+	code.Code = t
+	return nil
+}
+
+func (p *Persister) UseRecoveryCode(ctx context.Context, codeStr string) (*code.RecoveryCode, error) {
+	ctx, span := p.r.Tracer(ctx).Tracer().Start(ctx, "persistence.sql.UseRecoveryCode")
+	defer span.End()
+
+	var recoveryCode code.RecoveryCode
+
+	nid := corp.ContextualizeNID(ctx, p.nid)
+	if err := sqlcon.HandleError(p.Transaction(ctx, func(ctx context.Context, tx *pop.Connection) (err error) {
+		for _, secret := range p.r.Config(ctx).SecretsSession() {
+			if err = tx.Where("token = ? AND nid = ? AND NOT used", p.hmacValueWithSecret(ctx, codeStr, secret), nid).First(&recoveryCode); err != nil {
+				if !errors.Is(sqlcon.HandleError(err), sqlcon.ErrNoRows) {
+					return err
+				}
+			} else {
+				break
+			}
+		}
+		if err != nil {
+			return err
+		}
+
+		var ra identity.RecoveryAddress
+		if err := tx.Where("id = ? AND nid = ?", recoveryCode.RecoveryAddressID, nid).First(&ra); err != nil {
+			if !errors.Is(sqlcon.HandleError(err), sqlcon.ErrNoRows) {
+				return err
+			}
+		}
+		recoveryCode.RecoveryAddress = &ra
+
+		/* #nosec G201 TableName is static */
+		return tx.RawQuery(fmt.Sprintf("UPDATE %s SET used=true, used_at=? WHERE id=? AND nid = ?", recoveryCode.TableName(ctx)), time.Now().UTC(), recoveryCode.ID, nid).Exec()
+	})); err != nil {
+		return nil, err
+	}
+
+	return &recoveryCode, nil
+}
+
+func (p *Persister) DeleteRecoveryCode(ctx context.Context, codeStr string) error {
+	ctx, span := p.r.Tracer(ctx).Tracer().Start(ctx, "persistence.sql.DeleteRecoveryCode")
+	defer span.End()
+
+	/* #nosec G201 TableName is static */
+	return p.GetConnection(ctx).RawQuery(fmt.Sprintf("DELETE FROM %s WHERE token=? AND nid = ?", new(code.RecoveryCode).TableName(ctx)), codeStr, corp.ContextualizeNID(ctx, p.nid)).Exec()
 }

@@ -1,0 +1,21 @@
+package code_test
+
+import (
+	"testing"
+
+	"github.com/ory/kratos/internal/testhelpers"
+
+	"github.com/ory/kratos/driver/config"
+	"github.com/ory/kratos/identity"
+	"github.com/ory/kratos/selfservice/flow/recovery"
+)
+
+func initViper(t *testing.T, c *config.Config) {
+	testhelpers.SetDefaultIdentitySchema(c, "file://./stub/default.schema.json")
+	c.MustSet(config.ViperKeySelfServiceBrowserDefaultReturnTo, "https://www.ory.sh")
+	c.MustSet(config.ViperKeyURLsAllowedReturnToDomains, []string{"https://www.ory.sh"})
+	c.MustSet(config.ViperKeySelfServiceStrategyConfig+"."+identity.CredentialsTypePassword.String()+".enabled", true)
+	c.MustSet(config.ViperKeySelfServiceStrategyConfig+"."+recovery.StrategyRecoveryCodeName+".enabled", true)
+	c.MustSet(config.ViperKeySelfServiceRecoveryEnabled, true)
+	c.MustSet(config.ViperKeySelfServiceVerificationEnabled, true)
+}
