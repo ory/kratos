@@ -431,14 +431,23 @@ func (s *Strategy) recoveryHandleFormSubmission(w http.ResponseWriter, r *http.R
 	}
 
 	f.UI.SetCSRF(s.deps.GenerateCSRFToken(r))
-	f.UI.GetNodes().Upsert(
-		// v0.5: form.Field{Name: "email", Type: "email", Required: true, Value: body.Body.Email}
-		node.NewInputField("email", body.Email, node.CodeGroup, node.InputAttributeTypeEmail, node.WithRequiredInputAttribute).WithMetaLabel(text.NewInfoNodeInputEmail()),
-	)
 
 	f.Active = sqlxx.NullString(s.RecoveryNodeGroup())
 	f.State = recovery.StateEmailSent
 	f.UI.Messages.Set(text.NewRecoveryEmailSent())
+	f.UI.Nodes.Remove("email")
+	// TODO: Workaround, should probably add proper sorting here
+	f.UI.Nodes.Remove("method")
+	f.UI.Nodes.Upsert(
+		node.NewInputField("code", nil, node.CodeGroup, node.InputAttributeTypeNumber, node.WithRequiredInputAttribute).
+			WithMetaLabel(text.NewInfoNodeLabelVerifyOTP()),
+	)
+
+	f.UI.
+		GetNodes().
+		Append(node.NewInputField("method", s.RecoveryStrategyID(), node.CodeGroup, node.InputAttributeTypeSubmit).
+			WithMetaLabel(text.NewInfoNodeLabelSubmit()))
+
 	if err := s.deps.RecoveryFlowPersister().UpdateRecoveryFlow(r.Context(), f); err != nil {
 		return s.HandleRecoveryError(w, r, f, body, err)
 	}
