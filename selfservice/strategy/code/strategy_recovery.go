@@ -97,7 +97,7 @@ type selfServiceRecoveryCode struct {
 	//
 	// required: true
 	// format: uri
-	RecoveryCode string `json:"recovery_code"`
+	RecoveryLink string `json:"recovery_link"`
 
 	// Recovery Link Expires At
 	//
@@ -147,14 +147,14 @@ func (s *Strategy) createRecoveryCode(w http.ResponseWriter, r *http.Request, _ 
 		return
 	}
 
-	req, err := recovery.NewFlow(s.deps.Config(r.Context()), expiresIn, s.deps.GenerateCSRFToken(r),
+	flow, err := recovery.NewFlow(s.deps.Config(r.Context()), expiresIn, s.deps.GenerateCSRFToken(r),
 		r, s.deps.RecoveryStrategies(r.Context()), flow.TypeBrowser)
 	if err != nil {
 		s.deps.Writer().WriteError(w, r, err)
 		return
 	}
 
-	if err := s.deps.RecoveryFlowPersister().CreateRecoveryFlow(r.Context(), req); err != nil {
+	if err := s.deps.RecoveryFlowPersister().CreateRecoveryFlow(r.Context(), flow); err != nil {
 		s.deps.Writer().WriteError(w, r, err)
 		return
 	}
@@ -180,9 +180,14 @@ func (s *Strategy) createRecoveryCode(w http.ResponseWriter, r *http.Request, _ 
 		Info("A recovery code has been created.")
 
 	s.deps.Writer().Write(w, r, &selfServiceRecoveryCode{
-		ExpiresAt:    req.ExpiresAt.UTC(),
-		RecoveryCode: code.Code,
-	})
+		ExpiresAt: flow.ExpiresAt.UTC(),
+		RecoveryLink: urlx.CopyWithQuery(
+			urlx.AppendPaths(s.deps.Config(r.Context()).SelfPublicURL(), recovery.RouteSubmitFlow),
+			url.Values{
+				"code": {code.Code},
+				"flow": {flow.ID.String()},
+			}).String()},
+		herodot.UnescapedHTML)
 }
 
 // swagger:model submitSelfServiceRecoveryFlowWithCodeMethodBody
