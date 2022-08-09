@@ -3,7 +3,6 @@ package code
 import (
 	"context"
 	"net/http"
-	"net/url"
 
 	"github.com/hashicorp/go-retryablehttp"
 
@@ -12,8 +11,6 @@ import (
 	"github.com/ory/x/httpx"
 
 	"github.com/pkg/errors"
-
-	"github.com/ory/x/urlx"
 
 	"github.com/ory/kratos/courier"
 	"github.com/ory/kratos/driver/config"
@@ -101,19 +98,13 @@ func (s *RecoveryCodeSender) SendRecoveryCodeTo(ctx context.Context, f *recovery
 		return err
 	}
 
-	emailModel := email.RecoveryValidModel{
-		To: address.Value,
-		RecoveryURL: urlx.CopyWithQuery( // TODO: Replace with correct model for codes
-			urlx.AppendPaths(s.deps.Config(ctx).SelfServiceLinkMethodBaseURL(), recovery.RouteSubmitFlow),
-			url.Values{
-				"code": {code.Code},
-				"flow": {f.ID.String()},
-			}).String(),
+	emailModel := email.RecoveryCodeValidModel{
+		To:           address.Value,
 		RecoveryCode: code.Code,
 		Identity:     model,
 	}
 
-	return s.send(ctx, string(address.Via), email.NewRecoveryValid(s.deps, &emailModel))
+	return s.send(ctx, string(address.Via), email.NewRecoveryCodeValid(s.deps, &emailModel))
 }
 
 func (s *RecoveryCodeSender) send(ctx context.Context, via string, t courier.EmailTemplate) error {

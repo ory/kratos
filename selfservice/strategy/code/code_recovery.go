@@ -29,15 +29,15 @@ type RecoveryCode struct {
 	// Code represents the recovery code
 	Code string `json:"-" db:"code"`
 
-	// RecoveryAddress links this token to a recovery address.
+	// RecoveryAddress links this code to a recovery address.
 	// required: true
 	RecoveryAddress *identity.RecoveryAddress `json:"recovery_address" belongs_to:"identity_recovery_addresses" fk_id:"RecoveryAddressID"`
 
-	// ExpiresAt is the time (UTC) when the token expires.
+	// ExpiresAt is the time (UTC) when the code expires.
 	// required: true
 	ExpiresAt time.Time `json:"expires_at" faker:"time_type" db:"expires_at"`
 
-	// IssuedAt is the time (UTC) when the token was issued.
+	// IssuedAt is the time (UTC) when the code was issued.
 	// required: true
 	IssuedAt time.Time `json:"issued_at" faker:"time_type" db:"issued_at"`
 

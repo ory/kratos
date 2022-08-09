@@ -218,7 +218,7 @@ func (s *Strategy) Recover(w http.ResponseWriter, r *http.Request, f *recovery.F
 			return s.HandleRecoveryError(w, r, nil, body, err)
 		}
 
-		return s.recoveryUseToken(w, r, body)
+		return s.recoveryUseCode(w, r, body)
 	}
 
 	if _, err := s.deps.SessionManager().FetchFromRequest(r.Context(), r); err == nil {
@@ -309,7 +309,7 @@ func (s *Strategy) recoveryIssueSession(w http.ResponseWriter, r *http.Request, 
 	return errors.WithStack(flow.ErrCompletedByStrategy)
 }
 
-func (s *Strategy) recoveryUseToken(w http.ResponseWriter, r *http.Request, body *recoverySubmitPayload) error {
+func (s *Strategy) recoveryUseCode(w http.ResponseWriter, r *http.Request, body *recoverySubmitPayload) error {
 	token, err := s.deps.RecoveryCodePersister().UseRecoveryCode(r.Context(), body.Code)
 	if err != nil {
 		if errors.Is(err, sqlcon.ErrNoRows) {

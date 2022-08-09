@@ -62,7 +62,7 @@ type Flow struct {
 	// ReturnTo contains the requested return_to URL.
 	ReturnTo string `json:"return_to,omitempty" db:"-"`
 
-	// Active, if set, contains the registration method that is being used. It is initially
+	// Active, if set, contains the recovery method that is being used. It is initially
 	// not set.
 	Active sqlxx.NullString `json:"active,omitempty" faker:"-" db:"active_method"`
 
@@ -110,7 +110,7 @@ func NewFlow(conf *config.Config, exp time.Duration, csrf string, r *http.Reques
 		return nil, err
 	}
 
-	req := &Flow{
+	flow := &Flow{
 		ID:         id,
 		ExpiresAt:  now.Add(exp),
 		IssuedAt:   now,
@@ -125,12 +125,12 @@ func NewFlow(conf *config.Config, exp time.Duration, csrf string, r *http.Reques
 	}
 
 	for _, strategy := range strategies {
-		if err := strategy.PopulateRecoveryMethod(r, req); err != nil {
+		if err := strategy.PopulateRecoveryMethod(r, flow); err != nil {
 			return nil, err
 		}
 	}
 
-	return req, nil
+	return flow, nil
 }
 
 func FromOldFlow(conf *config.Config, exp time.Duration, csrf string, r *http.Request, strategies Strategies, of Flow) (*Flow, error) {

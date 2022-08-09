@@ -130,25 +130,25 @@ func (p *Persister) DeleteExpiredRecoveryFlows(ctx context.Context, expiresAt ti
 	return nil
 }
 
-func (p *Persister) CreateRecoveryCode(ctx context.Context, code *code.RecoveryCode) error {
+func (p *Persister) CreateRecoveryCode(ctx context.Context, recoveryCode *code.RecoveryCode) error {
 	ctx, span := p.r.Tracer(ctx).Tracer().Start(ctx, "persistence.sql.CreateRecoveryCode")
 	defer span.End()
 
-	t := code.Code
-	code.Code = p.hmacValue(ctx, t)
-	code.NID = corp.ContextualizeNID(ctx, p.nid)
+	code := recoveryCode.Code
+	recoveryCode.Code = p.hmacValue(ctx, code)
+	recoveryCode.NID = corp.ContextualizeNID(ctx, p.nid)
 
 	// TODO: This should not create the request eagerly because otherwise we might accidentally create an address that isn't
 	// supposed to be in the database.
-	if err := p.GetConnection(ctx).Create(code); err != nil {
+	if err := p.GetConnection(ctx).Create(recoveryCode); err != nil {
 		return err
 	}
 
-	code.Code = t
+	recoveryCode.Code = code
 	return nil
 }
 
-func (p *Persister) UseRecoveryCode(ctx context.Context, codeStr string) (*code.RecoveryCode, error) {
+func (p *Persister) UseRecoveryCode(ctx context.Context, codeVal string) (*code.RecoveryCode, error) {
 	ctx, span := p.r.Tracer(ctx).Tracer().Start(ctx, "persistence.sql.UseRecoveryCode")
 	defer span.End()
 
