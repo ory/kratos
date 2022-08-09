@@ -679,7 +679,7 @@ func (p *Config) SelfServiceStrategy(strategy string) *SelfServiceStrategy {
 			fallthrough
 		case "profile":
 			fallthrough
-		case "link":
+		case "code":
 			s.Enabled = true
 		}
 	}

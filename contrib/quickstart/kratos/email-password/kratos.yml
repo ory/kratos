@@ -18,6 +18,10 @@ selfservice:
   methods:
     password:
       enabled: true
+    link:
+      enabled: false
+    code:
+      enabled: true
 
   flows:
     error:

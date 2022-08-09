@@ -1256,6 +1256,35 @@
                 }
               }
             },
+            "code": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "enabled": {
+                  "type": "boolean",
+                  "title": "Enables Code Method",
+                  "default": true
+                },
+                "config": {
+                  "type": "object",
+                  "title": "Code Configuration",
+                  "description": "Additional configuration for the code strategy.",
+                  "properties": {
+                    "lifespan": {
+                      "title": "How long a code is valid for",
+                      "type": "string",
+                      "pattern": "^([0-9]+(ns|us|ms|s|m|h))+$",
+                      "default": "1h",
+                      "examples": [
+                        "1h",
+                        "1m",
+                        "1s"
+                      ]
+                    }
+                  }
+                }
+              }
+            },
             "password": {
               "type": "object",
               "additionalProperties": false,
