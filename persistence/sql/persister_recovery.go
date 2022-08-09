@@ -157,7 +157,7 @@ func (p *Persister) UseRecoveryCode(ctx context.Context, codeVal string) (*code.
 	nid := corp.ContextualizeNID(ctx, p.nid)
 	if err := sqlcon.HandleError(p.Transaction(ctx, func(ctx context.Context, tx *pop.Connection) (err error) {
 		for _, secret := range p.r.Config(ctx).SecretsSession() {
-			if err = tx.Where("token = ? AND nid = ? AND NOT used", p.hmacValueWithSecret(ctx, codeStr, secret), nid).First(&recoveryCode); err != nil {
+			if err = tx.Where("code = ? AND nid = ? AND NOT used", p.hmacValueWithSecret(ctx, codeVal, secret), nid).First(&recoveryCode); err != nil {
 				if !errors.Is(sqlcon.HandleError(err), sqlcon.ErrNoRows) {
 					return err
 				}
