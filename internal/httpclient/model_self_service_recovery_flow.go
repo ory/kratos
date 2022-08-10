@@ -18,7 +18,7 @@ import (
 
 // SelfServiceRecoveryFlow This request is used when an identity wants to recover their account.  We recommend reading the [Account Recovery Documentation](../self-service/flows/password-reset-account-recovery)
 type SelfServiceRecoveryFlow struct {
-	// Active, if set, contains the registration method that is being used. It is initially not set.
+	// Active, if set, contains the recovery method that is being used. It is initially not set.
 	Active *string `json:"active,omitempty"`
 	// ExpiresAt is the time (UTC) when the request expires. If the user still wishes to update the setting, a new request has to be initiated.
 	ExpiresAt time.Time `json:"expires_at"`

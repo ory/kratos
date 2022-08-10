@@ -3422,7 +3422,7 @@
     "selfServiceRecoveryCode": {
       "type": "object",
       "required": [
-        "recovery_code"
+        "recovery_link"
       ],
       "properties": {
         "expires_at": {
@@ -3430,7 +3430,7 @@
           "type": "string",
           "format": "date-time"
         },
-        "recovery_code": {
+        "recovery_link": {
           "description": "Recovery Link\n\nThis link can be used to recover the account.",
           "type": "string"
         }
@@ -3451,7 +3451,7 @@
       ],
       "properties": {
         "active": {
-          "description": "Active, if set, contains the registration method that is being used. It is initially\nnot set.",
+          "description": "Active, if set, contains the recovery method that is being used. It is initially\nnot set.",
           "type": "string"
         },
         "expires_at": {

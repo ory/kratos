@@ -939,13 +939,13 @@
             "format": "date-time",
             "type": "string"
           },
-          "recovery_code": {
+          "recovery_link": {
             "description": "Recovery Link\n\nThis link can be used to recover the account.",
             "type": "string"
           }
         },
         "required": [
-          "recovery_code"
+          "recovery_link"
         ],
         "type": "object"
       },
@@ -953,7 +953,7 @@
         "description": "This request is used when an identity wants to recover their account.\n\nWe recommend reading the [Account Recovery Documentation](../self-service/flows/password-reset-account-recovery)",
         "properties": {
           "active": {
-            "description": "Active, if set, contains the registration method that is being used. It is initially\nnot set.",
+            "description": "Active, if set, contains the recovery method that is being used. It is initially\nnot set.",
             "type": "string"
           },
           "expires_at": {
