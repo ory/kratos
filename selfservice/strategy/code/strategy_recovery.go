@@ -248,25 +248,25 @@ func (s *Strategy) Recover(w http.ResponseWriter, r *http.Request, f *recovery.F
 		return s.HandleRecoveryError(w, r, nil, body, err)
 	}
 
-	req, err := s.deps.RecoveryFlowPersister().GetRecoveryFlow(ctx, x.ParseUUID(body.Flow))
+	flow, err := s.deps.RecoveryFlowPersister().GetRecoveryFlow(ctx, x.ParseUUID(body.Flow))
 	if err != nil {
-		return s.HandleRecoveryError(w, r, req, body, err)
+		return s.HandleRecoveryError(w, r, flow, body, err)
 	}
 
-	if err := req.Valid(); err != nil {
-		return s.HandleRecoveryError(w, r, req, body, err)
+	if err := flow.Valid(); err != nil {
+		return s.HandleRecoveryError(w, r, flow, body, err)
 	}
 
-	switch req.State {
+	switch flow.State {
 	case recovery.StateChooseMethod:
 		fallthrough
 	case recovery.StateEmailSent:
-		return s.recoveryHandleFormSubmission(w, r, req, body)
+		return s.recoveryHandleFormSubmission(w, r, flow, body)
 	case recovery.StatePassedChallenge:
 		// was already handled, do not allow retry
-		return s.retryRecoveryFlowWithMessage(w, r, req.Type, text.NewErrorValidationRecoveryRetrySuccess())
+		return s.retryRecoveryFlowWithMessage(w, r, flow.Type, text.NewErrorValidationRecoveryRetrySuccess())
 	default:
-		return s.retryRecoveryFlowWithMessage(w, r, req.Type, text.NewErrorValidationRecoveryStateFailure())
+		return s.retryRecoveryFlowWithMessage(w, r, flow.Type, text.NewErrorValidationRecoveryStateFailure())
 	}
 }
 
@@ -388,22 +388,22 @@ func (s *Strategy) retryRecoveryFlowWithMessage(w http.ResponseWriter, r *http.R
 	ctx := r.Context()
 	config := s.deps.Config(ctx)
 
-	req, err := recovery.NewFlow(config, config.SelfServiceFlowRecoveryRequestLifespan(),
+	f, err := recovery.NewFlow(config, config.SelfServiceFlowRecoveryRequestLifespan(),
 		s.deps.CSRFHandler().RegenerateToken(w, r), r, s.deps.RecoveryStrategies(ctx), ft)
 	if err != nil {
 		return err
 	}
 
-	req.UI.Messages.Add(message)
-	if err := s.deps.RecoveryFlowPersister().CreateRecoveryFlow(ctx, req); err != nil {
+	f.UI.Messages.Add(message)
+	if err := s.deps.RecoveryFlowPersister().CreateRecoveryFlow(ctx, f); err != nil {
 		return err
 	}
 
 	if ft == flow.TypeBrowser {
-		http.Redirect(w, r, req.AppendTo(config.SelfServiceFlowRecoveryUI()).String(), http.StatusSeeOther)
+		http.Redirect(w, r, f.AppendTo(config.SelfServiceFlowRecoveryUI()).String(), http.StatusSeeOther)
 	} else {
 		http.Redirect(w, r, urlx.CopyWithQuery(urlx.AppendPaths(s.deps.Config(r.Context()).SelfPublicURL(),
-			recovery.RouteGetFlow), url.Values{"id": {req.ID.String()}}).String(), http.StatusSeeOther)
+			recovery.RouteGetFlow), url.Values{"id": {f.ID.String()}}).String(), http.StatusSeeOther)
 	}
 
 	return errors.WithStack(flow.ErrCompletedByStrategy)
@@ -418,7 +418,7 @@ func (s *Strategy) retryRecoveryFlowWithError(w http.ResponseWriter, r *http.Req
 	ctx := r.Context()
 	config := s.deps.Config(ctx)
 
-	req, err := recovery.NewFlow(config, config.SelfServiceFlowRecoveryRequestLifespan(),
+	f, err := recovery.NewFlow(config, config.SelfServiceFlowRecoveryRequestLifespan(),
 		s.deps.CSRFHandler().RegenerateToken(w, r), r, s.deps.RecoveryStrategies(ctx), ft)
 	if err != nil {
 		return err
@@ -427,20 +427,20 @@ func (s *Strategy) retryRecoveryFlowWithError(w http.ResponseWriter, r *http.Req
 	if expired := new(flow.ExpiredError); errors.As(recErr, &expired) {
 		return s.retryRecoveryFlowWithMessage(w, r, ft, text.NewErrorValidationRecoveryFlowExpired(expired.Ago))
 	} else {
-		if err := req.UI.ParseError(node.CodeGroup, recErr); err != nil {
+		if err := f.UI.ParseError(node.CodeGroup, recErr); err != nil {
 			return err
 		}
 	}
 
-	if err := s.deps.RecoveryFlowPersister().CreateRecoveryFlow(ctx, req); err != nil {
+	if err := s.deps.RecoveryFlowPersister().CreateRecoveryFlow(ctx, f); err != nil {
 		return err
 	}
 
 	if ft == flow.TypeBrowser {
-		http.Redirect(w, r, req.AppendTo(config.SelfServiceFlowRecoveryUI()).String(), http.StatusSeeOther)
+		http.Redirect(w, r, f.AppendTo(config.SelfServiceFlowRecoveryUI()).String(), http.StatusSeeOther)
 	} else {
 		http.Redirect(w, r, urlx.CopyWithQuery(urlx.AppendPaths(config.SelfPublicURL(),
-			recovery.RouteGetFlow), url.Values{"id": {req.ID.String()}}).String(), http.StatusSeeOther)
+			recovery.RouteGetFlow), url.Values{"id": {f.ID.String()}}).String(), http.StatusSeeOther)
 	}
 
 	return errors.WithStack(flow.ErrCompletedByStrategy)
@@ -515,15 +515,15 @@ func (s *Strategy) markRecoveryAddressVerified(w http.ResponseWriter, r *http.Re
 	return nil
 }
 
-func (s *Strategy) HandleRecoveryError(w http.ResponseWriter, r *http.Request, req *recovery.Flow, body *recoverySubmitPayload, err error) error {
-	if req != nil {
+func (s *Strategy) HandleRecoveryError(w http.ResponseWriter, r *http.Request, flow *recovery.Flow, body *recoverySubmitPayload, err error) error {
+	if flow != nil {
 		email := ""
 		if body != nil {
 			email = body.Email
 		}
 
-		req.UI.SetCSRF(s.deps.GenerateCSRFToken(r))
-		req.UI.GetNodes().Upsert(
+		flow.UI.SetCSRF(s.deps.GenerateCSRFToken(r))
+		flow.UI.GetNodes().Upsert(
 			node.NewInputField("email", email, node.CodeGroup, node.InputAttributeTypeEmail, node.WithRequiredInputAttribute).
 				WithMetaLabel(text.NewInfoNodeInputEmail()),
 		)
