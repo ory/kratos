@@ -37,6 +37,9 @@ func (h *MigrateHandler) MigrateSQL(cmd *cobra.Command, args []string) error {
 			cmd.ErrOrStderr(),
 			configx.WithFlags(cmd.Flags()),
 			configx.SkipValidation())
+		if err != nil {
+			return err
+		}
 		if len(d.Config().DSN(cmd.Context())) == 0 {
 			fmt.Println(cmd.UsageString())
 			fmt.Println("")
@@ -63,7 +66,6 @@ func (h *MigrateHandler) MigrateSQL(cmd *cobra.Command, args []string) error {
 	}
 
 	err = d.Init(cmd.Context(), &contextx.Default{}, driver.SkipNetworkInit)
-	cmdx.Must(err, "An error occurred initializing migrations: %s", err)
 	if err != nil {
 		return errors.Wrap(err, "an error occurred initializing migrations")
 	}
@@ -86,8 +88,9 @@ func (h *MigrateHandler) MigrateSQL(cmd *cobra.Command, args []string) error {
 		}
 	}
 
-	err = d.Persister().MigrateUp(cmd.Context())
-	cmdx.Must(err, "An error occurred while connecting to SQL: %s", err)
+	if err = d.Persister().MigrateUp(cmd.Context()); err != nil {
+		return err
+	}
 	fmt.Println("Successfully applied SQL migrations!")
 	return nil
 }

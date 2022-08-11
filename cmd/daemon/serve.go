@@ -2,10 +2,12 @@ package daemon
 
 import (
 	"crypto/tls"
-	"github.com/ory/x/servicelocator"
+	"net/http"
+
 	"github.com/pkg/errors"
 	"golang.org/x/net/context"
-	"net/http"
+
+	"github.com/ory/x/servicelocator"
 
 	"golang.org/x/sync/errgroup"
 
