@@ -36,14 +36,21 @@ func NewRecoveryUIFlowEchoServer(t *testing.T, reg driver.Registry) *httptest.Se
 }
 
 func GetRecoveryFlow(t *testing.T, client *http.Client, ts *httptest.Server) *kratos.SelfServiceRecoveryFlow {
+	t.Helper()
 	publicClient := NewSDKCustomClient(ts, client)
 
 	res, err := client.Get(ts.URL + recovery.RouteInitBrowserFlow)
-	require.NoError(t, err)
-	require.NoError(t, res.Body.Close())
+	require.NoError(t, err, "expected no error on %s: %s", recovery.RouteInitBrowserFlow, err)
+	require.NoError(t, res.Body.Close(), "expected no error on closing body: %s", err)
 
-	rs, _, err := publicClient.V0alpha2Api.GetSelfServiceRecoveryFlow(context.Background()).Id(res.Request.URL.Query().Get("flow")).Execute()
-	require.NoError(t, err, "%s", res.Request.URL.String())
+	flowID := res.Request.URL.Query().Get("flow")
+	assert.NotEmpty(t, flowID, "expected to receive a flow id, got none")
+
+	rs, _, err := publicClient.V0alpha2Api.
+		GetSelfServiceRecoveryFlow(context.Background()).
+		Id(flowID).
+		Execute()
+	require.NoError(t, err, "expected no error when fetching recovery flow: %s", err)
 	assert.Empty(t, rs.Active)
 
 	return rs

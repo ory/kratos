@@ -285,11 +285,11 @@ func (m *RegistryDefault) selfServiceStrategies() []interface{} {
 			password2.NewStrategy(m),
 			oidc.NewStrategy(m),
 			profile.NewStrategy(m),
+			code.NewStrategy(m),
 			link.NewStrategy(m),
 			totp.NewStrategy(m),
 			webauthn.NewStrategy(m),
 			lookup.NewStrategy(m),
-			code.NewStrategy(m),
 		}
 	}
 

@@ -33,3 +33,13 @@ func CourierExpectLinkInMessage(t *testing.T, message *courier.Message, offset i
 
 	return match[offset]
 }
+
+func CourierExpectCodeInMessage(t *testing.T, message *courier.Message, offset int) string {
+	if offset == 0 {
+		offset++
+	}
+	match := regexp.MustCompile(`(\d{8})`).FindStringSubmatch(message.Body)
+	require.Len(t, match, offset*2)
+
+	return match[offset]
+}

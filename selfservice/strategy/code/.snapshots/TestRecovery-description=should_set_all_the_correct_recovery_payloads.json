@@ -20,7 +20,7 @@
       "required": true,
       "type": "email"
     },
-    "group": "link",
+    "group": "code",
     "messages": [],
     "meta": {
       "label": {
@@ -37,9 +37,9 @@
       "name": "method",
       "node_type": "input",
       "type": "submit",
-      "value": "link"
+      "value": "code"
     },
-    "group": "link",
+    "group": "code",
     "messages": [],
     "meta": {
       "label": {
