@@ -40,8 +40,8 @@ You can read in the database URL using the -e flag, for example:
 
 Before running this command on an existing database, create a back up!
 `,
-		Run: func(cmd *cobra.Command, args []string) {
-			cliclient.NewMigrateHandler().MigrateSQL(cmd, args)
+		RunE: func(cmd *cobra.Command, args []string) error {
+			return cliclient.NewMigrateHandler().MigrateSQL(cmd, args)
 		},
 	}
 
