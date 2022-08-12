@@ -544,7 +544,7 @@ func TestViperProvider_Defaults(t *testing.T) {
 			assert.False(t, p.SelfServiceFlowVerificationEnabled())
 			assert.True(t, p.SelfServiceStrategy("password").Enabled)
 			assert.True(t, p.SelfServiceStrategy("profile").Enabled)
-			assert.True(t, p.SelfServiceStrategy("link").Enabled)
+			assert.True(t, p.SelfServiceStrategy("code").Enabled)
 			assert.False(t, p.SelfServiceStrategy("oidc").Enabled)
 		})
 	}
