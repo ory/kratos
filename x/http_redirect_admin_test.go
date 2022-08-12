@@ -1,7 +1,7 @@
 package x
 
 import (
-	"io/ioutil"
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -45,7 +45,7 @@ func TestRedirectAdmin(t *testing.T) {
 			assert.Equal(t, tc.expectedPath, res.Request.URL.Path)
 			defer res.Body.Close()
 			if tc.expectedBody != "" {
-				body, err := ioutil.ReadAll(res.Body)
+				body, err := io.ReadAll(res.Body)
 				require.NoError(t, err)
 				assert.Equal(t, tc.expectedBody, strings.TrimSpace(string(body)))
 			}

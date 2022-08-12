@@ -2,7 +2,8 @@ package identities
 
 import (
 	"fmt"
-	"io/ioutil"
+	"io"
+	"os"
 
 	"github.com/spf13/cobra"
 	"github.com/tidwall/gjson"
@@ -25,7 +26,7 @@ func parseIdentities(raw []byte) (rawIdentities []string) {
 func readIdentities(cmd *cobra.Command, args []string) (map[string]string, error) {
 	rawIdentities := make(map[string]string)
 	if len(args) == 0 {
-		fc, err := ioutil.ReadAll(cmd.InOrStdin())
+		fc, err := io.ReadAll(cmd.InOrStdin())
 		if err != nil {
 			_, _ = fmt.Fprintf(cmd.ErrOrStderr(), "STD_IN: Could not read: %s\n", err)
 			return nil, cmdx.FailSilently(cmd)
@@ -36,7 +37,7 @@ func readIdentities(cmd *cobra.Command, args []string) (map[string]string, error
 		return rawIdentities, nil
 	}
 	for _, fn := range args {
-		fc, err := ioutil.ReadFile(fn)
+		fc, err := os.ReadFile(fn)
 		if err != nil {
 			_, _ = fmt.Fprintf(cmd.ErrOrStderr(), "%s: Could not open identity file: %s\n", fn, err)
 			return nil, cmdx.FailSilently(cmd)

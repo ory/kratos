@@ -3,7 +3,7 @@ package oidc
 import (
 	"context"
 	"encoding/json"
-	"io/ioutil"
+	"io"
 	"net/url"
 	"path"
 	"time"
@@ -94,7 +94,7 @@ func (g *ProviderAuth0) Claims(ctx context.Context, exchange *oauth2.Token, quer
 	defer resp.Body.Close()
 
 	// Once auth0 fixes this bug, all this workaround can be removed.
-	b, err := ioutil.ReadAll(resp.Body)
+	b, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return nil, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("%s", err))
 	}

@@ -6,7 +6,7 @@ import (
 	_ "embed"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"net/url"
 	"strings"
@@ -497,7 +497,7 @@ func TestCompleteLogin(t *testing.T) {
 					require.NoError(t, err)
 					require.EqualValues(t, http.StatusOK, res.StatusCode)
 
-					body, err := ioutil.ReadAll(res.Body)
+					body, err := io.ReadAll(res.Body)
 					require.NoError(t, err)
 					assert.True(t, gjson.GetBytes(body, "refresh").Bool())
 					assert.Equal(t, identifier, gjson.GetBytes(body, "ui.nodes.#(attributes.name==identifier).attributes.value").String(), "%s", body)
@@ -521,7 +521,7 @@ func TestCompleteLogin(t *testing.T) {
 				require.NoError(t, err)
 				require.EqualValues(t, http.StatusOK, res.StatusCode)
 
-				body, err := ioutil.ReadAll(res.Body)
+				body, err := io.ReadAll(res.Body)
 				require.NoError(t, err)
 				assert.True(t, gjson.GetBytes(body, "refresh").Bool())
 				assert.False(t, gjson.GetBytes(body, "ui.nodes.#(attributes.name==identifier)").Exists(), "%s", body)

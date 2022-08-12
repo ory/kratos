@@ -6,7 +6,7 @@ import (
 	_ "embed"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
@@ -505,7 +505,7 @@ func TestStrategyTraits(t *testing.T) {
 		require.NoError(t, err)
 		defer res.Body.Close()
 
-		body, err := ioutil.ReadAll(res.Body)
+		body, err := io.ReadAll(res.Body)
 		require.NoError(t, err)
 		assert.True(t, returned, "%d - %s", res.StatusCode, body)
 	})

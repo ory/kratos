@@ -4,7 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"net/url"
 	"testing"
@@ -97,7 +97,7 @@ func TestHandler(t *testing.T) {
 		if isAPI {
 			assert.Len(t, res.Header.Get("Set-Cookie"), 0)
 		}
-		body, err := ioutil.ReadAll(res.Body)
+		body, err := io.ReadAll(res.Body)
 		require.NoError(t, err)
 		return res, body
 	}
@@ -244,7 +244,7 @@ func TestHandler(t *testing.T) {
 			// submit the flow but it is expired
 			u := publicTS.URL + settings.RouteSubmitFlow + "?flow=" + f.ID.String()
 			res, err := client.PostForm(u, url.Values{"method": {"password"}, "csrf_token": {"csrf"}, "password": {"password"}})
-			resBody, err := ioutil.ReadAll(res.Body)
+			resBody, err := io.ReadAll(res.Body)
 			require.NoError(t, err)
 			require.NoError(t, res.Body.Close())
 

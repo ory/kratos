@@ -3,7 +3,6 @@ package x
 import (
 	"context"
 	"io"
-	"io/ioutil"
 	"net/http"
 	"net/http/cookiejar"
 	"net/url"
@@ -32,7 +31,7 @@ func EasyGet(t *testing.T, c *http.Client, url string) (*http.Response, []byte) 
 	res, err := c.Get(url)
 	require.NoError(t, err)
 	defer res.Body.Close()
-	body, err := ioutil.ReadAll(res.Body)
+	body, err := io.ReadAll(res.Body)
 	require.NoError(t, err)
 	return res, body
 }
@@ -44,7 +43,7 @@ func EasyGetJSON(t *testing.T, c *http.Client, url string) (*http.Response, []by
 	res, err := c.Do(req)
 	require.NoError(t, err)
 	defer res.Body.Close()
-	body, err := ioutil.ReadAll(res.Body)
+	body, err := io.ReadAll(res.Body)
 	require.NoError(t, err)
 	return res, body
 }

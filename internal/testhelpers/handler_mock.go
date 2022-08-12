@@ -2,7 +2,7 @@ package testhelpers
 
 import (
 	"context"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"net/http/cookiejar"
 	"testing"
@@ -82,7 +82,7 @@ func MockMakeAuthenticatedRequestWithClientAndID(t *testing.T, reg mockDeps, con
 	res, err := client.Do(req)
 	require.NoError(t, errors.WithStack(err))
 
-	body, err := ioutil.ReadAll(res.Body)
+	body, err := io.ReadAll(res.Body)
 	require.NoError(t, errors.WithStack(err))
 
 	require.NoError(t, res.Body.Close())

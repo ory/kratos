@@ -3,7 +3,7 @@ package testhelpers
 import (
 	"context"
 	"errors"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"net/url"
 	"testing"
@@ -193,7 +193,7 @@ func SelfServiceMakeHookRequest(t *testing.T, ts *httptest.Server, suffix string
 	res, err := ts.Client().Do(req)
 	require.NoError(t, err)
 	defer res.Body.Close()
-	body, err := ioutil.ReadAll(res.Body)
+	body, err := io.ReadAll(res.Body)
 	require.NoError(t, err)
 	return res, string(body)
 }

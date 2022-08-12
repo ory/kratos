@@ -4,7 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -166,7 +166,7 @@ func TestSessionWhoAmI(t *testing.T) {
 
 				res, err = client.Do(req)
 				require.NoError(t, err)
-				body, err := ioutil.ReadAll(res.Body)
+				body, err := io.ReadAll(res.Body)
 				require.NoError(t, err)
 				assertNoCSRFCookieInResponse(t, ts, client, res) // Test that no CSRF cookie is ever set here.
 
@@ -568,7 +568,7 @@ func TestHandlerSelfServiceSessionManagement(t *testing.T) {
 		res, err := client.Do(req)
 		require.NoError(t, err)
 		require.Equal(t, http.StatusOK, res.StatusCode)
-		body, err := ioutil.ReadAll(res.Body)
+		body, err := io.ReadAll(res.Body)
 		require.NoError(t, err)
 		assert.Equal(t, int64(1), gjson.GetBytes(body, "count").Int(), "%s", body)
 

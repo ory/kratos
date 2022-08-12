@@ -7,7 +7,7 @@ import (
 	"crypto/sha1"
 	"errors"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
@@ -132,7 +132,7 @@ func TestDefaultPasswordValidationStrategy(t *testing.T) {
 			buffer := bytes.NewBufferString(<-hibpResp)
 			return &http.Response{
 				StatusCode:    http.StatusOK,
-				Body:          ioutil.NopCloser(buffer),
+				Body:          io.NopCloser(buffer),
 				ContentLength: int64(buffer.Len()),
 				Request:       req,
 			}, nil
@@ -327,7 +327,7 @@ func (c *fakeHttpClient) RespondWith(status int, body string) {
 		buffer := bytes.NewBufferString(body)
 		return &http.Response{
 			StatusCode:    status,
-			Body:          ioutil.NopCloser(buffer),
+			Body:          io.NopCloser(buffer),
 			ContentLength: int64(buffer.Len()),
 			Request:       request,
 		}, nil

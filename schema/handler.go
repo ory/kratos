@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"net/http"
 	"os"
 	"strings"
@@ -176,7 +175,7 @@ func (h *Handler) getAll(w http.ResponseWriter, r *http.Request, ps httprouter.P
 			return
 		}
 
-		raw, err := ioutil.ReadAll(src)
+		raw, err := io.ReadAll(src)
 		_ = src.Close()
 		if err != nil {
 			h.r.Writer().WriteError(w, r, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("The file for this JSON Schema ID could not be found or opened. This is a configuration issue.").WithDebugf("%+v", err)))
