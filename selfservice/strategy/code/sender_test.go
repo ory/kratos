@@ -51,9 +51,8 @@ func TestManager(t *testing.T) {
 
 		assert.EqualValues(t, "tracked@ory.sh", messages[0].Recipient)
 		assert.Contains(t, messages[0].Subject, "Recover access to your account")
-		assert.Contains(t, messages[0].Body, urlx.AppendPaths(conf.SelfServiceLinkMethodBaseURL(), recovery.RouteSubmitFlow).String()+"?")
-		assert.Contains(t, messages[0].Body, "code=") // TODO: Might be wrong?
-		assert.Contains(t, messages[0].Body, "flow=")
+
+		assert.Regexp(t, `(\d{8})`, messages[0].Body)
 
 		assert.EqualValues(t, "not-tracked@ory.sh", messages[1].Recipient)
 		assert.Contains(t, messages[1].Subject, "Account access attempted")
