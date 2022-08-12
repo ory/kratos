@@ -4,7 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -43,7 +43,7 @@ func TestQueueSMS(t *testing.T) {
 			Body string
 		}
 
-		rb, err := ioutil.ReadAll(r.Body)
+		rb, err := io.ReadAll(r.Body)
 		require.NoError(t, err)
 
 		var body sendSMSRequestBody

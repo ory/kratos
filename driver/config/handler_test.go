@@ -1,7 +1,7 @@
 package config_test
 
 import (
-	"io/ioutil"
+	"io"
 	"net/http/httptest"
 	"testing"
 
@@ -23,14 +23,14 @@ func TestNewConfigHashHandler(t *testing.T) {
 	require.NoError(t, err)
 	defer res.Body.Close()
 	require.Equal(t, 200, res.StatusCode)
-	first, err := ioutil.ReadAll(res.Body)
+	first, err := io.ReadAll(res.Body)
 	require.NoError(t, err)
 
 	res, err = ts.Client().Get(ts.URL + "/health/config")
 	require.NoError(t, err)
 	defer res.Body.Close()
 	require.Equal(t, 200, res.StatusCode)
-	second, err := ioutil.ReadAll(res.Body)
+	second, err := io.ReadAll(res.Body)
 	require.NoError(t, err)
 	assert.Equal(t, first, second)
 
@@ -40,7 +40,7 @@ func TestNewConfigHashHandler(t *testing.T) {
 	require.NoError(t, err)
 	defer res.Body.Close()
 	require.Equal(t, 200, res.StatusCode)
-	second, err = ioutil.ReadAll(res.Body)
+	second, err = io.ReadAll(res.Body)
 	require.NoError(t, err)
 	assert.NotEqual(t, first, second)
 }

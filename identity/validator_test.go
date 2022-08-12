@@ -3,7 +3,7 @@ package identity_test
 import (
 	"context"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -53,7 +53,7 @@ func TestSchemaValidatorDisallowsInternalNetworkRequests(t *testing.T) {
 		res, err := ts.Client().Get(ts.URL + "/" + id)
 		require.NoError(t, err)
 		defer res.Body.Close()
-		body, err := ioutil.ReadAll(res.Body)
+		body, err := io.ReadAll(res.Body)
 		require.NoError(t, err)
 		return string(body)
 	}

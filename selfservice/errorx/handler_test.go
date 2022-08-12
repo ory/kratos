@@ -4,7 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -52,7 +52,7 @@ func TestHandler(t *testing.T) {
 			require.NoError(t, err)
 			defer res.Body.Close()
 			require.EqualValues(t, expectedCode, res.StatusCode)
-			body, err := ioutil.ReadAll(res.Body)
+			body, err := io.ReadAll(res.Body)
 			require.NoError(t, err)
 			return body
 		}
@@ -79,7 +79,7 @@ func TestHandler(t *testing.T) {
 		require.NoError(t, err)
 		require.EqualValues(t, http.StatusOK, res.StatusCode)
 
-		actual, err := ioutil.ReadAll(res.Body)
+		actual, err := io.ReadAll(res.Body)
 		require.NoError(t, err)
 
 		assert.EqualValues(t, "This is a stub error.", gjson.GetBytes(actual, "error.reason").String())
@@ -109,7 +109,7 @@ func TestHandler(t *testing.T) {
 				defer res.Body.Close()
 				assert.EqualValues(t, http.StatusOK, res.StatusCode)
 
-				actual, err := ioutil.ReadAll(res.Body)
+				actual, err := io.ReadAll(res.Body)
 				require.NoError(t, err)
 
 				gg := errorsx.Cause(tc.gave)

@@ -2,7 +2,7 @@ package flow_test
 
 import (
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
@@ -68,7 +68,7 @@ func TestMethodEnabledAndAllowed(t *testing.T) {
 	t.Run("unknown", func(t *testing.T) {
 		res, err := ts.Client().PostForm(ts.URL, url.Values{"method": {"other"}})
 		require.NoError(t, err)
-		body, err := ioutil.ReadAll(res.Body)
+		body, err := io.ReadAll(res.Body)
 		require.NoError(t, err)
 		require.NoError(t, res.Body.Close())
 		assert.Equal(t, http.StatusInternalServerError, res.StatusCode)
@@ -79,7 +79,7 @@ func TestMethodEnabledAndAllowed(t *testing.T) {
 		require.NoError(t, conf.Set(fmt.Sprintf("%s.%s.enabled", config.ViperKeySelfServiceStrategyConfig, "password"), false))
 		res, err := ts.Client().PostForm(ts.URL, url.Values{"method": {"password"}})
 		require.NoError(t, err)
-		body, err := ioutil.ReadAll(res.Body)
+		body, err := io.ReadAll(res.Body)
 		require.NoError(t, err)
 		require.NoError(t, res.Body.Close())
 		assert.Equal(t, http.StatusInternalServerError, res.StatusCode)

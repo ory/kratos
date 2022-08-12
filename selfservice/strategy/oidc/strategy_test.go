@@ -5,7 +5,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"net/http/cookiejar"
 	"net/http/httptest"
@@ -140,7 +140,7 @@ func TestStrategy(t *testing.T) {
 		res, err := newClient(t, jar).PostForm(action, fv)
 		require.NoError(t, err, action)
 
-		body, err := ioutil.ReadAll(res.Body)
+		body, err := io.ReadAll(res.Body)
 		require.NoError(t, res.Body.Close())
 		require.NoError(t, err)
 

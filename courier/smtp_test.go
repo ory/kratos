@@ -9,7 +9,7 @@ import (
 	"encoding/pem"
 	"flag"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"math/big"
 	"net/http"
 	"os"
@@ -153,7 +153,7 @@ func TestQueueEmail(t *testing.T) {
 			}
 
 			defer res.Body.Close()
-			body, err = ioutil.ReadAll(res.Body)
+			body, err = io.ReadAll(res.Body)
 			if err != nil {
 				return err
 			}
@@ -209,7 +209,7 @@ func generateTestClientCert() (clientCert *os.File, clientKey *os.File, err erro
 	if err != nil {
 		return nil, nil, err
 	}
-	clientCert, err = ioutil.TempFile("./test", "testCert")
+	clientCert, err = os.CreateTemp("./test", "testCert")
 	if err != nil {
 		return nil, nil, err
 	}
@@ -217,7 +217,7 @@ func generateTestClientCert() (clientCert *os.File, clientKey *os.File, err erro
 	pem.Encode(clientCert, &pem.Block{Type: "CERTIFICATE", Bytes: cert})
 	clientCert.Close()
 
-	clientKey, err = ioutil.TempFile("./test", "testKey")
+	clientKey, err = os.CreateTemp("./test", "testKey")
 	if err != nil {
 		return nil, nil, err
 	}

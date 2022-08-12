@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"encoding/json"
 	"io"
-	"io/ioutil"
 	"net/http"
 	"net/url"
 	"testing"
@@ -70,7 +69,7 @@ func HTTPRequestJSON(t *testing.T, client *http.Client, method string, url strin
 	require.NoError(t, err)
 	defer res.Body.Close()
 
-	payload, err := ioutil.ReadAll(res.Body)
+	payload, err := io.ReadAll(res.Body)
 	require.NoError(t, err)
 
 	return payload, res
@@ -85,7 +84,7 @@ func HTTPPostForm(t *testing.T, client *http.Client, remote string, in *url.Valu
 	require.NoError(t, err)
 	defer res.Body.Close()
 
-	payload, err := ioutil.ReadAll(res.Body)
+	payload, err := io.ReadAll(res.Body)
 	require.NoError(t, err)
 
 	return payload, res

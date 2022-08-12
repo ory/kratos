@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"context"
 	"fmt"
-	"io/ioutil"
+	"os"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -19,7 +19,7 @@ func TestFieldFromPath(t *testing.T) {
 
 	var ctx = context.Background()
 	t.Run("all properties are properly transferred", func(t *testing.T) {
-		schema, err := ioutil.ReadFile("./fixtures/all_formats.schema.json")
+		schema, err := os.ReadFile("./fixtures/all_formats.schema.json")
 		require.NoError(t, err)
 
 		c := jsonschema.NewCompiler()
