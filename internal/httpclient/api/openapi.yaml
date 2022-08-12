@@ -1530,6 +1530,14 @@ paths:
         schema:
           type: string
         style: form
+      - description: The Code
+        explode: true
+        in: query
+        name: code
+        required: false
+        schema:
+          type: string
+        style: form
       - description: |-
           HTTP Cookies
 
@@ -4550,6 +4558,7 @@ components:
         method:
           enum:
           - link_recovery
+          - code_recovery
           - password
           - totp
           - oidc
@@ -4783,7 +4792,7 @@ components:
             format: email
           type: string
         method:
-          description: Method supports `link` only right now.
+          description: Method supports `link` and `code` only right now.
           type: string
       required:
       - email

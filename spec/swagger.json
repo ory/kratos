@@ -1503,6 +1503,12 @@
           },
           {
             "type": "string",
+            "description": "The Code",
+            "name": "code",
+            "in": "query"
+          },
+          {
+            "type": "string",
             "description": "HTTP Cookies\n\nWhen using the SDK in a browser app, on the server side you must include the HTTP Cookie Header\nsent by the client to your server here. This ensures that CSRF and session cookies are respected.",
             "name": "Cookie",
             "in": "header"
@@ -3943,7 +3949,7 @@
           "type": "string"
         },
         "method": {
-          "description": "Method supports `link` only right now.",
+          "description": "Method supports `link` and `code` only right now.",
           "type": "string"
         }
       }

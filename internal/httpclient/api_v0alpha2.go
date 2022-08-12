@@ -3395,11 +3395,16 @@ type V0alpha2ApiApiGetSelfServiceRecoveryFlowRequest struct {
 	ctx        context.Context
 	ApiService V0alpha2Api
 	id         *string
+	code       *string
 	cookie     *string
 }
 
 func (r V0alpha2ApiApiGetSelfServiceRecoveryFlowRequest) Id(id string) V0alpha2ApiApiGetSelfServiceRecoveryFlowRequest {
 	r.id = &id
+	return r
+}
+func (r V0alpha2ApiApiGetSelfServiceRecoveryFlowRequest) Code(code string) V0alpha2ApiApiGetSelfServiceRecoveryFlowRequest {
+	r.code = &code
 	return r
 }
 func (r V0alpha2ApiApiGetSelfServiceRecoveryFlowRequest) Cookie(cookie string) V0alpha2ApiApiGetSelfServiceRecoveryFlowRequest {
@@ -3470,6 +3475,9 @@ func (a *V0alpha2ApiService) GetSelfServiceRecoveryFlowExecute(r V0alpha2ApiApiG
 	}
 
 	localVarQueryParams.Add("id", parameterToString(*r.id, ""))
+	if r.code != nil {
+		localVarQueryParams.Add("code", parameterToString(*r.code, ""))
+	}
 	// to determine the Content-Type header
 	localVarHTTPContentTypes := []string{}
 

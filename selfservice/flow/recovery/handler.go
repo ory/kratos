@@ -200,6 +200,12 @@ type getSelfServiceRecoveryFlow struct {
 	// in: query
 	FlowID string `json:"id"`
 
+	// The Code
+	//
+	// required: false
+	// in: query
+	Code string `json:"code"`
+
 	// HTTP Cookies
 	//
 	// When using the SDK in a browser app, on the server side you must include the HTTP Cookie Header

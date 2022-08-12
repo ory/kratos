@@ -1244,6 +1244,7 @@
           "method": {
             "enum": [
               "link_recovery",
+              "code_recovery",
               "password",
               "totp",
               "oidc",
@@ -1511,7 +1512,7 @@
             "type": "string"
           },
           "method": {
-            "description": "Method supports `link` only right now.",
+            "description": "Method supports `link` and `code` only right now.",
             "type": "string"
           }
         },
@@ -4124,6 +4125,14 @@
             "in": "query",
             "name": "id",
             "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "The Code",
+            "in": "query",
+            "name": "code",
             "schema": {
               "type": "string"
             }
