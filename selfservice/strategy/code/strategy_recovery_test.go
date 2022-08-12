@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"github.com/davecgh/go-spew/spew"
+	"github.com/ory/kratos/driver"
 	"github.com/ory/kratos/session"
 
 	"github.com/ory/kratos/ui/node"
@@ -172,6 +173,29 @@ const (
 
 var flowTypes = []string{RecoveryFlowTypeBrowser, RecoveryFlowTypeAPI, RecoveryFlowTypeSPA}
 
+func createIdentityToRecover(t *testing.T, reg *driver.RegistryDefault, email string) *identity.Identity {
+	t.Helper()
+	var id = &identity.Identity{
+		Credentials: map[identity.CredentialsType]identity.Credentials{
+			"password": {
+				Type:        "password",
+				Identifiers: []string{email},
+				Config:      sqlxx.JSONRawMessage(`{"hashed_password":"foo"}`),
+			},
+		},
+		Traits:   identity.Traits(fmt.Sprintf(`{"email":"%s"}`, email)),
+		SchemaID: config.DefaultIdentityTraitsSchemaID,
+	}
+	require.NoError(t, reg.IdentityManager().Create(context.Background(), id, identity.ManagerAllowWriteProtectedTraits))
+
+	addr, err := reg.IdentityPool().FindVerifiableAddressByValue(context.Background(), identity.VerifiableAddressTypeEmail, email)
+	assert.NoError(t, err)
+	assert.False(t, addr.Verified)
+	assert.Nil(t, addr.VerifiedAt)
+	assert.Equal(t, identity.VerifiableAddressStatusPending, addr.Status)
+	return id
+}
+
 func TestRecovery(t *testing.T) {
 	conf, reg := internal.NewFastRegistryWithMocks(t)
 	conf.MustSet(config.ViperKeySelfServiceStrategyConfig+"."+recovery.StrategyRecoveryLinkName+".enabled", false)
@@ -183,24 +207,6 @@ func TestRecovery(t *testing.T) {
 	_ = testhelpers.NewErrorTestServer(t, reg)
 
 	public, _, publicRouter, _ := testhelpers.NewKratosServerWithCSRFAndRouters(t, reg)
-	// public, _, _, _ := testhelpers.NewKratosServerWithCSRFAndRouters(t, reg)
-
-	var createIdentityToRecover = func(email string) *identity.Identity {
-		var id = &identity.Identity{
-			Credentials: map[identity.CredentialsType]identity.Credentials{
-				"password": {Type: "password", Identifiers: []string{email}, Config: sqlxx.JSONRawMessage(`{"hashed_password":"foo"}`)}},
-			Traits:   identity.Traits(fmt.Sprintf(`{"email":"%s"}`, email)),
-			SchemaID: config.DefaultIdentityTraitsSchemaID,
-		}
-		require.NoError(t, reg.IdentityManager().Create(context.Background(), id, identity.ManagerAllowWriteProtectedTraits))
-
-		addr, err := reg.IdentityPool().FindVerifiableAddressByValue(context.Background(), identity.VerifiableAddressTypeEmail, email)
-		assert.NoError(t, err)
-		assert.False(t, addr.Verified)
-		assert.Nil(t, addr.VerifiedAt)
-		assert.Equal(t, identity.VerifiableAddressStatusPending, addr.Status)
-		return id
-	}
 
 	var submitRecovery = func(t *testing.T, client *http.Client, flowType string, values func(url.Values), code int) string {
 		isSPA := flowType == RecoveryFlowTypeSPA
@@ -279,7 +285,7 @@ func TestRecovery(t *testing.T) {
 
 		t.Run("type=browser", func(t *testing.T) {
 			email := "recoverme1@ory.sh"
-			createIdentityToRecover(email)
+			createIdentityToRecover(t, reg, email)
 			check(t, submitAndExpectSuccess(t, nil, RecoveryFlowTypeBrowser, func(v url.Values) {
 				v.Set("email", email)
 			}), email, "")
@@ -288,7 +294,7 @@ func TestRecovery(t *testing.T) {
 		t.Run("type=browser set return_to", func(t *testing.T) {
 			email := "recoverme2@ory.sh"
 			returnTo := "https://www.ory.sh"
-			createIdentityToRecover(email)
+			createIdentityToRecover(t, reg, email)
 
 			hc := testhelpers.NewClientWithCookies(t)
 			hc.Transport = testhelpers.NewTransportWithLogger(http.DefaultTransport, t).RoundTripper
@@ -310,7 +316,7 @@ func TestRecovery(t *testing.T) {
 
 		t.Run("type=spa", func(t *testing.T) {
 			email := "recoverme3@ory.sh"
-			createIdentityToRecover(email)
+			createIdentityToRecover(t, reg, email)
 			check(t, submitAndExpectSuccess(t, nil, RecoveryFlowTypeSPA, func(v url.Values) {
 				v.Set("email", email)
 			}), email, "")
@@ -318,7 +324,7 @@ func TestRecovery(t *testing.T) {
 
 		t.Run("type=api", func(t *testing.T) {
 			email := "recoverme4@ory.sh"
-			createIdentityToRecover(email)
+			createIdentityToRecover(t, reg, email)
 			check(t, submitAndExpectSuccess(t, nil, RecoveryFlowTypeAPI, func(v url.Values) {
 				v.Set("email", email)
 			}), email, "")
@@ -445,7 +451,7 @@ func TestRecovery(t *testing.T) {
 		for _, flowType := range flowTypes {
 			t.Run("type="+flowType, func(t *testing.T) {
 				email := "recoverinactive_" + flowType + "@ory.sh"
-				createIdentityToRecover(email)
+				createIdentityToRecover(t, reg, email)
 				values := func(v url.Values) {
 					v.Set("email", email)
 				}
@@ -526,7 +532,7 @@ func TestRecovery(t *testing.T) {
 		}
 
 		email := x.NewUUID().String() + "@ory.sh"
-		id := createIdentityToRecover(email)
+		id := createIdentityToRecover(t, reg, email)
 
 		t.Run("case=unauthenticated", func(t *testing.T) {
 			var values = func(v url.Values) {
@@ -566,7 +572,7 @@ func TestRecovery(t *testing.T) {
 		})
 
 		email := strings.ToLower(testhelpers.RandomEmail())
-		id := createIdentityToRecover(email)
+		id := createIdentityToRecover(t, reg, email)
 
 		sess, err := session.NewActiveSession(id, conf, time.Now(), identity.CredentialsTypePassword, identity.AuthenticatorAssuranceLevel1)
 		require.NoError(t, err)
@@ -628,7 +634,7 @@ func TestRecovery(t *testing.T) {
 
 	t.Run("description=should not be able to use an outdated flow", func(t *testing.T) {
 		recoveryEmail := "recoverme5@ory.sh"
-		createIdentityToRecover(recoveryEmail)
+		createIdentityToRecover(t, reg, recoveryEmail)
 		conf.MustSet(config.ViperKeySelfServiceRecoveryRequestLifespan, time.Millisecond*200)
 		t.Cleanup(func() {
 			conf.MustSet(config.ViperKeySelfServiceRecoveryRequestLifespan, time.Minute)
@@ -654,7 +660,7 @@ func TestRecovery(t *testing.T) {
 
 	t.Run("description=should not be able to use an outdated flow", func(t *testing.T) {
 		recoveryEmail := "recoverme6@ory.sh"
-		createIdentityToRecover(recoveryEmail)
+		createIdentityToRecover(t, reg, recoveryEmail)
 		conf.MustSet(config.ViperKeySelfServiceRecoveryRequestLifespan, time.Millisecond*200)
 		t.Cleanup(func() {
 			conf.MustSet(config.ViperKeySelfServiceRecoveryRequestLifespan, time.Minute)
