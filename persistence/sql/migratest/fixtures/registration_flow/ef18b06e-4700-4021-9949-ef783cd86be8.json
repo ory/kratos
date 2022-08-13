@@ -1,10 +1,10 @@
 {
-  "id": "e2150cdc-23ac-4940-a240-6c79c27ab029",
+  "id": "ef18b06e-4700-4021-9949-ef783cd86be8",
   "hydra_login_request": null,
-  "type": "api",
+  "type": "browser",
   "expires_at": "2013-10-07T08:23:19Z",
   "issued_at": "2013-10-07T08:23:19Z",
-  "request_url": "http://kratos:4433/self-service/browser/flows/registration",
+  "request_url": "http://kratos:4433/self-service/browser/flows/registration?login_challenge=",
   "active": "password",
   "ui": {
     "action": "",
