@@ -49,6 +49,7 @@ const (
 	LookupGroup        UiNodeGroup = "lookup_secret"
 	WebAuthnGroup      UiNodeGroup = "webauthn"
 	PasskeyGroup       UiNodeGroup = "passkey"
+	PinGroup           UiNodeGroup = "pin"
 )
 
 func (g UiNodeGroup) String() string {

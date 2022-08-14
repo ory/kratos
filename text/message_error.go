@@ -12,14 +12,14 @@ const (
 	ErrIDSelfServiceBrowserLocationChangeRequiredError = "browser_location_change_required"
 	ErrIDSelfServiceFlowReplaced                       = "self_service_flow_replaced"
 
-	ErrIDAlreadyLoggedIn             = "session_already_available"
-	ErrIDAddressNotVerified          = "session_verified_address_required"
-	ErrIDSessionHasAALAlready        = "session_aal_already_fulfilled"
-	ErrIDSessionRequiredForHigherAAL = "session_aal1_required"
-	ErrIDHigherAALRequired           = "session_aal2_required"
-	ErrNoActiveSession               = "session_inactive"
-	ErrIDRedirectURLNotAllowed       = "self_service_flow_return_to_forbidden"
-	ErrIDInitiatedBySomeoneElse      = "security_identity_mismatch"
+	ErrIDAlreadyLoggedIn        = "session_already_available"
+	ErrIDAddressNotVerified     = "session_verified_address_required"
+	ErrIDSessionHasAALAlready   = "session_aal_already_fulfilled"
+	ErrIDSessionRequired        = "session_aal1_required"
+	ErrIDHigherAALRequired      = "session_aal2_required"
+	ErrNoActiveSession          = "session_inactive"
+	ErrIDRedirectURLNotAllowed  = "self_service_flow_return_to_forbidden"
+	ErrIDInitiatedBySomeoneElse = "security_identity_mismatch"
 
 	ErrIDCSRF = "security_csrf_violation"
 )

@@ -886,7 +886,7 @@ func TestDefaultRegistry_AllStrategies(t *testing.T) {
 	_, reg := internal.NewVeryFastRegistryWithoutDB(t)
 
 	t.Run("case=all login strategies", func(t *testing.T) {
-		expects := []string{"password", "oidc", "code", "totp", "passkey", "webauthn", "lookup_secret"}
+		expects := []string{"password", "oidc", "code", "totp", "passkey", "webauthn", "lookup_secret", "pin"}
 		s := reg.AllLoginStrategies()
 		require.Len(t, s, len(expects))
 		for k, e := range expects {
@@ -904,7 +904,7 @@ func TestDefaultRegistry_AllStrategies(t *testing.T) {
 	})
 
 	t.Run("case=all settings strategies", func(t *testing.T) {
-		expects := []string{"password", "oidc", "profile", "totp", "passkey", "webauthn", "lookup_secret"}
+		expects := []string{"password", "oidc", "profile", "totp", "passkey", "webauthn", "lookup_secret", "pin"}
 		s := reg.AllSettingsStrategies()
 		require.Len(t, s, len(expects))
 		for k, e := range expects {

@@ -31,6 +31,7 @@ const (
 	InfoSelfServiceLoginCodeMFA                                  // 1010019
 	InfoSelfServiceLoginCodeMFAHint                              // 1010020
 	InfoSelfServiceLoginPasskey                                  // 1010021
+	InfoSelfServiceLoginPinLabel                                 // 1010022
 )
 
 const (
@@ -101,6 +102,7 @@ const (
 	InfoNodeLabelRegistrationCode                     // 1070012
 	InfoNodeLabelLoginCode                            // 1070013
 	InfoNodeLabelLoginAndLinkCredential
+	InfoNodeLabelInputPin                          // 1070015
 )
 
 const (
@@ -148,6 +150,7 @@ const (
 	ErrorValidationPasswordTooManyBreaches
 	ErrorValidationNoCodeUser
 	ErrorValidationTraitsMismatch
+	ErrorValidationInvalidPin
 )
 
 const (

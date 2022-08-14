@@ -209,7 +209,7 @@ func TestPersister(t *testing.T) {
 			})
 
 			t.Run("case=credentials types", func(t *testing.T) {
-				for _, ct := range []ri.CredentialsType{ri.CredentialsTypeOIDC, ri.CredentialsTypePassword} {
+				for _, ct := range []ri.CredentialsType{ri.CredentialsTypeOIDC, ri.CredentialsTypePassword, ri.CredentialsTypePin} {
 					require.NoError(t, p.(*sql.Persister).Connection(context.Background()).Where("name = ?", ct).First(&ri.CredentialsTypeTable{}))
 				}
 			})

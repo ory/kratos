@@ -416,3 +416,11 @@ func NewErrorValidationTraitsMismatch() *Message {
 		Type: Error,
 	}
 }
+
+func NewErrorValidationInvalidPin() *Message {
+	return &Message{
+		ID:   ErrorValidationInvalidPin,
+		Text: "The provided pin code is invalid.",
+		Type: Error,
+	}
+}

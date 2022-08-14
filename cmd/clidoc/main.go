@@ -177,6 +177,9 @@ func init() {
 		"NewErrorValidationAddressUnknown":                        text.NewErrorValidationAddressUnknown(),
 		"NewInfoSelfServiceLoginCodeMFA":                          text.NewInfoSelfServiceLoginCodeMFA(),
 		"NewInfoSelfServiceLoginCodeMFAHint":                      text.NewInfoSelfServiceLoginCodeMFAHint("{maskedIdentifier}"),
+		"NewErrorValidationInvalidPin":                            text.NewErrorValidationInvalidPin(),
+		"NewInfoLoginPinLabel":                                    text.NewInfoLoginPinLabel(),
+		"NewInfoNodeInputPin":                                     text.NewInfoNodeInputPin(),
 	}
 }
 
