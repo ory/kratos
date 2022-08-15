@@ -2,11 +2,10 @@ package x
 
 import (
 	"io"
-	"io/ioutil"
 )
 
 func MustReadAll(r io.Reader) []byte {
-	all, err := ioutil.ReadAll(r)
+	all, err := io.ReadAll(r)
 	if err != nil {
 		panic(err)
 	}

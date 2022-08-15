@@ -6,7 +6,7 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"strconv"
@@ -57,7 +57,7 @@ func TestWebHooks(t *testing.T) {
 
 	webHookEndPoint := func(whr *WebHookRequest) httprouter.Handle {
 		return func(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
-			body, err := ioutil.ReadAll(r.Body)
+			body, err := io.ReadAll(r.Body)
 			if err != nil {
 				w.WriteHeader(http.StatusInternalServerError)
 				return

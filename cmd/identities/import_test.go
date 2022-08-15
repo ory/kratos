@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
-	"io/ioutil"
+	"os"
 	"testing"
 
 	"github.com/spf13/cobra"
@@ -31,7 +31,7 @@ func TestImportCmd(t *testing.T) {
 		}
 		ij, err := json.Marshal(i)
 		require.NoError(t, err)
-		f, err := ioutil.TempFile("", "")
+		f, err := os.CreateTemp("", "")
 		require.NoError(t, err)
 		_, err = f.Write(ij)
 		require.NoError(t, err)
@@ -58,7 +58,7 @@ func TestImportCmd(t *testing.T) {
 		}
 		ij, err := json.Marshal(i)
 		require.NoError(t, err)
-		f, err := ioutil.TempFile("", "")
+		f, err := os.CreateTemp("", "")
 		require.NoError(t, err)
 		_, err = f.Write(ij)
 		require.NoError(t, err)

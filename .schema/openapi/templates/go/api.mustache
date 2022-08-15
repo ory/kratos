@@ -5,7 +5,7 @@ package {{packageName}}
 import (
 	"bytes"
 	"context"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"net/url"
 {{#imports}}	"{{import}}"
@@ -243,7 +243,7 @@ func (a *{{{classname}}}Service) {{nickname}}Execute(r {{#structPrefix}}{{&class
 	}
 {{/required}}
 	if localVarFile != nil {
-		fbs, _ := ioutil.ReadAll(localVarFile)
+		fbs, _ := io.ReadAll(localVarFile)
 		localVarFileBytes = fbs
 		localVarFileName = localVarFile.Name()
 		localVarFile.Close()
@@ -321,9 +321,9 @@ func (a *{{{classname}}}Service) {{nickname}}Execute(r {{#structPrefix}}{{&class
 		return {{#returnType}}localVarReturnValue, {{/returnType}}localVarHTTPResponse, err
 	}
 
-	localVarBody, err := ioutil.ReadAll(localVarHTTPResponse.Body)
+	localVarBody, err := io.ReadAll(localVarHTTPResponse.Body)
 	localVarHTTPResponse.Body.Close()
-	localVarHTTPResponse.Body = ioutil.NopCloser(bytes.NewBuffer(localVarBody))
+	localVarHTTPResponse.Body = io.NopCloser(bytes.NewBuffer(localVarBody))
 	if err != nil {
 		return {{#returnType}}localVarReturnValue, {{/returnType}}localVarHTTPResponse, err
 	}

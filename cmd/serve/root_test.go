@@ -2,7 +2,6 @@ package serve_test
 
 import (
 	"encoding/base64"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"testing"
@@ -24,10 +23,10 @@ func TestServeTLSBase64(t *testing.T) {
 
 	testhelpers.GenerateTLSCertificateFilesForTests(t, certPath, keyPath)
 
-	certRaw, err := ioutil.ReadFile(certPath)
+	certRaw, err := os.ReadFile(certPath)
 	require.NoError(t, err)
 
-	keyRaw, err := ioutil.ReadFile(keyPath)
+	keyRaw, err := os.ReadFile(keyPath)
 	require.NoError(t, err)
 
 	certBase64 := base64.StdEncoding.EncodeToString(certRaw)

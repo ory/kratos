@@ -14,7 +14,7 @@ package client
 import (
 	"bytes"
 	"context"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"net/url"
 )
@@ -102,16 +102,16 @@ func (r MetadataApiApiGetVersionRequest) Execute() (*InlineResponse2001, *http.R
 }
 
 /*
- * GetVersion Return Running Software Version.
- * This endpoint returns the version of Ory Kratos.
+  - GetVersion Return Running Software Version.
+  - This endpoint returns the version of Ory Kratos.
 
 If the service supports TLS Edge Termination, this endpoint does not require the
 `X-Forwarded-Proto` header to be set.
 
 Be aware that if you are running multiple nodes of this service, the version will never
 refer to the cluster state, only to a single instance.
- * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
- * @return MetadataApiApiGetVersionRequest
+  - @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
+  - @return MetadataApiApiGetVersionRequest
 */
 func (a *MetadataApiService) GetVersion(ctx context.Context) MetadataApiApiGetVersionRequest {
 	return MetadataApiApiGetVersionRequest{
@@ -172,9 +172,9 @@ func (a *MetadataApiService) GetVersionExecute(r MetadataApiApiGetVersionRequest
 		return localVarReturnValue, localVarHTTPResponse, err
 	}
 
-	localVarBody, err := ioutil.ReadAll(localVarHTTPResponse.Body)
+	localVarBody, err := io.ReadAll(localVarHTTPResponse.Body)
 	localVarHTTPResponse.Body.Close()
-	localVarHTTPResponse.Body = ioutil.NopCloser(bytes.NewBuffer(localVarBody))
+	localVarHTTPResponse.Body = io.NopCloser(bytes.NewBuffer(localVarBody))
 	if err != nil {
 		return localVarReturnValue, localVarHTTPResponse, err
 	}
@@ -209,8 +209,9 @@ func (r MetadataApiApiIsAliveRequest) Execute() (*InlineResponse200, *http.Respo
 }
 
 /*
- * IsAlive Check HTTP Server Status
- * This endpoint returns a HTTP 200 status code when Ory Kratos is accepting incoming
+  - IsAlive Check HTTP Server Status
+  - This endpoint returns a HTTP 200 status code when Ory Kratos is accepting incoming
+
 HTTP requests. This status does currently not include checks whether the database connection is working.
 
 If the service supports TLS Edge Termination, this endpoint does not require the
@@ -218,8 +219,8 @@ If the service supports TLS Edge Termination, this endpoint does not require the
 
 Be aware that if you are running multiple nodes of this service, the health status will never
 refer to the cluster state, only to a single instance.
- * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
- * @return MetadataApiApiIsAliveRequest
+  - @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
+  - @return MetadataApiApiIsAliveRequest
 */
 func (a *MetadataApiService) IsAlive(ctx context.Context) MetadataApiApiIsAliveRequest {
 	return MetadataApiApiIsAliveRequest{
@@ -280,9 +281,9 @@ func (a *MetadataApiService) IsAliveExecute(r MetadataApiApiIsAliveRequest) (*In
 		return localVarReturnValue, localVarHTTPResponse, err
 	}
 
-	localVarBody, err := ioutil.ReadAll(localVarHTTPResponse.Body)
+	localVarBody, err := io.ReadAll(localVarHTTPResponse.Body)
 	localVarHTTPResponse.Body.Close()
-	localVarHTTPResponse.Body = ioutil.NopCloser(bytes.NewBuffer(localVarBody))
+	localVarHTTPResponse.Body = io.NopCloser(bytes.NewBuffer(localVarBody))
 	if err != nil {
 		return localVarReturnValue, localVarHTTPResponse, err
 	}
@@ -326,8 +327,9 @@ func (r MetadataApiApiIsReadyRequest) Execute() (*InlineResponse200, *http.Respo
 }
 
 /*
- * IsReady Check HTTP Server and Database Status
- * This endpoint returns a HTTP 200 status code when Ory Kratos is up running and the environment dependencies (e.g.
+  - IsReady Check HTTP Server and Database Status
+  - This endpoint returns a HTTP 200 status code when Ory Kratos is up running and the environment dependencies (e.g.
+
 the database) are responsive as well.
 
 If the service supports TLS Edge Termination, this endpoint does not require the
@@ -335,8 +337,8 @@ If the service supports TLS Edge Termination, this endpoint does not require the
 
 Be aware that if you are running multiple nodes of Ory Kratos, the health status will never
 refer to the cluster state, only to a single instance.
- * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
- * @return MetadataApiApiIsReadyRequest
+  - @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
+  - @return MetadataApiApiIsReadyRequest
 */
 func (a *MetadataApiService) IsReady(ctx context.Context) MetadataApiApiIsReadyRequest {
 	return MetadataApiApiIsReadyRequest{
@@ -397,9 +399,9 @@ func (a *MetadataApiService) IsReadyExecute(r MetadataApiApiIsReadyRequest) (*In
 		return localVarReturnValue, localVarHTTPResponse, err
 	}
 
-	localVarBody, err := ioutil.ReadAll(localVarHTTPResponse.Body)
+	localVarBody, err := io.ReadAll(localVarHTTPResponse.Body)
 	localVarHTTPResponse.Body.Close()
-	localVarHTTPResponse.Body = ioutil.NopCloser(bytes.NewBuffer(localVarBody))
+	localVarHTTPResponse.Body = io.NopCloser(bytes.NewBuffer(localVarBody))
 	if err != nil {
 		return localVarReturnValue, localVarHTTPResponse, err
 	}

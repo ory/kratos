@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"net/http"
 	"os"
 	"strings"
@@ -80,15 +79,15 @@ type getIdentitySchema struct {
 //
 // Get a JSON Schema
 //
-//     Produces:
-//     - application/json
+//	Produces:
+//	- application/json
 //
-//     Schemes: http, https
+//	Schemes: http, https
 //
-//     Responses:
-//       200: identitySchema
-//       404: jsonError
-//       500: jsonError
+//	Responses:
+//	  200: identitySchema
+//	  404: jsonError
+//	  500: jsonError
 func (h *Handler) getIdentitySchema(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	ss, err := h.r.IdentityTraitsSchemas(r.Context())
 	if err != nil {
@@ -148,14 +147,14 @@ type listIdentitySchemas struct {
 //
 // Get all Identity Schemas
 //
-//     Produces:
-//     - application/json
+//	Produces:
+//	- application/json
 //
-//     Schemes: http, https
+//	Schemes: http, https
 //
-//     Responses:
-//       200: identitySchemas
-//       500: jsonError
+//	Responses:
+//	  200: identitySchemas
+//	  500: jsonError
 func (h *Handler) getAll(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	page, itemsPerPage := x.ParsePagination(r)
 
@@ -176,7 +175,7 @@ func (h *Handler) getAll(w http.ResponseWriter, r *http.Request, ps httprouter.P
 			return
 		}
 
-		raw, err := ioutil.ReadAll(src)
+		raw, err := io.ReadAll(src)
 		_ = src.Close()
 		if err != nil {
 			h.r.Writer().WriteError(w, r, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("The file for this JSON Schema ID could not be found or opened. This is a configuration issue.").WithDebugf("%+v", err)))

@@ -7,7 +7,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"net/http"
 	"net/url"
 	"os"
@@ -767,10 +766,10 @@ func TestLoadingTLSConfig(t *testing.T) {
 
 	testhelpers.GenerateTLSCertificateFilesForTests(t, certPath, keyPath)
 
-	certRaw, err := ioutil.ReadFile(certPath)
+	certRaw, err := os.ReadFile(certPath)
 	assert.Nil(t, err)
 
-	keyRaw, err := ioutil.ReadFile(keyPath)
+	keyRaw, err := os.ReadFile(keyPath)
 	assert.Nil(t, err)
 
 	certBase64 := base64.StdEncoding.EncodeToString(certRaw)

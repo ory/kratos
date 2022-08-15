@@ -3,9 +3,9 @@ package testhelpers
 import (
 	"context"
 	"encoding/base64"
-	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
+	"os"
 	"path"
 	"testing"
 
@@ -52,7 +52,7 @@ func TestRemoteTemplates(t *testing.T, basePath string, tmplType courier.Templat
 	t.Cleanup(cancel)
 
 	toBase64 := func(filePath string) string {
-		f, err := ioutil.ReadFile(filePath)
+		f, err := os.ReadFile(filePath)
 		require.NoError(t, err)
 		return base64.StdEncoding.EncodeToString(f)
 	}
