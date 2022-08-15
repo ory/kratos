@@ -186,6 +186,8 @@ func TestAdminStrategy(t *testing.T) {
 
 func TestRecovery(t *testing.T) {
 	conf, reg := internal.NewFastRegistryWithMocks(t)
+	conf.MustSet(config.ViperKeySelfServiceStrategyConfig+".code.enabled", false)
+	conf.MustSet(config.ViperKeySelfServiceStrategyConfig+".link.enabled", true)
 	initViper(t, conf)
 
 	_ = testhelpers.NewRecoveryUIFlowEchoServer(t, reg)

@@ -21,6 +21,7 @@ type (
 		RecoveryStrategyID() string
 		RecoveryNodeGroup() node.UiNodeGroup
 		PopulateRecoveryMethod(*http.Request, *Flow) error
+		PrefillUINodes(w http.ResponseWriter, r *http.Request, f *Flow) error
 		Recover(w http.ResponseWriter, r *http.Request, f *Flow) (err error)
 	}
 	AdminHandler interface {

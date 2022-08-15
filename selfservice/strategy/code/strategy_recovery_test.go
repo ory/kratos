@@ -6,12 +6,15 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"net/http/httptest"
 	"net/url"
 	"strings"
 	"testing"
 	"time"
 
 	"github.com/davecgh/go-spew/spew"
+	errors "github.com/pkg/errors"
+
 	"github.com/ory/kratos/driver"
 	"github.com/ory/kratos/session"
 
@@ -22,6 +25,7 @@ import (
 	"github.com/ory/kratos/corpx"
 
 	"github.com/ory/x/ioutilx"
+	"github.com/ory/x/pointerx"
 	"github.com/ory/x/urlx"
 
 	"github.com/stretchr/testify/assert"
@@ -36,7 +40,9 @@ import (
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/internal"
 	"github.com/ory/kratos/internal/testhelpers"
+	"github.com/ory/kratos/selfservice/flow"
 	"github.com/ory/kratos/selfservice/flow/recovery"
+	"github.com/ory/kratos/selfservice/strategy/code"
 	"github.com/ory/kratos/text"
 	"github.com/ory/kratos/x"
 )
@@ -45,125 +51,125 @@ func init() {
 	corpx.RegisterFakes()
 }
 
-// func TestAdminStrategy(t *testing.T) {
-// 	conf, reg := internal.NewFastRegistryWithMocks(t)
-// 	initViper(t, conf)
+func TestAdminStrategy(t *testing.T) {
+	conf, reg := internal.NewFastRegistryWithMocks(t)
+	initViper(t, conf)
 
-// 	_ = testhelpers.NewRecoveryUIFlowEchoServer(t, reg)
-// 	_ = testhelpers.NewSettingsUIFlowEchoServer(t, reg)
-// 	_ = testhelpers.NewLoginUIFlowEchoServer(t, reg)
-// 	_ = testhelpers.NewErrorTestServer(t, reg)
+	_ = testhelpers.NewRecoveryUIFlowEchoServer(t, reg)
+	_ = testhelpers.NewSettingsUIFlowEchoServer(t, reg)
+	_ = testhelpers.NewLoginUIFlowEchoServer(t, reg)
+	_ = testhelpers.NewErrorTestServer(t, reg)
 
-// 	publicTS, adminTS := testhelpers.NewKratosServer(t, reg)
-// 	adminSDK := testhelpers.NewSDKClient(adminTS)
+	publicTS, adminTS := testhelpers.NewKratosServer(t, reg)
+	adminSDK := testhelpers.NewSDKClient(adminTS)
 
-// 	createCode := func(id string, expiresIn *string) (*kratos.SelfServiceRecoveryCode, *http.Response, error) {
-// 		return adminSDK.V0alpha2Api.
-// 			AdminCreateSelfServiceRecoveryCode(context.Background()).
-// 			AdminCreateSelfServiceRecoveryCodeBody(
-// 				kratos.AdminCreateSelfServiceRecoveryCodeBody{
-// 					IdentityId: id,
-// 					ExpiresIn:  expiresIn,
-// 				}).
-// 			Execute()
-// 	}
+	createCode := func(id string, expiresIn *string) (*kratos.SelfServiceRecoveryCode, *http.Response, error) {
+		return adminSDK.V0alpha2Api.
+			AdminCreateSelfServiceRecoveryCode(context.Background()).
+			AdminCreateSelfServiceRecoveryCodeBody(
+				kratos.AdminCreateSelfServiceRecoveryCodeBody{
+					IdentityId: id,
+					ExpiresIn:  expiresIn,
+				}).
+			Execute()
+	}
 
-// 	t.Run("no panic on empty body #1384", func(t *testing.T) {
-// 		ctx := context.Background()
-// 		s, err := reg.RecoveryStrategies(ctx).Strategy("code")
-// 		require.NoError(t, err)
-// 		w := httptest.NewRecorder()
-// 		r := &http.Request{URL: new(url.URL)}
-// 		f, err := recovery.NewFlow(reg.Config(ctx), time.Minute, "", r, reg.RecoveryStrategies(ctx), flow.TypeBrowser)
-// 		require.NoError(t, err)
-// 		require.NotPanics(t, func() {
-// 			require.Error(t, s.(*code.Strategy).HandleRecoveryError(w, r, f, nil, errors.New("test")))
-// 		})
-// 	})
+	t.Run("no panic on empty body #1384", func(t *testing.T) {
+		ctx := context.Background()
+		s, err := reg.RecoveryStrategies(ctx).Strategy("code")
+		require.NoError(t, err)
+		w := httptest.NewRecorder()
+		r := &http.Request{URL: new(url.URL)}
+		f, err := recovery.NewFlow(reg.Config(ctx), time.Minute, "", r, reg.RecoveryStrategies(ctx), flow.TypeBrowser)
+		require.NoError(t, err)
+		require.NotPanics(t, func() {
+			require.Error(t, s.(*code.Strategy).HandleRecoveryError(w, r, f, nil, errors.New("test")))
+		})
+	})
 
-// 	t.Run("description=should not be able to recover an account that does not exist", func(t *testing.T) {
-// 		_, _, err := createCode(x.NewUUID().String(), nil)
+	t.Run("description=should not be able to recover an account that does not exist", func(t *testing.T) {
+		_, _, err := createCode(x.NewUUID().String(), nil)
 
-// 		require.IsType(t, err, new(kratos.GenericOpenAPIError), "%T", err)
-// 		assert.EqualError(t, err.(*kratos.GenericOpenAPIError), "400 Bad Request")
-// 	})
+		require.IsType(t, err, new(kratos.GenericOpenAPIError), "%T", err)
+		assert.EqualError(t, err.(*kratos.GenericOpenAPIError), "400 Bad Request")
+	})
 
-// 	t.Run("description=should create code without email", func(t *testing.T) {
-// 		id := identity.Identity{Traits: identity.Traits(`{}`)}
+	t.Run("description=should create code without email", func(t *testing.T) {
+		id := identity.Identity{Traits: identity.Traits(`{}`)}
 
-// 		require.NoError(t, reg.IdentityManager().Create(context.Background(),
-// 			&id, identity.ManagerAllowWriteProtectedTraits))
+		require.NoError(t, reg.IdentityManager().Create(context.Background(),
+			&id, identity.ManagerAllowWriteProtectedTraits))
 
-// 		code, _, err := createCode(id.ID.String(), pointerx.String("100ms"))
-// 		require.NoError(t, err)
+		code, _, err := createCode(id.ID.String(), pointerx.String("100ms"))
+		require.NoError(t, err)
 
-// 		require.NotEmpty(t, code.RecoveryLink)
-// 		require.True(t, code.ExpiresAt.Before(time.Now().Add(conf.SelfServiceFlowRecoveryRequestLifespan())))
+		require.NotEmpty(t, code.RecoveryLink)
+		require.True(t, code.ExpiresAt.Before(time.Now().Add(conf.SelfServiceFlowRecoveryRequestLifespan())))
 
-// 		res, err := publicTS.Client().Get(code.RecoveryLink)
-// 		body := ioutilx.MustReadAll(res.Body)
+		res, err := publicTS.Client().Get(code.RecoveryLink)
+		body := ioutilx.MustReadAll(res.Body)
 
-// 		require.Len(t, gjson.GetBytes(body, "ui.messages").Array(), 1)
-// 		require.Contains(t, gjson.GetBytes(body, "ui.messages.0.text").Str, "The recovery flow expired")
+		require.Len(t, gjson.GetBytes(body, "ui.messages").Array(), 1)
+		require.Contains(t, gjson.GetBytes(body, "ui.messages.0.text").Str, "The recovery flow expired")
 
-// 		require.True(t, false)
-// 	})
+		require.True(t, false)
+	})
 
-// 	t.Run("description=should not be able to recover with expired code", func(t *testing.T) {
-// 		recoveryEmail := "recover.expired@ory.sh"
-// 		id := identity.Identity{Traits: identity.Traits(fmt.Sprintf(`{"email":"%s"}`, recoveryEmail))}
+	t.Run("description=should not be able to recover with expired code", func(t *testing.T) {
+		recoveryEmail := "recover.expired@ory.sh"
+		id := identity.Identity{Traits: identity.Traits(fmt.Sprintf(`{"email":"%s"}`, recoveryEmail))}
 
-// 		require.NoError(t, reg.IdentityManager().Create(context.Background(),
-// 			&id, identity.ManagerAllowWriteProtectedTraits))
+		require.NoError(t, reg.IdentityManager().Create(context.Background(),
+			&id, identity.ManagerAllowWriteProtectedTraits))
 
-// 		code, _, err := createCode(id.ID.String(), nil)
-// 		require.NoError(t, err)
+		code, _, err := createCode(id.ID.String(), nil)
+		require.NoError(t, err)
 
-// 		time.Sleep(time.Millisecond * 100)
-// 		require.NotEmpty(t, code.RecoveryLink)
-// 		require.True(t, code.ExpiresAt.Before(time.Now().Add(conf.SelfServiceFlowRecoveryRequestLifespan())))
+		time.Sleep(time.Millisecond * 100)
+		require.NotEmpty(t, code.RecoveryLink)
+		require.True(t, code.ExpiresAt.Before(time.Now().Add(conf.SelfServiceFlowRecoveryRequestLifespan())))
 
-// 		res, err := publicTS.Client().Get(code.RecoveryLink)
-// 		body := ioutilx.MustReadAll(res.Body)
+		res, err := publicTS.Client().Get(code.RecoveryLink)
+		body := ioutilx.MustReadAll(res.Body)
 
-// 		require.Len(t, gjson.GetBytes(body, "ui.messages").Array(), 1)
-// 		require.Contains(t, gjson.GetBytes(body, "ui.messages.0.text").Str, "The recovery flow expired")
+		require.Len(t, gjson.GetBytes(body, "ui.messages").Array(), 1)
+		require.Contains(t, gjson.GetBytes(body, "ui.messages.0.text").Str, "The recovery flow expired")
 
-// 		// TODO: what does this do?
-// 		addr, err := reg.IdentityPool().FindVerifiableAddressByValue(context.Background(), identity.VerifiableAddressTypeEmail, recoveryEmail)
-// 		assert.NoError(t, err)
-// 		assert.False(t, addr.Verified)
-// 		assert.Nil(t, addr.VerifiedAt)
-// 		assert.Equal(t, identity.VerifiableAddressStatusPending, addr.Status)
-// 	})
+		// TODO: what does this do?
+		addr, err := reg.IdentityPool().FindVerifiableAddressByValue(context.Background(), identity.VerifiableAddressTypeEmail, recoveryEmail)
+		assert.NoError(t, err)
+		assert.False(t, addr.Verified)
+		assert.Nil(t, addr.VerifiedAt)
+		assert.Equal(t, identity.VerifiableAddressStatusPending, addr.Status)
+	})
 
-// 	t.Run("description=should create a valid recovery link and set the expiry time as well and recover the account", func(t *testing.T) {
-// 		recoveryEmail := "recoverme@ory.sh"
-// 		id := identity.Identity{Traits: identity.Traits(fmt.Sprintf(`{"email":"%s"}`, recoveryEmail))}
+	t.Run("description=should create a valid recovery link and set the expiry time as well and recover the account", func(t *testing.T) {
+		recoveryEmail := "recoverme@ory.sh"
+		id := identity.Identity{Traits: identity.Traits(fmt.Sprintf(`{"email":"%s"}`, recoveryEmail))}
 
-// 		require.NoError(t, reg.IdentityManager().Create(context.Background(),
-// 			&id, identity.ManagerAllowWriteProtectedTraits))
+		require.NoError(t, reg.IdentityManager().Create(context.Background(),
+			&id, identity.ManagerAllowWriteProtectedTraits))
 
-// 		code, _, err := createCode(id.ID.String(), nil)
-// 		require.NoError(t, err)
+		code, _, err := createCode(id.ID.String(), nil)
+		require.NoError(t, err)
 
-// 		require.NotEmpty(t, code.RecoveryLink)
-// 		require.True(t, code.ExpiresAt.Before(time.Now().Add(conf.SelfServiceFlowRecoveryRequestLifespan()+time.Second)))
+		require.NotEmpty(t, code.RecoveryLink)
+		require.True(t, code.ExpiresAt.Before(time.Now().Add(conf.SelfServiceFlowRecoveryRequestLifespan()+time.Second)))
 
-// 		// TODO: Fix this
-// 		// f, err := reg.SettingsFlowPersister().GetSettingsFlow(context.Background(), uuid.FromStringOrNil(res.Request.URL.Query().Get("flow")))
-// 		// require.NoError(t, err, "%s", res.Request.URL.String())
+		// TODO: Fix this
+		// f, err := reg.SettingsFlowPersister().GetSettingsFlow(context.Background(), uuid.FromStringOrNil(res.Request.URL.Query().Get("flow")))
+		// require.NoError(t, err, "%s", res.Request.URL.String())
 
-// 		// require.Len(t, f.UI.Messages, 1)
-// 		// assert.Equal(t, "You successfully recovered your account. Please change your password or set up an alternative login method (e.g. social sign in) within the next 60.00 minutes.", f.UI.Messages[0].Text)
+		// require.Len(t, f.UI.Messages, 1)
+		// assert.Equal(t, "You successfully recovered your account. Please change your password or set up an alternative login method (e.g. social sign in) within the next 60.00 minutes.", f.UI.Messages[0].Text)
 
-// 		// addr, err := reg.IdentityPool().FindVerifiableAddressByValue(context.Background(), identity.VerifiableAddressTypeEmail, recoveryEmail)
-// 		// assert.NoError(t, err)
-// 		// assert.False(t, addr.Verified)
-// 		// assert.Nil(t, addr.VerifiedAt)
-// 		// assert.Equal(t, identity.VerifiableAddressStatusPending, addr.Status)
-// 	})
-// }
+		// addr, err := reg.IdentityPool().FindVerifiableAddressByValue(context.Background(), identity.VerifiableAddressTypeEmail, recoveryEmail)
+		// assert.NoError(t, err)
+		// assert.False(t, addr.Verified)
+		// assert.Nil(t, addr.VerifiedAt)
+		// assert.Equal(t, identity.VerifiableAddressStatusPending, addr.Status)
+	})
+}
 
 const (
 	RecoveryFlowTypeBrowser string = "browser"

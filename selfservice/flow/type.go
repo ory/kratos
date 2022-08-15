@@ -11,3 +11,11 @@ const (
 	TypeAPI     Type = "api"
 	TypeBrowser Type = "browser"
 )
+
+func (t Type) IsBrowser() bool {
+	return t == TypeBrowser
+}
+
+func (t Type) IsAPI() bool {
+	return t == TypeAPI
+}

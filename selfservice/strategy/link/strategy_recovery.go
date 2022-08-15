@@ -518,3 +518,7 @@ func (s *Strategy) decodeRecovery(r *http.Request) (*recoverySubmitPayload, erro
 
 	return &body, nil
 }
+
+func (s *Strategy) PrefillUINodes(_ http.ResponseWriter, _ *http.Request, _ *recovery.Flow) error {
+	return nil
+}

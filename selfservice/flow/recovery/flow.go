@@ -168,6 +168,10 @@ func (f Flow) GetNID() uuid.UUID {
 	return f.NID
 }
 
+func (f Flow) ShouldEnforceCSRF() bool {
+	return f.Type.IsBrowser() && f.CSRFToken != ""
+}
+
 func (f *Flow) Valid() error {
 	if f.ExpiresAt.Before(time.Now().UTC()) {
 		return errors.WithStack(flow.NewFlowExpiredError(f.ExpiresAt))

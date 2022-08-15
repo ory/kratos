@@ -152,13 +152,26 @@ func (s *Strategy) createRecoveryCode(w http.ResponseWriter, r *http.Request, _ 
 		return
 	}
 
-	flow, err := recovery.NewFlow(config, expiresIn, s.deps.GenerateCSRFToken(r),
-		r, s.deps.RecoveryStrategies(ctx), flow.TypeBrowser)
-	flow.State = recovery.StateEmailSent // TODO: Rename this to `RecoveryGenerated`?
+	// Initially, the CSRF token is empty, as the generated flow + link is not yet tied to the users browser
+	flow, err := recovery.NewFlow(config, expiresIn, "", r, s.deps.RecoveryStrategies(ctx), flow.TypeBrowser)
 	if err != nil {
 		s.deps.Writer().WriteError(w, r, err)
 		return
 	}
+	flow.State = recovery.StateEmailSent // TODO: Rename this to `RecoveryGenerated`?
+	flow.UI.Nodes.ResetNodes()
+	// TODO: Workaround, should probably add proper sorting here
+	flow.UI.Nodes.Remove("method")
+	flow.UI.Nodes.Upsert(
+		node.
+			NewInputField("code", nil, node.CodeGroup, node.InputAttributeTypeNumber, node.WithRequiredInputAttribute).
+			WithMetaLabel(text.NewInfoNodeLabelVerifyOTP()),
+	)
+
+	flow.UI.
+		GetNodes().
+		Append(node.NewInputField("method", s.RecoveryStrategyID(), node.CodeGroup, node.InputAttributeTypeSubmit).
+			WithMetaLabel(text.NewInfoNodeLabelSubmit()))
 
 	if err := s.deps.RecoveryFlowPersister().CreateRecoveryFlow(ctx, flow); err != nil {
 		s.deps.Writer().WriteError(w, r, err)
@@ -188,10 +201,10 @@ func (s *Strategy) createRecoveryCode(w http.ResponseWriter, r *http.Request, _ 
 	s.deps.Writer().Write(w, r, &selfServiceRecoveryCode{
 		ExpiresAt: flow.ExpiresAt.UTC(),
 		RecoveryLink: urlx.CopyWithQuery(
-			urlx.AppendPaths(config.SelfPublicURL(), recovery.RouteSubmitFlow),
+			urlx.AppendPaths(config.SelfPublicURL(), recovery.RouteGetFlow),
 			url.Values{
 				"code": {code.Code},
-				"flow": {flow.ID.String()},
+				"id":   {flow.ID.String()},
 			}).String()},
 		herodot.UnescapedHTML)
 }
@@ -223,8 +236,14 @@ func (s *Strategy) Recover(w http.ResponseWriter, r *http.Request, f *recovery.F
 	if err != nil {
 		return s.HandleRecoveryError(w, r, nil, body, err)
 	}
-	sID := s.RecoveryStrategyID()
 	ctx := r.Context()
+
+	// TODO: In the error case we should invalidate the flow
+	if err := flow.EnsureCSRF(s.deps, r, f.Type, s.deps.Config(ctx).DisableAPIFlowEnforcement(), s.deps.GenerateCSRFToken, body.CSRFToken); err != nil {
+		return s.retryRecoveryFlowWithError(w, r, flow.TypeBrowser, err)
+	}
+
+	sID := s.RecoveryStrategyID()
 
 	if len(body.Code) > 0 {
 		if err := flow.MethodEnabledAndAllowed(ctx, sID, sID, s.deps); err != nil {
@@ -285,7 +304,7 @@ func (s *Strategy) recoveryIssueSession(w http.ResponseWriter, r *http.Request, 
 	}
 
 	sess, err := session.NewActiveSession(id, s.deps.Config(ctx), time.Now().UTC(),
-		identity.CredentialsTypeRecoveryLink, identity.AuthenticatorAssuranceLevel1)
+		identity.CredentialsTypeRecoveryCode, identity.AuthenticatorAssuranceLevel1)
 	if err != nil {
 		return s.retryRecoveryFlowWithError(w, r, flow.TypeBrowser, err)
 	}
@@ -559,4 +578,35 @@ func (s *Strategy) decodeRecovery(r *http.Request) (*recoverySubmitPayload, erro
 	}
 
 	return &body, nil
+}
+
+func (s *Strategy) PrefillUINodes(w http.ResponseWriter, r *http.Request, f *recovery.Flow) error {
+	code := r.URL.Query().Get("code")
+
+	if code == "" {
+		return nil
+	}
+
+	if f.Type.IsBrowser() && !x.IsJSONRequest(r) {
+		targetUrl := f.AppendTo(s.deps.Config(r.Context()).SelfServiceFlowRecoveryUI())
+		targetUrl = urlx.CopyWithQuery(targetUrl, url.Values{"code": {code}})
+		http.Redirect(w, r, targetUrl.String(), http.StatusSeeOther)
+
+		f.UI.SetCSRF(s.deps.GenerateCSRFToken(r))
+		err := s.deps.RecoveryFlowPersister().UpdateRecoveryFlow(r.Context(), f)
+		if err != nil {
+			return err
+		}
+
+		return flow.ErrCompletedByStrategy
+	}
+
+	codeNode := f.UI.Nodes.Find("code")
+	if codeNode == nil {
+		return flow.ErrStrategyNotResponsible
+	}
+
+	codeNode.Attributes.SetValue(code)
+
+	return nil
 }
