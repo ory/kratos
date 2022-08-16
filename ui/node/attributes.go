@@ -158,6 +158,7 @@ type AnchorAttributes struct {
 
 // TextAttributes represents the attributes of a text node.
 //
+//
 // swagger:model uiNodeTextAttributes
 type TextAttributes struct {
 	// The text of the text node.
