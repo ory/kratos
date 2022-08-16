@@ -255,7 +255,12 @@ func (s *Strategy) Recover(w http.ResponseWriter, r *http.Request, f *recovery.F
 			return s.HandleRecoveryError(w, r, nil, body, err)
 		}
 
-		return s.recoveryUseCode(w, r, body)
+		f.SubmitCount++
+		if err := s.deps.RecoveryFlowPersister().UpdateRecoveryFlow(ctx, f); err != nil {
+			return s.HandleRecoveryError(w, r, f, body, err)
+		}
+
+		return s.recoveryUseCode(w, r, body, f)
 	}
 
 	if _, err := s.deps.SessionManager().FetchFromRequest(ctx, r); err == nil {
@@ -354,34 +359,26 @@ func (s *Strategy) recoveryIssueSession(w http.ResponseWriter, r *http.Request, 
 	return errors.WithStack(flow.ErrCompletedByStrategy)
 }
 
-func (s *Strategy) recoveryUseCode(w http.ResponseWriter, r *http.Request, body *recoverySubmitPayload) error {
+func (s *Strategy) recoveryUseCode(w http.ResponseWriter, r *http.Request, body *recoverySubmitPayload, f *recovery.Flow) error {
 	ctx := r.Context()
 	code, err := s.deps.RecoveryCodePersister().UseRecoveryCode(ctx, body.Code)
 	if err != nil {
 		if errors.Is(err, sqlcon.ErrNoRows) {
-			return s.retryRecoveryFlowWithMessage(w, r, flow.TypeBrowser, text.NewErrorValidationRecoveryCodeInvalidOrAlreadyUsed())
+			if f.SubmitCount > 5 {
+				return s.retryRecoveryFlowWithMessage(w, r, flow.TypeBrowser, text.NewErrorValidationRecoveryFlowSubmittedTooOften())
+			}
+
+			f.UI.Messages.Clear()
+			f.UI.Messages.Add(text.NewErrorValidationRecoveryCodeInvalidOrAlreadyUsed())
+			if err := s.deps.RecoveryFlowPersister().UpdateRecoveryFlow(ctx, f); err != nil {
+				return s.retryRecoveryFlowWithError(w, r, flow.TypeBrowser, err)
+			}
+
+			// No error
+			return nil
 		}
 
 		return s.retryRecoveryFlowWithError(w, r, flow.TypeBrowser, err)
-	}
-
-	config := s.deps.Config(ctx)
-	var f *recovery.Flow
-	if code.FlowID.Valid {
-		f, err = s.deps.RecoveryFlowPersister().GetRecoveryFlow(ctx, code.FlowID.UUID)
-		if err != nil {
-			return s.retryRecoveryFlowWithError(w, r, flow.TypeBrowser, err)
-		}
-	} else {
-		f, err = recovery.NewFlow(config, time.Until(code.ExpiresAt), s.deps.GenerateCSRFToken(r),
-			r, s.deps.RecoveryStrategies(ctx), flow.TypeBrowser)
-		if err != nil {
-			return s.retryRecoveryFlowWithError(w, r, flow.TypeBrowser, err)
-		}
-
-		if err := s.deps.RecoveryFlowPersister().CreateRecoveryFlow(ctx, f); err != nil {
-			return s.retryRecoveryFlowWithError(w, r, flow.TypeBrowser, err)
-		}
 	}
 
 	if err := code.Valid(); err != nil {

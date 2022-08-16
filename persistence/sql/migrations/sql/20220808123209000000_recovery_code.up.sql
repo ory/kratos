@@ -27,3 +27,5 @@ CREATE TABLE "identity_recovery_codes"
 );
 
 CREATE INDEX "identity_recovery_codes_nid_idx" ON "identity_recovery_codes" (id, nid);
+
+ALTER TABLE "selfservice_recovery_flows" ADD "submit_count" int NOT NULL DEFAULT 0;

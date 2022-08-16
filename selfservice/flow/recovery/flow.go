@@ -66,6 +66,9 @@ type Flow struct {
 	// not set.
 	Active sqlxx.NullString `json:"active,omitempty" faker:"-" db:"active_method"`
 
+	// SubmitCount indicates how often a user tried to submit this flow
+	SubmitCount int `json:"-" faker:"-" db:"submit_count"`
+
 	// UI contains data which must be shown in the user interface.
 	//
 	// required: true
@@ -111,10 +114,11 @@ func NewFlow(conf *config.Config, exp time.Duration, csrf string, r *http.Reques
 	}
 
 	flow := &Flow{
-		ID:         id,
-		ExpiresAt:  now.Add(exp),
-		IssuedAt:   now,
-		RequestURL: requestURL,
+		ID:          id,
+		ExpiresAt:   now.Add(exp),
+		IssuedAt:    now,
+		SubmitCount: 0,
+		RequestURL:  requestURL,
 		UI: &container.Container{
 			Method: "POST",
 			Action: flow.AppendFlowTo(urlx.AppendPaths(conf.SelfPublicURL(), RouteSubmitFlow), id).String(),

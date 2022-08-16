@@ -601,6 +601,99 @@ func TestRecovery(t *testing.T) {
 		assert.False(t, actualSession.IsActive())
 	})
 
+	t.Run("description=should not be able to use an invalid code more than 5 times", func(t *testing.T) {
+		c := testhelpers.NewClientWithCookies(t)
+		f := testhelpers.InitializeRecoveryFlowViaBrowser(t, c, false, public, nil)
+
+		form := testhelpers.SDKFormFieldsToURLValues(f.Ui.Nodes)
+		form.Set("code", "123123")
+
+		for submitTry := 0; submitTry < 5; submitTry++ {
+			res, err := c.PostForm(f.Ui.Action, form)
+			require.NoError(t, err, "try=%d", submitTry)
+			assert.Equal(t, http.StatusOK, res.StatusCode, "try=%d", submitTry)
+			assert.Contains(t, res.Request.URL.String(), conf.SelfServiceFlowRecoveryUI().String()+"?flow=")
+
+			rs, _, err := testhelpers.
+				NewSDKCustomClient(public, c).
+				V0alpha2Api.GetSelfServiceRecoveryFlow(context.Background()).
+				Id(res.Request.URL.Query().Get("flow")).Execute()
+
+			require.NoError(t, err, "try=%d", submitTry)
+
+			require.Len(t, rs.Ui.Messages, 1, "try=%d", submitTry)
+			assert.Equal(t, "The recovery code is invalid or has already been used. Please try again.", rs.Ui.Messages[0].Text, "try=%d", submitTry)
+		}
+
+		// submit an invalid code for the 6th time
+		res, err := c.PostForm(f.Ui.Action, form)
+		require.NoError(t, err)
+		assert.Equal(t, http.StatusOK, res.StatusCode)
+
+		rs, _, err := testhelpers.
+			NewSDKCustomClient(public, c).
+			V0alpha2Api.GetSelfServiceRecoveryFlow(context.Background()).
+			Id(res.Request.URL.Query().Get("flow")).Execute()
+
+		require.NoError(t, err)
+
+		require.Len(t, rs.Ui.Messages, 1)
+		assert.Equal(t, "The recovery was submitted too often. Please restart the flow.", rs.Ui.Messages[0].Text)
+		json, err := rs.Ui.MarshalJSON()
+		require.NoError(t, err)
+		t.Logf("body: %s", string(json))
+		assert.True(t, gjson.GetBytes(json, "nodes.#(attributes.name==email)").Exists())
+	})
+
+	t.Run("description=should be able to recover after using invalid code", func(t *testing.T) {
+		c := testhelpers.NewClientWithCookies(t)
+		recoveryEmail := strings.ToLower(testhelpers.RandomEmail())
+		_ = createIdentityToRecover(t, reg, recoveryEmail)
+		f := testhelpers.InitializeRecoveryFlowViaBrowser(t, c, false, public, nil)
+
+		var values = func(v url.Values) {
+			v.Set("email", recoveryEmail)
+		}
+
+		cl := testhelpers.NewClientWithCookies(t)
+		actual := submitAndExpectSuccess(t, cl, RecoveryFlowTypeBrowser, values)
+		t.Logf("a: %s", actual)
+		message := testhelpers.CourierExpectMessage(t, reg, recoveryEmail, "Recover access to your account")
+		recoveryCode := testhelpers.CourierExpectCodeInMessage(t, message, 1)
+
+		form := testhelpers.SDKFormFieldsToURLValues(f.Ui.Nodes)
+		// Submit an invalid code first
+		form.Set("code", "123123")
+		res, err := c.PostForm(f.Ui.Action, form)
+		require.NoError(t, err)
+		assert.Equal(t, http.StatusOK, res.StatusCode)
+		assert.Contains(t, res.Request.URL.String(), conf.SelfServiceFlowRecoveryUI().String()+"?flow=")
+
+		flowId := res.Request.URL.Query().Get("flow")
+		require.NotEmpty(t, flowId)
+
+		rs, _, err := testhelpers.
+			NewSDKCustomClient(public, c).
+			V0alpha2Api.GetSelfServiceRecoveryFlow(context.Background()).
+			Id(flowId).Execute()
+
+		require.NoError(t, err)
+
+		require.Len(t, rs.Ui.Messages, 1)
+		assert.Equal(t, "The recovery code is invalid or has already been used. Please try again.", rs.Ui.Messages[0].Text, "try=%d")
+
+		// Now submit the correct code
+		form.Set("code", recoveryCode)
+		res, err = c.PostForm(f.Ui.Action, form)
+		require.NoError(t, err)
+		assert.Equal(t, http.StatusOK, res.StatusCode)
+
+		json := ioutilx.MustReadAll(res.Body)
+
+		assert.Len(t, gjson.GetBytes(json, "ui.messages").Array(), 1)
+		assert.Contains(t, gjson.GetBytes(json, "ui.messages.0.text").String(), "You successfully recovered your account.")
+	})
+
 	t.Run("description=should not be able to use an invalid code", func(t *testing.T) {
 		c := testhelpers.NewClientWithCookies(t)
 		f := testhelpers.InitializeRecoveryFlowViaBrowser(t, c, false, public, nil)

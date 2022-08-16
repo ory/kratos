@@ -55,6 +55,15 @@ func NewErrorValidationRecoveryCodeInvalidOrAlreadyUsed() *Message {
 	}
 }
 
+func NewErrorValidationRecoveryFlowSubmittedTooOften() *Message {
+	return &Message{
+		ID:      ErrorValidationRecoveryTokenInvalidOrAlreadyUsed,
+		Text:    "The recovery was submitted too often. Please restart the flow.",
+		Type:    Error,
+		Context: context(nil),
+	}
+}
+
 func NewErrorValidationRecoveryRetrySuccess() *Message {
 	return &Message{
 		ID:      ErrorValidationRecoveryRetrySuccess,
