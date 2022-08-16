@@ -710,10 +710,11 @@ func TestRecovery(t *testing.T) {
 	})
 }
 
-func TestDisabledEndpoint(t *testing.T) {
+func TestDisabledStrategy(t *testing.T) {
 	conf, reg := internal.NewFastRegistryWithMocks(t)
 	initViper(t, conf)
 	conf.MustSet(config.ViperKeySelfServiceStrategyConfig+"."+recovery.StrategyRecoveryLinkName+".enabled", false)
+	conf.MustSet(config.ViperKeySelfServiceStrategyConfig+"."+recovery.StrategyRecoveryCodeName+".enabled", false)
 
 	publicTS, adminTS := testhelpers.NewKratosServer(t, reg)
 	adminSDK := testhelpers.NewSDKClient(adminTS)
@@ -726,9 +727,11 @@ func TestDisabledEndpoint(t *testing.T) {
 			require.NoError(t, reg.IdentityManager().Create(context.Background(),
 				&id, identity.ManagerAllowWriteProtectedTraits))
 
-			rl, _, err := adminSDK.V0alpha2Api.AdminCreateSelfServiceRecoveryLink(context.Background()).AdminCreateSelfServiceRecoveryLinkBody(kratos.AdminCreateSelfServiceRecoveryLinkBody{
-				IdentityId: id.ID.String(),
-			}).Execute()
+			rl, _, err := adminSDK.V0alpha2Api.
+				AdminCreateSelfServiceRecoveryLink(context.Background()).
+				AdminCreateSelfServiceRecoveryLinkBody(kratos.AdminCreateSelfServiceRecoveryLinkBody{
+					IdentityId: id.ID.String(),
+				}).Execute()
 			assert.Nil(t, rl)
 			require.IsType(t, new(kratos.GenericOpenAPIError), err, "%s", err)
 
@@ -740,21 +743,15 @@ func TestDisabledEndpoint(t *testing.T) {
 	t.Run("role=public", func(t *testing.T) {
 		c := testhelpers.NewClientWithCookies(t)
 
-		t.Run("description=can not recover an account by get request when link method is disabled", func(t *testing.T) {
-			f := testhelpers.InitializeRecoveryFlowViaBrowser(t, c, false, publicTS, nil)
-			u := publicTS.URL + recovery.RouteSubmitFlow + "?flow=" + f.Id + "&token=endpoint-disabled"
-			res, err := c.Get(u)
-			require.NoError(t, err)
-			assert.Equal(t, http.StatusOK, res.StatusCode)
-
-			b := ioutilx.MustReadAll(res.Body)
-			assert.Contains(t, string(b), "This endpoint was disabled by system administrator")
-		})
-
 		t.Run("description=can not recover an account by post request when link method is disabled", func(t *testing.T) {
-			f := testhelpers.InitializeRecoveryFlowViaBrowser(t, c, false, publicTS, nil)
-			u := publicTS.URL + recovery.RouteSubmitFlow + "?flow=" + f.Id
-			res, err := c.PostForm(u, url.Values{"email": {"email@ory.sh"}, "method": {"link"}})
+			f := testhelpers.PersistsNewRecoveryFlow(t, conf, reg)
+			u := publicTS.URL + recovery.RouteSubmitFlow + "?flow=" + f.ID.String()
+
+			res, err := c.PostForm(u, url.Values{
+				"email":      {"email@ory.sh"},
+				"method":     {"code"},
+				"csrf_token": {f.CSRFToken},
+			})
 			require.NoError(t, err)
 			assert.Equal(t, http.StatusOK, res.StatusCode)
 
