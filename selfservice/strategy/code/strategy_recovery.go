@@ -201,10 +201,10 @@ func (s *Strategy) createRecoveryCode(w http.ResponseWriter, r *http.Request, _ 
 	s.deps.Writer().Write(w, r, &selfServiceRecoveryCode{
 		ExpiresAt: flow.ExpiresAt.UTC(),
 		RecoveryLink: urlx.CopyWithQuery(
-			urlx.AppendPaths(config.SelfPublicURL(), recovery.RouteGetFlow),
+			s.deps.Config(ctx).SelfServiceFlowRecoveryUI(),
 			url.Values{
 				"code": {code.Code},
-				"id":   {flow.ID.String()},
+				"flow": {flow.ID.String()},
 			}).String()},
 		herodot.UnescapedHTML)
 }
@@ -232,6 +232,11 @@ type submitSelfServiceRecoveryFlowWithCodeMethodBody struct {
 }
 
 func (s *Strategy) Recover(w http.ResponseWriter, r *http.Request, f *recovery.Flow) (err error) {
+	if r.Method == http.MethodGet {
+		// The "link" strategy also uses the `GET` method to Recover, "code" doesn't
+		return flow.ErrStrategyNotResponsible
+	}
+
 	body, err := s.decodeRecovery(r)
 	if err != nil {
 		return s.HandleRecoveryError(w, r, nil, body, err)
@@ -584,25 +589,16 @@ func (s *Strategy) PrefillUINodes(w http.ResponseWriter, r *http.Request, f *rec
 	code := r.URL.Query().Get("code")
 
 	if code == "" {
+		// No code was supplied - do nothing
 		return nil
-	}
-
-	if f.Type.IsBrowser() && !x.IsJSONRequest(r) {
-		targetUrl := f.AppendTo(s.deps.Config(r.Context()).SelfServiceFlowRecoveryUI())
-		targetUrl = urlx.CopyWithQuery(targetUrl, url.Values{"code": {code}})
-		http.Redirect(w, r, targetUrl.String(), http.StatusSeeOther)
-
-		f.UI.SetCSRF(s.deps.GenerateCSRFToken(r))
-		err := s.deps.RecoveryFlowPersister().UpdateRecoveryFlow(r.Context(), f)
-		if err != nil {
-			return err
-		}
-
-		return flow.ErrCompletedByStrategy
 	}
 
 	codeNode := f.UI.Nodes.Find("code")
 	if codeNode == nil {
+		// UI does not contain any node with id `code`, which indicates:
+		// the recovery flow was not created with the `code` strategy
+		// - or -
+		// no code has been generated yet in which case we shouldn't land here
 		return flow.ErrStrategyNotResponsible
 	}
 

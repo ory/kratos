@@ -20,6 +20,7 @@ import (
 
 	"github.com/ory/kratos/driver"
 	"github.com/ory/kratos/driver/config"
+	"github.com/ory/kratos/selfservice/flow"
 	"github.com/ory/kratos/selfservice/flow/recovery"
 	"github.com/ory/kratos/x"
 )
@@ -64,14 +65,14 @@ func InitializeRecoveryFlowViaBrowser(t *testing.T, client *http.Client, isSPA b
 		u += "?" + values.Encode()
 	}
 	req, err := http.NewRequest("GET", u, nil)
-	require.NoError(t, err)
+	require.NoError(t, err, "Expected no error when constructing request GET %s: %s", u, err)
 
 	if isSPA {
 		req.Header.Set("Accept", "application/json")
 	}
 
 	res, err := client.Do(req)
-	require.NoError(t, err)
+	require.NoError(t, err, "Expected no error on GET %s: %s", u, err)
 	defer res.Body.Close()
 
 	if isSPA {
@@ -144,4 +145,15 @@ func SubmitRecoveryForm(
 	assert.Contains(t, res.Request.URL.String(), expectedURL, "%+v\n\t%s", res.Request, b)
 
 	return b
+}
+
+func PersistsNewRecoveryFlow(t *testing.T, conf *config.Config, reg *driver.RegistryDefault) *recovery.Flow {
+	t.Helper()
+	req := x.NewTestHTTPRequest(t, "GET", conf.SelfPublicURL().String()+"/test", nil)
+	f, err := recovery.NewFlow(conf, conf.SelfServiceFlowRecoveryRequestLifespan(), reg.GenerateCSRFToken(req), req, reg.RecoveryStrategies(context.Background()), flow.TypeBrowser)
+	require.NoError(t, err, "Expected no error when creating a new recovery flow: %s", err)
+
+	err = reg.RecoveryFlowPersister().CreateRecoveryFlow(context.Background(), f)
+	require.NoError(t, err, "Expected no error when persisting a new recover flow: %s", err)
+	return f
 }
