@@ -46,6 +46,15 @@ func NewErrorValidationRecoveryTokenInvalidOrAlreadyUsed() *Message {
 	}
 }
 
+func NewErrorValidationRecoveryCodeInvalidOrAlreadyUsed() *Message {
+	return &Message{
+		ID:      ErrorValidationRecoveryTokenInvalidOrAlreadyUsed,
+		Text:    "The recovery code is invalid or has already been used. Please try again.",
+		Type:    Error,
+		Context: context(nil),
+	}
+}
+
 func NewErrorValidationRecoveryRetrySuccess() *Message {
 	return &Message{
 		ID:      ErrorValidationRecoveryRetrySuccess,

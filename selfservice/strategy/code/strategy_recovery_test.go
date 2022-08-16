@@ -618,8 +618,7 @@ func TestRecovery(t *testing.T) {
 		require.NoError(t, err)
 
 		require.Len(t, rs.Ui.Messages, 1)
-		// TODO: Change message "token -> code"
-		assert.Equal(t, "The recovery token is invalid or has already been used. Please retry the flow.", rs.Ui.Messages[0].Text)
+		assert.Equal(t, "The recovery code is invalid or has already been used. Please try again.", rs.Ui.Messages[0].Text)
 	})
 
 	t.Run("description=should not be able to use an outdated flow", func(t *testing.T) {

@@ -359,7 +359,7 @@ func (s *Strategy) recoveryUseCode(w http.ResponseWriter, r *http.Request, body 
 	code, err := s.deps.RecoveryCodePersister().UseRecoveryCode(ctx, body.Code)
 	if err != nil {
 		if errors.Is(err, sqlcon.ErrNoRows) {
-			return s.retryRecoveryFlowWithMessage(w, r, flow.TypeBrowser, text.NewErrorValidationRecoveryTokenInvalidOrAlreadyUsed())
+			return s.retryRecoveryFlowWithMessage(w, r, flow.TypeBrowser, text.NewErrorValidationRecoveryCodeInvalidOrAlreadyUsed())
 		}
 
 		return s.retryRecoveryFlowWithError(w, r, flow.TypeBrowser, err)
