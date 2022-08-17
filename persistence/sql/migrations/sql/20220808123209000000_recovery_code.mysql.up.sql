@@ -1,17 +1,17 @@
 CREATE TABLE identity_recovery_codes
 (
-    id UUID NOT NULL PRIMARY KEY,
+    id CHAR(36) NOT NULL PRIMARY KEY,
     code VARCHAR (64) NOT NULL, -- HMACed value of the actual code
-    used bool NOT NULL DEFAULT 'false',
+    used bool NOT NULL DEFAULT FALSE,
     used_at timestamp,
-    identity_recovery_address_id UUID,
+    identity_recovery_address_id CHAR(36),
     expires_at timestamp NOT NULL DEFAULT '2000-01-01 00:00:00',
     issued_at timestamp NOT NULL DEFAULT '2000-01-01 00:00:00',
-    selfservice_recovery_flow_id UUID,
+    selfservice_recovery_flow_id CHAR(36),
     created_at timestamp NOT NULL,
     updated_at timestamp NOT NULL,
-    nid UUID NOT NULL,
-    identity_id UUID NOT NULL,
+    nid CHAR(36) NOT NULL,
+    identity_id CHAR(36) NOT NULL,
     CONSTRAINT identity_recovery_codes_identity_recovery_addresses_id_fk 
         FOREIGN KEY (identity_recovery_address_id)
         REFERENCES identity_recovery_addresses (id)
