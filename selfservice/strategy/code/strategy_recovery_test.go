@@ -13,6 +13,7 @@ import (
 	"time"
 
 	"github.com/davecgh/go-spew/spew"
+	"github.com/gofrs/uuid"
 	errors "github.com/pkg/errors"
 
 	"github.com/ory/kratos/driver"
@@ -185,24 +186,44 @@ func TestAdminStrategy(t *testing.T) {
 		require.NoError(t, reg.IdentityManager().Create(context.Background(),
 			&id, identity.ManagerAllowWriteProtectedTraits))
 
-		code, _, err := createCode(id.ID.String(), nil)
+		code, res, err := createCode(id.ID.String(), nil)
 		require.NoError(t, err)
 
 		require.NotEmpty(t, code.RecoveryLink)
 		require.True(t, code.ExpiresAt.Before(time.Now().Add(conf.SelfServiceFlowRecoveryRequestLifespan()+time.Second)))
 
-		// TODO: Fix this
-		// f, err := reg.SettingsFlowPersister().GetSettingsFlow(context.Background(), uuid.FromStringOrNil(res.Request.URL.Query().Get("flow")))
-		// require.NoError(t, err, "%s", res.Request.URL.String())
+		recoveryUrl, err := urlx.Parse(code.RecoveryLink)
+		require.NoError(t, err, "Expected code.RecoveryLink to be a valid URL, got %s", code.RecoveryLink)
 
-		// require.Len(t, f.UI.Messages, 1)
-		// assert.Equal(t, "You successfully recovered your account. Please change your password or set up an alternative login method (e.g. social sign in) within the next 60.00 minutes.", f.UI.Messages[0].Text)
+		codeStr := recoveryUrl.Query().Get("code")
+		require.NotEmpty(t, codeStr, "Expected code.RecoveryLink to contain a code, got %s", code.RecoveryLink)
 
-		// addr, err := reg.IdentityPool().FindVerifiableAddressByValue(context.Background(), identity.VerifiableAddressTypeEmail, recoveryEmail)
-		// assert.NoError(t, err)
-		// assert.False(t, addr.Verified)
-		// assert.Nil(t, addr.VerifiedAt)
-		// assert.Equal(t, identity.VerifiableAddressStatusPending, addr.Status)
+		res, err = publicTS.Client().Get(code.RecoveryLink)
+		require.NoError(t, err)
+		body := ioutilx.MustReadAll(res.Body)
+
+		action := gjson.GetBytes(body, "ui.action").String()
+		require.NotEmpty(t, action)
+		csrfToken := gjson.GetBytes(body, "ui.nodes.#(attributes.name==csrf_token).attributes.value").String()
+		require.NotEmpty(t, csrfToken)
+
+		res, err = publicTS.Client().PostForm(action, url.Values{
+			"csrf_token": {csrfToken},
+			"code":       {codeStr},
+		})
+		// body = ioutilx.MustReadAll(res.Body)
+
+		f, err := reg.SettingsFlowPersister().GetSettingsFlow(context.Background(), uuid.FromStringOrNil(res.Request.URL.Query().Get("flow")))
+		require.NoError(t, err, "%s", res.Request.URL.String())
+
+		require.Len(t, f.UI.Messages, 1)
+		assert.Equal(t, "You successfully recovered your account. Please change your password or set up an alternative login method (e.g. social sign in) within the next 60.00 minutes.", f.UI.Messages[0].Text)
+
+		addr, err := reg.IdentityPool().FindVerifiableAddressByValue(context.Background(), identity.VerifiableAddressTypeEmail, recoveryEmail)
+		assert.NoError(t, err)
+		assert.False(t, addr.Verified)
+		assert.Nil(t, addr.VerifiedAt)
+		assert.Equal(t, identity.VerifiableAddressStatusPending, addr.Status)
 	})
 }
 
