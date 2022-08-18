@@ -154,12 +154,19 @@ func NewRegistryFromDSN(ctx context.Context, c *config.Config, l *logrusx.Logger
 
 type options struct {
 	skipNetworkInit bool
+	config          *config.Config
 }
 
 type RegistryOption func(*options)
 
 func SkipNetworkInit(o *options) {
 	o.skipNetworkInit = true
+}
+
+func WithConfig(config *config.Config) func(o *options) {
+	return func(o *options) {
+		o.config = config
+	}
 }
 
 func newOptions(os []RegistryOption) *options {

@@ -10,6 +10,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/ory/x/servicelocatorx"
+
 	"github.com/ory/x/fsx"
 
 	"github.com/ory/kratos/identity"
@@ -128,13 +130,17 @@ func TestMigrations(t *testing.T) {
 				d, err := driver.New(
 					context.Background(),
 					os.Stderr,
-					configx.WithValues(map[string]interface{}{
-						config.ViperKeyDSN:             url,
-						config.ViperKeyPublicBaseURL:   "https://www.ory.sh/",
-						config.ViperKeyIdentitySchemas: config.Schemas{{ID: "default", URL: "file://stub/default.schema.json"}},
-						config.ViperKeySecretsDefault:  []string{"secret"},
-					}),
-					configx.SkipValidation(),
+					servicelocatorx.NewOptions(),
+					nil,
+					[]configx.OptionModifier{
+						configx.WithValues(map[string]interface{}{
+							config.ViperKeyDSN:             url,
+							config.ViperKeyPublicBaseURL:   "https://www.ory.sh/",
+							config.ViperKeyIdentitySchemas: config.Schemas{{ID: "default", URL: "file://stub/default.schema.json"}},
+							config.ViperKeySecretsDefault:  []string{"secret"},
+						}),
+						configx.SkipValidation(),
+					},
 				)
 				require.NoError(t, err)
 

@@ -4,6 +4,8 @@ import (
 	cx "context"
 	"net/http"
 
+	"github.com/ory/x/servicelocatorx"
+
 	"golang.org/x/sync/errgroup"
 
 	"github.com/spf13/cobra"
@@ -17,12 +19,12 @@ import (
 	"github.com/ory/x/reqlog"
 )
 
-func NewWatchCmd() *cobra.Command {
+func NewWatchCmd(slOpts []servicelocatorx.Option, dOpts []driver.RegistryOption) *cobra.Command {
 	var c = &cobra.Command{
 		Use:   "watch",
 		Short: "Starts the Ory Kratos message courier",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			r, err := driver.New(cmd.Context(), cmd.ErrOrStderr(), configx.WithFlags(cmd.Flags()))
+			r, err := driver.New(cmd.Context(), cmd.ErrOrStderr(), servicelocatorx.NewOptions(slOpts...), dOpts, []configx.OptionModifier{configx.WithFlags(cmd.Flags())})
 			if err != nil {
 				return err
 			}

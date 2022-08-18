@@ -7,6 +7,8 @@ import (
 	"os"
 	"strings"
 
+	"github.com/ory/x/servicelocatorx"
+
 	"github.com/pkg/errors"
 
 	"github.com/ory/x/contextx"
@@ -35,8 +37,12 @@ func (h *MigrateHandler) MigrateSQL(cmd *cobra.Command, args []string) error {
 		d, err = driver.NewWithoutInit(
 			cmd.Context(),
 			cmd.ErrOrStderr(),
-			configx.WithFlags(cmd.Flags()),
-			configx.SkipValidation())
+			servicelocatorx.NewOptions(),
+			nil,
+			[]configx.OptionModifier{
+				configx.WithFlags(cmd.Flags()),
+				configx.SkipValidation(),
+			})
 		if err != nil {
 			return err
 		}
@@ -57,9 +63,13 @@ func (h *MigrateHandler) MigrateSQL(cmd *cobra.Command, args []string) error {
 		d, err = driver.NewWithoutInit(
 			cmd.Context(),
 			cmd.ErrOrStderr(),
-			configx.WithFlags(cmd.Flags()),
-			configx.SkipValidation(),
-			configx.WithValue(config.ViperKeyDSN, args[0]))
+			servicelocatorx.NewOptions(),
+			nil,
+			[]configx.OptionModifier{
+				configx.WithFlags(cmd.Flags()),
+				configx.SkipValidation(),
+				configx.WithValue(config.ViperKeyDSN, args[0]),
+			})
 		if err != nil {
 			return err
 		}

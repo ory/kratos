@@ -4,10 +4,10 @@ import (
 	"crypto/tls"
 	"net/http"
 
+	"github.com/ory/x/servicelocatorx"
+
 	"github.com/pkg/errors"
 	"golang.org/x/net/context"
-
-	"github.com/ory/x/servicelocator"
 
 	"golang.org/x/sync/errgroup"
 
@@ -52,7 +52,6 @@ import (
 )
 
 type options struct {
-	mwf []func(rw http.ResponseWriter, r *http.Request, next http.HandlerFunc)
 	ctx stdctx.Context
 }
 
@@ -67,19 +66,13 @@ func NewOptions(ctx stdctx.Context, opts []Option) *options {
 
 type Option func(*options)
 
-func WithRootMiddleware(m func(rw http.ResponseWriter, r *http.Request, next http.HandlerFunc)) Option {
-	return func(o *options) {
-		o.mwf = append(o.mwf, m)
-	}
-}
-
 func WithContext(ctx stdctx.Context) Option {
 	return func(o *options) {
 		o.ctx = ctx
 	}
 }
 
-func ServePublic(r driver.Registry, cmd *cobra.Command, args []string, opts ...Option) error {
+func ServePublic(r driver.Registry, cmd *cobra.Command, args []string, slOpts *servicelocatorx.Options, opts []Option) error {
 	modifiers := NewOptions(cmd.Context(), opts)
 	ctx := modifiers.ctx
 
@@ -87,11 +80,7 @@ func ServePublic(r driver.Registry, cmd *cobra.Command, args []string, opts ...O
 	l := r.Logger()
 	n := negroni.New()
 
-	for _, mw := range servicelocator.HTTPMiddlewares(ctx) {
-		n.Use(mw)
-	}
-
-	for _, mw := range modifiers.mwf {
+	for _, mw := range slOpts.HTTPMiddlewares() {
 		n.UseFunc(mw)
 	}
 
@@ -166,7 +155,7 @@ func ServePublic(r driver.Registry, cmd *cobra.Command, args []string, opts ...O
 	return nil
 }
 
-func ServeAdmin(r driver.Registry, cmd *cobra.Command, args []string, opts ...Option) error {
+func ServeAdmin(r driver.Registry, cmd *cobra.Command, args []string, slOpts *servicelocatorx.Options, opts []Option) error {
 	modifiers := NewOptions(cmd.Context(), opts)
 	ctx := modifiers.ctx
 
@@ -174,11 +163,7 @@ func ServeAdmin(r driver.Registry, cmd *cobra.Command, args []string, opts ...Op
 	l := r.Logger()
 	n := negroni.New()
 
-	for _, mw := range servicelocator.HTTPMiddlewares(ctx) {
-		n.Use(mw)
-	}
-
-	for _, mw := range modifiers.mwf {
+	for _, mw := range slOpts.HTTPMiddlewares() {
 		n.UseFunc(mw)
 	}
 
@@ -306,7 +291,7 @@ func sqa(ctx stdctx.Context, cmd *cobra.Command, d driver.Registry) *metricsx.Se
 	)
 }
 
-func bgTasks(d driver.Registry, cmd *cobra.Command, args []string, opts ...Option) error {
+func bgTasks(d driver.Registry, cmd *cobra.Command, args []string, slOpts *servicelocatorx.Options, opts []Option) error {
 	modifiers := NewOptions(cmd.Context(), opts)
 	ctx := modifiers.ctx
 
@@ -316,7 +301,7 @@ func bgTasks(d driver.Registry, cmd *cobra.Command, args []string, opts ...Optio
 	return nil
 }
 
-func ServeAll(d driver.Registry, opts ...Option) func(cmd *cobra.Command, args []string) error {
+func ServeAll(d driver.Registry, slOpts *servicelocatorx.Options, opts []Option) func(cmd *cobra.Command, args []string) error {
 	return func(cmd *cobra.Command, args []string) error {
 		mods := NewOptions(cmd.Context(), opts)
 		ctx := mods.ctx
@@ -326,13 +311,13 @@ func ServeAll(d driver.Registry, opts ...Option) func(cmd *cobra.Command, args [
 		opts = append(opts, WithContext(ctx))
 
 		g.Go(func() error {
-			return ServePublic(d, cmd, args, opts...)
+			return ServePublic(d, cmd, args, slOpts, opts)
 		})
 		g.Go(func() error {
-			return ServeAdmin(d, cmd, args, opts...)
+			return ServeAdmin(d, cmd, args, slOpts, opts)
 		})
 		g.Go(func() error {
-			return bgTasks(d, cmd, args, opts...)
+			return bgTasks(d, cmd, args, slOpts, opts)
 		})
 		return g.Wait()
 	}
