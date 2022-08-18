@@ -14,6 +14,7 @@ import (
 	kratos "github.com/ory/kratos-client-go"
 
 	"github.com/ory/x/ioutilx"
+	"github.com/ory/x/sqlxx"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -148,10 +149,11 @@ func SubmitRecoveryForm(
 	return b
 }
 
-func PersistsNewRecoveryFlow(t *testing.T, conf *config.Config, reg *driver.RegistryDefault) *recovery.Flow {
+func PersistNewRecoveryFlowWithActiveMethod(t *testing.T, method string, conf *config.Config, reg *driver.RegistryDefault) *recovery.Flow {
 	t.Helper()
 	req := x.NewTestHTTPRequest(t, "GET", conf.SelfPublicURL().String()+"/test", nil)
 	f, err := recovery.NewFlow(conf, conf.SelfServiceFlowRecoveryRequestLifespan(), reg.GenerateCSRFToken(req), req, reg.RecoveryStrategies(context.Background()), flow.TypeBrowser)
+	f.Active = sqlxx.NullString(method)
 	require.NoError(t, err, "Expected no error when creating a new recovery flow: %s", err)
 
 	err = reg.RecoveryFlowPersister().CreateRecoveryFlow(context.Background(), f)
