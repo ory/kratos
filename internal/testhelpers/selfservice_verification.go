@@ -153,8 +153,8 @@ func PersistNewRecoveryFlowWithActiveMethod(t *testing.T, method string, conf *c
 	t.Helper()
 	req := x.NewTestHTTPRequest(t, "GET", conf.SelfPublicURL().String()+"/test", nil)
 	f, err := recovery.NewFlow(conf, conf.SelfServiceFlowRecoveryRequestLifespan(), reg.GenerateCSRFToken(req), req, reg.RecoveryStrategies(context.Background()), flow.TypeBrowser)
-	f.Active = sqlxx.NullString(method)
 	require.NoError(t, err, "Expected no error when creating a new recovery flow: %s", err)
+	f.Active = sqlxx.NullString(method)
 
 	err = reg.RecoveryFlowPersister().CreateRecoveryFlow(context.Background(), f)
 	require.NoError(t, err, "Expected no error when persisting a new recover flow: %s", err)
