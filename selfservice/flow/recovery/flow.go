@@ -128,7 +128,16 @@ func NewFlow(conf *config.Config, exp time.Duration, csrf string, r *http.Reques
 		Type:      ft,
 	}
 
-	for _, strategy := range strategies {
+	// Currently, there are two recovery methods: "code" and (legacy) "link"
+	// Since it doesn't make sense to have both in one recovery flow and users
+	// should not have the option to decide whether to recieve a link _or_ code,
+	// we use the first strategy that has been passed in.
+	// If "code" is enabled, it is first here, so the flow always uses "code"
+	// If "code" is disabled, use "link"
+	// TODO: Remove this once we remove "link" completely
+	if len(strategies) > 0 {
+		strategy := strategies[0]
+		flow.Active = sqlxx.NullString(strategy.RecoveryNodeGroup())
 		if err := strategy.PopulateRecoveryMethod(r, flow); err != nil {
 			return nil, err
 		}

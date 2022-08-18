@@ -231,10 +231,18 @@ type submitSelfServiceRecoveryFlowWithCodeMethodBody struct {
 	Method string `json:"method"`
 }
 
+func (s Strategy) isCodeFlow(f *recovery.Flow) bool {
+	value, err := f.Active.Value()
+	if err != nil {
+		return false
+	}
+	return value == s.RecoveryNodeGroup().String()
+}
+
 func (s *Strategy) Recover(w http.ResponseWriter, r *http.Request, f *recovery.Flow) (err error) {
-	if r.Method == http.MethodGet {
+	if r.Method == http.MethodGet || !s.isCodeFlow(f) {
 		// The "link" strategy also uses the `GET` method to Recover, "code" doesn't
-		return flow.ErrStrategyNotResponsible
+		return errors.WithStack(flow.ErrStrategyNotResponsible)
 	}
 
 	body, err := s.decodeRecovery(r)
