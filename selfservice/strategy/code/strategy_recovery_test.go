@@ -305,7 +305,7 @@ func TestRecovery(t *testing.T) {
 			assert.EqualValues(t, node.CodeGroup, gjson.Get(recoverySubmissionResponse, "active").String(), "%s", recoverySubmissionResponse)
 			assert.True(t, gjson.Get(recoverySubmissionResponse, "ui.nodes.#(attributes.name==code)").Exists(), "%s", recoverySubmissionResponse)
 			assert.Len(t, gjson.Get(recoverySubmissionResponse, "ui.messages").Array(), 1, "%s", recoverySubmissionResponse)
-			assertx.EqualAsJSON(t, text.NewRecoveryEmailSent(), json.RawMessage(gjson.Get(recoverySubmissionResponse, "ui.messages.0").Raw))
+			assertx.EqualAsJSON(t, text.NewRecoveryEmailWithCodeSent(), json.RawMessage(gjson.Get(recoverySubmissionResponse, "ui.messages.0").Raw))
 
 			message := testhelpers.CourierExpectMessage(t, reg, recoveryEmail, "Recover access to your account")
 			assert.Contains(t, message.Body, "please recover access to your account by entering the following code")
