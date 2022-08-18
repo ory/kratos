@@ -17,6 +17,7 @@ package serve
 import (
 	"github.com/ory/kratos/driver/config"
 	"github.com/ory/x/configx"
+	"github.com/ory/x/servicelocatorx"
 
 	"github.com/spf13/cobra"
 
@@ -25,15 +26,15 @@ import (
 )
 
 // serveCmd represents the serve command
-func NewServeCmd() (serveCmd *cobra.Command) {
+func NewServeCmd(slOpts []servicelocatorx.Option, dOpts []driver.RegistryOption) (serveCmd *cobra.Command) {
 	serveCmd = &cobra.Command{
 		Use:   "serve",
 		Short: "Run the Ory Kratos server",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			ctx := cmd.Context()
 			opts := configx.ConfigOptionsFromContext(ctx)
-
-			d, err := driver.New(ctx, cmd.ErrOrStderr(), append(opts, configx.WithFlags(cmd.Flags()))...)
+			sl := servicelocatorx.NewOptions(slOpts...)
+			d, err := driver.New(ctx, cmd.ErrOrStderr(), sl, dOpts, append(opts, configx.WithFlags(cmd.Flags())))
 			if err != nil {
 				return err
 			}
@@ -56,7 +57,7 @@ DON'T DO THIS IN PRODUCTION!
 				d.Logger().Warnf("Config version is '%s' but kratos runs on version '%s'", configVersion, config.Version)
 			}
 
-			return daemon.ServeAll(d)(cmd, args)
+			return daemon.ServeAll(d, sl, nil)(cmd, args)
 		},
 	}
 	configx.RegisterFlags(serveCmd.PersistentFlags())
@@ -67,6 +68,6 @@ DON'T DO THIS IN PRODUCTION!
 	return serveCmd
 }
 
-func RegisterCommandRecursive(parent *cobra.Command) {
-	parent.AddCommand(NewServeCmd())
+func RegisterCommandRecursive(parent *cobra.Command, slOpts []servicelocatorx.Option, dOpts []driver.RegistryOption) {
+	parent.AddCommand(NewServeCmd(slOpts, dOpts))
 }

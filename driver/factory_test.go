@@ -5,6 +5,8 @@ import (
 	"os"
 	"testing"
 
+	"github.com/ory/x/servicelocatorx"
+
 	"github.com/gofrs/uuid"
 
 	"github.com/ory/x/configx"
@@ -21,8 +23,12 @@ func TestDriverNew(t *testing.T) {
 	r, err := driver.New(
 		context.Background(),
 		os.Stderr,
-		configx.WithValue(config.ViperKeyDSN, config.DefaultSQLiteMemoryDSN),
-		configx.SkipValidation())
+		servicelocatorx.NewOptions(),
+		nil,
+		[]configx.OptionModifier{
+			configx.WithValue(config.ViperKeyDSN, config.DefaultSQLiteMemoryDSN),
+			configx.SkipValidation(),
+		})
 	require.NoError(t, err)
 
 	assert.EqualValues(t, config.DefaultSQLiteMemoryDSN, r.Config().DSN(ctx))

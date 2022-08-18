@@ -4,22 +4,20 @@ import (
 	"context"
 	"io"
 
-	"github.com/ory/kratos/x/servicelocatorx"
-	"github.com/ory/x/contextx"
-	"github.com/ory/x/servicelocator"
+	"github.com/ory/x/servicelocatorx"
 
 	"github.com/ory/kratos/driver/config"
 	"github.com/ory/x/configx"
 	"github.com/ory/x/logrusx"
 )
 
-func New(ctx context.Context, stdOutOrErr io.Writer, opts ...configx.OptionModifier) (Registry, error) {
-	r, err := NewWithoutInit(ctx, stdOutOrErr, opts...)
+func New(ctx context.Context, stdOutOrErr io.Writer, sl *servicelocatorx.Options, dOpts []RegistryOption, opts []configx.OptionModifier) (Registry, error) {
+	r, err := NewWithoutInit(ctx, stdOutOrErr, sl, dOpts, opts)
 	if err != nil {
 		return nil, err
 	}
 
-	ctxter := servicelocator.Contextualizer(ctx, &contextx.Default{})
+	ctxter := sl.Contextualizer()
 	if err := r.Init(ctx, ctxter); err != nil {
 		r.Logger().WithError(err).Error("Unable to initialize service registry.")
 		return nil, err
@@ -28,10 +26,13 @@ func New(ctx context.Context, stdOutOrErr io.Writer, opts ...configx.OptionModif
 	return r, nil
 }
 
-func NewWithoutInit(ctx context.Context, stdOutOrErr io.Writer, opts ...configx.OptionModifier) (Registry, error) {
-	l := logrusx.New("Ory Kratos", config.Version)
+func NewWithoutInit(ctx context.Context, stdOutOrErr io.Writer, sl *servicelocatorx.Options, dOpts []RegistryOption, opts []configx.OptionModifier) (Registry, error) {
+	l := sl.Logger()
+	if l == nil {
+		l = logrusx.New("Ory Kratos", config.Version)
+	}
 
-	c := servicelocatorx.ConfigFromContext(ctx, nil)
+	c := newOptions(dOpts).config
 	if c == nil {
 		var err error
 		c, err = config.New(ctx, l, stdOutOrErr, opts...)
