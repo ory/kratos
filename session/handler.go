@@ -4,8 +4,6 @@ import (
 	"net/http"
 	"strconv"
 
-	"github.com/ory/x/pointerx"
-
 	"github.com/gofrs/uuid"
 	"github.com/julienschmidt/httprouter"
 	"github.com/pkg/errors"
@@ -182,8 +180,8 @@ func (h *Handler) whoami(w http.ResponseWriter, r *http.Request, ps httprouter.P
 	}
 
 	var aalErr *ErrAALNotSatisfied
-	c := h.r.Config(r.Context())
-	if err := h.r.SessionManager().DoesSessionSatisfy(r, s, c.SessionWhoAmIAAL()); errors.As(err, &aalErr) {
+	c := h.r.Config()
+	if err := h.r.SessionManager().DoesSessionSatisfy(r, s, c.SessionWhoAmIAAL(r.Context())); errors.As(err, &aalErr) {
 		h.r.Audit().WithRequest(r).WithError(err).Info("Session was found but AAL is not satisfied for calling this endpoint.")
 		h.r.Writer().WriteError(w, r, err)
 		return
@@ -415,6 +413,11 @@ func (h *Handler) revokeSession(w http.ResponseWriter, r *http.Request, ps httpr
 // nolint:deadcode,unused
 type listSessions struct {
 	x.PaginationParams
+
+	// If set to true will list only active sessions. If false will list all inactive sessions. If not set will list all sessions.
+	//
+	// in: query
+	Active bool `json:"active"`
 }
 
 // swagger:model sessionList
@@ -446,8 +449,13 @@ func (h *Handler) listSessions(w http.ResponseWriter, r *http.Request, _ httprou
 		return
 	}
 
+	var active *bool
+	if b, err := strconv.ParseBool(r.URL.Query().Get("active")); err == nil {
+		*active = b
+	}
+
 	page, perPage := x.ParsePagination(r)
-	sess, err := h.r.SessionPersister().ListSessionsByIdentity(r.Context(), s.IdentityID, pointerx.Bool(true), page, perPage, s.ID)
+	sess, err := h.r.SessionPersister().ListSessionsByIdentity(r.Context(), s.IdentityID, active, page, perPage, uuid.Nil)
 	if err != nil {
 		h.r.Writer().WriteError(w, r, err)
 		return
@@ -512,9 +520,9 @@ func (h *Handler) adminSessionExtend(w http.ResponseWriter, r *http.Request, ps 
 		return
 	}
 
-	c := h.r.Config(r.Context())
-	if s.CanBeRefreshed(c) {
-		if err := h.r.SessionPersister().UpsertSession(r.Context(), s.Refresh(c)); err != nil {
+	c := h.r.Config()
+	if s.CanBeRefreshed(r.Context(), c) {
+		if err := h.r.SessionPersister().UpsertSession(r.Context(), s.Refresh(r.Context(), c)); err != nil {
 			h.r.Writer().WriteError(w, r, err)
 			return
 		}
@@ -545,9 +553,10 @@ func (h *Handler) IsNotAuthenticated(wrap httprouter.Handle, onAuthenticated htt
 
 func RedirectOnAuthenticated(d interface{ config.Provider }) httprouter.Handle {
 	return func(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-		returnTo, err := x.SecureRedirectTo(r, d.Config(r.Context()).SelfServiceBrowserDefaultReturnTo(), x.SecureRedirectAllowSelfServiceURLs(d.Config(r.Context()).SelfPublicURL()))
+		ctx := r.Context()
+		returnTo, err := x.SecureRedirectTo(r, d.Config().SelfServiceBrowserDefaultReturnTo(ctx), x.SecureRedirectAllowSelfServiceURLs(d.Config().SelfPublicURL(ctx)))
 		if err != nil {
-			http.Redirect(w, r, d.Config(r.Context()).SelfServiceBrowserDefaultReturnTo().String(), http.StatusFound)
+			http.Redirect(w, r, d.Config().SelfServiceBrowserDefaultReturnTo(ctx).String(), http.StatusFound)
 			return
 		}
 
