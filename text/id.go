@@ -61,9 +61,10 @@ const (
 )
 
 const (
-	InfoSelfServiceRecovery           ID = 1060000 + iota // 1060000
-	InfoSelfServiceRecoverySuccessful                     // 1060001
-	InfoSelfServiceRecoveryEmailSent                      // 1060002
+	InfoSelfServiceRecovery                  ID = 1060000 + iota // 1060000
+	InfoSelfServiceRecoverySuccessful                            // 1060001
+	InfoSelfServiceRecoveryEmailSent                             // 1060002
+	InfoSelfServiceRecoveryEmailWithCodeSent                     // 1060002
 )
 
 const (

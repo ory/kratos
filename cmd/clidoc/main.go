@@ -111,6 +111,7 @@ func init() {
 		"NewErrorValidationRecoveryFlowExpired":                   text.NewErrorValidationRecoveryFlowExpired(time.Second),
 		"NewRecoverySuccessful":                                   text.NewRecoverySuccessful(inAMinute),
 		"NewRecoveryEmailSent":                                    text.NewRecoveryEmailSent(),
+		"NewRecoveryEmailWithCodeSent":                            text.NewRecoveryEmailWithCodeSent(),
 		"NewErrorValidationRecoveryTokenInvalidOrAlreadyUsed":     text.NewErrorValidationRecoveryTokenInvalidOrAlreadyUsed(),
 		"NewErrorValidationRecoveryCodeInvalidOrAlreadyUsed":      text.NewErrorValidationRecoveryCodeInvalidOrAlreadyUsed(),
 		"NewErrorValidationRecoveryFlowSubmittedTooOften":         text.NewErrorValidationRecoveryFlowSubmittedTooOften(),

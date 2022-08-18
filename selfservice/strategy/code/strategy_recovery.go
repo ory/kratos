@@ -499,7 +499,7 @@ func (s *Strategy) recoveryHandleFormSubmission(w http.ResponseWriter, r *http.R
 
 	f.Active = sqlxx.NullString(s.RecoveryNodeGroup())
 	f.State = recovery.StateEmailSent
-	f.UI.Messages.Set(text.NewRecoveryEmailSent())
+	f.UI.Messages.Set(text.NewRecoveryEmailWithCodeSent())
 	f.UI.Nodes.Remove("email")
 	// TODO: Workaround, should probably add proper sorting here
 	f.UI.Nodes.Remove("method")

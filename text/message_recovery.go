@@ -37,6 +37,15 @@ func NewRecoveryEmailSent() *Message {
 	}
 }
 
+func NewRecoveryEmailWithCodeSent() *Message {
+	return &Message{
+		ID:      InfoSelfServiceRecoveryEmailWithCodeSent,
+		Type:    Info,
+		Text:    "An email containing a recovery code has been sent to the email address you provided.",
+		Context: context(nil),
+	}
+}
+
 func NewErrorValidationRecoveryTokenInvalidOrAlreadyUsed() *Message {
 	return &Message{
 		ID:      ErrorValidationRecoveryTokenInvalidOrAlreadyUsed,
