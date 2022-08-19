@@ -103,7 +103,7 @@ Class | Method | HTTP request | Description
 *V0alpha2Api* | [**GetSelfServiceRecoveryFlow**](docs/V0alpha2Api.md#getselfservicerecoveryflow) | **Get** /self-service/recovery/flows | Get Recovery Flow
 *V0alpha2Api* | [**GetSelfServiceRegistrationFlow**](docs/V0alpha2Api.md#getselfserviceregistrationflow) | **Get** /self-service/registration/flows | Get Registration Flow
 *V0alpha2Api* | [**GetSelfServiceSettingsFlow**](docs/V0alpha2Api.md#getselfservicesettingsflow) | **Get** /self-service/settings/flows | Get Settings Flow
-*V0alpha2Api* | [**GetSelfServiceVerificationFlow**](docs/V0alpha2Api.md#getselfserviceverificationflow) | **Get** /self-service/verification/flows | Get Verification Flow
+*V0alpha2Api* | [**GetSelfServiceVerificationFlow**](docs/V0alpha2Api.md#getselfserviceverificationflow) | **Get** /self-service/verification/flows | # Get Verification Flow
 *V0alpha2Api* | [**GetWebAuthnJavaScript**](docs/V0alpha2Api.md#getwebauthnjavascript) | **Get** /.well-known/ory/webauthn.js | Get WebAuthn JavaScript
 *V0alpha2Api* | [**InitializeSelfServiceLoginFlowForBrowsers**](docs/V0alpha2Api.md#initializeselfserviceloginflowforbrowsers) | **Get** /self-service/login/browser | Initialize Login Flow for Browsers
 *V0alpha2Api* | [**InitializeSelfServiceLoginFlowWithoutBrowser**](docs/V0alpha2Api.md#initializeselfserviceloginflowwithoutbrowser) | **Get** /self-service/login/api | Initialize Login Flow for APIs, Services, Apps, ...
@@ -125,7 +125,7 @@ Class | Method | HTTP request | Description
 *V0alpha2Api* | [**SubmitSelfServiceRecoveryFlow**](docs/V0alpha2Api.md#submitselfservicerecoveryflow) | **Post** /self-service/recovery | Complete Recovery Flow
 *V0alpha2Api* | [**SubmitSelfServiceRegistrationFlow**](docs/V0alpha2Api.md#submitselfserviceregistrationflow) | **Post** /self-service/registration | Submit a Registration Flow
 *V0alpha2Api* | [**SubmitSelfServiceSettingsFlow**](docs/V0alpha2Api.md#submitselfservicesettingsflow) | **Post** /self-service/settings | Complete Settings Flow
-*V0alpha2Api* | [**SubmitSelfServiceVerificationFlow**](docs/V0alpha2Api.md#submitselfserviceverificationflow) | **Post** /self-service/verification | Complete Verification Flow
+*V0alpha2Api* | [**SubmitSelfServiceVerificationFlow**](docs/V0alpha2Api.md#submitselfserviceverificationflow) | **Post** /self-service/verification | # Complete Verification Flow
 *V0alpha2Api* | [**ToSession**](docs/V0alpha2Api.md#tosession) | **Get** /sessions/whoami | Check Who the Current HTTP Session Belongs To
 
 
