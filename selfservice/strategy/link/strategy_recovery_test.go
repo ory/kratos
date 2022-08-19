@@ -12,6 +12,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/ory/kratos/driver"
 	"github.com/ory/kratos/session"
 
 	"github.com/davecgh/go-spew/spew"
@@ -54,6 +55,23 @@ import (
 
 func init() {
 	corpx.RegisterFakes()
+}
+
+func createIdentityToRecover(t *testing.T, reg *driver.RegistryDefault, email string) *identity.Identity {
+	var id = &identity.Identity{
+		Credentials: map[identity.CredentialsType]identity.Credentials{
+			"password": {Type: "password", Identifiers: []string{email}, Config: sqlxx.JSONRawMessage(`{"hashed_password":"foo"}`)}},
+		Traits:   identity.Traits(fmt.Sprintf(`{"email":"%s"}`, email)),
+		SchemaID: config.DefaultIdentityTraitsSchemaID,
+	}
+	require.NoError(t, reg.IdentityManager().Create(context.Background(), id, identity.ManagerAllowWriteProtectedTraits))
+
+	addr, err := reg.IdentityPool().FindVerifiableAddressByValue(context.Background(), identity.VerifiableAddressTypeEmail, email)
+	assert.NoError(t, err)
+	assert.False(t, addr.Verified)
+	assert.Nil(t, addr.VerifiedAt)
+	assert.Equal(t, identity.VerifiableAddressStatusPending, addr.Status)
+	return id
 }
 
 func TestAdminStrategy(t *testing.T) {
@@ -182,6 +200,59 @@ func TestAdminStrategy(t *testing.T) {
 		assert.Nil(t, addr.VerifiedAt)
 		assert.Equal(t, identity.VerifiableAddressStatusPending, addr.Status)
 	})
+
+	t.Run("case=should not be able to use code from different flow", func(t *testing.T) {
+		email := strings.ToLower(testhelpers.RandomEmail())
+		id := createIdentityToRecover(t, reg, email)
+
+		rl1, _, err := adminSDK.V0alpha2Api.
+			AdminCreateSelfServiceRecoveryLink(context.Background()).
+			AdminCreateSelfServiceRecoveryLinkBody(kratos.AdminCreateSelfServiceRecoveryLinkBody{
+				IdentityId: id.ID.String(),
+			}).
+			Execute()
+		require.NoError(t, err)
+
+		checkLink(t, rl1, time.Now().Add(conf.SelfServiceFlowRecoveryRequestLifespan()+time.Second))
+
+		rl2, _, err := adminSDK.V0alpha2Api.
+			AdminCreateSelfServiceRecoveryLink(context.Background()).
+			AdminCreateSelfServiceRecoveryLinkBody(kratos.AdminCreateSelfServiceRecoveryLinkBody{
+				IdentityId: id.ID.String(),
+			}).
+			Execute()
+		require.NoError(t, err)
+
+		checkLink(t, rl2, time.Now().Add(conf.SelfServiceFlowRecoveryRequestLifespan()+time.Second))
+
+		recoveryUrl1, err := url.Parse(rl1.RecoveryLink)
+		require.NoError(t, err)
+
+		recoveryUrl2, err := url.Parse(rl2.RecoveryLink)
+		require.NoError(t, err)
+
+		token1 := recoveryUrl1.Query().Get("token")
+		require.NotEmpty(t, token1)
+		token2 := recoveryUrl2.Query().Get("token")
+		require.NotEmpty(t, token2)
+		require.NotEqual(t, token1, token2)
+
+		values := recoveryUrl1.Query()
+
+		values.Set("token", token2)
+
+		recoveryUrl1.RawQuery = values.Encode()
+
+		action := recoveryUrl1.String()
+		// Submit the modified link with token from rl2 and flow from rl1
+		res, err := publicTS.Client().Get(action)
+		require.NoError(t, err)
+		body := ioutilx.MustReadAll(res.Body)
+
+		action = gjson.GetBytes(body, "ui.action").String()
+		require.NotEmpty(t, action)
+		assert.Equal(t, "The recovery token is invalid or has already been used. Please retry the flow.", gjson.GetBytes(body, "ui.messages.0.text").String())
+	})
 }
 
 func TestRecovery(t *testing.T) {
@@ -194,23 +265,6 @@ func TestRecovery(t *testing.T) {
 	_ = testhelpers.NewErrorTestServer(t, reg)
 
 	public, _, publicRouter, _ := testhelpers.NewKratosServerWithCSRFAndRouters(t, reg)
-
-	var createIdentityToRecover = func(email string) *identity.Identity {
-		var id = &identity.Identity{
-			Credentials: map[identity.CredentialsType]identity.Credentials{
-				"password": {Type: "password", Identifiers: []string{email}, Config: sqlxx.JSONRawMessage(`{"hashed_password":"foo"}`)}},
-			Traits:   identity.Traits(fmt.Sprintf(`{"email":"%s"}`, email)),
-			SchemaID: config.DefaultIdentityTraitsSchemaID,
-		}
-		require.NoError(t, reg.IdentityManager().Create(context.Background(), id, identity.ManagerAllowWriteProtectedTraits))
-
-		addr, err := reg.IdentityPool().FindVerifiableAddressByValue(context.Background(), identity.VerifiableAddressTypeEmail, email)
-		assert.NoError(t, err)
-		assert.False(t, addr.Verified)
-		assert.Nil(t, addr.VerifiedAt)
-		assert.Equal(t, identity.VerifiableAddressStatusPending, addr.Status)
-		return id
-	}
 
 	var expect = func(t *testing.T, hc *http.Client, isAPI, isSPA bool, values func(url.Values), c int) string {
 		if hc == nil {
@@ -412,7 +466,7 @@ func TestRecovery(t *testing.T) {
 
 		t.Run("type=browser", func(t *testing.T) {
 			email := "recoverinactive1@ory.sh"
-			createIdentityToRecover(email)
+			createIdentityToRecover(t, reg, email)
 			check(t, expectSuccess(t, nil, false, false, func(v url.Values) {
 				v.Set("email", email)
 			}), email, false)
@@ -420,7 +474,7 @@ func TestRecovery(t *testing.T) {
 
 		t.Run("type=spa", func(t *testing.T) {
 			email := "recoverinactive2@ory.sh"
-			createIdentityToRecover(email)
+			createIdentityToRecover(t, reg, email)
 			check(t, expectSuccess(t, nil, true, true, func(v url.Values) {
 				v.Set("email", email)
 			}), email, true)
@@ -428,7 +482,7 @@ func TestRecovery(t *testing.T) {
 
 		t.Run("type=api", func(t *testing.T) {
 			email := "recoverinactive3@ory.sh"
-			createIdentityToRecover(email)
+			createIdentityToRecover(t, reg, email)
 			check(t, expectSuccess(t, nil, true, false, func(v url.Values) {
 				v.Set("email", email)
 			}), email, true)
@@ -485,7 +539,7 @@ func TestRecovery(t *testing.T) {
 
 		t.Run("type=browser", func(t *testing.T) {
 			email := "recoverme1@ory.sh"
-			createIdentityToRecover(email)
+			createIdentityToRecover(t, reg, email)
 			check(t, expectSuccess(t, nil, false, false, func(v url.Values) {
 				v.Set("email", email)
 			}), email, "")
@@ -494,7 +548,7 @@ func TestRecovery(t *testing.T) {
 		t.Run("type=browser set return_to", func(t *testing.T) {
 			email := "recoverme2@ory.sh"
 			returnTo := "https://www.ory.sh"
-			createIdentityToRecover(email)
+			createIdentityToRecover(t, reg, email)
 
 			hc := testhelpers.NewClientWithCookies(t)
 			hc.Transport = testhelpers.NewTransportWithLogger(http.DefaultTransport, t).RoundTripper
@@ -516,7 +570,7 @@ func TestRecovery(t *testing.T) {
 
 		t.Run("type=spa", func(t *testing.T) {
 			email := "recoverme3@ory.sh"
-			createIdentityToRecover(email)
+			createIdentityToRecover(t, reg, email)
 			check(t, expectSuccess(t, nil, true, true, func(v url.Values) {
 				v.Set("email", email)
 			}), email, "")
@@ -524,7 +578,7 @@ func TestRecovery(t *testing.T) {
 
 		t.Run("type=api", func(t *testing.T) {
 			email := "recoverme4@ory.sh"
-			createIdentityToRecover(email)
+			createIdentityToRecover(t, reg, email)
 			check(t, expectSuccess(t, nil, true, false, func(v url.Values) {
 				v.Set("email", email)
 			}), email, "")
@@ -561,7 +615,7 @@ func TestRecovery(t *testing.T) {
 		}
 
 		email := x.NewUUID().String() + "@ory.sh"
-		id := createIdentityToRecover(email)
+		id := createIdentityToRecover(t, reg, email)
 
 		t.Run("case=unauthenticated", func(t *testing.T) {
 			var values = func(v url.Values) {
@@ -602,7 +656,7 @@ func TestRecovery(t *testing.T) {
 
 		recoveryEmail := strings.ToLower(testhelpers.RandomEmail())
 		email := recoveryEmail
-		id := createIdentityToRecover(email)
+		id := createIdentityToRecover(t, reg, email)
 
 		sess, err := session.NewActiveSession(id, conf, time.Now(), identity.CredentialsTypePassword, identity.AuthenticatorAssuranceLevel1)
 		require.NoError(t, err)
@@ -657,7 +711,7 @@ func TestRecovery(t *testing.T) {
 
 	t.Run("description=should not be able to use an outdated link", func(t *testing.T) {
 		recoveryEmail := "recoverme5@ory.sh"
-		createIdentityToRecover(recoveryEmail)
+		createIdentityToRecover(t, reg, recoveryEmail)
 		conf.MustSet(config.ViperKeySelfServiceRecoveryRequestLifespan, time.Millisecond*200)
 		t.Cleanup(func() {
 			conf.MustSet(config.ViperKeySelfServiceRecoveryRequestLifespan, time.Minute)
@@ -683,7 +737,7 @@ func TestRecovery(t *testing.T) {
 
 	t.Run("description=should not be able to use an outdated flow", func(t *testing.T) {
 		recoveryEmail := "recoverme6@ory.sh"
-		createIdentityToRecover(recoveryEmail)
+		createIdentityToRecover(t, reg, recoveryEmail)
 		conf.MustSet(config.ViperKeySelfServiceRecoveryRequestLifespan, time.Millisecond*200)
 		t.Cleanup(func() {
 			conf.MustSet(config.ViperKeySelfServiceRecoveryRequestLifespan, time.Minute)

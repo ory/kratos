@@ -167,7 +167,7 @@ func (s *Strategy) createRecoveryLink(w http.ResponseWriter, r *http.Request, _ 
 		return
 	}
 
-	token := NewRecoveryToken(id.ID, expiresIn)
+	token := NewAdminRecoveryToken(id.ID, req.ID, expiresIn)
 	if err := s.d.RecoveryTokenPersister().CreateRecoveryToken(r.Context(), token); err != nil {
 		s.d.Writer().WriteError(w, r, err)
 		return
@@ -222,7 +222,7 @@ func (s *Strategy) Recover(w http.ResponseWriter, r *http.Request, f *recovery.F
 			return s.HandleRecoveryError(w, r, nil, body, err)
 		}
 
-		return s.recoveryUseToken(w, r, body)
+		return s.recoveryUseToken(w, r, f.ID, body)
 	}
 
 	if _, err := s.d.SessionManager().FetchFromRequest(r.Context(), r); err == nil {
@@ -313,8 +313,8 @@ func (s *Strategy) recoveryIssueSession(w http.ResponseWriter, r *http.Request, 
 	return errors.WithStack(flow.ErrCompletedByStrategy)
 }
 
-func (s *Strategy) recoveryUseToken(w http.ResponseWriter, r *http.Request, body *recoverySubmitPayload) error {
-	token, err := s.d.RecoveryTokenPersister().UseRecoveryToken(r.Context(), body.Token)
+func (s *Strategy) recoveryUseToken(w http.ResponseWriter, r *http.Request, fID uuid.UUID, body *recoverySubmitPayload) error {
+	token, err := s.d.RecoveryTokenPersister().UseRecoveryToken(r.Context(), fID, body.Token)
 	if err != nil {
 		if errors.Is(err, sqlcon.ErrNoRows) {
 			return s.retryRecoveryFlowWithMessage(w, r, flow.TypeBrowser, text.NewErrorValidationRecoveryTokenInvalidOrAlreadyUsed())
@@ -351,7 +351,7 @@ func (s *Strategy) recoveryUseToken(w http.ResponseWriter, r *http.Request, body
 	}
 
 	// mark address as verified only for a self-service flow
-	if token.FlowID.Valid {
+	if token.TokenType == RecoveryTokenTypeSelfService {
 		if err := s.markRecoveryAddressVerified(w, r, f, recovered, token.RecoveryAddress); err != nil {
 			return s.HandleRecoveryError(w, r, f, body, err)
 		}
