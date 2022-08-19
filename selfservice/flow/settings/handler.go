@@ -183,9 +183,9 @@ type initializeSelfServiceSettingsFlowWithoutBrowser struct {
 //
 // More information can be found at [Ory Kratos User Settings & Profile Management Documentation](../self-service/flows/user-settings).
 //
-//	Schemes: http, https
+//    Schemes: http, https
 //
-//	Responses:
+//    Responses:
 //	  200: selfServiceSettingsFlow
 //	  400: jsonError
 //	  500: jsonError
@@ -221,7 +221,7 @@ type initializeSelfServiceSettingsFlowForBrowsers struct {
 
 // swagger:route GET /self-service/settings/browser v0alpha2 initializeSelfServiceSettingsFlowForBrowsers
 //
-// # Initialize Settings Flow for Browsers
+// Initialize Settings Flow for Browsers
 //
 // This endpoint initializes a browser-based user settings flow. Once initialized, the browser will be redirected to
 // `selfservice.flows.settings.ui_url` with the flow ID set as the query parameter `?flow=`. If no valid
@@ -313,7 +313,7 @@ type getSelfServiceSettingsFlow struct {
 
 // swagger:route GET /self-service/settings/flows v0alpha2 getSelfServiceSettingsFlow
 //
-// # Get Settings Flow
+// Get Settings Flow
 //
 // When accessing this endpoint through Ory Kratos' Public API you must ensure that either the Ory Kratos Session Cookie
 // or the Ory Kratos Session Token are set.
@@ -431,7 +431,7 @@ type submitSelfServiceSettingsFlowBody struct{}
 
 // swagger:route POST /self-service/settings v0alpha2 submitSelfServiceSettingsFlow
 //
-// # Complete Settings Flow
+// Complete Settings Flow
 //
 // Use this endpoint to complete a settings flow by sending an identity's updated password. This endpoint
 // behaves differently for API and browser flows.

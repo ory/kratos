@@ -93,7 +93,7 @@ type createSelfServiceLogoutFlowUrlForBrowsers struct {
 
 // swagger:route GET /self-service/logout/browser v0alpha2 createSelfServiceLogoutFlowUrlForBrowsers
 //
-// # Create a Logout URL for Browsers
+// Create a Logout URL for Browsers
 //
 // This endpoint initializes a browser-based user logout flow and a URL which can be used to log out the user.
 //
@@ -214,7 +214,7 @@ type submitSelfServiceLogoutFlow struct {
 
 // swagger:route GET /self-service/logout v0alpha2 submitSelfServiceLogoutFlow
 //
-// # Complete Self-Service Logout
+// Complete Self-Service Logout
 //
 // This endpoint logs out an identity in a self-service manner.
 //

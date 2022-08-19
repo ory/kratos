@@ -19,7 +19,7 @@ type webAuthnJavaScript string
 
 // swagger:route GET /.well-known/ory/webauthn.js v0alpha2 getWebAuthnJavaScript
 //
-// # Get WebAuthn JavaScript
+// Get WebAuthn JavaScript
 //
 // This endpoint provides JavaScript which is needed in order to perform WebAuthn login and registration.
 //

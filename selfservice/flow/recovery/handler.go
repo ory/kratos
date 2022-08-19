@@ -146,7 +146,7 @@ type initializeSelfServiceRecoveryFlowWithoutBrowser struct {
 
 // swagger:route GET /self-service/recovery/browser v0alpha2 initializeSelfServiceRecoveryFlowForBrowsers
 //
-// # Initialize Recovery Flow for Browsers
+// Initialize Recovery Flow for Browsers
 //
 // This endpoint initializes a browser-based account recovery flow. Once initialized, the browser will be redirected to
 // `selfservice.flows.recovery.ui_url` with the flow ID set as the query parameter `?flow=`. If a valid user session
@@ -211,7 +211,7 @@ type getSelfServiceRecoveryFlow struct {
 
 // swagger:route GET /self-service/recovery/flows v0alpha2 getSelfServiceRecoveryFlow
 //
-// # Get Recovery Flow
+// Get Recovery Flow
 //
 // This endpoint returns a recovery flow's context with, for example, error details and other information.
 //
@@ -221,14 +221,14 @@ type getSelfServiceRecoveryFlow struct {
 // If you use the browser-flow for server-side apps, the services need to run on a common top-level-domain
 // and you need to forward the incoming HTTP Cookie header to this endpoint:
 //
-//		```js
-//		// pseudo-code example
-//		router.get('/recovery', async function (req, res) {
-//		  const flow = await client.getSelfServiceRecoveryFlow(req.header('Cookie'), req.query['flow'])
+//	```js
+//	// pseudo-code example
+//	router.get('/recovery', async function (req, res) {
+//	  const flow = await client.getSelfServiceRecoveryFlow(req.header('Cookie'), req.query['flow'])
 //
-//	   res.render('recovery', flow)
-//		})
-//		```
+//	  res.render('recovery', flow)
+//	})
+//	```
 //
 // More information can be found at [Ory Kratos Account Recovery Documentation](../self-service/flows/account-recovery).
 //
@@ -324,7 +324,7 @@ type submitSelfServiceRecoveryFlowBody struct{}
 
 // swagger:route POST /self-service/recovery v0alpha2 submitSelfServiceRecoveryFlow
 //
-// # Complete Recovery Flow
+// Complete Recovery Flow
 //
 // Use this endpoint to complete a recovery flow. This endpoint
 // behaves differently for API and browser flows and has several states:
