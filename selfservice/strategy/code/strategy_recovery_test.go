@@ -281,6 +281,40 @@ const (
 
 var flowTypes = []string{RecoveryFlowTypeBrowser, RecoveryFlowTypeAPI, RecoveryFlowTypeSPA}
 
+var flowTypeCases = []struct {
+	FlowType  string
+	GetClient func(*testing.T) *http.Client
+}{
+	{
+		FlowType:  RecoveryFlowTypeBrowser,
+		GetClient: testhelpers.NewClientWithCookies,
+	},
+	{
+		FlowType: RecoveryFlowTypeAPI,
+		GetClient: func(_ *testing.T) *http.Client {
+			return &http.Client{}
+		},
+	},
+	{
+		FlowType: RecoveryFlowTypeSPA,
+		GetClient: func(_ *testing.T) *http.Client {
+			return &http.Client{}
+		},
+	},
+}
+
+func withCSRFToken(flowType, body string, v url.Values) (url.Values, error) {
+	csrfToken := gjson.Get(body, "ui.nodes.#(attributes.name==csrf_token).attributes.value").String()
+	if csrfToken != "" {
+		v.Set("csrf_token", csrfToken)
+		return v, nil
+	}
+	if flowType == RecoveryFlowTypeBrowser {
+		return nil, errors.New("no csrf_token in browser flow found")
+	}
+	return v, nil
+}
+
 func createIdentityToRecover(t *testing.T, reg *driver.RegistryDefault, email string) *identity.Identity {
 	t.Helper()
 	var id = &identity.Identity{
@@ -362,15 +396,9 @@ func TestRecovery(t *testing.T) {
 			action := gjson.Get(recoverySubmissionResponse, "ui.action").String()
 			assert.NotEmpty(t, action)
 
-			values := url.Values{
+			values, err := withCSRFToken(flowType, recoverySubmissionResponse, url.Values{
 				"code": {recoveryCode},
-			}
-
-			if flowType == RecoveryFlowTypeBrowser {
-				csrfToken := gjson.Get(recoverySubmissionResponse, "ui.nodes.#(attributes.name==csrf_token).attributes.value").String()
-				require.NotEmpty(t, csrfToken, "Expected to find CSRF token, but didn't: %s", recoverySubmissionResponse)
-				values["csrf_token"] = []string{csrfToken}
-			}
+			})
 
 			res, err := client.PostForm(action, values)
 			require.NoError(t, err)
@@ -588,16 +616,10 @@ func TestRecovery(t *testing.T) {
 				action := gjson.Get(body, "ui.action").String()
 				assert.NotEmpty(t, action)
 
-				postValues := url.Values{
+				postValues, err := withCSRFToken(flowType, body, url.Values{
 					"code": {recoveryCode},
-				}
-
-				if flowType == RecoveryFlowTypeBrowser {
-					csrfToken := gjson.Get(body, "ui.nodes.#(attributes.name==csrf_token).attributes.value").String()
-					assert.NotEmpty(t, csrfToken)
-
-					postValues["csrf_token"] = []string{csrfToken}
-				}
+				})
+				require.NoError(t, err)
 
 				res, err := cl.PostForm(action, postValues)
 
@@ -713,60 +735,60 @@ func TestRecovery(t *testing.T) {
 	})
 
 	t.Run("description=should be able to recover after using invalid code", func(t *testing.T) {
-		c := testhelpers.NewClientWithCookies(t)
-		recoveryEmail := strings.ToLower(testhelpers.RandomEmail())
-		_ = createIdentityToRecover(t, reg, recoveryEmail)
+		for _, testCase := range flowTypeCases {
+			t.Run("type="+testCase.FlowType, func(t *testing.T) {
+				c := testCase.GetClient(t)
+				recoveryEmail := strings.ToLower(testhelpers.RandomEmail())
+				_ = createIdentityToRecover(t, reg, recoveryEmail)
 
-		var values = func(v url.Values) {
-			v.Set("email", recoveryEmail)
+				var values = func(v url.Values) {
+					v.Set("email", recoveryEmail)
+				}
+
+				actual := submitAndExpectSuccess(t, c, testCase.FlowType, values)
+				message := testhelpers.CourierExpectMessage(t, reg, recoveryEmail, "Recover access to your account")
+				recoveryCode := testhelpers.CourierExpectCodeInMessage(t, message, 1)
+
+				form, err := withCSRFToken(testCase.FlowType, actual, url.Values{
+					"code": {"123123"},
+				})
+				require.NoError(t, err)
+
+				action := gjson.Get(actual, "ui.action").String()
+				require.NotEmpty(t, action)
+
+				res, err := c.PostForm(action, form)
+				require.NoError(t, err)
+				assert.Equal(t, http.StatusOK, res.StatusCode)
+
+				flowId := gjson.Get(actual, "id").String()
+				require.NotEmpty(t, flowId)
+
+				rs, res, err := testhelpers.
+					NewSDKCustomClient(public, c).
+					V0alpha2Api.
+					GetSelfServiceRecoveryFlow(context.Background()).
+					Id(flowId).
+					Execute()
+
+				body := ioutilx.MustReadAll(res.Body)
+				require.NotEmpty(t, body)
+
+				require.Len(t, rs.Ui.Messages, 1)
+				assert.Equal(t, "The recovery code is invalid or has already been used. Please try again.", rs.Ui.Messages[0].Text)
+
+				// Now submit the correct code
+				form.Set("code", recoveryCode)
+				res, err = c.PostForm(action, form)
+				require.NoError(t, err)
+				assert.Equal(t, http.StatusOK, res.StatusCode)
+
+				json := ioutilx.MustReadAll(res.Body)
+
+				assert.Len(t, gjson.GetBytes(json, "ui.messages").Array(), 1)
+				assert.Contains(t, gjson.GetBytes(json, "ui.messages.0.text").String(), "You successfully recovered your account.")
+			})
 		}
-
-		actual := submitAndExpectSuccess(t, c, RecoveryFlowTypeBrowser, values)
-		t.Logf("a: %s", actual)
-		message := testhelpers.CourierExpectMessage(t, reg, recoveryEmail, "Recover access to your account")
-		recoveryCode := testhelpers.CourierExpectCodeInMessage(t, message, 1)
-
-		csrfToken := gjson.Get(actual, "ui.nodes.#(attributes.name==csrf_token).attributes.value").String()
-		require.NotEmpty(t, csrfToken)
-
-		form := url.Values{
-			"code":       {"123123"},
-			"csrf_token": {csrfToken},
-		}
-
-		action := gjson.Get(actual, "ui.action").String()
-		require.NotEmpty(t, action)
-
-		res, err := c.PostForm(action, form)
-		require.NoError(t, err)
-		assert.Equal(t, http.StatusOK, res.StatusCode)
-
-		flowId := gjson.Get(actual, "id").String()
-		require.NotEmpty(t, flowId)
-
-		rs, res, err := testhelpers.
-			NewSDKCustomClient(public, c).
-			V0alpha2Api.GetSelfServiceRecoveryFlow(context.Background()).
-			Id(flowId).
-			Execute()
-
-		body := ioutilx.MustReadAll(res.Body)
-		require.NotEmpty(t, body)
-		require.NoError(t, err)
-
-		require.Len(t, rs.Ui.Messages, 1)
-		assert.Equal(t, "The recovery code is invalid or has already been used. Please try again.", rs.Ui.Messages[0].Text)
-
-		// Now submit the correct code
-		form.Set("code", recoveryCode)
-		res, err = c.PostForm(action, form)
-		require.NoError(t, err)
-		assert.Equal(t, http.StatusOK, res.StatusCode)
-
-		json := ioutilx.MustReadAll(res.Body)
-
-		assert.Len(t, gjson.GetBytes(json, "ui.messages").Array(), 1)
-		assert.Contains(t, gjson.GetBytes(json, "ui.messages.0.text").String(), "You successfully recovered your account.")
 	})
 
 	t.Run("description=should not be able to use an invalid code", func(t *testing.T) {
