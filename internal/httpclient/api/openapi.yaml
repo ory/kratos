@@ -1382,7 +1382,6 @@ paths:
 
         This endpoint MUST ONLY be used in scenarios such as native mobile apps (React Native, Objective C, Swift, Java, ...).
 
-
         More information can be found at [Ory Kratos Account Recovery Documentation](../self-service/flows/account-recovery).
       operationId: initializeSelfServiceRecoveryFlowWithoutBrowser
       responses:
@@ -2391,6 +2390,7 @@ paths:
 
         res.render('verification', flow)
         })
+        ```
 
         More information can be found at [Ory Kratos Email and Phone Verification Documentation](https://www.ory.sh/docs/kratos/selfservice/flows/verify-email-account-activation).
       operationId: getSelfServiceVerificationFlow
