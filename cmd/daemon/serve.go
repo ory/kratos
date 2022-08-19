@@ -296,8 +296,9 @@ func bgTasks(d driver.Registry, cmd *cobra.Command, args []string, slOpts *servi
 	ctx := modifiers.ctx
 
 	if d.Config().IsBackgroundCourierEnabled(ctx) {
-		go courier.Watch(ctx, d)
+		return courier.Watch(ctx, d)
 	}
+
 	return nil
 }
 
