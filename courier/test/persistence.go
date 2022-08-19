@@ -6,29 +6,23 @@ import (
 	"testing"
 	"time"
 
-	"github.com/gobuffalo/pop/v6"
-	"github.com/gofrs/uuid"
-
 	"github.com/bxcodec/faker/v3"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
 	"github.com/ory/kratos/courier"
+	"github.com/ory/kratos/driver/config"
+	"github.com/ory/kratos/internal/testhelpers"
+	"github.com/ory/kratos/persistence"
 	"github.com/ory/kratos/x"
 	"github.com/ory/x/sqlcon"
 )
 
-type PersisterWrapper interface {
-	GetConnection(ctx context.Context) *pop.Connection
-	NetworkID(ctx context.Context) uuid.UUID
-	courier.Persister
-}
-
-type NetworkWrapper func(t *testing.T, ctx context.Context) (uuid.UUID, PersisterWrapper)
-
-func TestPersister(ctx context.Context, newNetworkUnlessExisting NetworkWrapper, newNetwork NetworkWrapper) func(t *testing.T) {
+func TestPersister(ctx context.Context, conf *config.Config, p interface {
+	persistence.Persister
+}) func(t *testing.T) {
 	return func(t *testing.T) {
-		nid, p := newNetworkUnlessExisting(t, ctx)
+		nid, p := testhelpers.NewNetworkUnlessExisting(t, ctx, p)
 
 		t.Run("case=no messages in queue", func(t *testing.T) {
 			m, err := p.NextMessages(ctx, 10)
@@ -107,6 +101,32 @@ func TestPersister(ctx context.Context, newNetworkUnlessExisting NetworkWrapper,
 			assert.Equal(t, originalSendCount+1, ms[0].SendCount)
 		})
 
+		t.Run("case=list messages", func(t *testing.T) {
+			status := courier.MessageStatusProcessing
+			filter := courier.MessagesFilter{
+				Status: &status,
+				PaginationParams: x.PaginationParams{
+					Page:    1,
+					PerPage: 100,
+				},
+			}
+			ms, tc, err := p.ListMessages(ctx, filter)
+
+			require.NoError(t, err)
+			assert.Len(t, ms, len(messages))
+			assert.Equal(t, int64(len(messages)), tc)
+			assert.Equal(t, messages[len(messages)-1].ID, ms[0].ID)
+
+			t.Run("on another network", func(t *testing.T) {
+				_, p := testhelpers.NewNetwork(t, ctx, p)
+				ms, tc, err := p.ListMessages(ctx, filter)
+
+				require.NoError(t, err)
+				require.Len(t, ms, 0)
+				require.Equal(t, int64(0), tc)
+			})
+		})
+
 		t.Run("case=network", func(t *testing.T) {
 			id := x.NewUUID()
 
@@ -132,7 +152,7 @@ func TestPersister(ctx context.Context, newNetworkUnlessExisting NetworkWrapper,
 			})
 
 			t.Run("can not get on another network", func(t *testing.T) {
-				_, p := newNetwork(t, ctx)
+				_, p := testhelpers.NewNetwork(t, ctx, p)
 
 				_, err := p.LatestQueuedMessage(ctx)
 				require.ErrorIs(t, err, courier.ErrQueueEmpty)
@@ -142,7 +162,7 @@ func TestPersister(ctx context.Context, newNetworkUnlessExisting NetworkWrapper,
 			})
 
 			t.Run("can not update on another network", func(t *testing.T) {
-				_, p := newNetwork(t, ctx)
+				_, p := testhelpers.NewNetwork(t, ctx, p)
 				err := p.SetMessageStatus(ctx, id, courier.MessageStatusProcessing)
 				require.ErrorIs(t, err, sqlcon.ErrNoRows)
 			})

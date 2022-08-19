@@ -103,6 +103,7 @@ sdk: .bin/swagger .bin/ory node_modules
 					-p file://.schema/openapi/patches/security.yaml \
 					-p file://.schema/openapi/patches/session.yaml \
 					-p file://.schema/openapi/patches/identity.yaml \
+					-p file://.schema/openapi/patches/courier.yaml \
 					-p file://.schema/openapi/patches/generic_error.yaml \
 					-p file://.schema/openapi/patches/common.yaml \
 					spec/swagger.json spec/api.json
