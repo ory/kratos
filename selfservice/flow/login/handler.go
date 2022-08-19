@@ -410,17 +410,17 @@ type getSelfServiceLoginFlow struct {
 //
 // More information can be found at [Ory Kratos User Login](https://www.ory.sh/docs/kratos/self-service/flows/user-login) and [User Registration Documentation](https://www.ory.sh/docs/kratos/self-service/flows/user-registration).
 //
-//	Produces:
-//	- application/json
+//    Produces:
+//    - application/json
 //
-//	Schemes: http, https
+//    Schemes: http, https
 //
-//	Responses:
-//	  200: selfServiceLoginFlow
-//	  403: jsonError
-//	  404: jsonError
-//	  410: jsonError
-//	  500: jsonError
+//    Responses:
+//      200: selfServiceLoginFlow
+//      403: jsonError
+//      404: jsonError
+//      410: jsonError
+//      500: jsonError
 func (h *Handler) fetchFlow(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 	ar, err := h.d.LoginFlowPersister().GetLoginFlow(r.Context(), x.ParseUUID(r.URL.Query().Get("id")))
 	if err != nil {
@@ -520,33 +520,33 @@ type submitSelfServiceLoginFlowBody struct{}
 // If this endpoint is called with `Accept: application/json` in the header, the response contains the flow without a redirect. In the
 // case of an error, the `error.id` of the JSON response body can be one of:
 //
-//   - `session_already_available`: The user is already signed in.
-//   - `security_csrf_violation`: Unable to fetch the flow because a CSRF violation occurred.
-//   - `security_identity_mismatch`: The requested `?return_to` address is not allowed to be used. Adjust this in the configuration!
-//   - `browser_location_change_required`: Usually sent when an AJAX request indicates that the browser needs to open a specific URL.
-//     Most likely used in Social Sign In flows.
+// - `session_already_available`: The user is already signed in.
+// - `security_csrf_violation`: Unable to fetch the flow because a CSRF violation occurred.
+// - `security_identity_mismatch`: The requested `?return_to` address is not allowed to be used. Adjust this in the configuration!
+// - `browser_location_change_required`: Usually sent when an AJAX request indicates that the browser needs to open a specific URL.
+//		Most likely used in Social Sign In flows.
 //
 // More information can be found at [Ory Kratos User Login](https://www.ory.sh/docs/kratos/self-service/flows/user-login) and [User Registration Documentation](https://www.ory.sh/docs/kratos/self-service/flows/user-registration).
 //
-//	Schemes: http, https
+//    Schemes: http, https
 //
-//	Consumes:
-//	- application/json
-//	- application/x-www-form-urlencoded
+//    Consumes:
+//    - application/json
+//    - application/x-www-form-urlencoded
 //
-//	Produces:
-//	- application/json
+//    Produces:
+//    - application/json
 //
-//	Header:
-//	- Set-Cookie
+//    Header:
+//    - Set-Cookie
 //
-//	Responses:
-//	  200: successfulSelfServiceLoginWithoutBrowser
-//	  303: emptyResponse
-//	  400: selfServiceLoginFlow
-//	  410: jsonError
-//	  422: selfServiceBrowserLocationChangeRequiredError
-//	  500: jsonError
+//    Responses:
+//      200: successfulSelfServiceLoginWithoutBrowser
+//      303: emptyResponse
+//      400: selfServiceLoginFlow
+//      410: jsonError
+//      422: selfServiceBrowserLocationChangeRequiredError
+//      500: jsonError
 func (h *Handler) submitFlow(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 	rid, err := flow.GetFlowID(r)
 	if err != nil {
