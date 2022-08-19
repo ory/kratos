@@ -187,7 +187,7 @@ func (s *Strategy) createRecoveryCode(w http.ResponseWriter, r *http.Request, _ 
 		return
 	}
 
-	code := NewRecoveryCode(id.ID, expiresIn)
+	code := NewAdminRecoveryCode(id.ID, flow.ID, expiresIn)
 	if err := s.deps.RecoveryCodePersister().CreateRecoveryCode(ctx, code); err != nil {
 		s.deps.Writer().WriteError(w, r, err)
 		return
@@ -369,7 +369,7 @@ func (s *Strategy) recoveryIssueSession(w http.ResponseWriter, r *http.Request, 
 
 func (s *Strategy) recoveryUseCode(w http.ResponseWriter, r *http.Request, body *recoverySubmitPayload, f *recovery.Flow) error {
 	ctx := r.Context()
-	code, err := s.deps.RecoveryCodePersister().UseRecoveryCode(ctx, body.Code)
+	code, err := s.deps.RecoveryCodePersister().UseRecoveryCode(ctx, f.ID, body.Code)
 	if err != nil {
 		if errors.Is(err, sqlcon.ErrNoRows) {
 			if f.SubmitCount > 5 {
@@ -399,7 +399,7 @@ func (s *Strategy) recoveryUseCode(w http.ResponseWriter, r *http.Request, body 
 	}
 
 	// mark address as verified only for a self-service flow
-	if code.FlowID.Valid {
+	if code.CodeType == RecoveryCodeTypeSelfService {
 		if err := s.markRecoveryAddressVerified(w, r, f, recovered, code.RecoveryAddress); err != nil {
 			return s.HandleRecoveryError(w, r, f, body, err)
 		}

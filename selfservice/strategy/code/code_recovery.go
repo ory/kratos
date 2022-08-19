@@ -18,6 +18,13 @@ import (
 	"github.com/ory/kratos/x"
 )
 
+type RecoveryCodeType int
+
+const (
+	RecoveryCodeTypeAdmin RecoveryCodeType = iota + 1
+	RecoveryCodeTypeSelfService
+)
+
 type RecoveryCode struct {
 	// ID represents the code's unique ID.
 	//
@@ -32,6 +39,9 @@ type RecoveryCode struct {
 	// RecoveryAddress links this code to a recovery address.
 	// required: true
 	RecoveryAddress *identity.RecoveryAddress `json:"recovery_address" belongs_to:"identity_recovery_addresses" fk_id:"RecoveryAddressID"`
+
+	// CodeType is the type of the code - either "admin" or "selfservice"
+	CodeType RecoveryCodeType `json:"-" faker:"-" db:"code_type"`
 
 	// ExpiresAt is the time (UTC) when the code expires.
 	// required: true
@@ -48,9 +58,9 @@ type RecoveryCode struct {
 	// RecoveryAddressID is a helper struct field for gobuffalo.pop.
 	RecoveryAddressID *uuid.UUID `json:"-" faker:"-" db:"identity_recovery_address_id"`
 	// FlowID is a helper struct field for gobuffalo.pop.
-	FlowID     uuid.NullUUID `json:"-" faker:"-" db:"selfservice_recovery_flow_id"`
-	NID        uuid.UUID     `json:"-"  faker:"-" db:"nid"`
-	IdentityID uuid.UUID     `json:"identity_id"  faker:"-" db:"identity_id"`
+	FlowID     uuid.UUID `json:"-" faker:"-" db:"selfservice_recovery_flow_id"`
+	NID        uuid.UUID `json:"-"  faker:"-" db:"nid"`
+	IdentityID uuid.UUID `json:"identity_id"  faker:"-" db:"identity_id"`
 }
 
 func (RecoveryCode) TableName(ctx context.Context) string {
@@ -72,12 +82,13 @@ func NewSelfServiceRecoveryCode(address *identity.RecoveryAddress, f *recovery.F
 		ExpiresAt:         now.Add(expiresIn),
 		IssuedAt:          now,
 		IdentityID:        identityID,
-		FlowID:            uuid.NullUUID{UUID: f.ID, Valid: true},
+		FlowID:            f.ID,
 		RecoveryAddressID: &recoveryAddressID,
+		CodeType:          RecoveryCodeTypeSelfService,
 	}
 }
 
-func NewRecoveryCode(identityID uuid.UUID, expiresIn time.Duration) *RecoveryCode {
+func NewAdminRecoveryCode(identityID uuid.UUID, fID uuid.UUID, expiresIn time.Duration) *RecoveryCode {
 	now := time.Now().UTC()
 	return &RecoveryCode{
 		ID:         x.NewUUID(),
@@ -85,6 +96,8 @@ func NewRecoveryCode(identityID uuid.UUID, expiresIn time.Duration) *RecoveryCod
 		ExpiresAt:  now.Add(expiresIn),
 		IssuedAt:   now,
 		IdentityID: identityID,
+		FlowID:     fID,
+		CodeType:   RecoveryCodeTypeAdmin,
 	}
 }
 

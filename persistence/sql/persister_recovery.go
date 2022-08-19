@@ -148,7 +148,7 @@ func (p *Persister) CreateRecoveryCode(ctx context.Context, recoveryCode *code.R
 	return nil
 }
 
-func (p *Persister) UseRecoveryCode(ctx context.Context, codeVal string) (*code.RecoveryCode, error) {
+func (p *Persister) UseRecoveryCode(ctx context.Context, fID uuid.UUID, codeVal string) (*code.RecoveryCode, error) {
 	ctx, span := p.r.Tracer(ctx).Tracer().Start(ctx, "persistence.sql.UseRecoveryCode")
 	defer span.End()
 
@@ -157,7 +157,7 @@ func (p *Persister) UseRecoveryCode(ctx context.Context, codeVal string) (*code.
 	nid := corp.ContextualizeNID(ctx, p.nid)
 	if err := sqlcon.HandleError(p.Transaction(ctx, func(ctx context.Context, tx *pop.Connection) (err error) {
 		for _, secret := range p.r.Config(ctx).SecretsSession() {
-			if err = tx.Where("code = ? AND nid = ? AND NOT used", p.hmacValueWithSecret(ctx, codeVal, secret), nid).First(&recoveryCode); err != nil {
+			if err = tx.Where("code = ? AND nid = ? AND NOT used AND selfservice_recovery_flow_id = ?", p.hmacValueWithSecret(ctx, codeVal, secret), nid, fID).First(&recoveryCode); err != nil {
 				if !errors.Is(sqlcon.HandleError(err), sqlcon.ErrNoRows) {
 					return err
 				}

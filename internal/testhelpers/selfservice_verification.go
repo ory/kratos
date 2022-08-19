@@ -21,8 +21,10 @@ import (
 
 	"github.com/ory/kratos/driver"
 	"github.com/ory/kratos/driver/config"
+	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/selfservice/flow"
 	"github.com/ory/kratos/selfservice/flow/recovery"
+	"github.com/ory/kratos/selfservice/strategy/code"
 	"github.com/ory/kratos/x"
 )
 
@@ -159,4 +161,13 @@ func PersistNewRecoveryFlowWithActiveMethod(t *testing.T, method string, conf *c
 	err = reg.RecoveryFlowPersister().CreateRecoveryFlow(context.Background(), f)
 	require.NoError(t, err, "Expected no error when persisting a new recover flow: %s", err)
 	return f
+}
+
+func PersistNewRecoveryCode(t *testing.T, reg *driver.RegistryDefault, f *recovery.Flow, a *identity.RecoveryAddress, e time.Duration) *code.RecoveryCode {
+	t.Helper()
+	c := code.NewSelfServiceRecoveryCode(a, f, e)
+
+	err := reg.RecoveryCodePersister().CreateRecoveryCode(context.Background(), c)
+	require.NoError(t, err)
+	return c
 }
