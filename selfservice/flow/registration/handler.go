@@ -199,7 +199,7 @@ type initializeSelfServiceRegistrationFlowForBrowsers struct {
 
 // swagger:route GET /self-service/registration/browser v0alpha2 initializeSelfServiceRegistrationFlowForBrowsers
 //
-// # Initialize Registration Flow for Browsers
+// Initialize Registration Flow for Browsers
 //
 // This endpoint initializes a browser-based user registration flow. This endpoint will set the appropriate
 // cookies and anti-CSRF measures required for browser-based flows.
@@ -281,7 +281,7 @@ type getSelfServiceRegistrationFlow struct {
 
 // swagger:route GET /self-service/registration/flows v0alpha2 getSelfServiceRegistrationFlow
 //
-// # Get Registration Flow
+// Get Registration Flow
 //
 // This endpoint returns a registration flow's context with, for example, error details and other information.
 //
@@ -291,14 +291,14 @@ type getSelfServiceRegistrationFlow struct {
 // If you use the browser-flow for server-side apps, the services need to run on a common top-level-domain
 // and you need to forward the incoming HTTP Cookie header to this endpoint:
 //
-//		```js
-//		// pseudo-code example
-//		router.get('/registration', async function (req, res) {
-//		  const flow = await client.getSelfServiceRegistrationFlow(req.header('cookie'), req.query['flow'])
+//	```js
+//	// pseudo-code example
+//	router.get('/registration', async function (req, res) {
+//	  const flow = await client.getSelfServiceRegistrationFlow(req.header('cookie'), req.query['flow'])
 //
-//	   res.render('registration', flow)
-//		})
-//		```
+//	  res.render('registration', flow)
+//	})
+//	```
 //
 // This request may fail due to several reasons. The `error.id` can be one of:
 //
@@ -390,7 +390,7 @@ type submitSelfServiceRegistrationFlowBody struct{}
 
 // swagger:route POST /self-service/registration v0alpha2 submitSelfServiceRegistrationFlow
 //
-// # Submit a Registration Flow
+// Submit a Registration Flow
 //
 // Use this endpoint to complete a registration flow by sending an identity's traits and password. This endpoint
 // behaves differently for API and browser flows.

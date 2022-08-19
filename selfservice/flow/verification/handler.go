@@ -133,7 +133,7 @@ type initializeSelfServiceVerificationFlowForBrowsers struct {
 
 // swagger:route GET /self-service/verification/browser v0alpha2 initializeSelfServiceVerificationFlowForBrowsers
 //
-// # Initialize Verification Flow for Browser Clients
+// Initialize Verification Flow for Browser Clients
 //
 // This endpoint initializes a browser-based account verification flow. Once initialized, the browser will be redirected to
 // `selfservice.flows.verification.ui_url` with the flow ID set as the query parameter `?flow=`.
@@ -195,7 +195,7 @@ type getSelfServiceVerificationFlow struct {
 
 // swagger:route GET /self-service/verification/flows v0alpha2 getSelfServiceVerificationFlow
 //
-// # Get Verification Flow
+// Get Verification Flow
 //
 // This endpoint returns a verification flow's context with, for example, error details and other information.
 //
@@ -205,13 +205,14 @@ type getSelfServiceVerificationFlow struct {
 // If you use the browser-flow for server-side apps, the services need to run on a common top-level-domain
 // and you need to forward the incoming HTTP Cookie header to this endpoint:
 //
-//		```js
-//		// pseudo-code example
-//		router.get('/recovery', async function (req, res) {
-//		  const flow = await client.getSelfServiceVerificationFlow(req.header('cookie'), req.query['flow'])
+//  ```js
+//  // pseudo-code example
+//  router.get('/recovery', async function (req, res) {
+//    const flow = await client.getSelfServiceVerificationFlow(req.header('cookie'), req.query['flow'])
 //
-//	   res.render('verification', flow)
-//		})
+//    res.render('verification', flow)
+//  })
+//  ```
 //
 // More information can be found at [Ory Kratos Email and Phone Verification Documentation](https://www.ory.sh/docs/kratos/selfservice/flows/verify-email-account-activation).
 //
@@ -307,7 +308,7 @@ type submitSelfServiceVerificationFlowBody struct{}
 
 // swagger:route POST /self-service/verification v0alpha2 submitSelfServiceVerificationFlow
 //
-// # Complete Verification Flow
+// Complete Verification Flow
 //
 // Use this endpoint to complete a verification flow. This endpoint
 // behaves differently for API and browser flows and has several states:

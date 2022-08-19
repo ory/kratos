@@ -257,15 +257,15 @@ type initializeSelfServiceLoginFlowWithoutBrowser struct {
 //
 // More information can be found at [Ory Kratos User Login](https://www.ory.sh/docs/kratos/self-service/flows/user-login) and [User Registration Documentation](https://www.ory.sh/docs/kratos/self-service/flows/user-registration).
 //
-//	Produces:
-//	- application/json
+//    Produces:
+//    - application/json
 //
-//	Schemes: http, https
+//    Schemes: http, https
 //
-//	Responses:
-//	  200: selfServiceLoginFlow
-//	  400: jsonError
-//	  500: jsonError
+//    Responses:
+//      200: selfServiceLoginFlow
+//      400: jsonError
+//      500: jsonError
 func (h *Handler) initAPIFlow(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 	f, err := h.NewLoginFlow(w, r, flow.TypeAPI)
 	if err != nil {
@@ -306,7 +306,7 @@ type initializeSelfServiceLoginFlowForBrowsers struct {
 
 // swagger:route GET /self-service/login/browser v0alpha2 initializeSelfServiceLoginFlowForBrowsers
 //
-// # Initialize Login Flow for Browsers
+// Initialize Login Flow for Browsers
 //
 // This endpoint initializes a browser-based user login flow. This endpoint will set the appropriate
 // cookies and anti-CSRF measures required for browser-based flows.
@@ -328,16 +328,16 @@ type initializeSelfServiceLoginFlowForBrowsers struct {
 //
 // More information can be found at [Ory Kratos User Login](https://www.ory.sh/docs/kratos/self-service/flows/user-login) and [User Registration Documentation](https://www.ory.sh/docs/kratos/self-service/flows/user-registration).
 //
-//	Produces:
-//	- application/json
+//    Produces:
+//    - application/json
 //
-//	Schemes: http, https
+//    Schemes: http, https
 //
-//	Responses:
-//	  200: selfServiceLoginFlow
-//	  303: emptyResponse
-//	  400: jsonError
-//	  500: jsonError
+//    Responses:
+//      200: selfServiceLoginFlow
+//      303: emptyResponse
+//      400: jsonError
+//      500: jsonError
 func (h *Handler) initBrowserFlow(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	a, err := h.NewLoginFlow(w, r, flow.TypeBrowser)
 	if errors.Is(err, ErrAlreadyLoggedIn) {
@@ -384,7 +384,7 @@ type getSelfServiceLoginFlow struct {
 
 // swagger:route GET /self-service/login/flows v0alpha2 getSelfServiceLoginFlow
 //
-// # Get Login Flow
+// Get Login Flow
 //
 // This endpoint returns a login flow's context with, for example, error details and other information.
 //
@@ -394,14 +394,14 @@ type getSelfServiceLoginFlow struct {
 // If you use the browser-flow for server-side apps, the services need to run on a common top-level-domain
 // and you need to forward the incoming HTTP Cookie header to this endpoint:
 //
-//		```js
-//		// pseudo-code example
-//		router.get('/login', async function (req, res) {
-//		  const flow = await client.getSelfServiceLoginFlow(req.header('cookie'), req.query['flow'])
+//	```js
+//	// pseudo-code example
+//	router.get('/login', async function (req, res) {
+//	  const flow = await client.getSelfServiceLoginFlow(req.header('cookie'), req.query['flow'])
 //
-//	   res.render('login', flow)
-//		})
-//		```
+//	  res.render('login', flow)
+//	})
+//	```
 //
 // This request may fail due to several reasons. The `error.id` can be one of:
 //
@@ -492,7 +492,7 @@ type submitSelfServiceLoginFlowBody struct{}
 
 // swagger:route POST /self-service/login v0alpha2 submitSelfServiceLoginFlow
 //
-// # Submit a Login Flow
+// Submit a Login Flow
 //
 // :::info
 //
