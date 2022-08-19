@@ -31,13 +31,13 @@ type webAuthnJavaScript string
 //
 // More information can be found at [Ory Kratos User Login](https://www.ory.sh/docs/kratos/self-service/flows/user-login) and [User Registration Documentation](https://www.ory.sh/docs/kratos/self-service/flows/user-registration).
 //
-//	Produces:
-//	- text/javascript
+//     Produces:
+//     - text/javascript
 //
-//	Schemes: http, https
+//     Schemes: http, https
 //
-//	Responses:
-//	  200: webAuthnJavaScript
+//     Responses:
+//       200: webAuthnJavaScript
 func (s *Strategy) RegisterLoginRoutes(r *x.RouterPublic) {
 	if handle, _, _ := r.Lookup("GET", webAuthnRoute); handle == nil {
 		r.GET(webAuthnRoute, func(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
