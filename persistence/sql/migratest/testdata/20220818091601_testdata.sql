@@ -4,6 +4,7 @@ INSERT INTO identity_recovery_codes (id, code, used, used_at, identity_recovery_
     false,
     null,
     "b8293f1c-010f-45d9-b809-f3fc5365ba80",
+    1,
     "2022-08-18 08:28:18.470717",
     "2022-08-18 07:28:18.470717",
     "68fb4010-84a9-4d1e-9f92-2705978ee89e",
