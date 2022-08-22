@@ -5,7 +5,7 @@ CREATE TABLE identity_recovery_codes
     used bool NOT NULL DEFAULT FALSE,
     used_at timestamp,
     identity_recovery_address_id CHAR(36),
-    code_type VARCHAR(12) NOT NULL,
+    code_type int NOT NULL,
     expires_at timestamp NOT NULL DEFAULT '2000-01-01 00:00:00',
     issued_at timestamp NOT NULL DEFAULT '2000-01-01 00:00:00',
     selfservice_recovery_flow_id CHAR(36),
