@@ -1,4 +1,4 @@
-INSERT INTO identity_recovery_codes (id, code, used, used_at, identity_recovery_address_id, expires_at, issued_at, selfservice_recovery_flow_id, created_at, updated_at, nid, identity_id) VALUES (
+INSERT INTO identity_recovery_codes (id, code, used, used_at, identity_recovery_address_id, code_type, expires_at, issued_at, selfservice_recovery_flow_id, created_at, updated_at, nid, identity_id) VALUES (
     "8f75f5d9-9cb4-4848-9a73-9344f686f8a6",
     "7eb71370d8497734ec78dfe613bf0f08967e206d2b5c2fc1243be823cfcd57a7",
     false,
