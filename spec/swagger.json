@@ -2049,7 +2049,7 @@
         "tags": [
           "v0alpha2"
         ],
-        "summary": "# Complete Verification Flow",
+        "summary": "Complete Verification Flow",
         "operationId": "submitSelfServiceVerificationFlow",
         "parameters": [
           {
@@ -2197,7 +2197,7 @@
         "tags": [
           "v0alpha2"
         ],
-        "summary": "# Get Verification Flow",
+        "summary": "Get Verification Flow",
         "operationId": "getSelfServiceVerificationFlow",
         "parameters": [
           {

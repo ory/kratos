@@ -14,6 +14,7 @@ import {
 import dayjs from 'dayjs'
 import YAML from 'yamljs'
 import { Session } from '@ory/kratos-client'
+import { RecoveryStrategy } from '.'
 
 const configFile = 'kratos.generated.yml'
 
@@ -212,7 +213,7 @@ Cypress.Commands.add('enableVerification', ({} = {}) => {
   })
 })
 
-Cypress.Commands.add('enableRecovery', ({} = {}) => {
+Cypress.Commands.add('enableRecovery', (strategy: RecoveryStrategy) => {
   updateConfigFile((config) => {
     config.selfservice.flows.recovery.enabled = true
     config.selfservice.methods[strategy].enabled = true
@@ -220,14 +221,17 @@ Cypress.Commands.add('enableRecovery', ({} = {}) => {
   })
 })
 
-Cypress.Commands.add('disableRecoveryStrategy', (strategy: RecoveryStrategy) => {
-  updateConfigFile((config) => {
-    config.selfservice.methods[strategy].enabled = false
-    return config
-  })
-});
+Cypress.Commands.add(
+  'disableRecoveryStrategy',
+  (strategy: RecoveryStrategy) => {
+    updateConfigFile((config) => {
+      config.selfservice.methods[strategy].enabled = false
+      return config
+    })
+  }
+)
 
-Cypress.Commands.add('disableRecovery', ({ } = {}) => {
+Cypress.Commands.add('disableRecovery', ({} = {}) => {
   updateConfigFile((config) => {
     config.selfservice.flows.recovery.enabled = false
     return config
@@ -939,7 +943,7 @@ Cypress.Commands.add('recoveryEmailWithCode', ({ expect: { email } }) => {
     expect(message.subject).to.equal('Recover access to your account')
     expect(message.toAddresses[0].trim()).to.equal(email)
 
-    const code = extractRecoveryCode(message.body);
+    const code = extractRecoveryCode(message.body)
     expect(code).to.not.be.undefined
     expect(code.length).to.equal(8)
     cy.get("input[name='code']").type(code)

@@ -28,7 +28,7 @@ context('Account Recovery Errors', () => {
         cy.longRecoveryLifespan()
         cy.longLinkLifespan()
         cy.disableVerification()
-        cy.enableRecovery("code")
+        cy.enableRecovery('code')
       })
 
       it('shows code expired message if expired code is submitted', () => {
@@ -71,8 +71,8 @@ context('Account Recovery Errors', () => {
           expect(message.toAddresses).to.have.length(1)
           expect(message.toAddresses[0].trim()).to.equal(email)
 
-          const code = extractRecoveryCode(message.body);
-          expect(code).to.be.null;
+          const code = extractRecoveryCode(message.body)
+          expect(code).to.be.null
         })
       })
 
@@ -127,7 +127,7 @@ context('Account Recovery Errors', () => {
           'have.text',
           'An email containing a recovery code has been sent to the email address you provided.'
         )
-        cy.get("input[name='code']").type("012345"); // Invalid code
+        cy.get("input[name='code']").type('012345') // Invalid code
         cy.get("button[value='code']").click()
         cy.get('[data-testid="ui/message/4060006"]').should(
           'have.text',

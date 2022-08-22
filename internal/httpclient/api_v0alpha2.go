@@ -397,7 +397,7 @@ type V0alpha2Api interface {
 	GetSelfServiceSettingsFlowExecute(r V0alpha2ApiApiGetSelfServiceSettingsFlowRequest) (*SelfServiceSettingsFlow, *http.Response, error)
 
 	/*
-			 * GetSelfServiceVerificationFlow # Get Verification Flow
+			 * GetSelfServiceVerificationFlow Get Verification Flow
 			 * This endpoint returns a verification flow's context with, for example, error details and other information.
 
 		Browser flows expect the anti-CSRF cookie to be included in the request's HTTP Cookie Header.
@@ -1032,7 +1032,7 @@ type V0alpha2Api interface {
 	SubmitSelfServiceSettingsFlowExecute(r V0alpha2ApiApiSubmitSelfServiceSettingsFlowRequest) (*SelfServiceSettingsFlow, *http.Response, error)
 
 	/*
-			 * SubmitSelfServiceVerificationFlow # Complete Verification Flow
+			 * SubmitSelfServiceVerificationFlow Complete Verification Flow
 			 * Use this endpoint to complete a verification flow. This endpoint
 		behaves differently for API and browser flows and has several states:
 
@@ -3951,7 +3951,7 @@ func (r V0alpha2ApiApiGetSelfServiceVerificationFlowRequest) Execute() (*SelfSer
 }
 
 /*
- * GetSelfServiceVerificationFlow # Get Verification Flow
+ * GetSelfServiceVerificationFlow Get Verification Flow
  * This endpoint returns a verification flow's context with, for example, error details and other information.
 
 Browser flows expect the anti-CSRF cookie to be included in the request's HTTP Cookie Header.
@@ -7356,7 +7356,7 @@ func (r V0alpha2ApiApiSubmitSelfServiceVerificationFlowRequest) Execute() (*Self
 }
 
 /*
- * SubmitSelfServiceVerificationFlow # Complete Verification Flow
+ * SubmitSelfServiceVerificationFlow Complete Verification Flow
  * Use this endpoint to complete a verification flow. This endpoint
 behaves differently for API and browser flows and has several states:
 
