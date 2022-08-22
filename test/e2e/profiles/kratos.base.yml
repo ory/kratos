@@ -17,6 +17,8 @@ selfservice:
     link:
       config:
         lifespan: 1h
+    code:
+      enabled: false
 
 serve:
   public:

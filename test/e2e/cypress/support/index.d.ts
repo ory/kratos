@@ -7,6 +7,8 @@ export interface MailMessage {
   subject: string
 }
 
+export type RecoveryStrategy = "code" | "link";
+
 declare global {
   namespace Cypress {
     interface Chainable {
@@ -413,6 +415,10 @@ declare global {
         expect: { email: string }
       }): Chainable<void>
 
+      recoveryEmailWithCode(opts?: {
+        expect: { email: string }
+      }): Chainable<void>;
+
       /**
        * Expect a verification email which is expired.
        *
@@ -435,7 +441,14 @@ declare global {
       /**
        * Enables recovery
        */
-      enableRecovery(): Chainable<void>
+      enableRecovery(strategy: RecoveryStrategy): Chainable<void>
+
+      /**
+       * Disables a specific recovery strategy
+       * 
+       * @param strategy the recovery strategy to disable
+       */
+      disableRecoveryStrategy(strategy: RecoveryStrategy): Chainable<void>
 
       /**
        * Disabled recovery

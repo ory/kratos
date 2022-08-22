@@ -2,6 +2,8 @@ selfservice:
   methods:
     password:
       enabled: true
+    code:
+      enabled: false
     link:
       enabled: true
 

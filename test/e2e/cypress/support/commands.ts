@@ -215,11 +215,19 @@ Cypress.Commands.add('enableVerification', ({} = {}) => {
 Cypress.Commands.add('enableRecovery', ({} = {}) => {
   updateConfigFile((config) => {
     config.selfservice.flows.recovery.enabled = true
+    config.selfservice.methods[strategy].enabled = true
     return config
   })
 })
 
-Cypress.Commands.add('disableRecovery', ({} = {}) => {
+Cypress.Commands.add('disableRecoveryStrategy', (strategy: RecoveryStrategy) => {
+  updateConfigFile((config) => {
+    config.selfservice.methods[strategy].enabled = false
+    return config
+  })
+});
+
+Cypress.Commands.add('disableRecovery', ({ } = {}) => {
   updateConfigFile((config) => {
     config.selfservice.flows.recovery.enabled = false
     return config
@@ -926,6 +934,17 @@ Cypress.Commands.add('recoverEmailButExpired', ({ expect: { email } }) => {
   })
 })
 
+Cypress.Commands.add('recoveryEmailWithCode', ({ expect: { email } }) => {
+  cy.getMail().should((message) => {
+    expect(message.subject).to.equal('Recover access to your account')
+    expect(message.toAddresses[0].trim()).to.equal(email)
+
+    const code = extractRecoveryCode(message.body);
+    expect(code).to.not.be.undefined
+    expect(code.length).to.equal(8)
+    cy.get("input[name='code']").type(code)
+  })
+})
 Cypress.Commands.add(
   'recoverEmail',
   ({ expect: { email }, shouldVisit = true }) =>
