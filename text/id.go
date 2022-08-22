@@ -64,7 +64,7 @@ const (
 	InfoSelfServiceRecovery                  ID = 1060000 + iota // 1060000
 	InfoSelfServiceRecoverySuccessful                            // 1060001
 	InfoSelfServiceRecoveryEmailSent                             // 1060002
-	InfoSelfServiceRecoveryEmailWithCodeSent                     // 1060002
+	InfoSelfServiceRecoveryEmailWithCodeSent                     // 1060003
 )
 
 const (
@@ -131,6 +131,8 @@ const (
 	ErrorValidationRecoveryMissingRecoveryToken                          // 4060003
 	ErrorValidationRecoveryTokenInvalidOrAlreadyUsed                     // 4060004
 	ErrorValidationRecoveryFlowExpired                                   // 4060005
+	ErrorValidationRecoveryCodeInvalidOrAlreadyUsed                      // 4060006
+	ErrorValidationRecoveryCodeUsedTooOften                              // 4060007
 )
 
 const (
