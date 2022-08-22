@@ -72,7 +72,7 @@ func (s *RecoveryCodeSender) SendRecoveryCode(ctx context.Context, r *http.Reque
 		return err
 	}
 
-	code := NewSelfServiceRecoveryCode(address, f, s.deps.Config(r.Context()).SelfServiceLinkMethodLifespan())
+	code := NewSelfServiceRecoveryCode(address, f, s.deps.Config().SelfServiceLinkMethodLifespan(r.Context()))
 	if err := s.deps.RecoveryCodePersister().CreateRecoveryCode(ctx, code); err != nil {
 		return err
 	}

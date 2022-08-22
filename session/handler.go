@@ -78,6 +78,7 @@ func (h *Handler) RegisterPublicRoutes(public *x.RouterPublic) {
 	h.r.CSRFHandler().IgnorePath(RouteWhoami)
 	h.r.CSRFHandler().IgnorePath(RouteCollection)
 	h.r.CSRFHandler().IgnoreGlob(RouteCollection + "/*")
+	h.r.CSRFHandler().IgnoreGlob(RouteCollection + "/*/extend")
 	h.r.CSRFHandler().IgnoreGlob(AdminRouteIdentity + "/*/sessions")
 
 	for _, m := range []string{http.MethodGet, http.MethodHead, http.MethodPost, http.MethodPut, http.MethodPatch, http.MethodConnect, http.MethodOptions, http.MethodTrace} {
@@ -125,19 +126,19 @@ type toSession struct {
 //	router.get('/protected-endpoint', async function (req, res) {
 //	  const session = await client.toSession(undefined, req.header('cookie'))
 //
-//    // console.log(session)
+//	  // console.log(session)
 //	})
 //	```
 //
 // When calling this endpoint from a non-browser application (e.g. mobile app) you must include the session token:
 //
-//	```js
-//	// pseudo-code example
-//	// ...
-//	const session = await client.toSession("the-session-token")
+//  ```js
+//  // pseudo-code example
+//  // ...
+//  const session = await client.toSession("the-session-token")
 //
 //  // console.log(session)
-//	```
+//  ```
 //
 // Depending on your configuration this endpoint might return a 403 status code if the session has a lower Authenticator
 // Assurance Level (AAL) than is possible for the identity. This can happen if the identity has password + webauthn
@@ -163,16 +164,16 @@ type toSession struct {
 // - `session_inactive`: No active session was found in the request (e.g. no Ory Session Cookie / Ory Session Token).
 // - `session_aal2_required`: An active session was found but it does not fulfil the Authenticator Assurance Level, implying that the session must (e.g.) authenticate the second factor.
 //
-//     Produces:
-//     - application/json
+//    Produces:
+//    - application/json
 //
-//     Schemes: http, https
+//    Schemes: http, https
 //
-//     Responses:
-//       200: session
-//       401: jsonError
-//       403: jsonError
-//       500: jsonError
+//    Responses:
+//      200: session
+//      401: jsonError
+//      403: jsonError
+//      500: jsonError
 func (h *Handler) whoami(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	s, err := h.r.SessionManager().FetchFromRequest(r.Context(), r)
 	if err != nil {
@@ -182,8 +183,8 @@ func (h *Handler) whoami(w http.ResponseWriter, r *http.Request, ps httprouter.P
 	}
 
 	var aalErr *ErrAALNotSatisfied
-	c := h.r.Config(r.Context())
-	if err := h.r.SessionManager().DoesSessionSatisfy(r, s, c.SessionWhoAmIAAL()); errors.As(err, &aalErr) {
+	c := h.r.Config()
+	if err := h.r.SessionManager().DoesSessionSatisfy(r, s, c.SessionWhoAmIAAL(r.Context())); errors.As(err, &aalErr) {
 		h.r.Audit().WithRequest(r).WithError(err).Info("Session was found but AAL is not satisfied for calling this endpoint.")
 		h.r.Writer().WriteError(w, r, err)
 		return
@@ -226,17 +227,17 @@ type adminDeleteIdentitySessions struct {
 //
 // - To forcefully logout Identity from all devices and sessions
 //
-//     Schemes: http, https
+//    Schemes: http, https
 //
-//     Security:
-//       oryAccessToken:
+//    Security:
+//      oryAccessToken:
 //
-//     Responses:
-//       204: emptyResponse
-//       400: jsonError
-//       401: jsonError
-//       404: jsonError
-//       500: jsonError
+//    Responses:
+//      204: emptyResponse
+//      400: jsonError
+//      401: jsonError
+//      404: jsonError
+//      500: jsonError
 func (h *Handler) adminDeleteIdentitySessions(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	iID, err := uuid.FromString(ps.ByName("id"))
 	if err != nil {
@@ -272,17 +273,17 @@ type adminListIdentitySessions struct {
 //
 // - Listing all sessions that belong to an Identity in an administrative context.
 //
-//     Schemes: http, https
+//    Schemes: http, https
 //
-//     Security:
-//       oryAccessToken:
+//    Security:
+//      oryAccessToken:
 //
-//     Responses:
-//       200: sessionList
-//       400: jsonError
-//       401: jsonError
-//       404: jsonError
-//       500: jsonError
+//    Responses:
+//      200: sessionList
+//      400: jsonError
+//      401: jsonError
+//      404: jsonError
+//      500: jsonError
 func (h *Handler) adminListIdentitySessions(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	iID, err := uuid.FromString(ps.ByName("id"))
 	if err != nil {
@@ -327,14 +328,14 @@ type revokeSessions struct {
 //
 // - To forcefully logout the current user from all other devices and sessions
 //
-//     Schemes: http, https
+//    Schemes: http, https
 //
-//     Responses:
-//       200: revokedSessions
-//       400: jsonError
-//       401: jsonError
-//       404: jsonError
-//       500: jsonError
+//    Responses:
+//      200: revokedSessions
+//      400: jsonError
+//      401: jsonError
+//      404: jsonError
+//      500: jsonError
 func (h *Handler) revokeSessions(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 	s, err := h.r.SessionManager().FetchFromRequest(r.Context(), r)
 	if err != nil {
@@ -371,13 +372,13 @@ type revokeSession struct {
 //
 // - To forcefully logout the current user from another device or session
 //
-//     Schemes: http, https
+//    Schemes: http, https
 //
-//     Responses:
-//       204: emptyResponse
-//       400: jsonError
-//       401: jsonError
-//       500: jsonError
+//    Responses:
+//      204: emptyResponse
+//      400: jsonError
+//      401: jsonError
+//      500: jsonError
 func (h *Handler) revokeSession(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	sid := ps.ByName("id")
 	if sid == "whoami" {
@@ -430,14 +431,14 @@ type sessionList []*Session
 //
 // - Displaying all other sessions that belong to the logged-in user
 //
-//     Schemes: http, https
+//    Schemes: http, https
 //
-//     Responses:
-//       200: sessionList
-//       400: jsonError
-//       401: jsonError
-//       404: jsonError
-//       500: jsonError
+//    Responses:
+//      200: sessionList
+//      400: jsonError
+//      401: jsonError
+//      404: jsonError
+//      500: jsonError
 func (h *Handler) listSessions(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 	s, err := h.r.SessionManager().FetchFromRequest(r.Context(), r)
 	if err != nil {
@@ -489,16 +490,16 @@ type adminExtendSession struct {
 //
 // Retrieve the session ID from the `/sessions/whoami` endpoint / `toSession` SDK method.
 //
-//     Schemes: http, https
+//    Schemes: http, https
 //
-//     Security:
-//       oryAccessToken:
+//    Security:
+//      oryAccessToken:
 //
-//     Responses:
-//       200: session
-//       400: jsonError
-//       404: jsonError
-//       500: jsonError
+//    Responses:
+//      200: session
+//      400: jsonError
+//      404: jsonError
+//      500: jsonError
 func (h *Handler) adminSessionExtend(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	iID, err := uuid.FromString(ps.ByName("id"))
 	if err != nil {
@@ -512,9 +513,9 @@ func (h *Handler) adminSessionExtend(w http.ResponseWriter, r *http.Request, ps 
 		return
 	}
 
-	c := h.r.Config(r.Context())
-	if s.CanBeRefreshed(c) {
-		if err := h.r.SessionPersister().UpsertSession(r.Context(), s.Refresh(c)); err != nil {
+	c := h.r.Config()
+	if s.CanBeRefreshed(r.Context(), c) {
+		if err := h.r.SessionPersister().UpsertSession(r.Context(), s.Refresh(r.Context(), c)); err != nil {
 			h.r.Writer().WriteError(w, r, err)
 			return
 		}
@@ -545,9 +546,10 @@ func (h *Handler) IsNotAuthenticated(wrap httprouter.Handle, onAuthenticated htt
 
 func RedirectOnAuthenticated(d interface{ config.Provider }) httprouter.Handle {
 	return func(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-		returnTo, err := x.SecureRedirectTo(r, d.Config(r.Context()).SelfServiceBrowserDefaultReturnTo(), x.SecureRedirectAllowSelfServiceURLs(d.Config(r.Context()).SelfPublicURL()))
+		ctx := r.Context()
+		returnTo, err := x.SecureRedirectTo(r, d.Config().SelfServiceBrowserDefaultReturnTo(ctx), x.SecureRedirectAllowSelfServiceURLs(d.Config().SelfPublicURL(ctx)))
 		if err != nil {
-			http.Redirect(w, r, d.Config(r.Context()).SelfServiceBrowserDefaultReturnTo().String(), http.StatusFound)
+			http.Redirect(w, r, d.Config().SelfServiceBrowserDefaultReturnTo(ctx).String(), http.StatusFound)
 			return
 		}
 

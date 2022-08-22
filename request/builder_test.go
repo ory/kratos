@@ -5,7 +5,6 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
-	"io"
 	"net/http"
 	"testing"
 
@@ -251,7 +250,7 @@ func TestBuildRequest(t *testing.T) {
 			assert.Equal(t, tc.method, req.Method)
 
 			if tc.body != nil {
-				requestBody, err := io.ReadAll(req.Body)
+				requestBody, err := req.BodyBytes()
 				require.NoError(t, err)
 
 				assert.Equal(t, tc.expectedBody, string(requestBody))

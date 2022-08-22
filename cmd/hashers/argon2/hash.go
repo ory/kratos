@@ -29,6 +29,8 @@ func newHashCmd() *cobra.Command {
 				return err
 			}
 
+			flagConfig.ctx = cmd.Context()
+
 			hasher := hash.NewHasherArgon2(conf)
 			hashes := make([][]byte, len(args))
 			errs := make(chan error, len(args))

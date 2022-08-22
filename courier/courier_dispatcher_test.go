@@ -29,8 +29,8 @@ func TestDispatchMessageWithInvalidSMTP(t *testing.T) {
 	ctx := context.Background()
 
 	conf, reg := internal.NewRegistryDefaultWithDSN(t, "")
-	conf.MustSet(config.ViperKeyCourierMessageRetries, 5)
-	conf.MustSet(config.ViperKeyCourierSMTPURL, "http://foo.url")
+	conf.MustSet(ctx, config.ViperKeyCourierMessageRetries, 5)
+	conf.MustSet(ctx, config.ViperKeyCourierSMTPURL, "http://foo.url")
 
 	ctx, cancel := context.WithCancel(ctx)
 	defer cancel()
@@ -71,7 +71,7 @@ func TestDispatchMessage2(t *testing.T) {
 	ctx := context.Background()
 
 	conf, reg := internal.NewRegistryDefaultWithDSN(t, "")
-	conf.MustSet(config.ViperKeyCourierMessageRetries, 1)
+	conf.MustSet(ctx, config.ViperKeyCourierMessageRetries, 1)
 
 	c := reg.Courier(ctx)
 

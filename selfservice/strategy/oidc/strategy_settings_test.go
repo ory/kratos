@@ -42,6 +42,7 @@ func init() {
 }
 
 func TestSettingsStrategy(t *testing.T) {
+	ctx := context.Background()
 	if testing.Short() {
 		t.Skip()
 	}
@@ -67,7 +68,7 @@ func TestSettingsStrategy(t *testing.T) {
 	)
 	testhelpers.InitKratosServers(t, reg, publicTS, adminTS)
 	testhelpers.SetDefaultIdentitySchema(conf, "file://./stub/settings.schema.json")
-	conf.MustSet(config.ViperKeySelfServiceBrowserDefaultReturnTo, "https://www.ory.sh/kratos")
+	conf.MustSet(ctx, config.ViperKeySelfServiceBrowserDefaultReturnTo, "https://www.ory.sh/kratos")
 
 	// Make test data for this test run unique
 	testID := x.NewUUID().String()
@@ -240,7 +241,7 @@ func TestSettingsStrategy(t *testing.T) {
 
 	var reset = func(t *testing.T) func() {
 		return func() {
-			conf.MustSet(config.ViperKeySelfServiceSettingsPrivilegedAuthenticationAfter, time.Minute*5)
+			conf.MustSet(ctx, config.ViperKeySelfServiceSettingsPrivilegedAuthenticationAfter, time.Minute*5)
 			agents = testhelpers.AddAndLoginIdentities(t, reg, publicTS, users)
 		}
 	}
@@ -300,7 +301,7 @@ func TestSettingsStrategy(t *testing.T) {
 			agent, provider := "githuber", "github"
 
 			var runUnauthed = func(t *testing.T) *kratos.SelfServiceSettingsFlow {
-				conf.MustSet(config.ViperKeySelfServiceSettingsPrivilegedAuthenticationAfter, time.Millisecond)
+				conf.MustSet(ctx, config.ViperKeySelfServiceSettingsPrivilegedAuthenticationAfter, time.Millisecond)
 				time.Sleep(time.Millisecond)
 				t.Cleanup(reset(t))
 				_, res, req := unlink(t, agent, provider)
@@ -323,7 +324,7 @@ func TestSettingsStrategy(t *testing.T) {
 				req := runUnauthed(t)
 
 				// fake login by allowing longer sessions...
-				conf.MustSet(config.ViperKeySelfServiceSettingsPrivilegedAuthenticationAfter, time.Minute*5)
+				conf.MustSet(ctx, config.ViperKeySelfServiceSettingsPrivilegedAuthenticationAfter, time.Minute*5)
 
 				body, res := testhelpers.HTTPPostForm(t, agents[agent], action(req),
 					&url.Values{"csrf_token": {x.FakeCSRFToken}, "unlink": {provider}})
@@ -463,7 +464,7 @@ func TestSettingsStrategy(t *testing.T) {
 			subject = "hackerman+new+google+" + testID
 
 			var runUnauthed = func(t *testing.T) *kratos.SelfServiceSettingsFlow {
-				conf.MustSet(config.ViperKeySelfServiceSettingsPrivilegedAuthenticationAfter, time.Millisecond)
+				conf.MustSet(ctx, config.ViperKeySelfServiceSettingsPrivilegedAuthenticationAfter, time.Millisecond)
 				time.Sleep(time.Millisecond)
 				t.Cleanup(reset(t))
 				_, res, req := link(t, agent, provider)
@@ -486,7 +487,7 @@ func TestSettingsStrategy(t *testing.T) {
 				req := runUnauthed(t)
 
 				// fake login by allowing longer sessions...
-				conf.MustSet(config.ViperKeySelfServiceSettingsPrivilegedAuthenticationAfter, time.Minute*5)
+				conf.MustSet(ctx, config.ViperKeySelfServiceSettingsPrivilegedAuthenticationAfter, time.Minute*5)
 
 				body, res := testhelpers.HTTPPostForm(t, agents[agent], action(req),
 					&url.Values{"csrf_token": {x.FakeCSRFToken}, "unlink": {provider}})
@@ -501,14 +502,15 @@ func TestSettingsStrategy(t *testing.T) {
 }
 
 func TestPopulateSettingsMethod(t *testing.T) {
+	ctx := context.Background()
 	nreg := func(t *testing.T, conf *oidc.ConfigurationCollection) *driver.RegistryDefault {
 		c, reg := internal.NewFastRegistryWithMocks(t)
 
 		testhelpers.SetDefaultIdentitySchema(c, "file://stub/registration.schema.json")
-		c.MustSet(config.ViperKeyPublicBaseURL, "https://www.ory.sh/")
+		c.MustSet(ctx, config.ViperKeyPublicBaseURL, "https://www.ory.sh/")
 
 		// Enabled per default:
-		// 		conf.Set(configuration.ViperKeySelfServiceStrategyConfig+"."+string(identity.CredentialsTypePassword), map[string]interface{}{"enabled": true})
+		// 		conf.Set(ctx, configuration.ViperKeySelfServiceStrategyConfig+"."+string(identity.CredentialsTypePassword), map[string]interface{}{"enabled": true})
 		viperSetProviderConfig(t, c, conf.Providers...)
 		return reg
 	}

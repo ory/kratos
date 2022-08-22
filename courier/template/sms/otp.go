@@ -30,7 +30,7 @@ func (t *OTPMessage) PhoneNumber() (string, error) {
 }
 
 func (t *OTPMessage) SMSBody(ctx context.Context) (string, error) {
-	return template.LoadText(ctx, t.d, os.DirFS(t.d.CourierConfig(ctx).CourierTemplatesRoot()), "otp/sms.body.gotmpl", "otp/sms.body*", t.m, "")
+	return template.LoadText(ctx, t.d, os.DirFS(t.d.CourierConfig().CourierTemplatesRoot(ctx)), "otp/sms.body.gotmpl", "otp/sms.body*", t.m, "")
 }
 
 func (t *OTPMessage) MarshalJSON() ([]byte, error) {

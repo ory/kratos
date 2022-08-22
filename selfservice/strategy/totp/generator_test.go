@@ -14,13 +14,14 @@ import (
 )
 
 func TestGenerator(t *testing.T) {
+	ctx := context.Background()
 	conf, reg := internal.NewFastRegistryWithMocks(t)
 
 	key, err := totp.NewKey(context.Background(), "foo", reg)
 	require.NoError(t, err)
-	assert.Equal(t, conf.SelfPublicURL().Hostname(), key.Issuer(), "if issuer is not set explicitly it should be the public URL")
+	assert.Equal(t, conf.SelfPublicURL(ctx).Hostname(), key.Issuer(), "if issuer is not set explicitly it should be the public URL")
 
-	require.NoError(t, conf.Set(config.ViperKeyTOTPIssuer, "foobar.com"))
+	require.NoError(t, conf.Set(ctx, config.ViperKeyTOTPIssuer, "foobar.com"))
 
 	key, err = totp.NewKey(context.Background(), "foo", reg)
 	require.NoError(t, err)

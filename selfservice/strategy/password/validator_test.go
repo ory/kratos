@@ -28,6 +28,7 @@ import (
 )
 
 func TestDefaultPasswordValidationStrategy(t *testing.T) {
+	ctx := context.Background()
 	// Tests are based on:
 	// - https://www.troyhunt.com/passwords-evolved-authentication-guidance-for-the-modern-era/
 	// - https://www.microsoft.com/en-us/research/wp-content/uploads/2016/06/Microsoft_Password_Guidance-1.pdf
@@ -91,31 +92,31 @@ func TestDefaultPasswordValidationStrategy(t *testing.T) {
 		s.Client = httpx.NewResilientClient(httpx.ResilientClientWithClient(&fakeClient.Client), httpx.ResilientClientWithMaxRetry(1), httpx.ResilientClientWithConnectionTimeout(time.Millisecond), httpx.ResilientClientWithMaxRetryWait(time.Millisecond))
 
 		t.Run("case=should send request to pwnedpasswords.com", func(t *testing.T) {
-			conf.MustSet(config.ViperKeyIgnoreNetworkErrors, false)
+			conf.MustSet(ctx, config.ViperKeyIgnoreNetworkErrors, false)
 			require.Error(t, s.Validate(context.Background(), "mohutdesub", "damrumukuh"))
 			require.Contains(t, fakeClient.RequestedURLs(), "https://api.pwnedpasswords.com/range/BCBA9")
 		})
 
 		t.Run("case=should fail if request fails and ignoreNetworkErrors is not set", func(t *testing.T) {
-			conf.MustSet(config.ViperKeyIgnoreNetworkErrors, false)
+			conf.MustSet(ctx, config.ViperKeyIgnoreNetworkErrors, false)
 			fakeClient.RespondWithError("Network request failed")
 			require.Error(t, s.Validate(context.Background(), "", "sumdarmetp"))
 		})
 
 		t.Run("case=should not fail if request fails and ignoreNetworkErrors is set", func(t *testing.T) {
-			conf.MustSet(config.ViperKeyIgnoreNetworkErrors, true)
+			conf.MustSet(ctx, config.ViperKeyIgnoreNetworkErrors, true)
 			fakeClient.RespondWithError("Network request failed")
 			require.NoError(t, s.Validate(context.Background(), "", "pepegtawni"))
 		})
 
 		t.Run("case=should fail if response has non 200 code and ignoreNetworkErrors is not set", func(t *testing.T) {
-			conf.MustSet(config.ViperKeyIgnoreNetworkErrors, false)
+			conf.MustSet(ctx, config.ViperKeyIgnoreNetworkErrors, false)
 			fakeClient.RespondWith(http.StatusForbidden, "")
 			require.Error(t, s.Validate(context.Background(), "", "jolhakowef"))
 		})
 
 		t.Run("case=should not fail if response has non 200 code code and ignoreNetworkErrors is set", func(t *testing.T) {
-			conf.MustSet(config.ViperKeyIgnoreNetworkErrors, true)
+			conf.MustSet(ctx, config.ViperKeyIgnoreNetworkErrors, true)
 			fakeClient.RespondWith(http.StatusInternalServerError, "")
 			require.NoError(t, s.Validate(context.Background(), "", "jenuzuhjoj"))
 		})
@@ -154,7 +155,7 @@ func TestDefaultPasswordValidationStrategy(t *testing.T) {
 			return fmt.Sprintf("%x", pw)
 		}
 
-		conf.MustSet(config.ViperKeyPasswordMaxBreaches, 5)
+		conf.MustSet(ctx, config.ViperKeyPasswordMaxBreaches, 5)
 		for _, tc := range []struct {
 			name      string
 			res       func(t *testing.T, hash string) string
@@ -197,16 +198,16 @@ func TestDefaultPasswordValidationStrategy(t *testing.T) {
 					return fmt.Sprintf(
 						"%s:%d\n%s:%d",
 						hash,
-						conf.PasswordPolicyConfig().MaxBreaches,
+						conf.PasswordPolicyConfig(ctx).MaxBreaches,
 						hashPw(t, randomPassword(t)),
-						conf.PasswordPolicyConfig().MaxBreaches+1,
+						conf.PasswordPolicyConfig(ctx).MaxBreaches+1,
 					)
 				},
 			},
 			{
 				name: "contains more than maxBreachesThreshold",
 				res: func(t *testing.T, hash string) string {
-					return fmt.Sprintf("%s:%d", hash, conf.PasswordPolicyConfig().MaxBreaches+1)
+					return fmt.Sprintf("%s:%d", hash, conf.PasswordPolicyConfig(ctx).MaxBreaches+1)
 				},
 				expectErr: password.ErrTooManyBreaches,
 			},
@@ -233,13 +234,14 @@ func TestDefaultPasswordValidationStrategy(t *testing.T) {
 }
 
 func TestChangeHaveIBeenPwnedValidationHost(t *testing.T) {
+	ctx := context.Background()
 	testServer := httptest.NewUnstartedServer(&fakeValidatorAPI{})
 	defer testServer.Close()
 	testServer.StartTLS()
 	testServerURL, _ := url.Parse(testServer.URL)
 	conf, reg := internal.NewFastRegistryWithMocks(t)
 	s, _ := password.NewDefaultPasswordValidatorStrategy(reg)
-	conf.MustSet(config.ViperKeyPasswordHaveIBeenPwnedHost, testServerURL.Host)
+	conf.MustSet(ctx, config.ViperKeyPasswordHaveIBeenPwnedHost, testServerURL.Host)
 
 	fakeClient := NewFakeHTTPClient()
 	s.Client = httpx.NewResilientClient(httpx.ResilientClientWithClient(&fakeClient.Client), httpx.ResilientClientWithMaxRetry(1), httpx.ResilientClientWithConnectionTimeout(time.Millisecond))
@@ -247,16 +249,17 @@ func TestChangeHaveIBeenPwnedValidationHost(t *testing.T) {
 	testServerExpectedCallURL := fmt.Sprintf("https://%s/range/BCBA9", testServerURL.Host)
 
 	t.Run("case=should send request to test server", func(t *testing.T) {
-		conf.MustSet(config.ViperKeyIgnoreNetworkErrors, false)
+		conf.MustSet(ctx, config.ViperKeyIgnoreNetworkErrors, false)
 		require.Error(t, s.Validate(context.Background(), "mohutdesub", "damrumukuh"))
 		require.Contains(t, fakeClient.RequestedURLs(), testServerExpectedCallURL)
 	})
 }
 
 func TestDisableHaveIBeenPwnedValidationHost(t *testing.T) {
+	ctx := context.Background()
 	conf, reg := internal.NewFastRegistryWithMocks(t)
 	s, _ := password.NewDefaultPasswordValidatorStrategy(reg)
-	conf.MustSet(config.ViperKeyPasswordHaveIBeenPwnedEnabled, false)
+	conf.MustSet(ctx, config.ViperKeyPasswordHaveIBeenPwnedEnabled, false)
 
 	fakeClient := NewFakeHTTPClient()
 	s.Client = httpx.NewResilientClient(httpx.ResilientClientWithClient(&fakeClient.Client), httpx.ResilientClientWithMaxRetry(1), httpx.ResilientClientWithConnectionTimeout(time.Millisecond))
@@ -268,9 +271,10 @@ func TestDisableHaveIBeenPwnedValidationHost(t *testing.T) {
 }
 
 func TestChangeMinPasswordLength(t *testing.T) {
+	ctx := context.Background()
 	conf, reg := internal.NewFastRegistryWithMocks(t)
 	s, _ := password.NewDefaultPasswordValidatorStrategy(reg)
-	conf.MustSet(config.ViperKeyPasswordMinLength, 10)
+	conf.MustSet(ctx, config.ViperKeyPasswordMinLength, 10)
 
 	t.Run("case=should not fail if password is longer than min length", func(t *testing.T) {
 		require.NoError(t, s.Validate(context.Background(), "", "kuobahcaas"))
@@ -282,16 +286,17 @@ func TestChangeMinPasswordLength(t *testing.T) {
 }
 
 func TestChangeIdentifierSimilarityCheckEnabled(t *testing.T) {
+	ctx := context.Background()
 	conf, reg := internal.NewFastRegistryWithMocks(t)
 	s, _ := password.NewDefaultPasswordValidatorStrategy(reg)
 
 	t.Run("case=should not fail if password is similar to identifier", func(t *testing.T) {
-		conf.MustSet(config.ViperKeyPasswordIdentifierSimilarityCheckEnabled, false)
+		conf.MustSet(ctx, config.ViperKeyPasswordIdentifierSimilarityCheckEnabled, false)
 		require.NoError(t, s.Validate(context.Background(), "bosqwfaxee", "bosqwfaxee"))
 	})
 
 	t.Run("case=should fail if password is similar to identifier", func(t *testing.T) {
-		conf.MustSet(config.ViperKeyPasswordIdentifierSimilarityCheckEnabled, true)
+		conf.MustSet(ctx, config.ViperKeyPasswordIdentifierSimilarityCheckEnabled, true)
 		require.Error(t, s.Validate(context.Background(), "bosqwfaxee", "bosqwfaxee"))
 	})
 }

@@ -3,6 +3,10 @@ package cliclient
 import (
 	"github.com/pkg/errors"
 
+	"github.com/ory/x/servicelocatorx"
+
+	"github.com/ory/x/contextx"
+
 	"github.com/ory/x/configx"
 
 	"github.com/spf13/cobra"
@@ -31,16 +35,20 @@ func (h *CleanupHandler) CleanupSQL(cmd *cobra.Command, args []string) error {
 		opts = append(opts, configx.WithValue(config.ViperKeyDSN, args[0]))
 	}
 
-	d := driver.NewWithoutInit(
+	d, err := driver.NewWithoutInit(
 		cmd.Context(),
 		cmd.ErrOrStderr(),
-		opts...,
+		servicelocatorx.NewOptions(),
+		nil,
+		opts,
 	)
-	if len(d.Config(cmd.Context()).DSN()) == 0 {
+	if len(d.Config().DSN(cmd.Context())) == 0 {
 		return errors.New(`required config value "dsn" was not set`)
+	} else if err != nil {
+		return errors.Wrap(err, "An error occurred initializing cleanup")
 	}
 
-	err := d.Init(cmd.Context(), driver.SkipNetworkInit)
+	err = d.Init(cmd.Context(), &contextx.Default{}, driver.SkipNetworkInit)
 	if err != nil {
 		return errors.Wrap(err, "An error occurred initializing cleanup")
 	}
@@ -49,9 +57,9 @@ func (h *CleanupHandler) CleanupSQL(cmd *cobra.Command, args []string) error {
 
 	err = d.Persister().CleanupDatabase(
 		cmd.Context(),
-		d.Config(cmd.Context()).DatabaseCleanupSleepTables(),
+		d.Config().DatabaseCleanupSleepTables(cmd.Context()),
 		keepLast,
-		d.Config(cmd.Context()).DatabaseCleanupBatchSize())
+		d.Config().DatabaseCleanupBatchSize(cmd.Context()))
 	if err != nil {
 		return errors.Wrap(err, "An error occurred while cleaning up expired data")
 	}

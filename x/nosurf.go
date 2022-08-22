@@ -128,22 +128,22 @@ type CSRFProvider interface {
 func CSRFCookieName(reg interface {
 	config.Provider
 }, r *http.Request) string {
-	return "csrf_token_" + fmt.Sprintf("%x", sha256.Sum256([]byte(reg.Config(r.Context()).SelfPublicURL().String())))
+	return "csrf_token_" + fmt.Sprintf("%x", sha256.Sum256([]byte(reg.Config().SelfPublicURL(r.Context()).String())))
 }
 
 func NosurfBaseCookieHandler(reg interface {
 	config.Provider
 }) func(w http.ResponseWriter, r *http.Request) http.Cookie {
 	return func(w http.ResponseWriter, r *http.Request) http.Cookie {
-		secure := !reg.Config(r.Context()).IsInsecureDevMode()
+		secure := !reg.Config().IsInsecureDevMode(r.Context())
 
-		sameSite := reg.Config(r.Context()).CookieSameSiteMode()
+		sameSite := reg.Config().CookieSameSiteMode(r.Context())
 		if !secure {
 			sameSite = http.SameSiteLaxMode
 		}
 
 		domain := ""
-		if d := reg.Config(r.Context()).CookieDomain(); d != "" {
+		if d := reg.Config().CookieDomain(r.Context()); d != "" {
 			domain = d
 		}
 
@@ -151,14 +151,14 @@ func NosurfBaseCookieHandler(reg interface {
 		cookie := http.Cookie{
 			Name:     name,
 			MaxAge:   nosurf.MaxAge,
-			Path:     reg.Config(r.Context()).CookiePath(),
+			Path:     reg.Config().CookiePath(r.Context()),
 			Domain:   domain,
 			HttpOnly: true,
 			Secure:   secure,
 			SameSite: sameSite,
 		}
 
-		if alias := reg.Config(r.Context()).SelfPublicURL(); reg.Config(r.Context()).SelfPublicURL().String() != alias.String() {
+		if alias := reg.Config().SelfPublicURL(r.Context()); reg.Config().SelfPublicURL(r.Context()).String() != alias.String() {
 			// If a domain alias is detected use that instead.
 			cookie.Domain = alias.Hostname()
 			cookie.Path = alias.Path

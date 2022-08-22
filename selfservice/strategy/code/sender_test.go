@@ -22,11 +22,12 @@ import (
 )
 
 func TestManager(t *testing.T) {
+	ctx := context.Background()
 	conf, reg := internal.NewFastRegistryWithMocks(t)
 	testhelpers.SetDefaultIdentitySchema(conf, "file://./stub/default.schema.json")
-	conf.MustSet(config.ViperKeyPublicBaseURL, "https://www.ory.sh/")
-	conf.MustSet(config.ViperKeyCourierSMTPURL, "smtp://foo@bar@dev.null/")
-	conf.MustSet(config.ViperKeyLinkBaseURL, "https://link-url/")
+	conf.MustSet(ctx, config.ViperKeyPublicBaseURL, "https://www.ory.sh/")
+	conf.MustSet(ctx, config.ViperKeyCourierSMTPURL, "smtp://foo@bar@dev.null/")
+	conf.MustSet(ctx, config.ViperKeyLinkBaseURL, "https://link-url/")
 
 	u := &http.Request{URL: urlx.ParseOrPanic("https://www.ory.sh/")}
 
@@ -56,7 +57,7 @@ func TestManager(t *testing.T) {
 
 		assert.EqualValues(t, "not-tracked@ory.sh", messages[1].Recipient)
 		assert.Contains(t, messages[1].Subject, "Account access attempted")
-		assert.NotContains(t, messages[1].Body, urlx.AppendPaths(conf.SelfServiceLinkMethodBaseURL(), recovery.RouteSubmitFlow).String()+"?")
+		assert.NotContains(t, messages[1].Body, urlx.AppendPaths(conf.SelfServiceLinkMethodBaseURL(ctx), recovery.RouteSubmitFlow).String()+"?")
 		assert.NotContains(t, messages[1].Body, "code=") // TODO: Might be wrong?
 		assert.NotContains(t, messages[1].Body, "flow=")
 	})

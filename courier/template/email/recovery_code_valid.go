@@ -30,17 +30,17 @@ func (t *RecoveryCodeValid) EmailRecipient() (string, error) {
 }
 
 func (t *RecoveryCodeValid) EmailSubject(ctx context.Context) (string, error) {
-	subject, err := template.LoadText(ctx, t.deps, os.DirFS(t.deps.CourierConfig(ctx).CourierTemplatesRoot()), "recovery_code/valid/email.subject.gotmpl", "recovery_code/valid/email.subject*", t.model, t.deps.CourierConfig(ctx).CourierTemplatesRecoveryCodeValid().Subject)
+	subject, err := template.LoadText(ctx, t.deps, os.DirFS(t.deps.CourierConfig().CourierTemplatesRoot(ctx)), "recovery_code/valid/email.subject.gotmpl", "recovery_code/valid/email.subject*", t.model, t.deps.CourierConfig().CourierTemplatesRecoveryCodeValid(ctx).Subject)
 
 	return strings.TrimSpace(subject), err
 }
 
 func (t *RecoveryCodeValid) EmailBody(ctx context.Context) (string, error) {
-	return template.LoadHTML(ctx, t.deps, os.DirFS(t.deps.CourierConfig(ctx).CourierTemplatesRoot()), "recovery_code/valid/email.body.gotmpl", "recovery_code/valid/email.body*", t.model, t.deps.CourierConfig(ctx).CourierTemplatesRecoveryCodeValid().Body.HTML)
+	return template.LoadHTML(ctx, t.deps, os.DirFS(t.deps.CourierConfig().CourierTemplatesRoot(ctx)), "recovery_code/valid/email.body.gotmpl", "recovery_code/valid/email.body*", t.model, t.deps.CourierConfig().CourierTemplatesRecoveryCodeValid(ctx).Body.HTML)
 }
 
 func (t *RecoveryCodeValid) EmailBodyPlaintext(ctx context.Context) (string, error) {
-	return template.LoadText(ctx, t.deps, os.DirFS(t.deps.CourierConfig(ctx).CourierTemplatesRoot()), "recovery_code/valid/email.body.plaintext.gotmpl", "recovery_code/valid/email.body.plaintext*", t.model, t.deps.CourierConfig(ctx).CourierTemplatesRecoveryCodeValid().Body.PlainText)
+	return template.LoadText(ctx, t.deps, os.DirFS(t.deps.CourierConfig().CourierTemplatesRoot(ctx)), "recovery_code/valid/email.body.plaintext.gotmpl", "recovery_code/valid/email.body.plaintext*", t.model, t.deps.CourierConfig().CourierTemplatesRecoveryCodeValid(ctx).Body.PlainText)
 }
 
 func (t *RecoveryCodeValid) MarshalJSON() ([]byte, error) {

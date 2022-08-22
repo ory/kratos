@@ -79,11 +79,11 @@ func (s *Strategy) handleRegistrationError(_ http.ResponseWriter, r *http.Reques
 }
 
 func (s *Strategy) decode(p *submitSelfServiceRegistrationFlowWithWebAuthnMethodBody, r *http.Request) error {
-	return registration.DecodeBody(p, r, s.hd, s.d.Config(r.Context()), registrationSchema)
+	return registration.DecodeBody(p, r, s.hd, s.d.Config(), registrationSchema)
 }
 
 func (s *Strategy) Register(w http.ResponseWriter, r *http.Request, f *registration.Flow, i *identity.Identity) (err error) {
-	if f.Type != flow.TypeBrowser || !s.d.Config(r.Context()).WebAuthnForPasswordless() {
+	if f.Type != flow.TypeBrowser || !s.d.Config().WebAuthnForPasswordless(r.Context()) {
 		return flow.ErrStrategyNotResponsible
 	}
 
@@ -92,7 +92,7 @@ func (s *Strategy) Register(w http.ResponseWriter, r *http.Request, f *registrat
 		return s.handleRegistrationError(w, r, f, &p, err)
 	}
 
-	if err := flow.EnsureCSRF(s.d, r, f.Type, s.d.Config(r.Context()).DisableAPIFlowEnforcement(), s.d.GenerateCSRFToken, p.CSRFToken); err != nil {
+	if err := flow.EnsureCSRF(s.d, r, f.Type, s.d.Config().DisableAPIFlowEnforcement(r.Context()), s.d.GenerateCSRFToken, p.CSRFToken); err != nil {
 		return s.handleRegistrationError(w, r, f, &p, err)
 	}
 
@@ -139,7 +139,7 @@ func (s *Strategy) Register(w http.ResponseWriter, r *http.Request, f *registrat
 	wc := CredentialFromWebAuthn(credential, true)
 	wc.AddedAt = time.Now().UTC().Round(time.Second)
 	wc.DisplayName = p.RegisterDisplayName
-	wc.IsPasswordless = s.d.Config(r.Context()).WebAuthnForPasswordless()
+	wc.IsPasswordless = s.d.Config().WebAuthnForPasswordless(r.Context())
 	cc.UserHandle = webAuthnSess.UserID
 
 	cc.Credentials = append(cc.Credentials, *wc)
@@ -167,11 +167,11 @@ func (s *Strategy) Register(w http.ResponseWriter, r *http.Request, f *registrat
 }
 
 func (s *Strategy) PopulateRegistrationMethod(r *http.Request, f *registration.Flow) error {
-	if f.Type != flow.TypeBrowser || !s.d.Config(r.Context()).WebAuthnForPasswordless() {
+	if f.Type != flow.TypeBrowser || !s.d.Config().WebAuthnForPasswordless(r.Context()) {
 		return nil
 	}
 
-	ds, err := s.d.Config(r.Context()).DefaultIdentityTraitsSchemaURL()
+	ds, err := s.d.Config().DefaultIdentityTraitsSchemaURL(r.Context())
 	if err != nil {
 		return err
 	}
@@ -206,7 +206,7 @@ func (s *Strategy) PopulateRegistrationMethod(r *http.Request, f *registration.F
 		return errors.WithStack(err)
 	}
 
-	f.UI.Nodes.Upsert(NewWebAuthnScript(urlx.AppendPaths(s.d.Config(r.Context()).SelfPublicURL(), webAuthnRoute).String(), jsOnLoad))
+	f.UI.Nodes.Upsert(NewWebAuthnScript(urlx.AppendPaths(s.d.Config().SelfPublicURL(r.Context()), webAuthnRoute).String(), jsOnLoad))
 	f.UI.Nodes.Upsert(NewWebAuthnConnectionName())
 	f.UI.Nodes.Upsert(NewWebAuthnConnectionInput())
 	f.UI.Nodes.Upsert(NewWebAuthnConnectionTrigger(string(injectWebAuthnOptions)).

@@ -30,17 +30,17 @@ func (t *TestStub) EmailRecipient() (string, error) {
 }
 
 func (t *TestStub) EmailSubject(ctx context.Context) (string, error) {
-	subject, err := template.LoadText(ctx, t.d, os.DirFS(t.d.CourierConfig(ctx).CourierTemplatesRoot()), "test_stub/email.subject.gotmpl", "test_stub/email.subject*", t.m, "")
+	subject, err := template.LoadText(ctx, t.d, os.DirFS(t.d.CourierConfig().CourierTemplatesRoot(ctx)), "test_stub/email.subject.gotmpl", "test_stub/email.subject*", t.m, "")
 
 	return strings.TrimSpace(subject), err
 }
 
 func (t *TestStub) EmailBody(ctx context.Context) (string, error) {
-	return template.LoadHTML(ctx, t.d, os.DirFS(t.d.CourierConfig(ctx).CourierTemplatesRoot()), "test_stub/email.body.gotmpl", "test_stub/email.body*", t.m, "")
+	return template.LoadHTML(ctx, t.d, os.DirFS(t.d.CourierConfig().CourierTemplatesRoot(ctx)), "test_stub/email.body.gotmpl", "test_stub/email.body*", t.m, "")
 }
 
 func (t *TestStub) EmailBodyPlaintext(ctx context.Context) (string, error) {
-	return template.LoadText(ctx, t.d, os.DirFS(t.d.CourierConfig(ctx).CourierTemplatesRoot()), "test_stub/email.body.plaintext.gotmpl", "test_stub/email.body.plaintext*", t.m, "")
+	return template.LoadText(ctx, t.d, os.DirFS(t.d.CourierConfig().CourierTemplatesRoot(ctx)), "test_stub/email.body.plaintext.gotmpl", "test_stub/email.body.plaintext*", t.m, "")
 }
 
 func (t *TestStub) MarshalJSON() ([]byte, error) {

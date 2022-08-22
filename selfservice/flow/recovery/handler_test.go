@@ -34,8 +34,9 @@ func init() {
 }
 
 func TestHandlerRedirectOnAuthenticated(t *testing.T) {
+	ctx := context.Background()
 	conf, reg := internal.NewFastRegistryWithMocks(t)
-	conf.MustSet(config.ViperKeySelfServiceRecoveryEnabled, true)
+	conf.MustSet(ctx, config.ViperKeySelfServiceRecoveryEnabled, true)
 
 	router := x.NewRouterPublic()
 	ts, _ := testhelpers.NewKratosServerWithRouters(t, reg, router, x.NewRouterAdmin())
@@ -58,18 +59,19 @@ func TestHandlerRedirectOnAuthenticated(t *testing.T) {
 }
 
 func TestInitFlow(t *testing.T) {
+	ctx := context.Background()
 	conf, reg := internal.NewFastRegistryWithMocks(t)
-	conf.MustSet(config.ViperKeySelfServiceRecoveryEnabled, true)
-	conf.MustSet(config.ViperKeySelfServiceStrategyConfig+"."+recovery.StrategyRecoveryLinkName,
-		map[string]interface{}{"enabled": false})
-	conf.MustSet(config.ViperKeySelfServiceStrategyConfig+"."+recovery.StrategyRecoveryCodeName,
+	conf.MustSet(ctx, config.ViperKeySelfServiceRecoveryEnabled, true)
+	conf.MustSet(ctx, config.ViperKeySelfServiceStrategyConfig+"."+recovery.StrategyRecoveryLinkName,
+		map[string]interface{}{"enabled": true})
+	conf.MustSet(ctx, config.ViperKeySelfServiceStrategyConfig+"."+recovery.StrategyRecoveryCodeName,
 		map[string]interface{}{"enabled": true})
 
 	router := x.NewRouterPublic()
 	publicTS, _ := testhelpers.NewKratosServerWithRouters(t, reg, router, x.NewRouterAdmin())
 	recoveryTS := testhelpers.NewRecoveryUIFlowEchoServer(t, reg)
 
-	conf.MustSet(config.ViperKeySelfServiceBrowserDefaultReturnTo, "https://www.ory.sh")
+	conf.MustSet(ctx, config.ViperKeySelfServiceBrowserDefaultReturnTo, "https://www.ory.sh")
 	testhelpers.SetDefaultIdentitySchema(conf, "file://./stub/identity.schema.json")
 
 	assertion := func(body []byte, isForced, isApi bool) {
@@ -166,7 +168,7 @@ func TestInitFlow(t *testing.T) {
 		})
 
 		t.Run("case=relative redirect when self-service recovery ui is a relative URL", func(t *testing.T) {
-			reg.Config(context.Background()).MustSet(config.ViperKeySelfServiceRecoveryUI, "/recovery-ts")
+			reg.Config().MustSet(ctx, config.ViperKeySelfServiceRecoveryUI, "/recovery-ts")
 			assert.Regexp(
 				t,
 				"^/recovery-ts.*$",
@@ -195,11 +197,12 @@ func TestInitFlow(t *testing.T) {
 }
 
 func TestGetFlow(t *testing.T) {
+	ctx := context.Background()
 	conf, reg := internal.NewFastRegistryWithMocks(t)
-	conf.MustSet(config.ViperKeySelfServiceRecoveryEnabled, true)
-	conf.MustSet(config.ViperKeySelfServiceStrategyConfig+"."+recovery.StrategyRecoveryLinkName,
-		map[string]interface{}{"enabled": false})
-	conf.MustSet(config.ViperKeySelfServiceStrategyConfig+"."+recovery.StrategyRecoveryCodeName,
+	conf.MustSet(ctx, config.ViperKeySelfServiceRecoveryEnabled, true)
+	conf.MustSet(ctx, config.ViperKeySelfServiceStrategyConfig+"."+recovery.StrategyRecoveryLinkName,
+		map[string]interface{}{"enabled": true})
+	conf.MustSet(ctx, config.ViperKeySelfServiceStrategyConfig+"."+recovery.StrategyRecoveryCodeName,
 		map[string]interface{}{"enabled": true})
 	testhelpers.SetDefaultIdentitySchema(conf, "file://./stub/identity.schema.json")
 
@@ -213,7 +216,7 @@ func TestGetFlow(t *testing.T) {
 			require.NoError(t, err)
 		}))
 		t.Cleanup(ts.Close)
-		conf.MustSet(config.ViperKeySelfServiceRecoveryUI, ts.URL)
+		conf.MustSet(ctx, config.ViperKeySelfServiceRecoveryUI, ts.URL)
 		return ts
 	}
 
@@ -254,7 +257,7 @@ func TestGetFlow(t *testing.T) {
 
 	t.Run("case=expired with return_to", func(t *testing.T) {
 		returnTo := "https://www.ory.sh"
-		conf.MustSet(config.ViperKeyURLsAllowedReturnToDomains, []string{returnTo})
+		conf.MustSet(ctx, config.ViperKeyURLsAllowedReturnToDomains, []string{returnTo})
 		client := testhelpers.NewClientWithCookies(t)
 		setupRecoveryTS(t, client)
 		body := x.EasyGetBody(t, client, public.URL+recovery.RouteInitBrowserFlow+"?return_to="+returnTo)

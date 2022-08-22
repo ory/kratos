@@ -6,8 +6,6 @@ import (
 
 	"github.com/ory/kratos/selfservice/flow"
 
-	"github.com/ory/kratos/corp"
-
 	"github.com/gofrs/uuid"
 	errors "github.com/pkg/errors"
 
@@ -64,7 +62,7 @@ type RecoveryCode struct {
 }
 
 func (RecoveryCode) TableName(ctx context.Context) string {
-	return corp.ContextualizeTableName(ctx, "identity_recovery_codes")
+	return "identity_recovery_codes"
 }
 
 func NewSelfServiceRecoveryCode(address *identity.RecoveryAddress, f *recovery.Flow, expiresIn time.Duration) *RecoveryCode {

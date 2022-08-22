@@ -1,6 +1,7 @@
 package x_test
 
 import (
+	"context"
 	"encoding/json"
 	"io"
 	"net/http"
@@ -39,10 +40,12 @@ func TestSecureContentNegotiationRedirection(t *testing.T) {
 	ts := httptest.NewServer(router)
 	defer ts.Close()
 
+	ctx := context.Background()
+
 	defaultReturnTo := ts.URL + "/default-return-to"
-	conf.MustSet(config.ViperKeySelfServiceBrowserDefaultReturnTo, defaultReturnTo)
-	conf.MustSet(config.ViperKeyPublicBaseURL, ts.URL)
-	conf.MustSet(config.ViperKeyURLsAllowedReturnToDomains, []string{ts.URL})
+	conf.MustSet(ctx, config.ViperKeySelfServiceBrowserDefaultReturnTo, defaultReturnTo)
+	conf.MustSet(ctx, config.ViperKeyPublicBaseURL, ts.URL)
+	conf.MustSet(ctx, config.ViperKeyURLsAllowedReturnToDomains, []string{ts.URL})
 
 	run := func(t *testing.T, href string, contentType string) (*http.Response, string) {
 		req, err := http.NewRequest("GET", href, nil)

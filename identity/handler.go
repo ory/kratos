@@ -50,7 +50,7 @@ type (
 )
 
 func (h *Handler) Config(ctx context.Context) *config.Config {
-	return h.r.Config(ctx)
+	return h.r.Config()
 }
 
 func NewHandler(r handlerDependencies) *Handler {
@@ -110,17 +110,17 @@ type adminListIdentities struct {
 //
 // Learn how identities work in [Ory Kratos' User And Identity Model Documentation](https://www.ory.sh/docs/next/kratos/concepts/identity-user-model).
 //
-//     Produces:
-//     - application/json
+//    Produces:
+//    - application/json
 //
-//     Schemes: http, https
+//    Schemes: http, https
 //
-//     Security:
-//       oryAccessToken:
+//    Security:
+//      oryAccessToken:
 //
-//     Responses:
-//       200: identityList
-//       500: jsonError
+//    Responses:
+//      200: identityList
+//      500: jsonError
 func (h *Handler) list(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 	page, itemsPerPage := x.ParsePagination(r)
 	is, err := h.r.IdentityPool().ListIdentities(r.Context(), page, itemsPerPage)
@@ -135,7 +135,7 @@ func (h *Handler) list(w http.ResponseWriter, r *http.Request, _ httprouter.Para
 		return
 	}
 
-	x.PaginationHeader(w, urlx.AppendPaths(h.r.Config(r.Context()).SelfAdminURL(), RouteCollection), total, page, itemsPerPage)
+	x.PaginationHeader(w, urlx.AppendPaths(h.r.Config().SelfAdminURL(r.Context()), RouteCollection), total, page, itemsPerPage)
 	h.r.Writer().Write(w, r, is)
 }
 
@@ -164,21 +164,21 @@ type adminGetIdentity struct {
 //
 // Learn how identities work in [Ory Kratos' User And Identity Model Documentation](https://www.ory.sh/docs/next/kratos/concepts/identity-user-model).
 //
-//     Consumes:
-//     - application/json
+//    Consumes:
+//    - application/json
 //
-//     Produces:
-//     - application/json
+//    Produces:
+//    - application/json
 //
-//     Schemes: http, https
+//    Schemes: http, https
 //
-//     Security:
-//       oryAccessToken:
+//    Security:
+//      oryAccessToken:
 //
-//     Responses:
-//       200: identity
-//       404: jsonError
-//       500: jsonError
+//    Responses:
+//      200: identity
+//      404: jsonError
+//      500: jsonError
 func (h *Handler) get(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	i, err := h.r.PrivilegedIdentityPool().GetIdentityConfidential(r.Context(), x.ParseUUID(ps.ByName("id")))
 	if err != nil {
@@ -313,22 +313,22 @@ type AdminCreateIdentityImportCredentialsOidcProvider struct {
 //
 // This endpoint creates an identity. Learn how identities work in [Ory Kratos' User And Identity Model Documentation](https://www.ory.sh/docs/next/kratos/concepts/identity-user-model).
 //
-//     Consumes:
-//     - application/json
+//    Consumes:
+//    - application/json
 //
-//     Produces:
-//     - application/json
+//    Produces:
+//    - application/json
 //
-//     Schemes: http, https
+//    Schemes: http, https
 //
-//     Security:
-//       oryAccessToken:
+//    Security:
+//      oryAccessToken:
 //
-//     Responses:
-//       201: identity
-//       400: jsonError
-//		 409: jsonError
-//       500: jsonError
+//    Responses:
+//      201: identity
+//      400: jsonError
+//      409: jsonError
+//      500: jsonError
 func (h *Handler) create(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 	var cr AdminCreateIdentityBody
 	if err := jsonx.NewStrictDecoder(r.Body).Decode(&cr); err != nil {
@@ -369,7 +369,7 @@ func (h *Handler) create(w http.ResponseWriter, r *http.Request, _ httprouter.Pa
 
 	h.r.Writer().WriteCreated(w, r,
 		urlx.AppendPaths(
-			h.r.Config(r.Context()).SelfAdminURL(),
+			h.r.Config().SelfAdminURL(r.Context()),
 			"identities",
 			i.ID.String(),
 		).String(),
@@ -432,23 +432,23 @@ type AdminUpdateIdentityBody struct {
 //
 // Learn how identities work in [Ory Kratos' User And Identity Model Documentation](https://www.ory.sh/docs/next/kratos/concepts/identity-user-model).
 //
-//     Consumes:
-//     - application/json
+//    Consumes:
+//    - application/json
 //
-//     Produces:
-//     - application/json
+//    Produces:
+//    - application/json
 //
-//     Schemes: http, https
+//    Schemes: http, https
 //
-//     Security:
-//       oryAccessToken:
+//    Security:
+//      oryAccessToken:
 //
-//     Responses:
-//       200: identity
-//       400: jsonError
-//       404: jsonError
-//       409: jsonError
-//       500: jsonError
+//    Responses:
+//      200: identity
+//      400: jsonError
+//      404: jsonError
+//      409: jsonError
+//      500: jsonError
 func (h *Handler) update(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	var ur AdminUpdateIdentityBody
 	if err := h.dx.Decode(r, &ur,
@@ -524,18 +524,18 @@ type adminDeleteIdentity struct {
 //
 // Learn how identities work in [Ory Kratos' User And Identity Model Documentation](https://www.ory.sh/docs/next/kratos/concepts/identity-user-model).
 //
-//     Produces:
-//     - application/json
+//    Produces:
+//    - application/json
 //
-//     Schemes: http, https
+//    Schemes: http, https
 //
-//     Security:
-//       oryAccessToken:
+//    Security:
+//      oryAccessToken:
 //
-//     Responses:
-//       204: emptyResponse
-//       404: jsonError
-//       500: jsonError
+//    Responses:
+//      204: emptyResponse
+//      404: jsonError
+//      500: jsonError
 func (h *Handler) delete(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	if err := h.r.IdentityPool().(PrivilegedPool).DeleteIdentity(r.Context(), x.ParseUUID(ps.ByName("id"))); err != nil {
 		h.r.Writer().WriteError(w, r, err)
@@ -566,23 +566,23 @@ type adminPatchIdentity struct {
 //
 // Learn how identities work in [Ory Kratos' User And Identity Model Documentation](https://www.ory.sh/docs/next/kratos/concepts/identity-user-model).
 //
-//     Consumes:
-//     - application/json
+//    Consumes:
+//    - application/json
 //
-//     Produces:
-//     - application/json
+//    Produces:
+//    - application/json
 //
-//     Schemes: http, https
+//    Schemes: http, https
 //
-//     Security:
-//       oryAccessToken:
+//    Security:
+//      oryAccessToken:
 //
-//     Responses:
-//       200: identity
-//       400: jsonError
-//       404: jsonError
-//       409: jsonError
-//       500: jsonError
+//    Responses:
+//      200: identity
+//      400: jsonError
+//      404: jsonError
+//      409: jsonError
+//      500: jsonError
 func (h *Handler) patch(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	requestBody, err := io.ReadAll(r.Body)
 	if err != nil {

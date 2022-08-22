@@ -9,8 +9,6 @@ import (
 
 	"github.com/ory/kratos/x"
 
-	"github.com/ory/kratos/corp"
-
 	"github.com/gofrs/uuid"
 	"github.com/pkg/errors"
 
@@ -35,7 +33,7 @@ func (p *Persister) Add(ctx context.Context, csrfToken string, errs error) (uuid
 
 	c := &errorx.ErrorContainer{
 		ID:        x.NewUUID(),
-		NID:       corp.ContextualizeNID(ctx, p.nid),
+		NID:       p.NetworkID(ctx),
 		CSRFToken: csrfToken,
 		Errors:    buf.Bytes(),
 		WasSeen:   false,
@@ -53,14 +51,14 @@ func (p *Persister) Read(ctx context.Context, id uuid.UUID) (*errorx.ErrorContai
 	defer span.End()
 
 	var ec errorx.ErrorContainer
-	if err := p.GetConnection(ctx).Where("id = ? AND nid = ?", id, corp.ContextualizeNID(ctx, p.nid)).First(&ec); err != nil {
+	if err := p.GetConnection(ctx).Where("id = ? AND nid = ?", id, p.NetworkID(ctx)).First(&ec); err != nil {
 		return nil, sqlcon.HandleError(err)
 	}
 
 	// #nosec G201
 	if err := p.GetConnection(ctx).RawQuery(
-		fmt.Sprintf("UPDATE %s SET was_seen = true, seen_at = ? WHERE id = ? AND nid = ?", corp.ContextualizeTableName(ctx, "selfservice_errors")),
-		time.Now().UTC(), id, corp.ContextualizeNID(ctx, p.nid)).Exec(); err != nil {
+		fmt.Sprintf("UPDATE %s SET was_seen = true, seen_at = ? WHERE id = ? AND nid = ?", "selfservice_errors"),
+		time.Now().UTC(), id, p.NetworkID(ctx)).Exec(); err != nil {
 		return nil, sqlcon.HandleError(err)
 	}
 
@@ -74,13 +72,13 @@ func (p *Persister) Clear(ctx context.Context, olderThan time.Duration, force bo
 	if force {
 		// #nosec G201
 		err = p.GetConnection(ctx).RawQuery(
-			fmt.Sprintf("DELETE FROM %s WHERE nid = ? AND seen_at < ? AND seen_at IS NOT NULL", corp.ContextualizeTableName(ctx, "selfservice_errors")),
-			corp.ContextualizeNID(ctx, p.nid), time.Now().UTC().Add(-olderThan)).Exec()
+			fmt.Sprintf("DELETE FROM %s WHERE nid = ? AND seen_at < ? AND seen_at IS NOT NULL", "selfservice_errors"),
+			p.NetworkID(ctx), time.Now().UTC().Add(-olderThan)).Exec()
 	} else {
 		// #nosec G201
 		err = p.GetConnection(ctx).RawQuery(
-			fmt.Sprintf("DELETE FROM %s WHERE nid = ? AND was_seen=true AND seen_at < ? AND seen_at IS NOT NULL", corp.ContextualizeTableName(ctx, "selfservice_errors")),
-			corp.ContextualizeNID(ctx, p.nid), time.Now().UTC().Add(-olderThan)).Exec()
+			fmt.Sprintf("DELETE FROM %s WHERE nid = ? AND was_seen=true AND seen_at < ? AND seen_at IS NOT NULL", "selfservice_errors"),
+			p.NetworkID(ctx), time.Now().UTC().Add(-olderThan)).Exec()
 	}
 
 	return sqlcon.HandleError(err)

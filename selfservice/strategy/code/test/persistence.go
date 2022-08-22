@@ -31,7 +31,7 @@ func TestPersister(ctx context.Context, conf *config.Config, p interface {
 		nid, p := testhelpers.NewNetworkUnlessExisting(t, ctx, p)
 
 		testhelpers.SetDefaultIdentitySchema(conf, "file://./stub/identity.schema.json")
-		conf.MustSet(config.ViperKeySecretsDefault, []string{"secret-a", "secret-b"})
+		conf.MustSet(ctx, config.ViperKeySecretsDefault, []string{"secret-a", "secret-b"})
 
 		t.Run("token=recovery", func(t *testing.T) {
 			t.Run("case=should error when the recovery token does not exist", func(t *testing.T) {

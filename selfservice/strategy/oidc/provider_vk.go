@@ -44,7 +44,7 @@ func (g *ProviderVK) oauth2(ctx context.Context) *oauth2.Config {
 			TokenURL: "https://oauth.vk.com/access_token",
 		},
 		Scopes:      g.config.Scope,
-		RedirectURL: g.config.Redir(g.reg.Config(ctx).OIDCRedirectURIBase()),
+		RedirectURL: g.config.Redir(g.reg.Config().OIDCRedirectURIBase(ctx)),
 	}
 }
 

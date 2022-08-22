@@ -145,11 +145,11 @@ func (s *Strategy) continueSettingsFlow(
 			return err
 		}
 
-		if err := flow.EnsureCSRF(s.d, r, ctxUpdate.Flow.Type, s.d.Config(r.Context()).DisableAPIFlowEnforcement(), s.d.GenerateCSRFToken, p.CSRFToken); err != nil {
+		if err := flow.EnsureCSRF(s.d, r, ctxUpdate.Flow.Type, s.d.Config().DisableAPIFlowEnforcement(r.Context()), s.d.GenerateCSRFToken, p.CSRFToken); err != nil {
 			return err
 		}
 
-		if ctxUpdate.Session.AuthenticatedAt.Add(s.d.Config(r.Context()).SelfServiceFlowSettingsPrivilegedSessionMaxAge()).Before(time.Now()) {
+		if ctxUpdate.Session.AuthenticatedAt.Add(s.d.Config().SelfServiceFlowSettingsPrivilegedSessionMaxAge(r.Context())).Before(time.Now()) {
 			return errors.WithStack(settings.NewFlowNeedsReAuth())
 		}
 	} else {
@@ -259,10 +259,10 @@ func (s *Strategy) continueSettingsFlowAdd(w http.ResponseWriter, r *http.Reques
 		return errors.WithStack(herodot.ErrInternalServerError.WithReasonf("Unable to decode identity credentials.").WithDebug(err.Error()))
 	}
 
-	wc := CredentialFromWebAuthn(credential, s.d.Config(r.Context()).WebAuthnForPasswordless())
+	wc := CredentialFromWebAuthn(credential, s.d.Config().WebAuthnForPasswordless(r.Context()))
 	wc.AddedAt = time.Now().UTC().Round(time.Second)
 	wc.DisplayName = p.RegisterDisplayName
-	wc.IsPasswordless = s.d.Config(r.Context()).WebAuthnForPasswordless()
+	wc.IsPasswordless = s.d.Config().WebAuthnForPasswordless(r.Context())
 	cc.UserHandle = ctxUpdate.Session.IdentityID[:]
 
 	cc.Credentials = append(cc.Credentials, *wc)
@@ -287,7 +287,7 @@ func (s *Strategy) continueSettingsFlowAdd(w http.ResponseWriter, r *http.Reques
 	}
 
 	aal := identity.AuthenticatorAssuranceLevel1
-	if !s.d.Config(r.Context()).WebAuthnForPasswordless() {
+	if !s.d.Config().WebAuthnForPasswordless(r.Context()) {
 		aal = identity.AuthenticatorAssuranceLevel2
 	}
 
@@ -371,7 +371,7 @@ func (s *Strategy) PopulateSettingsMethod(r *http.Request, id *identity.Identity
 		return errors.WithStack(err)
 	}
 
-	f.UI.Nodes.Upsert(NewWebAuthnScript(urlx.AppendPaths(s.d.Config(r.Context()).SelfPublicURL(), webAuthnRoute).String(), jsOnLoad))
+	f.UI.Nodes.Upsert(NewWebAuthnScript(urlx.AppendPaths(s.d.Config().SelfPublicURL(r.Context()), webAuthnRoute).String(), jsOnLoad))
 	f.UI.Nodes.Upsert(NewWebAuthnConnectionName())
 	f.UI.Nodes.Upsert(NewWebAuthnConnectionTrigger(string(injectWebAuthnOptions)).
 		WithMetaLabel(text.NewInfoSelfServiceSettingsRegisterWebAuthn()))

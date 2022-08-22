@@ -28,8 +28,8 @@ func (t *RecoveryCodeInvalid) EmailRecipient() (string, error) {
 }
 
 func (t *RecoveryCodeInvalid) EmailSubject(ctx context.Context) (string, error) {
-	filesystem := os.DirFS(t.deps.CourierConfig(ctx).CourierTemplatesRoot())
-	remoteURL := t.deps.CourierConfig(ctx).CourierTemplatesRecoveryCodeInvalid().Subject
+	filesystem := os.DirFS(t.deps.CourierConfig().CourierTemplatesRoot(ctx))
+	remoteURL := t.deps.CourierConfig().CourierTemplatesRecoveryCodeInvalid(ctx).Subject
 
 	subject, err := template.LoadText(ctx, t.deps, filesystem, "recovery_code/invalid/email.subject.gotmpl", "recovery_code/invalid/email.subject*", t.model, remoteURL)
 
@@ -37,11 +37,11 @@ func (t *RecoveryCodeInvalid) EmailSubject(ctx context.Context) (string, error) 
 }
 
 func (t *RecoveryCodeInvalid) EmailBody(ctx context.Context) (string, error) {
-	return template.LoadHTML(ctx, t.deps, os.DirFS(t.deps.CourierConfig(ctx).CourierTemplatesRoot()), "recovery_code/invalid/email.body.gotmpl", "recovery_code/invalid/email.body*", t.model, t.deps.CourierConfig(ctx).CourierTemplatesRecoveryCodeInvalid().Body.HTML)
+	return template.LoadHTML(ctx, t.deps, os.DirFS(t.deps.CourierConfig().CourierTemplatesRoot(ctx)), "recovery_code/invalid/email.body.gotmpl", "recovery_code/invalid/email.body*", t.model, t.deps.CourierConfig().CourierTemplatesRecoveryCodeInvalid(ctx).Body.HTML)
 }
 
 func (t *RecoveryCodeInvalid) EmailBodyPlaintext(ctx context.Context) (string, error) {
-	return template.LoadText(ctx, t.deps, os.DirFS(t.deps.CourierConfig(ctx).CourierTemplatesRoot()), "recovery_code/invalid/email.body.plaintext.gotmpl", "recovery_code/invalid/email.body.plaintext*", t.model, t.deps.CourierConfig(ctx).CourierTemplatesRecoveryCodeInvalid().Body.PlainText)
+	return template.LoadText(ctx, t.deps, os.DirFS(t.deps.CourierConfig().CourierTemplatesRoot(ctx)), "recovery_code/invalid/email.body.plaintext.gotmpl", "recovery_code/invalid/email.body.plaintext*", t.model, t.deps.CourierConfig().CourierTemplatesRecoveryCodeInvalid(ctx).Body.PlainText)
 }
 
 func (t *RecoveryCodeInvalid) MarshalJSON() ([]byte, error) {

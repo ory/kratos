@@ -29,12 +29,13 @@ import (
 )
 
 func NewRecoveryUIFlowEchoServer(t *testing.T, reg driver.Registry) *httptest.Server {
+	ctx := context.Background()
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		e, err := reg.RecoveryFlowPersister().GetRecoveryFlow(r.Context(), x.ParseUUID(r.URL.Query().Get("flow")))
 		require.NoError(t, err)
 		reg.Writer().Write(w, r, e)
 	}))
-	reg.Config(context.Background()).MustSet(config.ViperKeySelfServiceRecoveryUI, ts.URL+"/recovery-ts")
+	reg.Config().MustSet(ctx, config.ViperKeySelfServiceRecoveryUI, ts.URL+"/recovery-ts")
 	t.Cleanup(ts.Close)
 	return ts
 }
@@ -153,8 +154,8 @@ func SubmitRecoveryForm(
 
 func PersistNewRecoveryFlowWithActiveMethod(t *testing.T, method string, conf *config.Config, reg *driver.RegistryDefault) *recovery.Flow {
 	t.Helper()
-	req := x.NewTestHTTPRequest(t, "GET", conf.SelfPublicURL().String()+"/test", nil)
-	f, err := recovery.NewFlow(conf, conf.SelfServiceFlowRecoveryRequestLifespan(), reg.GenerateCSRFToken(req), req, reg.RecoveryStrategies(context.Background()), flow.TypeBrowser)
+	req := x.NewTestHTTPRequest(t, "GET", conf.SelfPublicURL(context.Background()).String()+"/test", nil)
+	f, err := recovery.NewFlow(conf, conf.SelfServiceFlowRecoveryRequestLifespan(context.Background()), reg.GenerateCSRFToken(req), req, reg.RecoveryStrategies(context.Background()), flow.TypeBrowser)
 	require.NoError(t, err, "Expected no error when creating a new recovery flow: %s", err)
 	f.Active = sqlxx.NullString(method)
 

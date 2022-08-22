@@ -10,6 +10,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/ory/x/servicelocatorx"
+
 	"github.com/ory/x/fsx"
 
 	"github.com/ory/kratos/identity"
@@ -17,7 +19,6 @@ import (
 	"github.com/bradleyjkemp/cupaloy/v2"
 	"github.com/stretchr/testify/assert"
 
-	"github.com/ory/kratos/corp"
 	"github.com/ory/x/dbal"
 
 	"github.com/ory/kratos/x/xsql"
@@ -47,7 +48,6 @@ import (
 )
 
 func init() {
-	corp.SetContextualizer(new(corp.ContextNoOp))
 	dbal.RegisterDriver(func() dbal.Driver {
 		return driver.NewRegistryDefault()
 	})
@@ -76,18 +76,18 @@ func TestMigrations(t *testing.T) {
 	require.NoError(t, sqlite.Open())
 
 	connections := map[string]*pop.Connection{
-		//"sqlite": sqlite,
+		"sqlite": sqlite,
 	}
 	if !testing.Short() {
 		dockertest.Parallel([]func(){
 			func() {
-				//connections["postgres"] = dockertest.ConnectToTestPostgreSQLPop(t)
+				connections["postgres"] = dockertest.ConnectToTestPostgreSQLPop(t)
 			},
 			func() {
 				connections["mysql"] = dockertest.ConnectToTestMySQLPop(t)
 			},
 			func() {
-				//connections["cockroach"] = dockertest.ConnectToTestCockroachDBPop(t)
+				connections["cockroach"] = dockertest.ConnectToTestCockroachDBPop(t)
 			},
 		})
 	}
@@ -128,17 +128,22 @@ func TestMigrations(t *testing.T) {
 			})
 
 			t.Run("suite=fixtures", func(t *testing.T) {
-				d := driver.New(
+				d, err := driver.New(
 					context.Background(),
 					os.Stderr,
-					configx.WithValues(map[string]interface{}{
-						config.ViperKeyDSN:             url,
-						config.ViperKeyPublicBaseURL:   "https://www.ory.sh/",
-						config.ViperKeyIdentitySchemas: config.Schemas{{ID: "default", URL: "file://stub/default.schema.json"}},
-						config.ViperKeySecretsDefault:  []string{"secret"},
-					}),
-					configx.SkipValidation(),
+					servicelocatorx.NewOptions(),
+					nil,
+					[]configx.OptionModifier{
+						configx.WithValues(map[string]interface{}{
+							config.ViperKeyDSN:             url,
+							config.ViperKeyPublicBaseURL:   "https://www.ory.sh/",
+							config.ViperKeyIdentitySchemas: config.Schemas{{ID: "default", URL: "file://stub/default.schema.json"}},
+							config.ViperKeySecretsDefault:  []string{"secret"},
+						}),
+						configx.SkipValidation(),
+					},
 				)
+				require.NoError(t, err)
 
 				t.Run("case=identity", func(t *testing.T) {
 					ids, err := d.PrivilegedIdentityPool().ListIdentities(context.Background(), 0, 1000)

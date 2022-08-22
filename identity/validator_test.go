@@ -27,8 +27,8 @@ import (
 func TestSchemaValidatorDisallowsInternalNetworkRequests(t *testing.T) {
 	conf, reg := internal.NewFastRegistryWithMocks(t)
 
-	conf.MustSet(config.ViperKeyClientHTTPNoPrivateIPRanges, true)
-	conf.MustSet(config.ViperKeyIdentitySchemas, []config.Schema{
+	conf.MustSet(ctx, config.ViperKeyClientHTTPNoPrivateIPRanges, true)
+	conf.MustSet(ctx, config.ViperKeyIdentitySchemas, []config.Schema{
 		{ID: "localhost", URL: "https://localhost/schema/whatever"},
 		{ID: "privateRef", URL: "file://stub/localhost-ref.schema.json"},
 	})
@@ -108,7 +108,7 @@ func TestSchemaValidator(t *testing.T) {
 	defer ts.Close()
 
 	conf, reg := internal.NewFastRegistryWithMocks(t)
-	conf.MustSet(config.ViperKeyIdentitySchemas, []config.Schema{
+	conf.MustSet(ctx, config.ViperKeyIdentitySchemas, []config.Schema{
 		{ID: "default", URL: ts.URL + "/schema/firstName"},
 		{ID: "whatever", URL: ts.URL + "/schema/whatever"},
 		{ID: "unreachable-url", URL: ts.URL + "/404-not-found"},

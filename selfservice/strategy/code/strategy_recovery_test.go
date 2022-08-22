@@ -53,8 +53,9 @@ func init() {
 }
 
 func TestAdminStrategy(t *testing.T) {
+	ctx := context.Background()
 	conf, reg := internal.NewFastRegistryWithMocks(t)
-	initViper(t, conf)
+	initViper(t, ctx, conf)
 
 	_ = testhelpers.NewRecoveryUIFlowEchoServer(t, reg)
 	_ = testhelpers.NewSettingsUIFlowEchoServer(t, reg)
@@ -81,7 +82,7 @@ func TestAdminStrategy(t *testing.T) {
 		require.NoError(t, err)
 		w := httptest.NewRecorder()
 		r := &http.Request{URL: new(url.URL)}
-		f, err := recovery.NewFlow(reg.Config(ctx), time.Minute, "", r, reg.RecoveryStrategies(ctx), flow.TypeBrowser)
+		f, err := recovery.NewFlow(reg.Config(), time.Minute, "", r, reg.RecoveryStrategies(ctx), flow.TypeBrowser)
 		require.NoError(t, err)
 		require.NotPanics(t, func() {
 			require.Error(t, s.(*code.Strategy).HandleRecoveryError(w, r, f, nil, errors.New("test")))
@@ -108,7 +109,7 @@ func TestAdminStrategy(t *testing.T) {
 		require.Contains(t, code.RecoveryLink, "flow=")
 		require.NotContains(t, code.RecoveryLink, "code=")
 		require.NotEmpty(t, code.RecoveryCode)
-		require.True(t, code.ExpiresAt.Before(time.Now().Add(conf.SelfServiceFlowRecoveryRequestLifespan())))
+		require.True(t, code.ExpiresAt.Before(time.Now().Add(conf.SelfServiceFlowRecoveryRequestLifespan(ctx))))
 
 		res, err := publicTS.Client().Get(code.RecoveryLink)
 		require.NoError(t, err)
@@ -142,7 +143,7 @@ func TestAdminStrategy(t *testing.T) {
 
 		time.Sleep(time.Millisecond * 100)
 		require.NotEmpty(t, code.RecoveryLink)
-		require.True(t, code.ExpiresAt.Before(time.Now().Add(conf.SelfServiceFlowRecoveryRequestLifespan())))
+		require.True(t, code.ExpiresAt.Before(time.Now().Add(conf.SelfServiceFlowRecoveryRequestLifespan(ctx))))
 
 		res, err := publicTS.Client().Get(code.RecoveryLink)
 		body := ioutilx.MustReadAll(res.Body)
@@ -180,7 +181,7 @@ func TestAdminStrategy(t *testing.T) {
 		require.NoError(t, err)
 
 		require.NotEmpty(t, code.RecoveryLink)
-		require.True(t, code.ExpiresAt.Before(time.Now().Add(conf.SelfServiceFlowRecoveryRequestLifespan()+time.Second)))
+		require.True(t, code.ExpiresAt.Before(time.Now().Add(conf.SelfServiceFlowRecoveryRequestLifespan(ctx)+time.Second)))
 
 		res, err = publicTS.Client().Get(code.RecoveryLink)
 		require.NoError(t, err)
@@ -312,9 +313,10 @@ func createIdentityToRecover(t *testing.T, reg *driver.RegistryDefault, email st
 }
 
 func TestRecovery(t *testing.T) {
+	ctx := context.Background()
 	conf, reg := internal.NewFastRegistryWithMocks(t)
-	conf.MustSet(config.ViperKeySelfServiceStrategyConfig+"."+recovery.StrategyRecoveryLinkName+".enabled", false)
-	initViper(t, conf)
+	conf.MustSet(ctx, config.ViperKeySelfServiceStrategyConfig+"."+recovery.StrategyRecoveryLinkName+".enabled", false)
+	initViper(t, ctx, conf)
 
 	_ = testhelpers.NewRecoveryUIFlowEchoServer(t, reg)
 	_ = testhelpers.NewLoginUIFlowEchoServer(t, reg)
@@ -335,7 +337,7 @@ func TestRecovery(t *testing.T) {
 		}
 
 		return testhelpers.SubmitRecoveryForm(t, isAPI, isSPA, client, public, values, code,
-			testhelpers.ExpectURL(isAPI || isSPA, public.URL+recovery.RouteSubmitFlow, conf.SelfServiceFlowRecoveryUI().String()))
+			testhelpers.ExpectURL(isAPI || isSPA, public.URL+recovery.RouteSubmitFlow, conf.SelfServiceFlowRecoveryUI(ctx).String()))
 	}
 
 	var submitAndExpectValidationError = func(t *testing.T, hc *http.Client, flowType string, values func(url.Values)) string {
@@ -377,7 +379,7 @@ func TestRecovery(t *testing.T) {
 			require.NoError(t, err)
 
 			assert.Equal(t, http.StatusOK, res.StatusCode)
-			assert.Contains(t, res.Request.URL.String(), conf.SelfServiceFlowSettingsUI().String())
+			assert.Contains(t, res.Request.URL.String(), conf.SelfServiceFlowSettingsUI(ctx).String())
 
 			body := ioutilx.MustReadAll(res.Body)
 			t.Logf("body: %s", body)
@@ -425,7 +427,7 @@ func TestRecovery(t *testing.T) {
 
 			b, res := testhelpers.RecoveryMakeRequest(t, false, f, client, testhelpers.EncodeFormAsJSON(t, false, formPayload))
 			assert.EqualValues(t, http.StatusOK, res.StatusCode, "%s", b)
-			expectedURL := testhelpers.ExpectURL(false, public.URL+recovery.RouteSubmitFlow, conf.SelfServiceFlowRecoveryUI().String())
+			expectedURL := testhelpers.ExpectURL(false, public.URL+recovery.RouteSubmitFlow, conf.SelfServiceFlowRecoveryUI(ctx).String())
 			assert.Contains(t, res.Request.URL.String(), expectedURL, "%+v\n\t%s", res.Request, b)
 
 			check(t, client, RecoveryFlowTypeBrowser, b, email, returnTo)
@@ -516,6 +518,7 @@ func TestRecovery(t *testing.T) {
 				}
 
 				session, err := session.NewActiveSession(
+					ctx,
 					&identity.Identity{ID: x.NewUUID(), State: identity.StateActive},
 					testhelpers.NewSessionLifespanProvider(time.Hour),
 					time.Now(),
@@ -540,7 +543,7 @@ func TestRecovery(t *testing.T) {
 					assertx.EqualAsJSONExcept(t, recovery.ErrAlreadyLoggedIn, json.RawMessage(gjson.Get(body, "error").Raw), nil)
 				} else {
 					assert.EqualValues(t, http.StatusOK, res.StatusCode, "%s", body)
-					assert.Contains(t, res.Request.URL.String(), conf.SelfServiceBrowserDefaultReturnTo().String(), "%+v\n\t%s", res.Request, body)
+					assert.Contains(t, res.Request.URL.String(), conf.SelfServiceBrowserDefaultReturnTo(ctx).String(), "%+v\n\t%s", res.Request, body)
 				}
 			})
 		}
@@ -605,7 +608,7 @@ func TestRecovery(t *testing.T) {
 					assertx.EqualAsJSON(t, session.ErrIdentityDisabled.WithDetail("identity_id", addr.IdentityID), json.RawMessage(gjson.Get(body, "error").Raw), "%s", body)
 				} else {
 					assert.Equal(t, http.StatusOK, res.StatusCode)
-					assert.Contains(t, res.Request.URL.String(), conf.SelfServiceFlowErrorURL().String())
+					assert.Contains(t, res.Request.URL.String(), conf.SelfServiceFlowErrorURL(ctx).String())
 					assertx.EqualAsJSON(t, session.ErrIdentityDisabled.WithDetail("identity_id", addr.IdentityID), json.RawMessage(body), "%s", body)
 				}
 			})
@@ -613,15 +616,15 @@ func TestRecovery(t *testing.T) {
 	})
 
 	t.Run("description=should recover and invalidate all other sessions if hook is set", func(t *testing.T) {
-		conf.MustSet(config.HookStrategyKey(config.ViperKeySelfServiceRecoveryAfter, config.HookGlobal), []config.SelfServiceHook{{Name: "revoke_active_sessions"}})
+		conf.MustSet(ctx, config.HookStrategyKey(config.ViperKeySelfServiceRecoveryAfter, config.HookGlobal), []config.SelfServiceHook{{Name: "revoke_active_sessions"}})
 		t.Cleanup(func() {
-			conf.MustSet(config.HookStrategyKey(config.ViperKeySelfServiceRegistrationAfter, identity.CredentialsTypePassword.String()), nil)
+			conf.MustSet(ctx, config.HookStrategyKey(config.ViperKeySelfServiceRegistrationAfter, identity.CredentialsTypePassword.String()), nil)
 		})
 
 		email := strings.ToLower(testhelpers.RandomEmail())
 		id := createIdentityToRecover(t, reg, email)
 
-		sess, err := session.NewActiveSession(id, conf, time.Now(), identity.CredentialsTypePassword, identity.AuthenticatorAssuranceLevel1)
+		sess, err := session.NewActiveSession(ctx, id, conf, time.Now(), identity.CredentialsTypePassword, identity.AuthenticatorAssuranceLevel1)
 		require.NoError(t, err)
 		require.NoError(t, reg.SessionPersister().UpsertSession(context.Background(), sess))
 
@@ -674,7 +677,7 @@ func TestRecovery(t *testing.T) {
 			res, err := c.PostForm(f.Ui.Action, form)
 			require.NoError(t, err, "try=%d", submitTry)
 			assert.Equal(t, http.StatusOK, res.StatusCode, "try=%d", submitTry)
-			assert.Contains(t, res.Request.URL.String(), conf.SelfServiceFlowRecoveryUI().String()+"?flow=")
+			assert.Contains(t, res.Request.URL.String(), conf.SelfServiceFlowRecoveryUI(ctx).String()+"?flow=")
 
 			rs, _, err := testhelpers.
 				NewSDKCustomClient(public, c).
@@ -775,7 +778,7 @@ func TestRecovery(t *testing.T) {
 
 		require.NoError(t, err)
 		assert.Equal(t, http.StatusOK, res.StatusCode)
-		assert.Contains(t, res.Request.URL.String(), conf.SelfServiceFlowRecoveryUI().String()+"?flow=")
+		assert.Contains(t, res.Request.URL.String(), conf.SelfServiceFlowRecoveryUI(ctx).String()+"?flow=")
 
 		rs, _, err := testhelpers.NewSDKCustomClient(public, c).V0alpha2Api.GetSelfServiceRecoveryFlow(context.Background()).Id(res.Request.URL.Query().Get("flow")).Execute()
 		require.NoError(t, err)
@@ -787,9 +790,9 @@ func TestRecovery(t *testing.T) {
 	t.Run("description=should not be able to use an outdated flow", func(t *testing.T) {
 		recoveryEmail := "recoverme5@ory.sh"
 		createIdentityToRecover(t, reg, recoveryEmail)
-		conf.MustSet(config.ViperKeySelfServiceRecoveryRequestLifespan, time.Millisecond*200)
+		conf.MustSet(ctx, config.ViperKeySelfServiceRecoveryRequestLifespan, time.Millisecond*200)
 		t.Cleanup(func() {
-			conf.MustSet(config.ViperKeySelfServiceRecoveryRequestLifespan, time.Minute)
+			conf.MustSet(ctx, config.ViperKeySelfServiceRecoveryRequestLifespan, time.Minute)
 		})
 
 		c := testhelpers.NewClientWithCookies(t)
@@ -801,7 +804,7 @@ func TestRecovery(t *testing.T) {
 		require.NoError(t, err)
 		assert.EqualValues(t, http.StatusOK, res.StatusCode)
 		assert.NotContains(t, res.Request.URL.String(), "flow="+rs.Id)
-		assert.Contains(t, res.Request.URL.String(), conf.SelfServiceFlowRecoveryUI().String())
+		assert.Contains(t, res.Request.URL.String(), conf.SelfServiceFlowRecoveryUI(ctx).String())
 
 		addr, err := reg.IdentityPool().FindVerifiableAddressByValue(context.Background(), identity.VerifiableAddressTypeEmail, recoveryEmail)
 		assert.NoError(t, err)
@@ -813,9 +816,9 @@ func TestRecovery(t *testing.T) {
 	t.Run("description=should not be able to use an outdated flow", func(t *testing.T) {
 		recoveryEmail := "recoverme6@ory.sh"
 		createIdentityToRecover(t, reg, recoveryEmail)
-		conf.MustSet(config.ViperKeySelfServiceRecoveryRequestLifespan, time.Millisecond*200)
+		conf.MustSet(ctx, config.ViperKeySelfServiceRecoveryRequestLifespan, time.Millisecond*200)
 		t.Cleanup(func() {
-			conf.MustSet(config.ViperKeySelfServiceRecoveryRequestLifespan, time.Minute)
+			conf.MustSet(ctx, config.ViperKeySelfServiceRecoveryRequestLifespan, time.Minute)
 		})
 
 		c := testhelpers.NewClientWithCookies(t)
@@ -839,7 +842,7 @@ func TestRecovery(t *testing.T) {
 		require.NoError(t, err)
 
 		require.EqualValues(t, http.StatusOK, res.StatusCode)
-		assert.Contains(t, res.Request.URL.String(), conf.SelfServiceFlowRecoveryUI().String())
+		assert.Contains(t, res.Request.URL.String(), conf.SelfServiceFlowRecoveryUI(ctx).String())
 		assert.NotContains(t, res.Request.URL.String(), gjson.Get(body, "id").String())
 
 		rs, _, err := testhelpers.NewSDKCustomClient(public, c).V0alpha2Api.GetSelfServiceRecoveryFlow(context.Background()).Id(res.Request.URL.Query().Get("flow")).Execute()
@@ -857,10 +860,11 @@ func TestRecovery(t *testing.T) {
 }
 
 func TestDisabledStrategy(t *testing.T) {
+	ctx := context.Background()
 	conf, reg := internal.NewFastRegistryWithMocks(t)
-	initViper(t, conf)
-	conf.MustSet(config.ViperKeySelfServiceStrategyConfig+"."+recovery.StrategyRecoveryLinkName+".enabled", false)
-	conf.MustSet(config.ViperKeySelfServiceStrategyConfig+"."+recovery.StrategyRecoveryCodeName+".enabled", false)
+	initViper(t, ctx, conf)
+	conf.MustSet(ctx, config.ViperKeySelfServiceStrategyConfig+"."+recovery.StrategyRecoveryLinkName+".enabled", false)
+	conf.MustSet(ctx, config.ViperKeySelfServiceStrategyConfig+"."+recovery.StrategyRecoveryCodeName+".enabled", false)
 
 	publicTS, adminTS := testhelpers.NewKratosServer(t, reg)
 	adminSDK := testhelpers.NewSDKClient(adminTS)

@@ -79,8 +79,8 @@ func (s *ErrorHandler) reauthenticate(
 	f *Flow,
 	err *FlowNeedsReAuth,
 ) {
-	returnTo := urlx.CopyWithQuery(urlx.AppendPaths(s.d.Config(r.Context()).SelfPublicURL(), r.URL.Path), r.URL.Query())
-	redirectTo := urlx.AppendPaths(urlx.CopyWithQuery(s.d.Config(r.Context()).SelfPublicURL(),
+	returnTo := urlx.CopyWithQuery(urlx.AppendPaths(s.d.Config().SelfPublicURL(r.Context()), r.URL.Path), r.URL.Query())
+	redirectTo := urlx.AppendPaths(urlx.CopyWithQuery(s.d.Config().SelfPublicURL(r.Context()),
 		url.Values{"refresh": {"true"}, "return_to": {returnTo.String()}}),
 		login.RouteInitBrowserFlow).String()
 	err.RedirectBrowserTo = redirectTo
@@ -135,7 +135,7 @@ func (s *ErrorHandler) WriteFlowError(
 		if shouldRespondWithJSON {
 			s.d.Writer().WriteError(w, r, err)
 		} else {
-			http.Redirect(w, r, urlx.AppendPaths(s.d.Config(r.Context()).SelfPublicURL(), login.RouteInitBrowserFlow).String(), http.StatusSeeOther)
+			http.Redirect(w, r, urlx.AppendPaths(s.d.Config().SelfPublicURL(r.Context()), login.RouteInitBrowserFlow).String(), http.StatusSeeOther)
 		}
 		return
 	}
@@ -145,7 +145,7 @@ func (s *ErrorHandler) WriteFlowError(
 			s.d.Writer().WriteError(w, r, aalErr)
 		} else {
 			http.Redirect(w, r, urlx.CopyWithQuery(
-				urlx.AppendPaths(s.d.Config(r.Context()).SelfPublicURL(), login.RouteInitBrowserFlow),
+				urlx.AppendPaths(s.d.Config().SelfPublicURL(r.Context()), login.RouteInitBrowserFlow),
 				url.Values{"aal": {string(identity.AuthenticatorAssuranceLevel2)}}).String(), http.StatusSeeOther)
 		}
 		return
@@ -168,7 +168,7 @@ func (s *ErrorHandler) WriteFlowError(
 		if f.Type == flow.TypeAPI || x.IsJSONRequest(r) {
 			s.d.Writer().WriteError(w, r, expired)
 		} else {
-			http.Redirect(w, r, expired.GetFlow().AppendTo(s.d.Config(r.Context()).SelfServiceFlowSettingsUI()).String(), http.StatusSeeOther)
+			http.Redirect(w, r, expired.GetFlow().AppendTo(s.d.Config().SelfServiceFlowSettingsUI(r.Context())).String(), http.StatusSeeOther)
 		}
 		return
 	}
@@ -177,7 +177,7 @@ func (s *ErrorHandler) WriteFlowError(
 		if shouldRespondWithJSON {
 			s.d.Writer().Write(w, r, f)
 		} else {
-			http.Redirect(w, r, f.AppendTo(s.d.Config(r.Context()).SelfServiceFlowSettingsUI()).String(), http.StatusSeeOther)
+			http.Redirect(w, r, f.AppendTo(s.d.Config().SelfServiceFlowSettingsUI(r.Context())).String(), http.StatusSeeOther)
 		}
 		return
 	}
@@ -217,7 +217,7 @@ func (s *ErrorHandler) WriteFlowError(
 	}
 
 	if f.Type == flow.TypeBrowser && !x.IsJSONRequest(r) {
-		http.Redirect(w, r, f.AppendTo(s.d.Config(r.Context()).SelfServiceFlowSettingsUI()).String(), http.StatusSeeOther)
+		http.Redirect(w, r, f.AppendTo(s.d.Config().SelfServiceFlowSettingsUI(r.Context())).String(), http.StatusSeeOther)
 		return
 	}
 

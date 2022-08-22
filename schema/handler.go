@@ -79,15 +79,15 @@ type getIdentitySchema struct {
 //
 // Get a JSON Schema
 //
-//     Produces:
-//     - application/json
+//    Produces:
+//    - application/json
 //
-//     Schemes: http, https
+//    Schemes: http, https
 //
-//     Responses:
-//       200: identitySchema
-//       404: jsonError
-//       500: jsonError
+//    Responses:
+//      200: identitySchema
+//      404: jsonError
+//      500: jsonError
 func (h *Handler) getIdentitySchema(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	ss, err := h.r.IdentityTraitsSchemas(r.Context())
 	if err != nil {
@@ -147,14 +147,14 @@ type listIdentitySchemas struct {
 //
 // Get all Identity Schemas
 //
-//     Produces:
-//     - application/json
+//    Produces:
+//    - application/json
 //
-//     Schemes: http, https
+//    Schemes: http, https
 //
-//     Responses:
-//       200: identitySchemas
-//       500: jsonError
+//    Responses:
+//      200: identitySchemas
+//      500: jsonError
 func (h *Handler) getAll(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	page, itemsPerPage := x.ParsePagination(r)
 
@@ -188,7 +188,7 @@ func (h *Handler) getAll(w http.ResponseWriter, r *http.Request, ps httprouter.P
 		})
 	}
 
-	x.PaginationHeader(w, urlx.AppendPaths(h.r.Config(r.Context()).SelfPublicURL(), fmt.Sprintf("/%s", SchemasPath)), int64(total), page, itemsPerPage)
+	x.PaginationHeader(w, urlx.AppendPaths(h.r.Config().SelfPublicURL(r.Context()), fmt.Sprintf("/%s", SchemasPath)), int64(total), page, itemsPerPage)
 	h.r.Writer().Write(w, r, ss)
 }
 

@@ -16,12 +16,13 @@ import (
 )
 
 func TestCountActiveFirstFactorCredentials(t *testing.T) {
+	ctx := context.Background()
 	_, reg := internal.NewFastRegistryWithMocks(t)
 	strategy := password.NewStrategy(reg)
 
 	h1, err := hash2.NewHasherBcrypt(reg).Generate(context.Background(), []byte("a password"))
 	require.NoError(t, err)
-	h2, err := reg.Hasher().Generate(context.Background(), []byte("a password"))
+	h2, err := reg.Hasher(ctx).Generate(context.Background(), []byte("a password"))
 	require.NoError(t, err)
 
 	for k, tc := range []struct {

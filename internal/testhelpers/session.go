@@ -25,7 +25,7 @@ type SessionLifespanProvider struct {
 	e time.Duration
 }
 
-func (p *SessionLifespanProvider) SessionLifespan() time.Duration {
+func (p *SessionLifespanProvider) SessionLifespan(ctx context.Context) time.Duration {
 	return p.e
 }
 
@@ -137,7 +137,8 @@ func NewHTTPClientWithSessionToken(t *testing.T, reg *driver.RegistryDefault, se
 }
 
 func NewHTTPClientWithArbitrarySessionToken(t *testing.T, reg *driver.RegistryDefault) *http.Client {
-	s, err := session.NewActiveSession(
+	ctx := context.Background()
+	s, err := session.NewActiveSession(ctx,
 		&identity.Identity{ID: x.NewUUID(), State: identity.StateActive},
 		NewSessionLifespanProvider(time.Hour),
 		time.Now(),
@@ -150,7 +151,8 @@ func NewHTTPClientWithArbitrarySessionToken(t *testing.T, reg *driver.RegistryDe
 }
 
 func NewHTTPClientWithArbitrarySessionCookie(t *testing.T, reg *driver.RegistryDefault) *http.Client {
-	s, err := session.NewActiveSession(
+	ctx := context.Background()
+	s, err := session.NewActiveSession(ctx,
 		&identity.Identity{ID: x.NewUUID(), State: identity.StateActive},
 		NewSessionLifespanProvider(time.Hour),
 		time.Now(),
@@ -163,7 +165,8 @@ func NewHTTPClientWithArbitrarySessionCookie(t *testing.T, reg *driver.RegistryD
 }
 
 func NewNoRedirectHTTPClientWithArbitrarySessionCookie(t *testing.T, reg *driver.RegistryDefault) *http.Client {
-	s, err := session.NewActiveSession(
+	ctx := context.Background()
+	s, err := session.NewActiveSession(ctx,
 		&identity.Identity{ID: x.NewUUID(), State: identity.StateActive},
 		NewSessionLifespanProvider(time.Hour),
 		time.Now(),
@@ -176,7 +179,8 @@ func NewNoRedirectHTTPClientWithArbitrarySessionCookie(t *testing.T, reg *driver
 }
 
 func NewHTTPClientWithIdentitySessionCookie(t *testing.T, reg *driver.RegistryDefault, id *identity.Identity) *http.Client {
-	s, err := session.NewActiveSession(id,
+	ctx := context.Background()
+	s, err := session.NewActiveSession(ctx, id,
 		NewSessionLifespanProvider(time.Hour),
 		time.Now(),
 		identity.CredentialsTypePassword,
@@ -188,7 +192,8 @@ func NewHTTPClientWithIdentitySessionCookie(t *testing.T, reg *driver.RegistryDe
 }
 
 func NewHTTPClientWithIdentitySessionToken(t *testing.T, reg *driver.RegistryDefault, id *identity.Identity) *http.Client {
-	s, err := session.NewActiveSession(id,
+	ctx := context.Background()
+	s, err := session.NewActiveSession(ctx, id,
 		NewSessionLifespanProvider(time.Hour),
 		time.Now(),
 		identity.CredentialsTypePassword,

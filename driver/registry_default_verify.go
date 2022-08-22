@@ -48,7 +48,7 @@ func (m *RegistryDefault) LinkSender() *link.Sender {
 func (m *RegistryDefault) VerificationStrategies(ctx context.Context) (verificationStrategies verification.Strategies) {
 	for _, strategy := range m.selfServiceStrategies() {
 		if s, ok := strategy.(verification.Strategy); ok {
-			if m.Config(ctx).SelfServiceStrategy(s.VerificationStrategyID()).Enabled {
+			if m.Config().SelfServiceStrategy(ctx, s.VerificationStrategyID()).Enabled {
 				verificationStrategies = append(verificationStrategies, s)
 			}
 		}
@@ -74,8 +74,7 @@ func (m *RegistryDefault) VerificationExecutor() *verification.HookExecutor {
 }
 
 func (m *RegistryDefault) PostVerificationHooks(ctx context.Context) (b []verification.PostHookExecutor) {
-
-	for _, v := range m.getHooks(config.HookGlobal, m.Config(ctx).SelfServiceFlowVerificationAfterHooks(config.HookGlobal)) {
+	for _, v := range m.getHooks(config.HookGlobal, m.Config().SelfServiceFlowVerificationAfterHooks(ctx, config.HookGlobal)) {
 		if hook, ok := v.(verification.PostHookExecutor); ok {
 			b = append(b, hook)
 		}
