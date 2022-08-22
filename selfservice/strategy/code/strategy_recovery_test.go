@@ -105,14 +105,10 @@ func TestAdminStrategy(t *testing.T) {
 		require.NoError(t, err)
 
 		require.NotEmpty(t, code.RecoveryLink)
-		require.Contains(t, code.RecoveryLink, "code=")
+		require.Contains(t, code.RecoveryLink, "flow=")
+		require.NotContains(t, code.RecoveryLink, "code=")
+		require.NotEmpty(t, code.RecoveryCode)
 		require.True(t, code.ExpiresAt.Before(time.Now().Add(conf.SelfServiceFlowRecoveryRequestLifespan())))
-
-		recoveryUrl, err := urlx.Parse(code.RecoveryLink)
-		require.NoError(t, err, "Expected code.RecoveryLink to be a valid URL, got %s", code.RecoveryLink)
-
-		codeStr := recoveryUrl.Query().Get("code")
-		require.NotEmpty(t, codeStr, "Expected code.RecoveryLink to contain a code, got %s", code.RecoveryLink)
 
 		res, err := publicTS.Client().Get(code.RecoveryLink)
 		require.NoError(t, err)
@@ -125,7 +121,7 @@ func TestAdminStrategy(t *testing.T) {
 
 		res, err = publicTS.Client().PostForm(action, url.Values{
 			"csrf_token": {csrfToken},
-			"code":       {codeStr},
+			"code":       {code.RecoveryCode},
 		})
 		body = ioutilx.MustReadAll(res.Body)
 
@@ -148,12 +144,6 @@ func TestAdminStrategy(t *testing.T) {
 		require.NotEmpty(t, code.RecoveryLink)
 		require.True(t, code.ExpiresAt.Before(time.Now().Add(conf.SelfServiceFlowRecoveryRequestLifespan())))
 
-		recoveryUrl, err := urlx.Parse(code.RecoveryLink)
-		require.NoError(t, err, "Expected code.RecoveryLink to be a valid URL, got %s", code.RecoveryLink)
-
-		codeStr := recoveryUrl.Query().Get("code")
-		require.NotEmpty(t, codeStr, "Expected code.RecoveryLink to contain a code, got %s", code.RecoveryLink)
-
 		res, err := publicTS.Client().Get(code.RecoveryLink)
 		body := ioutilx.MustReadAll(res.Body)
 
@@ -164,14 +154,14 @@ func TestAdminStrategy(t *testing.T) {
 
 		res, err = publicTS.Client().PostForm(action, url.Values{
 			"csrf_token": {csrfToken},
-			"code":       {codeStr},
+			"code":       {code.RecoveryCode},
 		})
 		body = ioutilx.MustReadAll(res.Body)
 
 		require.Len(t, gjson.GetBytes(body, "ui.messages").Array(), 1)
 		require.Contains(t, gjson.GetBytes(body, "ui.messages.0.text").Str, "The recovery flow expired")
 
-		// TODO: what does this do?
+		// The recovery address should not be verified if the flow was initiated by the admins
 		addr, err := reg.IdentityPool().FindVerifiableAddressByValue(context.Background(), identity.VerifiableAddressTypeEmail, recoveryEmail)
 		assert.NoError(t, err)
 		assert.False(t, addr.Verified)
@@ -192,12 +182,6 @@ func TestAdminStrategy(t *testing.T) {
 		require.NotEmpty(t, code.RecoveryLink)
 		require.True(t, code.ExpiresAt.Before(time.Now().Add(conf.SelfServiceFlowRecoveryRequestLifespan()+time.Second)))
 
-		recoveryUrl, err := urlx.Parse(code.RecoveryLink)
-		require.NoError(t, err, "Expected code.RecoveryLink to be a valid URL, got %s", code.RecoveryLink)
-
-		codeStr := recoveryUrl.Query().Get("code")
-		require.NotEmpty(t, codeStr, "Expected code.RecoveryLink to contain a code, got %s", code.RecoveryLink)
-
 		res, err = publicTS.Client().Get(code.RecoveryLink)
 		require.NoError(t, err)
 		body := ioutilx.MustReadAll(res.Body)
@@ -209,7 +193,7 @@ func TestAdminStrategy(t *testing.T) {
 
 		res, err = publicTS.Client().PostForm(action, url.Values{
 			"csrf_token": {csrfToken},
-			"code":       {codeStr},
+			"code":       {code.RecoveryCode},
 		})
 		// body = ioutilx.MustReadAll(res.Body)
 
@@ -234,25 +218,14 @@ func TestAdminStrategy(t *testing.T) {
 		require.NoError(t, err)
 		c2, _, err := createCode(i.ID.String(), pointerx.String("1h"))
 		require.NoError(t, err)
-
-		recoveryUrl1, err := url.Parse(c1.RecoveryLink)
-		require.NoError(t, err)
-
-		// Remove the code from the first recovery link
-		recoveryUrl1.Query().Del("code")
-
-		recoveryUrl2, err := url.Parse(c2.RecoveryLink)
-		require.NoError(t, err)
-
-		code2 := recoveryUrl2.Query().Get("code")
+		code2 := c2.RecoveryCode
 		require.NotEmpty(t, code2)
 
-		action := recoveryUrl1.String()
-		res, err := publicTS.Client().Get(action)
+		res, err := publicTS.Client().Get(c1.RecoveryLink)
 		require.NoError(t, err)
 		body := ioutilx.MustReadAll(res.Body)
 
-		action = gjson.GetBytes(body, "ui.action").String()
+		action := gjson.GetBytes(body, "ui.action").String()
 		require.NotEmpty(t, action)
 		csrfToken := gjson.GetBytes(body, "ui.nodes.#(attributes.name==csrf_token).attributes.value").String()
 		require.NotEmpty(t, csrfToken)

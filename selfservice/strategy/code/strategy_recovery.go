@@ -93,15 +93,20 @@ type adminCreateSelfServiceRecoveryCodeBody struct {
 // swagger:model selfServiceRecoveryCode
 // nolint
 type selfServiceRecoveryCode struct {
-	// Recovery Link
+	// RecoveryLink with flow
 	//
-	// This link can be used to recover the account.
+	// This link opens the recovery UI with an empty `code` field.
 	//
 	// required: true
 	// format: uri
 	RecoveryLink string `json:"recovery_link"`
 
-	// Recovery Link Expires At
+	// RecoverCode is the code that should be used to recover the account
+	//
+	// required: true
+	RecoveryCode string `json:"recovery_code"`
+
+	// Expires At is the timestamp of when the recovery flow expires
 	//
 	// The timestamp when the recovery link expires.
 	ExpiresAt time.Time `json:"expires_at"`
@@ -198,15 +203,17 @@ func (s *Strategy) createRecoveryCode(w http.ResponseWriter, r *http.Request, _ 
 		WithSensitiveField("recovery_link_code", code).
 		Info("A recovery code has been created.")
 
-	s.deps.Writer().Write(w, r, &selfServiceRecoveryCode{
+	body := &selfServiceRecoveryCode{
 		ExpiresAt: flow.ExpiresAt.UTC(),
 		RecoveryLink: urlx.CopyWithQuery(
 			s.deps.Config(ctx).SelfServiceFlowRecoveryUI(),
 			url.Values{
-				"code": {code.Code},
 				"flow": {flow.ID.String()},
-			}).String()},
-		herodot.UnescapedHTML)
+			}).String(),
+		RecoveryCode: code.Code,
+	}
+
+	s.deps.Writer().Write(w, r, body, herodot.UnescapedHTML)
 }
 
 // swagger:model submitSelfServiceRecoveryFlowWithCodeMethodBody
@@ -588,26 +595,4 @@ func (s *Strategy) decodeRecovery(r *http.Request) (*recoverySubmitPayload, erro
 	}
 
 	return &body, nil
-}
-
-func (s *Strategy) PrefillUINodes(w http.ResponseWriter, r *http.Request, f *recovery.Flow) error {
-	code := r.URL.Query().Get("code")
-
-	if code == "" {
-		// No code was supplied - do nothing
-		return nil
-	}
-
-	codeNode := f.UI.Nodes.Find("code")
-	if codeNode == nil {
-		// UI does not contain any node with id `code`, which indicates:
-		// the recovery flow was not created with the `code` strategy
-		// - or -
-		// no code has been generated yet in which case we shouldn't land here
-		return flow.ErrStrategyNotResponsible
-	}
-
-	codeNode.Attributes.SetValue(code)
-
-	return nil
 }

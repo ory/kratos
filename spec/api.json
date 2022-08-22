@@ -935,17 +935,22 @@
       "selfServiceRecoveryCode": {
         "properties": {
           "expires_at": {
-            "description": "Recovery Link Expires At\n\nThe timestamp when the recovery link expires.",
+            "description": "Expires At is the timestamp of when the recovery flow expires\n\nThe timestamp when the recovery link expires.",
             "format": "date-time",
             "type": "string"
           },
+          "recovery_code": {
+            "description": "RecoverCode is the code that should be used to recover the account",
+            "type": "string"
+          },
           "recovery_link": {
-            "description": "Recovery Link\n\nThis link can be used to recover the account.",
+            "description": "RecoveryLink with flow\n\nThis link opens the recovery UI with an empty `code` field.",
             "type": "string"
           }
         },
         "required": [
-          "recovery_link"
+          "recovery_link",
+          "recovery_code"
         ],
         "type": "object"
       },
@@ -4125,14 +4130,6 @@
             "in": "query",
             "name": "id",
             "required": true,
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "description": "The Code",
-            "in": "query",
-            "name": "code",
             "schema": {
               "type": "string"
             }

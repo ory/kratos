@@ -18,9 +18,11 @@ import (
 
 // SelfServiceRecoveryCode struct for SelfServiceRecoveryCode
 type SelfServiceRecoveryCode struct {
-	// Recovery Link Expires At  The timestamp when the recovery link expires.
+	// Expires At is the timestamp of when the recovery flow expires  The timestamp when the recovery link expires.
 	ExpiresAt *time.Time `json:"expires_at,omitempty"`
-	// Recovery Link  This link can be used to recover the account.
+	// RecoverCode is the code that should be used to recover the account
+	RecoveryCode string `json:"recovery_code"`
+	// RecoveryLink with flow  This link opens the recovery UI with an empty `code` field.
 	RecoveryLink string `json:"recovery_link"`
 }
 
@@ -28,8 +30,9 @@ type SelfServiceRecoveryCode struct {
 // This constructor will assign default values to properties that have it defined,
 // and makes sure properties required by API are set, but the set of arguments
 // will change when the set of required properties is changed
-func NewSelfServiceRecoveryCode(recoveryLink string) *SelfServiceRecoveryCode {
+func NewSelfServiceRecoveryCode(recoveryCode string, recoveryLink string) *SelfServiceRecoveryCode {
 	this := SelfServiceRecoveryCode{}
+	this.RecoveryCode = recoveryCode
 	this.RecoveryLink = recoveryLink
 	return &this
 }
@@ -74,6 +77,30 @@ func (o *SelfServiceRecoveryCode) SetExpiresAt(v time.Time) {
 	o.ExpiresAt = &v
 }
 
+// GetRecoveryCode returns the RecoveryCode field value
+func (o *SelfServiceRecoveryCode) GetRecoveryCode() string {
+	if o == nil {
+		var ret string
+		return ret
+	}
+
+	return o.RecoveryCode
+}
+
+// GetRecoveryCodeOk returns a tuple with the RecoveryCode field value
+// and a boolean to check if the value has been set.
+func (o *SelfServiceRecoveryCode) GetRecoveryCodeOk() (*string, bool) {
+	if o == nil {
+		return nil, false
+	}
+	return &o.RecoveryCode, true
+}
+
+// SetRecoveryCode sets field value
+func (o *SelfServiceRecoveryCode) SetRecoveryCode(v string) {
+	o.RecoveryCode = v
+}
+
 // GetRecoveryLink returns the RecoveryLink field value
 func (o *SelfServiceRecoveryCode) GetRecoveryLink() string {
 	if o == nil {
@@ -102,6 +129,9 @@ func (o SelfServiceRecoveryCode) MarshalJSON() ([]byte, error) {
 	toSerialize := map[string]interface{}{}
 	if o.ExpiresAt != nil {
 		toSerialize["expires_at"] = o.ExpiresAt
+	}
+	if true {
+		toSerialize["recovery_code"] = o.RecoveryCode
 	}
 	if true {
 		toSerialize["recovery_link"] = o.RecoveryLink

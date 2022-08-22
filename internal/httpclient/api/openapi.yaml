@@ -1530,14 +1530,6 @@ paths:
         schema:
           type: string
         style: form
-      - description: The Code
-        explode: true
-        in: query
-        name: code
-        required: false
-        schema:
-          type: string
-        style: form
       - description: |-
           HTTP Cookies
 
@@ -3906,22 +3898,28 @@ components:
     selfServiceRecoveryCode:
       example:
         expires_at: 2000-01-23T04:56:07.000+00:00
+        recovery_code: recovery_code
         recovery_link: recovery_link
       properties:
         expires_at:
           description: |-
-            Recovery Link Expires At
+            Expires At is the timestamp of when the recovery flow expires
 
             The timestamp when the recovery link expires.
           format: date-time
           type: string
+        recovery_code:
+          description: RecoverCode is the code that should be used to recover the
+            account
+          type: string
         recovery_link:
           description: |-
-            Recovery Link
+            RecoveryLink with flow
 
-            This link can be used to recover the account.
+            This link opens the recovery UI with an empty `code` field.
           type: string
       required:
+      - recovery_code
       - recovery_link
       type: object
     selfServiceRecoveryFlow:

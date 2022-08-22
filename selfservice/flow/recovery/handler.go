@@ -200,12 +200,6 @@ type getSelfServiceRecoveryFlow struct {
 	// in: query
 	FlowID string `json:"id"`
 
-	// The Code
-	//
-	// required: false
-	// in: query
-	Code string `json:"code"`
-
 	// HTTP Cookies
 	//
 	// When using the SDK in a browser app, on the server side you must include the HTTP Cookie Header
@@ -284,20 +278,6 @@ func (h *Handler) fetch(w http.ResponseWriter, r *http.Request, _ httprouter.Par
 			WithReason("The recovery flow has expired. Call the recovery flow init API endpoint to initialize a new recovery flow.").
 			WithDetail("api", urlx.AppendPaths(h.d.Config(r.Context()).SelfPublicURL(), RouteInitAPIFlow).String())))
 		return
-	}
-
-	for _, ss := range h.d.AllRecoveryStrategies() {
-		err := ss.PrefillUINodes(w, r, f)
-		if errors.Is(err, flow.ErrStrategyNotResponsible) {
-			continue
-		} else if errors.Is(err, flow.ErrCompletedByStrategy) {
-			return
-		} else if err != nil {
-			h.d.RecoveryFlowErrorHandler().WriteFlowError(w, r, f, ss.RecoveryNodeGroup(), err)
-			return
-		}
-
-		break
 	}
 
 	h.d.Writer().Write(w, r, f)

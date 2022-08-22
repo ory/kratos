@@ -4,14 +4,15 @@
 
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
-**ExpiresAt** | Pointer to **time.Time** | Recovery Link Expires At  The timestamp when the recovery link expires. | [optional] 
-**RecoveryLink** | **string** | Recovery Link  This link can be used to recover the account. | 
+**ExpiresAt** | Pointer to **time.Time** | Expires At is the timestamp of when the recovery flow expires  The timestamp when the recovery link expires. | [optional] 
+**RecoveryCode** | **string** | RecoverCode is the code that should be used to recover the account | 
+**RecoveryLink** | **string** | RecoveryLink with flow  This link opens the recovery UI with an empty &#x60;code&#x60; field. | 
 
 ## Methods
 
 ### NewSelfServiceRecoveryCode
 
-`func NewSelfServiceRecoveryCode(recoveryLink string, ) *SelfServiceRecoveryCode`
+`func NewSelfServiceRecoveryCode(recoveryCode string, recoveryLink string, ) *SelfServiceRecoveryCode`
 
 NewSelfServiceRecoveryCode instantiates a new SelfServiceRecoveryCode object
 This constructor will assign default values to properties that have it defined,
@@ -50,6 +51,26 @@ SetExpiresAt sets ExpiresAt field to given value.
 `func (o *SelfServiceRecoveryCode) HasExpiresAt() bool`
 
 HasExpiresAt returns a boolean if a field has been set.
+
+### GetRecoveryCode
+
+`func (o *SelfServiceRecoveryCode) GetRecoveryCode() string`
+
+GetRecoveryCode returns the RecoveryCode field if non-nil, zero value otherwise.
+
+### GetRecoveryCodeOk
+
+`func (o *SelfServiceRecoveryCode) GetRecoveryCodeOk() (*string, bool)`
+
+GetRecoveryCodeOk returns a tuple with the RecoveryCode field if it's non-nil, zero value otherwise
+and a boolean to check if the value has been set.
+
+### SetRecoveryCode
+
+`func (o *SelfServiceRecoveryCode) SetRecoveryCode(v string)`
+
+SetRecoveryCode sets RecoveryCode field to given value.
+
 
 ### GetRecoveryLink
 

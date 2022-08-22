@@ -1503,12 +1503,6 @@
           },
           {
             "type": "string",
-            "description": "The Code",
-            "name": "code",
-            "in": "query"
-          },
-          {
-            "type": "string",
             "description": "HTTP Cookies\n\nWhen using the SDK in a browser app, on the server side you must include the HTTP Cookie Header\nsent by the client to your server here. This ensures that CSRF and session cookies are respected.",
             "name": "Cookie",
             "in": "header"
@@ -3428,16 +3422,21 @@
     "selfServiceRecoveryCode": {
       "type": "object",
       "required": [
-        "recovery_link"
+        "recovery_link",
+        "recovery_code"
       ],
       "properties": {
         "expires_at": {
-          "description": "Recovery Link Expires At\n\nThe timestamp when the recovery link expires.",
+          "description": "Expires At is the timestamp of when the recovery flow expires\n\nThe timestamp when the recovery link expires.",
           "type": "string",
           "format": "date-time"
         },
+        "recovery_code": {
+          "description": "RecoverCode is the code that should be used to recover the account",
+          "type": "string"
+        },
         "recovery_link": {
-          "description": "Recovery Link\n\nThis link can be used to recover the account.",
+          "description": "RecoveryLink with flow\n\nThis link opens the recovery UI with an empty `code` field.",
           "type": "string"
         }
       }
