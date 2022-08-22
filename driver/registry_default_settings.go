@@ -8,7 +8,7 @@ import (
 )
 
 func (m *RegistryDefault) PostSettingsPrePersistHooks(ctx context.Context, settingsType string) (b []settings.PostHookPrePersistExecutor) {
-	for _, v := range m.getHooks(settingsType, m.Config(ctx).SelfServiceFlowSettingsAfterHooks(settingsType)) {
+	for _, v := range m.getHooks(settingsType, m.Config().SelfServiceFlowSettingsAfterHooks(ctx, settingsType)) {
 		if hook, ok := v.(settings.PostHookPrePersistExecutor); ok {
 			b = append(b, hook)
 		}
@@ -18,12 +18,12 @@ func (m *RegistryDefault) PostSettingsPrePersistHooks(ctx context.Context, setti
 
 func (m *RegistryDefault) PostSettingsPostPersistHooks(ctx context.Context, settingsType string) (b []settings.PostHookPostPersistExecutor) {
 	initialHookCount := 0
-	if m.Config(ctx).SelfServiceFlowVerificationEnabled() {
+	if m.Config().SelfServiceFlowVerificationEnabled(ctx) {
 		b = append(b, m.HookVerifier())
 		initialHookCount = 1
 	}
 
-	for _, v := range m.getHooks(settingsType, m.Config(ctx).SelfServiceFlowSettingsAfterHooks(settingsType)) {
+	for _, v := range m.getHooks(settingsType, m.Config().SelfServiceFlowSettingsAfterHooks(ctx, settingsType)) {
 		if hook, ok := v.(settings.PostHookPostPersistExecutor); ok {
 			b = append(b, hook)
 		}
@@ -32,7 +32,7 @@ func (m *RegistryDefault) PostSettingsPostPersistHooks(ctx context.Context, sett
 	if len(b) == initialHookCount {
 		// since we don't want merging hooks defined in a specific strategy and global hooks
 		// global hooks are added only if no strategy specific hooks are defined
-		for _, v := range m.getHooks(config.HookGlobal, m.Config(ctx).SelfServiceFlowSettingsAfterHooks(config.HookGlobal)) {
+		for _, v := range m.getHooks(config.HookGlobal, m.Config().SelfServiceFlowSettingsAfterHooks(ctx, config.HookGlobal)) {
 			if hook, ok := v.(settings.PostHookPostPersistExecutor); ok {
 				b = append(b, hook)
 			}
@@ -66,7 +66,7 @@ func (m *RegistryDefault) SettingsFlowErrorHandler() *settings.ErrorHandler {
 func (m *RegistryDefault) SettingsStrategies(ctx context.Context) (profileStrategies settings.Strategies) {
 	for _, strategy := range m.selfServiceStrategies() {
 		if s, ok := strategy.(settings.Strategy); ok {
-			if m.Config(ctx).SelfServiceStrategy(s.SettingsStrategyID()).Enabled {
+			if m.Config().SelfServiceStrategy(ctx, s.SettingsStrategyID()).Enabled {
 				profileStrategies = append(profileStrategies, s)
 			}
 		}

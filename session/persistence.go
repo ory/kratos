@@ -65,7 +65,7 @@ func TestPersister(ctx context.Context, conf *config.Config, p interface {
 	identity.PrivilegedPool
 }) func(t *testing.T) {
 	return func(t *testing.T) {
-		conf.MustSet(config.ViperKeyIdentitySchemas, config.Schemas{
+		conf.MustSet(ctx, config.ViperKeyIdentitySchemas, config.Schemas{
 			{ID: "default", URL: "file://./stub/identity.schema.json"},
 		})
 

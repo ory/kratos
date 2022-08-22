@@ -107,21 +107,22 @@ func (h *Handler) RegisterAdminRoutes(admin *x.RouterAdmin) {
 //
 // This endpoint MUST ONLY be used in scenarios such as native mobile apps (React Native, Objective C, Swift, Java, ...).
 //
+//
 // More information can be found at [Ory Kratos Account Recovery Documentation](../self-service/flows/account-recovery).
 //
-//	Schemes: http, https
+//     Schemes: http, https
 //
-//	Responses:
-//	  200: selfServiceRecoveryFlow
-//	  500: jsonError
-//	  400: jsonError
+//     Responses:
+//       200: selfServiceRecoveryFlow
+//       500: jsonError
+//       400: jsonError
 func (h *Handler) initAPIFlow(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
-	if !h.d.Config(r.Context()).SelfServiceFlowRecoveryEnabled() {
+	if !h.d.Config().SelfServiceFlowRecoveryEnabled(r.Context()) {
 		h.d.SelfServiceErrorManager().Forward(r.Context(), w, r, errors.WithStack(herodot.ErrBadRequest.WithReasonf("Recovery is not allowed because it was disabled.")))
 		return
 	}
 
-	req, err := NewFlow(h.d.Config(r.Context()), h.d.Config(r.Context()).SelfServiceFlowRecoveryRequestLifespan(), h.d.GenerateCSRFToken(r), r, h.d.RecoveryStrategies(r.Context()), flow.TypeAPI)
+	req, err := NewFlow(h.d.Config(), h.d.Config().SelfServiceFlowRecoveryRequestLifespan(r.Context()), h.d.GenerateCSRFToken(r), r, h.d.RecoveryStrategies(r.Context()), flow.TypeAPI)
 	if err != nil {
 		h.d.Writer().WriteError(w, r, err)
 		return
@@ -146,7 +147,7 @@ type initializeSelfServiceRecoveryFlowWithoutBrowser struct {
 
 // swagger:route GET /self-service/recovery/browser v0alpha2 initializeSelfServiceRecoveryFlowForBrowsers
 //
-// # Initialize Recovery Flow for Browsers
+// Initialize Recovery Flow for Browsers
 //
 // This endpoint initializes a browser-based account recovery flow. Once initialized, the browser will be redirected to
 // `selfservice.flows.recovery.ui_url` with the flow ID set as the query parameter `?flow=`. If a valid user session
@@ -159,20 +160,20 @@ type initializeSelfServiceRecoveryFlowWithoutBrowser struct {
 //
 // More information can be found at [Ory Kratos Account Recovery Documentation](../self-service/flows/account-recovery).
 //
-//	Schemes: http, https
+//     Schemes: http, https
 //
-//	Responses:
-//	  200: selfServiceRecoveryFlow
-//	  303: emptyResponse
-//	  400: jsonError
-//	  500: jsonError
+//     Responses:
+//       200: selfServiceRecoveryFlow
+//       303: emptyResponse
+//       400: jsonError
+//       500: jsonError
 func (h *Handler) initBrowserFlow(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
-	if !h.d.Config(r.Context()).SelfServiceFlowRecoveryEnabled() {
+	if !h.d.Config().SelfServiceFlowRecoveryEnabled(r.Context()) {
 		h.d.SelfServiceErrorManager().Forward(r.Context(), w, r, errors.WithStack(herodot.ErrBadRequest.WithReasonf("Recovery is not allowed because it was disabled.")))
 		return
 	}
 
-	f, err := NewFlow(h.d.Config(r.Context()), h.d.Config(r.Context()).SelfServiceFlowRecoveryRequestLifespan(), h.d.GenerateCSRFToken(r), r, h.d.RecoveryStrategies(r.Context()), flow.TypeBrowser)
+	f, err := NewFlow(h.d.Config(), h.d.Config().SelfServiceFlowRecoveryRequestLifespan(r.Context()), h.d.GenerateCSRFToken(r), r, h.d.RecoveryStrategies(r.Context()), flow.TypeBrowser)
 	if err != nil {
 		h.d.SelfServiceErrorManager().Forward(r.Context(), w, r, err)
 		return
@@ -183,7 +184,7 @@ func (h *Handler) initBrowserFlow(w http.ResponseWriter, r *http.Request, _ http
 		return
 	}
 
-	redirTo := f.AppendTo(h.d.Config(r.Context()).SelfServiceFlowRecoveryUI()).String()
+	redirTo := f.AppendTo(h.d.Config().SelfServiceFlowRecoveryUI(r.Context())).String()
 	x.AcceptToRedirectOrJSON(w, r, h.d.Writer(), f, redirTo)
 }
 
@@ -211,7 +212,7 @@ type getSelfServiceRecoveryFlow struct {
 
 // swagger:route GET /self-service/recovery/flows v0alpha2 getSelfServiceRecoveryFlow
 //
-// # Get Recovery Flow
+// Get Recovery Flow
 //
 // This endpoint returns a recovery flow's context with, for example, error details and other information.
 //
@@ -221,29 +222,29 @@ type getSelfServiceRecoveryFlow struct {
 // If you use the browser-flow for server-side apps, the services need to run on a common top-level-domain
 // and you need to forward the incoming HTTP Cookie header to this endpoint:
 //
-//		```js
-//		// pseudo-code example
-//		router.get('/recovery', async function (req, res) {
-//		  const flow = await client.getSelfServiceRecoveryFlow(req.header('Cookie'), req.query['flow'])
+//	```js
+//	// pseudo-code example
+//	router.get('/recovery', async function (req, res) {
+//	  const flow = await client.getSelfServiceRecoveryFlow(req.header('Cookie'), req.query['flow'])
 //
-//	   res.render('recovery', flow)
-//		})
-//		```
+//	  res.render('recovery', flow)
+//	})
+//	```
 //
 // More information can be found at [Ory Kratos Account Recovery Documentation](../self-service/flows/account-recovery).
 //
-//	Produces:
-//	- application/json
+//     Produces:
+//     - application/json
 //
-//	Schemes: http, https
+//     Schemes: http, https
 //
-//	Responses:
-//	  200: selfServiceRecoveryFlow
-//	  404: jsonError
-//	  410: jsonError
-//	  500: jsonError
+//     Responses:
+//       200: selfServiceRecoveryFlow
+//       404: jsonError
+//       410: jsonError
+//       500: jsonError
 func (h *Handler) fetch(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
-	if !h.d.Config(r.Context()).SelfServiceFlowRecoveryEnabled() {
+	if !h.d.Config().SelfServiceFlowRecoveryEnabled(r.Context()) {
 		h.d.SelfServiceErrorManager().Forward(r.Context(), w, r, errors.WithStack(herodot.ErrBadRequest.WithReasonf("Recovery is not allowed because it was disabled.")))
 		return
 	}
@@ -265,7 +266,7 @@ func (h *Handler) fetch(w http.ResponseWriter, r *http.Request, _ httprouter.Par
 
 	if f.ExpiresAt.Before(time.Now().UTC()) {
 		if f.Type == flow.TypeBrowser {
-			redirectURL := flow.GetFlowExpiredRedirectURL(h.d.Config(r.Context()), RouteInitBrowserFlow, f.ReturnTo)
+			redirectURL := flow.GetFlowExpiredRedirectURL(r.Context(), h.d.Config(), RouteInitBrowserFlow, f.ReturnTo)
 
 			h.d.Writer().WriteError(w, r, errors.WithStack(x.ErrGone.
 				WithReason("The recovery flow has expired. Redirect the user to the recovery flow init endpoint to initialize a new recovery flow.").
@@ -275,7 +276,7 @@ func (h *Handler) fetch(w http.ResponseWriter, r *http.Request, _ httprouter.Par
 		}
 		h.d.Writer().WriteError(w, r, errors.WithStack(x.ErrGone.
 			WithReason("The recovery flow has expired. Call the recovery flow init API endpoint to initialize a new recovery flow.").
-			WithDetail("api", urlx.AppendPaths(h.d.Config(r.Context()).SelfPublicURL(), RouteInitAPIFlow).String())))
+			WithDetail("api", urlx.AppendPaths(h.d.Config().SelfPublicURL(r.Context()), RouteInitAPIFlow).String())))
 		return
 	}
 
@@ -324,40 +325,40 @@ type submitSelfServiceRecoveryFlowBody struct{}
 
 // swagger:route POST /self-service/recovery v0alpha2 submitSelfServiceRecoveryFlow
 //
-// # Complete Recovery Flow
+// Complete Recovery Flow
 //
 // Use this endpoint to complete a recovery flow. This endpoint
 // behaves differently for API and browser flows and has several states:
 //
-//   - `choose_method` expects `flow` (in the URL query) and `email` (in the body) to be sent
-//     and works with API- and Browser-initiated flows.
-//   - For API clients and Browser clients with HTTP Header `Accept: application/json` it either returns a HTTP 200 OK when the form is valid and HTTP 400 OK when the form is invalid.
+// - `choose_method` expects `flow` (in the URL query) and `email` (in the body) to be sent
+//   and works with API- and Browser-initiated flows.
+//	 - For API clients and Browser clients with HTTP Header `Accept: application/json` it either returns a HTTP 200 OK when the form is valid and HTTP 400 OK when the form is invalid.
 //     and a HTTP 303 See Other redirect with a fresh recovery flow if the flow was otherwise invalid (e.g. expired).
-//   - For Browser clients without HTTP Header `Accept` or with `Accept: text/*` it returns a HTTP 303 See Other redirect to the Recovery UI URL with the Recovery Flow ID appended.
-//   - `sent_email` is the success state after `choose_method` for the `link` method and allows the user to request another recovery email. It
-//     works for both API and Browser-initiated flows and returns the same responses as the flow in `choose_method` state.
-//   - `passed_challenge` expects a `token` to be sent in the URL query and given the nature of the flow ("sending a recovery link")
-//     does not have any API capabilities. The server responds with a HTTP 303 See Other redirect either to the Settings UI URL
-//     (if the link was valid) and instructs the user to update their password, or a redirect to the Recover UI URL with
-//     a new Recovery Flow ID which contains an error message that the recovery link was invalid.
+//	 - For Browser clients without HTTP Header `Accept` or with `Accept: text/*` it returns a HTTP 303 See Other redirect to the Recovery UI URL with the Recovery Flow ID appended.
+// - `sent_email` is the success state after `choose_method` for the `link` method and allows the user to request another recovery email. It
+//   works for both API and Browser-initiated flows and returns the same responses as the flow in `choose_method` state.
+// - `passed_challenge` expects a `token` to be sent in the URL query and given the nature of the flow ("sending a recovery link")
+//   does not have any API capabilities. The server responds with a HTTP 303 See Other redirect either to the Settings UI URL
+//   (if the link was valid) and instructs the user to update their password, or a redirect to the Recover UI URL with
+//   a new Recovery Flow ID which contains an error message that the recovery link was invalid.
 //
 // More information can be found at [Ory Kratos Account Recovery Documentation](../self-service/flows/account-recovery).
 //
-//	Consumes:
-//	- application/json
-//	- application/x-www-form-urlencoded
+//     Consumes:
+//     - application/json
+//     - application/x-www-form-urlencoded
 //
-//	Produces:
-//	- application/json
+//     Produces:
+//     - application/json
 //
-//	Schemes: http, https
+//     Schemes: http, https
 //
-//	Responses:
-//	  200: selfServiceRecoveryFlow
-//	  303: emptyResponse
-//	  400: selfServiceRecoveryFlow
-//	  410: jsonError
-//	  500: jsonError
+//     Responses:
+//       200: selfServiceRecoveryFlow
+//       303: emptyResponse
+//       400: selfServiceRecoveryFlow
+//       410: jsonError
+//       500: jsonError
 func (h *Handler) submitFlow(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	rid, err := flow.GetFlowID(r)
 	if err != nil {
@@ -403,7 +404,7 @@ func (h *Handler) submitFlow(w http.ResponseWriter, r *http.Request, ps httprout
 	}
 
 	if f.Type == flow.TypeBrowser && !x.IsJSONRequest(r) {
-		http.Redirect(w, r, f.AppendTo(h.d.Config(r.Context()).SelfServiceFlowRecoveryUI()).String(), http.StatusSeeOther)
+		http.Redirect(w, r, f.AppendTo(h.d.Config().SelfServiceFlowRecoveryUI(r.Context())).String(), http.StatusSeeOther)
 		return
 	}
 

@@ -4787,7 +4787,7 @@
             "description": "jsonError"
           }
         },
-        "summary": "Complete Verification Flow",
+        "summary": "# Complete Verification Flow",
         "tags": [
           "v0alpha2"
         ]
@@ -4945,7 +4945,7 @@
             "description": "jsonError"
           }
         },
-        "summary": "Get Verification Flow",
+        "summary": "# Get Verification Flow",
         "tags": [
           "v0alpha2"
         ]

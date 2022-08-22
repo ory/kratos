@@ -58,6 +58,6 @@ type Persister interface {
 
 type Networker interface {
 	WithNetworkID(sid uuid.UUID) Persister
-	NetworkID() uuid.UUID
+	NetworkID(ctx context.Context) uuid.UUID
 	DetermineNetwork(ctx context.Context) (*networkx.Network, error)
 }

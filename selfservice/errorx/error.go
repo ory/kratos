@@ -6,8 +6,6 @@ import (
 	"encoding/json"
 	"time"
 
-	"github.com/ory/kratos/corp"
-
 	"github.com/gofrs/uuid"
 )
 
@@ -34,5 +32,5 @@ type ErrorContainer struct {
 }
 
 func (e ErrorContainer) TableName(ctx context.Context) string {
-	return corp.ContextualizeTableName(ctx, "selfservice_errors")
+	return "selfservice_errors"
 }

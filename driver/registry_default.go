@@ -8,6 +8,8 @@ import (
 	"sync"
 	"time"
 
+	"github.com/ory/x/contextx"
+
 	"github.com/ory/x/popx"
 
 	"github.com/hashicorp/go-retryablehttp"
@@ -27,8 +29,6 @@ import (
 	"github.com/ory/kratos/selfservice/strategy/totp"
 
 	"github.com/luna-duclos/instrumentedsql"
-
-	"github.com/ory/kratos/corp"
 
 	prometheus "github.com/ory/x/prometheusx"
 
@@ -75,6 +75,8 @@ type RegistryDefault struct {
 	rwl sync.RWMutex
 	l   *logrusx.Logger
 	c   *config.Config
+
+	ctxer contextx.Contextualizer
 
 	injectedSelfserviceHooks map[string]func(config.SelfServiceHook) interface{}
 
@@ -266,15 +268,15 @@ func (m *RegistryDefault) CSRFHandler() nosurf.Handler {
 	return m.nosurf
 }
 
-func (m *RegistryDefault) Config(ctx context.Context) *config.Config {
+func (m *RegistryDefault) Config() *config.Config {
 	if m.c == nil {
 		panic("configuration not set")
 	}
-	return corp.ContextualizeConfig(ctx, m.c)
+	return m.c
 }
 
-func (m *RegistryDefault) CourierConfig(ctx context.Context) config.CourierConfigs {
-	return m.Config(ctx)
+func (m *RegistryDefault) CourierConfig() config.CourierConfigs {
+	return m.Config()
 }
 
 func (m *RegistryDefault) selfServiceStrategies() []interface{} {
@@ -296,7 +298,7 @@ func (m *RegistryDefault) selfServiceStrategies() []interface{} {
 func (m *RegistryDefault) RegistrationStrategies(ctx context.Context) (registrationStrategies registration.Strategies) {
 	for _, strategy := range m.selfServiceStrategies() {
 		if s, ok := strategy.(registration.Strategy); ok {
-			if m.Config(ctx).SelfServiceStrategy(string(s.ID())).Enabled {
+			if m.Config().SelfServiceStrategy(ctx, string(s.ID())).Enabled {
 				registrationStrategies = append(registrationStrategies, s)
 			}
 		}
@@ -318,7 +320,7 @@ func (m *RegistryDefault) AllRegistrationStrategies() registration.Strategies {
 func (m *RegistryDefault) LoginStrategies(ctx context.Context) (loginStrategies login.Strategies) {
 	for _, strategy := range m.selfServiceStrategies() {
 		if s, ok := strategy.(login.Strategy); ok {
-			if m.Config(ctx).SelfServiceStrategy(string(s.ID())).Enabled {
+			if m.Config().SelfServiceStrategy(ctx, string(s.ID())).Enabled {
 				loginStrategies = append(loginStrategies, s)
 			}
 		}
@@ -393,9 +395,9 @@ func (m *RegistryDefault) SessionHandler() *session.Handler {
 	return m.sessionHandler
 }
 
-func (m *RegistryDefault) Cipher() cipher.Cipher {
+func (m *RegistryDefault) Cipher(ctx context.Context) cipher.Cipher {
 	if m.crypter == nil {
-		switch m.c.CipherAlgorithm() {
+		switch m.c.CipherAlgorithm(ctx) {
 		case "xchacha20-poly1305":
 			m.crypter = cipher.NewCryptChaCha20(m)
 		case "aes":
@@ -408,9 +410,9 @@ func (m *RegistryDefault) Cipher() cipher.Cipher {
 	return m.crypter
 }
 
-func (m *RegistryDefault) Hasher() hash.Hasher {
+func (m *RegistryDefault) Hasher(ctx context.Context) hash.Hasher {
 	if m.passwordHasher == nil {
-		if m.c.HasherPasswordHashingAlgorithm() == "bcrypt" {
+		if m.c.HasherPasswordHashingAlgorithm(ctx) == "bcrypt" {
 			m.passwordHasher = hash.NewHasherBcrypt(m)
 		} else {
 			m.passwordHasher = hash.NewHasherArgon2(m)
@@ -439,38 +441,38 @@ func (m *RegistryDefault) SelfServiceErrorHandler() *errorx.Handler {
 
 func (m *RegistryDefault) CookieManager(ctx context.Context) sessions.StoreExact {
 	var keys [][]byte
-	for _, k := range m.Config(ctx).SecretsSession() {
+	for _, k := range m.Config().SecretsSession(ctx) {
 		encrypt := sha256.Sum256(k)
 		keys = append(keys, k, encrypt[:])
 	}
 
 	cs := sessions.NewCookieStore(keys...)
-	cs.Options.Secure = !m.Config(ctx).IsInsecureDevMode()
+	cs.Options.Secure = !m.Config().IsInsecureDevMode(ctx)
 	cs.Options.HttpOnly = true
 
-	if domain := m.Config(ctx).SessionDomain(); domain != "" {
+	if domain := m.Config().SessionDomain(ctx); domain != "" {
 		cs.Options.Domain = domain
 	}
 
-	if path := m.Config(ctx).SessionPath(); path != "" {
+	if path := m.Config().SessionPath(ctx); path != "" {
 		cs.Options.Path = path
 	}
 
-	if sameSite := m.Config(ctx).SessionSameSiteMode(); sameSite != 0 {
+	if sameSite := m.Config().SessionSameSiteMode(ctx); sameSite != 0 {
 		cs.Options.SameSite = sameSite
 	}
 
 	cs.Options.MaxAge = 0
-	if m.Config(ctx).SessionPersistentCookie() {
-		cs.Options.MaxAge = int(m.Config(ctx).SessionLifespan().Seconds())
+	if m.Config().SessionPersistentCookie(ctx) {
+		cs.Options.MaxAge = int(m.Config().SessionLifespan(ctx).Seconds())
 	}
 	return cs
 }
 
 func (m *RegistryDefault) ContinuityCookieManager(ctx context.Context) sessions.StoreExact {
 	// To support hot reloading, this can not be instantiated only once.
-	cs := sessions.NewCookieStore(m.Config(ctx).SecretsSession()...)
-	cs.Options.Secure = !m.Config(ctx).IsInsecureDevMode()
+	cs := sessions.NewCookieStore(m.Config().SecretsSession(ctx)...)
+	cs.Options.Secure = !m.Config().IsInsecureDevMode(ctx)
 	cs.Options.HttpOnly = true
 	cs.Options.SameSite = http.SameSiteLaxMode
 	return cs
@@ -479,16 +481,16 @@ func (m *RegistryDefault) ContinuityCookieManager(ctx context.Context) sessions.
 func (m *RegistryDefault) Tracer(ctx context.Context) *otelx.Tracer {
 	if m.trc == nil {
 		// Tracing is initialized only once so it can not be hot reloaded or context-aware.
-		t, err := otelx.New("Ory Kratos", m.l, m.Config(ctx).Tracing())
+		t, err := otelx.New("Ory Kratos", m.l, m.Config().Tracing(ctx))
 		if err != nil {
 			m.Logger().WithError(err).Fatalf("Unable to initialize Tracer.")
-			t = otelx.NewNoop(m.l, m.Config(ctx).Tracing())
+			t = otelx.NewNoop(m.l, m.Config().Tracing(ctx))
 		}
 		m.trc = t
 	}
 
 	if m.trc.Tracer() == nil {
-		m.trc = otelx.NewNoop(m.l, m.Config(ctx).Tracing())
+		m.trc = otelx.NewNoop(m.l, m.Config().Tracing(ctx))
 	}
 
 	return m.trc
@@ -520,14 +522,10 @@ func (m *RegistryDefault) CanHandle(dsn string) bool {
 		strings.HasPrefix(dsn, "crdb")
 }
 
-func (m *RegistryDefault) Init(ctx context.Context, opts ...RegistryOption) error {
+func (m *RegistryDefault) Init(ctx context.Context, ctxer contextx.Contextualizer, opts ...RegistryOption) error {
 	if m.persister != nil {
 		// The DSN connection can not be hot-reloaded!
 		panic("RegistryDefault.Init() must not be called more than once.")
-	}
-
-	if corp.GetContextualizer() == nil {
-		panic("Contextualizer has not been set yet.")
 	}
 
 	o := newOptions(opts)
@@ -544,8 +542,10 @@ func (m *RegistryDefault) Init(ctx context.Context, opts ...RegistryOption) erro
 				}
 			}
 
+			m.WithContextualizer(ctxer)
+
 			// Use maxIdleConnTime - see comment below for https://github.com/gobuffalo/pop/pull/637
-			pool, idlePool, connMaxLifetime, _, cleanedDSN := sqlcon.ParseConnectionOptions(m.l, m.Config(ctx).DSN())
+			pool, idlePool, connMaxLifetime, _, cleanedDSN := sqlcon.ParseConnectionOptions(m.l, m.Config().DSN(ctx))
 			m.Logger().
 				WithField("pool", pool).
 				WithField("idlePool", idlePool).
@@ -582,7 +582,7 @@ func (m *RegistryDefault) Init(ctx context.Context, opts ...RegistryOption) erro
 			}
 
 			// if dsn is memory we have to run the migrations on every start
-			if dbal.IsMemorySQLite(m.Config(ctx).DSN()) || m.Config(ctx).DSN() == "memory" {
+			if dbal.IsMemorySQLite(m.Config().DSN(ctx)) || m.Config().DSN(ctx) == "memory" {
 				m.Logger().Infoln("Ory Kratos is running migrations on every startup as DSN is memory. This means your data is lost when Kratos terminates.")
 				if err := p.MigrateUp(ctx); err != nil {
 					m.Logger().WithError(err).Warnf("Unable to run migrations, retrying.")
@@ -716,8 +716,21 @@ func (m *RegistryDefault) HTTPClient(ctx context.Context, opts ...httpx.Resilien
 		opts = append(opts, httpx.ResilientClientWithTracer(tracer.Tracer()))
 	}
 
-	if m.Config(ctx).ClientHTTPNoPrivateIPRanges() {
+	// One of the few exceptions, this usually should not be hot reloaded.
+	if m.Config().ClientHTTPNoPrivateIPRanges(contextx.RootContext) {
 		opts = append(opts, httpx.ResilientClientDisallowInternalIPs())
 	}
 	return httpx.NewResilientClient(opts...)
+}
+
+func (m *RegistryDefault) WithContextualizer(ctxer contextx.Contextualizer) Registry {
+	m.ctxer = ctxer
+	return m
+}
+
+func (m *RegistryDefault) Contextualizer() contextx.Contextualizer {
+	if m.ctxer == nil {
+		panic("registry Contextualizer not set")
+	}
+	return m.ctxer
 }

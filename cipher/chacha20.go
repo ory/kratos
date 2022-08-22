@@ -31,11 +31,11 @@ func (c *XChaCha20Poly1305) Encrypt(ctx context.Context, message []byte) (string
 		return "", nil
 	}
 
-	if len(c.c.Config(ctx).SecretsCipher()) == 0 {
+	if len(c.c.Config().SecretsCipher(ctx)) == 0 {
 		return "", errors.WithStack(herodot.ErrInternalServerError.WithReason("Unable to encrypt message because no cipher secrets were configured."))
 	}
 
-	aead, err := chacha20poly1305.NewX(c.c.Config(ctx).SecretsCipher()[0][:])
+	aead, err := chacha20poly1305.NewX(c.c.Config().SecretsCipher(ctx)[0][:])
 	if err != nil {
 		return "", herodot.ErrInternalServerError.WithWrap(err).WithReason("Unable to generate key")
 	}
@@ -56,7 +56,7 @@ func (c *XChaCha20Poly1305) Decrypt(ctx context.Context, ciphertext string) ([]b
 		return nil, nil
 	}
 
-	secrets := c.c.Config(ctx).SecretsCipher()
+	secrets := c.c.Config().SecretsCipher(ctx)
 	if len(secrets) == 0 {
 		return nil, errors.WithStack(herodot.ErrInternalServerError.WithReason("Unable to decipher the encrypted message because no cipher secrets were configured."))
 	}

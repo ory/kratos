@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/ory/kratos/corp"
 	"github.com/ory/kratos/identity"
 
 	"github.com/gobuffalo/pop/v6"
@@ -24,7 +23,7 @@ func (p *Persister) CreateVerificationFlow(ctx context.Context, r *verification.
 	ctx, span := p.r.Tracer(ctx).Tracer().Start(ctx, "persistence.sql.CreateVerificationFlow")
 	defer span.End()
 
-	r.NID = corp.ContextualizeNID(ctx, p.nid)
+	r.NID = p.NetworkID(ctx)
 	// This should not create the request eagerly because otherwise we might accidentally create an address
 	// that isn't supposed to be in the database.
 	return p.GetConnection(ctx).Create(r)
@@ -35,7 +34,7 @@ func (p *Persister) GetVerificationFlow(ctx context.Context, id uuid.UUID) (*ver
 	defer span.End()
 
 	var r verification.Flow
-	if err := p.GetConnection(ctx).Where("id = ? AND nid = ?", id, corp.ContextualizeNID(ctx, p.nid)).First(&r); err != nil {
+	if err := p.GetConnection(ctx).Where("id = ? AND nid = ?", id, p.NetworkID(ctx)).First(&r); err != nil {
 		return nil, sqlcon.HandleError(err)
 	}
 
@@ -47,7 +46,7 @@ func (p *Persister) UpdateVerificationFlow(ctx context.Context, r *verification.
 	defer span.End()
 
 	cp := *r
-	cp.NID = corp.ContextualizeNID(ctx, p.nid)
+	cp.NID = p.NetworkID(ctx)
 	return p.update(ctx, cp)
 }
 
@@ -57,7 +56,7 @@ func (p *Persister) CreateVerificationToken(ctx context.Context, token *link.Ver
 
 	t := token.Token
 	token.Token = p.hmacValue(ctx, t)
-	token.NID = corp.ContextualizeNID(ctx, p.nid)
+	token.NID = p.NetworkID(ctx)
 
 	// This should not create the request eagerly because otherwise we might accidentally create an address that isn't
 	// supposed to be in the database.
@@ -74,9 +73,9 @@ func (p *Persister) UseVerificationToken(ctx context.Context, token string) (*li
 
 	var rt link.VerificationToken
 
-	nid := corp.ContextualizeNID(ctx, p.nid)
+	nid := p.NetworkID(ctx)
 	if err := sqlcon.HandleError(p.Transaction(ctx, func(ctx context.Context, tx *pop.Connection) (err error) {
-		for _, secret := range p.r.Config(ctx).SecretsSession() {
+		for _, secret := range p.r.Config().SecretsSession(ctx) {
 			if err = tx.Where("token = ? AND nid = ? AND NOT used", p.hmacValueWithSecret(ctx, token, secret), nid).First(&rt); err != nil {
 				if !errors.Is(sqlcon.HandleError(err), sqlcon.ErrNoRows) {
 					return err
@@ -109,7 +108,7 @@ func (p *Persister) DeleteVerificationToken(ctx context.Context, token string) e
 	ctx, span := p.r.Tracer(ctx).Tracer().Start(ctx, "persistence.sql.DeleteVerificationToken")
 	defer span.End()
 
-	nid := corp.ContextualizeNID(ctx, p.nid)
+	nid := p.NetworkID(ctx)
 	/* #nosec G201 TableName is static */
 	return p.GetConnection(ctx).RawQuery(fmt.Sprintf("DELETE FROM %s WHERE token=? AND nid = ?", new(link.VerificationToken).TableName(ctx)), token, nid).Exec()
 }
@@ -123,7 +122,7 @@ func (p *Persister) DeleteExpiredVerificationFlows(ctx context.Context, expiresA
 		limit,
 	),
 		expiresAt,
-		corp.ContextualizeNID(ctx, p.nid),
+		p.NetworkID(ctx),
 	).Exec()
 	if err != nil {
 		return sqlcon.HandleError(err)

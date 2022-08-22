@@ -56,22 +56,22 @@ func TestViperProvider(t *testing.T) {
 		)
 
 		t.Run("group=client config", func(t *testing.T) {
-			assert.False(t, p.ClientHTTPNoPrivateIPRanges(), "Should not have private IP ranges disabled per default")
-			p.MustSet(config.ViperKeyClientHTTPNoPrivateIPRanges, true)
-			assert.True(t, p.ClientHTTPNoPrivateIPRanges(), "Should disallow private IP ranges if set")
+			assert.False(t, p.ClientHTTPNoPrivateIPRanges(ctx), "Should not have private IP ranges disabled per default")
+			p.MustSet(ctx, config.ViperKeyClientHTTPNoPrivateIPRanges, true)
+			assert.True(t, p.ClientHTTPNoPrivateIPRanges(ctx), "Should disallow private IP ranges if set")
 		})
 
 		t.Run("group=urls", func(t *testing.T) {
-			assert.Equal(t, "http://test.kratos.ory.sh/login", p.SelfServiceFlowLoginUI().String())
-			assert.Equal(t, "http://test.kratos.ory.sh/settings", p.SelfServiceFlowSettingsUI().String())
-			assert.Equal(t, "http://test.kratos.ory.sh/register", p.SelfServiceFlowRegistrationUI().String())
-			assert.Equal(t, "http://test.kratos.ory.sh/error", p.SelfServiceFlowErrorURL().String())
+			assert.Equal(t, "http://test.kratos.ory.sh/login", p.SelfServiceFlowLoginUI(ctx).String())
+			assert.Equal(t, "http://test.kratos.ory.sh/settings", p.SelfServiceFlowSettingsUI(ctx).String())
+			assert.Equal(t, "http://test.kratos.ory.sh/register", p.SelfServiceFlowRegistrationUI(ctx).String())
+			assert.Equal(t, "http://test.kratos.ory.sh/error", p.SelfServiceFlowErrorURL(ctx).String())
 
-			assert.Equal(t, "http://admin.kratos.ory.sh", p.SelfAdminURL().String())
-			assert.Equal(t, "http://public.kratos.ory.sh", p.SelfPublicURL().String())
+			assert.Equal(t, "http://admin.kratos.ory.sh", p.SelfAdminURL(ctx).String())
+			assert.Equal(t, "http://public.kratos.ory.sh", p.SelfPublicURL(ctx).String())
 
 			var ds []string
-			for _, v := range p.SelfServiceBrowserAllowedReturnToDomains() {
+			for _, v := range p.SelfServiceBrowserAllowedReturnToDomains(ctx) {
 				ds = append(ds, v.String())
 			}
 
@@ -93,10 +93,10 @@ func TestViperProvider(t *testing.T) {
 				configx.SkipValidation(),
 			)
 
-			assert.Equal(t, "http://test.kratos.ory.sh/#/login", pWithFragments.SelfServiceFlowLoginUI().String())
-			assert.Equal(t, "http://test.kratos.ory.sh/#/settings", pWithFragments.SelfServiceFlowSettingsUI().String())
-			assert.Equal(t, "http://test.kratos.ory.sh/#/register", pWithFragments.SelfServiceFlowRegistrationUI().String())
-			assert.Equal(t, "http://test.kratos.ory.sh/#/error", pWithFragments.SelfServiceFlowErrorURL().String())
+			assert.Equal(t, "http://test.kratos.ory.sh/#/login", pWithFragments.SelfServiceFlowLoginUI(ctx).String())
+			assert.Equal(t, "http://test.kratos.ory.sh/#/settings", pWithFragments.SelfServiceFlowSettingsUI(ctx).String())
+			assert.Equal(t, "http://test.kratos.ory.sh/#/register", pWithFragments.SelfServiceFlowRegistrationUI(ctx).String())
+			assert.Equal(t, "http://test.kratos.ory.sh/#/error", pWithFragments.SelfServiceFlowErrorURL(ctx).String())
 
 			pWithRelativeFragments := config.MustNew(t, logrusx.New("", ""),
 				os.Stderr,
@@ -109,10 +109,10 @@ func TestViperProvider(t *testing.T) {
 				configx.SkipValidation(),
 			)
 
-			assert.Equal(t, "/login", pWithRelativeFragments.SelfServiceFlowLoginUI().String())
-			assert.Equal(t, "/settings", pWithRelativeFragments.SelfServiceFlowSettingsUI().String())
-			assert.Equal(t, "/register", pWithRelativeFragments.SelfServiceFlowRegistrationUI().String())
-			assert.Equal(t, "/error", pWithRelativeFragments.SelfServiceFlowErrorURL().String())
+			assert.Equal(t, "/login", pWithRelativeFragments.SelfServiceFlowLoginUI(ctx).String())
+			assert.Equal(t, "/settings", pWithRelativeFragments.SelfServiceFlowSettingsUI(ctx).String())
+			assert.Equal(t, "/register", pWithRelativeFragments.SelfServiceFlowRegistrationUI(ctx).String())
+			assert.Equal(t, "/error", pWithRelativeFragments.SelfServiceFlowErrorURL(ctx).String())
 
 			for _, v := range []string{
 				"#/login",
@@ -131,7 +131,7 @@ func TestViperProvider(t *testing.T) {
 					configx.SkipValidation(),
 				)
 
-				assert.Panics(t, func() { pWithIncorrectUrls.SelfServiceFlowLoginUI() })
+				assert.Panics(t, func() { pWithIncorrectUrls.SelfServiceFlowLoginUI(ctx) })
 
 				assert.Equal(t, logrus.FatalLevel, hook.LastEntry().Level)
 				assert.Equal(t, "Configuration value from key selfservice.flows.login.ui_url is not a valid URL: "+v, hook.LastEntry().Message)
@@ -140,18 +140,18 @@ func TestViperProvider(t *testing.T) {
 		})
 
 		t.Run("group=default_return_to", func(t *testing.T) {
-			assert.Equal(t, "https://self-service/login/password/return_to", p.SelfServiceFlowLoginReturnTo("password").String())
-			assert.Equal(t, "https://self-service/login/return_to", p.SelfServiceFlowLoginReturnTo("oidc").String())
+			assert.Equal(t, "https://self-service/login/password/return_to", p.SelfServiceFlowLoginReturnTo(ctx, "password").String())
+			assert.Equal(t, "https://self-service/login/return_to", p.SelfServiceFlowLoginReturnTo(ctx, "oidc").String())
 
-			assert.Equal(t, "https://self-service/registration/return_to", p.SelfServiceFlowRegistrationReturnTo("password").String())
-			assert.Equal(t, "https://self-service/registration/oidc/return_to", p.SelfServiceFlowRegistrationReturnTo("oidc").String())
+			assert.Equal(t, "https://self-service/registration/return_to", p.SelfServiceFlowRegistrationReturnTo(ctx, "password").String())
+			assert.Equal(t, "https://self-service/registration/oidc/return_to", p.SelfServiceFlowRegistrationReturnTo(ctx, "oidc").String())
 
-			assert.Equal(t, "https://self-service/settings/password/return_to", p.SelfServiceFlowSettingsReturnTo("password", p.SelfServiceBrowserDefaultReturnTo()).String())
-			assert.Equal(t, "https://self-service/settings/return_to", p.SelfServiceFlowSettingsReturnTo("profile", p.SelfServiceBrowserDefaultReturnTo()).String())
+			assert.Equal(t, "https://self-service/settings/password/return_to", p.SelfServiceFlowSettingsReturnTo(ctx, "password", p.SelfServiceBrowserDefaultReturnTo(ctx)).String())
+			assert.Equal(t, "https://self-service/settings/return_to", p.SelfServiceFlowSettingsReturnTo(ctx, "profile", p.SelfServiceBrowserDefaultReturnTo(ctx)).String())
 
-			assert.Equal(t, "http://test.kratos.ory.sh:4000/", p.SelfServiceFlowLogoutRedirectURL().String())
-			p.MustSet(config.ViperKeySelfServiceLogoutBrowserDefaultReturnTo, "")
-			assert.Equal(t, "http://return-to-3-test.ory.sh/", p.SelfServiceFlowLogoutRedirectURL().String())
+			assert.Equal(t, "http://test.kratos.ory.sh:4000/", p.SelfServiceFlowLogoutRedirectURL(ctx).String())
+			p.MustSet(ctx, config.ViperKeySelfServiceLogoutBrowserDefaultReturnTo, "")
+			assert.Equal(t, "http://return-to-3-test.ory.sh/", p.SelfServiceFlowLogoutRedirectURL(ctx).String())
 		})
 
 		t.Run("group=identity", func(t *testing.T) {
@@ -159,11 +159,11 @@ func TestViperProvider(t *testing.T) {
 				configx.WithConfigFiles("stub/.kratos.mock.identities.yaml"),
 				configx.SkipValidation())
 
-			ds, err := c.DefaultIdentityTraitsSchemaURL()
+			ds, err := c.DefaultIdentityTraitsSchemaURL(ctx)
 			require.NoError(t, err)
 			assert.Equal(t, "http://test.kratos.ory.sh/default-identity.schema.json", ds.String())
 
-			ss, err := c.IdentityTraitsSchemas()
+			ss, err := c.IdentityTraitsSchemas(ctx)
 			require.NoError(t, err)
 			assert.Equal(t, 2, len(ss))
 
@@ -178,26 +178,26 @@ func TestViperProvider(t *testing.T) {
 		})
 
 		t.Run("group=serve", func(t *testing.T) {
-			assert.Equal(t, "admin.kratos.ory.sh:1234", p.AdminListenOn())
-			assert.Equal(t, "public.kratos.ory.sh:1235", p.PublicListenOn())
+			assert.Equal(t, "admin.kratos.ory.sh:1234", p.AdminListenOn(ctx))
+			assert.Equal(t, "public.kratos.ory.sh:1235", p.PublicListenOn(ctx))
 		})
 
 		t.Run("group=dsn", func(t *testing.T) {
-			assert.Equal(t, "sqlite://foo.db?mode=memory&_fk=true", p.DSN())
+			assert.Equal(t, "sqlite://foo.db?mode=memory&_fk=true", p.DSN(ctx))
 		})
 
 		t.Run("group=secrets", func(t *testing.T) {
 			assert.Equal(t, [][]byte{
 				[]byte("session-key-7f8a9b77-1"),
 				[]byte("session-key-7f8a9b77-2"),
-			}, p.SecretsSession())
+			}, p.SecretsSession(ctx))
 			var cipherExpected [32]byte
 			for k, v := range []byte("secret-thirty-two-character-long") {
 				cipherExpected[k] = byte(v)
 			}
 			assert.Equal(t, [][32]byte{
 				cipherExpected,
-			}, p.SecretsCipher())
+			}, p.SecretsCipher(ctx))
 		})
 
 		t.Run("group=methods", func(t *testing.T) {
@@ -210,22 +210,22 @@ func TestViperProvider(t *testing.T) {
 				{id: "oidc", enabled: true, config: `{"providers":[{"client_id":"a","client_secret":"b","id":"github","provider":"github","mapper_url":"http://test.kratos.ory.sh/default-identity.schema.json"}]}`},
 				{id: "totp", enabled: true, config: `{"issuer":"issuer.ory.sh"}`},
 			} {
-				strategy := p.SelfServiceStrategy(tc.id)
+				strategy := p.SelfServiceStrategy(ctx, tc.id)
 				assert.Equal(t, tc.enabled, strategy.Enabled)
 				assert.JSONEq(t, tc.config, string(strategy.Config))
 			}
 		})
 
 		t.Run("method=registration", func(t *testing.T) {
-			assert.Equal(t, true, p.SelfServiceFlowRegistrationEnabled())
-			assert.Equal(t, time.Minute*98, p.SelfServiceFlowRegistrationRequestLifespan())
+			assert.Equal(t, true, p.SelfServiceFlowRegistrationEnabled(ctx))
+			assert.Equal(t, time.Minute*98, p.SelfServiceFlowRegistrationRequestLifespan(ctx))
 
 			t.Run("hook=before", func(t *testing.T) {
 				expHooks := []config.SelfServiceHook{
 					{Name: "web_hook", Config: json.RawMessage(`{"method":"GET","url":"https://test.kratos.ory.sh/before_registration_hook"}`)},
 				}
 
-				hooks := p.SelfServiceFlowRegistrationBeforeHooks()
+				hooks := p.SelfServiceFlowRegistrationBeforeHooks(ctx)
 
 				require.Len(t, hooks, 1)
 				assert.Equal(t, expHooks, hooks)
@@ -263,25 +263,25 @@ func TestViperProvider(t *testing.T) {
 				},
 			} {
 				t.Run("hook=after/strategy="+tc.strategy, func(t *testing.T) {
-					hooks := p.SelfServiceFlowRegistrationAfterHooks(tc.strategy)
+					hooks := p.SelfServiceFlowRegistrationAfterHooks(ctx, tc.strategy)
 					assert.Equal(t, tc.hooks, hooks)
 				})
 			}
 		})
 
 		t.Run("method=totp", func(t *testing.T) {
-			assert.Equal(t, "issuer.ory.sh", p.TOTPIssuer())
+			assert.Equal(t, "issuer.ory.sh", p.TOTPIssuer(ctx))
 		})
 
 		t.Run("method=login", func(t *testing.T) {
-			assert.Equal(t, time.Minute*99, p.SelfServiceFlowLoginRequestLifespan())
+			assert.Equal(t, time.Minute*99, p.SelfServiceFlowLoginRequestLifespan(ctx))
 
 			t.Run("hook=before", func(t *testing.T) {
 				expHooks := []config.SelfServiceHook{
 					{Name: "web_hook", Config: json.RawMessage(`{"method":"POST","url":"https://test.kratos.ory.sh/before_login_hook"}`)},
 				}
 
-				hooks := p.SelfServiceFlowLoginBeforeHooks()
+				hooks := p.SelfServiceFlowLoginBeforeHooks(ctx)
 
 				require.Len(t, hooks, 1)
 				assert.Equal(t, expHooks, hooks)
@@ -316,15 +316,15 @@ func TestViperProvider(t *testing.T) {
 				},
 			} {
 				t.Run("hook=after/strategy="+tc.strategy, func(t *testing.T) {
-					hooks := p.SelfServiceFlowLoginAfterHooks(tc.strategy)
+					hooks := p.SelfServiceFlowLoginAfterHooks(ctx, tc.strategy)
 					assert.Equal(t, tc.hooks, hooks)
 				})
 			}
 		})
 
 		t.Run("method=settings", func(t *testing.T) {
-			assert.Equal(t, time.Minute*99, p.SelfServiceFlowSettingsFlowLifespan())
-			assert.Equal(t, time.Minute*5, p.SelfServiceFlowSettingsPrivilegedSessionMaxAge())
+			assert.Equal(t, time.Minute*99, p.SelfServiceFlowSettingsFlowLifespan(ctx))
+			assert.Equal(t, time.Minute*5, p.SelfServiceFlowSettingsPrivilegedSessionMaxAge(ctx))
 
 			for _, tc := range []struct {
 				strategy string
@@ -350,31 +350,31 @@ func TestViperProvider(t *testing.T) {
 				},
 			} {
 				t.Run("hook=after/strategy="+tc.strategy, func(t *testing.T) {
-					hooks := p.SelfServiceFlowSettingsAfterHooks(tc.strategy)
+					hooks := p.SelfServiceFlowSettingsAfterHooks(ctx, tc.strategy)
 					assert.Equal(t, tc.hooks, hooks)
 				})
 			}
 		})
 
 		t.Run("method=recovery", func(t *testing.T) {
-			assert.Equal(t, true, p.SelfServiceFlowRecoveryEnabled())
-			assert.Equal(t, time.Minute*98, p.SelfServiceFlowRecoveryRequestLifespan())
-			assert.Equal(t, "http://test.kratos.ory.sh/recovery", p.SelfServiceFlowRecoveryUI().String())
+			assert.Equal(t, true, p.SelfServiceFlowRecoveryEnabled(ctx))
+			assert.Equal(t, time.Minute*98, p.SelfServiceFlowRecoveryRequestLifespan(ctx))
+			assert.Equal(t, "http://test.kratos.ory.sh/recovery", p.SelfServiceFlowRecoveryUI(ctx).String())
 
-			hooks := p.SelfServiceFlowRecoveryAfterHooks(config.HookGlobal)
+			hooks := p.SelfServiceFlowRecoveryAfterHooks(ctx, config.HookGlobal)
 			assert.Equal(t, []config.SelfServiceHook{{Name: "web_hook", Config: json.RawMessage(`{"body":"/path/to/template.jsonnet","method":"GET","url":"https://test.kratos.ory.sh/after_recovery_hook"}`)}}, hooks)
 		})
 
 		t.Run("method=verification", func(t *testing.T) {
-			assert.Equal(t, time.Minute*97, p.SelfServiceFlowVerificationRequestLifespan())
-			assert.Equal(t, "http://test.kratos.ory.sh/verification", p.SelfServiceFlowVerificationUI().String())
+			assert.Equal(t, time.Minute*97, p.SelfServiceFlowVerificationRequestLifespan(ctx))
+			assert.Equal(t, "http://test.kratos.ory.sh/verification", p.SelfServiceFlowVerificationUI(ctx).String())
 
-			hooks := p.SelfServiceFlowVerificationAfterHooks(config.HookGlobal)
+			hooks := p.SelfServiceFlowVerificationAfterHooks(ctx, config.HookGlobal)
 			assert.Equal(t, []config.SelfServiceHook{{Name: "web_hook", Config: json.RawMessage(`{"body":"/path/to/template.jsonnet","method":"GET","url":"https://test.kratos.ory.sh/after_verification_hook"}`)}}, hooks)
 		})
 
 		t.Run("group=hashers", func(t *testing.T) {
-			c := p.HasherArgon2()
+			c := p.HasherArgon2(ctx)
 			assert.Equal(t, &config.Argon2{Memory: 1048576, Iterations: 2, Parallelism: 4,
 				SaltLength: 16, KeyLength: 32, DedicatedMemory: config.Argon2DefaultDedicatedMemory, ExpectedDeviation: config.Argon2DefaultDeviation, ExpectedDuration: config.Argon2DefaultDuration}, c)
 		})
@@ -383,8 +383,8 @@ func TestViperProvider(t *testing.T) {
 			providerConfigJSON := `{"providers": [{"id":"github-test","provider":"github","client_id":"set_json_test","client_secret":"secret","mapper_url":"http://mapper-url","scope":["user:email"]}]}`
 			strategyConfigJSON := fmt.Sprintf(`{"enabled":true, "config": %s}`, providerConfigJSON)
 
-			p.MustSet(config.ViperKeySelfServiceStrategyConfig+".oidc", strategyConfigJSON)
-			strategy := p.SelfServiceStrategy("oidc")
+			p.MustSet(ctx, config.ViperKeySelfServiceStrategyConfig+".oidc", strategyConfigJSON)
+			strategy := p.SelfServiceStrategy(ctx, "oidc")
 			assert.JSONEq(t, providerConfigJSON, string(strategy.Config))
 		})
 	})
@@ -404,69 +404,74 @@ func (l InterceptHook) Fire(e *logrus.Entry) error {
 }
 
 func TestBcrypt(t *testing.T) {
+	ctx := context.Background()
 	p := config.MustNew(t, logrusx.New("", ""), os.Stderr, configx.SkipValidation())
 
-	require.NoError(t, p.Set(config.ViperKeyHasherBcryptCost, 4))
-	require.NoError(t, p.Set("dev", false))
-	assert.EqualValues(t, uint32(12), p.HasherBcrypt().Cost)
+	require.NoError(t, p.Set(ctx, config.ViperKeyHasherBcryptCost, 4))
+	require.NoError(t, p.Set(ctx, "dev", false))
+	assert.EqualValues(t, uint32(12), p.HasherBcrypt(ctx).Cost)
 
-	require.NoError(t, p.Set("dev", true))
-	assert.EqualValues(t, uint32(4), p.HasherBcrypt().Cost)
+	require.NoError(t, p.Set(ctx, "dev", true))
+	assert.EqualValues(t, uint32(4), p.HasherBcrypt(ctx).Cost)
 }
 
 func TestProviderBaseURLs(t *testing.T) {
+	ctx := context.Background()
 	machineHostname, err := os.Hostname()
 	if err != nil {
 		machineHostname = "127.0.0.1"
 	}
 
 	p := config.MustNew(t, logrusx.New("", ""), os.Stderr, configx.SkipValidation())
-	assert.Equal(t, "https://"+machineHostname+":4433/", p.SelfPublicURL().String())
-	assert.Equal(t, "https://"+machineHostname+":4434/", p.SelfAdminURL().String())
+	assert.Equal(t, "https://"+machineHostname+":4433/", p.SelfPublicURL(ctx).String())
+	assert.Equal(t, "https://"+machineHostname+":4434/", p.SelfAdminURL(ctx).String())
 
-	p.MustSet(config.ViperKeyPublicPort, 4444)
-	p.MustSet(config.ViperKeyAdminPort, 4445)
-	assert.Equal(t, "https://"+machineHostname+":4444/", p.SelfPublicURL().String())
-	assert.Equal(t, "https://"+machineHostname+":4445/", p.SelfAdminURL().String())
+	p.MustSet(ctx, config.ViperKeyPublicPort, 4444)
+	p.MustSet(ctx, config.ViperKeyAdminPort, 4445)
+	assert.Equal(t, "https://"+machineHostname+":4444/", p.SelfPublicURL(ctx).String())
+	assert.Equal(t, "https://"+machineHostname+":4445/", p.SelfAdminURL(ctx).String())
 
-	p.MustSet(config.ViperKeyPublicHost, "public.ory.sh")
-	p.MustSet(config.ViperKeyAdminHost, "admin.ory.sh")
-	assert.Equal(t, "https://public.ory.sh:4444/", p.SelfPublicURL().String())
-	assert.Equal(t, "https://admin.ory.sh:4445/", p.SelfAdminURL().String())
+	p.MustSet(ctx, config.ViperKeyPublicHost, "public.ory.sh")
+	p.MustSet(ctx, config.ViperKeyAdminHost, "admin.ory.sh")
+	assert.Equal(t, "https://public.ory.sh:4444/", p.SelfPublicURL(ctx).String())
+	assert.Equal(t, "https://admin.ory.sh:4445/", p.SelfAdminURL(ctx).String())
 
 	// Set to dev mode
-	p.MustSet("dev", true)
-	assert.Equal(t, "http://public.ory.sh:4444/", p.SelfPublicURL().String())
-	assert.Equal(t, "http://admin.ory.sh:4445/", p.SelfAdminURL().String())
+	p.MustSet(ctx, "dev", true)
+	assert.Equal(t, "http://public.ory.sh:4444/", p.SelfPublicURL(ctx).String())
+	assert.Equal(t, "http://admin.ory.sh:4445/", p.SelfAdminURL(ctx).String())
 }
 
 func TestProviderSelfServiceLinkMethodBaseURL(t *testing.T) {
+	ctx := context.Background()
 	machineHostname, err := os.Hostname()
 	if err != nil {
 		machineHostname = "127.0.0.1"
 	}
 
 	p := config.MustNew(t, logrusx.New("", ""), os.Stderr, configx.SkipValidation())
-	assert.Equal(t, "https://"+machineHostname+":4433/", p.SelfServiceLinkMethodBaseURL().String())
+	assert.Equal(t, "https://"+machineHostname+":4433/", p.SelfServiceLinkMethodBaseURL(ctx).String())
 
-	p.MustSet(config.ViperKeyLinkBaseURL, "https://example.org/bar")
-	assert.Equal(t, "https://example.org/bar", p.SelfServiceLinkMethodBaseURL().String())
+	p.MustSet(ctx, config.ViperKeyLinkBaseURL, "https://example.org/bar")
+	assert.Equal(t, "https://example.org/bar", p.SelfServiceLinkMethodBaseURL(ctx).String())
 }
 
 func TestViperProvider_Secrets(t *testing.T) {
+	ctx := context.Background()
 	p := config.MustNew(t, logrusx.New("", ""), os.Stderr, configx.SkipValidation())
 
-	def := p.SecretsDefault()
+	def := p.SecretsDefault(ctx)
 	assert.NotEmpty(t, def)
-	assert.Equal(t, def, p.SecretsSession())
-	assert.Equal(t, def, p.SecretsDefault())
-	assert.Empty(t, p.SecretsCipher())
-	err := p.Set(config.ViperKeySecretsCipher, []string{"short-secret-key"})
+	assert.Equal(t, def, p.SecretsSession(ctx))
+	assert.Equal(t, def, p.SecretsDefault(ctx))
+	assert.Empty(t, p.SecretsCipher(ctx))
+	err := p.Set(ctx, config.ViperKeySecretsCipher, []string{"short-secret-key"})
 	require.NoError(t, err)
-	assert.Equal(t, [][32]byte{}, p.SecretsCipher())
+	assert.Equal(t, [][32]byte{}, p.SecretsCipher(ctx))
 }
 
 func TestViperProvider_Defaults(t *testing.T) {
+	ctx := context.Background()
 	l := logrusx.New("", "")
 
 	for k, tc := range []struct {
@@ -495,13 +500,13 @@ func TestViperProvider_Defaults(t *testing.T) {
 				return config.MustNew(t, l, os.Stderr, configx.WithConfigFiles("../../test/e2e/profiles/recovery/.kratos.yml"), configx.SkipValidation())
 			},
 			expect: func(t *testing.T, p *config.Config) {
-				assert.True(t, p.SelfServiceFlowRecoveryEnabled())
-				assert.False(t, p.SelfServiceFlowVerificationEnabled())
-				assert.True(t, p.SelfServiceFlowRegistrationEnabled())
-				assert.True(t, p.SelfServiceStrategy("password").Enabled)
-				assert.True(t, p.SelfServiceStrategy("profile").Enabled)
-				assert.True(t, p.SelfServiceStrategy("link").Enabled)
-				assert.False(t, p.SelfServiceStrategy("oidc").Enabled)
+				assert.True(t, p.SelfServiceFlowRecoveryEnabled(ctx))
+				assert.False(t, p.SelfServiceFlowVerificationEnabled(ctx))
+				assert.True(t, p.SelfServiceFlowRegistrationEnabled(ctx))
+				assert.True(t, p.SelfServiceStrategy(ctx, "password").Enabled)
+				assert.True(t, p.SelfServiceStrategy(ctx, "profile").Enabled)
+				assert.True(t, p.SelfServiceStrategy(ctx, "link").Enabled)
+				assert.False(t, p.SelfServiceStrategy(ctx, "oidc").Enabled)
 			},
 		},
 		{
@@ -509,13 +514,13 @@ func TestViperProvider_Defaults(t *testing.T) {
 				return config.MustNew(t, l, os.Stderr, configx.WithConfigFiles("../../test/e2e/profiles/verification/.kratos.yml"), configx.SkipValidation())
 			},
 			expect: func(t *testing.T, p *config.Config) {
-				assert.False(t, p.SelfServiceFlowRecoveryEnabled())
-				assert.True(t, p.SelfServiceFlowVerificationEnabled())
-				assert.True(t, p.SelfServiceFlowRegistrationEnabled())
-				assert.True(t, p.SelfServiceStrategy("password").Enabled)
-				assert.True(t, p.SelfServiceStrategy("profile").Enabled)
-				assert.True(t, p.SelfServiceStrategy("link").Enabled)
-				assert.False(t, p.SelfServiceStrategy("oidc").Enabled)
+				assert.False(t, p.SelfServiceFlowRecoveryEnabled(ctx))
+				assert.True(t, p.SelfServiceFlowVerificationEnabled(ctx))
+				assert.True(t, p.SelfServiceFlowRegistrationEnabled(ctx))
+				assert.True(t, p.SelfServiceStrategy(ctx, "password").Enabled)
+				assert.True(t, p.SelfServiceStrategy(ctx, "profile").Enabled)
+				assert.True(t, p.SelfServiceStrategy(ctx, "link").Enabled)
+				assert.False(t, p.SelfServiceStrategy(ctx, "oidc").Enabled)
 			},
 		},
 		{
@@ -523,12 +528,12 @@ func TestViperProvider_Defaults(t *testing.T) {
 				return config.MustNew(t, l, os.Stderr, configx.WithConfigFiles("../../test/e2e/profiles/oidc/.kratos.yml"), configx.SkipValidation())
 			},
 			expect: func(t *testing.T, p *config.Config) {
-				assert.False(t, p.SelfServiceFlowRecoveryEnabled())
-				assert.False(t, p.SelfServiceFlowVerificationEnabled())
-				assert.True(t, p.SelfServiceStrategy("password").Enabled)
-				assert.True(t, p.SelfServiceStrategy("profile").Enabled)
-				assert.True(t, p.SelfServiceStrategy("link").Enabled)
-				assert.True(t, p.SelfServiceStrategy("oidc").Enabled)
+				assert.False(t, p.SelfServiceFlowRecoveryEnabled(ctx))
+				assert.False(t, p.SelfServiceFlowVerificationEnabled(ctx))
+				assert.True(t, p.SelfServiceStrategy(ctx, "password").Enabled)
+				assert.True(t, p.SelfServiceStrategy(ctx, "profile").Enabled)
+				assert.True(t, p.SelfServiceStrategy(ctx, "link").Enabled)
+				assert.True(t, p.SelfServiceStrategy(ctx, "oidc").Enabled)
 			},
 		},
 	} {
@@ -539,120 +544,125 @@ func TestViperProvider_Defaults(t *testing.T) {
 				tc.expect(t, p)
 				return
 			}
-			assert.False(t, p.SelfServiceFlowRecoveryEnabled())
-			assert.False(t, p.SelfServiceFlowVerificationEnabled())
-			assert.True(t, p.SelfServiceStrategy("password").Enabled)
-			assert.True(t, p.SelfServiceStrategy("profile").Enabled)
-			assert.True(t, p.SelfServiceStrategy("link").Enabled)
-			assert.False(t, p.SelfServiceStrategy("oidc").Enabled)
+			assert.False(t, p.SelfServiceFlowRecoveryEnabled(ctx))
+			assert.False(t, p.SelfServiceFlowVerificationEnabled(ctx))
+			assert.True(t, p.SelfServiceStrategy(ctx, "password").Enabled)
+			assert.True(t, p.SelfServiceStrategy(ctx, "profile").Enabled)
+			assert.True(t, p.SelfServiceStrategy(ctx, "link").Enabled)
+			assert.False(t, p.SelfServiceStrategy(ctx, "oidc").Enabled)
 		})
 	}
 
 	t.Run("suite=ui_url", func(t *testing.T) {
 		p := config.MustNew(t, l, os.Stderr, configx.SkipValidation())
-		assert.Equal(t, "https://www.ory.sh/kratos/docs/fallback/login", p.SelfServiceFlowLoginUI().String())
-		assert.Equal(t, "https://www.ory.sh/kratos/docs/fallback/settings", p.SelfServiceFlowSettingsUI().String())
-		assert.Equal(t, "https://www.ory.sh/kratos/docs/fallback/registration", p.SelfServiceFlowRegistrationUI().String())
-		assert.Equal(t, "https://www.ory.sh/kratos/docs/fallback/recovery", p.SelfServiceFlowRecoveryUI().String())
-		assert.Equal(t, "https://www.ory.sh/kratos/docs/fallback/verification", p.SelfServiceFlowVerificationUI().String())
+		assert.Equal(t, "https://www.ory.sh/kratos/docs/fallback/login", p.SelfServiceFlowLoginUI(ctx).String())
+		assert.Equal(t, "https://www.ory.sh/kratos/docs/fallback/settings", p.SelfServiceFlowSettingsUI(ctx).String())
+		assert.Equal(t, "https://www.ory.sh/kratos/docs/fallback/registration", p.SelfServiceFlowRegistrationUI(ctx).String())
+		assert.Equal(t, "https://www.ory.sh/kratos/docs/fallback/recovery", p.SelfServiceFlowRecoveryUI(ctx).String())
+		assert.Equal(t, "https://www.ory.sh/kratos/docs/fallback/verification", p.SelfServiceFlowVerificationUI(ctx).String())
 	})
 }
 
 func TestViperProvider_ReturnTo(t *testing.T) {
+	ctx := context.Background()
 	l := logrusx.New("", "")
 	p := config.MustNew(t, l, os.Stderr, configx.SkipValidation())
 
-	p.MustSet(config.ViperKeySelfServiceBrowserDefaultReturnTo, "https://www.ory.sh/")
-	assert.Equal(t, "https://www.ory.sh/", p.SelfServiceFlowVerificationReturnTo(urlx.ParseOrPanic("https://www.ory.sh/")).String())
-	assert.Equal(t, "https://www.ory.sh/", p.SelfServiceFlowRecoveryReturnTo().String())
+	p.MustSet(ctx, config.ViperKeySelfServiceBrowserDefaultReturnTo, "https://www.ory.sh/")
+	assert.Equal(t, "https://www.ory.sh/", p.SelfServiceFlowVerificationReturnTo(ctx, urlx.ParseOrPanic("https://www.ory.sh/")).String())
+	assert.Equal(t, "https://www.ory.sh/", p.SelfServiceFlowRecoveryReturnTo(ctx).String())
 
-	p.MustSet(config.ViperKeySelfServiceRecoveryBrowserDefaultReturnTo, "https://www.ory.sh/recovery")
-	assert.Equal(t, "https://www.ory.sh/recovery", p.SelfServiceFlowRecoveryReturnTo().String())
+	p.MustSet(ctx, config.ViperKeySelfServiceRecoveryBrowserDefaultReturnTo, "https://www.ory.sh/recovery")
+	assert.Equal(t, "https://www.ory.sh/recovery", p.SelfServiceFlowRecoveryReturnTo(ctx).String())
 
-	p.MustSet(config.ViperKeySelfServiceVerificationBrowserDefaultReturnTo, "https://www.ory.sh/verification")
-	assert.Equal(t, "https://www.ory.sh/verification", p.SelfServiceFlowVerificationReturnTo(urlx.ParseOrPanic("https://www.ory.sh/")).String())
+	p.MustSet(ctx, config.ViperKeySelfServiceVerificationBrowserDefaultReturnTo, "https://www.ory.sh/verification")
+	assert.Equal(t, "https://www.ory.sh/verification", p.SelfServiceFlowVerificationReturnTo(ctx, urlx.ParseOrPanic("https://www.ory.sh/")).String())
 }
 
 func TestSession(t *testing.T) {
+	ctx := context.Background()
 	l := logrusx.New("", "")
 	p := config.MustNew(t, l, os.Stderr, configx.SkipValidation())
 
-	assert.Equal(t, "ory_kratos_session", p.SessionName())
-	p.MustSet(config.ViperKeySessionName, "ory_session")
-	assert.Equal(t, "ory_session", p.SessionName())
+	assert.Equal(t, "ory_kratos_session", p.SessionName(ctx))
+	p.MustSet(ctx, config.ViperKeySessionName, "ory_session")
+	assert.Equal(t, "ory_session", p.SessionName(ctx))
 
-	assert.Equal(t, time.Hour*24, p.SessionRefreshMinTimeLeft())
-	p.MustSet(config.ViperKeySessionRefreshMinTimeLeft, "1m")
-	assert.Equal(t, time.Minute, p.SessionRefreshMinTimeLeft())
+	assert.Equal(t, time.Hour*24, p.SessionRefreshMinTimeLeft(ctx))
+	p.MustSet(ctx, config.ViperKeySessionRefreshMinTimeLeft, "1m")
+	assert.Equal(t, time.Minute, p.SessionRefreshMinTimeLeft(ctx))
 
-	assert.Equal(t, time.Hour*24, p.SessionLifespan())
-	p.MustSet(config.ViperKeySessionLifespan, "1m")
-	assert.Equal(t, time.Minute, p.SessionLifespan())
+	assert.Equal(t, time.Hour*24, p.SessionLifespan(ctx))
+	p.MustSet(ctx, config.ViperKeySessionLifespan, "1m")
+	assert.Equal(t, time.Minute, p.SessionLifespan(ctx))
 
-	assert.Equal(t, true, p.SessionPersistentCookie())
-	p.MustSet(config.ViperKeySessionPersistentCookie, false)
-	assert.Equal(t, false, p.SessionPersistentCookie())
+	assert.Equal(t, true, p.SessionPersistentCookie(ctx))
+	p.MustSet(ctx, config.ViperKeySessionPersistentCookie, false)
+	assert.Equal(t, false, p.SessionPersistentCookie(ctx))
 }
 
 func TestCookies(t *testing.T) {
+	ctx := context.Background()
 	l := logrusx.New("", "")
 	p := config.MustNew(t, l, os.Stderr, configx.SkipValidation())
 
 	t.Run("path", func(t *testing.T) {
-		assert.Equal(t, "/", p.CookiePath())
-		assert.Equal(t, "/", p.SessionPath())
+		assert.Equal(t, "/", p.CookiePath(ctx))
+		assert.Equal(t, "/", p.SessionPath(ctx))
 
-		p.MustSet(config.ViperKeyCookiePath, "/cookie")
-		assert.Equal(t, "/cookie", p.CookiePath())
-		assert.Equal(t, "/cookie", p.SessionPath())
+		p.MustSet(ctx, config.ViperKeyCookiePath, "/cookie")
+		assert.Equal(t, "/cookie", p.CookiePath(ctx))
+		assert.Equal(t, "/cookie", p.SessionPath(ctx))
 
-		p.MustSet(config.ViperKeySessionPath, "/session")
-		assert.Equal(t, "/cookie", p.CookiePath())
-		assert.Equal(t, "/session", p.SessionPath())
+		p.MustSet(ctx, config.ViperKeySessionPath, "/session")
+		assert.Equal(t, "/cookie", p.CookiePath(ctx))
+		assert.Equal(t, "/session", p.SessionPath(ctx))
 	})
 
 	t.Run("SameSite", func(t *testing.T) {
-		assert.Equal(t, http.SameSiteLaxMode, p.CookieSameSiteMode())
-		assert.Equal(t, http.SameSiteLaxMode, p.SessionSameSiteMode())
+		assert.Equal(t, http.SameSiteLaxMode, p.CookieSameSiteMode(ctx))
+		assert.Equal(t, http.SameSiteLaxMode, p.SessionSameSiteMode(ctx))
 
-		p.MustSet(config.ViperKeyCookieSameSite, "Strict")
-		assert.Equal(t, http.SameSiteStrictMode, p.CookieSameSiteMode())
-		assert.Equal(t, http.SameSiteStrictMode, p.SessionSameSiteMode())
+		p.MustSet(ctx, config.ViperKeyCookieSameSite, "Strict")
+		assert.Equal(t, http.SameSiteStrictMode, p.CookieSameSiteMode(ctx))
+		assert.Equal(t, http.SameSiteStrictMode, p.SessionSameSiteMode(ctx))
 
-		p.MustSet(config.ViperKeySessionSameSite, "None")
-		assert.Equal(t, http.SameSiteStrictMode, p.CookieSameSiteMode())
-		assert.Equal(t, http.SameSiteNoneMode, p.SessionSameSiteMode())
+		p.MustSet(ctx, config.ViperKeySessionSameSite, "None")
+		assert.Equal(t, http.SameSiteStrictMode, p.CookieSameSiteMode(ctx))
+		assert.Equal(t, http.SameSiteNoneMode, p.SessionSameSiteMode(ctx))
 	})
 
 	t.Run("domain", func(t *testing.T) {
-		assert.Equal(t, "", p.CookieDomain())
-		assert.Equal(t, "", p.SessionDomain())
+		assert.Equal(t, "", p.CookieDomain(ctx))
+		assert.Equal(t, "", p.SessionDomain(ctx))
 
-		p.MustSet(config.ViperKeyCookieDomain, "www.cookie.com")
-		assert.Equal(t, "www.cookie.com", p.CookieDomain())
-		assert.Equal(t, "www.cookie.com", p.SessionDomain())
+		p.MustSet(ctx, config.ViperKeyCookieDomain, "www.cookie.com")
+		assert.Equal(t, "www.cookie.com", p.CookieDomain(ctx))
+		assert.Equal(t, "www.cookie.com", p.SessionDomain(ctx))
 
-		p.MustSet(config.ViperKeySessionDomain, "www.session.com")
-		assert.Equal(t, "www.cookie.com", p.CookieDomain())
-		assert.Equal(t, "www.session.com", p.SessionDomain())
+		p.MustSet(ctx, config.ViperKeySessionDomain, "www.session.com")
+		assert.Equal(t, "www.cookie.com", p.CookieDomain(ctx))
+		assert.Equal(t, "www.session.com", p.SessionDomain(ctx))
 	})
 }
 
 func TestViperProvider_DSN(t *testing.T) {
+	ctx := context.Background()
+
 	t.Run("case=dsn: memory", func(t *testing.T) {
 		p := config.MustNew(t, logrusx.New("", ""), os.Stderr, configx.SkipValidation())
-		p.MustSet(config.ViperKeyDSN, "memory")
+		p.MustSet(ctx, config.ViperKeyDSN, "memory")
 
-		assert.Equal(t, config.DefaultSQLiteMemoryDSN, p.DSN())
+		assert.Equal(t, config.DefaultSQLiteMemoryDSN, p.DSN(ctx))
 	})
 
 	t.Run("case=dsn: not memory", func(t *testing.T) {
 		p := config.MustNew(t, logrusx.New("", ""), os.Stderr, configx.SkipValidation())
 
 		dsn := "sqlite://foo.db?_fk=true"
-		p.MustSet(config.ViperKeyDSN, dsn)
+		p.MustSet(ctx, config.ViperKeyDSN, dsn)
 
-		assert.Equal(t, dsn, p.DSN())
+		assert.Equal(t, dsn, p.DSN(ctx))
 	})
 
 	t.Run("case=dsn: not set", func(t *testing.T) {
@@ -664,12 +674,13 @@ func TestViperProvider_DSN(t *testing.T) {
 		}), logrusx.WithHook(InterceptHook{}))
 		p := config.MustNew(t, l, os.Stderr, configx.SkipValidation())
 
-		assert.Equal(t, dsn, p.DSN())
+		assert.Equal(t, dsn, p.DSN(ctx))
 		assert.NotEqual(t, 0, exitCode)
 	})
 }
 
 func TestViperProvider_ParseURIOrFail(t *testing.T) {
+	ctx := context.Background()
 	var exitCode int
 
 	l := logrusx.New("", "", logrusx.WithExitFunc(func(i int) {
@@ -716,9 +727,9 @@ func TestViperProvider_ParseURIOrFail(t *testing.T) {
 		},
 	} {
 		t.Run("case=parse "+tc.u, func(t *testing.T) {
-			require.NoError(t, p.Set(testKey, tc.u))
+			require.NoError(t, p.Set(ctx, testKey, tc.u))
 
-			u := p.ParseURIOrFail(testKey)
+			u := p.ParseURIOrFail(ctx, testKey)
 			require.Zero(t, exitCode)
 			assert.Equal(t, tc.expected, *u)
 		})
@@ -726,39 +737,41 @@ func TestViperProvider_ParseURIOrFail(t *testing.T) {
 }
 
 func TestViperProvider_HaveIBeenPwned(t *testing.T) {
+	ctx := context.Background()
 	p := config.MustNew(t, logrusx.New("", ""), os.Stderr, configx.SkipValidation())
 	t.Run("case=hipb: host", func(t *testing.T) {
-		p.MustSet(config.ViperKeyPasswordHaveIBeenPwnedHost, "foo.bar")
-		assert.Equal(t, "foo.bar", p.PasswordPolicyConfig().HaveIBeenPwnedHost)
+		p.MustSet(ctx, config.ViperKeyPasswordHaveIBeenPwnedHost, "foo.bar")
+		assert.Equal(t, "foo.bar", p.PasswordPolicyConfig(ctx).HaveIBeenPwnedHost)
 	})
 
 	t.Run("case=hibp: enabled", func(t *testing.T) {
-		p.MustSet(config.ViperKeyPasswordHaveIBeenPwnedEnabled, true)
-		assert.Equal(t, true, p.PasswordPolicyConfig().HaveIBeenPwnedEnabled)
+		p.MustSet(ctx, config.ViperKeyPasswordHaveIBeenPwnedEnabled, true)
+		assert.Equal(t, true, p.PasswordPolicyConfig(ctx).HaveIBeenPwnedEnabled)
 	})
 
 	t.Run("case=hibp: enabled", func(t *testing.T) {
-		p.MustSet(config.ViperKeyPasswordHaveIBeenPwnedEnabled, false)
-		assert.Equal(t, false, p.PasswordPolicyConfig().HaveIBeenPwnedEnabled)
+		p.MustSet(ctx, config.ViperKeyPasswordHaveIBeenPwnedEnabled, false)
+		assert.Equal(t, false, p.PasswordPolicyConfig(ctx).HaveIBeenPwnedEnabled)
 	})
 
 	t.Run("case=hibp: max_breaches", func(t *testing.T) {
-		p.MustSet(config.ViperKeyPasswordMaxBreaches, 10)
-		assert.Equal(t, uint(10), p.PasswordPolicyConfig().MaxBreaches)
+		p.MustSet(ctx, config.ViperKeyPasswordMaxBreaches, 10)
+		assert.Equal(t, uint(10), p.PasswordPolicyConfig(ctx).MaxBreaches)
 	})
 
 	t.Run("case=hibp: ignore_network_errors", func(t *testing.T) {
-		p.MustSet(config.ViperKeyIgnoreNetworkErrors, true)
-		assert.Equal(t, true, p.PasswordPolicyConfig().IgnoreNetworkErrors)
+		p.MustSet(ctx, config.ViperKeyIgnoreNetworkErrors, true)
+		assert.Equal(t, true, p.PasswordPolicyConfig(ctx).IgnoreNetworkErrors)
 	})
 
 	t.Run("case=hibp: ignore_network_errors", func(t *testing.T) {
-		p.MustSet(config.ViperKeyIgnoreNetworkErrors, false)
-		assert.Equal(t, false, p.PasswordPolicyConfig().IgnoreNetworkErrors)
+		p.MustSet(ctx, config.ViperKeyIgnoreNetworkErrors, false)
+		assert.Equal(t, false, p.PasswordPolicyConfig(ctx).IgnoreNetworkErrors)
 	})
 }
 
 func TestLoadingTLSConfig(t *testing.T) {
+	ctx := context.Background()
 	t.Parallel()
 
 	certPath := filepath.Join(os.TempDir(), "e2e_test_cert_"+x.NewUUID().String()+".pem")
@@ -782,9 +795,9 @@ func TestLoadingTLSConfig(t *testing.T) {
 		logger.Logger.Hooks.Add(hook)
 
 		p := config.MustNew(t, logger, os.Stderr, configx.SkipValidation())
-		p.MustSet(config.ViperKeyPublicTLSKeyBase64, keyBase64)
-		p.MustSet(config.ViperKeyPublicTLSCertBase64, certBase64)
-		assert.NotNil(t, p.GetTSLCertificatesForPublic())
+		p.MustSet(ctx, config.ViperKeyPublicTLSKeyBase64, keyBase64)
+		p.MustSet(ctx, config.ViperKeyPublicTLSCertBase64, certBase64)
+		assert.NotNil(t, p.GetTSLCertificatesForPublic(ctx))
 		assert.Equal(t, "Setting up HTTPS for public", hook.LastEntry().Message)
 	})
 
@@ -795,9 +808,9 @@ func TestLoadingTLSConfig(t *testing.T) {
 		logger.Logger.Hooks.Add(hook)
 
 		p := config.MustNew(t, logger, os.Stderr, configx.SkipValidation())
-		p.MustSet(config.ViperKeyPublicTLSKeyPath, keyPath)
-		p.MustSet(config.ViperKeyPublicTLSCertPath, certPath)
-		assert.NotNil(t, p.GetTSLCertificatesForPublic())
+		p.MustSet(ctx, config.ViperKeyPublicTLSKeyPath, keyPath)
+		p.MustSet(ctx, config.ViperKeyPublicTLSCertPath, certPath)
+		assert.NotNil(t, p.GetTSLCertificatesForPublic(ctx))
 		assert.Equal(t, "Setting up HTTPS for public", hook.LastEntry().Message)
 	})
 
@@ -808,9 +821,9 @@ func TestLoadingTLSConfig(t *testing.T) {
 		logger.Logger.Hooks.Add(hook)
 
 		p := config.MustNew(t, logger, os.Stderr, configx.SkipValidation())
-		p.MustSet(config.ViperKeyPublicTLSKeyBase64, "empty")
-		p.MustSet(config.ViperKeyPublicTLSCertBase64, certBase64)
-		assert.Nil(t, p.GetTSLCertificatesForPublic())
+		p.MustSet(ctx, config.ViperKeyPublicTLSKeyBase64, "empty")
+		p.MustSet(ctx, config.ViperKeyPublicTLSCertBase64, certBase64)
+		assert.Nil(t, p.GetTSLCertificatesForPublic(ctx))
 		assert.Equal(t, "TLS has not been configured for public, skipping", hook.LastEntry().Message)
 	})
 
@@ -821,9 +834,9 @@ func TestLoadingTLSConfig(t *testing.T) {
 		logger.Logger.Hooks.Add(hook)
 
 		p := config.MustNew(t, logger, os.Stderr, configx.SkipValidation())
-		p.MustSet(config.ViperKeyPublicTLSKeyPath, "/dev/null")
-		p.MustSet(config.ViperKeyPublicTLSCertPath, certPath)
-		assert.Nil(t, p.GetTSLCertificatesForPublic())
+		p.MustSet(ctx, config.ViperKeyPublicTLSKeyPath, "/dev/null")
+		p.MustSet(ctx, config.ViperKeyPublicTLSCertPath, certPath)
+		assert.Nil(t, p.GetTSLCertificatesForPublic(ctx))
 		assert.Equal(t, "TLS has not been configured for public, skipping", hook.LastEntry().Message)
 	})
 
@@ -834,9 +847,9 @@ func TestLoadingTLSConfig(t *testing.T) {
 		logger.Logger.Hooks.Add(hook)
 
 		p := config.MustNew(t, logger, os.Stderr, configx.SkipValidation())
-		p.MustSet(config.ViperKeyAdminTLSKeyBase64, keyBase64)
-		p.MustSet(config.ViperKeyAdminTLSCertBase64, certBase64)
-		assert.NotNil(t, p.GetTSLCertificatesForAdmin())
+		p.MustSet(ctx, config.ViperKeyAdminTLSKeyBase64, keyBase64)
+		p.MustSet(ctx, config.ViperKeyAdminTLSCertBase64, certBase64)
+		assert.NotNil(t, p.GetTSLCertificatesForAdmin(ctx))
 		assert.Equal(t, "Setting up HTTPS for admin", hook.LastEntry().Message)
 	})
 
@@ -847,9 +860,9 @@ func TestLoadingTLSConfig(t *testing.T) {
 		logger.Logger.Hooks.Add(hook)
 
 		p := config.MustNew(t, logger, os.Stderr, configx.SkipValidation())
-		p.MustSet(config.ViperKeyAdminTLSKeyPath, keyPath)
-		p.MustSet(config.ViperKeyAdminTLSCertPath, certPath)
-		assert.NotNil(t, p.GetTSLCertificatesForAdmin())
+		p.MustSet(ctx, config.ViperKeyAdminTLSKeyPath, keyPath)
+		p.MustSet(ctx, config.ViperKeyAdminTLSCertPath, certPath)
+		assert.NotNil(t, p.GetTSLCertificatesForAdmin(ctx))
 		assert.Equal(t, "Setting up HTTPS for admin", hook.LastEntry().Message)
 	})
 
@@ -860,9 +873,9 @@ func TestLoadingTLSConfig(t *testing.T) {
 		logger.Logger.Hooks.Add(hook)
 
 		p := config.MustNew(t, logger, os.Stderr, configx.SkipValidation())
-		p.MustSet(config.ViperKeyAdminTLSKeyBase64, "empty")
-		p.MustSet(config.ViperKeyAdminTLSCertBase64, certBase64)
-		assert.Nil(t, p.GetTSLCertificatesForAdmin())
+		p.MustSet(ctx, config.ViperKeyAdminTLSKeyBase64, "empty")
+		p.MustSet(ctx, config.ViperKeyAdminTLSCertBase64, certBase64)
+		assert.Nil(t, p.GetTSLCertificatesForAdmin(ctx))
 		assert.Equal(t, "TLS has not been configured for admin, skipping", hook.LastEntry().Message)
 	})
 
@@ -873,9 +886,9 @@ func TestLoadingTLSConfig(t *testing.T) {
 		logger.Logger.Hooks.Add(hook)
 
 		p := config.MustNew(t, logger, os.Stderr, configx.SkipValidation())
-		p.MustSet(config.ViperKeyAdminTLSKeyPath, "/dev/null")
-		p.MustSet(config.ViperKeyAdminTLSCertPath, certPath)
-		assert.Nil(t, p.GetTSLCertificatesForAdmin())
+		p.MustSet(ctx, config.ViperKeyAdminTLSKeyPath, "/dev/null")
+		p.MustSet(ctx, config.ViperKeyAdminTLSCertPath, certPath)
+		assert.Nil(t, p.GetTSLCertificatesForAdmin(ctx))
 		assert.Equal(t, "TLS has not been configured for admin, skipping", hook.LastEntry().Message)
 	})
 
@@ -1052,14 +1065,15 @@ func TestIdentitySchemaValidation(t *testing.T) {
 
 func TestPasswordless(t *testing.T) {
 	ctx := context.Background()
+
 	conf, err := config.New(ctx, logrusx.New("", ""), os.Stderr,
 		configx.SkipValidation(),
 		configx.WithValue(config.ViperKeyWebAuthnPasswordless, true))
 	require.NoError(t, err)
 
-	assert.True(t, conf.WebAuthnForPasswordless())
-	conf.MustSet(config.ViperKeyWebAuthnPasswordless, false)
-	assert.False(t, conf.WebAuthnForPasswordless())
+	assert.True(t, conf.WebAuthnForPasswordless(ctx))
+	conf.MustSet(ctx, config.ViperKeyWebAuthnPasswordless, false)
+	assert.False(t, conf.WebAuthnForPasswordless(ctx))
 }
 
 func TestChangeMinPasswordLength(t *testing.T) {
@@ -1090,17 +1104,17 @@ func TestCourierSMS(t *testing.T) {
 	t.Run("case=configs set", func(t *testing.T) {
 		conf, _ := config.New(ctx, logrusx.New("", ""), os.Stderr,
 			configx.WithConfigFiles("stub/.kratos.courier.sms.yaml"), configx.SkipValidation())
-		assert.True(t, conf.CourierSMSEnabled())
-		snapshotx.SnapshotTExcept(t, conf.CourierSMSRequestConfig(), nil)
-		assert.Equal(t, "+49123456789", conf.CourierSMSFrom())
+		assert.True(t, conf.CourierSMSEnabled(ctx))
+		snapshotx.SnapshotTExcept(t, conf.CourierSMSRequestConfig(ctx), nil)
+		assert.Equal(t, "+49123456789", conf.CourierSMSFrom(ctx))
 	})
 
 	t.Run("case=defaults", func(t *testing.T) {
 		conf, _ := config.New(ctx, logrusx.New("", ""), os.Stderr, configx.SkipValidation())
 
-		assert.False(t, conf.CourierSMSEnabled())
-		snapshotx.SnapshotTExcept(t, conf.CourierSMSRequestConfig(), nil)
-		assert.Equal(t, "Ory Kratos", conf.CourierSMSFrom())
+		assert.False(t, conf.CourierSMSEnabled(ctx))
+		snapshotx.SnapshotTExcept(t, conf.CourierSMSRequestConfig(ctx), nil)
+		assert.Equal(t, "Ory Kratos", conf.CourierSMSFrom(ctx))
 	})
 }
 
@@ -1110,12 +1124,12 @@ func TestCourierMessageTTL(t *testing.T) {
 	t.Run("case=configs set", func(t *testing.T) {
 		conf, _ := config.New(ctx, logrusx.New("", ""), os.Stderr,
 			configx.WithConfigFiles("stub/.kratos.courier.message_retries.yaml"), configx.SkipValidation())
-		assert.Equal(t, conf.CourierMessageRetries(), 10)
+		assert.Equal(t, conf.CourierMessageRetries(ctx), 10)
 	})
 
 	t.Run("case=defaults", func(t *testing.T) {
 		conf, _ := config.New(ctx, logrusx.New("", ""), os.Stderr, configx.SkipValidation())
-		assert.Equal(t, conf.CourierMessageRetries(), 5)
+		assert.Equal(t, conf.CourierMessageRetries(ctx), 5)
 	})
 }
 
@@ -1148,10 +1162,10 @@ func TestCourierTemplatesConfig(t *testing.T) {
 			Subject: "",
 		}
 
-		assert.Equal(t, courierTemplateConfig, c.CourierTemplatesHelper(config.ViperKeyCourierTemplatesVerificationInvalidEmail))
-		assert.Equal(t, courierTemplateConfig, c.CourierTemplatesHelper(config.ViperKeyCourierTemplatesVerificationValidEmail))
+		assert.Equal(t, courierTemplateConfig, c.CourierTemplatesHelper(ctx, config.ViperKeyCourierTemplatesVerificationInvalidEmail))
+		assert.Equal(t, courierTemplateConfig, c.CourierTemplatesHelper(ctx, config.ViperKeyCourierTemplatesVerificationValidEmail))
 		// this should return an empty courierEmailTemplate as the key does not exist
-		assert.Equal(t, courierTemplateConfig, c.CourierTemplatesHelper("a_random_key"))
+		assert.Equal(t, courierTemplateConfig, c.CourierTemplatesHelper(ctx, "a_random_key"))
 
 		courierTemplateConfig = &config.CourierEmailTemplate{
 			Body: &config.CourierEmailBodyTemplate{
@@ -1160,7 +1174,7 @@ func TestCourierTemplatesConfig(t *testing.T) {
 			},
 			Subject: "base64://QWNjb3VudCBBY2Nlc3MgQXR0ZW1wdGVk",
 		}
-		assert.Equal(t, courierTemplateConfig, c.CourierTemplatesHelper(config.ViperKeyCourierTemplatesRecoveryInvalidEmail))
+		assert.Equal(t, courierTemplateConfig, c.CourierTemplatesHelper(ctx, config.ViperKeyCourierTemplatesRecoveryInvalidEmail))
 
 		courierTemplateConfig = &config.CourierEmailTemplate{
 			Body: &config.CourierEmailBodyTemplate{
@@ -1169,20 +1183,22 @@ func TestCourierTemplatesConfig(t *testing.T) {
 			},
 			Subject: "base64://UmVjb3ZlciBhY2Nlc3MgdG8geW91ciBhY2NvdW50",
 		}
-		assert.Equal(t, courierTemplateConfig, c.CourierTemplatesHelper(config.ViperKeyCourierTemplatesRecoveryValidEmail))
+		assert.Equal(t, courierTemplateConfig, c.CourierTemplatesHelper(ctx, config.ViperKeyCourierTemplatesRecoveryValidEmail))
 	})
 }
 
 func TestCleanup(t *testing.T) {
+	ctx := context.Background()
+
 	p := config.MustNew(t, logrusx.New("", ""), os.Stderr,
 		configx.WithConfigFiles("stub/.kratos.yaml"))
 
 	t.Run("group=cleanup config", func(t *testing.T) {
-		assert.Equal(t, p.DatabaseCleanupSleepTables(), 1*time.Minute)
-		p.MustSet(config.ViperKeyDatabaseCleanupSleepTables, "1s")
-		assert.Equal(t, p.DatabaseCleanupSleepTables(), time.Second)
-		assert.Equal(t, p.DatabaseCleanupBatchSize(), 100)
-		p.MustSet(config.ViperKeyDatabaseCleanupBatchSize, "1")
-		assert.Equal(t, p.DatabaseCleanupBatchSize(), 1)
+		assert.Equal(t, p.DatabaseCleanupSleepTables(ctx), 1*time.Minute)
+		p.MustSet(ctx, config.ViperKeyDatabaseCleanupSleepTables, "1s")
+		assert.Equal(t, p.DatabaseCleanupSleepTables(ctx), time.Second)
+		assert.Equal(t, p.DatabaseCleanupBatchSize(ctx), 100)
+		p.MustSet(ctx, config.ViperKeyDatabaseCleanupBatchSize, "1")
+		assert.Equal(t, p.DatabaseCleanupBatchSize(ctx), 1)
 	})
 }

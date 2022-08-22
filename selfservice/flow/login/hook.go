@@ -65,7 +65,7 @@ func NewHookExecutor(d executorDependencies) *HookExecutor {
 
 func (e *HookExecutor) requiresAAL2(r *http.Request, s *session.Session, a *Flow) (*session.ErrAALNotSatisfied, bool) {
 	var aalErr *session.ErrAALNotSatisfied
-	err := e.d.SessionManager().DoesSessionSatisfy(r, s, e.d.Config(r.Context()).SessionWhoAmIAAL())
+	err := e.d.SessionManager().DoesSessionSatisfy(r, s, e.d.Config().SessionWhoAmIAAL(r.Context()))
 	if ok := errors.As(err, &aalErr); !ok {
 		return nil, false
 	}
@@ -101,18 +101,18 @@ func (e *HookExecutor) handleLoginError(_ http.ResponseWriter, r *http.Request, 
 }
 
 func (e *HookExecutor) PostLoginHook(w http.ResponseWriter, r *http.Request, g node.UiNodeGroup, a *Flow, i *identity.Identity, s *session.Session) error {
-	if err := s.Activate(i, e.d.Config(r.Context()), time.Now().UTC()); err != nil {
+	if err := s.Activate(r.Context(), i, e.d.Config(), time.Now().UTC()); err != nil {
 		return err
 	}
 
 	// Verify the redirect URL before we do any other processing.
-	c := e.d.Config(r.Context())
-	returnTo, err := x.SecureRedirectTo(r, c.SelfServiceBrowserDefaultReturnTo(),
+	c := e.d.Config()
+	returnTo, err := x.SecureRedirectTo(r, c.SelfServiceBrowserDefaultReturnTo(r.Context()),
 		x.SecureRedirectReturnTo(a.ReturnTo),
 		x.SecureRedirectUseSourceURL(a.RequestURL),
-		x.SecureRedirectAllowURLs(c.SelfServiceBrowserAllowedReturnToDomains()),
-		x.SecureRedirectAllowSelfServiceURLs(c.SelfPublicURL()),
-		x.SecureRedirectOverrideDefaultReturnTo(e.d.Config(r.Context()).SelfServiceFlowLoginReturnTo(a.Active.String())),
+		x.SecureRedirectAllowURLs(c.SelfServiceBrowserAllowedReturnToDomains(r.Context())),
+		x.SecureRedirectAllowSelfServiceURLs(c.SelfPublicURL(r.Context())),
+		x.SecureRedirectOverrideDefaultReturnTo(e.d.Config().SelfServiceFlowLoginReturnTo(r.Context(), a.Active.String())),
 	)
 	if err != nil {
 		return err

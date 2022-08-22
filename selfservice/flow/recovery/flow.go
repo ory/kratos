@@ -12,7 +12,6 @@ import (
 	"github.com/gofrs/uuid"
 	"github.com/pkg/errors"
 
-	"github.com/ory/kratos/corp"
 	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/selfservice/flow"
 	"github.com/ory/kratos/ui/container"
@@ -101,10 +100,10 @@ func NewFlow(conf *config.Config, exp time.Duration, csrf string, r *http.Reques
 	// Pre-validate the return to URL which is contained in the HTTP request.
 	requestURL := x.RequestURL(r).String()
 	_, err := x.SecureRedirectTo(r,
-		conf.SelfServiceBrowserDefaultReturnTo(),
+		conf.SelfServiceBrowserDefaultReturnTo(r.Context()),
 		x.SecureRedirectUseSourceURL(requestURL),
-		x.SecureRedirectAllowURLs(conf.SelfServiceBrowserAllowedReturnToDomains()),
-		x.SecureRedirectAllowSelfServiceURLs(conf.SelfPublicURL()),
+		x.SecureRedirectAllowURLs(conf.SelfServiceBrowserAllowedReturnToDomains(r.Context())),
+		x.SecureRedirectAllowSelfServiceURLs(conf.SelfPublicURL(r.Context())),
 	)
 	if err != nil {
 		return nil, err
@@ -117,7 +116,7 @@ func NewFlow(conf *config.Config, exp time.Duration, csrf string, r *http.Reques
 		RequestURL: requestURL,
 		UI: &container.Container{
 			Method: "POST",
-			Action: flow.AppendFlowTo(urlx.AppendPaths(conf.SelfPublicURL(), RouteSubmitFlow), id).String(),
+			Action: flow.AppendFlowTo(urlx.AppendPaths(conf.SelfPublicURL(r.Context()), RouteSubmitFlow), id).String(),
 		},
 		State:     StateChooseMethod,
 		CSRFToken: csrf,
@@ -157,7 +156,7 @@ func (f *Flow) GetRequestURL() string {
 }
 
 func (f Flow) TableName(ctx context.Context) string {
-	return corp.ContextualizeTableName(ctx, "selfservice_recovery_flows")
+	return "selfservice_recovery_flows"
 }
 
 func (f Flow) GetID() uuid.UUID {

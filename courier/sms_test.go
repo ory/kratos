@@ -23,6 +23,8 @@ import (
 )
 
 func TestQueueSMS(t *testing.T) {
+	ctx := context.Background()
+
 	expectedSender := "Kratos Test"
 	expectedSMS := []*sms.TestStubModel{
 		{
@@ -75,13 +77,11 @@ func TestQueueSMS(t *testing.T) {
 	}`, srv.URL)
 
 	conf, reg := internal.NewFastRegistryWithMocks(t)
-	conf.MustSet(config.ViperKeyCourierSMSRequestConfig, requestConfig)
-	conf.MustSet(config.ViperKeyCourierSMSFrom, expectedSender)
-	conf.MustSet(config.ViperKeyCourierSMSEnabled, true)
-	conf.MustSet(config.ViperKeyCourierSMTPURL, "http://foo.url")
+	conf.MustSet(ctx, config.ViperKeyCourierSMSRequestConfig, requestConfig)
+	conf.MustSet(ctx, config.ViperKeyCourierSMSFrom, expectedSender)
+	conf.MustSet(ctx, config.ViperKeyCourierSMSEnabled, true)
+	conf.MustSet(ctx, config.ViperKeyCourierSMTPURL, "http://foo.url")
 	reg.Logger().Level = logrus.TraceLevel
-
-	ctx := context.Background()
 
 	c := reg.Courier(ctx)
 
@@ -116,18 +116,19 @@ func TestQueueSMS(t *testing.T) {
 }
 
 func TestDisallowedInternalNetwork(t *testing.T) {
+	ctx := context.Background()
+
 	conf, reg := internal.NewFastRegistryWithMocks(t)
-	conf.MustSet(config.ViperKeyCourierSMSRequestConfig, fmt.Sprintf(`{
+	conf.MustSet(ctx, config.ViperKeyCourierSMSRequestConfig, fmt.Sprintf(`{
 		"url": "http://127.0.0.1/",
 		"method": "GET",
 		"body": "file://./stub/request.config.twilio.jsonnet"
 	}`))
-	conf.MustSet(config.ViperKeyCourierSMSEnabled, true)
-	conf.MustSet(config.ViperKeyCourierSMTPURL, "http://foo.url")
-	conf.MustSet(config.ViperKeyClientHTTPNoPrivateIPRanges, true)
+	conf.MustSet(ctx, config.ViperKeyCourierSMSEnabled, true)
+	conf.MustSet(ctx, config.ViperKeyCourierSMTPURL, "http://foo.url")
+	conf.MustSet(ctx, config.ViperKeyClientHTTPNoPrivateIPRanges, true)
 	reg.Logger().Level = logrus.TraceLevel
 
-	ctx := context.Background()
 	c := reg.Courier(ctx)
 	c.(interface {
 		FailOnDispatchError()

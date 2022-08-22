@@ -6,9 +6,9 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/ory/x/fsx"
+	"github.com/ory/x/contextx"
 
-	"github.com/ory/kratos/corp"
+	"github.com/ory/x/fsx"
 
 	"github.com/gobuffalo/pop/v6"
 	"github.com/gobuffalo/pop/v6/columns"
@@ -38,6 +38,7 @@ type (
 		identity.ValidationProvider
 		x.LoggingProvider
 		config.Provider
+		contextx.Provider
 		x.TracingProvider
 	}
 	Persister struct {
@@ -64,12 +65,8 @@ func NewPersister(ctx context.Context, r persisterDependencies, c *pop.Connectio
 	}, nil
 }
 
-func (p *Persister) NetworkID() uuid.UUID {
-	if p.nid == uuid.Nil {
-		panic("NetworkID called before initialized")
-	}
-
-	return p.nid
+func (p *Persister) NetworkID(ctx context.Context) uuid.UUID {
+	return p.r.Contextualizer().Network(ctx, p.nid)
 }
 
 func (p Persister) WithNetworkID(sid uuid.UUID) persistence.Persister {
@@ -245,7 +242,7 @@ func (p *Persister) delete(ctx context.Context, v interface{}, id uuid.UUID) err
 	ctx, span := p.r.Tracer(ctx).Tracer().Start(ctx, "persistence.sql.delete")
 	defer span.End()
 
-	nid := corp.ContextualizeNID(ctx, p.nid)
+	nid := p.NetworkID(ctx)
 
 	tabler, ok := v.(interface {
 		TableName(ctx context.Context) string

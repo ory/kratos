@@ -15,7 +15,7 @@ type router interface {
 
 func NewConfigHashHandler(c Provider, router router) {
 	router.GET("/health/config", func(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
-		bytes, _ := c.Config(r.Context()).Source().Marshal(json.Parser())
+		bytes, _ := c.Config().GetProvider(r.Context()).Marshal(json.Parser())
 		sum := sha256.Sum256(bytes)
 		w.Header().Set("Content-Type", "text/plain")
 		_, _ = fmt.Fprintf(w, "%x", sum)

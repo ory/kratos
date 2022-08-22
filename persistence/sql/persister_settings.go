@@ -7,8 +7,6 @@ import (
 
 	"github.com/gofrs/uuid"
 
-	"github.com/ory/kratos/corp"
-
 	"github.com/ory/x/sqlcon"
 
 	"github.com/ory/kratos/selfservice/flow/settings"
@@ -20,7 +18,7 @@ func (p *Persister) CreateSettingsFlow(ctx context.Context, r *settings.Flow) er
 	ctx, span := p.r.Tracer(ctx).Tracer().Start(ctx, "persistence.sql.CreateSettingsFlow")
 	defer span.End()
 
-	r.NID = corp.ContextualizeNID(ctx, p.nid)
+	r.NID = p.NetworkID(ctx)
 	r.EnsureInternalContext()
 	return sqlcon.HandleError(p.GetConnection(ctx).Create(r))
 }
@@ -31,7 +29,7 @@ func (p *Persister) GetSettingsFlow(ctx context.Context, id uuid.UUID) (*setting
 
 	var r settings.Flow
 
-	err := p.GetConnection(ctx).Where("id = ? AND nid = ?", id, corp.ContextualizeNID(ctx, p.nid)).First(&r)
+	err := p.GetConnection(ctx).Where("id = ? AND nid = ?", id, p.NetworkID(ctx)).First(&r)
 	if err != nil {
 		return nil, sqlcon.HandleError(err)
 	}
@@ -50,7 +48,7 @@ func (p *Persister) UpdateSettingsFlow(ctx context.Context, r *settings.Flow) er
 
 	r.EnsureInternalContext()
 	cp := *r
-	cp.NID = corp.ContextualizeNID(ctx, p.nid)
+	cp.NID = p.NetworkID(ctx)
 	return p.update(ctx, cp)
 }
 
@@ -63,7 +61,7 @@ func (p *Persister) DeleteExpiredSettingsFlows(ctx context.Context, expiresAt ti
 		limit,
 	),
 		expiresAt,
-		corp.ContextualizeNID(ctx, p.nid),
+		p.NetworkID(ctx),
 	).Exec()
 	if err != nil {
 		return sqlcon.HandleError(err)

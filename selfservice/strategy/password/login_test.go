@@ -46,8 +46,9 @@ import (
 var loginSchema []byte
 
 func TestCompleteLogin(t *testing.T) {
+	ctx := context.Background()
 	conf, reg := internal.NewFastRegistryWithMocks(t)
-	conf.MustSet(config.ViperKeySelfServiceStrategyConfig+"."+string(identity.CredentialsTypePassword),
+	conf.MustSet(ctx, config.ViperKeySelfServiceStrategyConfig+"."+string(identity.CredentialsTypePassword),
 		map[string]interface{}{"enabled": true})
 	router := x.NewRouterPublic()
 	publicTS, _ := testhelpers.NewKratosServerWithRouters(t, reg, router, x.NewRouterAdmin())
@@ -57,11 +58,11 @@ func TestCompleteLogin(t *testing.T) {
 	redirTS := testhelpers.NewRedirSessionEchoTS(t, reg)
 
 	// Overwrite these two:
-	conf.MustSet(config.ViperKeySelfServiceErrorUI, errTS.URL+"/error-ts")
-	conf.MustSet(config.ViperKeySelfServiceLoginUI, uiTS.URL+"/login-ts")
+	conf.MustSet(ctx, config.ViperKeySelfServiceErrorUI, errTS.URL+"/error-ts")
+	conf.MustSet(ctx, config.ViperKeySelfServiceLoginUI, uiTS.URL+"/login-ts")
 
 	testhelpers.SetDefaultIdentitySchemaFromRaw(conf, loginSchema)
-	conf.MustSet(config.ViperKeySecretsDefault, []string{"not-a-secure-session-key"})
+	conf.MustSet(ctx, config.ViperKeySecretsDefault, []string{"not-a-secure-session-key"})
 
 	ensureFieldsExist := func(t *testing.T, body []byte) {
 		registrationhelpers.CheckFormContent(t, body, "identifier",
@@ -70,7 +71,7 @@ func TestCompleteLogin(t *testing.T) {
 	}
 
 	createIdentity := func(identifier, password string) {
-		p, _ := reg.Hasher().Generate(context.Background(), []byte(password))
+		p, _ := reg.Hasher(ctx).Generate(context.Background(), []byte(password))
 		iId := x.NewUUID()
 		require.NoError(t, reg.PrivilegedIdentityPool().CreateIdentity(context.Background(), &identity.Identity{
 			ID:     iId,
@@ -180,9 +181,9 @@ func TestCompleteLogin(t *testing.T) {
 	})
 
 	t.Run("case=should return an error because the request is expired", func(t *testing.T) {
-		conf.MustSet(config.ViperKeySelfServiceLoginRequestLifespan, "50ms")
+		conf.MustSet(ctx, config.ViperKeySelfServiceLoginRequestLifespan, "50ms")
 		t.Cleanup(func() {
-			conf.MustSet(config.ViperKeySelfServiceLoginRequestLifespan, "10m")
+			conf.MustSet(ctx, config.ViperKeySelfServiceLoginRequestLifespan, "10m")
 		})
 		values := url.Values{
 			"csrf_token": {x.FakeCSRFToken},
@@ -299,13 +300,13 @@ func TestCompleteLogin(t *testing.T) {
 		return testhelpers.SubmitLoginForm(t, isAPI, nil, publicTS, values,
 			isSPA, refresh,
 			testhelpers.ExpectStatusCode(isAPI || isSPA, http.StatusBadRequest, http.StatusOK),
-			testhelpers.ExpectURL(isAPI || isSPA, publicTS.URL+login.RouteSubmitFlow, conf.SelfServiceFlowLoginUI().String()))
+			testhelpers.ExpectURL(isAPI || isSPA, publicTS.URL+login.RouteSubmitFlow, conf.SelfServiceFlowLoginUI(ctx).String()))
 	}
 
 	t.Run("should return an error because the credentials are invalid (user does not exist)", func(t *testing.T) {
 		var check = func(t *testing.T, body string, start time.Time) {
 			delay := time.Since(start)
-			minConfiguredDelay := conf.HasherArgon2().ExpectedDuration - conf.HasherArgon2().ExpectedDeviation
+			minConfiguredDelay := conf.HasherArgon2(ctx).ExpectedDuration - conf.HasherArgon2(ctx).ExpectedDeviation
 			assert.GreaterOrEqual(t, delay, minConfiguredDelay)
 			assert.NotEmpty(t, gjson.Get(body, "id").String(), "%s", body)
 			assert.Contains(t, gjson.Get(body, "ui.action").String(), publicTS.URL+login.RouteSubmitFlow, "%s", body)
@@ -764,7 +765,7 @@ func TestCompleteLogin(t *testing.T) {
 	})
 
 	t.Run("should fail as email is not yet verified", func(t *testing.T) {
-		conf.MustSet(config.ViperKeySelfServiceLoginAfter+".password.hooks", []map[string]interface{}{
+		conf.MustSet(ctx, config.ViperKeySelfServiceLoginAfter+".password.hooks", []map[string]interface{}{
 			{"hook": "require_verified_address"},
 		})
 
@@ -849,7 +850,7 @@ func TestCompleteLogin(t *testing.T) {
 		require.NoError(t, err)
 		var o identity.CredentialsPassword
 		require.NoError(t, json.NewDecoder(bytes.NewBuffer(c.Config)).Decode(&o))
-		assert.True(t, reg.Hasher().Understands([]byte(o.HashedPassword)), "%s", o.HashedPassword)
+		assert.True(t, reg.Hasher(ctx).Understands([]byte(o.HashedPassword)), "%s", o.HashedPassword)
 		assert.True(t, hash.IsBcryptHash([]byte(o.HashedPassword)), "%s", o.HashedPassword)
 
 		// retry after upgraded

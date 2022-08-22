@@ -28,17 +28,17 @@ func (t *RecoveryInvalid) EmailRecipient() (string, error) {
 }
 
 func (t *RecoveryInvalid) EmailSubject(ctx context.Context) (string, error) {
-	subject, err := template.LoadText(ctx, t.d, os.DirFS(t.d.CourierConfig(ctx).CourierTemplatesRoot()), "recovery/invalid/email.subject.gotmpl", "recovery/invalid/email.subject*", t.m, t.d.CourierConfig(ctx).CourierTemplatesRecoveryInvalid().Subject)
+	subject, err := template.LoadText(ctx, t.d, os.DirFS(t.d.CourierConfig().CourierTemplatesRoot(ctx)), "recovery/invalid/email.subject.gotmpl", "recovery/invalid/email.subject*", t.m, t.d.CourierConfig().CourierTemplatesRecoveryInvalid(ctx).Subject)
 
 	return strings.TrimSpace(subject), err
 }
 
 func (t *RecoveryInvalid) EmailBody(ctx context.Context) (string, error) {
-	return template.LoadHTML(ctx, t.d, os.DirFS(t.d.CourierConfig(ctx).CourierTemplatesRoot()), "recovery/invalid/email.body.gotmpl", "recovery/invalid/email.body*", t.m, t.d.CourierConfig(ctx).CourierTemplatesRecoveryInvalid().Body.HTML)
+	return template.LoadHTML(ctx, t.d, os.DirFS(t.d.CourierConfig().CourierTemplatesRoot(ctx)), "recovery/invalid/email.body.gotmpl", "recovery/invalid/email.body*", t.m, t.d.CourierConfig().CourierTemplatesRecoveryInvalid(ctx).Body.HTML)
 }
 
 func (t *RecoveryInvalid) EmailBodyPlaintext(ctx context.Context) (string, error) {
-	return template.LoadText(ctx, t.d, os.DirFS(t.d.CourierConfig(ctx).CourierTemplatesRoot()), "recovery/invalid/email.body.plaintext.gotmpl", "recovery/invalid/email.body.plaintext*", t.m, t.d.CourierConfig(ctx).CourierTemplatesRecoveryInvalid().Body.PlainText)
+	return template.LoadText(ctx, t.d, os.DirFS(t.d.CourierConfig().CourierTemplatesRoot(ctx)), "recovery/invalid/email.body.plaintext.gotmpl", "recovery/invalid/email.body.plaintext*", t.m, t.d.CourierConfig().CourierTemplatesRecoveryInvalid(ctx).Body.PlainText)
 }
 
 func (t *RecoveryInvalid) MarshalJSON() ([]byte, error) {

@@ -168,18 +168,20 @@ func newHydraIntegration(t *testing.T, remote *string, subject *string, claims *
 }
 
 func newReturnTs(t *testing.T, reg driver.Registry) *httptest.Server {
+	ctx := context.Background()
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		sess, err := reg.SessionManager().FetchFromRequest(r.Context(), r)
 		require.NoError(t, err)
 		require.Empty(t, sess.Identity.Credentials)
 		reg.Writer().Write(w, r, sess)
 	}))
-	reg.Config(context.Background()).MustSet(config.ViperKeySelfServiceBrowserDefaultReturnTo, ts.URL)
+	reg.Config().MustSet(ctx, config.ViperKeySelfServiceBrowserDefaultReturnTo, ts.URL)
 	t.Cleanup(ts.Close)
 	return ts
 }
 
 func newUI(t *testing.T, reg driver.Registry) *httptest.Server {
+	ctx := context.Background()
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		var e interface{}
 		var err error
@@ -195,9 +197,9 @@ func newUI(t *testing.T, reg driver.Registry) *httptest.Server {
 		reg.Writer().Write(w, r, e)
 	}))
 	t.Cleanup(ts.Close)
-	reg.Config(context.Background()).MustSet(config.ViperKeySelfServiceLoginUI, ts.URL+"/login")
-	reg.Config(context.Background()).MustSet(config.ViperKeySelfServiceRegistrationUI, ts.URL+"/registration")
-	reg.Config(context.Background()).MustSet(config.ViperKeySelfServiceSettingsURL, ts.URL+"/settings")
+	reg.Config().MustSet(ctx, config.ViperKeySelfServiceLoginUI, ts.URL+"/login")
+	reg.Config().MustSet(ctx, config.ViperKeySelfServiceRegistrationUI, ts.URL+"/registration")
+	reg.Config().MustSet(ctx, config.ViperKeySelfServiceSettingsURL, ts.URL+"/settings")
 	return ts
 }
 
@@ -270,8 +272,9 @@ func newOIDCProvider(
 }
 
 func viperSetProviderConfig(t *testing.T, conf *config.Config, providers ...oidc.Configuration) {
-	conf.MustSet(config.ViperKeySelfServiceStrategyConfig+"."+string(identity.CredentialsTypeOIDC)+".config", &oidc.ConfigurationCollection{Providers: providers})
-	conf.MustSet(config.ViperKeySelfServiceStrategyConfig+"."+string(identity.CredentialsTypeOIDC)+".enabled", true)
+	ctx := context.Background()
+	conf.MustSet(ctx, config.ViperKeySelfServiceStrategyConfig+"."+string(identity.CredentialsTypeOIDC)+".config", &oidc.ConfigurationCollection{Providers: providers})
+	conf.MustSet(ctx, config.ViperKeySelfServiceStrategyConfig+"."+string(identity.CredentialsTypeOIDC)+".enabled", true)
 }
 
 func newClient(t *testing.T, jar *cookiejar.Jar) *http.Client {

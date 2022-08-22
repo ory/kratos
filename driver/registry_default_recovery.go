@@ -26,7 +26,7 @@ func (m *RegistryDefault) RecoveryHandler() *recovery.Handler {
 func (m *RegistryDefault) RecoveryStrategies(ctx context.Context) (recoveryStrategies recovery.Strategies) {
 	for _, strategy := range m.selfServiceStrategies() {
 		if s, ok := strategy.(recovery.Strategy); ok {
-			if m.Config(ctx).SelfServiceStrategy(s.RecoveryStrategyID()).Enabled {
+			if m.Config().SelfServiceStrategy(ctx, s.RecoveryStrategyID()).Enabled {
 				recoveryStrategies = append(recoveryStrategies, s)
 			}
 		}
@@ -51,7 +51,7 @@ func (m *RegistryDefault) RecoveryExecutor() *recovery.HookExecutor {
 }
 
 func (m *RegistryDefault) PostRecoveryHooks(ctx context.Context) (b []recovery.PostHookExecutor) {
-	for _, v := range m.getHooks(config.HookGlobal, m.Config(ctx).SelfServiceFlowRecoveryAfterHooks(config.HookGlobal)) {
+	for _, v := range m.getHooks(config.HookGlobal, m.Config().SelfServiceFlowRecoveryAfterHooks(ctx, config.HookGlobal)) {
 		if hook, ok := v.(recovery.PostHookExecutor); ok {
 			b = append(b, hook)
 		}
