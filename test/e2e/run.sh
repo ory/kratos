@@ -9,12 +9,12 @@ make .bin/yq
 make .bin/modd
 
 export PATH=.bin:$PATH
-export KRATOS_PUBLIC_URL=http://localhost:4433/
-export KRATOS_BROWSER_URL=http://localhost:4433/
-export KRATOS_ADMIN_URL=http://localhost:4434/
-export KRATOS_UI_URL=http://localhost:4456/
-export KRATOS_UI_REACT_URL=http://localhost:4458/
-export KRATOS_UI_REACT_NATIVE_URL=http://localhost:4457/
+export KRATOS_PUBLIC_URL=http://127.0.0.1:4433/
+export KRATOS_BROWSER_URL=http://127.0.0.1:4433/
+export KRATOS_ADMIN_URL=http://127.0.0.1:4434/
+export KRATOS_UI_URL=http://127.0.0.1:4456/
+export KRATOS_UI_REACT_URL=http://127.0.0.1:4458/
+export KRATOS_UI_REACT_NATIVE_URL=http://127.0.0.1:4457/
 export LOG_LEAK_SENSITIVE_VALUES=true
 export DEV_DISABLE_API_FLOW_ENFORCEMENT=true
 
@@ -58,9 +58,9 @@ prepare() {
     docker run --name kratos_test_database_postgres -p 3445:5432 -e POSTGRES_PASSWORD=secret -e POSTGRES_DB=postgres -d postgres:9.6 postgres -c log_statement=all
     docker run --name kratos_test_database_cockroach -p 3446:26257 -d cockroachdb/cockroach:v20.2.4 start-single-node --insecure
 
-    export TEST_DATABASE_MYSQL="mysql://root:secret@(localhost:3444)/mysql?parseTime=true&multiStatements=true"
-    export TEST_DATABASE_POSTGRESQL="postgres://postgres:secret@localhost:3445/postgres?sslmode=disable"
-    export TEST_DATABASE_COCKROACHDB="cockroach://root@localhost:3446/defaultdb?sslmode=disable"
+    export TEST_DATABASE_MYSQL="mysql://root:secret@(127.0.0.1:3444)/mysql?parseTime=true&multiStatements=true"
+    export TEST_DATABASE_POSTGRESQL="postgres://postgres:secret@127.0.0.1:3445/postgres?sslmode=disable"
+    export TEST_DATABASE_COCKROACHDB="cockroach://root@127.0.0.1:3446/defaultdb?sslmode=disable"
   fi
 
   if [ -z ${NODE_UI_PATH+x} ]; then
@@ -100,53 +100,53 @@ prepare() {
   fi
 
   # Check if any ports that we need are open already
-  ! nc -zv localhost 4446
-  ! nc -zv localhost 4455
-  ! nc -zv localhost 4456
-  ! nc -zv localhost 4457
-  ! nc -zv localhost 4458
+  ! nc -zv 127.0.0.1 4446
+  ! nc -zv 127.0.0.1 4455
+  ! nc -zv 127.0.0.1 4456
+  ! nc -zv 127.0.0.1 4457
+  ! nc -zv 127.0.0.1 4458
 
   (
     cd "$rn_ui_dir"
     npm i expo-cli
-    WEB_PORT=4457 KRATOS_URL=http://localhost:4433 npm run web -- --non-interactive \
+    WEB_PORT=4457 KRATOS_URL=http://127.0.0.1:4433 npm run web -- --non-interactive \
       >"${base}/test/e2e/rn-profile-app.e2e.log" 2>&1 &
   )
 
   hydra serve all -c test/e2e/hydra.yml --dangerous-force-http >"${base}/test/e2e/hydra.e2e.log" 2>&1 &
 
-  (cd test/e2e; npm run wait-on -- -l -t 300000 http-get://localhost:4445/health/alive)
+  (cd test/e2e; npm run wait-on -- -l -t 300000 http-get://127.0.0.1:4445/health/alive)
 
   hydra clients delete \
-    --endpoint http://localhost:4445 \
+    --endpoint http://127.0.0.1:4445 \
     kratos-client google-client github-client || true
 
   hydra clients create \
-    --endpoint http://localhost:4445 \
+    --endpoint http://127.0.0.1:4445 \
     --id kratos-client \
     --secret kratos-secret \
     --grant-types authorization_code,refresh_token \
     --response-types code,id_token \
     --scope openid,offline \
-    --callbacks http://localhost:4455/self-service/methods/oidc/callback/hydra
+    --callbacks http://127.0.0.1:4455/self-service/methods/oidc/callback/hydra
 
   hydra clients create \
-    --endpoint http://localhost:4445 \
+    --endpoint http://127.0.0.1:4445 \
     --id google-client \
     --secret kratos-secret \
     --grant-types authorization_code,refresh_token \
     --response-types code,id_token \
     --scope openid,offline \
-    --callbacks http://localhost:4455/self-service/methods/oidc/callback/google
+    --callbacks http://127.0.0.1:4455/self-service/methods/oidc/callback/google
 
   hydra clients create \
-    --endpoint http://localhost:4445 \
+    --endpoint http://127.0.0.1:4445 \
     --id github-client \
     --secret kratos-secret \
     --grant-types authorization_code,refresh_token \
     --response-types code,id_token \
     --scope openid,offline \
-    --callbacks http://localhost:4455/self-service/methods/oidc/callback/github
+    --callbacks http://127.0.0.1:4455/self-service/methods/oidc/callback/github
 
   if [ -z ${NODE_UI_PATH+x} ]; then
     (
@@ -165,14 +165,14 @@ prepare() {
   if [ -z ${REACT_UI_PATH+x} ]; then
     (
       cd "$react_ui_dir"
-      ORY_KRATOS_URL=http://localhost:4433 npm run build
-      ORY_KRATOS_URL=http://localhost:4433 npm run start -- --hostname 0.0.0.0 --port 4458 \
+      ORY_KRATOS_URL=http://127.0.0.1:4433 npm run build
+      ORY_KRATOS_URL=http://127.0.0.1:4433 npm run start -- --hostname 0.0.0.0 --port 4458 \
         >"${base}/test/e2e/react-iu.e2e.log" 2>&1 &
     )
   else
     (
       cd "$react_ui_dir"
-      PORT=4458 ORY_KRATOS_URL=http://localhost:4433 npm run dev \
+      PORT=4458 ORY_KRATOS_URL=http://127.0.0.1:4433 npm run dev \
         >"${base}/test/e2e/react-iu.e2e.log" 2>&1 &
     )
   fi
@@ -186,7 +186,7 @@ prepare() {
   (
     cd test/e2e/hydra-login-consent
     go build .
-    PORT=4446 HYDRA_ADMIN_URL=http://localhost:4445 ./hydra-login-consent >"${base}/test/e2e/hydra-ui.e2e.log" 2>&1 &
+    PORT=4446 HYDRA_ADMIN_URL=http://127.0.0.1:4445 ./hydra-login-consent >"${base}/test/e2e/hydra-ui.e2e.log" 2>&1 &
   )
 }
 
@@ -196,8 +196,8 @@ run() {
 
   export DSN=${1}
 
-  ! nc -zv localhost 4434
-  ! nc -zv localhost 4433
+  ! nc -zv 127.0.0.1 4434
+  ! nc -zv 127.0.0.1 4433
 
   ls -la .
   for profile in email mobile oidc recovery verification mfa spa network passwordless webhooks; do
@@ -205,17 +205,24 @@ run() {
     cp test/e2e/kratos.email.yml test/e2e/kratos.generated.yml
   done
 
-  (modd -f test/e2e/modd.conf >"${base}/test/e2e/kratos.e2e.log" 2>&1 &)
+  (modd -f test/e2e/modd.conf)
 
-  npm run wait-on -- -v -l -t 300000 http-get://localhost:4434/health/ready \
-    http-get://localhost:4455/health/ready \
-    http-get://localhost:4445/health/ready \
-    http-get://localhost:4446/ \
-    http-get://localhost:4456/health/alive \
-    http-get://localhost:4457/ \
-    http-get://localhost:4437/mail \
-    http-get://localhost:4458/ \
-    http-get://localhost:4459/health
+  echo "----------- start"
+
+  cat ${base}/test/e2e/kratos.e2e.log
+
+  echo "----------- end"
+
+  npm run wait-on -- -v -l -t 300000 http-get://127.0.0.1:4434/health/ready \
+    http-get://127.0.0.1:4455/health/ready \
+    http-get://127.0.0.1:4445/health/ready \
+    http-get://127.0.0.1:4446/ \
+    http-get://127.0.0.1:4456/health/alive \
+    http-get://127.0.0.1:4457/ \
+    http-get://127.0.0.1:4437/mail \
+    http-get://127.0.0.1:4458/ \
+    http-get://127.0.0.1:4459/health
+
 
   if [[ $dev == "yes" ]]; then
     (cd test/e2e; npm run test:watch --)
