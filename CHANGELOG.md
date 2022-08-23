@@ -4,12 +4,13 @@
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 **Table of Contents**
 
-- [ (2022-08-19)](#2022-08-19)
+- [ (2022-08-23)](#2022-08-23)
   - [Breaking Changes](#breaking-changes)
     - [Bug Fixes](#bug-fixes)
     - [Code Refactoring](#code-refactoring)
     - [Documentation](#documentation)
     - [Features](#features)
+    - [Reverts](#reverts)
     - [Tests](#tests)
 - [0.10.1 (2022-06-01)](#0101-2022-06-01)
     - [Bug Fixes](#bug-fixes-1)
@@ -63,7 +64,7 @@
     - [Code Refactoring](#code-refactoring-3)
     - [Documentation](#documentation-6)
     - [Features](#features-4)
-    - [Reverts](#reverts)
+    - [Reverts](#reverts-1)
     - [Tests](#tests-4)
     - [Unclassified](#unclassified-2)
 - [0.7.6-alpha.1 (2021-09-12)](#076-alpha1-2021-09-12)
@@ -263,7 +264,7 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# [](https://github.com/ory/kratos/compare/v0.10.1...v) (2022-08-19)
+# [](https://github.com/ory/kratos/compare/v0.10.1...v) (2022-08-23)
 
 ## Breaking Changes
 
@@ -324,6 +325,8 @@ SDK Method `getJsonSchema` was renamed to `getIdentitySchema`.
   closes [#2426](https://github.com/ory/kratos/issues/2426)
 - Ignore CSRF for session extension on public route
   ([866b472](https://github.com/ory/kratos/commit/866b472750fba7bf498d359796f24867af7270ad))
+- Ignore error explicitly
+  ([772d596](https://github.com/ory/kratos/commit/772d5968d5a0cb7ac9415cfb2b1e9e86ae3a3131))
 - Improve migration status speed
   ([#2637](https://github.com/ory/kratos/issues/2637))
   ([a2e3c41](https://github.com/ory/kratos/commit/a2e3c41f9e513e1de47f6320f6a10acd1fed5eea))
@@ -333,15 +336,21 @@ SDK Method `getJsonSchema` was renamed to `getIdentitySchema`.
   ([#2507](https://github.com/ory/kratos/issues/2507))
   ([0844b47](https://github.com/ory/kratos/commit/0844b47c30851c548d46273927afee103cdc0e97)),
   closes [#2506](https://github.com/ory/kratos/issues/2506)
+- Make servicelocator explicit
+  ([4f841da](https://github.com/ory/kratos/commit/4f841dae5423acf3514d50add9e99d28bc339fbb))
 - Mark gosec false positives
   ([13eaddb](https://github.com/ory/kratos/commit/13eaddb7babe630750361c6d8f3ffc736898ddec))
 - Metadata should not be required
   ([05afd68](https://github.com/ory/kratos/commit/05afd68381abe58c5e7cdd51cbf0ae409f5f0eb0))
+- Migration error detection
+  ([a115486](https://github.com/ory/kratos/commit/a11548603a4c9b46ba238d2a7ee58fffb7f6d857))
 - Panic
   ([1182278](https://github.com/ory/kratos/commit/11822789c1561b27c2d769c9ea53a81835702f4a))
 - Potentially resolve tx issue in crdb
   ([#2595](https://github.com/ory/kratos/issues/2595))
   ([9d22035](https://github.com/ory/kratos/commit/9d22035695b6a793ac4bc5e2bd0a68b3aeea039c))
+- Re-add service to quickstart
+  ([8c52c33](https://github.com/ory/kratos/commit/8c52c33cf277eda82c9b00b77cd9e03f1e5b4602))
 - Re-issue outdated cookie in /whoami
   ([#2598](https://github.com/ory/kratos/issues/2598))
   ([bf6f27e](https://github.com/ory/kratos/commit/bf6f27e37b8aa342ae002e0a9f227a31e0f7c279)),
@@ -351,6 +360,8 @@ SDK Method `getJsonSchema` was renamed to `getIdentitySchema`.
 - Remove newline sign from email subject
   ([#2576](https://github.com/ory/kratos/issues/2576))
   ([ca3d9c2](https://github.com/ory/kratos/commit/ca3d9c24e25ce501e9eae23547f87e1c35b2ea97))
+- Remove rust workaround
+  ([355ec43](https://github.com/ory/kratos/commit/355ec431a304eef236a088571e2414f96c49d862))
 - Replace io/util usage by io and os package
   ([e2d805b](https://github.com/ory/kratos/commit/e2d805b7e336d202f7cf3c2e0ce586d78ac03cc0))
 - Resolve bug where 500s in web hooks are not properly retried
@@ -389,6 +400,8 @@ SDK Method `getJsonSchema` was renamed to `getIdentitySchema`.
 
 ### Code Refactoring
 
+- Hot reloading
+  ([b0d8f38](https://github.com/ory/kratos/commit/b0d8f3853886228a64e82437643a82b3970d6ff7))
 - **sdk:** Rename `getJsonSchema` to `getIdentitySchema`
   ([#2606](https://github.com/ory/kratos/issues/2606))
   ([8dc2ecf](https://github.com/ory/kratos/commit/8dc2ecf4919c9a14ef0bd089677de66ab3cfed92))
@@ -454,6 +467,13 @@ SDK Method `getJsonSchema` was renamed to `getIdentitySchema`.
   This PR replaces the `courier.message_ttl` configuration option with a
   `courier.message_retries` option to limit how often the sending of a message
   is retried before it is marked as `abandoned`.
+
+### Reverts
+
+- Revert "autogen(openapi): regenerate swagger spec and internal client"
+  ([24eddfb](https://github.com/ory/kratos/commit/24eddfb2adc67e22d34efdc6b6a6723c7be64237)):
+
+  This reverts commit 4159b93ae3f8175cf7ccf77d34e4a7a2d0181d4f.
 
 ### Tests
 
