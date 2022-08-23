@@ -19,7 +19,8 @@ import (
 type RecoveryTokenType int
 
 const (
-	RecoveryTokenTypeAdmin RecoveryTokenType = iota + 1
+	RecoveryTokenTypeNone RecoveryTokenType = iota
+	RecoveryTokenTypeAdmin
 	RecoveryTokenTypeSelfService
 )
 

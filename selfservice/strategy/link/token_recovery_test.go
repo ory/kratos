@@ -46,3 +46,9 @@ func TestRecoveryToken(t *testing.T) {
 		})
 	})
 }
+
+func TestRecoveryTokenType(t *testing.T) {
+	assert.Equal(t, 0, int(link.RecoveryTokenTypeNone))
+	assert.Equal(t, 1, int(link.RecoveryTokenTypeAdmin))
+	assert.Equal(t, 2, int(link.RecoveryTokenTypeSelfService))
+}
