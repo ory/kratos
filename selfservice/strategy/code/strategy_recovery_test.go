@@ -377,15 +377,21 @@ func TestRecovery(t *testing.T) {
 
 			res, err := client.PostForm(action, values)
 			require.NoError(t, err)
+			if flowType == RecoveryFlowTypeBrowser {
+				assert.Equal(t, http.StatusOK, res.StatusCode)
+				assert.Contains(t, res.Request.URL.String(), conf.SelfServiceFlowSettingsUI(ctx).String())
 
-			assert.Equal(t, http.StatusOK, res.StatusCode)
-			assert.Contains(t, res.Request.URL.String(), conf.SelfServiceFlowSettingsUI(ctx).String())
+				body := ioutilx.MustReadAll(res.Body)
+				assert.Equal(t, text.NewRecoverySuccessful(time.Now().Add(time.Hour)).Text,
+					gjson.GetBytes(body, "ui.messages.0.text").String())
+				assert.Equal(t, returnTo, gjson.GetBytes(body, "return_to").String())
+			} else {
+				assert.Equal(t, http.StatusUnprocessableEntity, res.StatusCode)
 
-			body := ioutilx.MustReadAll(res.Body)
-			t.Logf("body: %s", body)
-			assert.Equal(t, text.NewRecoverySuccessful(time.Now().Add(time.Hour)).Text,
-				gjson.GetBytes(body, "ui.messages.0.text").String())
-			assert.Equal(t, returnTo, gjson.GetBytes(body, "return_to").String())
+				body := ioutilx.MustReadAll(res.Body)
+				assert.Equal(t, "browser_location_change_required", gjson.GetBytes(body, "error.id").String())
+				assert.Contains(t, gjson.GetBytes(body, "redirect_browser_to").String(), "settings-ts?")
+			}
 
 			addr, err = reg.IdentityPool().FindVerifiableAddressByValue(context.Background(), identity.VerifiableAddressTypeEmail, recoveryEmail)
 			assert.NoError(t, err)
@@ -395,7 +401,7 @@ func TestRecovery(t *testing.T) {
 
 			res, err = client.Get(public.URL + session.RouteWhoami)
 			require.NoError(t, err)
-			body = x.MustReadAll(res.Body)
+			body := x.MustReadAll(res.Body)
 			require.NoError(t, res.Body.Close())
 			assert.Equal(t, "code_recovery", gjson.GetBytes(body, "authentication_methods.0.method").String(), "%s", body)
 			assert.Equal(t, "aal1", gjson.GetBytes(body, "authenticator_assurance_level").String(), "%s", body)
@@ -757,12 +763,21 @@ func TestRecovery(t *testing.T) {
 				form.Set("code", recoveryCode)
 				res, err = c.PostForm(action, form)
 				require.NoError(t, err)
-				assert.Equal(t, http.StatusOK, res.StatusCode)
+				if testCase.FlowType == RecoveryFlowTypeBrowser {
+					assert.Equal(t, http.StatusOK, res.StatusCode)
 
-				json := ioutilx.MustReadAll(res.Body)
+					json := ioutilx.MustReadAll(res.Body)
 
-				assert.Len(t, gjson.GetBytes(json, "ui.messages").Array(), 1)
-				assert.Contains(t, gjson.GetBytes(json, "ui.messages.0.text").String(), "You successfully recovered your account.")
+					assert.Len(t, gjson.GetBytes(json, "ui.messages").Array(), 1)
+					assert.Contains(t, gjson.GetBytes(json, "ui.messages.0.text").String(), "You successfully recovered your account.")
+				} else {
+					assert.Equal(t, http.StatusUnprocessableEntity, res.StatusCode)
+
+					json := ioutilx.MustReadAll(res.Body)
+
+					assert.Equal(t, gjson.GetBytes(json, "error.id").String(), "browser_location_change_required")
+					assert.Contains(t, gjson.GetBytes(json, "redirect_browser_to").String(), "settings-ts?")
+				}
 			})
 		}
 	})
