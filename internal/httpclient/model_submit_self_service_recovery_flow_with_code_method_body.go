@@ -17,10 +17,12 @@ import (
 
 // SubmitSelfServiceRecoveryFlowWithCodeMethodBody struct for SubmitSelfServiceRecoveryFlowWithCodeMethodBody
 type SubmitSelfServiceRecoveryFlowWithCodeMethodBody struct {
+	// Code from recovery email  Sent to the user once a recovery has been initiated and is used to prove that the user is in possession of the email
+	Code *string `json:"code,omitempty"`
 	// Sending the anti-csrf token is only required for browser login flows.
 	CsrfToken *string `json:"csrf_token,omitempty"`
 	// Email to Recover  Needs to be set when initiating the flow. If the email is a registered recovery email, a recovery link will be sent. If the email is not known, a email with details on what happened will be sent instead.  format: email
-	Email string `json:"email"`
+	Email *string `json:"email,omitempty"`
 	// Method supports `link` and `code` only right now.
 	Method string `json:"method"`
 }
@@ -29,9 +31,8 @@ type SubmitSelfServiceRecoveryFlowWithCodeMethodBody struct {
 // This constructor will assign default values to properties that have it defined,
 // and makes sure properties required by API are set, but the set of arguments
 // will change when the set of required properties is changed
-func NewSubmitSelfServiceRecoveryFlowWithCodeMethodBody(email string, method string) *SubmitSelfServiceRecoveryFlowWithCodeMethodBody {
+func NewSubmitSelfServiceRecoveryFlowWithCodeMethodBody(method string) *SubmitSelfServiceRecoveryFlowWithCodeMethodBody {
 	this := SubmitSelfServiceRecoveryFlowWithCodeMethodBody{}
-	this.Email = email
 	this.Method = method
 	return &this
 }
@@ -42,6 +43,38 @@ func NewSubmitSelfServiceRecoveryFlowWithCodeMethodBody(email string, method str
 func NewSubmitSelfServiceRecoveryFlowWithCodeMethodBodyWithDefaults() *SubmitSelfServiceRecoveryFlowWithCodeMethodBody {
 	this := SubmitSelfServiceRecoveryFlowWithCodeMethodBody{}
 	return &this
+}
+
+// GetCode returns the Code field value if set, zero value otherwise.
+func (o *SubmitSelfServiceRecoveryFlowWithCodeMethodBody) GetCode() string {
+	if o == nil || o.Code == nil {
+		var ret string
+		return ret
+	}
+	return *o.Code
+}
+
+// GetCodeOk returns a tuple with the Code field value if set, nil otherwise
+// and a boolean to check if the value has been set.
+func (o *SubmitSelfServiceRecoveryFlowWithCodeMethodBody) GetCodeOk() (*string, bool) {
+	if o == nil || o.Code == nil {
+		return nil, false
+	}
+	return o.Code, true
+}
+
+// HasCode returns a boolean if a field has been set.
+func (o *SubmitSelfServiceRecoveryFlowWithCodeMethodBody) HasCode() bool {
+	if o != nil && o.Code != nil {
+		return true
+	}
+
+	return false
+}
+
+// SetCode gets a reference to the given string and assigns it to the Code field.
+func (o *SubmitSelfServiceRecoveryFlowWithCodeMethodBody) SetCode(v string) {
+	o.Code = &v
 }
 
 // GetCsrfToken returns the CsrfToken field value if set, zero value otherwise.
@@ -76,28 +109,36 @@ func (o *SubmitSelfServiceRecoveryFlowWithCodeMethodBody) SetCsrfToken(v string)
 	o.CsrfToken = &v
 }
 
-// GetEmail returns the Email field value
+// GetEmail returns the Email field value if set, zero value otherwise.
 func (o *SubmitSelfServiceRecoveryFlowWithCodeMethodBody) GetEmail() string {
-	if o == nil {
+	if o == nil || o.Email == nil {
 		var ret string
 		return ret
 	}
-
-	return o.Email
+	return *o.Email
 }
 
-// GetEmailOk returns a tuple with the Email field value
+// GetEmailOk returns a tuple with the Email field value if set, nil otherwise
 // and a boolean to check if the value has been set.
 func (o *SubmitSelfServiceRecoveryFlowWithCodeMethodBody) GetEmailOk() (*string, bool) {
-	if o == nil {
+	if o == nil || o.Email == nil {
 		return nil, false
 	}
-	return &o.Email, true
+	return o.Email, true
 }
 
-// SetEmail sets field value
+// HasEmail returns a boolean if a field has been set.
+func (o *SubmitSelfServiceRecoveryFlowWithCodeMethodBody) HasEmail() bool {
+	if o != nil && o.Email != nil {
+		return true
+	}
+
+	return false
+}
+
+// SetEmail gets a reference to the given string and assigns it to the Email field.
 func (o *SubmitSelfServiceRecoveryFlowWithCodeMethodBody) SetEmail(v string) {
-	o.Email = v
+	o.Email = &v
 }
 
 // GetMethod returns the Method field value
@@ -126,10 +167,13 @@ func (o *SubmitSelfServiceRecoveryFlowWithCodeMethodBody) SetMethod(v string) {
 
 func (o SubmitSelfServiceRecoveryFlowWithCodeMethodBody) MarshalJSON() ([]byte, error) {
 	toSerialize := map[string]interface{}{}
+	if o.Code != nil {
+		toSerialize["code"] = o.Code
+	}
 	if o.CsrfToken != nil {
 		toSerialize["csrf_token"] = o.CsrfToken
 	}
-	if true {
+	if o.Email != nil {
 		toSerialize["email"] = o.Email
 	}
 	if true {

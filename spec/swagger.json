@@ -3248,6 +3248,10 @@
           "type": "string",
           "example": "d7ef54b1-ec15-46e6-bccb-524b82c035e6"
         },
+        "session_token": {
+          "description": "An optional session token",
+          "type": "string"
+        },
         "status": {
           "description": "The status description",
           "type": "string",
@@ -3935,10 +3939,13 @@
     "submitSelfServiceRecoveryFlowWithCodeMethodBody": {
       "type": "object",
       "required": [
-        "email",
         "method"
       ],
       "properties": {
+        "code": {
+          "description": "Code from recovery email\n\nSent to the user once a recovery has been initiated and is used to prove\nthat the user is in possession of the email",
+          "type": "string"
+        },
         "csrf_token": {
           "description": "Sending the anti-csrf token is only required for browser login flows.",
           "type": "string"

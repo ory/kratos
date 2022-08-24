@@ -33,6 +33,8 @@ type SelfServiceBrowserLocationChangeRequiredError struct {
 	RedirectBrowserTo *string `json:"redirect_browser_to,omitempty"`
 	// The request ID  The request ID is often exposed internally in order to trace errors across service architectures. This is often a UUID.
 	Request *string `json:"request,omitempty"`
+	// An optional session token
+	SessionToken *string `json:"session_token,omitempty"`
 	// The status description
 	Status *string `json:"status,omitempty"`
 }
@@ -303,6 +305,38 @@ func (o *SelfServiceBrowserLocationChangeRequiredError) SetRequest(v string) {
 	o.Request = &v
 }
 
+// GetSessionToken returns the SessionToken field value if set, zero value otherwise.
+func (o *SelfServiceBrowserLocationChangeRequiredError) GetSessionToken() string {
+	if o == nil || o.SessionToken == nil {
+		var ret string
+		return ret
+	}
+	return *o.SessionToken
+}
+
+// GetSessionTokenOk returns a tuple with the SessionToken field value if set, nil otherwise
+// and a boolean to check if the value has been set.
+func (o *SelfServiceBrowserLocationChangeRequiredError) GetSessionTokenOk() (*string, bool) {
+	if o == nil || o.SessionToken == nil {
+		return nil, false
+	}
+	return o.SessionToken, true
+}
+
+// HasSessionToken returns a boolean if a field has been set.
+func (o *SelfServiceBrowserLocationChangeRequiredError) HasSessionToken() bool {
+	if o != nil && o.SessionToken != nil {
+		return true
+	}
+
+	return false
+}
+
+// SetSessionToken gets a reference to the given string and assigns it to the SessionToken field.
+func (o *SelfServiceBrowserLocationChangeRequiredError) SetSessionToken(v string) {
+	o.SessionToken = &v
+}
+
 // GetStatus returns the Status field value if set, zero value otherwise.
 func (o *SelfServiceBrowserLocationChangeRequiredError) GetStatus() string {
 	if o == nil || o.Status == nil {
@@ -360,6 +394,9 @@ func (o SelfServiceBrowserLocationChangeRequiredError) MarshalJSON() ([]byte, er
 	}
 	if o.Request != nil {
 		toSerialize["request"] = o.Request
+	}
+	if o.SessionToken != nil {
+		toSerialize["session_token"] = o.SessionToken
 	}
 	if o.Status != nil {
 		toSerialize["status"] = o.Status

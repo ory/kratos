@@ -12,6 +12,7 @@ Name | Type | Description | Notes
 **Reason** | Pointer to **string** | A human-readable reason for the error | [optional] 
 **RedirectBrowserTo** | Pointer to **string** | Since when the flow has expired | [optional] 
 **Request** | Pointer to **string** | The request ID  The request ID is often exposed internally in order to trace errors across service architectures. This is often a UUID. | [optional] 
+**SessionToken** | Pointer to **string** | An optional session token | [optional] 
 **Status** | Pointer to **string** | The status description | [optional] 
 
 ## Methods
@@ -227,6 +228,31 @@ SetRequest sets Request field to given value.
 `func (o *SelfServiceBrowserLocationChangeRequiredError) HasRequest() bool`
 
 HasRequest returns a boolean if a field has been set.
+
+### GetSessionToken
+
+`func (o *SelfServiceBrowserLocationChangeRequiredError) GetSessionToken() string`
+
+GetSessionToken returns the SessionToken field if non-nil, zero value otherwise.
+
+### GetSessionTokenOk
+
+`func (o *SelfServiceBrowserLocationChangeRequiredError) GetSessionTokenOk() (*string, bool)`
+
+GetSessionTokenOk returns a tuple with the SessionToken field if it's non-nil, zero value otherwise
+and a boolean to check if the value has been set.
+
+### SetSessionToken
+
+`func (o *SelfServiceBrowserLocationChangeRequiredError) SetSessionToken(v string)`
+
+SetSessionToken sets SessionToken field to given value.
+
+### HasSessionToken
+
+`func (o *SelfServiceBrowserLocationChangeRequiredError) HasSessionToken() bool`
+
+HasSessionToken returns a boolean if a field has been set.
 
 ### GetStatus
 
