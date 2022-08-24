@@ -4,7 +4,7 @@
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 **Table of Contents**
 
-- [ (2022-08-23)](#2022-08-23)
+- [ (2022-08-24)](#2022-08-24)
   - [Breaking Changes](#breaking-changes)
     - [Bug Fixes](#bug-fixes)
     - [Code Refactoring](#code-refactoring)
@@ -264,7 +264,7 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# [](https://github.com/ory/kratos/compare/v0.10.1...v) (2022-08-23)
+# [](https://github.com/ory/kratos/compare/v0.10.1...v) (2022-08-24)
 
 ## Breaking Changes
 
@@ -410,6 +410,8 @@ SDK Method `getJsonSchema` was renamed to `getIdentitySchema`.
 
 - Fix badge
   ([dbb7506](https://github.com/ory/kratos/commit/dbb7506ec1a5a2b5bef21cb7838b6c86e755f0f9))
+- Importing credentials supported
+  ([4e8b5cf](https://github.com/ory/kratos/commit/4e8b5cf775c1bfe4c2eb5588bfebe900d1c390eb))
 - **sdk:** Identifier is actually required
   ([#2593](https://github.com/ory/kratos/issues/2593))
   ([f89d279](https://github.com/ory/kratos/commit/f89d2794d8a2122e3f86eeb8aa5d554da32e753e))
