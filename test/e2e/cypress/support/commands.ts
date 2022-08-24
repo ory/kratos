@@ -217,6 +217,9 @@ Cypress.Commands.add('enableVerification', ({} = {}) => {
 Cypress.Commands.add('enableRecovery', (strategy: RecoveryStrategy) => {
   updateConfigFile((config) => {
     config.selfservice.flows.recovery.enabled = true
+    if (!(strategy in config.selfservice.methods)) {
+      config.selfservice.methods[strategy] = {}
+    }
     config.selfservice.methods[strategy].enabled = true
     return config
   })
