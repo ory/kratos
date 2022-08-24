@@ -18,7 +18,15 @@ import (
 
 // SubmitSelfServiceRecoveryFlowBody - struct for SubmitSelfServiceRecoveryFlowBody
 type SubmitSelfServiceRecoveryFlowBody struct {
+	SubmitSelfServiceRecoveryFlowWithCodeMethodBody *SubmitSelfServiceRecoveryFlowWithCodeMethodBody
 	SubmitSelfServiceRecoveryFlowWithLinkMethodBody *SubmitSelfServiceRecoveryFlowWithLinkMethodBody
+}
+
+// SubmitSelfServiceRecoveryFlowWithCodeMethodBodyAsSubmitSelfServiceRecoveryFlowBody is a convenience function that returns SubmitSelfServiceRecoveryFlowWithCodeMethodBody wrapped in SubmitSelfServiceRecoveryFlowBody
+func SubmitSelfServiceRecoveryFlowWithCodeMethodBodyAsSubmitSelfServiceRecoveryFlowBody(v *SubmitSelfServiceRecoveryFlowWithCodeMethodBody) SubmitSelfServiceRecoveryFlowBody {
+	return SubmitSelfServiceRecoveryFlowBody{
+		SubmitSelfServiceRecoveryFlowWithCodeMethodBody: v,
+	}
 }
 
 // SubmitSelfServiceRecoveryFlowWithLinkMethodBodyAsSubmitSelfServiceRecoveryFlowBody is a convenience function that returns SubmitSelfServiceRecoveryFlowWithLinkMethodBody wrapped in SubmitSelfServiceRecoveryFlowBody
@@ -32,6 +40,19 @@ func SubmitSelfServiceRecoveryFlowWithLinkMethodBodyAsSubmitSelfServiceRecoveryF
 func (dst *SubmitSelfServiceRecoveryFlowBody) UnmarshalJSON(data []byte) error {
 	var err error
 	match := 0
+	// try to unmarshal data into SubmitSelfServiceRecoveryFlowWithCodeMethodBody
+	err = newStrictDecoder(data).Decode(&dst.SubmitSelfServiceRecoveryFlowWithCodeMethodBody)
+	if err == nil {
+		jsonSubmitSelfServiceRecoveryFlowWithCodeMethodBody, _ := json.Marshal(dst.SubmitSelfServiceRecoveryFlowWithCodeMethodBody)
+		if string(jsonSubmitSelfServiceRecoveryFlowWithCodeMethodBody) == "{}" { // empty struct
+			dst.SubmitSelfServiceRecoveryFlowWithCodeMethodBody = nil
+		} else {
+			match++
+		}
+	} else {
+		dst.SubmitSelfServiceRecoveryFlowWithCodeMethodBody = nil
+	}
+
 	// try to unmarshal data into SubmitSelfServiceRecoveryFlowWithLinkMethodBody
 	err = newStrictDecoder(data).Decode(&dst.SubmitSelfServiceRecoveryFlowWithLinkMethodBody)
 	if err == nil {
@@ -47,6 +68,7 @@ func (dst *SubmitSelfServiceRecoveryFlowBody) UnmarshalJSON(data []byte) error {
 
 	if match > 1 { // more than 1 match
 		// reset to nil
+		dst.SubmitSelfServiceRecoveryFlowWithCodeMethodBody = nil
 		dst.SubmitSelfServiceRecoveryFlowWithLinkMethodBody = nil
 
 		return fmt.Errorf("Data matches more than one schema in oneOf(SubmitSelfServiceRecoveryFlowBody)")
@@ -59,6 +81,10 @@ func (dst *SubmitSelfServiceRecoveryFlowBody) UnmarshalJSON(data []byte) error {
 
 // Marshal data from the first non-nil pointers in the struct to JSON
 func (src SubmitSelfServiceRecoveryFlowBody) MarshalJSON() ([]byte, error) {
+	if src.SubmitSelfServiceRecoveryFlowWithCodeMethodBody != nil {
+		return json.Marshal(&src.SubmitSelfServiceRecoveryFlowWithCodeMethodBody)
+	}
+
 	if src.SubmitSelfServiceRecoveryFlowWithLinkMethodBody != nil {
 		return json.Marshal(&src.SubmitSelfServiceRecoveryFlowWithLinkMethodBody)
 	}
@@ -71,6 +97,10 @@ func (obj *SubmitSelfServiceRecoveryFlowBody) GetActualInstance() interface{} {
 	if obj == nil {
 		return nil
 	}
+	if obj.SubmitSelfServiceRecoveryFlowWithCodeMethodBody != nil {
+		return obj.SubmitSelfServiceRecoveryFlowWithCodeMethodBody
+	}
+
 	if obj.SubmitSelfServiceRecoveryFlowWithLinkMethodBody != nil {
 		return obj.SubmitSelfServiceRecoveryFlowWithLinkMethodBody
 	}

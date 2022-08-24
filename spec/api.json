@@ -1500,6 +1500,7 @@
       "submitSelfServiceRecoveryFlowBody": {
         "discriminator": {
           "mapping": {
+            "code": "#/components/schemas/submitSelfServiceRecoveryFlowWithCodeMethodBody",
             "link": "#/components/schemas/submitSelfServiceRecoveryFlowWithLinkMethodBody"
           },
           "propertyName": "method"
@@ -1507,6 +1508,9 @@
         "oneOf": [
           {
             "$ref": "#/components/schemas/submitSelfServiceRecoveryFlowWithLinkMethodBody"
+          },
+          {
+            "$ref": "#/components/schemas/submitSelfServiceRecoveryFlowWithCodeMethodBody"
           }
         ]
       },
