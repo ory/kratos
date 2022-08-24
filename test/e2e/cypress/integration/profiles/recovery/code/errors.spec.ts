@@ -1,7 +1,6 @@
-import { APP_URL, appPrefix, gen, parseHtml } from '../../../../helpers'
+import { extractRecoveryCode, appPrefix, gen } from '../../../../helpers'
 import { routes as react } from '../../../../helpers/react'
 import { routes as express } from '../../../../helpers/express'
-import { extractRecoveryCode } from '../../../../helpers/util'
 
 context('Account Recovery Errors', () => {
   ;[
@@ -121,6 +120,7 @@ context('Account Recovery Errors', () => {
       it('is unable to recover the account if the code is incorrect', () => {
         const identity = gen.identityWithWebsite()
         cy.registerApi(identity)
+        cy.visit(recovery)
         cy.get(appPrefix(app) + "input[name='email']").type(identity.email)
         cy.get("button[value='code']").click()
         cy.get('[data-testid="ui/message/1060003"]').should(

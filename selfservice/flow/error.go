@@ -74,6 +74,9 @@ type BrowserLocationChangeRequiredError struct {
 
 	// Since when the flow has expired
 	RedirectBrowserTo string `json:"redirect_browser_to"`
+
+	// An optional session token
+	SessionToken string `json:"session_token,omitempty"`
 }
 
 func (e *BrowserLocationChangeRequiredError) EnhanceJSONError() interface{} {
@@ -82,6 +85,21 @@ func (e *BrowserLocationChangeRequiredError) EnhanceJSONError() interface{} {
 
 func NewBrowserLocationChangeRequiredError(redirectTo string) *BrowserLocationChangeRequiredError {
 	return &BrowserLocationChangeRequiredError{
+		RedirectBrowserTo: redirectTo,
+		DefaultError: &herodot.DefaultError{
+			IDField:     text.ErrIDSelfServiceBrowserLocationChangeRequiredError,
+			CodeField:   http.StatusUnprocessableEntity,
+			StatusField: http.StatusText(http.StatusUnprocessableEntity),
+			ReasonField: fmt.Sprintf("In order to complete this flow please redirect the browser to: %s", redirectTo),
+			DebugField:  "",
+			ErrorField:  "browser location change required",
+		},
+	}
+}
+
+func NewBrowserLocationChangeRequiredErrorWithSessionToken(redirectTo string, sessionToken string) *BrowserLocationChangeRequiredError {
+	return &BrowserLocationChangeRequiredError{
+		SessionToken:      sessionToken,
 		RedirectBrowserTo: redirectTo,
 		DefaultError: &herodot.DefaultError{
 			IDField:     text.ErrIDSelfServiceBrowserLocationChangeRequiredError,

@@ -89,3 +89,12 @@ export const verifyLifespan = 5000 + 1000
 export const privilegedLifespan = 5000 + 1000
 
 export const appPrefix = (app) => `[data-testid="app-${app}"] `
+
+export function extractRecoveryCode(body: string): string | null {
+  const codeRegex = /(\d{8})/
+  const result = codeRegex.exec(body)
+  if (result != null && result.length > 0) {
+    return result[0]
+  }
+  return null
+}

@@ -8,7 +8,8 @@ import {
   MOBILE_URL,
   parseHtml,
   pollInterval,
-  privilegedLifespan
+  privilegedLifespan,
+  extractRecoveryCode
 } from '../helpers'
 
 import dayjs from 'dayjs'
