@@ -34,12 +34,8 @@ func TestPersister(ctx context.Context, conf *config.Config, p interface {
 		conf.MustSet(ctx, config.ViperKeySecretsDefault, []string{"secret-a", "secret-b"})
 
 		t.Run("token=recovery", func(t *testing.T) {
-			t.Run("case=should error when the recovery token does not exist", func(t *testing.T) {
-				_, err := p.UseRecoveryToken(ctx, "i-do-not-exist")
-				require.Error(t, err)
-			})
 
-			newRecoveryToken := func(t *testing.T, email string) *link.RecoveryToken {
+			newRecoveryToken := func(t *testing.T, email string) (*link.RecoveryToken, *recovery.Flow) {
 				var req recovery.Flow
 				require.NoError(t, faker.FakeData(&req))
 				require.NoError(t, p.CreateRecoveryFlow(ctx, &req))
@@ -52,42 +48,52 @@ func TestPersister(ctx context.Context, conf *config.Config, p interface {
 
 				require.NoError(t, p.CreateIdentity(ctx, &i))
 
-				return &link.RecoveryToken{Token: x.NewUUID().String(), FlowID: uuid.NullUUID{UUID: req.ID, Valid: true},
+				return &link.RecoveryToken{
+					Token:           x.NewUUID().String(),
+					FlowID:          uuid.NullUUID{UUID: req.ID, Valid: true},
 					RecoveryAddress: &i.RecoveryAddresses[0],
 					ExpiresAt:       time.Now(),
 					IssuedAt:        time.Now(),
 					IdentityID:      i.ID,
-				}
+					TokenType:       link.RecoveryTokenTypeAdmin,
+				}, &req
 			}
 
 			t.Run("case=should error when the recovery token does not exist", func(t *testing.T) {
-				_, err := p.UseRecoveryToken(ctx, "i-do-not-exist")
+				_, err := p.UseRecoveryToken(ctx, x.NewUUID(), "i-do-not-exist")
 				require.Error(t, err)
 			})
 
 			t.Run("case=should create a new recovery token", func(t *testing.T) {
-				token := newRecoveryToken(t, "foo-user@ory.sh")
+				token, _ := newRecoveryToken(t, "foo-user@ory.sh")
 				require.NoError(t, p.CreateRecoveryToken(ctx, token))
 			})
 
+			t.Run("case=should error when token is used with different flow id", func(t *testing.T) {
+				token, _ := newRecoveryToken(t, "foo-user1@ory.sh")
+				require.NoError(t, p.CreateRecoveryToken(ctx, token))
+				_, err := p.UseRecoveryToken(ctx, x.NewUUID(), token.Token)
+				require.Error(t, err)
+			})
+
 			t.Run("case=should create a recovery token and use it", func(t *testing.T) {
-				expected := newRecoveryToken(t, "other-user@ory.sh")
+				expected, f := newRecoveryToken(t, "other-user@ory.sh")
 				require.NoError(t, p.CreateRecoveryToken(ctx, expected))
 
 				t.Run("not work on another network", func(t *testing.T) {
 					_, p := testhelpers.NewNetwork(t, ctx, p)
-					_, err := p.UseRecoveryToken(ctx, expected.Token)
+					_, err := p.UseRecoveryToken(ctx, f.ID, expected.Token)
 					require.ErrorIs(t, err, sqlcon.ErrNoRows)
 				})
 
-				actual, err := p.UseRecoveryToken(ctx, expected.Token)
+				actual, err := p.UseRecoveryToken(ctx, f.ID, expected.Token)
 				require.NoError(t, err)
 				assert.Equal(t, nid, actual.NID)
 				assert.Equal(t, expected.IdentityID, actual.IdentityID)
 				assert.NotEqual(t, expected.Token, actual.Token)
 				assert.EqualValues(t, expected.FlowID, actual.FlowID)
 
-				_, err = p.UseRecoveryToken(ctx, expected.Token)
+				_, err = p.UseRecoveryToken(ctx, f.ID, expected.Token)
 				require.Error(t, err)
 			})
 
