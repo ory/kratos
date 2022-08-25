@@ -9,7 +9,7 @@ import (
 type (
 	RecoveryTokenPersister interface {
 		CreateRecoveryToken(ctx context.Context, token *RecoveryToken) error
-		UseRecoveryToken(ctx context.Context, token string) (*RecoveryToken, error)
+		UseRecoveryToken(ctx context.Context, fID uuid.UUID, token string) (*RecoveryToken, error)
 		DeleteRecoveryToken(ctx context.Context, token string) error
 	}
 
