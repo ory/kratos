@@ -120,7 +120,7 @@ func CompareScrypt(_ context.Context, password []byte, hash []byte) error {
 	// Derive the key from the other password using the same parameters.
 	otherHash, err := scrypt.Key(password, salt, int(p.Cost), int(p.Block), int(p.Parrellization), int(p.KeyLength))
 	if err != nil {
-		return nil
+		return err
 	}
 
 	// Check that the contents of the hashed passwords are identical. Note
