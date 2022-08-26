@@ -205,6 +205,18 @@ func TestDefaultPasswordValidationStrategy(t *testing.T) {
 				},
 			},
 			{
+				name: "contains less than maxBreachesThreshold with a leading comma",
+				res: func(t *testing.T, hash string) string {
+					return fmt.Sprintf(
+						"%s:%d\n%s:0,%d",
+						hash,
+						conf.PasswordPolicyConfig(ctx).MaxBreaches,
+						hashPw(t, randomPassword(t)),
+						conf.PasswordPolicyConfig(ctx).MaxBreaches+1,
+					)
+				},
+			},
+			{
 				name: "contains more than maxBreachesThreshold",
 				res: func(t *testing.T, hash string) string {
 					return fmt.Sprintf("%s:%d", hash, conf.PasswordPolicyConfig(ctx).MaxBreaches+1)
