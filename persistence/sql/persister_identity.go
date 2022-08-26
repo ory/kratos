@@ -202,6 +202,43 @@ func (p *Persister) createVerifiableAddresses(ctx context.Context, i *identity.I
 	return nil
 }
 
+func (p *Persister) updateRecoveryAddresses(ctx context.Context, i *identity.Identity) error {
+	var addressesInDb []identity.RecoveryAddress
+	if err := p.GetConnection(ctx).Where("identity_id = ? AND nid = ?", i.ID, p.NetworkID(ctx)).Order("id ASC").All(&addressesInDb); err != nil {
+		return err
+	}
+
+	newAddresses := make(map[string]*identity.RecoveryAddress)
+	oldAddresses := make(map[string]*identity.RecoveryAddress)
+	for j, a := range i.RecoveryAddresses {
+		i.RecoveryAddresses[j].IdentityID = i.ID
+		i.RecoveryAddresses[j].NID = p.NetworkID(ctx)
+		i.RecoveryAddresses[j].Value = stringToLowerTrim(i.RecoveryAddresses[j].Value)
+		newAddresses[a.Hash()] = &i.RecoveryAddresses[j]
+	}
+	for j, a := range addressesInDb {
+		oldAddresses[a.Hash()] = &addressesInDb[j]
+	}
+	for h, a := range newAddresses {
+		if _, found := oldAddresses[h]; found {
+			// Ignore addresses that are already in the db
+			oldAddresses[h] = nil
+		} else {
+			if err := p.GetConnection(ctx).Create(a); err != nil {
+				return err
+			}
+		}
+	}
+	for _, a := range oldAddresses {
+		if a != nil {
+			if err := p.GetConnection(ctx).Destroy(a); err != nil {
+				return err
+			}
+		}
+	}
+	return nil
+}
+
 func (p *Persister) createRecoveryAddresses(ctx context.Context, i *identity.Identity) error {
 	ctx, span := p.r.Tracer(ctx).Tracer().Start(ctx, "persistence.sql.createRecoveryAddresses")
 	defer span.End()
@@ -350,10 +387,13 @@ func (p *Persister) UpdateIdentity(ctx context.Context, i *identity.Identity) er
 			return sql.ErrNoRows
 		}
 
+		if err := p.updateRecoveryAddresses(ctx, i); err != nil {
+			return err
+		}
+
 		for _, tn := range []string{
 			new(identity.Credentials).TableName(ctx),
 			new(identity.VerifiableAddress).TableName(ctx),
-			new(identity.RecoveryAddress).TableName(ctx),
 		} {
 			/* #nosec G201 TableName is static */
 			if err := tx.RawQuery(fmt.Sprintf(
@@ -367,10 +407,6 @@ func (p *Persister) UpdateIdentity(ctx context.Context, i *identity.Identity) er
 		}
 
 		if err := p.createVerifiableAddresses(ctx, i); err != nil {
-			return err
-		}
-
-		if err := p.createRecoveryAddresses(ctx, i); err != nil {
 			return err
 		}
 
