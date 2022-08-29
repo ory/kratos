@@ -1,6 +1,7 @@
 package code_test
 
 import (
+	"bytes"
 	"context"
 	_ "embed"
 	"encoding/json"
@@ -253,40 +254,54 @@ const (
 	RecoveryFlowTypeAPI     string = "api"
 )
 
+func apiHttpClient(t *testing.T) *http.Client {
+	return &http.Client{}
+}
+
+func spaHttpClient(t *testing.T) *http.Client {
+	return testhelpers.NewClientWithCookies(t)
+}
+
+func browserHttpClient(t *testing.T) *http.Client {
+	return testhelpers.NewClientWithCookies(t)
+}
+
 var flowTypes = []string{RecoveryFlowTypeBrowser, RecoveryFlowTypeAPI, RecoveryFlowTypeSPA}
 
 var flowTypeCases = []struct {
-	FlowType  string
-	GetClient func(*testing.T) *http.Client
+	FlowType        string
+	GetClient       func(*testing.T) *http.Client
+	FormContentType string
 }{
 	{
-		FlowType:  RecoveryFlowTypeBrowser,
-		GetClient: testhelpers.NewClientWithCookies,
+		FlowType:        RecoveryFlowTypeBrowser,
+		GetClient:       testhelpers.NewClientWithCookies,
+		FormContentType: "application/x-www-form-urlencoded",
 	},
 	{
 		FlowType: RecoveryFlowTypeAPI,
 		GetClient: func(_ *testing.T) *http.Client {
 			return &http.Client{}
 		},
+		FormContentType: "application/json",
 	},
 	{
-		FlowType: RecoveryFlowTypeSPA,
-		GetClient: func(_ *testing.T) *http.Client {
-			return &http.Client{}
-		},
+		FlowType:        RecoveryFlowTypeSPA,
+		GetClient:       testhelpers.NewClientWithCookies,
+		FormContentType: "application/json",
 	},
 }
 
-func withCSRFToken(flowType, body string, v url.Values) (url.Values, error) {
+func withCSRFToken(t *testing.T, flowType, body string, v url.Values) string {
+	t.Helper()
 	csrfToken := gjson.Get(body, "ui.nodes.#(attributes.name==csrf_token).attributes.value").String()
-	if csrfToken != "" {
+	if csrfToken != "" && flowType != RecoveryFlowTypeAPI {
 		v.Set("csrf_token", csrfToken)
-		return v, nil
 	}
 	if flowType == RecoveryFlowTypeBrowser {
-		return nil, errors.New("no csrf_token in browser flow found")
+		return v.Encode()
 	}
-	return v, nil
+	return testhelpers.EncodeFormAsJSON(t, true, v)
 }
 
 func createIdentityToRecover(t *testing.T, reg *driver.RegistryDefault, email string) *identity.Identity {
@@ -327,7 +342,7 @@ func TestRecovery(t *testing.T) {
 
 	var submitRecovery = func(t *testing.T, client *http.Client, flowType string, values func(url.Values), code int) string {
 		isSPA := flowType == RecoveryFlowTypeSPA
-		isAPI := isSPA || flowType == RecoveryFlowTypeAPI
+		isAPI := flowType == RecoveryFlowTypeAPI
 		if client == nil {
 			client = testhelpers.NewDebugClient(t)
 			if !isAPI {
@@ -336,26 +351,51 @@ func TestRecovery(t *testing.T) {
 			}
 		}
 
-		return testhelpers.SubmitRecoveryForm(t, isAPI, isSPA, client, public, values, code,
-			testhelpers.ExpectURL(isAPI || isSPA, public.URL+recovery.RouteSubmitFlow, conf.SelfServiceFlowRecoveryUI(ctx).String()))
+		expectedUrl := testhelpers.ExpectURL(isAPI || isSPA, public.URL+recovery.RouteSubmitFlow, conf.SelfServiceFlowRecoveryUI(ctx).String())
+		return testhelpers.SubmitRecoveryForm(t, isAPI, isSPA, client, public, values, code, expectedUrl)
 	}
 
-	var submitAndExpectValidationError = func(t *testing.T, hc *http.Client, flowType string, values func(url.Values)) string {
+	var submitRecoveryCode = func(t *testing.T, client *http.Client, flow string, flowType string, recoveryCode string, statusCode int) string {
+		action := gjson.Get(flow, "ui.action").String()
+		assert.NotEmpty(t, action)
+
+		values := withCSRFToken(t, flowType, flow, url.Values{
+			"code": {recoveryCode},
+		})
+
+		contentType := "application/json"
+		if flowType == RecoveryFlowTypeBrowser {
+			contentType = "application/x-www-form-urlencoded"
+		}
+
+		res, err := client.Post(action, contentType, bytes.NewBufferString(values))
+		require.NoError(t, err)
+		assert.Equal(t, statusCode, res.StatusCode)
+
+		return string(ioutilx.MustReadAll(res.Body))
+	}
+
+	var expectValidationError = func(t *testing.T, hc *http.Client, flowType string, values func(url.Values)) string {
 		code := testhelpers.ExpectStatusCode(flowType == RecoveryFlowTypeAPI || flowType == RecoveryFlowTypeSPA, http.StatusBadRequest, http.StatusOK)
 		return submitRecovery(t, hc, flowType, values, code)
 	}
 
-	var submitAndExpectSuccess = func(t *testing.T, hc *http.Client, flowType string, values func(url.Values)) string {
-		return submitRecovery(t, hc, flowType, values, http.StatusOK)
+	var expectSuccessfulRecovery = func(t *testing.T, hc *http.Client, flowType string, values func(url.Values)) string {
+		code := testhelpers.ExpectStatusCode(flowType == RecoveryFlowTypeAPI || flowType == RecoveryFlowTypeSPA, http.StatusUnprocessableEntity, http.StatusOK)
+		return submitRecovery(t, hc, flowType, values, code)
+	}
+
+	var ExpectVerfiableAddressStatus = func(t *testing.T, email string, status identity.VerifiableAddressStatus) {
+		addr, err := reg.IdentityPool().
+			FindVerifiableAddressByValue(context.Background(), identity.VerifiableAddressTypeEmail, email)
+		assert.NoError(t, err)
+		assert.Equal(t, status, addr.Status, "verifiable address %s was not %s. instead %", email, status, addr.Status)
 	}
 
 	t.Run("description=should recover an account", func(t *testing.T) {
-		var check = func(t *testing.T, client *http.Client, flowType, recoverySubmissionResponse, recoveryEmail, returnTo string) {
-			addr, err := reg.IdentityPool().FindVerifiableAddressByValue(context.Background(), identity.VerifiableAddressTypeEmail, recoveryEmail)
-			assert.NoError(t, err)
-			assert.False(t, addr.Verified)
-			assert.Nil(t, addr.VerifiedAt)
-			assert.Equal(t, identity.VerifiableAddressStatusPending, addr.Status)
+		var checkRecovery = func(t *testing.T, client *http.Client, flowType, recoveryEmail, recoverySubmissionResponse, returnTo string) string {
+
+			ExpectVerfiableAddressStatus(t, recoveryEmail, identity.VerifiableAddressStatusPending)
 
 			assert.EqualValues(t, node.CodeGroup, gjson.Get(recoverySubmissionResponse, "active").String(), "%s", recoverySubmissionResponse)
 			assert.True(t, gjson.Get(recoverySubmissionResponse, "ui.nodes.#(attributes.name==code)").Exists(), "%s", recoverySubmissionResponse)
@@ -368,57 +408,58 @@ func TestRecovery(t *testing.T) {
 			recoveryCode := testhelpers.CourierExpectCodeInMessage(t, message, 1)
 			assert.NotEmpty(t, recoveryCode)
 
-			action := gjson.Get(recoverySubmissionResponse, "ui.action").String()
-			assert.NotEmpty(t, action)
-
-			values, err := withCSRFToken(flowType, recoverySubmissionResponse, url.Values{
-				"code": {recoveryCode},
-			})
-
-			res, err := client.PostForm(action, values)
-			require.NoError(t, err)
-			if flowType == RecoveryFlowTypeBrowser {
-				assert.Equal(t, http.StatusOK, res.StatusCode)
-				assert.Contains(t, res.Request.URL.String(), conf.SelfServiceFlowSettingsUI(ctx).String())
-
-				body := ioutilx.MustReadAll(res.Body)
-				assert.Equal(t, text.NewRecoverySuccessful(time.Now().Add(time.Hour)).Text,
-					gjson.GetBytes(body, "ui.messages.0.text").String())
-				assert.Equal(t, returnTo, gjson.GetBytes(body, "return_to").String())
-			} else {
-				assert.Equal(t, http.StatusUnprocessableEntity, res.StatusCode)
-
-				body := ioutilx.MustReadAll(res.Body)
-				assert.Equal(t, "browser_location_change_required", gjson.GetBytes(body, "error.id").String())
-				assert.Contains(t, gjson.GetBytes(body, "redirect_browser_to").String(), "settings-ts?")
-			}
-
-			addr, err = reg.IdentityPool().FindVerifiableAddressByValue(context.Background(), identity.VerifiableAddressTypeEmail, recoveryEmail)
-			assert.NoError(t, err)
-			assert.True(t, addr.Verified)
-			assert.NotEqual(t, sqlxx.NullTime{}, addr.VerifiedAt)
-			assert.Equal(t, identity.VerifiableAddressStatusCompleted, addr.Status)
-
-			res, err = client.Get(public.URL + session.RouteWhoami)
-			require.NoError(t, err)
-			body := x.MustReadAll(res.Body)
-			require.NoError(t, res.Body.Close())
-			assert.Equal(t, "code_recovery", gjson.GetBytes(body, "authentication_methods.0.method").String(), "%s", body)
-			assert.Equal(t, "aal1", gjson.GetBytes(body, "authenticator_assurance_level").String(), "%s", body)
+			statusCode := testhelpers.ExpectStatusCode(flowType == RecoveryFlowTypeAPI || flowType == RecoveryFlowTypeSPA, http.StatusUnprocessableEntity, http.StatusOK)
+			return submitRecoveryCode(t, client, recoverySubmissionResponse, flowType, recoveryCode, statusCode)
 		}
 
 		t.Run("type=browser", func(t *testing.T) {
 			client := testhelpers.NewClientWithCookies(t)
 			email := "recoverme1@ory.sh"
 			createIdentityToRecover(t, reg, email)
-			check(t, client, RecoveryFlowTypeBrowser, submitAndExpectSuccess(t, client, RecoveryFlowTypeBrowser, func(v url.Values) {
+			recoverySubmissionResponse := submitRecovery(t, client, RecoveryFlowTypeBrowser, func(v url.Values) {
 				v.Set("email", email)
-			}), email, "")
+			}, http.StatusOK)
+			body := checkRecovery(t, client, RecoveryFlowTypeBrowser, email, recoverySubmissionResponse, "")
+
+			assert.Equal(t, text.NewRecoverySuccessful(time.Now().Add(time.Hour)).Text,
+				gjson.Get(body, "ui.messages.0.text").String())
+
+			res, err := client.Get(public.URL + session.RouteWhoami)
+			require.NoError(t, err)
+			body = string(x.MustReadAll(res.Body))
+			require.NoError(t, res.Body.Close())
+			assert.Equal(t, "code_recovery", gjson.Get(body, "authentication_methods.0.method").String(), "%s", body)
+			assert.Equal(t, "aal1", gjson.Get(body, "authenticator_assurance_level").String(), "%s", body)
 		})
 
-		t.Run("type=browser set return_to", func(t *testing.T) {
+		t.Run("type=spa", func(t *testing.T) {
 			client := testhelpers.NewClientWithCookies(t)
-			email := "recoverme2@ory.sh"
+			email := "recoverme3@ory.sh"
+			createIdentityToRecover(t, reg, email)
+			recoverySubmissionResponse := submitRecovery(t, client, RecoveryFlowTypeSPA, func(v url.Values) {
+				v.Set("email", email)
+			}, http.StatusOK)
+			body := checkRecovery(t, client, RecoveryFlowTypeSPA, email, recoverySubmissionResponse, "")
+			assert.Equal(t, "browser_location_change_required", gjson.Get(body, "error.id").String())
+			assert.Contains(t, gjson.Get(body, "redirect_browser_to").String(), "settings-ts?")
+		})
+
+		t.Run("type=api", func(t *testing.T) {
+			client := &http.Client{}
+			email := "recoverme4@ory.sh"
+			createIdentityToRecover(t, reg, email)
+			recoverySubmissionResponse := submitRecovery(t, client, RecoveryFlowTypeAPI, func(v url.Values) {
+				v.Set("email", email)
+			}, http.StatusOK)
+			body := checkRecovery(t, client, RecoveryFlowTypeAPI, email, recoverySubmissionResponse, "")
+			assert.Equal(t, "browser_location_change_required", gjson.Get(body, "error.id").String())
+			assert.Contains(t, gjson.Get(body, "redirect_flow_name").String(), "settings")
+			assert.NotEmpty(t, gjson.Get(body, "redirect_flow_id").String())
+		})
+
+		t.Run("description=should return browser to returl url", func(t *testing.T) {
+			client := testhelpers.NewClientWithCookies(t)
+			email := "recoverme@ory.sh"
 			returnTo := "https://www.ory.sh"
 			createIdentityToRecover(t, reg, email)
 
@@ -426,40 +467,30 @@ func TestRecovery(t *testing.T) {
 
 			f := testhelpers.InitializeRecoveryFlowViaBrowser(t, client, false, public, url.Values{"return_to": []string{returnTo}})
 
-			time.Sleep(time.Millisecond) // add a bit of delay to allow `1ns` to time out.
-
 			formPayload := testhelpers.SDKFormFieldsToURLValues(f.Ui.Nodes)
 			formPayload.Set("email", email)
 
-			b, res := testhelpers.RecoveryMakeRequest(t, false, f, client, testhelpers.EncodeFormAsJSON(t, false, formPayload))
-			assert.EqualValues(t, http.StatusOK, res.StatusCode, "%s", b)
+			body, res := testhelpers.RecoveryMakeRequest(t, false, f, client, formPayload.Encode())
+			assert.EqualValues(t, http.StatusOK, res.StatusCode, "%s", body)
 			expectedURL := testhelpers.ExpectURL(false, public.URL+recovery.RouteSubmitFlow, conf.SelfServiceFlowRecoveryUI(ctx).String())
-			assert.Contains(t, res.Request.URL.String(), expectedURL, "%+v\n\t%s", res.Request, b)
+			assert.Contains(t, res.Request.URL.String(), expectedURL, "%+v\n\t%s", res.Request, body)
 
-			check(t, client, RecoveryFlowTypeBrowser, b, email, returnTo)
-		})
+			body = checkRecovery(t, client, RecoveryFlowTypeBrowser, email, body, returnTo)
 
-		t.Run("type=spa", func(t *testing.T) {
-			client := testhelpers.NewClientWithCookies(t)
-			email := "recoverme3@ory.sh"
-			createIdentityToRecover(t, reg, email)
-			check(t, client, RecoveryFlowTypeSPA, submitAndExpectSuccess(t, client, RecoveryFlowTypeSPA, func(v url.Values) {
-				v.Set("email", email)
-			}), email, "")
-		})
+			assert.Equal(t, text.NewRecoverySuccessful(time.Now().Add(time.Hour)).Text,
+				gjson.Get(body, "ui.messages.0.text").String())
 
-		t.Run("type=api", func(t *testing.T) {
-			client := testhelpers.NewClientWithCookies(t)
-			email := "recoverme4@ory.sh"
-			createIdentityToRecover(t, reg, email)
-			check(t, client, RecoveryFlowTypeAPI, submitAndExpectSuccess(t, client, RecoveryFlowTypeAPI, func(v url.Values) {
-				v.Set("email", email)
-			}), email, "")
+			res, err := client.Get(public.URL + session.RouteWhoami)
+			require.NoError(t, err)
+			body = string(x.MustReadAll(res.Body))
+			require.NoError(t, res.Body.Close())
+			assert.Equal(t, "code_recovery", gjson.Get(body, "authentication_methods.0.method").String(), "%s", body)
+			assert.Equal(t, "aal1", gjson.Get(body, "authenticator_assurance_level").String(), "%s", body)
 		})
 	})
 
 	t.Run("description=should set all the correct recovery payloads after submission", func(t *testing.T) {
-		body := submitAndExpectSuccess(t, nil, RecoveryFlowTypeBrowser, func(v url.Values) {
+		body := expectSuccessfulRecovery(t, nil, RecoveryFlowTypeBrowser, func(v url.Values) {
 			v.Set("email", "test@ory.sh")
 		})
 		testhelpers.SnapshotTExcept(t, json.RawMessage(gjson.Get(body, "ui.nodes").String()), []string{"0.attributes.value"})
@@ -477,7 +508,7 @@ func TestRecovery(t *testing.T) {
 	t.Run("description=should require an email to be sent", func(t *testing.T) {
 		for _, flowType := range flowTypes {
 			t.Run("type="+flowType, func(t *testing.T) {
-				body := submitAndExpectValidationError(t, nil, flowType, func(v url.Values) {
+				body := expectValidationError(t, nil, flowType, func(v url.Values) {
 					v.Del("email")
 				})
 				assert.EqualValues(t, node.CodeGroup, gjson.Get(body, "active").String(), "%s", body)
@@ -489,10 +520,11 @@ func TestRecovery(t *testing.T) {
 	})
 
 	t.Run("description=should require a valid email to be sent", func(t *testing.T) {
+
 		for _, flowType := range flowTypes {
 			for _, email := range []string{"\\", "asdf", "...", "aiacobelli.sec@gmail.com,alejandro.iacobelli@mercadolibre.com"} {
 				t.Run("type="+flowType, func(t *testing.T) {
-					responseJSON := submitAndExpectValidationError(t, nil, flowType, func(v url.Values) {
+					responseJSON := expectValidationError(t, nil, flowType, func(v url.Values) {
 						v.Set("email", email)
 					})
 					activeMethod := gjson.Get(responseJSON, "active").String()
@@ -556,36 +588,50 @@ func TestRecovery(t *testing.T) {
 	})
 
 	t.Run("description=should not be able to recover account that does not exist", func(t *testing.T) {
-		for _, flowType := range flowTypes {
-			t.Run("type="+flowType, func(t *testing.T) {
-				email := x.NewUUID().String() + "@ory.sh"
-				var values = func(v url.Values) {
-					v.Set("email", email)
-				}
 
-				actual := submitAndExpectSuccess(t, nil, flowType, values)
+		var check = func(t *testing.T, c *http.Client, flowType, email string) {
+			withValues := func(v url.Values) {
+				v.Set("email", email)
+			}
+			body := submitRecovery(t, c, flowType, withValues, http.StatusOK)
+			assert.EqualValues(t, node.CodeGroup, gjson.Get(body, "active").String(), "%s", body)
+			assert.Empty(t, gjson.Get(body, "ui.nodes.#(attributes.name==code).attributes.value").String(), "%s", body)
+			assertx.EqualAsJSON(t, text.NewRecoveryEmailWithCodeSent(), json.RawMessage(gjson.Get(body, "ui.messages.0").Raw))
 
-				assert.EqualValues(t, node.CodeGroup, gjson.Get(actual, "active").String(), "%s", actual)
-				assert.Empty(t, gjson.Get(actual, "ui.nodes.#(attributes.name==code).attributes.value").String(), "%s", actual)
-				assertx.EqualAsJSON(t, text.NewRecoveryEmailWithCodeSent(), json.RawMessage(gjson.Get(actual, "ui.messages.0").Raw))
-
-				message := testhelpers.CourierExpectMessage(t, reg, email, "Account access attempted")
-				assert.Contains(t, message.Body, "If this was you, check if you signed up using a different address.")
-			})
+			message := testhelpers.CourierExpectMessage(t, reg, email, "Account access attempted")
+			assert.Contains(t, message.Body, "If this was you, check if you signed up using a different address.")
 		}
+
+		t.Run("type=browser", func(t *testing.T) {
+			email := "recover_browser@ory.sh"
+			c := browserHttpClient(t)
+			check(t, c, RecoveryFlowTypeBrowser, email)
+		})
+
+		t.Run("type=spa", func(t *testing.T) {
+			email := "recover_spa@ory.sh"
+			c := spaHttpClient(t)
+			check(t, c, RecoveryFlowTypeSPA, email)
+		})
+
+		t.Run("type=api", func(t *testing.T) {
+			email := "recover_api@ory.sh"
+			c := apiHttpClient(t)
+			check(t, c, RecoveryFlowTypeAPI, email)
+		})
 	})
 
 	t.Run("description=should not be able to recover an inactive account", func(t *testing.T) {
-		for _, flowType := range flowTypes {
-			t.Run("type="+flowType, func(t *testing.T) {
-				email := "recoverinactive_" + flowType + "@ory.sh"
+		for _, flowType := range flowTypeCases {
+			t.Run("type="+flowType.FlowType, func(t *testing.T) {
+				email := "recoverinactive_" + flowType.FlowType + "@ory.sh"
 				createIdentityToRecover(t, reg, email)
 				values := func(v url.Values) {
 					v.Set("email", email)
 				}
 				cl := testhelpers.NewClientWithCookies(t)
 
-				body := submitAndExpectSuccess(t, cl, flowType, values)
+				body := submitRecovery(t, cl, flowType.FlowType, values, http.StatusOK)
 				addr, err := reg.IdentityPool().FindVerifiableAddressByValue(context.Background(), identity.VerifiableAddressTypeEmail, email)
 				assert.NoError(t, err)
 
@@ -598,17 +644,16 @@ func TestRecovery(t *testing.T) {
 				action := gjson.Get(body, "ui.action").String()
 				assert.NotEmpty(t, action)
 
-				postValues, err := withCSRFToken(flowType, body, url.Values{
+				postValues := withCSRFToken(t, flowType.FlowType, body, url.Values{
 					"code": {recoveryCode},
 				})
-				require.NoError(t, err)
 
-				res, err := cl.PostForm(action, postValues)
+				res, err := cl.Post(action, flowType.FormContentType, bytes.NewBufferString(postValues))
 
 				require.NoError(t, err)
 
 				body = string(ioutilx.MustReadAll(res.Body))
-				if flowType == RecoveryFlowTypeAPI || flowType == RecoveryFlowTypeSPA {
+				if flowType.FlowType == RecoveryFlowTypeAPI || flowType.FlowType == RecoveryFlowTypeSPA {
 					assert.Equal(t, http.StatusUnauthorized, res.StatusCode)
 					assert.Contains(t, res.Request.URL.String(), public.URL+recovery.RouteSubmitFlow)
 					assertx.EqualAsJSON(t, session.ErrIdentityDisabled.WithDetail("identity_id", addr.IdentityID), json.RawMessage(gjson.Get(body, "error").Raw), "%s", body)
@@ -643,7 +688,7 @@ func TestRecovery(t *testing.T) {
 		}
 
 		cl := testhelpers.NewClientWithCookies(t)
-		actual := submitAndExpectSuccess(t, cl, RecoveryFlowTypeBrowser, values)
+		actual := expectSuccessfulRecovery(t, cl, RecoveryFlowTypeBrowser, values)
 		message := testhelpers.CourierExpectMessage(t, reg, email, "Recover access to your account")
 		recoveryCode := testhelpers.CourierExpectCodeInMessage(t, message, 1)
 
@@ -727,19 +772,18 @@ func TestRecovery(t *testing.T) {
 					v.Set("email", recoveryEmail)
 				}
 
-				actual := submitAndExpectSuccess(t, c, testCase.FlowType, values)
+				actual := submitRecovery(t, c, testCase.FlowType, values, http.StatusOK)
 				message := testhelpers.CourierExpectMessage(t, reg, recoveryEmail, "Recover access to your account")
 				recoveryCode := testhelpers.CourierExpectCodeInMessage(t, message, 1)
 
-				form, err := withCSRFToken(testCase.FlowType, actual, url.Values{
+				form := withCSRFToken(t, testCase.FlowType, actual, url.Values{
 					"code": {"123123"},
 				})
-				require.NoError(t, err)
 
 				action := gjson.Get(actual, "ui.action").String()
 				require.NotEmpty(t, action)
 
-				res, err := c.PostForm(action, form)
+				res, err := c.Post(action, testCase.FormContentType, bytes.NewBufferString(form))
 				require.NoError(t, err)
 				assert.Equal(t, http.StatusOK, res.StatusCode)
 
@@ -759,9 +803,11 @@ func TestRecovery(t *testing.T) {
 				require.Len(t, rs.Ui.Messages, 1)
 				assert.Equal(t, "The recovery code is invalid or has already been used. Please try again.", rs.Ui.Messages[0].Text)
 
+				form = withCSRFToken(t, testCase.FlowType, actual, url.Values{
+					"code": {recoveryCode},
+				})
 				// Now submit the correct code
-				form.Set("code", recoveryCode)
-				res, err = c.PostForm(action, form)
+				res, err = c.Post(action, testCase.FormContentType, bytes.NewBufferString(form))
 				require.NoError(t, err)
 				if testCase.FlowType == RecoveryFlowTypeBrowser {
 					assert.Equal(t, http.StatusOK, res.StatusCode)
@@ -770,13 +816,21 @@ func TestRecovery(t *testing.T) {
 
 					assert.Len(t, gjson.GetBytes(json, "ui.messages").Array(), 1)
 					assert.Contains(t, gjson.GetBytes(json, "ui.messages.0.text").String(), "You successfully recovered your account.")
-				} else {
+				} else if testCase.FlowType == RecoveryFlowTypeSPA {
 					assert.Equal(t, http.StatusUnprocessableEntity, res.StatusCode)
 
 					json := ioutilx.MustReadAll(res.Body)
 
 					assert.Equal(t, gjson.GetBytes(json, "error.id").String(), "browser_location_change_required")
 					assert.Contains(t, gjson.GetBytes(json, "redirect_browser_to").String(), "settings-ts?")
+				} else if testCase.FlowType == RecoveryFlowTypeSPA {
+					assert.Equal(t, http.StatusUnprocessableEntity, res.StatusCode)
+
+					json := ioutilx.MustReadAll(res.Body)
+
+					assert.Equal(t, gjson.GetBytes(json, "error.id").String(), "browser_location_change_required")
+					assert.Contains(t, gjson.GetBytes(json, "flow_name").String(), "settings")
+					assert.NotEmpty(t, gjson.GetBytes(json, "flow_id").String())
 				}
 			})
 		}
@@ -837,7 +891,7 @@ func TestRecovery(t *testing.T) {
 		})
 
 		c := testhelpers.NewClientWithCookies(t)
-		body := submitAndExpectSuccess(t, c, RecoveryFlowTypeBrowser, func(v url.Values) {
+		body := expectSuccessfulRecovery(t, c, RecoveryFlowTypeBrowser, func(v url.Values) {
 			v.Set("email", recoveryEmail)
 		})
 

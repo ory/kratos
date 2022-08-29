@@ -1390,6 +1390,12 @@
               "$ref": "#/definitions/jsonError"
             }
           },
+          "422": {
+            "description": "selfServiceBrowserLocationChangeRequiredError",
+            "schema": {
+              "$ref": "#/definitions/selfServiceBrowserLocationChangeRequiredError"
+            }
+          },
           "500": {
             "description": "jsonError",
             "schema": {
@@ -3243,13 +3249,20 @@
           "description": "Since when the flow has expired",
           "type": "string"
         },
+        "redirect_flow_id": {
+          "$ref": "#/definitions/UUID"
+        },
+        "redirect_flow_name": {
+          "description": "RedirectFlowName is the type of flow",
+          "type": "string"
+        },
         "request": {
           "description": "The request ID\n\nThe request ID is often exposed internally in order to trace\nerrors across service architectures. This is often a UUID.",
           "type": "string",
           "example": "d7ef54b1-ec15-46e6-bccb-524b82c035e6"
         },
         "session_token": {
-          "description": "An optional session token",
+          "description": "SessionToken is an optional token for the current session",
           "type": "string"
         },
         "status": {

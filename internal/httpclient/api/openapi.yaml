@@ -1398,6 +1398,12 @@ paths:
               schema:
                 $ref: '#/components/schemas/jsonError'
           description: jsonError
+        "422":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/selfServiceBrowserLocationChangeRequiredError'
+          description: selfServiceBrowserLocationChangeRequiredError
         "500":
           content:
             application/json:
@@ -3657,6 +3663,12 @@ components:
         redirect_browser_to:
           description: Since when the flow has expired
           type: string
+        redirect_flow_id:
+          format: uuid4
+          type: string
+        redirect_flow_name:
+          description: RedirectFlowName is the type of flow
+          type: string
         request:
           description: |-
             The request ID
@@ -3666,7 +3678,7 @@ components:
           example: d7ef54b1-ec15-46e6-bccb-524b82c035e6
           type: string
         session_token:
-          description: An optional session token
+          description: SessionToken is an optional token for the current session
           type: string
         status:
           description: The status description

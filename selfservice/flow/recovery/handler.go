@@ -358,6 +358,7 @@ type submitSelfServiceRecoveryFlowBody struct{}
 //       303: emptyResponse
 //       400: selfServiceRecoveryFlow
 //       410: jsonError
+//       422: selfServiceBrowserLocationChangeRequiredError
 //       500: jsonError
 func (h *Handler) submitFlow(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	rid, err := flow.GetFlowID(r)

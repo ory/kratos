@@ -378,11 +378,10 @@ func (s *Strategy) recoveryIssueSession(w http.ResponseWriter, r *http.Request, 
 		return s.retryRecoveryFlowWithError(w, r, f.Type, err)
 	}
 
-	settingsUrl := sf.AppendTo(s.deps.Config().SelfServiceFlowSettingsUI(r.Context())).String()
 	if f.Type.IsAPI() {
-		s.deps.Writer().WriteError(w, r, flow.NewBrowserLocationChangeRequiredErrorWithSessionToken(settingsUrl, sess.Token))
+		s.deps.Writer().WriteError(w, r, flow.NewFlowChangeRequiredError(sess.Token, "settings", sf.ID))
 	} else if x.IsJSONRequest(r) {
-		s.deps.Writer().WriteError(w, r, flow.NewBrowserLocationChangeRequiredError(settingsUrl))
+		s.deps.Writer().WriteError(w, r, flow.NewBrowserLocationChangeRequiredError(sf.AppendTo(s.deps.Config().SelfServiceFlowSettingsUI(r.Context())).String()))
 	} else {
 		http.Redirect(w, r, sf.AppendTo(s.deps.Config().SelfServiceFlowSettingsUI(r.Context())).String(), http.StatusSeeOther)
 	}

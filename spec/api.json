@@ -752,13 +752,20 @@
             "description": "Since when the flow has expired",
             "type": "string"
           },
+          "redirect_flow_id": {
+            "$ref": "#/components/schemas/UUID"
+          },
+          "redirect_flow_name": {
+            "description": "RedirectFlowName is the type of flow",
+            "type": "string"
+          },
           "request": {
             "description": "The request ID\n\nThe request ID is often exposed internally in order to trace\nerrors across service architectures. This is often a UUID.",
             "example": "d7ef54b1-ec15-46e6-bccb-524b82c035e6",
             "type": "string"
           },
           "session_token": {
-            "description": "An optional session token",
+            "description": "SessionToken is an optional token for the current session",
             "type": "string"
           },
           "status": {
@@ -4024,6 +4031,16 @@
               }
             },
             "description": "jsonError"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/selfServiceBrowserLocationChangeRequiredError"
+                }
+              }
+            },
+            "description": "selfServiceBrowserLocationChangeRequiredError"
           },
           "500": {
             "content": {

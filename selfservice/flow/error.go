@@ -71,12 +71,17 @@ func NewFlowExpiredError(at time.Time) *ExpiredError {
 // swagger:model selfServiceBrowserLocationChangeRequiredError
 type BrowserLocationChangeRequiredError struct {
 	*herodot.DefaultError `json:"error"`
-
 	// Since when the flow has expired
-	RedirectBrowserTo string `json:"redirect_browser_to"`
+	RedirectBrowserTo string `json:"redirect_browser_to,omitempty"`
 
-	// An optional session token
+	// SessionToken is an optional token for the current session
 	SessionToken string `json:"session_token,omitempty"`
+
+	// RedirectFlowName is the type of flow
+	RedirectFlowName string `json:"redirect_flow_name,omitempty"`
+
+	// RedirectFlowID is the ID of the flow instance
+	RedirectFlowID uuid.UUID `json:"redirect_flow_id,omitempty"`
 }
 
 func (e *BrowserLocationChangeRequiredError) EnhanceJSONError() interface{} {
@@ -97,15 +102,16 @@ func NewBrowserLocationChangeRequiredError(redirectTo string) *BrowserLocationCh
 	}
 }
 
-func NewBrowserLocationChangeRequiredErrorWithSessionToken(redirectTo string, sessionToken string) *BrowserLocationChangeRequiredError {
+func NewFlowChangeRequiredError(sessionToken string, flowName string, fID uuid.UUID) *BrowserLocationChangeRequiredError {
 	return &BrowserLocationChangeRequiredError{
-		SessionToken:      sessionToken,
-		RedirectBrowserTo: redirectTo,
+		RedirectFlowName: flowName,
+		RedirectFlowID:   fID,
+		SessionToken:     sessionToken,
 		DefaultError: &herodot.DefaultError{
 			IDField:     text.ErrIDSelfServiceBrowserLocationChangeRequiredError,
 			CodeField:   http.StatusUnprocessableEntity,
 			StatusField: http.StatusText(http.StatusUnprocessableEntity),
-			ReasonField: fmt.Sprintf("In order to complete this flow please redirect the browser to: %s", redirectTo),
+			ReasonField: fmt.Sprintf("In order to complete this flow please redirect to the %s flow with id %s", flowName, fID.String()),
 			DebugField:  "",
 			ErrorField:  "browser location change required",
 		},
