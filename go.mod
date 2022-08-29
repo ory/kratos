@@ -1,6 +1,6 @@
 module github.com/ory/kratos
 
-go 1.17
+go 1.18
 
 replace (
 	github.com/bradleyjkemp/cupaloy/v2 => github.com/aeneasr/cupaloy/v2 v2.6.1-0.20210924214125-3dfdd01210a3

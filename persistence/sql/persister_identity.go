@@ -192,9 +192,6 @@ func (p *Persister) createVerifiableAddresses(ctx context.Context, i *identity.I
 	defer span.End()
 
 	for k := range i.VerifiableAddresses {
-		i.VerifiableAddresses[k].IdentityID = i.ID
-		i.VerifiableAddresses[k].NID = p.NetworkID(ctx)
-		i.VerifiableAddresses[k].Value = stringToLowerTrim(i.VerifiableAddresses[k].Value)
 		if err := p.GetConnection(ctx).Create(&i.VerifiableAddresses[k]); err != nil {
 			return err
 		}
@@ -202,41 +199,69 @@ func (p *Persister) createVerifiableAddresses(ctx context.Context, i *identity.I
 	return nil
 }
 
-func (p *Persister) updateRecoveryAddresses(ctx context.Context, i *identity.Identity) error {
-	var addressesInDb []identity.RecoveryAddress
-	if err := p.GetConnection(ctx).Where("identity_id = ? AND nid = ?", i.ID, p.NetworkID(ctx)).Order("id ASC").All(&addressesInDb); err != nil {
+func updateAssociation[T interface {
+	Hash() string
+}](ctx context.Context, p *Persister, i *identity.Identity, inID []T) error {
+	var inDB []T
+	if err := p.GetConnection(ctx).
+		Where("identity_id = ? AND nid = ?", i.ID, p.NetworkID(ctx)).
+		Order("id ASC").
+		All(&inDB); err != nil {
+
 		return err
 	}
 
-	newAddresses := make(map[string]*identity.RecoveryAddress)
-	oldAddresses := make(map[string]*identity.RecoveryAddress)
-	for j, a := range i.RecoveryAddresses {
-		i.RecoveryAddresses[j].IdentityID = i.ID
-		i.RecoveryAddresses[j].NID = p.NetworkID(ctx)
-		i.RecoveryAddresses[j].Value = stringToLowerTrim(i.RecoveryAddresses[j].Value)
-		newAddresses[a.Hash()] = &i.RecoveryAddresses[j]
+	newAssocs := make(map[string]*T)
+	oldAssocs := make(map[string]*T)
+	for i, a := range inID {
+		newAssocs[a.Hash()] = &inID[i]
 	}
-	for j, a := range addressesInDb {
-		oldAddresses[a.Hash()] = &addressesInDb[j]
+	for i, a := range inDB {
+		oldAssocs[a.Hash()] = &inDB[i]
 	}
-	for h, a := range newAddresses {
-		if _, found := oldAddresses[h]; found {
-			// Ignore addresses that are already in the db
-			oldAddresses[h] = nil
+
+	// Subtle: we delete the old associations from the DB first, because else
+	// they could cause UNIQUE constraints to fail on insert.
+	for h, a := range oldAssocs {
+		if _, found := newAssocs[h]; found {
+			newAssocs[h] = nil // Ignore associations that are already in the db.
 		} else {
-			if err := p.GetConnection(ctx).Create(a); err != nil {
-				return err
-			}
-		}
-	}
-	for _, a := range oldAddresses {
-		if a != nil {
 			if err := p.GetConnection(ctx).Destroy(a); err != nil {
 				return err
 			}
 		}
 	}
+
+	for _, a := range newAssocs {
+		if a != nil {
+			if err := p.GetConnection(ctx).Create(a); err != nil {
+				return err
+			}
+		}
+	}
+
 	return nil
+}
+
+func (p *Persister) normalizeAllAddressess(ctx context.Context, id *identity.Identity) {
+	p.normalizeRecoveryAddresses(ctx, id)
+	p.normalizeVerifiableAddresses(ctx, id)
+}
+
+func (p *Persister) normalizeVerifiableAddresses(ctx context.Context, id *identity.Identity) {
+	for k := range id.VerifiableAddresses {
+		id.VerifiableAddresses[k].IdentityID = id.ID
+		id.VerifiableAddresses[k].NID = p.NetworkID(ctx)
+		id.VerifiableAddresses[k].Value = stringToLowerTrim(id.VerifiableAddresses[k].Value)
+	}
+}
+
+func (p *Persister) normalizeRecoveryAddresses(ctx context.Context, id *identity.Identity) {
+	for k := range id.RecoveryAddresses {
+		id.RecoveryAddresses[k].IdentityID = id.ID
+		id.RecoveryAddresses[k].NID = p.NetworkID(ctx)
+		id.RecoveryAddresses[k].Value = stringToLowerTrim(id.RecoveryAddresses[k].Value)
+	}
 }
 
 func (p *Persister) createRecoveryAddresses(ctx context.Context, i *identity.Identity) error {
@@ -244,9 +269,6 @@ func (p *Persister) createRecoveryAddresses(ctx context.Context, i *identity.Ide
 	defer span.End()
 
 	for k := range i.RecoveryAddresses {
-		i.RecoveryAddresses[k].IdentityID = i.ID
-		i.RecoveryAddresses[k].NID = p.NetworkID(ctx)
-		i.RecoveryAddresses[k].Value = stringToLowerTrim(i.RecoveryAddresses[k].Value)
 		if err := p.GetConnection(ctx).Create(&i.RecoveryAddresses[k]); err != nil {
 			return err
 		}
@@ -322,6 +344,8 @@ func (p *Persister) CreateIdentity(ctx context.Context, i *identity.Identity) er
 			return sqlcon.HandleError(err)
 		}
 
+		p.normalizeAllAddressess(ctx, i)
+
 		if err := p.createVerifiableAddresses(ctx, i); err != nil {
 			return sqlcon.HandleError(err)
 		}
@@ -387,26 +411,25 @@ func (p *Persister) UpdateIdentity(ctx context.Context, i *identity.Identity) er
 			return sql.ErrNoRows
 		}
 
-		if err := p.updateRecoveryAddresses(ctx, i); err != nil {
+		p.normalizeAllAddressess(ctx, i)
+		if err := updateAssociation(ctx, p, i, i.RecoveryAddresses); err != nil {
+			return err
+		}
+		if err := updateAssociation(ctx, p, i, i.VerifiableAddresses); err != nil {
 			return err
 		}
 
-		for _, tn := range []string{
-			new(identity.Credentials).TableName(ctx),
-			new(identity.VerifiableAddress).TableName(ctx),
-		} {
-			/* #nosec G201 TableName is static */
-			if err := tx.RawQuery(fmt.Sprintf(
-				`DELETE FROM %s WHERE identity_id = ? AND nid = ?`, tn), i.ID, p.NetworkID(ctx)).Exec(); err != nil {
-				return err
-			}
+		/* #nosec G201 TableName is static */
+		if err := tx.RawQuery(
+			fmt.Sprintf(
+				`DELETE FROM %s WHERE identity_id = ? AND nid = ?`,
+				new(identity.Credentials).TableName(ctx)),
+			i.ID, p.NetworkID(ctx)).Exec(); err != nil {
+
+			return err
 		}
 
 		if err := p.update(WithTransaction(ctx, tx), i); err != nil {
-			return err
-		}
-
-		if err := p.createVerifiableAddresses(ctx, i); err != nil {
 			return err
 		}
 
