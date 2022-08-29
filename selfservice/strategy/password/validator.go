@@ -138,7 +138,7 @@ func (s *DefaultPasswordValidator) fetch(hpw []byte, apiDNSName string) (int64, 
 		// See https://github.com/ory/kratos/issues/2145
 		count := int64(1)
 		if len(result) == 2 {
-			count, err = strconv.ParseInt(result[1], 10, 64)
+			count, err = strconv.ParseInt(strings.ReplaceAll(result[1], ",", ""), 10, 64)
 			if err != nil {
 				return 0, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("Expected password hash to contain a count formatted as int but got: %s", result[1]))
 			}

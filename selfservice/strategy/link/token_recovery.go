@@ -16,6 +16,13 @@ import (
 	"github.com/ory/kratos/x"
 )
 
+type RecoveryTokenType int
+
+const (
+	RecoveryTokenTypeAdmin RecoveryTokenType = iota + 1
+	RecoveryTokenTypeSelfService
+)
+
 type RecoveryToken struct {
 	// ID represents the tokens's unique ID.
 	//
@@ -30,6 +37,8 @@ type RecoveryToken struct {
 	// RecoveryAddress links this token to a recovery address.
 	// required: true
 	RecoveryAddress *identity.RecoveryAddress `json:"recovery_address" belongs_to:"identity_recovery_addresses" fk_id:"RecoveryAddressID"`
+
+	TokenType RecoveryTokenType `json:"-" faker:"-" db:"token_type"`
 
 	// ExpiresAt is the time (UTC) when the token expires.
 	// required: true
@@ -72,10 +81,11 @@ func NewSelfServiceRecoveryToken(address *identity.RecoveryAddress, f *recovery.
 		IdentityID:        identityID,
 		FlowID:            uuid.NullUUID{UUID: f.ID, Valid: true},
 		RecoveryAddressID: &recoveryAddressID,
+		TokenType:         RecoveryTokenTypeSelfService,
 	}
 }
 
-func NewRecoveryToken(identityID uuid.UUID, expiresIn time.Duration) *RecoveryToken {
+func NewAdminRecoveryToken(identityID uuid.UUID, fID uuid.UUID, expiresIn time.Duration) *RecoveryToken {
 	now := time.Now().UTC()
 	return &RecoveryToken{
 		ID:         x.NewUUID(),
@@ -83,6 +93,8 @@ func NewRecoveryToken(identityID uuid.UUID, expiresIn time.Duration) *RecoveryTo
 		ExpiresAt:  now.Add(expiresIn),
 		IssuedAt:   now,
 		IdentityID: identityID,
+		FlowID:     uuid.NullUUID{UUID: fID, Valid: true},
+		TokenType:  RecoveryTokenTypeAdmin,
 	}
 }
 
