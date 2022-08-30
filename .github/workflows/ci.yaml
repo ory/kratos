@@ -166,7 +166,8 @@ jobs:
       - name: Install selfservice-ui-react-native
         uses: actions/checkout@v2
         with:
-          repository: ory/kratos-selfservice-ui-react-native
+          repository: jonas-jonas/kratos-selfservice-ui-react-native
+          ref: feat/recovery
           path: react-native-ui
       - run: |
           cd react-native-ui
