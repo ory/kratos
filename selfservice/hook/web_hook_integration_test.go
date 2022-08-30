@@ -726,6 +726,7 @@ func TestDisallowPrivateIPRanges(t *testing.T) {
 	ctx := context.Background()
 	conf, reg := internal.NewFastRegistryWithMocks(t)
 	conf.MustSet(ctx, config.ViperKeyClientHTTPNoPrivateIPRanges, true)
+	conf.MustSet(ctx, config.ViperKeyClientHTTPPrivateIPExceptionURLs, []string{"http://localhost/exception"})
 	logger := logrusx.New("kratos", "test")
 	whDeps := x.SimpleLoggerWithClient{L: logger, C: reg.HTTPClient(context.Background()), T: otelx.NewNoop(logger, conf.Tracing(ctx))}
 
@@ -748,8 +749,19 @@ func TestDisallowPrivateIPRanges(t *testing.T) {
 		err := wh.ExecuteLoginPostHook(nil, req, node.DefaultGroup, f, s)
 		require.Error(t, err)
 		require.Contains(t, err.Error(), "ip 127.0.0.1 is in the 127.0.0.0/8 range")
-
 	})
+
+	t.Run("allowed to call exempt url", func(t *testing.T) {
+		wh := hook.NewWebHook(&whDeps, json.RawMessage(`{
+  "url": "http://localhost/exception",
+  "method": "GET",
+  "body": "file://stub/test_body.jsonnet"
+}`))
+		err := wh.ExecuteLoginPostHook(nil, req, node.DefaultGroup, f, s)
+		require.Error(t, err, "the target does not exist and we still receive an error")
+		require.NotContains(t, err.Error(), "ip 127.0.0.1 is in the 127.0.0.0/8 range", "but the error is not related to the IP range.")
+	})
+
 	t.Run("not allowed to load from source", func(t *testing.T) {
 		req := &http.Request{
 			Header: map[string][]string{"Some-Header": {"Some-Value"}},
