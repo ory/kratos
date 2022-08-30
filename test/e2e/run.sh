@@ -73,7 +73,7 @@ prepare() {
 
   if [ -z ${RN_UI_PATH+x} ]; then
     rn_ui_dir="$(mktemp -d -t ci-XXXXXXXXXX)/kratos-selfservice-ui-react-native"
-    git clone --depth 1 --branch master https://github.com/ory/kratos-selfservice-ui-react-native.git "$rn_ui_dir"
+    git clone --depth 1 --branch feat/recovery https://github.com/jonas-jonas/kratos-selfservice-ui-react-native.git "$rn_ui_dir"
     (cd "$rn_ui_dir" && npm i)
   else
     rn_ui_dir="${RN_UI_PATH}"
