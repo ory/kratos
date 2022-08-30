@@ -23,7 +23,7 @@ type AdminCreateIdentityBody struct {
 	// Store metadata about the identity which the identity itself can see when calling for example the session endpoint. Do not store sensitive information (e.g. credit score) about the identity in this field.
 	MetadataPublic interface{} `json:"metadata_public,omitempty"`
 	// RecoveryAddresses contains all the addresses that can be used to recover an identity.  Use this structure to import recovery addresses for an identity. Please keep in mind that the address needs to be represented in the Identity Schema or this field will be overwritten on the next identity update.
-	RecoveryAddresses []RecoveryAddress `json:"recovery_addresses,omitempty"`
+	RecoveryAddresses []RecoveryIdentityAddress `json:"recovery_addresses,omitempty"`
 	// SchemaID is the ID of the JSON Schema to be used for validating the identity's traits.
 	SchemaId string         `json:"schema_id"`
 	State    *IdentityState `json:"state,omitempty"`
@@ -151,9 +151,9 @@ func (o *AdminCreateIdentityBody) SetMetadataPublic(v interface{}) {
 }
 
 // GetRecoveryAddresses returns the RecoveryAddresses field value if set, zero value otherwise.
-func (o *AdminCreateIdentityBody) GetRecoveryAddresses() []RecoveryAddress {
+func (o *AdminCreateIdentityBody) GetRecoveryAddresses() []RecoveryIdentityAddress {
 	if o == nil || o.RecoveryAddresses == nil {
-		var ret []RecoveryAddress
+		var ret []RecoveryIdentityAddress
 		return ret
 	}
 	return o.RecoveryAddresses
@@ -161,7 +161,7 @@ func (o *AdminCreateIdentityBody) GetRecoveryAddresses() []RecoveryAddress {
 
 // GetRecoveryAddressesOk returns a tuple with the RecoveryAddresses field value if set, nil otherwise
 // and a boolean to check if the value has been set.
-func (o *AdminCreateIdentityBody) GetRecoveryAddressesOk() ([]RecoveryAddress, bool) {
+func (o *AdminCreateIdentityBody) GetRecoveryAddressesOk() ([]RecoveryIdentityAddress, bool) {
 	if o == nil || o.RecoveryAddresses == nil {
 		return nil, false
 	}
@@ -177,8 +177,8 @@ func (o *AdminCreateIdentityBody) HasRecoveryAddresses() bool {
 	return false
 }
 
-// SetRecoveryAddresses gets a reference to the given []RecoveryAddress and assigns it to the RecoveryAddresses field.
-func (o *AdminCreateIdentityBody) SetRecoveryAddresses(v []RecoveryAddress) {
+// SetRecoveryAddresses gets a reference to the given []RecoveryIdentityAddress and assigns it to the RecoveryAddresses field.
+func (o *AdminCreateIdentityBody) SetRecoveryAddresses(v []RecoveryIdentityAddress) {
 	o.RecoveryAddresses = v
 }
 

@@ -4,7 +4,7 @@
 
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
-**Autocomplete** | Pointer to **string** | The autocomplete attribute for the input. | [optional] 
+**Autocomplete** | Pointer to **string** | The autocomplete attribute for the input. email InputAttributeAutocompleteEmail tel InputAttributeAutocompleteTel url InputAttributeAutocompleteUrl current-password InputAttributeAutocompleteCurrentPassword new-password InputAttributeAutocompleteNewPassword one-time-code InputAttributeAutocompleteOneTimeCode | [optional] 
 **Disabled** | **bool** | Sets the input&#39;s disabled field to true or false. | 
 **Label** | Pointer to [**UiText**](UiText.md) |  | [optional] 
 **Name** | **string** | The input&#39;s element name. | 
@@ -12,7 +12,7 @@ Name | Type | Description | Notes
 **Onclick** | Pointer to **string** | OnClick may contain javascript which should be executed on click. This is primarily used for WebAuthn. | [optional] 
 **Pattern** | Pointer to **string** | The input&#39;s pattern. | [optional] 
 **Required** | Pointer to **bool** | Mark this input field as required. | [optional] 
-**Type** | **string** | The input&#39;s element type. | 
+**Type** | **string** | The input&#39;s element type. text InputAttributeTypeText password InputAttributeTypePassword number InputAttributeTypeNumber checkbox InputAttributeTypeCheckbox hidden InputAttributeTypeHidden email InputAttributeTypeEmail tel InputAttributeTypeTel submit InputAttributeTypeSubmit button InputAttributeTypeButton datetime-local InputAttributeTypeDateTimeLocal date InputAttributeTypeDate url InputAttributeTypeURI | 
 **Value** | Pointer to **interface{}** | The input&#39;s value. | [optional] 
 
 ## Methods
