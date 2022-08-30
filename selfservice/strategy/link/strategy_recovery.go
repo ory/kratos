@@ -106,24 +106,24 @@ type selfServiceRecoveryLink struct {
 
 // swagger:route POST /admin/recovery/link v0alpha2 adminCreateSelfServiceRecoveryLink
 //
-// Create a Recovery Link
+// # Create a Recovery Link
 //
 // This endpoint creates a recovery link which should be given to the user in order for them to recover
 // (or activate) their account.
 //
-//     Consumes:
-//     - application/json
+//	Consumes:
+//	- application/json
 //
-//     Produces:
-//     - application/json
+//	Produces:
+//	- application/json
 //
-//     Schemes: http, https
+//	Schemes: http, https
 //
-//     Responses:
-//       200: selfServiceRecoveryLink
-//       400: jsonError
-//       404: jsonError
-//       500: jsonError
+//	Responses:
+//	  200: selfServiceRecoveryLink
+//	  400: jsonError
+//	  404: jsonError
+//	  500: jsonError
 func (s *Strategy) createRecoveryLink(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 	var p adminCreateSelfServiceRecoveryLinkBody
 	if err := s.dx.Decode(r, &p, decoderx.HTTPJSONDecoder()); err != nil {

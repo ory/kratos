@@ -93,7 +93,7 @@ type createSelfServiceLogoutFlowUrlForBrowsers struct {
 
 // swagger:route GET /self-service/logout/browser v0alpha2 createSelfServiceLogoutFlowUrlForBrowsers
 //
-// Create a Logout URL for Browsers
+// # Create a Logout URL for Browsers
 //
 // This endpoint initializes a browser-based user logout flow and a URL which can be used to log out the user.
 //
@@ -106,15 +106,15 @@ type createSelfServiceLogoutFlowUrlForBrowsers struct {
 //
 // When calling this endpoint from a backend, please ensure to properly forward the HTTP cookies.
 //
-//     Produces:
-//     - application/json
+//	Produces:
+//	- application/json
 //
-//     Schemes: http, https
+//	Schemes: http, https
 //
-//     Responses:
-//       200: selfServiceLogoutUrl
-//       401: jsonError
-//       500: jsonError
+//	Responses:
+//	  200: selfServiceLogoutUrl
+//	  401: jsonError
+//	  500: jsonError
 func (h *Handler) createSelfServiceLogoutUrlForBrowsers(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	sess, err := h.d.SessionManager().FetchFromRequest(r.Context(), r)
 	if err != nil {
@@ -161,18 +161,18 @@ type submitSelfServiceLogoutFlowWithoutBrowserBody struct {
 // This endpoint does not remove any HTTP
 // Cookies - use the Browser-Based Self-Service Logout Flow instead.
 //
-//     Consumes:
-//     - application/json
+//	Consumes:
+//	- application/json
 //
-//     Produces:
-//     - application/json
+//	Produces:
+//	- application/json
 //
-//     Schemes: http, https
+//	Schemes: http, https
 //
-//     Responses:
-//       204: emptyResponse
-//       400: jsonError
-//       500: jsonError
+//	Responses:
+//	  204: emptyResponse
+//	  400: jsonError
+//	  500: jsonError
 func (h *Handler) submitSelfServiceLogoutFlowWithoutBrowser(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 	var p submitSelfServiceLogoutFlowWithoutBrowserBody
 	if err := h.dx.Decode(r, &p,
@@ -214,7 +214,7 @@ type submitSelfServiceLogoutFlow struct {
 
 // swagger:route GET /self-service/logout v0alpha2 submitSelfServiceLogoutFlow
 //
-// Complete Self-Service Logout
+// # Complete Self-Service Logout
 //
 // This endpoint logs out an identity in a self-service manner.
 //
@@ -230,15 +230,15 @@ type submitSelfServiceLogoutFlow struct {
 //
 // More information can be found at [Ory Kratos User Logout Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-logout).
 //
-//     Produces:
-//     - application/json
+//	Produces:
+//	- application/json
 //
-//     Schemes: http, https
+//	Schemes: http, https
 //
-//     Responses:
-//       303: emptyResponse
-//       204: emptyResponse
-//       500: jsonError
+//	Responses:
+//	  303: emptyResponse
+//	  204: emptyResponse
+//	  500: jsonError
 func (h *Handler) submitLogout(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	expected := r.URL.Query().Get("token")
 	if len(expected) == 0 {
