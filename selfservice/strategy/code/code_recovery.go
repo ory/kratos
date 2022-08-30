@@ -1,6 +1,7 @@
 package code
 
 import (
+	"context"
 	"time"
 
 	"github.com/ory/kratos/selfservice/flow"
@@ -60,7 +61,7 @@ type RecoveryCode struct {
 	IdentityID uuid.UUID `json:"identity_id"  faker:"-" db:"identity_id"`
 }
 
-func (RecoveryCode) TableName() string {
+func (RecoveryCode) TableName(ctx context.Context) string {
 	return "identity_recovery_codes"
 }
 
