@@ -1346,7 +1346,7 @@
     },
     "/self-service/recovery/api": {
       "get": {
-        "description": "This endpoint initiates a recovery flow for API clients such as mobile devices, smart TVs, and so on.\n\nIf a valid provided session cookie or session token is provided, a 400 Bad Request error.\n\nTo fetch an existing recovery flow call `/self-service/recovery/flows?flow=\u003cflow_id\u003e`.\n\nYou MUST NOT use this endpoint in client-side (Single Page Apps, ReactJS, AngularJS) nor server-side (Java Server\nPages, NodeJS, PHP, Golang, ...) browser applications. Using this endpoint in these applications will make\nyou vulnerable to a variety of CSRF attacks.\n\nThis endpoint MUST ONLY be used in scenarios such as native mobile apps (React Native, Objective C, Swift, Java, ...).\n\n\nMore information can be found at [Ory Kratos Account Recovery Documentation](../self-service/flows/account-recovery).",
+        "description": "This endpoint initiates a recovery flow for API clients such as mobile devices, smart TVs, and so on.\n\nIf a valid provided session cookie or session token is provided, a 400 Bad Request error.\n\nTo fetch an existing recovery flow call `/self-service/recovery/flows?flow=\u003cflow_id\u003e`.\n\nYou MUST NOT use this endpoint in client-side (Single Page Apps, ReactJS, AngularJS) nor server-side (Java Server\nPages, NodeJS, PHP, Golang, ...) browser applications. Using this endpoint in these applications will make\nyou vulnerable to a variety of CSRF attacks.\n\nThis endpoint MUST ONLY be used in scenarios such as native mobile apps (React Native, Objective C, Swift, Java, ...).\n\nMore information can be found at [Ory Kratos Account Recovery Documentation](../self-service/flows/account-recovery).",
         "schemes": [
           "http",
           "https"
@@ -1994,7 +1994,7 @@
         "tags": [
           "v0alpha2"
         ],
-        "summary": "# Complete Verification Flow",
+        "summary": "Complete Verification Flow",
         "operationId": "submitSelfServiceVerificationFlow",
         "parameters": [
           {
@@ -2142,7 +2142,7 @@
         "tags": [
           "v0alpha2"
         ],
-        "summary": "# Get Verification Flow",
+        "summary": "Get Verification Flow",
         "operationId": "getSelfServiceVerificationFlow",
         "parameters": [
           {
@@ -2326,7 +2326,7 @@
     },
     "/sessions/whoami": {
       "get": {
-        "description": "Uses the HTTP Headers in the GET request to determine (e.g. by using checking the cookies) who is authenticated.\nReturns a session object in the body or 401 if the credentials are invalid or no credentials were sent.\nAdditionally when the request it successful it adds the user ID to the 'X-Kratos-Authenticated-Identity-Id' header\nin the response.\n\nIf you call this endpoint from a server-side application, you must forward the HTTP Cookie Header to this endpoint:\n\n```js\npseudo-code example\nrouter.get('/protected-endpoint', async function (req, res) {\nconst session = await client.toSession(undefined, req.header('cookie'))\n\nconsole.log(session)\n})\n```\n\nWhen calling this endpoint from a non-browser application (e.g. mobile app) you must include the session token:\n\n```js\npseudo-code example\n...\nconst session = await client.toSession(\"the-session-token\")\n\nconsole.log(session)\n```\n\nDepending on your configuration this endpoint might return a 403 status code if the session has a lower Authenticator\nAssurance Level (AAL) than is possible for the identity. This can happen if the identity has password + webauthn\ncredentials (which would result in AAL2) but the session has only AAL1. If this error occurs, ask the user\nto sign in with the second factor or change the configuration.\n\nThis endpoint is useful for:\n\nAJAX calls. Remember to send credentials and set up CORS correctly!\nReverse proxies and API Gateways\nServer-side calls - use the `X-Session-Token` header!\n\nThis endpoint authenticates users by checking\n\nif the `Cookie` HTTP header was set containing an Ory Kratos Session Cookie;\nif the `Authorization: bearer \u003cory-session-token\u003e` HTTP header was set with a valid Ory Kratos Session Token;\nif the `X-Session-Token` HTTP header was set with a valid Ory Kratos Session Token.\n\nIf none of these headers are set or the cooke or token are invalid, the endpoint returns a HTTP 401 status code.\n\nAs explained above, this request may fail due to several reasons. The `error.id` can be one of:\n\n`session_inactive`: No active session was found in the request (e.g. no Ory Session Cookie / Ory Session Token).\n`session_aal2_required`: An active session was found but it does not fulfil the Authenticator Assurance Level, implying that the session must (e.g.) authenticate the second factor.",
+        "description": "Uses the HTTP Headers in the GET request to determine (e.g. by using checking the cookies) who is authenticated.\nReturns a session object in the body or 401 if the credentials are invalid or no credentials were sent.\nAdditionally when the request it successful it adds the user ID to the 'X-Kratos-Authenticated-Identity-Id' header\nin the response.\n\nIf you call this endpoint from a server-side application, you must forward the HTTP Cookie Header to this endpoint:\n\n```js\npseudo-code example\nrouter.get('/protected-endpoint', async function (req, res) {\nconst session = await client.toSession(undefined, req.header('cookie'))\n\nconsole.log(session)\n})\n```\n\nWhen calling this endpoint from a non-browser application (e.g. mobile app) you must include the session token:\n\n```js\npseudo-code example\n...\nconst session = await client.toSession(\"the-session-token\")\n\nconsole.log(session)\n```\n\nDepending on your configuration this endpoint might return a 403 status code if the session has a lower Authenticator\nAssurance Level (AAL) than is possible for the identity. This can happen if the identity has password + webauthn\ncredentials (which would result in AAL2) but the session has only AAL1. If this error occurs, ask the user\nto sign in with the second factor or change the configuration.\n\nThis endpoint is useful for:\n\nAJAX calls. Remember to send credentials and set up CORS correctly!\nReverse proxies and API Gateways\nServer-side calls - use the `X-Session-Token` header!\n\n# This endpoint authenticates users by checking\n\nif the `Cookie` HTTP header was set containing an Ory Kratos Session Cookie;\nif the `Authorization: bearer \u003cory-session-token\u003e` HTTP header was set with a valid Ory Kratos Session Token;\nif the `X-Session-Token` HTTP header was set with a valid Ory Kratos Session Token.\n\nIf none of these headers are set or the cooke or token are invalid, the endpoint returns a HTTP 401 status code.\n\nAs explained above, this request may fail due to several reasons. The `error.id` can be one of:\n\n`session_inactive`: No active session was found in the request (e.g. no Ory Session Cookie / Ory Session Token).\n`session_aal2_required`: An active session was found but it does not fulfil the Authenticator Assurance Level, implying that the session must (e.g.) authenticate the second factor.",
         "produces": [
           "application/json"
         ],
@@ -2495,37 +2495,9 @@
       "type": "object",
       "title": "JSONRawMessage represents a json.RawMessage that works well with JSON, SQL, and Swagger."
     },
-    "RecoveryAddress": {
-      "type": "object",
-      "required": [
-        "id",
-        "value",
-        "via"
-      ],
-      "properties": {
-        "created_at": {
-          "description": "CreatedAt is a helper struct field for gobuffalo.pop.",
-          "type": "string",
-          "format": "date-time"
-        },
-        "id": {
-          "$ref": "#/definitions/UUID"
-        },
-        "updated_at": {
-          "description": "UpdatedAt is a helper struct field for gobuffalo.pop.",
-          "type": "string",
-          "format": "date-time"
-        },
-        "value": {
-          "type": "string"
-        },
-        "via": {
-          "$ref": "#/definitions/RecoveryAddressType"
-        }
-      }
-    },
     "RecoveryAddressType": {
-      "type": "string"
+      "type": "string",
+      "title": "RecoveryAddressType must not exceed 16 characters as that is the limitation in the SQL Schema."
     },
     "UUID": {"type": "string", "format": "uuid4"},
     "adminCreateIdentityBody": {
@@ -2550,7 +2522,7 @@
           "description": "RecoveryAddresses contains all the addresses that can be used to recover an identity.\n\nUse this structure to import recovery addresses for an identity. Please keep in mind\nthat the address needs to be represented in the Identity Schema or this field will be overwritten\non the next identity update.",
           "type": "array",
           "items": {
-            "$ref": "#/definitions/RecoveryAddress"
+            "$ref": "#/definitions/recoveryIdentityAddress"
           }
         },
         "schema_id": {
@@ -2646,7 +2618,9 @@
           "pattern": "^[0-9]+(ns|us|ms|s|m|h)$"
         },
         "identity_id": {
-          "$ref": "#/definitions/UUID"
+          "description": "Identity to Recover\n\nThe identity's ID you wish to recover.",
+          "type": "string",
+          "format": "uuid"
         }
       }
     },
@@ -2687,7 +2661,7 @@
         "details": {
           "description": "Further error details",
           "type": "object",
-          "additionalProperties": true
+          "additionalProperties": {}
         },
         "id": {
           "description": "The error ID\n\nUseful when trying to identify various errors in application logic.",
@@ -2738,7 +2712,7 @@
         "details": {
           "description": "Further error details",
           "type": "object",
-          "additionalProperties": true
+          "additionalProperties": {}
         },
         "id": {
           "description": "The error ID\n\nUseful when trying to identify various errors in application logic.",
@@ -2811,7 +2785,9 @@
           }
         },
         "id": {
-          "$ref": "#/definitions/UUID"
+          "description": "ID is the identity's unique identifier.\n\nThe Identity ID can not be changed and can not be chosen. This ensures future\ncompatibility and optimization for distributed stores such as CockroachDB.",
+          "type": "string",
+          "format": "uuid"
         },
         "metadata_admin": {
           "$ref": "#/definitions/nullJsonRawMessage"
@@ -2823,7 +2799,7 @@
           "description": "RecoveryAddresses contains all the addresses that can be used to recover an identity.",
           "type": "array",
           "items": {
-            "$ref": "#/definitions/RecoveryAddress"
+            "$ref": "#/definitions/recoveryIdentityAddress"
           },
           "x-omitempty": true
         },
@@ -3026,7 +3002,6 @@
         },
         "value": {
           "description": "The value to be used within the operations.\n\nLearn more [about JSON Pointers](https://datatracker.ietf.org/doc/html/rfc6901#section-5).",
-          "type": "object",
           "example": "foobar"
         }
       }
@@ -3060,7 +3035,7 @@
         "details": {
           "description": "Further error details",
           "type": "object",
-          "additionalProperties": true
+          "additionalProperties": {}
         },
         "id": {
           "description": "The error ID\n\nUseful when trying to identify various errors in application logic.",
@@ -3121,6 +3096,36 @@
         }
       }
     },
+    "recoveryIdentityAddress": {
+      "type": "object",
+      "required": [
+        "id",
+        "value",
+        "via"
+      ],
+      "properties": {
+        "created_at": {
+          "description": "CreatedAt is a helper struct field for gobuffalo.pop.",
+          "type": "string",
+          "format": "date-time"
+        },
+        "id": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "updated_at": {
+          "description": "UpdatedAt is a helper struct field for gobuffalo.pop.",
+          "type": "string",
+          "format": "date-time"
+        },
+        "value": {
+          "type": "string"
+        },
+        "via": {
+          "$ref": "#/definitions/RecoveryAddressType"
+        }
+      }
+    },
     "revokedSessions": {
       "type": "object",
       "properties": {
@@ -3152,7 +3157,7 @@
         "details": {
           "description": "Further error details",
           "type": "object",
-          "additionalProperties": true
+          "additionalProperties": {}
         },
         "id": {
           "description": "The error ID\n\nUseful when trying to identify various errors in application logic.",
@@ -3200,7 +3205,9 @@
           "type": "object"
         },
         "id": {
-          "$ref": "#/definitions/UUID"
+          "description": "ID of the error container.",
+          "type": "string",
+          "format": "uuid"
         },
         "updated_at": {
           "description": "UpdatedAt is a helper struct field for gobuffalo.pop.",
@@ -3230,7 +3237,7 @@
         "details": {
           "description": "Further error details",
           "type": "object",
-          "additionalProperties": true
+          "additionalProperties": {}
         },
         "id": {
           "description": "The error ID\n\nUseful when trying to identify various errors in application logic.",
@@ -3260,7 +3267,9 @@
           "example": "Not Found"
         },
         "use_flow_id": {
-          "$ref": "#/definitions/UUID"
+          "description": "The flow ID that should be used for the new flow as it contains the correct messages.",
+          "type": "string",
+          "format": "uuid"
         }
       }
     },
@@ -3296,7 +3305,9 @@
           "format": "date-time"
         },
         "id": {
-          "$ref": "#/definitions/UUID"
+          "description": "ID represents the flow's unique ID. When performing the login flow, this\nrepresents the id in the login UI's query parameter: http://\u003cselfservice.flows.login.ui_url\u003e/?flow=\u003cflow_id\u003e",
+          "type": "string",
+          "format": "uuid"
         },
         "issued_at": {
           "description": "IssuedAt is the time (UTC) when the flow started.",
@@ -3372,7 +3383,9 @@
           "format": "date-time"
         },
         "id": {
-          "$ref": "#/definitions/UUID"
+          "description": "ID represents the request's unique ID. When performing the recovery flow, this\nrepresents the id in the recovery ui's query parameter: http://\u003cselfservice.flows.recovery.ui_url\u003e?request=\u003cid\u003e",
+          "type": "string",
+          "format": "uuid"
         },
         "issued_at": {
           "description": "IssuedAt is the time (UTC) when the request occurred.",
@@ -3440,7 +3453,9 @@
           "format": "date-time"
         },
         "id": {
-          "$ref": "#/definitions/UUID"
+          "description": "ID represents the flow's unique ID. When performing the registration flow, this\nrepresents the id in the registration ui's query parameter: http://\u003cselfservice.flows.registration.ui_url\u003e/?flow=\u003cid\u003e",
+          "type": "string",
+          "format": "uuid"
         },
         "issued_at": {
           "description": "IssuedAt is the time (UTC) when the flow occurred.",
@@ -3488,7 +3503,9 @@
           "format": "date-time"
         },
         "id": {
-          "$ref": "#/definitions/UUID"
+          "description": "ID represents the flow's unique ID. When performing the settings flow, this\nrepresents the id in the settings ui's query parameter: http://\u003cselfservice.flows.settings.ui_url\u003e?flow=\u003cid\u003e",
+          "type": "string",
+          "format": "uuid"
         },
         "identity": {
           "$ref": "#/definitions/identity"
@@ -3543,7 +3560,9 @@
           "format": "date-time"
         },
         "id": {
-          "$ref": "#/definitions/UUID"
+          "description": "ID represents the request's unique ID. When performing the verification flow, this\nrepresents the id in the verify ui's query parameter: http://\u003cselfservice.flows.verification.ui_url\u003e?request=\u003cid\u003e\n\ntype: string\nformat: uuid",
+          "type": "string",
+          "format": "uuid"
         },
         "issued_at": {
           "description": "IssuedAt is the time (UTC) when the request occurred.",
@@ -3603,7 +3622,9 @@
           "format": "date-time"
         },
         "id": {
-          "$ref": "#/definitions/UUID"
+          "description": "Session ID",
+          "type": "string",
+          "format": "uuid"
         },
         "identity": {
           "$ref": "#/definitions/identity"
@@ -4237,7 +4258,7 @@
           "$ref": "#/definitions/uiNodeAttributes"
         },
         "group": {
-          "description": "Group specifies which group (e.g. password authenticator) this node belongs to.",
+          "description": "Group specifies which group (e.g. password authenticator) this node belongs to.\ndefault DefaultGroup\npassword PasswordGroup\noidc OpenIDConnectGroup\nprofile ProfileGroup\nlink LinkGroup\ntotp TOTPGroup\nlookup_secret LookupGroup\nwebauthn WebAuthnGroup",
           "type": "string",
           "enum": [
             "default",
@@ -4248,7 +4269,8 @@
             "totp",
             "lookup_secret",
             "webauthn"
-          ]
+          ],
+          "x-go-enum-desc": "default DefaultGroup\npassword PasswordGroup\noidc OpenIDConnectGroup\nprofile ProfileGroup\nlink LinkGroup\ntotp TOTPGroup\nlookup_secret LookupGroup\nwebauthn WebAuthnGroup"
         },
         "messages": {
           "$ref": "#/definitions/uiTexts"
@@ -4257,7 +4279,7 @@
           "$ref": "#/definitions/uiNodeMeta"
         },
         "type": {
-          "description": "The node's type",
+          "description": "The node's type\ntext Text\ninput Input\nimg Image\na Anchor\nscript Script",
           "type": "string",
           "enum": [
             "text",
@@ -4265,7 +4287,8 @@
             "img",
             "a",
             "script"
-          ]
+          ],
+          "x-go-enum-desc": "text Text\ninput Input\nimg Image\na Anchor\nscript Script"
         }
       }
     },
@@ -4346,7 +4369,7 @@
       ],
       "properties": {
         "autocomplete": {
-          "description": "The autocomplete attribute for the input.",
+          "description": "The autocomplete attribute for the input.\nemail InputAttributeAutocompleteEmail\ntel InputAttributeAutocompleteTel\nurl InputAttributeAutocompleteUrl\ncurrent-password InputAttributeAutocompleteCurrentPassword\nnew-password InputAttributeAutocompleteNewPassword\none-time-code InputAttributeAutocompleteOneTimeCode",
           "type": "string",
           "enum": [
             "email",
@@ -4355,7 +4378,8 @@
             "current-password",
             "new-password",
             "one-time-code"
-          ]
+          ],
+          "x-go-enum-desc": "email InputAttributeAutocompleteEmail\ntel InputAttributeAutocompleteTel\nurl InputAttributeAutocompleteUrl\ncurrent-password InputAttributeAutocompleteCurrentPassword\nnew-password InputAttributeAutocompleteNewPassword\none-time-code InputAttributeAutocompleteOneTimeCode"
         },
         "disabled": {
           "description": "Sets the input's disabled field to true or false.",
@@ -4385,7 +4409,7 @@
           "type": "boolean"
         },
         "type": {
-          "description": "The input's element type.",
+          "description": "The input's element type.\ntext InputAttributeTypeText\npassword InputAttributeTypePassword\nnumber InputAttributeTypeNumber\ncheckbox InputAttributeTypeCheckbox\nhidden InputAttributeTypeHidden\nemail InputAttributeTypeEmail\ntel InputAttributeTypeTel\nsubmit InputAttributeTypeSubmit\nbutton InputAttributeTypeButton\ndatetime-local InputAttributeTypeDateTimeLocal\ndate InputAttributeTypeDate\nurl InputAttributeTypeURI",
           "type": "string",
           "enum": [
             "text",
@@ -4400,11 +4424,11 @@
             "datetime-local",
             "date",
             "url"
-          ]
+          ],
+          "x-go-enum-desc": "text InputAttributeTypeText\npassword InputAttributeTypePassword\nnumber InputAttributeTypeNumber\ncheckbox InputAttributeTypeCheckbox\nhidden InputAttributeTypeHidden\nemail InputAttributeTypeEmail\ntel InputAttributeTypeTel\nsubmit InputAttributeTypeSubmit\nbutton InputAttributeTypeButton\ndatetime-local InputAttributeTypeDateTimeLocal\ndate InputAttributeTypeDate\nurl InputAttributeTypeURI"
         },
         "value": {
-          "description": "The input's value.",
-          "type": "object"
+          "description": "The input's value."
         }
       }
     },
@@ -4549,7 +4573,9 @@
           "example": "2014-01-01T23:28:56.782Z"
         },
         "id": {
-          "$ref": "#/definitions/UUID"
+          "description": "The ID",
+          "type": "string",
+          "format": "uuid"
         },
         "status": {
           "$ref": "#/definitions/identityVerifiableAddressStatus"
