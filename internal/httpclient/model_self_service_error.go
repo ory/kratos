@@ -21,7 +21,8 @@ type SelfServiceError struct {
 	// CreatedAt is a helper struct field for gobuffalo.pop.
 	CreatedAt *time.Time             `json:"created_at,omitempty"`
 	Error     map[string]interface{} `json:"error,omitempty"`
-	Id        string                 `json:"id"`
+	// ID of the error container.
+	Id string `json:"id"`
 	// UpdatedAt is a helper struct field for gobuffalo.pop.
 	UpdatedAt *time.Time `json:"updated_at,omitempty"`
 }

@@ -21,8 +21,6 @@
     - "$ref": "#/components/schemas/uiNodeScriptAttributes"
 
 # Makes the uiNodeInputAttributes value attribute polymorph
-- op: remove
-  path: /components/schemas/uiNodeInputAttributes/properties/value/type
 - op: add
   path: /components/schemas/uiNodeInputAttributes/properties/value/nullable
   value: true

@@ -5,7 +5,7 @@
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
 **ExpiresIn** | Pointer to **string** | Link Expires In  The recovery link will expire at that point in time. Defaults to the configuration value of &#x60;selfservice.flows.recovery.request_lifespan&#x60;. | [optional] 
-**IdentityId** | **string** |  | 
+**IdentityId** | **string** | Identity to Recover  The identity&#39;s ID you wish to recover. | 
 
 ## Methods
 

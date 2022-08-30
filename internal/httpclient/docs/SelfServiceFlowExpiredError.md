@@ -6,14 +6,14 @@ Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
 **Code** | Pointer to **int64** | The status code | [optional] 
 **Debug** | Pointer to **string** | Debug information  This field is often not exposed to protect against leaking sensitive information. | [optional] 
-**Details** | Pointer to **map[string]map[string]interface{}** | Further error details | [optional] 
+**Details** | Pointer to **map[string]interface{}** | Further error details | [optional] 
 **Id** | Pointer to **string** | The error ID  Useful when trying to identify various errors in application logic. | [optional] 
 **Message** | **string** | Error message  The error&#39;s message. | 
 **Reason** | Pointer to **string** | A human-readable reason for the error | [optional] 
 **Request** | Pointer to **string** | The request ID  The request ID is often exposed internally in order to trace errors across service architectures. This is often a UUID. | [optional] 
 **Since** | Pointer to **int64** | A Duration represents the elapsed time between two instants as an int64 nanosecond count. The representation limits the largest representable duration to approximately 290 years. | [optional] 
 **Status** | Pointer to **string** | The status description | [optional] 
-**UseFlowId** | Pointer to **string** |  | [optional] 
+**UseFlowId** | Pointer to **string** | The flow ID that should be used for the new flow as it contains the correct messages. | [optional] 
 
 ## Methods
 
@@ -86,20 +86,20 @@ HasDebug returns a boolean if a field has been set.
 
 ### GetDetails
 
-`func (o *SelfServiceFlowExpiredError) GetDetails() map[string]map[string]interface{}`
+`func (o *SelfServiceFlowExpiredError) GetDetails() map[string]interface{}`
 
 GetDetails returns the Details field if non-nil, zero value otherwise.
 
 ### GetDetailsOk
 
-`func (o *SelfServiceFlowExpiredError) GetDetailsOk() (*map[string]map[string]interface{}, bool)`
+`func (o *SelfServiceFlowExpiredError) GetDetailsOk() (*map[string]interface{}, bool)`
 
 GetDetailsOk returns a tuple with the Details field if it's non-nil, zero value otherwise
 and a boolean to check if the value has been set.
 
 ### SetDetails
 
-`func (o *SelfServiceFlowExpiredError) SetDetails(v map[string]map[string]interface{})`
+`func (o *SelfServiceFlowExpiredError) SetDetails(v map[string]interface{})`
 
 SetDetails sets Details field to given value.
 
