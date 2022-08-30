@@ -26,7 +26,7 @@ func RequireEqualTime(t *testing.T, expected, actual time.Time) {
 // To produce a different normal distribution, callers can
 // adjust the output using:
 //
-//  sample = NormFloat64() * desiredStdDev + desiredMean
+//	sample = NormFloat64() * desiredStdDev + desiredMean
 //
 // Since 99.73% of values in a normal distribution lie within three standard deviations from the mean (https://en.wikipedia.org/wiki/68%E2%80%9395%E2%80%9399.7_rule),
 // by taking the standard deviation to be deviation/3, we can get a distribution which fits our bounds nicely with minimal clipping when we take max/mins to cut off the tails.
