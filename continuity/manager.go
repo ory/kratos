@@ -20,6 +20,10 @@ type ManagementProvider interface {
 	ContinuityManager() Manager
 }
 
+type ManagementProviderRelayState interface {
+	RelayStateContinuityManager() Manager
+}
+
 type Manager interface {
 	Pause(ctx context.Context, w http.ResponseWriter, r *http.Request, name string, opts ...ManagerOption) error
 	Continue(ctx context.Context, w http.ResponseWriter, r *http.Request, name string, opts ...ManagerOption) (*Container, error)

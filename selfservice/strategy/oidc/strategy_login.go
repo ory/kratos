@@ -82,7 +82,6 @@ func (s *Strategy) processLogin(w http.ResponseWriter, r *http.Request, a *login
 		if errors.Is(err, sqlcon.ErrNoRows) {
 			// If no account was found we're "manually" creating a new registration flow and redirecting the browser
 			// to that endpoint.
-
 			// That will execute the "pre registration" hook which allows to e.g. disallow this request. The registration
 			// ui however will NOT be shown, instead the user is directly redirected to the auth path. That should then
 			// do a silent re-request. While this might be a bit excessive from a network perspective it should usually

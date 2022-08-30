@@ -1,0 +1,33 @@
+version: '3.7'
+
+services:
+  postgresd:
+      image: postgres:9.6
+      ports:
+        - "5432:5432"
+      environment:
+        - POSTGRES_USER=kratos
+        - POSTGRES_PASSWORD=secret
+        - POSTGRES_DB=kratos
+      networks:
+        - intranet
+      
+
+
+  kratos-migrate:
+      depends_on:
+        - postgresd
+      image: oryd/kratos:latest
+      environment:
+        - DSN=postgres://kratos:secret@postgresd:5432/kratos?sslmode=disable&max_conns=20&max_idle_conns=4
+      volumes:
+        - type: bind
+          source: ./contrib/quickstart/kratos/email-password
+          target: /etc/config/kratos
+      command: -c /etc/config/kratos/kratos.yml migrate sql -e --yes
+      restart: on-failure
+      networks:
+        - intranet
+
+networks:
+  intranet:
