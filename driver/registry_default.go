@@ -718,7 +718,12 @@ func (m *RegistryDefault) HTTPClient(ctx context.Context, opts ...httpx.Resilien
 
 	// One of the few exceptions, this usually should not be hot reloaded.
 	if m.Config().ClientHTTPNoPrivateIPRanges(contextx.RootContext) {
-		opts = append(opts, httpx.ResilientClientDisallowInternalIPs())
+		opts = append(
+			opts,
+			httpx.ResilientClientDisallowInternalIPs(),
+			// One of the few exceptions, this usually should not be hot reloaded.
+			httpx.ResilientClientAllowInternalIPRequestsTo(m.Config().ClientHTTPPrivateIPExceptionURLs(contextx.RootContext)...),
+		)
 	}
 	return httpx.NewResilientClient(opts...)
 }
