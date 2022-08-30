@@ -137,7 +137,7 @@ func (p *Persister) CreateRecoveryCode(ctx context.Context, recoveryCode *code.R
 	recoveryCode.Code = p.hmacValue(ctx, code)
 	recoveryCode.NID = p.NetworkID(ctx)
 
-	// TODO: This should not create the request eagerly because otherwise we might accidentally create an address that isn't
+	// This should not create the request eagerly because otherwise we might accidentally create an address that isn't
 	// supposed to be in the database.
 	if err := p.GetConnection(ctx).Create(recoveryCode); err != nil {
 		return err
@@ -177,7 +177,7 @@ func (p *Persister) UseRecoveryCode(ctx context.Context, fID uuid.UUID, codeVal 
 		recoveryCode.RecoveryAddress = &ra
 
 		/* #nosec G201 TableName is static */
-		return tx.RawQuery(fmt.Sprintf("UPDATE %s SET used=true, used_at=? WHERE id=? AND nid = ?", recoveryCode.TableName(ctx)), time.Now().UTC(), recoveryCode.ID, nid).Exec()
+		return tx.RawQuery(fmt.Sprintf("UPDATE %s SET used=true, used_at=? WHERE id=? AND nid = ?", recoveryCode.TableName()), time.Now().UTC(), recoveryCode.ID, nid).Exec()
 	})); err != nil {
 		return nil, err
 	}
@@ -190,5 +190,5 @@ func (p *Persister) DeleteRecoveryCode(ctx context.Context, codeStr string) erro
 	defer span.End()
 
 	/* #nosec G201 TableName is static */
-	return p.GetConnection(ctx).RawQuery(fmt.Sprintf("DELETE FROM %s WHERE token=? AND nid = ?", new(code.RecoveryCode).TableName(ctx)), codeStr, p.NetworkID(ctx)).Exec()
+	return p.GetConnection(ctx).RawQuery(fmt.Sprintf("DELETE FROM %s WHERE token=? AND nid = ?", new(code.RecoveryCode).TableName()), codeStr, p.NetworkID(ctx)).Exec()
 }

@@ -1,7 +1,6 @@
 package code
 
 import (
-	"context"
 	"time"
 
 	"github.com/ory/kratos/selfservice/flow"
@@ -61,7 +60,7 @@ type RecoveryCode struct {
 	IdentityID uuid.UUID `json:"identity_id"  faker:"-" db:"identity_id"`
 }
 
-func (RecoveryCode) TableName(ctx context.Context) string {
+func (RecoveryCode) TableName() string {
 	return "identity_recovery_codes"
 }
 
@@ -99,7 +98,7 @@ func NewAdminRecoveryCode(identityID uuid.UUID, fID uuid.UUID, expiresIn time.Du
 	}
 }
 
-func (f *RecoveryCode) Valid() error {
+func (f RecoveryCode) Valid() error {
 	if f.ExpiresAt.Before(time.Now()) {
 		return errors.WithStack(flow.NewFlowExpiredError(f.ExpiresAt))
 	}

@@ -250,15 +250,15 @@ type initializeSelfServiceSettingsFlowForBrowsers struct {
 //
 // More information can be found at [Ory Kratos User Settings & Profile Management Documentation](../self-service/flows/user-settings).
 //
-//     Schemes: http, https
+//	Schemes: http, https
 //
-//     Responses:
-//       200: selfServiceSettingsFlow
-//       303: emptyResponse
-//       400: jsonError
-//       401: jsonError
-//       403: jsonError
-//       500: jsonError
+//	Responses:
+//	  200: selfServiceSettingsFlow
+//	  303: emptyResponse
+//	  400: jsonError
+//	  401: jsonError
+//	  403: jsonError
+//	  500: jsonError
 func (h *Handler) initBrowserFlow(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	s, err := h.d.SessionManager().FetchFromRequest(r.Context(), r)
 	if err != nil {
@@ -328,25 +328,25 @@ type getSelfServiceSettingsFlow struct {
 // If this endpoint is called via an AJAX request, the response contains the flow without a redirect. In the
 // case of an error, the `error.id` of the JSON response body can be one of:
 //
-// - `security_csrf_violation`: Unable to fetch the flow because a CSRF violation occurred.
-// - `session_inactive`: No Ory Session was found - sign in a user first.
-// - `security_identity_mismatch`: The flow was interrupted with `session_refresh_required` but apparently some other
-//		identity logged in instead.
+//   - `security_csrf_violation`: Unable to fetch the flow because a CSRF violation occurred.
+//   - `session_inactive`: No Ory Session was found - sign in a user first.
+//   - `security_identity_mismatch`: The flow was interrupted with `session_refresh_required` but apparently some other
+//     identity logged in instead.
 //
 // More information can be found at [Ory Kratos User Settings & Profile Management Documentation](../self-service/flows/user-settings).
 //
-//     Produces:
-//     - application/json
+//	Produces:
+//	- application/json
 //
-//     Schemes: http, https
+//	Schemes: http, https
 //
-//     Responses:
-//       200: selfServiceSettingsFlow
-//       401: jsonError
-//       403: jsonError
-//       404: jsonError
-//       410: jsonError
-//       500: jsonError
+//	Responses:
+//	  200: selfServiceSettingsFlow
+//	  401: jsonError
+//	  403: jsonError
+//	  404: jsonError
+//	  410: jsonError
+//	  500: jsonError
 func (h *Handler) fetchPublicFlow(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	if err := h.fetchFlow(w, r); err != nil {
 		h.d.Writer().WriteError(w, r, err)
@@ -464,40 +464,40 @@ type submitSelfServiceSettingsFlowBody struct{}
 // If this endpoint is called with a `Accept: application/json` HTTP header, the response contains the flow without a redirect. In the
 // case of an error, the `error.id` of the JSON response body can be one of:
 //
-// - `session_refresh_required`: The identity requested to change something that needs a privileged session. Redirect
-//		the identity to the login init endpoint with query parameters `?refresh=true&return_to=<the-current-browser-url>`,
-//		or initiate a refresh login flow otherwise.
-// - `security_csrf_violation`: Unable to fetch the flow because a CSRF violation occurred.
-// - `session_inactive`: No Ory Session was found - sign in a user first.
-// - `security_identity_mismatch`: The flow was interrupted with `session_refresh_required` but apparently some other
-//		identity logged in instead.
-// - `security_identity_mismatch`: The requested `?return_to` address is not allowed to be used. Adjust this in the configuration!
-// - `browser_location_change_required`: Usually sent when an AJAX request indicates that the browser needs to open a specific URL.
-//		Most likely used in Social Sign In flows.
+//   - `session_refresh_required`: The identity requested to change something that needs a privileged session. Redirect
+//     the identity to the login init endpoint with query parameters `?refresh=true&return_to=<the-current-browser-url>`,
+//     or initiate a refresh login flow otherwise.
+//   - `security_csrf_violation`: Unable to fetch the flow because a CSRF violation occurred.
+//   - `session_inactive`: No Ory Session was found - sign in a user first.
+//   - `security_identity_mismatch`: The flow was interrupted with `session_refresh_required` but apparently some other
+//     identity logged in instead.
+//   - `security_identity_mismatch`: The requested `?return_to` address is not allowed to be used. Adjust this in the configuration!
+//   - `browser_location_change_required`: Usually sent when an AJAX request indicates that the browser needs to open a specific URL.
+//     Most likely used in Social Sign In flows.
 //
 // More information can be found at [Ory Kratos User Settings & Profile Management Documentation](../self-service/flows/user-settings).
 //
-//     Consumes:
-//     - application/json
-//     - application/x-www-form-urlencoded
+//	Consumes:
+//	- application/json
+//	- application/x-www-form-urlencoded
 //
-//     Produces:
-//     - application/json
+//	Produces:
+//	- application/json
 //
-//     Security:
-//       sessionToken:
+//	Security:
+//	  sessionToken:
 //
-//     Schemes: http, https
+//	Schemes: http, https
 //
-//     Responses:
-//       200: selfServiceSettingsFlow
-//       303: emptyResponse
-//       400: selfServiceSettingsFlow
-//       401: jsonError
-//       403: jsonError
-//       410: jsonError
-//       422: selfServiceBrowserLocationChangeRequiredError
-//       500: jsonError
+//	Responses:
+//	  200: selfServiceSettingsFlow
+//	  303: emptyResponse
+//	  400: selfServiceSettingsFlow
+//	  401: jsonError
+//	  403: jsonError
+//	  410: jsonError
+//	  422: selfServiceBrowserLocationChangeRequiredError
+//	  500: jsonError
 func (h *Handler) submitSettingsFlow(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	rid, err := GetFlowID(r)
 	if err != nil {

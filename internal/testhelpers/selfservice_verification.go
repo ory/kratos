@@ -41,12 +41,11 @@ func NewRecoveryUIFlowEchoServer(t *testing.T, reg driver.Registry) *httptest.Se
 }
 
 func GetRecoveryFlow(t *testing.T, client *http.Client, ts *httptest.Server) *kratos.SelfServiceRecoveryFlow {
-	t.Helper()
 	publicClient := NewSDKCustomClient(ts, client)
 
 	res, err := client.Get(ts.URL + recovery.RouteInitBrowserFlow)
-	require.NoError(t, err, "expected no error on %s: %s", recovery.RouteInitBrowserFlow, err)
-	require.NoError(t, res.Body.Close(), "expected no error on closing body: %s", err)
+	require.NoError(t, err)
+	require.NoError(t, res.Body.Close())
 
 	flowID := res.Request.URL.Query().Get("flow")
 	assert.NotEmpty(t, flowID, "expected to receive a flow id, got none")
@@ -56,7 +55,6 @@ func GetRecoveryFlow(t *testing.T, client *http.Client, ts *httptest.Server) *kr
 		Id(flowID).
 		Execute()
 	require.NoError(t, err, "expected no error when fetching recovery flow: %s", err)
-	// assert.Empty(t, rs.Active)
 
 	return rs
 }
@@ -69,14 +67,14 @@ func InitializeRecoveryFlowViaBrowser(t *testing.T, client *http.Client, isSPA b
 		u += "?" + values.Encode()
 	}
 	req, err := http.NewRequest("GET", u, nil)
-	require.NoError(t, err, "Expected no error when constructing request GET %s: %s", u, err)
+	require.NoError(t, err)
 
 	if isSPA {
 		req.Header.Set("Accept", "application/json")
 	}
 
 	res, err := client.Do(req)
-	require.NoError(t, err, "Expected no error on GET %s: %s", u, err)
+	require.NoError(t, err)
 	defer res.Body.Close()
 
 	if isSPA {
@@ -88,7 +86,6 @@ func InitializeRecoveryFlowViaBrowser(t *testing.T, client *http.Client, isSPA b
 	require.NoError(t, res.Body.Close())
 	rs, _, err := publicClient.V0alpha2Api.GetSelfServiceRecoveryFlow(context.Background()).Id(res.Request.URL.Query().Get("flow")).Execute()
 	require.NoError(t, err)
-	// assert.Empty(t, rs.Active)
 
 	return rs
 }
@@ -98,7 +95,6 @@ func InitializeRecoveryFlowViaAPI(t *testing.T, client *http.Client, ts *httptes
 
 	rs, _, err := publicClient.V0alpha2Api.InitializeSelfServiceRecoveryFlowWithoutBrowser(context.Background()).Execute()
 	require.NoError(t, err)
-	// assert.Empty(t, rs.Active)
 
 	return rs
 }
@@ -131,7 +127,6 @@ func SubmitRecoveryForm(
 	expectedStatusCode int,
 	expectedURL string,
 ) string {
-	t.Helper()
 	hc.Transport = NewTransportWithLogger(hc.Transport, t)
 	var f *kratos.SelfServiceRecoveryFlow
 	if isAPI {

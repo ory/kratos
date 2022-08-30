@@ -71,7 +71,8 @@ func NewFlowExpiredError(at time.Time) *ExpiredError {
 // swagger:model selfServiceBrowserLocationChangeRequiredError
 type BrowserLocationChangeRequiredError struct {
 	*herodot.DefaultError `json:"error"`
-	// Since when the flow has expired
+
+	// RedirectBrowserTo contains the URL the browser should be redirected to
 	RedirectBrowserTo string `json:"redirect_browser_to,omitempty"`
 
 	// SessionToken is an optional token for the current session

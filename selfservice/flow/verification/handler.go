@@ -195,7 +195,7 @@ type getSelfServiceVerificationFlow struct {
 
 // swagger:route GET /self-service/verification/flows v0alpha2 getSelfServiceVerificationFlow
 //
-// Get Verification Flow
+// # Get Verification Flow
 //
 // This endpoint returns a verification flow's context with, for example, error details and other information.
 //
@@ -307,22 +307,22 @@ type submitSelfServiceVerificationFlowBody struct{}
 
 // swagger:route POST /self-service/verification v0alpha2 submitSelfServiceVerificationFlow
 //
-// Complete Verification Flow
+// # Complete Verification Flow
 //
 // Use this endpoint to complete a verification flow. This endpoint
 // behaves differently for API and browser flows and has several states:
 //
-// - `choose_method` expects `flow` (in the URL query) and `email` (in the body) to be sent
-//   and works with API- and Browser-initiated flows.
-//	 - For API clients and Browser clients with HTTP Header `Accept: application/json` it either returns a HTTP 200 OK when the form is valid and HTTP 400 OK when the form is invalid
+//   - `choose_method` expects `flow` (in the URL query) and `email` (in the body) to be sent
+//     and works with API- and Browser-initiated flows.
+//   - For API clients and Browser clients with HTTP Header `Accept: application/json` it either returns a HTTP 200 OK when the form is valid and HTTP 400 OK when the form is invalid
 //     and a HTTP 303 See Other redirect with a fresh verification flow if the flow was otherwise invalid (e.g. expired).
-//	 - For Browser clients without HTTP Header `Accept` or with `Accept: text/*` it returns a HTTP 303 See Other redirect to the Verification UI URL with the Verification Flow ID appended.
-// - `sent_email` is the success state after `choose_method` when using the `link` method and allows the user to request another verification email. It
-//   works for both API and Browser-initiated flows and returns the same responses as the flow in `choose_method` state.
-// - `passed_challenge` expects a `token` to be sent in the URL query and given the nature of the flow ("sending a verification link")
-//   does not have any API capabilities. The server responds with a HTTP 303 See Other redirect either to the Settings UI URL
-//   (if the link was valid) and instructs the user to update their password, or a redirect to the Verification UI URL with
-//   a new Verification Flow ID which contains an error message that the verification link was invalid.
+//   - For Browser clients without HTTP Header `Accept` or with `Accept: text/*` it returns a HTTP 303 See Other redirect to the Verification UI URL with the Verification Flow ID appended.
+//   - `sent_email` is the success state after `choose_method` when using the `link` method and allows the user to request another verification email. It
+//     works for both API and Browser-initiated flows and returns the same responses as the flow in `choose_method` state.
+//   - `passed_challenge` expects a `token` to be sent in the URL query and given the nature of the flow ("sending a verification link")
+//     does not have any API capabilities. The server responds with a HTTP 303 See Other redirect either to the Settings UI URL
+//     (if the link was valid) and instructs the user to update their password, or a redirect to the Verification UI URL with
+//     a new Verification Flow ID which contains an error message that the verification link was invalid.
 //
 // More information can be found at [Ory Kratos Email and Phone Verification Documentation](https://www.ory.sh/docs/kratos/selfservice/flows/verify-email-account-activation).
 //

@@ -18,7 +18,7 @@ import (
 	"github.com/ory/kratos/selfservice/flow/recovery"
 )
 
-func TestRecoveryToken(t *testing.T) {
+func TestRecoveryCode(t *testing.T) {
 	conf, _ := internal.NewFastRegistryWithMocks(t)
 
 	req := &http.Request{URL: urlx.ParseOrPanic("https://www.ory.sh/")}
