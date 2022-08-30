@@ -246,13 +246,13 @@ func decodeScryptHash(encodedHash string) (p *Scrypt, salt, hash []byte, err err
 		return nil, nil, nil, err
 	}
 
-	salt, err = base64.RawStdEncoding.Strict().DecodeString(parts[3])
+	salt, err = base64.StdEncoding.Strict().DecodeString(parts[3])
 	if err != nil {
 		return nil, nil, nil, err
 	}
 	p.SaltLength = uint32(len(salt))
 
-	hash, err = base64.RawStdEncoding.Strict().DecodeString(parts[4])
+	hash, err = base64.StdEncoding.Strict().DecodeString(parts[4])
 	if err != nil {
 		return nil, nil, nil, err
 	}

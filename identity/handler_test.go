@@ -270,7 +270,7 @@ func TestHandler(t *testing.T) {
 		t.Run("with scrypt password", func(t *testing.T) {
 			res := send(t, adminTS, "POST", "/identities", http.StatusCreated, identity.AdminCreateIdentityBody{Traits: []byte(`{"email": "import-7@ory.sh"}`),
 				Credentials: &identity.AdminIdentityImportCredentials{Password: &identity.AdminIdentityImportCredentialsPassword{
-					Config: identity.AdminIdentityImportCredentialsPasswordConfig{HashedPassword: "$scrypt$N=16384,r=8,p=1$KD2DJomxOY3bSKSzm4KERCuKbPJRfSATh7p9OQLTz/A$BTuCuvdIZsgY6kXPBBSNeq8kJsrujT2dLb2306v+wIU"}}}})
+					Config: identity.AdminIdentityImportCredentialsPasswordConfig{HashedPassword: "$scrypt$N=16384,r=8,p=1$ZtQva9xCHzlSELH/mA7Kj5KjH2tCrkbwYzdxknkL0QQ=$pnTcXKaWVT+FwFDdk3vO1K0J7ZgOxdSU1tCJNYmn8zI="}}}})
 			actual, err := reg.PrivilegedIdentityPool().GetIdentityConfidential(ctx, uuid.FromStringOrNil(res.Get("id").String()))
 			require.NoError(t, err)
 
