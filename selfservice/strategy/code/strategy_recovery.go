@@ -144,10 +144,13 @@ func (s *Strategy) createRecoveryCode(w http.ResponseWriter, r *http.Request, _ 
 
 	expiresIn := config.SelfServiceLinkMethodLifespan(ctx)
 	if len(p.ExpiresIn) > 0 {
+		// If an expiration of the code was supplied use it instead of the default duration
 		var err error
 		expiresIn, err = time.ParseDuration(p.ExpiresIn)
 		if err != nil {
-			s.deps.Writer().WriteError(w, r, errors.WithStack(herodot.ErrBadRequest.WithReasonf(`Unable to parse "expires_in" whose format should match "[0-9]+(ns|us|ms|s|m|h)" but did not: %s`, p.ExpiresIn)))
+			s.deps.Writer().WriteError(w, r, errors.WithStack(herodot.
+				ErrBadRequest.
+				WithReasonf(`Unable to parse "expires_in" whose format should match "[0-9]+(ns|us|ms|s|m|h)" but did not: %s`, p.ExpiresIn)))
 			return
 		}
 	}
@@ -200,7 +203,7 @@ func (s *Strategy) createRecoveryCode(w http.ResponseWriter, r *http.Request, _ 
 
 	s.deps.Audit().
 		WithField("identity_id", id.ID).
-		WithSensitiveField("recovery_link_code", code).
+		WithSensitiveField("recovery_code", code.Code).
 		Info("A recovery code has been created.")
 
 	body := &selfServiceRecoveryCode{
