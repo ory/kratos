@@ -20,12 +20,12 @@ context('Mobile Profile', () => {
       cy.registerApi({ email, password, fields: { 'traits.website': website } })
     })
 
-    beforeEach(() => {
-      cy.deleteMail()
-      cy.visit(MOBILE_URL + '/Recovery')
-    })
-
     describe('code', () => {
+      beforeEach(() => {
+        cy.deleteMail()
+        cy.visit(MOBILE_URL + '/Recovery')
+      })
+
       it('fails with validation errors', () => {
         cy.get('*[data-testid="field/email"] input[data-testid="email"]')
           .clear()
@@ -56,7 +56,7 @@ context('Mobile Profile', () => {
         )
 
         // Make sure, that the code times out
-        cy.wait(2) // 2ms
+        cy.wait(100) // 100ms
 
         cy.getMail().should((message) => {
           expect(message.subject).to.equal('Recover access to your account')
