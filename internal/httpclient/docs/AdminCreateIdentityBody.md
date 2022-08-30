@@ -7,7 +7,7 @@ Name | Type | Description | Notes
 **Credentials** | Pointer to [**AdminIdentityImportCredentials**](AdminIdentityImportCredentials.md) |  | [optional] 
 **MetadataAdmin** | Pointer to **interface{}** | Store metadata about the user which is only accessible through admin APIs such as &#x60;GET /admin/identities/&lt;id&gt;&#x60;. | [optional] 
 **MetadataPublic** | Pointer to **interface{}** | Store metadata about the identity which the identity itself can see when calling for example the session endpoint. Do not store sensitive information (e.g. credit score) about the identity in this field. | [optional] 
-**RecoveryAddresses** | Pointer to [**[]RecoveryAddress**](RecoveryAddress.md) | RecoveryAddresses contains all the addresses that can be used to recover an identity.  Use this structure to import recovery addresses for an identity. Please keep in mind that the address needs to be represented in the Identity Schema or this field will be overwritten on the next identity update. | [optional] 
+**RecoveryAddresses** | Pointer to [**[]RecoveryIdentityAddress**](RecoveryIdentityAddress.md) | RecoveryAddresses contains all the addresses that can be used to recover an identity.  Use this structure to import recovery addresses for an identity. Please keep in mind that the address needs to be represented in the Identity Schema or this field will be overwritten on the next identity update. | [optional] 
 **SchemaId** | **string** | SchemaID is the ID of the JSON Schema to be used for validating the identity&#39;s traits. | 
 **State** | Pointer to [**IdentityState**](IdentityState.md) |  | [optional] 
 **Traits** | **map[string]interface{}** | Traits represent an identity&#39;s traits. The identity is able to create, modify, and delete traits in a self-service manner. The input will always be validated against the JSON Schema defined in &#x60;schema_url&#x60;. | 
@@ -129,20 +129,20 @@ HasMetadataPublic returns a boolean if a field has been set.
 UnsetMetadataPublic ensures that no value is present for MetadataPublic, not even an explicit nil
 ### GetRecoveryAddresses
 
-`func (o *AdminCreateIdentityBody) GetRecoveryAddresses() []RecoveryAddress`
+`func (o *AdminCreateIdentityBody) GetRecoveryAddresses() []RecoveryIdentityAddress`
 
 GetRecoveryAddresses returns the RecoveryAddresses field if non-nil, zero value otherwise.
 
 ### GetRecoveryAddressesOk
 
-`func (o *AdminCreateIdentityBody) GetRecoveryAddressesOk() (*[]RecoveryAddress, bool)`
+`func (o *AdminCreateIdentityBody) GetRecoveryAddressesOk() (*[]RecoveryIdentityAddress, bool)`
 
 GetRecoveryAddressesOk returns a tuple with the RecoveryAddresses field if it's non-nil, zero value otherwise
 and a boolean to check if the value has been set.
 
 ### SetRecoveryAddresses
 
-`func (o *AdminCreateIdentityBody) SetRecoveryAddresses(v []RecoveryAddress)`
+`func (o *AdminCreateIdentityBody) SetRecoveryAddresses(v []RecoveryIdentityAddress)`
 
 SetRecoveryAddresses sets RecoveryAddresses field to given value.
 

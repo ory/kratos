@@ -20,7 +20,8 @@ import (
 type VerifiableIdentityAddress struct {
 	// When this entry was created
 	CreatedAt *time.Time `json:"created_at,omitempty"`
-	Id        *string    `json:"id,omitempty"`
+	// The ID
+	Id *string `json:"id,omitempty"`
 	// VerifiableAddressStatus must not exceed 16 characters as that is the limitation in the SQL Schema
 	Status string `json:"status"`
 	// When this entry was last updated
