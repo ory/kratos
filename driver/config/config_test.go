@@ -57,8 +57,13 @@ func TestViperProvider(t *testing.T) {
 
 		t.Run("group=client config", func(t *testing.T) {
 			assert.False(t, p.ClientHTTPNoPrivateIPRanges(ctx), "Should not have private IP ranges disabled per default")
+			assert.Equal(t, []string{}, p.ClientHTTPPrivateIPExceptionURLs(ctx), "Should return the correct exceptions")
+
 			p.MustSet(ctx, config.ViperKeyClientHTTPNoPrivateIPRanges, true)
 			assert.True(t, p.ClientHTTPNoPrivateIPRanges(ctx), "Should disallow private IP ranges if set")
+
+			p.MustSet(ctx, config.ViperKeyClientHTTPPrivateIPExceptionURLs, []string{"https://foobar.com/baz"})
+			assert.Equal(t, []string{"https://foobar.com/baz"}, p.ClientHTTPPrivateIPExceptionURLs(ctx), "Should return the correct exceptions")
 		})
 
 		t.Run("group=urls", func(t *testing.T) {
