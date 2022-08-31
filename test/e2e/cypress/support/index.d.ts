@@ -413,7 +413,7 @@ declare global {
        *
        * @see longCodeLifespan()
        */
-       shortCodeLifespan(): Chainable<void>
+      shortCodeLifespan(): Chainable<void>
 
       /**
        * Changes the config so that the code lifespan is very long.
@@ -422,7 +422,7 @@ declare global {
        *
        * @see shortCodeLifespan()
        */
-       longCodeLifespan(): Chainable<void>
+      longCodeLifespan(): Chainable<void>
 
       /**
        * Expect a recovery email which is expired.
