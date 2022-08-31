@@ -241,4 +241,5 @@ func TestCompare(t *testing.T) {
 	assert.Error(t, hash.Compare(context.Background(), []byte("test"), []byte("$scrypt$N=16384,r=8,p=1$(2npRo7P03Mt8keSoMbyD/tKFWyUzjiQf2svUaNDSrhA=$(MiCzNcIplSMqSBrm4HckjYqYhaVPPjTARTzwB1cVNYE=")))
 	assert.Error(t, hash.Compare(context.Background(), []byte("test"), []byte("$scrypt$N=16385,r=8,p=1$2npRo7P03Mt8keSoMbyD/tKFWyUzjiQf2svUaNDSrhA=$MiCzNcIplSMqSBrm4HckjYqYhaVPPjTARTzwB1cVNYE=")))
 	assert.Error(t, hash.Compare(context.Background(), []byte("tesu"), []byte("$scrypt$N=16384,r=8,p=1$2npRo7P03Mt8keSoMbyD/tKFWyUzjiQf2svUaNDSrhA=$MiCzNcIplSMqSBrm4HckjYqYhaVPPjTARTzwB1cVNYE=")))
+	assert.Error(t, hash.Compare(context.Background(), []byte("tesu"), []byte("$scrypt$N=abc,r=8,p=1$2npRo7P03Mt8keSoMbyD/tKFWyUzjiQf2svUaNDSrhA=$MiCzNcIplSMqSBrm4HckjYqYhaVPPjTARTzwB1cVNYE=")))
 }
