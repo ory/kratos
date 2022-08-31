@@ -23,10 +23,11 @@ context('Mobile Profile', () => {
     describe('code', () => {
       beforeEach(() => {
         cy.deleteMail()
-        cy.visit(MOBILE_URL + '/Recovery')
+        cy.longLinkLifespan()
       })
 
       it('fails with validation errors', () => {
+        cy.visit(MOBILE_URL + '/Recovery')
         cy.get('*[data-testid="field/email"] input[data-testid="email"]')
           .clear()
           .type('not-an-email')
@@ -42,7 +43,10 @@ context('Mobile Profile', () => {
 
       it('shows code expired message if expired code is submitted', () => {
         cy.shortLinkLifespan()
+        // cy.shortRecoveryLifespan()
+        cy.visit(MOBILE_URL + '/Recovery')
 
+        // Make sure, that the code times out
         cy.get('*[data-testid="field/email"] input[data-testid="email"]').type(
           email
         )
@@ -54,9 +58,6 @@ context('Mobile Profile', () => {
           'contain.text',
           'An email containing a recovery code has been sent to the email address you provided.'
         )
-
-        // Make sure, that the code times out
-        cy.wait(100) // 100ms
 
         cy.getMail().should((message) => {
           expect(message.subject).to.equal('Recover access to your account')
@@ -81,6 +82,7 @@ context('Mobile Profile', () => {
       })
 
       it('fails on invalid code', () => {
+        cy.visit(MOBILE_URL + '/Recovery')
         cy.get('*[data-testid="field/email"] input[data-testid="email"]')
           .clear()
           .type(email)
