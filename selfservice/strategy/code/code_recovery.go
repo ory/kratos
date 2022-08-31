@@ -54,7 +54,7 @@ type RecoveryCode struct {
 	// UpdatedAt is a helper struct field for gobuffalo.pop.
 	UpdatedAt time.Time `json:"-" faker:"-" db:"updated_at"`
 	// RecoveryAddressID is a helper struct field for gobuffalo.pop.
-	RecoveryAddressID *uuid.UUID `json:"-" faker:"-" db:"identity_recovery_address_id"`
+	RecoveryAddressID uuid.NullUUID `json:"-" faker:"-" db:"identity_recovery_address_id"`
 	// FlowID is a helper struct field for gobuffalo.pop.
 	FlowID     uuid.UUID `json:"-" faker:"-" db:"selfservice_recovery_flow_id"`
 	NID        uuid.UUID `json:"-"  faker:"-" db:"nid"`
@@ -65,13 +65,12 @@ func (RecoveryCode) TableName(ctx context.Context) string {
 	return "identity_recovery_codes"
 }
 
-func NewSelfServiceRecoveryCode(address *identity.RecoveryAddress, f *recovery.Flow, expiresIn time.Duration) *RecoveryCode {
+func NewSelfServiceRecoveryCode(identityID uuid.UUID, address *identity.RecoveryAddress, f *recovery.Flow, expiresIn time.Duration) *RecoveryCode {
 	now := time.Now().UTC()
-	var identityID = uuid.UUID{}
-	var recoveryAddressID = uuid.UUID{}
+	recoveryAddressID := uuid.NullUUID{}
 	if address != nil {
-		identityID = address.IdentityID
-		recoveryAddressID = address.ID
+		recoveryAddressID.UUID = address.ID
+		recoveryAddressID.Valid = true
 	}
 	return &RecoveryCode{
 		ID:                x.NewUUID(),
@@ -81,7 +80,7 @@ func NewSelfServiceRecoveryCode(address *identity.RecoveryAddress, f *recovery.F
 		IssuedAt:          now,
 		IdentityID:        identityID,
 		FlowID:            f.ID,
-		RecoveryAddressID: &recoveryAddressID,
+		RecoveryAddressID: recoveryAddressID,
 		CodeType:          RecoveryCodeTypeSelfService,
 	}
 }

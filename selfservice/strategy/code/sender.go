@@ -49,9 +49,9 @@ func NewSender(deps senderDependencies) *RecoveryCodeSender {
 	return &RecoveryCodeSender{deps: deps}
 }
 
-// SendRecoveryCode sends a recovery code to the specified address. If the address does not exist in the store, an email is
-// still being sent to prevent account enumeration attacks. In that case, this function returns the ErrUnknownAddress
-// error.
+// SendRecoveryCode sends a recovery code to the specified address.
+// If the address does not exist in the store, an email is still being sent to prevent account
+// enumeration attacks. In that case, this function returns the ErrUnknownAddress error.
 func (s *RecoveryCodeSender) SendRecoveryCode(ctx context.Context, r *http.Request, f *recovery.Flow, via identity.VerifiableAddressType, to string) error {
 	s.deps.Logger().
 		WithField("via", via).
@@ -72,7 +72,7 @@ func (s *RecoveryCodeSender) SendRecoveryCode(ctx context.Context, r *http.Reque
 		return err
 	}
 
-	code := NewSelfServiceRecoveryCode(address, f, s.deps.Config().SelfServiceLinkMethodLifespan(r.Context()))
+	code := NewSelfServiceRecoveryCode(i.ID, address, f, s.deps.Config().SelfServiceCodeMethodLifespan(r.Context()))
 	if err := s.deps.RecoveryCodePersister().CreateRecoveryCode(ctx, code); err != nil {
 		return err
 	}

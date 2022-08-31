@@ -7,6 +7,7 @@ import (
 
 	"github.com/ory/kratos/internal"
 	"github.com/ory/kratos/selfservice/strategy/code"
+	"github.com/ory/kratos/x"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -29,7 +30,7 @@ func TestRecoveryCode(t *testing.T) {
 
 			codes := make([]string, 10)
 			for k := range codes {
-				codes[k] = code.NewSelfServiceRecoveryCode(nil, f, time.Hour).Code
+				codes[k] = code.NewSelfServiceRecoveryCode(x.NewUUID(), nil, f, time.Hour).Code
 			}
 
 			assert.Len(t, stringslice.Unique(codes), len(codes))
@@ -40,7 +41,7 @@ func TestRecoveryCode(t *testing.T) {
 			f, err := recovery.NewFlow(conf, -time.Hour, "", req, nil, flow.TypeBrowser)
 			require.NoError(t, err)
 
-			token := code.NewSelfServiceRecoveryCode(nil, f, -time.Hour)
+			token := code.NewSelfServiceRecoveryCode(x.NewUUID(), nil, f, -time.Hour)
 			require.Error(t, token.Valid())
 			assert.EqualError(t, token.Valid(), f.Valid().Error())
 		})
