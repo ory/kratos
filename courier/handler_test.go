@@ -182,5 +182,12 @@ func TestHandler(t *testing.T) {
 			}
 			conf.MustSet(ctx, "dev", true)
 		})
+		t.Run("case=should return with http status BadRequest when given status is invalid", func(t *testing.T) {
+			qs := `?page=1&status=invalid_status`
+			res, err := adminTS.Client().Get(adminTS.URL + courier.AdminRouteMessages + qs)
+
+			require.NoError(t, err)
+			assert.Equal(t, http.StatusBadRequest, res.StatusCode, "status code should be equal to StatusBadRequest")
+		})
 	})
 }
