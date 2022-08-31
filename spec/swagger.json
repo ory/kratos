@@ -2055,7 +2055,7 @@
         "tags": [
           "v0alpha2"
         ],
-        "summary": "Complete Verification Flow",
+        "summary": "# Complete Verification Flow",
         "operationId": "submitSelfServiceVerificationFlow",
         "parameters": [
           {
@@ -2203,7 +2203,7 @@
         "tags": [
           "v0alpha2"
         ],
-        "summary": "Get Verification Flow",
+        "summary": "# Get Verification Flow",
         "operationId": "getSelfServiceVerificationFlow",
         "parameters": [
           {
@@ -3246,15 +3246,14 @@
           "example": "User with ID 1234 does not exist."
         },
         "redirect_browser_to": {
-          "description": "Since when the flow has expired",
+          "description": "RedirectBrowserTo contains the URL the browser should be redirected to",
           "type": "string"
         },
         "redirect_flow_id": {
           "$ref": "#/definitions/UUID"
         },
         "redirect_flow_name": {
-          "description": "RedirectFlowName is the type of flow",
-          "type": "string"
+          "$ref": "#/definitions/selfServiceFlowName"
         },
         "request": {
           "description": "The request ID\n\nThe request ID is often exposed internally in order to trace\nerrors across service architectures. This is often a UUID.",
@@ -3351,6 +3350,10 @@
           "$ref": "#/definitions/UUID"
         }
       }
+    },
+    "selfServiceFlowName": {
+      "description": "SelfServiceFlowName represents the names of the different flows in kratos",
+      "type": "string"
     },
     "selfServiceFlowType": {
       "description": "The flow type can either be `api` or `browser`.",

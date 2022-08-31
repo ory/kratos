@@ -2339,7 +2339,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/jsonError'
           description: jsonError
-      summary: Complete Verification Flow
+      summary: '# Complete Verification Flow'
       tags:
       - v0alpha2
   /self-service/verification/api:
@@ -2490,7 +2490,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/jsonError'
           description: jsonError
-      summary: Get Verification Flow
+      summary: '# Get Verification Flow'
       tags:
       - v0alpha2
   /sessions:
@@ -3661,14 +3661,14 @@ components:
           example: User with ID 1234 does not exist.
           type: string
         redirect_browser_to:
-          description: Since when the flow has expired
+          description: RedirectBrowserTo contains the URL the browser should be redirected
+            to
           type: string
         redirect_flow_id:
           format: uuid4
           type: string
         redirect_flow_name:
-          description: RedirectFlowName is the type of flow
-          type: string
+          $ref: '#/components/schemas/selfServiceFlowName'
         request:
           description: |-
             The request ID
@@ -3773,6 +3773,17 @@ components:
       required:
       - message
       type: object
+    selfServiceFlowName:
+      description: SelfServiceFlowName represents the names of the different flows
+        in kratos
+      enum:
+      - settings
+      - recovery
+      - registration
+      - login
+      - verification
+      - logout
+      type: string
     selfServiceFlowType:
       description: The flow type can either be `api` or `browser`.
       title: Type is the flow type.

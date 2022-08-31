@@ -124,3 +124,14 @@
     - show_form
     - success
 # end
+
+
+- op: add
+  path: /components/schemas/selfServiceFlowName/enum
+  value:
+    - "settings"
+    - "recovery"
+    - "registration"
+    - "login"
+    - "verification"
+    - "logout"

@@ -66,6 +66,20 @@ func NewFlowExpiredError(at time.Time) *ExpiredError {
 	}
 }
 
+// SelfServiceFlowName represents the names of the different flows in kratos
+//
+// swagger:model selfServiceFlowName
+type SelfServiceFlowName string
+
+const (
+	FlowNameSettings     SelfServiceFlowName = "settings"
+	FlowNameRecovery     SelfServiceFlowName = "recovery"
+	FlowNameRegistration SelfServiceFlowName = "registration"
+	FlowNameLogin        SelfServiceFlowName = "login"
+	FlowNameVerification SelfServiceFlowName = "verification"
+	FlowNameLogout       SelfServiceFlowName = "logout"
+)
+
 // Is sent when a flow requires a browser to change its location.
 //
 // swagger:model selfServiceBrowserLocationChangeRequiredError
@@ -79,7 +93,7 @@ type BrowserLocationChangeRequiredError struct {
 	SessionToken string `json:"session_token,omitempty"`
 
 	// RedirectFlowName is the type of flow
-	RedirectFlowName string `json:"redirect_flow_name,omitempty"`
+	RedirectFlowName SelfServiceFlowName `json:"redirect_flow_name,omitempty"`
 
 	// RedirectFlowID is the ID of the flow instance
 	RedirectFlowID uuid.UUID `json:"redirect_flow_id,omitempty"`
@@ -103,7 +117,7 @@ func NewBrowserLocationChangeRequiredError(redirectTo string) *BrowserLocationCh
 	}
 }
 
-func NewFlowChangeRequiredError(sessionToken string, flowName string, fID uuid.UUID) *BrowserLocationChangeRequiredError {
+func NewFlowChangeRequiredError(sessionToken string, flowName SelfServiceFlowName, fID uuid.UUID) *BrowserLocationChangeRequiredError {
 	return &BrowserLocationChangeRequiredError{
 		RedirectFlowName: flowName,
 		RedirectFlowID:   fID,

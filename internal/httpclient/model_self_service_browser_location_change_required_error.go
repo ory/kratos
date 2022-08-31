@@ -29,11 +29,10 @@ type SelfServiceBrowserLocationChangeRequiredError struct {
 	Message string `json:"message"`
 	// A human-readable reason for the error
 	Reason *string `json:"reason,omitempty"`
-	// Since when the flow has expired
-	RedirectBrowserTo *string `json:"redirect_browser_to,omitempty"`
-	RedirectFlowId    *string `json:"redirect_flow_id,omitempty"`
-	// RedirectFlowName is the type of flow
-	RedirectFlowName *string `json:"redirect_flow_name,omitempty"`
+	// RedirectBrowserTo contains the URL the browser should be redirected to
+	RedirectBrowserTo *string              `json:"redirect_browser_to,omitempty"`
+	RedirectFlowId    *string              `json:"redirect_flow_id,omitempty"`
+	RedirectFlowName  *SelfServiceFlowName `json:"redirect_flow_name,omitempty"`
 	// The request ID  The request ID is often exposed internally in order to trace errors across service architectures. This is often a UUID.
 	Request *string `json:"request,omitempty"`
 	// SessionToken is an optional token for the current session
@@ -309,9 +308,9 @@ func (o *SelfServiceBrowserLocationChangeRequiredError) SetRedirectFlowId(v stri
 }
 
 // GetRedirectFlowName returns the RedirectFlowName field value if set, zero value otherwise.
-func (o *SelfServiceBrowserLocationChangeRequiredError) GetRedirectFlowName() string {
+func (o *SelfServiceBrowserLocationChangeRequiredError) GetRedirectFlowName() SelfServiceFlowName {
 	if o == nil || o.RedirectFlowName == nil {
-		var ret string
+		var ret SelfServiceFlowName
 		return ret
 	}
 	return *o.RedirectFlowName
@@ -319,7 +318,7 @@ func (o *SelfServiceBrowserLocationChangeRequiredError) GetRedirectFlowName() st
 
 // GetRedirectFlowNameOk returns a tuple with the RedirectFlowName field value if set, nil otherwise
 // and a boolean to check if the value has been set.
-func (o *SelfServiceBrowserLocationChangeRequiredError) GetRedirectFlowNameOk() (*string, bool) {
+func (o *SelfServiceBrowserLocationChangeRequiredError) GetRedirectFlowNameOk() (*SelfServiceFlowName, bool) {
 	if o == nil || o.RedirectFlowName == nil {
 		return nil, false
 	}
@@ -335,8 +334,8 @@ func (o *SelfServiceBrowserLocationChangeRequiredError) HasRedirectFlowName() bo
 	return false
 }
 
-// SetRedirectFlowName gets a reference to the given string and assigns it to the RedirectFlowName field.
-func (o *SelfServiceBrowserLocationChangeRequiredError) SetRedirectFlowName(v string) {
+// SetRedirectFlowName gets a reference to the given SelfServiceFlowName and assigns it to the RedirectFlowName field.
+func (o *SelfServiceBrowserLocationChangeRequiredError) SetRedirectFlowName(v SelfServiceFlowName) {
 	o.RedirectFlowName = &v
 }
 

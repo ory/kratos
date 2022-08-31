@@ -382,7 +382,7 @@ func (s *Strategy) recoveryIssueSession(w http.ResponseWriter, r *http.Request, 
 	}
 
 	if f.Type.IsAPI() {
-		s.deps.Writer().WriteError(w, r, flow.NewFlowChangeRequiredError(sess.Token, "settings", sf.ID))
+		s.deps.Writer().WriteError(w, r, flow.NewFlowChangeRequiredError(sess.Token, flow.FlowNameSettings, sf.ID))
 	} else if x.IsJSONRequest(r) {
 		s.deps.Writer().WriteError(w, r, flow.NewBrowserLocationChangeRequiredError(sf.AppendTo(s.deps.Config().SelfServiceFlowSettingsUI(r.Context())).String()))
 	} else {
