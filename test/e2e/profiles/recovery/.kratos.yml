@@ -4,6 +4,8 @@ selfservice:
       enabled: true
     code:
       enabled: false
+      config:
+        lifespan: 1h
     link:
       enabled: true
 

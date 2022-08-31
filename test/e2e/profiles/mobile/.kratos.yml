@@ -32,8 +32,9 @@ selfservice:
           origin: http://localhost:4455
           display_name: Ory
     code:
-      lifespan: 10m
       enabled: true
+      config:
+        lifespan: 10m
 
 identity:
   schemas:
