@@ -407,6 +407,24 @@ declare global {
       shortLinkLifespan(): Chainable<void>
 
       /**
+       * Changes the config so that the code lifespan is very short.
+       *
+       * Useful when testing recovery/verification flows.
+       *
+       * @see longCodeLifespan()
+       */
+       shortCodeLifespan(): Chainable<void>
+
+      /**
+       * Changes the config so that the code lifespan is very long.
+       *
+       * Useful when testing recovery/verification flows.
+       *
+       * @see shortCodeLifespan()
+       */
+       longCodeLifespan(): Chainable<void>
+
+      /**
        * Expect a recovery email which is expired.
        *
        * @param opts

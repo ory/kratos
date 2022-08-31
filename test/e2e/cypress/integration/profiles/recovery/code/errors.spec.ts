@@ -25,7 +25,7 @@ context('Account Recovery Errors', () => {
       beforeEach(() => {
         cy.deleteMail()
         cy.longRecoveryLifespan()
-        cy.longLinkLifespan()
+        cy.longCodeLifespan()
         cy.disableVerification()
         cy.enableRecovery('code')
       })
@@ -33,7 +33,7 @@ context('Account Recovery Errors', () => {
       it('shows code expired message if expired code is submitted', () => {
         cy.visit(recovery)
 
-        cy.shortLinkLifespan()
+        cy.shortCodeLifespan()
 
         const identity = gen.identityWithWebsite()
         cy.registerApi(identity)

@@ -20,6 +20,10 @@ context('Mobile Profile', () => {
       cy.registerApi({ email, password, fields: { 'traits.website': website } })
     })
 
+    const visitRecover = () => {
+      cy.visit(MOBILE_URL + '/Recovery')
+    }
+
     describe('code', () => {
       beforeEach(() => {
         cy.deleteMail()
@@ -27,7 +31,7 @@ context('Mobile Profile', () => {
       })
 
       it('fails with validation errors', () => {
-        cy.visit(MOBILE_URL + '/Recovery')
+        visitRecover()
         cy.get('*[data-testid="field/email"] input[data-testid="email"]')
           .clear()
           .type('not-an-email')
@@ -42,11 +46,9 @@ context('Mobile Profile', () => {
       })
 
       it('shows code expired message if expired code is submitted', () => {
-        cy.shortLinkLifespan()
-        // cy.shortRecoveryLifespan()
-        cy.visit(MOBILE_URL + '/Recovery')
+        cy.shortCodeLifespan()
+        visitRecover()
 
-        // Make sure, that the code times out
         cy.get('*[data-testid="field/email"] input[data-testid="email"]').type(
           email
         )
@@ -82,7 +84,7 @@ context('Mobile Profile', () => {
       })
 
       it('fails on invalid code', () => {
-        cy.visit(MOBILE_URL + '/Recovery')
+        visitRecover()
         cy.get('*[data-testid="field/email"] input[data-testid="email"]')
           .clear()
           .type(email)

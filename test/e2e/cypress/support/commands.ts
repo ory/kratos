@@ -148,6 +148,20 @@ Cypress.Commands.add('longLinkLifespan', ({} = {}) => {
   })
 })
 
+Cypress.Commands.add('shortCodeLifespan', ({} = {}) => {
+  updateConfigFile((config) => {
+    config.selfservice.methods.code.config.lifespan = '1ms'
+    return config
+  })
+})
+
+Cypress.Commands.add('longCodeLifespan', ({} = {}) => {
+  updateConfigFile((config) => {
+    config.selfservice.methods.code.config.lifespan = '1m'
+    return config
+  })
+})
+
 Cypress.Commands.add('longRecoveryLifespan', ({} = {}) => {
   updateConfigFile((config) => {
     config.selfservice.flows.recovery.lifespan = '1m'

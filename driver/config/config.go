@@ -161,6 +161,7 @@ const (
 	ViperKeyDatabaseCleanupBatchSize                         = "database.cleanup.batch_size"
 	ViperKeyLinkLifespan                                     = "selfservice.methods.link.config.lifespan"
 	ViperKeyLinkBaseURL                                      = "selfservice.methods.link.config.base_url"
+	ViperKeyCodeLifespan                                     = "selfservice.methods.code.config.lifespan"
 	ViperKeyPasswordHaveIBeenPwnedHost                       = "selfservice.methods.password.config.haveibeenpwned_host"
 	ViperKeyPasswordHaveIBeenPwnedEnabled                    = "selfservice.methods.password.config.haveibeenpwned_enabled"
 	ViperKeyPasswordMaxBreaches                              = "selfservice.methods.password.config.max_breaches"
@@ -1113,6 +1114,10 @@ func (p *Config) SelfServiceLinkMethodLifespan(ctx context.Context) time.Duratio
 
 func (p *Config) SelfServiceLinkMethodBaseURL(ctx context.Context) *url.URL {
 	return p.GetProvider(ctx).RequestURIF(ViperKeyLinkBaseURL, p.SelfPublicURL(ctx))
+}
+
+func (p *Config) SelfServiceCodeMethodLifespan(ctx context.Context) time.Duration {
+	return p.GetProvider(ctx).DurationF(ViperKeyCodeLifespan, time.Hour)
 }
 
 func (p *Config) DatabaseCleanupSleepTables(ctx context.Context) time.Duration {

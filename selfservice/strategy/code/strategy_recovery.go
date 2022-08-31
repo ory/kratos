@@ -142,7 +142,7 @@ func (s *Strategy) createRecoveryCode(w http.ResponseWriter, r *http.Request, _ 
 	ctx := r.Context()
 	config := s.deps.Config()
 
-	expiresIn := config.SelfServiceLinkMethodLifespan(ctx)
+	expiresIn := config.SelfServiceCodeMethodLifespan(ctx)
 	if len(p.ExpiresIn) > 0 {
 		// If an expiration of the code was supplied use it instead of the default duration
 		var err error
