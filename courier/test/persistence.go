@@ -6,23 +6,29 @@ import (
 	"testing"
 	"time"
 
+	"github.com/gobuffalo/pop/v6"
+	"github.com/gofrs/uuid"
+
 	"github.com/bxcodec/faker/v3"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
 	"github.com/ory/kratos/courier"
-	"github.com/ory/kratos/driver/config"
-	"github.com/ory/kratos/internal/testhelpers"
-	"github.com/ory/kratos/persistence"
 	"github.com/ory/kratos/x"
 	"github.com/ory/x/sqlcon"
 )
 
-func TestPersister(ctx context.Context, conf *config.Config, p interface {
-	persistence.Persister
-}) func(t *testing.T) {
+type PersisterWrapper interface {
+	GetConnection(ctx context.Context) *pop.Connection
+	NetworkID(ctx context.Context) uuid.UUID
+	courier.Persister
+}
+
+type NetworkWrapper func(t *testing.T, ctx context.Context) (uuid.UUID, PersisterWrapper)
+
+func TestPersister(ctx context.Context, newNetworkUnlessExisting NetworkWrapper, newNetwork NetworkWrapper) func(t *testing.T) {
 	return func(t *testing.T) {
-		nid, p := testhelpers.NewNetworkUnlessExisting(t, ctx, p)
+		nid, p := newNetworkUnlessExisting(t, ctx)
 
 		t.Run("case=no messages in queue", func(t *testing.T) {
 			m, err := p.NextMessages(ctx, 10)
@@ -118,7 +124,7 @@ func TestPersister(ctx context.Context, conf *config.Config, p interface {
 			assert.Equal(t, messages[len(messages)-1].ID, ms[0].ID)
 
 			t.Run("on another network", func(t *testing.T) {
-				_, p := testhelpers.NewNetwork(t, ctx, p)
+				_, p := newNetwork(t, ctx)
 				ms, tc, err := p.ListMessages(ctx, filter)
 
 				require.NoError(t, err)
@@ -152,7 +158,7 @@ func TestPersister(ctx context.Context, conf *config.Config, p interface {
 			})
 
 			t.Run("can not get on another network", func(t *testing.T) {
-				_, p := testhelpers.NewNetwork(t, ctx, p)
+				_, p := newNetwork(t, ctx)
 
 				_, err := p.LatestQueuedMessage(ctx)
 				require.ErrorIs(t, err, courier.ErrQueueEmpty)
@@ -162,7 +168,7 @@ func TestPersister(ctx context.Context, conf *config.Config, p interface {
 			})
 
 			t.Run("can not update on another network", func(t *testing.T) {
-				_, p := testhelpers.NewNetwork(t, ctx, p)
+				_, p := newNetwork(t, ctx)
 				err := p.SetMessageStatus(ctx, id, courier.MessageStatusProcessing)
 				require.ErrorIs(t, err, sqlcon.ErrNoRows)
 			})
