@@ -15,10 +15,9 @@ type (
 		m *RecoveryValidModel
 	}
 	RecoveryValidModel struct {
-		To           string
-		RecoveryURL  string
-		RecoveryCode string
-		Identity     map[string]interface{}
+		To          string
+		RecoveryURL string
+		Identity    map[string]interface{}
 	}
 )
 
