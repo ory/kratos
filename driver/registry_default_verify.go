@@ -73,6 +73,15 @@ func (m *RegistryDefault) VerificationExecutor() *verification.HookExecutor {
 	return m.selfserviceVerificationExecutor
 }
 
+func (m *RegistryDefault) PreVerificationHooks(ctx context.Context) (b []verification.PreHookExecutor) {
+	for _, v := range m.getHooks("", m.Config().SelfServiceFlowVerificationBeforeHooks(ctx)) {
+		if hook, ok := v.(verification.PreHookExecutor); ok {
+			b = append(b, hook)
+		}
+	}
+	return
+}
+
 func (m *RegistryDefault) PostVerificationHooks(ctx context.Context) (b []verification.PostHookExecutor) {
 	for _, v := range m.getHooks(config.HookGlobal, m.Config().SelfServiceFlowVerificationAfterHooks(ctx, config.HookGlobal)) {
 		if hook, ok := v.(verification.PostHookExecutor); ok {

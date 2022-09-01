@@ -14,6 +14,11 @@ import (
 )
 
 type (
+	PreHookExecutor interface {
+		ExecuteVerificationPreHook(w http.ResponseWriter, r *http.Request, a *Flow) error
+	}
+	PreHookExecutorFunc func(w http.ResponseWriter, r *http.Request, a *Flow) error
+
 	PostHookExecutor interface {
 		ExecutePostVerificationHook(w http.ResponseWriter, r *http.Request, a *Flow, i *identity.Identity) error
 	}
@@ -21,6 +26,7 @@ type (
 
 	HooksProvider interface {
 		PostVerificationHooks(ctx context.Context) []PostHookExecutor
+		PreVerificationHooks(ctx context.Context) []PreHookExecutor
 	}
 )
 
@@ -30,6 +36,10 @@ func PostHookVerificationExecutorNames(e []PostHookExecutor) []string {
 		names[k] = fmt.Sprintf("%T", ee)
 	}
 	return names
+}
+
+func (f PreHookExecutorFunc) ExecuteVerificationPreHook(w http.ResponseWriter, r *http.Request, a *Flow) error {
+	return f(w, r, a)
 }
 
 func (f PostHookExecutorFunc) ExecutePostVerificationHook(w http.ResponseWriter, r *http.Request, a *Flow, i *identity.Identity) error {
@@ -61,6 +71,16 @@ func NewHookExecutor(d executorDependencies) *HookExecutor {
 	return &HookExecutor{
 		d: d,
 	}
+}
+
+func (e *HookExecutor) PreVerificationHook(w http.ResponseWriter, r *http.Request, a *Flow) error {
+	for _, executor := range e.d.PreVerificationHooks(r.Context()) {
+		if err := executor.ExecuteVerificationPreHook(w, r, a); err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
 
 func (e *HookExecutor) PostVerificationHook(w http.ResponseWriter, r *http.Request, a *Flow, i *identity.Identity) error {

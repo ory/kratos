@@ -25,9 +25,14 @@ var (
 
 	_ login.PreHookExecutor  = new(Error)
 	_ login.PostHookExecutor = new(Error)
+	_ login.PreHookExecutor  = new(Error)
 
 	_ settings.PostHookPostPersistExecutor = new(Error)
 	_ settings.PostHookPrePersistExecutor  = new(Error)
+	_ settings.PreHookExecutor             = new(Error)
+
+	_ verification.PreHookExecutor = new(Error)
+	_ recovery.PreHookExecutor     = new(Error)
 )
 
 type Error struct {
@@ -44,12 +49,16 @@ func (e Error) err(path string, abort error) error {
 	return nil
 }
 
+func (e Error) ExecuteSettingsPreHook(w http.ResponseWriter, r *http.Request, a *settings.Flow) error {
+	return e.err("ExecuteSettingsPreHook", settings.ErrHookAbortFlow)
+}
+
 func (e Error) ExecuteSettingsPrePersistHook(w http.ResponseWriter, r *http.Request, a *settings.Flow, s *identity.Identity) error {
-	return e.err("ExecuteSettingsPrePersistHook", settings.ErrHookAbortRequest)
+	return e.err("ExecuteSettingsPrePersistHook", settings.ErrHookAbortFlow)
 }
 
 func (e Error) ExecuteSettingsPostPersistHook(w http.ResponseWriter, r *http.Request, a *settings.Flow, s *identity.Identity) error {
-	return e.err("ExecuteSettingsPostPersistHook", settings.ErrHookAbortRequest)
+	return e.err("ExecuteSettingsPostPersistHook", settings.ErrHookAbortFlow)
 }
 
 func (e Error) ExecuteLoginPostHook(w http.ResponseWriter, r *http.Request, g node.UiNodeGroup, a *login.Flow, s *session.Session) error {
@@ -72,8 +81,16 @@ func (e Error) ExecutePostRegistrationPrePersistHook(w http.ResponseWriter, r *h
 	return e.err("ExecutePostRegistrationPrePersistHook", registration.ErrHookAbortFlow)
 }
 
+func (e Error) ExecuteRecoveryPreHook(w http.ResponseWriter, r *http.Request, a *recovery.Flow) error {
+	return e.err("ExecuteRecoveryPreHook", recovery.ErrHookAbortFlow)
+}
+
 func (e Error) ExecutePostRecoveryHook(w http.ResponseWriter, r *http.Request, a *recovery.Flow, s *session.Session) error {
 	return e.err("ExecutePostRecoveryHook", recovery.ErrHookAbortFlow)
+}
+
+func (e Error) ExecuteVerificationPreHook(w http.ResponseWriter, r *http.Request, a *verification.Flow) error {
+	return e.err("ExecuteVerificationPreHook", verification.ErrHookAbortFlow)
 }
 
 func (e Error) ExecutePostVerificationHook(w http.ResponseWriter, r *http.Request, a *verification.Flow, i *identity.Identity) error {

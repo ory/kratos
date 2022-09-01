@@ -46,7 +46,7 @@ func TestSelfServicePreHook(
 
 		t.Run("case=err if hooks err", func(t *testing.T) {
 			t.Cleanup(SelfServiceHookConfigReset(t, conf))
-			conf.MustSet(ctx, configKey, []config.SelfServiceHook{{Name: "err", Config: []byte(`{"ExecuteLoginPreHook": "err","ExecuteRegistrationPreHook": "err"}`)}})
+			conf.MustSet(ctx, configKey, []config.SelfServiceHook{{Name: "err", Config: []byte(`{"ExecuteLoginPreHook": "err","ExecuteRegistrationPreHook": "err","ExecuteSettingsPreHook": "err","ExecuteVerificationPreHook": "err","ExecuteRecoveryPreHook": "err"}`)}})
 
 			res, body := makeRequestPre(t, newServer(t))
 			assert.EqualValues(t, http.StatusInternalServerError, res.StatusCode, "%s", body)
@@ -55,7 +55,7 @@ func TestSelfServicePreHook(
 
 		t.Run("case=abort if hooks aborts", func(t *testing.T) {
 			t.Cleanup(SelfServiceHookConfigReset(t, conf))
-			conf.MustSet(ctx, configKey, []config.SelfServiceHook{{Name: "err", Config: []byte(`{"ExecuteLoginPreHook": "abort","ExecuteRegistrationPreHook": "abort"}`)}})
+			conf.MustSet(ctx, configKey, []config.SelfServiceHook{{Name: "err", Config: []byte(`{"ExecuteLoginPreHook": "abort","ExecuteRegistrationPreHook": "abort","ExecuteSettingsPreHook": "abort","ExecuteVerificationPreHook": "abort","ExecuteRecoveryPreHook": "abort"}`)}})
 
 			res, body := makeRequestPre(t, newServer(t))
 			assert.EqualValues(t, http.StatusOK, res.StatusCode)
@@ -154,7 +154,7 @@ func SelfServiceHookRegistrationErrorHandler(t *testing.T, w http.ResponseWriter
 }
 
 func SelfServiceHookSettingsErrorHandler(t *testing.T, w http.ResponseWriter, r *http.Request, err error) bool {
-	return SelfServiceHookErrorHandler(t, w, r, settings.ErrHookAbortRequest, err)
+	return SelfServiceHookErrorHandler(t, w, r, settings.ErrHookAbortFlow, err)
 }
 
 func SelfServiceHookErrorHandler(t *testing.T, w http.ResponseWriter, r *http.Request, abortErr error, actualErr error) bool {
@@ -180,6 +180,18 @@ func SelfServiceMakeLoginPostHookRequest(t *testing.T, ts *httptest.Server, asAP
 
 func SelfServiceMakeRegistrationPreHookRequest(t *testing.T, ts *httptest.Server) (*http.Response, string) {
 	return SelfServiceMakeHookRequest(t, ts, "/registration/pre", false, url.Values{})
+}
+
+func SelfServiceMakeSettingsPreHookRequest(t *testing.T, ts *httptest.Server) (*http.Response, string) {
+	return SelfServiceMakeHookRequest(t, ts, "/settings/pre", false, url.Values{})
+}
+
+func SelfServiceMakeRecoveryPreHookRequest(t *testing.T, ts *httptest.Server) (*http.Response, string) {
+	return SelfServiceMakeHookRequest(t, ts, "/recovery/pre", false, url.Values{})
+}
+
+func SelfServiceMakeVerificationPreHookRequest(t *testing.T, ts *httptest.Server) (*http.Response, string) {
+	return SelfServiceMakeHookRequest(t, ts, "/verification/pre", false, url.Values{})
 }
 
 func SelfServiceMakeRegistrationPostHookRequest(t *testing.T, ts *httptest.Server, asAPI bool, query url.Values) (*http.Response, string) {
