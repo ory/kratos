@@ -17,6 +17,7 @@ import (
 	"github.com/gofrs/uuid"
 	errors "github.com/pkg/errors"
 
+	client "github.com/ory/kratos-client-go"
 	"github.com/ory/kratos/driver"
 	"github.com/ory/kratos/session"
 
@@ -95,6 +96,28 @@ func TestAdminStrategy(t *testing.T) {
 
 		require.IsType(t, err, new(kratos.GenericOpenAPIError), "%T", err)
 		assert.EqualError(t, err.(*kratos.GenericOpenAPIError), "400 Bad Request")
+	})
+
+	t.Run("description=should fail on malformed expiry time", func(t *testing.T) {
+		_, _, err := createCode(x.NewUUID().String(), pointerx.String("not-a-valid-value"))
+
+		require.IsType(t, err, new(kratos.GenericOpenAPIError), "%T", err)
+		assert.EqualError(t, err.(*kratos.GenericOpenAPIError), "400 Bad Request")
+
+		reason := *err.(*kratos.GenericOpenAPIError).Model().(client.JsonError).Error.Reason
+
+		assert.Contains(t, reason, `Unable to parse "expires_in" whose format should match "[0-9]+(ns|us|ms|s|m|h)" but did not:`)
+	})
+
+	t.Run("description=should fail on negative expiry time", func(t *testing.T) {
+		_, _, err := createCode(x.NewUUID().String(), pointerx.String("-1h"))
+
+		require.IsType(t, err, new(kratos.GenericOpenAPIError), "%T", err)
+		assert.EqualError(t, err.(*kratos.GenericOpenAPIError), "400 Bad Request")
+
+		reason := *err.(*kratos.GenericOpenAPIError).Model().(client.JsonError).Error.Reason
+
+		assert.Contains(t, reason, `Value from "expires_in" must result to a future time:`)
 	})
 
 	t.Run("description=should create code without email", func(t *testing.T) {
