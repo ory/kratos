@@ -30,7 +30,7 @@ func TestPersister(ctx context.Context, conf *config.Config, p interface {
 		testhelpers.SetDefaultIdentitySchema(conf, "file://./stub/identity.schema.json")
 		conf.MustSet(ctx, config.ViperKeySecretsDefault, []string{"secret-a", "secret-b"})
 
-		t.Run("token=recovery", func(t *testing.T) {
+		t.Run("code=recovery", func(t *testing.T) {
 
 			newRecoveryCode := func(t *testing.T, email string) (*code.RecoveryCode, *recovery.Flow) {
 				var f recovery.Flow
