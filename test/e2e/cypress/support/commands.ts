@@ -1175,10 +1175,10 @@ Cypress.Commands.add(
         "The return_to address is not allowed.",
       )
     } else {
-      cy.location("pathname").should("contain", "error")
-      cy.get("code").should(
-        "contain.text",
-        'Requested return_to URL \\"https://not-allowed\\" is not allowed.',
+      cy.location('pathname').should('contain', 'error')
+      cy.get('div').should(
+        'contain.text',
+        'Requested return_to URL "https://not-allowed" is not allowed.'
       )
     }
   },
@@ -1208,8 +1208,14 @@ Cypress.Commands.add(
         expect(location.search).to.not.eq(initial)
       })
 
+<<<<<<< HEAD
       cy.location("pathname").should("include", "/error")
       cy.get("code").should("contain.text", "csrf_token")
+=======
+      cy.location('pathname').should('include', '/error')
+
+      cy.get(`div`).should('contain.text', 'CSRF')
+>>>>>>> 28b21c8c (fix(e2e): express tests)
     } else {
       cy.location("pathname").should((got) => {
         expect(got).to.eql(pathname)
