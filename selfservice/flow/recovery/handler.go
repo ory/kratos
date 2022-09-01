@@ -51,6 +51,7 @@ type (
 		x.CSRFProvider
 		config.Provider
 		ErrorHandlerProvider
+		HookExecutorProvider
 	}
 	Handler struct {
 		d handlerDependencies
@@ -127,6 +128,11 @@ func (h *Handler) initAPIFlow(w http.ResponseWriter, r *http.Request, _ httprout
 		return
 	}
 
+	if err := h.d.RecoveryExecutor().PreRecoveryHook(w, r, req); err != nil {
+		h.d.Writer().WriteError(w, r, err)
+		return
+	}
+
 	if err := h.d.RecoveryFlowPersister().CreateRecoveryFlow(r.Context(), req); err != nil {
 		h.d.Writer().WriteError(w, r, err)
 		return
@@ -175,6 +181,11 @@ func (h *Handler) initBrowserFlow(w http.ResponseWriter, r *http.Request, _ http
 	f, err := NewFlow(h.d.Config(), h.d.Config().SelfServiceFlowRecoveryRequestLifespan(r.Context()), h.d.GenerateCSRFToken(r), r, h.d.RecoveryStrategies(r.Context()), flow.TypeBrowser)
 	if err != nil {
 		h.d.SelfServiceErrorManager().Forward(r.Context(), w, r, err)
+		return
+	}
+
+	if err := h.d.RecoveryExecutor().PreRecoveryHook(w, r, f); err != nil {
+		h.d.Writer().WriteError(w, r, err)
 		return
 	}
 

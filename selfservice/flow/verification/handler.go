@@ -49,6 +49,7 @@ type (
 		FlowPersistenceProvider
 		ErrorHandlerProvider
 		StrategyProvider
+		HookExecutorProvider
 	}
 	Handler struct {
 		d handlerDependencies
@@ -80,6 +81,34 @@ func (h *Handler) RegisterAdminRoutes(admin *x.RouterAdmin) {
 	admin.GET(RouteSubmitFlow, x.RedirectToPublicRoute(h.d))
 }
 
+type FlowOption func(f *Flow)
+
+func WithFlowReturnTo(returnTo string) FlowOption {
+	return func(f *Flow) {
+		f.ReturnTo = returnTo
+	}
+}
+
+func (h *Handler) NewVerificationFlow(w http.ResponseWriter, r *http.Request, ft flow.Type, opts ...FlowOption) (*Flow, error) {
+	f, err := NewFlow(h.d.Config(), h.d.Config().SelfServiceFlowVerificationRequestLifespan(r.Context()), h.d.GenerateCSRFToken(r), r, h.d.AllVerificationStrategies(), ft)
+	if err != nil {
+		return nil, err
+	}
+	for _, o := range opts {
+		o(f)
+	}
+
+	if err := h.d.VerificationExecutor().PreVerificationHook(w, r, f); err != nil {
+		return nil, err
+	}
+
+	if err := h.d.VerificationFlowPersister().CreateVerificationFlow(r.Context(), f); err != nil {
+		return nil, err
+	}
+
+	return f, nil
+}
+
 // swagger:route GET /self-service/verification/api v0alpha2 initializeSelfServiceVerificationFlowWithoutBrowser
 //
 // Initialize Verification Flow for APIs, Services, Apps, ...
@@ -108,13 +137,8 @@ func (h *Handler) initAPIFlow(w http.ResponseWriter, r *http.Request, _ httprout
 		return
 	}
 
-	req, err := NewFlow(h.d.Config(), h.d.Config().SelfServiceFlowVerificationRequestLifespan(r.Context()), h.d.GenerateCSRFToken(r), r, h.d.VerificationStrategies(r.Context()), flow.TypeAPI)
+	req, err := h.NewVerificationFlow(w, r, flow.TypeAPI)
 	if err != nil {
-		h.d.Writer().WriteError(w, r, err)
-		return
-	}
-
-	if err := h.d.VerificationFlowPersister().CreateVerificationFlow(r.Context(), req); err != nil {
 		h.d.Writer().WriteError(w, r, err)
 		return
 	}
@@ -156,14 +180,9 @@ func (h *Handler) initBrowserFlow(w http.ResponseWriter, r *http.Request, ps htt
 		return
 	}
 
-	req, err := NewFlow(h.d.Config(), h.d.Config().SelfServiceFlowVerificationRequestLifespan(r.Context()), h.d.GenerateCSRFToken(r), r, h.d.VerificationStrategies(r.Context()), flow.TypeBrowser)
+	req, err := h.NewVerificationFlow(w, r, flow.TypeBrowser)
 	if err != nil {
-		h.d.SelfServiceErrorManager().Forward(r.Context(), w, r, err)
-		return
-	}
-
-	if err := h.d.VerificationFlowPersister().CreateVerificationFlow(r.Context(), req); err != nil {
-		h.d.SelfServiceErrorManager().Forward(r.Context(), w, r, err)
+		h.d.Writer().WriteError(w, r, err)
 		return
 	}
 
