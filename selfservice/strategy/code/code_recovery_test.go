@@ -36,6 +36,21 @@ func TestRecoveryCode(t *testing.T) {
 			assert.Len(t, stringslice.Unique(codes), len(codes))
 		})
 	})
+
+	t.Run("func=NewAdminRecoveryCode", func(t *testing.T) {
+		t.Run("case=creates unique tokens", func(t *testing.T) {
+			f, err := recovery.NewFlow(conf, time.Hour, "", req, nil, flow.TypeBrowser)
+			require.NoError(t, err)
+
+			codes := make([]string, 10)
+			for k := range codes {
+				codes[k] = code.NewAdminRecoveryCode(x.NewUUID(), f.ID, time.Hour).Code
+			}
+
+			assert.Len(t, stringslice.Unique(codes), len(codes))
+		})
+	})
+
 	t.Run("method=Valid", func(t *testing.T) {
 		t.Run("case=is invalid when the flow is expired", func(t *testing.T) {
 			f, err := recovery.NewFlow(conf, -time.Hour, "", req, nil, flow.TypeBrowser)

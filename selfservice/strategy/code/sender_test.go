@@ -17,11 +17,11 @@ import (
 	"github.com/ory/kratos/internal"
 	"github.com/ory/kratos/selfservice/flow"
 	"github.com/ory/kratos/selfservice/flow/recovery"
-	"github.com/ory/kratos/selfservice/strategy/link"
+	"github.com/ory/kratos/selfservice/strategy/code"
 	"github.com/ory/x/urlx"
 )
 
-func TestManager(t *testing.T) {
+func TestSender(t *testing.T) {
 	ctx := context.Background()
 	conf, reg := internal.NewFastRegistryWithMocks(t)
 	testhelpers.SetDefaultIdentitySchema(conf, "file://./stub/default.schema.json")
@@ -44,7 +44,7 @@ func TestManager(t *testing.T) {
 		require.NoError(t, reg.RecoveryFlowPersister().CreateRecoveryFlow(context.Background(), f))
 
 		require.NoError(t, reg.RecoveryCodeSender().SendRecoveryCode(context.Background(), hr, f, "email", "tracked@ory.sh"))
-		require.EqualError(t, reg.RecoveryCodeSender().SendRecoveryCode(context.Background(), hr, f, "email", "not-tracked@ory.sh"), link.ErrUnknownAddress.Error())
+		require.EqualError(t, reg.RecoveryCodeSender().SendRecoveryCode(context.Background(), hr, f, "email", "not-tracked@ory.sh"), code.ErrUnknownAddress.Error())
 
 		messages, err := reg.CourierPersister().NextMessages(context.Background(), 12)
 		require.NoError(t, err)
@@ -57,9 +57,8 @@ func TestManager(t *testing.T) {
 
 		assert.EqualValues(t, "not-tracked@ory.sh", messages[1].Recipient)
 		assert.Contains(t, messages[1].Subject, "Account access attempted")
-		assert.NotContains(t, messages[1].Body, urlx.AppendPaths(conf.SelfServiceLinkMethodBaseURL(ctx), recovery.RouteSubmitFlow).String()+"?")
-		assert.NotContains(t, messages[1].Body, "code=") // TODO: Might be wrong?
-		assert.NotContains(t, messages[1].Body, "flow=")
+
+		assert.NotRegexp(t, `(\d{8})`, messages[1].Body, "Expected message to not contain an 8 digit recovery code, but it did: ", messages[1].Body)
 	})
 
 }

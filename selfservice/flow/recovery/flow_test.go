@@ -21,11 +21,13 @@ import (
 
 	"github.com/ory/kratos/selfservice/flow"
 	"github.com/ory/kratos/selfservice/flow/recovery"
+	"github.com/ory/kratos/selfservice/strategy/code"
+	"github.com/ory/kratos/selfservice/strategy/link"
 )
 
 func TestFlow(t *testing.T) {
 	ctx := context.Background()
-	conf, _ := internal.NewFastRegistryWithMocks(t)
+	conf, reg := internal.NewFastRegistryWithMocks(t)
 
 	must := func(r *recovery.Flow, err error) *recovery.Flow {
 		require.NoError(t, err)
@@ -60,6 +62,25 @@ func TestFlow(t *testing.T) {
 
 		_, err = recovery.NewFlow(conf, 0, "csrf", &http.Request{URL: &url.URL{Path: "/", RawQuery: "return_to=" + urlx.AppendPaths(conf.SelfPublicURL(ctx), "/self-service/login/browser").String()}, Host: "ory.sh"}, nil, flow.TypeBrowser)
 		require.NoError(t, err)
+	})
+
+	t.Run("type=enabled code overrides link", func(t *testing.T) {
+		strategies := recovery.Strategies{
+			code.NewStrategy(reg),
+			link.NewStrategy(reg),
+		}
+		f, err := recovery.NewFlow(conf, 0, "csrf", u, strategies, flow.TypeBrowser)
+		require.NoError(t, err)
+		require.Equal(t, "code", f.Active.String())
+	})
+
+	t.Run("type=only link strategy", func(t *testing.T) {
+		strategies := recovery.Strategies{
+			link.NewStrategy(reg),
+		}
+		f, err := recovery.NewFlow(conf, 0, "csrf", u, strategies, flow.TypeBrowser)
+		require.NoError(t, err)
+		require.Equal(t, "link", f.Active.String())
 	})
 }
 
