@@ -184,7 +184,7 @@ func (s *Strategy) processRegistration(w http.ResponseWriter, r *http.Request, a
 		}
 
 		// This endpoint only handles browser flow at the moment.
-		ar, err := s.d.LoginHandler().NewLoginFlow(w, r, flow.TypeBrowser, opts...)
+		ar, _, err := s.d.LoginHandler().NewLoginFlow(w, r, flow.TypeBrowser, opts...)
 		if err != nil {
 			return nil, s.handleError(w, r, a, provider.Config().ID, nil, err)
 		}

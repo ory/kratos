@@ -2,11 +2,13 @@ package login
 
 import (
 	"net/http"
+	"net/url"
 	"time"
 
 	"github.com/gofrs/uuid"
 
 	"github.com/ory/herodot"
+
 	"github.com/ory/kratos/text"
 	"github.com/ory/x/stringsx"
 
@@ -23,6 +25,7 @@ import (
 	"github.com/ory/x/urlx"
 
 	"github.com/ory/kratos/driver/config"
+	"github.com/ory/kratos/internal/hydraclient"
 	"github.com/ory/kratos/selfservice/errorx"
 	"github.com/ory/kratos/selfservice/flow"
 	"github.com/ory/kratos/session"
@@ -94,11 +97,11 @@ func WithFlowReturnTo(returnTo string) FlowOption {
 	}
 }
 
-func (h *Handler) NewLoginFlow(w http.ResponseWriter, r *http.Request, ft flow.Type, opts ...FlowOption) (*Flow, error) {
+func (h *Handler) NewLoginFlow(w http.ResponseWriter, r *http.Request, ft flow.Type, opts ...FlowOption) (*Flow, *session.Session, error) {
 	conf := h.d.Config()
 	f, err := NewFlow(conf, conf.SelfServiceFlowLoginRequestLifespan(r.Context()), h.d.GenerateCSRFToken(r), r, ft)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 	for _, o := range opts {
 		o(f)
@@ -114,7 +117,7 @@ func (h *Handler) NewLoginFlow(w http.ResponseWriter, r *http.Request, ft flow.T
 	case cs.AddCase(string(identity.AuthenticatorAssuranceLevel2)):
 		f.RequestedAAL = identity.AuthenticatorAssuranceLevel2
 	default:
-		return nil, errors.WithStack(herodot.ErrBadRequest.WithReasonf("Unable to parse AuthenticationMethod Assurance Level (AAL): %s", cs.ToUnknownCaseErr()))
+		return nil, nil, errors.WithStack(herodot.ErrBadRequest.WithReasonf("Unable to parse AuthenticationMethod Assurance Level (AAL): %s", cs.ToUnknownCaseErr()))
 	}
 
 	// We assume an error means the user has no session
@@ -124,7 +127,7 @@ func (h *Handler) NewLoginFlow(w http.ResponseWriter, r *http.Request, ft flow.T
 
 		// We can not request an AAL > 1 because we must first verify the first factor.
 		if f.RequestedAAL > identity.AuthenticatorAssuranceLevel1 {
-			return nil, errors.WithStack(ErrSessionRequiredForHigherAAL)
+			return nil, nil, errors.WithStack(ErrSessionRequiredForHigherAAL)
 		}
 
 		// We are setting refresh to false if no session exists.
@@ -133,7 +136,7 @@ func (h *Handler) NewLoginFlow(w http.ResponseWriter, r *http.Request, ft flow.T
 		goto preLoginHook
 	} else if err != nil {
 		// Some other error happened - return that one.
-		return nil, err
+		return nil, nil, err
 	} else {
 		// A session exists already
 		if f.Refresh {
@@ -145,13 +148,13 @@ func (h *Handler) NewLoginFlow(w http.ResponseWriter, r *http.Request, ft flow.T
 
 		// If level is 1 we are not requesting AAL -> we are logged in already.
 		if f.RequestedAAL == identity.AuthenticatorAssuranceLevel1 {
-			return nil, errors.WithStack(ErrAlreadyLoggedIn)
+			return nil, sess, errors.WithStack(ErrAlreadyLoggedIn)
 		}
 
 		// We are requesting an assurance level which the session already has. So we are not upgrading the session
 		// in which case we want to return an error.
 		if f.RequestedAAL <= sess.AuthenticatorAssuranceLevel {
-			return nil, errors.WithStack(ErrAlreadyLoggedIn)
+			return nil, sess, errors.WithStack(ErrAlreadyLoggedIn)
 		}
 
 		// Looks like we are requesting an AAL which is higher than what the session has.
@@ -170,12 +173,12 @@ preLoginHook:
 	var s Strategy
 	for _, s = range h.d.LoginStrategies(r.Context()) {
 		if err := s.PopulateLoginMethod(r, f.RequestedAAL, f); err != nil {
-			return nil, err
+			return nil, nil, err
 		}
 	}
 
 	if err := sortNodes(r.Context(), f.UI.Nodes); err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
 	if f.Type == flow.TypeBrowser {
@@ -184,18 +187,18 @@ preLoginHook:
 
 	if err := h.d.LoginHookExecutor().PreLoginHook(w, r, f); err != nil {
 		h.d.LoginFlowErrorHandler().WriteFlowError(w, r, f, node.DefaultGroup, err)
-		return f, nil
+		return f, sess, nil
 	}
 
 	if err := h.d.LoginFlowPersister().CreateLoginFlow(r.Context(), f); err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
-	return f, nil
+	return f, nil, nil
 }
 
 func (h *Handler) FromOldFlow(w http.ResponseWriter, r *http.Request, of Flow) (*Flow, error) {
-	nf, err := h.NewLoginFlow(w, r, of.Type)
+	nf, _, err := h.NewLoginFlow(w, r, of.Type)
 	if err != nil {
 		return nil, err
 	}
@@ -267,7 +270,7 @@ type initializeSelfServiceLoginFlowWithoutBrowser struct {
 //	  400: jsonError
 //	  500: jsonError
 func (h *Handler) initAPIFlow(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
-	f, err := h.NewLoginFlow(w, r, flow.TypeAPI)
+	f, _, err := h.NewLoginFlow(w, r, flow.TypeAPI)
 	if err != nil {
 		h.d.Writer().WriteError(w, r, err)
 		return
@@ -279,6 +282,16 @@ func (h *Handler) initAPIFlow(w http.ResponseWriter, r *http.Request, _ httprout
 // nolint:deadcode,unused
 // swagger:parameters initializeSelfServiceLoginFlowForBrowsers
 type initializeSelfServiceLoginFlowForBrowsers struct {
+	// An optional Hydra login challenge. If present, Kratos will cooperate with
+	// Ory Hydra to act as an OAUTH identity provider.
+	//
+	// The value for this parameter comes from `login_challenge` URL Query parameter sent to your
+	// application (e.g. `/login?login_challenge=abcde`).
+	//
+	// required: false
+	// in: query
+	HydraLoginChallenge string `json:"login_challenge"`
+
 	// Refresh a login session
 	//
 	// If set to true, this will refresh an existing login session by
@@ -333,6 +346,10 @@ type initializeSelfServiceLoginFlowForBrowsers struct {
 // - `security_csrf_violation`: Unable to fetch the flow because a CSRF violation occurred.
 // - `security_identity_mismatch`: The requested `?return_to` address is not allowed to be used. Adjust this in the configuration!
 //
+// The optional query parameter login_challenge is set when using Kratos with
+// Hydra in an OAUTH flow. See the selfservice.hydra_admin_url configuration
+// option.
+//
 // This endpoint is NOT INTENDED for clients that do not have a browser (Chrome, Firefox, ...) as cookies are needed.
 //
 // More information can be found at [Ory Kratos User Login](https://www.ory.sh/docs/kratos/self-service/flows/user-login) and [User Registration Documentation](https://www.ory.sh/docs/kratos/self-service/flows/user-registration).
@@ -348,8 +365,37 @@ type initializeSelfServiceLoginFlowForBrowsers struct {
 //	  400: jsonError
 //	  500: jsonError
 func (h *Handler) initBrowserFlow(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	a, err := h.NewLoginFlow(w, r, flow.TypeBrowser)
+	a, sess, err := h.NewLoginFlow(w, r, flow.TypeBrowser)
 	if errors.Is(err, ErrAlreadyLoggedIn) {
+		if r.URL.Query().Has("login_challenge") {
+			// Always accept the Hydra login request if user has a session with the required AAL
+			hlc, err := uuid.FromString(r.URL.Query().Get("login_challenge"))
+			if err != nil || hlc == uuid.Nil {
+				h.d.SelfServiceErrorManager().Forward(r.Context(), w, r, errors.WithStack(herodot.ErrBadRequest.WithReason("The login_challenge parameter is present but invalid or zero UUID")))
+				return
+			}
+			hydra_admin_url := h.d.Config().SelfServiceFlowHydraAdminURL(r.Context())
+			if hydra_admin_url == nil {
+				h.d.SelfServiceErrorManager().Forward(r.Context(), w, r, errors.WithStack(herodot.ErrBadRequest.WithReason("We received a Hydra Login Challenge, but SelfServiceFlowHydraAdminURL is not configured")))
+				return
+			}
+			cr, err := hydraclient.AcceptHydraLoginRequest(hydra_admin_url.String(), hlc, sess.IdentityID.String())
+			if err != nil {
+				h.d.SelfServiceErrorManager().Forward(r.Context(), w, r, err)
+				return
+			} else if cr == nil {
+				h.d.SelfServiceErrorManager().Forward(r.Context(), w, r, errors.WithStack(herodot.ErrBadRequest.WithReason("Hydra failed to accept login request. Please try again later.")))
+				return
+			}
+			returnTo, err := url.Parse(cr.RedirectTo)
+			if err != nil || returnTo == nil {
+				h.d.SelfServiceErrorManager().Forward(r.Context(), w, r, errors.WithStack(herodot.ErrBadRequest.WithReason("The Hydra login request had an invalid redirect_to value: "+cr.RedirectTo)))
+				return
+			}
+			x.AcceptToRedirectOrJSON(w, r, h.d.Writer(), err, returnTo.String())
+			return
+		}
+
 		returnTo, redirErr := x.SecureRedirectTo(r, h.d.Config().SelfServiceBrowserDefaultReturnTo(r.Context()),
 			x.SecureRedirectAllowSelfServiceURLs(h.d.Config().SelfPublicURL(r.Context())),
 			x.SecureRedirectAllowURLs(h.d.Config().SelfServiceBrowserAllowedReturnToDomains(r.Context())),
@@ -459,6 +505,26 @@ func (h *Handler) fetchFlow(w http.ResponseWriter, r *http.Request, _ httprouter
 			WithReason("The login flow has expired. Call the login flow init API endpoint to initialize a new login flow.").
 			WithDetail("api", urlx.AppendPaths(h.d.Config().SelfPublicURL(r.Context()), RouteInitAPIFlow).String())))
 		return
+	}
+
+	if ar.HydraLoginChallenge != uuid.Nil {
+		// We don't redirect back to the third party on errors because Hydra doesn't
+		// give us the 3rd party return_uri when it redirects to the login UI.
+		hydra_admin_url := h.d.Config().SelfServiceFlowHydraAdminURL(r.Context())
+		if hydra_admin_url == nil {
+			h.d.SelfServiceErrorManager().Forward(r.Context(), w, r, errors.WithStack(herodot.ErrBadRequest.WithReason("We received a Hydra Login Challenge, but SelfServiceFlowHydraAdminURL is not configured")))
+			return
+		}
+		hlr, err := hydraclient.GetHydraLoginRequest(hydra_admin_url.String(), ar.HydraLoginChallenge)
+		if err != nil {
+			h.d.Writer().WriteError(w, r, errors.WithStack(err))
+			return
+		} else if hlr == nil {
+			h.d.Writer().WriteError(w, r, errors.WithStack(errors.Errorf("Hydra returned an empty login request")))
+			return
+		}
+
+		ar.HydraLoginRequest = hlr
 	}
 
 	h.d.Writer().Write(w, r, ar)

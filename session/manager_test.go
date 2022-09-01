@@ -60,7 +60,7 @@ func TestErrAALNotSatisfied_PassReturnToParameter(t *testing.T) {
 	}
 	for _, tc := range cases {
 		t.Run(fmt.Sprintf("case=%s", tc.name), func(t *testing.T) {
-			err := tc.instance.PassReturnToParameter(tc.requestURL)
+			err := tc.instance.PassReturnToAndLoginChallengeParameters(tc.requestURL)
 
 			tc.wantErr(t, err)
 			if err == nil {
