@@ -50,14 +50,10 @@ func (e *ErrAALNotSatisfied) EnhanceJSONError() interface{} {
 	return e
 }
 
-func (e *ErrAALNotSatisfied) PassReturnToParameter(requestURL string) error {
+func (e *ErrAALNotSatisfied) PassReturnToAndLoginChallengeParameters(requestURL string) error {
 	req, err := url.Parse(requestURL)
 	if err != nil {
 		return err
-	}
-	returnTo := req.Query().Get("return_to")
-	if len(returnTo) == 0 {
-		return nil
 	}
 
 	u, err := url.Parse(e.RedirectTo)
@@ -65,7 +61,17 @@ func (e *ErrAALNotSatisfied) PassReturnToParameter(requestURL string) error {
 		return err
 	}
 	q := u.Query()
-	q.Set("return_to", returnTo)
+
+	hlc := req.Query().Get("login_challenge")
+	if len(hlc) != 0 {
+		q.Set("login_challenge", hlc)
+	}
+
+	returnTo := req.Query().Get("return_to")
+	if len(returnTo) != 0 {
+		q.Set("return_to", returnTo)
+	}
+
 	u.RawQuery = q.Encode()
 	e.RedirectTo = u.String()
 

@@ -4,14 +4,17 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"net/url"
 	"time"
 
+	"github.com/gofrs/uuid"
 	"github.com/pkg/errors"
 
 	"github.com/ory/x/sqlcon"
 
 	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/identity"
+	"github.com/ory/kratos/internal/hydraclient"
 	"github.com/ory/kratos/schema"
 	"github.com/ory/kratos/selfservice/flow"
 	"github.com/ory/kratos/session"
@@ -200,6 +203,18 @@ func (e *HookExecutor) PostRegistrationHook(w http.ResponseWriter, r *http.Reque
 	if a.Type == flow.TypeAPI || x.IsJSONRequest(r) {
 		e.d.Writer().Write(w, r, &APIFlowResponse{Identity: i})
 		return nil
+	}
+
+	if a.HydraLoginChallenge != uuid.Nil {
+		hydra_admin_url := e.d.Config().SelfServiceFlowHydraAdminURL(r.Context())
+		cr, err := hydraclient.AcceptHydraLoginRequest(hydra_admin_url.String(), a.HydraLoginChallenge, i.ID.String())
+		if err != nil {
+			return errors.WithStack(err)
+		}
+		returnTo, err = url.Parse(cr.RedirectTo)
+		if err != nil {
+			return errors.WithStack(err)
+		}
 	}
 
 	x.ContentNegotiationRedirection(w, r, s.Declassify(), e.d.Writer(), returnTo.String())

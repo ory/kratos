@@ -118,6 +118,7 @@ const (
 	ViperKeySelfServiceStrategyConfig                        = "selfservice.methods"
 	ViperKeySelfServiceBrowserDefaultReturnTo                = "selfservice." + DefaultBrowserReturnURL
 	ViperKeyURLsAllowedReturnToDomains                       = "selfservice.allowed_return_urls"
+	ViperKeySelfServiceHydraAdminURL                         = "selfservice.hydra_admin_url"
 	ViperKeySelfServiceRegistrationEnabled                   = "selfservice.flows.registration.enabled"
 	ViperKeySelfServiceRegistrationUI                        = "selfservice.flows.registration.ui_url"
 	ViperKeySelfServiceRegistrationRequestLifespan           = "selfservice.flows.registration.lifespan"
@@ -846,6 +847,10 @@ func (p *Config) SelfAdminURL(ctx context.Context) *url.URL {
 
 func (p *Config) CourierSMTPURL(ctx context.Context) *url.URL {
 	return p.ParseURIOrFail(ctx, ViperKeyCourierSMTPURL)
+}
+
+func (p *Config) SelfServiceFlowHydraAdminURL(ctx context.Context) *url.URL {
+	return p.ParseAbsoluteOrRelativeURIOrFail(ctx, ViperKeySelfServiceHydraAdminURL)
 }
 
 func (p *Config) SelfServiceFlowLoginUI(ctx context.Context) *url.URL {

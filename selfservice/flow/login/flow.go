@@ -13,9 +13,12 @@ import (
 
 	"github.com/tidwall/gjson"
 
+	"github.com/ory/herodot"
 	"github.com/ory/x/sqlxx"
 
 	"github.com/ory/x/stringsx"
+
+	hydra "github.com/ory/hydra-client-go"
 
 	"github.com/ory/kratos/driver/config"
 
@@ -46,6 +49,11 @@ type Flow struct {
 	// required: true
 	ID  uuid.UUID `json:"id" faker:"-" db:"id" rw:"r"`
 	NID uuid.UUID `json:"-"  faker:"-" db:"nid"`
+
+	// HydraLoginChallenge is an optional field whose presence indicates that
+	// Kratos is being used as an identity provider in a Hydra OAUTH flow.
+	HydraLoginChallenge uuid.UUID           `json:"-" faker:"-" db:"hydra_login_challenge"`
+	HydraLoginRequest   *hydra.LoginRequest `json:"hydra_login_request" faker:"-" db:"-"`
 
 	// Type represents the flow's type which can be either "api" or "browser", depending on the flow interaction.
 	//
@@ -119,10 +127,19 @@ func NewFlow(conf *config.Config, exp time.Duration, csrf string, r *http.Reques
 		return nil, err
 	}
 
+	hlc := uuid.Nil
+	if r.URL.Query().Has("login_challenge") {
+		hlc, err = uuid.FromString(r.URL.Query().Get("login_challenge"))
+		if err != nil || hlc == uuid.Nil {
+			return nil, errors.WithStack(herodot.ErrBadRequest.WithReason("The login_challenge parameter is present but invalid or zero UUID"))
+		}
+	}
+
 	return &Flow{
-		ID:        id,
-		ExpiresAt: now.Add(exp),
-		IssuedAt:  now,
+		ID:                  id,
+		HydraLoginChallenge: hlc,
+		ExpiresAt:           now.Add(exp),
+		IssuedAt:            now,
 		UI: &container.Container{
 			Method: "POST",
 			Action: flow.AppendFlowTo(urlx.AppendPaths(conf.SelfPublicURL(r.Context()), RouteSubmitFlow), id).String(),

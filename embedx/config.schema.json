@@ -1007,6 +1007,15 @@
           ],
           "uniqueItems": true
         },
+        "hydra_admin_url": {
+          "title": "Hydra admin endpoint URL.",
+          "description": "If set, the login and registration flows will handle the hydra login_challenge query parameter and integrate with Hydra to serve as an OIDC identity provider.",
+          "type": "string",
+          "format": "uri",
+          "examples": [
+            "https://hydra:4445"
+          ]
+        },
         "flows": {
           "type": "object",
           "additionalProperties": false,

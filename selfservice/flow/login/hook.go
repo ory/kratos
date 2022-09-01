@@ -4,12 +4,15 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"net/url"
 	"time"
 
+	"github.com/gofrs/uuid"
 	"github.com/pkg/errors"
 
 	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/identity"
+	"github.com/ory/kratos/internal/hydraclient"
 	"github.com/ory/kratos/selfservice/flow"
 	"github.com/ory/kratos/session"
 	"github.com/ory/kratos/ui/container"
@@ -70,7 +73,7 @@ func (e *HookExecutor) requiresAAL2(r *http.Request, s *session.Session, a *Flow
 		return nil, false
 	}
 
-	if err := aalErr.PassReturnToParameter(a.RequestURL); err != nil {
+	if err := aalErr.PassReturnToAndLoginChallengeParameters(a.RequestURL); err != nil {
 		return nil, false
 	}
 
@@ -198,6 +201,18 @@ func (e *HookExecutor) PostLoginHook(w http.ResponseWriter, r *http.Request, g n
 	if aalErr, required := e.requiresAAL2(r, s, a); required {
 		http.Redirect(w, r, aalErr.RedirectTo, http.StatusSeeOther)
 		return nil
+	}
+
+	if a.HydraLoginChallenge != uuid.Nil {
+		hydra_admin_url := e.d.Config().SelfServiceFlowHydraAdminURL(r.Context())
+		cr, err := hydraclient.AcceptHydraLoginRequest(hydra_admin_url.String(), a.HydraLoginChallenge, i.ID.String())
+		if err != nil {
+			return errors.WithStack(err)
+		}
+		returnTo, err = url.Parse(cr.RedirectTo)
+		if err != nil {
+			return errors.WithStack(err)
+		}
 	}
 
 	x.ContentNegotiationRedirection(w, r, s.Declassify(), e.d.Writer(), returnTo.String())

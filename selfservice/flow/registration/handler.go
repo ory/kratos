@@ -4,6 +4,9 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/gofrs/uuid"
+
+	"github.com/ory/kratos/internal/hydraclient"
 	"github.com/ory/kratos/text"
 
 	"github.com/ory/nosurf"
@@ -352,6 +355,26 @@ func (h *Handler) fetchFlow(w http.ResponseWriter, r *http.Request, ps httproute
 			WithReason("The registration flow has expired. Call the registration flow init API endpoint to initialize a new registration flow.").
 			WithDetail("api", urlx.AppendPaths(h.d.Config().SelfPublicURL(r.Context()), RouteInitAPIFlow).String())))
 		return
+	}
+
+	if ar.HydraLoginChallenge != uuid.Nil {
+		// We don't redirect back to the third party on errors because Hydra doesn't
+		// give us the 3rd party return_uri when it redirects to the login UI.
+		hydra_admin_url := h.d.Config().SelfServiceFlowHydraAdminURL(r.Context())
+		if hydra_admin_url == nil {
+			h.d.Writer().WriteError(w, r, errors.WithStack(errors.Errorf("We received a Hydra Login Challenge, but SelfServiceFlowHydraAdminURL is not set")))
+			return
+		}
+		hlr, err := hydraclient.GetHydraLoginRequest(hydra_admin_url.String(), ar.HydraLoginChallenge)
+		if err != nil {
+			h.d.Writer().WriteError(w, r, errors.WithStack(err))
+			return
+		} else if hlr == nil {
+			h.d.Writer().WriteError(w, r, errors.WithStack(errors.Errorf("Hydra returned an empty login request")))
+			return
+		}
+
+		ar.HydraLoginRequest = hlr
 	}
 
 	h.d.Writer().Write(w, r, ar)

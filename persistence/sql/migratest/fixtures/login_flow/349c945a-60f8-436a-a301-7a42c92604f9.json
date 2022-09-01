@@ -1,10 +1,10 @@
 {
-  "id": "6d387820-f2f4-4f9f-9980-a90d89e7811f",
+  "id": "349c945a-60f8-436a-a301-7a42c92604f9",
   "hydra_login_request": null,
   "type": "browser",
   "expires_at": "2013-10-07T08:23:19Z",
   "issued_at": "2013-10-07T08:23:19Z",
-  "request_url": "http://kratos:4433/self-service/browser/flows/login",
+  "request_url": "http://kratos:4433/self-service/browser/flows/login?login_challenge=3caddfd599034bce83ffcae36f42dff7",
   "ui": {
     "action": "",
     "method": "",
@@ -13,5 +13,5 @@
   "created_at": "2013-10-07T08:23:19Z",
   "updated_at": "2013-10-07T08:23:19Z",
   "refresh": false,
-  "requested_aal": "aal1"
+  "requested_aal": "aal2"
 }
