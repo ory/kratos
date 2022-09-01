@@ -13,6 +13,8 @@ selfservice:
         password:
           hooks:
             - hook: session
+    recovery:
+      enabled: true
 
   methods:
     totp:
@@ -28,8 +30,6 @@ selfservice:
           id: localhost
           origin: http://localhost:4455
           display_name: Ory
-    recovery:
-      enabled: true
 
 identity:
   schemas:
