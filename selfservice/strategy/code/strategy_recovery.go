@@ -22,6 +22,7 @@ import (
 	"github.com/ory/kratos/selfservice/strategy"
 	"github.com/ory/kratos/session"
 	"github.com/ory/kratos/text"
+	"github.com/ory/kratos/ui/container"
 	"github.com/ory/kratos/ui/node"
 	"github.com/ory/kratos/x"
 )
@@ -166,18 +167,12 @@ func (s *Strategy) createRecoveryCode(w http.ResponseWriter, r *http.Request, _ 
 		s.deps.Writer().WriteError(w, r, err)
 		return
 	}
-	flow.State = recovery.StateEmailSent // TODO: Rename this to `RecoveryGenerated`?
-	flow.UI.Nodes.ResetNodes()
-	// TODO: Workaround, should probably add proper sorting here
-	flow.UI.Nodes.Remove("method")
-	flow.UI.Nodes.Upsert(
-		node.
-			NewInputField("code", nil, node.CodeGroup, node.InputAttributeTypeNumber, node.WithRequiredInputAttribute).
-			WithMetaLabel(text.NewInfoNodeLabelVerifyOTP()),
+	flow.State = recovery.StateEmailSent
+	flow.UI.Nodes.Append(node.NewInputField("code", nil, node.CodeGroup, node.InputAttributeTypeNumber, node.WithRequiredInputAttribute).
+		WithMetaLabel(text.NewInfoNodeLabelVerifyOTP()),
 	)
 
-	flow.UI.
-		GetNodes().
+	flow.UI.Nodes.
 		Append(node.NewInputField("method", s.RecoveryStrategyID(), node.CodeGroup, node.InputAttributeTypeSubmit).
 			WithMetaLabel(text.NewInfoNodeLabelSubmit()))
 
@@ -269,7 +264,8 @@ func (s *Strategy) Recover(w http.ResponseWriter, r *http.Request, f *recovery.F
 	}
 	ctx := r.Context()
 
-	// TODO: In the error case we should invalidate the flow
+	// If a CSRF violation occurs the flow is most likely FUBAR, as the user either lost the CSRF token, or an attack occured.
+	// In this case, we just issue a new flow and "abandon" the old flow.
 	if err := flow.EnsureCSRF(s.deps, r, f.Type, s.deps.Config().DisableAPIFlowEnforcement(ctx), s.deps.GenerateCSRFToken, body.CSRFToken); err != nil {
 		return s.retryRecoveryFlowWithError(w, r, flow.TypeBrowser, err)
 	}
@@ -524,18 +520,19 @@ func (s *Strategy) recoveryHandleFormSubmission(w http.ResponseWriter, r *http.R
 		// Continue execution
 	}
 
+	// re-initialize the UI with a "clean" new UI
+	f.UI = &container.Container{
+		Method: "POST",
+		Action: flow.AppendFlowTo(urlx.AppendPaths(s.deps.Config().SelfPublicURL(r.Context()), recovery.RouteSubmitFlow), f.ID).String(),
+	}
+
 	f.UI.SetCSRF(s.deps.GenerateCSRFToken(r))
 
 	f.Active = sqlxx.NullString(s.RecoveryNodeGroup())
 	f.State = recovery.StateEmailSent
 	f.UI.Messages.Set(text.NewRecoveryEmailWithCodeSent())
-	f.UI.Nodes.Remove("email")
-	// TODO: Workaround, should probably add proper sorting here
-	f.UI.Nodes.Remove("method")
-	f.UI.Nodes.Upsert(
-		node.
-			NewInputField("code", nil, node.CodeGroup, node.InputAttributeTypeNumber, node.WithRequiredInputAttribute).
-			WithMetaLabel(text.NewInfoNodeLabelVerifyOTP()),
+	f.UI.Nodes.Append(node.NewInputField("code", nil, node.CodeGroup, node.InputAttributeTypeNumber, node.WithRequiredInputAttribute).
+		WithMetaLabel(text.NewInfoNodeLabelVerifyOTP()),
 	)
 
 	f.UI.
