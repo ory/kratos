@@ -14,12 +14,18 @@ import (
 )
 
 type (
+	PreHookExecutor interface {
+		ExecuteRecoveryPreHook(w http.ResponseWriter, r *http.Request, a *Flow) error
+	}
+	PreHookExecutorFunc func(w http.ResponseWriter, r *http.Request, a *Flow) error
+
 	PostHookExecutor interface {
 		ExecutePostRecoveryHook(w http.ResponseWriter, r *http.Request, a *Flow, s *session.Session) error
 	}
 	PostHookExecutorFunc func(w http.ResponseWriter, r *http.Request, a *Flow, s *session.Session) error
 
 	HooksProvider interface {
+		PreRecoveryHooks(ctx context.Context) []PreHookExecutor
 		PostRecoveryHooks(ctx context.Context) []PostHookExecutor
 	}
 )
@@ -30,6 +36,10 @@ func PostHookRecoveryExecutorNames(e []PostHookExecutor) []string {
 		names[k] = fmt.Sprintf("%T", ee)
 	}
 	return names
+}
+
+func (f PreHookExecutorFunc) ExecuteRecoveryPreHook(w http.ResponseWriter, r *http.Request, a *Flow) error {
+	return f(w, r, a)
 }
 
 func (f PostHookExecutorFunc) ExecutePostRecoveryHook(w http.ResponseWriter, r *http.Request, a *Flow, s *session.Session) error {
@@ -89,6 +99,16 @@ func (e *HookExecutor) PostRecoveryHook(w http.ResponseWriter, r *http.Request, 
 		WithRequest(r).
 		WithField("identity_id", s.Identity.ID).
 		Debug("Post recovery execution hooks completed successfully.")
+
+	return nil
+}
+
+func (e *HookExecutor) PreRecoveryHook(w http.ResponseWriter, r *http.Request, a *Flow) error {
+	for _, executor := range e.d.PreRecoveryHooks(r.Context()) {
+		if err := executor.ExecuteRecoveryPreHook(w, r, a); err != nil {
+			return err
+		}
+	}
 
 	return nil
 }

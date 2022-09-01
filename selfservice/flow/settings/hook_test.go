@@ -46,6 +46,17 @@ func TestSettingsExecutor(t *testing.T) {
 			newServer := func(t *testing.T, ft flow.Type) *httptest.Server {
 				router := httprouter.New()
 				handleErr := testhelpers.SelfServiceHookSettingsErrorHandler
+				router.GET("/settings/pre", func(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+					i := testhelpers.SelfServiceHookCreateFakeIdentity(t, reg)
+					sess, _ := session.NewActiveSession(ctx, i, conf, time.Now().UTC(), identity.CredentialsTypePassword, identity.AuthenticatorAssuranceLevel1)
+
+					f, err := settings.NewFlow(conf, time.Minute, r, sess.Identity, ft)
+					require.NoError(t, err)
+					if handleErr(t, w, r, reg.SettingsHookExecutor().PreSettingsHook(w, r, f)) {
+						_, _ = w.Write([]byte("ok"))
+					}
+				})
+
 				router.GET("/settings/post", func(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 					i := testhelpers.SelfServiceHookCreateFakeIdentity(t, reg)
 					sess, _ := session.NewActiveSession(ctx, i, conf, time.Now().UTC(), identity.CredentialsTypePassword, identity.AuthenticatorAssuranceLevel1)
@@ -74,7 +85,6 @@ func TestSettingsExecutor(t *testing.T) {
 			conf.MustSet(ctx, config.ViperKeySelfServiceSettingsURL, uiURL)
 
 			t.Run("method=PostSettingsHook", func(t *testing.T) {
-
 				t.Run("case=pass without hooks", func(t *testing.T) {
 					t.Cleanup(testhelpers.SelfServiceHookConfigReset(t, conf))
 
@@ -154,6 +164,17 @@ func TestSettingsExecutor(t *testing.T) {
 					assert.NotEmpty(t, gjson.Get(body, "identity.id"))
 				})
 			})
+
+			for _, kind := range []flow.Type{flow.TypeBrowser, flow.TypeAPI} {
+				t.Run("type="+string(kind)+"/method=PreSettingsHook", testhelpers.TestSelfServicePreHook(
+					config.ViperKeySelfServiceSettingsBeforeHooks,
+					testhelpers.SelfServiceMakeSettingsPreHookRequest,
+					func(t *testing.T) *httptest.Server {
+						return newServer(t, kind)
+					},
+					conf,
+				))
+			}
 		})
 	}
 }

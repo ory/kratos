@@ -30,6 +30,13 @@ func TestRecoveryExecutor(t *testing.T) {
 
 	newServer := func(t *testing.T, i *identity.Identity, ft flow.Type) *httptest.Server {
 		router := httprouter.New()
+		router.GET("/recovery/pre", func(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+			a, err := recovery.NewFlow(conf, time.Minute, x.FakeCSRFToken, r, reg.RecoveryStrategies(context.Background()), ft)
+			require.NoError(t, err)
+			if testhelpers.SelfServiceHookErrorHandler(t, w, r, recovery.ErrHookAbortFlow, reg.RecoveryExecutor().PreRecoveryHook(w, r, a)) {
+				_, _ = w.Write([]byte("ok"))
+			}
+		})
 
 		router.GET("/recovery/post", func(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 			a, err := recovery.NewFlow(conf, time.Minute, x.FakeCSRFToken, r, reg.RecoveryStrategies(context.Background()), ft)
@@ -89,4 +96,15 @@ func TestRecoveryExecutor(t *testing.T) {
 			assert.Equal(t, "", body)
 		})
 	})
+
+	for _, kind := range []flow.Type{flow.TypeBrowser, flow.TypeAPI} {
+		t.Run("type="+string(kind)+"/method=PreRecoveryHook", testhelpers.TestSelfServicePreHook(
+			config.ViperKeySelfServiceRecoveryBeforeHooks,
+			testhelpers.SelfServiceMakeRecoveryPreHookRequest,
+			func(t *testing.T) *httptest.Server {
+				return newServer(t, nil, kind)
+			},
+			conf,
+		))
+	}
 }

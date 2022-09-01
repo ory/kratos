@@ -111,6 +111,11 @@ func (h *Handler) NewFlow(w http.ResponseWriter, r *http.Request, i *identity.Id
 	if err != nil {
 		return nil, err
 	}
+
+	if err := h.d.SettingsHookExecutor().PreSettingsHook(w, r, f); err != nil {
+		return nil, err
+	}
+
 	for _, strategy := range h.d.SettingsStrategies(r.Context()) {
 		if err := h.d.ContinuityManager().Abort(r.Context(), w, r, ContinuityKey(strategy.SettingsStrategyID())); err != nil {
 			return nil, err

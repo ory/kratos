@@ -31,6 +31,45 @@ func TestDriverDefault_Hooks(t *testing.T) {
 	ctx := context.Background()
 
 	t.Run("type=verification", func(t *testing.T) {
+		// BEFORE hooks
+		for _, tc := range []struct {
+			uc     string
+			prep   func(conf *config.Config)
+			expect func(reg *driver.RegistryDefault) []verification.PreHookExecutor
+		}{
+			{
+				uc:     "No hooks configured",
+				prep:   func(conf *config.Config) {},
+				expect: func(reg *driver.RegistryDefault) []verification.PreHookExecutor { return nil },
+			},
+			{
+				uc: "Two web_hooks are configured",
+				prep: func(conf *config.Config) {
+					conf.MustSet(ctx, config.ViperKeySelfServiceVerificationBeforeHooks, []map[string]interface{}{
+						{"hook": "web_hook", "config": map[string]interface{}{"url": "foo", "method": "POST"}},
+						{"hook": "web_hook", "config": map[string]interface{}{"url": "bar", "method": "GET"}},
+					})
+				},
+				expect: func(reg *driver.RegistryDefault) []verification.PreHookExecutor {
+					return []verification.PreHookExecutor{
+						hook.NewWebHook(reg, json.RawMessage(`{"method":"POST","url":"foo"}`)),
+						hook.NewWebHook(reg, json.RawMessage(`{"method":"GET","url":"bar"}`)),
+					}
+				},
+			},
+		} {
+			t.Run(fmt.Sprintf("before/uc=%s", tc.uc), func(t *testing.T) {
+				conf, reg := internal.NewFastRegistryWithMocks(t)
+				tc.prep(conf)
+
+				h := reg.PreVerificationHooks(ctx)
+
+				expectedExecutors := tc.expect(reg)
+				require.Len(t, h, len(expectedExecutors))
+				assert.Equal(t, expectedExecutors, h)
+			})
+		}
+
 		// AFTER hooks
 		for _, tc := range []struct {
 			uc     string
@@ -72,6 +111,45 @@ func TestDriverDefault_Hooks(t *testing.T) {
 	})
 
 	t.Run("type=recovery", func(t *testing.T) {
+		// BEFORE hooks
+		for _, tc := range []struct {
+			uc     string
+			prep   func(conf *config.Config)
+			expect func(reg *driver.RegistryDefault) []recovery.PreHookExecutor
+		}{
+			{
+				uc:     "No hooks configured",
+				prep:   func(conf *config.Config) {},
+				expect: func(reg *driver.RegistryDefault) []recovery.PreHookExecutor { return nil },
+			},
+			{
+				uc: "Two web_hooks are configured",
+				prep: func(conf *config.Config) {
+					conf.MustSet(ctx, config.ViperKeySelfServiceRecoveryBeforeHooks, []map[string]interface{}{
+						{"hook": "web_hook", "config": map[string]interface{}{"url": "foo", "method": "POST"}},
+						{"hook": "web_hook", "config": map[string]interface{}{"url": "bar", "method": "GET"}},
+					})
+				},
+				expect: func(reg *driver.RegistryDefault) []recovery.PreHookExecutor {
+					return []recovery.PreHookExecutor{
+						hook.NewWebHook(reg, json.RawMessage(`{"method":"POST","url":"foo"}`)),
+						hook.NewWebHook(reg, json.RawMessage(`{"method":"GET","url":"bar"}`)),
+					}
+				},
+			},
+		} {
+			t.Run(fmt.Sprintf("before/uc=%s", tc.uc), func(t *testing.T) {
+				conf, reg := internal.NewFastRegistryWithMocks(t)
+				tc.prep(conf)
+
+				h := reg.PreRecoveryHooks(ctx)
+
+				expectedExecutors := tc.expect(reg)
+				require.Len(t, h, len(expectedExecutors))
+				assert.Equal(t, expectedExecutors, h)
+			})
+		}
+
 		// AFTER hooks
 		for _, tc := range []struct {
 			uc     string
@@ -388,6 +466,45 @@ func TestDriverDefault_Hooks(t *testing.T) {
 	})
 
 	t.Run("type=settings", func(t *testing.T) {
+		// BEFORE hooks
+		for _, tc := range []struct {
+			uc     string
+			prep   func(conf *config.Config)
+			expect func(reg *driver.RegistryDefault) []settings.PreHookExecutor
+		}{
+			{
+				uc:     "No hooks configured",
+				prep:   func(conf *config.Config) {},
+				expect: func(reg *driver.RegistryDefault) []settings.PreHookExecutor { return nil },
+			},
+			{
+				uc: "Two web_hooks are configured",
+				prep: func(conf *config.Config) {
+					conf.MustSet(ctx, config.ViperKeySelfServiceSettingsBeforeHooks, []map[string]interface{}{
+						{"hook": "web_hook", "config": map[string]interface{}{"url": "foo", "method": "POST"}},
+						{"hook": "web_hook", "config": map[string]interface{}{"url": "bar", "method": "GET"}},
+					})
+				},
+				expect: func(reg *driver.RegistryDefault) []settings.PreHookExecutor {
+					return []settings.PreHookExecutor{
+						hook.NewWebHook(reg, json.RawMessage(`{"method":"POST","url":"foo"}`)),
+						hook.NewWebHook(reg, json.RawMessage(`{"method":"GET","url":"bar"}`)),
+					}
+				},
+			},
+		} {
+			t.Run(fmt.Sprintf("before/uc=%s", tc.uc), func(t *testing.T) {
+				conf, reg := internal.NewFastRegistryWithMocks(t)
+				tc.prep(conf)
+
+				h := reg.PreSettingsHooks(ctx)
+
+				expectedExecutors := tc.expect(reg)
+				require.Len(t, h, len(expectedExecutors))
+				assert.Equal(t, expectedExecutors, h)
+			})
+		}
+
 		// AFTER hooks
 		for _, tc := range []struct {
 			uc     string

@@ -25,7 +25,7 @@ import (
 )
 
 var (
-	ErrHookAbortRequest = errors.New("aborted settings hook execution")
+	ErrHookAbortFlow = errors.New("aborted settings hook execution")
 )
 
 type (
