@@ -12,10 +12,8 @@ selfservice:
       after:
         password:
           hooks:
-            - hook: session
-    recovery:
-      lifespan: 10m
-      enabled: true
+            -
+              hook: session
 
   methods:
     totp:
@@ -31,10 +29,6 @@ selfservice:
           id: localhost
           origin: http://localhost:4455
           display_name: Ory
-    code:
-      enabled: true
-      config:
-        lifespan: 10m
 
 identity:
   schemas:

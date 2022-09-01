@@ -28,7 +28,7 @@ context('Account Recovery Errors', () => {
         cy.longLinkLifespan()
         cy.disableVerification()
         cy.enableRecovery('link')
-        // cy.disableRecoveryStrategy("code")
+        cy.disableRecoveryStrategy('code')
         cy.clearAllCookies()
       })
 

@@ -18,7 +18,8 @@ selfservice:
       config:
         lifespan: 1h
     code:
-      enabled: false
+      config:
+        lifespan: 1h
 
 serve:
   public:

@@ -14,10 +14,12 @@ selfservice:
       after:
         password:
           hooks:
-            - hook: session
+            -
+              hook: session
         oidc:
           hooks:
-            - hook: session
+            -
+              hook: session
     login:
       ui_url: http://localhost:4455/login
     error:
@@ -36,7 +38,8 @@ selfservice:
       enabled: true
       config:
         providers:
-          - id: hydra
+          -
+            id: hydra
             label: Ory
             provider: generic
             client_id: kratos-client
@@ -45,7 +48,8 @@ selfservice:
             scope:
               - offline
             mapper_url: file://test/e2e/profiles/oidc/hydra.jsonnet
-          - id: google
+          -
+            id: google
             provider: generic
             client_id: google-client
             client_secret: kratos-secret
@@ -53,7 +57,8 @@ selfservice:
             scope:
               - offline
             mapper_url: file://test/e2e/profiles/oidc/hydra.jsonnet
-          - id: github
+          -
+            id: github
             provider: generic
             client_id: github-client
             client_secret: kratos-secret
@@ -74,15 +79,11 @@ selfservice:
           id: localhost
           origin: http://localhost:4455
           display_name: Ory
-    code:
-      enabled: true
-      config:
-        lifespan: 1h
 
 identity:
   schemas:
-    - id: default
-      url: file://test/e2e/profiles/spa/identity.traits.schema.json
+  - id: default
+    url: file://test/e2e/profiles/spa/identity.traits.schema.json
 
 session:
   whoami:
