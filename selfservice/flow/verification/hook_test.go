@@ -28,6 +28,13 @@ func TestVerificationExecutor(t *testing.T) {
 
 	newServer := func(t *testing.T, i *identity.Identity, ft flow.Type) *httptest.Server {
 		router := httprouter.New()
+		router.GET("/verification/pre", func(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+			a, err := verification.NewFlow(conf, time.Minute, x.FakeCSRFToken, r, reg.VerificationStrategies(context.Background()), ft)
+			require.NoError(t, err)
+			if testhelpers.SelfServiceHookErrorHandler(t, w, r, verification.ErrHookAbortFlow, reg.VerificationExecutor().PreVerificationHook(w, r, a)) {
+				_, _ = w.Write([]byte("ok"))
+			}
+		})
 
 		router.GET("/verification/post", func(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 			a, err := verification.NewFlow(conf, time.Minute, x.FakeCSRFToken, r, reg.VerificationStrategies(context.Background()), ft)
@@ -79,5 +86,17 @@ func TestVerificationExecutor(t *testing.T) {
 			assert.EqualValues(t, http.StatusOK, res.StatusCode)
 			assert.Equal(t, "", body)
 		})
+
+		for _, kind := range []flow.Type{flow.TypeBrowser, flow.TypeAPI} {
+			t.Run("type="+string(kind)+"/method=PreVerificationHook", testhelpers.TestSelfServicePreHook(
+				config.ViperKeySelfServiceVerificationBeforeHooks,
+				testhelpers.SelfServiceMakeVerificationPreHookRequest,
+				func(t *testing.T) *httptest.Server {
+					i := testhelpers.SelfServiceHookFakeIdentity(t)
+					return newServer(t, i, kind)
+				},
+				conf,
+			))
+		}
 	})
 }

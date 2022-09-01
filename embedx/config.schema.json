@@ -790,6 +790,33 @@
         }
       }
     },
+    "selfServiceBeforeSettings": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "hooks": {
+          "$ref": "#/definitions/selfServiceHooks"
+        }
+      }
+    },
+    "selfServiceBeforeRecovery": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "hooks": {
+          "$ref": "#/definitions/selfServiceHooks"
+        }
+      }
+    },
+    "selfServiceBeforeVerification": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "hooks": {
+          "$ref": "#/definitions/selfServiceHooks"
+        }
+      }
+    },
     "selfServiceAfterRegistration": {
       "type": "object",
       "additionalProperties": false,
@@ -1023,6 +1050,9 @@
                 },
                 "after": {
                   "$ref": "#/definitions/selfServiceAfterSettings"
+                },
+                "before": {
+                  "$ref": "#/definitions/selfServiceBeforeSettings"
                 }
               }
             },
@@ -1146,6 +1176,9 @@
                     "1m",
                     "1s"
                   ]
+                },
+                "before": {
+                  "$ref": "#/definitions/selfServiceBeforeVerification"
                 }
               }
             },
@@ -1184,6 +1217,9 @@
                     "1m",
                     "1s"
                   ]
+                },
+                "before": {
+                  "$ref": "#/definitions/selfServiceBeforeRecovery"
                 }
               }
             },

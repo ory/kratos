@@ -2,7 +2,6 @@ package driver
 
 import (
 	"context"
-
 	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/selfservice/flow/recovery"
 	"github.com/ory/kratos/selfservice/strategy/code"
@@ -49,6 +48,15 @@ func (m *RegistryDefault) RecoveryExecutor() *recovery.HookExecutor {
 		m.selfserviceRecoveryExecutor = recovery.NewHookExecutor(m)
 	}
 	return m.selfserviceRecoveryExecutor
+}
+
+func (m *RegistryDefault) PreRecoveryHooks(ctx context.Context) (b []recovery.PreHookExecutor) {
+	for _, v := range m.getHooks("", m.Config().SelfServiceFlowRecoveryBeforeHooks(ctx)) {
+		if hook, ok := v.(recovery.PreHookExecutor); ok {
+			b = append(b, hook)
+		}
+	}
+	return
 }
 
 func (m *RegistryDefault) PostRecoveryHooks(ctx context.Context) (b []recovery.PostHookExecutor) {

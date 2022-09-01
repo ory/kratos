@@ -2,7 +2,6 @@ package driver
 
 import (
 	"context"
-
 	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/selfservice/flow/settings"
 )
@@ -10,6 +9,15 @@ import (
 func (m *RegistryDefault) PostSettingsPrePersistHooks(ctx context.Context, settingsType string) (b []settings.PostHookPrePersistExecutor) {
 	for _, v := range m.getHooks(settingsType, m.Config().SelfServiceFlowSettingsAfterHooks(ctx, settingsType)) {
 		if hook, ok := v.(settings.PostHookPrePersistExecutor); ok {
+			b = append(b, hook)
+		}
+	}
+	return
+}
+
+func (m *RegistryDefault) PreSettingsHooks(ctx context.Context) (b []settings.PreHookExecutor) {
+	for _, v := range m.getHooks("", m.Config().SelfServiceFlowSettingsBeforeHooks(ctx)) {
+		if hook, ok := v.(settings.PreHookExecutor); ok {
 			b = append(b, hook)
 		}
 	}
