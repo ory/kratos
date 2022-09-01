@@ -43,7 +43,7 @@ type (
 	}
 )
 
-var ErrUnknownAddress = errors.New("verification requested for unknown address")
+var ErrUnknownAddress = errors.New("recovery requested for unknown address")
 
 func NewSender(deps senderDependencies) *RecoveryCodeSender {
 	return &RecoveryCodeSender{deps: deps}
@@ -56,7 +56,7 @@ func (s *RecoveryCodeSender) SendRecoveryCode(ctx context.Context, r *http.Reque
 	s.deps.Logger().
 		WithField("via", via).
 		WithSensitiveField("address", to).
-		Debug("Preparing verification code.")
+		Debug("Preparing recovery code.")
 
 	address, err := s.deps.IdentityPool().FindRecoveryAddressByValue(ctx, identity.RecoveryAddressTypeEmail, to)
 	if err != nil {
