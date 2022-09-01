@@ -128,7 +128,7 @@ func NewFlowChangeRequiredError(sessionToken string, flowName SelfServiceFlowNam
 			StatusField: http.StatusText(http.StatusUnprocessableEntity),
 			ReasonField: fmt.Sprintf("In order to complete this flow please redirect to the %s flow with id %s", flowName, fID.String()),
 			DebugField:  "",
-			ErrorField:  "browser location change required",
+			ErrorField:  "flow change required",
 		},
 	}
 }
