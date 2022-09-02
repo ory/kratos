@@ -58,7 +58,7 @@ func (a RecoveryAddress) ValidateNID() error {
 
 // Hash returns a unique string representation for the recovery address.
 func (a RecoveryAddress) Hash() string {
-	return fmt.Sprintf("%s|%s|%s|%s", a.Value, a.Via, a.IdentityID, a.NID)
+	return fmt.Sprintf("%v|%v|%v|%v", a.Value, a.Via, a.IdentityID, a.NID)
 }
 
 func NewRecoveryEmailAddress(

@@ -208,7 +208,7 @@ func updateAssociation[T interface {
 		Order("id ASC").
 		All(&inDB); err != nil {
 
-		return err
+		return sqlcon.HandleError(err)
 	}
 
 	newAssocs := make(map[string]*T)
@@ -227,7 +227,7 @@ func updateAssociation[T interface {
 			newAssocs[h] = nil // Ignore associations that are already in the db.
 		} else {
 			if err := p.GetConnection(ctx).Destroy(a); err != nil {
-				return err
+				return sqlcon.HandleError(err)
 			}
 		}
 	}
@@ -235,7 +235,7 @@ func updateAssociation[T interface {
 	for _, a := range newAssocs {
 		if a != nil {
 			if err := p.GetConnection(ctx).Create(a); err != nil {
-				return err
+				return sqlcon.HandleError(err)
 			}
 		}
 	}
@@ -426,7 +426,7 @@ func (p *Persister) UpdateIdentity(ctx context.Context, i *identity.Identity) er
 				new(identity.Credentials).TableName(ctx)),
 			i.ID, p.NetworkID(ctx)).Exec(); err != nil {
 
-			return err
+			return sqlcon.HandleError(err)
 		}
 
 		if err := p.update(WithTransaction(ctx, tx), i); err != nil {
