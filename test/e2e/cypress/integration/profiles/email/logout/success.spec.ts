@@ -39,9 +39,14 @@ context("Testing logout flows", () => {
       it("should sign out and be able to sign in again", () => {
         cy.getSession()
         cy.getCookie('ory_kratos_session').should('not.be.null')
-        cy.get(`[data-testid="logout"]:not(.disabled)`).click()
+        cy.get(
+          `${appPrefix(app)} [data-testid="logout"]:not(.disabled)`
+        ).click()
         cy.noSession()
         cy.getCookie('ory_kratos_session').should('be.null')
+        if (app === 'react') {
+          cy.url().should('include', '/login')
+        }
       })
     })
   })

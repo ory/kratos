@@ -566,6 +566,11 @@ declare global {
        * @param id
        */
       setDefaultIdentitySchema(id: string): Chainable<void>
+
+      /**
+       * Remove the required attribute from the HTML element with the selector name
+       */
+      removeRequiredAttribute(selectors: string[]): Chainable<void>
     }
   }
 }

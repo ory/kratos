@@ -1245,3 +1245,11 @@ Cypress.Commands.add(
     })
   },
 )
+
+Cypress.Commands.add('removeRequiredAttribute', (selectors: string[]) => {
+  selectors.forEach((selector) => {
+    cy.get(selector).then(($el) => {
+      $el.removeAttr('required')
+    })
+  })
+})

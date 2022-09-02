@@ -28,9 +28,9 @@ describe("Registration failures with email profile", () => {
       const identity = gen.email()
       const password = gen.password()
 
-      it("fails when CSRF cookies are missing", () => {
-        cy.get(`${appPrefix(app)}input[name="traits.website"]`).type(
-          "https://www.ory.sh",
+      it('fails when CSRF cookies are missing', () => {
+        cy.get(`${appPrefix(app)} input[name="traits.website"]`).type(
+          'https://www.ory.sh'
         )
         cy.get('input[name="traits.email"]')
           .type(identity)
@@ -82,13 +82,17 @@ describe("Registration failures with email profile", () => {
           cy.get('input[name="traits.website"]').type("https://www.ory.sh")
           cy.get('input[name="traits.email"]').type(identity)
 
+          // the browser will prevent the form from being submitted if the input field is required
+          // we should remove the required attribute to simulate the data not being sent
+          cy.removeRequiredAttribute(['input[name="password"]'])
+
           cy.submitPasswordForm()
           cy.get('*[data-testid^="ui/message/"]')
             .invoke("text")
             .then((text) => {
-              expect(text).to.be.oneOf([
-                "length must be >= 1, but got 0",
-                "Property password is missing.",
+              expect(text.trim()).to.be.oneOf([
+                'length must be >= 1, but got 0',
+                'Property password is missing.'
               ])
             })
         })
@@ -97,20 +101,32 @@ describe("Registration failures with email profile", () => {
           cy.get('input[name="traits.website"]').type("https://www.ory.sh")
           cy.get('input[name="password"]').type(password)
 
+          // the browser will prevent the form from being submitted if the input field is required
+          // we should remove the required attribute to simulate the data not being sent
+          cy.removeRequiredAttribute(['input[name="traits.email"]'])
+
           cy.submitPasswordForm()
           cy.get('*[data-testid^="ui/message/"]')
             .invoke("text")
             .then((text) => {
-              expect(text).to.be.oneOf([
+              expect(text.trim()).to.be.oneOf([
                 '"" is not valid "email"length must be >= 3, but got 0',
                 "Property email is missing.",
               ])
             })
         })
 
-        it("should show an error when the email is not an email", () => {
-          cy.get('input[name="traits.website"]').type("https://www.ory.sh")
-          cy.get('input[name="password"]').type("not-an-email")
+        it('should show an error when the email is not an email', () => {
+          cy.get('input[name="traits.website"]').type('https://www.ory.sh')
+          cy.get('input[name="password"]').type(password)
+
+          // the browser will prevent the form from being submitted if the input data doesn't conform to the input field type
+          // in this case an invalid email will prevent the form from being submitted by the browser
+          // we should remove it to ensure kratos is validating the payload
+          cy.get('input[name="traits.email"]').then(($el) =>
+            $el.removeAttr('type')
+          )
+          cy.get('input[name="traits.email"]').type('not-an-email')
 
           cy.submitPasswordForm()
           cy.get(
@@ -118,7 +134,15 @@ describe("Registration failures with email profile", () => {
           ).should("exist")
         })
 
-        it("should show a missing indicator if no fields are set", () => {
+        it('should show a missing indicator if no fields are set', () => {
+          // the browser will prevent the form from being submitted if the input field is required
+          // we should remove the required attribute to simulate the data not being sent
+          cy.removeRequiredAttribute([
+            'input[name="traits.email"]',
+            'input[name="traits.website"]',
+            'input[name="password"]'
+          ])
+
           cy.submitPasswordForm()
           cy.get(
             '*[data-testid="ui/message/4000001"], *[data-testid="ui/message/4000002"]',
@@ -135,8 +159,15 @@ describe("Registration failures with email profile", () => {
             })
         })
 
-        it("should show an error when the website is too short", () => {
-          cy.get('input[name="traits.website"]').type("http://s")
+        it('should show an error when the website is too short', () => {
+          // the browser will prevent the form from being submitted if the input field is required
+          // we should remove the required attribute to simulate the data not being sent
+          cy.removeRequiredAttribute([
+            'input[name="traits.email"]',
+            'input[name="password"]'
+          ])
+
+          cy.get('input[name="traits.website"]').type('http://s')
 
           cy.submitPasswordForm()
           cy.get('*[data-testid^="ui/message"]').should(
@@ -145,7 +176,13 @@ describe("Registration failures with email profile", () => {
           )
         })
 
-        it("should show an error when required params are missing", () => {
+        it('should show an error when required params are missing', () => {
+          // the browser will prevent the form from being submitted if the input field is required
+          // we should remove it from the DOM entirely to simulate the data not being sent
+          cy.get('input[name="traits.website"]').then(($el) => $el.remove())
+          cy.get('input[name="traits.email"]').then(($el) => $el.remove())
+          cy.get('input[name="password"]').then(($el) => $el.remove())
+
           cy.submitPasswordForm()
           cy.get('*[data-testid^="ui/message"]').should(
             "contain.text",
@@ -161,8 +198,16 @@ describe("Registration failures with email profile", () => {
           )
         })
 
-        it("should show an error when the age is too high", () => {
-          cy.get('input[name="traits.age"]').type("600")
+        it('should show an error when the age is too high', () => {
+          // the browser will prevent the form from being submitted if the input field is required
+          // we should remove the required attribute to simulate the data not being sent
+          cy.removeRequiredAttribute([
+            'input[name="traits.email"]',
+            'input[name="traits.website"]',
+            'input[name="password"]'
+          ])
+
+          cy.get('input[name="traits.age"]').type('600')
 
           cy.submitPasswordForm()
           cy.get('*[data-testid^="ui/message"]').should(
