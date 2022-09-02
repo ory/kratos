@@ -2,6 +2,7 @@ package identity
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	"github.com/gofrs/uuid"
@@ -128,4 +129,9 @@ func (a VerifiableAddress) GetNID() uuid.UUID {
 
 func (a VerifiableAddress) ValidateNID() error {
 	return nil
+}
+
+// Hash returns a unique string representation for the recovery address.
+func (a VerifiableAddress) Hash() string {
+	return fmt.Sprintf("%v|%v|%v|%v|%v|%v", a.Value, a.Verified, a.Via, a.Status, a.IdentityID, a.NID)
 }

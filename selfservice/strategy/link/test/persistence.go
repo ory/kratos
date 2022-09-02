@@ -93,8 +93,31 @@ func TestPersister(ctx context.Context, conf *config.Config, p interface {
 				assert.NotEqual(t, expected.Token, actual.Token)
 				assert.EqualValues(t, expected.FlowID, actual.FlowID)
 
-				_, err = p.UseRecoveryToken(ctx, f.ID, expected.Token)
-				require.Error(t, err)
+				t.Run("double spend", func(t *testing.T) {
+					_, err = p.UseRecoveryToken(ctx, f.ID, expected.Token)
+					require.Error(t, err)
+				})
+			})
+
+			t.Run("case=update to identity should not invalidate token", func(t *testing.T) {
+				expected, f := newRecoveryToken(t, "some-user@ory.sh")
+
+				require.NoError(t, p.CreateRecoveryToken(ctx, expected))
+				id, err := p.GetIdentity(ctx, expected.IdentityID)
+				require.NoError(t, err)
+				require.NoError(t, p.UpdateIdentity(ctx, id))
+
+				actual, err := p.UseRecoveryToken(ctx, f.ID, expected.Token)
+				require.NoError(t, err)
+				assert.Equal(t, nid, actual.NID)
+				assert.Equal(t, expected.IdentityID, actual.IdentityID)
+				assert.NotEqual(t, expected.Token, actual.Token)
+				assert.EqualValues(t, expected.FlowID, actual.FlowID)
+
+				t.Run("double spend", func(t *testing.T) {
+					_, err = p.UseRecoveryToken(ctx, f.ID, expected.Token)
+					require.Error(t, err)
+				})
 			})
 
 		})
