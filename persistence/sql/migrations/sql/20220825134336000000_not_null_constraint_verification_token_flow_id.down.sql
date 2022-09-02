@@ -1,0 +1,2 @@
+ALTER TABLE identity_verification_tokens
+ALTER selfservice_verification_flow_id DROP NOT NULL;
