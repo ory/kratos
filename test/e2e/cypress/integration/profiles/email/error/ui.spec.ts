@@ -27,9 +27,10 @@ describe("Handling self-service error flows", () => {
         })
 
         if (app === 'express') {
-          cy.get(
-            `[data-testid=${appPrefix(app)}] [data-testid="ui/error/message"]`
-          ).should('contain.text', 'This is a stub error.')
+          cy.get(`${appPrefix(app)} [data-testid="ui/error/message"]`).should(
+            'contain.text',
+            'This is a stub error.'
+          )
         } else {
           cy.get(`${appPrefix(app)}code`).should(
             'contain.text',
