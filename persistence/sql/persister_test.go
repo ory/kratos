@@ -285,7 +285,7 @@ func TestPersister_Transaction(t *testing.T) {
 			Traits: ri.Traits(`{}`),
 		}
 		errMessage := "failing because why not"
-		err := p.Transaction(context.Background(), func(ctx context.Context, connection *pop.Connection) error {
+		err := p.Transaction(context.Background(), func(_ context.Context, connection *pop.Connection) error {
 			require.NoError(t, connection.Create(i))
 			return errors.Errorf(errMessage)
 		})

@@ -2,6 +2,7 @@ package identity
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	"github.com/gofrs/uuid"
@@ -53,6 +54,11 @@ func (a RecoveryAddress) TableName(ctx context.Context) string {
 
 func (a RecoveryAddress) ValidateNID() error {
 	return nil
+}
+
+// Hash returns a unique string representation for the recovery address.
+func (a RecoveryAddress) Hash() string {
+	return fmt.Sprintf("%v|%v|%v|%v", a.Value, a.Via, a.IdentityID, a.NID)
 }
 
 func NewRecoveryEmailAddress(
