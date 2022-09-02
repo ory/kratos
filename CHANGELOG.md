@@ -4,7 +4,7 @@
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 **Table of Contents**
 
-- [ (2022-08-24)](#2022-08-24)
+- [ (2022-09-02)](#2022-09-02)
   - [Breaking Changes](#breaking-changes)
     - [Bug Fixes](#bug-fixes)
     - [Code Refactoring](#code-refactoring)
@@ -264,9 +264,12 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# [](https://github.com/ory/kratos/compare/v0.10.1...v) (2022-08-24)
+# [](https://github.com/ory/kratos/compare/v0.10.1...v) (2022-09-02)
 
 ## Breaking Changes
+
+This patch invalidates recovery flows initiated using the Admin API. Please
+re-generate any admin-generated recovery flows and tokens.
 
 This is a breaking change, as it removes the `courier.message_ttl` config key
 and replaces it with a counter `courier.message_retries`.
@@ -307,6 +310,9 @@ SDK Method `getJsonSchema` was renamed to `getIdentitySchema`.
   ([#2613](https://github.com/ory/kratos/issues/2613))
   ([29aa3b6](https://github.com/ory/kratos/commit/29aa3b6c37b3a173dcfeb02fdad4abc83774bc0b)),
   closes [#2591](https://github.com/ory/kratos/issues/2591)
+- Do not invalidate recovery addr on update
+  ([#2699](https://github.com/ory/kratos/issues/2699))
+  ([1689bb9](https://github.com/ory/kratos/commit/1689bb9f0a52387f699568da6bc773929b1201ae))
 - **docker:** Add missing dependencies
   ([#2643](https://github.com/ory/kratos/issues/2643))
   ([c589520](https://github.com/ory/kratos/commit/c589520ff865cefdb287e597b9e858851a778755))
@@ -323,6 +329,8 @@ SDK Method `getJsonSchema` was renamed to `getIdentitySchema`.
   ([#2517](https://github.com/ory/kratos/issues/2517))
   ([c058e23](https://github.com/ory/kratos/commit/c058e23599d994e12b676e87f7282c1f2b2e089c)),
   closes [#2426](https://github.com/ory/kratos/issues/2426)
+- Ignore commata in HIBP response
+  ([0856bd7](https://github.com/ory/kratos/commit/0856bd719b7e06a6d2163bf428ff6513d86376db))
 - Ignore CSRF for session extension on public route
   ([866b472](https://github.com/ory/kratos/commit/866b472750fba7bf498d359796f24867af7270ad))
 - Ignore error explicitly
@@ -330,6 +338,16 @@ SDK Method `getJsonSchema` was renamed to `getIdentitySchema`.
 - Improve migration status speed
   ([#2637](https://github.com/ory/kratos/issues/2637))
   ([a2e3c41](https://github.com/ory/kratos/commit/a2e3c41f9e513e1de47f6320f6a10acd1fed5eea))
+- Include flow id in use recovery token query
+  ([#2679](https://github.com/ory/kratos/issues/2679))
+  ([d56586b](https://github.com/ory/kratos/commit/d56586b028d79387886f880c1455edb5e4df2209)):
+
+  This PR adds the `selfservice_recovery_flow_id` to the query used when "using"
+  a token in the recovery flow.
+
+  This PR also adds a new enum field for `identity_recovery_tokens` to
+  distinguish the two flows: admin versus self-service recovery.
+
 - Make hydra consistently localhost
   ([70211a1](https://github.com/ory/kratos/commit/70211a17a452d5ced8317822afda3f8e6185cc71))
 - Make ID field in VerifiableAddress struct optional
@@ -338,6 +356,8 @@ SDK Method `getJsonSchema` was renamed to `getIdentitySchema`.
   closes [#2506](https://github.com/ory/kratos/issues/2506)
 - Make servicelocator explicit
   ([4f841da](https://github.com/ory/kratos/commit/4f841dae5423acf3514d50add9e99d28bc339fbb))
+- Make swagger/openapi go 1.19 compatible
+  ([fec6772](https://github.com/ory/kratos/commit/fec6772739129e0d5bb4103c717b1ac60df45aa8))
 - Mark gosec false positives
   ([13eaddb](https://github.com/ory/kratos/commit/13eaddb7babe630750361c6d8f3ffc736898ddec))
 - Metadata should not be required
@@ -439,6 +459,8 @@ SDK Method `getJsonSchema` was renamed to `getIdentitySchema`.
 - Add identity id to "account disabled" error
   ([#2557](https://github.com/ory/kratos/issues/2557))
   ([f09b1b3](https://github.com/ory/kratos/commit/f09b1b3701c6deda4d25cebb7ccf2e97089be32a))
+- Add missing config entry
+  ([8fe9de6](https://github.com/ory/kratos/commit/8fe9de6d60a381611e07226614241a83b0010126))
 - Add PATCH to adminUpdateIdentity
   ([#2380](https://github.com/ory/kratos/issues/2380))
   ([#2471](https://github.com/ory/kratos/issues/2471))
@@ -469,6 +491,9 @@ SDK Method `getJsonSchema` was renamed to `getIdentitySchema`.
   This PR replaces the `courier.message_ttl` configuration option with a
   `courier.message_retries` option to limit how often the sending of a message
   is retried before it is marked as `abandoned`.
+
+- Support ip exceptions
+  ([de46c08](https://github.com/ory/kratos/commit/de46c08534dfae6165f6a570cc59829f367c0b57))
 
 ### Reverts
 
