@@ -4,7 +4,7 @@
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 **Table of Contents**
 
-- [ (2022-09-02)](#2022-09-02)
+- [ (2022-09-05)](#2022-09-05)
   - [Breaking Changes](#breaking-changes)
     - [Bug Fixes](#bug-fixes)
     - [Code Refactoring](#code-refactoring)
@@ -264,7 +264,7 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# [](https://github.com/ory/kratos/compare/v0.10.1...v) (2022-09-02)
+# [](https://github.com/ory/kratos/compare/v0.10.1...v) (2022-09-05)
 
 ## Breaking Changes
 
@@ -465,6 +465,8 @@ SDK Method `getJsonSchema` was renamed to `getIdentitySchema`.
   ([#2380](https://github.com/ory/kratos/issues/2380))
   ([#2471](https://github.com/ory/kratos/issues/2471))
   ([94a3741](https://github.com/ory/kratos/commit/94a37416011086582e309f62dc2c45ca84083a33))
+- Add pre-hooks to settings, verification, recovery
+  ([c0ceaf3](https://github.com/ory/kratos/commit/c0ceaf31f9327cca903c19b77597cae4587737e6))
 - Allow setting public and admin metadata with the jsonnet data mapper
   ([#2569](https://github.com/ory/kratos/issues/2569))
   ([aa6eb13](https://github.com/ory/kratos/commit/aa6eb13c1c42c11354074553fac9c90ee0a8999e)),
