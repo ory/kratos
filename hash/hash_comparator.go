@@ -232,7 +232,7 @@ func decodePbkdf2Hash(encodedHash string) (p *Pbkdf2, salt, hash []byte, err err
 }
 
 // decodeScryptHash decodes Scrypt encoded password hash.
-// format: $scrypt$N=<cost>,r=<block>,p=<parrrelization>$<salt>$<hash>
+// format: $scrypt$ln=<cost>,r=<block>,p=<parrrelization>$<salt>$<hash>
 func decodeScryptHash(encodedHash string) (p *Scrypt, salt, hash []byte, err error) {
 	parts := strings.Split(encodedHash, "$")
 	if len(parts) != 5 {
@@ -241,7 +241,7 @@ func decodeScryptHash(encodedHash string) (p *Scrypt, salt, hash []byte, err err
 
 	p = new(Scrypt)
 
-	_, err = fmt.Sscanf(parts[2], "N=%d,r=%d,p=%d", &p.Cost, &p.Block, &p.Parrellization)
+	_, err = fmt.Sscanf(parts[2], "ln=%d,r=%d,p=%d", &p.Cost, &p.Block, &p.Parrellization)
 	if err != nil {
 		return nil, nil, nil, err
 	}
