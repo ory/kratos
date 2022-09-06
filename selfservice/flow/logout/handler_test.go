@@ -42,7 +42,7 @@ func TestLogout(t *testing.T) {
 	publicRouter.POST("/csrf/check", func(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 		w.WriteHeader(http.StatusNoContent)
 	})
-	conf.MustSet(config.ViperKeySelfServiceLogoutBrowserDefaultReturnTo, public.URL+"/session/browser/get")
+	conf.MustSet(ctx, config.ViperKeySelfServiceLogoutBrowserDefaultReturnTo, public.URL+"/session/browser/get")
 
 	t.Run("case=successful logout for API clients", func(t *testing.T) {
 		hc := testhelpers.NewDebugClient(t)

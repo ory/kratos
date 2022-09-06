@@ -19,7 +19,7 @@ type (
 	}
 
 	Dependencies interface {
-		CourierConfig(ctx context.Context) config.CourierConfigs
+		CourierConfig() config.CourierConfigs
 		HTTPClient(ctx context.Context, opts ...httpx.ResilientOptions) *retryablehttp.Client
 	}
 )

@@ -27,14 +27,14 @@ func disabledWriter(c disabledChecker, enabled bool, wrap httprouter.Handle, w h
 
 func IsDisabled(c disabledChecker, strategy string, wrap httprouter.Handle) httprouter.Handle {
 	return func(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-		disabledWriter(c, c.Config(r.Context()).SelfServiceStrategy(strategy).Enabled, wrap, w, r, ps)
+		disabledWriter(c, c.Config().SelfServiceStrategy(r.Context(), strategy).Enabled, wrap, w, r, ps)
 	}
 }
 
 func IsRecoveryDisabled(c disabledChecker, strategy string, wrap httprouter.Handle) httprouter.Handle {
 	return func(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 		disabledWriter(c,
-			c.Config(r.Context()).SelfServiceStrategy(strategy).Enabled && c.Config(r.Context()).SelfServiceFlowRecoveryEnabled(),
+			c.Config().SelfServiceStrategy(r.Context(), strategy).Enabled && c.Config().SelfServiceFlowRecoveryEnabled(r.Context()),
 			wrap, w, r, ps)
 	}
 }
@@ -42,7 +42,7 @@ func IsRecoveryDisabled(c disabledChecker, strategy string, wrap httprouter.Hand
 func IsVerificationDisabled(c disabledChecker, strategy string, wrap httprouter.Handle) httprouter.Handle {
 	return func(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 		disabledWriter(c,
-			c.Config(r.Context()).SelfServiceStrategy(strategy).Enabled && c.Config(r.Context()).SelfServiceFlowVerificationEnabled(),
+			c.Config().SelfServiceStrategy(r.Context(), strategy).Enabled && c.Config().SelfServiceFlowVerificationEnabled(r.Context()),
 			wrap, w, r, ps)
 	}
 }

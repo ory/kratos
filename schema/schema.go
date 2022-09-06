@@ -3,7 +3,7 @@ package schema
 import (
 	"context"
 	"encoding/base64"
-	"io/ioutil"
+	"io"
 	"net/url"
 	"strings"
 	"sync"
@@ -80,7 +80,7 @@ func GetKeysInOrder(ctx context.Context, schemaRef string) ([]string, error) {
 		if err != nil {
 			return nil, errors.WithStack(err)
 		}
-		schema, err := ioutil.ReadAll(sio)
+		schema, err := io.ReadAll(sio)
 		if err != nil {
 			return nil, errors.WithStack(err)
 		}

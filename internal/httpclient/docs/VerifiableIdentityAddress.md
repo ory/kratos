@@ -5,7 +5,7 @@
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
 **CreatedAt** | Pointer to **time.Time** | When this entry was created | [optional] 
-**Id** | Pointer to **string** |  | [optional] 
+**Id** | Pointer to **string** | The ID | [optional] 
 **Status** | **string** | VerifiableAddressStatus must not exceed 16 characters as that is the limitation in the SQL Schema | 
 **UpdatedAt** | Pointer to **time.Time** | When this entry was last updated | [optional] 
 **Value** | **string** | The address value  example foo@user.com | 

@@ -121,8 +121,9 @@ func (b *Builder) addJSONBody(template *bytes.Buffer, body interface{}) error {
 	}
 
 	rb := strings.NewReader(res)
-	b.r.Body = io.NopCloser(rb)
-	b.r.ContentLength = int64(rb.Len())
+	if err := b.r.SetBody(io.NopCloser(rb)); err != nil {
+		return errors.WithStack(err)
+	}
 
 	return nil
 }
@@ -157,7 +158,9 @@ func (b *Builder) addURLEncodedBody(template *bytes.Buffer, body interface{}) er
 	}
 
 	rb := strings.NewReader(u.Encode())
-	b.r.Body = io.NopCloser(rb)
+	if err := b.r.SetBody(io.NopCloser(rb)); err != nil {
+		return errors.WithStack(err)
+	}
 
 	return nil
 }

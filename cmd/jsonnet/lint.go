@@ -2,7 +2,6 @@ package jsonnet
 
 import (
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strings"
@@ -38,7 +37,7 @@ func NewJsonnetLintCmd() *cobra.Command {
 				cmdx.Must(err, `Glob path "%s" is not valid: %s`, pattern, err)
 
 				for _, file := range files {
-					content, err := ioutil.ReadFile(file)
+					content, err := os.ReadFile(file)
 					cmdx.Must(err, `Unable to read file "%s" because: %s`, file, err)
 
 					var outBuilder strings.Builder

@@ -5,10 +5,10 @@
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
 **Attributes** | [**UiNodeAttributes**](UiNodeAttributes.md) |  | 
-**Group** | **string** | Group specifies which group (e.g. password authenticator) this node belongs to. | 
+**Group** | **string** | Group specifies which group (e.g. password authenticator) this node belongs to. default DefaultGroup password PasswordGroup oidc OpenIDConnectGroup profile ProfileGroup link LinkGroup totp TOTPGroup lookup_secret LookupGroup webauthn WebAuthnGroup | 
 **Messages** | [**[]UiText**](UiText.md) |  | 
 **Meta** | [**UiNodeMeta**](UiNodeMeta.md) |  | 
-**Type** | **string** | The node&#39;s type | 
+**Type** | **string** | The node&#39;s type text Text input Input img Image a Anchor script Script | 
 
 ## Methods
 

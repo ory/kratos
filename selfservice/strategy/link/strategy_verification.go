@@ -152,7 +152,7 @@ func (s *Strategy) verificationHandleFormSubmission(w http.ResponseWriter, r *ht
 		return s.handleVerificationError(w, r, f, body, schema.NewRequiredError("#/email", "email"))
 	}
 
-	if err := flow.EnsureCSRF(s.d, r, f.Type, s.d.Config(r.Context()).DisableAPIFlowEnforcement(), s.d.GenerateCSRFToken, body.CSRFToken); err != nil {
+	if err := flow.EnsureCSRF(s.d, r, f.Type, s.d.Config().DisableAPIFlowEnforcement(r.Context()), s.d.GenerateCSRFToken, body.CSRFToken); err != nil {
 		return s.handleVerificationError(w, r, f, body, err)
 	}
 
@@ -199,7 +199,7 @@ func (s *Strategy) verificationUseToken(w http.ResponseWriter, r *http.Request, 
 
 	var f *verification.Flow
 	if !token.FlowID.Valid {
-		f, err = verification.NewFlow(s.d.Config(r.Context()), s.d.Config(r.Context()).SelfServiceFlowVerificationRequestLifespan(), s.d.GenerateCSRFToken(r), r, s.d.VerificationStrategies(r.Context()), flow.TypeBrowser)
+		f, err = verification.NewFlow(s.d.Config(), s.d.Config().SelfServiceFlowVerificationRequestLifespan(r.Context()), s.d.GenerateCSRFToken(r), r, s.d.VerificationStrategies(r.Context()), flow.TypeBrowser)
 		if err != nil {
 			return s.retryVerificationFlowWithError(w, r, flow.TypeBrowser, err)
 		}
@@ -245,7 +245,7 @@ func (s *Strategy) verificationUseToken(w http.ResponseWriter, r *http.Request, 
 		return s.retryVerificationFlowWithError(w, r, flow.TypeBrowser, err)
 	}
 
-	defaultRedirectURL := s.d.Config(r.Context()).SelfServiceFlowVerificationReturnTo(f.AppendTo(s.d.Config(r.Context()).SelfServiceFlowVerificationUI()))
+	defaultRedirectURL := s.d.Config().SelfServiceFlowVerificationReturnTo(r.Context(), f.AppendTo(s.d.Config().SelfServiceFlowVerificationUI(r.Context())))
 
 	verificationRequestURL, err := urlx.Parse(f.GetRequestURL())
 	if err != nil {
@@ -256,8 +256,8 @@ func (s *Strategy) verificationUseToken(w http.ResponseWriter, r *http.Request, 
 	verificationRequest := http.Request{URL: verificationRequestURL}
 
 	returnTo, err := x.SecureRedirectTo(&verificationRequest, defaultRedirectURL,
-		x.SecureRedirectAllowSelfServiceURLs(s.d.Config(r.Context()).SelfPublicURL()),
-		x.SecureRedirectAllowURLs(s.d.Config(r.Context()).SelfServiceBrowserAllowedReturnToDomains()),
+		x.SecureRedirectAllowSelfServiceURLs(s.d.Config().SelfPublicURL(r.Context())),
+		x.SecureRedirectAllowURLs(s.d.Config().SelfServiceBrowserAllowedReturnToDomains(r.Context())),
 	)
 	if err != nil {
 		s.d.Logger().Debugf("error parsing redirectTo from verification: %s\n", err)
@@ -272,8 +272,8 @@ func (s *Strategy) verificationUseToken(w http.ResponseWriter, r *http.Request, 
 func (s *Strategy) retryVerificationFlowWithMessage(w http.ResponseWriter, r *http.Request, ft flow.Type, message *text.Message) error {
 	s.d.Logger().WithRequest(r).WithField("message", message).Debug("A verification flow is being retried because a validation error occurred.")
 
-	f, err := verification.NewFlow(s.d.Config(r.Context()),
-		s.d.Config(r.Context()).SelfServiceFlowVerificationRequestLifespan(), s.d.CSRFHandler().RegenerateToken(w, r), r, s.d.VerificationStrategies(r.Context()), ft)
+	f, err := verification.NewFlow(s.d.Config(),
+		s.d.Config().SelfServiceFlowVerificationRequestLifespan(r.Context()), s.d.CSRFHandler().RegenerateToken(w, r), r, s.d.VerificationStrategies(r.Context()), ft)
 	if err != nil {
 		return s.handleVerificationError(w, r, f, nil, err)
 	}
@@ -284,9 +284,9 @@ func (s *Strategy) retryVerificationFlowWithMessage(w http.ResponseWriter, r *ht
 	}
 
 	if ft == flow.TypeBrowser {
-		http.Redirect(w, r, f.AppendTo(s.d.Config(r.Context()).SelfServiceFlowVerificationUI()).String(), http.StatusSeeOther)
+		http.Redirect(w, r, f.AppendTo(s.d.Config().SelfServiceFlowVerificationUI(r.Context())).String(), http.StatusSeeOther)
 	} else {
-		http.Redirect(w, r, urlx.CopyWithQuery(urlx.AppendPaths(s.d.Config(r.Context()).SelfPublicURL(),
+		http.Redirect(w, r, urlx.CopyWithQuery(urlx.AppendPaths(s.d.Config().SelfPublicURL(r.Context()),
 			verification.RouteGetFlow), url.Values{"id": {f.ID.String()}}).String(), http.StatusSeeOther)
 	}
 
@@ -296,8 +296,8 @@ func (s *Strategy) retryVerificationFlowWithMessage(w http.ResponseWriter, r *ht
 func (s *Strategy) retryVerificationFlowWithError(w http.ResponseWriter, r *http.Request, ft flow.Type, verErr error) error {
 	s.d.Logger().WithRequest(r).WithError(verErr).Debug("A verification flow is being retried because an error occurred.")
 
-	f, err := verification.NewFlow(s.d.Config(r.Context()),
-		s.d.Config(r.Context()).SelfServiceFlowVerificationRequestLifespan(), s.d.CSRFHandler().RegenerateToken(w, r), r, s.d.VerificationStrategies(r.Context()), ft)
+	f, err := verification.NewFlow(s.d.Config(),
+		s.d.Config().SelfServiceFlowVerificationRequestLifespan(r.Context()), s.d.CSRFHandler().RegenerateToken(w, r), r, s.d.VerificationStrategies(r.Context()), ft)
 	if err != nil {
 		return s.handleVerificationError(w, r, f, nil, err)
 	}
@@ -315,9 +315,9 @@ func (s *Strategy) retryVerificationFlowWithError(w http.ResponseWriter, r *http
 	}
 
 	if ft == flow.TypeBrowser {
-		http.Redirect(w, r, f.AppendTo(s.d.Config(r.Context()).SelfServiceFlowVerificationUI()).String(), http.StatusSeeOther)
+		http.Redirect(w, r, f.AppendTo(s.d.Config().SelfServiceFlowVerificationUI(r.Context())).String(), http.StatusSeeOther)
 	} else {
-		http.Redirect(w, r, urlx.CopyWithQuery(urlx.AppendPaths(s.d.Config(r.Context()).SelfPublicURL(),
+		http.Redirect(w, r, urlx.CopyWithQuery(urlx.AppendPaths(s.d.Config().SelfPublicURL(r.Context()),
 			verification.RouteGetFlow), url.Values{"id": {f.ID.String()}}).String(), http.StatusSeeOther)
 	}
 

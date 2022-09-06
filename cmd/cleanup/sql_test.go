@@ -2,7 +2,7 @@ package cleanup
 
 import (
 	"bytes"
-	"io/ioutil"
+	"io"
 	"strings"
 	"testing"
 )
@@ -13,7 +13,7 @@ func Test_ExecuteCleanupFailedDSN(t *testing.T) {
 	cmd.SetOut(b)
 	cmd.SetArgs([]string{"--read-from-env=false"})
 	cmd.Execute()
-	out, err := ioutil.ReadAll(b)
+	out, err := io.ReadAll(b)
 	if err != nil {
 		t.Fatal(err)
 	}

@@ -10,7 +10,7 @@ import (
 )
 
 func (m *RegistryDefault) IdentityTraitsSchemas(ctx context.Context) (schema.Schemas, error) {
-	ms, err := m.Config(ctx).IdentityTraitsSchemas()
+	ms, err := m.Config().IdentityTraitsSchemas(ctx)
 	if err != nil {
 		return nil, err
 	}

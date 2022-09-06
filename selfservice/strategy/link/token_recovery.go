@@ -6,8 +6,6 @@ import (
 
 	"github.com/ory/kratos/selfservice/flow"
 
-	"github.com/ory/kratos/corp"
-
 	"github.com/gofrs/uuid"
 	errors "github.com/pkg/errors"
 
@@ -16,6 +14,13 @@ import (
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/selfservice/flow/recovery"
 	"github.com/ory/kratos/x"
+)
+
+type RecoveryTokenType int
+
+const (
+	RecoveryTokenTypeAdmin RecoveryTokenType = iota + 1
+	RecoveryTokenTypeSelfService
 )
 
 type RecoveryToken struct {
@@ -32,6 +37,8 @@ type RecoveryToken struct {
 	// RecoveryAddress links this token to a recovery address.
 	// required: true
 	RecoveryAddress *identity.RecoveryAddress `json:"recovery_address" belongs_to:"identity_recovery_addresses" fk_id:"RecoveryAddressID"`
+
+	TokenType RecoveryTokenType `json:"-" faker:"-" db:"token_type"`
 
 	// ExpiresAt is the time (UTC) when the token expires.
 	// required: true
@@ -54,7 +61,7 @@ type RecoveryToken struct {
 }
 
 func (RecoveryToken) TableName(ctx context.Context) string {
-	return corp.ContextualizeTableName(ctx, "identity_recovery_tokens")
+	return "identity_recovery_tokens"
 }
 
 func NewSelfServiceRecoveryToken(address *identity.RecoveryAddress, f *recovery.Flow, expiresIn time.Duration) *RecoveryToken {
@@ -74,10 +81,11 @@ func NewSelfServiceRecoveryToken(address *identity.RecoveryAddress, f *recovery.
 		IdentityID:        identityID,
 		FlowID:            uuid.NullUUID{UUID: f.ID, Valid: true},
 		RecoveryAddressID: &recoveryAddressID,
+		TokenType:         RecoveryTokenTypeSelfService,
 	}
 }
 
-func NewRecoveryToken(identityID uuid.UUID, expiresIn time.Duration) *RecoveryToken {
+func NewAdminRecoveryToken(identityID uuid.UUID, fID uuid.UUID, expiresIn time.Duration) *RecoveryToken {
 	now := time.Now().UTC()
 	return &RecoveryToken{
 		ID:         x.NewUUID(),
@@ -85,6 +93,8 @@ func NewRecoveryToken(identityID uuid.UUID, expiresIn time.Duration) *RecoveryTo
 		ExpiresAt:  now.Add(expiresIn),
 		IssuedAt:   now,
 		IdentityID: identityID,
+		FlowID:     uuid.NullUUID{UUID: fID, Valid: true},
+		TokenType:  RecoveryTokenTypeAdmin,
 	}
 }
 

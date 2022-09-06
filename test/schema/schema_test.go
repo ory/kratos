@@ -5,7 +5,6 @@ import (
 	"context"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strings"
@@ -57,7 +56,7 @@ func (s schema) validate(path string) error {
 	}
 
 	var doc io.Reader
-	y, err := ioutil.ReadFile(path)
+	y, err := os.ReadFile(path)
 	if err != nil {
 		return errors.WithStack(err)
 	}
@@ -92,7 +91,7 @@ func TestSchemas(t *testing.T) {
 
 func SchemaTestRunner(spath string, sname string) func(*testing.T) {
 	return func(t *testing.T) {
-		sb, err := ioutil.ReadFile(fmt.Sprintf("%s/%s.schema.json", spath, sname))
+		sb, err := os.ReadFile(fmt.Sprintf("%s/%s.schema.json", spath, sname))
 		require.NoError(t, err)
 
 		// To test refs independently and reduce test case size we replace every "$ref" with "const".

@@ -67,7 +67,7 @@ func (s *Strategy) handleRegistrationError(_ http.ResponseWriter, r *http.Reques
 }
 
 func (s *Strategy) decode(p *SubmitSelfServiceRegistrationFlowWithPasswordMethodBody, r *http.Request) error {
-	return registration.DecodeBody(p, r, s.hd, s.d.Config(r.Context()), registrationSchema)
+	return registration.DecodeBody(p, r, s.hd, s.d.Config(), registrationSchema)
 }
 
 func (s *Strategy) Register(w http.ResponseWriter, r *http.Request, f *registration.Flow, i *identity.Identity) (err error) {
@@ -80,7 +80,7 @@ func (s *Strategy) Register(w http.ResponseWriter, r *http.Request, f *registrat
 		return s.handleRegistrationError(w, r, f, &p, err)
 	}
 
-	if err := flow.EnsureCSRF(s.d, r, f.Type, s.d.Config(r.Context()).DisableAPIFlowEnforcement(), s.d.GenerateCSRFToken, p.CSRFToken); err != nil {
+	if err := flow.EnsureCSRF(s.d, r, f.Type, s.d.Config().DisableAPIFlowEnforcement(r.Context()), s.d.GenerateCSRFToken, p.CSRFToken); err != nil {
 		return s.handleRegistrationError(w, r, f, &p, err)
 	}
 
@@ -92,7 +92,7 @@ func (s *Strategy) Register(w http.ResponseWriter, r *http.Request, f *registrat
 		p.Traits = json.RawMessage("{}")
 	}
 
-	hpw, err := s.d.Hasher().Generate(r.Context(), []byte(p.Password))
+	hpw, err := s.d.Hasher(r.Context()).Generate(r.Context(), []byte(p.Password))
 	if err != nil {
 		return s.handleRegistrationError(w, r, f, &p, err)
 	}
@@ -135,7 +135,7 @@ func (s *Strategy) validateCredentials(ctx context.Context, i *identity.Identity
 }
 
 func (s *Strategy) PopulateRegistrationMethod(r *http.Request, f *registration.Flow) error {
-	ds, err := s.d.Config(r.Context()).DefaultIdentityTraitsSchemaURL()
+	ds, err := s.d.Config().DefaultIdentityTraitsSchemaURL(r.Context())
 	if err != nil {
 		return err
 	}

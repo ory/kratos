@@ -45,11 +45,12 @@ func createIdentityWithoutTOTP(t *testing.T, reg driver.Registry) *identity.Iden
 }
 
 func createIdentity(t *testing.T, reg driver.Registry) (*identity.Identity, string, *otp.Key) {
+	ctx := context.Background()
 	identifier := x.NewUUID().String() + "@ory.sh"
 	password := x.NewUUID().String()
 	key, err := totp.NewKey(context.Background(), "foo", reg)
 	require.NoError(t, err)
-	p, err := reg.Hasher().Generate(context.Background(), []byte(password))
+	p, err := reg.Hasher(ctx).Generate(context.Background(), []byte(password))
 	require.NoError(t, err)
 	i := &identity.Identity{
 		Traits: identity.Traits(fmt.Sprintf(`{"subject":"%s"}`, identifier)),
@@ -79,10 +80,11 @@ func createIdentity(t *testing.T, reg driver.Registry) (*identity.Identity, stri
 }
 
 func TestCompleteLogin(t *testing.T) {
+	ctx := context.Background()
 	conf, reg := internal.NewFastRegistryWithMocks(t)
-	conf.MustSet(config.ViperKeySelfServiceStrategyConfig+"."+string(identity.CredentialsTypePassword), map[string]interface{}{"enabled": true})
-	conf.MustSet(config.ViperKeySelfServiceStrategyConfig+"."+string(identity.CredentialsTypeTOTP), map[string]interface{}{"enabled": true})
-	conf.MustSet(config.ViperKeyURLsAllowedReturnToDomains, []string{"https://www.ory.sh"})
+	conf.MustSet(ctx, config.ViperKeySelfServiceStrategyConfig+"."+string(identity.CredentialsTypePassword), map[string]interface{}{"enabled": true})
+	conf.MustSet(ctx, config.ViperKeySelfServiceStrategyConfig+"."+string(identity.CredentialsTypeTOTP), map[string]interface{}{"enabled": true})
+	conf.MustSet(ctx, config.ViperKeyURLsAllowedReturnToDomains, []string{"https://www.ory.sh"})
 
 	router := x.NewRouterPublic()
 	publicTS, _ := testhelpers.NewKratosServerWithRouters(t, reg, router, x.NewRouterAdmin())
@@ -92,11 +94,11 @@ func TestCompleteLogin(t *testing.T) {
 	redirTS := testhelpers.NewRedirSessionEchoTS(t, reg)
 
 	// Overwrite these two to make it more explicit when tests fail
-	conf.MustSet(config.ViperKeySelfServiceErrorUI, errTS.URL+"/error-ts")
-	conf.MustSet(config.ViperKeySelfServiceLoginUI, uiTS.URL+"/login-ts")
+	conf.MustSet(ctx, config.ViperKeySelfServiceErrorUI, errTS.URL+"/error-ts")
+	conf.MustSet(ctx, config.ViperKeySelfServiceLoginUI, uiTS.URL+"/login-ts")
 
 	testhelpers.SetDefaultIdentitySchema(conf, "file://./stub/login.schema.json")
-	conf.MustSet(config.ViperKeySecretsDefault, []string{"not-a-secure-session-key"})
+	conf.MustSet(ctx, config.ViperKeySecretsDefault, []string{"not-a-secure-session-key"})
 
 	t.Run("case=totp payload is set when identity has totp", func(t *testing.T) {
 		id, _, _ := createIdentity(t, reg)

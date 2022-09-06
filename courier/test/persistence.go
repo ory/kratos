@@ -20,7 +20,7 @@ import (
 
 type PersisterWrapper interface {
 	GetConnection(ctx context.Context) *pop.Connection
-	NetworkID() uuid.UUID
+	NetworkID(ctx context.Context) uuid.UUID
 	courier.Persister
 }
 
@@ -116,7 +116,7 @@ func TestPersister(ctx context.Context, newNetworkUnlessExisting NetworkWrapper,
 
 				assert.EqualValues(t, id, expected.ID)
 				assert.EqualValues(t, nid, expected.NID)
-				assert.EqualValues(t, nid, p.NetworkID())
+				assert.EqualValues(t, nid, p.NetworkID(ctx))
 
 				actual, err := p.LatestQueuedMessage(ctx)
 				require.NoError(t, err)

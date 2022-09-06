@@ -2,7 +2,7 @@ package jsonnet
 
 import (
 	"fmt"
-	"io/ioutil"
+	"os"
 	"path/filepath"
 
 	"github.com/google/go-jsonnet/formatter"
@@ -37,14 +37,14 @@ Use -w or --write to write output back to files instead of stdout.
 
 				shouldWrite := flagx.MustGetBool(cmd, "write")
 				for _, file := range files {
-					content, err := ioutil.ReadFile(file)
+					content, err := os.ReadFile(file)
 					cmdx.Must(err, `Unable to read file "%s" because: %s`, file, err)
 
 					output, err := formatter.Format(file, string(content), formatter.DefaultOptions())
 					cmdx.Must(err, `JSONNet file "%s" could not be formatted: %s`, file, err)
 
 					if shouldWrite {
-						err := ioutil.WriteFile(file, []byte(output), 0644) // #nosec
+						err := os.WriteFile(file, []byte(output), 0644) // #nosec
 						cmdx.Must(err, `Could not write to file "%s" because: %s`, file, err)
 					} else {
 						fmt.Println(output)

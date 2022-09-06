@@ -45,7 +45,7 @@ func TestPool(ctx context.Context, conf *config.Config, p interface {
 		nid, p := testhelpers.NewNetworkUnlessExisting(t, ctx, p)
 
 		exampleServerURL := urlx.ParseOrPanic("http://example.com")
-		conf.MustSet(config.ViperKeyPublicBaseURL, exampleServerURL.String())
+		conf.MustSet(ctx, config.ViperKeyPublicBaseURL, exampleServerURL.String())
 		defaultSchema := schema.Schema{
 			ID:     config.DefaultIdentityTraitsSchemaID,
 			URL:    urlx.ParseOrPanic("file://./stub/identity.schema.json"),
@@ -56,7 +56,7 @@ func TestPool(ctx context.Context, conf *config.Config, p interface {
 			URL:    urlx.ParseOrPanic("file://./stub/identity-2.schema.json"),
 			RawURL: "file://./stub/identity-2.schema.json",
 		}
-		conf.MustSet(config.ViperKeyIdentitySchemas, []config.Schema{
+		conf.MustSet(ctx, config.ViperKeyIdentitySchemas, []config.Schema{
 			{
 				ID:  altSchema.ID,
 				URL: altSchema.RawURL,

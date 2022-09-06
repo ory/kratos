@@ -9,7 +9,7 @@ Name | Type | Description | Notes
 **AuthenticationMethods** | Pointer to [**[]SessionAuthenticationMethod**](SessionAuthenticationMethod.md) | A list of authenticators which were used to authenticate the session. | [optional] 
 **AuthenticatorAssuranceLevel** | Pointer to [**AuthenticatorAssuranceLevel**](AuthenticatorAssuranceLevel.md) |  | [optional] 
 **ExpiresAt** | Pointer to **time.Time** | The Session Expiry  When this session expires at. | [optional] 
-**Id** | **string** |  | 
+**Id** | **string** | Session ID | 
 **Identity** | [**Identity**](Identity.md) |  | 
 **IssuedAt** | Pointer to **time.Time** | The Session Issuance Timestamp  When this session was issued at. Usually equal or close to &#x60;authenticated_at&#x60;. | [optional] 
 

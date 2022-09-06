@@ -47,9 +47,7 @@ Alternatively:
 	cat file.json | %[1]s import identities`, root.Use),
 		Long: `Import identities from files or STD_IN.
 
-Files can contain only a single or an array of identities. The validity of files can be tested beforehand using "... identities validate".
-
-WARNING: Importing credentials is not yet supported.`,
+Files can contain only a single or an array of identities. The validity of files can be tested beforehand using "... identities validate".`,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			c, err := cliclient.NewClient(cmd)
 			if err != nil {

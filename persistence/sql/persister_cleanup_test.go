@@ -16,12 +16,12 @@ func TestPersister_Cleanup(t *testing.T) {
 	ctx := context.Background()
 
 	t.Run("case=should not throw error on cleanup", func(t *testing.T) {
-		assert.Nil(t, p.CleanupDatabase(ctx, 0, 0, reg.Config(context.Background()).DatabaseCleanupBatchSize()))
+		assert.Nil(t, p.CleanupDatabase(ctx, 0, 0, reg.Config().DatabaseCleanupBatchSize(ctx)))
 	})
 
 	t.Run("case=should throw error on cleanup", func(t *testing.T) {
 		p.GetConnection(ctx).Close()
-		assert.Error(t, p.CleanupDatabase(ctx, 0, 0, reg.Config(context.Background()).DatabaseCleanupBatchSize()))
+		assert.Error(t, p.CleanupDatabase(ctx, 0, 0, reg.Config().DatabaseCleanupBatchSize(ctx)))
 	})
 }
 
@@ -32,12 +32,12 @@ func TestPersister_Continuity_Cleanup(t *testing.T) {
 	ctx := context.Background()
 
 	t.Run("case=should not throw error on cleanup continuity sessions", func(t *testing.T) {
-		assert.Nil(t, p.DeleteExpiredContinuitySessions(ctx, currentTime, reg.Config(context.Background()).DatabaseCleanupBatchSize()))
+		assert.Nil(t, p.DeleteExpiredContinuitySessions(ctx, currentTime, reg.Config().DatabaseCleanupBatchSize(ctx)))
 	})
 
 	t.Run("case=should throw error on cleanup continuity sessions", func(t *testing.T) {
 		p.GetConnection(ctx).Close()
-		assert.Error(t, p.DeleteExpiredContinuitySessions(ctx, currentTime, reg.Config(context.Background()).DatabaseCleanupBatchSize()))
+		assert.Error(t, p.DeleteExpiredContinuitySessions(ctx, currentTime, reg.Config().DatabaseCleanupBatchSize(ctx)))
 	})
 }
 
@@ -48,12 +48,12 @@ func TestPersister_Login_Cleanup(t *testing.T) {
 	ctx := context.Background()
 
 	t.Run("case=should not throw error on cleanup login flows", func(t *testing.T) {
-		assert.Nil(t, p.DeleteExpiredLoginFlows(ctx, currentTime, reg.Config(context.Background()).DatabaseCleanupBatchSize()))
+		assert.Nil(t, p.DeleteExpiredLoginFlows(ctx, currentTime, reg.Config().DatabaseCleanupBatchSize(ctx)))
 	})
 
 	t.Run("case=should throw error on cleanup login flows", func(t *testing.T) {
 		p.GetConnection(ctx).Close()
-		assert.Error(t, p.DeleteExpiredLoginFlows(ctx, currentTime, reg.Config(context.Background()).DatabaseCleanupBatchSize()))
+		assert.Error(t, p.DeleteExpiredLoginFlows(ctx, currentTime, reg.Config().DatabaseCleanupBatchSize(ctx)))
 	})
 }
 
@@ -64,12 +64,12 @@ func TestPersister_Recovery_Cleanup(t *testing.T) {
 	ctx := context.Background()
 
 	t.Run("case=should not throw error on cleanup recovery flows", func(t *testing.T) {
-		assert.Nil(t, p.DeleteExpiredRecoveryFlows(ctx, currentTime, reg.Config(context.Background()).DatabaseCleanupBatchSize()))
+		assert.Nil(t, p.DeleteExpiredRecoveryFlows(ctx, currentTime, reg.Config().DatabaseCleanupBatchSize(ctx)))
 	})
 
 	t.Run("case=should throw error on cleanup recovery flows", func(t *testing.T) {
 		p.GetConnection(ctx).Close()
-		assert.Error(t, p.DeleteExpiredRecoveryFlows(ctx, currentTime, reg.Config(context.Background()).DatabaseCleanupBatchSize()))
+		assert.Error(t, p.DeleteExpiredRecoveryFlows(ctx, currentTime, reg.Config().DatabaseCleanupBatchSize(ctx)))
 	})
 }
 
@@ -80,12 +80,12 @@ func TestPersister_Registration_Cleanup(t *testing.T) {
 	ctx := context.Background()
 
 	t.Run("case=should not throw error on cleanup registration flows", func(t *testing.T) {
-		assert.Nil(t, p.DeleteExpiredRegistrationFlows(ctx, currentTime, reg.Config(context.Background()).DatabaseCleanupBatchSize()))
+		assert.Nil(t, p.DeleteExpiredRegistrationFlows(ctx, currentTime, reg.Config().DatabaseCleanupBatchSize(ctx)))
 	})
 
 	t.Run("case=should throw error on cleanup registration flows", func(t *testing.T) {
 		p.GetConnection(ctx).Close()
-		assert.Error(t, p.DeleteExpiredRegistrationFlows(ctx, currentTime, reg.Config(context.Background()).DatabaseCleanupBatchSize()))
+		assert.Error(t, p.DeleteExpiredRegistrationFlows(ctx, currentTime, reg.Config().DatabaseCleanupBatchSize(ctx)))
 	})
 }
 
@@ -96,12 +96,12 @@ func TestPersister_Session_Cleanup(t *testing.T) {
 	ctx := context.Background()
 
 	t.Run("case=should not throw error on cleanup sessions", func(t *testing.T) {
-		assert.Nil(t, p.DeleteExpiredSessions(ctx, currentTime, reg.Config(context.Background()).DatabaseCleanupBatchSize()))
+		assert.Nil(t, p.DeleteExpiredSessions(ctx, currentTime, reg.Config().DatabaseCleanupBatchSize(ctx)))
 	})
 
 	t.Run("case=should throw error on cleanup sessions", func(t *testing.T) {
 		p.GetConnection(ctx).Close()
-		assert.Error(t, p.DeleteExpiredSessions(ctx, currentTime, reg.Config(context.Background()).DatabaseCleanupBatchSize()))
+		assert.Error(t, p.DeleteExpiredSessions(ctx, currentTime, reg.Config().DatabaseCleanupBatchSize(ctx)))
 	})
 }
 
@@ -112,12 +112,12 @@ func TestPersister_Settings_Cleanup(t *testing.T) {
 	ctx := context.Background()
 
 	t.Run("case=should not throw error on cleanup setting flows", func(t *testing.T) {
-		assert.Nil(t, p.DeleteExpiredSettingsFlows(ctx, currentTime, reg.Config(context.Background()).DatabaseCleanupBatchSize()))
+		assert.Nil(t, p.DeleteExpiredSettingsFlows(ctx, currentTime, reg.Config().DatabaseCleanupBatchSize(ctx)))
 	})
 
 	t.Run("case=should throw error on cleanup setting flows", func(t *testing.T) {
 		p.GetConnection(ctx).Close()
-		assert.Error(t, p.DeleteExpiredSettingsFlows(ctx, currentTime, reg.Config(context.Background()).DatabaseCleanupBatchSize()))
+		assert.Error(t, p.DeleteExpiredSettingsFlows(ctx, currentTime, reg.Config().DatabaseCleanupBatchSize(ctx)))
 	})
 }
 
@@ -128,11 +128,11 @@ func TestPersister_Verification_Cleanup(t *testing.T) {
 	ctx := context.Background()
 
 	t.Run("case=should not throw error on cleanup verification flows", func(t *testing.T) {
-		assert.Nil(t, p.DeleteExpiredVerificationFlows(ctx, currentTime, reg.Config(context.Background()).DatabaseCleanupBatchSize()))
+		assert.Nil(t, p.DeleteExpiredVerificationFlows(ctx, currentTime, reg.Config().DatabaseCleanupBatchSize(ctx)))
 	})
 
 	t.Run("case=should throw error on cleanup verification flows", func(t *testing.T) {
 		p.GetConnection(ctx).Close()
-		assert.Error(t, p.DeleteExpiredVerificationFlows(ctx, currentTime, reg.Config(context.Background()).DatabaseCleanupBatchSize()))
+		assert.Error(t, p.DeleteExpiredVerificationFlows(ctx, currentTime, reg.Config().DatabaseCleanupBatchSize(ctx)))
 	})
 }
