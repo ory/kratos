@@ -66,11 +66,14 @@ context("2FA lookup secrets", () => {
         cy.clearAllCookies()
         cy.login({ email: email, password: password, cookieUrl: base })
 
-        cy.visit(login + "?aal=aal2")
-        cy.get("h2").should("contain.text", "Two-Factor Authentication")
-        cy.get('*[name="method"][value="totp"]').should("not.exist")
-        cy.get('*[name="method"][value="lookup_secret"]').should("not.exist")
-        cy.get('*[name="method"][value="password"]').should("not.exist")
+        cy.visit(login + '?aal=aal2')
+        cy.get(app === 'express' ? 'h3' : 'h2').should(
+          'contain.text',
+          'Two-Factor Authentication'
+        )
+        cy.get('*[name="method"][value="totp"]').should('not.exist')
+        cy.get('*[name="method"][value="lookup_secret"]').should('not.exist')
+        cy.get('*[name="method"][value="password"]').should('not.exist')
       })
 
       it("should go through several lookup secret lifecycles", () => {
@@ -273,12 +276,15 @@ context("2FA lookup secrets", () => {
         })
       })
 
-      it("should not show lookup as an option if not configured", () => {
-        cy.visit(login + "?aal=aal2")
-        cy.get('*[name="method"][value="totp"]').should("not.exist")
-        cy.get('*[name="method"][value="lookup_secret"]').should("not.exist")
-        cy.get('*[name="method"][value="password"]').should("not.exist")
-        cy.get("h2").should("contain.text", "Two-Factor Authentication")
+      it('should not show lookup as an option if not configured', () => {
+        cy.visit(login + '?aal=aal2')
+        cy.get('*[name="method"][value="totp"]').should('not.exist')
+        cy.get('*[name="method"][value="lookup_secret"]').should('not.exist')
+        cy.get('*[name="method"][value="password"]').should('not.exist')
+        cy.get(app === 'express' ? 'h3' : 'h2').should(
+          'contain.text',
+          'Two-Factor Authentication'
+        )
       })
     })
   })
