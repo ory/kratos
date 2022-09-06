@@ -16,8 +16,8 @@ import (
 	"time"
 )
 
-// RecoveryAddress struct for RecoveryAddress
-type RecoveryAddress struct {
+// RecoveryIdentityAddress struct for RecoveryIdentityAddress
+type RecoveryIdentityAddress struct {
 	// CreatedAt is a helper struct field for gobuffalo.pop.
 	CreatedAt *time.Time `json:"created_at,omitempty"`
 	Id        string     `json:"id"`
@@ -27,28 +27,28 @@ type RecoveryAddress struct {
 	Via       string     `json:"via"`
 }
 
-// NewRecoveryAddress instantiates a new RecoveryAddress object
+// NewRecoveryIdentityAddress instantiates a new RecoveryIdentityAddress object
 // This constructor will assign default values to properties that have it defined,
 // and makes sure properties required by API are set, but the set of arguments
 // will change when the set of required properties is changed
-func NewRecoveryAddress(id string, value string, via string) *RecoveryAddress {
-	this := RecoveryAddress{}
+func NewRecoveryIdentityAddress(id string, value string, via string) *RecoveryIdentityAddress {
+	this := RecoveryIdentityAddress{}
 	this.Id = id
 	this.Value = value
 	this.Via = via
 	return &this
 }
 
-// NewRecoveryAddressWithDefaults instantiates a new RecoveryAddress object
+// NewRecoveryIdentityAddressWithDefaults instantiates a new RecoveryIdentityAddress object
 // This constructor will only assign default values to properties that have it defined,
 // but it doesn't guarantee that properties required by API are set
-func NewRecoveryAddressWithDefaults() *RecoveryAddress {
-	this := RecoveryAddress{}
+func NewRecoveryIdentityAddressWithDefaults() *RecoveryIdentityAddress {
+	this := RecoveryIdentityAddress{}
 	return &this
 }
 
 // GetCreatedAt returns the CreatedAt field value if set, zero value otherwise.
-func (o *RecoveryAddress) GetCreatedAt() time.Time {
+func (o *RecoveryIdentityAddress) GetCreatedAt() time.Time {
 	if o == nil || o.CreatedAt == nil {
 		var ret time.Time
 		return ret
@@ -58,7 +58,7 @@ func (o *RecoveryAddress) GetCreatedAt() time.Time {
 
 // GetCreatedAtOk returns a tuple with the CreatedAt field value if set, nil otherwise
 // and a boolean to check if the value has been set.
-func (o *RecoveryAddress) GetCreatedAtOk() (*time.Time, bool) {
+func (o *RecoveryIdentityAddress) GetCreatedAtOk() (*time.Time, bool) {
 	if o == nil || o.CreatedAt == nil {
 		return nil, false
 	}
@@ -66,7 +66,7 @@ func (o *RecoveryAddress) GetCreatedAtOk() (*time.Time, bool) {
 }
 
 // HasCreatedAt returns a boolean if a field has been set.
-func (o *RecoveryAddress) HasCreatedAt() bool {
+func (o *RecoveryIdentityAddress) HasCreatedAt() bool {
 	if o != nil && o.CreatedAt != nil {
 		return true
 	}
@@ -75,12 +75,12 @@ func (o *RecoveryAddress) HasCreatedAt() bool {
 }
 
 // SetCreatedAt gets a reference to the given time.Time and assigns it to the CreatedAt field.
-func (o *RecoveryAddress) SetCreatedAt(v time.Time) {
+func (o *RecoveryIdentityAddress) SetCreatedAt(v time.Time) {
 	o.CreatedAt = &v
 }
 
 // GetId returns the Id field value
-func (o *RecoveryAddress) GetId() string {
+func (o *RecoveryIdentityAddress) GetId() string {
 	if o == nil {
 		var ret string
 		return ret
@@ -91,7 +91,7 @@ func (o *RecoveryAddress) GetId() string {
 
 // GetIdOk returns a tuple with the Id field value
 // and a boolean to check if the value has been set.
-func (o *RecoveryAddress) GetIdOk() (*string, bool) {
+func (o *RecoveryIdentityAddress) GetIdOk() (*string, bool) {
 	if o == nil {
 		return nil, false
 	}
@@ -99,12 +99,12 @@ func (o *RecoveryAddress) GetIdOk() (*string, bool) {
 }
 
 // SetId sets field value
-func (o *RecoveryAddress) SetId(v string) {
+func (o *RecoveryIdentityAddress) SetId(v string) {
 	o.Id = v
 }
 
 // GetUpdatedAt returns the UpdatedAt field value if set, zero value otherwise.
-func (o *RecoveryAddress) GetUpdatedAt() time.Time {
+func (o *RecoveryIdentityAddress) GetUpdatedAt() time.Time {
 	if o == nil || o.UpdatedAt == nil {
 		var ret time.Time
 		return ret
@@ -114,7 +114,7 @@ func (o *RecoveryAddress) GetUpdatedAt() time.Time {
 
 // GetUpdatedAtOk returns a tuple with the UpdatedAt field value if set, nil otherwise
 // and a boolean to check if the value has been set.
-func (o *RecoveryAddress) GetUpdatedAtOk() (*time.Time, bool) {
+func (o *RecoveryIdentityAddress) GetUpdatedAtOk() (*time.Time, bool) {
 	if o == nil || o.UpdatedAt == nil {
 		return nil, false
 	}
@@ -122,7 +122,7 @@ func (o *RecoveryAddress) GetUpdatedAtOk() (*time.Time, bool) {
 }
 
 // HasUpdatedAt returns a boolean if a field has been set.
-func (o *RecoveryAddress) HasUpdatedAt() bool {
+func (o *RecoveryIdentityAddress) HasUpdatedAt() bool {
 	if o != nil && o.UpdatedAt != nil {
 		return true
 	}
@@ -131,12 +131,12 @@ func (o *RecoveryAddress) HasUpdatedAt() bool {
 }
 
 // SetUpdatedAt gets a reference to the given time.Time and assigns it to the UpdatedAt field.
-func (o *RecoveryAddress) SetUpdatedAt(v time.Time) {
+func (o *RecoveryIdentityAddress) SetUpdatedAt(v time.Time) {
 	o.UpdatedAt = &v
 }
 
 // GetValue returns the Value field value
-func (o *RecoveryAddress) GetValue() string {
+func (o *RecoveryIdentityAddress) GetValue() string {
 	if o == nil {
 		var ret string
 		return ret
@@ -147,7 +147,7 @@ func (o *RecoveryAddress) GetValue() string {
 
 // GetValueOk returns a tuple with the Value field value
 // and a boolean to check if the value has been set.
-func (o *RecoveryAddress) GetValueOk() (*string, bool) {
+func (o *RecoveryIdentityAddress) GetValueOk() (*string, bool) {
 	if o == nil {
 		return nil, false
 	}
@@ -155,12 +155,12 @@ func (o *RecoveryAddress) GetValueOk() (*string, bool) {
 }
 
 // SetValue sets field value
-func (o *RecoveryAddress) SetValue(v string) {
+func (o *RecoveryIdentityAddress) SetValue(v string) {
 	o.Value = v
 }
 
 // GetVia returns the Via field value
-func (o *RecoveryAddress) GetVia() string {
+func (o *RecoveryIdentityAddress) GetVia() string {
 	if o == nil {
 		var ret string
 		return ret
@@ -171,7 +171,7 @@ func (o *RecoveryAddress) GetVia() string {
 
 // GetViaOk returns a tuple with the Via field value
 // and a boolean to check if the value has been set.
-func (o *RecoveryAddress) GetViaOk() (*string, bool) {
+func (o *RecoveryIdentityAddress) GetViaOk() (*string, bool) {
 	if o == nil {
 		return nil, false
 	}
@@ -179,11 +179,11 @@ func (o *RecoveryAddress) GetViaOk() (*string, bool) {
 }
 
 // SetVia sets field value
-func (o *RecoveryAddress) SetVia(v string) {
+func (o *RecoveryIdentityAddress) SetVia(v string) {
 	o.Via = v
 }
 
-func (o RecoveryAddress) MarshalJSON() ([]byte, error) {
+func (o RecoveryIdentityAddress) MarshalJSON() ([]byte, error) {
 	toSerialize := map[string]interface{}{}
 	if o.CreatedAt != nil {
 		toSerialize["created_at"] = o.CreatedAt
@@ -203,38 +203,38 @@ func (o RecoveryAddress) MarshalJSON() ([]byte, error) {
 	return json.Marshal(toSerialize)
 }
 
-type NullableRecoveryAddress struct {
-	value *RecoveryAddress
+type NullableRecoveryIdentityAddress struct {
+	value *RecoveryIdentityAddress
 	isSet bool
 }
 
-func (v NullableRecoveryAddress) Get() *RecoveryAddress {
+func (v NullableRecoveryIdentityAddress) Get() *RecoveryIdentityAddress {
 	return v.value
 }
 
-func (v *NullableRecoveryAddress) Set(val *RecoveryAddress) {
+func (v *NullableRecoveryIdentityAddress) Set(val *RecoveryIdentityAddress) {
 	v.value = val
 	v.isSet = true
 }
 
-func (v NullableRecoveryAddress) IsSet() bool {
+func (v NullableRecoveryIdentityAddress) IsSet() bool {
 	return v.isSet
 }
 
-func (v *NullableRecoveryAddress) Unset() {
+func (v *NullableRecoveryIdentityAddress) Unset() {
 	v.value = nil
 	v.isSet = false
 }
 
-func NewNullableRecoveryAddress(val *RecoveryAddress) *NullableRecoveryAddress {
-	return &NullableRecoveryAddress{value: val, isSet: true}
+func NewNullableRecoveryIdentityAddress(val *RecoveryIdentityAddress) *NullableRecoveryIdentityAddress {
+	return &NullableRecoveryIdentityAddress{value: val, isSet: true}
 }
 
-func (v NullableRecoveryAddress) MarshalJSON() ([]byte, error) {
+func (v NullableRecoveryIdentityAddress) MarshalJSON() ([]byte, error) {
 	return json.Marshal(v.value)
 }
 
-func (v *NullableRecoveryAddress) UnmarshalJSON(src []byte) error {
+func (v *NullableRecoveryIdentityAddress) UnmarshalJSON(src []byte) error {
 	v.isSet = true
 	return json.Unmarshal(src, &v.value)
 }

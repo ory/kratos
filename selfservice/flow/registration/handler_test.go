@@ -4,7 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
@@ -34,13 +34,14 @@ func init() {
 }
 
 func TestHandlerRedirectOnAuthenticated(t *testing.T) {
+	ctx := context.Background()
 	conf, reg := internal.NewFastRegistryWithMocks(t)
 
 	router := x.NewRouterPublic()
 	ts, _ := testhelpers.NewKratosServerWithRouters(t, reg, router, x.NewRouterAdmin())
 
 	redirTS := testhelpers.NewRedirTS(t, "already authenticated", conf)
-	conf.MustSet(config.ViperKeySelfServiceRegistrationEnabled, true)
+	conf.MustSet(ctx, config.ViperKeySelfServiceRegistrationEnabled, true)
 	testhelpers.SetDefaultIdentitySchema(conf, "file://./stub/identity.schema.json")
 
 	t.Run("does redirect to default on authenticated request", func(t *testing.T) {
@@ -57,16 +58,17 @@ func TestHandlerRedirectOnAuthenticated(t *testing.T) {
 }
 
 func TestInitFlow(t *testing.T) {
+	ctx := context.Background()
 	conf, reg := internal.NewFastRegistryWithMocks(t)
-	conf.MustSet(config.ViperKeySelfServiceStrategyConfig+"."+string(identity.CredentialsTypePassword),
+	conf.MustSet(ctx, config.ViperKeySelfServiceStrategyConfig+"."+string(identity.CredentialsTypePassword),
 		map[string]interface{}{"enabled": true})
 
 	router := x.NewRouterPublic()
 	publicTS, _ := testhelpers.NewKratosServerWithRouters(t, reg, router, x.NewRouterAdmin())
 	registrationTS := testhelpers.NewRegistrationUIFlowEchoServer(t, reg)
 
-	conf.MustSet(config.ViperKeySelfServiceRegistrationEnabled, true)
-	conf.MustSet(config.ViperKeySelfServiceBrowserDefaultReturnTo, "https://www.ory.sh")
+	conf.MustSet(ctx, config.ViperKeySelfServiceRegistrationEnabled, true)
+	conf.MustSet(ctx, config.ViperKeySelfServiceBrowserDefaultReturnTo, "https://www.ory.sh")
 	testhelpers.SetDefaultIdentitySchema(conf, "file://./stub/login.schema.json")
 
 	assertion := func(body []byte, isForced, isApi bool) {
@@ -108,7 +110,7 @@ func TestInitFlow(t *testing.T) {
 		res, err := c.Do(req)
 		require.NoError(t, err)
 		defer res.Body.Close()
-		body, err := ioutil.ReadAll(res.Body)
+		body, err := io.ReadAll(res.Body)
 		require.NoError(t, err)
 		return res, body
 	}
@@ -161,7 +163,7 @@ func TestInitFlow(t *testing.T) {
 		})
 
 		t.Run("case=relative redirect when self-service registration ui is a relative URL", func(t *testing.T) {
-			reg.Config(context.Background()).MustSet(config.ViperKeySelfServiceRegistrationUI, "/registration-ts")
+			reg.Config().MustSet(ctx, config.ViperKeySelfServiceRegistrationUI, "/registration-ts")
 			assert.Regexp(
 				t,
 				"^/registration-ts.*$",
@@ -190,11 +192,12 @@ func TestInitFlow(t *testing.T) {
 }
 
 func TestDisabledFlow(t *testing.T) {
+	ctx := context.Background()
 	conf, reg := internal.NewFastRegistryWithMocks(t)
 
-	conf.MustSet(config.ViperKeySelfServiceRegistrationEnabled, false)
+	conf.MustSet(ctx, config.ViperKeySelfServiceRegistrationEnabled, false)
 	testhelpers.SetDefaultIdentitySchema(conf, "file://./stub/login.schema.json")
-	conf.MustSet(config.ViperKeySelfServiceStrategyConfig+"."+string(identity.CredentialsTypePassword),
+	conf.MustSet(ctx, config.ViperKeySelfServiceStrategyConfig+"."+string(identity.CredentialsTypePassword),
 		map[string]interface{}{"enabled": true})
 
 	publicTS, _ := testhelpers.NewKratosServerWithCSRF(t, reg)
@@ -212,7 +215,7 @@ func TestDisabledFlow(t *testing.T) {
 		res, err := c.Do(req)
 		require.NoError(t, err)
 		defer res.Body.Close()
-		body, err := ioutil.ReadAll(res.Body)
+		body, err := io.ReadAll(res.Body)
 		require.NoError(t, err)
 		return res, body
 	}
@@ -247,10 +250,11 @@ func TestDisabledFlow(t *testing.T) {
 }
 
 func TestGetFlow(t *testing.T) {
+	ctx := context.Background()
 	conf, reg := internal.NewFastRegistryWithMocks(t)
-	conf.MustSet(config.ViperKeySelfServiceRegistrationEnabled, true)
+	conf.MustSet(ctx, config.ViperKeySelfServiceRegistrationEnabled, true)
 	testhelpers.SetDefaultIdentitySchema(conf, "file://./stub/registration.schema.json")
-	conf.MustSet(config.ViperKeySelfServiceStrategyConfig+"."+string(identity.CredentialsTypePassword),
+	conf.MustSet(ctx, config.ViperKeySelfServiceStrategyConfig+"."+string(identity.CredentialsTypePassword),
 		map[string]interface{}{"enabled": true})
 
 	public, _ := testhelpers.NewKratosServerWithCSRF(t, reg)
@@ -263,7 +267,7 @@ func TestGetFlow(t *testing.T) {
 			require.NoError(t, err)
 		}))
 		t.Cleanup(ts.Close)
-		conf.MustSet(config.ViperKeySelfServiceRegistrationUI, ts.URL)
+		conf.MustSet(ctx, config.ViperKeySelfServiceRegistrationUI, ts.URL)
 		return ts
 	}
 
@@ -305,7 +309,7 @@ func TestGetFlow(t *testing.T) {
 
 	t.Run("case=expired with return_to", func(t *testing.T) {
 		returnTo := "https://www.ory.sh"
-		conf.MustSet(config.ViperKeyURLsAllowedReturnToDomains, []string{returnTo})
+		conf.MustSet(ctx, config.ViperKeyURLsAllowedReturnToDomains, []string{returnTo})
 
 		client := testhelpers.NewClientWithCookies(t)
 		setupRegistrationUI(t, client)
@@ -325,7 +329,7 @@ func TestGetFlow(t *testing.T) {
 		// submit the flow but it is expired
 		u := public.URL + registration.RouteSubmitFlow + "?flow=" + f.ID.String()
 		res, err := client.PostForm(u, url.Values{"method": {"password"}, "csrf_token": {f.CSRFToken}, "password": {"password"}, "traits.email": {"email@ory.sh"}})
-		resBody, err := ioutil.ReadAll(res.Body)
+		resBody, err := io.ReadAll(res.Body)
 		require.NoError(t, err)
 		require.NoError(t, res.Body.Close())
 

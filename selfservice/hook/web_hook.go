@@ -45,7 +45,7 @@ type (
 		Flow           flow.Flow          `json:"flow"`
 		RequestHeaders http.Header        `json:"request_headers"`
 		RequestMethod  string             `json:"request_method"`
-		RequestUrl     string             `json:"request_url"`
+		RequestURL     string             `json:"request_url"`
 		Identity       *identity.Identity `json:"identity,omitempty"`
 	}
 
@@ -81,7 +81,7 @@ func (e *WebHook) ExecuteLoginPreHook(_ http.ResponseWriter, req *http.Request, 
 		Flow:           flow,
 		RequestHeaders: req.Header,
 		RequestMethod:  req.Method,
-		RequestUrl:     req.RequestURI,
+		RequestURL:     x.RequestURL(req).String(),
 	})
 }
 
@@ -91,8 +91,18 @@ func (e *WebHook) ExecuteLoginPostHook(_ http.ResponseWriter, req *http.Request,
 		Flow:           flow,
 		RequestHeaders: req.Header,
 		RequestMethod:  req.Method,
-		RequestUrl:     req.RequestURI,
+		RequestURL:     x.RequestURL(req).String(),
 		Identity:       session.Identity,
+	})
+}
+
+func (e *WebHook) ExecuteVerificationPreHook(_ http.ResponseWriter, req *http.Request, flow *verification.Flow) error {
+	ctx, _ := e.deps.Tracer(req.Context()).Tracer().Start(req.Context(), "selfservice.hook.ExecutePreVerificationHook")
+	return e.execute(ctx, &templateContext{
+		Flow:           flow,
+		RequestHeaders: req.Header,
+		RequestMethod:  req.Method,
+		RequestURL:     x.RequestURL(req).String(),
 	})
 }
 
@@ -102,8 +112,18 @@ func (e *WebHook) ExecutePostVerificationHook(_ http.ResponseWriter, req *http.R
 		Flow:           flow,
 		RequestHeaders: req.Header,
 		RequestMethod:  req.Method,
-		RequestUrl:     req.RequestURI,
+		RequestURL:     x.RequestURL(req).String(),
 		Identity:       id,
+	})
+}
+
+func (e *WebHook) ExecuteRecoveryPreHook(_ http.ResponseWriter, req *http.Request, flow *recovery.Flow) error {
+	ctx, _ := e.deps.Tracer(req.Context()).Tracer().Start(req.Context(), "selfservice.hook.ExecutePreRecoveryHook")
+	return e.execute(ctx, &templateContext{
+		Flow:           flow,
+		RequestHeaders: req.Header,
+		RequestMethod:  req.Method,
+		RequestURL:     x.RequestURL(req).String(),
 	})
 }
 
@@ -113,7 +133,7 @@ func (e *WebHook) ExecutePostRecoveryHook(_ http.ResponseWriter, req *http.Reque
 		Flow:           flow,
 		RequestHeaders: req.Header,
 		RequestMethod:  req.Method,
-		RequestUrl:     req.RequestURI,
+		RequestURL:     x.RequestURL(req).String(),
 		Identity:       session.Identity,
 	})
 }
@@ -124,7 +144,7 @@ func (e *WebHook) ExecuteRegistrationPreHook(_ http.ResponseWriter, req *http.Re
 		Flow:           flow,
 		RequestHeaders: req.Header,
 		RequestMethod:  req.Method,
-		RequestUrl:     req.RequestURI,
+		RequestURL:     x.RequestURL(req).String(),
 	})
 }
 
@@ -134,7 +154,7 @@ func (e *WebHook) ExecutePostRegistrationPrePersistHook(_ http.ResponseWriter, r
 		Flow:           flow,
 		RequestHeaders: req.Header,
 		RequestMethod:  req.Method,
-		RequestUrl:     req.RequestURI,
+		RequestURL:     x.RequestURL(req).String(),
 		Identity:       id,
 	})
 }
@@ -145,8 +165,18 @@ func (e *WebHook) ExecutePostRegistrationPostPersistHook(_ http.ResponseWriter, 
 		Flow:           flow,
 		RequestHeaders: req.Header,
 		RequestMethod:  req.Method,
-		RequestUrl:     req.RequestURI,
+		RequestURL:     x.RequestURL(req).String(),
 		Identity:       session.Identity,
+	})
+}
+
+func (e *WebHook) ExecuteSettingsPreHook(_ http.ResponseWriter, req *http.Request, flow *settings.Flow) error {
+	ctx, _ := e.deps.Tracer(req.Context()).Tracer().Start(req.Context(), "selfservice.hook.ExecutePreSettingsHook")
+	return e.execute(ctx, &templateContext{
+		Flow:           flow,
+		RequestHeaders: req.Header,
+		RequestMethod:  req.Method,
+		RequestURL:     x.RequestURL(req).String(),
 	})
 }
 
@@ -156,7 +186,7 @@ func (e *WebHook) ExecuteSettingsPostPersistHook(_ http.ResponseWriter, req *htt
 		Flow:           flow,
 		RequestHeaders: req.Header,
 		RequestMethod:  req.Method,
-		RequestUrl:     req.RequestURI,
+		RequestURL:     x.RequestURL(req).String(),
 		Identity:       id,
 	})
 }
@@ -165,7 +195,7 @@ func (e *WebHook) execute(ctx context.Context, data *templateContext) error {
 	span := trace.SpanFromContext(ctx)
 	attrs := map[string]string{
 		"webhook.http.method":  data.RequestMethod,
-		"webhook.http.url":     data.RequestUrl,
+		"webhook.http.url":     data.RequestURL,
 		"webhook.http.headers": fmt.Sprintf("%#v", data.RequestHeaders),
 	}
 
@@ -196,7 +226,7 @@ func (e *WebHook) execute(ctx context.Context, data *templateContext) error {
 
 		resp, err := e.deps.HTTPClient(ctx).Do(req)
 		if err != nil {
-			errChan <- err
+			errChan <- errors.WithStack(err)
 			return
 		}
 		defer resp.Body.Close()

@@ -67,7 +67,7 @@ func (s *ErrorHandler) WriteFlowError(
 
 	if e := new(flow.ExpiredError); errors.As(err, &e) {
 		// create new flow because the old one is not valid
-		a, err := FromOldFlow(s.d.Config(r.Context()), s.d.Config(r.Context()).SelfServiceFlowVerificationRequestLifespan(),
+		a, err := FromOldFlow(s.d.Config(), s.d.Config().SelfServiceFlowVerificationRequestLifespan(r.Context()),
 			s.d.GenerateCSRFToken(r), r, s.d.VerificationStrategies(r.Context()), f)
 		if err != nil {
 			// failed to create a new session and redirect to it, handle that error as a new one
@@ -85,10 +85,10 @@ func (s *ErrorHandler) WriteFlowError(
 		//
 		// https://github.com/ory/kratos/issues/2049!!
 		if a.Type == flow.TypeAPI || x.IsJSONRequest(r) {
-			http.Redirect(w, r, urlx.CopyWithQuery(urlx.AppendPaths(s.d.Config(r.Context()).SelfPublicURL(),
+			http.Redirect(w, r, urlx.CopyWithQuery(urlx.AppendPaths(s.d.Config().SelfPublicURL(r.Context()),
 				RouteGetFlow), url.Values{"id": {a.ID.String()}}).String(), http.StatusSeeOther)
 		} else {
-			http.Redirect(w, r, a.AppendTo(s.d.Config(r.Context()).SelfServiceFlowVerificationUI()).String(), http.StatusSeeOther)
+			http.Redirect(w, r, a.AppendTo(s.d.Config().SelfServiceFlowVerificationUI(r.Context())).String(), http.StatusSeeOther)
 		}
 		return
 	}
@@ -105,7 +105,7 @@ func (s *ErrorHandler) WriteFlowError(
 	}
 
 	if f.Type == flow.TypeBrowser && !x.IsJSONRequest(r) {
-		http.Redirect(w, r, f.AppendTo(s.d.Config(r.Context()).SelfServiceFlowVerificationUI()).String(), http.StatusSeeOther)
+		http.Redirect(w, r, f.AppendTo(s.d.Config().SelfServiceFlowVerificationUI(r.Context())).String(), http.StatusSeeOther)
 		return
 	}
 

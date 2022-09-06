@@ -70,6 +70,8 @@ func newLoadTestCmd() *cobra.Command {
 				return err
 			}
 
+			flagConf.ctx = cmd.Context()
+
 			conf, err := configProvider(cmd, flagConf)
 			if err != nil {
 				return err

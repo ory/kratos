@@ -5,6 +5,7 @@ import (
 	"crypto/tls"
 	"encoding/json"
 	"fmt"
+	"net/textproto"
 	"strconv"
 	"time"
 
@@ -27,10 +28,10 @@ type smtpClient struct {
 }
 
 func newSMTP(ctx context.Context, deps Dependencies) *smtpClient {
-	uri := deps.CourierConfig(ctx).CourierSMTPURL()
+	uri := deps.CourierConfig().CourierSMTPURL(ctx)
 	var tlsCertificates []tls.Certificate
-	clientCertPath := deps.CourierConfig(ctx).CourierSMTPClientCertPath()
-	clientKeyPath := deps.CourierConfig(ctx).CourierSMTPClientKeyPath()
+	clientCertPath := deps.CourierConfig().CourierSMTPClientCertPath(ctx)
+	clientKeyPath := deps.CourierConfig().CourierSMTPClientKeyPath(ctx)
 
 	if clientCertPath != "" && clientKeyPath != "" {
 		clientCert, err := tls.LoadX509KeyPair(clientCertPath, clientKeyPath)
@@ -43,7 +44,7 @@ func newSMTP(ctx context.Context, deps Dependencies) *smtpClient {
 		}
 	}
 
-	localName := deps.CourierConfig(ctx).CourierSMTPLocalName()
+	localName := deps.CourierConfig().CourierSMTPLocalName(ctx)
 	password, _ := uri.User.Password()
 	port, _ := strconv.ParseInt(uri.Port(), 10, 0)
 
@@ -153,8 +154,8 @@ func (c *courier) dispatchEmail(ctx context.Context, msg Message) error {
 		return errors.WithStack(herodot.ErrInternalServerError.WithReasonf("Courier tried to deliver an email but %s is not set!", config.ViperKeyCourierSMTPURL))
 	}
 
-	from := c.deps.CourierConfig(ctx).CourierSMTPFrom()
-	fromName := c.deps.CourierConfig(ctx).CourierSMTPFromName()
+	from := c.deps.CourierConfig().CourierSMTPFrom(ctx)
+	fromName := c.deps.CourierConfig().CourierSMTPFromName(ctx)
 
 	gm := gomail.NewMessage()
 	if fromName == "" {
@@ -166,7 +167,7 @@ func (c *courier) dispatchEmail(ctx context.Context, msg Message) error {
 	gm.SetHeader("To", msg.Recipient)
 	gm.SetHeader("Subject", msg.Subject)
 
-	headers := c.deps.CourierConfig(ctx).CourierSMTPHeaders()
+	headers := c.deps.CourierConfig().CourierSMTPHeaders(ctx)
 	for k, v := range headers {
 		gm.SetHeader(k, v)
 	}
@@ -199,6 +200,19 @@ func (c *courier) dispatchEmail(ctx context.Context, msg Message) error {
 			// WithField("email_to", msg.Recipient).
 			WithField("message_from", from).
 			Error("Unable to send email using SMTP connection.")
+
+		var protoErr *textproto.Error
+		if containsProtoErr := errors.As(err, &protoErr); containsProtoErr && protoErr.Code >= 500 {
+			// See https://en.wikipedia.org/wiki/List_of_SMTP_server_return_codes
+			// If the SMTP server responds with 5xx, sending the message should not be retried (without changing something about the request)
+			if err := c.deps.CourierPersister().SetMessageStatus(ctx, msg.ID, MessageStatusAbandoned); err != nil {
+				c.deps.Logger().
+					WithError(err).
+					WithField("message_id", msg.ID).
+					Error(`Unable to reset the retried message's status to "abandoned".`)
+				return err
+			}
+		}
 		return errors.WithStack(err)
 	}
 

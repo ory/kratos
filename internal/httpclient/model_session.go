@@ -27,8 +27,9 @@ type Session struct {
 	AuthenticatorAssuranceLevel *AuthenticatorAssuranceLevel  `json:"authenticator_assurance_level,omitempty"`
 	// The Session Expiry  When this session expires at.
 	ExpiresAt *time.Time `json:"expires_at,omitempty"`
-	Id        string     `json:"id"`
-	Identity  Identity   `json:"identity"`
+	// Session ID
+	Id       string   `json:"id"`
+	Identity Identity `json:"identity"`
 	// The Session Issuance Timestamp  When this session was issued at. Usually equal or close to `authenticated_at`.
 	IssuedAt *time.Time `json:"issued_at,omitempty"`
 }

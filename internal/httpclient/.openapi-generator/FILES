@@ -37,7 +37,7 @@ docs/JsonPatch.md
 docs/MetadataApi.md
 docs/NeedsPrivilegedSessionError.md
 docs/Pagination.md
-docs/RecoveryAddress.md
+docs/RecoveryIdentityAddress.md
 docs/RevokedSessions.md
 docs/SelfServiceBrowserLocationChangeRequiredError.md
 docs/SelfServiceError.md
@@ -128,7 +128,7 @@ model_json_error.go
 model_json_patch.go
 model_needs_privileged_session_error.go
 model_pagination.go
-model_recovery_address.go
+model_recovery_identity_address.go
 model_revoked_sessions.go
 model_self_service_browser_location_change_required_error.go
 model_self_service_error.go

@@ -59,7 +59,7 @@ func createIdentityWithoutWebAuthn(t *testing.T, reg driver.Registry) *identity.
 func createIdentityAndReturnIdentifier(t *testing.T, reg driver.Registry, conf []byte) (*identity.Identity, string) {
 	identifier := x.NewUUID().String() + "@ory.sh"
 	password := x.NewUUID().String()
-	p, err := reg.Hasher().Generate(context.Background(), []byte(password))
+	p, err := reg.Hasher(ctx).Generate(context.Background(), []byte(password))
 	require.NoError(t, err)
 	i := &identity.Identity{
 		Traits: identity.Traits(fmt.Sprintf(`{"subject":"%s"}`, identifier)),
@@ -97,10 +97,10 @@ func createIdentity(t *testing.T, reg driver.Registry) *identity.Identity {
 }
 
 func enableWebAuthn(conf *config.Config) {
-	conf.MustSet(config.ViperKeySelfServiceStrategyConfig+"."+string(identity.CredentialsTypeWebAuthn)+".enabled", true)
-	conf.MustSet(config.ViperKeySelfServiceStrategyConfig+"."+string(identity.CredentialsTypeWebAuthn)+".config.rp.display_name", "Ory Corp")
-	conf.MustSet(config.ViperKeySelfServiceStrategyConfig+"."+string(identity.CredentialsTypeWebAuthn)+".config.rp.id", "localhost")
-	conf.MustSet(config.ViperKeySelfServiceStrategyConfig+"."+string(identity.CredentialsTypeWebAuthn)+".config.rp.origin", "http://localhost:4455")
+	conf.MustSet(ctx, config.ViperKeySelfServiceStrategyConfig+"."+string(identity.CredentialsTypeWebAuthn)+".enabled", true)
+	conf.MustSet(ctx, config.ViperKeySelfServiceStrategyConfig+"."+string(identity.CredentialsTypeWebAuthn)+".config.rp.display_name", "Ory Corp")
+	conf.MustSet(ctx, config.ViperKeySelfServiceStrategyConfig+"."+string(identity.CredentialsTypeWebAuthn)+".config.rp.id", "localhost")
+	conf.MustSet(ctx, config.ViperKeySelfServiceStrategyConfig+"."+string(identity.CredentialsTypeWebAuthn)+".config.rp.origin", "http://localhost:4455")
 }
 
 func ensureReplacement(t *testing.T, index string, ui kratos.UiContainer, expected string) {
@@ -113,10 +113,10 @@ var ctx = context.Background()
 
 func TestCompleteSettings(t *testing.T) {
 	conf, reg := internal.NewFastRegistryWithMocks(t)
-	conf.MustSet(config.ViperKeySelfServiceStrategyConfig+"."+string(identity.CredentialsTypePassword)+".enabled", false)
+	conf.MustSet(ctx, config.ViperKeySelfServiceStrategyConfig+"."+string(identity.CredentialsTypePassword)+".enabled", false)
 	enableWebAuthn(conf)
-	conf.MustSet(config.ViperKeySelfServiceStrategyConfig+".profile.enabled", false)
-	conf.MustSet(config.ViperKeySelfServiceSettingsRequiredAAL, "aal1")
+	conf.MustSet(ctx, config.ViperKeySelfServiceStrategyConfig+".profile.enabled", false)
+	conf.MustSet(ctx, config.ViperKeySelfServiceSettingsRequiredAAL, "aal1")
 
 	router := x.NewRouterPublic()
 	publicTS, _ := testhelpers.NewKratosServerWithRouters(t, reg, router, x.NewRouterAdmin())
@@ -126,10 +126,10 @@ func TestCompleteSettings(t *testing.T) {
 	_ = testhelpers.NewRedirSessionEchoTS(t, reg)
 	loginTS := testhelpers.NewLoginUIFlowEchoServer(t, reg)
 
-	conf.MustSet(config.ViperKeySelfServiceSettingsPrivilegedAuthenticationAfter, "1m")
+	conf.MustSet(ctx, config.ViperKeySelfServiceSettingsPrivilegedAuthenticationAfter, "1m")
 
 	testhelpers.SetDefaultIdentitySchema(conf, "file://./stub/settings.schema.json")
-	conf.MustSet(config.ViperKeySecretsDefault, []string{"not-a-secure-session-key"})
+	conf.MustSet(ctx, config.ViperKeySecretsDefault, []string{"not-a-secure-session-key"})
 
 	t.Run("case=a device is shown which can be unlinked", func(t *testing.T) {
 		id := createIdentity(t, reg)
@@ -273,9 +273,9 @@ func TestCompleteSettings(t *testing.T) {
 	})
 
 	t.Run("case=requires privileged session for register", func(t *testing.T) {
-		conf.MustSet(config.ViperKeySelfServiceSettingsPrivilegedAuthenticationAfter, "1ns")
+		conf.MustSet(ctx, config.ViperKeySelfServiceSettingsPrivilegedAuthenticationAfter, "1ns")
 		t.Cleanup(func() {
-			conf.MustSet(config.ViperKeySelfServiceSettingsPrivilegedAuthenticationAfter, "5m")
+			conf.MustSet(ctx, config.ViperKeySelfServiceSettingsPrivilegedAuthenticationAfter, "5m")
 		})
 
 		run := func(t *testing.T, spa bool) {
@@ -356,9 +356,9 @@ func TestCompleteSettings(t *testing.T) {
 	})
 
 	t.Run("case=fails to remove security key if it is passwordless and the last credential available", func(t *testing.T) {
-		conf.MustSet(config.ViperKeyWebAuthnPasswordless, true)
+		conf.MustSet(ctx, config.ViperKeyWebAuthnPasswordless, true)
 		t.Cleanup(func() {
-			conf.MustSet(config.ViperKeyWebAuthnPasswordless, false)
+			conf.MustSet(ctx, config.ViperKeyWebAuthnPasswordless, false)
 		})
 
 		run := func(t *testing.T, spa bool) {

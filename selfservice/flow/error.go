@@ -1,6 +1,7 @@
 package flow
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 	"net/url"
@@ -116,8 +117,8 @@ func HandleHookError(_ http.ResponseWriter, r *http.Request, f Flow, traits iden
 	return flowError
 }
 
-func GetFlowExpiredRedirectURL(config *config.Config, route, returnTo string) *url.URL {
-	redirectURL := urlx.AppendPaths(config.SelfPublicURL(), route)
+func GetFlowExpiredRedirectURL(ctx context.Context, config *config.Config, route, returnTo string) *url.URL {
+	redirectURL := urlx.AppendPaths(config.SelfPublicURL(ctx), route)
 	if returnTo != "" {
 		redirectURL = urlx.CopyWithQuery(redirectURL, url.Values{"return_to": {returnTo}})
 	}

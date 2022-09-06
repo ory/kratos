@@ -4,34 +4,50 @@ import (
 	"context"
 	"io"
 
+	"github.com/ory/x/servicelocatorx"
+
 	"github.com/ory/kratos/driver/config"
 	"github.com/ory/x/configx"
 	"github.com/ory/x/logrusx"
 )
 
-func New(ctx context.Context, stdOutOrErr io.Writer, opts ...configx.OptionModifier) Registry {
-	r := NewWithoutInit(ctx, stdOutOrErr, opts...)
-
-	if err := r.Init(ctx); err != nil {
-		r.Logger().WithError(err).Fatal("Unable to initialize service registry.")
+func New(ctx context.Context, stdOutOrErr io.Writer, sl *servicelocatorx.Options, dOpts []RegistryOption, opts []configx.OptionModifier) (Registry, error) {
+	r, err := NewWithoutInit(ctx, stdOutOrErr, sl, dOpts, opts)
+	if err != nil {
+		return nil, err
 	}
 
-	return r
+	ctxter := sl.Contextualizer()
+	if err := r.Init(ctx, ctxter); err != nil {
+		r.Logger().WithError(err).Error("Unable to initialize service registry.")
+		return nil, err
+	}
+
+	return r, nil
 }
 
-func NewWithoutInit(ctx context.Context, stdOutOrErr io.Writer, opts ...configx.OptionModifier) Registry {
-	l := logrusx.New("Ory Kratos", config.Version)
-	c, err := config.New(ctx, l, stdOutOrErr, opts...)
-	if err != nil {
-		l.WithError(err).Fatal("Unable to instantiate configuration.")
+func NewWithoutInit(ctx context.Context, stdOutOrErr io.Writer, sl *servicelocatorx.Options, dOpts []RegistryOption, opts []configx.OptionModifier) (Registry, error) {
+	l := sl.Logger()
+	if l == nil {
+		l = logrusx.New("Ory Kratos", config.Version)
 	}
 
-	r, err := NewRegistryFromDSN(c, l)
-	if err != nil {
-		l.WithError(err).Fatal("Unable to instantiate service registry.")
+	c := newOptions(dOpts).config
+	if c == nil {
+		var err error
+		c, err = config.New(ctx, l, stdOutOrErr, opts...)
+		if err != nil {
+			l.WithError(err).Error("Unable to instantiate configuration.")
+			return nil, err
+		}
 	}
 
-	c.Source().SetTracer(ctx, r.Tracer(ctx))
+	r, err := NewRegistryFromDSN(ctx, c, l)
+	if err != nil {
+		l.WithError(err).Error("Unable to instantiate service registry.")
+		return nil, err
+	}
 
-	return r
+	c.SetTracer(ctx, r.Tracer(ctx))
+	return r, nil
 }

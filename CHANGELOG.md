@@ -4,12 +4,13 @@
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 **Table of Contents**
 
-- [ (2022-07-25)](#2022-07-25)
+- [ (2022-09-05)](#2022-09-05)
   - [Breaking Changes](#breaking-changes)
     - [Bug Fixes](#bug-fixes)
     - [Code Refactoring](#code-refactoring)
     - [Documentation](#documentation)
     - [Features](#features)
+    - [Reverts](#reverts)
     - [Tests](#tests)
 - [0.10.1 (2022-06-01)](#0101-2022-06-01)
     - [Bug Fixes](#bug-fixes-1)
@@ -63,7 +64,7 @@
     - [Code Refactoring](#code-refactoring-3)
     - [Documentation](#documentation-6)
     - [Features](#features-4)
-    - [Reverts](#reverts)
+    - [Reverts](#reverts-1)
     - [Tests](#tests-4)
     - [Unclassified](#unclassified-2)
 - [0.7.6-alpha.1 (2021-09-12)](#076-alpha1-2021-09-12)
@@ -263,9 +264,18 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# [](https://github.com/ory/kratos/compare/v0.10.1...v) (2022-07-25)
+# [](https://github.com/ory/kratos/compare/v0.10.1...v) (2022-09-05)
 
 ## Breaking Changes
+
+This patch invalidates recovery flows initiated using the Admin API. Please
+re-generate any admin-generated recovery flows and tokens.
+
+This is a breaking change, as it removes the `courier.message_ttl` config key
+and replaces it with a counter `courier.message_retries`.
+
+Closes https://github.com/ory/kratos/issues/402 Closes
+https://github.com/ory/kratos/issues/1598
 
 SDK Method `getJsonSchema` was renamed to `getIdentitySchema`.
 
@@ -287,6 +297,11 @@ SDK Method `getJsonSchema` was renamed to `getIdentitySchema`.
   ([071c885](https://github.com/ory/kratos/commit/071c885d8231a1a66051002ecfcff5c8e5237085))
 - Bump graceful to deal with http header timeouts
   ([9ce2d26](https://github.com/ory/kratos/commit/9ce2d260338f020e2da077e81464e520883f582b))
+- Cache migration status ([#2631](https://github.com/ory/kratos/issues/2631))
+  ([9020738](https://github.com/ory/kratos/commit/902073836e4dcf6dc87776921e7988d795943718)):
+
+  See https://github.com/ory-corp/cloud/issues/2691
+
 - **cli:** Dry up code ([#2572](https://github.com/ory/kratos/issues/2572))
   ([d1b6b40](https://github.com/ory/kratos/commit/d1b6b40aa9dcc7a3ec9237eec28c4fa55f0b8627))
 - Debugging Docker setup ([#2616](https://github.com/ory/kratos/issues/2616))
@@ -295,6 +310,12 @@ SDK Method `getJsonSchema` was renamed to `getIdentitySchema`.
   ([#2613](https://github.com/ory/kratos/issues/2613))
   ([29aa3b6](https://github.com/ory/kratos/commit/29aa3b6c37b3a173dcfeb02fdad4abc83774bc0b)),
   closes [#2591](https://github.com/ory/kratos/issues/2591)
+- Do not invalidate recovery addr on update
+  ([#2699](https://github.com/ory/kratos/issues/2699))
+  ([1689bb9](https://github.com/ory/kratos/commit/1689bb9f0a52387f699568da6bc773929b1201ae))
+- **docker:** Add missing dependencies
+  ([#2643](https://github.com/ory/kratos/issues/2643))
+  ([c589520](https://github.com/ory/kratos/commit/c589520ff865cefdb287e597b9e858851a778755))
 - **docker:** Update images
   ([b5f80c1](https://github.com/ory/kratos/commit/b5f80c1198e4bb9ed392521daca934548eb21ee6))
 - Duplicate messages in recovery flow
@@ -308,28 +329,65 @@ SDK Method `getJsonSchema` was renamed to `getIdentitySchema`.
   ([#2517](https://github.com/ory/kratos/issues/2517))
   ([c058e23](https://github.com/ory/kratos/commit/c058e23599d994e12b676e87f7282c1f2b2e089c)),
   closes [#2426](https://github.com/ory/kratos/issues/2426)
+- Ignore commata in HIBP response
+  ([0856bd7](https://github.com/ory/kratos/commit/0856bd719b7e06a6d2163bf428ff6513d86376db))
+- Ignore CSRF for session extension on public route
+  ([866b472](https://github.com/ory/kratos/commit/866b472750fba7bf498d359796f24867af7270ad))
+- Ignore error explicitly
+  ([772d596](https://github.com/ory/kratos/commit/772d5968d5a0cb7ac9415cfb2b1e9e86ae3a3131))
+- Improve migration status speed
+  ([#2637](https://github.com/ory/kratos/issues/2637))
+  ([a2e3c41](https://github.com/ory/kratos/commit/a2e3c41f9e513e1de47f6320f6a10acd1fed5eea))
+- Include flow id in use recovery token query
+  ([#2679](https://github.com/ory/kratos/issues/2679))
+  ([d56586b](https://github.com/ory/kratos/commit/d56586b028d79387886f880c1455edb5e4df2209)):
+
+  This PR adds the `selfservice_recovery_flow_id` to the query used when "using"
+  a token in the recovery flow.
+
+  This PR also adds a new enum field for `identity_recovery_tokens` to
+  distinguish the two flows: admin versus self-service recovery.
+
 - Make hydra consistently localhost
   ([70211a1](https://github.com/ory/kratos/commit/70211a17a452d5ced8317822afda3f8e6185cc71))
 - Make ID field in VerifiableAddress struct optional
   ([#2507](https://github.com/ory/kratos/issues/2507))
   ([0844b47](https://github.com/ory/kratos/commit/0844b47c30851c548d46273927afee103cdc0e97)),
   closes [#2506](https://github.com/ory/kratos/issues/2506)
+- Make servicelocator explicit
+  ([4f841da](https://github.com/ory/kratos/commit/4f841dae5423acf3514d50add9e99d28bc339fbb))
+- Make swagger/openapi go 1.19 compatible
+  ([fec6772](https://github.com/ory/kratos/commit/fec6772739129e0d5bb4103c717b1ac60df45aa8))
 - Mark gosec false positives
   ([13eaddb](https://github.com/ory/kratos/commit/13eaddb7babe630750361c6d8f3ffc736898ddec))
 - Metadata should not be required
   ([05afd68](https://github.com/ory/kratos/commit/05afd68381abe58c5e7cdd51cbf0ae409f5f0eb0))
+- Migration error detection
+  ([a115486](https://github.com/ory/kratos/commit/a11548603a4c9b46ba238d2a7ee58fffb7f6d857))
 - Panic
   ([1182278](https://github.com/ory/kratos/commit/11822789c1561b27c2d769c9ea53a81835702f4a))
 - Potentially resolve tx issue in crdb
   ([#2595](https://github.com/ory/kratos/issues/2595))
   ([9d22035](https://github.com/ory/kratos/commit/9d22035695b6a793ac4bc5e2bd0a68b3aeea039c))
+- Re-add service to quickstart
+  ([8c52c33](https://github.com/ory/kratos/commit/8c52c33cf277eda82c9b00b77cd9e03f1e5b4602))
 - Re-issue outdated cookie in /whoami
   ([#2598](https://github.com/ory/kratos/issues/2598))
   ([bf6f27e](https://github.com/ory/kratos/commit/bf6f27e37b8aa342ae002e0a9f227a31e0f7c279)),
   closes [#2562](https://github.com/ory/kratos/issues/2562)
+- Remove jackc rewrites ([#2634](https://github.com/ory/kratos/issues/2634))
+  ([fe00c5b](https://github.com/ory/kratos/commit/fe00c5be72b0cdcc8d462a97aa04c413f758e8e3))
 - Remove newline sign from email subject
   ([#2576](https://github.com/ory/kratos/issues/2576))
   ([ca3d9c2](https://github.com/ory/kratos/commit/ca3d9c24e25ce501e9eae23547f87e1c35b2ea97))
+- Remove rust workaround
+  ([355ec43](https://github.com/ory/kratos/commit/355ec431a304eef236a088571e2414f96c49d862))
+- Replace io/util usage by io and os package
+  ([e2d805b](https://github.com/ory/kratos/commit/e2d805b7e336d202f7cf3c2e0ce586d78ac03cc0))
+- Resolve bug where 500s in web hooks are not properly retried
+  ([e572e81](https://github.com/ory/kratos/commit/e572e8185e17839addabf2a72f4e9921bda8b47a))
+- Respect more http sources for computing request URL
+  ([66a9448](https://github.com/ory/kratos/commit/66a94488eb2fc778a00a5c69916e7958b3535440))
 - Return browser to 'return_to' when logging in without registered account using
   oidc. ([#2496](https://github.com/ory/kratos/issues/2496))
   ([a4194f5](https://github.com/ory/kratos/commit/a4194f58dd4ccecca6698d5b43284d857a70a221)),
@@ -337,8 +395,16 @@ SDK Method `getJsonSchema` was renamed to `getIdentitySchema`.
 - Return empty array not null when there are no sessions
   ([#2548](https://github.com/ory/kratos/issues/2548))
   ([fffba47](https://github.com/ory/kratos/commit/fffba473440fec3118a3951b697d5a0d2d4e30d6))
+- Revert Go 1.19 formatting changes
+  ([7fb085b](https://github.com/ory/kratos/commit/7fb085b6ca4fbfe2978998bea868959966ae193d))
+- Revert removal of required field in uiNodeInputAttributes
+  ([#2623](https://github.com/ory/kratos/issues/2623))
+  ([fee154b](https://github.com/ory/kratos/commit/fee154b28dfb3007f8d20a807cfd6d362c3bd9e7))
 - **sdk:** Make InputAttributes.Type an enum
   ([ff6190f](https://github.com/ory/kratos/commit/ff6190f31f538cf8ed735dfd1bb3b7afcd944c36))
+- **sdk:** Rust compile issue with required enum
+  ([#2619](https://github.com/ory/kratos/issues/2619))
+  ([8800085](https://github.com/ory/kratos/commit/8800085d5bde32367217170d00f7141b7ea46733))
 - Unable to find JSON Schema ID: default
   ([#2393](https://github.com/ory/kratos/issues/2393))
   ([f43396b](https://github.com/ory/kratos/commit/f43396bdc03f89812f026c2a94b0b50100134c23))
@@ -346,9 +412,16 @@ SDK Method `getJsonSchema` was renamed to `getIdentitySchema`.
   ([c36ca53](https://github.com/ory/kratos/commit/c36ca53d4552596e62ec323795c3bf21438d4f26))
 - Use errors instead of fatal for serve cmd
   ([02f7e9c](https://github.com/ory/kratos/commit/02f7e9cfd17ab60c3f38aab3ae977c427b26990d))
+- Use full URL for webhook payload
+  ([72595ad](https://github.com/ory/kratos/commit/72595adcb68a1a2d350c4687328653e28d888847))
+- Wrap migration error in WithStack
+  ([#2636](https://github.com/ory/kratos/issues/2636))
+  ([4ce9f1e](https://github.com/ory/kratos/commit/4ce9f1ebb39cccfd36c4f0fb4a2ae2a17fbc18cc))
 
 ### Code Refactoring
 
+- Hot reloading
+  ([b0d8f38](https://github.com/ory/kratos/commit/b0d8f3853886228a64e82437643a82b3970d6ff7))
 - **sdk:** Rename `getJsonSchema` to `getIdentitySchema`
   ([#2606](https://github.com/ory/kratos/issues/2606))
   ([8dc2ecf](https://github.com/ory/kratos/commit/8dc2ecf4919c9a14ef0bd089677de66ab3cfed92))
@@ -357,6 +430,8 @@ SDK Method `getJsonSchema` was renamed to `getIdentitySchema`.
 
 - Fix badge
   ([dbb7506](https://github.com/ory/kratos/commit/dbb7506ec1a5a2b5bef21cb7838b6c86e755f0f9))
+- Importing credentials supported
+  ([4e8b5cf](https://github.com/ory/kratos/commit/4e8b5cf775c1bfe4c2eb5588bfebe900d1c390eb))
 - **sdk:** Identifier is actually required
   ([#2593](https://github.com/ory/kratos/issues/2593))
   ([f89d279](https://github.com/ory/kratos/commit/f89d2794d8a2122e3f86eeb8aa5d554da32e753e))
@@ -384,10 +459,14 @@ SDK Method `getJsonSchema` was renamed to `getIdentitySchema`.
 - Add identity id to "account disabled" error
   ([#2557](https://github.com/ory/kratos/issues/2557))
   ([f09b1b3](https://github.com/ory/kratos/commit/f09b1b3701c6deda4d25cebb7ccf2e97089be32a))
+- Add missing config entry
+  ([8fe9de6](https://github.com/ory/kratos/commit/8fe9de6d60a381611e07226614241a83b0010126))
 - Add PATCH to adminUpdateIdentity
   ([#2380](https://github.com/ory/kratos/issues/2380))
   ([#2471](https://github.com/ory/kratos/issues/2471))
   ([94a3741](https://github.com/ory/kratos/commit/94a37416011086582e309f62dc2c45ca84083a33))
+- Add pre-hooks to settings, verification, recovery
+  ([c0ceaf3](https://github.com/ory/kratos/commit/c0ceaf31f9327cca903c19b77597cae4587737e6))
 - Allow setting public and admin metadata with the jsonnet data mapper
   ([#2569](https://github.com/ory/kratos/issues/2569))
   ([aa6eb13](https://github.com/ory/kratos/commit/aa6eb13c1c42c11354074553fac9c90ee0a8999e)),
@@ -405,6 +484,25 @@ SDK Method `getJsonSchema` was renamed to `getIdentitySchema`.
   ([e48e9fa](https://github.com/ory/kratos/commit/e48e9fac7ab6a982e0e941bfea1d15569eb53582)),
   closes [#1724](https://github.com/ory/kratos/issues/1724)
   [#1483](https://github.com/ory/kratos/issues/1483)
+- Improve state generation logic
+  ([546ee3d](https://github.com/ory/kratos/commit/546ee3dc900874bc0614923b10697388c4e7676b))
+- Replace message_ttl with static max retry count
+  ([#2638](https://github.com/ory/kratos/issues/2638))
+  ([b341756](https://github.com/ory/kratos/commit/b341756130ee808ddcc003163884f09e3f006d0a)):
+
+  This PR replaces the `courier.message_ttl` configuration option with a
+  `courier.message_retries` option to limit how often the sending of a message
+  is retried before it is marked as `abandoned`.
+
+- Support ip exceptions
+  ([de46c08](https://github.com/ory/kratos/commit/de46c08534dfae6165f6a570cc59829f367c0b57))
+
+### Reverts
+
+- Revert "autogen(openapi): regenerate swagger spec and internal client"
+  ([24eddfb](https://github.com/ory/kratos/commit/24eddfb2adc67e22d34efdc6b6a6723c7be64237)):
+
+  This reverts commit 4159b93ae3f8175cf7ccf77d34e4a7a2d0181d4f.
 
 ### Tests
 
@@ -429,6 +527,8 @@ SDK Method `getJsonSchema` was renamed to `getIdentitySchema`.
 - Parallelize and speed up config tests
   ([#2611](https://github.com/ory/kratos/issues/2611))
   ([d8dea01](https://github.com/ory/kratos/commit/d8dea0138b09d4dff3c30aa14e0e99e423b355fe))
+- Resolve builder regression
+  ([934c30d](https://github.com/ory/kratos/commit/934c30d6064d1e7dfc59f4eef43d096e977c113e))
 - Try and recover from allocated port error
   ([3b5ac5f](https://github.com/ory/kratos/commit/3b5ac5ff03b653191c1979fe1e4e9a4ea3ed7d36))
 

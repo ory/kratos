@@ -17,7 +17,7 @@ import (
 
 // UiNodeInputAttributes InputAttributes represents the attributes of an input node
 type UiNodeInputAttributes struct {
-	// The autocomplete attribute for the input.
+	// The autocomplete attribute for the input. email InputAttributeAutocompleteEmail tel InputAttributeAutocompleteTel url InputAttributeAutocompleteUrl current-password InputAttributeAutocompleteCurrentPassword new-password InputAttributeAutocompleteNewPassword one-time-code InputAttributeAutocompleteOneTimeCode
 	Autocomplete *string `json:"autocomplete,omitempty"`
 	// Sets the input's disabled field to true or false.
 	Disabled bool    `json:"disabled"`
@@ -32,7 +32,7 @@ type UiNodeInputAttributes struct {
 	Pattern *string `json:"pattern,omitempty"`
 	// Mark this input field as required.
 	Required *bool `json:"required,omitempty"`
-	// The input's element type.
+	// The input's element type. text InputAttributeTypeText password InputAttributeTypePassword number InputAttributeTypeNumber checkbox InputAttributeTypeCheckbox hidden InputAttributeTypeHidden email InputAttributeTypeEmail tel InputAttributeTypeTel submit InputAttributeTypeSubmit button InputAttributeTypeButton datetime-local InputAttributeTypeDateTimeLocal date InputAttributeTypeDate url InputAttributeTypeURI
 	Type string `json:"type"`
 	// The input's value.
 	Value interface{} `json:"value,omitempty"`

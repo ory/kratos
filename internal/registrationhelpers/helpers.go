@@ -32,24 +32,26 @@ import (
 )
 
 func setupServer(t *testing.T, reg *driver.RegistryDefault) *httptest.Server {
-	conf := reg.Config(context.Background())
+	conf := reg.Config()
 	router := x.NewRouterPublic()
 	admin := x.NewRouterAdmin()
 
 	publicTS, _ := testhelpers.NewKratosServerWithRouters(t, reg, router, admin)
 	redirTS := testhelpers.NewRedirSessionEchoTS(t, reg)
-	conf.MustSet(config.ViperKeySelfServiceBrowserDefaultReturnTo, redirTS.URL+"/default-return-to")
-	conf.MustSet(config.ViperKeySelfServiceRegistrationAfter+"."+config.DefaultBrowserReturnURL, redirTS.URL+"/registration-return-ts")
+	ctx := context.Background()
+	conf.MustSet(ctx, config.ViperKeySelfServiceBrowserDefaultReturnTo, redirTS.URL+"/default-return-to")
+	conf.MustSet(ctx, config.ViperKeySelfServiceRegistrationAfter+"."+config.DefaultBrowserReturnURL, redirTS.URL+"/registration-return-ts")
 	return publicTS
 }
 
 func ExpectValidationError(t *testing.T, ts *httptest.Server, conf *config.Config, flow string, values func(url.Values)) string {
 	isSPA := flow == "spa"
 	isAPI := flow == "api"
+	ctx := context.Background()
 	return testhelpers.SubmitRegistrationForm(t, isAPI, nil, ts, values,
 		isSPA,
 		testhelpers.ExpectStatusCode(isAPI || isSPA, http.StatusBadRequest, http.StatusOK),
-		testhelpers.ExpectURL(isAPI || isSPA, ts.URL+registration.RouteSubmitFlow, conf.SelfServiceFlowRegistrationUI().String()))
+		testhelpers.ExpectURL(isAPI || isSPA, ts.URL+registration.RouteSubmitFlow, conf.SelfServiceFlowRegistrationUI(ctx).String()))
 }
 
 func CheckFormContent(t *testing.T, body []byte, requiredFields ...string) {
@@ -89,7 +91,7 @@ var skipIfNotEnabled = func(t *testing.T, flows []string, flow string) {
 }
 
 func AssertSchemDoesNotExist(t *testing.T, reg *driver.RegistryDefault, flows []string, payload func(v url.Values)) {
-	conf := reg.Config(context.Background())
+	conf := reg.Config()
 	_ = testhelpers.NewRegistrationUIFlowEchoServer(t, reg)
 	publicTS := setupServer(t, reg)
 	apiClient := testhelpers.NewDebugClient(t)
@@ -152,7 +154,7 @@ func AssertSchemDoesNotExist(t *testing.T, reg *driver.RegistryDefault, flows []
 }
 
 func AssertCSRFFailures(t *testing.T, reg *driver.RegistryDefault, flows []string, payload func(v url.Values)) {
-	conf := reg.Config(context.Background())
+	conf := reg.Config()
 	testhelpers.SetDefaultIdentitySchemaFromRaw(conf, multifieldSchema)
 	_ = testhelpers.NewRegistrationUIFlowEchoServer(t, reg)
 	publicTS := setupServer(t, reg)
@@ -241,7 +243,7 @@ func AssertCSRFFailures(t *testing.T, reg *driver.RegistryDefault, flows []strin
 }
 
 func AssertRegistrationRespectsValidation(t *testing.T, reg *driver.RegistryDefault, flows []string, payload func(url.Values)) {
-	conf := reg.Config(context.Background())
+	conf := reg.Config()
 	testhelpers.SetDefaultIdentitySchemaFromRaw(conf, multifieldSchema)
 	_ = testhelpers.NewRegistrationUIFlowEchoServer(t, reg)
 	publicTS := setupServer(t, reg)
@@ -271,6 +273,7 @@ func AssertRegistrationRespectsValidation(t *testing.T, reg *driver.RegistryDefa
 }
 
 func AssertCommonErrorCases(t *testing.T, reg *driver.RegistryDefault, flows []string) {
+	ctx := context.Background()
 	conf, reg := internal.NewFastRegistryWithMocks(t)
 	testhelpers.SetDefaultIdentitySchemaFromRaw(conf, basicSchema)
 	uiTS := testhelpers.NewRegistrationUIFlowEchoServer(t, reg)
@@ -286,7 +289,7 @@ func AssertCommonErrorCases(t *testing.T, reg *driver.RegistryDefault, flows []s
 			require.NoError(t, err)
 			defer res.Body.Close()
 			assert.EqualValues(t, http.StatusOK, res.StatusCode, "%+v", res.Request)
-			assert.Contains(t, res.Request.URL.String(), conf.Source().String(config.ViperKeySelfServiceBrowserDefaultReturnTo))
+			assert.Contains(t, res.Request.URL.String(), conf.GetProvider(ctx).String(config.ViperKeySelfServiceBrowserDefaultReturnTo))
 		})
 
 		t.Run("type=api", func(t *testing.T) {
@@ -335,7 +338,7 @@ func AssertCommonErrorCases(t *testing.T, reg *driver.RegistryDefault, flows []s
 			require.NoError(t, err)
 			defer res.Body.Close()
 			assert.EqualValues(t, http.StatusOK, res.StatusCode, "%+v", res.Request)
-			assert.Contains(t, res.Request.URL.String(), conf.Source().String(config.ViperKeySelfServiceBrowserDefaultReturnTo))
+			assert.Contains(t, res.Request.URL.String(), conf.GetProvider(ctx).String(config.ViperKeySelfServiceBrowserDefaultReturnTo))
 		})
 
 		t.Run("type=api", func(t *testing.T) {
@@ -437,9 +440,9 @@ func AssertCommonErrorCases(t *testing.T, reg *driver.RegistryDefault, flows []s
 	})
 
 	t.Run("case=should return an error because the request is expired", func(t *testing.T) {
-		conf.MustSet(config.ViperKeySelfServiceRegistrationRequestLifespan, "500ms")
+		conf.MustSet(ctx, config.ViperKeySelfServiceRegistrationRequestLifespan, "500ms")
 		t.Cleanup(func() {
-			conf.MustSet(config.ViperKeySelfServiceRegistrationRequestLifespan, "10m")
+			conf.MustSet(ctx, config.ViperKeySelfServiceRegistrationRequestLifespan, "10m")
 		})
 
 		t.Run("type=api", func(t *testing.T) {

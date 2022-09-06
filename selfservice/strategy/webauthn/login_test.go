@@ -71,7 +71,7 @@ var loginFixtureSuccessEmail = gjson.GetBytes(loginFixtureSuccessIdentity, "trai
 
 func TestCompleteLogin(t *testing.T) {
 	conf, reg := internal.NewFastRegistryWithMocks(t)
-	conf.MustSet(config.ViperKeySelfServiceStrategyConfig+"."+string(identity.CredentialsTypePassword)+".enabled", false)
+	conf.MustSet(ctx, config.ViperKeySelfServiceStrategyConfig+"."+string(identity.CredentialsTypePassword)+".enabled", false)
 	enableWebAuthn(conf)
 
 	router := x.NewRouterPublic()
@@ -82,11 +82,11 @@ func TestCompleteLogin(t *testing.T) {
 	redirTS := testhelpers.NewRedirSessionEchoTS(t, reg)
 
 	// Overwrite these two to make it more explicit when tests fail
-	conf.MustSet(config.ViperKeySelfServiceErrorUI, errTS.URL+"/error-ts")
-	conf.MustSet(config.ViperKeySelfServiceLoginUI, uiTS.URL+"/login-ts")
+	conf.MustSet(ctx, config.ViperKeySelfServiceErrorUI, errTS.URL+"/error-ts")
+	conf.MustSet(ctx, config.ViperKeySelfServiceLoginUI, uiTS.URL+"/login-ts")
 
 	testhelpers.SetDefaultIdentitySchema(conf, "file://./stub/login.schema.json")
-	conf.MustSet(config.ViperKeySecretsDefault, []string{"not-a-secure-session-key"})
+	conf.MustSet(ctx, config.ViperKeySecretsDefault, []string{"not-a-secure-session-key"})
 
 	checkURL := func(t *testing.T, shouldRedirect bool, res *http.Response) {
 		if shouldRedirect {
@@ -155,9 +155,9 @@ func TestCompleteLogin(t *testing.T) {
 	}
 
 	t.Run("flow=refresh", func(t *testing.T) {
-		conf.MustSet(config.ViperKeySessionWhoAmIAAL, "aal1")
+		conf.MustSet(ctx, config.ViperKeySessionWhoAmIAAL, "aal1")
 		t.Cleanup(func() {
-			conf.MustSet(config.ViperKeySessionWhoAmIAAL, nil)
+			conf.MustSet(ctx, config.ViperKeySessionWhoAmIAAL, nil)
 		})
 
 		run := func(t *testing.T, id *identity.Identity, context, response []byte, isSPA bool, expectedAAL identity.AuthenticatorAssuranceLevel) {
@@ -196,7 +196,7 @@ func TestCompleteLogin(t *testing.T) {
 				true,
 				false,
 			} {
-				conf.MustSet(config.ViperKeyWebAuthnPasswordless, e)
+				conf.MustSet(ctx, config.ViperKeyWebAuthnPasswordless, e)
 				expectedAAL := identity.AuthenticatorAssuranceLevel1
 				if !e {
 					// If passwordless is disabled, using WebAuthn means that we have a second factor enabled.
@@ -256,7 +256,7 @@ func TestCompleteLogin(t *testing.T) {
 
 		t.Run("case=no webauth credentials", func(t *testing.T) {
 			for _, e := range []bool{true, false} {
-				conf.MustSet(config.ViperKeyWebAuthnPasswordless, e)
+				conf.MustSet(ctx, config.ViperKeyWebAuthnPasswordless, e)
 				t.Run(fmt.Sprintf("passwordless=%v", e), func(t *testing.T) {
 					for _, f := range []string{"browser", "spa"} {
 						t.Run(f, func(t *testing.T) {
@@ -279,9 +279,9 @@ func TestCompleteLogin(t *testing.T) {
 	})
 
 	t.Run("flow=passwordless", func(t *testing.T) {
-		conf.MustSet(config.ViperKeyWebAuthnPasswordless, true)
+		conf.MustSet(ctx, config.ViperKeyWebAuthnPasswordless, true)
 		t.Cleanup(func() {
-			conf.MustSet(config.ViperKeyWebAuthnPasswordless, false)
+			conf.MustSet(ctx, config.ViperKeyWebAuthnPasswordless, false)
 		})
 
 		t.Run("case=webauthn button exists", func(t *testing.T) {

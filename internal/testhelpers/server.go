@@ -32,17 +32,18 @@ func NewKratosServerWithCSRFAndRouters(t *testing.T, reg driver.Registry) (publi
 	ran.UseHandler(ra)
 	public = httptest.NewServer(x.NewTestCSRFHandler(rp, reg))
 	admin = httptest.NewServer(ran)
+	ctx := context.Background()
 
 	// Workaround for:
 	// - https://github.com/golang/go/issues/12610
 	// - https://github.com/golang/go/issues/31054
 	public.URL = strings.Replace(public.URL, "127.0.0.1", "localhost", -1)
 
-	if len(reg.Config(context.Background()).Source().String(config.ViperKeySelfServiceLoginUI)) == 0 {
-		reg.Config(context.Background()).MustSet(config.ViperKeySelfServiceLoginUI, "http://NewKratosServerWithCSRF/you-forgot-to-set-me/login")
+	if len(reg.Config().GetProvider(ctx).String(config.ViperKeySelfServiceLoginUI)) == 0 {
+		reg.Config().MustSet(ctx, config.ViperKeySelfServiceLoginUI, "http://NewKratosServerWithCSRF/you-forgot-to-set-me/login")
 	}
-	reg.Config(context.Background()).MustSet(config.ViperKeyPublicBaseURL, public.URL)
-	reg.Config(context.Background()).MustSet(config.ViperKeyAdminBaseURL, admin.URL)
+	reg.Config().MustSet(ctx, config.ViperKeyPublicBaseURL, public.URL)
+	reg.Config().MustSet(ctx, config.ViperKeyAdminBaseURL, admin.URL)
 
 	reg.RegisterRoutes(context.Background(), rp, ra)
 
@@ -63,11 +64,12 @@ func NewKratosServerWithRouters(t *testing.T, reg driver.Registry, rp *x.RouterP
 }
 
 func InitKratosServers(t *testing.T, reg driver.Registry, public, admin *httptest.Server) {
-	if len(reg.Config(context.Background()).Source().String(config.ViperKeySelfServiceLoginUI)) == 0 {
-		reg.Config(context.Background()).MustSet(config.ViperKeySelfServiceLoginUI, "http://NewKratosServerWithRouters/you-forgot-to-set-me/login")
+	ctx := context.Background()
+	if len(reg.Config().GetProvider(ctx).String(config.ViperKeySelfServiceLoginUI)) == 0 {
+		reg.Config().MustSet(ctx, config.ViperKeySelfServiceLoginUI, "http://NewKratosServerWithRouters/you-forgot-to-set-me/login")
 	}
-	reg.Config(context.Background()).MustSet(config.ViperKeyPublicBaseURL, public.URL)
-	reg.Config(context.Background()).MustSet(config.ViperKeyAdminBaseURL, admin.URL)
+	reg.Config().MustSet(ctx, config.ViperKeyPublicBaseURL, public.URL)
+	reg.Config().MustSet(ctx, config.ViperKeyAdminBaseURL, admin.URL)
 
 	reg.RegisterRoutes(context.Background(), public.Config.Handler.(*x.RouterPublic), admin.Config.Handler.(*x.RouterAdmin))
 }

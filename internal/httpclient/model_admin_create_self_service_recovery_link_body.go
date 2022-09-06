@@ -18,8 +18,9 @@ import (
 // AdminCreateSelfServiceRecoveryLinkBody struct for AdminCreateSelfServiceRecoveryLinkBody
 type AdminCreateSelfServiceRecoveryLinkBody struct {
 	// Link Expires In  The recovery link will expire at that point in time. Defaults to the configuration value of `selfservice.flows.recovery.request_lifespan`.
-	ExpiresIn  *string `json:"expires_in,omitempty"`
-	IdentityId string  `json:"identity_id"`
+	ExpiresIn *string `json:"expires_in,omitempty"`
+	// Identity to Recover  The identity's ID you wish to recover.
+	IdentityId string `json:"identity_id"`
 }
 
 // NewAdminCreateSelfServiceRecoveryLinkBody instantiates a new AdminCreateSelfServiceRecoveryLinkBody object

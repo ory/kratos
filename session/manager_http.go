@@ -44,7 +44,7 @@ func NewManagerHTTP(r managerHTTPDependencies) *ManagerHTTP {
 	return &ManagerHTTP{
 		r: r,
 		cookieName: func(ctx context.Context) string {
-			return r.Config(ctx).SessionName()
+			return r.Config().SessionName(ctx)
 		},
 	}
 }
@@ -91,15 +91,15 @@ func (s *ManagerHTTP) IssueCookie(ctx context.Context, w http.ResponseWriter, r 
 		return errors.WithStack(err)
 	}
 
-	if s.r.Config(ctx).SessionPath() != "" {
-		cookie.Options.Path = s.r.Config(ctx).SessionPath()
+	if s.r.Config().SessionPath(ctx) != "" {
+		cookie.Options.Path = s.r.Config().SessionPath(ctx)
 	}
 
-	if domain := s.r.Config(ctx).SessionDomain(); domain != "" {
+	if domain := s.r.Config().SessionDomain(ctx); domain != "" {
 		cookie.Options.Domain = domain
 	}
 
-	if alias := s.r.Config(ctx).SelfPublicURL(); s.r.Config(ctx).SelfPublicURL().String() != alias.String() {
+	if alias := s.r.Config().SelfPublicURL(ctx); s.r.Config().SelfPublicURL(ctx).String() != alias.String() {
 		// If a domain alias is detected use that instead.
 		cookie.Options.Domain = alias.Hostname()
 		cookie.Options.Path = alias.Path
@@ -114,14 +114,14 @@ func (s *ManagerHTTP) IssueCookie(ctx context.Context, w http.ResponseWriter, r 
 		_ = s.r.CSRFHandler().RegenerateToken(w, r)
 	}
 
-	if s.r.Config(ctx).SessionSameSiteMode() != 0 {
-		cookie.Options.SameSite = s.r.Config(ctx).SessionSameSiteMode()
+	if s.r.Config().SessionSameSiteMode(ctx) != 0 {
+		cookie.Options.SameSite = s.r.Config().SessionSameSiteMode(ctx)
 	}
 
 	cookie.Options.MaxAge = 0
-	if s.r.Config(ctx).SessionPersistentCookie() {
+	if s.r.Config().SessionPersistentCookie(ctx) {
 		if session.ExpiresAt.IsZero() {
-			cookie.Options.MaxAge = int(s.r.Config(ctx).SessionLifespan().Seconds())
+			cookie.Options.MaxAge = int(s.r.Config().SessionLifespan(ctx).Seconds())
 		} else {
 			cookie.Options.MaxAge = int(time.Until(session.ExpiresAt).Seconds())
 		}
@@ -254,7 +254,7 @@ func (s *ManagerHTTP) DoesSessionSatisfy(r *http.Request, sess *Session, request
 		}
 
 		return NewErrAALNotSatisfied(
-			urlx.CopyWithQuery(urlx.AppendPaths(s.r.Config(r.Context()).SelfPublicURL(), "/self-service/login/browser"), url.Values{"aal": {"aal2"}}).String())
+			urlx.CopyWithQuery(urlx.AppendPaths(s.r.Config().SelfPublicURL(r.Context()), "/self-service/login/browser"), url.Values{"aal": {"aal2"}}).String())
 	}
 	return errors.Errorf("requested unknown aal: %s", requestedAAL)
 }
