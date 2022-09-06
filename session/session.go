@@ -148,10 +148,10 @@ func (s *Session) SetAuthenticatorAssuranceLevel() {
 	}
 }
 
-func NewActiveSession(ctx context.Context, i *identity.Identity, c lifespanProvider, authenticatedAt time.Time, completedLoginFor identity.CredentialsType, completedLoginAAL identity.AuthenticatorAssuranceLevel) (*Session, error) {
+func NewActiveSession(ctx context.Context, requestHeaders map[string][]string, i *identity.Identity, c lifespanProvider, authenticatedAt time.Time, completedLoginFor identity.CredentialsType, completedLoginAAL identity.AuthenticatorAssuranceLevel) (*Session, error) {
 	s := NewInactiveSession()
 	s.CompletedLoginFor(completedLoginFor, completedLoginAAL)
-	if err := s.Activate(ctx, i, c, authenticatedAt); err != nil {
+	if err := s.Activate(ctx, requestHeaders, i, c, authenticatedAt); err != nil {
 		return nil, err
 	}
 	return s, nil
@@ -167,7 +167,7 @@ func NewInactiveSession() *Session {
 	}
 }
 
-func (s *Session) Activate(ctx context.Context, i *identity.Identity, c lifespanProvider, authenticatedAt time.Time) error {
+func (s *Session) Activate(ctx context.Context, requestHeaders map[string][]string, i *identity.Identity, c lifespanProvider, authenticatedAt time.Time) error {
 	if i != nil && !i.IsActive() {
 		return ErrIdentityDisabled.WithDetail("identity_id", i.ID)
 	}
