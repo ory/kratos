@@ -30,7 +30,9 @@ func TestGuessForcedLoginIdentifier(t *testing.T) {
 	i.Credentials[identity.CredentialsTypePassword] = ic
 	require.NoError(t, reg.IdentityManager().Create(context.Background(), i))
 
-	sess, err := session.NewActiveSession(ctx, i, conf, time.Now(), identity.CredentialsTypePassword, identity.AuthenticatorAssuranceLevel1)
+	headers := make(map[string][]string, 0)
+
+	sess, err := session.NewActiveSession(ctx, headers, i, conf, time.Now(), identity.CredentialsTypePassword, identity.AuthenticatorAssuranceLevel1)
 	require.NoError(t, err)
 	reg.SessionPersister().UpsertSession(context.Background(), sess)
 

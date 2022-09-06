@@ -39,7 +39,7 @@ func MockSetSession(t *testing.T, reg mockDeps, conf *config.Config) httprouter.
 
 func MockSetSessionWithIdentity(t *testing.T, reg mockDeps, conf *config.Config, i *identity.Identity) httprouter.Handle {
 	return func(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
-		activeSession, _ := session.NewActiveSession(r.Context(), i, conf, time.Now().UTC(), identity.CredentialsTypePassword, identity.AuthenticatorAssuranceLevel1)
+		activeSession, _ := session.NewActiveSession(r.Context(), r.Header, i, conf, time.Now().UTC(), identity.CredentialsTypePassword, identity.AuthenticatorAssuranceLevel1)
 		if aal := r.URL.Query().Get("set_aal"); len(aal) > 0 {
 			activeSession.AuthenticatorAssuranceLevel = identity.AuthenticatorAssuranceLevel(aal)
 		}
