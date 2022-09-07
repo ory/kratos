@@ -266,6 +266,43 @@ func TestHandler(t *testing.T) {
 
 			require.NoError(t, hash.Compare(ctx, []byte("123456"), []byte(gjson.GetBytes(actual.Credentials[identity.CredentialsTypePassword].Config, "hashed_password").String())))
 		})
+
+		t.Run("with totp credentials", func(t *testing.T) {
+			res := send(t, adminTS, "POST", "/identities", http.StatusCreated, identity.AdminCreateIdentityBody{Traits: []byte(`{"email": "import-7@ory.sh"}`),
+				Credentials: &identity.AdminIdentityImportCredentials{
+					TOTP: &identity.AdminIdentityImportCredentialsTOTP{
+						Config: identity.AdminIdentityImportCredentialsTOTPConfig{
+							TOTPURL: "otpauth://totp/ory:import-7@ory.sh?secret=JBSWY3DPEHPK3PXP&issuer=ory",
+						},
+					},
+				},
+			})
+
+			actual, err := reg.PrivilegedIdentityPool().GetIdentityConfidential(ctx, uuid.FromStringOrNil(res.Get("id").String()))
+			require.NoError(t, err)
+
+			snapshotx.SnapshotTExceptMatchingKeys(t, identity.WithCredentialsAndAdminMetadataInJSON(*actual), ignoreDefault)
+		})
+
+		t.Run("with lookup credentials", func(t *testing.T) {
+			res := send(t, adminTS, "POST", "/identities", http.StatusCreated, identity.AdminCreateIdentityBody{Traits: []byte(`{"email": "import-8@ory.sh"}`),
+				Credentials: &identity.AdminIdentityImportCredentials{
+					Lookup: &identity.AdminIdentityImportCredentialsLookup{
+						Config: identity.AdminIdentityImportCredentialsLookupConfig{
+							LookupSecrets: []identity.AdminIdentityImportCredentialsLookupSecret{
+								{Code: "foo"},
+								{Code: "bar", UsedAt: sqlxx.NullTime(time.Date(1999, time.January, 1, 0, 0, 0, 0, time.UTC))},
+							},
+						},
+					},
+				},
+			})
+
+			actual, err := reg.PrivilegedIdentityPool().GetIdentityConfidential(ctx, uuid.FromStringOrNil(res.Get("id").String()))
+			require.NoError(t, err)
+
+			snapshotx.SnapshotTExceptMatchingKeys(t, identity.WithCredentialsAndAdminMetadataInJSON(*actual), ignoreDefault)
+		})
 	})
 
 	t.Run("case=unable to set ID itself", func(t *testing.T) {

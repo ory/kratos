@@ -263,6 +263,12 @@ type AdminIdentityImportCredentials struct {
 
 	// OIDC if set will import an OIDC credential.
 	OIDC *AdminIdentityImportCredentialsOIDC `json:"oidc"`
+
+	// TOTP if set will import TOTP credential.
+	TOTP *AdminIdentityImportCredentialsTOTP `json:"totp"`
+
+	// Lookup if set will import lookup_secret credential.
+	Lookup *AdminIdentityImportCredentialsLookup `json:"lookup_secret"`
 }
 
 // swagger:model adminCreateIdentityImportCredentialsPassword
@@ -305,6 +311,44 @@ type AdminCreateIdentityImportCredentialsOidcProvider struct {
 	//
 	// required: true
 	Provider string `json:"provider"`
+}
+
+// swagger:model AdminIdentityImportCredentialsTOTP
+type AdminIdentityImportCredentialsTOTP struct {
+	// Configuration options for the import.
+	Config AdminIdentityImportCredentialsTOTPConfig `json:"config"`
+}
+
+// swagger:model AdminIdentityImportCredentialsTOTPConfig
+type AdminIdentityImportCredentialsTOTPConfig struct {
+	// TOTPURL is the TOTP URL
+	//
+	// For more details see: https://github.com/google/google-authenticator/wiki/Key-Uri-Format
+	//
+	// required: true
+	TOTPURL string `json:"totp_url"`
+}
+
+// swagger:model AdminIdentityImportCredentialsLookup
+type AdminIdentityImportCredentialsLookup struct {
+	// Configuration options for the import.
+	Config AdminIdentityImportCredentialsLookupConfig `json:"config"`
+}
+
+// swagger:model AdminIdentityImportCredentialsLookupConfig
+type AdminIdentityImportCredentialsLookupConfig struct {
+	LookupSecrets []AdminIdentityImportCredentialsLookupSecret `json:"lookup_secrets"`
+}
+
+// swagger:model AdminIdentityImportCredentialsLookupSecret
+type AdminIdentityImportCredentialsLookupSecret struct {
+	// Code is a recovery code.
+	//
+	// required: true
+	Code string `json:"code"`
+
+	// UsedAt indicates whether and when a recovery code was used.
+	UsedAt sqlxx.NullTime `json:"used_at,omitempty"`
 }
 
 // swagger:route POST /admin/identities v0alpha2 adminCreateIdentity

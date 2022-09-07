@@ -42,14 +42,14 @@ func createIdentityWithoutLookup(t *testing.T, reg driver.Registry) *identity.Id
 	return id
 }
 
-func createIdentity(t *testing.T, reg driver.Registry) (*identity.Identity, []lookup.RecoveryCode) {
-	codes := make([]lookup.RecoveryCode, 12)
+func createIdentity(t *testing.T, reg driver.Registry) (*identity.Identity, []lookup.LookupSecret) {
+	codes := make([]lookup.LookupSecret, 12)
 	for k := range codes {
 		var usedAt sqlxx.NullTime
 		if k%3 == 1 {
 			usedAt = sqlxx.NullTime(time.Unix(int64(1629199958+k), 0))
 		}
-		codes[k] = lookup.RecoveryCode{Code: fmt.Sprintf("key-%d", k), UsedAt: usedAt}
+		codes[k] = lookup.LookupSecret{Code: fmt.Sprintf("key-%d", k), UsedAt: usedAt}
 	}
 	identifier := x.NewUUID().String() + "@ory.sh"
 	password := x.NewUUID().String()
@@ -66,7 +66,7 @@ func createIdentity(t *testing.T, reg driver.Registry) (*identity.Identity, []lo
 		},
 	}
 
-	rc, err := json.Marshal(&lookup.CredentialsConfig{RecoveryCodes: codes})
+	rc, err := json.Marshal(&lookup.CredentialsConfig{LookupSecrets: codes})
 	require.NoError(t, err)
 	require.NoError(t, reg.PrivilegedIdentityPool().CreateIdentity(context.Background(), i))
 	i.Credentials = map[identity.CredentialsType]identity.Credentials{
@@ -213,7 +213,7 @@ func TestCompleteSettings(t *testing.T) {
 		checkIdentity := func(t *testing.T) {
 			_, cred, err := reg.PrivilegedIdentityPool().FindByCredentialsIdentifier(context.Background(), identity.CredentialsTypeLookup, id.ID.String())
 			require.NoError(t, err)
-			assertx.EqualAsJSON(t, codes, json.RawMessage(gjson.GetBytes(cred.Config, "recovery_codes").Raw))
+			assertx.EqualAsJSON(t, codes, json.RawMessage(gjson.GetBytes(cred.Config, "lookup_secrets").Raw))
 		}
 
 		for _, tc := range []struct {
@@ -279,7 +279,7 @@ func TestCompleteSettings(t *testing.T) {
 		checkIdentity := func(t *testing.T) {
 			_, cred, err := reg.PrivilegedIdentityPool().FindByCredentialsIdentifier(context.Background(), identity.CredentialsTypeLookup, id.ID.String())
 			require.NoError(t, err)
-			assertx.EqualAsJSON(t, codes, json.RawMessage(gjson.GetBytes(cred.Config, "recovery_codes").Raw))
+			assertx.EqualAsJSON(t, codes, json.RawMessage(gjson.GetBytes(cred.Config, "lookup_secrets").Raw))
 		}
 
 		t.Run("type=api", func(t *testing.T) {
@@ -314,7 +314,7 @@ func TestCompleteSettings(t *testing.T) {
 		checkIdentity := func(t *testing.T) {
 			_, cred, err := reg.PrivilegedIdentityPool().FindByCredentialsIdentifier(context.Background(), identity.CredentialsTypeLookup, id.ID.String())
 			require.NoError(t, err)
-			assertx.EqualAsJSON(t, codes, json.RawMessage(gjson.GetBytes(cred.Config, "recovery_codes").Raw))
+			assertx.EqualAsJSON(t, codes, json.RawMessage(gjson.GetBytes(cred.Config, "lookup_secrets").Raw))
 		}
 
 		t.Run("type=api", func(t *testing.T) {
@@ -376,8 +376,8 @@ func TestCompleteSettings(t *testing.T) {
 				checkIdentity := func(t *testing.T, id *identity.Identity, f *kratos.SelfServiceSettingsFlow) {
 					_, cred, err := reg.PrivilegedIdentityPool().FindByCredentialsIdentifier(context.Background(), identity.CredentialsTypeLookup, id.ID.String())
 					require.NoError(t, err)
-					assert.NotContains(t, gjson.GetBytes(cred.Config, "recovery_codes").Raw, "key-1")
-					assert.NotContains(t, gjson.GetBytes(cred.Config, "recovery_codes").Raw, "key-0")
+					assert.NotContains(t, gjson.GetBytes(cred.Config, "lookup_secrets").Raw, "key-1")
+					assert.NotContains(t, gjson.GetBytes(cred.Config, "lookup_secrets").Raw, "key-0")
 
 					actualFlow, err := reg.SettingsFlowPersister().GetSettingsFlow(context.Background(), uuid.FromStringOrNil(f.Id))
 					require.NoError(t, err)

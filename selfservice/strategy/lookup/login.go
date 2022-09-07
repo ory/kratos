@@ -119,10 +119,10 @@ func (s *Strategy) Login(w http.ResponseWriter, r *http.Request, f *login.Flow, 
 	}
 
 	var found bool
-	for k, rc := range o.RecoveryCodes {
+	for k, rc := range o.LookupSecrets {
 		if rc.Code == p.Code {
 			if time.Time(rc.UsedAt).IsZero() {
-				o.RecoveryCodes[k].UsedAt = sqlxx.NullTime(time.Now().UTC().Round(time.Second))
+				o.LookupSecrets[k].UsedAt = sqlxx.NullTime(time.Now().UTC().Round(time.Second))
 				found = true
 			} else {
 				return nil, s.handleLoginError(r, f, errors.WithStack(schema.NewLookupAlreadyUsed()))

@@ -12,7 +12,7 @@ import (
 )
 
 func TestToNode(t *testing.T) {
-	c := lookup.CredentialsConfig{RecoveryCodes: []lookup.RecoveryCode{
+	c := lookup.CredentialsConfig{LookupSecrets: []lookup.LookupSecret{
 		{Code: "foo", UsedAt: sqlxx.NullTime(time.Unix(1629199958, 0).UTC())},
 		{Code: "bar"},
 		{Code: "baz"},

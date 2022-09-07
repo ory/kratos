@@ -38,7 +38,7 @@ func TestCountActiveFirstFactorCredentials(t *testing.T) {
 			{
 				in: identity.CredentialsCollection{{
 					Type:   strategy.ID(),
-					Config: []byte(`{"recovery_codes": []}`),
+					Config: []byte(`{"lookup_secrets": []}`),
 				}},
 				expected: 0,
 			},
@@ -46,7 +46,7 @@ func TestCountActiveFirstFactorCredentials(t *testing.T) {
 				in: identity.CredentialsCollection{{
 					Type:        strategy.ID(),
 					Identifiers: []string{"foo"},
-					Config:      []byte(`{"recovery_codes": [{}]}`),
+					Config:      []byte(`{"lookup_secrets": [{}]}`),
 				}},
 				expected: 1,
 			},

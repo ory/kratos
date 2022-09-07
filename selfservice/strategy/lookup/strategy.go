@@ -85,7 +85,7 @@ func (s *Strategy) CountActiveMultiFactorCredentials(cc map[identity.Credentials
 				return 0, errors.WithStack(err)
 			}
 
-			if len(conf.RecoveryCodes) > 0 {
+			if len(conf.LookupSecrets) > 0 {
 				count++
 			}
 		}

@@ -28,6 +28,18 @@ func (h *Handler) importCredentials(ctx context.Context, i *Identity, creds *Adm
 		}
 	}
 
+	if creds.TOTP != nil {
+		if err := h.importTOTPCredentials(ctx, i, creds.TOTP); err != nil {
+			return err
+		}
+	}
+
+	if creds.Lookup != nil {
+		if err := h.importLookupCredentials(ctx, i, creds.Lookup); err != nil {
+			return err
+		}
+	}
+
 	return nil
 }
 
@@ -85,4 +97,36 @@ func (h *Handler) importOIDCCredentials(_ context.Context, i *Identity, creds *A
 		})
 	}
 	return i.SetCredentialsWithConfig(CredentialsTypeOIDC, *c, &target)
+}
+
+func (h *Handler) importTOTPCredentials(_ context.Context, i *Identity, creds *AdminIdentityImportCredentialsTOTP) error {
+	return i.SetCredentialsWithConfig(CredentialsTypeTOTP, Credentials{Identifiers: []string{i.ID.String()}}, CredentialsTOTP{TOTPURL: creds.Config.TOTPURL})
+}
+
+func (h *Handler) importLookupCredentials(_ context.Context, i *Identity, creds *AdminIdentityImportCredentialsLookup) error {
+	var target CredentialsLookupSecrets
+	c, ok := i.GetCredentials(CredentialsTypeLookup)
+	if !ok {
+		var lookupSecrets []CredentialsLookupSecret
+		for _, s := range creds.Config.LookupSecrets {
+			lookupSecrets = append(lookupSecrets, CredentialsLookupSecret(s))
+		}
+
+		return i.SetCredentialsWithConfig(
+			CredentialsTypeLookup,
+			Credentials{Identifiers: []string{i.ID.String()}},
+			CredentialsLookupSecrets{LookupSecrets: lookupSecrets},
+		)
+	}
+
+	if err := json.Unmarshal(c.Config, &target); err != nil {
+		return errors.WithStack(x.PseudoPanic.WithWrap(err))
+	}
+
+	c.Identifiers = []string{i.ID.String()}
+	for _, s := range creds.Config.LookupSecrets {
+		target.LookupSecrets = append(target.LookupSecrets, CredentialsLookupSecret(s))
+	}
+
+	return i.SetCredentialsWithConfig(CredentialsTypeLookup, *c, &target)
 }

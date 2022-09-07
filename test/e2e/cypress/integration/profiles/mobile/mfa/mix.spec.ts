@@ -42,9 +42,9 @@ context('Mobile Profile', () => {
 
         // Set up backup code
         cy.get('*[data-testid="field/lookup_secret_regenerate/true"]').click()
-        let recoveryCodes
+        let lookupSecrets
         cy.get('*[data-testid="field/lookup_secret_codes/text"]').then(($e) => {
-          recoveryCodes = $e.text().trim().split(', ')
+          lookupSecrets = $e.text().trim().split(', ')
         })
         cy.get('*[data-testid="field/lookup_secret_confirm/true"]').click()
         cy.expectSettingsSaved()
@@ -63,7 +63,7 @@ context('Mobile Profile', () => {
         // Lets sign in with lookup secret
         cy.visit(MOBILE_URL + '/Login?aal=aal2&refresh=true')
         cy.get('*[data-testid="field/lookup_secret"]').then(($e) => {
-          cy.wrap($e).type(recoveryCodes[0])
+          cy.wrap($e).type(lookupSecrets[0])
         })
         cy.get('*[data-testid="field/method/lookup_secret"]').click()
 
