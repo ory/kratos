@@ -79,7 +79,7 @@ func (e *Verifier) do(r *http.Request, i *identity.Identity, f flow.Flow) error 
 				return err
 			}
 		case "phone":
-			tkn := token.NewOTPVerification(address, verificationFlow, e.r.Config(r.Context()).SelfServiceLinkMethodLifespan())
+			tkn := token.NewOTPVerification(address, verificationFlow, e.r.Config().SelfServiceLinkMethodLifespan(r.Context()))
 
 			if err := e.r.VerificationTokenPersister().CreateVerificationToken(r.Context(), tkn); err != nil {
 				return err

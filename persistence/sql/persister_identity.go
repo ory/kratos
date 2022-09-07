@@ -553,7 +553,7 @@ func (p *Persister) FindRecoveryAddressByValue(ctx context.Context, via identity
 
 func (p *Persister) FindVerifiableAddress(ctx context.Context, value string) (*identity.VerifiableAddress, error) {
 	var address identity.VerifiableAddress
-	if err := p.GetConnection(ctx).Where("nid = ? AND value = ?", corp.ContextualizeNID(ctx, p.nid), stringToLowerTrim(value)).First(&address); err != nil {
+	if err := p.GetConnection(ctx).Where("nid = ? AND value = ?", p.NetworkID(ctx), stringToLowerTrim(value)).First(&address); err != nil {
 		return nil, sqlcon.HandleError(err)
 	}
 
@@ -562,7 +562,7 @@ func (p *Persister) FindVerifiableAddress(ctx context.Context, value string) (*i
 
 func (p *Persister) FindRecoveryAddress(ctx context.Context, value string) (*identity.RecoveryAddress, error) {
 	var address identity.RecoveryAddress
-	if err := p.GetConnection(ctx).Where("nid = ? AND value = ?", corp.ContextualizeNID(ctx, p.nid), stringToLowerTrim(value)).First(&address); err != nil {
+	if err := p.GetConnection(ctx).Where("nid = ? AND value = ?", p.NetworkID(ctx), stringToLowerTrim(value)).First(&address); err != nil {
 		return nil, sqlcon.HandleError(err)
 	}
 

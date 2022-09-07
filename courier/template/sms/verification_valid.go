@@ -8,7 +8,7 @@ import (
 	"github.com/ory/kratos/courier/template"
 )
 
-const verificationMsgBodyPath = "otp/verification/valid/otp.body.gotmpl"
+const verificationMsgBodyPath = "otp/verification/valid/sms.body.gotmpl"
 
 type (
 	VerificationMessage struct {
@@ -32,7 +32,7 @@ func (t *VerificationMessage) PhoneNumber() (string, error) {
 }
 
 func (t *VerificationMessage) SMSBody(ctx context.Context) (string, error) {
-	templatesDir := os.DirFS(t.d.CourierConfig(ctx).CourierTemplatesRoot())
+	templatesDir := os.DirFS(t.d.CourierConfig().CourierTemplatesRoot(ctx))
 	return template.LoadText(ctx, t.d, templatesDir, verificationMsgBodyPath, "otp/sms.body*", t.m, "")
 }
 

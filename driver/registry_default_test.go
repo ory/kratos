@@ -698,21 +698,21 @@ func TestDriverDefault_Strategies(t *testing.T) {
 				name: "turn off otp and link recovery methods",
 				prep: func(conf *config.Config) {
 					conf.MustSet(ctx, config.ViperKeySelfServiceStrategyConfig+".link.enabled", false)
-					conf.MustSet(config.ViperKeySelfServiceStrategyConfig+".otp.enabled", false)
+					conf.MustSet(ctx, config.ViperKeySelfServiceStrategyConfig+".otp.enabled", false)
 				},
 			},
 			{
 				name: "turn on link method",
 				prep: func(conf *config.Config) {
 					conf.MustSet(ctx, config.ViperKeySelfServiceStrategyConfig+".link.enabled", true)
-					conf.MustSet(config.ViperKeySelfServiceStrategyConfig+".otp.enabled", false)
+					conf.MustSet(ctx, config.ViperKeySelfServiceStrategyConfig+".otp.enabled", false)
 				}, expect: []string{"link"},
 			},
 			{
 				name: "turn on otp method",
 				prep: func(conf *config.Config) {
-					conf.MustSet(config.ViperKeySelfServiceStrategyConfig+".link.enabled", false)
-					conf.MustSet(config.ViperKeySelfServiceStrategyConfig+".otp.enabled", true)
+					conf.MustSet(ctx, config.ViperKeySelfServiceStrategyConfig+".link.enabled", false)
+					conf.MustSet(ctx, config.ViperKeySelfServiceStrategyConfig+".otp.enabled", true)
 				}, expect: []string{"otp"},
 			},
 		} {

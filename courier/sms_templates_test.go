@@ -15,8 +15,9 @@ import (
 
 func TestSMSTemplateType(t *testing.T) {
 	for expectedType, tmpl := range map[courier.TemplateType]courier.SMSTemplate{
-		courier.TypeOTP:      &sms.OTPMessage{},
-		courier.TypeTestStub: &sms.TestStub{},
+		courier.TypeVerificationValidOTP: &sms.VerificationMessage{},
+		courier.TypeRecoveryValidOTP:     &sms.RecoveryMessage{},
+		courier.TypeTestStub:             &sms.TestStub{},
 	} {
 		t.Run(fmt.Sprintf("case=%s", expectedType), func(t *testing.T) {
 			actualType, err := courier.SMSTemplateType(tmpl)
@@ -31,8 +32,9 @@ func TestNewSMSTemplateFromMessage(t *testing.T) {
 	ctx := context.Background()
 
 	for tmplType, expectedTmpl := range map[courier.TemplateType]courier.SMSTemplate{
-		courier.TypeOTP:      sms.NewOTPMessage(reg, &sms.OTPMessageModel{To: "+12345678901"}),
-		courier.TypeTestStub: sms.NewTestStub(reg, &sms.TestStubModel{To: "+12345678901", Body: "test body"}),
+		courier.TypeVerificationValidOTP: sms.NewVerificationOTPMessage(reg, &sms.VerificationMessageModel{To: "+12345678901"}),
+		courier.TypeRecoveryValidOTP:     sms.NewRecoveryOTPMessage(reg, &sms.RecoveryMessageModel{To: "+12345678901"}),
+		courier.TypeTestStub:             sms.NewTestStub(reg, &sms.TestStubModel{To: "+12345678901", Body: "test body"}),
 	} {
 		t.Run(fmt.Sprintf("case=%s", tmplType), func(t *testing.T) {
 			tmplData, err := json.Marshal(expectedTmpl)

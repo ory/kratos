@@ -30,8 +30,8 @@ func (t *RecoveryValidOTP) EmailRecipient() (string, error) {
 }
 
 func (t *RecoveryValidOTP) EmailSubject(ctx context.Context) (string, error) {
-	templatesDir := os.DirFS(t.d.CourierConfig(ctx).CourierTemplatesRoot())
-	subject := t.d.CourierConfig(ctx).CourierTemplatesRecoveryValid().Subject
+	templatesDir := os.DirFS(t.d.CourierConfig().CourierTemplatesRoot(ctx))
+	subject := t.d.CourierConfig().CourierTemplatesRecoveryValid(ctx).Subject
 
 	subject, err := template.LoadText(ctx, t.d, templatesDir, "otp/recovery/valid/email.subject.gotmpl", "otp/recovery/valid/email.subject*", t.m, subject)
 
@@ -39,15 +39,15 @@ func (t *RecoveryValidOTP) EmailSubject(ctx context.Context) (string, error) {
 }
 
 func (t *RecoveryValidOTP) EmailBody(ctx context.Context) (string, error) {
-	templatesDir := os.DirFS(t.d.CourierConfig(ctx).CourierTemplatesRoot())
-	body := t.d.CourierConfig(ctx).CourierTemplatesRecoveryValid().Body.HTML
+	templatesDir := os.DirFS(t.d.CourierConfig().CourierTemplatesRoot(ctx))
+	body := t.d.CourierConfig().CourierTemplatesRecoveryValid(ctx).Body.HTML
 
 	return template.LoadHTML(ctx, t.d, templatesDir, "otp/recovery/valid/email.body.gotmpl", "otp/recovery/valid/email.body*", t.m, body)
 }
 
 func (t *RecoveryValidOTP) EmailBodyPlaintext(ctx context.Context) (string, error) {
-	templatesDir := os.DirFS(t.d.CourierConfig(ctx).CourierTemplatesRoot())
-	bodyPlaintext := t.d.CourierConfig(ctx).CourierTemplatesRecoveryValid().Body.PlainText
+	templatesDir := os.DirFS(t.d.CourierConfig().CourierTemplatesRoot(ctx))
+	bodyPlaintext := t.d.CourierConfig().CourierTemplatesRecoveryValid(ctx).Body.PlainText
 
 	return template.LoadText(ctx, t.d, templatesDir, "otp/recovery/valid/email.body.plaintext.gotmpl", "otp/recovery/valid/email.body.plaintext*", t.m, bodyPlaintext)
 }

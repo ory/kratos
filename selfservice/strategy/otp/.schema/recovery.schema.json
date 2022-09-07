@@ -11,7 +11,14 @@
     },
     "identifier": {
       "type": "string",
-      "format": "tel"
+      "anyOf": [
+        {
+          "format": "tel"
+        },
+        {
+          "format": "email"
+        }
+      ]
     },
     "flow": {
       "type": "string",

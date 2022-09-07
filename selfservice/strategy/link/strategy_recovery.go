@@ -167,7 +167,7 @@ func (s *Strategy) createRecoveryLink(w http.ResponseWriter, r *http.Request, _ 
 		return
 	}
 
-	tkn := NewAdminRecoveryToken(id.ID, req.ID, expiresIn)
+	tkn := token.NewAdminRecoveryToken(id.ID, req.ID, expiresIn)
 	if err := s.d.RecoveryTokenPersister().CreateRecoveryToken(r.Context(), tkn); err != nil {
 		s.d.Writer().WriteError(w, r, err)
 		return
@@ -351,7 +351,7 @@ func (s *Strategy) recoveryUseToken(w http.ResponseWriter, r *http.Request, fID 
 	}
 
 	// mark address as verified only for a self-service flow
-	if tkn.TokenType == RecoveryTokenTypeSelfService {
+	if tkn.TokenType == token.RecoveryTokenTypeSelfService {
 		if err := s.markRecoveryAddressVerified(w, r, f, recovered, tkn.RecoveryAddress); err != nil {
 			return s.HandleRecoveryError(w, r, f, body, err)
 		}

@@ -84,7 +84,7 @@ func (s *Sender) SendRecoveryOTP(ctx context.Context, r *http.Request, f *recove
 		return err
 	}
 
-	tkn := token.NewOTPRecovery(address, f, s.r.Config(r.Context()).SelfServiceLinkMethodLifespan())
+	tkn := token.NewOTPRecovery(address, f, s.r.Config().SelfServiceLinkMethodLifespan(r.Context()))
 	if err := s.r.RecoveryTokenPersister().CreateRecoveryToken(ctx, tkn); err != nil {
 		return err
 	}
@@ -125,7 +125,7 @@ func (s *Sender) SendVerificationOTP(ctx context.Context, f *verification.Flow, 
 		return err
 	}
 
-	tkn := token.NewOTPVerification(address, f, s.r.Config(ctx).SelfServiceLinkMethodLifespan())
+	tkn := token.NewOTPVerification(address, f, s.r.Config().SelfServiceLinkMethodLifespan(ctx))
 	if err := s.r.VerificationTokenPersister().CreateVerificationToken(ctx, tkn); err != nil {
 		return err
 	}

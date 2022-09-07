@@ -5,24 +5,21 @@ import (
 	"testing"
 	"time"
 
-	"github.com/ory/kratos/selfservice/token"
-
-	"github.com/ory/kratos/internal/testhelpers"
-	"github.com/ory/kratos/persistence"
-	"github.com/ory/x/sqlcon"
-
 	"github.com/bxcodec/faker/v3"
 	"github.com/gofrs/uuid"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/ory/x/assertx"
-
 	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/identity"
+	"github.com/ory/kratos/internal/testhelpers"
+	"github.com/ory/kratos/persistence"
 	"github.com/ory/kratos/selfservice/flow/recovery"
 	"github.com/ory/kratos/selfservice/flow/verification"
+	"github.com/ory/kratos/selfservice/token"
 	"github.com/ory/kratos/x"
+	"github.com/ory/x/assertx"
+	"github.com/ory/x/sqlcon"
 )
 
 func TestPersister(ctx context.Context, conf *config.Config, p interface {
@@ -56,7 +53,7 @@ func TestPersister(ctx context.Context, conf *config.Config, p interface {
 					ExpiresAt:       time.Now(),
 					IssuedAt:        time.Now(),
 					IdentityID:      i.ID,
-					TokenType:       link.RecoveryTokenTypeAdmin,
+					TokenType:       token.RecoveryTokenTypeAdmin,
 				}, &req
 			}
 

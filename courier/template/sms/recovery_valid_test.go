@@ -22,7 +22,7 @@ func TestNewRecoveryOTPMessage(t *testing.T) {
 
 	tpl := sms.NewRecoveryOTPMessage(reg, &sms.RecoveryMessageModel{To: expectedPhone, Code: otp})
 
-	expectedBody := fmt.Sprintf("Your recovery code is: %s\n", otp)
+	expectedBody := fmt.Sprintf("Your recovery code is: %s.\nDon't share this code with anyone.\n", otp)
 
 	actualBody, err := tpl.SMSBody(context.Background())
 	require.NoError(t, err)
