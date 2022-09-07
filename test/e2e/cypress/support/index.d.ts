@@ -433,6 +433,11 @@ declare global {
         expect: { email: string }
       }): Chainable<void>
 
+      /**
+       * Expect a recovery email with a recovery code.
+       *
+       * @param opts
+       */
       recoveryEmailWithCode(opts?: {
         expect: { email: string }
       }): Chainable<void>
