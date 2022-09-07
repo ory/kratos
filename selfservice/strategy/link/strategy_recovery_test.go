@@ -379,7 +379,8 @@ func TestRecovery(t *testing.T) {
 
 			authClient := testhelpers.NewHTTPClientWithArbitrarySessionToken(t, reg)
 			if isAPI {
-				s, err := session.NewActiveSession(ctx,
+				req := httptest.NewRequest("GET", "/sessions/whoami", nil)
+				s, err := session.NewActiveSession(req,
 					&identity.Identity{ID: x.NewUUID(), State: identity.StateActive},
 					testhelpers.NewSessionLifespanProvider(time.Hour),
 					time.Now(),
@@ -660,7 +661,8 @@ func TestRecovery(t *testing.T) {
 		email := recoveryEmail
 		id := createIdentityToRecover(t, reg, email)
 
-		sess, err := session.NewActiveSession(ctx, id, conf, time.Now(), identity.CredentialsTypePassword, identity.AuthenticatorAssuranceLevel1)
+		req := httptest.NewRequest("GET", "/sessions/whoami", nil)
+		sess, err := session.NewActiveSession(req, id, conf, time.Now(), identity.CredentialsTypePassword, identity.AuthenticatorAssuranceLevel1)
 		require.NoError(t, err)
 		require.NoError(t, reg.SessionPersister().UpsertSession(context.Background(), sess))
 
