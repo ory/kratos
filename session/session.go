@@ -199,9 +199,11 @@ func (s *Session) Activate(r *http.Request, i *identity.Identity, c lifespanProv
 		s.ClientIPAddress = trueClientIP
 	} else if realClientIP := r.Header.Get("X-Real-IP"); realClientIP != "" {
 		s.ClientIPAddress = realClientIP
-	} else {
+	} else if forwardedIP := r.Header.Get("X-Forwarded-For"); forwardedIP != "" {
 		// TODO: Use x lib implementation to parse client IP address from the header string
-		s.ClientIPAddress = r.Header.Get("X-Forwarded-For")
+		s.ClientIPAddress = forwardedIP
+	} else {
+		s.ClientIPAddress = r.RemoteAddr
 	}
 
 	clientGeoLocation := []string{r.Header.Get("Cf-Ipcity"), r.Header.Get("Cf-Ipcountry")}

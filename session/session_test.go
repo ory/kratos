@@ -3,6 +3,7 @@ package session_test
 import (
 	"context"
 	"fmt"
+	"github.com/ory/kratos/x"
 	"testing"
 	"time"
 
@@ -22,16 +23,18 @@ func TestSession(t *testing.T) {
 	authAt := time.Now()
 
 	t.Run("case=active session", func(t *testing.T) {
+		req := x.NewTestHTTPRequest(t, "GET", "/sessions/whoami", nil)
+
 		i := new(identity.Identity)
 		i.State = identity.StateActive
-		s, _ := session.NewActiveSession(ctx, i, conf, authAt, identity.CredentialsTypePassword, identity.AuthenticatorAssuranceLevel1)
+		s, _ := session.NewActiveSession(req, i, conf, authAt, identity.CredentialsTypePassword, identity.AuthenticatorAssuranceLevel1)
 		assert.True(t, s.IsActive())
 		require.NotEmpty(t, s.Token)
 		require.NotEmpty(t, s.LogoutToken)
 		assert.EqualValues(t, identity.CredentialsTypePassword, s.AMR[0].Method)
 
 		i = new(identity.Identity)
-		s, err := session.NewActiveSession(ctx, i, conf, authAt, identity.CredentialsTypePassword, identity.AuthenticatorAssuranceLevel1)
+		s, err := session.NewActiveSession(req, i, conf, authAt, identity.CredentialsTypePassword, identity.AuthenticatorAssuranceLevel1)
 		assert.Nil(t, s)
 		assert.ErrorIs(t, err, session.ErrIdentityDisabled)
 	})
@@ -51,14 +54,16 @@ func TestSession(t *testing.T) {
 	})
 
 	t.Run("case=activate", func(t *testing.T) {
+		req := x.NewTestHTTPRequest(t, "GET", "/sessions/whoami", nil)
+
 		s := session.NewInactiveSession()
-		require.NoError(t, s.Activate(ctx, &identity.Identity{State: identity.StateActive}, conf, authAt))
+		require.NoError(t, s.Activate(req, &identity.Identity{State: identity.StateActive}, conf, authAt))
 		assert.True(t, s.Active)
 		assert.Equal(t, identity.NoAuthenticatorAssuranceLevel, s.AuthenticatorAssuranceLevel)
 		assert.Equal(t, authAt, s.AuthenticatedAt)
 
 		s = session.NewInactiveSession()
-		require.ErrorIs(t, s.Activate(ctx, &identity.Identity{State: identity.StateInactive}, conf, authAt), session.ErrIdentityDisabled)
+		require.ErrorIs(t, s.Activate(req, &identity.Identity{State: identity.StateInactive}, conf, authAt), session.ErrIdentityDisabled)
 		assert.False(t, s.Active)
 		assert.Equal(t, identity.NoAuthenticatorAssuranceLevel, s.AuthenticatorAssuranceLevel)
 		assert.Empty(t, s.AuthenticatedAt)
@@ -192,6 +197,8 @@ func TestSession(t *testing.T) {
 	}
 
 	t.Run("case=session refresh", func(t *testing.T) {
+		req := x.NewTestHTTPRequest(t, "GET", "/sessions/whoami", nil)
+
 		conf.MustSet(ctx, config.ViperKeySessionLifespan, "24h")
 		conf.MustSet(ctx, config.ViperKeySessionRefreshMinTimeLeft, "12h")
 		t.Cleanup(func() {
@@ -200,7 +207,7 @@ func TestSession(t *testing.T) {
 		})
 		i := new(identity.Identity)
 		i.State = identity.StateActive
-		s, _ := session.NewActiveSession(ctx, i, conf, authAt, identity.CredentialsTypePassword, identity.AuthenticatorAssuranceLevel1)
+		s, _ := session.NewActiveSession(req, i, conf, authAt, identity.CredentialsTypePassword, identity.AuthenticatorAssuranceLevel1)
 		assert.False(t, s.CanBeRefreshed(ctx, conf), "fresh session is not refreshable")
 
 		s.ExpiresAt = s.ExpiresAt.Add(-12 * time.Hour)
