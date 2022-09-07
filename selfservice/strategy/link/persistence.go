@@ -19,7 +19,7 @@ type (
 
 	VerificationTokenPersister interface {
 		CreateVerificationToken(ctx context.Context, token *VerificationToken) error
-		UseVerificationToken(ctx context.Context, token string) (*VerificationToken, error)
+		UseVerificationToken(ctx context.Context, fID uuid.UUID, token string) (*VerificationToken, error)
 		DeleteVerificationToken(ctx context.Context, token string) error
 	}
 
