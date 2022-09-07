@@ -456,6 +456,9 @@ SDK Method `getJsonSchema` was renamed to `getIdentitySchema`.
   ([90da0bb](https://github.com/ory/kratos/commit/90da0bb4aeb50ed697c998342300cc56de5d5e1c))
 - Add DingTalk social login ([#2494](https://github.com/ory/kratos/issues/2494))
   ([7b966bd](https://github.com/ory/kratos/commit/7b966bd16333f419b2a57f2a0b8684d6d86b34e6))
+- Add flow id check to use verification token
+  ([#2695](https://github.com/ory/kratos/issues/2695))
+  ([54c64fc](https://github.com/ory/kratos/commit/54c64fcea40ede17a87253042259fd97eeb780fe))
 - Add identity id to "account disabled" error
   ([#2557](https://github.com/ory/kratos/issues/2557))
   ([f09b1b3](https://github.com/ory/kratos/commit/f09b1b3701c6deda4d25cebb7ccf2e97089be32a))
