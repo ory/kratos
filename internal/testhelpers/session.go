@@ -138,7 +138,9 @@ func NewHTTPClientWithSessionToken(t *testing.T, reg *driver.RegistryDefault, se
 
 func NewHTTPClientWithArbitrarySessionToken(t *testing.T, reg *driver.RegistryDefault) *http.Client {
 	ctx := context.Background()
+	header := make(map[string][]string, 0)
 	s, err := session.NewActiveSession(ctx,
+		header,
 		&identity.Identity{ID: x.NewUUID(), State: identity.StateActive},
 		NewSessionLifespanProvider(time.Hour),
 		time.Now(),
@@ -152,7 +154,9 @@ func NewHTTPClientWithArbitrarySessionToken(t *testing.T, reg *driver.RegistryDe
 
 func NewHTTPClientWithArbitrarySessionCookie(t *testing.T, reg *driver.RegistryDefault) *http.Client {
 	ctx := context.Background()
+	header := make(map[string][]string, 0)
 	s, err := session.NewActiveSession(ctx,
+		header,
 		&identity.Identity{ID: x.NewUUID(), State: identity.StateActive},
 		NewSessionLifespanProvider(time.Hour),
 		time.Now(),
@@ -166,7 +170,9 @@ func NewHTTPClientWithArbitrarySessionCookie(t *testing.T, reg *driver.RegistryD
 
 func NewNoRedirectHTTPClientWithArbitrarySessionCookie(t *testing.T, reg *driver.RegistryDefault) *http.Client {
 	ctx := context.Background()
+	header := make(map[string][]string, 0)
 	s, err := session.NewActiveSession(ctx,
+		header,
 		&identity.Identity{ID: x.NewUUID(), State: identity.StateActive},
 		NewSessionLifespanProvider(time.Hour),
 		time.Now(),
@@ -180,7 +186,10 @@ func NewNoRedirectHTTPClientWithArbitrarySessionCookie(t *testing.T, reg *driver
 
 func NewHTTPClientWithIdentitySessionCookie(t *testing.T, reg *driver.RegistryDefault, id *identity.Identity) *http.Client {
 	ctx := context.Background()
-	s, err := session.NewActiveSession(ctx, id,
+	header := make(map[string][]string, 0)
+	s, err := session.NewActiveSession(ctx,
+		header,
+		id,
 		NewSessionLifespanProvider(time.Hour),
 		time.Now(),
 		identity.CredentialsTypePassword,
@@ -193,7 +202,10 @@ func NewHTTPClientWithIdentitySessionCookie(t *testing.T, reg *driver.RegistryDe
 
 func NewHTTPClientWithIdentitySessionToken(t *testing.T, reg *driver.RegistryDefault, id *identity.Identity) *http.Client {
 	ctx := context.Background()
-	s, err := session.NewActiveSession(ctx, id,
+	header := make(map[string][]string, 0)
+	s, err := session.NewActiveSession(ctx,
+		header,
+		id,
 		NewSessionLifespanProvider(time.Hour),
 		time.Now(),
 		identity.CredentialsTypePassword,
