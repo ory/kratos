@@ -141,8 +141,10 @@ func TestHandleError(t *testing.T) {
 			t.Run("case=expired error", func(t *testing.T) {
 				t.Cleanup(reset)
 
+				req := httptest.NewRequest("GET", "/sessions/whoami", nil)
+
 				// This needs an authenticated client in order to call the RouteGetFlow endpoint
-				s, err := session.NewActiveSession(ctx, &id, testhelpers.NewSessionLifespanProvider(time.Hour), time.Now(), identity.CredentialsTypePassword, identity.AuthenticatorAssuranceLevel1)
+				s, err := session.NewActiveSession(req, &id, testhelpers.NewSessionLifespanProvider(time.Hour), time.Now(), identity.CredentialsTypePassword, identity.AuthenticatorAssuranceLevel1)
 				require.NoError(t, err)
 				c := testhelpers.NewHTTPClientWithSessionToken(t, reg, s)
 
