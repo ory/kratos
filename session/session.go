@@ -159,10 +159,10 @@ func (s *Session) SetAuthenticatorAssuranceLevel() {
 	}
 }
 
-func NewActiveSession(ctx context.Context, requestHeaders http.Header, i *identity.Identity, c lifespanProvider, authenticatedAt time.Time, completedLoginFor identity.CredentialsType, completedLoginAAL identity.AuthenticatorAssuranceLevel) (*Session, error) {
+func NewActiveSession(r *http.Request, i *identity.Identity, c lifespanProvider, authenticatedAt time.Time, completedLoginFor identity.CredentialsType, completedLoginAAL identity.AuthenticatorAssuranceLevel) (*Session, error) {
 	s := NewInactiveSession()
 	s.CompletedLoginFor(completedLoginFor, completedLoginAAL)
-	if err := s.Activate(ctx, requestHeaders, i, c, authenticatedAt); err != nil {
+	if err := s.Activate(r, i, c, authenticatedAt); err != nil {
 		return nil, err
 	}
 	return s, nil
@@ -178,32 +178,33 @@ func NewInactiveSession() *Session {
 	}
 }
 
-func (s *Session) Activate(ctx context.Context, requestHeaders http.Header, i *identity.Identity, c lifespanProvider, authenticatedAt time.Time) error {
+func (s *Session) Activate(r *http.Request, i *identity.Identity, c lifespanProvider, authenticatedAt time.Time) error {
 	if i != nil && !i.IsActive() {
 		return ErrIdentityDisabled.WithDetail("identity_id", i.ID)
 	}
 
 	s.Active = true
-	s.ExpiresAt = authenticatedAt.Add(c.SessionLifespan(ctx))
+	s.ExpiresAt = authenticatedAt.Add(c.SessionLifespan(r.Context()))
 	s.AuthenticatedAt = authenticatedAt
 	s.IssuedAt = authenticatedAt
 	s.Identity = i
 	s.IdentityID = i.ID
 
-	agent := requestHeaders["User-Agent"]
+	agent := r.Header["User-Agent"]
 	if len(agent) > 0 {
 		s.UserAgent = strings.Join(agent, " ")
 	}
 
-	clientIP := requestHeaders.Get("True-Client-IP")
-	if clientIP != "" {
-		s.ClientIPAddress = clientIP
+	if trueClientIP := r.Header.Get("True-Client-IP"); trueClientIP != "" {
+		s.ClientIPAddress = trueClientIP
+	} else if realClientIP := r.Header.Get("X-Real-IP"); realClientIP != "" {
+		s.ClientIPAddress = realClientIP
 	} else {
 		// TODO: Use x lib implementation to parse client IP address from the header string
-		s.ClientIPAddress = requestHeaders.Get("X-Forwarded-For")
+		s.ClientIPAddress = r.Header.Get("X-Forwarded-For")
 	}
 
-	clientGeoLocation := []string{requestHeaders.Get("Cf-Ipcity"), requestHeaders.Get("Cf-Ipcountry")}
+	clientGeoLocation := []string{r.Header.Get("Cf-Ipcity"), r.Header.Get("Cf-Ipcountry")}
 	s.GeoLocation = strings.Join(clientGeoLocation, ", ")
 
 	s.SetAuthenticatorAssuranceLevel()
