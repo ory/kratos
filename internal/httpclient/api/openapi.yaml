@@ -34,7 +34,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/webAuthnJavaScript'
           description: webAuthnJavaScript
-      summary: Get WebAuthn JavaScript
+      summary: '# Get WebAuthn JavaScript'
       tags:
       - v0alpha2
   /admin/identities:
@@ -92,7 +92,7 @@ paths:
           description: jsonError
       security:
       - oryAccessToken: []
-      summary: List Identities
+      summary: '# List Identities'
       tags:
       - v0alpha2
     post:
@@ -132,7 +132,7 @@ paths:
           description: jsonError
       security:
       - oryAccessToken: []
-      summary: Create an Identity
+      summary: '# Create an Identity'
       tags:
       - v0alpha2
   /admin/identities/{id}:
@@ -171,7 +171,7 @@ paths:
           description: jsonError
       security:
       - oryAccessToken: []
-      summary: Delete an Identity
+      summary: '# Delete an Identity'
       tags:
       - v0alpha2
     get:
@@ -222,7 +222,7 @@ paths:
           description: jsonError
       security:
       - oryAccessToken: []
-      summary: Get an Identity
+      summary: '# Get an Identity'
       tags:
       - v0alpha2
     patch:
@@ -336,7 +336,7 @@ paths:
           description: jsonError
       security:
       - oryAccessToken: []
-      summary: Update an Identity
+      summary: '# Update an Identity'
       tags:
       - v0alpha2
   /admin/identities/{id}/sessions:
@@ -558,7 +558,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/jsonError'
           description: jsonError
-      summary: Create a Recovery Link
+      summary: '# Create a Recovery Link'
       tags:
       - v0alpha2
   /admin/sessions/{id}/extend:
@@ -794,7 +794,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/jsonError'
           description: jsonError
-      summary: Get Self-Service Errors
+      summary: '# Get Self-Service Errors'
       tags:
       - v0alpha2
   /self-service/login:
@@ -911,7 +911,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/jsonError'
           description: jsonError
-      summary: Submit a Login Flow
+      summary: '# Submit a Login Flow'
       tags:
       - v0alpha2
   /self-service/login/api:
@@ -1077,7 +1077,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/jsonError'
           description: jsonError
-      summary: Initialize Login Flow for Browsers
+      summary: '# Initialize Login Flow for Browsers'
       tags:
       - v0alpha2
   /self-service/login/flows:
@@ -1163,7 +1163,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/jsonError'
           description: jsonError
-      summary: Get Login Flow
+      summary: '# Get Login Flow'
       tags:
       - v0alpha2
   /self-service/logout:
@@ -1217,7 +1217,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/jsonError'
           description: jsonError
-      summary: Complete Self-Service Logout
+      summary: '# Complete Self-Service Logout'
       tags:
       - v0alpha2
   /self-service/logout/api:
@@ -1304,7 +1304,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/jsonError'
           description: jsonError
-      summary: Create a Logout URL for Browsers
+      summary: '# Create a Logout URL for Browsers'
       tags:
       - v0alpha2
   /self-service/recovery:
@@ -1410,7 +1410,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/jsonError'
           description: jsonError
-      summary: Complete Recovery Flow
+      summary: '# Complete Recovery Flow'
       tags:
       - v0alpha2
   /self-service/recovery/api:
@@ -1427,7 +1427,6 @@ paths:
         you vulnerable to a variety of CSRF attacks.
 
         This endpoint MUST ONLY be used in scenarios such as native mobile apps (React Native, Objective C, Swift, Java, ...).
-
 
         More information can be found at [Ory Kratos Account Recovery Documentation](../self-service/flows/account-recovery).
       operationId: initializeSelfServiceRecoveryFlowWithoutBrowser
@@ -1498,7 +1497,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/jsonError'
           description: jsonError
-      summary: Initialize Recovery Flow for Browsers
+      summary: '# Initialize Recovery Flow for Browsers'
       tags:
       - v0alpha2
   /self-service/recovery/flows:
@@ -1573,7 +1572,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/jsonError'
           description: jsonError
-      summary: Get Recovery Flow
+      summary: '# Get Recovery Flow'
       tags:
       - v0alpha2
   /self-service/registration:
@@ -1677,7 +1676,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/jsonError'
           description: jsonError
-      summary: Submit a Registration Flow
+      summary: '# Submit a Registration Flow'
       tags:
       - v0alpha2
   /self-service/registration/api:
@@ -1779,7 +1778,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/jsonError'
           description: jsonError
-      summary: Initialize Registration Flow for Browsers
+      summary: '# Initialize Registration Flow for Browsers'
       tags:
       - v0alpha2
   /self-service/registration/flows:
@@ -1865,7 +1864,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/jsonError'
           description: jsonError
-      summary: Get Registration Flow
+      summary: '# Get Registration Flow'
       tags:
       - v0alpha2
   /self-service/settings:
@@ -2006,7 +2005,7 @@ paths:
           description: jsonError
       security:
       - sessionToken: []
-      summary: Complete Settings Flow
+      summary: '# Complete Settings Flow'
       tags:
       - v0alpha2
   /self-service/settings/api:
@@ -2139,7 +2138,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/jsonError'
           description: jsonError
-      summary: Initialize Settings Flow for Browsers
+      summary: '# Initialize Settings Flow for Browsers'
       tags:
       - v0alpha2
   /self-service/settings/flows:
@@ -2239,7 +2238,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/jsonError'
           description: jsonError
-      summary: Get Settings Flow
+      summary: '# Get Settings Flow'
       tags:
       - v0alpha2
   /self-service/verification:
@@ -2416,7 +2415,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/jsonError'
           description: jsonError
-      summary: Initialize Verification Flow for Browser Clients
+      summary: '# Initialize Verification Flow for Browser Clients'
       tags:
       - v0alpha2
   /self-service/verification/flows:
@@ -2696,7 +2695,7 @@ paths:
         Reverse proxies and API Gateways
         Server-side calls - use the `X-Session-Token` header!
 
-        This endpoint authenticates users by checking
+        # This endpoint authenticates users by checking
 
         if the `Cookie` HTTP header was set containing an Ory Kratos Session Cookie;
         if the `Authorization: bearer <ory-session-token>` HTTP header was set with a valid Ory Kratos Session Token;
@@ -2759,7 +2758,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/jsonError'
           description: jsonError
-      summary: Check Who the Current HTTP Session Belongs To
+      summary: '# Check Who the Current HTTP Session Belongs To'
       tags:
       - v0alpha2
   /sessions/{id}:
@@ -2895,35 +2894,9 @@ components:
       title: JSONRawMessage represents a json.RawMessage that works well with JSON,
         SQL, and Swagger.
       type: object
-    RecoveryAddress:
-      example:
-        updated_at: 2000-01-23T04:56:07.000+00:00
-        created_at: 2000-01-23T04:56:07.000+00:00
-        id: id
-        value: value
-        via: via
-      properties:
-        created_at:
-          description: CreatedAt is a helper struct field for gobuffalo.pop.
-          format: date-time
-          type: string
-        id:
-          format: uuid4
-          type: string
-        updated_at:
-          description: UpdatedAt is a helper struct field for gobuffalo.pop.
-          format: date-time
-          type: string
-        value:
-          type: string
-        via:
-          type: string
-      required:
-      - id
-      - value
-      - via
-      type: object
     RecoveryAddressType:
+      title: RecoveryAddressType must not exceed 16 characters as that is the limitation
+        in the SQL Schema.
       type: string
     UUID:
       format: uuid4
@@ -2947,7 +2920,7 @@ components:
             that the address needs to be represented in the Identity Schema or this field will be overwritten
             on the next identity update.
           items:
-            $ref: '#/components/schemas/RecoveryAddress'
+            $ref: '#/components/schemas/recoveryIdentityAddress'
           type: array
         schema_id:
           description: SchemaID is the ID of the JSON Schema to be used for validating
@@ -3058,7 +3031,11 @@ components:
           pattern: ^[0-9]+(ns|us|ms|s|m|h)$
           type: string
         identity_id:
-          format: uuid4
+          description: |-
+            Identity to Recover
+
+            The identity's ID you wish to recover.
+          format: uuid
           type: string
       required:
       - identity_id
@@ -3074,7 +3051,11 @@ components:
           pattern: ^[0-9]+(ns|us|ms|s|m|h)$
           type: string
         identity_id:
-          format: uuid4
+          description: |-
+            Identity to Recover
+
+            The identity's ID you wish to recover.
+          format: uuid
           type: string
       required:
       - identity_id
@@ -3133,7 +3114,7 @@ components:
           example: SQL field "foo" is not a bool.
           type: string
         details:
-          additionalProperties: true
+          additionalProperties: {}
           description: Further error details
           type: object
         id:
@@ -3258,12 +3239,12 @@ components:
         recovery_addresses:
         - updated_at: 2000-01-23T04:56:07.000+00:00
           created_at: 2000-01-23T04:56:07.000+00:00
-          id: id
+          id: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
           value: value
           via: via
         - updated_at: 2000-01-23T04:56:07.000+00:00
           created_at: 2000-01-23T04:56:07.000+00:00
-          id: id
+          id: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
           value: value
           via: via
         metadata_admin: ""
@@ -3273,7 +3254,7 @@ components:
           verified_at: 2000-01-23T04:56:07.000+00:00
           verified: true
           created_at: 2014-01-01T23:28:56.782Z
-          id: id
+          id: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
           value: value
           status: status
           via: via
@@ -3281,13 +3262,13 @@ components:
           verified_at: 2000-01-23T04:56:07.000+00:00
           verified: true
           created_at: 2014-01-01T23:28:56.782Z
-          id: id
+          id: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
           value: value
           status: status
           via: via
         schema_id: schema_id
         schema_url: schema_url
-        id: id
+        id: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
         metadata_public: ""
       properties:
         created_at:
@@ -3301,7 +3282,12 @@ components:
             authenticating this identity.
           type: object
         id:
-          format: uuid4
+          description: |-
+            ID is the identity's unique identifier.
+
+            The Identity ID can not be changed and can not be chosen. This ensures future
+            compatibility and optimization for distributed stores such as CockroachDB.
+          format: uuid
           type: string
         metadata_admin:
           description: NullJSONRawMessage represents a json.RawMessage that works
@@ -3313,7 +3299,7 @@ components:
           description: RecoveryAddresses contains all the addresses that can be used
             to recover an identity.
           items:
-            $ref: '#/components/schemas/RecoveryAddress'
+            $ref: '#/components/schemas/recoveryIdentityAddress'
           type: array
           x-omitempty: true
         schema_id:
@@ -3542,7 +3528,7 @@ components:
           example: SQL field "foo" is not a bool.
           type: string
         details:
-          additionalProperties: true
+          additionalProperties: {}
           description: Further error details
           type: object
         id:
@@ -3615,6 +3601,36 @@ components:
           minimum: 1
           type: integer
       type: object
+    recoveryIdentityAddress:
+      example:
+        updated_at: 2000-01-23T04:56:07.000+00:00
+        created_at: 2000-01-23T04:56:07.000+00:00
+        id: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
+        value: value
+        via: via
+      properties:
+        created_at:
+          description: CreatedAt is a helper struct field for gobuffalo.pop.
+          format: date-time
+          type: string
+        id:
+          format: uuid
+          type: string
+        updated_at:
+          description: UpdatedAt is a helper struct field for gobuffalo.pop.
+          format: date-time
+          type: string
+        value:
+          type: string
+        via:
+          title: RecoveryAddressType must not exceed 16 characters as that is the
+            limitation in the SQL Schema.
+          type: string
+      required:
+      - id
+      - value
+      - via
+      type: object
     revokedSessions:
       example:
         count: 0
@@ -3640,7 +3656,7 @@ components:
           example: SQL field "foo" is not a bool.
           type: string
         details:
-          additionalProperties: true
+          additionalProperties: {}
           description: Further error details
           type: object
         id:
@@ -3665,7 +3681,8 @@ components:
             to
           type: string
         redirect_flow_id:
-          format: uuid4
+          description: RedirectFlowID is the ID of the flow instance
+          format: uuid
           type: string
         redirect_flow_name:
           $ref: '#/components/schemas/selfServiceFlowName'
@@ -3692,7 +3709,7 @@ components:
       example:
         updated_at: 2000-01-23T04:56:07.000+00:00
         created_at: 2000-01-23T04:56:07.000+00:00
-        id: id
+        id: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
         error: '{}'
       properties:
         created_at:
@@ -3702,7 +3719,8 @@ components:
         error:
           type: object
         id:
-          format: uuid4
+          description: ID of the error container.
+          format: uuid
           type: string
         updated_at:
           description: UpdatedAt is a helper struct field for gobuffalo.pop.
@@ -3728,7 +3746,7 @@ components:
           example: SQL field "foo" is not a bool.
           type: string
         details:
-          additionalProperties: true
+          additionalProperties: {}
           description: Further error details
           type: object
         id:
@@ -3768,7 +3786,9 @@ components:
           example: Not Found
           type: string
         use_flow_id:
-          format: uuid4
+          description: The flow ID that should be used for the new flow as it contains
+            the correct messages.
+          format: uuid
           type: string
       required:
       - message
@@ -3847,7 +3867,7 @@ components:
         created_at: 2000-01-23T04:56:07.000+00:00
         refresh: true
         return_to: return_to
-        id: id
+        id: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
         type: type
         issued_at: 2000-01-23T04:56:07.000+00:00
         request_url: request_url
@@ -3865,7 +3885,10 @@ components:
           format: date-time
           type: string
         id:
-          format: uuid4
+          description: |-
+            ID represents the flow's unique ID. When performing the login flow, this
+            represents the id in the login UI's query parameter: http://<selfservice.flows.login.ui_url>/?flow=<flow_id>
+          format: uuid
           type: string
         issued_at:
           description: IssuedAt is the time (UTC) when the flow started.
@@ -4004,7 +4027,7 @@ components:
             type: type
         active: active
         return_to: return_to
-        id: id
+        id: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
         type: type
         issued_at: 2000-01-23T04:56:07.000+00:00
         request_url: request_url
@@ -4021,7 +4044,10 @@ components:
           format: date-time
           type: string
         id:
-          format: uuid4
+          description: |-
+            ID represents the request's unique ID. When performing the recovery flow, this
+            represents the id in the recovery ui's query parameter: http://<selfservice.flows.recovery.ui_url>?request=<id>
+          format: uuid
           type: string
         issued_at:
           description: IssuedAt is the time (UTC) when the request occurred.
@@ -4138,7 +4164,7 @@ components:
             text: text
             type: type
         return_to: return_to
-        id: id
+        id: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
         type: type
         issued_at: 2000-01-23T04:56:07.000+00:00
         request_url: request_url
@@ -4152,7 +4178,10 @@ components:
           format: date-time
           type: string
         id:
-          format: uuid4
+          description: |-
+            ID represents the flow's unique ID. When performing the registration flow, this
+            represents the id in the registration ui's query parameter: http://<selfservice.flows.registration.ui_url>/?flow=<id>
+          format: uuid
           type: string
         issued_at:
           description: IssuedAt is the time (UTC) when the flow occurred.
@@ -4251,12 +4280,12 @@ components:
           recovery_addresses:
           - updated_at: 2000-01-23T04:56:07.000+00:00
             created_at: 2000-01-23T04:56:07.000+00:00
-            id: id
+            id: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
             value: value
             via: via
           - updated_at: 2000-01-23T04:56:07.000+00:00
             created_at: 2000-01-23T04:56:07.000+00:00
-            id: id
+            id: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
             value: value
             via: via
           metadata_admin: ""
@@ -4266,7 +4295,7 @@ components:
             verified_at: 2000-01-23T04:56:07.000+00:00
             verified: true
             created_at: 2014-01-01T23:28:56.782Z
-            id: id
+            id: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
             value: value
             status: status
             via: via
@@ -4274,17 +4303,17 @@ components:
             verified_at: 2000-01-23T04:56:07.000+00:00
             verified: true
             created_at: 2014-01-01T23:28:56.782Z
-            id: id
+            id: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
             value: value
             status: status
             via: via
           schema_id: schema_id
           schema_url: schema_url
-          id: id
+          id: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
           metadata_public: ""
         active: active
         return_to: return_to
-        id: id
+        id: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
         type: type
         issued_at: 2000-01-23T04:56:07.000+00:00
         request_url: request_url
@@ -4301,7 +4330,10 @@ components:
           format: date-time
           type: string
         id:
-          format: uuid4
+          description: |-
+            ID represents the flow's unique ID. When performing the settings flow, this
+            represents the id in the settings ui's query parameter: http://<selfservice.flows.settings.ui_url>?flow=<id>
+          format: uuid
           type: string
         identity:
           $ref: '#/components/schemas/identity'
@@ -4404,7 +4436,7 @@ components:
             type: type
         active: active
         return_to: return_to
-        id: id
+        id: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
         type: type
         issued_at: 2000-01-23T04:56:07.000+00:00
         request_url: request_url
@@ -4421,7 +4453,13 @@ components:
           format: date-time
           type: string
         id:
-          format: uuid4
+          description: |-
+            ID represents the request's unique ID. When performing the verification flow, this
+            represents the id in the verify ui's query parameter: http://<selfservice.flows.verification.ui_url>?request=<id>
+
+            type: string
+            format: uuid
+          format: uuid
           type: string
         issued_at:
           description: IssuedAt is the time (UTC) when the request occurred.
@@ -4488,12 +4526,12 @@ components:
           recovery_addresses:
           - updated_at: 2000-01-23T04:56:07.000+00:00
             created_at: 2000-01-23T04:56:07.000+00:00
-            id: id
+            id: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
             value: value
             via: via
           - updated_at: 2000-01-23T04:56:07.000+00:00
             created_at: 2000-01-23T04:56:07.000+00:00
-            id: id
+            id: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
             value: value
             via: via
           metadata_admin: ""
@@ -4503,7 +4541,7 @@ components:
             verified_at: 2000-01-23T04:56:07.000+00:00
             verified: true
             created_at: 2014-01-01T23:28:56.782Z
-            id: id
+            id: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
             value: value
             status: status
             via: via
@@ -4511,17 +4549,17 @@ components:
             verified_at: 2000-01-23T04:56:07.000+00:00
             verified: true
             created_at: 2014-01-01T23:28:56.782Z
-            id: id
+            id: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
             value: value
             status: status
             via: via
           schema_id: schema_id
           schema_url: schema_url
-          id: id
+          id: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
           metadata_public: ""
         authenticated_at: 2000-01-23T04:56:07.000+00:00
         active: true
-        id: id
+        id: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
         issued_at: 2000-01-23T04:56:07.000+00:00
       properties:
         active:
@@ -4552,7 +4590,8 @@ components:
           format: date-time
           type: string
         id:
-          format: uuid4
+          description: Session ID
+          format: uuid
           type: string
         identity:
           $ref: '#/components/schemas/identity'
@@ -5184,12 +5223,12 @@ components:
             recovery_addresses:
             - updated_at: 2000-01-23T04:56:07.000+00:00
               created_at: 2000-01-23T04:56:07.000+00:00
-              id: id
+              id: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
               value: value
               via: via
             - updated_at: 2000-01-23T04:56:07.000+00:00
               created_at: 2000-01-23T04:56:07.000+00:00
-              id: id
+              id: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
               value: value
               via: via
             metadata_admin: ""
@@ -5199,7 +5238,7 @@ components:
               verified_at: 2000-01-23T04:56:07.000+00:00
               verified: true
               created_at: 2014-01-01T23:28:56.782Z
-              id: id
+              id: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
               value: value
               status: status
               via: via
@@ -5207,17 +5246,17 @@ components:
               verified_at: 2000-01-23T04:56:07.000+00:00
               verified: true
               created_at: 2014-01-01T23:28:56.782Z
-              id: id
+              id: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
               value: value
               status: status
               via: via
             schema_id: schema_id
             schema_url: schema_url
-            id: id
+            id: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
             metadata_public: ""
           authenticated_at: 2000-01-23T04:56:07.000+00:00
           active: true
-          id: id
+          id: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
           issued_at: 2000-01-23T04:56:07.000+00:00
       properties:
         session:
@@ -5256,12 +5295,12 @@ components:
           recovery_addresses:
           - updated_at: 2000-01-23T04:56:07.000+00:00
             created_at: 2000-01-23T04:56:07.000+00:00
-            id: id
+            id: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
             value: value
             via: via
           - updated_at: 2000-01-23T04:56:07.000+00:00
             created_at: 2000-01-23T04:56:07.000+00:00
-            id: id
+            id: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
             value: value
             via: via
           metadata_admin: ""
@@ -5271,7 +5310,7 @@ components:
             verified_at: 2000-01-23T04:56:07.000+00:00
             verified: true
             created_at: 2014-01-01T23:28:56.782Z
-            id: id
+            id: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
             value: value
             status: status
             via: via
@@ -5279,13 +5318,13 @@ components:
             verified_at: 2000-01-23T04:56:07.000+00:00
             verified: true
             created_at: 2014-01-01T23:28:56.782Z
-            id: id
+            id: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
             value: value
             status: status
             via: via
           schema_id: schema_id
           schema_url: schema_url
-          id: id
+          id: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
           metadata_public: ""
         session:
           expires_at: 2000-01-23T04:56:07.000+00:00
@@ -5310,12 +5349,12 @@ components:
             recovery_addresses:
             - updated_at: 2000-01-23T04:56:07.000+00:00
               created_at: 2000-01-23T04:56:07.000+00:00
-              id: id
+              id: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
               value: value
               via: via
             - updated_at: 2000-01-23T04:56:07.000+00:00
               created_at: 2000-01-23T04:56:07.000+00:00
-              id: id
+              id: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
               value: value
               via: via
             metadata_admin: ""
@@ -5325,7 +5364,7 @@ components:
               verified_at: 2000-01-23T04:56:07.000+00:00
               verified: true
               created_at: 2014-01-01T23:28:56.782Z
-              id: id
+              id: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
               value: value
               status: status
               via: via
@@ -5333,17 +5372,17 @@ components:
               verified_at: 2000-01-23T04:56:07.000+00:00
               verified: true
               created_at: 2014-01-01T23:28:56.782Z
-              id: id
+              id: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
               value: value
               status: status
               via: via
             schema_id: schema_id
             schema_url: schema_url
-            id: id
+            id: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
             metadata_public: ""
           authenticated_at: 2000-01-23T04:56:07.000+00:00
           active: true
-          id: id
+          id: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
           issued_at: 2000-01-23T04:56:07.000+00:00
       properties:
         identity:
@@ -5503,8 +5542,17 @@ components:
         attributes:
           $ref: '#/components/schemas/uiNodeAttributes'
         group:
-          description: Group specifies which group (e.g. password authenticator) this
-            node belongs to.
+          description: |-
+            Group specifies which group (e.g. password authenticator) this node belongs to.
+            default DefaultGroup
+            password PasswordGroup
+            oidc OpenIDConnectGroup
+            profile ProfileGroup
+            link LinkGroup
+            code CodeGroup
+            totp TOTPGroup
+            lookup_secret LookupGroup
+            webauthn WebAuthnGroup
           enum:
           - default
           - password
@@ -5516,6 +5564,16 @@ components:
           - lookup_secret
           - webauthn
           type: string
+          x-go-enum-desc: |-
+            default DefaultGroup
+            password PasswordGroup
+            oidc OpenIDConnectGroup
+            profile ProfileGroup
+            link LinkGroup
+            code CodeGroup
+            totp TOTPGroup
+            lookup_secret LookupGroup
+            webauthn WebAuthnGroup
         messages:
           items:
             $ref: '#/components/schemas/uiText'
@@ -5523,7 +5581,13 @@ components:
         meta:
           $ref: '#/components/schemas/uiNodeMeta'
         type:
-          description: The node's type
+          description: |-
+            The node's type
+            text Text
+            input Input
+            img Image
+            a Anchor
+            script Script
           enum:
           - text
           - input
@@ -5531,6 +5595,12 @@ components:
           - a
           - script
           type: string
+          x-go-enum-desc: |-
+            text Text
+            input Input
+            img Image
+            a Anchor
+            script Script
       required:
       - attributes
       - group
@@ -5616,7 +5686,14 @@ components:
       description: InputAttributes represents the attributes of an input node
       properties:
         autocomplete:
-          description: The autocomplete attribute for the input.
+          description: |-
+            The autocomplete attribute for the input.
+            email InputAttributeAutocompleteEmail
+            tel InputAttributeAutocompleteTel
+            url InputAttributeAutocompleteUrl
+            current-password InputAttributeAutocompleteCurrentPassword
+            new-password InputAttributeAutocompleteNewPassword
+            one-time-code InputAttributeAutocompleteOneTimeCode
           enum:
           - email
           - tel
@@ -5625,6 +5702,13 @@ components:
           - new-password
           - one-time-code
           type: string
+          x-go-enum-desc: |-
+            email InputAttributeAutocompleteEmail
+            tel InputAttributeAutocompleteTel
+            url InputAttributeAutocompleteUrl
+            current-password InputAttributeAutocompleteCurrentPassword
+            new-password InputAttributeAutocompleteNewPassword
+            one-time-code InputAttributeAutocompleteOneTimeCode
         disabled:
           description: Sets the input's disabled field to true or false.
           type: boolean
@@ -5650,7 +5734,20 @@ components:
           description: Mark this input field as required.
           type: boolean
         type:
-          description: The input's element type.
+          description: |-
+            The input's element type.
+            text InputAttributeTypeText
+            password InputAttributeTypePassword
+            number InputAttributeTypeNumber
+            checkbox InputAttributeTypeCheckbox
+            hidden InputAttributeTypeHidden
+            email InputAttributeTypeEmail
+            tel InputAttributeTypeTel
+            submit InputAttributeTypeSubmit
+            button InputAttributeTypeButton
+            datetime-local InputAttributeTypeDateTimeLocal
+            date InputAttributeTypeDate
+            url InputAttributeTypeURI
           enum:
           - text
           - password
@@ -5665,6 +5762,19 @@ components:
           - date
           - url
           type: string
+          x-go-enum-desc: |-
+            text InputAttributeTypeText
+            password InputAttributeTypePassword
+            number InputAttributeTypeNumber
+            checkbox InputAttributeTypeCheckbox
+            hidden InputAttributeTypeHidden
+            email InputAttributeTypeEmail
+            tel InputAttributeTypeTel
+            submit InputAttributeTypeSubmit
+            button InputAttributeTypeButton
+            datetime-local InputAttributeTypeDateTimeLocal
+            date InputAttributeTypeDate
+            url InputAttributeTypeURI
         value:
           description: The input's value.
           nullable: true
@@ -5795,7 +5905,7 @@ components:
         verified_at: 2000-01-23T04:56:07.000+00:00
         verified: true
         created_at: 2014-01-01T23:28:56.782Z
-        id: id
+        id: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
         value: value
         status: status
         via: via
@@ -5806,7 +5916,8 @@ components:
           format: date-time
           type: string
         id:
-          format: uuid4
+          description: The ID
+          format: uuid
           type: string
         status:
           description: VerifiableAddressStatus must not exceed 16 characters as that

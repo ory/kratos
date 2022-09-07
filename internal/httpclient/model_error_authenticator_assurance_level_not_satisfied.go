@@ -22,7 +22,7 @@ type ErrorAuthenticatorAssuranceLevelNotSatisfied struct {
 	// Debug information  This field is often not exposed to protect against leaking sensitive information.
 	Debug *string `json:"debug,omitempty"`
 	// Further error details
-	Details map[string]map[string]interface{} `json:"details,omitempty"`
+	Details map[string]interface{} `json:"details,omitempty"`
 	// The error ID  Useful when trying to identify various errors in application logic.
 	Id *string `json:"id,omitempty"`
 	// Error message  The error's message.
@@ -119,9 +119,9 @@ func (o *ErrorAuthenticatorAssuranceLevelNotSatisfied) SetDebug(v string) {
 }
 
 // GetDetails returns the Details field value if set, zero value otherwise.
-func (o *ErrorAuthenticatorAssuranceLevelNotSatisfied) GetDetails() map[string]map[string]interface{} {
+func (o *ErrorAuthenticatorAssuranceLevelNotSatisfied) GetDetails() map[string]interface{} {
 	if o == nil || o.Details == nil {
-		var ret map[string]map[string]interface{}
+		var ret map[string]interface{}
 		return ret
 	}
 	return o.Details
@@ -129,7 +129,7 @@ func (o *ErrorAuthenticatorAssuranceLevelNotSatisfied) GetDetails() map[string]m
 
 // GetDetailsOk returns a tuple with the Details field value if set, nil otherwise
 // and a boolean to check if the value has been set.
-func (o *ErrorAuthenticatorAssuranceLevelNotSatisfied) GetDetailsOk() (map[string]map[string]interface{}, bool) {
+func (o *ErrorAuthenticatorAssuranceLevelNotSatisfied) GetDetailsOk() (map[string]interface{}, bool) {
 	if o == nil || o.Details == nil {
 		return nil, false
 	}
@@ -145,8 +145,8 @@ func (o *ErrorAuthenticatorAssuranceLevelNotSatisfied) HasDetails() bool {
 	return false
 }
 
-// SetDetails gets a reference to the given map[string]map[string]interface{} and assigns it to the Details field.
-func (o *ErrorAuthenticatorAssuranceLevelNotSatisfied) SetDetails(v map[string]map[string]interface{}) {
+// SetDetails gets a reference to the given map[string]interface{} and assigns it to the Details field.
+func (o *ErrorAuthenticatorAssuranceLevelNotSatisfied) SetDetails(v map[string]interface{}) {
 	o.Details = v
 }
 

@@ -22,7 +22,7 @@ type SelfServiceBrowserLocationChangeRequiredError struct {
 	// Debug information  This field is often not exposed to protect against leaking sensitive information.
 	Debug *string `json:"debug,omitempty"`
 	// Further error details
-	Details map[string]map[string]interface{} `json:"details,omitempty"`
+	Details map[string]interface{} `json:"details,omitempty"`
 	// The error ID  Useful when trying to identify various errors in application logic.
 	Id *string `json:"id,omitempty"`
 	// Error message  The error's message.
@@ -30,9 +30,10 @@ type SelfServiceBrowserLocationChangeRequiredError struct {
 	// A human-readable reason for the error
 	Reason *string `json:"reason,omitempty"`
 	// RedirectBrowserTo contains the URL the browser should be redirected to
-	RedirectBrowserTo *string              `json:"redirect_browser_to,omitempty"`
-	RedirectFlowId    *string              `json:"redirect_flow_id,omitempty"`
-	RedirectFlowName  *SelfServiceFlowName `json:"redirect_flow_name,omitempty"`
+	RedirectBrowserTo *string `json:"redirect_browser_to,omitempty"`
+	// RedirectFlowID is the ID of the flow instance
+	RedirectFlowId   *string              `json:"redirect_flow_id,omitempty"`
+	RedirectFlowName *SelfServiceFlowName `json:"redirect_flow_name,omitempty"`
 	// The request ID  The request ID is often exposed internally in order to trace errors across service architectures. This is often a UUID.
 	Request *string `json:"request,omitempty"`
 	// SessionToken is an optional token for the current session
@@ -124,9 +125,9 @@ func (o *SelfServiceBrowserLocationChangeRequiredError) SetDebug(v string) {
 }
 
 // GetDetails returns the Details field value if set, zero value otherwise.
-func (o *SelfServiceBrowserLocationChangeRequiredError) GetDetails() map[string]map[string]interface{} {
+func (o *SelfServiceBrowserLocationChangeRequiredError) GetDetails() map[string]interface{} {
 	if o == nil || o.Details == nil {
-		var ret map[string]map[string]interface{}
+		var ret map[string]interface{}
 		return ret
 	}
 	return o.Details
@@ -134,7 +135,7 @@ func (o *SelfServiceBrowserLocationChangeRequiredError) GetDetails() map[string]
 
 // GetDetailsOk returns a tuple with the Details field value if set, nil otherwise
 // and a boolean to check if the value has been set.
-func (o *SelfServiceBrowserLocationChangeRequiredError) GetDetailsOk() (map[string]map[string]interface{}, bool) {
+func (o *SelfServiceBrowserLocationChangeRequiredError) GetDetailsOk() (map[string]interface{}, bool) {
 	if o == nil || o.Details == nil {
 		return nil, false
 	}
@@ -150,8 +151,8 @@ func (o *SelfServiceBrowserLocationChangeRequiredError) HasDetails() bool {
 	return false
 }
 
-// SetDetails gets a reference to the given map[string]map[string]interface{} and assigns it to the Details field.
-func (o *SelfServiceBrowserLocationChangeRequiredError) SetDetails(v map[string]map[string]interface{}) {
+// SetDetails gets a reference to the given map[string]interface{} and assigns it to the Details field.
+func (o *SelfServiceBrowserLocationChangeRequiredError) SetDetails(v map[string]interface{}) {
 	o.Details = v
 }
 

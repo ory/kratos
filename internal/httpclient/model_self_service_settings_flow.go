@@ -22,8 +22,9 @@ type SelfServiceSettingsFlow struct {
 	Active *string `json:"active,omitempty"`
 	// ExpiresAt is the time (UTC) when the flow expires. If the user still wishes to update the setting, a new flow has to be initiated.
 	ExpiresAt time.Time `json:"expires_at"`
-	Id        string    `json:"id"`
-	Identity  Identity  `json:"identity"`
+	// ID represents the flow's unique ID. When performing the settings flow, this represents the id in the settings ui's query parameter: http://<selfservice.flows.settings.ui_url>?flow=<id>
+	Id       string   `json:"id"`
+	Identity Identity `json:"identity"`
 	// IssuedAt is the time (UTC) when the flow occurred.
 	IssuedAt time.Time `json:"issued_at"`
 	// RequestURL is the initial URL that was requested from Ory Kratos. It can be used to forward information contained in the URL's path or query for example.

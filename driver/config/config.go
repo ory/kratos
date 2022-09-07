@@ -131,10 +131,12 @@ const (
 	ViperKeySelfServiceLogoutBrowserDefaultReturnTo          = "selfservice.flows.logout.after." + DefaultBrowserReturnURL
 	ViperKeySelfServiceSettingsURL                           = "selfservice.flows.settings.ui_url"
 	ViperKeySelfServiceSettingsAfter                         = "selfservice.flows.settings.after"
+	ViperKeySelfServiceSettingsBeforeHooks                   = "selfservice.flows.settings.before.hooks"
 	ViperKeySelfServiceSettingsRequestLifespan               = "selfservice.flows.settings.lifespan"
 	ViperKeySelfServiceSettingsPrivilegedAuthenticationAfter = "selfservice.flows.settings.privileged_session_max_age"
 	ViperKeySelfServiceSettingsRequiredAAL                   = "selfservice.flows.settings.required_aal"
 	ViperKeySelfServiceRecoveryAfter                         = "selfservice.flows.recovery.after"
+	ViperKeySelfServiceRecoveryBeforeHooks                   = "selfservice.flows.recovery.before.hooks"
 	ViperKeySelfServiceRecoveryEnabled                       = "selfservice.flows.recovery.enabled"
 	ViperKeySelfServiceRecoveryUI                            = "selfservice.flows.recovery.ui_url"
 	ViperKeySelfServiceRecoveryRequestLifespan               = "selfservice.flows.recovery.lifespan"
@@ -144,6 +146,7 @@ const (
 	ViperKeySelfServiceVerificationRequestLifespan           = "selfservice.flows.verification.lifespan"
 	ViperKeySelfServiceVerificationBrowserDefaultReturnTo    = "selfservice.flows.verification.after." + DefaultBrowserReturnURL
 	ViperKeySelfServiceVerificationAfter                     = "selfservice.flows.verification.after"
+	ViperKeySelfServiceVerificationBeforeHooks               = "selfservice.flows.verification.before.hooks"
 	ViperKeyDefaultIdentitySchemaID                          = "identity.default_schema_id"
 	ViperKeyIdentitySchemas                                  = "identity.schemas"
 	ViperKeyHasherAlgorithm                                  = "hashers.algorithm"
@@ -176,6 +179,7 @@ const (
 	ViperKeyWebAuthnRPIcon                                   = "selfservice.methods.webauthn.config.rp.issuer"
 	ViperKeyWebAuthnPasswordless                             = "selfservice.methods.webauthn.config.passwordless"
 	ViperKeyClientHTTPNoPrivateIPRanges                      = "clients.http.disallow_private_ip_ranges"
+	ViperKeyClientHTTPPrivateIPExceptionURLs                 = "clients.http.private_ip_exception_urls"
 	ViperKeyVersion                                          = "version"
 )
 
@@ -607,6 +611,10 @@ func (p *Config) ClientHTTPNoPrivateIPRanges(ctx context.Context) bool {
 	return p.GetProvider(ctx).Bool(ViperKeyClientHTTPNoPrivateIPRanges)
 }
 
+func (p *Config) ClientHTTPPrivateIPExceptionURLs(ctx context.Context) []string {
+	return p.GetProvider(ctx).Strings(ViperKeyClientHTTPPrivateIPExceptionURLs)
+}
+
 func (p *Config) SelfServiceFlowRegistrationEnabled(ctx context.Context) bool {
 	return p.GetProvider(ctx).Bool(ViperKeySelfServiceRegistrationEnabled)
 }
@@ -621,6 +629,18 @@ func (p *Config) SelfServiceFlowRecoveryEnabled(ctx context.Context) bool {
 
 func (p *Config) SelfServiceFlowLoginBeforeHooks(ctx context.Context) []SelfServiceHook {
 	return p.selfServiceHooks(ctx, ViperKeySelfServiceLoginBeforeHooks)
+}
+
+func (p *Config) SelfServiceFlowRecoveryBeforeHooks(ctx context.Context) []SelfServiceHook {
+	return p.selfServiceHooks(ctx, ViperKeySelfServiceRecoveryBeforeHooks)
+}
+
+func (p *Config) SelfServiceFlowVerificationBeforeHooks(ctx context.Context) []SelfServiceHook {
+	return p.selfServiceHooks(ctx, ViperKeySelfServiceVerificationBeforeHooks)
+}
+
+func (p *Config) SelfServiceFlowSettingsBeforeHooks(ctx context.Context) []SelfServiceHook {
+	return p.selfServiceHooks(ctx, ViperKeySelfServiceSettingsBeforeHooks)
 }
 
 func (p *Config) SelfServiceFlowRegistrationBeforeHooks(ctx context.Context) []SelfServiceHook {

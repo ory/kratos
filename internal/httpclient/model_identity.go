@@ -22,13 +22,14 @@ type Identity struct {
 	CreatedAt *time.Time `json:"created_at,omitempty"`
 	// Credentials represents all credentials that can be used for authenticating this identity.
 	Credentials *map[string]IdentityCredentials `json:"credentials,omitempty"`
-	Id          string                          `json:"id"`
+	// ID is the identity's unique identifier.  The Identity ID can not be changed and can not be chosen. This ensures future compatibility and optimization for distributed stores such as CockroachDB.
+	Id string `json:"id"`
 	// NullJSONRawMessage represents a json.RawMessage that works well with JSON, SQL, and Swagger and is NULLable-
 	MetadataAdmin interface{} `json:"metadata_admin,omitempty"`
 	// NullJSONRawMessage represents a json.RawMessage that works well with JSON, SQL, and Swagger and is NULLable-
 	MetadataPublic interface{} `json:"metadata_public,omitempty"`
 	// RecoveryAddresses contains all the addresses that can be used to recover an identity.
-	RecoveryAddresses []RecoveryAddress `json:"recovery_addresses,omitempty"`
+	RecoveryAddresses []RecoveryIdentityAddress `json:"recovery_addresses,omitempty"`
 	// SchemaID is the ID of the JSON Schema to be used for validating the identity's traits.
 	SchemaId string `json:"schema_id"`
 	// SchemaURL is the URL of the endpoint where the identity's traits schema can be fetched from.  format: url
@@ -219,9 +220,9 @@ func (o *Identity) SetMetadataPublic(v interface{}) {
 }
 
 // GetRecoveryAddresses returns the RecoveryAddresses field value if set, zero value otherwise.
-func (o *Identity) GetRecoveryAddresses() []RecoveryAddress {
+func (o *Identity) GetRecoveryAddresses() []RecoveryIdentityAddress {
 	if o == nil || o.RecoveryAddresses == nil {
-		var ret []RecoveryAddress
+		var ret []RecoveryIdentityAddress
 		return ret
 	}
 	return o.RecoveryAddresses
@@ -229,7 +230,7 @@ func (o *Identity) GetRecoveryAddresses() []RecoveryAddress {
 
 // GetRecoveryAddressesOk returns a tuple with the RecoveryAddresses field value if set, nil otherwise
 // and a boolean to check if the value has been set.
-func (o *Identity) GetRecoveryAddressesOk() ([]RecoveryAddress, bool) {
+func (o *Identity) GetRecoveryAddressesOk() ([]RecoveryIdentityAddress, bool) {
 	if o == nil || o.RecoveryAddresses == nil {
 		return nil, false
 	}
@@ -245,8 +246,8 @@ func (o *Identity) HasRecoveryAddresses() bool {
 	return false
 }
 
-// SetRecoveryAddresses gets a reference to the given []RecoveryAddress and assigns it to the RecoveryAddresses field.
-func (o *Identity) SetRecoveryAddresses(v []RecoveryAddress) {
+// SetRecoveryAddresses gets a reference to the given []RecoveryIdentityAddress and assigns it to the RecoveryAddresses field.
+func (o *Identity) SetRecoveryAddresses(v []RecoveryIdentityAddress) {
 	o.RecoveryAddresses = v
 }
 

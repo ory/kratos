@@ -49,6 +49,7 @@ type (
 		FlowPersistenceProvider
 		ErrorHandlerProvider
 		StrategyProvider
+		HookExecutorProvider
 	}
 	Handler struct {
 		d handlerDependencies
@@ -80,6 +81,34 @@ func (h *Handler) RegisterAdminRoutes(admin *x.RouterAdmin) {
 	admin.GET(RouteSubmitFlow, x.RedirectToPublicRoute(h.d))
 }
 
+type FlowOption func(f *Flow)
+
+func WithFlowReturnTo(returnTo string) FlowOption {
+	return func(f *Flow) {
+		f.ReturnTo = returnTo
+	}
+}
+
+func (h *Handler) NewVerificationFlow(w http.ResponseWriter, r *http.Request, ft flow.Type, opts ...FlowOption) (*Flow, error) {
+	f, err := NewFlow(h.d.Config(), h.d.Config().SelfServiceFlowVerificationRequestLifespan(r.Context()), h.d.GenerateCSRFToken(r), r, h.d.AllVerificationStrategies(), ft)
+	if err != nil {
+		return nil, err
+	}
+	for _, o := range opts {
+		o(f)
+	}
+
+	if err := h.d.VerificationExecutor().PreVerificationHook(w, r, f); err != nil {
+		return nil, err
+	}
+
+	if err := h.d.VerificationFlowPersister().CreateVerificationFlow(r.Context(), f); err != nil {
+		return nil, err
+	}
+
+	return f, nil
+}
+
 // swagger:route GET /self-service/verification/api v0alpha2 initializeSelfServiceVerificationFlowWithoutBrowser
 //
 // Initialize Verification Flow for APIs, Services, Apps, ...
@@ -96,25 +125,20 @@ func (h *Handler) RegisterAdminRoutes(admin *x.RouterAdmin) {
 //
 // More information can be found at [Ory Kratos Email and Phone Verification Documentation](https://www.ory.sh/docs/kratos/self-service/flows/verify-email-account-activation).
 //
-//     Schemes: http, https
+//	Schemes: http, https
 //
-//     Responses:
-//       200: selfServiceVerificationFlow
-//       500: jsonError
-//       400: jsonError
+//	Responses:
+//	  200: selfServiceVerificationFlow
+//	  500: jsonError
+//	  400: jsonError
 func (h *Handler) initAPIFlow(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 	if !h.d.Config().SelfServiceFlowVerificationEnabled(r.Context()) {
 		h.d.SelfServiceErrorManager().Forward(r.Context(), w, r, errors.WithStack(herodot.ErrBadRequest.WithReasonf("Verification is not allowed because it was disabled.")))
 		return
 	}
 
-	req, err := NewFlow(h.d.Config(), h.d.Config().SelfServiceFlowVerificationRequestLifespan(r.Context()), h.d.GenerateCSRFToken(r), r, h.d.VerificationStrategies(r.Context()), flow.TypeAPI)
+	req, err := h.NewVerificationFlow(w, r, flow.TypeAPI)
 	if err != nil {
-		h.d.Writer().WriteError(w, r, err)
-		return
-	}
-
-	if err := h.d.VerificationFlowPersister().CreateVerificationFlow(r.Context(), req); err != nil {
 		h.d.Writer().WriteError(w, r, err)
 		return
 	}
@@ -133,7 +157,7 @@ type initializeSelfServiceVerificationFlowForBrowsers struct {
 
 // swagger:route GET /self-service/verification/browser v0alpha2 initializeSelfServiceVerificationFlowForBrowsers
 //
-// Initialize Verification Flow for Browser Clients
+// # Initialize Verification Flow for Browser Clients
 //
 // This endpoint initializes a browser-based account verification flow. Once initialized, the browser will be redirected to
 // `selfservice.flows.verification.ui_url` with the flow ID set as the query parameter `?flow=`.
@@ -144,26 +168,21 @@ type initializeSelfServiceVerificationFlowForBrowsers struct {
 //
 // More information can be found at [Ory Kratos Email and Phone Verification Documentation](https://www.ory.sh/docs/kratos/selfservice/flows/verify-email-account-activation).
 //
-//     Schemes: http, https
+//	Schemes: http, https
 //
-//     Responses:
-//       200: selfServiceVerificationFlow
-//       303: emptyResponse
-//       500: jsonError
+//	Responses:
+//	  200: selfServiceVerificationFlow
+//	  303: emptyResponse
+//	  500: jsonError
 func (h *Handler) initBrowserFlow(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	if !h.d.Config().SelfServiceFlowVerificationEnabled(r.Context()) {
 		h.d.SelfServiceErrorManager().Forward(r.Context(), w, r, errors.WithStack(herodot.ErrBadRequest.WithReasonf("Verification is not allowed because it was disabled.")))
 		return
 	}
 
-	req, err := NewFlow(h.d.Config(), h.d.Config().SelfServiceFlowVerificationRequestLifespan(r.Context()), h.d.GenerateCSRFToken(r), r, h.d.VerificationStrategies(r.Context()), flow.TypeBrowser)
+	req, err := h.NewVerificationFlow(w, r, flow.TypeBrowser)
 	if err != nil {
-		h.d.SelfServiceErrorManager().Forward(r.Context(), w, r, err)
-		return
-	}
-
-	if err := h.d.VerificationFlowPersister().CreateVerificationFlow(r.Context(), req); err != nil {
-		h.d.SelfServiceErrorManager().Forward(r.Context(), w, r, err)
+		h.d.Writer().WriteError(w, r, err)
 		return
 	}
 
@@ -205,26 +224,26 @@ type getSelfServiceVerificationFlow struct {
 // If you use the browser-flow for server-side apps, the services need to run on a common top-level-domain
 // and you need to forward the incoming HTTP Cookie header to this endpoint:
 //
-//     	```js
-//     	// pseudo-code example
-//     	router.get('/recovery', async function (req, res) {
-//     	  const flow = await client.getSelfServiceVerificationFlow(req.header('cookie'), req.query['flow'])
+//		```js
+//		// pseudo-code example
+//		router.get('/recovery', async function (req, res) {
+//		  const flow = await client.getSelfServiceVerificationFlow(req.header('cookie'), req.query['flow'])
 //
-//        res.render('verification', flow)
-//     	})
+//	   res.render('verification', flow)
+//		})
 //
 // More information can be found at [Ory Kratos Email and Phone Verification Documentation](https://www.ory.sh/docs/kratos/selfservice/flows/verify-email-account-activation).
 //
-//     Produces:
-//     - application/json
+//	Produces:
+//	- application/json
 //
-//     Schemes: http, https
+//	Schemes: http, https
 //
-//     Responses:
-//       200: selfServiceVerificationFlow
-//       403: jsonError
-//       404: jsonError
-//       500: jsonError
+//	Responses:
+//	  200: selfServiceVerificationFlow
+//	  403: jsonError
+//	  404: jsonError
+//	  500: jsonError
 func (h *Handler) fetch(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 	if !h.d.Config().SelfServiceFlowVerificationEnabled(r.Context()) {
 		h.d.SelfServiceErrorManager().Forward(r.Context(), w, r, errors.WithStack(herodot.ErrBadRequest.WithReasonf("Verification is not allowed because it was disabled.")))
@@ -326,21 +345,21 @@ type submitSelfServiceVerificationFlowBody struct{}
 //
 // More information can be found at [Ory Kratos Email and Phone Verification Documentation](https://www.ory.sh/docs/kratos/selfservice/flows/verify-email-account-activation).
 //
-//     Consumes:
-//     - application/json
-//     - application/x-www-form-urlencoded
+//	Consumes:
+//	- application/json
+//	- application/x-www-form-urlencoded
 //
-//     Produces:
-//     - application/json
+//	Produces:
+//	- application/json
 //
-//     Schemes: http, https
+//	Schemes: http, https
 //
-//     Responses:
-//       200: selfServiceVerificationFlow
-//       303: emptyResponse
-//       400: selfServiceVerificationFlow
-//       410: jsonError
-//       500: jsonError
+//	Responses:
+//	  200: selfServiceVerificationFlow
+//	  303: emptyResponse
+//	  400: selfServiceVerificationFlow
+//	  410: jsonError
+//	  500: jsonError
 func (h *Handler) submitFlow(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	rid, err := flow.GetFlowID(r)
 	if err != nil {

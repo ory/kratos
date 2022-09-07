@@ -23,7 +23,8 @@ type SelfServiceLoginFlow struct {
 	CreatedAt *time.Time `json:"created_at,omitempty"`
 	// ExpiresAt is the time (UTC) when the flow expires. If the user still wishes to log in, a new flow has to be initiated.
 	ExpiresAt time.Time `json:"expires_at"`
-	Id        string    `json:"id"`
+	// ID represents the flow's unique ID. When performing the login flow, this represents the id in the login UI's query parameter: http://<selfservice.flows.login.ui_url>/?flow=<flow_id>
+	Id string `json:"id"`
 	// IssuedAt is the time (UTC) when the flow started.
 	IssuedAt time.Time `json:"issued_at"`
 	// Refresh stores whether this login flow should enforce re-authentication.

@@ -158,23 +158,16 @@ func TestRegistrationExecutor(t *testing.T) {
 				})
 			})
 
-			t.Run("type=browser/method=PreRegistrationHook", testhelpers.TestSelfServicePreHook(
-				config.ViperKeySelfServiceRegistrationBeforeHooks,
-				testhelpers.SelfServiceMakeRegistrationPreHookRequest,
-				func(t *testing.T) *httptest.Server {
-					return newServer(t, nil, flow.TypeBrowser)
-				},
-				conf,
-			))
-
-			t.Run("type=api/method=PreRegistrationHook", testhelpers.TestSelfServicePreHook(
-				config.ViperKeySelfServiceRegistrationBeforeHooks,
-				testhelpers.SelfServiceMakeRegistrationPreHookRequest,
-				func(t *testing.T) *httptest.Server {
-					return newServer(t, nil, flow.TypeAPI)
-				},
-				conf,
-			))
+			for _, kind := range []flow.Type{flow.TypeBrowser, flow.TypeAPI} {
+				t.Run("type="+string(kind)+"/method=PreRegistrationHook", testhelpers.TestSelfServicePreHook(
+					config.ViperKeySelfServiceRegistrationBeforeHooks,
+					testhelpers.SelfServiceMakeRegistrationPreHookRequest,
+					func(t *testing.T) *httptest.Server {
+						return newServer(t, nil, kind)
+					},
+					conf,
+				))
+			}
 		})
 	}
 }

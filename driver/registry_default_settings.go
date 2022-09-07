@@ -16,6 +16,15 @@ func (m *RegistryDefault) PostSettingsPrePersistHooks(ctx context.Context, setti
 	return
 }
 
+func (m *RegistryDefault) PreSettingsHooks(ctx context.Context) (b []settings.PreHookExecutor) {
+	for _, v := range m.getHooks("", m.Config().SelfServiceFlowSettingsBeforeHooks(ctx)) {
+		if hook, ok := v.(settings.PreHookExecutor); ok {
+			b = append(b, hook)
+		}
+	}
+	return
+}
+
 func (m *RegistryDefault) PostSettingsPostPersistHooks(ctx context.Context, settingsType string) (b []settings.PostHookPostPersistExecutor) {
 	initialHookCount := 0
 	if m.Config().SelfServiceFlowVerificationEnabled(ctx) {
