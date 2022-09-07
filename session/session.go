@@ -5,6 +5,8 @@ import (
 	"database/sql/driver"
 	"encoding/json"
 	"fmt"
+	"net/http"
+	"strings"
 	"time"
 
 	"github.com/pkg/errors"
@@ -79,6 +81,15 @@ type Session struct {
 	// required: true
 	Identity *identity.Identity `json:"identity" faker:"identity" db:"-" belongs_to:"identities" fk_id:"IdentityID"`
 
+	// IP address of the machine where the session was initiated
+	ClientIPAddress string `json:"client_ip_address" db:"client_ip_address"`
+
+	// User Agent
+	UserAgent string `json:"user_agent" db:"user_agent"`
+
+	// Geo Location where the session was initiated
+	GeoLocation string `json:"geo_location" db:"geo_location"`
+
 	// IdentityID is a helper struct field for gobuffalo.pop.
 	IdentityID uuid.UUID `json:"-" faker:"-" db:"identity_id"`
 
@@ -148,7 +159,7 @@ func (s *Session) SetAuthenticatorAssuranceLevel() {
 	}
 }
 
-func NewActiveSession(ctx context.Context, requestHeaders map[string][]string, i *identity.Identity, c lifespanProvider, authenticatedAt time.Time, completedLoginFor identity.CredentialsType, completedLoginAAL identity.AuthenticatorAssuranceLevel) (*Session, error) {
+func NewActiveSession(ctx context.Context, requestHeaders http.Header, i *identity.Identity, c lifespanProvider, authenticatedAt time.Time, completedLoginFor identity.CredentialsType, completedLoginAAL identity.AuthenticatorAssuranceLevel) (*Session, error) {
 	s := NewInactiveSession()
 	s.CompletedLoginFor(completedLoginFor, completedLoginAAL)
 	if err := s.Activate(ctx, requestHeaders, i, c, authenticatedAt); err != nil {
@@ -167,7 +178,7 @@ func NewInactiveSession() *Session {
 	}
 }
 
-func (s *Session) Activate(ctx context.Context, requestHeaders map[string][]string, i *identity.Identity, c lifespanProvider, authenticatedAt time.Time) error {
+func (s *Session) Activate(ctx context.Context, requestHeaders http.Header, i *identity.Identity, c lifespanProvider, authenticatedAt time.Time) error {
 	if i != nil && !i.IsActive() {
 		return ErrIdentityDisabled.WithDetail("identity_id", i.ID)
 	}
@@ -178,6 +189,22 @@ func (s *Session) Activate(ctx context.Context, requestHeaders map[string][]stri
 	s.IssuedAt = authenticatedAt
 	s.Identity = i
 	s.IdentityID = i.ID
+
+	agent := requestHeaders["User-Agent"]
+	if len(agent) > 0 {
+		s.UserAgent = strings.Join(agent, " ")
+	}
+
+	clientIP := requestHeaders.Get("True-Client-IP")
+	if clientIP != "" {
+		s.ClientIPAddress = clientIP
+	} else {
+		// TODO: Use x lib implementation to parse client IP address from the header string
+		s.ClientIPAddress = requestHeaders.Get("X-Forwarded-For")
+	}
+
+	clientGeoLocation := []string{requestHeaders.Get("Cf-Ipcity"), requestHeaders.Get("Cf-Ipcountry")}
+	s.GeoLocation = strings.Join(clientGeoLocation, ", ")
 
 	s.SetAuthenticatorAssuranceLevel()
 	return nil
