@@ -1,7 +1,7 @@
 package testhelpers
 
 import (
-	"context"
+	"github.com/ory/kratos/x"
 	"testing"
 	"time"
 
@@ -14,12 +14,11 @@ import (
 )
 
 func CreateSession(t *testing.T, reg driver.Registry) *session.Session {
-	ctx := context.Background()
-	header := make(map[string][]string, 0)
+	req := x.NewTestHTTPRequest(t, "GET", "/sessions/whoami", nil)
 	i := identity.NewIdentity(config.DefaultIdentityTraitsSchemaID)
-	require.NoError(t, reg.PrivilegedIdentityPool().CreateIdentity(ctx, i))
-	sess, err := session.NewActiveSession(ctx, header, i, reg.Config(), time.Now().UTC(), identity.CredentialsTypePassword, identity.AuthenticatorAssuranceLevel1)
+	require.NoError(t, reg.PrivilegedIdentityPool().CreateIdentity(req.Context(), i))
+	sess, err := session.NewActiveSession(req, i, reg.Config(), time.Now().UTC(), identity.CredentialsTypePassword, identity.AuthenticatorAssuranceLevel1)
 	require.NoError(t, err)
-	require.NoError(t, reg.SessionPersister().UpsertSession(ctx, sess))
+	require.NoError(t, reg.SessionPersister().UpsertSession(req.Context(), sess))
 	return sess
 }
