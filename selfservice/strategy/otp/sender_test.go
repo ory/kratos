@@ -32,8 +32,8 @@ func TestSender(t *testing.T) {
 		conf, reg := internal.NewFastRegistryWithMocks(t)
 		testhelpers.SetDefaultIdentitySchema(conf, "file://./stub/phone.schema.json")
 
-		conf.MustSet(config.ViperKeyPublicBaseURL, "https://www.ory.sh/")
-		conf.MustSet(config.ViperKeyCourierSMSRequestConfig, `  sms:
+		conf.MustSet(ctx, config.ViperKeyPublicBaseURL, "https://www.ory.sh/")
+		conf.MustSet(ctx, config.ViperKeyCourierSMSRequestConfig, `  sms:
     enabled: true
     from: '+49123456789'
     request_config:
@@ -47,7 +47,7 @@ func TestSender(t *testing.T) {
         config:
           user: YourUsername
           password: YourPass`)
-		conf.MustSet(config.ViperKeyLinkBaseURL, "https://link-url/")
+		conf.MustSet(ctx, config.ViperKeyLinkBaseURL, "https://link-url/")
 
 		i := identity.NewIdentity(config.DefaultIdentityTraitsSchemaID)
 		i.Traits = identity.Traits(`{"phone": "+18004444444"}`)
@@ -96,9 +96,9 @@ func TestSender(t *testing.T) {
 		conf, reg := internal.NewFastRegistryWithMocks(t)
 
 		testhelpers.SetDefaultIdentitySchema(conf, "file://./stub/email.schema.json")
-		conf.MustSet(config.ViperKeyPublicBaseURL, "https://www.ory.sh/")
-		conf.MustSet(config.ViperKeyCourierSMTPURL, "smtp://foo@bar@dev.null/")
-		conf.MustSet(config.ViperKeyLinkBaseURL, "https://link-url/")
+		conf.MustSet(ctx, config.ViperKeyPublicBaseURL, "https://www.ory.sh/")
+		conf.MustSet(ctx, config.ViperKeyCourierSMTPURL, "smtp://foo@bar@dev.null/")
+		conf.MustSet(ctx, config.ViperKeyLinkBaseURL, "https://link-url/")
 
 		i := identity.NewIdentity(config.DefaultIdentityTraitsSchemaID)
 		i.Traits = identity.Traits(`{"email": "tracked@ory.sh"}`)
@@ -140,13 +140,13 @@ func TestSender(t *testing.T) {
 
 			assert.EqualValues(t, "tracked@ory.sh", messages[0].Recipient)
 			assert.Contains(t, messages[0].Subject, "Please verify")
-			assert.Contains(t, messages[0].Body, urlx.AppendPaths(conf.SelfServiceLinkMethodBaseURL(), verification.RouteSubmitFlow).String()+"?")
+			assert.Contains(t, messages[0].Body, urlx.AppendPaths(conf.SelfServiceLinkMethodBaseURL(ctx), verification.RouteSubmitFlow).String()+"?")
 			assert.Contains(t, messages[0].Body, "token=")
 			assert.Contains(t, messages[0].Body, "flow=")
 
 			assert.EqualValues(t, "not-tracked@ory.sh", messages[1].Recipient)
 			assert.Contains(t, messages[1].Subject, "tried to verify")
-			assert.NotContains(t, messages[1].Body, urlx.AppendPaths(conf.SelfServiceLinkMethodBaseURL(), verification.RouteSubmitFlow).String()+"?")
+			assert.NotContains(t, messages[1].Body, urlx.AppendPaths(conf.SelfServiceLinkMethodBaseURL(ctx), verification.RouteSubmitFlow).String()+"?")
 
 			address, err := reg.IdentityPool().FindVerifiableAddressByValue(ctx, identity.VerifiableAddressTypeEmail, "tracked@ory.sh")
 			require.NoError(t, err)

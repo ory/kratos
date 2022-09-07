@@ -10,7 +10,7 @@ import (
 	"github.com/ory/kratos/selfservice/flow/recovery"
 )
 
-func initConfigEmail(ctx context.Context, t *testing.T, c *config.Config) {
+func initConfigEmail(ctx context.Context, c *config.Config) {
 	testhelpers.SetDefaultIdentitySchema(c, "file://./stub/email.schema.json")
 	c.MustSet(ctx, config.ViperKeySelfServiceBrowserDefaultReturnTo, "https://www.ory.sh")
 	c.MustSet(ctx, config.ViperKeyURLsAllowedReturnToDomains, []string{"https://www.ory.sh"})

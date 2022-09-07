@@ -36,7 +36,7 @@ func TestVerification(t *testing.T) {
 	ctx := context.Background()
 
 	conf, reg := internal.NewFastRegistryWithMocks(t)
-	initConfigPhone(ctx, t, conf)
+	initConfigEmail(ctx, conf)
 
 	var identityToVerify = &identity.Identity{
 		ID:       x.NewUUID(),
