@@ -1,7 +1,7 @@
 package testhelpers
 
 import (
-	"github.com/ory/kratos/x"
+	"net/http/httptest"
 	"testing"
 	"time"
 
@@ -14,7 +14,7 @@ import (
 )
 
 func CreateSession(t *testing.T, reg driver.Registry) *session.Session {
-	req := x.NewTestHTTPRequest(t, "GET", "/sessions/whoami", nil)
+	req := httptest.NewRequest("GET", "/sessions/whoami", nil)
 	i := identity.NewIdentity(config.DefaultIdentityTraitsSchemaID)
 	require.NoError(t, reg.PrivilegedIdentityPool().CreateIdentity(req.Context(), i))
 	sess, err := session.NewActiveSession(req, i, reg.Config(), time.Now().UTC(), identity.CredentialsTypePassword, identity.AuthenticatorAssuranceLevel1)
