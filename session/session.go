@@ -82,13 +82,13 @@ type Session struct {
 	Identity *identity.Identity `json:"identity" faker:"identity" db:"-" belongs_to:"identities" fk_id:"IdentityID"`
 
 	// IP address of the machine where the session was initiated
-	ClientIPAddress string `json:"client_ip_address" db:"client_ip_address"`
+	ClientIPAddress *string `json:"client_ip_address" db:"client_ip_address"`
 
 	// User Agent
-	UserAgent string `json:"user_agent" db:"user_agent"`
+	UserAgent *string `json:"user_agent" db:"user_agent"`
 
 	// Geo Location where the session was initiated
-	GeoLocation string `json:"geo_location" db:"geo_location"`
+	GeoLocation *string `json:"geo_location" db:"geo_location"`
 
 	// IdentityID is a helper struct field for gobuffalo.pop.
 	IdentityID uuid.UUID `json:"-" faker:"-" db:"identity_id"`
@@ -196,14 +196,14 @@ func (s *Session) Activate(r *http.Request, i *identity.Identity, c lifespanProv
 	}
 
 	if trueClientIP := r.Header.Get("True-Client-IP"); trueClientIP != "" {
-		s.ClientIPAddress = trueClientIP
+		s.ClientIPAddress = &trueClientIP
 	} else if realClientIP := r.Header.Get("X-Real-IP"); realClientIP != "" {
-		s.ClientIPAddress = realClientIP
+		s.ClientIPAddress = &realClientIP
 	} else if forwardedIP := r.Header.Get("X-Forwarded-For"); forwardedIP != "" {
 		// TODO: Use x lib implementation to parse client IP address from the header string
-		s.ClientIPAddress = forwardedIP
+		s.ClientIPAddress = &forwardedIP
 	} else {
-		s.ClientIPAddress = r.RemoteAddr
+		s.ClientIPAddress = &r.RemoteAddr
 	}
 
 	clientGeoLocation := []string{r.Header.Get("Cf-Ipcity"), r.Header.Get("Cf-Ipcountry")}
