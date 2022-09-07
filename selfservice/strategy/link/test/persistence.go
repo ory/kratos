@@ -126,6 +126,13 @@ func TestPersister(ctx context.Context, conf *config.Config, p interface {
 				require.Error(t, err)
 			})
 
+			t.Run("case=should error when the verification token does exist but the flow does not", func(t *testing.T) {
+				_, token := newVerificationToken(t, x.NewUUID().String()+"@ory.sh")
+				require.NoError(t, p.CreateVerificationToken(ctx, token))
+				_, err := p.UseVerificationToken(ctx, x.NewUUID(), token.Token)
+				require.Error(t, err)
+			})
+
 			t.Run("case=should create a new verification token", func(t *testing.T) {
 				_, token := newVerificationToken(t, "foo-user@ory.sh")
 				require.NoError(t, p.CreateVerificationToken(ctx, token))
