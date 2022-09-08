@@ -128,7 +128,12 @@ context("Passwordless registration", () => {
         signup(registration, app, email)
         cy.logout()
         cy.visit(login)
-        cy.get('[name="identifier"]').type(email)
+
+        const identifierTrait = `${
+          app === 'express' ? `[data-testid="passwordless-flow"]` : ''
+        } [name="identifier"]`
+
+        cy.get(identifierTrait).type(email)
         cy.get('[value="webauthn"]').click()
         cy.get('[data-testid="ui/message/1010012"]').should("to.exist")
         cy.get('[name="password"]').should("to.not.exist")
@@ -162,12 +167,17 @@ context("Passwordless registration", () => {
         cy.expectSettingsSaved()
         cy.logout()
         cy.visit(login)
-        cy.get('[name="identifier"]').type(email)
+
+        const identifierTrait = `${
+          app === 'express' ? `[data-testid="passwordless-flow"]` : ''
+        } [name="identifier"]`
+
+        cy.get(identifierTrait).type(email)
         cy.get('[value="webauthn"]').click()
-        cy.get('[data-testid="ui/message/4000015"]').should("to.exist")
-        cy.get('[name="identifier"]').should("exist")
-        cy.get('[name="password"]').should("exist")
-        cy.get('[value="password"]').should("exist")
+        cy.get('[data-testid="ui/message/4000015"]').should('to.exist')
+        cy.get(identifierTrait).should('exist')
+        cy.get('[name="password"]').should('exist')
+        cy.get('[value="password"]').should('exist')
       })
 
       it("should be able to refresh", () => {
@@ -242,7 +252,12 @@ context("Passwordless registration", () => {
 
         cy.logout()
         cy.visit(login)
-        cy.get('[name="identifier"]').type(email)
+
+        const identifierTrait = `${
+          app === 'express' ? `[data-testid="passwordless-flow"]` : ''
+        } [name="identifier"]`
+
+        cy.get(identifierTrait).type(email)
         cy.get('[value="webauthn"]').click()
         cy.clickWebAuthButton("login")
         cy.getSession({
