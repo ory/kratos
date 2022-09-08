@@ -39,14 +39,18 @@ context("Testing logout flows", () => {
       it("should sign out and be able to sign in again", () => {
         cy.getSession()
         cy.getCookie('ory_kratos_session').should('not.be.null')
-        cy.get(
-          `${appPrefix(app)} [data-testid="logout"]:not(.disabled)`
-        ).click()
-        cy.noSession()
-        cy.getCookie('ory_kratos_session').should('be.null')
-        if (app === 'react') {
-          cy.url().should('include', '/login')
+        if (app === 'express') {
+          cy.get(
+            `${appPrefix(app)} [data-testid="logout"] a:not(.disabled)`
+          ).click()
+        } else {
+          cy.get(
+            `${appPrefix(app)} [data-testid="logout"]:not(.disabled)`
+          ).click()
         }
+        cy.getCookie('ory_kratos_session').should('be.null')
+        cy.noSession()
+        cy.url().should('include', '/login')
       })
     })
   })
