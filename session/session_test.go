@@ -81,12 +81,31 @@ func TestSession(t *testing.T) {
 		assert.Equal(t, authAt, s.AuthenticatedAt)
 		assert.Equal(t, "54.155.246.232", *s.ClientIPAddress)
 		assert.Equal(t, "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/51.0.2704.103 Safari/537.36", *s.UserAgent)
+		assert.Equal(t, "", *s.GeoLocation)
+	})
+
+	t.Run("case=client information reverse proxy real IP set", func(t *testing.T) {
+		req := x.NewTestHTTPRequest(t, "GET", "/sessions/whoami", nil)
+		req.Header["User-Agent"] = []string{"Mozilla/5.0 (X11; Linux x86_64)", "AppleWebKit/537.36 (KHTML, like Gecko)", "Chrome/51.0.2704.103 Safari/537.36"}
+		req.Header.Set("X-Real-IP", "54.155.246.155")
+		req.Header["X-Forwarded-For"] = []string{"54.155.246.232", "10.145.1.10"}
+
+		s := session.NewInactiveSession()
+		require.NoError(t, s.Activate(req, &identity.Identity{State: identity.StateActive}, conf, authAt))
+		assert.True(t, s.Active)
+		assert.Equal(t, identity.NoAuthenticatorAssuranceLevel, s.AuthenticatorAssuranceLevel)
+		assert.Equal(t, authAt, s.AuthenticatedAt)
+		assert.Equal(t, "54.155.246.155", *s.ClientIPAddress)
+		assert.Equal(t, "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/51.0.2704.103 Safari/537.36", *s.UserAgent)
+		assert.Equal(t, "", *s.GeoLocation)
 	})
 
 	t.Run("case=client information CF", func(t *testing.T) {
 		req := x.NewTestHTTPRequest(t, "GET", "/sessions/whoami", nil)
 		req.Header["User-Agent"] = []string{"Mozilla/5.0 (X11; Linux x86_64)", "AppleWebKit/537.36 (KHTML, like Gecko)", "Chrome/51.0.2704.103 Safari/537.36"}
 		req.Header.Set("True-Client-IP", "54.155.246.232")
+		req.Header.Set("Cf-Ipcity", "Munich")
+		req.Header.Set("Cf-Ipcountry", "Germany")
 
 		s := session.NewInactiveSession()
 		require.NoError(t, s.Activate(req, &identity.Identity{State: identity.StateActive}, conf, authAt))
@@ -95,6 +114,7 @@ func TestSession(t *testing.T) {
 		assert.Equal(t, authAt, s.AuthenticatedAt)
 		assert.Equal(t, "54.155.246.232", *s.ClientIPAddress)
 		assert.Equal(t, "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/51.0.2704.103 Safari/537.36", *s.UserAgent)
+		assert.Equal(t, "Munich, Germany", *s.GeoLocation)
 	})
 
 	for k, tc := range []struct {

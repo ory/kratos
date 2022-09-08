@@ -210,7 +210,15 @@ func (s *Session) Activate(r *http.Request, i *identity.Identity, c lifespanProv
 	}
 
 	clientGeoLocation := []string{r.Header.Get("Cf-Ipcity"), r.Header.Get("Cf-Ipcountry")}
-	s.GeoLocation = stringsx.GetPointer(strings.Join(clientGeoLocation, ", "))
+
+	var sb strings.Builder
+	for _, i := range clientGeoLocation {
+		if sb.Len() != 0 && i != "" {
+			sb.WriteString(", ")
+		}
+		sb.WriteString(i)
+	}
+	s.GeoLocation = stringsx.GetPointer(sb.String())
 
 	s.SetAuthenticatorAssuranceLevel()
 	return nil
