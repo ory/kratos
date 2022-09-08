@@ -84,8 +84,8 @@ context("Social Sign Up Successes", () => {
 
         cy.triggerOidc(app)
 
-        cy.location("pathname").should((loc) => {
-          expect(loc).to.be.oneOf(["/welcome", "/"])
+        cy.location('pathname').should((loc) => {
+          expect(loc).to.be.oneOf(['/welcome', '/', '/sessions'])
         })
 
         cy.getSession().should((session) => {
@@ -110,8 +110,8 @@ context("Social Sign Up Successes", () => {
         cy.visit(registration)
         cy.triggerOidc(app)
 
-        cy.location("pathname").should((path) => {
-          expect(path).to.oneOf(["/", "/welcome"])
+        cy.location('pathname').should((path) => {
+          expect(path).to.oneOf(['/', '/welcome', '/sessions'])
         })
 
         cy.getSession().should(shouldSession(email))
