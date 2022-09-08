@@ -5,11 +5,12 @@ import (
 	"database/sql/driver"
 	"encoding/json"
 	"fmt"
-	"github.com/ory/x/httpx"
-	"github.com/ory/x/stringsx"
 	"net/http"
 	"strings"
 	"time"
+
+	"github.com/ory/x/httpx"
+	"github.com/ory/x/stringsx"
 
 	"github.com/pkg/errors"
 
