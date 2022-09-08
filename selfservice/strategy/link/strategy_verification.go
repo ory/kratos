@@ -117,7 +117,7 @@ func (s *Strategy) Verify(w http.ResponseWriter, r *http.Request, f *verificatio
 			return s.handleVerificationError(w, r, nil, body, err)
 		}
 
-		return s.verificationUseToken(w, r, body)
+		return s.verificationUseToken(w, r, body, f)
 	}
 
 	if err := flow.MethodEnabledAndAllowed(r.Context(), s.VerificationStrategyID(), body.Method, s.d); err != nil {
@@ -187,31 +187,14 @@ type selfServiceBrowserVerifyParameters struct {
 	Token string `json:"token"`
 }
 
-func (s *Strategy) verificationUseToken(w http.ResponseWriter, r *http.Request, body *verificationSubmitPayload) error {
-	token, err := s.d.VerificationTokenPersister().UseVerificationToken(r.Context(), body.Token)
+func (s *Strategy) verificationUseToken(w http.ResponseWriter, r *http.Request, body *verificationSubmitPayload, f *verification.Flow) error {
+	token, err := s.d.VerificationTokenPersister().UseVerificationToken(r.Context(), f.ID, body.Token)
 	if err != nil {
 		if errors.Is(err, sqlcon.ErrNoRows) {
 			return s.retryVerificationFlowWithMessage(w, r, flow.TypeBrowser, text.NewErrorValidationVerificationTokenInvalidOrAlreadyUsed())
 		}
 
 		return s.retryVerificationFlowWithError(w, r, flow.TypeBrowser, err)
-	}
-
-	var f *verification.Flow
-	if !token.FlowID.Valid {
-		f, err = verification.NewFlow(s.d.Config(), s.d.Config().SelfServiceFlowVerificationRequestLifespan(r.Context()), s.d.GenerateCSRFToken(r), r, s.d.VerificationStrategies(r.Context()), flow.TypeBrowser)
-		if err != nil {
-			return s.retryVerificationFlowWithError(w, r, flow.TypeBrowser, err)
-		}
-
-		if err := s.d.VerificationFlowPersister().CreateVerificationFlow(r.Context(), f); err != nil {
-			return s.retryVerificationFlowWithError(w, r, flow.TypeBrowser, err)
-		}
-	} else {
-		f, err = s.d.VerificationFlowPersister().GetVerificationFlow(r.Context(), token.FlowID.UUID)
-		if err != nil {
-			return s.retryVerificationFlowWithError(w, r, flow.TypeBrowser, err)
-		}
 	}
 
 	if err := token.Valid(); err != nil {

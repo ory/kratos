@@ -67,7 +67,7 @@ func (p *Persister) CreateVerificationToken(ctx context.Context, token *link.Ver
 	return nil
 }
 
-func (p *Persister) UseVerificationToken(ctx context.Context, token string) (*link.VerificationToken, error) {
+func (p *Persister) UseVerificationToken(ctx context.Context, fID uuid.UUID, token string) (*link.VerificationToken, error) {
 	ctx, span := p.r.Tracer(ctx).Tracer().Start(ctx, "persistence.sql.UseVerificationToken")
 	defer span.End()
 
@@ -76,7 +76,7 @@ func (p *Persister) UseVerificationToken(ctx context.Context, token string) (*li
 	nid := p.NetworkID(ctx)
 	if err := sqlcon.HandleError(p.Transaction(ctx, func(ctx context.Context, tx *pop.Connection) (err error) {
 		for _, secret := range p.r.Config().SecretsSession(ctx) {
-			if err = tx.Where("token = ? AND nid = ? AND NOT used", p.hmacValueWithSecret(ctx, token, secret), nid).First(&rt); err != nil {
+			if err = tx.Where("token = ? AND nid = ? AND NOT used AND selfservice_verification_flow_id = ?", p.hmacValueWithSecret(ctx, token, secret), nid, fID).First(&rt); err != nil {
 				if !errors.Is(sqlcon.HandleError(err), sqlcon.ErrNoRows) {
 					return err
 				}

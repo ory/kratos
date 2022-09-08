@@ -12,6 +12,7 @@ import (
 	"golang.org/x/crypto/argon2"
 	"golang.org/x/crypto/bcrypt"
 	"golang.org/x/crypto/pbkdf2"
+	"golang.org/x/crypto/scrypt"
 
 	"github.com/ory/kratos/driver/config"
 )
@@ -28,6 +29,8 @@ func Compare(ctx context.Context, password []byte, hash []byte) error {
 		return CompareArgon2i(ctx, password, hash)
 	case IsPbkdf2Hash(hash):
 		return ComparePbkdf2(ctx, password, hash)
+	case IsScryptHash(hash):
+		return CompareScrypt(ctx, password, hash)
 	default:
 		return errors.WithStack(ErrUnknownHashAlgorithm)
 	}
@@ -106,11 +109,35 @@ func ComparePbkdf2(_ context.Context, password []byte, hash []byte) error {
 	return errors.WithStack(ErrMismatchedHashAndPassword)
 }
 
+func CompareScrypt(_ context.Context, password []byte, hash []byte) error {
+	// Extract the parameters, salt and derived key from the encoded password
+	// hash.
+	p, salt, hash, err := decodeScryptHash(string(hash))
+	if err != nil {
+		return err
+	}
+
+	// Derive the key from the other password using the same parameters.
+	otherHash, err := scrypt.Key(password, salt, int(p.Cost), int(p.Block), int(p.Parrellization), int(p.KeyLength))
+	if err != nil {
+		return errors.WithStack(err)
+	}
+
+	// Check that the contents of the hashed passwords are identical. Note
+	// that we are using the subtle.ConstantTimeCompare() function for this
+	// to help prevent timing attacks.
+	if subtle.ConstantTimeCompare(hash, otherHash) == 1 {
+		return nil
+	}
+	return errors.WithStack(ErrMismatchedHashAndPassword)
+}
+
 var (
 	isBcryptHash   = regexp.MustCompile(`^\$2[abzy]?\$`)
 	isArgon2idHash = regexp.MustCompile(`^\$argon2id\$`)
 	isArgon2iHash  = regexp.MustCompile(`^\$argon2i\$`)
 	isPbkdf2Hash   = regexp.MustCompile(`^\$pbkdf2-sha[0-9]{1,3}\$`)
+	isScryptHash   = regexp.MustCompile(`^\$scrypt\$`)
 )
 
 func IsBcryptHash(hash []byte) bool {
@@ -127,6 +154,10 @@ func IsArgon2iHash(hash []byte) bool {
 
 func IsPbkdf2Hash(hash []byte) bool {
 	return isPbkdf2Hash.Match(hash)
+}
+
+func IsScryptHash(hash []byte) bool {
+	return isScryptHash.Match(hash)
 }
 
 func decodeArgon2idHash(encodedHash string) (p *config.Argon2, salt, hash []byte, err error) {
@@ -192,6 +223,36 @@ func decodePbkdf2Hash(encodedHash string) (p *Pbkdf2, salt, hash []byte, err err
 	p.SaltLength = uint32(len(salt))
 
 	hash, err = base64.RawStdEncoding.Strict().DecodeString(parts[4])
+	if err != nil {
+		return nil, nil, nil, err
+	}
+	p.KeyLength = uint32(len(hash))
+
+	return p, salt, hash, nil
+}
+
+// decodeScryptHash decodes Scrypt encoded password hash.
+// format: $scrypt$ln=<cost>,r=<block>,p=<parrrelization>$<salt>$<hash>
+func decodeScryptHash(encodedHash string) (p *Scrypt, salt, hash []byte, err error) {
+	parts := strings.Split(encodedHash, "$")
+	if len(parts) != 5 {
+		return nil, nil, nil, ErrInvalidHash
+	}
+
+	p = new(Scrypt)
+
+	_, err = fmt.Sscanf(parts[2], "ln=%d,r=%d,p=%d", &p.Cost, &p.Block, &p.Parrellization)
+	if err != nil {
+		return nil, nil, nil, err
+	}
+
+	salt, err = base64.StdEncoding.Strict().DecodeString(parts[3])
+	if err != nil {
+		return nil, nil, nil, err
+	}
+	p.SaltLength = uint32(len(salt))
+
+	hash, err = base64.StdEncoding.Strict().DecodeString(parts[4])
 	if err != nil {
 		return nil, nil, nil, err
 	}

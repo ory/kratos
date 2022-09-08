@@ -383,4 +383,23 @@ func TestVerification(t *testing.T) {
 		require.NoError(t, err)
 		assert.Equal(t, returnToURL+"?flow="+flow.ID.String(), redirectURL.String())
 	})
+
+	t.Run("case=should not be able to use code from different flow", func(t *testing.T) {
+
+		f1, _ := newValidFlow(t, public.URL+verification.RouteInitBrowserFlow)
+
+		_, t2 := newValidFlow(t, public.URL+verification.RouteInitBrowserFlow)
+
+		formValues := url.Values{
+			"flow":  {f1.ID.String()},
+			"token": {t2.Token},
+		}
+		submitUrl := public.URL + verification.RouteSubmitFlow + "?" + formValues.Encode()
+
+		res, err := public.Client().Get(submitUrl)
+		require.NoError(t, err)
+		body := ioutilx.MustReadAll(res.Body)
+
+		assert.Equal(t, "The verification token is invalid or has already been used. Please retry the flow.", gjson.GetBytes(body, "ui.messages.0.text").String())
+	})
 }

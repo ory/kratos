@@ -266,6 +266,18 @@ func TestHandler(t *testing.T) {
 
 			require.NoError(t, hash.Compare(ctx, []byte("123456"), []byte(gjson.GetBytes(actual.Credentials[identity.CredentialsTypePassword].Config, "hashed_password").String())))
 		})
+
+		t.Run("with scrypt password", func(t *testing.T) {
+			res := send(t, adminTS, "POST", "/identities", http.StatusCreated, identity.AdminCreateIdentityBody{Traits: []byte(`{"email": "import-7@ory.sh"}`),
+				Credentials: &identity.AdminIdentityImportCredentials{Password: &identity.AdminIdentityImportCredentialsPassword{
+					Config: identity.AdminIdentityImportCredentialsPasswordConfig{HashedPassword: "$scrypt$ln=16384,r=8,p=1$ZtQva9xCHzlSELH/mA7Kj5KjH2tCrkbwYzdxknkL0QQ=$pnTcXKaWVT+FwFDdk3vO1K0J7ZgOxdSU1tCJNYmn8zI="}}}})
+			actual, err := reg.PrivilegedIdentityPool().GetIdentityConfidential(ctx, uuid.FromStringOrNil(res.Get("id").String()))
+			require.NoError(t, err)
+
+			snapshotx.SnapshotTExceptMatchingKeys(t, identity.WithCredentialsAndAdminMetadataInJSON(*actual), append(ignoreDefault, "hashed_password"))
+
+			require.NoError(t, hash.Compare(ctx, []byte("123456"), []byte(gjson.GetBytes(actual.Credentials[identity.CredentialsTypePassword].Config, "hashed_password").String())))
+		})
 	})
 
 	t.Run("case=unable to set ID itself", func(t *testing.T) {
