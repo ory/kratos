@@ -5,6 +5,8 @@ import (
 	"database/sql/driver"
 	"encoding/json"
 	"fmt"
+	"github.com/ory/x/httpx"
+	"github.com/ory/x/stringsx"
 	"net/http"
 	"strings"
 	"time"
@@ -192,22 +194,22 @@ func (s *Session) Activate(r *http.Request, i *identity.Identity, c lifespanProv
 
 	agent := r.Header["User-Agent"]
 	if len(agent) > 0 {
-		s.UserAgent = strings.Join(agent, " ")
+		s.UserAgent = stringsx.GetPointer(strings.Join(agent, " "))
 	}
 
 	if trueClientIP := r.Header.Get("True-Client-IP"); trueClientIP != "" {
 		s.ClientIPAddress = &trueClientIP
 	} else if realClientIP := r.Header.Get("X-Real-IP"); realClientIP != "" {
 		s.ClientIPAddress = &realClientIP
-	} else if forwardedIP := r.Header.Get("X-Forwarded-For"); forwardedIP != "" {
-		// TODO: Use x lib implementation to parse client IP address from the header string
-		s.ClientIPAddress = &forwardedIP
+	} else if forwardedIP := r.Header["X-Forwarded-For"]; len(forwardedIP) != 0 {
+		ip, _ := httpx.GetClientIPAddress(forwardedIP, httpx.InternalIPSet)
+		s.ClientIPAddress = &ip
 	} else {
 		s.ClientIPAddress = &r.RemoteAddr
 	}
 
 	clientGeoLocation := []string{r.Header.Get("Cf-Ipcity"), r.Header.Get("Cf-Ipcountry")}
-	s.GeoLocation = strings.Join(clientGeoLocation, ", ")
+	s.GeoLocation = stringsx.GetPointer(strings.Join(clientGeoLocation, ", "))
 
 	s.SetAuthenticatorAssuranceLevel()
 	return nil
