@@ -1,6 +1,10 @@
-ALTER TABLE sessions
-  ADD client_ip_address TEXT DEFAULT '';
-ALTER TABLE sessions
-  ADD user_agent TEXT DEFAULT '';
-ALTER TABLE sessions
-  ADD geo_location TEXT DEFAULT '';
+CREATE TABLE "session_logs"
+(
+  "id"         TEXT PRIMARY KEY,
+  "ip_address" TEXT DEFAULT '',
+  "user_agent" TEXT DEFAULT '',
+  "location"   TEXT DEFAULT '',
+  "session_id" UUID      NOT NULL,
+  "created_at" timestamp NOT NULL,
+  FOREIGN KEY ("session_id") REFERENCES "sessions" ("id") ON DELETE cascade
+);

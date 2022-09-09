@@ -32,6 +32,35 @@ type refreshWindowProvider interface {
 	SessionRefreshMinTimeLeft(ctx context.Context) time.Duration
 }
 
+// A Session Log
+//
+// swagger:model Log
+type Log struct {
+	// Log ID
+	//
+	// required: true
+	ID uuid.UUID `json:"id" faker:"-" db:"id"`
+
+	// SessionID is a helper struct field for gobuffalo.pop.
+	SessionID uuid.UUID `json:"-" faker:"-" db:"session_id"`
+
+	// IPAddress of the client
+	IPAddress *string `json:"ip_address" db:"ip_address"`
+
+	// UserAgent of the client
+	UserAgent *string `json:"user_agent" db:"user_agent"`
+
+	// Geo Location corresponding to the IP Address
+	Location *string `json:"location" db:"location"`
+
+	// Time of capture
+	CreatedAt time.Time `json:"seen_at" faker:"-" db:"created_at"`
+}
+
+func (l Log) TableName(ctx context.Context) string {
+	return "session_logs"
+}
+
 // A Session
 //
 // swagger:model session
@@ -84,14 +113,8 @@ type Session struct {
 	// required: true
 	Identity *identity.Identity `json:"identity" faker:"identity" db:"-" belongs_to:"identities" fk_id:"IdentityID"`
 
-	// IP address of the machine where the session was initiated
-	ClientIPAddress *string `json:"client_ip_address" db:"client_ip_address"`
-
-	// User Agent
-	UserAgent *string `json:"user_agent" db:"user_agent"`
-
-	// Geo Location where the session was initiated
-	GeoLocation *string `json:"geo_location" db:"geo_location"`
+	// Logs has history of all clients where the session was used
+	Logs []Log `json:"logs" faker:"-" has_many:"session_logs"`
 
 	// IdentityID is a helper struct field for gobuffalo.pop.
 	IdentityID uuid.UUID `json:"-" faker:"-" db:"identity_id"`
@@ -193,20 +216,32 @@ func (s *Session) Activate(r *http.Request, i *identity.Identity, c lifespanProv
 	s.Identity = i
 	s.IdentityID = i.ID
 
+	s.SaveSessionMeta(r)
+	s.SetAuthenticatorAssuranceLevel()
+	return nil
+}
+
+func (s *Session) SaveSessionMeta(r *http.Request) {
+	var log Log
+
+	log.ID = x.NewUUID()
+	log.SessionID = s.ID
+	log.CreatedAt = time.Now().UTC()
+
 	agent := r.Header["User-Agent"]
 	if len(agent) > 0 {
-		s.UserAgent = stringsx.GetPointer(strings.Join(agent, " "))
+		log.UserAgent = stringsx.GetPointer(strings.Join(agent, " "))
 	}
 
 	if trueClientIP := r.Header.Get("True-Client-IP"); trueClientIP != "" {
-		s.ClientIPAddress = &trueClientIP
+		log.IPAddress = &trueClientIP
 	} else if realClientIP := r.Header.Get("X-Real-IP"); realClientIP != "" {
-		s.ClientIPAddress = &realClientIP
+		log.IPAddress = &realClientIP
 	} else if forwardedIP := r.Header["X-Forwarded-For"]; len(forwardedIP) != 0 {
 		ip, _ := httpx.GetClientIPAddress(forwardedIP, httpx.InternalIPSet)
-		s.ClientIPAddress = &ip
+		log.IPAddress = &ip
 	} else {
-		s.ClientIPAddress = &r.RemoteAddr
+		log.IPAddress = &r.RemoteAddr
 	}
 
 	clientGeoLocation := []string{r.Header.Get("Cf-Ipcity"), r.Header.Get("Cf-Ipcountry")}
@@ -218,16 +253,9 @@ func (s *Session) Activate(r *http.Request, i *identity.Identity, c lifespanProv
 		}
 		sb.WriteString(i)
 	}
-	s.GeoLocation = stringsx.GetPointer(sb.String())
+	log.Location = stringsx.GetPointer(sb.String())
 
-	s.SetAuthenticatorAssuranceLevel()
-	return nil
-}
-
-// swagger:model sessionDevice
-type Device struct {
-	// UserAgent of this device
-	UserAgent string `json:"user_agent"`
+	s.Logs = append(s.Logs, log)
 }
 
 func (s *Session) Declassify() *Session {
