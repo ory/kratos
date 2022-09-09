@@ -35,7 +35,7 @@ type refreshWindowProvider interface {
 // A Session Log
 //
 // swagger:model Log
-type Log struct {
+type Metadata struct {
 	// Log ID
 	//
 	// required: true
@@ -57,8 +57,8 @@ type Log struct {
 	CreatedAt time.Time `json:"seen_at" faker:"-" db:"created_at"`
 }
 
-func (l Log) TableName(ctx context.Context) string {
-	return "session_logs"
+func (m Metadata) TableName(ctx context.Context) string {
+	return "session_metadata"
 }
 
 // A Session
@@ -113,8 +113,8 @@ type Session struct {
 	// required: true
 	Identity *identity.Identity `json:"identity" faker:"identity" db:"-" belongs_to:"identities" fk_id:"IdentityID"`
 
-	// Logs has history of all clients where the session was used
-	Logs []Log `json:"logs" faker:"-" has_many:"session_logs"`
+	// Metadata has history of all clients where the session was used
+	Metadata []Metadata `json:"metadata" faker:"-" db:"-"`
 
 	// IdentityID is a helper struct field for gobuffalo.pop.
 	IdentityID uuid.UUID `json:"-" faker:"-" db:"identity_id"`
@@ -222,26 +222,26 @@ func (s *Session) Activate(r *http.Request, i *identity.Identity, c lifespanProv
 }
 
 func (s *Session) SaveSessionMeta(r *http.Request) {
-	var log Log
+	var metadata Metadata
 
-	log.ID = x.NewUUID()
-	log.SessionID = s.ID
-	log.CreatedAt = time.Now().UTC()
+	metadata.ID = x.NewUUID()
+	metadata.SessionID = s.ID
+	metadata.CreatedAt = time.Now().UTC()
 
 	agent := r.Header["User-Agent"]
 	if len(agent) > 0 {
-		log.UserAgent = stringsx.GetPointer(strings.Join(agent, " "))
+		metadata.UserAgent = stringsx.GetPointer(strings.Join(agent, " "))
 	}
 
 	if trueClientIP := r.Header.Get("True-Client-IP"); trueClientIP != "" {
-		log.IPAddress = &trueClientIP
+		metadata.IPAddress = &trueClientIP
 	} else if realClientIP := r.Header.Get("X-Real-IP"); realClientIP != "" {
-		log.IPAddress = &realClientIP
+		metadata.IPAddress = &realClientIP
 	} else if forwardedIP := r.Header["X-Forwarded-For"]; len(forwardedIP) != 0 {
 		ip, _ := httpx.GetClientIPAddress(forwardedIP, httpx.InternalIPSet)
-		log.IPAddress = &ip
+		metadata.IPAddress = &ip
 	} else {
-		log.IPAddress = &r.RemoteAddr
+		metadata.IPAddress = &r.RemoteAddr
 	}
 
 	clientGeoLocation := []string{r.Header.Get("Cf-Ipcity"), r.Header.Get("Cf-Ipcountry")}
@@ -253,9 +253,9 @@ func (s *Session) SaveSessionMeta(r *http.Request) {
 		}
 		sb.WriteString(i)
 	}
-	log.Location = stringsx.GetPointer(sb.String())
+	metadata.Location = stringsx.GetPointer(sb.String())
 
-	s.Logs = append(s.Logs, log)
+	s.Metadata = append(s.Metadata, metadata)
 }
 
 func (s *Session) Declassify() *Session {

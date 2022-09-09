@@ -1,1 +1,1 @@
-DROP TABLE "session_logs";
+DROP TABLE "session_metadata";
