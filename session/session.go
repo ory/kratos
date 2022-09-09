@@ -32,9 +32,9 @@ type refreshWindowProvider interface {
 	SessionRefreshMinTimeLeft(ctx context.Context) time.Duration
 }
 
-// A Session Log
+// Metadata of the Client corresponding to a Session
 //
-// swagger:model Log
+// swagger:model sessionMetadata
 type Metadata struct {
 	// Log ID
 	//
