@@ -8,6 +8,7 @@ CREATE TABLE `session_metadata`
   `session_id` char(36) NOT NULL,
   `nid`        char(36) NOT NULL,
   `created_at` DATETIME NOT NULL,
+  `last_seen`  DATETIME NOT NULL,
   FOREIGN KEY (`session_id`) REFERENCES `sessions` (`id`) ON DELETE cascade,
   FOREIGN KEY (`nid`) REFERENCES `networks` (`id`) ON DELETE cascade
 ) ENGINE = InnoDB;
