@@ -40,7 +40,5 @@
     "created_at": "2013-10-07T08:23:19Z",
     "updated_at": "2013-10-07T08:23:19Z"
   },
-  "client_ip_address": "54.155.246.232",
-  "user_agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/51.0.2704.103 Safari/537.36",
-  "geo_location": "Munich, Germany"
+  "logs": []
 }
