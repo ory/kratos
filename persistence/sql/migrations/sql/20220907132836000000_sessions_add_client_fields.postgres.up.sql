@@ -8,6 +8,7 @@ CREATE TABLE "session_metadata"
   "nid"        UUID      NOT NULL,
   "session_id" UUID      NOT NULL,
   "created_at" timestamp NOT NULL,
+  "last_seen"  timestamp NOT NULL,
   FOREIGN KEY ("session_id") REFERENCES "sessions" ("id") ON DELETE cascade,
   FOREIGN KEY ("nid") REFERENCES "networks" ("id") ON DELETE cascade
 );

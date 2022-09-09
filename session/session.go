@@ -56,6 +56,9 @@ type Metadata struct {
 	// Time of capture
 	CreatedAt time.Time `json:"seen_at" faker:"-" db:"created_at"`
 
+	// Last seen
+	LastSeen time.Time `json:"last_seen" faker:"-" db:"last_seen"`
+
 	NID uuid.UUID `json:"-"  faker:"-" db:"nid"`
 }
 
@@ -229,6 +232,7 @@ func (s *Session) SaveSessionMeta(r *http.Request) {
 	metadata.ID = x.NewUUID()
 	metadata.SessionID = s.ID
 	metadata.CreatedAt = time.Now().UTC()
+	metadata.LastSeen = time.Now().UTC()
 
 	agent := r.Header["User-Agent"]
 	if len(agent) > 0 {
