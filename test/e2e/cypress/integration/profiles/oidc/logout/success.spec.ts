@@ -30,7 +30,7 @@ context("Social Sign Out Successes", () => {
       beforeEach(() => {
         cy.visit(base)
         const email = gen.email()
-        cy.registerOidc({ email, website, route: registration })
+        cy.registerOidc({ app, email, website, route: registration })
       })
 
       it('should sign out and be able to sign in again', () => {

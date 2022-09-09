@@ -564,6 +564,7 @@ Cypress.Commands.add("addVirtualAuthenticator", () =>
 Cypress.Commands.add(
   "registerOidc",
   ({
+    app,
     email,
     website,
     scopes,
@@ -576,7 +577,7 @@ Cypress.Commands.add(
   }) => {
     cy.visit(route)
 
-    cy.triggerOidc()
+    cy.triggerOidc(app as 'react' | 'express')
 
     cy.get("#username").type(email)
     if (rememberLogin) {
@@ -609,7 +610,8 @@ Cypress.Commands.add(
     } else {
       cy.get("#reject").click()
     }
-    cy.location("pathname").should("not.include", "consent")
+
+    cy.location('pathname').should('not.include', 'consent')
 
     if (expectSession) {
       cy.getSession()
@@ -704,12 +706,16 @@ Cypress.Commands.add("remoteCourierRecoveryCodeTemplates", ({} = {}) => {
 })
 
 Cypress.Commands.add(
-  "loginOidc",
-  ({ expectSession = true, url = APP_URL + "/login" }) => {
+  'loginOidc',
+  ({ app, expectSession = true, url = APP_URL + '/login' }) => {
     cy.visit(url)
-    cy.triggerOidc("hydra")
-    cy.location("href").should("not.eq", "/consent")
+    cy.triggerOidc(app as 'react' | 'express', 'hydra')
+    cy.location('href').should('not.eq', '/consent')
     if (expectSession) {
+      // for some reason react flakes here although the login succeeded and there should be a session it fails
+      if (app === 'react') {
+        cy.wait(2000) // adding arbitrary wait here. not sure if there is a better way in this case
+      }
       cy.getSession()
     } else {
       cy.noSession()
@@ -894,9 +900,12 @@ Cypress.Commands.add(
   "getSession",
   ({ expectAal = "aal1", expectMethods = [] } = {}) => {
     // Do the request once to ensure we have a session (with retry)
-    cy.request("GET", `${KRATOS_PUBLIC}/sessions/whoami`)
-      .its("status")
-      .should("eq", 200)
+    cy.request({
+      method: 'GET',
+      url: `${KRATOS_PUBLIC}/sessions/whoami`
+    })
+      .its('status') // adds retry
+      .should('eq', 200)
 
     // Return the session for further propagation
     return cy

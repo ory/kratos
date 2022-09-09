@@ -52,6 +52,7 @@ context("Social Sign In Settings Success", () => {
         email = gen.email()
 
         cy.registerOidc({
+          app,
           email,
           expectSession: true,
           website,

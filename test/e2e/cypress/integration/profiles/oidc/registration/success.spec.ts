@@ -41,7 +41,12 @@ context("Social Sign Up Successes", () => {
       it("should be able to sign up with incomplete data and finally be signed in", () => {
         const email = gen.email()
 
-        cy.registerOidc({ email, expectSession: false, route: registration })
+        cy.registerOidc({
+          app,
+          email,
+          expectSession: false,
+          route: registration
+        })
 
         cy.get("#registration-password").should("not.exist")
         cy.get(appPrefix(app) + '[name="traits.email"]').should(
@@ -97,14 +102,14 @@ context("Social Sign Up Successes", () => {
       it("should be able to sign up with complete data", () => {
         const email = gen.email()
 
-        cy.registerOidc({ email, website, route: registration })
+        cy.registerOidc({ app, email, website, route: registration })
         cy.getSession().should(shouldSession(email))
       })
 
       it("should be able to convert a sign up flow to a sign in flow", () => {
         const email = gen.email()
 
-        cy.registerOidc({ email, website, route: registration })
+        cy.registerOidc({ app, email, website, route: registration })
         cy.logout()
         cy.noSession()
         cy.visit(registration)
@@ -162,6 +167,7 @@ context("Social Sign Up Successes", () => {
       it("should be able to sign up with redirects", () => {
         const email = gen.email()
         cy.registerOidc({
+          app,
           email,
           website,
           route: registration + "?return_to=https://www.ory.sh/",
