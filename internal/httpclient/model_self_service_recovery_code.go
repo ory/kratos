@@ -20,7 +20,7 @@ import (
 type SelfServiceRecoveryCode struct {
 	// Expires At is the timestamp of when the recovery flow expires  The timestamp when the recovery link expires.
 	ExpiresAt *time.Time `json:"expires_at,omitempty"`
-	// RecoverCode is the code that should be used to recover the account
+	// RecoveryCode is the code that can be used to recover the account
 	RecoveryCode string `json:"recovery_code"`
 	// RecoveryLink with flow  This link opens the recovery UI with an empty `code` field.
 	RecoveryLink string `json:"recovery_link"`
