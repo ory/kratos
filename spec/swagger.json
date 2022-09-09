@@ -3253,25 +3253,13 @@
           "example": "User with ID 1234 does not exist."
         },
         "redirect_browser_to": {
-          "description": "RedirectBrowserTo contains the URL the browser should be redirected to",
+          "description": "Since when the flow has expired",
           "type": "string"
-        },
-        "redirect_flow_id": {
-          "description": "RedirectFlowID is the ID of the flow instance",
-          "type": "string",
-          "format": "uuid"
-        },
-        "redirect_flow_name": {
-          "$ref": "#/definitions/selfServiceFlowName"
         },
         "request": {
           "description": "The request ID\n\nThe request ID is often exposed internally in order to trace\nerrors across service architectures. This is often a UUID.",
           "type": "string",
           "example": "d7ef54b1-ec15-46e6-bccb-524b82c035e6"
-        },
-        "session_token": {
-          "description": "SessionToken is an optional token for the current session",
-          "type": "string"
         },
         "status": {
           "description": "The status description",
@@ -3363,10 +3351,6 @@
           "format": "uuid"
         }
       }
-    },
-    "selfServiceFlowName": {
-      "description": "SelfServiceFlowName represents the names of the different flows in kratos",
-      "type": "string"
     },
     "selfServiceFlowType": {
       "description": "The flow type can either be `api` or `browser`.",

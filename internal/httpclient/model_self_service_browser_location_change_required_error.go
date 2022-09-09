@@ -29,15 +29,10 @@ type SelfServiceBrowserLocationChangeRequiredError struct {
 	Message string `json:"message"`
 	// A human-readable reason for the error
 	Reason *string `json:"reason,omitempty"`
-	// RedirectBrowserTo contains the URL the browser should be redirected to
+	// Since when the flow has expired
 	RedirectBrowserTo *string `json:"redirect_browser_to,omitempty"`
-	// RedirectFlowID is the ID of the flow instance
-	RedirectFlowId   *string              `json:"redirect_flow_id,omitempty"`
-	RedirectFlowName *SelfServiceFlowName `json:"redirect_flow_name,omitempty"`
 	// The request ID  The request ID is often exposed internally in order to trace errors across service architectures. This is often a UUID.
 	Request *string `json:"request,omitempty"`
-	// SessionToken is an optional token for the current session
-	SessionToken *string `json:"session_token,omitempty"`
 	// The status description
 	Status *string `json:"status,omitempty"`
 }
@@ -276,70 +271,6 @@ func (o *SelfServiceBrowserLocationChangeRequiredError) SetRedirectBrowserTo(v s
 	o.RedirectBrowserTo = &v
 }
 
-// GetRedirectFlowId returns the RedirectFlowId field value if set, zero value otherwise.
-func (o *SelfServiceBrowserLocationChangeRequiredError) GetRedirectFlowId() string {
-	if o == nil || o.RedirectFlowId == nil {
-		var ret string
-		return ret
-	}
-	return *o.RedirectFlowId
-}
-
-// GetRedirectFlowIdOk returns a tuple with the RedirectFlowId field value if set, nil otherwise
-// and a boolean to check if the value has been set.
-func (o *SelfServiceBrowserLocationChangeRequiredError) GetRedirectFlowIdOk() (*string, bool) {
-	if o == nil || o.RedirectFlowId == nil {
-		return nil, false
-	}
-	return o.RedirectFlowId, true
-}
-
-// HasRedirectFlowId returns a boolean if a field has been set.
-func (o *SelfServiceBrowserLocationChangeRequiredError) HasRedirectFlowId() bool {
-	if o != nil && o.RedirectFlowId != nil {
-		return true
-	}
-
-	return false
-}
-
-// SetRedirectFlowId gets a reference to the given string and assigns it to the RedirectFlowId field.
-func (o *SelfServiceBrowserLocationChangeRequiredError) SetRedirectFlowId(v string) {
-	o.RedirectFlowId = &v
-}
-
-// GetRedirectFlowName returns the RedirectFlowName field value if set, zero value otherwise.
-func (o *SelfServiceBrowserLocationChangeRequiredError) GetRedirectFlowName() SelfServiceFlowName {
-	if o == nil || o.RedirectFlowName == nil {
-		var ret SelfServiceFlowName
-		return ret
-	}
-	return *o.RedirectFlowName
-}
-
-// GetRedirectFlowNameOk returns a tuple with the RedirectFlowName field value if set, nil otherwise
-// and a boolean to check if the value has been set.
-func (o *SelfServiceBrowserLocationChangeRequiredError) GetRedirectFlowNameOk() (*SelfServiceFlowName, bool) {
-	if o == nil || o.RedirectFlowName == nil {
-		return nil, false
-	}
-	return o.RedirectFlowName, true
-}
-
-// HasRedirectFlowName returns a boolean if a field has been set.
-func (o *SelfServiceBrowserLocationChangeRequiredError) HasRedirectFlowName() bool {
-	if o != nil && o.RedirectFlowName != nil {
-		return true
-	}
-
-	return false
-}
-
-// SetRedirectFlowName gets a reference to the given SelfServiceFlowName and assigns it to the RedirectFlowName field.
-func (o *SelfServiceBrowserLocationChangeRequiredError) SetRedirectFlowName(v SelfServiceFlowName) {
-	o.RedirectFlowName = &v
-}
-
 // GetRequest returns the Request field value if set, zero value otherwise.
 func (o *SelfServiceBrowserLocationChangeRequiredError) GetRequest() string {
 	if o == nil || o.Request == nil {
@@ -370,38 +301,6 @@ func (o *SelfServiceBrowserLocationChangeRequiredError) HasRequest() bool {
 // SetRequest gets a reference to the given string and assigns it to the Request field.
 func (o *SelfServiceBrowserLocationChangeRequiredError) SetRequest(v string) {
 	o.Request = &v
-}
-
-// GetSessionToken returns the SessionToken field value if set, zero value otherwise.
-func (o *SelfServiceBrowserLocationChangeRequiredError) GetSessionToken() string {
-	if o == nil || o.SessionToken == nil {
-		var ret string
-		return ret
-	}
-	return *o.SessionToken
-}
-
-// GetSessionTokenOk returns a tuple with the SessionToken field value if set, nil otherwise
-// and a boolean to check if the value has been set.
-func (o *SelfServiceBrowserLocationChangeRequiredError) GetSessionTokenOk() (*string, bool) {
-	if o == nil || o.SessionToken == nil {
-		return nil, false
-	}
-	return o.SessionToken, true
-}
-
-// HasSessionToken returns a boolean if a field has been set.
-func (o *SelfServiceBrowserLocationChangeRequiredError) HasSessionToken() bool {
-	if o != nil && o.SessionToken != nil {
-		return true
-	}
-
-	return false
-}
-
-// SetSessionToken gets a reference to the given string and assigns it to the SessionToken field.
-func (o *SelfServiceBrowserLocationChangeRequiredError) SetSessionToken(v string) {
-	o.SessionToken = &v
 }
 
 // GetStatus returns the Status field value if set, zero value otherwise.
@@ -459,17 +358,8 @@ func (o SelfServiceBrowserLocationChangeRequiredError) MarshalJSON() ([]byte, er
 	if o.RedirectBrowserTo != nil {
 		toSerialize["redirect_browser_to"] = o.RedirectBrowserTo
 	}
-	if o.RedirectFlowId != nil {
-		toSerialize["redirect_flow_id"] = o.RedirectFlowId
-	}
-	if o.RedirectFlowName != nil {
-		toSerialize["redirect_flow_name"] = o.RedirectFlowName
-	}
 	if o.Request != nil {
 		toSerialize["request"] = o.Request
-	}
-	if o.SessionToken != nil {
-		toSerialize["session_token"] = o.SessionToken
 	}
 	if o.Status != nil {
 		toSerialize["status"] = o.Status

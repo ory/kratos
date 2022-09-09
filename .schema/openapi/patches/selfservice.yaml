@@ -124,15 +124,3 @@
     - show_form
     - success
 # end
-
-# All modifications for common flow types
-- op: add
-  path: /components/schemas/selfServiceFlowName/enum
-  value:
-    - "settings"
-    - "recovery"
-    - "registration"
-    - "login"
-    - "verification"
-    - "logout"
-# end

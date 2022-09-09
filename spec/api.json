@@ -757,24 +757,12 @@
             "type": "string"
           },
           "redirect_browser_to": {
-            "description": "RedirectBrowserTo contains the URL the browser should be redirected to",
+            "description": "Since when the flow has expired",
             "type": "string"
-          },
-          "redirect_flow_id": {
-            "description": "RedirectFlowID is the ID of the flow instance",
-            "format": "uuid",
-            "type": "string"
-          },
-          "redirect_flow_name": {
-            "$ref": "#/components/schemas/selfServiceFlowName"
           },
           "request": {
             "description": "The request ID\n\nThe request ID is often exposed internally in order to trace\nerrors across service architectures. This is often a UUID.",
             "example": "d7ef54b1-ec15-46e6-bccb-524b82c035e6",
-            "type": "string"
-          },
-          "session_token": {
-            "description": "SessionToken is an optional token for the current session",
             "type": "string"
           },
           "status": {
@@ -871,18 +859,6 @@
           "message"
         ],
         "type": "object"
-      },
-      "selfServiceFlowName": {
-        "description": "SelfServiceFlowName represents the names of the different flows in kratos",
-        "enum": [
-          "settings",
-          "recovery",
-          "registration",
-          "login",
-          "verification",
-          "logout"
-        ],
-        "type": "string"
       },
       "selfServiceFlowType": {
         "description": "The flow type can either be `api` or `browser`.",

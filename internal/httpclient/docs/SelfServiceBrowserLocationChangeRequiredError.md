@@ -10,11 +10,8 @@ Name | Type | Description | Notes
 **Id** | Pointer to **string** | The error ID  Useful when trying to identify various errors in application logic. | [optional] 
 **Message** | **string** | Error message  The error&#39;s message. | 
 **Reason** | Pointer to **string** | A human-readable reason for the error | [optional] 
-**RedirectBrowserTo** | Pointer to **string** | RedirectBrowserTo contains the URL the browser should be redirected to | [optional] 
-**RedirectFlowId** | Pointer to **string** | RedirectFlowID is the ID of the flow instance | [optional] 
-**RedirectFlowName** | Pointer to [**SelfServiceFlowName**](SelfServiceFlowName.md) |  | [optional] 
+**RedirectBrowserTo** | Pointer to **string** | Since when the flow has expired | [optional] 
 **Request** | Pointer to **string** | The request ID  The request ID is often exposed internally in order to trace errors across service architectures. This is often a UUID. | [optional] 
-**SessionToken** | Pointer to **string** | SessionToken is an optional token for the current session | [optional] 
 **Status** | Pointer to **string** | The status description | [optional] 
 
 ## Methods
@@ -206,56 +203,6 @@ SetRedirectBrowserTo sets RedirectBrowserTo field to given value.
 
 HasRedirectBrowserTo returns a boolean if a field has been set.
 
-### GetRedirectFlowId
-
-`func (o *SelfServiceBrowserLocationChangeRequiredError) GetRedirectFlowId() string`
-
-GetRedirectFlowId returns the RedirectFlowId field if non-nil, zero value otherwise.
-
-### GetRedirectFlowIdOk
-
-`func (o *SelfServiceBrowserLocationChangeRequiredError) GetRedirectFlowIdOk() (*string, bool)`
-
-GetRedirectFlowIdOk returns a tuple with the RedirectFlowId field if it's non-nil, zero value otherwise
-and a boolean to check if the value has been set.
-
-### SetRedirectFlowId
-
-`func (o *SelfServiceBrowserLocationChangeRequiredError) SetRedirectFlowId(v string)`
-
-SetRedirectFlowId sets RedirectFlowId field to given value.
-
-### HasRedirectFlowId
-
-`func (o *SelfServiceBrowserLocationChangeRequiredError) HasRedirectFlowId() bool`
-
-HasRedirectFlowId returns a boolean if a field has been set.
-
-### GetRedirectFlowName
-
-`func (o *SelfServiceBrowserLocationChangeRequiredError) GetRedirectFlowName() SelfServiceFlowName`
-
-GetRedirectFlowName returns the RedirectFlowName field if non-nil, zero value otherwise.
-
-### GetRedirectFlowNameOk
-
-`func (o *SelfServiceBrowserLocationChangeRequiredError) GetRedirectFlowNameOk() (*SelfServiceFlowName, bool)`
-
-GetRedirectFlowNameOk returns a tuple with the RedirectFlowName field if it's non-nil, zero value otherwise
-and a boolean to check if the value has been set.
-
-### SetRedirectFlowName
-
-`func (o *SelfServiceBrowserLocationChangeRequiredError) SetRedirectFlowName(v SelfServiceFlowName)`
-
-SetRedirectFlowName sets RedirectFlowName field to given value.
-
-### HasRedirectFlowName
-
-`func (o *SelfServiceBrowserLocationChangeRequiredError) HasRedirectFlowName() bool`
-
-HasRedirectFlowName returns a boolean if a field has been set.
-
 ### GetRequest
 
 `func (o *SelfServiceBrowserLocationChangeRequiredError) GetRequest() string`
@@ -280,31 +227,6 @@ SetRequest sets Request field to given value.
 `func (o *SelfServiceBrowserLocationChangeRequiredError) HasRequest() bool`
 
 HasRequest returns a boolean if a field has been set.
-
-### GetSessionToken
-
-`func (o *SelfServiceBrowserLocationChangeRequiredError) GetSessionToken() string`
-
-GetSessionToken returns the SessionToken field if non-nil, zero value otherwise.
-
-### GetSessionTokenOk
-
-`func (o *SelfServiceBrowserLocationChangeRequiredError) GetSessionTokenOk() (*string, bool)`
-
-GetSessionTokenOk returns a tuple with the SessionToken field if it's non-nil, zero value otherwise
-and a boolean to check if the value has been set.
-
-### SetSessionToken
-
-`func (o *SelfServiceBrowserLocationChangeRequiredError) SetSessionToken(v string)`
-
-SetSessionToken sets SessionToken field to given value.
-
-### HasSessionToken
-
-`func (o *SelfServiceBrowserLocationChangeRequiredError) HasSessionToken() bool`
-
-HasSessionToken returns a boolean if a field has been set.
 
 ### GetStatus
 
