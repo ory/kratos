@@ -26,7 +26,8 @@ context('Mobile Profile', () => {
         cy.longCodeLifespan()
       })
 
-      it('fails with validation errors', () => {
+      // Re-enable once mobile supports recovery
+      it.skip('fails with validation errors', () => {
         cy.visit(MOBILE_URL + '/Recovery')
         cy.get('*[data-testid="field/email"] input[data-testid="email"]')
           .clear()
@@ -41,7 +42,8 @@ context('Mobile Profile', () => {
         )
       })
 
-      it('shows code expired message if expired code is submitted', () => {
+      // Re-enable once mobile supports recovery
+      it.skip('shows code expired message if expired code is submitted', () => {
         cy.shortCodeLifespan()
         cy.visit(MOBILE_URL + '/Recovery')
 
@@ -79,7 +81,8 @@ context('Mobile Profile', () => {
         )
       })
 
-      it('fails on invalid code', () => {
+      // Re-enable once mobile supports recovery
+      it.skip('fails on invalid code', () => {
         cy.visit(MOBILE_URL + '/Recovery')
         cy.get('*[data-testid="field/email"] input[data-testid="email"]')
           .clear()

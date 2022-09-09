@@ -66,37 +66,14 @@ func NewFlowExpiredError(at time.Time) *ExpiredError {
 	}
 }
 
-// SelfServiceFlowName represents the names of the different flows in kratos
-//
-// swagger:model selfServiceFlowName
-type SelfServiceFlowName string
-
-const (
-	FlowNameSettings     SelfServiceFlowName = "settings"
-	FlowNameRecovery     SelfServiceFlowName = "recovery"
-	FlowNameRegistration SelfServiceFlowName = "registration"
-	FlowNameLogin        SelfServiceFlowName = "login"
-	FlowNameVerification SelfServiceFlowName = "verification"
-	FlowNameLogout       SelfServiceFlowName = "logout"
-)
-
 // Is sent when a flow requires a browser to change its location.
 //
 // swagger:model selfServiceBrowserLocationChangeRequiredError
 type BrowserLocationChangeRequiredError struct {
 	*herodot.DefaultError `json:"error"`
 
-	// RedirectBrowserTo contains the URL the browser should be redirected to
-	RedirectBrowserTo string `json:"redirect_browser_to,omitempty"`
-
-	// SessionToken is an optional token for the current session
-	SessionToken string `json:"session_token,omitempty"`
-
-	// RedirectFlowName is the type of flow
-	RedirectFlowName SelfServiceFlowName `json:"redirect_flow_name,omitempty"`
-
-	// RedirectFlowID is the ID of the flow instance
-	RedirectFlowID uuid.UUID `json:"redirect_flow_id,omitempty"`
+	// Since when the flow has expired
+	RedirectBrowserTo string `json:"redirect_browser_to"`
 }
 
 func (e *BrowserLocationChangeRequiredError) EnhanceJSONError() interface{} {
@@ -113,22 +90,6 @@ func NewBrowserLocationChangeRequiredError(redirectTo string) *BrowserLocationCh
 			ReasonField: fmt.Sprintf("In order to complete this flow please redirect the browser to: %s", redirectTo),
 			DebugField:  "",
 			ErrorField:  "browser location change required",
-		},
-	}
-}
-
-func NewFlowChangeRequiredError(sessionToken string, flowName SelfServiceFlowName, fID uuid.UUID) *BrowserLocationChangeRequiredError {
-	return &BrowserLocationChangeRequiredError{
-		RedirectFlowName: flowName,
-		RedirectFlowID:   fID,
-		SessionToken:     sessionToken,
-		DefaultError: &herodot.DefaultError{
-			IDField:     text.ErrIDSelfServiceBrowserLocationChangeRequiredError,
-			CodeField:   http.StatusUnprocessableEntity,
-			StatusField: http.StatusText(http.StatusUnprocessableEntity),
-			ReasonField: fmt.Sprintf("In order to complete this flow please redirect to the %s flow with id %s", flowName, fID.String()),
-			DebugField:  "",
-			ErrorField:  "flow change required",
 		},
 	}
 }

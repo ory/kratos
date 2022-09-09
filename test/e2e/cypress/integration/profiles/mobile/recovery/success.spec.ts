@@ -29,7 +29,8 @@ context('Mobile Profile', () => {
         cy.visit(MOBILE_URL + '/Recovery')
       })
 
-      it('recovers the account', () => {
+      // Re-enable once mobile supports recovery
+      it.skip('recovers the account', () => {
         cy.get('*[data-testid="field/email"] input[data-testid="email"]')
           .clear()
           .type(email)

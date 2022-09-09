@@ -476,8 +476,7 @@ func TestRecovery(t *testing.T) {
 			}, http.StatusOK)
 			body := checkRecovery(t, client, RecoveryFlowTypeAPI, email, recoverySubmissionResponse, "")
 			assert.Equal(t, "browser_location_change_required", gjson.Get(body, "error.id").String())
-			assert.Contains(t, gjson.Get(body, "redirect_flow_name").String(), "settings")
-			assert.NotEmpty(t, gjson.Get(body, "redirect_flow_id").String())
+			assert.Contains(t, gjson.Get(body, "redirect_browser_to").String(), "settings-ts?")
 		})
 
 		t.Run("description=should return browser to returl url", func(t *testing.T) {

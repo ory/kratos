@@ -377,9 +377,7 @@ func (s *Strategy) recoveryIssueSession(w http.ResponseWriter, r *http.Request, 
 		return s.retryRecoveryFlowWithError(w, r, f.Type, err)
 	}
 
-	if f.Type.IsAPI() {
-		s.deps.Writer().WriteError(w, r, flow.NewFlowChangeRequiredError(sess.Token, flow.FlowNameSettings, sf.ID))
-	} else if x.IsJSONRequest(r) {
+	if x.IsJSONRequest(r) {
 		s.deps.Writer().WriteError(w, r, flow.NewBrowserLocationChangeRequiredError(sf.AppendTo(s.deps.Config().SelfServiceFlowSettingsUI(r.Context())).String()))
 	} else {
 		http.Redirect(w, r, sf.AppendTo(s.deps.Config().SelfServiceFlowSettingsUI(r.Context())).String(), http.StatusSeeOther)
@@ -449,10 +447,7 @@ func (s *Strategy) retryRecoveryFlowWithMessage(w http.ResponseWriter, r *http.R
 		return err
 	}
 
-	if ft.IsAPI() {
-		http.Redirect(w, r, urlx.CopyWithQuery(urlx.AppendPaths(config.SelfPublicURL(ctx),
-			recovery.RouteGetFlow), url.Values{"id": {f.ID.String()}}).String(), http.StatusSeeOther)
-	} else if x.IsJSONRequest(r) {
+	if x.IsJSONRequest(r) {
 		http.Redirect(w, r, urlx.CopyWithQuery(urlx.AppendPaths(config.SelfPublicURL(ctx),
 			recovery.RouteGetFlow), url.Values{"id": {f.ID.String()}}).String(), http.StatusSeeOther)
 	} else {
@@ -487,10 +482,7 @@ func (s *Strategy) retryRecoveryFlowWithError(w http.ResponseWriter, r *http.Req
 		return err
 	}
 
-	if ft.IsAPI() {
-		http.Redirect(w, r, urlx.CopyWithQuery(urlx.AppendPaths(config.SelfPublicURL(ctx),
-			recovery.RouteGetFlow), url.Values{"id": {f.ID.String()}}).String(), http.StatusSeeOther)
-	} else if x.IsJSONRequest(r) {
+	if x.IsJSONRequest(r) {
 		http.Redirect(w, r, urlx.CopyWithQuery(urlx.AppendPaths(config.SelfPublicURL(ctx),
 			recovery.RouteGetFlow), url.Values{"id": {f.ID.String()}}).String(), http.StatusSeeOther)
 	} else {
