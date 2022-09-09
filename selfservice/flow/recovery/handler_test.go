@@ -4,7 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
@@ -34,8 +34,9 @@ func init() {
 }
 
 func TestHandlerRedirectOnAuthenticated(t *testing.T) {
+	ctx := context.Background()
 	conf, reg := internal.NewFastRegistryWithMocks(t)
-	conf.MustSet(config.ViperKeySelfServiceRecoveryEnabled, true)
+	conf.MustSet(ctx, config.ViperKeySelfServiceRecoveryEnabled, true)
 
 	router := x.NewRouterPublic()
 	ts, _ := testhelpers.NewKratosServerWithRouters(t, reg, router, x.NewRouterAdmin())
@@ -58,16 +59,17 @@ func TestHandlerRedirectOnAuthenticated(t *testing.T) {
 }
 
 func TestInitFlow(t *testing.T) {
+	ctx := context.Background()
 	conf, reg := internal.NewFastRegistryWithMocks(t)
-	conf.MustSet(config.ViperKeySelfServiceRecoveryEnabled, true)
-	conf.MustSet(config.ViperKeySelfServiceStrategyConfig+"."+recovery.StrategyRecoveryLinkName,
+	conf.MustSet(ctx, config.ViperKeySelfServiceRecoveryEnabled, true)
+	conf.MustSet(ctx, config.ViperKeySelfServiceStrategyConfig+"."+recovery.StrategyRecoveryLinkName,
 		map[string]interface{}{"enabled": true})
 
 	router := x.NewRouterPublic()
 	publicTS, _ := testhelpers.NewKratosServerWithRouters(t, reg, router, x.NewRouterAdmin())
 	recoveryTS := testhelpers.NewRecoveryUIFlowEchoServer(t, reg)
 
-	conf.MustSet(config.ViperKeySelfServiceBrowserDefaultReturnTo, "https://www.ory.sh")
+	conf.MustSet(ctx, config.ViperKeySelfServiceBrowserDefaultReturnTo, "https://www.ory.sh")
 	testhelpers.SetDefaultIdentitySchema(conf, "file://./stub/identity.schema.json")
 
 	assertion := func(body []byte, isForced, isApi bool) {
@@ -103,7 +105,7 @@ func TestInitFlow(t *testing.T) {
 		res, err := c.Get(publicTS.URL + route)
 		require.NoError(t, err)
 		defer res.Body.Close()
-		body, err := ioutil.ReadAll(res.Body)
+		body, err := io.ReadAll(res.Body)
 		require.NoError(t, err)
 		return res, body
 	}
@@ -118,7 +120,7 @@ func TestInitFlow(t *testing.T) {
 		res, err := c.Do(req)
 		require.NoError(t, err)
 		defer res.Body.Close()
-		body, err := ioutil.ReadAll(res.Body)
+		body, err := io.ReadAll(res.Body)
 		require.NoError(t, err)
 		return res, body
 	}
@@ -164,7 +166,7 @@ func TestInitFlow(t *testing.T) {
 		})
 
 		t.Run("case=relative redirect when self-service recovery ui is a relative URL", func(t *testing.T) {
-			reg.Config(context.Background()).MustSet(config.ViperKeySelfServiceRecoveryUI, "/recovery-ts")
+			reg.Config().MustSet(ctx, config.ViperKeySelfServiceRecoveryUI, "/recovery-ts")
 			assert.Regexp(
 				t,
 				"^/recovery-ts.*$",
@@ -193,9 +195,10 @@ func TestInitFlow(t *testing.T) {
 }
 
 func TestGetFlow(t *testing.T) {
+	ctx := context.Background()
 	conf, reg := internal.NewFastRegistryWithMocks(t)
-	conf.MustSet(config.ViperKeySelfServiceRecoveryEnabled, true)
-	conf.MustSet(config.ViperKeySelfServiceStrategyConfig+"."+recovery.StrategyRecoveryLinkName,
+	conf.MustSet(ctx, config.ViperKeySelfServiceRecoveryEnabled, true)
+	conf.MustSet(ctx, config.ViperKeySelfServiceStrategyConfig+"."+recovery.StrategyRecoveryLinkName,
 		map[string]interface{}{"enabled": true})
 	testhelpers.SetDefaultIdentitySchema(conf, "file://./stub/identity.schema.json")
 
@@ -209,7 +212,7 @@ func TestGetFlow(t *testing.T) {
 			require.NoError(t, err)
 		}))
 		t.Cleanup(ts.Close)
-		conf.MustSet(config.ViperKeySelfServiceRecoveryUI, ts.URL)
+		conf.MustSet(ctx, config.ViperKeySelfServiceRecoveryUI, ts.URL)
 		return ts
 	}
 
@@ -250,7 +253,7 @@ func TestGetFlow(t *testing.T) {
 
 	t.Run("case=expired with return_to", func(t *testing.T) {
 		returnTo := "https://www.ory.sh"
-		conf.MustSet(config.ViperKeyURLsAllowedReturnToDomains, []string{returnTo})
+		conf.MustSet(ctx, config.ViperKeyURLsAllowedReturnToDomains, []string{returnTo})
 		client := testhelpers.NewClientWithCookies(t)
 		setupRecoveryTS(t, client)
 		body := x.EasyGetBody(t, client, public.URL+recovery.RouteInitBrowserFlow+"?return_to="+returnTo)
@@ -269,7 +272,7 @@ func TestGetFlow(t *testing.T) {
 		// submit the flow but it is expired
 		u := public.URL + recovery.RouteSubmitFlow + "?flow=" + f.ID.String()
 		res, err := client.PostForm(u, url.Values{"email": {"email@ory.sh"}, "csrf_token": {f.CSRFToken}, "method": {"link"}})
-		resBody, err := ioutil.ReadAll(res.Body)
+		resBody, err := io.ReadAll(res.Body)
 		require.NoError(t, err)
 		require.NoError(t, res.Body.Close())
 

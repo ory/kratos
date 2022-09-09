@@ -14,8 +14,6 @@ import (
 
 	"github.com/ory/kratos/cipher"
 
-	"github.com/ory/kratos/corp"
-
 	"github.com/ory/herodot"
 	"github.com/ory/x/sqlxx"
 
@@ -171,7 +169,7 @@ func (t *Traits) UnmarshalJSON(data []byte) error {
 }
 
 func (i Identity) TableName(ctx context.Context) string {
-	return corp.ContextualizeTableName(ctx, "identities")
+	return "identities"
 }
 
 func (i *Identity) lock() *sync.RWMutex {
@@ -388,7 +386,7 @@ func (i *Identity) WithDeclassifiedCredentialsOIDC(ctx context.Context, c cipher
 				ciphertext := v.Get(token).String()
 
 				var plaintext []byte
-				plaintext, err = c.Cipher().Decrypt(ctx, ciphertext)
+				plaintext, err = c.Cipher(ctx).Decrypt(ctx, ciphertext)
 				if err != nil {
 					return false
 				}

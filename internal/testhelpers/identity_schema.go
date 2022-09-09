@@ -1,6 +1,7 @@
 package testhelpers
 
 import (
+	"context"
 	"testing"
 
 	"github.com/ory/kratos/driver/config"
@@ -10,10 +11,11 @@ import (
 //
 //	testhelpers.SetIdentitySchemas(map[string]string{"customer": "file://customer.json"})
 func SetIdentitySchemas(t *testing.T, conf *config.Config, schemas map[string]string) {
+	ctx := context.Background()
 	var s []config.Schema
 	for id, location := range schemas {
 		s = append(s, config.Schema{ID: id, URL: location})
 	}
 
-	conf.MustSet(config.ViperKeyIdentitySchemas, s)
+	conf.MustSet(ctx, config.ViperKeyIdentitySchemas, s)
 }

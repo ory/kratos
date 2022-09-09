@@ -1,6 +1,7 @@
 package testhelpers
 
 import (
+	"context"
 	"fmt"
 	"testing"
 
@@ -8,5 +9,6 @@ import (
 )
 
 func StrategyEnable(t *testing.T, c *config.Config, strategy string, enable bool) {
-	c.MustSet(fmt.Sprintf("%s.%s.enabled", config.ViperKeySelfServiceStrategyConfig, strategy), enable)
+	ctx := context.Background()
+	c.MustSet(ctx, fmt.Sprintf("%s.%s.enabled", config.ViperKeySelfServiceStrategyConfig, strategy), enable)
 }

@@ -12,7 +12,6 @@ import (
 	"github.com/gofrs/uuid"
 
 	"github.com/ory/herodot"
-	"github.com/ory/kratos/corp"
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/x"
 	"github.com/ory/x/randx"
@@ -21,11 +20,11 @@ import (
 var ErrIdentityDisabled = herodot.ErrUnauthorized.WithError("identity is disabled").WithReason("This account was disabled.")
 
 type lifespanProvider interface {
-	SessionLifespan() time.Duration
+	SessionLifespan(ctx context.Context) time.Duration
 }
 
 type refreshWindowProvider interface {
-	SessionRefreshMinTimeLeft() time.Duration
+	SessionRefreshMinTimeLeft(ctx context.Context) time.Duration
 }
 
 // A Session
@@ -97,7 +96,7 @@ type Session struct {
 }
 
 func (s Session) TableName(ctx context.Context) string {
-	return corp.ContextualizeTableName(ctx, "sessions")
+	return "sessions"
 }
 
 func (s *Session) CompletedLoginFor(method identity.CredentialsType, aal identity.AuthenticatorAssuranceLevel) {
@@ -149,10 +148,10 @@ func (s *Session) SetAuthenticatorAssuranceLevel() {
 	}
 }
 
-func NewActiveSession(i *identity.Identity, c lifespanProvider, authenticatedAt time.Time, completedLoginFor identity.CredentialsType, completedLoginAAL identity.AuthenticatorAssuranceLevel) (*Session, error) {
+func NewActiveSession(ctx context.Context, i *identity.Identity, c lifespanProvider, authenticatedAt time.Time, completedLoginFor identity.CredentialsType, completedLoginAAL identity.AuthenticatorAssuranceLevel) (*Session, error) {
 	s := NewInactiveSession()
 	s.CompletedLoginFor(completedLoginFor, completedLoginAAL)
-	if err := s.Activate(i, c, authenticatedAt); err != nil {
+	if err := s.Activate(ctx, i, c, authenticatedAt); err != nil {
 		return nil, err
 	}
 	return s, nil
@@ -168,13 +167,13 @@ func NewInactiveSession() *Session {
 	}
 }
 
-func (s *Session) Activate(i *identity.Identity, c lifespanProvider, authenticatedAt time.Time) error {
+func (s *Session) Activate(ctx context.Context, i *identity.Identity, c lifespanProvider, authenticatedAt time.Time) error {
 	if i != nil && !i.IsActive() {
 		return ErrIdentityDisabled.WithDetail("identity_id", i.ID)
 	}
 
 	s.Active = true
-	s.ExpiresAt = authenticatedAt.Add(c.SessionLifespan())
+	s.ExpiresAt = authenticatedAt.Add(c.SessionLifespan(ctx))
 	s.AuthenticatedAt = authenticatedAt
 	s.IssuedAt = authenticatedAt
 	s.Identity = i
@@ -199,13 +198,13 @@ func (s *Session) IsActive() bool {
 	return s.Active && s.ExpiresAt.After(time.Now()) && (s.Identity == nil || s.Identity.IsActive())
 }
 
-func (s *Session) Refresh(c lifespanProvider) *Session {
-	s.ExpiresAt = time.Now().Add(c.SessionLifespan()).UTC()
+func (s *Session) Refresh(ctx context.Context, c lifespanProvider) *Session {
+	s.ExpiresAt = time.Now().Add(c.SessionLifespan(ctx)).UTC()
 	return s
 }
 
-func (s *Session) CanBeRefreshed(c refreshWindowProvider) bool {
-	return s.ExpiresAt.Add(-c.SessionRefreshMinTimeLeft()).Before(time.Now())
+func (s *Session) CanBeRefreshed(ctx context.Context, c refreshWindowProvider) bool {
+	return s.ExpiresAt.Add(-c.SessionRefreshMinTimeLeft(ctx)).Before(time.Now())
 }
 
 // List of (Used) AuthenticationMethods

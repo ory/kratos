@@ -23,10 +23,18 @@ import (
 )
 
 func TestVerificationExecutor(t *testing.T) {
+	ctx := context.Background()
 	conf, reg := internal.NewFastRegistryWithMocks(t)
 
 	newServer := func(t *testing.T, i *identity.Identity, ft flow.Type) *httptest.Server {
 		router := httprouter.New()
+		router.GET("/verification/pre", func(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+			a, err := verification.NewFlow(conf, time.Minute, x.FakeCSRFToken, r, reg.VerificationStrategies(context.Background()), ft)
+			require.NoError(t, err)
+			if testhelpers.SelfServiceHookErrorHandler(t, w, r, verification.ErrHookAbortFlow, reg.VerificationExecutor().PreVerificationHook(w, r, a)) {
+				_, _ = w.Write([]byte("ok"))
+			}
+		})
 
 		router.GET("/verification/post", func(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 			a, err := verification.NewFlow(conf, time.Minute, x.FakeCSRFToken, r, reg.VerificationStrategies(context.Background()), ft)
@@ -39,7 +47,7 @@ func TestVerificationExecutor(t *testing.T) {
 
 		ts := httptest.NewServer(router)
 		t.Cleanup(ts.Close)
-		conf.MustSet(config.ViperKeyPublicBaseURL, ts.URL)
+		conf.MustSet(ctx, config.ViperKeyPublicBaseURL, ts.URL)
 		return ts
 	}
 
@@ -56,7 +64,7 @@ func TestVerificationExecutor(t *testing.T) {
 
 		t.Run("case=pass if hooks pass", func(t *testing.T) {
 			t.Cleanup(testhelpers.SelfServiceHookConfigReset(t, conf))
-			conf.MustSet(config.HookStrategyKey(config.ViperKeySelfServiceVerificationAfter, config.HookGlobal),
+			conf.MustSet(ctx, config.HookStrategyKey(config.ViperKeySelfServiceVerificationAfter, config.HookGlobal),
 				[]config.SelfServiceHook{{Name: "err", Config: []byte(`{}`)}})
 			i := testhelpers.SelfServiceHookFakeIdentity(t)
 			ts := newServer(t, i, flow.TypeBrowser)
@@ -68,7 +76,7 @@ func TestVerificationExecutor(t *testing.T) {
 
 		t.Run("case=fail if hooks fail", func(t *testing.T) {
 			t.Cleanup(testhelpers.SelfServiceHookConfigReset(t, conf))
-			conf.MustSet(config.HookStrategyKey(config.ViperKeySelfServiceVerificationAfter, config.HookGlobal),
+			conf.MustSet(ctx, config.HookStrategyKey(config.ViperKeySelfServiceVerificationAfter, config.HookGlobal),
 				[]config.SelfServiceHook{{Name: "err", Config: []byte(`{"ExecutePostVerificationHook": "abort"}`)}})
 			i := testhelpers.SelfServiceHookFakeIdentity(t)
 			ts := newServer(t, i, flow.TypeBrowser)
@@ -78,5 +86,17 @@ func TestVerificationExecutor(t *testing.T) {
 			assert.EqualValues(t, http.StatusOK, res.StatusCode)
 			assert.Equal(t, "", body)
 		})
+
+		for _, kind := range []flow.Type{flow.TypeBrowser, flow.TypeAPI} {
+			t.Run("type="+string(kind)+"/method=PreVerificationHook", testhelpers.TestSelfServicePreHook(
+				config.ViperKeySelfServiceVerificationBeforeHooks,
+				testhelpers.SelfServiceMakeVerificationPreHookRequest,
+				func(t *testing.T) *httptest.Server {
+					i := testhelpers.SelfServiceHookFakeIdentity(t)
+					return newServer(t, i, kind)
+				},
+				conf,
+			))
+		}
 	})
 }

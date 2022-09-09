@@ -52,9 +52,11 @@ func PostHookPostPersistExecutorNames(e []PostHookPostPersistExecutor) []string 
 func (f PreHookExecutorFunc) ExecuteRegistrationPreHook(w http.ResponseWriter, r *http.Request, a *Flow) error {
 	return f(w, r, a)
 }
+
 func (f PostHookPostPersistExecutorFunc) ExecutePostRegistrationPostPersistHook(w http.ResponseWriter, r *http.Request, a *Flow, s *session.Session) error {
 	return f(w, r, a, s)
 }
+
 func (f PostHookPrePersistExecutorFunc) ExecutePostRegistrationPrePersistHook(w http.ResponseWriter, r *http.Request, a *Flow, i *identity.Identity) error {
 	return f(w, r, a, i)
 }
@@ -132,13 +134,13 @@ func (e *HookExecutor) PostRegistrationHook(w http.ResponseWriter, r *http.Reque
 	}
 
 	// Verify the redirect URL before we do any other processing.
-	c := e.d.Config(r.Context())
-	returnTo, err := x.SecureRedirectTo(r, c.SelfServiceBrowserDefaultReturnTo(),
+	c := e.d.Config()
+	returnTo, err := x.SecureRedirectTo(r, c.SelfServiceBrowserDefaultReturnTo(r.Context()),
 		x.SecureRedirectReturnTo(a.ReturnTo),
 		x.SecureRedirectUseSourceURL(a.RequestURL),
-		x.SecureRedirectAllowURLs(c.SelfServiceBrowserAllowedReturnToDomains()),
-		x.SecureRedirectAllowSelfServiceURLs(c.SelfPublicURL()),
-		x.SecureRedirectOverrideDefaultReturnTo(c.SelfServiceFlowRegistrationReturnTo(ct.String())),
+		x.SecureRedirectAllowURLs(c.SelfServiceBrowserAllowedReturnToDomains(r.Context())),
+		x.SecureRedirectAllowSelfServiceURLs(c.SelfPublicURL(r.Context())),
+		x.SecureRedirectOverrideDefaultReturnTo(c.SelfServiceFlowRegistrationReturnTo(r.Context(), ct.String())),
 	)
 	if err != nil {
 		return err
@@ -149,7 +151,7 @@ func (e *HookExecutor) PostRegistrationHook(w http.ResponseWriter, r *http.Reque
 		WithField("identity_id", i.ID).
 		Info("A new identity has registered using self-service registration.")
 
-	s, err := session.NewActiveSession(i, e.d.Config(r.Context()), time.Now().UTC(), ct, identity.AuthenticatorAssuranceLevel1)
+	s, err := session.NewActiveSession(r.Context(), i, e.d.Config(), time.Now().UTC(), ct, identity.AuthenticatorAssuranceLevel1)
 	if err != nil {
 		return err
 	}

@@ -4,18 +4,14 @@ import (
 	"context"
 	"time"
 
-	"github.com/ory/kratos/selfservice/flow"
-
-	"github.com/ory/kratos/corp"
-
 	"github.com/gofrs/uuid"
 	"github.com/pkg/errors"
 
-	"github.com/ory/x/randx"
-
 	"github.com/ory/kratos/identity"
+	"github.com/ory/kratos/selfservice/flow"
 	"github.com/ory/kratos/selfservice/flow/verification"
 	"github.com/ory/kratos/x"
+	"github.com/ory/x/randx"
 )
 
 type VerificationToken struct {
@@ -48,12 +44,12 @@ type VerificationToken struct {
 	// VerifiableAddressID is a helper struct field for gobuffalo.pop.
 	VerifiableAddressID uuid.UUID `json:"-" faker:"-" db:"identity_verifiable_address_id"`
 	// FlowID is a helper struct field for gobuffalo.pop.
-	FlowID uuid.NullUUID `json:"-" faker:"-" db:"selfservice_verification_flow_id"`
-	NID    uuid.UUID     `json:"-"  faker:"-" db:"nid"`
+	FlowID uuid.UUID `json:"-" faker:"-" db:"selfservice_verification_flow_id"`
+	NID    uuid.UUID `json:"-" faker:"-" db:"nid"`
 }
 
 func (VerificationToken) TableName(ctx context.Context) string {
-	return corp.ContextualizeTableName(ctx, "identity_verification_tokens")
+	return "identity_verification_tokens"
 }
 
 func NewSelfServiceVerificationToken(address *identity.VerifiableAddress, f *verification.Flow, expiresIn time.Duration) *VerificationToken {
@@ -64,7 +60,8 @@ func NewSelfServiceVerificationToken(address *identity.VerifiableAddress, f *ver
 		VerifiableAddress: address,
 		ExpiresAt:         now.Add(expiresIn),
 		IssuedAt:          now,
-		FlowID:            uuid.NullUUID{UUID: f.ID, Valid: true}}
+		FlowID:            f.ID,
+	}
 }
 
 func (f *VerificationToken) Valid() error {

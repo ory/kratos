@@ -22,7 +22,8 @@ type SelfServiceRecoveryFlow struct {
 	Active *string `json:"active,omitempty"`
 	// ExpiresAt is the time (UTC) when the request expires. If the user still wishes to update the setting, a new request has to be initiated.
 	ExpiresAt time.Time `json:"expires_at"`
-	Id        string    `json:"id"`
+	// ID represents the request's unique ID. When performing the recovery flow, this represents the id in the recovery ui's query parameter: http://<selfservice.flows.recovery.ui_url>?request=<id>
+	Id string `json:"id"`
 	// IssuedAt is the time (UTC) when the request occurred.
 	IssuedAt time.Time `json:"issued_at"`
 	// RequestURL is the initial URL that was requested from Ory Kratos. It can be used to forward information contained in the URL's path or query for example.

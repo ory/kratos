@@ -12,7 +12,7 @@ import (
 
 func RedirectToAdminRoute(reg config.Provider) httprouter.Handle {
 	return func(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
-		admin := reg.Config(r.Context()).SelfAdminURL()
+		admin := reg.Config().SelfAdminURL(r.Context())
 
 		dest := *r.URL
 		dest.Host = admin.Host
@@ -26,7 +26,7 @@ func RedirectToAdminRoute(reg config.Provider) httprouter.Handle {
 
 func RedirectToPublicRoute(reg config.Provider) httprouter.Handle {
 	return func(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
-		public := reg.Config(r.Context()).SelfPublicURL()
+		public := reg.Config().SelfPublicURL(r.Context())
 
 		dest := *r.URL
 		dest.Host = public.Host

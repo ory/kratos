@@ -33,11 +33,11 @@ func (a *AES) Encrypt(ctx context.Context, message []byte) (string, error) {
 		return "", nil
 	}
 
-	if len(a.c.Config(ctx).SecretsCipher()) == 0 {
+	if len(a.c.Config().SecretsCipher(ctx)) == 0 {
 		return "", errors.WithStack(herodot.ErrInternalServerError.WithReason("Unable to encrypt message because no cipher secrets were configured."))
 	}
 
-	ciphertext, err := cryptopasta.Encrypt(message, &a.c.Config(ctx).SecretsCipher()[0])
+	ciphertext, err := cryptopasta.Encrypt(message, &a.c.Config().SecretsCipher(ctx)[0])
 	return hex.EncodeToString(ciphertext), errors.WithStack(err)
 }
 
@@ -49,7 +49,7 @@ func (a *AES) Decrypt(ctx context.Context, ciphertext string) ([]byte, error) {
 		return nil, nil
 	}
 
-	secrets := a.c.Config(ctx).SecretsCipher()
+	secrets := a.c.Config().SecretsCipher(ctx)
 	if len(secrets) == 0 {
 		return nil, errors.WithStack(herodot.ErrInternalServerError.WithReason("Unable to decipher the encrypted message because no AES secrets were configured."))
 	}

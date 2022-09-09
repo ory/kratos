@@ -61,6 +61,7 @@ type (
 		verification.FlowPersistenceProvider
 		verification.StrategyProvider
 		verification.HookExecutorProvider
+		verification.HandlerProvider
 
 		RecoveryTokenPersistenceProvider
 		VerificationTokenPersistenceProvider

@@ -1,10 +1,11 @@
 package schema_test
 
 import (
+	"context"
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"os"
@@ -24,6 +25,7 @@ import (
 )
 
 func TestHandler(t *testing.T) {
+	ctx := context.Background()
 	conf, reg := internal.NewFastRegistryWithMocks(t)
 	router := x.NewRouterPublic()
 	reg.SchemaHandler().RegisterPublicRoutes(router)
@@ -77,7 +79,7 @@ func TestHandler(t *testing.T) {
 	getFromTS := func(url string, expectCode int) []byte {
 		res, err := ts.Client().Get(url)
 		require.NoError(t, err)
-		body, err := ioutil.ReadAll(res.Body)
+		body, err := io.ReadAll(res.Body)
 		require.NoError(t, err)
 		require.NoError(t, res.Body.Close())
 
@@ -117,11 +119,11 @@ func TestHandler(t *testing.T) {
 				URL: s.RawURL,
 			})
 		}
-		conf.MustSet(config.ViperKeyIdentitySchemas, schemasConfig)
+		conf.MustSet(ctx, config.ViperKeyIdentitySchemas, schemasConfig)
 	}
 
-	conf.MustSet(config.ViperKeyPublicBaseURL, ts.URL)
-	conf.MustSet(config.ViperKeyDefaultIdentitySchemaID, config.DefaultIdentityTraitsSchemaID)
+	conf.MustSet(ctx, config.ViperKeyPublicBaseURL, ts.URL)
+	conf.MustSet(ctx, config.ViperKeyDefaultIdentitySchemaID, config.DefaultIdentityTraitsSchemaID)
 	setSchemas(schemas)
 
 	t.Run("case=get default schema", func(t *testing.T) {

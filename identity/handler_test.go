@@ -5,7 +5,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -41,20 +41,20 @@ func TestHandler(t *testing.T) {
 	mockServerURL := urlx.ParseOrPanic(publicTS.URL)
 	defaultSchemaExternalURL := (&schema.Schema{ID: "default"}).SchemaURL(mockServerURL).String()
 
-	conf.MustSet(config.ViperKeyAdminBaseURL, adminTS.URL)
+	conf.MustSet(ctx, config.ViperKeyAdminBaseURL, adminTS.URL)
 	testhelpers.SetIdentitySchemas(t, conf, map[string]string{
 		"default":  "file://./stub/identity.schema.json",
 		"customer": "file://./stub/handler/customer.schema.json",
 		"employee": "file://./stub/handler/employee.schema.json",
 	})
 
-	conf.MustSet(config.ViperKeyPublicBaseURL, mockServerURL.String())
+	conf.MustSet(ctx, config.ViperKeyPublicBaseURL, mockServerURL.String())
 
 	var get = func(t *testing.T, base *httptest.Server, href string, expectCode int) gjson.Result {
 		t.Helper()
 		res, err := base.Client().Get(base.URL + href)
 		require.NoError(t, err)
-		body, err := ioutil.ReadAll(res.Body)
+		body, err := io.ReadAll(res.Body)
 		require.NoError(t, err)
 		require.NoError(t, res.Body.Close())
 
@@ -84,7 +84,7 @@ func TestHandler(t *testing.T) {
 		req.Header.Set("Content-Type", "application/json")
 		res, err := base.Client().Do(req)
 		require.NoError(t, err)
-		body, err := ioutil.ReadAll(res.Body)
+		body, err := io.ReadAll(res.Body)
 		require.NoError(t, err)
 		require.NoError(t, res.Body.Close())
 
@@ -266,6 +266,18 @@ func TestHandler(t *testing.T) {
 
 			require.NoError(t, hash.Compare(ctx, []byte("123456"), []byte(gjson.GetBytes(actual.Credentials[identity.CredentialsTypePassword].Config, "hashed_password").String())))
 		})
+
+		t.Run("with scrypt password", func(t *testing.T) {
+			res := send(t, adminTS, "POST", "/identities", http.StatusCreated, identity.AdminCreateIdentityBody{Traits: []byte(`{"email": "import-7@ory.sh"}`),
+				Credentials: &identity.AdminIdentityImportCredentials{Password: &identity.AdminIdentityImportCredentialsPassword{
+					Config: identity.AdminIdentityImportCredentialsPasswordConfig{HashedPassword: "$scrypt$ln=16384,r=8,p=1$ZtQva9xCHzlSELH/mA7Kj5KjH2tCrkbwYzdxknkL0QQ=$pnTcXKaWVT+FwFDdk3vO1K0J7ZgOxdSU1tCJNYmn8zI="}}}})
+			actual, err := reg.PrivilegedIdentityPool().GetIdentityConfidential(ctx, uuid.FromStringOrNil(res.Get("id").String()))
+			require.NoError(t, err)
+
+			snapshotx.SnapshotTExceptMatchingKeys(t, identity.WithCredentialsAndAdminMetadataInJSON(*actual), append(ignoreDefault, "hashed_password"))
+
+			require.NoError(t, hash.Compare(ctx, []byte("123456"), []byte(gjson.GetBytes(actual.Credentials[identity.CredentialsTypePassword].Config, "hashed_password").String())))
+		})
 	})
 
 	t.Run("case=unable to set ID itself", func(t *testing.T) {
@@ -284,7 +296,7 @@ func TestHandler(t *testing.T) {
 				if !encrypt {
 					return token
 				}
-				c, err := reg.Cipher().Encrypt(context.Background(), []byte(token))
+				c, err := reg.Cipher(ctx).Encrypt(context.Background(), []byte(token))
 				require.NoError(t, err)
 				return c
 			}
@@ -428,7 +440,7 @@ func TestHandler(t *testing.T) {
 				})
 			}
 
-			e, _ := reg.Cipher().Encrypt(context.Background(), []byte("foo_token"))
+			e, _ := reg.Cipher(ctx).Encrypt(context.Background(), []byte("foo_token"))
 			id = createOidcIdentity(t, "foo-failed-2.oidc@bar.com", e, "bar_token", "id_token", false)
 			for name, ts := range map[string]*httptest.Server{"public": publicTS, "admin": adminTS} {
 				t.Run("endpoint="+name, func(t *testing.T) {

@@ -4,7 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"net/url"
 	"strings"
@@ -42,13 +42,14 @@ func init() {
 }
 
 func TestFlowLifecycle(t *testing.T) {
+	ctx := context.Background()
 	conf, reg := internal.NewFastRegistryWithMocks(t)
 	router := x.NewRouterPublic()
 	ts, _ := testhelpers.NewKratosServerWithRouters(t, reg, router, x.NewRouterAdmin())
 	loginTS := testhelpers.NewLoginUIFlowEchoServer(t, reg)
 
 	errorTS := testhelpers.NewErrorTestServer(t, reg)
-	conf.MustSet(config.ViperKeySelfServiceBrowserDefaultReturnTo, "https://www.ory.sh")
+	conf.MustSet(ctx, config.ViperKeySelfServiceBrowserDefaultReturnTo, "https://www.ory.sh")
 	testhelpers.SetDefaultIdentitySchema(conf, "file://./stub/password.schema.json")
 
 	assertion := func(body []byte, isForced, isApi bool) {
@@ -91,7 +92,7 @@ func TestFlowLifecycle(t *testing.T) {
 		res, err := c.Do(req)
 		require.NoError(t, err)
 		defer res.Body.Close()
-		body, err := ioutil.ReadAll(res.Body)
+		body, err := io.ReadAll(res.Body)
 		require.NoError(t, err)
 		return res, body
 	}
@@ -174,7 +175,7 @@ func TestFlowLifecycle(t *testing.T) {
 			t.Run("case=reset the session when refresh is true but identity is different", func(t *testing.T) {
 				testhelpers.NewRedirSessionEchoTS(t, reg)
 				t.Cleanup(func() {
-					conf.MustSet(config.ViperKeySelfServiceBrowserDefaultReturnTo, "https://www.ory.sh")
+					conf.MustSet(ctx, config.ViperKeySelfServiceBrowserDefaultReturnTo, "https://www.ory.sh")
 				})
 
 				run := func(t *testing.T, tt flow.Type) (string, string) {
@@ -261,9 +262,9 @@ func TestFlowLifecycle(t *testing.T) {
 		})
 
 		t.Run("case=should return an error because the request is expired", func(t *testing.T) {
-			conf.MustSet(config.ViperKeySelfServiceLoginRequestLifespan, "50ms")
+			conf.MustSet(ctx, config.ViperKeySelfServiceLoginRequestLifespan, "50ms")
 			t.Cleanup(func() {
-				conf.MustSet(config.ViperKeySelfServiceLoginRequestLifespan, "10m")
+				conf.MustSet(ctx, config.ViperKeySelfServiceLoginRequestLifespan, "10m")
 			})
 
 			expired := time.Now().Add(-time.Minute)
@@ -484,7 +485,7 @@ func TestFlowLifecycle(t *testing.T) {
 		})
 
 		t.Run("case=relative redirect when self-service login ui is a relative URL", func(t *testing.T) {
-			reg.Config(context.Background()).MustSet(config.ViperKeySelfServiceLoginUI, "/login-ts")
+			reg.Config().MustSet(ctx, config.ViperKeySelfServiceLoginUI, "/login-ts")
 			assert.Regexp(
 				t,
 				"^/login-ts.*$",
@@ -495,6 +496,7 @@ func TestFlowLifecycle(t *testing.T) {
 }
 
 func TestGetFlow(t *testing.T) {
+	ctx := context.Background()
 	conf, reg := internal.NewFastRegistryWithMocks(t)
 	public, _ := testhelpers.NewKratosServerWithCSRF(t, reg)
 	_ = testhelpers.NewErrorTestServer(t, reg)
@@ -506,14 +508,14 @@ func TestGetFlow(t *testing.T) {
 			_, err := w.Write(x.EasyGetBody(t, c, public.URL+login.RouteGetFlow+"?id="+r.URL.Query().Get("flow")))
 			require.NoError(t, err)
 		}))
-		conf.MustSet(config.ViperKeySelfServiceLoginUI, ts.URL)
-		conf.MustSet(config.ViperKeySelfServiceBrowserDefaultReturnTo, "https://www.ory.sh")
+		conf.MustSet(ctx, config.ViperKeySelfServiceLoginUI, ts.URL)
+		conf.MustSet(ctx, config.ViperKeySelfServiceBrowserDefaultReturnTo, "https://www.ory.sh")
 		t.Cleanup(ts.Close)
 		return ts
 	}
 
 	_ = testhelpers.NewLoginUIFlowEchoServer(t, reg)
-	conf.MustSet(config.ViperKeySelfServiceStrategyConfig+"."+string(identity.CredentialsTypePassword), map[string]interface{}{
+	conf.MustSet(ctx, config.ViperKeySelfServiceStrategyConfig+"."+string(identity.CredentialsTypePassword), map[string]interface{}{
 		"enabled": true})
 
 	t.Run("case=fetching successful", func(t *testing.T) {
@@ -555,7 +557,7 @@ func TestGetFlow(t *testing.T) {
 
 	t.Run("case=expired with return_to", func(t *testing.T) {
 		returnTo := "https://www.ory.sh"
-		conf.MustSet(config.ViperKeyURLsAllowedReturnToDomains, []string{returnTo})
+		conf.MustSet(ctx, config.ViperKeyURLsAllowedReturnToDomains, []string{returnTo})
 
 		client := testhelpers.NewClientWithCookies(t)
 		setupLoginUI(t, client)
@@ -575,7 +577,7 @@ func TestGetFlow(t *testing.T) {
 		// submit the flow but it is expired
 		u := public.URL + login.RouteSubmitFlow + "?flow=" + f.ID.String()
 		res, err := client.PostForm(u, url.Values{"password_identifier": {"email@ory.sh"}, "csrf_token": {f.CSRFToken}, "password": {"password"}, "method": {"password"}})
-		resBody, err := ioutil.ReadAll(res.Body)
+		resBody, err := io.ReadAll(res.Body)
 		require.NoError(t, err)
 		require.NoError(t, res.Body.Close())
 

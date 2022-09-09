@@ -103,7 +103,7 @@ func MethodEnabledAndAllowed(ctx context.Context, expected, actual string, d int
 		return errors.WithStack(ErrStrategyNotResponsible)
 	}
 
-	if !d.Config(ctx).SelfServiceStrategy(expected).Enabled {
+	if !d.Config().SelfServiceStrategy(ctx, expected).Enabled {
 		return errors.WithStack(herodot.ErrNotFound.WithReason(strategy.EndpointDisabledMessage))
 	}
 

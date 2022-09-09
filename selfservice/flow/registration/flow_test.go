@@ -1,6 +1,7 @@
 package registration_test
 
 import (
+	"context"
 	"crypto/tls"
 	"fmt"
 	"net/http"
@@ -39,6 +40,7 @@ func TestFakeFlow(t *testing.T) {
 }
 
 func TestNewFlow(t *testing.T) {
+	ctx := context.Background()
 	conf, _ := internal.NewFastRegistryWithMocks(t)
 	t.Run("case=0", func(t *testing.T) {
 		r, err := registration.NewFlow(conf, 0, "csrf", &http.Request{
@@ -55,7 +57,7 @@ func TestNewFlow(t *testing.T) {
 		_, err := registration.NewFlow(conf, 0, "csrf", &http.Request{URL: &url.URL{Path: "/", RawQuery: "return_to=https://not-allowed/foobar"}, Host: "ory.sh"}, flow.TypeBrowser)
 		require.Error(t, err)
 
-		_, err = registration.NewFlow(conf, 0, "csrf", &http.Request{URL: &url.URL{Path: "/", RawQuery: "return_to=" + urlx.AppendPaths(conf.SelfPublicURL(), "/self-service/login/browser").String()}, Host: "ory.sh"}, flow.TypeBrowser)
+		_, err = registration.NewFlow(conf, 0, "csrf", &http.Request{URL: &url.URL{Path: "/", RawQuery: "return_to=" + urlx.AppendPaths(conf.SelfPublicURL(ctx), "/self-service/login/browser").String()}, Host: "ory.sh"}, flow.TypeBrowser)
 		require.NoError(t, err)
 	})
 

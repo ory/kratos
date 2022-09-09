@@ -3,7 +3,7 @@ package settings_test
 import (
 	"context"
 	"encoding/json"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"testing"
 	"time"
@@ -39,6 +39,7 @@ import (
 )
 
 func TestHandleError(t *testing.T) {
+	ctx := context.Background()
 	conf, reg := internal.NewFastRegistryWithMocks(t)
 	testhelpers.SetDefaultIdentitySchema(conf, "file://./stub/identity.schema.json")
 
@@ -91,7 +92,7 @@ func TestHandleError(t *testing.T) {
 		res, err := ts.Client().Get(ts.URL + "/error")
 		require.NoError(t, err)
 		defer res.Body.Close()
-		require.Contains(t, res.Request.URL.String(), conf.SelfServiceFlowErrorURL().String()+"?id=")
+		require.Contains(t, res.Request.URL.String(), conf.SelfServiceFlowErrorURL(ctx).String()+"?id=")
 
 		sse, _, err := sdk.V0alpha2Api.GetSelfServiceError(context.Background()).
 			Id(res.Request.URL.Query().Get("id")).Execute()
@@ -122,9 +123,9 @@ func TestHandleError(t *testing.T) {
 		require.NoError(t, err)
 		defer res.Body.Close()
 		assert.Contains(t, res.Header.Get("Content-Type"), "application/json")
-		assert.NotContains(t, res.Request.URL.String(), conf.SelfServiceFlowErrorURL().String()+"?id=")
+		assert.NotContains(t, res.Request.URL.String(), conf.SelfServiceFlowErrorURL(ctx).String()+"?id=")
 
-		body, err := ioutil.ReadAll(res.Body)
+		body, err := io.ReadAll(res.Body)
 		require.NoError(t, err)
 		assert.Contains(t, string(body), "system error")
 	})
@@ -141,7 +142,7 @@ func TestHandleError(t *testing.T) {
 				t.Cleanup(reset)
 
 				// This needs an authenticated client in order to call the RouteGetFlow endpoint
-				s, err := session.NewActiveSession(&id, testhelpers.NewSessionLifespanProvider(time.Hour), time.Now(), identity.CredentialsTypePassword, identity.AuthenticatorAssuranceLevel1)
+				s, err := session.NewActiveSession(ctx, &id, testhelpers.NewSessionLifespanProvider(time.Hour), time.Now(), identity.CredentialsTypePassword, identity.AuthenticatorAssuranceLevel1)
 				require.NoError(t, err)
 				c := testhelpers.NewHTTPClientWithSessionToken(t, reg, s)
 
@@ -154,7 +155,7 @@ func TestHandleError(t *testing.T) {
 				defer res.Body.Close()
 				require.Contains(t, res.Request.URL.String(), ts.URL+"/error")
 
-				body, err := ioutil.ReadAll(res.Body)
+				body, err := io.ReadAll(res.Body)
 				require.NoError(t, err)
 				require.Equal(t, http.StatusGone, res.StatusCode, "%+v\n\t%s", res.Request, body)
 
@@ -174,7 +175,7 @@ func TestHandleError(t *testing.T) {
 				defer res.Body.Close()
 				require.Equal(t, http.StatusBadRequest, res.StatusCode)
 
-				body, err := ioutil.ReadAll(res.Body)
+				body, err := io.ReadAll(res.Body)
 				require.NoError(t, err)
 				assert.Equal(t, int(text.ErrorValidationInvalidCredentials), int(gjson.GetBytes(body, "ui.messages.0.id").Int()), "%s", body)
 				assert.Equal(t, settingsFlow.ID.String(), gjson.GetBytes(body, "id").String())
@@ -193,7 +194,7 @@ func TestHandleError(t *testing.T) {
 				defer res.Body.Close()
 				require.Equal(t, http.StatusOK, res.StatusCode)
 
-				body, err := ioutil.ReadAll(res.Body)
+				body, err := io.ReadAll(res.Body)
 				require.NoError(t, err)
 				assert.Equal(t, settingsFlow.ID.String(), gjson.GetBytes(body, "id").String())
 			})
@@ -211,7 +212,7 @@ func TestHandleError(t *testing.T) {
 				defer res.Body.Close()
 				require.Equal(t, http.StatusUnauthorized, res.StatusCode)
 
-				body, err := ioutil.ReadAll(res.Body)
+				body, err := io.ReadAll(res.Body)
 				require.NoError(t, err)
 				assert.Equal(t, session.NewErrNoActiveSessionFound().Reason(), gjson.GetBytes(body, "error.reason").String(), "%s", body)
 			})
@@ -229,7 +230,7 @@ func TestHandleError(t *testing.T) {
 				defer res.Body.Close()
 				require.Equal(t, http.StatusForbidden, res.StatusCode)
 
-				body, err := ioutil.ReadAll(res.Body)
+				body, err := io.ReadAll(res.Body)
 				require.NoError(t, err)
 				assertx.EqualAsJSON(t, session.NewErrAALNotSatisfied("a"), json.RawMessage(body))
 			})
@@ -246,7 +247,7 @@ func TestHandleError(t *testing.T) {
 				defer res.Body.Close()
 				require.Equal(t, http.StatusInternalServerError, res.StatusCode)
 
-				body, err := ioutil.ReadAll(res.Body)
+				body, err := io.ReadAll(res.Body)
 				require.NoError(t, err)
 				assert.JSONEq(t, x.MustEncodeJSON(t, flowError), gjson.GetBytes(body, "error").Raw)
 			})
@@ -258,7 +259,7 @@ func TestHandleError(t *testing.T) {
 			res, err := ts.Client().Get(ts.URL + "/error")
 			require.NoError(t, err)
 			defer res.Body.Close()
-			assert.Contains(t, res.Request.URL.String(), conf.SelfServiceFlowSettingsUI().String()+"?flow=")
+			assert.Contains(t, res.Request.URL.String(), conf.SelfServiceFlowSettingsUI(ctx).String()+"?flow=")
 
 			sf, err := reg.SettingsFlowPersister().GetSettingsFlow(context.Background(), uuid.FromStringOrNil(res.Request.URL.Query().Get("flow")))
 			require.NoError(t, err)
@@ -326,7 +327,7 @@ func TestHandleError(t *testing.T) {
 		})
 
 		t.Run("case=session old error", func(t *testing.T) {
-			conf.MustSet(config.ViperKeyURLsAllowedReturnToDomains, []string{urlx.AppendPaths(conf.SelfPublicURL(), "/error").String()})
+			conf.MustSet(ctx, config.ViperKeyURLsAllowedReturnToDomains, []string{urlx.AppendPaths(conf.SelfPublicURL(ctx), "/error").String()})
 			t.Cleanup(reset)
 
 			settingsFlow = &settings.Flow{Type: flow.TypeBrowser}
@@ -336,7 +337,7 @@ func TestHandleError(t *testing.T) {
 			res, err := ts.Client().Get(ts.URL + "/error")
 			require.NoError(t, err)
 			defer res.Body.Close()
-			require.Contains(t, res.Request.URL.String(), conf.Source().String(config.ViperKeySelfServiceLoginUI))
+			require.Contains(t, res.Request.URL.String(), conf.GetProvider(ctx).String(config.ViperKeySelfServiceLoginUI))
 		})
 
 		t.Run("case=validation error", func(t *testing.T) {

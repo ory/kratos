@@ -790,6 +790,33 @@
         }
       }
     },
+    "selfServiceBeforeSettings": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "hooks": {
+          "$ref": "#/definitions/selfServiceHooks"
+        }
+      }
+    },
+    "selfServiceBeforeRecovery": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "hooks": {
+          "$ref": "#/definitions/selfServiceHooks"
+        }
+      }
+    },
+    "selfServiceBeforeVerification": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "hooks": {
+          "$ref": "#/definitions/selfServiceHooks"
+        }
+      }
+    },
     "selfServiceAfterRegistration": {
       "type": "object",
       "additionalProperties": false,
@@ -1023,6 +1050,9 @@
                 },
                 "after": {
                   "$ref": "#/definitions/selfServiceAfterSettings"
+                },
+                "before": {
+                  "$ref": "#/definitions/selfServiceBeforeSettings"
                 }
               }
             },
@@ -1146,6 +1176,9 @@
                     "1m",
                     "1s"
                   ]
+                },
+                "before": {
+                  "$ref": "#/definitions/selfServiceBeforeVerification"
                 }
               }
             },
@@ -1184,6 +1217,9 @@
                     "1m",
                     "1s"
                   ]
+                },
+                "before": {
+                  "$ref": "#/definitions/selfServiceBeforeRecovery"
                 }
               }
             },
@@ -2334,6 +2370,16 @@
               "description": "Disallow all outgoing HTTP calls to private IP ranges. This feature can help protect against SSRF attacks.",
               "type": "boolean",
               "default": false
+            },
+            "private_ip_exception_urls": {
+              "title": "Add exempt URLs to private IP ranges",
+              "description": "Allows the given URLs to be called despite them being in the private IP range. URLs need to have an exact and case-sensitive match to be excempt.",
+              "type": "array",
+              "items": {
+                "type": "string",
+                "format": "uri-reference"
+              },
+              "default": []
             }
           }
         }

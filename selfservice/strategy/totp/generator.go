@@ -27,7 +27,7 @@ func NewKey(ctx context.Context, accountName string, d interface {
 	config.Provider
 }) (*otp.Key, error) {
 	key, err := stdtotp.Generate(stdtotp.GenerateOpts{
-		Issuer:      d.Config(ctx).TOTPIssuer(),
+		Issuer:      d.Config().TOTPIssuer(ctx),
 		AccountName: accountName,
 		SecretSize:  secretSize,
 		Digits:      otp.DigitsSix,

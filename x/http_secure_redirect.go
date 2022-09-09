@@ -141,11 +141,11 @@ func SecureContentNegotiationRedirection(
 	case "text/html":
 		fallthrough
 	default:
-		ret, err := SecureRedirectTo(r, c.SelfServiceBrowserDefaultReturnTo(),
+		ret, err := SecureRedirectTo(r, c.SelfServiceBrowserDefaultReturnTo(r.Context()),
 			append([]SecureRedirectOption{
 				SecureRedirectUseSourceURL(requestURL),
-				SecureRedirectAllowURLs(c.SelfServiceBrowserAllowedReturnToDomains()),
-				SecureRedirectAllowSelfServiceURLs(c.SelfPublicURL()),
+				SecureRedirectAllowURLs(c.SelfServiceBrowserAllowedReturnToDomains(r.Context())),
+				SecureRedirectAllowSelfServiceURLs(c.SelfPublicURL(r.Context())),
 			}, opts...)...,
 		)
 		if err != nil {

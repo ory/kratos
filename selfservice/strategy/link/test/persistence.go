@@ -31,15 +31,11 @@ func TestPersister(ctx context.Context, conf *config.Config, p interface {
 		nid, p := testhelpers.NewNetworkUnlessExisting(t, ctx, p)
 
 		testhelpers.SetDefaultIdentitySchema(conf, "file://./stub/identity.schema.json")
-		conf.MustSet(config.ViperKeySecretsDefault, []string{"secret-a", "secret-b"})
+		conf.MustSet(ctx, config.ViperKeySecretsDefault, []string{"secret-a", "secret-b"})
 
 		t.Run("token=recovery", func(t *testing.T) {
-			t.Run("case=should error when the recovery token does not exist", func(t *testing.T) {
-				_, err := p.UseRecoveryToken(ctx, "i-do-not-exist")
-				require.Error(t, err)
-			})
 
-			newRecoveryToken := func(t *testing.T, email string) *link.RecoveryToken {
+			newRecoveryToken := func(t *testing.T, email string) (*link.RecoveryToken, *recovery.Flow) {
 				var req recovery.Flow
 				require.NoError(t, faker.FakeData(&req))
 				require.NoError(t, p.CreateRecoveryFlow(ctx, &req))
@@ -52,57 +48,85 @@ func TestPersister(ctx context.Context, conf *config.Config, p interface {
 
 				require.NoError(t, p.CreateIdentity(ctx, &i))
 
-				return &link.RecoveryToken{Token: x.NewUUID().String(), FlowID: uuid.NullUUID{UUID: req.ID, Valid: true},
+				return &link.RecoveryToken{
+					Token:           x.NewUUID().String(),
+					FlowID:          uuid.NullUUID{UUID: req.ID, Valid: true},
 					RecoveryAddress: &i.RecoveryAddresses[0],
 					ExpiresAt:       time.Now(),
 					IssuedAt:        time.Now(),
 					IdentityID:      i.ID,
-				}
+					TokenType:       link.RecoveryTokenTypeAdmin,
+				}, &req
 			}
 
 			t.Run("case=should error when the recovery token does not exist", func(t *testing.T) {
-				_, err := p.UseRecoveryToken(ctx, "i-do-not-exist")
+				_, err := p.UseRecoveryToken(ctx, x.NewUUID(), "i-do-not-exist")
 				require.Error(t, err)
 			})
 
 			t.Run("case=should create a new recovery token", func(t *testing.T) {
-				token := newRecoveryToken(t, "foo-user@ory.sh")
+				token, _ := newRecoveryToken(t, "foo-user@ory.sh")
 				require.NoError(t, p.CreateRecoveryToken(ctx, token))
 			})
 
+			t.Run("case=should error when token is used with different flow id", func(t *testing.T) {
+				token, _ := newRecoveryToken(t, "foo-user1@ory.sh")
+				require.NoError(t, p.CreateRecoveryToken(ctx, token))
+				_, err := p.UseRecoveryToken(ctx, x.NewUUID(), token.Token)
+				require.Error(t, err)
+			})
+
 			t.Run("case=should create a recovery token and use it", func(t *testing.T) {
-				expected := newRecoveryToken(t, "other-user@ory.sh")
+				expected, f := newRecoveryToken(t, "other-user@ory.sh")
 				require.NoError(t, p.CreateRecoveryToken(ctx, expected))
 
 				t.Run("not work on another network", func(t *testing.T) {
 					_, p := testhelpers.NewNetwork(t, ctx, p)
-					_, err := p.UseRecoveryToken(ctx, expected.Token)
+					_, err := p.UseRecoveryToken(ctx, f.ID, expected.Token)
 					require.ErrorIs(t, err, sqlcon.ErrNoRows)
 				})
 
-				actual, err := p.UseRecoveryToken(ctx, expected.Token)
+				actual, err := p.UseRecoveryToken(ctx, f.ID, expected.Token)
 				require.NoError(t, err)
 				assert.Equal(t, nid, actual.NID)
 				assert.Equal(t, expected.IdentityID, actual.IdentityID)
 				assert.NotEqual(t, expected.Token, actual.Token)
 				assert.EqualValues(t, expected.FlowID, actual.FlowID)
 
-				_, err = p.UseRecoveryToken(ctx, expected.Token)
-				require.Error(t, err)
+				t.Run("double spend", func(t *testing.T) {
+					_, err = p.UseRecoveryToken(ctx, f.ID, expected.Token)
+					require.Error(t, err)
+				})
+			})
+
+			t.Run("case=update to identity should not invalidate token", func(t *testing.T) {
+				expected, f := newRecoveryToken(t, "some-user@ory.sh")
+
+				require.NoError(t, p.CreateRecoveryToken(ctx, expected))
+				id, err := p.GetIdentity(ctx, expected.IdentityID)
+				require.NoError(t, err)
+				require.NoError(t, p.UpdateIdentity(ctx, id))
+
+				actual, err := p.UseRecoveryToken(ctx, f.ID, expected.Token)
+				require.NoError(t, err)
+				assert.Equal(t, nid, actual.NID)
+				assert.Equal(t, expected.IdentityID, actual.IdentityID)
+				assert.NotEqual(t, expected.Token, actual.Token)
+				assert.EqualValues(t, expected.FlowID, actual.FlowID)
+
+				t.Run("double spend", func(t *testing.T) {
+					_, err = p.UseRecoveryToken(ctx, f.ID, expected.Token)
+					require.Error(t, err)
+				})
 			})
 
 		})
 
 		t.Run("token=verification", func(t *testing.T) {
-			t.Run("case=should error when the verification token does not exist", func(t *testing.T) {
-				_, err := p.UseVerificationToken(ctx, "i-do-not-exist")
-				require.Error(t, err)
-			})
-
-			newVerificationToken := func(t *testing.T, email string) *link.VerificationToken {
-				var req verification.Flow
-				require.NoError(t, faker.FakeData(&req))
-				require.NoError(t, p.CreateVerificationFlow(ctx, &req))
+			newVerificationToken := func(t *testing.T, email string) (*verification.Flow, *link.VerificationToken) {
+				var f verification.Flow
+				require.NoError(t, faker.FakeData(&f))
+				require.NoError(t, p.CreateVerificationFlow(ctx, &f))
 
 				var i identity.Identity
 				require.NoError(t, faker.FakeData(&i))
@@ -111,9 +135,9 @@ func TestPersister(ctx context.Context, conf *config.Config, p interface {
 				i.VerifiableAddresses = append(i.VerifiableAddresses, *address)
 
 				require.NoError(t, p.CreateIdentity(ctx, &i))
-				return &link.VerificationToken{
+				return &f, &link.VerificationToken{
 					Token:             x.NewUUID().String(),
-					FlowID:            uuid.NullUUID{UUID: req.ID, Valid: true},
+					FlowID:            f.ID,
 					VerifiableAddress: &i.VerifiableAddresses[0],
 					ExpiresAt:         time.Now(),
 					IssuedAt:          time.Now(),
@@ -121,26 +145,33 @@ func TestPersister(ctx context.Context, conf *config.Config, p interface {
 			}
 
 			t.Run("case=should error when the verification token does not exist", func(t *testing.T) {
-				_, err := p.UseVerificationToken(ctx, "i-do-not-exist")
+				_, err := p.UseVerificationToken(ctx, x.NewUUID(), "i-do-not-exist")
+				require.Error(t, err)
+			})
+
+			t.Run("case=should error when the verification token does exist but the flow does not", func(t *testing.T) {
+				_, token := newVerificationToken(t, x.NewUUID().String()+"@ory.sh")
+				require.NoError(t, p.CreateVerificationToken(ctx, token))
+				_, err := p.UseVerificationToken(ctx, x.NewUUID(), token.Token)
 				require.Error(t, err)
 			})
 
 			t.Run("case=should create a new verification token", func(t *testing.T) {
-				token := newVerificationToken(t, "foo-user@ory.sh")
+				_, token := newVerificationToken(t, "foo-user@ory.sh")
 				require.NoError(t, p.CreateVerificationToken(ctx, token))
 			})
 
 			t.Run("case=should create a verification token and use it", func(t *testing.T) {
-				expected := newVerificationToken(t, "other-user@ory.sh")
+				f, expected := newVerificationToken(t, "other-user@ory.sh")
 				require.NoError(t, p.CreateVerificationToken(ctx, expected))
 
 				t.Run("not work on another network", func(t *testing.T) {
 					_, p := testhelpers.NewNetwork(t, ctx, p)
-					_, err := p.UseVerificationToken(ctx, expected.Token)
+					_, err := p.UseVerificationToken(ctx, f.ID, expected.Token)
 					require.ErrorIs(t, err, sqlcon.ErrNoRows)
 				})
 
-				actual, err := p.UseVerificationToken(ctx, expected.Token)
+				actual, err := p.UseVerificationToken(ctx, f.ID, expected.Token)
 				require.NoError(t, err)
 				assertx.EqualAsJSONExcept(t, expected.VerifiableAddress, actual.VerifiableAddress, []string{"created_at", "updated_at"})
 				assert.Equal(t, nid, actual.NID)
@@ -148,7 +179,7 @@ func TestPersister(ctx context.Context, conf *config.Config, p interface {
 				assert.NotEqual(t, expected.Token, actual.Token)
 				assert.EqualValues(t, expected.FlowID, actual.FlowID)
 
-				_, err = p.UseVerificationToken(ctx, expected.Token)
+				_, err = p.UseVerificationToken(ctx, f.ID, expected.Token)
 				require.Error(t, err)
 			})
 		})

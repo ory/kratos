@@ -1,7 +1,7 @@
 package password_test
 
 import (
-	"io/ioutil"
+	"io"
 	"net/http"
 	"net/url"
 	"testing"
@@ -31,7 +31,7 @@ func TestDisabledEndpoint(t *testing.T) {
 		assert.Equal(t, http.StatusNotFound, res.StatusCode)
 
 		defer res.Body.Close()
-		b, err := ioutil.ReadAll(res.Body)
+		b, err := io.ReadAll(res.Body)
 		assert.Contains(t, string(b), "This endpoint was disabled by system administrator", "%s", b)
 	})
 
@@ -43,7 +43,7 @@ func TestDisabledEndpoint(t *testing.T) {
 		assert.Equal(t, http.StatusNotFound, res.StatusCode)
 
 		defer res.Body.Close()
-		b, err := ioutil.ReadAll(res.Body)
+		b, err := io.ReadAll(res.Body)
 		assert.Contains(t, string(b), "This endpoint was disabled by system administrator", "%s", b)
 	})
 
@@ -65,7 +65,7 @@ func TestDisabledEndpoint(t *testing.T) {
 			assert.Equal(t, http.StatusNotFound, res.StatusCode)
 
 			defer res.Body.Close()
-			b, err := ioutil.ReadAll(res.Body)
+			b, err := io.ReadAll(res.Body)
 			assert.Contains(t, string(b), "This endpoint was disabled by system administrator", "%s", b)
 		})
 	})

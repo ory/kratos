@@ -24,18 +24,27 @@ import (
 )
 
 type (
+	PreHookExecutor interface {
+		ExecuteSettingsPreHook(w http.ResponseWriter, r *http.Request, a *Flow) error
+	}
+	PreHookExecutorFunc func(w http.ResponseWriter, r *http.Request, a *Flow) error
+
 	PostHookPrePersistExecutor interface {
 		ExecuteSettingsPrePersistHook(w http.ResponseWriter, r *http.Request, a *Flow, s *identity.Identity) error
 	}
 	PostHookPrePersistExecutorFunc func(w http.ResponseWriter, r *http.Request, a *Flow, s *identity.Identity) error
-	PostHookPostPersistExecutor    interface {
+
+	PostHookPostPersistExecutor interface {
 		ExecuteSettingsPostPersistHook(w http.ResponseWriter, r *http.Request, a *Flow, s *identity.Identity) error
 	}
 	PostHookPostPersistExecutorFunc func(w http.ResponseWriter, r *http.Request, a *Flow, s *identity.Identity) error
-	HooksProvider                   interface {
+
+	HooksProvider interface {
+		PreSettingsHooks(ctx context.Context) []PreHookExecutor
 		PostSettingsPrePersistHooks(ctx context.Context, settingsType string) []PostHookPrePersistExecutor
 		PostSettingsPostPersistHooks(ctx context.Context, settingsType string) []PostHookPostPersistExecutor
 	}
+
 	executorDependencies interface {
 		identity.ManagementProvider
 		identity.ValidationProvider
@@ -56,6 +65,10 @@ type (
 		SettingsHookExecutor() *HookExecutor
 	}
 )
+
+func (f PreHookExecutorFunc) ExecuteSettingsPreHook(w http.ResponseWriter, r *http.Request, a *Flow) error {
+	return f(w, r, a)
+}
 
 func (f PostHookPrePersistExecutorFunc) ExecuteSettingsPrePersistHook(w http.ResponseWriter, r *http.Request, a *Flow, s *identity.Identity) error {
 	return f(w, r, a, s)
@@ -136,14 +149,14 @@ func (e *HookExecutor) PostSettingsHook(w http.ResponseWriter, r *http.Request, 
 		Debug("Running PostSettingsPrePersistHooks.")
 
 	// Verify the redirect URL before we do any other processing.
-	c := e.d.Config(r.Context())
-	returnTo, err := x.SecureRedirectTo(r, c.SelfServiceBrowserDefaultReturnTo(),
+	c := e.d.Config()
+	returnTo, err := x.SecureRedirectTo(r, c.SelfServiceBrowserDefaultReturnTo(r.Context()),
 		x.SecureRedirectUseSourceURL(ctxUpdate.Flow.RequestURL),
-		x.SecureRedirectAllowURLs(c.SelfServiceBrowserAllowedReturnToDomains()),
-		x.SecureRedirectAllowSelfServiceURLs(c.SelfPublicURL()),
+		x.SecureRedirectAllowURLs(c.SelfServiceBrowserAllowedReturnToDomains(r.Context())),
+		x.SecureRedirectAllowSelfServiceURLs(c.SelfPublicURL(r.Context())),
 		x.SecureRedirectOverrideDefaultReturnTo(
-			e.d.Config(r.Context()).SelfServiceFlowSettingsReturnTo(settingsType,
-				ctxUpdate.Flow.AppendTo(e.d.Config(r.Context()).SelfServiceFlowSettingsUI()))),
+			e.d.Config().SelfServiceFlowSettingsReturnTo(r.Context(), settingsType,
+				ctxUpdate.Flow.AppendTo(e.d.Config().SelfServiceFlowSettingsUI(r.Context())))),
 	)
 	if err != nil {
 		return err
@@ -164,7 +177,7 @@ func (e *HookExecutor) PostSettingsHook(w http.ResponseWriter, r *http.Request, 
 		}
 
 		if err := executor.ExecuteSettingsPrePersistHook(w, r, ctxUpdate.Flow, i); err != nil {
-			if errors.Is(err, ErrHookAbortRequest) {
+			if errors.Is(err, ErrHookAbortFlow) {
 				e.d.Logger().WithRequest(r).WithFields(logFields).
 					Debug("A ExecuteSettingsPrePersistHook hook aborted early.")
 				return nil
@@ -187,7 +200,7 @@ func (e *HookExecutor) PostSettingsHook(w http.ResponseWriter, r *http.Request, 
 	}
 
 	options := []identity.ManagerOption{identity.ManagerExposeValidationErrorsForInternalTypeAssertion}
-	ttl := e.d.Config(r.Context()).SelfServiceFlowSettingsPrivilegedSessionMaxAge()
+	ttl := e.d.Config().SelfServiceFlowSettingsPrivilegedSessionMaxAge(r.Context())
 	if ctxUpdate.Session.AuthenticatedAt.Add(ttl).After(time.Now()) {
 		options = append(options, identity.ManagerAllowWriteProtectedTraits)
 	}
@@ -229,7 +242,7 @@ func (e *HookExecutor) PostSettingsHook(w http.ResponseWriter, r *http.Request, 
 
 	for k, executor := range e.d.PostSettingsPostPersistHooks(r.Context(), settingsType) {
 		if err := executor.ExecuteSettingsPostPersistHook(w, r, ctxUpdate.Flow, i); err != nil {
-			if errors.Is(err, ErrHookAbortRequest) {
+			if errors.Is(err, ErrHookAbortFlow) {
 				e.d.Logger().
 					WithRequest(r).
 					WithField("executor", fmt.Sprintf("%T", executor)).
@@ -269,5 +282,15 @@ func (e *HookExecutor) PostSettingsHook(w http.ResponseWriter, r *http.Request, 
 	}
 
 	x.ContentNegotiationRedirection(w, r, i.CopyWithoutCredentials(), e.d.Writer(), returnTo.String())
+	return nil
+}
+
+func (e *HookExecutor) PreSettingsHook(w http.ResponseWriter, r *http.Request, a *Flow) error {
+	for _, executor := range e.d.PreSettingsHooks(r.Context()) {
+		if err := executor.ExecuteSettingsPreHook(w, r, a); err != nil {
+			return err
+		}
+	}
+
 	return nil
 }
