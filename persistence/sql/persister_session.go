@@ -36,8 +36,27 @@ func (p *Persister) GetSession(ctx context.Context, sid uuid.UUID) (*session.Ses
 		return nil, err
 	}
 
+	metadata, err := p.GetSessionLogs(ctx, sid)
+	if err != nil {
+		return nil, err
+	}
+
 	s.Identity = i
+	s.Metadata = metadata
 	return &s, nil
+}
+
+func (p *Persister) GetSessionLogs(ctx context.Context, sid uuid.UUID) ([]session.Metadata, error) {
+	ctx, span := p.r.Tracer(ctx).Tracer().Start(ctx, "persistence.sql.GetSessionLogs")
+	defer span.End()
+
+	metadata := make([]session.Metadata, 0)
+	nid := p.NetworkID(ctx)
+	if err := p.GetConnection(ctx).Where("session_id = ? AND nid = ?", sid, nid).All(&metadata); err != nil {
+		return nil, sqlcon.HandleError(err)
+	}
+
+	return metadata, nil
 }
 
 // ListSessionsByIdentity retrieves sessions for an identity from the store.

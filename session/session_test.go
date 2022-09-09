@@ -79,10 +79,10 @@ func TestSession(t *testing.T) {
 		assert.True(t, s.Active)
 		assert.Equal(t, identity.NoAuthenticatorAssuranceLevel, s.AuthenticatorAssuranceLevel)
 		assert.Equal(t, authAt, s.AuthenticatedAt)
-		assert.Equal(t, 1, len(s.Logs))
-		assert.Equal(t, "54.155.246.232", *s.Logs[0].IPAddress)
-		assert.Equal(t, "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/51.0.2704.103 Safari/537.36", *s.Logs[0].UserAgent)
-		assert.Equal(t, "", *s.Logs[0].Location)
+		assert.Equal(t, 1, len(s.Metadata))
+		assert.Equal(t, "54.155.246.232", *s.Metadata[0].IPAddress)
+		assert.Equal(t, "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/51.0.2704.103 Safari/537.36", *s.Metadata[0].UserAgent)
+		assert.Equal(t, "", *s.Metadata[0].Location)
 	})
 
 	t.Run("case=client information reverse proxy real IP set", func(t *testing.T) {
@@ -96,10 +96,10 @@ func TestSession(t *testing.T) {
 		assert.True(t, s.Active)
 		assert.Equal(t, identity.NoAuthenticatorAssuranceLevel, s.AuthenticatorAssuranceLevel)
 		assert.Equal(t, authAt, s.AuthenticatedAt)
-		assert.Equal(t, 1, len(s.Logs))
-		assert.Equal(t, "54.155.246.155", *s.Logs[0].IPAddress)
-		assert.Equal(t, "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/51.0.2704.103 Safari/537.36", *s.Logs[0].UserAgent)
-		assert.Equal(t, "", *s.Logs[0].Location)
+		assert.Equal(t, 1, len(s.Metadata))
+		assert.Equal(t, "54.155.246.155", *s.Metadata[0].IPAddress)
+		assert.Equal(t, "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/51.0.2704.103 Safari/537.36", *s.Metadata[0].UserAgent)
+		assert.Equal(t, "", *s.Metadata[0].Location)
 	})
 
 	t.Run("case=client information CF", func(t *testing.T) {
@@ -114,10 +114,10 @@ func TestSession(t *testing.T) {
 		assert.True(t, s.Active)
 		assert.Equal(t, identity.NoAuthenticatorAssuranceLevel, s.AuthenticatorAssuranceLevel)
 		assert.Equal(t, authAt, s.AuthenticatedAt)
-		assert.Equal(t, 1, len(s.Logs))
-		assert.Equal(t, "54.155.246.232", *s.Logs[0].IPAddress)
-		assert.Equal(t, "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/51.0.2704.103 Safari/537.36", *s.Logs[0].UserAgent)
-		assert.Equal(t, "Munich, Germany", *s.Logs[0].Location)
+		assert.Equal(t, 1, len(s.Metadata))
+		assert.Equal(t, "54.155.246.232", *s.Metadata[0].IPAddress)
+		assert.Equal(t, "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/51.0.2704.103 Safari/537.36", *s.Metadata[0].UserAgent)
+		assert.Equal(t, "Munich, Germany", *s.Metadata[0].Location)
 	})
 
 	for k, tc := range []struct {

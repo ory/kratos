@@ -23,6 +23,9 @@ type Persister interface {
 	// GetSession retrieves a session from the store.
 	GetSession(ctx context.Context, sid uuid.UUID) (*Session, error)
 
+	// GetSessionLogs retrieves all the log history from the store
+	GetSessionLogs(ctx context.Context, sid uuid.UUID) ([]Metadata, error)
+
 	// ListSessionsByIdentity retrieves sessions for an identity from the store.
 	ListSessionsByIdentity(ctx context.Context, iID uuid.UUID, active *bool, page, perPage int, except uuid.UUID) ([]*Session, error)
 
