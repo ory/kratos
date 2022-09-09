@@ -892,15 +892,11 @@ func TestHandler(t *testing.T) {
 					cr.Traits = []byte(`{"department": "ory"}`)
 					res := send(t, ts, "POST", "/identities", http.StatusCreated, &cr)
 
-					assert.Empty(t, res.Get("credentials").Array())
-
 					id := res.Get("id").String()
 					res = send(t, ts, "PUT", "/identities/"+id, http.StatusOK, &identity.AdminUpdateIdentityBody{
 						SchemaID: "employee",
 						Traits:   []byte(`{"email":"` + x.NewUUID().String() + `@ory.sh"}`),
 					})
-
-					assert.Empty(t, res.Get("credentials").Array())
 
 					res = send(t, ts, "PUT", "/identities/"+id, http.StatusOK, &identity.AdminUpdateIdentityBody{
 						SchemaID: "employee",
