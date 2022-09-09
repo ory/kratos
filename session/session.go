@@ -36,7 +36,7 @@ type refreshWindowProvider interface {
 //
 // swagger:model sessionMetadata
 type Metadata struct {
-	// Log ID
+	// Metadata record ID
 	//
 	// required: true
 	ID uuid.UUID `json:"id" faker:"-" db:"id"`
@@ -55,6 +55,8 @@ type Metadata struct {
 
 	// Time of capture
 	CreatedAt time.Time `json:"seen_at" faker:"-" db:"created_at"`
+
+	NID uuid.UUID `json:"-"  faker:"-" db:"nid"`
 }
 
 func (m Metadata) TableName(ctx context.Context) string {
