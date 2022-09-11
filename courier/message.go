@@ -6,9 +6,10 @@ import (
 	"time"
 
 	"github.com/gofrs/uuid"
+	"github.com/pkg/errors"
+
 	"github.com/ory/herodot"
 	"github.com/ory/x/stringsx"
-	"github.com/pkg/errors"
 )
 
 // A Message's Status
