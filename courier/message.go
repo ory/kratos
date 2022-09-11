@@ -3,10 +3,12 @@ package courier
 import (
 	"context"
 	"encoding/json"
-	"errors"
 	"time"
 
 	"github.com/gofrs/uuid"
+	"github.com/ory/herodot"
+	"github.com/ory/x/stringsx"
+	"github.com/pkg/errors"
 )
 
 // A Message's Status
@@ -29,17 +31,17 @@ const (
 )
 
 func ToMessageStatus(str string) (MessageStatus, error) {
-	switch str {
-	case messageStatusQueuedText:
+	switch s := stringsx.SwitchExact(str); {
+	case s.AddCase(MessageStatusQueued.String()):
 		return MessageStatusQueued, nil
-	case messageStatusSentText:
+	case s.AddCase(MessageStatusSent.String()):
 		return MessageStatusSent, nil
-	case messageStatusProcessingText:
+	case s.AddCase(MessageStatusProcessing.String()):
 		return MessageStatusProcessing, nil
-	case messageStatusAbandonedText:
+	case s.AddCase(MessageStatusAbandoned.String()):
 		return MessageStatusAbandoned, nil
 	default:
-		return MessageStatus(0), errors.New("Message status is not valid")
+		return 0, errors.WithStack(herodot.ErrBadRequest.WithWrap(s.ToUnknownCaseErr()).WithReason("Message status is not valid"))
 	}
 }
 
@@ -63,7 +65,7 @@ func (ms MessageStatus) IsValid() error {
 	case MessageStatusQueued, MessageStatusSent, MessageStatusProcessing, MessageStatusAbandoned:
 		return nil
 	default:
-		return errors.New("Message status is not valid")
+		return errors.WithStack(herodot.ErrBadRequest.WithReason("Message status is not valid"))
 	}
 }
 
@@ -108,13 +110,13 @@ const (
 )
 
 func ToMessageType(str string) (MessageType, error) {
-	switch str {
-	case messageTypeEmailText:
+	switch s := stringsx.SwitchExact(str); {
+	case s.AddCase(messageTypeEmailText):
 		return MessageTypeEmail, nil
-	case messageTypePhoneText:
+	case s.AddCase(messageTypePhoneText):
 		return MessageTypePhone, nil
 	default:
-		return MessageType(0), errors.New("Message type is not valid")
+		return 0, errors.WithStack(herodot.ErrBadRequest.WithWrap(s.ToUnknownCaseErr()).WithReason("Message type is not valid"))
 	}
 }
 
@@ -134,7 +136,7 @@ func (mt MessageType) IsValid() error {
 	case MessageTypeEmail, MessageTypePhone:
 		return nil
 	default:
-		return errors.New("Message type is not valid")
+		return errors.WithStack(herodot.ErrBadRequest.WithReason("Message type is not valid"))
 	}
 }
 

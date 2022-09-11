@@ -78,6 +78,7 @@ func TestHandler(t *testing.T) {
 		for i := range messages {
 			require.NoError(t, faker.FakeData(&messages[i]))
 			messages[i].Type = courier.MessageTypeEmail
+			messages[i].Body = "body content"
 			if i < rcptOryCount {
 				messages[i].Recipient = "noreply@ory.sh"
 			}
@@ -155,8 +156,8 @@ func TestHandler(t *testing.T) {
 				}
 			})
 		})
-		t.Run("case=body should be redacted if kratos is in dev mode", func(t *testing.T) {
-			conf.MustSet(ctx, "dev", true)
+		t.Run("case=body should be redacted if kratos is not in dev mode", func(t *testing.T) {
+			conf.MustSet(ctx, "dev", false)
 			for _, name := range tss {
 				t.Run("endpoint="+name, func(t *testing.T) {
 					parsed := getList(t, name, "")
@@ -168,19 +169,18 @@ func TestHandler(t *testing.T) {
 				})
 			}
 		})
-		t.Run("case=body should not be redacted if kratos is not in dev mode", func(t *testing.T) {
-			conf.MustSet(ctx, "dev", false)
+		t.Run("case=body should not be redacted if kratos is in dev mode", func(t *testing.T) {
+			conf.MustSet(ctx, "dev", true)
 			for _, name := range tss {
 				t.Run("endpoint="+name, func(t *testing.T) {
 					parsed := getList(t, name, "")
 					require.Len(t, parsed.Array(), msgCount, "%s", parsed.Raw)
 
 					for _, item := range parsed.Array() {
-						assert.NotEqual(t, "<redacted-unless-dev-mode>", item.Get("body").String())
+						assert.Equal(t, "body content", item.Get("body").String())
 					}
 				})
 			}
-			conf.MustSet(ctx, "dev", true)
 		})
 		t.Run("case=should return with http status BadRequest when given status is invalid", func(t *testing.T) {
 			qs := `?page=1&status=invalid_status`

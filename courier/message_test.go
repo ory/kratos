@@ -3,13 +3,14 @@ package courier_test
 import (
 	"testing"
 
+	"github.com/ory/herodot"
 	"github.com/ory/kratos/courier"
 	"github.com/stretchr/testify/require"
 )
 
 func TestMessageStatusValidity(t *testing.T) {
 	invalid := courier.MessageStatus(0)
-	require.Error(t, invalid.IsValid(), "IsValid() should return an error when message status is invalid")
+	require.ErrorIs(t, invalid.IsValid(), herodot.ErrBadRequest, "IsValid() should return an error when message status is invalid")
 }
 
 func TestToMessageStatus(t *testing.T) {
@@ -27,14 +28,14 @@ func TestToMessageStatus(t *testing.T) {
 	})
 	t.Run("case=should return error for invalid message status str", func(t *testing.T) {
 		result, err := courier.ToMessageStatus("invalid")
-		require.Error(t, err)
-		require.Error(t, result.IsValid())
+		require.Error(t, err, herodot.ErrBadRequest)
+		require.Error(t, result.IsValid(), herodot.ErrBadRequest)
 	})
 }
 
 func TestMessageTypeValidity(t *testing.T) {
 	invalid := courier.MessageType(0)
-	require.Error(t, invalid.IsValid(), "IsValid() should return an error when message type is invalid")
+	require.ErrorIs(t, invalid.IsValid(), herodot.ErrBadRequest, "IsValid() should return an error when message type is invalid")
 }
 
 func TestToMessageType(t *testing.T) {
@@ -50,7 +51,7 @@ func TestToMessageType(t *testing.T) {
 	})
 	t.Run("case=should return error for invalid message type str", func(t *testing.T) {
 		result, err := courier.ToMessageType("invalid")
-		require.Error(t, err)
-		require.Error(t, result.IsValid())
+		require.ErrorIs(t, err, herodot.ErrBadRequest)
+		require.ErrorIs(t, result.IsValid(), herodot.ErrBadRequest)
 	})
 }

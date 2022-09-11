@@ -93,7 +93,7 @@ func (h *Handler) listMessages(w http.ResponseWriter, r *http.Request, _ httprou
 		return
 	}
 
-	if h.r.Config().IsInsecureDevMode(r.Context()) {
+	if !h.r.Config().IsInsecureDevMode(r.Context()) {
 		for i := range l {
 			l[i].Body = "<redacted-unless-dev-mode>"
 		}
