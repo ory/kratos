@@ -4,7 +4,7 @@
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 **Table of Contents**
 
-- [ (2022-09-08)](#2022-09-08)
+- [ (2022-09-11)](#2022-09-11)
   - [Breaking Changes](#breaking-changes)
     - [Bug Fixes](#bug-fixes)
     - [Code Refactoring](#code-refactoring)
@@ -264,7 +264,7 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# [](https://github.com/ory/kratos/compare/v0.10.1...v) (2022-09-08)
+# [](https://github.com/ory/kratos/compare/v0.10.1...v) (2022-09-11)
 
 ## Breaking Changes
 
@@ -366,6 +366,10 @@ SDK Method `getJsonSchema` was renamed to `getIdentitySchema`.
   ([a115486](https://github.com/ory/kratos/commit/a11548603a4c9b46ba238d2a7ee58fffb7f6d857))
 - Panic
   ([1182278](https://github.com/ory/kratos/commit/11822789c1561b27c2d769c9ea53a81835702f4a))
+- Patch invalidates credentials
+  ([#2721](https://github.com/ory/kratos/issues/2721))
+  ([c4d95af](https://github.com/ory/kratos/commit/c4d95afac590136acd14efa093f48c301fd07164)),
+  closes [ory/cloud#148](https://github.com/ory/cloud/issues/148)
 - Potentially resolve tx issue in crdb
   ([#2595](https://github.com/ory/kratos/issues/2595))
   ([9d22035](https://github.com/ory/kratos/commit/9d22035695b6a793ac4bc5e2bd0a68b3aeea039c))
