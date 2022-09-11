@@ -608,9 +608,7 @@ func (h *Handler) patch(w http.ResponseWriter, r *http.Request, ps httprouter.Pa
 
 	// See https://github.com/ory/cloud/issues/148
 	// The apply patch operation overrides the credentials with an empty map.
-	if len(identity.Credentials) == 0 {
-		identity.Credentials = credentials
-	}
+	identity.Credentials = credentials
 
 	if oldState != identity.State {
 		// Check if the changed state was actually valid
