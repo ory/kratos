@@ -68,6 +68,7 @@ prepare() {
   if [[ "${nokill}" == "no" ]]; then
     killall node || true
     killall modd || true
+    killall webhook || true
     killall hydra || true
     killall hydra-login-consent || true
     killall hydra-kratos-login-consent || true
@@ -255,8 +256,8 @@ run() {
   ls -la .
   for profile in email mobile oidc recovery verification mfa spa network passwordless webhooks oidc-provider oidc-provider-mfa; do
     yq ea '. as $item ireduce ({}; . * $item )' test/e2e/profiles/kratos.base.yml "test/e2e/profiles/${profile}/.kratos.yml" > test/e2e/kratos.${profile}.yml
-    cp test/e2e/kratos.email.yml test/e2e/kratos.generated.yml
   done
+  cp test/e2e/kratos.email.yml test/e2e/kratos.generated.yml
 
   (modd -f test/e2e/modd.conf >"${base}/test/e2e/kratos.e2e.log" 2>&1 &)
 
