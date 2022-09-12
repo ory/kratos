@@ -55,7 +55,7 @@ node_modules: package.json Makefile
 		npm ci
 
 .bin/golangci-lint: Makefile
-		curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -d -b .bin v1.47.0
+		curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -d -b .bin v1.47.3
 
 .bin/hydra: Makefile
 		bash <(curl https://raw.githubusercontent.com/ory/meta/master/install.sh) -d -b .bin hydra v1.11.0
@@ -103,6 +103,7 @@ sdk: .bin/swagger .bin/ory node_modules
 					-p file://.schema/openapi/patches/security.yaml \
 					-p file://.schema/openapi/patches/session.yaml \
 					-p file://.schema/openapi/patches/identity.yaml \
+					-p file://.schema/openapi/patches/courier.yaml \
 					-p file://.schema/openapi/patches/generic_error.yaml \
 					-p file://.schema/openapi/patches/common.yaml \
 					spec/swagger.json spec/api.json

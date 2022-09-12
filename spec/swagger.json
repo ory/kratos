@@ -31,13 +31,84 @@
         "tags": [
           "v0alpha2"
         ],
-        "summary": "# Get WebAuthn JavaScript",
+        "summary": "Get WebAuthn JavaScript",
         "operationId": "getWebAuthnJavaScript",
         "responses": {
           "200": {
             "description": "webAuthnJavaScript",
             "schema": {
               "$ref": "#/definitions/webAuthnJavaScript"
+            }
+          }
+        }
+      }
+    },
+    "/admin/courier/messages": {
+      "get": {
+        "description": "Lists all messages by given status and recipient.",
+        "produces": [
+          "application/json"
+        ],
+        "schemes": [
+          "http",
+          "https"
+        ],
+        "tags": [
+          "v0alpha2"
+        ],
+        "summary": "List Messages",
+        "operationId": "adminListCourierMessages",
+        "parameters": [
+          {
+            "maximum": 1000,
+            "minimum": 1,
+            "type": "integer",
+            "format": "int64",
+            "default": 250,
+            "description": "Items per Page\n\nThis is the number of items per page.",
+            "name": "per_page",
+            "in": "query"
+          },
+          {
+            "minimum": 1,
+            "type": "integer",
+            "format": "int64",
+            "default": 1,
+            "description": "Pagination Page\n\nThis value is currently an integer, but it is not sequential. The value is not the page number, but a\nreference. The next page can be any number and some numbers might return an empty list.\n\nFor example, page 2 might not follow after page 1. And even if page 3 and 5 exist, but page 4 might not exist.",
+            "name": "page",
+            "in": "query"
+          },
+          {
+            "type": "integer",
+            "format": "int64",
+            "description": "Status filters out messages based on status.\nIf no value is provided, it doesn't take effect on filter.",
+            "name": "status",
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "description": "Recipient filters out messages based on recipient.\nIf no value is provided, it doesn't take effect on filter.",
+            "name": "recipient",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "courierMessageList",
+            "schema": {
+              "$ref": "#/definitions/courierMessageList"
+            }
+          },
+          "400": {
+            "description": "jsonError",
+            "schema": {
+              "$ref": "#/definitions/jsonError"
+            }
+          },
+          "500": {
+            "description": "jsonError",
+            "schema": {
+              "$ref": "#/definitions/jsonError"
             }
           }
         }
@@ -61,7 +132,7 @@
         "tags": [
           "v0alpha2"
         ],
-        "summary": "# List Identities",
+        "summary": "List Identities",
         "operationId": "adminListIdentities",
         "parameters": [
           {
@@ -119,7 +190,7 @@
         "tags": [
           "v0alpha2"
         ],
-        "summary": "# Create an Identity",
+        "summary": "Create an Identity",
         "operationId": "adminCreateIdentity",
         "parameters": [
           {
@@ -179,7 +250,7 @@
         "tags": [
           "v0alpha2"
         ],
-        "summary": "# Get an Identity",
+        "summary": "Get an Identity",
         "operationId": "adminGetIdentity",
         "parameters": [
           {
@@ -240,7 +311,7 @@
         "tags": [
           "v0alpha2"
         ],
-        "summary": "# Update an Identity",
+        "summary": "Update an Identity",
         "operationId": "adminUpdateIdentity",
         "parameters": [
           {
@@ -308,7 +379,7 @@
         "tags": [
           "v0alpha2"
         ],
-        "summary": "# Delete an Identity",
+        "summary": "Delete an Identity",
         "operationId": "adminDeleteIdentity",
         "parameters": [
           {
@@ -565,7 +636,7 @@
         "tags": [
           "v0alpha2"
         ],
-        "summary": "# Create a Recovery Link",
+        "summary": "Create a Recovery Link",
         "operationId": "adminCreateSelfServiceRecoveryLink",
         "parameters": [
           {
@@ -821,7 +892,7 @@
         "tags": [
           "v0alpha2"
         ],
-        "summary": "# Get Self-Service Errors",
+        "summary": "Get Self-Service Errors",
         "operationId": "getSelfServiceError",
         "parameters": [
           {
@@ -879,7 +950,7 @@
         "tags": [
           "v0alpha2"
         ],
-        "summary": "# Submit a Login Flow",
+        "summary": "Submit a Login Flow",
         "operationId": "submitSelfServiceLoginFlow",
         "parameters": [
           {
@@ -1017,7 +1088,7 @@
         "tags": [
           "v0alpha2"
         ],
-        "summary": "# Initialize Login Flow for Browsers",
+        "summary": "Initialize Login Flow for Browsers",
         "operationId": "initializeSelfServiceLoginFlowForBrowsers",
         "parameters": [
           {
@@ -1083,7 +1154,7 @@
         "tags": [
           "v0alpha2"
         ],
-        "summary": "# Get Login Flow",
+        "summary": "Get Login Flow",
         "operationId": "getSelfServiceLoginFlow",
         "parameters": [
           {
@@ -1147,7 +1218,7 @@
         "tags": [
           "v0alpha2"
         ],
-        "summary": "# Complete Self-Service Logout",
+        "summary": "Complete Self-Service Logout",
         "operationId": "submitSelfServiceLogoutFlow",
         "parameters": [
           {
@@ -1239,7 +1310,7 @@
         "tags": [
           "v0alpha2"
         ],
-        "summary": "# Create a Logout URL for Browsers",
+        "summary": "Create a Logout URL for Browsers",
         "operationId": "createSelfServiceLogoutFlowUrlForBrowsers",
         "parameters": [
           {
@@ -1288,7 +1359,7 @@
         "tags": [
           "v0alpha2"
         ],
-        "summary": "# Complete Recovery Flow",
+        "summary": "Complete Recovery Flow",
         "operationId": "submitSelfServiceRecoveryFlow",
         "parameters": [
           {
@@ -1394,7 +1465,7 @@
         "tags": [
           "v0alpha2"
         ],
-        "summary": "# Initialize Recovery Flow for Browsers",
+        "summary": "Initialize Recovery Flow for Browsers",
         "operationId": "initializeSelfServiceRecoveryFlowForBrowsers",
         "parameters": [
           {
@@ -1442,7 +1513,7 @@
         "tags": [
           "v0alpha2"
         ],
-        "summary": "# Get Recovery Flow",
+        "summary": "Get Recovery Flow",
         "operationId": "getSelfServiceRecoveryFlow",
         "parameters": [
           {
@@ -1504,7 +1575,7 @@
         "tags": [
           "v0alpha2"
         ],
-        "summary": "# Submit a Registration Flow",
+        "summary": "Submit a Registration Flow",
         "operationId": "submitSelfServiceRegistrationFlow",
         "parameters": [
           {
@@ -1613,7 +1684,7 @@
         "tags": [
           "v0alpha2"
         ],
-        "summary": "# Initialize Registration Flow for Browsers",
+        "summary": "Initialize Registration Flow for Browsers",
         "operationId": "initializeSelfServiceRegistrationFlowForBrowsers",
         "parameters": [
           {
@@ -1655,7 +1726,7 @@
         "tags": [
           "v0alpha2"
         ],
-        "summary": "# Get Registration Flow",
+        "summary": "Get Registration Flow",
         "operationId": "getSelfServiceRegistrationFlow",
         "parameters": [
           {
@@ -1728,7 +1799,7 @@
         "tags": [
           "v0alpha2"
         ],
-        "summary": "# Complete Settings Flow",
+        "summary": "Complete Settings Flow",
         "operationId": "submitSelfServiceSettingsFlow",
         "parameters": [
           {
@@ -1860,7 +1931,7 @@
         "tags": [
           "v0alpha2"
         ],
-        "summary": "# Initialize Settings Flow for Browsers",
+        "summary": "Initialize Settings Flow for Browsers",
         "operationId": "initializeSelfServiceSettingsFlowForBrowsers",
         "parameters": [
           {
@@ -1926,7 +1997,7 @@
         "tags": [
           "v0alpha2"
         ],
-        "summary": "# Get Settings Flow",
+        "summary": "Get Settings Flow",
         "operationId": "getSelfServiceSettingsFlow",
         "parameters": [
           {
@@ -2006,7 +2077,7 @@
         "tags": [
           "v0alpha2"
         ],
-        "summary": "# Complete Verification Flow",
+        "summary": "Complete Verification Flow",
         "operationId": "submitSelfServiceVerificationFlow",
         "parameters": [
           {
@@ -2112,7 +2183,7 @@
         "tags": [
           "v0alpha2"
         ],
-        "summary": "# Initialize Verification Flow for Browser Clients",
+        "summary": "Initialize Verification Flow for Browser Clients",
         "operationId": "initializeSelfServiceVerificationFlowForBrowsers",
         "parameters": [
           {
@@ -2154,7 +2225,7 @@
         "tags": [
           "v0alpha2"
         ],
-        "summary": "# Get Verification Flow",
+        "summary": "Get Verification Flow",
         "operationId": "getSelfServiceVerificationFlow",
         "parameters": [
           {
@@ -2349,7 +2420,7 @@
         "tags": [
           "v0alpha2"
         ],
-        "summary": "# Check Who the Current HTTP Session Belongs To",
+        "summary": "Check Who the Current HTTP Session Belongs To",
         "operationId": "toSession",
         "parameters": [
           {
@@ -2511,6 +2582,9 @@
       "type": "string",
       "title": "RecoveryAddressType must not exceed 16 characters as that is the limitation in the SQL Schema."
     },
+    "TemplateType": {
+      "type": "string"
+    },
     "UUID": {"type": "string", "format": "uuid4"},
     "adminCreateIdentityBody": {
       "type": "object",
@@ -2651,6 +2725,24 @@
       "description": "The authenticator assurance level can be one of \"aal1\", \"aal2\", or \"aal3\". A higher number means that it is harder\nfor an attacker to compromise the account.\n\nGenerally, \"aal1\" implies that one authentication factor was used while AAL2 implies that two factors (e.g.\npassword + TOTP) have been used.\n\nTo learn more about these levels please head over to: https://www.ory.sh/kratos/docs/concepts/credentials",
       "type": "string",
       "title": "Authenticator Assurance Level (AAL)"
+    },
+    "courierMessageList": {
+      "type": "array",
+      "title": "A list of messages.",
+      "items": {
+        "$ref": "#/definitions/message"
+      }
+    },
+    "courierMessageStatus": {
+      "description": "A Message's Status",
+      "type": "integer",
+      "format": "int64"
+    },
+    "courierMessageType": {
+      "description": "It can either be `email` or `phone`",
+      "type": "integer",
+      "format": "int64",
+      "title": "A Message's Type"
     },
     "errorAuthenticatorAssuranceLevelNotSatisfied": {
       "type": "object",
@@ -3023,6 +3115,47 @@
       "type": "array",
       "items": {
         "$ref": "#/definitions/jsonPatch"
+      }
+    },
+    "message": {
+      "type": "object",
+      "properties": {
+        "body": {
+          "type": "string"
+        },
+        "created_at": {
+          "description": "CreatedAt is a helper struct field for gobuffalo.pop.",
+          "type": "string",
+          "format": "date-time"
+        },
+        "id": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "recipient": {
+          "type": "string"
+        },
+        "send_count": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "status": {
+          "$ref": "#/definitions/courierMessageStatus"
+        },
+        "subject": {
+          "type": "string"
+        },
+        "template_type": {
+          "$ref": "#/definitions/TemplateType"
+        },
+        "type": {
+          "$ref": "#/definitions/courierMessageType"
+        },
+        "updated_at": {
+          "description": "UpdatedAt is a helper struct field for gobuffalo.pop.",
+          "type": "string",
+          "format": "date-time"
+        }
       }
     },
     "needsPrivilegedSessionError": {

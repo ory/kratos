@@ -53,6 +53,9 @@
         "title": "RecoveryAddressType must not exceed 16 characters as that is the limitation in the SQL Schema.",
         "type": "string"
       },
+      "TemplateType": {
+        "type": "string"
+      },
       "UUID": {
         "format": "uuid4",
         "type": "string"
@@ -199,6 +202,32 @@
           "aal3"
         ],
         "title": "Authenticator Assurance Level (AAL)",
+        "type": "string"
+      },
+      "courierMessageList": {
+        "items": {
+          "$ref": "#/components/schemas/message"
+        },
+        "title": "A list of messages.",
+        "type": "array"
+      },
+      "courierMessageStatus": {
+        "description": "A Message's Status",
+        "enum": [
+          "queued",
+          "sent",
+          "processing",
+          "abandoned"
+        ],
+        "type": "string"
+      },
+      "courierMessageType": {
+        "description": "It can either be `email` or `phone`",
+        "enum": [
+          "email",
+          "phone"
+        ],
+        "title": "A Message's Type",
         "type": "string"
       },
       "errorAuthenticatorAssuranceLevelNotSatisfied": {
@@ -583,6 +612,47 @@
           "$ref": "#/components/schemas/jsonPatch"
         },
         "type": "array"
+      },
+      "message": {
+        "properties": {
+          "body": {
+            "type": "string"
+          },
+          "created_at": {
+            "description": "CreatedAt is a helper struct field for gobuffalo.pop.",
+            "format": "date-time",
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "recipient": {
+            "type": "string"
+          },
+          "send_count": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "status": {
+            "$ref": "#/components/schemas/courierMessageStatus"
+          },
+          "subject": {
+            "type": "string"
+          },
+          "template_type": {
+            "$ref": "#/components/schemas/TemplateType"
+          },
+          "type": {
+            "$ref": "#/components/schemas/courierMessageType"
+          },
+          "updated_at": {
+            "description": "UpdatedAt is a helper struct field for gobuffalo.pop.",
+            "format": "date-time",
+            "type": "string"
+          }
+        },
+        "type": "object"
       },
       "needsPrivilegedSessionError": {
         "properties": {
@@ -2370,7 +2440,90 @@
             "description": "webAuthnJavaScript"
           }
         },
-        "summary": "# Get WebAuthn JavaScript",
+        "summary": "Get WebAuthn JavaScript",
+        "tags": [
+          "v0alpha2"
+        ]
+      }
+    },
+    "/admin/courier/messages": {
+      "get": {
+        "description": "Lists all messages by given status and recipient.",
+        "operationId": "adminListCourierMessages",
+        "parameters": [
+          {
+            "description": "Items per Page\n\nThis is the number of items per page.",
+            "in": "query",
+            "name": "per_page",
+            "schema": {
+              "default": 250,
+              "format": "int64",
+              "maximum": 1000,
+              "minimum": 1,
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Pagination Page\n\nThis value is currently an integer, but it is not sequential. The value is not the page number, but a\nreference. The next page can be any number and some numbers might return an empty list.\n\nFor example, page 2 might not follow after page 1. And even if page 3 and 5 exist, but page 4 might not exist.",
+            "in": "query",
+            "name": "page",
+            "schema": {
+              "default": 1,
+              "format": "int64",
+              "minimum": 1,
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Status filters out messages based on status.\nIf no value is provided, it doesn't take effect on filter.",
+            "in": "query",
+            "name": "status",
+            "schema": {
+              "$ref": "#/components/schemas/courierMessageStatus"
+            }
+          },
+          {
+            "description": "Recipient filters out messages based on recipient.\nIf no value is provided, it doesn't take effect on filter.",
+            "in": "query",
+            "name": "recipient",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/courierMessageList"
+                }
+              }
+            },
+            "description": "courierMessageList"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/jsonError"
+                }
+              }
+            },
+            "description": "jsonError"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/jsonError"
+                }
+              }
+            },
+            "description": "jsonError"
+          }
+        },
+        "summary": "List Messages",
         "tags": [
           "v0alpha2"
         ]
@@ -2432,7 +2585,7 @@
             "oryAccessToken": []
           }
         ],
-        "summary": "# List Identities",
+        "summary": "List Identities",
         "tags": [
           "v0alpha2"
         ]
@@ -2497,7 +2650,7 @@
             "oryAccessToken": []
           }
         ],
-        "summary": "# Create an Identity",
+        "summary": "Create an Identity",
         "tags": [
           "v0alpha2"
         ]
@@ -2548,7 +2701,7 @@
             "oryAccessToken": []
           }
         ],
-        "summary": "# Delete an Identity",
+        "summary": "Delete an Identity",
         "tags": [
           "v0alpha2"
         ]
@@ -2615,7 +2768,7 @@
             "oryAccessToken": []
           }
         ],
-        "summary": "# Get an Identity",
+        "summary": "Get an Identity",
         "tags": [
           "v0alpha2"
         ]
@@ -2787,7 +2940,7 @@
             "oryAccessToken": []
           }
         ],
-        "summary": "# Update an Identity",
+        "summary": "Update an Identity",
         "tags": [
           "v0alpha2"
         ]
@@ -3027,7 +3180,7 @@
             "description": "jsonError"
           }
         },
-        "summary": "# Create a Recovery Link",
+        "summary": "Create a Recovery Link",
         "tags": [
           "v0alpha2"
         ]
@@ -3360,7 +3513,7 @@
             "description": "jsonError"
           }
         },
-        "summary": "# Get Self-Service Errors",
+        "summary": "Get Self-Service Errors",
         "tags": [
           "v0alpha2"
         ]
@@ -3468,7 +3621,7 @@
             "description": "jsonError"
           }
         },
-        "summary": "# Submit a Login Flow",
+        "summary": "Submit a Login Flow",
         "tags": [
           "v0alpha2"
         ]
@@ -3615,7 +3768,7 @@
             "description": "jsonError"
           }
         },
-        "summary": "# Initialize Login Flow for Browsers",
+        "summary": "Initialize Login Flow for Browsers",
         "tags": [
           "v0alpha2"
         ]
@@ -3696,7 +3849,7 @@
             "description": "jsonError"
           }
         },
-        "summary": "# Get Login Flow",
+        "summary": "Get Login Flow",
         "tags": [
           "v0alpha2"
         ]
@@ -3742,7 +3895,7 @@
             "description": "jsonError"
           }
         },
-        "summary": "# Complete Self-Service Logout",
+        "summary": "Complete Self-Service Logout",
         "tags": [
           "v0alpha2"
         ]
@@ -3840,7 +3993,7 @@
             "description": "jsonError"
           }
         },
-        "summary": "# Create a Logout URL for Browsers",
+        "summary": "Create a Logout URL for Browsers",
         "tags": [
           "v0alpha2"
         ]
@@ -3938,7 +4091,7 @@
             "description": "jsonError"
           }
         },
-        "summary": "# Complete Recovery Flow",
+        "summary": "Complete Recovery Flow",
         "tags": [
           "v0alpha2"
         ]
@@ -4035,7 +4188,7 @@
             "description": "jsonError"
           }
         },
-        "summary": "# Initialize Recovery Flow for Browsers",
+        "summary": "Initialize Recovery Flow for Browsers",
         "tags": [
           "v0alpha2"
         ]
@@ -4106,7 +4259,7 @@
             "description": "jsonError"
           }
         },
-        "summary": "# Get Recovery Flow",
+        "summary": "Get Recovery Flow",
         "tags": [
           "v0alpha2"
         ]
@@ -4206,7 +4359,7 @@
             "description": "jsonError"
           }
         },
-        "summary": "# Submit a Registration Flow",
+        "summary": "Submit a Registration Flow",
         "tags": [
           "v0alpha2"
         ]
@@ -4293,7 +4446,7 @@
             "description": "jsonError"
           }
         },
-        "summary": "# Initialize Registration Flow for Browsers",
+        "summary": "Initialize Registration Flow for Browsers",
         "tags": [
           "v0alpha2"
         ]
@@ -4374,7 +4527,7 @@
             "description": "jsonError"
           }
         },
-        "summary": "# Get Registration Flow",
+        "summary": "Get Registration Flow",
         "tags": [
           "v0alpha2"
         ]
@@ -4507,7 +4660,7 @@
             "sessionToken": []
           }
         ],
-        "summary": "# Complete Settings Flow",
+        "summary": "Complete Settings Flow",
         "tags": [
           "v0alpha2"
         ]
@@ -4642,7 +4795,7 @@
             "description": "jsonError"
           }
         },
-        "summary": "# Initialize Settings Flow for Browsers",
+        "summary": "Initialize Settings Flow for Browsers",
         "tags": [
           "v0alpha2"
         ]
@@ -4741,7 +4894,7 @@
             "description": "jsonError"
           }
         },
-        "summary": "# Get Settings Flow",
+        "summary": "Get Settings Flow",
         "tags": [
           "v0alpha2"
         ]
@@ -4839,7 +4992,7 @@
             "description": "jsonError"
           }
         },
-        "summary": "# Complete Verification Flow",
+        "summary": "Complete Verification Flow",
         "tags": [
           "v0alpha2"
         ]
@@ -4926,7 +5079,7 @@
             "description": "jsonError"
           }
         },
-        "summary": "# Initialize Verification Flow for Browser Clients",
+        "summary": "Initialize Verification Flow for Browser Clients",
         "tags": [
           "v0alpha2"
         ]
@@ -4997,7 +5150,7 @@
             "description": "jsonError"
           }
         },
-        "summary": "# Get Verification Flow",
+        "summary": "Get Verification Flow",
         "tags": [
           "v0alpha2"
         ]
@@ -5250,7 +5403,7 @@
             "description": "jsonError"
           }
         },
-        "summary": "# Check Who the Current HTTP Session Belongs To",
+        "summary": "Check Who the Current HTTP Session Belongs To",
         "tags": [
           "v0alpha2"
         ]

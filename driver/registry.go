@@ -92,6 +92,9 @@ type Registry interface {
 	identity.ManagementProvider
 	identity.ActiveCredentialsCounterStrategyProvider
 
+	courier.HandlerProvider
+	courier.PersistenceProvider
+
 	schema.HandlerProvider
 
 	password2.ValidationProvider

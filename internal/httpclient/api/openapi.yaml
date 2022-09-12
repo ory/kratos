@@ -34,7 +34,86 @@ paths:
               schema:
                 $ref: '#/components/schemas/webAuthnJavaScript'
           description: webAuthnJavaScript
-      summary: '# Get WebAuthn JavaScript'
+      summary: Get WebAuthn JavaScript
+      tags:
+      - v0alpha2
+  /admin/courier/messages:
+    get:
+      description: Lists all messages by given status and recipient.
+      operationId: adminListCourierMessages
+      parameters:
+      - description: |-
+          Items per Page
+
+          This is the number of items per page.
+        explode: true
+        in: query
+        name: per_page
+        required: false
+        schema:
+          default: 250
+          format: int64
+          maximum: 1000
+          minimum: 1
+          type: integer
+        style: form
+      - description: |-
+          Pagination Page
+
+          This value is currently an integer, but it is not sequential. The value is not the page number, but a
+          reference. The next page can be any number and some numbers might return an empty list.
+
+          For example, page 2 might not follow after page 1. And even if page 3 and 5 exist, but page 4 might not exist.
+        explode: true
+        in: query
+        name: page
+        required: false
+        schema:
+          default: 1
+          format: int64
+          minimum: 1
+          type: integer
+        style: form
+      - description: |-
+          Status filters out messages based on status.
+          If no value is provided, it doesn't take effect on filter.
+        explode: true
+        in: query
+        name: status
+        required: false
+        schema:
+          $ref: '#/components/schemas/courierMessageStatus'
+        style: form
+      - description: |-
+          Recipient filters out messages based on recipient.
+          If no value is provided, it doesn't take effect on filter.
+        explode: true
+        in: query
+        name: recipient
+        required: false
+        schema:
+          type: string
+        style: form
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/courierMessageList'
+          description: courierMessageList
+        "400":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/jsonError'
+          description: jsonError
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/jsonError'
+          description: jsonError
+      summary: List Messages
       tags:
       - v0alpha2
   /admin/identities:
@@ -92,7 +171,7 @@ paths:
           description: jsonError
       security:
       - oryAccessToken: []
-      summary: '# List Identities'
+      summary: List Identities
       tags:
       - v0alpha2
     post:
@@ -132,7 +211,7 @@ paths:
           description: jsonError
       security:
       - oryAccessToken: []
-      summary: '# Create an Identity'
+      summary: Create an Identity
       tags:
       - v0alpha2
   /admin/identities/{id}:
@@ -171,7 +250,7 @@ paths:
           description: jsonError
       security:
       - oryAccessToken: []
-      summary: '# Delete an Identity'
+      summary: Delete an Identity
       tags:
       - v0alpha2
     get:
@@ -222,7 +301,7 @@ paths:
           description: jsonError
       security:
       - oryAccessToken: []
-      summary: '# Get an Identity'
+      summary: Get an Identity
       tags:
       - v0alpha2
     patch:
@@ -336,7 +415,7 @@ paths:
           description: jsonError
       security:
       - oryAccessToken: []
-      summary: '# Update an Identity'
+      summary: Update an Identity
       tags:
       - v0alpha2
   /admin/identities/{id}/sessions:
@@ -518,7 +597,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/jsonError'
           description: jsonError
-      summary: '# Create a Recovery Link'
+      summary: Create a Recovery Link
       tags:
       - v0alpha2
   /admin/sessions/{id}/extend:
@@ -754,7 +833,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/jsonError'
           description: jsonError
-      summary: '# Get Self-Service Errors'
+      summary: Get Self-Service Errors
       tags:
       - v0alpha2
   /self-service/login:
@@ -871,7 +950,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/jsonError'
           description: jsonError
-      summary: '# Submit a Login Flow'
+      summary: Submit a Login Flow
       tags:
       - v0alpha2
   /self-service/login/api:
@@ -1049,7 +1128,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/jsonError'
           description: jsonError
-      summary: '# Initialize Login Flow for Browsers'
+      summary: Initialize Login Flow for Browsers
       tags:
       - v0alpha2
   /self-service/login/flows:
@@ -1135,7 +1214,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/jsonError'
           description: jsonError
-      summary: '# Get Login Flow'
+      summary: Get Login Flow
       tags:
       - v0alpha2
   /self-service/logout:
@@ -1189,7 +1268,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/jsonError'
           description: jsonError
-      summary: '# Complete Self-Service Logout'
+      summary: Complete Self-Service Logout
       tags:
       - v0alpha2
   /self-service/logout/api:
@@ -1276,7 +1355,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/jsonError'
           description: jsonError
-      summary: '# Create a Logout URL for Browsers'
+      summary: Create a Logout URL for Browsers
       tags:
       - v0alpha2
   /self-service/recovery:
@@ -1376,7 +1455,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/jsonError'
           description: jsonError
-      summary: '# Complete Recovery Flow'
+      summary: Complete Recovery Flow
       tags:
       - v0alpha2
   /self-service/recovery/api:
@@ -1463,7 +1542,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/jsonError'
           description: jsonError
-      summary: '# Initialize Recovery Flow for Browsers'
+      summary: Initialize Recovery Flow for Browsers
       tags:
       - v0alpha2
   /self-service/recovery/flows:
@@ -1538,7 +1617,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/jsonError'
           description: jsonError
-      summary: '# Get Recovery Flow'
+      summary: Get Recovery Flow
       tags:
       - v0alpha2
   /self-service/registration:
@@ -1642,7 +1721,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/jsonError'
           description: jsonError
-      summary: '# Submit a Registration Flow'
+      summary: Submit a Registration Flow
       tags:
       - v0alpha2
   /self-service/registration/api:
@@ -1744,7 +1823,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/jsonError'
           description: jsonError
-      summary: '# Initialize Registration Flow for Browsers'
+      summary: Initialize Registration Flow for Browsers
       tags:
       - v0alpha2
   /self-service/registration/flows:
@@ -1830,7 +1909,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/jsonError'
           description: jsonError
-      summary: '# Get Registration Flow'
+      summary: Get Registration Flow
       tags:
       - v0alpha2
   /self-service/settings:
@@ -1971,7 +2050,7 @@ paths:
           description: jsonError
       security:
       - sessionToken: []
-      summary: '# Complete Settings Flow'
+      summary: Complete Settings Flow
       tags:
       - v0alpha2
   /self-service/settings/api:
@@ -2116,7 +2195,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/jsonError'
           description: jsonError
-      summary: '# Initialize Settings Flow for Browsers'
+      summary: Initialize Settings Flow for Browsers
       tags:
       - v0alpha2
   /self-service/settings/flows:
@@ -2216,7 +2295,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/jsonError'
           description: jsonError
-      summary: '# Get Settings Flow'
+      summary: Get Settings Flow
       tags:
       - v0alpha2
   /self-service/verification:
@@ -2316,7 +2395,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/jsonError'
           description: jsonError
-      summary: '# Complete Verification Flow'
+      summary: Complete Verification Flow
       tags:
       - v0alpha2
   /self-service/verification/api:
@@ -2393,7 +2472,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/jsonError'
           description: jsonError
-      summary: '# Initialize Verification Flow for Browser Clients'
+      summary: Initialize Verification Flow for Browser Clients
       tags:
       - v0alpha2
   /self-service/verification/flows:
@@ -2467,7 +2546,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/jsonError'
           description: jsonError
-      summary: '# Get Verification Flow'
+      summary: Get Verification Flow
       tags:
       - v0alpha2
   /sessions:
@@ -2736,7 +2815,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/jsonError'
           description: jsonError
-      summary: '# Check Who the Current HTTP Session Belongs To'
+      summary: Check Who the Current HTTP Session Belongs To
       tags:
       - v0alpha2
   /sessions/{id}:
@@ -2875,6 +2954,8 @@ components:
     RecoveryAddressType:
       title: RecoveryAddressType must not exceed 16 characters as that is the limitation
         in the SQL Schema.
+      type: string
+    TemplateType:
       type: string
     UUID:
       format: uuid4
@@ -3055,6 +3136,26 @@ components:
       - aal2
       - aal3
       title: Authenticator Assurance Level (AAL)
+      type: string
+    courierMessageList:
+      items:
+        $ref: '#/components/schemas/message'
+      title: A list of messages.
+      type: array
+    courierMessageStatus:
+      description: A Message's Status
+      enum:
+      - queued
+      - sent
+      - processing
+      - abandoned
+      type: string
+    courierMessageType:
+      description: It can either be `email` or `phone`
+      enum:
+      - email
+      - phone
+      title: A Message's Type
       type: string
     errorAuthenticatorAssuranceLevelNotSatisfied:
       properties:
@@ -3470,6 +3571,44 @@ components:
       items:
         $ref: '#/components/schemas/jsonPatch'
       type: array
+    message:
+      example:
+        updated_at: 2000-01-23T04:56:07.000+00:00
+        subject: subject
+        recipient: recipient
+        created_at: 2000-01-23T04:56:07.000+00:00
+        send_count: 0
+        template_type: template_type
+        id: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
+        body: body
+      properties:
+        body:
+          type: string
+        created_at:
+          description: CreatedAt is a helper struct field for gobuffalo.pop.
+          format: date-time
+          type: string
+        id:
+          format: uuid
+          type: string
+        recipient:
+          type: string
+        send_count:
+          format: int64
+          type: integer
+        status:
+          $ref: '#/components/schemas/courierMessageStatus'
+        subject:
+          type: string
+        template_type:
+          type: string
+        type:
+          $ref: '#/components/schemas/courierMessageType'
+        updated_at:
+          description: UpdatedAt is a helper struct field for gobuffalo.pop.
+          format: date-time
+          type: string
+      type: object
     needsPrivilegedSessionError:
       properties:
         code:
