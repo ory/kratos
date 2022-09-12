@@ -3702,6 +3702,14 @@
             "schema": {
               "type": "string"
             }
+          },
+          {
+            "description": "HTTP Cookies\n\nWhen using the SDK in a browser app, on the server side you must include the HTTP Cookie Header\nsent by the client to your server here. This ensures that CSRF and session cookies are respected.",
+            "in": "header",
+            "name": "Cookie",
+            "schema": {
+              "type": "string"
+            }
           }
         ],
         "responses": {
@@ -4708,6 +4716,14 @@
             "description": "The URL to return the browser to after the flow was completed.",
             "in": "query",
             "name": "return_to",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "HTTP Cookies\n\nWhen using the SDK in a browser app, on the server side you must include the HTTP Cookie Header\nsent by the client to your server here. This ensures that CSRF and session cookies are respected.",
+            "in": "header",
+            "name": "Cookie",
             "schema": {
               "type": "string"
             }

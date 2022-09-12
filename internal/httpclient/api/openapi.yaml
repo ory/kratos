@@ -1055,6 +1055,18 @@ paths:
         schema:
           type: string
         style: form
+      - description: |-
+          HTTP Cookies
+
+          When using the SDK in a browser app, on the server side you must include the HTTP Cookie Header
+          sent by the client to your server here. This ensures that CSRF and session cookies are respected.
+        explode: false
+        in: header
+        name: Cookie
+        required: false
+        schema:
+          type: string
+        style: simple
       responses:
         "200":
           content:
@@ -2104,6 +2116,18 @@ paths:
         schema:
           type: string
         style: form
+      - description: |-
+          HTTP Cookies
+
+          When using the SDK in a browser app, on the server side you must include the HTTP Cookie Header
+          sent by the client to your server here. This ensures that CSRF and session cookies are respected.
+        explode: false
+        in: header
+        name: Cookie
+        required: false
+        schema:
+          type: string
+        style: simple
       responses:
         "200":
           content:

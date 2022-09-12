@@ -4,7 +4,7 @@
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 **Table of Contents**
 
-- [ (2022-09-07)](#2022-09-07)
+- [ (2022-09-11)](#2022-09-11)
   - [Breaking Changes](#breaking-changes)
     - [Bug Fixes](#bug-fixes)
     - [Code Refactoring](#code-refactoring)
@@ -264,7 +264,7 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# [](https://github.com/ory/kratos/compare/v0.10.1...v) (2022-09-07)
+# [](https://github.com/ory/kratos/compare/v0.10.1...v) (2022-09-11)
 
 ## Breaking Changes
 
@@ -366,6 +366,10 @@ SDK Method `getJsonSchema` was renamed to `getIdentitySchema`.
   ([a115486](https://github.com/ory/kratos/commit/a11548603a4c9b46ba238d2a7ee58fffb7f6d857))
 - Panic
   ([1182278](https://github.com/ory/kratos/commit/11822789c1561b27c2d769c9ea53a81835702f4a))
+- Patch invalidates credentials
+  ([#2721](https://github.com/ory/kratos/issues/2721))
+  ([c4d95af](https://github.com/ory/kratos/commit/c4d95afac590136acd14efa093f48c301fd07164)),
+  closes [ory/cloud#148](https://github.com/ory/cloud/issues/148)
 - Potentially resolve tx issue in crdb
   ([#2595](https://github.com/ory/kratos/issues/2595))
   ([9d22035](https://github.com/ory/kratos/commit/9d22035695b6a793ac4bc5e2bd0a68b3aeea039c))
@@ -470,6 +474,13 @@ SDK Method `getJsonSchema` was renamed to `getIdentitySchema`.
   ([94a3741](https://github.com/ory/kratos/commit/94a37416011086582e309f62dc2c45ca84083a33))
 - Add pre-hooks to settings, verification, recovery
   ([c0ceaf3](https://github.com/ory/kratos/commit/c0ceaf31f9327cca903c19b77597cae4587737e6))
+- Allow importing scrypt hashing algorithm
+  ([#2689](https://github.com/ory/kratos/issues/2689))
+  ([3e3b59e](https://github.com/ory/kratos/commit/3e3b59e53de8cb89e9fd01cfec75a0f8a601035b)),
+  closes [#2422](https://github.com/ory/kratos/issues/2422):
+
+  It is now possible to import scrypt-hashed passwords.
+
 - Allow setting public and admin metadata with the jsonnet data mapper
   ([#2569](https://github.com/ory/kratos/issues/2569))
   ([aa6eb13](https://github.com/ory/kratos/commit/aa6eb13c1c42c11354074553fac9c90ee0a8999e)),

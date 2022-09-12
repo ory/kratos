@@ -4208,6 +4208,7 @@ type V0alpha2ApiApiInitializeSelfServiceLoginFlowForBrowsersRequest struct {
 	refresh    *bool
 	aal        *string
 	returnTo   *string
+	cookie     *string
 }
 
 func (r V0alpha2ApiApiInitializeSelfServiceLoginFlowForBrowsersRequest) Refresh(refresh bool) V0alpha2ApiApiInitializeSelfServiceLoginFlowForBrowsersRequest {
@@ -4220,6 +4221,10 @@ func (r V0alpha2ApiApiInitializeSelfServiceLoginFlowForBrowsersRequest) Aal(aal 
 }
 func (r V0alpha2ApiApiInitializeSelfServiceLoginFlowForBrowsersRequest) ReturnTo(returnTo string) V0alpha2ApiApiInitializeSelfServiceLoginFlowForBrowsersRequest {
 	r.returnTo = &returnTo
+	return r
+}
+func (r V0alpha2ApiApiInitializeSelfServiceLoginFlowForBrowsersRequest) Cookie(cookie string) V0alpha2ApiApiInitializeSelfServiceLoginFlowForBrowsersRequest {
+	r.cookie = &cookie
 	return r
 }
 
@@ -4308,6 +4313,9 @@ func (a *V0alpha2ApiService) InitializeSelfServiceLoginFlowForBrowsersExecute(r 
 	localVarHTTPHeaderAccept := selectHeaderAccept(localVarHTTPHeaderAccepts)
 	if localVarHTTPHeaderAccept != "" {
 		localVarHeaderParams["Accept"] = localVarHTTPHeaderAccept
+	}
+	if r.cookie != nil {
+		localVarHeaderParams["Cookie"] = parameterToString(*r.cookie, "")
 	}
 	req, err := a.client.prepareRequest(r.ctx, localVarPath, localVarHTTPMethod, localVarPostBody, localVarHeaderParams, localVarQueryParams, localVarFormParams, localVarFormFileName, localVarFileName, localVarFileBytes)
 	if err != nil {
@@ -5084,10 +5092,15 @@ type V0alpha2ApiApiInitializeSelfServiceSettingsFlowForBrowsersRequest struct {
 	ctx        context.Context
 	ApiService V0alpha2Api
 	returnTo   *string
+	cookie     *string
 }
 
 func (r V0alpha2ApiApiInitializeSelfServiceSettingsFlowForBrowsersRequest) ReturnTo(returnTo string) V0alpha2ApiApiInitializeSelfServiceSettingsFlowForBrowsersRequest {
 	r.returnTo = &returnTo
+	return r
+}
+func (r V0alpha2ApiApiInitializeSelfServiceSettingsFlowForBrowsersRequest) Cookie(cookie string) V0alpha2ApiApiInitializeSelfServiceSettingsFlowForBrowsersRequest {
+	r.cookie = &cookie
 	return r
 }
 
@@ -5177,6 +5190,9 @@ func (a *V0alpha2ApiService) InitializeSelfServiceSettingsFlowForBrowsersExecute
 	localVarHTTPHeaderAccept := selectHeaderAccept(localVarHTTPHeaderAccepts)
 	if localVarHTTPHeaderAccept != "" {
 		localVarHeaderParams["Accept"] = localVarHTTPHeaderAccept
+	}
+	if r.cookie != nil {
+		localVarHeaderParams["Cookie"] = parameterToString(*r.cookie, "")
 	}
 	req, err := a.client.prepareRequest(r.ctx, localVarPath, localVarHTTPMethod, localVarPostBody, localVarHeaderParams, localVarQueryParams, localVarFormParams, localVarFormFileName, localVarFileName, localVarFileBytes)
 	if err != nil {
