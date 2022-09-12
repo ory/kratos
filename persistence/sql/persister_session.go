@@ -36,27 +36,27 @@ func (p *Persister) GetSession(ctx context.Context, sid uuid.UUID) (*session.Ses
 		return nil, err
 	}
 
-	metadata, err := p.GetSessionLogs(ctx, sid)
+	devices, err := p.GetSessionDevices(ctx, sid)
 	if err != nil {
 		return nil, err
 	}
 
 	s.Identity = i
-	s.Metadata = metadata
+	s.Devices = devices
 	return &s, nil
 }
 
-func (p *Persister) GetSessionLogs(ctx context.Context, sid uuid.UUID) ([]session.Metadata, error) {
-	ctx, span := p.r.Tracer(ctx).Tracer().Start(ctx, "persistence.sql.GetSessionLogs")
+func (p *Persister) GetSessionDevices(ctx context.Context, sid uuid.UUID) ([]session.Device, error) {
+	ctx, span := p.r.Tracer(ctx).Tracer().Start(ctx, "persistence.sql.GetSessionDevices")
 	defer span.End()
 
-	metadata := make([]session.Metadata, 0)
+	devices := make([]session.Device, 0)
 	nid := p.NetworkID(ctx)
-	if err := p.GetConnection(ctx).Where("session_id = ? AND nid = ?", sid, nid).All(&metadata); err != nil {
+	if err := p.GetConnection(ctx).Where("session_id = ? AND nid = ?", sid, nid).All(&devices); err != nil {
 		return nil, sqlcon.HandleError(err)
 	}
 
-	return metadata, nil
+	return devices, nil
 }
 
 // ListSessionsByIdentity retrieves sessions for an identity from the store.
@@ -85,7 +85,13 @@ func (p *Persister) ListSessionsByIdentity(ctx context.Context, iID uuid.UUID, a
 				return err
 			}
 
+			devices, err := p.GetSessionDevices(ctx, s.ID)
+			if err != nil {
+				return err
+			}
+
 			s.Identity = i
+			s.Devices = devices
 		}
 		return nil
 	}); err != nil {
