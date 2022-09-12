@@ -14,7 +14,7 @@ import (
 
 // A Message's Status
 //
-// swagger:model messageStatus
+// swagger:model courierMessageStatus
 type MessageStatus int
 
 const (

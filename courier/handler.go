@@ -39,16 +39,16 @@ func (h *Handler) RegisterPublicRoutes(public *x.RouterPublic) {
 }
 
 func (h *Handler) RegisterAdminRoutes(admin *x.RouterAdmin) {
-	admin.GET(AdminRouteMessages, h.listMessages)
+	admin.GET(AdminRouteMessages, h.adminListCourierMessages)
 }
 
 // A list of messages.
-// swagger:model messageList
+// swagger:model courierMessageList
 // nolint:deadcode,unused
-type messageList []Message
+type courierMessageList []Message
 
 // nolint:deadcode,unused
-// swagger:parameters adminListMessages
+// swagger:parameters adminListCourierMessages
 type MessagesFilter struct {
 	x.PaginationParams
 	// Status filters out messages based on status.
@@ -65,22 +65,22 @@ type MessagesFilter struct {
 	Recipient string `json:"recipient"`
 }
 
-// swagger:route GET /admin/courier/messages v0alpha2 adminListMessages
+// swagger:route GET /admin/courier/messages v0alpha2 adminListCourierMessages
 //
-// List Messages
+// # List Messages
 //
 // Lists all messages by given status and recipient.
 //
-//     Produces:
-//     - application/json
+//	Produces:
+//	- application/json
 //
-//     Schemes: http, https
+//	Schemes: http, https
 //
-//     Responses:
-//       200: messageList
-//       400: jsonError
-//       500: jsonError
-func (h *Handler) listMessages(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+//	Responses:
+//	  200: courierMessageList
+//	  400: jsonError
+//	  500: jsonError
+func (h *Handler) adminListCourierMessages(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 	filter, err := parseMessagesFilter(r)
 	if err != nil {
 		h.r.Writer().WriteErrorCode(w, r, http.StatusBadRequest, err)

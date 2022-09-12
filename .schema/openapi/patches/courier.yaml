@@ -1,11 +1,11 @@
-# Makes messageStatus a string enum
+# Makes courierMessageStatus a string enum
 - op: remove
-  path: /components/schemas/messageStatus/format
+  path: /components/schemas/courierMessageStatus/format
 - op: replace
-  path: /components/schemas/messageStatus/type
+  path: /components/schemas/courierMessageStatus/type
   value: string
 - op: add
-  path: /components/schemas/messageStatus/enum
+  path: /components/schemas/courierMessageStatus/enum
   value:
     - queued
     - sent
@@ -22,8 +22,8 @@
   value:
     - email
     - phone
-# Fix messageStatus query parameter in listMessages endpoint
+# Fix courierMessageStatus query parameter in listMessages endpoint
 - op: replace
   path: /paths/~1admin~1courier~1messages/get/parameters/2/schema
   value:
-    $ref: "#/components/schemas/messageStatus"
+    $ref: "#/components/schemas/courierMessageStatus"

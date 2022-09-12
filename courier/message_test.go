@@ -3,9 +3,10 @@ package courier_test
 import (
 	"testing"
 
+	"github.com/stretchr/testify/require"
+
 	"github.com/ory/herodot"
 	"github.com/ory/kratos/courier"
-	"github.com/stretchr/testify/require"
 )
 
 func TestMessageStatusValidity(t *testing.T) {
