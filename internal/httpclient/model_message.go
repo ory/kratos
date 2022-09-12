@@ -27,7 +27,7 @@ type Message struct {
 	Status       *CourierMessageStatus `json:"status,omitempty"`
 	Subject      *string               `json:"subject,omitempty"`
 	TemplateType *string               `json:"template_type,omitempty"`
-	Type         *MessageType          `json:"type,omitempty"`
+	Type         *CourierMessageType   `json:"type,omitempty"`
 	// UpdatedAt is a helper struct field for gobuffalo.pop.
 	UpdatedAt *time.Time `json:"updated_at,omitempty"`
 }
@@ -306,9 +306,9 @@ func (o *Message) SetTemplateType(v string) {
 }
 
 // GetType returns the Type field value if set, zero value otherwise.
-func (o *Message) GetType() MessageType {
+func (o *Message) GetType() CourierMessageType {
 	if o == nil || o.Type == nil {
-		var ret MessageType
+		var ret CourierMessageType
 		return ret
 	}
 	return *o.Type
@@ -316,7 +316,7 @@ func (o *Message) GetType() MessageType {
 
 // GetTypeOk returns a tuple with the Type field value if set, nil otherwise
 // and a boolean to check if the value has been set.
-func (o *Message) GetTypeOk() (*MessageType, bool) {
+func (o *Message) GetTypeOk() (*CourierMessageType, bool) {
 	if o == nil || o.Type == nil {
 		return nil, false
 	}
@@ -332,8 +332,8 @@ func (o *Message) HasType() bool {
 	return false
 }
 
-// SetType gets a reference to the given MessageType and assigns it to the Type field.
-func (o *Message) SetType(v MessageType) {
+// SetType gets a reference to the given CourierMessageType and assigns it to the Type field.
+func (o *Message) SetType(v CourierMessageType) {
 	o.Type = &v
 }
 

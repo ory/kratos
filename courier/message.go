@@ -97,7 +97,7 @@ func (ms *MessageStatus) UnmarshalJSON(data []byte) error {
 //
 // It can either be `email` or `phone`
 //
-// swagger:model messageType
+// swagger:model courierMessageType
 type MessageType int
 
 const (

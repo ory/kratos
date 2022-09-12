@@ -11,14 +11,14 @@
     - sent
     - processing
     - abandoned
-# Makes messageType a string enum
+# Makes courierMessageType a string enum
 - op: remove
-  path: /components/schemas/messageType/format
+  path: /components/schemas/courierMessageType/format
 - op: replace
-  path: /components/schemas/messageType/type
+  path: /components/schemas/courierMessageType/type
   value: string
 - op: add
-  path: /components/schemas/messageType/enum
+  path: /components/schemas/courierMessageType/enum
   value:
     - email
     - phone

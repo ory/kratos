@@ -221,6 +221,15 @@
         ],
         "type": "string"
       },
+      "courierMessageType": {
+        "description": "It can either be `email` or `phone`",
+        "enum": [
+          "email",
+          "phone"
+        ],
+        "title": "A Message's Type",
+        "type": "string"
+      },
       "errorAuthenticatorAssuranceLevelNotSatisfied": {
         "properties": {
           "code": {
@@ -635,7 +644,7 @@
             "$ref": "#/components/schemas/TemplateType"
           },
           "type": {
-            "$ref": "#/components/schemas/messageType"
+            "$ref": "#/components/schemas/courierMessageType"
           },
           "updated_at": {
             "description": "UpdatedAt is a helper struct field for gobuffalo.pop.",
@@ -644,15 +653,6 @@
           }
         },
         "type": "object"
-      },
-      "messageType": {
-        "description": "It can either be `email` or `phone`",
-        "enum": [
-          "email",
-          "phone"
-        ],
-        "title": "A Message's Type",
-        "type": "string"
       },
       "needsPrivilegedSessionError": {
         "properties": {

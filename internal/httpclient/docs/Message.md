@@ -12,7 +12,7 @@ Name | Type | Description | Notes
 **Status** | Pointer to [**CourierMessageStatus**](CourierMessageStatus.md) |  | [optional] 
 **Subject** | Pointer to **string** |  | [optional] 
 **TemplateType** | Pointer to **string** |  | [optional] 
-**Type** | Pointer to [**MessageType**](MessageType.md) |  | [optional] 
+**Type** | Pointer to [**CourierMessageType**](CourierMessageType.md) |  | [optional] 
 **UpdatedAt** | Pointer to **time.Time** | UpdatedAt is a helper struct field for gobuffalo.pop. | [optional] 
 
 ## Methods
@@ -236,20 +236,20 @@ HasTemplateType returns a boolean if a field has been set.
 
 ### GetType
 
-`func (o *Message) GetType() MessageType`
+`func (o *Message) GetType() CourierMessageType`
 
 GetType returns the Type field if non-nil, zero value otherwise.
 
 ### GetTypeOk
 
-`func (o *Message) GetTypeOk() (*MessageType, bool)`
+`func (o *Message) GetTypeOk() (*CourierMessageType, bool)`
 
 GetTypeOk returns a tuple with the Type field if it's non-nil, zero value otherwise
 and a boolean to check if the value has been set.
 
 ### SetType
 
-`func (o *Message) SetType(v MessageType)`
+`func (o *Message) SetType(v CourierMessageType)`
 
 SetType sets Type field to given value.
 

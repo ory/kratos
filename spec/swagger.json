@@ -2738,6 +2738,12 @@
       "type": "integer",
       "format": "int64"
     },
+    "courierMessageType": {
+      "description": "It can either be `email` or `phone`",
+      "type": "integer",
+      "format": "int64",
+      "title": "A Message's Type"
+    },
     "errorAuthenticatorAssuranceLevelNotSatisfied": {
       "type": "object",
       "title": "ErrAALNotSatisfied is returned when an active session was found but the requested AAL is not satisfied.",
@@ -3143,7 +3149,7 @@
           "$ref": "#/definitions/TemplateType"
         },
         "type": {
-          "$ref": "#/definitions/messageType"
+          "$ref": "#/definitions/courierMessageType"
         },
         "updated_at": {
           "description": "UpdatedAt is a helper struct field for gobuffalo.pop.",
@@ -3151,12 +3157,6 @@
           "format": "date-time"
         }
       }
-    },
-    "messageType": {
-      "description": "It can either be `email` or `phone`",
-      "type": "integer",
-      "format": "int64",
-      "title": "A Message's Type"
     },
     "needsPrivilegedSessionError": {
       "type": "object",
