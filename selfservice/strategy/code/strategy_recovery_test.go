@@ -84,7 +84,7 @@ func TestAdminStrategy(t *testing.T) {
 		require.NoError(t, err)
 		w := httptest.NewRecorder()
 		r := &http.Request{URL: new(url.URL)}
-		f, err := recovery.NewFlow(reg.Config(), time.Minute, "", r, reg.RecoveryStrategies(ctx), flow.TypeBrowser)
+		f, err := recovery.NewFlow(reg.Config(), time.Minute, "", r, s, flow.TypeBrowser)
 		require.NoError(t, err)
 		require.NotPanics(t, func() {
 			require.Error(t, s.(*code.Strategy).HandleRecoveryError(w, r, f, nil, errors.New("test")))
@@ -776,7 +776,7 @@ func TestRecovery(t *testing.T) {
 		require.NoError(t, err)
 
 		require.Len(t, rs.Ui.Messages, 1)
-		assert.Equal(t, "The recovery was submitted too often. Please restart the flow.", rs.Ui.Messages[0].Text)
+		assert.Equal(t, "The recovery was submitted too often. Please try again.", rs.Ui.Messages[0].Text)
 		json, err := rs.Ui.MarshalJSON()
 		require.NoError(t, err)
 		t.Logf("body: %s", string(json))
@@ -984,8 +984,8 @@ func TestDisabledStrategy(t *testing.T) {
 	t.Run("role=public", func(t *testing.T) {
 		c := testhelpers.NewClientWithCookies(t)
 
-		t.Run("description=can not recover an account by post request when link method is disabled", func(t *testing.T) {
-			f := testhelpers.PersistNewRecoveryFlowWithActiveMethod(t, new(code.Strategy).RecoveryNodeGroup().String(), conf, reg)
+		t.Run("description=can not recover an account by post request when code method is disabled", func(t *testing.T) {
+			f := testhelpers.PersistNewRecoveryFlow(t, code.NewStrategy(reg), conf, reg)
 			u := publicTS.URL + recovery.RouteSubmitFlow + "?flow=" + f.ID.String()
 
 			res, err := c.PostForm(u, url.Values{

@@ -138,6 +138,7 @@ const (
 	ViperKeySelfServiceRecoveryAfter                         = "selfservice.flows.recovery.after"
 	ViperKeySelfServiceRecoveryBeforeHooks                   = "selfservice.flows.recovery.before.hooks"
 	ViperKeySelfServiceRecoveryEnabled                       = "selfservice.flows.recovery.enabled"
+	ViperKeySelfServiceRecoveryUse                           = "selfservice.flows.recovery.use"
 	ViperKeySelfServiceRecoveryUI                            = "selfservice.flows.recovery.ui_url"
 	ViperKeySelfServiceRecoveryRequestLifespan               = "selfservice.flows.recovery.lifespan"
 	ViperKeySelfServiceRecoveryBrowserDefaultReturnTo        = "selfservice.flows.recovery.after." + DefaultBrowserReturnURL
@@ -625,6 +626,10 @@ func (p *Config) SelfServiceFlowVerificationEnabled(ctx context.Context) bool {
 
 func (p *Config) SelfServiceFlowRecoveryEnabled(ctx context.Context) bool {
 	return p.GetProvider(ctx).Bool(ViperKeySelfServiceRecoveryEnabled)
+}
+
+func (p *Config) SelfServiceFlowRecoveryUse(ctx context.Context) string {
+	return p.GetProvider(ctx).String(ViperKeySelfServiceRecoveryUse)
 }
 
 func (p *Config) SelfServiceFlowLoginBeforeHooks(ctx context.Context) []SelfServiceHook {

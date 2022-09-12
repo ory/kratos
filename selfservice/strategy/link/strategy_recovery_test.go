@@ -101,7 +101,7 @@ func TestAdminStrategy(t *testing.T) {
 		require.NoError(t, err)
 		w := httptest.NewRecorder()
 		r := &http.Request{URL: new(url.URL)}
-		f, err := recovery.NewFlow(reg.Config(), time.Minute, "", r, reg.RecoveryStrategies(ctx), flow.TypeBrowser)
+		f, err := recovery.NewFlow(reg.Config(), time.Minute, "", r, s, flow.TypeBrowser)
 		require.NoError(t, err)
 		require.NotPanics(t, func() {
 			require.Error(t, s.(*link.Strategy).HandleRecoveryError(w, r, f, nil, errors.New("test")))
@@ -813,8 +813,8 @@ func TestDisabledEndpoint(t *testing.T) {
 		c := testhelpers.NewClientWithCookies(t)
 
 		t.Run("description=can not recover an account by get request when link method is disabled", func(t *testing.T) {
-			f := testhelpers.InitializeRecoveryFlowViaBrowser(t, c, false, publicTS, nil)
-			u := publicTS.URL + recovery.RouteSubmitFlow + "?flow=" + f.Id + "&token=endpoint-disabled"
+			f := testhelpers.PersistNewRecoveryFlow(t, nil, conf, reg)
+			u := publicTS.URL + recovery.RouteSubmitFlow + "?flow=" + f.ID.String() + "&token=endpoint-disabled"
 			res, err := c.Get(u)
 			require.NoError(t, err)
 			assert.Equal(t, http.StatusOK, res.StatusCode)
@@ -824,8 +824,8 @@ func TestDisabledEndpoint(t *testing.T) {
 		})
 
 		t.Run("description=can not recover an account by post request when link method is disabled", func(t *testing.T) {
-			f := testhelpers.InitializeRecoveryFlowViaBrowser(t, c, false, publicTS, nil)
-			u := publicTS.URL + recovery.RouteSubmitFlow + "?flow=" + f.Id
+			f := testhelpers.PersistNewRecoveryFlow(t, nil, conf, reg)
+			u := publicTS.URL + recovery.RouteSubmitFlow + "?flow=" + f.ID.String()
 			res, err := c.PostForm(u, url.Values{"email": {"email@ory.sh"}, "method": {"link"}})
 			require.NoError(t, err)
 			assert.Equal(t, http.StatusOK, res.StatusCode)

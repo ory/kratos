@@ -35,6 +35,13 @@ func (m *RegistryDefault) RecoveryStrategies(ctx context.Context) (recoveryStrat
 	return
 }
 
+// GetActiveRecoveryStrategy returns the currently active recovery strategy
+// If no recovery strategy has been set, an error is returned
+func (m *RegistryDefault) GetActiveRecoveryStrategy(ctx context.Context) (recovery.Strategy, error) {
+	activeRecoveryStrategy := m.Config().SelfServiceFlowRecoveryUse(ctx)
+	return m.RecoveryStrategies(ctx).Strategy(activeRecoveryStrategy)
+}
+
 func (m *RegistryDefault) AllRecoveryStrategies() (recoveryStrategies recovery.Strategies) {
 	for _, strategy := range m.selfServiceStrategies() {
 		if s, ok := strategy.(recovery.Strategy); ok {

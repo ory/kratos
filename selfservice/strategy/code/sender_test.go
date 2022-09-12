@@ -38,7 +38,7 @@ func TestSender(t *testing.T) {
 	hr := httptest.NewRequest("GET", "https://www.ory.sh", nil)
 
 	t.Run("method=SendRecoveryCode", func(t *testing.T) {
-		f, err := recovery.NewFlow(conf, time.Hour, "", u, reg.RecoveryStrategies(context.Background()), flow.TypeBrowser)
+		f, err := recovery.NewFlow(conf, time.Hour, "", u, code.NewStrategy(reg), flow.TypeBrowser)
 		require.NoError(t, err)
 
 		require.NoError(t, reg.RecoveryFlowPersister().CreateRecoveryFlow(context.Background(), f))

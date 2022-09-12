@@ -162,7 +162,7 @@ func (s *Strategy) createRecoveryCode(w http.ResponseWriter, r *http.Request, _ 
 	}
 
 	// Initially, the CSRF token is empty, as the generated flow + link is not yet tied to the users browser
-	flow, err := recovery.NewFlow(config, expiresIn, "", r, s.deps.RecoveryStrategies(ctx), flow.TypeBrowser)
+	flow, err := recovery.NewFlow(config, expiresIn, "", r, s, flow.TypeBrowser)
 	if err != nil {
 		s.deps.Writer().WriteError(w, r, err)
 		return
@@ -436,8 +436,7 @@ func (s *Strategy) retryRecoveryFlowWithMessage(w http.ResponseWriter, r *http.R
 	ctx := r.Context()
 	config := s.deps.Config()
 
-	f, err := recovery.NewFlow(config, config.SelfServiceFlowRecoveryRequestLifespan(ctx),
-		"", r, s.deps.RecoveryStrategies(ctx), ft)
+	f, err := recovery.NewFlow(config, config.SelfServiceFlowRecoveryRequestLifespan(ctx), "", r, s, ft)
 	if err != nil {
 		return err
 	}
@@ -470,8 +469,7 @@ func (s *Strategy) retryRecoveryFlowWithError(w http.ResponseWriter, r *http.Req
 		return s.retryRecoveryFlowWithMessage(w, r, ft, text.NewErrorValidationRecoveryFlowExpired(expired.Ago))
 	}
 
-	f, err := recovery.NewFlow(config, config.SelfServiceFlowRecoveryRequestLifespan(ctx),
-		"", r, s.deps.RecoveryStrategies(ctx), ft)
+	f, err := recovery.NewFlow(config, config.SelfServiceFlowRecoveryRequestLifespan(ctx), "", r, s, ft)
 	if err != nil {
 		return err
 	}

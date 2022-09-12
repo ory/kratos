@@ -1220,6 +1220,16 @@
                 },
                 "before": {
                   "$ref": "#/definitions/selfServiceBeforeRecovery"
+                },
+                "use": {
+                  "title": "Recovery Strategy",
+                  "description":"The strategy to use for recovery requests",
+                  "type": "string",
+                  "enum": [
+                    "link",
+                    "code"
+                  ],
+                  "default": "code"
                 }
               }
             },
@@ -1263,7 +1273,7 @@
                 "enabled": {
                   "type": "boolean",
                   "title": "Enables Link Method",
-                  "default": true
+                  "default": false
                 },
                 "config": {
                   "type": "object",

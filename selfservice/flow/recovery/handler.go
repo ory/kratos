@@ -117,12 +117,13 @@ func (h *Handler) RegisterAdminRoutes(admin *x.RouterAdmin) {
 //	  500: jsonError
 //	  400: jsonError
 func (h *Handler) initAPIFlow(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
-	if !h.d.Config().SelfServiceFlowRecoveryEnabled(r.Context()) {
+	activeRecoveryStrategy, err := h.d.GetActiveRecoveryStrategy(r.Context())
+	if !h.d.Config().SelfServiceFlowRecoveryEnabled(r.Context()) || err != nil {
 		h.d.SelfServiceErrorManager().Forward(r.Context(), w, r, errors.WithStack(herodot.ErrBadRequest.WithReasonf("Recovery is not allowed because it was disabled.")))
 		return
 	}
 
-	req, err := NewFlow(h.d.Config(), h.d.Config().SelfServiceFlowRecoveryRequestLifespan(r.Context()), h.d.GenerateCSRFToken(r), r, h.d.RecoveryStrategies(r.Context()), flow.TypeAPI)
+	req, err := NewFlow(h.d.Config(), h.d.Config().SelfServiceFlowRecoveryRequestLifespan(r.Context()), h.d.GenerateCSRFToken(r), r, activeRecoveryStrategy, flow.TypeAPI)
 	if err != nil {
 		h.d.Writer().WriteError(w, r, err)
 		return
@@ -173,12 +174,14 @@ type initializeSelfServiceRecoveryFlowWithoutBrowser struct {
 //	  400: jsonError
 //	  500: jsonError
 func (h *Handler) initBrowserFlow(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
-	if !h.d.Config().SelfServiceFlowRecoveryEnabled(r.Context()) {
+	activeRecoveryStrategy, err := h.d.GetActiveRecoveryStrategy(r.Context())
+
+	if !h.d.Config().SelfServiceFlowRecoveryEnabled(r.Context()) || err != nil {
 		h.d.SelfServiceErrorManager().Forward(r.Context(), w, r, errors.WithStack(herodot.ErrBadRequest.WithReasonf("Recovery is not allowed because it was disabled.")))
 		return
 	}
 
-	f, err := NewFlow(h.d.Config(), h.d.Config().SelfServiceFlowRecoveryRequestLifespan(r.Context()), h.d.GenerateCSRFToken(r), r, h.d.RecoveryStrategies(r.Context()), flow.TypeBrowser)
+	f, err := NewFlow(h.d.Config(), h.d.Config().SelfServiceFlowRecoveryRequestLifespan(r.Context()), h.d.GenerateCSRFToken(r), r, activeRecoveryStrategy, flow.TypeBrowser)
 	if err != nil {
 		h.d.SelfServiceErrorManager().Forward(r.Context(), w, r, err)
 		return

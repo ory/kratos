@@ -33,6 +33,7 @@ type (
 	StrategyProvider interface {
 		AllRecoveryStrategies() Strategies
 		RecoveryStrategies(ctx context.Context) Strategies
+		GetActiveRecoveryStrategy(ctx context.Context) (Strategy, error)
 	}
 )
 

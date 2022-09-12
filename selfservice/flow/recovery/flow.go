@@ -96,7 +96,7 @@ type Flow struct {
 	NID                 uuid.UUID     `json:"-"  faker:"-" db:"nid"`
 }
 
-func NewFlow(conf *config.Config, exp time.Duration, csrf string, r *http.Request, strategies Strategies, ft flow.Type) (*Flow, error) {
+func NewFlow(conf *config.Config, exp time.Duration, csrf string, r *http.Request, strategy Strategy, ft flow.Type) (*Flow, error) {
 	now := time.Now().UTC()
 	id := x.NewUUID()
 
@@ -127,15 +127,7 @@ func NewFlow(conf *config.Config, exp time.Duration, csrf string, r *http.Reques
 		Type:      ft,
 	}
 
-	// Currently, there are two recovery methods: "code" and (legacy) "link"
-	// Since it doesn't make sense to have both in one recovery flow and users
-	// should not have the option to decide whether to recieve a link _or_ code,
-	// we use the first strategy that has been passed in.
-	// If "code" is enabled, it is first here, so the flow always uses "code"
-	// If "code" is disabled, use "link"
-	// TODO: Remove this once we remove "link" completely
-	if len(strategies) > 0 {
-		strategy := strategies[0]
+	if strategy != nil {
 		flow.Active = sqlxx.NullString(strategy.RecoveryNodeGroup())
 		if err := strategy.PopulateRecoveryMethod(r, flow); err != nil {
 			return nil, err
@@ -145,13 +137,13 @@ func NewFlow(conf *config.Config, exp time.Duration, csrf string, r *http.Reques
 	return flow, nil
 }
 
-func FromOldFlow(conf *config.Config, exp time.Duration, csrf string, r *http.Request, strategies Strategies, of Flow) (*Flow, error) {
+func FromOldFlow(conf *config.Config, exp time.Duration, csrf string, r *http.Request, strategy Strategy, of Flow) (*Flow, error) {
 	f := of.Type
 	// Using the same flow in the recovery/verification context can lead to using API flow in a verification/recovery email
 	if of.Type == flow.TypeAPI {
 		f = flow.TypeBrowser
 	}
-	nf, err := NewFlow(conf, exp, csrf, r, strategies, f)
+	nf, err := NewFlow(conf, exp, csrf, r, strategy, f)
 	if err != nil {
 		return nil, err
 	}

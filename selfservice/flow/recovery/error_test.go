@@ -38,6 +38,7 @@ func TestHandleError(t *testing.T) {
 	ctx := context.Background()
 	conf, reg := internal.NewFastRegistryWithMocks(t)
 	conf.MustSet(ctx, config.ViperKeySelfServiceRecoveryEnabled, true)
+	conf.MustSet(ctx, config.ViperKeySelfServiceRecoveryUse, "code")
 
 	public, _ := testhelpers.NewKratosServer(t, reg)
 
@@ -66,7 +67,9 @@ func TestHandleError(t *testing.T) {
 
 	newFlow := func(t *testing.T, ttl time.Duration, ft flow.Type) *recovery.Flow {
 		req := &http.Request{URL: urlx.ParseOrPanic("/")}
-		f, err := recovery.NewFlow(conf, ttl, x.FakeCSRFToken, req, reg.RecoveryStrategies(context.Background()), ft)
+		s, err := reg.GetActiveRecoveryStrategy(context.Background())
+		require.NoError(t, err)
+		f, err := recovery.NewFlow(conf, ttl, x.FakeCSRFToken, req, s, ft)
 		require.NoError(t, err)
 		require.NoError(t, reg.RecoveryFlowPersister().CreateRecoveryFlow(context.Background(), f))
 		f, err = reg.RecoveryFlowPersister().GetRecoveryFlow(context.Background(), f.ID)
