@@ -354,22 +354,22 @@ type submitSelfServiceRecoveryFlowBody struct{}
 //
 // More information can be found at [Ory Kratos Account Recovery Documentation](../self-service/flows/account-recovery).
 //
-//	Consumes:
-//	- application/json
-//	- application/x-www-form-urlencoded
+//		Consumes:
+//		- application/json
+//		- application/x-www-form-urlencoded
 //
-//	Produces:
-//	- application/json
+//		Produces:
+//		- application/json
 //
-//	Schemes: http, https
+//		Schemes: http, https
 //
-//     Responses:
-//       200: selfServiceRecoveryFlow
-//       303: emptyResponse
-//       400: selfServiceRecoveryFlow
-//       410: jsonError
-//       422: selfServiceBrowserLocationChangeRequiredError
-//       500: jsonError
+//	    Responses:
+//	      200: selfServiceRecoveryFlow
+//	      303: emptyResponse
+//	      400: selfServiceRecoveryFlow
+//	      410: jsonError
+//	      422: selfServiceBrowserLocationChangeRequiredError
+//	      500: jsonError
 func (h *Handler) submitFlow(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	rid, err := flow.GetFlowID(r)
 	if err != nil {
