@@ -1,4 +1,4 @@
-CREATE TABLE IF NOT EXISTS "session_metadata"
+CREATE TABLE IF NOT EXISTS "session_devices"
 (
   "id"         TEXT PRIMARY KEY,
   "ip_address" TEXT DEFAULT '',

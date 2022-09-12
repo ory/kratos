@@ -1,4 +1,4 @@
-CREATE TABLE "session_metadata"
+CREATE TABLE "session_devices"
 (
   "id"         UUID      NOT NULL,
   PRIMARY KEY ("id"),

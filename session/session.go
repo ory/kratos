@@ -32,11 +32,11 @@ type refreshWindowProvider interface {
 	SessionRefreshMinTimeLeft(ctx context.Context) time.Duration
 }
 
-// Metadata of the Client corresponding to a Session
+// Device corresponding to a Session
 //
-// swagger:model sessionMetadata
-type Metadata struct {
-	// Metadata record ID
+// swagger:model sessionDevice
+type Device struct {
+	// Device record ID
 	//
 	// required: true
 	ID uuid.UUID `json:"id" faker:"-" db:"id"`
@@ -62,8 +62,8 @@ type Metadata struct {
 	NID uuid.UUID `json:"-"  faker:"-" db:"nid"`
 }
 
-func (m Metadata) TableName(ctx context.Context) string {
-	return "session_metadata"
+func (m Device) TableName(ctx context.Context) string {
+	return "session_devices"
 }
 
 // A Session
@@ -118,8 +118,8 @@ type Session struct {
 	// required: true
 	Identity *identity.Identity `json:"identity" faker:"identity" db:"-" belongs_to:"identities" fk_id:"IdentityID"`
 
-	// Metadata has history of all clients where the session was used
-	Metadata []Metadata `json:"metadata" faker:"-" db:"-"`
+	// Devices has history of all endpoints where the session was used
+	Devices []Device `json:"devices" faker:"-" db:"-"`
 
 	// IdentityID is a helper struct field for gobuffalo.pop.
 	IdentityID uuid.UUID `json:"-" faker:"-" db:"identity_id"`
@@ -221,33 +221,33 @@ func (s *Session) Activate(r *http.Request, i *identity.Identity, c lifespanProv
 	s.Identity = i
 	s.IdentityID = i.ID
 
-	s.SaveSessionMeta(r)
+	s.SaveSessionDeviceInformation(r)
 	s.SetAuthenticatorAssuranceLevel()
 	return nil
 }
 
-func (s *Session) SaveSessionMeta(r *http.Request) {
-	var metadata Metadata
+func (s *Session) SaveSessionDeviceInformation(r *http.Request) {
+	var device Device
 
-	metadata.ID = x.NewUUID()
-	metadata.SessionID = s.ID
-	metadata.CreatedAt = time.Now().UTC()
-	metadata.LastSeen = time.Now().UTC()
+	device.ID = x.NewUUID()
+	device.SessionID = s.ID
+	device.CreatedAt = time.Now().UTC()
+	device.LastSeen = time.Now().UTC()
 
 	agent := r.Header["User-Agent"]
 	if len(agent) > 0 {
-		metadata.UserAgent = stringsx.GetPointer(strings.Join(agent, " "))
+		device.UserAgent = stringsx.GetPointer(strings.Join(agent, " "))
 	}
 
 	if trueClientIP := r.Header.Get("True-Client-IP"); trueClientIP != "" {
-		metadata.IPAddress = &trueClientIP
+		device.IPAddress = &trueClientIP
 	} else if realClientIP := r.Header.Get("X-Real-IP"); realClientIP != "" {
-		metadata.IPAddress = &realClientIP
+		device.IPAddress = &realClientIP
 	} else if forwardedIP := r.Header["X-Forwarded-For"]; len(forwardedIP) != 0 {
 		ip, _ := httpx.GetClientIPAddress(forwardedIP, httpx.InternalIPSet)
-		metadata.IPAddress = &ip
+		device.IPAddress = &ip
 	} else {
-		metadata.IPAddress = &r.RemoteAddr
+		device.IPAddress = &r.RemoteAddr
 	}
 
 	clientGeoLocation := []string{r.Header.Get("Cf-Ipcity"), r.Header.Get("Cf-Ipcountry")}
@@ -259,9 +259,9 @@ func (s *Session) SaveSessionMeta(r *http.Request) {
 		}
 		sb.WriteString(i)
 	}
-	metadata.Location = stringsx.GetPointer(sb.String())
+	device.Location = stringsx.GetPointer(sb.String())
 
-	s.Metadata = append(s.Metadata, metadata)
+	s.Devices = append(s.Devices, device)
 }
 
 func (s *Session) Declassify() *Session {

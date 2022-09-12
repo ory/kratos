@@ -1,1 +1,1 @@
-DROP TABLE session_metadata;
+DROP TABLE session_devices;

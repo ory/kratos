@@ -1,4 +1,4 @@
-CREATE TABLE `session_metadata`
+CREATE TABLE `session_devices`
 (
   `id`         char(36) NOT NULL,
   PRIMARY KEY (`id`),
