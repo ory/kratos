@@ -873,7 +873,7 @@ func (p *Config) SelfServiceFlowRecoveryUI(ctx context.Context) *url.URL {
 	return p.ParseAbsoluteOrRelativeURIOrFail(ctx, ViperKeySelfServiceRecoveryUI)
 }
 
-// SessionLifespan returns nil when the value is not set.
+// SessionLifespan returns time.Hour*24 when the value is not set.
 func (p *Config) SessionLifespan(ctx context.Context) time.Duration {
 	return p.GetProvider(ctx).DurationF(ViperKeySessionLifespan, time.Hour*24)
 }

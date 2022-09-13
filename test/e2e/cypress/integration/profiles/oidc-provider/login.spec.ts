@@ -1,6 +1,6 @@
-import { gen } from '../../../../helpers'
+import { gen } from '../../../helpers'
 import * as uuid from 'uuid'
-import * as oauth2 from '../../../../helpers/oauth2'
+import * as oauth2 from '../../../helpers/oauth2'
 
 context('OpenID Provider', () => {
   const client = {
@@ -86,6 +86,9 @@ context('OpenID Provider', () => {
                 expect(token).to.have.property('token_type')
                 expect(token).to.have.property('expires_in')
                 expect(token.scope).to.equal('offline openid')
+                let idToken = JSON.parse(decodeURIComponent(escape(window.atob(token.id_token.split('.')[1]))))
+                expect(idToken).to.have.property('amr')
+                expect(idToken.amr).to.deep.equal(["password"])
               })
           })
       })
@@ -161,6 +164,72 @@ context('OpenID Provider', () => {
       })
   })
 
+  it('respects-login-remember-config', () => {
+    let odicLogin = () => {
+      const email = gen.email()
+      const password = gen.password()
+      cy.registerApi({
+        email: email,
+        password: password,
+        fields: { 'traits.website': 'http://t1.local' }
+      })
+
+      let state = uuid.v4().toString().replace(/-/g, '')
+      let nonce = uuid.v4().toString().replace(/-/g, '')
+      const scope = ['offline', 'openid']
+
+      let url = oauth2.getAuthorizeURL(
+        client.auth_endpoint,
+        '',
+        client.id,
+        '0',
+        nonce,
+        'https://httpbin.org/anything',
+        'code',
+        ['offline', 'openid'],
+        state,
+        undefined
+      )
+
+      cy.visit(url)
+
+      // kratos login ui
+      cy.get('[name=identifier]').type(email)
+      cy.get('[name=password]').type(password)
+      cy.get('[type=submit]').click()
+
+      // consent ui
+      cy.get('#accept').click()
+    }
+
+    cy.clearAllCookies()
+    cy.updateConfigFile((config) => {
+      config.session.cookie = config.session.cookie || {}
+      config.session.cookie.persistent = true
+      config.session.lifespan = "1234s"
+      return config
+    })
+
+    odicLogin()
+    cy.getCookie('oauth2_authentication_session_insecure').should('not.be.null')
+    cy.getCookie('oauth2_authentication_session_insecure').then(cookie => {
+      let expected = (Date.now() / 1000) + 1234
+      let precision = 10
+      expect(cookie.expiry).to.be.lessThan(expected + precision)
+      expect(cookie.expiry).to.be.greaterThan(expected - precision)
+    })
+
+    cy.clearAllCookies()
+    cy.updateConfigFile((config) => {
+      config.session.cookie = config.session.cookie || {}
+      config.session.cookie.persistent = false
+      return config
+    })
+
+    odicLogin()
+    cy.getCookie('oauth2_authentication_session_insecure').should('be.null')
+  })
+
   it('registration', () => {
     const state = uuid.v4()
     const nonce = uuid.v4()
@@ -229,6 +298,9 @@ context('OpenID Provider', () => {
                 expect(token).to.have.property('token_type')
                 expect(token).to.have.property('expires_in')
                 expect(token.scope).to.equal('offline openid')
+                let idToken = JSON.parse(decodeURIComponent(escape(window.atob(token.id_token.split('.')[1]))))
+                expect(idToken).to.have.property('amr')
+                expect(idToken.amr).to.deep.equal(["password"])
               })
           })
       })

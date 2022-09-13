@@ -1,4 +1,4 @@
-import { routes as express } from '../../../../helpers/express'
+import { routes as express } from '../../../helpers/express'
 
 context('OpenID Provider', () => {
   it('should fail with invalid login_challenge', () => {

@@ -8,6 +8,7 @@ import (
 
 	"github.com/ory/herodot"
 	hydraclientgo "github.com/ory/hydra-client-go"
+	"github.com/ory/kratos/session"
 )
 
 func GetHydraAdminAPIClient(hydra_admin_url string) hydraclientgo.AdminApi {
@@ -29,10 +30,16 @@ func GetHydraLoginRequest(hydra_admin_url string, hlc uuid.UUID) (*hydraclientgo
 	return resp, nil
 }
 
-func AcceptHydraLoginRequest(hydra_admin_url string, hlc uuid.UUID, sub string) (*hydraclientgo.CompletedRequest, error) {
+func AcceptHydraLoginRequest(hydra_admin_url string, hlc uuid.UUID, sub string, remember bool, remember_for int64, amr session.AuthenticationMethods) (*hydraclientgo.CompletedRequest, error) {
 	adminClient := GetHydraAdminAPIClient(hydra_admin_url)
-	// TODO remember...
 	alr := hydraclientgo.NewAcceptLoginRequest(sub)
+	alr.Remember = &remember
+	alr.RememberFor = &remember_for
+	alr.Amr = []string{}
+	for _, r := range amr {
+		alr.Amr = append(alr.Amr, string(r.Method))
+	}
+
 	resp, r, err := adminClient.AcceptLoginRequest(context.Background()).LoginChallenge(fmt.Sprintf("%x", hlc)).AcceptLoginRequest(*alr).Execute()
 	if err != nil {
 		return nil, herodot.ErrInternalServerError.

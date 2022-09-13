@@ -205,7 +205,14 @@ func (e *HookExecutor) PostLoginHook(w http.ResponseWriter, r *http.Request, g n
 
 	if a.HydraLoginChallenge != uuid.Nil {
 		hydra_admin_url := e.d.Config().SelfServiceFlowHydraAdminURL(r.Context())
-		cr, err := hydraclient.AcceptHydraLoginRequest(hydra_admin_url.String(), a.HydraLoginChallenge, i.ID.String())
+		cr, err := hydraclient.AcceptHydraLoginRequest(
+			hydra_admin_url.String(),
+			a.HydraLoginChallenge,
+			i.ID.String(),
+			e.d.Config().SessionPersistentCookie(r.Context()),
+			int64(e.d.Config().SessionLifespan(r.Context())/time.Second),
+			s.AMR,
+		)
 		if err != nil {
 			return errors.WithStack(err)
 		}

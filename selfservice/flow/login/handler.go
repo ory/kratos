@@ -379,7 +379,14 @@ func (h *Handler) initBrowserFlow(w http.ResponseWriter, r *http.Request, ps htt
 				h.d.SelfServiceErrorManager().Forward(r.Context(), w, r, errors.WithStack(herodot.ErrBadRequest.WithReason("We received a Hydra Login Challenge, but SelfServiceFlowHydraAdminURL is not configured")))
 				return
 			}
-			cr, err := hydraclient.AcceptHydraLoginRequest(hydra_admin_url.String(), hlc, sess.IdentityID.String())
+			cr, err := hydraclient.AcceptHydraLoginRequest(
+				hydra_admin_url.String(),
+				hlc,
+				sess.IdentityID.String(),
+				h.d.Config().SessionPersistentCookie(r.Context()),
+				int64(h.d.Config().SessionLifespan(r.Context())/time.Second),
+				sess.AMR,
+			)
 			if err != nil {
 				h.d.SelfServiceErrorManager().Forward(r.Context(), w, r, err)
 				return
