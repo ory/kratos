@@ -25,6 +25,7 @@ import (
 func TestManager(t *testing.T) {
 	ctx := context.Background()
 	conf, reg := internal.NewFastRegistryWithMocks(t)
+	initViper(t, conf)
 	testhelpers.SetDefaultIdentitySchema(conf, "file://./stub/default.schema.json")
 	conf.MustSet(ctx, config.ViperKeyPublicBaseURL, "https://www.ory.sh/")
 	conf.MustSet(ctx, config.ViperKeyCourierSMTPURL, "smtp://foo@bar@dev.null/")
