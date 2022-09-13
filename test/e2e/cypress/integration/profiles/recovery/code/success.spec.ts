@@ -31,7 +31,8 @@ context('Account Recovery Success', () => {
         cy.longRecoveryLifespan()
         cy.longLinkLifespan()
         cy.disableVerification()
-        cy.enableRecovery('code')
+        cy.enableRecovery()
+        cy.useRecoveryStrategy('code')
 
         identity = gen.identityWithWebsite()
         cy.registerApi(identity)
@@ -66,6 +67,27 @@ context('Account Recovery Success', () => {
           cookieUrl: base
         })
       })
+
+      it('should recover account with correct code after entering wrong code', () => {
+        const identity = gen.identityWithWebsite()
+        cy.registerApi(identity)
+        cy.visit(recovery)
+        cy.get(appPrefix(app) + "input[name='email']").type(identity.email)
+        cy.get("button[value='code']").click()
+        cy.get('[data-testid="ui/message/1060003"]').should(
+          'have.text',
+          'An email containing a recovery code has been sent to the email address you provided.'
+        )
+        cy.get("input[name='code']").type('123123') // Invalid code
+        cy.get("button[value='code']").click()
+        cy.get('[data-testid="ui/message/4060006"]').should(
+          'have.text',
+          'The recovery code is invalid or has already been used. Please try again.'
+        )
+        cy.noSession()
+        cy.recoveryEmailWithCode({ expect: { email: identity.email } })
+        cy.get("button[value='code']").click()
+      })
     })
   })
 
@@ -80,7 +102,8 @@ context('Account Recovery Success', () => {
     cy.longRecoveryLifespan()
     cy.longLinkLifespan()
     cy.disableVerification()
-    cy.enableRecovery('code')
+    cy.enableRecovery()
+    cy.useRecoveryStrategy('code')
 
     const identity = gen.identityWithWebsite()
     cy.registerApi(identity)

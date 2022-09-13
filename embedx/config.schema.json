@@ -1611,6 +1611,9 @@
             "recovery": {
               "$ref": "#/definitions/courierTemplates"
             },
+            "recovery_code": {
+              "$ref": "#/definitions/courierTemplates"
+            },
             "verification": {
               "$ref": "#/definitions/courierTemplates"
             }

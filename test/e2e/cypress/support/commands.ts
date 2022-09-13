@@ -228,12 +228,22 @@ Cypress.Commands.add('enableVerification', ({} = {}) => {
   })
 })
 
-Cypress.Commands.add('enableRecovery', (strategy: RecoveryStrategy) => {
+Cypress.Commands.add('enableRecovery', () => {
   updateConfigFile((config) => {
     if (!config.selfservice.flows.recovery) {
       config.selfservice.flows.recovery = {}
     }
     config.selfservice.flows.recovery.enabled = true
+    return config
+  })
+})
+
+Cypress.Commands.add('useRecoveryStrategy', (strategy: RecoveryStrategy) => {
+  updateConfigFile((config) => {
+    if (!config.selfservice.flows.recovery) {
+      config.selfservice.flows.recovery = {}
+    }
+    config.selfservice.flows.recovery.use = strategy
     if (!config.selfservice.methods[strategy]) {
       config.selfservice.methods[strategy] = {}
     }
@@ -638,6 +648,36 @@ Cypress.Commands.add('remoteCourierRecoveryTemplates', ({} = {}) => {
               html: 'base64://SGksCgp0aGlzIGlzIGEgcmVtb3RlIHRlbXBsYXRlCnBsZWFzZSByZWNvdmVyIGFjY2VzcyB0byB5b3VyIGFjY291bnQgYnkgY2xpY2tpbmcgdGhlIGZvbGxvd2luZyBsaW5rOgo8YSBocmVmPSJ7eyAuUmVjb3ZlcnlVUkwgfX0iPnt7IC5SZWNvdmVyeVVSTCB9fTwvYT4=',
               plaintext:
                 'base64://SGksCgp0aGlzIGlzIGEgcmVtb3RlIHRlbXBsYXRlCnBsZWFzZSByZWNvdmVyIGFjY2VzcyB0byB5b3VyIGFjY291bnQgYnkgY2xpY2tpbmcgdGhlIGZvbGxvd2luZyBsaW5rOgp7eyAuUmVjb3ZlcnlVUkwgfX0='
+            },
+            subject: 'base64://UmVjb3ZlciBhY2Nlc3MgdG8geW91ciBhY2NvdW50'
+          }
+        }
+      }
+    }
+    return config
+  })
+})
+
+Cypress.Commands.add('remoteCourierRecoveryCodeTemplates', ({} = {}) => {
+  updateConfigFile((config) => {
+    config.courier.templates = {
+      recovery_code: {
+        invalid: {
+          email: {
+            body: {
+              html: 'base64://SGksCgp0aGlzIGlzIGEgcmVtb3RlIGludmFsaWQgcmVjb3ZlcnkgdGVtcGxhdGU=',
+              plaintext:
+                'base64://SGksCgp0aGlzIGlzIGEgcmVtb3RlIGludmFsaWQgcmVjb3ZlcnkgdGVtcGxhdGU='
+            },
+            subject: 'base64://QWNjb3VudCBBY2Nlc3MgQXR0ZW1wdGVk'
+          }
+        },
+        valid: {
+          email: {
+            body: {
+              html: 'base64://SGksCgp0aGlzIGlzIGEgcmVtb3RlIGludmFsaWQgcmVjb3ZlcnkgdGVtcGxhdGUKcGxlYXNlIHJlY292ZXIgYWNjZXNzIHRvIHlvdXIgYWNjb3VudCBieSBlbnRlcmluZyB0aGUgZm9sbG93aW5nIGNvZGU6Cgp7eyAuUmVjb3ZlcnlDb2RlIH19Cg==',
+              plaintext:
+                'base64://SGksCgp0aGlzIGlzIGEgcmVtb3RlIGludmFsaWQgcmVjb3ZlcnkgdGVtcGxhdGUKcGxlYXNlIHJlY292ZXIgYWNjZXNzIHRvIHlvdXIgYWNjb3VudCBieSBlbnRlcmluZyB0aGUgZm9sbG93aW5nIGNvZGU6Cgp7eyAuUmVjb3ZlcnlDb2RlIH19Cg=='
             },
             subject: 'base64://UmVjb3ZlciBhY2Nlc3MgdG8geW91ciBhY2NvdW50'
           }

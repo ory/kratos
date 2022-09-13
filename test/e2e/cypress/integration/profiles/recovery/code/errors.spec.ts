@@ -27,7 +27,37 @@ context('Account Recovery Errors', () => {
         cy.longRecoveryLifespan()
         cy.longCodeLifespan()
         cy.disableVerification()
-        cy.enableRecovery('code')
+        cy.enableRecovery()
+        cy.useRecoveryStrategy('code')
+      })
+
+      it('should invalidate flow if wrong code is submitted too often', () => {
+        const identity = gen.identityWithWebsite()
+        cy.registerApi(identity)
+        cy.visit(recovery)
+        cy.get(appPrefix(app) + "input[name='email']").type(identity.email)
+        cy.get("button[value='code']").click()
+        cy.get('[data-testid="ui/message/1060003"]').should(
+          'have.text',
+          'An email containing a recovery code has been sent to the email address you provided.'
+        )
+        for (let i = 0; i < 5; i++) {
+          cy.get("input[name='code']").type(i + '' + i) // Invalid code
+          cy.get("button[value='code']").click()
+          cy.get('[data-testid="ui/message/4060006"]').should(
+            'have.text',
+            'The recovery code is invalid or has already been used. Please try again.'
+          )
+          cy.noSession()
+        }
+
+        cy.get("input[name='code']").type('123123') // Invalid code
+        cy.get("button[value='code']").click()
+        cy.get('[data-testid="ui/message/4060007"]').should(
+          'have.text',
+          'The recovery was submitted too often. Please try again.'
+        )
+        cy.noSession()
       })
 
       it('shows code expired message if expired code is submitted', () => {
@@ -86,37 +116,6 @@ context('Account Recovery Errors', () => {
         cy.get('[name="method"][value="code"]').should('exist')
       })
 
-      it('should cause non-repeating form errors after submitting empty form twice. see: #2512', () => {
-        cy.visit(recovery)
-        cy.get('button[value="code"]').click()
-        cy.location('pathname').should('eq', '/recovery')
-
-        cy.get('button[value="code"]').click()
-        cy.get('[data-testid="ui/message/4000002"]').should(
-          'contain.text',
-          'Property email is missing.'
-        )
-        cy.get('form')
-          .find('[data-testid="ui/message/4000002"]')
-          .should('have.length', 1)
-        cy.get('[name="method"][value="code"]').should('exist')
-      })
-
-      it('is unable to recover the email address if the code is expired', () => {
-        cy.shortLinkLifespan()
-        const identity = gen.identityWithWebsite()
-        cy.registerApi(identity)
-        cy.recoverApi({ email: identity.email })
-        cy.recoverEmailButExpired({ expect: { email: identity.email } })
-
-        cy.get('[data-testid="ui/message/4060005"]').should(
-          'contain.text',
-          'The recovery flow expired'
-        )
-
-        cy.noSession()
-      })
-
       it('is unable to recover the account if the code is incorrect', () => {
         const identity = gen.identityWithWebsite()
         cy.registerApi(identity)
@@ -136,10 +135,33 @@ context('Account Recovery Errors', () => {
         cy.noSession()
       })
 
+      it('should cause non-repeating form errors after submitting empty form twice. see: #2512', () => {
+        cy.visit(recovery)
+        cy.get('button[value="code"]').click()
+        cy.location('pathname').should('eq', '/recovery')
+
+        cy.get('button[value="code"]').click()
+        cy.get('[data-testid="ui/message/4000002"]').should(
+          'contain.text',
+          'Property email is missing.'
+        )
+        cy.get('form')
+          .find('[data-testid="ui/message/4000002"]')
+          .should('have.length', 1)
+        cy.get('[name="method"][value="code"]').should('exist')
+      })
+
       it('invalid remote recovery email template', () => {
-        cy.remoteCourierRecoveryTemplates()
+        cy.remoteCourierRecoveryCodeTemplates()
         const identity = gen.identityWithWebsite()
-        cy.recoverApi({ email: identity.email })
+        cy.registerApi(identity)
+        cy.visit(recovery)
+        cy.get(appPrefix(app) + "input[name='email']").type(identity.email)
+        cy.get("button[value='code']").click()
+        cy.get('[data-testid="ui/message/1060003"]').should(
+          'have.text',
+          'An email containing a recovery code has been sent to the email address you provided.'
+        )
 
         cy.getMail().then((mail) => {
           expect(mail.body).to.include(

@@ -183,6 +183,11 @@ declare global {
       remoteCourierRecoveryTemplates(): Chainable<void>
 
       /**
+       * Change the courier recovery code invalid and valid templates to remote base64 strings
+       */
+      remoteCourierRecoveryCodeTemplates(): Chainable<void>
+
+      /**
        * Changes the config so that the registration flow lifespan is very short.
        *
        * Useful when testing expiry of registration flows.
@@ -464,7 +469,12 @@ declare global {
       /**
        * Enables recovery
        */
-      enableRecovery(strategy: RecoveryStrategy): Chainable<void>
+      enableRecovery(): Chainable<void>
+
+      /**
+       * Sets the recovery strategy to use
+       */
+      useRecoveryStrategy(strategy: RecoveryStrategy): Chainable<void>
 
       /**
        * Disables a specific recovery strategy
