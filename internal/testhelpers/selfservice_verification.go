@@ -51,6 +51,7 @@ func GetRecoveryFlow(t *testing.T, client *http.Client, ts *httptest.Server) *kr
 		GetSelfServiceRecoveryFlow(context.Background()).
 		Id(flowID).
 		Execute()
+	assert.NotEmpty(t, rs.Active)
 	require.NoError(t, err, "expected no error when fetching recovery flow: %s", err)
 
 	return rs
@@ -83,6 +84,7 @@ func InitializeRecoveryFlowViaBrowser(t *testing.T, client *http.Client, isSPA b
 	require.NoError(t, res.Body.Close())
 	rs, _, err := publicClient.V0alpha2Api.GetSelfServiceRecoveryFlow(context.Background()).Id(res.Request.URL.Query().Get("flow")).Execute()
 	require.NoError(t, err)
+	assert.NotEmpty(t, rs.Active)
 
 	return rs
 }
@@ -92,6 +94,7 @@ func InitializeRecoveryFlowViaAPI(t *testing.T, client *http.Client, ts *httptes
 
 	rs, _, err := publicClient.V0alpha2Api.InitializeSelfServiceRecoveryFlowWithoutBrowser(context.Background()).Execute()
 	require.NoError(t, err)
+	assert.NotEmpty(t, rs.Active)
 
 	return rs
 }
