@@ -3463,7 +3463,7 @@
           "format": "date-time"
         },
         "recovery_code": {
-          "description": "RecoverCode is the code that should be used to recover the account",
+          "description": "RecoveryCode is the code that can be used to recover the account",
           "type": "string"
         },
         "recovery_link": {

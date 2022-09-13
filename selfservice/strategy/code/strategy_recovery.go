@@ -102,7 +102,7 @@ type selfServiceRecoveryCode struct {
 	// format: uri
 	RecoveryLink string `json:"recovery_link"`
 
-	// RecoverCode is the code that should be used to recover the account
+	// RecoveryCode is the code that can be used to recover the account
 	//
 	// required: true
 	RecoveryCode string `json:"recovery_code"`
