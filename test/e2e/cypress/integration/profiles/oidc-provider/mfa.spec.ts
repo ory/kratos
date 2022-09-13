@@ -1,8 +1,8 @@
 import { authenticator } from 'otplib'
 import * as uuid from 'uuid'
-import { gen } from '../../../../helpers'
-import { routes as express } from '../../../../helpers/express'
-import * as oauth2 from '../../../../helpers/oauth2'
+import { gen } from '../../../helpers'
+import { routes as express } from '../../../helpers/express'
+import * as oauth2 from '../../../helpers/oauth2'
 
 context('OIDC Provider 2FA', () => {
   const client = {
@@ -141,6 +141,9 @@ context('OIDC Provider 2FA', () => {
                         expect(token).to.have.property('token_type')
                         expect(token).to.have.property('expires_in')
                         expect(token.scope).to.equal('offline openid')
+                        let idToken = JSON.parse(decodeURIComponent(escape(window.atob(token.id_token.split('.')[1]))))
+                        expect(idToken).to.have.property('amr')
+                        expect(idToken.amr).to.deep.equal(["password", "totp"])
                       })
                   })
               })
@@ -212,6 +215,9 @@ context('OIDC Provider 2FA', () => {
                             expect(token).to.have.property('token_type')
                             expect(token).to.have.property('expires_in')
                             expect(token.scope).to.equal('offline openid')
+                            let idToken = JSON.parse(decodeURIComponent(escape(window.atob(token.id_token.split('.')[1]))))
+                            expect(idToken).to.have.property('amr')
+                            expect(idToken.amr).to.deep.equal(["password", "totp"])
                           })
                       })
                   })

@@ -2327,7 +2327,7 @@
             },
             "persistent": {
               "title": "Make Session Cookie Persistent",
-              "description": "If set to true will persist the cookie in the end-user's browser using the `max-age` parameter which is set to the `session.lifespan` value. Persistent cookies are not deleted when the browser is closed (e.g. on reboot or alt+f4).",
+              "description": "If set to true will persist the cookie in the end-user's browser using the `max-age` parameter which is set to the `session.lifespan` value. Persistent cookies are not deleted when the browser is closed (e.g. on reboot or alt+f4). This option also applies to sessions initiated by third parties via OIDC.",
               "type": "boolean",
               "default": true
             },
