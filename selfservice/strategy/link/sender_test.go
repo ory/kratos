@@ -40,6 +40,7 @@ func TestManager(t *testing.T) {
 
 	t.Run("method=SendRecoveryLink", func(t *testing.T) {
 		s, err := reg.RecoveryStrategies(ctx).Strategy("link")
+		require.NoError(t, err)
 		f, err := recovery.NewFlow(conf, time.Hour, "", u, s, flow.TypeBrowser)
 		require.NoError(t, err)
 
