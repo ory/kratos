@@ -86,9 +86,13 @@ context('OpenID Provider', () => {
                 expect(token).to.have.property('token_type')
                 expect(token).to.have.property('expires_in')
                 expect(token.scope).to.equal('offline openid')
-                let idToken = JSON.parse(decodeURIComponent(escape(window.atob(token.id_token.split('.')[1]))))
+                let idToken = JSON.parse(
+                  decodeURIComponent(
+                    escape(window.atob(token.id_token.split('.')[1]))
+                  )
+                )
                 expect(idToken).to.have.property('amr')
-                expect(idToken.amr).to.deep.equal(["password"])
+                expect(idToken.amr).to.deep.equal(['password'])
               })
           })
       })

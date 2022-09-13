@@ -22,7 +22,8 @@ type SelfServiceLoginFlow struct {
 	// CreatedAt is a helper struct field for gobuffalo.pop.
 	CreatedAt *time.Time `json:"created_at,omitempty"`
 	// ExpiresAt is the time (UTC) when the flow expires. If the user still wishes to log in, a new flow has to be initiated.
-	ExpiresAt time.Time `json:"expires_at"`
+	ExpiresAt         time.Time     `json:"expires_at"`
+	HydraLoginRequest *LoginRequest `json:"hydra_login_request,omitempty"`
 	// ID represents the flow's unique ID. When performing the login flow, this represents the id in the login UI's query parameter: http://<selfservice.flows.login.ui_url>/?flow=<flow_id>
 	Id string `json:"id"`
 	// IssuedAt is the time (UTC) when the flow started.
@@ -150,6 +151,38 @@ func (o *SelfServiceLoginFlow) GetExpiresAtOk() (*time.Time, bool) {
 // SetExpiresAt sets field value
 func (o *SelfServiceLoginFlow) SetExpiresAt(v time.Time) {
 	o.ExpiresAt = v
+}
+
+// GetHydraLoginRequest returns the HydraLoginRequest field value if set, zero value otherwise.
+func (o *SelfServiceLoginFlow) GetHydraLoginRequest() LoginRequest {
+	if o == nil || o.HydraLoginRequest == nil {
+		var ret LoginRequest
+		return ret
+	}
+	return *o.HydraLoginRequest
+}
+
+// GetHydraLoginRequestOk returns a tuple with the HydraLoginRequest field value if set, nil otherwise
+// and a boolean to check if the value has been set.
+func (o *SelfServiceLoginFlow) GetHydraLoginRequestOk() (*LoginRequest, bool) {
+	if o == nil || o.HydraLoginRequest == nil {
+		return nil, false
+	}
+	return o.HydraLoginRequest, true
+}
+
+// HasHydraLoginRequest returns a boolean if a field has been set.
+func (o *SelfServiceLoginFlow) HasHydraLoginRequest() bool {
+	if o != nil && o.HydraLoginRequest != nil {
+		return true
+	}
+
+	return false
+}
+
+// SetHydraLoginRequest gets a reference to the given LoginRequest and assigns it to the HydraLoginRequest field.
+func (o *SelfServiceLoginFlow) SetHydraLoginRequest(v LoginRequest) {
+	o.HydraLoginRequest = &v
 }
 
 // GetId returns the Id field value
@@ -410,6 +443,9 @@ func (o SelfServiceLoginFlow) MarshalJSON() ([]byte, error) {
 	}
 	if true {
 		toSerialize["expires_at"] = o.ExpiresAt
+	}
+	if o.HydraLoginRequest != nil {
+		toSerialize["hydra_login_request"] = o.HydraLoginRequest
 	}
 	if true {
 		toSerialize["id"] = o.Id

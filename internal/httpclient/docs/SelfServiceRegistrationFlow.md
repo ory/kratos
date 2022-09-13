@@ -6,6 +6,7 @@ Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
 **Active** | Pointer to [**IdentityCredentialsType**](IdentityCredentialsType.md) |  | [optional] 
 **ExpiresAt** | **time.Time** | ExpiresAt is the time (UTC) when the flow expires. If the user still wishes to log in, a new flow has to be initiated. | 
+**HydraLoginRequest** | Pointer to [**LoginRequest**](LoginRequest.md) |  | [optional] 
 **Id** | **string** | ID represents the flow&#39;s unique ID. When performing the registration flow, this represents the id in the registration ui&#39;s query parameter: http://&lt;selfservice.flows.registration.ui_url&gt;/?flow&#x3D;&lt;id&gt; | 
 **IssuedAt** | **time.Time** | IssuedAt is the time (UTC) when the flow occurred. | 
 **RequestUrl** | **string** | RequestURL is the initial URL that was requested from Ory Kratos. It can be used to forward information contained in the URL&#39;s path or query for example. | 
@@ -76,6 +77,31 @@ and a boolean to check if the value has been set.
 
 SetExpiresAt sets ExpiresAt field to given value.
 
+
+### GetHydraLoginRequest
+
+`func (o *SelfServiceRegistrationFlow) GetHydraLoginRequest() LoginRequest`
+
+GetHydraLoginRequest returns the HydraLoginRequest field if non-nil, zero value otherwise.
+
+### GetHydraLoginRequestOk
+
+`func (o *SelfServiceRegistrationFlow) GetHydraLoginRequestOk() (*LoginRequest, bool)`
+
+GetHydraLoginRequestOk returns a tuple with the HydraLoginRequest field if it's non-nil, zero value otherwise
+and a boolean to check if the value has been set.
+
+### SetHydraLoginRequest
+
+`func (o *SelfServiceRegistrationFlow) SetHydraLoginRequest(v LoginRequest)`
+
+SetHydraLoginRequest sets HydraLoginRequest field to given value.
+
+### HasHydraLoginRequest
+
+`func (o *SelfServiceRegistrationFlow) HasHydraLoginRequest() bool`
+
+HasHydraLoginRequest returns a boolean if a field has been set.
 
 ### GetId
 

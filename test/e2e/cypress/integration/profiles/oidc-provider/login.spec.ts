@@ -86,9 +86,13 @@ context('OpenID Provider', () => {
                 expect(token).to.have.property('token_type')
                 expect(token).to.have.property('expires_in')
                 expect(token.scope).to.equal('offline openid')
-                let idToken = JSON.parse(decodeURIComponent(escape(window.atob(token.id_token.split('.')[1]))))
+                let idToken = JSON.parse(
+                  decodeURIComponent(
+                    escape(window.atob(token.id_token.split('.')[1]))
+                  )
+                )
                 expect(idToken).to.have.property('amr')
-                expect(idToken.amr).to.deep.equal(["password"])
+                expect(idToken.amr).to.deep.equal(['password'])
               })
           })
       })
@@ -206,14 +210,14 @@ context('OpenID Provider', () => {
     cy.updateConfigFile((config) => {
       config.session.cookie = config.session.cookie || {}
       config.session.cookie.persistent = true
-      config.session.lifespan = "1234s"
+      config.session.lifespan = '1234s'
       return config
     })
 
     odicLogin()
     cy.getCookie('oauth2_authentication_session_insecure').should('not.be.null')
-    cy.getCookie('oauth2_authentication_session_insecure').then(cookie => {
-      let expected = (Date.now() / 1000) + 1234
+    cy.getCookie('oauth2_authentication_session_insecure').then((cookie) => {
+      let expected = Date.now() / 1000 + 1234
       let precision = 10
       expect(cookie.expiry).to.be.lessThan(expected + precision)
       expect(cookie.expiry).to.be.greaterThan(expected - precision)
@@ -298,9 +302,13 @@ context('OpenID Provider', () => {
                 expect(token).to.have.property('token_type')
                 expect(token).to.have.property('expires_in')
                 expect(token.scope).to.equal('offline openid')
-                let idToken = JSON.parse(decodeURIComponent(escape(window.atob(token.id_token.split('.')[1]))))
+                let idToken = JSON.parse(
+                  decodeURIComponent(
+                    escape(window.atob(token.id_token.split('.')[1]))
+                  )
+                )
                 expect(idToken).to.have.property('amr')
-                expect(idToken.amr).to.deep.equal(["password"])
+                expect(idToken.amr).to.deep.equal(['password'])
               })
           })
       })
