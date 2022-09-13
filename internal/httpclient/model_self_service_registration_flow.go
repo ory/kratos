@@ -20,7 +20,8 @@ import (
 type SelfServiceRegistrationFlow struct {
 	Active *IdentityCredentialsType `json:"active,omitempty"`
 	// ExpiresAt is the time (UTC) when the flow expires. If the user still wishes to log in, a new flow has to be initiated.
-	ExpiresAt time.Time `json:"expires_at"`
+	ExpiresAt         time.Time     `json:"expires_at"`
+	HydraLoginRequest *LoginRequest `json:"hydra_login_request,omitempty"`
 	// ID represents the flow's unique ID. When performing the registration flow, this represents the id in the registration ui's query parameter: http://<selfservice.flows.registration.ui_url>/?flow=<id>
 	Id string `json:"id"`
 	// IssuedAt is the time (UTC) when the flow occurred.
@@ -111,6 +112,38 @@ func (o *SelfServiceRegistrationFlow) GetExpiresAtOk() (*time.Time, bool) {
 // SetExpiresAt sets field value
 func (o *SelfServiceRegistrationFlow) SetExpiresAt(v time.Time) {
 	o.ExpiresAt = v
+}
+
+// GetHydraLoginRequest returns the HydraLoginRequest field value if set, zero value otherwise.
+func (o *SelfServiceRegistrationFlow) GetHydraLoginRequest() LoginRequest {
+	if o == nil || o.HydraLoginRequest == nil {
+		var ret LoginRequest
+		return ret
+	}
+	return *o.HydraLoginRequest
+}
+
+// GetHydraLoginRequestOk returns a tuple with the HydraLoginRequest field value if set, nil otherwise
+// and a boolean to check if the value has been set.
+func (o *SelfServiceRegistrationFlow) GetHydraLoginRequestOk() (*LoginRequest, bool) {
+	if o == nil || o.HydraLoginRequest == nil {
+		return nil, false
+	}
+	return o.HydraLoginRequest, true
+}
+
+// HasHydraLoginRequest returns a boolean if a field has been set.
+func (o *SelfServiceRegistrationFlow) HasHydraLoginRequest() bool {
+	if o != nil && o.HydraLoginRequest != nil {
+		return true
+	}
+
+	return false
+}
+
+// SetHydraLoginRequest gets a reference to the given LoginRequest and assigns it to the HydraLoginRequest field.
+func (o *SelfServiceRegistrationFlow) SetHydraLoginRequest(v LoginRequest) {
+	o.HydraLoginRequest = &v
 }
 
 // GetId returns the Id field value
@@ -272,6 +305,9 @@ func (o SelfServiceRegistrationFlow) MarshalJSON() ([]byte, error) {
 	}
 	if true {
 		toSerialize["expires_at"] = o.ExpiresAt
+	}
+	if o.HydraLoginRequest != nil {
+		toSerialize["hydra_login_request"] = o.HydraLoginRequest
 	}
 	if true {
 		toSerialize["id"] = o.Id
