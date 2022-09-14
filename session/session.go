@@ -57,7 +57,7 @@ type Device struct {
 	CreatedAt time.Time `json:"seen_at" faker:"-" db:"created_at"`
 
 	// Last seen
-	LastSeen time.Time `json:"last_seen" faker:"-" db:"last_seen"`
+	UpdatedAt time.Time `json:"last_seen" faker:"-" db:"updated_at"`
 
 	NID uuid.UUID `json:"-"  faker:"-" db:"nid"`
 }
@@ -231,8 +231,6 @@ func (s *Session) SaveSessionDeviceInformation(r *http.Request) {
 
 	device.ID = x.NewUUID()
 	device.SessionID = s.ID
-	device.CreatedAt = time.Now().UTC()
-	device.LastSeen = time.Now().UTC()
 
 	agent := r.Header["User-Agent"]
 	if len(agent) > 0 {

@@ -99,7 +99,7 @@ func TestSession(t *testing.T) {
 		assert.Equal(t, authAt, s.AuthenticatedAt)
 		assert.Equal(t, 1, len(s.Devices))
 		assert.Equal(t, s.ID.String(), s.Devices[0].SessionID.String())
-		assert.NotNil(t, s.Devices[0].LastSeen)
+		assert.NotNil(t, s.Devices[0].UpdatedAt)
 		assert.NotNil(t, s.Devices[0].CreatedAt)
 		assert.Equal(t, "54.155.246.155", *s.Devices[0].IPAddress)
 		assert.Equal(t, "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/51.0.2704.103 Safari/537.36", *s.Devices[0].UserAgent)
