@@ -24,8 +24,9 @@ func (p *Persister) GetSession(ctx context.Context, sid uuid.UUID) (*session.Ses
 	defer span.End()
 
 	var s session.Session
+	s.Devices = make([]session.Device, 0)
 	nid := p.NetworkID(ctx)
-	if err := p.GetConnection(ctx).Where("id = ? AND nid = ?", sid, nid).First(&s); err != nil {
+	if err := p.GetConnection(ctx).EagerPreload("Devices").Where("id = ? AND nid = ?", sid, nid).First(&s); err != nil {
 		return nil, sqlcon.HandleError(err)
 	}
 
@@ -36,27 +37,8 @@ func (p *Persister) GetSession(ctx context.Context, sid uuid.UUID) (*session.Ses
 		return nil, err
 	}
 
-	devices, err := p.GetSessionDevices(ctx, sid)
-	if err != nil {
-		return nil, err
-	}
-
 	s.Identity = i
-	s.Devices = devices
 	return &s, nil
-}
-
-func (p *Persister) GetSessionDevices(ctx context.Context, sid uuid.UUID) ([]session.Device, error) {
-	ctx, span := p.r.Tracer(ctx).Tracer().Start(ctx, "persistence.sql.GetSessionDevices")
-	defer span.End()
-
-	devices := make([]session.Device, 0)
-	nid := p.NetworkID(ctx)
-	if err := p.GetConnection(ctx).Where("session_id = ? AND nid = ?", sid, nid).All(&devices); err != nil {
-		return nil, sqlcon.HandleError(err)
-	}
-
-	return devices, nil
 }
 
 // ListSessionsByIdentity retrieves sessions for an identity from the store.
@@ -75,7 +57,7 @@ func (p *Persister) ListSessionsByIdentity(ctx context.Context, iID uuid.UUID, a
 		if active != nil {
 			q = q.Where("active = ?", *active)
 		}
-		if err := q.All(&s); err != nil {
+		if err := q.Eager("Devices").All(&s); err != nil {
 			return sqlcon.HandleError(err)
 		}
 
@@ -85,13 +67,7 @@ func (p *Persister) ListSessionsByIdentity(ctx context.Context, iID uuid.UUID, a
 				return err
 			}
 
-			devices, err := p.GetSessionDevices(ctx, s.ID)
-			if err != nil {
-				return err
-			}
-
 			s.Identity = i
-			s.Devices = devices
 		}
 		return nil
 	}); err != nil {

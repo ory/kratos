@@ -10,5 +10,6 @@ CREATE TABLE "session_devices"
   "created_at" timestamp NOT NULL,
   "last_seen"  timestamp NOT NULL,
   CONSTRAINT "session_metadata_sessions_id_fk" FOREIGN KEY ("session_id") REFERENCES "sessions" ("id") ON DELETE cascade,
-  CONSTRAINT "session_metadata_nid_fk" FOREIGN KEY ("nid") REFERENCES "networks" ("id") ON DELETE cascade
+  CONSTRAINT "session_metadata_nid_fk" FOREIGN KEY ("nid") REFERENCES "networks" ("id") ON DELETE cascade,
+  CONSTRAINT unique_session_device UNIQUE (nid, session_id, ip_address, user_agent)
 );
