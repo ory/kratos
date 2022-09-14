@@ -857,8 +857,14 @@ Cypress.Commands.add('deleteMail', ({ atLeast = 0 } = {}) => {
   let count = 0
   const req = () =>
     cy
-      .request('DELETE', `${MAIL_API}/mail`, { pruneCode: 'all' })
+      .request({
+        method: 'DELETE',
+        url: `${MAIL_API}/mail`,
+        body: { pruneCode: 'all' },
+        failOnStatusCode: false
+      })
       .then(({ body }) => {
+        cy.log(body)
         count += parseInt(body)
         if (count < atLeast && tries < 100) {
           cy.log(

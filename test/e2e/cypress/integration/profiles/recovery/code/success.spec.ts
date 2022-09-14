@@ -2,7 +2,7 @@ import { appPrefix, assertRecoveryAddress, gen } from '../../../../helpers'
 import { routes as react } from '../../../../helpers/react'
 import { routes as express } from '../../../../helpers/express'
 
-context('Account Recovery Success', () => {
+context('Account Recovery With Code Success', () => {
   ;[
     {
       recovery: react.recovery,
@@ -94,16 +94,26 @@ context('Account Recovery Success', () => {
         cy.noSession()
         cy.recoveryEmailWithCode({ expect: { email: identity.email } })
         cy.get("button[value='code']").click()
+
+        cy.getSession()
+        cy.location('pathname').should('eq', '/settings')
+        cy.get('input[name="traits.email"]').should(
+          'have.value',
+          identity.email
+        )
       })
     })
   })
 
   it('should recover, set password and be redirected', () => {
+    const app = 'express' as 'express'
+    cy.deleteMail()
     cy.useConfigProfile('recovery')
-    cy.proxy('express')
+    cy.proxy(app)
+
     cy.deleteMail()
     cy.longRecoveryLifespan()
-    cy.longLinkLifespan()
+    cy.longCodeLifespan()
     cy.disableVerification()
     cy.enableRecovery()
     cy.useRecoveryStrategy('code')
