@@ -3,6 +3,7 @@ package hydraclient
 import (
 	"context"
 	"fmt"
+	"github.com/pkg/errors"
 
 	"github.com/gofrs/uuid"
 
@@ -22,10 +23,9 @@ func GetHydraAdminAPIClient(hydra_admin_url string) hydraclientgo.AdminApi {
 func GetHydraLoginRequest(hydra_admin_url string, hlc uuid.UUID) (*hydraclientgo.LoginRequest, error) {
 	resp, r, err := GetHydraAdminAPIClient(hydra_admin_url).GetLoginRequest(context.Background()).LoginChallenge(fmt.Sprintf("%x", hlc)).Execute()
 	if err != nil {
-		return nil, herodot.ErrInternalServerError.
+		return nil, errors.WithStack(herodot.ErrInternalServerError.
 			WithError(err.Error()).
-			WithDetail("status_code", r.StatusCode).
-			WithDebugf("hydra_admin_url=%s", hydra_admin_url)
+			WithDetail("status_code", r.StatusCode))
 	}
 	return resp, nil
 }
@@ -42,10 +42,9 @@ func AcceptHydraLoginRequest(hydra_admin_url string, hlc uuid.UUID, sub string, 
 
 	resp, r, err := adminClient.AcceptLoginRequest(context.Background()).LoginChallenge(fmt.Sprintf("%x", hlc)).AcceptLoginRequest(*alr).Execute()
 	if err != nil {
-		return nil, herodot.ErrInternalServerError.
+		return nil, errors.WithStack(herodot.ErrInternalServerError.
 			WithError(err.Error()).
-			WithDetail("status_code", r.StatusCode).
-			WithDebugf("hydra_admin_url=%s", hydra_admin_url)
+			WithDetail("status_code", r.StatusCode))
 	}
 	return resp, nil
 }
