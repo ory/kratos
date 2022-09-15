@@ -57,7 +57,7 @@ type Device struct {
 	CreatedAt time.Time `json:"seen_at" faker:"-" db:"created_at"`
 
 	// Last seen
-	LastSeen time.Time `json:"last_seen" faker:"-" db:"last_seen"`
+	UpdatedAt time.Time `json:"last_seen" faker:"-" db:"updated_at"`
 
 	NID uuid.UUID `json:"-"  faker:"-" db:"nid"`
 }
@@ -119,7 +119,7 @@ type Session struct {
 	Identity *identity.Identity `json:"identity" faker:"identity" db:"-" belongs_to:"identities" fk_id:"IdentityID"`
 
 	// Devices has history of all endpoints where the session was used
-	Devices []Device `json:"devices" faker:"-" db:"-"`
+	Devices []Device `json:"devices" faker:"-" has_many:"session_devices" fk_id:"session_id"`
 
 	// IdentityID is a helper struct field for gobuffalo.pop.
 	IdentityID uuid.UUID `json:"-" faker:"-" db:"identity_id"`
@@ -231,8 +231,6 @@ func (s *Session) SaveSessionDeviceInformation(r *http.Request) {
 
 	device.ID = x.NewUUID()
 	device.SessionID = s.ID
-	device.CreatedAt = time.Now().UTC()
-	device.LastSeen = time.Now().UTC()
 
 	agent := r.Header["User-Agent"]
 	if len(agent) > 0 {

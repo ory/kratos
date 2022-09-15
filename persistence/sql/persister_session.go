@@ -24,8 +24,9 @@ func (p *Persister) GetSession(ctx context.Context, sid uuid.UUID) (*session.Ses
 	defer span.End()
 
 	var s session.Session
+	s.Devices = make([]session.Device, 0)
 	nid := p.NetworkID(ctx)
-	if err := p.GetConnection(ctx).Where("id = ? AND nid = ?", sid, nid).First(&s); err != nil {
+	if err := p.GetConnection(ctx).EagerPreload("Devices").Where("id = ? AND nid = ?", sid, nid).First(&s); err != nil {
 		return nil, sqlcon.HandleError(err)
 	}
 
@@ -36,27 +37,8 @@ func (p *Persister) GetSession(ctx context.Context, sid uuid.UUID) (*session.Ses
 		return nil, err
 	}
 
-	devices, err := p.GetSessionDevices(ctx, sid)
-	if err != nil {
-		return nil, err
-	}
-
 	s.Identity = i
-	s.Devices = devices
 	return &s, nil
-}
-
-func (p *Persister) GetSessionDevices(ctx context.Context, sid uuid.UUID) ([]session.Device, error) {
-	ctx, span := p.r.Tracer(ctx).Tracer().Start(ctx, "persistence.sql.GetSessionDevices")
-	defer span.End()
-
-	devices := make([]session.Device, 0)
-	nid := p.NetworkID(ctx)
-	if err := p.GetConnection(ctx).Where("session_id = ? AND nid = ?", sid, nid).All(&devices); err != nil {
-		return nil, sqlcon.HandleError(err)
-	}
-
-	return devices, nil
 }
 
 // ListSessionsByIdentity retrieves sessions for an identity from the store.
@@ -75,7 +57,7 @@ func (p *Persister) ListSessionsByIdentity(ctx context.Context, iID uuid.UUID, a
 		if active != nil {
 			q = q.Where("active = ?", *active)
 		}
-		if err := q.All(&s); err != nil {
+		if err := q.Eager("Devices").All(&s); err != nil {
 			return sqlcon.HandleError(err)
 		}
 
@@ -85,13 +67,7 @@ func (p *Persister) ListSessionsByIdentity(ctx context.Context, iID uuid.UUID, a
 				return err
 			}
 
-			devices, err := p.GetSessionDevices(ctx, s.ID)
-			if err != nil {
-				return err
-			}
-
 			s.Identity = i
-			s.Devices = devices
 		}
 		return nil
 	}); err != nil {
@@ -107,15 +83,34 @@ func (p *Persister) UpsertSession(ctx context.Context, s *session.Session) error
 
 	s.NID = p.NetworkID(ctx)
 
-	if err := p.Connection(ctx).Find(new(session.Session), s.ID); errors.Is(err, sql.ErrNoRows) {
-		// This must not be eager or identities will be created / updated
-		return errors.WithStack(p.GetConnection(ctx).Create(s))
-	} else if err != nil {
-		return errors.WithStack(err)
-	}
+	return errors.WithStack(p.Transaction(ctx, func(ctx context.Context, tx *pop.Connection) error {
+		if err := tx.Find(new(session.Session), s.ID); errors.Is(err, sql.ErrNoRows) {
+			// This must not be eager or identities will be created / updated
+			err = errors.WithStack(tx.Create(s))
+			if err != nil {
+				return err
+			}
 
-	// This must not be eager or identities will be created / updated
-	return p.GetConnection(ctx).Update(s)
+			for i := range s.Devices {
+				device := &(s.Devices[i])
+				device.SessionID = s.ID
+				device.NID = s.NID
+
+				if err := tx.Create(device); err != nil {
+					return err
+				}
+
+				s.Devices[i] = *device
+			}
+
+			return nil
+		} else if err != nil {
+			return errors.WithStack(err)
+		}
+
+		// This must not be eager or identities will be created / updated
+		return tx.Update(s)
+	}))
 }
 
 func (p *Persister) DeleteSession(ctx context.Context, sid uuid.UUID) error {
