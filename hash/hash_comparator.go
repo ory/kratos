@@ -304,8 +304,8 @@ func decodeScryptHash(encodedHash string) (p *Scrypt, salt, hash []byte, err err
 	return p, salt, hash, nil
 }
 
-// decodeScryptHash decodes Scrypt encoded password hash.
-// format: $scrypt$ln=<mem_cost>,r=<rounds>,p=<parallelization>$<salt>$<hash>$<salt_separator>$<signer_key>
+// decodeFirebaseScryptHash decodes Firebase Scrypt encoded password hash.
+// format: $firescrypt$ln=<mem_cost>,r=<rounds>,p=<parallelization>$<salt>$<hash>$<salt_separator>$<signer_key>
 func decodeFirebaseScryptHash(encodedHash string) (p *Scrypt, salt, saltSeparator, hash, signerKey []byte, err error) {
 	parts := strings.Split(encodedHash, "$")
 	if len(parts) != 7 {
