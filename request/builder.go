@@ -9,6 +9,8 @@ import (
 	"reflect"
 	"strings"
 
+	"github.com/ory/x/jsonnetsecure"
+
 	"github.com/pkg/errors"
 
 	"github.com/google/go-jsonnet"
@@ -106,7 +108,7 @@ func (b *Builder) addJSONBody(template *bytes.Buffer, body interface{}) error {
 		return errors.WithStack(err)
 	}
 
-	vm := jsonnet.MakeVM()
+	vm := jsonnetsecure.MakeSecureVM()
 	vm.TLACode("ctx", buf.String())
 
 	res, err := vm.EvaluateAnonymousSnippet(b.conf.TemplateURI, template.String())
@@ -138,7 +140,7 @@ func (b *Builder) addURLEncodedBody(template *bytes.Buffer, body interface{}) er
 		return err
 	}
 
-	vm := jsonnet.MakeVM()
+	vm := jsonnetsecure.MakeSecureVM()
 	vm.TLACode("ctx", buf.String())
 
 	res, err := vm.EvaluateAnonymousSnippet(b.conf.TemplateURI, template.String())
