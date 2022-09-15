@@ -96,8 +96,7 @@ func (p *Persister) UpsertSession(ctx context.Context, s *session.Session) error
 				device.SessionID = s.ID
 				device.NID = s.NID
 
-				err = tx.Create(device)
-				if err != nil {
+				if err := tx.Create(device); err != nil {
 					return err
 				}
 
