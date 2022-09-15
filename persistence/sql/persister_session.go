@@ -91,7 +91,7 @@ func (p *Persister) UpsertSession(ctx context.Context, s *session.Session) error
 				return err
 			}
 
-			for i := 0; i < len(s.Devices); i++ {
+			for i := range s.Devices {
 				device := &(s.Devices[i])
 				device.SessionID = s.ID
 				device.NID = s.NID
