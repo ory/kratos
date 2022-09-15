@@ -42,14 +42,14 @@ jobs:
         ports:
           - 3306:3306
     env:
-      TEST_MAILHOG_SMTP: "smtp://test:test@127.0.0.1:1025/?disable_starttls=true"
+      TEST_MAILHOG_SMTP: 'smtp://test:test@127.0.0.1:1025/?disable_starttls=true'
       TEST_MAILHOG_API: http://127.0.0.1:8025
       TEST_SELFSERVICE_OIDC_HYDRA_ADMIN: http://localhost:4445
       TEST_SELFSERVICE_OIDC_HYDRA_PUBLIC: http://localhost:4444
       TEST_SELFSERVICE_OIDC_HYDRA_INTEGRATION_ADDR: http://127.0.0.1:4499
-      TEST_DATABASE_POSTGRESQL: "postgres://test:test@localhost:5432/postgres?sslmode=disable"
-      TEST_DATABASE_MYSQL: "mysql://root:test@(localhost:3306)/mysql?parseTime=true&multiStatements=true"
-      TEST_DATABASE_COCKROACHDB: "cockroach://root@localhost:26257/defaultdb?sslmode=disable"
+      TEST_DATABASE_POSTGRESQL: 'postgres://test:test@localhost:5432/postgres?sslmode=disable'
+      TEST_DATABASE_MYSQL: 'mysql://root:test@(localhost:3306)/mysql?parseTime=true&multiStatements=true'
+      TEST_DATABASE_COCKROACHDB: 'cockroach://root@localhost:26257/defaultdb?sslmode=disable'
     steps:
       - run: |
           docker create --name cockroach -p 26257:26257 \
@@ -133,9 +133,9 @@ jobs:
           - 4437:4437
           - 1025:1025
     env:
-      TEST_DATABASE_POSTGRESQL: "postgres://test:test@localhost:5432/postgres?sslmode=disable"
-      TEST_DATABASE_MYSQL: "mysql://root:test@(localhost:3306)/mysql?parseTime=true&multiStatements=true"
-      TEST_DATABASE_COCKROACHDB: "cockroach://root@localhost:26257/defaultdb?sslmode=disable"
+      TEST_DATABASE_POSTGRESQL: 'postgres://test:test@localhost:5432/postgres?sslmode=disable'
+      TEST_DATABASE_MYSQL: 'mysql://root:test@(localhost:3306)/mysql?parseTime=true&multiStatements=true'
+      TEST_DATABASE_COCKROACHDB: 'cockroach://root@localhost:26257/defaultdb?sslmode=disable'
     strategy:
       matrix:
         database: ['postgres', 'cockroach', 'sqlite', 'mysql']
@@ -192,7 +192,6 @@ jobs:
         with:
           name: logs
           path: test/e2e/*.e2e.log
-
 
   docs-cli:
     runs-on: ubuntu-latest
