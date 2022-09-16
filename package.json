@@ -1,7 +1,6 @@
 {
   "private": true,
   "scripts": {
-    "format": "",
     "openapi-generator-cli": "openapi-generator-cli",
     "test": "cypress run --browser chrome",
     "test:watch": "cypress open --browser chrome",
