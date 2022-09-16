@@ -1,16 +1,12 @@
 {
   "private": true,
   "scripts": {
-    "format": "prettier --write ${npm_package_config_prettierTarget}",
-    "format:check": "prettier --check ${npm_package_config_prettierTarget}",
+    "format": "",
     "openapi-generator-cli": "openapi-generator-cli",
     "test": "cypress run --browser chrome",
     "test:watch": "cypress open --browser chrome",
     "text-run": "exit 0",
     "wait-on": "wait-on"
-  },
-  "config": {
-    "prettierTarget": "test/e2e/**/*{.ts,.js}"
   },
   "prettier": "ory-prettier-styles",
   "dependencies": {

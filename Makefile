@@ -51,8 +51,9 @@ docs/swagger:
 		bash <(curl https://raw.githubusercontent.com/ory/meta/master/install.sh) -d -b .bin ory v0.1.33
 		touch -a -m .bin/ory
 
-node_modules: package.json Makefile
+node_modules: package.json
 		npm ci
+		touch node_modules
 
 .bin/golangci-lint: Makefile
 		curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -d -b .bin v1.47.3
@@ -136,7 +137,7 @@ quickstart-dev:
 .PHONY: format
 format: .bin/goimports node_modules
 		goimports -w -local github.com/ory .
-		npm run format
+		npm exec -- prettier --write 'test/e2e/**/*{.ts,.js}'
 
 # Build local docker image
 .PHONY: docker
