@@ -208,11 +208,13 @@ jobs:
   changelog:
     name: Generate changelog
     runs-on: ubuntu-latest
-    if: ${{ github.ref_type == 'tag' || github.ref_name == 'master' }}
     needs:
       - test
       - test-e2e
     steps:
+      - uses: ory/ci/prettier@master
+        with:
+          action: 'write'
       - uses: ory/ci/changelog@master
         with:
           token: ${{ secrets.ORY_BOT_PAT }}
