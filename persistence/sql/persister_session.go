@@ -86,8 +86,7 @@ func (p *Persister) UpsertSession(ctx context.Context, s *session.Session) error
 	return errors.WithStack(p.Transaction(ctx, func(ctx context.Context, tx *pop.Connection) error {
 		if err := tx.Find(new(session.Session), s.ID); errors.Is(err, sql.ErrNoRows) {
 			// This must not be eager or identities will be created / updated
-			err = errors.WithStack(tx.Create(s))
-			if err != nil {
+			if err := sqlcon.HandleError(tx.Create(s)); err != nil {
 				return err
 			}
 
