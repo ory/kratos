@@ -3,9 +3,10 @@ package session_test
 import (
 	"context"
 	"fmt"
-	"github.com/ory/kratos/x"
 	"testing"
 	"time"
+
+	"github.com/ory/kratos/x"
 
 	"github.com/stretchr/testify/require"
 
