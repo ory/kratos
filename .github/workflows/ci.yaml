@@ -83,8 +83,8 @@ jobs:
         uses: sonatype-nexus-community/nancy-github-action@v1.0.2
       - run: npm install
         name: Install node deps
-      - name: Run prettier
-        run: npm run format:check
+      - run: make format && git diff HEAD --exit-code --color
+        name: Check formatting issues
       - name: Run golangci-lint
         uses: golangci/golangci-lint-action@v2
         env:
@@ -138,7 +138,7 @@ jobs:
       TEST_DATABASE_COCKROACHDB: 'cockroach://root@localhost:26257/defaultdb?sslmode=disable'
     strategy:
       matrix:
-        database: ['postgres', 'cockroach', 'sqlite', 'mysql']
+        database: [ 'postgres', 'cockroach', 'sqlite', 'mysql' ]
     steps:
       - run: |
           docker create --name cockroach -p 26257:26257 \
