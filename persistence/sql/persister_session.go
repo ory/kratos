@@ -2,7 +2,6 @@ package sql
 
 import (
 	"context"
-	"database/sql"
 	"fmt"
 	"time"
 
@@ -77,6 +76,9 @@ func (p *Persister) ListSessionsByIdentity(ctx context.Context, iID uuid.UUID, a
 	return s, nil
 }
 
+// UpsertSession creates a session if not found else updates.
+// This operation also inserts Session device records when a session is being created.
+// The update operation skips updating Session device records since only one record would need to be updated in this case.
 func (p *Persister) UpsertSession(ctx context.Context, s *session.Session) error {
 	ctx, span := p.r.Tracer(ctx).Tracer().Start(ctx, "persistence.sql.UpsertSession")
 	defer span.End()
@@ -84,7 +86,7 @@ func (p *Persister) UpsertSession(ctx context.Context, s *session.Session) error
 	s.NID = p.NetworkID(ctx)
 
 	return errors.WithStack(p.Transaction(ctx, func(ctx context.Context, tx *pop.Connection) error {
-		if err := tx.Find(new(session.Session), s.ID); errors.Is(err, sql.ErrNoRows) {
+		if err := sqlcon.HandleError(tx.Where("id = ? AND nid = ?", s.ID, s.NID).First(new(session.Session))); errors.Is(err, sqlcon.ErrNoRows) {
 			// This must not be eager or identities will be created / updated
 			if err := sqlcon.HandleError(tx.Create(s)); err != nil {
 				return err
@@ -95,7 +97,7 @@ func (p *Persister) UpsertSession(ctx context.Context, s *session.Session) error
 				device.SessionID = s.ID
 				device.NID = s.NID
 
-				if err := tx.Create(device); err != nil {
+				if err := sqlcon.HandleError(tx.Create(device)); err != nil {
 					return err
 				}
 
@@ -104,10 +106,11 @@ func (p *Persister) UpsertSession(ctx context.Context, s *session.Session) error
 
 			return nil
 		} else if err != nil {
-			return errors.WithStack(err)
+			return err
 		}
 
 		// This must not be eager or identities will be created / updated
+		// Only update session and not corresponding session device records
 		return tx.Update(s)
 	}))
 }
