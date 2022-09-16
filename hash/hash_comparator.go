@@ -8,6 +8,9 @@ import (
 	"regexp"
 	"strings"
 
+	"github.com/jsimonetti/pwscheme/ssha"
+	"github.com/jsimonetti/pwscheme/ssha256"
+	"github.com/jsimonetti/pwscheme/ssha512"
 	"github.com/pkg/errors"
 	"golang.org/x/crypto/argon2"
 	"golang.org/x/crypto/bcrypt"
@@ -31,6 +34,12 @@ func Compare(ctx context.Context, password []byte, hash []byte) error {
 		return ComparePbkdf2(ctx, password, hash)
 	case IsScryptHash(hash):
 		return CompareScrypt(ctx, password, hash)
+	case IsSSHAHash(hash):
+		return CompareSSHA(ctx, password, hash)
+	case IsSSHA256Hash(hash):
+		return CompareSSHA256(ctx, password, hash)
+	case IsSSHA512Hash(hash):
+		return CompareSSHA512(ctx, password, hash)
 	default:
 		return errors.WithStack(ErrUnknownHashAlgorithm)
 	}
@@ -132,12 +141,42 @@ func CompareScrypt(_ context.Context, password []byte, hash []byte) error {
 	return errors.WithStack(ErrMismatchedHashAndPassword)
 }
 
+func CompareSSHA(_ context.Context, password []byte, hash []byte) error {
+
+	if _, err := ssha.Validate(string(password), string(hash)); err != nil {
+		return errors.WithStack(err)
+	}
+
+	return nil
+}
+
+func CompareSSHA256(_ context.Context, password []byte, hash []byte) error {
+
+	if _, err := ssha256.Validate(string(password), string(hash)); err != nil {
+		return errors.WithStack(err)
+	}
+
+	return nil
+}
+
+func CompareSSHA512(_ context.Context, password []byte, hash []byte) error {
+
+	if _, err := ssha512.Validate(string(password), string(hash)); err != nil {
+		return errors.WithStack(err)
+	}
+
+	return nil
+}
+
 var (
 	isBcryptHash   = regexp.MustCompile(`^\$2[abzy]?\$`)
 	isArgon2idHash = regexp.MustCompile(`^\$argon2id\$`)
 	isArgon2iHash  = regexp.MustCompile(`^\$argon2i\$`)
 	isPbkdf2Hash   = regexp.MustCompile(`^\$pbkdf2-sha[0-9]{1,3}\$`)
 	isScryptHash   = regexp.MustCompile(`^\$scrypt\$`)
+	isSSHAHash     = regexp.MustCompile(`^{SSHA}.*`)
+	isSSHA256Hash  = regexp.MustCompile(`^{SSHA256}.*`)
+	isSSHA512Hash  = regexp.MustCompile(`^{SSHA512}.*`)
 )
 
 func IsBcryptHash(hash []byte) bool {
@@ -158,6 +197,18 @@ func IsPbkdf2Hash(hash []byte) bool {
 
 func IsScryptHash(hash []byte) bool {
 	return isScryptHash.Match(hash)
+}
+
+func IsSSHAHash(hash []byte) bool {
+	return isSSHAHash.Match(hash)
+}
+
+func IsSSHA256Hash(hash []byte) bool {
+	return isSSHA256Hash.Match(hash)
+}
+
+func IsSSHA512Hash(hash []byte) bool {
+	return isSSHA512Hash.Match(hash)
 }
 
 func decodeArgon2idHash(encodedHash string) (p *config.Argon2, salt, hash []byte, err error) {

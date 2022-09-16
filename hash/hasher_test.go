@@ -242,4 +242,16 @@ func TestCompare(t *testing.T) {
 	assert.Error(t, hash.Compare(context.Background(), []byte("test"), []byte("$scrypt$ln=16385,r=8,p=1$2npRo7P03Mt8keSoMbyD/tKFWyUzjiQf2svUaNDSrhA=$MiCzNcIplSMqSBrm4HckjYqYhaVPPjTARTzwB1cVNYE=")))
 	assert.Error(t, hash.Compare(context.Background(), []byte("tesu"), []byte("$scrypt$ln=16384,r=8,p=1$2npRo7P03Mt8keSoMbyD/tKFWyUzjiQf2svUaNDSrhA=$MiCzNcIplSMqSBrm4HckjYqYhaVPPjTARTzwB1cVNYE=")))
 	assert.Error(t, hash.Compare(context.Background(), []byte("tesu"), []byte("$scrypt$ln=abc,r=8,p=1$2npRo7P03Mt8keSoMbyD/tKFWyUzjiQf2svUaNDSrhA=$MiCzNcIplSMqSBrm4HckjYqYhaVPPjTARTzwB1cVNYE=")))
+
+	assert.Nil(t, hash.Compare(context.Background(), []byte("test123"), []byte("{SSHA}JFZFs0oHzxbMwkSJmYVeI8MnTDy/276a")))
+	assert.Nil(t, hash.CompareSSHA(context.Background(), []byte("test123"), []byte("{SSHA}JFZFs0oHzxbMwkSJmYVeI8MnTDy/276a")))
+	assert.Error(t, hash.CompareSSHA(context.Background(), []byte("badtest"), []byte("{SSHA}JFZFs0oHzxbMwkSJmYVeI8MnTDy/276a")))
+
+	assert.Nil(t, hash.Compare(context.Background(), []byte("test123"), []byte("{SSHA256}czO44OTV17PcF1cRxWrLZLy9xHd7CWyVYplr1rOhuMlx/7IK")))
+	assert.Nil(t, hash.CompareSSHA256(context.Background(), []byte("test123"), []byte("{SSHA256}czO44OTV17PcF1cRxWrLZLy9xHd7CWyVYplr1rOhuMlx/7IK")))
+	assert.Error(t, hash.CompareSSHA256(context.Background(), []byte("badtest"), []byte("{SSHA256}czO44OTV17PcF1cRxWrLZLy9xHd7CWyVYplr1rOhuMlx/7IK")))
+
+	assert.Nil(t, hash.Compare(context.Background(), []byte("test123"), []byte("{SSHA512}xPUl/px+1cG55rUH4rzcwxdOIPSB2TingLpiJJumN2xyDWN4Ix1WQG3ihnvHaWUE8MYNkvMi5rf0C9NYixHsE6Yh59M=")))
+	assert.Nil(t, hash.CompareSSHA512(context.Background(), []byte("test123"), []byte("{SSHA512}xPUl/px+1cG55rUH4rzcwxdOIPSB2TingLpiJJumN2xyDWN4Ix1WQG3ihnvHaWUE8MYNkvMi5rf0C9NYixHsE6Yh59M=")))
+	assert.Error(t, hash.CompareSSHA512(context.Background(), []byte("badtest"), []byte("{SSHA512}xPUl/px+1cG55rUH4rzcwxdOIPSB2TingLpiJJumN2xyDWN4Ix1WQG3ihnvHaWUE8MYNkvMi5rf0C9NYixHsE6Yh59M=")))
 }

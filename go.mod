@@ -216,6 +216,7 @@ require (
 	github.com/joho/godotenv v1.4.0 // indirect
 	github.com/jonboulle/clockwork v0.2.2 // indirect
 	github.com/josharian/intern v1.0.0 // indirect
+	github.com/jsimonetti/pwscheme v0.0.0-20220125093853-4d9895f5db73 // indirect
 	github.com/json-iterator/go v1.1.12 // indirect
 	github.com/kballard/go-shellquote v0.0.0-20180428030007-95032a82bc51 // indirect
 	github.com/kr/pretty v0.3.0 // indirect
