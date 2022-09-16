@@ -13,3 +13,4 @@ CREATE TABLE "session_devices"
   FOREIGN KEY ("nid") REFERENCES "networks" ("id") ON DELETE cascade,
   CONSTRAINT unique_session_device UNIQUE (nid, session_id, ip_address, user_agent)
 );
+CREATE INDEX "session_devices_session_id_nid_idx" ON "session_devices" (session_id, nid);
