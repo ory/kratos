@@ -211,6 +211,14 @@ func IsSSHA512Hash(hash []byte) bool {
 	return isSSHA512Hash.Match(hash)
 }
 
+func IsValidHashFormat(hash []byte) bool {
+	if IsArgon2iHash(hash) || IsBcryptHash(hash) || IsPbkdf2Hash(hash) || IsScryptHash(hash) || IsSSHAHash(hash) || IsSSHA256Hash(hash) || IsSSHA512Hash(hash) {
+		return true
+	} else {
+		return false
+	}
+}
+
 func decodeArgon2idHash(encodedHash string) (p *config.Argon2, salt, hash []byte, err error) {
 	parts := strings.Split(encodedHash, "$")
 	if len(parts) != 6 {
