@@ -58,6 +58,12 @@ context('Account Recovery Errors', () => {
           'The recovery was submitted too often. Please try again.'
         )
         cy.noSession()
+        cy.get(appPrefix(app) + "input[name='email']").type(identity.email)
+        cy.get("button[value='code']").click()
+        cy.get('[data-testid="ui/message/1060003"]').should(
+          'have.text',
+          'An email containing a recovery code has been sent to the email address you provided.'
+        )
       })
 
       it('shows code expired message if expired code is submitted', () => {
