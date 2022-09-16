@@ -766,20 +766,15 @@ func TestRecovery(t *testing.T) {
 		res, err := c.PostForm(f.Ui.Action, form)
 		require.NoError(t, err)
 		assert.Equal(t, http.StatusOK, res.StatusCode)
+		body := ioutilx.MustReadAll(res.Body)
 
-		rs, _, err := testhelpers.
-			NewSDKCustomClient(public, c).
-			V0alpha2Api.GetSelfServiceRecoveryFlow(context.Background()).
-			Id(res.Request.URL.Query().Get("flow")).Execute()
+		require.Len(t, gjson.GetBytes(body, "ui.messages").Array(), 1)
+		assert.Equal(t, "The recovery was submitted too often. Please try again.", gjson.GetBytes(body, "ui.messages.0.text").String())
 
-		require.NoError(t, err)
+		// check that a new flow has been created
+		assert.NotEqual(t, f.Id, res.Request.URL.Query().Get("flow"))
 
-		require.Len(t, rs.Ui.Messages, 1)
-		assert.Equal(t, "The recovery was submitted too often. Please try again.", rs.Ui.Messages[0].Text)
-		json, err := rs.Ui.MarshalJSON()
-		require.NoError(t, err)
-		t.Logf("body: %s", string(json))
-		assert.True(t, gjson.GetBytes(json, "nodes.#(attributes.name==email)").Exists())
+		assert.True(t, gjson.GetBytes(body, "ui.nodes.#(attributes.name==email)").Exists())
 	})
 
 	t.Run("description=should be able to recover after using invalid code", func(t *testing.T) {

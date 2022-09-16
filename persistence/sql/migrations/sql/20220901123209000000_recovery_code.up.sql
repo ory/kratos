@@ -30,3 +30,4 @@ CREATE TABLE identity_recovery_codes
 CREATE INDEX identity_recovery_codes_id_nid_flow_id_idx ON identity_recovery_codes (id, nid, selfservice_recovery_flow_id);
 
 ALTER TABLE selfservice_recovery_flows ADD submit_count int NOT NULL DEFAULT 0;
+ALTER TABLE selfservice_recovery_flows ADD skip_csrf_check boolean NOT NULL DEFAULT FALSE;

@@ -94,6 +94,12 @@ type Flow struct {
 	// RecoveredIdentityID is a helper struct field for gobuffalo.pop.
 	RecoveredIdentityID uuid.NullUUID `json:"-" faker:"-" db:"recovered_identity_id"`
 	NID                 uuid.UUID     `json:"-"  faker:"-" db:"nid"`
+
+	// DangerousSkipCSRFCheck indicates whether anti CSRF measures should be enforced in this flow
+	//
+	// This is needed, because we can not enforce these measures, if the flow has been initialized by some else than
+	// the user.
+	DangerousSkipCSRFCheck bool `json:"-" faker:"-" db:"skip_csrf_check"`
 }
 
 func NewFlow(conf *config.Config, exp time.Duration, csrf string, r *http.Request, strategy Strategy, ft flow.Type) (*Flow, error) {
@@ -170,10 +176,6 @@ func (f Flow) GetID() uuid.UUID {
 
 func (f Flow) GetNID() uuid.UUID {
 	return f.NID
-}
-
-func (f Flow) ShouldEnforceCSRF() bool {
-	return f.Type.IsBrowser() && f.CSRFToken != ""
 }
 
 func (f *Flow) Valid() error {

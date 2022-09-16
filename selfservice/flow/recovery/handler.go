@@ -272,7 +272,7 @@ func (h *Handler) fetch(w http.ResponseWriter, r *http.Request, _ httprouter.Par
 	// Browser flows must include the CSRF token
 	//
 	// Resolves: https://github.com/ory/kratos/issues/1282
-	if f.ShouldEnforceCSRF() && !nosurf.VerifyToken(h.d.GenerateCSRFToken(r), f.CSRFToken) {
+	if f.Type.IsBrowser() && !f.DangerousSkipCSRFCheck && !nosurf.VerifyToken(h.d.GenerateCSRFToken(r), f.CSRFToken) {
 		h.d.Writer().WriteError(w, r, x.CSRFErrorReason(r, h.d))
 		return
 	}
