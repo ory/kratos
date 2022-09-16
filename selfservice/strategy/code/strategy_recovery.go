@@ -162,11 +162,11 @@ func (s *Strategy) createRecoveryCode(w http.ResponseWriter, r *http.Request, _ 
 	}
 
 	flow, err := recovery.NewFlow(config, expiresIn, s.deps.GenerateCSRFToken(r), r, s, flow.TypeBrowser)
-	flow.DangerousSkipCSRFCheck = true
 	if err != nil {
 		s.deps.Writer().WriteError(w, r, err)
 		return
 	}
+	flow.DangerousSkipCSRFCheck = true
 	flow.State = recovery.StateEmailSent
 	flow.UI.Nodes.Append(node.NewInputField("code", nil, node.CodeGroup, node.InputAttributeTypeNumber, node.WithRequiredInputAttribute).
 		WithMetaLabel(text.NewInfoNodeLabelVerifyOTP()),
