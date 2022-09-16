@@ -253,8 +253,7 @@ func (s Strategy) isCodeFlow(f *recovery.Flow) bool {
 }
 
 func (s *Strategy) Recover(w http.ResponseWriter, r *http.Request, f *recovery.Flow) (err error) {
-	if r.Method == http.MethodGet || !s.isCodeFlow(f) {
-		// The "link" strategy also uses the `GET` method to Recover, "code" doesn't
+	if !s.isCodeFlow(f) {
 		return errors.WithStack(flow.ErrStrategyNotResponsible)
 	}
 
@@ -341,6 +340,7 @@ func (s *Strategy) recoveryIssueSession(w http.ResponseWriter, r *http.Request, 
 		return s.retryRecoveryFlowWithError(w, r, f.Type, err)
 	}
 
+	// TODO: How does this work with Mobile?
 	if err := s.deps.SessionManager().UpsertAndIssueCookie(ctx, w, r, sess); err != nil {
 		return s.retryRecoveryFlowWithError(w, r, f.Type, err)
 	}
@@ -389,22 +389,20 @@ func (s *Strategy) recoveryIssueSession(w http.ResponseWriter, r *http.Request, 
 func (s *Strategy) recoveryUseCode(w http.ResponseWriter, r *http.Request, body *recoverySubmitPayload, f *recovery.Flow) error {
 	ctx := r.Context()
 	code, err := s.deps.RecoveryCodePersister().UseRecoveryCode(ctx, f.ID, body.Code)
-	if err != nil {
-		if errors.Is(err, sqlcon.ErrNoRows) {
-			if f.SubmitCount > 5 {
-				return s.retryRecoveryFlowWithMessage(w, r, f.Type, text.NewErrorValidationRecoveryFlowSubmittedTooOften())
-			}
-
-			f.UI.Messages.Clear()
-			f.UI.Messages.Add(text.NewErrorValidationRecoveryCodeInvalidOrAlreadyUsed())
-			if err := s.deps.RecoveryFlowPersister().UpdateRecoveryFlow(ctx, f); err != nil {
-				return s.retryRecoveryFlowWithError(w, r, f.Type, err)
-			}
-
-			// No error
-			return nil
+	if errors.Is(err, sqlcon.ErrNoRows) {
+		if f.SubmitCount > 5 {
+			return s.retryRecoveryFlowWithMessage(w, r, f.Type, text.NewErrorValidationRecoveryFlowSubmittedTooOften())
 		}
 
+		f.UI.Messages.Clear()
+		f.UI.Messages.Add(text.NewErrorValidationRecoveryCodeInvalidOrAlreadyUsed())
+		if err := s.deps.RecoveryFlowPersister().UpdateRecoveryFlow(ctx, f); err != nil {
+			return s.retryRecoveryFlowWithError(w, r, f.Type, err)
+		}
+
+		// No error
+		return nil
+	} else if err != nil {
 		return s.retryRecoveryFlowWithError(w, r, f.Type, err)
 	}
 
@@ -596,7 +594,7 @@ func (s *Strategy) decodeRecovery(r *http.Request) (*recoverySubmitPayload, erro
 	if err := s.dx.Decode(r, &body, compiler,
 		decoderx.HTTPDecoderUseQueryAndBody(),
 		decoderx.HTTPKeepRequestBody(true),
-		decoderx.HTTPDecoderAllowedMethods("POST", "GET"),
+		decoderx.HTTPDecoderAllowedMethods("POST"),
 		decoderx.HTTPDecoderSetValidatePayloads(true),
 		decoderx.HTTPDecoderJSONFollowsFormFormat(),
 	); err != nil {
