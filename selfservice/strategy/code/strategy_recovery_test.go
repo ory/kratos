@@ -839,14 +839,6 @@ func TestRecovery(t *testing.T) {
 
 					assert.Equal(t, gjson.GetBytes(json, "error.id").String(), "browser_location_change_required")
 					assert.Contains(t, gjson.GetBytes(json, "redirect_browser_to").String(), "settings-ts?")
-				} else if testCase.FlowType == RecoveryFlowTypeSPA {
-					assert.Equal(t, http.StatusUnprocessableEntity, res.StatusCode)
-
-					json := ioutilx.MustReadAll(res.Body)
-
-					assert.Equal(t, gjson.GetBytes(json, "error.id").String(), "browser_location_change_required")
-					assert.Contains(t, gjson.GetBytes(json, "flow_name").String(), "settings")
-					assert.NotEmpty(t, gjson.GetBytes(json, "flow_id").String())
 				}
 			})
 		}
