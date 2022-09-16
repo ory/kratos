@@ -271,7 +271,7 @@ func (s *Strategy) Recover(w http.ResponseWriter, r *http.Request, f *recovery.F
 
 	sID := s.RecoveryStrategyID()
 
-	if len(body.Code) > 0 {
+	if f.State != recovery.StateChooseMethod {
 		if err := flow.MethodEnabledAndAllowed(ctx, sID, sID, s.deps); err != nil {
 			return s.HandleRecoveryError(w, r, nil, body, err)
 		}
