@@ -212,7 +212,8 @@ func IsSSHA512Hash(hash []byte) bool {
 }
 
 func IsValidHashFormat(hash []byte) bool {
-	if IsArgon2iHash(hash) || IsBcryptHash(hash) || IsPbkdf2Hash(hash) || IsScryptHash(hash) || IsSSHAHash(hash) || IsSSHA256Hash(hash) || IsSSHA512Hash(hash) {
+	if IsArgon2iHash(hash) || IsArgon2idHash(hash) || IsBcryptHash(hash) || IsPbkdf2Hash(hash) ||
+		IsScryptHash(hash) || IsSSHAHash(hash) || IsSSHA256Hash(hash) || IsSSHA512Hash(hash) {
 		return true
 	} else {
 		return false
