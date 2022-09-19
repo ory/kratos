@@ -144,7 +144,7 @@ func CompareScrypt(_ context.Context, password []byte, hash []byte) error {
 func CompareSSHA(_ context.Context, password []byte, hash []byte) error {
 
 	if _, err := ssha.Validate(string(password), string(hash)); err != nil {
-		return errors.WithStack(err)
+		return errors.WithStack(ErrMismatchedHashAndPassword)
 	}
 
 	return nil
@@ -153,7 +153,7 @@ func CompareSSHA(_ context.Context, password []byte, hash []byte) error {
 func CompareSSHA256(_ context.Context, password []byte, hash []byte) error {
 
 	if _, err := ssha256.Validate(string(password), string(hash)); err != nil {
-		return errors.WithStack(err)
+		return errors.WithStack(ErrMismatchedHashAndPassword)
 	}
 
 	return nil
@@ -162,7 +162,7 @@ func CompareSSHA256(_ context.Context, password []byte, hash []byte) error {
 func CompareSSHA512(_ context.Context, password []byte, hash []byte) error {
 
 	if _, err := ssha512.Validate(string(password), string(hash)); err != nil {
-		return errors.WithStack(err)
+		return errors.WithStack(ErrMismatchedHashAndPassword)
 	}
 
 	return nil
