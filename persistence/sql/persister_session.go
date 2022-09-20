@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/ory/x/stringsx"
+
 	"github.com/gobuffalo/pop/v6"
 
 	"github.com/pkg/errors"
@@ -17,6 +19,9 @@ import (
 )
 
 var _ session.Persister = new(Persister)
+
+const SessionDeviceUserAgentMaxLength = 512
+const SessionDeviceLocationMaxLength = 512
 
 func (p *Persister) GetSession(ctx context.Context, sid uuid.UUID) (*session.Session, error) {
 	ctx, span := p.r.Tracer(ctx).Tracer().Start(ctx, "persistence.sql.GetSession")
@@ -96,6 +101,13 @@ func (p *Persister) UpsertSession(ctx context.Context, s *session.Session) error
 				device := &(s.Devices[i])
 				device.SessionID = s.ID
 				device.NID = s.NID
+
+				if device.Location != nil {
+					device.Location = stringsx.GetPointer(stringsx.TruncateByteLen(*device.Location, SessionDeviceLocationMaxLength))
+				}
+				if device.UserAgent != nil {
+					device.UserAgent = stringsx.GetPointer(stringsx.TruncateByteLen(*device.UserAgent, SessionDeviceUserAgentMaxLength))
+				}
 
 				if err := sqlcon.HandleError(tx.Create(device)); err != nil {
 					return err
