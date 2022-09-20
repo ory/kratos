@@ -24,8 +24,6 @@ import (
 
 	"github.com/ory/x/watcherx"
 
-	"github.com/ory/kratos/x"
-
 	"github.com/ory/kratos/internal/testhelpers"
 
 	"github.com/ory/x/configx"
@@ -775,126 +773,106 @@ func TestViperProvider_HaveIBeenPwned(t *testing.T) {
 	})
 }
 
+func newTestConfig(t *testing.T) (_ *config.Config, _ *test.Hook, exited *bool) {
+	l := logrusx.New("", "")
+	h := new(test.Hook)
+	exited = new(bool)
+	l.Logger.Hooks.Add(h)
+	l.Logger.ExitFunc = func(code int) { *exited = true }
+	config := config.MustNew(t, l, os.Stderr, configx.SkipValidation())
+	return config, h, exited
+}
+
 func TestLoadingTLSConfig(t *testing.T) {
 	ctx := context.Background()
 	t.Parallel()
 
-	certPath := filepath.Join(os.TempDir(), "e2e_test_cert_"+x.NewUUID().String()+".pem")
-	keyPath := filepath.Join(os.TempDir(), "e2e_test_key_"+x.NewUUID().String()+".pem")
+	certPath, keyPath, certBase64, keyBase64 := testhelpers.GenerateTLSCertificateFilesForTests(t)
 
-	testhelpers.GenerateTLSCertificateFilesForTests(t, certPath, keyPath)
+	t.Run("case=public: no TLS config", func(t *testing.T) {
+		p, hook, exited := newTestConfig(t)
+		assert.Nil(t, p.GetTLSCertificatesForPublic(ctx))
+		assert.Equal(t, "TLS has not been configured for public, skipping", hook.LastEntry().Message)
+		assert.False(t, *exited)
+	})
 
-	certRaw, err := os.ReadFile(certPath)
-	assert.Nil(t, err)
-
-	keyRaw, err := os.ReadFile(keyPath)
-	assert.Nil(t, err)
-
-	certBase64 := base64.StdEncoding.EncodeToString(certRaw)
-	keyBase64 := base64.StdEncoding.EncodeToString(keyRaw)
+	t.Run("case=admin: no TLS config", func(t *testing.T) {
+		p, hook, exited := newTestConfig(t)
+		assert.Nil(t, p.GetTLSCertificatesForAdmin(ctx))
+		assert.Equal(t, "TLS has not been configured for admin, skipping", hook.LastEntry().Message)
+		assert.False(t, *exited)
+	})
 
 	t.Run("case=public: loading inline base64 certificate", func(t *testing.T) {
-		logger := logrusx.New("", "")
-		logger.Logger.ExitFunc = func(code int) { panic("") }
-		hook := new(test.Hook)
-		logger.Logger.Hooks.Add(hook)
-
-		p := config.MustNew(t, logger, os.Stderr, configx.SkipValidation())
+		p, hook, exited := newTestConfig(t)
 		p.MustSet(ctx, config.ViperKeyPublicTLSKeyBase64, keyBase64)
 		p.MustSet(ctx, config.ViperKeyPublicTLSCertBase64, certBase64)
-		assert.NotNil(t, p.GetTSLCertificatesForPublic(ctx))
+		assert.NotNil(t, p.GetTLSCertificatesForPublic(ctx))
 		assert.Equal(t, "Setting up HTTPS for public", hook.LastEntry().Message)
+		assert.False(t, *exited)
 	})
 
 	t.Run("case=public: loading certificate from a file", func(t *testing.T) {
-		logger := logrusx.New("", "")
-		logger.Logger.ExitFunc = func(code int) { panic("") }
-		hook := new(test.Hook)
-		logger.Logger.Hooks.Add(hook)
-
-		p := config.MustNew(t, logger, os.Stderr, configx.SkipValidation())
+		p, hook, exited := newTestConfig(t)
 		p.MustSet(ctx, config.ViperKeyPublicTLSKeyPath, keyPath)
 		p.MustSet(ctx, config.ViperKeyPublicTLSCertPath, certPath)
-		assert.NotNil(t, p.GetTSLCertificatesForPublic(ctx))
-		assert.Equal(t, "Setting up HTTPS for public", hook.LastEntry().Message)
+		assert.NotNil(t, p.GetTLSCertificatesForPublic(ctx))
+		assert.Equal(t, "Setting up HTTPS for public (automatic certificate reloading active)", hook.LastEntry().Message)
+		assert.False(t, *exited)
 	})
 
 	t.Run("case=public: failing to load inline base64 certificate", func(t *testing.T) {
-		logger := logrusx.New("", "")
-		logger.Logger.ExitFunc = func(code int) {}
-		hook := new(test.Hook)
-		logger.Logger.Hooks.Add(hook)
-
-		p := config.MustNew(t, logger, os.Stderr, configx.SkipValidation())
+		p, hook, exited := newTestConfig(t)
 		p.MustSet(ctx, config.ViperKeyPublicTLSKeyBase64, "empty")
 		p.MustSet(ctx, config.ViperKeyPublicTLSCertBase64, certBase64)
-		assert.Nil(t, p.GetTSLCertificatesForPublic(ctx))
-		assert.Equal(t, "TLS has not been configured for public, skipping", hook.LastEntry().Message)
+		assert.Nil(t, p.GetTLSCertificatesForPublic(ctx))
+		assert.Equal(t, "Unable to load HTTPS TLS Certificate", hook.LastEntry().Message)
+		assert.True(t, *exited)
 	})
 
 	t.Run("case=public: failing to load certificate from a file", func(t *testing.T) {
-		logger := logrusx.New("", "")
-		logger.Logger.ExitFunc = func(code int) {}
-		hook := new(test.Hook)
-		logger.Logger.Hooks.Add(hook)
-
-		p := config.MustNew(t, logger, os.Stderr, configx.SkipValidation())
+		p, hook, exited := newTestConfig(t)
 		p.MustSet(ctx, config.ViperKeyPublicTLSKeyPath, "/dev/null")
 		p.MustSet(ctx, config.ViperKeyPublicTLSCertPath, certPath)
-		assert.Nil(t, p.GetTSLCertificatesForPublic(ctx))
-		assert.Equal(t, "TLS has not been configured for public, skipping", hook.LastEntry().Message)
+		assert.Nil(t, p.GetTLSCertificatesForPublic(ctx))
+		assert.Equal(t, "Unable to load HTTPS TLS Certificate", hook.LastEntry().Message)
+		assert.True(t, *exited)
 	})
 
 	t.Run("case=admin: loading inline base64 certificate", func(t *testing.T) {
-		logger := logrusx.New("", "")
-		logger.Logger.ExitFunc = func(code int) { panic("") }
-		hook := new(test.Hook)
-		logger.Logger.Hooks.Add(hook)
-
-		p := config.MustNew(t, logger, os.Stderr, configx.SkipValidation())
+		p, hook, exited := newTestConfig(t)
 		p.MustSet(ctx, config.ViperKeyAdminTLSKeyBase64, keyBase64)
 		p.MustSet(ctx, config.ViperKeyAdminTLSCertBase64, certBase64)
-		assert.NotNil(t, p.GetTSLCertificatesForAdmin(ctx))
+		assert.NotNil(t, p.GetTLSCertificatesForAdmin(ctx))
 		assert.Equal(t, "Setting up HTTPS for admin", hook.LastEntry().Message)
+		assert.False(t, *exited)
 	})
 
 	t.Run("case=admin: loading certificate from a file", func(t *testing.T) {
-		logger := logrusx.New("", "")
-		logger.Logger.ExitFunc = func(code int) { panic("") }
-		hook := new(test.Hook)
-		logger.Logger.Hooks.Add(hook)
-
-		p := config.MustNew(t, logger, os.Stderr, configx.SkipValidation())
+		p, hook, exited := newTestConfig(t)
 		p.MustSet(ctx, config.ViperKeyAdminTLSKeyPath, keyPath)
 		p.MustSet(ctx, config.ViperKeyAdminTLSCertPath, certPath)
-		assert.NotNil(t, p.GetTSLCertificatesForAdmin(ctx))
-		assert.Equal(t, "Setting up HTTPS for admin", hook.LastEntry().Message)
+		assert.NotNil(t, p.GetTLSCertificatesForAdmin(ctx))
+		assert.Equal(t, "Setting up HTTPS for admin (automatic certificate reloading active)", hook.LastEntry().Message)
+		assert.False(t, *exited)
 	})
 
 	t.Run("case=admin: failing to load inline base64 certificate", func(t *testing.T) {
-		logger := logrusx.New("", "")
-		logger.Logger.ExitFunc = func(code int) {}
-		hook := new(test.Hook)
-		logger.Logger.Hooks.Add(hook)
-
-		p := config.MustNew(t, logger, os.Stderr, configx.SkipValidation())
+		p, hook, exited := newTestConfig(t)
 		p.MustSet(ctx, config.ViperKeyAdminTLSKeyBase64, "empty")
 		p.MustSet(ctx, config.ViperKeyAdminTLSCertBase64, certBase64)
-		assert.Nil(t, p.GetTSLCertificatesForAdmin(ctx))
-		assert.Equal(t, "TLS has not been configured for admin, skipping", hook.LastEntry().Message)
+		assert.Nil(t, p.GetTLSCertificatesForAdmin(ctx))
+		assert.Equal(t, "Unable to load HTTPS TLS Certificate", hook.LastEntry().Message)
+		assert.True(t, *exited)
 	})
 
 	t.Run("case=admin: failing to load certificate from a file", func(t *testing.T) {
-		logger := logrusx.New("", "")
-		logger.Logger.ExitFunc = func(code int) {}
-		hook := new(test.Hook)
-		logger.Logger.Hooks.Add(hook)
-
-		p := config.MustNew(t, logger, os.Stderr, configx.SkipValidation())
+		p, hook, exited := newTestConfig(t)
 		p.MustSet(ctx, config.ViperKeyAdminTLSKeyPath, "/dev/null")
 		p.MustSet(ctx, config.ViperKeyAdminTLSCertPath, certPath)
-		assert.Nil(t, p.GetTSLCertificatesForAdmin(ctx))
-		assert.Equal(t, "TLS has not been configured for admin, skipping", hook.LastEntry().Message)
+		assert.Nil(t, p.GetTLSCertificatesForAdmin(ctx))
+		assert.Equal(t, "Unable to load HTTPS TLS Certificate", hook.LastEntry().Message)
+		assert.True(t, *exited)
 	})
 
 }

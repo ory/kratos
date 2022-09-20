@@ -121,7 +121,7 @@ func ServePublic(r driver.Registry, cmd *cobra.Command, args []string, slOpts *s
 		handler = cors.New(options).Handler(handler)
 	}
 
-	certs := c.GetTSLCertificatesForPublic(ctx)
+	certs := c.GetTLSCertificatesForPublic(ctx)
 
 	if tracer := r.Tracer(ctx); tracer.IsLoaded() {
 		handler = x.TraceHandler(handler)
@@ -130,7 +130,7 @@ func ServePublic(r driver.Registry, cmd *cobra.Command, args []string, slOpts *s
 	// #nosec G112 - the correct settings are set by graceful.WithDefaults
 	server := graceful.WithDefaults(&http.Server{
 		Handler:   handler,
-		TLSConfig: &tls.Config{Certificates: certs, MinVersion: tls.VersionTLS12},
+		TLSConfig: &tls.Config{GetCertificate: certs, MinVersion: tls.VersionTLS12},
 	})
 	addr := c.PublicListenOn(ctx)
 
@@ -186,7 +186,7 @@ func ServeAdmin(r driver.Registry, cmd *cobra.Command, args []string, slOpts *se
 	r.PrometheusManager().RegisterRouter(router.Router)
 
 	n.UseHandler(router)
-	certs := c.GetTSLCertificatesForAdmin(ctx)
+	certs := c.GetTLSCertificatesForAdmin(ctx)
 
 	var handler http.Handler = n
 	if tracer := r.Tracer(ctx); tracer.IsLoaded() {
@@ -196,7 +196,7 @@ func ServeAdmin(r driver.Registry, cmd *cobra.Command, args []string, slOpts *se
 	// #nosec G112 - the correct settings are set by graceful.WithDefaults
 	server := graceful.WithDefaults(&http.Server{
 		Handler:   handler,
-		TLSConfig: &tls.Config{Certificates: certs, MinVersion: tls.VersionTLS12},
+		TLSConfig: &tls.Config{GetCertificate: certs, MinVersion: tls.VersionTLS12},
 	})
 
 	addr := c.AdminListenOn(ctx)
