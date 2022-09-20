@@ -76,6 +76,7 @@ const (
 	InfoNodeLabelSubmit                            // 1070005
 	InfoNodeLabelVerifyOTP                         // 1070006
 	InfoNodeLabelEmail                             // 1070007
+	InfoNodeLabelResendOTP                         // 1070008
 )
 
 const (

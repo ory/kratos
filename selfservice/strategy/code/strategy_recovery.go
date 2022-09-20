@@ -271,7 +271,8 @@ func (s *Strategy) Recover(w http.ResponseWriter, r *http.Request, f *recovery.F
 
 	sID := s.RecoveryStrategyID()
 
-	if f.State != recovery.StateChooseMethod {
+	// If the email is present in the submission body, the user needs a new code via resend
+	if f.State != recovery.StateChooseMethod && len(body.Email) == 0 {
 		if err := flow.MethodEnabledAndAllowed(ctx, sID, sID, s.deps); err != nil {
 			return s.HandleRecoveryError(w, r, nil, body, err)
 		}
@@ -521,6 +522,11 @@ func (s *Strategy) recoveryHandleFormSubmission(w http.ResponseWriter, r *http.R
 	f.UI.Messages.Set(text.NewRecoveryEmailWithCodeSent())
 	f.UI.Nodes.Append(node.NewInputField("code", nil, node.CodeGroup, node.InputAttributeTypeNumber, node.WithRequiredInputAttribute).
 		WithMetaLabel(text.NewInfoNodeLabelVerifyOTP()),
+	)
+	f.UI.Nodes.Append(node.NewInputField("method", s.RecoveryNodeGroup(), node.CodeGroup, node.InputAttributeTypeHidden))
+
+	f.UI.Nodes.Append(node.NewInputField("email", body.Email, node.CodeGroup, node.InputAttributeTypeSubmit).
+		WithMetaLabel(text.NewInfoNodeResendOTP()),
 	)
 
 	f.UI.

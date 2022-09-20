@@ -102,6 +102,32 @@ context('Account Recovery With Code Success', () => {
           identity.email
         )
       })
+
+      it('should recover account after resending code', () => {
+        const identity = gen.identityWithWebsite()
+        cy.registerApi(identity)
+        cy.visit(recovery)
+        cy.get(appPrefix(app) + "input[name='email']").type(identity.email)
+        cy.get("button[value='code']").click()
+        cy.get('[data-testid="ui/message/1060003"]').should(
+          'have.text',
+          'An email containing a recovery code has been sent to the email address you provided.'
+        )
+        cy.get("button[name='email']").click() // resend code
+        cy.noSession()
+
+        cy.recoveryEmailWithCode({
+          expect: { email: identity.email, count: 2 }
+        })
+        cy.get("button[value='code']").click()
+
+        cy.getSession()
+        cy.location('pathname').should('eq', '/settings')
+        cy.get('input[name="traits.email"]').should(
+          'have.value',
+          identity.email
+        )
+      })
     })
   })
 

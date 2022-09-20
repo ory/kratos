@@ -352,6 +352,29 @@ func TestRecovery(t *testing.T) {
 		return string(ioutilx.MustReadAll(res.Body))
 	}
 
+	var resendRecoveryCode = func(t *testing.T, client *http.Client, flow string, flowType string, statusCode int) string {
+		action := gjson.Get(flow, "ui.action").String()
+		assert.NotEmpty(t, action)
+
+		email := gjson.Get(flow, "ui.nodes.#(attributes.name==email).attributes.value").String()
+
+		values := withCSRFToken(t, flowType, flow, url.Values{
+			"method": {"code"},
+			"email":  {email},
+		})
+
+		contentType := "application/json"
+		if flowType == RecoveryFlowTypeBrowser {
+			contentType = "application/x-www-form-urlencoded"
+		}
+
+		res, err := client.Post(action, contentType, bytes.NewBufferString(values))
+		require.NoError(t, err)
+		assert.Equal(t, statusCode, res.StatusCode)
+
+		return string(ioutilx.MustReadAll(res.Body))
+	}
+
 	var expectValidationError = func(t *testing.T, hc *http.Client, flowType string, values func(url.Values)) string {
 		code := testhelpers.ExpectStatusCode(flowType == RecoveryFlowTypeAPI || flowType == RecoveryFlowTypeSPA, http.StatusBadRequest, http.StatusOK)
 		return submitRecovery(t, hc, flowType, values, code)
@@ -853,10 +876,31 @@ func TestRecovery(t *testing.T) {
 
 		body = submitRecoveryCode(t, c, body, RecoveryFlowTypeBrowser, "", http.StatusOK)
 
-		assert.False(t, gjson.Get(body, "ui.nodes.#(attributes.name==email)").Exists())
-
 		assert.NotContains(t, gjson.Get(body, "ui.nodes").String(), "Property email is missing.")
 		assertMessage(t, []byte(body), "The recovery code is invalid or has already been used. Please try again.")
+	})
+
+	t.Run("description=should be able to re-send the recovery code", func(t *testing.T) {
+		recoveryEmail := strings.ToLower(testhelpers.RandomEmail())
+		createIdentityToRecover(t, reg, recoveryEmail)
+
+		c := testhelpers.NewClientWithCookies(t)
+		body := expectSuccessfulRecovery(t, c, RecoveryFlowTypeBrowser, func(v url.Values) {
+			v.Set("email", recoveryEmail)
+		})
+
+		action := gjson.Get(body, "ui.action").String()
+		require.NotEmpty(t, action)
+		assert.Equal(t, recoveryEmail, gjson.Get(body, "ui.nodes.#(attributes.name==email).attributes.value").String())
+
+		body = resendRecoveryCode(t, c, body, RecoveryFlowTypeBrowser, http.StatusOK)
+		assert.True(t, gjson.Get(body, "ui.nodes.#(attributes.name==code)").Exists())
+		assert.Equal(t, recoveryEmail, gjson.Get(body, "ui.nodes.#(attributes.name==email).attributes.value").String())
+
+		message := testhelpers.CourierExpectMessage(t, reg, recoveryEmail, "Recover access to your account")
+		recoveryCode := testhelpers.CourierExpectCodeInMessage(t, message, 1)
+
+		submitRecoveryCode(t, c, body, RecoveryFlowTypeBrowser, recoveryCode, http.StatusOK)
 	})
 }
 

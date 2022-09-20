@@ -1005,17 +1005,20 @@ Cypress.Commands.add('recoverEmailButExpired', ({ expect: { email } }) => {
   })
 })
 
-Cypress.Commands.add('recoveryEmailWithCode', ({ expect: { email } }) => {
-  cy.getMail().should((message) => {
-    expect(message.subject).to.equal('Recover access to your account')
-    expect(message.toAddresses[0].trim()).to.equal(email)
+Cypress.Commands.add(
+  'recoveryEmailWithCode',
+  ({ expect: { email, count = 1 } }) => {
+    cy.getMail({ removeMail: true, count }).should((message) => {
+      expect(message.subject).to.equal('Recover access to your account')
+      expect(message.toAddresses[0].trim()).to.equal(email)
 
-    const code = extractRecoveryCode(message.body)
-    expect(code).to.not.be.undefined
-    expect(code.length).to.equal(8)
-    cy.get("input[name='code']").type(code)
-  })
-})
+      const code = extractRecoveryCode(message.body)
+      expect(code).to.not.be.undefined
+      expect(code.length).to.equal(8)
+      cy.get("input[name='code']").type(code)
+    })
+  }
+)
 Cypress.Commands.add(
   'recoverEmail',
   ({ expect: { email }, shouldVisit = true }) =>
@@ -1093,30 +1096,33 @@ Cypress.Commands.add('expectSettingsSaved', () =>
     .should('contain.text', 'Your changes have been saved')
 )
 
-Cypress.Commands.add('getMail', ({ removeMail = true } = {}) => {
-  let tries = 0
-  const req = () =>
-    cy.request(`${MAIL_API}/mail`).then((response) => {
-      expect(response.body).to.have.property('mailItems')
-      const count = response.body.mailItems.length
-      if (count === 0 && tries < 100) {
-        tries++
-        cy.wait(pollInterval)
-        return req()
-      }
+Cypress.Commands.add(
+  'getMail',
+  ({ removeMail = true, count: expectedCount = 1 } = {}) => {
+    let tries = 0
+    const req = () =>
+      cy.request(`${MAIL_API}/mail`).then((response) => {
+        expect(response.body).to.have.property('mailItems')
+        const count = response.body.mailItems.length
+        if (count === 0 && tries < 100) {
+          tries++
+          cy.wait(pollInterval)
+          return req()
+        }
 
-      expect(count).to.equal(1)
-      if (removeMail) {
-        return cy
-          .deleteMail({ atLeast: count })
-          .then(() => Promise.resolve(response.body.mailItems[0]))
-      }
+        expect(count).to.equal(expectedCount)
+        if (removeMail) {
+          return cy
+            .deleteMail({ atLeast: count })
+            .then(() => Promise.resolve(response.body.mailItems[0]))
+        }
 
-      return Promise.resolve(response.body.mailItems[0])
-    })
+        return Promise.resolve(response.body.mailItems[0])
+      })
 
-  return req()
-})
+    return req()
+  }
+)
 
 Cypress.Commands.add('clearAllCookies', () => {
   cy.clearCookies({ domain: null })
