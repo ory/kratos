@@ -5,7 +5,7 @@
 
 **Table of Contents**
 
-- [ (2022-09-11)](#2022-09-11)
+- [ (2022-09-21)](#2022-09-21)
   - [Breaking Changes](#breaking-changes)
     - [Bug Fixes](#bug-fixes)
     - [Code Refactoring](#code-refactoring)
@@ -13,6 +13,7 @@
     - [Features](#features)
     - [Reverts](#reverts)
     - [Tests](#tests)
+    - [Unclassified](#unclassified)
 - [0.10.1 (2022-06-01)](#0101-2022-06-01)
   - [Bug Fixes](#bug-fixes-1)
   - [Code Generation](#code-generation)
@@ -24,7 +25,7 @@
     - [Documentation](#documentation-1)
     - [Features](#features-1)
     - [Tests](#tests-1)
-    - [Unclassified](#unclassified)
+    - [Unclassified](#unclassified-1)
 - [0.9.0-alpha.3 (2022-03-25)](#090-alpha3-2022-03-25)
   - [Breaking Changes](#breaking-changes-2)
     - [Bug Fixes](#bug-fixes-3)
@@ -41,7 +42,7 @@
     - [Documentation](#documentation-3)
     - [Features](#features-2)
     - [Tests](#tests-2)
-    - [Unclassified](#unclassified-1)
+    - [Unclassified](#unclassified-2)
 - [0.8.2-alpha.1 (2021-12-17)](#082-alpha1-2021-12-17)
   - [Bug Fixes](#bug-fixes-6)
   - [Code Generation](#code-generation-5)
@@ -67,7 +68,7 @@
     - [Features](#features-4)
     - [Reverts](#reverts-1)
     - [Tests](#tests-4)
-    - [Unclassified](#unclassified-2)
+    - [Unclassified](#unclassified-3)
 - [0.7.6-alpha.1 (2021-09-12)](#076-alpha1-2021-09-12)
   - [Code Generation](#code-generation-10)
 - [0.7.5-alpha.1 (2021-09-11)](#075-alpha1-2021-09-11)
@@ -96,7 +97,7 @@
     - [Documentation](#documentation-10)
     - [Features](#features-7)
     - [Tests](#tests-7)
-    - [Unclassified](#unclassified-3)
+    - [Unclassified](#unclassified-4)
 - [0.6.3-alpha.1 (2021-05-17)](#063-alpha1-2021-05-17)
   - [Breaking Changes](#breaking-changes-7)
     - [Bug Fixes](#bug-fixes-14)
@@ -120,14 +121,14 @@
     - [Documentation](#documentation-12)
     - [Features](#features-10)
     - [Tests](#tests-8)
-    - [Unclassified](#unclassified-4)
+    - [Unclassified](#unclassified-5)
 - [0.5.5-alpha.1 (2020-12-09)](#055-alpha1-2020-12-09)
   - [Bug Fixes](#bug-fixes-17)
   - [Code Generation](#code-generation-21)
   - [Documentation](#documentation-13)
   - [Features](#features-11)
   - [Tests](#tests-9)
-  - [Unclassified](#unclassified-5)
+  - [Unclassified](#unclassified-6)
 - [0.5.4-alpha.1 (2020-11-11)](#054-alpha1-2020-11-11)
   - [Bug Fixes](#bug-fixes-18)
   - [Code Generation](#code-generation-22)
@@ -151,7 +152,7 @@
   - [Documentation](#documentation-17)
   - [Features](#features-14)
   - [Tests](#tests-12)
-  - [Unclassified](#unclassified-6)
+  - [Unclassified](#unclassified-7)
 - [0.5.0-alpha.1 (2020-10-15)](#050-alpha1-2020-10-15)
   - [Breaking Changes](#breaking-changes-9)
     - [Bug Fixes](#bug-fixes-22)
@@ -160,7 +161,7 @@
     - [Documentation](#documentation-18)
     - [Features](#features-15)
     - [Tests](#tests-13)
-    - [Unclassified](#unclassified-7)
+    - [Unclassified](#unclassified-8)
 - [0.4.6-alpha.1 (2020-07-13)](#046-alpha1-2020-07-13)
   - [Bug Fixes](#bug-fixes-23)
   - [Code Generation](#code-generation-27)
@@ -184,7 +185,7 @@
     - [Code Refactoring](#code-refactoring-9)
     - [Documentation](#documentation-20)
     - [Features](#features-16)
-    - [Unclassified](#unclassified-8)
+    - [Unclassified](#unclassified-9)
 - [0.3.0-alpha.1 (2020-05-15)](#030-alpha1-2020-05-15)
   - [Breaking Changes](#breaking-changes-11)
     - [Bug Fixes](#bug-fixes-29)
@@ -192,7 +193,7 @@
     - [Code Refactoring](#code-refactoring-10)
     - [Documentation](#documentation-21)
     - [Features](#features-17)
-    - [Unclassified](#unclassified-9)
+    - [Unclassified](#unclassified-10)
 - [0.2.1-alpha.1 (2020-05-05)](#021-alpha1-2020-05-05)
   - [Chores](#chores-1)
   - [Documentation](#documentation-22)
@@ -203,7 +204,7 @@
     - [Code Refactoring](#code-refactoring-11)
     - [Documentation](#documentation-23)
     - [Features](#features-18)
-    - [Unclassified](#unclassified-10)
+    - [Unclassified](#unclassified-11)
 - [0.1.1-alpha.1 (2020-02-18)](#011-alpha1-2020-02-18)
   - [Bug Fixes](#bug-fixes-31)
   - [Code Refactoring](#code-refactoring-12)
@@ -225,47 +226,47 @@
   - [Bug Fixes](#bug-fixes-33)
   - [Documentation](#documentation-28)
   - [Features](#features-21)
-  - [Unclassified](#unclassified-11)
+  - [Unclassified](#unclassified-12)
 - [0.1.0-alpha.1 (2020-01-31)](#010-alpha1-2020-01-31)
   - [Documentation](#documentation-29)
 - [0.0.3-alpha.15 (2020-01-31)](#003-alpha15-2020-01-31)
-  - [Unclassified](#unclassified-12)
-- [0.0.3-alpha.14 (2020-01-31)](#003-alpha14-2020-01-31)
   - [Unclassified](#unclassified-13)
-- [0.0.3-alpha.13 (2020-01-31)](#003-alpha13-2020-01-31)
+- [0.0.3-alpha.14 (2020-01-31)](#003-alpha14-2020-01-31)
   - [Unclassified](#unclassified-14)
-- [0.0.3-alpha.11 (2020-01-31)](#003-alpha11-2020-01-31)
+- [0.0.3-alpha.13 (2020-01-31)](#003-alpha13-2020-01-31)
   - [Unclassified](#unclassified-15)
-- [0.0.3-alpha.10 (2020-01-31)](#003-alpha10-2020-01-31)
+- [0.0.3-alpha.11 (2020-01-31)](#003-alpha11-2020-01-31)
   - [Unclassified](#unclassified-16)
-- [0.0.3-alpha.7 (2020-01-30)](#003-alpha7-2020-01-30)
+- [0.0.3-alpha.10 (2020-01-31)](#003-alpha10-2020-01-31)
   - [Unclassified](#unclassified-17)
+- [0.0.3-alpha.7 (2020-01-30)](#003-alpha7-2020-01-30)
+  - [Unclassified](#unclassified-18)
 - [0.0.3-alpha.5 (2020-01-30)](#003-alpha5-2020-01-30)
   - [Continuous Integration](#continuous-integration-2)
-  - [Unclassified](#unclassified-18)
-- [0.0.3-alpha.4 (2020-01-30)](#003-alpha4-2020-01-30)
   - [Unclassified](#unclassified-19)
-- [0.0.3-alpha.2 (2020-01-30)](#003-alpha2-2020-01-30)
+- [0.0.3-alpha.4 (2020-01-30)](#003-alpha4-2020-01-30)
   - [Unclassified](#unclassified-20)
-- [0.0.3-alpha.1 (2020-01-30)](#003-alpha1-2020-01-30)
+- [0.0.3-alpha.2 (2020-01-30)](#003-alpha2-2020-01-30)
   - [Unclassified](#unclassified-21)
+- [0.0.3-alpha.1 (2020-01-30)](#003-alpha1-2020-01-30)
+  - [Unclassified](#unclassified-22)
 - [0.0.1-alpha.9 (2020-01-29)](#001-alpha9-2020-01-29)
   - [Continuous Integration](#continuous-integration-3)
 - [0.0.2-alpha.1 (2020-01-29)](#002-alpha1-2020-01-29)
-  - [Unclassified](#unclassified-22)
+  - [Unclassified](#unclassified-23)
 - [0.0.1-alpha.6 (2020-01-29)](#001-alpha6-2020-01-29)
   - [Continuous Integration](#continuous-integration-4)
 - [0.0.1-alpha.5 (2020-01-29)](#001-alpha5-2020-01-29)
   - [Continuous Integration](#continuous-integration-5)
-  - [Unclassified](#unclassified-23)
+  - [Unclassified](#unclassified-24)
 - [0.0.1-alpha.3 (2020-01-28)](#001-alpha3-2020-01-28)
   - [Continuous Integration](#continuous-integration-6)
   - [Documentation](#documentation-30)
-  - [Unclassified](#unclassified-24)
+  - [Unclassified](#unclassified-25)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# [](https://github.com/ory/kratos/compare/v0.10.1...v) (2022-09-11)
+# [](https://github.com/ory/kratos/compare/v0.10.1...v) (2022-09-21)
 
 ## Breaking Changes
 
@@ -303,6 +304,9 @@ SDK Method `getJsonSchema` was renamed to `getIdentitySchema`.
 
   See https://github.com/ory-corp/cloud/issues/2691
 
+- Check return code of ms graphapi /me request.
+  ([#2647](https://github.com/ory/kratos/issues/2647))
+  ([3f490a3](https://github.com/ory/kratos/commit/3f490a31cddc53ce5d9958454f41c352580904c9))
 - **cli:** Dry up code ([#2572](https://github.com/ory/kratos/issues/2572))
   ([d1b6b40](https://github.com/ory/kratos/commit/d1b6b40aa9dcc7a3ec9237eec28c4fa55f0b8627))
 - Debugging Docker setup ([#2616](https://github.com/ory/kratos/issues/2616))
@@ -324,6 +328,9 @@ SDK Method `getJsonSchema` was renamed to `getIdentitySchema`.
   ([43fcc51](https://github.com/ory/kratos/commit/43fcc51b9bf6996fc4f7b0ef797189eb8f3978dc))
 - Format
   ([0934def](https://github.com/ory/kratos/commit/0934defff7a0d56e712af98c1cec87c60b3c934b))
+- Format check stage in the CI
+  ([#2737](https://github.com/ory/kratos/issues/2737))
+  ([bbe4463](https://github.com/ory/kratos/commit/bbe44632de77cfb3d4983b68647107d914cd4c46))
 - Gosec false positives
   ([e3e7ed0](https://github.com/ory/kratos/commit/e3e7ed08f5ce47fc794bd5c093018cee51baf689))
 - **identity:** Migrate identity_addresses to lower case
@@ -382,6 +389,8 @@ SDK Method `getJsonSchema` was renamed to `getIdentitySchema`.
   closes [#2562](https://github.com/ory/kratos/issues/2562)
 - Remove jackc rewrites ([#2634](https://github.com/ory/kratos/issues/2634))
   ([fe00c5b](https://github.com/ory/kratos/commit/fe00c5be72b0cdcc8d462a97aa04c413f758e8e3))
+- Remove jsonnet import support
+  ([d708c81](https://github.com/ory/kratos/commit/d708c81abbec424e4376a68140e5008bdba4eaaf))
 - Remove newline sign from email subject
   ([#2576](https://github.com/ory/kratos/issues/2576))
   ([ca3d9c2](https://github.com/ory/kratos/commit/ca3d9c24e25ce501e9eae23547f87e1c35b2ea97))
@@ -453,6 +462,12 @@ SDK Method `getJsonSchema` was renamed to `getIdentitySchema`.
 
 ### Features
 
+- Add api endpoint to fetch messages
+  ([#2651](https://github.com/ory/kratos/issues/2651))
+  ([5fddcbf](https://github.com/ory/kratos/commit/5fddcbf6554264766301e63ed3889ba746f0cd1a)):
+
+  Closes https://github.com/ory/kratos/issues/2639
+
 - Add autocomplete attributes
   ([#2523](https://github.com/ory/kratos/issues/2523))
   ([6284a9a](https://github.com/ory/kratos/commit/6284a9a5152924018d85f306e5758e9d8d759283)),
@@ -469,6 +484,12 @@ SDK Method `getJsonSchema` was renamed to `getIdentitySchema`.
   ([f09b1b3](https://github.com/ory/kratos/commit/f09b1b3701c6deda4d25cebb7ccf2e97089be32a))
 - Add missing config entry
   ([8fe9de6](https://github.com/ory/kratos/commit/8fe9de6d60a381611e07226614241a83b0010126))
+- Add missing cookie headers to SDK methods
+  ([#2720](https://github.com/ory/kratos/issues/2720))
+  ([32e32d1](https://github.com/ory/kratos/commit/32e32d1b98404ac14a44b2f0ccefa8c02d38c5f7)):
+
+  See https://github.com/ory/kratos/discussions/2583
+
 - Add PATCH to adminUpdateIdentity
   ([#2380](https://github.com/ory/kratos/issues/2380))
   ([#2471](https://github.com/ory/kratos/issues/2471))
@@ -546,6 +567,12 @@ SDK Method `getJsonSchema` was renamed to `getIdentitySchema`.
   ([934c30d](https://github.com/ory/kratos/commit/934c30d6064d1e7dfc59f4eef43d096e977c113e))
 - Try and recover from allocated port error
   ([3b5ac5f](https://github.com/ory/kratos/commit/3b5ac5ff03b653191c1979fe1e4e9a4ea3ed7d36))
+
+### Unclassified
+
+- Remove empty script (#2739)
+  ([1515b83](https://github.com/ory/kratos/commit/1515b839f52044d6c9674d4a2df43dfeda3bb15b)),
+  closes [#2739](https://github.com/ory/kratos/issues/2739)
 
 # [0.10.1](https://github.com/ory/kratos/compare/v0.10.0...v0.10.1) (2022-06-01)
 
@@ -3449,15 +3476,15 @@ We also streamlined how credentials are used. We now differentiate between:
   const kratos = new V0Alpha0(
     new Configuration({
       basePath: config.kratos.admin,
-      accessToken: 'some-token'
-    })
+      accessToken: "some-token",
+    }),
   )
 
   kratosAdmin.adminCreateIdentity({
-    schema_id: 'default',
+    schema_id: "default",
     traits: {
       /* ... */
-    }
+    },
   })
   ```
 
