@@ -56,7 +56,7 @@ func init() {
 func assertMessage(t *testing.T, body []byte, message string) {
 	t.Helper()
 	assert.Len(t, gjson.GetBytes(body, "ui.messages").Array(), 1)
-	assert.Equal(t, gjson.GetBytes(body, "ui.messages.0.text").String(), message)
+	assert.Equal(t, message, gjson.GetBytes(body, "ui.messages.0.text").String())
 }
 
 func extractCsrfToken(body []byte) string {
@@ -703,13 +703,13 @@ func TestRecovery(t *testing.T) {
 		initialFlowId := gjson.Get(body, "id")
 
 		for submitTry := 0; submitTry < 5; submitTry++ {
-			body := submitRecoveryCode(t, c, body, RecoveryFlowTypeBrowser, "123123", http.StatusOK)
+			body := submitRecoveryCode(t, c, body, RecoveryFlowTypeBrowser, "12312312", http.StatusOK)
 
 			assertMessage(t, []byte(body), "The recovery code is invalid or has already been used. Please try again.")
 		}
 
 		// submit an invalid code for the 6th time
-		body = submitRecoveryCode(t, c, body, RecoveryFlowTypeBrowser, "123123", http.StatusOK)
+		body = submitRecoveryCode(t, c, body, RecoveryFlowTypeBrowser, "12312312", http.StatusOK)
 
 		require.Len(t, gjson.Get(body, "ui.messages").Array(), 1)
 		assert.Equal(t, "The recovery was submitted too often. Please try again.", gjson.Get(body, "ui.messages.0.text").String())
@@ -735,7 +735,7 @@ func TestRecovery(t *testing.T) {
 				recoveryCode := testhelpers.CourierExpectCodeInMessage(t, message, 1)
 
 				form := withCSRFToken(t, testCase.FlowType, actual, url.Values{
-					"code": {"123123"},
+					"code": {"12312312"},
 				})
 
 				action := gjson.Get(actual, "ui.action").String()
@@ -795,7 +795,7 @@ func TestRecovery(t *testing.T) {
 			v.Set("email", email)
 		}, http.StatusOK)
 
-		body = submitRecoveryCode(t, c, body, RecoveryFlowTypeBrowser, "123123", http.StatusOK)
+		body = submitRecoveryCode(t, c, body, RecoveryFlowTypeBrowser, "12312312", http.StatusOK)
 
 		assertMessage(t, []byte(body), "The recovery code is invalid or has already been used. Please try again.")
 	})

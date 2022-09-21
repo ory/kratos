@@ -176,6 +176,10 @@ func (p *Persister) UseRecoveryCode(ctx context.Context, fID uuid.UUID, codeVal 
 	if err := sqlcon.HandleError(p.Transaction(ctx, func(ctx context.Context, tx *pop.Connection) (err error) {
 		var recoveryCodes []code.RecoveryCode
 		if err = tx.Where("nid = ? AND selfservice_recovery_flow_id = ?", nid, fID).All(&recoveryCodes); err != nil {
+			if errors.Is(err, sqlcon.ErrNoRows) {
+				return code.ErrCodeNotFound
+			}
+
 			return sqlcon.HandleError(err)
 		}
 
