@@ -190,15 +190,17 @@ func (s *Strategy) createRecoveryCode(w http.ResponseWriter, r *http.Request, _ 
 		return
 	}
 
-	code := NewAdminRecoveryCode(id.ID, flow.ID, expiresIn)
-	if err := s.deps.RecoveryCodePersister().CreateRecoveryCode(ctx, code); err != nil {
+	code := GenerateRecoveryCode()
+
+	dto := NewAdminRecoveryCodeDTO(code, id.ID, flow.ID, expiresIn)
+	if _, err := s.deps.RecoveryCodePersister().CreateRecoveryCode(ctx, dto); err != nil {
 		s.deps.Writer().WriteError(w, r, err)
 		return
 	}
 
 	s.deps.Audit().
 		WithField("identity_id", id.ID).
-		WithSensitiveField("recovery_code", code.Code).
+		WithSensitiveField("recovery_code", code).
 		Info("A recovery code has been created.")
 
 	body := &selfServiceRecoveryCode{
@@ -208,7 +210,7 @@ func (s *Strategy) createRecoveryCode(w http.ResponseWriter, r *http.Request, _ 
 			url.Values{
 				"flow": {flow.ID.String()},
 			}).String(),
-		RecoveryCode: code.Code,
+		RecoveryCode: code,
 	}
 
 	s.deps.Writer().WriteCode(w, r, http.StatusCreated, body, herodot.UnescapedHTML)

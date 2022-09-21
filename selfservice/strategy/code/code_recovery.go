@@ -11,8 +11,6 @@ import (
 	"github.com/ory/x/randx"
 
 	"github.com/ory/kratos/identity"
-	"github.com/ory/kratos/selfservice/flow/recovery"
-	"github.com/ory/kratos/x"
 )
 
 type RecoveryCodeType int
@@ -72,43 +70,56 @@ func (RecoveryCode) TableName(ctx context.Context) string {
 	return "identity_recovery_codes"
 }
 
-func NewSelfServiceRecoveryCode(identityID uuid.UUID, address *identity.RecoveryAddress, f *recovery.Flow, expiresIn time.Duration) *RecoveryCode {
-	now := time.Now().UTC()
-	recoveryAddressID := uuid.NullUUID{}
-	if address != nil {
-		recoveryAddressID.UUID = address.ID
-		recoveryAddressID.Valid = true
-	}
-	return &RecoveryCode{
-		ID:                x.NewUUID(),
-		Code:              randx.MustString(8, randx.Numeric),
-		RecoveryAddress:   address,
-		ExpiresAt:         now.Add(expiresIn),
-		IssuedAt:          now,
-		IdentityID:        identityID,
-		FlowID:            f.ID,
-		RecoveryAddressID: recoveryAddressID,
-		CodeType:          RecoveryCodeTypeSelfService,
-	}
-}
-
-func NewAdminRecoveryCode(identityID uuid.UUID, fID uuid.UUID, expiresIn time.Duration) *RecoveryCode {
-	now := time.Now().UTC()
-	return &RecoveryCode{
-		ID:         x.NewUUID(),
-		Code:       randx.MustString(8, randx.Numeric),
-		ExpiresAt:  now.Add(expiresIn),
-		IssuedAt:   now,
-		IdentityID: identityID,
-		FlowID:     fID,
-		CodeType:   RecoveryCodeTypeAdmin,
-	}
-}
-
 func (f RecoveryCode) IsExpired() bool {
 	return f.ExpiresAt.Before(time.Now())
 }
 
 func (r RecoveryCode) WasUsed() bool {
 	return r.UsedAt.Valid
+}
+
+func GenerateRecoveryCode() string {
+	return randx.MustString(8, randx.Numeric)
+}
+
+type RecoveryCodeDTO struct {
+	// Code represents the recovery code
+	Code string
+
+	// CodeType is the type of the code - either "admin" or "selfservice"
+	CodeType RecoveryCodeType
+
+	// ExpiresAt is the time (UTC) when the code expires.
+	// required: true
+	ExpiresIn time.Duration
+
+	// RecoveryAddressID is a helper struct field for gobuffalo.pop.
+	RecoveryAddress *identity.RecoveryAddress
+
+	// FlowID is a helper struct field for gobuffalo.pop.
+	FlowID uuid.UUID
+
+	IdentityID uuid.UUID
+}
+
+func NewSelfServiceRecoveryCodeDTO(code string, identityID uuid.UUID, fID uuid.UUID, expiresIn time.Duration, recoveryAddress *identity.RecoveryAddress) *RecoveryCodeDTO {
+	return &RecoveryCodeDTO{
+		Code:            code,
+		ExpiresIn:       expiresIn,
+		CodeType:        RecoveryCodeTypeSelfService,
+		RecoveryAddress: recoveryAddress,
+		FlowID:          fID,
+		IdentityID:      identityID,
+	}
+}
+
+func NewAdminRecoveryCodeDTO(code string, identityID uuid.UUID, fID uuid.UUID, expiresIn time.Duration) *RecoveryCodeDTO {
+	return &RecoveryCodeDTO{
+		Code:            code,
+		ExpiresIn:       expiresIn,
+		CodeType:        RecoveryCodeTypeAdmin,
+		RecoveryAddress: nil,
+		FlowID:          fID,
+		IdentityID:      identityID,
+	}
 }

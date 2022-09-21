@@ -72,26 +72,26 @@ func (s *RecoveryCodeSender) SendRecoveryCode(ctx context.Context, r *http.Reque
 		return err
 	}
 
-	code := NewSelfServiceRecoveryCode(i.ID, address, f, s.deps.Config().SelfServiceCodeMethodLifespan(r.Context()))
-	if err := s.deps.RecoveryCodePersister().CreateRecoveryCode(ctx, code); err != nil {
+	codeString := GenerateRecoveryCode()
+
+	var code *RecoveryCode
+	if code, err = s.deps.
+		RecoveryCodePersister().
+		CreateRecoveryCode(ctx, NewSelfServiceRecoveryCodeDTO(codeString, i.ID, f.ID, s.deps.Config().SelfServiceCodeMethodLifespan(r.Context()), address)); err != nil {
 		return err
 	}
 
-	if err := s.SendRecoveryCodeTo(ctx, f, i, address, code); err != nil {
-		return err
-	}
-
-	return nil
+	return s.SendRecoveryCodeTo(ctx, i, codeString, code)
 }
 
-func (s *RecoveryCodeSender) SendRecoveryCodeTo(ctx context.Context, f *recovery.Flow, i *identity.Identity, address *identity.RecoveryAddress, code *RecoveryCode) error {
+func (s *RecoveryCodeSender) SendRecoveryCodeTo(ctx context.Context, i *identity.Identity, codeString string, code *RecoveryCode) error {
 	s.deps.Audit().
-		WithField("via", address.Via).
-		WithField("identity_id", address.IdentityID).
+		WithField("via", code.RecoveryAddress.Via).
+		WithField("identity_id", code.RecoveryAddress.IdentityID).
 		WithField("recovery_code_id", code.ID).
-		WithSensitiveField("email_address", address.Value).
-		WithSensitiveField("recovery_code", code.Code).
-		Info("Sending out recovery email with recovery link.")
+		WithSensitiveField("email_address", code.RecoveryAddress.Value).
+		WithSensitiveField("recovery_code", codeString).
+		Info("Sending out recovery email with recovery code.")
 
 	model, err := x.StructToMap(i)
 	if err != nil {
@@ -99,12 +99,12 @@ func (s *RecoveryCodeSender) SendRecoveryCodeTo(ctx context.Context, f *recovery
 	}
 
 	emailModel := email.RecoveryCodeValidModel{
-		To:           address.Value,
-		RecoveryCode: code.Code,
+		To:           code.RecoveryAddress.Value,
+		RecoveryCode: codeString,
 		Identity:     model,
 	}
 
-	return s.send(ctx, string(address.Via), email.NewRecoveryCodeValid(s.deps, &emailModel))
+	return s.send(ctx, string(code.RecoveryAddress.Via), email.NewRecoveryCodeValid(s.deps, &emailModel))
 }
 
 func (s *RecoveryCodeSender) send(ctx context.Context, via string, t courier.EmailTemplate) error {

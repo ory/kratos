@@ -31,7 +31,7 @@ func TestPersister(ctx context.Context, conf *config.Config, p interface {
 
 		t.Run("code=recovery", func(t *testing.T) {
 
-			newRecoveryCode := func(t *testing.T, email string) (*code.RecoveryCode, *recovery.Flow) {
+			newRecoveryCodeDTO := func(t *testing.T, email string) (*code.RecoveryCodeDTO, *recovery.Flow, *identity.RecoveryAddress) {
 				var f recovery.Flow
 				require.NoError(t, faker.FakeData(&f))
 				require.NoError(t, p.CreateRecoveryFlow(ctx, &f))
@@ -44,14 +44,13 @@ func TestPersister(ctx context.Context, conf *config.Config, p interface {
 
 				require.NoError(t, p.CreateIdentity(ctx, &i))
 
-				return &code.RecoveryCode{
+				return &code.RecoveryCodeDTO{
 					Code:            string(randx.MustString(8, randx.Numeric)),
 					FlowID:          f.ID,
 					RecoveryAddress: &i.RecoveryAddresses[0],
-					ExpiresAt:       time.Now().Add(time.Minute),
-					IssuedAt:        time.Now(),
+					ExpiresIn:       time.Minute,
 					IdentityID:      i.ID,
-				}, &f
+				}, &f, &i.RecoveryAddresses[0]
 			}
 
 			t.Run("case=should error when the recovery token does not exist", func(t *testing.T) {
@@ -60,52 +59,46 @@ func TestPersister(ctx context.Context, conf *config.Config, p interface {
 			})
 
 			t.Run("case=should create a new recovery code", func(t *testing.T) {
-				token, _ := newRecoveryCode(t, "foo-user@ory.sh")
-				require.NoError(t, p.CreateRecoveryCode(ctx, token))
+				dto, f, a := newRecoveryCodeDTO(t, "foo-user@ory.sh")
+				rCode, err := p.CreateRecoveryCode(ctx, dto)
+				require.NoError(t, err)
+				assert.Equal(t, f.ID, rCode.FlowID)
+				assert.Equal(t, dto.IdentityID, rCode.IdentityID)
+				require.True(t, rCode.RecoveryAddressID.Valid)
+				assert.Equal(t, a.ID, rCode.RecoveryAddressID.UUID)
+				assert.Equal(t, a.ID, rCode.RecoveryAddress.ID)
 			})
 
 			t.Run("case=should create a recovery code and use it", func(t *testing.T) {
-				expected, f := newRecoveryCode(t, "other-user@ory.sh")
-				require.NoError(t, p.CreateRecoveryCode(ctx, expected))
+				dto, f, _ := newRecoveryCodeDTO(t, "other-user@ory.sh")
+				_, err := p.CreateRecoveryCode(ctx, dto)
+				require.NoError(t, err)
 
 				t.Run("not work on another network", func(t *testing.T) {
 					_, p := testhelpers.NewNetwork(t, ctx, p)
-					_, err := p.UseRecoveryCode(ctx, f.ID, expected.Code)
+					_, err := p.UseRecoveryCode(ctx, f.ID, dto.Code)
 					require.ErrorIs(t, err, code.ErrCodeNotFound)
 				})
 
-				actual, err := p.UseRecoveryCode(ctx, f.ID, expected.Code)
+				actual, err := p.UseRecoveryCode(ctx, f.ID, dto.Code)
 				require.NoError(t, err)
 				assert.Equal(t, nid, actual.NID)
-				assert.Equal(t, expected.IdentityID, actual.IdentityID)
-				assert.NotEqual(t, expected.Code, actual.Code)
-				assert.EqualValues(t, expected.FlowID, actual.FlowID)
+				assert.Equal(t, dto.IdentityID, actual.IdentityID)
+				assert.NotEqual(t, dto.Code, actual.Code)
+				assert.EqualValues(t, f.ID, actual.FlowID)
 
-				_, err = p.UseRecoveryCode(ctx, f.ID, expected.Code)
+				_, err = p.UseRecoveryCode(ctx, f.ID, dto.Code)
 				require.ErrorIs(t, err, code.ErrCodeAlreadyUsed)
 			})
 
 			t.Run("case=should not be able to use expired codes", func(t *testing.T) {
-				expected, f := newRecoveryCode(t, "expired-code@ory.sh")
-				expected.ExpiresAt = time.Now().UTC().Add(-time.Hour)
-				require.NoError(t, p.CreateRecoveryCode(ctx, expected))
+				dto, f, _ := newRecoveryCodeDTO(t, "expired-code@ory.sh")
+				dto.ExpiresIn = -time.Hour
+				_, err := p.CreateRecoveryCode(ctx, dto)
+				require.NoError(t, err)
 
-				_, err := p.UseRecoveryCode(ctx, f.ID, expected.Code)
+				_, err = p.UseRecoveryCode(ctx, f.ID, dto.Code)
 				assert.Error(t, err)
-			})
-
-			t.Run("case=should not be able to use code twice", func(t *testing.T) {
-				expected, f := newRecoveryCode(t, "code-used-twice@ory.sh")
-				require.NoError(t, p.CreateRecoveryCode(ctx, expected))
-
-				actual, err := p.UseRecoveryCode(ctx, f.ID, expected.Code)
-				assert.NoError(t, err)
-				assert.Equal(t, nid, actual.NID)
-				assert.Equal(t, expected.IdentityID, actual.IdentityID)
-				assert.NotEqual(t, expected.Code, actual.Code)
-				assert.EqualValues(t, expected.FlowID, actual.FlowID)
-				_, err = p.UseRecoveryCode(ctx, f.ID, expected.Code)
-				assert.ErrorIs(t, err, code.ErrCodeAlreadyUsed)
 			})
 		})
 	}

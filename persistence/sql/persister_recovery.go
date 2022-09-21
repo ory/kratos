@@ -14,6 +14,7 @@ import (
 	"github.com/ory/kratos/selfservice/flow/recovery"
 	"github.com/ory/kratos/selfservice/strategy/code"
 	"github.com/ory/kratos/selfservice/strategy/link"
+	"github.com/ory/kratos/x"
 	"github.com/ory/x/sqlcon"
 )
 
@@ -130,22 +131,38 @@ func (p *Persister) DeleteExpiredRecoveryFlows(ctx context.Context, expiresAt ti
 	return nil
 }
 
-func (p *Persister) CreateRecoveryCode(ctx context.Context, recoveryCode *code.RecoveryCode) error {
+func (p *Persister) CreateRecoveryCode(ctx context.Context, dto *code.RecoveryCodeDTO) (*code.RecoveryCode, error) {
 	ctx, span := p.r.Tracer(ctx).Tracer().Start(ctx, "persistence.sql.CreateRecoveryCode")
 	defer span.End()
 
-	code := recoveryCode.Code
-	recoveryCode.Code = p.hmacValue(ctx, code)
-	recoveryCode.NID = p.NetworkID(ctx)
+	now := time.Now()
+
+	recoveryCode := &code.RecoveryCode{
+		ID:         x.NewUUID(),
+		Code:       p.hmacValue(ctx, dto.Code),
+		ExpiresAt:  now.UTC().Add(dto.ExpiresIn),
+		IssuedAt:   now,
+		CodeType:   dto.CodeType,
+		FlowID:     dto.FlowID,
+		NID:        p.NetworkID(ctx),
+		IdentityID: dto.IdentityID,
+	}
+
+	if dto.RecoveryAddress != nil {
+		recoveryCode.RecoveryAddress = dto.RecoveryAddress
+		recoveryCode.RecoveryAddressID = uuid.NullUUID{
+			UUID:  dto.RecoveryAddress.ID,
+			Valid: true,
+		}
+	}
 
 	// This should not create the request eagerly because otherwise we might accidentally create an address that isn't
 	// supposed to be in the database.
 	if err := p.GetConnection(ctx).Create(recoveryCode); err != nil {
-		return err
+		return nil, err
 	}
 
-	recoveryCode.Code = code
-	return nil
+	return recoveryCode, nil
 }
 
 func (p *Persister) UseRecoveryCode(ctx context.Context, fID uuid.UUID, codeVal string) (*code.RecoveryCode, error) {

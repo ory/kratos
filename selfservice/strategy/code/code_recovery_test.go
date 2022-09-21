@@ -23,29 +23,20 @@ import (
 func TestRecoveryCode(t *testing.T) {
 	conf, _ := internal.NewFastRegistryWithMocks(t)
 
+	newCode := func(expiresIn time.Duration, f *recovery.Flow) *code.RecoveryCode {
+		return &code.RecoveryCode{
+			ID:        x.NewUUID(),
+			FlowID:    f.ID,
+			ExpiresAt: time.Now().Add(expiresIn),
+		}
+	}
+
 	req := &http.Request{URL: urlx.ParseOrPanic("https://www.ory.sh/")}
-	t.Run("func=NewSelfServiceRecoveryCode", func(t *testing.T) {
+	t.Run("func=GenerateRecoveryCode", func(t *testing.T) {
 		t.Run("case=creates unique tokens", func(t *testing.T) {
-			f, err := recovery.NewFlow(conf, time.Hour, "", req, nil, flow.TypeBrowser)
-			require.NoError(t, err)
-
-			codes := make([]string, 10)
+			codes := make([]string, 100)
 			for k := range codes {
-				codes[k] = code.NewSelfServiceRecoveryCode(x.NewUUID(), nil, f, time.Hour).Code
-			}
-
-			assert.Len(t, stringslice.Unique(codes), len(codes))
-		})
-	})
-
-	t.Run("func=NewAdminRecoveryCode", func(t *testing.T) {
-		t.Run("case=creates unique tokens", func(t *testing.T) {
-			f, err := recovery.NewFlow(conf, time.Hour, "", req, nil, flow.TypeBrowser)
-			require.NoError(t, err)
-
-			codes := make([]string, 10)
-			for k := range codes {
-				codes[k] = code.NewAdminRecoveryCode(x.NewUUID(), f.ID, time.Hour).Code
+				codes[k] = code.GenerateRecoveryCode()
 			}
 
 			assert.Len(t, stringslice.Unique(codes), len(codes))
@@ -57,14 +48,14 @@ func TestRecoveryCode(t *testing.T) {
 			f, err := recovery.NewFlow(conf, -time.Hour, "", req, nil, flow.TypeBrowser)
 			require.NoError(t, err)
 
-			token := code.NewSelfServiceRecoveryCode(x.NewUUID(), nil, f, -time.Hour)
+			token := newCode(-time.Hour, f)
 			require.True(t, token.IsExpired())
 		})
 		t.Run("case=returns false if flow is not expired", func(t *testing.T) {
 			f, err := recovery.NewFlow(conf, time.Hour, "", req, nil, flow.TypeBrowser)
 			require.NoError(t, err)
 
-			token := code.NewSelfServiceRecoveryCode(x.NewUUID(), nil, f, time.Hour)
+			token := newCode(time.Hour, f)
 			require.False(t, token.IsExpired())
 		})
 	})
@@ -74,7 +65,7 @@ func TestRecoveryCode(t *testing.T) {
 			f, err := recovery.NewFlow(conf, -time.Hour, "", req, nil, flow.TypeBrowser)
 			require.NoError(t, err)
 
-			token := code.NewSelfServiceRecoveryCode(x.NewUUID(), nil, f, -time.Hour)
+			token := newCode(time.Hour, f)
 			token.UsedAt = sql.NullTime{
 				Time:  time.Now(),
 				Valid: true,
@@ -85,7 +76,7 @@ func TestRecoveryCode(t *testing.T) {
 			f, err := recovery.NewFlow(conf, -time.Hour, "", req, nil, flow.TypeBrowser)
 			require.NoError(t, err)
 
-			token := code.NewSelfServiceRecoveryCode(x.NewUUID(), nil, f, -time.Hour)
+			token := newCode(time.Hour, f)
 			token.UsedAt = sql.NullTime{
 				Valid: false,
 			}

@@ -8,7 +8,7 @@ import (
 
 type (
 	RecoveryCodePersister interface {
-		CreateRecoveryCode(ctx context.Context, code *RecoveryCode) error
+		CreateRecoveryCode(ctx context.Context, dto *RecoveryCodeDTO) (*RecoveryCode, error)
 		UseRecoveryCode(ctx context.Context, fID uuid.UUID, code string) (*RecoveryCode, error)
 	}
 
