@@ -9,6 +9,7 @@ import (
 	"github.com/gobuffalo/pop/v6"
 	"github.com/gofrs/uuid"
 
+	"github.com/ory/herodot"
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/selfservice/flow/recovery"
 	"github.com/ory/kratos/selfservice/strategy/code"
@@ -151,21 +152,37 @@ func (p *Persister) UseRecoveryCode(ctx context.Context, fID uuid.UUID, codeVal 
 	ctx, span := p.r.Tracer(ctx).Tracer().Start(ctx, "persistence.sql.UseRecoveryCode")
 	defer span.End()
 
-	var recoveryCode code.RecoveryCode
+	var recoveryCode *code.RecoveryCode
 
 	nid := p.NetworkID(ctx)
+
 	if err := sqlcon.HandleError(p.Transaction(ctx, func(ctx context.Context, tx *pop.Connection) (err error) {
+		var recoveryCodes []code.RecoveryCode
+		if err = tx.Where("nid = ? AND selfservice_recovery_flow_id = ?", nid, fID).All(&recoveryCodes); err != nil {
+			return sqlcon.HandleError(err)
+		}
+
 		for _, secret := range p.r.Config().SecretsSession(ctx) {
-			if err = tx.Where("code = ? AND nid = ? AND NOT used AND selfservice_recovery_flow_id = ?", p.hmacValueWithSecret(ctx, codeVal, secret), nid, fID).First(&recoveryCode); err != nil {
-				if err := sqlcon.HandleError(err); !errors.Is(err, sqlcon.ErrNoRows) {
-					return err
+			suppliedCode := p.hmacValueWithSecret(ctx, codeVal, secret)
+			for i := range recoveryCodes {
+				code := recoveryCodes[i]
+				if code.Code != suppliedCode {
+					// Not the supplied code
+					continue
 				}
-			} else {
-				break
+				recoveryCode = &code
 			}
 		}
-		if err != nil {
-			return err
+		if recoveryCode == nil {
+			return code.ErrCodeNotFound
+		}
+
+		if recoveryCode.IsExpired() {
+			return herodot.ErrBadRequest.WithReasonf("recovery code expired %.2f ago", time.Since(recoveryCode.ExpiresAt).Minutes())
+		}
+
+		if recoveryCode.WasUsed() {
+			return code.ErrCodeAlreadyUsed
 		}
 
 		var ra identity.RecoveryAddress
@@ -177,12 +194,12 @@ func (p *Persister) UseRecoveryCode(ctx context.Context, fID uuid.UUID, codeVal 
 		recoveryCode.RecoveryAddress = &ra
 
 		/* #nosec G201 TableName is static */
-		return tx.RawQuery(fmt.Sprintf("UPDATE %s SET used=true, used_at=? WHERE id=? AND nid = ?", recoveryCode.TableName(ctx)), time.Now().UTC(), recoveryCode.ID, nid).Exec()
+		return tx.RawQuery(fmt.Sprintf("UPDATE %s SET used_at = ? WHERE id = ? AND nid = ?", recoveryCode.TableName(ctx)), time.Now().UTC(), recoveryCode.ID, nid).Exec()
 	})); err != nil {
 		return nil, err
 	}
 
-	return &recoveryCode, nil
+	return recoveryCode, nil
 }
 
 func (p *Persister) DeleteRecoveryCode(ctx context.Context, codeStr string) error {

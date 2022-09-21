@@ -2,7 +2,6 @@ CREATE TABLE identity_recovery_codes
 (
     id CHAR(36) NOT NULL PRIMARY KEY,
     code VARCHAR (64) NOT NULL, -- HMACed value of the actual code
-    used bool NOT NULL DEFAULT FALSE,
     used_at timestamp,
     identity_recovery_address_id CHAR(36),
     code_type int NOT NULL,

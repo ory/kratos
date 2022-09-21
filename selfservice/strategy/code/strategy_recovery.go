@@ -182,10 +182,7 @@ func (s *Strategy) createRecoveryCode(w http.ResponseWriter, r *http.Request, _ 
 	}
 
 	id, err := s.deps.IdentityPool().GetIdentity(ctx, p.IdentityID)
-	if errors.Is(err, sqlcon.ErrNoRows) {
-		s.deps.Writer().WriteError(w, r, errors.WithStack(herodot.ErrNotFound.WithReasonf("The requested identity id does not exist.").WithWrap(err)))
-		return
-	} else if err != nil {
+	if err != nil {
 		s.deps.Writer().WriteError(w, r, err)
 		return
 	}
@@ -404,10 +401,6 @@ func (s *Strategy) recoveryUseCode(w http.ResponseWriter, r *http.Request, body 
 		// No error
 		return nil
 	} else if err != nil {
-		return s.retryRecoveryFlowWithError(w, r, f.Type, err)
-	}
-
-	if err := code.Valid(); err != nil {
 		return s.retryRecoveryFlowWithError(w, r, f.Type, err)
 	}
 

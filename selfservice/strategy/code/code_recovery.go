@@ -2,13 +2,12 @@ package code
 
 import (
 	"context"
+	"database/sql"
 	"time"
 
-	"github.com/ory/kratos/selfservice/flow"
-
 	"github.com/gofrs/uuid"
-	errors "github.com/pkg/errors"
 
+	"github.com/ory/herodot"
 	"github.com/ory/x/randx"
 
 	"github.com/ory/kratos/identity"
@@ -23,6 +22,11 @@ const (
 	RecoveryCodeTypeSelfService
 )
 
+var (
+	ErrCodeNotFound    = herodot.ErrNotFound.WithReasonf("unknown recovery code")
+	ErrCodeAlreadyUsed = herodot.ErrNotFound.WithReasonf("recovery code was already used")
+)
+
 type RecoveryCode struct {
 	// ID represents the code's unique ID.
 	//
@@ -33,6 +37,9 @@ type RecoveryCode struct {
 
 	// Code represents the recovery code
 	Code string `json:"-" db:"code"`
+
+	// UsedAt is the timestamp of when the code was used or null if it wasn't yet
+	UsedAt sql.NullTime `json:"-" db:"used_at"`
 
 	// RecoveryAddress links this code to a recovery address.
 	// required: true
@@ -98,9 +105,10 @@ func NewAdminRecoveryCode(identityID uuid.UUID, fID uuid.UUID, expiresIn time.Du
 	}
 }
 
-func (f RecoveryCode) Valid() error {
-	if f.ExpiresAt.Before(time.Now()) {
-		return errors.WithStack(flow.NewFlowExpiredError(f.ExpiresAt))
-	}
-	return nil
+func (f RecoveryCode) IsExpired() bool {
+	return f.ExpiresAt.Before(time.Now())
+}
+
+func (r RecoveryCode) WasUsed() bool {
+	return r.UsedAt.Valid
 }

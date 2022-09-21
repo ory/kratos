@@ -9,7 +9,6 @@ import (
 	"github.com/ory/kratos/persistence"
 	"github.com/ory/kratos/selfservice/strategy/code"
 	"github.com/ory/x/randx"
-	"github.com/ory/x/sqlcon"
 
 	"github.com/bxcodec/faker/v3"
 	"github.com/stretchr/testify/assert"
@@ -49,7 +48,7 @@ func TestPersister(ctx context.Context, conf *config.Config, p interface {
 					Code:            string(randx.MustString(8, randx.Numeric)),
 					FlowID:          f.ID,
 					RecoveryAddress: &i.RecoveryAddresses[0],
-					ExpiresAt:       time.Now(),
+					ExpiresAt:       time.Now().Add(time.Minute),
 					IssuedAt:        time.Now(),
 					IdentityID:      i.ID,
 				}, &f
@@ -60,19 +59,19 @@ func TestPersister(ctx context.Context, conf *config.Config, p interface {
 				require.Error(t, err)
 			})
 
-			t.Run("case=should create a new recovery token", func(t *testing.T) {
+			t.Run("case=should create a new recovery code", func(t *testing.T) {
 				token, _ := newRecoveryCode(t, "foo-user@ory.sh")
 				require.NoError(t, p.CreateRecoveryCode(ctx, token))
 			})
 
-			t.Run("case=should create a recovery token and use it", func(t *testing.T) {
+			t.Run("case=should create a recovery code and use it", func(t *testing.T) {
 				expected, f := newRecoveryCode(t, "other-user@ory.sh")
 				require.NoError(t, p.CreateRecoveryCode(ctx, expected))
 
 				t.Run("not work on another network", func(t *testing.T) {
 					_, p := testhelpers.NewNetwork(t, ctx, p)
 					_, err := p.UseRecoveryCode(ctx, f.ID, expected.Code)
-					require.ErrorIs(t, err, sqlcon.ErrNoRows)
+					require.ErrorIs(t, err, code.ErrCodeNotFound)
 				})
 
 				actual, err := p.UseRecoveryCode(ctx, f.ID, expected.Code)
@@ -83,9 +82,31 @@ func TestPersister(ctx context.Context, conf *config.Config, p interface {
 				assert.EqualValues(t, expected.FlowID, actual.FlowID)
 
 				_, err = p.UseRecoveryCode(ctx, f.ID, expected.Code)
-				require.Error(t, err)
+				require.ErrorIs(t, err, code.ErrCodeAlreadyUsed)
 			})
 
+			t.Run("case=should not be able to use expired codes", func(t *testing.T) {
+				expected, f := newRecoveryCode(t, "expired-code@ory.sh")
+				expected.ExpiresAt = time.Now().UTC().Add(-time.Hour)
+				require.NoError(t, p.CreateRecoveryCode(ctx, expected))
+
+				_, err := p.UseRecoveryCode(ctx, f.ID, expected.Code)
+				assert.Error(t, err)
+			})
+
+			t.Run("case=should not be able to use code twice", func(t *testing.T) {
+				expected, f := newRecoveryCode(t, "code-used-twice@ory.sh")
+				require.NoError(t, p.CreateRecoveryCode(ctx, expected))
+
+				actual, err := p.UseRecoveryCode(ctx, f.ID, expected.Code)
+				assert.NoError(t, err)
+				assert.Equal(t, nid, actual.NID)
+				assert.Equal(t, expected.IdentityID, actual.IdentityID)
+				assert.NotEqual(t, expected.Code, actual.Code)
+				assert.EqualValues(t, expected.FlowID, actual.FlowID)
+				_, err = p.UseRecoveryCode(ctx, f.ID, expected.Code)
+				assert.ErrorIs(t, err, code.ErrCodeAlreadyUsed)
+			})
 		})
 	}
 }
