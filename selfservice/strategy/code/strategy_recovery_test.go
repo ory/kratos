@@ -104,7 +104,7 @@ func TestAdminStrategy(t *testing.T) {
 		_, _, err := createCode(x.NewUUID().String(), nil)
 
 		require.IsType(t, err, new(kratos.GenericOpenAPIError), "%T", err)
-		assert.EqualError(t, err.(*kratos.GenericOpenAPIError), "400 Bad Request")
+		snapshotx.SnapshotT(t, err.(*kratos.GenericOpenAPIError).Model())
 	})
 
 	t.Run("description=should fail on malformed expiry time", func(t *testing.T) {

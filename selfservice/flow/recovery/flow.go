@@ -97,7 +97,7 @@ type Flow struct {
 
 	// DangerousSkipCSRFCheck indicates whether anti CSRF measures should be enforced in this flow
 	//
-	// This is needed, because we can not enforce these measures, if the flow has been initialized by some else than
+	// This is needed, because we can not enforce these measures, if the flow has been initialized by someone else than
 	// the user.
 	DangerousSkipCSRFCheck bool `json:"-" faker:"-" db:"skip_csrf_check"`
 }

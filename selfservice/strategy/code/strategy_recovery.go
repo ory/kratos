@@ -182,7 +182,10 @@ func (s *Strategy) createRecoveryCode(w http.ResponseWriter, r *http.Request, _ 
 	}
 
 	id, err := s.deps.IdentityPool().GetIdentity(ctx, p.IdentityID)
-	if err != nil {
+	if notFoundErr := sqlcon.ErrNoRows; errors.As(err, &notFoundErr) {
+		s.deps.Writer().WriteError(w, r, notFoundErr.WithReasonf("could not find identity"))
+		return
+	} else if err != nil {
 		s.deps.Writer().WriteError(w, r, err)
 		return
 	}

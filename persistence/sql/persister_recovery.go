@@ -194,18 +194,10 @@ func (p *Persister) UseRecoveryCode(ctx context.Context, fID uuid.UUID, codeVal 
 		recoveryCode.RecoveryAddress = &ra
 
 		/* #nosec G201 TableName is static */
-		return tx.RawQuery(fmt.Sprintf("UPDATE %s SET used_at = ? WHERE id = ? AND nid = ?", recoveryCode.TableName(ctx)), time.Now().UTC(), recoveryCode.ID, nid).Exec()
+		return sqlcon.HandleError(tx.RawQuery(fmt.Sprintf("UPDATE %s SET used_at = ? WHERE id = ? AND nid = ?", recoveryCode.TableName(ctx)), time.Now().UTC(), recoveryCode.ID, nid).Exec())
 	})); err != nil {
 		return nil, err
 	}
 
 	return recoveryCode, nil
-}
-
-func (p *Persister) DeleteRecoveryCode(ctx context.Context, codeStr string) error {
-	ctx, span := p.r.Tracer(ctx).Tracer().Start(ctx, "persistence.sql.DeleteRecoveryCode")
-	defer span.End()
-
-	/* #nosec G201 TableName is static */
-	return p.GetConnection(ctx).RawQuery(fmt.Sprintf("DELETE FROM %s WHERE token=? AND nid = ?", new(code.RecoveryCode).TableName(ctx)), codeStr, p.NetworkID(ctx)).Exec()
 }
