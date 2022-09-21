@@ -83,7 +83,7 @@ type adminCreateSelfServiceRecoveryCodeBody struct {
 	// `selfservice.flows.recovery.request_lifespan`.
 	//
 	//
-	// pattern: ^[0-9]+(ns|us|ms|s|m|h)$
+	// pattern: ^([0-9]+(ns|us|ms|s|m|h))*$
 	// example:
 	//	- 1h
 	//	- 1m
@@ -129,7 +129,7 @@ type selfServiceRecoveryCode struct {
 //	Schemes: http, https
 //
 //	Responses:
-//		200: selfServiceRecoveryCode
+//		201: selfServiceRecoveryCode
 //		400: jsonError
 //		404: jsonError
 //		500: jsonError
@@ -183,7 +183,7 @@ func (s *Strategy) createRecoveryCode(w http.ResponseWriter, r *http.Request, _ 
 
 	id, err := s.deps.IdentityPool().GetIdentity(ctx, p.IdentityID)
 	if errors.Is(err, sqlcon.ErrNoRows) {
-		s.deps.Writer().WriteError(w, r, errors.WithStack(herodot.ErrBadRequest.WithReasonf("The requested identity id does not exist.").WithWrap(err)))
+		s.deps.Writer().WriteError(w, r, errors.WithStack(herodot.ErrNotFound.WithReasonf("The requested identity id does not exist.").WithWrap(err)))
 		return
 	} else if err != nil {
 		s.deps.Writer().WriteError(w, r, err)
@@ -211,7 +211,7 @@ func (s *Strategy) createRecoveryCode(w http.ResponseWriter, r *http.Request, _ 
 		RecoveryCode: code.Code,
 	}
 
-	s.deps.Writer().Write(w, r, body, herodot.UnescapedHTML)
+	s.deps.Writer().WriteCode(w, r, http.StatusCreated, body, herodot.UnescapedHTML)
 }
 
 // swagger:model submitSelfServiceRecoveryFlowWithCodeMethodBody

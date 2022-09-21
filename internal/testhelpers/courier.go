@@ -26,7 +26,7 @@ func CourierExpectMessage(t *testing.T, reg interface {
 
 func CourierExpectLinkInMessage(t *testing.T, message *courier.Message, offset int) string {
 	if offset == 0 {
-		offset++
+		offset = 1
 	}
 	match := regexp.MustCompile(`(http[^\s]+)`).FindStringSubmatch(message.Body)
 	require.Len(t, match, offset*2)
@@ -36,7 +36,7 @@ func CourierExpectLinkInMessage(t *testing.T, message *courier.Message, offset i
 
 func CourierExpectCodeInMessage(t *testing.T, message *courier.Message, offset int) string {
 	if offset == 0 {
-		offset++
+		offset = 1
 	}
 	match := regexp.MustCompile(`(\d{8})`).FindStringSubmatch(message.Body)
 	require.Len(t, match, offset*2)

@@ -6,11 +6,11 @@ import (
 
 	"github.com/hashicorp/go-retryablehttp"
 
+	"github.com/ory/herodot"
 	"github.com/ory/kratos/courier/template/email"
 
 	"github.com/ory/x/httpx"
-
-	"github.com/pkg/errors"
+	"github.com/ory/x/stringsx"
 
 	"github.com/ory/kratos/courier"
 	"github.com/ory/kratos/driver/config"
@@ -43,7 +43,7 @@ type (
 	}
 )
 
-var ErrUnknownAddress = errors.New("recovery requested for unknown address")
+var ErrUnknownAddress = herodot.ErrNotFound.WithReason("recovery requested for unknown address")
 
 func NewSender(deps senderDependencies) *RecoveryCodeSender {
 	return &RecoveryCodeSender{deps: deps}
@@ -63,7 +63,7 @@ func (s *RecoveryCodeSender) SendRecoveryCode(ctx context.Context, r *http.Reque
 		if err := s.send(ctx, string(via), email.NewRecoveryInvalid(s.deps, &email.RecoveryInvalidModel{To: to})); err != nil {
 			return err
 		}
-		return errors.Cause(ErrUnknownAddress)
+		return ErrUnknownAddress
 	}
 
 	// Get the identity associated with the recovery address
@@ -108,11 +108,11 @@ func (s *RecoveryCodeSender) SendRecoveryCodeTo(ctx context.Context, f *recovery
 }
 
 func (s *RecoveryCodeSender) send(ctx context.Context, via string, t courier.EmailTemplate) error {
-	switch via {
-	case identity.AddressTypeEmail:
+	switch f := stringsx.SwitchExact(via); {
+	case f.AddCase(identity.AddressTypeEmail):
 		_, err := s.deps.Courier(ctx).QueueEmail(ctx, t)
 		return err
 	default:
-		return errors.Errorf("received unexpected via type: %s", via)
+		return f.ToUnknownCaseErr()
 	}
 }

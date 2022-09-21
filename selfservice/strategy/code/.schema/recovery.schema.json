@@ -4,10 +4,15 @@
   "type": "object",
   "properties": {
     "method": {
-      "type": "string"
+      "type": "string",
+      "enum": [
+        "code",
+        "link"
+      ]
     },
     "code": {
-      "type": "string"
+      "type": "string",
+      "pattern": "^\\d{8}$"
     },
     "email": {
       "type": "string",

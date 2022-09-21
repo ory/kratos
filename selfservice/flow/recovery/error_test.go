@@ -229,5 +229,47 @@ func TestHandleError(t *testing.T) {
 			sse, _ := expectErrorUI(t)
 			assertx.EqualAsJSON(t, flowError, sse)
 		})
+
+		t.Run("case=new flow uses strategy of old flow", func(t *testing.T) {
+
+			t.Cleanup(reset)
+
+			recoveryFlow = &recovery.Flow{Type: flow.TypeBrowser, Active: "code"}
+			flowError = flow.NewFlowExpiredError(anHourAgo)
+
+			lf, _ := expectRecoveryUI(t)
+			require.Len(t, lf.UI.Messages, 1, "%s", jsonx.TestMarshalJSONString(t, lf))
+			assert.Equal(t, int(text.ErrorValidationRecoveryFlowExpired), int(lf.UI.Messages[0].ID))
+			assert.Equal(t, recoveryFlow.Active.String(), lf.Active.String())
+		})
+
+		t.Run("case=new flow uses current strategy if strategy of old flow does not exist", func(t *testing.T) {
+
+			t.Cleanup(reset)
+
+			recoveryFlow = &recovery.Flow{Type: flow.TypeBrowser, Active: "not-valid"}
+			flowError = flow.NewFlowExpiredError(anHourAgo)
+
+			lf, _ := expectRecoveryUI(t)
+			require.Len(t, lf.UI.Messages, 1, "%s", jsonx.TestMarshalJSONString(t, lf))
+			assert.Equal(t, int(text.ErrorValidationRecoveryFlowExpired), int(lf.UI.Messages[0].ID))
+			assert.Equal(t, "code", lf.Active.String())
+		})
+
+		t.Run("case=XX", func(t *testing.T) {
+
+			t.Cleanup(func() {
+				reset()
+				conf.MustSet(ctx, config.ViperKeySelfServiceRecoveryUse, "code")
+			})
+
+			recoveryFlow = newFlow(t, 0, flow.TypeBrowser)
+			recoveryFlow.Active = "not-valid"
+			flowError = flow.NewFlowExpiredError(anHourAgo)
+
+			conf.MustSet(ctx, config.ViperKeySelfServiceRecoveryUse, "not-valid")
+			sse, _ := expectErrorUI(t)
+			assertx.EqualAsJSON(t, herodot.ErrInternalServerError.WithReason("unable to find strategy for not-valid have [code]"), sse)
+		})
 	})
 }
