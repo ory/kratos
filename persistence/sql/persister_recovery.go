@@ -187,7 +187,7 @@ func (p *Persister) UseRecoveryCode(ctx context.Context, fID uuid.UUID, codeVal 
 
 		var ra identity.RecoveryAddress
 		if err := tx.Where("id = ? AND nid = ?", recoveryCode.RecoveryAddressID, nid).First(&ra); err != nil {
-			if !errors.Is(sqlcon.HandleError(err), sqlcon.ErrNoRows) {
+			if err = sqlcon.HandleError(err); !errors.Is(err, sqlcon.ErrNoRows) {
 				return err
 			}
 		}
