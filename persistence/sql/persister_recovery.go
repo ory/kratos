@@ -183,6 +183,7 @@ func (p *Persister) UseRecoveryCode(ctx context.Context, fID uuid.UUID, codeVal 
 			return sqlcon.HandleError(err)
 		}
 
+	secrets:
 		for _, secret := range p.r.Config().SecretsSession(ctx) {
 			suppliedCode := p.hmacValueWithSecret(ctx, codeVal, secret)
 			for i := range recoveryCodes {
@@ -192,8 +193,10 @@ func (p *Persister) UseRecoveryCode(ctx context.Context, fID uuid.UUID, codeVal 
 					continue
 				}
 				recoveryCode = &code
+				break secrets
 			}
 		}
+
 		if recoveryCode == nil {
 			return code.ErrCodeNotFound
 		}
