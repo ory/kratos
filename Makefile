@@ -51,11 +51,12 @@ docs/swagger:
 		bash <(curl https://raw.githubusercontent.com/ory/meta/master/install.sh) -d -b .bin ory v0.1.33
 		touch -a -m .bin/ory
 
-node_modules: package.json Makefile
+node_modules: package.json
 		npm ci
+		touch node_modules
 
 .bin/golangci-lint: Makefile
-		curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -d -b .bin v1.47.0
+		curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -d -b .bin v1.47.3
 
 .bin/hydra: Makefile
 		bash <(curl https://raw.githubusercontent.com/ory/meta/master/install.sh) -d -b .bin hydra v1.11.0
@@ -103,6 +104,7 @@ sdk: .bin/swagger .bin/ory node_modules
 					-p file://.schema/openapi/patches/security.yaml \
 					-p file://.schema/openapi/patches/session.yaml \
 					-p file://.schema/openapi/patches/identity.yaml \
+					-p file://.schema/openapi/patches/courier.yaml \
 					-p file://.schema/openapi/patches/generic_error.yaml \
 					-p file://.schema/openapi/patches/common.yaml \
 					spec/swagger.json spec/api.json
@@ -135,7 +137,7 @@ quickstart-dev:
 .PHONY: format
 format: .bin/goimports node_modules
 		goimports -w -local github.com/ory .
-		npm run format
+		npm exec -- prettier --write 'test/e2e/**/*{.ts,.js}'
 
 # Build local docker image
 .PHONY: docker

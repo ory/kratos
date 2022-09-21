@@ -123,15 +123,10 @@ func TestPersister(ctx context.Context, conf *config.Config, p interface {
 		})
 
 		t.Run("token=verification", func(t *testing.T) {
-			t.Run("case=should error when the verification token does not exist", func(t *testing.T) {
-				_, err := p.UseVerificationToken(ctx, "i-do-not-exist")
-				require.Error(t, err)
-			})
-
-			newVerificationToken := func(t *testing.T, email string) *link.VerificationToken {
-				var req verification.Flow
-				require.NoError(t, faker.FakeData(&req))
-				require.NoError(t, p.CreateVerificationFlow(ctx, &req))
+			newVerificationToken := func(t *testing.T, email string) (*verification.Flow, *link.VerificationToken) {
+				var f verification.Flow
+				require.NoError(t, faker.FakeData(&f))
+				require.NoError(t, p.CreateVerificationFlow(ctx, &f))
 
 				var i identity.Identity
 				require.NoError(t, faker.FakeData(&i))
@@ -140,9 +135,9 @@ func TestPersister(ctx context.Context, conf *config.Config, p interface {
 				i.VerifiableAddresses = append(i.VerifiableAddresses, *address)
 
 				require.NoError(t, p.CreateIdentity(ctx, &i))
-				return &link.VerificationToken{
+				return &f, &link.VerificationToken{
 					Token:             x.NewUUID().String(),
-					FlowID:            uuid.NullUUID{UUID: req.ID, Valid: true},
+					FlowID:            f.ID,
 					VerifiableAddress: &i.VerifiableAddresses[0],
 					ExpiresAt:         time.Now(),
 					IssuedAt:          time.Now(),
@@ -150,26 +145,33 @@ func TestPersister(ctx context.Context, conf *config.Config, p interface {
 			}
 
 			t.Run("case=should error when the verification token does not exist", func(t *testing.T) {
-				_, err := p.UseVerificationToken(ctx, "i-do-not-exist")
+				_, err := p.UseVerificationToken(ctx, x.NewUUID(), "i-do-not-exist")
+				require.Error(t, err)
+			})
+
+			t.Run("case=should error when the verification token does exist but the flow does not", func(t *testing.T) {
+				_, token := newVerificationToken(t, x.NewUUID().String()+"@ory.sh")
+				require.NoError(t, p.CreateVerificationToken(ctx, token))
+				_, err := p.UseVerificationToken(ctx, x.NewUUID(), token.Token)
 				require.Error(t, err)
 			})
 
 			t.Run("case=should create a new verification token", func(t *testing.T) {
-				token := newVerificationToken(t, "foo-user@ory.sh")
+				_, token := newVerificationToken(t, "foo-user@ory.sh")
 				require.NoError(t, p.CreateVerificationToken(ctx, token))
 			})
 
 			t.Run("case=should create a verification token and use it", func(t *testing.T) {
-				expected := newVerificationToken(t, "other-user@ory.sh")
+				f, expected := newVerificationToken(t, "other-user@ory.sh")
 				require.NoError(t, p.CreateVerificationToken(ctx, expected))
 
 				t.Run("not work on another network", func(t *testing.T) {
 					_, p := testhelpers.NewNetwork(t, ctx, p)
-					_, err := p.UseVerificationToken(ctx, expected.Token)
+					_, err := p.UseVerificationToken(ctx, f.ID, expected.Token)
 					require.ErrorIs(t, err, sqlcon.ErrNoRows)
 				})
 
-				actual, err := p.UseVerificationToken(ctx, expected.Token)
+				actual, err := p.UseVerificationToken(ctx, f.ID, expected.Token)
 				require.NoError(t, err)
 				assertx.EqualAsJSONExcept(t, expected.VerifiableAddress, actual.VerifiableAddress, []string{"created_at", "updated_at"})
 				assert.Equal(t, nid, actual.NID)
@@ -177,7 +179,7 @@ func TestPersister(ctx context.Context, conf *config.Config, p interface {
 				assert.NotEqual(t, expected.Token, actual.Token)
 				assert.EqualValues(t, expected.FlowID, actual.FlowID)
 
-				_, err = p.UseVerificationToken(ctx, expected.Token)
+				_, err = p.UseVerificationToken(ctx, f.ID, expected.Token)
 				require.Error(t, err)
 			})
 		})

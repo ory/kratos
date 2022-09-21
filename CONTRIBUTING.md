@@ -30,8 +30,8 @@ https://github.com/ory/meta/blob/master/templates/repository/common/CONTRIBUTING
 ## Introduction
 
 _Please note_: We take Ory Kratos's security and our users' trust very
-seriously. If you believe you have found a security issue in Ory Kratos,
-please disclose by contacting us at security@ory.sh.
+seriously. If you believe you have found a security issue in Ory Kratos, please
+disclose by contacting us at security@ory.sh.
 
 There are many ways in which you can contribute. The goal of this document is to
 provide a high-level overview of how you can get involved in Ory.
@@ -47,11 +47,9 @@ contributions, and don't want a wall of rules to get in the way of that.
 
 That said, if you want to ensure that a pull request is likely to be merged,
 talk to us! You can find out our thoughts and ensure that your contribution
-won't clash with Ory
-Kratos's direction. A great way to
-do this is via
-[Ory Kratos Discussions](https://github.com/ory/kratos/discussions)
-or the [Ory Chat](https://www.ory.sh/chat).
+won't clash with Ory Kratos's direction. A great way to do this is via
+[Ory Kratos Discussions](https://github.com/ory/kratos/discussions) or the
+[Ory Chat](https://www.ory.sh/chat).
 
 ## FAQ
 
@@ -68,8 +66,7 @@ or the [Ory Chat](https://www.ory.sh/chat).
 - I want to talk to other Ory Kratos users.
   [How can I become a part of the community?](#communication)
 
-- I would like to know what I am agreeing to when I contribute to Ory
-  Kratos.
+- I would like to know what I am agreeing to when I contribute to Ory Kratos.
   Does Ory have
   [a Contributors License Agreement?](https://cla-assistant.io/ory/kratos)
 
@@ -119,8 +116,9 @@ to help out:
 We use [Slack](https://www.ory.sh/chat). You are welcome to drop in and ask
 questions, discuss bugs and feature requests, talk to other users of Ory, etc.
 
-Check out [Ory Kratos Discussions](https://github.com/ory/kratos/discussions). This is a great place for
-in-depth discussions and lots of code examples, logs and similar data.
+Check out [Ory Kratos Discussions](https://github.com/ory/kratos/discussions).
+This is a great place for in-depth discussions and lots of code examples, logs
+and similar data.
 
 You can also join our community calls, if you want to speak to the Ory team
 directly or ask some questions. You can find more info and participate in
@@ -185,10 +183,6 @@ request, go through this checklist:
    Please refer to this
    [list of prefixes for Kratos](https://github.com/ory/kratos/blob/master/.github/semantic.yml)
    for an overview.
-1. Sign-up with CircleCI so that it has access to your repository with the
-   branch containing your PR. Simply creating a CircleCI account is sufficient
-   for the CI jobs to run, you do not need to setup a CircleCI project for the
-   branch.
 
 If a pull request is not ready to be reviewed yet
 [it should be marked as a "Draft"](https://docs.github.com/en/github/collaborating-with-pull-requests/proposing-changes-to-your-work-with-pull-requests/changing-the-stage-of-a-pull-request).

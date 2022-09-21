@@ -44,8 +44,8 @@ type VerificationToken struct {
 	// VerifiableAddressID is a helper struct field for gobuffalo.pop.
 	VerifiableAddressID uuid.UUID `json:"-" faker:"-" db:"identity_verifiable_address_id"`
 	// FlowID is a helper struct field for gobuffalo.pop.
-	FlowID uuid.NullUUID `json:"-" faker:"-" db:"selfservice_verification_flow_id"`
-	NID    uuid.UUID     `json:"-"  faker:"-" db:"nid"`
+	FlowID uuid.UUID `json:"-" faker:"-" db:"selfservice_verification_flow_id"`
+	NID    uuid.UUID `json:"-" faker:"-" db:"nid"`
 }
 
 func (VerificationToken) TableName(ctx context.Context) string {
@@ -60,7 +60,8 @@ func NewSelfServiceVerificationToken(address *identity.VerifiableAddress, f *ver
 		VerifiableAddress: address,
 		ExpiresAt:         now.Add(expiresIn),
 		IssuedAt:          now,
-		FlowID:            uuid.NullUUID{UUID: f.ID, Valid: true}}
+		FlowID:            f.ID,
+	}
 }
 
 func (f *VerificationToken) Valid() error {

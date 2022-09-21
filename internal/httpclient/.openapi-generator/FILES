@@ -17,6 +17,8 @@ docs/AdminCreateSelfServiceRecoveryLinkBody.md
 docs/AdminIdentityImportCredentials.md
 docs/AdminUpdateIdentityBody.md
 docs/AuthenticatorAssuranceLevel.md
+docs/CourierMessageStatus.md
+docs/CourierMessageType.md
 docs/ErrorAuthenticatorAssuranceLevelNotSatisfied.md
 docs/GenericError.md
 docs/HealthNotReadyStatus.md
@@ -34,6 +36,7 @@ docs/InlineResponse2001.md
 docs/InlineResponse503.md
 docs/JsonError.md
 docs/JsonPatch.md
+docs/Message.md
 docs/MetadataApi.md
 docs/NeedsPrivilegedSessionError.md
 docs/Pagination.md
@@ -109,6 +112,8 @@ model_admin_create_self_service_recovery_link_body.go
 model_admin_identity_import_credentials.go
 model_admin_update_identity_body.go
 model_authenticator_assurance_level.go
+model_courier_message_status.go
+model_courier_message_type.go
 model_error_authenticator_assurance_level_not_satisfied.go
 model_generic_error.go
 model_health_not_ready_status.go
@@ -126,6 +131,7 @@ model_inline_response_200_1.go
 model_inline_response_503.go
 model_json_error.go
 model_json_patch.go
+model_message.go
 model_needs_privileged_session_error.go
 model_pagination.go
 model_recovery_identity_address.go

@@ -43,6 +43,77 @@
         }
       }
     },
+    "/admin/courier/messages": {
+      "get": {
+        "description": "Lists all messages by given status and recipient.",
+        "produces": [
+          "application/json"
+        ],
+        "schemes": [
+          "http",
+          "https"
+        ],
+        "tags": [
+          "v0alpha2"
+        ],
+        "summary": "# List Messages",
+        "operationId": "adminListCourierMessages",
+        "parameters": [
+          {
+            "maximum": 1000,
+            "minimum": 1,
+            "type": "integer",
+            "format": "int64",
+            "default": 250,
+            "description": "Items per Page\n\nThis is the number of items per page.",
+            "name": "per_page",
+            "in": "query"
+          },
+          {
+            "minimum": 1,
+            "type": "integer",
+            "format": "int64",
+            "default": 1,
+            "description": "Pagination Page\n\nThis value is currently an integer, but it is not sequential. The value is not the page number, but a\nreference. The next page can be any number and some numbers might return an empty list.\n\nFor example, page 2 might not follow after page 1. And even if page 3 and 5 exist, but page 4 might not exist.",
+            "name": "page",
+            "in": "query"
+          },
+          {
+            "type": "integer",
+            "format": "int64",
+            "description": "Status filters out messages based on status.\nIf no value is provided, it doesn't take effect on filter.",
+            "name": "status",
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "description": "Recipient filters out messages based on recipient.\nIf no value is provided, it doesn't take effect on filter.",
+            "name": "recipient",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "courierMessageList",
+            "schema": {
+              "$ref": "#/definitions/courierMessageList"
+            }
+          },
+          "400": {
+            "description": "jsonError",
+            "schema": {
+              "$ref": "#/definitions/jsonError"
+            }
+          },
+          "500": {
+            "description": "jsonError",
+            "schema": {
+              "$ref": "#/definitions/jsonError"
+            }
+          }
+        }
+      }
+    },
     "/admin/identities": {
       "get": {
         "security": [
@@ -1037,6 +1108,12 @@
             "description": "The URL to return the browser to after the flow was completed.",
             "name": "return_to",
             "in": "query"
+          },
+          {
+            "type": "string",
+            "description": "HTTP Cookies\n\nWhen using the SDK in a browser app, on the server side you must include the HTTP Cookie Header\nsent by the client to your server here. This ensures that CSRF and session cookies are respected.",
+            "name": "Cookie",
+            "in": "header"
           }
         ],
         "responses": {
@@ -1862,6 +1939,12 @@
             "description": "The URL to return the browser to after the flow was completed.",
             "name": "return_to",
             "in": "query"
+          },
+          {
+            "type": "string",
+            "description": "HTTP Cookies\n\nWhen using the SDK in a browser app, on the server side you must include the HTTP Cookie Header\nsent by the client to your server here. This ensures that CSRF and session cookies are respected.",
+            "name": "Cookie",
+            "in": "header"
           }
         ],
         "responses": {
@@ -2499,6 +2582,9 @@
       "type": "string",
       "title": "RecoveryAddressType must not exceed 16 characters as that is the limitation in the SQL Schema."
     },
+    "TemplateType": {
+      "type": "string"
+    },
     "UUID": {"type": "string", "format": "uuid4"},
     "adminCreateIdentityBody": {
       "type": "object",
@@ -2639,6 +2725,24 @@
       "description": "The authenticator assurance level can be one of \"aal1\", \"aal2\", or \"aal3\". A higher number means that it is harder\nfor an attacker to compromise the account.\n\nGenerally, \"aal1\" implies that one authentication factor was used while AAL2 implies that two factors (e.g.\npassword + TOTP) have been used.\n\nTo learn more about these levels please head over to: https://www.ory.sh/kratos/docs/concepts/credentials",
       "type": "string",
       "title": "Authenticator Assurance Level (AAL)"
+    },
+    "courierMessageList": {
+      "type": "array",
+      "title": "A list of messages.",
+      "items": {
+        "$ref": "#/definitions/message"
+      }
+    },
+    "courierMessageStatus": {
+      "description": "A Message's Status",
+      "type": "integer",
+      "format": "int64"
+    },
+    "courierMessageType": {
+      "description": "It can either be `email` or `phone`",
+      "type": "integer",
+      "format": "int64",
+      "title": "A Message's Type"
     },
     "errorAuthenticatorAssuranceLevelNotSatisfied": {
       "type": "object",
@@ -3011,6 +3115,47 @@
       "type": "array",
       "items": {
         "$ref": "#/definitions/jsonPatch"
+      }
+    },
+    "message": {
+      "type": "object",
+      "properties": {
+        "body": {
+          "type": "string"
+        },
+        "created_at": {
+          "description": "CreatedAt is a helper struct field for gobuffalo.pop.",
+          "type": "string",
+          "format": "date-time"
+        },
+        "id": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "recipient": {
+          "type": "string"
+        },
+        "send_count": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "status": {
+          "$ref": "#/definitions/courierMessageStatus"
+        },
+        "subject": {
+          "type": "string"
+        },
+        "template_type": {
+          "$ref": "#/definitions/TemplateType"
+        },
+        "type": {
+          "$ref": "#/definitions/courierMessageType"
+        },
+        "updated_at": {
+          "description": "UpdatedAt is a helper struct field for gobuffalo.pop.",
+          "type": "string",
+          "format": "date-time"
+        }
       }
     },
     "needsPrivilegedSessionError": {
