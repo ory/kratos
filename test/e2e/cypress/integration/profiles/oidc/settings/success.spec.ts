@@ -1,23 +1,23 @@
-import { appPrefix, gen, website } from '../../../../helpers'
-import { routes as react } from '../../../../helpers/react'
-import { routes as express } from '../../../../helpers/express'
+import { appPrefix, gen, website } from "../../../../helpers"
+import { routes as react } from "../../../../helpers/react"
+import { routes as express } from "../../../../helpers/express"
 
-context('Social Sign In Settings Success', () => {
+context("Social Sign In Settings Success", () => {
   ;[
     {
       registration: react.registration,
       settings: react.settings,
       login: react.login,
-      app: 'react' as 'react',
-      profile: 'spa'
+      app: "react" as "react",
+      profile: "spa",
     },
     {
       registration: express.registration,
       settings: express.settings,
       login: express.login,
-      app: 'express' as 'express',
-      profile: 'oidc'
-    }
+      app: "express" as "express",
+      profile: "oidc",
+    },
   ].forEach(({ registration, login, profile, app, settings }) => {
     describe(`for app ${app}`, () => {
       before(() => {
@@ -32,16 +32,16 @@ context('Social Sign In Settings Success', () => {
         cy.visit(login)
         cy.get(appPrefix(app) + '[value="hydra"]').click()
 
-        cy.get('#username').type(email)
-        cy.get('#remember').click()
-        cy.get('#accept').click()
+        cy.get("#username").type(email)
+        cy.get("#remember").click()
+        cy.get("#accept").click()
 
         cy.get('input[name="traits.website"]').clear().type(website)
-        cy.triggerOidc(app, 'hydra')
+        cy.triggerOidc(app, "hydra")
 
         cy.get('[data-testid="ui/message/4000007"]').should(
-          'contain.text',
-          'An account with the same identifier'
+          "contain.text",
+          "An account with the same identifier",
         )
 
         cy.noSession()
@@ -55,53 +55,53 @@ context('Social Sign In Settings Success', () => {
           email,
           expectSession: true,
           website,
-          route: registration
+          route: registration,
         })
         cy.visit(settings)
       })
 
-      describe('oidc', () => {
+      describe("oidc", () => {
         beforeEach(() => {
           cy.longRecoveryLifespan()
           cy.longVerificationLifespan()
           cy.longPrivilegedSessionTime()
         })
 
-        it('should show the correct options', () => {
-          cy.get('[value="hydra"]').should('not.exist')
+        it("should show the correct options", () => {
+          cy.get('[value="hydra"]').should("not.exist")
 
           cy.get('[value="google"]')
-            .should('have.attr', 'name', 'link')
-            .should('contain.text', 'Link google')
+            .should("have.attr", "name", "link")
+            .should("contain.text", "Link google")
 
           cy.get('[value="github"]')
-            .should('have.attr', 'name', 'link')
-            .should('contain.text', 'Link github')
+            .should("have.attr", "name", "link")
+            .should("contain.text", "Link github")
         })
 
-        it('should show the unlink once password is set', () => {
-          cy.get('[value="hydra"]').should('not.exist')
+        it("should show the unlink once password is set", () => {
+          cy.get('[value="hydra"]').should("not.exist")
 
           cy.get('input[name="password"]').type(gen.password())
           cy.get('button[value="password"]').click()
 
           cy.get('[value="hydra"]')
-            .should('have.attr', 'name', 'unlink')
-            .should('contain.text', 'Unlink hydra')
+            .should("have.attr", "name", "unlink")
+            .should("contain.text", "Unlink hydra")
         })
 
-        it('should link google', () => {
+        it("should link google", () => {
           cy.get('[value="google"]').click()
 
           cy.get('input[name="scope"]').each(($el) => cy.wrap($el).click())
-          cy.get('#remember').click()
-          cy.get('#accept').click()
+          cy.get("#remember").click()
+          cy.get("#accept").click()
 
           cy.visit(settings)
 
           cy.get('[value="google"]')
-            .should('have.attr', 'name', 'unlink')
-            .should('contain.text', 'Unlink google')
+            .should("have.attr", "name", "unlink")
+            .should("contain.text", "Unlink google")
 
           cy.logout()
 
@@ -110,39 +110,39 @@ context('Social Sign In Settings Success', () => {
           cy.getSession()
         })
 
-        it('should link google after re-auth', () => {
+        it("should link google after re-auth", () => {
           cy.shortPrivilegedSessionTime()
           cy.get('[value="google"]').click()
-          cy.location('pathname').should('equal', '/login')
+          cy.location("pathname").should("equal", "/login")
 
           cy.longPrivilegedSessionTime()
           cy.get('[value="hydra"]').click()
 
           // prompt=login means that we need to re-auth!
-          cy.get('#username').type(email)
-          cy.get('#accept').click()
+          cy.get("#username").type(email)
+          cy.get("#accept").click()
 
           // we re-authed, now we do the google oauth2 dance
-          cy.get('#username').type(gen.email())
-          cy.get('#accept').click()
+          cy.get("#username").type(gen.email())
+          cy.get("#accept").click()
           cy.get('input[name="scope"]').each(($el) => cy.wrap($el).click())
-          cy.get('#accept').click()
+          cy.get("#accept").click()
 
           cy.expectSettingsSaved()
 
           cy.get('[value="google"]')
-            .should('have.attr', 'name', 'unlink')
-            .should('contain.text', 'Unlink google')
+            .should("have.attr", "name", "unlink")
+            .should("contain.text", "Unlink google")
 
           cy.visit(settings)
 
           cy.get('[value="google"]')
-            .should('have.attr', 'name', 'unlink')
-            .should('contain.text', 'Unlink google')
+            .should("have.attr", "name", "unlink")
+            .should("contain.text", "Unlink google")
         })
 
-        it('should unlink hydra and no longer be able to sign in', () => {
-          cy.get('[value="hydra"]').should('not.exist')
+        it("should unlink hydra and no longer be able to sign in", () => {
+          cy.get('[value="hydra"]').should("not.exist")
           cy.get('input[name="password"]').type(gen.password())
           cy.get('[value="password"]').click()
           cy.expectSettingsSaved()
@@ -157,8 +157,8 @@ context('Social Sign In Settings Success', () => {
           hydraReauthFails()
         })
 
-        it('should unlink hydra after reauth', () => {
-          cy.get('[value="hydra"]').should('not.exist')
+        it("should unlink hydra after reauth", () => {
+          cy.get('[value="hydra"]').should("not.exist")
 
           cy.get('input[name="password"]').type(gen.password())
           cy.get('[value="password"]').click()
@@ -169,12 +169,12 @@ context('Social Sign In Settings Success', () => {
           cy.get('[value="hydra"]').click()
 
           cy.longPrivilegedSessionTime()
-          cy.location('pathname').should('equal', '/login')
+          cy.location("pathname").should("equal", "/login")
           cy.get('[value="hydra"]').click()
 
           // prompt=login means that we need to re-auth!
-          cy.get('#username').type(email)
-          cy.get('#accept').click()
+          cy.get("#username").type(email)
+          cy.get("#accept").click()
           cy.expectSettingsSaved()
 
           hydraReauthFails()

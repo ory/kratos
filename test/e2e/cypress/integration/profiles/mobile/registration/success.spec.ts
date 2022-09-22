@@ -1,16 +1,16 @@
-import { MOBILE_URL, gen, website } from '../../../../helpers'
+import { MOBILE_URL, gen, website } from "../../../../helpers"
 
-context('Mobile Profile', () => {
-  describe('Login Flow Success', () => {
+context("Mobile Profile", () => {
+  describe("Login Flow Success", () => {
     before(() => {
-      cy.useConfigProfile('mobile')
+      cy.useConfigProfile("mobile")
     })
 
     beforeEach(() => {
-      cy.visit(MOBILE_URL + '/Registration')
+      cy.visit(MOBILE_URL + "/Registration")
     })
 
-    it('should sign up and be logged in', () => {
+    it("should sign up and be logged in", () => {
       const email = gen.email()
       const password = gen.password()
 
@@ -19,8 +19,8 @@ context('Mobile Profile', () => {
       cy.get('input[data-testid="traits.website"]').type(website)
       cy.get('div[data-testid="submit-form"]').click()
 
-      cy.get('[data-testid="session-content"]').should('contain', email)
-      cy.get('[data-testid="session-token"]').should('not.be.empty')
+      cy.get('[data-testid="session-content"]').should("contain", email)
+      cy.get('[data-testid="session-token"]').should("not.be.empty")
     })
   })
 })
