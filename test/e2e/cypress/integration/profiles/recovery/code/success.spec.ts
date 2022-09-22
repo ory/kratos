@@ -56,7 +56,7 @@ context('Account Recovery With Code Success', () => {
         cy.recoveryEmailWithCode({ expect: { email: identity.email } })
         cy.get("button[value='code']").click()
 
-        cy.get('[data-testid="ui/message/1060001"]').should(
+        cy.get('[data-testid="ui/message/1060001"]', { timeout: 30000 }).should(
           'contain.text',
           'You successfully recovered your account. '
         )
@@ -100,7 +100,7 @@ context('Account Recovery With Code Success', () => {
         cy.recoveryEmailWithCode({ expect: { email: identity.email } })
         cy.get("button[value='code']").click()
 
-        cy.get('[data-testid="ui/message/1060001"]').should(
+        cy.get('[data-testid="ui/message/1060001"]', { timeout: 30000 }).should(
           'contain.text',
           'You successfully recovered your account. '
         )
@@ -130,7 +130,7 @@ context('Account Recovery With Code Success', () => {
         })
         cy.get("button[value='code']").click()
 
-        cy.get('[data-testid="ui/message/1060001"]').should(
+        cy.get('[data-testid="ui/message/1060001"]', { timeout: 30000 }).should(
           'contain.text',
           'You successfully recovered your account. '
         )

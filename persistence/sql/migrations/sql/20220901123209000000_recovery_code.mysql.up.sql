@@ -26,7 +26,8 @@ CREATE TABLE identity_recovery_codes
         ON UPDATE RESTRICT ON DELETE CASCADE
 );
 
-CREATE INDEX identity_recovery_codes_id_nid_flow_id_idx ON identity_recovery_codes (id, nid, selfservice_recovery_flow_id);
+CREATE INDEX identity_recovery_codes_nid_flow_id_idx ON identity_recovery_codes (nid, selfservice_recovery_flow_id);
+CREATE INDEX identity_recovery_codes_id_nid_idx ON identity_recovery_codes (id, nid);
 
 ALTER TABLE selfservice_recovery_flows ADD submit_count int NOT NULL DEFAULT 0;
 ALTER TABLE selfservice_recovery_flows ADD skip_csrf_check boolean NOT NULL DEFAULT FALSE;
