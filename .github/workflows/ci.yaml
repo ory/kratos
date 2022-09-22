@@ -138,7 +138,7 @@ jobs:
       TEST_DATABASE_COCKROACHDB: 'cockroach://root@localhost:26257/defaultdb?sslmode=disable'
     strategy:
       matrix:
-        database: [ 'postgres', 'cockroach', 'sqlite', 'mysql' ]
+        database: ['postgres', 'cockroach', 'sqlite', 'mysql']
     steps:
       - run: |
           docker create --name cockroach -p 26257:26257 \
