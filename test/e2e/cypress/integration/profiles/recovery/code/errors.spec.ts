@@ -42,7 +42,7 @@ context('Account Recovery Errors', () => {
           'An email containing a recovery code has been sent to the email address you provided.'
         )
         for (let i = 0; i < 5; i++) {
-          cy.get("input[name='code']").type(i + '' + i) // Invalid code
+          cy.get("input[name='code']").type((i + '').repeat(8)) // Invalid code
           cy.get("button[value='code']").click()
           cy.get('[data-testid="ui/message/4060006"]').should(
             'have.text',
@@ -51,7 +51,7 @@ context('Account Recovery Errors', () => {
           cy.noSession()
         }
 
-        cy.get("input[name='code']").type('123123') // Invalid code
+        cy.get("input[name='code']").type('12312312') // Invalid code
         cy.get("button[value='code']").click()
         cy.get('[data-testid="ui/message/4060007"]').should(
           'have.text',
@@ -132,7 +132,7 @@ context('Account Recovery Errors', () => {
           'have.text',
           'An email containing a recovery code has been sent to the email address you provided.'
         )
-        cy.get("input[name='code']").type('012345') // Invalid code
+        cy.get("input[name='code']").type('01234567') // Invalid code
         cy.get("button[value='code']").click()
         cy.get('[data-testid="ui/message/4060006"]').should(
           'have.text',

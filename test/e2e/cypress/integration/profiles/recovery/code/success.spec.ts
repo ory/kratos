@@ -85,7 +85,7 @@ context('Account Recovery With Code Success', () => {
           'have.text',
           'An email containing a recovery code has been sent to the email address you provided.'
         )
-        cy.get("input[name='code']").type('123123') // Invalid code
+        cy.get("input[name='code']").type('12312312') // Invalid code
         cy.get("button[value='code']").click()
         cy.get('[data-testid="ui/message/4060006"]').should(
           'have.text',
