@@ -54,10 +54,10 @@ type Device struct {
 	Location *string `json:"location" db:"location"`
 
 	// Time of capture
-	CreatedAt time.Time `json:"seen_at" faker:"-" db:"created_at"`
+	CreatedAt time.Time `json:"-" faker:"-" db:"created_at"`
 
 	// Last seen
-	UpdatedAt time.Time `json:"last_seen" faker:"-" db:"updated_at"`
+	UpdatedAt time.Time `json:"-" faker:"-" db:"updated_at"`
 
 	NID uuid.UUID `json:"-"  faker:"-" db:"nid"`
 }
