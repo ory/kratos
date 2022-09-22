@@ -1,21 +1,21 @@
-import { appPrefix, gen, website } from '../../../../helpers'
-import { routes as react } from '../../../../helpers/react'
-import { routes as express } from '../../../../helpers/express'
+import { appPrefix, gen, website } from "../../../../helpers"
+import { routes as react } from "../../../../helpers/react"
+import { routes as express } from "../../../../helpers/express"
 
-context('Social Sign Up Successes', () => {
+context("Social Sign Up Successes", () => {
   ;[
     {
       login: react.login,
       registration: react.registration,
-      app: 'react' as 'react',
-      profile: 'spa'
+      app: "react" as "react",
+      profile: "spa",
     },
     {
       login: express.login,
       registration: express.registration,
-      app: 'express' as 'express',
-      profile: 'oidc'
-    }
+      app: "express" as "express",
+      profile: "oidc",
+    },
   ].forEach(({ registration, login, profile, app }) => {
     describe(`for app ${app}`, () => {
       before(() => {
@@ -27,7 +27,7 @@ context('Social Sign Up Successes', () => {
         cy.clearAllCookies()
         cy.visit(registration)
         cy.setIdentitySchema(
-          'file://test/e2e/profiles/oidc/identity.traits.schema.json'
+          "file://test/e2e/profiles/oidc/identity.traits.schema.json",
         )
       })
 
@@ -38,54 +38,54 @@ context('Social Sign Up Successes', () => {
         expect(identity.traits.email).to.equal(email)
       }
 
-      it('should be able to sign up with incomplete data and finally be signed in', () => {
+      it("should be able to sign up with incomplete data and finally be signed in", () => {
         const email = gen.email()
 
         cy.registerOidc({ email, expectSession: false, route: registration })
 
-        cy.get('#registration-password').should('not.exist')
+        cy.get("#registration-password").should("not.exist")
         cy.get(appPrefix(app) + '[name="traits.email"]').should(
-          'have.value',
-          email
+          "have.value",
+          email,
         )
         cy.get('[data-testid="ui/message/4000002"]').should(
-          'contain.text',
-          'Property website is missing'
+          "contain.text",
+          "Property website is missing",
         )
 
         cy.get('[name="traits.consent"][type="checkbox"]')
-          .siblings('label')
+          .siblings("label")
           .click()
         cy.get('[name="traits.newsletter"][type="checkbox"]')
-          .siblings('label')
+          .siblings("label")
           .click()
-        cy.get('[name="traits.website"]').type('http://s')
+        cy.get('[name="traits.website"]').type("http://s")
 
         cy.get('[name="provider"]')
-          .should('have.length', 1)
-          .should('have.value', 'hydra')
-          .should('contain.text', 'Continue')
+          .should("have.length", 1)
+          .should("have.value", "hydra")
+          .should("contain.text", "Continue")
           .click()
 
-        cy.get('#registration-password').should('not.exist')
-        cy.get('[name="traits.email"]').should('have.value', email)
-        cy.get('[name="traits.website"]').should('have.value', 'http://s')
+        cy.get("#registration-password").should("not.exist")
+        cy.get('[name="traits.email"]').should("have.value", email)
+        cy.get('[name="traits.website"]').should("have.value", "http://s")
         cy.get('[data-testid="ui/message/4000001"]').should(
-          'contain.text',
-          'length must be >= 10'
+          "contain.text",
+          "length must be >= 10",
         )
         cy.get('[name="traits.website"]')
-          .should('have.value', 'http://s')
+          .should("have.value", "http://s")
           .clear()
           .type(website)
 
-        cy.get('[name="traits.consent"]').should('be.checked')
-        cy.get('[name="traits.newsletter"]').should('be.checked')
+        cy.get('[name="traits.consent"]').should("be.checked")
+        cy.get('[name="traits.newsletter"]').should("be.checked")
 
         cy.triggerOidc(app)
 
-        cy.location('pathname').should((loc) => {
-          expect(loc).to.be.oneOf(['/welcome', '/'])
+        cy.location("pathname").should((loc) => {
+          expect(loc).to.be.oneOf(["/welcome", "/"])
         })
 
         cy.getSession().should((session) => {
@@ -94,14 +94,14 @@ context('Social Sign Up Successes', () => {
         })
       })
 
-      it('should be able to sign up with complete data', () => {
+      it("should be able to sign up with complete data", () => {
         const email = gen.email()
 
         cy.registerOidc({ email, website, route: registration })
         cy.getSession().should(shouldSession(email))
       })
 
-      it('should be able to convert a sign up flow to a sign in flow', () => {
+      it("should be able to convert a sign up flow to a sign in flow", () => {
         const email = gen.email()
 
         cy.registerOidc({ email, website, route: registration })
@@ -110,63 +110,63 @@ context('Social Sign Up Successes', () => {
         cy.visit(registration)
         cy.triggerOidc(app)
 
-        cy.location('pathname').should((path) => {
-          expect(path).to.oneOf(['/', '/welcome'])
+        cy.location("pathname").should((path) => {
+          expect(path).to.oneOf(["/", "/welcome"])
         })
 
         cy.getSession().should(shouldSession(email))
       })
 
-      it('should be able to convert a sign in flow to a sign up flow', () => {
+      it("should be able to convert a sign in flow to a sign up flow", () => {
         cy.setIdentitySchema(
-          'file://test/e2e/profiles/oidc/identity-required.traits.schema.json'
+          "file://test/e2e/profiles/oidc/identity-required.traits.schema.json",
         )
 
         const email = gen.email()
         cy.visit(login)
         cy.triggerOidc(app)
 
-        cy.get('#username').clear().type(email)
-        cy.get('#remember').click()
-        cy.get('#accept').click()
+        cy.get("#username").clear().type(email)
+        cy.get("#remember").click()
+        cy.get("#accept").click()
         cy.get('[name="scope"]').each(($el) => cy.wrap($el).click())
-        cy.get('#remember').click()
-        cy.get('#accept').click()
+        cy.get("#remember").click()
+        cy.get("#accept").click()
 
         cy.get('[data-testid="ui/message/4000002"]').should(
-          'contain.text',
-          'Property website is missing'
+          "contain.text",
+          "Property website is missing",
         )
-        cy.get('[name="traits.website"]').type('http://s')
+        cy.get('[name="traits.website"]').type("http://s")
 
         cy.triggerOidc(app)
 
         cy.get('[data-testid="ui/message/4000001"]').should(
-          'contain.text',
-          'length must be >= 10'
+          "contain.text",
+          "length must be >= 10",
         )
-        cy.get('[name="traits.requirednested"]').should('not.exist')
-        cy.get('[name="traits.requirednested.a"]').siblings('label').click()
-        cy.get('[name="traits.consent"]').siblings('label').click()
+        cy.get('[name="traits.requirednested"]').should("not.exist")
+        cy.get('[name="traits.requirednested.a"]').siblings("label").click()
+        cy.get('[name="traits.consent"]').siblings("label").click()
         cy.get('[name="traits.website"]')
-          .should('have.value', 'http://s')
+          .should("have.value", "http://s")
           .clear()
           .type(website)
         cy.triggerOidc(app)
 
-        cy.location('pathname').should('not.contain', '/registration')
+        cy.location("pathname").should("not.contain", "/registration")
 
         cy.getSession().should(shouldSession(email))
       })
 
-      it('should be able to sign up with redirects', () => {
+      it("should be able to sign up with redirects", () => {
         const email = gen.email()
         cy.registerOidc({
           email,
           website,
-          route: registration + '?return_to=https://www.ory.sh/'
+          route: registration + "?return_to=https://www.ory.sh/",
         })
-        cy.location('href').should('eq', 'https://www.ory.sh/')
+        cy.location("href").should("eq", "https://www.ory.sh/")
         cy.logout()
       })
     })

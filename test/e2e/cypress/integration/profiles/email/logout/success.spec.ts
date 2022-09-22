@@ -1,19 +1,19 @@
-import { appPrefix, gen, website } from '../../../../helpers'
-import { routes as express } from '../../../../helpers/express'
-import { routes as react } from '../../../../helpers/react'
+import { appPrefix, gen, website } from "../../../../helpers"
+import { routes as express } from "../../../../helpers/express"
+import { routes as react } from "../../../../helpers/react"
 
-context('Testing logout flows', () => {
+context("Testing logout flows", () => {
   ;[
     {
       route: express.login,
-      app: 'express' as 'express',
-      profile: 'email'
+      app: "express" as "express",
+      profile: "email",
     },
     {
       route: react.login,
-      app: 'react' as 'react',
-      profile: 'spa'
-    }
+      app: "react" as "react",
+      profile: "spa",
+    },
   ].forEach(({ route, profile, app }) => {
     describe(`for app ${app}`, () => {
       const email = gen.email()
@@ -26,7 +26,7 @@ context('Testing logout flows', () => {
         cy.registerApi({
           email,
           password,
-          fields: { 'traits.website': website }
+          fields: { "traits.website": website },
         })
       })
 
@@ -36,15 +36,15 @@ context('Testing logout flows', () => {
         cy.visit(route)
       })
 
-      it('should sign out and be able to sign in again', () => {
+      it("should sign out and be able to sign in again", () => {
         cy.getSession()
-        cy.getCookie('ory_kratos_session').should('not.be.null')
+        cy.getCookie("ory_kratos_session").should("not.be.null")
         cy.get(
-          `${appPrefix(app)} [data-testid="logout"]:not(.disabled)`
+          `${appPrefix(app)} [data-testid="logout"]:not(.disabled)`,
         ).click()
         cy.noSession()
-        cy.url().should('include', '/login')
-        cy.getCookie('ory_kratos_session').should('be.null')
+        cy.url().should("include", "/login")
+        cy.getCookie("ory_kratos_session").should("be.null")
       })
     })
   })
