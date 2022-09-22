@@ -56,6 +56,11 @@ context('Account Recovery With Code Success', () => {
         cy.recoveryEmailWithCode({ expect: { email: identity.email } })
         cy.get("button[value='code']").click()
 
+        cy.get('[data-testid="ui/message/1060001"]').should(
+          'contain.text',
+          'You successfully recovered your account. '
+        )
+
         cy.getSession()
         cy.location('pathname').should('eq', '/settings')
 
@@ -95,6 +100,10 @@ context('Account Recovery With Code Success', () => {
         cy.recoveryEmailWithCode({ expect: { email: identity.email } })
         cy.get("button[value='code']").click()
 
+        cy.get('[data-testid="ui/message/1060001"]').should(
+          'contain.text',
+          'You successfully recovered your account. '
+        )
         cy.getSession()
         cy.location('pathname').should('eq', '/settings')
         cy.get('input[name="traits.email"]').should(
@@ -121,6 +130,10 @@ context('Account Recovery With Code Success', () => {
         })
         cy.get("button[value='code']").click()
 
+        cy.get('[data-testid="ui/message/1060001"]').should(
+          'contain.text',
+          'You successfully recovered your account. '
+        )
         cy.getSession()
         cy.location('pathname').should('eq', '/settings')
         cy.get('input[name="traits.email"]').should(
