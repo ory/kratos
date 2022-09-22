@@ -9,8 +9,8 @@ import (
 	"github.com/gobuffalo/pop/v6"
 	"github.com/gofrs/uuid"
 
-	"github.com/ory/herodot"
 	"github.com/ory/kratos/identity"
+	"github.com/ory/kratos/selfservice/flow"
 	"github.com/ory/kratos/selfservice/flow/recovery"
 	"github.com/ory/kratos/selfservice/strategy/code"
 	"github.com/ory/kratos/selfservice/strategy/link"
@@ -202,7 +202,7 @@ func (p *Persister) UseRecoveryCode(ctx context.Context, fID uuid.UUID, codeVal 
 		}
 
 		if recoveryCode.IsExpired() {
-			return herodot.ErrBadRequest.WithReasonf("recovery code expired %.2f ago", time.Since(recoveryCode.ExpiresAt).Minutes())
+			return flow.NewFlowExpiredError(recoveryCode.ExpiresAt)
 		}
 
 		if recoveryCode.WasUsed() {

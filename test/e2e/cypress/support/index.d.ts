@@ -447,7 +447,7 @@ declare global {
        * @param opts
        */
       recoveryEmailWithCode(opts?: {
-        expect: { email: string; count?: number }
+        expect: { email: string; count?: number; enterCode?: boolean }
       }): Chainable<void>
 
       /**

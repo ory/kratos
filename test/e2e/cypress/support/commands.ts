@@ -1007,7 +1007,7 @@ Cypress.Commands.add('recoverEmailButExpired', ({ expect: { email } }) => {
 
 Cypress.Commands.add(
   'recoveryEmailWithCode',
-  ({ expect: { email, count = 1 } }) => {
+  ({ expect: { email, count = 1, enterCode = true } }) => {
     cy.getMail({ removeMail: true, count }).should((message) => {
       expect(message.subject).to.equal('Recover access to your account')
       expect(message.toAddresses[0].trim()).to.equal(email)
@@ -1015,7 +1015,9 @@ Cypress.Commands.add(
       const code = extractRecoveryCode(message.body)
       expect(code).to.not.be.undefined
       expect(code.length).to.equal(8)
-      cy.get("input[name='code']").type(code)
+      if (enterCode) {
+        cy.get("input[name='code']").type(code)
+      }
     })
   }
 )

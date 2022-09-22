@@ -41,6 +41,9 @@ context('Account Recovery Errors', () => {
           'have.text',
           'An email containing a recovery code has been sent to the email address you provided.'
         )
+        cy.recoveryEmailWithCode({
+          expect: { email: identity.email, enterCode: false }
+        })
         for (let i = 0; i < 5; i++) {
           cy.get("input[name='code']").type((i + '').repeat(8)) // Invalid code
           cy.get("button[value='code']").click()
@@ -64,6 +67,9 @@ context('Account Recovery Errors', () => {
           'have.text',
           'An email containing a recovery code has been sent to the email address you provided.'
         )
+        cy.recoveryEmailWithCode({
+          expect: { email: identity.email, enterCode: false }
+        })
       })
 
       it('shows code expired message if expired code is submitted', () => {
