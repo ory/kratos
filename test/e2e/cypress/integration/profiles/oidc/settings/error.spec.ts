@@ -1,21 +1,21 @@
-import { APP_URL, appPrefix, gen, website } from '../../../../helpers'
-import { routes as react } from '../../../../helpers/react'
-import { routes as express } from '../../../../helpers/express'
+import { APP_URL, appPrefix, gen, website } from "../../../../helpers"
+import { routes as react } from "../../../../helpers/react"
+import { routes as express } from "../../../../helpers/express"
 
-context('Social Sign In Settings Errors', () => {
+context("Social Sign In Settings Errors", () => {
   ;[
     {
       registration: react.registration,
       settings: react.settings,
-      app: 'react' as 'react',
-      profile: 'spa'
+      app: "react" as "react",
+      profile: "spa",
     },
     {
       registration: express.registration,
       settings: express.settings,
-      app: 'express' as 'express',
-      profile: 'oidc'
-    }
+      app: "express" as "express",
+      profile: "oidc",
+    },
   ].forEach(({ registration, profile, app, settings }) => {
     describe(`for app ${app}`, () => {
       before(() => {
@@ -32,20 +32,20 @@ context('Social Sign In Settings Errors', () => {
           email,
           expectSession: true,
           website,
-          route: registration
+          route: registration,
         })
         cy.visit(settings)
       })
 
-      describe('oidc', () => {
-        it('should fail to link google because id token is missing', () => {
+      describe("oidc", () => {
+        it("should fail to link google because id token is missing", () => {
           cy.get(appPrefix(app) + 'button[value="google"]').click()
-          cy.get('#remember').click()
-          cy.get('#accept').click()
+          cy.get("#remember").click()
+          cy.get("#accept").click()
 
           cy.get('[data-testid="ui/message/4000001"]').should(
-            'contain.text',
-            'Authentication failed because no id_token was returned. Please accept the "openid" permission and try again.'
+            "contain.text",
+            'Authentication failed because no id_token was returned. Please accept the "openid" permission and try again.',
           )
         })
       })

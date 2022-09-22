@@ -1,21 +1,21 @@
-import { appPrefix, assertRecoveryAddress, gen } from '../../../../helpers'
-import { routes as react } from '../../../../helpers/react'
-import { routes as express } from '../../../../helpers/express'
+import { appPrefix, assertRecoveryAddress, gen } from "../../../../helpers"
+import { routes as react } from "../../../../helpers/react"
+import { routes as express } from "../../../../helpers/express"
 
-context('Account Recovery Success', () => {
+context("Account Recovery Success", () => {
   ;[
     {
       recovery: react.recovery,
       base: react.base,
-      app: 'react' as 'react',
-      profile: 'spa'
+      app: "react" as "react",
+      profile: "spa",
     },
     {
       recovery: express.recovery,
       base: express.base,
-      app: 'express' as 'express',
-      profile: 'recovery'
-    }
+      app: "express" as "express",
+      profile: "recovery",
+    },
   ].forEach(({ recovery, profile, base, app }) => {
     describe(`for app ${app}`, () => {
       before(() => {
@@ -37,19 +37,19 @@ context('Account Recovery Success', () => {
         cy.registerApi(identity)
       })
 
-      it('should contain the recovery address in the session', () => {
+      it("should contain the recovery address in the session", () => {
         cy.visit(recovery)
         cy.login({ ...identity, cookieUrl: base })
         cy.getSession().should(assertRecoveryAddress(identity))
       })
 
-      it('should perform a recovery flow', () => {
+      it("should perform a recovery flow", () => {
         cy.recoverApi({ email: identity.email })
 
         cy.recoverEmail({ expect: identity })
 
         cy.getSession()
-        cy.location('pathname').should('eq', '/settings')
+        cy.location("pathname").should("eq", "/settings")
 
         const newPassword = gen.password()
         cy.get(appPrefix(app) + 'input[name="password"]')
@@ -57,23 +57,23 @@ context('Account Recovery Success', () => {
           .type(newPassword)
         cy.get('button[value="password"]').click()
         cy.expectSettingsSaved()
-        cy.get('input[name="password"]').should('be.empty')
+        cy.get('input[name="password"]').should("be.empty")
 
         cy.logout()
         cy.login({
           email: identity.email,
           password: newPassword,
-          cookieUrl: base
+          cookieUrl: base,
         })
       })
     })
   })
 
-  it('should recover, set password and be redirected', () => {
-    const app = 'express' as 'express'
+  it("should recover, set password and be redirected", () => {
+    const app = "express" as "express"
 
     cy.deleteMail()
-    cy.useConfigProfile('recovery')
+    cy.useConfigProfile("recovery")
     cy.proxy(app)
 
     cy.deleteMail()
@@ -85,25 +85,25 @@ context('Account Recovery Success', () => {
     const identity = gen.identityWithWebsite()
     cy.registerApi(identity)
 
-    cy.recoverApi({ email: identity.email, returnTo: 'https://www.ory.sh/' })
+    cy.recoverApi({ email: identity.email, returnTo: "https://www.ory.sh/" })
 
     cy.recoverEmail({ expect: identity })
 
     cy.getSession()
-    cy.location('pathname').should('eq', '/settings')
+    cy.location("pathname").should("eq", "/settings")
 
     cy.get(appPrefix(app) + 'input[name="password"]')
       .clear()
       .type(gen.password())
     cy.get('button[value="password"]').click()
-    cy.url().should('eq', 'https://www.ory.sh/')
+    cy.url().should("eq", "https://www.ory.sh/")
   })
 
-  it('should recover even if already logged into another account', () => {
-    const app = 'express' as 'express'
+  it("should recover even if already logged into another account", () => {
+    const app = "express" as "express"
 
     cy.deleteMail()
-    cy.useConfigProfile('recovery')
+    cy.useConfigProfile("recovery")
     cy.proxy(app)
 
     cy.deleteMail()
@@ -124,14 +124,14 @@ context('Account Recovery Success', () => {
     cy.get('input[name="password"]').type(identity1.password)
     cy.get('button[value="password"]').click()
 
-    cy.location('pathname').should('not.contain', '/login')
+    cy.location("pathname").should("not.contain", "/login")
 
     // then recover identity2, while still logged in as identity1
 
     cy.recoverEmail({ expect: identity2 })
 
     cy.getSession()
-    cy.location('pathname').should('eq', '/settings')
-    cy.get('input[name="traits.email"]').should('have.value', identity2.email)
+    cy.location("pathname").should("eq", "/settings")
+    cy.get('input[name="traits.email"]').should("have.value", identity2.email)
   })
 })

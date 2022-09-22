@@ -4,7 +4,7 @@ on:
     branches:
       - master
     tags:
-      - '*'
+      - "*"
   pull_request:
 
 # Cancel in-progress runs in current workflow.
@@ -42,14 +42,14 @@ jobs:
         ports:
           - 3306:3306
     env:
-      TEST_MAILHOG_SMTP: 'smtp://test:test@127.0.0.1:1025/?disable_starttls=true'
+      TEST_MAILHOG_SMTP: "smtp://test:test@127.0.0.1:1025/?disable_starttls=true"
       TEST_MAILHOG_API: http://127.0.0.1:8025
       TEST_SELFSERVICE_OIDC_HYDRA_ADMIN: http://localhost:4445
       TEST_SELFSERVICE_OIDC_HYDRA_PUBLIC: http://localhost:4444
       TEST_SELFSERVICE_OIDC_HYDRA_INTEGRATION_ADDR: http://127.0.0.1:4499
-      TEST_DATABASE_POSTGRESQL: 'postgres://test:test@localhost:5432/postgres?sslmode=disable'
-      TEST_DATABASE_MYSQL: 'mysql://root:test@(localhost:3306)/mysql?parseTime=true&multiStatements=true'
-      TEST_DATABASE_COCKROACHDB: 'cockroach://root@localhost:26257/defaultdb?sslmode=disable'
+      TEST_DATABASE_POSTGRESQL: "postgres://test:test@localhost:5432/postgres?sslmode=disable"
+      TEST_DATABASE_MYSQL: "mysql://root:test@(localhost:3306)/mysql?parseTime=true&multiStatements=true"
+      TEST_DATABASE_COCKROACHDB: "cockroach://root@localhost:26257/defaultdb?sslmode=disable"
     steps:
       - run: |
           docker create --name cockroach -p 26257:26257 \
@@ -77,7 +77,7 @@ jobs:
           fetch-depth: 2
       - uses: actions/setup-go@v2
         with:
-          go-version: '~1.18'
+          go-version: "~1.18"
       - run: go list -json > go.list
       - name: Run nancy
         uses: sonatype-nexus-community/nancy-github-action@v1.0.2
@@ -133,12 +133,12 @@ jobs:
           - 4437:4437
           - 1025:1025
     env:
-      TEST_DATABASE_POSTGRESQL: 'postgres://test:test@localhost:5432/postgres?sslmode=disable'
-      TEST_DATABASE_MYSQL: 'mysql://root:test@(localhost:3306)/mysql?parseTime=true&multiStatements=true'
-      TEST_DATABASE_COCKROACHDB: 'cockroach://root@localhost:26257/defaultdb?sslmode=disable'
+      TEST_DATABASE_POSTGRESQL: "postgres://test:test@localhost:5432/postgres?sslmode=disable"
+      TEST_DATABASE_MYSQL: "mysql://root:test@(localhost:3306)/mysql?parseTime=true&multiStatements=true"
+      TEST_DATABASE_COCKROACHDB: "cockroach://root@localhost:26257/defaultdb?sslmode=disable"
     strategy:
       matrix:
-        database: ['postgres', 'cockroach', 'sqlite', 'mysql']
+        database: ["postgres", "cockroach", "sqlite", "mysql"]
     steps:
       - run: |
           docker create --name cockroach -p 26257:26257 \
@@ -162,7 +162,7 @@ jobs:
       - name: Setup Go
         uses: actions/setup-go@v2
         with:
-          go-version: '~1.18'
+          go-version: "~1.18"
       - name: Install selfservice-ui-react-native
         uses: actions/checkout@v2
         with:
@@ -202,7 +202,7 @@ jobs:
       - uses: ory/ci/docs/cli-next@master
         with:
           token: ${{ secrets.ORY_BOT_PAT }}
-          arg: '.'
+          arg: "."
           output-dir: docs/kratos
 
   changelog:
@@ -230,7 +230,7 @@ jobs:
       - uses: ory/ci/sdk/release@master
         with:
           token: ${{ secrets.ORY_BOT_PAT }}
-          swag-spec-location: 'spec/api.json'
+          swag-spec-location: "spec/api.json"
 
   release:
     name: Generate release
@@ -273,7 +273,7 @@ jobs:
           mailchimp_list_id: f605a41b53
           mailchmip_segment_id: 6479477
           mailchimp_api_key: ${{ secrets.MAILCHIMP_API_KEY }}
-          draft: 'true'
+          draft: "true"
           ssh_key: ${{ secrets.ORY_BOT_SSH_KEY }}
 
   slack-approval-notification:
@@ -300,5 +300,5 @@ jobs:
           mailchimp_list_id: f605a41b53
           mailchmip_segment_id: 6479477
           mailchimp_api_key: ${{ secrets.MAILCHIMP_API_KEY }}
-          draft: 'false'
+          draft: "false"
           ssh_key: ${{ secrets.ORY_BOT_SSH_KEY }}

@@ -138,6 +138,7 @@ quickstart-dev:
 format: .bin/goimports node_modules
 		goimports -w -local github.com/ory .
 		npm exec -- prettier --write 'test/e2e/**/*{.ts,.js}'
+		npm exec -- prettier --write '.github'
 
 # Build local docker image
 .PHONY: docker
