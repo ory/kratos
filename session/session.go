@@ -45,13 +45,13 @@ type Device struct {
 	SessionID uuid.UUID `json:"-" faker:"-" db:"session_id"`
 
 	// IPAddress of the client
-	IPAddress *string `json:"ip_address" db:"ip_address"`
+	IPAddress *string `json:"ip_address" faker:"ptr_ipv4" db:"ip_address"`
 
 	// UserAgent of the client
-	UserAgent *string `json:"user_agent" db:"user_agent"`
+	UserAgent *string `json:"user_agent" faker:"-" db:"user_agent"`
 
 	// Geo Location corresponding to the IP Address
-	Location *string `json:"location" db:"location"`
+	Location *string `json:"location" faker:"ptr_geo_location" db:"location"`
 
 	// Time of capture
 	CreatedAt time.Time `json:"-" faker:"-" db:"created_at"`

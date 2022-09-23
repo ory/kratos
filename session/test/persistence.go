@@ -32,7 +32,7 @@ func TestPersister(ctx context.Context, conf *config.Config, p interface {
 		testhelpers.SetDefaultIdentitySchema(conf, "file://./stub/identity.schema.json")
 
 		t.Run("case=not found", func(t *testing.T) {
-			_, err := p.GetSession(ctx, x.NewUUID())
+			_, err := p.GetSession(ctx, x.NewUUID(), session.ExpandNothing)
 			require.Error(t, err)
 		})
 
@@ -45,6 +45,12 @@ func TestPersister(ctx context.Context, conf *config.Config, p interface {
 				{Method: identity.CredentialsTypeOIDC, CompletedAt: time.Now().UTC().Round(time.Second)},
 			}
 			require.NoError(t, p.CreateIdentity(ctx, expected.Identity))
+
+			var expectedSessionDevice session.Device
+			require.NoError(t, faker.FakeData(&expectedSessionDevice))
+			expected.Devices = []session.Device{
+				expectedSessionDevice,
+			}
 
 			assert.Equal(t, uuid.Nil, expected.ID)
 			require.NoError(t, p.UpsertSession(ctx, &expected))
@@ -65,12 +71,27 @@ func TestPersister(ctx context.Context, conf *config.Config, p interface {
 				assert.Equal(t, expected.AMR, actual.AMR)
 			}
 
+			checkDevices := func(actual []session.Device, err error) {
+				require.NoError(t, err)
+				assert.Equal(t, len(expected.Devices), len(actual))
+
+				for i, d := range actual {
+					assert.Equal(t, expected.Devices[i].SessionID, d.SessionID)
+					assert.Equal(t, expected.Devices[i].NID, d.NID)
+					assert.Equal(t, *expected.Devices[i].IPAddress, *d.IPAddress)
+					assert.Equal(t, expected.Devices[i].UserAgent, d.UserAgent)
+					assert.Equal(t, *expected.Devices[i].Location, *d.Location)
+				}
+			}
+
 			t.Run("method=get by id", func(t *testing.T) {
-				check(p.GetSession(ctx, expected.ID))
+				sess, err := p.GetSession(ctx, expected.ID, session.ExpandEverything)
+				check(sess, err)
+				checkDevices(sess.Devices, err)
 
 				t.Run("on another network", func(t *testing.T) {
 					_, p := testhelpers.NewNetwork(t, ctx, p)
-					_, err := p.GetSession(ctx, expected.ID)
+					_, err := p.GetSession(ctx, expected.ID, session.ExpandEverything)
 					assert.ErrorIs(t, err, sqlcon.ErrNoRows)
 				})
 			})
@@ -203,12 +224,12 @@ func TestPersister(ctx context.Context, conf *config.Config, p interface {
 				err := other.DeleteSession(ctx, expected.ID)
 				assert.ErrorIs(t, err, sqlcon.ErrNoRows)
 
-				_, err = p.GetSession(ctx, expected.ID)
+				_, err = p.GetSession(ctx, expected.ID, session.ExpandNothing)
 				assert.NoError(t, err)
 			})
 
 			require.NoError(t, p.DeleteSession(ctx, expected.ID))
-			_, err := p.GetSession(ctx, expected.ID)
+			_, err := p.GetSession(ctx, expected.ID, session.ExpandNothing)
 			assert.ErrorIs(t, err, sqlcon.ErrNoRows)
 		})
 
@@ -228,7 +249,7 @@ func TestPersister(ctx context.Context, conf *config.Config, p interface {
 			})
 
 			require.NoError(t, p.DeleteSessionByToken(ctx, expected.Token))
-			_, err := p.GetSession(ctx, expected.ID)
+			_, err := p.GetSession(ctx, expected.ID, session.ExpandNothing)
 			require.Error(t, err)
 		})
 
@@ -239,7 +260,7 @@ func TestPersister(ctx context.Context, conf *config.Config, p interface {
 			require.NoError(t, p.CreateIdentity(ctx, expected.Identity))
 			require.NoError(t, p.UpsertSession(ctx, &expected))
 
-			actual, err := p.GetSession(ctx, expected.ID)
+			actual, err := p.GetSession(ctx, expected.ID, session.ExpandNothing)
 			require.NoError(t, err)
 			assert.True(t, actual.Active)
 
@@ -248,14 +269,14 @@ func TestPersister(ctx context.Context, conf *config.Config, p interface {
 				err := other.RevokeSessionByToken(ctx, expected.Token)
 				assert.ErrorIs(t, err, sqlcon.ErrNoRows)
 
-				actual, err = p.GetSession(ctx, expected.ID)
+				actual, err = p.GetSession(ctx, expected.ID, session.ExpandNothing)
 				require.NoError(t, err)
 				assert.True(t, actual.Active)
 			})
 
 			require.NoError(t, p.RevokeSessionByToken(ctx, expected.Token))
 
-			actual, err = p.GetSession(ctx, expected.ID)
+			actual, err = p.GetSession(ctx, expected.ID, session.ExpandNothing)
 			require.NoError(t, err)
 			assert.False(t, actual.Active)
 		})
@@ -282,7 +303,7 @@ func TestPersister(ctx context.Context, conf *config.Config, p interface {
 				assert.Equal(t, 0, n)
 
 				for _, s := range sessions {
-					actual, err := p.GetSession(ctx, s.ID)
+					actual, err := p.GetSession(ctx, s.ID, session.ExpandNothing)
 					require.NoError(t, err)
 					assert.True(t, actual.Active)
 				}
@@ -331,7 +352,7 @@ func TestPersister(ctx context.Context, conf *config.Config, p interface {
 				require.NoError(t, other.RevokeSession(ctx, sessions[0].IdentityID, sessions[0].ID))
 
 				for _, s := range sessions {
-					actual, err := p.GetSession(ctx, s.ID)
+					actual, err := p.GetSession(ctx, s.ID, session.ExpandNothing)
 					require.NoError(t, err)
 					assert.True(t, actual.Active)
 				}
@@ -371,14 +392,14 @@ func TestPersister(ctx context.Context, conf *config.Config, p interface {
 				err := other.DeleteSessionsByIdentity(ctx, expected2.IdentityID)
 				assert.ErrorIs(t, err, sqlcon.ErrNoRows)
 
-				_, err = p.GetSession(ctx, expected1.ID)
+				_, err = p.GetSession(ctx, expected1.ID, session.ExpandNothing)
 				require.NoError(t, err)
 			})
 
 			require.NoError(t, p.DeleteSessionsByIdentity(ctx, expected2.IdentityID))
-			_, err := p.GetSession(ctx, expected1.ID)
+			_, err := p.GetSession(ctx, expected1.ID, session.ExpandNothing)
 			require.Error(t, err)
-			_, err = p.GetSession(ctx, expected2.ID)
+			_, err = p.GetSession(ctx, expected2.ID, session.ExpandNothing)
 			require.Error(t, err)
 		})
 
@@ -395,9 +416,9 @@ func TestPersister(ctx context.Context, conf *config.Config, p interface {
 			require.NoError(t, p.GetConnection(ctx).RawQuery("INSERT INTO sessions (id, nid, identity_id, token, expires_at,authenticated_at, created_at, updated_at, logout_token, authentication_methods) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", sid1, nid1, iid1, t1, time.Now().Add(time.Hour), time.Now(), time.Now(), time.Now(), randx.MustString(32, randx.AlphaNum), "[]").Exec())
 			require.NoError(t, p.GetConnection(ctx).RawQuery("INSERT INTO sessions (id, nid, identity_id, token, expires_at,authenticated_at, created_at, updated_at, logout_token, authentication_methods) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", sid2, nid2, iid2, t2, time.Now().Add(time.Hour), time.Now(), time.Now(), time.Now(), randx.MustString(32, randx.AlphaNum), "[]").Exec())
 
-			_, err := p.GetSession(ctx, sid1)
+			_, err := p.GetSession(ctx, sid1, session.ExpandEverything)
 			require.NoError(t, err)
-			_, err = p.GetSession(ctx, sid2)
+			_, err = p.GetSession(ctx, sid2, session.ExpandNothing)
 			require.ErrorIs(t, err, sqlcon.ErrNoRows)
 
 			_, err = p.GetSessionByToken(ctx, t1)
