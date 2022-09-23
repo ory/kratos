@@ -137,6 +137,20 @@ type V0alpha2Api interface {
 	AdminGetIdentityExecute(r V0alpha2ApiApiAdminGetIdentityRequest) (*Identity, *http.Response, error)
 
 	/*
+	 * AdminListCourierMessages # List Messages
+	 * Lists all messages by given status and recipient.
+	 * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
+	 * @return V0alpha2ApiApiAdminListCourierMessagesRequest
+	 */
+	AdminListCourierMessages(ctx context.Context) V0alpha2ApiApiAdminListCourierMessagesRequest
+
+	/*
+	 * AdminListCourierMessagesExecute executes the request
+	 * @return []Message
+	 */
+	AdminListCourierMessagesExecute(r V0alpha2ApiApiAdminListCourierMessagesRequest) ([]Message, *http.Response, error)
+
+	/*
 			 * AdminListIdentities # List Identities
 			 * Lists all identities. Does not support search at the moment.
 
@@ -2108,6 +2122,159 @@ func (a *V0alpha2ApiService) AdminGetIdentityExecute(r V0alpha2ApiApiAdminGetIde
 			error: localVarHTTPResponse.Status,
 		}
 		if localVarHTTPResponse.StatusCode == 404 {
+			var v JsonError
+			err = a.client.decode(&v, localVarBody, localVarHTTPResponse.Header.Get("Content-Type"))
+			if err != nil {
+				newErr.error = err.Error()
+				return localVarReturnValue, localVarHTTPResponse, newErr
+			}
+			newErr.model = v
+			return localVarReturnValue, localVarHTTPResponse, newErr
+		}
+		if localVarHTTPResponse.StatusCode == 500 {
+			var v JsonError
+			err = a.client.decode(&v, localVarBody, localVarHTTPResponse.Header.Get("Content-Type"))
+			if err != nil {
+				newErr.error = err.Error()
+				return localVarReturnValue, localVarHTTPResponse, newErr
+			}
+			newErr.model = v
+		}
+		return localVarReturnValue, localVarHTTPResponse, newErr
+	}
+
+	err = a.client.decode(&localVarReturnValue, localVarBody, localVarHTTPResponse.Header.Get("Content-Type"))
+	if err != nil {
+		newErr := &GenericOpenAPIError{
+			body:  localVarBody,
+			error: err.Error(),
+		}
+		return localVarReturnValue, localVarHTTPResponse, newErr
+	}
+
+	return localVarReturnValue, localVarHTTPResponse, nil
+}
+
+type V0alpha2ApiApiAdminListCourierMessagesRequest struct {
+	ctx        context.Context
+	ApiService V0alpha2Api
+	perPage    *int64
+	page       *int64
+	status     *CourierMessageStatus
+	recipient  *string
+}
+
+func (r V0alpha2ApiApiAdminListCourierMessagesRequest) PerPage(perPage int64) V0alpha2ApiApiAdminListCourierMessagesRequest {
+	r.perPage = &perPage
+	return r
+}
+func (r V0alpha2ApiApiAdminListCourierMessagesRequest) Page(page int64) V0alpha2ApiApiAdminListCourierMessagesRequest {
+	r.page = &page
+	return r
+}
+func (r V0alpha2ApiApiAdminListCourierMessagesRequest) Status(status CourierMessageStatus) V0alpha2ApiApiAdminListCourierMessagesRequest {
+	r.status = &status
+	return r
+}
+func (r V0alpha2ApiApiAdminListCourierMessagesRequest) Recipient(recipient string) V0alpha2ApiApiAdminListCourierMessagesRequest {
+	r.recipient = &recipient
+	return r
+}
+
+func (r V0alpha2ApiApiAdminListCourierMessagesRequest) Execute() ([]Message, *http.Response, error) {
+	return r.ApiService.AdminListCourierMessagesExecute(r)
+}
+
+/*
+ * AdminListCourierMessages # List Messages
+ * Lists all messages by given status and recipient.
+ * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
+ * @return V0alpha2ApiApiAdminListCourierMessagesRequest
+ */
+func (a *V0alpha2ApiService) AdminListCourierMessages(ctx context.Context) V0alpha2ApiApiAdminListCourierMessagesRequest {
+	return V0alpha2ApiApiAdminListCourierMessagesRequest{
+		ApiService: a,
+		ctx:        ctx,
+	}
+}
+
+/*
+ * Execute executes the request
+ * @return []Message
+ */
+func (a *V0alpha2ApiService) AdminListCourierMessagesExecute(r V0alpha2ApiApiAdminListCourierMessagesRequest) ([]Message, *http.Response, error) {
+	var (
+		localVarHTTPMethod   = http.MethodGet
+		localVarPostBody     interface{}
+		localVarFormFileName string
+		localVarFileName     string
+		localVarFileBytes    []byte
+		localVarReturnValue  []Message
+	)
+
+	localBasePath, err := a.client.cfg.ServerURLWithContext(r.ctx, "V0alpha2ApiService.AdminListCourierMessages")
+	if err != nil {
+		return localVarReturnValue, nil, &GenericOpenAPIError{error: err.Error()}
+	}
+
+	localVarPath := localBasePath + "/admin/courier/messages"
+
+	localVarHeaderParams := make(map[string]string)
+	localVarQueryParams := url.Values{}
+	localVarFormParams := url.Values{}
+
+	if r.perPage != nil {
+		localVarQueryParams.Add("per_page", parameterToString(*r.perPage, ""))
+	}
+	if r.page != nil {
+		localVarQueryParams.Add("page", parameterToString(*r.page, ""))
+	}
+	if r.status != nil {
+		localVarQueryParams.Add("status", parameterToString(*r.status, ""))
+	}
+	if r.recipient != nil {
+		localVarQueryParams.Add("recipient", parameterToString(*r.recipient, ""))
+	}
+	// to determine the Content-Type header
+	localVarHTTPContentTypes := []string{}
+
+	// set Content-Type header
+	localVarHTTPContentType := selectHeaderContentType(localVarHTTPContentTypes)
+	if localVarHTTPContentType != "" {
+		localVarHeaderParams["Content-Type"] = localVarHTTPContentType
+	}
+
+	// to determine the Accept header
+	localVarHTTPHeaderAccepts := []string{"application/json"}
+
+	// set Accept header
+	localVarHTTPHeaderAccept := selectHeaderAccept(localVarHTTPHeaderAccepts)
+	if localVarHTTPHeaderAccept != "" {
+		localVarHeaderParams["Accept"] = localVarHTTPHeaderAccept
+	}
+	req, err := a.client.prepareRequest(r.ctx, localVarPath, localVarHTTPMethod, localVarPostBody, localVarHeaderParams, localVarQueryParams, localVarFormParams, localVarFormFileName, localVarFileName, localVarFileBytes)
+	if err != nil {
+		return localVarReturnValue, nil, err
+	}
+
+	localVarHTTPResponse, err := a.client.callAPI(req)
+	if err != nil || localVarHTTPResponse == nil {
+		return localVarReturnValue, localVarHTTPResponse, err
+	}
+
+	localVarBody, err := io.ReadAll(localVarHTTPResponse.Body)
+	localVarHTTPResponse.Body.Close()
+	localVarHTTPResponse.Body = io.NopCloser(bytes.NewBuffer(localVarBody))
+	if err != nil {
+		return localVarReturnValue, localVarHTTPResponse, err
+	}
+
+	if localVarHTTPResponse.StatusCode >= 300 {
+		newErr := &GenericOpenAPIError{
+			body:  localVarBody,
+			error: localVarHTTPResponse.Status,
+		}
+		if localVarHTTPResponse.StatusCode == 400 {
 			var v JsonError
 			err = a.client.decode(&v, localVarBody, localVarHTTPResponse.Header.Get("Content-Type"))
 			if err != nil {

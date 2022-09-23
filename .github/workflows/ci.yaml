@@ -4,7 +4,7 @@ on:
     branches:
       - master
     tags:
-      - '*'
+      - "*"
   pull_request:
 
 # Cancel in-progress runs in current workflow.
@@ -77,14 +77,14 @@ jobs:
           fetch-depth: 2
       - uses: actions/setup-go@v2
         with:
-          go-version: '~1.18'
+          go-version: "~1.18"
       - run: go list -json > go.list
       - name: Run nancy
         uses: sonatype-nexus-community/nancy-github-action@v1.0.2
       - run: npm install
         name: Install node deps
-      - name: Run prettier
-        run: npm run format:check
+      - run: make format && git diff HEAD --exit-code --color
+        name: Check formatting issues
       - name: Run golangci-lint
         uses: golangci/golangci-lint-action@v2
         env:
@@ -138,7 +138,7 @@ jobs:
       TEST_DATABASE_COCKROACHDB: "cockroach://root@localhost:26257/defaultdb?sslmode=disable"
     strategy:
       matrix:
-        database: ['postgres', 'cockroach', 'sqlite', 'mysql']
+        database: ["postgres", "cockroach", "sqlite", "mysql"]
     steps:
       - run: |
           docker create --name cockroach -p 26257:26257 \
@@ -162,7 +162,7 @@ jobs:
       - name: Setup Go
         uses: actions/setup-go@v2
         with:
-          go-version: '~1.18'
+          go-version: "~1.18"
       - name: Install selfservice-ui-react-native
         uses: actions/checkout@v2
         with:
@@ -194,7 +194,6 @@ jobs:
           name: logs
           path: test/e2e/*.e2e.log
 
-
   docs-cli:
     runs-on: ubuntu-latest
     name: Build CLI docs
@@ -204,7 +203,7 @@ jobs:
       - uses: ory/ci/docs/cli-next@master
         with:
           token: ${{ secrets.ORY_BOT_PAT }}
-          arg: '.'
+          arg: "."
           output-dir: docs/kratos
 
   changelog:
@@ -232,7 +231,7 @@ jobs:
       - uses: ory/ci/sdk/release@master
         with:
           token: ${{ secrets.ORY_BOT_PAT }}
-          swag-spec-location: 'spec/api.json'
+          swag-spec-location: "spec/api.json"
 
   release:
     name: Generate release
@@ -275,7 +274,7 @@ jobs:
           mailchimp_list_id: f605a41b53
           mailchmip_segment_id: 6479477
           mailchimp_api_key: ${{ secrets.MAILCHIMP_API_KEY }}
-          draft: 'true'
+          draft: "true"
           ssh_key: ${{ secrets.ORY_BOT_SSH_KEY }}
 
   slack-approval-notification:
@@ -302,5 +301,5 @@ jobs:
           mailchimp_list_id: f605a41b53
           mailchmip_segment_id: 6479477
           mailchimp_api_key: ${{ secrets.MAILCHIMP_API_KEY }}
-          draft: 'false'
+          draft: "false"
           ssh_key: ${{ secrets.ORY_BOT_SSH_KEY }}

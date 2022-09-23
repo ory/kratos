@@ -37,6 +37,85 @@ paths:
       summary: '# Get WebAuthn JavaScript'
       tags:
       - v0alpha2
+  /admin/courier/messages:
+    get:
+      description: Lists all messages by given status and recipient.
+      operationId: adminListCourierMessages
+      parameters:
+      - description: |-
+          Items per Page
+
+          This is the number of items per page.
+        explode: true
+        in: query
+        name: per_page
+        required: false
+        schema:
+          default: 250
+          format: int64
+          maximum: 1000
+          minimum: 1
+          type: integer
+        style: form
+      - description: |-
+          Pagination Page
+
+          This value is currently an integer, but it is not sequential. The value is not the page number, but a
+          reference. The next page can be any number and some numbers might return an empty list.
+
+          For example, page 2 might not follow after page 1. And even if page 3 and 5 exist, but page 4 might not exist.
+        explode: true
+        in: query
+        name: page
+        required: false
+        schema:
+          default: 1
+          format: int64
+          minimum: 1
+          type: integer
+        style: form
+      - description: |-
+          Status filters out messages based on status.
+          If no value is provided, it doesn't take effect on filter.
+        explode: true
+        in: query
+        name: status
+        required: false
+        schema:
+          $ref: '#/components/schemas/courierMessageStatus'
+        style: form
+      - description: |-
+          Recipient filters out messages based on recipient.
+          If no value is provided, it doesn't take effect on filter.
+        explode: true
+        in: query
+        name: recipient
+        required: false
+        schema:
+          type: string
+        style: form
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/courierMessageList'
+          description: courierMessageList
+        "400":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/jsonError'
+          description: jsonError
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/jsonError'
+          description: jsonError
+      summary: '# List Messages'
+      tags:
+      - v0alpha2
   /admin/identities:
     get:
       description: |-
@@ -2922,6 +3001,8 @@ components:
       title: RecoveryAddressType must not exceed 16 characters as that is the limitation
         in the SQL Schema.
       type: string
+    TemplateType:
+      type: string
     UUID:
       format: uuid4
       type: string
@@ -3121,6 +3202,26 @@ components:
       - aal2
       - aal3
       title: Authenticator Assurance Level (AAL)
+      type: string
+    courierMessageList:
+      items:
+        $ref: '#/components/schemas/message'
+      title: A list of messages.
+      type: array
+    courierMessageStatus:
+      description: A Message's Status
+      enum:
+      - queued
+      - sent
+      - processing
+      - abandoned
+      type: string
+    courierMessageType:
+      description: It can either be `email` or `phone`
+      enum:
+      - email
+      - phone
+      title: A Message's Type
       type: string
     errorAuthenticatorAssuranceLevelNotSatisfied:
       properties:
@@ -3536,6 +3637,44 @@ components:
       items:
         $ref: '#/components/schemas/jsonPatch'
       type: array
+    message:
+      example:
+        updated_at: 2000-01-23T04:56:07.000+00:00
+        subject: subject
+        recipient: recipient
+        created_at: 2000-01-23T04:56:07.000+00:00
+        send_count: 0
+        template_type: template_type
+        id: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
+        body: body
+      properties:
+        body:
+          type: string
+        created_at:
+          description: CreatedAt is a helper struct field for gobuffalo.pop.
+          format: date-time
+          type: string
+        id:
+          format: uuid
+          type: string
+        recipient:
+          type: string
+        send_count:
+          format: int64
+          type: integer
+        status:
+          $ref: '#/components/schemas/courierMessageStatus'
+        subject:
+          type: string
+        template_type:
+          type: string
+        type:
+          $ref: '#/components/schemas/courierMessageType'
+        updated_at:
+          description: UpdatedAt is a helper struct field for gobuffalo.pop.
+          format: date-time
+          type: string
+      type: object
     needsPrivilegedSessionError:
       properties:
         code:

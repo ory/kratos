@@ -25,6 +25,33 @@ func (p *Persister) AddMessage(ctx context.Context, m *courier.Message) error {
 	return sqlcon.HandleError(p.GetConnection(ctx).Create(m)) // do not create eager to avoid identity injection.
 }
 
+func (p *Persister) ListMessages(ctx context.Context, filter courier.MessagesFilter) ([]courier.Message, int64, error) {
+	ctx, span := p.r.Tracer(ctx).Tracer().Start(ctx, "persistence.sql.ListMessages")
+	defer span.End()
+
+	q := p.GetConnection(ctx).Where("nid=?", p.NetworkID(ctx))
+
+	if filter.Status != nil {
+		q = q.Where("status=?", *filter.Status)
+	}
+
+	if filter.Recipient != "" {
+		q = q.Where("recipient=?", filter.Recipient)
+	}
+
+	messages := make([]courier.Message, 0)
+	if err := q.Paginate(filter.Page, filter.PerPage).Order("created_at DESC").All(&messages); err != nil {
+		return nil, 0, sqlcon.HandleError(err)
+	}
+
+	count, err := q.Count(&courier.Message{})
+	if err != nil {
+		return nil, 0, sqlcon.HandleError(err)
+	}
+
+	return messages, int64(count), nil
+}
+
 func (p *Persister) NextMessages(ctx context.Context, limit uint8) (messages []courier.Message, err error) {
 	ctx, span := p.r.Tracer(ctx).Tracer().Start(ctx, "persistence.sql.NextMessages")
 	defer span.End()

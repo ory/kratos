@@ -1,21 +1,21 @@
-import { appPrefix, gen, website } from '../../../helpers'
-import { routes as express } from '../../../helpers/express'
-import { routes as react } from '../../../helpers/react'
+import { appPrefix, gen, website } from "../../../helpers"
+import { routes as express } from "../../../helpers/express"
+import { routes as react } from "../../../helpers/react"
 
-context('2FA UI settings tests', () => {
+context("2FA UI settings tests", () => {
   ;[
     {
       settings: react.settings,
       base: react.base,
-      app: 'react' as 'react',
-      profile: 'spa'
+      app: "react" as "react",
+      profile: "spa",
     },
     {
       settings: express.settings,
       base: express.base,
-      app: 'express' as 'express',
-      profile: 'mfa'
-    }
+      app: "express" as "express",
+      profile: "mfa",
+    },
   ].forEach(({ settings, profile, base, app }) => {
     describe(`for app ${app}`, () => {
       before(() => {
@@ -30,7 +30,7 @@ context('2FA UI settings tests', () => {
         cy.registerApi({
           email,
           password,
-          fields: { 'traits.website': website }
+          fields: { "traits.website": website },
         })
       })
 
@@ -40,24 +40,24 @@ context('2FA UI settings tests', () => {
         cy.visit(settings)
       })
 
-      it('shows all settings forms', () => {
-        cy.get(appPrefix(app) + 'h3').should('contain.text', 'Profile Settings')
-        cy.get('h3').should('contain.text', 'Change Password')
-        cy.get('h3').should('contain.text', 'Manage 2FA Backup Recovery Codes')
-        cy.get('h3').should('contain.text', 'Manage 2FA TOTP Authenticator App')
-        cy.get('h3').should('contain.text', 'Manage Hardware Tokens')
-        cy.get('input[name="traits.email"]').should('contain.value', email)
-        cy.get('input[name="traits.website"]').should('contain.value', website)
+      it("shows all settings forms", () => {
+        cy.get(appPrefix(app) + "h3").should("contain.text", "Profile Settings")
+        cy.get("h3").should("contain.text", "Change Password")
+        cy.get("h3").should("contain.text", "Manage 2FA Backup Recovery Codes")
+        cy.get("h3").should("contain.text", "Manage 2FA TOTP Authenticator App")
+        cy.get("h3").should("contain.text", "Manage Hardware Tokens")
+        cy.get('input[name="traits.email"]').should("contain.value", email)
+        cy.get('input[name="traits.website"]').should("contain.value", website)
 
         cy.get('[data-testid="node/text/totp_secret_key/label"]').should(
-          'contain.text',
-          'This is your authenticator app secret'
+          "contain.text",
+          "This is your authenticator app secret",
         )
-        cy.get('button').should(
-          'contain.text',
-          'Generate new backup recovery codes'
+        cy.get("button").should(
+          "contain.text",
+          "Generate new backup recovery codes",
         )
-        cy.get('button').should('contain.text', 'Add security key')
+        cy.get("button").should("contain.text", "Add security key")
       })
     })
   })

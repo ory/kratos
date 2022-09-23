@@ -100,6 +100,8 @@ type RegistryDefault struct {
 	identityValidator *identity.Validator
 	identityManager   *identity.Manager
 
+	courierHandler *courier.Handler
+
 	continuityManager continuity.Manager
 
 	schemaHandler *schema.Handler
@@ -161,6 +163,7 @@ func (m *RegistryDefault) RegisterPublicRoutes(ctx context.Context, router *x.Ro
 	m.LogoutHandler().RegisterPublicRoutes(router)
 	m.SettingsHandler().RegisterPublicRoutes(router)
 	m.IdentityHandler().RegisterPublicRoutes(router)
+	m.CourierHandler().RegisterPublicRoutes(router)
 	m.AllLoginStrategies().RegisterPublicRoutes(router)
 	m.AllSettingsStrategies().RegisterPublicRoutes(router)
 	m.AllRegistrationStrategies().RegisterPublicRoutes(router)
@@ -184,6 +187,7 @@ func (m *RegistryDefault) RegisterAdminRoutes(ctx context.Context, router *x.Rou
 	m.SchemaHandler().RegisterAdminRoutes(router)
 	m.SettingsHandler().RegisterAdminRoutes(router)
 	m.IdentityHandler().RegisterAdminRoutes(router)
+	m.CourierHandler().RegisterAdminRoutes(router)
 	m.SelfServiceErrorHandler().RegisterAdminRoutes(router)
 
 	m.RecoveryHandler().RegisterAdminRoutes(router)
@@ -382,6 +386,13 @@ func (m *RegistryDefault) IdentityHandler() *identity.Handler {
 		m.identityHandler = identity.NewHandler(m)
 	}
 	return m.identityHandler
+}
+
+func (m *RegistryDefault) CourierHandler() *courier.Handler {
+	if m.courierHandler == nil {
+		m.courierHandler = courier.NewHandler(m)
+	}
+	return m.courierHandler
 }
 
 func (m *RegistryDefault) SchemaHandler() *schema.Handler {

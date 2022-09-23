@@ -1,21 +1,21 @@
-import { gen, website } from '../../../../helpers'
-import { routes as react } from '../../../../helpers/react'
-import { routes as express } from '../../../../helpers/express'
+import { gen, website } from "../../../../helpers"
+import { routes as react } from "../../../../helpers/react"
+import { routes as express } from "../../../../helpers/express"
 
-context('Social Sign In Successes', () => {
+context("Social Sign In Successes", () => {
   ;[
     {
       login: react.login,
       registration: react.registration,
-      app: 'react' as 'react',
-      profile: 'spa'
+      app: "react" as "react",
+      profile: "spa",
     },
     {
       login: express.login,
       registration: express.registration,
-      app: 'express' as 'express',
-      profile: 'oidc'
-    }
+      app: "express" as "express",
+      profile: "oidc",
+    },
   ].forEach(({ login, registration, profile, app }) => {
     describe(`for app ${app}`, () => {
       before(() => {
@@ -27,7 +27,7 @@ context('Social Sign In Successes', () => {
         cy.clearAllCookies()
       })
 
-      it('should be able to sign up, sign out, and then sign in', () => {
+      it("should be able to sign up, sign out, and then sign in", () => {
         const email = gen.email()
         cy.registerOidc({ email, website, route: registration })
         cy.logout()
@@ -35,18 +35,18 @@ context('Social Sign In Successes', () => {
         cy.loginOidc({ url: login })
       })
 
-      it('should be able to sign up with redirects', () => {
+      it("should be able to sign up with redirects", () => {
         const email = gen.email()
         cy.registerOidc({
           email,
           website,
-          route: registration + '?return_to=https://www.example.org/'
+          route: registration + "?return_to=https://www.example.org/",
         })
-        cy.location('href').should('eq', 'https://www.example.org/')
+        cy.location("href").should("eq", "https://www.example.org/")
         cy.logout()
         cy.noSession()
-        cy.loginOidc({ url: login + '?return_to=https://www.example.org/' })
-        cy.location('href').should('eq', 'https://www.example.org/')
+        cy.loginOidc({ url: login + "?return_to=https://www.example.org/" })
+        cy.location("href").should("eq", "https://www.example.org/")
       })
     })
   })
