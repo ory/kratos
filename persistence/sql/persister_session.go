@@ -23,7 +23,7 @@ var _ session.Persister = new(Persister)
 const SessionDeviceUserAgentMaxLength = 512
 const SessionDeviceLocationMaxLength = 512
 
-func (p *Persister) GetSession(ctx context.Context, sid uuid.UUID) (*session.Session, error) {
+func (p *Persister) GetSession(ctx context.Context, sid uuid.UUID, expandables session.Expandables) (*session.Session, error) {
 	ctx, span := p.r.Tracer(ctx).Tracer().Start(ctx, "persistence.sql.GetSession")
 	defer span.End()
 
