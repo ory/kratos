@@ -30,7 +30,13 @@ func (p *Persister) GetSession(ctx context.Context, sid uuid.UUID, expandables s
 	var s session.Session
 	s.Devices = make([]session.Device, 0)
 	nid := p.NetworkID(ctx)
-	if err := p.GetConnection(ctx).EagerPreload("Devices").Where("id = ? AND nid = ?", sid, nid).First(&s); err != nil {
+
+	q := p.GetConnection(ctx).Q()
+	if len(expandables) > 0 {
+		q = q.EagerPreload(expandables.ToEager()...)
+	}
+
+	if err := q.Where("id = ? AND nid = ?", sid, nid).First(&s); err != nil {
 		return nil, sqlcon.HandleError(err)
 	}
 
