@@ -136,6 +136,8 @@ quickstart-dev:
 # Formats the code
 .PHONY: format
 format: .bin/goimports node_modules
+		# workaround because goimports doesn't allow ignoring folders yet, see https://github.com/golang/go/issues/42965
+		find . -type f -name '*.go' -not -path './internal/httpclient/*' | xargs .bin/goimports -w --local github.com/ory
 		goimports -w -local github.com/ory .
 		npm exec -- prettier --write 'test/e2e/**/*{.ts,.js}'
 		npm exec -- prettier --write '.github'
