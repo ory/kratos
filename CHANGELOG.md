@@ -3476,15 +3476,15 @@ We also streamlined how credentials are used. We now differentiate between:
   const kratos = new V0Alpha0(
     new Configuration({
       basePath: config.kratos.admin,
-      accessToken: 'some-token'
-    })
+      accessToken: "some-token",
+    }),
   )
 
   kratosAdmin.adminCreateIdentity({
-    schema_id: 'default',
+    schema_id: "default",
     traits: {
       /* ... */
-    }
+    },
   })
   ```
 
