@@ -2,11 +2,11 @@
   "name": "@ory/kratos-e2e-suite",
   "version": "0.0.1",
   "scripts": {
-    "test": "cypress run --browser chrome --e2e",
-    "test:watch": "cypress open --browser chrome",
     "openapi-generator-cli": "openapi-generator-cli",
-    "wait-on": "wait-on",
-    "text-run": "exit 0"
+    "test": "cypress run --browser chrome --e2e --spec 'cypress/integration/profiles/recovery/code/success.spec.ts'",
+    "test:watch": "cypress open --browser chrome",
+    "text-run": "exit 0",
+    "wait-on": "wait-on"
   },
   "devDependencies": {
     "@ory/kratos-client": "0.0.0-next.8d3b018594f7",

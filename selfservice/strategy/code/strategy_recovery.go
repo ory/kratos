@@ -392,10 +392,15 @@ func (s *Strategy) recoveryIssueSession(w http.ResponseWriter, r *http.Request, 
 func (s *Strategy) recoveryUseCode(w http.ResponseWriter, r *http.Request, body *recoverySubmitPayload, f *recovery.Flow) error {
 	ctx := r.Context()
 	code, err := s.deps.RecoveryCodePersister().UseRecoveryCode(ctx, f.ID, body.Code)
-	if errors.Is(err, ErrCodeNotFound) {
+	if errors.Is(err, ErrCodeNotFound) || errors.Is(err, sqlcon.ErrNoRows) {
 		if f.SubmitCount > 5 {
 			return s.retryRecoveryFlowWithMessage(w, r, f.Type, text.NewErrorValidationRecoveryFlowSubmittedTooOften())
 		}
+
+		s.deps.Logger().
+			WithRequest(r).
+			WithError(err).
+			Debugf("No code was found for %s", body.Code)
 
 		f.UI.Messages.Clear()
 		f.UI.Messages.Add(text.NewErrorValidationRecoveryCodeInvalidOrAlreadyUsed())

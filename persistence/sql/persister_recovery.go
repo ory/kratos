@@ -162,6 +162,8 @@ func (p *Persister) CreateRecoveryCode(ctx context.Context, dto *code.RecoveryCo
 		return nil, err
 	}
 
+	p.r.Logger().Debugf("CreateRecoveryCode#AAAABBBBB123: %s %t %s", dto.FlowID, recoveryCode.UsedAt.Valid, recoveryCode.UsedAt.Time.String())
+
 	return recoveryCode, nil
 }
 
@@ -176,14 +178,9 @@ func (p *Persister) UseRecoveryCode(ctx context.Context, fID uuid.UUID, codeVal 
 	if err := sqlcon.HandleError(p.Transaction(ctx, func(ctx context.Context, tx *pop.Connection) (err error) {
 		var recoveryCodes []code.RecoveryCode
 		if err = tx.Where("nid = ? AND selfservice_recovery_flow_id = ?", nid, fID).All(&recoveryCodes); err != nil {
-			if errors.Is(err, sqlcon.ErrNoRows) {
-				return code.ErrCodeNotFound
-			}
-
 			return sqlcon.HandleError(err)
 		}
 
-	secrets:
 		for _, secret := range p.r.Config().SecretsSession(ctx) {
 			suppliedCode := p.hmacValueWithSecret(ctx, codeVal, secret)
 			for i := range recoveryCodes {
@@ -193,7 +190,10 @@ func (p *Persister) UseRecoveryCode(ctx context.Context, fID uuid.UUID, codeVal 
 					continue
 				}
 				recoveryCode = &code
-				break secrets
+				break
+			}
+			if recoveryCode != nil {
+				break
 			}
 		}
 
@@ -206,6 +206,7 @@ func (p *Persister) UseRecoveryCode(ctx context.Context, fID uuid.UUID, codeVal 
 		}
 
 		if recoveryCode.WasUsed() {
+			p.r.Logger().Debugf("UseRecoveryCode#AAAABBBBB123: %s %t %s", fID.String(), recoveryCode.UsedAt.Valid, recoveryCode.UsedAt.Time.String())
 			return code.ErrCodeAlreadyUsed
 		}
 

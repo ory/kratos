@@ -4,18 +4,18 @@ import { routes as express } from "../../../../helpers/express"
 
 context("Account Recovery With Code Success", () => {
   ;[
-    {
-      recovery: react.recovery,
-      base: react.base,
-      app: "react" as "react",
-      profile: "spa",
-    },
-    {
-      recovery: express.recovery,
-      base: express.base,
-      app: "express" as "express",
-      profile: "recovery",
-    },
+    // {
+    //   recovery: react.recovery,
+    //   base: react.base,
+    //   app: "react" as "react",
+    //   profile: "spa",
+    // },
+    // {
+    //   recovery: express.recovery,
+    //   base: express.base,
+    //   app: "express" as "express",
+    //   profile: "recovery",
+    // },
   ].forEach(({ recovery, profile, base, app }) => {
     describe(`for app ${app}`, () => {
       before(() => {
@@ -100,7 +100,7 @@ context("Account Recovery With Code Success", () => {
         cy.recoveryEmailWithCode({ expect: { email: identity.email } })
         cy.get("button[value='code']").click()
 
-        cy.get('[data-testid="ui/message/1060001"]', { timeout: 30000 }).should(
+        cy.get('[data-testid="ui/message/1060001"]').should(
           "contain.text",
           "You successfully recovered your account. ",
         )
@@ -130,7 +130,7 @@ context("Account Recovery With Code Success", () => {
         })
         cy.get("button[value='code']").click()
 
-        cy.get('[data-testid="ui/message/1060001"]', { timeout: 30000 }).should(
+        cy.get('[data-testid="ui/message/1060001"]').should(
           "contain.text",
           "You successfully recovered your account. ",
         )

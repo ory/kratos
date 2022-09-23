@@ -14,7 +14,7 @@ export default defineConfig({
   screenshotOnRunFailure: true,
   e2e: {
     retries: {
-      runMode: 6,
+      runMode: 2,
       openMode: 1,
     },
     videosFolder: "cypress/videos",

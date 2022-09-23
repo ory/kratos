@@ -7,7 +7,7 @@ CREATE TABLE identity_recovery_codes
     code_type int NOT NULL,
     expires_at timestamp NOT NULL DEFAULT '2000-01-01 00:00:00',
     issued_at timestamp NOT NULL DEFAULT '2000-01-01 00:00:00',
-    selfservice_recovery_flow_id CHAR(36),
+    selfservice_recovery_flow_id CHAR(36) NOT NULL,
     created_at timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
     nid CHAR(36) NOT NULL,
