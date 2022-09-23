@@ -29,7 +29,7 @@ var (
 type V0alpha2Api interface {
 
 	/*
-	 * AdminCreateIdentity # Create an Identity
+	 * AdminCreateIdentity Create an Identity
 	 * This endpoint creates an identity. Learn how identities work in [Ory Kratos' User And Identity Model Documentation](https://www.ory.sh/docs/next/kratos/concepts/identity-user-model).
 	 * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
 	 * @return V0alpha2ApiApiAdminCreateIdentityRequest
@@ -43,7 +43,7 @@ type V0alpha2Api interface {
 	AdminCreateIdentityExecute(r V0alpha2ApiApiAdminCreateIdentityRequest) (*Identity, *http.Response, error)
 
 	/*
-			 * AdminCreateSelfServiceRecoveryLink # Create a Recovery Link
+			 * AdminCreateSelfServiceRecoveryLink Create a Recovery Link
 			 * This endpoint creates a recovery link which should be given to the user in order for them to recover
 		(or activate) their account.
 			 * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
@@ -58,7 +58,7 @@ type V0alpha2Api interface {
 	AdminCreateSelfServiceRecoveryLinkExecute(r V0alpha2ApiApiAdminCreateSelfServiceRecoveryLinkRequest) (*SelfServiceRecoveryLink, *http.Response, error)
 
 	/*
-			 * AdminDeleteIdentity # Delete an Identity
+			 * AdminDeleteIdentity Delete an Identity
 			 * Calling this endpoint irrecoverably and permanently deletes the identity given its ID. This action can not be undone.
 		This endpoint returns 204 when the identity was deleted or when the identity was not found, in which case it is
 		assumed that is has been deleted already.
@@ -107,7 +107,7 @@ type V0alpha2Api interface {
 	AdminExtendSessionExecute(r V0alpha2ApiApiAdminExtendSessionRequest) (*Session, *http.Response, error)
 
 	/*
-	 * AdminGetIdentity # Get an Identity
+	 * AdminGetIdentity Get an Identity
 	 * Learn how identities work in [Ory Kratos' User And Identity Model Documentation](https://www.ory.sh/docs/next/kratos/concepts/identity-user-model).
 	 * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
 	 * @param id ID must be set to the ID of identity you want to get
@@ -122,7 +122,7 @@ type V0alpha2Api interface {
 	AdminGetIdentityExecute(r V0alpha2ApiApiAdminGetIdentityRequest) (*Identity, *http.Response, error)
 
 	/*
-	 * AdminListCourierMessages # List Messages
+	 * AdminListCourierMessages List Messages
 	 * Lists all messages by given status and recipient.
 	 * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
 	 * @return V0alpha2ApiApiAdminListCourierMessagesRequest
@@ -136,7 +136,7 @@ type V0alpha2Api interface {
 	AdminListCourierMessagesExecute(r V0alpha2ApiApiAdminListCourierMessagesRequest) ([]Message, *http.Response, error)
 
 	/*
-			 * AdminListIdentities # List Identities
+			 * AdminListIdentities List Identities
 			 * Lists all identities. Does not support search at the moment.
 
 		Learn how identities work in [Ory Kratos' User And Identity Model Documentation](https://www.ory.sh/docs/next/kratos/concepts/identity-user-model).
@@ -186,7 +186,7 @@ type V0alpha2Api interface {
 	AdminPatchIdentityExecute(r V0alpha2ApiApiAdminPatchIdentityRequest) (*Identity, *http.Response, error)
 
 	/*
-			 * AdminUpdateIdentity # Update an Identity
+			 * AdminUpdateIdentity Update an Identity
 			 * This endpoint updates an identity. The full identity payload (except credentials) is expected. This endpoint does not support patching.
 
 		Learn how identities work in [Ory Kratos' User And Identity Model Documentation](https://www.ory.sh/docs/next/kratos/concepts/identity-user-model).
@@ -203,7 +203,7 @@ type V0alpha2Api interface {
 	AdminUpdateIdentityExecute(r V0alpha2ApiApiAdminUpdateIdentityRequest) (*Identity, *http.Response, error)
 
 	/*
-			 * CreateSelfServiceLogoutFlowUrlForBrowsers # Create a Logout URL for Browsers
+			 * CreateSelfServiceLogoutFlowUrlForBrowsers Create a Logout URL for Browsers
 			 * This endpoint initializes a browser-based user logout flow and a URL which can be used to log out the user.
 
 		This endpoint is NOT INTENDED for API clients and only works
@@ -241,7 +241,7 @@ type V0alpha2Api interface {
 	GetIdentitySchemaExecute(r V0alpha2ApiApiGetIdentitySchemaRequest) (map[string]interface{}, *http.Response, error)
 
 	/*
-			 * GetSelfServiceError # Get Self-Service Errors
+			 * GetSelfServiceError Get Self-Service Errors
 			 * This endpoint returns the error associated with a user-facing self service errors.
 
 		This endpoint supports stub values to help you implement the error UI:
@@ -261,7 +261,7 @@ type V0alpha2Api interface {
 	GetSelfServiceErrorExecute(r V0alpha2ApiApiGetSelfServiceErrorRequest) (*SelfServiceError, *http.Response, error)
 
 	/*
-			 * GetSelfServiceLoginFlow # Get Login Flow
+			 * GetSelfServiceLoginFlow Get Login Flow
 			 * This endpoint returns a login flow's context with, for example, error details and other information.
 
 		Browser flows expect the anti-CSRF cookie to be included in the request's HTTP Cookie Header.
@@ -297,7 +297,7 @@ type V0alpha2Api interface {
 	GetSelfServiceLoginFlowExecute(r V0alpha2ApiApiGetSelfServiceLoginFlowRequest) (*SelfServiceLoginFlow, *http.Response, error)
 
 	/*
-			 * GetSelfServiceRecoveryFlow # Get Recovery Flow
+			 * GetSelfServiceRecoveryFlow Get Recovery Flow
 			 * This endpoint returns a recovery flow's context with, for example, error details and other information.
 
 		Browser flows expect the anti-CSRF cookie to be included in the request's HTTP Cookie Header.
@@ -328,7 +328,7 @@ type V0alpha2Api interface {
 	GetSelfServiceRecoveryFlowExecute(r V0alpha2ApiApiGetSelfServiceRecoveryFlowRequest) (*SelfServiceRecoveryFlow, *http.Response, error)
 
 	/*
-			 * GetSelfServiceRegistrationFlow # Get Registration Flow
+			 * GetSelfServiceRegistrationFlow Get Registration Flow
 			 * This endpoint returns a registration flow's context with, for example, error details and other information.
 
 		Browser flows expect the anti-CSRF cookie to be included in the request's HTTP Cookie Header.
@@ -364,7 +364,7 @@ type V0alpha2Api interface {
 	GetSelfServiceRegistrationFlowExecute(r V0alpha2ApiApiGetSelfServiceRegistrationFlowRequest) (*SelfServiceRegistrationFlow, *http.Response, error)
 
 	/*
-			 * GetSelfServiceSettingsFlow # Get Settings Flow
+			 * GetSelfServiceSettingsFlow Get Settings Flow
 			 * When accessing this endpoint through Ory Kratos' Public API you must ensure that either the Ory Kratos Session Cookie
 		or the Ory Kratos Session Token are set.
 
@@ -396,7 +396,7 @@ type V0alpha2Api interface {
 	GetSelfServiceSettingsFlowExecute(r V0alpha2ApiApiGetSelfServiceSettingsFlowRequest) (*SelfServiceSettingsFlow, *http.Response, error)
 
 	/*
-			 * GetSelfServiceVerificationFlow # Get Verification Flow
+			 * GetSelfServiceVerificationFlow Get Verification Flow
 			 * This endpoint returns a verification flow's context with, for example, error details and other information.
 
 		Browser flows expect the anti-CSRF cookie to be included in the request's HTTP Cookie Header.
@@ -426,7 +426,7 @@ type V0alpha2Api interface {
 	GetSelfServiceVerificationFlowExecute(r V0alpha2ApiApiGetSelfServiceVerificationFlowRequest) (*SelfServiceVerificationFlow, *http.Response, error)
 
 	/*
-			 * GetWebAuthnJavaScript # Get WebAuthn JavaScript
+			 * GetWebAuthnJavaScript Get WebAuthn JavaScript
 			 * This endpoint provides JavaScript which is needed in order to perform WebAuthn login and registration.
 
 		If you are building a JavaScript Browser App (e.g. in ReactJS or AngularJS) you will need to load this file:
@@ -448,7 +448,7 @@ type V0alpha2Api interface {
 	GetWebAuthnJavaScriptExecute(r V0alpha2ApiApiGetWebAuthnJavaScriptRequest) (string, *http.Response, error)
 
 	/*
-			 * InitializeSelfServiceLoginFlowForBrowsers # Initialize Login Flow for Browsers
+			 * InitializeSelfServiceLoginFlowForBrowsers Initialize Login Flow for Browsers
 			 * This endpoint initializes a browser-based user login flow. This endpoint will set the appropriate
 		cookies and anti-CSRF measures required for browser-based flows.
 
@@ -513,7 +513,7 @@ type V0alpha2Api interface {
 	InitializeSelfServiceLoginFlowWithoutBrowserExecute(r V0alpha2ApiApiInitializeSelfServiceLoginFlowWithoutBrowserRequest) (*SelfServiceLoginFlow, *http.Response, error)
 
 	/*
-			 * InitializeSelfServiceRecoveryFlowForBrowsers # Initialize Recovery Flow for Browsers
+			 * InitializeSelfServiceRecoveryFlowForBrowsers Initialize Recovery Flow for Browsers
 			 * This endpoint initializes a browser-based account recovery flow. Once initialized, the browser will be redirected to
 		`selfservice.flows.recovery.ui_url` with the flow ID set as the query parameter `?flow=`. If a valid user session
 		exists, the browser is returned to the configured return URL.
@@ -562,7 +562,7 @@ type V0alpha2Api interface {
 	InitializeSelfServiceRecoveryFlowWithoutBrowserExecute(r V0alpha2ApiApiInitializeSelfServiceRecoveryFlowWithoutBrowserRequest) (*SelfServiceRecoveryFlow, *http.Response, error)
 
 	/*
-			 * InitializeSelfServiceRegistrationFlowForBrowsers # Initialize Registration Flow for Browsers
+			 * InitializeSelfServiceRegistrationFlowForBrowsers Initialize Registration Flow for Browsers
 			 * This endpoint initializes a browser-based user registration flow. This endpoint will set the appropriate
 		cookies and anti-CSRF measures required for browser-based flows.
 
@@ -632,7 +632,7 @@ type V0alpha2Api interface {
 	InitializeSelfServiceRegistrationFlowWithoutBrowserExecute(r V0alpha2ApiApiInitializeSelfServiceRegistrationFlowWithoutBrowserRequest) (*SelfServiceRegistrationFlow, *http.Response, error)
 
 	/*
-			 * InitializeSelfServiceSettingsFlowForBrowsers # Initialize Settings Flow for Browsers
+			 * InitializeSelfServiceSettingsFlowForBrowsers Initialize Settings Flow for Browsers
 			 * This endpoint initializes a browser-based user settings flow. Once initialized, the browser will be redirected to
 		`selfservice.flows.settings.ui_url` with the flow ID set as the query parameter `?flow=`. If no valid
 		Ory Kratos Session Cookie is included in the request, a login flow will be initialized.
@@ -706,7 +706,7 @@ type V0alpha2Api interface {
 	InitializeSelfServiceSettingsFlowWithoutBrowserExecute(r V0alpha2ApiApiInitializeSelfServiceSettingsFlowWithoutBrowserRequest) (*SelfServiceSettingsFlow, *http.Response, error)
 
 	/*
-			 * InitializeSelfServiceVerificationFlowForBrowsers # Initialize Verification Flow for Browser Clients
+			 * InitializeSelfServiceVerificationFlowForBrowsers Initialize Verification Flow for Browser Clients
 			 * This endpoint initializes a browser-based account verification flow. Once initialized, the browser will be redirected to
 		`selfservice.flows.verification.ui_url` with the flow ID set as the query parameter `?flow=`.
 
@@ -813,7 +813,7 @@ type V0alpha2Api interface {
 	RevokeSessionsExecute(r V0alpha2ApiApiRevokeSessionsRequest) (*RevokedSessions, *http.Response, error)
 
 	/*
-			 * SubmitSelfServiceLoginFlow # Submit a Login Flow
+			 * SubmitSelfServiceLoginFlow Submit a Login Flow
 			 * :::info
 
 		This endpoint is EXPERIMENTAL and subject to potential breaking changes in the future.
@@ -859,7 +859,7 @@ type V0alpha2Api interface {
 	SubmitSelfServiceLoginFlowExecute(r V0alpha2ApiApiSubmitSelfServiceLoginFlowRequest) (*SuccessfulSelfServiceLoginWithoutBrowser, *http.Response, error)
 
 	/*
-			 * SubmitSelfServiceLogoutFlow # Complete Self-Service Logout
+			 * SubmitSelfServiceLogoutFlow Complete Self-Service Logout
 			 * This endpoint logs out an identity in a self-service manner.
 
 		If the `Accept` HTTP header is not set to `application/json`, the browser will be redirected (HTTP 303 See Other)
@@ -904,7 +904,7 @@ type V0alpha2Api interface {
 	SubmitSelfServiceLogoutFlowWithoutBrowserExecute(r V0alpha2ApiApiSubmitSelfServiceLogoutFlowWithoutBrowserRequest) (*http.Response, error)
 
 	/*
-			 * SubmitSelfServiceRecoveryFlow # Complete Recovery Flow
+			 * SubmitSelfServiceRecoveryFlow Complete Recovery Flow
 			 * Use this endpoint to complete a recovery flow. This endpoint
 		behaves differently for API and browser flows and has several states:
 
@@ -933,7 +933,7 @@ type V0alpha2Api interface {
 	SubmitSelfServiceRecoveryFlowExecute(r V0alpha2ApiApiSubmitSelfServiceRecoveryFlowRequest) (*SelfServiceRecoveryFlow, *http.Response, error)
 
 	/*
-			 * SubmitSelfServiceRegistrationFlow # Submit a Registration Flow
+			 * SubmitSelfServiceRegistrationFlow Submit a Registration Flow
 			 * Use this endpoint to complete a registration flow by sending an identity's traits and password. This endpoint
 		behaves differently for API and browser flows.
 
@@ -974,7 +974,7 @@ type V0alpha2Api interface {
 	SubmitSelfServiceRegistrationFlowExecute(r V0alpha2ApiApiSubmitSelfServiceRegistrationFlowRequest) (*SuccessfulSelfServiceRegistrationWithoutBrowser, *http.Response, error)
 
 	/*
-			 * SubmitSelfServiceSettingsFlow # Complete Settings Flow
+			 * SubmitSelfServiceSettingsFlow Complete Settings Flow
 			 * Use this endpoint to complete a settings flow by sending an identity's updated password. This endpoint
 		behaves differently for API and browser flows.
 
@@ -1030,7 +1030,7 @@ type V0alpha2Api interface {
 	SubmitSelfServiceSettingsFlowExecute(r V0alpha2ApiApiSubmitSelfServiceSettingsFlowRequest) (*SelfServiceSettingsFlow, *http.Response, error)
 
 	/*
-			 * SubmitSelfServiceVerificationFlow # Complete Verification Flow
+			 * SubmitSelfServiceVerificationFlow Complete Verification Flow
 			 * Use this endpoint to complete a verification flow. This endpoint
 		behaves differently for API and browser flows and has several states:
 
@@ -1059,7 +1059,7 @@ type V0alpha2Api interface {
 	SubmitSelfServiceVerificationFlowExecute(r V0alpha2ApiApiSubmitSelfServiceVerificationFlowRequest) (*SelfServiceVerificationFlow, *http.Response, error)
 
 	/*
-			 * ToSession # Check Who the Current HTTP Session Belongs To
+			 * ToSession Check Who the Current HTTP Session Belongs To
 			 * Uses the HTTP Headers in the GET request to determine (e.g. by using checking the cookies) who is authenticated.
 		Returns a session object in the body or 401 if the credentials are invalid or no credentials were sent.
 		Additionally when the request it successful it adds the user ID to the 'X-Kratos-Authenticated-Identity-Id' header
@@ -1140,7 +1140,7 @@ func (r V0alpha2ApiApiAdminCreateIdentityRequest) Execute() (*Identity, *http.Re
 }
 
 /*
- * AdminCreateIdentity # Create an Identity
+ * AdminCreateIdentity Create an Identity
  * This endpoint creates an identity. Learn how identities work in [Ory Kratos' User And Identity Model Documentation](https://www.ory.sh/docs/next/kratos/concepts/identity-user-model).
  * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
  * @return V0alpha2ApiApiAdminCreateIdentityRequest
@@ -1292,7 +1292,7 @@ func (r V0alpha2ApiApiAdminCreateSelfServiceRecoveryLinkRequest) Execute() (*Sel
 }
 
 /*
-  - AdminCreateSelfServiceRecoveryLink # Create a Recovery Link
+  - AdminCreateSelfServiceRecoveryLink Create a Recovery Link
   - This endpoint creates a recovery link which should be given to the user in order for them to recover
 
 (or activate) their account.
@@ -1427,7 +1427,7 @@ func (r V0alpha2ApiApiAdminDeleteIdentityRequest) Execute() (*http.Response, err
 }
 
 /*
-  - AdminDeleteIdentity # Delete an Identity
+  - AdminDeleteIdentity Delete an Identity
   - Calling this endpoint irrecoverably and permanently deletes the identity given its ID. This action can not be undone.
 
 This endpoint returns 204 when the identity was deleted or when the identity was not found, in which case it is
@@ -1862,7 +1862,7 @@ func (r V0alpha2ApiApiAdminGetIdentityRequest) Execute() (*Identity, *http.Respo
 }
 
 /*
- * AdminGetIdentity # Get an Identity
+ * AdminGetIdentity Get an Identity
  * Learn how identities work in [Ory Kratos' User And Identity Model Documentation](https://www.ory.sh/docs/next/kratos/concepts/identity-user-model).
  * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
  * @param id ID must be set to the ID of identity you want to get
@@ -2031,7 +2031,7 @@ func (r V0alpha2ApiApiAdminListCourierMessagesRequest) Execute() ([]Message, *ht
 }
 
 /*
- * AdminListCourierMessages # List Messages
+ * AdminListCourierMessages List Messages
  * Lists all messages by given status and recipient.
  * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
  * @return V0alpha2ApiApiAdminListCourierMessagesRequest
@@ -2174,7 +2174,7 @@ func (r V0alpha2ApiApiAdminListIdentitiesRequest) Execute() ([]Identity, *http.R
 }
 
 /*
-  - AdminListIdentities # List Identities
+  - AdminListIdentities List Identities
   - Lists all identities. Does not support search at the moment.
 
 Learn how identities work in [Ory Kratos' User And Identity Model Documentation](https://www.ory.sh/docs/next/kratos/concepts/identity-user-model).
@@ -2666,7 +2666,7 @@ func (r V0alpha2ApiApiAdminUpdateIdentityRequest) Execute() (*Identity, *http.Re
 }
 
 /*
-  - AdminUpdateIdentity # Update an Identity
+  - AdminUpdateIdentity Update an Identity
   - This endpoint updates an identity. The full identity payload (except credentials) is expected. This endpoint does not support patching.
 
 Learn how identities work in [Ory Kratos' User And Identity Model Documentation](https://www.ory.sh/docs/next/kratos/concepts/identity-user-model).
@@ -2833,7 +2833,7 @@ func (r V0alpha2ApiApiCreateSelfServiceLogoutFlowUrlForBrowsersRequest) Execute(
 }
 
 /*
-  - CreateSelfServiceLogoutFlowUrlForBrowsers # Create a Logout URL for Browsers
+  - CreateSelfServiceLogoutFlowUrlForBrowsers Create a Logout URL for Browsers
   - This endpoint initializes a browser-based user logout flow and a URL which can be used to log out the user.
 
 This endpoint is NOT INTENDED for API clients and only works
@@ -3095,7 +3095,7 @@ func (r V0alpha2ApiApiGetSelfServiceErrorRequest) Execute() (*SelfServiceError, 
 }
 
 /*
-  - GetSelfServiceError # Get Self-Service Errors
+  - GetSelfServiceError Get Self-Service Errors
   - This endpoint returns the error associated with a user-facing self service errors.
 
 This endpoint supports stub values to help you implement the error UI:
@@ -3246,7 +3246,7 @@ func (r V0alpha2ApiApiGetSelfServiceLoginFlowRequest) Execute() (*SelfServiceLog
 }
 
 /*
-  - GetSelfServiceLoginFlow # Get Login Flow
+  - GetSelfServiceLoginFlow Get Login Flow
   - This endpoint returns a login flow's context with, for example, error details and other information.
 
 Browser flows expect the anti-CSRF cookie to be included in the request's HTTP Cookie Header.
@@ -3426,7 +3426,7 @@ func (r V0alpha2ApiApiGetSelfServiceRecoveryFlowRequest) Execute() (*SelfService
 }
 
 /*
-  - GetSelfServiceRecoveryFlow # Get Recovery Flow
+  - GetSelfServiceRecoveryFlow Get Recovery Flow
   - This endpoint returns a recovery flow's context with, for example, error details and other information.
 
 Browser flows expect the anti-CSRF cookie to be included in the request's HTTP Cookie Header.
@@ -3591,7 +3591,7 @@ func (r V0alpha2ApiApiGetSelfServiceRegistrationFlowRequest) Execute() (*SelfSer
 }
 
 /*
-  - GetSelfServiceRegistrationFlow # Get Registration Flow
+  - GetSelfServiceRegistrationFlow Get Registration Flow
   - This endpoint returns a registration flow's context with, for example, error details and other information.
 
 Browser flows expect the anti-CSRF cookie to be included in the request's HTTP Cookie Header.
@@ -3776,7 +3776,7 @@ func (r V0alpha2ApiApiGetSelfServiceSettingsFlowRequest) Execute() (*SelfService
 }
 
 /*
-  - GetSelfServiceSettingsFlow # Get Settings Flow
+  - GetSelfServiceSettingsFlow Get Settings Flow
   - When accessing this endpoint through Ory Kratos' Public API you must ensure that either the Ory Kratos Session Cookie
 
 or the Ory Kratos Session Token are set.
@@ -3966,7 +3966,7 @@ func (r V0alpha2ApiApiGetSelfServiceVerificationFlowRequest) Execute() (*SelfSer
 }
 
 /*
-  - GetSelfServiceVerificationFlow # Get Verification Flow
+  - GetSelfServiceVerificationFlow Get Verification Flow
   - This endpoint returns a verification flow's context with, for example, error details and other information.
 
 Browser flows expect the anti-CSRF cookie to be included in the request's HTTP Cookie Header.
@@ -4119,7 +4119,7 @@ func (r V0alpha2ApiApiGetWebAuthnJavaScriptRequest) Execute() (string, *http.Res
 }
 
 /*
-  - GetWebAuthnJavaScript # Get WebAuthn JavaScript
+  - GetWebAuthnJavaScript Get WebAuthn JavaScript
   - This endpoint provides JavaScript which is needed in order to perform WebAuthn login and registration.
 
 If you are building a JavaScript Browser App (e.g. in ReactJS or AngularJS) you will need to load this file:
@@ -4249,7 +4249,7 @@ func (r V0alpha2ApiApiInitializeSelfServiceLoginFlowForBrowsersRequest) Execute(
 }
 
 /*
-  - InitializeSelfServiceLoginFlowForBrowsers # Initialize Login Flow for Browsers
+  - InitializeSelfServiceLoginFlowForBrowsers Initialize Login Flow for Browsers
   - This endpoint initializes a browser-based user login flow. This endpoint will set the appropriate
 
 cookies and anti-CSRF measures required for browser-based flows.
@@ -4570,7 +4570,7 @@ func (r V0alpha2ApiApiInitializeSelfServiceRecoveryFlowForBrowsersRequest) Execu
 }
 
 /*
-  - InitializeSelfServiceRecoveryFlowForBrowsers # Initialize Recovery Flow for Browsers
+  - InitializeSelfServiceRecoveryFlowForBrowsers Initialize Recovery Flow for Browsers
   - This endpoint initializes a browser-based account recovery flow. Once initialized, the browser will be redirected to
 
 `selfservice.flows.recovery.ui_url` with the flow ID set as the query parameter `?flow=`. If a valid user session
@@ -4841,7 +4841,7 @@ func (r V0alpha2ApiApiInitializeSelfServiceRegistrationFlowForBrowsersRequest) E
 }
 
 /*
-  - InitializeSelfServiceRegistrationFlowForBrowsers # Initialize Registration Flow for Browsers
+  - InitializeSelfServiceRegistrationFlowForBrowsers Initialize Registration Flow for Browsers
   - This endpoint initializes a browser-based user registration flow. This endpoint will set the appropriate
 
 cookies and anti-CSRF measures required for browser-based flows.
@@ -5128,7 +5128,7 @@ func (r V0alpha2ApiApiInitializeSelfServiceSettingsFlowForBrowsersRequest) Execu
 }
 
 /*
-  - InitializeSelfServiceSettingsFlowForBrowsers # Initialize Settings Flow for Browsers
+  - InitializeSelfServiceSettingsFlowForBrowsers Initialize Settings Flow for Browsers
   - This endpoint initializes a browser-based user settings flow. Once initialized, the browser will be redirected to
 
 `selfservice.flows.settings.ui_url` with the flow ID set as the query parameter `?flow=`. If no valid
@@ -5457,7 +5457,7 @@ func (r V0alpha2ApiApiInitializeSelfServiceVerificationFlowForBrowsersRequest) E
 }
 
 /*
-  - InitializeSelfServiceVerificationFlowForBrowsers # Initialize Verification Flow for Browser Clients
+  - InitializeSelfServiceVerificationFlowForBrowsers Initialize Verification Flow for Browser Clients
   - This endpoint initializes a browser-based account verification flow. Once initialized, the browser will be redirected to
 
 `selfservice.flows.verification.ui_url` with the flow ID set as the query parameter `?flow=`.
@@ -6315,7 +6315,7 @@ func (r V0alpha2ApiApiSubmitSelfServiceLoginFlowRequest) Execute() (*SuccessfulS
 }
 
 /*
-  - SubmitSelfServiceLoginFlow # Submit a Login Flow
+  - SubmitSelfServiceLoginFlow Submit a Login Flow
   - :::info
 
 This endpoint is EXPERIMENTAL and subject to potential breaking changes in the future.
@@ -6513,7 +6513,7 @@ func (r V0alpha2ApiApiSubmitSelfServiceLogoutFlowRequest) Execute() (*http.Respo
 }
 
 /*
-  - SubmitSelfServiceLogoutFlow # Complete Self-Service Logout
+  - SubmitSelfServiceLogoutFlow Complete Self-Service Logout
   - This endpoint logs out an identity in a self-service manner.
 
 If the `Accept` HTTP header is not set to `application/json`, the browser will be redirected (HTTP 303 See Other)
@@ -6779,7 +6779,7 @@ func (r V0alpha2ApiApiSubmitSelfServiceRecoveryFlowRequest) Execute() (*SelfServ
 }
 
 /*
-  - SubmitSelfServiceRecoveryFlow # Complete Recovery Flow
+  - SubmitSelfServiceRecoveryFlow Complete Recovery Flow
   - Use this endpoint to complete a recovery flow. This endpoint
 
 behaves differently for API and browser flows and has several states:
@@ -6956,7 +6956,7 @@ func (r V0alpha2ApiApiSubmitSelfServiceRegistrationFlowRequest) Execute() (*Succ
 }
 
 /*
-  - SubmitSelfServiceRegistrationFlow # Submit a Registration Flow
+  - SubmitSelfServiceRegistrationFlow Submit a Registration Flow
   - Use this endpoint to complete a registration flow by sending an identity's traits and password. This endpoint
 
 behaves differently for API and browser flows.
@@ -7157,7 +7157,7 @@ func (r V0alpha2ApiApiSubmitSelfServiceSettingsFlowRequest) Execute() (*SelfServ
 }
 
 /*
-  - SubmitSelfServiceSettingsFlow # Complete Settings Flow
+  - SubmitSelfServiceSettingsFlow Complete Settings Flow
   - Use this endpoint to complete a settings flow by sending an identity's updated password. This endpoint
 
 behaves differently for API and browser flows.
@@ -7396,7 +7396,7 @@ func (r V0alpha2ApiApiSubmitSelfServiceVerificationFlowRequest) Execute() (*Self
 }
 
 /*
-  - SubmitSelfServiceVerificationFlow # Complete Verification Flow
+  - SubmitSelfServiceVerificationFlow Complete Verification Flow
   - Use this endpoint to complete a verification flow. This endpoint
 
 behaves differently for API and browser flows and has several states:
@@ -7568,7 +7568,7 @@ func (r V0alpha2ApiApiToSessionRequest) Execute() (*Session, *http.Response, err
 }
 
 /*
-  - ToSession # Check Who the Current HTTP Session Belongs To
+  - ToSession Check Who the Current HTTP Session Belongs To
   - Uses the HTTP Headers in the GET request to determine (e.g. by using checking the cookies) who is authenticated.
 
 Returns a session object in the body or 401 if the credentials are invalid or no credentials were sent.
