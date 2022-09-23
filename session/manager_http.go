@@ -261,7 +261,7 @@ func (s *ManagerHTTP) DoesSessionSatisfy(r *http.Request, sess *Session, request
 
 func (s *ManagerHTTP) SessionAddAuthenticationMethods(ctx context.Context, sid uuid.UUID, ams ...AuthenticationMethod) error {
 	// Since we added the method, it also means that we have authenticated it
-	sess, err := s.r.SessionPersister().GetSession(ctx, sid)
+	sess, err := s.r.SessionPersister().GetSession(ctx, sid, ExpandNothing)
 	if err != nil {
 		return err
 	}
