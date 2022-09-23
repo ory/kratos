@@ -162,7 +162,7 @@ func TestManagerHTTP(t *testing.T) {
 			}))
 		assert.Len(t, sess.AMR, 0)
 
-		actual, err := reg.SessionPersister().GetSession(context.Background(), sess.ID)
+		actual, err := reg.SessionPersister().GetSession(context.Background(), sess.ID, session.ExpandNothing)
 		require.NoError(t, err)
 		assert.EqualValues(t, identity.AuthenticatorAssuranceLevel2, actual.AuthenticatorAssuranceLevel)
 		for _, amr := range actual.AMR {

@@ -666,7 +666,7 @@ func TestRecovery(t *testing.T) {
 		require.NoError(t, err)
 		require.NoError(t, reg.SessionPersister().UpsertSession(context.Background(), sess))
 
-		actualSession, err := reg.SessionPersister().GetSession(context.Background(), sess.ID)
+		actualSession, err := reg.SessionPersister().GetSession(context.Background(), sess.ID, session.ExpandNothing)
 		require.NoError(t, err)
 		assert.True(t, actualSession.IsActive())
 
@@ -686,7 +686,7 @@ func TestRecovery(t *testing.T) {
 			cookies := spew.Sdump(cl.Jar.Cookies(urlx.ParseOrPanic(public.URL)))
 			assert.Contains(t, cookies, "ory_kratos_session")
 
-			actualSession, err := reg.SessionPersister().GetSession(context.Background(), sess.ID)
+			actualSession, err := reg.SessionPersister().GetSession(context.Background(), sess.ID, session.ExpandNothing)
 			require.NoError(t, err)
 			assert.False(t, actualSession.IsActive())
 		}
