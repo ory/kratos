@@ -2,12 +2,13 @@ package corpx
 
 import (
 	"fmt"
-	"github.com/ory/kratos/session"
-	"github.com/ory/x/stringsx"
 	"math/rand"
 	"net/http"
 	"reflect"
 	"time"
+
+	"github.com/ory/kratos/session"
+	"github.com/ory/x/stringsx"
 
 	"github.com/bxcodec/faker/v3"
 

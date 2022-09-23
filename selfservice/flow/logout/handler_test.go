@@ -4,11 +4,12 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/ory/kratos/session"
 	"net/http"
 	"net/http/cookiejar"
 	"net/url"
 	"testing"
+
+	"github.com/ory/kratos/session"
 
 	"github.com/julienschmidt/httprouter"
 	"github.com/stretchr/testify/assert"
