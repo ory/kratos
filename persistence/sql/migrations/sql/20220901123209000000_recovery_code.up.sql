@@ -2,7 +2,7 @@ CREATE TABLE identity_recovery_codes
 (
     id UUID NOT NULL PRIMARY KEY,
     code VARCHAR (64) NOT NULL, -- HMACed value of the actual code
-    used_at timestamp,
+    used_at timestamp NULL DEFAULT NULL,
     identity_recovery_address_id UUID,
     code_type INT NOT NULL,
     expires_at timestamp NOT NULL DEFAULT '2000-01-01 00:00:00',
