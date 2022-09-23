@@ -304,7 +304,7 @@ func (h *Handler) adminListIdentitySessions(w http.ResponseWriter, r *http.Reque
 	}
 
 	page, perPage := x.ParsePagination(r)
-	sess, err := h.r.SessionPersister().ListSessionsByIdentity(r.Context(), iID, active, page, perPage, uuid.Nil)
+	sess, err := h.r.SessionPersister().ListSessionsByIdentity(r.Context(), iID, active, page, perPage, uuid.Nil, ExpandEverything)
 	if err != nil {
 		h.r.Writer().WriteError(w, r, err)
 		return
@@ -448,7 +448,7 @@ func (h *Handler) listSessions(w http.ResponseWriter, r *http.Request, _ httprou
 	}
 
 	page, perPage := x.ParsePagination(r)
-	sess, err := h.r.SessionPersister().ListSessionsByIdentity(r.Context(), s.IdentityID, pointerx.Bool(true), page, perPage, s.ID)
+	sess, err := h.r.SessionPersister().ListSessionsByIdentity(r.Context(), s.IdentityID, pointerx.Bool(true), page, perPage, s.ID, ExpandEverything)
 	if err != nil {
 		h.r.Writer().WriteError(w, r, err)
 		return

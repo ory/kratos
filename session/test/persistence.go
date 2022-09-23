@@ -170,7 +170,7 @@ func TestPersister(ctx context.Context, conf *config.Config, p interface {
 					},
 				} {
 					t.Run("case="+tc.desc, func(t *testing.T) {
-						actual, err := p.ListSessionsByIdentity(ctx, i.ID, tc.active, 1, 10, tc.except)
+						actual, err := p.ListSessionsByIdentity(ctx, i.ID, tc.active, 1, 10, tc.except, session.ExpandNothing)
 						require.NoError(t, err)
 
 						require.Equal(t, len(tc.expected), len(actual))
@@ -188,7 +188,7 @@ func TestPersister(ctx context.Context, conf *config.Config, p interface {
 
 				t.Run("other network", func(t *testing.T) {
 					_, other := testhelpers.NewNetwork(t, ctx, p)
-					actual, err := other.ListSessionsByIdentity(ctx, i.ID, nil, 1, 10, uuid.Nil)
+					actual, err := other.ListSessionsByIdentity(ctx, i.ID, nil, 1, 10, uuid.Nil, session.ExpandNothing)
 					require.NoError(t, err)
 					assert.Len(t, actual, 0)
 				})
@@ -313,7 +313,7 @@ func TestPersister(ctx context.Context, conf *config.Config, p interface {
 			require.NoError(t, err)
 			assert.Equal(t, 1, n)
 
-			actual, err := p.ListSessionsByIdentity(ctx, sessions[0].IdentityID, nil, 1, 10, uuid.Nil)
+			actual, err := p.ListSessionsByIdentity(ctx, sessions[0].IdentityID, nil, 1, 10, uuid.Nil, session.ExpandNothing)
 			require.NoError(t, err)
 			require.Len(t, actual, 2)
 
@@ -326,7 +326,7 @@ func TestPersister(ctx context.Context, conf *config.Config, p interface {
 				assert.False(t, actual[0].Active)
 			}
 
-			otherIdentitiesSessions, err := p.ListSessionsByIdentity(ctx, sessions[2].IdentityID, nil, 1, 10, uuid.Nil)
+			otherIdentitiesSessions, err := p.ListSessionsByIdentity(ctx, sessions[2].IdentityID, nil, 1, 10, uuid.Nil, session.ExpandNothing)
 			require.NoError(t, err)
 			require.Len(t, actual, 2)
 
@@ -360,7 +360,7 @@ func TestPersister(ctx context.Context, conf *config.Config, p interface {
 
 			require.NoError(t, p.RevokeSession(ctx, sessions[0].IdentityID, sessions[0].ID))
 
-			actual, err := p.ListSessionsByIdentity(ctx, sessions[0].IdentityID, nil, 1, 10, uuid.Nil)
+			actual, err := p.ListSessionsByIdentity(ctx, sessions[0].IdentityID, nil, 1, 10, uuid.Nil, session.ExpandNothing)
 			require.NoError(t, err)
 			require.Len(t, actual, 2)
 

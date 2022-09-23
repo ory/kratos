@@ -33,7 +33,7 @@ func (p *Persister) GetSession(ctx context.Context, sid uuid.UUID, expandables s
 
 	q := p.GetConnection(ctx).Q()
 	if len(expandables) > 0 {
-		q = q.EagerPreload(expandables.ToEager()...)
+		q = q.Eager(expandables.ToEager()...)
 	}
 
 	if err := q.Where("id = ? AND nid = ?", sid, nid).First(&s); err != nil {
@@ -52,7 +52,7 @@ func (p *Persister) GetSession(ctx context.Context, sid uuid.UUID, expandables s
 }
 
 // ListSessionsByIdentity retrieves sessions for an identity from the store.
-func (p *Persister) ListSessionsByIdentity(ctx context.Context, iID uuid.UUID, active *bool, page, perPage int, except uuid.UUID) ([]*session.Session, error) {
+func (p *Persister) ListSessionsByIdentity(ctx context.Context, iID uuid.UUID, active *bool, page, perPage int, except uuid.UUID, expandables session.Expandables) ([]*session.Session, error) {
 	ctx, span := p.r.Tracer(ctx).Tracer().Start(ctx, "persistence.sql.ListSessionsByIdentity")
 	defer span.End()
 
@@ -67,7 +67,10 @@ func (p *Persister) ListSessionsByIdentity(ctx context.Context, iID uuid.UUID, a
 		if active != nil {
 			q = q.Where("active = ?", *active)
 		}
-		if err := q.Eager("Devices").All(&s); err != nil {
+		if len(expandables) > 0 {
+			q = q.Eager(expandables.ToEager()...)
+		}
+		if err := q.All(&s); err != nil {
 			return sqlcon.HandleError(err)
 		}
 
