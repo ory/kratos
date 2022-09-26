@@ -83,8 +83,6 @@ jobs:
         uses: sonatype-nexus-community/nancy-github-action@v1.0.2
       - run: npm install
         name: Install node deps
-      - run: make format && git diff HEAD --exit-code --color
-        name: Check formatting issues
       - name: Run golangci-lint
         uses: golangci/golangci-lint-action@v2
         env:
