@@ -577,7 +577,7 @@ Cypress.Commands.add(
   }) => {
     cy.visit(route)
 
-    cy.triggerOidc(app as 'react' | 'express')
+    cy.triggerOidc(app)
 
     cy.get("#username").type(email)
     if (rememberLogin) {
@@ -611,7 +611,7 @@ Cypress.Commands.add(
       cy.get("#reject").click()
     }
 
-    cy.location('pathname').should('not.include', 'consent')
+    cy.location("pathname").should("not.include", "consent")
 
     if (expectSession) {
       cy.getSession()
@@ -706,14 +706,14 @@ Cypress.Commands.add("remoteCourierRecoveryCodeTemplates", ({} = {}) => {
 })
 
 Cypress.Commands.add(
-  'loginOidc',
-  ({ app, expectSession = true, url = APP_URL + '/login' }) => {
+  "loginOidc",
+  ({ app, expectSession = true, url = APP_URL + "/login" }) => {
     cy.visit(url)
-    cy.triggerOidc(app as 'react' | 'express', 'hydra')
-    cy.location('href').should('not.eq', '/consent')
+    cy.triggerOidc(app, "hydra")
+    cy.location("href").should("not.eq", "/consent")
     if (expectSession) {
       // for some reason react flakes here although the login succeeded and there should be a session it fails
-      if (app === 'react') {
+      if (app === "react") {
         cy.wait(2000) // adding arbitrary wait here. not sure if there is a better way in this case
       }
       cy.getSession()
@@ -901,11 +901,11 @@ Cypress.Commands.add(
   ({ expectAal = "aal1", expectMethods = [] } = {}) => {
     // Do the request once to ensure we have a session (with retry)
     cy.request({
-      method: 'GET',
-      url: `${KRATOS_PUBLIC}/sessions/whoami`
+      method: "GET",
+      url: `${KRATOS_PUBLIC}/sessions/whoami`,
     })
-      .its('status') // adds retry
-      .should('eq', 200)
+      .its("status") // adds retry
+      .should("eq", 200)
 
     // Return the session for further propagation
     return cy
@@ -1185,10 +1185,10 @@ Cypress.Commands.add(
         "The return_to address is not allowed.",
       )
     } else {
-      cy.location('pathname').should('contain', 'error')
-      cy.get('div').should(
-        'contain.text',
-        'Requested return_to URL "https://not-allowed" is not allowed.'
+      cy.location("pathname").should("contain", "error")
+      cy.get("div").should(
+        "contain.text",
+        'Requested return_to URL "https://not-allowed" is not allowed.',
       )
     }
   },
@@ -1218,8 +1218,8 @@ Cypress.Commands.add(
         expect(location.search).to.not.eq(initial)
       })
 
-      cy.location('pathname').should('include', '/error')
-      cy.get(`div`).should('contain.text', 'CSRF')
+      cy.location("pathname").should("include", "/error")
+      cy.get(`div`).should("contain.text", "CSRF")
     } else {
       cy.location("pathname").should((got) => {
         expect(got).to.eql(pathname)
@@ -1250,10 +1250,10 @@ Cypress.Commands.add(
   },
 )
 
-Cypress.Commands.add('removeRequiredAttribute', (selectors: string[]) => {
+Cypress.Commands.add("removeRequiredAttribute", (selectors: string[]) => {
   selectors.forEach((selector) => {
     cy.get(selector).then(($el) => {
-      $el.removeAttr('required')
+      $el.removeAttr("required")
     })
   })
 })

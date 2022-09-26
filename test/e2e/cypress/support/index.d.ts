@@ -8,6 +8,7 @@ export interface MailMessage {
 }
 
 export type RecoveryStrategy = "code" | "link"
+type app = "express" | "react"
 
 declare global {
   namespace Cypress {
@@ -316,7 +317,7 @@ declare global {
        * @param opts
        */
       registerOidc(opts: {
-        app: string
+        app: app
         email?: string
         website?: string
         scopes?: Array<string>
@@ -334,7 +335,7 @@ declare global {
        * @param opts
        */
       loginOidc(opts: {
-        app: string
+        app: app
         expectSession?: boolean
         url?: string
       }): Chainable<void>
