@@ -648,7 +648,7 @@
           }
         ],
         "responses": {
-          "200": {
+          "201": {
             "description": "selfServiceRecoveryCode",
             "schema": {
               "$ref": "#/definitions/selfServiceRecoveryCode"
@@ -2762,7 +2762,7 @@
         "expires_in": {
           "description": "Code Expires In\n\nThe recovery code will expire at that point in time. Defaults to the configuration value of\n`selfservice.flows.recovery.request_lifespan`.",
           "type": "string",
-          "pattern": "^[0-9]+(ns|us|ms|s|m|h)$"
+          "pattern": "^([0-9]+(ns|us|ms|s|m|h))*$"
         },
         "identity_id": {
           "description": "Identity to Recover\n\nThe identity's ID you wish to recover.",

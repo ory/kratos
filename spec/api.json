@@ -168,7 +168,7 @@
         "properties": {
           "expires_in": {
             "description": "Code Expires In\n\nThe recovery code will expire at that point in time. Defaults to the configuration value of\n`selfservice.flows.recovery.request_lifespan`.",
-            "pattern": "^[0-9]+(ns|us|ms|s|m|h)$",
+            "pattern": "^([0-9]+(ns|us|ms|s|m|h))*$",
             "type": "string"
           },
           "identity_id": {
@@ -3209,7 +3209,7 @@
           "x-originalParamName": "Body"
         },
         "responses": {
-          "200": {
+          "201": {
             "content": {
               "application/json": {
                 "schema": {

@@ -573,7 +573,7 @@ paths:
               $ref: '#/components/schemas/adminCreateSelfServiceRecoveryCodeBody'
         x-originalParamName: Body
       responses:
-        "200":
+        "201":
           content:
             application/json:
               schema:
@@ -3133,7 +3133,7 @@ components:
 
             The recovery code will expire at that point in time. Defaults to the configuration value of
             `selfservice.flows.recovery.request_lifespan`.
-          pattern: ^[0-9]+(ns|us|ms|s|m|h)$
+          pattern: ^([0-9]+(ns|us|ms|s|m|h))*$
           type: string
         identity_id:
           description: |-
