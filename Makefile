@@ -28,147 +28,147 @@ $(foreach dep, $(GO_DEPENDENCIES), $(eval $(call make-go-dependency, $(dep))))
 $(call make-lint-dependency)
 
 .bin/clidoc:
-		echo "deprecated usage, use docs/cli instead"
-		go build -o .bin/clidoc ./cmd/clidoc/.
+	echo "deprecated usage, use docs/cli instead"
+	go build -o .bin/clidoc ./cmd/clidoc/.
 
 .PHONY: .bin/yq
 .bin/yq:
-		go build -o .bin/yq github.com/mikefarah/yq/v4
+	go build -o .bin/yq github.com/mikefarah/yq/v4
 
 .PHONY: docs/cli
 docs/cli:
-		go run ./cmd/clidoc/. .
+	go run ./cmd/clidoc/. .
 
 .PHONY: docs/api
 docs/api:
-		npx @redocly/openapi-cli preview-docs spec/api.json
+	npx @redocly/openapi-cli preview-docs spec/api.json
 
 .PHONY: docs/swagger
 docs/swagger:
-		npx @redocly/openapi-cli preview-docs spec/swagger.json
+	npx @redocly/openapi-cli preview-docs spec/swagger.json
 
 .bin/ory: Makefile
-		bash <(curl https://raw.githubusercontent.com/ory/meta/master/install.sh) -d -b .bin ory v0.1.33
-		touch -a -m .bin/ory
+	bash <(curl https://raw.githubusercontent.com/ory/meta/master/install.sh) -d -b .bin ory v0.1.33
+	touch -a -m .bin/ory
 
 node_modules: package.json
-		npm ci
-		touch node_modules
+	npm ci
+	touch node_modules
 
 .bin/golangci-lint: Makefile
-		curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -d -b .bin v1.47.3
+	curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -d -b .bin v1.47.3
 
 .bin/hydra: Makefile
-		bash <(curl https://raw.githubusercontent.com/ory/meta/master/install.sh) -d -b .bin hydra v1.11.0
+	bash <(curl https://raw.githubusercontent.com/ory/meta/master/install.sh) -d -b .bin hydra v1.11.0
 
 .PHONY: lint
 lint: .bin/golangci-lint
-		golangci-lint run -v --timeout 10m ./...
+	golangci-lint run -v --timeout 10m ./...
 
 .PHONY: mocks
 mocks: .bin/mockgen
-		mockgen -mock_names Manager=MockLoginExecutorDependencies -package internal -destination internal/hook_login_executor_dependencies.go github.com/ory/kratos/selfservice loginExecutorDependencies
+	mockgen -mock_names Manager=MockLoginExecutorDependencies -package internal -destination internal/hook_login_executor_dependencies.go github.com/ory/kratos/selfservice loginExecutorDependencies
 
 .PHONY: install
 install:
-		GO111MODULE=on go install -tags sqlite .
+	GO111MODULE=on go install -tags sqlite .
 
 .PHONY: test-resetdb
 test-resetdb:
-		script/testenv.sh
+	script/testenv.sh
 
 .PHONY: test
 test:
-		go test -p 1 -tags sqlite -count=1 -failfast ./...
+	go test -p 1 -tags sqlite -count=1 -failfast ./...
 
 .PHONY: test-coverage
 test-coverage: .bin/go-acc .bin/goveralls
-		go-acc -o coverage.out ./... -- -v -failfast -timeout=20m -tags sqlite
+	go-acc -o coverage.out ./... -- -v -failfast -timeout=20m -tags sqlite
 
 # Generates the SDK
 .PHONY: sdk
 sdk: .bin/swagger .bin/ory node_modules
-		swagger generate spec -m -o spec/swagger.json \
-			-c github.com/ory/kratos \
-			-c github.com/ory/x/healthx \
-			-c github.com/ory/x/openapix
-		ory dev swagger sanitize ./spec/swagger.json
-		swagger validate ./spec/swagger.json
-		CIRCLE_PROJECT_USERNAME=ory CIRCLE_PROJECT_REPONAME=kratos \
-				ory dev openapi migrate \
-					--health-path-tags metadata \
-					-p https://raw.githubusercontent.com/ory/x/master/healthx/openapi/patch.yaml \
-					-p file://.schema/openapi/patches/meta.yaml \
-					-p file://.schema/openapi/patches/schema.yaml \
-					-p file://.schema/openapi/patches/selfservice.yaml \
-					-p file://.schema/openapi/patches/security.yaml \
-					-p file://.schema/openapi/patches/session.yaml \
-					-p file://.schema/openapi/patches/identity.yaml \
-					-p file://.schema/openapi/patches/courier.yaml \
-					-p file://.schema/openapi/patches/generic_error.yaml \
-					-p file://.schema/openapi/patches/common.yaml \
-					spec/swagger.json spec/api.json
+	swagger generate spec -m -o spec/swagger.json \
+		-c github.com/ory/kratos \
+		-c github.com/ory/x/healthx \
+		-c github.com/ory/x/openapix
+	ory dev swagger sanitize ./spec/swagger.json
+	swagger validate ./spec/swagger.json
+	CIRCLE_PROJECT_USERNAME=ory CIRCLE_PROJECT_REPONAME=kratos \
+		ory dev openapi migrate \
+			--health-path-tags metadata \
+			-p https://raw.githubusercontent.com/ory/x/master/healthx/openapi/patch.yaml \
+			-p file://.schema/openapi/patches/meta.yaml \
+			-p file://.schema/openapi/patches/schema.yaml \
+			-p file://.schema/openapi/patches/selfservice.yaml \
+			-p file://.schema/openapi/patches/security.yaml \
+			-p file://.schema/openapi/patches/session.yaml \
+			-p file://.schema/openapi/patches/identity.yaml \
+			-p file://.schema/openapi/patches/courier.yaml \
+			-p file://.schema/openapi/patches/generic_error.yaml \
+			-p file://.schema/openapi/patches/common.yaml \
+			spec/swagger.json spec/api.json
 
-		rm -rf internal/httpclient
-		mkdir -p internal/httpclient/
-		npm run openapi-generator-cli -- generate -i "spec/api.json" \
-				-g go \
-				-o "internal/httpclient" \
-				--git-user-id ory \
-				--git-repo-id kratos-client-go \
-				--git-host github.com \
-				-t .schema/openapi/templates/go \
-				-c .schema/openapi/gen.go.yml
+	rm -rf internal/httpclient
+	mkdir -p internal/httpclient/
+	npm run openapi-generator-cli -- generate -i "spec/api.json" \
+		-g go \
+		-o "internal/httpclient" \
+		--git-user-id ory \
+		--git-repo-id kratos-client-go \
+		--git-host github.com \
+		-t .schema/openapi/templates/go \
+		-c .schema/openapi/gen.go.yml
 
-		make format
+	make format
 
 .PHONY: quickstart
 quickstart:
-		docker pull oryd/kratos:latest
-		docker pull oryd/kratos-selfservice-ui-node:latest
-		docker-compose -f quickstart.yml -f quickstart-standalone.yml up --build --force-recreate
+	docker pull oryd/kratos:latest
+	docker pull oryd/kratos-selfservice-ui-node:latest
+	docker-compose -f quickstart.yml -f quickstart-standalone.yml up --build --force-recreate
 
 .PHONY: quickstart-dev
 quickstart-dev:
-		docker build -f .docker/Dockerfile-build -t oryd/kratos:latest .
-		docker-compose -f quickstart.yml -f quickstart-standalone.yml -f quickstart-latest.yml $(QUICKSTART_OPTIONS) up --build --force-recreate
+	docker build -f .docker/Dockerfile-build -t oryd/kratos:latest .
+	docker-compose -f quickstart.yml -f quickstart-standalone.yml -f quickstart-latest.yml $(QUICKSTART_OPTIONS) up --build --force-recreate
 
 # Formats the code
 .PHONY: format
 format: .bin/goimports node_modules
-		goimports -w -local github.com/ory .
-		npm exec -- prettier --write 'test/e2e/**/*{.ts,.js}'
-		npm exec -- prettier --write '.github'
+	goimports -w -local github.com/ory .
+	npm exec -- prettier --write 'test/e2e/**/*{.ts,.js}'
+	npm exec -- prettier --write '.github'
 
 # Build local docker image
 .PHONY: docker
 docker:
-		DOCKER_BUILDKIT=1 docker build -f .docker/Dockerfile-build --build-arg=COMMIT=$(VCS_REF) --build-arg=BUILD_DATE=$(BUILD_DATE) -t oryd/kratos:latest .
+	DOCKER_BUILDKIT=1 docker build -f .docker/Dockerfile-build --build-arg=COMMIT=$(VCS_REF) --build-arg=BUILD_DATE=$(BUILD_DATE) -t oryd/kratos:latest .
 
 # Runs the documentation tests
 .PHONY: test-docs
 test-docs: node_modules
-		npm run text-run
+	npm run text-run
 
 .PHONY: test-e2e
 test-e2e: node_modules test-resetdb
-		source script/test-envs.sh
-		test/e2e/run.sh sqlite
-		test/e2e/run.sh postgres
-		test/e2e/run.sh cockroach
-		test/e2e/run.sh mysql
+	source script/test-envs.sh
+	test/e2e/run.sh sqlite
+	test/e2e/run.sh postgres
+	test/e2e/run.sh cockroach
+	test/e2e/run.sh mysql
 
 .PHONY: migrations-sync
 migrations-sync: .bin/ory
-		ory dev pop migration sync persistence/sql/migrations/templates persistence/sql/migratest/testdata
-		script/add-down-migrations.sh
+	ory dev pop migration sync persistence/sql/migrations/templates persistence/sql/migratest/testdata
+	script/add-down-migrations.sh
 
 .PHONY: test-update-snapshots
 test-update-snapshots:
-		UPDATE_SNAPSHOTS=true go test -p 4 -tags sqlite -short ./...
+	UPDATE_SNAPSHOTS=true go test -p 4 -tags sqlite -short ./...
 
 .PHONY: post-release
 post-release: .bin/yq
-		cat quickstart.yml | yq '.services.kratos.image = "oryd/kratos:'$$DOCKER_TAG'"' | sponge quickstart.yml
-		cat quickstart.yml | yq '.services.kratos-migrate.image = "oryd/kratos:'$$DOCKER_TAG'"' | sponge quickstart.yml
-		cat quickstart.yml | yq '.services.kratos-selfservice-ui-node.image = "oryd/kratos-selfservice-ui-node:'$$DOCKER_TAG'"' | sponge quickstart.yml
+	cat quickstart.yml | yq '.services.kratos.image = "oryd/kratos:'$$DOCKER_TAG'"' | sponge quickstart.yml
+	cat quickstart.yml | yq '.services.kratos-migrate.image = "oryd/kratos:'$$DOCKER_TAG'"' | sponge quickstart.yml
+	cat quickstart.yml | yq '.services.kratos-selfservice-ui-node.image = "oryd/kratos-selfservice-ui-node:'$$DOCKER_TAG'"' | sponge quickstart.yml
