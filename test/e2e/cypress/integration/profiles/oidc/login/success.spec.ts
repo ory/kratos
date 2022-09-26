@@ -48,9 +48,9 @@ context("Social Sign In Successes", () => {
         cy.noSession()
         cy.loginOidc({
           app,
-          url: login + '?return_to=https://www.example.org/'
+          url: login + "?return_to=https://www.example.org/",
         })
-        cy.location('href').should('eq', 'https://www.example.org/')
+        cy.location("href").should("eq", "https://www.example.org/")
       })
     })
   })

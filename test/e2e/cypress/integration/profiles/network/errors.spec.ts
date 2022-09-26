@@ -11,8 +11,8 @@ describe("Registration failures with email profile", () => {
     cy.setDefaultIdentitySchema("localhost")
     cy.visit(express.registration, { failOnStatusCode: false })
     cy.get('[data-testid="code-box"]').should(
-      'contain.text',
-      'ip 127.0.0.1 is in the 127.0.0.0/8'
+      "contain.text",
+      "ip 127.0.0.1 is in the 127.0.0.0/8",
     )
   })
 
@@ -20,8 +20,8 @@ describe("Registration failures with email profile", () => {
     cy.setDefaultIdentitySchema("ref")
     cy.visit(express.registration, { failOnStatusCode: false })
     cy.get('[data-testid="code-box"]').should(
-      'contain.text',
-      'ip 192.168.178.1 is in the 192.168.0.0/16 range'
+      "contain.text",
+      "ip 192.168.178.1 is in the 192.168.0.0/16 range",
     )
   })
 
@@ -29,8 +29,8 @@ describe("Registration failures with email profile", () => {
     cy.setDefaultIdentitySchema("working")
     cy.visit(express.login, { failOnStatusCode: false })
     cy.get('[data-testid="code-box"]').should(
-      'contain.text',
-      'ip 192.168.178.2 is in the 192.168.0.0/16 range'
+      "contain.text",
+      "ip 192.168.178.2 is in the 192.168.0.0/16 range",
     )
   })
 
@@ -38,12 +38,12 @@ describe("Registration failures with email profile", () => {
     cy.setDefaultIdentitySchema("working")
     cy.visit(express.registration, { failOnStatusCode: false })
     cy.get('input[name="traits.email"]').type(gen.email())
-    cy.get('input[name="traits.website"]').type('https://google.com/')
+    cy.get('input[name="traits.website"]').type("https://google.com/")
     cy.get('input[name="password"]').type(gen.password())
     cy.get('[type="submit"]').click()
     cy.get('[data-testid="code-box"]').should(
-      'contain.text',
-      'ip 192.168.178.3 is in the 192.168.0.0/16 range'
+      "contain.text",
+      "ip 192.168.178.3 is in the 192.168.0.0/16 range",
     )
   })
 })

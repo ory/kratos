@@ -81,8 +81,8 @@ context("2FA lookup secrets", () => {
           cy.wrap($e).type(authenticator.generate(secret))
         })
         cy.get('*[name="method"][value="totp"]').click()
-        cy.location('pathname').should((loc) => {
-          expect(loc).to.oneOf(['/welcome', '/', '/sessions'])
+        cy.location("pathname").should((loc) => {
+          expect(loc).to.oneOf(["/welcome", "/", "/sessions"])
         })
         cy.getSession({
           expectAal: "aal2",

@@ -1,21 +1,21 @@
-import { appPrefix, gen, website } from '../../../helpers'
-import { routes as express } from '../../../helpers/express'
-import { routes as react } from '../../../helpers/react'
+import { appPrefix, gen, website } from "../../../helpers"
+import { routes as express } from "../../../helpers/express"
+import { routes as react } from "../../../helpers/react"
 
 const signup = (registration: string, app: string, email = gen.email()) => {
   cy.visit(registration)
 
   const emailTrait = `${
-    app === 'express' ? '[data-testid="passwordless-flow"]' : ''
+    app === "express" ? '[data-testid="passwordless-flow"]' : ""
   } [name="traits.email"]`
   const websiteTrait = `${
-    app === 'express' ? '[data-testid="passwordless-flow"]' : ''
+    app === "express" ? '[data-testid="passwordless-flow"]' : ""
   } [name="traits.website"]`
 
-  cy.get('[name="webauthn_register_displayname"]').type('key1')
+  cy.get('[name="webauthn_register_displayname"]').type("key1")
   cy.get(emailTrait).type(email)
-  cy.get(websiteTrait).type('https://www.ory.sh')
-  cy.clickWebAuthButton('register')
+  cy.get(websiteTrait).type("https://www.ory.sh")
+  cy.clickWebAuthButton("register")
   cy.getSession({
     expectAal: "aal1",
     expectMethods: ["webauthn"],
@@ -79,40 +79,40 @@ context("Passwordless registration", () => {
         // we should remove the required attribute to simulate the data not being sent
         cy.removeRequiredAttribute([
           'input[name="traits.email"]',
-          'input[name="traits.website"]'
+          'input[name="traits.website"]',
         ])
 
         cy.get(`input[name="traits.website"]`).then(($el) => {
-          $el.removeAttr('type')
+          $el.removeAttr("type")
         })
 
         const websiteTrait = `${
-          app === 'express' ? `[data-testid="passwordless-flow"]` : ''
+          app === "express" ? `[data-testid="passwordless-flow"]` : ""
         } [name="traits.website"]`
 
         const emailTrait = `${
-          app === 'express' ? `[data-testid="passwordless-flow"]` : ''
+          app === "express" ? `[data-testid="passwordless-flow"]` : ""
         } [name="traits.email"]`
 
         cy.get(appPrefix(app) + '[name="webauthn_register_displayname"]').type(
           "key1",
         )
-        cy.get(websiteTrait).type('b')
-        cy.clickWebAuthButton('register')
+        cy.get(websiteTrait).type("b")
+        cy.clickWebAuthButton("register")
 
-        cy.get('[data-testid="ui/message/4000002"]').should('to.exist')
-        cy.get('[data-testid="ui/message/4000001"]').should('to.exist')
-        cy.get(websiteTrait).should('have.value', 'b')
+        cy.get('[data-testid="ui/message/4000002"]').should("to.exist")
+        cy.get('[data-testid="ui/message/4000001"]').should("to.exist")
+        cy.get(websiteTrait).should("have.value", "b")
 
         const email = gen.email()
         cy.get(emailTrait).type(email)
-        cy.clickWebAuthButton('register')
+        cy.clickWebAuthButton("register")
 
-        cy.get('[data-testid="ui/message/4000001"]').should('to.exist')
-        cy.get(websiteTrait).should('have.value', 'b')
-        cy.get(emailTrait).should('have.value', email)
-        cy.get(websiteTrait).clear().type('https://www.ory.sh')
-        cy.clickWebAuthButton('register')
+        cy.get('[data-testid="ui/message/4000001"]').should("to.exist")
+        cy.get(websiteTrait).should("have.value", "b")
+        cy.get(emailTrait).should("have.value", email)
+        cy.get(websiteTrait).clear().type("https://www.ory.sh")
+        cy.clickWebAuthButton("register")
         cy.getSession({
           expectAal: "aal1",
           expectMethods: ["webauthn"],
@@ -130,7 +130,7 @@ context("Passwordless registration", () => {
         cy.visit(login)
 
         const identifierTrait = `${
-          app === 'express' ? `[data-testid="passwordless-flow"]` : ''
+          app === "express" ? `[data-testid="passwordless-flow"]` : ""
         } [name="identifier"]`
 
         cy.get(identifierTrait).type(email)
@@ -169,26 +169,26 @@ context("Passwordless registration", () => {
         cy.visit(login)
 
         const identifierTrait = `${
-          app === 'express' ? `[data-testid="passwordless-flow"]` : ''
+          app === "express" ? `[data-testid="passwordless-flow"]` : ""
         } [name="identifier"]`
 
         cy.get(identifierTrait).type(email)
         cy.get('[value="webauthn"]').click()
-        cy.get('[data-testid="ui/message/4000015"]').should('to.exist')
-        cy.get(identifierTrait).should('exist')
-        cy.get('[name="password"]').should('exist')
-        cy.get('[value="password"]').should('exist')
+        cy.get('[data-testid="ui/message/4000015"]').should("to.exist")
+        cy.get(identifierTrait).should("exist")
+        cy.get('[name="password"]').should("exist")
+        cy.get('[value="password"]').should("exist")
       })
 
       it("should be able to refresh", () => {
         const email = gen.email()
         signup(registration, app, email)
-        cy.visit(login + '?refresh=true')
-        cy.get('[name="identifier"][type="hidden"]').should('exist')
-        cy.get('[name="identifier"][type="input"]').should('not.exist')
-        cy.get('[name="password"]').should('not.exist')
-        cy.get('[value="password"]').should('not.exist')
-        cy.clickWebAuthButton('login')
+        cy.visit(login + "?refresh=true")
+        cy.get('[name="identifier"][type="hidden"]').should("exist")
+        cy.get('[name="identifier"][type="input"]').should("not.exist")
+        cy.get('[name="password"]').should("not.exist")
+        cy.get('[value="password"]').should("not.exist")
+        cy.clickWebAuthButton("login")
         cy.getSession({
           expectAal: "aal1",
           expectMethods: ["webauthn", "webauthn"],
@@ -201,9 +201,9 @@ context("Passwordless registration", () => {
       it("should not be able to use for MFA", () => {
         const email = gen.email()
         signup(registration, app, email)
-        cy.visit(login + '?aal=aal2')
-        cy.get('[value="webauthn"]').should('not.exist')
-        cy.get('[name="webauthn_login_trigger"]').should('not.exist')
+        cy.visit(login + "?aal=aal2")
+        cy.get('[value="webauthn"]').should("not.exist")
+        cy.get('[name="webauthn_login_trigger"]').should("not.exist")
       })
 
       it("should be able to add method later and try a variety of refresh flows", () => {
@@ -212,15 +212,15 @@ context("Passwordless registration", () => {
         cy.visit(registration)
 
         const emailTrait = `${
-          app === 'express' ? `[data-testid="registration-flow"]` : ''
+          app === "express" ? `[data-testid="registration-flow"]` : ""
         } [name="traits.email"]`
         const websiteTrait = `${
-          app === 'express' ? `[data-testid="registration-flow"]` : ''
+          app === "express" ? `[data-testid="registration-flow"]` : ""
         } [name="traits.website"]`
 
         cy.get(emailTrait).type(email)
         cy.get('[name="password"]').type(password)
-        cy.get(websiteTrait).type('https://www.ory.sh')
+        cy.get(websiteTrait).type("https://www.ory.sh")
         cy.get('[value="password"]').click()
         cy.location("pathname").should("not.contain", "/registration")
         cy.getSession({
@@ -254,7 +254,7 @@ context("Passwordless registration", () => {
         cy.visit(login)
 
         const identifierTrait = `${
-          app === 'express' ? `[data-testid="passwordless-flow"]` : ''
+          app === "express" ? `[data-testid="passwordless-flow"]` : ""
         } [name="identifier"]`
 
         cy.get(identifierTrait).type(email)

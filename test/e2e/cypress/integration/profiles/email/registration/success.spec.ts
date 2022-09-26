@@ -113,7 +113,7 @@ context("Registration success with email profile", () => {
       const password = gen.password()
       const website = "https://www.example.org/"
 
-      cy.get(`${appPrefix('express')} input[name="traits"]`).should('not.exist')
+      cy.get(`${appPrefix("express")} input[name="traits"]`).should("not.exist")
       cy.get('input[name="traits.email"]').type(email)
       cy.get('input[name="traits.website').type(website)
       cy.get('input[name="password"]').type(password)

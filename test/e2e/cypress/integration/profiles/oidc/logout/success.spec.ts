@@ -33,14 +33,14 @@ context("Social Sign Out Successes", () => {
         cy.registerOidc({ app, email, website, route: registration })
       })
 
-      it('should sign out and be able to sign in again', () => {
-        if (app === 'express') {
+      it("should sign out and be able to sign in again", () => {
+        if (app === "express") {
           cy.get(
-            `${appPrefix(app)} [data-testid="logout"] a:not(disabled)`
+            `${appPrefix(app)} [data-testid="logout"] a:not(disabled)`,
           ).click()
         } else {
           cy.get(
-            `${appPrefix(app)} [data-testid="logout"]:not(disabled)`
+            `${appPrefix(app)} [data-testid="logout"]:not(disabled)`,
           ).click()
         }
         cy.noSession()
