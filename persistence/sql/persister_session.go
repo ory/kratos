@@ -296,3 +296,31 @@ func (p *Persister) DeleteExpiredSessions(ctx context.Context, expiresAt time.Ti
 	}
 	return nil
 }
+
+func (p *Persister) ReplaceSession(ctx context.Context, oldSession *session.Session, newSession *session.Session) error {
+	ctx, span := p.r.Tracer(ctx).Tracer().Start(ctx, "persistence.sql.RevokeSession")
+	defer span.End()
+
+	nid := p.NetworkID(ctx)
+	newSession.NID = nid
+
+	return errors.WithStack(p.Transaction(ctx, func(ctx context.Context, tx *pop.Connection) error {
+		// #nosec G201
+		if err := sqlcon.HandleError(tx.RawQuery(fmt.Sprintf(
+			"UPDATE %s SET active = false WHERE id = ? AND identity_id = ? AND nid = ?",
+			"sessions",
+		),
+			oldSession.ID,
+			oldSession.IdentityID,
+			nid,
+		).Exec()); err != nil {
+			return err
+		}
+
+		if err := sqlcon.HandleError(tx.Create(newSession)); err != nil {
+			return err
+		}
+
+		return nil
+	}))
+}

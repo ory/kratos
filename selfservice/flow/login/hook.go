@@ -6,8 +6,6 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/ory/x/randx"
-
 	"github.com/pkg/errors"
 
 	"github.com/ory/kratos/driver/config"
@@ -157,31 +155,16 @@ func (e *HookExecutor) PostLoginHook(w http.ResponseWriter, r *http.Request, g n
 
 		// Update session identifiers when Re-Auth or session upgrade
 		if a.Refresh || a.RequestedAAL > s.AuthenticatorAssuranceLevel { // TODO: Change to OR to allow block exec
-			newSession := &session.Session{
-				ID:                          x.NewUUID(),
-				Active:                      s.Active,
-				ExpiresAt:                   s.ExpiresAt,
-				AuthenticatedAt:             s.AuthenticatedAt,
-				AuthenticatorAssuranceLevel: s.AuthenticatorAssuranceLevel,
-				AMR:                         s.AMR,
-				IssuedAt:                    s.IssuedAt,
-				LogoutToken:                 randx.MustString(32, randx.AlphaNum),
-				Identity:                    s.Identity,
-				IdentityID:                  s.IdentityID,
-				Token:                       randx.MustString(32, randx.AlphaNum),
-				NID:                         s.NID,
+			ns := session.NewReplacementSession(s)
+			if err := e.d.SessionPersister().ReplaceSession(r.Context(), s, ns); err != nil {
+				return errors.WithStack(err)
 			}
 
-			/*
-				if err := e.d.SessionPersister().RevokeSession(r.Context(), s.IdentityID, s.ID); err != nil {
-					return errors.WithStack(err)
-				}
-			*/
-			s = newSession
-		}
-
-		if err := e.d.SessionPersister().UpsertSession(r.Context(), s); err != nil {
-			return errors.WithStack(err)
+			s = ns
+		} else {
+			if err := e.d.SessionPersister().UpsertSession(r.Context(), s); err != nil {
+				return errors.WithStack(err)
+			}
 		}
 		e.d.Audit().
 			WithRequest(r).
