@@ -172,6 +172,68 @@ func TestFlowLifecycle(t *testing.T) {
 				})
 			})
 
+			t.Run("case=setup new session when refresh is true (re-auth)", func(t *testing.T) {
+				testhelpers.NewRedirSessionEchoTS(t, reg)
+				t.Cleanup(func() {
+					conf.MustSet(ctx, config.ViperKeySelfServiceBrowserDefaultReturnTo, "https://www.ory.sh")
+				})
+
+				run := func(t *testing.T, tt flow.Type) (string, string) {
+					f := login.Flow{Type: tt, ExpiresAt: time.Now().Add(time.Minute), IssuedAt: time.Now(), UI: container.New(""), Refresh: false, RequestedAAL: "aal1"}
+					require.NoError(t, reg.LoginFlowPersister().CreateLoginFlow(context.Background(), &f))
+
+					hc := testhelpers.NewClientWithCookies(t)
+					res, err := hc.PostForm(ts.URL+login.RouteSubmitFlow+"?flow="+f.ID.String(), url.Values{"method": {"password"}, "password_identifier": {id1mail}, "password": {"foobar"}, "csrf_token": {x.FakeCSRFToken}})
+					require.NoError(t, err)
+					firstSession := x.MustReadAll(res.Body)
+					require.NoError(t, res.Body.Close())
+
+					f = login.Flow{Type: tt, ExpiresAt: time.Now().Add(time.Minute), IssuedAt: time.Now(), UI: container.New(""), Refresh: true, RequestedAAL: "aal1"}
+					require.NoError(t, reg.LoginFlowPersister().CreateLoginFlow(context.Background(), &f))
+
+					vv := testhelpers.EncodeFormAsJSON(t, tt == flow.TypeAPI, url.Values{"method": {"password"}, "password_identifier": {id1mail}, "password": {"foobar"}, "csrf_token": {x.FakeCSRFToken}})
+
+					req, err := http.NewRequest("POST", ts.URL+login.RouteSubmitFlow+"?flow="+f.ID.String(), strings.NewReader(vv))
+					require.NoError(t, err)
+
+					if tt == flow.TypeAPI {
+						req.Header.Set("Content-Type", "application/json")
+						req.Header.Set("Authorization", "Bearer "+gjson.GetBytes(firstSession, "session_token").String())
+					} else {
+						req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+					}
+
+					res, err = hc.Do(req)
+					require.NoError(t, err)
+					secondSession := x.MustReadAll(res.Body)
+					require.NoError(t, res.Body.Close())
+					return string(firstSession), string(secondSession)
+				}
+
+				t.Run("type=browser", func(t *testing.T) {
+					a, b := run(t, flow.TypeBrowser)
+
+					assert.Equal(t, id1mail, gjson.Get(a, "identity.traits.username").String())
+					assert.Equal(t, id1mail, gjson.Get(b, "identity.traits.username").String())
+
+					assert.NotEmpty(t, gjson.Get(b, "id").String())
+					assert.NotEqual(t, gjson.Get(b, "id").String(), gjson.Get(a, "id").String())
+				})
+
+				t.Run("type=api", func(t *testing.T) {
+					a, b := run(t, flow.TypeAPI)
+
+					assert.Equal(t, id1mail, gjson.Get(a, "session.identity.traits.username").String())
+					assert.Equal(t, id1mail, gjson.Get(b, "session.identity.traits.username").String())
+
+					assert.NotEmpty(t, gjson.Get(a, "session_token").String())
+					assert.NotEqual(t, gjson.Get(a, "session_token").String(), gjson.Get(b, "session_token").String())
+
+					assert.NotEmpty(t, gjson.Get(b, "session.id").String())
+					assert.NotEqual(t, gjson.Get(b, "session.id").String(), gjson.Get(a, "id").String())
+				})
+			})
+
 			t.Run("case=reset the session when refresh is true but identity is different", func(t *testing.T) {
 				testhelpers.NewRedirSessionEchoTS(t, reg)
 				t.Cleanup(func() {
