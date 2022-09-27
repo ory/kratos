@@ -152,7 +152,6 @@ func (e *HookExecutor) PostLoginHook(w http.ResponseWriter, r *http.Request, g n
 	}
 
 	if a.Type == flow.TypeAPI {
-
 		// Update session identifiers when Re-Auth or session upgrade
 		if a.Refresh || a.RequestedAAL > s.AuthenticatorAssuranceLevel { // TODO: Change to OR to allow block exec
 			ns := session.NewReplacementSession(s)
@@ -182,8 +181,22 @@ func (e *HookExecutor) PostLoginHook(w http.ResponseWriter, r *http.Request, g n
 		return nil
 	}
 
-	if err := e.d.SessionManager().UpsertAndIssueCookie(r.Context(), w, r, s); err != nil {
-		return errors.WithStack(err)
+	// Update session identifiers when Re-Auth or session upgrade and then issue cookie
+	if a.Refresh || a.RequestedAAL > s.AuthenticatorAssuranceLevel { // TODO: Change to OR to allow block exec
+		ns := session.NewReplacementSession(s)
+		if err := e.d.SessionPersister().ReplaceSession(r.Context(), s, ns); err != nil {
+			return errors.WithStack(err)
+		}
+
+		s = ns
+
+		if err := e.d.SessionManager().IssueCookie(r.Context(), w, r, s); err != nil {
+			return errors.WithStack(err)
+		}
+	} else {
+		if err := e.d.SessionManager().UpsertAndIssueCookie(r.Context(), w, r, s); err != nil {
+			return errors.WithStack(err)
+		}
 	}
 
 	e.d.Audit().
