@@ -1,19 +1,26 @@
 #!/bin/bash
 
-set -euxo pipefail
+echo "Running Ory Kratos E2E Tests..."
+echo ""
 
 NODE_VERSION=$(node -v)
-# check node version
-if [[ $(node -v | sed 's/[^0-9]*//g' | sed 's/\(^..\).*/\1/') -gt 16 ]]; then
-  set +x
-  echo "It seems you are running this script using a node version newer than 16."
-  echo "Currently, this script will not work if not run using Node 16 (or lower) due to changes in the way Node 18 does network requests."
-  echo "Please use Node 16 instead."
-  echo ""
-  echo "  Using nvm (https://github.com/nvm-sh/nvm):"
-  echo "   $ nvm install 16"
-  exit
+
+if [[ $NODE_VERSION =~ v([0-9]{1,2}).* ]]; then
+  MAJOR_NODE_VERSION=${BASH_REMATCH[1]}
+  if [[ $MAJOR_NODE_VERSION -gt 16 ]]; then
+    echo "It seems you are running this script using a node version newer than 16 ($NODE_VERSION)."
+    echo "Currently, this script will not work if not run using Node 16 (or lower) due to changes in the way Node 18 does network requests."
+    echo "Please use Node 16 instead."
+    echo ""
+    echo "  Using nvm (https://github.com/nvm-sh/nvm):"
+    echo "   $ nvm install 16"
+    exit
+  fi
+else
+  echo "could not detect node version from string $NODE_VERSION. Continuing..."
 fi
+
+set -euxo pipefail
 
 cd "$(dirname "${BASH_SOURCE[0]}")/../.."
 
