@@ -1,19 +1,19 @@
-import { appPrefix, gen } from '../../../../helpers'
-import { routes as react } from '../../../../helpers/react'
-import { routes as express } from '../../../../helpers/express'
+import { appPrefix, gen } from "../../../../helpers"
+import { routes as react } from "../../../../helpers/react"
+import { routes as express } from "../../../../helpers/express"
 
-context('Account Verification Login Errors', () => {
+context("Account Verification Login Errors", () => {
   ;[
     {
       login: react.login,
-      app: 'react' as 'react',
-      profile: 'verification'
+      app: "react" as "react",
+      profile: "verification",
     },
     {
       login: express.login,
-      app: 'express' as 'express',
-      profile: 'verification'
-    }
+      app: "express" as "express",
+      profile: "verification",
+    },
   ].forEach(({ profile, login, app }) => {
     describe(`for app ${app}`, () => {
       before(() => {
@@ -23,7 +23,7 @@ context('Account Verification Login Errors', () => {
         cy.proxy(app)
       })
 
-      it('is unable to login as long as the email is not verified', () => {
+      it("is unable to login as long as the email is not verified", () => {
         cy.deleteMail()
 
         const identity = gen.identityWithWebsite()
@@ -35,7 +35,7 @@ context('Account Verification Login Errors', () => {
         cy.get('[value="password"]').click()
 
         cy.get('[data-testid="ui/message/4000010"]').contains(
-          'Account not active yet'
+          "Account not active yet",
         )
 
         cy.noSession()

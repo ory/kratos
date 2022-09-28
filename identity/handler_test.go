@@ -8,6 +8,7 @@ import (
 	"io"
 	"net/http"
 	"net/http/httptest"
+	"net/url"
 	"testing"
 	"time"
 
@@ -650,6 +651,55 @@ func TestHandler(t *testing.T) {
 					res := send(t, ts, "PATCH", "/identities/"+i.ID.String(), http.StatusBadRequest, &ur)
 
 					assert.EqualValues(t, "patch includes denied path: /credentials", res.Get("error.reason").String(), "%s", res.Raw)
+				})
+			}
+		})
+
+		t.Run("case=PATCH should not invalidate credentials ory/cloud#148", func(t *testing.T) {
+			// see https://github.com/ory/cloud/issues/148
+
+			createCredentials := func(t *testing.T) (*identity.Identity, string, string) {
+				t.Helper()
+				uuid := x.NewUUID().String()
+				email := uuid + "@ory.sh"
+				password := "ljanf123akf"
+				p, err := reg.Hasher(ctx).Generate(context.Background(), []byte(password))
+				require.NoError(t, err)
+				i := &identity.Identity{Traits: identity.Traits(`{"email":"` + email + `"}`)}
+				i.SetCredentials(identity.CredentialsTypePassword, identity.Credentials{
+					Type:        identity.CredentialsTypePassword,
+					Identifiers: []string{email},
+					Config:      sqlxx.JSONRawMessage(`{"hashed_password":"` + string(p) + `"}`),
+				})
+				require.NoError(t, reg.PrivilegedIdentityPool().CreateIdentity(context.Background(), i))
+				return i, email, password
+			}
+
+			for name, ts := range map[string]*httptest.Server{"public": publicTS, "admin": adminTS} {
+				t.Run("endpoint="+name, func(t *testing.T) {
+					i, email, password := createCredentials(t)
+					values := func(v url.Values) {
+						v.Set("identifier", email)
+						v.Set("password", password)
+					}
+
+					// verify login works initially
+					loginResponse := testhelpers.SubmitLoginForm(t, true, ts.Client(), ts, values, false, true, 200, "")
+					require.NotEmpty(t, gjson.Get(loginResponse, "session_token").String(), "expected to find a session token, found none")
+
+					ur := makePatch(t, patch{
+						"op": "replace", "path": "/metadata_public", "value": map[string]string{
+							"role": "user",
+						},
+					})
+
+					res := send(t, ts, "PATCH", "/identities/"+i.ID.String(), http.StatusOK, &ur)
+					assert.EqualValues(t, "user", res.Get("metadata_public.role").String(), "%s", res.Raw)
+					assert.NotEqualValues(t, i.StateChangedAt, sqlxx.NullTime(res.Get("state_changed_at").Time()), "%s", res.Raw)
+
+					loginResponse = testhelpers.SubmitLoginForm(t, true, ts.Client(), ts, values, false, true, 200, "")
+					msgs := gjson.Get(loginResponse, "ui.messages")
+					require.Empty(t, msgs.Array(), "expected to find no messages: %s", msgs.String())
 				})
 			}
 		})

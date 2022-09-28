@@ -1,21 +1,21 @@
-import { appPrefix, gen, website } from '../../../../helpers'
-import { routes as react } from '../../../../helpers/react'
-import { routes as express } from '../../../../helpers/express'
+import { appPrefix, gen, website } from "../../../../helpers"
+import { routes as react } from "../../../../helpers/react"
+import { routes as express } from "../../../../helpers/express"
 
-context('Social Sign Out Successes', () => {
+context("Social Sign Out Successes", () => {
   ;[
     {
       base: react.base,
       registration: react.registration,
-      app: 'react' as 'react',
-      profile: 'spa'
+      app: "react" as "react",
+      profile: "spa",
     },
     {
       base: express.base,
       registration: express.registration,
-      app: 'express' as 'express',
-      profile: 'oidc'
-    }
+      app: "express" as "express",
+      profile: "oidc",
+    },
   ].forEach(({ base, registration, profile, app }) => {
     describe(`for app ${app}`, () => {
       before(() => {
@@ -33,10 +33,10 @@ context('Social Sign Out Successes', () => {
         cy.registerOidc({ email, website, route: registration })
       })
 
-      it('should sign out and be able to sign in again', () => {
+      it("should sign out and be able to sign in again", () => {
         cy.get(`${appPrefix(app)} [data-testid="logout"]:not(disabled)`).click()
         cy.noSession()
-        cy.url().should('include', '/login')
+        cy.url().should("include", "/login")
       })
     })
   })

@@ -597,12 +597,18 @@ func (h *Handler) patch(w http.ResponseWriter, r *http.Request, ps httprouter.Pa
 		return
 	}
 
+	credentials := identity.Credentials
+
 	oldState := identity.State
 
 	if err := jsonx.ApplyJSONPatch(requestBody, identity, "/id", "/stateChangedAt", "/credentials"); err != nil {
 		h.r.Writer().WriteError(w, r, errors.WithStack(herodot.ErrBadRequest.WithReasonf("%s", err).WithWrap(err)))
 		return
 	}
+
+	// See https://github.com/ory/cloud/issues/148
+	// The apply patch operation overrides the credentials with an empty map.
+	identity.Credentials = credentials
 
 	if oldState != identity.State {
 		// Check if the changed state was actually valid

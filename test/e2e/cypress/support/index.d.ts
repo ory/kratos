@@ -1,4 +1,4 @@
-import { Session } from '@ory/kratos-client'
+import { Session } from "@ory/kratos-client"
 
 export interface MailMessage {
   fromAddress: string
@@ -28,9 +28,9 @@ declare global {
        * @param opts
        */
       getSession(opts?: {
-        expectAal?: 'aal2' | 'aal1'
+        expectAal?: "aal2" | "aal1"
         expectMethods?: Array<
-          'password' | 'webauthn' | 'lookup_secret' | 'totp'
+          "password" | "webauthn" | "lookup_secret" | "totp"
         >
       }): Chainable<Session>
 
@@ -256,7 +256,7 @@ declare global {
       expectSettingsSaved(): Chainable<void>
 
       clearCookies(
-        options?: Partial<Loggable & Timeoutable & { domain: null | string }>
+        options?: Partial<Loggable & Timeoutable & { domain: null | string }>,
       ): Chainable<null>
 
       /**
@@ -289,7 +289,7 @@ declare global {
        */
       shouldErrorOnDisallowedReturnTo(
         init: string,
-        opts: { app: string }
+        opts: { app: string },
       ): Chainable<void>
 
       /**
@@ -301,7 +301,7 @@ declare global {
        *
        * @param type
        */
-      clickWebAuthButton(type: 'login' | 'register'): Chainable<void>
+      clickWebAuthButton(type: "login" | "register"): Chainable<void>
 
       /**
        * Sign up a user using Social Sign In
@@ -336,7 +336,7 @@ declare global {
        * @param app
        * @param provider
        */
-      triggerOidc(app: 'react' | 'express', provider?: string): Chainable<void>
+      triggerOidc(app: "react" | "express", provider?: string): Chainable<void>
 
       /**
        * Changes the config so that the recovery privileged lifespan is very long.
@@ -500,7 +500,7 @@ declare global {
       /**
        * Which app to proxy
        */
-      proxy(app: 'react' | 'express'): Chainable<void>
+      proxy(app: "react" | "express"): Chainable<void>
 
       /**
        * Log a user in on mobile

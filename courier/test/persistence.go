@@ -107,6 +107,32 @@ func TestPersister(ctx context.Context, newNetworkUnlessExisting NetworkWrapper,
 			assert.Equal(t, originalSendCount+1, ms[0].SendCount)
 		})
 
+		t.Run("case=list messages", func(t *testing.T) {
+			status := courier.MessageStatusProcessing
+			filter := courier.MessagesFilter{
+				Status: &status,
+				PaginationParams: x.PaginationParams{
+					Page:    1,
+					PerPage: 100,
+				},
+			}
+			ms, tc, err := p.ListMessages(ctx, filter)
+
+			require.NoError(t, err)
+			assert.Len(t, ms, len(messages))
+			assert.Equal(t, int64(len(messages)), tc)
+			assert.Equal(t, messages[len(messages)-1].ID, ms[0].ID)
+
+			t.Run("on another network", func(t *testing.T) {
+				_, p := newNetwork(t, ctx)
+				ms, tc, err := p.ListMessages(ctx, filter)
+
+				require.NoError(t, err)
+				require.Len(t, ms, 0)
+				require.Equal(t, int64(0), tc)
+			})
+		})
+
 		t.Run("case=network", func(t *testing.T) {
 			id := x.NewUUID()
 
