@@ -11,6 +11,7 @@ import (
 	"github.com/pkg/errors"
 
 	"github.com/ory/x/decoderx"
+	"github.com/ory/x/urlx"
 
 	"github.com/ory/herodot"
 
@@ -304,12 +305,13 @@ func (h *Handler) adminListIdentitySessions(w http.ResponseWriter, r *http.Reque
 	}
 
 	page, perPage := x.ParsePagination(r)
-	sess, err := h.r.SessionPersister().ListSessionsByIdentity(r.Context(), iID, active, page, perPage, uuid.Nil, ExpandEverything)
+	sess, total, err := h.r.SessionPersister().ListSessionsByIdentity(r.Context(), iID, active, page, perPage, uuid.Nil, ExpandEverything)
 	if err != nil {
 		h.r.Writer().WriteError(w, r, err)
 		return
 	}
 
+	x.PaginationHeader(w, urlx.AppendPaths(h.r.Config().SelfAdminURL(r.Context()), RouteCollection), total, page, perPage)
 	h.r.Writer().Write(w, r, sess)
 }
 
@@ -448,12 +450,13 @@ func (h *Handler) listSessions(w http.ResponseWriter, r *http.Request, _ httprou
 	}
 
 	page, perPage := x.ParsePagination(r)
-	sess, err := h.r.SessionPersister().ListSessionsByIdentity(r.Context(), s.IdentityID, pointerx.Bool(true), page, perPage, s.ID, ExpandEverything)
+	sess, total, err := h.r.SessionPersister().ListSessionsByIdentity(r.Context(), s.IdentityID, pointerx.Bool(true), page, perPage, s.ID, ExpandEverything)
 	if err != nil {
 		h.r.Writer().WriteError(w, r, err)
 		return
 	}
 
+	x.PaginationHeader(w, urlx.AppendPaths(h.r.Config().SelfAdminURL(r.Context()), RouteCollection), total, page, perPage)
 	h.r.Writer().Write(w, r, sess)
 }
 
