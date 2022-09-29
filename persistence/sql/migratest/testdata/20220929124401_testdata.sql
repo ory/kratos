@@ -9,6 +9,6 @@ INSERT INTO identity_recovery_codes (id, code, used_at, identity_recovery_addres
     '68fb4010-84a9-4d1e-9f92-2705978ee89e',
     '2022-08-18 07:28:18',
     '2022-08-18 07:28:18',
-    'b64ad553-8107-42cb-a350-7087fbdb5387',
+    '884f556e-eb3a-4b9f-bee3-11345642c6c0',
     '308929d3-41a2-43fe-a33c-75308539d841'
 )
