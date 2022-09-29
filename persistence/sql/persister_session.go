@@ -100,39 +100,42 @@ func (p *Persister) UpsertSession(ctx context.Context, s *session.Session) error
 	s.NID = p.NetworkID(ctx)
 
 	return errors.WithStack(p.Transaction(ctx, func(ctx context.Context, tx *pop.Connection) error {
-		if err := sqlcon.HandleError(tx.Where("id = ? AND nid = ?", s.ID, s.NID).First(new(session.Session))); errors.Is(err, sqlcon.ErrNoRows) {
+		exists, err := tx.Where("id = ? AND nid = ?", s.ID, s.NID).Exists(new(session.Session))
+		if err != nil {
+			return sqlcon.HandleError(err)
+		}
+
+		if exists {
 			// This must not be eager or identities will be created / updated
-			if err := sqlcon.HandleError(tx.Create(s)); err != nil {
-				return err
-			}
-
-			for i := range s.Devices {
-				device := &(s.Devices[i])
-				device.SessionID = s.ID
-				device.NID = s.NID
-
-				if device.Location != nil {
-					device.Location = stringsx.GetPointer(stringsx.TruncateByteLen(*device.Location, SessionDeviceLocationMaxLength))
-				}
-				if device.UserAgent != nil {
-					device.UserAgent = stringsx.GetPointer(stringsx.TruncateByteLen(*device.UserAgent, SessionDeviceUserAgentMaxLength))
-				}
-
-				if err := sqlcon.HandleError(tx.Create(device)); err != nil {
-					return err
-				}
-
-				s.Devices[i] = *device
-			}
-
-			return nil
-		} else if err != nil {
-			return err
+			// Only update session and not corresponding session device records
+			return sqlcon.HandleError(tx.Update(s))
 		}
 
 		// This must not be eager or identities will be created / updated
-		// Only update session and not corresponding session device records
-		return tx.Update(s)
+		if err := sqlcon.HandleError(tx.Create(s)); err != nil {
+			return err
+		}
+
+		for i := range s.Devices {
+			device := &(s.Devices[i])
+			device.SessionID = s.ID
+			device.NID = s.NID
+
+			if device.Location != nil {
+				device.Location = stringsx.GetPointer(stringsx.TruncateByteLen(*device.Location, SessionDeviceLocationMaxLength))
+			}
+			if device.UserAgent != nil {
+				device.UserAgent = stringsx.GetPointer(stringsx.TruncateByteLen(*device.UserAgent, SessionDeviceUserAgentMaxLength))
+			}
+
+			if err := sqlcon.HandleError(tx.Create(device)); err != nil {
+				return err
+			}
+
+			s.Devices[i] = *device
+		}
+
+		return nil
 	}))
 }
 
