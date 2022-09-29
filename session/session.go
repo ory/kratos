@@ -56,7 +56,7 @@ type Device struct {
 	// Time of capture
 	CreatedAt time.Time `json:"-" faker:"-" db:"created_at"`
 
-	// Last seen
+	// Last updated at
 	UpdatedAt time.Time `json:"-" faker:"-" db:"updated_at"`
 
 	NID uuid.UUID `json:"-"  faker:"-" db:"nid"`
