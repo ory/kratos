@@ -20,9 +20,13 @@ CREATE TABLE identity_recovery_codes
         FOREIGN KEY (selfservice_recovery_flow_id) 
         REFERENCES selfservice_recovery_flows (id)
         ON DELETE cascade,
-    CONSTRAINT identity_recovery_tokens_identity_id_fk 
+    CONSTRAINT identity_recovery_codes_identity_id_fk 
         FOREIGN KEY (identity_id) 
         REFERENCES identities (id)
+        ON UPDATE RESTRICT ON DELETE CASCADE,
+    CONSTRAINT identity_recovery_codes_networks_id_fk
+        FOREIGN KEY ("nid")
+        REFERENCES "networks" ("id")
         ON UPDATE RESTRICT ON DELETE CASCADE
 );
 
