@@ -256,7 +256,7 @@ func TestHandleError(t *testing.T) {
 			assert.Equal(t, "code", lf.Active.String())
 		})
 
-		t.Run("case=XX", func(t *testing.T) {
+		t.Run("case=fails to retry flow if recovery strategy id is not valid", func(t *testing.T) {
 
 			t.Cleanup(func() {
 				reset()

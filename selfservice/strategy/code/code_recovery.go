@@ -22,7 +22,7 @@ const (
 
 var (
 	ErrCodeNotFound    = herodot.ErrNotFound.WithReasonf("unknown recovery code")
-	ErrCodeAlreadyUsed = herodot.ErrNotFound.WithReasonf("recovery code was already used")
+	ErrCodeAlreadyUsed = herodot.ErrBadRequest.WithReasonf("recovery code was already used")
 )
 
 type RecoveryCode struct {

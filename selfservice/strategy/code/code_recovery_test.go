@@ -33,7 +33,7 @@ func TestRecoveryCode(t *testing.T) {
 
 	req := &http.Request{URL: urlx.ParseOrPanic("https://www.ory.sh/")}
 	t.Run("func=GenerateRecoveryCode", func(t *testing.T) {
-		t.Run("case=creates unique tokens", func(t *testing.T) {
+		t.Run("case=creates unique codes", func(t *testing.T) {
 			codes := make([]string, 100)
 			for k := range codes {
 				codes[k] = code.GenerateRecoveryCode()
@@ -48,15 +48,15 @@ func TestRecoveryCode(t *testing.T) {
 			f, err := recovery.NewFlow(conf, -time.Hour, "", req, nil, flow.TypeBrowser)
 			require.NoError(t, err)
 
-			token := newCode(-time.Hour, f)
-			require.True(t, token.IsExpired())
+			c := newCode(-time.Hour, f)
+			require.True(t, c.IsExpired())
 		})
 		t.Run("case=returns false if flow is not expired", func(t *testing.T) {
 			f, err := recovery.NewFlow(conf, time.Hour, "", req, nil, flow.TypeBrowser)
 			require.NoError(t, err)
 
-			token := newCode(time.Hour, f)
-			require.False(t, token.IsExpired())
+			c := newCode(time.Hour, f)
+			require.False(t, c.IsExpired())
 		})
 	})
 
@@ -65,22 +65,22 @@ func TestRecoveryCode(t *testing.T) {
 			f, err := recovery.NewFlow(conf, -time.Hour, "", req, nil, flow.TypeBrowser)
 			require.NoError(t, err)
 
-			token := newCode(time.Hour, f)
-			token.UsedAt = sql.NullTime{
+			c := newCode(time.Hour, f)
+			c.UsedAt = sql.NullTime{
 				Time:  time.Now(),
 				Valid: true,
 			}
-			require.True(t, token.WasUsed())
+			require.True(t, c.WasUsed())
 		})
 		t.Run("case=returns false if flow has not been used", func(t *testing.T) {
 			f, err := recovery.NewFlow(conf, -time.Hour, "", req, nil, flow.TypeBrowser)
 			require.NoError(t, err)
 
-			token := newCode(time.Hour, f)
-			token.UsedAt = sql.NullTime{
+			c := newCode(time.Hour, f)
+			c.UsedAt = sql.NullTime{
 				Valid: false,
 			}
-			require.False(t, token.WasUsed())
+			require.False(t, c.WasUsed())
 		})
 	})
 }
