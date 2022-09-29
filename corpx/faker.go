@@ -1,7 +1,6 @@
 package corpx
 
 import (
-	"fmt"
 	"math/rand"
 	"net/http"
 	"reflect"
@@ -30,7 +29,7 @@ func RegisterFakes() {
 	_ = faker.SetRandomMapAndSliceSize(4)
 
 	if err := faker.AddProvider("ptr_geo_location", func(v reflect.Value) (interface{}, error) {
-		return stringsx.GetPointer(fmt.Sprintf("%s, %s", "Munich", "Germany")), nil
+		return stringsx.GetPointer("Munich, Germany"), nil
 	}); err != nil {
 		panic(err)
 	}
