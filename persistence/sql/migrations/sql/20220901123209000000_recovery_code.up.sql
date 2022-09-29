@@ -25,8 +25,8 @@ CREATE TABLE identity_recovery_codes
         REFERENCES identities (id)
         ON UPDATE RESTRICT ON DELETE CASCADE,
     CONSTRAINT identity_recovery_codes_networks_id_fk
-        FOREIGN KEY ("nid")
-        REFERENCES "networks" ("id")
+        FOREIGN KEY (nid)
+        REFERENCES networks (id)
         ON UPDATE RESTRICT ON DELETE CASCADE
 );
 
