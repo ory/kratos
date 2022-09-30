@@ -114,6 +114,12 @@ func TestPersister(ctx context.Context, conf *config.Config, p interface {
 					require.NoError(t, faker.FakeData(&sess[j]))
 					sess[j].Identity = i
 					sess[j].Active = j%2 == 0
+
+					var device session.Device
+					require.NoError(t, faker.FakeData(&device))
+					sess[j].Devices = []session.Device{
+						device,
+					}
 					require.NoError(t, p.UpsertSession(ctx, &sess[j]))
 				}
 
@@ -170,7 +176,7 @@ func TestPersister(ctx context.Context, conf *config.Config, p interface {
 					},
 				} {
 					t.Run("case="+tc.desc, func(t *testing.T) {
-						actual, err := p.ListSessionsByIdentity(ctx, i.ID, tc.active, 1, 10, tc.except, session.ExpandNothing)
+						actual, err := p.ListSessionsByIdentity(ctx, i.ID, tc.active, 1, 10, tc.except, session.ExpandEverything)
 						require.NoError(t, err)
 
 						require.Equal(t, len(tc.expected), len(actual))
@@ -179,6 +185,7 @@ func TestPersister(ctx context.Context, conf *config.Config, p interface {
 							for _, as := range actual {
 								if as.ID == es.ID {
 									found = true
+									assert.Equal(t, len(es.Devices), len(as.Devices))
 								}
 							}
 							assert.True(t, found)
