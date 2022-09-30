@@ -22,6 +22,7 @@ type Configuration struct {
 	// - github
 	// - github-app
 	// - gitlab
+	// - econt
 	// - microsoft
 	// - discord
 	// - slack
@@ -133,6 +134,8 @@ func (c ConfigurationCollection) Provider(id string, reg dependencies) (Provider
 				return NewProviderGitHubApp(&p, reg), nil
 			case addProviderName("gitlab"):
 				return NewProviderGitLab(&p, reg), nil
+			case addProviderName("econt"):
+				return NewProviderEcont(&p, reg), nil
 			case addProviderName("microsoft"):
 				return NewProviderMicrosoft(&p, reg), nil
 			case addProviderName("discord"):

@@ -1,0 +1,143 @@
+# This is a working test file for econt - kratos.yml 
+version: master
+
+
+ciphers:
+  algorithm: xchacha20-poly1305
+cookies:
+  domain: (localhost|github.com)
+  #   # path: /.ory/kratos
+  path: /
+  # same_site: Lax
+courier:
+  smtp:
+    connection_uri: smtps://test:test@mailslurper:1025/?skip_ssl_verify=true
+hashers:
+  algorithm: bcrypt
+  bcrypt:
+    cost: 8
+identity:
+  default_schema_id: default
+  schemas:
+    - id: default
+      # Change to your filesystem whene it's located / possible to need to change something in the schema
+      url: file:///Users/petargeorgiev/Documents/Senteca/v3-repos/kratos-fork/examples/go/pkg/stub/identity.schema.json
+selfservice:
+  allowed_return_urls:
+    - http://localhost:4005/auth
+    - http://localhost:4010/admin
+    - https://github.com
+  default_browser_return_url: http://localhost:4005/auth/
+  methods:
+    # password:
+    #   enabled: true
+    oidc:
+      enabled: true
+      config:
+        base_redirect_uri: http://localhost:4433
+        providers:
+          - id: econt
+            provider: econt
+            client_id: f93yqURXa
+            mapper_url:  file:///Users/petargeorgiev/Documents/Senteca/v3-repos/kratos-fork/econt.jsonnet
+            client_secret: Xsxjy4ydPEHRVWXa9G
+            issuer_url: https://login.econt.com
+            auth_url: https://login.econt.com/oauth2/auth
+            token_url: https://login.econt.com/oauth2/token
+            scope:
+              - read
+            requested_claims:
+              name: name
+              name_en: name_en
+              email: email
+              # users: users
+              lang: lang
+              language: language
+              user_name: user_name
+              account_id: account_id
+  flows:
+    error:
+      ui_url: http://localhost:4005/auth/error
+    settings:
+      privileged_session_max_age: 15m
+      ui_url: http://localhost:4005/auth/settings
+      after:
+        default_browser_return_url: http://localhost:4010/admin/
+    recovery:
+      enabled: true
+      ui_url: http://localhost:4005/auth/recovery
+    verification:
+      enabled: true
+      ui_url: http://localhost:4005/auth/verify
+      after:
+        default_browser_return_url: http://localhost:4005/auth/dashboard
+    logout:
+      after:
+        default_browser_return_url: https://login.econt.com/oauth2/logout/?client_id=f93yqURXa&redirect_uri=http://localhost:4005/auth/login
+    login:
+      lifespan: 10m
+      ui_url: http://localhost:4005/auth/login
+      after:
+        default_browser_return_url: http://localhost:4010/admin/
+    registration:
+      ui_url: http://localhost:4005/auth/registration
+      after:
+        # password:
+        #   hooks:
+        #     - hook: session
+        oidc:
+          hooks:
+            - hook: session
+        default_browser_return_url: http://localhost:4005/auth/registration
+
+serve:
+  admin:
+    port: 4434
+    base_url: http://localhost:4434
+  public:
+    port: 4433
+    base_url: http://localhost:4433
+    # request_log:
+    #   disable_for_health: true
+    cors:
+      allowed_headers:
+        - Authorization
+        - Cookie
+        - Content-Type
+        - X-Session-Token
+      allowed_methods:
+        - POST
+        - GET
+        - PUT
+        - PATCH
+        - DELETE
+      allowed_origins:
+        - http://localhost
+        - https://github.com
+      enabled: true
+      allow_credentials: true
+      options_passthrough: true
+      debug: true
+      exposed_headers:
+        - Content-Type
+        - Set-Cookie
+session:
+  lifespan: 24h
+  cookie:
+    domain: localhost
+    path: /
+    same_site: Lax
+log:
+  level: debug
+  format: text
+  leak_sensitive_values: true
+  
+secrets:
+  cipher:
+    - 32-LONG-SECRET-NOT-SECURE-AT-ALL
+  default:
+    - opsatropsaebredebre
+  cookie:
+    - 8432a217-cc13-4ce9-bd7e-3be15a01cd87
+    # Put your local dsn here (maybe you need to create a local DB in local postgre)
+dsn: postgres://postgres:root@localhost:5432/kratos

@@ -45,4 +45,12 @@ type Claims struct {
 	UpdatedAt           int64                `json:"updated_at,omitempty"`
 	HD                  string               `json:"hd,omitempty"`
 	Team                string               `json:"team,omitempty"`
+	// For econt
+	Username  string `json:"user_name,omitempty"`
+	NameEn    string `json:"name_en,omitempty"`
+	AccountId int    `json:"account_id,omitempty"`
+	Lang      string `json:"lang,omitempty"`
+	Language  string `json:"language,omitempty"`
+	// Possibly we will need to find a way to extract also nested fields for the claims
+	// e.g. ClientBussinessEmail string `json:"users[0].clients[0].business_email,omitempty"`
 }

@@ -323,12 +323,13 @@
         },
         "provider": {
           "title": "Provider",
-          "description": "Can be one of github, github-app, gitlab, generic, google, microsoft, discord, slack, facebook, auth0, vk, yandex, spotify, dingtalk.",
+          "description": "Can be one of github, github-app, gitlab, econt, generic, google, microsoft, discord, slack, facebook, auth0, vk, yandex, spotify, dingtalk.",
           "type": "string",
           "enum": [
             "github",
             "github-app",
             "gitlab",
+            "econt",
             "generic",
             "google",
             "microsoft",
