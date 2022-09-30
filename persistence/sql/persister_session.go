@@ -131,8 +131,6 @@ func (p *Persister) UpsertSession(ctx context.Context, s *session.Session) error
 			if err := sqlcon.HandleError(tx.Create(device)); err != nil {
 				return err
 			}
-
-			s.Devices[i] = *device
 		}
 
 		return nil
