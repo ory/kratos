@@ -185,7 +185,7 @@ func (s *ManagerHTTP) FetchFromRequest(ctx context.Context, r *http.Request) (*S
 		return nil, errors.WithStack(NewErrNoActiveSessionFound())
 	}
 
-	se, err := s.r.SessionPersister().GetSessionByToken(ctx, token)
+	se, err := s.r.SessionPersister().GetSessionByToken(ctx, token, ExpandEverything)
 	if err != nil {
 		if errors.Is(err, herodot.ErrNotFound) || errors.Is(err, sqlcon.ErrNoRows) {
 			return nil, errors.WithStack(NewErrNoActiveSessionFound())

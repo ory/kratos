@@ -97,11 +97,13 @@ func TestPersister(ctx context.Context, conf *config.Config, p interface {
 			})
 
 			t.Run("method=get by token", func(t *testing.T) {
-				check(p.GetSessionByToken(ctx, expected.Token))
+				sess, err := p.GetSessionByToken(ctx, expected.Token, session.ExpandEverything)
+				check(sess, err)
+				checkDevices(sess.Devices, err)
 
 				t.Run("on another network", func(t *testing.T) {
 					_, p := testhelpers.NewNetwork(t, ctx, p)
-					_, err := p.GetSessionByToken(ctx, expected.Token)
+					_, err := p.GetSessionByToken(ctx, expected.Token, session.ExpandNothing)
 					assert.ErrorIs(t, err, sqlcon.ErrNoRows)
 				})
 			})
@@ -205,7 +207,7 @@ func TestPersister(ctx context.Context, conf *config.Config, p interface {
 				expected.AuthenticatorAssuranceLevel = identity.AuthenticatorAssuranceLevel3
 				require.NoError(t, p.UpsertSession(ctx, &expected))
 
-				actual, err := p.GetSessionByToken(ctx, expected.Token)
+				actual, err := p.GetSessionByToken(ctx, expected.Token, session.ExpandNothing)
 				check(actual, err)
 				assert.Equal(t, identity.AuthenticatorAssuranceLevel3, actual.AuthenticatorAssuranceLevel)
 			})
@@ -214,7 +216,7 @@ func TestPersister(ctx context.Context, conf *config.Config, p interface {
 				expected.AMR = nil
 				require.NoError(t, p.UpsertSession(ctx, &expected))
 
-				actual, err := p.GetSessionByToken(ctx, expected.Token)
+				actual, err := p.GetSessionByToken(ctx, expected.Token, session.ExpandNothing)
 				check(actual, err)
 				assert.Empty(t, actual.AMR)
 			})
@@ -251,7 +253,7 @@ func TestPersister(ctx context.Context, conf *config.Config, p interface {
 				err := other.DeleteSessionByToken(ctx, expected.Token)
 				assert.ErrorIs(t, err, sqlcon.ErrNoRows)
 
-				_, err = p.GetSessionByToken(ctx, expected.Token)
+				_, err = p.GetSessionByToken(ctx, expected.Token, session.ExpandNothing)
 				assert.NoError(t, err)
 			})
 
@@ -428,9 +430,9 @@ func TestPersister(ctx context.Context, conf *config.Config, p interface {
 			_, err = p.GetSession(ctx, sid2, session.ExpandNothing)
 			require.ErrorIs(t, err, sqlcon.ErrNoRows)
 
-			_, err = p.GetSessionByToken(ctx, t1)
+			_, err = p.GetSessionByToken(ctx, t1, session.ExpandNothing)
 			require.NoError(t, err)
-			_, err = p.GetSessionByToken(ctx, t2)
+			_, err = p.GetSessionByToken(ctx, t2, session.ExpandNothing)
 			require.ErrorIs(t, err, sqlcon.ErrNoRows)
 		})
 	}

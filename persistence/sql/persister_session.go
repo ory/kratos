@@ -167,15 +167,20 @@ func (p *Persister) DeleteSessionsByIdentity(ctx context.Context, identityID uui
 	return nil
 }
 
-func (p *Persister) GetSessionByToken(ctx context.Context, token string) (*session.Session, error) {
+func (p *Persister) GetSessionByToken(ctx context.Context, token string, expandables session.Expandables) (*session.Session, error) {
 	ctx, span := p.r.Tracer(ctx).Tracer().Start(ctx, "persistence.sql.GetSessionByToken")
 	defer span.End()
 
 	var s session.Session
-	if err := p.GetConnection(ctx).Where("token = ? AND nid = ?",
-		token,
-		p.NetworkID(ctx),
-	).First(&s); err != nil {
+	s.Devices = make([]session.Device, 0)
+	nid := p.NetworkID(ctx)
+
+	q := p.GetConnection(ctx).Q()
+	if len(expandables) > 0 {
+		q = q.Eager(expandables.ToEager()...)
+	}
+
+	if err := q.Where("token = ? AND nid = ?", token, nid).First(&s); err != nil {
 		return nil, sqlcon.HandleError(err)
 	}
 
