@@ -133,7 +133,7 @@ func TestSettings(t *testing.T) {
 		var check = func(t *testing.T, actual string) {
 			assert.Empty(t, gjson.Get(actual, "ui.nodes.#(attributes.name==password).attributes.value").String(), "%s", actual)
 			assert.NotEmpty(t, gjson.Get(actual, "ui.nodes.#(attributes.name==csrf_token).attributes.value").String(), "%s", actual)
-			assert.Contains(t, gjson.Get(actual, "ui.nodes.#(attributes.name==password).messages.0.text").String(), "password can not be used because", "%s", actual)
+			assert.Contains(t, gjson.Get(actual, "ui.nodes.#(attributes.name==password).messages.0.text").String(), "password cannot be used because", "%s", actual)
 		}
 
 		t.Run("session=with privileged session", func(t *testing.T) {
@@ -169,7 +169,7 @@ func TestSettings(t *testing.T) {
 				v.Set("password", "123456")
 			}
 
-			t.Run("type=api/expected=an error because reauth can not be initialized for API clients", func(t *testing.T) {
+			t.Run("type=api/expected=an error because reauth cannot be initialized for API clients", func(t *testing.T) {
 				_ = testhelpers.NewSettingsLoginAcceptAPIServer(t, testhelpers.NewSDKCustomClient(publicTS, apiUser1), conf)
 				actual := testhelpers.SubmitSettingsForm(t, true, false, apiUser1, publicTS, payload,
 					http.StatusForbidden, publicTS.URL+settings.RouteSubmitFlow)

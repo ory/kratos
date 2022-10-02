@@ -157,7 +157,7 @@ func TestPersister(ctx context.Context, newNetworkUnlessExisting NetworkWrapper,
 				assert.EqualValues(t, nid, actual.NID)
 			})
 
-			t.Run("can not get on another network", func(t *testing.T) {
+			t.Run("cannot get on another network", func(t *testing.T) {
 				_, p := newNetwork(t, ctx)
 
 				_, err := p.LatestQueuedMessage(ctx)
@@ -167,7 +167,7 @@ func TestPersister(ctx context.Context, newNetworkUnlessExisting NetworkWrapper,
 				require.ErrorIs(t, err, courier.ErrQueueEmpty)
 			})
 
-			t.Run("can not update on another network", func(t *testing.T) {
+			t.Run("cannot update on another network", func(t *testing.T) {
 				_, p := newNetwork(t, ctx)
 				err := p.SetMessageStatus(ctx, id, courier.MessageStatusProcessing)
 				require.ErrorIs(t, err, sqlcon.ErrNoRows)

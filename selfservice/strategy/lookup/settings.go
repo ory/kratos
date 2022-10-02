@@ -208,7 +208,7 @@ func (s *Strategy) continueSettingsFlowReveal(w http.ResponseWriter, r *http.Req
 	}
 
 	if !hasLookup {
-		return errors.WithStack(herodot.ErrBadRequest.WithReasonf("Can not reveal lookup codes because you have none."))
+		return errors.WithStack(herodot.ErrBadRequest.WithReasonf("Cannot reveal lookup codes because you have none."))
 	}
 
 	_, cred, err := s.d.PrivilegedIdentityPool().FindByCredentialsIdentifier(r.Context(), s.ID(), ctxUpdate.Session.IdentityID.String())

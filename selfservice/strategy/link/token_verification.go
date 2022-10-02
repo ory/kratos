@@ -22,7 +22,7 @@ type VerificationToken struct {
 	// format: uuid
 	ID uuid.UUID `json:"id" db:"id" faker:"-"`
 
-	// Token represents the verification token. It can not be longer than 64 chars!
+	// Token represents the verification token. It cannot be longer than 64 chars!
 	Token string `json:"-" db:"token"`
 
 	// VerifiableAddress links this token to a verification address.

@@ -511,7 +511,7 @@ func (p *Config) listenOn(ctx context.Context, key string) string {
 	pp := p.GetProvider(ctx)
 	port := pp.IntF("serve."+key+".port", fb)
 	if port < 1 {
-		p.l.Fatalf("serve.%s.port can not be zero or negative", key)
+		p.l.Fatalf("serve.%s.port cannot be zero or negative", key)
 	}
 
 	return configx.GetAddress(pp.String("serve."+key+".host"), port)

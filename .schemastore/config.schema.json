@@ -2216,16 +2216,16 @@
     "sqa-opt-out": {
       "type": "boolean",
       "default": false,
-      "description": "This is a CLI flag and environment variable and can not be set using the config file."
+      "description": "This is a CLI flag and environment variable and cannot be set using the config file."
     },
     "watch-courier": {
       "type": "boolean",
       "default": false,
-      "description": "This is a CLI flag and environment variable and can not be set using the config file."
+      "description": "This is a CLI flag and environment variable and cannot be set using the config file."
     },
     "expose-metrics-port": {
       "title": "Metrics port",
-      "description": "The port the courier's metrics endpoint listens on (0/disabled by default). This is a CLI flag and environment variable and can not be set using the config file.",
+      "description": "The port the courier's metrics endpoint listens on (0/disabled by default). This is a CLI flag and environment variable and cannot be set using the config file.",
       "type": "integer",
       "minimum": 0,
       "maximum": 65535,
@@ -2239,7 +2239,7 @@
       "items": {
         "type": "string"
       },
-      "description": "This is a CLI flag and environment variable and can not be set using the config file."
+      "description": "This is a CLI flag and environment variable and cannot be set using the config file."
     },
     "clients": {
       "title": "Global outgoing network settings",

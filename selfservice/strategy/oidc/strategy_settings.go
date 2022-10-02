@@ -34,9 +34,9 @@ var settingsSchema []byte
 
 var _ settings.Strategy = new(Strategy)
 var UnknownConnectionValidationError = &jsonschema.ValidationError{
-	Message: "can not unlink non-existing OpenID Connect connection", InstancePtr: "#/"}
+	Message: "cannot unlink non-existing OpenID Connect connection", InstancePtr: "#/"}
 var ConnectionExistValidationError = &jsonschema.ValidationError{
-	Message: "can not link unknown or already existing OpenID Connect connection", InstancePtr: "#/"}
+	Message: "cannot link unknown or already existing OpenID Connect connection", InstancePtr: "#/"}
 
 func (s *Strategy) RegisterSettingsRoutes(router *x.RouterPublic) {}
 

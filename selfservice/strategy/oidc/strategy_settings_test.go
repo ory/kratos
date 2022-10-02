@@ -273,7 +273,7 @@ func TestSettingsStrategy(t *testing.T) {
 
 				assert.Contains(t, gjson.GetBytes(body, "ui.action").String(), publicTS.URL+settings.RouteSubmitFlow+"?flow=")
 				assert.Contains(t, gjson.GetBytes(body, `ui.messages.0.text`).String(),
-					"can not unlink non-existing OpenID Connect")
+					"cannot unlink non-existing OpenID Connect")
 			}
 		}
 
@@ -357,7 +357,7 @@ func TestSettingsStrategy(t *testing.T) {
 				snapshotx.SnapshotTExcept(t, json.RawMessage(gjson.GetBytes(body, `ui.nodes`).Raw), []string{"0.attributes.value", "1.attributes.value"})
 
 				assert.Contains(t, gjson.GetBytes(body, `ui.messages.0.text`).String(),
-					"can not link unknown or already existing OpenID Connect connection")
+					"cannot link unknown or already existing OpenID Connect connection")
 			}
 		}
 

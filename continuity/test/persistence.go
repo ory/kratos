@@ -82,13 +82,13 @@ func TestPersister(ctx context.Context, p interface {
 				assert.EqualValues(t, nid, actual.NID)
 			})
 
-			t.Run("can not get on another network", func(t *testing.T) {
+			t.Run("cannot get on another network", func(t *testing.T) {
 				_, p := testhelpers.NewNetwork(t, ctx, p)
 				_, err := p.GetLoginFlow(ctx, id)
 				require.ErrorIs(t, err, sqlcon.ErrNoRows)
 			})
 
-			t.Run("can not delete on another network", func(t *testing.T) {
+			t.Run("cannot delete on another network", func(t *testing.T) {
 				_, p := testhelpers.NewNetwork(t, ctx, p)
 				err := p.DeleteContinuitySession(ctx, id)
 				require.ErrorIs(t, err, sqlcon.ErrNoRows)

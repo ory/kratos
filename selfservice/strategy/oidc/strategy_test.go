@@ -281,7 +281,7 @@ func TestStrategy(t *testing.T) {
 		}
 	})
 
-	t.Run("case=should fail because password can not handle AAL2", func(t *testing.T) {
+	t.Run("case=should fail because password cannot handle AAL2", func(t *testing.T) {
 		testhelpers.SetDefaultIdentitySchema(conf, "file://./stub/registration-aal.schema.json")
 		t.Cleanup(func() {
 			testhelpers.SetDefaultIdentitySchema(conf, "file://./stub/registration.schema.json")

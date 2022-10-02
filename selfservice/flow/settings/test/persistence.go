@@ -59,7 +59,7 @@ func TestRequestPersister(ctx context.Context, conf *config.Config, p interface 
 			err := p.CreateSettingsFlow(ctx, r)
 			require.NoError(t, err, "%#v", err)
 
-			t.Run("can not fetch on another network", func(t *testing.T) {
+			t.Run("cannot fetch on another network", func(t *testing.T) {
 				_, p := testhelpers.NewNetwork(t, ctx, p)
 				_, err := p.GetSettingsFlow(ctx, r.ID)
 				require.ErrorIs(t, err, sqlcon.ErrNoRows)
@@ -107,7 +107,7 @@ func TestRequestPersister(ctx context.Context, conf *config.Config, p interface 
 			require.NoError(t, p.CreateSettingsFlow(ctx, &r))
 
 			require.NotEmpty(t, r.Identity)
-			t.Run("can not fetch on another network", func(t *testing.T) {
+			t.Run("cannot fetch on another network", func(t *testing.T) {
 				_, p := testhelpers.NewNetwork(t, ctx, p)
 				_, err := p.GetSettingsFlow(ctx, r.ID)
 				require.ErrorIs(t, err, sqlcon.ErrNoRows)
@@ -212,7 +212,7 @@ func TestRequestPersister(ctx context.Context, conf *config.Config, p interface 
 				require.NoError(t, err)
 			})
 
-			t.Run("can not update id", func(t *testing.T) {
+			t.Run("cannot update id", func(t *testing.T) {
 				expected, err := p.GetSettingsFlow(ctx, id)
 				require.NoError(t, err)
 
@@ -228,7 +228,7 @@ func TestRequestPersister(ctx context.Context, conf *config.Config, p interface 
 				require.NotEqual(t, "updated", actual.RequestURL)
 			})
 
-			t.Run("can not get on another network", func(t *testing.T) {
+			t.Run("cannot get on another network", func(t *testing.T) {
 				_, p := testhelpers.NewNetwork(t, ctx, p)
 				_, err := p.GetSettingsFlow(ctx, id)
 				require.ErrorIs(t, err, sqlcon.ErrNoRows)

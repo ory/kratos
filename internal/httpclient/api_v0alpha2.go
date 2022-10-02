@@ -59,7 +59,7 @@ type V0alpha2Api interface {
 
 	/*
 			 * AdminDeleteIdentity Delete an Identity
-			 * Calling this endpoint irrecoverably and permanently deletes the identity given its ID. This action can not be undone.
+			 * Calling this endpoint irrecoverably and permanently deletes the identity given its ID. This action cannot be undone.
 		This endpoint returns 204 when the identity was deleted or when the identity was not found, in which case it is
 		assumed that is has been deleted already.
 
@@ -1428,7 +1428,7 @@ func (r V0alpha2ApiApiAdminDeleteIdentityRequest) Execute() (*http.Response, err
 
 /*
   - AdminDeleteIdentity Delete an Identity
-  - Calling this endpoint irrecoverably and permanently deletes the identity given its ID. This action can not be undone.
+  - Calling this endpoint irrecoverably and permanently deletes the identity given its ID. This action cannot be undone.
 
 This endpoint returns 204 when the identity was deleted or when the identity was not found, in which case it is
 assumed that is has been deleted already.

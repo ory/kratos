@@ -323,7 +323,7 @@ func TestHandleError(t *testing.T) {
 			require.NoError(t, res.Body.Close())
 
 			// We end up at the error endpoint with an aal2 error message because ts.client has no session.
-			assert.Equal(t, "You can not requested a higher AAL (AAL2/AAL3) without an active session.", gjson.GetBytes(body, "reason").String(), "%s", body)
+			assert.Equal(t, "You cannot requested a higher AAL (AAL2/AAL3) without an active session.", gjson.GetBytes(body, "reason").String(), "%s", body)
 		})
 
 		t.Run("case=session old error", func(t *testing.T) {

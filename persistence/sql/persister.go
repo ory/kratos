@@ -123,7 +123,7 @@ func (p *Persister) Ping() error {
 		Ping() error
 	}
 
-	// This can not be contextualized because of some gobuffalo/pop limitations.
+	// This cannot be contextualized because of some gobuffalo/pop limitations.
 	return errors.WithStack(p.c.Store.(pinger).Ping())
 }
 

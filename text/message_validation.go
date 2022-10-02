@@ -51,7 +51,7 @@ func NewErrorValidationInvalidFormat(format, value string) *Message {
 func NewErrorValidationPasswordPolicyViolation(reason string) *Message {
 	return &Message{
 		ID:   ErrorValidationPasswordPolicyViolation,
-		Text: fmt.Sprintf("The password can not be used because %s.", reason),
+		Text: fmt.Sprintf("The password cannot be used because %s.", reason),
 		Type: Error,
 		Context: context(map[string]interface{}{
 			"reason": reason,

@@ -46,7 +46,7 @@
     "meta": {
       "label": {
         "id": 1050017,
-        "text": "This is your authenticator app secret. Use it if you can not scan the QR code.",
+        "text": "This is your authenticator app secret. Use it if you cannot scan the QR code.",
         "type": "info"
       }
     },

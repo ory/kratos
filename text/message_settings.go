@@ -38,7 +38,7 @@ func NewInfoSelfServiceSettingsTOTPSecret(secret string) *Message {
 func NewInfoSelfServiceSettingsTOTPSecretLabel() *Message {
 	return &Message{
 		ID:   InfoSelfServiceSettingsTOTPSecretLabel,
-		Text: "This is your authenticator app secret. Use it if you can not scan the QR code.",
+		Text: "This is your authenticator app secret. Use it if you cannot scan the QR code.",
 		Type: Info,
 	}
 }

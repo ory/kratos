@@ -340,7 +340,7 @@ func TestCompleteLogin(t *testing.T) {
 			})
 		})
 
-		t.Run("case=webauthn MFA credentials can not be used for passwordless login", func(t *testing.T) {
+		t.Run("case=webauthn MFA credentials cannot be used for passwordless login", func(t *testing.T) {
 			_, subject := createIdentityAndReturnIdentifier(t, reg, []byte(`{"credentials":[{"id":"Zm9vZm9v","is_passwordless":false}]}`))
 
 			payload := func(v url.Values) {
@@ -534,7 +534,7 @@ func TestCompleteLogin(t *testing.T) {
 			})
 		})
 
-		t.Run("case=can not use security key for passwordless in mfa flow", func(t *testing.T) {
+		t.Run("case=cannot use security key for passwordless in mfa flow", func(t *testing.T) {
 			id := createIdentityWithWebAuthn(t, identity.Credentials{
 				Config:  loginFixtureSuccessV1PasswordlessCredentials,
 				Version: 1,

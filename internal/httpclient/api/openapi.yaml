@@ -217,7 +217,7 @@ paths:
   /admin/identities/{id}:
     delete:
       description: |-
-        Calling this endpoint irrecoverably and permanently deletes the identity given its ID. This action can not be undone.
+        Calling this endpoint irrecoverably and permanently deletes the identity given its ID. This action cannot be undone.
         This endpoint returns 204 when the identity was deleted or when the identity was not found, in which case it is
         assumed that is has been deleted already.
 
@@ -3344,7 +3344,7 @@ components:
           description: |-
             ID is the identity's unique identifier.
 
-            The Identity ID can not be changed and can not be chosen. This ensures future
+            The Identity ID cannot be changed and cannot be chosen. This ensures future
             compatibility and optimization for distributed stores such as CockroachDB.
           format: uuid
           type: string

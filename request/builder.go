@@ -113,7 +113,7 @@ func (b *Builder) addJSONBody(template *bytes.Buffer, body interface{}) error {
 
 	res, err := vm.EvaluateAnonymousSnippet(b.conf.TemplateURI, template.String())
 	if err != nil {
-		// Unfortunately we can not use errors.As / errors.Is, see:
+		// Unfortunately we cannot use errors.As / errors.Is, see:
 		// https://github.com/google/go-jsonnet/issues/592
 		if strings.Contains(err.Error(), (&jsonnet.RuntimeError{Msg: "cancel"}).Error()) {
 			return errors.WithStack(ErrCancel)

@@ -61,7 +61,7 @@ func TestPersister(ctx context.Context, p persistence.Persister) func(t *testing
 		})
 
 		t.Run("case=network", func(t *testing.T) {
-			t.Run("can not read error from another network", func(t *testing.T) {
+			t.Run("cannot read error from another network", func(t *testing.T) {
 				created, err := p.Add(ctx, "nosurf", herodot.ErrNotFound.WithReason("foobar"))
 				require.NoError(t, err)
 
@@ -71,7 +71,7 @@ func TestPersister(ctx context.Context, p persistence.Persister) func(t *testing
 				_, err = other.Read(ctx, created)
 				require.ErrorIs(t, err, sqlcon.ErrNoRows)
 
-				t.Run("can not clear another network", func(t *testing.T) {
+				t.Run("cannot clear another network", func(t *testing.T) {
 					_, other := testhelpers.NewNetwork(t, ctx, p)
 					require.NoError(t, other.Clear(ctx, time.Second, true))
 

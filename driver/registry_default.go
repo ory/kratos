@@ -481,7 +481,7 @@ func (m *RegistryDefault) CookieManager(ctx context.Context) sessions.StoreExact
 }
 
 func (m *RegistryDefault) ContinuityCookieManager(ctx context.Context) sessions.StoreExact {
-	// To support hot reloading, this can not be instantiated only once.
+	// To support hot reloading, this cannot be instantiated only once.
 	cs := sessions.NewCookieStore(m.Config().SecretsSession(ctx)...)
 	cs.Options.Secure = !m.Config().IsInsecureDevMode(ctx)
 	cs.Options.HttpOnly = true
@@ -491,7 +491,7 @@ func (m *RegistryDefault) ContinuityCookieManager(ctx context.Context) sessions.
 
 func (m *RegistryDefault) Tracer(ctx context.Context) *otelx.Tracer {
 	if m.trc == nil {
-		// Tracing is initialized only once so it can not be hot reloaded or context-aware.
+		// Tracing is initialized only once so it cannot be hot reloaded or context-aware.
 		t, err := otelx.New("Ory Kratos", m.l, m.Config().Tracing(ctx))
 		if err != nil {
 			m.Logger().WithError(err).Fatalf("Unable to initialize Tracer.")
@@ -535,7 +535,7 @@ func (m *RegistryDefault) CanHandle(dsn string) bool {
 
 func (m *RegistryDefault) Init(ctx context.Context, ctxer contextx.Contextualizer, opts ...RegistryOption) error {
 	if m.persister != nil {
-		// The DSN connection can not be hot-reloaded!
+		// The DSN connection cannot be hot-reloaded!
 		panic("RegistryDefault.Init() must not be called more than once.")
 	}
 

@@ -63,7 +63,7 @@ type Identity struct {
 
 	// ID is the identity's unique identifier.
 	//
-	// The Identity ID can not be changed and can not be chosen. This ensures future
+	// The Identity ID cannot be changed and cannot be chosen. This ensures future
 	// compatibility and optimization for distributed stores such as CockroachDB.
 	//
 	// required: true

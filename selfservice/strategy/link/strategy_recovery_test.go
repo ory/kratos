@@ -789,7 +789,7 @@ func TestDisabledEndpoint(t *testing.T) {
 	_ = testhelpers.NewErrorTestServer(t, reg)
 
 	t.Run("role=admin", func(t *testing.T) {
-		t.Run("description=can not create recovery link when link method is disabled", func(t *testing.T) {
+		t.Run("description=cannot create recovery link when link method is disabled", func(t *testing.T) {
 			id := identity.Identity{Traits: identity.Traits(`{"email":"recovery-endpoint-disabled@ory.sh"}`)}
 
 			require.NoError(t, reg.IdentityManager().Create(context.Background(),
@@ -809,7 +809,7 @@ func TestDisabledEndpoint(t *testing.T) {
 	t.Run("role=public", func(t *testing.T) {
 		c := testhelpers.NewClientWithCookies(t)
 
-		t.Run("description=can not recover an account by get request when link method is disabled", func(t *testing.T) {
+		t.Run("description=cannot recover an account by get request when link method is disabled", func(t *testing.T) {
 			f := testhelpers.InitializeRecoveryFlowViaBrowser(t, c, false, publicTS, nil)
 			u := publicTS.URL + recovery.RouteSubmitFlow + "?flow=" + f.Id + "&token=endpoint-disabled"
 			res, err := c.Get(u)
@@ -820,7 +820,7 @@ func TestDisabledEndpoint(t *testing.T) {
 			assert.Contains(t, string(b), "This endpoint was disabled by system administrator")
 		})
 
-		t.Run("description=can not recover an account by post request when link method is disabled", func(t *testing.T) {
+		t.Run("description=cannot recover an account by post request when link method is disabled", func(t *testing.T) {
 			f := testhelpers.InitializeRecoveryFlowViaBrowser(t, c, false, publicTS, nil)
 			u := publicTS.URL + recovery.RouteSubmitFlow + "?flow=" + f.Id
 			res, err := c.PostForm(u, url.Values{"email": {"email@ory.sh"}, "method": {"link"}})

@@ -49,7 +49,7 @@ func NewErrorValidationRecoveryTokenInvalidOrAlreadyUsed() *Message {
 func NewErrorValidationRecoveryRetrySuccess() *Message {
 	return &Message{
 		ID:      ErrorValidationRecoveryRetrySuccess,
-		Text:    "The request was already completed successfully and can not be retried.",
+		Text:    "The request was already completed successfully and cannot be retried.",
 		Type:    Error,
 		Context: context(nil),
 	}

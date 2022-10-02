@@ -26,7 +26,7 @@ var (
 	ErrSessionHasAALAlready = herodot.ErrUnauthorized.WithID(text.ErrIDSessionHasAALAlready).WithError("session has the requested authenticator assurance level already").WithReason("The session has the requested AAL already.")
 
 	// ErrSessionRequiredForHigherAAL is returned when someone requests AAL2 or AAL3 even though no active session exists yet.
-	ErrSessionRequiredForHigherAAL = herodot.ErrUnauthorized.WithID(text.ErrIDSessionRequiredForHigherAAL).WithError("aal2 and aal3 can only be requested if a session exists already").WithReason("You can not requested a higher AAL (AAL2/AAL3) without an active session.")
+	ErrSessionRequiredForHigherAAL = herodot.ErrUnauthorized.WithID(text.ErrIDSessionRequiredForHigherAAL).WithError("aal2 and aal3 can only be requested if a session exists already").WithReason("You cannot requested a higher AAL (AAL2/AAL3) without an active session.")
 )
 
 type (

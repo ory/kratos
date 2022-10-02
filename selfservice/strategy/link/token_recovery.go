@@ -31,7 +31,7 @@ type RecoveryToken struct {
 	// format: uuid
 	ID uuid.UUID `json:"id" db:"id" faker:"-"`
 
-	// Token represents the recovery token. It can not be longer than 64 chars!
+	// Token represents the recovery token. It cannot be longer than 64 chars!
 	Token string `json:"-" db:"token"`
 
 	// RecoveryAddress links this token to a recovery address.

@@ -156,7 +156,7 @@ func TestFlowPersister(ctx context.Context, p persistence.Persister) func(t *tes
 				assert.EqualValues(t, nid, actual.NID)
 			})
 
-			t.Run("can not update id", func(t *testing.T) {
+			t.Run("cannot update id", func(t *testing.T) {
 				expected, err := p.GetRegistrationFlow(ctx, id)
 				require.NoError(t, err)
 				require.NoError(t, p.UpdateRegistrationFlow(ctx, expected))
@@ -167,7 +167,7 @@ func TestFlowPersister(ctx context.Context, p persistence.Persister) func(t *tes
 				assert.EqualValues(t, nid, actual.NID)
 			})
 
-			t.Run("can not update on another network", func(t *testing.T) {
+			t.Run("cannot update on another network", func(t *testing.T) {
 				expected, err := p.GetRegistrationFlow(ctx, id)
 				require.NoError(t, err)
 
@@ -184,7 +184,7 @@ func TestFlowPersister(ctx context.Context, p persistence.Persister) func(t *tes
 				require.NotEqual(t, "updated", actual.RequestURL)
 			})
 
-			t.Run("can not get on another network", func(t *testing.T) {
+			t.Run("cannot get on another network", func(t *testing.T) {
 				_, p := testhelpers.NewNetwork(t, ctx, p)
 				_, err := p.GetRegistrationFlow(ctx, id)
 				require.ErrorIs(t, err, sqlcon.ErrNoRows)

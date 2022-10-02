@@ -148,13 +148,13 @@ func TestFlowLifecycle(t *testing.T) {
 				t.Run("type=api", func(t *testing.T) {
 					body, res := run(t, flow.TypeAPI, "aal2", url.Values{"method": {"password"}})
 					assert.Contains(t, res.Request.URL.String(), login.RouteSubmitFlow)
-					assertx.EqualAsJSON(t, "You can not requested a higher AAL (AAL2/AAL3) without an active session.", gjson.Get(body, "error.reason").String())
+					assertx.EqualAsJSON(t, "You cannot requested a higher AAL (AAL2/AAL3) without an active session.", gjson.Get(body, "error.reason").String())
 				})
 
 				t.Run("type=browser", func(t *testing.T) {
 					body, res := run(t, flow.TypeBrowser, "aal2", url.Values{"method": {"password"}})
 					assert.Contains(t, res.Request.URL.String(), errorTS.URL)
-					assertx.EqualAsJSON(t, "You can not requested a higher AAL (AAL2/AAL3) without an active session.", gjson.Get(body, "reason").String())
+					assertx.EqualAsJSON(t, "You cannot requested a higher AAL (AAL2/AAL3) without an active session.", gjson.Get(body, "reason").String())
 				})
 			})
 
@@ -320,10 +320,10 @@ func TestFlowLifecycle(t *testing.T) {
 				assertion(body, false, true)
 			})
 
-			t.Run("case=can not request refresh and aal at the same time on unauthenticated request", func(t *testing.T) {
+			t.Run("case=cannot request refresh and aal at the same time on unauthenticated request", func(t *testing.T) {
 				res, body := initFlow(t, url.Values{"refresh": {"true"}, "aal": {"aal2"}}, true)
 				assert.Contains(t, res.Request.URL.String(), login.RouteInitAPIFlow)
-				assertx.EqualAsJSON(t, "You can not requested a higher AAL (AAL2/AAL3) without an active session.", gjson.GetBytes(body, "error.reason").String())
+				assertx.EqualAsJSON(t, "You cannot requested a higher AAL (AAL2/AAL3) without an active session.", gjson.GetBytes(body, "error.reason").String())
 			})
 
 			t.Run("case=can request refresh and aal at the same time on authenticated request", func(t *testing.T) {
@@ -333,10 +333,10 @@ func TestFlowLifecycle(t *testing.T) {
 				assertx.EqualAsJSON(t, "Please complete the second authentication challenge.", gjson.GetBytes(body, "ui.messages.1.text").String(), "%s", body)
 			})
 
-			t.Run("case=can not request aal2 on unauthenticated request", func(t *testing.T) {
+			t.Run("case=cannot request aal2 on unauthenticated request", func(t *testing.T) {
 				res, body := initFlow(t, url.Values{"aal": {"aal2"}}, true)
 				assert.Contains(t, res.Request.URL.String(), login.RouteInitAPIFlow)
-				assertx.EqualAsJSON(t, "You can not requested a higher AAL (AAL2/AAL3) without an active session.", gjson.GetBytes(body, "error.reason").String())
+				assertx.EqualAsJSON(t, "You cannot requested a higher AAL (AAL2/AAL3) without an active session.", gjson.GetBytes(body, "error.reason").String())
 			})
 
 			t.Run("case=ignores aal1 if session has aal1 already", func(t *testing.T) {
@@ -396,10 +396,10 @@ func TestFlowLifecycle(t *testing.T) {
 				assert.Contains(t, res.Request.URL.String(), loginTS.URL)
 			})
 
-			t.Run("case=can not request refresh and aal at the same time on unauthenticated request", func(t *testing.T) {
+			t.Run("case=cannot request refresh and aal at the same time on unauthenticated request", func(t *testing.T) {
 				res, body := initFlow(t, url.Values{"refresh": {"true"}, "aal": {"aal2"}}, false)
 				assert.Contains(t, res.Request.URL.String(), errorTS.URL)
-				assertx.EqualAsJSON(t, "You can not requested a higher AAL (AAL2/AAL3) without an active session.", gjson.GetBytes(body, "reason").String(), "%s", body)
+				assertx.EqualAsJSON(t, "You cannot requested a higher AAL (AAL2/AAL3) without an active session.", gjson.GetBytes(body, "reason").String(), "%s", body)
 			})
 
 			t.Run("case=can request refresh and aal at the same time on authenticated request", func(t *testing.T) {
@@ -414,10 +414,10 @@ func TestFlowLifecycle(t *testing.T) {
 				assert.Contains(t, res.Request.URL.String(), "https://www.ory.sh")
 			})
 
-			t.Run("case=can not request aal2 on unauthenticated request", func(t *testing.T) {
+			t.Run("case=cannot request aal2 on unauthenticated request", func(t *testing.T) {
 				res, body := initFlow(t, url.Values{"aal": {"aal2"}}, false)
 				assert.Contains(t, res.Request.URL.String(), errorTS.URL)
-				assertx.EqualAsJSON(t, "You can not requested a higher AAL (AAL2/AAL3) without an active session.", gjson.GetBytes(body, "reason").String())
+				assertx.EqualAsJSON(t, "You cannot requested a higher AAL (AAL2/AAL3) without an active session.", gjson.GetBytes(body, "reason").String())
 			})
 
 			t.Run("case=ignores aal1 if session has aal1 already", func(t *testing.T) {

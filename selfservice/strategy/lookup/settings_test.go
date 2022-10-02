@@ -202,7 +202,7 @@ func TestCompleteSettings(t *testing.T) {
 		})
 	})
 
-	t.Run("type=can not reveal or regenerate or remove without privileged session", func(t *testing.T) {
+	t.Run("type=cannot reveal or regenerate or remove without privileged session", func(t *testing.T) {
 		conf.MustSet(ctx, config.ViperKeySelfServiceSettingsPrivilegedAuthenticationAfter, "1ns")
 		t.Cleanup(func() {
 			conf.MustSet(ctx, config.ViperKeySelfServiceSettingsPrivilegedAuthenticationAfter, "5m")
@@ -268,7 +268,7 @@ func TestCompleteSettings(t *testing.T) {
 		}
 	})
 
-	t.Run("type=can not confirm without regenerate", func(t *testing.T) {
+	t.Run("type=cannot confirm without regenerate", func(t *testing.T) {
 		id, codes := createIdentity(t, reg)
 		var payload = func(v url.Values) {
 			v.Set(node.LookupConfirm, "true")

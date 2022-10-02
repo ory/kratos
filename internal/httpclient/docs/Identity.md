@@ -6,7 +6,7 @@ Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
 **CreatedAt** | Pointer to **time.Time** | CreatedAt is a helper struct field for gobuffalo.pop. | [optional] 
 **Credentials** | Pointer to [**map[string]IdentityCredentials**](IdentityCredentials.md) | Credentials represents all credentials that can be used for authenticating this identity. | [optional] 
-**Id** | **string** | ID is the identity&#39;s unique identifier.  The Identity ID can not be changed and can not be chosen. This ensures future compatibility and optimization for distributed stores such as CockroachDB. | 
+**Id** | **string** | ID is the identity&#39;s unique identifier.  The Identity ID cannot be changed and cannot be chosen. This ensures future compatibility and optimization for distributed stores such as CockroachDB. | 
 **MetadataAdmin** | Pointer to **interface{}** | NullJSONRawMessage represents a json.RawMessage that works well with JSON, SQL, and Swagger and is NULLable- | [optional] 
 **MetadataPublic** | Pointer to **interface{}** | NullJSONRawMessage represents a json.RawMessage that works well with JSON, SQL, and Swagger and is NULLable- | [optional] 
 **RecoveryAddresses** | Pointer to [**[]RecoveryIdentityAddress**](RecoveryIdentityAddress.md) | RecoveryAddresses contains all the addresses that can be used to recover an identity. | [optional] 

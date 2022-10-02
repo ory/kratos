@@ -368,7 +368,7 @@
             "oryAccessToken": []
           }
         ],
-        "description": "Calling this endpoint irrecoverably and permanently deletes the identity given its ID. This action can not be undone.\nThis endpoint returns 204 when the identity was deleted or when the identity was not found, in which case it is\nassumed that is has been deleted already.\n\nLearn how identities work in [Ory Kratos' User And Identity Model Documentation](https://www.ory.sh/docs/next/kratos/concepts/identity-user-model).",
+        "description": "Calling this endpoint irrecoverably and permanently deletes the identity given its ID. This action cannot be undone.\nThis endpoint returns 204 when the identity was deleted or when the identity was not found, in which case it is\nassumed that is has been deleted already.\n\nLearn how identities work in [Ory Kratos' User And Identity Model Documentation](https://www.ory.sh/docs/next/kratos/concepts/identity-user-model).",
         "produces": [
           "application/json"
         ],
@@ -2889,7 +2889,7 @@
           }
         },
         "id": {
-          "description": "ID is the identity's unique identifier.\n\nThe Identity ID can not be changed and can not be chosen. This ensures future\ncompatibility and optimization for distributed stores such as CockroachDB.",
+          "description": "ID is the identity's unique identifier.\n\nThe Identity ID cannot be changed and cannot be chosen. This ensures future\ncompatibility and optimization for distributed stores such as CockroachDB.",
           "type": "string",
           "format": "uuid"
         },

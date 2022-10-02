@@ -138,7 +138,7 @@ func TestCompleteSettings(t *testing.T) {
 		})
 	})
 
-	t.Run("type=can not unlink without privileged session", func(t *testing.T) {
+	t.Run("type=cannot unlink without privileged session", func(t *testing.T) {
 		conf.MustSet(ctx, config.ViperKeySelfServiceSettingsPrivilegedAuthenticationAfter, "1ns")
 		t.Cleanup(func() {
 			conf.MustSet(ctx, config.ViperKeySelfServiceSettingsPrivilegedAuthenticationAfter, "5m")
@@ -180,7 +180,7 @@ func TestCompleteSettings(t *testing.T) {
 		})
 	})
 
-	t.Run("type=can not set up new totp device without privileged session", func(t *testing.T) {
+	t.Run("type=cannot set up new totp device without privileged session", func(t *testing.T) {
 		conf.MustSet(ctx, config.ViperKeySelfServiceSettingsPrivilegedAuthenticationAfter, "1ns")
 		t.Cleanup(func() {
 			conf.MustSet(ctx, config.ViperKeySelfServiceSettingsPrivilegedAuthenticationAfter, "5m")

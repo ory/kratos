@@ -133,7 +133,7 @@ func TestHandler(t *testing.T) {
 				assertion(t, body, true)
 			})
 
-			t.Run("description=can not init if identity has aal2 but session has aal1", func(t *testing.T) {
+			t.Run("description=cannot init if identity has aal2 but session has aal1", func(t *testing.T) {
 				conf.MustSet(ctx, config.ViperKeySelfServiceSettingsRequiredAAL, config.HighestAvailableAAL)
 				res, body := initFlow(t, aal2Identity, true)
 				assert.Equal(t, http.StatusForbidden, res.StatusCode, "%s", body)
@@ -155,7 +155,7 @@ func TestHandler(t *testing.T) {
 				assertion(t, body, false)
 			})
 
-			t.Run("description=can not init if identity has aal2 but session has aal1", func(t *testing.T) {
+			t.Run("description=cannot init if identity has aal2 but session has aal1", func(t *testing.T) {
 				conf.MustSet(ctx, config.ViperKeySelfServiceSettingsRequiredAAL, config.HighestAvailableAAL)
 				res, body := initFlow(t, aal2Identity, false)
 				assert.Contains(t, res.Request.URL.String(), reg.Config().SelfServiceFlowLoginUI(ctx).String())
@@ -187,7 +187,7 @@ func TestHandler(t *testing.T) {
 				assertion(t, body, false)
 			})
 
-			t.Run("description=can not init if identity has aal2 but session has aal1", func(t *testing.T) {
+			t.Run("description=cannot init if identity has aal2 but session has aal1", func(t *testing.T) {
 				email := testhelpers.RandomEmail()
 				conf.MustSet(ctx, config.ViperKeySelfServiceSettingsRequiredAAL, config.HighestAvailableAAL)
 				user1 := testhelpers.NewHTTPClientWithIdentitySessionCookie(t, reg, &identity.Identity{
@@ -290,7 +290,7 @@ func TestHandler(t *testing.T) {
 				assert.Equal(t, int64(http.StatusForbidden), gjson.GetBytes(err.(*kratos.GenericOpenAPIError).Body(), "error.code").Int(), "should return a 403 error because the identities from the cookies do not match")
 			})
 
-			t.Run("description=can not fetch if identity has aal2 but session has aal1", func(t *testing.T) {
+			t.Run("description=cannot fetch if identity has aal2 but session has aal1", func(t *testing.T) {
 				t.Cleanup(func() {
 					conf.MustSet(ctx, config.ViperKeySelfServiceSettingsRequiredAAL, config.HighestAvailableAAL)
 				})
@@ -312,7 +312,7 @@ func TestHandler(t *testing.T) {
 	})
 
 	t.Run("endpoint=submit", func(t *testing.T) {
-		t.Run("description=can not submit if identity has aal2 but session has aal1", func(t *testing.T) {
+		t.Run("description=cannot submit if identity has aal2 but session has aal1", func(t *testing.T) {
 			t.Run("type=browser", func(t *testing.T) {
 				t.Cleanup(func() {
 					conf.MustSet(ctx, config.ViperKeySelfServiceSettingsRequiredAAL, config.HighestAvailableAAL)

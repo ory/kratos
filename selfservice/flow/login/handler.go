@@ -122,7 +122,7 @@ func (h *Handler) NewLoginFlow(w http.ResponseWriter, r *http.Request, ft flow.T
 	if e := new(session.ErrNoActiveSessionFound); errors.As(err, &e) {
 		// No session exists yet
 
-		// We can not request an AAL > 1 because we must first verify the first factor.
+		// We cannot request an AAL > 1 because we must first verify the first factor.
 		if f.RequestedAAL > identity.AuthenticatorAssuranceLevel1 {
 			return nil, errors.WithStack(ErrSessionRequiredForHigherAAL)
 		}

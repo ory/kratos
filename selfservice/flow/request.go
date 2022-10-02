@@ -40,7 +40,7 @@ func EnsureCSRF(reg interface {
 			return nil
 		}
 
-		// API Based flows to not require anti-CSRF tokens because we can not leverage a session, making this
+		// API Based flows to not require anti-CSRF tokens because we cannot leverage a session, making this
 		// endpoint pointless.
 
 		// Let's ensure that no-one mistakenly makes an AJAX request using the API flow.

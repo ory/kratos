@@ -644,7 +644,7 @@ func TestPool(ctx context.Context, conf *config.Config, p interface {
 				_, err := p.FindVerifiableAddressByValue(ctx, identity.VerifiableAddressTypeEmail, "verification.TestPersister.Update-Identity@ory.sh")
 				require.NoError(t, err)
 
-				t.Run("can not find if on another network", func(t *testing.T) {
+				t.Run("cannot find if on another network", func(t *testing.T) {
 					_, p := testhelpers.NewNetwork(t, ctx, p)
 					_, err := p.FindVerifiableAddressByValue(ctx, identity.VerifiableAddressTypeEmail, "verification.TestPersister.Update-Identity@ory.sh")
 					require.ErrorIs(t, err, sqlcon.ErrNoRows)
@@ -657,7 +657,7 @@ func TestPool(ctx context.Context, conf *config.Config, p interface {
 				_, err = p.FindVerifiableAddressByValue(ctx, identity.VerifiableAddressTypeEmail, "verification.TestPersister.Update-Identity@ory.sh")
 				require.EqualError(t, err, sqlcon.ErrNoRows.Error())
 
-				t.Run("can not find if on another network", func(t *testing.T) {
+				t.Run("cannot find if on another network", func(t *testing.T) {
 					_, p := testhelpers.NewNetwork(t, ctx, p)
 					_, err := p.FindVerifiableAddressByValue(ctx, identity.VerifiableAddressTypeEmail, "verification.TestPersister.Update-Identity@ory.sh")
 					require.ErrorIs(t, err, sqlcon.ErrNoRows)
@@ -668,7 +668,7 @@ func TestPool(ctx context.Context, conf *config.Config, p interface {
 				assert.Equal(t, identity.VerifiableAddressTypeEmail, actual.Via)
 				assert.Equal(t, "verification.testpersister.update-identity-next@ory.sh", actual.Value)
 
-				t.Run("can not find if on another network", func(t *testing.T) {
+				t.Run("cannot find if on another network", func(t *testing.T) {
 					_, p := testhelpers.NewNetwork(t, ctx, p)
 					_, err := p.FindVerifiableAddressByValue(ctx, identity.VerifiableAddressTypeEmail, "verification.TestPersister.Update-Identity-next@ory.sh")
 					require.ErrorIs(t, err, sqlcon.ErrNoRows)
@@ -686,7 +686,7 @@ func TestPool(ctx context.Context, conf *config.Config, p interface {
 				_, err := p.FindVerifiableAddressByValue(ctx, identity.VerifiableAddressTypeEmail, strings.ToUpper("verification.TestPersister.Update-Identity-case-insensitive@ory.sh"))
 				require.NoError(t, err)
 
-				t.Run("can not find if on another network", func(t *testing.T) {
+				t.Run("cannot find if on another network", func(t *testing.T) {
 					_, p := testhelpers.NewNetwork(t, ctx, p)
 					_, err := p.FindVerifiableAddressByValue(ctx, identity.VerifiableAddressTypeEmail, strings.ToUpper("verification.TestPersister.Update-Identity-case-insensitive@ory.sh"))
 					require.ErrorIs(t, err, sqlcon.ErrNoRows)
@@ -699,7 +699,7 @@ func TestPool(ctx context.Context, conf *config.Config, p interface {
 				_, err = p.FindVerifiableAddressByValue(ctx, identity.VerifiableAddressTypeEmail, strings.ToUpper("verification.TestPersister.Update-Identity-case-insensitive@ory.sh"))
 				require.EqualError(t, err, sqlcon.ErrNoRows.Error())
 
-				t.Run("can not find if on another network", func(t *testing.T) {
+				t.Run("cannot find if on another network", func(t *testing.T) {
 					_, p := testhelpers.NewNetwork(t, ctx, p)
 					_, err := p.FindVerifiableAddressByValue(ctx, identity.VerifiableAddressTypeEmail, strings.ToUpper("verification.TestPersister.Update-Identity-case-insensitive@ory.sh"))
 					require.ErrorIs(t, err, sqlcon.ErrNoRows)
@@ -710,7 +710,7 @@ func TestPool(ctx context.Context, conf *config.Config, p interface {
 				assert.Equal(t, identity.VerifiableAddressTypeEmail, actual.Via)
 				assert.Equal(t, "verification.testpersister.update-identity-case-insensitive-next@ory.sh", actual.Value)
 
-				t.Run("can not find if on another network", func(t *testing.T) {
+				t.Run("cannot find if on another network", func(t *testing.T) {
 					_, p := testhelpers.NewNetwork(t, ctx, p)
 					_, err := p.FindVerifiableAddressByValue(ctx, identity.VerifiableAddressTypeEmail, "verification.TestPersister.Update-Identity-case-insensitive-next@ory.sh")
 					require.ErrorIs(t, err, sqlcon.ErrNoRows)
@@ -772,7 +772,7 @@ func TestPool(ctx context.Context, conf *config.Config, p interface {
 				_, err := p.FindRecoveryAddressByValue(ctx, identity.RecoveryAddressTypeEmail, "recovery.TestPersister.Update@ory.sh")
 				require.NoError(t, err)
 
-				t.Run("can not find if on another network", func(t *testing.T) {
+				t.Run("cannot find if on another network", func(t *testing.T) {
 					_, p := testhelpers.NewNetwork(t, ctx, p)
 					_, err := p.FindRecoveryAddressByValue(ctx, identity.RecoveryAddressTypeEmail, "Recovery.TestPersister.Update@ory.sh")
 					require.ErrorIs(t, err, sqlcon.ErrNoRows)
@@ -784,7 +784,7 @@ func TestPool(ctx context.Context, conf *config.Config, p interface {
 				_, err = p.FindRecoveryAddressByValue(ctx, identity.RecoveryAddressTypeEmail, "recovery.TestPersister.Update@ory.sh")
 				require.EqualError(t, err, sqlcon.ErrNoRows.Error())
 
-				t.Run("can not find if on another network", func(t *testing.T) {
+				t.Run("cannot find if on another network", func(t *testing.T) {
 					_, p := testhelpers.NewNetwork(t, ctx, p)
 					_, err := p.FindRecoveryAddressByValue(ctx, identity.RecoveryAddressTypeEmail, "recovery.TestPersister.Update@ory.sh")
 					require.ErrorIs(t, err, sqlcon.ErrNoRows)
@@ -795,7 +795,7 @@ func TestPool(ctx context.Context, conf *config.Config, p interface {
 				assert.Equal(t, identity.RecoveryAddressTypeEmail, actual.Via)
 				assert.Equal(t, "recovery.testpersister.update-next@ory.sh", actual.Value)
 
-				t.Run("can not find if on another network", func(t *testing.T) {
+				t.Run("cannot find if on another network", func(t *testing.T) {
 					_, p := testhelpers.NewNetwork(t, ctx, p)
 					_, err := p.FindRecoveryAddressByValue(ctx, identity.RecoveryAddressTypeEmail, "recovery.TestPersister.Update-next@ory.sh")
 					require.ErrorIs(t, err, sqlcon.ErrNoRows)
@@ -808,7 +808,7 @@ func TestPool(ctx context.Context, conf *config.Config, p interface {
 				_, err := p.FindRecoveryAddressByValue(ctx, identity.RecoveryAddressTypeEmail, strings.ToUpper("recovery.TestPersister.Update-case-insensitive@ory.sh"))
 				require.NoError(t, err)
 
-				t.Run("can not find if on another network", func(t *testing.T) {
+				t.Run("cannot find if on another network", func(t *testing.T) {
 					_, p := testhelpers.NewNetwork(t, ctx, p)
 					_, err := p.FindRecoveryAddressByValue(ctx, identity.RecoveryAddressTypeEmail, strings.ToUpper("Recovery.TestPersister.Update-case-insensitive@ory.sh"))
 					require.ErrorIs(t, err, sqlcon.ErrNoRows)
@@ -820,7 +820,7 @@ func TestPool(ctx context.Context, conf *config.Config, p interface {
 				_, err = p.FindRecoveryAddressByValue(ctx, identity.RecoveryAddressTypeEmail, strings.ToUpper("recovery.TestPersister.Update-case-insensitive@ory.sh"))
 				require.EqualError(t, err, sqlcon.ErrNoRows.Error())
 
-				t.Run("can not find if on another network", func(t *testing.T) {
+				t.Run("cannot find if on another network", func(t *testing.T) {
 					_, p := testhelpers.NewNetwork(t, ctx, p)
 					_, err := p.FindRecoveryAddressByValue(ctx, identity.RecoveryAddressTypeEmail, strings.ToUpper("recovery.TestPersister.Update-case-insensitive@ory.sh"))
 					require.ErrorIs(t, err, sqlcon.ErrNoRows)
@@ -831,7 +831,7 @@ func TestPool(ctx context.Context, conf *config.Config, p interface {
 				assert.Equal(t, identity.RecoveryAddressTypeEmail, actual.Via)
 				assert.Equal(t, "recovery.testpersister.update-case-insensitive-next@ory.sh", actual.Value)
 
-				t.Run("can not find if on another network", func(t *testing.T) {
+				t.Run("cannot find if on another network", func(t *testing.T) {
 					_, p := testhelpers.NewNetwork(t, ctx, p)
 					_, err := p.FindRecoveryAddressByValue(ctx, identity.RecoveryAddressTypeEmail, strings.ToUpper("recovery.TestPersister.Update-case-insensitive-next@ory.sh"))
 					require.ErrorIs(t, err, sqlcon.ErrNoRows)

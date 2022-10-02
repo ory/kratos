@@ -260,7 +260,7 @@ func TestCompleteLogin(t *testing.T) {
 		})
 	})
 
-	t.Run("case=should fail because lookup can not handle AAL1", func(t *testing.T) {
+	t.Run("case=should fail because lookup cannot handle AAL1", func(t *testing.T) {
 		apiClient := testhelpers.NewDebugClient(t)
 		f := testhelpers.InitializeLoginFlowViaAPI(t, apiClient, publicTS, false)
 

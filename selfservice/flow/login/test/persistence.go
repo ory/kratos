@@ -151,7 +151,7 @@ func TestFlowPersister(ctx context.Context, p persistence.Persister) func(t *tes
 				assert.EqualValues(t, nid, actual.NID)
 			})
 
-			t.Run("can not update id", func(t *testing.T) {
+			t.Run("cannot update id", func(t *testing.T) {
 				expected, err := p.GetLoginFlow(ctx, id)
 				require.NoError(t, err)
 				require.NoError(t, p.UpdateLoginFlow(ctx, expected))
@@ -162,7 +162,7 @@ func TestFlowPersister(ctx context.Context, p persistence.Persister) func(t *tes
 				assert.EqualValues(t, nid, actual.NID)
 			})
 
-			t.Run("can not force on another network", func(t *testing.T) {
+			t.Run("cannot force on another network", func(t *testing.T) {
 				expected, err := p.GetLoginFlow(ctx, id)
 				require.NoError(t, err)
 
@@ -179,7 +179,7 @@ func TestFlowPersister(ctx context.Context, p persistence.Persister) func(t *tes
 				require.False(t, actual.Refresh)
 			})
 
-			t.Run("can not update on another network", func(t *testing.T) {
+			t.Run("cannot update on another network", func(t *testing.T) {
 				expected, err := p.GetLoginFlow(ctx, id)
 				require.NoError(t, err)
 
@@ -196,7 +196,7 @@ func TestFlowPersister(ctx context.Context, p persistence.Persister) func(t *tes
 				require.NotEqual(t, "updated", actual.RequestURL)
 			})
 
-			t.Run("can not get on another network", func(t *testing.T) {
+			t.Run("cannot get on another network", func(t *testing.T) {
 				_, p := testhelpers.NewNetwork(t, ctx, p)
 				_, err := p.GetLoginFlow(ctx, id)
 				require.ErrorIs(t, err, sqlcon.ErrNoRows)

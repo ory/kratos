@@ -450,7 +450,7 @@
             "additionalProperties": {
               "$ref": "#/components/schemas/loginFlowMethod"
             },
-            "description": "List of login methods\n\nThis is the list of available login methods with their required form fields, such as `identifier` and `password`\nfor the password login method. This will also contain error messages such as \"password can not be empty\".",
+            "description": "List of login methods\n\nThis is the list of available login methods with their required form fields, such as `identifier` and `password`\nfor the password login method. This will also contain error messages such as \"password cannot be empty\".",
             "type": "object"
           },
           "request_url": {
@@ -1547,7 +1547,7 @@
     },
     "/identities/{id}": {
       "delete": {
-        "description": "Calling this endpoint irrecoverably and permanently deletes the identity given its ID. This action can not be undone.\nThis endpoint returns 204 when the identity was deleted or when the identity was not found, in which case it is\nassumed that is has been deleted already.\n\nLearn how identities work in [Ory Kratos' User And Identity Model Documentation](https://www.ory.sh/docs/next/kratos/concepts/identity-user-model).",
+        "description": "Calling this endpoint irrecoverably and permanently deletes the identity given its ID. This action cannot be undone.\nThis endpoint returns 204 when the identity was deleted or when the identity was not found, in which case it is\nassumed that is has been deleted already.\n\nLearn how identities work in [Ory Kratos' User And Identity Model Documentation](https://www.ory.sh/docs/next/kratos/concepts/identity-user-model).",
         "operationId": "deleteIdentity",
         "parameters": [
           {
