@@ -204,7 +204,7 @@ func (e *HookExecutor) PostLoginHook(w http.ResponseWriter, r *http.Request, g n
 	}
 
 	if a.HydraLoginChallenge.Valid {
-		rt, err := e.d.Hydra().AcceptHydraLoginRequest(r.Context(), a.HydraLoginChallenge.UUID, i.ID.String(), s.AMR)
+		rt, err := e.d.Hydra().AcceptLoginRequest(r.Context(), a.HydraLoginChallenge.UUID, i.ID.String(), s.AMR)
 		if err != nil {
 			return err
 		}

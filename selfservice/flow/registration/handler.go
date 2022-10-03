@@ -367,7 +367,7 @@ func (h *Handler) fetchFlow(w http.ResponseWriter, r *http.Request, ps httproute
 	}
 
 	if ar.HydraLoginChallenge.Valid {
-		hlr, err := h.d.Hydra().GetHydraLoginRequest(r.Context(), ar.HydraLoginChallenge)
+		hlr, err := h.d.Hydra().GetLoginRequest(r.Context(), ar.HydraLoginChallenge)
 		if err != nil {
 			// We don't redirect back to the third party on errors because Hydra doesn't
 			// give us the 3rd party return_uri when it redirects to the login UI.

@@ -134,7 +134,7 @@ func NewFlow(conf *config.Config, exp time.Duration, csrf string, r *http.Reques
 		return nil, err
 	}
 
-	hlc, err := hydra.GetHydraLoginChallenge(conf, r)
+	hlc, err := hydra.GetLoginChallenge(conf, r)
 	if err != nil {
 		return nil, err
 	}

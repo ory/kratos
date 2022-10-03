@@ -147,7 +147,7 @@ type RegistryDefault struct {
 
 	selfserviceStrategies []interface{}
 
-	hydra *hydra.Hydra
+	hydra hydra.Hydra
 
 	buildVersion string
 	buildHash    string
@@ -520,11 +520,16 @@ func (m *RegistryDefault) SessionManager() session.Manager {
 	return m.sessionManager
 }
 
-func (m *RegistryDefault) Hydra() *hydra.Hydra {
+func (m *RegistryDefault) Hydra() hydra.Hydra {
 	if m.hydra == nil {
-		m.hydra = hydra.NewHydra(m)
+		m.hydra = hydra.NewDefaultHydra(m)
 	}
 	return m.hydra
+}
+
+func (m *RegistryDefault) WithHydra(h hydra.Hydra) Registry {
+	m.hydra = h
+	return m
 }
 
 func (m *RegistryDefault) SelfServiceErrorManager() *errorx.Manager {

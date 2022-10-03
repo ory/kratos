@@ -30,9 +30,11 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/ory/kratos/driver/config"
+	"github.com/ory/kratos/hydra"
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/internal"
 	"github.com/ory/kratos/internal/testhelpers"
+	"github.com/ory/kratos/session"
 	"github.com/ory/kratos/x"
 )
 
@@ -289,6 +291,7 @@ func TestOAuth2Provider(t *testing.T) {
 		require.Equal(t, "", string(body))
 		require.Equal(t, http.StatusOK, res.StatusCode)
 		require.True(t, oAuthSuccess)
+		oAuthSuccess = false
 	})
 
 	conf.MustSet(ctx, config.ViperKeySessionPersistentCookie, true)
@@ -303,6 +306,7 @@ func TestOAuth2Provider(t *testing.T) {
 		require.Equal(t, "", string(body))
 		require.Equal(t, http.StatusOK, res.StatusCode)
 		require.True(t, oAuthSuccess)
+		oAuthSuccess = false
 	})
 
 	testRequireLogin = false
@@ -317,5 +321,36 @@ func TestOAuth2Provider(t *testing.T) {
 		require.Equal(t, "", string(body))
 		require.Equal(t, http.StatusOK, res.StatusCode)
 		require.True(t, oAuthSuccess)
+		oAuthSuccess = false
 	})
+
+	reg.WithHydra(&AcceptWrongSubject{h: reg.Hydra().(*hydra.DefaultHydra)})
+	t.Run("should fail when Hydra session subject doesn't match the subject authenticated by Kratos", func(t *testing.T) {
+		authCodeURL := makeAuthCodeURL(t, clientAppOAuth2Config, "", false)
+		res, err := browserClient.Get(authCodeURL)
+
+		require.NoError(t, err, authCodeURL)
+		body, err := io.ReadAll(res.Body)
+		require.NoError(t, res.Body.Close())
+		require.NoError(t, err)
+		require.Equal(t, "", string(body))
+		require.Equal(t, http.StatusOK, res.StatusCode)
+		require.False(t, oAuthSuccess)
+		oAuthSuccess = false
+	})
+}
+
+var _ hydra.Hydra = &AcceptWrongSubject{}
+
+type AcceptWrongSubject struct {
+	h *hydra.DefaultHydra
+}
+
+func (h *AcceptWrongSubject) AcceptLoginRequest(ctx context.Context, hlc uuid.UUID, sub string, amr session.AuthenticationMethods) (string, error) {
+	hackerman := uuid.Must(uuid.NewV4())
+	return h.h.AcceptLoginRequest(ctx, hlc, hackerman.String(), amr)
+}
+
+func (h *AcceptWrongSubject) GetLoginRequest(ctx context.Context, hlc uuid.NullUUID) (*hydraclientgo.LoginRequest, error) {
+	return h.h.GetLoginRequest(ctx, hlc)
 }
