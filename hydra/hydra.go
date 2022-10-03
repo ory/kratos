@@ -22,20 +22,24 @@ type (
 		x.HTTPClientProvider
 	}
 	HydraProvider interface {
-		Hydra() *Hydra
+		Hydra() Hydra
 	}
-	Hydra struct {
+	Hydra interface {
+		AcceptLoginRequest(ctx context.Context, hlc uuid.UUID, sub string, amr session.AuthenticationMethods) (string, error)
+		GetLoginRequest(ctx context.Context, hlc uuid.NullUUID) (*hydraclientgo.LoginRequest, error)
+	}
+	DefaultHydra struct {
 		d hydraDependencies
 	}
 )
 
-func NewHydra(d hydraDependencies) *Hydra {
-	return &Hydra{
+func NewDefaultHydra(d hydraDependencies) *DefaultHydra {
+	return &DefaultHydra{
 		d: d,
 	}
 }
 
-func GetHydraLoginChallenge(conf *config.Config, r *http.Request) (uuid.NullUUID, error) {
+func GetLoginChallenge(conf *config.Config, r *http.Request) (uuid.NullUUID, error) {
 	if !r.URL.Query().Has("login_challenge") {
 		return uuid.NullUUID{}, nil
 	} else if conf.SelfServiceFlowHydraAdminURL(r.Context()) == nil {
@@ -50,7 +54,7 @@ func GetHydraLoginChallenge(conf *config.Config, r *http.Request) (uuid.NullUUID
 	}
 }
 
-func (h *Hydra) getAdminURL(ctx context.Context) (string, error) {
+func (h *DefaultHydra) getAdminURL(ctx context.Context) (string, error) {
 	u := h.d.Config().SelfServiceFlowHydraAdminURL(ctx)
 	if u == nil {
 		return "", errors.WithStack(herodot.ErrInternalServerError.WithReason(config.ViperKeySelfServiceHydraAdminURL + " is not configured"))
@@ -58,7 +62,7 @@ func (h *Hydra) getAdminURL(ctx context.Context) (string, error) {
 	return u.String(), nil
 }
 
-func (h *Hydra) getAdminAPIClient(ctx context.Context) (hydraclientgo.AdminApi, error) {
+func (h *DefaultHydra) getAdminAPIClient(ctx context.Context) (hydraclientgo.AdminApi, error) {
 	url, err := h.getAdminURL(ctx)
 	if err != nil {
 		return nil, err
@@ -71,7 +75,7 @@ func (h *Hydra) getAdminAPIClient(ctx context.Context) (hydraclientgo.AdminApi, 
 	return hydraclientgo.NewAPIClient(configuration).AdminApi, nil
 }
 
-func (h *Hydra) AcceptHydraLoginRequest(ctx context.Context, hlc uuid.UUID, sub string, amr session.AuthenticationMethods) (string, error) {
+func (h *DefaultHydra) AcceptLoginRequest(ctx context.Context, hlc uuid.UUID, sub string, amr session.AuthenticationMethods) (string, error) {
 	remember := h.d.Config().SessionPersistentCookie(ctx)
 	remember_for := int64(h.d.Config().SessionLifespan(ctx) / time.Second)
 
@@ -100,7 +104,7 @@ func (h *Hydra) AcceptHydraLoginRequest(ctx context.Context, hlc uuid.UUID, sub 
 	return resp.RedirectTo, nil
 }
 
-func (h *Hydra) GetHydraLoginRequest(ctx context.Context, hlc uuid.NullUUID) (*hydraclientgo.LoginRequest, error) {
+func (h *DefaultHydra) GetLoginRequest(ctx context.Context, hlc uuid.NullUUID) (*hydraclientgo.LoginRequest, error) {
 	if !hlc.Valid {
 		return nil, errors.WithStack(herodot.ErrBadRequest.WithReason("invalid login_challenge"))
 	}
