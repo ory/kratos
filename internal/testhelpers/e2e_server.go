@@ -7,9 +7,11 @@ import (
 	"crypto/rsa"
 	"crypto/tls"
 	"crypto/x509"
+	"encoding/base64"
 	"encoding/pem"
 	"errors"
 	"fmt"
+	"io"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -181,35 +183,51 @@ func CheckE2EServerOnHTTPS(t *testing.T, publicPort, adminPort int) (publicUrl, 
 	return
 }
 
-func GenerateTLSCertificateFilesForTests(t *testing.T, certPath, keyPath string) {
+// GenerateTLSCertificateFilesForTests writes a new, self-signed TLS
+// certificate+key (in PEM format) to a temporary location on disk and returns
+// the paths to both, as well as the respective contents in base64 encoding. The
+// files are automatically cleaned up when the given *testing.T concludes its
+// tests.
+func GenerateTLSCertificateFilesForTests(t *testing.T) (certPath, keyPath, certBase64, keyBase64 string) {
+	tmpDir := t.TempDir()
+
 	privateKey, err := rsa.GenerateKey(rand.Reader, 2048)
 	require.NoError(t, err)
 
 	cert, err := tlsx.CreateSelfSignedCertificate(privateKey)
 	require.NoError(t, err)
 
-	certOut, err := os.Create(certPath)
-	require.NoError(t, err, "Failed to open cert.pem for writing: %v", err)
+	// write cert
+	certFile, err := os.CreateTemp(tmpDir, "test-*-cert.pem")
+	require.NoError(t, err, "Failed to create temp file for certificate: %v", err)
+	certPath = certFile.Name()
 
+	var buf bytes.Buffer
+	enc := base64.NewEncoder(base64.StdEncoding, &buf)
+	certOut := io.MultiWriter(enc, certFile)
 	err = pem.Encode(certOut, &pem.Block{Type: "CERTIFICATE", Bytes: cert.Raw})
-	require.NoError(t, err, "Failed to write data to cert.pem: %v", err)
+	require.NoError(t, err, "Failed to write data to %q: %v", certPath, err)
+	err = certFile.Close()
+	require.NoError(t, err, "Error closing %q: %v", certPath, err)
+	certBase64 = buf.String()
+	t.Log("wrote", certPath)
 
-	err = certOut.Close()
-	require.NoError(t, err, "Error closing cert.pem: %v", err)
-
-	t.Logf("wrote cert.pem")
-
-	keyOut, err := os.OpenFile(keyPath, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0600)
-	require.NoError(t, err, "Failed to open key.pem for writing: %v", err)
+	// write key
+	keyFile, err := os.CreateTemp(tmpDir, "test-*-key.pem")
+	require.NoError(t, err, "Failed to create temp file for key: %v", err)
+	keyPath = keyFile.Name()
+	buf.Reset()
+	enc = base64.NewEncoder(base64.StdEncoding, &buf)
+	keyOut := io.MultiWriter(enc, keyFile)
 
 	privBytes, err := x509.MarshalPKCS8PrivateKey(privateKey)
-	require.NoError(t, err, "Unable to marshal private key: %v", err)
+	require.NoError(t, err, "Failed to marshal private key: %v", err)
 
 	err = pem.Encode(keyOut, &pem.Block{Type: "PRIVATE KEY", Bytes: privBytes})
-	require.NoError(t, err, "Failed to write data to key.pem: %v", err)
-
-	err = keyOut.Close()
-	require.NoError(t, err, "Error closing key.pem: %v", err)
-
-	t.Logf("wrote key.pem")
+	require.NoError(t, err, "Failed to write data to %q: %v", keyPath, err)
+	err = keyFile.Close()
+	require.NoError(t, err, "Error closing %q: %v", keyPath, err)
+	keyBase64 = buf.String()
+	t.Log("wrote", keyPath)
+	return
 }

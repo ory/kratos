@@ -1284,8 +1284,11 @@ func (p *Config) CipherAlgorithm(ctx context.Context) string {
 	}
 }
 
-func (p *Config) GetTSLCertificatesForPublic(ctx context.Context) []tls.Certificate {
-	return p.getTSLCertificates(
+type CertFunc = func(*tls.ClientHelloInfo) (*tls.Certificate, error)
+
+func (p *Config) GetTLSCertificatesForPublic(ctx context.Context) CertFunc {
+	return p.getTLSCertificates(
+		ctx,
 		"public",
 		p.GetProvider(ctx).String(ViperKeyPublicTLSCertBase64),
 		p.GetProvider(ctx).String(ViperKeyPublicTLSKeyBase64),
@@ -1294,8 +1297,9 @@ func (p *Config) GetTSLCertificatesForPublic(ctx context.Context) []tls.Certific
 	)
 }
 
-func (p *Config) GetTSLCertificatesForAdmin(ctx context.Context) []tls.Certificate {
-	return p.getTSLCertificates(
+func (p *Config) GetTLSCertificatesForAdmin(ctx context.Context) CertFunc {
+	return p.getTLSCertificates(
+		ctx,
 		"admin",
 		p.GetProvider(ctx).String(ViperKeyAdminTLSCertBase64),
 		p.GetProvider(ctx).String(ViperKeyAdminTLSKeyBase64),
@@ -1304,16 +1308,31 @@ func (p *Config) GetTSLCertificatesForAdmin(ctx context.Context) []tls.Certifica
 	)
 }
 
-func (p *Config) getTSLCertificates(daemon, certBase64, keyBase64, certPath, keyPath string) []tls.Certificate {
-	cert, err := tlsx.Certificate(certBase64, keyBase64, certPath, keyPath)
-
-	if err == nil {
+func (p *Config) getTLSCertificates(ctx context.Context, daemon, certBase64, keyBase64, certPath, keyPath string) CertFunc {
+	if certBase64 != "" && keyBase64 != "" {
+		cert, err := tlsx.CertificateFromBase64(certBase64, keyBase64)
+		if err != nil {
+			p.l.WithError(err).Fatalf("Unable to load HTTPS TLS Certificate")
+			return nil // reachable in unit tests when Fatalf is hooked
+		}
 		p.l.Infof("Setting up HTTPS for %s", daemon)
-		return cert
-	} else if !errors.Is(err, tlsx.ErrNoCertificatesConfigured) {
-		p.l.WithError(err).Fatalf("Unable to load HTTPS TLS Certificate")
+		return func(*tls.ClientHelloInfo) (*tls.Certificate, error) { return &cert, nil }
 	}
-
+	if certPath != "" && keyPath != "" {
+		errs := make(chan error, 1)
+		getCert, err := tlsx.GetCertificate(ctx, certPath, keyPath, errs)
+		if err != nil {
+			p.l.WithError(err).Fatalf("Unable to load HTTPS TLS Certificate")
+			return nil // reachable in unit tests when Fatalf is hooked
+		}
+		go func() {
+			for err := range errs {
+				p.l.WithError(err).Error("Failed to reload TLS certificates, using previous certificates")
+			}
+		}()
+		p.l.Infof("Setting up HTTPS for %s (automatic certificate reloading active)", daemon)
+		return getCert
+	}
 	p.l.Infof("TLS has not been configured for %s, skipping", daemon)
 	return nil
 }
