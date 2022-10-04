@@ -23,20 +23,19 @@ import (
 	"github.com/spf13/cobra"
 )
 
+// RootCmd represents the base command when called without any subcommands
 func NewRootCmd() (cmd *cobra.Command) {
 	cmd = &cobra.Command{
 		Use: "kratos",
 	}
-	cmdx.EnableUsageTemplating(cmd)
-
 	courier.RegisterCommandRecursive(cmd, nil, nil)
-	cmd.AddCommand(identities.NewGetCmd())
-	cmd.AddCommand(identities.NewDeleteCmd())
+	cmd.AddCommand(identities.NewGetCmd(cmd))
+	cmd.AddCommand(identities.NewDeleteCmd(cmd))
 	cmd.AddCommand(jsonnet.NewFormatCmd())
 	hashers.RegisterCommandRecursive(cmd)
-	cmd.AddCommand(identities.NewImportCmd())
+	cmd.AddCommand(identities.NewImportCmd(cmd))
 	cmd.AddCommand(jsonnet.NewLintCmd())
-	cmd.AddCommand(identities.NewListCmd())
+	cmd.AddCommand(identities.NewListCmd(cmd))
 	migrate.RegisterCommandRecursive(cmd)
 	serve.RegisterCommandRecursive(cmd, nil, nil)
 	cleanup.RegisterCommandRecursive(cmd)
