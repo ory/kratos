@@ -1,6 +1,6 @@
 package session
 
-// Expandable controls what fields to expand for projects.
+// Expandable controls what fields to expand for sessions.
 type Expandable string
 
 // Expandables is a list of Expandable values.
@@ -15,6 +15,9 @@ func (e Expandable) String() string {
 func (e Expandables) ToEager() []string {
 	var s []string
 	for _, e := range e {
+		if e == ExpandSessionIdentity {
+			continue
+		}
 		s = append(s, e.String())
 	}
 	return s
@@ -31,13 +34,23 @@ func (e Expandables) Has(search Expandable) bool {
 }
 
 const (
+	// ExpandSessionDevices expands devices related to the session
 	ExpandSessionDevices Expandable = "Devices"
+	// ExpandSessionIdentity expands Identity related to the session
+	ExpandSessionIdentity Expandable = "Identity"
 )
 
 // ExpandNothing expands nothing
 var ExpandNothing []Expandable
 
-// ExpandEverything expands all the fields of a project.
+// ExpandDefault expands the default fields of a session
+// - Associated Identity
+var ExpandDefault = Expandables{
+	ExpandSessionIdentity,
+}
+
+// ExpandEverything expands all the fields of a session.
 var ExpandEverything = Expandables{
 	ExpandSessionDevices,
+	ExpandSessionIdentity,
 }

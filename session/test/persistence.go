@@ -207,7 +207,7 @@ func TestPersister(ctx context.Context, conf *config.Config, p interface {
 				expected.AuthenticatorAssuranceLevel = identity.AuthenticatorAssuranceLevel3
 				require.NoError(t, p.UpsertSession(ctx, &expected))
 
-				actual, err := p.GetSessionByToken(ctx, expected.Token, session.ExpandNothing)
+				actual, err := p.GetSessionByToken(ctx, expected.Token, session.ExpandDefault)
 				check(actual, err)
 				assert.Equal(t, identity.AuthenticatorAssuranceLevel3, actual.AuthenticatorAssuranceLevel)
 			})
@@ -216,7 +216,7 @@ func TestPersister(ctx context.Context, conf *config.Config, p interface {
 				expected.AMR = nil
 				require.NoError(t, p.UpsertSession(ctx, &expected))
 
-				actual, err := p.GetSessionByToken(ctx, expected.Token, session.ExpandNothing)
+				actual, err := p.GetSessionByToken(ctx, expected.Token, session.ExpandDefault)
 				check(actual, err)
 				assert.Empty(t, actual.AMR)
 			})

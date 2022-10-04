@@ -40,14 +40,16 @@ func (p *Persister) GetSession(ctx context.Context, sid uuid.UUID, expandables s
 		return nil, sqlcon.HandleError(err)
 	}
 
-	// This is needed because of how identities are fetched from the store (if we use eager not all fields are
-	// available!).
-	i, err := p.GetIdentity(ctx, s.IdentityID)
-	if err != nil {
-		return nil, err
+	if expandables.Has(session.ExpandSessionIdentity) {
+		// This is needed because of how identities are fetched from the store (if we use eager not all fields are
+		// available!).
+		i, err := p.GetIdentity(ctx, s.IdentityID)
+		if err != nil {
+			return nil, err
+		}
+		s.Identity = i
 	}
 
-	s.Identity = i
 	return &s, nil
 }
 
@@ -74,13 +76,15 @@ func (p *Persister) ListSessionsByIdentity(ctx context.Context, iID uuid.UUID, a
 			return sqlcon.HandleError(err)
 		}
 
-		for _, s := range s {
-			i, err := p.GetIdentity(ctx, s.IdentityID)
-			if err != nil {
-				return err
-			}
+		if expandables.Has(session.ExpandSessionIdentity) {
+			for _, s := range s {
+				i, err := p.GetIdentity(ctx, s.IdentityID)
+				if err != nil {
+					return err
+				}
 
-			s.Identity = i
+				s.Identity = i
+			}
 		}
 		return nil
 	}); err != nil {
@@ -184,11 +188,13 @@ func (p *Persister) GetSessionByToken(ctx context.Context, token string, expanda
 
 	// This is needed because of how identities are fetched from the store (if we use eager not all fields are
 	// available!).
-	i, err := p.GetIdentity(ctx, s.IdentityID)
-	if err != nil {
-		return nil, err
+	if expandables.Has(session.ExpandSessionIdentity) {
+		i, err := p.GetIdentity(ctx, s.IdentityID)
+		if err != nil {
+			return nil, err
+		}
+		s.Identity = i
 	}
-	s.Identity = i
 	return &s, nil
 }
 
