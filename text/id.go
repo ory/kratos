@@ -133,7 +133,6 @@ const (
 	ErrorValidationRecoveryTokenInvalidOrAlreadyUsed                     // 4060004
 	ErrorValidationRecoveryFlowExpired                                   // 4060005
 	ErrorValidationRecoveryCodeInvalidOrAlreadyUsed                      // 4060006
-	ErrorValidationRecoveryCodeUsedTooOften                              // 4060007
 )
 
 const (

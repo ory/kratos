@@ -100,6 +100,24 @@ func TestPersister(ctx context.Context, conf *config.Config, p interface {
 				_, err = p.UseRecoveryCode(ctx, f.ID, dto.Code)
 				assert.Error(t, err)
 			})
+
+			t.Run("case=should increment flow submit count and fail after too many tries", func(t *testing.T) {
+				dto, f, _ := newRecoveryCodeDTO(t, "submit-count@ory.sh")
+				_, err := p.CreateRecoveryCode(ctx, dto)
+				require.NoError(t, err)
+
+				for i := 1; i <= 5; i++ {
+					_, err = p.UseRecoveryCode(ctx, f.ID, "i-do-not-exist")
+					require.Error(t, err)
+				}
+
+				_, err = p.UseRecoveryCode(ctx, f.ID, "i-do-not-exist")
+				require.ErrorIs(t, err, code.ErrCodeSubmittedTooOften)
+
+				// Submit again, just to be sure
+				_, err = p.UseRecoveryCode(ctx, f.ID, "i-do-not-exist")
+				require.ErrorIs(t, err, code.ErrCodeSubmittedTooOften)
+			})
 		})
 	}
 }

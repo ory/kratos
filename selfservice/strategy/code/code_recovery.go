@@ -21,8 +21,9 @@ const (
 )
 
 var (
-	ErrCodeNotFound    = herodot.ErrNotFound.WithReasonf("unknown recovery code")
-	ErrCodeAlreadyUsed = herodot.ErrBadRequest.WithReasonf("recovery code was already used")
+	ErrCodeNotFound          = herodot.ErrNotFound.WithReasonf("unknown recovery code")
+	ErrCodeAlreadyUsed       = herodot.ErrBadRequest.WithReasonf("recovery code was already used")
+	ErrCodeSubmittedTooOften = herodot.ErrBadRequest.WithReasonf("The recovery was submitted too often. Please try again.")
 )
 
 type RecoveryCode struct {
@@ -76,6 +77,10 @@ func (f RecoveryCode) IsExpired() bool {
 
 func (r RecoveryCode) WasUsed() bool {
 	return r.UsedAt.Valid
+}
+
+func (f RecoveryCode) IsValid() bool {
+	return !f.IsExpired() && !f.WasUsed()
 }
 
 func GenerateRecoveryCode() string {

@@ -114,7 +114,6 @@ func init() {
 		"NewRecoveryEmailWithCodeSent":                            text.NewRecoveryEmailWithCodeSent(),
 		"NewErrorValidationRecoveryTokenInvalidOrAlreadyUsed":     text.NewErrorValidationRecoveryTokenInvalidOrAlreadyUsed(),
 		"NewErrorValidationRecoveryCodeInvalidOrAlreadyUsed":      text.NewErrorValidationRecoveryCodeInvalidOrAlreadyUsed(),
-		"NewErrorValidationRecoveryFlowSubmittedTooOften":         text.NewErrorValidationRecoveryFlowSubmittedTooOften(),
 		"NewErrorValidationRecoveryRetrySuccess":                  text.NewErrorValidationRecoveryRetrySuccess(),
 		"NewErrorValidationRecoveryStateFailure":                  text.NewErrorValidationRecoveryStateFailure(),
 		"NewInfoNodeInputEmail":                                   text.NewInfoNodeInputEmail(),

@@ -278,12 +278,6 @@ func (s *Strategy) Recover(w http.ResponseWriter, r *http.Request, f *recovery.F
 		if err := flow.MethodEnabledAndAllowed(ctx, sID, sID, s.deps); err != nil {
 			return s.HandleRecoveryError(w, r, nil, body, err)
 		}
-
-		f.SubmitCount++
-		if err := s.deps.RecoveryFlowPersister().UpdateRecoveryFlow(ctx, f); err != nil {
-			return s.HandleRecoveryError(w, r, f, body, err)
-		}
-
 		return s.recoveryUseCode(w, r, body, f)
 	}
 
@@ -393,10 +387,6 @@ func (s *Strategy) recoveryUseCode(w http.ResponseWriter, r *http.Request, body 
 	ctx := r.Context()
 	code, err := s.deps.RecoveryCodePersister().UseRecoveryCode(ctx, f.ID, body.Code)
 	if errors.Is(err, ErrCodeNotFound) {
-		if f.SubmitCount > 5 {
-			return s.retryRecoveryFlowWithMessage(w, r, f.Type, text.NewErrorValidationRecoveryFlowSubmittedTooOften())
-		}
-
 		f.UI.Messages.Clear()
 		f.UI.Messages.Add(text.NewErrorValidationRecoveryCodeInvalidOrAlreadyUsed())
 		if err := s.deps.RecoveryFlowPersister().UpdateRecoveryFlow(ctx, f); err != nil {

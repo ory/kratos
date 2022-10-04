@@ -173,14 +173,39 @@ func (p *Persister) UseRecoveryCode(ctx context.Context, fID uuid.UUID, codeVal 
 
 	nid := p.NetworkID(ctx)
 
+	flowTableName := new(recovery.Flow).TableName(ctx)
+
 	if err := sqlcon.HandleError(p.Transaction(ctx, func(ctx context.Context, tx *pop.Connection) (err error) {
-		var recoveryCodes []code.RecoveryCode
-		if err = tx.Where("nid = ? AND selfservice_recovery_flow_id = ?", nid, fID).All(&recoveryCodes); err != nil {
+
+		/* #nosec G201 TableName is static */
+		if err = sqlcon.HandleError(tx.RawQuery(fmt.Sprintf("UPDATE %s SET submit_count = submit_count + 1 WHERE id = ? AND nid = ?", flowTableName), fID, nid).Exec()); err != nil {
+			return
+		}
+
+		var submitCount int
+		// Because MySQL does not support "RETURNING" clauses, but we need the updated `submit_count` later on.
+		/* #nosec G201 TableName is static */
+		if err := sqlcon.HandleError(tx.RawQuery(fmt.Sprintf("SELECT submit_count FROM %s WHERE id = ? AND nid = ?", flowTableName), fID, nid).First(&submitCount)); err != nil {
 			if errors.Is(err, sqlcon.ErrNoRows) {
-				return code.ErrCodeNotFound
+				// Return no error, as that would roll back the transaction
+				return nil
 			}
 
-			return sqlcon.HandleError(err)
+			return err
+		}
+
+		if submitCount > 5 {
+			return code.ErrCodeSubmittedTooOften
+		}
+
+		var recoveryCodes []code.RecoveryCode
+		if err = sqlcon.HandleError(tx.Where("nid = ? AND selfservice_recovery_flow_id = ?", nid, fID).All(&recoveryCodes)); err != nil {
+			if errors.Is(err, sqlcon.ErrNoRows) {
+				// Return no error, as that would roll back the transaction
+				return nil
+			}
+
+			return err
 		}
 
 	secrets:
@@ -197,16 +222,9 @@ func (p *Persister) UseRecoveryCode(ctx context.Context, fID uuid.UUID, codeVal 
 			}
 		}
 
-		if recoveryCode == nil {
-			return code.ErrCodeNotFound
-		}
-
-		if recoveryCode.IsExpired() {
-			return flow.NewFlowExpiredError(recoveryCode.ExpiresAt)
-		}
-
-		if recoveryCode.WasUsed() {
-			return code.ErrCodeAlreadyUsed
+		if recoveryCode == nil || !recoveryCode.IsValid() {
+			// Return no error, as that would roll back the transaction
+			return nil
 		}
 
 		var ra identity.RecoveryAddress
@@ -221,6 +239,18 @@ func (p *Persister) UseRecoveryCode(ctx context.Context, fID uuid.UUID, codeVal 
 		return sqlcon.HandleError(tx.RawQuery(fmt.Sprintf("UPDATE %s SET used_at = ? WHERE id = ? AND nid = ?", recoveryCode.TableName(ctx)), time.Now().UTC(), recoveryCode.ID, nid).Exec())
 	})); err != nil {
 		return nil, err
+	}
+
+	if recoveryCode == nil {
+		return nil, code.ErrCodeNotFound
+	}
+
+	if recoveryCode.IsExpired() {
+		return nil, flow.NewFlowExpiredError(recoveryCode.ExpiresAt)
+	}
+
+	if recoveryCode.WasUsed() {
+		return nil, code.ErrCodeAlreadyUsed
 	}
 
 	return recoveryCode, nil

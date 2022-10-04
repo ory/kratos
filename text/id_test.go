@@ -50,5 +50,4 @@ func TestIDs(t *testing.T) {
 	assert.Equal(t, 5000000, int(ErrorSystem))
 
 	assert.Equal(t, 4060006, int(ErrorValidationRecoveryCodeInvalidOrAlreadyUsed))
-	assert.Equal(t, 4060007, int(ErrorValidationRecoveryCodeUsedTooOften))
 }

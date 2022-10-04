@@ -56,7 +56,7 @@ context("Account Recovery Errors", () => {
 
         cy.get("input[name='code']").type("12312312") // Invalid code
         cy.get("button[value='code']").click()
-        cy.get('[data-testid="ui/message/4060007"]').should(
+        cy.get('[data-testid="ui/message/4000001"]').should(
           "have.text",
           "The recovery was submitted too often. Please try again.",
         )
