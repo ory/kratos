@@ -100,6 +100,11 @@ func (s *Strategy) processLogin(w http.ResponseWriter, r *http.Request, a *login
 				return nil, s.handleError(w, r, a, provider.Config().ID, nil, err)
 			}
 
+			aa.RequestURL, err = x.TakeOverReturnToParameter(a.RequestURL, aa.RequestURL)
+			if err != nil {
+				return nil, s.handleError(w, r, a, provider.Config().ID, nil, err)
+			}
+
 			if _, err := s.processRegistration(w, r, aa, token, claims, provider, container); err != nil {
 				return aa, err
 			}
