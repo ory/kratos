@@ -138,6 +138,9 @@ jobs:
       matrix:
         database: ["postgres", "cockroach", "sqlite", "mysql"]
     steps:
+      - uses: actions/setup-node@v3
+        with:
+          node-version: 16
       - run: |
           docker create --name cockroach -p 26257:26257 \
             cockroachdb/cockroach:v20.2.5 start-single-node --insecure
