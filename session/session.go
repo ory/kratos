@@ -248,16 +248,15 @@ func (s *Session) SaveSessionDeviceInformation(r *http.Request) {
 		device.IPAddress = &r.RemoteAddr
 	}
 
-	clientGeoLocation := []string{r.Header.Get("Cf-Ipcity"), r.Header.Get("Cf-Ipcountry")}
+	var clientGeoLocation []string
 
-	var sb strings.Builder
-	for _, i := range clientGeoLocation {
-		if sb.Len() != 0 && i != "" {
-			sb.WriteString(", ")
-		}
-		sb.WriteString(i)
+	if r.Header.Get("Cf-Ipcity") != "" {
+		clientGeoLocation = append(clientGeoLocation, r.Header.Get("Cf-Ipcity"))
 	}
-	device.Location = stringsx.GetPointer(sb.String())
+	if r.Header.Get("Cf-Ipcountry") != "" {
+		clientGeoLocation = append(clientGeoLocation, r.Header.Get("Cf-Ipcountry"))
+	}
+	device.Location = stringsx.GetPointer(strings.Join(clientGeoLocation, ", "))
 
 	s.Devices = append(s.Devices, device)
 }
