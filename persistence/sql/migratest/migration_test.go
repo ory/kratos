@@ -191,7 +191,7 @@ func TestMigrations(t *testing.T) {
 					var found []string
 					for _, id := range ids {
 						found = append(found, id.ID.String())
-						actual, err := d.SessionPersister().GetSession(context.Background(), id.ID)
+						actual, err := d.SessionPersister().GetSession(context.Background(), id.ID, session.ExpandEverything)
 						require.NoErrorf(t, err, "Trying to get session: %s", id.ID)
 						require.NotEmpty(t, actual.LogoutToken, "check if migrations have generated a logout token for existing sessions")
 						CompareWithFixture(t, actual, "session", id.ID.String())

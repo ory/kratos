@@ -41,7 +41,7 @@ func TestRecoveryExecutor(t *testing.T) {
 		router.GET("/recovery/post", func(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 			a, err := recovery.NewFlow(conf, time.Minute, x.FakeCSRFToken, r, reg.RecoveryStrategies(context.Background()), ft)
 			require.NoError(t, err)
-			s, _ := session.NewActiveSession(ctx,
+			s, _ := session.NewActiveSession(r,
 				i,
 				conf,
 				time.Now().UTC(),

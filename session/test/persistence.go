@@ -32,7 +32,7 @@ func TestPersister(ctx context.Context, conf *config.Config, p interface {
 		testhelpers.SetDefaultIdentitySchema(conf, "file://./stub/identity.schema.json")
 
 		t.Run("case=not found", func(t *testing.T) {
-			_, err := p.GetSession(ctx, x.NewUUID())
+			_, err := p.GetSession(ctx, x.NewUUID(), session.ExpandNothing)
 			require.Error(t, err)
 		})
 
@@ -45,6 +45,12 @@ func TestPersister(ctx context.Context, conf *config.Config, p interface {
 				{Method: identity.CredentialsTypeOIDC, CompletedAt: time.Now().UTC().Round(time.Second)},
 			}
 			require.NoError(t, p.CreateIdentity(ctx, expected.Identity))
+
+			var expectedSessionDevice session.Device
+			require.NoError(t, faker.FakeData(&expectedSessionDevice))
+			expected.Devices = []session.Device{
+				expectedSessionDevice,
+			}
 
 			assert.Equal(t, uuid.Nil, expected.ID)
 			require.NoError(t, p.UpsertSession(ctx, &expected))
@@ -65,22 +71,39 @@ func TestPersister(ctx context.Context, conf *config.Config, p interface {
 				assert.Equal(t, expected.AMR, actual.AMR)
 			}
 
+			checkDevices := func(actual []session.Device, err error) {
+				require.NoError(t, err)
+				assert.Equal(t, len(expected.Devices), len(actual))
+
+				for i, d := range actual {
+					assert.Equal(t, expected.Devices[i].SessionID, d.SessionID)
+					assert.Equal(t, expected.Devices[i].NID, d.NID)
+					assert.Equal(t, *expected.Devices[i].IPAddress, *d.IPAddress)
+					assert.Equal(t, expected.Devices[i].UserAgent, d.UserAgent)
+					assert.Equal(t, *expected.Devices[i].Location, *d.Location)
+				}
+			}
+
 			t.Run("method=get by id", func(t *testing.T) {
-				check(p.GetSession(ctx, expected.ID))
+				sess, err := p.GetSession(ctx, expected.ID, session.ExpandEverything)
+				check(sess, err)
+				checkDevices(sess.Devices, err)
 
 				t.Run("on another network", func(t *testing.T) {
 					_, p := testhelpers.NewNetwork(t, ctx, p)
-					_, err := p.GetSession(ctx, expected.ID)
+					_, err := p.GetSession(ctx, expected.ID, session.ExpandEverything)
 					assert.ErrorIs(t, err, sqlcon.ErrNoRows)
 				})
 			})
 
 			t.Run("method=get by token", func(t *testing.T) {
-				check(p.GetSessionByToken(ctx, expected.Token))
+				sess, err := p.GetSessionByToken(ctx, expected.Token, session.ExpandEverything)
+				check(sess, err)
+				checkDevices(sess.Devices, err)
 
 				t.Run("on another network", func(t *testing.T) {
 					_, p := testhelpers.NewNetwork(t, ctx, p)
-					_, err := p.GetSessionByToken(ctx, expected.Token)
+					_, err := p.GetSessionByToken(ctx, expected.Token, session.ExpandNothing)
 					assert.ErrorIs(t, err, sqlcon.ErrNoRows)
 				})
 			})
@@ -93,6 +116,12 @@ func TestPersister(ctx context.Context, conf *config.Config, p interface {
 					require.NoError(t, faker.FakeData(&sess[j]))
 					sess[j].Identity = i
 					sess[j].Active = j%2 == 0
+
+					var device session.Device
+					require.NoError(t, faker.FakeData(&device))
+					sess[j].Devices = []session.Device{
+						device,
+					}
 					require.NoError(t, p.UpsertSession(ctx, &sess[j]))
 				}
 
@@ -149,7 +178,7 @@ func TestPersister(ctx context.Context, conf *config.Config, p interface {
 					},
 				} {
 					t.Run("case="+tc.desc, func(t *testing.T) {
-						actual, err := p.ListSessionsByIdentity(ctx, i.ID, tc.active, 1, 10, tc.except)
+						actual, err := p.ListSessionsByIdentity(ctx, i.ID, tc.active, 1, 10, tc.except, session.ExpandEverything)
 						require.NoError(t, err)
 
 						require.Equal(t, len(tc.expected), len(actual))
@@ -158,6 +187,7 @@ func TestPersister(ctx context.Context, conf *config.Config, p interface {
 							for _, as := range actual {
 								if as.ID == es.ID {
 									found = true
+									assert.Equal(t, len(es.Devices), len(as.Devices))
 								}
 							}
 							assert.True(t, found)
@@ -167,7 +197,7 @@ func TestPersister(ctx context.Context, conf *config.Config, p interface {
 
 				t.Run("other network", func(t *testing.T) {
 					_, other := testhelpers.NewNetwork(t, ctx, p)
-					actual, err := other.ListSessionsByIdentity(ctx, i.ID, nil, 1, 10, uuid.Nil)
+					actual, err := other.ListSessionsByIdentity(ctx, i.ID, nil, 1, 10, uuid.Nil, session.ExpandNothing)
 					require.NoError(t, err)
 					assert.Len(t, actual, 0)
 				})
@@ -177,7 +207,7 @@ func TestPersister(ctx context.Context, conf *config.Config, p interface {
 				expected.AuthenticatorAssuranceLevel = identity.AuthenticatorAssuranceLevel3
 				require.NoError(t, p.UpsertSession(ctx, &expected))
 
-				actual, err := p.GetSessionByToken(ctx, expected.Token)
+				actual, err := p.GetSessionByToken(ctx, expected.Token, session.ExpandDefault)
 				check(actual, err)
 				assert.Equal(t, identity.AuthenticatorAssuranceLevel3, actual.AuthenticatorAssuranceLevel)
 			})
@@ -186,7 +216,7 @@ func TestPersister(ctx context.Context, conf *config.Config, p interface {
 				expected.AMR = nil
 				require.NoError(t, p.UpsertSession(ctx, &expected))
 
-				actual, err := p.GetSessionByToken(ctx, expected.Token)
+				actual, err := p.GetSessionByToken(ctx, expected.Token, session.ExpandDefault)
 				check(actual, err)
 				assert.Empty(t, actual.AMR)
 			})
@@ -203,12 +233,12 @@ func TestPersister(ctx context.Context, conf *config.Config, p interface {
 				err := other.DeleteSession(ctx, expected.ID)
 				assert.ErrorIs(t, err, sqlcon.ErrNoRows)
 
-				_, err = p.GetSession(ctx, expected.ID)
+				_, err = p.GetSession(ctx, expected.ID, session.ExpandNothing)
 				assert.NoError(t, err)
 			})
 
 			require.NoError(t, p.DeleteSession(ctx, expected.ID))
-			_, err := p.GetSession(ctx, expected.ID)
+			_, err := p.GetSession(ctx, expected.ID, session.ExpandNothing)
 			assert.ErrorIs(t, err, sqlcon.ErrNoRows)
 		})
 
@@ -223,12 +253,12 @@ func TestPersister(ctx context.Context, conf *config.Config, p interface {
 				err := other.DeleteSessionByToken(ctx, expected.Token)
 				assert.ErrorIs(t, err, sqlcon.ErrNoRows)
 
-				_, err = p.GetSessionByToken(ctx, expected.Token)
+				_, err = p.GetSessionByToken(ctx, expected.Token, session.ExpandNothing)
 				assert.NoError(t, err)
 			})
 
 			require.NoError(t, p.DeleteSessionByToken(ctx, expected.Token))
-			_, err := p.GetSession(ctx, expected.ID)
+			_, err := p.GetSession(ctx, expected.ID, session.ExpandNothing)
 			require.Error(t, err)
 		})
 
@@ -239,7 +269,7 @@ func TestPersister(ctx context.Context, conf *config.Config, p interface {
 			require.NoError(t, p.CreateIdentity(ctx, expected.Identity))
 			require.NoError(t, p.UpsertSession(ctx, &expected))
 
-			actual, err := p.GetSession(ctx, expected.ID)
+			actual, err := p.GetSession(ctx, expected.ID, session.ExpandNothing)
 			require.NoError(t, err)
 			assert.True(t, actual.Active)
 
@@ -248,14 +278,14 @@ func TestPersister(ctx context.Context, conf *config.Config, p interface {
 				err := other.RevokeSessionByToken(ctx, expected.Token)
 				assert.ErrorIs(t, err, sqlcon.ErrNoRows)
 
-				actual, err = p.GetSession(ctx, expected.ID)
+				actual, err = p.GetSession(ctx, expected.ID, session.ExpandNothing)
 				require.NoError(t, err)
 				assert.True(t, actual.Active)
 			})
 
 			require.NoError(t, p.RevokeSessionByToken(ctx, expected.Token))
 
-			actual, err = p.GetSession(ctx, expected.ID)
+			actual, err = p.GetSession(ctx, expected.ID, session.ExpandNothing)
 			require.NoError(t, err)
 			assert.False(t, actual.Active)
 		})
@@ -282,7 +312,7 @@ func TestPersister(ctx context.Context, conf *config.Config, p interface {
 				assert.Equal(t, 0, n)
 
 				for _, s := range sessions {
-					actual, err := p.GetSession(ctx, s.ID)
+					actual, err := p.GetSession(ctx, s.ID, session.ExpandNothing)
 					require.NoError(t, err)
 					assert.True(t, actual.Active)
 				}
@@ -292,7 +322,7 @@ func TestPersister(ctx context.Context, conf *config.Config, p interface {
 			require.NoError(t, err)
 			assert.Equal(t, 1, n)
 
-			actual, err := p.ListSessionsByIdentity(ctx, sessions[0].IdentityID, nil, 1, 10, uuid.Nil)
+			actual, err := p.ListSessionsByIdentity(ctx, sessions[0].IdentityID, nil, 1, 10, uuid.Nil, session.ExpandNothing)
 			require.NoError(t, err)
 			require.Len(t, actual, 2)
 
@@ -305,7 +335,7 @@ func TestPersister(ctx context.Context, conf *config.Config, p interface {
 				assert.False(t, actual[0].Active)
 			}
 
-			otherIdentitiesSessions, err := p.ListSessionsByIdentity(ctx, sessions[2].IdentityID, nil, 1, 10, uuid.Nil)
+			otherIdentitiesSessions, err := p.ListSessionsByIdentity(ctx, sessions[2].IdentityID, nil, 1, 10, uuid.Nil, session.ExpandNothing)
 			require.NoError(t, err)
 			require.Len(t, actual, 2)
 
@@ -331,7 +361,7 @@ func TestPersister(ctx context.Context, conf *config.Config, p interface {
 				require.NoError(t, other.RevokeSession(ctx, sessions[0].IdentityID, sessions[0].ID))
 
 				for _, s := range sessions {
-					actual, err := p.GetSession(ctx, s.ID)
+					actual, err := p.GetSession(ctx, s.ID, session.ExpandNothing)
 					require.NoError(t, err)
 					assert.True(t, actual.Active)
 				}
@@ -339,7 +369,7 @@ func TestPersister(ctx context.Context, conf *config.Config, p interface {
 
 			require.NoError(t, p.RevokeSession(ctx, sessions[0].IdentityID, sessions[0].ID))
 
-			actual, err := p.ListSessionsByIdentity(ctx, sessions[0].IdentityID, nil, 1, 10, uuid.Nil)
+			actual, err := p.ListSessionsByIdentity(ctx, sessions[0].IdentityID, nil, 1, 10, uuid.Nil, session.ExpandNothing)
 			require.NoError(t, err)
 			require.Len(t, actual, 2)
 
@@ -371,14 +401,14 @@ func TestPersister(ctx context.Context, conf *config.Config, p interface {
 				err := other.DeleteSessionsByIdentity(ctx, expected2.IdentityID)
 				assert.ErrorIs(t, err, sqlcon.ErrNoRows)
 
-				_, err = p.GetSession(ctx, expected1.ID)
+				_, err = p.GetSession(ctx, expected1.ID, session.ExpandNothing)
 				require.NoError(t, err)
 			})
 
 			require.NoError(t, p.DeleteSessionsByIdentity(ctx, expected2.IdentityID))
-			_, err := p.GetSession(ctx, expected1.ID)
+			_, err := p.GetSession(ctx, expected1.ID, session.ExpandNothing)
 			require.Error(t, err)
-			_, err = p.GetSession(ctx, expected2.ID)
+			_, err = p.GetSession(ctx, expected2.ID, session.ExpandNothing)
 			require.Error(t, err)
 		})
 
@@ -395,14 +425,14 @@ func TestPersister(ctx context.Context, conf *config.Config, p interface {
 			require.NoError(t, p.GetConnection(ctx).RawQuery("INSERT INTO sessions (id, nid, identity_id, token, expires_at,authenticated_at, created_at, updated_at, logout_token, authentication_methods) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", sid1, nid1, iid1, t1, time.Now().Add(time.Hour), time.Now(), time.Now(), time.Now(), randx.MustString(32, randx.AlphaNum), "[]").Exec())
 			require.NoError(t, p.GetConnection(ctx).RawQuery("INSERT INTO sessions (id, nid, identity_id, token, expires_at,authenticated_at, created_at, updated_at, logout_token, authentication_methods) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", sid2, nid2, iid2, t2, time.Now().Add(time.Hour), time.Now(), time.Now(), time.Now(), randx.MustString(32, randx.AlphaNum), "[]").Exec())
 
-			_, err := p.GetSession(ctx, sid1)
+			_, err := p.GetSession(ctx, sid1, session.ExpandEverything)
 			require.NoError(t, err)
-			_, err = p.GetSession(ctx, sid2)
+			_, err = p.GetSession(ctx, sid2, session.ExpandNothing)
 			require.ErrorIs(t, err, sqlcon.ErrNoRows)
 
-			_, err = p.GetSessionByToken(ctx, t1)
+			_, err = p.GetSessionByToken(ctx, t1, session.ExpandNothing)
 			require.NoError(t, err)
-			_, err = p.GetSessionByToken(ctx, t2)
+			_, err = p.GetSessionByToken(ctx, t2, session.ExpandNothing)
 			require.ErrorIs(t, err, sqlcon.ErrNoRows)
 		})
 	}

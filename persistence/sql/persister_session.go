@@ -2,9 +2,10 @@ package sql
 
 import (
 	"context"
-	"database/sql"
 	"fmt"
 	"time"
+
+	"github.com/ory/x/stringsx"
 
 	"github.com/gobuffalo/pop/v6"
 
@@ -19,29 +20,41 @@ import (
 
 var _ session.Persister = new(Persister)
 
-func (p *Persister) GetSession(ctx context.Context, sid uuid.UUID) (*session.Session, error) {
+const SessionDeviceUserAgentMaxLength = 512
+const SessionDeviceLocationMaxLength = 512
+
+func (p *Persister) GetSession(ctx context.Context, sid uuid.UUID, expandables session.Expandables) (*session.Session, error) {
 	ctx, span := p.r.Tracer(ctx).Tracer().Start(ctx, "persistence.sql.GetSession")
 	defer span.End()
 
 	var s session.Session
+	s.Devices = make([]session.Device, 0)
 	nid := p.NetworkID(ctx)
-	if err := p.GetConnection(ctx).Where("id = ? AND nid = ?", sid, nid).First(&s); err != nil {
+
+	q := p.GetConnection(ctx).Q()
+	if len(expandables) > 0 {
+		q = q.Eager(expandables.ToEager()...)
+	}
+
+	if err := q.Where("id = ? AND nid = ?", sid, nid).First(&s); err != nil {
 		return nil, sqlcon.HandleError(err)
 	}
 
-	// This is needed because of how identities are fetched from the store (if we use eager not all fields are
-	// available!).
-	i, err := p.GetIdentity(ctx, s.IdentityID)
-	if err != nil {
-		return nil, err
+	if expandables.Has(session.ExpandSessionIdentity) {
+		// This is needed because of how identities are fetched from the store (if we use eager not all fields are
+		// available!).
+		i, err := p.GetIdentity(ctx, s.IdentityID)
+		if err != nil {
+			return nil, err
+		}
+		s.Identity = i
 	}
 
-	s.Identity = i
 	return &s, nil
 }
 
 // ListSessionsByIdentity retrieves sessions for an identity from the store.
-func (p *Persister) ListSessionsByIdentity(ctx context.Context, iID uuid.UUID, active *bool, page, perPage int, except uuid.UUID) ([]*session.Session, error) {
+func (p *Persister) ListSessionsByIdentity(ctx context.Context, iID uuid.UUID, active *bool, page, perPage int, except uuid.UUID, expandables session.Expandables) ([]*session.Session, error) {
 	ctx, span := p.r.Tracer(ctx).Tracer().Start(ctx, "persistence.sql.ListSessionsByIdentity")
 	defer span.End()
 
@@ -56,17 +69,22 @@ func (p *Persister) ListSessionsByIdentity(ctx context.Context, iID uuid.UUID, a
 		if active != nil {
 			q = q.Where("active = ?", *active)
 		}
+		if len(expandables) > 0 {
+			q = q.Eager(expandables.ToEager()...)
+		}
 		if err := q.All(&s); err != nil {
 			return sqlcon.HandleError(err)
 		}
 
-		for _, s := range s {
-			i, err := p.GetIdentity(ctx, s.IdentityID)
-			if err != nil {
-				return err
-			}
+		if expandables.Has(session.ExpandSessionIdentity) {
+			for _, s := range s {
+				i, err := p.GetIdentity(ctx, s.IdentityID)
+				if err != nil {
+					return err
+				}
 
-			s.Identity = i
+				s.Identity = i
+			}
 		}
 		return nil
 	}); err != nil {
@@ -76,21 +94,51 @@ func (p *Persister) ListSessionsByIdentity(ctx context.Context, iID uuid.UUID, a
 	return s, nil
 }
 
+// UpsertSession creates a session if not found else updates.
+// This operation also inserts Session device records when a session is being created.
+// The update operation skips updating Session device records since only one record would need to be updated in this case.
 func (p *Persister) UpsertSession(ctx context.Context, s *session.Session) error {
 	ctx, span := p.r.Tracer(ctx).Tracer().Start(ctx, "persistence.sql.UpsertSession")
 	defer span.End()
 
 	s.NID = p.NetworkID(ctx)
 
-	if err := p.Connection(ctx).Find(new(session.Session), s.ID); errors.Is(err, sql.ErrNoRows) {
-		// This must not be eager or identities will be created / updated
-		return errors.WithStack(p.GetConnection(ctx).Create(s))
-	} else if err != nil {
-		return errors.WithStack(err)
-	}
+	return errors.WithStack(p.Transaction(ctx, func(ctx context.Context, tx *pop.Connection) error {
+		exists, err := tx.Where("id = ? AND nid = ?", s.ID, s.NID).Exists(new(session.Session))
+		if err != nil {
+			return sqlcon.HandleError(err)
+		}
 
-	// This must not be eager or identities will be created / updated
-	return p.GetConnection(ctx).Update(s)
+		if exists {
+			// This must not be eager or identities will be created / updated
+			// Only update session and not corresponding session device records
+			return sqlcon.HandleError(tx.Update(s))
+		}
+
+		// This must not be eager or identities will be created / updated
+		if err := sqlcon.HandleError(tx.Create(s)); err != nil {
+			return err
+		}
+
+		for i := range s.Devices {
+			device := &(s.Devices[i])
+			device.SessionID = s.ID
+			device.NID = s.NID
+
+			if device.Location != nil {
+				device.Location = stringsx.GetPointer(stringsx.TruncateByteLen(*device.Location, SessionDeviceLocationMaxLength))
+			}
+			if device.UserAgent != nil {
+				device.UserAgent = stringsx.GetPointer(stringsx.TruncateByteLen(*device.UserAgent, SessionDeviceUserAgentMaxLength))
+			}
+
+			if err := sqlcon.HandleError(tx.Create(device)); err != nil {
+				return err
+			}
+		}
+
+		return nil
+	}))
 }
 
 func (p *Persister) DeleteSession(ctx context.Context, sid uuid.UUID) error {
@@ -121,25 +169,32 @@ func (p *Persister) DeleteSessionsByIdentity(ctx context.Context, identityID uui
 	return nil
 }
 
-func (p *Persister) GetSessionByToken(ctx context.Context, token string) (*session.Session, error) {
+func (p *Persister) GetSessionByToken(ctx context.Context, token string, expandables session.Expandables) (*session.Session, error) {
 	ctx, span := p.r.Tracer(ctx).Tracer().Start(ctx, "persistence.sql.GetSessionByToken")
 	defer span.End()
 
 	var s session.Session
-	if err := p.GetConnection(ctx).Where("token = ? AND nid = ?",
-		token,
-		p.NetworkID(ctx),
-	).First(&s); err != nil {
+	s.Devices = make([]session.Device, 0)
+	nid := p.NetworkID(ctx)
+
+	q := p.GetConnection(ctx).Q()
+	if len(expandables) > 0 {
+		q = q.Eager(expandables.ToEager()...)
+	}
+
+	if err := q.Where("token = ? AND nid = ?", token, nid).First(&s); err != nil {
 		return nil, sqlcon.HandleError(err)
 	}
 
 	// This is needed because of how identities are fetched from the store (if we use eager not all fields are
 	// available!).
-	i, err := p.GetIdentity(ctx, s.IdentityID)
-	if err != nil {
-		return nil, err
+	if expandables.Has(session.ExpandSessionIdentity) {
+		i, err := p.GetIdentity(ctx, s.IdentityID)
+		if err != nil {
+			return nil, err
+		}
+		s.Identity = i
 	}
-	s.Identity = i
 	return &s, nil
 }
 

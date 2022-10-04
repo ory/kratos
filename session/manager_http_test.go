@@ -141,13 +141,15 @@ func TestManagerHTTP(t *testing.T) {
 	})
 
 	t.Run("suite=SessionAddAuthenticationMethod", func(t *testing.T) {
+		req := x.NewTestHTTPRequest(t, "GET", "/sessions/whoami", nil)
+
 		conf, reg := internal.NewFastRegistryWithMocks(t)
 		testhelpers.SetDefaultIdentitySchema(conf, "file://./stub/identity.schema.json")
 
 		i := &identity.Identity{Traits: []byte("{}"), State: identity.StateActive}
 		require.NoError(t, reg.PrivilegedIdentityPool().CreateIdentity(context.Background(), i))
 		sess := session.NewInactiveSession()
-		require.NoError(t, sess.Activate(ctx, i, conf, time.Now()))
+		require.NoError(t, sess.Activate(req, i, conf, time.Now()))
 		require.NoError(t, reg.SessionPersister().UpsertSession(context.Background(), sess))
 		require.NoError(t, reg.SessionManager().SessionAddAuthenticationMethods(context.Background(), sess.ID,
 			session.AuthenticationMethod{
@@ -160,7 +162,7 @@ func TestManagerHTTP(t *testing.T) {
 			}))
 		assert.Len(t, sess.AMR, 0)
 
-		actual, err := reg.SessionPersister().GetSession(context.Background(), sess.ID)
+		actual, err := reg.SessionPersister().GetSession(context.Background(), sess.ID, session.ExpandNothing)
 		require.NoError(t, err)
 		assert.EqualValues(t, identity.AuthenticatorAssuranceLevel2, actual.AuthenticatorAssuranceLevel)
 		for _, amr := range actual.AMR {
@@ -202,11 +204,12 @@ func TestManagerHTTP(t *testing.T) {
 		reg.RegisterPublicRoutes(context.Background(), rp)
 
 		t.Run("case=valid", func(t *testing.T) {
-			conf.MustSet(ctx, config.ViperKeySessionLifespan, "1m")
+			req := x.NewTestHTTPRequest(t, "GET", "/sessions/whoami", nil)
+			conf.MustSet(req.Context(), config.ViperKeySessionLifespan, "1m")
 
 			i := identity.Identity{Traits: []byte("{}")}
 			require.NoError(t, reg.PrivilegedIdentityPool().CreateIdentity(context.Background(), &i))
-			s, _ = session.NewActiveSession(ctx, &i, conf, time.Now(), identity.CredentialsTypePassword, identity.AuthenticatorAssuranceLevel1)
+			s, _ = session.NewActiveSession(req, &i, conf, time.Now(), identity.CredentialsTypePassword, identity.AuthenticatorAssuranceLevel1)
 
 			c := testhelpers.NewClientWithCookies(t)
 			testhelpers.MockHydrateCookieClient(t, c, pts.URL+"/session/set")
@@ -217,6 +220,7 @@ func TestManagerHTTP(t *testing.T) {
 		})
 
 		t.Run("case=key rotation", func(t *testing.T) {
+			req := x.NewTestHTTPRequest(t, "GET", "/sessions/whoami", nil)
 			original := conf.GetProvider(ctx).Strings(config.ViperKeySecretsCookie)
 			t.Cleanup(func() {
 				conf.MustSet(ctx, config.ViperKeySecretsCookie, original)
@@ -226,7 +230,7 @@ func TestManagerHTTP(t *testing.T) {
 
 			i := identity.Identity{Traits: []byte("{}")}
 			require.NoError(t, reg.PrivilegedIdentityPool().CreateIdentity(context.Background(), &i))
-			s, _ = session.NewActiveSession(ctx, &i, conf, time.Now(), identity.CredentialsTypePassword, identity.AuthenticatorAssuranceLevel1)
+			s, _ = session.NewActiveSession(req, &i, conf, time.Now(), identity.CredentialsTypePassword, identity.AuthenticatorAssuranceLevel1)
 
 			c := testhelpers.NewClientWithCookies(t)
 			testhelpers.MockHydrateCookieClient(t, c, pts.URL+"/session/set")
@@ -242,6 +246,7 @@ func TestManagerHTTP(t *testing.T) {
 		})
 
 		t.Run("case=no panic on invalid cookie name", func(t *testing.T) {
+			req := x.NewTestHTTPRequest(t, "GET", "/sessions/whoami", nil)
 			conf.MustSet(ctx, config.ViperKeySessionLifespan, "1m")
 			conf.MustSet(ctx, config.ViperKeySessionName, "$%˜\"")
 			t.Cleanup(func() {
@@ -255,7 +260,7 @@ func TestManagerHTTP(t *testing.T) {
 
 			i := identity.Identity{Traits: []byte("{}")}
 			require.NoError(t, reg.PrivilegedIdentityPool().CreateIdentity(context.Background(), &i))
-			s, _ = session.NewActiveSession(ctx, &i, conf, time.Now(), identity.CredentialsTypePassword, identity.AuthenticatorAssuranceLevel1)
+			s, _ = session.NewActiveSession(req, &i, conf, time.Now(), identity.CredentialsTypePassword, identity.AuthenticatorAssuranceLevel1)
 
 			c := testhelpers.NewClientWithCookies(t)
 			res, err := c.Get(pts.URL + "/session/set/invalid")
@@ -264,11 +269,12 @@ func TestManagerHTTP(t *testing.T) {
 		})
 
 		t.Run("case=valid and uses x-session-cookie", func(t *testing.T) {
+			req := x.NewTestHTTPRequest(t, "GET", "/sessions/whoami", nil)
 			conf.MustSet(ctx, config.ViperKeySessionLifespan, "1m")
 
 			i := identity.Identity{Traits: []byte("{}")}
 			require.NoError(t, reg.PrivilegedIdentityPool().CreateIdentity(context.Background(), &i))
-			s, _ = session.NewActiveSession(ctx, &i, conf, time.Now(), identity.CredentialsTypePassword, identity.AuthenticatorAssuranceLevel1)
+			s, _ = session.NewActiveSession(req, &i, conf, time.Now(), identity.CredentialsTypePassword, identity.AuthenticatorAssuranceLevel1)
 
 			c := testhelpers.NewClientWithCookies(t)
 			testhelpers.MockHydrateCookieClient(t, c, pts.URL+"/session/set")
@@ -297,16 +303,17 @@ func TestManagerHTTP(t *testing.T) {
 		})
 
 		t.Run("case=valid bearer auth as fallback", func(t *testing.T) {
+			req := x.NewTestHTTPRequest(t, "GET", "/sessions/whoami", nil)
 			conf.MustSet(ctx, config.ViperKeySessionLifespan, "1m")
 
 			i := identity.Identity{Traits: []byte("{}"), State: identity.StateActive}
 			require.NoError(t, reg.PrivilegedIdentityPool().CreateIdentity(context.Background(), &i))
-			s, err := session.NewActiveSession(ctx, &i, conf, time.Now(), identity.CredentialsTypePassword, identity.AuthenticatorAssuranceLevel1)
+			s, err := session.NewActiveSession(req, &i, conf, time.Now(), identity.CredentialsTypePassword, identity.AuthenticatorAssuranceLevel1)
 			require.NoError(t, err)
 			require.NoError(t, reg.SessionPersister().UpsertSession(context.Background(), s))
 			require.NotEmpty(t, s.Token)
 
-			req, err := http.NewRequest("GET", pts.URL+"/session/get", nil)
+			req, err = http.NewRequest("GET", pts.URL+"/session/get", nil)
 			require.NoError(t, err)
 			req.Header.Set("Authorization", "Bearer "+s.Token)
 
@@ -317,15 +324,16 @@ func TestManagerHTTP(t *testing.T) {
 		})
 
 		t.Run("case=valid x-session-token auth even if bearer is set", func(t *testing.T) {
+			req := x.NewTestHTTPRequest(t, "GET", "/sessions/whoami", nil)
 			conf.MustSet(ctx, config.ViperKeySessionLifespan, "1m")
 
 			i := identity.Identity{Traits: []byte("{}"), State: identity.StateActive}
 			require.NoError(t, reg.PrivilegedIdentityPool().CreateIdentity(context.Background(), &i))
-			s, err := session.NewActiveSession(ctx, &i, conf, time.Now(), identity.CredentialsTypePassword, identity.AuthenticatorAssuranceLevel1)
+			s, err := session.NewActiveSession(req, &i, conf, time.Now(), identity.CredentialsTypePassword, identity.AuthenticatorAssuranceLevel1)
 			require.NoError(t, err)
 			require.NoError(t, reg.SessionPersister().UpsertSession(context.Background(), s))
 
-			req, err := http.NewRequest("GET", pts.URL+"/session/get", nil)
+			req, err = http.NewRequest("GET", pts.URL+"/session/get", nil)
 			require.NoError(t, err)
 			req.Header.Set("Authorization", "Bearer invalid")
 			req.Header.Set("X-Session-Token", s.Token)
@@ -337,6 +345,7 @@ func TestManagerHTTP(t *testing.T) {
 		})
 
 		t.Run("case=expired", func(t *testing.T) {
+			req := x.NewTestHTTPRequest(t, "GET", "/sessions/whoami", nil)
 			conf.MustSet(ctx, config.ViperKeySessionLifespan, "1ns")
 			t.Cleanup(func() {
 				conf.MustSet(ctx, config.ViperKeySessionLifespan, "1m")
@@ -344,7 +353,7 @@ func TestManagerHTTP(t *testing.T) {
 
 			i := identity.Identity{Traits: []byte("{}")}
 			require.NoError(t, reg.PrivilegedIdentityPool().CreateIdentity(context.Background(), &i))
-			s, _ = session.NewActiveSession(ctx, &i, conf, time.Now(), identity.CredentialsTypePassword, identity.AuthenticatorAssuranceLevel1)
+			s, _ = session.NewActiveSession(req, &i, conf, time.Now(), identity.CredentialsTypePassword, identity.AuthenticatorAssuranceLevel1)
 
 			c := testhelpers.NewClientWithCookies(t)
 			testhelpers.MockHydrateCookieClient(t, c, pts.URL+"/session/set")
@@ -357,11 +366,12 @@ func TestManagerHTTP(t *testing.T) {
 		})
 
 		t.Run("case=revoked", func(t *testing.T) {
+			req := x.NewTestHTTPRequest(t, "GET", "/sessions/whoami", nil)
 			i := identity.Identity{Traits: []byte("{}")}
 			require.NoError(t, reg.PrivilegedIdentityPool().CreateIdentity(context.Background(), &i))
-			s, _ = session.NewActiveSession(ctx, &i, conf, time.Now(), identity.CredentialsTypePassword, identity.AuthenticatorAssuranceLevel1)
+			s, _ = session.NewActiveSession(req, &i, conf, time.Now(), identity.CredentialsTypePassword, identity.AuthenticatorAssuranceLevel1)
 
-			s, _ = session.NewActiveSession(ctx, &i, conf, time.Now(), identity.CredentialsTypePassword, identity.AuthenticatorAssuranceLevel1)
+			s, _ = session.NewActiveSession(req, &i, conf, time.Now(), identity.CredentialsTypePassword, identity.AuthenticatorAssuranceLevel1)
 
 			c := testhelpers.NewClientWithCookies(t)
 			testhelpers.MockHydrateCookieClient(t, c, pts.URL+"/session/set")
@@ -379,6 +389,7 @@ func TestManagerHTTP(t *testing.T) {
 			conf.MustSet(ctx, config.ViperKeySessionLifespan, "1m")
 
 			t.Run("required_aal=aal2", func(t *testing.T) {
+				req := x.NewTestHTTPRequest(t, "GET", "/sessions/whoami", nil)
 				idAAL2 := createAAL2Identity(t, reg)
 				idAAL1 := createAAL1Identity(t, reg)
 				require.NoError(t, reg.PrivilegedIdentityPool().CreateIdentity(context.Background(), idAAL1))
@@ -389,7 +400,7 @@ func TestManagerHTTP(t *testing.T) {
 					for _, m := range complete {
 						s.CompletedLoginFor(m, "")
 					}
-					require.NoError(t, s.Activate(ctx, i, conf, time.Now().UTC()))
+					require.NoError(t, s.Activate(req, i, conf, time.Now().UTC()))
 					err := reg.SessionManager().DoesSessionSatisfy((&http.Request{}).WithContext(context.Background()), s, requested)
 					if expectedError != nil {
 						require.ErrorAs(t, err, &expectedError)
@@ -424,7 +435,6 @@ func TestManagerHTTP(t *testing.T) {
 }
 
 func TestDoesSessionSatisfy(t *testing.T) {
-	ctx := context.Background()
 	conf, reg := internal.NewFastRegistryWithMocks(t)
 	testhelpers.SetDefaultIdentitySchema(conf, "file://./stub/identity.schema.json")
 
@@ -552,11 +562,12 @@ func TestDoesSessionSatisfy(t *testing.T) {
 				require.NoError(t, reg.PrivilegedIdentityPool().DeleteIdentity(context.Background(), id.ID))
 			})
 
+			req := x.NewTestHTTPRequest(t, "GET", "/sessions/whoami", nil)
 			s := session.NewInactiveSession()
 			for _, m := range tc.amr {
 				s.CompletedLoginFor(m.Method, m.AAL)
 			}
-			require.NoError(t, s.Activate(ctx, id, conf, time.Now().UTC()))
+			require.NoError(t, s.Activate(req, id, conf, time.Now().UTC()))
 
 			err := reg.SessionManager().DoesSessionSatisfy((&http.Request{}).WithContext(context.Background()), s, string(tc.requested))
 			if tc.err != nil {

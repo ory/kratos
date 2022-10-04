@@ -6,6 +6,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/ory/kratos/x"
+
 	"github.com/stretchr/testify/require"
 
 	"github.com/stretchr/testify/assert"
@@ -22,16 +24,18 @@ func TestSession(t *testing.T) {
 	authAt := time.Now()
 
 	t.Run("case=active session", func(t *testing.T) {
+		req := x.NewTestHTTPRequest(t, "GET", "/sessions/whoami", nil)
+
 		i := new(identity.Identity)
 		i.State = identity.StateActive
-		s, _ := session.NewActiveSession(ctx, i, conf, authAt, identity.CredentialsTypePassword, identity.AuthenticatorAssuranceLevel1)
+		s, _ := session.NewActiveSession(req, i, conf, authAt, identity.CredentialsTypePassword, identity.AuthenticatorAssuranceLevel1)
 		assert.True(t, s.IsActive())
 		require.NotEmpty(t, s.Token)
 		require.NotEmpty(t, s.LogoutToken)
 		assert.EqualValues(t, identity.CredentialsTypePassword, s.AMR[0].Method)
 
 		i = new(identity.Identity)
-		s, err := session.NewActiveSession(ctx, i, conf, authAt, identity.CredentialsTypePassword, identity.AuthenticatorAssuranceLevel1)
+		s, err := session.NewActiveSession(req, i, conf, authAt, identity.CredentialsTypePassword, identity.AuthenticatorAssuranceLevel1)
 		assert.Nil(t, s)
 		assert.ErrorIs(t, err, session.ErrIdentityDisabled)
 	})
@@ -51,17 +55,75 @@ func TestSession(t *testing.T) {
 	})
 
 	t.Run("case=activate", func(t *testing.T) {
+		req := x.NewTestHTTPRequest(t, "GET", "/sessions/whoami", nil)
+
 		s := session.NewInactiveSession()
-		require.NoError(t, s.Activate(ctx, &identity.Identity{State: identity.StateActive}, conf, authAt))
+		require.NoError(t, s.Activate(req, &identity.Identity{State: identity.StateActive}, conf, authAt))
 		assert.True(t, s.Active)
 		assert.Equal(t, identity.NoAuthenticatorAssuranceLevel, s.AuthenticatorAssuranceLevel)
 		assert.Equal(t, authAt, s.AuthenticatedAt)
 
 		s = session.NewInactiveSession()
-		require.ErrorIs(t, s.Activate(ctx, &identity.Identity{State: identity.StateInactive}, conf, authAt), session.ErrIdentityDisabled)
+		require.ErrorIs(t, s.Activate(req, &identity.Identity{State: identity.StateInactive}, conf, authAt), session.ErrIdentityDisabled)
 		assert.False(t, s.Active)
 		assert.Equal(t, identity.NoAuthenticatorAssuranceLevel, s.AuthenticatorAssuranceLevel)
 		assert.Empty(t, s.AuthenticatedAt)
+	})
+
+	t.Run("case=client information reverse proxy forward", func(t *testing.T) {
+		req := x.NewTestHTTPRequest(t, "GET", "/sessions/whoami", nil)
+		req.Header["User-Agent"] = []string{"Mozilla/5.0 (X11; Linux x86_64)", "AppleWebKit/537.36 (KHTML, like Gecko)", "Chrome/51.0.2704.103 Safari/537.36"}
+		req.Header["X-Forwarded-For"] = []string{"54.155.246.232", "10.145.1.10"}
+
+		s := session.NewInactiveSession()
+		require.NoError(t, s.Activate(req, &identity.Identity{State: identity.StateActive}, conf, authAt))
+		assert.True(t, s.Active)
+		assert.Equal(t, identity.NoAuthenticatorAssuranceLevel, s.AuthenticatorAssuranceLevel)
+		assert.Equal(t, authAt, s.AuthenticatedAt)
+		assert.Equal(t, 1, len(s.Devices))
+		assert.Equal(t, s.ID.String(), s.Devices[0].SessionID.String())
+		assert.Equal(t, "54.155.246.232", *s.Devices[0].IPAddress)
+		assert.Equal(t, "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/51.0.2704.103 Safari/537.36", *s.Devices[0].UserAgent)
+		assert.Equal(t, "", *s.Devices[0].Location)
+	})
+
+	t.Run("case=client information reverse proxy real IP set", func(t *testing.T) {
+		req := x.NewTestHTTPRequest(t, "GET", "/sessions/whoami", nil)
+		req.Header["User-Agent"] = []string{"Mozilla/5.0 (X11; Linux x86_64)", "AppleWebKit/537.36 (KHTML, like Gecko)", "Chrome/51.0.2704.103 Safari/537.36"}
+		req.Header.Set("X-Real-IP", "54.155.246.155")
+		req.Header["X-Forwarded-For"] = []string{"54.155.246.232", "10.145.1.10"}
+
+		s := session.NewInactiveSession()
+		require.NoError(t, s.Activate(req, &identity.Identity{State: identity.StateActive}, conf, authAt))
+		assert.True(t, s.Active)
+		assert.Equal(t, identity.NoAuthenticatorAssuranceLevel, s.AuthenticatorAssuranceLevel)
+		assert.Equal(t, authAt, s.AuthenticatedAt)
+		assert.Equal(t, 1, len(s.Devices))
+		assert.Equal(t, s.ID.String(), s.Devices[0].SessionID.String())
+		assert.NotNil(t, s.Devices[0].UpdatedAt)
+		assert.NotNil(t, s.Devices[0].CreatedAt)
+		assert.Equal(t, "54.155.246.155", *s.Devices[0].IPAddress)
+		assert.Equal(t, "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/51.0.2704.103 Safari/537.36", *s.Devices[0].UserAgent)
+		assert.Equal(t, "", *s.Devices[0].Location)
+	})
+
+	t.Run("case=client information CF", func(t *testing.T) {
+		req := x.NewTestHTTPRequest(t, "GET", "/sessions/whoami", nil)
+		req.Header["User-Agent"] = []string{"Mozilla/5.0 (X11; Linux x86_64)", "AppleWebKit/537.36 (KHTML, like Gecko)", "Chrome/51.0.2704.103 Safari/537.36"}
+		req.Header.Set("True-Client-IP", "54.155.246.232")
+		req.Header.Set("Cf-Ipcity", "Munich")
+		req.Header.Set("Cf-Ipcountry", "Germany")
+
+		s := session.NewInactiveSession()
+		require.NoError(t, s.Activate(req, &identity.Identity{State: identity.StateActive}, conf, authAt))
+		assert.True(t, s.Active)
+		assert.Equal(t, identity.NoAuthenticatorAssuranceLevel, s.AuthenticatorAssuranceLevel)
+		assert.Equal(t, authAt, s.AuthenticatedAt)
+		assert.Equal(t, 1, len(s.Devices))
+		assert.Equal(t, s.ID.String(), s.Devices[0].SessionID.String())
+		assert.Equal(t, "54.155.246.232", *s.Devices[0].IPAddress)
+		assert.Equal(t, "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/51.0.2704.103 Safari/537.36", *s.Devices[0].UserAgent)
+		assert.Equal(t, "Munich, Germany", *s.Devices[0].Location)
 	})
 
 	for k, tc := range []struct {
@@ -192,6 +254,8 @@ func TestSession(t *testing.T) {
 	}
 
 	t.Run("case=session refresh", func(t *testing.T) {
+		req := x.NewTestHTTPRequest(t, "GET", "/sessions/whoami", nil)
+
 		conf.MustSet(ctx, config.ViperKeySessionLifespan, "24h")
 		conf.MustSet(ctx, config.ViperKeySessionRefreshMinTimeLeft, "12h")
 		t.Cleanup(func() {
@@ -200,7 +264,7 @@ func TestSession(t *testing.T) {
 		})
 		i := new(identity.Identity)
 		i.State = identity.StateActive
-		s, _ := session.NewActiveSession(ctx, i, conf, authAt, identity.CredentialsTypePassword, identity.AuthenticatorAssuranceLevel1)
+		s, _ := session.NewActiveSession(req, i, conf, authAt, identity.CredentialsTypePassword, identity.AuthenticatorAssuranceLevel1)
 		assert.False(t, s.CanBeRefreshed(ctx, conf), "fresh session is not refreshable")
 
 		s.ExpiresAt = s.ExpiresAt.Add(-12 * time.Hour)

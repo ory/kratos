@@ -185,7 +185,7 @@ func (s *ManagerHTTP) FetchFromRequest(ctx context.Context, r *http.Request) (*S
 		return nil, errors.WithStack(NewErrNoActiveSessionFound())
 	}
 
-	se, err := s.r.SessionPersister().GetSessionByToken(ctx, token)
+	se, err := s.r.SessionPersister().GetSessionByToken(ctx, token, ExpandEverything)
 	if err != nil {
 		if errors.Is(err, herodot.ErrNotFound) || errors.Is(err, sqlcon.ErrNoRows) {
 			return nil, errors.WithStack(NewErrNoActiveSessionFound())
@@ -261,7 +261,7 @@ func (s *ManagerHTTP) DoesSessionSatisfy(r *http.Request, sess *Session, request
 
 func (s *ManagerHTTP) SessionAddAuthenticationMethods(ctx context.Context, sid uuid.UUID, ams ...AuthenticationMethod) error {
 	// Since we added the method, it also means that we have authenticated it
-	sess, err := s.r.SessionPersister().GetSession(ctx, sid)
+	sess, err := s.r.SessionPersister().GetSession(ctx, sid, ExpandNothing)
 	if err != nil {
 		return err
 	}

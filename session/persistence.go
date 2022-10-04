@@ -13,10 +13,10 @@ type PersistenceProvider interface {
 
 type Persister interface {
 	// GetSession retrieves a session from the store.
-	GetSession(ctx context.Context, sid uuid.UUID) (*Session, error)
+	GetSession(ctx context.Context, sid uuid.UUID, expandables Expandables) (*Session, error)
 
 	// ListSessionsByIdentity retrieves sessions for an identity from the store.
-	ListSessionsByIdentity(ctx context.Context, iID uuid.UUID, active *bool, page, perPage int, except uuid.UUID) ([]*Session, error)
+	ListSessionsByIdentity(ctx context.Context, iID uuid.UUID, active *bool, page, perPage int, except uuid.UUID, expandables Expandables) ([]*Session, error)
 
 	// UpsertSession inserts or updates a session into / in the store.
 	UpsertSession(ctx context.Context, s *Session) error
@@ -31,7 +31,7 @@ type Persister interface {
 	//
 	// Functionality is similar to GetSession but accepts a session token
 	// instead of a session ID.
-	GetSessionByToken(context.Context, string) (*Session, error)
+	GetSessionByToken(ctx context.Context, token string, expandables Expandables) (*Session, error)
 
 	// DeleteExpiredSessions deletes sessions that expired before the given time.
 	DeleteExpiredSessions(context.Context, time.Time, int) error
