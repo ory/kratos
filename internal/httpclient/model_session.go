@@ -25,6 +25,8 @@ type Session struct {
 	// A list of authenticators which were used to authenticate the session.
 	AuthenticationMethods       []SessionAuthenticationMethod `json:"authentication_methods,omitempty"`
 	AuthenticatorAssuranceLevel *AuthenticatorAssuranceLevel  `json:"authenticator_assurance_level,omitempty"`
+	// Devices has history of all endpoints where the session was used
+	Devices []SessionDevice `json:"devices,omitempty"`
 	// The Session Expiry  When this session expires at.
 	ExpiresAt *time.Time `json:"expires_at,omitempty"`
 	// Session ID
@@ -181,6 +183,38 @@ func (o *Session) SetAuthenticatorAssuranceLevel(v AuthenticatorAssuranceLevel) 
 	o.AuthenticatorAssuranceLevel = &v
 }
 
+// GetDevices returns the Devices field value if set, zero value otherwise.
+func (o *Session) GetDevices() []SessionDevice {
+	if o == nil || o.Devices == nil {
+		var ret []SessionDevice
+		return ret
+	}
+	return o.Devices
+}
+
+// GetDevicesOk returns a tuple with the Devices field value if set, nil otherwise
+// and a boolean to check if the value has been set.
+func (o *Session) GetDevicesOk() ([]SessionDevice, bool) {
+	if o == nil || o.Devices == nil {
+		return nil, false
+	}
+	return o.Devices, true
+}
+
+// HasDevices returns a boolean if a field has been set.
+func (o *Session) HasDevices() bool {
+	if o != nil && o.Devices != nil {
+		return true
+	}
+
+	return false
+}
+
+// SetDevices gets a reference to the given []SessionDevice and assigns it to the Devices field.
+func (o *Session) SetDevices(v []SessionDevice) {
+	o.Devices = v
+}
+
 // GetExpiresAt returns the ExpiresAt field value if set, zero value otherwise.
 func (o *Session) GetExpiresAt() time.Time {
 	if o == nil || o.ExpiresAt == nil {
@@ -306,6 +340,9 @@ func (o Session) MarshalJSON() ([]byte, error) {
 	}
 	if o.AuthenticatorAssuranceLevel != nil {
 		toSerialize["authenticator_assurance_level"] = o.AuthenticatorAssuranceLevel
+	}
+	if o.Devices != nil {
+		toSerialize["devices"] = o.Devices
 	}
 	if o.ExpiresAt != nil {
 		toSerialize["expires_at"] = o.ExpiresAt

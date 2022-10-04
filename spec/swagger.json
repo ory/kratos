@@ -3761,6 +3761,13 @@
         "authenticator_assurance_level": {
           "$ref": "#/definitions/authenticatorAssuranceLevel"
         },
+        "devices": {
+          "description": "Devices has history of all endpoints where the session was used",
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/sessionDevice"
+          }
+        },
         "expires_at": {
           "description": "The Session Expiry\n\nWhen this session expires at.",
           "type": "string",
@@ -3808,10 +3815,27 @@
       }
     },
     "sessionDevice": {
+      "description": "Device corresponding to a Session",
       "type": "object",
+      "required": [
+        "id"
+      ],
       "properties": {
+        "id": {
+          "description": "Device record ID",
+          "type": "string",
+          "format": "uuid"
+        },
+        "ip_address": {
+          "description": "IPAddress of the client",
+          "type": "string"
+        },
+        "location": {
+          "description": "Geo Location corresponding to the IP Address",
+          "type": "string"
+        },
         "user_agent": {
-          "description": "UserAgent of this device",
+          "description": "UserAgent of the client",
           "type": "string"
         }
       }

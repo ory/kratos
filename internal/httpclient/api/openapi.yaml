@@ -4554,6 +4554,15 @@ components:
       description: A Session
       example:
         expires_at: 2000-01-23T04:56:07.000+00:00
+        devices:
+        - location: location
+          id: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
+          ip_address: ip_address
+          user_agent: user_agent
+        - location: location
+          id: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
+          ip_address: ip_address
+          user_agent: user_agent
         authentication_methods:
         - completed_at: 2000-01-23T04:56:07.000+00:00
           method: link_recovery
@@ -4631,6 +4640,12 @@ components:
           type: array
         authenticator_assurance_level:
           $ref: '#/components/schemas/authenticatorAssuranceLevel'
+        devices:
+          description: Devices has history of all endpoints where the session was
+            used
+          items:
+            $ref: '#/components/schemas/sessionDevice'
+          type: array
         expires_at:
           description: |-
             The Session Expiry
@@ -4687,10 +4702,28 @@ components:
       title: List of (Used) AuthenticationMethods
       type: array
     sessionDevice:
+      description: Device corresponding to a Session
+      example:
+        location: location
+        id: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
+        ip_address: ip_address
+        user_agent: user_agent
       properties:
-        user_agent:
-          description: UserAgent of this device
+        id:
+          description: Device record ID
+          format: uuid
           type: string
+        ip_address:
+          description: IPAddress of the client
+          type: string
+        location:
+          description: Geo Location corresponding to the IP Address
+          type: string
+        user_agent:
+          description: UserAgent of the client
+          type: string
+      required:
+      - id
       type: object
     sessionList:
       items:
@@ -5219,6 +5252,15 @@ components:
         session_token: session_token
         session:
           expires_at: 2000-01-23T04:56:07.000+00:00
+          devices:
+          - location: location
+            id: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
+            ip_address: ip_address
+            user_agent: user_agent
+          - location: location
+            id: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
+            ip_address: ip_address
+            user_agent: user_agent
           authentication_methods:
           - completed_at: 2000-01-23T04:56:07.000+00:00
             method: link_recovery
@@ -5345,6 +5387,15 @@ components:
           metadata_public: ""
         session:
           expires_at: 2000-01-23T04:56:07.000+00:00
+          devices:
+          - location: location
+            id: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
+            ip_address: ip_address
+            user_agent: user_agent
+          - location: location
+            id: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
+            ip_address: ip_address
+            user_agent: user_agent
           authentication_methods:
           - completed_at: 2000-01-23T04:56:07.000+00:00
             method: link_recovery
