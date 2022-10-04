@@ -38,7 +38,7 @@ require (
 	github.com/go-errors/errors v1.0.1
 	github.com/go-openapi/strfmt v0.21.3
 	github.com/go-playground/validator/v10 v10.4.1
-	github.com/go-swagger/go-swagger v0.30.0
+	github.com/go-swagger/go-swagger v0.30.3
 	github.com/gobuffalo/fizz v1.14.2
 	github.com/gobuffalo/httptest v1.0.2
 	github.com/gobuffalo/pop/v6 v6.0.6
@@ -76,7 +76,7 @@ require (
 	github.com/ory/kratos-client-go v0.6.3-alpha.1
 	github.com/ory/mail/v3 v3.0.0
 	github.com/ory/nosurf v1.2.7
-	github.com/ory/x v0.0.474
+	github.com/ory/x v0.0.480
 	github.com/phayes/freeport v0.0.0-20180830031419-95f893ade6f2
 	github.com/pkg/errors v0.9.1
 	github.com/pquerna/otp v1.3.0
@@ -93,7 +93,7 @@ require (
 	github.com/zmb3/spotify/v2 v2.0.0
 	go.opentelemetry.io/otel v1.9.0
 	go.opentelemetry.io/otel/trace v1.9.0
-	golang.org/x/crypto v0.0.0-20220817201139-bc19a97f63c8
+	golang.org/x/crypto v0.0.0-20220829220503-c86fa9a7ed90
 	golang.org/x/net v0.0.0-20220826154423-83b083e8dc8b
 	golang.org/x/oauth2 v0.0.0-20220822191816-0ebed06d0094
 	golang.org/x/sync v0.0.0-20220722155255-886fb9371eb4
