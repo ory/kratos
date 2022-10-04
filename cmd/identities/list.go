@@ -1,32 +1,30 @@
 package identities
 
 import (
-	"fmt"
-
 	"github.com/spf13/cobra"
 
 	"github.com/ory/kratos/cmd/cliclient"
 	"github.com/ory/x/cmdx"
 )
 
-func NewListCmd(root *cobra.Command) *cobra.Command {
+func NewListCmd() *cobra.Command {
 	c := &cobra.Command{
 		Use:     "list",
 		Aliases: []string{"ls"},
 		Short:   "List resources",
 	}
-	c.AddCommand(NewListIdentitiesCmd(root))
+	c.AddCommand(NewListIdentitiesCmd())
 	cliclient.RegisterClientFlags(c.PersistentFlags())
 	cmdx.RegisterFormatFlags(c.PersistentFlags())
 	return c
 }
 
-func NewListIdentitiesCmd(root *cobra.Command) *cobra.Command {
+func NewListIdentitiesCmd() *cobra.Command {
 	return &cobra.Command{
 		Use:     "identities [<page> <per-page>]",
 		Short:   "List identities",
 		Long:    "List identities (paginated)",
-		Example: fmt.Sprintf("%[1]s ls identities 100 1", root.Use),
+		Example: "{{ .CommandPath }} 100 1",
 		Args:    cmdx.ZeroOrTwoArgs,
 		Aliases: []string{"ls"},
 		RunE: func(cmd *cobra.Command, args []string) error {

@@ -10,27 +10,27 @@ import (
 	"github.com/ory/x/cmdx"
 )
 
-func NewDeleteCmd(root *cobra.Command) *cobra.Command {
+func NewDeleteCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "delete",
 		Short: "Delete resources",
 	}
-	cmd.AddCommand(NewDeleteIdentityCmd(root))
+	cmd.AddCommand(NewDeleteIdentityCmd())
 	cliclient.RegisterClientFlags(cmd.PersistentFlags())
 	cmdx.RegisterFormatFlags(cmd.PersistentFlags())
 	return cmd
 }
 
-func NewDeleteIdentityCmd(root *cobra.Command) *cobra.Command {
+func NewDeleteIdentityCmd() *cobra.Command {
 	return &cobra.Command{
 		Use:   "identity id-0 [id-1] [id-2] [id-n]",
 		Short: "Delete one or more identities by their ID(s)",
 		Long: fmt.Sprintf(`This command deletes one or more identities by ID. To delete an identity by some selector, e.g. the recovery email address, use the list command in combination with jq.
 
 %s`, clihelpers.WarningJQIsComplicated),
-		Example: fmt.Sprintf(`To delete the identity with the recovery email address "foo@bar.com", run:
+		Example: `To delete the identity with the recovery email address "foo@bar.com", run:
 
-	%[1]s delete identity $(%[1]s list identities --format json | jq -r 'map(select(.recovery_addresses[].value == "foo@bar.com")) | .[].id')`, root.Use),
+	{{ .CommandPath }} $({{ .Root.Name }} list identities --format json | jq -r 'map(select(.recovery_addresses[].value == "foo@bar.com")) | .[].id')`,
 		Args: cobra.MinimumNArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			c, err := cliclient.NewClient(cmd)
