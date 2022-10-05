@@ -31,7 +31,7 @@
         "tags": [
           "v0alpha2"
         ],
-        "summary": "# Get WebAuthn JavaScript",
+        "summary": "Get WebAuthn JavaScript",
         "operationId": "getWebAuthnJavaScript",
         "responses": {
           "200": {
@@ -56,7 +56,7 @@
         "tags": [
           "v0alpha2"
         ],
-        "summary": "# List Messages",
+        "summary": "List Messages",
         "operationId": "adminListCourierMessages",
         "parameters": [
           {
@@ -132,7 +132,7 @@
         "tags": [
           "v0alpha2"
         ],
-        "summary": "# List Identities",
+        "summary": "List Identities",
         "operationId": "adminListIdentities",
         "parameters": [
           {
@@ -190,7 +190,7 @@
         "tags": [
           "v0alpha2"
         ],
-        "summary": "# Create an Identity",
+        "summary": "Create an Identity",
         "operationId": "adminCreateIdentity",
         "parameters": [
           {
@@ -250,7 +250,7 @@
         "tags": [
           "v0alpha2"
         ],
-        "summary": "# Get an Identity",
+        "summary": "Get an Identity",
         "operationId": "adminGetIdentity",
         "parameters": [
           {
@@ -311,7 +311,7 @@
         "tags": [
           "v0alpha2"
         ],
-        "summary": "# Update an Identity",
+        "summary": "Update an Identity",
         "operationId": "adminUpdateIdentity",
         "parameters": [
           {
@@ -379,7 +379,7 @@
         "tags": [
           "v0alpha2"
         ],
-        "summary": "# Delete an Identity",
+        "summary": "Delete an Identity",
         "operationId": "adminDeleteIdentity",
         "parameters": [
           {
@@ -428,7 +428,7 @@
         "tags": [
           "v0alpha2"
         ],
-        "summary": "# Patch an Identity",
+        "summary": "Patch an Identity",
         "operationId": "adminPatchIdentity",
         "parameters": [
           {
@@ -636,7 +636,7 @@
         "tags": [
           "v0alpha2"
         ],
-        "summary": "# Create a Recovery Link",
+        "summary": "Create a Recovery Link",
         "operationId": "adminCreateSelfServiceRecoveryCode",
         "parameters": [
           {
@@ -691,7 +691,7 @@
         "tags": [
           "v0alpha2"
         ],
-        "summary": "# Create a Recovery Link",
+        "summary": "Create a Recovery Link",
         "operationId": "adminCreateSelfServiceRecoveryLink",
         "parameters": [
           {
@@ -793,7 +793,7 @@
         "tags": [
           "health"
         ],
-        "summary": "# Check alive status",
+        "summary": "Check alive status",
         "operationId": "isInstanceAlive",
         "responses": {
           "200": {
@@ -820,7 +820,7 @@
         "tags": [
           "health"
         ],
-        "summary": "# Check readiness status",
+        "summary": "Check readiness status",
         "operationId": "isInstanceReady",
         "responses": {
           "200": {
@@ -947,7 +947,7 @@
         "tags": [
           "v0alpha2"
         ],
-        "summary": "# Get Self-Service Errors",
+        "summary": "Get Self-Service Errors",
         "operationId": "getSelfServiceError",
         "parameters": [
           {
@@ -1005,7 +1005,7 @@
         "tags": [
           "v0alpha2"
         ],
-        "summary": "# Submit a Login Flow",
+        "summary": "Submit a Login Flow",
         "operationId": "submitSelfServiceLoginFlow",
         "parameters": [
           {
@@ -1143,7 +1143,7 @@
         "tags": [
           "v0alpha2"
         ],
-        "summary": "# Initialize Login Flow for Browsers",
+        "summary": "Initialize Login Flow for Browsers",
         "operationId": "initializeSelfServiceLoginFlowForBrowsers",
         "parameters": [
           {
@@ -1209,7 +1209,7 @@
         "tags": [
           "v0alpha2"
         ],
-        "summary": "# Get Login Flow",
+        "summary": "Get Login Flow",
         "operationId": "getSelfServiceLoginFlow",
         "parameters": [
           {
@@ -1273,7 +1273,7 @@
         "tags": [
           "v0alpha2"
         ],
-        "summary": "# Complete Self-Service Logout",
+        "summary": "Complete Self-Service Logout",
         "operationId": "submitSelfServiceLogoutFlow",
         "parameters": [
           {
@@ -1365,7 +1365,7 @@
         "tags": [
           "v0alpha2"
         ],
-        "summary": "# Create a Logout URL for Browsers",
+        "summary": "Create a Logout URL for Browsers",
         "operationId": "createSelfServiceLogoutFlowUrlForBrowsers",
         "parameters": [
           {
@@ -1414,7 +1414,7 @@
         "tags": [
           "v0alpha2"
         ],
-        "summary": "# Complete Recovery Flow",
+        "summary": "Complete Recovery Flow",
         "operationId": "submitSelfServiceRecoveryFlow",
         "parameters": [
           {
@@ -1526,7 +1526,7 @@
         "tags": [
           "v0alpha2"
         ],
-        "summary": "# Initialize Recovery Flow for Browsers",
+        "summary": "Initialize Recovery Flow for Browsers",
         "operationId": "initializeSelfServiceRecoveryFlowForBrowsers",
         "parameters": [
           {
@@ -1574,7 +1574,7 @@
         "tags": [
           "v0alpha2"
         ],
-        "summary": "# Get Recovery Flow",
+        "summary": "Get Recovery Flow",
         "operationId": "getSelfServiceRecoveryFlow",
         "parameters": [
           {
@@ -1636,7 +1636,7 @@
         "tags": [
           "v0alpha2"
         ],
-        "summary": "# Submit a Registration Flow",
+        "summary": "Submit a Registration Flow",
         "operationId": "submitSelfServiceRegistrationFlow",
         "parameters": [
           {
@@ -1745,7 +1745,7 @@
         "tags": [
           "v0alpha2"
         ],
-        "summary": "# Initialize Registration Flow for Browsers",
+        "summary": "Initialize Registration Flow for Browsers",
         "operationId": "initializeSelfServiceRegistrationFlowForBrowsers",
         "parameters": [
           {
@@ -1787,7 +1787,7 @@
         "tags": [
           "v0alpha2"
         ],
-        "summary": "# Get Registration Flow",
+        "summary": "Get Registration Flow",
         "operationId": "getSelfServiceRegistrationFlow",
         "parameters": [
           {
@@ -1860,7 +1860,7 @@
         "tags": [
           "v0alpha2"
         ],
-        "summary": "# Complete Settings Flow",
+        "summary": "Complete Settings Flow",
         "operationId": "submitSelfServiceSettingsFlow",
         "parameters": [
           {
@@ -1992,7 +1992,7 @@
         "tags": [
           "v0alpha2"
         ],
-        "summary": "# Initialize Settings Flow for Browsers",
+        "summary": "Initialize Settings Flow for Browsers",
         "operationId": "initializeSelfServiceSettingsFlowForBrowsers",
         "parameters": [
           {
@@ -2058,7 +2058,7 @@
         "tags": [
           "v0alpha2"
         ],
-        "summary": "# Get Settings Flow",
+        "summary": "Get Settings Flow",
         "operationId": "getSelfServiceSettingsFlow",
         "parameters": [
           {
@@ -2138,7 +2138,7 @@
         "tags": [
           "v0alpha2"
         ],
-        "summary": "# Complete Verification Flow",
+        "summary": "Complete Verification Flow",
         "operationId": "submitSelfServiceVerificationFlow",
         "parameters": [
           {
@@ -2244,7 +2244,7 @@
         "tags": [
           "v0alpha2"
         ],
-        "summary": "# Initialize Verification Flow for Browser Clients",
+        "summary": "Initialize Verification Flow for Browser Clients",
         "operationId": "initializeSelfServiceVerificationFlowForBrowsers",
         "parameters": [
           {
@@ -2286,7 +2286,7 @@
         "tags": [
           "v0alpha2"
         ],
-        "summary": "# Get Verification Flow",
+        "summary": "Get Verification Flow",
         "operationId": "getSelfServiceVerificationFlow",
         "parameters": [
           {
@@ -2481,7 +2481,7 @@
         "tags": [
           "v0alpha2"
         ],
-        "summary": "# Check Who the Current HTTP Session Belongs To",
+        "summary": "Check Who the Current HTTP Session Belongs To",
         "operationId": "toSession",
         "parameters": [
           {
@@ -2580,7 +2580,7 @@
         "tags": [
           "version"
         ],
-        "summary": "# Get service version",
+        "summary": "Get service version",
         "operationId": "getVersion",
         "responses": {
           "200": {

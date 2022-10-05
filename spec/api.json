@@ -2534,7 +2534,7 @@
             "description": "webAuthnJavaScript"
           }
         },
-        "summary": "# Get WebAuthn JavaScript",
+        "summary": "Get WebAuthn JavaScript",
         "tags": [
           "v0alpha2"
         ]
@@ -2617,7 +2617,7 @@
             "description": "jsonError"
           }
         },
-        "summary": "# List Messages",
+        "summary": "List Messages",
         "tags": [
           "v0alpha2"
         ]
@@ -2679,7 +2679,7 @@
             "oryAccessToken": []
           }
         ],
-        "summary": "# List Identities",
+        "summary": "List Identities",
         "tags": [
           "v0alpha2"
         ]
@@ -2744,7 +2744,7 @@
             "oryAccessToken": []
           }
         ],
-        "summary": "# Create an Identity",
+        "summary": "Create an Identity",
         "tags": [
           "v0alpha2"
         ]
@@ -2795,7 +2795,7 @@
             "oryAccessToken": []
           }
         ],
-        "summary": "# Delete an Identity",
+        "summary": "Delete an Identity",
         "tags": [
           "v0alpha2"
         ]
@@ -2862,7 +2862,7 @@
             "oryAccessToken": []
           }
         ],
-        "summary": "# Get an Identity",
+        "summary": "Get an Identity",
         "tags": [
           "v0alpha2"
         ]
@@ -2948,7 +2948,7 @@
             "oryAccessToken": []
           }
         ],
-        "summary": "# Patch an Identity",
+        "summary": "Patch an Identity",
         "tags": [
           "v0alpha2"
         ]
@@ -3034,7 +3034,7 @@
             "oryAccessToken": []
           }
         ],
-        "summary": "# Update an Identity",
+        "summary": "Update an Identity",
         "tags": [
           "v0alpha2"
         ]
@@ -3274,7 +3274,7 @@
             "description": "jsonError"
           }
         },
-        "summary": "# Create a Recovery Link",
+        "summary": "Create a Recovery Link",
         "tags": [
           "v0alpha2"
         ]
@@ -3336,7 +3336,7 @@
             "description": "jsonError"
           }
         },
-        "summary": "# Create a Recovery Link",
+        "summary": "Create a Recovery Link",
         "tags": [
           "v0alpha2"
         ]
@@ -3669,7 +3669,7 @@
             "description": "jsonError"
           }
         },
-        "summary": "# Get Self-Service Errors",
+        "summary": "Get Self-Service Errors",
         "tags": [
           "v0alpha2"
         ]
@@ -3777,7 +3777,7 @@
             "description": "jsonError"
           }
         },
-        "summary": "# Submit a Login Flow",
+        "summary": "Submit a Login Flow",
         "tags": [
           "v0alpha2"
         ]
@@ -3924,7 +3924,7 @@
             "description": "jsonError"
           }
         },
-        "summary": "# Initialize Login Flow for Browsers",
+        "summary": "Initialize Login Flow for Browsers",
         "tags": [
           "v0alpha2"
         ]
@@ -4005,7 +4005,7 @@
             "description": "jsonError"
           }
         },
-        "summary": "# Get Login Flow",
+        "summary": "Get Login Flow",
         "tags": [
           "v0alpha2"
         ]
@@ -4051,7 +4051,7 @@
             "description": "jsonError"
           }
         },
-        "summary": "# Complete Self-Service Logout",
+        "summary": "Complete Self-Service Logout",
         "tags": [
           "v0alpha2"
         ]
@@ -4149,7 +4149,7 @@
             "description": "jsonError"
           }
         },
-        "summary": "# Create a Logout URL for Browsers",
+        "summary": "Create a Logout URL for Browsers",
         "tags": [
           "v0alpha2"
         ]
@@ -4257,7 +4257,7 @@
             "description": "jsonError"
           }
         },
-        "summary": "# Complete Recovery Flow",
+        "summary": "Complete Recovery Flow",
         "tags": [
           "v0alpha2"
         ]
@@ -4354,7 +4354,7 @@
             "description": "jsonError"
           }
         },
-        "summary": "# Initialize Recovery Flow for Browsers",
+        "summary": "Initialize Recovery Flow for Browsers",
         "tags": [
           "v0alpha2"
         ]
@@ -4425,7 +4425,7 @@
             "description": "jsonError"
           }
         },
-        "summary": "# Get Recovery Flow",
+        "summary": "Get Recovery Flow",
         "tags": [
           "v0alpha2"
         ]
@@ -4525,7 +4525,7 @@
             "description": "jsonError"
           }
         },
-        "summary": "# Submit a Registration Flow",
+        "summary": "Submit a Registration Flow",
         "tags": [
           "v0alpha2"
         ]
@@ -4612,7 +4612,7 @@
             "description": "jsonError"
           }
         },
-        "summary": "# Initialize Registration Flow for Browsers",
+        "summary": "Initialize Registration Flow for Browsers",
         "tags": [
           "v0alpha2"
         ]
@@ -4693,7 +4693,7 @@
             "description": "jsonError"
           }
         },
-        "summary": "# Get Registration Flow",
+        "summary": "Get Registration Flow",
         "tags": [
           "v0alpha2"
         ]
@@ -4826,7 +4826,7 @@
             "sessionToken": []
           }
         ],
-        "summary": "# Complete Settings Flow",
+        "summary": "Complete Settings Flow",
         "tags": [
           "v0alpha2"
         ]
@@ -4961,7 +4961,7 @@
             "description": "jsonError"
           }
         },
-        "summary": "# Initialize Settings Flow for Browsers",
+        "summary": "Initialize Settings Flow for Browsers",
         "tags": [
           "v0alpha2"
         ]
@@ -5060,7 +5060,7 @@
             "description": "jsonError"
           }
         },
-        "summary": "# Get Settings Flow",
+        "summary": "Get Settings Flow",
         "tags": [
           "v0alpha2"
         ]
@@ -5158,7 +5158,7 @@
             "description": "jsonError"
           }
         },
-        "summary": "# Complete Verification Flow",
+        "summary": "Complete Verification Flow",
         "tags": [
           "v0alpha2"
         ]
@@ -5245,7 +5245,7 @@
             "description": "jsonError"
           }
         },
-        "summary": "# Initialize Verification Flow for Browser Clients",
+        "summary": "Initialize Verification Flow for Browser Clients",
         "tags": [
           "v0alpha2"
         ]
@@ -5316,7 +5316,7 @@
             "description": "jsonError"
           }
         },
-        "summary": "# Get Verification Flow",
+        "summary": "Get Verification Flow",
         "tags": [
           "v0alpha2"
         ]
@@ -5569,7 +5569,7 @@
             "description": "jsonError"
           }
         },
-        "summary": "# Check Who the Current HTTP Session Belongs To",
+        "summary": "Check Who the Current HTTP Session Belongs To",
         "tags": [
           "v0alpha2"
         ]
