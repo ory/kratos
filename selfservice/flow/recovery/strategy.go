@@ -4,6 +4,8 @@ import (
 	"context"
 	"net/http"
 
+	"github.com/pkg/errors"
+
 	"github.com/ory/herodot"
 	"github.com/ory/kratos/ui/node"
 
@@ -45,7 +47,7 @@ func (s Strategies) Strategy(id string) (Strategy, error) {
 		}
 	}
 
-	return nil, herodot.ErrInternalServerError.WithReasonf("unable to find strategy for %s have %v", id, ids)
+	return nil, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("unable to find strategy for %s have %v", id, ids))
 }
 
 func (s Strategies) MustStrategy(id string) Strategy {

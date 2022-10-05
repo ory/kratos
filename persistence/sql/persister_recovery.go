@@ -2,9 +2,11 @@ package sql
 
 import (
 	"context"
-	"errors"
+	"crypto/subtle"
 	"fmt"
 	"time"
+
+	"github.com/pkg/errors"
 
 	"github.com/gobuffalo/pop/v6"
 	"github.com/gofrs/uuid"
@@ -165,6 +167,11 @@ func (p *Persister) CreateRecoveryCode(ctx context.Context, dto *code.RecoveryCo
 	return recoveryCode, nil
 }
 
+// UseRecoveryCode attempts to "use" the supplied code in the flow
+//
+// If the supplied code matched a code from the flow, no error is returned
+// If an invalid code was submitted with this flow more than 5 times, an error is returned
+// TODO: Extract the business logic to a new service/manager (https://github.com/ory/kratos/issues/2785)
 func (p *Persister) UseRecoveryCode(ctx context.Context, fID uuid.UUID, codeVal string) (*code.RecoveryCode, error) {
 	ctx, span := p.r.Tracer(ctx).Tracer().Start(ctx, "persistence.sql.UseRecoveryCode")
 	defer span.End()
@@ -195,7 +202,7 @@ func (p *Persister) UseRecoveryCode(ctx context.Context, fID uuid.UUID, codeVal 
 		}
 
 		if submitCount > 5 {
-			return code.ErrCodeSubmittedTooOften
+			return errors.WithStack(code.ErrCodeSubmittedTooOften)
 		}
 
 		var recoveryCodes []code.RecoveryCode
@@ -210,10 +217,10 @@ func (p *Persister) UseRecoveryCode(ctx context.Context, fID uuid.UUID, codeVal 
 
 	secrets:
 		for _, secret := range p.r.Config().SecretsSession(ctx) {
-			suppliedCode := p.hmacValueWithSecret(ctx, codeVal, secret)
+			suppliedCode := []byte(p.hmacValueWithSecret(ctx, codeVal, secret))
 			for i := range recoveryCodes {
 				code := recoveryCodes[i]
-				if code.Code != suppliedCode {
+				if subtle.ConstantTimeCompare([]byte(code.Code), suppliedCode) == 1 {
 					// Not the supplied code
 					continue
 				}
