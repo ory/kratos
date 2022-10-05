@@ -169,8 +169,10 @@ type V0alpha2Api interface {
 	AdminListIdentitySessionsExecute(r V0alpha2ApiApiAdminListIdentitySessionsRequest) ([]Session, *http.Response, error)
 
 	/*
-			 * AdminPatchIdentity Partially updates an Identity's field using [JSON Patch](https://jsonpatch.com/)
-			 * NOTE: The fields `id`, `stateChangedAt` and `credentials` are not updateable.
+			 * AdminPatchIdentity Patch an Identity
+			 * Partially updates an Identity's field using [JSON Patch](https://jsonpatch.com/)
+
+		NOTE: The fields `id`, `stateChangedAt` and `credentials` are not updateable.
 
 		Learn how identities work in [Ory Kratos' User And Identity Model Documentation](https://www.ory.sh/docs/next/kratos/concepts/identity-user-model).
 			 * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
@@ -2498,8 +2500,10 @@ func (r V0alpha2ApiApiAdminPatchIdentityRequest) Execute() (*Identity, *http.Res
 }
 
 /*
-  - AdminPatchIdentity Partially updates an Identity's field using [JSON Patch](https://jsonpatch.com/)
-  - NOTE: The fields `id`, `stateChangedAt` and `credentials` are not updateable.
+  - AdminPatchIdentity Patch an Identity
+  - Partially updates an Identity's field using [JSON Patch](https://jsonpatch.com/)
+
+NOTE: The fields `id`, `stateChangedAt` and `credentials` are not updateable.
 
 Learn how identities work in [Ory Kratos' User And Identity Model Documentation](https://www.ory.sh/docs/next/kratos/concepts/identity-user-model).
   - @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().

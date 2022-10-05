@@ -2798,7 +2798,7 @@
         ]
       },
       "patch": {
-        "description": "NOTE: The fields `id`, `stateChangedAt` and `credentials` are not updateable.\n\nLearn how identities work in [Ory Kratos' User And Identity Model Documentation](https://www.ory.sh/docs/next/kratos/concepts/identity-user-model).",
+        "description": "Partially updates an Identity's field using [JSON Patch](https://jsonpatch.com/)\n\nNOTE: The fields `id`, `stateChangedAt` and `credentials` are not updateable.\n\nLearn how identities work in [Ory Kratos' User And Identity Model Documentation](https://www.ory.sh/docs/next/kratos/concepts/identity-user-model).",
         "operationId": "adminPatchIdentity",
         "parameters": [
           {
@@ -2878,7 +2878,7 @@
             "oryAccessToken": []
           }
         ],
-        "summary": "Partially updates an Identity's field using [JSON Patch](https://jsonpatch.com/)",
+        "summary": "Patch an Identity",
         "tags": [
           "v0alpha2"
         ]

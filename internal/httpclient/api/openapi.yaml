@@ -306,6 +306,8 @@ paths:
       - v0alpha2
     patch:
       description: |-
+        Partially updates an Identity's field using [JSON Patch](https://jsonpatch.com/)
+
         NOTE: The fields `id`, `stateChangedAt` and `credentials` are not updateable.
 
         Learn how identities work in [Ory Kratos' User And Identity Model Documentation](https://www.ory.sh/docs/next/kratos/concepts/identity-user-model).
@@ -358,7 +360,7 @@ paths:
           description: jsonError
       security:
       - oryAccessToken: []
-      summary: Partially updates an Identity's field using [JSON Patch](https://jsonpatch.com/)
+      summary: Patch an Identity
       tags:
       - v0alpha2
     put:
