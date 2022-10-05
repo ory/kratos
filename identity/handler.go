@@ -560,6 +560,8 @@ type adminPatchIdentity struct {
 
 // swagger:route PATCH /admin/identities/{id} v0alpha2 adminPatchIdentity
 //
+// # Patch an Identity
+//
 // Partially updates an Identity's field using [JSON Patch](https://jsonpatch.com/)
 //
 // NOTE: The fields `id`, `stateChangedAt` and `credentials` are not updateable.
