@@ -414,6 +414,7 @@ func TestCompleteLogin(t *testing.T) {
 
 		t.Run("case=succeeds with passwordless login", func(t *testing.T) {
 			run := func(t *testing.T, spa bool) {
+				conf.MustSet(ctx, config.ViperKeySessionWhoAmIAAL, "aal1")
 				// We load our identity which we will use to replay the webauth session
 				id := createIdentityWithWebAuthn(t, identity.Credentials{
 					Config:  loginFixtureSuccessV1PasswordlessCredentials,

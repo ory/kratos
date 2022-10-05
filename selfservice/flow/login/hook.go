@@ -66,18 +66,19 @@ func NewHookExecutor(d executorDependencies) *HookExecutor {
 	return &HookExecutor{d: d}
 }
 
-func (e *HookExecutor) requiresAAL2(r *http.Request, s *session.Session, a *Flow) (*session.ErrAALNotSatisfied, bool) {
-	var aalErr *session.ErrAALNotSatisfied
+func (e *HookExecutor) requiresAAL2(r *http.Request, s *session.Session, a *Flow) (error, bool) {
 	err := e.d.SessionManager().DoesSessionSatisfy(r, s, e.d.Config().SessionWhoAmIAAL(r.Context()))
-	if ok := errors.As(err, &aalErr); !ok {
-		return nil, false
+
+	if aalErr := new(session.ErrAALNotSatisfied); errors.As(err, &aalErr) {
+		if aalErr.PassReturnToAndLoginChallengeParameters(a.RequestURL) != nil {
+			aalErr.WithDetail("pass_request_params_error", "failed to pass request parameters to aalErr.RedirectTo")
+		}
+		return aalErr, true
+	} else if err != nil {
+		return errors.WithStack(err), true
 	}
 
-	if err := aalErr.PassReturnToAndLoginChallengeParameters(a.RequestURL); err != nil {
-		return nil, false
-	}
-
-	return aalErr, true
+	return nil, false
 }
 
 func (e *HookExecutor) handleLoginError(_ http.ResponseWriter, r *http.Request, g node.UiNodeGroup, f *Flow, i *identity.Identity, flowError error) error {
@@ -198,9 +199,15 @@ func (e *HookExecutor) PostLoginHook(w http.ResponseWriter, r *http.Request, g n
 	}
 
 	// If we detect that whoami would require a higher AAL, we redirect!
-	if aalErr, required := e.requiresAAL2(r, s, a); required {
-		http.Redirect(w, r, aalErr.RedirectTo, http.StatusSeeOther)
-		return nil
+	if err, required := e.requiresAAL2(r, s, a); err != nil {
+		if aalErr := new(session.ErrAALNotSatisfied); errors.As(err, &aalErr) {
+			http.Redirect(w, r, aalErr.RedirectTo, http.StatusSeeOther)
+			return nil
+		} else {
+			return errors.WithStack(err)
+		}
+	} else if required {
+		return errors.New("this should never happen; error must not be nil when required is true")
 	}
 
 	if a.HydraLoginChallenge.Valid {
