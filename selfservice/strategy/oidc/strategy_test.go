@@ -452,6 +452,7 @@ func TestStrategy(t *testing.T) {
 		scope = []string{"openid"}
 		claims = idTokenClaims{}
 		claims.traits.website = "https://www.ory.sh/kratos"
+		claims.traits.groups = []string{"group1", "group2"}
 		claims.metadataPublic.picture = "picture.png"
 		claims.metadataAdmin.phoneNumber = "911"
 
@@ -474,6 +475,7 @@ func TestStrategy(t *testing.T) {
 			ai(t, res, body)
 			assert.Equal(t, "https://www.ory.sh/kratos", gjson.GetBytes(body, "identity.traits.website").String(), "%s", body)
 			assert.Equal(t, "valid-name", gjson.GetBytes(body, "identity.traits.name").String(), "%s", body)
+			assert.Equal(t, "[\"group1\",\"group2\"]", gjson.GetBytes(body, "identity.traits.groups").String(), "%s", body)
 		})
 	})
 
