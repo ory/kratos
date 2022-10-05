@@ -11,7 +11,7 @@ import (
 	"github.com/ory/kratos/session"
 )
 
-func TestErrAALNotSatisfied_PassReturnToParameter(t *testing.T) {
+func TestErrAALNotSatisfied_PassReturnToAndLoginChallengeParameters(t *testing.T) {
 	cases := []struct {
 		name       string
 		instance   *session.ErrAALNotSatisfied
@@ -38,6 +38,26 @@ func TestErrAALNotSatisfied_PassReturnToParameter(t *testing.T) {
 			requestURL: "https://localhost:1234/?return_to=https%3A%2F%2Fory.sh",
 			wantErr:    assert.NoError,
 			expected:   "https://localhost/?foo=bar&return_to=https%3A%2F%2Fory.sh",
+		},
+		{
+			name: "pass login_challenge parameter",
+			instance: &session.ErrAALNotSatisfied{
+				DefaultError: &herodot.DefaultError{},
+				RedirectTo:   "https://localhost/?foo=bar",
+			},
+			requestURL: "https://localhost:1234/?login_challenge=badee1",
+			wantErr:    assert.NoError,
+			expected:   "https://localhost/?foo=bar&login_challenge=badee1",
+		},
+		{
+			name: "pass login_challenge and return_to parameters",
+			instance: &session.ErrAALNotSatisfied{
+				DefaultError: &herodot.DefaultError{},
+				RedirectTo:   "https://localhost/?foo=bar",
+			},
+			requestURL: "https://localhost:1234/?return_to=https%3A%2F%2Fory.sh&login_challenge=badee1",
+			wantErr:    assert.NoError,
+			expected:   "https://localhost/?foo=bar&login_challenge=badee1&return_to=https%3A%2F%2Fory.sh",
 		},
 		{
 			name: "invalid RedirectTo URL",
