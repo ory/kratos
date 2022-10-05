@@ -31,7 +31,7 @@ func TestPersister(ctx context.Context, conf *config.Config, p interface {
 
 		t.Run("code=recovery", func(t *testing.T) {
 
-			newRecoveryCodeDTO := func(t *testing.T, email string) (*code.RecoveryCodeDTO, *recovery.Flow, *identity.RecoveryAddress) {
+			newRecoveryCodeDTO := func(t *testing.T, email string) (*code.CreateRecoveryCodeParams, *recovery.Flow, *identity.RecoveryAddress) {
 				var f recovery.Flow
 				require.NoError(t, faker.FakeData(&f))
 				require.NoError(t, p.CreateRecoveryFlow(ctx, &f))
@@ -44,8 +44,8 @@ func TestPersister(ctx context.Context, conf *config.Config, p interface {
 
 				require.NoError(t, p.CreateIdentity(ctx, &i))
 
-				return &code.RecoveryCodeDTO{
-					Code:            string(randx.MustString(8, randx.Numeric)),
+				return &code.CreateRecoveryCodeParams{
+					RawCode:         string(randx.MustString(8, randx.Numeric)),
 					FlowID:          f.ID,
 					RecoveryAddress: &i.RecoveryAddresses[0],
 					ExpiresIn:       time.Minute,
@@ -76,18 +76,18 @@ func TestPersister(ctx context.Context, conf *config.Config, p interface {
 
 				t.Run("not work on another network", func(t *testing.T) {
 					_, p := testhelpers.NewNetwork(t, ctx, p)
-					_, err := p.UseRecoveryCode(ctx, f.ID, dto.Code)
+					_, err := p.UseRecoveryCode(ctx, f.ID, dto.RawCode)
 					require.ErrorIs(t, err, code.ErrCodeNotFound)
 				})
 
-				actual, err := p.UseRecoveryCode(ctx, f.ID, dto.Code)
+				actual, err := p.UseRecoveryCode(ctx, f.ID, dto.RawCode)
 				require.NoError(t, err)
 				assert.Equal(t, nid, actual.NID)
 				assert.Equal(t, dto.IdentityID, actual.IdentityID)
-				assert.NotEqual(t, dto.Code, actual.Code)
+				assert.NotEqual(t, dto.RawCode, actual.CodeHMAC)
 				assert.EqualValues(t, f.ID, actual.FlowID)
 
-				_, err = p.UseRecoveryCode(ctx, f.ID, dto.Code)
+				_, err = p.UseRecoveryCode(ctx, f.ID, dto.RawCode)
 				require.ErrorIs(t, err, code.ErrCodeAlreadyUsed)
 			})
 
@@ -97,7 +97,7 @@ func TestPersister(ctx context.Context, conf *config.Config, p interface {
 				_, err := p.CreateRecoveryCode(ctx, dto)
 				require.NoError(t, err)
 
-				_, err = p.UseRecoveryCode(ctx, f.ID, dto.Code)
+				_, err = p.UseRecoveryCode(ctx, f.ID, dto.RawCode)
 				assert.Error(t, err)
 			})
 

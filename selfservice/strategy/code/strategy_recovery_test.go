@@ -553,9 +553,10 @@ func TestRecovery(t *testing.T) {
 				} else {
 					f = testhelpers.InitializeRecoveryFlowViaBrowser(t, client, isSPA, public, nil)
 				}
+				req := httptest.NewRequest("GET", "/sessions/whoami", nil)
 
 				session, err := session.NewActiveSession(
-					ctx,
+					req,
 					&identity.Identity{ID: x.NewUUID(), State: identity.StateActive},
 					testhelpers.NewSessionLifespanProvider(time.Hour),
 					time.Now(),
@@ -659,11 +660,12 @@ func TestRecovery(t *testing.T) {
 		email := strings.ToLower(testhelpers.RandomEmail())
 		id := createIdentityToRecover(t, reg, email)
 
-		sess, err := session.NewActiveSession(ctx, id, conf, time.Now(), identity.CredentialsTypePassword, identity.AuthenticatorAssuranceLevel1)
+		req := httptest.NewRequest("GET", "/sessions/whoami", nil)
+		sess, err := session.NewActiveSession(req, id, conf, time.Now(), identity.CredentialsTypePassword, identity.AuthenticatorAssuranceLevel1)
 		require.NoError(t, err)
 		require.NoError(t, reg.SessionPersister().UpsertSession(context.Background(), sess))
 
-		actualSession, err := reg.SessionPersister().GetSession(context.Background(), sess.ID)
+		actualSession, err := reg.SessionPersister().GetSession(context.Background(), sess.ID, session.ExpandNothing)
 		require.NoError(t, err)
 		assert.True(t, actualSession.IsActive())
 
@@ -689,7 +691,7 @@ func TestRecovery(t *testing.T) {
 		cookies := spew.Sdump(cl.Jar.Cookies(urlx.ParseOrPanic(public.URL)))
 		assert.Contains(t, cookies, "ory_kratos_session")
 
-		actualSession, err = reg.SessionPersister().GetSession(context.Background(), sess.ID)
+		actualSession, err = reg.SessionPersister().GetSession(context.Background(), sess.ID, session.ExpandNothing)
 		require.NoError(t, err)
 		assert.False(t, actualSession.IsActive())
 	})

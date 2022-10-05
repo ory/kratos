@@ -133,7 +133,7 @@ func (p *Persister) DeleteExpiredRecoveryFlows(ctx context.Context, expiresAt ti
 	return nil
 }
 
-func (p *Persister) CreateRecoveryCode(ctx context.Context, dto *code.RecoveryCodeDTO) (*code.RecoveryCode, error) {
+func (p *Persister) CreateRecoveryCode(ctx context.Context, dto *code.CreateRecoveryCodeParams) (*code.RecoveryCode, error) {
 	ctx, span := p.r.Tracer(ctx).Tracer().Start(ctx, "persistence.sql.CreateRecoveryCode")
 	defer span.End()
 
@@ -141,7 +141,7 @@ func (p *Persister) CreateRecoveryCode(ctx context.Context, dto *code.RecoveryCo
 
 	recoveryCode := &code.RecoveryCode{
 		ID:         x.NewUUID(),
-		Code:       p.hmacValue(ctx, dto.Code),
+		CodeHMAC:   p.hmacValue(ctx, dto.RawCode),
 		ExpiresAt:  now.UTC().Add(dto.ExpiresIn),
 		IssuedAt:   now,
 		CodeType:   dto.CodeType,
@@ -185,8 +185,8 @@ func (p *Persister) UseRecoveryCode(ctx context.Context, fID uuid.UUID, codeVal 
 	if err := sqlcon.HandleError(p.Transaction(ctx, func(ctx context.Context, tx *pop.Connection) (err error) {
 
 		/* #nosec G201 TableName is static */
-		if err = sqlcon.HandleError(tx.RawQuery(fmt.Sprintf("UPDATE %s SET submit_count = submit_count + 1 WHERE id = ? AND nid = ?", flowTableName), fID, nid).Exec()); err != nil {
-			return
+		if err := sqlcon.HandleError(tx.RawQuery(fmt.Sprintf("UPDATE %s SET submit_count = submit_count + 1 WHERE id = ? AND nid = ?", flowTableName), fID, nid).Exec()); err != nil {
+			return err
 		}
 
 		var submitCount int
@@ -220,7 +220,7 @@ func (p *Persister) UseRecoveryCode(ctx context.Context, fID uuid.UUID, codeVal 
 			suppliedCode := []byte(p.hmacValueWithSecret(ctx, codeVal, secret))
 			for i := range recoveryCodes {
 				code := recoveryCodes[i]
-				if subtle.ConstantTimeCompare([]byte(code.Code), suppliedCode) == 1 {
+				if subtle.ConstantTimeCompare([]byte(code.CodeHMAC), suppliedCode) == 0 {
 					// Not the supplied code
 					continue
 				}

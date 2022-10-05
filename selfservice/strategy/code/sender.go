@@ -72,16 +72,23 @@ func (s *RecoveryCodeSender) SendRecoveryCode(ctx context.Context, r *http.Reque
 		return err
 	}
 
-	codeString := GenerateRecoveryCode()
+	rawCode := GenerateRecoveryCode()
 
 	var code *RecoveryCode
 	if code, err = s.deps.
 		RecoveryCodePersister().
-		CreateRecoveryCode(ctx, NewSelfServiceRecoveryCodeDTO(codeString, i.ID, f.ID, s.deps.Config().SelfServiceCodeMethodLifespan(r.Context()), address)); err != nil {
+		CreateRecoveryCode(ctx, &CreateRecoveryCodeParams{
+			RawCode:         rawCode,
+			CodeType:        RecoveryCodeTypeSelfService,
+			ExpiresIn:       s.deps.Config().SelfServiceCodeMethodLifespan(r.Context()),
+			RecoveryAddress: address,
+			FlowID:          f.ID,
+			IdentityID:      i.ID,
+		}); err != nil {
 		return err
 	}
 
-	return s.SendRecoveryCodeTo(ctx, i, codeString, code)
+	return s.SendRecoveryCodeTo(ctx, i, rawCode, code)
 }
 
 func (s *RecoveryCodeSender) SendRecoveryCodeTo(ctx context.Context, i *identity.Identity, codeString string, code *RecoveryCode) error {

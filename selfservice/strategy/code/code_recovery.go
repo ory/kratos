@@ -34,8 +34,8 @@ type RecoveryCode struct {
 	// format: uuid
 	ID uuid.UUID `json:"id" db:"id" faker:"-"`
 
-	// Code represents the recovery code
-	Code string `json:"-" db:"code"`
+	// CodeHMAC represents the HMACed value of the recovery code
+	CodeHMAC string `json:"-" db:"code"`
 
 	// UsedAt is the timestamp of when the code was used or null if it wasn't yet
 	UsedAt sql.NullTime `json:"-" db:"used_at"`
@@ -87,9 +87,9 @@ func GenerateRecoveryCode() string {
 	return randx.MustString(8, randx.Numeric)
 }
 
-type RecoveryCodeDTO struct {
+type CreateRecoveryCodeParams struct {
 	// Code represents the recovery code
-	Code string
+	RawCode string
 
 	// CodeType is the type of the code - either "admin" or "selfservice"
 	CodeType RecoveryCodeType
@@ -105,26 +105,4 @@ type RecoveryCodeDTO struct {
 	FlowID uuid.UUID
 
 	IdentityID uuid.UUID
-}
-
-func NewSelfServiceRecoveryCodeDTO(code string, identityID uuid.UUID, fID uuid.UUID, expiresIn time.Duration, recoveryAddress *identity.RecoveryAddress) *RecoveryCodeDTO {
-	return &RecoveryCodeDTO{
-		Code:            code,
-		ExpiresIn:       expiresIn,
-		CodeType:        RecoveryCodeTypeSelfService,
-		RecoveryAddress: recoveryAddress,
-		FlowID:          fID,
-		IdentityID:      identityID,
-	}
-}
-
-func NewAdminRecoveryCodeDTO(code string, identityID uuid.UUID, fID uuid.UUID, expiresIn time.Duration) *RecoveryCodeDTO {
-	return &RecoveryCodeDTO{
-		Code:            code,
-		ExpiresIn:       expiresIn,
-		CodeType:        RecoveryCodeTypeAdmin,
-		RecoveryAddress: nil,
-		FlowID:          fID,
-		IdentityID:      identityID,
-	}
 }
