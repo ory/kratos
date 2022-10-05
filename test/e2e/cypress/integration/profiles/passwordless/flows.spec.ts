@@ -77,10 +77,10 @@ context("Passwordless registration", () => {
 
         // the browser will prevent the form from being submitted if the input field is required
         // we should remove the required attribute to simulate the data not being sent
-        cy.removeRequiredAttribute([
-          'input[name="traits.email"]',
-          'input[name="traits.website"]',
-        ])
+        cy.removeAttribute(
+          ['input[name="traits.email"]', 'input[name="traits.website"]'],
+          "required",
+        )
 
         cy.get(`input[name="traits.website"]`).then(($el) => {
           $el.removeAttr("type")

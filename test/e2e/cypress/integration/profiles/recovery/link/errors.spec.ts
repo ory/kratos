@@ -111,7 +111,7 @@ context("Account Recovery Errors", () => {
 
         // we need to remove the required attribute of the element since the browser prevents us from submitting the form
         // this is to simulate the case where the form is submitted with an empty input field.
-        cy.removeRequiredAttribute(["input[name='email']"])
+        cy.removeAttribute(["input[name='email']"], "required")
 
         cy.get('button[value="link"]').click()
         cy.get('[data-testid="ui/message/4000002"]').should(
@@ -125,13 +125,13 @@ context("Account Recovery Errors", () => {
         cy.visit(recovery)
         // we need to remove the required attribute of the element since the browser prevents us from submitting the form
         // this is to simulate the case where the form is submitted with an empty input field.
-        cy.removeRequiredAttribute(["input[name='email']"])
+        cy.removeAttribute(["input[name='email']"], "required")
         cy.get('button[value="link"]').click()
         cy.location("pathname").should("eq", "/recovery")
 
         // we need to remove the required attribute of the element since the browser prevents us from submitting the form
         // this is to simulate the case where the form is submitted with an empty input field.
-        cy.removeRequiredAttribute(["input[name='email']"])
+        cy.removeAttribute(["input[name='email']"], "required")
         cy.get('button[value="link"]').click()
         cy.get('[data-testid="ui/message/4000002"]').should(
           "contain.text",

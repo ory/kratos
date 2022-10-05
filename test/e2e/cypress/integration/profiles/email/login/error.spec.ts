@@ -46,10 +46,10 @@ describe("Basic email profile with failing login flows", () => {
         it("should show an error when the identifier is missing", () => {
           // the browser will prevent the form from submitting if the fields are empty since they are required
           // here we just remove the required attribute to make the form submit
-          cy.removeRequiredAttribute([
-            'input[name="identifier"]',
-            'input[name="password"]',
-          ])
+          cy.removeAttribute(
+            ['input[name="identifier"]', 'input[name="password"]'],
+            "required",
+          )
           cy.submitPasswordForm()
           cy.get('*[data-testid="ui/message/4000002"]').should(
             "contain.text",
@@ -69,7 +69,7 @@ describe("Basic email profile with failing login flows", () => {
 
           // the browser will prevent the form from submitting if the fields are empty since they are required
           // here we just remove the required attribute to make the form submit
-          cy.removeRequiredAttribute(['input[name="password"]'])
+          cy.removeAttribute(['input[name="password"]'], "required")
 
           cy.submitPasswordForm()
           cy.get('*[data-testid^="ui/message/"]')
