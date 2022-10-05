@@ -118,6 +118,28 @@ func TestPersister(ctx context.Context, conf *config.Config, p interface {
 				_, err = p.UseRecoveryCode(ctx, f.ID, "i-do-not-exist")
 				require.ErrorIs(t, err, code.ErrCodeSubmittedTooOften)
 			})
+
+			t.Run("case=should delete codes of flow", func(t *testing.T) {
+				dto, f, _ := newRecoveryCodeDTO(t, testhelpers.RandomEmail())
+				for i := 0; i < 10; i++ {
+					dto.RawCode = string(randx.MustString(8, randx.Numeric))
+					_, err := p.CreateRecoveryCode(ctx, dto)
+					require.NoError(t, err)
+				}
+
+				count, err := p.GetConnection(ctx).Where("selfservice_recovery_flow_id = ?", f.ID).Count(&code.RecoveryCode{})
+				require.NoError(t, err)
+				require.Equal(t, 10, count)
+
+				err = p.DeleteRecoveryCodesOfFlow(ctx, f.ID)
+				require.NoError(t, err)
+
+				// Count again, should be 0
+				count, err = p.GetConnection(ctx).Where("selfservice_recovery_flow_id = ?", f.ID).Count(&code.RecoveryCode{})
+				require.NoError(t, err)
+				require.Equal(t, 0, count)
+
+			})
 		})
 	}
 }

@@ -262,3 +262,11 @@ func (p *Persister) UseRecoveryCode(ctx context.Context, fID uuid.UUID, codeVal 
 
 	return recoveryCode, nil
 }
+
+func (p *Persister) DeleteRecoveryCodesOfFlow(ctx context.Context, fID uuid.UUID) error {
+	ctx, span := p.r.Tracer(ctx).Tracer().Start(ctx, "persistence.sql.DeleteRecoveryToken")
+	defer span.End()
+
+	/* #nosec G201 TableName is static */
+	return p.GetConnection(ctx).RawQuery(fmt.Sprintf("DELETE FROM %s WHERE selfservice_recovery_flow_id = ? AND nid = ?", new(code.RecoveryCode).TableName(ctx)), fID, p.NetworkID(ctx)).Exec()
+}

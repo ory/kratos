@@ -697,7 +697,8 @@ func TestRecovery(t *testing.T) {
 	})
 
 	t.Run("description=should not be able to use an invalid code more than 5 times", func(t *testing.T) {
-		email := "recoverme+invalid_code5times@ory.sh"
+		email := strings.ToLower(testhelpers.RandomEmail())
+		createIdentityToRecover(t, reg, email)
 		c := testhelpers.NewClientWithCookies(t)
 		body := submitRecovery(t, c, RecoveryFlowTypeBrowser, func(v url.Values) {
 			v.Set("email", email)
@@ -904,6 +905,39 @@ func TestRecovery(t *testing.T) {
 
 		submitRecoveryCode(t, c, body, RecoveryFlowTypeBrowser, recoveryCode, http.StatusOK)
 	})
+
+	t.Run("description=should not be able to use first code after re-sending email", func(t *testing.T) {
+		recoveryEmail := strings.ToLower(testhelpers.RandomEmail())
+		createIdentityToRecover(t, reg, recoveryEmail)
+
+		c := testhelpers.NewClientWithCookies(t)
+		body := expectSuccessfulRecovery(t, c, RecoveryFlowTypeBrowser, func(v url.Values) {
+			v.Set("email", recoveryEmail)
+		})
+
+		action := gjson.Get(body, "ui.action").String()
+		require.NotEmpty(t, action)
+		assert.Equal(t, recoveryEmail, gjson.Get(body, "ui.nodes.#(attributes.name==email).attributes.value").String())
+
+		message1 := testhelpers.CourierExpectMessage(t, reg, recoveryEmail, "Recover access to your account")
+		recoveryCode1 := testhelpers.CourierExpectCodeInMessage(t, message1, 1)
+
+		body = resendRecoveryCode(t, c, body, RecoveryFlowTypeBrowser, http.StatusOK)
+		assert.True(t, gjson.Get(body, "ui.nodes.#(attributes.name==code)").Exists())
+		assert.Equal(t, recoveryEmail, gjson.Get(body, "ui.nodes.#(attributes.name==email).attributes.value").String())
+
+		message2 := testhelpers.CourierExpectMessage(t, reg, recoveryEmail, "Recover access to your account")
+		recoveryCode2 := testhelpers.CourierExpectCodeInMessage(t, message2, 1)
+
+		body = submitRecoveryCode(t, c, body, RecoveryFlowTypeBrowser, recoveryCode1, http.StatusOK)
+		assertMessage(t, []byte(body), "The recovery code is invalid or has already been used. Please try again.")
+
+		// For good measure, check that the second code works!
+		body = submitRecoveryCode(t, c, body, RecoveryFlowTypeBrowser, recoveryCode2, http.StatusOK)
+		assertMessage(t, []byte(body), "You successfully recovered your account. Please change your password or set up an alternative login method (e.g. social sign in) within the next 60.00 minutes.")
+
+	})
+
 }
 
 func TestDisabledStrategy(t *testing.T) {

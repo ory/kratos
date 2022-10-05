@@ -495,6 +495,10 @@ func (s *Strategy) recoveryHandleFormSubmission(w http.ResponseWriter, r *http.R
 		return s.HandleRecoveryError(w, r, f, body, err)
 	}
 
+	if err := s.deps.RecoveryCodePersister().DeleteRecoveryCodesOfFlow(ctx, f.ID); err != nil {
+		return s.HandleRecoveryError(w, r, f, body, err)
+	}
+
 	if err := s.deps.RecoveryCodeSender().SendRecoveryCode(ctx, r, f, identity.VerifiableAddressTypeEmail, body.Email); err != nil {
 		if !errors.Is(err, ErrUnknownAddress) {
 			return s.HandleRecoveryError(w, r, f, body, err)
@@ -502,7 +506,7 @@ func (s *Strategy) recoveryHandleFormSubmission(w http.ResponseWriter, r *http.R
 		// Continue execution
 	}
 
-	// re-initialize the UI with a "clean" new UI
+	// re-initialize the UI with a "clean" new state
 	f.UI = &container.Container{
 		Method: "POST",
 		Action: flow.AppendFlowTo(urlx.AppendPaths(s.deps.Config().SelfPublicURL(r.Context()), recovery.RouteSubmitFlow), f.ID).String(),
