@@ -5,8 +5,6 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/spf13/cobra"
-
 	"github.com/ory/kratos/cmd/identities"
 
 	"github.com/ory/x/cmdx"
@@ -18,7 +16,7 @@ import (
 )
 
 func TestListCmd(t *testing.T) {
-	c := identities.NewListIdentitiesCmd(new(cobra.Command))
+	c := identities.NewListIdentitiesCmd()
 	reg := setup(t, c)
 	require.NoError(t, c.Flags().Set(cmdx.FlagQuiet, "true"))
 

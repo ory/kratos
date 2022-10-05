@@ -1,6 +1,6 @@
 module github.com/ory/kratos
 
-go 1.18
+go 1.19
 
 replace (
 	github.com/bradleyjkemp/cupaloy/v2 => github.com/aeneasr/cupaloy/v2 v2.6.1-0.20210924214125-3dfdd01210a3
@@ -38,7 +38,7 @@ require (
 	github.com/go-errors/errors v1.0.1
 	github.com/go-openapi/strfmt v0.21.3
 	github.com/go-playground/validator/v10 v10.4.1
-	github.com/go-swagger/go-swagger v0.30.0
+	github.com/go-swagger/go-swagger v0.30.3
 	github.com/gobuffalo/fizz v1.14.2
 	github.com/gobuffalo/httptest v1.0.2
 	github.com/gobuffalo/pop/v6 v6.0.6
@@ -76,7 +76,7 @@ require (
 	github.com/ory/kratos-client-go v0.6.3-alpha.1
 	github.com/ory/mail/v3 v3.0.0
 	github.com/ory/nosurf v1.2.7
-	github.com/ory/x v0.0.470
+	github.com/ory/x v0.0.480
 	github.com/phayes/freeport v0.0.0-20180830031419-95f893ade6f2
 	github.com/pkg/errors v0.9.1
 	github.com/pquerna/otp v1.3.0
@@ -93,7 +93,7 @@ require (
 	github.com/zmb3/spotify/v2 v2.0.0
 	go.opentelemetry.io/otel v1.9.0
 	go.opentelemetry.io/otel/trace v1.9.0
-	golang.org/x/crypto v0.0.0-20220817201139-bc19a97f63c8
+	golang.org/x/crypto v0.0.0-20220829220503-c86fa9a7ed90
 	golang.org/x/net v0.0.0-20220826154423-83b083e8dc8b
 	golang.org/x/oauth2 v0.0.0-20220822191816-0ebed06d0094
 	golang.org/x/sync v0.0.0-20220722155255-886fb9371eb4
@@ -199,7 +199,7 @@ require (
 	github.com/hashicorp/hcl v1.0.0 // indirect
 	github.com/hashicorp/serf v0.9.7 // indirect
 	github.com/huandu/xstrings v1.3.2 // indirect
-	github.com/inconshreveable/mousetrap v1.0.0 // indirect
+	github.com/inconshreveable/mousetrap v1.0.1 // indirect
 	github.com/jackc/chunkreader/v2 v2.0.1 // indirect
 	github.com/jackc/pgconn v1.12.1 // indirect
 	github.com/jackc/pgio v1.0.0 // indirect
@@ -267,11 +267,11 @@ require (
 	github.com/soheilhy/cmux v0.1.5 // indirect
 	github.com/sourcegraph/annotate v0.0.0-20160123013949-f4cad6c6324d // indirect
 	github.com/sourcegraph/syntaxhighlight v0.0.0-20170531221838-bd320f5d308e // indirect
-	github.com/spf13/afero v1.8.2 // indirect
+	github.com/spf13/afero v1.9.2 // indirect
 	github.com/spf13/cast v1.5.0 // indirect
 	github.com/spf13/jwalterweatherman v1.1.0 // indirect
 	github.com/spf13/viper v1.12.0 // indirect
-	github.com/subosito/gotenv v1.3.0 // indirect
+	github.com/subosito/gotenv v1.4.1 // indirect
 	github.com/tidwall/match v1.1.1 // indirect
 	github.com/tidwall/pretty v1.2.0 // indirect
 	github.com/timtadh/data-structures v0.5.3 // indirect
@@ -315,7 +315,7 @@ require (
 	go.uber.org/multierr v1.7.0 // indirect
 	go.uber.org/zap v1.17.0 // indirect
 	golang.org/x/mod v0.6.0-dev.0.20220419223038-86c51ed26bb4 // indirect
-	golang.org/x/sys v0.0.0-20220817070843-5a390386f1f2 // indirect
+	golang.org/x/sys v0.0.0-20220919091848-fb04ddd9f9c8 // indirect
 	golang.org/x/term v0.0.0-20210927222741-03fcf44c2211 // indirect
 	golang.org/x/text v0.3.7 // indirect
 	golang.org/x/time v0.0.0-20211116232009-f0f3c7e86c11 // indirect
@@ -327,7 +327,7 @@ require (
 	gopkg.in/alecthomas/kingpin.v2 v2.2.6 // indirect
 	gopkg.in/alexcesaro/quotedprintable.v3 v3.0.0-20150716171945-2caba252f4dc // indirect
 	gopkg.in/cheggaaa/pb.v1 v1.0.28 // indirect
-	gopkg.in/ini.v1 v1.66.4 // indirect
+	gopkg.in/ini.v1 v1.67.0 // indirect
 	gopkg.in/op/go-logging.v1 v1.0.0-20160211212156-b2cb9fa56473 // indirect
 	gopkg.in/square/go-jose.v2 v2.6.0 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect

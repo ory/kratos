@@ -323,6 +323,42 @@ func TestStrategy(t *testing.T) {
 		assert.Contains(t, gjson.GetBytes(body, "ui.nodes.#(attributes.name==traits.subject).messages.0.text").String(), "is not valid", "%s\n%s", gjson.GetBytes(body, "ui.nodes.#(attributes.name==traits.subject)").Raw, body)
 	})
 
+	t.Run("case=cannot register multiple accounts with the same OIDC account", func(t *testing.T) {
+		subject = "oidc-register-then-login@ory.sh"
+		scope = []string{"openid", "offline"}
+
+		expectTokens := func(t *testing.T, provider string, body []byte) {
+			i, err := reg.PrivilegedIdentityPool().GetIdentityConfidential(context.Background(), uuid.FromStringOrNil(gjson.GetBytes(body, "identity.id").String()))
+			require.NoError(t, err)
+			c := i.Credentials[identity.CredentialsTypeOIDC].Config
+			assert.NotEmpty(t, gjson.GetBytes(c, "providers.0.initial_access_token").String())
+			assertx.EqualAsJSONExcept(
+				t,
+				json.RawMessage(fmt.Sprintf(`{"providers": [{"subject":"%s","provider":"%s"}]}`, subject, provider)),
+				json.RawMessage(c),
+				[]string{"providers.0.initial_id_token", "providers.0.initial_access_token", "providers.0.initial_refresh_token"},
+			)
+		}
+
+		t.Run("case=should pass registration", func(t *testing.T) {
+			r := newRegistrationFlow(t, returnTS.URL, time.Minute)
+			action := afv(t, r.ID, "valid")
+			res, body := makeRequest(t, "valid", action, url.Values{})
+			ai(t, res, body)
+			expectTokens(t, "valid", body)
+		})
+
+		t.Run("case=try another registration", func(t *testing.T) {
+			returnTo := fmt.Sprintf("%s/home?query=true", returnTS.URL)
+			r := newRegistrationFlow(t, fmt.Sprintf("%s?return_to=%s", returnTS.URL, url.QueryEscape(returnTo)), time.Minute)
+			action := afv(t, r.ID, "valid")
+			res, body := makeRequest(t, "valid", action, url.Values{})
+			assert.Equal(t, returnTo, res.Request.URL.String())
+			ai(t, res, body)
+			expectTokens(t, "valid", body)
+		})
+	})
+
 	t.Run("case=register and then login", func(t *testing.T) {
 		subject = "register-then-login@ory.sh"
 		scope = []string{"openid", "offline"}
@@ -416,6 +452,7 @@ func TestStrategy(t *testing.T) {
 		scope = []string{"openid"}
 		claims = idTokenClaims{}
 		claims.traits.website = "https://www.ory.sh/kratos"
+		claims.traits.groups = []string{"group1", "group2"}
 		claims.metadataPublic.picture = "picture.png"
 		claims.metadataAdmin.phoneNumber = "911"
 
@@ -438,6 +475,7 @@ func TestStrategy(t *testing.T) {
 			ai(t, res, body)
 			assert.Equal(t, "https://www.ory.sh/kratos", gjson.GetBytes(body, "identity.traits.website").String(), "%s", body)
 			assert.Equal(t, "valid-name", gjson.GetBytes(body, "identity.traits.name").String(), "%s", body)
+			assert.Equal(t, "[\"group1\",\"group2\"]", gjson.GetBytes(body, "identity.traits.groups").String(), "%s", body)
 		})
 	})
 

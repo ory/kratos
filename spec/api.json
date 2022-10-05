@@ -1304,6 +1304,13 @@
           "authenticator_assurance_level": {
             "$ref": "#/components/schemas/authenticatorAssuranceLevel"
           },
+          "devices": {
+            "description": "Devices has history of all endpoints where the session was used",
+            "items": {
+              "$ref": "#/components/schemas/sessionDevice"
+            },
+            "type": "array"
+          },
           "expires_at": {
             "description": "The Session Expiry\n\nWhen this session expires at.",
             "format": "date-time",
@@ -1367,12 +1374,29 @@
         "type": "array"
       },
       "sessionDevice": {
+        "description": "Device corresponding to a Session",
         "properties": {
+          "id": {
+            "description": "Device record ID",
+            "format": "uuid",
+            "type": "string"
+          },
+          "ip_address": {
+            "description": "IPAddress of the client",
+            "type": "string"
+          },
+          "location": {
+            "description": "Geo Location corresponding to the IP Address",
+            "type": "string"
+          },
           "user_agent": {
-            "description": "UserAgent of this device",
+            "description": "UserAgent of the client",
             "type": "string"
           }
         },
+        "required": [
+          "id"
+        ],
         "type": "object"
       },
       "sessionList": {
@@ -2844,7 +2868,7 @@
         ]
       },
       "patch": {
-        "description": "NOTE: The fields `id`, `stateChangedAt` and `credentials` are not updateable.\n\nLearn how identities work in [Ory Kratos' User And Identity Model Documentation](https://www.ory.sh/docs/next/kratos/concepts/identity-user-model).",
+        "description": "Partially updates an Identity's field using [JSON Patch](https://jsonpatch.com/)\n\nNOTE: The fields `id`, `stateChangedAt` and `credentials` are not updateable.\n\nLearn how identities work in [Ory Kratos' User And Identity Model Documentation](https://www.ory.sh/docs/next/kratos/concepts/identity-user-model).",
         "operationId": "adminPatchIdentity",
         "parameters": [
           {
@@ -2924,7 +2948,7 @@
             "oryAccessToken": []
           }
         ],
-        "summary": "Partially updates an Identity's field using [JSON Patch](https://jsonpatch.com/)",
+        "summary": "# Patch an Identity",
         "tags": [
           "v0alpha2"
         ]

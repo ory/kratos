@@ -9,6 +9,8 @@ import (
 	"net/url"
 	"testing"
 
+	"github.com/ory/kratos/session"
+
 	"github.com/julienschmidt/httprouter"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -51,7 +53,7 @@ func TestLogout(t *testing.T) {
 		_, res := testhelpers.HTTPRequestJSON(t, hc, "DELETE", public.URL+"/self-service/logout/api", json.RawMessage(`{"session_token": "`+sess.Token+`"}`))
 		assert.Equal(t, http.StatusNoContent, res.StatusCode)
 
-		actual, err := reg.SessionPersister().GetSession(ctx, sess.ID)
+		actual, err := reg.SessionPersister().GetSession(ctx, sess.ID, session.ExpandNothing)
 		require.NoError(t, err)
 		assert.False(t, actual.IsActive())
 

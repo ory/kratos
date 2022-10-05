@@ -37,6 +37,7 @@ import (
 type idTokenClaims struct {
 	traits struct {
 		website string
+		groups  []string
 	}
 	metadataPublic struct {
 		picture string
@@ -44,6 +45,29 @@ type idTokenClaims struct {
 	metadataAdmin struct {
 		phoneNumber string
 	}
+}
+
+func (token *idTokenClaims) MarshalJSON() ([]byte, error) {
+	return json.Marshal(struct {
+		IdToken struct {
+			Website     string   `json:"website,omitempty"`
+			Groups      []string `json:"groups,omitempty"`
+			Picture     string   `json:"picture,omitempty"`
+			PhoneNumber string   `json:"phone_number,omitempty"`
+		} `json:"id_token"`
+	}{
+		IdToken: struct {
+			Website     string   `json:"website,omitempty"`
+			Groups      []string `json:"groups,omitempty"`
+			Picture     string   `json:"picture,omitempty"`
+			PhoneNumber string   `json:"phone_number,omitempty"`
+		}{
+			Website:     token.traits.website,
+			Groups:      token.traits.groups,
+			Picture:     token.metadataPublic.picture,
+			PhoneNumber: token.metadataAdmin.phoneNumber,
+		},
+	})
 }
 
 func createClient(t *testing.T, remote string, redir, id string) {
@@ -137,8 +161,9 @@ func newHydraIntegration(t *testing.T, remote *string, subject *string, claims *
 		require.NotEmpty(t, challenge)
 
 		var b bytes.Buffer
-		var msg = `{"id_token":{"website":"` + claims.traits.website + `","picture":"` + *&claims.metadataPublic.picture + `","phone_number":"` + *&claims.metadataAdmin.phoneNumber + `"}}`
-		require.NoError(t, json.NewEncoder(&b).Encode(&p{GrantScope: *scope, Session: json.RawMessage(msg)}))
+		msg, err := json.Marshal(claims)
+		require.NoError(t, err)
+		require.NoError(t, json.NewEncoder(&b).Encode(&p{GrantScope: *scope, Session: msg}))
 		href := urlx.MustJoin(*remote, "/oauth2/auth/requests/consent/accept") + "?consent_challenge=" + challenge
 		do(w, r, href, &b)
 	})

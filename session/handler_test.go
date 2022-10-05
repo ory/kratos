@@ -438,7 +438,7 @@ func TestHandlerAdminSessionManagement(t *testing.T) {
 		require.NoError(t, err)
 		require.Equal(t, http.StatusNoContent, res.StatusCode)
 
-		_, err = reg.SessionPersister().GetSession(ctx, s.ID)
+		_, err = reg.SessionPersister().GetSession(ctx, s.ID, ExpandNothing)
 		require.True(t, errors.Is(err, sqlcon.ErrNoRows))
 
 		t.Run("should not list session", func(t *testing.T) {
@@ -576,11 +576,11 @@ func TestHandlerSelfServiceSessionManagement(t *testing.T) {
 		require.NoError(t, err)
 		assert.Equal(t, int64(1), gjson.GetBytes(body, "count").Int(), "%s", body)
 
-		actualOther, err := reg.SessionPersister().GetSession(ctx, otherSess.ID)
+		actualOther, err := reg.SessionPersister().GetSession(ctx, otherSess.ID, ExpandNothing)
 		require.NoError(t, err)
 		assert.False(t, actualOther.Active)
 
-		actualCurr, err := reg.SessionPersister().GetSession(ctx, currSess.ID)
+		actualCurr, err := reg.SessionPersister().GetSession(ctx, currSess.ID, ExpandNothing)
 		require.NoError(t, err)
 		assert.True(t, actualCurr.Active)
 	})
@@ -601,7 +601,7 @@ func TestHandlerSelfServiceSessionManagement(t *testing.T) {
 		require.NoError(t, err)
 		require.Equal(t, http.StatusNoContent, res.StatusCode)
 
-		actualOthers, err := reg.SessionPersister().ListSessionsByIdentity(ctx, i.ID, nil, 1, 10, uuid.Nil)
+		actualOthers, err := reg.SessionPersister().ListSessionsByIdentity(ctx, i.ID, nil, 1, 10, uuid.Nil, ExpandNothing)
 		require.NoError(t, err)
 		require.Len(t, actualOthers, 3)
 
@@ -712,7 +712,7 @@ func TestHandlerRefreshSessionBySessionID(t *testing.T) {
 		require.NoError(t, err)
 		require.Equal(t, http.StatusOK, res.StatusCode)
 
-		s, err = reg.SessionPersister().GetSession(context.Background(), s.ID)
+		s, err = reg.SessionPersister().GetSession(context.Background(), s.ID, ExpandNothing)
 		require.Nil(t, err)
 	})
 

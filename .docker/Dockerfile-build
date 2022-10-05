@@ -1,5 +1,5 @@
 # syntax = docker/dockerfile:1-experimental
-FROM golang:1.18-alpine3.16 AS base
+FROM golang:1.19-alpine3.16 AS base
 
 RUN apk --update upgrade && apk --no-cache --update-cache --upgrade --latest add ca-certificates build-base gcc
 
