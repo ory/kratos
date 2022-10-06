@@ -177,7 +177,6 @@ jobs:
         with:
           repository: ory/kratos-selfservice-ui-node
           path: node-ui
-          ref: e01c6b09095b647aa872132ec51cda8278bf905d
       - run: |
           cd node-ui
           npm install
