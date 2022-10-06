@@ -41,6 +41,7 @@ const (
 	OpenIDConnectGroup UiNodeGroup = "oidc"
 	ProfileGroup       UiNodeGroup = "profile"
 	LinkGroup          UiNodeGroup = "link"
+	CodeGroup          UiNodeGroup = "code"
 	TOTPGroup          UiNodeGroup = "totp"
 	LookupGroup        UiNodeGroup = "lookup_secret"
 	WebAuthnGroup      UiNodeGroup = "webauthn"

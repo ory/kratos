@@ -164,6 +164,24 @@
         },
         "type": "object"
       },
+      "adminCreateSelfServiceRecoveryCodeBody": {
+        "properties": {
+          "expires_in": {
+            "description": "Code Expires In\n\nThe recovery code will expire at that point in time. Defaults to the configuration value of\n`selfservice.flows.recovery.request_lifespan`.",
+            "pattern": "^([0-9]+(ns|us|ms|s|m|h))*$",
+            "type": "string"
+          },
+          "identity_id": {
+            "description": "Identity to Recover\n\nThe identity's ID you wish to recover.",
+            "format": "uuid",
+            "type": "string"
+          }
+        },
+        "required": [
+          "identity_id"
+        ],
+        "type": "object"
+      },
       "adminCreateSelfServiceRecoveryLinkBody": {
         "properties": {
           "expires_in": {
@@ -998,11 +1016,33 @@
         ],
         "type": "object"
       },
+      "selfServiceRecoveryCode": {
+        "properties": {
+          "expires_at": {
+            "description": "Expires At is the timestamp of when the recovery flow expires\n\nThe timestamp when the recovery link expires.",
+            "format": "date-time",
+            "type": "string"
+          },
+          "recovery_code": {
+            "description": "RecoveryCode is the code that can be used to recover the account",
+            "type": "string"
+          },
+          "recovery_link": {
+            "description": "RecoveryLink with flow\n\nThis link opens the recovery UI with an empty `code` field.",
+            "type": "string"
+          }
+        },
+        "required": [
+          "recovery_link",
+          "recovery_code"
+        ],
+        "type": "object"
+      },
       "selfServiceRecoveryFlow": {
         "description": "This request is used when an identity wants to recover their account.\n\nWe recommend reading the [Account Recovery Documentation](../self-service/flows/password-reset-account-recovery)",
         "properties": {
           "active": {
-            "description": "Active, if set, contains the registration method that is being used. It is initially\nnot set.",
+            "description": "Active, if set, contains the recovery method that is being used. It is initially\nnot set.",
             "type": "string"
           },
           "expires_at": {
@@ -1310,6 +1350,7 @@
           "method": {
             "enum": [
               "link_recovery",
+              "code_recovery",
               "password",
               "totp",
               "oidc",
@@ -1573,6 +1614,7 @@
       "submitSelfServiceRecoveryFlowBody": {
         "discriminator": {
           "mapping": {
+            "code": "#/components/schemas/submitSelfServiceRecoveryFlowWithCodeMethodBody",
             "link": "#/components/schemas/submitSelfServiceRecoveryFlowWithLinkMethodBody"
           },
           "propertyName": "method"
@@ -1580,8 +1622,35 @@
         "oneOf": [
           {
             "$ref": "#/components/schemas/submitSelfServiceRecoveryFlowWithLinkMethodBody"
+          },
+          {
+            "$ref": "#/components/schemas/submitSelfServiceRecoveryFlowWithCodeMethodBody"
           }
         ]
+      },
+      "submitSelfServiceRecoveryFlowWithCodeMethodBody": {
+        "properties": {
+          "code": {
+            "description": "Code from recovery email\n\nSent to the user once a recovery has been initiated and is used to prove\nthat the user is in possession of the email",
+            "type": "string"
+          },
+          "csrf_token": {
+            "description": "Sending the anti-csrf token is only required for browser login flows.",
+            "type": "string"
+          },
+          "email": {
+            "description": "Email to Recover\n\nNeeds to be set when initiating the flow. If the email is a registered\nrecovery email, a recovery link will be sent. If the email is not known,\na email with details on what happened will be sent instead.\n\nformat: email",
+            "type": "string"
+          },
+          "method": {
+            "description": "Method supports `link` and `code` only right now.",
+            "type": "string"
+          }
+        },
+        "required": [
+          "method"
+        ],
+        "type": "object"
       },
       "submitSelfServiceRecoveryFlowWithLinkMethodBody": {
         "properties": {
@@ -2033,19 +2102,20 @@
             "$ref": "#/components/schemas/uiNodeAttributes"
           },
           "group": {
-            "description": "Group specifies which group (e.g. password authenticator) this node belongs to.\ndefault DefaultGroup\npassword PasswordGroup\noidc OpenIDConnectGroup\nprofile ProfileGroup\nlink LinkGroup\ntotp TOTPGroup\nlookup_secret LookupGroup\nwebauthn WebAuthnGroup",
+            "description": "Group specifies which group (e.g. password authenticator) this node belongs to.\ndefault DefaultGroup\npassword PasswordGroup\noidc OpenIDConnectGroup\nprofile ProfileGroup\nlink LinkGroup\ncode CodeGroup\ntotp TOTPGroup\nlookup_secret LookupGroup\nwebauthn WebAuthnGroup",
             "enum": [
               "default",
               "password",
               "oidc",
               "profile",
               "link",
+              "code",
               "totp",
               "lookup_secret",
               "webauthn"
             ],
             "type": "string",
-            "x-go-enum-desc": "default DefaultGroup\npassword PasswordGroup\noidc OpenIDConnectGroup\nprofile ProfileGroup\nlink LinkGroup\ntotp TOTPGroup\nlookup_secret LookupGroup\nwebauthn WebAuthnGroup"
+            "x-go-enum-desc": "default DefaultGroup\npassword PasswordGroup\noidc OpenIDConnectGroup\nprofile ProfileGroup\nlink LinkGroup\ncode CodeGroup\ntotp TOTPGroup\nlookup_secret LookupGroup\nwebauthn WebAuthnGroup"
           },
           "messages": {
             "$ref": "#/components/schemas/uiTexts"
@@ -3148,6 +3218,68 @@
         ]
       }
     },
+    "/admin/recovery/code": {
+      "post": {
+        "description": "This endpoint creates a recovery code which should be given to the user in order for them to recover\n(or activate) their account.",
+        "operationId": "adminCreateSelfServiceRecoveryCode",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/adminCreateSelfServiceRecoveryCodeBody"
+              }
+            }
+          },
+          "x-originalParamName": "Body"
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/selfServiceRecoveryCode"
+                }
+              }
+            },
+            "description": "selfServiceRecoveryCode"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/jsonError"
+                }
+              }
+            },
+            "description": "jsonError"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/jsonError"
+                }
+              }
+            },
+            "description": "jsonError"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/jsonError"
+                }
+              }
+            },
+            "description": "jsonError"
+          }
+        },
+        "summary": "Create a Recovery Link",
+        "tags": [
+          "v0alpha2"
+        ]
+      }
+    },
     "/admin/recovery/link": {
       "post": {
         "description": "This endpoint creates a recovery link which should be given to the user in order for them to recover\n(or activate) their account.",
@@ -4103,6 +4235,16 @@
               }
             },
             "description": "jsonError"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/selfServiceBrowserLocationChangeRequiredError"
+                }
+              }
+            },
+            "description": "selfServiceBrowserLocationChangeRequiredError"
           },
           "500": {
             "content": {

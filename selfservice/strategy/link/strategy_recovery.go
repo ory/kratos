@@ -146,8 +146,7 @@ func (s *Strategy) createRecoveryLink(w http.ResponseWriter, r *http.Request, _ 
 		return
 	}
 
-	req, err := recovery.NewFlow(s.d.Config(), expiresIn, s.d.GenerateCSRFToken(r),
-		r, s.d.RecoveryStrategies(r.Context()), flow.TypeBrowser)
+	req, err := recovery.NewFlow(s.d.Config(), expiresIn, s.d.GenerateCSRFToken(r), r, s, flow.TypeBrowser)
 	if err != nil {
 		s.d.Writer().WriteError(w, r, err)
 		return
@@ -316,8 +315,7 @@ func (s *Strategy) recoveryUseToken(w http.ResponseWriter, r *http.Request, fID 
 
 	var f *recovery.Flow
 	if !token.FlowID.Valid {
-		f, err = recovery.NewFlow(s.d.Config(), time.Until(token.ExpiresAt), s.d.GenerateCSRFToken(r),
-			r, s.d.RecoveryStrategies(r.Context()), flow.TypeBrowser)
+		f, err = recovery.NewFlow(s.d.Config(), time.Until(token.ExpiresAt), s.d.GenerateCSRFToken(r), r, s, flow.TypeBrowser)
 		if err != nil {
 			return s.retryRecoveryFlowWithError(w, r, flow.TypeBrowser, err)
 		}
@@ -354,7 +352,7 @@ func (s *Strategy) recoveryUseToken(w http.ResponseWriter, r *http.Request, fID 
 func (s *Strategy) retryRecoveryFlowWithMessage(w http.ResponseWriter, r *http.Request, ft flow.Type, message *text.Message) error {
 	s.d.Logger().WithRequest(r).WithField("message", message).Debug("A recovery flow is being retried because a validation error occurred.")
 
-	req, err := recovery.NewFlow(s.d.Config(), s.d.Config().SelfServiceFlowRecoveryRequestLifespan(r.Context()), s.d.CSRFHandler().RegenerateToken(w, r), r, s.d.RecoveryStrategies(r.Context()), ft)
+	req, err := recovery.NewFlow(s.d.Config(), s.d.Config().SelfServiceFlowRecoveryRequestLifespan(r.Context()), s.d.CSRFHandler().RegenerateToken(w, r), r, s, ft)
 	if err != nil {
 		return err
 	}
@@ -377,7 +375,7 @@ func (s *Strategy) retryRecoveryFlowWithMessage(w http.ResponseWriter, r *http.R
 func (s *Strategy) retryRecoveryFlowWithError(w http.ResponseWriter, r *http.Request, ft flow.Type, recErr error) error {
 	s.d.Logger().WithRequest(r).WithError(recErr).Debug("A recovery flow is being retried because a validation error occurred.")
 
-	req, err := recovery.NewFlow(s.d.Config(), s.d.Config().SelfServiceFlowRecoveryRequestLifespan(r.Context()), s.d.CSRFHandler().RegenerateToken(w, r), r, s.d.RecoveryStrategies(r.Context()), ft)
+	req, err := recovery.NewFlow(s.d.Config(), s.d.Config().SelfServiceFlowRecoveryRequestLifespan(r.Context()), s.d.CSRFHandler().RegenerateToken(w, r), r, s, ft)
 	if err != nil {
 		return err
 	}

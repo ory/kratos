@@ -217,3 +217,11 @@ func EnsureAAL(t *testing.T, c *http.Client, ts *httptest.Server, aal string, me
 	}
 	assert.Len(t, gjson.GetBytes(sess, "authentication_methods").Array(), 1+len(methods))
 }
+
+func NewAuthorizedTransport(t *testing.T, reg *driver.RegistryDefault, sess *session.Session) *x.TransportWithHeader {
+	maybePersistSession(t, reg, sess)
+
+	return x.NewTransportWithHeader(http.Header{
+		"Authorization": {"Bearer " + sess.Token},
+	})
+}

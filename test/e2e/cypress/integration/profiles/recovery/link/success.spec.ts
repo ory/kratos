@@ -32,6 +32,7 @@ context("Account Recovery Success", () => {
         cy.longLinkLifespan()
         cy.disableVerification()
         cy.enableRecovery()
+        cy.useRecoveryStrategy("link")
 
         identity = gen.identityWithWebsite()
         cy.registerApi(identity)

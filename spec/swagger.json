@@ -620,6 +620,61 @@
         }
       }
     },
+    "/admin/recovery/code": {
+      "post": {
+        "description": "This endpoint creates a recovery code which should be given to the user in order for them to recover\n(or activate) their account.",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "schemes": [
+          "http",
+          "https"
+        ],
+        "tags": [
+          "v0alpha2"
+        ],
+        "summary": "Create a Recovery Link",
+        "operationId": "adminCreateSelfServiceRecoveryCode",
+        "parameters": [
+          {
+            "name": "Body",
+            "in": "body",
+            "schema": {
+              "$ref": "#/definitions/adminCreateSelfServiceRecoveryCodeBody"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "selfServiceRecoveryCode",
+            "schema": {
+              "$ref": "#/definitions/selfServiceRecoveryCode"
+            }
+          },
+          "400": {
+            "description": "jsonError",
+            "schema": {
+              "$ref": "#/definitions/jsonError"
+            }
+          },
+          "404": {
+            "description": "jsonError",
+            "schema": {
+              "$ref": "#/definitions/jsonError"
+            }
+          },
+          "500": {
+            "description": "jsonError",
+            "schema": {
+              "$ref": "#/definitions/jsonError"
+            }
+          }
+        }
+      }
+    },
     "/admin/recovery/link": {
       "post": {
         "description": "This endpoint creates a recovery link which should be given to the user in order for them to recover\n(or activate) their account.",
@@ -1410,6 +1465,12 @@
             "description": "jsonError",
             "schema": {
               "$ref": "#/definitions/jsonError"
+            }
+          },
+          "422": {
+            "description": "selfServiceBrowserLocationChangeRequiredError",
+            "schema": {
+              "$ref": "#/definitions/selfServiceBrowserLocationChangeRequiredError"
             }
           },
           "500": {
@@ -2692,6 +2753,24 @@
         }
       }
     },
+    "adminCreateSelfServiceRecoveryCodeBody": {
+      "type": "object",
+      "required": [
+        "identity_id"
+      ],
+      "properties": {
+        "expires_in": {
+          "description": "Code Expires In\n\nThe recovery code will expire at that point in time. Defaults to the configuration value of\n`selfservice.flows.recovery.request_lifespan`.",
+          "type": "string",
+          "pattern": "^([0-9]+(ns|us|ms|s|m|h))*$"
+        },
+        "identity_id": {
+          "description": "Identity to Recover\n\nThe identity's ID you wish to recover.",
+          "type": "string",
+          "format": "uuid"
+        }
+      }
+    },
     "adminCreateSelfServiceRecoveryLinkBody": {
       "type": "object",
       "required": [
@@ -3504,6 +3583,28 @@
         }
       }
     },
+    "selfServiceRecoveryCode": {
+      "type": "object",
+      "required": [
+        "recovery_link",
+        "recovery_code"
+      ],
+      "properties": {
+        "expires_at": {
+          "description": "Expires At is the timestamp of when the recovery flow expires\n\nThe timestamp when the recovery link expires.",
+          "type": "string",
+          "format": "date-time"
+        },
+        "recovery_code": {
+          "description": "RecoveryCode is the code that can be used to recover the account",
+          "type": "string"
+        },
+        "recovery_link": {
+          "description": "RecoveryLink with flow\n\nThis link opens the recovery UI with an empty `code` field.",
+          "type": "string"
+        }
+      }
+    },
     "selfServiceRecoveryFlow": {
       "description": "This request is used when an identity wants to recover their account.\n\nWe recommend reading the [Account Recovery Documentation](../self-service/flows/password-reset-account-recovery)",
       "type": "object",
@@ -3519,7 +3620,7 @@
       ],
       "properties": {
         "active": {
-          "description": "Active, if set, contains the registration method that is being used. It is initially\nnot set.",
+          "description": "Active, if set, contains the recovery method that is being used. It is initially\nnot set.",
           "type": "string"
         },
         "expires_at": {
@@ -4029,6 +4130,30 @@
     "submitSelfServiceRecoveryFlowBody": {
       "type": "object"
     },
+    "submitSelfServiceRecoveryFlowWithCodeMethodBody": {
+      "type": "object",
+      "required": [
+        "method"
+      ],
+      "properties": {
+        "code": {
+          "description": "Code from recovery email\n\nSent to the user once a recovery has been initiated and is used to prove\nthat the user is in possession of the email",
+          "type": "string"
+        },
+        "csrf_token": {
+          "description": "Sending the anti-csrf token is only required for browser login flows.",
+          "type": "string"
+        },
+        "email": {
+          "description": "Email to Recover\n\nNeeds to be set when initiating the flow. If the email is a registered\nrecovery email, a recovery link will be sent. If the email is not known,\na email with details on what happened will be sent instead.\n\nformat: email",
+          "type": "string"
+        },
+        "method": {
+          "description": "Method supports `link` and `code` only right now.",
+          "type": "string"
+        }
+      }
+    },
     "submitSelfServiceRecoveryFlowWithLinkMethodBody": {
       "type": "object",
       "required": [
@@ -4427,7 +4552,7 @@
           "$ref": "#/definitions/uiNodeAttributes"
         },
         "group": {
-          "description": "Group specifies which group (e.g. password authenticator) this node belongs to.\ndefault DefaultGroup\npassword PasswordGroup\noidc OpenIDConnectGroup\nprofile ProfileGroup\nlink LinkGroup\ntotp TOTPGroup\nlookup_secret LookupGroup\nwebauthn WebAuthnGroup",
+          "description": "Group specifies which group (e.g. password authenticator) this node belongs to.\ndefault DefaultGroup\npassword PasswordGroup\noidc OpenIDConnectGroup\nprofile ProfileGroup\nlink LinkGroup\ncode CodeGroup\ntotp TOTPGroup\nlookup_secret LookupGroup\nwebauthn WebAuthnGroup",
           "type": "string",
           "enum": [
             "default",
@@ -4435,11 +4560,12 @@
             "oidc",
             "profile",
             "link",
+            "code",
             "totp",
             "lookup_secret",
             "webauthn"
           ],
-          "x-go-enum-desc": "default DefaultGroup\npassword PasswordGroup\noidc OpenIDConnectGroup\nprofile ProfileGroup\nlink LinkGroup\ntotp TOTPGroup\nlookup_secret LookupGroup\nwebauthn WebAuthnGroup"
+          "x-go-enum-desc": "default DefaultGroup\npassword PasswordGroup\noidc OpenIDConnectGroup\nprofile ProfileGroup\nlink LinkGroup\ncode CodeGroup\ntotp TOTPGroup\nlookup_secret LookupGroup\nwebauthn WebAuthnGroup"
         },
         "messages": {
           "$ref": "#/definitions/uiTexts"

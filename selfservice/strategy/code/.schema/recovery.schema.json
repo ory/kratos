@@ -1,0 +1,29 @@
+{
+  "$id": "https://schemas.ory.sh/kratos/selfservice/strategy/profile/settings.schema.json",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "properties": {
+    "method": {
+      "type": "string",
+      "enum": [
+        "code",
+        "link"
+      ]
+    },
+    "code": {
+      "type": "string",
+      "pattern": "^\\d{8}$"
+    },
+    "email": {
+      "type": "string",
+      "format": "email"
+    },
+    "flow": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "csrf_token": {
+      "type": "string"
+    }
+  }
+}

@@ -67,6 +67,8 @@ const (
 	ViperKeyCourierTemplatesPath                             = "courier.template_override_path"
 	ViperKeyCourierTemplatesRecoveryInvalidEmail             = "courier.templates.recovery.invalid.email"
 	ViperKeyCourierTemplatesRecoveryValidEmail               = "courier.templates.recovery.valid.email"
+	ViperKeyCourierTemplatesRecoveryCodeInvalidEmail         = "courier.templates.recovery_code.invalid.email"
+	ViperKeyCourierTemplatesRecoveryCodeValidEmail           = "courier.templates.recovery_code.valid.email"
 	ViperKeyCourierTemplatesVerificationInvalidEmail         = "courier.templates.verification.invalid.email"
 	ViperKeyCourierTemplatesVerificationValidEmail           = "courier.templates.verification.valid.email"
 	ViperKeyCourierSMTPFrom                                  = "courier.smtp.from_address"
@@ -136,6 +138,7 @@ const (
 	ViperKeySelfServiceRecoveryAfter                         = "selfservice.flows.recovery.after"
 	ViperKeySelfServiceRecoveryBeforeHooks                   = "selfservice.flows.recovery.before.hooks"
 	ViperKeySelfServiceRecoveryEnabled                       = "selfservice.flows.recovery.enabled"
+	ViperKeySelfServiceRecoveryUse                           = "selfservice.flows.recovery.use"
 	ViperKeySelfServiceRecoveryUI                            = "selfservice.flows.recovery.ui_url"
 	ViperKeySelfServiceRecoveryRequestLifespan               = "selfservice.flows.recovery.lifespan"
 	ViperKeySelfServiceRecoveryBrowserDefaultReturnTo        = "selfservice.flows.recovery.after." + DefaultBrowserReturnURL
@@ -162,6 +165,7 @@ const (
 	ViperKeyDatabaseCleanupBatchSize                         = "database.cleanup.batch_size"
 	ViperKeyLinkLifespan                                     = "selfservice.methods.link.config.lifespan"
 	ViperKeyLinkBaseURL                                      = "selfservice.methods.link.config.base_url"
+	ViperKeyCodeLifespan                                     = "selfservice.methods.code.config.lifespan"
 	ViperKeyPasswordHaveIBeenPwnedHost                       = "selfservice.methods.password.config.haveibeenpwned_host"
 	ViperKeyPasswordHaveIBeenPwnedEnabled                    = "selfservice.methods.password.config.haveibeenpwned_enabled"
 	ViperKeyPasswordMaxBreaches                              = "selfservice.methods.password.config.max_breaches"
@@ -264,6 +268,8 @@ type (
 		CourierTemplatesVerificationValid(ctx context.Context) *CourierEmailTemplate
 		CourierTemplatesRecoveryInvalid(ctx context.Context) *CourierEmailTemplate
 		CourierTemplatesRecoveryValid(ctx context.Context) *CourierEmailTemplate
+		CourierTemplatesRecoveryCodeInvalid(ctx context.Context) *CourierEmailTemplate
+		CourierTemplatesRecoveryCodeValid(ctx context.Context) *CourierEmailTemplate
 		CourierMessageRetries(ctx context.Context) int
 	}
 )
@@ -622,6 +628,10 @@ func (p *Config) SelfServiceFlowRecoveryEnabled(ctx context.Context) bool {
 	return p.GetProvider(ctx).Bool(ViperKeySelfServiceRecoveryEnabled)
 }
 
+func (p *Config) SelfServiceFlowRecoveryUse(ctx context.Context) string {
+	return p.GetProvider(ctx).String(ViperKeySelfServiceRecoveryUse)
+}
+
 func (p *Config) SelfServiceFlowLoginBeforeHooks(ctx context.Context) []SelfServiceHook {
 	return p.selfServiceHooks(ctx, ViperKeySelfServiceLoginBeforeHooks)
 }
@@ -711,7 +721,7 @@ func (p *Config) SelfServiceStrategy(ctx context.Context, strategy string) *Self
 			fallthrough
 		case "profile":
 			fallthrough
-		case "link":
+		case "code":
 			s.Enabled = true
 		}
 	}
@@ -985,6 +995,14 @@ func (p *Config) CourierTemplatesRecoveryValid(ctx context.Context) *CourierEmai
 	return p.CourierTemplatesHelper(ctx, ViperKeyCourierTemplatesRecoveryValidEmail)
 }
 
+func (p *Config) CourierTemplatesRecoveryCodeInvalid(ctx context.Context) *CourierEmailTemplate {
+	return p.CourierTemplatesHelper(ctx, ViperKeyCourierTemplatesRecoveryCodeInvalidEmail)
+}
+
+func (p *Config) CourierTemplatesRecoveryCodeValid(ctx context.Context) *CourierEmailTemplate {
+	return p.CourierTemplatesHelper(ctx, ViperKeyCourierTemplatesRecoveryCodeValidEmail)
+}
+
 func (p *Config) CourierMessageRetries(ctx context.Context) int {
 	return p.GetProvider(ctx).IntF(ViperKeyCourierMessageRetries, 5)
 }
@@ -1121,6 +1139,10 @@ func (p *Config) SelfServiceLinkMethodLifespan(ctx context.Context) time.Duratio
 
 func (p *Config) SelfServiceLinkMethodBaseURL(ctx context.Context) *url.URL {
 	return p.GetProvider(ctx).RequestURIF(ViperKeyLinkBaseURL, p.SelfPublicURL(ctx))
+}
+
+func (p *Config) SelfServiceCodeMethodLifespan(ctx context.Context) time.Duration {
+	return p.GetProvider(ctx).DurationF(ViperKeyCodeLifespan, time.Hour)
 }
 
 func (p *Config) DatabaseCleanupSleepTables(ctx context.Context) time.Duration {

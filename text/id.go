@@ -61,9 +61,10 @@ const (
 )
 
 const (
-	InfoSelfServiceRecovery           ID = 1060000 + iota // 1060000
-	InfoSelfServiceRecoverySuccessful                     // 1060001
-	InfoSelfServiceRecoveryEmailSent                      // 1060002
+	InfoSelfServiceRecovery                  ID = 1060000 + iota // 1060000
+	InfoSelfServiceRecoverySuccessful                            // 1060001
+	InfoSelfServiceRecoveryEmailSent                             // 1060002
+	InfoSelfServiceRecoveryEmailWithCodeSent                     // 1060003
 )
 
 const (
@@ -75,6 +76,7 @@ const (
 	InfoNodeLabelSubmit                            // 1070005
 	InfoNodeLabelVerifyOTP                         // 1070006
 	InfoNodeLabelEmail                             // 1070007
+	InfoNodeLabelResendOTP                         // 1070008
 )
 
 const (
@@ -130,6 +132,7 @@ const (
 	ErrorValidationRecoveryMissingRecoveryToken                          // 4060003
 	ErrorValidationRecoveryTokenInvalidOrAlreadyUsed                     // 4060004
 	ErrorValidationRecoveryFlowExpired                                   // 4060005
+	ErrorValidationRecoveryCodeInvalidOrAlreadyUsed                      // 4060006
 )
 
 const (

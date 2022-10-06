@@ -22,6 +22,7 @@ import (
 
 	"github.com/ory/nosurf"
 
+	"github.com/ory/kratos/selfservice/strategy/code"
 	"github.com/ory/kratos/selfservice/strategy/webauthn"
 
 	"github.com/ory/kratos/selfservice/strategy/lookup"
@@ -135,6 +136,7 @@ type RegistryDefault struct {
 	selfserviceVerificationExecutor *verification.HookExecutor
 
 	selfserviceLinkSender *link.Sender
+	selfserviceCodeSender *code.RecoveryCodeSender
 
 	selfserviceRecoveryErrorHandler *recovery.ErrorHandler
 	selfserviceRecoveryHandler      *recovery.Handler
@@ -289,6 +291,7 @@ func (m *RegistryDefault) selfServiceStrategies() []interface{} {
 			password2.NewStrategy(m),
 			oidc.NewStrategy(m),
 			profile.NewStrategy(m),
+			code.NewStrategy(m),
 			link.NewStrategy(m),
 			totp.NewStrategy(m),
 			webauthn.NewStrategy(m),
@@ -674,6 +677,10 @@ func (m *RegistryDefault) CourierPersister() courier.Persister {
 }
 
 func (m *RegistryDefault) RecoveryTokenPersister() link.RecoveryTokenPersister {
+	return m.Persister()
+}
+
+func (m *RegistryDefault) RecoveryCodePersister() code.RecoveryCodePersister {
 	return m.Persister()
 }
 

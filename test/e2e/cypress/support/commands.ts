@@ -9,11 +9,13 @@ import {
   parseHtml,
   pollInterval,
   privilegedLifespan,
+  extractRecoveryCode,
 } from "../helpers"
 
 import dayjs from "dayjs"
 import YAML from "yamljs"
 import { Session } from "@ory/kratos-client"
+import { RecoveryStrategy } from "."
 
 const configFile = "kratos.generated.yml"
 
@@ -146,6 +148,34 @@ Cypress.Commands.add("longLinkLifespan", ({} = {}) => {
   })
 })
 
+Cypress.Commands.add("shortCodeLifespan", ({} = {}) => {
+  updateConfigFile((config) => {
+    config.selfservice.methods.code.config.lifespan = "1ms"
+    return config
+  })
+})
+
+Cypress.Commands.add("longCodeLifespan", ({} = {}) => {
+  updateConfigFile((config) => {
+    config.selfservice.methods.code.config.lifespan = "1m"
+    return config
+  })
+})
+
+Cypress.Commands.add("shortCodeLifespan", ({} = {}) => {
+  updateConfigFile((config) => {
+    config.selfservice.methods.code.config.lifespan = "1ms"
+    return config
+  })
+})
+
+Cypress.Commands.add("longCodeLifespan", ({} = {}) => {
+  updateConfigFile((config) => {
+    config.selfservice.methods.code.config.lifespan = "1m"
+    return config
+  })
+})
+
 Cypress.Commands.add("longRecoveryLifespan", ({} = {}) => {
   updateConfigFile((config) => {
     config.selfservice.flows.recovery.lifespan = "1m"
@@ -214,10 +244,37 @@ Cypress.Commands.add("enableVerification", ({} = {}) => {
 
 Cypress.Commands.add("enableRecovery", ({} = {}) => {
   updateConfigFile((config) => {
+    if (!config.selfservice.flows.recovery) {
+      config.selfservice.flows.recovery = {}
+    }
     config.selfservice.flows.recovery.enabled = true
     return config
   })
 })
+
+Cypress.Commands.add("useRecoveryStrategy", (strategy: RecoveryStrategy) => {
+  updateConfigFile((config) => {
+    if (!config.selfservice.flows.recovery) {
+      config.selfservice.flows.recovery = {}
+    }
+    config.selfservice.flows.recovery.use = strategy
+    if (!config.selfservice.methods[strategy]) {
+      config.selfservice.methods[strategy] = {}
+    }
+    config.selfservice.methods[strategy].enabled = true
+    return config
+  })
+})
+
+Cypress.Commands.add(
+  "disableRecoveryStrategy",
+  (strategy: RecoveryStrategy) => {
+    updateConfigFile((config) => {
+      config.selfservice.methods[strategy].enabled = false
+      return config
+    })
+  },
+)
 
 Cypress.Commands.add("disableRecovery", ({} = {}) => {
   updateConfigFile((config) => {
@@ -615,6 +672,36 @@ Cypress.Commands.add("remoteCourierRecoveryTemplates", ({} = {}) => {
   })
 })
 
+Cypress.Commands.add("remoteCourierRecoveryCodeTemplates", ({} = {}) => {
+  updateConfigFile((config) => {
+    config.courier.templates = {
+      recovery_code: {
+        invalid: {
+          email: {
+            body: {
+              html: "base64://SGksCgp0aGlzIGlzIGEgcmVtb3RlIGludmFsaWQgcmVjb3ZlcnkgdGVtcGxhdGU=",
+              plaintext:
+                "base64://SGksCgp0aGlzIGlzIGEgcmVtb3RlIGludmFsaWQgcmVjb3ZlcnkgdGVtcGxhdGU=",
+            },
+            subject: "base64://QWNjb3VudCBBY2Nlc3MgQXR0ZW1wdGVk",
+          },
+        },
+        valid: {
+          email: {
+            body: {
+              html: "base64://SGksCgp0aGlzIGlzIGEgcmVtb3RlIGludmFsaWQgcmVjb3ZlcnkgdGVtcGxhdGUKcGxlYXNlIHJlY292ZXIgYWNjZXNzIHRvIHlvdXIgYWNjb3VudCBieSBlbnRlcmluZyB0aGUgZm9sbG93aW5nIGNvZGU6Cgp7eyAuUmVjb3ZlcnlDb2RlIH19Cg==",
+              plaintext:
+                "base64://SGksCgp0aGlzIGlzIGEgcmVtb3RlIGludmFsaWQgcmVjb3ZlcnkgdGVtcGxhdGUKcGxlYXNlIHJlY292ZXIgYWNjZXNzIHRvIHlvdXIgYWNjb3VudCBieSBlbnRlcmluZyB0aGUgZm9sbG93aW5nIGNvZGU6Cgp7eyAuUmVjb3ZlcnlDb2RlIH19Cg==",
+            },
+            subject: "base64://UmVjb3ZlciBhY2Nlc3MgdG8geW91ciBhY2NvdW50",
+          },
+        },
+      },
+    }
+    return config
+  })
+})
+
 Cypress.Commands.add(
   "loginOidc",
   ({ expectSession = true, url = APP_URL + "/login" }) => {
@@ -925,6 +1012,23 @@ Cypress.Commands.add("recoverEmailButExpired", ({ expect: { email } }) => {
     cy.visit(link.href)
   })
 })
+
+Cypress.Commands.add(
+  "recoveryEmailWithCode",
+  ({ expect: { email, enterCode = true } }) => {
+    cy.getMail({ removeMail: true }).should((message) => {
+      expect(message.subject).to.equal("Recover access to your account")
+      expect(message.toAddresses[0].trim()).to.equal(email)
+
+      const code = extractRecoveryCode(message.body)
+      expect(code).to.not.be.undefined
+      expect(code.length).to.equal(8)
+      if (enterCode) {
+        cy.get("input[name='code']").type(code)
+      }
+    })
+  },
+)
 
 Cypress.Commands.add(
   "recoverEmail",

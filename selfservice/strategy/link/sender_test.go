@@ -25,6 +25,7 @@ import (
 func TestManager(t *testing.T) {
 	ctx := context.Background()
 	conf, reg := internal.NewFastRegistryWithMocks(t)
+	initViper(t, conf)
 	testhelpers.SetDefaultIdentitySchema(conf, "file://./stub/default.schema.json")
 	conf.MustSet(ctx, config.ViperKeyPublicBaseURL, "https://www.ory.sh/")
 	conf.MustSet(ctx, config.ViperKeyCourierSMTPURL, "smtp://foo@bar@dev.null/")
@@ -39,7 +40,9 @@ func TestManager(t *testing.T) {
 	hr := httptest.NewRequest("GET", "https://www.ory.sh", nil)
 
 	t.Run("method=SendRecoveryLink", func(t *testing.T) {
-		f, err := recovery.NewFlow(conf, time.Hour, "", u, reg.RecoveryStrategies(context.Background()), flow.TypeBrowser)
+		s, err := reg.RecoveryStrategies(ctx).Strategy("link")
+		require.NoError(t, err)
+		f, err := recovery.NewFlow(conf, time.Hour, "", u, s, flow.TypeBrowser)
 		require.NoError(t, err)
 
 		require.NoError(t, reg.RecoveryFlowPersister().CreateRecoveryFlow(context.Background(), f))

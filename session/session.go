@@ -163,6 +163,7 @@ func (s *Session) SetAuthenticatorAssuranceLevel() {
 			// be part of the AMR.
 			switch amr.Method {
 			case identity.CredentialsTypeRecoveryLink:
+			case identity.CredentialsTypeRecoveryCode:
 				isAAL1 = true
 			case identity.CredentialsTypeOIDC:
 				isAAL1 = true

@@ -52,6 +52,8 @@ func TestSession(t *testing.T) {
 		s.CompletedLoginFor(identity.CredentialsTypeRecoveryLink, identity.AuthenticatorAssuranceLevel1)
 		assert.EqualValues(t, identity.CredentialsTypeOIDC, s.AMR[0].Method)
 		assert.EqualValues(t, identity.CredentialsTypeRecoveryLink, s.AMR[1].Method)
+		s.CompletedLoginFor(identity.CredentialsTypeRecoveryCode, identity.AuthenticatorAssuranceLevel1)
+		assert.EqualValues(t, identity.CredentialsTypeRecoveryCode, s.AMR[2].Method)
 	})
 
 	t.Run("case=activate", func(t *testing.T) {
@@ -146,14 +148,32 @@ func TestSession(t *testing.T) {
 			expected: identity.AuthenticatorAssuranceLevel1,
 		},
 		{
-			d:        "recovery is aal1",
-			methods:  []session.AuthenticationMethod{{Method: identity.CredentialsTypeRecoveryLink}},
+			d: "recovery link is aal1",
+			methods: []session.AuthenticationMethod{
+				{Method: identity.CredentialsTypeRecoveryLink},
+			},
 			expected: identity.AuthenticatorAssuranceLevel1,
 		},
 		{
-			d: "mix of password, oidc, recovery is still aal1",
+			d: "recovery code is aal1",
+			methods: []session.AuthenticationMethod{
+				{Method: identity.CredentialsTypeRecoveryCode},
+			},
+			expected: identity.AuthenticatorAssuranceLevel1,
+		},
+		{
+			d: "mix of password, oidc, recovery link is still aal1",
 			methods: []session.AuthenticationMethod{
 				{Method: identity.CredentialsTypeRecoveryLink},
+				{Method: identity.CredentialsTypeOIDC},
+				{Method: identity.CredentialsTypePassword},
+			},
+			expected: identity.AuthenticatorAssuranceLevel1,
+		},
+		{
+			d: "mix of password, oidc, recovery code is still aal1",
+			methods: []session.AuthenticationMethod{
+				{Method: identity.CredentialsTypeRecoveryCode},
 				{Method: identity.CredentialsTypeOIDC},
 				{Method: identity.CredentialsTypePassword},
 			},
@@ -205,6 +225,14 @@ func TestSession(t *testing.T) {
 			expected: identity.AuthenticatorAssuranceLevel2,
 		},
 		{
+			d: "recovery code + totp is aal2",
+			methods: []session.AuthenticationMethod{
+				{Method: identity.CredentialsTypeRecoveryCode},
+				{Method: identity.CredentialsTypeTOTP},
+			},
+			expected: identity.AuthenticatorAssuranceLevel2,
+		},
+		{
 			d: "recovery link + lookup is aal2",
 			methods: []session.AuthenticationMethod{
 				{Method: identity.CredentialsTypeRecoveryLink},
@@ -213,9 +241,25 @@ func TestSession(t *testing.T) {
 			expected: identity.AuthenticatorAssuranceLevel2,
 		},
 		{
+			d: "recovery code + lookup is aal2",
+			methods: []session.AuthenticationMethod{
+				{Method: identity.CredentialsTypeRecoveryCode},
+				{Method: identity.CredentialsTypeLookup},
+			},
+			expected: identity.AuthenticatorAssuranceLevel2,
+		},
+		{
 			d: "recovery link + passwordless webauth is aal1",
 			methods: []session.AuthenticationMethod{
 				{Method: identity.CredentialsTypeRecoveryLink},
+				{Method: identity.CredentialsTypeWebAuthn, AAL: identity.AuthenticatorAssuranceLevel1},
+			},
+			expected: identity.AuthenticatorAssuranceLevel1,
+		},
+		{
+			d: "recovery code + passwordless webauth is aal1",
+			methods: []session.AuthenticationMethod{
+				{Method: identity.CredentialsTypeRecoveryCode},
 				{Method: identity.CredentialsTypeWebAuthn, AAL: identity.AuthenticatorAssuranceLevel1},
 			},
 			expected: identity.AuthenticatorAssuranceLevel1,

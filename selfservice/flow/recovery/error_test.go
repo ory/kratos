@@ -38,6 +38,7 @@ func TestHandleError(t *testing.T) {
 	ctx := context.Background()
 	conf, reg := internal.NewFastRegistryWithMocks(t)
 	conf.MustSet(ctx, config.ViperKeySelfServiceRecoveryEnabled, true)
+	conf.MustSet(ctx, config.ViperKeySelfServiceRecoveryUse, "code")
 
 	public, _ := testhelpers.NewKratosServer(t, reg)
 
@@ -66,7 +67,9 @@ func TestHandleError(t *testing.T) {
 
 	newFlow := func(t *testing.T, ttl time.Duration, ft flow.Type) *recovery.Flow {
 		req := &http.Request{URL: urlx.ParseOrPanic("/")}
-		f, err := recovery.NewFlow(conf, ttl, x.FakeCSRFToken, req, reg.RecoveryStrategies(context.Background()), ft)
+		s, err := reg.GetActiveRecoveryStrategy(context.Background())
+		require.NoError(t, err)
+		f, err := recovery.NewFlow(conf, ttl, x.FakeCSRFToken, req, s, ft)
 		require.NoError(t, err)
 		require.NoError(t, reg.RecoveryFlowPersister().CreateRecoveryFlow(context.Background(), f))
 		f, err = reg.RecoveryFlowPersister().GetRecoveryFlow(context.Background(), f.ID)
@@ -225,6 +228,48 @@ func TestHandleError(t *testing.T) {
 
 			sse, _ := expectErrorUI(t)
 			assertx.EqualAsJSON(t, flowError, sse)
+		})
+
+		t.Run("case=new flow uses strategy of old flow", func(t *testing.T) {
+
+			t.Cleanup(reset)
+
+			recoveryFlow = &recovery.Flow{Type: flow.TypeBrowser, Active: "code"}
+			flowError = flow.NewFlowExpiredError(anHourAgo)
+
+			lf, _ := expectRecoveryUI(t)
+			require.Len(t, lf.UI.Messages, 1, "%s", jsonx.TestMarshalJSONString(t, lf))
+			assert.Equal(t, int(text.ErrorValidationRecoveryFlowExpired), int(lf.UI.Messages[0].ID))
+			assert.Equal(t, recoveryFlow.Active.String(), lf.Active.String())
+		})
+
+		t.Run("case=new flow uses current strategy if strategy of old flow does not exist", func(t *testing.T) {
+
+			t.Cleanup(reset)
+
+			recoveryFlow = &recovery.Flow{Type: flow.TypeBrowser, Active: "not-valid"}
+			flowError = flow.NewFlowExpiredError(anHourAgo)
+
+			lf, _ := expectRecoveryUI(t)
+			require.Len(t, lf.UI.Messages, 1, "%s", jsonx.TestMarshalJSONString(t, lf))
+			assert.Equal(t, int(text.ErrorValidationRecoveryFlowExpired), int(lf.UI.Messages[0].ID))
+			assert.Equal(t, "code", lf.Active.String())
+		})
+
+		t.Run("case=fails to retry flow if recovery strategy id is not valid", func(t *testing.T) {
+
+			t.Cleanup(func() {
+				reset()
+				conf.MustSet(ctx, config.ViperKeySelfServiceRecoveryUse, "code")
+			})
+
+			recoveryFlow = newFlow(t, 0, flow.TypeBrowser)
+			recoveryFlow.Active = "not-valid"
+			flowError = flow.NewFlowExpiredError(anHourAgo)
+
+			conf.MustSet(ctx, config.ViperKeySelfServiceRecoveryUse, "not-valid")
+			sse, _ := expectErrorUI(t)
+			assertx.EqualAsJSON(t, herodot.ErrInternalServerError.WithReason("unable to find strategy for not-valid have [code]"), sse)
 		})
 	})
 }

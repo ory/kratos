@@ -36,6 +36,7 @@ import (
 	"github.com/ory/kratos/selfservice/flow/registration"
 	"github.com/ory/kratos/selfservice/flow/settings"
 	"github.com/ory/kratos/selfservice/flow/verification"
+	"github.com/ory/kratos/selfservice/strategy/code"
 	"github.com/ory/kratos/selfservice/strategy/link"
 	"github.com/ory/kratos/session"
 	"github.com/ory/kratos/x"
@@ -285,6 +286,19 @@ func TestMigrations(t *testing.T) {
 						CompareWithFixture(t, id, "recovery_token", id.ID.String())
 					}
 					migratest.ContainsExpectedIds(t, filepath.Join("fixtures", "recovery_token"), found)
+				})
+
+				t.Run("case=recovery_code", func(t *testing.T) {
+					var ids []code.RecoveryCode
+					require.NoError(t, c.All(&ids))
+					require.NotEmpty(t, ids)
+
+					var found []string
+					for _, id := range ids {
+						found = append(found, id.ID.String())
+						CompareWithFixture(t, id, "recovery_code", id.ID.String())
+					}
+					migratest.ContainsExpectedIds(t, filepath.Join("fixtures", "recovery_code"), found)
 				})
 
 				t.Run("suite=constraints", func(t *testing.T) {

@@ -7,6 +7,8 @@ export interface MailMessage {
   subject: string
 }
 
+export type RecoveryStrategy = "code" | "link"
+
 declare global {
   namespace Cypress {
     interface Chainable {
@@ -179,6 +181,11 @@ declare global {
        * Change the courier recovery invalid and valid templates to remote base64 strings
        */
       remoteCourierRecoveryTemplates(): Chainable<void>
+
+      /**
+       * Change the courier recovery code invalid and valid templates to remote base64 strings
+       */
+      remoteCourierRecoveryCodeTemplates(): Chainable<void>
 
       /**
        * Changes the config so that the registration flow lifespan is very short.
@@ -405,12 +412,39 @@ declare global {
       shortLinkLifespan(): Chainable<void>
 
       /**
+       * Changes the config so that the code lifespan is very short.
+       *
+       * Useful when testing recovery/verification flows.
+       *
+       * @see longCodeLifespan()
+       */
+      shortCodeLifespan(): Chainable<void>
+
+      /**
+       * Changes the config so that the code lifespan is very long.
+       *
+       * Useful when testing recovery/verification flows.
+       *
+       * @see shortCodeLifespan()
+       */
+      longCodeLifespan(): Chainable<void>
+
+      /**
        * Expect a recovery email which is expired.
        *
        * @param opts
        */
       recoverEmailButExpired(opts?: {
         expect: { email: string }
+      }): Chainable<void>
+
+      /**
+       * Expect a recovery email with a recovery code.
+       *
+       * @param opts
+       */
+      recoveryEmailWithCode(opts?: {
+        expect: { email: string; enterCode?: boolean }
       }): Chainable<void>
 
       /**
@@ -436,6 +470,18 @@ declare global {
        * Enables recovery
        */
       enableRecovery(): Chainable<void>
+
+      /**
+       * Sets the recovery strategy to use
+       */
+      useRecoveryStrategy(strategy: RecoveryStrategy): Chainable<void>
+
+      /**
+       * Disables a specific recovery strategy
+       *
+       * @param strategy the recovery strategy to disable
+       */
+      disableRecoveryStrategy(strategy: RecoveryStrategy): Chainable<void>
 
       /**
        * Disabled recovery

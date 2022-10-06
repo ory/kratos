@@ -188,6 +188,7 @@ jobs:
         env:
           RN_UI_PATH: react-native-ui
           NODE_UI_PATH: node-ui
+          CYPRESS_RECORD_KEY: ${{ secrets.CYPRESS_RECORD_KEY }}
       - if: failure()
         uses: actions/upload-artifact@v2
         with:

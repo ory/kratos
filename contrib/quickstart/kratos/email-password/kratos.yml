@@ -18,6 +18,10 @@ selfservice:
   methods:
     password:
       enabled: true
+    link:
+      enabled: false
+    code:
+      enabled: true
 
   flows:
     error:
@@ -30,6 +34,7 @@ selfservice:
     recovery:
       enabled: true
       ui_url: http://127.0.0.1:4455/recovery
+      use: code
 
     verification:
       enabled: true
@@ -51,8 +56,7 @@ selfservice:
       after:
         password:
           hooks:
-            -
-              hook: session
+            - hook: session
 
 log:
   level: debug

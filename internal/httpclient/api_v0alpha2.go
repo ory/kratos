@@ -43,6 +43,21 @@ type V0alpha2Api interface {
 	AdminCreateIdentityExecute(r V0alpha2ApiApiAdminCreateIdentityRequest) (*Identity, *http.Response, error)
 
 	/*
+			 * AdminCreateSelfServiceRecoveryCode Create a Recovery Link
+			 * This endpoint creates a recovery code which should be given to the user in order for them to recover
+		(or activate) their account.
+			 * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
+			 * @return V0alpha2ApiApiAdminCreateSelfServiceRecoveryCodeRequest
+	*/
+	AdminCreateSelfServiceRecoveryCode(ctx context.Context) V0alpha2ApiApiAdminCreateSelfServiceRecoveryCodeRequest
+
+	/*
+	 * AdminCreateSelfServiceRecoveryCodeExecute executes the request
+	 * @return SelfServiceRecoveryCode
+	 */
+	AdminCreateSelfServiceRecoveryCodeExecute(r V0alpha2ApiApiAdminCreateSelfServiceRecoveryCodeRequest) (*SelfServiceRecoveryCode, *http.Response, error)
+
+	/*
 			 * AdminCreateSelfServiceRecoveryLink Create a Recovery Link
 			 * This endpoint creates a recovery link which should be given to the user in order for them to recover
 		(or activate) their account.
@@ -1245,6 +1260,146 @@ func (a *V0alpha2ApiService) AdminCreateIdentityExecute(r V0alpha2ApiApiAdminCre
 			return localVarReturnValue, localVarHTTPResponse, newErr
 		}
 		if localVarHTTPResponse.StatusCode == 409 {
+			var v JsonError
+			err = a.client.decode(&v, localVarBody, localVarHTTPResponse.Header.Get("Content-Type"))
+			if err != nil {
+				newErr.error = err.Error()
+				return localVarReturnValue, localVarHTTPResponse, newErr
+			}
+			newErr.model = v
+			return localVarReturnValue, localVarHTTPResponse, newErr
+		}
+		if localVarHTTPResponse.StatusCode == 500 {
+			var v JsonError
+			err = a.client.decode(&v, localVarBody, localVarHTTPResponse.Header.Get("Content-Type"))
+			if err != nil {
+				newErr.error = err.Error()
+				return localVarReturnValue, localVarHTTPResponse, newErr
+			}
+			newErr.model = v
+		}
+		return localVarReturnValue, localVarHTTPResponse, newErr
+	}
+
+	err = a.client.decode(&localVarReturnValue, localVarBody, localVarHTTPResponse.Header.Get("Content-Type"))
+	if err != nil {
+		newErr := &GenericOpenAPIError{
+			body:  localVarBody,
+			error: err.Error(),
+		}
+		return localVarReturnValue, localVarHTTPResponse, newErr
+	}
+
+	return localVarReturnValue, localVarHTTPResponse, nil
+}
+
+type V0alpha2ApiApiAdminCreateSelfServiceRecoveryCodeRequest struct {
+	ctx                                    context.Context
+	ApiService                             V0alpha2Api
+	adminCreateSelfServiceRecoveryCodeBody *AdminCreateSelfServiceRecoveryCodeBody
+}
+
+func (r V0alpha2ApiApiAdminCreateSelfServiceRecoveryCodeRequest) AdminCreateSelfServiceRecoveryCodeBody(adminCreateSelfServiceRecoveryCodeBody AdminCreateSelfServiceRecoveryCodeBody) V0alpha2ApiApiAdminCreateSelfServiceRecoveryCodeRequest {
+	r.adminCreateSelfServiceRecoveryCodeBody = &adminCreateSelfServiceRecoveryCodeBody
+	return r
+}
+
+func (r V0alpha2ApiApiAdminCreateSelfServiceRecoveryCodeRequest) Execute() (*SelfServiceRecoveryCode, *http.Response, error) {
+	return r.ApiService.AdminCreateSelfServiceRecoveryCodeExecute(r)
+}
+
+/*
+  - AdminCreateSelfServiceRecoveryCode Create a Recovery Link
+  - This endpoint creates a recovery code which should be given to the user in order for them to recover
+
+(or activate) their account.
+  - @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
+  - @return V0alpha2ApiApiAdminCreateSelfServiceRecoveryCodeRequest
+*/
+func (a *V0alpha2ApiService) AdminCreateSelfServiceRecoveryCode(ctx context.Context) V0alpha2ApiApiAdminCreateSelfServiceRecoveryCodeRequest {
+	return V0alpha2ApiApiAdminCreateSelfServiceRecoveryCodeRequest{
+		ApiService: a,
+		ctx:        ctx,
+	}
+}
+
+/*
+ * Execute executes the request
+ * @return SelfServiceRecoveryCode
+ */
+func (a *V0alpha2ApiService) AdminCreateSelfServiceRecoveryCodeExecute(r V0alpha2ApiApiAdminCreateSelfServiceRecoveryCodeRequest) (*SelfServiceRecoveryCode, *http.Response, error) {
+	var (
+		localVarHTTPMethod   = http.MethodPost
+		localVarPostBody     interface{}
+		localVarFormFileName string
+		localVarFileName     string
+		localVarFileBytes    []byte
+		localVarReturnValue  *SelfServiceRecoveryCode
+	)
+
+	localBasePath, err := a.client.cfg.ServerURLWithContext(r.ctx, "V0alpha2ApiService.AdminCreateSelfServiceRecoveryCode")
+	if err != nil {
+		return localVarReturnValue, nil, &GenericOpenAPIError{error: err.Error()}
+	}
+
+	localVarPath := localBasePath + "/admin/recovery/code"
+
+	localVarHeaderParams := make(map[string]string)
+	localVarQueryParams := url.Values{}
+	localVarFormParams := url.Values{}
+
+	// to determine the Content-Type header
+	localVarHTTPContentTypes := []string{"application/json"}
+
+	// set Content-Type header
+	localVarHTTPContentType := selectHeaderContentType(localVarHTTPContentTypes)
+	if localVarHTTPContentType != "" {
+		localVarHeaderParams["Content-Type"] = localVarHTTPContentType
+	}
+
+	// to determine the Accept header
+	localVarHTTPHeaderAccepts := []string{"application/json"}
+
+	// set Accept header
+	localVarHTTPHeaderAccept := selectHeaderAccept(localVarHTTPHeaderAccepts)
+	if localVarHTTPHeaderAccept != "" {
+		localVarHeaderParams["Accept"] = localVarHTTPHeaderAccept
+	}
+	// body params
+	localVarPostBody = r.adminCreateSelfServiceRecoveryCodeBody
+	req, err := a.client.prepareRequest(r.ctx, localVarPath, localVarHTTPMethod, localVarPostBody, localVarHeaderParams, localVarQueryParams, localVarFormParams, localVarFormFileName, localVarFileName, localVarFileBytes)
+	if err != nil {
+		return localVarReturnValue, nil, err
+	}
+
+	localVarHTTPResponse, err := a.client.callAPI(req)
+	if err != nil || localVarHTTPResponse == nil {
+		return localVarReturnValue, localVarHTTPResponse, err
+	}
+
+	localVarBody, err := io.ReadAll(localVarHTTPResponse.Body)
+	localVarHTTPResponse.Body.Close()
+	localVarHTTPResponse.Body = io.NopCloser(bytes.NewBuffer(localVarBody))
+	if err != nil {
+		return localVarReturnValue, localVarHTTPResponse, err
+	}
+
+	if localVarHTTPResponse.StatusCode >= 300 {
+		newErr := &GenericOpenAPIError{
+			body:  localVarBody,
+			error: localVarHTTPResponse.Status,
+		}
+		if localVarHTTPResponse.StatusCode == 400 {
+			var v JsonError
+			err = a.client.decode(&v, localVarBody, localVarHTTPResponse.Header.Get("Content-Type"))
+			if err != nil {
+				newErr.error = err.Error()
+				return localVarReturnValue, localVarHTTPResponse, newErr
+			}
+			newErr.model = v
+			return localVarReturnValue, localVarHTTPResponse, newErr
+		}
+		if localVarHTTPResponse.StatusCode == 404 {
 			var v JsonError
 			err = a.client.decode(&v, localVarBody, localVarHTTPResponse.Header.Get("Content-Type"))
 			if err != nil {
@@ -6902,6 +7057,16 @@ func (a *V0alpha2ApiService) SubmitSelfServiceRecoveryFlowExecute(r V0alpha2ApiA
 		}
 		if localVarHTTPResponse.StatusCode == 410 {
 			var v JsonError
+			err = a.client.decode(&v, localVarBody, localVarHTTPResponse.Header.Get("Content-Type"))
+			if err != nil {
+				newErr.error = err.Error()
+				return localVarReturnValue, localVarHTTPResponse, newErr
+			}
+			newErr.model = v
+			return localVarReturnValue, localVarHTTPResponse, newErr
+		}
+		if localVarHTTPResponse.StatusCode == 422 {
+			var v SelfServiceBrowserLocationChangeRequiredError
 			err = a.client.decode(&v, localVarBody, localVarHTTPResponse.Header.Get("Content-Type"))
 			if err != nil {
 				newErr.error = err.Error()

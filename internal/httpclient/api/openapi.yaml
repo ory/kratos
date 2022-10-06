@@ -562,6 +562,46 @@ paths:
       summary: This endpoint returns all sessions that belong to the given Identity.
       tags:
       - v0alpha2
+  /admin/recovery/code:
+    post:
+      description: |-
+        This endpoint creates a recovery code which should be given to the user in order for them to recover
+        (or activate) their account.
+      operationId: adminCreateSelfServiceRecoveryCode
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/adminCreateSelfServiceRecoveryCodeBody'
+        x-originalParamName: Body
+      responses:
+        "201":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/selfServiceRecoveryCode'
+          description: selfServiceRecoveryCode
+        "400":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/jsonError'
+          description: jsonError
+        "404":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/jsonError'
+          description: jsonError
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/jsonError'
+          description: jsonError
+      summary: Create a Recovery Link
+      tags:
+      - v0alpha2
   /admin/recovery/link:
     post:
       description: |-
@@ -1451,6 +1491,12 @@ paths:
               schema:
                 $ref: '#/components/schemas/jsonError'
           description: jsonError
+        "422":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/selfServiceBrowserLocationChangeRequiredError'
+          description: selfServiceBrowserLocationChangeRequiredError
         "500":
           content:
             application/json:
@@ -3081,6 +3127,26 @@ components:
           description: The password in plain text if no hash is available.
           type: string
       type: object
+    adminCreateSelfServiceRecoveryCodeBody:
+      properties:
+        expires_in:
+          description: |-
+            Code Expires In
+
+            The recovery code will expire at that point in time. Defaults to the configuration value of
+            `selfservice.flows.recovery.request_lifespan`.
+          pattern: ^([0-9]+(ns|us|ms|s|m|h))*$
+          type: string
+        identity_id:
+          description: |-
+            Identity to Recover
+
+            The identity's ID you wish to recover.
+          format: uuid
+          type: string
+      required:
+      - identity_id
+      type: object
     adminCreateSelfServiceRecoveryLinkBody:
       properties:
         expires_in:
@@ -4022,6 +4088,32 @@ components:
       - logout_token
       - logout_url
       type: object
+    selfServiceRecoveryCode:
+      example:
+        expires_at: 2000-01-23T04:56:07.000+00:00
+        recovery_code: recovery_code
+        recovery_link: recovery_link
+      properties:
+        expires_at:
+          description: |-
+            Expires At is the timestamp of when the recovery flow expires
+
+            The timestamp when the recovery link expires.
+          format: date-time
+          type: string
+        recovery_code:
+          description: RecoveryCode is the code that can be used to recover the account
+          type: string
+        recovery_link:
+          description: |-
+            RecoveryLink with flow
+
+            This link opens the recovery UI with an empty `code` field.
+          type: string
+      required:
+      - recovery_code
+      - recovery_link
+      type: object
     selfServiceRecoveryFlow:
       description: |-
         This request is used when an identity wants to recover their account.
@@ -4085,7 +4177,7 @@ components:
       properties:
         active:
           description: |-
-            Active, if set, contains the registration method that is being used. It is initially
+            Active, if set, contains the recovery method that is being used. It is initially
             not set.
           type: string
         expires_at:
@@ -4687,6 +4779,7 @@ components:
         method:
           enum:
           - link_recovery
+          - code_recovery
           - password
           - totp
           - oidc
@@ -4917,10 +5010,41 @@ components:
     submitSelfServiceRecoveryFlowBody:
       discriminator:
         mapping:
+          code: '#/components/schemas/submitSelfServiceRecoveryFlowWithCodeMethodBody'
           link: '#/components/schemas/submitSelfServiceRecoveryFlowWithLinkMethodBody'
         propertyName: method
       oneOf:
       - $ref: '#/components/schemas/submitSelfServiceRecoveryFlowWithLinkMethodBody'
+      - $ref: '#/components/schemas/submitSelfServiceRecoveryFlowWithCodeMethodBody'
+    submitSelfServiceRecoveryFlowWithCodeMethodBody:
+      properties:
+        code:
+          description: |-
+            Code from recovery email
+
+            Sent to the user once a recovery has been initiated and is used to prove
+            that the user is in possession of the email
+          type: string
+        csrf_token:
+          description: Sending the anti-csrf token is only required for browser login
+            flows.
+          type: string
+        email:
+          description: |-
+            Email to Recover
+
+            Needs to be set when initiating the flow. If the email is a registered
+            recovery email, a recovery link will be sent. If the email is not known,
+            a email with details on what happened will be sent instead.
+
+            format: email
+          type: string
+        method:
+          description: Method supports `link` and `code` only right now.
+          type: string
+      required:
+      - method
+      type: object
     submitSelfServiceRecoveryFlowWithLinkMethodBody:
       properties:
         csrf_token:
@@ -5619,6 +5743,7 @@ components:
             oidc OpenIDConnectGroup
             profile ProfileGroup
             link LinkGroup
+            code CodeGroup
             totp TOTPGroup
             lookup_secret LookupGroup
             webauthn WebAuthnGroup
@@ -5628,6 +5753,7 @@ components:
           - oidc
           - profile
           - link
+          - code
           - totp
           - lookup_secret
           - webauthn
@@ -5638,6 +5764,7 @@ components:
             oidc OpenIDConnectGroup
             profile ProfileGroup
             link LinkGroup
+            code CodeGroup
             totp TOTPGroup
             lookup_secret LookupGroup
             webauthn WebAuthnGroup

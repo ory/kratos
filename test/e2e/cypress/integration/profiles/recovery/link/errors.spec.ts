@@ -28,6 +28,9 @@ context("Account Recovery Errors", () => {
         cy.longLinkLifespan()
         cy.disableVerification()
         cy.enableRecovery()
+        cy.useRecoveryStrategy("link")
+        cy.disableRecoveryStrategy("code")
+        cy.clearAllCookies()
       })
 
       it("responds with a HTML response on link click of an API flow if the link is expired", () => {
