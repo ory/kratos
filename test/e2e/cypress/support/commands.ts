@@ -1250,10 +1250,13 @@ Cypress.Commands.add(
   },
 )
 
-Cypress.Commands.add("removeAttribute", (selectors: string[], attribute: string) => {
-  selectors.forEach((selector) => {
-    cy.get(selector).then(($el) => {
-      $el.removeAttr(attribute)
+Cypress.Commands.add(
+  "removeAttribute",
+  (selectors: string[], attribute: string) => {
+    selectors.forEach((selector) => {
+      cy.get(selector).then(($el) => {
+        $el.removeAttr(attribute)
+      })
     })
-  })
-})
+  },
+)
