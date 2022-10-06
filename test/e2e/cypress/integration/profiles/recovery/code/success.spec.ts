@@ -122,11 +122,16 @@ context("Account Recovery With Code Success", () => {
           "have.text",
           "An email containing a recovery code has been sent to the email address you provided.",
         )
+
+        cy.recoveryEmailWithCode({
+          expect: { email: identity.email, enterCode: false },
+        })
+
         cy.get("button[name='email']").click() // resend code
         cy.noSession()
 
         cy.recoveryEmailWithCode({
-          expect: { email: identity.email, count: 2 },
+          expect: { email: identity.email },
         })
         cy.get("button[value='code']").click()
 

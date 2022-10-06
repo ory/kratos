@@ -84,10 +84,7 @@ declare global {
        *
        * @param opts
        */
-      getMail(opts?: {
-        removeMail: boolean
-        count?: number
-      }): Chainable<MailMessage>
+      getMail(opts?: { removeMail: boolean }): Chainable<MailMessage>
 
       performEmailVerification(opts?: {
         expect?: { email?: string; redirectTo?: string }
@@ -447,7 +444,7 @@ declare global {
        * @param opts
        */
       recoveryEmailWithCode(opts?: {
-        expect: { email: string; count?: number; enterCode?: boolean }
+        expect: { email: string; enterCode?: boolean }
       }): Chainable<void>
 
       /**
