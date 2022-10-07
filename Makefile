@@ -46,10 +46,6 @@ docs/api:
 docs/swagger:
 	npx @redocly/openapi-cli preview-docs spec/swagger.json
 
-.bin/ory: Makefile
-	bash <(curl https://raw.githubusercontent.com/ory/meta/master/install.sh) -d -b .bin ory v0.1.33
-	touch -a -m .bin/ory
-
 node_modules: package.json
 	npm ci
 	touch node_modules
