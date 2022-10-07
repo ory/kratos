@@ -18,6 +18,7 @@ import (
 	"github.com/ory/kratos/schema"
 	"github.com/ory/kratos/selfservice/errorx"
 	"github.com/ory/kratos/selfservice/flow"
+	"github.com/ory/kratos/selfservice/flow/login"
 	"github.com/ory/kratos/session"
 	"github.com/ory/kratos/text"
 	"github.com/ory/kratos/ui/node"
@@ -85,7 +86,13 @@ func (h *Handler) RegisterPublicRoutes(public *x.RouterPublic) {
 		if x.IsJSONRequest(r) {
 			h.d.Writer().WriteError(w, r, session.NewErrNoActiveSessionFound())
 		} else {
-			http.Redirect(w, r, h.d.Config().SelfServiceFlowLoginUI(r.Context()).String(), http.StatusSeeOther)
+			loginFlowUrl := h.d.Config().SelfPublicURL(r.Context()).JoinPath(login.RouteInitBrowserFlow).String()
+			redirectUrl, err := x.TakeOverReturnToParameter(r.URL.String(), loginFlowUrl)
+			if err != nil {
+				http.Redirect(w, r, h.d.Config().SelfServiceFlowLoginUI(r.Context()).String(), http.StatusSeeOther)
+			} else {
+				http.Redirect(w, r, redirectUrl, http.StatusSeeOther)
+			}
 		}
 	}))
 
