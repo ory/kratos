@@ -1,3 +1,5 @@
+// Copyright © 2022 Ory Corp
+
 /// <reference types="cypress" />
 
 const got = require("got")

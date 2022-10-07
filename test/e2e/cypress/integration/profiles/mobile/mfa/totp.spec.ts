@@ -1,3 +1,5 @@
+// Copyright © 2022 Ory Corp
+
 import { APP_URL, gen, MOBILE_URL, website } from "../../../../helpers"
 import { authenticator } from "otplib"
 

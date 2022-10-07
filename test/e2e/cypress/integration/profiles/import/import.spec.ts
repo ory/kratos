@@ -1,3 +1,5 @@
+// Copyright © 2022 Ory Corp
+
 import { routes as express } from "../../../helpers/express"
 import { gen, KRATOS_ADMIN, website } from "../../../helpers"
 

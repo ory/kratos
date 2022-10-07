@@ -1,3 +1,5 @@
+// Copyright © 2022 Ory Corp
+
 package text
 
 // This file contains error IDs for all system errors / JSON errors

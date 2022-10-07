@@ -1,3 +1,5 @@
+// Copyright © 2022 Ory Corp
+
 import { APP_URL, appPrefix, gen, website } from "../../../helpers"
 import { authenticator } from "otplib"
 import { routes as react } from "../../../helpers/react"

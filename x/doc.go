@@ -1,3 +1,5 @@
+// Copyright © 2022 Ory Corp
+
 /*
 Package x provides various helpers that do not have an obvious home elsewhere.
 

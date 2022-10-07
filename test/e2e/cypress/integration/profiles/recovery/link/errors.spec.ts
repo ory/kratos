@@ -1,3 +1,5 @@
+// Copyright © 2022 Ory Corp
+
 import { APP_URL, appPrefix, gen, parseHtml } from "../../../../helpers"
 import { routes as react } from "../../../../helpers/react"
 import { routes as express } from "../../../../helpers/express"

@@ -1,3 +1,5 @@
+// Copyright © 2022 Ory Corp
+
 import { assertVerifiableAddress, gen } from "../../../../helpers"
 
 import { routes as react } from "../../../../helpers/react"

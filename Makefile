@@ -60,6 +60,10 @@ node_modules: package.json
 .bin/hydra: Makefile
 	bash <(curl https://raw.githubusercontent.com/ory/meta/master/install.sh) -d -b .bin hydra v1.11.0
 
+.bin/ory: Makefile
+	curl https://raw.githubusercontent.com/ory/meta/master/install.sh | bash -s -- -b .bin ory v0.1.43
+	touch .bin/ory
+
 .PHONY: lint
 lint: .bin/golangci-lint
 	golangci-lint run -v --timeout 10m ./...
@@ -133,8 +137,9 @@ quickstart-dev:
 	docker-compose -f quickstart.yml -f quickstart-standalone.yml -f quickstart-latest.yml $(QUICKSTART_OPTIONS) up --build --force-recreate
 
 # Formats the code
-.PHONY: format
-format: .bin/goimports node_modules
+.PHONY: .bin/ory format
+format: .bin/goimports .bin/ory node_modules
+	.bin/ory dev headers license --exclude=internal/httpclient
 	goimports -w -local github.com/ory .
 	npm exec -- prettier --write 'test/e2e/**/*{.ts,.js}'
 	npm exec -- prettier --write '.github'

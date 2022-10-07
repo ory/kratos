@@ -1,3 +1,5 @@
+// Copyright © 2022 Ory Corp
+
 import { extractRecoveryCode, appPrefix, gen } from "../../../../helpers"
 import { routes as react } from "../../../../helpers/react"
 import { routes as express } from "../../../../helpers/express"

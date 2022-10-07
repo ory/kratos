@@ -1,3 +1,5 @@
+// Copyright © 2022 Ory Corp
+
 package x
 
 // MaxItemsPerPage is used to prevent DoS attacks against large lists by limiting the items per page to 500.

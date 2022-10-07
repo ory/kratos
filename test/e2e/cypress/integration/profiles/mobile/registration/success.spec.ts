@@ -1,3 +1,5 @@
+// Copyright © 2022 Ory Corp
+
 import { MOBILE_URL, gen, website } from "../../../../helpers"
 
 context("Mobile Profile", () => {

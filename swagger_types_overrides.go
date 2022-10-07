@@ -1,3 +1,5 @@
+// Copyright © 2022 Ory Corp
+
 package main
 
 import "github.com/go-openapi/strfmt"

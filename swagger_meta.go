@@ -1,3 +1,5 @@
+// Copyright © 2022 Ory Corp
+
 // Ory Kratos
 //
 // Welcome to the Ory Kratos HTTP API documentation!

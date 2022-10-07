@@ -1,3 +1,5 @@
+// Copyright © 2022 Ory Corp
+
 package settings
 
 // State represents the state of this flow. It knows two states:

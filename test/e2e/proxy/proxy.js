@@ -1,3 +1,5 @@
+// Copyright © 2022 Ory Corp
+
 const request = require("request")
 const urljoin = require("url-join")
 const express = require("express")

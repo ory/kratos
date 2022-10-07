@@ -1,3 +1,5 @@
+// Copyright © 2022 Ory Corp
+
 /*
 Copyright © 2019 NAME HERE <EMAIL ADDRESS>
 

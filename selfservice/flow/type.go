@@ -1,3 +1,5 @@
+// Copyright © 2022 Ory Corp
+
 package flow
 
 // Type is the flow type.

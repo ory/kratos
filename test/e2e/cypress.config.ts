@@ -1,3 +1,5 @@
+// Copyright © 2022 Ory Corp
+
 import { defineConfig } from "cypress"
 import got from "got"
 const CRI = require("chrome-remote-interface")

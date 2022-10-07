@@ -1,3 +1,5 @@
+// Copyright © 2022 Ory Corp
+
 package totp
 
 // CredentialsConfig is the struct that is being used as part of the identity credentials.

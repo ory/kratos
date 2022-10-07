@@ -1,3 +1,5 @@
+// Copyright © 2022 Ory Corp
+
 import { APP_URL, SPA_URL } from "./index"
 
 export const routes = {

@@ -1,3 +1,5 @@
+// Copyright © 2022 Ory Corp
+
 package text
 
 // This file MUST not have any imports to modules that are not in the standard library.
