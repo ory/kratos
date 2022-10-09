@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"net/http"
-	"time"
 
 	"github.com/ory/kratos/session"
 
@@ -203,8 +202,7 @@ func (e *HookExecutor) PostSettingsHook(w http.ResponseWriter, r *http.Request, 
 	}
 
 	options := []identity.ManagerOption{identity.ManagerExposeValidationErrorsForInternalTypeAssertion}
-	ttl := e.d.Config().SelfServiceFlowSettingsPrivilegedSessionMaxAge(r.Context())
-	if ctxUpdate.Session.AuthenticatedAt.Add(ttl).After(time.Now()) {
+	if ctxUpdate.Session.IsPrivileged() {
 		options = append(options, identity.ManagerAllowWriteProtectedTraits)
 	}
 

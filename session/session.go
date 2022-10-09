@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/ory/x/httpx"
+	"github.com/ory/x/sqlxx"
 	"github.com/ory/x/stringsx"
 
 	"github.com/pkg/errors"
@@ -28,8 +29,18 @@ type lifespanProvider interface {
 	SessionLifespan(ctx context.Context) time.Duration
 }
 
+type privilegedMaxAgeProvider interface {
+	SelfServiceFlowSettingsPrivilegedSessionMaxAge(ctx context.Context) time.Duration
+}
+
 type refreshWindowProvider interface {
 	SessionRefreshMinTimeLeft(ctx context.Context) time.Duration
+}
+
+// Helper type to avoid requring duplicate params
+type lifespanPrivilegedProvider interface {
+	lifespanProvider
+	privilegedMaxAgeProvider
 }
 
 // Device corresponding to a Session
@@ -82,6 +93,14 @@ type Session struct {
 	//
 	// When this session expires at.
 	ExpiresAt time.Time `json:"expires_at" db:"expires_at" faker:"time_type"`
+
+	// The Privileged Until Timestamp
+	//
+	// The timestamp at which point the session is no longer privileged, as described here:
+	// https://www.ory.sh/docs/kratos/session-management/overview#privileged-sessions. This value is determined
+	// by adding the configured `selfservice.flows.settings.privileged_session_max_age` duration to the
+	// `authenticated_at` time of the session.
+	PrivilegedUntil *sqlxx.NullTime `json:"privileged_until" faker:"-" db:"privileged_until"`
 
 	// The Session Authentication Timestamp
 	//
@@ -191,7 +210,7 @@ func (s *Session) SetAuthenticatorAssuranceLevel() {
 	}
 }
 
-func NewActiveSession(r *http.Request, i *identity.Identity, c lifespanProvider, authenticatedAt time.Time, completedLoginFor identity.CredentialsType, completedLoginAAL identity.AuthenticatorAssuranceLevel) (*Session, error) {
+func NewActiveSession(r *http.Request, i *identity.Identity, c lifespanPrivilegedProvider, authenticatedAt time.Time, completedLoginFor identity.CredentialsType, completedLoginAAL identity.AuthenticatorAssuranceLevel) (*Session, error) {
 	s := NewInactiveSession()
 	s.CompletedLoginFor(completedLoginFor, completedLoginAAL)
 	if err := s.Activate(r, i, c, authenticatedAt); err != nil {
@@ -210,13 +229,17 @@ func NewInactiveSession() *Session {
 	}
 }
 
-func (s *Session) Activate(r *http.Request, i *identity.Identity, c lifespanProvider, authenticatedAt time.Time) error {
+func (s *Session) Activate(r *http.Request, i *identity.Identity, c lifespanPrivilegedProvider, authenticatedAt time.Time) error {
 	if i != nil && !i.IsActive() {
 		return ErrIdentityDisabled.WithDetail("identity_id", i.ID)
 	}
+	privilegedUntil := sqlxx.NullTime(
+		authenticatedAt.Add(c.SelfServiceFlowSettingsPrivilegedSessionMaxAge(r.Context())),
+	)
 
 	s.Active = true
 	s.ExpiresAt = authenticatedAt.Add(c.SessionLifespan(r.Context()))
+	s.PrivilegedUntil = &privilegedUntil
 	s.AuthenticatedAt = authenticatedAt
 	s.IssuedAt = authenticatedAt
 	s.Identity = i
@@ -271,8 +294,23 @@ func (s *Session) IsActive() bool {
 	return s.Active && s.ExpiresAt.After(time.Now()) && (s.Identity == nil || s.Identity.IsActive())
 }
 
-func (s *Session) Refresh(ctx context.Context, c lifespanProvider) *Session {
+func (s *Session) IsPrivileged() bool {
+	fmt.Printf("IsPrivileged is handling a null value: %v\n", s.PrivilegedUntil == nil)
+	// priviledgedUntil, err := s.PrivilegedUntil.Value()
+	// TODO: I don't understand the `s.Identity == nil` portion of the conditional. Why is a session
+	// considered active if the identity associated with it is nil?
+	// TODO: I think s.PriviledgedUntil can be nil because the sqlxx.NullTime can be a nil pointer,
+	// and we'd be doing a nil pointer dereference
+	return time.Time(*s.PrivilegedUntil).After(time.Now())
+}
+
+func (s *Session) Refresh(ctx context.Context, c lifespanPrivilegedProvider) *Session {
+	privilegedUntil := sqlxx.NullTime(
+		time.Now().Add(c.SelfServiceFlowSettingsPrivilegedSessionMaxAge(ctx)).UTC(),
+	)
+
 	s.ExpiresAt = time.Now().Add(c.SessionLifespan(ctx)).UTC()
+	s.PrivilegedUntil = &privilegedUntil
 	return s
 }
 

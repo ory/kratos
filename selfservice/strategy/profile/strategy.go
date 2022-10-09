@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"net/http"
-	"time"
 
 	"github.com/ory/jsonschema/v3"
 
@@ -163,8 +162,7 @@ func (s *Strategy) continueFlow(w http.ResponseWriter, r *http.Request, ctxUpdat
 	}
 
 	options := []identity.ManagerOption{identity.ManagerExposeValidationErrorsForInternalTypeAssertion}
-	ttl := s.d.Config().SelfServiceFlowSettingsPrivilegedSessionMaxAge(r.Context())
-	if ctxUpdate.Session.AuthenticatedAt.Add(ttl).After(time.Now()) {
+	if ctxUpdate.Session.IsPrivileged() {
 		options = append(options, identity.ManagerAllowWriteProtectedTraits)
 	}
 
