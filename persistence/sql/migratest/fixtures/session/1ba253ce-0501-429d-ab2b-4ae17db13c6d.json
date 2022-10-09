@@ -1,13 +1,13 @@
 {
-  "id": "f38cdebe-e567-42c9-a562-1bd4dee40998",
+  "id": "1ba253ce-0501-429d-ab2b-4ae17db13c6d",
   "active": true,
   "expires_at": "2013-10-07T08:23:19Z",
-  "privileged_until": null,
+  "privileged_until": "2013-10-07T09:23:19Z",
   "authenticated_at": "2013-10-07T08:23:19Z",
   "authenticator_assurance_level": "aal1",
   "authentication_methods": [
     {
-      "method": "v0.6_legacy_session",
+      "method": "password",
       "aal": "",
       "completed_at": "0001-01-01T00:00:00Z"
     }

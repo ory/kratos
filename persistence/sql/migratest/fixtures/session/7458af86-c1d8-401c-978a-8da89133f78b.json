@@ -2,6 +2,7 @@
   "id": "7458af86-c1d8-401c-978a-8da89133f78b",
   "active": true,
   "expires_at": "2013-10-07T08:23:19Z",
+  "privileged_until": null,
   "authenticated_at": "2013-10-07T08:23:19Z",
   "authenticator_assurance_level": "aal2",
   "authentication_methods": [
