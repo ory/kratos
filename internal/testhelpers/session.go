@@ -33,6 +33,48 @@ func NewSessionLifespanProvider(expiresIn time.Duration) *SessionLifespanProvide
 	return &SessionLifespanProvider{e: expiresIn}
 }
 
+type SessionPrivilegedMaxAgeProvider struct {
+	e time.Duration
+}
+
+func (p *SessionPrivilegedMaxAgeProvider) SelfServiceFlowSettingsPrivilegedSessionMaxAge(ctx context.Context) time.Duration {
+	return p.e
+}
+
+func NewSessionPrivilegedMaxAgeProvider(privilegedMaxAge time.Duration) *SessionPrivilegedMaxAgeProvider {
+	return &SessionPrivilegedMaxAgeProvider{e: privilegedMaxAge}
+}
+
+type SessionLifespanAndPrivilegedMaxAgeProvider struct {
+	l *SessionLifespanProvider
+	p *SessionPrivilegedMaxAgeProvider
+}
+
+func (p *SessionLifespanAndPrivilegedMaxAgeProvider) SessionLifespan(ctx context.Context) time.Duration {
+	return p.l.SessionLifespan(ctx)
+}
+
+func (p *SessionLifespanAndPrivilegedMaxAgeProvider) SelfServiceFlowSettingsPrivilegedSessionMaxAge(ctx context.Context) time.Duration {
+	return p.p.SelfServiceFlowSettingsPrivilegedSessionMaxAge(ctx)
+}
+
+func NewSessionLifespanAndPrivilegedMaxAgeProvider(expiresIn time.Duration, privilegedMaxAge time.Duration) *SessionLifespanAndPrivilegedMaxAgeProvider {
+	return &SessionLifespanAndPrivilegedMaxAgeProvider{
+		l: NewSessionLifespanProvider(expiresIn),
+		p: NewSessionPrivilegedMaxAgeProvider(privilegedMaxAge),
+	}
+}
+
+// Gets a session provider that is privileged
+func PrivilegedProvider() *SessionLifespanAndPrivilegedMaxAgeProvider {
+	return NewSessionLifespanAndPrivilegedMaxAgeProvider(time.Hour, time.Minute)
+}
+
+// Gets a session provider that is unprivileged
+func UnrivilegedProvider() *SessionLifespanAndPrivilegedMaxAgeProvider {
+	return NewSessionLifespanAndPrivilegedMaxAgeProvider(time.Hour, time.Nanosecond)
+}
+
 func NewSessionClient(t *testing.T, u string) *http.Client {
 	c := NewClientWithCookies(t)
 	MockHydrateCookieClient(t, c, u)
@@ -136,75 +178,80 @@ func NewHTTPClientWithSessionToken(t *testing.T, reg *driver.RegistryDefault, se
 	}
 }
 
-func NewHTTPClientWithArbitrarySessionToken(t *testing.T, reg *driver.RegistryDefault) *http.Client {
-	req := x.NewTestHTTPRequest(t, "GET", "/sessions/whoami", nil)
-	s, err := session.NewActiveSession(req,
-		&identity.Identity{ID: x.NewUUID(), State: identity.StateActive},
-		NewSessionLifespanProvider(time.Hour),
-		time.Now(),
-		identity.CredentialsTypePassword,
-		identity.AuthenticatorAssuranceLevel1,
-	)
-	require.NoError(t, err, "Could not initialize session from identity.")
+// func NewHTTPClientWithArbitrarySessionToken(t *testing.T, ctx context.Context, reg *driver.RegistryDefault) *http.Client {
+// 	req := x.NewTestHTTPRequest(t, "GET", "/sessions/whoami", nil)
+// 	privilegedMaxAge := reg.Config().SelfServiceFlowSettingsPrivilegedSessionMaxAge(ctx)
+// 	s, err := session.NewActiveSession(req,
+// 		&identity.Identity{ID: x.NewUUID(), State: identity.StateActive},
+// 		NewSessionLifespanAndPrivilegedMaxAgeProvider(time.Hour, privilegedMaxAge),
+// 		time.Now(),
+// 		identity.CredentialsTypePassword,
+// 		identity.AuthenticatorAssuranceLevel1,
+// 	)
+// 	require.NoError(t, err, "Could not initialize session from identity.")
 
-	return NewHTTPClientWithSessionToken(t, reg, s)
-}
+// 	return NewHTTPClientWithSessionToken(t, reg, s)
+// }
 
-func NewHTTPClientWithArbitrarySessionCookie(t *testing.T, reg *driver.RegistryDefault) *http.Client {
-	req := x.NewTestHTTPRequest(t, "GET", "/sessions/whoami", nil)
-	s, err := session.NewActiveSession(req,
-		&identity.Identity{ID: x.NewUUID(), State: identity.StateActive},
-		NewSessionLifespanProvider(time.Hour),
-		time.Now(),
-		identity.CredentialsTypePassword,
-		identity.AuthenticatorAssuranceLevel1,
-	)
-	require.NoError(t, err, "Could not initialize session from identity.")
+// func NewHTTPClientWithArbitrarySessionCookie(t *testing.T, ctx context.Context, reg *driver.RegistryDefault) *http.Client {
+// 	req := x.NewTestHTTPRequest(t, "GET", "/sessions/whoami", nil)
+// 	privilegedMaxAge := reg.Config().SelfServiceFlowSettingsPrivilegedSessionMaxAge(ctx)
+// 	s, err := session.NewActiveSession(req,
+// 		&identity.Identity{ID: x.NewUUID(), State: identity.StateActive},
+// 		NewSessionLifespanAndPrivilegedMaxAgeProvider(time.Hour, privilegedMaxAge),
+// 		time.Now(),
+// 		identity.CredentialsTypePassword,
+// 		identity.AuthenticatorAssuranceLevel1,
+// 	)
+// 	require.NoError(t, err, "Could not initialize session from identity.")
 
-	return NewHTTPClientWithSessionCookie(t, reg, s)
-}
+// 	return NewHTTPClientWithSessionCookie(t, reg, s)
+// }
 
-func NewNoRedirectHTTPClientWithArbitrarySessionCookie(t *testing.T, reg *driver.RegistryDefault) *http.Client {
-	req := x.NewTestHTTPRequest(t, "GET", "/sessions/whoami", nil)
-	s, err := session.NewActiveSession(req,
-		&identity.Identity{ID: x.NewUUID(), State: identity.StateActive},
-		NewSessionLifespanProvider(time.Hour),
-		time.Now(),
-		identity.CredentialsTypePassword,
-		identity.AuthenticatorAssuranceLevel1,
-	)
-	require.NoError(t, err, "Could not initialize session from identity.")
+// func NewNoRedirectHTTPClientWithArbitrarySessionCookie(t *testing.T, ctx context.Context, reg *driver.RegistryDefault) *http.Client {
+// 	req := x.NewTestHTTPRequest(t, "GET", "/sessions/whoami", nil)
+// 	privilegedMaxAge := reg.Config().SelfServiceFlowSettingsPrivilegedSessionMaxAge(ctx)
+// 	s, err := session.NewActiveSession(req,
+// 		&identity.Identity{ID: x.NewUUID(), State: identity.StateActive},
+// 		NewSessionLifespanAndPrivilegedMaxAgeProvider(time.Hour, privilegedMaxAge),
+// 		time.Now(),
+// 		identity.CredentialsTypePassword,
+// 		identity.AuthenticatorAssuranceLevel1,
+// 	)
+// 	require.NoError(t, err, "Could not initialize session from identity.")
 
-	return NewNoRedirectHTTPClientWithSessionCookie(t, reg, s)
-}
+// 	return NewNoRedirectHTTPClientWithSessionCookie(t, reg, s)
+// }
 
-func NewHTTPClientWithIdentitySessionCookie(t *testing.T, reg *driver.RegistryDefault, id *identity.Identity) *http.Client {
-	req := x.NewTestHTTPRequest(t, "GET", "/sessions/whoami", nil)
-	s, err := session.NewActiveSession(req,
-		id,
-		NewSessionLifespanProvider(time.Hour),
-		time.Now(),
-		identity.CredentialsTypePassword,
-		identity.AuthenticatorAssuranceLevel1,
-	)
-	require.NoError(t, err, "Could not initialize session from identity.")
+// func NewHTTPClientWithIdentitySessionCookie(t *testing.T, ctx context.Context, reg *driver.RegistryDefault, id *identity.Identity) *http.Client {
+// 	req := x.NewTestHTTPRequest(t, "GET", "/sessions/whoami", nil)
+// 	privilegedMaxAge := reg.Config().SelfServiceFlowSettingsPrivilegedSessionMaxAge(ctx)
+// 	s, err := session.NewActiveSession(req,
+// 		id,
+// 		NewSessionLifespanAndPrivilegedMaxAgeProvider(time.Hour, privilegedMaxAge),
+// 		time.Now(),
+// 		identity.CredentialsTypePassword,
+// 		identity.AuthenticatorAssuranceLevel1,
+// 	)
+// 	require.NoError(t, err, "Could not initialize session from identity.")
 
-	return NewHTTPClientWithSessionCookie(t, reg, s)
-}
+// 	return NewHTTPClientWithSessionCookie(t, reg, s)
+// }
 
-func NewHTTPClientWithIdentitySessionToken(t *testing.T, reg *driver.RegistryDefault, id *identity.Identity) *http.Client {
-	req := x.NewTestHTTPRequest(t, "GET", "/sessions/whoami", nil)
-	s, err := session.NewActiveSession(req,
-		id,
-		NewSessionLifespanProvider(time.Hour),
-		time.Now(),
-		identity.CredentialsTypePassword,
-		identity.AuthenticatorAssuranceLevel1,
-	)
-	require.NoError(t, err, "Could not initialize session from identity.")
+// func NewHTTPClientWithIdentitySessionToken(t *testing.T, ctx context.Context, reg *driver.RegistryDefault, id *identity.Identity) *http.Client {
+// 	req := x.NewTestHTTPRequest(t, "GET", "/sessions/whoami", nil)
+// 	privilegedMaxAge := reg.Config().SelfServiceFlowSettingsPrivilegedSessionMaxAge(ctx)
+// 	s, err := session.NewActiveSession(req,
+// 		id,
+// 		NewSessionLifespanAndPrivilegedMaxAgeProvider(time.Hour, privilegedMaxAge),
+// 		time.Now(),
+// 		identity.CredentialsTypePassword,
+// 		identity.AuthenticatorAssuranceLevel1,
+// 	)
+// 	require.NoError(t, err, "Could not initialize session from identity.")
 
-	return NewHTTPClientWithSessionToken(t, reg, s)
-}
+// 	return NewHTTPClientWithSessionToken(t, reg, s)
+// }
 
 func EnsureAAL(t *testing.T, c *http.Client, ts *httptest.Server, aal string, methods ...string) {
 	res, err := c.Get(ts.URL + session.RouteWhoami)
@@ -224,4 +271,188 @@ func NewAuthorizedTransport(t *testing.T, reg *driver.RegistryDefault, sess *ses
 	return x.NewTransportWithHeader(http.Header{
 		"Authorization": {"Bearer " + sess.Token},
 	})
+}
+
+// A builder struct to help customize an authenticated http client
+type HTTPClientBuilder struct {
+	t        *testing.T
+	request  *http.Request
+	identity *identity.Identity
+	session  *session.Session
+}
+
+func NewHTTPClientBuilder(t *testing.T) *HTTPClientBuilder {
+	return &HTTPClientBuilder{t: t}
+}
+
+// Raise a test error if the request hasn't been assigned yet.
+func (c *HTTPClientBuilder) nilRequestCheck() {
+	if c.request == nil {
+		c.t.Errorf("creating a Session requires a request to be present on the builder, but request was nil")
+	}
+}
+
+// Raise a test error if the identity hasn't been assigned yet.
+func (c *HTTPClientBuilder) nilIdentityCheck() {
+	if c.request == nil {
+		c.t.Errorf("creating a Session requires an identity to be present on the builder, but identity was nil")
+	}
+}
+
+// Raise a test error if the session hasn't been assigned yet.
+func (c *HTTPClientBuilder) nilSessionCheck() {
+	if c.session == nil {
+		c.t.Errorf("consuming the HTTPClientBuilder requires a session to be present on the builder, but session was nil")
+	}
+}
+
+// Sets a custom request to be used during creation of the session.
+//
+// A request is required unless you intend to provide your own Session via `SetSession`.
+func (c *HTTPClientBuilder) SetReqest(req *http.Request) *HTTPClientBuilder {
+	c.request = req
+	return c
+}
+
+func (c *HTTPClientBuilder) SetReqestFromWhoAmI() *HTTPClientBuilder {
+	return c.SetReqest(
+		x.NewTestHTTPRequest(c.t, "GET", "/sessions/whoami", nil),
+	)
+}
+
+// Sets a given identity on the builder struct for later use in instantiating the session.
+//
+// An identity is required unless you intend to provide your own Session via `SetSession`.
+func (c *HTTPClientBuilder) SetIdentity(identity *identity.Identity) *HTTPClientBuilder {
+	c.identity = identity
+	return c
+}
+
+// Using this builder method for setting the identity is equivalent to using the old "WithArbitrary"
+// functions, since this creates a new arbitrary session token for the session.
+//
+// An identity is required unless you intend to provide your own Session via `SetSession`.
+func (c *HTTPClientBuilder) SetIdentityFromNew() *HTTPClientBuilder {
+	return c.SetIdentity(
+		&identity.Identity{ID: x.NewUUID(), State: identity.StateActive},
+	)
+}
+
+// Sets a given session on the builder for instantiating the final client
+func (c *HTTPClientBuilder) SetSession(session *session.Session) *HTTPClientBuilder {
+	c.session = session
+	return c
+}
+
+// Sets a default session on the builder. This session is active, has an authenticated_at time of now,
+// expires in 1 hour, is privileged for 1 minute, has a password credential type, and is aal1
+func (c *HTTPClientBuilder) SetSessionDefault() *HTTPClientBuilder {
+	c.nilRequestCheck()
+	c.nilIdentityCheck()
+	session, err := session.NewActiveSession(
+		c.request,
+		c.identity,
+		NewSessionLifespanAndPrivilegedMaxAgeProvider(time.Hour, time.Minute),
+		time.Now(),
+		identity.CredentialsTypePassword,
+		identity.AuthenticatorAssuranceLevel1,
+	)
+	require.NoError(c.t, err, "Could not initialize session from identity.")
+	return c.SetSession(session)
+}
+
+// Sets a new session based on a default session, but using a provided instance of
+// `SessionLifespanAndPrivilegedMaxAgeProvider` for setting the session lifespan and privileged age.
+//
+// Example Usage:
+//
+//	func TestStrategyTraits(t *testing.T) {
+//		var unprivilegedClient *http.Client
+//		unprivilegedClient := NewHTTPClientBuilder(t).
+//			SetReqestFromWhoAmI().
+//			SetIdentityFromNew().
+//			SetSessionWithProvider(UnrivilegedProvider()).
+//			ClientWithSessionToken()
+//	}
+func (c *HTTPClientBuilder) SetSessionWithProvider(provider *SessionLifespanAndPrivilegedMaxAgeProvider) *HTTPClientBuilder {
+	c.nilRequestCheck()
+	c.nilIdentityCheck()
+	session, err := session.NewActiveSession(
+		c.request,
+		c.identity,
+		provider,
+		time.Now(),
+		identity.CredentialsTypePassword,
+		identity.AuthenticatorAssuranceLevel1,
+	)
+	require.NoError(c.t, err, "Could not initialize session from identity.")
+	return c.SetSession(session)
+}
+
+// Builder Consumers
+
+// A generic function for creating a new client using the builders session.
+func (c *HTTPClientBuilder) ClientCallback(clientFunc func(*testing.T, *session.Session) *http.Client) *http.Client {
+	return clientFunc(c.t, c.session)
+}
+
+// A quality of life function that consumes the builder, creating a client with a session token
+// via the `NewHTTPClientWithSessionToken` function.
+func (c *HTTPClientBuilder) ClientWithSessionToken(reg *driver.RegistryDefault) *http.Client {
+	c.nilSessionCheck()
+	return c.ClientCallback(func(t *testing.T, s *session.Session) *http.Client {
+		return NewHTTPClientWithSessionToken(t, reg, s)
+	})
+}
+
+// A quality of life function that consumes the builder, creating a client with a session cookie
+// via the `NewHTTPClientWithSessionCookie` function.
+func (c *HTTPClientBuilder) ClientWithSessionCookie(reg *driver.RegistryDefault) *http.Client {
+	c.nilSessionCheck()
+	return c.ClientCallback(func(t *testing.T, s *session.Session) *http.Client {
+		return NewHTTPClientWithSessionCookie(t, reg, s)
+	})
+}
+
+// A quality of life function that consumes the builder, creating a client with a session cookie
+// without redirections via the `NewNoRedirectHTTPClientWithSessionCookie` function.
+func (c *HTTPClientBuilder) ClientNoRedirectWithSessionCookie(reg *driver.RegistryDefault) *http.Client {
+	c.nilSessionCheck()
+	return c.ClientCallback(func(t *testing.T, s *session.Session) *http.Client {
+		return NewNoRedirectHTTPClientWithSessionCookie(t, reg, s)
+	})
+}
+
+// Common configurations
+
+func NewDefaultClientWithSessionToken(t *testing.T, reg *driver.RegistryDefault) *http.Client {
+	return NewHTTPClientBuilder(t).
+		SetReqestFromWhoAmI().
+		SetIdentityFromNew().
+		SetSessionDefault().
+		ClientWithSessionToken(reg)
+}
+
+func NewDefaultClientWithSessionCookie(t *testing.T, reg *driver.RegistryDefault) *http.Client {
+	return NewHTTPClientBuilder(t).
+		SetReqestFromWhoAmI().
+		SetIdentityFromNew().
+		SetSessionDefault().
+		ClientWithSessionCookie(reg)
+}
+
+func NewDefaultClientNoRedirectWithSessionCookie(t *testing.T, reg *driver.RegistryDefault) *http.Client {
+	return NewHTTPClientBuilder(t).
+		SetReqestFromWhoAmI().
+		SetIdentityFromNew().
+		SetSessionDefault().
+		ClientNoRedirectWithSessionCookie(reg)
+}
+
+func NewDefaultClientViaCallback(t *testing.T, clientFunc func(*testing.T, *session.Session) *http.Client) *http.Client {
+	return NewHTTPClientBuilder(t).
+		SetReqestFromWhoAmI().
+		SetIdentityFromNew().
+		SetSessionDefault().
+		ClientCallback(clientFunc)
 }
