@@ -80,7 +80,6 @@ func makeAuthCodeURL(t *testing.T, c *oauth2.Config, requestedClaims string, isF
 }
 
 func newHydra(t *testing.T, loginUI string, consentUI string) (hydraAdmin string, hydraPublic string) {
-	t.Logf("Environment did not provide Ory Hydra, starting fresh.")
 	publicPort, err := freeport.GetFreePort()
 	require.NoError(t, err)
 	adminPort, err := freeport.GetFreePort()
@@ -214,24 +213,7 @@ func TestOAuth2Provider(t *testing.T) {
 		}
 
 		if q.Has("consent_challenge") {
-			cr, r, err := hydraAdminClient.GetConsentRequest(r.Context()).ConsentChallenge(q.Get("consent_challenge")).Execute()
-			require.NoError(t, err)
-			require.Equal(t, http.StatusOK, r.StatusCode)
-			require.ElementsMatch(t, cr.RequestedScope, []string{"profile", "email"})
-
-			remember := true
-			completedAcceptRequest, r, err := hydraAdminClient.AcceptConsentRequest(context.Background()).AcceptConsentRequest(hydraclientgo.AcceptConsentRequest{
-				Remember: &remember,
-			}).ConsentChallenge(q.Get("consent_challenge")).Execute()
-			require.NoError(t, err)
-			require.Equal(t, http.StatusOK, r.StatusCode)
-			require.NotNil(t, completedAcceptRequest)
-			t.Logf("[uiTS] navigating to %s", completedAcceptRequest.RedirectTo)
-			r, err = browserClient.Get(completedAcceptRequest.RedirectTo)
-			require.NoError(t, err)
-			require.Equal(t, clientAppTS.URL, fmt.Sprintf("%s://%s", r.Request.URL.Scheme, r.Request.URL.Host))
-			require.True(t, r.Request.URL.Query().Has("code"))
-
+			kratosUIHandleConsent(t, r, browserClient, hydraAdminClient, clientAppTS.URL)
 			return
 		}
 

@@ -39,7 +39,7 @@ func NewRegistrationUIFlowEchoServer(t *testing.T, reg driver.Registry) *httptes
 	return ts
 }
 
-func InitializeRegistrationFlowViaBrowser(t *testing.T, client *http.Client, ts *httptest.Server, isSPA bool, opts ...InitFlowWithOption) *kratos.SelfServiceRegistrationFlow {
+func InitializeRegistrationFlowViaBrowser(t *testing.T, client *http.Client, ts *httptest.Server, isSPA bool, expectInitError bool, expectGetError bool, opts ...InitFlowWithOption) *kratos.SelfServiceRegistrationFlow {
 	req, err := http.NewRequest("GET", getURLFromInitOptions(ts, registration.RouteInitBrowserFlow, false, opts...), nil)
 	require.NoError(t, err)
 
@@ -51,6 +51,11 @@ func InitializeRegistrationFlowViaBrowser(t *testing.T, client *http.Client, ts 
 	require.NoError(t, err)
 	body := x.MustReadAll(res.Body)
 	require.NoError(t, res.Body.Close())
+	if expectInitError {
+		require.Equal(t, 200, res.StatusCode)
+		require.NotNil(t, res.Request.URL)
+		require.Contains(t, res.Request.URL.String(), "error-ts")
+	}
 
 	flowID := res.Request.URL.Query().Get("flow")
 	if isSPA {
@@ -58,8 +63,13 @@ func InitializeRegistrationFlowViaBrowser(t *testing.T, client *http.Client, ts 
 	}
 
 	rs, _, err := NewSDKCustomClient(ts, client).V0alpha2Api.GetSelfServiceRegistrationFlow(context.Background()).Id(flowID).Execute()
-	require.NoError(t, err)
-	assert.Empty(t, rs.Active)
+	if expectGetError {
+		require.Error(t, err)
+		require.Nil(t, rs)
+	} else {
+		require.NoError(t, err)
+		assert.Empty(t, rs.Active)
+	}
 	return rs
 }
 
@@ -114,7 +124,7 @@ func SubmitRegistrationForm(
 	if isAPI {
 		payload = InitializeRegistrationFlowViaAPI(t, hc, publicTS)
 	} else {
-		payload = InitializeRegistrationFlowViaBrowser(t, hc, publicTS, isSPA)
+		payload = InitializeRegistrationFlowViaBrowser(t, hc, publicTS, isSPA, false, false)
 	}
 
 	time.Sleep(time.Millisecond) // add a bit of delay to allow `1ns` to time out.
