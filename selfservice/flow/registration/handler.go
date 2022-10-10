@@ -2,6 +2,7 @@ package registration
 
 import (
 	"net/http"
+	"net/url"
 	"time"
 
 	"github.com/ory/kratos/hydra"
@@ -22,6 +23,7 @@ import (
 	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/selfservice/errorx"
 	"github.com/ory/kratos/selfservice/flow"
+	"github.com/ory/kratos/selfservice/flow/logout"
 	"github.com/ory/kratos/session"
 	"github.com/ory/kratos/x"
 )
@@ -255,7 +257,26 @@ func (h *Handler) initBrowserFlow(w http.ResponseWriter, r *http.Request, ps htt
 		return
 	}
 
-	if _, err := h.d.SessionManager().FetchFromRequest(r.Context(), r); err == nil {
+	if sess, err := h.d.SessionManager().FetchFromRequest(r.Context(), r); err == nil {
+		if r.URL.Query().Has("login_challenge") {
+			logoutUrl := urlx.AppendPaths(h.d.Config().SelfPublicURL(r.Context()), logout.RouteSubmitFlow)
+			self := urlx.CopyWithQuery(
+				urlx.AppendPaths(h.d.Config().SelfPublicURL(r.Context()), RouteInitBrowserFlow),
+				r.URL.Query(),
+			).String()
+
+			http.Redirect(
+				w,
+				r,
+				urlx.CopyWithQuery(logoutUrl, url.Values{
+					"token":     {sess.LogoutToken},
+					"return_to": {self},
+				}).String(),
+				http.StatusFound,
+			)
+			return
+		}
+
 		if x.IsJSONRequest(r) {
 			h.d.Writer().WriteError(w, r, errors.WithStack(ErrAlreadyLoggedIn))
 			return
