@@ -30,6 +30,7 @@ type Configuration struct {
 	// - yandex
 	// - apple
 	// - dingtalk
+	// - linkedin
 	Provider string `json:"provider"`
 
 	// Label represents an optional label which can be used in the UI generation.
@@ -154,6 +155,8 @@ func (c ConfigurationCollection) Provider(id string, reg dependencies) (Provider
 			case addProviderName("netid"):
 				return NewProviderNetID(&p, reg), nil
 			case addProviderName("dingtalk"):
+				return NewProviderDingTalk(&p, reg), nil
+			case addProviderName("linkedin"):
 				return NewProviderDingTalk(&p, reg), nil
 			}
 			return nil, errors.Errorf("provider type %s is not supported, supported are: %v", p.Provider, providerNames)
