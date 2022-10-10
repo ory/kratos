@@ -119,7 +119,7 @@ context("Account Recovery Errors", () => {
 
       it("should cause form errors", () => {
         cy.visit(recovery)
-
+        cy.removeAttribute(["input[name='email']"], "required")
         cy.get('button[value="code"]').click()
         cy.get('[data-testid="ui/message/4000002"]').should(
           "contain.text",
@@ -149,9 +149,8 @@ context("Account Recovery Errors", () => {
 
       it("should cause non-repeating form errors after submitting empty form twice. see: #2512", () => {
         cy.visit(recovery)
-        cy.get('button[value="code"]').click()
         cy.location("pathname").should("eq", "/recovery")
-
+        cy.removeAttribute(["input[name='email']"], "required")
         cy.get('button[value="code"]').click()
         cy.get('[data-testid="ui/message/4000002"]').should(
           "contain.text",
