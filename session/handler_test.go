@@ -90,19 +90,19 @@ func TestSessionWhoAmI(t *testing.T) {
 		MetadataAdmin:  []byte(`{"admin":"ma"}`),
 		MetadataPublic: []byte(`{"public":"mp"}`),
 	}
-	h, _ := testhelpers.MockSessionCreateHandlerWithIdentity(t, reg, i)
+	h, _ := testhelpers.MockSessionCreateHandlerWithIdentity(t, reg, true, i)
 
 	r.GET("/set", h)
 	conf.MustSet(ctx, config.ViperKeyPublicBaseURL, ts.URL)
 
 	t.Run("case=aal requirements", func(t *testing.T) {
-		h1, _ := testhelpers.MockSessionCreateHandlerWithIdentityAndAMR(t, reg, createAAL2Identity(t, reg), []identity.CredentialsType{identity.CredentialsTypePassword, identity.CredentialsTypeWebAuthn})
+		h1, _ := testhelpers.MockSessionCreateHandlerWithIdentityAndAMR(t, reg, createAAL2Identity(t, reg), true, []identity.CredentialsType{identity.CredentialsTypePassword, identity.CredentialsTypeWebAuthn})
 		r.GET("/set/aal2-aal2", h1)
 
-		h2, _ := testhelpers.MockSessionCreateHandlerWithIdentityAndAMR(t, reg, createAAL2Identity(t, reg), []identity.CredentialsType{identity.CredentialsTypePassword})
+		h2, _ := testhelpers.MockSessionCreateHandlerWithIdentityAndAMR(t, reg, createAAL2Identity(t, reg), true, []identity.CredentialsType{identity.CredentialsTypePassword})
 		r.GET("/set/aal2-aal1", h2)
 
-		h3, _ := testhelpers.MockSessionCreateHandlerWithIdentityAndAMR(t, reg, createAAL1Identity(t, reg), []identity.CredentialsType{identity.CredentialsTypePassword})
+		h3, _ := testhelpers.MockSessionCreateHandlerWithIdentityAndAMR(t, reg, createAAL1Identity(t, reg), true, []identity.CredentialsType{identity.CredentialsTypePassword})
 		r.GET("/set/aal1-aal1", h3)
 
 		run := func(t *testing.T, kind string, code int) string {
@@ -602,7 +602,7 @@ func TestHandlerSelfServiceSessionManagement(t *testing.T) {
 		ident := make(chan *identity.Identity, 1)
 		sess := make(chan *Session, 1)
 		r.GET("/set", func(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-			h, s := testhelpers.MockSessionCreateHandlerWithIdentity(t, reg, <-ident)
+			h, s := testhelpers.MockSessionCreateHandlerWithIdentity(t, reg, true, <-ident)
 			h(w, r, ps)
 			sess <- s
 		})

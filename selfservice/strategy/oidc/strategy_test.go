@@ -683,7 +683,7 @@ func TestDisabledEndpoint(t *testing.T) {
 
 		t.Run("flow=settings", func(t *testing.T) {
 			testhelpers.SetDefaultIdentitySchema(conf, "file://stub/stub.schema.json")
-			c := testhelpers.NewHTTPClientWithArbitrarySessionCookie(t, reg)
+			c := testhelpers.NewDefaultClientWithSessionCookie(t, reg)
 			f := testhelpers.InitializeSettingsFlowViaAPI(t, c, publicTS)
 
 			res, err := c.PostForm(f.Ui.Action, url.Values{"link": {"oidc"}})

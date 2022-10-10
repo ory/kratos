@@ -102,13 +102,17 @@ func TestCompleteSettings(t *testing.T) {
 	_ = testhelpers.NewRedirSessionEchoTS(t, reg)
 	loginTS := testhelpers.NewLoginUIFlowEchoServer(t, reg)
 
-	conf.MustSet(ctx, config.ViperKeySelfServiceSettingsPrivilegedAuthenticationAfter, "1m")
-
 	testhelpers.SetDefaultIdentitySchema(conf, "file://./stub/login.schema.json")
 	conf.MustSet(ctx, config.ViperKeySecretsDefault, []string{"not-a-secure-session-key"})
 
-	doAPIFlow := func(t *testing.T, v func(url.Values), id *identity.Identity) (string, *http.Response) {
-		apiClient := testhelpers.NewHTTPClientWithIdentitySessionToken(t, reg, id)
+	doAPIFlow := func(t *testing.T, privilegedSession bool, v func(url.Values), id *identity.Identity) (string, *http.Response) {
+		apiBuilder := testhelpers.NewHTTPClientBuilder(t).SetReqestFromWhoAmI().SetIdentity(id)
+		if privilegedSession {
+			apiBuilder = apiBuilder.SetSessionWithProvider(testhelpers.PrivilegedProvider())
+		} else {
+			apiBuilder = apiBuilder.SetSessionWithProvider(testhelpers.UnprivilegedProvider())
+		}
+		apiClient := apiBuilder.ClientWithSessionToken(reg)
 		f := testhelpers.InitializeSettingsFlowViaAPI(t, apiClient, publicTS)
 		values := testhelpers.SDKFormFieldsToURLValues(f.Ui.Nodes)
 		v(values)
@@ -116,8 +120,14 @@ func TestCompleteSettings(t *testing.T) {
 		return testhelpers.SettingsMakeRequest(t, true, false, f, apiClient, payload)
 	}
 
-	doBrowserFlow := func(t *testing.T, spa bool, v func(url.Values), id *identity.Identity) (string, *http.Response) {
-		browserClient := testhelpers.NewHTTPClientWithIdentitySessionCookie(t, reg, id)
+	doBrowserFlow := func(t *testing.T, spa bool, privilegedSession bool, v func(url.Values), id *identity.Identity) (string, *http.Response) {
+		clientBuilder := testhelpers.NewHTTPClientBuilder(t).SetReqestFromWhoAmI().SetIdentity(id)
+		if privilegedSession {
+			clientBuilder = clientBuilder.SetSessionWithProvider(testhelpers.PrivilegedProvider())
+		} else {
+			clientBuilder = clientBuilder.SetSessionWithProvider(testhelpers.UnprivilegedProvider())
+		}
+		browserClient := clientBuilder.ClientWithSessionCookie(reg)
 		f := testhelpers.InitializeSettingsFlowViaBrowser(t, browserClient, spa, publicTS)
 		values := testhelpers.SDKFormFieldsToURLValues(f.Ui.Nodes)
 		v(values)
@@ -126,7 +136,14 @@ func TestCompleteSettings(t *testing.T) {
 
 	t.Run("case=hide recovery codes behind reveal button and show disable button", func(t *testing.T) {
 		id, _ := createIdentity(t, reg)
-		browserClient := testhelpers.NewHTTPClientWithIdentitySessionToken(t, reg, id)
+		// TODO: Review this particular diff- I suspect there was a bug since `browserClient` was
+		// actually a token client, not a cookie client
+		browserClient := testhelpers.NewHTTPClientBuilder(t).
+			SetReqestFromWhoAmI().
+			SetIdentity(id).
+			SetSessionDefault().
+			ClientWithSessionCookie(reg)
+			// ClientWithSessionToken(reg)
 
 		t.Run("case=spa", func(t *testing.T) {
 			f := testhelpers.InitializeSettingsFlowViaBrowser(t, browserClient, true, publicTS)
@@ -139,7 +156,11 @@ func TestCompleteSettings(t *testing.T) {
 		})
 
 		t.Run("case=api", func(t *testing.T) {
-			apiClient := testhelpers.NewHTTPClientWithIdentitySessionToken(t, reg, id)
+			apiClient := testhelpers.NewHTTPClientBuilder(t).
+				SetReqestFromWhoAmI().
+				SetIdentity(id).
+				SetSessionDefault().
+				ClientWithSessionToken(reg)
 			f := testhelpers.InitializeSettingsFlowViaAPI(t, apiClient, publicTS)
 			testhelpers.SnapshotTExcept(t, f.Ui.Nodes, []string{"0.attributes.value"})
 		})
@@ -147,7 +168,14 @@ func TestCompleteSettings(t *testing.T) {
 
 	t.Run("case=button for regeneration is displayed when identity has no recovery codes yet", func(t *testing.T) {
 		id := createIdentityWithoutLookup(t, reg)
-		browserClient := testhelpers.NewHTTPClientWithIdentitySessionToken(t, reg, id)
+		// TODO: Review this particular diff- I suspect there was a bug since `browserClient` was
+		// actually a token client, not a cookie client
+		browserClient := testhelpers.NewHTTPClientBuilder(t).
+			SetReqestFromWhoAmI().
+			SetIdentity(id).
+			SetSessionDefault().
+			ClientWithSessionCookie(reg)
+			// ClientWithSessionToken(reg)
 
 		t.Run("case=spa", func(t *testing.T) {
 			f := testhelpers.InitializeSettingsFlowViaBrowser(t, browserClient, true, publicTS)
@@ -160,7 +188,11 @@ func TestCompleteSettings(t *testing.T) {
 		})
 
 		t.Run("case=api", func(t *testing.T) {
-			apiClient := testhelpers.NewHTTPClientWithIdentitySessionToken(t, reg, id)
+			apiClient := testhelpers.NewHTTPClientBuilder(t).
+				SetReqestFromWhoAmI().
+				SetIdentity(id).
+				SetSessionDefault().
+				ClientWithSessionToken(reg)
 			f := testhelpers.InitializeSettingsFlowViaAPI(t, apiClient, publicTS)
 			testhelpers.SnapshotTExcept(t, f.Ui.Nodes, []string{"0.attributes.value"})
 		})
@@ -169,7 +201,7 @@ func TestCompleteSettings(t *testing.T) {
 	t.Run("case=should pass without csrf if API flow", func(t *testing.T) {
 		id, _ := createIdentity(t, reg)
 
-		body, res := doAPIFlow(t, func(v url.Values) {
+		body, res := doAPIFlow(t, true, func(v url.Values) {
 			v.Del("csrf_token")
 			v.Set(node.LookupReveal, "true")
 		}, id)
@@ -182,7 +214,7 @@ func TestCompleteSettings(t *testing.T) {
 		id := createIdentityWithoutLookup(t, reg)
 
 		t.Run("type=browser", func(t *testing.T) {
-			body, res := doBrowserFlow(t, false, func(v url.Values) {
+			body, res := doBrowserFlow(t, false, true, func(v url.Values) {
 				v.Del("csrf_token")
 				v.Set(node.LookupReveal, "true")
 			}, id)
@@ -192,7 +224,7 @@ func TestCompleteSettings(t *testing.T) {
 		})
 
 		t.Run("type=spa", func(t *testing.T) {
-			body, res := doBrowserFlow(t, true, func(v url.Values) {
+			body, res := doBrowserFlow(t, true, true, func(v url.Values) {
 				v.Del("csrf_token")
 				v.Set(node.LookupReveal, "true")
 			}, id)
@@ -203,11 +235,6 @@ func TestCompleteSettings(t *testing.T) {
 	})
 
 	t.Run("type=can not reveal or regenerate or remove without privileged session", func(t *testing.T) {
-		conf.MustSet(ctx, config.ViperKeySelfServiceSettingsPrivilegedAuthenticationAfter, "1ns")
-		t.Cleanup(func() {
-			conf.MustSet(ctx, config.ViperKeySelfServiceSettingsPrivilegedAuthenticationAfter, "5m")
-		})
-
 		id, codes := createIdentity(t, reg)
 
 		checkIdentity := func(t *testing.T) {
@@ -242,7 +269,7 @@ func TestCompleteSettings(t *testing.T) {
 			t.Run("case="+tc.d, func(t *testing.T) {
 				payload := tc.v
 				t.Run("type=api", func(t *testing.T) {
-					actual, res := doAPIFlow(t, payload, id)
+					actual, res := doAPIFlow(t, false, payload, id)
 					assert.Equal(t, http.StatusForbidden, res.StatusCode)
 					assert.Contains(t, gjson.Get(actual, "redirect_browser_to").String(), publicTS.URL+"/self-service/login/browser?refresh=true&return_to=")
 					assertx.EqualAsJSONExcept(t, settings.NewFlowNeedsReAuth(), json.RawMessage(actual), []string{"redirect_browser_to"})
@@ -250,7 +277,7 @@ func TestCompleteSettings(t *testing.T) {
 				})
 
 				t.Run("type=spa", func(t *testing.T) {
-					actual, res := doBrowserFlow(t, true, payload, id)
+					actual, res := doBrowserFlow(t, true, false, payload, id)
 					assert.Equal(t, http.StatusForbidden, res.StatusCode)
 					assert.Contains(t, gjson.Get(actual, "redirect_browser_to").String(), publicTS.URL+"/self-service/login/browser?refresh=true&return_to=")
 					assertx.EqualAsJSONExcept(t, settings.NewFlowNeedsReAuth(), json.RawMessage(actual), []string{"redirect_browser_to"})
@@ -258,7 +285,7 @@ func TestCompleteSettings(t *testing.T) {
 				})
 
 				t.Run("type=browser", func(t *testing.T) {
-					actual, res := doBrowserFlow(t, false, payload, id)
+					actual, res := doBrowserFlow(t, false, false, payload, id)
 					assert.Equal(t, http.StatusOK, res.StatusCode)
 					assert.Contains(t, res.Request.URL.String(), loginTS.URL+"/login-ts")
 					assertx.EqualAsJSON(t, text.NewInfoLoginReAuth().Text, json.RawMessage(gjson.Get(actual, "ui.messages.0.text").Raw), actual)
@@ -283,21 +310,21 @@ func TestCompleteSettings(t *testing.T) {
 		}
 
 		t.Run("type=api", func(t *testing.T) {
-			actual, res := doAPIFlow(t, payload, id)
+			actual, res := doAPIFlow(t, true, payload, id)
 			assert.Equal(t, http.StatusBadRequest, res.StatusCode)
 			assert.EqualValues(t, reason, gjson.Get(actual, "ui.messages.0.text").String(), "%s", actual)
 			checkIdentity(t)
 		})
 
 		t.Run("type=spa", func(t *testing.T) {
-			actual, res := doBrowserFlow(t, true, payload, id)
+			actual, res := doBrowserFlow(t, true, true, payload, id)
 			assert.Equal(t, http.StatusBadRequest, res.StatusCode)
 			assert.EqualValues(t, reason, gjson.Get(actual, "ui.messages.0.text").String(), "%s", actual)
 			checkIdentity(t)
 		})
 
 		t.Run("type=browser", func(t *testing.T) {
-			actual, res := doBrowserFlow(t, false, payload, id)
+			actual, res := doBrowserFlow(t, false, true, payload, id)
 			assert.Equal(t, http.StatusOK, res.StatusCode)
 			assert.Contains(t, res.Request.URL.String(), uiTS.URL)
 			assert.EqualValues(t, reason, gjson.Get(actual, "ui.messages.0.text").String(), "%s", actual)
@@ -318,21 +345,21 @@ func TestCompleteSettings(t *testing.T) {
 		}
 
 		t.Run("type=api", func(t *testing.T) {
-			actual, res := doAPIFlow(t, payload, id)
+			actual, res := doAPIFlow(t, true, payload, id)
 			assert.Equal(t, http.StatusOK, res.StatusCode)
 			testhelpers.SnapshotTExcept(t, json.RawMessage(gjson.Get(actual, "ui.nodes").Raw), []string{"0.attributes.value"})
 			checkIdentity(t)
 		})
 
 		t.Run("type=spa", func(t *testing.T) {
-			actual, res := doBrowserFlow(t, true, payload, id)
+			actual, res := doBrowserFlow(t, true, true, payload, id)
 			assert.Equal(t, http.StatusOK, res.StatusCode)
 			testhelpers.SnapshotTExcept(t, json.RawMessage(gjson.Get(actual, "ui.nodes").Raw), []string{"0.attributes.value"})
 			checkIdentity(t)
 		})
 
 		t.Run("type=browser", func(t *testing.T) {
-			actual, res := doBrowserFlow(t, false, payload, id)
+			actual, res := doBrowserFlow(t, false, true, payload, id)
 			assert.Equal(t, http.StatusOK, res.StatusCode)
 			assert.Contains(t, res.Request.URL.String(), uiTS.URL)
 			testhelpers.SnapshotTExcept(t, json.RawMessage(gjson.Get(actual, "ui.nodes").Raw), []string{"0.attributes.value"})
@@ -386,7 +413,7 @@ func TestCompleteSettings(t *testing.T) {
 
 				t.Run("type=api", func(t *testing.T) {
 					id, _ := createIdentity(t, reg)
-					apiClient := testhelpers.NewHTTPClientWithIdentitySessionToken(t, reg, id)
+					apiClient := testhelpers.NewIdentityClientWithSessionToken(t, reg, id)
 					f := testhelpers.InitializeSettingsFlowViaAPI(t, apiClient, publicTS)
 					values := testhelpers.SDKFormFieldsToURLValues(f.Ui.Nodes)
 
@@ -407,7 +434,7 @@ func TestCompleteSettings(t *testing.T) {
 				runBrowser := func(t *testing.T, spa bool) {
 					id, _ := createIdentity(t, reg)
 
-					browserClient := testhelpers.NewHTTPClientWithIdentitySessionCookie(t, reg, id)
+					browserClient := testhelpers.NewIdentityClientWithSessionCookie(t, reg, id)
 					f := testhelpers.InitializeSettingsFlowViaBrowser(t, browserClient, spa, publicTS)
 					values := testhelpers.SDKFormFieldsToURLValues(f.Ui.Nodes)
 
@@ -477,7 +504,7 @@ func TestCompleteSettings(t *testing.T) {
 
 				t.Run("type=api", func(t *testing.T) {
 					id, _ := createIdentity(t, reg)
-					apiClient := testhelpers.NewHTTPClientWithIdentitySessionToken(t, reg, id)
+					apiClient := testhelpers.NewIdentityClientWithSessionToken(t, reg, id)
 					f := testhelpers.InitializeSettingsFlowViaAPI(t, apiClient, publicTS)
 					values := testhelpers.SDKFormFieldsToURLValues(f.Ui.Nodes)
 
@@ -495,7 +522,7 @@ func TestCompleteSettings(t *testing.T) {
 				runBrowser := func(t *testing.T, spa bool) {
 					id, _ := createIdentity(t, reg)
 
-					browserClient := testhelpers.NewHTTPClientWithIdentitySessionCookie(t, reg, id)
+					browserClient := testhelpers.NewIdentityClientWithSessionCookie(t, reg, id)
 					f := testhelpers.InitializeSettingsFlowViaBrowser(t, browserClient, spa, publicTS)
 					values := testhelpers.SDKFormFieldsToURLValues(f.Ui.Nodes)
 

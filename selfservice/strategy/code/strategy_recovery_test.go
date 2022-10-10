@@ -565,7 +565,7 @@ func TestRecovery(t *testing.T) {
 				session, err := session.NewActiveSession(
 					req,
 					&identity.Identity{ID: x.NewUUID(), State: identity.StateActive},
-					testhelpers.NewSessionLifespanProvider(time.Hour),
+					testhelpers.PrivilegedProvider(),
 					time.Now(),
 					identity.CredentialsTypePassword,
 					identity.AuthenticatorAssuranceLevel1,

@@ -103,7 +103,7 @@ func TestCompleteLogin(t *testing.T) {
 	t.Run("case=totp payload is set when identity has totp", func(t *testing.T) {
 		id, _, _ := createIdentity(t, reg)
 
-		apiClient := testhelpers.NewHTTPClientWithIdentitySessionToken(t, reg, id)
+		apiClient := testhelpers.NewIdentityClientWithSessionToken(t, reg, id)
 		f := testhelpers.InitializeLoginFlowViaAPI(t, apiClient, publicTS, false, testhelpers.InitFlowWithAAL(identity.AuthenticatorAssuranceLevel2))
 		testhelpers.SnapshotTExcept(t, f.Ui.Nodes, []string{
 			"0.attributes.value",
@@ -113,7 +113,7 @@ func TestCompleteLogin(t *testing.T) {
 	t.Run("case=totp payload is not set when identity has no totp", func(t *testing.T) {
 		id := createIdentityWithoutTOTP(t, reg)
 
-		apiClient := testhelpers.NewHTTPClientWithIdentitySessionToken(t, reg, id)
+		apiClient := testhelpers.NewIdentityClientWithSessionToken(t, reg, id)
 		f := testhelpers.InitializeLoginFlowViaAPI(t, apiClient, publicTS, false, testhelpers.InitFlowWithAAL(identity.AuthenticatorAssuranceLevel2))
 		assertx.EqualAsJSON(t, nil, f.Ui.Nodes)
 	})
@@ -122,7 +122,7 @@ func TestCompleteLogin(t *testing.T) {
 		id, _, _ := createIdentity(t, reg)
 
 		t.Run("type=api", func(t *testing.T) {
-			apiClient := testhelpers.NewHTTPClientWithIdentitySessionToken(t, reg, id)
+			apiClient := testhelpers.NewIdentityClientWithSessionToken(t, reg, id)
 			f := testhelpers.InitializeLoginFlowViaAPI(t, apiClient, publicTS, false, testhelpers.InitFlowWithAAL(identity.AuthenticatorAssuranceLevel2))
 
 			body, res := testhelpers.LoginMakeRequest(t, true, false, f, apiClient, "14=)=!(%)$/ZP()GHIÖ")
@@ -132,7 +132,7 @@ func TestCompleteLogin(t *testing.T) {
 		})
 
 		t.Run("type=browser", func(t *testing.T) {
-			browserClient := testhelpers.NewHTTPClientWithIdentitySessionCookie(t, reg, id)
+			browserClient := testhelpers.NewIdentityClientWithSessionCookie(t, reg, id)
 			f := testhelpers.InitializeLoginFlowViaBrowser(t, browserClient, publicTS, false, false, testhelpers.InitFlowWithAAL(identity.AuthenticatorAssuranceLevel2))
 
 			body, res := testhelpers.LoginMakeRequest(t, false, false, f, browserClient, "14=)=!(%)$/ZP()GHIÖ")
@@ -142,7 +142,7 @@ func TestCompleteLogin(t *testing.T) {
 		})
 
 		t.Run("type=spa", func(t *testing.T) {
-			browserClient := testhelpers.NewHTTPClientWithIdentitySessionCookie(t, reg, id)
+			browserClient := testhelpers.NewIdentityClientWithSessionCookie(t, reg, id)
 			f := testhelpers.InitializeLoginFlowViaBrowser(t, browserClient, publicTS, false, true, testhelpers.InitFlowWithAAL(identity.AuthenticatorAssuranceLevel2))
 
 			body, res := testhelpers.LoginMakeRequest(t, false, true, f, browserClient, "14=)=!(%)$/ZP()GHIÖ")
@@ -153,7 +153,7 @@ func TestCompleteLogin(t *testing.T) {
 	})
 
 	doAPIFlow := func(t *testing.T, v func(url.Values), id *identity.Identity) (string, *http.Response) {
-		apiClient := testhelpers.NewHTTPClientWithIdentitySessionToken(t, reg, id)
+		apiClient := testhelpers.NewIdentityClientWithSessionToken(t, reg, id)
 		f := testhelpers.InitializeLoginFlowViaAPI(t, apiClient, publicTS, false, testhelpers.InitFlowWithAAL(identity.AuthenticatorAssuranceLevel2))
 		values := testhelpers.SDKFormFieldsToURLValues(f.Ui.Nodes)
 		values.Set("method", "totp")
@@ -163,7 +163,7 @@ func TestCompleteLogin(t *testing.T) {
 	}
 
 	doBrowserFlow := func(t *testing.T, spa bool, v func(url.Values), id *identity.Identity, returnTo string) (string, *http.Response) {
-		browserClient := testhelpers.NewHTTPClientWithIdentitySessionCookie(t, reg, id)
+		browserClient := testhelpers.NewIdentityClientWithSessionCookie(t, reg, id)
 
 		opts := []testhelpers.InitFlowWithOption{testhelpers.InitFlowWithAAL(identity.AuthenticatorAssuranceLevel2)}
 		if len(returnTo) > 0 {

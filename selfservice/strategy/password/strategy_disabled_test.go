@@ -49,7 +49,7 @@ func TestDisabledEndpoint(t *testing.T) {
 
 	t.Run("case=should not settings when password method is disabled", func(t *testing.T) {
 		testhelpers.SetDefaultIdentitySchema(conf, "file://stub/login.schema.json")
-		c := testhelpers.NewHTTPClientWithArbitrarySessionCookie(t, reg)
+		c := testhelpers.NewDefaultClientWithSessionCookie(t, reg)
 
 		t.Run("method=GET", func(t *testing.T) {
 			t.Skip("GET is currently not supported for this endpoint.")

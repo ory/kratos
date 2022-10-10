@@ -82,7 +82,6 @@ func TestSettings(t *testing.T) {
 	_ = testhelpers.NewSettingsUIFlowEchoServer(t, reg)
 	_ = testhelpers.NewErrorTestServer(t, reg)
 	_ = testhelpers.NewLoginUIWith401Response(t, conf)
-	conf.MustSet(ctx, config.ViperKeySelfServiceSettingsPrivilegedAuthenticationAfter, "1m")
 
 	browserIdentity1 := newIdentityWithPassword("john-browser@doe.com")
 	apiIdentity1 := newIdentityWithPassword("john-api@doe.com")
@@ -91,10 +90,10 @@ func TestSettings(t *testing.T) {
 
 	publicTS, _ := testhelpers.NewKratosServer(t, reg)
 
-	browserUser1 := testhelpers.NewHTTPClientWithIdentitySessionCookie(t, reg, browserIdentity1)
-	browserUser2 := testhelpers.NewHTTPClientWithIdentitySessionCookie(t, reg, browserIdentity2)
-	apiUser1 := testhelpers.NewHTTPClientWithIdentitySessionToken(t, reg, apiIdentity1)
-	apiUser2 := testhelpers.NewHTTPClientWithIdentitySessionToken(t, reg, apiIdentity2)
+	browserUser1 := testhelpers.NewIdentityClientWithSessionCookie(t, reg, browserIdentity1)
+	browserUser2 := testhelpers.NewIdentityClientWithSessionCookie(t, reg, browserIdentity2)
+	apiUser1 := testhelpers.NewIdentityClientWithSessionToken(t, reg, apiIdentity1)
+	apiUser2 := testhelpers.NewIdentityClientWithSessionToken(t, reg, apiIdentity2)
 
 	t.Run("description=not authorized to call endpoints without a session", func(t *testing.T) {
 		c := testhelpers.NewDebugClient(t)
@@ -137,8 +136,6 @@ func TestSettings(t *testing.T) {
 		}
 
 		t.Run("session=with privileged session", func(t *testing.T) {
-			conf.MustSet(ctx, config.ViperKeySelfServiceSettingsPrivilegedAuthenticationAfter, "5m")
-
 			var payload = func(v url.Values) {
 				v.Set("password", "123456")
 				v.Set("method", "password")
@@ -158,11 +155,19 @@ func TestSettings(t *testing.T) {
 		})
 
 		t.Run("session=needs reauthentication", func(t *testing.T) {
-			conf.MustSet(ctx, config.ViperKeySelfServiceSettingsPrivilegedAuthenticationAfter, "1ns")
 			defer testhelpers.NewLoginUIWith401Response(t, conf)
-			t.Cleanup(func() {
-				conf.MustSet(ctx, config.ViperKeySelfServiceSettingsPrivilegedAuthenticationAfter, "5m")
-			})
+
+			unprivilegedBrowserUser1 := testhelpers.NewHTTPClientBuilder(t).
+				SetReqestFromWhoAmI().
+				SetIdentity(browserIdentity1).
+				SetSessionWithProvider(testhelpers.UnprivilegedProvider()).
+				ClientWithSessionCookie(reg)
+
+			unprivilegedApiUser := testhelpers.NewHTTPClientBuilder(t).
+				SetReqestFromWhoAmI().
+				SetIdentity(apiIdentity1).
+				SetSessionWithProvider(testhelpers.UnprivilegedProvider()).
+				ClientWithSessionToken(reg)
 
 			var payload = func(v url.Values) {
 				v.Set("method", "password")
@@ -170,24 +175,24 @@ func TestSettings(t *testing.T) {
 			}
 
 			t.Run("type=api/expected=an error because reauth can not be initialized for API clients", func(t *testing.T) {
-				_ = testhelpers.NewSettingsLoginAcceptAPIServer(t, testhelpers.NewSDKCustomClient(publicTS, apiUser1), conf)
-				actual := testhelpers.SubmitSettingsForm(t, true, false, apiUser1, publicTS, payload,
+				_ = testhelpers.NewSettingsLoginAcceptAPIServer(t, testhelpers.NewSDKCustomClient(publicTS, unprivilegedApiUser), conf)
+				actual := testhelpers.SubmitSettingsForm(t, true, false, unprivilegedApiUser, publicTS, payload,
 					http.StatusForbidden, publicTS.URL+settings.RouteSubmitFlow)
 				assertx.EqualAsJSONExcept(t, settings.NewFlowNeedsReAuth(), json.RawMessage(actual), []string{"redirect_browser_to"})
 				assert.NotEmpty(t, json.RawMessage(gjson.Get(actual, "redirect_browser_to").String()))
 			})
 
 			t.Run("type=spa", func(t *testing.T) {
-				_ = testhelpers.NewSettingsLoginAcceptAPIServer(t, testhelpers.NewSDKCustomClient(publicTS, browserUser1), conf)
-				actual := testhelpers.SubmitSettingsForm(t, false, true, browserUser1, publicTS, payload,
+				_ = testhelpers.NewSettingsLoginAcceptAPIServer(t, testhelpers.NewSDKCustomClient(publicTS, unprivilegedBrowserUser1), conf)
+				actual := testhelpers.SubmitSettingsForm(t, false, true, unprivilegedBrowserUser1, publicTS, payload,
 					http.StatusForbidden, publicTS.URL+settings.RouteSubmitFlow)
 				assertx.EqualAsJSON(t, settings.NewFlowNeedsReAuth().DefaultError, json.RawMessage(gjson.Get(actual, "error").Raw))
 				assert.NotEmpty(t, json.RawMessage(gjson.Get(actual, "redirect_browser_to").String()))
 			})
 
 			t.Run("type=browser", func(t *testing.T) {
-				_ = testhelpers.NewSettingsLoginAcceptAPIServer(t, testhelpers.NewSDKCustomClient(publicTS, browserUser1), conf)
-				check(t, expectValidationError(t, false, false, browserUser1, payload))
+				_ = testhelpers.NewSettingsLoginAcceptAPIServer(t, testhelpers.NewSDKCustomClient(publicTS, unprivilegedBrowserUser1), conf)
+				check(t, expectValidationError(t, false, false, unprivilegedBrowserUser1, payload))
 			})
 		})
 	})
@@ -337,9 +342,9 @@ func TestSettings(t *testing.T) {
 		bi := newIdentityWithoutCredentials(x.NewUUID().String() + "@ory.sh")
 		si := newIdentityWithoutCredentials(x.NewUUID().String() + "@ory.sh")
 		ai := newIdentityWithoutCredentials(x.NewUUID().String() + "@ory.sh")
-		browserUser := testhelpers.NewHTTPClientWithIdentitySessionCookie(t, reg, bi)
-		spaUser := testhelpers.NewHTTPClientWithIdentitySessionCookie(t, reg, si)
-		apiUser := testhelpers.NewHTTPClientWithIdentitySessionToken(t, reg, ai)
+		browserUser := testhelpers.NewIdentityClientWithSessionCookie(t, reg, bi)
+		spaUser := testhelpers.NewIdentityClientWithSessionCookie(t, reg, si)
+		apiUser := testhelpers.NewIdentityClientWithSessionToken(t, reg, ai)
 
 		var check = func(t *testing.T, actual string, id *identity.Identity) {
 			assert.Equal(t, "success", gjson.Get(actual, "state").String(), "%s", actual)
@@ -414,8 +419,8 @@ func TestSettings(t *testing.T) {
 		testhelpers.SetDefaultIdentitySchema(conf, "file://stub/missing-identifier.schema.json")
 
 		id := newIdentityWithoutCredentials(testhelpers.RandomEmail())
-		browser := testhelpers.NewHTTPClientWithIdentitySessionCookie(t, reg, id)
-		api := testhelpers.NewHTTPClientWithIdentitySessionToken(t, reg, id)
+		browser := testhelpers.NewIdentityClientWithSessionCookie(t, reg, id)
+		api := testhelpers.NewIdentityClientWithSessionToken(t, reg, id)
 
 		for _, f := range []string{"spa", "api", "browser"} {
 			t.Run("type="+f, func(t *testing.T) {

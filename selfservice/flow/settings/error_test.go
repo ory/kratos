@@ -144,7 +144,15 @@ func TestHandleError(t *testing.T) {
 				req := httptest.NewRequest("GET", "/sessions/whoami", nil)
 
 				// This needs an authenticated client in order to call the RouteGetFlow endpoint
-				s, err := session.NewActiveSession(req, &id, testhelpers.NewSessionLifespanProvider(time.Hour), time.Now(), identity.CredentialsTypePassword, identity.AuthenticatorAssuranceLevel1)
+				// TODO: Replace with client generator
+				s, err := session.NewActiveSession(
+					req,
+					&id,
+					testhelpers.NewSessionLifespanAndPrivilegedMaxAgeProvider(time.Hour, time.Minute),
+					time.Now(),
+					identity.CredentialsTypePassword,
+					identity.AuthenticatorAssuranceLevel1,
+				)
 				require.NoError(t, err)
 				c := testhelpers.NewHTTPClientWithSessionToken(t, reg, s)
 

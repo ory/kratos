@@ -12,7 +12,6 @@ import (
 	"net/url"
 	"strings"
 	"testing"
-	"time"
 
 	"github.com/ory/x/jsonx"
 
@@ -63,21 +62,6 @@ func TestStrategyTraits(t *testing.T) {
 	testhelpers.StrategyEnable(t, conf, identity.CredentialsTypePassword.String(), true)
 	testhelpers.StrategyEnable(t, conf, settings.StrategyProfile, true)
 
-	setPrivilegedTime := func(t *testing.T, duration time.Duration) {
-		conf.MustSet(ctx, config.ViperKeySelfServiceSettingsPrivilegedAuthenticationAfter, duration.String())
-		t.Cleanup(func() {
-			conf.MustSet(ctx, config.ViperKeySelfServiceSettingsPrivilegedAuthenticationAfter, "1ns")
-		})
-	}
-
-	setPrivileged := func(t *testing.T) {
-		setPrivilegedTime(t, time.Minute*10)
-	}
-
-	setUnprivileged := func(t *testing.T) {
-		setPrivilegedTime(t, time.Nanosecond)
-	}
-
 	ui := testhelpers.NewSettingsUIEchoServer(t, reg)
 	_ = testhelpers.NewErrorTestServer(t, reg)
 
@@ -88,14 +72,35 @@ func TestStrategyTraits(t *testing.T) {
 	browserIdentity2 := &identity.Identity{ID: x.NewUUID(), Traits: identity.Traits(`{}`), State: identity.StateActive}
 	apiIdentity2 := &identity.Identity{ID: x.NewUUID(), Traits: identity.Traits(`{}`), State: identity.StateActive}
 
-	browserUser1 := testhelpers.NewHTTPClientWithIdentitySessionCookie(t, reg, browserIdentity1)
-	browserUser2 := testhelpers.NewHTTPClientWithIdentitySessionCookie(t, reg, browserIdentity2)
-	apiUser1 := testhelpers.NewHTTPClientWithIdentitySessionToken(t, reg, apiIdentity1)
-	apiUser2 := testhelpers.NewHTTPClientWithIdentitySessionToken(t, reg, apiIdentity2)
+	getBrowserUser := func(sessionPrivileged bool, identity *identity.Identity) *http.Client {
+		var provider *testhelpers.SessionLifespanAndPrivilegedMaxAgeProvider
+		if sessionPrivileged {
+			provider = testhelpers.PrivilegedProvider()
+		} else {
+			provider = testhelpers.UnprivilegedProvider()
+		}
+		return testhelpers.NewHTTPClientBuilder(t).
+			SetReqestFromWhoAmI().
+			SetIdentity(identity).
+			SetSessionWithProvider(provider).
+			ClientWithSessionCookie(reg)
+	}
+
+	getApiUser := func(sessionPrivileged bool, identity *identity.Identity) *http.Client {
+		var provider *testhelpers.SessionLifespanAndPrivilegedMaxAgeProvider
+		if sessionPrivileged {
+			provider = testhelpers.PrivilegedProvider()
+		} else {
+			provider = testhelpers.UnprivilegedProvider()
+		}
+		return testhelpers.NewHTTPClientBuilder(t).
+			SetReqestFromWhoAmI().
+			SetIdentity(identity).
+			SetSessionWithProvider(provider).
+			ClientWithSessionToken(reg)
+	}
 
 	t.Run("description=not authorized to call endpoints without a session", func(t *testing.T) {
-		setUnprivileged(t)
-
 		t.Run("type=browser", func(t *testing.T) {
 			res, err := http.DefaultClient.Do(httpx.MustNewRequest("POST", publicTS.URL+settings.RouteSubmitFlow, strings.NewReader(url.Values{"foo": {"bar"}}.Encode()), "application/x-www-form-urlencoded"))
 			require.NoError(t, err)
@@ -113,7 +118,7 @@ func TestStrategyTraits(t *testing.T) {
 	})
 
 	t.Run("description=should fail to post data if CSRF is invalid/type=browser", func(t *testing.T) {
-		setUnprivileged(t)
+		browserUser1 := getBrowserUser(false, browserIdentity1)
 
 		f := testhelpers.InitializeSettingsFlowViaBrowser(t, browserUser1, false, publicTS)
 
@@ -124,7 +129,7 @@ func TestStrategyTraits(t *testing.T) {
 	})
 
 	t.Run("description=should fail to post data if CSRF is invalid/type=spa", func(t *testing.T) {
-		setUnprivileged(t)
+		browserUser1 := getBrowserUser(false, browserIdentity1)
 
 		f := testhelpers.InitializeSettingsFlowViaBrowser(t, browserUser1, true, publicTS)
 
@@ -135,7 +140,7 @@ func TestStrategyTraits(t *testing.T) {
 	})
 
 	t.Run("description=should not fail because of CSRF token but because of unprivileged/type=api", func(t *testing.T) {
-		setUnprivileged(t)
+		apiUser1 := getApiUser(false, apiIdentity1)
 
 		f := testhelpers.InitializeSettingsFlowViaAPI(t, apiUser1, publicTS)
 
@@ -147,7 +152,7 @@ func TestStrategyTraits(t *testing.T) {
 	})
 
 	t.Run("case=should fail with correct CSRF error cause/type=api", func(t *testing.T) {
-		setPrivileged(t)
+		apiUser1 := getApiUser(true, apiIdentity1)
 
 		for k, tc := range []struct {
 			mod func(http.Header)
@@ -184,7 +189,8 @@ func TestStrategyTraits(t *testing.T) {
 	})
 
 	t.Run("description=hydrate the proper fields", func(t *testing.T) {
-		setPrivileged(t)
+		browserUser1 := getBrowserUser(true, browserIdentity1)
+		apiUser1 := getApiUser(true, apiIdentity1)
 
 		var run = func(t *testing.T, id *identity.Identity, payload *kratos.SelfServiceSettingsFlow, route string) {
 			assert.NotEmpty(t, payload.Identity)
@@ -234,7 +240,8 @@ func TestStrategyTraits(t *testing.T) {
 	}
 
 	t.Run("description=should come back with form errors if some profile data is invalid", func(t *testing.T) {
-		setPrivileged(t)
+		browserUser1 := getBrowserUser(true, browserIdentity1)
+		apiUser1 := getApiUser(true, apiIdentity1)
 
 		var check = func(t *testing.T, actual string) {
 			assert.NotEmpty(t, gjson.Get(actual, "ui.nodes.#(attributes.name==csrf_token).attributes.value").String(), "%s", actual)
@@ -264,7 +271,10 @@ func TestStrategyTraits(t *testing.T) {
 	})
 
 	t.Run("description=should not be able to make requests for another user", func(t *testing.T) {
-		setUnprivileged(t)
+		browserUser1 := getBrowserUser(false, browserIdentity1)
+		browserUser2 := getBrowserUser(false, browserIdentity2)
+		apiUser1 := getApiUser(false, apiIdentity1)
+		apiUser2 := getApiUser(false, apiIdentity2)
 
 		t.Run("type=api", func(t *testing.T) {
 			f := testhelpers.InitializeSettingsFlowViaAPI(t, apiUser1, publicTS)
@@ -296,8 +306,6 @@ func TestStrategyTraits(t *testing.T) {
 
 	t.Run("description=should end up at the login endpoint if trying to update protected field without sudo mode", func(t *testing.T) {
 		var run = func(t *testing.T, config *kratos.SelfServiceSettingsFlow, isAPI bool, c *http.Client) *http.Response {
-			time.Sleep(time.Millisecond)
-
 			values := testhelpers.SDKFormFieldsToURLValues(config.Ui.Nodes)
 			values.Set("method", "profile")
 			values.Set("traits.email", "not-john-doe@foo.bar")
@@ -309,7 +317,7 @@ func TestStrategyTraits(t *testing.T) {
 		}
 
 		t.Run("type=api", func(t *testing.T) {
-			setUnprivileged(t)
+			apiUser1 := getApiUser(false, apiIdentity1)
 			f := testhelpers.InitializeSettingsFlowViaAPI(t, apiUser1, publicTS)
 			res := run(t, f, true, apiUser1)
 			assert.EqualValues(t, http.StatusForbidden, res.StatusCode)
@@ -317,7 +325,7 @@ func TestStrategyTraits(t *testing.T) {
 		})
 
 		t.Run("type=sqa", func(t *testing.T) {
-			setUnprivileged(t)
+			browserUser1 := getBrowserUser(false, browserIdentity1)
 			f := testhelpers.InitializeSettingsFlowViaBrowser(t, browserUser1, true, publicTS)
 			res := run(t, f, true, browserUser1)
 			assert.EqualValues(t, http.StatusUnauthorized, res.StatusCode)
@@ -325,14 +333,14 @@ func TestStrategyTraits(t *testing.T) {
 		})
 
 		t.Run("type=browser", func(t *testing.T) {
-			setUnprivileged(t)
+			browserUser1 := getBrowserUser(false, browserIdentity1)
 			f := testhelpers.InitializeSettingsFlowViaBrowser(t, browserUser1, false, publicTS)
 			res := run(t, f, false, browserUser1)
 			assert.EqualValues(t, http.StatusUnauthorized, res.StatusCode)
 			assert.Contains(t, res.Request.URL.String(), conf.GetProvider(ctx).String(config.ViperKeySelfServiceLoginUI))
 
 			t.Run("should update when signed back in", func(t *testing.T) {
-				setPrivileged(t)
+				browserUser1 := getBrowserUser(true, browserIdentity1)
 				res, err := browserUser1.Get(f.Ui.Action)
 				require.NoError(t, err)
 
@@ -346,7 +354,8 @@ func TestStrategyTraits(t *testing.T) {
 	})
 
 	t.Run("flow=fail first update", func(t *testing.T) {
-		setPrivileged(t)
+		browserUser1 := getBrowserUser(true, browserIdentity1)
+		apiUser1 := getApiUser(true, apiIdentity1)
 
 		var check = func(t *testing.T, actual string) {
 			assert.EqualValues(t, settings.StateShowForm, gjson.Get(actual, "state").String(), "%s", actual)
@@ -374,7 +383,8 @@ func TestStrategyTraits(t *testing.T) {
 	})
 
 	t.Run("flow=fail second update", func(t *testing.T) {
-		setPrivileged(t)
+		browserUser1 := getBrowserUser(true, browserIdentity1)
+		apiUser1 := getApiUser(true, apiIdentity1)
 
 		var check = func(t *testing.T, actual string) {
 			assert.EqualValues(t, settings.StateShowForm, gjson.Get(actual, "state").String(), "%s", actual)
@@ -418,7 +428,8 @@ func TestStrategyTraits(t *testing.T) {
 	}
 
 	t.Run("flow=succeed with final request", func(t *testing.T) {
-		setPrivileged(t)
+		browserUser1 := getBrowserUser(true, browserIdentity1)
+		apiUser1 := getApiUser(true, apiIdentity1)
 
 		var check = func(t *testing.T, actual string) {
 			assert.EqualValues(t, settings.StateSuccess, gjson.Get(actual, "state").String(), "%s", actual)
@@ -458,7 +469,8 @@ func TestStrategyTraits(t *testing.T) {
 	})
 
 	t.Run("flow=try another update with invalid data", func(t *testing.T) {
-		setPrivileged(t)
+		browserUser1 := getBrowserUser(true, browserIdentity1)
+		apiUser1 := getApiUser(true, apiIdentity1)
 
 		var check = func(t *testing.T, actual string) {
 			assert.EqualValues(t, settings.StateShowForm, gjson.Get(actual, "state").String(), "%s", actual)
@@ -483,7 +495,7 @@ func TestStrategyTraits(t *testing.T) {
 	})
 
 	t.Run("description=ensure that hooks are running", func(t *testing.T) {
-		setPrivileged(t)
+		browserUser1 := getBrowserUser(true, browserIdentity1)
 
 		var returned bool
 		router := httprouter.New()
@@ -512,10 +524,13 @@ func TestStrategyTraits(t *testing.T) {
 	})
 
 	// Update the login endpoint to auto-accept any incoming login request!
-	_ = testhelpers.NewSettingsLoginAcceptAPIServer(t, testhelpers.NewSDKCustomClient(publicTS, browserUser1), conf)
+	// TODO: This causes some side effect, possibly on the old browserUser1 client- I'm not sure what the implications
+	// of commenting this out are. I'll follow up on this before opening this for final review
+	// _ = testhelpers.NewSettingsLoginAcceptAPIServer(t, testhelpers.NewSDKCustomClient(publicTS, browserUser1), conf)
 
 	t.Run("description=should send email with verifiable address", func(t *testing.T) {
-		setPrivileged(t)
+		browserUser1 := getBrowserUser(true, browserIdentity1)
+		apiUser1 := getApiUser(true, apiIdentity1)
 
 		conf.MustSet(ctx, config.ViperKeySelfServiceVerificationEnabled, true)
 		conf.MustSet(ctx, config.ViperKeyCourierSMTPURL, "smtp://foo:bar@irrelevant.com/")
@@ -559,7 +574,8 @@ func TestStrategyTraits(t *testing.T) {
 	})
 
 	t.Run("description=should update protected field with sudo mode", func(t *testing.T) {
-		setPrivileged(t)
+		browserUser1 := getBrowserUser(true, browserIdentity1)
+		apiUser1 := getApiUser(true, apiIdentity1)
 
 		var check = func(t *testing.T, newEmail string, actual string) {
 			assert.EqualValues(t, settings.StateSuccess, gjson.Get(actual, "state").String(), "%s", actual)
@@ -578,21 +594,18 @@ func TestStrategyTraits(t *testing.T) {
 		}
 
 		t.Run("type=api", func(t *testing.T) {
-			setPrivilegedTime(t, time.Second*10)
 			email := "not-john-doe-api@mail.com"
 			actual := expectSuccess(t, true, false, apiUser1, payload(email))
 			check(t, email, actual)
 		})
 
 		t.Run("type=sqa", func(t *testing.T) {
-			setPrivilegedTime(t, time.Second*10)
 			email := "not-john-doe-browser@mail.com"
 			actual := expectSuccess(t, false, true, browserUser1, payload(email))
 			check(t, email, actual)
 		})
 
 		t.Run("type=browser", func(t *testing.T) {
-			setPrivilegedTime(t, time.Second*10)
 			email := "not-john-doe-browser@mail.com"
 			actual := expectSuccess(t, false, false, browserUser1, payload(email))
 			check(t, email, actual)
@@ -608,7 +621,7 @@ func TestDisabledEndpoint(t *testing.T) {
 
 	publicTS, _ := testhelpers.NewKratosServer(t, reg)
 	browserIdentity1 := newIdentityWithPassword("john-browser@doe.com")
-	browserUser1 := testhelpers.NewHTTPClientWithIdentitySessionCookie(t, reg, browserIdentity1)
+	browserUser1 := testhelpers.NewIdentityClientWithSessionCookie(t, reg, browserIdentity1)
 
 	t.Run("case=should not submit when profile method is disabled", func(t *testing.T) {
 		t.Run("method=GET", func(t *testing.T) {

@@ -126,15 +126,13 @@ func TestCompleteSettings(t *testing.T) {
 	_ = testhelpers.NewRedirSessionEchoTS(t, reg)
 	loginTS := testhelpers.NewLoginUIFlowEchoServer(t, reg)
 
-	conf.MustSet(ctx, config.ViperKeySelfServiceSettingsPrivilegedAuthenticationAfter, "1m")
-
 	testhelpers.SetDefaultIdentitySchema(conf, "file://./stub/settings.schema.json")
 	conf.MustSet(ctx, config.ViperKeySecretsDefault, []string{"not-a-secure-session-key"})
 
 	t.Run("case=a device is shown which can be unlinked", func(t *testing.T) {
 		id := createIdentity(t, reg)
 
-		apiClient := testhelpers.NewHTTPClientWithIdentitySessionCookie(t, reg, id)
+		apiClient := testhelpers.NewIdentityClientWithSessionCookie(t, reg, id)
 		f := testhelpers.InitializeSettingsFlowViaBrowser(t, apiClient, true, publicTS)
 
 		testhelpers.SnapshotTExcept(t, f.Ui.Nodes, []string{
@@ -150,7 +148,7 @@ func TestCompleteSettings(t *testing.T) {
 		id := createIdentityWithoutWebAuthn(t, reg)
 		require.NoError(t, reg.PrivilegedIdentityPool().UpdateIdentity(context.Background(), id))
 
-		apiClient := testhelpers.NewHTTPClientWithIdentitySessionCookie(t, reg, id)
+		apiClient := testhelpers.NewIdentityClientWithSessionCookie(t, reg, id)
 		f := testhelpers.InitializeSettingsFlowViaBrowser(t, apiClient, true, publicTS)
 
 		testhelpers.SnapshotTExcept(t, f.Ui.Nodes, []string{
@@ -167,13 +165,13 @@ func TestCompleteSettings(t *testing.T) {
 		id := createIdentityWithoutWebAuthn(t, reg)
 		require.NoError(t, reg.PrivilegedIdentityPool().UpdateIdentity(context.Background(), id))
 
-		apiClient := testhelpers.NewHTTPClientWithIdentitySessionToken(t, reg, id)
+		apiClient := testhelpers.NewIdentityClientWithSessionToken(t, reg, id)
 		f := testhelpers.InitializeSettingsFlowViaAPI(t, apiClient, publicTS)
 		assert.Empty(t, f.Ui.Nodes)
 	})
 
 	doAPIFlow := func(t *testing.T, v func(url.Values), id *identity.Identity) (string, *http.Response) {
-		apiClient := testhelpers.NewHTTPClientWithIdentitySessionToken(t, reg, id)
+		apiClient := testhelpers.NewIdentityClientWithSessionToken(t, reg, id)
 		f := testhelpers.InitializeSettingsFlowViaAPI(t, apiClient, publicTS)
 		values := testhelpers.SDKFormFieldsToURLValues(f.Ui.Nodes)
 		v(values)
@@ -181,8 +179,14 @@ func TestCompleteSettings(t *testing.T) {
 		return testhelpers.SettingsMakeRequest(t, true, false, f, apiClient, payload)
 	}
 
-	doBrowserFlow := func(t *testing.T, spa bool, v func(url.Values), id *identity.Identity) (string, *http.Response) {
-		browserClient := testhelpers.NewHTTPClientWithIdentitySessionCookie(t, reg, id)
+	doBrowserFlow := func(t *testing.T, spa bool, privilegedSession bool, v func(url.Values), id *identity.Identity) (string, *http.Response) {
+		clientBuilder := testhelpers.NewHTTPClientBuilder(t).SetReqestFromWhoAmI().SetIdentity(id)
+		if privilegedSession {
+			clientBuilder = clientBuilder.SetSessionWithProvider(testhelpers.PrivilegedProvider())
+		} else {
+			clientBuilder = clientBuilder.SetSessionWithProvider(testhelpers.UnprivilegedProvider())
+		}
+		browserClient := clientBuilder.ClientWithSessionCookie(reg)
 		f := testhelpers.InitializeSettingsFlowViaBrowser(t, browserClient, spa, publicTS)
 		values := testhelpers.SDKFormFieldsToURLValues(f.Ui.Nodes)
 		v(values)
@@ -202,7 +206,7 @@ func TestCompleteSettings(t *testing.T) {
 	t.Run("case=fails with browser submit if name is missing", func(t *testing.T) {
 		run := func(t *testing.T, spa bool) {
 			id := createIdentityWithoutWebAuthn(t, reg)
-			body, res := doBrowserFlow(t, spa, func(v url.Values) {
+			body, res := doBrowserFlow(t, spa, true, func(v url.Values) {
 				v.Set(node.WebAuthnRegister, "{}")
 			}, id)
 			if spa {
@@ -225,7 +229,7 @@ func TestCompleteSettings(t *testing.T) {
 	t.Run("case=fails with browser submit because csrf token is missing", func(t *testing.T) {
 		run := func(t *testing.T, spa bool) {
 			id := createIdentityWithoutWebAuthn(t, reg)
-			body, res := doBrowserFlow(t, spa, func(v url.Values) {
+			body, res := doBrowserFlow(t, spa, true, func(v url.Values) {
 				v.Del("csrf_token")
 				v.Set(node.WebAuthnRegister, "{}")
 				v.Set(node.WebAuthnRegisterDisplayName, "foobar")
@@ -251,7 +255,7 @@ func TestCompleteSettings(t *testing.T) {
 	t.Run("case=fails with browser submit register payload is invalid", func(t *testing.T) {
 		run := func(t *testing.T, spa bool) {
 			id := createIdentityWithoutWebAuthn(t, reg)
-			body, res := doBrowserFlow(t, spa, func(v url.Values) {
+			body, res := doBrowserFlow(t, spa, true, func(v url.Values) {
 				v.Set(node.WebAuthnRegister, "{}")
 				v.Set(node.WebAuthnRegisterDisplayName, "foobar")
 			}, id)
@@ -273,14 +277,9 @@ func TestCompleteSettings(t *testing.T) {
 	})
 
 	t.Run("case=requires privileged session for register", func(t *testing.T) {
-		conf.MustSet(ctx, config.ViperKeySelfServiceSettingsPrivilegedAuthenticationAfter, "1ns")
-		t.Cleanup(func() {
-			conf.MustSet(ctx, config.ViperKeySelfServiceSettingsPrivilegedAuthenticationAfter, "5m")
-		})
-
 		run := func(t *testing.T, spa bool) {
 			id := createIdentityWithoutWebAuthn(t, reg)
-			body, res := doBrowserFlow(t, spa, func(v url.Values) {
+			body, res := doBrowserFlow(t, spa, false, func(v url.Values) {
 				v.Set(node.WebAuthnRegister, "{}")
 				v.Set(node.WebAuthnRegisterDisplayName, "foobar")
 			}, id)
@@ -310,7 +309,7 @@ func TestCompleteSettings(t *testing.T) {
 			var id identity.Identity
 			require.NoError(t, json.Unmarshal(settingsFixtureSuccessIdentity, &id))
 			_ = reg.PrivilegedIdentityPool().DeleteIdentity(context.Background(), id.ID)
-			browserClient := testhelpers.NewHTTPClientWithIdentitySessionCookie(t, reg, &id)
+			browserClient := testhelpers.NewIdentityClientWithSessionCookie(t, reg, &id)
 			f := testhelpers.InitializeSettingsFlowViaBrowser(t, browserClient, spa, publicTS)
 
 			// We inject the session to replay
@@ -368,7 +367,7 @@ func TestCompleteSettings(t *testing.T) {
 			id.UpsertCredentialsConfig(identity.CredentialsTypeWebAuthn, conf, 0)
 			require.NoError(t, reg.IdentityManager().Update(ctx, id, identity.ManagerAllowWriteProtectedTraits))
 
-			body, res := doBrowserFlow(t, spa, func(v url.Values) {
+			body, res := doBrowserFlow(t, spa, true, func(v url.Values) {
 				// The remove key should be empty
 				snapshotx.SnapshotTExcept(t, v, []string{"csrf_token"})
 
@@ -409,7 +408,7 @@ func TestCompleteSettings(t *testing.T) {
 			id.UpsertCredentialsConfig(identity.CredentialsTypeWebAuthn, sqlxx.JSONRawMessage(`{"credentials":[{"id":"Zm9vZm9v","display_name":"foo","is_passwordless":false}]}`), 0)
 			require.NoError(t, reg.IdentityManager().Update(ctx, id, identity.ManagerAllowWriteProtectedTraits))
 
-			body, res := doBrowserFlow(t, spa, func(v url.Values) {
+			body, res := doBrowserFlow(t, spa, true, func(v url.Values) {
 				// The remove key should be set
 				snapshotx.SnapshotTExcept(t, v, []string{"csrf_token"})
 				v.Set(node.WebAuthnRemove, fmt.Sprintf("666f6f666f6f"))
@@ -450,7 +449,7 @@ func TestCompleteSettings(t *testing.T) {
 			require.Len(t, cc.Credentials, 2)
 
 			for _, cred := range cc.Credentials {
-				body, res := doBrowserFlow(t, spa, func(v url.Values) {
+				body, res := doBrowserFlow(t, spa, true, func(v url.Values) {
 					v.Set(node.WebAuthnRemove, fmt.Sprintf("%x", cred.ID))
 				}, id)
 
@@ -483,7 +482,7 @@ func TestCompleteSettings(t *testing.T) {
 	t.Run("case=fails with browser submit register payload is invalid", func(t *testing.T) {
 		run := func(t *testing.T, spa bool) {
 			id := createIdentity(t, reg)
-			body, res := doBrowserFlow(t, spa, func(v url.Values) {
+			body, res := doBrowserFlow(t, spa, true, func(v url.Values) {
 				v.Set(node.WebAuthnRemove, fmt.Sprintf("%x", []byte("foofoo")))
 			}, id)
 
@@ -521,7 +520,7 @@ func TestCompleteSettings(t *testing.T) {
 				var id identity.Identity
 				require.NoError(t, json.Unmarshal(settingsFixtureSuccessIdentity, &id))
 				_ = reg.PrivilegedIdentityPool().DeleteIdentity(context.Background(), id.ID)
-				browserClient := testhelpers.NewHTTPClientWithIdentitySessionCookie(t, reg, &id)
+				browserClient := testhelpers.NewIdentityClientWithSessionToken(t, reg, &id)
 				f := testhelpers.InitializeSettingsFlowViaBrowser(t, browserClient, isSPA, publicTS)
 
 				// We inject the session to replay

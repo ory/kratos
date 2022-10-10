@@ -19,6 +19,7 @@ import (
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/session"
 	"github.com/ory/kratos/x"
+	"github.com/ory/x/sqlxx"
 )
 
 type mockDeps interface {
@@ -126,17 +127,27 @@ func MockHydrateCookieClient(t *testing.T, c *http.Client, u string) *http.Cooki
 	return sessionCookie
 }
 
-func MockSessionCreateHandlerWithIdentity(t *testing.T, reg mockDeps, i *identity.Identity) (httprouter.Handle, *session.Session) {
-	return MockSessionCreateHandlerWithIdentityAndAMR(t, reg, i, []identity.CredentialsType{"password"})
+func MockSessionCreateHandlerWithIdentity(t *testing.T, reg mockDeps, privileged bool, i *identity.Identity) (httprouter.Handle, *session.Session) {
+	return MockSessionCreateHandlerWithIdentityAndAMR(t, reg, i, privileged, []identity.CredentialsType{"password"})
 }
 
-func MockSessionCreateHandlerWithIdentityAndAMR(t *testing.T, reg mockDeps, i *identity.Identity, methods []identity.CredentialsType) (httprouter.Handle, *session.Session) {
+func MockSessionCreateHandlerWithIdentityAndAMR(t *testing.T, reg mockDeps, i *identity.Identity, privileged bool, methods []identity.CredentialsType) (httprouter.Handle, *session.Session) {
 	var sess session.Session
 	require.NoError(t, faker.FakeData(&sess))
 	// require AuthenticatedAt to be time.Now() as we always compare it to the current time
-	sess.AuthenticatedAt = time.Now().UTC()
-	sess.IssuedAt = time.Now().UTC()
-	sess.ExpiresAt = time.Now().UTC().Add(time.Hour * 24)
+	now := time.Now().UTC()
+	sess.AuthenticatedAt = now
+
+	var priviledgedUntil time.Time
+	if privileged {
+		priviledgedUntil = now.Add(time.Minute)
+	} else {
+		priviledgedUntil = now.Add(time.Nanosecond)
+	}
+	sess.PrivilegedUntil = (*sqlxx.NullTime)(&priviledgedUntil)
+
+	sess.IssuedAt = now
+	sess.ExpiresAt = now.Add(time.Hour * 24)
 	sess.Active = true
 	for _, method := range methods {
 		sess.CompletedLoginFor(method, "")
@@ -163,6 +174,6 @@ func MockSessionCreateHandlerWithIdentityAndAMR(t *testing.T, reg mockDeps, i *i
 }
 
 func MockSessionCreateHandler(t *testing.T, reg mockDeps) (httprouter.Handle, *session.Session) {
-	return MockSessionCreateHandlerWithIdentity(t, reg, &identity.Identity{
+	return MockSessionCreateHandlerWithIdentity(t, reg, true, &identity.Identity{
 		ID: x.NewUUID(), State: identity.StateActive, Traits: identity.Traits(`{"baz":"bar","foo":true,"bar":2.5}`)})
 }

@@ -173,7 +173,7 @@ func NewSettingsLoginAcceptAPIServer(t *testing.T, publicClient *kratos.APIClien
 	return loginTS
 }
 
-func NewSettingsAPIServer(t *testing.T, reg *driver.RegistryDefault, ids map[string]*identity.Identity) (*httptest.Server, *httptest.Server, map[string]*http.Client) {
+func NewSettingsAPIServer(t *testing.T, reg *driver.RegistryDefault, sessionsPrivileged bool, ids map[string]*identity.Identity) (*httptest.Server, *httptest.Server, map[string]*http.Client) {
 	ctx := context.Background()
 	public, admin := x.NewRouterPublic(), x.NewRouterAdmin()
 	reg.SettingsHandler().RegisterAdminRoutes(admin)
@@ -196,17 +196,17 @@ func NewSettingsAPIServer(t *testing.T, reg *driver.RegistryDefault, ids map[str
 	reg.Config().MustSet(ctx, config.ViperKeyPublicBaseURL, tsp.URL)
 	reg.Config().MustSet(ctx, config.ViperKeyAdminBaseURL, tsa.URL)
 	// #nosec G112
-	return tsp, tsa, AddAndLoginIdentities(t, reg, &httptest.Server{Config: &http.Server{Handler: public}, URL: tsp.URL}, ids)
+	return tsp, tsa, AddAndLoginIdentities(t, reg, &httptest.Server{Config: &http.Server{Handler: public}, URL: tsp.URL}, sessionsPrivileged, ids)
 }
 
 // AddAndLoginIdentities adds the given identities to the store (like a registration flow) and returns http.Clients
 // which contain their sessions.
-func AddAndLoginIdentities(t *testing.T, reg *driver.RegistryDefault, public *httptest.Server, ids map[string]*identity.Identity) map[string]*http.Client {
+func AddAndLoginIdentities(t *testing.T, reg *driver.RegistryDefault, public *httptest.Server, sessionsPrivileged bool, ids map[string]*identity.Identity) map[string]*http.Client {
 	result := map[string]*http.Client{}
 	for k := range ids {
 		tid := x.NewUUID().String()
 		_ = reg.PrivilegedIdentityPool().DeleteIdentity(context.Background(), ids[k].ID)
-		route, _ := MockSessionCreateHandlerWithIdentity(t, reg, ids[k])
+		route, _ := MockSessionCreateHandlerWithIdentity(t, reg, sessionsPrivileged, ids[k])
 		location := "/sessions/set/" + tid
 
 		if router, ok := public.Config.Handler.(*x.RouterPublic); ok {

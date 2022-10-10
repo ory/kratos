@@ -509,7 +509,7 @@ func TestCompleteLogin(t *testing.T) {
 
 			t.Run("do not show password method if identity has no password set", func(t *testing.T) {
 				id := identity.NewIdentity("")
-				browserClient := testhelpers.NewHTTPClientWithIdentitySessionCookie(t, reg, id)
+				browserClient := testhelpers.NewIdentityClientWithSessionCookie(t, reg, id)
 
 				res, err := browserClient.Get(publicTS.URL + login.RouteInitBrowserFlow + "?refresh=true")
 				require.NoError(t, err)
@@ -569,7 +569,7 @@ func TestCompleteLogin(t *testing.T) {
 
 			t.Run("do not show password method if identity has no password set", func(t *testing.T) {
 				id := identity.NewIdentity("")
-				hc := testhelpers.NewHTTPClientWithIdentitySessionCookie(t, reg, id)
+				hc := testhelpers.NewIdentityClientWithSessionCookie(t, reg, id)
 
 				res, err := hc.Do(testhelpers.NewHTTPGetAJAXRequest(t, publicTS.URL+login.RouteInitBrowserFlow+"?refresh=true"))
 				require.NoError(t, err)
@@ -628,7 +628,7 @@ func TestCompleteLogin(t *testing.T) {
 
 			t.Run("do not show password method if identity has no password set", func(t *testing.T) {
 				id := identity.NewIdentity("")
-				hc := testhelpers.NewHTTPClientWithIdentitySessionToken(t, reg, id)
+				hc := testhelpers.NewIdentityClientWithSessionToken(t, reg, id)
 
 				res, err := hc.Do(testhelpers.NewHTTPGetAJAXRequest(t, publicTS.URL+login.RouteInitAPIFlow+"?refresh=true"))
 				require.NoError(t, err)

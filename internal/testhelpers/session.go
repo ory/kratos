@@ -71,7 +71,7 @@ func PrivilegedProvider() *SessionLifespanAndPrivilegedMaxAgeProvider {
 }
 
 // Gets a session provider that is unprivileged
-func UnrivilegedProvider() *SessionLifespanAndPrivilegedMaxAgeProvider {
+func UnprivilegedProvider() *SessionLifespanAndPrivilegedMaxAgeProvider {
 	return NewSessionLifespanAndPrivilegedMaxAgeProvider(time.Hour, time.Nanosecond)
 }
 
@@ -424,6 +424,22 @@ func (c *HTTPClientBuilder) ClientNoRedirectWithSessionCookie(reg *driver.Regist
 }
 
 // Common configurations
+
+func NewIdentityClientWithSessionToken(t *testing.T, reg *driver.RegistryDefault, id *identity.Identity) *http.Client {
+	return NewHTTPClientBuilder(t).
+		SetReqestFromWhoAmI().
+		SetIdentity(id).
+		SetSessionDefault().
+		ClientWithSessionToken(reg)
+}
+
+func NewIdentityClientWithSessionCookie(t *testing.T, reg *driver.RegistryDefault, id *identity.Identity) *http.Client {
+	return NewHTTPClientBuilder(t).
+		SetReqestFromWhoAmI().
+		SetIdentity(id).
+		SetSessionDefault().
+		ClientWithSessionToken(reg)
+}
 
 func NewDefaultClientWithSessionToken(t *testing.T, reg *driver.RegistryDefault) *http.Client {
 	return NewHTTPClientBuilder(t).

@@ -105,7 +105,7 @@ func TestSettingsStrategy(t *testing.T) {
 			SchemaID: config.DefaultIdentityTraitsSchemaID,
 		},
 	}
-	agents := testhelpers.AddAndLoginIdentities(t, reg, publicTS, users)
+	agents := testhelpers.AddAndLoginIdentities(t, reg, publicTS, true, users)
 
 	var newProfileFlow = func(t *testing.T, client *http.Client, redirectTo string, exp time.Duration) *settings.Flow {
 		req, err := reg.SettingsFlowPersister().GetSettingsFlow(context.Background(),
@@ -241,8 +241,8 @@ func TestSettingsStrategy(t *testing.T) {
 
 	var reset = func(t *testing.T) func() {
 		return func() {
-			conf.MustSet(ctx, config.ViperKeySelfServiceSettingsPrivilegedAuthenticationAfter, time.Minute*5)
-			agents = testhelpers.AddAndLoginIdentities(t, reg, publicTS, users)
+			// conf.MustSet(ctx, config.ViperKeySelfServiceSettingsPrivilegedAuthenticationAfter, time.Minute*5)
+			agents = testhelpers.AddAndLoginIdentities(t, reg, publicTS, true, users)
 		}
 	}
 
