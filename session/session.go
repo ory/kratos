@@ -210,29 +210,6 @@ func NewInactiveSession() *Session {
 	}
 }
 
-// TODO: Figure out appropriate func name
-func NewReplacementSession(s *Session) *Session {
-	if s != nil {
-		return &Session{
-			// Assign new identifiers and copy the rest
-			ID:                          x.NewUUID(),
-			Token:                       randx.MustString(32, randx.AlphaNum),
-			LogoutToken:                 randx.MustString(32, randx.AlphaNum),
-			Active:                      s.Active,
-			ExpiresAt:                   s.ExpiresAt,
-			AuthenticatedAt:             s.AuthenticatedAt,
-			AuthenticatorAssuranceLevel: s.AuthenticatorAssuranceLevel,
-			AMR:                         s.AMR,
-			IssuedAt:                    s.IssuedAt,
-			Identity:                    s.Identity,
-			IdentityID:                  s.IdentityID,
-			NID:                         s.NID,
-		}
-	}
-
-	return NewInactiveSession()
-}
-
 func (s *Session) Activate(r *http.Request, i *identity.Identity, c lifespanProvider, authenticatedAt time.Time) error {
 	if i != nil && !i.IsActive() {
 		return ErrIdentityDisabled.WithDetail("identity_id", i.ID)

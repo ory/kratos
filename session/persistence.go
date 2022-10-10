@@ -21,9 +21,6 @@ type Persister interface {
 	// UpsertSession inserts or updates a session into / in the store.
 	UpsertSession(ctx context.Context, s *Session) error
 
-	// ReplaceSession revokes oldSession and inserts newSession in a transaction
-	ReplaceSession(ctx context.Context, oldSession *Session, newSession *Session) error
-
 	// DeleteSession removes a session from the store.
 	DeleteSession(ctx context.Context, id uuid.UUID) error
 
