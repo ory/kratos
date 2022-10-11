@@ -6,8 +6,6 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/ory/x/randx"
-
 	"github.com/pkg/errors"
 
 	"github.com/ory/kratos/driver/config"
@@ -174,14 +172,15 @@ func (e *HookExecutor) PostLoginHook(w http.ResponseWriter, r *http.Request, g n
 		return nil
 	}
 
-	cookieValues := make(map[interface{}]interface{})
 	// Update session token when Re-Auth or session upgrade and then issue cookie
 	if a.Refresh || a.RequestedAAL > s.AuthenticatorAssuranceLevel { // TODO: Change to OR to allow block exec
-		cookieValues["nonce"] = randx.MustString(8, randx.Alpha)
-	}
-
-	if err := e.d.SessionManager().UpsertAndIssueCookie(r.Context(), w, r, s); err != nil {
-		return errors.WithStack(err)
+		if err := e.d.SessionManager().UpsertAndIssueCookie(r.Context(), w, r, s, x.CookieWithNonce()); err != nil {
+			return errors.WithStack(err)
+		}
+	} else {
+		if err := e.d.SessionManager().UpsertAndIssueCookie(r.Context(), w, r, s); err != nil {
+			return errors.WithStack(err)
+		}
 	}
 
 	e.d.Audit().
