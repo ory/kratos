@@ -86,12 +86,12 @@ type Manager interface {
 	// UpsertAndIssueCookie stores a session in the database and issues a cookie by calling IssueCookie.
 	//
 	// Also regenerates CSRF tokens due to assumed principal change.
-	UpsertAndIssueCookie(context.Context, http.ResponseWriter, *http.Request, *Session, ...x.CookieOption) error
+	UpsertAndIssueCookie(context.Context, http.ResponseWriter, *http.Request, *Session, ...x.CookieModifier) error
 
 	// IssueCookie issues a cookie for the given session.
 	//
 	// Also regenerates CSRF tokens due to assumed principal change.
-	IssueCookie(context.Context, http.ResponseWriter, *http.Request, *Session, ...x.CookieOption) error
+	IssueCookie(context.Context, http.ResponseWriter, *http.Request, *Session, ...x.CookieModifier) error
 
 	// RefreshCookie checks if the request uses an outdated cookie and refreshes the cookie if needed.
 	RefreshCookie(context.Context, http.ResponseWriter, *http.Request, *Session) error
