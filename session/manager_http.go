@@ -84,7 +84,7 @@ func (s *ManagerHTTP) RefreshCookie(ctx context.Context, w http.ResponseWriter, 
 	return nil
 }
 
-func (s *ManagerHTTP) IssueCookie(ctx context.Context, w http.ResponseWriter, r *http.Request, session *Session) error {
+func (s *ManagerHTTP) IssueCookie(ctx context.Context, w http.ResponseWriter, r *http.Request, session *Session, cookieOpts ...x.CookieOption) error {
 	cookie, err := s.r.CookieManager(r.Context()).Get(r, s.cookieName(ctx))
 	// Fix for https://github.com/ory/kratos/issues/1695
 	if err != nil && cookie == nil {
@@ -129,6 +129,10 @@ func (s *ManagerHTTP) IssueCookie(ctx context.Context, w http.ResponseWriter, r 
 
 	cookie.Values["session_token"] = session.Token
 	cookie.Values["expires_at"] = session.ExpiresAt.UTC().Format(time.RFC3339Nano)
+
+	for _, opt := range cookieOpts {
+		opt(cookie)
+	}
 
 	if err := cookie.Save(r, w); err != nil {
 		return errors.WithStack(err)
