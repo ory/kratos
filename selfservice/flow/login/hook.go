@@ -199,15 +199,12 @@ func (e *HookExecutor) PostLoginHook(w http.ResponseWriter, r *http.Request, g n
 	}
 
 	// If we detect that whoami would require a higher AAL, we redirect!
-	if err, required := e.requiresAAL2(r, s, a); err != nil {
+	if err, _ := e.requiresAAL2(r, s, a); err != nil {
 		if aalErr := new(session.ErrAALNotSatisfied); errors.As(err, &aalErr) {
 			http.Redirect(w, r, aalErr.RedirectTo, http.StatusSeeOther)
 			return nil
-		} else {
-			return errors.WithStack(err)
 		}
-	} else if required {
-		return errors.New("this should never happen; error must not be nil when required is true")
+		return errors.WithStack(err)
 	}
 
 	if a.HydraLoginChallenge.Valid {

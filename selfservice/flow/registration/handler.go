@@ -393,6 +393,7 @@ func (h *Handler) fetchFlow(w http.ResponseWriter, r *http.Request, ps httproute
 			// We don't redirect back to the third party on errors because Hydra doesn't
 			// give us the 3rd party return_uri when it redirects to the login UI.
 			h.d.SelfServiceErrorManager().Forward(r.Context(), w, r, err)
+			return
 		}
 		ar.HydraLoginRequest = hlr
 	}

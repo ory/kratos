@@ -371,7 +371,7 @@ func (h *Handler) initBrowserFlow(w http.ResponseWriter, r *http.Request, ps htt
 	var hlc uuid.NullUUID
 	if r.URL.Query().Has("login_challenge") {
 		var err error
-		hlc, err = hydra.GetLoginChallenge(h.d.Config(), r)
+		hlc, err = hydra.GetLoginChallengeID(h.d.Config(), r)
 		if err != nil || !hlc.Valid {
 			h.d.SelfServiceErrorManager().Forward(r.Context(), w, r, errors.WithStack(herodot.ErrBadRequest.WithReason("the login_challenge parameter is present but invalid or zero UUID")))
 			return
@@ -395,8 +395,11 @@ func (h *Handler) initBrowserFlow(w http.ResponseWriter, r *http.Request, ps htt
 
 	a, sess, err := h.NewLoginFlow(w, r, flow.TypeBrowser)
 	if errors.Is(err, ErrAlreadyLoggedIn) {
-		if hlr != nil && hlr.GetSkip() && hlc.Valid {
-			// Accept the Hydra login request if user has a session with the required AAL and hlr.GetSkip() is true
+		if hlr != nil {
+			if !hlr.GetSkip() {
+				h.d.SelfServiceErrorManager().Forward(r.Context(), w, r, errors.WithStack(herodot.ErrInternalServerError.WithReason("ErrAlreadyLoggedIn indicated we can skip login, but Hydra asked us to refresh")))
+				return
+			}
 
 			rt, err := h.d.Hydra().AcceptLoginRequest(r.Context(), hlc.UUID, sess.IdentityID.String(), sess.AMR)
 
@@ -410,14 +413,6 @@ func (h *Handler) initBrowserFlow(w http.ResponseWriter, r *http.Request, ps htt
 				return
 			}
 			x.AcceptToRedirectOrJSON(w, r, h.d.Writer(), err, returnTo.String())
-			return
-		} else if hlr != nil { // This should never happen
-			if hlr.GetSkip() {
-				h.d.SelfServiceErrorManager().Forward(r.Context(), w, r, errors.WithStack(herodot.ErrInternalServerError.WithReason("unexpected state: already logged in, but Hydra asked us to refresh session")))
-				return
-			}
-
-			h.d.SelfServiceErrorManager().Forward(r.Context(), w, r, errors.WithStack(herodot.ErrInternalServerError.WithReason("unexpected state: Hydra login challenge is invalid, but Hydra login request is not nil")))
 			return
 		}
 
@@ -538,6 +533,7 @@ func (h *Handler) fetchFlow(w http.ResponseWriter, r *http.Request, _ httprouter
 			// We don't redirect back to the third party on errors because Hydra doesn't
 			// give us the 3rd party return_uri when it redirects to the login UI.
 			h.d.SelfServiceErrorManager().Forward(r.Context(), w, r, err)
+			return
 		}
 		ar.HydraLoginRequest = hlr
 	}

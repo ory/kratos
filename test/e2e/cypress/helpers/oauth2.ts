@@ -1,3 +1,34 @@
+import * as uuid from "uuid"
+
+export type oAuth2Client = {
+  auth_endpoint: string
+  token_endpoint: string
+  id: string
+  secret: string
+  token_endpoint_auth_method: string
+  grant_types: string[]
+  response_types: string[]
+  scopes: string[]
+  callbacks: string[]
+}
+
+export function getDefaultAuthorizeURL(client: oAuth2Client) {
+  const state = uuid.v4()
+  const nonce = uuid.v4()
+  return getAuthorizeURL(
+    client.auth_endpoint,
+    "",
+    client.id,
+    "0",
+    nonce,
+    "https://httpbin.org/anything",
+    "code",
+    ["offline", "openid"],
+    state,
+    undefined,
+  )
+}
+
 export function getAuthorizeURL(
   auth_endpoint: string,
   audience: string,
