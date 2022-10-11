@@ -29,6 +29,9 @@ context("Registration success with email profile with webhooks", () => {
         cy.get('input[name="password"]').type(password)
 
         cy.submitPasswordForm()
+        if (app === "express") {
+          cy.get("a[href*='sessions']").click()
+        }
         cy.get("pre").should("contain.text", email)
 
         cy.getSession().should((session) => {
