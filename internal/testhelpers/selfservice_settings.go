@@ -154,8 +154,6 @@ func NewSettingsLoginAcceptAPIServer(t *testing.T, publicClient *kratos.APIClien
 		require.Equal(t, 0, called)
 		called++
 
-		conf.MustSet(r.Context(), config.ViperKeySelfServiceSettingsPrivilegedAuthenticationAfter, "5m")
-
 		res, _, err := publicClient.V0alpha2Api.GetSelfServiceLoginFlow(context.Background()).Id(r.URL.Query().Get("flow")).Execute()
 
 		require.NoError(t, err)

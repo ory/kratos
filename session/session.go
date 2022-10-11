@@ -233,13 +233,12 @@ func (s *Session) Activate(r *http.Request, i *identity.Identity, c lifespanPriv
 	if i != nil && !i.IsActive() {
 		return ErrIdentityDisabled.WithDetail("identity_id", i.ID)
 	}
-	privilegedUntil := sqlxx.NullTime(
-		authenticatedAt.Add(c.SelfServiceFlowSettingsPrivilegedSessionMaxAge(r.Context())),
-	)
 
 	s.Active = true
 	s.ExpiresAt = authenticatedAt.Add(c.SessionLifespan(r.Context()))
-	s.PrivilegedUntil = &privilegedUntil
+	s.SetPrivilegedUntil(
+		authenticatedAt.Add(c.SelfServiceFlowSettingsPrivilegedSessionMaxAge(r.Context())),
+	)
 	s.AuthenticatedAt = authenticatedAt
 	s.IssuedAt = authenticatedAt
 	s.Identity = i
@@ -294,6 +293,11 @@ func (s *Session) IsActive() bool {
 	return s.Active && s.ExpiresAt.After(time.Now()) && (s.Identity == nil || s.Identity.IsActive())
 }
 
+func (s *Session) SetPrivilegedUntil(t time.Time) {
+	until := sqlxx.NullTime(t)
+	s.PrivilegedUntil = &until
+}
+
 func (s *Session) IsPrivileged() bool {
 	fmt.Printf("IsPrivileged is handling a null value: %v\n", s.PrivilegedUntil == nil)
 	// priviledgedUntil, err := s.PrivilegedUntil.Value()
@@ -305,12 +309,10 @@ func (s *Session) IsPrivileged() bool {
 }
 
 func (s *Session) Refresh(ctx context.Context, c lifespanPrivilegedProvider) *Session {
-	privilegedUntil := sqlxx.NullTime(
+	s.ExpiresAt = time.Now().Add(c.SessionLifespan(ctx)).UTC()
+	s.SetPrivilegedUntil(
 		time.Now().Add(c.SelfServiceFlowSettingsPrivilegedSessionMaxAge(ctx)).UTC(),
 	)
-
-	s.ExpiresAt = time.Now().Add(c.SessionLifespan(ctx)).UTC()
-	s.PrivilegedUntil = &privilegedUntil
 	return s
 }
 

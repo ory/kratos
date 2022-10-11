@@ -9,8 +9,10 @@ import (
 	"net/url"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/ory/kratos/internal/settingshelpers"
+	"github.com/ory/kratos/session"
 	"github.com/ory/kratos/text"
 
 	kratos "github.com/ory/kratos-client-go"
@@ -157,13 +159,15 @@ func TestSettings(t *testing.T) {
 		t.Run("session=needs reauthentication", func(t *testing.T) {
 			defer testhelpers.NewLoginUIWith401Response(t, conf)
 
-			unprivilegedBrowserUser1 := testhelpers.NewHTTPClientBuilder(t).
+			var sessionMutator func(mutateFunc func(session *session.Session))
+			browserUser1 := testhelpers.NewHTTPClientBuilder(t).
 				SetReqestFromWhoAmI().
 				SetIdentity(browserIdentity1).
 				SetSessionWithProvider(testhelpers.UnprivilegedProvider()).
+				RecordSessionMutator(reg, &sessionMutator).
 				ClientWithSessionCookie(reg)
 
-			unprivilegedApiUser := testhelpers.NewHTTPClientBuilder(t).
+			apiUser := testhelpers.NewHTTPClientBuilder(t).
 				SetReqestFromWhoAmI().
 				SetIdentity(apiIdentity1).
 				SetSessionWithProvider(testhelpers.UnprivilegedProvider()).
@@ -175,24 +179,29 @@ func TestSettings(t *testing.T) {
 			}
 
 			t.Run("type=api/expected=an error because reauth can not be initialized for API clients", func(t *testing.T) {
-				_ = testhelpers.NewSettingsLoginAcceptAPIServer(t, testhelpers.NewSDKCustomClient(publicTS, unprivilegedApiUser), conf)
-				actual := testhelpers.SubmitSettingsForm(t, true, false, unprivilegedApiUser, publicTS, payload,
+				_ = testhelpers.NewSettingsLoginAcceptAPIServer(t, testhelpers.NewSDKCustomClient(publicTS, apiUser), conf)
+				actual := testhelpers.SubmitSettingsForm(t, true, false, apiUser, publicTS, payload,
 					http.StatusForbidden, publicTS.URL+settings.RouteSubmitFlow)
 				assertx.EqualAsJSONExcept(t, settings.NewFlowNeedsReAuth(), json.RawMessage(actual), []string{"redirect_browser_to"})
 				assert.NotEmpty(t, json.RawMessage(gjson.Get(actual, "redirect_browser_to").String()))
 			})
 
 			t.Run("type=spa", func(t *testing.T) {
-				_ = testhelpers.NewSettingsLoginAcceptAPIServer(t, testhelpers.NewSDKCustomClient(publicTS, unprivilegedBrowserUser1), conf)
-				actual := testhelpers.SubmitSettingsForm(t, false, true, unprivilegedBrowserUser1, publicTS, payload,
+				_ = testhelpers.NewSettingsLoginAcceptAPIServer(t, testhelpers.NewSDKCustomClient(publicTS, browserUser1), conf)
+				actual := testhelpers.SubmitSettingsForm(t, false, true, browserUser1, publicTS, payload,
 					http.StatusForbidden, publicTS.URL+settings.RouteSubmitFlow)
 				assertx.EqualAsJSON(t, settings.NewFlowNeedsReAuth().DefaultError, json.RawMessage(gjson.Get(actual, "error").Raw))
 				assert.NotEmpty(t, json.RawMessage(gjson.Get(actual, "redirect_browser_to").String()))
 			})
 
 			t.Run("type=browser", func(t *testing.T) {
-				_ = testhelpers.NewSettingsLoginAcceptAPIServer(t, testhelpers.NewSDKCustomClient(publicTS, unprivilegedBrowserUser1), conf)
-				check(t, expectValidationError(t, false, false, unprivilegedBrowserUser1, payload))
+				_ = testhelpers.NewSettingsLoginAcceptAPIServer(t, testhelpers.NewSDKCustomClient(publicTS, browserUser1), conf)
+
+				sessionMutator(func(session *session.Session) {
+					session.SetPrivilegedUntil(time.Now().Add(time.Minute))
+				})
+
+				check(t, expectValidationError(t, false, false, browserUser1, payload))
 			})
 		})
 	})

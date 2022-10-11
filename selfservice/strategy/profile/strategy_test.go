@@ -341,6 +341,7 @@ func TestStrategyTraits(t *testing.T) {
 
 			t.Run("should update when signed back in", func(t *testing.T) {
 				browserUser1 := getBrowserUser(true, browserIdentity1)
+				_ = run(t, f, false, browserUser1)
 				res, err := browserUser1.Get(f.Ui.Action)
 				require.NoError(t, err)
 

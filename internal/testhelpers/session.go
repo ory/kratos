@@ -366,9 +366,9 @@ func (c *HTTPClientBuilder) SetSessionDefault() *HTTPClientBuilder {
 //
 // Example Usage:
 //
-//	func TestStrategyTraits(t *testing.T) {
+//	func TestSessionBehavior(t *testing.T) {
 //		var unprivilegedClient *http.Client
-//		unprivilegedClient := NewHTTPClientBuilder(t).
+//		unprivilegedClient = NewHTTPClientBuilder(t).
 //			SetReqestFromWhoAmI().
 //			SetIdentityFromNew().
 //			SetSessionWithProvider(UnrivilegedProvider()).
@@ -387,6 +387,45 @@ func (c *HTTPClientBuilder) SetSessionWithProvider(provider *SessionLifespanAndP
 	)
 	require.NoError(c.t, err, "Could not initialize session from identity.")
 	return c.SetSession(session)
+}
+
+// Record a callback function for mutating the session after the client has been created. This
+// is more useful than recording the session pointer because mutations to the session wouldn't
+// be persistend unless the session was then passed to the private `testhelpers.maybePersistSession`
+// function. This function compromises in giving access to the session without uncontrollably
+// exposing the persistence function.
+//
+// Example Usage:
+//
+//	func TestSessionBehavior(t *testing.T) {
+//		// Define a var at which we'll record the session mutation function
+//		var sessionMutator func(mutateFunc func(session *session.Session))
+//
+//		// Construct a client with a default unprivileged session
+//		client := NewHTTPClientBuilder(t).
+//			SetReqestFromWhoAmI().
+//			SetIdentityFromNew().
+//			SetSessionDefault(UnrivilegedProvider()).
+//			RecordSessionMutator(reg, &sessionMutator).
+//			ClientWithSessionToken()
+//
+//		// Run some tests using `client` requiring the session to be unprivileged
+//		...
+//
+//		// Pretend the session has been refreshed, and is now privileged for an additional minute
+//		sessionMutator(func(session *session.Session) {
+//			session.SetPrivilegedUntil(time.Now().Add(time.Minute))
+//		})
+//
+//		// Run some tests using `client` requiring the session to be privileged
+//		...
+//	}
+func (c *HTTPClientBuilder) RecordSessionMutator(reg *driver.RegistryDefault, funcRef *func(func(session *session.Session))) *HTTPClientBuilder {
+	*funcRef = func(mutateFunc func(session *session.Session)) {
+		mutateFunc(c.session)
+		maybePersistSession(c.t, reg, c.session)
+	}
+	return c
 }
 
 // Builder Consumers
