@@ -939,7 +939,9 @@ func TestHandler(t *testing.T) {
 		for name, ts := range map[string]*httptest.Server{"public": publicTS, "admin": adminTS} {
 			t.Run("endpoint="+name, func(t *testing.T) {
 				res := get(t, ts, "/identities", http.StatusOK)
-				assert.Empty(t, res.Get("0.credentials").String(), "%s", res.Raw)
+				assert.False(t, res.Get("0.credentials").Exists(), "credentials config should be omitted: %s", res.Raw)
+				assert.True(t, res.Get("0.metadata_public").Exists(), "metadata_public config should be included: %s", res.Raw)
+				assert.True(t, res.Get("0.metadata_admin").Exists(), "metadata_admin config should be included: %s", res.Raw)
 				assert.EqualValues(t, "baz", res.Get(`#(traits.bar=="baz").traits.bar`).String(), "%s", res.Raw)
 			})
 		}
