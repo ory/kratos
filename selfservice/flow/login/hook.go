@@ -155,7 +155,6 @@ func (e *HookExecutor) PostLoginHook(w http.ResponseWriter, r *http.Request, g n
 		if err := e.d.SessionPersister().UpsertSession(r.Context(), s); err != nil {
 			return errors.WithStack(err)
 		}
-
 		e.d.Audit().
 			WithRequest(r).
 			WithField("session_id", s.ID).
@@ -172,7 +171,8 @@ func (e *HookExecutor) PostLoginHook(w http.ResponseWriter, r *http.Request, g n
 		return nil
 	}
 
-	// Update session token when Re-Auth or session upgrade and then issue cookie
+	// Use nonce cookie modifier when Re-Auth or session upgrade and then issue cookie.
+	// Using nonce modifies the cookie value without affecting the session attributes
 	if a.Refresh || a.RequestedAAL > s.AuthenticatorAssuranceLevel { // TODO: Change to OR to allow block exec
 		if err := e.d.SessionManager().UpsertAndIssueCookie(r.Context(), w, r, s, x.CookieValuesWithNonce()); err != nil {
 			return errors.WithStack(err)
