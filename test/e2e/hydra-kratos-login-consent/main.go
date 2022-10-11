@@ -71,7 +71,9 @@ func main() {
 	})
 
 	router.POST("/login", func(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
-		check(r.ParseForm())
+		if !checkReq(w, r.ParseForm()) {
+			return
+		}
 		if r.Form.Get("action") == "accept" {
 			res, err := hc.Admin.AcceptLoginRequest(admin.NewAcceptLoginRequestParams().
 				WithLoginChallenge(r.URL.Query().Get("login_challenge")).
@@ -174,7 +176,7 @@ func main() {
 		http.Redirect(w, r, *res.Payload.RedirectTo, http.StatusFound)
 	})
 
-	addr := ":" + osx.GetenvDefault("PORT", "4446")
+	addr := ":" + osx.GetenvDefault("PORT", "4746")
 	server := &http.Server{Addr: addr, Handler: router}
 	fmt.Printf("Starting web server at %s\n", addr)
 	check(server.ListenAndServe())

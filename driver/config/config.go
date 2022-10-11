@@ -852,6 +852,9 @@ func (p *Config) CourierSMTPURL(ctx context.Context) *url.URL {
 func (p *Config) SelfServiceFlowHydraAdminURL(ctx context.Context) *url.URL {
 	k := ViperKeySelfServiceHydraAdminURL
 	v := p.GetProvider(ctx).String(k)
+	if v == "" {
+		return nil
+	}
 	parsed, err := p.ParseAbsoluteOrRelativeURI(v)
 	if err != nil {
 		p.l.WithError(errors.WithStack(err)).

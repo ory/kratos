@@ -39,7 +39,7 @@ func NewDefaultHydra(d hydraDependencies) *DefaultHydra {
 	}
 }
 
-func GetLoginChallenge(conf *config.Config, r *http.Request) (uuid.NullUUID, error) {
+func GetLoginChallengeID(conf *config.Config, r *http.Request) (uuid.NullUUID, error) {
 	if !r.URL.Query().Has("login_challenge") {
 		return uuid.NullUUID{}, nil
 	} else if conf.SelfServiceFlowHydraAdminURL(r.Context()) == nil {
