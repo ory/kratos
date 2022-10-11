@@ -300,9 +300,6 @@ func (s *Session) SetPrivilegedUntil(t time.Time) {
 
 func (s *Session) IsPrivileged() bool {
 	fmt.Printf("IsPrivileged is handling a null value: %v\n", s.PrivilegedUntil == nil)
-	// priviledgedUntil, err := s.PrivilegedUntil.Value()
-	// TODO: I don't understand the `s.Identity == nil` portion of the conditional. Why is a session
-	// considered active if the identity associated with it is nil?
 	// TODO: I think s.PriviledgedUntil can be nil because the sqlxx.NullTime can be a nil pointer,
 	// and we'd be doing a nil pointer dereference
 	return time.Time(*s.PrivilegedUntil).After(time.Now())

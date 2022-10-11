@@ -241,7 +241,6 @@ func TestSettingsStrategy(t *testing.T) {
 
 	var reset = func(t *testing.T) func() {
 		return func() {
-			// conf.MustSet(ctx, config.ViperKeySelfServiceSettingsPrivilegedAuthenticationAfter, time.Minute*5)
 			agents = testhelpers.AddAndLoginIdentities(t, reg, publicTS, true, users)
 		}
 	}
