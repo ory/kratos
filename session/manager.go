@@ -2,9 +2,10 @@ package session
 
 import (
 	"context"
-	"github.com/ory/kratos/x"
 	"net/http"
 	"net/url"
+
+	"github.com/ory/kratos/x"
 
 	"github.com/ory/kratos/text"
 
@@ -85,7 +86,7 @@ type Manager interface {
 	// UpsertAndIssueCookie stores a session in the database and issues a cookie by calling IssueCookie.
 	//
 	// Also regenerates CSRF tokens due to assumed principal change.
-	UpsertAndIssueCookie(context.Context, http.ResponseWriter, *http.Request, *Session) error
+	UpsertAndIssueCookie(context.Context, http.ResponseWriter, *http.Request, *Session, ...x.CookieOption) error
 
 	// IssueCookie issues a cookie for the given session.
 	//

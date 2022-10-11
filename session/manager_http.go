@@ -49,12 +49,12 @@ func NewManagerHTTP(r managerHTTPDependencies) *ManagerHTTP {
 	}
 }
 
-func (s *ManagerHTTP) UpsertAndIssueCookie(ctx context.Context, w http.ResponseWriter, r *http.Request, ss *Session) error {
+func (s *ManagerHTTP) UpsertAndIssueCookie(ctx context.Context, w http.ResponseWriter, r *http.Request, ss *Session, cookieOpts ...x.CookieOption) error {
 	if err := s.r.SessionPersister().UpsertSession(ctx, ss); err != nil {
 		return err
 	}
 
-	if err := s.IssueCookie(ctx, w, r, ss); err != nil {
+	if err := s.IssueCookie(ctx, w, r, ss, cookieOpts...); err != nil {
 		return err
 	}
 

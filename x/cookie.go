@@ -1,8 +1,9 @@
 package x
 
 import (
-	"github.com/ory/x/randx"
 	"net/http"
+
+	"github.com/ory/x/randx"
 
 	"github.com/gorilla/sessions"
 	"github.com/pkg/errors"
