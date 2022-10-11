@@ -9,10 +9,10 @@ import (
 	"github.com/pkg/errors"
 )
 
-type CookieOption func(*sessions.Session)
+type CookieModifier func(*sessions.Session)
 
-// CookieWithNonce adds Nonce to the cookie values map.
-func CookieWithNonce() CookieOption {
+// CookieValuesWithNonce adds Nonce to the cookie values map.
+func CookieValuesWithNonce() CookieModifier {
 	return func(s *sessions.Session) {
 		s.Values["nonce"] = randx.MustString(8, randx.Alpha)
 	}
