@@ -284,7 +284,7 @@ func (e *HookExecutor) PostSettingsHook(w http.ResponseWriter, r *http.Request, 
 		return nil
 	}
 
-	if err := e.d.SessionManager().IssueCookie(r.Context(), w, r, ctxUpdate.Session); err != nil {
+	if err := e.d.SessionManager().IssueCookie(r.Context(), w, r, ctxUpdate.Session, x.CookieWithNonce()); err != nil {
 		return errors.WithStack(err)
 	}
 

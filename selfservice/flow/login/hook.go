@@ -174,9 +174,10 @@ func (e *HookExecutor) PostLoginHook(w http.ResponseWriter, r *http.Request, g n
 		return nil
 	}
 
+	cookieValues := make(map[interface{}]interface{})
 	// Update session token when Re-Auth or session upgrade and then issue cookie
 	if a.Refresh || a.RequestedAAL > s.AuthenticatorAssuranceLevel { // TODO: Change to OR to allow block exec
-		s.Token = randx.MustString(32, randx.AlphaNum)
+		cookieValues["nonce"] = randx.MustString(8, randx.Alpha)
 	}
 
 	if err := e.d.SessionManager().UpsertAndIssueCookie(r.Context(), w, r, s); err != nil {

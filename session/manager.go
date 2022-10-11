@@ -2,6 +2,7 @@ package session
 
 import (
 	"context"
+	"github.com/ory/kratos/x"
 	"net/http"
 	"net/url"
 
@@ -89,7 +90,7 @@ type Manager interface {
 	// IssueCookie issues a cookie for the given session.
 	//
 	// Also regenerates CSRF tokens due to assumed principal change.
-	IssueCookie(context.Context, http.ResponseWriter, *http.Request, *Session) error
+	IssueCookie(context.Context, http.ResponseWriter, *http.Request, *Session, ...x.CookieOption) error
 
 	// RefreshCookie checks if the request uses an outdated cookie and refreshes the cookie if needed.
 	RefreshCookie(context.Context, http.ResponseWriter, *http.Request, *Session) error

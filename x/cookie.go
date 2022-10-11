@@ -1,11 +1,21 @@
 package x
 
 import (
+	"github.com/ory/x/randx"
 	"net/http"
 
 	"github.com/gorilla/sessions"
 	"github.com/pkg/errors"
 )
+
+type CookieOption func(*sessions.Session)
+
+// CookieWithNonce adds Nonce to the cookie values map.
+func CookieWithNonce() CookieOption {
+	return func(s *sessions.Session) {
+		s.Values["nonce"] = randx.MustString(8, randx.Alpha)
+	}
+}
 
 // SessionPersistValues adds values to the session store and persists the changes.
 func SessionPersistValues(w http.ResponseWriter, r *http.Request, s sessions.StoreExact, id string, values map[string]interface{}) error {
