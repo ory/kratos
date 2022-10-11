@@ -4,7 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 
 	"github.com/pkg/errors"
@@ -30,11 +30,11 @@ type EmailAddress struct {
 	} `json:"elements"`
 }
 
-type APIUrl string
+// type APIUrl string
 
 const (
-	ProfileUrl APIUrl = "https://api.linkedin.com/v2/me"
-	EmailUrl          = "https://api.linkedin.com/v2/emailAddress?q=members&projection=(elements*(handle~))"
+	ProfileUrl string = "https://api.linkedin.com/v2/me"
+	EmailUrl   string = "https://api.linkedin.com/v2/emailAddress?q=members&projection=(elements*(handle~))"
 )
 
 type ProviderLinkedIn struct {
@@ -74,7 +74,7 @@ func (l *ProviderLinkedIn) AuthCodeURLOptions(r ider) []oauth2.AuthCodeOption {
 	return []oauth2.AuthCodeOption{}
 }
 
-func (l *ProviderLinkedIn) ApiCall(url APIUrl, result interface{}, exchange *oauth2.Token) error {
+func (l *ProviderLinkedIn) ApiCall(url string, result interface{}, exchange *oauth2.Token) error {
 	var bearer = "Bearer " + exchange.AccessToken
 	req, err := http.NewRequest("GET", string(url), nil)
 	if err != nil {
@@ -87,7 +87,7 @@ func (l *ProviderLinkedIn) ApiCall(url APIUrl, result interface{}, exchange *oau
 		return errors.WithStack(err)
 	}
 	defer resp.Body.Close()
-	body, err := ioutil.ReadAll(resp.Body)
+	body, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return errors.WithStack(err)
 	}
