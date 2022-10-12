@@ -1545,7 +1545,7 @@
         }
       }
     },
-    "database":  {
+    "database": {
       "type": "object",
       "title": "Database related configuration",
       "description": "Miscellaneous settings used in database related tasks (cleanup, etc.)",
@@ -1555,7 +1555,7 @@
           "title": "Database cleanup settings",
           "description": "Settings that controls how the database cleanup process is configured (delays, batch size, etc.)",
           "properties": {
-            "batch_size" : {
+            "batch_size": {
               "type": "integer",
               "title": "Number of records to clean in one iteration",
               "description": "Controls how many records should be purged from one table during database cleanup task",
@@ -1609,7 +1609,35 @@
           "type": "object",
           "properties": {
             "recovery": {
-              "$ref": "#/definitions/courierTemplates"
+              "invalid": {
+                "additionalProperties": false,
+                "type": "object",
+                "properties": {
+                  "send": {
+                    "type": "boolean",
+                    "description": "Enable sending invalid recovery email",
+                    "default": true
+                  },
+                  "email": {
+                    "$ref": "#/definitions/emailCourierTemplate"
+                  }
+                },
+                "required": [
+                  "email"
+                ]
+              },
+              "valid": {
+                "additionalProperties": false,
+                "type": "object",
+                "properties": {
+                  "email": {
+                    "$ref": "#/definitions/emailCourierTemplate"
+                  }
+                },
+                "required": [
+                  "email"
+                ]
+              }
             },
             "recovery_code": {
               "$ref": "#/definitions/courierTemplates"

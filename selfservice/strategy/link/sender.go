@@ -67,6 +67,12 @@ func (s *Sender) SendRecoveryLink(ctx context.Context, r *http.Request, f *recov
 
 	address, err := s.r.IdentityPool().FindRecoveryAddressByValue(ctx, identity.RecoveryAddressTypeEmail, to)
 	if err != nil {
+		if !s.r.Config().CourierTemplatesRecoveryInvalidSend(ctx) {
+			s.r.Logger().Info("Suppressing invalid recovery email.")
+
+			return nil
+		}
+
 		if err := s.send(ctx, string(via), email.NewRecoveryInvalid(s.r, &email.RecoveryInvalidModel{To: to})); err != nil {
 			return err
 		}

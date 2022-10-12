@@ -8,10 +8,12 @@ import (
 	"time"
 
 	"github.com/ory/kratos/internal/testhelpers"
+	"github.com/pkg/errors"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
+	"github.com/ory/kratos/courier"
 	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/internal"
@@ -91,5 +93,27 @@ func TestManager(t *testing.T) {
 		address, err := reg.IdentityPool().FindVerifiableAddressByValue(context.Background(), identity.VerifiableAddressTypeEmail, "tracked@ory.sh")
 		require.NoError(t, err)
 		assert.EqualValues(t, identity.VerifiableAddressStatusSent, address.Status)
+	})
+
+	t.Run("case=should not send recovery link", func(t *testing.T) {
+		conf.Set(ctx, "courier.templates.recovery.invalid.send", false)
+
+		t.Cleanup(func() {
+			conf.Set(ctx, "courier.templates.recovery.invalid.send", true)
+		})
+
+		s, err := reg.RecoveryStrategies(ctx).Strategy("link")
+		require.NoError(t, err)
+		f, err := recovery.NewFlow(conf, time.Hour, "", u, s, flow.TypeBrowser)
+		require.NoError(t, err)
+
+		require.NoError(t, reg.RecoveryFlowPersister().CreateRecoveryFlow(context.Background(), f))
+
+		require.Equal(t, reg.LinkSender().SendRecoveryLink(context.Background(), hr, f, "email", "not-tracked@ory.sh"), nil)
+
+		messages, err := reg.CourierPersister().NextMessages(context.Background(), 0)
+
+		require.True(t, errors.Is(err, courier.ErrQueueEmpty))
+		require.Len(t, messages, 0)
 	})
 }
