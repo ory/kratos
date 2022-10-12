@@ -638,11 +638,7 @@ func TestRecovery(t *testing.T) {
 				v.Set("email", email)
 			}
 
-			cl := testhelpers.NewHTTPClientBuilder(t).
-				SetReqestFromWhoAmI().
-				SetIdentity(id).
-				SetSessionDefault().
-				ClientWithSessionCookie(reg)
+			cl := testhelpers.NewIdentityClientWithSessionCookie(t, reg, id)
 			check(t, expectSuccess(t, nil, false, false, values), email, cl, func(_ *http.Client, req *http.Request) (*http.Response, error) {
 				_, res := testhelpers.MockMakeAuthenticatedRequestWithClientAndID(t, reg, conf, publicRouter.Router, req, cl, id)
 				return res, nil

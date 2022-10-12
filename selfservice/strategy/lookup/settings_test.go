@@ -136,14 +136,7 @@ func TestCompleteSettings(t *testing.T) {
 
 	t.Run("case=hide recovery codes behind reveal button and show disable button", func(t *testing.T) {
 		id, _ := createIdentity(t, reg)
-		// TODO: Review this particular diff- I suspect there was a bug since `browserClient` was
-		// actually a token client, not a cookie client
-		browserClient := testhelpers.NewHTTPClientBuilder(t).
-			SetReqestFromWhoAmI().
-			SetIdentity(id).
-			SetSessionDefault().
-			ClientWithSessionCookie(reg)
-			// ClientWithSessionToken(reg)
+		browserClient := testhelpers.NewIdentityClientWithSessionCookie(t, reg, id)
 
 		t.Run("case=spa", func(t *testing.T) {
 			f := testhelpers.InitializeSettingsFlowViaBrowser(t, browserClient, true, publicTS)
@@ -156,11 +149,7 @@ func TestCompleteSettings(t *testing.T) {
 		})
 
 		t.Run("case=api", func(t *testing.T) {
-			apiClient := testhelpers.NewHTTPClientBuilder(t).
-				SetReqestFromWhoAmI().
-				SetIdentity(id).
-				SetSessionDefault().
-				ClientWithSessionToken(reg)
+			apiClient := testhelpers.NewIdentityClientWithSessionToken(t, reg, id)
 			f := testhelpers.InitializeSettingsFlowViaAPI(t, apiClient, publicTS)
 			testhelpers.SnapshotTExcept(t, f.Ui.Nodes, []string{"0.attributes.value"})
 		})
@@ -168,14 +157,7 @@ func TestCompleteSettings(t *testing.T) {
 
 	t.Run("case=button for regeneration is displayed when identity has no recovery codes yet", func(t *testing.T) {
 		id := createIdentityWithoutLookup(t, reg)
-		// TODO: Review this particular diff- I suspect there was a bug since `browserClient` was
-		// actually a token client, not a cookie client
-		browserClient := testhelpers.NewHTTPClientBuilder(t).
-			SetReqestFromWhoAmI().
-			SetIdentity(id).
-			SetSessionDefault().
-			ClientWithSessionCookie(reg)
-			// ClientWithSessionToken(reg)
+		browserClient := testhelpers.NewIdentityClientWithSessionCookie(t, reg, id)
 
 		t.Run("case=spa", func(t *testing.T) {
 			f := testhelpers.InitializeSettingsFlowViaBrowser(t, browserClient, true, publicTS)
@@ -188,11 +170,7 @@ func TestCompleteSettings(t *testing.T) {
 		})
 
 		t.Run("case=api", func(t *testing.T) {
-			apiClient := testhelpers.NewHTTPClientBuilder(t).
-				SetReqestFromWhoAmI().
-				SetIdentity(id).
-				SetSessionDefault().
-				ClientWithSessionToken(reg)
+			apiClient := testhelpers.NewIdentityClientWithSessionToken(t, reg, id)
 			f := testhelpers.InitializeSettingsFlowViaAPI(t, apiClient, publicTS)
 			testhelpers.SnapshotTExcept(t, f.Ui.Nodes, []string{"0.attributes.value"})
 		})

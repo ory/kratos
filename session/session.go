@@ -299,9 +299,9 @@ func (s *Session) SetPrivilegedUntil(t time.Time) {
 }
 
 func (s *Session) IsPrivileged() bool {
-	fmt.Printf("IsPrivileged is handling a null value: %v\n", s.PrivilegedUntil == nil)
-	// TODO: I think s.PriviledgedUntil can be nil because the sqlxx.NullTime can be a nil pointer,
-	// and we'd be doing a nil pointer dereference
+	if s.PrivilegedUntil == nil {
+		return false
+	}
 	return time.Time(*s.PrivilegedUntil).After(time.Now())
 }
 

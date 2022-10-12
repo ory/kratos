@@ -146,7 +146,7 @@ func TestHandler(t *testing.T) {
 			})
 
 			t.Run("description=success", func(t *testing.T) {
-				user1 := testhelpers.NewDefaultClientWithSessionCookie(t, reg)
+				user1 := testhelpers.NewDefaultClientWithSessionToken(t, reg)
 				res, body := initFlow(t, user1, true)
 				assert.Contains(t, res.Request.URL.String(), settings.RouteInitAPIFlow)
 				assertion(t, body, true)
@@ -288,8 +288,8 @@ func TestHandler(t *testing.T) {
 
 		t.Run("description=should fail to fetch request if identity changed", func(t *testing.T) {
 			t.Run("type=api", func(t *testing.T) {
-				user1 := testhelpers.NewDefaultClientWithSessionCookie(t, reg)
-				user2 := testhelpers.NewDefaultClientWithSessionCookie(t, reg)
+				user1 := testhelpers.NewDefaultClientWithSessionToken(t, reg)
+				user2 := testhelpers.NewDefaultClientWithSessionToken(t, reg)
 
 				res, err := user1.Get(publicTS.URL + settings.RouteInitAPIFlow)
 				require.NoError(t, err)
@@ -399,8 +399,8 @@ func TestHandler(t *testing.T) {
 
 		t.Run("description=fail to submit form as another user", func(t *testing.T) {
 			t.Run("type=api", func(t *testing.T) {
-				user1 := testhelpers.NewDefaultClientWithSessionCookie(t, reg)
-				user2 := testhelpers.NewDefaultClientWithSessionCookie(t, reg)
+				user1 := testhelpers.NewDefaultClientWithSessionToken(t, reg)
+				user2 := testhelpers.NewDefaultClientWithSessionToken(t, reg)
 				_, body := initFlow(t, user1, true)
 				var f kratos.SelfServiceSettingsFlow
 				require.NoError(t, json.Unmarshal(body, &f))

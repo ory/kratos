@@ -402,7 +402,7 @@ func NewIdentityClientWithSessionCookie(t *testing.T, reg *driver.RegistryDefaul
 		SetReqestFromWhoAmI().
 		SetIdentity(id).
 		SetSessionDefault().
-		ClientWithSessionToken(reg)
+		ClientWithSessionCookie(reg)
 }
 
 func NewDefaultClientWithSessionToken(t *testing.T, reg *driver.RegistryDefault) *http.Client {

@@ -12,12 +12,14 @@ import (
 	"net/url"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/ory/x/jsonx"
 
 	kratos "github.com/ory/kratos-client-go"
 
 	"github.com/ory/kratos/corpx"
+	"github.com/ory/kratos/session"
 
 	"github.com/julienschmidt/httprouter"
 	"github.com/stretchr/testify/assert"
@@ -333,15 +335,23 @@ func TestStrategyTraits(t *testing.T) {
 		})
 
 		t.Run("type=browser", func(t *testing.T) {
-			browserUser1 := getBrowserUser(false, browserIdentity1)
+			var sessionMutator func(mutateFunc func(session *session.Session))
+			browserUser1 := testhelpers.NewHTTPClientBuilder(t).
+				SetReqestFromWhoAmI().
+				SetIdentity(browserIdentity1).
+				SetSessionWithProvider(testhelpers.UnprivilegedProvider()).
+				RecordSessionMutator(reg, &sessionMutator).
+				ClientWithSessionCookie(reg)
+
 			f := testhelpers.InitializeSettingsFlowViaBrowser(t, browserUser1, false, publicTS)
 			res := run(t, f, false, browserUser1)
 			assert.EqualValues(t, http.StatusUnauthorized, res.StatusCode)
 			assert.Contains(t, res.Request.URL.String(), conf.GetProvider(ctx).String(config.ViperKeySelfServiceLoginUI))
 
 			t.Run("should update when signed back in", func(t *testing.T) {
-				browserUser1 := getBrowserUser(true, browserIdentity1)
-				_ = run(t, f, false, browserUser1)
+				sessionMutator(func(session *session.Session) {
+					session.SetPrivilegedUntil(time.Now().Add(time.Minute))
+				})
 				res, err := browserUser1.Get(f.Ui.Action)
 				require.NoError(t, err)
 
@@ -523,11 +533,6 @@ func TestStrategyTraits(t *testing.T) {
 		require.NoError(t, err)
 		assert.True(t, returned, "%d - %s", res.StatusCode, body)
 	})
-
-	// Update the login endpoint to auto-accept any incoming login request!
-	// TODO: This causes some side effect, possibly on the old browserUser1 client- I'm not sure what the implications
-	// of commenting this out are. I'll follow up on this before opening this for final review
-	// _ = testhelpers.NewSettingsLoginAcceptAPIServer(t, testhelpers.NewSDKCustomClient(publicTS, browserUser1), conf)
 
 	t.Run("description=should send email with verifiable address", func(t *testing.T) {
 		browserUser1 := getBrowserUser(true, browserIdentity1)
