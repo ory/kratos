@@ -7,14 +7,13 @@ import (
 	"net/url"
 	"time"
 
-	"github.com/gofrs/uuid"
 	"github.com/pkg/errors"
 
 	"github.com/ory/x/sqlcon"
 
 	"github.com/ory/kratos/driver/config"
+	"github.com/ory/kratos/hydra"
 	"github.com/ory/kratos/identity"
-	"github.com/ory/kratos/internal/hydraclient"
 	"github.com/ory/kratos/schema"
 	"github.com/ory/kratos/selfservice/flow"
 	"github.com/ory/kratos/session"
@@ -72,7 +71,9 @@ type (
 		session.PersistenceProvider
 		session.ManagementProvider
 		HooksProvider
+		hydra.HydraProvider
 		x.CSRFTokenGeneratorProvider
+		x.HTTPClientProvider
 		x.LoggingProvider
 		x.WriterProvider
 	}
@@ -205,22 +206,14 @@ func (e *HookExecutor) PostRegistrationHook(w http.ResponseWriter, r *http.Reque
 		return nil
 	}
 
-	if a.HydraLoginChallenge != uuid.Nil {
-		hydra_admin_url := e.d.Config().SelfServiceFlowHydraAdminURL(r.Context())
-		cr, err := hydraclient.AcceptHydraLoginRequest(
-			hydra_admin_url.String(),
-			a.HydraLoginChallenge,
-			i.ID.String(),
-			e.d.Config().SessionPersistentCookie(r.Context()),
-			int64(e.d.Config().SessionLifespan(r.Context())/time.Second),
-			s.AMR,
-		)
+	if a.HydraLoginChallenge.Valid {
+		cr, err := e.d.Hydra().AcceptHydraLoginRequest(r.Context(), a.HydraLoginChallenge.UUID, i.ID.String(), s.AMR)
 		if err != nil {
-			return errors.WithStack(err)
+			return err
 		}
-		returnTo, err = url.Parse(cr.RedirectTo)
+		returnTo, err = url.Parse(cr)
 		if err != nil {
-			return errors.WithStack(err)
+			return err
 		}
 	}
 

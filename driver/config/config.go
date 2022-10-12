@@ -850,7 +850,15 @@ func (p *Config) CourierSMTPURL(ctx context.Context) *url.URL {
 }
 
 func (p *Config) SelfServiceFlowHydraAdminURL(ctx context.Context) *url.URL {
-	return p.ParseAbsoluteOrRelativeURIOrFail(ctx, ViperKeySelfServiceHydraAdminURL)
+	k := ViperKeySelfServiceHydraAdminURL
+	v := p.GetProvider(ctx).String(k)
+	parsed, err := p.ParseAbsoluteOrRelativeURI(v)
+	if err != nil {
+		p.l.WithError(errors.WithStack(err)).
+			Errorf("Configuration value from key %s is not a valid URL: %s", k, v)
+		return nil
+	}
+	return parsed
 }
 
 func (p *Config) SelfServiceFlowLoginUI(ctx context.Context) *url.URL {

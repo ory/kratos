@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"io"
 	"net/http"
-	"net/http/cookiejar"
 	"net/http/httptest"
 	"net/url"
 	"os"
@@ -300,29 +299,6 @@ func viperSetProviderConfig(t *testing.T, conf *config.Config, providers ...oidc
 	ctx := context.Background()
 	conf.MustSet(ctx, config.ViperKeySelfServiceStrategyConfig+"."+string(identity.CredentialsTypeOIDC)+".config", &oidc.ConfigurationCollection{Providers: providers})
 	conf.MustSet(ctx, config.ViperKeySelfServiceStrategyConfig+"."+string(identity.CredentialsTypeOIDC)+".enabled", true)
-}
-
-func newClient(t *testing.T, jar *cookiejar.Jar) *http.Client {
-	if jar == nil {
-		j, err := cookiejar.New(nil)
-		jar = j
-		require.NoError(t, err)
-	}
-	return &http.Client{
-		Jar: jar,
-		CheckRedirect: func(req *http.Request, via []*http.Request) error {
-			if debugRedirects {
-				t.Logf("Redirect: %s", req.URL.String())
-			}
-			if len(via) >= 20 {
-				for k, v := range via {
-					t.Logf("Failed with redirect (%d): %s", k, v.URL.String())
-				}
-				return errors.New("stopped after 20 redirects")
-			}
-			return nil
-		},
-	}
 }
 
 // AssertSystemError asserts an error ui response

@@ -4,9 +4,7 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/gofrs/uuid"
-
-	"github.com/ory/kratos/internal/hydraclient"
+	"github.com/ory/kratos/hydra"
 	"github.com/ory/kratos/text"
 
 	"github.com/ory/nosurf"
@@ -41,6 +39,7 @@ type (
 	handlerDependencies interface {
 		config.Provider
 		errorx.ManagementProvider
+		hydra.HydraProvider
 		session.HandlerProvider
 		session.ManagementProvider
 		x.WriterProvider
@@ -194,6 +193,16 @@ func (h *Handler) initApiFlow(w http.ResponseWriter, r *http.Request, _ httprout
 // nolint:deadcode,unused
 // swagger:parameters initializeSelfServiceRegistrationFlowForBrowsers
 type initializeSelfServiceRegistrationFlowForBrowsers struct {
+	// An optional Hydra login challenge. If present, Kratos will cooperate with
+	// Ory Hydra to act as an OAuth2 identity provider.
+	//
+	// The value for this parameter comes from `login_challenge` URL Query parameter sent to your
+	// application (e.g. `/registration?login_challenge=abcde`).
+	//
+	// required: false
+	// in: query
+	HydraLoginChallenge string `json:"login_challenge"`
+
 	// The URL to return the browser to after the flow was completed.
 	//
 	// in: query
@@ -357,23 +366,13 @@ func (h *Handler) fetchFlow(w http.ResponseWriter, r *http.Request, ps httproute
 		return
 	}
 
-	if ar.HydraLoginChallenge != uuid.Nil {
-		// We don't redirect back to the third party on errors because Hydra doesn't
-		// give us the 3rd party return_uri when it redirects to the login UI.
-		hydra_admin_url := h.d.Config().SelfServiceFlowHydraAdminURL(r.Context())
-		if hydra_admin_url == nil {
-			h.d.Writer().WriteError(w, r, errors.WithStack(errors.Errorf("We received a Hydra Login Challenge, but SelfServiceFlowHydraAdminURL is not set")))
-			return
-		}
-		hlr, err := hydraclient.GetHydraLoginRequest(hydra_admin_url.String(), ar.HydraLoginChallenge)
+	if ar.HydraLoginChallenge.Valid {
+		hlr, err := h.d.Hydra().GetHydraLoginRequest(r.Context(), ar.HydraLoginChallenge)
 		if err != nil {
-			h.d.Writer().WriteError(w, r, errors.WithStack(err))
-			return
-		} else if hlr == nil {
-			h.d.Writer().WriteError(w, r, errors.WithStack(errors.Errorf("Hydra returned an empty login request")))
-			return
+			// We don't redirect back to the third party on errors because Hydra doesn't
+			// give us the 3rd party return_uri when it redirects to the login UI.
+			h.d.SelfServiceErrorManager().Forward(r.Context(), w, r, err)
 		}
-
 		ar.HydraLoginRequest = hlr
 	}
 

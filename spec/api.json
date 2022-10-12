@@ -93,6 +93,28 @@
         },
         "type": "object"
       },
+      "NullBool": {
+        "nullable": true,
+        "type": "boolean"
+      },
+      "NullInt": {
+        "nullable": true,
+        "type": "integer"
+      },
+      "NullString": {
+        "nullable": true,
+        "type": "string"
+      },
+      "NullTime": {
+        "format": "date-time",
+        "nullable": true,
+        "type": "string"
+      },
+      "NullUUID": {
+        "format": "uuid4",
+        "nullable": true,
+        "type": "string"
+      },
       "OAuth2Client": {
         "description": "OAuth2Client struct for OAuth2Client",
         "properties": {
@@ -296,6 +318,10 @@
         "type": "string"
       },
       "TemplateType": {
+        "type": "string"
+      },
+      "Time": {
+        "format": "date-time",
         "type": "string"
       },
       "UUID": {
@@ -968,6 +994,15 @@
         "title": "Is sent when a privileged session is required to perform the settings update.",
         "type": "object"
       },
+      "nullDuration": {
+        "nullable": true,
+        "pattern": "^[0-9]+(ns|us|ms|s|m|h)$",
+        "type": "string"
+      },
+      "nullInt64": {
+        "nullable": true,
+        "type": "integer"
+      },
       "nullJsonRawMessage": {
         "description": "NullJSONRawMessage represents a json.RawMessage that works well with JSON, SQL, and Swagger and is NULLable-"
       },
@@ -1193,9 +1228,6 @@
             "format": "date-time",
             "type": "string"
           },
-          "hydra_login_request": {
-            "$ref": "#/components/schemas/LoginRequest"
-          },
           "id": {
             "description": "ID represents the flow's unique ID. When performing the login flow, this\nrepresents the id in the login UI's query parameter: http://\u003cselfservice.flows.login.ui_url\u003e/?flow=\u003cflow_id\u003e",
             "format": "uuid",
@@ -1205,6 +1237,12 @@
             "description": "IssuedAt is the time (UTC) when the flow started.",
             "format": "date-time",
             "type": "string"
+          },
+          "oauth2_login_challenge": {
+            "$ref": "#/components/schemas/NullUUID"
+          },
+          "oauth2_login_request": {
+            "$ref": "#/components/schemas/LoginRequest"
           },
           "refresh": {
             "description": "Refresh stores whether this login flow should enforce re-authentication.",
@@ -1372,9 +1410,6 @@
             "format": "date-time",
             "type": "string"
           },
-          "hydra_login_request": {
-            "$ref": "#/components/schemas/LoginRequest"
-          },
           "id": {
             "description": "ID represents the flow's unique ID. When performing the registration flow, this\nrepresents the id in the registration ui's query parameter: http://\u003cselfservice.flows.registration.ui_url\u003e/?flow=\u003cid\u003e",
             "format": "uuid",
@@ -1384,6 +1419,12 @@
             "description": "IssuedAt is the time (UTC) when the flow occurred.",
             "format": "date-time",
             "type": "string"
+          },
+          "oauth2_login_challenge": {
+            "$ref": "#/components/schemas/NullUUID"
+          },
+          "oauth2_login_request": {
+            "$ref": "#/components/schemas/LoginRequest"
           },
           "request_url": {
             "description": "RequestURL is the initial URL that was requested from Ory Kratos. It can be used\nto forward information contained in the URL's path or query for example.",
@@ -4101,11 +4142,11 @@
     },
     "/self-service/login/browser": {
       "get": {
-        "description": "This endpoint initializes a browser-based user login flow. This endpoint will set the appropriate\ncookies and anti-CSRF measures required for browser-based flows.\n\nIf this endpoint is opened as a link in the browser, it will be redirected to\n`selfservice.flows.login.ui_url` with the flow ID set as the query parameter `?flow=`. If a valid user session\nexists already, the browser will be redirected to `urls.default_redirect_url` unless the query parameter\n`?refresh=true` was set.\n\nIf this endpoint is called via an AJAX request, the response contains the flow without a redirect. In the\ncase of an error, the `error.id` of the JSON response body can be one of:\n\n`session_already_available`: The user is already signed in.\n`session_aal1_required`: Multi-factor auth (e.g. 2fa) was requested but the user has no session yet.\n`security_csrf_violation`: Unable to fetch the flow because a CSRF violation occurred.\n`security_identity_mismatch`: The requested `?return_to` address is not allowed to be used. Adjust this in the configuration!\n\nThe optional query parameter login_challenge is set when using Kratos with\nHydra in an OAUTH flow. See the selfservice.hydra_admin_url configuration\noption.\n\nThis endpoint is NOT INTENDED for clients that do not have a browser (Chrome, Firefox, ...) as cookies are needed.\n\nMore information can be found at [Ory Kratos User Login](https://www.ory.sh/docs/kratos/self-service/flows/user-login) and [User Registration Documentation](https://www.ory.sh/docs/kratos/self-service/flows/user-registration).",
+        "description": "This endpoint initializes a browser-based user login flow. This endpoint will set the appropriate\ncookies and anti-CSRF measures required for browser-based flows.\n\nIf this endpoint is opened as a link in the browser, it will be redirected to\n`selfservice.flows.login.ui_url` with the flow ID set as the query parameter `?flow=`. If a valid user session\nexists already, the browser will be redirected to `urls.default_redirect_url` unless the query parameter\n`?refresh=true` was set.\n\nIf this endpoint is called via an AJAX request, the response contains the flow without a redirect. In the\ncase of an error, the `error.id` of the JSON response body can be one of:\n\n`session_already_available`: The user is already signed in.\n`session_aal1_required`: Multi-factor auth (e.g. 2fa) was requested but the user has no session yet.\n`security_csrf_violation`: Unable to fetch the flow because a CSRF violation occurred.\n`security_identity_mismatch`: The requested `?return_to` address is not allowed to be used. Adjust this in the configuration!\n\nThe optional query parameter login_challenge is set when using Kratos with\nHydra in an OAuth2 flow. See the selfservice.hydra_admin_url configuration\noption.\n\nThis endpoint is NOT INTENDED for clients that do not have a browser (Chrome, Firefox, ...) as cookies are needed.\n\nMore information can be found at [Ory Kratos User Login](https://www.ory.sh/docs/kratos/self-service/flows/user-login) and [User Registration Documentation](https://www.ory.sh/docs/kratos/self-service/flows/user-registration).",
         "operationId": "initializeSelfServiceLoginFlowForBrowsers",
         "parameters": [
           {
-            "description": "An optional Hydra login challenge. If present, Kratos will cooperate with\nOry Hydra to act as an OAUTH identity provider.\n\nThe value for this parameter comes from `login_challenge` URL Query parameter sent to your\napplication (e.g. `/login?login_challenge=abcde`).",
+            "description": "An optional Hydra login challenge. If present, Kratos will cooperate with\nOry Hydra to act as an OAuth2 identity provider.\n\nThe value for this parameter comes from `login_challenge` URL Query parameter sent to your\napplication (e.g. `/login?login_challenge=abcde`).",
             "in": "query",
             "name": "login_challenge",
             "schema": {
@@ -4834,6 +4875,14 @@
         "description": "This endpoint initializes a browser-based user registration flow. This endpoint will set the appropriate\ncookies and anti-CSRF measures required for browser-based flows.\n\n:::info\n\nThis endpoint is EXPERIMENTAL and subject to potential breaking changes in the future.\n\n:::\n\nIf this endpoint is opened as a link in the browser, it will be redirected to\n`selfservice.flows.registration.ui_url` with the flow ID set as the query parameter `?flow=`. If a valid user session\nexists already, the browser will be redirected to `urls.default_redirect_url`.\n\nIf this endpoint is called via an AJAX request, the response contains the flow without a redirect. In the\ncase of an error, the `error.id` of the JSON response body can be one of:\n\n`session_already_available`: The user is already signed in.\n`security_csrf_violation`: Unable to fetch the flow because a CSRF violation occurred.\n`security_identity_mismatch`: The requested `?return_to` address is not allowed to be used. Adjust this in the configuration!\n\nIf this endpoint is called via an AJAX request, the response contains the registration flow without a redirect.\n\nThis endpoint is NOT INTENDED for clients that do not have a browser (Chrome, Firefox, ...) as cookies are needed.\n\nMore information can be found at [Ory Kratos User Login](https://www.ory.sh/docs/kratos/self-service/flows/user-login) and [User Registration Documentation](https://www.ory.sh/docs/kratos/self-service/flows/user-registration).",
         "operationId": "initializeSelfServiceRegistrationFlowForBrowsers",
         "parameters": [
+          {
+            "description": "An optional Hydra login challenge. If present, Kratos will cooperate with\nOry Hydra to act as an OAuth2 identity provider.\n\nThe value for this parameter comes from `login_challenge` URL Query parameter sent to your\napplication (e.g. `/registration?login_challenge=abcde`).",
+            "in": "query",
+            "name": "login_challenge",
+            "schema": {
+              "type": "string"
+            }
+          },
           {
             "description": "The URL to return the browser to after the flow was completed.",
             "in": "query",

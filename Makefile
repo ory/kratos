@@ -105,6 +105,7 @@ sdk: .bin/swagger .bin/ory node_modules
 			-p file://.schema/openapi/patches/identity.yaml \
 			-p file://.schema/openapi/patches/courier.yaml \
 			-p file://.schema/openapi/patches/generic_error.yaml \
+			-p file://.schema/openapi/patches/nulls.yaml \
 			-p file://.schema/openapi/patches/common.yaml \
 			spec/swagger.json spec/api.json
 

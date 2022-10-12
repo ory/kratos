@@ -8,7 +8,9 @@ import (
 	"github.com/gofrs/uuid"
 
 	"github.com/ory/herodot"
+	hydraclientgo "github.com/ory/hydra-client-go"
 
+	"github.com/ory/kratos/hydra"
 	"github.com/ory/kratos/text"
 	"github.com/ory/x/stringsx"
 
@@ -25,7 +27,6 @@ import (
 	"github.com/ory/x/urlx"
 
 	"github.com/ory/kratos/driver/config"
-	"github.com/ory/kratos/internal/hydraclient"
 	"github.com/ory/kratos/selfservice/errorx"
 	"github.com/ory/kratos/selfservice/flow"
 	"github.com/ory/kratos/session"
@@ -46,6 +47,7 @@ type (
 		HookExecutorProvider
 		FlowPersistenceProvider
 		errorx.ManagementProvider
+		hydra.HydraProvider
 		StrategyProvider
 		session.HandlerProvider
 		session.ManagementProvider
@@ -283,7 +285,7 @@ func (h *Handler) initAPIFlow(w http.ResponseWriter, r *http.Request, _ httprout
 // swagger:parameters initializeSelfServiceLoginFlowForBrowsers
 type initializeSelfServiceLoginFlowForBrowsers struct {
 	// An optional Hydra login challenge. If present, Kratos will cooperate with
-	// Ory Hydra to act as an OAUTH identity provider.
+	// Ory Hydra to act as an OAuth2 identity provider.
 	//
 	// The value for this parameter comes from `login_challenge` URL Query parameter sent to your
 	// application (e.g. `/login?login_challenge=abcde`).
@@ -365,41 +367,57 @@ type initializeSelfServiceLoginFlowForBrowsers struct {
 //	  400: jsonError
 //	  500: jsonError
 func (h *Handler) initBrowserFlow(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	var hlr *hydraclientgo.LoginRequest
+	var hlc uuid.NullUUID
+	if r.URL.Query().Has("login_challenge") {
+		var err error
+		hlc, err = hydra.GetHydraLoginChallenge(h.d.Config(), r)
+		if err != nil || !hlc.Valid {
+			h.d.SelfServiceErrorManager().Forward(r.Context(), w, r, errors.WithStack(herodot.ErrBadRequest.WithReason("the login_challenge parameter is present but invalid or zero UUID")))
+			return
+		}
+
+		hlr, err = h.d.Hydra().GetHydraLoginRequest(r.Context(), hlc)
+		if err != nil {
+			h.d.SelfServiceErrorManager().Forward(r.Context(), w, r, errors.WithStack(herodot.ErrInternalServerError.WithReason("failed to retrieve Hydra login request")))
+			return
+		} else if hlr == nil {
+			h.d.SelfServiceErrorManager().Forward(r.Context(), w, r, errors.WithStack(herodot.ErrInternalServerError.WithReason("Hydra returned an empty login request")))
+			return
+		}
+
+		if !hlr.GetSkip() {
+			q := r.URL.Query()
+			q.Set("refresh", "true")
+			r.URL.RawQuery = q.Encode()
+		}
+	}
+
 	a, sess, err := h.NewLoginFlow(w, r, flow.TypeBrowser)
 	if errors.Is(err, ErrAlreadyLoggedIn) {
-		if r.URL.Query().Has("login_challenge") {
-			// Always accept the Hydra login request if user has a session with the required AAL
-			hlc, err := uuid.FromString(r.URL.Query().Get("login_challenge"))
-			if err != nil || hlc == uuid.Nil {
-				h.d.SelfServiceErrorManager().Forward(r.Context(), w, r, errors.WithStack(herodot.ErrBadRequest.WithReason("The login_challenge parameter is present but invalid or zero UUID")))
-				return
-			}
-			hydra_admin_url := h.d.Config().SelfServiceFlowHydraAdminURL(r.Context())
-			if hydra_admin_url == nil {
-				h.d.SelfServiceErrorManager().Forward(r.Context(), w, r, errors.WithStack(herodot.ErrBadRequest.WithReason("We received a Hydra Login Challenge, but SelfServiceFlowHydraAdminURL is not configured")))
-				return
-			}
-			cr, err := hydraclient.AcceptHydraLoginRequest(
-				hydra_admin_url.String(),
-				hlc,
-				sess.IdentityID.String(),
-				h.d.Config().SessionPersistentCookie(r.Context()),
-				int64(h.d.Config().SessionLifespan(r.Context())/time.Second),
-				sess.AMR,
-			)
+		if hlr != nil && hlr.GetSkip() && hlc.Valid {
+			// Accept the Hydra login request if user has a session with the required AAL and hlr.GetSkip() is true
+
+			rt, err := h.d.Hydra().AcceptHydraLoginRequest(r.Context(), hlc.UUID, sess.IdentityID.String(), sess.AMR)
+
 			if err != nil {
 				h.d.SelfServiceErrorManager().Forward(r.Context(), w, r, err)
 				return
-			} else if cr == nil {
-				h.d.SelfServiceErrorManager().Forward(r.Context(), w, r, errors.WithStack(herodot.ErrBadRequest.WithReason("Hydra failed to accept login request. Please try again later.")))
-				return
 			}
-			returnTo, err := url.Parse(cr.RedirectTo)
+			returnTo, err := url.Parse(rt)
 			if err != nil || returnTo == nil {
-				h.d.SelfServiceErrorManager().Forward(r.Context(), w, r, errors.WithStack(herodot.ErrBadRequest.WithReason("The Hydra login request had an invalid redirect_to value: "+cr.RedirectTo)))
+				h.d.SelfServiceErrorManager().Forward(r.Context(), w, r, errors.WithStack(herodot.ErrInternalServerError.WithReason("AcceptHydraLoginRequest returned an invalid redirect_to value: "+rt)))
 				return
 			}
 			x.AcceptToRedirectOrJSON(w, r, h.d.Writer(), err, returnTo.String())
+			return
+		} else if hlr != nil { // This should never happen
+			if hlr.GetSkip() {
+				h.d.SelfServiceErrorManager().Forward(r.Context(), w, r, errors.WithStack(herodot.ErrInternalServerError.WithReason("unexpected state: already logged in, but Hydra asked us to refresh session")))
+				return
+			}
+
+			h.d.SelfServiceErrorManager().Forward(r.Context(), w, r, errors.WithStack(herodot.ErrInternalServerError.WithReason("unexpected state: Hydra login challenge is invalid, but Hydra login request is not nil")))
 			return
 		}
 
@@ -514,23 +532,13 @@ func (h *Handler) fetchFlow(w http.ResponseWriter, r *http.Request, _ httprouter
 		return
 	}
 
-	if ar.HydraLoginChallenge != uuid.Nil {
-		// We don't redirect back to the third party on errors because Hydra doesn't
-		// give us the 3rd party return_uri when it redirects to the login UI.
-		hydra_admin_url := h.d.Config().SelfServiceFlowHydraAdminURL(r.Context())
-		if hydra_admin_url == nil {
-			h.d.SelfServiceErrorManager().Forward(r.Context(), w, r, errors.WithStack(herodot.ErrBadRequest.WithReason("We received a Hydra Login Challenge, but SelfServiceFlowHydraAdminURL is not configured")))
-			return
-		}
-		hlr, err := hydraclient.GetHydraLoginRequest(hydra_admin_url.String(), ar.HydraLoginChallenge)
+	if ar.HydraLoginChallenge.Valid {
+		hlr, err := h.d.Hydra().GetHydraLoginRequest(r.Context(), ar.HydraLoginChallenge)
 		if err != nil {
-			h.d.Writer().WriteError(w, r, errors.WithStack(err))
-			return
-		} else if hlr == nil {
-			h.d.Writer().WriteError(w, r, errors.WithStack(errors.Errorf("Hydra returned an empty login request")))
-			return
+			// We don't redirect back to the third party on errors because Hydra doesn't
+			// give us the 3rd party return_uri when it redirects to the login UI.
+			h.d.SelfServiceErrorManager().Forward(r.Context(), w, r, err)
 		}
-
 		ar.HydraLoginRequest = hlr
 	}
 

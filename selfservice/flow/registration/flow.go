@@ -11,12 +11,12 @@ import (
 
 	"github.com/tidwall/gjson"
 
-	"github.com/ory/herodot"
 	"github.com/ory/x/sqlxx"
 
-	hydra "github.com/ory/hydra-client-go"
+	hydraclientgo "github.com/ory/hydra-client-go"
 
 	"github.com/ory/kratos/driver/config"
+	"github.com/ory/kratos/hydra"
 	"github.com/ory/kratos/ui/container"
 
 	"github.com/gofrs/uuid"
@@ -38,9 +38,16 @@ type Flow struct {
 	ID uuid.UUID `json:"id" faker:"-" db:"id"`
 
 	// HydraLoginChallenge is an optional field whose presence indicates that
-	// Kratos is being used as an identity provider in a Hydra OAUTH flow.
-	HydraLoginChallenge uuid.UUID           `json:"-" faker:"-" db:"hydra_login_challenge"`
-	HydraLoginRequest   *hydra.LoginRequest `json:"hydra_login_request" faker:"-" db:"-"`
+	// Kratos is being used as an identity provider in a Hydra OAuth2 flow. This
+	// value is set using the `login_challenge` query parameter of the
+	// registration init endpoint.
+	HydraLoginChallenge uuid.NullUUID `json:"oauth2_login_challenge,omitempty" faker:"-" db:"hydra_login_challenge"`
+
+	// HydraLoginRequest is an optional field whose presence indicates that Kratos
+	// is being used as an identity provider in a Hydra OAuth2 flow. Kratos
+	// populates this field by retrieving its value from Hydra and it is used by
+	// the login and consent UIs.
+	HydraLoginRequest *hydraclientgo.LoginRequest `json:"oauth2_login_request,omitempty" faker:"-" db:"-"`
 
 	// Type represents the flow's type which can be either "api" or "browser", depending on the flow interaction.
 	//
@@ -106,12 +113,9 @@ func NewFlow(conf *config.Config, exp time.Duration, csrf string, r *http.Reques
 		return nil, err
 	}
 
-	hlc := uuid.Nil
-	if r.URL.Query().Has("login_challenge") {
-		hlc, err = uuid.FromString(r.URL.Query().Get("login_challenge"))
-		if err != nil || hlc == uuid.Nil {
-			return nil, errors.WithStack(herodot.ErrBadRequest.WithReason("The login_challenge parameter is present but invalid or zero UUID"))
-		}
+	hlc, err := hydra.GetHydraLoginChallenge(conf, r)
+	if err != nil {
+		return nil, err
 	}
 
 	return &Flow{

@@ -1009,7 +1009,7 @@
         },
         "hydra_admin_url": {
           "title": "Hydra admin endpoint URL.",
-          "description": "If set, the login and registration flows will handle the hydra login_challenge query parameter and integrate with Hydra to serve as an OIDC identity provider.",
+          "description": "If set, the login and registration flows will handle the hydra login_challenge query parameter and integrate with Hydra to serve as an OIDC identity provider. Note that if disallow_private_ip_ranges is enabled, hydra_admin_url must not resolve to a private IP for Kratos to be able to reach it.",
           "type": "string",
           "format": "uri",
           "examples": [
