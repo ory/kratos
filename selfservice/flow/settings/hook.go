@@ -274,7 +274,7 @@ func (e *HookExecutor) PostSettingsHook(w http.ResponseWriter, r *http.Request, 
 		WithField("flow_method", settingsType).
 		Debug("Completed all PostSettingsPrePersistHooks and PostSettingsPostPersistHooks.")
 
-	if ctxUpdate.Flow.Type == flow.TypeAPI || x.IsJSONRequest(r) {
+	if ctxUpdate.Flow.Type == flow.TypeAPI {
 		updatedFlow, err := e.d.SettingsFlowPersister().GetSettingsFlow(r.Context(), ctxUpdate.Flow.ID)
 		if err != nil {
 			return err
@@ -288,6 +288,16 @@ func (e *HookExecutor) PostSettingsHook(w http.ResponseWriter, r *http.Request, 
 	// Using nonce modifies the cookie value without affecting the session attributes (token, expiry)
 	if err := e.d.SessionManager().IssueCookie(r.Context(), w, r, ctxUpdate.Session, x.CookieValuesWithNonce()); err != nil {
 		return errors.WithStack(err)
+	}
+
+	if x.IsJSONRequest(r) {
+		updatedFlow, err := e.d.SettingsFlowPersister().GetSettingsFlow(r.Context(), ctxUpdate.Flow.ID)
+		if err != nil {
+			return err
+		}
+
+		e.d.Writer().Write(w, r, updatedFlow)
+		return nil
 	}
 
 	x.ContentNegotiationRedirection(w, r, i.CopyWithoutCredentials(), e.d.Writer(), returnTo.String())
