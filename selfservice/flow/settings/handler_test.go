@@ -402,6 +402,31 @@ func TestHandler(t *testing.T) {
 				assert.Equal(t, "You must restart the flow because the resumable session was initiated by another person.", gjson.Get(actual, "ui.messages.0.text").String(), actual)
 			})
 		})
+
+		t.Run("description=submit - kratos session cookie", func(t *testing.T) {
+			t.Run("type=api", func(t *testing.T) {
+				user1 := testhelpers.NewHTTPClientWithArbitrarySessionToken(t, reg)
+				_, body := initFlow(t, user1, true)
+				var f kratos.SelfServiceSettingsFlow
+				require.NoError(t, json.Unmarshal(body, &f))
+
+				actual, res := testhelpers.SettingsMakeRequest(t, true, false, &f, user1, `{"method":"profile", "numby": 15}`)
+				assert.Equal(t, http.StatusOK, res.StatusCode)
+				assert.Equal(t, "Your changes have been saved!", gjson.Get(actual, "ui.messages.0.text").String(), actual)
+			})
+
+			t.Run("type=browser", func(t *testing.T) {
+				_, body := initFlow(t, primaryUser, false)
+				var f kratos.SelfServiceSettingsFlow
+				require.NoError(t, json.Unmarshal(body, &f))
+
+				actual, res := testhelpers.SettingsMakeRequest(t, false, false, &f, primaryUser, `method=profile&traits.numby=15&csrf_token=`+x.FakeCSRFToken)
+				assert.Equal(t, http.StatusOK, res.StatusCode)
+				require.Len(t, primaryUser.Jar.Cookies(urlx.ParseOrPanic(publicTS.URL+login.RouteGetFlow)), 1)
+				require.Contains(t, fmt.Sprintf("%v", primaryUser.Jar.Cookies(urlx.ParseOrPanic(publicTS.URL))), "ory_kratos_session")
+				assert.Equal(t, "Your changes have been saved!", gjson.Get(actual, "ui.messages.0.text").String(), actual)
+			})
+		})
 	})
 
 	t.Run("case=relative redirect when self-service settings ui is a relative url", func(t *testing.T) {
