@@ -1,1 +1,1 @@
-ALTER TABLE "sessions" ADD COLUMN "privileged_until" DATETIME DEFAULT NULL;
+ALTER TABLE `sessions` ADD COLUMN `privileged_until` DATETIME DEFAULT NULL;

@@ -1,1 +1,1 @@
-ALTER TABLE "sessions" DROP COLUMN "privileged_until";
+ALTER TABLE `sessions` DROP COLUMN `privileged_until`;
