@@ -51,9 +51,10 @@ func NewLoginUIWith401Response(t *testing.T, c *config.Config) *httptest.Server 
 }
 
 type initFlowOptions struct {
-	aal      identity.AuthenticatorAssuranceLevel
-	returnTo string
-	refresh  bool
+	aal                 identity.AuthenticatorAssuranceLevel
+	returnTo            string
+	refresh             bool
+	hydraLoginChallenge string
 }
 
 func (o *initFlowOptions) apply(opts []InitFlowWithOption) *initFlowOptions {
@@ -77,6 +78,10 @@ func getURLFromInitOptions(ts *httptest.Server, path string, forced bool, opts .
 
 	if o.returnTo != "" {
 		q.Set("return_to", string(o.returnTo))
+	}
+
+	if o.hydraLoginChallenge != "" {
+		q.Set("login_challenge", o.hydraLoginChallenge)
 	}
 
 	u := urlx.ParseOrPanic(ts.URL + path)
@@ -104,7 +109,13 @@ func InitFlowWithRefresh() InitFlowWithOption {
 	}
 }
 
-func InitializeLoginFlowViaBrowser(t *testing.T, client *http.Client, ts *httptest.Server, forced bool, isSPA bool, opts ...InitFlowWithOption) *kratos.SelfServiceLoginFlow {
+func InitFlowWithHydraLoginChallenge(hlc string) InitFlowWithOption {
+	return func(o *initFlowOptions) {
+		o.hydraLoginChallenge = hlc
+	}
+}
+
+func InitializeLoginFlowViaBrowser(t *testing.T, client *http.Client, ts *httptest.Server, forced bool, isSPA bool, expectInitError bool, expectGetError bool, opts ...InitFlowWithOption) *kratos.SelfServiceLoginFlow {
 	publicClient := NewSDKCustomClient(ts, client)
 
 	req, err := http.NewRequest("GET", getURLFromInitOptions(ts, login.RouteInitBrowserFlow, forced, opts...), nil)
@@ -118,6 +129,11 @@ func InitializeLoginFlowViaBrowser(t *testing.T, client *http.Client, ts *httpte
 	require.NoError(t, err)
 	body := x.MustReadAll(res.Body)
 	require.NoError(t, res.Body.Close())
+	if expectInitError {
+		require.Equal(t, 200, res.StatusCode)
+		require.NotNil(t, res.Request.URL)
+		require.Contains(t, res.Request.URL.String(), "error-ts")
+	}
 
 	flowID := res.Request.URL.Query().Get("flow")
 	if isSPA {
@@ -125,8 +141,13 @@ func InitializeLoginFlowViaBrowser(t *testing.T, client *http.Client, ts *httpte
 	}
 
 	rs, _, err := publicClient.V0alpha2Api.GetSelfServiceLoginFlow(context.Background()).Id(flowID).Execute()
-	require.NoError(t, err)
-	assert.Empty(t, rs.Active)
+	if expectGetError {
+		require.Error(t, err)
+		require.Nil(t, rs)
+	} else {
+		require.NoError(t, err)
+		assert.Empty(t, rs.Active)
+	}
 
 	return rs
 }
@@ -195,7 +216,7 @@ func SubmitLoginForm(
 	if isAPI {
 		f = InitializeLoginFlowViaAPI(t, hc, publicTS, forced)
 	} else {
-		f = InitializeLoginFlowViaBrowser(t, hc, publicTS, forced, isSPA)
+		f = InitializeLoginFlowViaBrowser(t, hc, publicTS, forced, isSPA, false, false)
 	}
 
 	time.Sleep(time.Millisecond) // add a bit of delay to allow `1ns` to time out.

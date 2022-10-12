@@ -133,7 +133,7 @@ func TestCompleteLogin(t *testing.T) {
 
 		t.Run("type=browser", func(t *testing.T) {
 			browserClient := testhelpers.NewHTTPClientWithIdentitySessionCookie(t, reg, id)
-			f := testhelpers.InitializeLoginFlowViaBrowser(t, browserClient, publicTS, false, false, testhelpers.InitFlowWithAAL(identity.AuthenticatorAssuranceLevel2))
+			f := testhelpers.InitializeLoginFlowViaBrowser(t, browserClient, publicTS, false, false, false, false, testhelpers.InitFlowWithAAL(identity.AuthenticatorAssuranceLevel2))
 
 			body, res := testhelpers.LoginMakeRequest(t, false, false, f, browserClient, "14=)=!(%)$/ZP()GHIÖ")
 			assert.Contains(t, res.Request.URL.String(), uiTS.URL+"/login-ts")
@@ -143,7 +143,7 @@ func TestCompleteLogin(t *testing.T) {
 
 		t.Run("type=spa", func(t *testing.T) {
 			browserClient := testhelpers.NewHTTPClientWithIdentitySessionCookie(t, reg, id)
-			f := testhelpers.InitializeLoginFlowViaBrowser(t, browserClient, publicTS, false, true, testhelpers.InitFlowWithAAL(identity.AuthenticatorAssuranceLevel2))
+			f := testhelpers.InitializeLoginFlowViaBrowser(t, browserClient, publicTS, false, true, false, false, testhelpers.InitFlowWithAAL(identity.AuthenticatorAssuranceLevel2))
 
 			body, res := testhelpers.LoginMakeRequest(t, false, true, f, browserClient, "14=)=!(%)$/ZP()GHIÖ")
 			assert.Contains(t, res.Request.URL.String(), publicTS.URL+login.RouteSubmitFlow)
@@ -170,7 +170,7 @@ func TestCompleteLogin(t *testing.T) {
 			opts = append(opts, testhelpers.InitFlowWithReturnTo(returnTo))
 		}
 
-		f := testhelpers.InitializeLoginFlowViaBrowser(t, browserClient, publicTS, false, spa, opts...)
+		f := testhelpers.InitializeLoginFlowViaBrowser(t, browserClient, publicTS, false, spa, false, false, opts...)
 		values := testhelpers.SDKFormFieldsToURLValues(f.Ui.Nodes)
 		values.Set("method", "totp")
 		v(values)
@@ -411,7 +411,7 @@ func TestCompleteLogin(t *testing.T) {
 		t.Run("type=browser", func(t *testing.T) {
 			returnTo := "https://www.ory.sh"
 			browserClient := testhelpers.NewClientWithCookies(t)
-			f := testhelpers.InitializeLoginFlowViaBrowser(t, browserClient, publicTS, false, false, testhelpers.InitFlowWithReturnTo(returnTo))
+			f := testhelpers.InitializeLoginFlowViaBrowser(t, browserClient, publicTS, false, false, false, false, testhelpers.InitFlowWithReturnTo(returnTo))
 
 			cred, ok := id.GetCredentials(identity.CredentialsTypePassword)
 			require.True(t, ok)

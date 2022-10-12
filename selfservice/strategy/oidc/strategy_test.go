@@ -45,8 +45,6 @@ import (
 	"github.com/ory/kratos/x"
 )
 
-const debugRedirects = false
-
 func TestStrategy(t *testing.T) {
 	ctx := context.Background()
 	if testing.Short() {
@@ -138,7 +136,7 @@ func TestStrategy(t *testing.T) {
 
 	var makeRequestWithCookieJar = func(t *testing.T, provider string, action string, fv url.Values, jar *cookiejar.Jar) (*http.Response, []byte) {
 		fv.Set("provider", provider)
-		res, err := newClient(t, jar).PostForm(action, fv)
+		res, err := testhelpers.NewClientWithCookieJar(t, jar, false).PostForm(action, fv)
 		require.NoError(t, err, action)
 
 		body, err := io.ReadAll(res.Body)

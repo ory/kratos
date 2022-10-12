@@ -1097,7 +1097,7 @@ paths:
         `security_identity_mismatch`: The requested `?return_to` address is not allowed to be used. Adjust this in the configuration!
 
         The optional query parameter login_challenge is set when using Kratos with
-        Hydra in an OAUTH flow. See the selfservice.hydra_admin_url configuration
+        Hydra in an OAuth2 flow. See the selfservice.hydra_admin_url configuration
         option.
 
         This endpoint is NOT INTENDED for clients that do not have a browser (Chrome, Firefox, ...) as cookies are needed.
@@ -1107,7 +1107,7 @@ paths:
       parameters:
       - description: |-
           An optional Hydra login challenge. If present, Kratos will cooperate with
-          Ory Hydra to act as an OAUTH identity provider.
+          Ory Hydra to act as an OAuth2 identity provider.
 
           The value for this parameter comes from `login_challenge` URL Query parameter sent to your
           application (e.g. `/login?login_challenge=abcde`).
@@ -1864,6 +1864,19 @@ paths:
         More information can be found at [Ory Kratos User Login](https://www.ory.sh/docs/kratos/self-service/flows/user-login) and [User Registration Documentation](https://www.ory.sh/docs/kratos/self-service/flows/user-registration).
       operationId: initializeSelfServiceRegistrationFlowForBrowsers
       parameters:
+      - description: |-
+          An optional Hydra login challenge. If present, Kratos will cooperate with
+          Ory Hydra to act as an OAuth2 identity provider.
+
+          The value for this parameter comes from `login_challenge` URL Query parameter sent to your
+          application (e.g. `/registration?login_challenge=abcde`).
+        explode: true
+        in: query
+        name: login_challenge
+        required: false
+        schema:
+          type: string
+        style: form
       - description: The URL to return the browser to after the flow was completed.
         explode: true
         in: query
@@ -3141,6 +3154,23 @@ components:
             fail.
           type: string
       type: object
+    NullBool:
+      nullable: true
+      type: boolean
+    NullInt:
+      nullable: true
+      type: integer
+    NullString:
+      nullable: true
+      type: string
+    NullTime:
+      format: date-time
+      nullable: true
+      type: string
+    NullUUID:
+      format: uuid4
+      nullable: true
+      type: string
     OAuth2Client:
       description: OAuth2Client struct for OAuth2Client
       example:
@@ -3446,6 +3476,9 @@ components:
         in the SQL Schema.
       type: string
     TemplateType:
+      type: string
+    Time:
+      format: date-time
       type: string
     UUID:
       format: uuid4
@@ -4176,6 +4209,13 @@ components:
       title: Is sent when a privileged session is required to perform the settings
         update.
       type: object
+    nullDuration:
+      nullable: true
+      pattern: ^[0-9]+(ns|us|ms|s|m|h)$
+      type: string
+    nullInt64:
+      nullable: true
+      type: integer
     nullJsonRawMessage:
       description: NullJSONRawMessage represents a json.RawMessage that works well
         with JSON, SQL, and Swagger and is NULLable-
@@ -4408,56 +4448,7 @@ components:
         issued_at: 2000-01-23T04:56:07.000+00:00
         request_url: request_url
         expires_at: 2000-01-23T04:56:07.000+00:00
-        ui:
-          nodes:
-          - meta:
-              label:
-                context: '{}'
-                id: 6
-                text: text
-                type: type
-            messages:
-            - context: '{}'
-              id: 6
-              text: text
-              type: type
-            - context: '{}'
-              id: 6
-              text: text
-              type: type
-            type: text
-            group: default
-          - meta:
-              label:
-                context: '{}'
-                id: 6
-                text: text
-                type: type
-            messages:
-            - context: '{}'
-              id: 6
-              text: text
-              type: type
-            - context: '{}'
-              id: 6
-              text: text
-              type: type
-            type: text
-            group: default
-          method: method
-          action: action
-          messages:
-          - context: '{}'
-            id: 6
-            text: text
-            type: type
-          - context: '{}'
-            id: 6
-            text: text
-            type: type
-        updated_at: 2000-01-23T04:56:07.000+00:00
-        id: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
-        hydra_login_request:
+        oauth2_login_request:
           requested_access_token_audience:
           - requested_access_token_audience
           - requested_access_token_audience
@@ -4534,6 +4525,56 @@ components:
           requested_scope:
           - requested_scope
           - requested_scope
+        ui:
+          nodes:
+          - meta:
+              label:
+                context: '{}'
+                id: 6
+                text: text
+                type: type
+            messages:
+            - context: '{}'
+              id: 6
+              text: text
+              type: type
+            - context: '{}'
+              id: 6
+              text: text
+              type: type
+            type: text
+            group: default
+          - meta:
+              label:
+                context: '{}'
+                id: 6
+                text: text
+                type: type
+            messages:
+            - context: '{}'
+              id: 6
+              text: text
+              type: type
+            - context: '{}'
+              id: 6
+              text: text
+              type: type
+            type: text
+            group: default
+          method: method
+          action: action
+          messages:
+          - context: '{}'
+            id: 6
+            text: text
+            type: type
+          - context: '{}'
+            id: 6
+            text: text
+            type: type
+        updated_at: 2000-01-23T04:56:07.000+00:00
+        oauth2_login_challenge: oauth2_login_challenge
+        id: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
       properties:
         active:
           $ref: '#/components/schemas/identityCredentialsType'
@@ -4547,8 +4588,6 @@ components:
             a new flow has to be initiated.
           format: date-time
           type: string
-        hydra_login_request:
-          $ref: '#/components/schemas/LoginRequest'
         id:
           description: |-
             ID represents the flow's unique ID. When performing the login flow, this
@@ -4559,6 +4598,12 @@ components:
           description: IssuedAt is the time (UTC) when the flow started.
           format: date-time
           type: string
+        oauth2_login_challenge:
+          format: uuid4
+          nullable: true
+          type: string
+        oauth2_login_request:
+          $ref: '#/components/schemas/LoginRequest'
         refresh:
           description: Refresh stores whether this login flow should enforce re-authentication.
           type: boolean
@@ -4780,59 +4825,7 @@ components:
     selfServiceRegistrationFlow:
       example:
         expires_at: 2000-01-23T04:56:07.000+00:00
-        ui:
-          nodes:
-          - meta:
-              label:
-                context: '{}'
-                id: 6
-                text: text
-                type: type
-            messages:
-            - context: '{}'
-              id: 6
-              text: text
-              type: type
-            - context: '{}'
-              id: 6
-              text: text
-              type: type
-            type: text
-            group: default
-          - meta:
-              label:
-                context: '{}'
-                id: 6
-                text: text
-                type: type
-            messages:
-            - context: '{}'
-              id: 6
-              text: text
-              type: type
-            - context: '{}'
-              id: 6
-              text: text
-              type: type
-            type: text
-            group: default
-          method: method
-          action: action
-          messages:
-          - context: '{}'
-            id: 6
-            text: text
-            type: type
-          - context: '{}'
-            id: 6
-            text: text
-            type: type
-        return_to: return_to
-        id: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
-        type: type
-        issued_at: 2000-01-23T04:56:07.000+00:00
-        request_url: request_url
-        hydra_login_request:
+        oauth2_login_request:
           requested_access_token_audience:
           - requested_access_token_audience
           - requested_access_token_audience
@@ -4909,6 +4902,59 @@ components:
           requested_scope:
           - requested_scope
           - requested_scope
+        ui:
+          nodes:
+          - meta:
+              label:
+                context: '{}'
+                id: 6
+                text: text
+                type: type
+            messages:
+            - context: '{}'
+              id: 6
+              text: text
+              type: type
+            - context: '{}'
+              id: 6
+              text: text
+              type: type
+            type: text
+            group: default
+          - meta:
+              label:
+                context: '{}'
+                id: 6
+                text: text
+                type: type
+            messages:
+            - context: '{}'
+              id: 6
+              text: text
+              type: type
+            - context: '{}'
+              id: 6
+              text: text
+              type: type
+            type: text
+            group: default
+          method: method
+          action: action
+          messages:
+          - context: '{}'
+            id: 6
+            text: text
+            type: type
+          - context: '{}'
+            id: 6
+            text: text
+            type: type
+        oauth2_login_challenge: oauth2_login_challenge
+        return_to: return_to
+        id: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
+        type: type
+        issued_at: 2000-01-23T04:56:07.000+00:00
+        request_url: request_url
       properties:
         active:
           $ref: '#/components/schemas/identityCredentialsType'
@@ -4918,8 +4964,6 @@ components:
             a new flow has to be initiated.
           format: date-time
           type: string
-        hydra_login_request:
-          $ref: '#/components/schemas/LoginRequest'
         id:
           description: |-
             ID represents the flow's unique ID. When performing the registration flow, this
@@ -4930,6 +4974,12 @@ components:
           description: IssuedAt is the time (UTC) when the flow occurred.
           format: date-time
           type: string
+        oauth2_login_challenge:
+          format: uuid4
+          nullable: true
+          type: string
+        oauth2_login_request:
+          $ref: '#/components/schemas/LoginRequest'
         request_url:
           description: |-
             RequestURL is the initial URL that was requested from Ory Kratos. It can be used

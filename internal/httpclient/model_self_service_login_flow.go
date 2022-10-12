@@ -22,12 +22,13 @@ type SelfServiceLoginFlow struct {
 	// CreatedAt is a helper struct field for gobuffalo.pop.
 	CreatedAt *time.Time `json:"created_at,omitempty"`
 	// ExpiresAt is the time (UTC) when the flow expires. If the user still wishes to log in, a new flow has to be initiated.
-	ExpiresAt         time.Time     `json:"expires_at"`
-	HydraLoginRequest *LoginRequest `json:"hydra_login_request,omitempty"`
+	ExpiresAt time.Time `json:"expires_at"`
 	// ID represents the flow's unique ID. When performing the login flow, this represents the id in the login UI's query parameter: http://<selfservice.flows.login.ui_url>/?flow=<flow_id>
 	Id string `json:"id"`
 	// IssuedAt is the time (UTC) when the flow started.
-	IssuedAt time.Time `json:"issued_at"`
+	IssuedAt             time.Time      `json:"issued_at"`
+	Oauth2LoginChallenge NullableString `json:"oauth2_login_challenge,omitempty"`
+	Oauth2LoginRequest   *LoginRequest  `json:"oauth2_login_request,omitempty"`
 	// Refresh stores whether this login flow should enforce re-authentication.
 	Refresh *bool `json:"refresh,omitempty"`
 	// RequestURL is the initial URL that was requested from Ory Kratos. It can be used to forward information contained in the URL's path or query for example.
@@ -153,38 +154,6 @@ func (o *SelfServiceLoginFlow) SetExpiresAt(v time.Time) {
 	o.ExpiresAt = v
 }
 
-// GetHydraLoginRequest returns the HydraLoginRequest field value if set, zero value otherwise.
-func (o *SelfServiceLoginFlow) GetHydraLoginRequest() LoginRequest {
-	if o == nil || o.HydraLoginRequest == nil {
-		var ret LoginRequest
-		return ret
-	}
-	return *o.HydraLoginRequest
-}
-
-// GetHydraLoginRequestOk returns a tuple with the HydraLoginRequest field value if set, nil otherwise
-// and a boolean to check if the value has been set.
-func (o *SelfServiceLoginFlow) GetHydraLoginRequestOk() (*LoginRequest, bool) {
-	if o == nil || o.HydraLoginRequest == nil {
-		return nil, false
-	}
-	return o.HydraLoginRequest, true
-}
-
-// HasHydraLoginRequest returns a boolean if a field has been set.
-func (o *SelfServiceLoginFlow) HasHydraLoginRequest() bool {
-	if o != nil && o.HydraLoginRequest != nil {
-		return true
-	}
-
-	return false
-}
-
-// SetHydraLoginRequest gets a reference to the given LoginRequest and assigns it to the HydraLoginRequest field.
-func (o *SelfServiceLoginFlow) SetHydraLoginRequest(v LoginRequest) {
-	o.HydraLoginRequest = &v
-}
-
 // GetId returns the Id field value
 func (o *SelfServiceLoginFlow) GetId() string {
 	if o == nil {
@@ -231,6 +200,81 @@ func (o *SelfServiceLoginFlow) GetIssuedAtOk() (*time.Time, bool) {
 // SetIssuedAt sets field value
 func (o *SelfServiceLoginFlow) SetIssuedAt(v time.Time) {
 	o.IssuedAt = v
+}
+
+// GetOauth2LoginChallenge returns the Oauth2LoginChallenge field value if set, zero value otherwise (both if not set or set to explicit null).
+func (o *SelfServiceLoginFlow) GetOauth2LoginChallenge() string {
+	if o == nil || o.Oauth2LoginChallenge.Get() == nil {
+		var ret string
+		return ret
+	}
+	return *o.Oauth2LoginChallenge.Get()
+}
+
+// GetOauth2LoginChallengeOk returns a tuple with the Oauth2LoginChallenge field value if set, nil otherwise
+// and a boolean to check if the value has been set.
+// NOTE: If the value is an explicit nil, `nil, true` will be returned
+func (o *SelfServiceLoginFlow) GetOauth2LoginChallengeOk() (*string, bool) {
+	if o == nil {
+		return nil, false
+	}
+	return o.Oauth2LoginChallenge.Get(), o.Oauth2LoginChallenge.IsSet()
+}
+
+// HasOauth2LoginChallenge returns a boolean if a field has been set.
+func (o *SelfServiceLoginFlow) HasOauth2LoginChallenge() bool {
+	if o != nil && o.Oauth2LoginChallenge.IsSet() {
+		return true
+	}
+
+	return false
+}
+
+// SetOauth2LoginChallenge gets a reference to the given NullableString and assigns it to the Oauth2LoginChallenge field.
+func (o *SelfServiceLoginFlow) SetOauth2LoginChallenge(v string) {
+	o.Oauth2LoginChallenge.Set(&v)
+}
+
+// SetOauth2LoginChallengeNil sets the value for Oauth2LoginChallenge to be an explicit nil
+func (o *SelfServiceLoginFlow) SetOauth2LoginChallengeNil() {
+	o.Oauth2LoginChallenge.Set(nil)
+}
+
+// UnsetOauth2LoginChallenge ensures that no value is present for Oauth2LoginChallenge, not even an explicit nil
+func (o *SelfServiceLoginFlow) UnsetOauth2LoginChallenge() {
+	o.Oauth2LoginChallenge.Unset()
+}
+
+// GetOauth2LoginRequest returns the Oauth2LoginRequest field value if set, zero value otherwise.
+func (o *SelfServiceLoginFlow) GetOauth2LoginRequest() LoginRequest {
+	if o == nil || o.Oauth2LoginRequest == nil {
+		var ret LoginRequest
+		return ret
+	}
+	return *o.Oauth2LoginRequest
+}
+
+// GetOauth2LoginRequestOk returns a tuple with the Oauth2LoginRequest field value if set, nil otherwise
+// and a boolean to check if the value has been set.
+func (o *SelfServiceLoginFlow) GetOauth2LoginRequestOk() (*LoginRequest, bool) {
+	if o == nil || o.Oauth2LoginRequest == nil {
+		return nil, false
+	}
+	return o.Oauth2LoginRequest, true
+}
+
+// HasOauth2LoginRequest returns a boolean if a field has been set.
+func (o *SelfServiceLoginFlow) HasOauth2LoginRequest() bool {
+	if o != nil && o.Oauth2LoginRequest != nil {
+		return true
+	}
+
+	return false
+}
+
+// SetOauth2LoginRequest gets a reference to the given LoginRequest and assigns it to the Oauth2LoginRequest field.
+func (o *SelfServiceLoginFlow) SetOauth2LoginRequest(v LoginRequest) {
+	o.Oauth2LoginRequest = &v
 }
 
 // GetRefresh returns the Refresh field value if set, zero value otherwise.
@@ -444,14 +488,17 @@ func (o SelfServiceLoginFlow) MarshalJSON() ([]byte, error) {
 	if true {
 		toSerialize["expires_at"] = o.ExpiresAt
 	}
-	if o.HydraLoginRequest != nil {
-		toSerialize["hydra_login_request"] = o.HydraLoginRequest
-	}
 	if true {
 		toSerialize["id"] = o.Id
 	}
 	if true {
 		toSerialize["issued_at"] = o.IssuedAt
+	}
+	if o.Oauth2LoginChallenge.IsSet() {
+		toSerialize["oauth2_login_challenge"] = o.Oauth2LoginChallenge.Get()
+	}
+	if o.Oauth2LoginRequest != nil {
+		toSerialize["oauth2_login_request"] = o.Oauth2LoginRequest
 	}
 	if o.Refresh != nil {
 		toSerialize["refresh"] = o.Refresh
