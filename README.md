@@ -706,6 +706,8 @@ You can also run this command from a sub folder.
 
 We use [Cypress](https://www.cypress.io) to run our e2e tests.
 
+⚠️ To run Cypress on ARM based Mac's, at the moment it is [necessary to install Rosetta 2](https://www.cypress.io/blog/2021/01/20/running-cypress-on-the-apple-m1-silicon-arm-architecture-using-rosetta-2/). To install, use the command - `softwareupdate --install-rosetta --agree-to-license`
+
 The simplest way to develop e2e tests is:
 
 <pre type="repo/executable">
