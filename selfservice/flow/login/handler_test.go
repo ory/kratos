@@ -237,7 +237,6 @@ func TestFlowLifecycle(t *testing.T) {
 			})
 
 			t.Run("case=changed kratos session identifiers when refresh is true", func(t *testing.T) {
-				// testhelpers.NewRedirSessionEchoTS(t, reg)
 				t.Cleanup(func() {
 					conf.MustSet(ctx, config.ViperKeySelfServiceBrowserDefaultReturnTo, "https://www.ory.sh")
 				})
@@ -258,13 +257,22 @@ func TestFlowLifecycle(t *testing.T) {
 					require.Contains(t, fmt.Sprintf("%v", hc.Jar.Cookies(urlx.ParseOrPanic(ts.URL))), "ory_kratos_session")
 					cookies1 := hc.Jar.Cookies(urlx.ParseOrPanic(ts.URL + login.RouteGetFlow))
 
+					req, err := http.NewRequest("GET", ts.URL+"/sessions/whoami", nil)
+					require.NoError(t, err)
+
+					res, err = hc.Do(req)
+					require.NoError(t, err)
+					assert.Equal(t, http.StatusOK, res.StatusCode)
+					firstSession := x.MustReadAll(res.Body)
+					require.NoError(t, res.Body.Close())
+
 					// Refresh
 					f = login.Flow{Type: flow.TypeBrowser, ExpiresAt: time.Now().Add(time.Minute), IssuedAt: time.Now(), UI: container.New(""), Refresh: true, RequestedAAL: "aal1"}
 					require.NoError(t, reg.LoginFlowPersister().CreateLoginFlow(context.Background(), &f))
 
 					vv := testhelpers.EncodeFormAsJSON(t, false, url.Values{"method": {"password"}, "password_identifier": {id1mail}, "password": {"foobar"}, "csrf_token": {x.FakeCSRFToken}})
 
-					req, err := http.NewRequest("POST", ts.URL+login.RouteSubmitFlow+"?flow="+f.ID.String(), strings.NewReader(vv))
+					req, err = http.NewRequest("POST", ts.URL+login.RouteSubmitFlow+"?flow="+f.ID.String(), strings.NewReader(vv))
 					require.NoError(t, err)
 					req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 
@@ -278,8 +286,20 @@ func TestFlowLifecycle(t *testing.T) {
 					require.Contains(t, fmt.Sprintf("%v", hc.Jar.Cookies(urlx.ParseOrPanic(ts.URL))), "ory_kratos_session")
 					cookies2 := hc.Jar.Cookies(urlx.ParseOrPanic(ts.URL + login.RouteGetFlow))
 
+					req, err = http.NewRequest("GET", ts.URL+"/sessions/whoami", nil)
+					require.NoError(t, err)
+
+					res, err = hc.Do(req)
+					require.NoError(t, err)
+					assert.Equal(t, http.StatusOK, res.StatusCode)
+					secondSession := x.MustReadAll(res.Body)
+					require.NoError(t, res.Body.Close())
+
 					// Sessions should still be resolvable despite different kratos session identifier due to nonce
 					assert.NotEqual(t, cookies1[0].String(), cookies2[0].String())
+					assert.Equal(t, id1mail, gjson.Get(string(firstSession), "identity.traits.username").String())
+					assert.Equal(t, id1mail, gjson.Get(string(secondSession), "identity.traits.username").String())
+					assert.Equal(t, gjson.Get(string(secondSession), "id").String(), gjson.Get(string(firstSession), "id").String())
 				})
 			})
 		})
