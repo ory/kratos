@@ -284,9 +284,7 @@ func (e *HookExecutor) PostSettingsHook(w http.ResponseWriter, r *http.Request, 
 		return nil
 	}
 
-	// Use nonce cookie modifier due to indicate change in the session content and then issue cookie.
-	// Using nonce modifies the cookie value without affecting the session attributes (token, expiry)
-	if err := e.d.SessionManager().IssueCookie(r.Context(), w, r, ctxUpdate.Session, x.CookieValuesWithNonce()); err != nil {
+	if err := e.d.SessionManager().IssueCookie(r.Context(), w, r, ctxUpdate.Session); err != nil {
 		return errors.WithStack(err)
 	}
 

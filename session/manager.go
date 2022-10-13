@@ -5,8 +5,6 @@ import (
 	"net/http"
 	"net/url"
 
-	"github.com/ory/kratos/x"
-
 	"github.com/ory/kratos/text"
 
 	"github.com/gofrs/uuid"
@@ -86,12 +84,12 @@ type Manager interface {
 	// UpsertAndIssueCookie stores a session in the database and issues a cookie by calling IssueCookie.
 	//
 	// Also regenerates CSRF tokens due to assumed principal change.
-	UpsertAndIssueCookie(context.Context, http.ResponseWriter, *http.Request, *Session, ...x.CookieModifier) error
+	UpsertAndIssueCookie(context.Context, http.ResponseWriter, *http.Request, *Session) error
 
 	// IssueCookie issues a cookie for the given session.
 	//
 	// Also regenerates CSRF tokens due to assumed principal change.
-	IssueCookie(context.Context, http.ResponseWriter, *http.Request, *Session, ...x.CookieModifier) error
+	IssueCookie(context.Context, http.ResponseWriter, *http.Request, *Session) error
 
 	// RefreshCookie checks if the request uses an outdated cookie and refreshes the cookie if needed.
 	RefreshCookie(context.Context, http.ResponseWriter, *http.Request, *Session) error
