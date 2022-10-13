@@ -104,6 +104,13 @@ func TestManagerHTTP(t *testing.T) {
 			return rec.Result().Cookies()[0]
 		}
 
+		t.Run("case=immutability", func(t *testing.T) {
+			cookie1 := getCookie(t, x.NewTestHTTPRequest(t, "GET", "https://baseurl.com/bar", nil))
+			cookie2 := getCookie(t, x.NewTestHTTPRequest(t, "GET", "https://baseurl.com/bar", nil))
+
+			assert.NotEqual(t, cookie1.Value, cookie2.Value)
+		})
+
 		t.Run("case=with default options", func(t *testing.T) {
 			actual := getCookie(t, httptest.NewRequest("GET", "https://baseurl.com/bar", nil))
 			assert.EqualValues(t, "", actual.Domain, "Domain is empty because unset as a config option")

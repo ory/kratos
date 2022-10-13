@@ -6,6 +6,8 @@ import (
 	"net/url"
 	"time"
 
+	"github.com/ory/x/randx"
+
 	"github.com/gorilla/sessions"
 
 	"github.com/ory/x/urlx"
@@ -129,6 +131,7 @@ func (s *ManagerHTTP) IssueCookie(ctx context.Context, w http.ResponseWriter, r 
 
 	cookie.Values["session_token"] = session.Token
 	cookie.Values["expires_at"] = session.ExpiresAt.UTC().Format(time.RFC3339Nano)
+	cookie.Values["nonce"] = randx.MustString(8, randx.Alpha) // Guarantee new kratos session identifier
 
 	if err := cookie.Save(r, w); err != nil {
 		return errors.WithStack(err)
