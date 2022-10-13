@@ -178,10 +178,11 @@ func TestPersister(ctx context.Context, conf *config.Config, p interface {
 					},
 				} {
 					t.Run("case="+tc.desc, func(t *testing.T) {
-						actual, err := p.ListSessionsByIdentity(ctx, i.ID, tc.active, 1, 10, tc.except, session.ExpandEverything)
+						actual, total, err := p.ListSessionsByIdentity(ctx, i.ID, tc.active, 1, 10, tc.except, session.ExpandEverything)
 						require.NoError(t, err)
 
 						require.Equal(t, len(tc.expected), len(actual))
+						require.Equal(t, int64(len(tc.expected)), total)
 						for _, es := range tc.expected {
 							found := false
 							for _, as := range actual {
@@ -197,8 +198,9 @@ func TestPersister(ctx context.Context, conf *config.Config, p interface {
 
 				t.Run("other network", func(t *testing.T) {
 					_, other := testhelpers.NewNetwork(t, ctx, p)
-					actual, err := other.ListSessionsByIdentity(ctx, i.ID, nil, 1, 10, uuid.Nil, session.ExpandNothing)
+					actual, total, err := other.ListSessionsByIdentity(ctx, i.ID, nil, 1, 10, uuid.Nil, session.ExpandNothing)
 					require.NoError(t, err)
+					require.Equal(t, int64(0), total)
 					assert.Len(t, actual, 0)
 				})
 			})
@@ -322,9 +324,10 @@ func TestPersister(ctx context.Context, conf *config.Config, p interface {
 			require.NoError(t, err)
 			assert.Equal(t, 1, n)
 
-			actual, err := p.ListSessionsByIdentity(ctx, sessions[0].IdentityID, nil, 1, 10, uuid.Nil, session.ExpandNothing)
+			actual, total, err := p.ListSessionsByIdentity(ctx, sessions[0].IdentityID, nil, 1, 10, uuid.Nil, session.ExpandNothing)
 			require.NoError(t, err)
 			require.Len(t, actual, 2)
+			require.Equal(t, int64(2), total)
 
 			if actual[0].ID == sessions[0].ID {
 				assert.True(t, actual[0].Active)
@@ -335,9 +338,10 @@ func TestPersister(ctx context.Context, conf *config.Config, p interface {
 				assert.False(t, actual[0].Active)
 			}
 
-			otherIdentitiesSessions, err := p.ListSessionsByIdentity(ctx, sessions[2].IdentityID, nil, 1, 10, uuid.Nil, session.ExpandNothing)
+			otherIdentitiesSessions, total, err := p.ListSessionsByIdentity(ctx, sessions[2].IdentityID, nil, 1, 10, uuid.Nil, session.ExpandNothing)
 			require.NoError(t, err)
 			require.Len(t, actual, 2)
+			require.Equal(t, int64(2), total)
 
 			for _, s := range otherIdentitiesSessions {
 				assert.True(t, s.Active)
@@ -369,9 +373,10 @@ func TestPersister(ctx context.Context, conf *config.Config, p interface {
 
 			require.NoError(t, p.RevokeSession(ctx, sessions[0].IdentityID, sessions[0].ID))
 
-			actual, err := p.ListSessionsByIdentity(ctx, sessions[0].IdentityID, nil, 1, 10, uuid.Nil, session.ExpandNothing)
+			actual, total, err := p.ListSessionsByIdentity(ctx, sessions[0].IdentityID, nil, 1, 10, uuid.Nil, session.ExpandNothing)
 			require.NoError(t, err)
 			require.Len(t, actual, 2)
+			require.Equal(t, int64(2), total)
 
 			if actual[0].ID == sessions[0].ID {
 				assert.False(t, actual[0].Active)

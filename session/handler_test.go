@@ -7,6 +7,7 @@ import (
 	"io"
 	"net/http"
 	"net/http/httptest"
+	"strconv"
 	"strings"
 	"testing"
 	"time"
@@ -472,6 +473,61 @@ func TestHandlerAdminSessionManagement(t *testing.T) {
 		require.Equal(t, http.StatusNotFound, res.StatusCode)
 	})
 
+	t.Run("case=should return pagination headers on list response", func(t *testing.T) {
+		client := testhelpers.NewClientWithCookies(t)
+		i := identity.NewIdentity("")
+		require.NoError(t, reg.IdentityManager().Create(ctx, i))
+
+		numSessions := 5
+		numSessionsActive := 2
+
+		sess := make([]Session, numSessions)
+		for j := range sess {
+			require.NoError(t, faker.FakeData(&sess[j]))
+			sess[j].Identity = i
+			if j < numSessionsActive {
+				sess[j].Active = true
+			} else {
+				sess[j].Active = false
+			}
+			require.NoError(t, reg.SessionPersister().UpsertSession(ctx, &sess[j]))
+		}
+
+		for _, tc := range []struct {
+			activeOnly         string
+			expectedTotalCount int
+		}{
+			{
+				activeOnly:         "true",
+				expectedTotalCount: numSessionsActive,
+			},
+			{
+				activeOnly:         "false",
+				expectedTotalCount: numSessions - numSessionsActive,
+			},
+			{
+				activeOnly:         "",
+				expectedTotalCount: numSessions,
+			},
+		} {
+			t.Run(fmt.Sprintf("active=%#v", tc.activeOnly), func(t *testing.T) {
+				reqURL := ts.URL + "/admin/identities/" + i.ID.String() + "/sessions"
+				if tc.activeOnly != "" {
+					reqURL += "?active=" + tc.activeOnly
+				}
+				req, _ := http.NewRequest("GET", reqURL, nil)
+				res, err := client.Do(req)
+				require.NoError(t, err)
+				require.Equal(t, http.StatusOK, res.StatusCode)
+
+				totalCount, err := strconv.Atoi(res.Header.Get("X-Total-Count"))
+				require.NoError(t, err)
+				require.Equal(t, tc.expectedTotalCount, totalCount)
+				require.NotEqual(t, "", res.Header.Get("Link"))
+			})
+		}
+	})
+
 	t.Run("case=should respect active on list", func(t *testing.T) {
 		client := testhelpers.NewClientWithCookies(t)
 		i := identity.NewIdentity("")
@@ -559,6 +615,36 @@ func TestHandlerSelfServiceSessionManagement(t *testing.T) {
 		}
 	}
 
+	t.Run("case=list should return pagination headers", func(t *testing.T) {
+		client, i, _ := setup(t)
+
+		numSessions := 5
+		numSessionsActive := 2
+
+		sess := make([]Session, numSessions)
+		for j := range sess {
+			require.NoError(t, faker.FakeData(&sess[j]))
+			sess[j].Identity = i
+			if j < numSessionsActive {
+				sess[j].Active = true
+			} else {
+				sess[j].Active = false
+			}
+			require.NoError(t, reg.SessionPersister().UpsertSession(ctx, &sess[j]))
+		}
+
+		reqURL := ts.URL + "/sessions"
+		req, _ := http.NewRequest("GET", reqURL, nil)
+		res, err := client.Do(req)
+		require.NoError(t, err)
+		require.Equal(t, http.StatusOK, res.StatusCode)
+
+		totalCount, err := strconv.Atoi(res.Header.Get("X-Total-Count"))
+		require.NoError(t, err)
+		require.Equal(t, numSessionsActive, totalCount)
+		require.NotEqual(t, "", res.Header.Get("Link"))
+	})
+
 	t.Run("case=should return 200 and number after invalidating all other sessions", func(t *testing.T) {
 		client, i, currSess := setup(t)
 
@@ -601,9 +687,10 @@ func TestHandlerSelfServiceSessionManagement(t *testing.T) {
 		require.NoError(t, err)
 		require.Equal(t, http.StatusNoContent, res.StatusCode)
 
-		actualOthers, err := reg.SessionPersister().ListSessionsByIdentity(ctx, i.ID, nil, 1, 10, uuid.Nil, ExpandNothing)
+		actualOthers, total, err := reg.SessionPersister().ListSessionsByIdentity(ctx, i.ID, nil, 1, 10, uuid.Nil, ExpandNothing)
 		require.NoError(t, err)
 		require.Len(t, actualOthers, 3)
+		require.Equal(t, int64(3), total)
 
 		for _, s := range actualOthers {
 			if s.ID == others[0].ID {
