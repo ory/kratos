@@ -71,6 +71,7 @@ func (e *HookExecutor) requiresAAL2(r *http.Request, s *session.Session, a *Flow
 
 	if aalErr := new(session.ErrAALNotSatisfied); errors.As(err, &aalErr) {
 		if aalErr.PassReturnToAndLoginChallengeParameters(a.RequestURL) != nil {
+			//nolint:errcheck
 			aalErr.WithDetail("pass_request_params_error", "failed to pass request parameters to aalErr.RedirectTo")
 		}
 		return aalErr, true
