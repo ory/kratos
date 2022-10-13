@@ -6,6 +6,8 @@ import (
 	"net/url"
 	"time"
 
+	"github.com/ory/x/randx"
+
 	"github.com/gorilla/sessions"
 
 	"github.com/ory/x/urlx"
@@ -49,12 +51,12 @@ func NewManagerHTTP(r managerHTTPDependencies) *ManagerHTTP {
 	}
 }
 
-func (s *ManagerHTTP) UpsertAndIssueCookie(ctx context.Context, w http.ResponseWriter, r *http.Request, ss *Session, cookieModifiers ...x.CookieModifier) error {
+func (s *ManagerHTTP) UpsertAndIssueCookie(ctx context.Context, w http.ResponseWriter, r *http.Request, ss *Session) error {
 	if err := s.r.SessionPersister().UpsertSession(ctx, ss); err != nil {
 		return err
 	}
 
-	if err := s.IssueCookie(ctx, w, r, ss, cookieModifiers...); err != nil {
+	if err := s.IssueCookie(ctx, w, r, ss); err != nil {
 		return err
 	}
 
@@ -84,7 +86,7 @@ func (s *ManagerHTTP) RefreshCookie(ctx context.Context, w http.ResponseWriter, 
 	return nil
 }
 
-func (s *ManagerHTTP) IssueCookie(ctx context.Context, w http.ResponseWriter, r *http.Request, session *Session, cookieModifiers ...x.CookieModifier) error {
+func (s *ManagerHTTP) IssueCookie(ctx context.Context, w http.ResponseWriter, r *http.Request, session *Session) error {
 	cookie, err := s.r.CookieManager(r.Context()).Get(r, s.cookieName(ctx))
 	// Fix for https://github.com/ory/kratos/issues/1695
 	if err != nil && cookie == nil {
@@ -129,10 +131,7 @@ func (s *ManagerHTTP) IssueCookie(ctx context.Context, w http.ResponseWriter, r 
 
 	cookie.Values["session_token"] = session.Token
 	cookie.Values["expires_at"] = session.ExpiresAt.UTC().Format(time.RFC3339Nano)
-
-	for _, mod := range cookieModifiers {
-		mod(cookie)
-	}
+	cookie.Values["nonce"] = randx.MustString(8, randx.Alpha) // Guarantee new kratos session identifier
 
 	if err := cookie.Save(r, w); err != nil {
 		return errors.WithStack(err)
