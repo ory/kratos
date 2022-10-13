@@ -30,11 +30,19 @@ context("Social Sign Out Successes", () => {
       beforeEach(() => {
         cy.visit(base)
         const email = gen.email()
-        cy.registerOidc({ email, website, route: registration })
+        cy.registerOidc({ app, email, website, route: registration })
       })
 
       it("should sign out and be able to sign in again", () => {
-        cy.get(`${appPrefix(app)} [data-testid="logout"]:not(disabled)`).click()
+        if (app === "express") {
+          cy.get(
+            `${appPrefix(app)} [data-testid="logout"] a:not(disabled)`,
+          ).click()
+        } else {
+          cy.get(
+            `${appPrefix(app)} [data-testid="logout"]:not(disabled)`,
+          ).click()
+        }
         cy.noSession()
         cy.url().should("include", "/login")
       })

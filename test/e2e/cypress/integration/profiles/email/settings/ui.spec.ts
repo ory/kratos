@@ -34,7 +34,12 @@ context("Settings errors with email profile", () => {
 
       describe("use ui elements", () => {
         it("should use the json schema titles", () => {
-          cy.get(appPrefix(app) + 'a[href*="settings"]').click()
+          const settingsLink = appPrefix(app) + 'a[href*="settings"]'
+          if (app === "express") {
+            cy.get(settingsLink).should("have.attr", "target", "_blank")
+            cy.removeAttribute([settingsLink], "target")
+          }
+          cy.get(settingsLink).click()
           cy.get('input[name="traits.email"]')
             .parent()
             .should("contain.text", "Your E-Mail")
@@ -49,7 +54,12 @@ context("Settings errors with email profile", () => {
         })
 
         it("clicks the settings link", () => {
-          cy.get('a[href*="settings"]').click()
+          const settingsLink = 'a[href*="settings"]'
+          if (app === "express") {
+            cy.get(settingsLink).should("have.attr", "target", "_blank")
+            cy.removeAttribute([settingsLink], "target")
+          }
+          cy.get(settingsLink).click()
           cy.location("pathname").should("include", "settings")
         })
       })

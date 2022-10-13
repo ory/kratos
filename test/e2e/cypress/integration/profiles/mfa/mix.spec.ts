@@ -119,6 +119,7 @@ context("2FA with various methods", () => {
             cy.get('[name="totp_code"]').then(($e) => {
               cy.wrap($e).type(authenticator.generate(secret))
             })
+
             cy.get('[name="method"][value="totp"]').click()
             cy.location("pathname").should("not.include", "/login")
 
