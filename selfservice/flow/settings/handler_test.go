@@ -403,15 +403,16 @@ func TestHandler(t *testing.T) {
 			})
 		})
 
-		t.Run("description=submit - kratos session cookie", func(t *testing.T) {
-			t.Run("type=api", func(t *testing.T) {
-				user1 := testhelpers.NewHTTPClientWithArbitrarySessionToken(t, reg)
-				_, body := initFlow(t, user1, true)
+		t.Run("description=submit - kratos session cookie issued", func(t *testing.T) {
+			t.Run("type=spa", func(t *testing.T) {
+				_, body := initFlow(t, primaryUser, false)
 				var f kratos.SelfServiceSettingsFlow
 				require.NoError(t, json.Unmarshal(body, &f))
 
-				actual, res := testhelpers.SettingsMakeRequest(t, true, false, &f, user1, `{"method":"profile", "numby": 15}`)
+				actual, res := testhelpers.SettingsMakeRequest(t, false, true, &f, primaryUser, fmt.Sprintf(`{"method":"profile", "numby": 15, "csrf_token": "%s"}`, x.FakeCSRFToken))
 				assert.Equal(t, http.StatusOK, res.StatusCode)
+				require.Len(t, primaryUser.Jar.Cookies(urlx.ParseOrPanic(publicTS.URL+login.RouteGetFlow)), 1)
+				require.Contains(t, fmt.Sprintf("%v", primaryUser.Jar.Cookies(urlx.ParseOrPanic(publicTS.URL))), "ory_kratos_session")
 				assert.Equal(t, "Your changes have been saved!", gjson.Get(actual, "ui.messages.0.text").String(), actual)
 			})
 
