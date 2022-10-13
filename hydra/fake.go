@@ -16,9 +16,7 @@ const (
 	FAKE_SUCCESS                          = "5ff59a39-ecc5-467e-bb10-26644c0700ee"
 )
 
-type FakeHydra struct {
-	lrs map[string]hydraclientgo.LoginRequest
-}
+type FakeHydra struct{}
 
 var _ Hydra = &FakeHydra{}
 
