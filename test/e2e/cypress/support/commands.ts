@@ -682,21 +682,47 @@ Cypress.Commands.add("remoteCourierRecoveryCodeTemplates", ({} = {}) => {
         invalid: {
           email: {
             body: {
-              html: "base64://SGksCgp0aGlzIGlzIGEgcmVtb3RlIGludmFsaWQgcmVjb3ZlcnkgdGVtcGxhdGU=",
+              html: "base64://cmVjb3ZlcnlfY29kZV9pbnZhbGlkIFJFTU9URSBURU1QTEFURSBIVE1M", // only
               plaintext:
-                "base64://SGksCgp0aGlzIGlzIGEgcmVtb3RlIGludmFsaWQgcmVjb3ZlcnkgdGVtcGxhdGU=",
+                "base64://cmVjb3ZlcnlfY29kZV9pbnZhbGlkIFJFTU9URSBURU1QTEFURSBUWFQ=",
             },
-            subject: "base64://QWNjb3VudCBBY2Nlc3MgQXR0ZW1wdGVk",
+            subject:
+              "base64://cmVjb3ZlcnlfY29kZV9pbnZhbGlkIFJFTU9URSBURU1QTEFURSBTVUJKRUNU",
           },
         },
         valid: {
           email: {
             body: {
-              html: "base64://SGksCgp0aGlzIGlzIGEgcmVtb3RlIGludmFsaWQgcmVjb3ZlcnkgdGVtcGxhdGUKcGxlYXNlIHJlY292ZXIgYWNjZXNzIHRvIHlvdXIgYWNjb3VudCBieSBlbnRlcmluZyB0aGUgZm9sbG93aW5nIGNvZGU6Cgp7eyAuUmVjb3ZlcnlDb2RlIH19Cg==",
+              html: "base://cmVjb3ZlcnlfY29kZV92YWxpZCBSRU1PVEUgVEVNUExBVEUgSFRNTA==",
               plaintext:
-                "base64://SGksCgp0aGlzIGlzIGEgcmVtb3RlIGludmFsaWQgcmVjb3ZlcnkgdGVtcGxhdGUKcGxlYXNlIHJlY292ZXIgYWNjZXNzIHRvIHlvdXIgYWNjb3VudCBieSBlbnRlcmluZyB0aGUgZm9sbG93aW5nIGNvZGU6Cgp7eyAuUmVjb3ZlcnlDb2RlIH19Cg==",
+                "base64://cmVjb3ZlcnlfY29kZV92YWxpZCBSRU1PVEUgVEVNUExBVEUgVFhU",
             },
-            subject: "base64://UmVjb3ZlciBhY2Nlc3MgdG8geW91ciBhY2NvdW50",
+            subject:
+              "base64://cmVjb3ZlcnlfY29kZV92YWxpZCBSRU1PVEUgVEVNUExBVEUgU1VCSkVDVA==",
+          },
+        },
+      },
+    }
+    return config
+  })
+})
+
+Cypress.Commands.add("resetCourierTemplates", (type) => {
+  updateConfigFile((config) => {
+    config.courier.templates = {
+      [type]: {
+        invalid: {
+          email: {
+            body: {},
+            subject: "",
+          },
+        },
+        valid: {
+          email: {
+            body: {
+              body: {},
+              subject: "",
+            },
           },
         },
       },
