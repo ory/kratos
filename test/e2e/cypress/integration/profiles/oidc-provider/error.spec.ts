@@ -1,6 +1,10 @@
 import { routes as express } from "../../../helpers/express"
 
 context("OpenID Provider", () => {
+  before(() => {
+    cy.useConfigProfile("oidc-provider")
+    cy.proxy("express")
+  })
   it("should fail with invalid login_challenge", () => {
     cy.visit(express.login + "?login_challenge=not-a-uuid", {
       failOnStatusCode: false,
