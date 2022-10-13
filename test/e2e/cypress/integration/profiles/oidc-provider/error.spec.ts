@@ -5,9 +5,11 @@ context("OpenID Provider", () => {
     cy.visit(express.login + "?login_challenge=not-a-uuid", {
       failOnStatusCode: false,
     }).then((d) => {
-      cy.get("code").then((c) => {
-        const err = JSON.parse(c[0].textContent)
-        cy.wrap(err["code"]).should("equal", 400)
+      cy.get(`[data-testid="ui/error/message"]`).then((c) => {
+        cy.wrap(c[0].textContent).should(
+          "contain",
+          "the login_challenge parameter is present but invalid or zero UUID",
+        )
       })
     })
   })
@@ -17,9 +19,11 @@ context("OpenID Provider", () => {
       express.login + "?login_challenge=00000000-0000-0000-0000-000000000000",
       { failOnStatusCode: false },
     ).then((d) => {
-      cy.get("code").then((c) => {
-        const err = JSON.parse(c[0].textContent)
-        cy.wrap(err["code"]).should("equal", 400)
+      cy.get(`[data-testid="ui/error/message"]`).then((c) => {
+        cy.wrap(c[0].textContent).should(
+          "contain",
+          "the login_challenge parameter is present but invalid or zero UUID",
+        )
       })
     })
   })

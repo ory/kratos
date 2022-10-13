@@ -23,7 +23,7 @@ context("OpenID Provider", () => {
     const url = oauth2.getDefaultAuthorizeURL(client)
 
     cy.visit(url)
-    cy.get("[data-testid=cta-link]").click()
+    cy.get("[data-testid=signup-link]").click()
 
     const email = gen.email()
     const password = gen.password()
