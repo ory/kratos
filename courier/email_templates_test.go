@@ -36,6 +36,8 @@ func TestNewEmailTemplateFromMessage(t *testing.T) {
 	for tmplType, expectedTmpl := range map[courier.TemplateType]courier.EmailTemplate{
 		courier.TypeRecoveryInvalid:     email.NewRecoveryInvalid(reg, &email.RecoveryInvalidModel{To: "foo"}),
 		courier.TypeRecoveryValid:       email.NewRecoveryValid(reg, &email.RecoveryValidModel{To: "bar", RecoveryURL: "http://foo.bar"}),
+		courier.TypeRecoveryCodeValid:   email.NewRecoveryCodeValid(reg, &email.RecoveryCodeValidModel{To: "bar", RecoveryCode: "12345678"}),
+		courier.TypeRecoveryCodeInvalid: email.NewRecoveryCodeInvalid(reg, &email.RecoveryCodeInvalidModel{To: "bar"}),
 		courier.TypeVerificationInvalid: email.NewVerificationInvalid(reg, &email.VerificationInvalidModel{To: "baz"}),
 		courier.TypeVerificationValid:   email.NewVerificationValid(reg, &email.VerificationValidModel{To: "faz", VerificationURL: "http://bar.foo"}),
 		courier.TypeTestStub:            email.NewTestStub(reg, &email.TestStubModel{To: "far", Subject: "test subject", Body: "test body"}),
