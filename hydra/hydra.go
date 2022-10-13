@@ -50,7 +50,7 @@ func GetLoginChallengeID(conf *config.Config, r *http.Request) (uuid.NullUUID, e
 	if err != nil || hlc.IsNil() {
 		return uuid.NullUUID{}, errors.WithStack(herodot.ErrBadRequest.WithReason("the login_challenge parameter is present but invalid or zero UUID"))
 	} else {
-		return uuid.NullUUID{UUID: hlc, Valid: !hlc.IsNil()}, nil
+		return uuid.NullUUID{UUID: hlc, Valid: true}, nil
 	}
 }
 

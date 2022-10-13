@@ -372,8 +372,8 @@ func (h *Handler) initBrowserFlow(w http.ResponseWriter, r *http.Request, ps htt
 	if r.URL.Query().Has("login_challenge") {
 		var err error
 		hlc, err = hydra.GetLoginChallengeID(h.d.Config(), r)
-		if err != nil || !hlc.Valid {
-			h.d.SelfServiceErrorManager().Forward(r.Context(), w, r, errors.WithStack(herodot.ErrBadRequest.WithReason("the login_challenge parameter is present but invalid or zero UUID")))
+		if err != nil {
+			h.d.SelfServiceErrorManager().Forward(r.Context(), w, r, err)
 			return
 		}
 
