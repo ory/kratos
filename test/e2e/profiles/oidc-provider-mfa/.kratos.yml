@@ -1,3 +1,6 @@
+clients:
+  http:
+    disallow_private_ip_ranges: false
 selfservice:
   flows:
     settings:

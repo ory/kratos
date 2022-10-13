@@ -1,3 +1,6 @@
+clients:
+  http:
+    disallow_private_ip_ranges: false
 selfservice:
   hydra_admin_url: "http://localhost:4745"
   flows:
