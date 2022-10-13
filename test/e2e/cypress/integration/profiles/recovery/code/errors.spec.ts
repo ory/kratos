@@ -175,9 +175,7 @@ context("Account Recovery Errors", () => {
         )
 
         cy.getMail().then((mail) => {
-          expect(mail.body).to.include(
-            "recovery_code_valid REMOTE TEMPLATE",
-          )
+          expect(mail.body).to.include("recovery_code_valid REMOTE TEMPLATE")
         })
       })
 
@@ -192,9 +190,7 @@ context("Account Recovery Errors", () => {
         )
 
         cy.getMail().then((mail) => {
-          expect(mail.body).to.include(
-            "recovery_code_invalid REMOTE TEMPLATE",
-          )
+          expect(mail.body).to.include("recovery_code_invalid REMOTE TEMPLATE")
         })
       })
     })
