@@ -69,6 +69,18 @@ func NewEmailTemplateFromMessage(d template.Dependencies, msg Message) (EmailTem
 			return nil, err
 		}
 		return email.NewRecoveryValid(d, &t), nil
+	case TypeRecoveryCodeInvalid:
+		var t email.RecoveryCodeInvalidModel
+		if err := json.Unmarshal(msg.TemplateData, &t); err != nil {
+			return nil, err
+		}
+		return email.NewRecoveryCodeInvalid(d, &t), nil
+	case TypeRecoveryCodeValid:
+		var t email.RecoveryCodeValidModel
+		if err := json.Unmarshal(msg.TemplateData, &t); err != nil {
+			return nil, err
+		}
+		return email.NewRecoveryCodeValid(d, &t), nil
 	case TypeVerificationInvalid:
 		var t email.VerificationInvalidModel
 		if err := json.Unmarshal(msg.TemplateData, &t); err != nil {

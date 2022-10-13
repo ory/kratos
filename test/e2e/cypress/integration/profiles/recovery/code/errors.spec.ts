@@ -1,4 +1,4 @@
-import { extractRecoveryCode, appPrefix, gen } from "../../../../helpers"
+import { extractRecoveryCode, appPrefix, gen, email } from "../../../../helpers"
 import { routes as react } from "../../../../helpers/react"
 import { routes as express } from "../../../../helpers/express"
 
@@ -162,7 +162,7 @@ context("Account Recovery Errors", () => {
         cy.get('[name="method"][value="code"]').should("exist")
       })
 
-      it("invalid remote recovery email template", () => {
+      it("remote recovery email template (recovery_code_valid)", () => {
         cy.remoteCourierRecoveryCodeTemplates()
         const identity = gen.identityWithWebsite()
         cy.registerApi(identity)
@@ -175,9 +175,22 @@ context("Account Recovery Errors", () => {
         )
 
         cy.getMail().then((mail) => {
-          expect(mail.body).to.include(
-            "this is a remote invalid recovery template",
-          )
+          expect(mail.body).to.include("recovery_code_valid REMOTE TEMPLATE")
+        })
+      })
+
+      it("remote recovery email template (recovery_code_invalid)", () => {
+        cy.remoteCourierRecoveryCodeTemplates()
+        cy.visit(recovery)
+        cy.get(appPrefix(app) + "input[name='email']").type(email())
+        cy.get("button[value='code']").click()
+        cy.get('[data-testid="ui/message/1060003"]').should(
+          "have.text",
+          "An email containing a recovery code has been sent to the email address you provided.",
+        )
+
+        cy.getMail().then((mail) => {
+          expect(mail.body).to.include("recovery_code_invalid REMOTE TEMPLATE")
         })
       })
     })

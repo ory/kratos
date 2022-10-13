@@ -184,6 +184,13 @@ declare global {
       remoteCourierRecoveryTemplates(): Chainable<void>
 
       /**
+       * Resets the remote courier templates for the given template type to their default values
+       */
+      resetCourierTemplates(
+        type: "recovery_code" | "recovery" | "verification",
+      ): Chainable<void>
+
+      /**
        * Change the courier recovery code invalid and valid templates to remote base64 strings
        */
       remoteCourierRecoveryCodeTemplates(): Chainable<void>
