@@ -4,6 +4,10 @@ import * as oauth2 from "../../../helpers/oauth2"
 import * as httpbin from "../../../helpers/httpbin"
 
 context("OpenID Provider", () => {
+  before(() => {
+    cy.useConfigProfile("oidc-provider")
+    cy.proxy("express")
+  })
   const client = {
     auth_endpoint: "http://localhost:4744/oauth2/auth",
     token_endpoint: "http://localhost:4744/oauth2/token",
