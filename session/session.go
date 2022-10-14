@@ -242,8 +242,8 @@ func (s *Session) SaveSessionDeviceInformation(r *http.Request) {
 		device.IPAddress = &trueClientIP
 	} else if realClientIP := r.Header.Get("X-Real-IP"); realClientIP != "" {
 		device.IPAddress = &realClientIP
-	} else if forwardedIP := r.Header["X-Forwarded-For"]; len(forwardedIP) != 0 {
-		ip, _ := httpx.GetClientIPAddress(forwardedIP, httpx.InternalIPSet)
+	} else if forwardedIP := r.Header.Get("X-Forwarded-For"); forwardedIP != "" {
+		ip, _ := httpx.GetClientIPAddress(strings.Split(forwardedIP, ","), httpx.InternalIPSet)
 		device.IPAddress = &ip
 	} else {
 		device.IPAddress = &r.RemoteAddr

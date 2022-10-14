@@ -73,8 +73,46 @@ func TestSession(t *testing.T) {
 	})
 
 	t.Run("case=client information reverse proxy forward", func(t *testing.T) {
+		for _, tc := range []struct {
+			input    string
+			expected string
+		}{
+			{
+				input:    "10.10.8.1, 172.19.2.7",
+				expected: "",
+			},
+			{
+				input:    "217.73.188.139,162.158.203.149, 172.19.2.7",
+				expected: "162.158.203.149",
+			},
+			{
+				input:    "122.122.122.122 , 123.123.123.123",
+				expected: "123.123.123.123",
+			},
+		} {
+			t.Run("case=parse "+tc.input, func(t *testing.T) {
+				req := x.NewTestHTTPRequest(t, "GET", "/sessions/whoami", nil)
+				req.Header["User-Agent"] = []string{"Mozilla/5.0 (X11; Linux x86_64)", "AppleWebKit/537.36 (KHTML, like Gecko)", "Chrome/51.0.2704.103 Safari/537.36"}
+				req.Header.Set("X-Forwarded-For", tc.input)
+
+				s := session.NewInactiveSession()
+				require.NoError(t, s.Activate(req, &identity.Identity{State: identity.StateActive}, conf, authAt))
+				assert.True(t, s.Active)
+				assert.Equal(t, identity.NoAuthenticatorAssuranceLevel, s.AuthenticatorAssuranceLevel)
+				assert.Equal(t, authAt, s.AuthenticatedAt)
+				assert.Equal(t, 1, len(s.Devices))
+				assert.Equal(t, s.ID.String(), s.Devices[0].SessionID.String())
+				assert.Equal(t, tc.expected, *s.Devices[0].IPAddress)
+				assert.Equal(t, "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/51.0.2704.103 Safari/537.36", *s.Devices[0].UserAgent)
+				assert.Equal(t, "", *s.Devices[0].Location)
+			})
+		}
+	})
+
+	t.Run("case=client information reverse proxy real IP set", func(t *testing.T) {
 		req := x.NewTestHTTPRequest(t, "GET", "/sessions/whoami", nil)
 		req.Header["User-Agent"] = []string{"Mozilla/5.0 (X11; Linux x86_64)", "AppleWebKit/537.36 (KHTML, like Gecko)", "Chrome/51.0.2704.103 Safari/537.36"}
+		req.Header.Set("X-Real-IP", "54.155.246.155")
 		req.Header["X-Forwarded-For"] = []string{"54.155.246.232", "10.145.1.10"}
 
 		s := session.NewInactiveSession()
@@ -84,16 +122,18 @@ func TestSession(t *testing.T) {
 		assert.Equal(t, authAt, s.AuthenticatedAt)
 		assert.Equal(t, 1, len(s.Devices))
 		assert.Equal(t, s.ID.String(), s.Devices[0].SessionID.String())
-		assert.Equal(t, "54.155.246.232", *s.Devices[0].IPAddress)
+		assert.NotNil(t, s.Devices[0].UpdatedAt)
+		assert.NotNil(t, s.Devices[0].CreatedAt)
+		assert.Equal(t, "54.155.246.155", *s.Devices[0].IPAddress)
 		assert.Equal(t, "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/51.0.2704.103 Safari/537.36", *s.Devices[0].UserAgent)
 		assert.Equal(t, "", *s.Devices[0].Location)
 	})
 
-	t.Run("case=client information reverse proxy real IP set", func(t *testing.T) {
+	t.Run("case=client information CF true client IP set", func(t *testing.T) {
 		req := x.NewTestHTTPRequest(t, "GET", "/sessions/whoami", nil)
 		req.Header["User-Agent"] = []string{"Mozilla/5.0 (X11; Linux x86_64)", "AppleWebKit/537.36 (KHTML, like Gecko)", "Chrome/51.0.2704.103 Safari/537.36"}
-		req.Header.Set("X-Real-IP", "54.155.246.155")
-		req.Header["X-Forwarded-For"] = []string{"54.155.246.232", "10.145.1.10"}
+		req.Header.Set("True-Client-IP", "54.155.246.155")
+		req.Header.Set("X-Forwarded-For", "217.73.188.139,162.158.203.149, 172.19.2.7")
 
 		s := session.NewInactiveSession()
 		require.NoError(t, s.Activate(req, &identity.Identity{State: identity.StateActive}, conf, authAt))
