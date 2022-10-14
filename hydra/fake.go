@@ -35,8 +35,6 @@ func (h *FakeHydra) AcceptLoginRequest(ctx context.Context, hlc uuid.UUID, sub s
 
 func (h *FakeHydra) GetLoginRequest(ctx context.Context, hlc uuid.NullUUID) (*hydraclientgo.LoginRequest, error) {
 	switch hlc.UUID.String() {
-	case FAKE_GET_LOGIN_REQUEST_RETURN_NIL_NIL:
-		return nil, nil
 	case FAKE_ACCEPT_REQUEST_FAIL:
 		return &hydraclientgo.LoginRequest{}, nil
 	case FAKE_SUCCESS:

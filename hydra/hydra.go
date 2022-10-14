@@ -3,9 +3,10 @@ package hydra
 import (
 	"context"
 	"fmt"
-	"github.com/ory/x/httpx"
 	"net/http"
 	"time"
+
+	"github.com/ory/x/httpx"
 
 	"github.com/gofrs/uuid"
 	"github.com/pkg/errors"

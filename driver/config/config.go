@@ -850,7 +850,7 @@ func (p *Config) CourierSMTPURL(ctx context.Context) *url.URL {
 	return p.ParseURIOrFail(ctx, ViperKeyCourierSMTPURL)
 }
 
-func (p *Config) OAuth2ProviderHeader(ctx context.Context) (http.Header) {
+func (p *Config) OAuth2ProviderHeader(ctx context.Context) http.Header {
 	hh := map[string]string{}
 	if err := p.GetProvider(ctx).Unmarshal(ViperKeyOAuth2ProviderHeader, &hh); err != nil {
 		p.l.WithError(errors.WithStack(err)).
