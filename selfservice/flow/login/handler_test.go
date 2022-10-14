@@ -560,7 +560,7 @@ func TestFlowLifecycle(t *testing.T) {
 				require.Contains(t, string(body), "refusing to parse")
 			})
 
-			conf.MustSet(ctx, config.ViperKeySelfServiceOAuth2ProviderURL, "https://fake-hydra")
+			conf.MustSet(ctx, config.ViperKeyOAuth2ProviderURL, "https://fake-hydra")
 
 			t.Run("case=oauth2 flow fails when get login request returns nil", func(t *testing.T) {
 				res, body := initAuthenticatedFlow(t, url.Values{"login_challenge": {hydra.FAKE_GET_LOGIN_REQUEST_RETURN_NIL_NIL}}, false)

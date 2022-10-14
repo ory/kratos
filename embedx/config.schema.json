@@ -1801,8 +1801,19 @@
             "https://some-slug.projects.oryapis.com",
             "https://domain-of-ory-hydra:4445"
           ]
+        },
+        "headers": {
+          "title": "HTTP Request Headers",
+          "description": "These headers will be passed in HTTP request to the OAuth2 Provider.",
+          "type": "object",
+          "examples": [
+            {
+              "Authorization": "Bearer some-token"
+            }
+          ]
         }
-      }
+      },
+      "additionalProperties": false
     },
     "serve": {
       "type": "object",

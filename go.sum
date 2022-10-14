@@ -1383,8 +1383,8 @@ github.com/ory/sessions v1.2.2-0.20220110165800-b09c17334dc2 h1:zm6sDvHy/U9XrGpi
 github.com/ory/sessions v1.2.2-0.20220110165800-b09c17334dc2/go.mod h1:dk2InVEVJ0sfLlnXv9EAgkf6ecYs/i80K/zI+bUmuGM=
 github.com/ory/viper v1.7.5 h1:+xVdq7SU3e1vNaCsk/ixsfxE4zylk1TJUiJrY647jUE=
 github.com/ory/viper v1.7.5/go.mod h1:ypOuyJmEUb3oENywQZRgeAMwqgOyDqwboO1tj3DjTaM=
-github.com/ory/x v0.0.480 h1:IAflszUfmpy/bVnd8gxIgKuL9pL1oLjytxqCmAMC14o=
-github.com/ory/x v0.0.480/go.mod h1:w2gwqgw3XqKTxW8wURVxUFI2NuDyIC2rGxvEsnBJqjs=
+github.com/ory/x v0.0.488 h1:EQLqYLPwNfs9OW9GFrxDEO11oEmKpvveN1wuUfU8yOU=
+github.com/ory/x v0.0.488/go.mod h1:dJ800rWC2/eNECWhXMyI9kSd7lO2LTOu6R8oS0lQZ38=
 github.com/otiai10/copy v1.2.0/go.mod h1:rrF5dJ5F0t/EWSYODDu4j9/vEeYHMkc8jt0zJChqQWw=
 github.com/otiai10/curr v0.0.0-20150429015615-9b4961190c95/go.mod h1:9qAhocn7zKJG+0mI8eUu6xqkFDYS2kb2saOteoSB3cE=
 github.com/otiai10/curr v1.0.0/go.mod h1:LskTG5wDwr8Rs+nNQ+1LlxRjAtTZZjtJW4rMXl6j4vs=

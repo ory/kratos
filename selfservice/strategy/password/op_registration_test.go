@@ -158,7 +158,7 @@ func TestOAuth2ProviderRegistration(t *testing.T) {
 		RedirectURL: clientAppTS.URL,
 	}
 
-	conf.MustSet(ctx, config.ViperKeySelfServiceOAuth2ProviderURL, hydraAdmin+"/admin")
+	conf.MustSet(ctx, config.ViperKeyOAuth2ProviderURL, hydraAdmin+"/admin")
 	conf.MustSet(ctx, config.ViperKeySelfServiceErrorUI, errTS.URL+"/error-ts")
 	conf.MustSet(ctx, config.ViperKeySelfServiceLoginUI, kratosUITS.URL+"/login-ts")
 	conf.MustSet(ctx, config.ViperKeySelfServiceRegistrationUI, kratosUITS.URL+"/login-ts")

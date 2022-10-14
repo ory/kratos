@@ -179,10 +179,11 @@ const (
 	ViperKeyWebAuthnRPOrigin                                 = "selfservice.methods.webauthn.config.rp.origin"
 	ViperKeyWebAuthnRPIcon                                   = "selfservice.methods.webauthn.config.rp.issuer"
 	ViperKeyWebAuthnPasswordless                             = "selfservice.methods.webauthn.config.passwordless"
+	ViperKeyOAuth2ProviderURL                                = "oauth2_provider.url"
+	ViperKeyOAuth2ProviderHeader                             = "oauth2_provider.headers"
 	ViperKeyClientHTTPNoPrivateIPRanges                      = "clients.http.disallow_private_ip_ranges"
 	ViperKeyClientHTTPPrivateIPExceptionURLs                 = "clients.http.private_ip_exception_urls"
 	ViperKeyVersion                                          = "version"
-	ViperKeySelfServiceOAuth2ProviderURL                     = "oauth2_provider.url"
 )
 
 const (
@@ -849,8 +850,24 @@ func (p *Config) CourierSMTPURL(ctx context.Context) *url.URL {
 	return p.ParseURIOrFail(ctx, ViperKeyCourierSMTPURL)
 }
 
-func (p *Config) SelfServiceOAuth2ProviderURL(ctx context.Context) *url.URL {
-	k := ViperKeySelfServiceOAuth2ProviderURL
+func (p *Config) OAuth2ProviderHeader(ctx context.Context) (http.Header) {
+	hh := map[string]string{}
+	if err := p.GetProvider(ctx).Unmarshal(ViperKeyOAuth2ProviderHeader, &hh); err != nil {
+		p.l.WithError(errors.WithStack(err)).
+			Errorf("Configuration value from key %s could not be decoded.", ViperKeyOAuth2ProviderHeader)
+		return nil
+	}
+
+	h := make(http.Header)
+	for k, v := range hh {
+		h.Set(k, v)
+	}
+
+	return h
+}
+
+func (p *Config) OAuth2ProviderURL(ctx context.Context) *url.URL {
+	k := ViperKeyOAuth2ProviderURL
 	v := p.GetProvider(ctx).String(k)
 	if v == "" {
 		return nil
