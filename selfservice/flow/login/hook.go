@@ -66,20 +66,19 @@ func NewHookExecutor(d executorDependencies) *HookExecutor {
 	return &HookExecutor{d: d}
 }
 
-func (e *HookExecutor) requiresAAL2(r *http.Request, s *session.Session, a *Flow) (error, bool) {
+func (e *HookExecutor) requiresAAL2(r *http.Request, s *session.Session, a *Flow) (bool, error) {
 	err := e.d.SessionManager().DoesSessionSatisfy(r, s, e.d.Config().SessionWhoAmIAAL(r.Context()))
 
 	if aalErr := new(session.ErrAALNotSatisfied); errors.As(err, &aalErr) {
 		if aalErr.PassReturnToAndLoginChallengeParameters(a.RequestURL) != nil {
-			//nolint:errcheck
-			aalErr.WithDetail("pass_request_params_error", "failed to pass request parameters to aalErr.RedirectTo")
+			_ = aalErr.WithDetail("pass_request_params_error", "failed to pass request parameters to aalErr.RedirectTo")
 		}
-		return aalErr, true
+		return true, aalErr
 	} else if err != nil {
-		return errors.WithStack(err), true
+		return true, errors.WithStack(err)
 	}
 
-	return nil, false
+	return false, nil
 }
 
 func (e *HookExecutor) handleLoginError(_ http.ResponseWriter, r *http.Request, g node.UiNodeGroup, f *Flow, i *identity.Identity, flowError error) error {
@@ -167,7 +166,7 @@ func (e *HookExecutor) PostLoginHook(w http.ResponseWriter, r *http.Request, g n
 			Info("Identity authenticated successfully and was issued an Ory Kratos Session Token.")
 
 		response := &APIFlowResponse{Session: s, Token: s.Token}
-		if _, required := e.requiresAAL2(r, s, a); required {
+		if required, _ := e.requiresAAL2(r, s, a); required {
 			// If AAL is not satisfied, we omit the identity to preserve the user's privacy in case of a phishing attack.
 			response.Session.Identity = nil
 		}
@@ -191,7 +190,7 @@ func (e *HookExecutor) PostLoginHook(w http.ResponseWriter, r *http.Request, g n
 		s.Token = ""
 
 		response := &APIFlowResponse{Session: s}
-		if _, required := e.requiresAAL2(r, s, a); required {
+		if required, _ := e.requiresAAL2(r, s, a); required {
 			// If AAL is not satisfied, we omit the identity to preserve the user's privacy in case of a phishing attack.
 			response.Session.Identity = nil
 		}
@@ -200,7 +199,7 @@ func (e *HookExecutor) PostLoginHook(w http.ResponseWriter, r *http.Request, g n
 	}
 
 	// If we detect that whoami would require a higher AAL, we redirect!
-	if err, _ := e.requiresAAL2(r, s, a); err != nil {
+	if _, err := e.requiresAAL2(r, s, a); err != nil {
 		if aalErr := new(session.ErrAALNotSatisfied); errors.As(err, &aalErr) {
 			http.Redirect(w, r, aalErr.RedirectTo, http.StatusSeeOther)
 			return nil

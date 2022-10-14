@@ -249,7 +249,7 @@ func TestLoginExecutor(t *testing.T) {
 			})
 
 			t.Run("requiresAAL2 should return true if there's an error", func(t *testing.T) {
-				err, requiresAAL2 := login.RequiresAAL2ForTest(*reg.LoginHookExecutor(), &http.Request{}, &session.Session{})
+				requiresAAL2, err := login.RequiresAAL2ForTest(*reg.LoginHookExecutor(), &http.Request{}, &session.Session{})
 				require.NotNil(t, err)
 				require.True(t, requiresAAL2)
 			})
