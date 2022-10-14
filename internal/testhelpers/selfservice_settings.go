@@ -25,6 +25,7 @@ import (
 	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/selfservice/flow/settings"
+	"github.com/ory/kratos/session"
 	"github.com/ory/kratos/x"
 	"github.com/ory/x/ioutilx"
 	"github.com/ory/x/urlx"
@@ -171,7 +172,7 @@ func NewSettingsLoginAcceptAPIServer(t *testing.T, publicClient *kratos.APIClien
 	return loginTS
 }
 
-func NewSettingsAPIServer(t *testing.T, reg *driver.RegistryDefault, sessionsPrivileged bool, ids map[string]*identity.Identity) (*httptest.Server, *httptest.Server, map[string]*http.Client) {
+func NewSettingsAPIServer(t *testing.T, reg *driver.RegistryDefault, sessionsPrivileged bool, ids map[string]*identity.Identity) (*httptest.Server, *httptest.Server, map[string]ClientWithSession) {
 	ctx := context.Background()
 	public, admin := x.NewRouterPublic(), x.NewRouterAdmin()
 	reg.SettingsHandler().RegisterAdminRoutes(admin)
@@ -197,14 +198,19 @@ func NewSettingsAPIServer(t *testing.T, reg *driver.RegistryDefault, sessionsPri
 	return tsp, tsa, AddAndLoginIdentities(t, reg, &httptest.Server{Config: &http.Server{Handler: public}, URL: tsp.URL}, sessionsPrivileged, ids)
 }
 
+type ClientWithSession struct {
+	Client  *http.Client
+	Session *session.Session
+}
+
 // AddAndLoginIdentities adds the given identities to the store (like a registration flow) and returns http.Clients
 // which contain their sessions.
-func AddAndLoginIdentities(t *testing.T, reg *driver.RegistryDefault, public *httptest.Server, sessionsPrivileged bool, ids map[string]*identity.Identity) map[string]*http.Client {
-	result := map[string]*http.Client{}
+func AddAndLoginIdentities(t *testing.T, reg *driver.RegistryDefault, public *httptest.Server, sessionsPrivileged bool, ids map[string]*identity.Identity) map[string]ClientWithSession {
+	result := map[string]ClientWithSession{}
 	for k := range ids {
 		tid := x.NewUUID().String()
 		_ = reg.PrivilegedIdentityPool().DeleteIdentity(context.Background(), ids[k].ID)
-		route, _ := MockSessionCreateHandlerWithIdentity(t, reg, sessionsPrivileged, ids[k])
+		route, session := MockSessionCreateHandlerWithIdentity(t, reg, sessionsPrivileged, ids[k])
 		location := "/sessions/set/" + tid
 
 		if router, ok := public.Config.Handler.(*x.RouterPublic); ok {
@@ -217,7 +223,10 @@ func AddAndLoginIdentities(t *testing.T, reg *driver.RegistryDefault, public *ht
 			t.Logf("Got unknown type: %T", public.Config.Handler)
 			t.FailNow()
 		}
-		result[k] = NewSessionClient(t, public.URL+location)
+		result[k] = ClientWithSession{
+			Client:  NewSessionClient(t, public.URL+location),
+			Session: session,
+		}
 	}
 	return result
 }

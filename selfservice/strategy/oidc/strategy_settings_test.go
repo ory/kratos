@@ -133,23 +133,23 @@ func TestSettingsStrategy(t *testing.T) {
 	}
 
 	t.Run("case=should not be able to continue a flow with a malformed ID", func(t *testing.T) {
-		body, res := testhelpers.HTTPPostForm(t, agents["password"], publicTS.URL+settings.RouteSubmitFlow+"?flow=i-am-not-a-uuid", nil)
+		body, res := testhelpers.HTTPPostForm(t, agents["password"].Client, publicTS.URL+settings.RouteSubmitFlow+"?flow=i-am-not-a-uuid", nil)
 		AssertSystemError(t, errTS, res, body, 400, "malformed")
 	})
 
 	t.Run("case=should not be able to continue a flow without the flow query parameter", func(t *testing.T) {
-		body, res := testhelpers.HTTPPostForm(t, agents["password"], publicTS.URL+settings.RouteSubmitFlow, nil)
+		body, res := testhelpers.HTTPPostForm(t, agents["password"].Client, publicTS.URL+settings.RouteSubmitFlow, nil)
 		AssertSystemError(t, errTS, res, body, 400, "query parameter is missing")
 	})
 
 	t.Run("case=should not be able to continue a flow with a non-existing ID", func(t *testing.T) {
-		body, res := testhelpers.HTTPPostForm(t, agents["password"], publicTS.URL+settings.RouteSubmitFlow+"?flow="+x.NewUUID().String(), nil)
+		body, res := testhelpers.HTTPPostForm(t, agents["password"].Client, publicTS.URL+settings.RouteSubmitFlow+"?flow="+x.NewUUID().String(), nil)
 		AssertSystemError(t, errTS, res, body, 404, "not be found")
 	})
 
 	t.Run("case=should not be able to continue a flow that is expired", func(t *testing.T) {
-		req := newProfileFlow(t, agents["password"], "", -time.Hour)
-		body, res := testhelpers.HTTPPostForm(t, agents["password"], publicTS.URL+settings.RouteSubmitFlow+"?flow="+req.ID.String(), nil)
+		req := newProfileFlow(t, agents["password"].Client, "", -time.Hour)
+		body, res := testhelpers.HTTPPostForm(t, agents["password"].Client, publicTS.URL+settings.RouteSubmitFlow+"?flow="+req.ID.String(), nil)
 
 		require.Contains(t, res.Request.URL.String(), uiTS.URL+"/settings?flow=")
 		assert.NotContains(t, res.Request.URL.String(), req.ID.String(), "should initialize a new flow")
@@ -157,17 +157,17 @@ func TestSettingsStrategy(t *testing.T) {
 	})
 
 	t.Run("case=should not be able to fetch another user's data", func(t *testing.T) {
-		req := newProfileFlow(t, agents["password"], "", time.Hour)
+		req := newProfileFlow(t, agents["password"].Client, "", time.Hour)
 
-		_, _, err := testhelpers.NewSDKCustomClient(publicTS, agents["oryer"]).V0alpha2Api.GetSelfServiceSettingsFlow(context.Background()).Id(req.ID.String()).Execute()
+		_, _, err := testhelpers.NewSDKCustomClient(publicTS, agents["oryer"].Client).V0alpha2Api.GetSelfServiceSettingsFlow(context.Background()).Id(req.ID.String()).Execute()
 		require.Error(t, err)
 		assert.Contains(t, err.Error(), "403")
 	})
 
 	t.Run("case=should fetch the settings request and expect data to be set appropriately", func(t *testing.T) {
-		req := newProfileFlow(t, agents["password"], "", time.Hour)
+		req := newProfileFlow(t, agents["password"].Client, "", time.Hour)
 
-		rs, _, err := testhelpers.NewSDKCustomClient(publicTS, agents["password"]).V0alpha2Api.GetSelfServiceSettingsFlow(context.Background()).Id(req.ID.String()).Execute()
+		rs, _, err := testhelpers.NewSDKCustomClient(publicTS, agents["password"].Client).V0alpha2Api.GetSelfServiceSettingsFlow(context.Background()).Id(req.ID.String()).Execute()
 		require.NoError(t, err)
 
 		// Check our sanity. Does the SDK relay the same info that we expect and got from the store?
@@ -199,7 +199,7 @@ func TestSettingsStrategy(t *testing.T) {
 			{agent: "multiuser"},
 		} {
 			t.Run("agent="+tc.agent, func(t *testing.T) {
-				rs := nprSDK(t, agents[tc.agent], "", time.Hour)
+				rs := nprSDK(t, agents[tc.agent].Client, "", time.Hour)
 				snapshotx.SnapshotTExcept(t, rs.Ui.Nodes, []string{"0.attributes.value", "1.attributes.value"})
 			})
 		}
@@ -247,8 +247,8 @@ func TestSettingsStrategy(t *testing.T) {
 
 	t.Run("suite=unlink", func(t *testing.T) {
 		var unlink = func(t *testing.T, agent, provider string) (body []byte, res *http.Response, req *kratos.SelfServiceSettingsFlow) {
-			req = nprSDK(t, agents[agent], "", time.Hour)
-			body, res = testhelpers.HTTPPostForm(t, agents[agent], action(req),
+			req = nprSDK(t, agents[agent].Client, "", time.Hour)
+			body, res = testhelpers.HTTPPostForm(t, agents[agent].Client, action(req),
 				&url.Values{"csrf_token": {x.FakeCSRFToken}, "unlink": {provider}})
 			return
 		}
@@ -300,13 +300,15 @@ func TestSettingsStrategy(t *testing.T) {
 			agent, provider := "githuber", "github"
 
 			var runUnauthed = func(t *testing.T) *kratos.SelfServiceSettingsFlow {
-				conf.MustSet(ctx, config.ViperKeySelfServiceSettingsPrivilegedAuthenticationAfter, time.Millisecond)
-				time.Sleep(time.Millisecond)
+				// Set the session to expire right now, and persist the session
+				agents[agent].Session.SetPrivilegedUntil(time.Now())
+				require.NoError(t, reg.SessionPersister().UpsertSession(context.Background(), agents[agent].Session))
+
 				t.Cleanup(reset(t))
 				_, res, req := unlink(t, agent, provider)
 				assert.Contains(t, res.Request.URL.String(), uiTS.URL+"/login")
 
-				rs, _, err := testhelpers.NewSDKCustomClient(publicTS, agents[agent]).V0alpha2Api.GetSelfServiceSettingsFlow(context.Background()).Id(req.Id).Execute()
+				rs, _, err := testhelpers.NewSDKCustomClient(publicTS, agents[agent].Client).V0alpha2Api.GetSelfServiceSettingsFlow(context.Background()).Id(req.Id).Execute()
 				require.NoError(t, err)
 				require.EqualValues(t, settings.StateShowForm, rs.State)
 
@@ -322,10 +324,11 @@ func TestSettingsStrategy(t *testing.T) {
 			t.Run("subcase=should update after re-auth", func(t *testing.T) {
 				req := runUnauthed(t)
 
-				// fake login by allowing longer sessions...
-				conf.MustSet(ctx, config.ViperKeySelfServiceSettingsPrivilegedAuthenticationAfter, time.Minute*5)
+				// fake login by increasing the session privileged util value
+				agents[agent].Session.SetPrivilegedUntil(time.Now().Add(time.Minute))
+				require.NoError(t, reg.SessionPersister().UpsertSession(context.Background(), agents[agent].Session))
 
-				body, res := testhelpers.HTTPPostForm(t, agents[agent], action(req),
+				body, res := testhelpers.HTTPPostForm(t, agents[agent].Client, action(req),
 					&url.Values{"csrf_token": {x.FakeCSRFToken}, "unlink": {provider}})
 				assert.Contains(t, res.Request.URL.String(), uiTS.URL+"/settings?flow="+req.Id)
 
@@ -338,8 +341,8 @@ func TestSettingsStrategy(t *testing.T) {
 
 	t.Run("suite=link", func(t *testing.T) {
 		var link = func(t *testing.T, agent, provider string) (body []byte, res *http.Response, req *kratos.SelfServiceSettingsFlow) {
-			req = nprSDK(t, agents[agent], "", time.Hour)
-			body, res = testhelpers.HTTPPostForm(t, agents[agent], action(req),
+			req = nprSDK(t, agents[agent].Client, "", time.Hour)
+			body, res = testhelpers.HTTPPostForm(t, agents[agent].Client, action(req),
 				&url.Values{"csrf_token": {x.FakeCSRFToken}, "link": {provider}})
 			return
 		}
@@ -422,7 +425,7 @@ func TestSettingsStrategy(t *testing.T) {
 			updatedFlow, res, originalFlow := link(t, agent, provider)
 			assert.Contains(t, res.Request.URL.String(), uiTS.URL)
 
-			updatedFlowSDK, _, err := testhelpers.NewSDKCustomClient(publicTS, agents[agent]).V0alpha2Api.GetSelfServiceSettingsFlow(context.Background()).Id(originalFlow.Id).Execute()
+			updatedFlowSDK, _, err := testhelpers.NewSDKCustomClient(publicTS, agents[agent].Client).V0alpha2Api.GetSelfServiceSettingsFlow(context.Background()).Id(originalFlow.Id).Execute()
 			require.NoError(t, err)
 			require.EqualValues(t, settings.StateSuccess, updatedFlowSDK.State)
 
@@ -449,7 +452,7 @@ func TestSettingsStrategy(t *testing.T) {
 			_, res, req := link(t, agent, provider)
 			assert.Contains(t, res.Request.URL.String(), uiTS.URL)
 
-			rs, _, err := testhelpers.NewSDKCustomClient(publicTS, agents[agent]).V0alpha2Api.GetSelfServiceSettingsFlow(context.Background()).Id(req.Id).Execute()
+			rs, _, err := testhelpers.NewSDKCustomClient(publicTS, agents[agent].Client).V0alpha2Api.GetSelfServiceSettingsFlow(context.Background()).Id(req.Id).Execute()
 			require.NoError(t, err)
 			require.EqualValues(t, settings.StateSuccess, rs.State)
 
@@ -463,13 +466,14 @@ func TestSettingsStrategy(t *testing.T) {
 			subject = "hackerman+new+google+" + testID
 
 			var runUnauthed = func(t *testing.T) *kratos.SelfServiceSettingsFlow {
-				conf.MustSet(ctx, config.ViperKeySelfServiceSettingsPrivilegedAuthenticationAfter, time.Millisecond)
-				time.Sleep(time.Millisecond)
+				agents[agent].Session.SetPrivilegedUntil(time.Now())
+				require.NoError(t, reg.SessionPersister().UpsertSession(context.Background(), agents[agent].Session))
+
 				t.Cleanup(reset(t))
 				_, res, req := link(t, agent, provider)
 				assert.Contains(t, res.Request.URL.String(), uiTS.URL+"/login")
 
-				rs, _, err := testhelpers.NewSDKCustomClient(publicTS, agents[agent]).V0alpha2Api.GetSelfServiceSettingsFlow(context.Background()).Id(req.Id).Execute()
+				rs, _, err := testhelpers.NewSDKCustomClient(publicTS, agents[agent].Client).V0alpha2Api.GetSelfServiceSettingsFlow(context.Background()).Id(req.Id).Execute()
 				require.NoError(t, err)
 				require.EqualValues(t, settings.StateShowForm, rs.State)
 
@@ -486,9 +490,10 @@ func TestSettingsStrategy(t *testing.T) {
 				req := runUnauthed(t)
 
 				// fake login by allowing longer sessions...
-				conf.MustSet(ctx, config.ViperKeySelfServiceSettingsPrivilegedAuthenticationAfter, time.Minute*5)
+				agents[agent].Session.SetPrivilegedUntil(time.Now().Add(time.Minute))
+				require.NoError(t, reg.SessionPersister().UpsertSession(context.Background(), agents[agent].Session))
 
-				body, res := testhelpers.HTTPPostForm(t, agents[agent], action(req),
+				body, res := testhelpers.HTTPPostForm(t, agents[agent].Client, action(req),
 					&url.Values{"csrf_token": {x.FakeCSRFToken}, "unlink": {provider}})
 				assert.Contains(t, res.Request.URL.String(), uiTS.URL+"/settings?flow="+req.Id)
 
