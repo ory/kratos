@@ -51,10 +51,10 @@ func NewLoginUIWith401Response(t *testing.T, c *config.Config) *httptest.Server 
 }
 
 type initFlowOptions struct {
-	aal                 identity.AuthenticatorAssuranceLevel
-	returnTo            string
-	refresh             bool
-	hydraLoginChallenge string
+	aal                  identity.AuthenticatorAssuranceLevel
+	returnTo             string
+	refresh              bool
+	oauth2LoginChallenge string
 }
 
 func (o *initFlowOptions) apply(opts []InitFlowWithOption) *initFlowOptions {
@@ -80,8 +80,8 @@ func getURLFromInitOptions(ts *httptest.Server, path string, forced bool, opts .
 		q.Set("return_to", string(o.returnTo))
 	}
 
-	if o.hydraLoginChallenge != "" {
-		q.Set("login_challenge", o.hydraLoginChallenge)
+	if o.oauth2LoginChallenge != "" {
+		q.Set("login_challenge", o.oauth2LoginChallenge)
 	}
 
 	u := urlx.ParseOrPanic(ts.URL + path)
@@ -109,9 +109,9 @@ func InitFlowWithRefresh() InitFlowWithOption {
 	}
 }
 
-func InitFlowWithHydraLoginChallenge(hlc string) InitFlowWithOption {
+func InitFlowWithOAuth2LoginChallenge(hlc string) InitFlowWithOption {
 	return func(o *initFlowOptions) {
-		o.hydraLoginChallenge = hlc
+		o.oauth2LoginChallenge = hlc
 	}
 }
 

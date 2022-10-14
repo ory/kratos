@@ -94,7 +94,7 @@ func newKratosUITS(t *testing.T, c *kratosUIConfig) *httptest.Server {
 		if len(q) == 1 && !q.Has("flow") && q.Has("login_challenge") {
 			t.Log("[uiTS] initializing a new OpenID Provider flow")
 			hlc := r.URL.Query().Get("login_challenge")
-			f := testhelpers.InitializeRegistrationFlowViaBrowser(t, c.browserClient, c.kratosPublicTS, false, false, !c.expectLoginScreen, testhelpers.InitFlowWithHydraLoginChallenge(hlc))
+			f := testhelpers.InitializeRegistrationFlowViaBrowser(t, c.browserClient, c.kratosPublicTS, false, false, !c.expectLoginScreen, testhelpers.InitFlowWithOAuth2LoginChallenge(hlc))
 			if c.expectLoginScreen {
 				require.NotNil(t, f)
 

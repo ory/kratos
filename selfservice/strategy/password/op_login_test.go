@@ -198,7 +198,7 @@ func TestOAuth2Provider(t *testing.T) {
 		if len(q) == 1 && !q.Has("flow") && q.Has("login_challenge") {
 			t.Log("[uiTS] initializing a new OpenID Provider flow")
 			hlc := r.URL.Query().Get("login_challenge")
-			f := testhelpers.InitializeLoginFlowViaBrowser(t, browserClient, kratosPublicTS, false, false, false, !testRequireLogin, testhelpers.InitFlowWithHydraLoginChallenge(hlc))
+			f := testhelpers.InitializeLoginFlowViaBrowser(t, browserClient, kratosPublicTS, false, false, false, !testRequireLogin, testhelpers.InitFlowWithOAuth2LoginChallenge(hlc))
 			if testRequireLogin {
 				require.NotNil(t, f)
 

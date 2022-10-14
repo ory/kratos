@@ -50,11 +50,11 @@ type Flow struct {
 	ID  uuid.UUID `json:"id" faker:"-" db:"id" rw:"r"`
 	NID uuid.UUID `json:"-"  faker:"-" db:"nid"`
 
-	// HydraLoginChallenge is an optional field whose presence indicates that
-	// Kratos is being used as an identity provider in a Hydra OAuth2 flow. This
-	// value is set using the `login_challenge` query parameter of the login init
-	// endpoint.
-	HydraLoginChallenge uuid.NullUUID `json:"oauth2_login_challenge,omitempty" faker:"-" db:"hydra_login_challenge"`
+	// Ory OAuth 2.0 Login Challenge.
+	//
+	// This value is set using the `login_challenge` query parameter of the registration and login endpoints.
+	// If set will cooperate with Ory OAuth2 and OpenID to act as an OAuth2 server / OpenID Provider.
+	OAuth2LoginChallenge uuid.NullUUID `json:"oauth2_login_challenge,omitempty" faker:"-" db:"oauth2_login_challenge"`
 
 	// HydraLoginRequest is an optional field whose presence indicates that Kratos
 	// is being used as an identity provider in a Hydra OAuth2 flow. Kratos
@@ -140,10 +140,10 @@ func NewFlow(conf *config.Config, exp time.Duration, csrf string, r *http.Reques
 	}
 
 	return &Flow{
-		ID:                  id,
-		HydraLoginChallenge: hlc,
-		ExpiresAt:           now.Add(exp),
-		IssuedAt:            now,
+		ID:                   id,
+		OAuth2LoginChallenge: hlc,
+		ExpiresAt:            now.Add(exp),
+		IssuedAt:             now,
 		UI: &container.Container{
 			Method: "POST",
 			Action: flow.AppendFlowTo(urlx.AppendPaths(conf.SelfPublicURL(r.Context()), RouteSubmitFlow), id).String(),

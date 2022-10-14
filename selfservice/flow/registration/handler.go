@@ -195,15 +195,18 @@ func (h *Handler) initApiFlow(w http.ResponseWriter, r *http.Request, _ httprout
 // nolint:deadcode,unused
 // swagger:parameters initializeSelfServiceRegistrationFlowForBrowsers
 type initializeSelfServiceRegistrationFlowForBrowsers struct {
-	// An optional Hydra login challenge. If present, Kratos will cooperate with
-	// Ory Hydra to act as an OAuth2 identity provider.
+	// Ory OAuth 2.0 Login Challenge.
+	//
+	// If set will cooperate with Ory OAuth2 and OpenID to act as an OAuth2 server / OpenID Provider.
 	//
 	// The value for this parameter comes from `login_challenge` URL Query parameter sent to your
 	// application (e.g. `/registration?login_challenge=abcde`).
 	//
+	// This feature is compatible with Ory Hydra when not running on the Ory Network.
+	//
 	// required: false
 	// in: query
-	HydraLoginChallenge string `json:"login_challenge"`
+	LoginChallenge string `json:"login_challenge"`
 
 	// The URL to return the browser to after the flow was completed.
 	//
@@ -387,8 +390,8 @@ func (h *Handler) fetchFlow(w http.ResponseWriter, r *http.Request, ps httproute
 		return
 	}
 
-	if ar.HydraLoginChallenge.Valid {
-		hlr, err := h.d.Hydra().GetLoginRequest(r.Context(), ar.HydraLoginChallenge)
+	if ar.OAuth2LoginChallenge.Valid {
+		hlr, err := h.d.Hydra().GetLoginRequest(r.Context(), ar.OAuth2LoginChallenge)
 		if err != nil {
 			// We don't redirect back to the third party on errors because Hydra doesn't
 			// give us the 3rd party return_uri when it redirects to the login UI.

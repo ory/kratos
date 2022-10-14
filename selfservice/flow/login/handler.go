@@ -379,10 +379,7 @@ func (h *Handler) initBrowserFlow(w http.ResponseWriter, r *http.Request, ps htt
 
 		hlr, err = h.d.Hydra().GetLoginRequest(r.Context(), hlc)
 		if err != nil {
-			h.d.SelfServiceErrorManager().Forward(r.Context(), w, r, errors.WithStack(herodot.ErrInternalServerError.WithReason("failed to retrieve Hydra login request")))
-			return
-		} else if hlr == nil {
-			h.d.SelfServiceErrorManager().Forward(r.Context(), w, r, errors.WithStack(herodot.ErrInternalServerError.WithReason("Hydra returned an empty login request")))
+			h.d.SelfServiceErrorManager().Forward(r.Context(), w, r, errors.WithStack(herodot.ErrInternalServerError.WithReason("Failed to retrieve OAuth 2.0 login request.")))
 			return
 		}
 
@@ -408,8 +405,8 @@ func (h *Handler) initBrowserFlow(w http.ResponseWriter, r *http.Request, ps htt
 				return
 			}
 			returnTo, err := url.Parse(rt)
-			if err != nil || returnTo == nil {
-				h.d.SelfServiceErrorManager().Forward(r.Context(), w, r, errors.WithStack(herodot.ErrInternalServerError.WithReason("AcceptHydraLoginRequest returned an invalid redirect_to value: "+rt)))
+			if err != nil {
+				h.d.SelfServiceErrorManager().Forward(r.Context(), w, r, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("Unable to parse URL: %s", rt)))
 				return
 			}
 			x.AcceptToRedirectOrJSON(w, r, h.d.Writer(), err, returnTo.String())
@@ -527,8 +524,8 @@ func (h *Handler) fetchFlow(w http.ResponseWriter, r *http.Request, _ httprouter
 		return
 	}
 
-	if ar.HydraLoginChallenge.Valid {
-		hlr, err := h.d.Hydra().GetLoginRequest(r.Context(), ar.HydraLoginChallenge)
+	if ar.OAuth2LoginChallenge.Valid {
+		hlr, err := h.d.Hydra().GetLoginRequest(r.Context(), ar.OAuth2LoginChallenge)
 		if err != nil {
 			// We don't redirect back to the third party on errors because Hydra doesn't
 			// give us the 3rd party return_uri when it redirects to the login UI.
