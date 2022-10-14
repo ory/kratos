@@ -1788,7 +1788,9 @@
       ],
       "additionalProperties": false
     },
-    "oauth_provider": {
+    "oauth2_provider": {
+      "title": "OAuth2 Provider Configuration",
+      "type": "object",
       "properties": {
         "url": {
           "title": "OAuth 2.0 Provider URL.",
