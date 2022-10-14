@@ -108,7 +108,7 @@ func TestManagerHTTP(t *testing.T) {
 			cookie1 := getCookie(t, x.NewTestHTTPRequest(t, "GET", "https://baseurl.com/bar", nil))
 			cookie2 := getCookie(t, x.NewTestHTTPRequest(t, "GET", "https://baseurl.com/bar", nil))
 
-			assert.NotEqual(t, cookie1, cookie2)
+			assert.NotEqual(t, cookie1.Value, cookie2.Value)
 		})
 
 		t.Run("case=with default options", func(t *testing.T) {
