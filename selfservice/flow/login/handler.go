@@ -349,7 +349,7 @@ type initializeSelfServiceLoginFlowForBrowsers struct {
 // - `security_identity_mismatch`: The requested `?return_to` address is not allowed to be used. Adjust this in the configuration!
 //
 // The optional query parameter login_challenge is set when using Kratos with
-// Hydra in an OAuth2 flow. See the selfservice.hydra_admin_url configuration
+// Hydra in an OAuth2 flow. See the oauth2_provider.url configuration
 // option.
 //
 // This endpoint is NOT INTENDED for clients that do not have a browser (Chrome, Firefox, ...) as cookies are needed.

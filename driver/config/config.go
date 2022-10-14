@@ -118,7 +118,6 @@ const (
 	ViperKeySelfServiceStrategyConfig                        = "selfservice.methods"
 	ViperKeySelfServiceBrowserDefaultReturnTo                = "selfservice." + DefaultBrowserReturnURL
 	ViperKeyURLsAllowedReturnToDomains                       = "selfservice.allowed_return_urls"
-	ViperKeySelfServiceHydraAdminURL                         = "selfservice.hydra_admin_url"
 	ViperKeySelfServiceRegistrationEnabled                   = "selfservice.flows.registration.enabled"
 	ViperKeySelfServiceRegistrationUI                        = "selfservice.flows.registration.ui_url"
 	ViperKeySelfServiceRegistrationRequestLifespan           = "selfservice.flows.registration.lifespan"
@@ -183,6 +182,7 @@ const (
 	ViperKeyClientHTTPNoPrivateIPRanges                      = "clients.http.disallow_private_ip_ranges"
 	ViperKeyClientHTTPPrivateIPExceptionURLs                 = "clients.http.private_ip_exception_urls"
 	ViperKeyVersion                                          = "version"
+	ViperKeySelfServiceOAuth2ProviderURL                     = "oauth2_provider.url"
 )
 
 const (
@@ -849,8 +849,8 @@ func (p *Config) CourierSMTPURL(ctx context.Context) *url.URL {
 	return p.ParseURIOrFail(ctx, ViperKeyCourierSMTPURL)
 }
 
-func (p *Config) SelfServiceFlowHydraAdminURL(ctx context.Context) *url.URL {
-	k := ViperKeySelfServiceHydraAdminURL
+func (p *Config) SelfServiceOAuth2ProviderURL(ctx context.Context) *url.URL {
+	k := ViperKeySelfServiceOAuth2ProviderURL
 	v := p.GetProvider(ctx).String(k)
 	if v == "" {
 		return nil

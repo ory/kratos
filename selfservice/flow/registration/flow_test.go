@@ -84,7 +84,7 @@ func TestNewFlow(t *testing.T) {
 		_, err := registration.NewFlow(conf, 0, "csrf", &http.Request{URL: urlx.ParseOrPanic("https://ory.sh/?login_challenge=badee1"), Host: "ory.sh"}, flow.TypeBrowser)
 		require.Error(t, err)
 
-		conf.MustSet(ctx, config.ViperKeySelfServiceHydraAdminURL, "https://hydra")
+		conf.MustSet(ctx, config.ViperKeySelfServiceOAuth2ProviderURL, "https://hydra")
 
 		r, err := registration.NewFlow(conf, 0, "csrf", &http.Request{URL: urlx.ParseOrPanic("https://ory.sh/?login_challenge=8aadcb8fc1334186a84c4da9813356d9"), Host: "ory.sh"}, flow.TypeBrowser)
 		require.NoError(t, err)

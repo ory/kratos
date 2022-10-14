@@ -42,8 +42,8 @@ func NewDefaultHydra(d hydraDependencies) *DefaultHydra {
 func GetLoginChallengeID(conf *config.Config, r *http.Request) (uuid.NullUUID, error) {
 	if !r.URL.Query().Has("login_challenge") {
 		return uuid.NullUUID{}, nil
-	} else if conf.SelfServiceFlowHydraAdminURL(r.Context()) == nil {
-		return uuid.NullUUID{}, errors.WithStack(herodot.ErrInternalServerError.WithReason("refusing to parse login_challenge query parameter because " + config.ViperKeySelfServiceHydraAdminURL + " is invalid or unset"))
+	} else if conf.SelfServiceOAuth2ProviderURL(r.Context()) == nil {
+		return uuid.NullUUID{}, errors.WithStack(herodot.ErrInternalServerError.WithReason("refusing to parse login_challenge query parameter because " + config.ViperKeySelfServiceOAuth2ProviderURL + " is invalid or unset"))
 	}
 
 	hlc, err := uuid.FromString(r.URL.Query().Get("login_challenge"))
@@ -55,9 +55,9 @@ func GetLoginChallengeID(conf *config.Config, r *http.Request) (uuid.NullUUID, e
 }
 
 func (h *DefaultHydra) getAdminURL(ctx context.Context) (string, error) {
-	u := h.d.Config().SelfServiceFlowHydraAdminURL(ctx)
+	u := h.d.Config().SelfServiceOAuth2ProviderURL(ctx)
 	if u == nil {
-		return "", errors.WithStack(herodot.ErrInternalServerError.WithReason(config.ViperKeySelfServiceHydraAdminURL + " is not configured"))
+		return "", errors.WithStack(herodot.ErrInternalServerError.WithReason(config.ViperKeySelfServiceOAuth2ProviderURL + " is not configured"))
 	}
 	return u.String(), nil
 }

@@ -1,8 +1,9 @@
 clients:
   http:
     disallow_private_ip_ranges: false
+oauth2_provider:
+  url: "http://localhost:4745"
 selfservice:
-  hydra_admin_url: "http://localhost:4745"
   flows:
     settings:
       privileged_session_max_age: 5m

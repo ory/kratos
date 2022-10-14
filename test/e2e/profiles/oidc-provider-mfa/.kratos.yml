@@ -40,7 +40,9 @@ selfservice:
           id: localhost
           origin: http://localhost:4455
           display_name: Ory
-  hydra_admin_url: "http://localhost:4745"
+
+oauth2_provider:
+  url: "http://localhost:4745"
 
 identity:
   schemas:

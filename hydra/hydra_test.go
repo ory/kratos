@@ -30,7 +30,7 @@ func TestGetLoginRequest(t *testing.T) {
 		w.WriteHeader(http.StatusOK)
 	}))
 
-	conf.MustSet(ctx, config.ViperKeySelfServiceHydraAdminURL, ok.URL)
+	conf.MustSet(ctx, config.ViperKeySelfServiceOAuth2ProviderURL, ok.URL)
 	_, err := reg.Hydra().GetLoginRequest(ctx, uuid.NullUUID{Valid: true, UUID: x.NewUUID()})
 	require.Error(t, err)
 	require.Contains(t, errors.Unwrap(err).(*herodot.DefaultError).Reason(), "empty login request")
@@ -51,7 +51,7 @@ func TestGetLoginChallengeID(t *testing.T) {
 		os.Stderr,
 		configx.SkipValidation(),
 		configx.WithValues(map[string]interface{}{
-			config.ViperKeySelfServiceHydraAdminURL: "https://hydra",
+			config.ViperKeySelfServiceOAuth2ProviderURL: "https://hydra",
 		}),
 	)
 
