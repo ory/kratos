@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"net/http"
-	"net/url"
 	"time"
 
 	"github.com/pkg/errors"
@@ -207,18 +206,16 @@ func (e *HookExecutor) PostLoginHook(w http.ResponseWriter, r *http.Request, g n
 		return errors.WithStack(err)
 	}
 
+	finalReturnTo := returnTo.String()
 	if a.OAuth2LoginChallenge.Valid {
 		rt, err := e.d.Hydra().AcceptLoginRequest(r.Context(), a.OAuth2LoginChallenge.UUID, i.ID.String(), s.AMR)
 		if err != nil {
 			return err
 		}
-		returnTo, err = url.Parse(rt)
-		if err != nil {
-			return err
-		}
+		finalReturnTo = rt
 	}
 
-	x.ContentNegotiationRedirection(w, r, s.Declassify(), e.d.Writer(), returnTo.String())
+	x.ContentNegotiationRedirection(w, r, s.Declassify(), e.d.Writer(), finalReturnTo)
 	return nil
 }
 
