@@ -230,8 +230,7 @@
           },
           "anyOf": [
             {
-              "not":
-              {
+              "not": {
                 "properties": {
                   "response": {
                     "properties": {
@@ -241,10 +240,14 @@
                         ]
                       }
                     },
-                    "required": ["ignore"]
+                    "required": [
+                      "ignore"
+                    ]
                   }
                 },
-                "required": ["response"]
+                "required": [
+                  "response"
+                ]
               }
             },
             {
@@ -255,7 +258,9 @@
                   ]
                 }
               },
-              "require": ["can_interrupt"]
+              "require": [
+                "can_interrupt"
+              ]
             }
           ],
           "additionalProperties": false,
@@ -1223,7 +1228,7 @@
                 },
                 "use": {
                   "title": "Recovery Strategy",
-                  "description":"The strategy to use for recovery requests",
+                  "description": "The strategy to use for recovery requests",
                   "type": "string",
                   "enum": [
                     "link",
@@ -1545,7 +1550,7 @@
         }
       }
     },
-    "database":  {
+    "database": {
       "type": "object",
       "title": "Database related configuration",
       "description": "Miscellaneous settings used in database related tasks (cleanup, etc.)",
@@ -1555,7 +1560,7 @@
           "title": "Database cleanup settings",
           "description": "Settings that controls how the database cleanup process is configured (delays, batch size, etc.)",
           "properties": {
-            "batch_size" : {
+            "batch_size": {
               "type": "integer",
               "title": "Number of records to clean in one iteration",
               "description": "Controls how many records should be purged from one table during database cleanup task",
@@ -1687,6 +1692,9 @@
               "title": "SMTP Headers",
               "description": "These headers will be passed in the SMTP conversation -- e.g. when using the AWS SES SMTP interface for cross-account sending.",
               "type": "object",
+              "additionalProperties": {
+                "type": "string"
+              },
               "examples": [
                 {
                   "X-SES-SOURCE-ARN": "arn:aws:ses:us-west-2:123456789012:identity/example.com",
@@ -1806,6 +1814,9 @@
           "title": "HTTP Request Headers",
           "description": "These headers will be passed in HTTP request to the OAuth2 Provider.",
           "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          },
           "examples": [
             {
               "Authorization": "Bearer some-token"
