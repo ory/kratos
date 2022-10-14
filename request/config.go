@@ -17,7 +17,7 @@ type (
 		Method      string      `json:"method"`
 		URL         string      `json:"url"`
 		TemplateURI string      `json:"body"`
-		Header      http.Header `json:"header"`
+		Header      http.Header `json:"headers"`
 		Auth        Auth        `json:"auth,omitempty"`
 	}
 )

@@ -7,7 +7,7 @@
     "type": "basic_auth"
   },
   "body": "base64://e30=",
-  "header": {
+  "headers": {
     "Content-Type": "application/x-www-form-urlencoded"
   },
   "method": "POST",
