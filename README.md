@@ -49,7 +49,7 @@ It's fully managed, highly available, developer & compliance-friendly!
 - Fair, usage-based [pricing](https://www.ory.sh/pricing)
 
 Sign up for a
-[**free developer account**](https://console.ory.sh/registration?utm_source=github&utm_medium=banner&utm_campaign=hydra-readme)
+[**free developer account**](https://console.ory.sh/registration?utm_source=github&utm_medium=banner&utm_campaign=kratos-readme)
 today!
 
 
