@@ -28,15 +28,30 @@ Ory Kratos is _the_ developer-friendly, security-hardened and battle-test Identi
 
 The [Ory Network](https://www.ory.sh/cloud) is the fastest, most secure and worry-free way to use Ory's Services. **Ory Identities** is powered by the Ory Kratos open source identity server, and it's fully API-compatible.
 
-* Fully managed, highly available, maintenance-free services 
-* GDPR-compliant secure storage with data regionality 
-* Cloud-native APIs, compatible with Ory's Open Source servers
-* Pre-built login, registration and account management pages (Ory Account Experience)
-* Comprehensive admin tools with the web-based Ory Console and the Ory Command Line Interface (CLI)
-* Fair, usage-based [pricing](https://www.ory.sh/pricing)
-* Extensive documentation, straighforward examples and easy-to-follow guides
+The Ory Network provides the infrastructure for modern end-to-end security:
 
-Sign up for a [**free developer account**](https://console.ory.sh/registration?utm_source=github&utm_medium=banner&utm_campaign=org-readme) today!
+- **Identity & credential management scaling to billions of users and devices**
+- **Registration, Login and Account management flows for passkey, biometric,
+  social, SSO and multi-factor authentication**
+- **Pre-built login, registration and account management pages and components**
+- OAuth2 and OpenID provider for single sign on, API access and
+  machine-to-machine authorization
+- Low-latency permission checks based on Google's Zanzibar model and with
+  built-in support for the Ory Permission Language
+
+It's fully managed, highly available, developer & compliance-friendly!
+
+- GDPR-compliant secure storage with data locality
+- Cloud-native APIs, compatible with Ory's Open Source servers
+- Comprehensive admin tools with the web-based Ory Console and the Ory Command
+  Line Interface (CLI)
+- Extensive documentation, straightforward examples and easy-to-follow guides
+- Fair, usage-based [pricing](https://www.ory.sh/pricing)
+
+Sign up for a
+[**free developer account**](https://console.ory.sh/registration?utm_source=github&utm_medium=banner&utm_campaign=hydra-readme)
+today!
+
 
 ### Quickstart
   
@@ -61,6 +76,8 @@ ory create project
 
 **Table of Contents**
 
+- [Ory Kratos on the Ory Network](#ory-kratos-on-the-ory-network)
+  - [Quickstart](#quickstart)
 - [What is Ory Kratos?](#what-is-ory-kratos)
   - [Who is using it?](#who-is-using-it)
 - [Getting Started](#getting-started)
