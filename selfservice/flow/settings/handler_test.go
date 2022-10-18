@@ -154,12 +154,12 @@ func TestHandler(t *testing.T) {
 
 				res, err := c.Do(req)
 				require.NoError(t, err)
+				defer res.Body.Close()
 				// here we check that the redirect status is 303
 				require.Equal(t, http.StatusSeeOther, res.StatusCode)
 				location, err := res.Location()
 				require.NoError(t, err)
 				require.Equal(t, publicTS.URL+login.RouteInitBrowserFlow+returnTo, location.String())
-				defer res.Body.Close()
 			})
 
 			t.Run("description=success", func(t *testing.T) {
@@ -187,9 +187,9 @@ func TestHandler(t *testing.T) {
 
 				res, err := c.Do(req)
 				require.NoError(t, err)
+				defer res.Body.Close()
 				// here we check that the redirect status is 303
 				require.Equal(t, http.StatusSeeOther, res.StatusCode)
-				defer res.Body.Close()
 			})
 		})
 
