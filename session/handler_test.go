@@ -150,6 +150,7 @@ func TestSessionWhoAmI(t *testing.T) {
 		res, err := client.Get(ts.URL + RouteWhoami)
 		require.NoError(t, err)
 		assertNoCSRFCookieInResponse(t, ts, client, res) // Test that no CSRF cookie is ever set here.
+		assert.NotEmpty(t, res.Header.Get("X-Ory-Session-Expires-At"))
 
 		// Set cookie
 		reg.CSRFHandler().IgnorePath("/set")
@@ -174,6 +175,7 @@ func TestSessionWhoAmI(t *testing.T) {
 
 				assert.EqualValues(t, http.StatusOK, res.StatusCode)
 				assert.NotEmpty(t, res.Header.Get("X-Kratos-Authenticated-Identity-Id"))
+				assert.NotEmpty(t, res.Header.Get("X-Ory-Session-Expires-At"))
 
 				assert.Empty(t, gjson.GetBytes(body, "identity.credentials"))
 				assert.Equal(t, "mp", gjson.GetBytes(body, "identity.metadata_public.public").String(), "%s", body)
