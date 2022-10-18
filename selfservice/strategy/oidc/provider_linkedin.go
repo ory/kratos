@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"net/url"
 
 	"github.com/pkg/errors"
 	"golang.org/x/oauth2"
@@ -99,7 +100,7 @@ func (l *ProviderLinkedIn) ApiCall(url string, result interface{}, exchange *oau
 	return nil
 }
 
-func (l *ProviderLinkedIn) Claims(ctx context.Context, exchange *oauth2.Token) (*Claims, error) {
+func (l *ProviderLinkedIn) Claims(ctx context.Context, exchange *oauth2.Token, query url.Values) (*Claims, error) {
 	grantedScopes := stringsx.Splitx(fmt.Sprintf("%s", exchange.Extra("scope")), ",")
 	for _, check := range l.Config().Scope {
 		if !stringslice.Has(grantedScopes, check) {
