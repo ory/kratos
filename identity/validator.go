@@ -2,9 +2,14 @@ package identity
 
 import (
 	"context"
+	"encoding/json"
+	"fmt"
 
-	"github.com/tidwall/sjson"
+	"github.com/ory/x/sqlfields"
 
+	"github.com/pkg/errors"
+
+	"github.com/ory/herodot"
 	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/schema"
 )
@@ -43,12 +48,28 @@ func (v *Validator) ValidateWithRunner(ctx context.Context, i *Identity, runners
 		return err
 	}
 
-	traits, err := sjson.SetRawBytes([]byte(`{}`), "traits", i.Traits)
-	if err != nil {
-		return err
+	var metadataPublic *sqlfields.NullJSONRawMessage
+	if i.MetadataPublic.Valid {
+		metadataPublic = &i.MetadataPublic
 	}
 
-	return v.v.Validate(ctx, s.URL.String(), traits, schema.WithExtensionRunner(runner))
+	validationFields := struct {
+		Traits         Traits                        `json:"traits"`
+		MetadataPublic *sqlfields.NullJSONRawMessage `json:"metadata_public,omitempty"`
+		MetadataAdmin  *sqlfields.NullJSONRawMessage `json:"metadata_admin,omitempty"`
+	}{
+		Traits:         i.Traits,
+		MetadataPublic: metadataPublic,
+		MetadataAdmin:  i.MetadataAdmin,
+	}
+	rawIdentity, err := json.Marshal(validationFields)
+	if err != nil {
+		return errors.WithStack(herodot.ErrInternalServerError.WithError(err.Error()).WithReason("Unable to marshal identity for validation."))
+	}
+	fmt.Println(string(rawIdentity))
+	fmt.Printf("%#v %#v\n", validationFields.MetadataAdmin, validationFields.MetadataPublic)
+
+	return v.v.Validate(ctx, s.URL.String(), rawIdentity, schema.WithExtensionRunner(runner))
 }
 
 func (v *Validator) Validate(ctx context.Context, i *Identity) error {

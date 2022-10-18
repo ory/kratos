@@ -12,6 +12,9 @@ import (
 	"testing"
 	"time"
 
+	"github.com/ory/x/pointerx"
+	"github.com/ory/x/sqlfields"
+
 	"github.com/bxcodec/faker/v3"
 
 	"github.com/tidwall/gjson"
@@ -87,8 +90,8 @@ func TestSessionWhoAmI(t *testing.T) {
 			},
 		},
 		Traits:         identity.Traits(`{"baz":"bar","foo":true,"bar":2.5}`),
-		MetadataAdmin:  []byte(`{"admin":"ma"}`),
-		MetadataPublic: []byte(`{"public":"mp"}`),
+		MetadataAdmin:  pointerx.Ptr(sqlfields.NewNullJSONRawMessage([]byte(`{"admin":"ma"}`))),
+		MetadataPublic: sqlfields.NewNullJSONRawMessage([]byte(`{"public":"mp"}`)),
 	}
 	h, _ := testhelpers.MockSessionCreateHandlerWithIdentity(t, reg, i)
 

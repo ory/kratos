@@ -6,6 +6,9 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/ory/x/pointerx"
+	"github.com/ory/x/sqlfields"
+
 	"github.com/ory/x/jsonnetsecure"
 
 	"github.com/ory/herodot"
@@ -316,9 +319,9 @@ func (s *Strategy) setMetadata(evaluated string, i *identity.Identity, m Metadat
 
 	switch m {
 	case PublicMetadata:
-		i.MetadataPublic = []byte(metadata.Raw)
+		i.MetadataPublic = sqlfields.NewNullJSONRawMessage([]byte(metadata.Raw))
 	case AdminMetadata:
-		i.MetadataAdmin = []byte(metadata.Raw)
+		i.MetadataAdmin = pointerx.Ptr(sqlfields.NewNullJSONRawMessage([]byte(metadata.Raw)))
 	}
 
 	return nil
