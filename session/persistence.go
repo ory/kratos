@@ -15,6 +15,9 @@ type Persister interface {
 	// GetSession retrieves a session from the store.
 	GetSession(ctx context.Context, sid uuid.UUID, expandables Expandables) (*Session, error)
 
+	// ListSessions retrieves all sessions.
+	ListSessions(ctx context.Context, active *bool, page, perPage int, expandables Expandables) ([]*Session, int64, error)
+
 	// ListSessionsByIdentity retrieves sessions for an identity from the store.
 	ListSessionsByIdentity(ctx context.Context, iID uuid.UUID, active *bool, page, perPage int, except uuid.UUID, expandables Expandables) ([]*Session, int64, error)
 

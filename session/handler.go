@@ -61,13 +61,14 @@ const (
 )
 
 func (h *Handler) RegisterAdminRoutes(admin *x.RouterAdmin) {
+	admin.GET(RouteCollection, h.adminListSessions)
+
 	admin.GET(AdminRouteIdentitiesSessions, h.adminListIdentitySessions)
 	admin.DELETE(AdminRouteIdentitiesSessions, h.adminDeleteIdentitySessions)
 	admin.PATCH(AdminRouteSessionExtendId, h.adminSessionExtend)
 
 	admin.DELETE(RouteCollection, x.RedirectToPublicRoute(h.r))
 	admin.DELETE(RouteSession, x.RedirectToPublicRoute(h.r))
-	admin.GET(RouteCollection, x.RedirectToPublicRoute(h.r))
 
 	for _, m := range []string{http.MethodGet, http.MethodHead, http.MethodPost, http.MethodPut} {
 		// Redirect to public endpoint
@@ -261,6 +262,61 @@ func (h *Handler) adminDeleteIdentitySessions(w http.ResponseWriter, r *http.Req
 	}
 
 	w.WriteHeader(http.StatusNoContent)
+}
+
+// swagger:parameters adminListSessions
+// nolint:deadcode,unused
+type adminListSessions struct {
+	// Active is a boolean flag that filters out sessions based on the state. If no value is provided, all sessions are returned.
+	//
+	// required: false
+	// in: query
+	Active bool `json:"active"`
+
+	x.PaginationParams
+}
+
+// swagger:route GET /admin/sessions v0alpha2 adminListSessions
+//
+// This endpoint returns all sessions that exist.
+//
+// This endpoint is useful for:
+//
+// - Listing all sessions that exist in an administrative context.
+//
+//	Schemes: http, https
+//
+//	Security:
+//	  oryAccessToken:
+//
+//	Responses:
+//	  200: sessionList
+//	  400: jsonError
+//	  401: jsonError
+//	  404: jsonError
+//	  500: jsonError
+func (h *Handler) adminListSessions(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	activeRaw := r.URL.Query().Get("active")
+	activeBool, err := strconv.ParseBool(activeRaw)
+	if activeRaw != "" && err != nil {
+		h.r.Writer().WriteError(w, r, herodot.ErrBadRequest.WithError("could not parse parameter active"))
+		return
+	}
+
+	var active *bool
+	if activeRaw != "" {
+		active = &activeBool
+	}
+
+	page, perPage := x.ParsePagination(r)
+	sess, total, err := h.r.SessionPersister().ListSessions(r.Context(), active, page, perPage, ExpandEverything)
+	if err != nil {
+		h.r.Writer().WriteError(w, r, err)
+		return
+	}
+
+	x.PaginationHeader(w, urlx.AppendPaths(h.r.Config().SelfAdminURL(r.Context()), RouteCollection), total, page, perPage)
+	h.r.Writer().Write(w, r, sess)
 }
 
 // swagger:parameters adminListIdentitySessions
