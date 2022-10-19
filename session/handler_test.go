@@ -429,6 +429,7 @@ func TestHandlerAdminSessionManagement(t *testing.T) {
 			res, err := client.Do(req)
 			require.NoError(t, err)
 			assert.Equal(t, http.StatusOK, res.StatusCode)
+			assert.Equal(t, "1", res.Header.Get("X-Total-Count"))
 
 			var sessions []Session
 			require.NoError(t, json.NewDecoder(res.Body).Decode(&sessions))
