@@ -22,18 +22,41 @@
     <a href="https://github.com/ory/kratos/blob/master/CODE_OF_CONDUCT.md" alt="Ory Code of Conduct"><img src="https://img.shields.io/badge/ory-code%20of%20conduct-green" /></a>
 </>
 
-Ory Kratos is the first cloud native Identity and User Management System in the
-world. Finally, it is no longer necessary to implement a User Login process for
-the umpteenth time!
+Ory Kratos is _the_ developer-friendly, security-hardened and battle-test Identity, User Management and Authentication system for the Cloud. Finally, it is no longer necessary to implement User Login for the umpteenth time!
 
-## Ory Kratos in Ory Cloud
+## Ory Kratos on the Ory Network
 
-The easiest way to get started with Ory Software is in Ory Cloud! Ory Cloud is
-[**free forever for developers**](https://console.ory.sh/registration?utm_source=github&utm_medium=banner&utm_campaign=kratos-readme),
-no credit card required.
+The [Ory Network](https://www.ory.sh/cloud) is the fastest, most secure and worry-free way to use Ory's Services. **Ory Identities** is powered by the Ory Kratos open source identity server, and it's fully API-compatible.
 
+The Ory Network provides the infrastructure for modern end-to-end security:
+
+- **Identity & credential management scaling to billions of users and devices**
+- **Registration, Login and Account management flows for passkey, biometric,
+  social, SSO and multi-factor authentication**
+- **Pre-built login, registration and account management pages and components**
+- OAuth2 and OpenID provider for single sign on, API access and
+  machine-to-machine authorization
+- Low-latency permission checks based on Google's Zanzibar model and with
+  built-in support for the Ory Permission Language
+
+It's fully managed, highly available, developer & compliance-friendly!
+
+- GDPR-friendly secure storage with data locality
+- Cloud-native APIs, compatible with Ory's Open Source servers
+- Comprehensive admin tools with the web-based Ory Console and the Ory Command
+  Line Interface (CLI)
+- Extensive documentation, straightforward examples and easy-to-follow guides
+- Fair, usage-based [pricing](https://www.ory.sh/pricing)
+
+Sign up for a
+[**free developer account**](https://console.ory.sh/registration?utm_source=github&utm_medium=banner&utm_campaign=kratos-readme)
+today!
+
+
+### Quickstart
+  
 Install the [Ory CLI](https://www.ory.sh/docs/guides/cli/installation) and
-create a new project to get started with Ory Kratos right away:
+create a new project to get started with Ory Identities right away:
 
 ```
 # If you don't have Ory CLI installed yet:
@@ -47,15 +70,14 @@ ory auth
 ory create project
 ```
 
-Ory Cloud ships administrative user interfaces, hosted pages (e.g. for login or
-registration), support for custom domains, collaborative features for your
-colleagues, integration services, and much more!
 
 <!-- START doctoc generated TOC please keep comment here to allow auto update -->
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 
 **Table of Contents**
 
+- [Ory Kratos on the Ory Network](#ory-kratos-on-the-ory-network)
+  - [Quickstart](#quickstart)
 - [What is Ory Kratos?](#what-is-ory-kratos)
   - [Who is using it?](#who-is-using-it)
 - [Getting Started](#getting-started)
