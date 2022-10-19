@@ -22,11 +22,15 @@
     <a href="https://github.com/ory/kratos/blob/master/CODE_OF_CONDUCT.md" alt="Ory Code of Conduct"><img src="https://img.shields.io/badge/ory-code%20of%20conduct-green" /></a>
 </>
 
-Ory Kratos is _the_ developer-friendly, security-hardened and battle-test Identity, User Management and Authentication system for the Cloud. Finally, it is no longer necessary to implement User Login for the umpteenth time!
+Ory Kratos is _the_ developer-friendly, security-hardened and battle-test
+Identity, User Management and Authentication system for the Cloud. Finally, it
+is no longer necessary to implement User Login for the umpteenth time!
 
 ## Ory Kratos on the Ory Network
 
-The [Ory Network](https://www.ory.sh/cloud) is the fastest, most secure and worry-free way to use Ory's Services. **Ory Identities** is powered by the Ory Kratos open source identity server, and it's fully API-compatible.
+The [Ory Network](https://www.ory.sh/cloud) is the fastest, most secure and
+worry-free way to use Ory's Services. **Ory Identities** is powered by the Ory
+Kratos open source identity server, and it's fully API-compatible.
 
 The Ory Network provides the infrastructure for modern end-to-end security:
 
@@ -52,9 +56,8 @@ Sign up for a
 [**free developer account**](https://console.ory.sh/registration?utm_source=github&utm_medium=banner&utm_campaign=kratos-readme)
 today!
 
-
 ### Quickstart
-  
+
 Install the [Ory CLI](https://www.ory.sh/docs/guides/cli/installation) and
 create a new project to get started with Ory Identities right away:
 
@@ -69,7 +72,6 @@ ory auth
 # Create project
 ory create project
 ```
-
 
 <!-- START doctoc generated TOC please keep comment here to allow auto update -->
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
@@ -728,7 +730,10 @@ You can also run this command from a sub folder.
 
 We use [Cypress](https://www.cypress.io) to run our e2e tests.
 
-⚠️ To run Cypress on ARM based Mac's, at the moment it is [necessary to install Rosetta 2](https://www.cypress.io/blog/2021/01/20/running-cypress-on-the-apple-m1-silicon-arm-architecture-using-rosetta-2/). To install, use the command - `softwareupdate --install-rosetta --agree-to-license`
+⚠️ To run Cypress on ARM based Mac's, at the moment it is
+[necessary to install Rosetta 2](https://www.cypress.io/blog/2021/01/20/running-cypress-on-the-apple-m1-silicon-arm-architecture-using-rosetta-2/).
+To install, use the command -
+`softwareupdate --install-rosetta --agree-to-license`
 
 The simplest way to develop e2e tests is:
 
