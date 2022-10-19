@@ -424,6 +424,18 @@ func TestHandlerAdminSessionManagement(t *testing.T) {
 		s := &Session{Identity: i}
 		require.NoError(t, reg.SessionPersister().UpsertSession(ctx, s))
 
+		t.Run("should list sessions", func(t *testing.T) {
+			req, _ := http.NewRequest("GET", ts.URL+"/admin/sessions/", nil)
+			res, err := client.Do(req)
+			require.NoError(t, err)
+			assert.Equal(t, http.StatusOK, res.StatusCode)
+
+			var sessions []Session
+			require.NoError(t, json.NewDecoder(res.Body).Decode(&sessions))
+			require.Len(t, sessions, 1)
+			assert.Equal(t, s.ID, sessions[0].ID)
+		})
+
 		t.Run("should list session", func(t *testing.T) {
 			req, _ := http.NewRequest("GET", ts.URL+"/admin/identities/"+i.ID.String()+"/sessions", nil)
 			res, err := client.Do(req)

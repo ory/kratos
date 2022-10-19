@@ -108,7 +108,7 @@ func TestPersister(ctx context.Context, conf *config.Config, p interface {
 				})
 			})
 
-			t.Run("method=list by identity", func(t *testing.T) {
+			t.Run("method=listing", func(t *testing.T) {
 				i := identity.NewIdentity("")
 				require.NoError(t, p.CreateIdentity(ctx, i))
 				sess := make([]session.Session, 4)
@@ -177,7 +177,7 @@ func TestPersister(ctx context.Context, conf *config.Config, p interface {
 						},
 					},
 				} {
-					t.Run("case="+tc.desc, func(t *testing.T) {
+					t.Run("case=ListSessionsByIdentity "+tc.desc, func(t *testing.T) {
 						actual, total, err := p.ListSessionsByIdentity(ctx, i.ID, tc.active, 1, 10, tc.except, session.ExpandEverything)
 						require.NoError(t, err)
 
@@ -196,9 +196,64 @@ func TestPersister(ctx context.Context, conf *config.Config, p interface {
 					})
 				}
 
-				t.Run("other network", func(t *testing.T) {
+				for _, tc := range []struct {
+					desc     string
+					except   uuid.UUID
+					expected []session.Session
+					active   *bool
+				}{
+					{
+						desc:     "all",
+						expected: append(sess, expected),
+					},
+					{
+						desc:   "active only",
+						active: pointerx.Bool(true),
+						expected: []session.Session{
+							expected,
+							sess[0],
+							sess[2],
+						},
+					},
+					{
+						desc:   "inactive only",
+						active: pointerx.Bool(false),
+						expected: []session.Session{
+							sess[1],
+							sess[3],
+						},
+					},
+				} {
+					t.Run("case=ListSessions (all) "+tc.desc, func(t *testing.T) {
+						actual, total, err := p.ListSessions(ctx, tc.active, 1, 10, session.ExpandEverything)
+						require.NoError(t, err)
+
+						require.Equal(t, len(tc.expected), len(actual))
+						require.Equal(t, int64(len(tc.expected)), total)
+						for _, es := range tc.expected {
+							found := false
+							for _, as := range actual {
+								if as.ID == es.ID {
+									found = true
+									assert.Equal(t, len(es.Devices), len(as.Devices))
+								}
+							}
+							assert.True(t, found)
+						}
+					})
+				}
+
+				t.Run("ListSessionsByIdentity - other network", func(t *testing.T) {
 					_, other := testhelpers.NewNetwork(t, ctx, p)
 					actual, total, err := other.ListSessionsByIdentity(ctx, i.ID, nil, 1, 10, uuid.Nil, session.ExpandNothing)
+					require.NoError(t, err)
+					require.Equal(t, int64(0), total)
+					assert.Len(t, actual, 0)
+				})
+
+				t.Run("ListSessions - other network", func(t *testing.T) {
+					_, other := testhelpers.NewNetwork(t, ctx, p)
+					actual, total, err := other.ListSessions(ctx, nil, 1, 10, session.ExpandNothing)
 					require.NoError(t, err)
 					require.Equal(t, int64(0), total)
 					assert.Len(t, actual, 0)
