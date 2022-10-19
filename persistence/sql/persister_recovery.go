@@ -268,7 +268,7 @@ func (p *Persister) UseRecoveryCode(ctx context.Context, fID uuid.UUID, codeVal 
 }
 
 func (p *Persister) DeleteRecoveryCodesOfFlow(ctx context.Context, fID uuid.UUID) error {
-	ctx, span := p.r.Tracer(ctx).Tracer().Start(ctx, "persistence.sql.DeleteRecoveryToken")
+	ctx, span := p.r.Tracer(ctx).Tracer().Start(ctx, "persistence.sql.DeleteRecoveryCodesOfFlow")
 	defer span.End()
 
 	/* #nosec G201 TableName is static */
