@@ -40,6 +40,9 @@ context("Registration success with email profile", () => {
         cy.get('[type="checkbox"][name="traits.tos"]').click({ force: true })
 
         cy.submitPasswordForm()
+        if (app === "express") {
+          cy.get('a[href*="sessions"').click()
+        }
         cy.get("pre").should("contain.text", email)
 
         cy.getSession().should((session) => {
@@ -66,6 +69,9 @@ context("Registration success with email profile", () => {
         cy.get('input[name="traits.website"]').type(website)
 
         cy.submitPasswordForm()
+        if (app === "express") {
+          cy.get('a[href*="sessions"').click()
+        }
         cy.get("pre").should("contain.text", email)
 
         cy.getSession().should((session) => {
@@ -113,7 +119,7 @@ context("Registration success with email profile", () => {
       const password = gen.password()
       const website = "https://www.example.org/"
 
-      cy.get(appPrefix("express") + 'input[name="traits"]').should("not.exist")
+      cy.get(`${appPrefix("express")} input[name="traits"]`).should("not.exist")
       cy.get('input[name="traits.email"]').type(email)
       cy.get('input[name="traits.website').type(website)
       cy.get('input[name="password"]').type(password)

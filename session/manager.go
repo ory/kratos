@@ -15,6 +15,9 @@ import (
 // ErrNoActiveSessionFound is returned when no active cookie session could be found in the request.
 type ErrNoActiveSessionFound struct {
 	*herodot.DefaultError `json:"error"`
+
+	// True when the request had no credentials in it.
+	credentialsMissing bool
 }
 
 // NewErrNoActiveSessionFound creates a new ErrNoActiveSessionFound
@@ -22,6 +25,13 @@ func NewErrNoActiveSessionFound() *ErrNoActiveSessionFound {
 	return &ErrNoActiveSessionFound{
 		DefaultError: herodot.ErrUnauthorized.WithID(text.ErrNoActiveSession).WithError("request does not have a valid authentication session").WithReason("No active session was found in this request."),
 	}
+}
+
+// NewErrNoCredentialsForSession creates a new NewErrNoCredentialsForSession
+func NewErrNoCredentialsForSession() *ErrNoActiveSessionFound {
+	e := NewErrNoActiveSessionFound()
+	e.credentialsMissing = true
+	return e
 }
 
 func (e *ErrNoActiveSessionFound) EnhanceJSONError() interface{} {

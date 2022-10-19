@@ -54,15 +54,16 @@ func (p *Persister) GetSession(ctx context.Context, sid uuid.UUID, expandables s
 }
 
 // ListSessionsByIdentity retrieves sessions for an identity from the store.
-func (p *Persister) ListSessionsByIdentity(ctx context.Context, iID uuid.UUID, active *bool, page, perPage int, except uuid.UUID, expandables session.Expandables) ([]*session.Session, error) {
+func (p *Persister) ListSessionsByIdentity(ctx context.Context, iID uuid.UUID, active *bool, page, perPage int, except uuid.UUID, expandables session.Expandables) ([]*session.Session, int64, error) {
 	ctx, span := p.r.Tracer(ctx).Tracer().Start(ctx, "persistence.sql.ListSessionsByIdentity")
 	defer span.End()
 
 	s := make([]*session.Session, 0)
+	t := int64(0)
 	nid := p.NetworkID(ctx)
 
 	if err := p.Transaction(ctx, func(ctx context.Context, c *pop.Connection) error {
-		q := c.Where("identity_id = ? AND nid = ?", iID, nid).Paginate(page, perPage)
+		q := c.Where("identity_id = ? AND nid = ?", iID, nid)
 		if except != uuid.Nil {
 			q = q.Where("id != ?", except)
 		}
@@ -72,7 +73,16 @@ func (p *Persister) ListSessionsByIdentity(ctx context.Context, iID uuid.UUID, a
 		if len(expandables) > 0 {
 			q = q.Eager(expandables.ToEager()...)
 		}
-		if err := q.All(&s); err != nil {
+
+		// Get the total count of matching items
+		total, err := q.Count(new(session.Session))
+		if err != nil {
+			return sqlcon.HandleError(err)
+		}
+		t = int64(total)
+
+		// Get the paginated list of matching items
+		if err := q.Paginate(page, perPage).All(&s); err != nil {
 			return sqlcon.HandleError(err)
 		}
 
@@ -88,10 +98,10 @@ func (p *Persister) ListSessionsByIdentity(ctx context.Context, iID uuid.UUID, a
 		}
 		return nil
 	}); err != nil {
-		return nil, err
+		return nil, 0, err
 	}
 
-	return s, nil
+	return s, t, nil
 }
 
 // UpsertSession creates a session if not found else updates.

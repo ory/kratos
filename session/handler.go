@@ -1,8 +1,10 @@
 package session
 
 import (
+	"fmt"
 	"net/http"
 	"strconv"
+	"time"
 
 	"github.com/ory/x/pointerx"
 
@@ -11,6 +13,7 @@ import (
 	"github.com/pkg/errors"
 
 	"github.com/ory/x/decoderx"
+	"github.com/ory/x/urlx"
 
 	"github.com/ory/herodot"
 
@@ -177,6 +180,11 @@ type toSession struct {
 func (h *Handler) whoami(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	s, err := h.r.SessionManager().FetchFromRequest(r.Context(), r)
 	if err != nil {
+		// We cache errors where no session was found.
+		if noSess := new(ErrNoActiveSessionFound); errors.As(err, &noSess) && noSess.credentialsMissing {
+			w.Header().Set("Ory-Session-Cache-For", fmt.Sprintf("%d", int64(time.Minute.Seconds())))
+		}
+
 		h.r.Audit().WithRequest(r).WithError(err).Info("No valid session cookie found.")
 		h.r.Writer().WriteError(w, r, herodot.ErrUnauthorized.WithWrap(err).WithReasonf("No valid session cookie found."))
 		return
@@ -199,6 +207,7 @@ func (h *Handler) whoami(w http.ResponseWriter, r *http.Request, ps httprouter.P
 
 	// Set userId as the X-Kratos-Authenticated-Identity-Id header.
 	w.Header().Set("X-Kratos-Authenticated-Identity-Id", s.Identity.ID.String())
+	w.Header().Set("Ory-Session-Cache-For", fmt.Sprintf("%d", int64(s.ExpiresAt.Sub(time.Now()).Seconds())))
 
 	if err := h.r.SessionManager().RefreshCookie(r.Context(), w, r, s); err != nil {
 		h.r.Audit().WithRequest(r).WithError(err).Info("Could not re-issue cookie.")
@@ -304,12 +313,13 @@ func (h *Handler) adminListIdentitySessions(w http.ResponseWriter, r *http.Reque
 	}
 
 	page, perPage := x.ParsePagination(r)
-	sess, err := h.r.SessionPersister().ListSessionsByIdentity(r.Context(), iID, active, page, perPage, uuid.Nil, ExpandEverything)
+	sess, total, err := h.r.SessionPersister().ListSessionsByIdentity(r.Context(), iID, active, page, perPage, uuid.Nil, ExpandEverything)
 	if err != nil {
 		h.r.Writer().WriteError(w, r, err)
 		return
 	}
 
+	x.PaginationHeader(w, urlx.AppendPaths(h.r.Config().SelfAdminURL(r.Context()), RouteCollection), total, page, perPage)
 	h.r.Writer().Write(w, r, sess)
 }
 
@@ -448,12 +458,13 @@ func (h *Handler) listSessions(w http.ResponseWriter, r *http.Request, _ httprou
 	}
 
 	page, perPage := x.ParsePagination(r)
-	sess, err := h.r.SessionPersister().ListSessionsByIdentity(r.Context(), s.IdentityID, pointerx.Bool(true), page, perPage, s.ID, ExpandEverything)
+	sess, total, err := h.r.SessionPersister().ListSessionsByIdentity(r.Context(), s.IdentityID, pointerx.Bool(true), page, perPage, s.ID, ExpandEverything)
 	if err != nil {
 		h.r.Writer().WriteError(w, r, err)
 		return
 	}
 
+	x.PaginationHeader(w, urlx.AppendPaths(h.r.Config().SelfAdminURL(r.Context()), RouteCollection), total, page, perPage)
 	h.r.Writer().Write(w, r, sess)
 }
 

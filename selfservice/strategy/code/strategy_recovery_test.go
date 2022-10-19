@@ -59,6 +59,13 @@ func assertMessage(t *testing.T, body []byte, message string) {
 	assert.Equal(t, message, gjson.GetBytes(body, "ui.messages.0.text").String())
 }
 
+func assertFieldMessage(t *testing.T, body []byte, fieldName string, message string) {
+	t.Helper()
+	messages := gjson.GetBytes(body, "ui.nodes.#(attributes.name=="+fieldName+").messages")
+	assert.Len(t, messages.Array(), 1, "expected field %s to have one message, got %s", fieldName, messages)
+	assert.Equal(t, message, messages.Get("0.text").String())
+}
+
 func extractCsrfToken(body []byte) string {
 	return gjson.GetBytes(body, "ui.nodes.#(attributes.name==csrf_token).attributes.value").String()
 }
@@ -935,9 +942,30 @@ func TestRecovery(t *testing.T) {
 		// For good measure, check that the second code works!
 		body = submitRecoveryCode(t, c, body, RecoveryFlowTypeBrowser, recoveryCode2, http.StatusOK)
 		assertMessage(t, []byte(body), "You successfully recovered your account. Please change your password or set up an alternative login method (e.g. social sign in) within the next 60.00 minutes.")
-
 	})
 
+	t.Run("description=should not show outdated validation message if newer message appears #2799", func(t *testing.T) {
+		recoveryEmail := strings.ToLower(testhelpers.RandomEmail())
+		createIdentityToRecover(t, reg, recoveryEmail)
+
+		c := testhelpers.NewClientWithCookies(t)
+		body := expectSuccessfulRecovery(t, c, RecoveryFlowTypeBrowser, func(v url.Values) {
+			v.Set("email", recoveryEmail)
+		})
+
+		action := gjson.Get(body, "ui.action").String()
+		require.NotEmpty(t, action)
+		assert.Equal(t, recoveryEmail, gjson.Get(body, "ui.nodes.#(attributes.name==email).attributes.value").String())
+
+		body = submitRecoveryCode(t, c, body, RecoveryFlowTypeBrowser, "123", http.StatusOK) // Send code that validates field schema
+
+		assertFieldMessage(t, []byte(body), "code", "does not match pattern \"^\\\\d{8}$\"")
+
+		body = submitRecoveryCode(t, c, body, RecoveryFlowTypeBrowser, "12312312", http.StatusOK) // Now send a wrong code that triggers "global" validation error
+
+		assert.Empty(t, gjson.Get(body, "ui.nodes.#(attributes.name==code).messages").Array())
+		assertMessage(t, []byte(body), "The recovery code is invalid or has already been used. Please try again.")
+	})
 }
 
 func TestDisabledStrategy(t *testing.T) {

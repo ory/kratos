@@ -44,6 +44,12 @@ describe("Basic email profile with failing login flows", () => {
 
       describe("shows validation errors when invalid signup data is used", () => {
         it("should show an error when the identifier is missing", () => {
+          // the browser will prevent the form from submitting if the fields are empty since they are required
+          // here we just remove the required attribute to make the form submit
+          cy.removeAttribute(
+            ['input[name="identifier"]', 'input[name="password"]'],
+            "required",
+          )
           cy.submitPasswordForm()
           cy.get('*[data-testid="ui/message/4000002"]').should(
             "contain.text",
@@ -61,11 +67,15 @@ describe("Basic email profile with failing login flows", () => {
             .type(identity)
             .should("have.value", identity)
 
+          // the browser will prevent the form from submitting if the fields are empty since they are required
+          // here we just remove the required attribute to make the form submit
+          cy.removeAttribute(['input[name="password"]'], "required")
+
           cy.submitPasswordForm()
           cy.get('*[data-testid^="ui/message/"]')
             .invoke("text")
             .then((text) => {
-              expect(text).to.be.oneOf([
+              expect(text.trim()).to.be.oneOf([
                 "length must be >= 1, but got 0",
                 "Property password is missing.",
               ])

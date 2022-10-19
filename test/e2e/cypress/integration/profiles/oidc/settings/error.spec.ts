@@ -29,6 +29,7 @@ context("Social Sign In Settings Errors", () => {
         email = gen.email()
 
         cy.registerOidc({
+          app,
           email,
           expectSession: true,
           website,

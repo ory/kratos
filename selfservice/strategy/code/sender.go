@@ -60,7 +60,7 @@ func (s *RecoveryCodeSender) SendRecoveryCode(ctx context.Context, r *http.Reque
 
 	address, err := s.deps.IdentityPool().FindRecoveryAddressByValue(ctx, identity.RecoveryAddressTypeEmail, to)
 	if err != nil {
-		if err := s.send(ctx, string(via), email.NewRecoveryInvalid(s.deps, &email.RecoveryInvalidModel{To: to})); err != nil {
+		if err := s.send(ctx, string(via), email.NewRecoveryCodeInvalid(s.deps, &email.RecoveryCodeInvalidModel{To: to})); err != nil {
 			return err
 		}
 		return ErrUnknownAddress

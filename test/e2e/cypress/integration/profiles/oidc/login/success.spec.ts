@@ -29,15 +29,16 @@ context("Social Sign In Successes", () => {
 
       it("should be able to sign up, sign out, and then sign in", () => {
         const email = gen.email()
-        cy.registerOidc({ email, website, route: registration })
+        cy.registerOidc({ app, email, website, route: registration })
         cy.logout()
         cy.noSession()
-        cy.loginOidc({ url: login })
+        cy.loginOidc({ app, url: login })
       })
 
       it("should be able to sign up with redirects", () => {
         const email = gen.email()
         cy.registerOidc({
+          app,
           email,
           website,
           route: registration + "?return_to=https://www.example.org/",
@@ -45,7 +46,10 @@ context("Social Sign In Successes", () => {
         cy.location("href").should("eq", "https://www.example.org/")
         cy.logout()
         cy.noSession()
-        cy.loginOidc({ url: login + "?return_to=https://www.example.org/" })
+        cy.loginOidc({
+          app,
+          url: login + "?return_to=https://www.example.org/",
+        })
         cy.location("href").should("eq", "https://www.example.org/")
       })
     })
