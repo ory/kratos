@@ -5,15 +5,15 @@ All URIs are relative to *http://localhost*
 Method | HTTP request | Description
 ------------- | ------------- | -------------
 [**AdminCreateIdentity**](V0alpha2Api.md#AdminCreateIdentity) | **Post** /admin/identities | Create an Identity
-[**AdminCreateSelfServiceRecoveryCode**](V0alpha2Api.md#AdminCreateSelfServiceRecoveryCode) | **Post** /admin/recovery/code | Create a Recovery Link
+[**AdminCreateSelfServiceRecoveryCode**](V0alpha2Api.md#AdminCreateSelfServiceRecoveryCode) | **Post** /admin/recovery/code | Create a Recovery Code
 [**AdminCreateSelfServiceRecoveryLink**](V0alpha2Api.md#AdminCreateSelfServiceRecoveryLink) | **Post** /admin/recovery/link | Create a Recovery Link
 [**AdminDeleteIdentity**](V0alpha2Api.md#AdminDeleteIdentity) | **Delete** /admin/identities/{id} | Delete an Identity
-[**AdminDeleteIdentitySessions**](V0alpha2Api.md#AdminDeleteIdentitySessions) | **Delete** /admin/identities/{id}/sessions | Calling this endpoint irrecoverably and permanently deletes and invalidates all sessions that belong to the given Identity.
-[**AdminExtendSession**](V0alpha2Api.md#AdminExtendSession) | **Patch** /admin/sessions/{id}/extend | Calling this endpoint extends the given session ID. If &#x60;session.earliest_possible_extend&#x60; is set it will only extend the session after the specified time has passed.
+[**AdminDeleteIdentitySessions**](V0alpha2Api.md#AdminDeleteIdentitySessions) | **Delete** /admin/identities/{id}/sessions | Delete &amp; Invalidate an Identity&#39;s Sessions
+[**AdminExtendSession**](V0alpha2Api.md#AdminExtendSession) | **Patch** /admin/sessions/{id}/extend | Extend a Session
 [**AdminGetIdentity**](V0alpha2Api.md#AdminGetIdentity) | **Get** /admin/identities/{id} | Get an Identity
 [**AdminListCourierMessages**](V0alpha2Api.md#AdminListCourierMessages) | **Get** /admin/courier/messages | List Messages
 [**AdminListIdentities**](V0alpha2Api.md#AdminListIdentities) | **Get** /admin/identities | List Identities
-[**AdminListIdentitySessions**](V0alpha2Api.md#AdminListIdentitySessions) | **Get** /admin/identities/{id}/sessions | This endpoint returns all sessions that belong to the given Identity.
+[**AdminListIdentitySessions**](V0alpha2Api.md#AdminListIdentitySessions) | **Get** /admin/identities/{id}/sessions | List an Identity&#39;s Sessions
 [**AdminPatchIdentity**](V0alpha2Api.md#AdminPatchIdentity) | **Patch** /admin/identities/{id} | Patch an Identity
 [**AdminUpdateIdentity**](V0alpha2Api.md#AdminUpdateIdentity) | **Put** /admin/identities/{id} | Update an Identity
 [**CreateSelfServiceLogoutFlowUrlForBrowsers**](V0alpha2Api.md#CreateSelfServiceLogoutFlowUrlForBrowsers) | **Get** /self-service/logout/browser | Create a Logout URL for Browsers
@@ -36,9 +36,9 @@ Method | HTTP request | Description
 [**InitializeSelfServiceVerificationFlowForBrowsers**](V0alpha2Api.md#InitializeSelfServiceVerificationFlowForBrowsers) | **Get** /self-service/verification/browser | Initialize Verification Flow for Browser Clients
 [**InitializeSelfServiceVerificationFlowWithoutBrowser**](V0alpha2Api.md#InitializeSelfServiceVerificationFlowWithoutBrowser) | **Get** /self-service/verification/api | Initialize Verification Flow for APIs, Services, Apps, ...
 [**ListIdentitySchemas**](V0alpha2Api.md#ListIdentitySchemas) | **Get** /schemas | 
-[**ListSessions**](V0alpha2Api.md#ListSessions) | **Get** /sessions | This endpoints returns all other active sessions that belong to the logged-in user. The current session can be retrieved by calling the &#x60;/sessions/whoami&#x60; endpoint.
-[**RevokeSession**](V0alpha2Api.md#RevokeSession) | **Delete** /sessions/{id} | Calling this endpoint invalidates the specified session. The current session cannot be revoked. Session data are not deleted.
-[**RevokeSessions**](V0alpha2Api.md#RevokeSessions) | **Delete** /sessions | Calling this endpoint invalidates all except the current session that belong to the logged-in user. Session data are not deleted.
+[**ListSessions**](V0alpha2Api.md#ListSessions) | **Get** /sessions | Get Active Sessions
+[**RevokeSession**](V0alpha2Api.md#RevokeSession) | **Delete** /sessions/{id} | Invalidate a Session
+[**RevokeSessions**](V0alpha2Api.md#RevokeSessions) | **Delete** /sessions | Invalidate all Other Sessions
 [**SubmitSelfServiceLoginFlow**](V0alpha2Api.md#SubmitSelfServiceLoginFlow) | **Post** /self-service/login | Submit a Login Flow
 [**SubmitSelfServiceLogoutFlow**](V0alpha2Api.md#SubmitSelfServiceLogoutFlow) | **Get** /self-service/logout | Complete Self-Service Logout
 [**SubmitSelfServiceLogoutFlowWithoutBrowser**](V0alpha2Api.md#SubmitSelfServiceLogoutFlowWithoutBrowser) | **Delete** /self-service/logout/api | Perform Logout for APIs, Services, Apps, ...
@@ -120,7 +120,7 @@ Name | Type | Description  | Notes
 
 > SelfServiceRecoveryCode AdminCreateSelfServiceRecoveryCode(ctx).AdminCreateSelfServiceRecoveryCodeBody(adminCreateSelfServiceRecoveryCodeBody).Execute()
 
-Create a Recovery Link
+Create a Recovery Code
 
 
 
@@ -320,7 +320,7 @@ Name | Type | Description  | Notes
 
 > AdminDeleteIdentitySessions(ctx, id).Execute()
 
-Calling this endpoint irrecoverably and permanently deletes and invalidates all sessions that belong to the given Identity.
+Delete & Invalidate an Identity's Sessions
 
 
 
@@ -388,7 +388,7 @@ Name | Type | Description  | Notes
 
 > Session AdminExtendSession(ctx, id).Execute()
 
-Calling this endpoint extends the given session ID. If `session.earliest_possible_extend` is set it will only extend the session after the specified time has passed.
+Extend a Session
 
 
 
@@ -670,7 +670,7 @@ Name | Type | Description  | Notes
 
 > []Session AdminListIdentitySessions(ctx, id).PerPage(perPage).Page(page).Active(active).Execute()
 
-This endpoint returns all sessions that belong to the given Identity.
+List an Identity's Sessions
 
 
 
@@ -2220,7 +2220,7 @@ No authorization required
 
 > []Session ListSessions(ctx).XSessionToken(xSessionToken).Cookie(cookie).PerPage(perPage).Page(page).Execute()
 
-This endpoints returns all other active sessions that belong to the logged-in user. The current session can be retrieved by calling the `/sessions/whoami` endpoint.
+Get Active Sessions
 
 
 
@@ -2292,7 +2292,7 @@ No authorization required
 
 > RevokeSession(ctx, id).Execute()
 
-Calling this endpoint invalidates the specified session. The current session cannot be revoked. Session data are not deleted.
+Invalidate a Session
 
 
 
@@ -2360,7 +2360,7 @@ No authorization required
 
 > RevokedSessions RevokeSessions(ctx).XSessionToken(xSessionToken).Cookie(cookie).Execute()
 
-Calling this endpoint invalidates all except the current session that belong to the logged-in user. Session data are not deleted.
+Invalidate all Other Sessions
 
 
 

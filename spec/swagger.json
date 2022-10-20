@@ -487,7 +487,7 @@
             "oryAccessToken": []
           }
         ],
-        "description": "This endpoint is useful for:\n\nListing all sessions that belong to an Identity in an administrative context.",
+        "description": "This endpoint returns all sessions that belong to the given Identity.\n\nThis endpoint is useful for:\n\nListing all sessions that belong to an Identity in an administrative context.",
         "schemes": [
           "http",
           "https"
@@ -495,7 +495,7 @@
         "tags": [
           "v0alpha2"
         ],
-        "summary": "This endpoint returns all sessions that belong to the given Identity.",
+        "summary": "List an Identity's Sessions",
         "operationId": "adminListIdentitySessions",
         "parameters": [
           {
@@ -570,7 +570,7 @@
             "oryAccessToken": []
           }
         ],
-        "description": "This endpoint is useful for:\n\nTo forcefully logout Identity from all devices and sessions",
+        "description": "Calling this endpoint irrecoverably and permanently deletes and invalidates all sessions that belong to the given Identity.\n\nThis endpoint is useful for:\n\nTo forcefully logout Identity from all devices and sessions",
         "schemes": [
           "http",
           "https"
@@ -578,7 +578,7 @@
         "tags": [
           "v0alpha2"
         ],
-        "summary": "Calling this endpoint irrecoverably and permanently deletes and invalidates all sessions that belong to the given Identity.",
+        "summary": "Delete \u0026 Invalidate an Identity's Sessions",
         "operationId": "adminDeleteIdentitySessions",
         "parameters": [
           {
@@ -636,7 +636,7 @@
         "tags": [
           "v0alpha2"
         ],
-        "summary": "Create a Recovery Link",
+        "summary": "Create a Recovery Code",
         "operationId": "adminCreateSelfServiceRecoveryCode",
         "parameters": [
           {
@@ -737,7 +737,7 @@
             "oryAccessToken": []
           }
         ],
-        "description": "Retrieve the session ID from the `/sessions/whoami` endpoint / `toSession` SDK method.",
+        "description": "Calling this endpoint extends the given session ID. If `session.earliest_possible_extend` is set it\nwill only extend the session after the specified time has passed.\n\nRetrieve the session ID from the `/sessions/whoami` endpoint / `toSession` SDK method.",
         "schemes": [
           "http",
           "https"
@@ -745,7 +745,7 @@
         "tags": [
           "v0alpha2"
         ],
-        "summary": "Calling this endpoint extends the given session ID. If `session.earliest_possible_extend` is set it\nwill only extend the session after the specified time has passed.",
+        "summary": "Extend a Session",
         "operationId": "adminExtendSession",
         "parameters": [
           {
@@ -2333,7 +2333,7 @@
     },
     "/sessions": {
       "get": {
-        "description": "This endpoint is useful for:\n\nDisplaying all other sessions that belong to the logged-in user",
+        "description": "This endpoints returns all other active sessions that belong to the logged-in user.\nThe current session can be retrieved by calling the `/sessions/whoami` endpoint.\n\nThis endpoint is useful for:\n\nDisplaying all other sessions that belong to the logged-in user",
         "schemes": [
           "http",
           "https"
@@ -2341,7 +2341,7 @@
         "tags": [
           "v0alpha2"
         ],
-        "summary": "This endpoints returns all other active sessions that belong to the logged-in user.\nThe current session can be retrieved by calling the `/sessions/whoami` endpoint.",
+        "summary": "Get Active Sessions",
         "operationId": "listSessions",
         "parameters": [
           {
@@ -2410,7 +2410,7 @@
         }
       },
       "delete": {
-        "description": "This endpoint is useful for:\n\nTo forcefully logout the current user from all other devices and sessions",
+        "description": "Calling this endpoint invalidates all except the current session that belong to the logged-in user.\nSession data are not deleted.\n\nThis endpoint is useful for:\n\nTo forcefully logout the current user from all other devices and sessions",
         "schemes": [
           "http",
           "https"
@@ -2418,7 +2418,7 @@
         "tags": [
           "v0alpha2"
         ],
-        "summary": "Calling this endpoint invalidates all except the current session that belong to the logged-in user.\nSession data are not deleted.",
+        "summary": "Invalidate all Other Sessions",
         "operationId": "revokeSessions",
         "parameters": [
           {
@@ -2527,7 +2527,7 @@
     },
     "/sessions/{id}": {
       "delete": {
-        "description": "This endpoint is useful for:\n\nTo forcefully logout the current user from another device or session",
+        "description": "Calling this endpoint invalidates the specified session. The current session cannot be revoked.\nSession data are not deleted.\n\nThis endpoint is useful for:\n\nTo forcefully logout the current user from another device or session",
         "schemes": [
           "http",
           "https"
@@ -2535,7 +2535,7 @@
         "tags": [
           "v0alpha2"
         ],
-        "summary": "Calling this endpoint invalidates the specified session. The current session cannot be revoked.\nSession data are not deleted.",
+        "summary": "Invalidate a Session",
         "operationId": "revokeSession",
         "parameters": [
           {

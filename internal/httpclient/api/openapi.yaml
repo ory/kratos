@@ -423,6 +423,8 @@ paths:
   /admin/identities/{id}/sessions:
     delete:
       description: |-
+        Calling this endpoint irrecoverably and permanently deletes and invalidates all sessions that belong to the given Identity.
+
         This endpoint is useful for:
 
         To forcefully logout Identity from all devices and sessions
@@ -466,12 +468,13 @@ paths:
           description: jsonError
       security:
       - oryAccessToken: []
-      summary: Calling this endpoint irrecoverably and permanently deletes and invalidates
-        all sessions that belong to the given Identity.
+      summary: Delete & Invalidate an Identity's Sessions
       tags:
       - v0alpha2
     get:
       description: |-
+        This endpoint returns all sessions that belong to the given Identity.
+
         This endpoint is useful for:
 
         Listing all sessions that belong to an Identity in an administrative context.
@@ -559,7 +562,7 @@ paths:
           description: jsonError
       security:
       - oryAccessToken: []
-      summary: This endpoint returns all sessions that belong to the given Identity.
+      summary: List an Identity's Sessions
       tags:
       - v0alpha2
   /admin/recovery/code:
@@ -599,7 +602,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/jsonError'
           description: jsonError
-      summary: Create a Recovery Link
+      summary: Create a Recovery Code
       tags:
       - v0alpha2
   /admin/recovery/link:
@@ -644,8 +647,11 @@ paths:
       - v0alpha2
   /admin/sessions/{id}/extend:
     patch:
-      description: Retrieve the session ID from the `/sessions/whoami` endpoint /
-        `toSession` SDK method.
+      description: |-
+        Calling this endpoint extends the given session ID. If `session.earliest_possible_extend` is set it
+        will only extend the session after the specified time has passed.
+
+        Retrieve the session ID from the `/sessions/whoami` endpoint / `toSession` SDK method.
       operationId: adminExtendSession
       parameters:
       - description: ID is the session's ID.
@@ -683,9 +689,7 @@ paths:
           description: jsonError
       security:
       - oryAccessToken: []
-      summary: |-
-        Calling this endpoint extends the given session ID. If `session.earliest_possible_extend` is set it
-        will only extend the session after the specified time has passed.
+      summary: Extend a Session
       tags:
       - v0alpha2
   /health/alive:
@@ -2600,6 +2604,9 @@ paths:
   /sessions:
     delete:
       description: |-
+        Calling this endpoint invalidates all except the current session that belong to the logged-in user.
+        Session data are not deleted.
+
         This endpoint is useful for:
 
         To forcefully logout the current user from all other devices and sessions
@@ -2658,13 +2665,14 @@ paths:
               schema:
                 $ref: '#/components/schemas/jsonError'
           description: jsonError
-      summary: |-
-        Calling this endpoint invalidates all except the current session that belong to the logged-in user.
-        Session data are not deleted.
+      summary: Invalidate all Other Sessions
       tags:
       - v0alpha2
     get:
       description: |-
+        This endpoints returns all other active sessions that belong to the logged-in user.
+        The current session can be retrieved by calling the `/sessions/whoami` endpoint.
+
         This endpoint is useful for:
 
         Displaying all other sessions that belong to the logged-in user
@@ -2755,9 +2763,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/jsonError'
           description: jsonError
-      summary: |-
-        This endpoints returns all other active sessions that belong to the logged-in user.
-        The current session can be retrieved by calling the `/sessions/whoami` endpoint.
+      summary: Get Active Sessions
       tags:
       - v0alpha2
   /sessions/whoami:
@@ -2869,6 +2875,9 @@ paths:
   /sessions/{id}:
     delete:
       description: |-
+        Calling this endpoint invalidates the specified session. The current session cannot be revoked.
+        Session data are not deleted.
+
         This endpoint is useful for:
 
         To forcefully logout the current user from another device or session
@@ -2904,9 +2913,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/jsonError'
           description: jsonError
-      summary: |-
-        Calling this endpoint invalidates the specified session. The current session cannot be revoked.
-        Session data are not deleted.
+      summary: Invalidate a Session
       tags:
       - v0alpha2
   /version:
