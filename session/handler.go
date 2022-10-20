@@ -230,6 +230,8 @@ type adminDeleteIdentitySessions struct {
 
 // swagger:route DELETE /admin/identities/{id}/sessions v0alpha2 adminDeleteIdentitySessions
 //
+// # Delete & Invalidate an Identity's Sessions
+//
 // Calling this endpoint irrecoverably and permanently deletes and invalidates all sessions that belong to the given Identity.
 //
 // This endpoint is useful for:
@@ -275,6 +277,8 @@ type adminListIdentitySessions struct {
 }
 
 // swagger:route GET /admin/identities/{id}/sessions v0alpha2 adminListIdentitySessions
+//
+// # List an Identity's Sessions
 //
 // This endpoint returns all sessions that belong to the given Identity.
 //
@@ -331,6 +335,8 @@ type revokeSessions struct {
 
 // swagger:route DELETE /sessions v0alpha2 revokeSessions
 //
+// # Invalidate all Other Sessions
+//
 // Calling this endpoint invalidates all except the current session that belong to the logged-in user.
 // Session data are not deleted.
 //
@@ -374,6 +380,8 @@ type revokeSession struct {
 }
 
 // swagger:route DELETE /sessions/{id} v0alpha2 revokeSession
+//
+// # Invalidate a Session
 //
 // Calling this endpoint invalidates the specified session. The current session cannot be revoked.
 // Session data are not deleted.
@@ -433,6 +441,8 @@ type listSessions struct {
 type sessionList []*Session
 
 // swagger:route GET /sessions v0alpha2 listSessions
+//
+// # Get Active Sessions
 //
 // This endpoints returns all other active sessions that belong to the logged-in user.
 // The current session can be retrieved by calling the `/sessions/whoami` endpoint.
@@ -495,6 +505,8 @@ type adminExtendSession struct {
 }
 
 // swagger:route PATCH /admin/sessions/{id}/extend v0alpha2 adminExtendSession
+//
+// # Extend a Session
 //
 // Calling this endpoint extends the given session ID. If `session.earliest_possible_extend` is set it
 // will only extend the session after the specified time has passed.
