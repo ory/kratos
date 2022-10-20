@@ -207,7 +207,7 @@ func (h *Handler) whoami(w http.ResponseWriter, r *http.Request, ps httprouter.P
 
 	// Set userId as the X-Kratos-Authenticated-Identity-Id header.
 	w.Header().Set("X-Kratos-Authenticated-Identity-Id", s.Identity.ID.String())
-	w.Header().Set("Ory-Session-Cache-For", fmt.Sprintf("%d", int64(s.ExpiresAt.Sub(time.Now()).Seconds())))
+	w.Header().Set("Ory-Session-Cache-For", fmt.Sprintf("%d", int64(time.Until(s.ExpiresAt).Seconds())))
 
 	if err := h.r.SessionManager().RefreshCookie(r.Context(), w, r, s); err != nil {
 		h.r.Audit().WithRequest(r).WithError(err).Info("Could not re-issue cookie.")
