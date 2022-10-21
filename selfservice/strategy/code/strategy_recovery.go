@@ -115,7 +115,7 @@ type selfServiceRecoveryCode struct {
 
 // swagger:route POST /admin/recovery/code v0alpha2 adminCreateSelfServiceRecoveryCode
 //
-// # Create a Recovery Link
+// # Create a Recovery Code
 //
 // This endpoint creates a recovery code which should be given to the user in order for them to recover
 // (or activate) their account.

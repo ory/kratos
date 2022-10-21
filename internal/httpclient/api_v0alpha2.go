@@ -43,7 +43,7 @@ type V0alpha2Api interface {
 	AdminCreateIdentityExecute(r V0alpha2ApiApiAdminCreateIdentityRequest) (*Identity, *http.Response, error)
 
 	/*
-			 * AdminCreateSelfServiceRecoveryCode Create a Recovery Link
+			 * AdminCreateSelfServiceRecoveryCode Create a Recovery Code
 			 * This endpoint creates a recovery code which should be given to the user in order for them to recover
 		(or activate) their account.
 			 * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
@@ -91,8 +91,10 @@ type V0alpha2Api interface {
 	AdminDeleteIdentityExecute(r V0alpha2ApiApiAdminDeleteIdentityRequest) (*http.Response, error)
 
 	/*
-			 * AdminDeleteIdentitySessions Calling this endpoint irrecoverably and permanently deletes and invalidates all sessions that belong to the given Identity.
-			 * This endpoint is useful for:
+			 * AdminDeleteIdentitySessions Delete & Invalidate an Identity's Sessions
+			 * Calling this endpoint irrecoverably and permanently deletes and invalidates all sessions that belong to the given Identity.
+
+		This endpoint is useful for:
 
 		To forcefully logout Identity from all devices and sessions
 			 * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
@@ -107,12 +109,15 @@ type V0alpha2Api interface {
 	AdminDeleteIdentitySessionsExecute(r V0alpha2ApiApiAdminDeleteIdentitySessionsRequest) (*http.Response, error)
 
 	/*
-	 * AdminExtendSession Calling this endpoint extends the given session ID. If `session.earliest_possible_extend` is set it will only extend the session after the specified time has passed.
-	 * Retrieve the session ID from the `/sessions/whoami` endpoint / `toSession` SDK method.
-	 * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
-	 * @param id ID is the session's ID.
-	 * @return V0alpha2ApiApiAdminExtendSessionRequest
-	 */
+			 * AdminExtendSession Extend a Session
+			 * Calling this endpoint extends the given session ID. If `session.earliest_possible_extend` is set it
+		will only extend the session after the specified time has passed.
+
+		Retrieve the session ID from the `/sessions/whoami` endpoint / `toSession` SDK method.
+			 * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
+			 * @param id ID is the session's ID.
+			 * @return V0alpha2ApiApiAdminExtendSessionRequest
+	*/
 	AdminExtendSession(ctx context.Context, id string) V0alpha2ApiApiAdminExtendSessionRequest
 
 	/*
@@ -167,8 +172,10 @@ type V0alpha2Api interface {
 	AdminListIdentitiesExecute(r V0alpha2ApiApiAdminListIdentitiesRequest) ([]Identity, *http.Response, error)
 
 	/*
-			 * AdminListIdentitySessions This endpoint returns all sessions that belong to the given Identity.
-			 * This endpoint is useful for:
+			 * AdminListIdentitySessions List an Identity's Sessions
+			 * This endpoint returns all sessions that belong to the given Identity.
+
+		This endpoint is useful for:
 
 		Listing all sessions that belong to an Identity in an administrative context.
 			 * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
@@ -782,8 +789,11 @@ type V0alpha2Api interface {
 	ListIdentitySchemasExecute(r V0alpha2ApiApiListIdentitySchemasRequest) ([]IdentitySchemaContainer, *http.Response, error)
 
 	/*
-			 * ListSessions This endpoints returns all other active sessions that belong to the logged-in user. The current session can be retrieved by calling the `/sessions/whoami` endpoint.
-			 * This endpoint is useful for:
+			 * ListSessions Get Active Sessions
+			 * This endpoints returns all other active sessions that belong to the logged-in user.
+		The current session can be retrieved by calling the `/sessions/whoami` endpoint.
+
+		This endpoint is useful for:
 
 		Displaying all other sessions that belong to the logged-in user
 			 * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
@@ -798,8 +808,11 @@ type V0alpha2Api interface {
 	ListSessionsExecute(r V0alpha2ApiApiListSessionsRequest) ([]Session, *http.Response, error)
 
 	/*
-			 * RevokeSession Calling this endpoint invalidates the specified session. The current session cannot be revoked. Session data are not deleted.
-			 * This endpoint is useful for:
+			 * RevokeSession Invalidate a Session
+			 * Calling this endpoint invalidates the specified session. The current session cannot be revoked.
+		Session data are not deleted.
+
+		This endpoint is useful for:
 
 		To forcefully logout the current user from another device or session
 			 * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
@@ -814,8 +827,11 @@ type V0alpha2Api interface {
 	RevokeSessionExecute(r V0alpha2ApiApiRevokeSessionRequest) (*http.Response, error)
 
 	/*
-			 * RevokeSessions Calling this endpoint invalidates all except the current session that belong to the logged-in user. Session data are not deleted.
-			 * This endpoint is useful for:
+			 * RevokeSessions Invalidate all Other Sessions
+			 * Calling this endpoint invalidates all except the current session that belong to the logged-in user.
+		Session data are not deleted.
+
+		This endpoint is useful for:
 
 		To forcefully logout the current user from all other devices and sessions
 			 * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
@@ -1309,7 +1325,7 @@ func (r V0alpha2ApiApiAdminCreateSelfServiceRecoveryCodeRequest) Execute() (*Sel
 }
 
 /*
-  - AdminCreateSelfServiceRecoveryCode Create a Recovery Link
+  - AdminCreateSelfServiceRecoveryCode Create a Recovery Code
   - This endpoint creates a recovery code which should be given to the user in order for them to recover
 
 (or activate) their account.
@@ -1716,8 +1732,10 @@ func (r V0alpha2ApiApiAdminDeleteIdentitySessionsRequest) Execute() (*http.Respo
 }
 
 /*
-  - AdminDeleteIdentitySessions Calling this endpoint irrecoverably and permanently deletes and invalidates all sessions that belong to the given Identity.
-  - This endpoint is useful for:
+  - AdminDeleteIdentitySessions Delete & Invalidate an Identity's Sessions
+  - Calling this endpoint irrecoverably and permanently deletes and invalidates all sessions that belong to the given Identity.
+
+This endpoint is useful for:
 
 To forcefully logout Identity from all devices and sessions
   - @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
@@ -1865,12 +1883,16 @@ func (r V0alpha2ApiApiAdminExtendSessionRequest) Execute() (*Session, *http.Resp
 }
 
 /*
- * AdminExtendSession Calling this endpoint extends the given session ID. If `session.earliest_possible_extend` is set it will only extend the session after the specified time has passed.
- * Retrieve the session ID from the `/sessions/whoami` endpoint / `toSession` SDK method.
- * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
- * @param id ID is the session's ID.
- * @return V0alpha2ApiApiAdminExtendSessionRequest
- */
+  - AdminExtendSession Extend a Session
+  - Calling this endpoint extends the given session ID. If `session.earliest_possible_extend` is set it
+
+will only extend the session after the specified time has passed.
+
+Retrieve the session ID from the `/sessions/whoami` endpoint / `toSession` SDK method.
+  - @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
+  - @param id ID is the session's ID.
+  - @return V0alpha2ApiApiAdminExtendSessionRequest
+*/
 func (a *V0alpha2ApiService) AdminExtendSession(ctx context.Context, id string) V0alpha2ApiApiAdminExtendSessionRequest {
 	return V0alpha2ApiApiAdminExtendSessionRequest{
 		ApiService: a,
@@ -2480,8 +2502,10 @@ func (r V0alpha2ApiApiAdminListIdentitySessionsRequest) Execute() ([]Session, *h
 }
 
 /*
-  - AdminListIdentitySessions This endpoint returns all sessions that belong to the given Identity.
-  - This endpoint is useful for:
+  - AdminListIdentitySessions List an Identity's Sessions
+  - This endpoint returns all sessions that belong to the given Identity.
+
+This endpoint is useful for:
 
 Listing all sessions that belong to an Identity in an administrative context.
   - @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
@@ -6015,8 +6039,12 @@ func (r V0alpha2ApiApiListSessionsRequest) Execute() ([]Session, *http.Response,
 }
 
 /*
-  - ListSessions This endpoints returns all other active sessions that belong to the logged-in user. The current session can be retrieved by calling the `/sessions/whoami` endpoint.
-  - This endpoint is useful for:
+  - ListSessions Get Active Sessions
+  - This endpoints returns all other active sessions that belong to the logged-in user.
+
+The current session can be retrieved by calling the `/sessions/whoami` endpoint.
+
+This endpoint is useful for:
 
 Displaying all other sessions that belong to the logged-in user
   - @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
@@ -6170,8 +6198,12 @@ func (r V0alpha2ApiApiRevokeSessionRequest) Execute() (*http.Response, error) {
 }
 
 /*
-  - RevokeSession Calling this endpoint invalidates the specified session. The current session cannot be revoked. Session data are not deleted.
-  - This endpoint is useful for:
+  - RevokeSession Invalidate a Session
+  - Calling this endpoint invalidates the specified session. The current session cannot be revoked.
+
+Session data are not deleted.
+
+This endpoint is useful for:
 
 To forcefully logout the current user from another device or session
   - @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
@@ -6305,8 +6337,12 @@ func (r V0alpha2ApiApiRevokeSessionsRequest) Execute() (*RevokedSessions, *http.
 }
 
 /*
-  - RevokeSessions Calling this endpoint invalidates all except the current session that belong to the logged-in user. Session data are not deleted.
-  - This endpoint is useful for:
+  - RevokeSessions Invalidate all Other Sessions
+  - Calling this endpoint invalidates all except the current session that belong to the logged-in user.
+
+Session data are not deleted.
+
+This endpoint is useful for:
 
 To forcefully logout the current user from all other devices and sessions
   - @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
