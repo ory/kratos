@@ -6,6 +6,10 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/ory/x/pagination/keysetpagination"
+
+	"github.com/ory/x/pagination/tokenpagination"
+
 	"github.com/ory/x/pointerx"
 
 	"github.com/gofrs/uuid"
@@ -95,6 +99,9 @@ func (h *Handler) RegisterPublicRoutes(public *x.RouterPublic) {
 
 	public.DELETE(AdminRouteIdentitiesSessions, x.RedirectToAdminRoute(h.r))
 }
+
+const paginationMaxItems = 1000
+const paginationDefaultItems = 250
 
 // nolint:deadcode,unused
 // swagger:parameters toSession revokeSessions listSessions
@@ -264,16 +271,36 @@ func (h *Handler) adminDeleteIdentitySessions(w http.ResponseWriter, r *http.Req
 	w.WriteHeader(http.StatusNoContent)
 }
 
+// Session List Request
+//
+// The request object for listing sessions in an administrative context.
+//
 // swagger:parameters adminListSessions
 // nolint:deadcode,unused
-type adminListSessions struct {
+type adminListSessionsRequest struct {
+	tokenpagination.RequestParameters
+
 	// Active is a boolean flag that filters out sessions based on the state. If no value is provided, all sessions are returned.
 	//
 	// required: false
 	// in: query
 	Active bool `json:"active"`
+}
 
-	x.PaginationParams
+// Session List Response
+//
+// The response given when listing sessions in an administrative context.
+//
+// swagger:response adminListSessions
+// nolint:deadcode,unused
+type adminListSessionsResponse struct {
+	// The pagination headers
+	// in: header
+	tokenpagination.ResponseHeaders
+
+	// The list of sessions found
+	// in: body
+	Sessions []Session
 }
 
 // swagger:route GET /admin/sessions v0alpha2 adminListSessions
@@ -308,14 +335,25 @@ func (h *Handler) adminListSessions(w http.ResponseWriter, r *http.Request, ps h
 		active = &activeBool
 	}
 
-	page, perPage := x.ParsePagination(r)
-	sess, total, err := h.r.SessionPersister().ListSessions(r.Context(), active, page, perPage, ExpandEverything)
+	// Parse request pagination parameters
+	urlValues := r.URL.Query()
+	opts, err := keysetpagination.Parse(&urlValues)
+	if err != nil {
+		h.r.Writer().WriteError(w, r, herodot.ErrBadRequest.WithError("could not parse parameter page_size"))
+		return
+	}
+
+	opts = append(opts, keysetpagination.WithDefaultSize(paginationDefaultItems))
+	opts = append(opts, keysetpagination.WithMaxSize(paginationMaxItems))
+
+	sess, total, nextPage, err := h.r.SessionPersister().ListSessions(r.Context(), active, keysetpagination.GetPaginator(opts...), ExpandEverything)
 	if err != nil {
 		h.r.Writer().WriteError(w, r, err)
 		return
 	}
 
-	x.PaginationHeader(w, urlx.AppendPaths(h.r.Config().SelfAdminURL(r.Context()), RouteCollection), total, page, perPage)
+	w.Header().Set("x-total-count", fmt.Sprint(total))
+	keysetpagination.Header(w, r.URL, nextPage)
 	h.r.Writer().Write(w, r, sess)
 }
 

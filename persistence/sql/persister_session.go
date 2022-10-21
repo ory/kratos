@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/ory/x/pagination/keysetpagination"
+
 	"github.com/ory/x/stringsx"
 
 	"github.com/gobuffalo/pop/v6"
@@ -53,11 +55,11 @@ func (p *Persister) GetSession(ctx context.Context, sid uuid.UUID, expandables s
 	return &s, nil
 }
 
-func (p *Persister) ListSessions(ctx context.Context, active *bool, page, perPage int, expandables session.Expandables) ([]*session.Session, int64, error) {
+func (p *Persister) ListSessions(ctx context.Context, active *bool, paginator *keysetpagination.Paginator, expandables session.Expandables) ([]session.Session, int64, *keysetpagination.Paginator, error) {
 	ctx, span := p.r.Tracer(ctx).Tracer().Start(ctx, "persistence.sql.ListSessions")
 	defer span.End()
 
-	s := make([]*session.Session, 0)
+	s := make([]session.Session, 0)
 	t := int64(0)
 	nid := p.NetworkID(ctx)
 
@@ -78,26 +80,29 @@ func (p *Persister) ListSessions(ctx context.Context, active *bool, page, perPag
 		t = int64(total)
 
 		// Get the paginated list of matching items
-		if err := q.Paginate(page, perPage).All(&s); err != nil {
+		if err := q.Scope(keysetpagination.Paginate[session.Session](paginator)).All(&s); err != nil {
 			return sqlcon.HandleError(err)
 		}
 
 		if expandables.Has(session.ExpandSessionIdentity) {
-			for _, s := range s {
-				i, err := p.GetIdentity(ctx, s.IdentityID)
+			for index := range s {
+				sess := &(s[index])
+
+				i, err := p.GetIdentity(ctx, sess.IdentityID)
 				if err != nil {
 					return err
 				}
 
-				s.Identity = i
+				sess.Identity = i
 			}
 		}
 		return nil
 	}); err != nil {
-		return nil, 0, err
+		return nil, 0, nil, err
 	}
 
-	return s, t, nil
+	s, nextPage := keysetpagination.Result[session.Session](s, paginator)
+	return s, t, nextPage, nil
 }
 
 // ListSessionsByIdentity retrieves sessions for an identity from the store.
