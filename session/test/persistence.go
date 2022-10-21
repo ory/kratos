@@ -288,7 +288,7 @@ func TestPersister(ctx context.Context, conf *config.Config, p interface {
 					require.Equal(t, 3, len(actual))
 					require.Equal(t, int64(5), total)
 					assert.Equal(t, false, nextPage.IsLast())
-					assert.Equal(t, sess[2].ID.String(), nextPage.Token())
+					assert.Equal(t, actual[len(actual)-1].ID.String(), nextPage.Token())
 					assert.Equal(t, 3, nextPage.Size())
 				})
 
