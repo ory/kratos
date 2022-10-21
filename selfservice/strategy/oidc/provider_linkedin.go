@@ -8,7 +8,6 @@ import (
 	"net/http"
 	"net/url"
 	"strings"
-	"time"
 
 	"github.com/pkg/errors"
 	"golang.org/x/oauth2"
@@ -20,8 +19,30 @@ import (
 )
 
 type Profile struct {
-	LocalizedFirstName string `json:"localizedFirstName"`
 	LocalizedLastName  string `json:"localizedLastName"`
+	LocalizedFirstName string `json:"localizedFirstName"`
+	ProfilePicture     struct {
+		DisplayImage string `json:"displayImage"`
+	} `json:"profilePicture"`
+	FirstName struct {
+		Localized struct {
+			EnUS string `json:"en_US"`
+		} `json:"localized"`
+		PreferredLocale struct {
+			Country  string `json:"country"`
+			Language string `json:"language"`
+		} `json:"preferredLocale"`
+	} `json:"firstName"`
+	LastName struct {
+		Localized struct {
+			EnUS string `json:"en_US"`
+		} `json:"localized"`
+		PreferredLocale struct {
+			Country  string `json:"country"`
+			Language string `json:"language"`
+		} `json:"preferredLocale"`
+	} `json:"lastName"`
+	ID string `json:"id"`
 }
 
 type EmailAddress struct {
@@ -91,7 +112,7 @@ func (l *ProviderLinkedIn) AuthCodeURLOptions(r ider) []oauth2.AuthCodeOption {
 
 func (l *ProviderLinkedIn) ApiCall(url string, result interface{}, exchange *oauth2.Token) error {
 	var bearer = "Bearer " + exchange.AccessToken
-	req, err := http.NewRequest("GET", string(url), nil)
+	req, err := http.NewRequest(http.MethodGet, string(url), nil)
 	if err != nil {
 		return errors.WithStack(err)
 	}
@@ -119,12 +140,14 @@ func (l *ProviderLinkedIn) Introspection(result interface{}, exchange *oauth2.To
 	v.Set("client_id", l.config.ClientID)
 	v.Set("client_secret", l.config.ClientSecret)
 	v.Set("token", exchange.AccessToken)
-	req, err := http.NewRequest("POST", string(IntrospectionURL), strings.NewReader(v.Encode()))
+	req, err := http.NewRequest(http.MethodPost, string(IntrospectionURL), strings.NewReader(v.Encode()))
 	req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
 	if err != nil {
 		return errors.WithStack(err)
 	}
-	client := &http.Client{}
+	client := &http.Client{
+		CheckRedirect: redirectPostOn302,
+	}
 	resp, err := client.Do(req)
 	if err != nil {
 		return errors.WithStack(err)
@@ -142,14 +165,51 @@ func (l *ProviderLinkedIn) Introspection(result interface{}, exchange *oauth2.To
 	return nil
 }
 
+func PrintDebugMessage(header string, message interface{}) {
+	fmt.Println()
+	fmt.Println()
+	fmt.Println()
+	fmt.Println()
+	fmt.Println(header)
+	fmt.Println(message)
+	fmt.Println()
+	fmt.Println()
+	fmt.Println()
+	fmt.Println()
+}
+
+func redirectPostOn302(req *http.Request, via []*http.Request) error {
+	if len(via) >= 10 {
+		return errors.New("stopped after 10 redirects")
+	}
+
+	lastReq := via[len(via)-1]
+	if req.Response.StatusCode == 302 && lastReq.Method == http.MethodPost {
+		req.Method = http.MethodPost
+
+		// Get the body of the original request, set here, since req.Body will be nil if a 302 was returned
+		if via[0].GetBody != nil {
+			var err error
+			req.Body, err = via[0].GetBody()
+			if err != nil {
+				return err
+			}
+			req.ContentLength = via[0].ContentLength
+		}
+	}
+
+	return nil
+}
+
 func (l *ProviderLinkedIn) Claims(ctx context.Context, exchange *oauth2.Token, query url.Values) (*Claims, error) {
 
 	var introspection Introspection
 	var profile Profile
 	var emailaddress EmailAddress
 
-	time.Sleep(50 * time.Millisecond)
+	PrintDebugMessage("Access Token:", exchange.AccessToken)
 	err := l.Introspection(&introspection, exchange)
+	PrintDebugMessage("Introspection:", introspection)
 	if err != nil {
 		return nil, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("%s", err))
 	}
@@ -168,10 +228,15 @@ func (l *ProviderLinkedIn) Claims(ctx context.Context, exchange *oauth2.Token, q
 		return nil, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("%s", err))
 	}
 
+	PrintDebugMessage("Email:", emailaddress.Elements[0].Handle.EmailAddress)
+	PrintDebugMessage("Name:", profile.LocalizedFirstName)
+	PrintDebugMessage("LastName:", profile.LocalizedLastName)
+	PrintDebugMessage("Picture:", profile.ProfilePicture.DisplayImage)
 	claims := &Claims{
 		Email:    emailaddress.Elements[0].Handle.EmailAddress,
 		Name:     profile.LocalizedFirstName,
 		LastName: profile.LocalizedLastName,
+		Picture:  profile.ProfilePicture.DisplayImage,
 	}
 
 	return claims, nil
