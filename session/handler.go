@@ -8,8 +8,6 @@ import (
 
 	"github.com/ory/x/pagination/keysetpagination"
 
-	"github.com/ory/x/pagination/tokenpagination"
-
 	"github.com/ory/x/pointerx"
 
 	"github.com/gofrs/uuid"
@@ -278,7 +276,26 @@ func (h *Handler) adminDeleteIdentitySessions(w http.ResponseWriter, r *http.Req
 // swagger:parameters adminListSessions
 // nolint:deadcode,unused
 type adminListSessionsRequest struct {
-	tokenpagination.RequestParameters
+	// Items per Page
+	//
+	// This is the number of items per page to return.
+	// For details on pagination please head over to the [pagination documentation](https://www.ory.sh/docs/ecosystem/api-design#pagination).
+	//
+	// required: false
+	// in: query
+	// default: 250
+	// min: 1
+	// max: 1000
+	PageSize int `json:"page_size"`
+
+	// Next Page Token
+	//
+	// The next page token.
+	// For details on pagination please head over to the [pagination documentation](https://www.ory.sh/docs/ecosystem/api-design#pagination).
+	//
+	// required: false
+	// in: query
+	PageToken string `json:"page_token"`
 
 	// Active is a boolean flag that filters out sessions based on the state. If no value is provided, all sessions are returned.
 	//
@@ -294,9 +311,13 @@ type adminListSessionsRequest struct {
 // swagger:response adminListSessions
 // nolint:deadcode,unused
 type adminListSessionsResponse struct {
-	// The pagination headers
+	// Links to the first and next page, if one exists.
 	// in: header
-	tokenpagination.ResponseHeaders
+	Link string `json:"link"`
+
+	// Total count of sessions that exist
+	// in: header
+	TotalCount string `json:"x-total-count"`
 
 	// The list of sessions found
 	// in: body
