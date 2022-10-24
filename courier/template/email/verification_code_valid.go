@@ -15,9 +15,10 @@ type (
 		m *VerificationCodeValidModel
 	}
 	VerificationCodeValidModel struct {
-		To              string
-		VerificationURL string
-		Identity        map[string]interface{}
+		To               string
+		VerificationURL  string
+		VerificationCode string
+		Identity         map[string]interface{}
 	}
 )
 

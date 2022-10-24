@@ -3,7 +3,9 @@ package code
 import (
 	"context"
 	"net/http"
+	"net/url"
 
+	"github.com/gofrs/uuid"
 	"github.com/hashicorp/go-retryablehttp"
 	"github.com/pkg/errors"
 
@@ -14,6 +16,7 @@ import (
 	"github.com/ory/x/httpx"
 	"github.com/ory/x/sqlcon"
 	"github.com/ory/x/stringsx"
+	"github.com/ory/x/urlx"
 
 	"github.com/ory/kratos/courier"
 	"github.com/ory/kratos/driver/config"
@@ -155,37 +158,50 @@ func (s *CodeSender) SendVerificationCode(ctx context.Context, f *verification.F
 		return err
 	}
 
-	if err := s.SendVerificationCodeTo(ctx, f, rawCode, code); err != nil {
+	// Get the identity associated with the recovery address
+	i, err := s.deps.IdentityPool().GetIdentity(ctx, address.IdentityID)
+	if err != nil {
+		return err
+	}
+
+	if err := s.SendVerificationCodeTo(ctx, f, i, rawCode, code); err != nil {
 		return err
 	}
 	return nil
 }
 
-func (s *CodeSender) SendVerificationCodeTo(ctx context.Context, f *verification.Flow, codeString string, code *VerificationCode) error {
+func (s *CodeSender) constructVerificationLink(ctx context.Context, fID uuid.UUID, codeStr string) string {
+	return urlx.CopyWithQuery(
+		urlx.AppendPaths(s.deps.Config().SelfServiceLinkMethodBaseURL(ctx), verification.RouteSubmitFlow),
+		url.Values{
+			"flow": {fID.String()},
+			"code": {codeStr},
+		}).String()
+}
+
+func (s *CodeSender) SendVerificationCodeTo(ctx context.Context, f *verification.Flow, i *identity.Identity, codeString string, code *VerificationCode) error {
 	s.deps.Audit().
 		WithField("via", code.VerifiableAddress.Via).
-		WithField("identity_id", code.VerifiableAddress.IdentityID).
+		WithField("identity_id", i.ID).
 		WithField("verification_code_id", code.ID).
 		WithSensitiveField("email_address", code.VerifiableAddress.Value).
 		WithSensitiveField("verification_link_token", codeString).
 		Info("Sending out verification email with verification code.")
 
-	// model, err := x.StructToMap(i)
-	// if err != nil {
-	// 	return err
-	// }
+	model, err := x.StructToMap(i)
+	if err != nil {
+		return err
+	}
 
-	// TODO: add models
-
-	// if err := s.send(ctx, string(code.VerifiableAddress.Via), email.NewVerificationValid(s.deps,
-	// 	&email.VerificationValidModel{To: code.VerifiableAddress.Value, VerificationURL: urlx.CopyWithQuery(
-	// 		urlx.AppendPaths(s.deps.Config().SelfServiceLinkMethodBaseURL(ctx), verification.RouteSubmitFlow),
-	// 		url.Values{
-	// 			"flow":  {f.ID.String()},
-	// 			"token": {token.Token},
-	// 		}).String(), Identity: model})); err != nil {
-	// 	return err
-	// }
+	if err := s.send(ctx, string(code.VerifiableAddress.Via), email.NewVerificationCodeValid(s.deps,
+		&email.VerificationCodeValidModel{
+			To:               code.VerifiableAddress.Value,
+			VerificationURL:  s.constructVerificationLink(ctx, f.ID, codeString),
+			Identity:         model,
+			VerificationCode: codeString,
+		})); err != nil {
+		return err
+	}
 	code.VerifiableAddress.Status = identity.VerifiableAddressStatusSent
 	if err := s.deps.PrivilegedIdentityPool().UpdateVerifiableAddress(ctx, code.VerifiableAddress); err != nil {
 		return err
