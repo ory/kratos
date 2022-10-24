@@ -6,9 +6,10 @@ import (
 	"time"
 
 	"github.com/gofrs/uuid"
+	"github.com/pkg/errors"
+
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/selfservice/flow"
-	"github.com/pkg/errors"
 )
 
 type VerificationCode struct {

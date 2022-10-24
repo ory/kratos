@@ -5,6 +5,8 @@ import (
 	"net/url"
 	"time"
 
+	"github.com/pkg/errors"
+
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/schema"
 	"github.com/ory/kratos/selfservice/flow"
@@ -16,7 +18,6 @@ import (
 	"github.com/ory/x/sqlcon"
 	"github.com/ory/x/sqlxx"
 	"github.com/ory/x/urlx"
-	"github.com/pkg/errors"
 )
 
 func (s *Strategy) VerificationStrategyID() string {
