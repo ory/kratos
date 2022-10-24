@@ -99,13 +99,13 @@ func (h *DefaultHydra) AcceptLoginRequest(ctx context.Context, hlc uuid.UUID, su
 		return "", err
 	}
 
-	resp, r, err := aa.AcceptLoginRequest(context.Background()).LoginChallenge(fmt.Sprintf("%x", hlc)).AcceptLoginRequest(*alr).Execute()
+	resp, r, err := aa.AcceptLoginRequest(ctx).LoginChallenge(fmt.Sprintf("%x", hlc)).AcceptLoginRequest(*alr).Execute()
 	if err != nil {
-		return "", errors.WithStack(herodot.ErrInternalServerError.WithError(err.Error()).WithDetail("status_code", r.StatusCode))
-	}
-
-	if resp == nil {
-		return "", errors.WithStack(herodot.ErrInternalServerError.WithReason("AcceptLoginRequest produced an empty response with no error").WithDetail("status_code", r.StatusCode))
+		err := herodot.ErrInternalServerError.WithWrap(err).WithReasonf("Unable to accept OAuth 2.0 Login Challenge.")
+		if r != nil {
+			err = err.WithDetail("status_code", r.StatusCode)
+		}
+		return "", errors.WithStack(err)
 	}
 
 	return resp.RedirectTo, nil
@@ -121,11 +121,13 @@ func (h *DefaultHydra) GetLoginRequest(ctx context.Context, hlc uuid.NullUUID) (
 		return nil, err
 	}
 
-	hlr, _, err := aa.GetLoginRequest(context.Background()).LoginChallenge(fmt.Sprintf("%x", hlc.UUID)).Execute()
+	hlr, r, err := aa.GetLoginRequest(ctx).LoginChallenge(fmt.Sprintf("%x", hlc.UUID)).Execute()
 	if err != nil {
-		return nil, errors.WithStack(herodot.ErrInternalServerError.WithReason("failed to retrieve login request from Hydra"))
-	} else if hlr == nil {
-		return nil, errors.WithStack(herodot.ErrInternalServerError.WithReason("Hydra returned an empty login request"))
+		err := herodot.ErrInternalServerError.WithWrap(err).WithReasonf("Unable to get OAuth 2.0 Login Challenge.")
+		if r != nil {
+			err = err.WithDetail("status_code", r.StatusCode)
+		}
+		return nil, errors.WithStack(err)
 	}
 
 	return hlr, nil

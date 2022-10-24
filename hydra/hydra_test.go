@@ -1,45 +1,18 @@
 package hydra_test
 
 import (
-	"context"
 	"net/http"
 	"os"
 	"reflect"
 	"testing"
 
 	"github.com/gofrs/uuid"
-	"github.com/pkg/errors"
-	"github.com/stretchr/testify/require"
-
-	"github.com/ory/herodot"
 	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/hydra"
-	"github.com/ory/kratos/internal"
-	"github.com/ory/kratos/internal/testhelpers"
-	"github.com/ory/kratos/x"
 	"github.com/ory/x/configx"
 	"github.com/ory/x/logrusx"
 	"github.com/ory/x/urlx"
 )
-
-func TestGetLoginRequest(t *testing.T) {
-	ctx := context.Background()
-	conf, reg := internal.NewFastRegistryWithMocks(t)
-
-	ok := testhelpers.NewHTTPTestServer(t, http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
-		w.WriteHeader(http.StatusOK)
-	}))
-
-	conf.MustSet(ctx, config.ViperKeyOAuth2ProviderURL, ok.URL)
-	_, err := reg.Hydra().GetLoginRequest(ctx, uuid.NullUUID{Valid: true, UUID: x.NewUUID()})
-	require.Error(t, err)
-	require.Contains(t, errors.Unwrap(err).(*herodot.DefaultError).Reason(), "empty login request")
-
-	conf.MustSet(ctx, config.ViperKeyClientHTTPNoPrivateIPRanges, true)
-	_, err = reg.Hydra().GetLoginRequest(ctx, uuid.NullUUID{Valid: true, UUID: x.NewUUID()})
-	require.Error(t, err)
-	require.NotContains(t, errors.Unwrap(err).(*herodot.DefaultError).Reason(), "empty login request")
-}
 
 func TestGetLoginChallengeID(t *testing.T) {
 	validChallenge := "https://hydra?login_challenge=b346a452-e8fb-4828-8ef8-a4dbc98dc23a"
