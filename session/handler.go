@@ -276,26 +276,7 @@ func (h *Handler) adminDeleteIdentitySessions(w http.ResponseWriter, r *http.Req
 // swagger:parameters adminListSessions
 // nolint:deadcode,unused
 type adminListSessionsRequest struct {
-	// Items per Page
-	//
-	// This is the number of items per page to return.
-	// For details on pagination please head over to the [pagination documentation](https://www.ory.sh/docs/ecosystem/api-design#pagination).
-	//
-	// required: false
-	// in: query
-	// default: 250
-	// min: 1
-	// max: 1000
-	PageSize int `json:"page_size"`
-
-	// Next Page Token
-	//
-	// The next page token.
-	// For details on pagination please head over to the [pagination documentation](https://www.ory.sh/docs/ecosystem/api-design#pagination).
-	//
-	// required: false
-	// in: query
-	PageToken string `json:"page_token"`
+	keysetpagination.RequestParameters
 
 	// Active is a boolean flag that filters out sessions based on the state. If no value is provided, all sessions are returned.
 	//
@@ -311,13 +292,9 @@ type adminListSessionsRequest struct {
 // swagger:response adminListSessions
 // nolint:deadcode,unused
 type adminListSessionsResponse struct {
-	// Links to the first and next page, if one exists.
+	// The pagination headers
 	// in: header
-	Link string `json:"link"`
-
-	// Total count of sessions that exist
-	// in: header
-	TotalCount string `json:"x-total-count"`
+	keysetpagination.ResponseHeaders
 
 	// The list of sessions found
 	// in: body
@@ -366,6 +343,7 @@ func (h *Handler) adminListSessions(w http.ResponseWriter, r *http.Request, ps h
 
 	opts = append(opts, keysetpagination.WithDefaultSize(paginationDefaultItems))
 	opts = append(opts, keysetpagination.WithMaxSize(paginationMaxItems))
+	opts = append(opts, keysetpagination.WithDefaultToken(uuid.Nil.String()))
 
 	sess, total, nextPage, err := h.r.SessionPersister().ListSessions(r.Context(), active, keysetpagination.GetPaginator(opts...), ExpandEverything)
 	if err != nil {
