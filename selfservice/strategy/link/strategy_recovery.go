@@ -18,7 +18,9 @@ import (
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/schema"
 	"github.com/ory/kratos/selfservice/flow"
+	"github.com/ory/kratos/selfservice/flow/login"
 	"github.com/ory/kratos/selfservice/flow/recovery"
+	"github.com/ory/kratos/selfservice/flow/settings"
 	"github.com/ory/kratos/selfservice/strategy"
 	"github.com/ory/kratos/session"
 	"github.com/ory/kratos/text"
@@ -299,7 +301,31 @@ func (s *Strategy) recoveryIssueSession(w http.ResponseWriter, r *http.Request, 
 		return s.retryRecoveryFlowWithError(w, r, flow.TypeBrowser, err)
 	}
 
-	http.Redirect(w, r, sf.AppendTo(s.d.Config().SelfServiceFlowSettingsUI(r.Context())).String(), http.StatusSeeOther)
+	return s.handleAALLevels(w, r, sf, sess, id)
+}
+
+func (s *Strategy) handleAALLevels(w http.ResponseWriter, r *http.Request, sf *settings.Flow, sess *session.Session, id *identity.Identity) error {
+	requiredAAL := s.d.Config().SelfServiceSettingsRequiredAAL(r.Context())
+	if requiredAAL == string(identity.AuthenticatorAssuranceLevel1) {
+		if sess.AuthenticatorAssuranceLevel >= identity.AuthenticatorAssuranceLevel1 {
+			http.Redirect(w, r, sf.AppendTo(s.d.Config().SelfServiceFlowSettingsUI(r.Context())).String(), http.StatusSeeOther)
+			return errors.WithStack(flow.ErrCompletedByStrategy)
+		}
+	}
+	available, err := s.d.IdentityManager().GetIdentityHighestAAL(r.Context(), id.ID)
+	if err != nil {
+		return s.retryRecoveryFlowWithError(w, r, flow.TypeBrowser, err)
+	}
+	if identity.AuthenticatorAssuranceLevel1 >= available {
+		http.Redirect(w, r, sf.AppendTo(s.d.Config().SelfServiceFlowSettingsUI(r.Context())).String(), http.StatusSeeOther)
+		return errors.WithStack(flow.ErrCompletedByStrategy)
+	}
+
+	// Redirect user to login page for 2FA authorization with settings flow as return url
+	// User will provide 2FA authorization and will be redirected to settings flow to update their credentials
+	settingFlowUrl := sf.AppendTo(s.d.Config().SelfServiceFlowSettingsUI(r.Context())).String()
+	loginPath := s.d.Config().SelfPublicURL(r.Context()).JoinPath(login.RouteInitBrowserFlow)
+	http.Redirect(w, r, urlx.CopyWithQuery(loginPath, url.Values{"aal": {"aal2"}, "return_to": {settingFlowUrl}}).String(), http.StatusSeeOther)
 	return errors.WithStack(flow.ErrCompletedByStrategy)
 }
 

@@ -28,6 +28,7 @@ type (
 		courier.Provider
 		ValidationProvider
 		ActiveCredentialsCounterStrategyProvider
+		PrivilegedPoolProvider
 	}
 	ManagementProvider interface {
 		IdentityManager() *Manager
@@ -196,4 +197,24 @@ func (m *Manager) CountActiveMultiFactorCredentials(ctx context.Context, i *Iden
 		count += current
 	}
 	return count, nil
+}
+
+func (m *Manager) GetIdentityHighestAAL(ctx context.Context, identityId uuid.UUID) (available AuthenticatorAssuranceLevel, err error) {
+	available = NoAuthenticatorAssuranceLevel
+	identity, err := m.r.PrivilegedIdentityPool().GetIdentityConfidential(ctx, identityId)
+	if err != nil {
+		return available, err
+	}
+	if firstCount, err := m.CountActiveFirstFactorCredentials(ctx, identity); err != nil {
+		return available, err
+	} else if firstCount > 0 {
+		available = AuthenticatorAssuranceLevel1
+	}
+
+	if secondCount, err := m.CountActiveMultiFactorCredentials(ctx, identity); err != nil {
+		return available, err
+	} else if secondCount > 0 {
+		available = AuthenticatorAssuranceLevel2
+	}
+	return available, nil
 }

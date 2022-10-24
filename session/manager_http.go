@@ -234,25 +234,9 @@ func (s *ManagerHTTP) DoesSessionSatisfy(r *http.Request, sess *Session, request
 			return nil
 		}
 	case config.HighestAvailableAAL:
-		i, err := s.r.PrivilegedIdentityPool().GetIdentityConfidential(r.Context(), sess.IdentityID)
-		if err != nil {
+		if available, err := s.r.IdentityManager().GetIdentityHighestAAL(r.Context(), sess.IdentityID); err != nil {
 			return err
-		}
-
-		available := identity.NoAuthenticatorAssuranceLevel
-		if firstCount, err := s.r.IdentityManager().CountActiveFirstFactorCredentials(r.Context(), i); err != nil {
-			return err
-		} else if firstCount > 0 {
-			available = identity.AuthenticatorAssuranceLevel1
-		}
-
-		if secondCount, err := s.r.IdentityManager().CountActiveMultiFactorCredentials(r.Context(), i); err != nil {
-			return err
-		} else if secondCount > 0 {
-			available = identity.AuthenticatorAssuranceLevel2
-		}
-
-		if sess.AuthenticatorAssuranceLevel >= available {
+		} else if sess.AuthenticatorAssuranceLevel >= available {
 			return nil
 		}
 
