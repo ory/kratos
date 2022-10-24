@@ -5,17 +5,21 @@ import (
 	"net/http"
 
 	"github.com/hashicorp/go-retryablehttp"
+	"github.com/pkg/errors"
 
 	"github.com/ory/herodot"
 	"github.com/ory/kratos/courier/template/email"
 
+	"github.com/ory/x/errorsx"
 	"github.com/ory/x/httpx"
+	"github.com/ory/x/sqlcon"
 	"github.com/ory/x/stringsx"
 
 	"github.com/ory/kratos/courier"
 	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/selfservice/flow/recovery"
+	"github.com/ory/kratos/selfservice/flow/verification"
 	"github.com/ory/kratos/x"
 )
 
@@ -31,6 +35,7 @@ type (
 		config.Provider
 
 		RecoveryCodePersistenceProvider
+		VerificationCodePersistenceProvider
 
 		HTTPClient(ctx context.Context, opts ...httpx.ResilientOptions) *retryablehttp.Client
 	}
@@ -112,6 +117,80 @@ func (s *CodeSender) SendRecoveryCodeTo(ctx context.Context, i *identity.Identit
 	}
 
 	return s.send(ctx, string(code.RecoveryAddress.Via), email.NewRecoveryCodeValid(s.deps, &emailModel))
+}
+
+// SendVerificationCode sends a verification link to the specified address. If the address does not exist in the store, an email is
+// still being sent to prevent account enumeration attacks. In that case, this function returns the ErrUnknownAddress
+// error.
+func (s *CodeSender) SendVerificationCode(ctx context.Context, f *verification.Flow, via identity.VerifiableAddressType, to string) error {
+	s.deps.Logger().
+		WithField("via", via).
+		WithSensitiveField("address", to).
+		Debug("Preparing verification code.")
+
+	address, err := s.deps.IdentityPool().FindVerifiableAddressByValue(ctx, via, to)
+	if err != nil {
+		if errorsx.Cause(err) == sqlcon.ErrNoRows {
+			s.deps.Audit().
+				WithField("via", via).
+				WithSensitiveField("email_address", address).
+				Info("Sending out invalid verification email because address is unknown.")
+			if err := s.send(ctx, string(via), email.NewVerificationInvalid(s.deps, &email.VerificationInvalidModel{To: to})); err != nil {
+				return err
+			}
+			return errors.Cause(ErrUnknownAddress)
+		}
+		return err
+	}
+
+	rawCode := GenerateRecoveryCode()
+	// token := NewSelfServiceVerificationCode(address, f, s.deps.Config().SelfServiceLinkMethodLifespan(ctx))
+	var code *VerificationCode
+	if code, err = s.deps.VerificationCodePersister().CreateVerificationCode(ctx, &CreateVerificationCodeParams{
+		RawCode:           rawCode,
+		ExpiresIn:         s.deps.Config().SelfServiceCodeMethodLifespan(ctx),
+		VerifiableAddress: address,
+		FlowID:            f.ID,
+	}); err != nil {
+		return err
+	}
+
+	if err := s.SendVerificationCodeTo(ctx, f, rawCode, code); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (s *CodeSender) SendVerificationCodeTo(ctx context.Context, f *verification.Flow, codeString string, code *VerificationCode) error {
+	s.deps.Audit().
+		WithField("via", code.VerifiableAddress.Via).
+		WithField("identity_id", code.VerifiableAddress.IdentityID).
+		WithField("verification_code_id", code.ID).
+		WithSensitiveField("email_address", code.VerifiableAddress.Value).
+		WithSensitiveField("verification_link_token", codeString).
+		Info("Sending out verification email with verification code.")
+
+	// model, err := x.StructToMap(i)
+	// if err != nil {
+	// 	return err
+	// }
+
+	// TODO: add models
+
+	// if err := s.send(ctx, string(code.VerifiableAddress.Via), email.NewVerificationValid(s.deps,
+	// 	&email.VerificationValidModel{To: code.VerifiableAddress.Value, VerificationURL: urlx.CopyWithQuery(
+	// 		urlx.AppendPaths(s.deps.Config().SelfServiceLinkMethodBaseURL(ctx), verification.RouteSubmitFlow),
+	// 		url.Values{
+	// 			"flow":  {f.ID.String()},
+	// 			"token": {token.Token},
+	// 		}).String(), Identity: model})); err != nil {
+	// 	return err
+	// }
+	code.VerifiableAddress.Status = identity.VerifiableAddressStatusSent
+	if err := s.deps.PrivilegedIdentityPool().UpdateVerifiableAddress(ctx, code.VerifiableAddress); err != nil {
+		return err
+	}
+	return nil
 }
 
 func (s *CodeSender) send(ctx context.Context, via string, t courier.EmailTemplate) error {

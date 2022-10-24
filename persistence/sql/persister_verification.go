@@ -14,6 +14,7 @@ import (
 	"github.com/ory/x/sqlcon"
 
 	"github.com/ory/kratos/selfservice/flow/verification"
+	"github.com/ory/kratos/selfservice/strategy/code"
 	"github.com/ory/kratos/selfservice/strategy/link"
 )
 
@@ -128,4 +129,12 @@ func (p *Persister) DeleteExpiredVerificationFlows(ctx context.Context, expiresA
 		return sqlcon.HandleError(err)
 	}
 	return nil
+}
+func (p *Persister) UseVerificationCode(ctx context.Context, fID uuid.UUID, codeVal string) (*code.VerificationCode, error) {
+
+	return nil, nil
+}
+
+func (p *Persister) CreateVerificationCode(ctx context.Context, c *code.CreateVerificationCodeParams) (*code.VerificationCode, error) {
+	return nil, nil
 }

@@ -16,4 +16,13 @@ type (
 	RecoveryCodePersistenceProvider interface {
 		RecoveryCodePersister() RecoveryCodePersister
 	}
+
+	VerificationCodePersister interface {
+		CreateVerificationCode(context.Context, *CreateVerificationCodeParams) (*VerificationCode, error)
+		UseVerificationCode(context.Context, uuid.UUID, string) (*VerificationCode, error)
+	}
+
+	VerificationCodePersistenceProvider interface {
+		VerificationCodePersister() VerificationCodePersister
+	}
 )

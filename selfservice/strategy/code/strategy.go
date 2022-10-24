@@ -8,6 +8,7 @@ import (
 	"github.com/ory/kratos/selfservice/errorx"
 	"github.com/ory/kratos/selfservice/flow/recovery"
 	"github.com/ory/kratos/selfservice/flow/settings"
+	"github.com/ory/kratos/selfservice/flow/verification"
 	"github.com/ory/kratos/session"
 	"github.com/ory/kratos/ui/container"
 	"github.com/ory/kratos/ui/node"
@@ -18,6 +19,10 @@ import (
 var _ recovery.Strategy = new(Strategy)
 var _ recovery.AdminHandler = new(Strategy)
 var _ recovery.PublicHandler = new(Strategy)
+
+var _ verification.Strategy = new(Strategy)
+var _ verification.AdminHandler = new(Strategy)
+var _ verification.PublicHandler = new(Strategy)
 
 type (
 	// FlowMethod contains the configuration for this selfservice strategy.
@@ -52,7 +57,12 @@ type (
 		recovery.StrategyProvider
 		recovery.HookExecutorProvider
 
+		verification.FlowPersistenceProvider
+		verification.StrategyProvider
+		verification.HookExecutorProvider
+
 		RecoveryCodePersistenceProvider
+		VerificationCodePersistenceProvider
 		CodeSenderProvider
 
 		schema.IdentityTraitsProvider
