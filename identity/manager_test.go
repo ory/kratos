@@ -2,6 +2,7 @@ package identity_test
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"testing"
 	"time"
@@ -9,6 +10,8 @@ import (
 	"github.com/ory/x/sqlxx"
 
 	"github.com/ory/kratos/internal/testhelpers"
+	"github.com/ory/kratos/selfservice/strategy/lookup"
+	"github.com/ory/kratos/selfservice/strategy/totp"
 
 	"github.com/pkg/errors"
 	"github.com/stretchr/testify/assert"
@@ -198,6 +201,125 @@ func TestManager(t *testing.T) {
 		count, err = reg.IdentityManager().CountActiveMultiFactorCredentials(ctx, id)
 		require.NoError(t, err)
 		assert.Equal(t, 1, count)
+	})
+
+	t.Run("method=GetIdentityHighestAAL", func(t *testing.T) {
+		newIdentity := identity.NewIdentity(config.DefaultIdentityTraitsSchemaID)
+		newIdentity.Traits = newTraits(x.NewUUID().String()+"@ory.sh", "")
+		require.NoError(t, reg.IdentityManager().Create(context.Background(), newIdentity))
+
+		// Create credentials
+		password := identity.Credentials{
+			Type:        identity.CredentialsTypePassword,
+			Identifiers: []string{"foo"},
+			Config:      []byte(`{"hashed_password":"$argon2id$v=19$m=32,t=2,p=4$cm94YnRVOW5jZzFzcVE4bQ$MNzk5BtR2vUhrp6qQEjRNw"}`),
+		}
+
+		oidc, err := identity.NewCredentialsOIDC("id", "token", "refreshToken", "google", newIdentity.ID.String())
+		require.NoError(t, err)
+
+		codes := make([]lookup.RecoveryCode, 12)
+		for k := range codes {
+			var usedAt sqlxx.NullTime
+			codes[k] = lookup.RecoveryCode{Code: fmt.Sprintf("key-%d", k), UsedAt: usedAt}
+		}
+		rc, err := json.Marshal(&lookup.CredentialsConfig{RecoveryCodes: codes})
+		require.NoError(t, err)
+		lookupSecret := identity.Credentials{
+			Type:        identity.CredentialsTypeLookup,
+			Identifiers: []string{newIdentity.ID.String()},
+			Config:      rc,
+		}
+
+		key, err := totp.NewKey(context.Background(), "foo", reg)
+		require.NoError(t, err)
+		totpCredential := identity.Credentials{
+			Type:        identity.CredentialsTypeTOTP,
+			Identifiers: []string{newIdentity.ID.String()},
+			Config:      sqlxx.JSONRawMessage(`{"totp_url":"` + string(key.URL()) + `"}`),
+		}
+
+		webAuthn := identity.Credentials{
+			Type:        identity.CredentialsTypeWebAuthn,
+			Identifiers: []string{"foo"},
+			Config:      []byte(`{"credentials":[{"is_passwordless":false}]}`),
+		}
+
+		// Without credentials -> no AAL
+		aal, err := reg.IdentityManager().GetIdentityHighestAAL(ctx, newIdentity.ID)
+		require.NoError(t, err)
+		assert.Equal(t, identity.NoAuthenticatorAssuranceLevel, aal)
+
+		// With password -> AAL1
+		newIdentity.Credentials = map[identity.CredentialsType]identity.Credentials{
+			identity.CredentialsTypePassword: password,
+		}
+		require.NoError(t, reg.IdentityManager().Update(context.Background(), newIdentity, identity.ManagerAllowWriteProtectedTraits))
+		aal, err = reg.IdentityManager().GetIdentityHighestAAL(ctx, newIdentity.ID)
+		require.NoError(t, err)
+		assert.Equal(t, identity.AuthenticatorAssuranceLevel1, aal)
+
+		// With password and OIDC -> AAL1
+		newIdentity.Credentials = map[identity.CredentialsType]identity.Credentials{
+			identity.CredentialsTypePassword: password,
+			identity.CredentialsTypeOIDC:     *oidc,
+		}
+		require.NoError(t, reg.IdentityManager().Update(context.Background(), newIdentity, identity.ManagerAllowWriteProtectedTraits))
+		aal, err = reg.IdentityManager().GetIdentityHighestAAL(ctx, newIdentity.ID)
+		require.NoError(t, err)
+		assert.Equal(t, identity.AuthenticatorAssuranceLevel1, aal)
+
+		// With password and totp -> AAL2
+		newIdentity.Credentials = map[identity.CredentialsType]identity.Credentials{
+			identity.CredentialsTypePassword: password,
+			identity.CredentialsTypeTOTP:     totpCredential,
+		}
+		require.NoError(t, reg.IdentityManager().Update(context.Background(), newIdentity, identity.ManagerAllowWriteProtectedTraits))
+		aal, err = reg.IdentityManager().GetIdentityHighestAAL(ctx, newIdentity.ID)
+		require.NoError(t, err)
+		assert.Equal(t, identity.AuthenticatorAssuranceLevel2, aal)
+
+		// With oidc and lookup secret -> AAL2
+		newIdentity.Credentials = map[identity.CredentialsType]identity.Credentials{
+			identity.CredentialsTypeOIDC:   *oidc,
+			identity.CredentialsTypeLookup: lookupSecret,
+		}
+		require.NoError(t, reg.IdentityManager().Update(context.Background(), newIdentity, identity.ManagerAllowWriteProtectedTraits))
+		aal, err = reg.IdentityManager().GetIdentityHighestAAL(ctx, newIdentity.ID)
+		require.NoError(t, err)
+		assert.Equal(t, identity.AuthenticatorAssuranceLevel2, aal)
+
+		// With password and webAuthn -> AAL2
+		newIdentity.Credentials = map[identity.CredentialsType]identity.Credentials{
+			identity.CredentialsTypePassword: password,
+			identity.CredentialsTypeWebAuthn: webAuthn,
+		}
+		require.NoError(t, reg.IdentityManager().Update(context.Background(), newIdentity, identity.ManagerAllowWriteProtectedTraits))
+		aal, err = reg.IdentityManager().GetIdentityHighestAAL(ctx, newIdentity.ID)
+		require.NoError(t, err)
+		assert.Equal(t, identity.AuthenticatorAssuranceLevel2, aal)
+
+		// With webAuthn -> AAL2
+		newIdentity.Credentials = map[identity.CredentialsType]identity.Credentials{
+			identity.CredentialsTypeWebAuthn: webAuthn,
+		}
+		require.NoError(t, reg.IdentityManager().Update(context.Background(), newIdentity, identity.ManagerAllowWriteProtectedTraits))
+		aal, err = reg.IdentityManager().GetIdentityHighestAAL(ctx, newIdentity.ID)
+		require.NoError(t, err)
+		assert.Equal(t, identity.AuthenticatorAssuranceLevel2, aal)
+
+		// With password, oidc, totp, lookup secret and webAuthn -> AAL2
+		newIdentity.Credentials = map[identity.CredentialsType]identity.Credentials{
+			identity.CredentialsTypePassword: password,
+			identity.CredentialsTypeOIDC:     *oidc,
+			identity.CredentialsTypeTOTP:     totpCredential,
+			identity.CredentialsTypeLookup:   lookupSecret,
+			identity.CredentialsTypeWebAuthn: webAuthn,
+		}
+		require.NoError(t, reg.IdentityManager().Update(context.Background(), newIdentity, identity.ManagerAllowWriteProtectedTraits))
+		aal, err = reg.IdentityManager().GetIdentityHighestAAL(ctx, newIdentity.ID)
+		require.NoError(t, err)
+		assert.Equal(t, identity.AuthenticatorAssuranceLevel2, aal)
 	})
 
 	t.Run("method=UpdateTraits", func(t *testing.T) {
