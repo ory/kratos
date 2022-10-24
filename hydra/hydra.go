@@ -101,11 +101,13 @@ func (h *DefaultHydra) AcceptLoginRequest(ctx context.Context, hlc uuid.UUID, su
 
 	resp, r, err := aa.AcceptLoginRequest(ctx).LoginChallenge(fmt.Sprintf("%x", hlc)).AcceptLoginRequest(*alr).Execute()
 	if err != nil {
-		err := herodot.ErrInternalServerError.WithWrap(err).WithReasonf("Unable to accept OAuth 2.0 Login Challenge.")
+		innerErr := herodot.ErrInternalServerError.WithWrap(err).WithReasonf("Unable to accept OAuth 2.0 Login Challenge.")
 		if r != nil {
-			err = err.WithDetail("status_code", r.StatusCode)
+			innerErr = innerErr.
+				WithDetail("status_code", r.StatusCode).
+				WithDebugf("error", err.Error())
 		}
-		return "", errors.WithStack(err)
+		return "", errors.WithStack(innerErr)
 	}
 
 	return resp.RedirectTo, nil
@@ -123,11 +125,13 @@ func (h *DefaultHydra) GetLoginRequest(ctx context.Context, hlc uuid.NullUUID) (
 
 	hlr, r, err := aa.GetLoginRequest(ctx).LoginChallenge(fmt.Sprintf("%x", hlc.UUID)).Execute()
 	if err != nil {
-		err := herodot.ErrInternalServerError.WithWrap(err).WithReasonf("Unable to get OAuth 2.0 Login Challenge.")
+		innerErr := herodot.ErrInternalServerError.WithWrap(err).WithReasonf("Unable to get OAuth 2.0 Login Challenge.")
 		if r != nil {
-			err = err.WithDetail("status_code", r.StatusCode)
+			innerErr = innerErr.
+				WithDetail("status_code", r.StatusCode).
+				WithDebugf("error", err.Error())
 		}
-		return nil, errors.WithStack(err)
+		return nil, errors.WithStack(innerErr)
 	}
 
 	return hlr, nil
