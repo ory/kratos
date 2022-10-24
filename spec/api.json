@@ -1328,6 +1328,9 @@
             "description": "The Session Issuance Timestamp\n\nWhen this session was issued at. Usually equal or close to `authenticated_at`.",
             "format": "date-time",
             "type": "string"
+          },
+          "privileged_until": {
+            "$ref": "#/components/schemas/nullTime"
           }
         },
         "required": [

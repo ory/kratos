@@ -4716,6 +4716,7 @@ components:
           schema_url: schema_url
           id: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
           metadata_public: ""
+        privileged_until: 2000-01-23T04:56:07.000+00:00
         authenticated_at: 2000-01-23T04:56:07.000+00:00
         active: true
         id: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
@@ -4766,6 +4767,10 @@ components:
 
             When this session was issued at. Usually equal or close to `authenticated_at`.
           format: date-time
+          type: string
+        privileged_until:
+          format: date-time
+          title: NullTime implements sql.NullTime functionality.
           type: string
       required:
       - id
@@ -5446,6 +5451,7 @@ components:
             schema_url: schema_url
             id: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
             metadata_public: ""
+          privileged_until: 2000-01-23T04:56:07.000+00:00
           authenticated_at: 2000-01-23T04:56:07.000+00:00
           active: true
           id: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
@@ -5581,6 +5587,7 @@ components:
             schema_url: schema_url
             id: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
             metadata_public: ""
+          privileged_until: 2000-01-23T04:56:07.000+00:00
           authenticated_at: 2000-01-23T04:56:07.000+00:00
           active: true
           id: 046b6c7f-0b8a-43b9-b35d-6489e6daee91

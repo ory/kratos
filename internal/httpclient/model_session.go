@@ -33,7 +33,8 @@ type Session struct {
 	Id       string   `json:"id"`
 	Identity Identity `json:"identity"`
 	// The Session Issuance Timestamp  When this session was issued at. Usually equal or close to `authenticated_at`.
-	IssuedAt *time.Time `json:"issued_at,omitempty"`
+	IssuedAt        *time.Time `json:"issued_at,omitempty"`
+	PrivilegedUntil *time.Time `json:"privileged_until,omitempty"`
 }
 
 // NewSession instantiates a new Session object
@@ -327,6 +328,38 @@ func (o *Session) SetIssuedAt(v time.Time) {
 	o.IssuedAt = &v
 }
 
+// GetPrivilegedUntil returns the PrivilegedUntil field value if set, zero value otherwise.
+func (o *Session) GetPrivilegedUntil() time.Time {
+	if o == nil || o.PrivilegedUntil == nil {
+		var ret time.Time
+		return ret
+	}
+	return *o.PrivilegedUntil
+}
+
+// GetPrivilegedUntilOk returns a tuple with the PrivilegedUntil field value if set, nil otherwise
+// and a boolean to check if the value has been set.
+func (o *Session) GetPrivilegedUntilOk() (*time.Time, bool) {
+	if o == nil || o.PrivilegedUntil == nil {
+		return nil, false
+	}
+	return o.PrivilegedUntil, true
+}
+
+// HasPrivilegedUntil returns a boolean if a field has been set.
+func (o *Session) HasPrivilegedUntil() bool {
+	if o != nil && o.PrivilegedUntil != nil {
+		return true
+	}
+
+	return false
+}
+
+// SetPrivilegedUntil gets a reference to the given time.Time and assigns it to the PrivilegedUntil field.
+func (o *Session) SetPrivilegedUntil(v time.Time) {
+	o.PrivilegedUntil = &v
+}
+
 func (o Session) MarshalJSON() ([]byte, error) {
 	toSerialize := map[string]interface{}{}
 	if o.Active != nil {
@@ -355,6 +388,9 @@ func (o Session) MarshalJSON() ([]byte, error) {
 	}
 	if o.IssuedAt != nil {
 		toSerialize["issued_at"] = o.IssuedAt
+	}
+	if o.PrivilegedUntil != nil {
+		toSerialize["privileged_until"] = o.PrivilegedUntil
 	}
 	return json.Marshal(toSerialize)
 }
