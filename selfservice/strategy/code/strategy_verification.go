@@ -10,8 +10,10 @@ import (
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/schema"
 	"github.com/ory/kratos/selfservice/flow"
+	"github.com/ory/kratos/selfservice/flow/recovery"
 	"github.com/ory/kratos/selfservice/flow/verification"
 	"github.com/ory/kratos/text"
+	"github.com/ory/kratos/ui/container"
 	"github.com/ory/kratos/ui/node"
 	"github.com/ory/kratos/x"
 	"github.com/ory/x/decoderx"
@@ -164,15 +166,33 @@ func (s *Strategy) verificationHandleFormSubmission(w http.ResponseWriter, r *ht
 		// Continue execution
 	}
 
+	// re-initialize the UI with a "clean" new state
+	f.UI = &container.Container{
+		Method: "POST",
+		Action: flow.AppendFlowTo(urlx.AppendPaths(s.deps.Config().SelfPublicURL(r.Context()), recovery.RouteSubmitFlow), f.ID).String(),
+	}
+
 	f.UI.SetCSRF(s.deps.GenerateCSRFToken(r))
 	f.UI.GetNodes().Upsert(
-		// v0.5: form.Field{Name: "email", Type: "email", Required: true, Value: body.Body.Email}
 		node.NewInputField("email", body.Email, node.CodeGroup, node.InputAttributeTypeEmail, node.WithRequiredInputAttribute).WithMetaLabel(text.NewInfoNodeInputEmail()),
 	)
 
 	f.Active = sqlxx.NullString(s.VerificationNodeGroup())
 	f.State = verification.StateEmailSent
 	f.UI.Messages.Set(text.NewVerificationEmailSent())
+	f.UI.Nodes.Append(node.NewInputField("code", nil, node.CodeGroup, node.InputAttributeTypeNumber, node.WithRequiredInputAttribute).
+		WithMetaLabel(text.NewInfoNodeLabelVerifyOTP()),
+	)
+	f.UI.Nodes.Append(node.NewInputField("method", s.RecoveryNodeGroup(), node.CodeGroup, node.InputAttributeTypeHidden))
+
+	f.UI.
+		GetNodes().
+		Append(node.NewInputField("method", s.VerificationStrategyID(), node.CodeGroup, node.InputAttributeTypeSubmit).
+			WithMetaLabel(text.NewInfoNodeLabelSubmit()))
+
+	f.UI.Nodes.Append(node.NewInputField("email", body.Email, node.CodeGroup, node.InputAttributeTypeSubmit).
+		WithMetaLabel(text.NewInfoNodeResendOTP()),
+	)
 	if err := s.deps.VerificationFlowPersister().UpdateVerificationFlow(r.Context(), f); err != nil {
 		return s.handleVerificationError(w, r, f, body, err)
 	}
