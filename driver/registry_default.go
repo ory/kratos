@@ -136,7 +136,7 @@ type RegistryDefault struct {
 	selfserviceVerificationExecutor *verification.HookExecutor
 
 	selfserviceLinkSender *link.Sender
-	selfserviceCodeSender *code.RecoveryCodeSender
+	selfserviceCodeSender *code.CodeSender
 
 	selfserviceRecoveryErrorHandler *recovery.ErrorHandler
 	selfserviceRecoveryHandler      *recovery.Handler

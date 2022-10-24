@@ -53,7 +53,7 @@ type (
 		recovery.HookExecutorProvider
 
 		RecoveryCodePersistenceProvider
-		RecoveryCodeSenderProvider
+		CodeSenderProvider
 
 		schema.IdentityTraitsProvider
 	}
