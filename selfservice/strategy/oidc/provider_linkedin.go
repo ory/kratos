@@ -165,19 +165,6 @@ func (l *ProviderLinkedIn) Introspection(result interface{}, exchange *oauth2.To
 	return nil
 }
 
-func PrintDebugMessage(header string, message interface{}) {
-	fmt.Println()
-	fmt.Println()
-	fmt.Println()
-	fmt.Println()
-	fmt.Println(header)
-	fmt.Println(message)
-	fmt.Println()
-	fmt.Println()
-	fmt.Println()
-	fmt.Println()
-}
-
 func redirectPostOn302(req *http.Request, via []*http.Request) error {
 	if len(via) >= 10 {
 		return errors.New("stopped after 10 redirects")
@@ -207,9 +194,7 @@ func (l *ProviderLinkedIn) Claims(ctx context.Context, exchange *oauth2.Token, q
 	var profile Profile
 	var emailaddress EmailAddress
 
-	PrintDebugMessage("Access Token:", exchange.AccessToken)
 	err := l.Introspection(&introspection, exchange)
-	PrintDebugMessage("Introspection:", introspection)
 	if err != nil {
 		return nil, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("%s", err))
 	}
@@ -228,10 +213,6 @@ func (l *ProviderLinkedIn) Claims(ctx context.Context, exchange *oauth2.Token, q
 		return nil, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("%s", err))
 	}
 
-	PrintDebugMessage("Email:", emailaddress.Elements[0].Handle.EmailAddress)
-	PrintDebugMessage("Name:", profile.LocalizedFirstName)
-	PrintDebugMessage("LastName:", profile.LocalizedLastName)
-	PrintDebugMessage("Picture:", profile.ProfilePicture.DisplayImage)
 	claims := &Claims{
 		Email:    emailaddress.Elements[0].Handle.EmailAddress,
 		Name:     profile.LocalizedFirstName,
