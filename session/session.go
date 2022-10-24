@@ -96,11 +96,10 @@ type Session struct {
 
 	// The Privileged Until Timestamp
 	//
-	// The timestamp at which point the session is no longer privileged, as described here:
-	// https://www.ory.sh/docs/kratos/session-management/overview#privileged-sessions. This value is determined
-	// by adding the configured `selfservice.flows.settings.privileged_session_max_age` duration to the
-	// `authenticated_at` time of the session.
-	PrivilegedUntil *sqlxx.NullTime `json:"privileged_until" faker:"-" db:"privileged_until"`
+	// The timestamp at which point the session is no longer [privileged](https://www.ory.sh/docs/kratos/session-management/overview#privileged-sessions).
+	// This value is determined by adding the configured `selfservice.flows.settings.privileged_session_max_age`
+	// duration to the sessions `authenticated_at` time.
+	PrivilegedUntil sqlxx.NullTime `json:"privileged_until" faker:"-" db:"privileged_until"`
 
 	// The Session Authentication Timestamp
 	//
@@ -236,7 +235,7 @@ func (s *Session) Activate(r *http.Request, i *identity.Identity, c lifespanPriv
 
 	s.Active = true
 	s.ExpiresAt = authenticatedAt.Add(c.SessionLifespan(r.Context()))
-	s.SetPrivilegedUntil(
+	s.PrivilegedUntil = sqlxx.NullTime(
 		authenticatedAt.Add(c.SelfServiceFlowSettingsPrivilegedSessionMaxAge(r.Context())),
 	)
 	s.AuthenticatedAt = authenticatedAt
@@ -293,22 +292,14 @@ func (s *Session) IsActive() bool {
 	return s.Active && s.ExpiresAt.After(time.Now()) && (s.Identity == nil || s.Identity.IsActive())
 }
 
-func (s *Session) SetPrivilegedUntil(t time.Time) {
-	until := sqlxx.NullTime(t)
-	s.PrivilegedUntil = &until
-}
-
 func (s *Session) IsPrivileged() bool {
-	if s.PrivilegedUntil == nil {
-		return false
-	}
-	return time.Time(*s.PrivilegedUntil).After(time.Now())
+	return time.Time(s.PrivilegedUntil).After(time.Now())
 }
 
 func (s *Session) Refresh(ctx context.Context, c lifespanPrivilegedProvider) *Session {
 	s.ExpiresAt = time.Now().Add(c.SessionLifespan(ctx)).UTC()
-	s.SetPrivilegedUntil(
-		time.Now().Add(c.SelfServiceFlowSettingsPrivilegedSessionMaxAge(ctx)).UTC(),
+	s.PrivilegedUntil = sqlxx.NullTime(
+		time.Now().Add(c.SelfServiceFlowSettingsPrivilegedSessionMaxAge(ctx)),
 	)
 	return s
 }

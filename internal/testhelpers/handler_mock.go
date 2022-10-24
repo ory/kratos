@@ -19,6 +19,7 @@ import (
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/session"
 	"github.com/ory/kratos/x"
+	"github.com/ory/x/sqlxx"
 )
 
 type mockDeps interface {
@@ -137,13 +138,11 @@ func MockSessionCreateHandlerWithIdentityAndAMR(t *testing.T, reg mockDeps, i *i
 	now := time.Now().UTC()
 	sess.AuthenticatedAt = now
 
-	var priviledgedUntil time.Time
+	var privilegedTime time.Time
 	if privileged {
-		priviledgedUntil = now.Add(time.Minute)
-	} else {
-		priviledgedUntil = now.Add(time.Nanosecond)
+		privilegedTime = now.Add(time.Minute)
 	}
-	sess.SetPrivilegedUntil(priviledgedUntil)
+	sess.PrivilegedUntil = sqlxx.NullTime(privilegedTime)
 
 	sess.IssuedAt = now
 	sess.ExpiresAt = now.Add(time.Hour * 24)

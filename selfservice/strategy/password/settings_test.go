@@ -33,6 +33,7 @@ import (
 	"github.com/ory/x/httpx"
 	"github.com/ory/x/ioutilx"
 	"github.com/ory/x/randx"
+	"github.com/ory/x/sqlxx"
 )
 
 func init() {
@@ -198,7 +199,7 @@ func TestSettings(t *testing.T) {
 				_ = testhelpers.NewSettingsLoginAcceptAPIServer(t, testhelpers.NewSDKCustomClient(publicTS, browserUser1), conf)
 
 				sessionMutator(func(session *session.Session) {
-					session.SetPrivilegedUntil(time.Now().Add(time.Minute))
+					session.PrivilegedUntil = sqlxx.NullTime(time.Now().Add(time.Minute))
 				})
 
 				check(t, expectValidationError(t, false, false, browserUser1, payload))

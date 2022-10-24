@@ -301,7 +301,7 @@ func TestSettingsStrategy(t *testing.T) {
 
 			var runUnauthed = func(t *testing.T) *kratos.SelfServiceSettingsFlow {
 				// Set the session to expire right now, and persist the session
-				agents[agent].Session.SetPrivilegedUntil(time.Now())
+				agents[agent].Session.PrivilegedUntil = sqlxx.NullTime(time.Now())
 				require.NoError(t, reg.SessionPersister().UpsertSession(context.Background(), agents[agent].Session))
 
 				t.Cleanup(reset(t))
@@ -325,7 +325,7 @@ func TestSettingsStrategy(t *testing.T) {
 				req := runUnauthed(t)
 
 				// fake login by increasing the session privileged util value
-				agents[agent].Session.SetPrivilegedUntil(time.Now().Add(time.Minute))
+				agents[agent].Session.PrivilegedUntil = sqlxx.NullTime(time.Now().Add(time.Minute))
 				require.NoError(t, reg.SessionPersister().UpsertSession(context.Background(), agents[agent].Session))
 
 				body, res := testhelpers.HTTPPostForm(t, agents[agent].Client, action(req),
@@ -466,7 +466,7 @@ func TestSettingsStrategy(t *testing.T) {
 			subject = "hackerman+new+google+" + testID
 
 			var runUnauthed = func(t *testing.T) *kratos.SelfServiceSettingsFlow {
-				agents[agent].Session.SetPrivilegedUntil(time.Now())
+				agents[agent].Session.PrivilegedUntil = sqlxx.NullTime(time.Now())
 				require.NoError(t, reg.SessionPersister().UpsertSession(context.Background(), agents[agent].Session))
 
 				t.Cleanup(reset(t))
@@ -490,7 +490,7 @@ func TestSettingsStrategy(t *testing.T) {
 				req := runUnauthed(t)
 
 				// fake login by allowing longer sessions...
-				agents[agent].Session.SetPrivilegedUntil(time.Now().Add(time.Minute))
+				agents[agent].Session.PrivilegedUntil = sqlxx.NullTime(time.Now().Add(time.Minute))
 				require.NoError(t, reg.SessionPersister().UpsertSession(context.Background(), agents[agent].Session))
 
 				body, res := testhelpers.HTTPPostForm(t, agents[agent].Client, action(req),

@@ -350,7 +350,7 @@ func TestStrategyTraits(t *testing.T) {
 
 			t.Run("should update when signed back in", func(t *testing.T) {
 				sessionMutator(func(session *session.Session) {
-					session.SetPrivilegedUntil(time.Now().Add(time.Minute))
+					session.PrivilegedUntil = sqlxx.NullTime(time.Now().Add(time.Minute))
 				})
 				res, err := browserUser1.Get(f.Ui.Action)
 				require.NoError(t, err)
