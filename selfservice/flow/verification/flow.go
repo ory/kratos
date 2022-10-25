@@ -65,6 +65,11 @@ type Flow struct {
 	// required: true
 	UI *container.Container `json:"ui" db:"ui"`
 
+	// SubmitCount is the amount of times this flow has been submitted
+	//
+	// This is important to protect against brute force attacks
+	SubmitCount int `json:"-" db:"submit_count"`
+
 	// State represents the state of this request:
 	//
 	// - choose_method: ask the user to choose a method (e.g. verify your email)

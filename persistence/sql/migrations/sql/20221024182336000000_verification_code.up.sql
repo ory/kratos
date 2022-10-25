@@ -23,3 +23,5 @@ CREATE TABLE identity_verification_codes
         REFERENCES networks (id)
         ON UPDATE RESTRICT ON DELETE CASCADE
 );
+
+ALTER TABLE "selfservice_verification_flows" ADD COLUMN submit_count INT NOT NULL;

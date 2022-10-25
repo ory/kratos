@@ -162,7 +162,7 @@ func (p *Persister) UseVerificationCode(ctx context.Context, fID uuid.UUID, code
 
 			return err
 		}
-		// This check prevents parallel brute force attacks to generate the recovery code
+		// This check prevents parallel brute force attacks to generate the verification code
 		// by checking the submit count inside this database transaction.
 		// If the flow has been submitted more than 5 times, the transaction is aborted (regardless of whether the code was correct or not)
 		// and we thus give no indication whether the supplied code was correct or not. See also https://github.com/ory/kratos/pull/2645#discussion_r984732899
@@ -171,7 +171,7 @@ func (p *Persister) UseVerificationCode(ctx context.Context, fID uuid.UUID, code
 		}
 
 		var verificationCodes []code.VerificationCode
-		if err = sqlcon.HandleError(tx.Where("nid = ? AND selfservice_recovery_flow_id = ?", nid, fID).All(&verificationCodes)); err != nil {
+		if err = sqlcon.HandleError(tx.Where("nid = ? AND selfservice_verification_flow_id = ?", nid, fID).All(&verificationCodes)); err != nil {
 			if errors.Is(err, sqlcon.ErrNoRows) {
 				// Return no error, as that would roll back the transaction
 				return nil

@@ -389,6 +389,10 @@ func (h *Handler) submitFlow(w http.ResponseWriter, r *http.Request, ps httprout
 	var g node.UiNodeGroup
 	var found bool
 	for _, ss := range h.d.AllVerificationStrategies() {
+		if f.Active.String() != "" && f.Active.String() != ss.VerificationStrategyID() {
+			continue
+		}
+
 		err := ss.Verify(w, r, f)
 		if errors.Is(err, flow.ErrStrategyNotResponsible) {
 			continue
