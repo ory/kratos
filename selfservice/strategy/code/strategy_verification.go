@@ -148,35 +148,42 @@ func (s *Strategy) Verify(w http.ResponseWriter, r *http.Request, f *verificatio
 	}
 }
 
-func (s *Strategy) handleLinkClick(w http.ResponseWriter, r *http.Request, f *verification.Flow, code string) error {
-
+func (s *Strategy) createVerificationCodeForm(action string, code *string, email *string) *container.Container {
 	// re-initialize the UI with a "clean" new state
-	f.UI = &container.Container{
+	c := &container.Container{
 		Method: "POST",
-		Action: flow.AppendFlowTo(urlx.AppendPaths(s.deps.Config().SelfPublicURL(r.Context()), verification.RouteSubmitFlow), f.ID).String(),
+		Action: action,
 	}
+
+	c.Messages.Set(text.NewVerificationEmailSent())
+	c.Nodes.Append(
+		node.
+			NewInputField("code", code, node.CodeGroup, node.InputAttributeTypeNumber, node.WithRequiredInputAttribute).
+			WithMetaLabel(text.NewInfoNodeLabelVerifyOTP()),
+	)
+	c.Nodes.Append(node.NewInputField("method", s.VerificationNodeGroup(), node.CodeGroup, node.InputAttributeTypeHidden))
+
+	c.
+		Nodes.
+		Append(node.NewInputField("method", s.VerificationStrategyID(), node.CodeGroup, node.InputAttributeTypeSubmit).
+			WithMetaLabel(text.NewInfoNodeLabelSubmit()))
+
+	if email != nil {
+		c.Nodes.Append(node.NewInputField("email", email, node.CodeGroup, node.InputAttributeTypeSubmit).
+			WithMetaLabel(text.NewInfoNodeResendOTP()),
+		)
+	}
+
+	return c
+}
+
+func (s *Strategy) handleLinkClick(w http.ResponseWriter, r *http.Request, f *verification.Flow, code string) error {
+	f.UI = s.createVerificationCodeForm(flow.AppendFlowTo(urlx.AppendPaths(s.deps.Config().SelfPublicURL(r.Context()), verification.RouteSubmitFlow), f.ID).String(), &code, nil)
 
 	// In the verification flow, we can't enforce CSRF if the flow is opened from an email
 	csrfToken := s.deps.GenerateCSRFToken(r)
 	f.UI.SetCSRF(csrfToken)
 	f.CSRFToken = csrfToken
-
-	f.Active = sqlxx.NullString(s.VerificationNodeGroup())
-	f.State = verification.StateEmailSent
-	f.UI.Messages.Set(text.NewVerificationEmailSent())
-	f.UI.Nodes.Append(node.NewInputField("code", code, node.CodeGroup, node.InputAttributeTypeNumber, node.WithRequiredInputAttribute).
-		WithMetaLabel(text.NewInfoNodeLabelVerifyOTP()),
-	)
-	f.UI.Nodes.Append(node.NewInputField("method", s.VerificationNodeGroup(), node.CodeGroup, node.InputAttributeTypeHidden))
-
-	f.UI.
-		GetNodes().
-		Append(node.NewInputField("method", s.VerificationStrategyID(), node.CodeGroup, node.InputAttributeTypeSubmit).
-			WithMetaLabel(text.NewInfoNodeLabelSubmit()))
-
-	// f.UI.Nodes.Append(node.NewInputField("email", body.Email, node.CodeGroup, node.InputAttributeTypeSubmit).
-	// WithMetaLabel(text.NewInfoNodeResendOTP()),
-	// )
 
 	return s.deps.VerificationFlowPersister().UpdateVerificationFlow(r.Context(), f)
 }
@@ -202,34 +209,11 @@ func (s *Strategy) verificationHandleFormSubmission(w http.ResponseWriter, r *ht
 		}
 		// Continue execution
 	}
-
-	// re-initialize the UI with a "clean" new state
-	f.UI = &container.Container{
-		Method: "POST",
-		Action: flow.AppendFlowTo(urlx.AppendPaths(s.deps.Config().SelfPublicURL(r.Context()), verification.RouteSubmitFlow), f.ID).String(),
-	}
-
-	f.UI.SetCSRF(s.deps.GenerateCSRFToken(r))
-	f.UI.GetNodes().Upsert(
-		node.NewInputField("email", body.Email, node.CodeGroup, node.InputAttributeTypeEmail, node.WithRequiredInputAttribute).WithMetaLabel(text.NewInfoNodeInputEmail()),
-	)
-
-	f.Active = sqlxx.NullString(s.VerificationNodeGroup())
 	f.State = verification.StateEmailSent
-	f.UI.Messages.Set(text.NewVerificationEmailSent())
-	f.UI.Nodes.Append(node.NewInputField("code", nil, node.CodeGroup, node.InputAttributeTypeNumber, node.WithRequiredInputAttribute).
-		WithMetaLabel(text.NewInfoNodeLabelVerifyOTP()),
-	)
-	f.UI.Nodes.Append(node.NewInputField("method", s.VerificationNodeGroup(), node.CodeGroup, node.InputAttributeTypeHidden))
 
-	f.UI.
-		GetNodes().
-		Append(node.NewInputField("method", s.VerificationStrategyID(), node.CodeGroup, node.InputAttributeTypeSubmit).
-			WithMetaLabel(text.NewInfoNodeLabelSubmit()))
+	s.createVerificationCodeForm(flow.AppendFlowTo(urlx.AppendPaths(s.deps.Config().SelfPublicURL(r.Context()), verification.RouteSubmitFlow), f.ID).String(), nil, &body.Email)
+	f.UI.SetCSRF(s.deps.GenerateCSRFToken(r))
 
-	f.UI.Nodes.Append(node.NewInputField("email", body.Email, node.CodeGroup, node.InputAttributeTypeSubmit).
-		WithMetaLabel(text.NewInfoNodeResendOTP()),
-	)
 	if err := s.deps.VerificationFlowPersister().UpdateVerificationFlow(r.Context(), f); err != nil {
 		return s.handleVerificationError(w, r, f, body, err)
 	}
