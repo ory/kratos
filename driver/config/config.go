@@ -148,6 +148,7 @@ const (
 	ViperKeySelfServiceVerificationBrowserDefaultReturnTo    = "selfservice.flows.verification.after." + DefaultBrowserReturnURL
 	ViperKeySelfServiceVerificationAfter                     = "selfservice.flows.verification.after"
 	ViperKeySelfServiceVerificationBeforeHooks               = "selfservice.flows.verification.before.hooks"
+	ViperKeySelfServiceVerificationUse                       = "selfservice.flows.verification.use"
 	ViperKeyDefaultIdentitySchemaID                          = "identity.default_schema_id"
 	ViperKeyIdentitySchemas                                  = "identity.schemas"
 	ViperKeyHasherAlgorithm                                  = "hashers.algorithm"
@@ -642,6 +643,9 @@ func (p *Config) SelfServiceFlowRecoveryBeforeHooks(ctx context.Context) []SelfS
 
 func (p *Config) SelfServiceFlowVerificationBeforeHooks(ctx context.Context) []SelfServiceHook {
 	return p.selfServiceHooks(ctx, ViperKeySelfServiceVerificationBeforeHooks)
+}
+func (p *Config) SelfServiceFlowVerificationUse(ctx context.Context) string {
+	return p.GetProvider(ctx).String(ViperKeySelfServiceVerificationUse)
 }
 
 func (p *Config) SelfServiceFlowSettingsBeforeHooks(ctx context.Context) []SelfServiceHook {

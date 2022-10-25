@@ -1,6 +1,7 @@
 package code
 
 import (
+	"context"
 	"net/http"
 	"net/url"
 	"time"
@@ -277,7 +278,7 @@ func (s *Strategy) retryVerificationFlowWithMessage(w http.ResponseWriter, r *ht
 	s.deps.Logger().WithRequest(r).WithField("message", message).Debug("A verification flow is being retried because a validation error occurred.")
 
 	f, err := verification.NewFlow(s.deps.Config(),
-		s.deps.Config().SelfServiceFlowVerificationRequestLifespan(r.Context()), s.deps.CSRFHandler().RegenerateToken(w, r), r, s.deps.VerificationStrategies(r.Context()), ft)
+		s.deps.Config().SelfServiceFlowVerificationRequestLifespan(r.Context()), s.deps.CSRFHandler().RegenerateToken(w, r), r, s, ft)
 	if err != nil {
 		return s.handleVerificationError(w, r, f, nil, err)
 	}
@@ -301,7 +302,7 @@ func (s *Strategy) retryVerificationFlowWithError(w http.ResponseWriter, r *http
 	s.deps.Logger().WithRequest(r).WithError(verErr).Debug("A verification flow is being retried because an error occurred.")
 
 	f, err := verification.NewFlow(s.deps.Config(),
-		s.deps.Config().SelfServiceFlowVerificationRequestLifespan(r.Context()), s.deps.CSRFHandler().RegenerateToken(w, r), r, s.deps.VerificationStrategies(r.Context()), ft)
+		s.deps.Config().SelfServiceFlowVerificationRequestLifespan(r.Context()), s.deps.CSRFHandler().RegenerateToken(w, r), r, s, ft)
 	if err != nil {
 		return s.handleVerificationError(w, r, f, nil, err)
 	}
@@ -326,4 +327,22 @@ func (s *Strategy) retryVerificationFlowWithError(w http.ResponseWriter, r *http
 	}
 
 	return errors.WithStack(flow.ErrCompletedByStrategy)
+}
+
+func (s *Strategy) SendVerificationEmail(ctx context.Context, f *verification.Flow, i *identity.Identity, a *identity.VerifiableAddress) (err error) {
+
+	rawCode := GenerateRecoveryCode()
+
+	code, err := s.deps.VerificationCodePersister().CreateVerificationCode(ctx, &CreateVerificationCodeParams{
+		RawCode:           rawCode,
+		ExpiresIn:         s.deps.Config().SelfServiceCodeMethodLifespan(ctx),
+		VerifiableAddress: a,
+		FlowID:            f.ID,
+	})
+
+	if err != nil {
+		return err
+	}
+
+	return s.deps.CodeSender().SendVerificationCodeTo(ctx, f, i, rawCode, code)
 }

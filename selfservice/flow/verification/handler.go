@@ -90,7 +90,12 @@ func WithFlowReturnTo(returnTo string) FlowOption {
 }
 
 func (h *Handler) NewVerificationFlow(w http.ResponseWriter, r *http.Request, ft flow.Type, opts ...FlowOption) (*Flow, error) {
-	f, err := NewFlow(h.d.Config(), h.d.Config().SelfServiceFlowVerificationRequestLifespan(r.Context()), h.d.GenerateCSRFToken(r), r, h.d.AllVerificationStrategies(), ft)
+	strategy, err := h.d.GetActiveVerificationStrategy(r.Context())
+	if err != nil {
+		return nil, err
+	}
+
+	f, err := NewFlow(h.d.Config(), h.d.Config().SelfServiceFlowVerificationRequestLifespan(r.Context()), h.d.GenerateCSRFToken(r), r, strategy, ft)
 	if err != nil {
 		return nil, err
 	}

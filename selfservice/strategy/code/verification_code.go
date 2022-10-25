@@ -21,7 +21,7 @@ type VerificationCode struct {
 	ID uuid.UUID `json:"id" db:"id" faker:"-"`
 
 	// CodeHMAC represents the HMACed value of the verification code
-	CodeHMAC string `json:"-" db:"code"`
+	CodeHMAC string `json:"-" db:"code_hmac"`
 
 	// UsedAt is the timestamp of when the code was used or null if it wasn't yet
 	UsedAt sql.NullTime `json:"-" db:"used_at"`
@@ -58,6 +58,18 @@ func (f *VerificationCode) Valid() error {
 		return errors.WithStack(flow.NewFlowExpiredError(f.ExpiresAt))
 	}
 	return nil
+}
+
+func (f *VerificationCode) IsValid() bool {
+	return f.Valid() == nil
+}
+
+func (f VerificationCode) IsExpired() bool {
+	return f.ExpiresAt.Before(time.Now())
+}
+
+func (r VerificationCode) WasUsed() bool {
+	return r.UsedAt.Valid
 }
 
 type CreateVerificationCodeParams struct {

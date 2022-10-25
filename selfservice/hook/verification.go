@@ -9,7 +9,6 @@ import (
 	"github.com/ory/kratos/selfservice/flow/registration"
 	"github.com/ory/kratos/selfservice/flow/settings"
 	"github.com/ory/kratos/selfservice/flow/verification"
-	"github.com/ory/kratos/selfservice/strategy/link"
 	"github.com/ory/kratos/session"
 	"github.com/ory/kratos/x"
 )
@@ -19,8 +18,6 @@ var _ settings.PostHookPostPersistExecutor = new(Verifier)
 
 type (
 	verifierDependencies interface {
-		link.SenderProvider
-		link.VerificationTokenPersistenceProvider
 		config.Provider
 		x.CSRFTokenGeneratorProvider
 		verification.StrategyProvider
@@ -44,8 +41,13 @@ func (e *Verifier) ExecuteSettingsPostPersistHook(w http.ResponseWriter, r *http
 }
 
 func (e *Verifier) do(r *http.Request, i *identity.Identity, f flow.Flow) error {
-	// Ths is called after the identity has been created so we can safely assume that all addresses are available
+	// This is called after the identity has been created so we can safely assume that all addresses are available
 	// already.
+
+	strategy, err := e.r.GetActiveVerificationStrategy(r.Context())
+	if err != nil {
+		return err
+	}
 
 	for k := range i.VerifiableAddresses {
 		address := &i.VerifiableAddresses[k]
@@ -54,7 +56,7 @@ func (e *Verifier) do(r *http.Request, i *identity.Identity, f flow.Flow) error 
 		}
 		verificationFlow, err := verification.NewPostHookFlow(e.r.Config(),
 			e.r.Config().SelfServiceFlowVerificationRequestLifespan(r.Context()),
-			e.r.GenerateCSRFToken(r), r, e.r.VerificationStrategies(r.Context()), f)
+			e.r.GenerateCSRFToken(r), r, strategy, f)
 		if err != nil {
 			return err
 		}
@@ -63,14 +65,10 @@ func (e *Verifier) do(r *http.Request, i *identity.Identity, f flow.Flow) error 
 			return err
 		}
 
-		token := link.NewSelfServiceVerificationToken(address, verificationFlow, e.r.Config().SelfServiceLinkMethodLifespan(r.Context()))
-		if err := e.r.VerificationTokenPersister().CreateVerificationToken(r.Context(), token); err != nil {
+		if err := strategy.SendVerificationEmail(r.Context(), verificationFlow, i, address); err != nil {
 			return err
 		}
 
-		if err := e.r.LinkSender().SendVerificationTokenTo(r.Context(), verificationFlow, i, address, token); err != nil {
-			return err
-		}
 	}
 	return nil
 }
