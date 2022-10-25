@@ -452,7 +452,7 @@ func AssertCommonErrorCases(t *testing.T, reg *driver.RegistryDefault, flows []s
 			actual, res := testhelpers.RegistrationMakeRequest(t, true, false, f, apiClient, "{}")
 			assert.Contains(t, res.Request.URL.String(), publicTS.URL+registration.RouteSubmitFlow)
 			assert.NotEqual(t, "00000000-0000-0000-0000-000000000000", gjson.Get(actual, "use_flow_id").String())
-			assertx.EqualAsJSONExcept(t, flow.NewFlowExpiredError(time.Now()), json.RawMessage(actual), []string{"use_flow_id", "since"}, "expired", "%s", actual)
+			assertx.EqualAsJSONExcept(t, flow.NewFlowExpiredError(time.Now()), json.RawMessage(actual), []string{"use_flow_id", "expired_at", "since"}, "expired", "%s", actual)
 		})
 
 		t.Run("type=spa", func(t *testing.T) {
@@ -463,7 +463,7 @@ func AssertCommonErrorCases(t *testing.T, reg *driver.RegistryDefault, flows []s
 			actual, res := testhelpers.RegistrationMakeRequest(t, false, true, f, browserClient, "{}")
 			assert.Contains(t, res.Request.URL.String(), publicTS.URL+registration.RouteSubmitFlow)
 			assert.NotEqual(t, "00000000-0000-0000-0000-000000000000", gjson.Get(actual, "use_flow_id").String())
-			assertx.EqualAsJSONExcept(t, flow.NewFlowExpiredError(time.Now()), json.RawMessage(actual), []string{"use_flow_id", "since"}, "expired", "%s", actual)
+			assertx.EqualAsJSONExcept(t, flow.NewFlowExpiredError(time.Now()), json.RawMessage(actual), []string{"use_flow_id", "expired_at", "since"}, "expired", "%s", actual)
 		})
 
 		t.Run("type=browser", func(t *testing.T) {

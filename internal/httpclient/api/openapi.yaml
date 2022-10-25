@@ -3911,6 +3911,10 @@ components:
           additionalProperties: {}
           description: Further error details
           type: object
+        expired_at:
+          description: When the flow has expired
+          format: date-time
+          type: string
         id:
           description: |-
             The error ID
