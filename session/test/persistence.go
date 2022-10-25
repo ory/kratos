@@ -271,35 +271,49 @@ func TestPersister(ctx context.Context, conf *config.Config, p interface {
 				})
 
 				t.Run("case=ListSessions page iteration", func(t *testing.T) {
+
+				})
+
+				t.Run("case=ListSessions - other network", func(t *testing.T) {
+					var identity1 identity.Identity
+					require.NoError(t, faker.FakeData(&identity1))
+
+					_, other := testhelpers.NewNetwork(t, ctx, p)
+					require.NoError(t, other.CreateIdentity(ctx, &identity1))
+
+					seedSessionsList := make([]session.Session, 5)
+					for j := range seedSessionsList {
+						require.NoError(t, faker.FakeData(&seedSessionsList[j]))
+						seedSessionsList[j].Identity = &identity1
+						seedSessionsList[j].Active = j%2 == 0
+
+						var device session.Device
+						require.NoError(t, faker.FakeData(&device))
+						seedSessionsList[j].Devices = []session.Device{
+							device,
+						}
+						require.NoError(t, other.UpsertSession(ctx, &seedSessionsList[j]))
+					}
+
 					paginatorOpts := make([]keysetpagination.Option, 0)
 					paginatorOpts = append(paginatorOpts, keysetpagination.WithSize(3))
-					firstPageItems, total, page1, err := p.ListSessions(ctx, nil, paginatorOpts, session.ExpandEverything)
+					firstPageItems, total, page1, err := other.ListSessions(ctx, nil, paginatorOpts, session.ExpandEverything)
 					require.NoError(t, err)
-
-					require.Equal(t, 3, len(firstPageItems))
 					require.Equal(t, int64(5), total)
+					assert.Len(t, firstPageItems, 3)
+
 					assert.Equal(t, false, page1.IsLast())
 					assert.Equal(t, firstPageItems[len(firstPageItems)-1].ID.String(), page1.Token())
 					assert.Equal(t, 3, page1.Size())
 
 					// Validate secondPageItems page
-					secondPageItems, total, page2, err := p.ListSessions(ctx, nil, page1.ToOptions(), session.ExpandEverything)
+					secondPageItems, total, page2, err := other.ListSessions(ctx, nil, page1.ToOptions(), session.ExpandEverything)
 
 					require.NoError(t, err)
-					require.Equal(t, 2, len(secondPageItems))
 					require.Equal(t, int64(5), total)
+					assert.Len(t, secondPageItems, 2)
 					assert.True(t, page2.IsLast())
-					assert.Empty(t, page2.Token())
 					assert.Equal(t, 3, page2.Size())
-				})
-
-				t.Run("case=ListSessions - other network", func(t *testing.T) {
-					_, other := testhelpers.NewNetwork(t, ctx, p)
-					paginatorOpts := make([]keysetpagination.Option, 0)
-					actual, total, _, err := other.ListSessions(ctx, nil, paginatorOpts, session.ExpandNothing)
-					require.NoError(t, err)
-					require.Equal(t, int64(0), total)
-					assert.Len(t, actual, 0)
 				})
 			})
 
