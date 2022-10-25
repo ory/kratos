@@ -892,6 +892,11 @@
             "description": "Further error details",
             "type": "object"
           },
+          "expired_at": {
+            "description": "When the flow has expired",
+            "format": "date-time",
+            "type": "string"
+          },
           "id": {
             "description": "The error ID\n\nUseful when trying to identify various errors in application logic.",
             "type": "string"
