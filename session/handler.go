@@ -343,9 +343,8 @@ func (h *Handler) adminListSessions(w http.ResponseWriter, r *http.Request, ps h
 
 	opts = append(opts, keysetpagination.WithDefaultSize(paginationDefaultItems))
 	opts = append(opts, keysetpagination.WithMaxSize(paginationMaxItems))
-	opts = append(opts, keysetpagination.WithDefaultToken(uuid.Nil.String()))
 
-	sess, total, nextPage, err := h.r.SessionPersister().ListSessions(r.Context(), active, keysetpagination.GetPaginator(opts...), ExpandEverything)
+	sess, total, nextPage, err := h.r.SessionPersister().ListSessions(r.Context(), active, opts, ExpandEverything)
 	if err != nil {
 		h.r.Writer().WriteError(w, r, err)
 		return

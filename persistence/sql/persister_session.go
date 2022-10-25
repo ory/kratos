@@ -55,13 +55,16 @@ func (p *Persister) GetSession(ctx context.Context, sid uuid.UUID, expandables s
 	return &s, nil
 }
 
-func (p *Persister) ListSessions(ctx context.Context, active *bool, paginator *keysetpagination.Paginator, expandables session.Expandables) ([]session.Session, int64, *keysetpagination.Paginator, error) {
+func (p *Persister) ListSessions(ctx context.Context, active *bool, paginatorOpts []keysetpagination.Option, expandables session.Expandables) ([]session.Session, int64, *keysetpagination.Paginator, error) {
 	ctx, span := p.r.Tracer(ctx).Tracer().Start(ctx, "persistence.sql.ListSessions")
 	defer span.End()
 
 	s := make([]session.Session, 0)
 	t := int64(0)
 	nid := p.NetworkID(ctx)
+
+	paginatorOpts = append(paginatorOpts, keysetpagination.WithDefaultToken(uuid.Nil.String()))
+	paginator := keysetpagination.GetPaginator(paginatorOpts...)
 
 	if err := p.Transaction(ctx, func(ctx context.Context, c *pop.Connection) error {
 		q := c.Where("nid = ?", nid)
