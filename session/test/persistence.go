@@ -281,6 +281,7 @@ func TestPersister(ctx context.Context, conf *config.Config, p interface {
 					_, other := testhelpers.NewNetwork(t, ctx, p)
 					require.NoError(t, other.CreateIdentity(ctx, &identity1))
 
+					expectedIDs := make([]uuid.UUID, 5)
 					seedSessionsList := make([]session.Session, 5)
 					for j := range seedSessionsList {
 						require.NoError(t, faker.FakeData(&seedSessionsList[j]))
@@ -293,6 +294,7 @@ func TestPersister(ctx context.Context, conf *config.Config, p interface {
 							device,
 						}
 						require.NoError(t, other.UpsertSession(ctx, &seedSessionsList[j]))
+						expectedIDs[j] = seedSessionsList[j].ID
 					}
 
 					paginatorOpts := make([]keysetpagination.Option, 0)
@@ -308,8 +310,14 @@ func TestPersister(ctx context.Context, conf *config.Config, p interface {
 
 					// Validate secondPageItems page
 					secondPageItems, total, page2, err := other.ListSessions(ctx, nil, page1.ToOptions(), session.ExpandEverything)
-
 					require.NoError(t, err)
+
+					acutalIDs := make([]uuid.UUID, 0)
+					for _, s := range append(firstPageItems, secondPageItems...) {
+						acutalIDs = append(acutalIDs, s.ID)
+					}
+					assert.ElementsMatch(t, expectedIDs, acutalIDs)
+
 					require.Equal(t, int64(5), total)
 					assert.Len(t, secondPageItems, 2)
 					assert.True(t, page2.IsLast())

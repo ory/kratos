@@ -71,7 +71,7 @@ func (p *Persister) ListSessions(ctx context.Context, active *bool, paginatorOpt
 	paginator := keysetpagination.GetPaginator(paginatorOpts...)
 
 	if err := p.Transaction(ctx, func(ctx context.Context, c *pop.Connection) error {
-		q := c.Where("nid = ?", nid)
+		q := c.Where("nid = ?", nid).Order("id ASC")
 		if active != nil {
 			q = q.Where("active = ?", *active)
 		}
