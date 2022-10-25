@@ -270,7 +270,7 @@ func TestPersister(ctx context.Context, conf *config.Config, p interface {
 					assert.Equal(t, 250, page.Size())
 				})
 
-				t.Run("case=ListSessions first page", func(t *testing.T) {
+				t.Run("case=ListSessions page iteration", func(t *testing.T) {
 					paginatorOpts := make([]keysetpagination.Option, 0)
 					paginatorOpts = append(paginatorOpts, keysetpagination.WithSize(3))
 					firstPageItems, total, page1, err := p.ListSessions(ctx, nil, paginatorOpts, session.ExpandEverything)
