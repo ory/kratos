@@ -118,8 +118,9 @@ func NewFlow(conf *config.Config, exp time.Duration, csrf string, r *http.Reques
 	}
 
 	f := &Flow{
-		ID:        id,
-		ExpiresAt: now.Add(exp), IssuedAt: now,
+		ID:         id,
+		ExpiresAt:  now.Add(exp),
+		IssuedAt:   now,
 		RequestURL: requestURL,
 		UI: &container.Container{
 			Method: "POST",
@@ -131,7 +132,7 @@ func NewFlow(conf *config.Config, exp time.Duration, csrf string, r *http.Reques
 	}
 
 	if strategy != nil {
-		// flow.Active = sqlxx.NullString(strategy.RecoveryNodeGroup())
+		f.Active = sqlxx.NullString(strategy.VerificationNodeGroup())
 		if err := strategy.PopulateVerificationMethod(r, f); err != nil {
 			return nil, err
 		}

@@ -11,7 +11,6 @@ import (
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/schema"
 	"github.com/ory/kratos/selfservice/flow"
-	"github.com/ory/kratos/selfservice/flow/recovery"
 	"github.com/ory/kratos/selfservice/flow/verification"
 	"github.com/ory/kratos/text"
 	"github.com/ory/kratos/ui/container"
@@ -121,6 +120,10 @@ func (s *Strategy) Verify(w http.ResponseWriter, r *http.Request, f *verificatio
 			return s.handleVerificationError(w, r, nil, body, err)
 		}
 
+		if r.Method == http.MethodGet {
+			return s.handleLinkClick(w, r, f, body.Code)
+		}
+
 		return s.verificationUseToken(w, r, body, f)
 	}
 
@@ -143,6 +146,39 @@ func (s *Strategy) Verify(w http.ResponseWriter, r *http.Request, f *verificatio
 	default:
 		return s.retryVerificationFlowWithMessage(w, r, f.Type, text.NewErrorValidationVerificationStateFailure())
 	}
+}
+
+func (s *Strategy) handleLinkClick(w http.ResponseWriter, r *http.Request, f *verification.Flow, code string) error {
+
+	// re-initialize the UI with a "clean" new state
+	f.UI = &container.Container{
+		Method: "POST",
+		Action: flow.AppendFlowTo(urlx.AppendPaths(s.deps.Config().SelfPublicURL(r.Context()), verification.RouteSubmitFlow), f.ID).String(),
+	}
+
+	// In the verification flow, we can't enforce CSRF if the flow is opened from an email
+	csrfToken := s.deps.GenerateCSRFToken(r)
+	f.UI.SetCSRF(csrfToken)
+	f.CSRFToken = csrfToken
+
+	f.Active = sqlxx.NullString(s.VerificationNodeGroup())
+	f.State = verification.StateEmailSent
+	f.UI.Messages.Set(text.NewVerificationEmailSent())
+	f.UI.Nodes.Append(node.NewInputField("code", code, node.CodeGroup, node.InputAttributeTypeNumber, node.WithRequiredInputAttribute).
+		WithMetaLabel(text.NewInfoNodeLabelVerifyOTP()),
+	)
+	f.UI.Nodes.Append(node.NewInputField("method", s.VerificationNodeGroup(), node.CodeGroup, node.InputAttributeTypeHidden))
+
+	f.UI.
+		GetNodes().
+		Append(node.NewInputField("method", s.VerificationStrategyID(), node.CodeGroup, node.InputAttributeTypeSubmit).
+			WithMetaLabel(text.NewInfoNodeLabelSubmit()))
+
+	// f.UI.Nodes.Append(node.NewInputField("email", body.Email, node.CodeGroup, node.InputAttributeTypeSubmit).
+	// WithMetaLabel(text.NewInfoNodeResendOTP()),
+	// )
+
+	return s.deps.VerificationFlowPersister().UpdateVerificationFlow(r.Context(), f)
 }
 
 func (s *Strategy) verificationHandleFormSubmission(w http.ResponseWriter, r *http.Request, f *verification.Flow) error {
@@ -170,7 +206,7 @@ func (s *Strategy) verificationHandleFormSubmission(w http.ResponseWriter, r *ht
 	// re-initialize the UI with a "clean" new state
 	f.UI = &container.Container{
 		Method: "POST",
-		Action: flow.AppendFlowTo(urlx.AppendPaths(s.deps.Config().SelfPublicURL(r.Context()), recovery.RouteSubmitFlow), f.ID).String(),
+		Action: flow.AppendFlowTo(urlx.AppendPaths(s.deps.Config().SelfPublicURL(r.Context()), verification.RouteSubmitFlow), f.ID).String(),
 	}
 
 	f.UI.SetCSRF(s.deps.GenerateCSRFToken(r))
@@ -184,7 +220,7 @@ func (s *Strategy) verificationHandleFormSubmission(w http.ResponseWriter, r *ht
 	f.UI.Nodes.Append(node.NewInputField("code", nil, node.CodeGroup, node.InputAttributeTypeNumber, node.WithRequiredInputAttribute).
 		WithMetaLabel(text.NewInfoNodeLabelVerifyOTP()),
 	)
-	f.UI.Nodes.Append(node.NewInputField("method", s.RecoveryNodeGroup(), node.CodeGroup, node.InputAttributeTypeHidden))
+	f.UI.Nodes.Append(node.NewInputField("method", s.VerificationNodeGroup(), node.CodeGroup, node.InputAttributeTypeHidden))
 
 	f.UI.
 		GetNodes().
