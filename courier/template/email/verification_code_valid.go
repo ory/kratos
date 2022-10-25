@@ -31,17 +31,17 @@ func (t *VerificationCodeValid) EmailRecipient() (string, error) {
 }
 
 func (t *VerificationCodeValid) EmailSubject(ctx context.Context) (string, error) {
-	subject, err := template.LoadText(ctx, t.d, os.DirFS(t.d.CourierConfig().CourierTemplatesRoot(ctx)), "verification/valid/email.subject.gotmpl", "verification/valid/email.subject*", t.m, t.d.CourierConfig().CourierTemplatesVerificationValid(ctx).Subject)
+	subject, err := template.LoadText(ctx, t.d, os.DirFS(t.d.CourierConfig().CourierTemplatesRoot(ctx)), "verification_code/valid/email.subject.gotmpl", "verification_code/valid/email.subject*", t.m, t.d.CourierConfig().CourierTemplatesVerificationCodeValid(ctx).Subject)
 
 	return strings.TrimSpace(subject), err
 }
 
 func (t *VerificationCodeValid) EmailBody(ctx context.Context) (string, error) {
-	return template.LoadHTML(ctx, t.d, os.DirFS(t.d.CourierConfig().CourierTemplatesRoot(ctx)), "verification/valid/email.body.gotmpl", "verification/valid/email.body*", t.m, t.d.CourierConfig().CourierTemplatesVerificationValid(ctx).Body.HTML)
+	return template.LoadHTML(ctx, t.d, os.DirFS(t.d.CourierConfig().CourierTemplatesRoot(ctx)), "verification_code/valid/email.body.gotmpl", "verification_code/valid/email.body*", t.m, t.d.CourierConfig().CourierTemplatesVerificationCodeValid(ctx).Body.HTML)
 }
 
 func (t *VerificationCodeValid) EmailBodyPlaintext(ctx context.Context) (string, error) {
-	return template.LoadText(ctx, t.d, os.DirFS(t.d.CourierConfig().CourierTemplatesRoot(ctx)), "verification/valid/email.body.plaintext.gotmpl", "verification/valid/email.body.plaintext*", t.m, t.d.CourierConfig().CourierTemplatesVerificationValid(ctx).Body.PlainText)
+	return template.LoadText(ctx, t.d, os.DirFS(t.d.CourierConfig().CourierTemplatesRoot(ctx)), "verification_code/valid/email.body.plaintext.gotmpl", "verification_code/valid/email.body.plaintext*", t.m, t.d.CourierConfig().CourierTemplatesVerificationCodeValid(ctx).Body.PlainText)
 }
 
 func (t *VerificationCodeValid) MarshalJSON() ([]byte, error) {
