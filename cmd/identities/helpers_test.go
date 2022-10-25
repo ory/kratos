@@ -6,6 +6,8 @@ import (
 	"io"
 	"testing"
 
+	"github.com/ory/x/sqlfields"
+
 	"github.com/ory/x/cmdx"
 
 	"github.com/pkg/errors"
@@ -65,7 +67,7 @@ func execErr(t *testing.T, cmd *cobra.Command, args ...string) string {
 func makeIdentities(t *testing.T, reg driver.Registry, n int) (is []*identity.Identity, ids []string) {
 	for j := 0; j < n; j++ {
 		i := identity.NewIdentity(config.DefaultIdentityTraitsSchemaID)
-		i.MetadataPublic = []byte(`{"foo":"bar"}`)
+		i.MetadataPublic = sqlfields.NewNullJSONRawMessage([]byte(`{"foo":"bar"}`))
 		require.NoError(t, reg.Persister().CreateIdentity(context.Background(), i))
 		is = append(is, i)
 		ids = append(ids, i.ID.String())

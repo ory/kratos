@@ -6,6 +6,9 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/ory/x/pointerx"
+	"github.com/ory/x/sqlfields"
+
 	"github.com/ory/x/snapshotx"
 
 	"github.com/ory/kratos/x"
@@ -126,8 +129,8 @@ func TestMarshalExcludesCredentialsByReference(t *testing.T) {
 
 func TestMarshalIgnoresAdminMetadata(t *testing.T) {
 	i := NewIdentity(config.DefaultIdentityTraitsSchemaID)
-	i.MetadataAdmin = []byte(`{"admin":"bar"}`)
-	i.MetadataPublic = []byte(`{"public":"bar"}`)
+	i.MetadataAdmin = pointerx.Ptr(sqlfields.NewNullJSONRawMessage([]byte(`{"admin":"bar"}`)))
+	i.MetadataPublic = sqlfields.NewNullJSONRawMessage([]byte(`{"public":"bar"}`))
 
 	var b bytes.Buffer
 	require.Nil(t, json.NewEncoder(&b).Encode(&i))
@@ -171,11 +174,12 @@ func TestMarshalIdentityWithCredentialsWhenCredentialsNil(t *testing.T) {
 
 func TestMarshalIdentityWithAdminMetadata(t *testing.T) {
 	i := NewIdentity(config.DefaultIdentityTraitsSchemaID)
-	i.MetadataAdmin = []byte(`{"some":"metadata"}`)
+	i.MetadataAdmin = pointerx.Ptr(sqlfields.NewNullJSONRawMessage([]byte(`{"some":"metadata"}`)))
 
 	var b bytes.Buffer
 	require.Nil(t, json.NewEncoder(&b).Encode(WithAdminMetadataInJSON(*i)))
-	assert.Equal(t, "metadata", gjson.GetBytes(i.MetadataAdmin, "some").String(), "Original metadata_admin should not be touched by marshalling")
+	require.True(t, i.MetadataAdmin.Valid)
+	assert.Equal(t, "metadata", gjson.GetBytes(i.MetadataAdmin.Val, "some").String(), "Original metadata_admin should not be touched by marshalling")
 }
 
 func TestMarshalIdentityWithCredentialsMetadata(t *testing.T) {
@@ -187,7 +191,7 @@ func TestMarshalIdentityWithCredentialsMetadata(t *testing.T) {
 		},
 	}
 	i.Credentials = credentials
-	i.MetadataAdmin = []byte(`{"some":"metadata"}`)
+	i.MetadataAdmin = pointerx.Ptr(sqlfields.NewNullJSONRawMessage([]byte(`{"some":"metadata"}`)))
 
 	var b bytes.Buffer
 	require.Nil(t, json.NewEncoder(&b).Encode(WithCredentialsMetadataAndAdminMetadataInJSON(*i)))
@@ -197,7 +201,8 @@ func TestMarshalIdentityWithCredentialsMetadata(t *testing.T) {
 
 	assert.JSONEq(t, "{\"password\":{\"type\":\"password\",\"identifiers\":null,\"updated_at\":\"0001-01-01T00:00:00Z\",\"created_at\":\"0001-01-01T00:00:00Z\",\"version\":0}}", credentialsInJson.Raw)
 	assert.Equal(t, credentials, i.Credentials, "Original credentials should not be touched by marshalling")
-	assert.Equal(t, "metadata", gjson.GetBytes(i.MetadataAdmin, "some").String(), "Original metadata_admin should not be touched by marshalling")
+	require.True(t, i.MetadataAdmin.Valid)
+	assert.Equal(t, "metadata", gjson.GetBytes(i.MetadataAdmin.Val, "some").String(), "Original metadata_admin should not be touched by marshalling")
 }
 
 func TestMarshalIdentityWithAll(t *testing.T) {
@@ -209,7 +214,7 @@ func TestMarshalIdentityWithAll(t *testing.T) {
 		},
 	}
 	i.Credentials = credentials
-	i.MetadataAdmin = []byte(`{"some":"metadata"}`)
+	i.MetadataAdmin = pointerx.Ptr(sqlfields.NewNullJSONRawMessage([]byte(`{"some":"metadata"}`)))
 
 	var b bytes.Buffer
 	require.Nil(t, json.NewEncoder(&b).Encode(WithCredentialsAndAdminMetadataInJSON(*i)))
@@ -219,7 +224,8 @@ func TestMarshalIdentityWithAll(t *testing.T) {
 
 	snapshotx.SnapshotTExcept(t, json.RawMessage(credentialsInJson.Raw), nil)
 	assert.Equal(t, credentials, i.Credentials, "Original credentials should not be touched by marshalling")
-	assert.Equal(t, "metadata", gjson.GetBytes(i.MetadataAdmin, "some").String(), "Original credentials should not be touched by marshalling")
+	require.True(t, i.MetadataAdmin.Valid)
+	assert.Equal(t, "metadata", gjson.GetBytes(i.MetadataAdmin.Val, "some").String(), "Original credentials should not be touched by marshalling")
 }
 
 func TestValidateNID(t *testing.T) {

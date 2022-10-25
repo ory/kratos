@@ -8,6 +8,8 @@ import (
 	"sync"
 	"time"
 
+	"github.com/ory/x/sqlfields"
+
 	"github.com/tidwall/sjson"
 
 	"github.com/tidwall/gjson"
@@ -119,10 +121,10 @@ type Identity struct {
 
 	// Store metadata about the identity which the identity itself can see when calling for example the
 	// session endpoint. Do not store sensitive information (e.g. credit score) about the identity in this field.
-	MetadataPublic sqlxx.NullJSONRawMessage `json:"metadata_public" faker:"-" db:"metadata_public"`
+	MetadataPublic sqlfields.NullJSONRawMessage `json:"metadata_public" faker:"-" db:"metadata_public"`
 
 	// Store metadata about the user which is only accessible through admin APIs such as `GET /admin/identities/<id>`.
-	MetadataAdmin sqlxx.NullJSONRawMessage `json:"metadata_admin,omitempty" faker:"-" db:"metadata_admin"`
+	MetadataAdmin *sqlfields.NullJSONRawMessage `json:"metadata_admin,omitempty" faker:"-" db:"metadata_admin"`
 
 	// CreatedAt is a helper struct field for gobuffalo.pop.
 	CreatedAt time.Time `json:"created_at" db:"created_at"`
@@ -324,6 +326,10 @@ type WithAdminMetadataInJSON Identity
 func (i WithAdminMetadataInJSON) MarshalJSON() ([]byte, error) {
 	type localIdentity Identity
 	i.Credentials = nil
+	if i.MetadataAdmin == nil {
+		// The field is `omitemtpy` to not expose the key to public APIs, but we want to not omit it on the admin API.
+		i.MetadataAdmin = &sqlfields.NullJSONRawMessage{}
+	}
 	return json.Marshal(localIdentity(i))
 }
 

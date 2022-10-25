@@ -7,6 +7,9 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/ory/x/pointerx"
+	"github.com/ory/x/sqlfields"
+
 	"github.com/ory/kratos/hash"
 	"github.com/ory/kratos/x"
 
@@ -338,7 +341,7 @@ type AdminCreateIdentityImportCredentialsOidcProvider struct {
 func (h *Handler) create(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 	var cr AdminCreateIdentityBody
 	if err := jsonx.NewStrictDecoder(r.Body).Decode(&cr); err != nil {
-		h.r.Writer().WriteErrorCode(w, r, http.StatusBadRequest, errors.WithStack(err))
+		h.r.Writer().WriteError(w, r, errors.WithStack(herodot.ErrBadRequest.WithError(err.Error())))
 		return
 	}
 
@@ -359,8 +362,8 @@ func (h *Handler) create(w http.ResponseWriter, r *http.Request, _ httprouter.Pa
 		StateChangedAt:      &stateChangedAt,
 		VerifiableAddresses: cr.VerifiableAddresses,
 		RecoveryAddresses:   cr.RecoveryAddresses,
-		MetadataAdmin:       []byte(cr.MetadataAdmin),
-		MetadataPublic:      []byte(cr.MetadataPublic),
+		MetadataAdmin:       pointerx.Ptr(sqlfields.NewNullJSONRawMessage(cr.MetadataAdmin)),
+		MetadataPublic:      sqlfields.NewNullJSONRawMessage(cr.MetadataPublic),
 	}
 
 	if err := h.importCredentials(r.Context(), i, cr.Credentials); err != nil {
@@ -487,8 +490,8 @@ func (h *Handler) update(w http.ResponseWriter, r *http.Request, ps httprouter.P
 	}
 
 	identity.Traits = []byte(ur.Traits)
-	identity.MetadataPublic = []byte(ur.MetadataPublic)
-	identity.MetadataAdmin = []byte(ur.MetadataAdmin)
+	identity.MetadataPublic = sqlfields.NewNullJSONRawMessage(ur.MetadataPublic)
+	identity.MetadataAdmin = pointerx.Ptr(sqlfields.NewNullJSONRawMessage(ur.MetadataAdmin))
 
 	// Although this is PUT and not PATCH, if the Credentials are not supplied keep the old one
 	if ur.Credentials != nil {

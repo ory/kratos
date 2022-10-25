@@ -6,6 +6,9 @@ import (
 	"encoding/json"
 	"testing"
 
+	"github.com/ory/x/pointerx"
+	"github.com/ory/x/sqlfields"
+
 	"github.com/ory/kratos/cmd/identities"
 	"github.com/ory/x/assertx"
 
@@ -24,8 +27,8 @@ func TestGetCmd(t *testing.T) {
 
 	t.Run("case=gets a single identity", func(t *testing.T) {
 		i := identity.NewIdentity(config.DefaultIdentityTraitsSchemaID)
-		i.MetadataPublic = []byte(`"public"`)
-		i.MetadataAdmin = []byte(`"admin"`)
+		i.MetadataPublic = sqlfields.NewNullJSONRawMessage([]byte(`"public"`))
+		i.MetadataAdmin = pointerx.Ptr(sqlfields.NewNullJSONRawMessage([]byte(`"admin"`)))
 		require.NoError(t, reg.Persister().CreateIdentity(context.Background(), i))
 
 		stdOut := execNoErr(t, c, i.ID.String())
@@ -88,8 +91,8 @@ func TestGetCmd(t *testing.T) {
 			}
 		}
 		i := identity.NewIdentity(config.DefaultIdentityTraitsSchemaID)
-		i.MetadataPublic = []byte(`"public"`)
-		i.MetadataAdmin = []byte(`"admin"`)
+		i.MetadataPublic = sqlfields.NewNullJSONRawMessage([]byte(`"public"`))
+		i.MetadataAdmin = pointerx.Ptr(sqlfields.NewNullJSONRawMessage([]byte(`"admin"`)))
 		i.SetCredentials(identity.CredentialsTypeOIDC, applyCredentials("uniqueIdentifier", "accessBar", "refreshBar", "idBar", true))
 		// duplicate identity with decrypted tokens
 		di := i.CopyWithoutCredentials()

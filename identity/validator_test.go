@@ -2,11 +2,16 @@ package identity_test
 
 import (
 	"context"
+	_ "embed"
+	"encoding/base64"
 	"fmt"
 	"io"
 	"net/http"
 	"net/http/httptest"
 	"testing"
+
+	"github.com/ory/x/pointerx"
+	"github.com/ory/x/sqlfields"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/urfave/negroni"
@@ -68,6 +73,12 @@ func TestSchemaValidatorDisallowsInternalNetworkRequests(t *testing.T) {
 	}
 }
 
+//go:embed stub/identity-meta.schema.json
+var schemaWithMetadata []byte
+
+//go:embed stub/identity-nodata.schema.json
+var nodataSchema []byte
+
 func TestSchemaValidator(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
@@ -112,6 +123,7 @@ func TestSchemaValidator(t *testing.T) {
 		{ID: "default", URL: ts.URL + "/schema/firstName"},
 		{ID: "whatever", URL: ts.URL + "/schema/whatever"},
 		{ID: "unreachable-url", URL: ts.URL + "/404-not-found"},
+		{ID: "nodata", URL: "base64://" + base64.StdEncoding.EncodeToString(nodataSchema)},
 	})
 	v := NewValidator(reg)
 
@@ -156,6 +168,22 @@ func TestSchemaValidator(t *testing.T) {
 			},
 			err: "An internal server error occurred, please contact the system administrator",
 		},
+		{
+			i: &Identity{
+				SchemaID:       "nodata",
+				Traits:         Traits(`{}`),
+				MetadataPublic: sqlfields.NewNullJSONRawMessage([]byte(`"metadata"`)),
+			},
+			err: `I[#] S[#/additionalProperties] additionalProperties "metadata_public" not allowed`,
+		},
+		{
+			i: &Identity{
+				SchemaID:      "nodata",
+				Traits:        Traits(`{}`),
+				MetadataAdmin: pointerx.Ptr(sqlfields.NewNullJSONRawMessage([]byte(`"metadata"`))),
+			},
+			err: `I[#] S[#/additionalProperties] additionalProperties "metadata_admin" not allowed`,
+		},
 	} {
 		t.Run(fmt.Sprintf("case=%d", k), func(t *testing.T) {
 			ctx := context.WithValue(ctx, httploader.ContextKey, httpx.NewResilientClient())
@@ -167,4 +195,22 @@ func TestSchemaValidator(t *testing.T) {
 			}
 		})
 	}
+
+	t.Run("case=schema with metadata", func(t *testing.T) {
+		conf, reg := internal.NewFastRegistryWithMocks(t)
+		conf.MustSet(ctx, config.ViperKeyIdentitySchemas, []config.Schema{
+			{ID: "default", URL: "base64://" + base64.StdEncoding.EncodeToString(schemaWithMetadata)},
+		})
+		v := NewValidator(reg)
+		assert.NoError(t, v.Validate(ctx, &Identity{
+			Traits:         Traits(`{ "email": "foo@bar.com" }`),
+			MetadataAdmin:  pointerx.Ptr(sqlfields.NewNullJSONRawMessage([]byte(`{ "value": "whatever" }`))),
+			MetadataPublic: sqlfields.NewNullJSONRawMessage([]byte(`{ "value": "whatever" }`)),
+		}))
+		assert.EqualError(t, v.Validate(ctx, &Identity{
+			Traits:         Traits(`{ "email": "foo@bar.com" }`),
+			MetadataAdmin:  pointerx.Ptr(sqlfields.NewNullJSONRawMessage([]byte(`{ "unknown": "whatever" }`))),
+			MetadataPublic: sqlfields.NewNullJSONRawMessage([]byte(`{ "unknown": "whatever" }`)),
+		}), "I[#] S[#] validation failed\n  I[#/metadata_public] S[#/properties/metadata_public/additionalProperties] additionalProperties \"unknown\" not allowed\n  I[#/metadata_admin] S[#/properties/metadata_admin/additionalProperties] additionalProperties \"unknown\" not allowed")
+	})
 }
