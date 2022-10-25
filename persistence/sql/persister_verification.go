@@ -233,13 +233,13 @@ func (p *Persister) CreateVerificationCode(ctx context.Context, c *code.CreateVe
 	ctx, span := p.r.Tracer(ctx).Tracer().Start(ctx, "persistence.sql.CreateVerificationCode")
 	defer span.End()
 
-	now := time.Now()
+	now := time.Now().UTC()
 
 	verificationCode := &code.VerificationCode{
 		ID:        x.NewUUID(),
 		CodeHMAC:  p.hmacValue(ctx, c.RawCode),
-		ExpiresAt: now.UTC().Add(c.ExpiresIn),
-		IssuedAt:  now.UTC(),
+		ExpiresAt: now.Add(c.ExpiresIn),
+		IssuedAt:  now,
 		FlowID:    c.FlowID,
 		NID:       p.NetworkID(ctx),
 	}
