@@ -62,7 +62,7 @@ func (s *ErrorHandler) PrepareReplacementForExpiredFlow(w http.ResponseWriter, r
 		return nil, err
 	}
 
-	a.UI.Messages.Add(text.NewErrorValidationLoginFlowExpired(e.Ago))
+	a.UI.Messages.Add(text.NewErrorValidationLoginFlowExpired(e.ExpiredAt))
 	if err := s.d.LoginFlowPersister().UpdateLoginFlow(r.Context(), a); err != nil {
 		return nil, err
 	}

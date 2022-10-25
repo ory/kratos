@@ -75,7 +75,7 @@ func (s *ErrorHandler) WriteFlowError(
 			return
 		}
 
-		a.UI.Messages.Add(text.NewErrorValidationVerificationFlowExpired(e.Ago))
+		a.UI.Messages.Add(text.NewErrorValidationVerificationFlowExpired(e.ExpiredAt))
 		if err := s.d.VerificationFlowPersister().CreateVerificationFlow(r.Context(), a); err != nil {
 			s.forward(w, r, a, err)
 			return
