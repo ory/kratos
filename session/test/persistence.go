@@ -236,8 +236,6 @@ func TestPersister(ctx context.Context, conf *config.Config, p interface {
 				} {
 					t.Run("case=ListSessions "+tc.desc, func(t *testing.T) {
 						paginatorOpts := make([]keysetpagination.Option, 0)
-						paginatorOpts = append(paginatorOpts, keysetpagination.WithDefaultSize(250))
-						paginatorOpts = append(paginatorOpts, keysetpagination.WithMaxSize(1000))
 						actual, total, nextPage, err := p.ListSessions(ctx, tc.active, paginatorOpts, session.ExpandEverything)
 						require.NoError(t, err)
 
@@ -262,49 +260,42 @@ func TestPersister(ctx context.Context, conf *config.Config, p interface {
 
 				t.Run("case=ListSessions last page", func(t *testing.T) {
 					paginatorOpts := make([]keysetpagination.Option, 0)
-					paginatorOpts = append(paginatorOpts, keysetpagination.WithDefaultSize(250))
-					paginatorOpts = append(paginatorOpts, keysetpagination.WithMaxSize(1000))
-					actual, total, nextPage, err := p.ListSessions(ctx, nil, paginatorOpts, session.ExpandEverything)
+					actual, total, page, err := p.ListSessions(ctx, nil, paginatorOpts, session.ExpandEverything)
 					require.NoError(t, err)
 
 					require.Equal(t, 5, len(actual))
 					require.Equal(t, int64(5), total)
-					assert.Equal(t, true, nextPage.IsLast())
-					assert.Equal(t, uuid.Nil.String(), nextPage.Token())
-					assert.Equal(t, 250, nextPage.Size())
+					assert.Equal(t, true, page.IsLast())
+					assert.Equal(t, uuid.Nil.String(), page.Token())
+					assert.Equal(t, 250, page.Size())
 				})
 
 				t.Run("case=ListSessions first page", func(t *testing.T) {
 					paginatorOpts := make([]keysetpagination.Option, 0)
-					paginatorOpts = append(paginatorOpts, keysetpagination.WithDefaultSize(250))
-					paginatorOpts = append(paginatorOpts, keysetpagination.WithMaxSize(1000))
 					paginatorOpts = append(paginatorOpts, keysetpagination.WithSize(3))
-					actual, total, page1, err := p.ListSessions(ctx, nil, paginatorOpts, session.ExpandEverything)
+					firstPageItems, total, page1, err := p.ListSessions(ctx, nil, paginatorOpts, session.ExpandEverything)
 					require.NoError(t, err)
 
-					require.Equal(t, 3, len(actual))
+					require.Equal(t, 3, len(firstPageItems))
 					require.Equal(t, int64(5), total)
 					assert.Equal(t, false, page1.IsLast())
-					assert.Equal(t, actual[len(actual)-1].ID.String(), page1.Token())
+					assert.Equal(t, firstPageItems[len(firstPageItems)-1].ID.String(), page1.Token())
 					assert.Equal(t, 3, page1.Size())
 
-					// Validate second page
-					paginatorOpts = append(paginatorOpts, keysetpagination.WithToken(page1.Token()))
-					second, total, page2, err := p.ListSessions(ctx, nil, paginatorOpts, session.ExpandEverything)
+					// Validate secondPageItems page
+					secondPageItems, total, page2, err := p.ListSessions(ctx, nil, page1.ToOptions(), session.ExpandEverything)
 
 					require.NoError(t, err)
-					require.Equal(t, 2, len(second))
+					require.Equal(t, 2, len(secondPageItems))
 					require.Equal(t, int64(5), total)
-					assert.Equal(t, true, page2.IsLast())
-					assert.Equal(t, "", page2.Token())
+					assert.True(t, page2.IsLast())
+					assert.Empty(t, page2.Token())
 					assert.Equal(t, 3, page2.Size())
 				})
 
 				t.Run("case=ListSessions - other network", func(t *testing.T) {
 					_, other := testhelpers.NewNetwork(t, ctx, p)
 					paginatorOpts := make([]keysetpagination.Option, 0)
-					paginatorOpts = append(paginatorOpts, keysetpagination.WithDefaultSize(250))
-					paginatorOpts = append(paginatorOpts, keysetpagination.WithMaxSize(1000))
 					actual, total, _, err := other.ListSessions(ctx, nil, paginatorOpts, session.ExpandNothing)
 					require.NoError(t, err)
 					require.Equal(t, int64(0), total)

@@ -98,9 +98,6 @@ func (h *Handler) RegisterPublicRoutes(public *x.RouterPublic) {
 	public.DELETE(AdminRouteIdentitiesSessions, x.RedirectToAdminRoute(h.r))
 }
 
-const paginationMaxItems = 1000
-const paginationDefaultItems = 250
-
 // nolint:deadcode,unused
 // swagger:parameters toSession revokeSessions listSessions
 type toSession struct {
@@ -340,9 +337,6 @@ func (h *Handler) adminListSessions(w http.ResponseWriter, r *http.Request, ps h
 		h.r.Writer().WriteError(w, r, herodot.ErrBadRequest.WithError("could not parse parameter page_size"))
 		return
 	}
-
-	opts = append(opts, keysetpagination.WithDefaultSize(paginationDefaultItems))
-	opts = append(opts, keysetpagination.WithMaxSize(paginationMaxItems))
 
 	sess, total, nextPage, err := h.r.SessionPersister().ListSessions(r.Context(), active, opts, ExpandEverything)
 	if err != nil {

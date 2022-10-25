@@ -24,6 +24,8 @@ var _ session.Persister = new(Persister)
 
 const SessionDeviceUserAgentMaxLength = 512
 const SessionDeviceLocationMaxLength = 512
+const paginationMaxItemsSize = 1000
+const paginationDefaultItemsSize = 250
 
 func (p *Persister) GetSession(ctx context.Context, sid uuid.UUID, expandables session.Expandables) (*session.Session, error) {
 	ctx, span := p.r.Tracer(ctx).Tracer().Start(ctx, "persistence.sql.GetSession")
@@ -63,6 +65,8 @@ func (p *Persister) ListSessions(ctx context.Context, active *bool, paginatorOpt
 	t := int64(0)
 	nid := p.NetworkID(ctx)
 
+	paginatorOpts = append(paginatorOpts, keysetpagination.WithDefaultSize(paginationDefaultItemsSize))
+	paginatorOpts = append(paginatorOpts, keysetpagination.WithMaxSize(paginationMaxItemsSize))
 	paginatorOpts = append(paginatorOpts, keysetpagination.WithDefaultToken(uuid.Nil.String()))
 	paginator := keysetpagination.GetPaginator(paginatorOpts...)
 
