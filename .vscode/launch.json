@@ -10,6 +10,17 @@
             "request": "launch",
             "mode": "auto",
             "program": "${fileDirname}"
-        }
+        },
+        {
+          "name": "Launch Remote",
+          "type": "go",
+          "request": "attach",
+          "mode": "remote",
+          "remotePath": "/dockerdev",
+          "port": 9999,
+          "host": "localhost",
+          "cwd": "${workspaceFolder}",
+          "trace": "verbose"
+      }
     ]
 }
