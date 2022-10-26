@@ -15,6 +15,7 @@ import (
 
 	"github.com/ory/x/sqlxx"
 
+	"github.com/ory/kratos/hydra"
 	"github.com/ory/kratos/selfservice/flow"
 	"github.com/ory/kratos/ui/container"
 
@@ -46,6 +47,7 @@ func init() {
 func TestFlowLifecycle(t *testing.T) {
 	ctx := context.Background()
 	conf, reg := internal.NewFastRegistryWithMocks(t)
+	reg.WithHydra(hydra.NewFakeHydra())
 	router := x.NewRouterPublic()
 	ts, _ := testhelpers.NewKratosServerWithRouters(t, reg, router, x.NewRouterAdmin())
 	loginTS := testhelpers.NewLoginUIFlowEchoServer(t, reg)
@@ -550,6 +552,19 @@ func TestFlowLifecycle(t *testing.T) {
 				// here we check that the redirect status is 303
 				require.Equal(t, http.StatusSeeOther, res.StatusCode)
 				defer res.Body.Close()
+			})
+
+			t.Run("case=refuses to parse oauth2 login challenge when Hydra is not configured", func(t *testing.T) {
+				res, body := initAuthenticatedFlow(t, url.Values{"login_challenge": {hydra.FAKE_GET_LOGIN_REQUEST_RETURN_NIL_NIL}}, false)
+				require.Contains(t, res.Request.URL.String(), errorTS.URL)
+				require.Contains(t, string(body), "refusing to parse")
+			})
+
+			conf.MustSet(ctx, config.ViperKeyOAuth2ProviderURL, "https://fake-hydra")
+
+			t.Run("case=oauth2 flow init succeeds", func(t *testing.T) {
+				res, _ := initAuthenticatedFlow(t, url.Values{"login_challenge": {hydra.FAKE_SUCCESS}}, false)
+				require.Contains(t, res.Request.URL.String(), loginTS.URL)
 			})
 		})
 

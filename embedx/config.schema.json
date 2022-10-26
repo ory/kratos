@@ -230,8 +230,7 @@
           },
           "anyOf": [
             {
-              "not":
-              {
+              "not": {
                 "properties": {
                   "response": {
                     "properties": {
@@ -241,10 +240,14 @@
                         ]
                       }
                     },
-                    "required": ["ignore"]
+                    "required": [
+                      "ignore"
+                    ]
                   }
                 },
-                "required": ["response"]
+                "required": [
+                  "response"
+                ]
               }
             },
             {
@@ -255,7 +258,9 @@
                   ]
                 }
               },
-              "require": ["can_interrupt"]
+              "require": [
+                "can_interrupt"
+              ]
             }
           ],
           "additionalProperties": false,
@@ -1223,7 +1228,7 @@
                 },
                 "use": {
                   "title": "Recovery Strategy",
-                  "description":"The strategy to use for recovery requests",
+                  "description": "The strategy to use for recovery requests",
                   "type": "string",
                   "enum": [
                     "link",
@@ -1545,7 +1550,7 @@
         }
       }
     },
-    "database":  {
+    "database": {
       "type": "object",
       "title": "Database related configuration",
       "description": "Miscellaneous settings used in database related tasks (cleanup, etc.)",
@@ -1555,7 +1560,7 @@
           "title": "Database cleanup settings",
           "description": "Settings that controls how the database cleanup process is configured (delays, batch size, etc.)",
           "properties": {
-            "batch_size" : {
+            "batch_size": {
               "type": "integer",
               "title": "Number of records to clean in one iteration",
               "description": "Controls how many records should be purged from one table during database cleanup task",
@@ -1687,6 +1692,9 @@
               "title": "SMTP Headers",
               "description": "These headers will be passed in the SMTP conversation -- e.g. when using the AWS SES SMTP interface for cross-account sending.",
               "type": "object",
+              "additionalProperties": {
+                "type": "string"
+              },
               "examples": [
                 {
                   "X-SES-SOURCE-ARN": "arn:aws:ses:us-west-2:123456789012:identity/example.com",
@@ -1739,7 +1747,7 @@
                   "type": "string",
                   "description": "The HTTP method to use (GET, POST, etc)."
                 },
-                "header": {
+                "headers": {
                   "type": "object",
                   "description": "The HTTP headers that must be applied to request",
                   "additionalProperties": {
@@ -1786,6 +1794,36 @@
       "required": [
         "smtp"
       ],
+      "additionalProperties": false
+    },
+    "oauth2_provider": {
+      "title": "OAuth2 Provider Configuration",
+      "type": "object",
+      "properties": {
+        "url": {
+          "title": "OAuth 2.0 Provider URL.",
+          "description": "If set, the login and registration flows will handle the Ory OAuth 2.0 & OpenID `login_challenge` query parameter to serve as an OpenID Connect Provider. This URL should point to Ory Hydra when you are not running on the Ory Network and be left untouched otherwise.",
+          "type": "string",
+          "format": "uri",
+          "examples": [
+            "https://some-slug.projects.oryapis.com",
+            "https://domain-of-ory-hydra:4445"
+          ]
+        },
+        "headers": {
+          "title": "HTTP Request Headers",
+          "description": "These headers will be passed in HTTP request to the OAuth2 Provider.",
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          },
+          "examples": [
+            {
+              "Authorization": "Bearer some-token"
+            }
+          ]
+        }
+      },
       "additionalProperties": false
     },
     "serve": {
@@ -2318,7 +2356,7 @@
             },
             "persistent": {
               "title": "Make Session Cookie Persistent",
-              "description": "If set to true will persist the cookie in the end-user's browser using the `max-age` parameter which is set to the `session.lifespan` value. Persistent cookies are not deleted when the browser is closed (e.g. on reboot or alt+f4).",
+              "description": "If set to true will persist the cookie in the end-user's browser using the `max-age` parameter which is set to the `session.lifespan` value. Persistent cookies are not deleted when the browser is closed (e.g. on reboot or alt+f4). This option affects the Ory OAuth2 and OpenID Provider's remember feature as well.",
               "type": "boolean",
               "default": true
             },

@@ -1100,11 +1100,28 @@ paths:
         `security_csrf_violation`: Unable to fetch the flow because a CSRF violation occurred.
         `security_identity_mismatch`: The requested `?return_to` address is not allowed to be used. Adjust this in the configuration!
 
+        The optional query parameter login_challenge is set when using Kratos with
+        Hydra in an OAuth2 flow. See the oauth2_provider.url configuration
+        option.
+
         This endpoint is NOT INTENDED for clients that do not have a browser (Chrome, Firefox, ...) as cookies are needed.
 
         More information can be found at [Ory Kratos User Login](https://www.ory.sh/docs/kratos/self-service/flows/user-login) and [User Registration Documentation](https://www.ory.sh/docs/kratos/self-service/flows/user-registration).
       operationId: initializeSelfServiceLoginFlowForBrowsers
       parameters:
+      - description: |-
+          An optional Hydra login challenge. If present, Kratos will cooperate with
+          Ory Hydra to act as an OAuth2 identity provider.
+
+          The value for this parameter comes from `login_challenge` URL Query parameter sent to your
+          application (e.g. `/login?login_challenge=abcde`).
+        explode: true
+        in: query
+        name: login_challenge
+        required: false
+        schema:
+          type: string
+        style: form
       - description: |-
           Refresh a login session
 
@@ -1851,6 +1868,19 @@ paths:
         More information can be found at [Ory Kratos User Login](https://www.ory.sh/docs/kratos/self-service/flows/user-login) and [User Registration Documentation](https://www.ory.sh/docs/kratos/self-service/flows/user-registration).
       operationId: initializeSelfServiceRegistrationFlowForBrowsers
       parameters:
+      - description: |-
+          An optional Hydra login challenge. If present, Kratos will cooperate with
+          Ory Hydra to act as an OAuth2 identity provider.
+
+          The value for this parameter comes from `login_challenge` URL Query parameter sent to your
+          application (e.g. `/registration?login_challenge=abcde`).
+        explode: true
+        in: query
+        name: login_challenge
+        required: false
+        schema:
+          type: string
+        style: form
       - description: The URL to return the browser to after the flow was completed.
         explode: true
         in: query
@@ -3006,11 +3036,456 @@ components:
       title: JSONRawMessage represents a json.RawMessage that works well with JSON,
         SQL, and Swagger.
       type: object
+    LoginRequest:
+      description: LoginRequest struct for LoginRequest
+      example:
+        requested_access_token_audience:
+        - requested_access_token_audience
+        - requested_access_token_audience
+        subject: subject
+        oidc_context:
+          login_hint: login_hint
+          ui_locales:
+          - ui_locales
+          - ui_locales
+          id_token_hint_claims:
+            key: '{}'
+          acr_values:
+          - acr_values
+          - acr_values
+          display: display
+        challenge: challenge
+        client:
+          metadata:
+            key: ""
+          token_endpoint_auth_signing_alg: token_endpoint_auth_signing_alg
+          client_uri: client_uri
+          jwks:
+            key: ""
+          logo_uri: logo_uri
+          created_at: 2000-01-23T04:56:07.000+00:00
+          registration_client_uri: registration_client_uri
+          allowed_cors_origins:
+          - allowed_cors_origins
+          - allowed_cors_origins
+          registration_access_token: registration_access_token
+          client_id: client_id
+          token_endpoint_auth_method: token_endpoint_auth_method
+          userinfo_signed_response_alg: userinfo_signed_response_alg
+          updated_at: 2000-01-23T04:56:07.000+00:00
+          scope: scope
+          request_uris:
+          - request_uris
+          - request_uris
+          client_secret: client_secret
+          backchannel_logout_session_required: true
+          backchannel_logout_uri: backchannel_logout_uri
+          client_name: client_name
+          policy_uri: policy_uri
+          owner: owner
+          audience:
+          - audience
+          - audience
+          post_logout_redirect_uris:
+          - post_logout_redirect_uris
+          - post_logout_redirect_uris
+          grant_types:
+          - grant_types
+          - grant_types
+          subject_type: subject_type
+          redirect_uris:
+          - redirect_uris
+          - redirect_uris
+          sector_identifier_uri: sector_identifier_uri
+          frontchannel_logout_session_required: true
+          frontchannel_logout_uri: frontchannel_logout_uri
+          client_secret_expires_at: 0
+          jwks_uri: jwks_uri
+          request_object_signing_alg: request_object_signing_alg
+          tos_uri: tos_uri
+          contacts:
+          - contacts
+          - contacts
+          response_types:
+          - response_types
+          - response_types
+        session_id: session_id
+        skip: true
+        request_url: request_url
+        requested_scope:
+        - requested_scope
+        - requested_scope
+      properties:
+        challenge:
+          description: ID is the identifier (\"login challenge\") of the login request.
+            It is used to identify the session.
+          type: string
+        client:
+          $ref: '#/components/schemas/OAuth2Client'
+        oidc_context:
+          $ref: '#/components/schemas/OpenIDConnectContext'
+        request_url:
+          description: RequestURL is the original OAuth 2.0 Authorization URL requested
+            by the OAuth 2.0 client. It is the URL which initiates the OAuth 2.0 Authorization
+            Code or OAuth 2.0 Implicit flow. This URL is typically not needed, but
+            might come in handy if you want to deal with additional request parameters.
+          type: string
+        requested_access_token_audience:
+          items:
+            type: string
+          type: array
+        requested_scope:
+          items:
+            type: string
+          type: array
+        session_id:
+          description: SessionID is the login session ID. If the user-agent reuses
+            a login session (via cookie / remember flag) this ID will remain the same.
+            If the user-agent did not have an existing authentication session (e.g.
+            remember is false) this will be a new random value. This value is used
+            as the \"sid\" parameter in the ID Token and in OIDC Front-/Back- channel
+            logout. It's value can generally be used to associate consecutive login
+            requests by a certain user.
+          type: string
+        skip:
+          description: Skip, if true, implies that the client has requested the same
+            scopes from the same user previously. If true, you can skip asking the
+            user to grant the requested scopes, and simply forward the user to the
+            redirect URL.  This feature allows you to update / set session information.
+          type: boolean
+        subject:
+          description: Subject is the user ID of the end-user that authenticated.
+            Now, that end user needs to grant or deny the scope requested by the OAuth
+            2.0 client. If this value is set and `skip` is true, you MUST include
+            this subject type when accepting the login request, or the request will
+            fail.
+          type: string
+      type: object
+    NullBool:
+      nullable: true
+      type: boolean
+    NullInt:
+      nullable: true
+      type: integer
+    NullString:
+      nullable: true
+      type: string
+    NullTime:
+      format: date-time
+      nullable: true
+      type: string
+    NullUUID:
+      format: uuid4
+      nullable: true
+      type: string
+    OAuth2Client:
+      description: OAuth2Client struct for OAuth2Client
+      example:
+        metadata:
+          key: ""
+        token_endpoint_auth_signing_alg: token_endpoint_auth_signing_alg
+        client_uri: client_uri
+        jwks:
+          key: ""
+        logo_uri: logo_uri
+        created_at: 2000-01-23T04:56:07.000+00:00
+        registration_client_uri: registration_client_uri
+        allowed_cors_origins:
+        - allowed_cors_origins
+        - allowed_cors_origins
+        registration_access_token: registration_access_token
+        client_id: client_id
+        token_endpoint_auth_method: token_endpoint_auth_method
+        userinfo_signed_response_alg: userinfo_signed_response_alg
+        updated_at: 2000-01-23T04:56:07.000+00:00
+        scope: scope
+        request_uris:
+        - request_uris
+        - request_uris
+        client_secret: client_secret
+        backchannel_logout_session_required: true
+        backchannel_logout_uri: backchannel_logout_uri
+        client_name: client_name
+        policy_uri: policy_uri
+        owner: owner
+        audience:
+        - audience
+        - audience
+        post_logout_redirect_uris:
+        - post_logout_redirect_uris
+        - post_logout_redirect_uris
+        grant_types:
+        - grant_types
+        - grant_types
+        subject_type: subject_type
+        redirect_uris:
+        - redirect_uris
+        - redirect_uris
+        sector_identifier_uri: sector_identifier_uri
+        frontchannel_logout_session_required: true
+        frontchannel_logout_uri: frontchannel_logout_uri
+        client_secret_expires_at: 0
+        jwks_uri: jwks_uri
+        request_object_signing_alg: request_object_signing_alg
+        tos_uri: tos_uri
+        contacts:
+        - contacts
+        - contacts
+        response_types:
+        - response_types
+        - response_types
+      properties:
+        allowed_cors_origins:
+          items:
+            type: string
+          type: array
+        audience:
+          items:
+            type: string
+          type: array
+        backchannel_logout_session_required:
+          description: Boolean value specifying whether the RP requires that a sid
+            (session ID) Claim be included in the Logout Token to identify the RP
+            session with the OP when the backchannel_logout_uri is used. If omitted,
+            the default value is false.
+          type: boolean
+        backchannel_logout_uri:
+          description: RP URL that will cause the RP to log itself out when sent a
+            Logout Token by the OP.
+          type: string
+        client_id:
+          description: ID  is the id for this client.
+          type: string
+        client_name:
+          description: Name is the human-readable string name of the client to be
+            presented to the end-user during authorization.
+          type: string
+        client_secret:
+          description: Secret is the client's secret. The secret will be included
+            in the create request as cleartext, and then never again. The secret is
+            stored using BCrypt so it is impossible to recover it. Tell your users
+            that they need to write the secret down as it will not be made available
+            again.
+          type: string
+        client_secret_expires_at:
+          description: SecretExpiresAt is an integer holding the time at which the
+            client secret will expire or 0 if it will not expire. The time is represented
+            as the number of seconds from 1970-01-01T00:00:00Z as measured in UTC
+            until the date/time of expiration.  This feature is currently not supported
+            and it's value will always be set to 0.
+          format: int64
+          type: integer
+        client_uri:
+          description: ClientURI is an URL string of a web page providing information
+            about the client. If present, the server SHOULD display this URL to the
+            end-user in a clickable fashion.
+          type: string
+        contacts:
+          items:
+            type: string
+          type: array
+        created_at:
+          description: CreatedAt returns the timestamp of the client's creation.
+          format: date-time
+          type: string
+        frontchannel_logout_session_required:
+          description: Boolean value specifying whether the RP requires that iss (issuer)
+            and sid (session ID) query parameters be included to identify the RP session
+            with the OP when the frontchannel_logout_uri is used. If omitted, the
+            default value is false.
+          type: boolean
+        frontchannel_logout_uri:
+          description: RP URL that will cause the RP to log itself out when rendered
+            in an iframe by the OP. An iss (issuer) query parameter and a sid (session
+            ID) query parameter MAY be included by the OP to enable the RP to validate
+            the request and to determine which of the potentially multiple sessions
+            is to be logged out; if either is included, both MUST be.
+          type: string
+        grant_types:
+          items:
+            type: string
+          type: array
+        jwks:
+          additionalProperties: {}
+          type: object
+        jwks_uri:
+          description: URL for the Client's JSON Web Key Set [JWK] document. If the
+            Client signs requests to the Server, it contains the signing key(s) the
+            Server uses to validate signatures from the Client. The JWK Set MAY also
+            contain the Client's encryption keys(s), which are used by the Server
+            to encrypt responses to the Client. When both signing and encryption keys
+            are made available, a use (Key Use) parameter value is REQUIRED for all
+            keys in the referenced JWK Set to indicate each key's intended usage.
+            Although some algorithms allow the same key to be used for both signatures
+            and encryption, doing so is NOT RECOMMENDED, as it is less secure. The
+            JWK x5c parameter MAY be used to provide X.509 representations of keys
+            provided. When used, the bare key values MUST still be present and MUST
+            match those in the certificate.
+          type: string
+        logo_uri:
+          description: LogoURI is an URL string that references a logo for the client.
+          type: string
+        metadata:
+          additionalProperties: {}
+          type: object
+        owner:
+          description: Owner is a string identifying the owner of the OAuth 2.0 Client.
+          type: string
+        policy_uri:
+          description: PolicyURI is a URL string that points to a human-readable privacy
+            policy document that describes how the deployment organization collects,
+            uses, retains, and discloses personal data.
+          type: string
+        post_logout_redirect_uris:
+          items:
+            type: string
+          type: array
+        redirect_uris:
+          items:
+            type: string
+          type: array
+        registration_access_token:
+          description: RegistrationAccessToken can be used to update, get, or delete
+            the OAuth2 Client.
+          type: string
+        registration_client_uri:
+          description: RegistrationClientURI is the URL used to update, get, or delete
+            the OAuth2 Client.
+          type: string
+        request_object_signing_alg:
+          description: JWS [JWS] alg algorithm [JWA] that MUST be used for signing
+            Request Objects sent to the OP. All Request Objects from this Client MUST
+            be rejected, if not signed with this algorithm.
+          type: string
+        request_uris:
+          items:
+            type: string
+          type: array
+        response_types:
+          items:
+            type: string
+          type: array
+        scope:
+          description: Scope is a string containing a space-separated list of scope
+            values (as described in Section 3.3 of OAuth 2.0 [RFC6749]) that the client
+            can use when requesting access tokens.
+          type: string
+        sector_identifier_uri:
+          description: URL using the https scheme to be used in calculating Pseudonymous
+            Identifiers by the OP. The URL references a file with a single JSON array
+            of redirect_uri values.
+          type: string
+        subject_type:
+          description: SubjectType requested for responses to this Client. The subject_types_supported
+            Discovery parameter contains a list of the supported subject_type values
+            for this server. Valid types include `pairwise` and `public`.
+          type: string
+        token_endpoint_auth_method:
+          description: Requested Client Authentication method for the Token Endpoint.
+            The options are client_secret_post, client_secret_basic, private_key_jwt,
+            and none.
+          type: string
+        token_endpoint_auth_signing_alg:
+          description: Requested Client Authentication signing algorithm for the Token
+            Endpoint.
+          type: string
+        tos_uri:
+          description: TermsOfServiceURI is a URL string that points to a human-readable
+            terms of service document for the client that describes a contractual
+            relationship between the end-user and the client that the end-user accepts
+            when authorizing the client.
+          type: string
+        updated_at:
+          description: UpdatedAt returns the timestamp of the last update.
+          format: date-time
+          type: string
+        userinfo_signed_response_alg:
+          description: JWS alg algorithm [JWA] REQUIRED for signing UserInfo Responses.
+            If this is specified, the response will be JWT [JWT] serialized, and signed
+            using JWS. The default, if omitted, is for the UserInfo Response to return
+            the Claims as a UTF-8 encoded JSON object using the application/json content-type.
+          type: string
+      type: object
+    OpenIDConnectContext:
+      description: OpenIDConnectContext struct for OpenIDConnectContext
+      example:
+        login_hint: login_hint
+        ui_locales:
+        - ui_locales
+        - ui_locales
+        id_token_hint_claims:
+          key: '{}'
+        acr_values:
+        - acr_values
+        - acr_values
+        display: display
+      properties:
+        acr_values:
+          description: 'ACRValues is the Authentication AuthorizationContext Class
+            Reference requested in the OAuth 2.0 Authorization request. It is a parameter
+            defined by OpenID Connect and expresses which level of authentication
+            (e.g. 2FA) is required.  OpenID Connect defines it as follows: > Requested
+            Authentication AuthorizationContext Class Reference values. Space-separated
+            string that specifies the acr values that the Authorization Server is
+            being requested to use for processing this Authentication Request, with
+            the values appearing in order of preference. The Authentication AuthorizationContext
+            Class satisfied by the authentication performed is returned as the acr
+            Claim Value, as specified in Section 2. The acr Claim is requested as
+            a Voluntary Claim by this parameter.'
+          items:
+            type: string
+          type: array
+        display:
+          description: 'Display is a string value that specifies how the Authorization
+            Server displays the authentication and consent user interface pages to
+            the End-User. The defined values are: page: The Authorization Server SHOULD
+            display the authentication and consent UI consistent with a full User
+            Agent page view. If the display parameter is not specified, this is the
+            default display mode. popup: The Authorization Server SHOULD display the
+            authentication and consent UI consistent with a popup User Agent window.
+            The popup User Agent window should be of an appropriate size for a login-focused
+            dialog and should not obscure the entire window that it is popping up
+            over. touch: The Authorization Server SHOULD display the authentication
+            and consent UI consistent with a device that leverages a touch interface.
+            wap: The Authorization Server SHOULD display the authentication and consent
+            UI consistent with a \"feature phone\" type display.  The Authorization
+            Server MAY also attempt to detect the capabilities of the User Agent and
+            present an appropriate display.'
+          type: string
+        id_token_hint_claims:
+          additionalProperties: true
+          description: IDTokenHintClaims are the claims of the ID Token previously
+            issued by the Authorization Server being passed as a hint about the End-User's
+            current or past authenticated session with the Client.
+          type: object
+        login_hint:
+          description: LoginHint hints about the login identifier the End-User might
+            use to log in (if necessary). This hint can be used by an RP if it first
+            asks the End-User for their e-mail address (or other identifier) and then
+            wants to pass that value as a hint to the discovered authorization service.
+            This value MAY also be a phone number in the format specified for the
+            phone_number Claim. The use of this parameter is optional.
+          type: string
+        ui_locales:
+          description: UILocales is the End-User'id preferred languages and scripts
+            for the user interface, represented as a space-separated list of BCP47
+            [RFC5646] language tag values, ordered by preference. For instance, the
+            value \"fr-CA fr en\" represents a preference for French as spoken in
+            Canada, then French (without a region designation), followed by English
+            (without a region designation). An error SHOULD NOT result if some or
+            all of the requested locales are not supported by the OpenID Provider.
+          items:
+            type: string
+          type: array
+      type: object
     RecoveryAddressType:
       title: RecoveryAddressType must not exceed 16 characters as that is the limitation
         in the SQL Schema.
       type: string
     TemplateType:
+      type: string
+    Time:
+      format: date-time
       type: string
     UUID:
       format: uuid4
@@ -3741,6 +4216,13 @@ components:
       title: Is sent when a privileged session is required to perform the settings
         update.
       type: object
+    nullDuration:
+      nullable: true
+      pattern: ^[0-9]+(ns|us|ms|s|m|h)$
+      type: string
+    nullInt64:
+      nullable: true
+      type: integer
     nullJsonRawMessage:
       description: NullJSONRawMessage represents a json.RawMessage that works well
         with JSON, SQL, and Swagger and is NULLable-
@@ -3970,22 +4452,105 @@ components:
 
         Once a login flow is completed successfully, a session cookie or session token will be issued.
       example:
+        created_at: 2000-01-23T04:56:07.000+00:00
+        refresh: true
+        return_to: return_to
+        type: type
+        issued_at: 2000-01-23T04:56:07.000+00:00
+        request_url: request_url
         expires_at: 2000-01-23T04:56:07.000+00:00
+        oauth2_login_request:
+          requested_access_token_audience:
+          - requested_access_token_audience
+          - requested_access_token_audience
+          subject: subject
+          oidc_context:
+            login_hint: login_hint
+            ui_locales:
+            - ui_locales
+            - ui_locales
+            id_token_hint_claims:
+              key: '{}'
+            acr_values:
+            - acr_values
+            - acr_values
+            display: display
+          challenge: challenge
+          client:
+            metadata:
+              key: ""
+            token_endpoint_auth_signing_alg: token_endpoint_auth_signing_alg
+            client_uri: client_uri
+            jwks:
+              key: ""
+            logo_uri: logo_uri
+            created_at: 2000-01-23T04:56:07.000+00:00
+            registration_client_uri: registration_client_uri
+            allowed_cors_origins:
+            - allowed_cors_origins
+            - allowed_cors_origins
+            registration_access_token: registration_access_token
+            client_id: client_id
+            token_endpoint_auth_method: token_endpoint_auth_method
+            userinfo_signed_response_alg: userinfo_signed_response_alg
+            updated_at: 2000-01-23T04:56:07.000+00:00
+            scope: scope
+            request_uris:
+            - request_uris
+            - request_uris
+            client_secret: client_secret
+            backchannel_logout_session_required: true
+            backchannel_logout_uri: backchannel_logout_uri
+            client_name: client_name
+            policy_uri: policy_uri
+            owner: owner
+            audience:
+            - audience
+            - audience
+            post_logout_redirect_uris:
+            - post_logout_redirect_uris
+            - post_logout_redirect_uris
+            grant_types:
+            - grant_types
+            - grant_types
+            subject_type: subject_type
+            redirect_uris:
+            - redirect_uris
+            - redirect_uris
+            sector_identifier_uri: sector_identifier_uri
+            frontchannel_logout_session_required: true
+            frontchannel_logout_uri: frontchannel_logout_uri
+            client_secret_expires_at: 0
+            jwks_uri: jwks_uri
+            request_object_signing_alg: request_object_signing_alg
+            tos_uri: tos_uri
+            contacts:
+            - contacts
+            - contacts
+            response_types:
+            - response_types
+            - response_types
+          session_id: session_id
+          skip: true
+          request_url: request_url
+          requested_scope:
+          - requested_scope
+          - requested_scope
         ui:
           nodes:
           - meta:
               label:
                 context: '{}'
-                id: 0
+                id: 6
                 text: text
                 type: type
             messages:
             - context: '{}'
-              id: 0
+              id: 6
               text: text
               type: type
             - context: '{}'
-              id: 0
+              id: 6
               text: text
               type: type
             type: text
@@ -3993,16 +4558,16 @@ components:
           - meta:
               label:
                 context: '{}'
-                id: 0
+                id: 6
                 text: text
                 type: type
             messages:
             - context: '{}'
-              id: 0
+              id: 6
               text: text
               type: type
             - context: '{}'
-              id: 0
+              id: 6
               text: text
               type: type
             type: text
@@ -4011,21 +4576,16 @@ components:
           action: action
           messages:
           - context: '{}'
-            id: 0
+            id: 6
             text: text
             type: type
           - context: '{}'
-            id: 0
+            id: 6
             text: text
             type: type
         updated_at: 2000-01-23T04:56:07.000+00:00
-        created_at: 2000-01-23T04:56:07.000+00:00
-        refresh: true
-        return_to: return_to
+        oauth2_login_challenge: oauth2_login_challenge
         id: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
-        type: type
-        issued_at: 2000-01-23T04:56:07.000+00:00
-        request_url: request_url
       properties:
         active:
           $ref: '#/components/schemas/identityCredentialsType'
@@ -4049,6 +4609,12 @@ components:
           description: IssuedAt is the time (UTC) when the flow started.
           format: date-time
           type: string
+        oauth2_login_challenge:
+          format: uuid4
+          nullable: true
+          type: string
+        oauth2_login_request:
+          $ref: '#/components/schemas/LoginRequest'
         refresh:
           description: Refresh stores whether this login flow should enforce re-authentication.
           type: boolean
@@ -4137,16 +4703,16 @@ components:
           - meta:
               label:
                 context: '{}'
-                id: 0
+                id: 6
                 text: text
                 type: type
             messages:
             - context: '{}'
-              id: 0
+              id: 6
               text: text
               type: type
             - context: '{}'
-              id: 0
+              id: 6
               text: text
               type: type
             type: text
@@ -4154,16 +4720,16 @@ components:
           - meta:
               label:
                 context: '{}'
-                id: 0
+                id: 6
                 text: text
                 type: type
             messages:
             - context: '{}'
-              id: 0
+              id: 6
               text: text
               type: type
             - context: '{}'
-              id: 0
+              id: 6
               text: text
               type: type
             type: text
@@ -4172,11 +4738,11 @@ components:
           action: action
           messages:
           - context: '{}'
-            id: 0
+            id: 6
             text: text
             type: type
           - context: '{}'
-            id: 0
+            id: 6
             text: text
             type: type
         active: active
@@ -4270,21 +4836,98 @@ components:
     selfServiceRegistrationFlow:
       example:
         expires_at: 2000-01-23T04:56:07.000+00:00
+        oauth2_login_request:
+          requested_access_token_audience:
+          - requested_access_token_audience
+          - requested_access_token_audience
+          subject: subject
+          oidc_context:
+            login_hint: login_hint
+            ui_locales:
+            - ui_locales
+            - ui_locales
+            id_token_hint_claims:
+              key: '{}'
+            acr_values:
+            - acr_values
+            - acr_values
+            display: display
+          challenge: challenge
+          client:
+            metadata:
+              key: ""
+            token_endpoint_auth_signing_alg: token_endpoint_auth_signing_alg
+            client_uri: client_uri
+            jwks:
+              key: ""
+            logo_uri: logo_uri
+            created_at: 2000-01-23T04:56:07.000+00:00
+            registration_client_uri: registration_client_uri
+            allowed_cors_origins:
+            - allowed_cors_origins
+            - allowed_cors_origins
+            registration_access_token: registration_access_token
+            client_id: client_id
+            token_endpoint_auth_method: token_endpoint_auth_method
+            userinfo_signed_response_alg: userinfo_signed_response_alg
+            updated_at: 2000-01-23T04:56:07.000+00:00
+            scope: scope
+            request_uris:
+            - request_uris
+            - request_uris
+            client_secret: client_secret
+            backchannel_logout_session_required: true
+            backchannel_logout_uri: backchannel_logout_uri
+            client_name: client_name
+            policy_uri: policy_uri
+            owner: owner
+            audience:
+            - audience
+            - audience
+            post_logout_redirect_uris:
+            - post_logout_redirect_uris
+            - post_logout_redirect_uris
+            grant_types:
+            - grant_types
+            - grant_types
+            subject_type: subject_type
+            redirect_uris:
+            - redirect_uris
+            - redirect_uris
+            sector_identifier_uri: sector_identifier_uri
+            frontchannel_logout_session_required: true
+            frontchannel_logout_uri: frontchannel_logout_uri
+            client_secret_expires_at: 0
+            jwks_uri: jwks_uri
+            request_object_signing_alg: request_object_signing_alg
+            tos_uri: tos_uri
+            contacts:
+            - contacts
+            - contacts
+            response_types:
+            - response_types
+            - response_types
+          session_id: session_id
+          skip: true
+          request_url: request_url
+          requested_scope:
+          - requested_scope
+          - requested_scope
         ui:
           nodes:
           - meta:
               label:
                 context: '{}'
-                id: 0
+                id: 6
                 text: text
                 type: type
             messages:
             - context: '{}'
-              id: 0
+              id: 6
               text: text
               type: type
             - context: '{}'
-              id: 0
+              id: 6
               text: text
               type: type
             type: text
@@ -4292,16 +4935,16 @@ components:
           - meta:
               label:
                 context: '{}'
-                id: 0
+                id: 6
                 text: text
                 type: type
             messages:
             - context: '{}'
-              id: 0
+              id: 6
               text: text
               type: type
             - context: '{}'
-              id: 0
+              id: 6
               text: text
               type: type
             type: text
@@ -4310,13 +4953,14 @@ components:
           action: action
           messages:
           - context: '{}'
-            id: 0
+            id: 6
             text: text
             type: type
           - context: '{}'
-            id: 0
+            id: 6
             text: text
             type: type
+        oauth2_login_challenge: oauth2_login_challenge
         return_to: return_to
         id: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
         type: type
@@ -4341,6 +4985,12 @@ components:
           description: IssuedAt is the time (UTC) when the flow occurred.
           format: date-time
           type: string
+        oauth2_login_challenge:
+          format: uuid4
+          nullable: true
+          type: string
+        oauth2_login_request:
+          $ref: '#/components/schemas/LoginRequest'
         request_url:
           description: |-
             RequestURL is the initial URL that was requested from Ory Kratos. It can be used
@@ -4376,16 +5026,16 @@ components:
           - meta:
               label:
                 context: '{}'
-                id: 0
+                id: 6
                 text: text
                 type: type
             messages:
             - context: '{}'
-              id: 0
+              id: 6
               text: text
               type: type
             - context: '{}'
-              id: 0
+              id: 6
               text: text
               type: type
             type: text
@@ -4393,16 +5043,16 @@ components:
           - meta:
               label:
                 context: '{}'
-                id: 0
+                id: 6
                 text: text
                 type: type
             messages:
             - context: '{}'
-              id: 0
+              id: 6
               text: text
               type: type
             - context: '{}'
-              id: 0
+              id: 6
               text: text
               type: type
             type: text
@@ -4411,11 +5061,11 @@ components:
           action: action
           messages:
           - context: '{}'
-            id: 0
+            id: 6
             text: text
             type: type
           - context: '{}'
-            id: 0
+            id: 6
             text: text
             type: type
         identity:
@@ -4546,16 +5196,16 @@ components:
           - meta:
               label:
                 context: '{}'
-                id: 0
+                id: 6
                 text: text
                 type: type
             messages:
             - context: '{}'
-              id: 0
+              id: 6
               text: text
               type: type
             - context: '{}'
-              id: 0
+              id: 6
               text: text
               type: type
             type: text
@@ -4563,16 +5213,16 @@ components:
           - meta:
               label:
                 context: '{}'
-                id: 0
+                id: 6
                 text: text
                 type: type
             messages:
             - context: '{}'
-              id: 0
+              id: 6
               text: text
               type: type
             - context: '{}'
-              id: 0
+              id: 6
               text: text
               type: type
             type: text
@@ -4581,11 +5231,11 @@ components:
           action: action
           messages:
           - context: '{}'
-            id: 0
+            id: 6
             text: text
             type: type
           - context: '{}'
-            id: 0
+            id: 6
             text: text
             type: type
         active: active
@@ -5658,16 +6308,16 @@ components:
         - meta:
             label:
               context: '{}'
-              id: 0
+              id: 6
               text: text
               type: type
           messages:
           - context: '{}'
-            id: 0
+            id: 6
             text: text
             type: type
           - context: '{}'
-            id: 0
+            id: 6
             text: text
             type: type
           type: text
@@ -5675,16 +6325,16 @@ components:
         - meta:
             label:
               context: '{}'
-              id: 0
+              id: 6
               text: text
               type: type
           messages:
           - context: '{}'
-            id: 0
+            id: 6
             text: text
             type: type
           - context: '{}'
-            id: 0
+            id: 6
             text: text
             type: type
           type: text
@@ -5693,11 +6343,11 @@ components:
         action: action
         messages:
         - context: '{}'
-          id: 0
+          id: 6
           text: text
           type: type
         - context: '{}'
-          id: 0
+          id: 6
           text: text
           type: type
       properties:
@@ -5729,16 +6379,16 @@ components:
         meta:
           label:
             context: '{}'
-            id: 0
+            id: 6
             text: text
             type: type
         messages:
         - context: '{}'
-          id: 0
+          id: 6
           text: text
           type: type
         - context: '{}'
-          id: 0
+          id: 6
           text: text
           type: type
         type: text
@@ -5996,7 +6646,7 @@ components:
       example:
         label:
           context: '{}'
-          id: 0
+          id: 6
           text: text
           type: type
       properties:
@@ -6077,7 +6727,7 @@ components:
     uiText:
       example:
         context: '{}'
-        id: 0
+        id: 6
         text: text
         type: type
       properties:

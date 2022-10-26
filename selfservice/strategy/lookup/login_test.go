@@ -89,7 +89,7 @@ func TestCompleteLogin(t *testing.T) {
 	}
 
 	doBrowserFlowWithClient := func(t *testing.T, spa bool, v func(url.Values), id *identity.Identity, browserClient *http.Client, forced bool) (string, *http.Response) {
-		f := testhelpers.InitializeLoginFlowViaBrowser(t, browserClient, publicTS, forced, spa, testhelpers.InitFlowWithAAL(identity.AuthenticatorAssuranceLevel2))
+		f := testhelpers.InitializeLoginFlowViaBrowser(t, browserClient, publicTS, forced, spa, false, false, testhelpers.InitFlowWithAAL(identity.AuthenticatorAssuranceLevel2))
 		values := testhelpers.SDKFormFieldsToURLValues(f.Ui.Nodes)
 		values.Set("method", identity.CredentialsTypeLookup.String())
 		v(values)

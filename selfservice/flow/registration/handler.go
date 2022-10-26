@@ -2,8 +2,10 @@ package registration
 
 import (
 	"net/http"
+	"net/url"
 	"time"
 
+	"github.com/ory/kratos/hydra"
 	"github.com/ory/kratos/text"
 
 	"github.com/ory/nosurf"
@@ -21,6 +23,7 @@ import (
 	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/selfservice/errorx"
 	"github.com/ory/kratos/selfservice/flow"
+	"github.com/ory/kratos/selfservice/flow/logout"
 	"github.com/ory/kratos/session"
 	"github.com/ory/kratos/x"
 )
@@ -38,6 +41,7 @@ type (
 	handlerDependencies interface {
 		config.Provider
 		errorx.ManagementProvider
+		hydra.HydraProvider
 		session.HandlerProvider
 		session.ManagementProvider
 		x.WriterProvider
@@ -191,6 +195,19 @@ func (h *Handler) initApiFlow(w http.ResponseWriter, r *http.Request, _ httprout
 // nolint:deadcode,unused
 // swagger:parameters initializeSelfServiceRegistrationFlowForBrowsers
 type initializeSelfServiceRegistrationFlowForBrowsers struct {
+	// Ory OAuth 2.0 Login Challenge.
+	//
+	// If set will cooperate with Ory OAuth2 and OpenID to act as an OAuth2 server / OpenID Provider.
+	//
+	// The value for this parameter comes from `login_challenge` URL Query parameter sent to your
+	// application (e.g. `/registration?login_challenge=abcde`).
+	//
+	// This feature is compatible with Ory Hydra when not running on the Ory Network.
+	//
+	// required: false
+	// in: query
+	LoginChallenge string `json:"login_challenge"`
+
 	// The URL to return the browser to after the flow was completed.
 	//
 	// in: query
@@ -243,7 +260,26 @@ func (h *Handler) initBrowserFlow(w http.ResponseWriter, r *http.Request, ps htt
 		return
 	}
 
-	if _, err := h.d.SessionManager().FetchFromRequest(r.Context(), r); err == nil {
+	if sess, err := h.d.SessionManager().FetchFromRequest(r.Context(), r); err == nil {
+		if r.URL.Query().Has("login_challenge") {
+			logoutUrl := urlx.AppendPaths(h.d.Config().SelfPublicURL(r.Context()), logout.RouteSubmitFlow)
+			self := urlx.CopyWithQuery(
+				urlx.AppendPaths(h.d.Config().SelfPublicURL(r.Context()), RouteInitBrowserFlow),
+				r.URL.Query(),
+			).String()
+
+			http.Redirect(
+				w,
+				r,
+				urlx.CopyWithQuery(logoutUrl, url.Values{
+					"token":     {sess.LogoutToken},
+					"return_to": {self},
+				}).String(),
+				http.StatusFound,
+			)
+			return
+		}
+
 		if x.IsJSONRequest(r) {
 			h.d.Writer().WriteError(w, r, errors.WithStack(ErrAlreadyLoggedIn))
 			return
@@ -352,6 +388,17 @@ func (h *Handler) fetchFlow(w http.ResponseWriter, r *http.Request, ps httproute
 			WithReason("The registration flow has expired. Call the registration flow init API endpoint to initialize a new registration flow.").
 			WithDetail("api", urlx.AppendPaths(h.d.Config().SelfPublicURL(r.Context()), RouteInitAPIFlow).String())))
 		return
+	}
+
+	if ar.OAuth2LoginChallenge.Valid {
+		hlr, err := h.d.Hydra().GetLoginRequest(r.Context(), ar.OAuth2LoginChallenge)
+		if err != nil {
+			// We don't redirect back to the third party on errors because Hydra doesn't
+			// give us the 3rd party return_uri when it redirects to the login UI.
+			h.d.SelfServiceErrorManager().Forward(r.Context(), w, r, err)
+			return
+		}
+		ar.HydraLoginRequest = hlr
 	}
 
 	h.d.Writer().Write(w, r, ar)

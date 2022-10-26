@@ -489,6 +489,10 @@ type V0alpha2Api interface {
 		`security_csrf_violation`: Unable to fetch the flow because a CSRF violation occurred.
 		`security_identity_mismatch`: The requested `?return_to` address is not allowed to be used. Adjust this in the configuration!
 
+		The optional query parameter login_challenge is set when using Kratos with
+		Hydra in an OAuth2 flow. See the oauth2_provider.url configuration
+		option.
+
 		This endpoint is NOT INTENDED for clients that do not have a browser (Chrome, Firefox, ...) as cookies are needed.
 
 		More information can be found at [Ory Kratos User Login](https://www.ory.sh/docs/kratos/self-service/flows/user-login) and [User Registration Documentation](https://www.ory.sh/docs/kratos/self-service/flows/user-registration).
@@ -4402,14 +4406,19 @@ func (a *V0alpha2ApiService) GetWebAuthnJavaScriptExecute(r V0alpha2ApiApiGetWeb
 }
 
 type V0alpha2ApiApiInitializeSelfServiceLoginFlowForBrowsersRequest struct {
-	ctx        context.Context
-	ApiService V0alpha2Api
-	refresh    *bool
-	aal        *string
-	returnTo   *string
-	cookie     *string
+	ctx            context.Context
+	ApiService     V0alpha2Api
+	loginChallenge *string
+	refresh        *bool
+	aal            *string
+	returnTo       *string
+	cookie         *string
 }
 
+func (r V0alpha2ApiApiInitializeSelfServiceLoginFlowForBrowsersRequest) LoginChallenge(loginChallenge string) V0alpha2ApiApiInitializeSelfServiceLoginFlowForBrowsersRequest {
+	r.loginChallenge = &loginChallenge
+	return r
+}
 func (r V0alpha2ApiApiInitializeSelfServiceLoginFlowForBrowsersRequest) Refresh(refresh bool) V0alpha2ApiApiInitializeSelfServiceLoginFlowForBrowsersRequest {
 	r.refresh = &refresh
 	return r
@@ -4450,6 +4459,10 @@ case of an error, the `error.id` of the JSON response body can be one of:
 `security_csrf_violation`: Unable to fetch the flow because a CSRF violation occurred.
 `security_identity_mismatch`: The requested `?return_to` address is not allowed to be used. Adjust this in the configuration!
 
+The optional query parameter login_challenge is set when using Kratos with
+Hydra in an OAuth2 flow. See the oauth2_provider.url configuration
+option.
+
 This endpoint is NOT INTENDED for clients that do not have a browser (Chrome, Firefox, ...) as cookies are needed.
 
 More information can be found at [Ory Kratos User Login](https://www.ory.sh/docs/kratos/self-service/flows/user-login) and [User Registration Documentation](https://www.ory.sh/docs/kratos/self-service/flows/user-registration).
@@ -4488,6 +4501,9 @@ func (a *V0alpha2ApiService) InitializeSelfServiceLoginFlowForBrowsersExecute(r 
 	localVarQueryParams := url.Values{}
 	localVarFormParams := url.Values{}
 
+	if r.loginChallenge != nil {
+		localVarQueryParams.Add("login_challenge", parameterToString(*r.loginChallenge, ""))
+	}
 	if r.refresh != nil {
 		localVarQueryParams.Add("refresh", parameterToString(*r.refresh, ""))
 	}
@@ -5009,11 +5025,16 @@ func (a *V0alpha2ApiService) InitializeSelfServiceRecoveryFlowWithoutBrowserExec
 }
 
 type V0alpha2ApiApiInitializeSelfServiceRegistrationFlowForBrowsersRequest struct {
-	ctx        context.Context
-	ApiService V0alpha2Api
-	returnTo   *string
+	ctx            context.Context
+	ApiService     V0alpha2Api
+	loginChallenge *string
+	returnTo       *string
 }
 
+func (r V0alpha2ApiApiInitializeSelfServiceRegistrationFlowForBrowsersRequest) LoginChallenge(loginChallenge string) V0alpha2ApiApiInitializeSelfServiceRegistrationFlowForBrowsersRequest {
+	r.loginChallenge = &loginChallenge
+	return r
+}
 func (r V0alpha2ApiApiInitializeSelfServiceRegistrationFlowForBrowsersRequest) ReturnTo(returnTo string) V0alpha2ApiApiInitializeSelfServiceRegistrationFlowForBrowsersRequest {
 	r.returnTo = &returnTo
 	return r
@@ -5086,6 +5107,9 @@ func (a *V0alpha2ApiService) InitializeSelfServiceRegistrationFlowForBrowsersExe
 	localVarQueryParams := url.Values{}
 	localVarFormParams := url.Values{}
 
+	if r.loginChallenge != nil {
+		localVarQueryParams.Add("login_challenge", parameterToString(*r.loginChallenge, ""))
+	}
 	if r.returnTo != nil {
 		localVarQueryParams.Add("return_to", parameterToString(*r.returnTo, ""))
 	}
