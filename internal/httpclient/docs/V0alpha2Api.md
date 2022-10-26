@@ -1783,7 +1783,7 @@ import (
 )
 
 func main() {
-    loginChallenge := "loginChallenge_example" // string | An optional Hydra login challenge. If present, Kratos will cooperate with Ory Hydra to act as an OAuth2 identity provider.  The value for this parameter comes from `login_challenge` URL Query parameter sent to your application (e.g. `/registration?login_challenge=abcde`). (optional)
+    loginChallenge := "loginChallenge_example" // string | Ory OAuth 2.0 Login Challenge.  If set will cooperate with Ory OAuth2 and OpenID to act as an OAuth2 server / OpenID Provider.  The value for this parameter comes from `login_challenge` URL Query parameter sent to your application (e.g. `/registration?login_challenge=abcde`).  This feature is compatible with Ory Hydra when not running on the Ory Network. (optional)
     returnTo := "returnTo_example" // string | The URL to return the browser to after the flow was completed. (optional)
 
     configuration := openapiclient.NewConfiguration()
@@ -1809,7 +1809,7 @@ Other parameters are passed through a pointer to a apiInitializeSelfServiceRegis
 
 Name | Type | Description  | Notes
 ------------- | ------------- | ------------- | -------------
- **loginChallenge** | **string** | An optional Hydra login challenge. If present, Kratos will cooperate with Ory Hydra to act as an OAuth2 identity provider.  The value for this parameter comes from &#x60;login_challenge&#x60; URL Query parameter sent to your application (e.g. &#x60;/registration?login_challenge&#x3D;abcde&#x60;). | 
+ **loginChallenge** | **string** | Ory OAuth 2.0 Login Challenge.  If set will cooperate with Ory OAuth2 and OpenID to act as an OAuth2 server / OpenID Provider.  The value for this parameter comes from &#x60;login_challenge&#x60; URL Query parameter sent to your application (e.g. &#x60;/registration?login_challenge&#x3D;abcde&#x60;).  This feature is compatible with Ory Hydra when not running on the Ory Network. | 
  **returnTo** | **string** | The URL to return the browser to after the flow was completed. | 
 
 ### Return type

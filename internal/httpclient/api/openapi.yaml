@@ -1869,11 +1869,14 @@ paths:
       operationId: initializeSelfServiceRegistrationFlowForBrowsers
       parameters:
       - description: |-
-          An optional Hydra login challenge. If present, Kratos will cooperate with
-          Ory Hydra to act as an OAuth2 identity provider.
+          Ory OAuth 2.0 Login Challenge.
+
+          If set will cooperate with Ory OAuth2 and OpenID to act as an OAuth2 server / OpenID Provider.
 
           The value for this parameter comes from `login_challenge` URL Query parameter sent to your
           application (e.g. `/registration?login_challenge=abcde`).
+
+          This feature is compatible with Ory Hydra when not running on the Ory Network.
         explode: true
         in: query
         name: login_challenge

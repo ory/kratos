@@ -1756,7 +1756,7 @@
         "parameters": [
           {
             "type": "string",
-            "description": "An optional Hydra login challenge. If present, Kratos will cooperate with\nOry Hydra to act as an OAuth2 identity provider.\n\nThe value for this parameter comes from `login_challenge` URL Query parameter sent to your\napplication (e.g. `/registration?login_challenge=abcde`).",
+            "description": "Ory OAuth 2.0 Login Challenge.\n\nIf set will cooperate with Ory OAuth2 and OpenID to act as an OAuth2 server / OpenID Provider.\n\nThe value for this parameter comes from `login_challenge` URL Query parameter sent to your\napplication (e.g. `/registration?login_challenge=abcde`).\n\nThis feature is compatible with Ory Hydra when not running on the Ory Network.",
             "name": "login_challenge",
             "in": "query"
           },
