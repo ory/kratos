@@ -4151,14 +4151,6 @@
         "operationId": "initializeSelfServiceLoginFlowForBrowsers",
         "parameters": [
           {
-            "description": "An optional Hydra login challenge. If present, Kratos will cooperate with\nOry Hydra to act as an OAuth2 identity provider.\n\nThe value for this parameter comes from `login_challenge` URL Query parameter sent to your\napplication (e.g. `/login?login_challenge=abcde`).",
-            "in": "query",
-            "name": "login_challenge",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
             "description": "Refresh a login session\n\nIf set to true, this will refresh an existing login session by\nasking the user to sign in again. This will reset the\nauthenticated_at time of the session.",
             "in": "query",
             "name": "refresh",
@@ -4186,6 +4178,14 @@
             "description": "HTTP Cookies\n\nWhen using the SDK in a browser app, on the server side you must include the HTTP Cookie Header\nsent by the client to your server here. This ensures that CSRF and session cookies are respected.",
             "in": "header",
             "name": "Cookie",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "An optional Hydra login challenge. If present, Kratos will cooperate with\nOry Hydra to act as an OAuth2 identity provider.\n\nThe value for this parameter comes from `login_challenge` URL Query parameter sent to your\napplication (e.g. `/login?login_challenge=abcde`).",
+            "in": "query",
+            "name": "login_challenge",
             "schema": {
               "type": "string"
             }

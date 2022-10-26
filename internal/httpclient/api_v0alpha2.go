@@ -4408,17 +4408,13 @@ func (a *V0alpha2ApiService) GetWebAuthnJavaScriptExecute(r V0alpha2ApiApiGetWeb
 type V0alpha2ApiApiInitializeSelfServiceLoginFlowForBrowsersRequest struct {
 	ctx            context.Context
 	ApiService     V0alpha2Api
-	loginChallenge *string
 	refresh        *bool
 	aal            *string
 	returnTo       *string
 	cookie         *string
+	loginChallenge *string
 }
 
-func (r V0alpha2ApiApiInitializeSelfServiceLoginFlowForBrowsersRequest) LoginChallenge(loginChallenge string) V0alpha2ApiApiInitializeSelfServiceLoginFlowForBrowsersRequest {
-	r.loginChallenge = &loginChallenge
-	return r
-}
 func (r V0alpha2ApiApiInitializeSelfServiceLoginFlowForBrowsersRequest) Refresh(refresh bool) V0alpha2ApiApiInitializeSelfServiceLoginFlowForBrowsersRequest {
 	r.refresh = &refresh
 	return r
@@ -4433,6 +4429,10 @@ func (r V0alpha2ApiApiInitializeSelfServiceLoginFlowForBrowsersRequest) ReturnTo
 }
 func (r V0alpha2ApiApiInitializeSelfServiceLoginFlowForBrowsersRequest) Cookie(cookie string) V0alpha2ApiApiInitializeSelfServiceLoginFlowForBrowsersRequest {
 	r.cookie = &cookie
+	return r
+}
+func (r V0alpha2ApiApiInitializeSelfServiceLoginFlowForBrowsersRequest) LoginChallenge(loginChallenge string) V0alpha2ApiApiInitializeSelfServiceLoginFlowForBrowsersRequest {
+	r.loginChallenge = &loginChallenge
 	return r
 }
 
@@ -4501,9 +4501,6 @@ func (a *V0alpha2ApiService) InitializeSelfServiceLoginFlowForBrowsersExecute(r 
 	localVarQueryParams := url.Values{}
 	localVarFormParams := url.Values{}
 
-	if r.loginChallenge != nil {
-		localVarQueryParams.Add("login_challenge", parameterToString(*r.loginChallenge, ""))
-	}
 	if r.refresh != nil {
 		localVarQueryParams.Add("refresh", parameterToString(*r.refresh, ""))
 	}
@@ -4512,6 +4509,9 @@ func (a *V0alpha2ApiService) InitializeSelfServiceLoginFlowForBrowsersExecute(r 
 	}
 	if r.returnTo != nil {
 		localVarQueryParams.Add("return_to", parameterToString(*r.returnTo, ""))
+	}
+	if r.loginChallenge != nil {
+		localVarQueryParams.Add("login_challenge", parameterToString(*r.loginChallenge, ""))
 	}
 	// to determine the Content-Type header
 	localVarHTTPContentTypes := []string{}
