@@ -2,6 +2,7 @@ package request
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"io"
 	"net/http"
@@ -9,15 +10,13 @@ import (
 	"reflect"
 	"strings"
 
-	"github.com/ory/x/jsonnetsecure"
-
-	"github.com/pkg/errors"
-
 	"github.com/google/go-jsonnet"
 	"github.com/hashicorp/go-retryablehttp"
+	"github.com/pkg/errors"
 
+	"github.com/ory/kratos/x"
 	"github.com/ory/x/fetcher"
-	"github.com/ory/x/logrusx"
+	"github.com/ory/x/jsonnetsecure"
 )
 
 var ErrCancel = errors.New("request cancel by JsonNet")
@@ -27,14 +26,20 @@ const (
 	ContentTypeJSON = "application/json"
 )
 
-type Builder struct {
-	r           *retryablehttp.Request
-	log         *logrusx.Logger
-	conf        *Config
-	fetchClient *retryablehttp.Client
-}
+type (
+	Dependencies interface {
+		x.LoggingProvider
+		x.HTTPClientProvider
+		jsonnetsecure.VMProvider
+	}
+	Builder struct {
+		r    *retryablehttp.Request
+		conf *Config
+		Dependencies
+	}
+)
 
-func NewBuilder(config json.RawMessage, client *retryablehttp.Client, l *logrusx.Logger) (*Builder, error) {
+func NewBuilder(config json.RawMessage, deps Dependencies) (*Builder, error) {
 	c, err := parseConfig(config)
 	if err != nil {
 		return nil, err
@@ -46,10 +51,9 @@ func NewBuilder(config json.RawMessage, client *retryablehttp.Client, l *logrusx
 	}
 
 	return &Builder{
-		r:           r,
-		log:         l,
-		conf:        c,
-		fetchClient: client,
+		r:            r,
+		conf:         c,
+		Dependencies: deps,
 	}, nil
 }
 
@@ -66,7 +70,7 @@ func (b *Builder) addAuth() error {
 	return nil
 }
 
-func (b *Builder) addBody(body interface{}) error {
+func (b *Builder) addBody(ctx context.Context, body interface{}) error {
 	if isNilInterface(body) {
 		return nil
 	}
@@ -77,18 +81,18 @@ func (b *Builder) addBody(body interface{}) error {
 		return errors.New("got empty template path for request with body")
 	}
 
-	tpl, err := b.readTemplate()
+	tpl, err := b.readTemplate(ctx)
 	if err != nil {
 		return err
 	}
 
 	switch contentType {
 	case ContentTypeForm:
-		if err := b.addURLEncodedBody(tpl, body); err != nil {
+		if err := b.addURLEncodedBody(ctx, tpl, body); err != nil {
 			return err
 		}
 	case ContentTypeJSON:
-		if err := b.addJSONBody(tpl, body); err != nil {
+		if err := b.addJSONBody(ctx, tpl, body); err != nil {
 			return err
 		}
 	default:
@@ -98,7 +102,7 @@ func (b *Builder) addBody(body interface{}) error {
 	return nil
 }
 
-func (b *Builder) addJSONBody(template *bytes.Buffer, body interface{}) error {
+func (b *Builder) addJSONBody(ctx context.Context, template *bytes.Buffer, body interface{}) error {
 	buf := new(bytes.Buffer)
 	enc := json.NewEncoder(buf)
 	enc.SetEscapeHTML(false)
@@ -108,10 +112,16 @@ func (b *Builder) addJSONBody(template *bytes.Buffer, body interface{}) error {
 		return errors.WithStack(err)
 	}
 
-	vm := jsonnetsecure.MakeSecureVM()
+	vm, err := b.JsonnetVM(ctx)
+	if err != nil {
+		return errors.WithStack(err)
+	}
 	vm.TLACode("ctx", buf.String())
 
-	res, err := vm.EvaluateAnonymousSnippet(b.conf.TemplateURI, template.String())
+	res, err := vm.EvaluateAnonymousSnippet(
+		b.conf.TemplateURI,
+		template.String(),
+	)
 	if err != nil {
 		// Unfortunately we can not use errors.As / errors.Is, see:
 		// https://github.com/google/go-jsonnet/issues/592
@@ -130,7 +140,7 @@ func (b *Builder) addJSONBody(template *bytes.Buffer, body interface{}) error {
 	return nil
 }
 
-func (b *Builder) addURLEncodedBody(template *bytes.Buffer, body interface{}) error {
+func (b *Builder) addURLEncodedBody(ctx context.Context, template *bytes.Buffer, body interface{}) error {
 	buf := new(bytes.Buffer)
 	enc := json.NewEncoder(buf)
 	enc.SetEscapeHTML(false)
@@ -140,7 +150,10 @@ func (b *Builder) addURLEncodedBody(template *bytes.Buffer, body interface{}) er
 		return err
 	}
 
-	vm := jsonnetsecure.MakeSecureVM()
+	vm, err := b.JsonnetVM(ctx)
+	if err != nil {
+		return err
+	}
 	vm.TLACode("ctx", buf.String())
 
 	res, err := vm.EvaluateAnonymousSnippet(b.conf.TemplateURI, template.String())
@@ -167,7 +180,7 @@ func (b *Builder) addURLEncodedBody(template *bytes.Buffer, body interface{}) er
 	return nil
 }
 
-func (b *Builder) BuildRequest(body interface{}) (*retryablehttp.Request, error) {
+func (b *Builder) BuildRequest(ctx context.Context, body interface{}) (*retryablehttp.Request, error) {
 	b.r.Header = b.conf.Header
 	if err := b.addAuth(); err != nil {
 		return nil, err
@@ -176,7 +189,7 @@ func (b *Builder) BuildRequest(body interface{}) (*retryablehttp.Request, error)
 	// According to the HTTP spec any request method, but TRACE is allowed to
 	// have a body. Even this is a bad practice for some of them, like for GET
 	if b.conf.Method != http.MethodTrace {
-		if err := b.addBody(body); err != nil {
+		if err := b.addBody(ctx, body); err != nil {
 			return nil, err
 		}
 	}
@@ -184,20 +197,22 @@ func (b *Builder) BuildRequest(body interface{}) (*retryablehttp.Request, error)
 	return b.r, nil
 }
 
-func (b *Builder) readTemplate() (*bytes.Buffer, error) {
+func (b *Builder) readTemplate(ctx context.Context) (*bytes.Buffer, error) {
 	templateURI := b.conf.TemplateURI
 
 	if templateURI == "" {
 		return nil, nil
 	}
 
-	f := fetcher.NewFetcher(fetcher.WithClient(b.fetchClient))
+	f := fetcher.NewFetcher(fetcher.WithClient(b.HTTPClient(ctx)))
 
 	tpl, err := f.Fetch(templateURI)
 	if errors.Is(err, fetcher.ErrUnknownScheme) {
 		// legacy filepath
 		templateURI = "file://" + templateURI
-		b.log.WithError(err).Warnf("support for filepaths without a 'file://' scheme will be dropped in the next release, please use %s instead in your config", templateURI)
+		b.Logger().WithError(err).Warnf(
+			"support for filepaths without a 'file://' scheme will be dropped in the next release, please use %s instead in your config",
+			templateURI)
 
 		tpl, err = f.Fetch(templateURI)
 	}

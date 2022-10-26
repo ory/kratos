@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/ory/kratos/courier/template"
+	"github.com/ory/x/jsonnetsecure"
 
 	"github.com/cenkalti/backoff"
 	"github.com/gofrs/uuid"
@@ -21,6 +22,7 @@ type (
 		x.LoggingProvider
 		ConfigProvider
 		x.HTTPClientProvider
+		jsonnetsecure.VMProvider
 	}
 
 	Courier interface {

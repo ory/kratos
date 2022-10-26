@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/ory/x/contextx"
+	"github.com/ory/x/jsonnetsecure"
 	"github.com/ory/x/otelx"
 	prometheus "github.com/ory/x/prometheusx"
 
@@ -48,6 +49,7 @@ type Registry interface {
 	Init(ctx context.Context, ctxer contextx.Contextualizer, opts ...RegistryOption) error
 
 	WithLogger(l *logrusx.Logger) Registry
+	WithJsonnetVMProvider(jsonnetsecure.VMProvider) Registry
 
 	WithCSRFHandler(c nosurf.Handler)
 	WithCSRFTokenGenerator(cg x.CSRFToken)
@@ -73,6 +75,7 @@ type Registry interface {
 	x.WriterProvider
 	x.LoggingProvider
 	x.HTTPClientProvider
+	jsonnetsecure.VMProvider
 
 	continuity.ManagementProvider
 	continuity.PersistenceProvider

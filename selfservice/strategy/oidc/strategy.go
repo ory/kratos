@@ -11,6 +11,7 @@ import (
 	"strings"
 
 	"github.com/ory/kratos/cipher"
+	"github.com/ory/x/jsonnetsecure"
 
 	"github.com/ory/kratos/text"
 
@@ -93,6 +94,8 @@ type dependencies interface {
 	continuity.ManagementProvider
 
 	cipher.Provider
+
+	jsonnetsecure.VMProvider
 }
 
 func isForced(req interface{}) bool {

@@ -6,6 +6,7 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/google/go-jsonnet"
 	"github.com/google/go-jsonnet/linter"
 	"github.com/spf13/cobra"
 
@@ -30,7 +31,7 @@ func NewJsonnetLintCmd() *cobra.Command {
 ` + GlobHelp,
 		Args: cobra.MinimumNArgs(1),
 		Run: func(cmd *cobra.Command, args []string) {
-			vm := jsonnetsecure.MakeSecureVM()
+			vm := jsonnetsecure.MakeSecureVM().(*jsonnet.VM)
 
 			for _, pattern := range args {
 				files, err := filepath.Glob(pattern)
