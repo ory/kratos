@@ -3904,9 +3904,11 @@ components:
         metadata_admin:
           description: NullJSONRawMessage represents a json.RawMessage that works
             well with JSON, SQL, and Swagger and is NULLable-
+          nullable: true
         metadata_public:
           description: NullJSONRawMessage represents a json.RawMessage that works
             well with JSON, SQL, and Swagger and is NULLable-
+          nullable: true
         recovery_addresses:
           description: RecoveryAddresses contains all the addresses that can be used
             to recover an identity.
@@ -4229,6 +4231,7 @@ components:
     nullJsonRawMessage:
       description: NullJSONRawMessage represents a json.RawMessage that works well
         with JSON, SQL, and Swagger and is NULLable-
+      nullable: true
     nullTime:
       format: date-time
       title: NullTime implements sql.NullTime functionality.

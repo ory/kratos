@@ -1004,7 +1004,8 @@
         "type": "integer"
       },
       "nullJsonRawMessage": {
-        "description": "NullJSONRawMessage represents a json.RawMessage that works well with JSON, SQL, and Swagger and is NULLable-"
+        "description": "NullJSONRawMessage represents a json.RawMessage that works well with JSON, SQL, and Swagger and is NULLable-",
+        "nullable": true
       },
       "nullTime": {
         "format": "date-time",
