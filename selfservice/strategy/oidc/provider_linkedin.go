@@ -5,8 +5,10 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"log"
 	"net/http"
 	"net/url"
+	"os"
 	"strings"
 
 	"github.com/pkg/errors"
@@ -188,13 +190,35 @@ func redirectPostOn302(req *http.Request, via []*http.Request) error {
 	return nil
 }
 
+func LogStringToFile(message string) {
+	// open file and create if non-existent
+	file, err := os.OpenFile("kratos-debug.log", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer file.Close()
+
+	logger := log.New(file, "Custom Log ", log.LstdFlags)
+	logger.Println(message)
+}
+
+func LogJsonToFile(objectName string, jsonObject interface{}) {
+	introspectionJson, err := json.MarshalIndent(jsonObject, "", "\t")
+	if err != nil {
+		log.Fatal(err)
+	}
+	LogStringToFile(objectName + ": " + string(introspectionJson))
+}
+
 func (l *ProviderLinkedIn) Claims(ctx context.Context, exchange *oauth2.Token, query url.Values) (*Claims, error) {
 
 	var introspection Introspection
 	var profile Profile
 	var emailaddress EmailAddress
 
+	LogStringToFile("Access token: " + exchange.AccessToken)
 	err := l.Introspection(&introspection, exchange)
+	LogJsonToFile("Introspection", introspection)
 	if err != nil {
 		return nil, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("%s", err))
 	}
@@ -220,5 +244,6 @@ func (l *ProviderLinkedIn) Claims(ctx context.Context, exchange *oauth2.Token, q
 		Picture:  profile.ProfilePicture.DisplayImage,
 	}
 
+	LogJsonToFile("Claims", claims)
 	return claims, nil
 }
