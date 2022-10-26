@@ -5027,16 +5027,16 @@ func (a *V0alpha2ApiService) InitializeSelfServiceRecoveryFlowWithoutBrowserExec
 type V0alpha2ApiApiInitializeSelfServiceRegistrationFlowForBrowsersRequest struct {
 	ctx            context.Context
 	ApiService     V0alpha2Api
-	loginChallenge *string
 	returnTo       *string
+	loginChallenge *string
 }
 
-func (r V0alpha2ApiApiInitializeSelfServiceRegistrationFlowForBrowsersRequest) LoginChallenge(loginChallenge string) V0alpha2ApiApiInitializeSelfServiceRegistrationFlowForBrowsersRequest {
-	r.loginChallenge = &loginChallenge
-	return r
-}
 func (r V0alpha2ApiApiInitializeSelfServiceRegistrationFlowForBrowsersRequest) ReturnTo(returnTo string) V0alpha2ApiApiInitializeSelfServiceRegistrationFlowForBrowsersRequest {
 	r.returnTo = &returnTo
+	return r
+}
+func (r V0alpha2ApiApiInitializeSelfServiceRegistrationFlowForBrowsersRequest) LoginChallenge(loginChallenge string) V0alpha2ApiApiInitializeSelfServiceRegistrationFlowForBrowsersRequest {
+	r.loginChallenge = &loginChallenge
 	return r
 }
 
@@ -5107,11 +5107,11 @@ func (a *V0alpha2ApiService) InitializeSelfServiceRegistrationFlowForBrowsersExe
 	localVarQueryParams := url.Values{}
 	localVarFormParams := url.Values{}
 
-	if r.loginChallenge != nil {
-		localVarQueryParams.Add("login_challenge", parameterToString(*r.loginChallenge, ""))
-	}
 	if r.returnTo != nil {
 		localVarQueryParams.Add("return_to", parameterToString(*r.returnTo, ""))
+	}
+	if r.loginChallenge != nil {
+		localVarQueryParams.Add("login_challenge", parameterToString(*r.loginChallenge, ""))
 	}
 	// to determine the Content-Type header
 	localVarHTTPContentTypes := []string{}

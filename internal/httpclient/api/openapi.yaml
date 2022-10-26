@@ -1868,6 +1868,14 @@ paths:
         More information can be found at [Ory Kratos User Login](https://www.ory.sh/docs/kratos/self-service/flows/user-login) and [User Registration Documentation](https://www.ory.sh/docs/kratos/self-service/flows/user-registration).
       operationId: initializeSelfServiceRegistrationFlowForBrowsers
       parameters:
+      - description: The URL to return the browser to after the flow was completed.
+        explode: true
+        in: query
+        name: return_to
+        required: false
+        schema:
+          type: string
+        style: form
       - description: |-
           Ory OAuth 2.0 Login Challenge.
 
@@ -1880,14 +1888,6 @@ paths:
         explode: true
         in: query
         name: login_challenge
-        required: false
-        schema:
-          type: string
-        style: form
-      - description: The URL to return the browser to after the flow was completed.
-        explode: true
-        in: query
-        name: return_to
         required: false
         schema:
           type: string
