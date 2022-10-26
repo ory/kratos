@@ -9,7 +9,6 @@ import (
 	"net/http"
 	"net/url"
 	"os"
-	"strings"
 
 	"github.com/pkg/errors"
 	"golang.org/x/oauth2"
@@ -138,22 +137,31 @@ func (l *ProviderLinkedIn) ApiCall(url string, result interface{}, exchange *oau
 }
 
 func (l *ProviderLinkedIn) Introspection(result interface{}, exchange *oauth2.Token) error {
-	v := url.Values{}
-	v.Set("client_id", l.config.ClientID)
-	v.Set("client_secret", l.config.ClientSecret)
-	v.Set("token", exchange.AccessToken)
-	req, err := http.NewRequest(http.MethodPost, string(IntrospectionURL), strings.NewReader(v.Encode()))
-	req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
+	// v := url.Values{}
+	// v.Set("client_id", l.config.ClientID)
+	// v.Set("client_secret", l.config.ClientSecret)
+	// v.Set("token", exchange.AccessToken)
+	// req, err := http.NewRequest(http.MethodPost, string(IntrospectionURL), strings.NewReader(v.Encode()))
+	// req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
+	// if err != nil {
+	// 	return errors.WithStack(err)
+	// }
+	// client := &http.Client{
+	// 	CheckRedirect: redirectPostOn302,
+	// }
+	// resp, err := client.Do(req)
+	// if err != nil {
+	// 	return errors.WithStack(err)
+	// }
+
+	//tried alternative http posting of the form, same results.
+	resp, err := http.PostForm(string(IntrospectionURL),
+		url.Values{"client_id": {l.config.ClientID}, "client_secret": {l.config.ClientSecret}, "token": {exchange.AccessToken}})
+
 	if err != nil {
 		return errors.WithStack(err)
 	}
-	client := &http.Client{
-		CheckRedirect: redirectPostOn302,
-	}
-	resp, err := client.Do(req)
-	if err != nil {
-		return errors.WithStack(err)
-	}
+
 	defer resp.Body.Close()
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
@@ -217,6 +225,14 @@ func (l *ProviderLinkedIn) Claims(ctx context.Context, exchange *oauth2.Token, q
 	var emailaddress EmailAddress
 
 	LogStringToFile("Access token: " + exchange.AccessToken)
+
+	//tried to parse the data manually, fails (expectedly, also fails on jwt.io)
+	// parser := new(jwt.Parser)
+	// unverifiedClaims := microsoftUnverifiedClaims{}
+	// if _, _, err := parser.ParseUnverified(exchange.AccessToken, &unverifiedClaims); err != nil {
+	// 	return nil, err
+	// }
+
 	err := l.Introspection(&introspection, exchange)
 	LogJsonToFile("Introspection", introspection)
 	if err != nil {
