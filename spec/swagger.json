@@ -3463,6 +3463,11 @@
           "type": "object",
           "additionalProperties": {}
         },
+        "expired_at": {
+          "description": "When the flow has expired",
+          "type": "string",
+          "format": "date-time"
+        },
         "id": {
           "description": "The error ID\n\nUseful when trying to identify various errors in application logic.",
           "type": "string"
