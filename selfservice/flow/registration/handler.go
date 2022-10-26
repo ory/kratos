@@ -195,6 +195,11 @@ func (h *Handler) initApiFlow(w http.ResponseWriter, r *http.Request, _ httprout
 // nolint:deadcode,unused
 // swagger:parameters initializeSelfServiceRegistrationFlowForBrowsers
 type initializeSelfServiceRegistrationFlowForBrowsers struct {
+	// The URL to return the browser to after the flow was completed.
+	//
+	// in: query
+	ReturnTo string `json:"return_to"`
+
 	// Ory OAuth 2.0 Login Challenge.
 	//
 	// If set will cooperate with Ory OAuth2 and OpenID to act as an OAuth2 server / OpenID Provider.
@@ -207,11 +212,6 @@ type initializeSelfServiceRegistrationFlowForBrowsers struct {
 	// required: false
 	// in: query
 	LoginChallenge string `json:"login_challenge"`
-
-	// The URL to return the browser to after the flow was completed.
-	//
-	// in: query
-	ReturnTo string `json:"return_to"`
 }
 
 // swagger:route GET /self-service/registration/browser v0alpha2 initializeSelfServiceRegistrationFlowForBrowsers

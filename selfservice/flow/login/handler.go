@@ -284,16 +284,6 @@ func (h *Handler) initAPIFlow(w http.ResponseWriter, r *http.Request, _ httprout
 // nolint:deadcode,unused
 // swagger:parameters initializeSelfServiceLoginFlowForBrowsers
 type initializeSelfServiceLoginFlowForBrowsers struct {
-	// An optional Hydra login challenge. If present, Kratos will cooperate with
-	// Ory Hydra to act as an OAuth2 identity provider.
-	//
-	// The value for this parameter comes from `login_challenge` URL Query parameter sent to your
-	// application (e.g. `/login?login_challenge=abcde`).
-	//
-	// required: false
-	// in: query
-	HydraLoginChallenge string `json:"login_challenge"`
-
 	// Refresh a login session
 	//
 	// If set to true, this will refresh an existing login session by
@@ -326,6 +316,16 @@ type initializeSelfServiceLoginFlowForBrowsers struct {
 	// in: header
 	// name: Cookie
 	Cookies string `json:"Cookie"`
+
+	// An optional Hydra login challenge. If present, Kratos will cooperate with
+	// Ory Hydra to act as an OAuth2 identity provider.
+	//
+	// The value for this parameter comes from `login_challenge` URL Query parameter sent to your
+	// application (e.g. `/login?login_challenge=abcde`).
+	//
+	// required: false
+	// in: query
+	HydraLoginChallenge string `json:"login_challenge"`
 }
 
 // swagger:route GET /self-service/login/browser v0alpha2 initializeSelfServiceLoginFlowForBrowsers
