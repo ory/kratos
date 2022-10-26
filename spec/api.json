@@ -435,7 +435,7 @@
       "adminCreateSelfServiceRecoveryCodeBody": {
         "properties": {
           "expires_in": {
-            "description": "Code Expires In\n\nThe recovery code will expire at that point in time. Defaults to the configuration value of\n`selfservice.flows.recovery.request_lifespan`.",
+            "description": "Code Expires In\n\nThe recovery code will expire after that amount of time has passed. Defaults to the configuration value of\n`selfservice.methods.code.config.lifespan`.",
             "pattern": "^([0-9]+(ns|us|ms|s|m|h))*$",
             "type": "string"
           },
@@ -453,7 +453,7 @@
       "adminCreateSelfServiceRecoveryLinkBody": {
         "properties": {
           "expires_in": {
-            "description": "Link Expires In\n\nThe recovery link will expire at that point in time. Defaults to the configuration value of\n`selfservice.flows.recovery.request_lifespan`.",
+            "description": "Link Expires In\n\nThe recovery link will expire after that amount of time has passed. Defaults to the configuration value of\n`selfservice.methods.code.config.lifespan`.",
             "pattern": "^[0-9]+(ns|us|ms|s|m|h)$",
             "type": "string"
           },

@@ -79,8 +79,8 @@ type adminCreateSelfServiceRecoveryCodeBody struct {
 
 	// Code Expires In
 	//
-	// The recovery code will expire at that point in time. Defaults to the configuration value of
-	// `selfservice.flows.recovery.request_lifespan`.
+	// The recovery code will expire after that amount of time has passed. Defaults to the configuration value of
+	// `selfservice.methods.code.config.lifespan`.
 	//
 	//
 	// pattern: ^([0-9]+(ns|us|ms|s|m|h))*$
