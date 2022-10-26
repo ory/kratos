@@ -105,7 +105,7 @@ func TestBuildRequest(t *testing.T) {
 			rawConfig: `{
 				"url": "https://test.kratos.ory.sh/my_endpoint2",
 				"method": "POST",
-				"header": {
+				"headers": {
 					"Custom-Header": "test"
 				},
 				"body": "file://./stub/test_body.jsonnet"
@@ -196,7 +196,7 @@ func TestBuildRequest(t *testing.T) {
 				"url": "https://test.kratos.ory.sh/my_endpoint6",
 				"method": "POST",
 				"body": "file://./stub/test_body.jsonnet",
-				"header": {
+				"headers": {
 					"Content-Type": "application/x-www-form-urlencoded"
 				},
 				"auth": {

@@ -110,7 +110,7 @@ context("Import Identities", () => {
     })
 
     cy.visit(express.login)
-    cy.triggerOidc({ url: express.login })
+    cy.triggerOidc("express")
 
     cy.get("#username").clear().type(email)
     cy.get("#remember").click()

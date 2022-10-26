@@ -15,6 +15,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/ory/kratos/driver"
 	"github.com/ory/kratos/internal/registrationhelpers"
 
 	"github.com/ory/kratos/selfservice/flow"
@@ -47,6 +48,31 @@ import (
 //go:embed stub/login.schema.json
 var loginSchema []byte
 
+func createIdentity(ctx context.Context, reg *driver.RegistryDefault, t *testing.T, identifier, password string) {
+	p, _ := reg.Hasher(ctx).Generate(context.Background(), []byte(password))
+	iId := x.NewUUID()
+	require.NoError(t, reg.PrivilegedIdentityPool().CreateIdentity(context.Background(), &identity.Identity{
+		ID:     iId,
+		Traits: identity.Traits(fmt.Sprintf(`{"subject":"%s"}`, identifier)),
+		Credentials: map[identity.CredentialsType]identity.Credentials{
+			identity.CredentialsTypePassword: {
+				Type:        identity.CredentialsTypePassword,
+				Identifiers: []string{identifier},
+				Config:      sqlxx.JSONRawMessage(`{"hashed_password":"` + string(p) + `"}`),
+			},
+		},
+		VerifiableAddresses: []identity.VerifiableAddress{
+			{
+				ID:         x.NewUUID(),
+				Value:      identifier,
+				Verified:   false,
+				CreatedAt:  time.Now(),
+				IdentityID: iId,
+			},
+		},
+	}))
+}
+
 func TestCompleteLogin(t *testing.T) {
 	ctx := context.Background()
 	conf, reg := internal.NewFastRegistryWithMocks(t)
@@ -72,31 +98,6 @@ func TestCompleteLogin(t *testing.T) {
 			"csrf_token")
 	}
 
-	createIdentity := func(identifier, password string) {
-		p, _ := reg.Hasher(ctx).Generate(context.Background(), []byte(password))
-		iId := x.NewUUID()
-		require.NoError(t, reg.PrivilegedIdentityPool().CreateIdentity(context.Background(), &identity.Identity{
-			ID:     iId,
-			Traits: identity.Traits(fmt.Sprintf(`{"subject":"%s"}`, identifier)),
-			Credentials: map[identity.CredentialsType]identity.Credentials{
-				identity.CredentialsTypePassword: {
-					Type:        identity.CredentialsTypePassword,
-					Identifiers: []string{identifier},
-					Config:      sqlxx.JSONRawMessage(`{"hashed_password":"` + string(p) + `"}`),
-				},
-			},
-			VerifiableAddresses: []identity.VerifiableAddress{
-				{
-					ID:         x.NewUUID(),
-					Value:      identifier,
-					Verified:   false,
-					CreatedAt:  time.Now(),
-					IdentityID: iId,
-				},
-			},
-		}))
-	}
-
 	apiClient := testhelpers.NewDebugClient(t)
 
 	t.Run("case=should show the error ui because the request payload is malformed", func(t *testing.T) {
@@ -111,7 +112,7 @@ func TestCompleteLogin(t *testing.T) {
 
 		t.Run("type=browser", func(t *testing.T) {
 			browserClient := testhelpers.NewClientWithCookies(t)
-			f := testhelpers.InitializeLoginFlowViaBrowser(t, browserClient, publicTS, false, false)
+			f := testhelpers.InitializeLoginFlowViaBrowser(t, browserClient, publicTS, false, false, false, false)
 
 			body, res := testhelpers.LoginMakeRequest(t, false, false, f, browserClient, "14=)=!(%)$/ZP()GHIÖ")
 			assert.Contains(t, res.Request.URL.String(), uiTS.URL+"/login-ts")
@@ -121,7 +122,7 @@ func TestCompleteLogin(t *testing.T) {
 
 		t.Run("type=spa", func(t *testing.T) {
 			browserClient := testhelpers.NewClientWithCookies(t)
-			f := testhelpers.InitializeLoginFlowViaBrowser(t, browserClient, publicTS, false, true)
+			f := testhelpers.InitializeLoginFlowViaBrowser(t, browserClient, publicTS, false, true, false, false)
 
 			body, res := testhelpers.LoginMakeRequest(t, false, true, f, browserClient, "14=)=!(%)$/ZP()GHIÖ")
 			assert.Contains(t, res.Request.URL.String(), publicTS.URL+login.RouteSubmitFlow)
@@ -200,12 +201,12 @@ func TestCompleteLogin(t *testing.T) {
 			actual, res := testhelpers.LoginMakeRequest(t, true, false, f, apiClient, testhelpers.EncodeFormAsJSON(t, true, values))
 			assert.Contains(t, res.Request.URL.String(), publicTS.URL+login.RouteSubmitFlow)
 			assert.NotEqual(t, "00000000-0000-0000-0000-000000000000", gjson.Get(actual, "use_flow_id").String())
-			assertx.EqualAsJSONExcept(t, flow.NewFlowExpiredError(time.Now()), json.RawMessage(actual), []string{"use_flow_id", "since"}, "expired", "%s", actual)
+			assertx.EqualAsJSONExcept(t, flow.NewFlowExpiredError(time.Now()), json.RawMessage(actual), []string{"use_flow_id", "since", "expired_at"}, "expired", "%s", actual)
 		})
 
 		t.Run("type=browser", func(t *testing.T) {
 			browserClient := testhelpers.NewClientWithCookies(t)
-			f := testhelpers.InitializeLoginFlowViaBrowser(t, browserClient, publicTS, false, false)
+			f := testhelpers.InitializeLoginFlowViaBrowser(t, browserClient, publicTS, false, false, false, false)
 
 			time.Sleep(time.Millisecond * 60)
 			actual, res := testhelpers.LoginMakeRequest(t, false, false, f, browserClient, values.Encode())
@@ -216,13 +217,13 @@ func TestCompleteLogin(t *testing.T) {
 
 		t.Run("type=SPA", func(t *testing.T) {
 			browserClient := testhelpers.NewClientWithCookies(t)
-			f := testhelpers.InitializeLoginFlowViaBrowser(t, browserClient, publicTS, false, true)
+			f := testhelpers.InitializeLoginFlowViaBrowser(t, browserClient, publicTS, false, true, false, false)
 
 			time.Sleep(time.Millisecond * 60)
 			actual, res := testhelpers.LoginMakeRequest(t, false, true, f, apiClient, testhelpers.EncodeFormAsJSON(t, true, values))
 			assert.Contains(t, res.Request.URL.String(), publicTS.URL+login.RouteSubmitFlow)
 			assert.NotEqual(t, "00000000-0000-0000-0000-000000000000", gjson.Get(actual, "use_flow_id").String())
-			assertx.EqualAsJSONExcept(t, flow.NewFlowExpiredError(time.Now()), json.RawMessage(actual), []string{"use_flow_id", "since"}, "expired", "%s", actual)
+			assertx.EqualAsJSONExcept(t, flow.NewFlowExpiredError(time.Now()), json.RawMessage(actual), []string{"use_flow_id", "since", "expired_at"}, "expired", "%s", actual)
 		})
 	})
 
@@ -236,7 +237,7 @@ func TestCompleteLogin(t *testing.T) {
 
 		t.Run("case=should fail because of missing CSRF token/type=browser", func(t *testing.T) {
 			browserClient := testhelpers.NewClientWithCookies(t)
-			f := testhelpers.InitializeLoginFlowViaBrowser(t, browserClient, publicTS, false, false)
+			f := testhelpers.InitializeLoginFlowViaBrowser(t, browserClient, publicTS, false, false, false, false)
 
 			actual, res := testhelpers.LoginMakeRequest(t, false, false, f, browserClient, values.Encode())
 			assert.EqualValues(t, http.StatusOK, res.StatusCode)
@@ -246,7 +247,7 @@ func TestCompleteLogin(t *testing.T) {
 
 		t.Run("case=should fail because of missing CSRF token/type=spa", func(t *testing.T) {
 			browserClient := testhelpers.NewClientWithCookies(t)
-			f := testhelpers.InitializeLoginFlowViaBrowser(t, browserClient, publicTS, false, true)
+			f := testhelpers.InitializeLoginFlowViaBrowser(t, browserClient, publicTS, false, true, false, false)
 
 			actual, res := testhelpers.LoginMakeRequest(t, false, true, f, browserClient, values.Encode())
 			assert.EqualValues(t, http.StatusForbidden, res.StatusCode)
@@ -445,7 +446,7 @@ func TestCompleteLogin(t *testing.T) {
 		}
 
 		identifier, pwd := x.NewUUID().String(), "password"
-		createIdentity(identifier, pwd)
+		createIdentity(ctx, reg, t, identifier, pwd)
 
 		var values = func(v url.Values) {
 			v.Set("identifier", identifier)
@@ -466,7 +467,7 @@ func TestCompleteLogin(t *testing.T) {
 
 	t.Run("should pass with real request", func(t *testing.T) {
 		identifier, pwd := x.NewUUID().String(), "password"
-		createIdentity(identifier, pwd)
+		createIdentity(ctx, reg, t, identifier, pwd)
 
 		var values = func(v url.Values) {
 			v.Set("identifier", identifier)
@@ -691,7 +692,7 @@ func TestCompleteLogin(t *testing.T) {
 
 		t.Run("type=browser", func(t *testing.T) {
 			browserClient := testhelpers.NewClientWithCookies(t)
-			f := testhelpers.InitializeLoginFlowViaBrowser(t, browserClient, publicTS, false, false)
+			f := testhelpers.InitializeLoginFlowViaBrowser(t, browserClient, publicTS, false, false, false, false)
 
 			actual, _ := testhelpers.LoginMakeRequest(t, false, false, f, browserClient, valuesFirst(testhelpers.SDKFormFieldsToURLValues(f.Ui.Nodes)).Encode())
 			checkFirst(t, actual)
@@ -702,10 +703,10 @@ func TestCompleteLogin(t *testing.T) {
 
 	t.Run("should be a new session with refresh flag", func(t *testing.T) {
 		identifier, pwd := x.NewUUID().String(), "password"
-		createIdentity(identifier, pwd)
+		createIdentity(ctx, reg, t, identifier, pwd)
 
 		browserClient := testhelpers.NewClientWithCookies(t)
-		f := testhelpers.InitializeLoginFlowViaBrowser(t, browserClient, publicTS, false, false)
+		f := testhelpers.InitializeLoginFlowViaBrowser(t, browserClient, publicTS, false, false, false, false)
 
 		values := url.Values{"method": {"password"}, "identifier": {identifier},
 			"password": {pwd}, "csrf_token": {x.FakeCSRFToken}}.Encode()
@@ -713,7 +714,7 @@ func TestCompleteLogin(t *testing.T) {
 		body1, res := testhelpers.LoginMakeRequest(t, false, false, f, browserClient, values)
 		assert.EqualValues(t, http.StatusOK, res.StatusCode)
 
-		f = testhelpers.InitializeLoginFlowViaBrowser(t, browserClient, publicTS, true, false)
+		f = testhelpers.InitializeLoginFlowViaBrowser(t, browserClient, publicTS, true, false, false, false)
 		body2, res := testhelpers.LoginMakeRequest(t, false, false, f, browserClient, values)
 
 		require.Contains(t, res.Request.URL.Path, "return-ts", "%s", res.Request.URL.String())
@@ -723,10 +724,10 @@ func TestCompleteLogin(t *testing.T) {
 
 	t.Run("should login same identity regardless of identifier capitalization", func(t *testing.T) {
 		identifier, pwd := x.NewUUID().String(), "password"
-		createIdentity(identifier, pwd)
+		createIdentity(ctx, reg, t, identifier, pwd)
 
 		browserClient := testhelpers.NewClientWithCookies(t)
-		f := testhelpers.InitializeLoginFlowViaBrowser(t, browserClient, publicTS, false, false)
+		f := testhelpers.InitializeLoginFlowViaBrowser(t, browserClient, publicTS, false, false, false, false)
 
 		values := url.Values{"method": {"password"}, "identifier": {strings.ToUpper(identifier)}, "password": {pwd}, "csrf_token": {x.FakeCSRFToken}}.Encode()
 
@@ -738,10 +739,10 @@ func TestCompleteLogin(t *testing.T) {
 
 	t.Run("should login even if old form field name is used", func(t *testing.T) {
 		identifier, pwd := x.NewUUID().String(), "password"
-		createIdentity(identifier, pwd)
+		createIdentity(ctx, reg, t, identifier, pwd)
 
 		browserClient := testhelpers.NewClientWithCookies(t)
-		f := testhelpers.InitializeLoginFlowViaBrowser(t, browserClient, publicTS, false, false)
+		f := testhelpers.InitializeLoginFlowViaBrowser(t, browserClient, publicTS, false, false, false, false)
 
 		values := url.Values{"method": {"password"}, "password_identifier": {strings.ToUpper(identifier)}, "password": {pwd}, "csrf_token": {x.FakeCSRFToken}}.Encode()
 
@@ -753,10 +754,10 @@ func TestCompleteLogin(t *testing.T) {
 
 	t.Run("should login same identity regardless of leading or trailing whitespace", func(t *testing.T) {
 		identifier, pwd := x.NewUUID().String(), "password"
-		createIdentity(identifier, pwd)
+		createIdentity(ctx, reg, t, identifier, pwd)
 
 		browserClient := testhelpers.NewClientWithCookies(t)
-		f := testhelpers.InitializeLoginFlowViaBrowser(t, browserClient, publicTS, false, false)
+		f := testhelpers.InitializeLoginFlowViaBrowser(t, browserClient, publicTS, false, false, false, false)
 
 		values := url.Values{"method": {"password"}, "identifier": {"  " + identifier + "  "}, "password": {pwd}, "csrf_token": {x.FakeCSRFToken}}.Encode()
 
@@ -772,7 +773,7 @@ func TestCompleteLogin(t *testing.T) {
 		})
 
 		identifier, pwd := x.NewUUID().String(), "password"
-		createIdentity(identifier, pwd)
+		createIdentity(ctx, reg, t, identifier, pwd)
 
 		var values = func(v url.Values) {
 			v.Set("method", "password")

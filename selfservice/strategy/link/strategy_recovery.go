@@ -77,8 +77,8 @@ type adminCreateSelfServiceRecoveryLinkBody struct {
 
 	// Link Expires In
 	//
-	// The recovery link will expire at that point in time. Defaults to the configuration value of
-	// `selfservice.flows.recovery.request_lifespan`.
+	// The recovery link will expire after that amount of time has passed. Defaults to the configuration value of
+	// `selfservice.methods.code.config.lifespan`.
 	//
 	//
 	// pattern: ^[0-9]+(ns|us|ms|s|m|h)$
@@ -383,7 +383,7 @@ func (s *Strategy) retryRecoveryFlowWithError(w http.ResponseWriter, r *http.Req
 	}
 
 	if expired := new(flow.ExpiredError); errors.As(recErr, &expired) {
-		return s.retryRecoveryFlowWithMessage(w, r, ft, text.NewErrorValidationRecoveryFlowExpired(expired.Ago))
+		return s.retryRecoveryFlowWithMessage(w, r, ft, text.NewErrorValidationRecoveryFlowExpired(expired.ExpiredAt))
 	} else {
 		if err := req.UI.ParseError(node.LinkGroup, recErr); err != nil {
 			return err

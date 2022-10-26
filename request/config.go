@@ -19,7 +19,7 @@ type (
 		Method      string      `json:"method"`
 		URL         string      `json:"url"`
 		TemplateURI string      `json:"body"`
-		Header      http.Header `json:"header"`
+		Header      http.Header `json:"headers"`
 		Auth        Auth        `json:"auth,omitempty"`
 	}
 )
@@ -29,7 +29,7 @@ func parseConfig(r json.RawMessage) (*Config, error) {
 		Method      string          `json:"method"`
 		URL         string          `json:"url"`
 		TemplateURI string          `json:"body"`
-		Header      json.RawMessage `json:"header"`
+		Header      json.RawMessage `json:"headers"`
 		Auth        Auth            `json:"auth,omitempty"`
 	}
 

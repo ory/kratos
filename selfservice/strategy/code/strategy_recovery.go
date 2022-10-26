@@ -81,8 +81,8 @@ type adminCreateSelfServiceRecoveryCodeBody struct {
 
 	// Code Expires In
 	//
-	// The recovery code will expire at that point in time. Defaults to the configuration value of
-	// `selfservice.flows.recovery.request_lifespan`.
+	// The recovery code will expire after that amount of time has passed. Defaults to the configuration value of
+	// `selfservice.methods.code.config.lifespan`.
 	//
 	//
 	// pattern: ^([0-9]+(ns|us|ms|s|m|h))*$
@@ -117,7 +117,7 @@ type selfServiceRecoveryCode struct {
 
 // swagger:route POST /admin/recovery/code v0alpha2 adminCreateSelfServiceRecoveryCode
 //
-// # Create a Recovery Link
+// # Create a Recovery Code
 //
 // This endpoint creates a recovery code which should be given to the user in order for them to recover
 // (or activate) their account.
@@ -279,6 +279,8 @@ func (s *Strategy) Recover(w http.ResponseWriter, r *http.Request, f *recovery.F
 	}
 
 	sID := s.RecoveryStrategyID()
+
+	f.UI.ResetMessages()
 
 	// If the email is present in the submission body, the user needs a new code via resend
 	if f.State != recovery.StateChooseMethod && len(body.Email) == 0 {
@@ -460,7 +462,7 @@ func (s *Strategy) retryRecoveryFlowWithError(w http.ResponseWriter, r *http.Req
 	config := s.deps.Config()
 
 	if expired := new(flow.ExpiredError); errors.As(recErr, &expired) {
-		return s.retryRecoveryFlowWithMessage(w, r, ft, text.NewErrorValidationRecoveryFlowExpired(expired.Ago))
+		return s.retryRecoveryFlowWithMessage(w, r, ft, text.NewErrorValidationRecoveryFlowExpired(expired.ExpiredAt))
 	}
 
 	f, err := recovery.NewFlow(config, config.SelfServiceFlowRecoveryRequestLifespan(ctx), s.deps.CSRFHandler().RegenerateToken(w, r), r, s, ft)

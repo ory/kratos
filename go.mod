@@ -72,11 +72,12 @@ require (
 	github.com/ory/go-convenience v0.1.0
 	github.com/ory/graceful v0.1.3
 	github.com/ory/herodot v0.9.13
+	github.com/ory/hydra-client-go v1.11.8
 	github.com/ory/jsonschema/v3 v3.0.7
 	github.com/ory/kratos-client-go v0.6.3-alpha.1
 	github.com/ory/mail/v3 v3.0.0
 	github.com/ory/nosurf v1.2.7
-	github.com/ory/x v0.0.480
+	github.com/ory/x v0.0.488
 	github.com/phayes/freeport v0.0.0-20180830031419-95f893ade6f2
 	github.com/pkg/errors v0.9.1
 	github.com/pquerna/otp v1.3.0

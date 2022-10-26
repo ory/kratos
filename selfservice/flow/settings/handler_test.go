@@ -144,10 +144,43 @@ func TestHandler(t *testing.T) {
 		})
 
 		t.Run("description=init a flow as browser", func(t *testing.T) {
-			t.Run("description=without privileges", func(t *testing.T) {
-				res, body := initSPAFlow(t, new(http.Client))
-				assert.Equal(t, http.StatusUnauthorized, res.StatusCode, "%s", body)
-				assert.Equal(t, text.ErrNoActiveSession, gjson.GetBytes(body, "error.id").String(), "%s", body)
+			t.Run("case=unauthorized users are redirected to login preserving redirect_to param", func(t *testing.T) {
+				c := testhelpers.NewClientWithCookies(t)
+				// prevent the redirect
+				c.CheckRedirect = func(req *http.Request, via []*http.Request) error {
+					return http.ErrUseLastResponse
+				}
+				returnTo := "?return_to=validRedirect"
+				req, err := http.NewRequest("GET", publicTS.URL+settings.RouteInitBrowserFlow+returnTo, nil)
+				require.NoError(t, err)
+
+				res, err := c.Do(req)
+				require.NoError(t, err)
+				defer res.Body.Close()
+				// here we check that the redirect status is 303
+				require.Equal(t, http.StatusSeeOther, res.StatusCode)
+				location, err := res.Location()
+				require.NoError(t, err)
+				require.Equal(t, publicTS.URL+login.RouteInitBrowserFlow+returnTo, location.String())
+			})
+
+			t.Run("case=unauthorized users are redirected to login", func(t *testing.T) {
+				c := testhelpers.NewClientWithCookies(t)
+				// prevent the redirect
+				c.CheckRedirect = func(req *http.Request, via []*http.Request) error {
+					return http.ErrUseLastResponse
+				}
+				req, err := http.NewRequest("GET", publicTS.URL+settings.RouteInitBrowserFlow, nil)
+				require.NoError(t, err)
+
+				res, err := c.Do(req)
+				require.NoError(t, err)
+				defer res.Body.Close()
+				// here we check that the redirect status is 303
+				require.Equal(t, http.StatusSeeOther, res.StatusCode)
+				location, err := res.Location()
+				require.NoError(t, err)
+				require.Equal(t, publicTS.URL+login.RouteInitBrowserFlow, location.String())
 			})
 
 			t.Run("description=success", func(t *testing.T) {
@@ -175,13 +208,22 @@ func TestHandler(t *testing.T) {
 
 				res, err := c.Do(req)
 				require.NoError(t, err)
+				defer res.Body.Close()
 				// here we check that the redirect status is 303
 				require.Equal(t, http.StatusSeeOther, res.StatusCode)
-				defer res.Body.Close()
+				location, err := res.Location()
+				require.NoError(t, err)
+				require.Contains(t, location.String(), conf.SelfServiceFlowSettingsUI(ctx).String())
 			})
 		})
 
 		t.Run("description=init a flow as SPA", func(t *testing.T) {
+			t.Run("description=without privileges", func(t *testing.T) {
+				res, body := initSPAFlow(t, new(http.Client))
+				assert.Equal(t, http.StatusUnauthorized, res.StatusCode, "%s", body)
+				assert.Equal(t, text.ErrNoActiveSession, gjson.GetBytes(body, "error.id").String(), "%s", body)
+			})
+
 			t.Run("description=success", func(t *testing.T) {
 				user1 := testhelpers.NewHTTPClientWithArbitrarySessionToken(t, reg)
 				res, body := initSPAFlow(t, user1)
@@ -402,6 +444,32 @@ func TestHandler(t *testing.T) {
 				actual, res := testhelpers.SettingsMakeRequest(t, false, false, &f, user2, `{"method":"not-exists"}`)
 				assert.Equal(t, http.StatusBadRequest, res.StatusCode)
 				assert.Equal(t, "You must restart the flow because the resumable session was initiated by another person.", gjson.Get(actual, "ui.messages.0.text").String(), actual)
+			})
+		})
+
+		t.Run("description=submit - kratos session cookie issued", func(t *testing.T) {
+			t.Run("type=spa", func(t *testing.T) {
+				_, body := initFlow(t, primaryUser, false)
+				var f kratos.SelfServiceSettingsFlow
+				require.NoError(t, json.Unmarshal(body, &f))
+
+				actual, res := testhelpers.SettingsMakeRequest(t, false, true, &f, primaryUser, fmt.Sprintf(`{"method":"profile", "numby": 15, "csrf_token": "%s"}`, x.FakeCSRFToken))
+				assert.Equal(t, http.StatusOK, res.StatusCode)
+				require.Len(t, primaryUser.Jar.Cookies(urlx.ParseOrPanic(publicTS.URL+login.RouteGetFlow)), 1)
+				require.Contains(t, fmt.Sprintf("%v", primaryUser.Jar.Cookies(urlx.ParseOrPanic(publicTS.URL))), "ory_kratos_session")
+				assert.Equal(t, "Your changes have been saved!", gjson.Get(actual, "ui.messages.0.text").String(), actual)
+			})
+
+			t.Run("type=browser", func(t *testing.T) {
+				_, body := initFlow(t, primaryUser, false)
+				var f kratos.SelfServiceSettingsFlow
+				require.NoError(t, json.Unmarshal(body, &f))
+
+				actual, res := testhelpers.SettingsMakeRequest(t, false, false, &f, primaryUser, `method=profile&traits.numby=15&csrf_token=`+x.FakeCSRFToken)
+				assert.Equal(t, http.StatusOK, res.StatusCode)
+				require.Len(t, primaryUser.Jar.Cookies(urlx.ParseOrPanic(publicTS.URL+login.RouteGetFlow)), 1)
+				require.Contains(t, fmt.Sprintf("%v", primaryUser.Jar.Cookies(urlx.ParseOrPanic(publicTS.URL))), "ory_kratos_session")
+				assert.Equal(t, "Your changes have been saved!", gjson.Get(actual, "ui.messages.0.text").String(), actual)
 			})
 		})
 	})

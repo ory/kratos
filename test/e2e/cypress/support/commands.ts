@@ -1,6 +1,7 @@
 // Copyright © 2022 Ory Corp
 
 import {
+  appPrefix,
   APP_URL,
   assertVerifiableAddress,
   gen,
@@ -565,6 +566,7 @@ Cypress.Commands.add("addVirtualAuthenticator", () =>
 Cypress.Commands.add(
   "registerOidc",
   ({
+    app,
     email,
     website,
     scopes,
@@ -577,7 +579,7 @@ Cypress.Commands.add(
   }) => {
     cy.visit(route)
 
-    cy.triggerOidc()
+    cy.triggerOidc(app)
 
     cy.get("#username").type(email)
     if (rememberLogin) {
@@ -610,6 +612,7 @@ Cypress.Commands.add(
     } else {
       cy.get("#reject").click()
     }
+
     cy.location("pathname").should("not.include", "consent")
 
     if (expectSession) {
@@ -681,21 +684,47 @@ Cypress.Commands.add("remoteCourierRecoveryCodeTemplates", ({} = {}) => {
         invalid: {
           email: {
             body: {
-              html: "base64://SGksCgp0aGlzIGlzIGEgcmVtb3RlIGludmFsaWQgcmVjb3ZlcnkgdGVtcGxhdGU=",
+              html: "base64://cmVjb3ZlcnlfY29kZV9pbnZhbGlkIFJFTU9URSBURU1QTEFURSBIVE1M", // only
               plaintext:
-                "base64://SGksCgp0aGlzIGlzIGEgcmVtb3RlIGludmFsaWQgcmVjb3ZlcnkgdGVtcGxhdGU=",
+                "base64://cmVjb3ZlcnlfY29kZV9pbnZhbGlkIFJFTU9URSBURU1QTEFURSBUWFQ=",
             },
-            subject: "base64://QWNjb3VudCBBY2Nlc3MgQXR0ZW1wdGVk",
+            subject:
+              "base64://cmVjb3ZlcnlfY29kZV9pbnZhbGlkIFJFTU9URSBURU1QTEFURSBTVUJKRUNU",
           },
         },
         valid: {
           email: {
             body: {
-              html: "base64://SGksCgp0aGlzIGlzIGEgcmVtb3RlIGludmFsaWQgcmVjb3ZlcnkgdGVtcGxhdGUKcGxlYXNlIHJlY292ZXIgYWNjZXNzIHRvIHlvdXIgYWNjb3VudCBieSBlbnRlcmluZyB0aGUgZm9sbG93aW5nIGNvZGU6Cgp7eyAuUmVjb3ZlcnlDb2RlIH19Cg==",
+              html: "base://cmVjb3ZlcnlfY29kZV92YWxpZCBSRU1PVEUgVEVNUExBVEUgSFRNTA==",
               plaintext:
-                "base64://SGksCgp0aGlzIGlzIGEgcmVtb3RlIGludmFsaWQgcmVjb3ZlcnkgdGVtcGxhdGUKcGxlYXNlIHJlY292ZXIgYWNjZXNzIHRvIHlvdXIgYWNjb3VudCBieSBlbnRlcmluZyB0aGUgZm9sbG93aW5nIGNvZGU6Cgp7eyAuUmVjb3ZlcnlDb2RlIH19Cg==",
+                "base64://cmVjb3ZlcnlfY29kZV92YWxpZCBSRU1PVEUgVEVNUExBVEUgVFhU",
             },
-            subject: "base64://UmVjb3ZlciBhY2Nlc3MgdG8geW91ciBhY2NvdW50",
+            subject:
+              "base64://cmVjb3ZlcnlfY29kZV92YWxpZCBSRU1PVEUgVEVNUExBVEUgU1VCSkVDVA==",
+          },
+        },
+      },
+    }
+    return config
+  })
+})
+
+Cypress.Commands.add("resetCourierTemplates", (type) => {
+  updateConfigFile((config) => {
+    config.courier.templates = {
+      [type]: {
+        invalid: {
+          email: {
+            body: {},
+            subject: "",
+          },
+        },
+        valid: {
+          email: {
+            body: {
+              body: {},
+              subject: "",
+            },
           },
         },
       },
@@ -706,11 +735,15 @@ Cypress.Commands.add("remoteCourierRecoveryCodeTemplates", ({} = {}) => {
 
 Cypress.Commands.add(
   "loginOidc",
-  ({ expectSession = true, url = APP_URL + "/login" }) => {
+  ({ app, expectSession = true, url = APP_URL + "/login" }) => {
     cy.visit(url)
-    cy.triggerOidc("hydra")
+    cy.triggerOidc(app, "hydra")
     cy.location("href").should("not.eq", "/consent")
     if (expectSession) {
+      // for some reason react flakes here although the login succeeded and there should be a session it fails
+      if (app === "react") {
+        cy.wait(2000) // adding arbitrary wait here. not sure if there is a better way in this case
+      }
       cy.getSession()
     } else {
       cy.noSession()
@@ -895,8 +928,11 @@ Cypress.Commands.add(
   "getSession",
   ({ expectAal = "aal1", expectMethods = [] } = {}) => {
     // Do the request once to ensure we have a session (with retry)
-    cy.request("GET", `${KRATOS_PUBLIC}/sessions/whoami`)
-      .its("status")
+    cy.request({
+      method: "GET",
+      url: `${KRATOS_PUBLIC}/sessions/whoami`,
+    })
+      .its("status") // adds retry
       .should("eq", 200)
 
     // Return the session for further propagation
@@ -1178,9 +1214,9 @@ Cypress.Commands.add(
       )
     } else {
       cy.location("pathname").should("contain", "error")
-      cy.get("code").should(
+      cy.get("div").should(
         "contain.text",
-        'Requested return_to URL \\"https://not-allowed\\" is not allowed.',
+        'Requested return_to URL "https://not-allowed" is not allowed.',
       )
     }
   },
@@ -1211,7 +1247,7 @@ Cypress.Commands.add(
       })
 
       cy.location("pathname").should("include", "/error")
-      cy.get("code").should("contain.text", "csrf_token")
+      cy.get(`div`).should("contain.text", "CSRF")
     } else {
       cy.location("pathname").should((got) => {
         expect(got).to.eql(pathname)
@@ -1238,6 +1274,17 @@ Cypress.Commands.add(
         return
       }
       expect(loc.pathname + loc.search).not.to.eql(initial)
+    })
+  },
+)
+
+Cypress.Commands.add(
+  "removeAttribute",
+  (selectors: string[], attribute: string) => {
+    selectors.forEach((selector) => {
+      cy.get(selector).then(($el) => {
+        $el.removeAttr(attribute)
+      })
     })
   },
 )

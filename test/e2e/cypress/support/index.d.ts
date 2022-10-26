@@ -10,6 +10,7 @@ export interface MailMessage {
 }
 
 export type RecoveryStrategy = "code" | "link"
+type app = "express" | "react"
 
 declare global {
   namespace Cypress {
@@ -185,6 +186,13 @@ declare global {
       remoteCourierRecoveryTemplates(): Chainable<void>
 
       /**
+       * Resets the remote courier templates for the given template type to their default values
+       */
+      resetCourierTemplates(
+        type: "recovery_code" | "recovery" | "verification",
+      ): Chainable<void>
+
+      /**
        * Change the courier recovery code invalid and valid templates to remote base64 strings
        */
       remoteCourierRecoveryCodeTemplates(): Chainable<void>
@@ -318,6 +326,7 @@ declare global {
        * @param opts
        */
       registerOidc(opts: {
+        app: app
         email?: string
         website?: string
         scopes?: Array<string>
@@ -335,6 +344,7 @@ declare global {
        * @param opts
        */
       loginOidc(opts: {
+        app: app
         expectSession?: boolean
         url?: string
       }): Chainable<void>
@@ -568,6 +578,11 @@ declare global {
        * @param id
        */
       setDefaultIdentitySchema(id: string): Chainable<void>
+
+      /**
+       * Remove the specified attribute from the given HTML elements
+       */
+      removeAttribute(selectors: string[], attribute: string): Chainable<void>
     }
   }
 }

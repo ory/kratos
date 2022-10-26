@@ -8,6 +8,8 @@ Name | Type | Description | Notes
 **ExpiresAt** | **time.Time** | ExpiresAt is the time (UTC) when the flow expires. If the user still wishes to log in, a new flow has to be initiated. | 
 **Id** | **string** | ID represents the flow&#39;s unique ID. When performing the registration flow, this represents the id in the registration ui&#39;s query parameter: http://&lt;selfservice.flows.registration.ui_url&gt;/?flow&#x3D;&lt;id&gt; | 
 **IssuedAt** | **time.Time** | IssuedAt is the time (UTC) when the flow occurred. | 
+**Oauth2LoginChallenge** | Pointer to **NullableString** |  | [optional] 
+**Oauth2LoginRequest** | Pointer to [**LoginRequest**](LoginRequest.md) |  | [optional] 
 **RequestUrl** | **string** | RequestURL is the initial URL that was requested from Ory Kratos. It can be used to forward information contained in the URL&#39;s path or query for example. | 
 **ReturnTo** | Pointer to **string** | ReturnTo contains the requested return_to URL. | [optional] 
 **Type** | **string** | The flow type can either be &#x60;api&#x60; or &#x60;browser&#x60;. | 
@@ -116,6 +118,66 @@ and a boolean to check if the value has been set.
 
 SetIssuedAt sets IssuedAt field to given value.
 
+
+### GetOauth2LoginChallenge
+
+`func (o *SelfServiceRegistrationFlow) GetOauth2LoginChallenge() string`
+
+GetOauth2LoginChallenge returns the Oauth2LoginChallenge field if non-nil, zero value otherwise.
+
+### GetOauth2LoginChallengeOk
+
+`func (o *SelfServiceRegistrationFlow) GetOauth2LoginChallengeOk() (*string, bool)`
+
+GetOauth2LoginChallengeOk returns a tuple with the Oauth2LoginChallenge field if it's non-nil, zero value otherwise
+and a boolean to check if the value has been set.
+
+### SetOauth2LoginChallenge
+
+`func (o *SelfServiceRegistrationFlow) SetOauth2LoginChallenge(v string)`
+
+SetOauth2LoginChallenge sets Oauth2LoginChallenge field to given value.
+
+### HasOauth2LoginChallenge
+
+`func (o *SelfServiceRegistrationFlow) HasOauth2LoginChallenge() bool`
+
+HasOauth2LoginChallenge returns a boolean if a field has been set.
+
+### SetOauth2LoginChallengeNil
+
+`func (o *SelfServiceRegistrationFlow) SetOauth2LoginChallengeNil(b bool)`
+
+ SetOauth2LoginChallengeNil sets the value for Oauth2LoginChallenge to be an explicit nil
+
+### UnsetOauth2LoginChallenge
+`func (o *SelfServiceRegistrationFlow) UnsetOauth2LoginChallenge()`
+
+UnsetOauth2LoginChallenge ensures that no value is present for Oauth2LoginChallenge, not even an explicit nil
+### GetOauth2LoginRequest
+
+`func (o *SelfServiceRegistrationFlow) GetOauth2LoginRequest() LoginRequest`
+
+GetOauth2LoginRequest returns the Oauth2LoginRequest field if non-nil, zero value otherwise.
+
+### GetOauth2LoginRequestOk
+
+`func (o *SelfServiceRegistrationFlow) GetOauth2LoginRequestOk() (*LoginRequest, bool)`
+
+GetOauth2LoginRequestOk returns a tuple with the Oauth2LoginRequest field if it's non-nil, zero value otherwise
+and a boolean to check if the value has been set.
+
+### SetOauth2LoginRequest
+
+`func (o *SelfServiceRegistrationFlow) SetOauth2LoginRequest(v LoginRequest)`
+
+SetOauth2LoginRequest sets Oauth2LoginRequest field to given value.
+
+### HasOauth2LoginRequest
+
+`func (o *SelfServiceRegistrationFlow) HasOauth2LoginRequest() bool`
+
+HasOauth2LoginRequest returns a boolean if a field has been set.
 
 ### GetRequestUrl
 

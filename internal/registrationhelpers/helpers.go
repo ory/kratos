@@ -132,7 +132,7 @@ func AssertSchemDoesNotExist(t *testing.T, reg *driver.RegistryDefault, flows []
 		t.Run("type=spa", func(t *testing.T) {
 			skipIfNotEnabled(t, flows, "spa")
 			browserClient := testhelpers.NewClientWithCookies(t)
-			f := testhelpers.InitializeRegistrationFlowViaBrowser(t, browserClient, publicTS, true)
+			f := testhelpers.InitializeRegistrationFlowViaBrowser(t, browserClient, publicTS, true, false, false)
 			testhelpers.SetDefaultIdentitySchema(conf, "file://./stub/i-do-not-exist.schema.json")
 			t.Cleanup(reset)
 
@@ -144,7 +144,7 @@ func AssertSchemDoesNotExist(t *testing.T, reg *driver.RegistryDefault, flows []
 		t.Run("type=browser", func(t *testing.T) {
 			skipIfNotEnabled(t, flows, "browser")
 			browserClient := testhelpers.NewClientWithCookies(t)
-			f := testhelpers.InitializeRegistrationFlowViaBrowser(t, browserClient, publicTS, false)
+			f := testhelpers.InitializeRegistrationFlowViaBrowser(t, browserClient, publicTS, false, false, false)
 			testhelpers.SetDefaultIdentitySchema(conf, "file://./stub/i-do-not-exist.schema.json")
 			t.Cleanup(reset)
 
@@ -175,7 +175,7 @@ func AssertCSRFFailures(t *testing.T, reg *driver.RegistryDefault, flows []strin
 		skipIfNotEnabled(t, flows, "browser")
 
 		browserClient := testhelpers.NewClientWithCookies(t)
-		f := testhelpers.InitializeRegistrationFlowViaBrowser(t, browserClient, publicTS, false)
+		f := testhelpers.InitializeRegistrationFlowViaBrowser(t, browserClient, publicTS, false, false, false)
 
 		actual, res := testhelpers.RegistrationMakeRequest(t, false, false, f, browserClient, values.Encode())
 		assert.EqualValues(t, http.StatusOK, res.StatusCode)
@@ -187,7 +187,7 @@ func AssertCSRFFailures(t *testing.T, reg *driver.RegistryDefault, flows []strin
 		skipIfNotEnabled(t, flows, "spa")
 
 		browserClient := testhelpers.NewClientWithCookies(t)
-		f := testhelpers.InitializeRegistrationFlowViaBrowser(t, browserClient, publicTS, true)
+		f := testhelpers.InitializeRegistrationFlowViaBrowser(t, browserClient, publicTS, true, false, false)
 
 		actual, res := testhelpers.RegistrationMakeRequest(t, false, true, f, browserClient, values.Encode())
 		assert.EqualValues(t, http.StatusForbidden, res.StatusCode)
@@ -314,7 +314,7 @@ func AssertCommonErrorCases(t *testing.T, reg *driver.RegistryDefault, flows []s
 		})
 
 		t.Run("type=spa", func(t *testing.T) {
-			f := testhelpers.InitializeRegistrationFlowViaBrowser(t, apiClient, publicTS, true)
+			f := testhelpers.InitializeRegistrationFlowViaBrowser(t, apiClient, publicTS, true, false, false)
 			body, res := testhelpers.RegistrationMakeRequest(t, true, false, f, apiClient, "14=)=!(%)$/ZP()GHIÖ")
 			assert.Contains(t, res.Request.URL.String(), publicTS.URL+registration.RouteSubmitFlow)
 			assert.NotEmpty(t, gjson.Get(body, "id").String(), "%s", body)
@@ -323,7 +323,7 @@ func AssertCommonErrorCases(t *testing.T, reg *driver.RegistryDefault, flows []s
 
 		t.Run("type=browser", func(t *testing.T) {
 			browserClient := testhelpers.NewClientWithCookies(t)
-			f := testhelpers.InitializeRegistrationFlowViaBrowser(t, browserClient, publicTS, false)
+			f := testhelpers.InitializeRegistrationFlowViaBrowser(t, browserClient, publicTS, false, false, false)
 			body, res := testhelpers.RegistrationMakeRequest(t, false, false, f, browserClient, "14=)=!(%)$/ZP()GHIÖ")
 			assert.Contains(t, res.Request.URL.String(), uiTS.URL+"/registration-ts")
 			assert.NotEmpty(t, gjson.Get(body, "id").String(), "%s", body)
@@ -363,7 +363,7 @@ func AssertCommonErrorCases(t *testing.T, reg *driver.RegistryDefault, flows []s
 		})
 
 		t.Run("type=spa", func(t *testing.T) {
-			f := testhelpers.InitializeRegistrationFlowViaBrowser(t, apiClient, publicTS, true)
+			f := testhelpers.InitializeRegistrationFlowViaBrowser(t, apiClient, publicTS, true, false, false)
 			body, res := testhelpers.RegistrationMakeRequest(t, true, false, f, apiClient, "14=)=!(%)$/ZP()GHIÖ")
 			assert.Contains(t, res.Request.URL.String(), publicTS.URL+registration.RouteSubmitFlow)
 			assert.NotEmpty(t, gjson.Get(body, "id").String(), "%s", body)
@@ -372,7 +372,7 @@ func AssertCommonErrorCases(t *testing.T, reg *driver.RegistryDefault, flows []s
 
 		t.Run("type=browser", func(t *testing.T) {
 			browserClient := testhelpers.NewClientWithCookies(t)
-			f := testhelpers.InitializeRegistrationFlowViaBrowser(t, browserClient, publicTS, false)
+			f := testhelpers.InitializeRegistrationFlowViaBrowser(t, browserClient, publicTS, false, false, false)
 			body, res := testhelpers.RegistrationMakeRequest(t, false, false, f, browserClient, "14=)=!(%)$/ZP()GHIÖ")
 			assert.Contains(t, res.Request.URL.String(), uiTS.URL+"/registration-ts")
 			assert.NotEmpty(t, gjson.Get(body, "id").String(), "%s", body)
@@ -392,7 +392,7 @@ func AssertCommonErrorCases(t *testing.T, reg *driver.RegistryDefault, flows []s
 
 		t.Run("type=spa", func(t *testing.T) {
 			browserClient := testhelpers.NewClientWithCookies(t)
-			f := testhelpers.InitializeRegistrationFlowViaBrowser(t, browserClient, publicTS, true)
+			f := testhelpers.InitializeRegistrationFlowViaBrowser(t, browserClient, publicTS, true, false, false)
 			body, res := testhelpers.RegistrationMakeRequest(t, false, true, f, browserClient, "{}}")
 			assert.Contains(t, res.Request.URL.String(), publicTS.URL+registration.RouteSubmitFlow)
 			assert.NotEmpty(t, gjson.Get(body, "id").String(), "%s", body)
@@ -401,7 +401,7 @@ func AssertCommonErrorCases(t *testing.T, reg *driver.RegistryDefault, flows []s
 
 		t.Run("type=browser", func(t *testing.T) {
 			browserClient := testhelpers.NewClientWithCookies(t)
-			f := testhelpers.InitializeRegistrationFlowViaBrowser(t, browserClient, publicTS, false)
+			f := testhelpers.InitializeRegistrationFlowViaBrowser(t, browserClient, publicTS, false, false, false)
 			body, res := testhelpers.RegistrationMakeRequest(t, false, false, f, browserClient, "foo=bar")
 			assert.Contains(t, res.Request.URL.String(), uiTS.URL+"/registration-ts")
 			assert.NotEmpty(t, gjson.Get(body, "id").String(), "%s", body)
@@ -454,23 +454,23 @@ func AssertCommonErrorCases(t *testing.T, reg *driver.RegistryDefault, flows []s
 			actual, res := testhelpers.RegistrationMakeRequest(t, true, false, f, apiClient, "{}")
 			assert.Contains(t, res.Request.URL.String(), publicTS.URL+registration.RouteSubmitFlow)
 			assert.NotEqual(t, "00000000-0000-0000-0000-000000000000", gjson.Get(actual, "use_flow_id").String())
-			assertx.EqualAsJSONExcept(t, flow.NewFlowExpiredError(time.Now()), json.RawMessage(actual), []string{"use_flow_id", "since"}, "expired", "%s", actual)
+			assertx.EqualAsJSONExcept(t, flow.NewFlowExpiredError(time.Now()), json.RawMessage(actual), []string{"use_flow_id", "expired_at", "since"}, "expired", "%s", actual)
 		})
 
 		t.Run("type=spa", func(t *testing.T) {
 			browserClient := testhelpers.NewClientWithCookies(t)
-			f := testhelpers.InitializeRegistrationFlowViaBrowser(t, browserClient, publicTS, true)
+			f := testhelpers.InitializeRegistrationFlowViaBrowser(t, browserClient, publicTS, true, false, false)
 
 			time.Sleep(time.Millisecond * 600)
 			actual, res := testhelpers.RegistrationMakeRequest(t, false, true, f, browserClient, "{}")
 			assert.Contains(t, res.Request.URL.String(), publicTS.URL+registration.RouteSubmitFlow)
 			assert.NotEqual(t, "00000000-0000-0000-0000-000000000000", gjson.Get(actual, "use_flow_id").String())
-			assertx.EqualAsJSONExcept(t, flow.NewFlowExpiredError(time.Now()), json.RawMessage(actual), []string{"use_flow_id", "since"}, "expired", "%s", actual)
+			assertx.EqualAsJSONExcept(t, flow.NewFlowExpiredError(time.Now()), json.RawMessage(actual), []string{"use_flow_id", "expired_at", "since"}, "expired", "%s", actual)
 		})
 
 		t.Run("type=browser", func(t *testing.T) {
 			browserClient := testhelpers.NewClientWithCookies(t)
-			f := testhelpers.InitializeRegistrationFlowViaBrowser(t, browserClient, publicTS, false)
+			f := testhelpers.InitializeRegistrationFlowViaBrowser(t, browserClient, publicTS, false, false, false)
 
 			time.Sleep(time.Millisecond * 600)
 			actual, res := testhelpers.RegistrationMakeRequest(t, false, false, f, browserClient, "")
