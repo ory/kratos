@@ -1,15 +1,15 @@
 CREATE TABLE identity_verification_codes
 (
-    id UUID NOT NULL PRIMARY KEY,
+    id CHAR(36) NOT NULL PRIMARY KEY,
     code_hmac VARCHAR (64) NOT NULL, -- HMACed value of the actual code
     used_at timestamp NULL DEFAULT NULL,
-    identity_verifiable_address_id UUID,
+    identity_verifiable_address_id CHAR(36),
     expires_at timestamp NOT NULL DEFAULT '2000-01-01 00:00:00',
     issued_at timestamp NOT NULL DEFAULT '2000-01-01 00:00:00',
-    selfservice_verification_flow_id UUID NOT NULL,
+    selfservice_verification_flow_id CHAR(36) NOT NULL,
     created_at timestamp NOT NULL,
     updated_at timestamp NOT NULL,
-    nid UUID NOT NULL,
+    nid CHAR(36) NOT NULL,
     CONSTRAINT identity_verification_codes_identity_verifiable_addresses_id_fk 
         FOREIGN KEY (identity_verifiable_address_id)
         REFERENCES identity_verifiable_addresses (id)
