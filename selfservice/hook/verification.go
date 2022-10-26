@@ -61,6 +61,8 @@ func (e *Verifier) do(r *http.Request, i *identity.Identity, f flow.Flow) error 
 			return err
 		}
 
+		verificationFlow.State = verification.StateEmailSent
+
 		if err := e.r.VerificationFlowPersister().CreateVerificationFlow(r.Context(), verificationFlow); err != nil {
 			return err
 		}

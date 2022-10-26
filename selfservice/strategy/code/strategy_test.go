@@ -20,4 +20,5 @@ func initViper(t *testing.T, ctx context.Context, c *config.Config) {
 	c.MustSet(ctx, config.ViperKeySelfServiceRecoveryEnabled, true)
 	c.MustSet(ctx, config.ViperKeySelfServiceRecoveryUse, "code")
 	c.MustSet(ctx, config.ViperKeySelfServiceVerificationEnabled, true)
+	c.MustSet(ctx, config.ViperKeySelfServiceVerificationUse, "code")
 }

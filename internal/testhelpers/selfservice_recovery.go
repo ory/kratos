@@ -43,7 +43,7 @@ func GetVerificationFlow(t *testing.T, client *http.Client, ts *httptest.Server)
 
 	rs, _, err := publicClient.V0alpha2Api.GetSelfServiceVerificationFlow(context.Background()).Id(res.Request.URL.Query().Get("flow")).Execute()
 	require.NoError(t, err, "%s", res.Request.URL.String())
-	assert.Empty(t, rs.Active)
+	assert.NotEmpty(t, rs.Active)
 
 	return rs
 }
@@ -70,7 +70,7 @@ func InitializeVerificationFlowViaBrowser(t *testing.T, client *http.Client, isS
 
 	rs, _, err := publicClient.V0alpha2Api.GetSelfServiceVerificationFlow(context.Background()).Id(res.Request.URL.Query().Get("flow")).Execute()
 	require.NoError(t, err)
-	assert.Empty(t, rs.Active)
+	assert.NotEmpty(t, rs.Active)
 
 	return rs
 }
@@ -80,7 +80,7 @@ func InitializeVerificationFlowViaAPI(t *testing.T, client *http.Client, ts *htt
 
 	rs, _, err := publicClient.V0alpha2Api.InitializeSelfServiceVerificationFlowWithoutBrowser(context.Background()).Execute()
 	require.NoError(t, err)
-	assert.Empty(t, rs.Active)
+	assert.NotEmpty(t, rs.Active)
 
 	return rs
 }

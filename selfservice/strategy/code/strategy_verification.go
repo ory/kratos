@@ -17,7 +17,6 @@ import (
 	"github.com/ory/kratos/ui/node"
 	"github.com/ory/kratos/x"
 	"github.com/ory/x/decoderx"
-	"github.com/ory/x/sqlcon"
 	"github.com/ory/x/sqlxx"
 	"github.com/ory/x/urlx"
 )
@@ -181,7 +180,7 @@ func (s *Strategy) handleLinkClick(w http.ResponseWriter, r *http.Request, f *ve
 	f.UI = s.createVerificationCodeForm(flow.AppendFlowTo(urlx.AppendPaths(s.deps.Config().SelfPublicURL(r.Context()), verification.RouteSubmitFlow), f.ID).String(), &code, nil)
 
 	// In the verification flow, we can't enforce CSRF if the flow is opened from an email
-	csrfToken := s.deps.GenerateCSRFToken(r)
+	csrfToken := s.deps.CSRFHandler().RegenerateToken(w, r)
 	f.UI.SetCSRF(csrfToken)
 	f.CSRFToken = csrfToken
 
@@ -230,12 +229,17 @@ type selfServiceBrowserVerifyParameters struct {
 
 func (s *Strategy) verificationUseToken(w http.ResponseWriter, r *http.Request, body *verificationSubmitPayload, f *verification.Flow) error {
 	code, err := s.deps.VerificationCodePersister().UseVerificationCode(r.Context(), f.ID, body.Code)
-	if err != nil {
-		if errors.Is(err, sqlcon.ErrNoRows) {
-			return s.retryVerificationFlowWithMessage(w, r, flow.TypeBrowser, text.NewErrorValidationVerificationTokenInvalidOrAlreadyUsed())
+	if errors.Is(err, ErrCodeNotFound) {
+		f.UI.Messages.Clear()
+		f.UI.Messages.Add(text.NewErrorValidationRecoveryCodeInvalidOrAlreadyUsed())
+		if err := s.deps.VerificationFlowPersister().UpdateVerificationFlow(r.Context(), f); err != nil {
+			return s.retryVerificationFlowWithError(w, r, f.Type, err)
 		}
 
-		return s.retryVerificationFlowWithError(w, r, flow.TypeBrowser, err)
+		// No error
+		return nil
+	} else if err != nil {
+		return s.retryVerificationFlowWithError(w, r, f.Type, err)
 	}
 
 	if err := code.Valid(); err != nil {
