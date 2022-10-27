@@ -5,7 +5,6 @@ import (
 	"crypto/sha1"
 	"crypto/subtle"
 	"encoding/base64"
-	"encoding/hex"
 	"fmt"
 	"regexp"
 	"strings"
@@ -42,8 +41,8 @@ func Compare(ctx context.Context, password []byte, hash []byte) error {
 		return CompareSSHA256(ctx, password, hash)
 	case IsSSHA512Hash(hash):
 		return CompareSSHA512(ctx, password, hash)
-	case IsSerloHash(hash):
-		return CompareSerlo(ctx, password, hash)
+	case IsSHA1Hash(hash):
+		return CompareSHA1(ctx, password, hash)
 	default:
 		return errors.WithStack(ErrUnknownHashAlgorithm)
 	}
@@ -145,37 +144,6 @@ func CompareScrypt(_ context.Context, password []byte, hash []byte) error {
 	return errors.WithStack(ErrMismatchedHashAndPassword)
 }
 
-func CompareSerlo(_ context.Context, password []byte, hash []byte) error {
-	// Extract the parameters, salt and derived key from the encoded password
-	// hash.
-	parts := strings.Split(string(hash), "$")
-
-	salt := parts[2]
-	hashed := parts[3]
-
-	// Derive the key from the other password using the same parameters.
-    sha := sha1.New()
-
-    _, err := sha.Write(append([]byte(salt), password...))
-
-	if err != nil {
-		return errors.WithStack(err)
-	}
-
-	otherHash := hex.EncodeToString(sha.Sum(nil))
-
-	// Check that the contents of the hashed passwords are identical. Note
-	// that we are using the subtle.ConstantTimeCompare() function for this
-	// to help prevent timing attacks.
-	// if subtle.ConstantTimeCompare(hashed, otherHash) == 1 {
-	// 	return nil
-	// }
-	if hashed == otherHash {
-		return nil
-	}
-	return errors.WithStack(ErrMismatchedHashAndPassword)
-}
-
 func CompareSSHA(_ context.Context, password []byte, hash []byte) error {
 
 	if _, err := ssha.Validate(string(password), string(hash)); err != nil {
@@ -203,16 +171,43 @@ func CompareSSHA512(_ context.Context, password []byte, hash []byte) error {
 	return nil
 }
 
+func CompareSHA1(_ context.Context, password []byte, hash []byte) error {
+
+	// 	"$md5$pf=e1NBTFR9e1BBU1NXT1JEfQ==$MTIz$q+RdKCgc+ipCAcm5ChQwlQ=="
+	// pf={SALT}{PASSWORD} salt=123
+
+	// Extract the parameters, salt and derived key from the encoded password
+	pf, salt, hash, err := decodeSHA1Hash(string(hash))
+	if err != nil {
+		return err
+	}
+
+	r := strings.NewReplacer("{SALT}", string(salt), "{PASSWORD}", string(password))
+	arg := []byte(r.Replace(string(pf)))
+
+	// @hugo: why did you use hex.EncodeToString here before?
+	// otherHash := hex.EncodeToString(sha.Sum(nil))
+	otherHash := sha1.Sum(arg)
+
+	// Check that the contents of the hashed passwords are identical. Note
+	// that we are using the subtle.ConstantTimeCompare() function for this
+	// to help prevent timing attacks.
+	if subtle.ConstantTimeCompare(hash, otherHash[:]) == 1 {
+		return nil
+	}
+	return errors.WithStack(ErrMismatchedHashAndPassword)
+}
+
 var (
 	isBcryptHash   = regexp.MustCompile(`^\$2[abzy]?\$`)
 	isArgon2idHash = regexp.MustCompile(`^\$argon2id\$`)
 	isArgon2iHash  = regexp.MustCompile(`^\$argon2i\$`)
 	isPbkdf2Hash   = regexp.MustCompile(`^\$pbkdf2-sha[0-9]{1,3}\$`)
-	isSerloHash    = regexp.MustCompile(`^\$serlo\$`)
 	isScryptHash   = regexp.MustCompile(`^\$scrypt\$`)
 	isSSHAHash     = regexp.MustCompile(`^{SSHA}.*`)
 	isSSHA256Hash  = regexp.MustCompile(`^{SSHA256}.*`)
 	isSSHA512Hash  = regexp.MustCompile(`^{SSHA512}.*`)
+	isSHA1Hash     = regexp.MustCompile(`^\$sha1\$`)
 )
 
 func IsBcryptHash(hash []byte) bool {
@@ -247,13 +242,13 @@ func IsSSHA512Hash(hash []byte) bool {
 	return isSSHA512Hash.Match(hash)
 }
 
-func IsSerloHash(hash []byte) bool {
-	return isSerloHash.Match(hash)
+func IsSHA1Hash(hash []byte) bool {
+	return isSHA1Hash.Match(hash)
 }
 
 func IsValidHashFormat(hash []byte) bool {
 	if IsArgon2iHash(hash) || IsArgon2idHash(hash) || IsBcryptHash(hash) || IsPbkdf2Hash(hash) ||
-		IsScryptHash(hash) || IsSSHAHash(hash) || IsSSHA256Hash(hash) || IsSSHA512Hash(hash) || IsSerloHash(hash) {
+		IsScryptHash(hash) || IsSSHAHash(hash) || IsSSHA256Hash(hash) || IsSSHA512Hash(hash) || IsSHA1Hash(hash) {
 		return true
 	} else {
 		return false
@@ -359,4 +354,36 @@ func decodeScryptHash(encodedHash string) (p *Scrypt, salt, hash []byte, err err
 	p.KeyLength = uint32(len(hash))
 
 	return p, salt, hash, nil
+}
+
+// decodeSHA1Hash decodes SHA1 encoded password hash in custom PHC format
+// $sha1$pf=<salting-format>$<salt>$<hash>
+func decodeSHA1Hash(encodedHash string) (pf, salt, hash []byte, err error) {
+	parts := strings.Split(encodedHash, "$")
+
+	if len(parts) != 5 {
+		return nil, nil, nil, ErrInvalidHash
+	}
+
+	_, err = fmt.Sscanf(parts[2], "pf=%s", &pf)
+	if err != nil {
+		return nil, nil, nil, err
+	}
+
+	pf, err := base64.StdEncoding.Strict().DecodeString(string(pf))
+	if err != nil {
+		return nil, nil, nil, err
+	}
+
+	salt, err = base64.StdEncoding.Strict().DecodeString(parts[3])
+	if err != nil {
+		return nil, nil, nil, err
+	}
+
+	hash, err = base64.StdEncoding.Strict().DecodeString(parts[4])
+	if err != nil {
+		return nil, nil, nil, err
+	}
+
+	return pf, salt, hash, nil
 }
