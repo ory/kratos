@@ -134,12 +134,9 @@ func TestAdminStrategy(t *testing.T) {
 
 		action := gjson.GetBytes(body, "ui.action").String()
 		require.NotEmpty(t, action)
-		csrfToken := gjson.GetBytes(body, "ui.nodes.#(attributes.name==csrf_token).attributes.value").String()
-		require.NotEmpty(t, csrfToken)
 
 		res, err = publicTS.Client().PostForm(action, url.Values{
-			"csrf_token": {csrfToken},
-			"code":       {code},
+			"code": {code},
 		})
 		assert.Equal(t, http.StatusOK, res.StatusCode)
 
@@ -228,6 +225,20 @@ func TestAdminStrategy(t *testing.T) {
 		body := submitRecoveryLink(t, c1.RecoveryLink, c2.RecoveryCode)
 
 		assertMessage(t, body, "The recovery code is invalid or has already been used. Please try again.")
+	})
+
+	t.Run("case=form should not contain email field when creating recovery code", func(t *testing.T) {
+		email := strings.ToLower(testhelpers.RandomEmail())
+		i := createIdentityToRecover(t, reg, email)
+
+		c1, _, err := createCode(i.ID.String(), pointerx.String("1h"))
+		require.NoError(t, err)
+
+		res, err := http.Get(c1.RecoveryLink)
+		require.NoError(t, err)
+		body := ioutilx.MustReadAll(res.Body)
+
+		snapshotx.SnapshotT(t, json.RawMessage(gjson.GetBytes(body, "ui.nodes").String()))
 	})
 }
 
