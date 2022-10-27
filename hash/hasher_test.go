@@ -198,6 +198,9 @@ func TestPbkdf2Hasher(t *testing.T) {
 func TestCompare(t *testing.T) {
 	assert.Error(t, hash.Compare(context.Background(), []byte("test"), []byte("$unknown$12$o6hx.Wog/wvFSkT/Bp/6DOxCtLRTDj7lm9on9suF/WaCGNVHbkfL6")))
 
+	assert.Nil(t, hash.Compare(context.Background(), []byte("123456"), []byte("$serlo$a40c10cfe4$85396a8a48e3485a0ae374b857bfadf02c8cbf0d")))
+	assert.Nil(t, hash.CompareSerlo(context.Background(), []byte("123456"), []byte("$serlo$a40c10cfe4$85396a8a48e3485a0ae374b857bfadf02c8cbf0d")))
+
 	assert.Nil(t, hash.Compare(context.Background(), []byte("test"), []byte("$2a$12$o6hx.Wog/wvFSkT/Bp/6DOxCtLRTDj7lm9on9suF/WaCGNVHbkfL6")))
 	assert.Nil(t, hash.CompareBcrypt(context.Background(), []byte("test"), []byte("$2a$12$o6hx.Wog/wvFSkT/Bp/6DOxCtLRTDj7lm9on9suF/WaCGNVHbkfL6")))
 	assert.Error(t, hash.Compare(context.Background(), []byte("test"), []byte("$2a$12$o6hx.Wog/wvFSkT/Bp/6DOxCtLRTDj7lm9on9suF/WaCGNVHbkfL7")))

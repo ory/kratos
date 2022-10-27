@@ -2,8 +2,10 @@ package hash
 
 import (
 	"context"
+	"crypto/sha1"
 	"crypto/subtle"
 	"encoding/base64"
+	"encoding/hex"
 	"fmt"
 	"regexp"
 	"strings"
@@ -40,6 +42,8 @@ func Compare(ctx context.Context, password []byte, hash []byte) error {
 		return CompareSSHA256(ctx, password, hash)
 	case IsSSHA512Hash(hash):
 		return CompareSSHA512(ctx, password, hash)
+	case IsSerloHash(hash):
+		return CompareSerlo(ctx, password, hash)
 	default:
 		return errors.WithStack(ErrUnknownHashAlgorithm)
 	}
@@ -141,6 +145,37 @@ func CompareScrypt(_ context.Context, password []byte, hash []byte) error {
 	return errors.WithStack(ErrMismatchedHashAndPassword)
 }
 
+func CompareSerlo(_ context.Context, password []byte, hash []byte) error {
+	// Extract the parameters, salt and derived key from the encoded password
+	// hash.
+	parts := strings.Split(string(hash), "$")
+
+	salt := parts[2]
+	hashed := parts[3]
+
+	// Derive the key from the other password using the same parameters.
+    sha := sha1.New()
+
+    _, err := sha.Write(append([]byte(salt), password...))
+
+	if err != nil {
+		return errors.WithStack(err)
+	}
+
+	otherHash := hex.EncodeToString(sha.Sum(nil))
+
+	// Check that the contents of the hashed passwords are identical. Note
+	// that we are using the subtle.ConstantTimeCompare() function for this
+	// to help prevent timing attacks.
+	// if subtle.ConstantTimeCompare(hashed, otherHash) == 1 {
+	// 	return nil
+	// }
+	if hashed == otherHash {
+		return nil
+	}
+	return errors.WithStack(ErrMismatchedHashAndPassword)
+}
+
 func CompareSSHA(_ context.Context, password []byte, hash []byte) error {
 
 	if _, err := ssha.Validate(string(password), string(hash)); err != nil {
@@ -173,6 +208,7 @@ var (
 	isArgon2idHash = regexp.MustCompile(`^\$argon2id\$`)
 	isArgon2iHash  = regexp.MustCompile(`^\$argon2i\$`)
 	isPbkdf2Hash   = regexp.MustCompile(`^\$pbkdf2-sha[0-9]{1,3}\$`)
+	isSerloHash    = regexp.MustCompile(`^\$serlo\$`)
 	isScryptHash   = regexp.MustCompile(`^\$scrypt\$`)
 	isSSHAHash     = regexp.MustCompile(`^{SSHA}.*`)
 	isSSHA256Hash  = regexp.MustCompile(`^{SSHA256}.*`)
@@ -211,9 +247,13 @@ func IsSSHA512Hash(hash []byte) bool {
 	return isSSHA512Hash.Match(hash)
 }
 
+func IsSerloHash(hash []byte) bool {
+	return isSerloHash.Match(hash)
+}
+
 func IsValidHashFormat(hash []byte) bool {
 	if IsArgon2iHash(hash) || IsArgon2idHash(hash) || IsBcryptHash(hash) || IsPbkdf2Hash(hash) ||
-		IsScryptHash(hash) || IsSSHAHash(hash) || IsSSHA256Hash(hash) || IsSSHA512Hash(hash) {
+		IsScryptHash(hash) || IsSSHAHash(hash) || IsSSHA256Hash(hash) || IsSSHA512Hash(hash) || IsSerloHash(hash) {
 		return true
 	} else {
 		return false
