@@ -19,7 +19,7 @@ selfservice:
     password:
       enabled: true
     link:
-      enabled: false
+      enabled: true
     code:
       enabled: true
 
