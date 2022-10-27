@@ -225,8 +225,6 @@ func TestVerification(t *testing.T) {
 
 		body := ioutilx.MustReadAll(res.Body)
 
-		testhelpers.AssertMessage(t, body, "An email containing a verification link has been sent to the email address you provided.")
-
 		assert.Equal(t, "12312312", gjson.GetBytes(body, "ui.nodes.#(attributes.name==code).attributes.value").String(), "%v", string(body))
 	})
 
