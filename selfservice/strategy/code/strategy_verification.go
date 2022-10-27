@@ -123,7 +123,7 @@ func (s *Strategy) Verify(w http.ResponseWriter, r *http.Request, f *verificatio
 			return s.handleLinkClick(w, r, f, body.Code)
 		}
 
-		return s.verificationUseToken(w, r, body, f)
+		return s.verificationUseCode(w, r, body, f)
 	}
 
 	if err := flow.MethodEnabledAndAllowed(r.Context(), s.VerificationStrategyID(), body.Method, s.deps); err != nil {
@@ -183,7 +183,17 @@ func (s *Strategy) handleLinkClick(w http.ResponseWriter, r *http.Request, f *ve
 	f.UI.SetCSRF(csrfToken)
 	f.CSRFToken = csrfToken
 
-	return s.deps.VerificationFlowPersister().UpdateVerificationFlow(r.Context(), f)
+	if err := s.deps.VerificationFlowPersister().UpdateVerificationFlow(r.Context(), f); err != nil {
+		return err
+	}
+
+	// we always redirect to the browser UI here to allow API flows to complete aswell
+	// In the future, we might want to redirect to a custom URI scheme here, to allow to open e.g. an app on the device of
+	// the user to handle the flow directly. For now, the browser is good enough, as no session is issued after the
+	// verification is done.
+	http.Redirect(w, r, f.AppendTo(s.deps.Config().SelfServiceFlowVerificationUI(r.Context())).String(), http.StatusSeeOther)
+
+	return errors.WithStack(flow.ErrCompletedByStrategy)
 }
 
 func (s *Strategy) verificationHandleFormSubmission(w http.ResponseWriter, r *http.Request, f *verification.Flow) error {
@@ -227,7 +237,7 @@ type selfServiceBrowserVerifyParameters struct {
 	Code string `json:"code"`
 }
 
-func (s *Strategy) verificationUseToken(w http.ResponseWriter, r *http.Request, body *verificationSubmitPayload, f *verification.Flow) error {
+func (s *Strategy) verificationUseCode(w http.ResponseWriter, r *http.Request, body *verificationSubmitPayload, f *verification.Flow) error {
 	code, err := s.deps.VerificationCodePersister().UseVerificationCode(r.Context(), f.ID, body.Code)
 	if errors.Is(err, ErrCodeNotFound) {
 		f.UI.Messages.Clear()
@@ -243,15 +253,6 @@ func (s *Strategy) verificationUseToken(w http.ResponseWriter, r *http.Request, 
 	}
 
 	if err := code.Valid(); err != nil {
-		return s.retryVerificationFlowWithError(w, r, flow.TypeBrowser, err)
-	}
-
-	f.UI.Messages.Clear()
-	f.State = verification.StatePassedChallenge
-	// See https://github.com/ory/kratos/issues/1547
-	f.SetCSRFToken(flow.GetCSRFToken(s.deps, w, r, f.Type))
-	f.UI.Messages.Set(text.NewInfoSelfServiceVerificationSuccessful())
-	if err := s.deps.VerificationFlowPersister().UpdateVerificationFlow(r.Context(), f); err != nil {
 		return s.retryVerificationFlowWithError(w, r, flow.TypeBrowser, err)
 	}
 
@@ -273,28 +274,50 @@ func (s *Strategy) verificationUseToken(w http.ResponseWriter, r *http.Request, 
 		return s.retryVerificationFlowWithError(w, r, flow.TypeBrowser, err)
 	}
 
-	defaultRedirectURL := s.deps.Config().SelfServiceFlowVerificationReturnTo(r.Context(), f.AppendTo(s.deps.Config().SelfServiceFlowVerificationUI(r.Context())))
+	returnTo := s.getRedirectURL(r.Context(), f)
+
+	f.UI = &container.Container{
+		Method: "GET",
+		Action: returnTo.String(),
+	}
+
+	f.State = verification.StatePassedChallenge
+	// See https://github.com/ory/kratos/issues/1547
+	f.SetCSRFToken(flow.GetCSRFToken(s.deps, w, r, f.Type))
+	f.UI.Messages.Set(text.NewInfoSelfServiceVerificationSuccessful())
+	f.UI.
+		Nodes.
+		Append(node.NewInputField("method", s.VerificationStrategyID(), node.CodeGroup, node.InputAttributeTypeSubmit).
+			WithMetaLabel(text.NewInfoNodeLabelReturn()))
+
+	if err := s.deps.VerificationFlowPersister().UpdateVerificationFlow(r.Context(), f); err != nil {
+		return s.retryVerificationFlowWithError(w, r, flow.TypeBrowser, err)
+	}
+
+	http.Redirect(w, r, f.AppendTo(s.deps.Config().SelfServiceFlowVerificationUI(r.Context())).String(), http.StatusSeeOther)
+	return errors.WithStack(flow.ErrCompletedByStrategy)
+}
+
+func (s *Strategy) getRedirectURL(ctx context.Context, f *verification.Flow) *url.URL {
+	defaultRedirectURL := s.deps.Config().SelfServiceFlowVerificationReturnTo(ctx, f.AppendTo(s.deps.Config().SelfServiceFlowVerificationUI(ctx)))
 
 	verificationRequestURL, err := urlx.Parse(f.GetRequestURL())
 	if err != nil {
-		s.deps.Logger().Debugf("error parsing verification requestURL: %s\n", err)
-		http.Redirect(w, r, defaultRedirectURL.String(), http.StatusSeeOther)
-		return errors.WithStack(flow.ErrCompletedByStrategy)
+		s.deps.Logger().Debugf("error parsing verification requestURL, using default redirect url %s: %s\n", defaultRedirectURL.String(), err)
+		return defaultRedirectURL
 	}
+
 	verificationRequest := http.Request{URL: verificationRequestURL}
 
 	returnTo, err := x.SecureRedirectTo(&verificationRequest, defaultRedirectURL,
-		x.SecureRedirectAllowSelfServiceURLs(s.deps.Config().SelfPublicURL(r.Context())),
-		x.SecureRedirectAllowURLs(s.deps.Config().SelfServiceBrowserAllowedReturnToDomains(r.Context())),
+		x.SecureRedirectAllowSelfServiceURLs(s.deps.Config().SelfPublicURL(ctx)),
+		x.SecureRedirectAllowURLs(s.deps.Config().SelfServiceBrowserAllowedReturnToDomains(ctx)),
 	)
 	if err != nil {
-		s.deps.Logger().Debugf("error parsing redirectTo from verification: %s\n", err)
-		http.Redirect(w, r, defaultRedirectURL.String(), http.StatusSeeOther)
-		return errors.WithStack(flow.ErrCompletedByStrategy)
+		s.deps.Logger().Debugf("error parsing redirectTo from verification, using default redirect url %s: %s\n", defaultRedirectURL.String(), err)
+		return defaultRedirectURL
 	}
-
-	http.Redirect(w, r, f.AppendTo(returnTo).String(), http.StatusSeeOther)
-	return errors.WithStack(flow.ErrCompletedByStrategy)
+	return returnTo
 }
 
 func (s *Strategy) retryVerificationFlowWithMessage(w http.ResponseWriter, r *http.Request, ft flow.Type, message *text.Message) error {
