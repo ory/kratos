@@ -198,8 +198,13 @@ func TestPbkdf2Hasher(t *testing.T) {
 func TestCompare(t *testing.T) {
 	assert.Error(t, hash.Compare(context.Background(), []byte("test"), []byte("$unknown$12$o6hx.Wog/wvFSkT/Bp/6DOxCtLRTDj7lm9on9suF/WaCGNVHbkfL6")))
 
-	// assert.Nil(t, hash.Compare(context.Background(), []byte("123456"), []byte("$sha1$a40c10cfe4$85396a8a48e3485a0ae374b857bfadf02c8cbf0d"))) // TODO: split hash from our string, add pf format string (b64 encoded)
-	// assert.Nil(t, hash.CompareSHA1(context.Background(), []byte("123456"), []byte("$sha1$a40c10cfe4$85396a8a48e3485a0ae374b857bfadf02c8cbf0d")))
+	// $sha1$pf=<salting-format>$<salt>$<hash>
+	// pf   {SALT}{PASSWORD}
+	// salt a40c10cfe4
+	// pass 85396a8a48e3485a0ae374b857bfadf02c8cbf0d
+
+	assert.Nil(t, hash.Compare(context.Background(), []byte("123456"), []byte("$sha1$pf=e1NBTFR9e1BBU1NXT1JEfQ==$YTQwYzEwY2ZlNA==$ODUzOTZhOGE0OGUzNDg1YTBhZTM3NGI4NTdiZmFkZjAyYzhjYmYwZA==")))
+	assert.Nil(t, hash.CompareSHA1(context.Background(), []byte("123456"), []byte("$sha1$pf=e1NBTFR9e1BBU1NXT1JEfQ==$YTQwYzEwY2ZlNA==$ODUzOTZhOGE0OGUzNDg1YTBhZTM3NGI4NTdiZmFkZjAyYzhjYmYwZA==")))
 
 	assert.Nil(t, hash.Compare(context.Background(), []byte("test"), []byte("$2a$12$o6hx.Wog/wvFSkT/Bp/6DOxCtLRTDj7lm9on9suF/WaCGNVHbkfL6")))
 	assert.Nil(t, hash.CompareBcrypt(context.Background(), []byte("test"), []byte("$2a$12$o6hx.Wog/wvFSkT/Bp/6DOxCtLRTDj7lm9on9suF/WaCGNVHbkfL6")))

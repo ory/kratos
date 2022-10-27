@@ -5,6 +5,7 @@ import (
 	"crypto/sha1"
 	"crypto/subtle"
 	"encoding/base64"
+	"encoding/hex"
 	"fmt"
 	"regexp"
 	"strings"
@@ -183,16 +184,14 @@ func CompareSHA1(_ context.Context, password []byte, hash []byte) error {
 	}
 
 	r := strings.NewReplacer("{SALT}", string(salt), "{PASSWORD}", string(password))
-	arg := []byte(r.Replace(string(pf)))
-
-	// @hugo: why did you use hex.EncodeToString here before?
-	// otherHash := hex.EncodeToString(sha.Sum(nil))
-	otherHash := sha1.Sum(arg)
+	str := []byte(r.Replace(string(pf)))
+	sum := sha1.Sum(str)
+	otherHash := hex.EncodeToString(sum[:])
 
 	// Check that the contents of the hashed passwords are identical. Note
 	// that we are using the subtle.ConstantTimeCompare() function for this
 	// to help prevent timing attacks.
-	if subtle.ConstantTimeCompare(hash, otherHash[:]) == 1 {
+	if subtle.ConstantTimeCompare(hash, []byte(otherHash)) == 1 {
 		return nil
 	}
 	return errors.WithStack(ErrMismatchedHashAndPassword)
@@ -370,7 +369,7 @@ func decodeSHA1Hash(encodedHash string) (pf, salt, hash []byte, err error) {
 		return nil, nil, nil, err
 	}
 
-	pf, err := base64.StdEncoding.Strict().DecodeString(string(pf))
+	pf, err = base64.StdEncoding.Strict().DecodeString(string(pf))
 	if err != nil {
 		return nil, nil, nil, err
 	}
