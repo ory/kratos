@@ -201,7 +201,7 @@ func TestCompare(t *testing.T) {
 	// $sha1$pf=<salting-format>$<salt>$<hash>
 	// pf   {SALT}{PASSWORD}
 	// salt a40c10cfe4
-	// pass 85396a8a48e3485a0ae374b857bfadf02c8cbf0d
+	// hash 85396a8a48e3485a0ae374b857bfadf02c8cbf0d
 
 	assert.Nil(t, hash.Compare(context.Background(), []byte("123456"), []byte("$sha1$pf=e1NBTFR9e1BBU1NXT1JEfQ==$YTQwYzEwY2ZlNA==$ODUzOTZhOGE0OGUzNDg1YTBhZTM3NGI4NTdiZmFkZjAyYzhjYmYwZA==")))
 	assert.Nil(t, hash.CompareSHA1(context.Background(), []byte("123456"), []byte("$sha1$pf=e1NBTFR9e1BBU1NXT1JEfQ==$YTQwYzEwY2ZlNA==$ODUzOTZhOGE0OGUzNDg1YTBhZTM3NGI4NTdiZmFkZjAyYzhjYmYwZA==")))
