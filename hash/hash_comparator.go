@@ -387,6 +387,7 @@ func decodeSHAHash(encodedHash string) (hasher, pf, salt, hash []byte, err error
 	return hasher, pf, salt, hash, nil
 }
 
+// used for CompareSHA and CompareSSHA CompareSSHA256 CompareSSHA512
 func compareSHAHelper(hasher string, raw []byte, hash []byte) error {
 
 	var sha []byte
