@@ -243,49 +243,38 @@ func TestCompare(t *testing.T) {
 	assert.Error(t, hash.Compare(context.Background(), []byte("tesu"), []byte("$scrypt$ln=16384,r=8,p=1$2npRo7P03Mt8keSoMbyD/tKFWyUzjiQf2svUaNDSrhA=$MiCzNcIplSMqSBrm4HckjYqYhaVPPjTARTzwB1cVNYE=")))
 	assert.Error(t, hash.Compare(context.Background(), []byte("tesu"), []byte("$scrypt$ln=abc,r=8,p=1$2npRo7P03Mt8keSoMbyD/tKFWyUzjiQf2svUaNDSrhA=$MiCzNcIplSMqSBrm4HckjYqYhaVPPjTARTzwB1cVNYE=")))
 
-	// SSHA
 	assert.Nil(t, hash.Compare(context.Background(), []byte("test123"), []byte("{SSHA}JFZFs0oHzxbMwkSJmYVeI8MnTDy/276a")))
 	assert.Nil(t, hash.CompareSSHA(context.Background(), []byte("test123"), []byte("{SSHA}JFZFs0oHzxbMwkSJmYVeI8MnTDy/276a")))
 	assert.Error(t, hash.CompareSSHA(context.Background(), []byte("badtest"), []byte("{SSHA}JFZFs0oHzxbMwkSJmYVeI8MnTDy/276a")))
 
-	// SSHA256
 	assert.Nil(t, hash.Compare(context.Background(), []byte("test123"), []byte("{SSHA256}czO44OTV17PcF1cRxWrLZLy9xHd7CWyVYplr1rOhuMlx/7IK")))
 	assert.Nil(t, hash.CompareSSHA256(context.Background(), []byte("test123"), []byte("{SSHA256}czO44OTV17PcF1cRxWrLZLy9xHd7CWyVYplr1rOhuMlx/7IK")))
 	assert.Error(t, hash.CompareSSHA256(context.Background(), []byte("badtest"), []byte("{SSHA256}czO44OTV17PcF1cRxWrLZLy9xHd7CWyVYplr1rOhuMlx/7IK")))
 
-	// SSHA512
 	assert.Nil(t, hash.Compare(context.Background(), []byte("test123"), []byte("{SSHA512}xPUl/px+1cG55rUH4rzcwxdOIPSB2TingLpiJJumN2xyDWN4Ix1WQG3ihnvHaWUE8MYNkvMi5rf0C9NYixHsE6Yh59M=")))
 	assert.Nil(t, hash.CompareSSHA512(context.Background(), []byte("test123"), []byte("{SSHA512}xPUl/px+1cG55rUH4rzcwxdOIPSB2TingLpiJJumN2xyDWN4Ix1WQG3ihnvHaWUE8MYNkvMi5rf0C9NYixHsE6Yh59M=")))
 	assert.Error(t, hash.CompareSSHA512(context.Background(), []byte("badtest"), []byte("{SSHA512}xPUl/px+1cG55rUH4rzcwxdOIPSB2TingLpiJJumN2xyDWN4Ix1WQG3ihnvHaWUE8MYNkvMi5rf0C9NYixHsE6Yh59M=")))
-
-	//SHA-1
 
 	//pf: {SALT}{PASSWORD}
 	assert.Nil(t, hash.Compare(context.Background(), []byte("test"), []byte("$sha1$pf=e1NBTFR9e1BBU1NXT1JEfQ==$NW9wbWtnejAzcg==$2qU2SGWP8viTM1md3FiI3+rjWXQ=")))
 	assert.Error(t, hash.Compare(context.Background(), []byte("wrongpass"), []byte("$sha1$pf=e1NBTFR9e1BBU1NXT1JEfQ==$NW9wbWtnejAzcg==$2qU2SGWP8viTM1md3FiI3+rjWXQ=")))
 	assert.Error(t, hash.Compare(context.Background(), []byte("tset"), []byte("$sha1$pf=e1NBTFR9e1BBU1NXT1JEfQ==$NW9wbWtnejAzcg==$2qU2SGWP8viTM1md3FiI3+rjWXQ=")))
-	assert.Error(t, hash.Compare(context.Background(), []byte("test"), []byte("$sha1$pf=e1NBTFR9e1BBU1NXT1JEfQ==$cDJvb3ZrZGJ6cQ==$2qU2SGWP8viTM1md3FiI3+rjWXQ="))) // wrong salt
-	assert.Error(t, hash.Compare(context.Background(), []byte("test"), []byte("$sha1$pf=e1NBTFR9e1BBU1NXT1JEfQ==$5opmkgz03r$2qU2SGWP8viTM1md3FiI3+rjWXQ=")))       // salt not encoded
-
+	// wrong salt
+	assert.Error(t, hash.Compare(context.Background(), []byte("test"), []byte("$sha1$pf=e1NBTFR9e1BBU1NXT1JEfQ==$cDJvb3ZrZGJ6cQ==$2qU2SGWP8viTM1md3FiI3+rjWXQ=")))
+	// salt not encoded
+	assert.Error(t, hash.Compare(context.Background(), []byte("test"), []byte("$sha1$pf=e1NBTFR9e1BBU1NXT1JEfQ==$5opmkgz03r$2qU2SGWP8viTM1md3FiI3+rjWXQ=")))
 	assert.Nil(t, hash.Compare(context.Background(), []byte("BwS^514g^cv@Z"), []byte("$sha1$pf=e1NBTFR9e1BBU1NXT1JEfQ==$NW9wbWtnejAzcg==$99h9net4BXl7qdTRaiGUobLROxM=")))
-
 	// no format string
 	assert.Error(t, hash.Compare(context.Background(), []byte("test"), []byte("$sha1$pf=$NW9wbWtnejAzcg==$2qU2SGWP8viTM1md3FiI3+rjWXQ=")))
 	assert.Error(t, hash.Compare(context.Background(), []byte("test"), []byte("$sha1$$NW9wbWtnejAzcg==$2qU2SGWP8viTM1md3FiI3+rjWXQ=")))
-
 	// wrong number of parameters
 	assert.Error(t, hash.Compare(context.Background(), []byte("test"), []byte("$sha1$NW9wbWtnejAzcg==$2qU2SGWP8viTM1md3FiI3+rjWXQ=")))
-
 	// pf: ??staticPrefix??{SALT}{PASSWORD}
 	assert.Nil(t, hash.Compare(context.Background(), []byte("test"), []byte("$sha1$pf=Pz9zdGF0aWNQcmVmaXg/P3tTQUxUfXtQQVNTV09SRH0=$NW9wbWtnejAzcg==$SAAxMUn7jxckQXkBmsVF0nHwqso=")))
-
 	// pf: {PASSWORD}%%{SALT}
 	assert.Nil(t, hash.Compare(context.Background(), []byte("test"), []byte("$sha1$pf=e1BBU1NXT1JEfSUle1NBTFR9$NW9wbWtnejAzcg==$YX0AW8/MW5ojUlnzTaR43ucHCog=")))
-
 	// pf: ${PASSWORD}${SALT}$
 	assert.Nil(t, hash.Compare(context.Background(), []byte("test"), []byte("$sha1$pf=JHtQQVNTV09SRH0ke1NBTFR9JA==$NW9wbWtnejAzcg==$iE5n1yjX3oAdxRHwZ4u57I4LpQo=")))
-
-	//SHA-256
 
 	//pf: {SALT}{PASSWORD}
 	assert.Nil(t, hash.Compare(context.Background(), []byte("test"), []byte("$sha256$pf=e1NBTFR9e1BBU1NXT1JEfQ==$NW9wbWtnejAzcg==$0gfRVLCvtBCk20udLDEY5vNhujWx7RGjwRIS1ebMsLY=")))
@@ -293,8 +282,6 @@ func TestCompare(t *testing.T) {
 	assert.Error(t, hash.Compare(context.Background(), []byte("wrongpass"), []byte("$sha256$pf=e1NBTFR9e1BBU1NXT1JEfQ==$NW9wbWtnejAzcg==$0gfRVLCvtBCk20udLDEY5vNhujWx7RGjwRIS1ebMsLY=")))
 	//pf: {SALT}$${PASSWORD}
 	assert.Nil(t, hash.Compare(context.Background(), []byte("test"), []byte("$sha256$pf=e1NBTFR9JCR7UEFTU1dPUkR9$NW9wbWtnejAzcg==$HokCOi9OtiZaZRvnkgemV3B4UUHpI7kA8zq/EZWH2NY=")))
-
-	//SHA-512
 
 	//pf: {SALT}{PASSWORD}
 	assert.Nil(t, hash.Compare(context.Background(), []byte("test"), []byte("$sha512$pf=e1NBTFR9e1BBU1NXT1JEfQ==$NW9wbWtnejAzcg==$6ctpVuApMNp0CgBXcdHw/GC562eFEFGr4gpgANX8ZYsX+j5B19IkdmOY2Fytsz3QUwSWdGcUjbqwgJGTH0UYvw==")))
