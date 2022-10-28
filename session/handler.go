@@ -6,6 +6,8 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/ory/x/pagination/keysetpagination"
+
 	"github.com/ory/x/pointerx"
 
 	"github.com/gofrs/uuid"
@@ -61,13 +63,14 @@ const (
 )
 
 func (h *Handler) RegisterAdminRoutes(admin *x.RouterAdmin) {
+	admin.GET(RouteCollection, h.adminListSessions)
+
 	admin.GET(AdminRouteIdentitiesSessions, h.adminListIdentitySessions)
 	admin.DELETE(AdminRouteIdentitiesSessions, h.adminDeleteIdentitySessions)
 	admin.PATCH(AdminRouteSessionExtendId, h.adminSessionExtend)
 
 	admin.DELETE(RouteCollection, x.RedirectToPublicRoute(h.r))
 	admin.DELETE(RouteSession, x.RedirectToPublicRoute(h.r))
-	admin.GET(RouteCollection, x.RedirectToPublicRoute(h.r))
 
 	for _, m := range []string{http.MethodGet, http.MethodHead, http.MethodPost, http.MethodPut} {
 		// Redirect to public endpoint
@@ -261,6 +264,89 @@ func (h *Handler) adminDeleteIdentitySessions(w http.ResponseWriter, r *http.Req
 	}
 
 	w.WriteHeader(http.StatusNoContent)
+}
+
+// Session List Request
+//
+// The request object for listing sessions in an administrative context.
+//
+// swagger:parameters adminListSessions
+// nolint:deadcode,unused
+type adminListSessionsRequest struct {
+	keysetpagination.RequestParameters
+
+	// Active is a boolean flag that filters out sessions based on the state. If no value is provided, all sessions are returned.
+	//
+	// required: false
+	// in: query
+	Active bool `json:"active"`
+}
+
+// Session List Response
+//
+// The response given when listing sessions in an administrative context.
+//
+// swagger:response adminListSessions
+// nolint:deadcode,unused
+type adminListSessionsResponse struct {
+	// The pagination headers
+	// in: header
+	keysetpagination.ResponseHeaders
+
+	// The list of sessions found
+	// in: body
+	Sessions []Session
+}
+
+// swagger:route GET /admin/sessions v0alpha2 adminListSessions
+//
+// This endpoint returns all sessions that exist.
+//
+// This endpoint is useful for:
+//
+// - Listing all sessions that exist in an administrative context.
+//
+//	Schemes: http, https
+//
+//	Security:
+//	  oryAccessToken:
+//
+//	Responses:
+//	  200: sessionList
+//	  400: jsonError
+//	  401: jsonError
+//	  404: jsonError
+//	  500: jsonError
+func (h *Handler) adminListSessions(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	activeRaw := r.URL.Query().Get("active")
+	activeBool, err := strconv.ParseBool(activeRaw)
+	if activeRaw != "" && err != nil {
+		h.r.Writer().WriteError(w, r, herodot.ErrBadRequest.WithError("could not parse parameter active"))
+		return
+	}
+
+	var active *bool
+	if activeRaw != "" {
+		active = &activeBool
+	}
+
+	// Parse request pagination parameters
+	urlValues := r.URL.Query()
+	opts, err := keysetpagination.Parse(&urlValues)
+	if err != nil {
+		h.r.Writer().WriteError(w, r, herodot.ErrBadRequest.WithError("could not parse parameter page_size"))
+		return
+	}
+
+	sess, total, nextPage, err := h.r.SessionPersister().ListSessions(r.Context(), active, opts, ExpandEverything)
+	if err != nil {
+		h.r.Writer().WriteError(w, r, err)
+		return
+	}
+
+	w.Header().Set("x-total-count", fmt.Sprint(total))
+	keysetpagination.Header(w, r.URL, nextPage)
+	h.r.Writer().Write(w, r, sess)
 }
 
 // swagger:parameters adminListIdentitySessions

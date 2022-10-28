@@ -5,7 +5,7 @@
 
 **Table of Contents**
 
-- [ (2022-10-26)](#2022-10-26)
+- [ (2022-10-27)](#2022-10-27)
   - [Breaking Changes](#breaking-changes)
     - [Bug Fixes](#bug-fixes)
     - [Code Refactoring](#code-refactoring)
@@ -280,7 +280,7 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# [](https://github.com/ory/kratos/compare/v0.10.1...v) (2022-10-26)
+# [](https://github.com/ory/kratos/compare/v0.10.1...v) (2022-10-27)
 
 ## Breaking Changes
 
@@ -579,6 +579,9 @@ SDK Method `getJsonSchema` was renamed to `getIdentitySchema`.
   upgrade ([#2734](https://github.com/ory/kratos/issues/2734))
   ([3852eb4](https://github.com/ory/kratos/commit/3852eb460251a079bad68d08bee2aef23516d168)),
   closes [#2422](https://github.com/ory/kratos/issues/2422)
+- Adding admin session listing api
+  ([#2818](https://github.com/ory/kratos/issues/2818))
+  ([59588d2](https://github.com/ory/kratos/commit/59588d2e290a8b72125021fa899661622e4cd946))
 - Adding device information to the session
   ([#2715](https://github.com/ory/kratos/issues/2715))
   ([82bc9ce](https://github.com/ory/kratos/commit/82bc9ce00d44085287e6d8d9e3fb67e107be2503)):

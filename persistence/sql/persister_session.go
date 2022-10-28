@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/ory/x/pagination/keysetpagination"
+
 	"github.com/ory/x/stringsx"
 
 	"github.com/gobuffalo/pop/v6"
@@ -22,6 +24,8 @@ var _ session.Persister = new(Persister)
 
 const SessionDeviceUserAgentMaxLength = 512
 const SessionDeviceLocationMaxLength = 512
+const paginationMaxItemsSize = 1000
+const paginationDefaultItemsSize = 250
 
 func (p *Persister) GetSession(ctx context.Context, sid uuid.UUID, expandables session.Expandables) (*session.Session, error) {
 	ctx, span := p.r.Tracer(ctx).Tracer().Start(ctx, "persistence.sql.GetSession")
@@ -51,6 +55,61 @@ func (p *Persister) GetSession(ctx context.Context, sid uuid.UUID, expandables s
 	}
 
 	return &s, nil
+}
+
+func (p *Persister) ListSessions(ctx context.Context, active *bool, paginatorOpts []keysetpagination.Option, expandables session.Expandables) ([]session.Session, int64, *keysetpagination.Paginator, error) {
+	ctx, span := p.r.Tracer(ctx).Tracer().Start(ctx, "persistence.sql.ListSessions")
+	defer span.End()
+
+	s := make([]session.Session, 0)
+	t := int64(0)
+	nid := p.NetworkID(ctx)
+
+	paginatorOpts = append(paginatorOpts, keysetpagination.WithDefaultSize(paginationDefaultItemsSize))
+	paginatorOpts = append(paginatorOpts, keysetpagination.WithMaxSize(paginationMaxItemsSize))
+	paginatorOpts = append(paginatorOpts, keysetpagination.WithDefaultToken(uuid.Nil.String()))
+	paginator := keysetpagination.GetPaginator(paginatorOpts...)
+
+	if err := p.Transaction(ctx, func(ctx context.Context, c *pop.Connection) error {
+		q := c.Where("nid = ?", nid)
+		if active != nil {
+			q = q.Where("active = ?", *active)
+		}
+		if len(expandables) > 0 {
+			q = q.Eager(expandables.ToEager()...)
+		}
+
+		// Get the total count of matching items
+		total, err := q.Count(new(session.Session))
+		if err != nil {
+			return sqlcon.HandleError(err)
+		}
+		t = int64(total)
+
+		// Get the paginated list of matching items
+		if err := q.Scope(keysetpagination.Paginate[session.Session](paginator)).All(&s); err != nil {
+			return sqlcon.HandleError(err)
+		}
+
+		if expandables.Has(session.ExpandSessionIdentity) {
+			for index := range s {
+				sess := &(s[index])
+
+				i, err := p.GetIdentity(ctx, sess.IdentityID)
+				if err != nil {
+					return err
+				}
+
+				sess.Identity = i
+			}
+		}
+		return nil
+	}); err != nil {
+		return nil, 0, nil, err
+	}
+
+	s, nextPage := keysetpagination.Result[session.Session](s, paginator)
+	return s, t, nextPage, nil
 }
 
 // ListSessionsByIdentity retrieves sessions for an identity from the store.
