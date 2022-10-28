@@ -406,11 +406,12 @@ func compareSHAHelper(hasher string, raw []byte, hash []byte) error {
 		return errors.WithStack(ErrUnknownHashAlgorithm)
 	}
 
-	// sum is uint8, encoded in base16
+	encodedHash := []byte(base64.StdEncoding.EncodeToString(hash))
+	newEncodedHash := []byte(base64.StdEncoding.EncodeToString(sha))
 
 	// Check that the contents of the hashed passwords are identical.
 	// subtle.ConstantTimeCompare() is used to help prevent timing attacks.
-	if subtle.ConstantTimeCompare([]byte(base64.StdEncoding.EncodeToString(sha)), []byte(base64.StdEncoding.EncodeToString(hash))) == 1 {
+	if subtle.ConstantTimeCompare(encodedHash, newEncodedHash) == 1 {
 		return nil
 	}
 	return errors.WithStack(ErrMismatchedHashAndPassword)
