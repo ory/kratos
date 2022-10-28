@@ -7,7 +7,10 @@ import (
 	"time"
 
 	"github.com/pkg/errors"
+	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/trace"
 
+	"github.com/ory/x/otelx/semconv"
 	"github.com/ory/x/sqlcon"
 
 	"github.com/ory/kratos/driver/config"
@@ -153,6 +156,14 @@ func (e *HookExecutor) PostRegistrationHook(w http.ResponseWriter, r *http.Reque
 		WithRequest(r).
 		WithField("identity_id", i.ID).
 		Info("A new identity has registered using self-service registration.")
+	trace.SpanFromContext(r.Context()).AddEvent(
+		semconv.EventIdentityCreated,
+		trace.WithAttributes(
+			attribute.String(semconv.AttrIdentityID, i.ID.String()),
+			attribute.String(semconv.AttrNID, i.NID.String()),
+			attribute.String("flow", string(a.Type)),
+		),
+	)
 
 	s, err := session.NewActiveSession(r, i, e.d.Config(), time.Now().UTC(), ct, identity.AuthenticatorAssuranceLevel1)
 	if err != nil {

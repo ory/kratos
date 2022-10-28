@@ -4,12 +4,10 @@ import (
 	cx "context"
 	"net/http"
 
-	"github.com/ory/x/servicelocatorx"
-
-	"golang.org/x/sync/errgroup"
-
 	"github.com/spf13/cobra"
 	"github.com/urfave/negroni"
+	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
+	"golang.org/x/sync/errgroup"
 
 	"github.com/ory/graceful"
 	"github.com/ory/kratos/driver"
@@ -17,6 +15,7 @@ import (
 	"github.com/ory/x/configx"
 	"github.com/ory/x/otelx"
 	"github.com/ory/x/reqlog"
+	"github.com/ory/x/servicelocatorx"
 )
 
 func NewWatchCmd(slOpts []servicelocatorx.Option, dOpts []driver.RegistryOption) *cobra.Command {
@@ -67,7 +66,8 @@ func ServeMetrics(ctx cx.Context, r driver.Registry) error {
 
 	var handler http.Handler = n
 	if tracer := r.Tracer(ctx); tracer.IsLoaded() {
-		handler = otelx.NewHandler(n, "cmd.courier.ServeMetrics")
+		tp := tracer.Provider()
+		handler = otelx.NewHandler(handler, "cmd.courier.ServeMetrics", otelhttp.WithTracerProvider(tp))
 	}
 
 	// #nosec G112 - the correct settings are set by graceful.WithDefaults

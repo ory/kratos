@@ -62,6 +62,7 @@ type Registry interface {
 	RegisterAdminRoutes(ctx context.Context, admin *x.RouterAdmin)
 	PrometheusManager() *prometheus.MetricsManager
 	Tracer(context.Context) *otelx.Tracer
+	SetTracer(*otelx.Tracer)
 
 	config.Provider
 	CourierConfig() config.CourierConfigs
@@ -156,12 +157,20 @@ func NewRegistryFromDSN(ctx context.Context, c *config.Config, l *logrusx.Logger
 		return nil, errors.Errorf("driver of type %T does not implement interface Registry", driver)
 	}
 
+	tracer, err := otelx.New("Ory Kratos", l, c.Tracing(ctx))
+	if err != nil {
+		l.WithError(err).Fatalf("failed to initialize tracer")
+		tracer = otelx.NewNoop(l, c.Tracing(ctx))
+	}
+	registry.SetTracer(tracer)
+
 	return registry.WithLogger(l).WithConfig(c), nil
 }
 
 type options struct {
 	skipNetworkInit bool
 	config          *config.Config
+	replaceTracer   func(*otelx.Tracer) *otelx.Tracer
 }
 
 type RegistryOption func(*options)
@@ -173,6 +182,12 @@ func SkipNetworkInit(o *options) {
 func WithConfig(config *config.Config) func(o *options) {
 	return func(o *options) {
 		o.config = config
+	}
+}
+
+func ReplaceTracer(f func(*otelx.Tracer) *otelx.Tracer) func(o *options) {
+	return func(o *options) {
+		o.replaceTracer = f
 	}
 }
 
