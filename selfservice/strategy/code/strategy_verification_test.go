@@ -310,7 +310,6 @@ func TestVerification(t *testing.T) {
 			body, res := submitVerificationCode(t, string(f), cl, code)
 
 			assert.Equal(t, http.StatusOK, res.StatusCode)
-			assert.Contains(t, res.Request.URL.String(), conf.SelfServiceFlowVerificationUI(ctx).String())
 			assert.EqualValues(t, "passed_challenge", gjson.GetBytes(body, "state").String())
 			assert.EqualValues(t, text.NewInfoSelfServiceVerificationSuccessful().Text, gjson.GetBytes(body, "ui.messages.0.text").String())
 
@@ -385,14 +384,10 @@ func TestVerification(t *testing.T) {
 		return f, verificationCode, params.RawCode
 	}
 
-	t.Run("case=respects return_to URI parameter", func(t *testing.T) {
+	t.Run("case=contains link to return_to", func(t *testing.T) {
 		returnToURL := public.URL + "/after-verification"
 		conf.MustSet(ctx, config.ViperKeyURLsAllowedReturnToDomains, []string{returnToURL})
-		client := &http.Client{
-			CheckRedirect: func(req *http.Request, via []*http.Request) error {
-				return http.ErrUseLastResponse
-			},
-		}
+		client := &http.Client{}
 
 		f, _, rawCode := newValidFlow(t, public.URL+verification.RouteInitBrowserFlow+"?"+url.Values{"return_to": {returnToURL}}.Encode())
 
@@ -404,11 +399,8 @@ func TestVerification(t *testing.T) {
 		})
 		require.NoError(t, err)
 		body := ioutilx.MustReadAll(res.Body)
-		t.Logf("%v", string(body))
 
-		redirectURL, err := res.Location()
-		require.NoError(t, err)
-		assert.Equal(t, returnToURL+"?flow="+f.ID.String(), redirectURL.String())
+		assert.Equal(t, returnToURL, gjson.GetBytes(body, "ui.nodes.#(attributes.id==go-back).attributes.href").String())
 	})
 
 	// t.Run("case=should not be able to use code from different flow", func(t *testing.T) {

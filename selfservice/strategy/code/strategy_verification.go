@@ -287,15 +287,13 @@ func (s *Strategy) verificationUseCode(w http.ResponseWriter, r *http.Request, b
 	f.UI.Messages.Set(text.NewInfoSelfServiceVerificationSuccessful())
 	f.UI.
 		Nodes.
-		Append(node.NewInputField("method", s.VerificationStrategyID(), node.CodeGroup, node.InputAttributeTypeSubmit).
-			WithMetaLabel(text.NewInfoNodeLabelReturn()))
+		Append(node.NewAnchorField("go-back", returnTo.String(), node.CodeGroup, text.NewInfoNodeLabelReturn()))
 
 	if err := s.deps.VerificationFlowPersister().UpdateVerificationFlow(r.Context(), f); err != nil {
 		return s.retryVerificationFlowWithError(w, r, flow.TypeBrowser, err)
 	}
 
-	http.Redirect(w, r, f.AppendTo(s.deps.Config().SelfServiceFlowVerificationUI(r.Context())).String(), http.StatusSeeOther)
-	return errors.WithStack(flow.ErrCompletedByStrategy)
+	return nil
 }
 
 func (s *Strategy) getRedirectURL(ctx context.Context, f *verification.Flow) *url.URL {
