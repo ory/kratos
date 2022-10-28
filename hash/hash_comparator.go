@@ -3,15 +3,14 @@ package hash
 import (
 	"context"
 	"crypto/sha1"
+	"crypto/sha256"
+	"crypto/sha512"
 	"crypto/subtle"
 	"encoding/base64"
 	"fmt"
 	"regexp"
 	"strings"
 
-	"github.com/jsimonetti/pwscheme/ssha"
-	"github.com/jsimonetti/pwscheme/ssha256"
-	"github.com/jsimonetti/pwscheme/ssha512"
 	"github.com/pkg/errors"
 	"golang.org/x/crypto/argon2"
 	"golang.org/x/crypto/bcrypt"
@@ -146,29 +145,41 @@ func CompareScrypt(_ context.Context, password []byte, hash []byte) error {
 
 func CompareSSHA(_ context.Context, password []byte, hash []byte) error {
 
-	if _, err := ssha.Validate(string(password), string(hash)); err != nil {
-		return errors.WithStack(ErrMismatchedHashAndPassword)
+	decoded, err := base64.StdEncoding.DecodeString(string(hash[6:]))
+	if len(decoded) < 21 || err != nil {
+		return err
 	}
+	salt := decoded[20:]
+	shaHash := decoded[:20]
+	raw := append(password[:], salt[:]...)
 
-	return nil
+	return compareSHAHelper("sha1", raw, shaHash)
 }
 
 func CompareSSHA256(_ context.Context, password []byte, hash []byte) error {
 
-	if _, err := ssha256.Validate(string(password), string(hash)); err != nil {
-		return errors.WithStack(ErrMismatchedHashAndPassword)
+	decoded, err := base64.StdEncoding.DecodeString(string(hash[9:]))
+	if len(decoded) < 33 || err != nil {
+		return err
 	}
+	salt := decoded[32:]
+	shaHash := decoded[:32]
+	raw := append(password[:], salt[:]...)
 
-	return nil
+	return compareSHAHelper("sha256", raw, shaHash)
 }
 
 func CompareSSHA512(_ context.Context, password []byte, hash []byte) error {
 
-	if _, err := ssha512.Validate(string(password), string(hash)); err != nil {
-		return errors.WithStack(ErrMismatchedHashAndPassword)
+	decoded, err := base64.StdEncoding.DecodeString(string(hash[9:]))
+	if len(decoded) < 65 || err != nil {
+		return err
 	}
+	salt := decoded[64:]
+	shaHash := decoded[:64]
+	raw := append(password[:], salt[:]...)
 
-	return nil
+	return compareSHAHelper("sha512", raw, shaHash)
 }
 
 func CompareSHA1(_ context.Context, password []byte, hash []byte) error {
@@ -179,17 +190,9 @@ func CompareSHA1(_ context.Context, password []byte, hash []byte) error {
 	}
 
 	r := strings.NewReplacer("{SALT}", string(salt), "{PASSWORD}", string(password))
-	arg := []byte(r.Replace(string(pf)))
-	sum := sha1.Sum(arg) // sum is uint8, encoded in base16
-	otherHash := []byte(fmt.Sprintf("%x", sum))
+	raw := []byte(r.Replace(string(pf)))
 
-	// Check that the contents of the hashed passwords are identical. Note
-	// that we are using the subtle.ConstantTimeCompare() function for this
-	// to help prevent timing attacks.
-	if subtle.ConstantTimeCompare(hash, otherHash) == 1 {
-		return nil
-	}
-	return errors.WithStack(ErrMismatchedHashAndPassword)
+	return compareSHAHelper("sha1", raw, hash)
 }
 
 var (
@@ -351,7 +354,7 @@ func decodeScryptHash(encodedHash string) (p *Scrypt, salt, hash []byte, err err
 }
 
 // decodeSHA1Hash decodes SHA1 encoded password hash in custom PHC format
-// $sha1$pf=<salting-format>$<salt>$<hash>
+// format: $sha1$pf=<salting-format>$<salt>$<hash>
 func decodeSHA1Hash(encodedHash string) (pf, salt, hash []byte, err error) {
 	parts := strings.Split(encodedHash, "$")
 
@@ -380,4 +383,32 @@ func decodeSHA1Hash(encodedHash string) (pf, salt, hash []byte, err error) {
 	}
 
 	return pf, salt, hash, nil
+}
+
+func compareSHAHelper(hasher string, raw []byte, hash []byte) error {
+
+	var sha []byte
+
+	switch hasher {
+	case "sha1":
+		sum := sha1.Sum(raw)
+		sha = sum[:]
+	case "sha256":
+		sum := sha256.Sum256(raw)
+		sha = sum[:]
+	case "sha512":
+		sum := sha512.Sum512(raw)
+		sha = sum[:]
+	default:
+		return errors.WithStack(ErrUnknownHashAlgorithm)
+	}
+
+	// sum is uint8, encoded in base16
+
+	// Check that the contents of the hashed passwords are identical.
+	// subtle.ConstantTimeCompare() is used to help prevent timing attacks.
+	if subtle.ConstantTimeCompare([]byte(base64.StdEncoding.EncodeToString(sha)), []byte(base64.StdEncoding.EncodeToString(hash))) == 1 {
+		return nil
+	}
+	return errors.WithStack(ErrMismatchedHashAndPassword)
 }
