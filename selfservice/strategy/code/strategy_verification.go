@@ -327,7 +327,6 @@ func (s *Strategy) retryVerificationFlowWithMessage(w http.ResponseWriter, r *ht
 
 	f, err := verification.NewFlow(s.deps.Config(),
 		s.deps.Config().SelfServiceFlowVerificationRequestLifespan(r.Context()), s.deps.CSRFHandler().RegenerateToken(w, r), r, s, ft)
-
 	if err != nil {
 		return s.handleVerificationError(w, r, f, nil, err)
 	}
@@ -338,11 +337,12 @@ func (s *Strategy) retryVerificationFlowWithMessage(w http.ResponseWriter, r *ht
 		return s.handleVerificationError(w, r, f, nil, err)
 	}
 
-	if ft == flow.TypeBrowser {
-		http.Redirect(w, r, f.AppendTo(s.deps.Config().SelfServiceFlowVerificationUI(r.Context())).String(), http.StatusSeeOther)
+	if x.IsJSONRequest(r) {
+		// Use the expired error here, in the future we should probably have a `SelfServiceFlowGoneError` or similar`
+		expired := new(flow.ExpiredError)
+		s.deps.Writer().WriteError(w, r, expired.WithFlow(f))
 	} else {
-		http.Redirect(w, r, urlx.CopyWithQuery(urlx.AppendPaths(s.deps.Config().SelfPublicURL(r.Context()),
-			verification.RouteGetFlow), url.Values{"id": {f.ID.String()}}).String(), http.StatusSeeOther)
+		http.Redirect(w, r, f.AppendTo(s.deps.Config().SelfServiceFlowVerificationUI(r.Context())).String(), http.StatusSeeOther)
 	}
 
 	return errors.WithStack(flow.ErrCompletedByStrategy)
@@ -361,8 +361,11 @@ func (s *Strategy) retryVerificationFlowWithError(w http.ResponseWriter, r *http
 		return s.handleVerificationError(w, r, f, nil, err)
 	}
 
+	var toReturn error
+
 	if expired := new(flow.ExpiredError); errors.As(verErr, &expired) {
-		return s.retryVerificationFlowWithMessage(w, r, ft, text.NewErrorValidationVerificationFlowExpired(expired.Ago))
+		f.UI.Messages.Add(text.NewErrorValidationVerificationFlowExpired(expired.Ago))
+		toReturn = expired.WithFlow(f)
 	} else if err := f.UI.ParseError(node.LinkGroup, verErr); err != nil {
 		return err
 	}
@@ -371,11 +374,10 @@ func (s *Strategy) retryVerificationFlowWithError(w http.ResponseWriter, r *http
 		return s.handleVerificationError(w, r, f, nil, err)
 	}
 
-	if ft == flow.TypeBrowser {
-		http.Redirect(w, r, f.AppendTo(s.deps.Config().SelfServiceFlowVerificationUI(r.Context())).String(), http.StatusSeeOther)
+	if x.IsJSONRequest(r) {
+		s.deps.Writer().WriteError(w, r, toReturn)
 	} else {
-		http.Redirect(w, r, urlx.CopyWithQuery(urlx.AppendPaths(s.deps.Config().SelfPublicURL(r.Context()),
-			verification.RouteGetFlow), url.Values{"id": {f.ID.String()}}).String(), http.StatusSeeOther)
+		http.Redirect(w, r, f.AppendTo(s.deps.Config().SelfServiceFlowVerificationUI(r.Context())).String(), http.StatusSeeOther)
 	}
 
 	return errors.WithStack(flow.ErrCompletedByStrategy)
