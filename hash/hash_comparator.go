@@ -40,8 +40,8 @@ func Compare(ctx context.Context, password []byte, hash []byte) error {
 		return CompareSSHA256(ctx, password, hash)
 	case IsSSHA512Hash(hash):
 		return CompareSSHA512(ctx, password, hash)
-	case IsSHA1Hash(hash):
-		return CompareSHA1(ctx, password, hash)
+	case IsSHAHash(hash):
+		return CompareSHA(ctx, password, hash)
 	default:
 		return errors.WithStack(ErrUnknownHashAlgorithm)
 	}
@@ -182,9 +182,9 @@ func CompareSSHA512(_ context.Context, password []byte, hash []byte) error {
 	return compareSHAHelper("sha512", raw, shaHash)
 }
 
-func CompareSHA1(_ context.Context, password []byte, hash []byte) error {
+func CompareSHA(_ context.Context, password []byte, hash []byte) error {
 
-	pf, salt, hash, err := decodeSHA1Hash(string(hash))
+	hasher, pf, salt, hash, err := decodeSHAHash(string(hash))
 	if err != nil {
 		return err
 	}
@@ -192,7 +192,7 @@ func CompareSHA1(_ context.Context, password []byte, hash []byte) error {
 	r := strings.NewReplacer("{SALT}", string(salt), "{PASSWORD}", string(password))
 	raw := []byte(r.Replace(string(pf)))
 
-	return compareSHAHelper("sha1", raw, hash)
+	return compareSHAHelper(string(hasher), raw, hash)
 }
 
 var (
@@ -204,7 +204,7 @@ var (
 	isSSHAHash     = regexp.MustCompile(`^{SSHA}.*`)
 	isSSHA256Hash  = regexp.MustCompile(`^{SSHA256}.*`)
 	isSSHA512Hash  = regexp.MustCompile(`^{SSHA512}.*`)
-	isSHA1Hash     = regexp.MustCompile(`^\$sha1\$`)
+	isSHAHash      = regexp.MustCompile(`^\$sha[0-9]{1,3}\$`)
 )
 
 func IsBcryptHash(hash []byte) bool {
@@ -239,13 +239,13 @@ func IsSSHA512Hash(hash []byte) bool {
 	return isSSHA512Hash.Match(hash)
 }
 
-func IsSHA1Hash(hash []byte) bool {
-	return isSHA1Hash.Match(hash)
+func IsSHAHash(hash []byte) bool {
+	return isSHAHash.Match(hash)
 }
 
 func IsValidHashFormat(hash []byte) bool {
 	if IsArgon2iHash(hash) || IsArgon2idHash(hash) || IsBcryptHash(hash) || IsPbkdf2Hash(hash) ||
-		IsScryptHash(hash) || IsSSHAHash(hash) || IsSSHA256Hash(hash) || IsSSHA512Hash(hash) || IsSHA1Hash(hash) {
+		IsScryptHash(hash) || IsSSHAHash(hash) || IsSSHA256Hash(hash) || IsSSHA512Hash(hash) || IsSHAHash(hash) {
 		return true
 	} else {
 		return false
@@ -353,36 +353,38 @@ func decodeScryptHash(encodedHash string) (p *Scrypt, salt, hash []byte, err err
 	return p, salt, hash, nil
 }
 
-// decodeSHA1Hash decodes SHA1 encoded password hash in custom PHC format
+// decodeSHAHash decodes SHA[1|256|512] encoded password hash in custom PHC format.
 // format: $sha1$pf=<salting-format>$<salt>$<hash>
-func decodeSHA1Hash(encodedHash string) (pf, salt, hash []byte, err error) {
+func decodeSHAHash(encodedHash string) (hasher, pf, salt, hash []byte, err error) {
 	parts := strings.Split(encodedHash, "$")
 
 	if len(parts) != 5 {
-		return nil, nil, nil, ErrInvalidHash
+		return nil, nil, nil, nil, ErrInvalidHash
 	}
+
+	hasher = []byte(parts[1])
 
 	_, err = fmt.Sscanf(parts[2], "pf=%s", &pf)
 	if err != nil {
-		return nil, nil, nil, err
+		return nil, nil, nil, nil, err
 	}
 
 	pf, err = base64.StdEncoding.Strict().DecodeString(string(pf))
 	if err != nil {
-		return nil, nil, nil, err
+		return nil, nil, nil, nil, err
 	}
 
 	salt, err = base64.StdEncoding.Strict().DecodeString(parts[3])
 	if err != nil {
-		return nil, nil, nil, err
+		return nil, nil, nil, nil, err
 	}
 
 	hash, err = base64.StdEncoding.Strict().DecodeString(parts[4])
 	if err != nil {
-		return nil, nil, nil, err
+		return nil, nil, nil, nil, err
 	}
 
-	return pf, salt, hash, nil
+	return hasher, pf, salt, hash, nil
 }
 
 func compareSHAHelper(hasher string, raw []byte, hash []byte) error {
