@@ -58,6 +58,7 @@ require (
 	github.com/imdario/mergo v0.3.12
 	github.com/inhies/go-bytesize v0.0.0-20210819104631-275770b98743
 	github.com/jarcoal/httpmock v1.0.5
+	github.com/jsimonetti/pwscheme v0.0.0-20220922140336-67a4d090f150
 	github.com/jteeuwen/go-bindata v3.0.7+incompatible
 	github.com/julienschmidt/httprouter v1.3.0
 	github.com/knadh/koanf v1.4.0
@@ -216,7 +217,6 @@ require (
 	github.com/joho/godotenv v1.4.0 // indirect
 	github.com/jonboulle/clockwork v0.2.2 // indirect
 	github.com/josharian/intern v1.0.0 // indirect
-	github.com/jsimonetti/pwscheme v0.0.0-20220922140336-67a4d090f150 // indirect
 	github.com/json-iterator/go v1.1.12 // indirect
 	github.com/kballard/go-shellquote v0.0.0-20180428030007-95032a82bc51 // indirect
 	github.com/kr/pretty v0.3.0 // indirect
