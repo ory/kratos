@@ -181,42 +181,38 @@ func CompareFirebaseScrypt(_ context.Context, password []byte, hash []byte) erro
 }
 
 func CompareSSHA(_ context.Context, password []byte, hash []byte) error {
+	hasher, salt, shaHash, err := decodeSSHAHash(string(hash))
 
-	decoded, err := base64.StdEncoding.DecodeString(string(hash[6:]))
-	if len(decoded) < 21 || err != nil {
+	if err != nil {
 		return err
 	}
-	salt := decoded[20:]
-	shaHash := decoded[:20]
+
 	raw := append(password[:], salt[:]...)
 
-	return compareSHAHelper("sha1", raw, shaHash)
+	return compareSHAHelper(hasher, raw, shaHash)
 }
 
 func CompareSSHA256(_ context.Context, password []byte, hash []byte) error {
+	hasher, salt, shaHash, err := decodeSSHAHash(string(hash))
 
-	decoded, err := base64.StdEncoding.DecodeString(string(hash[9:]))
-	if len(decoded) < 33 || err != nil {
+	if err != nil {
 		return err
 	}
-	salt := decoded[32:]
-	shaHash := decoded[:32]
+
 	raw := append(password[:], salt[:]...)
 
-	return compareSHAHelper("sha256", raw, shaHash)
+	return compareSHAHelper(hasher, raw, shaHash)
 }
 
 func CompareSSHA512(_ context.Context, password []byte, hash []byte) error {
+	hasher, salt, shaHash, err := decodeSSHAHash(string(hash))
 
-	decoded, err := base64.StdEncoding.DecodeString(string(hash[9:]))
-	if len(decoded) < 65 || err != nil {
+	if err != nil {
 		return err
 	}
-	salt := decoded[64:]
-	shaHash := decoded[:64]
 	raw := append(password[:], salt[:]...)
 
-	return compareSHAHelper("sha512", raw, shaHash)
+	return compareSHAHelper(hasher, raw, shaHash)
 }
 
 func CompareSHA(_ context.Context, password []byte, hash []byte) error {
@@ -490,4 +486,41 @@ func compareSHAHelper(hasher string, raw []byte, hash []byte) error {
 		return nil
 	}
 	return errors.WithStack(ErrMismatchedHashAndPassword)
+}
+
+// decodeSSHAHash decodes SSHA[1|256|512] encoded password hash in usual {SSHA...} format.
+func decodeSSHAHash(encodedHash string) (hasher string, salt, shaHash []byte, err error) {
+	re := regexp.MustCompile(`\{([^}]*)\}`)
+	match := re.FindStringSubmatch(string(encodedHash))
+
+	var index_of_salt_begin int
+	var index_of_hash_begin int
+
+	switch match[1] {
+	case "SSHA":
+		hasher = "sha1"
+		index_of_hash_begin = 6
+		index_of_salt_begin = 20
+
+	case "SSHA256":
+		hasher = "sha256"
+		index_of_hash_begin = 9
+		index_of_salt_begin = 32
+
+	case "SSHA512":
+		hasher = "sha512"
+		index_of_hash_begin = 9
+		index_of_salt_begin = 64
+	}
+
+	decoded, err := base64.StdEncoding.DecodeString(string(encodedHash[index_of_hash_begin:]))
+
+	if len(decoded) < index_of_salt_begin+1 || err != nil {
+		return "", nil, nil, err
+	}
+
+	salt = decoded[index_of_salt_begin:]
+	shaHash = decoded[:index_of_salt_begin]
+
+	return hasher, salt, shaHash, nil
 }
