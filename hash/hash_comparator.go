@@ -386,6 +386,50 @@ func decodeScryptHash(encodedHash string) (p *Scrypt, salt, hash []byte, err err
 	return p, salt, hash, nil
 }
 
+// decodeFirebaseScryptHash decodes Firebase Scrypt encoded password hash.
+// format: $firescrypt$ln=<mem_cost>,r=<rounds>,p=<parallelization>$<salt>$<hash>$<salt_separator>$<signer_key>
+func decodeFirebaseScryptHash(encodedHash string) (p *Scrypt, salt, saltSeparator, hash, signerKey []byte, err error) {
+	parts := strings.Split(encodedHash, "$")
+	if len(parts) != 7 {
+		return nil, nil, nil, nil, nil, ErrInvalidHash
+	}
+
+	p = new(Scrypt)
+
+	_, err = fmt.Sscanf(parts[2], "ln=%d,r=%d,p=%d", &p.Cost, &p.Block, &p.Parrellization)
+	if err != nil {
+		return nil, nil, nil, nil, nil, err
+	}
+	// convert from firebase config "mem_cost" to
+	// scrypt CPU/memory cost parameter, which must be a power of two greater than 1.
+	p.Cost = 1 << p.Cost
+
+	salt, err = base64.StdEncoding.Strict().DecodeString(parts[3])
+	if err != nil {
+		return nil, nil, nil, nil, nil, err
+	}
+	p.SaltLength = uint32(len(salt))
+
+	hash, err = base64.StdEncoding.Strict().DecodeString(parts[4])
+	if err != nil {
+		return nil, nil, nil, nil, nil, err
+	}
+	// Are all firebase script hashes of length 32?
+	p.KeyLength = 32
+
+	saltSeparator, err = base64.StdEncoding.Strict().DecodeString(parts[5])
+	if err != nil {
+		return nil, nil, nil, nil, nil, err
+	}
+
+	signerKey, err = base64.StdEncoding.Strict().DecodeString(parts[6])
+	if err != nil {
+		return nil, nil, nil, nil, nil, err
+	}
+
+	return p, salt, saltSeparator, hash, signerKey, nil
+}
+
 // decodeSHAHash decodes SHA[1|256|512] encoded password hash in custom PHC format.
 // format: $sha1$pf=<salting-format>$<salt>$<hash>
 func decodeSHAHash(encodedHash string) (hasher, pf, salt, hash []byte, err error) {
@@ -446,48 +490,4 @@ func compareSHAHelper(hasher string, raw []byte, hash []byte) error {
 		return nil
 	}
 	return errors.WithStack(ErrMismatchedHashAndPassword)
-}
-
-// decodeFirebaseScryptHash decodes Firebase Scrypt encoded password hash.
-// format: $firescrypt$ln=<mem_cost>,r=<rounds>,p=<parallelization>$<salt>$<hash>$<salt_separator>$<signer_key>
-func decodeFirebaseScryptHash(encodedHash string) (p *Scrypt, salt, saltSeparator, hash, signerKey []byte, err error) {
-	parts := strings.Split(encodedHash, "$")
-	if len(parts) != 7 {
-		return nil, nil, nil, nil, nil, ErrInvalidHash
-	}
-
-	p = new(Scrypt)
-
-	_, err = fmt.Sscanf(parts[2], "ln=%d,r=%d,p=%d", &p.Cost, &p.Block, &p.Parrellization)
-	if err != nil {
-		return nil, nil, nil, nil, nil, err
-	}
-	// convert from firebase config "mem_cost" to
-	// scrypt CPU/memory cost parameter, which must be a power of two greater than 1.
-	p.Cost = 1 << p.Cost
-
-	salt, err = base64.StdEncoding.Strict().DecodeString(parts[3])
-	if err != nil {
-		return nil, nil, nil, nil, nil, err
-	}
-	p.SaltLength = uint32(len(salt))
-
-	hash, err = base64.StdEncoding.Strict().DecodeString(parts[4])
-	if err != nil {
-		return nil, nil, nil, nil, nil, err
-	}
-	// Are all firebase script hashes of length 32?
-	p.KeyLength = 32
-
-	saltSeparator, err = base64.StdEncoding.Strict().DecodeString(parts[5])
-	if err != nil {
-		return nil, nil, nil, nil, nil, err
-	}
-
-	signerKey, err = base64.StdEncoding.Strict().DecodeString(parts[6])
-	if err != nil {
-		return nil, nil, nil, nil, nil, err
-	}
-
-	return p, salt, saltSeparator, hash, signerKey, nil
 }
