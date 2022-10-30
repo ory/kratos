@@ -177,7 +177,7 @@ func CompareFirebaseScrypt(_ context.Context, password []byte, hash []byte) erro
 }
 
 func CompareSSHA(_ context.Context, password []byte, hash []byte) error {
-	hasher, salt, shaHash, err := decodeSSHAHash(string(hash))
+	hasher, salt, hash, err := decodeSSHAHash(string(hash))
 
 	if err != nil {
 		return err
@@ -185,7 +185,7 @@ func CompareSSHA(_ context.Context, password []byte, hash []byte) error {
 
 	raw := append(password[:], salt[:]...)
 
-	return compareSHAHelper(hasher, raw, shaHash)
+	return compareSHAHelper(hasher, raw, hash)
 }
 
 func CompareSHA(_ context.Context, password []byte, hash []byte) error {
@@ -198,7 +198,7 @@ func CompareSHA(_ context.Context, password []byte, hash []byte) error {
 	r := strings.NewReplacer("{SALT}", string(salt), "{PASSWORD}", string(password))
 	raw := []byte(r.Replace(string(pf)))
 
-	return compareSHAHelper(string(hasher), raw, hash)
+	return compareSHAHelper(hasher, raw, hash)
 }
 
 var (
@@ -391,39 +391,39 @@ func decodeFirebaseScryptHash(encodedHash string) (p *Scrypt, salt, saltSeparato
 
 // decodeSHAHash decodes SHA[1|256|512] encoded password hash in custom PHC format.
 // format: $sha1$pf=<salting-format>$<salt>$<hash>
-func decodeSHAHash(encodedHash string) (hasher, pf, salt, hash []byte, err error) {
+func decodeSHAHash(encodedHash string) (hasher string, pf, salt, hash []byte, err error) {
 	parts := strings.Split(encodedHash, "$")
 
 	if len(parts) != 5 {
-		return nil, nil, nil, nil, ErrInvalidHash
+		return "", nil, nil, nil, ErrInvalidHash
 	}
 
-	hasher = []byte(parts[1])
+	hasher = parts[1]
 
 	_, err = fmt.Sscanf(parts[2], "pf=%s", &pf)
 	if err != nil {
-		return nil, nil, nil, nil, err
+		return "", nil, nil, nil, err
 	}
 
 	pf, err = base64.StdEncoding.Strict().DecodeString(string(pf))
 	if err != nil {
-		return nil, nil, nil, nil, err
+		return "", nil, nil, nil, err
 	}
 
 	salt, err = base64.StdEncoding.Strict().DecodeString(parts[3])
 	if err != nil {
-		return nil, nil, nil, nil, err
+		return "", nil, nil, nil, err
 	}
 
 	hash, err = base64.StdEncoding.Strict().DecodeString(parts[4])
 	if err != nil {
-		return nil, nil, nil, nil, err
+		return "", nil, nil, nil, err
 	}
 
 	return hasher, pf, salt, hash, nil
 }
 
-// used for CompareSHA and CompareSSHA CompareSSHA256 CompareSSHA512
+// used for CompareSHA and CompareSSHA
 func compareSHAHelper(hasher string, raw []byte, hash []byte) error {
 
 	var sha []byte
@@ -452,7 +452,7 @@ func compareSHAHelper(hasher string, raw []byte, hash []byte) error {
 }
 
 // decodeSSHAHash decodes SSHA[1|256|512] encoded password hash in usual {SSHA...} format.
-func decodeSSHAHash(encodedHash string) (hasher string, salt, shaHash []byte, err error) {
+func decodeSSHAHash(encodedHash string) (hasher string, salt, hash []byte, err error) {
 	re := regexp.MustCompile(`\{([^}]*)\}`)
 	match := re.FindStringSubmatch(string(encodedHash))
 
@@ -483,7 +483,7 @@ func decodeSSHAHash(encodedHash string) (hasher string, salt, shaHash []byte, er
 	}
 
 	salt = decoded[index_of_salt_begin:]
-	shaHash = decoded[:index_of_salt_begin]
+	hash = decoded[:index_of_salt_begin]
 
-	return hasher, salt, shaHash, nil
+	return hasher, salt, hash, nil
 }
