@@ -293,4 +293,7 @@ func TestCompare(t *testing.T) {
 	assert.Error(t, hash.Compare(context.Background(), []byte("wrongpass"), []byte("$sha512$pf=e1NBTFR9e1BBU1NXT1JEfQ==$NW9wbWtnejAzcg==$6ctpVuApMNp0CgBXcdHw/GC562eFEFGr4gpgANX8ZYsX+j5B19IkdmOY2Fytsz3QUwSWdGcUjbqwgJGTH0UYvw==")))
 	//pf: {SALT}$${PASSWORD}
 	assert.Nil(t, hash.Compare(context.Background(), []byte("test"), []byte("$sha512$pf=e1NBTFR9JCR7UEFTU1dPUkR9$NW9wbWtnejAzcg==$1F9BPW8UtdJkZ9Dhlf+D4X4dJ9xfuH8y04EfuCP2k4aGPPq/aWxU9/xe3LydHmYW1/K3zu3NFO9ETVrZettz3w==")))
+
+	assert.Error(t, hash.Compare(context.Background(), []byte("test"), []byte("$shaNotexistent$pf=e1NBTFR9e1BBU1NXT1JEfQ==$NW9wbWtnejAzcg==$6ctpVuApMNp0CgBXcdHw/GC562eFEFGr4gpgANX8ZYsX+j5B19IkdmOY2Fytsz3QUwSWdGcUjbqwgJGTH0UYvw==")))
+
 }
