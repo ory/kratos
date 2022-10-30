@@ -413,7 +413,7 @@ func (h *Handler) submitFlow(w http.ResponseWriter, r *http.Request, ps httprout
 		return
 	}
 
-	if f.Type == flow.TypeBrowser && !x.IsJSONRequest(r) {
+	if x.IsBrowserRequest(r) {
 		http.Redirect(w, r, f.AppendTo(h.d.Config().SelfServiceFlowVerificationUI(r.Context())).String(), http.StatusSeeOther)
 		return
 	}
