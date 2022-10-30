@@ -40,10 +40,6 @@ func Compare(ctx context.Context, password []byte, hash []byte) error {
 		return CompareFirebaseScrypt(ctx, password, hash)
 	case IsSSHAHash(hash):
 		return CompareSSHA(ctx, password, hash)
-	case IsSSHA256Hash(hash):
-		return CompareSSHA256(ctx, password, hash)
-	case IsSSHA512Hash(hash):
-		return CompareSSHA512(ctx, password, hash)
 	case IsSHAHash(hash):
 		return CompareSHA(ctx, password, hash)
 	default:
@@ -192,29 +188,6 @@ func CompareSSHA(_ context.Context, password []byte, hash []byte) error {
 	return compareSHAHelper(hasher, raw, shaHash)
 }
 
-func CompareSSHA256(_ context.Context, password []byte, hash []byte) error {
-	hasher, salt, shaHash, err := decodeSSHAHash(string(hash))
-
-	if err != nil {
-		return err
-	}
-
-	raw := append(password[:], salt[:]...)
-
-	return compareSHAHelper(hasher, raw, shaHash)
-}
-
-func CompareSSHA512(_ context.Context, password []byte, hash []byte) error {
-	hasher, salt, shaHash, err := decodeSSHAHash(string(hash))
-
-	if err != nil {
-		return err
-	}
-	raw := append(password[:], salt[:]...)
-
-	return compareSHAHelper(hasher, raw, shaHash)
-}
-
 func CompareSHA(_ context.Context, password []byte, hash []byte) error {
 
 	hasher, pf, salt, hash, err := decodeSHAHash(string(hash))
@@ -235,9 +208,7 @@ var (
 	isPbkdf2Hash         = regexp.MustCompile(`^\$pbkdf2-sha[0-9]{1,3}\$`)
 	isScryptHash         = regexp.MustCompile(`^\$scrypt\$`)
 	isFirebaseScryptHash = regexp.MustCompile(`^\$firescrypt\$`)
-	isSSHAHash           = regexp.MustCompile(`^{SSHA}.*`)
-	isSSHA256Hash        = regexp.MustCompile(`^{SSHA256}.*`)
-	isSSHA512Hash        = regexp.MustCompile(`^{SSHA512}.*`)
+	isSSHAHash           = regexp.MustCompile(`^{SSHA(256|512)?}.*`)
 	isSHAHash            = regexp.MustCompile(`^\$sha(1|256|512)\$`)
 )
 
@@ -263,14 +234,6 @@ func IsScryptHash(hash []byte) bool {
 
 func IsSSHAHash(hash []byte) bool {
 	return isSSHAHash.Match(hash)
-}
-
-func IsSSHA256Hash(hash []byte) bool {
-	return isSSHA256Hash.Match(hash)
-}
-
-func IsSSHA512Hash(hash []byte) bool {
-	return isSSHA512Hash.Match(hash)
 }
 
 func IsSHAHash(hash []byte) bool {
