@@ -6,6 +6,8 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/ory/kratos/session"
+
 	"github.com/ory/kratos/text"
 	"github.com/ory/kratos/ui/container"
 	"github.com/ory/kratos/ui/node"
@@ -48,6 +50,7 @@ type (
 	executorDependencies interface {
 		identity.ManagementProvider
 		identity.ValidationProvider
+		session.ManagementProvider
 		config.Provider
 
 		HandlerProvider
@@ -271,7 +274,21 @@ func (e *HookExecutor) PostSettingsHook(w http.ResponseWriter, r *http.Request, 
 		WithField("flow_method", settingsType).
 		Debug("Completed all PostSettingsPrePersistHooks and PostSettingsPostPersistHooks.")
 
-	if ctxUpdate.Flow.Type == flow.TypeAPI || x.IsJSONRequest(r) {
+	if ctxUpdate.Flow.Type == flow.TypeAPI {
+		updatedFlow, err := e.d.SettingsFlowPersister().GetSettingsFlow(r.Context(), ctxUpdate.Flow.ID)
+		if err != nil {
+			return err
+		}
+
+		e.d.Writer().Write(w, r, updatedFlow)
+		return nil
+	}
+
+	if err := e.d.SessionManager().IssueCookie(r.Context(), w, r, ctxUpdate.Session); err != nil {
+		return errors.WithStack(err)
+	}
+
+	if x.IsJSONRequest(r) {
 		updatedFlow, err := e.d.SettingsFlowPersister().GetSettingsFlow(r.Context(), ctxUpdate.Flow.ID)
 		if err != nil {
 			return err

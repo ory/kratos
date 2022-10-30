@@ -13,6 +13,7 @@ package client
 
 import (
 	"encoding/json"
+	"time"
 )
 
 // SelfServiceFlowExpiredError Is sent when a flow is expired
@@ -23,6 +24,8 @@ type SelfServiceFlowExpiredError struct {
 	Debug *string `json:"debug,omitempty"`
 	// Further error details
 	Details map[string]interface{} `json:"details,omitempty"`
+	// When the flow has expired
+	ExpiredAt *time.Time `json:"expired_at,omitempty"`
 	// The error ID  Useful when trying to identify various errors in application logic.
 	Id *string `json:"id,omitempty"`
 	// Error message  The error's message.
@@ -151,6 +154,38 @@ func (o *SelfServiceFlowExpiredError) HasDetails() bool {
 // SetDetails gets a reference to the given map[string]interface{} and assigns it to the Details field.
 func (o *SelfServiceFlowExpiredError) SetDetails(v map[string]interface{}) {
 	o.Details = v
+}
+
+// GetExpiredAt returns the ExpiredAt field value if set, zero value otherwise.
+func (o *SelfServiceFlowExpiredError) GetExpiredAt() time.Time {
+	if o == nil || o.ExpiredAt == nil {
+		var ret time.Time
+		return ret
+	}
+	return *o.ExpiredAt
+}
+
+// GetExpiredAtOk returns a tuple with the ExpiredAt field value if set, nil otherwise
+// and a boolean to check if the value has been set.
+func (o *SelfServiceFlowExpiredError) GetExpiredAtOk() (*time.Time, bool) {
+	if o == nil || o.ExpiredAt == nil {
+		return nil, false
+	}
+	return o.ExpiredAt, true
+}
+
+// HasExpiredAt returns a boolean if a field has been set.
+func (o *SelfServiceFlowExpiredError) HasExpiredAt() bool {
+	if o != nil && o.ExpiredAt != nil {
+		return true
+	}
+
+	return false
+}
+
+// SetExpiredAt gets a reference to the given time.Time and assigns it to the ExpiredAt field.
+func (o *SelfServiceFlowExpiredError) SetExpiredAt(v time.Time) {
+	o.ExpiredAt = &v
 }
 
 // GetId returns the Id field value if set, zero value otherwise.
@@ -379,6 +414,9 @@ func (o SelfServiceFlowExpiredError) MarshalJSON() ([]byte, error) {
 	}
 	if o.Details != nil {
 		toSerialize["details"] = o.Details
+	}
+	if o.ExpiredAt != nil {
+		toSerialize["expired_at"] = o.ExpiredAt
 	}
 	if o.Id != nil {
 		toSerialize["id"] = o.Id

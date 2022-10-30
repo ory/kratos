@@ -55,3 +55,11 @@ func NewInfoNodeInputEmail() *Message {
 		Type: Info,
 	}
 }
+
+func NewInfoNodeResendOTP() *Message {
+	return &Message{
+		ID:   InfoNodeLabelEmail,
+		Text: "Resend code",
+		Type: Info,
+	}
+}

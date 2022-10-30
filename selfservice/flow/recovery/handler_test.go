@@ -64,6 +64,8 @@ func TestInitFlow(t *testing.T) {
 	conf.MustSet(ctx, config.ViperKeySelfServiceRecoveryEnabled, true)
 	conf.MustSet(ctx, config.ViperKeySelfServiceStrategyConfig+"."+recovery.StrategyRecoveryLinkName,
 		map[string]interface{}{"enabled": true})
+	conf.MustSet(ctx, config.ViperKeySelfServiceStrategyConfig+"."+recovery.StrategyRecoveryCodeName,
+		map[string]interface{}{"enabled": true})
 
 	router := x.NewRouterPublic()
 	publicTS, _ := testhelpers.NewKratosServerWithRouters(t, reg, router, x.NewRouterAdmin())
@@ -187,9 +189,9 @@ func TestInitFlow(t *testing.T) {
 
 			res, err := c.Do(req)
 			require.NoError(t, err)
+			defer res.Body.Close()
 			// here we check that the redirect status is 303
 			require.Equal(t, http.StatusSeeOther, res.StatusCode)
-			defer res.Body.Close()
 		})
 	})
 }
@@ -199,6 +201,8 @@ func TestGetFlow(t *testing.T) {
 	conf, reg := internal.NewFastRegistryWithMocks(t)
 	conf.MustSet(ctx, config.ViperKeySelfServiceRecoveryEnabled, true)
 	conf.MustSet(ctx, config.ViperKeySelfServiceStrategyConfig+"."+recovery.StrategyRecoveryLinkName,
+		map[string]interface{}{"enabled": true})
+	conf.MustSet(ctx, config.ViperKeySelfServiceStrategyConfig+"."+recovery.StrategyRecoveryCodeName,
 		map[string]interface{}{"enabled": true})
 	testhelpers.SetDefaultIdentitySchema(conf, "file://./stub/identity.schema.json")
 

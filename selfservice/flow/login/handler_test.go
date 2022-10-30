@@ -11,8 +11,11 @@ import (
 	"testing"
 	"time"
 
+	"github.com/ory/x/urlx"
+
 	"github.com/ory/x/sqlxx"
 
+	"github.com/ory/kratos/hydra"
 	"github.com/ory/kratos/selfservice/flow"
 	"github.com/ory/kratos/ui/container"
 
@@ -44,6 +47,7 @@ func init() {
 func TestFlowLifecycle(t *testing.T) {
 	ctx := context.Background()
 	conf, reg := internal.NewFastRegistryWithMocks(t)
+	reg.WithHydra(hydra.NewFakeHydra())
 	router := x.NewRouterPublic()
 	ts, _ := testhelpers.NewKratosServerWithRouters(t, reg, router, x.NewRouterAdmin())
 	loginTS := testhelpers.NewLoginUIFlowEchoServer(t, reg)
@@ -231,6 +235,73 @@ func TestFlowLifecycle(t *testing.T) {
 
 					assert.NotEmpty(t, gjson.Get(b, "session.id").String())
 					assert.NotEqual(t, gjson.Get(b, "session.id").String(), gjson.Get(a, "id").String())
+				})
+			})
+
+			t.Run("case=changed kratos session identifiers when refresh is true", func(t *testing.T) {
+				t.Cleanup(func() {
+					conf.MustSet(ctx, config.ViperKeySelfServiceBrowserDefaultReturnTo, "https://www.ory.sh")
+				})
+
+				t.Run("type=browser", func(t *testing.T) {
+					// Setup flow
+					f := login.Flow{Type: flow.TypeBrowser, ExpiresAt: time.Now().Add(time.Minute), IssuedAt: time.Now(), UI: container.New(""), Refresh: false, RequestedAAL: "aal1"}
+					require.NoError(t, reg.LoginFlowPersister().CreateLoginFlow(context.Background(), &f))
+
+					// Submit Login
+					hc := testhelpers.NewClientWithCookies(t)
+					res, err := hc.PostForm(ts.URL+login.RouteSubmitFlow+"?flow="+f.ID.String(), url.Values{"method": {"password"}, "password_identifier": {id1mail}, "password": {"foobar"}, "csrf_token": {x.FakeCSRFToken}})
+					require.NoError(t, err)
+
+					// Check response and session cookie presence
+					assert.Equal(t, http.StatusOK, res.StatusCode)
+					require.Len(t, hc.Jar.Cookies(urlx.ParseOrPanic(ts.URL+login.RouteGetFlow)), 1)
+					require.Contains(t, fmt.Sprintf("%v", hc.Jar.Cookies(urlx.ParseOrPanic(ts.URL))), "ory_kratos_session")
+					cookies1 := hc.Jar.Cookies(urlx.ParseOrPanic(ts.URL + login.RouteGetFlow))
+
+					req, err := http.NewRequest("GET", ts.URL+"/sessions/whoami", nil)
+					require.NoError(t, err)
+
+					res, err = hc.Do(req)
+					require.NoError(t, err)
+					assert.Equal(t, http.StatusOK, res.StatusCode)
+					firstSession := x.MustReadAll(res.Body)
+					require.NoError(t, res.Body.Close())
+
+					// Refresh
+					f = login.Flow{Type: flow.TypeBrowser, ExpiresAt: time.Now().Add(time.Minute), IssuedAt: time.Now(), UI: container.New(""), Refresh: true, RequestedAAL: "aal1"}
+					require.NoError(t, reg.LoginFlowPersister().CreateLoginFlow(context.Background(), &f))
+
+					vv := testhelpers.EncodeFormAsJSON(t, false, url.Values{"method": {"password"}, "password_identifier": {id1mail}, "password": {"foobar"}, "csrf_token": {x.FakeCSRFToken}})
+
+					req, err = http.NewRequest("POST", ts.URL+login.RouteSubmitFlow+"?flow="+f.ID.String(), strings.NewReader(vv))
+					require.NoError(t, err)
+					req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+
+					// Submit Login
+					res, err = hc.Do(req)
+					require.NoError(t, err)
+
+					// Check response and session cookie presence
+					assert.Equal(t, http.StatusOK, res.StatusCode)
+					require.Len(t, hc.Jar.Cookies(urlx.ParseOrPanic(ts.URL+login.RouteGetFlow)), 1)
+					require.Contains(t, fmt.Sprintf("%v", hc.Jar.Cookies(urlx.ParseOrPanic(ts.URL))), "ory_kratos_session")
+					cookies2 := hc.Jar.Cookies(urlx.ParseOrPanic(ts.URL + login.RouteGetFlow))
+
+					req, err = http.NewRequest("GET", ts.URL+"/sessions/whoami", nil)
+					require.NoError(t, err)
+
+					res, err = hc.Do(req)
+					require.NoError(t, err)
+					assert.Equal(t, http.StatusOK, res.StatusCode)
+					secondSession := x.MustReadAll(res.Body)
+					require.NoError(t, res.Body.Close())
+
+					// Sessions should still be resolvable despite different kratos session identifier due to nonce
+					assert.NotEqual(t, cookies1[0].String(), cookies2[0].String())
+					assert.Equal(t, id1mail, gjson.Get(string(firstSession), "identity.traits.username").String())
+					assert.Equal(t, id1mail, gjson.Get(string(secondSession), "identity.traits.username").String())
+					assert.Equal(t, gjson.Get(string(secondSession), "id").String(), gjson.Get(string(firstSession), "id").String())
 				})
 			})
 		})
@@ -478,9 +549,22 @@ func TestFlowLifecycle(t *testing.T) {
 
 				res, err := c.Do(req)
 				require.NoError(t, err)
+				defer res.Body.Close()
 				// here we check that the redirect status is 303
 				require.Equal(t, http.StatusSeeOther, res.StatusCode)
-				defer res.Body.Close()
+			})
+
+			t.Run("case=refuses to parse oauth2 login challenge when Hydra is not configured", func(t *testing.T) {
+				res, body := initAuthenticatedFlow(t, url.Values{"login_challenge": {hydra.FAKE_GET_LOGIN_REQUEST_RETURN_NIL_NIL}}, false)
+				require.Contains(t, res.Request.URL.String(), errorTS.URL)
+				require.Contains(t, string(body), "refusing to parse")
+			})
+
+			conf.MustSet(ctx, config.ViperKeyOAuth2ProviderURL, "https://fake-hydra")
+
+			t.Run("case=oauth2 flow init succeeds", func(t *testing.T) {
+				res, _ := initAuthenticatedFlow(t, url.Values{"login_challenge": {hydra.FAKE_SUCCESS}}, false)
+				require.Contains(t, res.Request.URL.String(), loginTS.URL)
 			})
 		})
 

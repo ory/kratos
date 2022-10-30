@@ -104,7 +104,7 @@ func (s *ErrorHandler) PrepareReplacementForExpiredFlow(w http.ResponseWriter, r
 		return nil, err
 	}
 
-	a.UI.Messages.Add(text.NewErrorValidationSettingsFlowExpired(e.Ago))
+	a.UI.Messages.Add(text.NewErrorValidationSettingsFlowExpired(e.ExpiredAt))
 	if err := s.d.SettingsFlowPersister().UpdateSettingsFlow(r.Context(), a); err != nil {
 		return nil, err
 	}

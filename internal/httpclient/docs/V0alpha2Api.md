@@ -4,48 +4,50 @@ All URIs are relative to *http://localhost*
 
 Method | HTTP request | Description
 ------------- | ------------- | -------------
-[**AdminCreateIdentity**](V0alpha2Api.md#AdminCreateIdentity) | **Post** /admin/identities | # Create an Identity
-[**AdminCreateSelfServiceRecoveryLink**](V0alpha2Api.md#AdminCreateSelfServiceRecoveryLink) | **Post** /admin/recovery/link | # Create a Recovery Link
-[**AdminDeleteIdentity**](V0alpha2Api.md#AdminDeleteIdentity) | **Delete** /admin/identities/{id} | # Delete an Identity
-[**AdminDeleteIdentitySessions**](V0alpha2Api.md#AdminDeleteIdentitySessions) | **Delete** /admin/identities/{id}/sessions | Calling this endpoint irrecoverably and permanently deletes and invalidates all sessions that belong to the given Identity.
-[**AdminExtendSession**](V0alpha2Api.md#AdminExtendSession) | **Patch** /admin/sessions/{id}/extend | Calling this endpoint extends the given session ID. If &#x60;session.earliest_possible_extend&#x60; is set it will only extend the session after the specified time has passed.
-[**AdminGetIdentity**](V0alpha2Api.md#AdminGetIdentity) | **Get** /admin/identities/{id} | # Get an Identity
-[**AdminListCourierMessages**](V0alpha2Api.md#AdminListCourierMessages) | **Get** /admin/courier/messages | # List Messages
-[**AdminListIdentities**](V0alpha2Api.md#AdminListIdentities) | **Get** /admin/identities | # List Identities
-[**AdminListIdentitySessions**](V0alpha2Api.md#AdminListIdentitySessions) | **Get** /admin/identities/{id}/sessions | This endpoint returns all sessions that belong to the given Identity.
-[**AdminPatchIdentity**](V0alpha2Api.md#AdminPatchIdentity) | **Patch** /admin/identities/{id} | Partially updates an Identity&#39;s field using [JSON Patch](https://jsonpatch.com/)
-[**AdminUpdateIdentity**](V0alpha2Api.md#AdminUpdateIdentity) | **Put** /admin/identities/{id} | # Update an Identity
-[**CreateSelfServiceLogoutFlowUrlForBrowsers**](V0alpha2Api.md#CreateSelfServiceLogoutFlowUrlForBrowsers) | **Get** /self-service/logout/browser | # Create a Logout URL for Browsers
+[**AdminCreateIdentity**](V0alpha2Api.md#AdminCreateIdentity) | **Post** /admin/identities | Create an Identity
+[**AdminCreateSelfServiceRecoveryCode**](V0alpha2Api.md#AdminCreateSelfServiceRecoveryCode) | **Post** /admin/recovery/code | Create a Recovery Code
+[**AdminCreateSelfServiceRecoveryLink**](V0alpha2Api.md#AdminCreateSelfServiceRecoveryLink) | **Post** /admin/recovery/link | Create a Recovery Link
+[**AdminDeleteIdentity**](V0alpha2Api.md#AdminDeleteIdentity) | **Delete** /admin/identities/{id} | Delete an Identity
+[**AdminDeleteIdentitySessions**](V0alpha2Api.md#AdminDeleteIdentitySessions) | **Delete** /admin/identities/{id}/sessions | Delete &amp; Invalidate an Identity&#39;s Sessions
+[**AdminExtendSession**](V0alpha2Api.md#AdminExtendSession) | **Patch** /admin/sessions/{id}/extend | Extend a Session
+[**AdminGetIdentity**](V0alpha2Api.md#AdminGetIdentity) | **Get** /admin/identities/{id} | Get an Identity
+[**AdminListCourierMessages**](V0alpha2Api.md#AdminListCourierMessages) | **Get** /admin/courier/messages | List Messages
+[**AdminListIdentities**](V0alpha2Api.md#AdminListIdentities) | **Get** /admin/identities | List Identities
+[**AdminListIdentitySessions**](V0alpha2Api.md#AdminListIdentitySessions) | **Get** /admin/identities/{id}/sessions | List an Identity&#39;s Sessions
+[**AdminListSessions**](V0alpha2Api.md#AdminListSessions) | **Get** /admin/sessions | This endpoint returns all sessions that exist.
+[**AdminPatchIdentity**](V0alpha2Api.md#AdminPatchIdentity) | **Patch** /admin/identities/{id} | Patch an Identity
+[**AdminUpdateIdentity**](V0alpha2Api.md#AdminUpdateIdentity) | **Put** /admin/identities/{id} | Update an Identity
+[**CreateSelfServiceLogoutFlowUrlForBrowsers**](V0alpha2Api.md#CreateSelfServiceLogoutFlowUrlForBrowsers) | **Get** /self-service/logout/browser | Create a Logout URL for Browsers
 [**GetIdentitySchema**](V0alpha2Api.md#GetIdentitySchema) | **Get** /schemas/{id} | 
-[**GetSelfServiceError**](V0alpha2Api.md#GetSelfServiceError) | **Get** /self-service/errors | # Get Self-Service Errors
-[**GetSelfServiceLoginFlow**](V0alpha2Api.md#GetSelfServiceLoginFlow) | **Get** /self-service/login/flows | # Get Login Flow
-[**GetSelfServiceRecoveryFlow**](V0alpha2Api.md#GetSelfServiceRecoveryFlow) | **Get** /self-service/recovery/flows | # Get Recovery Flow
-[**GetSelfServiceRegistrationFlow**](V0alpha2Api.md#GetSelfServiceRegistrationFlow) | **Get** /self-service/registration/flows | # Get Registration Flow
-[**GetSelfServiceSettingsFlow**](V0alpha2Api.md#GetSelfServiceSettingsFlow) | **Get** /self-service/settings/flows | # Get Settings Flow
-[**GetSelfServiceVerificationFlow**](V0alpha2Api.md#GetSelfServiceVerificationFlow) | **Get** /self-service/verification/flows | # Get Verification Flow
-[**GetWebAuthnJavaScript**](V0alpha2Api.md#GetWebAuthnJavaScript) | **Get** /.well-known/ory/webauthn.js | # Get WebAuthn JavaScript
-[**InitializeSelfServiceLoginFlowForBrowsers**](V0alpha2Api.md#InitializeSelfServiceLoginFlowForBrowsers) | **Get** /self-service/login/browser | # Initialize Login Flow for Browsers
+[**GetSelfServiceError**](V0alpha2Api.md#GetSelfServiceError) | **Get** /self-service/errors | Get Self-Service Errors
+[**GetSelfServiceLoginFlow**](V0alpha2Api.md#GetSelfServiceLoginFlow) | **Get** /self-service/login/flows | Get Login Flow
+[**GetSelfServiceRecoveryFlow**](V0alpha2Api.md#GetSelfServiceRecoveryFlow) | **Get** /self-service/recovery/flows | Get Recovery Flow
+[**GetSelfServiceRegistrationFlow**](V0alpha2Api.md#GetSelfServiceRegistrationFlow) | **Get** /self-service/registration/flows | Get Registration Flow
+[**GetSelfServiceSettingsFlow**](V0alpha2Api.md#GetSelfServiceSettingsFlow) | **Get** /self-service/settings/flows | Get Settings Flow
+[**GetSelfServiceVerificationFlow**](V0alpha2Api.md#GetSelfServiceVerificationFlow) | **Get** /self-service/verification/flows | Get Verification Flow
+[**GetWebAuthnJavaScript**](V0alpha2Api.md#GetWebAuthnJavaScript) | **Get** /.well-known/ory/webauthn.js | Get WebAuthn JavaScript
+[**InitializeSelfServiceLoginFlowForBrowsers**](V0alpha2Api.md#InitializeSelfServiceLoginFlowForBrowsers) | **Get** /self-service/login/browser | Initialize Login Flow for Browsers
 [**InitializeSelfServiceLoginFlowWithoutBrowser**](V0alpha2Api.md#InitializeSelfServiceLoginFlowWithoutBrowser) | **Get** /self-service/login/api | Initialize Login Flow for APIs, Services, Apps, ...
-[**InitializeSelfServiceRecoveryFlowForBrowsers**](V0alpha2Api.md#InitializeSelfServiceRecoveryFlowForBrowsers) | **Get** /self-service/recovery/browser | # Initialize Recovery Flow for Browsers
+[**InitializeSelfServiceRecoveryFlowForBrowsers**](V0alpha2Api.md#InitializeSelfServiceRecoveryFlowForBrowsers) | **Get** /self-service/recovery/browser | Initialize Recovery Flow for Browsers
 [**InitializeSelfServiceRecoveryFlowWithoutBrowser**](V0alpha2Api.md#InitializeSelfServiceRecoveryFlowWithoutBrowser) | **Get** /self-service/recovery/api | Initialize Recovery Flow for APIs, Services, Apps, ...
-[**InitializeSelfServiceRegistrationFlowForBrowsers**](V0alpha2Api.md#InitializeSelfServiceRegistrationFlowForBrowsers) | **Get** /self-service/registration/browser | # Initialize Registration Flow for Browsers
+[**InitializeSelfServiceRegistrationFlowForBrowsers**](V0alpha2Api.md#InitializeSelfServiceRegistrationFlowForBrowsers) | **Get** /self-service/registration/browser | Initialize Registration Flow for Browsers
 [**InitializeSelfServiceRegistrationFlowWithoutBrowser**](V0alpha2Api.md#InitializeSelfServiceRegistrationFlowWithoutBrowser) | **Get** /self-service/registration/api | Initialize Registration Flow for APIs, Services, Apps, ...
-[**InitializeSelfServiceSettingsFlowForBrowsers**](V0alpha2Api.md#InitializeSelfServiceSettingsFlowForBrowsers) | **Get** /self-service/settings/browser | # Initialize Settings Flow for Browsers
+[**InitializeSelfServiceSettingsFlowForBrowsers**](V0alpha2Api.md#InitializeSelfServiceSettingsFlowForBrowsers) | **Get** /self-service/settings/browser | Initialize Settings Flow for Browsers
 [**InitializeSelfServiceSettingsFlowWithoutBrowser**](V0alpha2Api.md#InitializeSelfServiceSettingsFlowWithoutBrowser) | **Get** /self-service/settings/api | Initialize Settings Flow for APIs, Services, Apps, ...
-[**InitializeSelfServiceVerificationFlowForBrowsers**](V0alpha2Api.md#InitializeSelfServiceVerificationFlowForBrowsers) | **Get** /self-service/verification/browser | # Initialize Verification Flow for Browser Clients
+[**InitializeSelfServiceVerificationFlowForBrowsers**](V0alpha2Api.md#InitializeSelfServiceVerificationFlowForBrowsers) | **Get** /self-service/verification/browser | Initialize Verification Flow for Browser Clients
 [**InitializeSelfServiceVerificationFlowWithoutBrowser**](V0alpha2Api.md#InitializeSelfServiceVerificationFlowWithoutBrowser) | **Get** /self-service/verification/api | Initialize Verification Flow for APIs, Services, Apps, ...
 [**ListIdentitySchemas**](V0alpha2Api.md#ListIdentitySchemas) | **Get** /schemas | 
-[**ListSessions**](V0alpha2Api.md#ListSessions) | **Get** /sessions | This endpoints returns all other active sessions that belong to the logged-in user. The current session can be retrieved by calling the &#x60;/sessions/whoami&#x60; endpoint.
-[**RevokeSession**](V0alpha2Api.md#RevokeSession) | **Delete** /sessions/{id} | Calling this endpoint invalidates the specified session. The current session cannot be revoked. Session data are not deleted.
-[**RevokeSessions**](V0alpha2Api.md#RevokeSessions) | **Delete** /sessions | Calling this endpoint invalidates all except the current session that belong to the logged-in user. Session data are not deleted.
-[**SubmitSelfServiceLoginFlow**](V0alpha2Api.md#SubmitSelfServiceLoginFlow) | **Post** /self-service/login | # Submit a Login Flow
-[**SubmitSelfServiceLogoutFlow**](V0alpha2Api.md#SubmitSelfServiceLogoutFlow) | **Get** /self-service/logout | # Complete Self-Service Logout
+[**ListSessions**](V0alpha2Api.md#ListSessions) | **Get** /sessions | Get Active Sessions
+[**RevokeSession**](V0alpha2Api.md#RevokeSession) | **Delete** /sessions/{id} | Invalidate a Session
+[**RevokeSessions**](V0alpha2Api.md#RevokeSessions) | **Delete** /sessions | Invalidate all Other Sessions
+[**SubmitSelfServiceLoginFlow**](V0alpha2Api.md#SubmitSelfServiceLoginFlow) | **Post** /self-service/login | Submit a Login Flow
+[**SubmitSelfServiceLogoutFlow**](V0alpha2Api.md#SubmitSelfServiceLogoutFlow) | **Get** /self-service/logout | Complete Self-Service Logout
 [**SubmitSelfServiceLogoutFlowWithoutBrowser**](V0alpha2Api.md#SubmitSelfServiceLogoutFlowWithoutBrowser) | **Delete** /self-service/logout/api | Perform Logout for APIs, Services, Apps, ...
-[**SubmitSelfServiceRecoveryFlow**](V0alpha2Api.md#SubmitSelfServiceRecoveryFlow) | **Post** /self-service/recovery | # Complete Recovery Flow
-[**SubmitSelfServiceRegistrationFlow**](V0alpha2Api.md#SubmitSelfServiceRegistrationFlow) | **Post** /self-service/registration | # Submit a Registration Flow
-[**SubmitSelfServiceSettingsFlow**](V0alpha2Api.md#SubmitSelfServiceSettingsFlow) | **Post** /self-service/settings | # Complete Settings Flow
-[**SubmitSelfServiceVerificationFlow**](V0alpha2Api.md#SubmitSelfServiceVerificationFlow) | **Post** /self-service/verification | # Complete Verification Flow
-[**ToSession**](V0alpha2Api.md#ToSession) | **Get** /sessions/whoami | # Check Who the Current HTTP Session Belongs To
+[**SubmitSelfServiceRecoveryFlow**](V0alpha2Api.md#SubmitSelfServiceRecoveryFlow) | **Post** /self-service/recovery | Complete Recovery Flow
+[**SubmitSelfServiceRegistrationFlow**](V0alpha2Api.md#SubmitSelfServiceRegistrationFlow) | **Post** /self-service/registration | Submit a Registration Flow
+[**SubmitSelfServiceSettingsFlow**](V0alpha2Api.md#SubmitSelfServiceSettingsFlow) | **Post** /self-service/settings | Complete Settings Flow
+[**SubmitSelfServiceVerificationFlow**](V0alpha2Api.md#SubmitSelfServiceVerificationFlow) | **Post** /self-service/verification | Complete Verification Flow
+[**ToSession**](V0alpha2Api.md#ToSession) | **Get** /sessions/whoami | Check Who the Current HTTP Session Belongs To
 
 
 
@@ -53,7 +55,7 @@ Method | HTTP request | Description
 
 > Identity AdminCreateIdentity(ctx).AdminCreateIdentityBody(adminCreateIdentityBody).Execute()
 
-# Create an Identity
+Create an Identity
 
 
 
@@ -115,11 +117,77 @@ Name | Type | Description  | Notes
 [[Back to README]](../README.md)
 
 
+## AdminCreateSelfServiceRecoveryCode
+
+> SelfServiceRecoveryCode AdminCreateSelfServiceRecoveryCode(ctx).AdminCreateSelfServiceRecoveryCodeBody(adminCreateSelfServiceRecoveryCodeBody).Execute()
+
+Create a Recovery Code
+
+
+
+### Example
+
+```go
+package main
+
+import (
+    "context"
+    "fmt"
+    "os"
+    openapiclient "./openapi"
+)
+
+func main() {
+    adminCreateSelfServiceRecoveryCodeBody := *openapiclient.NewAdminCreateSelfServiceRecoveryCodeBody("IdentityId_example") // AdminCreateSelfServiceRecoveryCodeBody |  (optional)
+
+    configuration := openapiclient.NewConfiguration()
+    apiClient := openapiclient.NewAPIClient(configuration)
+    resp, r, err := apiClient.V0alpha2Api.AdminCreateSelfServiceRecoveryCode(context.Background()).AdminCreateSelfServiceRecoveryCodeBody(adminCreateSelfServiceRecoveryCodeBody).Execute()
+    if err != nil {
+        fmt.Fprintf(os.Stderr, "Error when calling `V0alpha2Api.AdminCreateSelfServiceRecoveryCode``: %v\n", err)
+        fmt.Fprintf(os.Stderr, "Full HTTP response: %v\n", r)
+    }
+    // response from `AdminCreateSelfServiceRecoveryCode`: SelfServiceRecoveryCode
+    fmt.Fprintf(os.Stdout, "Response from `V0alpha2Api.AdminCreateSelfServiceRecoveryCode`: %v\n", resp)
+}
+```
+
+### Path Parameters
+
+
+
+### Other Parameters
+
+Other parameters are passed through a pointer to a apiAdminCreateSelfServiceRecoveryCodeRequest struct via the builder pattern
+
+
+Name | Type | Description  | Notes
+------------- | ------------- | ------------- | -------------
+ **adminCreateSelfServiceRecoveryCodeBody** | [**AdminCreateSelfServiceRecoveryCodeBody**](AdminCreateSelfServiceRecoveryCodeBody.md) |  | 
+
+### Return type
+
+[**SelfServiceRecoveryCode**](SelfServiceRecoveryCode.md)
+
+### Authorization
+
+No authorization required
+
+### HTTP request headers
+
+- **Content-Type**: application/json
+- **Accept**: application/json
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints)
+[[Back to Model list]](../README.md#documentation-for-models)
+[[Back to README]](../README.md)
+
+
 ## AdminCreateSelfServiceRecoveryLink
 
 > SelfServiceRecoveryLink AdminCreateSelfServiceRecoveryLink(ctx).AdminCreateSelfServiceRecoveryLinkBody(adminCreateSelfServiceRecoveryLinkBody).Execute()
 
-# Create a Recovery Link
+Create a Recovery Link
 
 
 
@@ -185,7 +253,7 @@ No authorization required
 
 > AdminDeleteIdentity(ctx, id).Execute()
 
-# Delete an Identity
+Delete an Identity
 
 
 
@@ -253,7 +321,7 @@ Name | Type | Description  | Notes
 
 > AdminDeleteIdentitySessions(ctx, id).Execute()
 
-Calling this endpoint irrecoverably and permanently deletes and invalidates all sessions that belong to the given Identity.
+Delete & Invalidate an Identity's Sessions
 
 
 
@@ -321,7 +389,7 @@ Name | Type | Description  | Notes
 
 > Session AdminExtendSession(ctx, id).Execute()
 
-Calling this endpoint extends the given session ID. If `session.earliest_possible_extend` is set it will only extend the session after the specified time has passed.
+Extend a Session
 
 
 
@@ -391,7 +459,7 @@ Name | Type | Description  | Notes
 
 > Identity AdminGetIdentity(ctx, id).IncludeCredential(includeCredential).Execute()
 
-# Get an Identity
+Get an Identity
 
 
 
@@ -463,7 +531,7 @@ Name | Type | Description  | Notes
 
 > []Message AdminListCourierMessages(ctx).PerPage(perPage).Page(page).Status(status).Recipient(recipient).Execute()
 
-# List Messages
+List Messages
 
 
 
@@ -535,7 +603,7 @@ No authorization required
 
 > []Identity AdminListIdentities(ctx).PerPage(perPage).Page(page).Execute()
 
-# List Identities
+List Identities
 
 
 
@@ -603,7 +671,7 @@ Name | Type | Description  | Notes
 
 > []Session AdminListIdentitySessions(ctx, id).PerPage(perPage).Page(page).Active(active).Execute()
 
-This endpoint returns all sessions that belong to the given Identity.
+List an Identity's Sessions
 
 
 
@@ -675,11 +743,81 @@ Name | Type | Description  | Notes
 [[Back to README]](../README.md)
 
 
+## AdminListSessions
+
+> []Session AdminListSessions(ctx).PageSize(pageSize).PageToken(pageToken).Active(active).Execute()
+
+This endpoint returns all sessions that exist.
+
+
+
+### Example
+
+```go
+package main
+
+import (
+    "context"
+    "fmt"
+    "os"
+    openapiclient "./openapi"
+)
+
+func main() {
+    pageSize := int64(789) // int64 | Items per Page  This is the number of items per page to return. For details on pagination please head over to the [pagination documentation](https://www.ory.sh/docs/ecosystem/api-design#pagination). (optional) (default to 250)
+    pageToken := "pageToken_example" // string | Next Page Token  The next page token. For details on pagination please head over to the [pagination documentation](https://www.ory.sh/docs/ecosystem/api-design#pagination). (optional)
+    active := true // bool | Active is a boolean flag that filters out sessions based on the state. If no value is provided, all sessions are returned. (optional)
+
+    configuration := openapiclient.NewConfiguration()
+    apiClient := openapiclient.NewAPIClient(configuration)
+    resp, r, err := apiClient.V0alpha2Api.AdminListSessions(context.Background()).PageSize(pageSize).PageToken(pageToken).Active(active).Execute()
+    if err != nil {
+        fmt.Fprintf(os.Stderr, "Error when calling `V0alpha2Api.AdminListSessions``: %v\n", err)
+        fmt.Fprintf(os.Stderr, "Full HTTP response: %v\n", r)
+    }
+    // response from `AdminListSessions`: []Session
+    fmt.Fprintf(os.Stdout, "Response from `V0alpha2Api.AdminListSessions`: %v\n", resp)
+}
+```
+
+### Path Parameters
+
+
+
+### Other Parameters
+
+Other parameters are passed through a pointer to a apiAdminListSessionsRequest struct via the builder pattern
+
+
+Name | Type | Description  | Notes
+------------- | ------------- | ------------- | -------------
+ **pageSize** | **int64** | Items per Page  This is the number of items per page to return. For details on pagination please head over to the [pagination documentation](https://www.ory.sh/docs/ecosystem/api-design#pagination). | [default to 250]
+ **pageToken** | **string** | Next Page Token  The next page token. For details on pagination please head over to the [pagination documentation](https://www.ory.sh/docs/ecosystem/api-design#pagination). | 
+ **active** | **bool** | Active is a boolean flag that filters out sessions based on the state. If no value is provided, all sessions are returned. | 
+
+### Return type
+
+[**[]Session**](Session.md)
+
+### Authorization
+
+[oryAccessToken](../README.md#oryAccessToken)
+
+### HTTP request headers
+
+- **Content-Type**: Not defined
+- **Accept**: application/json
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints)
+[[Back to Model list]](../README.md#documentation-for-models)
+[[Back to README]](../README.md)
+
+
 ## AdminPatchIdentity
 
 > Identity AdminPatchIdentity(ctx, id).JsonPatch(jsonPatch).Execute()
 
-Partially updates an Identity's field using [JSON Patch](https://jsonpatch.com/)
+Patch an Identity
 
 
 
@@ -751,7 +889,7 @@ Name | Type | Description  | Notes
 
 > Identity AdminUpdateIdentity(ctx, id).AdminUpdateIdentityBody(adminUpdateIdentityBody).Execute()
 
-# Update an Identity
+Update an Identity
 
 
 
@@ -823,7 +961,7 @@ Name | Type | Description  | Notes
 
 > SelfServiceLogoutUrl CreateSelfServiceLogoutFlowUrlForBrowsers(ctx).Cookie(cookie).Execute()
 
-# Create a Logout URL for Browsers
+Create a Logout URL for Browsers
 
 
 
@@ -959,7 +1097,7 @@ No authorization required
 
 > SelfServiceError GetSelfServiceError(ctx).Id(id).Execute()
 
-# Get Self-Service Errors
+Get Self-Service Errors
 
 
 
@@ -1025,7 +1163,7 @@ No authorization required
 
 > SelfServiceLoginFlow GetSelfServiceLoginFlow(ctx).Id(id).Cookie(cookie).Execute()
 
-# Get Login Flow
+Get Login Flow
 
 
 
@@ -1093,7 +1231,7 @@ No authorization required
 
 > SelfServiceRecoveryFlow GetSelfServiceRecoveryFlow(ctx).Id(id).Cookie(cookie).Execute()
 
-# Get Recovery Flow
+Get Recovery Flow
 
 
 
@@ -1161,7 +1299,7 @@ No authorization required
 
 > SelfServiceRegistrationFlow GetSelfServiceRegistrationFlow(ctx).Id(id).Cookie(cookie).Execute()
 
-# Get Registration Flow
+Get Registration Flow
 
 
 
@@ -1229,7 +1367,7 @@ No authorization required
 
 > SelfServiceSettingsFlow GetSelfServiceSettingsFlow(ctx).Id(id).XSessionToken(xSessionToken).Cookie(cookie).Execute()
 
-# Get Settings Flow
+Get Settings Flow
 
 
 
@@ -1299,7 +1437,7 @@ No authorization required
 
 > SelfServiceVerificationFlow GetSelfServiceVerificationFlow(ctx).Id(id).Cookie(cookie).Execute()
 
-# Get Verification Flow
+Get Verification Flow
 
 
 
@@ -1367,7 +1505,7 @@ No authorization required
 
 > string GetWebAuthnJavaScript(ctx).Execute()
 
-# Get WebAuthn JavaScript
+Get WebAuthn JavaScript
 
 
 
@@ -1426,9 +1564,9 @@ No authorization required
 
 ## InitializeSelfServiceLoginFlowForBrowsers
 
-> SelfServiceLoginFlow InitializeSelfServiceLoginFlowForBrowsers(ctx).Refresh(refresh).Aal(aal).ReturnTo(returnTo).Cookie(cookie).Execute()
+> SelfServiceLoginFlow InitializeSelfServiceLoginFlowForBrowsers(ctx).Refresh(refresh).Aal(aal).ReturnTo(returnTo).Cookie(cookie).LoginChallenge(loginChallenge).Execute()
 
-# Initialize Login Flow for Browsers
+Initialize Login Flow for Browsers
 
 
 
@@ -1449,10 +1587,11 @@ func main() {
     aal := "aal_example" // string | Request a Specific AuthenticationMethod Assurance Level  Use this parameter to upgrade an existing session's authenticator assurance level (AAL). This allows you to ask for multi-factor authentication. When an identity sign in using e.g. username+password, the AAL is 1. If you wish to \"upgrade\" the session's security by asking the user to perform TOTP / WebAuth/ ... you would set this to \"aal2\". (optional)
     returnTo := "returnTo_example" // string | The URL to return the browser to after the flow was completed. (optional)
     cookie := "cookie_example" // string | HTTP Cookies  When using the SDK in a browser app, on the server side you must include the HTTP Cookie Header sent by the client to your server here. This ensures that CSRF and session cookies are respected. (optional)
+    loginChallenge := "loginChallenge_example" // string | An optional Hydra login challenge. If present, Kratos will cooperate with Ory Hydra to act as an OAuth2 identity provider.  The value for this parameter comes from `login_challenge` URL Query parameter sent to your application (e.g. `/login?login_challenge=abcde`). (optional)
 
     configuration := openapiclient.NewConfiguration()
     apiClient := openapiclient.NewAPIClient(configuration)
-    resp, r, err := apiClient.V0alpha2Api.InitializeSelfServiceLoginFlowForBrowsers(context.Background()).Refresh(refresh).Aal(aal).ReturnTo(returnTo).Cookie(cookie).Execute()
+    resp, r, err := apiClient.V0alpha2Api.InitializeSelfServiceLoginFlowForBrowsers(context.Background()).Refresh(refresh).Aal(aal).ReturnTo(returnTo).Cookie(cookie).LoginChallenge(loginChallenge).Execute()
     if err != nil {
         fmt.Fprintf(os.Stderr, "Error when calling `V0alpha2Api.InitializeSelfServiceLoginFlowForBrowsers``: %v\n", err)
         fmt.Fprintf(os.Stderr, "Full HTTP response: %v\n", r)
@@ -1477,6 +1616,7 @@ Name | Type | Description  | Notes
  **aal** | **string** | Request a Specific AuthenticationMethod Assurance Level  Use this parameter to upgrade an existing session&#39;s authenticator assurance level (AAL). This allows you to ask for multi-factor authentication. When an identity sign in using e.g. username+password, the AAL is 1. If you wish to \&quot;upgrade\&quot; the session&#39;s security by asking the user to perform TOTP / WebAuth/ ... you would set this to \&quot;aal2\&quot;. | 
  **returnTo** | **string** | The URL to return the browser to after the flow was completed. | 
  **cookie** | **string** | HTTP Cookies  When using the SDK in a browser app, on the server side you must include the HTTP Cookie Header sent by the client to your server here. This ensures that CSRF and session cookies are respected. | 
+ **loginChallenge** | **string** | An optional Hydra login challenge. If present, Kratos will cooperate with Ory Hydra to act as an OAuth2 identity provider.  The value for this parameter comes from &#x60;login_challenge&#x60; URL Query parameter sent to your application (e.g. &#x60;/login?login_challenge&#x3D;abcde&#x60;). | 
 
 ### Return type
 
@@ -1570,7 +1710,7 @@ No authorization required
 
 > SelfServiceRecoveryFlow InitializeSelfServiceRecoveryFlowForBrowsers(ctx).ReturnTo(returnTo).Execute()
 
-# Initialize Recovery Flow for Browsers
+Initialize Recovery Flow for Browsers
 
 
 
@@ -1695,9 +1835,9 @@ No authorization required
 
 ## InitializeSelfServiceRegistrationFlowForBrowsers
 
-> SelfServiceRegistrationFlow InitializeSelfServiceRegistrationFlowForBrowsers(ctx).ReturnTo(returnTo).Execute()
+> SelfServiceRegistrationFlow InitializeSelfServiceRegistrationFlowForBrowsers(ctx).ReturnTo(returnTo).LoginChallenge(loginChallenge).Execute()
 
-# Initialize Registration Flow for Browsers
+Initialize Registration Flow for Browsers
 
 
 
@@ -1715,10 +1855,11 @@ import (
 
 func main() {
     returnTo := "returnTo_example" // string | The URL to return the browser to after the flow was completed. (optional)
+    loginChallenge := "loginChallenge_example" // string | Ory OAuth 2.0 Login Challenge.  If set will cooperate with Ory OAuth2 and OpenID to act as an OAuth2 server / OpenID Provider.  The value for this parameter comes from `login_challenge` URL Query parameter sent to your application (e.g. `/registration?login_challenge=abcde`).  This feature is compatible with Ory Hydra when not running on the Ory Network. (optional)
 
     configuration := openapiclient.NewConfiguration()
     apiClient := openapiclient.NewAPIClient(configuration)
-    resp, r, err := apiClient.V0alpha2Api.InitializeSelfServiceRegistrationFlowForBrowsers(context.Background()).ReturnTo(returnTo).Execute()
+    resp, r, err := apiClient.V0alpha2Api.InitializeSelfServiceRegistrationFlowForBrowsers(context.Background()).ReturnTo(returnTo).LoginChallenge(loginChallenge).Execute()
     if err != nil {
         fmt.Fprintf(os.Stderr, "Error when calling `V0alpha2Api.InitializeSelfServiceRegistrationFlowForBrowsers``: %v\n", err)
         fmt.Fprintf(os.Stderr, "Full HTTP response: %v\n", r)
@@ -1740,6 +1881,7 @@ Other parameters are passed through a pointer to a apiInitializeSelfServiceRegis
 Name | Type | Description  | Notes
 ------------- | ------------- | ------------- | -------------
  **returnTo** | **string** | The URL to return the browser to after the flow was completed. | 
+ **loginChallenge** | **string** | Ory OAuth 2.0 Login Challenge.  If set will cooperate with Ory OAuth2 and OpenID to act as an OAuth2 server / OpenID Provider.  The value for this parameter comes from &#x60;login_challenge&#x60; URL Query parameter sent to your application (e.g. &#x60;/registration?login_challenge&#x3D;abcde&#x60;).  This feature is compatible with Ory Hydra when not running on the Ory Network. | 
 
 ### Return type
 
@@ -1824,7 +1966,7 @@ No authorization required
 
 > SelfServiceSettingsFlow InitializeSelfServiceSettingsFlowForBrowsers(ctx).ReturnTo(returnTo).Cookie(cookie).Execute()
 
-# Initialize Settings Flow for Browsers
+Initialize Settings Flow for Browsers
 
 
 
@@ -1958,7 +2100,7 @@ No authorization required
 
 > SelfServiceVerificationFlow InitializeSelfServiceVerificationFlowForBrowsers(ctx).ReturnTo(returnTo).Execute()
 
-# Initialize Verification Flow for Browser Clients
+Initialize Verification Flow for Browser Clients
 
 
 
@@ -2153,7 +2295,7 @@ No authorization required
 
 > []Session ListSessions(ctx).XSessionToken(xSessionToken).Cookie(cookie).PerPage(perPage).Page(page).Execute()
 
-This endpoints returns all other active sessions that belong to the logged-in user. The current session can be retrieved by calling the `/sessions/whoami` endpoint.
+Get Active Sessions
 
 
 
@@ -2225,7 +2367,7 @@ No authorization required
 
 > RevokeSession(ctx, id).Execute()
 
-Calling this endpoint invalidates the specified session. The current session cannot be revoked. Session data are not deleted.
+Invalidate a Session
 
 
 
@@ -2293,7 +2435,7 @@ No authorization required
 
 > RevokedSessions RevokeSessions(ctx).XSessionToken(xSessionToken).Cookie(cookie).Execute()
 
-Calling this endpoint invalidates all except the current session that belong to the logged-in user. Session data are not deleted.
+Invalidate all Other Sessions
 
 
 
@@ -2361,7 +2503,7 @@ No authorization required
 
 > SuccessfulSelfServiceLoginWithoutBrowser SubmitSelfServiceLoginFlow(ctx).Flow(flow).SubmitSelfServiceLoginFlowBody(submitSelfServiceLoginFlowBody).XSessionToken(xSessionToken).Cookie(cookie).Execute()
 
-# Submit a Login Flow
+Submit a Login Flow
 
 
 
@@ -2433,7 +2575,7 @@ No authorization required
 
 > SubmitSelfServiceLogoutFlow(ctx).Token(token).ReturnTo(returnTo).Execute()
 
-# Complete Self-Service Logout
+Complete Self-Service Logout
 
 
 
@@ -2563,7 +2705,7 @@ No authorization required
 
 > SelfServiceRecoveryFlow SubmitSelfServiceRecoveryFlow(ctx).Flow(flow).SubmitSelfServiceRecoveryFlowBody(submitSelfServiceRecoveryFlowBody).Token(token).Cookie(cookie).Execute()
 
-# Complete Recovery Flow
+Complete Recovery Flow
 
 
 
@@ -2581,7 +2723,7 @@ import (
 
 func main() {
     flow := "flow_example" // string | The Recovery Flow ID  The value for this parameter comes from `flow` URL Query parameter sent to your application (e.g. `/recovery?flow=abcde`).
-    submitSelfServiceRecoveryFlowBody := openapiclient.submitSelfServiceRecoveryFlowBody{SubmitSelfServiceRecoveryFlowWithLinkMethodBody: openapiclient.NewSubmitSelfServiceRecoveryFlowWithLinkMethodBody("Email_example", "Method_example")} // SubmitSelfServiceRecoveryFlowBody | 
+    submitSelfServiceRecoveryFlowBody := openapiclient.submitSelfServiceRecoveryFlowBody{SubmitSelfServiceRecoveryFlowWithCodeMethodBody: openapiclient.NewSubmitSelfServiceRecoveryFlowWithCodeMethodBody("Method_example")} // SubmitSelfServiceRecoveryFlowBody | 
     token := "token_example" // string | Recovery Token  The recovery token which completes the recovery request. If the token is invalid (e.g. expired) an error will be shown to the end-user.  This parameter is usually set in a link and not used by any direct API call. (optional)
     cookie := "cookie_example" // string | HTTP Cookies  When using the SDK in a browser app, on the server side you must include the HTTP Cookie Header sent by the client to your server here. This ensures that CSRF and session cookies are respected. (optional)
 
@@ -2635,7 +2777,7 @@ No authorization required
 
 > SuccessfulSelfServiceRegistrationWithoutBrowser SubmitSelfServiceRegistrationFlow(ctx).Flow(flow).SubmitSelfServiceRegistrationFlowBody(submitSelfServiceRegistrationFlowBody).Cookie(cookie).Execute()
 
-# Submit a Registration Flow
+Submit a Registration Flow
 
 
 
@@ -2705,7 +2847,7 @@ No authorization required
 
 > SelfServiceSettingsFlow SubmitSelfServiceSettingsFlow(ctx).Flow(flow).SubmitSelfServiceSettingsFlowBody(submitSelfServiceSettingsFlowBody).XSessionToken(xSessionToken).Cookie(cookie).Execute()
 
-# Complete Settings Flow
+Complete Settings Flow
 
 
 
@@ -2777,7 +2919,7 @@ No authorization required
 
 > SelfServiceVerificationFlow SubmitSelfServiceVerificationFlow(ctx).Flow(flow).SubmitSelfServiceVerificationFlowBody(submitSelfServiceVerificationFlowBody).Token(token).Cookie(cookie).Execute()
 
-# Complete Verification Flow
+Complete Verification Flow
 
 
 
@@ -2849,7 +2991,7 @@ No authorization required
 
 > Session ToSession(ctx).XSessionToken(xSessionToken).Cookie(cookie).Execute()
 
-# Check Who the Current HTTP Session Belongs To
+Check Who the Current HTTP Session Belongs To
 
 
 

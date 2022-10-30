@@ -48,7 +48,7 @@ func TestSettingsExecutor(t *testing.T) {
 				handleErr := testhelpers.SelfServiceHookSettingsErrorHandler
 				router.GET("/settings/pre", func(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 					i := testhelpers.SelfServiceHookCreateFakeIdentity(t, reg)
-					sess, _ := session.NewActiveSession(ctx, i, conf, time.Now().UTC(), identity.CredentialsTypePassword, identity.AuthenticatorAssuranceLevel1)
+					sess, _ := session.NewActiveSession(r, i, conf, time.Now().UTC(), identity.CredentialsTypePassword, identity.AuthenticatorAssuranceLevel1)
 
 					f, err := settings.NewFlow(conf, time.Minute, r, sess.Identity, ft)
 					require.NoError(t, err)
@@ -59,7 +59,7 @@ func TestSettingsExecutor(t *testing.T) {
 
 				router.GET("/settings/post", func(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 					i := testhelpers.SelfServiceHookCreateFakeIdentity(t, reg)
-					sess, _ := session.NewActiveSession(ctx, i, conf, time.Now().UTC(), identity.CredentialsTypePassword, identity.AuthenticatorAssuranceLevel1)
+					sess, _ := session.NewActiveSession(r, i, conf, time.Now().UTC(), identity.CredentialsTypePassword, identity.AuthenticatorAssuranceLevel1)
 
 					a, err := settings.NewFlow(conf, time.Minute, r, sess.Identity, ft)
 					require.NoError(t, err)

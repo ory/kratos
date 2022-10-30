@@ -20,6 +20,7 @@ import (
 
 	"github.com/ory/kratos/driver"
 	"github.com/ory/kratos/driver/config"
+	"github.com/ory/kratos/selfservice/flow"
 	"github.com/ory/kratos/selfservice/flow/recovery"
 	"github.com/ory/kratos/x"
 )
@@ -43,9 +44,15 @@ func GetRecoveryFlow(t *testing.T, client *http.Client, ts *httptest.Server) *kr
 	require.NoError(t, err)
 	require.NoError(t, res.Body.Close())
 
-	rs, _, err := publicClient.V0alpha2Api.GetSelfServiceRecoveryFlow(context.Background()).Id(res.Request.URL.Query().Get("flow")).Execute()
-	require.NoError(t, err, "%s", res.Request.URL.String())
-	assert.Empty(t, rs.Active)
+	flowID := res.Request.URL.Query().Get("flow")
+	assert.NotEmpty(t, flowID, "expected to receive a flow id, got none")
+
+	rs, _, err := publicClient.V0alpha2Api.
+		GetSelfServiceRecoveryFlow(context.Background()).
+		Id(flowID).
+		Execute()
+	assert.NotEmpty(t, rs.Active)
+	require.NoError(t, err, "expected no error when fetching recovery flow: %s", err)
 
 	return rs
 }
@@ -77,7 +84,7 @@ func InitializeRecoveryFlowViaBrowser(t *testing.T, client *http.Client, isSPA b
 	require.NoError(t, res.Body.Close())
 	rs, _, err := publicClient.V0alpha2Api.GetSelfServiceRecoveryFlow(context.Background()).Id(res.Request.URL.Query().Get("flow")).Execute()
 	require.NoError(t, err)
-	assert.Empty(t, rs.Active)
+	assert.NotEmpty(t, rs.Active)
 
 	return rs
 }
@@ -87,7 +94,7 @@ func InitializeRecoveryFlowViaAPI(t *testing.T, client *http.Client, ts *httptes
 
 	rs, _, err := publicClient.V0alpha2Api.InitializeSelfServiceRecoveryFlowWithoutBrowser(context.Background()).Execute()
 	require.NoError(t, err)
-	assert.Empty(t, rs.Active)
+	assert.NotEmpty(t, rs.Active)
 
 	return rs
 }
@@ -138,4 +145,15 @@ func SubmitRecoveryForm(
 	assert.Contains(t, res.Request.URL.String(), expectedURL, "%+v\n\t%s", res.Request, b)
 
 	return b
+}
+
+func PersistNewRecoveryFlow(t *testing.T, strategy recovery.Strategy, conf *config.Config, reg *driver.RegistryDefault) *recovery.Flow {
+	t.Helper()
+	req := x.NewTestHTTPRequest(t, "GET", conf.SelfPublicURL(context.Background()).String()+"/test", nil)
+	f, err := recovery.NewFlow(conf, conf.SelfServiceFlowRecoveryRequestLifespan(context.Background()), reg.GenerateCSRFToken(req), req, strategy, flow.TypeBrowser)
+	require.NoError(t, err, "Expected no error when creating a new recovery flow: %s", err)
+
+	err = reg.RecoveryFlowPersister().CreateRecoveryFlow(context.Background(), f)
+	require.NoError(t, err, "Expected no error when persisting a new recover flow: %s", err)
+	return f
 }

@@ -135,8 +135,14 @@ func (h *Handler) list(w http.ResponseWriter, r *http.Request, _ httprouter.Para
 		return
 	}
 
+	// Identities using the marshaler for including metadata_admin
+	isam := make([]WithAdminMetadataInJSON, len(is))
+	for i, identity := range is {
+		isam[i] = WithAdminMetadataInJSON(identity)
+	}
+
 	x.PaginationHeader(w, urlx.AppendPaths(h.r.Config().SelfAdminURL(r.Context()), RouteCollection), total, page, itemsPerPage)
-	h.r.Writer().Write(w, r, is)
+	h.r.Writer().Write(w, r, isam)
 }
 
 // swagger:parameters adminGetIdentity
@@ -559,6 +565,8 @@ type adminPatchIdentity struct {
 }
 
 // swagger:route PATCH /admin/identities/{id} v0alpha2 adminPatchIdentity
+//
+// # Patch an Identity
 //
 // Partially updates an Identity's field using [JSON Patch](https://jsonpatch.com/)
 //
