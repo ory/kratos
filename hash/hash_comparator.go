@@ -242,7 +242,7 @@ var (
 	isSSHAHash           = regexp.MustCompile(`^{SSHA}.*`)
 	isSSHA256Hash        = regexp.MustCompile(`^{SSHA256}.*`)
 	isSSHA512Hash        = regexp.MustCompile(`^{SSHA512}.*`)
-	isSHAHash            = regexp.MustCompile(`^\$sha[0-9]{1,3}\$`)
+	isSHAHash            = regexp.MustCompile(`^\$sha(1|256|512)\$`)
 )
 
 func IsBcryptHash(hash []byte) bool {
@@ -435,8 +435,6 @@ func compareSHAHelper(hasher string, raw []byte, hash []byte) error {
 	case "sha512":
 		sum := sha512.Sum512(raw)
 		sha = sum[:]
-	default:
-		return errors.WithStack(ErrUnknownHashAlgorithm)
 	}
 
 	encodedHash := []byte(base64.StdEncoding.EncodeToString(hash))
