@@ -12,7 +12,6 @@ import (
 	_ "github.com/gobuffalo/fizz"
 
 	_ "github.com/ory/go-acc"
-	_ "github.com/ory/x/tools/listx"
 
 	_ "github.com/jteeuwen/go-bindata"
 

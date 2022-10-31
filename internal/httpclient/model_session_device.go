@@ -15,9 +15,15 @@ import (
 	"encoding/json"
 )
 
-// SessionDevice struct for SessionDevice
+// SessionDevice Device corresponding to a Session
 type SessionDevice struct {
-	// UserAgent of this device
+	// Device record ID
+	Id string `json:"id"`
+	// IPAddress of the client
+	IpAddress *string `json:"ip_address,omitempty"`
+	// Geo Location corresponding to the IP Address
+	Location *string `json:"location,omitempty"`
+	// UserAgent of the client
 	UserAgent *string `json:"user_agent,omitempty"`
 }
 
@@ -25,8 +31,9 @@ type SessionDevice struct {
 // This constructor will assign default values to properties that have it defined,
 // and makes sure properties required by API are set, but the set of arguments
 // will change when the set of required properties is changed
-func NewSessionDevice() *SessionDevice {
+func NewSessionDevice(id string) *SessionDevice {
 	this := SessionDevice{}
+	this.Id = id
 	return &this
 }
 
@@ -36,6 +43,94 @@ func NewSessionDevice() *SessionDevice {
 func NewSessionDeviceWithDefaults() *SessionDevice {
 	this := SessionDevice{}
 	return &this
+}
+
+// GetId returns the Id field value
+func (o *SessionDevice) GetId() string {
+	if o == nil {
+		var ret string
+		return ret
+	}
+
+	return o.Id
+}
+
+// GetIdOk returns a tuple with the Id field value
+// and a boolean to check if the value has been set.
+func (o *SessionDevice) GetIdOk() (*string, bool) {
+	if o == nil {
+		return nil, false
+	}
+	return &o.Id, true
+}
+
+// SetId sets field value
+func (o *SessionDevice) SetId(v string) {
+	o.Id = v
+}
+
+// GetIpAddress returns the IpAddress field value if set, zero value otherwise.
+func (o *SessionDevice) GetIpAddress() string {
+	if o == nil || o.IpAddress == nil {
+		var ret string
+		return ret
+	}
+	return *o.IpAddress
+}
+
+// GetIpAddressOk returns a tuple with the IpAddress field value if set, nil otherwise
+// and a boolean to check if the value has been set.
+func (o *SessionDevice) GetIpAddressOk() (*string, bool) {
+	if o == nil || o.IpAddress == nil {
+		return nil, false
+	}
+	return o.IpAddress, true
+}
+
+// HasIpAddress returns a boolean if a field has been set.
+func (o *SessionDevice) HasIpAddress() bool {
+	if o != nil && o.IpAddress != nil {
+		return true
+	}
+
+	return false
+}
+
+// SetIpAddress gets a reference to the given string and assigns it to the IpAddress field.
+func (o *SessionDevice) SetIpAddress(v string) {
+	o.IpAddress = &v
+}
+
+// GetLocation returns the Location field value if set, zero value otherwise.
+func (o *SessionDevice) GetLocation() string {
+	if o == nil || o.Location == nil {
+		var ret string
+		return ret
+	}
+	return *o.Location
+}
+
+// GetLocationOk returns a tuple with the Location field value if set, nil otherwise
+// and a boolean to check if the value has been set.
+func (o *SessionDevice) GetLocationOk() (*string, bool) {
+	if o == nil || o.Location == nil {
+		return nil, false
+	}
+	return o.Location, true
+}
+
+// HasLocation returns a boolean if a field has been set.
+func (o *SessionDevice) HasLocation() bool {
+	if o != nil && o.Location != nil {
+		return true
+	}
+
+	return false
+}
+
+// SetLocation gets a reference to the given string and assigns it to the Location field.
+func (o *SessionDevice) SetLocation(v string) {
+	o.Location = &v
 }
 
 // GetUserAgent returns the UserAgent field value if set, zero value otherwise.
@@ -72,6 +167,15 @@ func (o *SessionDevice) SetUserAgent(v string) {
 
 func (o SessionDevice) MarshalJSON() ([]byte, error) {
 	toSerialize := map[string]interface{}{}
+	if true {
+		toSerialize["id"] = o.Id
+	}
+	if o.IpAddress != nil {
+		toSerialize["ip_address"] = o.IpAddress
+	}
+	if o.Location != nil {
+		toSerialize["location"] = o.Location
+	}
 	if o.UserAgent != nil {
 		toSerialize["user_agent"] = o.UserAgent
 	}

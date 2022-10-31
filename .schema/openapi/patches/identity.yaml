@@ -21,3 +21,7 @@
   path: /components/schemas/adminCreateIdentityBody/properties/metadata_public/type
 - op: remove
   path: /components/schemas/nullJsonRawMessage/type
+- op: add
+  path: /components/schemas/nullJsonRawMessage/nullable
+  value: true
+

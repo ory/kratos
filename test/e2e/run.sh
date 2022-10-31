@@ -1,5 +1,25 @@
 #!/bin/bash
 
+echo "Running Ory Kratos E2E Tests..."
+echo ""
+
+NODE_VERSION=$(node -v)
+
+if [[ $NODE_VERSION =~ v([0-9]{1,2}).* ]]; then
+  MAJOR_NODE_VERSION=${BASH_REMATCH[1]}
+  if [[ $MAJOR_NODE_VERSION -gt 16 ]]; then
+    echo "It seems you are running this script using a node version newer than 16 ($NODE_VERSION)."
+    echo "Currently, this script will not work if not run using Node 16 (or lower) due to changes in the way Node 18 does network requests."
+    echo "Please use Node 16 instead."
+    echo ""
+    echo "  Using nvm (https://github.com/nvm-sh/nvm):"
+    echo "   $ nvm install 16"
+    exit
+  fi
+else
+  echo "could not detect node version from string $NODE_VERSION. Continuing..."
+fi
+
 set -euxo pipefail
 
 cd "$(dirname "${BASH_SOURCE[0]}")/../.."
@@ -48,8 +68,11 @@ prepare() {
   if [[ "${nokill}" == "no" ]]; then
     killall node || true
     killall modd || true
+    killall webhook || true
     killall hydra || true
     killall hydra-login-consent || true
+    killall hydra-kratos-login-consent || true
+    docker kill kratos_test_hydra || true
   fi
 
   if [ -z ${TEST_DATABASE_POSTGRESQL+x} ]; then
@@ -100,11 +123,15 @@ prepare() {
   fi
 
   # Check if any ports that we need are open already
-  ! nc -zv localhost 4446
-  ! nc -zv localhost 4455
-  ! nc -zv localhost 4456
-  ! nc -zv localhost 4457
-  ! nc -zv localhost 4458
+  nc -zv localhost 4444 && exit 1
+  nc -zv localhost 4445 && exit 1
+  nc -zv localhost 4446 && exit 1
+  nc -zv localhost 4455 && exit 1
+  nc -zv localhost 4456 && exit 1
+  nc -zv localhost 4457 && exit 1
+  nc -zv localhost 4458 && exit 1
+  nc -zv localhost 4744 && exit 1
+  nc -zv localhost 4745 && exit 1
 
   (
     cd "$rn_ui_dir"
@@ -148,6 +175,39 @@ prepare() {
     --scope openid,offline \
     --callbacks http://localhost:4455/self-service/methods/oidc/callback/github
 
+  (
+    cd test/e2e/hydra-login-consent
+    go build .
+    PORT=4446 HYDRA_ADMIN_URL=http://localhost:4445 ./hydra-login-consent >"${base}/test/e2e/hydra-ui.e2e.log" 2>&1 &
+  )
+
+  # Spin up another Hydra instance with the express node app used as the login UI for kratos-hydra OIDC provider tests
+  DSN=memory SERVE_PUBLIC_PORT=4744 \
+    SERVE_ADMIN_PORT=4745 \
+    URLS_SELF_ISSUER=http://localhost:4744 \
+    LOG_LEVEL=trace \
+    URLS_LOGIN=http://localhost:4455/login \
+    URLS_CONSENT=http://localhost:4746/consent \
+    hydra serve all --dangerous-force-http >"${base}/test/e2e/hydra-kratos.e2e.log" 2>&1 &
+
+  (cd test/e2e; npm run wait-on -- -l -t 300000 http-get://127.0.0.1:4745/health/alive)
+
+  hydra clients create \
+    --endpoint http://localhost:4745 \
+    --id dummy-client \
+    --secret secret \
+    --token-endpoint-auth-method client_secret_basic \
+    --grant-types authorization_code,refresh_token \
+    --response-types code,id_token \
+    --scope openid,offline,email,website \
+    --callbacks http://localhost:5555/callback,https://httpbin.org/anything
+
+  (
+    cd test/e2e/hydra-kratos-login-consent
+    go build .
+    PORT=4746 HYDRA_ADMIN_URL=http://localhost:4745 ./hydra-kratos-login-consent >"${base}/test/e2e/hydra-kratos-ui.e2e.log" 2>&1 &
+  )
+
   if [ -z ${NODE_UI_PATH+x} ]; then
     (
       cd "$node_ui_dir"
@@ -182,12 +242,6 @@ prepare() {
     PORT=4455 npm run start \
       >"${base}/test/e2e/proxy.e2e.log" 2>&1 &
   )
-
-  (
-    cd test/e2e/hydra-login-consent
-    go build .
-    PORT=4446 HYDRA_ADMIN_URL=http://localhost:4445 ./hydra-login-consent >"${base}/test/e2e/hydra-ui.e2e.log" 2>&1 &
-  )
 }
 
 run() {
@@ -196,14 +250,14 @@ run() {
 
   export DSN=${1}
 
-  ! nc -zv localhost 4434
-  ! nc -zv localhost 4433
+  nc -zv localhost 4434 && exit 1
+  nc -zv localhost 4433 && exit 1
 
   ls -la .
-  for profile in email mobile oidc recovery verification mfa spa network passwordless webhooks; do
+  for profile in email mobile oidc recovery verification mfa spa network passwordless webhooks oidc-provider oidc-provider-mfa; do
     yq ea '. as $item ireduce ({}; . * $item )' test/e2e/profiles/kratos.base.yml "test/e2e/profiles/${profile}/.kratos.yml" > test/e2e/kratos.${profile}.yml
-    cp test/e2e/kratos.email.yml test/e2e/kratos.generated.yml
   done
+  cp test/e2e/kratos.email.yml test/e2e/kratos.generated.yml
 
   (modd -f test/e2e/modd.conf >"${base}/test/e2e/kratos.e2e.log" 2>&1 &)
 

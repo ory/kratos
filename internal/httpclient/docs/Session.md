@@ -8,6 +8,7 @@ Name | Type | Description | Notes
 **AuthenticatedAt** | Pointer to **time.Time** | The Session Authentication Timestamp  When this session was authenticated at. If multi-factor authentication was used this is the time when the last factor was authenticated (e.g. the TOTP code challenge was completed). | [optional] 
 **AuthenticationMethods** | Pointer to [**[]SessionAuthenticationMethod**](SessionAuthenticationMethod.md) | A list of authenticators which were used to authenticate the session. | [optional] 
 **AuthenticatorAssuranceLevel** | Pointer to [**AuthenticatorAssuranceLevel**](AuthenticatorAssuranceLevel.md) |  | [optional] 
+**Devices** | Pointer to [**[]SessionDevice**](SessionDevice.md) | Devices has history of all endpoints where the session was used | [optional] 
 **ExpiresAt** | Pointer to **time.Time** | The Session Expiry  When this session expires at. | [optional] 
 **Id** | **string** | Session ID | 
 **Identity** | [**Identity**](Identity.md) |  | 
@@ -131,6 +132,31 @@ SetAuthenticatorAssuranceLevel sets AuthenticatorAssuranceLevel field to given v
 `func (o *Session) HasAuthenticatorAssuranceLevel() bool`
 
 HasAuthenticatorAssuranceLevel returns a boolean if a field has been set.
+
+### GetDevices
+
+`func (o *Session) GetDevices() []SessionDevice`
+
+GetDevices returns the Devices field if non-nil, zero value otherwise.
+
+### GetDevicesOk
+
+`func (o *Session) GetDevicesOk() (*[]SessionDevice, bool)`
+
+GetDevicesOk returns a tuple with the Devices field if it's non-nil, zero value otherwise
+and a boolean to check if the value has been set.
+
+### SetDevices
+
+`func (o *Session) SetDevices(v []SessionDevice)`
+
+SetDevices sets Devices field to given value.
+
+### HasDevices
+
+`func (o *Session) HasDevices() bool`
+
+HasDevices returns a boolean if a field has been set.
 
 ### GetExpiresAt
 

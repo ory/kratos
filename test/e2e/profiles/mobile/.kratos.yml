@@ -12,8 +12,9 @@ selfservice:
       after:
         password:
           hooks:
-            -
-              hook: session
+            - hook: session
+    recovery:
+      enabled: true
 
   methods:
     totp:

@@ -44,7 +44,7 @@ func TestSessionIssuer(t *testing.T) {
 			require.NoError(t, h.ExecutePostRegistrationPostPersistHook(w, &r,
 				&registration.Flow{Type: flow.TypeBrowser}, &session.Session{ID: sid, Identity: i, Token: randx.MustString(12, randx.AlphaLowerNum)}))
 
-			got, err := reg.SessionPersister().GetSession(context.Background(), sid)
+			got, err := reg.SessionPersister().GetSession(context.Background(), sid, session.ExpandNothing)
 			require.NoError(t, err)
 			assert.Equal(t, sid, got.ID)
 			assert.True(t, got.AuthenticatedAt.After(time.Now().Add(-time.Minute)))
@@ -63,7 +63,7 @@ func TestSessionIssuer(t *testing.T) {
 			err := h.ExecutePostRegistrationPostPersistHook(w, &http.Request{Header: http.Header{"Accept": {"application/json"}}}, f, s)
 			require.True(t, errors.Is(err, registration.ErrHookAbortFlow), "%+v", err)
 
-			got, err := reg.SessionPersister().GetSession(context.Background(), s.ID)
+			got, err := reg.SessionPersister().GetSession(context.Background(), s.ID, session.ExpandNothing)
 			require.NoError(t, err)
 			assert.Equal(t, s.ID.String(), got.ID.String())
 			assert.True(t, got.AuthenticatedAt.After(time.Now().Add(-time.Minute)))
@@ -86,7 +86,7 @@ func TestSessionIssuer(t *testing.T) {
 			err := h.ExecutePostRegistrationPostPersistHook(w, &http.Request{Header: http.Header{"Accept": {"application/json"}}}, f, s)
 			require.True(t, errors.Is(err, registration.ErrHookAbortFlow), "%+v", err)
 
-			got, err := reg.SessionPersister().GetSession(context.Background(), s.ID)
+			got, err := reg.SessionPersister().GetSession(context.Background(), s.ID, session.ExpandNothing)
 			require.NoError(t, err)
 			assert.Equal(t, s.ID.String(), got.ID.String())
 			assert.True(t, got.AuthenticatedAt.After(time.Now().Add(-time.Minute)))

@@ -1,25 +1,25 @@
-import { APP_URL, appPrefix, gen, website } from '../../../../helpers'
-import { routes as express } from '../../../../helpers/express'
-import { routes as react } from '../../../../helpers/react'
+import { APP_URL, appPrefix, gen, website } from "../../../../helpers"
+import { routes as express } from "../../../../helpers/express"
+import { routes as react } from "../../../../helpers/react"
 
-describe('Basic email profile with succeeding login flows', () => {
+describe("Basic email profile with succeeding login flows", () => {
   const email = gen.email()
   const password = gen.password()
 
   before(() => {
-    cy.registerApi({ email, password, fields: { 'traits.website': website } })
+    cy.registerApi({ email, password, fields: { "traits.website": website } })
   })
   ;[
     {
       route: express.login,
-      app: 'express' as 'express',
-      profile: 'email'
+      app: "express" as "express",
+      profile: "email",
     },
     {
       route: react.login,
-      app: 'react' as 'react',
-      profile: 'spa'
-    }
+      app: "react" as "react",
+      profile: "spa",
+    },
   ].forEach(({ route, profile, app }) => {
     describe(`for app ${app}`, () => {
       before(() => {
@@ -32,57 +32,57 @@ describe('Basic email profile with succeeding login flows', () => {
         cy.visit(route)
       })
 
-      it('should sign in and be logged in', () => {
+      it("should sign in and be logged in", () => {
         cy.get(`${appPrefix(app)}input[name="identifier"]`).type(email)
         cy.get('input[name="password"]').type(password)
         cy.submitPasswordForm()
-        cy.location('pathname').should('not.contain', '/login')
+        cy.location("pathname").should("not.contain", "/login")
 
         cy.getSession().should((session) => {
           const { identity } = session
           expect(identity.id).to.not.be.empty
-          expect(identity.schema_id).to.equal('default')
+          expect(identity.schema_id).to.equal("default")
           expect(identity.schema_url).to.equal(`${APP_URL}/schemas/ZGVmYXVsdA`)
           expect(identity.traits.website).to.equal(website)
           expect(identity.traits.email).to.equal(email)
         })
       })
 
-      it('should sign in with case insensitive identifier surrounded by whitespace', () => {
+      it("should sign in with case insensitive identifier surrounded by whitespace", () => {
         cy.get('input[name="identifier"]').type(
-          '  ' + email.toUpperCase() + '  '
+          "  " + email.toUpperCase() + "  ",
         )
         cy.get('input[name="password"]').type(password)
         cy.submitPasswordForm()
-        cy.location('pathname').should('not.contain', '/login')
+        cy.location("pathname").should("not.contain", "/login")
 
         cy.getSession().should((session) => {
           const { identity } = session
           expect(identity.id).to.not.be.empty
-          expect(identity.schema_id).to.equal('default')
+          expect(identity.schema_id).to.equal("default")
           expect(identity.schema_url).to.equal(`${APP_URL}/schemas/ZGVmYXVsdA`)
           expect(identity.traits.website).to.equal(website)
           expect(identity.traits.email).to.equal(email)
         })
       })
 
-      it('should sign in and be redirected', () => {
+      it("should sign in and be redirected", () => {
         cy.browserReturnUrlOry()
-        cy.visit(route + '?return_to=https://www.example.org/')
+        cy.visit(route + "?return_to=https://www.example.org/")
 
         cy.get('input[name="identifier"]').type(email.toUpperCase())
         cy.get('input[name="password"]').type(password)
         cy.submitPasswordForm()
 
-        cy.url().should('eq', 'https://www.example.org/')
+        cy.url().should("eq", "https://www.example.org/")
       })
     })
   })
 
-  describe('for app express handle return_to correctly for expired flows', () => {
+  describe("for app express handle return_to correctly for expired flows", () => {
     before(() => {
-      cy.proxy('express')
-      cy.useConfigProfile('email')
+      cy.proxy("express")
+      cy.useConfigProfile("email")
 
       cy.browserReturnUrlOry()
     })
@@ -91,23 +91,23 @@ describe('Basic email profile with succeeding login flows', () => {
       cy.clearAllCookies()
     })
 
-    it('should redirect to return_to when retrying expired flow', () => {
+    it("should redirect to return_to when retrying expired flow", () => {
       cy.shortLoginLifespan()
       cy.wait(500)
 
-      cy.visit(express.login + '?return_to=https://www.example.org/')
+      cy.visit(express.login + "?return_to=https://www.example.org/")
 
       cy.longLoginLifespan()
 
-      cy.get(appPrefix('express') + 'input[name="identifier"]').type(
-        email.toUpperCase()
+      cy.get(appPrefix("express") + 'input[name="identifier"]').type(
+        email.toUpperCase(),
       )
       cy.get('input[name="password"]').type(password)
 
       cy.submitPasswordForm()
       cy.get('[data-testid="ui/message/4010001"]').should(
-        'contain.text',
-        'The login flow expired'
+        "contain.text",
+        "The login flow expired",
       )
 
       // try again with long lifespan set
@@ -116,7 +116,7 @@ describe('Basic email profile with succeeding login flows', () => {
       cy.submitPasswordForm()
 
       // check that redirection has happened
-      cy.url().should('eq', 'https://www.example.org/')
+      cy.url().should("eq", "https://www.example.org/")
     })
   })
 })

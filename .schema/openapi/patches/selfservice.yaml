@@ -57,12 +57,14 @@
   path: /components/schemas/submitSelfServiceRecoveryFlowBody/oneOf
   value:
     - "$ref": "#/components/schemas/submitSelfServiceRecoveryFlowWithLinkMethodBody"
+    - "$ref": "#/components/schemas/submitSelfServiceRecoveryFlowWithCodeMethodBody"
 - op: add
   path: /components/schemas/submitSelfServiceRecoveryFlowBody/discriminator
   value:
     propertyName: method
     mapping:
       link: "#/components/schemas/submitSelfServiceRecoveryFlowWithLinkMethodBody"
+      code: "#/components/schemas/submitSelfServiceRecoveryFlowWithCodeMethodBody"
 - op: add
   path: /components/schemas/selfServiceRecoveryFlowState/enum
   value:

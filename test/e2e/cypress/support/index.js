@@ -1,3 +1,3 @@
-import './commands'
+import "./commands"
 
 Cypress.Cookies.debug(true)

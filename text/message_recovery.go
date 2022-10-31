@@ -5,13 +5,13 @@ import (
 	"time"
 )
 
-func NewErrorValidationRecoveryFlowExpired(ago time.Duration) *Message {
+func NewErrorValidationRecoveryFlowExpired(expiredAt time.Time) *Message {
 	return &Message{
 		ID:   ErrorValidationRecoveryFlowExpired,
-		Text: fmt.Sprintf("The recovery flow expired %.2f minutes ago, please try again.", ago.Minutes()),
+		Text: fmt.Sprintf("The recovery flow expired %.2f minutes ago, please try again.", (-Until(expiredAt)).Minutes()),
 		Type: Error,
 		Context: context(map[string]interface{}{
-			"expired_at": Now().UTC().Add(ago),
+			"expired_at": expiredAt,
 		}),
 	}
 }
@@ -37,10 +37,28 @@ func NewRecoveryEmailSent() *Message {
 	}
 }
 
+func NewRecoveryEmailWithCodeSent() *Message {
+	return &Message{
+		ID:      InfoSelfServiceRecoveryEmailWithCodeSent,
+		Type:    Info,
+		Text:    "An email containing a recovery code has been sent to the email address you provided.",
+		Context: context(nil),
+	}
+}
+
 func NewErrorValidationRecoveryTokenInvalidOrAlreadyUsed() *Message {
 	return &Message{
 		ID:      ErrorValidationRecoveryTokenInvalidOrAlreadyUsed,
 		Text:    "The recovery token is invalid or has already been used. Please retry the flow.",
+		Type:    Error,
+		Context: context(nil),
+	}
+}
+
+func NewErrorValidationRecoveryCodeInvalidOrAlreadyUsed() *Message {
+	return &Message{
+		ID:      ErrorValidationRecoveryCodeInvalidOrAlreadyUsed,
+		Text:    "The recovery code is invalid or has already been used. Please try again.",
 		Type:    Error,
 		Context: context(nil),
 	}

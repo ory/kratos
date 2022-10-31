@@ -1,0 +1,8 @@
+{
+  "error": {
+    "code": 400,
+    "message": "The request was malformed or contained invalid parameters",
+    "reason": "Unable to parse \"expires_in\" whose format should match \"[0-9]+(ns|us|ms|s|m|h)\" but did not: not-a-valid-value",
+    "status": "Bad Request"
+  }
+}

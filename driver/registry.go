@@ -21,6 +21,7 @@ import (
 	"github.com/ory/kratos/selfservice/flow/recovery"
 	"github.com/ory/kratos/selfservice/flow/settings"
 	"github.com/ory/kratos/selfservice/flow/verification"
+	"github.com/ory/kratos/selfservice/strategy/code"
 	"github.com/ory/kratos/selfservice/strategy/link"
 
 	"github.com/ory/x/healthx"
@@ -132,6 +133,9 @@ type Registry interface {
 	link.SenderProvider
 	link.VerificationTokenPersistenceProvider
 	link.RecoveryTokenPersistenceProvider
+
+	code.RecoveryCodeSenderProvider
+	code.RecoveryCodePersistenceProvider
 
 	recovery.FlowPersistenceProvider
 	recovery.ErrorHandlerProvider

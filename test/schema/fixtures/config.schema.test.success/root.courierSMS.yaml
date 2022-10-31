@@ -20,5 +20,5 @@ courier:
       url: https://sms.example.com
       method: POST
       body: file://request.config.twilio.jsonnet
-      header:
+      headers:
         'Content-Type': "application/x-www-form-urlencoded"
