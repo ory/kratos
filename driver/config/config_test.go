@@ -1119,6 +1119,23 @@ func TestCourierMessageTTL(t *testing.T) {
 	})
 }
 
+func TestOAuth2Provider(t *testing.T) {
+	ctx := context.Background()
+
+	t.Run("case=configs set", func(t *testing.T) {
+		conf, _ := config.New(ctx, logrusx.New("", ""), os.Stderr,
+			configx.WithConfigFiles("stub/.kratos.oauth2_provider.yaml"), configx.SkipValidation())
+		assert.Equal(t, "https://oauth2_provider/", conf.OAuth2ProviderURL(ctx).String())
+		assert.Equal(t, http.Header{"Authorization": {"Basic"}}, conf.OAuth2ProviderHeader(ctx))
+	})
+
+	t.Run("case=defaults", func(t *testing.T) {
+		conf, _ := config.New(ctx, logrusx.New("", ""), os.Stderr, configx.SkipValidation())
+		assert.Empty(t, conf.OAuth2ProviderURL(ctx))
+		assert.Empty(t, conf.OAuth2ProviderHeader(ctx))
+	})
+}
+
 func TestCourierTemplatesConfig(t *testing.T) {
 	ctx := context.Background()
 

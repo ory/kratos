@@ -37,9 +37,12 @@ docs/InlineResponse2001.md
 docs/InlineResponse503.md
 docs/JsonError.md
 docs/JsonPatch.md
+docs/LoginRequest.md
 docs/Message.md
 docs/MetadataApi.md
 docs/NeedsPrivilegedSessionError.md
+docs/OAuth2Client.md
+docs/OpenIDConnectContext.md
 docs/Pagination.md
 docs/RecoveryIdentityAddress.md
 docs/RevokedSessions.md
@@ -135,8 +138,11 @@ model_inline_response_200_1.go
 model_inline_response_503.go
 model_json_error.go
 model_json_patch.go
+model_login_request.go
 model_message.go
 model_needs_privileged_session_error.go
+model_o_auth2_client.go
+model_open_id_connect_context.go
 model_pagination.go
 model_recovery_identity_address.go
 model_revoked_sessions.go

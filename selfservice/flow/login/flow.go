@@ -17,7 +17,10 @@ import (
 
 	"github.com/ory/x/stringsx"
 
+	hydraclientgo "github.com/ory/hydra-client-go"
+
 	"github.com/ory/kratos/driver/config"
+	"github.com/ory/kratos/hydra"
 
 	"github.com/ory/kratos/ui/container"
 
@@ -46,6 +49,18 @@ type Flow struct {
 	// required: true
 	ID  uuid.UUID `json:"id" faker:"-" db:"id" rw:"r"`
 	NID uuid.UUID `json:"-"  faker:"-" db:"nid"`
+
+	// Ory OAuth 2.0 Login Challenge.
+	//
+	// This value is set using the `login_challenge` query parameter of the registration and login endpoints.
+	// If set will cooperate with Ory OAuth2 and OpenID to act as an OAuth2 server / OpenID Provider.
+	OAuth2LoginChallenge uuid.NullUUID `json:"oauth2_login_challenge,omitempty" faker:"-" db:"oauth2_login_challenge"`
+
+	// HydraLoginRequest is an optional field whose presence indicates that Kratos
+	// is being used as an identity provider in a Hydra OAuth2 flow. Kratos
+	// populates this field by retrieving its value from Hydra and it is used by
+	// the login and consent UIs.
+	HydraLoginRequest *hydraclientgo.LoginRequest `json:"oauth2_login_request,omitempty" faker:"-" db:"-"`
 
 	// Type represents the flow's type which can be either "api" or "browser", depending on the flow interaction.
 	//
@@ -119,10 +134,16 @@ func NewFlow(conf *config.Config, exp time.Duration, csrf string, r *http.Reques
 		return nil, err
 	}
 
+	hlc, err := hydra.GetLoginChallengeID(conf, r)
+	if err != nil {
+		return nil, err
+	}
+
 	return &Flow{
-		ID:        id,
-		ExpiresAt: now.Add(exp),
-		IssuedAt:  now,
+		ID:                   id,
+		OAuth2LoginChallenge: hlc,
+		ExpiresAt:            now.Add(exp),
+		IssuedAt:             now,
 		UI: &container.Container{
 			Method: "POST",
 			Action: flow.AppendFlowTo(urlx.AppendPaths(conf.SelfPublicURL(r.Context()), RouteSubmitFlow), id).String(),
