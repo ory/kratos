@@ -5,7 +5,7 @@
 
 **Table of Contents**
 
-- [ (2022-10-27)](#2022-10-27)
+- [ (2022-10-30)](#2022-10-30)
   - [Breaking Changes](#breaking-changes)
     - [Bug Fixes](#bug-fixes)
     - [Code Refactoring](#code-refactoring)
@@ -280,7 +280,7 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# [](https://github.com/ory/kratos/compare/v0.10.1...v) (2022-10-27)
+# [](https://github.com/ory/kratos/compare/v0.10.1...v) (2022-10-30)
 
 ## Breaking Changes
 
@@ -314,6 +314,9 @@ SDK Method `getJsonSchema` was renamed to `getIdentitySchema`.
 - Add support for verified Graph API calls for facebook oidc provider
   ([#2547](https://github.com/ory/kratos/issues/2547))
   ([1ba7c66](https://github.com/ory/kratos/commit/1ba7c66fc4897b676690f0ac701a0b68aee4f151))
+- Admin recovery CSRF & duplicate form elements
+  ([#2846](https://github.com/ory/kratos/issues/2846))
+  ([de80b7f](https://github.com/ory/kratos/commit/de80b7f508afdd56f5d8396f03919bd9a98e49d3))
 - Bump docker image ([#2594](https://github.com/ory/kratos/issues/2594))
   ([071c885](https://github.com/ory/kratos/commit/071c885d8231a1a66051002ecfcff5c8e5237085))
 - Bump graceful to deal with http header timeouts
