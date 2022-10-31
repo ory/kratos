@@ -82,7 +82,7 @@ func TestSessionDestroyer(t *testing.T) {
 			}
 
 			for k := range sessions {
-				sess, err := reg.SessionPersister().GetSession(context.Background(), sessions[k].ID, session.ExpandNothing)
+				sess, err := reg.SessionPersister().GetSession(context.Background(), sessions[k].ID)
 				require.NoError(t, err)
 				assert.True(t, sess.IsActive())
 			}
@@ -91,7 +91,7 @@ func TestSessionDestroyer(t *testing.T) {
 			require.NoError(t, tc.hook(&i))
 
 			for k := range sessions {
-				sess, err := reg.SessionPersister().GetSession(context.Background(), sessions[k].ID, session.ExpandNothing)
+				sess, err := reg.SessionPersister().GetSession(context.Background(), sessions[k].ID)
 				require.NoError(t, err)
 				assert.False(t, sess.IsActive())
 			}

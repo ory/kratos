@@ -18,6 +18,7 @@ import (
 )
 
 func TestGuessForcedLoginIdentifier(t *testing.T) {
+	ctx := context.Background()
 	conf, reg := internal.NewFastRegistryWithMocks(t)
 	testhelpers.SetDefaultIdentitySchema(conf, "file://./stub/login.schema.json")
 
@@ -29,9 +30,7 @@ func TestGuessForcedLoginIdentifier(t *testing.T) {
 	i.Credentials[identity.CredentialsTypePassword] = ic
 	require.NoError(t, reg.IdentityManager().Create(context.Background(), i))
 
-	req := httptest.NewRequest("GET", "/sessions/whoami", nil)
-
-	sess, err := session.NewActiveSession(req, i, conf, time.Now(), identity.CredentialsTypePassword, identity.AuthenticatorAssuranceLevel1)
+	sess, err := session.NewActiveSession(ctx, i, conf, time.Now(), identity.CredentialsTypePassword, identity.AuthenticatorAssuranceLevel1)
 	require.NoError(t, err)
 	reg.SessionPersister().UpsertSession(context.Background(), sess)
 

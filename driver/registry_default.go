@@ -22,8 +22,6 @@ import (
 
 	"github.com/ory/nosurf"
 
-	"github.com/ory/kratos/hydra"
-	"github.com/ory/kratos/selfservice/strategy/code"
 	"github.com/ory/kratos/selfservice/strategy/webauthn"
 
 	"github.com/ory/kratos/selfservice/strategy/lookup"
@@ -137,7 +135,6 @@ type RegistryDefault struct {
 	selfserviceVerificationExecutor *verification.HookExecutor
 
 	selfserviceLinkSender *link.Sender
-	selfserviceCodeSender *code.RecoveryCodeSender
 
 	selfserviceRecoveryErrorHandler *recovery.ErrorHandler
 	selfserviceRecoveryHandler      *recovery.Handler
@@ -146,8 +143,6 @@ type RegistryDefault struct {
 	selfserviceLogoutHandler *logout.Handler
 
 	selfserviceStrategies []interface{}
-
-	hydra hydra.Hydra
 
 	buildVersion string
 	buildHash    string
@@ -294,7 +289,6 @@ func (m *RegistryDefault) selfServiceStrategies() []interface{} {
 			password2.NewStrategy(m),
 			oidc.NewStrategy(m),
 			profile.NewStrategy(m),
-			code.NewStrategy(m),
 			link.NewStrategy(m),
 			totp.NewStrategy(m),
 			webauthn.NewStrategy(m),
@@ -520,18 +514,6 @@ func (m *RegistryDefault) SessionManager() session.Manager {
 	return m.sessionManager
 }
 
-func (m *RegistryDefault) Hydra() hydra.Hydra {
-	if m.hydra == nil {
-		m.hydra = hydra.NewDefaultHydra(m)
-	}
-	return m.hydra
-}
-
-func (m *RegistryDefault) WithHydra(h hydra.Hydra) Registry {
-	m.hydra = h
-	return m
-}
-
 func (m *RegistryDefault) SelfServiceErrorManager() *errorx.Manager {
 	if m.errorManager == nil {
 		m.errorManager = errorx.NewManager(m)
@@ -692,10 +674,6 @@ func (m *RegistryDefault) CourierPersister() courier.Persister {
 }
 
 func (m *RegistryDefault) RecoveryTokenPersister() link.RecoveryTokenPersister {
-	return m.Persister()
-}
-
-func (m *RegistryDefault) RecoveryCodePersister() code.RecoveryCodePersister {
 	return m.Persister()
 }
 

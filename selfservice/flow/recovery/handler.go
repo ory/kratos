@@ -117,13 +117,12 @@ func (h *Handler) RegisterAdminRoutes(admin *x.RouterAdmin) {
 //	  500: jsonError
 //	  400: jsonError
 func (h *Handler) initAPIFlow(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
-	activeRecoveryStrategy, err := h.d.GetActiveRecoveryStrategy(r.Context())
-	if !h.d.Config().SelfServiceFlowRecoveryEnabled(r.Context()) || err != nil {
+	if !h.d.Config().SelfServiceFlowRecoveryEnabled(r.Context()) {
 		h.d.SelfServiceErrorManager().Forward(r.Context(), w, r, errors.WithStack(herodot.ErrBadRequest.WithReasonf("Recovery is not allowed because it was disabled.")))
 		return
 	}
 
-	req, err := NewFlow(h.d.Config(), h.d.Config().SelfServiceFlowRecoveryRequestLifespan(r.Context()), h.d.GenerateCSRFToken(r), r, activeRecoveryStrategy, flow.TypeAPI)
+	req, err := NewFlow(h.d.Config(), h.d.Config().SelfServiceFlowRecoveryRequestLifespan(r.Context()), h.d.GenerateCSRFToken(r), r, h.d.RecoveryStrategies(r.Context()), flow.TypeAPI)
 	if err != nil {
 		h.d.Writer().WriteError(w, r, err)
 		return
@@ -174,14 +173,12 @@ type initializeSelfServiceRecoveryFlowWithoutBrowser struct {
 //	  400: jsonError
 //	  500: jsonError
 func (h *Handler) initBrowserFlow(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
-	activeRecoveryStrategy, err := h.d.GetActiveRecoveryStrategy(r.Context())
-
-	if !h.d.Config().SelfServiceFlowRecoveryEnabled(r.Context()) || err != nil {
+	if !h.d.Config().SelfServiceFlowRecoveryEnabled(r.Context()) {
 		h.d.SelfServiceErrorManager().Forward(r.Context(), w, r, errors.WithStack(herodot.ErrBadRequest.WithReasonf("Recovery is not allowed because it was disabled.")))
 		return
 	}
 
-	f, err := NewFlow(h.d.Config(), h.d.Config().SelfServiceFlowRecoveryRequestLifespan(r.Context()), h.d.GenerateCSRFToken(r), r, activeRecoveryStrategy, flow.TypeBrowser)
+	f, err := NewFlow(h.d.Config(), h.d.Config().SelfServiceFlowRecoveryRequestLifespan(r.Context()), h.d.GenerateCSRFToken(r), r, h.d.RecoveryStrategies(r.Context()), flow.TypeBrowser)
 	if err != nil {
 		h.d.SelfServiceErrorManager().Forward(r.Context(), w, r, err)
 		return
@@ -272,7 +269,7 @@ func (h *Handler) fetch(w http.ResponseWriter, r *http.Request, _ httprouter.Par
 	// Browser flows must include the CSRF token
 	//
 	// Resolves: https://github.com/ory/kratos/issues/1282
-	if f.Type.IsBrowser() && !f.DangerousSkipCSRFCheck && !nosurf.VerifyToken(h.d.GenerateCSRFToken(r), f.CSRFToken) {
+	if f.Type == flow.TypeBrowser && !nosurf.VerifyToken(h.d.GenerateCSRFToken(r), f.CSRFToken) {
 		h.d.Writer().WriteError(w, r, x.CSRFErrorReason(r, h.d))
 		return
 	}
@@ -357,22 +354,21 @@ type submitSelfServiceRecoveryFlowBody struct{}
 //
 // More information can be found at [Ory Kratos Account Recovery Documentation](../self-service/flows/account-recovery).
 //
-//		Consumes:
-//		- application/json
-//		- application/x-www-form-urlencoded
+//	Consumes:
+//	- application/json
+//	- application/x-www-form-urlencoded
 //
-//		Produces:
-//		- application/json
+//	Produces:
+//	- application/json
 //
-//		Schemes: http, https
+//	Schemes: http, https
 //
-//	    Responses:
-//	      200: selfServiceRecoveryFlow
-//	      303: emptyResponse
-//	      400: selfServiceRecoveryFlow
-//	      410: jsonError
-//	      422: selfServiceBrowserLocationChangeRequiredError
-//	      500: jsonError
+//	Responses:
+//	  200: selfServiceRecoveryFlow
+//	  303: emptyResponse
+//	  400: selfServiceRecoveryFlow
+//	  410: jsonError
+//	  500: jsonError
 func (h *Handler) submitFlow(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	rid, err := flow.GetFlowID(r)
 	if err != nil {

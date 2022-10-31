@@ -319,14 +319,6 @@ func (i *Identity) UnmarshalJSON(b []byte) error {
 	return err
 }
 
-type WithAdminMetadataInJSON Identity
-
-func (i WithAdminMetadataInJSON) MarshalJSON() ([]byte, error) {
-	type localIdentity Identity
-	i.Credentials = nil
-	return json.Marshal(localIdentity(i))
-}
-
 type WithCredentialsAndAdminMetadataInJSON Identity
 
 func (i WithCredentialsAndAdminMetadataInJSON) MarshalJSON() ([]byte, error) {

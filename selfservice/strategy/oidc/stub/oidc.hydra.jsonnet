@@ -8,7 +8,6 @@ else
       traits: {
         subject: claims.sub,
         [if "website" in claims then "website" else null]: claims.website,
-        [if "groups" in claims.raw_claims then "groups" else null]: claims.raw_claims.groups,
       },
       metadata_public: {
         [if "picture" in claims then "picture" else null]: claims.picture,

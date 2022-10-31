@@ -6,8 +6,6 @@ import (
 	"net/url"
 	"time"
 
-	"github.com/ory/x/randx"
-
 	"github.com/gorilla/sessions"
 
 	"github.com/ory/x/urlx"
@@ -131,7 +129,6 @@ func (s *ManagerHTTP) IssueCookie(ctx context.Context, w http.ResponseWriter, r 
 
 	cookie.Values["session_token"] = session.Token
 	cookie.Values["expires_at"] = session.ExpiresAt.UTC().Format(time.RFC3339Nano)
-	cookie.Values["nonce"] = randx.MustString(8, randx.Alpha) // Guarantee new kratos session identifier
 
 	if err := cookie.Save(r, w); err != nil {
 		return errors.WithStack(err)
@@ -185,10 +182,10 @@ func (s *ManagerHTTP) extractToken(r *http.Request) string {
 func (s *ManagerHTTP) FetchFromRequest(ctx context.Context, r *http.Request) (*Session, error) {
 	token := s.extractToken(r)
 	if token == "" {
-		return nil, errors.WithStack(NewErrNoCredentialsForSession())
+		return nil, errors.WithStack(NewErrNoActiveSessionFound())
 	}
 
-	se, err := s.r.SessionPersister().GetSessionByToken(ctx, token, ExpandEverything)
+	se, err := s.r.SessionPersister().GetSessionByToken(ctx, token)
 	if err != nil {
 		if errors.Is(err, herodot.ErrNotFound) || errors.Is(err, sqlcon.ErrNoRows) {
 			return nil, errors.WithStack(NewErrNoActiveSessionFound())
@@ -264,7 +261,7 @@ func (s *ManagerHTTP) DoesSessionSatisfy(r *http.Request, sess *Session, request
 
 func (s *ManagerHTTP) SessionAddAuthenticationMethods(ctx context.Context, sid uuid.UUID, ams ...AuthenticationMethod) error {
 	// Since we added the method, it also means that we have authenticated it
-	sess, err := s.r.SessionPersister().GetSession(ctx, sid, ExpandNothing)
+	sess, err := s.r.SessionPersister().GetSession(ctx, sid)
 	if err != nil {
 		return err
 	}

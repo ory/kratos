@@ -13,23 +13,23 @@ import (
 	"github.com/ory/kratos/cmd/cliclient"
 )
 
-func NewImportCmd() *cobra.Command {
+func NewImportCmd(root *cobra.Command) *cobra.Command {
 	var cmd = &cobra.Command{
 		Use:   "import",
 		Short: "Import resources",
 	}
-	cmd.AddCommand(NewImportIdentitiesCmd())
+	cmd.AddCommand(NewImportIdentitiesCmd(root))
 	cliclient.RegisterClientFlags(cmd.PersistentFlags())
 	cmdx.RegisterFormatFlags(cmd.PersistentFlags())
 	return cmd
 }
 
 // NewImportIdentitiesCmd represents the import command
-func NewImportIdentitiesCmd() *cobra.Command {
+func NewImportIdentitiesCmd(root *cobra.Command) *cobra.Command {
 	return &cobra.Command{
 		Use:   "identities file-1.json [file-2.json] [file-3.json] [file-n.json]",
 		Short: "Import one or more identities from files or STD_IN",
-		Example: `Create an example identity:
+		Example: fmt.Sprintf(`Create an example identity:
 
 	cat > ./file.json <<EOF
 	{
@@ -40,11 +40,11 @@ func NewImportIdentitiesCmd() *cobra.Command {
 	}
 	EOF
 
-	{{ .CommandPath }} file.json
+	%[1]s import identities file.json
 
 Alternatively:
 
-	cat file.json | {{ .CommandPath }}`,
+	cat file.json | %[1]s import identities`, root.Use),
 		Long: `Import identities from files or STD_IN.
 
 Files can contain only a single or an array of identities. The validity of files can be tested beforehand using "... identities validate".`,

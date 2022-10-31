@@ -18,7 +18,6 @@
     type: string
     enum:
       - link_recovery
-      - code_recovery
       - password
       - totp
       - oidc
