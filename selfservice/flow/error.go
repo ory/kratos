@@ -33,11 +33,8 @@ var (
 type ExpiredError struct {
 	*herodot.DefaultError `json:"error"`
 
-	// When the flow has expired
-	ExpiredAt time.Time `json:"expired_at"`
-
-	// DEPRECATED: Please use the "expired_at" field instead to have a more accurate result.
-	Since time.Duration `json:"since"`
+	// Since when the flow has expired
+	Ago time.Duration `json:"since"`
 
 	// The flow ID that should be used for the new flow as it contains the correct messages.
 	FlowID uuid.UUID `json:"use_flow_id"`
@@ -62,8 +59,7 @@ func (e *ExpiredError) EnhanceJSONError() interface{} {
 func NewFlowExpiredError(at time.Time) *ExpiredError {
 	ago := time.Since(at)
 	return &ExpiredError{
-		ExpiredAt: at.UTC(),
-		Since:     ago,
+		Ago: ago,
 		DefaultError: x.ErrGone.WithID(text.ErrIDSelfServiceFlowExpired).
 			WithError("self-service flow expired").
 			WithReasonf("The self-service flow expired %.2f minutes ago, initialize a new one.", ago.Minutes()),

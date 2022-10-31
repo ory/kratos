@@ -11,7 +11,6 @@ import (
 	"github.com/ory/x/sqlcon"
 
 	"github.com/ory/kratos/driver/config"
-	"github.com/ory/kratos/hydra"
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/schema"
 	"github.com/ory/kratos/selfservice/flow"
@@ -70,9 +69,7 @@ type (
 		session.PersistenceProvider
 		session.ManagementProvider
 		HooksProvider
-		hydra.HydraProvider
 		x.CSRFTokenGeneratorProvider
-		x.HTTPClientProvider
 		x.LoggingProvider
 		x.WriterProvider
 	}
@@ -154,7 +151,7 @@ func (e *HookExecutor) PostRegistrationHook(w http.ResponseWriter, r *http.Reque
 		WithField("identity_id", i.ID).
 		Info("A new identity has registered using self-service registration.")
 
-	s, err := session.NewActiveSession(r, i, e.d.Config(), time.Now().UTC(), ct, identity.AuthenticatorAssuranceLevel1)
+	s, err := session.NewActiveSession(r.Context(), i, e.d.Config(), time.Now().UTC(), ct, identity.AuthenticatorAssuranceLevel1)
 	if err != nil {
 		return err
 	}
@@ -205,16 +202,7 @@ func (e *HookExecutor) PostRegistrationHook(w http.ResponseWriter, r *http.Reque
 		return nil
 	}
 
-	finalReturnTo := returnTo.String()
-	if a.OAuth2LoginChallenge.Valid {
-		cr, err := e.d.Hydra().AcceptLoginRequest(r.Context(), a.OAuth2LoginChallenge.UUID, i.ID.String(), s.AMR)
-		if err != nil {
-			return err
-		}
-		finalReturnTo = cr
-	}
-
-	x.ContentNegotiationRedirection(w, r, s.Declassify(), e.d.Writer(), finalReturnTo)
+	x.ContentNegotiationRedirection(w, r, s.Declassify(), e.d.Writer(), returnTo.String())
 	return nil
 }
 

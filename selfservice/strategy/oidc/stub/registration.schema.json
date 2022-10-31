@@ -25,12 +25,6 @@
         "website": {
           "type": "string",
           "format": "uri"
-        },
-        "groups": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
         }
       },
       "required": [

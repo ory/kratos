@@ -21,7 +21,6 @@ import (
 	"github.com/ory/kratos/selfservice/flow/registration"
 	"github.com/ory/kratos/selfservice/flow/settings"
 	"github.com/ory/kratos/selfservice/flow/verification"
-	"github.com/ory/kratos/selfservice/strategy/code"
 	"github.com/ory/kratos/selfservice/strategy/link"
 	"github.com/ory/kratos/session"
 )
@@ -44,7 +43,6 @@ type Persister interface {
 	recovery.FlowPersister
 	link.RecoveryTokenPersister
 	link.VerificationTokenPersister
-	code.RecoveryCodePersister
 
 	CleanupDatabase(context.Context, time.Duration, time.Duration, int) error
 	Close(context.Context) error

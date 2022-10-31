@@ -8,6 +8,8 @@ import (
 
 	"github.com/tidwall/gjson"
 
+	"github.com/spf13/cobra"
+
 	"github.com/ory/kratos/cmd/identities"
 
 	"github.com/stretchr/testify/assert"
@@ -20,7 +22,7 @@ import (
 )
 
 func TestDeleteCmd(t *testing.T) {
-	c := identities.NewDeleteIdentityCmd()
+	c := identities.NewDeleteIdentityCmd(new(cobra.Command))
 	reg := setup(t, c)
 
 	t.Run("case=deletes successfully", func(t *testing.T) {

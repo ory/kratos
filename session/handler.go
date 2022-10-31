@@ -1,12 +1,8 @@
 package session
 
 import (
-	"fmt"
 	"net/http"
 	"strconv"
-	"time"
-
-	"github.com/ory/x/pagination/keysetpagination"
 
 	"github.com/ory/x/pointerx"
 
@@ -15,7 +11,6 @@ import (
 	"github.com/pkg/errors"
 
 	"github.com/ory/x/decoderx"
-	"github.com/ory/x/urlx"
 
 	"github.com/ory/herodot"
 
@@ -63,14 +58,13 @@ const (
 )
 
 func (h *Handler) RegisterAdminRoutes(admin *x.RouterAdmin) {
-	admin.GET(RouteCollection, h.adminListSessions)
-
 	admin.GET(AdminRouteIdentitiesSessions, h.adminListIdentitySessions)
 	admin.DELETE(AdminRouteIdentitiesSessions, h.adminDeleteIdentitySessions)
 	admin.PATCH(AdminRouteSessionExtendId, h.adminSessionExtend)
 
 	admin.DELETE(RouteCollection, x.RedirectToPublicRoute(h.r))
 	admin.DELETE(RouteSession, x.RedirectToPublicRoute(h.r))
+	admin.GET(RouteCollection, x.RedirectToPublicRoute(h.r))
 
 	for _, m := range []string{http.MethodGet, http.MethodHead, http.MethodPost, http.MethodPut} {
 		// Redirect to public endpoint
@@ -183,11 +177,6 @@ type toSession struct {
 func (h *Handler) whoami(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	s, err := h.r.SessionManager().FetchFromRequest(r.Context(), r)
 	if err != nil {
-		// We cache errors where no session was found.
-		if noSess := new(ErrNoActiveSessionFound); errors.As(err, &noSess) && noSess.credentialsMissing {
-			w.Header().Set("Ory-Session-Cache-For", fmt.Sprintf("%d", int64(time.Minute.Seconds())))
-		}
-
 		h.r.Audit().WithRequest(r).WithError(err).Info("No valid session cookie found.")
 		h.r.Writer().WriteError(w, r, herodot.ErrUnauthorized.WithWrap(err).WithReasonf("No valid session cookie found."))
 		return
@@ -210,7 +199,6 @@ func (h *Handler) whoami(w http.ResponseWriter, r *http.Request, ps httprouter.P
 
 	// Set userId as the X-Kratos-Authenticated-Identity-Id header.
 	w.Header().Set("X-Kratos-Authenticated-Identity-Id", s.Identity.ID.String())
-	w.Header().Set("Ory-Session-Cache-For", fmt.Sprintf("%d", int64(time.Until(s.ExpiresAt).Seconds())))
 
 	if err := h.r.SessionManager().RefreshCookie(r.Context(), w, r, s); err != nil {
 		h.r.Audit().WithRequest(r).WithError(err).Info("Could not re-issue cookie.")
@@ -232,8 +220,6 @@ type adminDeleteIdentitySessions struct {
 }
 
 // swagger:route DELETE /admin/identities/{id}/sessions v0alpha2 adminDeleteIdentitySessions
-//
-// # Delete & Invalidate an Identity's Sessions
 //
 // Calling this endpoint irrecoverably and permanently deletes and invalidates all sessions that belong to the given Identity.
 //
@@ -266,89 +252,6 @@ func (h *Handler) adminDeleteIdentitySessions(w http.ResponseWriter, r *http.Req
 	w.WriteHeader(http.StatusNoContent)
 }
 
-// Session List Request
-//
-// The request object for listing sessions in an administrative context.
-//
-// swagger:parameters adminListSessions
-// nolint:deadcode,unused
-type adminListSessionsRequest struct {
-	keysetpagination.RequestParameters
-
-	// Active is a boolean flag that filters out sessions based on the state. If no value is provided, all sessions are returned.
-	//
-	// required: false
-	// in: query
-	Active bool `json:"active"`
-}
-
-// Session List Response
-//
-// The response given when listing sessions in an administrative context.
-//
-// swagger:response adminListSessions
-// nolint:deadcode,unused
-type adminListSessionsResponse struct {
-	// The pagination headers
-	// in: header
-	keysetpagination.ResponseHeaders
-
-	// The list of sessions found
-	// in: body
-	Sessions []Session
-}
-
-// swagger:route GET /admin/sessions v0alpha2 adminListSessions
-//
-// This endpoint returns all sessions that exist.
-//
-// This endpoint is useful for:
-//
-// - Listing all sessions that exist in an administrative context.
-//
-//	Schemes: http, https
-//
-//	Security:
-//	  oryAccessToken:
-//
-//	Responses:
-//	  200: sessionList
-//	  400: jsonError
-//	  401: jsonError
-//	  404: jsonError
-//	  500: jsonError
-func (h *Handler) adminListSessions(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	activeRaw := r.URL.Query().Get("active")
-	activeBool, err := strconv.ParseBool(activeRaw)
-	if activeRaw != "" && err != nil {
-		h.r.Writer().WriteError(w, r, herodot.ErrBadRequest.WithError("could not parse parameter active"))
-		return
-	}
-
-	var active *bool
-	if activeRaw != "" {
-		active = &activeBool
-	}
-
-	// Parse request pagination parameters
-	urlValues := r.URL.Query()
-	opts, err := keysetpagination.Parse(&urlValues)
-	if err != nil {
-		h.r.Writer().WriteError(w, r, herodot.ErrBadRequest.WithError("could not parse parameter page_size"))
-		return
-	}
-
-	sess, total, nextPage, err := h.r.SessionPersister().ListSessions(r.Context(), active, opts, ExpandEverything)
-	if err != nil {
-		h.r.Writer().WriteError(w, r, err)
-		return
-	}
-
-	w.Header().Set("x-total-count", fmt.Sprint(total))
-	keysetpagination.Header(w, r.URL, nextPage)
-	h.r.Writer().Write(w, r, sess)
-}
-
 // swagger:parameters adminListIdentitySessions
 // nolint:deadcode,unused
 type adminListIdentitySessions struct {
@@ -363,8 +266,6 @@ type adminListIdentitySessions struct {
 }
 
 // swagger:route GET /admin/identities/{id}/sessions v0alpha2 adminListIdentitySessions
-//
-// # List an Identity's Sessions
 //
 // This endpoint returns all sessions that belong to the given Identity.
 //
@@ -403,13 +304,12 @@ func (h *Handler) adminListIdentitySessions(w http.ResponseWriter, r *http.Reque
 	}
 
 	page, perPage := x.ParsePagination(r)
-	sess, total, err := h.r.SessionPersister().ListSessionsByIdentity(r.Context(), iID, active, page, perPage, uuid.Nil, ExpandEverything)
+	sess, err := h.r.SessionPersister().ListSessionsByIdentity(r.Context(), iID, active, page, perPage, uuid.Nil)
 	if err != nil {
 		h.r.Writer().WriteError(w, r, err)
 		return
 	}
 
-	x.PaginationHeader(w, urlx.AppendPaths(h.r.Config().SelfAdminURL(r.Context()), RouteCollection), total, page, perPage)
 	h.r.Writer().Write(w, r, sess)
 }
 
@@ -420,8 +320,6 @@ type revokeSessions struct {
 }
 
 // swagger:route DELETE /sessions v0alpha2 revokeSessions
-//
-// # Invalidate all Other Sessions
 //
 // Calling this endpoint invalidates all except the current session that belong to the logged-in user.
 // Session data are not deleted.
@@ -466,8 +364,6 @@ type revokeSession struct {
 }
 
 // swagger:route DELETE /sessions/{id} v0alpha2 revokeSession
-//
-// # Invalidate a Session
 //
 // Calling this endpoint invalidates the specified session. The current session cannot be revoked.
 // Session data are not deleted.
@@ -528,8 +424,6 @@ type sessionList []*Session
 
 // swagger:route GET /sessions v0alpha2 listSessions
 //
-// # Get Active Sessions
-//
 // This endpoints returns all other active sessions that belong to the logged-in user.
 // The current session can be retrieved by calling the `/sessions/whoami` endpoint.
 //
@@ -554,13 +448,12 @@ func (h *Handler) listSessions(w http.ResponseWriter, r *http.Request, _ httprou
 	}
 
 	page, perPage := x.ParsePagination(r)
-	sess, total, err := h.r.SessionPersister().ListSessionsByIdentity(r.Context(), s.IdentityID, pointerx.Bool(true), page, perPage, s.ID, ExpandEverything)
+	sess, err := h.r.SessionPersister().ListSessionsByIdentity(r.Context(), s.IdentityID, pointerx.Bool(true), page, perPage, s.ID)
 	if err != nil {
 		h.r.Writer().WriteError(w, r, err)
 		return
 	}
 
-	x.PaginationHeader(w, urlx.AppendPaths(h.r.Config().SelfAdminURL(r.Context()), RouteCollection), total, page, perPage)
 	h.r.Writer().Write(w, r, sess)
 }
 
@@ -592,8 +485,6 @@ type adminExtendSession struct {
 
 // swagger:route PATCH /admin/sessions/{id}/extend v0alpha2 adminExtendSession
 //
-// # Extend a Session
-//
 // Calling this endpoint extends the given session ID. If `session.earliest_possible_extend` is set it
 // will only extend the session after the specified time has passed.
 //
@@ -616,7 +507,7 @@ func (h *Handler) adminSessionExtend(w http.ResponseWriter, r *http.Request, ps 
 		return
 	}
 
-	s, err := h.r.SessionPersister().GetSession(r.Context(), iID, ExpandNothing)
+	s, err := h.r.SessionPersister().GetSession(r.Context(), iID)
 	if err != nil {
 		h.r.Writer().WriteError(w, r, err)
 		return

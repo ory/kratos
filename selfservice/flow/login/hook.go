@@ -9,7 +9,6 @@ import (
 	"github.com/pkg/errors"
 
 	"github.com/ory/kratos/driver/config"
-	"github.com/ory/kratos/hydra"
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/selfservice/flow"
 	"github.com/ory/kratos/session"
@@ -36,7 +35,6 @@ type (
 type (
 	executorDependencies interface {
 		config.Provider
-		hydra.HydraProvider
 		session.ManagementProvider
 		session.PersistenceProvider
 		x.CSRFTokenGeneratorProvider
@@ -65,19 +63,18 @@ func NewHookExecutor(d executorDependencies) *HookExecutor {
 	return &HookExecutor{d: d}
 }
 
-func (e *HookExecutor) requiresAAL2(r *http.Request, s *session.Session, a *Flow) (bool, error) {
+func (e *HookExecutor) requiresAAL2(r *http.Request, s *session.Session, a *Flow) (*session.ErrAALNotSatisfied, bool) {
+	var aalErr *session.ErrAALNotSatisfied
 	err := e.d.SessionManager().DoesSessionSatisfy(r, s, e.d.Config().SessionWhoAmIAAL(r.Context()))
-
-	if aalErr := new(session.ErrAALNotSatisfied); errors.As(err, &aalErr) {
-		if aalErr.PassReturnToAndLoginChallengeParameters(a.RequestURL) != nil {
-			_ = aalErr.WithDetail("pass_request_params_error", "failed to pass request parameters to aalErr.RedirectTo")
-		}
-		return true, aalErr
-	} else if err != nil {
-		return true, errors.WithStack(err)
+	if ok := errors.As(err, &aalErr); !ok {
+		return nil, false
 	}
 
-	return false, nil
+	if err := aalErr.PassReturnToParameter(a.RequestURL); err != nil {
+		return nil, false
+	}
+
+	return aalErr, true
 }
 
 func (e *HookExecutor) handleLoginError(_ http.ResponseWriter, r *http.Request, g node.UiNodeGroup, f *Flow, i *identity.Identity, flowError error) error {
@@ -104,7 +101,7 @@ func (e *HookExecutor) handleLoginError(_ http.ResponseWriter, r *http.Request, 
 }
 
 func (e *HookExecutor) PostLoginHook(w http.ResponseWriter, r *http.Request, g node.UiNodeGroup, a *Flow, i *identity.Identity, s *session.Session) error {
-	if err := s.Activate(r, i, e.d.Config(), time.Now().UTC()); err != nil {
+	if err := s.Activate(r.Context(), i, e.d.Config(), time.Now().UTC()); err != nil {
 		return err
 	}
 
@@ -165,7 +162,7 @@ func (e *HookExecutor) PostLoginHook(w http.ResponseWriter, r *http.Request, g n
 			Info("Identity authenticated successfully and was issued an Ory Kratos Session Token.")
 
 		response := &APIFlowResponse{Session: s, Token: s.Token}
-		if required, _ := e.requiresAAL2(r, s, a); required {
+		if _, required := e.requiresAAL2(r, s, a); required {
 			// If AAL is not satisfied, we omit the identity to preserve the user's privacy in case of a phishing attack.
 			response.Session.Identity = nil
 		}
@@ -189,7 +186,7 @@ func (e *HookExecutor) PostLoginHook(w http.ResponseWriter, r *http.Request, g n
 		s.Token = ""
 
 		response := &APIFlowResponse{Session: s}
-		if required, _ := e.requiresAAL2(r, s, a); required {
+		if _, required := e.requiresAAL2(r, s, a); required {
 			// If AAL is not satisfied, we omit the identity to preserve the user's privacy in case of a phishing attack.
 			response.Session.Identity = nil
 		}
@@ -198,24 +195,12 @@ func (e *HookExecutor) PostLoginHook(w http.ResponseWriter, r *http.Request, g n
 	}
 
 	// If we detect that whoami would require a higher AAL, we redirect!
-	if _, err := e.requiresAAL2(r, s, a); err != nil {
-		if aalErr := new(session.ErrAALNotSatisfied); errors.As(err, &aalErr) {
-			http.Redirect(w, r, aalErr.RedirectTo, http.StatusSeeOther)
-			return nil
-		}
-		return errors.WithStack(err)
+	if aalErr, required := e.requiresAAL2(r, s, a); required {
+		http.Redirect(w, r, aalErr.RedirectTo, http.StatusSeeOther)
+		return nil
 	}
 
-	finalReturnTo := returnTo.String()
-	if a.OAuth2LoginChallenge.Valid {
-		rt, err := e.d.Hydra().AcceptLoginRequest(r.Context(), a.OAuth2LoginChallenge.UUID, i.ID.String(), s.AMR)
-		if err != nil {
-			return err
-		}
-		finalReturnTo = rt
-	}
-
-	x.ContentNegotiationRedirection(w, r, s.Declassify(), e.d.Writer(), finalReturnTo)
+	x.ContentNegotiationRedirection(w, r, s.Declassify(), e.d.Writer(), returnTo.String())
 	return nil
 }
 

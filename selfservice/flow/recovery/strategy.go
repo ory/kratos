@@ -4,17 +4,15 @@ import (
 	"context"
 	"net/http"
 
-	"github.com/pkg/errors"
-
-	"github.com/ory/herodot"
 	"github.com/ory/kratos/ui/node"
+
+	"github.com/pkg/errors"
 
 	"github.com/ory/kratos/x"
 )
 
 const (
 	StrategyRecoveryLinkName = "link"
-	StrategyRecoveryCodeName = "code"
 )
 
 type (
@@ -34,7 +32,6 @@ type (
 	StrategyProvider interface {
 		AllRecoveryStrategies() Strategies
 		RecoveryStrategies(ctx context.Context) Strategies
-		GetActiveRecoveryStrategy(ctx context.Context) (Strategy, error)
 	}
 )
 
@@ -47,7 +44,7 @@ func (s Strategies) Strategy(id string) (Strategy, error) {
 		}
 	}
 
-	return nil, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("unable to find strategy for %s have %v", id, ids))
+	return nil, errors.Errorf(`unable to find strategy for %s have %v`, id, ids)
 }
 
 func (s Strategies) MustStrategy(id string) Strategy {

@@ -1,19 +1,6 @@
 {
   "components": {
     "responses": {
-      "adminListSessions": {
-        "content": {
-          "application/json": {
-            "schema": {
-              "items": {
-                "$ref": "#/components/schemas/session"
-              },
-              "type": "array"
-            }
-          }
-        },
-        "description": "Session List Response\n\nThe response given when listing sessions in an administrative context."
-      },
       "emptyResponse": {
         "description": "Empty responses are sent when, for example, resources are deleted. The HTTP status code for empty responses is typically 201."
       }
@@ -62,279 +49,11 @@
         "title": "JSONRawMessage represents a json.RawMessage that works well with JSON, SQL, and Swagger.",
         "type": "object"
       },
-      "LoginRequest": {
-        "description": "LoginRequest struct for LoginRequest",
-        "properties": {
-          "challenge": {
-            "description": "ID is the identifier (\\\"login challenge\\\") of the login request. It is used to identify the session.",
-            "type": "string"
-          },
-          "client": {
-            "$ref": "#/components/schemas/OAuth2Client"
-          },
-          "oidc_context": {
-            "$ref": "#/components/schemas/OpenIDConnectContext"
-          },
-          "request_url": {
-            "description": "RequestURL is the original OAuth 2.0 Authorization URL requested by the OAuth 2.0 client. It is the URL which initiates the OAuth 2.0 Authorization Code or OAuth 2.0 Implicit flow. This URL is typically not needed, but might come in handy if you want to deal with additional request parameters.",
-            "type": "string"
-          },
-          "requested_access_token_audience": {
-            "items": {
-              "type": "string"
-            },
-            "type": "array"
-          },
-          "requested_scope": {
-            "items": {
-              "type": "string"
-            },
-            "type": "array"
-          },
-          "session_id": {
-            "description": "SessionID is the login session ID. If the user-agent reuses a login session (via cookie / remember flag) this ID will remain the same. If the user-agent did not have an existing authentication session (e.g. remember is false) this will be a new random value. This value is used as the \\\"sid\\\" parameter in the ID Token and in OIDC Front-/Back- channel logout. It's value can generally be used to associate consecutive login requests by a certain user.",
-            "type": "string"
-          },
-          "skip": {
-            "description": "Skip, if true, implies that the client has requested the same scopes from the same user previously. If true, you can skip asking the user to grant the requested scopes, and simply forward the user to the redirect URL.  This feature allows you to update / set session information.",
-            "type": "boolean"
-          },
-          "subject": {
-            "description": "Subject is the user ID of the end-user that authenticated. Now, that end user needs to grant or deny the scope requested by the OAuth 2.0 client. If this value is set and `skip` is true, you MUST include this subject type when accepting the login request, or the request will fail.",
-            "type": "string"
-          }
-        },
-        "type": "object"
-      },
-      "NullBool": {
-        "nullable": true,
-        "type": "boolean"
-      },
-      "NullInt": {
-        "nullable": true,
-        "type": "integer"
-      },
-      "NullString": {
-        "nullable": true,
-        "type": "string"
-      },
-      "NullTime": {
-        "format": "date-time",
-        "nullable": true,
-        "type": "string"
-      },
-      "NullUUID": {
-        "format": "uuid4",
-        "nullable": true,
-        "type": "string"
-      },
-      "OAuth2Client": {
-        "description": "OAuth2Client struct for OAuth2Client",
-        "properties": {
-          "allowed_cors_origins": {
-            "items": {
-              "type": "string"
-            },
-            "type": "array"
-          },
-          "audience": {
-            "items": {
-              "type": "string"
-            },
-            "type": "array"
-          },
-          "backchannel_logout_session_required": {
-            "description": "Boolean value specifying whether the RP requires that a sid (session ID) Claim be included in the Logout Token to identify the RP session with the OP when the backchannel_logout_uri is used. If omitted, the default value is false.",
-            "type": "boolean"
-          },
-          "backchannel_logout_uri": {
-            "description": "RP URL that will cause the RP to log itself out when sent a Logout Token by the OP.",
-            "type": "string"
-          },
-          "client_id": {
-            "description": "ID  is the id for this client.",
-            "type": "string"
-          },
-          "client_name": {
-            "description": "Name is the human-readable string name of the client to be presented to the end-user during authorization.",
-            "type": "string"
-          },
-          "client_secret": {
-            "description": "Secret is the client's secret. The secret will be included in the create request as cleartext, and then never again. The secret is stored using BCrypt so it is impossible to recover it. Tell your users that they need to write the secret down as it will not be made available again.",
-            "type": "string"
-          },
-          "client_secret_expires_at": {
-            "description": "SecretExpiresAt is an integer holding the time at which the client secret will expire or 0 if it will not expire. The time is represented as the number of seconds from 1970-01-01T00:00:00Z as measured in UTC until the date/time of expiration.  This feature is currently not supported and it's value will always be set to 0.",
-            "format": "int64",
-            "type": "integer"
-          },
-          "client_uri": {
-            "description": "ClientURI is an URL string of a web page providing information about the client. If present, the server SHOULD display this URL to the end-user in a clickable fashion.",
-            "type": "string"
-          },
-          "contacts": {
-            "items": {
-              "type": "string"
-            },
-            "type": "array"
-          },
-          "created_at": {
-            "description": "CreatedAt returns the timestamp of the client's creation.",
-            "format": "date-time",
-            "type": "string"
-          },
-          "frontchannel_logout_session_required": {
-            "description": "Boolean value specifying whether the RP requires that iss (issuer) and sid (session ID) query parameters be included to identify the RP session with the OP when the frontchannel_logout_uri is used. If omitted, the default value is false.",
-            "type": "boolean"
-          },
-          "frontchannel_logout_uri": {
-            "description": "RP URL that will cause the RP to log itself out when rendered in an iframe by the OP. An iss (issuer) query parameter and a sid (session ID) query parameter MAY be included by the OP to enable the RP to validate the request and to determine which of the potentially multiple sessions is to be logged out; if either is included, both MUST be.",
-            "type": "string"
-          },
-          "grant_types": {
-            "items": {
-              "type": "string"
-            },
-            "type": "array"
-          },
-          "jwks": {
-            "additionalProperties": {},
-            "type": "object"
-          },
-          "jwks_uri": {
-            "description": "URL for the Client's JSON Web Key Set [JWK] document. If the Client signs requests to the Server, it contains the signing key(s) the Server uses to validate signatures from the Client. The JWK Set MAY also contain the Client's encryption keys(s), which are used by the Server to encrypt responses to the Client. When both signing and encryption keys are made available, a use (Key Use) parameter value is REQUIRED for all keys in the referenced JWK Set to indicate each key's intended usage. Although some algorithms allow the same key to be used for both signatures and encryption, doing so is NOT RECOMMENDED, as it is less secure. The JWK x5c parameter MAY be used to provide X.509 representations of keys provided. When used, the bare key values MUST still be present and MUST match those in the certificate.",
-            "type": "string"
-          },
-          "logo_uri": {
-            "description": "LogoURI is an URL string that references a logo for the client.",
-            "type": "string"
-          },
-          "metadata": {
-            "additionalProperties": {},
-            "type": "object"
-          },
-          "owner": {
-            "description": "Owner is a string identifying the owner of the OAuth 2.0 Client.",
-            "type": "string"
-          },
-          "policy_uri": {
-            "description": "PolicyURI is a URL string that points to a human-readable privacy policy document that describes how the deployment organization collects, uses, retains, and discloses personal data.",
-            "type": "string"
-          },
-          "post_logout_redirect_uris": {
-            "items": {
-              "type": "string"
-            },
-            "type": "array"
-          },
-          "redirect_uris": {
-            "items": {
-              "type": "string"
-            },
-            "type": "array"
-          },
-          "registration_access_token": {
-            "description": "RegistrationAccessToken can be used to update, get, or delete the OAuth2 Client.",
-            "type": "string"
-          },
-          "registration_client_uri": {
-            "description": "RegistrationClientURI is the URL used to update, get, or delete the OAuth2 Client.",
-            "type": "string"
-          },
-          "request_object_signing_alg": {
-            "description": "JWS [JWS] alg algorithm [JWA] that MUST be used for signing Request Objects sent to the OP. All Request Objects from this Client MUST be rejected, if not signed with this algorithm.",
-            "type": "string"
-          },
-          "request_uris": {
-            "items": {
-              "type": "string"
-            },
-            "type": "array"
-          },
-          "response_types": {
-            "items": {
-              "type": "string"
-            },
-            "type": "array"
-          },
-          "scope": {
-            "description": "Scope is a string containing a space-separated list of scope values (as described in Section 3.3 of OAuth 2.0 [RFC6749]) that the client can use when requesting access tokens.",
-            "type": "string"
-          },
-          "sector_identifier_uri": {
-            "description": "URL using the https scheme to be used in calculating Pseudonymous Identifiers by the OP. The URL references a file with a single JSON array of redirect_uri values.",
-            "type": "string"
-          },
-          "subject_type": {
-            "description": "SubjectType requested for responses to this Client. The subject_types_supported Discovery parameter contains a list of the supported subject_type values for this server. Valid types include `pairwise` and `public`.",
-            "type": "string"
-          },
-          "token_endpoint_auth_method": {
-            "description": "Requested Client Authentication method for the Token Endpoint. The options are client_secret_post, client_secret_basic, private_key_jwt, and none.",
-            "type": "string"
-          },
-          "token_endpoint_auth_signing_alg": {
-            "description": "Requested Client Authentication signing algorithm for the Token Endpoint.",
-            "type": "string"
-          },
-          "tos_uri": {
-            "description": "TermsOfServiceURI is a URL string that points to a human-readable terms of service document for the client that describes a contractual relationship between the end-user and the client that the end-user accepts when authorizing the client.",
-            "type": "string"
-          },
-          "updated_at": {
-            "description": "UpdatedAt returns the timestamp of the last update.",
-            "format": "date-time",
-            "type": "string"
-          },
-          "userinfo_signed_response_alg": {
-            "description": "JWS alg algorithm [JWA] REQUIRED for signing UserInfo Responses. If this is specified, the response will be JWT [JWT] serialized, and signed using JWS. The default, if omitted, is for the UserInfo Response to return the Claims as a UTF-8 encoded JSON object using the application/json content-type.",
-            "type": "string"
-          }
-        },
-        "type": "object"
-      },
-      "OpenIDConnectContext": {
-        "description": "OpenIDConnectContext struct for OpenIDConnectContext",
-        "properties": {
-          "acr_values": {
-            "description": "ACRValues is the Authentication AuthorizationContext Class Reference requested in the OAuth 2.0 Authorization request. It is a parameter defined by OpenID Connect and expresses which level of authentication (e.g. 2FA) is required.  OpenID Connect defines it as follows: \u003e Requested Authentication AuthorizationContext Class Reference values. Space-separated string that specifies the acr values that the Authorization Server is being requested to use for processing this Authentication Request, with the values appearing in order of preference. The Authentication AuthorizationContext Class satisfied by the authentication performed is returned as the acr Claim Value, as specified in Section 2. The acr Claim is requested as a Voluntary Claim by this parameter.",
-            "items": {
-              "type": "string"
-            },
-            "type": "array"
-          },
-          "display": {
-            "description": "Display is a string value that specifies how the Authorization Server displays the authentication and consent user interface pages to the End-User. The defined values are: page: The Authorization Server SHOULD display the authentication and consent UI consistent with a full User Agent page view. If the display parameter is not specified, this is the default display mode. popup: The Authorization Server SHOULD display the authentication and consent UI consistent with a popup User Agent window. The popup User Agent window should be of an appropriate size for a login-focused dialog and should not obscure the entire window that it is popping up over. touch: The Authorization Server SHOULD display the authentication and consent UI consistent with a device that leverages a touch interface. wap: The Authorization Server SHOULD display the authentication and consent UI consistent with a \\\"feature phone\\\" type display.  The Authorization Server MAY also attempt to detect the capabilities of the User Agent and present an appropriate display.",
-            "type": "string"
-          },
-          "id_token_hint_claims": {
-            "additionalProperties": true,
-            "description": "IDTokenHintClaims are the claims of the ID Token previously issued by the Authorization Server being passed as a hint about the End-User's current or past authenticated session with the Client.",
-            "type": "object"
-          },
-          "login_hint": {
-            "description": "LoginHint hints about the login identifier the End-User might use to log in (if necessary). This hint can be used by an RP if it first asks the End-User for their e-mail address (or other identifier) and then wants to pass that value as a hint to the discovered authorization service. This value MAY also be a phone number in the format specified for the phone_number Claim. The use of this parameter is optional.",
-            "type": "string"
-          },
-          "ui_locales": {
-            "description": "UILocales is the End-User'id preferred languages and scripts for the user interface, represented as a space-separated list of BCP47 [RFC5646] language tag values, ordered by preference. For instance, the value \\\"fr-CA fr en\\\" represents a preference for French as spoken in Canada, then French (without a region designation), followed by English (without a region designation). An error SHOULD NOT result if some or all of the requested locales are not supported by the OpenID Provider.",
-            "items": {
-              "type": "string"
-            },
-            "type": "array"
-          }
-        },
-        "type": "object"
-      },
       "RecoveryAddressType": {
         "title": "RecoveryAddressType must not exceed 16 characters as that is the limitation in the SQL Schema.",
         "type": "string"
       },
       "TemplateType": {
-        "type": "string"
-      },
-      "Time": {
-        "format": "date-time",
         "type": "string"
       },
       "UUID": {
@@ -445,28 +164,10 @@
         },
         "type": "object"
       },
-      "adminCreateSelfServiceRecoveryCodeBody": {
-        "properties": {
-          "expires_in": {
-            "description": "Code Expires In\n\nThe recovery code will expire after that amount of time has passed. Defaults to the configuration value of\n`selfservice.methods.code.config.lifespan`.",
-            "pattern": "^([0-9]+(ns|us|ms|s|m|h))*$",
-            "type": "string"
-          },
-          "identity_id": {
-            "description": "Identity to Recover\n\nThe identity's ID you wish to recover.",
-            "format": "uuid",
-            "type": "string"
-          }
-        },
-        "required": [
-          "identity_id"
-        ],
-        "type": "object"
-      },
       "adminCreateSelfServiceRecoveryLinkBody": {
         "properties": {
           "expires_in": {
-            "description": "Link Expires In\n\nThe recovery link will expire after that amount of time has passed. Defaults to the configuration value of\n`selfservice.methods.code.config.lifespan`.",
+            "description": "Link Expires In\n\nThe recovery link will expire at that point in time. Defaults to the configuration value of\n`selfservice.flows.recovery.request_lifespan`.",
             "pattern": "^[0-9]+(ns|us|ms|s|m|h)$",
             "type": "string"
           },
@@ -1007,18 +708,8 @@
         "title": "Is sent when a privileged session is required to perform the settings update.",
         "type": "object"
       },
-      "nullDuration": {
-        "nullable": true,
-        "pattern": "^[0-9]+(ns|us|ms|s|m|h)$",
-        "type": "string"
-      },
-      "nullInt64": {
-        "nullable": true,
-        "type": "integer"
-      },
       "nullJsonRawMessage": {
-        "description": "NullJSONRawMessage represents a json.RawMessage that works well with JSON, SQL, and Swagger and is NULLable-",
-        "nullable": true
+        "description": "NullJSONRawMessage represents a json.RawMessage that works well with JSON, SQL, and Swagger and is NULLable-"
       },
       "nullTime": {
         "format": "date-time",
@@ -1183,11 +874,6 @@
             "description": "Further error details",
             "type": "object"
           },
-          "expired_at": {
-            "description": "When the flow has expired",
-            "format": "date-time",
-            "type": "string"
-          },
           "id": {
             "description": "The error ID\n\nUseful when trying to identify various errors in application logic.",
             "type": "string"
@@ -1257,12 +943,6 @@
             "format": "date-time",
             "type": "string"
           },
-          "oauth2_login_challenge": {
-            "$ref": "#/components/schemas/NullUUID"
-          },
-          "oauth2_login_request": {
-            "$ref": "#/components/schemas/LoginRequest"
-          },
           "refresh": {
             "description": "Refresh stores whether this login flow should enforce re-authentication.",
             "type": "boolean"
@@ -1318,33 +998,11 @@
         ],
         "type": "object"
       },
-      "selfServiceRecoveryCode": {
-        "properties": {
-          "expires_at": {
-            "description": "Expires At is the timestamp of when the recovery flow expires\n\nThe timestamp when the recovery link expires.",
-            "format": "date-time",
-            "type": "string"
-          },
-          "recovery_code": {
-            "description": "RecoveryCode is the code that can be used to recover the account",
-            "type": "string"
-          },
-          "recovery_link": {
-            "description": "RecoveryLink with flow\n\nThis link opens the recovery UI with an empty `code` field.",
-            "type": "string"
-          }
-        },
-        "required": [
-          "recovery_link",
-          "recovery_code"
-        ],
-        "type": "object"
-      },
       "selfServiceRecoveryFlow": {
         "description": "This request is used when an identity wants to recover their account.\n\nWe recommend reading the [Account Recovery Documentation](../self-service/flows/password-reset-account-recovery)",
         "properties": {
           "active": {
-            "description": "Active, if set, contains the recovery method that is being used. It is initially\nnot set.",
+            "description": "Active, if set, contains the registration method that is being used. It is initially\nnot set.",
             "type": "string"
           },
           "expires_at": {
@@ -1438,12 +1096,6 @@
             "description": "IssuedAt is the time (UTC) when the flow occurred.",
             "format": "date-time",
             "type": "string"
-          },
-          "oauth2_login_challenge": {
-            "$ref": "#/components/schemas/NullUUID"
-          },
-          "oauth2_login_request": {
-            "$ref": "#/components/schemas/LoginRequest"
           },
           "request_url": {
             "description": "RequestURL is the initial URL that was requested from Ory Kratos. It can be used\nto forward information contained in the URL's path or query for example.",
@@ -1612,13 +1264,6 @@
           "authenticator_assurance_level": {
             "$ref": "#/components/schemas/authenticatorAssuranceLevel"
           },
-          "devices": {
-            "description": "Devices has history of all endpoints where the session was used",
-            "items": {
-              "$ref": "#/components/schemas/sessionDevice"
-            },
-            "type": "array"
-          },
           "expires_at": {
             "description": "The Session Expiry\n\nWhen this session expires at.",
             "format": "date-time",
@@ -1658,7 +1303,6 @@
           "method": {
             "enum": [
               "link_recovery",
-              "code_recovery",
               "password",
               "totp",
               "oidc",
@@ -1682,29 +1326,12 @@
         "type": "array"
       },
       "sessionDevice": {
-        "description": "Device corresponding to a Session",
         "properties": {
-          "id": {
-            "description": "Device record ID",
-            "format": "uuid",
-            "type": "string"
-          },
-          "ip_address": {
-            "description": "IPAddress of the client",
-            "type": "string"
-          },
-          "location": {
-            "description": "Geo Location corresponding to the IP Address",
-            "type": "string"
-          },
           "user_agent": {
-            "description": "UserAgent of the client",
+            "description": "UserAgent of this device",
             "type": "string"
           }
         },
-        "required": [
-          "id"
-        ],
         "type": "object"
       },
       "sessionList": {
@@ -1922,7 +1549,6 @@
       "submitSelfServiceRecoveryFlowBody": {
         "discriminator": {
           "mapping": {
-            "code": "#/components/schemas/submitSelfServiceRecoveryFlowWithCodeMethodBody",
             "link": "#/components/schemas/submitSelfServiceRecoveryFlowWithLinkMethodBody"
           },
           "propertyName": "method"
@@ -1930,35 +1556,8 @@
         "oneOf": [
           {
             "$ref": "#/components/schemas/submitSelfServiceRecoveryFlowWithLinkMethodBody"
-          },
-          {
-            "$ref": "#/components/schemas/submitSelfServiceRecoveryFlowWithCodeMethodBody"
           }
         ]
-      },
-      "submitSelfServiceRecoveryFlowWithCodeMethodBody": {
-        "properties": {
-          "code": {
-            "description": "Code from recovery email\n\nSent to the user once a recovery has been initiated and is used to prove\nthat the user is in possession of the email",
-            "type": "string"
-          },
-          "csrf_token": {
-            "description": "Sending the anti-csrf token is only required for browser login flows.",
-            "type": "string"
-          },
-          "email": {
-            "description": "Email to Recover\n\nNeeds to be set when initiating the flow. If the email is a registered\nrecovery email, a recovery link will be sent. If the email is not known,\na email with details on what happened will be sent instead.\n\nformat: email",
-            "type": "string"
-          },
-          "method": {
-            "description": "Method supports `link` and `code` only right now.",
-            "type": "string"
-          }
-        },
-        "required": [
-          "method"
-        ],
-        "type": "object"
       },
       "submitSelfServiceRecoveryFlowWithLinkMethodBody": {
         "properties": {
@@ -2410,20 +2009,19 @@
             "$ref": "#/components/schemas/uiNodeAttributes"
           },
           "group": {
-            "description": "Group specifies which group (e.g. password authenticator) this node belongs to.\ndefault DefaultGroup\npassword PasswordGroup\noidc OpenIDConnectGroup\nprofile ProfileGroup\nlink LinkGroup\ncode CodeGroup\ntotp TOTPGroup\nlookup_secret LookupGroup\nwebauthn WebAuthnGroup",
+            "description": "Group specifies which group (e.g. password authenticator) this node belongs to.\ndefault DefaultGroup\npassword PasswordGroup\noidc OpenIDConnectGroup\nprofile ProfileGroup\nlink LinkGroup\ntotp TOTPGroup\nlookup_secret LookupGroup\nwebauthn WebAuthnGroup",
             "enum": [
               "default",
               "password",
               "oidc",
               "profile",
               "link",
-              "code",
               "totp",
               "lookup_secret",
               "webauthn"
             ],
             "type": "string",
-            "x-go-enum-desc": "default DefaultGroup\npassword PasswordGroup\noidc OpenIDConnectGroup\nprofile ProfileGroup\nlink LinkGroup\ncode CodeGroup\ntotp TOTPGroup\nlookup_secret LookupGroup\nwebauthn WebAuthnGroup"
+            "x-go-enum-desc": "default DefaultGroup\npassword PasswordGroup\noidc OpenIDConnectGroup\nprofile ProfileGroup\nlink LinkGroup\ntotp TOTPGroup\nlookup_secret LookupGroup\nwebauthn WebAuthnGroup"
           },
           "messages": {
             "$ref": "#/components/schemas/uiTexts"
@@ -2842,7 +2440,7 @@
             "description": "webAuthnJavaScript"
           }
         },
-        "summary": "Get WebAuthn JavaScript",
+        "summary": "# Get WebAuthn JavaScript",
         "tags": [
           "v0alpha2"
         ]
@@ -2925,7 +2523,7 @@
             "description": "jsonError"
           }
         },
-        "summary": "List Messages",
+        "summary": "# List Messages",
         "tags": [
           "v0alpha2"
         ]
@@ -2987,7 +2585,7 @@
             "oryAccessToken": []
           }
         ],
-        "summary": "List Identities",
+        "summary": "# List Identities",
         "tags": [
           "v0alpha2"
         ]
@@ -3052,7 +2650,7 @@
             "oryAccessToken": []
           }
         ],
-        "summary": "Create an Identity",
+        "summary": "# Create an Identity",
         "tags": [
           "v0alpha2"
         ]
@@ -3103,7 +2701,7 @@
             "oryAccessToken": []
           }
         ],
-        "summary": "Delete an Identity",
+        "summary": "# Delete an Identity",
         "tags": [
           "v0alpha2"
         ]
@@ -3170,13 +2768,13 @@
             "oryAccessToken": []
           }
         ],
-        "summary": "Get an Identity",
+        "summary": "# Get an Identity",
         "tags": [
           "v0alpha2"
         ]
       },
       "patch": {
-        "description": "Partially updates an Identity's field using [JSON Patch](https://jsonpatch.com/)\n\nNOTE: The fields `id`, `stateChangedAt` and `credentials` are not updateable.\n\nLearn how identities work in [Ory Kratos' User And Identity Model Documentation](https://www.ory.sh/docs/next/kratos/concepts/identity-user-model).",
+        "description": "NOTE: The fields `id`, `stateChangedAt` and `credentials` are not updateable.\n\nLearn how identities work in [Ory Kratos' User And Identity Model Documentation](https://www.ory.sh/docs/next/kratos/concepts/identity-user-model).",
         "operationId": "adminPatchIdentity",
         "parameters": [
           {
@@ -3256,7 +2854,7 @@
             "oryAccessToken": []
           }
         ],
-        "summary": "Patch an Identity",
+        "summary": "Partially updates an Identity's field using [JSON Patch](https://jsonpatch.com/)",
         "tags": [
           "v0alpha2"
         ]
@@ -3342,7 +2940,7 @@
             "oryAccessToken": []
           }
         ],
-        "summary": "Update an Identity",
+        "summary": "# Update an Identity",
         "tags": [
           "v0alpha2"
         ]
@@ -3350,7 +2948,7 @@
     },
     "/admin/identities/{id}/sessions": {
       "delete": {
-        "description": "Calling this endpoint irrecoverably and permanently deletes and invalidates all sessions that belong to the given Identity.\n\nThis endpoint is useful for:\n\nTo forcefully logout Identity from all devices and sessions",
+        "description": "This endpoint is useful for:\n\nTo forcefully logout Identity from all devices and sessions",
         "operationId": "adminDeleteIdentitySessions",
         "parameters": [
           {
@@ -3413,13 +3011,13 @@
             "oryAccessToken": []
           }
         ],
-        "summary": "Delete \u0026 Invalidate an Identity's Sessions",
+        "summary": "Calling this endpoint irrecoverably and permanently deletes and invalidates all sessions that belong to the given Identity.",
         "tags": [
           "v0alpha2"
         ]
       },
       "get": {
-        "description": "This endpoint returns all sessions that belong to the given Identity.\n\nThis endpoint is useful for:\n\nListing all sessions that belong to an Identity in an administrative context.",
+        "description": "This endpoint is useful for:\n\nListing all sessions that belong to an Identity in an administrative context.",
         "operationId": "adminListIdentitySessions",
         "parameters": [
           {
@@ -3520,69 +3118,7 @@
             "oryAccessToken": []
           }
         ],
-        "summary": "List an Identity's Sessions",
-        "tags": [
-          "v0alpha2"
-        ]
-      }
-    },
-    "/admin/recovery/code": {
-      "post": {
-        "description": "This endpoint creates a recovery code which should be given to the user in order for them to recover\n(or activate) their account.",
-        "operationId": "adminCreateSelfServiceRecoveryCode",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/adminCreateSelfServiceRecoveryCodeBody"
-              }
-            }
-          },
-          "x-originalParamName": "Body"
-        },
-        "responses": {
-          "201": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/selfServiceRecoveryCode"
-                }
-              }
-            },
-            "description": "selfServiceRecoveryCode"
-          },
-          "400": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/jsonError"
-                }
-              }
-            },
-            "description": "jsonError"
-          },
-          "404": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/jsonError"
-                }
-              }
-            },
-            "description": "jsonError"
-          },
-          "500": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/jsonError"
-                }
-              }
-            },
-            "description": "jsonError"
-          }
-        },
-        "summary": "Create a Recovery Code",
+        "summary": "This endpoint returns all sessions that belong to the given Identity.",
         "tags": [
           "v0alpha2"
         ]
@@ -3644,104 +3180,7 @@
             "description": "jsonError"
           }
         },
-        "summary": "Create a Recovery Link",
-        "tags": [
-          "v0alpha2"
-        ]
-      }
-    },
-    "/admin/sessions": {
-      "get": {
-        "description": "This endpoint is useful for:\n\nListing all sessions that exist in an administrative context.",
-        "operationId": "adminListSessions",
-        "parameters": [
-          {
-            "description": "Items per Page\n\nThis is the number of items per page to return.\nFor details on pagination please head over to the [pagination documentation](https://www.ory.sh/docs/ecosystem/api-design#pagination).",
-            "in": "query",
-            "name": "page_size",
-            "schema": {
-              "default": 250,
-              "format": "int64",
-              "maximum": 1000,
-              "minimum": 1,
-              "type": "integer"
-            }
-          },
-          {
-            "description": "Next Page Token\n\nThe next page token.\nFor details on pagination please head over to the [pagination documentation](https://www.ory.sh/docs/ecosystem/api-design#pagination).",
-            "in": "query",
-            "name": "page_token",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "description": "Active is a boolean flag that filters out sessions based on the state. If no value is provided, all sessions are returned.",
-            "in": "query",
-            "name": "active",
-            "schema": {
-              "type": "boolean"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/sessionList"
-                }
-              }
-            },
-            "description": "sessionList"
-          },
-          "400": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/jsonError"
-                }
-              }
-            },
-            "description": "jsonError"
-          },
-          "401": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/jsonError"
-                }
-              }
-            },
-            "description": "jsonError"
-          },
-          "404": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/jsonError"
-                }
-              }
-            },
-            "description": "jsonError"
-          },
-          "500": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/jsonError"
-                }
-              }
-            },
-            "description": "jsonError"
-          }
-        },
-        "security": [
-          {
-            "oryAccessToken": []
-          }
-        ],
-        "summary": "This endpoint returns all sessions that exist.",
+        "summary": "# Create a Recovery Link",
         "tags": [
           "v0alpha2"
         ]
@@ -3749,7 +3188,7 @@
     },
     "/admin/sessions/{id}/extend": {
       "patch": {
-        "description": "Calling this endpoint extends the given session ID. If `session.earliest_possible_extend` is set it\nwill only extend the session after the specified time has passed.\n\nRetrieve the session ID from the `/sessions/whoami` endpoint / `toSession` SDK method.",
+        "description": "Retrieve the session ID from the `/sessions/whoami` endpoint / `toSession` SDK method.",
         "operationId": "adminExtendSession",
         "parameters": [
           {
@@ -3809,7 +3248,7 @@
             "oryAccessToken": []
           }
         ],
-        "summary": "Extend a Session",
+        "summary": "Calling this endpoint extends the given session ID. If `session.earliest_possible_extend` is set it\nwill only extend the session after the specified time has passed.",
         "tags": [
           "v0alpha2"
         ]
@@ -4074,7 +3513,7 @@
             "description": "jsonError"
           }
         },
-        "summary": "Get Self-Service Errors",
+        "summary": "# Get Self-Service Errors",
         "tags": [
           "v0alpha2"
         ]
@@ -4182,7 +3621,7 @@
             "description": "jsonError"
           }
         },
-        "summary": "Submit a Login Flow",
+        "summary": "# Submit a Login Flow",
         "tags": [
           "v0alpha2"
         ]
@@ -4258,7 +3697,7 @@
     },
     "/self-service/login/browser": {
       "get": {
-        "description": "This endpoint initializes a browser-based user login flow. This endpoint will set the appropriate\ncookies and anti-CSRF measures required for browser-based flows.\n\nIf this endpoint is opened as a link in the browser, it will be redirected to\n`selfservice.flows.login.ui_url` with the flow ID set as the query parameter `?flow=`. If a valid user session\nexists already, the browser will be redirected to `urls.default_redirect_url` unless the query parameter\n`?refresh=true` was set.\n\nIf this endpoint is called via an AJAX request, the response contains the flow without a redirect. In the\ncase of an error, the `error.id` of the JSON response body can be one of:\n\n`session_already_available`: The user is already signed in.\n`session_aal1_required`: Multi-factor auth (e.g. 2fa) was requested but the user has no session yet.\n`security_csrf_violation`: Unable to fetch the flow because a CSRF violation occurred.\n`security_identity_mismatch`: The requested `?return_to` address is not allowed to be used. Adjust this in the configuration!\n\nThe optional query parameter login_challenge is set when using Kratos with\nHydra in an OAuth2 flow. See the oauth2_provider.url configuration\noption.\n\nThis endpoint is NOT INTENDED for clients that do not have a browser (Chrome, Firefox, ...) as cookies are needed.\n\nMore information can be found at [Ory Kratos User Login](https://www.ory.sh/docs/kratos/self-service/flows/user-login) and [User Registration Documentation](https://www.ory.sh/docs/kratos/self-service/flows/user-registration).",
+        "description": "This endpoint initializes a browser-based user login flow. This endpoint will set the appropriate\ncookies and anti-CSRF measures required for browser-based flows.\n\nIf this endpoint is opened as a link in the browser, it will be redirected to\n`selfservice.flows.login.ui_url` with the flow ID set as the query parameter `?flow=`. If a valid user session\nexists already, the browser will be redirected to `urls.default_redirect_url` unless the query parameter\n`?refresh=true` was set.\n\nIf this endpoint is called via an AJAX request, the response contains the flow without a redirect. In the\ncase of an error, the `error.id` of the JSON response body can be one of:\n\n`session_already_available`: The user is already signed in.\n`session_aal1_required`: Multi-factor auth (e.g. 2fa) was requested but the user has no session yet.\n`security_csrf_violation`: Unable to fetch the flow because a CSRF violation occurred.\n`security_identity_mismatch`: The requested `?return_to` address is not allowed to be used. Adjust this in the configuration!\n\nThis endpoint is NOT INTENDED for clients that do not have a browser (Chrome, Firefox, ...) as cookies are needed.\n\nMore information can be found at [Ory Kratos User Login](https://www.ory.sh/docs/kratos/self-service/flows/user-login) and [User Registration Documentation](https://www.ory.sh/docs/kratos/self-service/flows/user-registration).",
         "operationId": "initializeSelfServiceLoginFlowForBrowsers",
         "parameters": [
           {
@@ -4289,14 +3728,6 @@
             "description": "HTTP Cookies\n\nWhen using the SDK in a browser app, on the server side you must include the HTTP Cookie Header\nsent by the client to your server here. This ensures that CSRF and session cookies are respected.",
             "in": "header",
             "name": "Cookie",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "description": "An optional Hydra login challenge. If present, Kratos will cooperate with\nOry Hydra to act as an OAuth2 identity provider.\n\nThe value for this parameter comes from `login_challenge` URL Query parameter sent to your\napplication (e.g. `/login?login_challenge=abcde`).",
-            "in": "query",
-            "name": "login_challenge",
             "schema": {
               "type": "string"
             }
@@ -4337,7 +3768,7 @@
             "description": "jsonError"
           }
         },
-        "summary": "Initialize Login Flow for Browsers",
+        "summary": "# Initialize Login Flow for Browsers",
         "tags": [
           "v0alpha2"
         ]
@@ -4418,7 +3849,7 @@
             "description": "jsonError"
           }
         },
-        "summary": "Get Login Flow",
+        "summary": "# Get Login Flow",
         "tags": [
           "v0alpha2"
         ]
@@ -4464,7 +3895,7 @@
             "description": "jsonError"
           }
         },
-        "summary": "Complete Self-Service Logout",
+        "summary": "# Complete Self-Service Logout",
         "tags": [
           "v0alpha2"
         ]
@@ -4562,7 +3993,7 @@
             "description": "jsonError"
           }
         },
-        "summary": "Create a Logout URL for Browsers",
+        "summary": "# Create a Logout URL for Browsers",
         "tags": [
           "v0alpha2"
         ]
@@ -4649,16 +4080,6 @@
             },
             "description": "jsonError"
           },
-          "422": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/selfServiceBrowserLocationChangeRequiredError"
-                }
-              }
-            },
-            "description": "selfServiceBrowserLocationChangeRequiredError"
-          },
           "500": {
             "content": {
               "application/json": {
@@ -4670,7 +4091,7 @@
             "description": "jsonError"
           }
         },
-        "summary": "Complete Recovery Flow",
+        "summary": "# Complete Recovery Flow",
         "tags": [
           "v0alpha2"
         ]
@@ -4767,7 +4188,7 @@
             "description": "jsonError"
           }
         },
-        "summary": "Initialize Recovery Flow for Browsers",
+        "summary": "# Initialize Recovery Flow for Browsers",
         "tags": [
           "v0alpha2"
         ]
@@ -4838,7 +4259,7 @@
             "description": "jsonError"
           }
         },
-        "summary": "Get Recovery Flow",
+        "summary": "# Get Recovery Flow",
         "tags": [
           "v0alpha2"
         ]
@@ -4938,7 +4359,7 @@
             "description": "jsonError"
           }
         },
-        "summary": "Submit a Registration Flow",
+        "summary": "# Submit a Registration Flow",
         "tags": [
           "v0alpha2"
         ]
@@ -4998,14 +4419,6 @@
             "schema": {
               "type": "string"
             }
-          },
-          {
-            "description": "Ory OAuth 2.0 Login Challenge.\n\nIf set will cooperate with Ory OAuth2 and OpenID to act as an OAuth2 server / OpenID Provider.\n\nThe value for this parameter comes from `login_challenge` URL Query parameter sent to your\napplication (e.g. `/registration?login_challenge=abcde`).\n\nThis feature is compatible with Ory Hydra when not running on the Ory Network.",
-            "in": "query",
-            "name": "login_challenge",
-            "schema": {
-              "type": "string"
-            }
           }
         ],
         "responses": {
@@ -5033,7 +4446,7 @@
             "description": "jsonError"
           }
         },
-        "summary": "Initialize Registration Flow for Browsers",
+        "summary": "# Initialize Registration Flow for Browsers",
         "tags": [
           "v0alpha2"
         ]
@@ -5114,7 +4527,7 @@
             "description": "jsonError"
           }
         },
-        "summary": "Get Registration Flow",
+        "summary": "# Get Registration Flow",
         "tags": [
           "v0alpha2"
         ]
@@ -5247,7 +4660,7 @@
             "sessionToken": []
           }
         ],
-        "summary": "Complete Settings Flow",
+        "summary": "# Complete Settings Flow",
         "tags": [
           "v0alpha2"
         ]
@@ -5382,7 +4795,7 @@
             "description": "jsonError"
           }
         },
-        "summary": "Initialize Settings Flow for Browsers",
+        "summary": "# Initialize Settings Flow for Browsers",
         "tags": [
           "v0alpha2"
         ]
@@ -5481,7 +4894,7 @@
             "description": "jsonError"
           }
         },
-        "summary": "Get Settings Flow",
+        "summary": "# Get Settings Flow",
         "tags": [
           "v0alpha2"
         ]
@@ -5579,7 +4992,7 @@
             "description": "jsonError"
           }
         },
-        "summary": "Complete Verification Flow",
+        "summary": "# Complete Verification Flow",
         "tags": [
           "v0alpha2"
         ]
@@ -5666,7 +5079,7 @@
             "description": "jsonError"
           }
         },
-        "summary": "Initialize Verification Flow for Browser Clients",
+        "summary": "# Initialize Verification Flow for Browser Clients",
         "tags": [
           "v0alpha2"
         ]
@@ -5737,7 +5150,7 @@
             "description": "jsonError"
           }
         },
-        "summary": "Get Verification Flow",
+        "summary": "# Get Verification Flow",
         "tags": [
           "v0alpha2"
         ]
@@ -5745,7 +5158,7 @@
     },
     "/sessions": {
       "delete": {
-        "description": "Calling this endpoint invalidates all except the current session that belong to the logged-in user.\nSession data are not deleted.\n\nThis endpoint is useful for:\n\nTo forcefully logout the current user from all other devices and sessions",
+        "description": "This endpoint is useful for:\n\nTo forcefully logout the current user from all other devices and sessions",
         "operationId": "revokeSessions",
         "parameters": [
           {
@@ -5817,13 +5230,13 @@
             "description": "jsonError"
           }
         },
-        "summary": "Invalidate all Other Sessions",
+        "summary": "Calling this endpoint invalidates all except the current session that belong to the logged-in user.\nSession data are not deleted.",
         "tags": [
           "v0alpha2"
         ]
       },
       "get": {
-        "description": "This endpoints returns all other active sessions that belong to the logged-in user.\nThe current session can be retrieved by calling the `/sessions/whoami` endpoint.\n\nThis endpoint is useful for:\n\nDisplaying all other sessions that belong to the logged-in user",
+        "description": "This endpoint is useful for:\n\nDisplaying all other sessions that belong to the logged-in user",
         "operationId": "listSessions",
         "parameters": [
           {
@@ -5918,7 +5331,7 @@
             "description": "jsonError"
           }
         },
-        "summary": "Get Active Sessions",
+        "summary": "This endpoints returns all other active sessions that belong to the logged-in user.\nThe current session can be retrieved by calling the `/sessions/whoami` endpoint.",
         "tags": [
           "v0alpha2"
         ]
@@ -5990,7 +5403,7 @@
             "description": "jsonError"
           }
         },
-        "summary": "Check Who the Current HTTP Session Belongs To",
+        "summary": "# Check Who the Current HTTP Session Belongs To",
         "tags": [
           "v0alpha2"
         ]
@@ -5998,7 +5411,7 @@
     },
     "/sessions/{id}": {
       "delete": {
-        "description": "Calling this endpoint invalidates the specified session. The current session cannot be revoked.\nSession data are not deleted.\n\nThis endpoint is useful for:\n\nTo forcefully logout the current user from another device or session",
+        "description": "This endpoint is useful for:\n\nTo forcefully logout the current user from another device or session",
         "operationId": "revokeSession",
         "parameters": [
           {
@@ -6046,7 +5459,7 @@
             "description": "jsonError"
           }
         },
-        "summary": "Invalidate a Session",
+        "summary": "Calling this endpoint invalidates the specified session. The current session cannot be revoked.\nSession data are not deleted.",
         "tags": [
           "v0alpha2"
         ]

@@ -5,12 +5,7 @@ import (
 	"database/sql/driver"
 	"encoding/json"
 	"fmt"
-	"net/http"
-	"strings"
 	"time"
-
-	"github.com/ory/x/httpx"
-	"github.com/ory/x/stringsx"
 
 	"github.com/pkg/errors"
 
@@ -30,40 +25,6 @@ type lifespanProvider interface {
 
 type refreshWindowProvider interface {
 	SessionRefreshMinTimeLeft(ctx context.Context) time.Duration
-}
-
-// Device corresponding to a Session
-//
-// swagger:model sessionDevice
-type Device struct {
-	// Device record ID
-	//
-	// required: true
-	ID uuid.UUID `json:"id" faker:"-" db:"id"`
-
-	// SessionID is a helper struct field for gobuffalo.pop.
-	SessionID uuid.UUID `json:"-" faker:"-" db:"session_id"`
-
-	// IPAddress of the client
-	IPAddress *string `json:"ip_address" faker:"ptr_ipv4" db:"ip_address"`
-
-	// UserAgent of the client
-	UserAgent *string `json:"user_agent" faker:"-" db:"user_agent"`
-
-	// Geo Location corresponding to the IP Address
-	Location *string `json:"location" faker:"ptr_geo_location" db:"location"`
-
-	// Time of capture
-	CreatedAt time.Time `json:"-" faker:"-" db:"created_at"`
-
-	// Last updated at
-	UpdatedAt time.Time `json:"-" faker:"-" db:"updated_at"`
-
-	NID uuid.UUID `json:"-"  faker:"-" db:"nid"`
-}
-
-func (m Device) TableName(ctx context.Context) string {
-	return "session_devices"
 }
 
 // A Session
@@ -118,9 +79,6 @@ type Session struct {
 	// required: true
 	Identity *identity.Identity `json:"identity" faker:"identity" db:"-" belongs_to:"identities" fk_id:"IdentityID"`
 
-	// Devices has history of all endpoints where the session was used
-	Devices []Device `json:"devices" faker:"-" has_many:"session_devices" fk_id:"session_id"`
-
 	// IdentityID is a helper struct field for gobuffalo.pop.
 	IdentityID uuid.UUID `json:"-" faker:"-" db:"identity_id"`
 
@@ -135,10 +93,6 @@ type Session struct {
 	// The token of this session.
 	Token string    `json:"-" db:"token"`
 	NID   uuid.UUID `json:"-"  faker:"-" db:"nid"`
-}
-
-func (s Session) PageToken() string {
-	return s.ID.String()
 }
 
 func (s Session) TableName(ctx context.Context) string {
@@ -167,7 +121,6 @@ func (s *Session) SetAuthenticatorAssuranceLevel() {
 			// be part of the AMR.
 			switch amr.Method {
 			case identity.CredentialsTypeRecoveryLink:
-			case identity.CredentialsTypeRecoveryCode:
 				isAAL1 = true
 			case identity.CredentialsTypeOIDC:
 				isAAL1 = true
@@ -195,10 +148,10 @@ func (s *Session) SetAuthenticatorAssuranceLevel() {
 	}
 }
 
-func NewActiveSession(r *http.Request, i *identity.Identity, c lifespanProvider, authenticatedAt time.Time, completedLoginFor identity.CredentialsType, completedLoginAAL identity.AuthenticatorAssuranceLevel) (*Session, error) {
+func NewActiveSession(ctx context.Context, i *identity.Identity, c lifespanProvider, authenticatedAt time.Time, completedLoginFor identity.CredentialsType, completedLoginAAL identity.AuthenticatorAssuranceLevel) (*Session, error) {
 	s := NewInactiveSession()
 	s.CompletedLoginFor(completedLoginFor, completedLoginAAL)
-	if err := s.Activate(r, i, c, authenticatedAt); err != nil {
+	if err := s.Activate(ctx, i, c, authenticatedAt); err != nil {
 		return nil, err
 	}
 	return s, nil
@@ -214,56 +167,26 @@ func NewInactiveSession() *Session {
 	}
 }
 
-func (s *Session) Activate(r *http.Request, i *identity.Identity, c lifespanProvider, authenticatedAt time.Time) error {
+func (s *Session) Activate(ctx context.Context, i *identity.Identity, c lifespanProvider, authenticatedAt time.Time) error {
 	if i != nil && !i.IsActive() {
 		return ErrIdentityDisabled.WithDetail("identity_id", i.ID)
 	}
 
 	s.Active = true
-	s.ExpiresAt = authenticatedAt.Add(c.SessionLifespan(r.Context()))
+	s.ExpiresAt = authenticatedAt.Add(c.SessionLifespan(ctx))
 	s.AuthenticatedAt = authenticatedAt
 	s.IssuedAt = authenticatedAt
 	s.Identity = i
 	s.IdentityID = i.ID
 
-	s.SaveSessionDeviceInformation(r)
 	s.SetAuthenticatorAssuranceLevel()
 	return nil
 }
 
-func (s *Session) SaveSessionDeviceInformation(r *http.Request) {
-	var device Device
-
-	device.ID = x.NewUUID()
-	device.SessionID = s.ID
-
-	agent := r.Header["User-Agent"]
-	if len(agent) > 0 {
-		device.UserAgent = stringsx.GetPointer(strings.Join(agent, " "))
-	}
-
-	if trueClientIP := r.Header.Get("True-Client-IP"); trueClientIP != "" {
-		device.IPAddress = &trueClientIP
-	} else if realClientIP := r.Header.Get("X-Real-IP"); realClientIP != "" {
-		device.IPAddress = &realClientIP
-	} else if forwardedIP := r.Header.Get("X-Forwarded-For"); forwardedIP != "" {
-		ip, _ := httpx.GetClientIPAddress(strings.Split(forwardedIP, ","), httpx.InternalIPSet)
-		device.IPAddress = &ip
-	} else {
-		device.IPAddress = &r.RemoteAddr
-	}
-
-	var clientGeoLocation []string
-
-	if r.Header.Get("Cf-Ipcity") != "" {
-		clientGeoLocation = append(clientGeoLocation, r.Header.Get("Cf-Ipcity"))
-	}
-	if r.Header.Get("Cf-Ipcountry") != "" {
-		clientGeoLocation = append(clientGeoLocation, r.Header.Get("Cf-Ipcountry"))
-	}
-	device.Location = stringsx.GetPointer(strings.Join(clientGeoLocation, ", "))
-
-	s.Devices = append(s.Devices, device)
+// swagger:model sessionDevice
+type Device struct {
+	// UserAgent of this device
+	UserAgent string `json:"user_agent"`
 }
 
 func (s *Session) Declassify() *Session {

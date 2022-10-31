@@ -41,7 +41,6 @@ import (
 	registration "github.com/ory/kratos/selfservice/flow/registration/test"
 	settings "github.com/ory/kratos/selfservice/flow/settings/test"
 	verification "github.com/ory/kratos/selfservice/flow/verification/test"
-	code "github.com/ory/kratos/selfservice/strategy/code/test"
 	link "github.com/ory/kratos/selfservice/strategy/link/test"
 	session "github.com/ory/kratos/session/test"
 	"github.com/ory/kratos/x"
@@ -255,10 +254,6 @@ func TestPersister(t *testing.T) {
 			t.Run("contract=link.TestPersister", func(t *testing.T) {
 				pop.SetLogger(pl(t))
 				link.TestPersister(ctx, conf, p)(t)
-			})
-			t.Run("contract=code.TestPersister", func(t *testing.T) {
-				pop.SetLogger(pl(t))
-				code.TestPersister(ctx, conf, p)(t)
 			})
 			t.Run("contract=continuity.TestPersister", func(t *testing.T) {
 				pop.SetLogger(pl(t))

@@ -1,7 +1,14 @@
 package serve_test
 
 import (
+	"encoding/base64"
+	"os"
+	"path/filepath"
 	"testing"
+
+	"github.com/stretchr/testify/require"
+
+	"github.com/ory/kratos/x"
 
 	"github.com/ory/kratos/internal/testhelpers"
 )
@@ -11,7 +18,19 @@ func TestServe(t *testing.T) {
 }
 
 func TestServeTLSBase64(t *testing.T) {
-	_, _, certBase64, keyBase64 := testhelpers.GenerateTLSCertificateFilesForTests(t)
+	certPath := filepath.Join(os.TempDir(), "e2e_test_cert_"+x.NewUUID().String()+".pem")
+	keyPath := filepath.Join(os.TempDir(), "e2e_test_key_"+x.NewUUID().String()+".pem")
+
+	testhelpers.GenerateTLSCertificateFilesForTests(t, certPath, keyPath)
+
+	certRaw, err := os.ReadFile(certPath)
+	require.NoError(t, err)
+
+	keyRaw, err := os.ReadFile(keyPath)
+	require.NoError(t, err)
+
+	certBase64 := base64.StdEncoding.EncodeToString(certRaw)
+	keyBase64 := base64.StdEncoding.EncodeToString(keyRaw)
 	publicPort, adminPort := testhelpers.StartE2EServerOnly(t,
 		"./stub/kratos.yml",
 		true,
@@ -26,7 +45,10 @@ func TestServeTLSBase64(t *testing.T) {
 }
 
 func TestServeTLSPaths(t *testing.T) {
-	certPath, keyPath, _, _ := testhelpers.GenerateTLSCertificateFilesForTests(t)
+	certPath := filepath.Join(os.TempDir(), "e2e_test_cert_"+x.NewUUID().String()+".pem")
+	keyPath := filepath.Join(os.TempDir(), "e2e_test_key_"+x.NewUUID().String()+".pem")
+
+	testhelpers.GenerateTLSCertificateFilesForTests(t, certPath, keyPath)
 
 	publicPort, adminPort := testhelpers.StartE2EServerOnly(t,
 		"./stub/kratos.yml",

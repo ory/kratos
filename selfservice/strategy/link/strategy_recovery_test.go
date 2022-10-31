@@ -101,7 +101,7 @@ func TestAdminStrategy(t *testing.T) {
 		require.NoError(t, err)
 		w := httptest.NewRecorder()
 		r := &http.Request{URL: new(url.URL)}
-		f, err := recovery.NewFlow(reg.Config(), time.Minute, "", r, s, flow.TypeBrowser)
+		f, err := recovery.NewFlow(reg.Config(), time.Minute, "", r, reg.RecoveryStrategies(ctx), flow.TypeBrowser)
 		require.NoError(t, err)
 		require.NotPanics(t, func() {
 			require.Error(t, s.(*link.Strategy).HandleRecoveryError(w, r, f, nil, errors.New("test")))
@@ -259,8 +259,6 @@ func TestAdminStrategy(t *testing.T) {
 func TestRecovery(t *testing.T) {
 	ctx := context.Background()
 	conf, reg := internal.NewFastRegistryWithMocks(t)
-	conf.MustSet(ctx, config.ViperKeySelfServiceStrategyConfig+".code.enabled", false)
-	conf.MustSet(ctx, config.ViperKeySelfServiceStrategyConfig+".link.enabled", true)
 	initViper(t, conf)
 
 	_ = testhelpers.NewRecoveryUIFlowEchoServer(t, reg)
@@ -381,8 +379,7 @@ func TestRecovery(t *testing.T) {
 
 			authClient := testhelpers.NewHTTPClientWithArbitrarySessionToken(t, reg)
 			if isAPI {
-				req := httptest.NewRequest("GET", "/sessions/whoami", nil)
-				s, err := session.NewActiveSession(req,
+				s, err := session.NewActiveSession(ctx,
 					&identity.Identity{ID: x.NewUUID(), State: identity.StateActive},
 					testhelpers.NewSessionLifespanProvider(time.Hour),
 					time.Now(),
@@ -663,12 +660,11 @@ func TestRecovery(t *testing.T) {
 		email := recoveryEmail
 		id := createIdentityToRecover(t, reg, email)
 
-		req := httptest.NewRequest("GET", "/sessions/whoami", nil)
-		sess, err := session.NewActiveSession(req, id, conf, time.Now(), identity.CredentialsTypePassword, identity.AuthenticatorAssuranceLevel1)
+		sess, err := session.NewActiveSession(ctx, id, conf, time.Now(), identity.CredentialsTypePassword, identity.AuthenticatorAssuranceLevel1)
 		require.NoError(t, err)
 		require.NoError(t, reg.SessionPersister().UpsertSession(context.Background(), sess))
 
-		actualSession, err := reg.SessionPersister().GetSession(context.Background(), sess.ID, session.ExpandNothing)
+		actualSession, err := reg.SessionPersister().GetSession(context.Background(), sess.ID)
 		require.NoError(t, err)
 		assert.True(t, actualSession.IsActive())
 
@@ -688,7 +684,7 @@ func TestRecovery(t *testing.T) {
 			cookies := spew.Sdump(cl.Jar.Cookies(urlx.ParseOrPanic(public.URL)))
 			assert.Contains(t, cookies, "ory_kratos_session")
 
-			actualSession, err := reg.SessionPersister().GetSession(context.Background(), sess.ID, session.ExpandNothing)
+			actualSession, err := reg.SessionPersister().GetSession(context.Background(), sess.ID)
 			require.NoError(t, err)
 			assert.False(t, actualSession.IsActive())
 		}
@@ -787,7 +783,6 @@ func TestDisabledEndpoint(t *testing.T) {
 	conf, reg := internal.NewFastRegistryWithMocks(t)
 	initViper(t, conf)
 	conf.MustSet(ctx, config.ViperKeySelfServiceStrategyConfig+"."+recovery.StrategyRecoveryLinkName+".enabled", false)
-	conf.MustSet(ctx, config.ViperKeySelfServiceStrategyConfig+"."+recovery.StrategyRecoveryCodeName+".enabled", false)
 
 	publicTS, adminTS := testhelpers.NewKratosServer(t, reg)
 	adminSDK := testhelpers.NewSDKClient(adminTS)
@@ -815,8 +810,8 @@ func TestDisabledEndpoint(t *testing.T) {
 		c := testhelpers.NewClientWithCookies(t)
 
 		t.Run("description=can not recover an account by get request when link method is disabled", func(t *testing.T) {
-			f := testhelpers.PersistNewRecoveryFlow(t, nil, conf, reg)
-			u := publicTS.URL + recovery.RouteSubmitFlow + "?flow=" + f.ID.String() + "&token=endpoint-disabled"
+			f := testhelpers.InitializeRecoveryFlowViaBrowser(t, c, false, publicTS, nil)
+			u := publicTS.URL + recovery.RouteSubmitFlow + "?flow=" + f.Id + "&token=endpoint-disabled"
 			res, err := c.Get(u)
 			require.NoError(t, err)
 			assert.Equal(t, http.StatusOK, res.StatusCode)
@@ -826,8 +821,8 @@ func TestDisabledEndpoint(t *testing.T) {
 		})
 
 		t.Run("description=can not recover an account by post request when link method is disabled", func(t *testing.T) {
-			f := testhelpers.PersistNewRecoveryFlow(t, nil, conf, reg)
-			u := publicTS.URL + recovery.RouteSubmitFlow + "?flow=" + f.ID.String()
+			f := testhelpers.InitializeRecoveryFlowViaBrowser(t, c, false, publicTS, nil)
+			u := publicTS.URL + recovery.RouteSubmitFlow + "?flow=" + f.Id
 			res, err := c.PostForm(u, url.Values{"email": {"email@ory.sh"}, "method": {"link"}})
 			require.NoError(t, err)
 			assert.Equal(t, http.StatusOK, res.StatusCode)

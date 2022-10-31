@@ -6,13 +6,13 @@ import (
 	"time"
 )
 
-func NewErrorValidationSettingsFlowExpired(expiredAt time.Time) *Message {
+func NewErrorValidationSettingsFlowExpired(ago time.Duration) *Message {
 	return &Message{
 		ID:   ErrorValidationSettingsFlowExpired,
-		Text: fmt.Sprintf("The settings flow expired %.2f minutes ago, please try again.", (-Until(expiredAt)).Minutes()),
+		Text: fmt.Sprintf("The settings flow expired %.2f minutes ago, please try again.", ago.Minutes()),
 		Type: Error,
 		Context: context(map[string]interface{}{
-			"expired_at": expiredAt,
+			"expired_at": Now().UTC().Add(ago),
 		}),
 	}
 }
