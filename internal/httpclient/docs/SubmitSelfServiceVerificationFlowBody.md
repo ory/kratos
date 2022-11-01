@@ -4,6 +4,7 @@
 
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
+**Code** | Pointer to **string** | Verification Code  The verification Code which completes the verification request. If the code is invalid (e.g. expired) an error will be shown to the end-user.  in: body | [optional] 
 **CsrfToken** | Pointer to **string** | Sending the anti-csrf token is only required for browser login flows. | [optional] 
 **Email** | **string** | Email to Verify  Needs to be set when initiating the flow. If the email is a registered verification email, a verification link will be sent. If the email is not known, a email with details on what happened will be sent instead.  format: email | 
 **Method** | **string** | Method supports &#x60;link&#x60; only right now. | 
@@ -26,6 +27,31 @@ will change when the set of required properties is changed
 NewSubmitSelfServiceVerificationFlowBodyWithDefaults instantiates a new SubmitSelfServiceVerificationFlowBody object
 This constructor will only assign default values to properties that have it defined,
 but it doesn't guarantee that properties required by API are set
+
+### GetCode
+
+`func (o *SubmitSelfServiceVerificationFlowBody) GetCode() string`
+
+GetCode returns the Code field if non-nil, zero value otherwise.
+
+### GetCodeOk
+
+`func (o *SubmitSelfServiceVerificationFlowBody) GetCodeOk() (*string, bool)`
+
+GetCodeOk returns a tuple with the Code field if it's non-nil, zero value otherwise
+and a boolean to check if the value has been set.
+
+### SetCode
+
+`func (o *SubmitSelfServiceVerificationFlowBody) SetCode(v string)`
+
+SetCode sets Code field to given value.
+
+### HasCode
+
+`func (o *SubmitSelfServiceVerificationFlowBody) HasCode() bool`
+
+HasCode returns a boolean if a field has been set.
 
 ### GetCsrfToken
 

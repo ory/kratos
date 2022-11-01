@@ -2186,9 +2186,9 @@
             }
           },
           "410": {
-            "description": "jsonError",
+            "description": "selfServiceFlowExpiredError",
             "schema": {
-              "$ref": "#/definitions/jsonError"
+              "$ref": "#/definitions/selfServiceFlowExpiredError"
             }
           },
           "500": {
@@ -4421,7 +4421,13 @@
     },
     "submitSelfServiceVerificationFlowBody": {
       "description": "nolint:deadcode,unused",
-      "type": "object"
+      "type": "object",
+      "properties": {
+        "code": {
+          "description": "Verification Code\n\nThe verification Code which completes the verification request. If the code\nis invalid (e.g. expired) an error will be shown to the end-user.\n\nin: body",
+          "type": "string"
+        }
+      }
     },
     "submitSelfServiceVerificationFlowWithLinkMethodBody": {
       "type": "object",

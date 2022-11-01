@@ -1980,7 +1980,13 @@
           {
             "$ref": "#/components/schemas/submitSelfServiceVerificationFlowWithLinkMethodBody"
           }
-        ]
+        ],
+        "properties": {
+          "code": {
+            "description": "Verification Code\n\nThe verification Code which completes the verification request. If the code\nis invalid (e.g. expired) an error will be shown to the end-user.\n\nin: body",
+            "type": "string"
+          }
+        }
       },
       "submitSelfServiceVerificationFlowWithLinkMethodBody": {
         "properties": {
@@ -5141,11 +5147,11 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/jsonError"
+                  "$ref": "#/components/schemas/selfServiceFlowExpiredError"
                 }
               }
             },
-            "description": "jsonError"
+            "description": "selfServiceFlowExpiredError"
           },
           "500": {
             "content": {

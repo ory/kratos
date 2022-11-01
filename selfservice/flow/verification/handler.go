@@ -327,7 +327,16 @@ type submitSelfServiceVerificationFlow struct {
 
 // nolint:deadcode,unused
 // swagger:model submitSelfServiceVerificationFlowBody
-type submitSelfServiceVerificationFlowBody struct{}
+type submitSelfServiceVerificationFlowBody struct {
+
+	// Verification Code
+	//
+	// The verification Code which completes the verification request. If the code
+	// is invalid (e.g. expired) an error will be shown to the end-user.
+	//
+	// in: body
+	Code string `json:"code" form:"code"`
+}
 
 // swagger:route POST /self-service/verification v0alpha2 submitSelfServiceVerificationFlow
 //

@@ -2439,8 +2439,8 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/jsonError'
-          description: jsonError
+                $ref: '#/components/schemas/selfServiceFlowExpiredError'
+          description: selfServiceFlowExpiredError
         "500":
           content:
             application/json:
@@ -5356,6 +5356,16 @@ components:
         propertyName: method
       oneOf:
       - $ref: '#/components/schemas/submitSelfServiceVerificationFlowWithLinkMethodBody'
+      properties:
+        code:
+          description: |-
+            Verification Code
+
+            The verification Code which completes the verification request. If the code
+            is invalid (e.g. expired) an error will be shown to the end-user.
+
+            in: body
+          type: string
     submitSelfServiceVerificationFlowWithLinkMethodBody:
       properties:
         csrf_token:
