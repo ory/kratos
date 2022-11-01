@@ -7,7 +7,7 @@ export interface MailMessage {
   subject: string
 }
 
-export type RecoveryStrategy = "code" | "link"
+export type Strategy = "code" | "link"
 type app = "express" | "react"
 
 declare global {
@@ -89,6 +89,7 @@ declare global {
 
       performEmailVerification(opts?: {
         expect?: { email?: string; redirectTo?: string }
+        strategy?: Strategy
       }): Chainable<void>
 
       /**
@@ -126,6 +127,7 @@ declare global {
       verificationApi(opts: {
         email: string
         returnTo?: string
+        strategy?: Strategy
       }): Chainable<void>
 
       /**
@@ -142,6 +144,7 @@ declare global {
        */
       verificationApiExpired(opts: {
         email: string
+        strategy?: Strategy
         returnTo?: string
       }): Chainable<void>
 
@@ -431,6 +434,22 @@ declare global {
       shortCodeLifespan(): Chainable<void>
 
       /**
+       * Sets the `lifespan` of a strategy to 1ms (a short value)
+       *
+       * Useful to test the behavior if the subject of the strategy expired
+       *
+       * @param s the strategy
+       */
+      shortLifespan(s: Strategy): Chainable<void>
+
+      /**
+       * Sets the `lifespan` of a strategy to 1m
+       *
+       * @param s the strategy
+       */
+      longLifespan(s: Strategy): Chainable<void>
+
+      /**
        * Changes the config so that the code lifespan is very long.
        *
        * Useful when testing recovery/verification flows.
@@ -464,7 +483,15 @@ declare global {
        */
       verifyEmailButExpired(opts?: {
         expect: { password?: string; email: string }
-      }): Chainable<string>
+        strategy?: Strategy
+      }): Chainable<void>
+
+      /**
+       * Sets the strategy to use for verification
+       *
+       * @param strategy the Strategy
+       */
+      useVerificationStrategy(strategy: Strategy): Chainable<void>
 
       /**
        * Disables verification
@@ -484,14 +511,14 @@ declare global {
       /**
        * Sets the recovery strategy to use
        */
-      useRecoveryStrategy(strategy: RecoveryStrategy): Chainable<void>
+      useRecoveryStrategy(strategy: Strategy): Chainable<void>
 
       /**
        * Disables a specific recovery strategy
        *
        * @param strategy the recovery strategy to disable
        */
-      disableRecoveryStrategy(strategy: RecoveryStrategy): Chainable<void>
+      disableRecoveryStrategy(strategy: Strategy): Chainable<void>
 
       /**
        * Disabled recovery
@@ -525,8 +552,9 @@ declare global {
        */
       verifyEmail(opts: {
         expect: { email: string; password?: string; redirectTo?: string }
+        strategy?: Strategy
         shouldVisit?: boolean
-      }): Chainable<string>
+      }): Chainable<void>
 
       /**
        * Configures a hook which only allows verified email addresses to sign in.
