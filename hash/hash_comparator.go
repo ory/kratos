@@ -36,10 +36,6 @@ func Compare(ctx context.Context, password []byte, hash []byte) error {
 		return CompareScrypt(ctx, password, hash)
 	case IsSSHAHash(hash):
 		return CompareSSHA(ctx, password, hash)
-	case IsSSHA256Hash(hash):
-		return CompareSSHA256(ctx, password, hash)
-	case IsSSHA512Hash(hash):
-		return CompareSSHA512(ctx, password, hash)
 	case IsSHAHash(hash):
 		return CompareSHA(ctx, password, hash)
 	default:
@@ -144,42 +140,15 @@ func CompareScrypt(_ context.Context, password []byte, hash []byte) error {
 }
 
 func CompareSSHA(_ context.Context, password []byte, hash []byte) error {
+	hasher, salt, hash, err := decodeSSHAHash(string(hash))
 
-	decoded, err := base64.StdEncoding.DecodeString(string(hash[6:]))
-	if len(decoded) < 21 || err != nil {
+	if err != nil {
 		return err
 	}
-	salt := decoded[20:]
-	shaHash := decoded[:20]
+
 	raw := append(password[:], salt[:]...)
 
-	return compareSHAHelper("sha1", raw, shaHash)
-}
-
-func CompareSSHA256(_ context.Context, password []byte, hash []byte) error {
-
-	decoded, err := base64.StdEncoding.DecodeString(string(hash[9:]))
-	if len(decoded) < 33 || err != nil {
-		return err
-	}
-	salt := decoded[32:]
-	shaHash := decoded[:32]
-	raw := append(password[:], salt[:]...)
-
-	return compareSHAHelper("sha256", raw, shaHash)
-}
-
-func CompareSSHA512(_ context.Context, password []byte, hash []byte) error {
-
-	decoded, err := base64.StdEncoding.DecodeString(string(hash[9:]))
-	if len(decoded) < 65 || err != nil {
-		return err
-	}
-	salt := decoded[64:]
-	shaHash := decoded[:64]
-	raw := append(password[:], salt[:]...)
-
-	return compareSHAHelper("sha512", raw, shaHash)
+	return compareSHAHelper(hasher, raw, hash)
 }
 
 func CompareSHA(_ context.Context, password []byte, hash []byte) error {
@@ -192,7 +161,7 @@ func CompareSHA(_ context.Context, password []byte, hash []byte) error {
 	r := strings.NewReplacer("{SALT}", string(salt), "{PASSWORD}", string(password))
 	raw := []byte(r.Replace(string(pf)))
 
-	return compareSHAHelper(string(hasher), raw, hash)
+	return compareSHAHelper(hasher, raw, hash)
 }
 
 var (
@@ -201,10 +170,8 @@ var (
 	isArgon2iHash  = regexp.MustCompile(`^\$argon2i\$`)
 	isPbkdf2Hash   = regexp.MustCompile(`^\$pbkdf2-sha[0-9]{1,3}\$`)
 	isScryptHash   = regexp.MustCompile(`^\$scrypt\$`)
-	isSSHAHash     = regexp.MustCompile(`^{SSHA}.*`)
-	isSSHA256Hash  = regexp.MustCompile(`^{SSHA256}.*`)
-	isSSHA512Hash  = regexp.MustCompile(`^{SSHA512}.*`)
-	isSHAHash      = regexp.MustCompile(`^\$sha[0-9]{1,3}\$`)
+	isSSHAHash     = regexp.MustCompile(`^{SSHA(256|512)?}.*`)
+	isSHAHash      = regexp.MustCompile(`^\$sha(1|256|512)\$`)
 )
 
 func IsBcryptHash(hash []byte) bool {
@@ -230,22 +197,13 @@ func IsScryptHash(hash []byte) bool {
 func IsSSHAHash(hash []byte) bool {
 	return isSSHAHash.Match(hash)
 }
-
-func IsSSHA256Hash(hash []byte) bool {
-	return isSSHA256Hash.Match(hash)
-}
-
-func IsSSHA512Hash(hash []byte) bool {
-	return isSSHA512Hash.Match(hash)
-}
-
 func IsSHAHash(hash []byte) bool {
 	return isSHAHash.Match(hash)
 }
 
 func IsValidHashFormat(hash []byte) bool {
 	if IsArgon2iHash(hash) || IsArgon2idHash(hash) || IsBcryptHash(hash) || IsPbkdf2Hash(hash) ||
-		IsScryptHash(hash) || IsSSHAHash(hash) || IsSSHA256Hash(hash) || IsSSHA512Hash(hash) || IsSHAHash(hash) {
+		IsScryptHash(hash) || IsSSHAHash(hash) || IsSHAHash(hash) {
 		return true
 	} else {
 		return false
@@ -355,39 +313,39 @@ func decodeScryptHash(encodedHash string) (p *Scrypt, salt, hash []byte, err err
 
 // decodeSHAHash decodes SHA[1|256|512] encoded password hash in custom PHC format.
 // format: $sha1$pf=<salting-format>$<salt>$<hash>
-func decodeSHAHash(encodedHash string) (hasher, pf, salt, hash []byte, err error) {
+func decodeSHAHash(encodedHash string) (hasher string, pf, salt, hash []byte, err error) {
 	parts := strings.Split(encodedHash, "$")
 
 	if len(parts) != 5 {
-		return nil, nil, nil, nil, ErrInvalidHash
+		return "", nil, nil, nil, ErrInvalidHash
 	}
 
-	hasher = []byte(parts[1])
+	hasher = parts[1]
 
 	_, err = fmt.Sscanf(parts[2], "pf=%s", &pf)
 	if err != nil {
-		return nil, nil, nil, nil, err
+		return "", nil, nil, nil, err
 	}
 
 	pf, err = base64.StdEncoding.Strict().DecodeString(string(pf))
 	if err != nil {
-		return nil, nil, nil, nil, err
+		return "", nil, nil, nil, err
 	}
 
 	salt, err = base64.StdEncoding.Strict().DecodeString(parts[3])
 	if err != nil {
-		return nil, nil, nil, nil, err
+		return "", nil, nil, nil, err
 	}
 
 	hash, err = base64.StdEncoding.Strict().DecodeString(parts[4])
 	if err != nil {
-		return nil, nil, nil, nil, err
+		return "", nil, nil, nil, err
 	}
 
 	return hasher, pf, salt, hash, nil
 }
 
-// used for CompareSHA and CompareSSHA CompareSSHA256 CompareSSHA512
+// used for CompareSHA and CompareSSHA
 func compareSHAHelper(hasher string, raw []byte, hash []byte) error {
 
 	var sha []byte
@@ -402,8 +360,6 @@ func compareSHAHelper(hasher string, raw []byte, hash []byte) error {
 	case "sha512":
 		sum := sha512.Sum512(raw)
 		sha = sum[:]
-	default:
-		return errors.WithStack(ErrUnknownHashAlgorithm)
 	}
 
 	encodedHash := []byte(base64.StdEncoding.EncodeToString(hash))
@@ -415,4 +371,41 @@ func compareSHAHelper(hasher string, raw []byte, hash []byte) error {
 		return nil
 	}
 	return errors.WithStack(ErrMismatchedHashAndPassword)
+}
+
+// decodeSSHAHash decodes SSHA[1|256|512] encoded password hash in usual {SSHA...} format.
+func decodeSSHAHash(encodedHash string) (hasher string, salt, hash []byte, err error) {
+	re := regexp.MustCompile(`\{([^}]*)\}`)
+	match := re.FindStringSubmatch(string(encodedHash))
+
+	var index_of_salt_begin int
+	var index_of_hash_begin int
+
+	switch match[1] {
+	case "SSHA":
+		hasher = "sha1"
+		index_of_hash_begin = 6
+		index_of_salt_begin = 20
+
+	case "SSHA256":
+		hasher = "sha256"
+		index_of_hash_begin = 9
+		index_of_salt_begin = 32
+
+	case "SSHA512":
+		hasher = "sha512"
+		index_of_hash_begin = 9
+		index_of_salt_begin = 64
+	}
+
+	decoded, err := base64.StdEncoding.DecodeString(string(encodedHash[index_of_hash_begin:]))
+
+	if len(decoded) < index_of_salt_begin+1 || err != nil {
+		return "", nil, nil, err
+	}
+
+	salt = decoded[index_of_salt_begin:]
+	hash = decoded[:index_of_salt_begin]
+
+	return hasher, salt, hash, nil
 }
