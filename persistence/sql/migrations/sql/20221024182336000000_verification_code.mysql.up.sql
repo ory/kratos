@@ -7,8 +7,8 @@ CREATE TABLE identity_verification_codes
     expires_at timestamp NOT NULL DEFAULT '2000-01-01 00:00:00',
     issued_at timestamp NOT NULL DEFAULT '2000-01-01 00:00:00',
     selfservice_verification_flow_id CHAR(36) NOT NULL,
-    created_at timestamp NOT NULL,
-    updated_at timestamp NOT NULL,
+    created_at timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
     nid CHAR(36) NOT NULL,
     CONSTRAINT identity_verification_codes_identity_verifiable_addresses_id_fk 
         FOREIGN KEY (identity_verifiable_address_id)
