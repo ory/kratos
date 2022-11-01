@@ -28,6 +28,7 @@ type (
 		errorx.ManagementProvider
 		x.WriterProvider
 		x.LoggingProvider
+		x.CSRFProvider
 		x.CSRFTokenGeneratorProvider
 		config.Provider
 		FlowPersistenceProvider
@@ -77,7 +78,7 @@ func (s *ErrorHandler) WriteFlowError(
 		}
 		// create new flow because the old one is not valid
 		a, err := FromOldFlow(s.d.Config(), s.d.Config().SelfServiceFlowVerificationRequestLifespan(r.Context()),
-			s.d.GenerateCSRFToken(r), r, strategy, f)
+			s.d.CSRFHandler().RegenerateToken(w, r), r, strategy, f)
 		if err != nil {
 			// failed to create a new session and redirect to it, handle that error as a new one
 			s.WriteFlowError(w, r, f, group, err)
