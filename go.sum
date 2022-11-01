@@ -1396,6 +1396,10 @@ github.com/ory/x v0.0.496-0.20221027125525-9b0bf170fc8f h1:5rcqhDWQfdJpi+aSOzden
 github.com/ory/x v0.0.496-0.20221027125525-9b0bf170fc8f/go.mod h1:dJ800rWC2/eNECWhXMyI9kSd7lO2LTOu6R8oS0lQZ38=
 github.com/ory/x v0.0.496-0.20221027133513-e86fadee7d2e h1:PoCwBFFMxKPcSUrB14SxJylO/3p5tpc3fcCXZYwrCi0=
 github.com/ory/x v0.0.496-0.20221027133513-e86fadee7d2e/go.mod h1:dJ800rWC2/eNECWhXMyI9kSd7lO2LTOu6R8oS0lQZ38=
+github.com/ory/x v0.0.496-0.20221101112538-995d3693c73b h1:G5i1RnENu00TSu6dU4hOVlAiP12C9FpeoS+SvK/XKZM=
+github.com/ory/x v0.0.496-0.20221101112538-995d3693c73b/go.mod h1:dJ800rWC2/eNECWhXMyI9kSd7lO2LTOu6R8oS0lQZ38=
+github.com/ory/x v0.0.496-0.20221101120857-5b3c8501472d h1:7SI77rOXr1k86c7DZgSAX53SjlgakAeal8oGOZ/E1m0=
+github.com/ory/x v0.0.496-0.20221101120857-5b3c8501472d/go.mod h1:dJ800rWC2/eNECWhXMyI9kSd7lO2LTOu6R8oS0lQZ38=
 github.com/otiai10/copy v1.2.0/go.mod h1:rrF5dJ5F0t/EWSYODDu4j9/vEeYHMkc8jt0zJChqQWw=
 github.com/otiai10/curr v0.0.0-20150429015615-9b4961190c95/go.mod h1:9qAhocn7zKJG+0mI8eUu6xqkFDYS2kb2saOteoSB3cE=
 github.com/otiai10/curr v1.0.0/go.mod h1:LskTG5wDwr8Rs+nNQ+1LlxRjAtTZZjtJW4rMXl6j4vs=
