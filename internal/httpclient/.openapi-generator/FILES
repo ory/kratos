@@ -46,6 +46,7 @@ docs/RevokedSessions.md
 docs/SelfServiceBrowserLocationChangeRequiredError.md
 docs/SelfServiceError.md
 docs/SelfServiceFlowExpiredError.md
+docs/SelfServiceFlowReplacedError.md
 docs/SelfServiceLoginFlow.md
 docs/SelfServiceLogoutUrl.md
 docs/SelfServiceRecoveryCode.md
@@ -143,6 +144,7 @@ model_revoked_sessions.go
 model_self_service_browser_location_change_required_error.go
 model_self_service_error.go
 model_self_service_flow_expired_error.go
+model_self_service_flow_replaced_error.go
 model_self_service_login_flow.go
 model_self_service_logout_url.go
 model_self_service_recovery_code.go

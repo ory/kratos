@@ -16,7 +16,6 @@ import (
 
 	"github.com/ory/x/sqlcon"
 
-	"github.com/ory/kratos/selfservice/flow"
 	"github.com/ory/kratos/selfservice/flow/verification"
 	"github.com/ory/kratos/selfservice/strategy/code"
 	"github.com/ory/kratos/selfservice/strategy/link"
@@ -194,7 +193,7 @@ func (p *Persister) UseVerificationCode(ctx context.Context, fID uuid.UUID, code
 			}
 		}
 
-		if verificationCode == nil || !verificationCode.IsValid() {
+		if verificationCode == nil || verificationCode.Validate() != nil {
 			// Return no error, as that would roll back the transaction
 			return nil
 		}
@@ -216,14 +215,6 @@ func (p *Persister) UseVerificationCode(ctx context.Context, fID uuid.UUID, code
 
 	if verificationCode == nil {
 		return nil, code.ErrCodeNotFound
-	}
-
-	if verificationCode.IsExpired() {
-		return nil, flow.NewFlowExpiredError(verificationCode.ExpiresAt)
-	}
-
-	if verificationCode.WasUsed() {
-		return nil, code.ErrCodeAlreadyUsed
 	}
 
 	return verificationCode, nil

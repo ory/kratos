@@ -53,30 +53,26 @@ func (VerificationCode) TableName(ctx context.Context) string {
 	return "identity_verification_codes"
 }
 
-func (f *VerificationCode) Valid() error {
+// Validate validates the state of the verification code
+//
+// - If the code is expired, `flow.ExpiredError` is returned
+// - If the code was already used `ErrCodeAlreadyUsed` is returnd
+// - Otherwise, `nil` is returned
+func (f *VerificationCode) Validate() error {
 	if f.ExpiresAt.Before(time.Now().UTC()) {
 		return errors.WithStack(flow.NewFlowExpiredError(f.ExpiresAt))
 	}
+	if f.UsedAt.Valid {
+		return errors.WithStack(ErrCodeAlreadyUsed)
+	}
 	return nil
-}
-
-func (f *VerificationCode) IsValid() bool {
-	return f.Valid() == nil
-}
-
-func (f VerificationCode) IsExpired() bool {
-	return f.ExpiresAt.Before(time.Now())
-}
-
-func (r VerificationCode) WasUsed() bool {
-	return r.UsedAt.Valid
 }
 
 type CreateVerificationCodeParams struct {
 	// Code represents the recovery code
 	RawCode string
 
-	// ExpiresAt is the time (UTC) when the code expires.
+	// ExpiresIn is the lifetime of the code
 	ExpiresIn time.Duration
 
 	// VerifiableAddress is the address to be verified

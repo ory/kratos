@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"net/url"
+	"strings"
 	"testing"
 	"time"
 
@@ -403,22 +404,43 @@ func TestVerification(t *testing.T) {
 		assert.Equal(t, returnToURL, gjson.GetBytes(body, "ui.nodes.#(attributes.id==go-back).attributes.href").String())
 	})
 
-	// t.Run("case=should not be able to use code from different flow", func(t *testing.T) {
+	t.Run("case=should respond with replaced error if successful code is submitted again via api", func(t *testing.T) {
+		_ = expectSuccess(t, nil, true, false, func(v url.Values) {
+			v.Set("email", verificationEmail)
+		})
 
-	// 	f1, _ := newValidFlow(t, public.URL+verification.RouteInitBrowserFlow)
+		message := testhelpers.CourierExpectMessage(t, reg, verificationEmail, "Please verify your email address")
+		assert.Contains(t, message.Body, "please verify your account by entering the following code")
 
-	// 	_, t2 := newValidFlow(t, public.URL+verification.RouteInitBrowserFlow)
+		verificationLink := testhelpers.CourierExpectLinkInMessage(t, message, 1)
 
-	// 	formValues := url.Values{
-	// 		"flow":  {f1.ID.String()},
-	// 		"token": {t2.Token},
-	// 	}
-	// 	submitUrl := public.URL + verification.RouteSubmitFlow + "?" + formValues.Encode()
+		assert.Contains(t, verificationLink, public.URL+verification.RouteSubmitFlow)
+		assert.Contains(t, verificationLink, "code=")
 
-	// 	res, err := public.Client().Get(submitUrl)
-	// 	require.NoError(t, err)
-	// 	body := ioutilx.MustReadAll(res.Body)
+		cl := testhelpers.NewClientWithCookies(t)
+		res, err := cl.Get(verificationLink)
+		require.NoError(t, err)
+		defer res.Body.Close()
 
-	// 	assert.Equal(t, "The verification token is invalid or has already been used. Please retry the flow.", gjson.GetBytes(body, "ui.messages.0.text").String())
-	// })
+		original := ioutilx.MustReadAll(res.Body)
+
+		code := gjson.GetBytes(original, "ui.nodes.#(attributes.name==code).attributes.value").String()
+		require.NotEmpty(t, code)
+		action := gjson.GetBytes(original, "ui.action").String()
+		require.NotEmpty(t, action)
+
+		c := testhelpers.NewDebugClient(t)
+		res, err = c.Post(action, "application/json", strings.NewReader(fmt.Sprintf(`{"code": "%v"}`, code)))
+		assert.Equal(t, http.StatusOK, res.StatusCode)
+
+		f1 := ioutilx.MustReadAll(res.Body)
+
+		assert.EqualValues(t, "passed_challenge", gjson.GetBytes(f1, "state").String())
+
+		res, err = c.Post(action, "application/json", strings.NewReader(fmt.Sprintf(`{"code": "%v"}`, code)))
+		assert.Equal(t, http.StatusGone, res.StatusCode)
+
+		f2 := ioutilx.MustReadAll(res.Body)
+		assert.Equal(t, text.ErrIDSelfServiceFlowReplaced, gjson.GetBytes(f2, "error.id").String())
+	})
 }

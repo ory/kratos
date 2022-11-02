@@ -171,6 +171,7 @@ Class | Method | HTTP request | Description
  - [SelfServiceBrowserLocationChangeRequiredError](docs/SelfServiceBrowserLocationChangeRequiredError.md)
  - [SelfServiceError](docs/SelfServiceError.md)
  - [SelfServiceFlowExpiredError](docs/SelfServiceFlowExpiredError.md)
+ - [SelfServiceFlowReplacedError](docs/SelfServiceFlowReplacedError.md)
  - [SelfServiceLoginFlow](docs/SelfServiceLoginFlow.md)
  - [SelfServiceLogoutUrl](docs/SelfServiceLogoutUrl.md)
  - [SelfServiceRecoveryCode](docs/SelfServiceRecoveryCode.md)
