@@ -1,3 +1,5 @@
+// Copyright © 2022 Ory Corp
+
 import { gen } from "../../../helpers"
 import * as oauth2 from "../../../helpers/oauth2"
 import * as httpbin from "../../../helpers/httpbin"

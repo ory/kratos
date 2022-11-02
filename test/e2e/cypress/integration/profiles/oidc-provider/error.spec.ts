@@ -1,3 +1,5 @@
+// Copyright © 2022 Ory Corp
+
 import { routes as express } from "../../../helpers/express"
 
 context("OpenID Provider", () => {

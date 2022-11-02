@@ -1,3 +1,5 @@
+// Copyright © 2022 Ory Corp
+
 import * as oauth2 from "./oauth2"
 
 export function checkToken(
