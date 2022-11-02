@@ -278,12 +278,12 @@ type adminListSessionsRequest struct {
 	// in: query
 	Active bool `json:"active"`
 
-	// ExpandOptions is a list of all properties that must be expanded in the Session. If no value is provided, the expandable properties are skipped.
+	// ExpandOptions is a comma seperated list of all properties that must be expanded in the Session. If no value is provided, the expandable properties are skipped.
 	//
-	// enum: Identity,Devices
+	// enum: ["Identity","Devices"]
 	// required: false
 	// in: query
-	ExpandOptions Expandables `json:"expand"`
+	ExpandOptions string `json:"expand"`
 }
 
 // Session List Response
@@ -373,14 +373,14 @@ func (h *Handler) adminListSessions(w http.ResponseWriter, r *http.Request, ps h
 // swagger:parameters adminGetSession
 // nolint:deadcode,unused
 type adminGetSessionRequest struct {
-	// ExpandOptions is a list of all properties that must be expanded in the Session. If no value is provided, the expandable properties are skipped.
+	// ExpandOptions is a comma seperated list of all properties that must be expanded in the Session. If no value is provided, the expandable properties are skipped.
 	//
-	// enum: Identity,Devices
+	// enum: ["Identity","Devices"]
 	// required: false
 	// in: query
-	ExpandOptions Expandables `json:"expand"`
+	ExpandOptions string `json:"expand"`
 
-	// ID is the identity's ID.
+	// ID is the session's ID.
 	//
 	// required: true
 	// in: path
