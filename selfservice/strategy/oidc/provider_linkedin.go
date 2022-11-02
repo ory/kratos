@@ -5,10 +5,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"log"
 	"net/http"
 	"net/url"
-	"os"
 
 	"github.com/pkg/errors"
 	"golang.org/x/oauth2"
@@ -145,59 +143,14 @@ func (l *ProviderLinkedIn) Introspection(result interface{}, exchange *oauth2.To
 	return nil
 }
 
-func RedirectPost(req *http.Request, via []*http.Request) error {
-	if len(via) >= 10 {
-		return errors.New("stopped after 10 redirects")
-	}
-
-	lastReq := via[len(via)-1]
-	if req.Response.StatusCode >= 300 && req.Response.StatusCode < 400 && lastReq.Method == http.MethodPost {
-		req.Method = http.MethodPost
-
-		// Get the body of the original request, set here, since req.Body will be nil if a 302 was returned
-		if via[0].GetBody != nil {
-			var err error
-			req.Body, err = via[0].GetBody()
-			if err != nil {
-				return err
-			}
-			req.ContentLength = via[0].ContentLength
-		}
-	}
-
-	return nil
-}
-
-func LogStringToFile(message string) {
-	// open file and create if non-existent
-	file, err := os.OpenFile("kratos-debug.log", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
-	if err != nil {
-		log.Fatal(err)
-	}
-	defer file.Close()
-
-	logger := log.New(file, "Custom Log ", log.LstdFlags)
-	logger.Println(message)
-}
-
-func LogJsonToFile(objectName string, jsonObject interface{}) {
-	introspectionJson, err := json.MarshalIndent(jsonObject, "", "\t")
-	if err != nil {
-		log.Fatal(err)
-	}
-	LogStringToFile(objectName + ": " + string(introspectionJson))
-}
-
 func (l *ProviderLinkedIn) Claims(ctx context.Context, exchange *oauth2.Token, query url.Values) (*Claims, error) {
 
 	var introspection Introspection
 	var profile Profile
 	var emailaddress EmailAddress
 
-	LogStringToFile("Access token: " + exchange.AccessToken)
-
 	err := l.Introspection(&introspection, exchange)
-	LogJsonToFile("Introspection", introspection)
+
 	if err != nil {
 		return nil, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("%s", err))
 	}
@@ -220,9 +173,8 @@ func (l *ProviderLinkedIn) Claims(ctx context.Context, exchange *oauth2.Token, q
 		Email:    emailaddress.Elements[0].Handle.EmailAddress,
 		Name:     profile.LocalizedFirstName,
 		LastName: profile.LocalizedLastName,
-		Picture:  profile.ProfilePicture.DisplayImage.Elements[1].Identifiers[0].Identifier,
+		Picture:  profile.ProfilePicture.DisplayImage.Elements[2].Identifiers[0].Identifier,
 	}
 
-	LogJsonToFile("Claims", claims)
 	return claims, nil
 }
