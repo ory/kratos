@@ -57,7 +57,7 @@ node_modules: package.json
 	bash <(curl https://raw.githubusercontent.com/ory/meta/master/install.sh) -d -b .bin hydra v1.11.0
 
 .bin/ory: Makefile
-	curl https://raw.githubusercontent.com/ory/meta/master/install.sh | bash -s -- -b .bin ory v0.1.44
+	curl https://raw.githubusercontent.com/ory/meta/master/install.sh | bash -s -- -b .bin ory v0.1.45
 	touch .bin/ory
 
 .PHONY: lint
@@ -134,7 +134,7 @@ quickstart-dev:
 	docker-compose -f quickstart.yml -f quickstart-standalone.yml -f quickstart-latest.yml $(QUICKSTART_OPTIONS) up --build --force-recreate
 
 # Formats the code
-.PHONY: .bin/ory format
+.PHONY: format
 format: .bin/goimports .bin/ory node_modules
 	.bin/ory dev headers license --exclude=internal/httpclient
 	goimports -w -local github.com/ory .
