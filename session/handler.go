@@ -277,6 +277,13 @@ type adminListSessionsRequest struct {
 	// required: false
 	// in: query
 	Active bool `json:"active"`
+
+	// ExpandOptions is a list of all properties that must be expanded in the Session. If no value is provided, the expandable properties are skipped.
+	//
+	// enum: Identity,Devices
+	// required: false
+	// in: query
+	ExpandOptions Expandables `json:"expand"`
 }
 
 // Session List Response
@@ -335,7 +342,20 @@ func (h *Handler) adminListSessions(w http.ResponseWriter, r *http.Request, ps h
 		return
 	}
 
-	sess, total, nextPage, err := h.r.SessionPersister().ListSessions(r.Context(), active, opts, ExpandEverything)
+	var expandables Expandables
+	if urlValues.Has("expand") {
+		es := strings.Split(urlValues.Get("expand"), ",")
+		for _, e := range es {
+			expand, ok := ParseExpandable(e)
+			if !ok {
+				h.r.Writer().WriteError(w, r, herodot.ErrBadRequest.WithError("could not parse expand option").WithDebug("could not parse expand option"))
+				return
+			}
+			expandables = append(expandables, expand)
+		}
+	}
+
+	sess, total, nextPage, err := h.r.SessionPersister().ListSessions(r.Context(), active, opts, expandables)
 	if err != nil {
 		h.r.Writer().WriteError(w, r, err)
 		return
@@ -353,7 +373,7 @@ func (h *Handler) adminListSessions(w http.ResponseWriter, r *http.Request, ps h
 // swagger:parameters adminGetSession
 // nolint:deadcode,unused
 type adminGetSessionRequest struct {
-	// Active is a boolean flag that filters out sessions based on the state. If no value is provided, all sessions are returned.
+	// ExpandOptions is a list of all properties that must be expanded in the Session. If no value is provided, the expandable properties are skipped.
 	//
 	// enum: Identity,Devices
 	// required: false

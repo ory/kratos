@@ -483,6 +483,25 @@ func TestHandlerAdminSessionManagement(t *testing.T) {
 			require.NoError(t, json.NewDecoder(res.Body).Decode(&sessions))
 			require.Len(t, sessions, 1)
 			assert.Equal(t, s.ID, sessions[0].ID)
+			assert.Empty(t, sessions[0].Identity)
+			assert.Empty(t, sessions[0].Devices)
+		})
+
+		t.Run("should list sessions expand identity", func(t *testing.T) {
+			req, _ := http.NewRequest("GET", ts.URL+"/admin/sessions/?expand=identity", nil)
+			res, err := client.Do(req)
+			require.NoError(t, err)
+			assert.Equal(t, http.StatusOK, res.StatusCode)
+			assert.Equal(t, "1", res.Header.Get("X-Total-Count"))
+			assert.Equal(t, "</admin/sessions?expand=identity&page_size=250&page_token=00000000-0000-0000-0000-000000000000>; rel=\"first\"", res.Header.Get("Link"))
+
+			var sessions []Session
+			require.NoError(t, json.NewDecoder(res.Body).Decode(&sessions))
+			require.Len(t, sessions, 1)
+			assert.Equal(t, s.ID, sessions[0].ID)
+			assert.NotNil(t, sessions[0].Identity)
+			assert.Equal(t, s.Identity.ID.String(), sessions[0].Identity.ID.String())
+			assert.Empty(t, sessions[0].Devices)
 		})
 
 		t.Run("should list sessions for an identity", func(t *testing.T) {
