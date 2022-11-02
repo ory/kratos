@@ -458,6 +458,19 @@ func TestHandlerAdminSessionManagement(t *testing.T) {
 			assert.Equal(t, http.StatusBadRequest, res.StatusCode)
 		})
 
+		t.Run("case=should redirect to public for whoami", func(t *testing.T) {
+			client := testhelpers.NewHTTPClientWithSessionToken(t, reg, s)
+			client.CheckRedirect = func(req *http.Request, via []*http.Request) error {
+				return http.ErrUseLastResponse
+			}
+
+			req := x.NewTestHTTPRequest(t, "GET", ts.URL+"/admin/sessions/whoami", nil)
+			res, err := client.Do(req)
+			require.NoError(t, err)
+			require.Equal(t, http.StatusTemporaryRedirect, res.StatusCode)
+			require.Equal(t, ts.URL+"/sessions/whoami", res.Header.Get("Location"))
+		})
+
 		t.Run("should list sessions", func(t *testing.T) {
 			req, _ := http.NewRequest("GET", ts.URL+"/admin/sessions/", nil)
 			res, err := client.Do(req)

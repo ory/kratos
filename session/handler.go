@@ -383,7 +383,7 @@ type adminGetSessionRequest struct {
 func (h *Handler) adminGetSession(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	if ps.ByName("id") == "whoami" {
 		// for /admin/sessions/whoami redirect to the public route
-		x.RedirectToPublicRoute(h.r)
+		x.RedirectToPublicRoute(h.r)(w, r, ps)
 		return
 	}
 
