@@ -50,10 +50,6 @@ docs/swagger:
 	bash <(curl https://raw.githubusercontent.com/ory/meta/master/install.sh) -d -b .bin ory v0.1.33
 	touch -a -m .bin/ory
 
-node_modules: package.json
-	npm ci
-	touch node_modules
-
 .bin/golangci-lint: Makefile
 	curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -d -b .bin v1.47.3
 
@@ -172,3 +168,13 @@ post-release: .bin/yq
 	cat quickstart.yml | yq '.services.kratos.image = "oryd/kratos:'$$DOCKER_TAG'"' | sponge quickstart.yml
 	cat quickstart.yml | yq '.services.kratos-migrate.image = "oryd/kratos:'$$DOCKER_TAG'"' | sponge quickstart.yml
 	cat quickstart.yml | yq '.services.kratos-selfservice-ui-node.image = "oryd/kratos-selfservice-ui-node:'$$DOCKER_TAG'"' | sponge quickstart.yml
+
+licenses: .bin/licenses node_modules  # checks open-source licenses
+	.bin/licenses
+
+.bin/licenses: Makefile
+	curl https://raw.githubusercontent.com/ory/ci/master/licenses/install | sh
+
+node_modules: package-lock.json
+	npm ci
+	touch node_modules
