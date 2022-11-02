@@ -359,6 +359,12 @@ type adminGetSessionRequest struct {
 	// required: false
 	// in: query
 	ExpandOptions Expandables `json:"expand"`
+
+	// ID is the identity's ID.
+	//
+	// required: true
+	// in: path
+	ID string `json:"id"`
 }
 
 // swagger:route GET /admin/sessions/{id} v0alpha2 adminGetSession
