@@ -45,8 +45,6 @@ import (
 	"github.com/ory/kratos/x"
 )
 
-const debugRedirects = false
-
 func TestStrategy(t *testing.T) {
 	ctx := context.Background()
 	if testing.Short() {
@@ -138,7 +136,7 @@ func TestStrategy(t *testing.T) {
 
 	var makeRequestWithCookieJar = func(t *testing.T, provider string, action string, fv url.Values, jar *cookiejar.Jar) (*http.Response, []byte) {
 		fv.Set("provider", provider)
-		res, err := newClient(t, jar).PostForm(action, fv)
+		res, err := testhelpers.NewClientWithCookieJar(t, jar, false).PostForm(action, fv)
 		require.NoError(t, err, action)
 
 		body, err := io.ReadAll(res.Body)
@@ -185,7 +183,7 @@ func TestStrategy(t *testing.T) {
 
 	var newLoginFlow = func(t *testing.T, redirectTo string, exp time.Duration) (req *login.Flow) {
 		// Use NewLoginFlow to instantiate the request but change the things we need to control a copy of it.
-		req, err := reg.LoginHandler().NewLoginFlow(httptest.NewRecorder(),
+		req, _, err := reg.LoginHandler().NewLoginFlow(httptest.NewRecorder(),
 			&http.Request{URL: urlx.ParseOrPanic(redirectTo)}, flow.TypeBrowser)
 		require.NoError(t, err)
 		req.RequestURL = redirectTo

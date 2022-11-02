@@ -5,6 +5,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/ory/x/pagination/keysetpagination"
+
 	"github.com/ory/x/pointerx"
 
 	"github.com/ory/kratos/identity"
@@ -108,7 +110,7 @@ func TestPersister(ctx context.Context, conf *config.Config, p interface {
 				})
 			})
 
-			t.Run("method=list by identity", func(t *testing.T) {
+			t.Run("method=listing", func(t *testing.T) {
 				i := identity.NewIdentity("")
 				require.NoError(t, p.CreateIdentity(ctx, i))
 				sess := make([]session.Session, 4)
@@ -177,7 +179,7 @@ func TestPersister(ctx context.Context, conf *config.Config, p interface {
 						},
 					},
 				} {
-					t.Run("case="+tc.desc, func(t *testing.T) {
+					t.Run("case=ListSessionsByIdentity "+tc.desc, func(t *testing.T) {
 						actual, total, err := p.ListSessionsByIdentity(ctx, i.ID, tc.active, 1, 10, tc.except, session.ExpandEverything)
 						require.NoError(t, err)
 
@@ -196,12 +198,130 @@ func TestPersister(ctx context.Context, conf *config.Config, p interface {
 					})
 				}
 
-				t.Run("other network", func(t *testing.T) {
+				t.Run("case=ListSessionsByIdentity - other network", func(t *testing.T) {
 					_, other := testhelpers.NewNetwork(t, ctx, p)
 					actual, total, err := other.ListSessionsByIdentity(ctx, i.ID, nil, 1, 10, uuid.Nil, session.ExpandNothing)
 					require.NoError(t, err)
 					require.Equal(t, int64(0), total)
 					assert.Len(t, actual, 0)
+				})
+
+				for _, tc := range []struct {
+					desc     string
+					except   uuid.UUID
+					expected []session.Session
+					active   *bool
+				}{
+					{
+						desc:     "all",
+						expected: append(sess, expected),
+					},
+					{
+						desc:   "active only",
+						active: pointerx.Bool(true),
+						expected: []session.Session{
+							expected,
+							sess[0],
+							sess[2],
+						},
+					},
+					{
+						desc:   "inactive only",
+						active: pointerx.Bool(false),
+						expected: []session.Session{
+							sess[1],
+							sess[3],
+						},
+					},
+				} {
+					t.Run("case=ListSessions "+tc.desc, func(t *testing.T) {
+						paginatorOpts := make([]keysetpagination.Option, 0)
+						actual, total, nextPage, err := p.ListSessions(ctx, tc.active, paginatorOpts, session.ExpandEverything)
+						require.NoError(t, err)
+
+						require.Equal(t, len(tc.expected), len(actual))
+						require.Equal(t, int64(len(tc.expected)), total)
+						assert.Equal(t, true, nextPage.IsLast())
+						assert.Equal(t, uuid.Nil.String(), nextPage.Token())
+						assert.Equal(t, 250, nextPage.Size())
+						for _, es := range tc.expected {
+							found := false
+							for _, as := range actual {
+								if as.ID == es.ID {
+									found = true
+									assert.Equal(t, len(es.Devices), len(as.Devices))
+									assert.Equal(t, es.Identity.ID.String(), as.Identity.ID.String())
+								}
+							}
+							assert.True(t, found)
+						}
+					})
+				}
+
+				t.Run("case=ListSessions last page", func(t *testing.T) {
+					paginatorOpts := make([]keysetpagination.Option, 0)
+					actual, total, page, err := p.ListSessions(ctx, nil, paginatorOpts, session.ExpandEverything)
+					require.NoError(t, err)
+
+					require.Equal(t, 5, len(actual))
+					require.Equal(t, int64(5), total)
+					assert.Equal(t, true, page.IsLast())
+					assert.Equal(t, uuid.Nil.String(), page.Token())
+					assert.Equal(t, 250, page.Size())
+				})
+
+				t.Run("case=ListSessions page iteration", func(t *testing.T) {
+
+				})
+
+				t.Run("case=ListSessions - other network", func(t *testing.T) {
+					var identity1 identity.Identity
+					require.NoError(t, faker.FakeData(&identity1))
+
+					_, other := testhelpers.NewNetwork(t, ctx, p)
+					require.NoError(t, other.CreateIdentity(ctx, &identity1))
+
+					expectedIDs := make([]uuid.UUID, 5)
+					seedSessionsList := make([]session.Session, 5)
+					for j := range seedSessionsList {
+						require.NoError(t, faker.FakeData(&seedSessionsList[j]))
+						seedSessionsList[j].Identity = &identity1
+						seedSessionsList[j].Active = j%2 == 0
+
+						var device session.Device
+						require.NoError(t, faker.FakeData(&device))
+						seedSessionsList[j].Devices = []session.Device{
+							device,
+						}
+						require.NoError(t, other.UpsertSession(ctx, &seedSessionsList[j]))
+						expectedIDs[j] = seedSessionsList[j].ID
+					}
+
+					paginatorOpts := make([]keysetpagination.Option, 0)
+					paginatorOpts = append(paginatorOpts, keysetpagination.WithSize(3))
+					firstPageItems, total, page1, err := other.ListSessions(ctx, nil, paginatorOpts, session.ExpandEverything)
+					require.NoError(t, err)
+					require.Equal(t, int64(5), total)
+					assert.Len(t, firstPageItems, 3)
+
+					assert.Equal(t, false, page1.IsLast())
+					assert.Equal(t, firstPageItems[len(firstPageItems)-1].ID.String(), page1.Token())
+					assert.Equal(t, 3, page1.Size())
+
+					// Validate secondPageItems page
+					secondPageItems, total, page2, err := other.ListSessions(ctx, nil, page1.ToOptions(), session.ExpandEverything)
+					require.NoError(t, err)
+
+					acutalIDs := make([]uuid.UUID, 0)
+					for _, s := range append(firstPageItems, secondPageItems...) {
+						acutalIDs = append(acutalIDs, s.ID)
+					}
+					assert.ElementsMatch(t, expectedIDs, acutalIDs)
+
+					require.Equal(t, int64(5), total)
+					assert.Len(t, secondPageItems, 2)
+					assert.True(t, page2.IsLast())
+					assert.Equal(t, 3, page2.Size())
 				})
 			})
 

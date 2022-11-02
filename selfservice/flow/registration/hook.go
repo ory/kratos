@@ -11,6 +11,7 @@ import (
 	"github.com/ory/x/sqlcon"
 
 	"github.com/ory/kratos/driver/config"
+	"github.com/ory/kratos/hydra"
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/schema"
 	"github.com/ory/kratos/selfservice/flow"
@@ -69,7 +70,9 @@ type (
 		session.PersistenceProvider
 		session.ManagementProvider
 		HooksProvider
+		hydra.HydraProvider
 		x.CSRFTokenGeneratorProvider
+		x.HTTPClientProvider
 		x.LoggingProvider
 		x.WriterProvider
 	}
@@ -202,7 +205,16 @@ func (e *HookExecutor) PostRegistrationHook(w http.ResponseWriter, r *http.Reque
 		return nil
 	}
 
-	x.ContentNegotiationRedirection(w, r, s.Declassify(), e.d.Writer(), returnTo.String())
+	finalReturnTo := returnTo.String()
+	if a.OAuth2LoginChallenge.Valid {
+		cr, err := e.d.Hydra().AcceptLoginRequest(r.Context(), a.OAuth2LoginChallenge.UUID, i.ID.String(), s.AMR)
+		if err != nil {
+			return err
+		}
+		finalReturnTo = cr
+	}
+
+	x.ContentNegotiationRedirection(w, r, s.Declassify(), e.d.Writer(), finalReturnTo)
 	return nil
 }
 

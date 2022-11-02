@@ -24,7 +24,9 @@ type SelfServiceRegistrationFlow struct {
 	// ID represents the flow's unique ID. When performing the registration flow, this represents the id in the registration ui's query parameter: http://<selfservice.flows.registration.ui_url>/?flow=<id>
 	Id string `json:"id"`
 	// IssuedAt is the time (UTC) when the flow occurred.
-	IssuedAt time.Time `json:"issued_at"`
+	IssuedAt             time.Time      `json:"issued_at"`
+	Oauth2LoginChallenge NullableString `json:"oauth2_login_challenge,omitempty"`
+	Oauth2LoginRequest   *LoginRequest  `json:"oauth2_login_request,omitempty"`
 	// RequestURL is the initial URL that was requested from Ory Kratos. It can be used to forward information contained in the URL's path or query for example.
 	RequestUrl string `json:"request_url"`
 	// ReturnTo contains the requested return_to URL.
@@ -161,6 +163,81 @@ func (o *SelfServiceRegistrationFlow) SetIssuedAt(v time.Time) {
 	o.IssuedAt = v
 }
 
+// GetOauth2LoginChallenge returns the Oauth2LoginChallenge field value if set, zero value otherwise (both if not set or set to explicit null).
+func (o *SelfServiceRegistrationFlow) GetOauth2LoginChallenge() string {
+	if o == nil || o.Oauth2LoginChallenge.Get() == nil {
+		var ret string
+		return ret
+	}
+	return *o.Oauth2LoginChallenge.Get()
+}
+
+// GetOauth2LoginChallengeOk returns a tuple with the Oauth2LoginChallenge field value if set, nil otherwise
+// and a boolean to check if the value has been set.
+// NOTE: If the value is an explicit nil, `nil, true` will be returned
+func (o *SelfServiceRegistrationFlow) GetOauth2LoginChallengeOk() (*string, bool) {
+	if o == nil {
+		return nil, false
+	}
+	return o.Oauth2LoginChallenge.Get(), o.Oauth2LoginChallenge.IsSet()
+}
+
+// HasOauth2LoginChallenge returns a boolean if a field has been set.
+func (o *SelfServiceRegistrationFlow) HasOauth2LoginChallenge() bool {
+	if o != nil && o.Oauth2LoginChallenge.IsSet() {
+		return true
+	}
+
+	return false
+}
+
+// SetOauth2LoginChallenge gets a reference to the given NullableString and assigns it to the Oauth2LoginChallenge field.
+func (o *SelfServiceRegistrationFlow) SetOauth2LoginChallenge(v string) {
+	o.Oauth2LoginChallenge.Set(&v)
+}
+
+// SetOauth2LoginChallengeNil sets the value for Oauth2LoginChallenge to be an explicit nil
+func (o *SelfServiceRegistrationFlow) SetOauth2LoginChallengeNil() {
+	o.Oauth2LoginChallenge.Set(nil)
+}
+
+// UnsetOauth2LoginChallenge ensures that no value is present for Oauth2LoginChallenge, not even an explicit nil
+func (o *SelfServiceRegistrationFlow) UnsetOauth2LoginChallenge() {
+	o.Oauth2LoginChallenge.Unset()
+}
+
+// GetOauth2LoginRequest returns the Oauth2LoginRequest field value if set, zero value otherwise.
+func (o *SelfServiceRegistrationFlow) GetOauth2LoginRequest() LoginRequest {
+	if o == nil || o.Oauth2LoginRequest == nil {
+		var ret LoginRequest
+		return ret
+	}
+	return *o.Oauth2LoginRequest
+}
+
+// GetOauth2LoginRequestOk returns a tuple with the Oauth2LoginRequest field value if set, nil otherwise
+// and a boolean to check if the value has been set.
+func (o *SelfServiceRegistrationFlow) GetOauth2LoginRequestOk() (*LoginRequest, bool) {
+	if o == nil || o.Oauth2LoginRequest == nil {
+		return nil, false
+	}
+	return o.Oauth2LoginRequest, true
+}
+
+// HasOauth2LoginRequest returns a boolean if a field has been set.
+func (o *SelfServiceRegistrationFlow) HasOauth2LoginRequest() bool {
+	if o != nil && o.Oauth2LoginRequest != nil {
+		return true
+	}
+
+	return false
+}
+
+// SetOauth2LoginRequest gets a reference to the given LoginRequest and assigns it to the Oauth2LoginRequest field.
+func (o *SelfServiceRegistrationFlow) SetOauth2LoginRequest(v LoginRequest) {
+	o.Oauth2LoginRequest = &v
+}
+
 // GetRequestUrl returns the RequestUrl field value
 func (o *SelfServiceRegistrationFlow) GetRequestUrl() string {
 	if o == nil {
@@ -278,6 +355,12 @@ func (o SelfServiceRegistrationFlow) MarshalJSON() ([]byte, error) {
 	}
 	if true {
 		toSerialize["issued_at"] = o.IssuedAt
+	}
+	if o.Oauth2LoginChallenge.IsSet() {
+		toSerialize["oauth2_login_challenge"] = o.Oauth2LoginChallenge.Get()
+	}
+	if o.Oauth2LoginRequest != nil {
+		toSerialize["oauth2_login_request"] = o.Oauth2LoginRequest
 	}
 	if true {
 		toSerialize["request_url"] = o.RequestUrl
