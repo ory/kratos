@@ -424,6 +424,40 @@ func TestHandlerAdminSessionManagement(t *testing.T) {
 		s := &Session{Identity: i}
 		require.NoError(t, reg.SessionPersister().UpsertSession(ctx, s))
 
+		t.Run("get session no expand", func(t *testing.T) {
+			req, _ := http.NewRequest("GET", ts.URL+"/admin/sessions/"+s.ID.String(), nil)
+			res, err := client.Do(req)
+			require.NoError(t, err)
+			assert.Equal(t, http.StatusOK, res.StatusCode)
+
+			var session Session
+			require.NoError(t, json.NewDecoder(res.Body).Decode(&session))
+			assert.Equal(t, s.ID, session.ID)
+			assert.Nil(t, session.Identity)
+			assert.Empty(t, session.Devices)
+		})
+
+		t.Run("get session expand identity", func(t *testing.T) {
+			req, _ := http.NewRequest("GET", ts.URL+"/admin/sessions/"+s.ID.String()+"/?expand=Identity", nil)
+			res, err := client.Do(req)
+			require.NoError(t, err)
+			assert.Equal(t, http.StatusOK, res.StatusCode)
+
+			var session Session
+			require.NoError(t, json.NewDecoder(res.Body).Decode(&session))
+			assert.Equal(t, s.ID, session.ID)
+			assert.NotNil(t, session.Identity)
+			assert.Equal(t, s.Identity.ID.String(), session.Identity.ID.String())
+			assert.Empty(t, session.Devices)
+		})
+
+		t.Run("get session expand invalid", func(t *testing.T) {
+			req, _ := http.NewRequest("GET", ts.URL+"/admin/sessions/"+s.ID.String()+"/?expand=invalid", nil)
+			res, err := client.Do(req)
+			require.NoError(t, err)
+			assert.Equal(t, http.StatusBadRequest, res.StatusCode)
+		})
+
 		t.Run("should list sessions", func(t *testing.T) {
 			req, _ := http.NewRequest("GET", ts.URL+"/admin/sessions/", nil)
 			res, err := client.Do(req)
@@ -438,7 +472,7 @@ func TestHandlerAdminSessionManagement(t *testing.T) {
 			assert.Equal(t, s.ID, sessions[0].ID)
 		})
 
-		t.Run("should list session", func(t *testing.T) {
+		t.Run("should list sessions for an identity", func(t *testing.T) {
 			req, _ := http.NewRequest("GET", ts.URL+"/admin/identities/"+i.ID.String()+"/sessions", nil)
 			res, err := client.Do(req)
 			require.NoError(t, err)

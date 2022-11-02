@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net/http"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/ory/x/pagination/keysetpagination"
@@ -64,6 +65,7 @@ const (
 
 func (h *Handler) RegisterAdminRoutes(admin *x.RouterAdmin) {
 	admin.GET(RouteCollection, h.adminListSessions)
+	admin.GET(RouteSession, h.adminGetSession)
 
 	admin.GET(AdminRouteIdentitiesSessions, h.adminListIdentitySessions)
 	admin.DELETE(AdminRouteIdentitiesSessions, h.adminDeleteIdentitySessions)
@@ -71,11 +73,6 @@ func (h *Handler) RegisterAdminRoutes(admin *x.RouterAdmin) {
 
 	admin.DELETE(RouteCollection, x.RedirectToPublicRoute(h.r))
 	admin.DELETE(RouteSession, x.RedirectToPublicRoute(h.r))
-
-	for _, m := range []string{http.MethodGet, http.MethodHead, http.MethodPost, http.MethodPut} {
-		// Redirect to public endpoint
-		admin.Handle(m, RouteWhoami, x.RedirectToPublicRoute(h.r))
-	}
 }
 
 func (h *Handler) RegisterPublicRoutes(public *x.RouterPublic) {
@@ -346,6 +343,77 @@ func (h *Handler) adminListSessions(w http.ResponseWriter, r *http.Request, ps h
 
 	w.Header().Set("x-total-count", fmt.Sprint(total))
 	keysetpagination.Header(w, r.URL, nextPage)
+	h.r.Writer().Write(w, r, sess)
+}
+
+// Session Get Request
+//
+// The request object for getting a session in an administrative context.
+//
+// swagger:parameters adminGetSession
+// nolint:deadcode,unused
+type adminGetSessionRequest struct {
+	// Active is a boolean flag that filters out sessions based on the state. If no value is provided, all sessions are returned.
+	//
+	// enum: Identity,Devices
+	// required: false
+	// in: query
+	ExpandOptions Expandables `json:"expand"`
+}
+
+// swagger:route GET /admin/sessions/{id} v0alpha2 adminGetSession
+//
+// This endpoint returns the session object with expandables specified.
+//
+// This endpoint is useful for:
+//
+// - Getting a session object with all specified expandables that exist in an administrative context.
+//
+//	Schemes: http, https
+//
+//	Security:
+//	  oryAccessToken:
+//
+//	Responses:
+//	  200: session
+//	  400: jsonError
+//	  401: jsonError
+//	  404: jsonError
+//	  500: jsonError
+func (h *Handler) adminGetSession(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	if ps.ByName("id") == "whoami" {
+		// for /admin/sessions/whoami redirect to the public route
+		x.RedirectToPublicRoute(h.r)
+		return
+	}
+
+	sID, err := uuid.FromString(ps.ByName("id"))
+	if err != nil {
+		h.r.Writer().WriteError(w, r, herodot.ErrBadRequest.WithError(err.Error()).WithDebug("could not parse UUID"))
+		return
+	}
+
+	var expandables Expandables
+
+	urlValues := r.URL.Query()
+	if urlValues.Has("expand") {
+		es := strings.Split(urlValues.Get("expand"), ",")
+		for _, e := range es {
+			expand, ok := ParseExpandable(e)
+			if !ok {
+				h.r.Writer().WriteError(w, r, herodot.ErrBadRequest.WithError("could not parse expand option").WithDebug("could not parse expand option"))
+				return
+			}
+			expandables = append(expandables, expand)
+		}
+	}
+
+	sess, err := h.r.SessionPersister().GetSession(r.Context(), sID, expandables)
+	if err != nil {
+		h.r.Writer().WriteError(w, r, err)
+		return
+	}
+
 	h.r.Writer().Write(w, r, sess)
 }
 
