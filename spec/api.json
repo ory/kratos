@@ -1,6 +1,19 @@
 {
   "components": {
     "responses": {
+      "adminListSessions": {
+        "content": {
+          "application/json": {
+            "schema": {
+              "items": {
+                "$ref": "#/components/schemas/session"
+              },
+              "type": "array"
+            }
+          }
+        },
+        "description": "Session List Response\n\nThe response given when listing sessions in an administrative context."
+      },
       "emptyResponse": {
         "description": "Empty responses are sent when, for example, resources are deleted. The HTTP status code for empty responses is typically 201."
       }
@@ -1004,7 +1017,8 @@
         "type": "integer"
       },
       "nullJsonRawMessage": {
-        "description": "NullJSONRawMessage represents a json.RawMessage that works well with JSON, SQL, and Swagger and is NULLable-"
+        "description": "NullJSONRawMessage represents a json.RawMessage that works well with JSON, SQL, and Swagger and is NULLable-",
+        "nullable": true
       },
       "nullTime": {
         "format": "date-time",
@@ -3636,6 +3650,103 @@
         ]
       }
     },
+    "/admin/sessions": {
+      "get": {
+        "description": "This endpoint is useful for:\n\nListing all sessions that exist in an administrative context.",
+        "operationId": "adminListSessions",
+        "parameters": [
+          {
+            "description": "Items per Page\n\nThis is the number of items per page to return.\nFor details on pagination please head over to the [pagination documentation](https://www.ory.sh/docs/ecosystem/api-design#pagination).",
+            "in": "query",
+            "name": "page_size",
+            "schema": {
+              "default": 250,
+              "format": "int64",
+              "maximum": 1000,
+              "minimum": 1,
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Next Page Token\n\nThe next page token.\nFor details on pagination please head over to the [pagination documentation](https://www.ory.sh/docs/ecosystem/api-design#pagination).",
+            "in": "query",
+            "name": "page_token",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "Active is a boolean flag that filters out sessions based on the state. If no value is provided, all sessions are returned.",
+            "in": "query",
+            "name": "active",
+            "schema": {
+              "type": "boolean"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/sessionList"
+                }
+              }
+            },
+            "description": "sessionList"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/jsonError"
+                }
+              }
+            },
+            "description": "jsonError"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/jsonError"
+                }
+              }
+            },
+            "description": "jsonError"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/jsonError"
+                }
+              }
+            },
+            "description": "jsonError"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/jsonError"
+                }
+              }
+            },
+            "description": "jsonError"
+          }
+        },
+        "security": [
+          {
+            "oryAccessToken": []
+          }
+        ],
+        "summary": "This endpoint returns all sessions that exist.",
+        "tags": [
+          "v0alpha2"
+        ]
+      }
+    },
     "/admin/sessions/{id}/extend": {
       "patch": {
         "description": "Calling this endpoint extends the given session ID. If `session.earliest_possible_extend` is set it\nwill only extend the session after the specified time has passed.\n\nRetrieve the session ID from the `/sessions/whoami` endpoint / `toSession` SDK method.",
@@ -4151,14 +4262,6 @@
         "operationId": "initializeSelfServiceLoginFlowForBrowsers",
         "parameters": [
           {
-            "description": "An optional Hydra login challenge. If present, Kratos will cooperate with\nOry Hydra to act as an OAuth2 identity provider.\n\nThe value for this parameter comes from `login_challenge` URL Query parameter sent to your\napplication (e.g. `/login?login_challenge=abcde`).",
-            "in": "query",
-            "name": "login_challenge",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
             "description": "Refresh a login session\n\nIf set to true, this will refresh an existing login session by\nasking the user to sign in again. This will reset the\nauthenticated_at time of the session.",
             "in": "query",
             "name": "refresh",
@@ -4186,6 +4289,14 @@
             "description": "HTTP Cookies\n\nWhen using the SDK in a browser app, on the server side you must include the HTTP Cookie Header\nsent by the client to your server here. This ensures that CSRF and session cookies are respected.",
             "in": "header",
             "name": "Cookie",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "An optional Hydra login challenge. If present, Kratos will cooperate with\nOry Hydra to act as an OAuth2 identity provider.\n\nThe value for this parameter comes from `login_challenge` URL Query parameter sent to your\napplication (e.g. `/login?login_challenge=abcde`).",
+            "in": "query",
+            "name": "login_challenge",
             "schema": {
               "type": "string"
             }
@@ -4881,17 +4992,17 @@
         "operationId": "initializeSelfServiceRegistrationFlowForBrowsers",
         "parameters": [
           {
-            "description": "Ory OAuth 2.0 Login Challenge.\n\nIf set will cooperate with Ory OAuth2 and OpenID to act as an OAuth2 server / OpenID Provider.\n\nThe value for this parameter comes from `login_challenge` URL Query parameter sent to your\napplication (e.g. `/registration?login_challenge=abcde`).\n\nThis feature is compatible with Ory Hydra when not running on the Ory Network.",
+            "description": "The URL to return the browser to after the flow was completed.",
             "in": "query",
-            "name": "login_challenge",
+            "name": "return_to",
             "schema": {
               "type": "string"
             }
           },
           {
-            "description": "The URL to return the browser to after the flow was completed.",
+            "description": "Ory OAuth 2.0 Login Challenge.\n\nIf set will cooperate with Ory OAuth2 and OpenID to act as an OAuth2 server / OpenID Provider.\n\nThe value for this parameter comes from `login_challenge` URL Query parameter sent to your\napplication (e.g. `/registration?login_challenge=abcde`).\n\nThis feature is compatible with Ory Hydra when not running on the Ory Network.",
             "in": "query",
-            "name": "return_to",
+            "name": "login_challenge",
             "schema": {
               "type": "string"
             }

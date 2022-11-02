@@ -14,6 +14,7 @@ Method | HTTP request | Description
 [**AdminListCourierMessages**](V0alpha2Api.md#AdminListCourierMessages) | **Get** /admin/courier/messages | List Messages
 [**AdminListIdentities**](V0alpha2Api.md#AdminListIdentities) | **Get** /admin/identities | List Identities
 [**AdminListIdentitySessions**](V0alpha2Api.md#AdminListIdentitySessions) | **Get** /admin/identities/{id}/sessions | List an Identity&#39;s Sessions
+[**AdminListSessions**](V0alpha2Api.md#AdminListSessions) | **Get** /admin/sessions | This endpoint returns all sessions that exist.
 [**AdminPatchIdentity**](V0alpha2Api.md#AdminPatchIdentity) | **Patch** /admin/identities/{id} | Patch an Identity
 [**AdminUpdateIdentity**](V0alpha2Api.md#AdminUpdateIdentity) | **Put** /admin/identities/{id} | Update an Identity
 [**CreateSelfServiceLogoutFlowUrlForBrowsers**](V0alpha2Api.md#CreateSelfServiceLogoutFlowUrlForBrowsers) | **Get** /self-service/logout/browser | Create a Logout URL for Browsers
@@ -722,6 +723,76 @@ Name | Type | Description  | Notes
 
  **perPage** | **int64** | Items per Page  This is the number of items per page. | [default to 250]
  **page** | **int64** | Pagination Page  This value is currently an integer, but it is not sequential. The value is not the page number, but a reference. The next page can be any number and some numbers might return an empty list.  For example, page 2 might not follow after page 1. And even if page 3 and 5 exist, but page 4 might not exist. | [default to 1]
+ **active** | **bool** | Active is a boolean flag that filters out sessions based on the state. If no value is provided, all sessions are returned. | 
+
+### Return type
+
+[**[]Session**](Session.md)
+
+### Authorization
+
+[oryAccessToken](../README.md#oryAccessToken)
+
+### HTTP request headers
+
+- **Content-Type**: Not defined
+- **Accept**: application/json
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints)
+[[Back to Model list]](../README.md#documentation-for-models)
+[[Back to README]](../README.md)
+
+
+## AdminListSessions
+
+> []Session AdminListSessions(ctx).PageSize(pageSize).PageToken(pageToken).Active(active).Execute()
+
+This endpoint returns all sessions that exist.
+
+
+
+### Example
+
+```go
+package main
+
+import (
+    "context"
+    "fmt"
+    "os"
+    openapiclient "./openapi"
+)
+
+func main() {
+    pageSize := int64(789) // int64 | Items per Page  This is the number of items per page to return. For details on pagination please head over to the [pagination documentation](https://www.ory.sh/docs/ecosystem/api-design#pagination). (optional) (default to 250)
+    pageToken := "pageToken_example" // string | Next Page Token  The next page token. For details on pagination please head over to the [pagination documentation](https://www.ory.sh/docs/ecosystem/api-design#pagination). (optional)
+    active := true // bool | Active is a boolean flag that filters out sessions based on the state. If no value is provided, all sessions are returned. (optional)
+
+    configuration := openapiclient.NewConfiguration()
+    apiClient := openapiclient.NewAPIClient(configuration)
+    resp, r, err := apiClient.V0alpha2Api.AdminListSessions(context.Background()).PageSize(pageSize).PageToken(pageToken).Active(active).Execute()
+    if err != nil {
+        fmt.Fprintf(os.Stderr, "Error when calling `V0alpha2Api.AdminListSessions``: %v\n", err)
+        fmt.Fprintf(os.Stderr, "Full HTTP response: %v\n", r)
+    }
+    // response from `AdminListSessions`: []Session
+    fmt.Fprintf(os.Stdout, "Response from `V0alpha2Api.AdminListSessions`: %v\n", resp)
+}
+```
+
+### Path Parameters
+
+
+
+### Other Parameters
+
+Other parameters are passed through a pointer to a apiAdminListSessionsRequest struct via the builder pattern
+
+
+Name | Type | Description  | Notes
+------------- | ------------- | ------------- | -------------
+ **pageSize** | **int64** | Items per Page  This is the number of items per page to return. For details on pagination please head over to the [pagination documentation](https://www.ory.sh/docs/ecosystem/api-design#pagination). | [default to 250]
+ **pageToken** | **string** | Next Page Token  The next page token. For details on pagination please head over to the [pagination documentation](https://www.ory.sh/docs/ecosystem/api-design#pagination). | 
  **active** | **bool** | Active is a boolean flag that filters out sessions based on the state. If no value is provided, all sessions are returned. | 
 
 ### Return type
@@ -1493,7 +1564,7 @@ No authorization required
 
 ## InitializeSelfServiceLoginFlowForBrowsers
 
-> SelfServiceLoginFlow InitializeSelfServiceLoginFlowForBrowsers(ctx).LoginChallenge(loginChallenge).Refresh(refresh).Aal(aal).ReturnTo(returnTo).Cookie(cookie).Execute()
+> SelfServiceLoginFlow InitializeSelfServiceLoginFlowForBrowsers(ctx).Refresh(refresh).Aal(aal).ReturnTo(returnTo).Cookie(cookie).LoginChallenge(loginChallenge).Execute()
 
 Initialize Login Flow for Browsers
 
@@ -1512,15 +1583,15 @@ import (
 )
 
 func main() {
-    loginChallenge := "loginChallenge_example" // string | An optional Hydra login challenge. If present, Kratos will cooperate with Ory Hydra to act as an OAuth2 identity provider.  The value for this parameter comes from `login_challenge` URL Query parameter sent to your application (e.g. `/login?login_challenge=abcde`). (optional)
     refresh := true // bool | Refresh a login session  If set to true, this will refresh an existing login session by asking the user to sign in again. This will reset the authenticated_at time of the session. (optional)
     aal := "aal_example" // string | Request a Specific AuthenticationMethod Assurance Level  Use this parameter to upgrade an existing session's authenticator assurance level (AAL). This allows you to ask for multi-factor authentication. When an identity sign in using e.g. username+password, the AAL is 1. If you wish to \"upgrade\" the session's security by asking the user to perform TOTP / WebAuth/ ... you would set this to \"aal2\". (optional)
     returnTo := "returnTo_example" // string | The URL to return the browser to after the flow was completed. (optional)
     cookie := "cookie_example" // string | HTTP Cookies  When using the SDK in a browser app, on the server side you must include the HTTP Cookie Header sent by the client to your server here. This ensures that CSRF and session cookies are respected. (optional)
+    loginChallenge := "loginChallenge_example" // string | An optional Hydra login challenge. If present, Kratos will cooperate with Ory Hydra to act as an OAuth2 identity provider.  The value for this parameter comes from `login_challenge` URL Query parameter sent to your application (e.g. `/login?login_challenge=abcde`). (optional)
 
     configuration := openapiclient.NewConfiguration()
     apiClient := openapiclient.NewAPIClient(configuration)
-    resp, r, err := apiClient.V0alpha2Api.InitializeSelfServiceLoginFlowForBrowsers(context.Background()).LoginChallenge(loginChallenge).Refresh(refresh).Aal(aal).ReturnTo(returnTo).Cookie(cookie).Execute()
+    resp, r, err := apiClient.V0alpha2Api.InitializeSelfServiceLoginFlowForBrowsers(context.Background()).Refresh(refresh).Aal(aal).ReturnTo(returnTo).Cookie(cookie).LoginChallenge(loginChallenge).Execute()
     if err != nil {
         fmt.Fprintf(os.Stderr, "Error when calling `V0alpha2Api.InitializeSelfServiceLoginFlowForBrowsers``: %v\n", err)
         fmt.Fprintf(os.Stderr, "Full HTTP response: %v\n", r)
@@ -1541,11 +1612,11 @@ Other parameters are passed through a pointer to a apiInitializeSelfServiceLogin
 
 Name | Type | Description  | Notes
 ------------- | ------------- | ------------- | -------------
- **loginChallenge** | **string** | An optional Hydra login challenge. If present, Kratos will cooperate with Ory Hydra to act as an OAuth2 identity provider.  The value for this parameter comes from &#x60;login_challenge&#x60; URL Query parameter sent to your application (e.g. &#x60;/login?login_challenge&#x3D;abcde&#x60;). | 
  **refresh** | **bool** | Refresh a login session  If set to true, this will refresh an existing login session by asking the user to sign in again. This will reset the authenticated_at time of the session. | 
  **aal** | **string** | Request a Specific AuthenticationMethod Assurance Level  Use this parameter to upgrade an existing session&#39;s authenticator assurance level (AAL). This allows you to ask for multi-factor authentication. When an identity sign in using e.g. username+password, the AAL is 1. If you wish to \&quot;upgrade\&quot; the session&#39;s security by asking the user to perform TOTP / WebAuth/ ... you would set this to \&quot;aal2\&quot;. | 
  **returnTo** | **string** | The URL to return the browser to after the flow was completed. | 
  **cookie** | **string** | HTTP Cookies  When using the SDK in a browser app, on the server side you must include the HTTP Cookie Header sent by the client to your server here. This ensures that CSRF and session cookies are respected. | 
+ **loginChallenge** | **string** | An optional Hydra login challenge. If present, Kratos will cooperate with Ory Hydra to act as an OAuth2 identity provider.  The value for this parameter comes from &#x60;login_challenge&#x60; URL Query parameter sent to your application (e.g. &#x60;/login?login_challenge&#x3D;abcde&#x60;). | 
 
 ### Return type
 
@@ -1764,7 +1835,7 @@ No authorization required
 
 ## InitializeSelfServiceRegistrationFlowForBrowsers
 
-> SelfServiceRegistrationFlow InitializeSelfServiceRegistrationFlowForBrowsers(ctx).LoginChallenge(loginChallenge).ReturnTo(returnTo).Execute()
+> SelfServiceRegistrationFlow InitializeSelfServiceRegistrationFlowForBrowsers(ctx).ReturnTo(returnTo).LoginChallenge(loginChallenge).Execute()
 
 Initialize Registration Flow for Browsers
 
@@ -1783,12 +1854,12 @@ import (
 )
 
 func main() {
-    loginChallenge := "loginChallenge_example" // string | Ory OAuth 2.0 Login Challenge.  If set will cooperate with Ory OAuth2 and OpenID to act as an OAuth2 server / OpenID Provider.  The value for this parameter comes from `login_challenge` URL Query parameter sent to your application (e.g. `/registration?login_challenge=abcde`).  This feature is compatible with Ory Hydra when not running on the Ory Network. (optional)
     returnTo := "returnTo_example" // string | The URL to return the browser to after the flow was completed. (optional)
+    loginChallenge := "loginChallenge_example" // string | Ory OAuth 2.0 Login Challenge.  If set will cooperate with Ory OAuth2 and OpenID to act as an OAuth2 server / OpenID Provider.  The value for this parameter comes from `login_challenge` URL Query parameter sent to your application (e.g. `/registration?login_challenge=abcde`).  This feature is compatible with Ory Hydra when not running on the Ory Network. (optional)
 
     configuration := openapiclient.NewConfiguration()
     apiClient := openapiclient.NewAPIClient(configuration)
-    resp, r, err := apiClient.V0alpha2Api.InitializeSelfServiceRegistrationFlowForBrowsers(context.Background()).LoginChallenge(loginChallenge).ReturnTo(returnTo).Execute()
+    resp, r, err := apiClient.V0alpha2Api.InitializeSelfServiceRegistrationFlowForBrowsers(context.Background()).ReturnTo(returnTo).LoginChallenge(loginChallenge).Execute()
     if err != nil {
         fmt.Fprintf(os.Stderr, "Error when calling `V0alpha2Api.InitializeSelfServiceRegistrationFlowForBrowsers``: %v\n", err)
         fmt.Fprintf(os.Stderr, "Full HTTP response: %v\n", r)
@@ -1809,8 +1880,8 @@ Other parameters are passed through a pointer to a apiInitializeSelfServiceRegis
 
 Name | Type | Description  | Notes
 ------------- | ------------- | ------------- | -------------
- **loginChallenge** | **string** | Ory OAuth 2.0 Login Challenge.  If set will cooperate with Ory OAuth2 and OpenID to act as an OAuth2 server / OpenID Provider.  The value for this parameter comes from &#x60;login_challenge&#x60; URL Query parameter sent to your application (e.g. &#x60;/registration?login_challenge&#x3D;abcde&#x60;).  This feature is compatible with Ory Hydra when not running on the Ory Network. | 
  **returnTo** | **string** | The URL to return the browser to after the flow was completed. | 
+ **loginChallenge** | **string** | Ory OAuth 2.0 Login Challenge.  If set will cooperate with Ory OAuth2 and OpenID to act as an OAuth2 server / OpenID Provider.  The value for this parameter comes from &#x60;login_challenge&#x60; URL Query parameter sent to your application (e.g. &#x60;/registration?login_challenge&#x3D;abcde&#x60;).  This feature is compatible with Ory Hydra when not running on the Ory Network. | 
 
 ### Return type
 

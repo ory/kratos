@@ -645,6 +645,87 @@ paths:
       summary: Create a Recovery Link
       tags:
       - v0alpha2
+  /admin/sessions:
+    get:
+      description: |-
+        This endpoint is useful for:
+
+        Listing all sessions that exist in an administrative context.
+      operationId: adminListSessions
+      parameters:
+      - description: |-
+          Items per Page
+
+          This is the number of items per page to return.
+          For details on pagination please head over to the [pagination documentation](https://www.ory.sh/docs/ecosystem/api-design#pagination).
+        explode: true
+        in: query
+        name: page_size
+        required: false
+        schema:
+          default: 250
+          format: int64
+          maximum: 1000
+          minimum: 1
+          type: integer
+        style: form
+      - description: |-
+          Next Page Token
+
+          The next page token.
+          For details on pagination please head over to the [pagination documentation](https://www.ory.sh/docs/ecosystem/api-design#pagination).
+        explode: true
+        in: query
+        name: page_token
+        required: false
+        schema:
+          type: string
+        style: form
+      - description: Active is a boolean flag that filters out sessions based on the
+          state. If no value is provided, all sessions are returned.
+        explode: true
+        in: query
+        name: active
+        required: false
+        schema:
+          type: boolean
+        style: form
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/sessionList'
+          description: sessionList
+        "400":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/jsonError'
+          description: jsonError
+        "401":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/jsonError'
+          description: jsonError
+        "404":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/jsonError'
+          description: jsonError
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/jsonError'
+          description: jsonError
+      security:
+      - oryAccessToken: []
+      summary: This endpoint returns all sessions that exist.
+      tags:
+      - v0alpha2
   /admin/sessions/{id}/extend:
     patch:
       description: |-
@@ -1110,19 +1191,6 @@ paths:
       operationId: initializeSelfServiceLoginFlowForBrowsers
       parameters:
       - description: |-
-          An optional Hydra login challenge. If present, Kratos will cooperate with
-          Ory Hydra to act as an OAuth2 identity provider.
-
-          The value for this parameter comes from `login_challenge` URL Query parameter sent to your
-          application (e.g. `/login?login_challenge=abcde`).
-        explode: true
-        in: query
-        name: login_challenge
-        required: false
-        schema:
-          type: string
-        style: form
-      - description: |-
           Refresh a login session
 
           If set to true, this will refresh an existing login session by
@@ -1169,6 +1237,19 @@ paths:
         schema:
           type: string
         style: simple
+      - description: |-
+          An optional Hydra login challenge. If present, Kratos will cooperate with
+          Ory Hydra to act as an OAuth2 identity provider.
+
+          The value for this parameter comes from `login_challenge` URL Query parameter sent to your
+          application (e.g. `/login?login_challenge=abcde`).
+        explode: true
+        in: query
+        name: login_challenge
+        required: false
+        schema:
+          type: string
+        style: form
       responses:
         "200":
           content:
@@ -1868,6 +1949,14 @@ paths:
         More information can be found at [Ory Kratos User Login](https://www.ory.sh/docs/kratos/self-service/flows/user-login) and [User Registration Documentation](https://www.ory.sh/docs/kratos/self-service/flows/user-registration).
       operationId: initializeSelfServiceRegistrationFlowForBrowsers
       parameters:
+      - description: The URL to return the browser to after the flow was completed.
+        explode: true
+        in: query
+        name: return_to
+        required: false
+        schema:
+          type: string
+        style: form
       - description: |-
           Ory OAuth 2.0 Login Challenge.
 
@@ -1880,14 +1969,6 @@ paths:
         explode: true
         in: query
         name: login_challenge
-        required: false
-        schema:
-          type: string
-        style: form
-      - description: The URL to return the browser to after the flow was completed.
-        explode: true
-        in: query
-        name: return_to
         required: false
         schema:
           type: string
@@ -2972,6 +3053,17 @@ paths:
       - metadata
 components:
   responses:
+    adminListSessions:
+      content:
+        application/json:
+          schema:
+            items:
+              $ref: '#/components/schemas/session'
+            type: array
+      description: |-
+        Session List Response
+
+        The response given when listing sessions in an administrative context.
     emptyResponse:
       description: Empty responses are sent when, for example, resources are deleted.
         The HTTP status code for empty responses is typically 201.
@@ -3904,9 +3996,11 @@ components:
         metadata_admin:
           description: NullJSONRawMessage represents a json.RawMessage that works
             well with JSON, SQL, and Swagger and is NULLable-
+          nullable: true
         metadata_public:
           description: NullJSONRawMessage represents a json.RawMessage that works
             well with JSON, SQL, and Swagger and is NULLable-
+          nullable: true
         recovery_addresses:
           description: RecoveryAddresses contains all the addresses that can be used
             to recover an identity.
@@ -4229,6 +4323,7 @@ components:
     nullJsonRawMessage:
       description: NullJSONRawMessage represents a json.RawMessage that works well
         with JSON, SQL, and Swagger and is NULLable-
+      nullable: true
     nullTime:
       format: date-time
       title: NullTime implements sql.NullTime functionality.

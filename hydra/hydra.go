@@ -105,7 +105,7 @@ func (h *DefaultHydra) AcceptLoginRequest(ctx context.Context, hlc uuid.UUID, su
 		if r != nil {
 			innerErr = innerErr.
 				WithDetail("status_code", r.StatusCode).
-				WithDebugf("error", err.Error())
+				WithDebug(err.Error())
 		}
 		return "", errors.WithStack(innerErr)
 	}
@@ -129,7 +129,7 @@ func (h *DefaultHydra) GetLoginRequest(ctx context.Context, hlc uuid.NullUUID) (
 		if r != nil {
 			innerErr = innerErr.
 				WithDetail("status_code", r.StatusCode).
-				WithDebugf("error", err.Error())
+				WithDebug(err.Error())
 		}
 		return nil, errors.WithStack(innerErr)
 	}
