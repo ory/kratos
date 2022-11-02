@@ -403,9 +403,7 @@ type adminGetSessionRequest struct {
 //	Responses:
 //	  200: session
 //	  400: jsonError
-//	  401: jsonError
-//	  404: jsonError
-//	  500: jsonError
+//	  default: jsonError
 func (h *Handler) adminGetSession(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	if ps.ByName("id") == "whoami" {
 		// for /admin/sessions/whoami redirect to the public route
