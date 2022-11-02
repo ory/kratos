@@ -425,7 +425,7 @@ func (h *Handler) adminGetSession(w http.ResponseWriter, r *http.Request, ps htt
 		for _, e := range es {
 			expand, ok := ParseExpandable(e)
 			if !ok {
-				h.r.Writer().WriteError(w, r, errors.WithStack(herodot.ErrBadRequest.WithReasonf("Could not parse expand option: %s", e))))
+				h.r.Writer().WriteError(w, r, errors.WithStack(herodot.ErrBadRequest.WithReasonf("Could not parse expand option: %s", e)))
 				return
 			}
 			expandables = append(expandables, expand)
