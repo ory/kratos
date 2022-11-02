@@ -23,26 +23,14 @@ type Profile struct {
 	LocalizedLastName  string `json:"localizedLastName"`
 	LocalizedFirstName string `json:"localizedFirstName"`
 	ProfilePicture     struct {
-		DisplayImage string `json:"displayImage"`
+		DisplayImage struct {
+			Elements []struct {
+				Identifiers []struct {
+					Identifier string `json:"identifier"`
+				} `json:"identifiers"`
+			} `json:"elements"`
+		} `json:"displayImage~"`
 	} `json:"profilePicture"`
-	FirstName struct {
-		Localized struct {
-			EnUS string `json:"en_US"`
-		} `json:"localized"`
-		PreferredLocale struct {
-			Country  string `json:"country"`
-			Language string `json:"language"`
-		} `json:"preferredLocale"`
-	} `json:"firstName"`
-	LastName struct {
-		Localized struct {
-			EnUS string `json:"en_US"`
-		} `json:"localized"`
-		PreferredLocale struct {
-			Country  string `json:"country"`
-			Language string `json:"language"`
-		} `json:"preferredLocale"`
-	} `json:"lastName"`
 	ID string `json:"id"`
 }
 
@@ -69,7 +57,7 @@ type Introspection struct {
 // type APIUrl string
 
 const (
-	ProfileUrl       string = "https://api.linkedin.com/v2/me"
+	ProfileUrl       string = "https://api.linkedin.com/v2/me?projection=(id,localizedFirstName,localizedLastName,profilePicture(displayImage~digitalmediaAsset:playableStreams))"
 	EmailUrl         string = "https://api.linkedin.com/v2/emailAddress?q=members&projection=(elements*(handle~))"
 	IntrospectionURL string = "https://www.linkedin.com/oauth/v2/introspectToken"
 )
@@ -137,24 +125,6 @@ func (l *ProviderLinkedIn) ApiCall(url string, result interface{}, exchange *oau
 }
 
 func (l *ProviderLinkedIn) Introspection(result interface{}, exchange *oauth2.Token) error {
-	// v := url.Values{}
-	// v.Set("client_id", l.config.ClientID)
-	// v.Set("client_secret", l.config.ClientSecret)
-	// v.Set("token", exchange.AccessToken)
-	// req, err := http.NewRequest(http.MethodPost, string(IntrospectionURL), strings.NewReader(v.Encode()))
-	// req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
-	// if err != nil {
-	// 	return errors.WithStack(err)
-	// }
-	// client := &http.Client{
-	// 	CheckRedirect: redirectPostOn302,
-	// }
-	// resp, err := client.Do(req)
-	// if err != nil {
-	// 	return errors.WithStack(err)
-	// }
-
-	//tried alternative http posting of the form, same results.
 	resp, err := http.PostForm(string(IntrospectionURL),
 		url.Values{"client_id": {l.config.ClientID}, "client_secret": {l.config.ClientSecret}, "token": {exchange.AccessToken}})
 
@@ -175,13 +145,13 @@ func (l *ProviderLinkedIn) Introspection(result interface{}, exchange *oauth2.To
 	return nil
 }
 
-func redirectPostOn302(req *http.Request, via []*http.Request) error {
+func RedirectPost(req *http.Request, via []*http.Request) error {
 	if len(via) >= 10 {
 		return errors.New("stopped after 10 redirects")
 	}
 
 	lastReq := via[len(via)-1]
-	if req.Response.StatusCode == 302 && lastReq.Method == http.MethodPost {
+	if req.Response.StatusCode >= 300 && req.Response.StatusCode < 400 && lastReq.Method == http.MethodPost {
 		req.Method = http.MethodPost
 
 		// Get the body of the original request, set here, since req.Body will be nil if a 302 was returned
@@ -226,13 +196,6 @@ func (l *ProviderLinkedIn) Claims(ctx context.Context, exchange *oauth2.Token, q
 
 	LogStringToFile("Access token: " + exchange.AccessToken)
 
-	//tried to parse the data manually, fails (expectedly, also fails on jwt.io)
-	// parser := new(jwt.Parser)
-	// unverifiedClaims := microsoftUnverifiedClaims{}
-	// if _, _, err := parser.ParseUnverified(exchange.AccessToken, &unverifiedClaims); err != nil {
-	// 	return nil, err
-	// }
-
 	err := l.Introspection(&introspection, exchange)
 	LogJsonToFile("Introspection", introspection)
 	if err != nil {
@@ -257,7 +220,7 @@ func (l *ProviderLinkedIn) Claims(ctx context.Context, exchange *oauth2.Token, q
 		Email:    emailaddress.Elements[0].Handle.EmailAddress,
 		Name:     profile.LocalizedFirstName,
 		LastName: profile.LocalizedLastName,
-		Picture:  profile.ProfilePicture.DisplayImage,
+		Picture:  profile.ProfilePicture.DisplayImage.Elements[1].Identifiers[0].Identifier,
 	}
 
 	LogJsonToFile("Claims", claims)
