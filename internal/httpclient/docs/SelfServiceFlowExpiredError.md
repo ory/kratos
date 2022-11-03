@@ -7,6 +7,7 @@ Name | Type | Description | Notes
 **Code** | Pointer to **int64** | The status code | [optional] 
 **Debug** | Pointer to **string** | Debug information  This field is often not exposed to protect against leaking sensitive information. | [optional] 
 **Details** | Pointer to **map[string]interface{}** | Further error details | [optional] 
+**ExpiredAt** | Pointer to **time.Time** | When the flow has expired | [optional] 
 **Id** | Pointer to **string** | The error ID  Useful when trying to identify various errors in application logic. | [optional] 
 **Message** | **string** | Error message  The error&#39;s message. | 
 **Reason** | Pointer to **string** | A human-readable reason for the error | [optional] 
@@ -108,6 +109,31 @@ SetDetails sets Details field to given value.
 `func (o *SelfServiceFlowExpiredError) HasDetails() bool`
 
 HasDetails returns a boolean if a field has been set.
+
+### GetExpiredAt
+
+`func (o *SelfServiceFlowExpiredError) GetExpiredAt() time.Time`
+
+GetExpiredAt returns the ExpiredAt field if non-nil, zero value otherwise.
+
+### GetExpiredAtOk
+
+`func (o *SelfServiceFlowExpiredError) GetExpiredAtOk() (*time.Time, bool)`
+
+GetExpiredAtOk returns a tuple with the ExpiredAt field if it's non-nil, zero value otherwise
+and a boolean to check if the value has been set.
+
+### SetExpiredAt
+
+`func (o *SelfServiceFlowExpiredError) SetExpiredAt(v time.Time)`
+
+SetExpiredAt sets ExpiredAt field to given value.
+
+### HasExpiredAt
+
+`func (o *SelfServiceFlowExpiredError) HasExpiredAt() bool`
+
+HasExpiredAt returns a boolean if a field has been set.
 
 ### GetId
 

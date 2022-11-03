@@ -1,0 +1,40 @@
+[
+  {
+    "type": "input",
+    "group": "code",
+    "attributes": {
+      "name": "code",
+      "type": "number",
+      "required": true,
+      "disabled": false,
+      "node_type": "input"
+    },
+    "messages": [],
+    "meta": {
+      "label": {
+        "id": 1070006,
+        "text": "Verify code",
+        "type": "info"
+      }
+    }
+  },
+  {
+    "type": "input",
+    "group": "code",
+    "attributes": {
+      "name": "method",
+      "type": "submit",
+      "value": "code",
+      "disabled": false,
+      "node_type": "input"
+    },
+    "messages": [],
+    "meta": {
+      "label": {
+        "id": 1070005,
+        "text": "Submit",
+        "type": "info"
+      }
+    }
+  }
+]

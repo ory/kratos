@@ -137,6 +137,10 @@ type Session struct {
 	NID   uuid.UUID `json:"-"  faker:"-" db:"nid"`
 }
 
+func (s Session) PageToken() string {
+	return s.ID.String()
+}
+
 func (s Session) TableName(ctx context.Context) string {
 	return "sessions"
 }

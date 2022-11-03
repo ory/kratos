@@ -3,8 +3,10 @@ package testhelpers
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
 	"io"
 	"net/http"
+	"net/http/cookiejar"
 	"net/url"
 	"testing"
 
@@ -13,6 +15,29 @@ import (
 
 func NewDebugClient(t *testing.T) *http.Client {
 	return &http.Client{Transport: NewTransportWithLogger(http.DefaultTransport, t)}
+}
+
+func NewClientWithCookieJar(t *testing.T, jar *cookiejar.Jar, debugRedirects bool) *http.Client {
+	if jar == nil {
+		j, err := cookiejar.New(nil)
+		jar = j
+		require.NoError(t, err)
+	}
+	return &http.Client{
+		Jar: jar,
+		CheckRedirect: func(req *http.Request, via []*http.Request) error {
+			if debugRedirects {
+				t.Logf("Redirect: %s", req.URL.String())
+			}
+			if len(via) >= 20 {
+				for k, v := range via {
+					t.Logf("Failed with redirect (%d): %s", k, v.URL.String())
+				}
+				return errors.New("stopped after 20 redirects")
+			}
+			return nil
+		},
+	}
 }
 
 func NewRequest(t *testing.T, isAPI bool, method string, url string, payload io.Reader) *http.Request {

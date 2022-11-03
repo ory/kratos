@@ -86,7 +86,7 @@ func (s *ErrorHandler) WriteFlowError(
 			return
 		}
 
-		a.UI.Messages.Add(text.NewErrorValidationRecoveryFlowExpired(e.Ago))
+		a.UI.Messages.Add(text.NewErrorValidationRecoveryFlowExpired(e.ExpiredAt))
 		if err := s.d.RecoveryFlowPersister().CreateRecoveryFlow(r.Context(), a); err != nil {
 			s.forward(w, r, a, err)
 			return

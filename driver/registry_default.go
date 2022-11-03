@@ -22,6 +22,7 @@ import (
 
 	"github.com/ory/nosurf"
 
+	"github.com/ory/kratos/hydra"
 	"github.com/ory/kratos/selfservice/strategy/code"
 	"github.com/ory/kratos/selfservice/strategy/webauthn"
 
@@ -145,6 +146,8 @@ type RegistryDefault struct {
 	selfserviceLogoutHandler *logout.Handler
 
 	selfserviceStrategies []interface{}
+
+	hydra hydra.Hydra
 
 	buildVersion string
 	buildHash    string
@@ -515,6 +518,18 @@ func (m *RegistryDefault) SessionManager() session.Manager {
 		m.sessionManager = session.NewManagerHTTP(m)
 	}
 	return m.sessionManager
+}
+
+func (m *RegistryDefault) Hydra() hydra.Hydra {
+	if m.hydra == nil {
+		m.hydra = hydra.NewDefaultHydra(m)
+	}
+	return m.hydra
+}
+
+func (m *RegistryDefault) WithHydra(h hydra.Hydra) Registry {
+	m.hydra = h
+	return m
 }
 
 func (m *RegistryDefault) SelfServiceErrorManager() *errorx.Manager {

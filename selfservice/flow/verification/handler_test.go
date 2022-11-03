@@ -176,8 +176,8 @@ func TestGetFlow(t *testing.T) {
 
 		res, err := c.Do(req)
 		require.NoError(t, err)
+		defer res.Body.Close()
 		// here we check that the redirect status is 303
 		require.Equal(t, http.StatusSeeOther, res.StatusCode)
-		defer res.Body.Close()
 	})
 }

@@ -142,10 +142,43 @@ func TestHandler(t *testing.T) {
 		})
 
 		t.Run("description=init a flow as browser", func(t *testing.T) {
-			t.Run("description=without privileges", func(t *testing.T) {
-				res, body := initSPAFlow(t, new(http.Client))
-				assert.Equal(t, http.StatusUnauthorized, res.StatusCode, "%s", body)
-				assert.Equal(t, text.ErrNoActiveSession, gjson.GetBytes(body, "error.id").String(), "%s", body)
+			t.Run("case=unauthorized users are redirected to login preserving redirect_to param", func(t *testing.T) {
+				c := testhelpers.NewClientWithCookies(t)
+				// prevent the redirect
+				c.CheckRedirect = func(req *http.Request, via []*http.Request) error {
+					return http.ErrUseLastResponse
+				}
+				returnTo := "?return_to=validRedirect"
+				req, err := http.NewRequest("GET", publicTS.URL+settings.RouteInitBrowserFlow+returnTo, nil)
+				require.NoError(t, err)
+
+				res, err := c.Do(req)
+				require.NoError(t, err)
+				defer res.Body.Close()
+				// here we check that the redirect status is 303
+				require.Equal(t, http.StatusSeeOther, res.StatusCode)
+				location, err := res.Location()
+				require.NoError(t, err)
+				require.Equal(t, publicTS.URL+login.RouteInitBrowserFlow+returnTo, location.String())
+			})
+
+			t.Run("case=unauthorized users are redirected to login", func(t *testing.T) {
+				c := testhelpers.NewClientWithCookies(t)
+				// prevent the redirect
+				c.CheckRedirect = func(req *http.Request, via []*http.Request) error {
+					return http.ErrUseLastResponse
+				}
+				req, err := http.NewRequest("GET", publicTS.URL+settings.RouteInitBrowserFlow, nil)
+				require.NoError(t, err)
+
+				res, err := c.Do(req)
+				require.NoError(t, err)
+				defer res.Body.Close()
+				// here we check that the redirect status is 303
+				require.Equal(t, http.StatusSeeOther, res.StatusCode)
+				location, err := res.Location()
+				require.NoError(t, err)
+				require.Equal(t, publicTS.URL+login.RouteInitBrowserFlow, location.String())
 			})
 
 			t.Run("description=success", func(t *testing.T) {
@@ -173,13 +206,22 @@ func TestHandler(t *testing.T) {
 
 				res, err := c.Do(req)
 				require.NoError(t, err)
+				defer res.Body.Close()
 				// here we check that the redirect status is 303
 				require.Equal(t, http.StatusSeeOther, res.StatusCode)
-				defer res.Body.Close()
+				location, err := res.Location()
+				require.NoError(t, err)
+				require.Contains(t, location.String(), conf.SelfServiceFlowSettingsUI(ctx).String())
 			})
 		})
 
 		t.Run("description=init a flow as SPA", func(t *testing.T) {
+			t.Run("description=without privileges", func(t *testing.T) {
+				res, body := initSPAFlow(t, new(http.Client))
+				assert.Equal(t, http.StatusUnauthorized, res.StatusCode, "%s", body)
+				assert.Equal(t, text.ErrNoActiveSession, gjson.GetBytes(body, "error.id").String(), "%s", body)
+			})
+
 			t.Run("description=success", func(t *testing.T) {
 				user1 := testhelpers.NewHTTPClientWithArbitrarySessionToken(t, reg)
 				res, body := initSPAFlow(t, user1)
