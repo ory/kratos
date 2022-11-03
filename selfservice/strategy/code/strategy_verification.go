@@ -355,7 +355,7 @@ func (s *Strategy) retryVerificationFlowWithError(w http.ResponseWriter, r *http
 	var toReturn error
 
 	if expired := new(flow.ExpiredError); errors.As(verErr, &expired) {
-		f.UI.Messages.Add(text.NewErrorValidationVerificationFlowExpired(expired.Ago))
+		f.UI.Messages.Add(text.NewErrorValidationVerificationFlowExpired(expired.ExpiredAt))
 		toReturn = expired.WithFlow(f)
 	} else if err := f.UI.ParseError(node.LinkGroup, verErr); err != nil {
 		return err
