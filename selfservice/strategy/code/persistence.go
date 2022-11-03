@@ -20,6 +20,7 @@ type (
 	VerificationCodePersister interface {
 		CreateVerificationCode(context.Context, *CreateVerificationCodeParams) (*VerificationCode, error)
 		UseVerificationCode(context.Context, uuid.UUID, string) (*VerificationCode, error)
+		DeleteVerificationCodesOfFlow(context.Context, uuid.UUID) error
 	}
 
 	VerificationCodePersistenceProvider interface {

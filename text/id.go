@@ -143,6 +143,7 @@ const (
 	ErrorValidationVerificationStateFailure                                  // 4070003
 	ErrorValidationVerificationMissingVerificationToken                      // 4070004
 	ErrorValidationVerificationFlowExpired                                   // 4070005
+	ErrorValidationVerificationCodeInvalidOrAlreadyUsed                      // 4070006
 )
 
 const (

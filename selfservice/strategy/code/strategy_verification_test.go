@@ -1,6 +1,7 @@
 package code_test
 
 import (
+	"bytes"
 	"context"
 	_ "embed"
 	"encoding/json"
@@ -86,7 +87,7 @@ func TestVerification(t *testing.T) {
 		return expect(t, hc, isAPI, isSPA, values, http.StatusOK)
 	}
 
-	var submitVerificationCode = func(t *testing.T, body string, c *http.Client, code string) ([]byte, *http.Response) {
+	var submitVerificationCode = func(t *testing.T, body string, c *http.Client, code string) (string, *http.Response) {
 		action := gjson.Get(body, "ui.action").String()
 		require.NotEmpty(t, action, "%v", string(body))
 		csrfToken := extractCsrfToken([]byte(body))
@@ -97,7 +98,7 @@ func TestVerification(t *testing.T) {
 		})
 		require.NoError(t, err)
 
-		return ioutilx.MustReadAll(res.Body), res
+		return string(ioutilx.MustReadAll(res.Body)), res
 	}
 
 	t.Run("description=should set all the correct verification payloads after submission", func(t *testing.T) {
@@ -238,7 +239,7 @@ func TestVerification(t *testing.T) {
 		body, res := submitVerificationCode(t, f, c, "12312312")
 		assert.Equal(t, http.StatusOK, res.StatusCode)
 
-		testhelpers.AssertMessage(t, body, "The recovery code is invalid or has already been used. Please try again.")
+		testhelpers.AssertMessage(t, []byte(body), "The verification code is invalid or has already been used. Please try again.")
 	})
 
 	t.Run("description=should not be able to submit email in expired flow", func(t *testing.T) {
@@ -281,7 +282,7 @@ func TestVerification(t *testing.T) {
 
 		f, _ := submitVerificationCode(t, body, c, code)
 
-		testhelpers.AssertMessage(t, f, "The verification flow expired 0.00 minutes ago, please try again.")
+		testhelpers.AssertMessage(t, []byte(f), "The verification flow expired 0.00 minutes ago, please try again.")
 	})
 
 	t.Run("description=should verify an email address", func(t *testing.T) {
@@ -311,8 +312,8 @@ func TestVerification(t *testing.T) {
 			body, res := submitVerificationCode(t, string(f), cl, code)
 
 			assert.Equal(t, http.StatusOK, res.StatusCode)
-			assert.EqualValues(t, "passed_challenge", gjson.GetBytes(body, "state").String())
-			assert.EqualValues(t, text.NewInfoSelfServiceVerificationSuccessful().Text, gjson.GetBytes(body, "ui.messages.0.text").String())
+			assert.EqualValues(t, "passed_challenge", gjson.Get(body, "state").String())
+			assert.EqualValues(t, text.NewInfoSelfServiceVerificationSuccessful().Text, gjson.Get(body, "ui.messages.0.text").String())
 
 			id, err := reg.PrivilegedIdentityPool().GetIdentityConfidential(context.Background(), identityToVerify.ID)
 			require.NoError(t, err)
@@ -362,7 +363,7 @@ func TestVerification(t *testing.T) {
 
 		actualBody, res := submitVerificationCode(t, body, cl, code)
 
-		assert.EqualValues(t, "passed_challenge", gjson.GetBytes(actualBody, "state").String())
+		assert.EqualValues(t, "passed_challenge", gjson.Get(actualBody, "state").String())
 	})
 
 	newValidFlow := func(t *testing.T, requestURL string) (*verification.Flow, *code.VerificationCode, string) {
@@ -442,5 +443,77 @@ func TestVerification(t *testing.T) {
 
 		f2 := ioutilx.MustReadAll(res.Body)
 		assert.Equal(t, text.ErrIDSelfServiceFlowReplaced, gjson.GetBytes(f2, "error.id").String())
+	})
+
+	var resendVerificationCode = func(t *testing.T, client *http.Client, flow string, flowType string, statusCode int) string {
+		action := gjson.Get(flow, "ui.action").String()
+		assert.NotEmpty(t, action)
+
+		email := gjson.Get(flow, "ui.nodes.#(attributes.name==email).attributes.value").String()
+
+		values := withCSRFToken(t, flowType, flow, url.Values{
+			"method": {"code"},
+			"email":  {email},
+		})
+
+		contentType := "application/json"
+		if flowType == RecoveryFlowTypeBrowser {
+			contentType = "application/x-www-form-urlencoded"
+		}
+
+		res, err := client.Post(action, contentType, bytes.NewBufferString(values))
+		require.NoError(t, err)
+		assert.Equal(t, statusCode, res.StatusCode)
+
+		return string(ioutilx.MustReadAll(res.Body))
+	}
+
+	t.Run("case=should be able to resend code", func(t *testing.T) {
+		body := expectSuccess(t, nil, true, false, func(v url.Values) {
+			v.Set("email", verificationEmail)
+		})
+
+		message := testhelpers.CourierExpectMessage(t, reg, verificationEmail, "Please verify your email address")
+		_ = testhelpers.CourierExpectCodeInMessage(t, message, 1)
+
+		c := testhelpers.NewClientWithCookies(t)
+		body = resendVerificationCode(t, c, body, RecoveryFlowTypeBrowser, http.StatusOK)
+
+		assert.True(t, gjson.Get(body, "ui.nodes.#(attributes.name==code)").Exists())
+		assert.Equal(t, verificationEmail, gjson.Get(body, "ui.nodes.#(attributes.name==email).attributes.value").String())
+
+		message = testhelpers.CourierExpectMessage(t, reg, verificationEmail, "Please verify your email address")
+		verificationCode := testhelpers.CourierExpectCodeInMessage(t, message, 1)
+
+		submitVerificationCode(t, body, c, verificationCode)
+	})
+
+	t.Run("case=should not be able to use first code after resending code", func(t *testing.T) {
+
+		body := expectSuccess(t, nil, true, false, func(v url.Values) {
+			v.Set("email", verificationEmail)
+		})
+
+		message := testhelpers.CourierExpectMessage(t, reg, verificationEmail, "Please verify your email address")
+		firstCode := testhelpers.CourierExpectCodeInMessage(t, message, 1)
+
+		c := testhelpers.NewClientWithCookies(t)
+		body = resendVerificationCode(t, c, body, RecoveryFlowTypeBrowser, http.StatusOK)
+
+		assert.True(t, gjson.Get(body, "ui.nodes.#(attributes.name==code)").Exists())
+		assert.Equal(t, verificationEmail, gjson.Get(body, "ui.nodes.#(attributes.name==email).attributes.value").String())
+
+		message = testhelpers.CourierExpectMessage(t, reg, verificationEmail, "Please verify your email address")
+		secondCode := testhelpers.CourierExpectCodeInMessage(t, message, 1)
+
+		body, res := submitVerificationCode(t, body, c, firstCode)
+		assert.Equal(t, http.StatusOK, res.StatusCode)
+		testhelpers.AssertMessage(t, []byte(body), "The verification code is invalid or has already been used. Please try again.")
+
+		// For good measure, check that the second code still works!
+
+		body, res = submitVerificationCode(t, body, c, secondCode)
+		assert.Equal(t, http.StatusOK, res.StatusCode)
+		testhelpers.AssertMessage(t, []byte(body), "You successfully verified your email address.")
 	})
 }

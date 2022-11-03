@@ -250,3 +250,11 @@ func (p *Persister) CreateVerificationCode(ctx context.Context, c *code.CreateVe
 	}
 	return verificationCode, nil
 }
+
+func (p *Persister) DeleteVerificationCodesOfFlow(ctx context.Context, fID uuid.UUID) error {
+	ctx, span := p.r.Tracer(ctx).Tracer().Start(ctx, "persistence.sql.DeleteVerificationCodesOfFlow")
+	defer span.End()
+
+	/* #nosec G201 TableName is static */
+	return p.GetConnection(ctx).RawQuery(fmt.Sprintf("DELETE FROM %s WHERE selfservice_verification_flow_id = ? AND nid = ?", new(code.VerificationCode).TableName(ctx)), fID, p.NetworkID(ctx)).Exec()
+}

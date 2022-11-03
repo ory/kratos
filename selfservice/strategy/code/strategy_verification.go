@@ -209,6 +209,10 @@ func (s *Strategy) verificationHandleFormSubmission(w http.ResponseWriter, r *ht
 		return s.handleVerificationError(w, r, f, body, err)
 	}
 
+	if err := s.deps.VerificationCodePersister().DeleteVerificationCodesOfFlow(r.Context(), f.ID); err != nil {
+		return s.handleVerificationError(w, r, f, body, err)
+	}
+
 	if err := s.deps.CodeSender().SendVerificationCode(r.Context(), f, identity.VerifiableAddressTypeEmail, body.Email); err != nil {
 		if !errors.Is(err, ErrUnknownAddress) {
 			return s.handleVerificationError(w, r, f, body, err)
@@ -233,7 +237,7 @@ func (s *Strategy) verificationUseCode(w http.ResponseWriter, r *http.Request, c
 	code, err := s.deps.VerificationCodePersister().UseVerificationCode(r.Context(), f.ID, codeString)
 	if errors.Is(err, ErrCodeNotFound) {
 		f.UI.Messages.Clear()
-		f.UI.Messages.Add(text.NewErrorValidationRecoveryCodeInvalidOrAlreadyUsed())
+		f.UI.Messages.Add(text.NewErrorValidationVerificationCodeInvalidOrAlreadyUsed())
 		if err := s.deps.VerificationFlowPersister().UpdateVerificationFlow(r.Context(), f); err != nil {
 			return s.retryVerificationFlowWithError(w, r, f.Type, err)
 		}
