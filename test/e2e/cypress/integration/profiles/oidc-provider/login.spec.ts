@@ -1,4 +1,5 @@
 // Copyright © 2022 Ory Corp
+// SPDX-License-Identifier: Apache-2.0
 
 import { gen } from "../../../helpers"
 import * as oauth2 from "../../../helpers/oauth2"

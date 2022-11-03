@@ -1,4 +1,5 @@
 // Copyright © 2022 Ory Corp
+// SPDX-License-Identifier: Apache-2.0
 
 export const email = () => Math.random().toString(36) + "@ory.sh"
 export const blockedEmail = () =>
