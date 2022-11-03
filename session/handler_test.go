@@ -419,10 +419,25 @@ func TestHandlerAdminSessionManagement(t *testing.T) {
 
 	t.Run("case=should return 202 after invalidating all sessions", func(t *testing.T) {
 		client := testhelpers.NewClientWithCookies(t)
-		i := identity.NewIdentity("")
-		require.NoError(t, reg.IdentityManager().Create(ctx, i))
-		s := &Session{Identity: i}
+		var s *Session
+		require.NoError(t, faker.FakeData(&s))
+		s.Active = true
+		s.AMR = AuthenticationMethods{
+			{Method: identity.CredentialsTypePassword, CompletedAt: time.Now().UTC().Round(time.Second)},
+			{Method: identity.CredentialsTypeOIDC, CompletedAt: time.Now().UTC().Round(time.Second)},
+		}
+		require.NoError(t, reg.Persister().CreateIdentity(ctx, s.Identity))
+
+		var expectedSessionDevice Device
+		require.NoError(t, faker.FakeData(&expectedSessionDevice))
+		s.Devices = []Device{
+			expectedSessionDevice,
+		}
+
+		assert.Equal(t, uuid.Nil, s.ID)
 		require.NoError(t, reg.SessionPersister().UpsertSession(ctx, s))
+		assert.NotEqual(t, uuid.Nil, s.ID)
+		assert.NotEqual(t, uuid.Nil, s.Identity.ID)
 
 		t.Run("get session no expand", func(t *testing.T) {
 			req, _ := http.NewRequest("GET", ts.URL+"/admin/sessions/"+s.ID.String(), nil)
@@ -435,6 +450,47 @@ func TestHandlerAdminSessionManagement(t *testing.T) {
 			assert.Equal(t, s.ID, session.ID)
 			assert.Nil(t, session.Identity)
 			assert.Empty(t, session.Devices)
+		})
+
+		t.Run("get session", func(t *testing.T) {
+			for _, tc := range []struct {
+				description        string
+				expand             string
+				expectedIdentityId string
+				expectedDevices    int
+				expectedDevicesIds []uuid.UUID
+			}{
+				{
+					description:        "expand Identity",
+					expand:             "/?expand=Identity",
+					expectedIdentityId: s.Identity.ID.String(),
+					expectedDevices:    0,
+				},
+				{
+					description:        "expand Devices",
+					expand:             "/?expand=Devices",
+					expectedIdentityId: "",
+					expectedDevices:    1,
+				},
+				{
+					description:        "expand Identity and Devices",
+					expand:             "/?expand=Identity&expand=Devices",
+					expectedIdentityId: s.Identity.ID.String(),
+					expectedDevices:    1,
+				},
+			} {
+				t.Run(fmt.Sprintf("description=%s", tc.description), func(t *testing.T) {
+					req, _ := http.NewRequest("GET", ts.URL+"/admin/sessions/"+s.ID.String()+tc.expand, nil)
+					res, err := client.Do(req)
+					require.NoError(t, err)
+					assert.Equal(t, http.StatusOK, res.StatusCode)
+
+					body := ioutilx.MustReadAll(res.Body)
+					assert.Equal(t, s.ID.String(), gjson.GetBytes(body, "id").String())
+					assert.Equal(t, tc.expectedIdentityId, gjson.GetBytes(body, "identity.id").String())
+					assert.Equal(t, fmt.Sprint(tc.expectedDevices), gjson.GetBytes(body, "devices.#").String())
+				})
+			}
 		})
 
 		t.Run("get session expand identity", func(t *testing.T) {
@@ -505,7 +561,7 @@ func TestHandlerAdminSessionManagement(t *testing.T) {
 		})
 
 		t.Run("should list sessions for an identity", func(t *testing.T) {
-			req, _ := http.NewRequest("GET", ts.URL+"/admin/identities/"+i.ID.String()+"/sessions", nil)
+			req, _ := http.NewRequest("GET", ts.URL+"/admin/identities/"+s.Identity.ID.String()+"/sessions", nil)
 			res, err := client.Do(req)
 			require.NoError(t, err)
 			assert.Equal(t, http.StatusOK, res.StatusCode)
@@ -516,7 +572,7 @@ func TestHandlerAdminSessionManagement(t *testing.T) {
 			assert.Equal(t, s.ID, sessions[0].ID)
 		})
 
-		req, _ := http.NewRequest("DELETE", ts.URL+"/admin/identities/"+i.ID.String()+"/sessions", nil)
+		req, _ := http.NewRequest("DELETE", ts.URL+"/admin/identities/"+s.Identity.ID.String()+"/sessions", nil)
 		res, err := client.Do(req)
 		require.NoError(t, err)
 		require.Equal(t, http.StatusNoContent, res.StatusCode)
@@ -525,7 +581,7 @@ func TestHandlerAdminSessionManagement(t *testing.T) {
 		require.True(t, errors.Is(err, sqlcon.ErrNoRows))
 
 		t.Run("should not list session", func(t *testing.T) {
-			req, _ := http.NewRequest("GET", ts.URL+"/admin/identities/"+i.ID.String()+"/sessions", nil)
+			req, _ := http.NewRequest("GET", ts.URL+"/admin/identities/"+s.Identity.ID.String()+"/sessions", nil)
 			res, err := client.Do(req)
 			require.NoError(t, err)
 			assert.Equal(t, http.StatusOK, res.StatusCode)

@@ -421,7 +421,7 @@ func (h *Handler) adminGetSession(w http.ResponseWriter, r *http.Request, ps htt
 
 	urlValues := r.URL.Query()
 	if urlValues.Has("expand") {
-		es := strings.Split(urlValues.Get("expand"), ",")
+		es := urlValues["expand"]
 		for _, e := range es {
 			expand, ok := ParseExpandable(e)
 			if !ok {
