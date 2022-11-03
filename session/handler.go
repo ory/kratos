@@ -277,7 +277,9 @@ type adminListSessionsRequest struct {
 	// in: query
 	Active bool `json:"active"`
 
-	// ExpandOptions is a comma seperated list of all properties that must be expanded in the Session. If no value is provided, the expandable properties are skipped.
+	// ExpandOptions is a query parameter encoded list of all properties that must be expanded in the Session.
+	// Example - ?expand=Identity&expand=Devices
+	// If no value is provided, the expandable properties are skipped.
 	//
 	// enum: Identity,Devices
 	// required: false
@@ -372,7 +374,9 @@ func (h *Handler) adminListSessions(w http.ResponseWriter, r *http.Request, ps h
 // swagger:parameters adminGetSession
 // nolint:deadcode,unused
 type adminGetSessionRequest struct {
-	// ExpandOptions is a comma seperated list of all properties that must be expanded in the Session. If no value is provided, the expandable properties are skipped.
+	// ExpandOptions is a query parameter encoded list of all properties that must be expanded in the Session.
+	// Example - ?expand=Identity&expand=Devices
+	// If no value is provided, the expandable properties are skipped.
 	//
 	// enum: Identity,Devices
 	// required: false
