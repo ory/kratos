@@ -186,9 +186,15 @@ func ServeAdmin(r driver.Registry, cmd *cobra.Command, args []string, slOpts *se
 	r.PrometheusManager().RegisterRouter(router.Router)
 
 	n.UseHandler(router)
-	certs := c.GetTLSCertificatesForAdmin(ctx)
 
 	var handler http.Handler = n
+	options, enabled := r.Config().CORS(ctx, "public")
+	if enabled {
+		handler = cors.New(options).Handler(handler)
+	}
+
+	certs := c.GetTLSCertificatesForAdmin(ctx)
+
 	if tracer := r.Tracer(ctx); tracer.IsLoaded() {
 		handler = x.TraceHandler(n)
 	}
