@@ -47,16 +47,16 @@ func TestProviderPrivateIP(t *testing.T) {
 	}{
 		// Apple uses a fixed token URL and does not use the issuer.
 
-		{p: auth0, c: &oidc.Configuration{IssuerURL: "http://127.0.0.2/"}, e: "ip 127.0.0.2 is in the 127.0.0.0/8"},
+		{p: auth0, c: &oidc.Configuration{IssuerURL: "http://127.0.0.2/"}, e: "ip 127.0.0.2 is in the private, loopback, or unspecified IP range"},
 		// The TokenURL is fixed in Auth0 to {issuer_url}/token. Since the issuer is called first, any local token fails also.
 
 		// If the issuer URL is local, we fail
-		{p: generic, c: &oidc.Configuration{IssuerURL: "http://127.0.0.2/"}, e: "ip 127.0.0.2 is in the 127.0.0.0/8", id: fakeJWTJWKS},
+		{p: generic, c: &oidc.Configuration{IssuerURL: "http://127.0.0.2/"}, e: "ip 127.0.0.2 is in the private, loopback, or unspecified IP range", id: fakeJWTJWKS},
 		// If the issuer URL has a local JWKs URL, we fail
-		{p: generic, c: &oidc.Configuration{ClientID: "abcd", IssuerURL: wellknownJWKs}, e: "ip 127.0.1.0 is in the 127.0.0.0/8", id: fakeJWTJWKS},
+		{p: generic, c: &oidc.Configuration{ClientID: "abcd", IssuerURL: wellknownJWKs}, e: "ip 127.0.1.0 is in the private, loopback, or unspecified IP range", id: fakeJWTJWKS},
 		// The next call does not fail because the provider uses only the ID JSON Web Token to verify this call and does
 		// not use the TokenURL at all!
-		// {p: generic, c: &oidc.Configuration{ClientID: "abcd", IssuerURL: wellknownToken, TokenURL: "http://127.0.0.3/"}, e: "ip 127.0.0.1 is in the 127.0.0.0/8", id: fakeJWTToken},
+		// {p: generic, c: &oidc.Configuration{ClientID: "abcd", IssuerURL: wellknownToken, TokenURL: "http://127.0.0.3/"}, e: "ip 127.0.0.3 is in the private, loopback, or unspecified IP range", id: fakeJWTToken},
 
 		// Discord uses a fixed token URL and does not use the issuer.
 		// Facebook uses a fixed token URL and does not use the issuer.
@@ -64,7 +64,7 @@ func TestProviderPrivateIP(t *testing.T) {
 		// GitHub App uses a fixed token URL and does not use the issuer.
 		// GitHub App uses a fixed token URL and does not use the issuer.
 
-		{p: gitlab, c: &oidc.Configuration{IssuerURL: "http://127.0.0.2/"}, e: "ip 127.0.0.2 is in the 127.0.0.0/8"},
+		{p: gitlab, c: &oidc.Configuration{IssuerURL: "http://127.0.0.2/"}, e: "ip 127.0.0.2 is in the private, loopback, or unspecified IP range"},
 		// The TokenURL is fixed in GitLab to {issuer_url}/token. Since the issuer is called first, any local token fails also.
 
 		// Google uses a fixed token URL and does not use the issuer.
