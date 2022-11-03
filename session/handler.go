@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"net/http"
 	"strconv"
-	"strings"
 	"time"
 
 	"github.com/ory/x/pagination/keysetpagination"
@@ -344,7 +343,7 @@ func (h *Handler) adminListSessions(w http.ResponseWriter, r *http.Request, ps h
 
 	var expandables Expandables
 	if urlValues.Has("expand") {
-		es := strings.Split(urlValues.Get("expand"), ",")
+		es := urlValues["expand"]
 		for _, e := range es {
 			expand, ok := ParseExpandable(e)
 			if !ok {

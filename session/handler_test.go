@@ -439,7 +439,7 @@ func TestHandlerAdminSessionManagement(t *testing.T) {
 		assert.NotEqual(t, uuid.Nil, s.ID)
 		assert.NotEqual(t, uuid.Nil, s.Identity.ID)
 
-		t.Run("get session no expand", func(t *testing.T) {
+		t.Run("get session", func(t *testing.T) {
 			req, _ := http.NewRequest("GET", ts.URL+"/admin/sessions/"+s.ID.String(), nil)
 			res, err := client.Do(req)
 			require.NoError(t, err)
@@ -452,13 +452,12 @@ func TestHandlerAdminSessionManagement(t *testing.T) {
 			assert.Empty(t, session.Devices)
 		})
 
-		t.Run("get session", func(t *testing.T) {
+		t.Run("get session expand", func(t *testing.T) {
 			for _, tc := range []struct {
 				description        string
 				expand             string
 				expectedIdentityId string
 				expectedDevices    int
-				expectedDevicesIds []uuid.UUID
 			}{
 				{
 					description:        "expand Identity",
@@ -493,20 +492,6 @@ func TestHandlerAdminSessionManagement(t *testing.T) {
 			}
 		})
 
-		t.Run("get session expand identity", func(t *testing.T) {
-			req, _ := http.NewRequest("GET", ts.URL+"/admin/sessions/"+s.ID.String()+"/?expand=Identity", nil)
-			res, err := client.Do(req)
-			require.NoError(t, err)
-			assert.Equal(t, http.StatusOK, res.StatusCode)
-
-			var session Session
-			require.NoError(t, json.NewDecoder(res.Body).Decode(&session))
-			assert.Equal(t, s.ID, session.ID)
-			assert.NotNil(t, session.Identity)
-			assert.Equal(t, s.Identity.ID.String(), session.Identity.ID.String())
-			assert.Empty(t, session.Devices)
-		})
-
 		t.Run("get session expand invalid", func(t *testing.T) {
 			req, _ := http.NewRequest("GET", ts.URL+"/admin/sessions/"+s.ID.String()+"/?expand=invalid", nil)
 			res, err := client.Do(req)
@@ -514,7 +499,7 @@ func TestHandlerAdminSessionManagement(t *testing.T) {
 			assert.Equal(t, http.StatusBadRequest, res.StatusCode)
 		})
 
-		t.Run("case=should redirect to public for whoami", func(t *testing.T) {
+		t.Run("should redirect to public for whoami", func(t *testing.T) {
 			client := testhelpers.NewHTTPClientWithSessionToken(t, reg, s)
 			client.CheckRedirect = func(req *http.Request, via []*http.Request) error {
 				return http.ErrUseLastResponse
@@ -527,7 +512,7 @@ func TestHandlerAdminSessionManagement(t *testing.T) {
 			require.Equal(t, ts.URL+"/sessions/whoami", res.Header.Get("Location"))
 		})
 
-		t.Run("should list sessions", func(t *testing.T) {
+		t.Run("list sessions", func(t *testing.T) {
 			req, _ := http.NewRequest("GET", ts.URL+"/admin/sessions/", nil)
 			res, err := client.Do(req)
 			require.NoError(t, err)
@@ -543,21 +528,46 @@ func TestHandlerAdminSessionManagement(t *testing.T) {
 			assert.Empty(t, sessions[0].Devices)
 		})
 
-		t.Run("should list sessions expand identity", func(t *testing.T) {
-			req, _ := http.NewRequest("GET", ts.URL+"/admin/sessions/?expand=identity", nil)
-			res, err := client.Do(req)
-			require.NoError(t, err)
-			assert.Equal(t, http.StatusOK, res.StatusCode)
-			assert.Equal(t, "1", res.Header.Get("X-Total-Count"))
-			assert.Equal(t, "</admin/sessions?expand=identity&page_size=250&page_token=00000000-0000-0000-0000-000000000000>; rel=\"first\"", res.Header.Get("Link"))
+		t.Run("list sessions expand", func(t *testing.T) {
+			for _, tc := range []struct {
+				description          string
+				expand               string
+				expectedIdentityId   string
+				expectedDevicesCount string
+			}{
+				{
+					description:          "expand Identity",
+					expand:               "?expand=Identity",
+					expectedIdentityId:   s.Identity.ID.String(),
+					expectedDevicesCount: "",
+				},
+				{
+					description:          "expand Devices",
+					expand:               "?expand=Devices",
+					expectedIdentityId:   "",
+					expectedDevicesCount: "1",
+				},
+				{
+					description:          "expand Identity and Devices",
+					expand:               "?expand=Identity&expand=Devices",
+					expectedIdentityId:   s.Identity.ID.String(),
+					expectedDevicesCount: "1",
+				},
+			} {
+				t.Run(fmt.Sprintf("description=%s", tc.description), func(t *testing.T) {
+					req, _ := http.NewRequest("GET", ts.URL+"/admin/sessions/"+tc.expand, nil)
+					res, err := client.Do(req)
+					require.NoError(t, err)
+					assert.Equal(t, http.StatusOK, res.StatusCode)
+					assert.Equal(t, "1", res.Header.Get("X-Total-Count"))
+					assert.Equal(t, "</admin/sessions"+tc.expand+"&page_size=250&page_token=00000000-0000-0000-0000-000000000000>; rel=\"first\"", res.Header.Get("Link"))
 
-			var sessions []Session
-			require.NoError(t, json.NewDecoder(res.Body).Decode(&sessions))
-			require.Len(t, sessions, 1)
-			assert.Equal(t, s.ID, sessions[0].ID)
-			assert.NotNil(t, sessions[0].Identity)
-			assert.Equal(t, s.Identity.ID.String(), sessions[0].Identity.ID.String())
-			assert.Empty(t, sessions[0].Devices)
+					body := ioutilx.MustReadAll(res.Body)
+					assert.Equal(t, s.ID.String(), gjson.GetBytes(body, "0.id").String())
+					assert.Equal(t, tc.expectedIdentityId, gjson.GetBytes(body, "0.identity.id").String())
+					assert.Equal(t, tc.expectedDevicesCount, gjson.GetBytes(body, "0.devices.#").String())
+				})
+			}
 		})
 
 		t.Run("should list sessions for an identity", func(t *testing.T) {
