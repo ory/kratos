@@ -46,10 +46,6 @@ docs/api:
 docs/swagger:
 	npx @redocly/openapi-cli preview-docs spec/swagger.json
 
-node_modules: package.json
-	npm ci
-	touch node_modules
-
 .bin/golangci-lint: Makefile
 	curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -d -b .bin v1.47.3
 
