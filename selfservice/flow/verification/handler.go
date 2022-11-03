@@ -399,6 +399,7 @@ func (h *Handler) submitFlow(w http.ResponseWriter, r *http.Request, ps httprout
 	var g node.UiNodeGroup
 	var found bool
 	for _, ss := range h.d.AllVerificationStrategies() {
+		// If an active strategy is set, but it does not match the current strategy, that strategy is not responsible anyways.
 		if f.Active.String() != "" && f.Active.String() != ss.VerificationStrategyID() {
 			continue
 		}

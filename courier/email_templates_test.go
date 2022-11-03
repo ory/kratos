@@ -45,7 +45,7 @@ func TestNewEmailTemplateFromMessage(t *testing.T) {
 		courier.TypeVerificationInvalid:     email.NewVerificationInvalid(reg, &email.VerificationInvalidModel{To: "baz"}),
 		courier.TypeVerificationValid:       email.NewVerificationValid(reg, &email.VerificationValidModel{To: "faz", VerificationURL: "http://bar.foo"}),
 		courier.TypeVerificationCodeInvalid: email.NewVerificationCodeInvalid(reg, &email.VerificationCodeInvalidModel{To: "baz"}),
-		courier.TypeVerificationCodeValid:   email.NewVerificationCodeValid(reg, &email.VerificationCodeValidModel{To: "faz", VerificationURL: "http://bar.foo"}),
+		courier.TypeVerificationCodeValid:   email.NewVerificationCodeValid(reg, &email.VerificationCodeValidModel{To: "faz", VerificationURL: "http://bar.foo", VerificationCode: "123456678"}),
 		courier.TypeTestStub:                email.NewTestStub(reg, &email.TestStubModel{To: "far", Subject: "test subject", Body: "test body"}),
 	} {
 		t.Run(fmt.Sprintf("case=%s", tmplType), func(t *testing.T) {

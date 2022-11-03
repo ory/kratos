@@ -34,10 +34,13 @@ func (s *Strategy) RegisterAdminVerificationRoutes(admin *x.RouterAdmin) {
 func (s *Strategy) PopulateVerificationMethod(r *http.Request, f *verification.Flow) error {
 	f.UI.SetCSRF(s.deps.GenerateCSRFToken(r))
 	f.UI.GetNodes().Upsert(
-		// v0.5: form.Field{Name: "email", Type: "email", Required: true}
-		node.NewInputField("email", nil, node.CodeGroup, node.InputAttributeTypeEmail, node.WithRequiredInputAttribute).WithMetaLabel(text.NewInfoNodeInputEmail()),
+		node.NewInputField("email", nil, node.CodeGroup, node.InputAttributeTypeEmail, node.WithRequiredInputAttribute).
+			WithMetaLabel(text.NewInfoNodeInputEmail()),
 	)
-	f.UI.GetNodes().Append(node.NewInputField("method", s.VerificationStrategyID(), node.LinkGroup, node.InputAttributeTypeSubmit).WithMetaLabel(text.NewInfoNodeLabelSubmit()))
+	f.UI.GetNodes().Append(
+		node.NewInputField("method", s.VerificationStrategyID(), node.CodeGroup, node.InputAttributeTypeSubmit).
+			WithMetaLabel(text.NewInfoNodeLabelSubmit()),
+	)
 	return nil
 }
 
@@ -67,8 +70,7 @@ func (s *Strategy) handleVerificationError(w http.ResponseWriter, r *http.Reques
 	if f != nil {
 		f.UI.SetCSRF(s.deps.GenerateCSRFToken(r))
 		f.UI.GetNodes().Upsert(
-			// v0.5: form.Field{Name: "email", Type: "email", Required: true, Value: body.Body.Email}
-			node.NewInputField("email", body.Email, node.LinkGroup, node.InputAttributeTypeEmail, node.WithRequiredInputAttribute).WithMetaLabel(text.NewInfoNodeInputEmail()),
+			node.NewInputField("email", body.Email, node.CodeGroup, node.InputAttributeTypeEmail, node.WithRequiredInputAttribute).WithMetaLabel(text.NewInfoNodeInputEmail()),
 		)
 	}
 
@@ -133,7 +135,6 @@ func (s *Strategy) Verify(w http.ResponseWriter, r *http.Request, f *verificatio
 	case verification.StateChooseMethod:
 		fallthrough
 	case verification.StateEmailSent:
-		// Do nothing (continue with execution after this switch statement)
 		return s.verificationHandleFormSubmission(w, r, f, body)
 	case verification.StatePassedChallenge:
 		return s.retryVerificationFlowWithMessage(w, r, f.Type, text.NewErrorValidationVerificationRetrySuccess())
@@ -154,16 +155,19 @@ func (s *Strategy) createVerificationCodeForm(action string, code *string, email
 			NewInputField("code", code, node.CodeGroup, node.InputAttributeTypeNumber, node.WithRequiredInputAttribute).
 			WithMetaLabel(text.NewInfoNodeLabelVerifyOTP()),
 	)
-	c.Nodes.Append(node.NewInputField("method", s.VerificationNodeGroup(), node.CodeGroup, node.InputAttributeTypeHidden))
+	c.Nodes.Append(
+		node.NewInputField("method", s.VerificationNodeGroup(), node.CodeGroup, node.InputAttributeTypeHidden),
+	)
 
-	c.
-		Nodes.
-		Append(node.NewInputField("method", s.VerificationStrategyID(), node.CodeGroup, node.InputAttributeTypeSubmit).
-			WithMetaLabel(text.NewInfoNodeLabelSubmit()))
+	c.Nodes.Append(
+		node.NewInputField("method", s.VerificationStrategyID(), node.CodeGroup, node.InputAttributeTypeSubmit).
+			WithMetaLabel(text.NewInfoNodeLabelSubmit()),
+	)
 
 	if email != nil {
-		c.Nodes.Append(node.NewInputField("email", email, node.CodeGroup, node.InputAttributeTypeSubmit).
-			WithMetaLabel(text.NewInfoNodeResendOTP()),
+		c.Nodes.Append(
+			node.NewInputField("email", email, node.CodeGroup, node.InputAttributeTypeSubmit).
+				WithMetaLabel(text.NewInfoNodeResendOTP()),
 		)
 	}
 
@@ -173,7 +177,8 @@ func (s *Strategy) createVerificationCodeForm(action string, code *string, email
 func (s *Strategy) handleLinkClick(w http.ResponseWriter, r *http.Request, f *verification.Flow, code string) error {
 	f.UI = s.createVerificationCodeForm(flow.AppendFlowTo(urlx.AppendPaths(s.deps.Config().SelfPublicURL(r.Context()), verification.RouteSubmitFlow), f.ID).String(), &code, nil)
 
-	// In the verification flow, we can't enforce CSRF if the flow is opened from an email
+	// In the verification flow, we can't enforce CSRF if the flow is opened from an email, so we initialize the CSRF
+	// token here, so all subsequent interactions are protected
 	csrfToken := s.deps.CSRFHandler().RegenerateToken(w, r)
 	f.UI.SetCSRF(csrfToken)
 	f.CSRFToken = csrfToken
@@ -183,9 +188,8 @@ func (s *Strategy) handleLinkClick(w http.ResponseWriter, r *http.Request, f *ve
 	}
 
 	// we always redirect to the browser UI here to allow API flows to complete aswell
-	// In the future, we might want to redirect to a custom URI scheme here, to allow to open an app on the device of
-	// the user to handle the flow directly. For now, the browser is good enough, as no session is issued after the
-	// verification is done.
+	// TODO: In the future, we might want to redirect to a custom URI scheme here, to allow to open an app on the device of
+	// the user to handle the flow directly.
 	http.Redirect(w, r, f.AppendTo(s.deps.Config().SelfServiceFlowVerificationUI(r.Context())).String(), http.StatusSeeOther)
 
 	return errors.WithStack(flow.ErrCompletedByStrategy)
@@ -298,7 +302,7 @@ func (s *Strategy) getRedirectURL(ctx context.Context, f *verification.Flow) *ur
 
 	verificationRequestURL, err := urlx.Parse(f.GetRequestURL())
 	if err != nil {
-		s.deps.Logger().Debugf("error parsing verification requestURL, using default redirect url %s: %s\n", defaultRedirectURL.String(), err)
+		// Initial flow request url is not a valid URL, use the default
 		return defaultRedirectURL
 	}
 
@@ -309,7 +313,7 @@ func (s *Strategy) getRedirectURL(ctx context.Context, f *verification.Flow) *ur
 		x.SecureRedirectAllowURLs(s.deps.Config().SelfServiceBrowserAllowedReturnToDomains(ctx)),
 	)
 	if err != nil {
-		s.deps.Logger().Debugf("error parsing redirectTo from verification, using default redirect url %s: %s\n", defaultRedirectURL.String(), err)
+		// Initial flow request url is not allowd, use the default
 		return defaultRedirectURL
 	}
 	return returnTo

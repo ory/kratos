@@ -147,7 +147,6 @@ func (s *CodeSender) SendVerificationCode(ctx context.Context, f *verification.F
 	}
 
 	rawCode := GenerateRecoveryCode()
-	// token := NewSelfServiceVerificationCode(address, f, s.deps.Config().SelfServiceLinkMethodLifespan(ctx))
 	var code *VerificationCode
 	if code, err = s.deps.VerificationCodePersister().CreateVerificationCode(ctx, &CreateVerificationCodeParams{
 		RawCode:           rawCode,
@@ -203,10 +202,7 @@ func (s *CodeSender) SendVerificationCodeTo(ctx context.Context, f *verification
 		return err
 	}
 	code.VerifiableAddress.Status = identity.VerifiableAddressStatusSent
-	if err := s.deps.PrivilegedIdentityPool().UpdateVerifiableAddress(ctx, code.VerifiableAddress); err != nil {
-		return err
-	}
-	return nil
+	return s.deps.PrivilegedIdentityPool().UpdateVerifiableAddress(ctx, code.VerifiableAddress)
 }
 
 func (s *CodeSender) send(ctx context.Context, via string, t courier.EmailTemplate) error {

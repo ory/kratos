@@ -1628,6 +1628,9 @@
             },
             "verification": {
               "$ref": "#/definitions/courierTemplates"
+            },
+            "verification_code": {
+              "$ref": "#/definitions/courierTemplates"
             }
           }
         },

@@ -46,7 +46,7 @@ selfservice:
     verification:
       enabled: true
       ui_url: http://127.0.0.1:4455/verification
-      use: code # TODO: REMOVE!! To not break quickstart
+      use: code
       after:
         default_browser_return_url: http://127.0.0.1:4455/
 
