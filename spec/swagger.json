@@ -772,8 +772,8 @@
           },
           {
             "enum": [
-              "Identity",
-              "Devices"
+              "identity",
+              "devices"
             ],
             "type": "array",
             "items": {
@@ -838,8 +838,8 @@
         "parameters": [
           {
             "enum": [
-              "Identity",
-              "Devices"
+              "identity",
+              "devices"
             ],
             "type": "array",
             "items": {

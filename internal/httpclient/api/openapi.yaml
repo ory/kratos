@@ -700,8 +700,8 @@ paths:
         required: false
         schema:
           enum:
-          - Identity
-          - Devices
+          - identity
+          - devices
           items:
             type: string
           type: array
@@ -760,8 +760,8 @@ paths:
         required: false
         schema:
           enum:
-          - Identity
-          - Devices
+          - identity
+          - devices
           items:
             type: string
           type: array

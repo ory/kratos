@@ -3689,8 +3689,8 @@
             "name": "expand",
             "schema": {
               "enum": [
-                "Identity",
-                "Devices"
+                "identity",
+                "devices"
               ],
               "items": {
                 "type": "string"
@@ -3773,8 +3773,8 @@
             "name": "expand",
             "schema": {
               "enum": [
-                "Identity",
-                "Devices"
+                "identity",
+                "devices"
               ],
               "items": {
                 "type": "string"
