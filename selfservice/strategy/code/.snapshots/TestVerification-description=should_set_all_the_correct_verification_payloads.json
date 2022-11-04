@@ -39,7 +39,7 @@
       "type": "submit",
       "value": "code"
     },
-    "group": "link",
+    "group": "code",
     "messages": [],
     "meta": {
       "label": {
