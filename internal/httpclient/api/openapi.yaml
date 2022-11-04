@@ -759,10 +759,10 @@ paths:
         name: expand
         required: false
         schema:
-          enum:
-          - identity
-          - devices
           items:
+            enum:
+            - Devices
+            - Identity
             type: string
           type: array
         style: form

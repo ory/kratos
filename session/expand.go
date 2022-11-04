@@ -3,6 +3,7 @@ package session
 import "strings"
 
 // Expandable controls what fields to expand for sessions.
+// swagger:enum Expandable
 type Expandable string
 
 const (
