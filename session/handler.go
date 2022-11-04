@@ -281,7 +281,7 @@ type adminListSessionsRequest struct {
 	// Example - ?expand=Identity&expand=Devices
 	// If no value is provided, the expandable properties are skipped.
 	//
-	// enum: Identity,Devices
+	// enum: identity,devices
 	// required: false
 	// in: query
 	ExpandOptions []string `json:"expand"`
@@ -378,7 +378,7 @@ type adminGetSessionRequest struct {
 	// Example - ?expand=Identity&expand=Devices
 	// If no value is provided, the expandable properties are skipped.
 	//
-	// enum: Identity,Devices
+	// enum: identity,devices
 	// required: false
 	// in: query
 	ExpandOptions []string `json:"expand"`
