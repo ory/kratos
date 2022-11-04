@@ -3688,11 +3688,11 @@
             "in": "query",
             "name": "expand",
             "schema": {
-              "enum": [
-                "identity",
-                "devices"
-              ],
               "items": {
+                "enum": [
+                  "Devices",
+                  "Identity"
+                ],
                 "type": "string"
               },
               "type": "array"
