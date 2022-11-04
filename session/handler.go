@@ -344,8 +344,7 @@ func (h *Handler) adminListSessions(w http.ResponseWriter, r *http.Request, ps h
 	}
 
 	var expandables Expandables
-	if urlValues.Has("expand") {
-		es := urlValues["expand"]
+	if es, ok := urlValues["expand"]; ok {
 		for _, e := range es {
 			expand, ok := ParseExpandable(e)
 			if !ok {
@@ -423,8 +422,7 @@ func (h *Handler) adminGetSession(w http.ResponseWriter, r *http.Request, ps htt
 	var expandables Expandables
 
 	urlValues := r.URL.Query()
-	if urlValues.Has("expand") {
-		es := urlValues["expand"]
+	if es, ok := urlValues["expand"]; ok {
 		for _, e := range es {
 			expand, ok := ParseExpandable(e)
 			if !ok {
