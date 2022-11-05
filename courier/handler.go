@@ -6,6 +6,8 @@ package courier
 import (
 	"net/http"
 
+	"github.com/ory/x/pagination/migrationpagination"
+
 	"github.com/julienschmidt/httprouter"
 
 	"github.com/ory/kratos/driver/config"
@@ -42,24 +44,36 @@ func (h *Handler) RegisterPublicRoutes(public *x.RouterPublic) {
 }
 
 func (h *Handler) RegisterAdminRoutes(admin *x.RouterAdmin) {
-	admin.GET(AdminRouteMessages, h.adminListCourierMessages)
+	admin.GET(AdminRouteMessages, h.listCourierMessages)
 }
 
-// A list of messages.
-// swagger:model courierMessageList
+// Paginated Courier Message List Response
+//
+// swagger:response listCourierMessages
 // nolint:deadcode,unused
-type courierMessageList []Message
+type listCourierMessagesResponse struct {
+	migrationpagination.ResponseHeaderAnnotation
 
+	// List of identities
+	//
+	// in:body
+	Body []Message
+}
+
+// Paginated List Courier Message Parameters
+//
 // nolint:deadcode,unused
-// swagger:parameters adminListCourierMessages
-type MessagesFilter struct {
-	x.PaginationParams
+// swagger:parameters listCourierMessages
+type ListCourierMessagesParameters struct {
+	migrationpagination.RequestParameters
+
 	// Status filters out messages based on status.
 	// If no value is provided, it doesn't take effect on filter.
 	//
 	// required: false
 	// in: query
 	Status *MessageStatus `json:"status"`
+
 	// Recipient filters out messages based on recipient.
 	// If no value is provided, it doesn't take effect on filter.
 	//
@@ -68,7 +82,7 @@ type MessagesFilter struct {
 	Recipient string `json:"recipient"`
 }
 
-// swagger:route GET /admin/courier/messages v0alpha2 adminListCourierMessages
+// swagger:route GET /admin/courier/messages courier listCourierMessages
 //
 // # List Messages
 //
@@ -77,13 +91,16 @@ type MessagesFilter struct {
 //	Produces:
 //	- application/json
 //
+//	Security:
+//	  oryAccessToken:
+//
 //	Schemes: http, https
 //
 //	Responses:
-//	  200: courierMessageList
-//	  400: jsonError
-//	  500: jsonError
-func (h *Handler) adminListCourierMessages(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+//	  200: listCourierMessages
+//	  400: errorGeneric
+//	  default: errorGeneric
+func (h *Handler) listCourierMessages(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 	filter, err := parseMessagesFilter(r)
 	if err != nil {
 		h.r.Writer().WriteErrorCode(w, r, http.StatusBadRequest, err)
@@ -106,22 +123,22 @@ func (h *Handler) adminListCourierMessages(w http.ResponseWriter, r *http.Reques
 	h.r.Writer().Write(w, r, l)
 }
 
-func parseMessagesFilter(r *http.Request) (MessagesFilter, error) {
+func parseMessagesFilter(r *http.Request) (ListCourierMessagesParameters, error) {
 	var status *MessageStatus
 
 	if r.URL.Query().Has("status") {
 		ms, err := ToMessageStatus(r.URL.Query().Get("status"))
 
 		if err != nil {
-			return MessagesFilter{}, err
+			return ListCourierMessagesParameters{}, err
 		}
 
 		status = &ms
 	}
 
 	page, itemsPerPage := x.ParsePagination(r)
-	return MessagesFilter{
-		PaginationParams: x.PaginationParams{
+	return ListCourierMessagesParameters{
+		RequestParameters: migrationpagination.RequestParameters{
 			Page:    page,
 			PerPage: itemsPerPage,
 		},

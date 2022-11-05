@@ -75,7 +75,7 @@ func NewFlowExpiredError(at time.Time) *ExpiredError {
 
 // Is sent when a flow requires a browser to change its location.
 //
-// swagger:model selfServiceBrowserLocationChangeRequiredError
+// swagger:model errorBrowserLocationChangeRequired
 type BrowserLocationChangeRequiredError struct {
 	*herodot.DefaultError `json:"error"`
 

@@ -86,15 +86,14 @@ func TestAdminStrategy(t *testing.T) {
 	publicTS, adminTS := testhelpers.NewKratosServer(t, reg)
 	adminSDK := testhelpers.NewSDKClient(adminTS)
 
-	createCode := func(id string, expiresIn *string) (*kratos.SelfServiceRecoveryCode, *http.Response, error) {
-		return adminSDK.V0alpha2Api.
-			AdminCreateSelfServiceRecoveryCode(context.Background()).
-			AdminCreateSelfServiceRecoveryCodeBody(
-				kratos.AdminCreateSelfServiceRecoveryCodeBody{
+	createCode := func(id string, expiresIn *string) (*kratos.RecoveryCodeForIdentity, *http.Response, error) {
+		return adminSDK.IdentityApi.
+			CreateRecoveryCodeForIdentity(context.Background()).
+			CreateRecoveryCodeForIdentityBody(
+				kratos.CreateRecoveryCodeForIdentityBody{
 					IdentityId: id,
 					ExpiresIn:  expiresIn,
-				}).
-			Execute()
+				}).Execute()
 	}
 
 	t.Run("no panic on empty body #1384", func(t *testing.T) {
@@ -568,7 +567,7 @@ func TestRecovery(t *testing.T) {
 					client.Transport = testhelpers.NewTransportWithLogger(http.DefaultTransport, t).RoundTripper
 				}
 
-				var f *kratos.SelfServiceRecoveryFlow
+				var f *kratos.RecoveryFlow
 				if isAPI {
 					f = testhelpers.InitializeRecoveryFlowViaAPI(t, client, public)
 				} else {
@@ -774,8 +773,7 @@ func TestRecovery(t *testing.T) {
 
 				rs, res, err := testhelpers.
 					NewSDKCustomClient(public, c).
-					V0alpha2Api.
-					GetSelfServiceRecoveryFlow(context.Background()).
+					FrontendApi.GetRecoveryFlow(context.Background()).
 					Id(flowId).
 					Execute()
 
@@ -1000,11 +998,10 @@ func TestDisabledStrategy(t *testing.T) {
 			require.NoError(t, reg.IdentityManager().Create(context.Background(),
 				&id, identity.ManagerAllowWriteProtectedTraits))
 
-			rl, _, err := adminSDK.V0alpha2Api.
-				AdminCreateSelfServiceRecoveryLink(context.Background()).
-				AdminCreateSelfServiceRecoveryLinkBody(kratos.AdminCreateSelfServiceRecoveryLinkBody{
-					IdentityId: id.ID.String(),
-				}).Execute()
+			rl, _, err := adminSDK.IdentityApi.
+				CreateRecoveryLinkForIdentity(context.Background()).
+				CreateRecoveryLinkForIdentityBody(kratos.CreateRecoveryLinkForIdentityBody{IdentityId: id.ID.String()}).
+				Execute()
 			assert.Nil(t, rl)
 			require.IsType(t, new(kratos.GenericOpenAPIError), err, "%s", err)
 

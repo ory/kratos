@@ -36,7 +36,7 @@ import (
 func (s *Strategy) RegisterLoginRoutes(r *x.RouterPublic) {
 }
 
-func (s *Strategy) handleLoginError(w http.ResponseWriter, r *http.Request, f *login.Flow, payload *submitSelfServiceLoginFlowWithPasswordMethodBody, err error) error {
+func (s *Strategy) handleLoginError(w http.ResponseWriter, r *http.Request, f *login.Flow, payload *updateLoginFlowWithPasswordMethod, err error) error {
 	if f != nil {
 		f.UI.Nodes.ResetNodes("password")
 		f.UI.Nodes.SetValueAttribute("identifier", stringsx.Coalesce(payload.Identifier, payload.LegacyIdentifier))
@@ -57,7 +57,7 @@ func (s *Strategy) Login(w http.ResponseWriter, r *http.Request, f *login.Flow, 
 		return nil, err
 	}
 
-	var p submitSelfServiceLoginFlowWithPasswordMethodBody
+	var p updateLoginFlowWithPasswordMethod
 	if err := s.hd.Decode(r, &p,
 		decoderx.HTTPDecoderSetValidatePayloads(true),
 		decoderx.MustHTTPRawJSONSchemaCompiler(loginSchema),

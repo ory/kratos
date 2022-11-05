@@ -237,8 +237,8 @@ func TestOAuth2Provider(t *testing.T) {
 	createIdentity(ctx, reg, t, identifier, pwd)
 
 	hydraAdmin, hydraPublic := newHydra(t, uiTS.URL, uiTS.URL)
-	conf.MustSet(ctx, config.ViperKeyOAuth2ProviderURL, hydraAdmin+"/admin")
-	hydraAdminClient = createHydraOAuth2ApiClient(hydraAdmin + "/admin")
+	conf.MustSet(ctx, config.ViperKeyOAuth2ProviderURL, hydraAdmin)
+	hydraAdminClient = createHydraOAuth2ApiClient(hydraAdmin)
 	clientID := createOAuth2Client(t, ctx, hydraAdminClient, []string{clientAppTS.URL}, "profile email")
 
 	t.Run("should sign in the user without OAuth2", func(t *testing.T) {

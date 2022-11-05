@@ -4,6 +4,7 @@
 package main
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/ory/kratos/examples/go/pkg"
@@ -22,8 +23,8 @@ func performLogout() {
 	_, sessionToken := pkg.CreateIdentityWithSession(client, email, password)
 
 	// Log out using session token
-	res, err := client.V0alpha2Api.SubmitSelfServiceLogoutFlowWithoutBrowserExecute(ory.V0alpha2ApiApiSubmitSelfServiceLogoutFlowWithoutBrowserRequest{}.
-		SubmitSelfServiceLogoutFlowWithoutBrowserBody(ory.SubmitSelfServiceLogoutFlowWithoutBrowserBody{SessionToken: sessionToken}))
+	res, err := client.FrontendApi.PerformNativeLogout(context.Background()).
+		PerformNativeLogoutBody(ory.PerformNativeLogoutBody{SessionToken: sessionToken}).Execute()
 	pkg.SDKExitOnError(err, res)
 }
 

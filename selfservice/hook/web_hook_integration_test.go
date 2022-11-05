@@ -764,7 +764,7 @@ func TestDisallowPrivateIPRanges(t *testing.T) {
 }`))
 		err := wh.ExecuteLoginPostHook(nil, req, node.DefaultGroup, f, s)
 		require.Error(t, err)
-		require.Contains(t, err.Error(), "is in the private, loopback, or unspecified IP range")
+		require.Contains(t, err.Error(), "private, loopback, or unspecified IP range")
 	})
 
 	t.Run("allowed to call exempt url", func(t *testing.T) {

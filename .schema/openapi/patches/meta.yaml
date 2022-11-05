@@ -1,16 +1,23 @@
 - op: replace
   path: /info
   value:
-    title: Ory Kratos API
+    title: Ory Identities API
     description: |
-      Documentation for all public and administrative Ory Kratos APIs. Public and administrative APIs
-      are exposed on different ports. Public APIs can face the public internet without any protection
-      while administrative APIs should never be exposed without prior authorization. To protect
-      the administative API port you should use something like Nginx, Ory Oathkeeper, or any other
-      technology capable of authorizing incoming requests.
+      This is the API specification for Ory Identities with features such as registration, login, recovery, account verification, profile settings, password reset, identity management, session management, email and sms delivery, and more.
     version: >-
       {{ getenv "CIRCLE_TAG" }}
     license:
       name: Apache 2.0
     contact:
-      email: "hi@ory.sh"
+      email: "office@ory.sh"
+- op: replace
+  path: /tags
+  value:
+    - name: identity
+      description: APIs for managing identities.
+    - name: frontend
+      description: Endpoints used by frontend applications (e.g. Single-Page-App, Native Apps, Server Apps, ...) to manage a user's own profile.
+    - name: courier
+      description: APIs for managing email and SMS message delivery.
+    - name: metadata
+      description: Server Metadata provides relevant information about the running server. Only available when self-hosting this service.

@@ -157,7 +157,7 @@ func TestCompleteLogin(t *testing.T) {
 			assert.Contains(t, gjson.Get(actual, "message").String(), "Unable to locate the resource", "%s", actual)
 		}
 
-		fakeFlow := &kratos.SelfServiceLoginFlow{
+		fakeFlow := &kratos.LoginFlow{
 			Ui: kratos.UiContainer{
 				Action: publicTS.URL + login.RouteSubmitFlow + "?flow=" + x.NewUUID().String()},
 		}

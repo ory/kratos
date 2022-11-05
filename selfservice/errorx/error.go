@@ -12,7 +12,7 @@ import (
 	"github.com/gofrs/uuid"
 )
 
-// swagger:model selfServiceError
+// swagger:model flowError
 type ErrorContainer struct {
 	// ID of the error container.
 	//

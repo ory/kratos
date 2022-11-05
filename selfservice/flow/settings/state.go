@@ -10,7 +10,7 @@ package settings
 //     Done will stay true when repeatedly checking. If set to true, done will revert back to false only
 //     when a flow with invalid (e.g. "please use a valid phone number") data was sent.
 //
-// swagger:model selfServiceSettingsFlowState
+// swagger:model settingsFlowState
 type State string
 
 const (

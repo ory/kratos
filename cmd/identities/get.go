@@ -66,8 +66,8 @@ func NewGetIdentityCmd() *cobra.Command {
 			identities := make([]kratos.Identity, 0, len(args))
 			failed := make(map[string]error)
 			for _, id := range args {
-				identity, _, err := c.V0alpha2Api.
-					AdminGetIdentity(cmd.Context(), id).
+				identity, _, err := c.IdentityApi.
+					GetIdentity(cmd.Context(), id).
 					IncludeCredential(includeCreds).
 					Execute()
 

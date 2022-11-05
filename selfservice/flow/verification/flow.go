@@ -30,7 +30,7 @@ import (
 //
 // For more information head over to: https://www.ory.sh/docs/kratos/selfservice/flows/verify-email-account-activation
 //
-// swagger:model selfServiceVerificationFlow
+// swagger:model verificationFlow
 type Flow struct {
 	// ID represents the request's unique ID. When performing the verification flow, this
 	// represents the id in the verify ui's query parameter: http://<selfservice.flows.verification.ui_url>?request=<id>

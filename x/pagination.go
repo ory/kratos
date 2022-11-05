@@ -7,6 +7,8 @@ import (
 	"net/http"
 	"net/url"
 
+	"github.com/ory/x/pagination/migrationpagination"
+
 	"github.com/ory/x/pagination/pagepagination"
 )
 
@@ -37,17 +39,9 @@ type PaginationParams struct {
 	Page int `json:"page"`
 }
 
-const paginationMaxItems = 1000
-const paginationDefaultItems = 250
-
-var paginator = &pagepagination.PagePaginator{
-	MaxItems:     paginationMaxItems,
-	DefaultItems: paginationDefaultItems,
-}
-
 // ParsePagination parses limit and page from *http.Request with given limits and defaults.
 func ParsePagination(r *http.Request) (page, itemsPerPage int) {
-	return paginator.ParsePagination(r)
+	return migrationpagination.NewDefaultPaginator().ParsePagination(r)
 }
 
 func PaginationHeader(w http.ResponseWriter, u *url.URL, total int64, page, itemsPerPage int) {
