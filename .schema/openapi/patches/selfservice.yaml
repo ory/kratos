@@ -1,72 +1,72 @@
-# Makes submitSelfServiceLoginFlowPayload polymorph
+# Makes updateLoginFlowPayload polymorph
 #- op: remove
-#  path: /components/schemas/submitSelfServiceLoginFlowBody/type
+#  path: /components/schemas/updateLoginFlowBody/type
 #- op: add
-#  path: /components/schemas/submitSelfServiceLoginFlowBody/oneOf
+#  path: /components/schemas/updateLoginFlowBody/oneOf
 #  value:
-#    - "$ref": "#/components/schemas/submitSelfServiceLoginFlowWithPasswordMethod"
+#    - "$ref": "#/components/schemas/updateLoginFlowWithPasswordMethod"
 
-# Makes submitSelfServiceRegistrationFlowPayload polymorph
+# Makes updateRegistrationFlowPayload polymorph
 
 # All modifications for the registration flow
 - op: remove
-  path: /components/schemas/submitSelfServiceRegistrationFlowBody/type
+  path: /components/schemas/updateRegistrationFlowBody/type
 - op: add
-  path: /components/schemas/submitSelfServiceRegistrationFlowBody/oneOf
+  path: /components/schemas/updateRegistrationFlowBody/oneOf
   value:
-    - "$ref": "#/components/schemas/submitSelfServiceRegistrationFlowWithPasswordMethodBody"
-    - "$ref": "#/components/schemas/submitSelfServiceRegistrationFlowWithOidcMethodBody"
-    - "$ref": "#/components/schemas/submitSelfServiceRegistrationFlowWithWebAuthnMethodBody"
+    - "$ref": "#/components/schemas/updateRegistrationFlowWithPasswordMethod"
+    - "$ref": "#/components/schemas/updateRegistrationFlowWithOidcMethod"
+    - "$ref": "#/components/schemas/updateRegistrationFlowWithWebAuthnMethod"
 - op: add
-  path: /components/schemas/submitSelfServiceRegistrationFlowBody/discriminator
+  path: /components/schemas/updateRegistrationFlowBody/discriminator
   value:
     propertyName: method
     mapping:
-      password: "#/components/schemas/submitSelfServiceRegistrationFlowWithPasswordMethodBody"
-      oidc: "#/components/schemas/submitSelfServiceRegistrationFlowWithOidcMethodBody"
-      webauthn: "#/components/schemas/submitSelfServiceRegistrationFlowWithWebAuthnMethodBody"
+      password: "#/components/schemas/updateRegistrationFlowWithPasswordMethod"
+      oidc: "#/components/schemas/updateRegistrationFlowWithOidcMethod"
+      webauthn: "#/components/schemas/updateRegistrationFlowWithWebAuthnMethod"
 # end
 
 # All modifications for the login flow
 - op: remove
-  path: /components/schemas/submitSelfServiceLoginFlowBody/type
+  path: /components/schemas/updateLoginFlowBody/type
 - op: add
-  path: /components/schemas/submitSelfServiceLoginFlowBody/oneOf
+  path: /components/schemas/updateLoginFlowBody/oneOf
   value:
-    - "$ref": "#/components/schemas/submitSelfServiceLoginFlowWithPasswordMethodBody"
-    - "$ref": "#/components/schemas/submitSelfServiceLoginFlowWithOidcMethodBody"
-    - "$ref": "#/components/schemas/submitSelfServiceLoginFlowWithTotpMethodBody"
-    - "$ref": "#/components/schemas/submitSelfServiceLoginFlowWithWebAuthnMethodBody"
-    - "$ref": "#/components/schemas/submitSelfServiceLoginFlowWithLookupSecretMethodBody"
+    - "$ref": "#/components/schemas/updateLoginFlowWithPasswordMethod"
+    - "$ref": "#/components/schemas/updateLoginFlowWithOidcMethod"
+    - "$ref": "#/components/schemas/updateLoginFlowWithTotpMethod"
+    - "$ref": "#/components/schemas/updateLoginFlowWithWebAuthnMethod"
+    - "$ref": "#/components/schemas/updateLoginFlowWithLookupSecretMethod"
 - op: add
-  path: /components/schemas/submitSelfServiceLoginFlowBody/discriminator
+  path: /components/schemas/updateLoginFlowBody/discriminator
   value:
     propertyName: method
     mapping:
-      password: "#/components/schemas/submitSelfServiceLoginFlowWithPasswordMethodBody"
-      oidc: "#/components/schemas/submitSelfServiceLoginFlowWithOidcMethodBody"
-      totp: "#/components/schemas/submitSelfServiceLoginFlowWithTotpMethodBody"
-      webauthn: "#/components/schemas/submitSelfServiceLoginFlowWithWebAuthnMethodBody"
-      lookup_secret: "#/components/schemas/submitSelfServiceLoginFlowWithLookupSecretMethodBody"
+      password: "#/components/schemas/updateLoginFlowWithPasswordMethod"
+      oidc: "#/components/schemas/updateLoginFlowWithOidcMethod"
+      totp: "#/components/schemas/updateLoginFlowWithTotpMethod"
+      webauthn: "#/components/schemas/updateLoginFlowWithWebAuthnMethod"
+      lookup_secret: "#/components/schemas/updateLoginFlowWithLookupSecretMethod"
 # end
 
 # All modifications for the recovery flow
 - op: remove
-  path: /components/schemas/submitSelfServiceRecoveryFlowBody/type
+  path: /components/schemas/updateRecoveryFlowBody/type
 - op: add
-  path: /components/schemas/submitSelfServiceRecoveryFlowBody/oneOf
+  path: /components/schemas/updateRecoveryFlowBody/oneOf
   value:
-    - "$ref": "#/components/schemas/submitSelfServiceRecoveryFlowWithLinkMethodBody"
-    - "$ref": "#/components/schemas/submitSelfServiceRecoveryFlowWithCodeMethodBody"
+    - "$ref": "#/components/schemas/updateRecoveryFlowWithLinkMethod"
+    - "$ref": "#/components/schemas/updateRecoveryFlowWithCodeMethod"
 - op: add
-  path: /components/schemas/submitSelfServiceRecoveryFlowBody/discriminator
+  path: /components/schemas/updateRecoveryFlowBody/discriminator
   value:
     propertyName: method
     mapping:
-      link: "#/components/schemas/submitSelfServiceRecoveryFlowWithLinkMethodBody"
-      code: "#/components/schemas/submitSelfServiceRecoveryFlowWithCodeMethodBody"
+      link: "#/components/schemas/updateRecoveryFlowWithLinkMethod"
+      code: "#/components/schemas/updateRecoveryFlowWithCodeMethod"
 - op: add
-  path: /components/schemas/selfServiceRecoveryFlowState/enum
+  path: /components/schemas/recoveryFlowState/enum
   value:
     - choose_method
     - sent_email
@@ -75,19 +75,19 @@
 
 # All modifications for the verification flow
 - op: remove
-  path: /components/schemas/submitSelfServiceVerificationFlowBody/type
+  path: /components/schemas/updateVerificationFlowBody/type
 - op: add
-  path: /components/schemas/submitSelfServiceVerificationFlowBody/oneOf
+  path: /components/schemas/updateVerificationFlowBody/oneOf
   value:
-    - "$ref": "#/components/schemas/submitSelfServiceVerificationFlowWithLinkMethodBody"
+    - "$ref": "#/components/schemas/updateVerificationFlowWithLinkMethod"
 - op: add
-  path: /components/schemas/submitSelfServiceVerificationFlowBody/discriminator
+  path: /components/schemas/updateVerificationFlowBody/discriminator
   value:
     propertyName: method
     mapping:
-      link: "#/components/schemas/submitSelfServiceVerificationFlowWithLinkMethodBody"
+      link: "#/components/schemas/updateVerificationFlowWithLinkMethod"
 - op: add
-  path: /components/schemas/selfServiceVerificationFlowState/enum
+  path: /components/schemas/verificationFlowState/enum
   value:
     - choose_method
     - sent_email
@@ -96,30 +96,30 @@
 
 # All modifications for the settings flow
 - op: remove
-  path: /components/schemas/submitSelfServiceSettingsFlowBody/type
+  path: /components/schemas/updateSettingsFlowBody/type
 - op: add
-  path: /components/schemas/submitSelfServiceSettingsFlowBody/oneOf
+  path: /components/schemas/updateSettingsFlowBody/oneOf
   value:
-    - "$ref": "#/components/schemas/submitSelfServiceSettingsFlowWithPasswordMethodBody"
-    - "$ref": "#/components/schemas/submitSelfServiceSettingsFlowWithProfileMethodBody"
-    - "$ref": "#/components/schemas/submitSelfServiceSettingsFlowWithOidcMethodBody"
-    - "$ref": "#/components/schemas/submitSelfServiceSettingsFlowWithOidcMethodBody"
-    - "$ref": "#/components/schemas/submitSelfServiceSettingsFlowWithTotpMethodBody"
-    - "$ref": "#/components/schemas/submitSelfServiceSettingsFlowWithWebAuthnMethodBody"
-    - "$ref": "#/components/schemas/submitSelfServiceSettingsFlowWithLookupMethodBody"
+    - "$ref": "#/components/schemas/updateSettingsFlowWithPasswordMethod"
+    - "$ref": "#/components/schemas/updateSettingsFlowWithProfileMethod"
+    - "$ref": "#/components/schemas/updateSettingsFlowWithOidcMethod"
+    - "$ref": "#/components/schemas/updateSettingsFlowWithOidcMethod"
+    - "$ref": "#/components/schemas/updateSettingsFlowWithTotpMethod"
+    - "$ref": "#/components/schemas/updateSettingsFlowWithWebAuthnMethod"
+    - "$ref": "#/components/schemas/updateSettingsFlowWithLookupMethod"
 - op: add
-  path: /components/schemas/submitSelfServiceSettingsFlowBody/discriminator
+  path: /components/schemas/updateSettingsFlowBody/discriminator
   value:
     propertyName: method
     mapping:
-      password: "#/components/schemas/submitSelfServiceSettingsFlowWithPasswordMethodBody"
-      profile: "#/components/schemas/submitSelfServiceSettingsFlowWithProfileMethodBody"
-      oidc: "#/components/schemas/submitSelfServiceSettingsFlowWithOidcMethodBody"
-      totp: "#/components/schemas/submitSelfServiceSettingsFlowWithTotpMethodBody"
-      webauthn: "#/components/schemas/submitSelfServiceSettingsFlowWithWebAuthnMethodBody"
-      lookup_secret: "#/components/schemas/submitSelfServiceSettingsFlowWithLookupMethodBody"
+      password: "#/components/schemas/updateSettingsFlowWithPasswordMethod"
+      profile: "#/components/schemas/updateSettingsFlowWithProfileMethod"
+      oidc: "#/components/schemas/updateSettingsFlowWithOidcMethod"
+      totp: "#/components/schemas/updateSettingsFlowWithTotpMethod"
+      webauthn: "#/components/schemas/updateSettingsFlowWithWebAuthnMethod"
+      lookup_secret: "#/components/schemas/updateSettingsFlowWithLookupMethod"
 - op: add
-  path: /components/schemas/selfServiceSettingsFlowState/enum
+  path: /components/schemas/settingsFlowState/enum
   value:
     - show_form
     - success

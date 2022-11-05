@@ -16,7 +16,7 @@ import (
 // var client = pkg.NewSDKForSelfHosted("http://127.0.0.1:4433")
 var client = pkg.NewSDK("playground")
 
-func performLogin() *ory.SuccessfulSelfServiceLoginWithoutBrowser {
+func performLogin() *ory.SuccessfulNativeLogin {
 	ctx := context.Background()
 
 	// Create a temporary user
@@ -24,7 +24,7 @@ func performLogin() *ory.SuccessfulSelfServiceLoginWithoutBrowser {
 	_, _ = pkg.CreateIdentityWithSession(client, email, password)
 
 	// Initialize the flow
-	flow, res, err := client.V0alpha2Api.InitializeSelfServiceLoginFlowWithoutBrowser(ctx).Execute()
+	flow, res, err := client.FrontendApi.CreateNativeLoginFlow(ctx).Execute()
 	pkg.SDKExitOnError(err, res)
 
 	// If you want, print the flow here:
@@ -32,8 +32,8 @@ func performLogin() *ory.SuccessfulSelfServiceLoginWithoutBrowser {
 	//	pkg.PrintJSONPretty(flow)
 
 	// Submit the form
-	result, res, err := client.V0alpha2Api.SubmitSelfServiceLoginFlow(ctx).Flow(flow.Id).SubmitSelfServiceLoginFlowBody(
-		ory.SubmitSelfServiceLoginFlowWithPasswordMethodBodyAsSubmitSelfServiceLoginFlowBody(&ory.SubmitSelfServiceLoginFlowWithPasswordMethodBody{
+	result, res, err := client.FrontendApi.UpdateLoginFlow(ctx).Flow(flow.Id).UpdateLoginFlowBody(
+		ory.UpdateLoginFlowWithPasswordMethodAsUpdateLoginFlowBody(&ory.UpdateLoginFlowWithPasswordMethod{
 			Method:             "password",
 			Password:           password,
 			PasswordIdentifier: &email,

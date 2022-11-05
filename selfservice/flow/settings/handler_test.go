@@ -251,7 +251,7 @@ func TestHandler(t *testing.T) {
 
 	t.Run("endpoint=fetch", func(t *testing.T) {
 		t.Run("description=fetching a non-existent flow should return a 404 error", func(t *testing.T) {
-			_, _, err := testhelpers.NewSDKCustomClient(publicTS, otherUser).V0alpha2Api.GetSelfServiceSettingsFlow(context.Background()).Id("i-do-not-exist").Execute()
+			_, _, err := testhelpers.NewSDKCustomClient(publicTS, otherUser).FrontendApi.GetSettingsFlow(context.Background()).Id("i-do-not-exist").Execute()
 			require.Error(t, err)
 
 			require.IsType(t, new(kratos.GenericOpenAPIError), err, "%T", err)
@@ -262,7 +262,7 @@ func TestHandler(t *testing.T) {
 			pr := newExpiredFlow()
 			require.NoError(t, reg.SettingsFlowPersister().CreateSettingsFlow(context.Background(), pr))
 
-			_, _, err := testhelpers.NewSDKCustomClient(publicTS, primaryUser).V0alpha2Api.GetSelfServiceSettingsFlow(context.Background()).Id(pr.ID.String()).Execute()
+			_, _, err := testhelpers.NewSDKCustomClient(publicTS, primaryUser).FrontendApi.GetSettingsFlow(context.Background()).Id(pr.ID.String()).Execute()
 			require.Error(t, err)
 
 			require.IsType(t, new(kratos.GenericOpenAPIError), err, "%T", err)
@@ -329,7 +329,7 @@ func TestHandler(t *testing.T) {
 				rid := res.Request.URL.Query().Get("flow")
 				require.NotEmpty(t, rid)
 
-				_, _, err = testhelpers.NewSDKCustomClient(publicTS, otherUser).V0alpha2Api.GetSelfServiceSettingsFlow(context.Background()).Id(rid).Execute()
+				_, _, err = testhelpers.NewSDKCustomClient(publicTS, otherUser).FrontendApi.GetSettingsFlow(context.Background()).Id(rid).Execute()
 				require.Error(t, err)
 				require.IsType(t, new(kratos.GenericOpenAPIError), err, "%T", err)
 				assert.Equal(t, int64(http.StatusForbidden), gjson.GetBytes(err.(*kratos.GenericOpenAPIError).Body(), "error.code").Int(), "should return a 403 error because the identities from the cookies do not match")
@@ -366,7 +366,7 @@ func TestHandler(t *testing.T) {
 
 				res, body := initFlow(t, aal2Identity, false)
 				require.Equal(t, http.StatusOK, res.StatusCode)
-				var f kratos.SelfServiceSettingsFlow
+				var f kratos.SettingsFlow
 				require.NoError(t, json.Unmarshal(body, &f))
 
 				conf.MustSet(ctx, config.ViperKeySelfServiceSettingsRequiredAAL, config.HighestAvailableAAL)
@@ -383,7 +383,7 @@ func TestHandler(t *testing.T) {
 
 				res, body := initFlow(t, aal2Identity, false)
 				require.Equal(t, http.StatusOK, res.StatusCode)
-				var f kratos.SelfServiceSettingsFlow
+				var f kratos.SettingsFlow
 				require.NoError(t, json.Unmarshal(body, &f))
 
 				conf.MustSet(ctx, config.ViperKeySelfServiceSettingsRequiredAAL, config.HighestAvailableAAL)
@@ -400,7 +400,7 @@ func TestHandler(t *testing.T) {
 
 				res, body := initFlow(t, aal2Identity, true)
 				require.Equal(t, http.StatusOK, res.StatusCode)
-				var f kratos.SelfServiceSettingsFlow
+				var f kratos.SettingsFlow
 				require.NoError(t, json.Unmarshal(body, &f))
 
 				conf.MustSet(ctx, config.ViperKeySelfServiceSettingsRequiredAAL, config.HighestAvailableAAL)
@@ -415,7 +415,7 @@ func TestHandler(t *testing.T) {
 				user1 := testhelpers.NewHTTPClientWithArbitrarySessionToken(t, reg)
 				user2 := testhelpers.NewHTTPClientWithArbitrarySessionToken(t, reg)
 				_, body := initFlow(t, user1, true)
-				var f kratos.SelfServiceSettingsFlow
+				var f kratos.SettingsFlow
 				require.NoError(t, json.Unmarshal(body, &f))
 
 				actual, res := testhelpers.SettingsMakeRequest(t, true, false, &f, user2, `{"method":"not-exists"}`)
@@ -427,7 +427,7 @@ func TestHandler(t *testing.T) {
 				user1 := testhelpers.NewHTTPClientWithArbitrarySessionCookie(t, reg)
 				user2 := testhelpers.NewHTTPClientWithArbitrarySessionCookie(t, reg)
 				_, body := initFlow(t, user1, true)
-				var f kratos.SelfServiceSettingsFlow
+				var f kratos.SettingsFlow
 				require.NoError(t, json.Unmarshal(body, &f))
 
 				actual, res := testhelpers.SettingsMakeRequest(t, false, true, &f, user2, `{"method":"not-exists"}`)
@@ -439,7 +439,7 @@ func TestHandler(t *testing.T) {
 				user1 := testhelpers.NewHTTPClientWithArbitrarySessionCookie(t, reg)
 				user2 := testhelpers.NewHTTPClientWithArbitrarySessionCookie(t, reg)
 				_, body := initFlow(t, user1, true)
-				var f kratos.SelfServiceSettingsFlow
+				var f kratos.SettingsFlow
 				require.NoError(t, json.Unmarshal(body, &f))
 
 				actual, res := testhelpers.SettingsMakeRequest(t, false, false, &f, user2, `{"method":"not-exists"}`)
@@ -451,7 +451,7 @@ func TestHandler(t *testing.T) {
 		t.Run("description=submit - kratos session cookie issued", func(t *testing.T) {
 			t.Run("type=spa", func(t *testing.T) {
 				_, body := initFlow(t, primaryUser, false)
-				var f kratos.SelfServiceSettingsFlow
+				var f kratos.SettingsFlow
 				require.NoError(t, json.Unmarshal(body, &f))
 
 				actual, res := testhelpers.SettingsMakeRequest(t, false, true, &f, primaryUser, fmt.Sprintf(`{"method":"profile", "numby": 15, "csrf_token": "%s"}`, x.FakeCSRFToken))
@@ -463,7 +463,7 @@ func TestHandler(t *testing.T) {
 
 			t.Run("type=browser", func(t *testing.T) {
 				_, body := initFlow(t, primaryUser, false)
-				var f kratos.SelfServiceSettingsFlow
+				var f kratos.SettingsFlow
 				require.NoError(t, json.Unmarshal(body, &f))
 
 				actual, res := testhelpers.SettingsMakeRequest(t, false, false, &f, primaryUser, `method=profile&traits.numby=15&csrf_token=`+x.FakeCSRFToken)

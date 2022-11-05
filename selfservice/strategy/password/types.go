@@ -7,10 +7,10 @@ import (
 	"github.com/ory/kratos/ui/container"
 )
 
-// submitSelfServiceLoginFlowWithPasswordMethodBody is used to decode the login form payload.
+// Update Login Flow with Password Method
 //
-// swagger:model submitSelfServiceLoginFlowWithPasswordMethodBody
-type submitSelfServiceLoginFlowWithPasswordMethodBody struct {
+// swagger:model updateLoginFlowWithPasswordMethod
+type updateLoginFlowWithPasswordMethod struct {
 	// Method should be set to "password" when logging in using the identifier and password strategy.
 	//
 	// required: true

@@ -9,6 +9,8 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/ory/x/pagination/migrationpagination"
+
 	"github.com/ory/x/pagination/keysetpagination"
 
 	"github.com/ory/x/pointerx"
@@ -70,8 +72,8 @@ func (h *Handler) RegisterAdminRoutes(admin *x.RouterAdmin) {
 	admin.GET(RouteSession, h.adminGetSession)
 	admin.DELETE(RouteSession, h.disableSession)
 
-	admin.GET(AdminRouteIdentitiesSessions, h.adminListIdentitySessions)
-	admin.DELETE(AdminRouteIdentitiesSessions, h.adminDeleteIdentitySessions)
+	admin.GET(AdminRouteIdentitiesSessions, h.listIdentitySessions)
+	admin.DELETE(AdminRouteIdentitiesSessions, h.deleteIdentitySessions)
 	admin.PATCH(AdminRouteSessionExtendId, h.adminSessionExtend)
 
 	admin.DELETE(RouteCollection, x.RedirectToPublicRoute(h.r))
@@ -90,15 +92,17 @@ func (h *Handler) RegisterPublicRoutes(public *x.RouterPublic) {
 		public.Handle(m, RouteWhoami, h.whoami)
 	}
 
-	public.DELETE(RouteCollection, h.revokeSessions)
-	public.DELETE(RouteSession, h.revokeSession)
-	public.GET(RouteCollection, h.listSessions)
+	public.DELETE(RouteCollection, h.deleteMySessions)
+	public.DELETE(RouteSession, h.deleteMySession)
+	public.GET(RouteCollection, h.listMySessions)
 
 	public.DELETE(AdminRouteIdentitiesSessions, x.RedirectToAdminRoute(h.r))
 }
 
+// Check Session Request Parameters
+//
 // nolint:deadcode,unused
-// swagger:parameters toSession revokeSessions listSessions
+// swagger:parameters toSession
 type toSession struct {
 	// Set the Session Token when calling from non-browser clients. A session token has a format of `MP2YWEMeM8MxjkGKpH4dqOQ4Q4DlSPaj`.
 	//
@@ -115,13 +119,13 @@ type toSession struct {
 	Cookie string `json:"Cookie"`
 }
 
-// swagger:route GET /sessions/whoami v0alpha2 toSession
+// swagger:route GET /sessions/whoami frontend toSession
 //
 // # Check Who the Current HTTP Session Belongs To
 //
 // Uses the HTTP Headers in the GET request to determine (e.g. by using checking the cookies) who is authenticated.
 // Returns a session object in the body or 401 if the credentials are invalid or no credentials were sent.
-// Additionally when the request it successful it adds the user ID to the 'X-Kratos-Authenticated-Identity-Id' header
+// When the request it successful it adds the user ID to the 'X-Kratos-Authenticated-Identity-Id' header
 // in the response.
 //
 // If you call this endpoint from a server-side application, you must forward the HTTP Cookie Header to this endpoint:
@@ -156,7 +160,7 @@ type toSession struct {
 // - Reverse proxies and API Gateways
 // - Server-side calls - use the `X-Session-Token` header!
 //
-// # This endpoint authenticates users by checking
+// This endpoint authenticates users by checking:
 //
 // - if the `Cookie` HTTP header was set containing an Ory Kratos Session Cookie;
 // - if the `Authorization: bearer <ory-session-token>` HTTP header was set with a valid Ory Kratos Session Token;
@@ -176,9 +180,9 @@ type toSession struct {
 //
 //	Responses:
 //	  200: session
-//	  401: jsonError
-//	  403: jsonError
-//	  500: jsonError
+//	  401: errorGeneric
+//	  403: errorGeneric
+//	  default: errorGeneric
 func (h *Handler) whoami(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	s, err := h.r.SessionManager().FetchFromRequest(r.Context(), r)
 	if err != nil {
@@ -220,9 +224,11 @@ func (h *Handler) whoami(w http.ResponseWriter, r *http.Request, ps httprouter.P
 	h.r.Writer().Write(w, r, s)
 }
 
-// swagger:parameters adminDeleteIdentitySessions
+// Delete Identity Session Parameters
+//
+// swagger:parameters deleteIdentitySessions
 // nolint:deadcode,unused
-type adminDeleteIdentitySessions struct {
+type deleteIdentitySessions struct {
 	// ID is the identity's ID.
 	//
 	// required: true
@@ -230,15 +236,11 @@ type adminDeleteIdentitySessions struct {
 	ID string `json:"id"`
 }
 
-// swagger:route DELETE /admin/identities/{id}/sessions v0alpha2 adminDeleteIdentitySessions
+// swagger:route DELETE /admin/identities/{id}/sessions identity deleteIdentitySessions
 //
 // # Delete & Invalidate an Identity's Sessions
 //
 // Calling this endpoint irrecoverably and permanently deletes and invalidates all sessions that belong to the given Identity.
-//
-// This endpoint is useful for:
-//
-// - To forcefully logout Identity from all devices and sessions
 //
 //	Schemes: http, https
 //
@@ -247,11 +249,11 @@ type adminDeleteIdentitySessions struct {
 //
 //	Responses:
 //	  204: emptyResponse
-//	  400: jsonError
-//	  401: jsonError
-//	  404: jsonError
-//	  500: jsonError
-func (h *Handler) adminDeleteIdentitySessions(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+//	  400: errorGeneric
+//	  401: errorGeneric
+//	  404: errorGeneric
+//	  default: errorGeneric
+func (h *Handler) deleteIdentitySessions(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	iID, err := uuid.FromString(ps.ByName("id"))
 	if err != nil {
 		h.r.Writer().WriteError(w, r, herodot.ErrBadRequest.WithError(err.Error()).WithDebug("could not parse UUID"))
@@ -269,9 +271,9 @@ func (h *Handler) adminDeleteIdentitySessions(w http.ResponseWriter, r *http.Req
 //
 // The request object for listing sessions in an administrative context.
 //
-// swagger:parameters adminListSessions
+// swagger:parameters listSessions
 // nolint:deadcode,unused
-type adminListSessionsRequest struct {
+type listSessionsRequest struct {
 	keysetpagination.RequestParameters
 
 	// Active is a boolean flag that filters out sessions based on the state. If no value is provided, all sessions are returned.
@@ -293,11 +295,9 @@ type adminListSessionsRequest struct {
 //
 // The response given when listing sessions in an administrative context.
 //
-// swagger:response adminListSessions
+// swagger:response listSessions
 // nolint:deadcode,unused
-type adminListSessionsResponse struct {
-	// The pagination headers
-	// in: header
+type listSessionsResponse struct {
 	keysetpagination.ResponseHeaders
 
 	// The list of sessions found
@@ -305,13 +305,11 @@ type adminListSessionsResponse struct {
 	Sessions []Session
 }
 
-// swagger:route GET /admin/sessions v0alpha2 adminListSessions
+// swagger:route GET /admin/sessions identity listSessions
 //
-// This endpoint returns all sessions that exist.
+// # List All Sessions
 //
-// This endpoint is useful for:
-//
-// - Listing all sessions that exist in an administrative context.
+// Listing all sessions that exist.
 //
 //	Schemes: http, https
 //
@@ -319,11 +317,9 @@ type adminListSessionsResponse struct {
 //	  oryAccessToken:
 //
 //	Responses:
-//	  200: sessionList
-//	  400: jsonError
-//	  401: jsonError
-//	  404: jsonError
-//	  500: jsonError
+//	  200: listSessions
+//	  400: errorGeneric
+//	  default: errorGeneric
 func (h *Handler) adminListSessions(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	activeRaw := r.URL.Query().Get("active")
 	activeBool, err := strconv.ParseBool(activeRaw)
@@ -404,8 +400,8 @@ type adminGetSessionRequest struct {
 //
 //	Responses:
 //	  200: session
-//	  400: jsonError
-//	  default: jsonError
+//	  400: errorGeneric
+//	  default: errorGeneric
 func (h *Handler) adminGetSession(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	if ps.ByName("id") == "whoami" {
 		// for /admin/sessions/whoami redirect to the public route
@@ -442,6 +438,9 @@ func (h *Handler) adminGetSession(w http.ResponseWriter, r *http.Request, ps htt
 	h.r.Writer().Write(w, r, sess)
 }
 
+// List Identity Sessions Parameters
+//
+// swagger:parameters listIdentitySessions
 // Deactivate Session Parameters
 //
 // swagger:parameters disableSession
@@ -464,9 +463,9 @@ type disableSession struct {
 //
 //	Responses:
 //	  204: emptyResponse
-//	  400: jsonError
-//	  401: jsonError
-//	  default: jsonError
+//	  400: errorGeneric
+//	  401: errorGeneric
+//	  default: errorGeneric
 func (h *Handler) disableSession(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	sID, err := uuid.FromString(ps.ByName("id"))
 	if err != nil {
@@ -482,28 +481,42 @@ func (h *Handler) disableSession(w http.ResponseWriter, r *http.Request, ps http
 	h.r.Writer().WriteCode(w, r, http.StatusNoContent, nil)
 }
 
-// swagger:parameters adminListIdentitySessions
+// List Identity Sessions Parameters
+//
+// swagger:parameters listIdentitySessions
 // nolint:deadcode,unused
-type adminListIdentitySessions struct {
+type listIdentitySessionsRequest struct {
+	migrationpagination.RequestParameters
+
+	// ID is the identity's ID.
+	//
+	// required: true
+	// in: path
+	ID string `json:"id"`
+
 	// Active is a boolean flag that filters out sessions based on the state. If no value is provided, all sessions are returned.
 	//
 	// required: false
 	// in: query
 	Active bool `json:"active"`
-
-	adminDeleteIdentitySessions
-	x.PaginationParams
 }
 
-// swagger:route GET /admin/identities/{id}/sessions v0alpha2 adminListIdentitySessions
+// List Identity Sessions Response
+//
+// swagger:response listIdentitySessions
+// nolint:deadcode,unused
+type listIdentitySessionsResponse struct {
+	migrationpagination.ResponseHeaderAnnotation
+
+	// in: body
+	Body []Session
+}
+
+// swagger:route GET /admin/identities/{id}/sessions identity listIdentitySessions
 //
 // # List an Identity's Sessions
 //
 // This endpoint returns all sessions that belong to the given Identity.
-//
-// This endpoint is useful for:
-//
-// - Listing all sessions that belong to an Identity in an administrative context.
 //
 //	Schemes: http, https
 //
@@ -511,22 +524,21 @@ type adminListIdentitySessions struct {
 //	  oryAccessToken:
 //
 //	Responses:
-//	  200: sessionList
-//	  400: jsonError
-//	  401: jsonError
-//	  404: jsonError
-//	  500: jsonError
-func (h *Handler) adminListIdentitySessions(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+//	  200: listIdentitySessions
+//	  400: errorGeneric
+//	  404: errorGeneric
+//	  default: errorGeneric
+func (h *Handler) listIdentitySessions(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	iID, err := uuid.FromString(ps.ByName("id"))
 	if err != nil {
-		h.r.Writer().WriteError(w, r, herodot.ErrBadRequest.WithError(err.Error()).WithDebug("could not parse UUID"))
+		h.r.Writer().WriteError(w, r, errors.WithStack(herodot.ErrBadRequest.WithError(err.Error()).WithDebug("could not parse UUID")))
 		return
 	}
 
 	activeRaw := r.URL.Query().Get("active")
 	activeBool, err := strconv.ParseBool(activeRaw)
 	if activeRaw != "" && err != nil {
-		h.r.Writer().WriteError(w, r, herodot.ErrBadRequest.WithError("could not parse parameter active"))
+		h.r.Writer().WriteError(w, r, errors.WithStack(herodot.ErrBadRequest.WithError("could not parse parameter active")))
 		return
 	}
 
@@ -546,32 +558,49 @@ func (h *Handler) adminListIdentitySessions(w http.ResponseWriter, r *http.Reque
 	h.r.Writer().Write(w, r, sess)
 }
 
-// swagger:model revokedSessions
-type revokeSessions struct {
+// Deleted Session Count
+//
+// swagger:model deleteMySessionsCount
+type deleteMySessionsCount struct {
 	// The number of sessions that were revoked.
 	Count int `json:"count"`
 }
 
-// swagger:route DELETE /sessions v0alpha2 revokeSessions
+// Disable My Other Session Parameters
 //
-// # Invalidate all Other Sessions
+// nolint:deadcode,unused
+// swagger:parameters disableMyOtherSessions
+type disableMyOtherSessions struct {
+	// Set the Session Token when calling from non-browser clients. A session token has a format of `MP2YWEMeM8MxjkGKpH4dqOQ4Q4DlSPaj`.
+	//
+	// in: header
+	SessionToken string `json:"X-Session-Token"`
+
+	// Set the Cookie Header. This is especially useful when calling this endpoint from a server-side application. In that
+	// scenario you must include the HTTP Cookie Header which originally was included in the request to your server.
+	// An example of a session in the HTTP Cookie Header is: `ory_kratos_session=a19iOVAbdzdgl70Rq1QZmrKmcjDtdsviCTZx7m9a9yHIUS8Wa9T7hvqyGTsLHi6Qifn2WUfpAKx9DWp0SJGleIn9vh2YF4A16id93kXFTgIgmwIOvbVAScyrx7yVl6bPZnCx27ec4WQDtaTewC1CpgudeDV2jQQnSaCP6ny3xa8qLH-QUgYqdQuoA_LF1phxgRCUfIrCLQOkolX5nv3ze_f==`.
+	//
+	// It is ok if more than one cookie are included here as all other cookies will be ignored.
+	//
+	// in: header
+	Cookie string `json:"Cookie"`
+}
+
+// swagger:route DELETE /sessions frontend disableMyOtherSessions
+//
+// # Disable my other sessions
 //
 // Calling this endpoint invalidates all except the current session that belong to the logged-in user.
 // Session data are not deleted.
 //
-// This endpoint is useful for:
-//
-// - To forcefully logout the current user from all other devices and sessions
-//
 //	Schemes: http, https
 //
 //	Responses:
-//	  200: revokedSessions
-//	  400: jsonError
-//	  401: jsonError
-//	  404: jsonError
-//	  500: jsonError
-func (h *Handler) revokeSessions(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+//	  200: deleteMySessionsCount
+//	  400: errorGeneric
+//	  401: errorGeneric
+//	  default: errorGeneric
+func (h *Handler) deleteMySessions(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 	s, err := h.r.SessionManager().FetchFromRequest(r.Context(), r)
 	if err != nil {
 		h.r.Audit().WithRequest(r).WithError(err).Info("No valid session cookie found.")
@@ -585,38 +614,50 @@ func (h *Handler) revokeSessions(w http.ResponseWriter, r *http.Request, _ httpr
 		return
 	}
 
-	h.r.Writer().WriteCode(w, r, http.StatusOK, &revokeSessions{Count: n})
+	h.r.Writer().WriteCode(w, r, http.StatusOK, &deleteMySessionsCount{Count: n})
 }
 
-// swagger:parameters revokeSession
+// Disable My Session Parameters
+//
+// swagger:parameters disableMySession
 // nolint:deadcode,unused
-type revokeSession struct {
+type disableMySession struct {
 	// ID is the session's ID.
 	//
 	// required: true
 	// in: path
 	ID string `json:"id"`
+
+	// Set the Session Token when calling from non-browser clients. A session token has a format of `MP2YWEMeM8MxjkGKpH4dqOQ4Q4DlSPaj`.
+	//
+	// in: header
+	SessionToken string `json:"X-Session-Token"`
+
+	// Set the Cookie Header. This is especially useful when calling this endpoint from a server-side application. In that
+	// scenario you must include the HTTP Cookie Header which originally was included in the request to your server.
+	// An example of a session in the HTTP Cookie Header is: `ory_kratos_session=a19iOVAbdzdgl70Rq1QZmrKmcjDtdsviCTZx7m9a9yHIUS8Wa9T7hvqyGTsLHi6Qifn2WUfpAKx9DWp0SJGleIn9vh2YF4A16id93kXFTgIgmwIOvbVAScyrx7yVl6bPZnCx27ec4WQDtaTewC1CpgudeDV2jQQnSaCP6ny3xa8qLH-QUgYqdQuoA_LF1phxgRCUfIrCLQOkolX5nv3ze_f==`.
+	//
+	// It is ok if more than one cookie are included here as all other cookies will be ignored.
+	//
+	// in: header
+	Cookie string `json:"Cookie"`
 }
 
-// swagger:route DELETE /sessions/{id} v0alpha2 revokeSession
+// swagger:route DELETE /sessions/{id} frontend disableMySession
 //
-// # Invalidate a Session
+// # Disable one of my sessions
 //
 // Calling this endpoint invalidates the specified session. The current session cannot be revoked.
 // Session data are not deleted.
-//
-// This endpoint is useful for:
-//
-// - To forcefully logout the current user from another device or session
 //
 //	Schemes: http, https
 //
 //	Responses:
 //	  204: emptyResponse
-//	  400: jsonError
-//	  401: jsonError
-//	  500: jsonError
-func (h *Handler) revokeSession(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+//	  400: errorGeneric
+//	  401: errorGeneric
+//	  default: errorGeneric
+func (h *Handler) deleteMySession(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	sid := ps.ByName("id")
 	if sid == "whoami" {
 		// Special case where we actually want to handle the whomai endpoint.
@@ -649,40 +690,58 @@ func (h *Handler) revokeSession(w http.ResponseWriter, r *http.Request, ps httpr
 	h.r.Writer().WriteCode(w, r, http.StatusNoContent, nil)
 }
 
-// swagger:parameters listSessions
+// List My Session Parameters
+//
+// swagger:parameters listMySessions
 // nolint:deadcode,unused
-type listSessions struct {
+type listMySessionsParameters struct {
 	x.PaginationParams
+
+	// Set the Session Token when calling from non-browser clients. A session token has a format of `MP2YWEMeM8MxjkGKpH4dqOQ4Q4DlSPaj`.
+	//
+	// in: header
+	SessionToken string `json:"X-Session-Token"`
+
+	// Set the Cookie Header. This is especially useful when calling this endpoint from a server-side application. In that
+	// scenario you must include the HTTP Cookie Header which originally was included in the request to your server.
+	// An example of a session in the HTTP Cookie Header is: `ory_kratos_session=a19iOVAbdzdgl70Rq1QZmrKmcjDtdsviCTZx7m9a9yHIUS8Wa9T7hvqyGTsLHi6Qifn2WUfpAKx9DWp0SJGleIn9vh2YF4A16id93kXFTgIgmwIOvbVAScyrx7yVl6bPZnCx27ec4WQDtaTewC1CpgudeDV2jQQnSaCP6ny3xa8qLH-QUgYqdQuoA_LF1phxgRCUfIrCLQOkolX5nv3ze_f==`.
+	//
+	// It is ok if more than one cookie are included here as all other cookies will be ignored.
+	//
+	// in: header
+	Cookie string `json:"Cookie"`
 }
 
-// swagger:model sessionList
-// nolint:deadcode,unused
-type sessionList []*Session
-
-// swagger:route GET /sessions v0alpha2 listSessions
+// List My Session Response
 //
-// # Get Active Sessions
+// swagger:response listMySessions
+// nolint:deadcode,unused
+type listMySessionsResponse struct {
+	migrationpagination.ResponseHeaderAnnotation
+
+	// in: body
+	Body []Session
+}
+
+// swagger:route GET /sessions frontend listMySessions
+//
+// # Get My Active Sessions
 //
 // This endpoints returns all other active sessions that belong to the logged-in user.
 // The current session can be retrieved by calling the `/sessions/whoami` endpoint.
 //
-// This endpoint is useful for:
-//
-// - Displaying all other sessions that belong to the logged-in user
-//
 //	Schemes: http, https
 //
 //	Responses:
-//	  200: sessionList
-//	  400: jsonError
-//	  401: jsonError
-//	  404: jsonError
-//	  500: jsonError
-func (h *Handler) listSessions(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+//	  200: listMySessions
+//	  400: errorGeneric
+//	  401: errorGeneric
+//	  default: errorGeneric
+func (h *Handler) listMySessions(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 	s, err := h.r.SessionManager().FetchFromRequest(r.Context(), r)
 	if err != nil {
 		h.r.Audit().WithRequest(r).WithError(err).Info("No valid session cookie found.")
-		h.r.Writer().WriteError(w, r, herodot.ErrUnauthorized.WithWrap(err).WithReasonf("No valid session cookie found."))
+		h.r.Writer().WriteError(w, r, errors.WithStack(herodot.ErrUnauthorized.WithWrap(err).WithReasonf("No valid session cookie found.")))
 		return
 	}
 
@@ -713,9 +772,9 @@ func (h *Handler) IsAuthenticated(wrap httprouter.Handle, onUnauthenticated http
 	}
 }
 
-// swagger:parameters adminExtendSession
+// swagger:parameters extendSession
 // nolint:deadcode,unused
-type adminExtendSession struct {
+type extendSession struct {
 	// ID is the session's ID.
 	//
 	// required: true
@@ -723,7 +782,7 @@ type adminExtendSession struct {
 	ID string `json:"id"`
 }
 
-// swagger:route PATCH /admin/sessions/{id}/extend v0alpha2 adminExtendSession
+// swagger:route PATCH /admin/sessions/{id}/extend identity extendSession
 //
 // # Extend a Session
 //
@@ -739,9 +798,9 @@ type adminExtendSession struct {
 //
 //	Responses:
 //	  200: session
-//	  400: jsonError
-//	  404: jsonError
-//	  500: jsonError
+//	  400: errorGeneric
+//	  404: errorGeneric
+//	  default: errorGeneric
 func (h *Handler) adminSessionExtend(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	iID, err := uuid.FromString(ps.ByName("id"))
 	if err != nil {
@@ -805,7 +864,7 @@ func RedirectOnUnauthenticated(to string) httprouter.Handle {
 	}
 }
 
-func RespondWithJSONErrorOnAuthenticated(h herodot.Writer, err error) httprouter.Handle {
+func RespondWitherrorGenericOnAuthenticated(h herodot.Writer, err error) httprouter.Handle {
 	return func(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 		h.WriteError(w, r, err)
 	}

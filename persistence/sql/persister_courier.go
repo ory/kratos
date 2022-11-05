@@ -28,7 +28,7 @@ func (p *Persister) AddMessage(ctx context.Context, m *courier.Message) error {
 	return sqlcon.HandleError(p.GetConnection(ctx).Create(m)) // do not create eager to avoid identity injection.
 }
 
-func (p *Persister) ListMessages(ctx context.Context, filter courier.MessagesFilter) ([]courier.Message, int64, error) {
+func (p *Persister) ListMessages(ctx context.Context, filter courier.ListCourierMessagesParameters) ([]courier.Message, int64, error) {
 	ctx, span := p.r.Tracer(ctx).Tracer().Start(ctx, "persistence.sql.ListMessages")
 	defer span.End()
 

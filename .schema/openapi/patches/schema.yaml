@@ -27,7 +27,7 @@
 
 
 - op: replace
-  path: /components/schemas/selfServiceError/properties/error
+  path: /components/schemas/flowError/properties/error
   value:
     type: object
 

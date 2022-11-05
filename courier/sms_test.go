@@ -144,5 +144,5 @@ func TestDisallowedInternalNetwork(t *testing.T) {
 
 	err = c.DispatchQueue(ctx)
 	require.Error(t, err)
-	assert.Contains(t, err.Error(), "ip 127.0.0.1 is in the private, loopback, or unspecified IP range")
+	assert.Contains(t, err.Error(), "is in the private, loopback, or unspecified IP range")
 }

@@ -146,7 +146,7 @@ func TestOAuth2ProviderRegistration(t *testing.T) {
 
 	hydraAdmin, hydraPublic := newHydra(t, kratosUITS.URL, kratosUITS.URL)
 
-	hydraAdminClient = createHydraOAuth2ApiClient(hydraAdmin + "/admin")
+	hydraAdminClient = createHydraOAuth2ApiClient(hydraAdmin)
 	clientID := createOAuth2Client(t, ctx, hydraAdminClient, []string{clientAppTS.URL}, "profile email")
 
 	defaultClient := &oauth2.Config{
@@ -161,7 +161,7 @@ func TestOAuth2ProviderRegistration(t *testing.T) {
 		RedirectURL: clientAppTS.URL,
 	}
 
-	conf.MustSet(ctx, config.ViperKeyOAuth2ProviderURL, hydraAdmin+"/admin")
+	conf.MustSet(ctx, config.ViperKeyOAuth2ProviderURL, hydraAdmin+"/")
 	conf.MustSet(ctx, config.ViperKeySelfServiceErrorUI, errTS.URL+"/error-ts")
 	conf.MustSet(ctx, config.ViperKeySelfServiceLoginUI, kratosUITS.URL+"/login-ts")
 	conf.MustSet(ctx, config.ViperKeySelfServiceRegistrationUI, kratosUITS.URL+"/login-ts")

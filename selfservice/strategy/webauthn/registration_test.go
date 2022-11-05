@@ -193,7 +193,7 @@ func TestRegistration(t *testing.T) {
 		}
 	})
 
-	submitWebAuthnRegistrationWithClient := func(t *testing.T, flow string, contextFixture []byte, client *http.Client, cb func(values url.Values), opts ...testhelpers.InitFlowWithOption) (string, *http.Response, *kratos.SelfServiceRegistrationFlow) {
+	submitWebAuthnRegistrationWithClient := func(t *testing.T, flow string, contextFixture []byte, client *http.Client, cb func(values url.Values), opts ...testhelpers.InitFlowWithOption) (string, *http.Response, *kratos.RegistrationFlow) {
 		isSPA := flow == "spa"
 		f := testhelpers.InitializeRegistrationFlowViaBrowser(t, client, publicTS, isSPA, false, false, opts...)
 

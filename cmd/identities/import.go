@@ -66,14 +66,14 @@ Files can contain only a single or an array of identities. The validity of files
 			}
 
 			for src, i := range is {
-				var params kratos.AdminCreateIdentityBody
+				var params kratos.CreateIdentityBody
 				err = json.Unmarshal([]byte(i), &params)
 				if err != nil {
 					_, _ = fmt.Fprintln(cmd.ErrOrStderr(), "STD_IN: Could not parse identity")
 					return cmdx.FailSilently(cmd)
 				}
 
-				ident, _, err := c.V0alpha2Api.AdminCreateIdentity(cmd.Context()).AdminCreateIdentityBody(params).Execute()
+				ident, _, err := c.IdentityApi.CreateIdentity(cmd.Context()).CreateIdentityBody(params).Execute()
 				if err != nil {
 					failed[src] = cmdx.PrintOpenAPIError(cmd, err)
 				} else {

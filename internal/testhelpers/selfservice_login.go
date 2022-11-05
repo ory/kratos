@@ -118,7 +118,7 @@ func InitFlowWithOAuth2LoginChallenge(hlc string) InitFlowWithOption {
 	}
 }
 
-func InitializeLoginFlowViaBrowser(t *testing.T, client *http.Client, ts *httptest.Server, forced bool, isSPA bool, expectInitError bool, expectGetError bool, opts ...InitFlowWithOption) *kratos.SelfServiceLoginFlow {
+func InitializeLoginFlowViaBrowser(t *testing.T, client *http.Client, ts *httptest.Server, forced bool, isSPA bool, expectInitError bool, expectGetError bool, opts ...InitFlowWithOption) *kratos.LoginFlow {
 	publicClient := NewSDKCustomClient(ts, client)
 
 	req, err := http.NewRequest("GET", getURLFromInitOptions(ts, login.RouteInitBrowserFlow, forced, opts...), nil)
@@ -143,7 +143,7 @@ func InitializeLoginFlowViaBrowser(t *testing.T, client *http.Client, ts *httpte
 		flowID = gjson.GetBytes(body, "id").String()
 	}
 
-	rs, _, err := publicClient.V0alpha2Api.GetSelfServiceLoginFlow(context.Background()).Id(flowID).Execute()
+	rs, _, err := publicClient.FrontendApi.GetLoginFlow(context.Background()).Id(flowID).Execute()
 	if expectGetError {
 		require.Error(t, err)
 		require.Nil(t, rs)
@@ -155,11 +155,11 @@ func InitializeLoginFlowViaBrowser(t *testing.T, client *http.Client, ts *httpte
 	return rs
 }
 
-func InitializeLoginFlowViaAPI(t *testing.T, client *http.Client, ts *httptest.Server, forced bool, opts ...InitFlowWithOption) *kratos.SelfServiceLoginFlow {
+func InitializeLoginFlowViaAPI(t *testing.T, client *http.Client, ts *httptest.Server, forced bool, opts ...InitFlowWithOption) *kratos.LoginFlow {
 	publicClient := NewSDKCustomClient(ts, client)
 
 	o := new(initFlowOptions).apply(opts)
-	req := publicClient.V0alpha2Api.InitializeSelfServiceLoginFlowWithoutBrowser(context.Background()).Refresh(forced)
+	req := publicClient.FrontendApi.CreateNativeLoginFlow(context.Background()).Refresh(forced)
 	if o.aal != "" {
 		req = req.Aal(string(o.aal))
 	}
@@ -175,7 +175,7 @@ func LoginMakeRequest(
 	t *testing.T,
 	isAPI bool,
 	isSPA bool,
-	f *kratos.SelfServiceLoginFlow,
+	f *kratos.LoginFlow,
 	hc *http.Client,
 	values string,
 ) (string, *http.Response) {
@@ -215,7 +215,7 @@ func SubmitLoginForm(
 	}
 
 	hc.Transport = NewTransportWithLogger(hc.Transport, t)
-	var f *kratos.SelfServiceLoginFlow
+	var f *kratos.LoginFlow
 	if isAPI {
 		f = InitializeLoginFlowViaAPI(t, hc, publicTS, forced)
 	} else {

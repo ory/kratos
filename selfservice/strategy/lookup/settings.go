@@ -52,8 +52,10 @@ var allSettingsNodes = []string{
 	node.LookupConfirm,
 }
 
-// swagger:model submitSelfServiceSettingsFlowWithLookupMethodBody
-type submitSelfServiceSettingsFlowWithLookupMethodBody struct {
+// Update Settings Flow with Lookup Method
+//
+// swagger:model updateSettingsFlowWithLookupMethod
+type updateSettingsFlowWithLookupMethod struct {
 	// If set to true will reveal the lookup secrets
 	RevealLookup bool `json:"lookup_secret_reveal"`
 
@@ -82,16 +84,16 @@ type submitSelfServiceSettingsFlowWithLookupMethodBody struct {
 	Flow string `json:"flow"`
 }
 
-func (p *submitSelfServiceSettingsFlowWithLookupMethodBody) GetFlowID() uuid.UUID {
+func (p *updateSettingsFlowWithLookupMethod) GetFlowID() uuid.UUID {
 	return x.ParseUUID(p.Flow)
 }
 
-func (p *submitSelfServiceSettingsFlowWithLookupMethodBody) SetFlowID(rid uuid.UUID) {
+func (p *updateSettingsFlowWithLookupMethod) SetFlowID(rid uuid.UUID) {
 	p.Flow = rid.String()
 }
 
 func (s *Strategy) Settings(w http.ResponseWriter, r *http.Request, f *settings.Flow, ss *session.Session) (*settings.UpdateContext, error) {
-	var p submitSelfServiceSettingsFlowWithLookupMethodBody
+	var p updateSettingsFlowWithLookupMethod
 	ctxUpdate, err := settings.PrepareUpdate(s.d, w, r, f, ss, settings.ContinuityKey(s.SettingsStrategyID()), &p)
 	if errors.Is(err, settings.ErrContinuePreviousAction) {
 		return ctxUpdate, s.continueSettingsFlow(w, r, ctxUpdate, &p)
@@ -136,7 +138,7 @@ func (s *Strategy) decodeSettingsFlow(r *http.Request, dest interface{}) error {
 
 func (s *Strategy) continueSettingsFlow(
 	w http.ResponseWriter, r *http.Request,
-	ctxUpdate *settings.UpdateContext, p *submitSelfServiceSettingsFlowWithLookupMethodBody,
+	ctxUpdate *settings.UpdateContext, p *updateSettingsFlowWithLookupMethod,
 ) error {
 	if p.ConfirmLookup || p.RevealLookup || p.RegenerateLookup || p.DisableLookup {
 		if err := flow.MethodEnabledAndAllowed(r.Context(), s.SettingsStrategyID(), s.SettingsStrategyID(), s.d); err != nil {
@@ -174,7 +176,7 @@ func (s *Strategy) continueSettingsFlow(
 	return errors.New("ended up in unexpected state")
 }
 
-func (s *Strategy) continueSettingsFlowDisable(w http.ResponseWriter, r *http.Request, ctxUpdate *settings.UpdateContext, p *submitSelfServiceSettingsFlowWithLookupMethodBody) error {
+func (s *Strategy) continueSettingsFlowDisable(w http.ResponseWriter, r *http.Request, ctxUpdate *settings.UpdateContext, p *updateSettingsFlowWithLookupMethod) error {
 	i, err := s.d.PrivilegedIdentityPool().GetIdentityConfidential(r.Context(), ctxUpdate.Session.Identity.ID)
 	if err != nil {
 		return err
@@ -204,7 +206,7 @@ func (s *Strategy) continueSettingsFlowDisable(w http.ResponseWriter, r *http.Re
 	return nil
 }
 
-func (s *Strategy) continueSettingsFlowReveal(w http.ResponseWriter, r *http.Request, ctxUpdate *settings.UpdateContext, p *submitSelfServiceSettingsFlowWithLookupMethodBody) error {
+func (s *Strategy) continueSettingsFlowReveal(w http.ResponseWriter, r *http.Request, ctxUpdate *settings.UpdateContext, p *updateSettingsFlowWithLookupMethod) error {
 	hasLookup, err := s.identityHasLookup(r.Context(), ctxUpdate.Session.IdentityID)
 	if err != nil {
 		return err
@@ -244,7 +246,7 @@ func (s *Strategy) continueSettingsFlowReveal(w http.ResponseWriter, r *http.Req
 	return nil
 }
 
-func (s *Strategy) continueSettingsFlowRegenerate(w http.ResponseWriter, r *http.Request, ctxUpdate *settings.UpdateContext, p *submitSelfServiceSettingsFlowWithLookupMethodBody) error {
+func (s *Strategy) continueSettingsFlowRegenerate(w http.ResponseWriter, r *http.Request, ctxUpdate *settings.UpdateContext, p *updateSettingsFlowWithLookupMethod) error {
 	codes := make([]RecoveryCode, numCodes)
 	for k := range codes {
 		codes[k] = RecoveryCode{Code: randx.MustString(8, randx.AlphaLowerNum)}
@@ -270,7 +272,7 @@ func (s *Strategy) continueSettingsFlowRegenerate(w http.ResponseWriter, r *http
 	return nil
 }
 
-func (s *Strategy) continueSettingsFlowConfirm(w http.ResponseWriter, r *http.Request, ctxUpdate *settings.UpdateContext, p *submitSelfServiceSettingsFlowWithLookupMethodBody) error {
+func (s *Strategy) continueSettingsFlowConfirm(w http.ResponseWriter, r *http.Request, ctxUpdate *settings.UpdateContext, p *updateSettingsFlowWithLookupMethod) error {
 	codes := gjson.GetBytes(ctxUpdate.Flow.InternalContext, flow.PrefixInternalContextKey(s.ID(), InternalContextKeyRegenerated)).Array()
 	if len(codes) != numCodes {
 		return errors.WithStack(herodot.ErrBadRequest.WithReasonf("You must (re-)generate recovery backup codes before you can save them."))
@@ -350,7 +352,7 @@ func (s *Strategy) PopulateSettingsMethod(r *http.Request, id *identity.Identity
 	return nil
 }
 
-func (s *Strategy) handleSettingsError(w http.ResponseWriter, r *http.Request, ctxUpdate *settings.UpdateContext, p *submitSelfServiceSettingsFlowWithLookupMethodBody, err error) error {
+func (s *Strategy) handleSettingsError(w http.ResponseWriter, r *http.Request, ctxUpdate *settings.UpdateContext, p *updateSettingsFlowWithLookupMethod, err error) error {
 	// Do not pause flow if the flow type is an API flow as we can't save cookies in those flows.
 	if e := new(settings.FlowNeedsReAuth); errors.As(err, &e) && ctxUpdate.Flow != nil && ctxUpdate.Flow.Type == flow.TypeBrowser {
 		if err := s.d.ContinuityManager().Pause(r.Context(), w, r, settings.ContinuityKey(s.SettingsStrategyID()), settings.ContinuityOptions(p, ctxUpdate.GetSessionIdentity())...); err != nil {

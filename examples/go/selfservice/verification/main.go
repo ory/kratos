@@ -16,11 +16,11 @@ import (
 // var client = pkg.NewSDKForSelfHosted("http://127.0.0.1:4433")
 var client = pkg.NewSDK("playground")
 
-func performVerification(email string) *ory.SelfServiceVerificationFlow {
+func performVerification(email string) *ory.VerificationFlow {
 	ctx := context.Background()
 
 	// Initialize the flow
-	flow, res, err := client.V0alpha2Api.InitializeSelfServiceVerificationFlowWithoutBrowser(ctx).Execute()
+	flow, res, err := client.FrontendApi.CreateNativeVerificationFlow(ctx).Execute()
 	pkg.SDKExitOnError(err, res)
 
 	// If you want, print the flow here:
@@ -28,8 +28,8 @@ func performVerification(email string) *ory.SelfServiceVerificationFlow {
 	//	pkg.PrintJSONPretty(flow)
 
 	// Submit the form
-	afterSubmit, res, err := client.V0alpha2Api.SubmitSelfServiceVerificationFlow(ctx).Flow(flow.Id).
-		SubmitSelfServiceVerificationFlowBody(ory.SubmitSelfServiceVerificationFlowWithLinkMethodBodyAsSubmitSelfServiceVerificationFlowBody(&ory.SubmitSelfServiceVerificationFlowWithLinkMethodBody{
+	afterSubmit, res, err := client.FrontendApi.UpdateVerificationFlow(ctx).Flow(flow.Id).
+		UpdateVerificationFlowBody(ory.UpdateVerificationFlowWithLinkMethodAsUpdateVerificationFlowBody(&ory.UpdateVerificationFlowWithLinkMethod{
 			Email:  email,
 			Method: "link",
 		})).Execute()

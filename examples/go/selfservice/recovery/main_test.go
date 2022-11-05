@@ -21,5 +21,5 @@ func TestFunc(t *testing.T) {
 
 	flow := performRecovery("dev+" + uuid.New().String() + "@ory.sh")
 	require.NotEmpty(t, flow.Id)
-	assert.EqualValues(t, ory.SELFSERVICERECOVERYFLOWSTATE_SENT_EMAIL, flow.State)
+	assert.EqualValues(t, ory.RECOVERYFLOWSTATE_SENT_EMAIL, flow.State)
 }

@@ -40,7 +40,7 @@ func NewRecoveryUIFlowEchoServer(t *testing.T, reg driver.Registry) *httptest.Se
 	return ts
 }
 
-func GetRecoveryFlow(t *testing.T, client *http.Client, ts *httptest.Server) *kratos.SelfServiceRecoveryFlow {
+func GetRecoveryFlow(t *testing.T, client *http.Client, ts *httptest.Server) *kratos.RecoveryFlow {
 	publicClient := NewSDKCustomClient(ts, client)
 
 	res, err := client.Get(ts.URL + recovery.RouteInitBrowserFlow)
@@ -50,8 +50,7 @@ func GetRecoveryFlow(t *testing.T, client *http.Client, ts *httptest.Server) *kr
 	flowID := res.Request.URL.Query().Get("flow")
 	assert.NotEmpty(t, flowID, "expected to receive a flow id, got none")
 
-	rs, _, err := publicClient.V0alpha2Api.
-		GetSelfServiceRecoveryFlow(context.Background()).
+	rs, _, err := publicClient.FrontendApi.GetRecoveryFlow(context.Background()).
 		Id(flowID).
 		Execute()
 	assert.NotEmpty(t, rs.Active)
@@ -60,7 +59,7 @@ func GetRecoveryFlow(t *testing.T, client *http.Client, ts *httptest.Server) *kr
 	return rs
 }
 
-func InitializeRecoveryFlowViaBrowser(t *testing.T, client *http.Client, isSPA bool, ts *httptest.Server, values url.Values) *kratos.SelfServiceRecoveryFlow {
+func InitializeRecoveryFlowViaBrowser(t *testing.T, client *http.Client, isSPA bool, ts *httptest.Server, values url.Values) *kratos.RecoveryFlow {
 	publicClient := NewSDKCustomClient(ts, client)
 
 	u := ts.URL + recovery.RouteInitBrowserFlow
@@ -79,23 +78,23 @@ func InitializeRecoveryFlowViaBrowser(t *testing.T, client *http.Client, isSPA b
 	defer res.Body.Close()
 
 	if isSPA {
-		var f kratos.SelfServiceRecoveryFlow
+		var f kratos.RecoveryFlow
 		require.NoError(t, json.NewDecoder(res.Body).Decode(&f))
 		return &f
 	}
 
 	require.NoError(t, res.Body.Close())
-	rs, _, err := publicClient.V0alpha2Api.GetSelfServiceRecoveryFlow(context.Background()).Id(res.Request.URL.Query().Get("flow")).Execute()
+	rs, _, err := publicClient.FrontendApi.GetRecoveryFlow(context.Background()).Id(res.Request.URL.Query().Get("flow")).Execute()
 	require.NoError(t, err)
 	assert.NotEmpty(t, rs.Active)
 
 	return rs
 }
 
-func InitializeRecoveryFlowViaAPI(t *testing.T, client *http.Client, ts *httptest.Server) *kratos.SelfServiceRecoveryFlow {
+func InitializeRecoveryFlowViaAPI(t *testing.T, client *http.Client, ts *httptest.Server) *kratos.RecoveryFlow {
 	publicClient := NewSDKCustomClient(ts, client)
 
-	rs, _, err := publicClient.V0alpha2Api.InitializeSelfServiceRecoveryFlowWithoutBrowser(context.Background()).Execute()
+	rs, _, err := publicClient.FrontendApi.CreateNativeRecoveryFlow(context.Background()).Execute()
 	require.NoError(t, err)
 	assert.NotEmpty(t, rs.Active)
 
@@ -105,7 +104,7 @@ func InitializeRecoveryFlowViaAPI(t *testing.T, client *http.Client, ts *httptes
 func RecoveryMakeRequest(
 	t *testing.T,
 	isAPI bool,
-	f *kratos.SelfServiceRecoveryFlow,
+	f *kratos.RecoveryFlow,
 	hc *http.Client,
 	values string,
 ) (string, *http.Response) {
@@ -131,7 +130,7 @@ func SubmitRecoveryForm(
 	expectedURL string,
 ) string {
 	hc.Transport = NewTransportWithLogger(hc.Transport, t)
-	var f *kratos.SelfServiceRecoveryFlow
+	var f *kratos.RecoveryFlow
 	if isAPI {
 		f = InitializeRecoveryFlowViaAPI(t, hc, publicTS)
 	} else {

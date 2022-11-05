@@ -21,5 +21,5 @@ func TestFunc(t *testing.T) {
 
 	flow := performVerification("dev+" + uuid.New().String() + "@ory.sh")
 	require.NotEmpty(t, flow.Id)
-	assert.EqualValues(t, ory.SELFSERVICEVERIFICATIONFLOWSTATE_SENT_EMAIL, flow.State)
+	assert.EqualValues(t, ory.VERIFICATIONFLOWSTATE_SENT_EMAIL, flow.State)
 }

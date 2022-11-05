@@ -10,6 +10,8 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/ory/x/pagination/migrationpagination"
+
 	"github.com/ory/kratos/hash"
 	"github.com/ory/kratos/x"
 
@@ -94,24 +96,32 @@ func (h *Handler) RegisterAdminRoutes(admin *x.RouterAdmin) {
 	admin.PUT(RouteItem, h.update)
 }
 
-// A list of identities.
-// swagger:model identityList
+// Paginated Identity List Response
+//
+// swagger:response listIdentities
 // nolint:deadcode,unused
-type identityList []Identity
+type listIdentitiesResponse struct {
+	migrationpagination.ResponseHeaderAnnotation
 
-// swagger:parameters adminListIdentities
-// nolint:deadcode,unused
-type adminListIdentities struct {
-	x.PaginationParams
+	// List of identities
+	//
+	// in:body
+	Body []Identity
 }
 
-// swagger:route GET /admin/identities v0alpha2 adminListIdentities
+// Paginated List Identity Parameters
+//
+// swagger:parameters listIdentities
+// nolint:deadcode,unused
+type listIdentitiesParameters struct {
+	migrationpagination.RequestParameters
+}
+
+// swagger:route GET /admin/identities identity listIdentities
 //
 // # List Identities
 //
-// Lists all identities. Does not support search at the moment.
-//
-// Learn how identities work in [Ory Kratos' User And Identity Model Documentation](https://www.ory.sh/docs/next/kratos/concepts/identity-user-model).
+// Lists all [identities](https://www.ory.sh/docs/kratos/concepts/identity-user-model) in the system.
 //
 //	Produces:
 //	- application/json
@@ -122,8 +132,8 @@ type adminListIdentities struct {
 //	  oryAccessToken:
 //
 //	Responses:
-//	  200: identityList
-//	  500: jsonError
+//	  200: listIdentities
+//	  default: errorGeneric
 func (h *Handler) list(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 	page, itemsPerPage := x.ParsePagination(r)
 	is, err := h.r.IdentityPool().ListIdentities(r.Context(), page, itemsPerPage)
@@ -144,20 +154,22 @@ func (h *Handler) list(w http.ResponseWriter, r *http.Request, _ httprouter.Para
 		isam[i] = WithAdminMetadataInJSON(identity)
 	}
 
-	x.PaginationHeader(w, urlx.AppendPaths(h.r.Config().SelfAdminURL(r.Context()), RouteCollection), total, page, itemsPerPage)
+	migrationpagination.PaginationHeader(w, urlx.AppendPaths(h.r.Config().SelfAdminURL(r.Context()), RouteCollection), total, page, itemsPerPage)
 	h.r.Writer().Write(w, r, isam)
 }
 
-// swagger:parameters adminGetIdentity
+// Get Identity Parameters
+//
+// swagger:parameters getIdentity
 // nolint:deadcode,unused
-type adminGetIdentity struct {
+type getIdentity struct {
 	// ID must be set to the ID of identity you want to get
 	//
 	// required: true
 	// in: path
 	ID string `json:"id"`
 
-	// DeclassifyCredentials will declassify one or more identity's credentials
+	// Include Credentials in Response
 	//
 	// Currently, only `oidc` is supported. This will return the initial OAuth 2.0 Access,
 	// Refresh and (optionally) OpenID Connect ID Token.
@@ -167,11 +179,12 @@ type adminGetIdentity struct {
 	DeclassifyCredentials []string `json:"include_credential"`
 }
 
-// swagger:route GET /admin/identities/{id} v0alpha2 adminGetIdentity
+// swagger:route GET /admin/identities/{id} identity getIdentity
 //
 // # Get an Identity
 //
-// Learn how identities work in [Ory Kratos' User And Identity Model Documentation](https://www.ory.sh/docs/next/kratos/concepts/identity-user-model).
+// Return an [identity](https://www.ory.sh/docs/kratos/concepts/identity-user-model) by its ID. You can optionally
+// include credentials (e.g. social sign in connections) in the response by using the `include_credential` query parameter.
 //
 //	Consumes:
 //	- application/json
@@ -186,8 +199,8 @@ type adminGetIdentity struct {
 //
 //	Responses:
 //	  200: identity
-//	  404: jsonError
-//	  500: jsonError
+//	  404: errorGeneric
+//	  default: errorGeneric
 func (h *Handler) get(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	i, err := h.r.PrivilegedIdentityPool().GetIdentityConfidential(r.Context(), x.ParseUUID(ps.ByName("id")))
 	if err != nil {
@@ -212,15 +225,19 @@ func (h *Handler) get(w http.ResponseWriter, r *http.Request, ps httprouter.Para
 	h.r.Writer().Write(w, r, WithCredentialsMetadataAndAdminMetadataInJSON(*i))
 }
 
-// swagger:parameters adminCreateIdentity
+// Create Identity Parameters
+//
+// swagger:parameters createIdentity
 // nolint:deadcode,unused
-type adminCreateIdentity struct {
+type createIdentity struct {
 	// in: body
-	Body AdminCreateIdentityBody
+	Body CreateIdentityBody
 }
 
-// swagger:model adminCreateIdentityBody
-type AdminCreateIdentityBody struct {
+// Create Identity Body
+//
+// swagger:model createIdentityBody
+type CreateIdentityBody struct {
 	// SchemaID is the ID of the JSON Schema to be used for validating the identity's traits.
 	//
 	// required: true
@@ -236,7 +253,7 @@ type AdminCreateIdentityBody struct {
 	// Credentials represents all credentials that can be used for authenticating this identity.
 	//
 	// Use this structure to import credentials for a user.
-	Credentials *AdminIdentityImportCredentials `json:"credentials"`
+	Credentials *IdentityWithCredentials `json:"credentials"`
 
 	// VerifiableAddresses contains all the addresses that can be verified by the user.
 	//
@@ -265,8 +282,10 @@ type AdminCreateIdentityBody struct {
 	State State `json:"state"`
 }
 
-// swagger:model adminIdentityImportCredentials
-type AdminIdentityImportCredentials struct {
+// Create Identity and Import Credentials
+//
+// swagger:model identityWithCredentials
+type IdentityWithCredentials struct {
 	// Password if set will import a password credential.
 	Password *AdminIdentityImportCredentialsPassword `json:"password"`
 
@@ -274,13 +293,17 @@ type AdminIdentityImportCredentials struct {
 	OIDC *AdminIdentityImportCredentialsOIDC `json:"oidc"`
 }
 
-// swagger:model adminCreateIdentityImportCredentialsPassword
+// Create Identity and Import Password Credentials
+//
+// swagger:model identityWithCredentialsPassword
 type AdminIdentityImportCredentialsPassword struct {
 	// Configuration options for the import.
 	Config AdminIdentityImportCredentialsPasswordConfig `json:"config"`
 }
 
-// swagger:model adminCreateIdentityImportCredentialsPasswordConfig
+// Create Identity and Import Password Credentials Configuration
+//
+// swagger:model identityWithCredentialsPasswordConfig
 type AdminIdentityImportCredentialsPasswordConfig struct {
 	// The hashed password in [PHC format]( https://www.ory.sh/docs/kratos/concepts/credentials/username-email-password#hashed-password-format)
 	HashedPassword string `json:"hashed_password"`
@@ -289,13 +312,15 @@ type AdminIdentityImportCredentialsPasswordConfig struct {
 	Password string `json:"password"`
 }
 
-// swagger:model adminCreateIdentityImportCredentialsOidc
+// Create Identity and Import Social Sign In Credentials
+//
+// swagger:model identityWithCredentialsOidc
 type AdminIdentityImportCredentialsOIDC struct {
 	// Configuration options for the import.
 	Config AdminIdentityImportCredentialsOIDCConfig `json:"config"`
 }
 
-// swagger:model adminCreateIdentityImportCredentialsOidcConfig
+// swagger:model identityWithCredentialsOidcConfig
 type AdminIdentityImportCredentialsOIDCConfig struct {
 	// Configuration options for the import.
 	Config AdminIdentityImportCredentialsPasswordConfig `json:"config"`
@@ -303,7 +328,9 @@ type AdminIdentityImportCredentialsOIDCConfig struct {
 	Providers []AdminCreateIdentityImportCredentialsOidcProvider `json:"providers"`
 }
 
-// swagger:model adminCreateIdentityImportCredentialsOidcProvider
+// Create Identity and Import Social Sign In Credentials Configuration
+//
+// swagger:model identityWithCredentialsOidcConfigProvider
 type AdminCreateIdentityImportCredentialsOidcProvider struct {
 	// The subject (`sub`) of the OpenID Connect connection. Usually the `sub` field of the ID Token.
 	//
@@ -316,11 +343,13 @@ type AdminCreateIdentityImportCredentialsOidcProvider struct {
 	Provider string `json:"provider"`
 }
 
-// swagger:route POST /admin/identities v0alpha2 adminCreateIdentity
+// swagger:route POST /admin/identities identity createIdentity
 //
 // # Create an Identity
 //
-// This endpoint creates an identity. Learn how identities work in [Ory Kratos' User And Identity Model Documentation](https://www.ory.sh/docs/next/kratos/concepts/identity-user-model).
+// Create an [identity](https://www.ory.sh/docs/kratos/concepts/identity-user-model).  This endpoint can also be used to
+// [import credentials](https://www.ory.sh/docs/kratos/manage-identities/import-user-accounts-identities)
+// for instance passwords, social sign in configurations or multifactor methods.
 //
 //	Consumes:
 //	- application/json
@@ -335,11 +364,11 @@ type AdminCreateIdentityImportCredentialsOidcProvider struct {
 //
 //	Responses:
 //	  201: identity
-//	  400: jsonError
-//	  409: jsonError
-//	  500: jsonError
+//	  400: errorGeneric
+//	  409: errorGeneric
+//	  default: errorGeneric
 func (h *Handler) create(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
-	var cr AdminCreateIdentityBody
+	var cr CreateIdentityBody
 	if err := jsonx.NewStrictDecoder(r.Body).Decode(&cr); err != nil {
 		h.r.Writer().WriteErrorCode(w, r, http.StatusBadRequest, errors.WithStack(err))
 		return
@@ -386,9 +415,11 @@ func (h *Handler) create(w http.ResponseWriter, r *http.Request, _ httprouter.Pa
 	)
 }
 
-// swagger:parameters adminUpdateIdentity
+// Update Identity Parameters
+//
+// swagger:parameters updateIdentity
 // nolint:deadcode,unused
-type adminUpdateIdentity struct {
+type updateIdentity struct {
 	// ID must be set to the ID of identity you want to update
 	//
 	// required: true
@@ -396,10 +427,13 @@ type adminUpdateIdentity struct {
 	ID string `json:"id"`
 
 	// in: body
-	Body AdminUpdateIdentityBody
+	Body UpdateIdentityBody
 }
 
-type AdminUpdateIdentityBody struct {
+// Update Identity Body
+//
+// swagger:model updateIdentityBody
+type UpdateIdentityBody struct {
 	// SchemaID is the ID of the JSON Schema to be used for validating the identity's traits. If set
 	// will update the Identity's SchemaID.
 	//
@@ -418,7 +452,7 @@ type AdminUpdateIdentityBody struct {
 	// Use this structure to import credentials for a user.
 	// Note: this wil override completely identity's credentials. If used incorrectly, this can cause a user to lose
 	// access to their account!
-	Credentials *AdminIdentityImportCredentials `json:"credentials"`
+	Credentials *IdentityWithCredentials `json:"credentials"`
 
 	// Store metadata about the identity which the identity itself can see when calling for example the
 	// session endpoint. Do not store sensitive information (e.g. credit score) about the identity in this field.
@@ -433,13 +467,12 @@ type AdminUpdateIdentityBody struct {
 	State State `json:"state"`
 }
 
-// swagger:route PUT /admin/identities/{id} v0alpha2 adminUpdateIdentity
+// swagger:route PUT /admin/identities/{id} identity updateIdentity
 //
 // # Update an Identity
 //
-// This endpoint updates an identity. The full identity payload (except credentials) is expected. This endpoint does not support patching.
-//
-// Learn how identities work in [Ory Kratos' User And Identity Model Documentation](https://www.ory.sh/docs/next/kratos/concepts/identity-user-model).
+// This endpoint updates an [identity](https://www.ory.sh/docs/kratos/concepts/identity-user-model). The full identity
+// payload (except credentials) is expected. It is possible to update the identity's credentials as well.
 //
 //	Consumes:
 //	- application/json
@@ -454,12 +487,12 @@ type AdminUpdateIdentityBody struct {
 //
 //	Responses:
 //	  200: identity
-//	  400: jsonError
-//	  404: jsonError
-//	  409: jsonError
-//	  500: jsonError
+//	  400: errorGeneric
+//	  404: errorGeneric
+//	  409: errorGeneric
+//	  default: errorGeneric
 func (h *Handler) update(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	var ur AdminUpdateIdentityBody
+	var ur UpdateIdentityBody
 	if err := h.dx.Decode(r, &ur,
 		decoderx.HTTPJSONDecoder()); err != nil {
 		h.r.Writer().WriteError(w, r, err)
@@ -513,9 +546,11 @@ func (h *Handler) update(w http.ResponseWriter, r *http.Request, ps httprouter.P
 	h.r.Writer().Write(w, r, WithCredentialsMetadataAndAdminMetadataInJSON(*identity))
 }
 
-// swagger:parameters adminDeleteIdentity
+// Delete Identity Parameters
+//
+// swagger:parameters deleteIdentity
 // nolint:deadcode,unused
-type adminDeleteIdentity struct {
+type deleteIdentity struct {
 	// ID is the identity's ID.
 	//
 	// required: true
@@ -523,15 +558,13 @@ type adminDeleteIdentity struct {
 	ID string `json:"id"`
 }
 
-// swagger:route DELETE /admin/identities/{id} v0alpha2 adminDeleteIdentity
+// swagger:route DELETE /admin/identities/{id} identity deleteIdentity
 //
 // # Delete an Identity
 //
-// Calling this endpoint irrecoverably and permanently deletes the identity given its ID. This action can not be undone.
+// Calling this endpoint irrecoverably and permanently deletes the [identity](https://www.ory.sh/docs/kratos/concepts/identity-user-model) given its ID. This action can not be undone.
 // This endpoint returns 204 when the identity was deleted or when the identity was not found, in which case it is
 // assumed that is has been deleted already.
-//
-// Learn how identities work in [Ory Kratos' User And Identity Model Documentation](https://www.ory.sh/docs/next/kratos/concepts/identity-user-model).
 //
 //	Produces:
 //	- application/json
@@ -543,8 +576,8 @@ type adminDeleteIdentity struct {
 //
 //	Responses:
 //	  204: emptyResponse
-//	  404: jsonError
-//	  500: jsonError
+//	  404: errorGeneric
+//	  default: errorGeneric
 func (h *Handler) delete(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	if err := h.r.IdentityPool().(PrivilegedPool).DeleteIdentity(r.Context(), x.ParseUUID(ps.ByName("id"))); err != nil {
 		h.r.Writer().WriteError(w, r, err)
@@ -554,9 +587,11 @@ func (h *Handler) delete(w http.ResponseWriter, r *http.Request, ps httprouter.P
 	w.WriteHeader(http.StatusNoContent)
 }
 
-// swagger:parameters adminPatchIdentity
+// Patch Identity Parameters
+//
+// swagger:parameters patchIdentity
 // nolint:deadcode,unused
-type adminPatchIdentity struct {
+type patchIdentity struct {
 	// ID must be set to the ID of identity you want to update
 	//
 	// required: true
@@ -567,15 +602,12 @@ type adminPatchIdentity struct {
 	Body openapix.JSONPatchDocument
 }
 
-// swagger:route PATCH /admin/identities/{id} v0alpha2 adminPatchIdentity
+// swagger:route PATCH /admin/identities/{id} identity patchIdentity
 //
 // # Patch an Identity
 //
-// Partially updates an Identity's field using [JSON Patch](https://jsonpatch.com/)
-//
-// NOTE: The fields `id`, `stateChangedAt` and `credentials` are not updateable.
-//
-// Learn how identities work in [Ory Kratos' User And Identity Model Documentation](https://www.ory.sh/docs/next/kratos/concepts/identity-user-model).
+// Partially updates an [identity's](https://www.ory.sh/docs/kratos/concepts/identity-user-model) field using [JSON Patch](https://jsonpatch.com/).
+// The fields `id`, `stateChangedAt` and `credentials` can not be updated using this method.
 //
 //	Consumes:
 //	- application/json
@@ -590,10 +622,10 @@ type adminPatchIdentity struct {
 //
 //	Responses:
 //	  200: identity
-//	  400: jsonError
-//	  404: jsonError
-//	  409: jsonError
-//	  500: jsonError
+//	  400: errorGeneric
+//	  404: errorGeneric
+//	  409: errorGeneric
+//	  default: errorGeneric
 func (h *Handler) patch(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	requestBody, err := io.ReadAll(r.Body)
 	if err != nil {
@@ -609,7 +641,6 @@ func (h *Handler) patch(w http.ResponseWriter, r *http.Request, ps httprouter.Pa
 	}
 
 	credentials := identity.Credentials
-
 	oldState := identity.State
 
 	if err := jsonx.ApplyJSONPatch(requestBody, identity, "/id", "/stateChangedAt", "/credentials"); err != nil {

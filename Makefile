@@ -150,7 +150,7 @@ authors:  # updates the AUTHORS file
 # Formats the code
 .PHONY: format
 format: .bin/goimports .bin/ory node_modules
-	.bin/ory dev headers license --exclude=internal/httpclient --exclude=internal/httpclient-ory
+	.bin/ory dev headers license --exclude=internal/httpclient --exclude=internal/client-go
 	goimports -w -local github.com/ory .
 	npm exec -- prettier --write 'test/e2e/**/*{.ts,.js}'
 	npm exec -- prettier --write '.github'

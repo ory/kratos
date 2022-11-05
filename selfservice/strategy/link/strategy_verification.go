@@ -85,9 +85,11 @@ func (s *Strategy) handleVerificationError(w http.ResponseWriter, r *http.Reques
 	return err
 }
 
-// swagger:model submitSelfServiceVerificationFlowWithLinkMethodBody
+// Update Verification Flow with Link Method
+//
+// swagger:model updateVerificationFlowWithLinkMethod
 // nolint:deadcode,unused
-type submitSelfServiceVerificationFlowWithLinkMethodBody struct {
+type updateVerificationFlowWithLinkMethod struct {
 	// Email to Verify
 	//
 	// Needs to be set when initiating the flow. If the email is a registered
@@ -180,14 +182,6 @@ func (s *Strategy) verificationHandleFormSubmission(w http.ResponseWriter, r *ht
 	}
 
 	return nil
-}
-
-// nolint:deadcode,unused
-// swagger:parameters selfServiceBrowserVerify
-type selfServiceBrowserVerifyParameters struct {
-	// required: true
-	// in: query
-	Token string `json:"token"`
 }
 
 func (s *Strategy) verificationUseToken(w http.ResponseWriter, r *http.Request, body *verificationSubmitPayload, f *verification.Flow) error {

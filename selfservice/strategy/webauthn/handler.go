@@ -20,7 +20,7 @@ const webAuthnRoute = "/.well-known/ory/webauthn.js"
 // swagger:model webAuthnJavaScript
 type webAuthnJavaScript string
 
-// swagger:route GET /.well-known/ory/webauthn.js v0alpha2 getWebAuthnJavaScript
+// swagger:route GET /.well-known/ory/webauthn.js frontend getWebAuthnJavaScript
 //
 // # Get WebAuthn JavaScript
 //

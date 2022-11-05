@@ -10,8 +10,8 @@ import "github.com/ory/herodot"
 //
 // The standard Ory JSON API error format.
 //
-// swagger:model jsonError
-type jsonError struct {
+// swagger:model errorGeneric
+type errorGeneric struct {
 	// Contains error details
 	//
 	// required: true

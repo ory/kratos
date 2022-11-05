@@ -23,11 +23,10 @@ import (
 	"github.com/ory/x/errorsx"
 )
 
-// SubmitSelfServiceRegistrationFlowWithPasswordMethodBody is used to decode the registration form payload
-// when using the password method.
+// Update Registration Flow with Password Method
 //
-// swagger:model submitSelfServiceRegistrationFlowWithPasswordMethodBody
-type SubmitSelfServiceRegistrationFlowWithPasswordMethodBody struct {
+// swagger:model updateRegistrationFlowWithPasswordMethod
+type UpdateRegistrationFlowWithPasswordMethod struct {
 	// Password to sign the user up with
 	//
 	// required: true
@@ -52,7 +51,7 @@ type SubmitSelfServiceRegistrationFlowWithPasswordMethodBody struct {
 func (s *Strategy) RegisterRegistrationRoutes(_ *x.RouterPublic) {
 }
 
-func (s *Strategy) handleRegistrationError(_ http.ResponseWriter, r *http.Request, f *registration.Flow, p *SubmitSelfServiceRegistrationFlowWithPasswordMethodBody, err error) error {
+func (s *Strategy) handleRegistrationError(_ http.ResponseWriter, r *http.Request, f *registration.Flow, p *UpdateRegistrationFlowWithPasswordMethod, err error) error {
 	if f != nil {
 		if p != nil {
 			for _, n := range container.NewFromJSON("", node.ProfileGroup, p.Traits, "traits").Nodes {
@@ -69,7 +68,7 @@ func (s *Strategy) handleRegistrationError(_ http.ResponseWriter, r *http.Reques
 	return err
 }
 
-func (s *Strategy) decode(p *SubmitSelfServiceRegistrationFlowWithPasswordMethodBody, r *http.Request) error {
+func (s *Strategy) decode(p *UpdateRegistrationFlowWithPasswordMethod, r *http.Request) error {
 	return registration.DecodeBody(p, r, s.hd, s.d.Config(), registrationSchema)
 }
 
@@ -78,7 +77,7 @@ func (s *Strategy) Register(w http.ResponseWriter, r *http.Request, f *registrat
 		return err
 	}
 
-	var p SubmitSelfServiceRegistrationFlowWithPasswordMethodBody
+	var p UpdateRegistrationFlowWithPasswordMethod
 	if err := s.decode(&p, r); err != nil {
 		return s.handleRegistrationError(w, r, f, &p, err)
 	}

@@ -169,10 +169,10 @@ func (s *Strategy) handleLoginError(r *http.Request, f *login.Flow, err error) e
 	return err
 }
 
-// submitSelfServiceLoginFlowWithWebAuthnMethodBody is used to decode the login form payload.
+// Update Login Flow with WebAuthn Method
 //
-// swagger:model submitSelfServiceLoginFlowWithWebAuthnMethodBody
-type submitSelfServiceLoginFlowWithWebAuthnMethodBody struct {
+// swagger:model updateLoginFlowWithWebAuthnMethod
+type updateLoginFlowWithWebAuthnMethod struct {
 	// Identifier is the email or username of the user trying to log in.
 	//
 	// required: true
@@ -197,7 +197,7 @@ func (s *Strategy) Login(w http.ResponseWriter, r *http.Request, f *login.Flow, 
 		return nil, flow.ErrStrategyNotResponsible
 	}
 
-	var p submitSelfServiceLoginFlowWithWebAuthnMethodBody
+	var p updateLoginFlowWithWebAuthnMethod
 	if err := s.hd.Decode(r, &p,
 		decoderx.HTTPDecoderSetValidatePayloads(true),
 		decoderx.MustHTTPRawJSONSchemaCompiler(loginSchema),
@@ -227,7 +227,7 @@ func (s *Strategy) Login(w http.ResponseWriter, r *http.Request, f *login.Flow, 
 	return s.loginMultiFactor(w, r, f, ss, &p)
 }
 
-func (s *Strategy) loginPasswordless(w http.ResponseWriter, r *http.Request, f *login.Flow, _ *session.Session, p *submitSelfServiceLoginFlowWithWebAuthnMethodBody) (i *identity.Identity, err error) {
+func (s *Strategy) loginPasswordless(w http.ResponseWriter, r *http.Request, f *login.Flow, _ *session.Session, p *updateLoginFlowWithWebAuthnMethod) (i *identity.Identity, err error) {
 	if err := login.CheckAAL(f, identity.AuthenticatorAssuranceLevel1); err != nil {
 		return nil, s.handleLoginError(r, f, err)
 	}
@@ -280,7 +280,7 @@ func (s *Strategy) loginPasswordless(w http.ResponseWriter, r *http.Request, f *
 	return s.loginAuthenticate(w, r, f, i.ID, p, identity.AuthenticatorAssuranceLevel1)
 }
 
-func (s *Strategy) loginAuthenticate(_ http.ResponseWriter, r *http.Request, f *login.Flow, identityID uuid.UUID, p *submitSelfServiceLoginFlowWithWebAuthnMethodBody, aal identity.AuthenticatorAssuranceLevel) (*identity.Identity, error) {
+func (s *Strategy) loginAuthenticate(_ http.ResponseWriter, r *http.Request, f *login.Flow, identityID uuid.UUID, p *updateLoginFlowWithWebAuthnMethod, aal identity.AuthenticatorAssuranceLevel) (*identity.Identity, error) {
 	i, err := s.d.PrivilegedIdentityPool().GetIdentityConfidential(r.Context(), identityID)
 	if err != nil {
 		return nil, s.handleLoginError(r, f, errors.WithStack(schema.NewNoWebAuthnRegistered()))
@@ -334,7 +334,7 @@ func (s *Strategy) loginAuthenticate(_ http.ResponseWriter, r *http.Request, f *
 	return i, nil
 }
 
-func (s *Strategy) loginMultiFactor(w http.ResponseWriter, r *http.Request, f *login.Flow, ss *session.Session, p *submitSelfServiceLoginFlowWithWebAuthnMethodBody) (*identity.Identity, error) {
+func (s *Strategy) loginMultiFactor(w http.ResponseWriter, r *http.Request, f *login.Flow, ss *session.Session, p *updateLoginFlowWithWebAuthnMethod) (*identity.Identity, error) {
 	if err := login.CheckAAL(f, identity.AuthenticatorAssuranceLevel2); err != nil {
 		return nil, err
 	}

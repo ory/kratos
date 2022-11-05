@@ -312,7 +312,7 @@ func TestCompleteSettings(t *testing.T) {
 			assert.Contains(t, c.TOTPURL, gjson.GetBytes(i.Traits, "subject").String())
 		}
 
-		run := func(t *testing.T, isAPI, isSPA bool, id *identity.Identity, hc *http.Client, f *kratos.SelfServiceSettingsFlow) {
+		run := func(t *testing.T, isAPI, isSPA bool, id *identity.Identity, hc *http.Client, f *kratos.SettingsFlow) {
 			values := testhelpers.SDKFormFieldsToURLValues(f.Ui.Nodes)
 
 			nodes, err := json.Marshal(f.Ui.Nodes)

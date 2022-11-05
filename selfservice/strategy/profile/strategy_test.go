@@ -189,7 +189,7 @@ func TestStrategyTraits(t *testing.T) {
 	t.Run("description=hydrate the proper fields", func(t *testing.T) {
 		setPrivileged(t)
 
-		var run = func(t *testing.T, id *identity.Identity, payload *kratos.SelfServiceSettingsFlow, route string) {
+		var run = func(t *testing.T, id *identity.Identity, payload *kratos.SettingsFlow, route string) {
 			assert.NotEmpty(t, payload.Identity)
 			assert.Equal(t, id.ID.String(), string(payload.Identity.Id))
 			assert.JSONEq(t, string(id.Traits), x.MustEncodeJSON(t, payload.Identity.Traits))
@@ -204,13 +204,13 @@ func TestStrategyTraits(t *testing.T) {
 		}
 
 		t.Run("type=api", func(t *testing.T) {
-			pr, _, err := testhelpers.NewSDKCustomClient(publicTS, apiUser1).V0alpha2Api.InitializeSelfServiceSettingsFlowWithoutBrowser(context.Background()).Execute()
+			pr, _, err := testhelpers.NewSDKCustomClient(publicTS, apiUser1).FrontendApi.CreateNativeSettingsFlow(context.Background()).Execute()
 			require.NoError(t, err)
 			run(t, apiIdentity1, pr, settings.RouteInitAPIFlow)
 		})
 
 		t.Run("type=api", func(t *testing.T) {
-			pr, _, err := testhelpers.NewSDKCustomClient(publicTS, browserUser1).V0alpha2Api.InitializeSelfServiceSettingsFlowForBrowsers(context.Background()).Execute()
+			pr, _, err := testhelpers.NewSDKCustomClient(publicTS, browserUser1).FrontendApi.CreateBrowserSettingsFlow(context.Background()).Execute()
 			require.NoError(t, err)
 			run(t, browserIdentity1, pr, settings.RouteInitBrowserFlow)
 		})
@@ -223,7 +223,7 @@ func TestStrategyTraits(t *testing.T) {
 			rid := res.Request.URL.Query().Get("flow")
 			require.NotEmpty(t, rid)
 
-			pr, res, err := testhelpers.NewSDKCustomClient(publicTS, browserUser1).V0alpha2Api.GetSelfServiceSettingsFlow(context.Background()).Id(res.Request.URL.Query().Get("flow")).Execute()
+			pr, res, err := testhelpers.NewSDKCustomClient(publicTS, browserUser1).FrontendApi.GetSettingsFlow(context.Background()).Id(res.Request.URL.Query().Get("flow")).Execute()
 			require.NoError(t, err, "%s", rid)
 
 			run(t, browserIdentity1, pr, settings.RouteInitBrowserFlow)
@@ -298,7 +298,7 @@ func TestStrategyTraits(t *testing.T) {
 	})
 
 	t.Run("description=should end up at the login endpoint if trying to update protected field without sudo mode", func(t *testing.T) {
-		var run = func(t *testing.T, config *kratos.SelfServiceSettingsFlow, isAPI bool, c *http.Client) *http.Response {
+		var run = func(t *testing.T, config *kratos.SettingsFlow, isAPI bool, c *http.Client) *http.Response {
 			time.Sleep(time.Millisecond)
 
 			values := testhelpers.SDKFormFieldsToURLValues(config.Ui.Nodes)

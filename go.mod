@@ -10,7 +10,7 @@ replace (
 	github.com/mattn/go-sqlite3 => github.com/mattn/go-sqlite3 v1.14.7-0.20210414154423-1157a4212dcb
 	github.com/oleiade/reflections => github.com/oleiade/reflections v1.0.1
 
-	github.com/ory/client-go => ./internal/httpclient-ory
+	github.com/ory/client-go => ./internal/client-go
 
 	// Use the internal httpclient which can be generated in this codebase but mark it as the
 	// official SDK, allowing for the Ory CLI to consume Ory Kratos' CLI commands.

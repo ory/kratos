@@ -417,7 +417,7 @@ func AssertCommonErrorCases(t *testing.T, reg *driver.RegistryDefault, flows []s
 			assert.Contains(t, gjson.Get(actual, "message").String(), "Unable to locate the resource", "%s", actual)
 		}
 
-		fakeFlow := &kratos.SelfServiceRegistrationFlow{Ui: kratos.UiContainer{
+		fakeFlow := &kratos.RegistrationFlow{Ui: kratos.UiContainer{
 			Action: publicTS.URL + registration.RouteSubmitFlow + "?flow=" + x.NewUUID().String(),
 		}}
 
