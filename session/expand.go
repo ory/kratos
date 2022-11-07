@@ -1,7 +1,22 @@
 package session
 
+import "strings"
+
 // Expandable controls what fields to expand for sessions.
+// swagger:enum Expandable
 type Expandable string
+
+const (
+	// ExpandSessionDevices expands devices related to the session
+	ExpandSessionDevices Expandable = "Devices"
+	// ExpandSessionIdentity expands Identity related to the session
+	ExpandSessionIdentity Expandable = "Identity"
+)
+
+var expandablesMap = map[string]Expandable{
+	"devices":  ExpandSessionDevices,
+	"identity": ExpandSessionIdentity,
+}
 
 // Expandables is a list of Expandable values.
 type Expandables []Expandable
@@ -33,12 +48,10 @@ func (e Expandables) Has(search Expandable) bool {
 	return false
 }
 
-const (
-	// ExpandSessionDevices expands devices related to the session
-	ExpandSessionDevices Expandable = "Devices"
-	// ExpandSessionIdentity expands Identity related to the session
-	ExpandSessionIdentity Expandable = "Identity"
-)
+func ParseExpandable(in string) (Expandable, bool) {
+	e, ok := expandablesMap[strings.ToLower(in)]
+	return e, ok
+}
 
 // ExpandNothing expands nothing
 var ExpandNothing []Expandable

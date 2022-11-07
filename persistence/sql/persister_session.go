@@ -36,7 +36,8 @@ func (p *Persister) GetSession(ctx context.Context, sid uuid.UUID, expandables s
 	nid := p.NetworkID(ctx)
 
 	q := p.GetConnection(ctx).Q()
-	if len(expandables) > 0 {
+	// if len(expandables) > 0 {
+	if expandables.Has(session.ExpandSessionDevices) {
 		q = q.Eager(expandables.ToEager()...)
 	}
 
@@ -75,7 +76,9 @@ func (p *Persister) ListSessions(ctx context.Context, active *bool, paginatorOpt
 		if active != nil {
 			q = q.Where("active = ?", *active)
 		}
-		if len(expandables) > 0 {
+
+		// if len(expandables) > 0 {
+		if expandables.Has(session.ExpandSessionDevices) {
 			q = q.Eager(expandables.ToEager()...)
 		}
 

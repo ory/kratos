@@ -3682,6 +3682,21 @@
             "schema": {
               "type": "boolean"
             }
+          },
+          {
+            "description": "ExpandOptions is a query parameter encoded list of all properties that must be expanded in the Session.\nExample - ?expand=Identity\u0026expand=Devices\nIf no value is provided, the expandable properties are skipped.",
+            "in": "query",
+            "name": "expand",
+            "schema": {
+              "items": {
+                "enum": [
+                  "Devices",
+                  "Identity"
+                ],
+                "type": "string"
+              },
+              "type": "array"
+            }
           }
         ],
         "responses": {
@@ -3742,6 +3757,79 @@
           }
         ],
         "summary": "This endpoint returns all sessions that exist.",
+        "tags": [
+          "v0alpha2"
+        ]
+      }
+    },
+    "/admin/sessions/{id}": {
+      "get": {
+        "description": "This endpoint is useful for:\n\nGetting a session object with all specified expandables that exist in an administrative context.",
+        "operationId": "adminGetSession",
+        "parameters": [
+          {
+            "description": "ExpandOptions is a query parameter encoded list of all properties that must be expanded in the Session.\nExample - ?expand=Identity\u0026expand=Devices\nIf no value is provided, the expandable properties are skipped.",
+            "in": "query",
+            "name": "expand",
+            "schema": {
+              "items": {
+                "enum": [
+                  "Devices",
+                  "Identity"
+                ],
+                "type": "string"
+              },
+              "type": "array"
+            }
+          },
+          {
+            "description": "ID is the session's ID.",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/session"
+                }
+              }
+            },
+            "description": "session"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/jsonError"
+                }
+              }
+            },
+            "description": "jsonError"
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/jsonError"
+                }
+              }
+            },
+            "description": "jsonError"
+          }
+        },
+        "security": [
+          {
+            "oryAccessToken": []
+          }
+        ],
+        "summary": "This endpoint returns the session object with expandables specified.",
         "tags": [
           "v0alpha2"
         ]

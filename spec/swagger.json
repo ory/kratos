@@ -769,6 +769,19 @@
             "description": "Active is a boolean flag that filters out sessions based on the state. If no value is provided, all sessions are returned.",
             "name": "active",
             "in": "query"
+          },
+          {
+            "type": "array",
+            "items": {
+              "enum": [
+                "Devices",
+                "Identity"
+              ],
+              "type": "string"
+            },
+            "description": "ExpandOptions is a query parameter encoded list of all properties that must be expanded in the Session.\nExample - ?expand=Identity\u0026expand=Devices\nIf no value is provided, the expandable properties are skipped.",
+            "name": "expand",
+            "in": "query"
           }
         ],
         "responses": {
@@ -797,6 +810,67 @@
             }
           },
           "500": {
+            "description": "jsonError",
+            "schema": {
+              "$ref": "#/definitions/jsonError"
+            }
+          }
+        }
+      }
+    },
+    "/admin/sessions/{id}": {
+      "get": {
+        "security": [
+          {
+            "oryAccessToken": []
+          }
+        ],
+        "description": "This endpoint is useful for:\n\nGetting a session object with all specified expandables that exist in an administrative context.",
+        "schemes": [
+          "http",
+          "https"
+        ],
+        "tags": [
+          "v0alpha2"
+        ],
+        "summary": "This endpoint returns the session object with expandables specified.",
+        "operationId": "adminGetSession",
+        "parameters": [
+          {
+            "type": "array",
+            "items": {
+              "enum": [
+                "Devices",
+                "Identity"
+              ],
+              "type": "string"
+            },
+            "description": "ExpandOptions is a query parameter encoded list of all properties that must be expanded in the Session.\nExample - ?expand=Identity\u0026expand=Devices\nIf no value is provided, the expandable properties are skipped.",
+            "name": "expand",
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "description": "ID is the session's ID.",
+            "name": "id",
+            "in": "path",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "session",
+            "schema": {
+              "$ref": "#/definitions/session"
+            }
+          },
+          "400": {
+            "description": "jsonError",
+            "schema": {
+              "$ref": "#/definitions/jsonError"
+            }
+          },
+          "default": {
             "description": "jsonError",
             "schema": {
               "$ref": "#/definitions/jsonError"
