@@ -877,6 +877,50 @@
             }
           }
         }
+      },
+      "delete": {
+        "description": "Calling this endpoint invalidates the specified session. The current session cannot be revoked.\nSession data is not deleted.\n\nThis endpoint is useful for:\n\nTo forcefully logout the current user from another device or session",
+        "schemes": [
+          "http",
+          "https"
+        ],
+        "tags": [
+          "v0alpha2"
+        ],
+        "summary": "Invalidate a Session from an Administrative context",
+        "operationId": "adminRevokeSession",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "ID is the session's ID.",
+            "name": "id",
+            "in": "path",
+            "required": true
+          }
+        ],
+        "responses": {
+          "204": {
+            "$ref": "#/responses/emptyResponse"
+          },
+          "400": {
+            "description": "jsonError",
+            "schema": {
+              "$ref": "#/definitions/jsonError"
+            }
+          },
+          "401": {
+            "description": "jsonError",
+            "schema": {
+              "$ref": "#/definitions/jsonError"
+            }
+          },
+          "500": {
+            "description": "jsonError",
+            "schema": {
+              "$ref": "#/definitions/jsonError"
+            }
+          }
+        }
       }
     },
     "/admin/sessions/{id}/extend": {

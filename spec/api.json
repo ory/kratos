@@ -3763,6 +3763,60 @@
       }
     },
     "/admin/sessions/{id}": {
+      "delete": {
+        "description": "Calling this endpoint invalidates the specified session. The current session cannot be revoked.\nSession data is not deleted.\n\nThis endpoint is useful for:\n\nTo forcefully logout the current user from another device or session",
+        "operationId": "adminRevokeSession",
+        "parameters": [
+          {
+            "description": "ID is the session's ID.",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "$ref": "#/components/responses/emptyResponse"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/jsonError"
+                }
+              }
+            },
+            "description": "jsonError"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/jsonError"
+                }
+              }
+            },
+            "description": "jsonError"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/jsonError"
+                }
+              }
+            },
+            "description": "jsonError"
+          }
+        },
+        "summary": "Invalidate a Session from an Administrative context",
+        "tags": [
+          "v0alpha2"
+        ]
+      },
       "get": {
         "description": "This endpoint is useful for:\n\nGetting a session object with all specified expandables that exist in an administrative context.",
         "operationId": "adminGetSession",

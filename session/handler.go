@@ -439,6 +439,21 @@ func (h *Handler) adminGetSession(w http.ResponseWriter, r *http.Request, ps htt
 	h.r.Writer().Write(w, r, sess)
 }
 
+// (Admin) Session Revoke Request
+//
+// The request object for getting a session in an administrative context.
+//
+// swagger:parameters adminRevokeSession
+// nolint:deadcode,unused
+type adminRevokeSessionRequest struct {
+
+	// ID is the session's ID.
+	//
+	// required: true
+	// in: path
+	ID string `json:"id"`
+}
+
 // swagger:route DELETE /admin/sessions/{id} v0alpha2 adminRevokeSession
 //
 // # Invalidate a Session from an Administrative context

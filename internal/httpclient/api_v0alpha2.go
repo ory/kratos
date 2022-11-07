@@ -243,6 +243,25 @@ type V0alpha2Api interface {
 	AdminPatchIdentityExecute(r V0alpha2ApiApiAdminPatchIdentityRequest) (*Identity, *http.Response, error)
 
 	/*
+			 * AdminRevokeSession Invalidate a Session from an Administrative context
+			 * Calling this endpoint invalidates the specified session. The current session cannot be revoked.
+		Session data is not deleted.
+
+		This endpoint is useful for:
+
+		To forcefully logout the current user from another device or session
+			 * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
+			 * @param id ID is the session's ID.
+			 * @return V0alpha2ApiApiAdminRevokeSessionRequest
+	*/
+	AdminRevokeSession(ctx context.Context, id string) V0alpha2ApiApiAdminRevokeSessionRequest
+
+	/*
+	 * AdminRevokeSessionExecute executes the request
+	 */
+	AdminRevokeSessionExecute(r V0alpha2ApiApiAdminRevokeSessionRequest) (*http.Response, error)
+
+	/*
 			 * AdminUpdateIdentity Update an Identity
 			 * This endpoint updates an identity. The full identity payload (except credentials) is expected. This endpoint does not support patching.
 
@@ -3219,6 +3238,135 @@ func (a *V0alpha2ApiService) AdminPatchIdentityExecute(r V0alpha2ApiApiAdminPatc
 	}
 
 	return localVarReturnValue, localVarHTTPResponse, nil
+}
+
+type V0alpha2ApiApiAdminRevokeSessionRequest struct {
+	ctx        context.Context
+	ApiService V0alpha2Api
+	id         string
+}
+
+func (r V0alpha2ApiApiAdminRevokeSessionRequest) Execute() (*http.Response, error) {
+	return r.ApiService.AdminRevokeSessionExecute(r)
+}
+
+/*
+  - AdminRevokeSession Invalidate a Session from an Administrative context
+  - Calling this endpoint invalidates the specified session. The current session cannot be revoked.
+
+Session data is not deleted.
+
+This endpoint is useful for:
+
+To forcefully logout the current user from another device or session
+  - @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
+  - @param id ID is the session's ID.
+  - @return V0alpha2ApiApiAdminRevokeSessionRequest
+*/
+func (a *V0alpha2ApiService) AdminRevokeSession(ctx context.Context, id string) V0alpha2ApiApiAdminRevokeSessionRequest {
+	return V0alpha2ApiApiAdminRevokeSessionRequest{
+		ApiService: a,
+		ctx:        ctx,
+		id:         id,
+	}
+}
+
+/*
+ * Execute executes the request
+ */
+func (a *V0alpha2ApiService) AdminRevokeSessionExecute(r V0alpha2ApiApiAdminRevokeSessionRequest) (*http.Response, error) {
+	var (
+		localVarHTTPMethod   = http.MethodDelete
+		localVarPostBody     interface{}
+		localVarFormFileName string
+		localVarFileName     string
+		localVarFileBytes    []byte
+	)
+
+	localBasePath, err := a.client.cfg.ServerURLWithContext(r.ctx, "V0alpha2ApiService.AdminRevokeSession")
+	if err != nil {
+		return nil, &GenericOpenAPIError{error: err.Error()}
+	}
+
+	localVarPath := localBasePath + "/admin/sessions/{id}"
+	localVarPath = strings.Replace(localVarPath, "{"+"id"+"}", url.PathEscape(parameterToString(r.id, "")), -1)
+
+	localVarHeaderParams := make(map[string]string)
+	localVarQueryParams := url.Values{}
+	localVarFormParams := url.Values{}
+
+	// to determine the Content-Type header
+	localVarHTTPContentTypes := []string{}
+
+	// set Content-Type header
+	localVarHTTPContentType := selectHeaderContentType(localVarHTTPContentTypes)
+	if localVarHTTPContentType != "" {
+		localVarHeaderParams["Content-Type"] = localVarHTTPContentType
+	}
+
+	// to determine the Accept header
+	localVarHTTPHeaderAccepts := []string{"application/json"}
+
+	// set Accept header
+	localVarHTTPHeaderAccept := selectHeaderAccept(localVarHTTPHeaderAccepts)
+	if localVarHTTPHeaderAccept != "" {
+		localVarHeaderParams["Accept"] = localVarHTTPHeaderAccept
+	}
+	req, err := a.client.prepareRequest(r.ctx, localVarPath, localVarHTTPMethod, localVarPostBody, localVarHeaderParams, localVarQueryParams, localVarFormParams, localVarFormFileName, localVarFileName, localVarFileBytes)
+	if err != nil {
+		return nil, err
+	}
+
+	localVarHTTPResponse, err := a.client.callAPI(req)
+	if err != nil || localVarHTTPResponse == nil {
+		return localVarHTTPResponse, err
+	}
+
+	localVarBody, err := io.ReadAll(localVarHTTPResponse.Body)
+	localVarHTTPResponse.Body.Close()
+	localVarHTTPResponse.Body = io.NopCloser(bytes.NewBuffer(localVarBody))
+	if err != nil {
+		return localVarHTTPResponse, err
+	}
+
+	if localVarHTTPResponse.StatusCode >= 300 {
+		newErr := &GenericOpenAPIError{
+			body:  localVarBody,
+			error: localVarHTTPResponse.Status,
+		}
+		if localVarHTTPResponse.StatusCode == 400 {
+			var v JsonError
+			err = a.client.decode(&v, localVarBody, localVarHTTPResponse.Header.Get("Content-Type"))
+			if err != nil {
+				newErr.error = err.Error()
+				return localVarHTTPResponse, newErr
+			}
+			newErr.model = v
+			return localVarHTTPResponse, newErr
+		}
+		if localVarHTTPResponse.StatusCode == 401 {
+			var v JsonError
+			err = a.client.decode(&v, localVarBody, localVarHTTPResponse.Header.Get("Content-Type"))
+			if err != nil {
+				newErr.error = err.Error()
+				return localVarHTTPResponse, newErr
+			}
+			newErr.model = v
+			return localVarHTTPResponse, newErr
+		}
+		if localVarHTTPResponse.StatusCode == 500 {
+			var v JsonError
+			err = a.client.decode(&v, localVarBody, localVarHTTPResponse.Header.Get("Content-Type"))
+			if err != nil {
+				newErr.error = err.Error()
+				return localVarHTTPResponse, newErr
+			}
+			newErr.model = v
+		}
+		return localVarHTTPResponse, newErr
+	}
+
+	return localVarHTTPResponse, nil
 }
 
 type V0alpha2ApiApiAdminUpdateIdentityRequest struct {
