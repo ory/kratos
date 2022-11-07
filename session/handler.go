@@ -65,13 +65,13 @@ const (
 func (h *Handler) RegisterAdminRoutes(admin *x.RouterAdmin) {
 	admin.GET(RouteCollection, h.adminListSessions)
 	admin.GET(RouteSession, h.adminGetSession)
+	admin.DELETE(RouteSession, h.adminRevokeSession)
 
 	admin.GET(AdminRouteIdentitiesSessions, h.adminListIdentitySessions)
 	admin.DELETE(AdminRouteIdentitiesSessions, h.adminDeleteIdentitySessions)
 	admin.PATCH(AdminRouteSessionExtendId, h.adminSessionExtend)
 
 	admin.DELETE(RouteCollection, x.RedirectToPublicRoute(h.r))
-	admin.DELETE(RouteSession, x.RedirectToPublicRoute(h.r))
 }
 
 func (h *Handler) RegisterPublicRoutes(public *x.RouterPublic) {
@@ -437,6 +437,29 @@ func (h *Handler) adminGetSession(w http.ResponseWriter, r *http.Request, ps htt
 	}
 
 	h.r.Writer().Write(w, r, sess)
+}
+
+// swagger:route DELETE /admin/sessions/{id} v0alpha2 adminRevokeSession
+//
+// # Invalidate a Session from an Administrative context
+//
+// Calling this endpoint invalidates the specified session. The current session cannot be revoked.
+// Session data is not deleted.
+//
+// This endpoint is useful for:
+//
+// - To forcefully logout the current user from another device or session
+//
+//	Schemes: http, https
+//
+//	Responses:
+//	  204: emptyResponse
+//	  400: jsonError
+//	  401: jsonError
+//	  500: jsonError
+func (h *Handler) adminRevokeSession(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	x.RedirectToPublicRoute(h.r)(w, r, ps)
+	return
 }
 
 // swagger:parameters adminListIdentitySessions
