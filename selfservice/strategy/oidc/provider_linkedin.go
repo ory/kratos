@@ -3,7 +3,6 @@ package oidc
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 	"io"
 	"net/http"
 	"net/url"
@@ -154,7 +153,7 @@ func (l *ProviderLinkedIn) Claims(ctx context.Context, exchange *oauth2.Token, q
 	if err != nil {
 		return nil, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("%s", err))
 	}
-	grantedScopes := stringsx.Splitx(fmt.Sprintf("%s", introspection.Scope), ",")
+	grantedScopes := stringsx.Splitx(introspection.Scope, ",")
 	for _, check := range l.Config().Scope {
 		if !stringslice.Has(grantedScopes, check) {
 			return nil, errors.WithStack(ErrScopeMissing)
