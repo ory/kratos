@@ -4,9 +4,10 @@ import (
 	"context"
 	"testing"
 
+	"github.com/stretchr/testify/assert"
+
 	"github.com/ory/kratos/internal/testhelpers"
 	"github.com/ory/x/stringslice"
-	"github.com/stretchr/testify/assert"
 
 	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/identity"
