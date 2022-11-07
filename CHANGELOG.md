@@ -5,7 +5,7 @@
 
 **Table of Contents**
 
-- [ (2022-11-03)](#2022-11-03)
+- [ (2022-11-07)](#2022-11-07)
   - [Breaking Changes](#breaking-changes)
     - [Bug Fixes](#bug-fixes)
     - [Code Refactoring](#code-refactoring)
@@ -280,7 +280,7 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# [](https://github.com/ory/kratos/compare/v0.10.1...v) (2022-11-03)
+# [](https://github.com/ory/kratos/compare/v0.10.1...v) (2022-11-07)
 
 ## Breaking Changes
 
@@ -542,6 +542,9 @@ SDK Method `getJsonSchema` was renamed to `getIdentitySchema`.
 
 ### Features
 
+- Add admin get api for session
+  ([#2855](https://github.com/ory/kratos/issues/2855))
+  ([1aa1321](https://github.com/ory/kratos/commit/1aa13211d1459e7453c2ba8fec69fee1c79aecbc))
 - Add api endpoint to fetch messages
   ([#2651](https://github.com/ory/kratos/issues/2651))
   ([5fddcbf](https://github.com/ory/kratos/commit/5fddcbf6554264766301e63ed3889ba746f0cd1a)):
@@ -572,6 +575,9 @@ SDK Method `getJsonSchema` was renamed to `getIdentitySchema`.
 
   See https://github.com/ory/kratos/discussions/2583
 
+- Add OpenTelemetry span events
+  ([#2858](https://github.com/ory/kratos/issues/2858))
+  ([37b1a3b](https://github.com/ory/kratos/commit/37b1a3bb0cf2ea859d672674ca0e95893e63301b))
 - Add PATCH to adminUpdateIdentity
   ([#2380](https://github.com/ory/kratos/issues/2380))
   ([#2471](https://github.com/ory/kratos/issues/2471))
