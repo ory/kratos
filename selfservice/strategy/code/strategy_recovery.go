@@ -191,7 +191,7 @@ func (s *Strategy) createRecoveryCode(w http.ResponseWriter, r *http.Request, _ 
 		return
 	}
 
-	rawCode := GenerateRecoveryCode()
+	rawCode := GenerateCode()
 
 	if _, err := s.deps.RecoveryCodePersister().CreateRecoveryCode(ctx, &CreateRecoveryCodeParams{
 		RawCode:    rawCode,

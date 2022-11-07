@@ -389,7 +389,7 @@ func (s *Strategy) retryVerificationFlowWithError(w http.ResponseWriter, r *http
 
 func (s *Strategy) SendVerificationEmail(ctx context.Context, f *verification.Flow, i *identity.Identity, a *identity.VerifiableAddress) (err error) {
 
-	rawCode := GenerateRecoveryCode()
+	rawCode := GenerateCode()
 
 	code, err := s.deps.VerificationCodePersister().CreateVerificationCode(ctx, &CreateVerificationCodeParams{
 		RawCode:           rawCode,

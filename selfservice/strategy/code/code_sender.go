@@ -80,7 +80,7 @@ func (s *CodeSender) SendRecoveryCode(ctx context.Context, r *http.Request, f *r
 		return err
 	}
 
-	rawCode := GenerateRecoveryCode()
+	rawCode := GenerateCode()
 
 	var code *RecoveryCode
 	if code, err = s.deps.
@@ -146,7 +146,7 @@ func (s *CodeSender) SendVerificationCode(ctx context.Context, f *verification.F
 		return err
 	}
 
-	rawCode := GenerateRecoveryCode()
+	rawCode := GenerateCode()
 	var code *VerificationCode
 	if code, err = s.deps.VerificationCodePersister().CreateVerificationCode(ctx, &CreateVerificationCodeParams{
 		RawCode:           rawCode,

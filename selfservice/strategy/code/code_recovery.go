@@ -8,7 +8,6 @@ import (
 	"github.com/gofrs/uuid"
 
 	"github.com/ory/herodot"
-	"github.com/ory/x/randx"
 
 	"github.com/ory/kratos/identity"
 )
@@ -81,10 +80,6 @@ func (r RecoveryCode) WasUsed() bool {
 
 func (f RecoveryCode) IsValid() bool {
 	return !f.IsExpired() && !f.WasUsed()
-}
-
-func GenerateRecoveryCode() string {
-	return randx.MustString(8, randx.Numeric)
 }
 
 type CreateRecoveryCodeParams struct {

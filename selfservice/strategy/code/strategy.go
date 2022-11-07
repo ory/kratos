@@ -14,6 +14,7 @@ import (
 	"github.com/ory/kratos/ui/node"
 	"github.com/ory/kratos/x"
 	"github.com/ory/x/decoderx"
+	"github.com/ory/x/randx"
 )
 
 var _ recovery.Strategy = new(Strategy)
@@ -84,4 +85,8 @@ func (s *Strategy) RecoveryNodeGroup() node.UiNodeGroup {
 
 func (s *Strategy) VerificationNodeGroup() node.UiNodeGroup {
 	return node.CodeGroup
+}
+
+func GenerateCode() string {
+	return randx.MustString(8, randx.Numeric)
 }
