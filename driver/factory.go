@@ -18,7 +18,7 @@ func New(ctx context.Context, stdOutOrErr io.Writer, sl *servicelocatorx.Options
 	}
 
 	ctxter := sl.Contextualizer()
-	if err := r.Init(ctx, ctxter); err != nil {
+	if err := r.Init(ctx, ctxter, dOpts...); err != nil {
 		r.Logger().WithError(err).Error("Unable to initialize service registry.")
 		return nil, err
 	}

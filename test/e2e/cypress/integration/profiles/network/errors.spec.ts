@@ -12,7 +12,7 @@ describe("Registration failures with email profile", () => {
     cy.visit(express.registration, { failOnStatusCode: false })
     cy.get('[data-testid="code-box"]').should(
       "contain.text",
-      "ip 127.0.0.1 is in the 127.0.0.0/8",
+      "is in the private, loopback, or unspecified IP range", // could be ::1 or 127.0.0.1
     )
   })
 
@@ -21,7 +21,7 @@ describe("Registration failures with email profile", () => {
     cy.visit(express.registration, { failOnStatusCode: false })
     cy.get('[data-testid="code-box"]').should(
       "contain.text",
-      "ip 192.168.178.1 is in the 192.168.0.0/16 range",
+      "ip 192.168.178.1 is in the private, loopback, or unspecified IP range",
     )
   })
 
@@ -30,7 +30,7 @@ describe("Registration failures with email profile", () => {
     cy.visit(express.login, { failOnStatusCode: false })
     cy.get('[data-testid="code-box"]').should(
       "contain.text",
-      "ip 192.168.178.2 is in the 192.168.0.0/16 range",
+      "ip 192.168.178.2 is in the private, loopback, or unspecified IP range",
     )
   })
 
@@ -43,7 +43,7 @@ describe("Registration failures with email profile", () => {
     cy.get('[type="submit"]').click()
     cy.get('[data-testid="code-box"]').should(
       "contain.text",
-      "ip 192.168.178.3 is in the 192.168.0.0/16 range",
+      "ip 192.168.178.3 is in the private, loopback, or unspecified IP range",
     )
   })
 })
