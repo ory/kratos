@@ -50,6 +50,9 @@ type Persister interface {
 	// RevokeSessionByToken marks a session inactive with the given token.
 	RevokeSessionByToken(ctx context.Context, token string) error
 
+	// RevokeSessionById marks a session inactive with the specified uuid
+	RevokeSessionById(ctx context.Context, sID uuid.UUID) error
+
 	// RevokeSession marks a given session inactive.
 	RevokeSession(ctx context.Context, iID, sID uuid.UUID) error
 

@@ -473,8 +473,18 @@ type adminRevokeSessionRequest struct {
 //	  401: jsonError
 //	  500: jsonError
 func (h *Handler) adminRevokeSession(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	x.RedirectToPublicRoute(h.r)(w, r, ps)
-	return
+	sID, err := uuid.FromString(ps.ByName("id"))
+	if err != nil {
+		h.r.Writer().WriteError(w, r, herodot.ErrBadRequest.WithError(err.Error()).WithDebug("could not parse UUID"))
+		return
+	}
+
+	if err := h.r.SessionPersister().RevokeSessionById(r.Context(), sID); err != nil {
+		h.r.Writer().WriteError(w, r, err)
+		return
+	}
+
+	h.r.Writer().WriteCode(w, r, http.StatusNoContent, nil)
 }
 
 // swagger:parameters adminListIdentitySessions
