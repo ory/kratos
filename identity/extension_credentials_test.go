@@ -40,6 +40,12 @@ func TestSchemaExtensionCredentials(t *testing.T) {
 			ct:     identity.CredentialsTypePassword,
 		},
 		{
+			doc:    `{"emails":["foo@ory.sh","foo@ory.sh","bar@ory.sh"], "username": "foobar"}`,
+			schema: "file://./stub/extension/credentials/multi.schema.json",
+			expect: []string{"foo@ory.sh", "bar@ory.sh"},
+			ct:     identity.CredentialsTypeWebAuthn,
+		},
+		{
 			doc:    `{"emails":["FOO@ory.sh","bar@ory.sh"], "username": "foobar"}`,
 			schema: "file://./stub/extension/credentials/multi.schema.json",
 			expect: []string{"foo@ory.sh", "bar@ory.sh", "foobar"},
