@@ -490,6 +490,9 @@ SDK Method `getJsonSchema` was renamed to `getIdentitySchema`.
   ([02f7e9c](https://github.com/ory/kratos/commit/02f7e9cfd17ab60c3f38aab3ae977c427b26990d))
 - Use full URL for webhook payload
   ([72595ad](https://github.com/ory/kratos/commit/72595adcb68a1a2d350c4687328653e28d888847))
+- Use process-isolated Jsonnet VM
+  ([#2869](https://github.com/ory/kratos/issues/2869))
+  ([9eeedc0](https://github.com/ory/kratos/commit/9eeedc06408c447077b630fff65e9ca4ed1ec59a))
 - Wrap migration error in WithStack
   ([#2636](https://github.com/ory/kratos/issues/2636))
   ([4ce9f1e](https://github.com/ory/kratos/commit/4ce9f1ebb39cccfd36c4f0fb4a2ae2a17fbc18cc))
