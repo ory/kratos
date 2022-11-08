@@ -3649,8 +3649,6 @@ components:
       title: RecoveryAddressType must not exceed 16 characters as that is the limitation
         in the SQL Schema.
       type: string
-    TemplateType:
-      type: string
     Time:
       format: date-time
       type: string
@@ -4297,7 +4295,7 @@ components:
         recipient: recipient
         created_at: 2000-01-23T04:56:07.000+00:00
         send_count: 0
-        template_type: template_type
+        template_type: recovery_invalid
         id: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
         body: body
       properties:
@@ -4320,7 +4318,25 @@ components:
         subject:
           type: string
         template_type:
+          enum:
+          - recovery_invalid
+          - recovery_valid
+          - recovery_code_invalid
+          - recovery_code_valid
+          - verification_invalid
+          - verification_valid
+          - otp
+          - stub
           type: string
+          x-go-enum-desc: |-
+            recovery_invalid TypeRecoveryInvalid
+            recovery_valid TypeRecoveryValid
+            recovery_code_invalid TypeRecoveryCodeInvalid
+            recovery_code_valid TypeRecoveryCodeValid
+            verification_invalid TypeVerificationInvalid
+            verification_valid TypeVerificationValid
+            otp TypeOTP
+            stub TypeTestStub
         type:
           $ref: '#/components/schemas/courierMessageType'
         updated_at:

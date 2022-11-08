@@ -12,8 +12,6 @@ import (
 )
 
 type (
-	TemplateType string
-
 	EmailTemplate interface {
 		json.Marshaler
 		EmailSubject(context.Context) (string, error)
@@ -22,6 +20,11 @@ type (
 		EmailRecipient() (string, error)
 	}
 )
+
+// A Template's type
+//
+// swagger:enum TemplateType
+type TemplateType string
 
 const (
 	TypeRecoveryInvalid     TemplateType = "recovery_invalid"

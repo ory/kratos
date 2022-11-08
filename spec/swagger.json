@@ -3059,9 +3059,6 @@
       "type": "string",
       "title": "RecoveryAddressType must not exceed 16 characters as that is the limitation in the SQL Schema."
     },
-    "TemplateType": {
-      "type": "string"
-    },
     "UUID": {"type": "string", "format": "uuid4"},
     "adminCreateIdentityBody": {
       "type": "object",
@@ -3641,7 +3638,18 @@
           "type": "string"
         },
         "template_type": {
-          "$ref": "#/definitions/TemplateType"
+          "type": "string",
+          "enum": [
+            "recovery_invalid",
+            "recovery_valid",
+            "recovery_code_invalid",
+            "recovery_code_valid",
+            "verification_invalid",
+            "verification_valid",
+            "otp",
+            "stub"
+          ],
+          "x-go-enum-desc": "recovery_invalid TypeRecoveryInvalid\nrecovery_valid TypeRecoveryValid\nrecovery_code_invalid TypeRecoveryCodeInvalid\nrecovery_code_valid TypeRecoveryCodeValid\nverification_invalid TypeVerificationInvalid\nverification_valid TypeVerificationValid\notp TypeOTP\nstub TypeTestStub"
         },
         "type": {
           "$ref": "#/definitions/courierMessageType"

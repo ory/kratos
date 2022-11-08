@@ -330,9 +330,6 @@
         "title": "RecoveryAddressType must not exceed 16 characters as that is the limitation in the SQL Schema.",
         "type": "string"
       },
-      "TemplateType": {
-        "type": "string"
-      },
       "Time": {
         "format": "date-time",
         "type": "string"
@@ -940,7 +937,18 @@
             "type": "string"
           },
           "template_type": {
-            "$ref": "#/components/schemas/TemplateType"
+            "enum": [
+              "recovery_invalid",
+              "recovery_valid",
+              "recovery_code_invalid",
+              "recovery_code_valid",
+              "verification_invalid",
+              "verification_valid",
+              "otp",
+              "stub"
+            ],
+            "type": "string",
+            "x-go-enum-desc": "recovery_invalid TypeRecoveryInvalid\nrecovery_valid TypeRecoveryValid\nrecovery_code_invalid TypeRecoveryCodeInvalid\nrecovery_code_valid TypeRecoveryCodeValid\nverification_invalid TypeVerificationInvalid\nverification_valid TypeVerificationValid\notp TypeOTP\nstub TypeTestStub"
           },
           "type": {
             "$ref": "#/components/schemas/courierMessageType"
