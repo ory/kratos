@@ -8,7 +8,7 @@ import (
 
 	"github.com/ory/kratos/examples/go/pkg"
 
-	ory "github.com/ory/kratos-client-go"
+	ory "github.com/ory/client-go"
 )
 
 // If you use Open Source this would be:

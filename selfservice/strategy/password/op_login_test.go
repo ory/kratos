@@ -41,15 +41,15 @@ import (
 	"github.com/ory/kratos/x"
 )
 
-func createHydraAdminApiClient(url string) hydraclientgo.AdminApi {
+func createHydraOAuth2ApiClient(url string) hydraclientgo.OAuth2Api {
 	configuration := hydraclientgo.NewConfiguration()
 	configuration.Host = urlx.ParseOrPanic(url).Host
 	configuration.Servers = hydraclientgo.ServerConfigurations{{URL: url}}
 
-	return hydraclientgo.NewAPIClient(configuration).AdminApi
+	return hydraclientgo.NewAPIClient(configuration).OAuth2Api
 }
 
-func createOAuth2Client(t *testing.T, ctx context.Context, hydraAdmin hydraclientgo.AdminApi, redirectURIs []string, scope string) string {
+func createOAuth2Client(t *testing.T, ctx context.Context, hydraAdmin hydraclientgo.OAuth2Api, redirectURIs []string, scope string) string {
 	clientName := "kratos-hydra-integration-test-client-1"
 	tokenEndpointAuthMethod := "client_secret_post"
 	clientSecret := "client-secret"
@@ -173,7 +173,7 @@ func TestOAuth2Provider(t *testing.T) {
 	redirTS := testhelpers.NewRedirSessionEchoTS(t, reg)
 
 	oAuthSuccess := false
-	var hydraAdminClient hydraclientgo.AdminApi
+	var hydraAdminClient hydraclientgo.OAuth2Api
 	var clientAppOAuth2Config *oauth2.Config
 
 	clientAppTS := testhelpers.NewHTTPTestServer(t, http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -238,7 +238,7 @@ func TestOAuth2Provider(t *testing.T) {
 
 	hydraAdmin, hydraPublic := newHydra(t, uiTS.URL, uiTS.URL)
 	conf.MustSet(ctx, config.ViperKeyOAuth2ProviderURL, hydraAdmin+"/admin")
-	hydraAdminClient = createHydraAdminApiClient(hydraAdmin + "/admin")
+	hydraAdminClient = createHydraOAuth2ApiClient(hydraAdmin + "/admin")
 	clientID := createOAuth2Client(t, ctx, hydraAdminClient, []string{clientAppTS.URL}, "profile email")
 
 	t.Run("should sign in the user without OAuth2", func(t *testing.T) {
@@ -336,6 +336,6 @@ func (h *AcceptWrongSubject) AcceptLoginRequest(ctx context.Context, hlc uuid.UU
 	return h.h.AcceptLoginRequest(ctx, hlc, hackerman.String(), amr)
 }
 
-func (h *AcceptWrongSubject) GetLoginRequest(ctx context.Context, hlc uuid.NullUUID) (*hydraclientgo.LoginRequest, error) {
+func (h *AcceptWrongSubject) GetLoginRequest(ctx context.Context, hlc uuid.NullUUID) (*hydraclientgo.OAuth2LoginRequest, error) {
 	return h.h.GetLoginRequest(ctx, hlc)
 }

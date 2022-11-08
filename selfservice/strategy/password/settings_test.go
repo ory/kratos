@@ -16,7 +16,7 @@ import (
 	"github.com/ory/kratos/internal/settingshelpers"
 	"github.com/ory/kratos/text"
 
-	kratos "github.com/ory/kratos-client-go"
+	kratos "github.com/ory/kratos/internal/httpclient"
 
 	"github.com/ory/kratos/corpx"
 

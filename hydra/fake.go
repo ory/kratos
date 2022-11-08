@@ -36,12 +36,12 @@ func (h *FakeHydra) AcceptLoginRequest(ctx context.Context, hlc uuid.UUID, sub s
 	}
 }
 
-func (h *FakeHydra) GetLoginRequest(ctx context.Context, hlc uuid.NullUUID) (*hydraclientgo.LoginRequest, error) {
+func (h *FakeHydra) GetLoginRequest(ctx context.Context, hlc uuid.NullUUID) (*hydraclientgo.OAuth2LoginRequest, error) {
 	switch hlc.UUID.String() {
 	case FAKE_ACCEPT_REQUEST_FAIL:
-		return &hydraclientgo.LoginRequest{}, nil
+		return &hydraclientgo.OAuth2LoginRequest{}, nil
 	case FAKE_SUCCESS:
-		return &hydraclientgo.LoginRequest{}, nil
+		return &hydraclientgo.OAuth2LoginRequest{}, nil
 	default:
 		panic("unknown fake login_challenge " + hlc.UUID.String())
 	}

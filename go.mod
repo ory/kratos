@@ -6,14 +6,14 @@ replace (
 	github.com/bradleyjkemp/cupaloy/v2 => github.com/aeneasr/cupaloy/v2 v2.6.1-0.20210924214125-3dfdd01210a3
 	github.com/gorilla/sessions => github.com/ory/sessions v1.2.2-0.20220110165800-b09c17334dc2
 	github.com/knadh/koanf => github.com/aeneasr/koanf v0.14.1-0.20211230115640-aa3902b3267a
-	// github.com/luna-duclos/instrumentedsql => github.com/ory/instrumentedsql v1.2.0
-	// github.com/luna-duclos/instrumentedsql/opentracing => github.com/ory/instrumentedsql/opentracing v0.0.0-20210903114257-c8963b546c5c
+
 	github.com/mattn/go-sqlite3 => github.com/mattn/go-sqlite3 v1.14.7-0.20210414154423-1157a4212dcb
 	github.com/oleiade/reflections => github.com/oleiade/reflections v1.0.1
+
+	github.com/ory/client-go => ./internal/httpclient-ory
+
 	// Use the internal httpclient which can be generated in this codebase but mark it as the
 	// official SDK, allowing for the Ory CLI to consume Ory Kratos' CLI commands.
-	github.com/ory/kratos-client-go => ./internal/httpclient
-
 	go.mongodb.org/mongo-driver => go.mongodb.org/mongo-driver v1.4.6
 	golang.org/x/sys => golang.org/x/sys v0.0.0-20220319134239-a9b59b0215f8
 	gopkg.in/DataDog/dd-trace-go.v1 => gopkg.in/DataDog/dd-trace-go.v1 v1.27.1-0.20201005154917-54b73b3e126a
@@ -67,14 +67,14 @@ require (
 	github.com/mohae/deepcopy v0.0.0-20170929034955-c48cc78d4826
 	github.com/montanaflynn/stats v0.0.0-20171201202039-1bf9dbcd8cbe
 	github.com/ory/analytics-go/v4 v4.0.3
+	github.com/ory/client-go v0.2.0-alpha.60
 	github.com/ory/dockertest/v3 v3.9.1
 	github.com/ory/go-acc v0.2.8
 	github.com/ory/go-convenience v0.1.0
 	github.com/ory/graceful v0.1.3
 	github.com/ory/herodot v0.9.13
-	github.com/ory/hydra-client-go v1.11.8
+	github.com/ory/hydra-client-go v1.11.9-0.20221102130300-f558e85344c8
 	github.com/ory/jsonschema/v3 v3.0.7
-	github.com/ory/kratos-client-go v0.6.3-alpha.1
 	github.com/ory/mail/v3 v3.0.0
 	github.com/ory/nosurf v1.2.7
 	github.com/ory/x v0.0.513
