@@ -6,8 +6,8 @@ import (
 	"os"
 
 	"github.com/ory/kratos/cmd/cleanup"
-
 	"github.com/ory/kratos/driver/config"
+	"github.com/ory/x/jsonnetsecure"
 
 	"github.com/ory/kratos/cmd/courier"
 	"github.com/ory/kratos/cmd/hashers"
@@ -43,6 +43,9 @@ func NewRootCmd() (cmd *cobra.Command) {
 	remote.RegisterCommandRecursive(cmd)
 	cmd.AddCommand(identities.NewValidateCmd())
 	cmd.AddCommand(cmdx.Version(&config.Version, &config.Commit, &config.Date))
+
+	// Registers a hidden "jsonnet" subcommand for process-isolated Jsonnet VMs.
+	cmd.AddCommand(jsonnetsecure.NewJsonnetCmd())
 
 	return cmd
 }

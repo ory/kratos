@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/ory/x/contextx"
+	"github.com/ory/x/jsonnetsecure"
 
 	"github.com/ory/x/popx"
 
@@ -154,6 +155,15 @@ type RegistryDefault struct {
 	buildDate    string
 
 	csrfTokenGenerator x.CSRFToken
+
+	jsonnetVMProvider jsonnetsecure.VMProvider
+}
+
+func (m *RegistryDefault) JsonnetVM(ctx context.Context) (jsonnetsecure.VM, error) {
+	if m.jsonnetVMProvider == nil {
+		m.jsonnetVMProvider = &jsonnetsecure.DefaultProvider{Subcommand: "jsonnet"}
+	}
+	return m.jsonnetVMProvider.JsonnetVM(ctx)
 }
 
 func (m *RegistryDefault) Audit() *logrusx.Logger {
@@ -220,6 +230,11 @@ func NewRegistryDefault() *RegistryDefault {
 
 func (m *RegistryDefault) WithLogger(l *logrusx.Logger) Registry {
 	m.l = l
+	return m
+}
+
+func (m *RegistryDefault) WithJsonnetVMProvider(p jsonnetsecure.VMProvider) Registry {
+	m.jsonnetVMProvider = p
 	return m
 }
 
@@ -350,7 +365,7 @@ func (m *RegistryDefault) AllLoginStrategies() login.Strategies {
 	return loginStrategies
 }
 
-func (m *RegistryDefault) ActiveCredentialsCounterStrategies(ctx context.Context) (activeCredentialsCounterStrategies []identity.ActiveCredentialsCounter) {
+func (m *RegistryDefault) ActiveCredentialsCounterStrategies(_ context.Context) (activeCredentialsCounterStrategies []identity.ActiveCredentialsCounter) {
 	for _, strategy := range m.selfServiceStrategies() {
 		if s, ok := strategy.(identity.ActiveCredentialsCounter); ok {
 			activeCredentialsCounterStrategies = append(activeCredentialsCounterStrategies, s)

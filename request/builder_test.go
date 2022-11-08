@@ -1,6 +1,7 @@
 package request
 
 import (
+	"context"
 	_ "embed"
 	"encoding/base64"
 	"encoding/json"
@@ -11,6 +12,8 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
+	"github.com/ory/kratos/x"
+	"github.com/ory/x/jsonnetsecure"
 	"github.com/ory/x/logrusx"
 )
 
@@ -81,11 +84,13 @@ func TestBuildRequest(t *testing.T) {
 				Body: "test-sms-body",
 			},
 			expectedBody: "{\n   \"Body\": \"test-sms-body\",\n   \"From\": \"+12288534869\",\n   \"To\": \"+15056445993\"\n}\n",
-			rawConfig: fmt.Sprintf(`{
+			rawConfig: fmt.Sprintf(
+				`{
 				"url": "https://test.kratos.ory.sh/my_endpoint1",
 				"method": "POST",
 				"body": "base64://%s"
-			}`, base64.StdEncoding.EncodeToString(testJSONNetTemplate)),
+			}`, base64.StdEncoding.EncodeToString(testJSONNetTemplate),
+			),
 		},
 		{
 			name:            "POST request with custom header",
@@ -234,50 +239,67 @@ func TestBuildRequest(t *testing.T) {
 			}`,
 		},
 	} {
-		t.Run("request-type="+tc.name, func(t *testing.T) {
-			l := logrusx.New("kratos", "test")
-
-			rb, err := NewBuilder(json.RawMessage(tc.rawConfig), nil, l)
-			require.NoError(t, err)
-
-			assert.Equal(t, tc.bodyTemplateURI, rb.conf.TemplateURI)
-			assert.Equal(t, tc.authStrategy, rb.conf.Auth.Type)
-
-			req, err := rb.BuildRequest(tc.body)
-			require.NoError(t, err)
-
-			assert.Equal(t, tc.url, req.URL.String())
-			assert.Equal(t, tc.method, req.Method)
-
-			if tc.body != nil {
-				requestBody, err := req.BodyBytes()
+		t.Run(
+			"request-type="+tc.name, func(t *testing.T) {
+				rb, err := NewBuilder(json.RawMessage(tc.rawConfig), newTestDependencyProvider(t))
 				require.NoError(t, err)
 
-				assert.Equal(t, tc.expectedBody, string(requestBody))
-			}
+				assert.Equal(t, tc.bodyTemplateURI, rb.conf.TemplateURI)
+				assert.Equal(t, tc.authStrategy, rb.conf.Auth.Type)
 
-			if tc.expectedHeader != nil {
-				mustContainHeader(t, tc.expectedHeader, req.Header)
-			}
-		})
+				req, err := rb.BuildRequest(context.Background(), tc.body)
+				require.NoError(t, err)
+
+				assert.Equal(t, tc.url, req.URL.String())
+				assert.Equal(t, tc.method, req.Method)
+
+				if tc.body != nil {
+					requestBody, err := req.BodyBytes()
+					require.NoError(t, err)
+
+					assert.Equal(t, tc.expectedBody, string(requestBody))
+				}
+
+				if tc.expectedHeader != nil {
+					mustContainHeader(t, tc.expectedHeader, req.Header)
+				}
+			},
+		)
 	}
 
-	t.Run("cancel request", func(t *testing.T) {
-		l := logrusx.New("kratos", "test")
-
-		rb, err := NewBuilder(json.RawMessage(`{
+	t.Run(
+		"cancel request", func(t *testing.T) {
+			rb, err := NewBuilder(json.RawMessage(
+				`{
 	"url": "https://test.kratos.ory.sh/my_endpoint6",
 	"method": "POST",
 	"body": "file://./stub/cancel_body.jsonnet"
-}`), nil, l)
-		require.NoError(t, err)
+}`,
+			), newTestDependencyProvider(t))
+			require.NoError(t, err)
 
-		_, err = rb.BuildRequest(json.RawMessage(`{}`))
-		require.ErrorIs(t, err, ErrCancel)
-	})
+			_, err = rb.BuildRequest(context.Background(), json.RawMessage(`{}`))
+			require.ErrorIs(t, err, ErrCancel)
+		},
+	)
+}
+
+type testDependencyProvider struct {
+	x.SimpleLoggerWithClient
+	*jsonnetsecure.TestProvider
+}
+
+func newTestDependencyProvider(t *testing.T) *testDependencyProvider {
+	return &testDependencyProvider{
+		SimpleLoggerWithClient: x.SimpleLoggerWithClient{
+			L: logrusx.New("kratos", "test"),
+		},
+		TestProvider: jsonnetsecure.NewTestProvider(t),
+	}
 }
 
 func mustContainHeader(t *testing.T, expected http.Header, actual http.Header) {
+	t.Helper()
 	for k := range expected {
 		require.Contains(t, actual, k)
 		assert.Equal(t, expected[k], actual[k])

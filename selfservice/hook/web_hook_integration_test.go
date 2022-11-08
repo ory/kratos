@@ -20,6 +20,7 @@ import (
 
 	"github.com/ory/kratos/schema"
 	"github.com/ory/kratos/text"
+	"github.com/ory/x/jsonnetsecure"
 	"github.com/ory/x/otelx"
 
 	"github.com/ory/kratos/driver/config"
@@ -50,7 +51,13 @@ import (
 func TestWebHooks(t *testing.T) {
 	_, reg := internal.NewFastRegistryWithMocks(t)
 	logger := logrusx.New("kratos", "test")
-	whDeps := x.SimpleLoggerWithClient{L: logger, C: reg.HTTPClient(context.Background()), T: otelx.NewNoop(logger, &otelx.Config{ServiceName: "kratos"})}
+	whDeps := struct {
+		x.SimpleLoggerWithClient
+		*jsonnetsecure.TestProvider
+	}{
+		x.SimpleLoggerWithClient{L: logger, C: reg.HTTPClient(context.Background()), T: otelx.NewNoop(logger, &otelx.Config{ServiceName: "kratos"})},
+		jsonnetsecure.NewTestProvider(t),
+	}
 	type WebHookRequest struct {
 		Body    string
 		Headers http.Header
@@ -728,7 +735,13 @@ func TestDisallowPrivateIPRanges(t *testing.T) {
 	conf.MustSet(ctx, config.ViperKeyClientHTTPNoPrivateIPRanges, true)
 	conf.MustSet(ctx, config.ViperKeyClientHTTPPrivateIPExceptionURLs, []string{"http://localhost/exception"})
 	logger := logrusx.New("kratos", "test")
-	whDeps := x.SimpleLoggerWithClient{L: logger, C: reg.HTTPClient(context.Background()), T: otelx.NewNoop(logger, conf.Tracing(ctx))}
+	whDeps := struct {
+		x.SimpleLoggerWithClient
+		*jsonnetsecure.TestProvider
+	}{
+		x.SimpleLoggerWithClient{L: logger, C: reg.HTTPClient(context.Background()), T: otelx.NewNoop(logger, &otelx.Config{ServiceName: "kratos"})},
+		jsonnetsecure.NewTestProvider(t),
+	}
 
 	req := &http.Request{
 		Header: map[string][]string{"Some-Header": {"Some-Value"}},
