@@ -312,6 +312,28 @@ func (p *Persister) RevokeSessionByToken(ctx context.Context, token string) erro
 	return nil
 }
 
+// RevokeSessionById revokes a given session
+func (p *Persister) RevokeSessionById(ctx context.Context, sID uuid.UUID) error {
+	ctx, span := p.r.Tracer(ctx).Tracer().Start(ctx, "persistence.sql.RevokeSessionById")
+	defer span.End()
+
+	// #nosec G201
+	count, err := p.GetConnection(ctx).RawQuery(fmt.Sprintf(
+		"UPDATE %s SET active = false WHERE id = ? AND nid = ?",
+		"sessions",
+	),
+		sID,
+		p.NetworkID(ctx),
+	).ExecWithCount()
+	if err != nil {
+		return sqlcon.HandleError(err)
+	}
+	if count == 0 {
+		return errors.WithStack(sqlcon.ErrNoRows)
+	}
+	return nil
+}
+
 // RevokeSession revokes a given session. If the session does not exist or was not modified,
 // it effectively has been revoked already, and therefore that case does not return an error.
 func (p *Persister) RevokeSession(ctx context.Context, iID, sID uuid.UUID) error {

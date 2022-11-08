@@ -65,13 +65,13 @@ const (
 func (h *Handler) RegisterAdminRoutes(admin *x.RouterAdmin) {
 	admin.GET(RouteCollection, h.adminListSessions)
 	admin.GET(RouteSession, h.adminGetSession)
+	admin.DELETE(RouteSession, h.disableSession)
 
 	admin.GET(AdminRouteIdentitiesSessions, h.adminListIdentitySessions)
 	admin.DELETE(AdminRouteIdentitiesSessions, h.adminDeleteIdentitySessions)
 	admin.PATCH(AdminRouteSessionExtendId, h.adminSessionExtend)
 
 	admin.DELETE(RouteCollection, x.RedirectToPublicRoute(h.r))
-	admin.DELETE(RouteSession, x.RedirectToPublicRoute(h.r))
 }
 
 func (h *Handler) RegisterPublicRoutes(public *x.RouterPublic) {
@@ -437,6 +437,46 @@ func (h *Handler) adminGetSession(w http.ResponseWriter, r *http.Request, ps htt
 	}
 
 	h.r.Writer().Write(w, r, sess)
+}
+
+// Deactivate Session Parameters
+//
+// swagger:parameters disableSession
+// nolint:deadcode,unused
+type disableSession struct {
+	// ID is the session's ID.
+	//
+	// required: true
+	// in: path
+	ID string `json:"id"`
+}
+
+// swagger:route DELETE /admin/sessions/{id} identity disableSession
+//
+// # Deactivate a Session
+//
+// Calling this endpoint deactivates the specified session. Session data is not deleted.
+//
+//	Schemes: http, https
+//
+//	Responses:
+//	  204: emptyResponse
+//	  400: jsonError
+//	  401: jsonError
+//	  default: jsonError
+func (h *Handler) disableSession(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	sID, err := uuid.FromString(ps.ByName("id"))
+	if err != nil {
+		h.r.Writer().WriteError(w, r, herodot.ErrBadRequest.WithError(err.Error()).WithDebug("could not parse UUID"))
+		return
+	}
+
+	if err := h.r.SessionPersister().RevokeSessionById(r.Context(), sID); err != nil {
+		h.r.Writer().WriteError(w, r, err)
+		return
+	}
+
+	h.r.Writer().WriteCode(w, r, http.StatusNoContent, nil)
 }
 
 // swagger:parameters adminListIdentitySessions

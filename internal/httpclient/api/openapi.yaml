@@ -743,6 +743,44 @@ paths:
       tags:
       - v0alpha2
   /admin/sessions/{id}:
+    delete:
+      description: Calling this endpoint deactivates the specified session. Session
+        data is not deleted.
+      operationId: disableSession
+      parameters:
+      - description: ID is the session's ID.
+        explode: false
+        in: path
+        name: id
+        required: true
+        schema:
+          type: string
+        style: simple
+      responses:
+        "204":
+          description: Empty responses are sent when, for example, resources are deleted.
+            The HTTP status code for empty responses is typically 201.
+        "400":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/jsonError'
+          description: jsonError
+        "401":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/jsonError'
+          description: jsonError
+        default:
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/jsonError'
+          description: jsonError
+      summary: Deactivate a Session
+      tags:
+      - identity
     get:
       description: |-
         This endpoint is useful for:

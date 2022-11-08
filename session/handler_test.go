@@ -582,6 +582,32 @@ func TestHandlerAdminSessionManagement(t *testing.T) {
 			assert.Equal(t, s.ID, sessions[0].ID)
 		})
 
+		t.Run("should revoke session by id", func(t *testing.T) {
+			req, _ := http.NewRequest("GET", ts.URL+"/admin/sessions/"+s.ID.String(), nil)
+			res, err := client.Do(req)
+			require.NoError(t, err)
+			assert.Equal(t, http.StatusOK, res.StatusCode)
+
+			var session Session
+			require.NoError(t, json.NewDecoder(res.Body).Decode(&session))
+			assert.Equal(t, s.ID, session.ID)
+			assert.True(t, session.Active)
+
+			req, _ = http.NewRequest("DELETE", ts.URL+"/admin/sessions/"+s.ID.String(), nil)
+			res, err = client.Do(req)
+			require.NoError(t, err)
+			assert.Equal(t, http.StatusNoContent, res.StatusCode)
+
+			req, _ = http.NewRequest("GET", ts.URL+"/admin/sessions/"+s.ID.String(), nil)
+			res, err = client.Do(req)
+			require.NoError(t, err)
+			assert.Equal(t, http.StatusOK, res.StatusCode)
+
+			require.NoError(t, json.NewDecoder(res.Body).Decode(&session))
+			assert.Equal(t, s.ID, session.ID)
+			assert.False(t, session.Active)
+		})
+
 		req, _ := http.NewRequest("DELETE", ts.URL+"/admin/identities/"+s.Identity.ID.String()+"/sessions", nil)
 		res, err := client.Do(req)
 		require.NoError(t, err)

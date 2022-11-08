@@ -3771,6 +3771,60 @@
       }
     },
     "/admin/sessions/{id}": {
+      "delete": {
+        "description": "Calling this endpoint deactivates the specified session. Session data is not deleted.",
+        "operationId": "disableSession",
+        "parameters": [
+          {
+            "description": "ID is the session's ID.",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "$ref": "#/components/responses/emptyResponse"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/jsonError"
+                }
+              }
+            },
+            "description": "jsonError"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/jsonError"
+                }
+              }
+            },
+            "description": "jsonError"
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/jsonError"
+                }
+              }
+            },
+            "description": "jsonError"
+          }
+        },
+        "summary": "Deactivate a Session",
+        "tags": [
+          "identity"
+        ]
+      },
       "get": {
         "description": "This endpoint is useful for:\n\nGetting a session object with all specified expandables that exist in an administrative context.",
         "operationId": "adminGetSession",

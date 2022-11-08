@@ -877,6 +877,50 @@
             }
           }
         }
+      },
+      "delete": {
+        "description": "Calling this endpoint deactivates the specified session. Session data is not deleted.",
+        "schemes": [
+          "http",
+          "https"
+        ],
+        "tags": [
+          "identity"
+        ],
+        "summary": "Deactivate a Session",
+        "operationId": "disableSession",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "ID is the session's ID.",
+            "name": "id",
+            "in": "path",
+            "required": true
+          }
+        ],
+        "responses": {
+          "204": {
+            "$ref": "#/responses/emptyResponse"
+          },
+          "400": {
+            "description": "jsonError",
+            "schema": {
+              "$ref": "#/definitions/jsonError"
+            }
+          },
+          "401": {
+            "description": "jsonError",
+            "schema": {
+              "$ref": "#/definitions/jsonError"
+            }
+          },
+          "default": {
+            "description": "jsonError",
+            "schema": {
+              "$ref": "#/definitions/jsonError"
+            }
+          }
+        }
       }
     },
     "/admin/sessions/{id}/extend": {
