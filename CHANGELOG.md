@@ -343,6 +343,9 @@ SDK Method `getJsonSchema` was renamed to `getIdentitySchema`.
   ([#2613](https://github.com/ory/kratos/issues/2613))
   ([29aa3b6](https://github.com/ory/kratos/commit/29aa3b6c37b3a173dcfeb02fdad4abc83774bc0b)),
   closes [#2591](https://github.com/ory/kratos/issues/2591)
+- Distinguish credential types properly when collecting identifiers
+  ([#2873](https://github.com/ory/kratos/issues/2873))
+  ([705f7b1](https://github.com/ory/kratos/commit/705f7b105c98b1d68b3e35d6e6893e9cfb661548))
 - Do not invalidate recovery addr on update
   ([#2699](https://github.com/ory/kratos/issues/2699))
   ([1689bb9](https://github.com/ory/kratos/commit/1689bb9f0a52387f699568da6bc773929b1201ae))
@@ -397,6 +400,9 @@ SDK Method `getJsonSchema` was renamed to `getIdentitySchema`.
   closes [#2711](https://github.com/ory/kratos/issues/2711)
 - **lint:** Fixed lint error causing ci failures
   ([4aab5e0](https://github.com/ory/kratos/commit/4aab5e0114dd02b8b0ce45376a0fe4bf11e38221))
+- Make `courier.TemplateType` an enum
+  ([#2875](https://github.com/ory/kratos/issues/2875))
+  ([65aeb0a](https://github.com/ory/kratos/commit/65aeb0a7fd90bfbc81f68b77141f8271aef011fe))
 - Make hydra consistently localhost
   ([70211a1](https://github.com/ory/kratos/commit/70211a17a452d5ced8317822afda3f8e6185cc71))
 - Make ID field in VerifiableAddress struct optional
@@ -567,6 +573,9 @@ SDK Method `getJsonSchema` was renamed to `getIdentitySchema`.
 - Add flow id check to use verification token
   ([#2695](https://github.com/ory/kratos/issues/2695))
   ([54c64fc](https://github.com/ory/kratos/commit/54c64fcea40ede17a87253042259fd97eeb780fe))
+- Add handler with openapi def for admin revoke session
+  ([#2867](https://github.com/ory/kratos/issues/2867))
+  ([2438ca0](https://github.com/ory/kratos/commit/2438ca0c9aed997870dcf60d41dad783838dd840))
 - Add identity id to "account disabled" error
   ([#2557](https://github.com/ory/kratos/issues/2557))
   ([f09b1b3](https://github.com/ory/kratos/commit/f09b1b3701c6deda4d25cebb7ccf2e97089be32a))
