@@ -182,6 +182,10 @@ type Message struct {
 	UpdatedAt time.Time `json:"updated_at" faker:"-" db:"updated_at"`
 }
 
+func (m Message) PageToken() string {
+	return m.ID.String()
+}
+
 func (m Message) TableName(ctx context.Context) string {
 	return "courier_messages"
 }

@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/gofrs/uuid"
+	"github.com/ory/x/pagination/keysetpagination"
 	"github.com/pkg/errors"
 )
 
@@ -23,7 +24,7 @@ type (
 
 		// ListMessages lists all messages in the store given the page, itemsPerPage, status and recipient.
 		// Returns list of messages, total count of messages satisfied by given filter, and error if any
-		ListMessages(ctx context.Context, filter MessagesFilter) ([]Message, int64, error)
+		ListMessages(context.Context, MessagesFilter, []keysetpagination.Option) ([]Message, int64, *keysetpagination.Paginator, error)
 	}
 	PersistenceProvider interface {
 		CourierPersister() Persister
