@@ -6,7 +6,7 @@ package main
 import (
 	"context"
 
-	ory "github.com/ory/kratos-client-go"
+	ory "github.com/ory/client-go"
 	"github.com/ory/kratos/examples/go/pkg"
 )
 

@@ -370,7 +370,7 @@ type initializeSelfServiceLoginFlowForBrowsers struct {
 //	  400: jsonError
 //	  500: jsonError
 func (h *Handler) initBrowserFlow(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	var hlr *hydraclientgo.LoginRequest
+	var hlr *hydraclientgo.OAuth2LoginRequest
 	var hlc uuid.NullUUID
 	if r.URL.Query().Has("login_challenge") {
 		var err error

@@ -18,7 +18,7 @@ import (
 
 	"github.com/ory/x/assertx"
 
-	kratos "github.com/ory/kratos-client-go"
+	kratos "github.com/ory/kratos/internal/httpclient"
 
 	"github.com/ory/x/ioutilx"
 

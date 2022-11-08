@@ -7,7 +7,7 @@ import (
 	"encoding/json"
 	"fmt"
 
-	kratos "github.com/ory/kratos-client-go"
+	kratos "github.com/ory/kratos/internal/httpclient"
 
 	"github.com/ory/x/cmdx"
 

@@ -6,17 +6,13 @@ package main
 import (
 	"testing"
 
-	ory "github.com/ory/kratos-client-go"
-
-	"github.com/stretchr/testify/assert"
-
 	"github.com/google/uuid"
-
-	"github.com/ory/kratos/internal/testhelpers"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 
 	"github.com/ory/kratos/examples/go/pkg"
-
-	"github.com/stretchr/testify/require"
+	ory "github.com/ory/kratos/internal/httpclient"
+	"github.com/ory/kratos/internal/testhelpers"
 )
 
 func TestFunc(t *testing.T) {
@@ -25,5 +21,5 @@ func TestFunc(t *testing.T) {
 
 	flow := performRecovery("dev+" + uuid.New().String() + "@ory.sh")
 	require.NotEmpty(t, flow.Id)
-	assert.Equal(t, ory.SELFSERVICERECOVERYFLOWSTATE_SENT_EMAIL, flow.State)
+	assert.EqualValues(t, ory.SELFSERVICERECOVERYFLOWSTATE_SENT_EMAIL, flow.State)
 }

@@ -19,7 +19,7 @@ import (
 	"github.com/pquerna/otp"
 	stdtotp "github.com/pquerna/otp/totp"
 
-	kratos "github.com/ory/kratos-client-go"
+	kratos "github.com/ory/kratos/internal/httpclient"
 	"github.com/ory/kratos/selfservice/strategy/totp"
 	"github.com/ory/kratos/ui/node"
 

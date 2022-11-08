@@ -23,6 +23,7 @@ docs/CourierMessageStatus.md
 docs/CourierMessageType.md
 docs/ErrorAuthenticatorAssuranceLevelNotSatisfied.md
 docs/GenericError.md
+docs/GetVersion200Response.md
 docs/HealthNotReadyStatus.md
 docs/HealthStatus.md
 docs/Identity.md
@@ -34,9 +35,8 @@ docs/IdentityCredentialsPassword.md
 docs/IdentityCredentialsType.md
 docs/IdentitySchemaContainer.md
 docs/IdentityState.md
-docs/InlineResponse200.md
-docs/InlineResponse2001.md
-docs/InlineResponse503.md
+docs/IsAlive200Response.md
+docs/IsReady503Response.md
 docs/JsonError.md
 docs/JsonPatch.md
 docs/LoginRequest.md
@@ -125,6 +125,7 @@ model_courier_message_status.go
 model_courier_message_type.go
 model_error_authenticator_assurance_level_not_satisfied.go
 model_generic_error.go
+model_get_version_200_response.go
 model_health_not_ready_status.go
 model_health_status.go
 model_identity.go
@@ -135,9 +136,8 @@ model_identity_credentials_password.go
 model_identity_credentials_type.go
 model_identity_schema_container.go
 model_identity_state.go
-model_inline_response_200.go
-model_inline_response_200_1.go
-model_inline_response_503.go
+model_is_alive_200_response.go
+model_is_ready_503_response.go
 model_json_error.go
 model_json_patch.go
 model_login_request.go
@@ -207,4 +207,6 @@ model_ui_text.go
 model_verifiable_identity_address.go
 model_version.go
 response.go
+test/api_metadata_test.go
+test/api_v0alpha2_test.go
 utils.go

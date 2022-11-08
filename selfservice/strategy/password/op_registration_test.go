@@ -44,7 +44,7 @@ type kratosUIConfig struct {
 	browserClient     *http.Client
 	kratosPublicTS    *httptest.Server
 	clientAppTS       *httptest.Server
-	hydraAdminClient  hydraclientgo.AdminApi
+	hydraAdminClient  hydraclientgo.OAuth2Api
 }
 
 func newClientAppTS(t *testing.T, c *clientAppConfig) *httptest.Server {
@@ -66,15 +66,15 @@ func newClientAppTS(t *testing.T, c *clientAppConfig) *httptest.Server {
 	}))
 }
 
-func kratosUIHandleConsent(t *testing.T, req *http.Request, client *http.Client, haa hydraclientgo.AdminApi, clientAppURL string) {
+func kratosUIHandleConsent(t *testing.T, req *http.Request, client *http.Client, haa hydraclientgo.OAuth2Api, clientAppURL string) {
 	q := req.URL.Query()
-	cr, resp, err := haa.GetConsentRequest(req.Context()).ConsentChallenge(q.Get("consent_challenge")).Execute()
+	cr, resp, err := haa.GetOAuth2ConsentRequest(req.Context()).ConsentChallenge(q.Get("consent_challenge")).Execute()
 	require.NoError(t, err)
 	require.Equal(t, http.StatusOK, resp.StatusCode)
 	require.ElementsMatch(t, cr.RequestedScope, []string{"profile", "email"})
 
 	remember := true
-	completedAcceptRequest, resp, err := haa.AcceptConsentRequest(context.Background()).AcceptConsentRequest(hydraclientgo.AcceptConsentRequest{
+	completedAcceptRequest, resp, err := haa.AcceptOAuth2ConsentRequest(context.Background()).AcceptOAuth2ConsentRequest(hydraclientgo.AcceptOAuth2ConsentRequest{
 		Remember: &remember,
 	}).ConsentChallenge(q.Get("consent_challenge")).Execute()
 
@@ -136,7 +136,7 @@ func TestOAuth2ProviderRegistration(t *testing.T) {
 	errTS := testhelpers.NewErrorTestServer(t, reg)
 	redirTS := testhelpers.NewRedirSessionEchoTS(t, reg)
 
-	var hydraAdminClient hydraclientgo.AdminApi
+	var hydraAdminClient hydraclientgo.OAuth2Api
 
 	cac := &clientAppConfig{}
 	clientAppTS := newClientAppTS(t, cac)
@@ -146,7 +146,7 @@ func TestOAuth2ProviderRegistration(t *testing.T) {
 
 	hydraAdmin, hydraPublic := newHydra(t, kratosUITS.URL, kratosUITS.URL)
 
-	hydraAdminClient = createHydraAdminApiClient(hydraAdmin + "/admin")
+	hydraAdminClient = createHydraOAuth2ApiClient(hydraAdmin + "/admin")
 	clientID := createOAuth2Client(t, ctx, hydraAdminClient, []string{clientAppTS.URL}, "profile email")
 
 	defaultClient := &oauth2.Config{

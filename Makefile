@@ -111,10 +111,25 @@ sdk: .bin/swagger .bin/ory node_modules
 		-g go \
 		-o "internal/httpclient" \
 		--git-user-id ory \
-		--git-repo-id kratos-client-go \
+		--git-repo-id client-go \
 		--git-host github.com \
 		-t .schema/openapi/templates/go \
 		-c .schema/openapi/gen.go.yml
+
+	(cd internal/httpclient; rm -rf go.mod go.sum test api docs)
+
+	rm -rf internal/httpclient-central
+	mkdir -p internal/httpclient-central/
+	npm run openapi-generator-cli -- generate -i "spec/api.json" \
+		-g go \
+		-o "internal/client-go" \
+		--git-user-id ory \
+		--git-repo-id client-go \
+		--git-host github.com \
+		-t .schema/openapi/templates/go \
+		-c .schema/openapi/gen.go.yml
+
+	(cd internal/client-go; go mod edit -module github.com/ory/client-go go.mod; rm -rf test api docs)
 
 	make format
 
@@ -135,7 +150,7 @@ authors:  # updates the AUTHORS file
 # Formats the code
 .PHONY: format
 format: .bin/goimports .bin/ory node_modules
-	.bin/ory dev headers license --exclude=internal/httpclient
+	.bin/ory dev headers license --exclude=internal/httpclient --exclude=internal/httpclient-ory
 	goimports -w -local github.com/ory .
 	npm exec -- prettier --write 'test/e2e/**/*{.ts,.js}'
 	npm exec -- prettier --write '.github'
