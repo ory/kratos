@@ -17,9 +17,9 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	kratos "github.com/ory/kratos-client-go"
 	"github.com/ory/kratos/driver"
 	"github.com/ory/kratos/driver/config"
+	kratos "github.com/ory/kratos/internal/httpclient"
 	"github.com/ory/kratos/selfservice/flow/verification"
 	"github.com/ory/kratos/x"
 	"github.com/ory/x/ioutilx"

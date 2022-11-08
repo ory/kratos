@@ -29,7 +29,7 @@ import (
 
 	"github.com/ory/kratos/ui/node"
 
-	kratos "github.com/ory/kratos-client-go"
+	kratos "github.com/ory/kratos/internal/httpclient"
 
 	"github.com/ory/kratos/corpx"
 

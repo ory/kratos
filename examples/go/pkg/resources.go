@@ -10,7 +10,7 @@ import (
 
 	"github.com/google/uuid"
 
-	ory "github.com/ory/kratos-client-go"
+	ory "github.com/ory/client-go"
 )
 
 func RandomCredentials() (email, password string) {
