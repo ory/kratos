@@ -335,15 +335,14 @@ func (h *Handler) adminListSessions(w http.ResponseWriter, r *http.Request, ps h
 	}
 
 	// Parse request pagination parameters
-	urlValues := r.URL.Query()
-	opts, err := keysetpagination.Parse(&urlValues)
+	opts, err := keysetpagination.Parse(r.URL.Query())
 	if err != nil {
 		h.r.Writer().WriteError(w, r, herodot.ErrBadRequest.WithError("could not parse parameter page_size"))
 		return
 	}
 
 	var expandables Expandables
-	if es, ok := urlValues["expand"]; ok {
+	if es, ok := r.URL.Query()["expand"]; ok {
 		for _, e := range es {
 			expand, ok := ParseExpandable(e)
 			if !ok {
