@@ -46,15 +46,15 @@ docs/api:
 docs/swagger:
 	npx @redocly/openapi-cli preview-docs spec/swagger.json
 
-.bin/ory: Makefile
-	bash <(curl https://raw.githubusercontent.com/ory/meta/master/install.sh) -d -b .bin ory v0.1.33
-	touch -a -m .bin/ory
-
 .bin/golangci-lint: Makefile
 	curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -d -b .bin v1.47.3
 
 .bin/hydra: Makefile
 	bash <(curl https://raw.githubusercontent.com/ory/meta/master/install.sh) -d -b .bin hydra v1.11.0
+
+.bin/ory: Makefile
+	curl https://raw.githubusercontent.com/ory/meta/master/install.sh | bash -s -- -b .bin ory v0.1.47
+	touch .bin/ory
 
 .PHONY: lint
 lint: .bin/golangci-lint
@@ -131,7 +131,8 @@ quickstart-dev:
 
 # Formats the code
 .PHONY: format
-format: .bin/goimports node_modules
+format: .bin/goimports .bin/ory node_modules
+	.bin/ory dev headers license --exclude=internal/httpclient
 	goimports -w -local github.com/ory .
 	npm exec -- prettier --write 'test/e2e/**/*{.ts,.js}'
 	npm exec -- prettier --write '.github'
