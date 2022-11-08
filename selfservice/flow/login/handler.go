@@ -379,7 +379,7 @@ func (h *Handler) initBrowserFlow(w http.ResponseWriter, r *http.Request, ps htt
 
 		hlr, err = h.d.Hydra().GetLoginRequest(r.Context(), hlc)
 		if err != nil {
-			h.d.SelfServiceErrorManager().Forward(r.Context(), w, r, errors.WithStack(herodot.ErrInternalServerError.WithReason("Failed to retrieve OAuth 2.0 login request.")))
+			h.d.SelfServiceErrorManager().Forward(r.Context(), w, r, errors.WithStack(herodot.ErrInternalServerError.WithReason("Failed to retrieve OAuth 2.0 login request.").WithError(err.Error())))
 			return
 		}
 
