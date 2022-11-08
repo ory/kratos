@@ -697,6 +697,9 @@ SDK Method `getJsonSchema` was renamed to `getIdentitySchema`.
   `courier.message_retries` option to limit how often the sending of a message
   is retried before it is marked as `abandoned`.
 
+- Standardize license headers
+  ([#2790](https://github.com/ory/kratos/issues/2790))
+  ([8406eaf](https://github.com/ory/kratos/commit/8406eaf92006d9812108bd3ae57245f01e627bfc))
 - Support ip exceptions
   ([de46c08](https://github.com/ory/kratos/commit/de46c08534dfae6165f6a570cc59829f367c0b57))
 - Update for the Ory Network
@@ -737,6 +740,8 @@ SDK Method `getJsonSchema` was renamed to `getIdentitySchema`.
   ([934c30d](https://github.com/ory/kratos/commit/934c30d6064d1e7dfc59f4eef43d096e977c113e))
 - Try and recover from allocated port error
   ([3b5ac5f](https://github.com/ory/kratos/commit/3b5ac5ff03b653191c1979fe1e4e9a4ea3ed7d36))
+- Update snapshots ([#2877](https://github.com/ory/kratos/issues/2877))
+  ([cbaaceb](https://github.com/ory/kratos/commit/cbaaceb9ef73a91e1b4ce5e4f7b9d7bac04d4c03))
 
 ### Unclassified
 
