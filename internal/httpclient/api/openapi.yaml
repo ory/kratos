@@ -744,14 +744,9 @@ paths:
       - v0alpha2
   /admin/sessions/{id}:
     delete:
-      description: |-
-        Calling this endpoint invalidates the specified session. The current session cannot be revoked.
-        Session data is not deleted.
-
-        This endpoint is useful for:
-
-        To forcefully logout the current user from another device or session
-      operationId: adminRevokeSession
+      description: Calling this endpoint deactivates the specified session. Session
+        data is not deleted.
+      operationId: disableSession
       parameters:
       - description: ID is the session's ID.
         explode: false
@@ -777,15 +772,15 @@ paths:
               schema:
                 $ref: '#/components/schemas/jsonError'
           description: jsonError
-        "500":
+        default:
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/jsonError'
           description: jsonError
-      summary: Invalidate a Session from an Administrative context
+      summary: Deactivate a Session
       tags:
-      - v0alpha2
+      - identity
     get:
       description: |-
         This endpoint is useful for:

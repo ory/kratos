@@ -65,7 +65,7 @@ const (
 func (h *Handler) RegisterAdminRoutes(admin *x.RouterAdmin) {
 	admin.GET(RouteCollection, h.adminListSessions)
 	admin.GET(RouteSession, h.adminGetSession)
-	admin.DELETE(RouteSession, h.adminRevokeSession)
+	admin.DELETE(RouteSession, h.disableSession)
 
 	admin.GET(AdminRouteIdentitiesSessions, h.adminListIdentitySessions)
 	admin.DELETE(AdminRouteIdentitiesSessions, h.adminDeleteIdentitySessions)
@@ -439,14 +439,11 @@ func (h *Handler) adminGetSession(w http.ResponseWriter, r *http.Request, ps htt
 	h.r.Writer().Write(w, r, sess)
 }
 
-// (Admin) Session Revoke Request
+// Deactivate Session Parameters
 //
-// The request object for getting a session in an administrative context.
-//
-// swagger:parameters adminRevokeSession
+// swagger:parameters disableSession
 // nolint:deadcode,unused
-type adminRevokeSessionRequest struct {
-
+type disableSession struct {
 	// ID is the session's ID.
 	//
 	// required: true
@@ -454,16 +451,11 @@ type adminRevokeSessionRequest struct {
 	ID string `json:"id"`
 }
 
-// swagger:route DELETE /admin/sessions/{id} v0alpha2 adminRevokeSession
+// swagger:route DELETE /admin/sessions/{id} identity disableSession
 //
-// # Invalidate a Session from an Administrative context
+// # Deactivate a Session
 //
-// Calling this endpoint invalidates the specified session. The current session cannot be revoked.
-// Session data is not deleted.
-//
-// This endpoint is useful for:
-//
-// - To forcefully logout the current user from another device or session
+// Calling this endpoint deactivates the specified session. Session data is not deleted.
 //
 //	Schemes: http, https
 //
@@ -471,8 +463,8 @@ type adminRevokeSessionRequest struct {
 //	  204: emptyResponse
 //	  400: jsonError
 //	  401: jsonError
-//	  500: jsonError
-func (h *Handler) adminRevokeSession(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+//	  default: jsonError
+func (h *Handler) disableSession(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	sID, err := uuid.FromString(ps.ByName("id"))
 	if err != nil {
 		h.r.Writer().WriteError(w, r, herodot.ErrBadRequest.WithError(err.Error()).WithDebug("could not parse UUID"))

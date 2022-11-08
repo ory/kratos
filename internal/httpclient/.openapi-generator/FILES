@@ -3,6 +3,7 @@
 .travis.yml
 README.md
 api/openapi.yaml
+api_identity.go
 api_metadata.go
 api_v0alpha2.go
 client.go
@@ -25,6 +26,7 @@ docs/GenericError.md
 docs/HealthNotReadyStatus.md
 docs/HealthStatus.md
 docs/Identity.md
+docs/IdentityApi.md
 docs/IdentityCredentials.md
 docs/IdentityCredentialsOidc.md
 docs/IdentityCredentialsOidcProvider.md

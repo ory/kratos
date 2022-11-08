@@ -83,6 +83,7 @@ All URIs are relative to *http://localhost*
 
 Class | Method | HTTP request | Description
 ------------ | ------------- | ------------- | -------------
+*IdentityApi* | [**DisableSession**](docs/IdentityApi.md#disablesession) | **Delete** /admin/sessions/{id} | Deactivate a Session
 *MetadataApi* | [**GetVersion**](docs/MetadataApi.md#getversion) | **Get** /version | Return Running Software Version.
 *MetadataApi* | [**IsAlive**](docs/MetadataApi.md#isalive) | **Get** /health/alive | Check HTTP Server Status
 *MetadataApi* | [**IsReady**](docs/MetadataApi.md#isready) | **Get** /health/ready | Check HTTP Server and Database Status
@@ -99,7 +100,6 @@ Class | Method | HTTP request | Description
 *V0alpha2Api* | [**AdminListIdentitySessions**](docs/V0alpha2Api.md#adminlistidentitysessions) | **Get** /admin/identities/{id}/sessions | List an Identity&#39;s Sessions
 *V0alpha2Api* | [**AdminListSessions**](docs/V0alpha2Api.md#adminlistsessions) | **Get** /admin/sessions | This endpoint returns all sessions that exist.
 *V0alpha2Api* | [**AdminPatchIdentity**](docs/V0alpha2Api.md#adminpatchidentity) | **Patch** /admin/identities/{id} | Patch an Identity
-*V0alpha2Api* | [**AdminRevokeSession**](docs/V0alpha2Api.md#adminrevokesession) | **Delete** /admin/sessions/{id} | Invalidate a Session from an Administrative context
 *V0alpha2Api* | [**AdminUpdateIdentity**](docs/V0alpha2Api.md#adminupdateidentity) | **Put** /admin/identities/{id} | Update an Identity
 *V0alpha2Api* | [**CreateSelfServiceLogoutFlowUrlForBrowsers**](docs/V0alpha2Api.md#createselfservicelogoutflowurlforbrowsers) | **Get** /self-service/logout/browser | Create a Logout URL for Browsers
 *V0alpha2Api* | [**GetIdentitySchema**](docs/V0alpha2Api.md#getidentityschema) | **Get** /schemas/{id} | 
