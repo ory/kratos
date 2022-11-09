@@ -140,40 +140,39 @@ prepare() {
       >"${base}/test/e2e/rn-profile-app.e2e.log" 2>&1 &
   )
 
-  hydra serve all -c test/e2e/hydra.yml --dangerous-force-http >"${base}/test/e2e/hydra.e2e.log" 2>&1 &
+  hydra serve all -c test/e2e/hydra.yml --dev >"${base}/test/e2e/hydra.e2e.log" 2>&1 &
 
   (cd test/e2e; npm run wait-on -- -l -t 300000 http-get://localhost:4445/health/alive)
 
-  hydra clients delete \
+  hydra_client=$(hydra create oauth2-client \
     --endpoint http://localhost:4445 \
-    kratos-client google-client github-client || true
+    --grant-type authorization_code --grant-type refresh_token \
+    --response-type code --response-type id_token \
+    --scope openid --scope offline \
+    --redirect-uri http://localhost:4455/self-service/methods/oidc/callback/hydra \
+    --format json)
+  export OIDC_HYDRA_CLIENT_ID=$(jq -r '.client_id' <<< "$hydra_client" )
+  export OIDC_HYDRA_CLIENT_SECRET=$(jq -r '.client_secret' <<< "$hydra_client" )
 
-  hydra clients create \
+  google_client=$(hydra create oauth2-client \
     --endpoint http://localhost:4445 \
-    --id kratos-client \
-    --secret kratos-secret \
-    --grant-types authorization_code,refresh_token \
-    --response-types code,id_token \
-    --scope openid,offline \
-    --callbacks http://localhost:4455/self-service/methods/oidc/callback/hydra
+    --grant-type authorization_code --grant-type refresh_token \
+    --response-type code --response-type id_token \
+    --scope openid --scope offline \
+    --redirect-uri http://localhost:4455/self-service/methods/oidc/callback/google \
+    --format json)
+  export OIDC_GOOGLE_CLIENT_ID=$(jq -r '.client_id' <<< "$google_client" )
+  export OIDC_GOOGLE_CLIENT_SECRET=$(jq -r '.client_secret' <<< "$google_client" )
 
-  hydra clients create \
+  github_client=$(hydra create oauth2-client \
     --endpoint http://localhost:4445 \
-    --id google-client \
-    --secret kratos-secret \
-    --grant-types authorization_code,refresh_token \
-    --response-types code,id_token \
-    --scope openid,offline \
-    --callbacks http://localhost:4455/self-service/methods/oidc/callback/google
-
-  hydra clients create \
-    --endpoint http://localhost:4445 \
-    --id github-client \
-    --secret kratos-secret \
-    --grant-types authorization_code,refresh_token \
-    --response-types code,id_token \
-    --scope openid,offline \
-    --callbacks http://localhost:4455/self-service/methods/oidc/callback/github
+    --grant-type authorization_code --grant-type refresh_token \
+    --response-type code --response-type id_token \
+    --scope openid --scope offline \
+    --redirect-uri http://localhost:4455/self-service/methods/oidc/callback/github \
+    --format json)
+  export OIDC_GITHUB_CLIENT_ID=$(jq -r '.client_id' <<< "$github_client" )
+  export OIDC_GITHUB_CLIENT_SECRET=$(jq -r '.client_secret' <<< "$github_client" )
 
   (
     cd test/e2e/hydra-login-consent
@@ -188,19 +187,21 @@ prepare() {
     LOG_LEVEL=trace \
     URLS_LOGIN=http://localhost:4455/login \
     URLS_CONSENT=http://localhost:4746/consent \
-    hydra serve all --dangerous-force-http >"${base}/test/e2e/hydra-kratos.e2e.log" 2>&1 &
+    hydra serve all --dev >"${base}/test/e2e/hydra-kratos.e2e.log" 2>&1 &
 
   (cd test/e2e; npm run wait-on -- -l -t 300000 http-get://127.0.0.1:4745/health/alive)
 
-  hydra clients create \
+  dummy_client=$(hydra create oauth2-client \
     --endpoint http://localhost:4745 \
-    --id dummy-client \
-    --secret secret \
     --token-endpoint-auth-method client_secret_basic \
-    --grant-types authorization_code,refresh_token \
-    --response-types code,id_token \
-    --scope openid,offline,email,website \
-    --callbacks http://localhost:5555/callback,https://httpbin.org/anything
+    --grant-type authorization_code --grant-type refresh_token \
+    --response-type code --response-type id_token \
+    --scope openid --scope offline --scope email --scope website \
+    --redirect-uri http://localhost:5555/callback \
+    --redirect-uri https://httpbin.org/anything \
+    --format json)
+  export CYPRESS_OIDC_DUMMY_CLIENT_ID=$(jq -r '.client_id' <<< "$dummy_client" )
+  export CYPRESS_OIDC_DUMMY_CLIENT_SECRET=$(jq -r '.client_secret' <<< "$dummy_client" )
 
   (
     cd test/e2e/hydra-kratos-login-consent
@@ -256,6 +257,7 @@ run() {
   ls -la .
   for profile in email mobile oidc recovery verification mfa spa network passwordless webhooks oidc-provider oidc-provider-mfa; do
     yq ea '. as $item ireduce ({}; . * $item )' test/e2e/profiles/kratos.base.yml "test/e2e/profiles/${profile}/.kratos.yml" > test/e2e/kratos.${profile}.yml
+    cat "test/e2e/kratos.${profile}.yml" | envsubst | sponge "test/e2e/kratos.${profile}.yml"
   done
   cp test/e2e/kratos.email.yml test/e2e/kratos.generated.yml
 
