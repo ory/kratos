@@ -5,7 +5,7 @@
 
 **Table of Contents**
 
-- [ (2022-11-08)](#2022-11-08)
+- [ (2022-11-09)](#2022-11-09)
   - [Breaking Changes](#breaking-changes)
     - [Bug Fixes](#bug-fixes)
     - [Code Refactoring](#code-refactoring)
@@ -280,7 +280,7 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# [](https://github.com/ory/kratos/compare/v0.10.1...v) (2022-11-08)
+# [](https://github.com/ory/kratos/compare/v0.10.1...v) (2022-11-09)
 
 ## Breaking Changes
 
@@ -331,6 +331,8 @@ SDK Method `getJsonSchema` was renamed to `getIdentitySchema`.
   ([3f490a3](https://github.com/ory/kratos/commit/3f490a31cddc53ce5d9958454f41c352580904c9))
 - **cli:** Dry up code ([#2572](https://github.com/ory/kratos/issues/2572))
   ([d1b6b40](https://github.com/ory/kratos/commit/d1b6b40aa9dcc7a3ec9237eec28c4fa55f0b8627))
+- Codecov ([#2879](https://github.com/ory/kratos/issues/2879))
+  ([e446c5a](https://github.com/ory/kratos/commit/e446c5a53dbe9963e8047a3e9ca443fa6a7e64eb))
 - Correct name of span on recovery code deletion
   ([#2823](https://github.com/ory/kratos/issues/2823))
   ([44f775f](https://github.com/ory/kratos/commit/44f775f45d47eff63379d77a2339b824a6ede235))
