@@ -200,7 +200,6 @@ func (c *courier) dispatchEmail(ctx context.Context, msg Message) error {
 			WithError(err).
 			WithField("smtp_server", fmt.Sprintf("%s:%d", c.smtpClient.Host, c.smtpClient.Port)).
 			WithField("smtp_ssl_enabled", c.smtpClient.SSL).
-			// WithField("email_to", msg.Recipient).
 			WithField("message_from", from).
 			Error("Unable to send email using SMTP connection.")
 

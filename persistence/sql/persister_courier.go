@@ -43,7 +43,10 @@ func (p *Persister) ListMessages(ctx context.Context, filter courier.MessagesFil
 	}
 
 	messages := make([]courier.Message, 0)
-	if err := q.Paginate(filter.Page, filter.PerPage).Order("created_at DESC").All(&messages); err != nil {
+	if err := q.Paginate(filter.Page, filter.PerPage).
+		Order("created_at DESC").
+		Eager("Dispatches").
+		All(&messages); err != nil {
 		return nil, 0, sqlcon.HandleError(err)
 	}
 
@@ -166,6 +169,18 @@ func (p *Persister) IncrementMessageSendCount(ctx context.Context, id uuid.UUID)
 
 	if count == 0 {
 		return errors.WithStack(sqlcon.ErrNoRows)
+	}
+
+	return nil
+}
+
+func (p *Persister) RecordDispatch(ctx context.Context, dispatch courier.CourierMessageDispatch) error {
+	ctx, span := p.r.Tracer(ctx).Tracer().Start(ctx, "persistence.sql.RecordError")
+	defer span.End()
+
+	dispatch.NID = p.NetworkID(ctx)
+	if err := p.GetConnection(ctx).Create(&dispatch); err != nil {
+		return sqlcon.HandleError(err)
 	}
 
 	return nil

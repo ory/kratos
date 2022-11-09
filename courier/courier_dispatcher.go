@@ -6,6 +6,7 @@ package courier
 import (
 	"context"
 
+	"github.com/ory/x/uuidx"
 	"github.com/pkg/errors"
 )
 
@@ -79,6 +80,18 @@ func (c *courier) DispatchQueue(ctx context.Context) error {
 	for k, msg := range messages {
 		if err := c.DispatchMessage(ctx, msg); err != nil {
 
+			if err := c.deps.CourierPersister().RecordDispatch(ctx, CourierMessageDispatch{
+				ID:        uuidx.NewV4(),
+				MessageID: msg.ID,
+				Error:     err.Error(),
+				Status:    CourierMessageDispatchStatusFailed,
+			}); err != nil {
+				c.deps.Logger().
+					WithError(err).
+					WithField("message_id", msg.ID).
+					Error(`Unable to record failure log entry.`)
+			}
+
 			for _, replace := range messages[k:] {
 				if err := c.deps.CourierPersister().SetMessageStatus(ctx, replace.ID, MessageStatusQueued); err != nil {
 					if c.failOnError {
@@ -92,7 +105,19 @@ func (c *courier) DispatchQueue(ctx context.Context) error {
 			}
 
 			return err
+		} else {
+			if err := c.deps.CourierPersister().RecordDispatch(ctx, CourierMessageDispatch{
+				ID:        uuidx.NewV4(),
+				MessageID: msg.ID,
+				Status:    CourierMessageDispatchStatusSuccess,
+			}); err != nil {
+				c.deps.Logger().
+					WithError(err).
+					WithField("message_id", msg.ID).
+					Error(`Unable to record success log entry.`)
+			}
 		}
+
 	}
 
 	return nil
