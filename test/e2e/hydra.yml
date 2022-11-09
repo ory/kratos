@@ -7,7 +7,7 @@ log:
 
 urls:
   self:
-    issuer: http://localhost:4444
-    public: http://localhost:4444
+    issuer: http://localhost:4444/
+    public: http://localhost:4444/
   login: http://localhost:4446/login
   consent: http://localhost:4446/consent
