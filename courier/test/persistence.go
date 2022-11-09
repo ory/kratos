@@ -5,6 +5,7 @@ package test
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"testing"
 	"time"
@@ -19,6 +20,7 @@ import (
 	"github.com/ory/kratos/courier"
 	"github.com/ory/kratos/x"
 	"github.com/ory/x/sqlcon"
+	"github.com/ory/x/uuidx"
 )
 
 type PersisterWrapper interface {
@@ -175,6 +177,19 @@ func TestPersister(ctx context.Context, newNetworkUnlessExisting NetworkWrapper,
 				err := p.SetMessageStatus(ctx, id, courier.MessageStatusProcessing)
 				require.ErrorIs(t, err, sqlcon.ErrNoRows)
 			})
+		})
+
+		t.Run("case=Record dispatch", func(t *testing.T) {
+			msgID := messages[0].ID
+
+			err := p.RecordDispatch(ctx, courier.CourierMessageDispatch{
+				ID:        uuidx.NewV4(),
+				MessageID: msgID,
+				Status:    courier.CourierMessageDispatchStatusFailed,
+				Error:     errors.New("testerror").Error(),
+			})
+
+			require.NoError(t, err)
 		})
 	}
 }
