@@ -1,3 +1,6 @@
+// Copyright © 2022 Ory Corp
+// SPDX-License-Identifier: Apache-2.0
+
 package courier
 
 import (
@@ -12,8 +15,6 @@ import (
 )
 
 type (
-	TemplateType string
-
 	EmailTemplate interface {
 		json.Marshaler
 		EmailSubject(context.Context) (string, error)
@@ -22,6 +23,11 @@ type (
 		EmailRecipient() (string, error)
 	}
 )
+
+// A Template's type
+//
+// swagger:enum TemplateType
+type TemplateType string
 
 const (
 	TypeRecoveryInvalid         TemplateType = "recovery_invalid"

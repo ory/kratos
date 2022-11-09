@@ -1,3 +1,6 @@
+// Copyright © 2022 Ory Corp
+// SPDX-License-Identifier: Apache-2.0
+
 package courier
 
 import (
@@ -5,6 +8,7 @@ import (
 	"time"
 
 	"github.com/ory/kratos/courier/template"
+	"github.com/ory/x/jsonnetsecure"
 
 	"github.com/cenkalti/backoff"
 	"github.com/gofrs/uuid"
@@ -21,6 +25,7 @@ type (
 		x.LoggingProvider
 		ConfigProvider
 		x.HTTPClientProvider
+		jsonnetsecure.VMProvider
 	}
 
 	Courier interface {

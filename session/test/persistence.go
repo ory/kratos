@@ -1,3 +1,6 @@
+// Copyright © 2022 Ory Corp
+// SPDX-License-Identifier: Apache-2.0
+
 package test
 
 import (
@@ -406,6 +409,34 @@ func TestPersister(ctx context.Context, conf *config.Config, p interface {
 			})
 
 			require.NoError(t, p.RevokeSessionByToken(ctx, expected.Token))
+
+			actual, err = p.GetSession(ctx, expected.ID, session.ExpandNothing)
+			require.NoError(t, err)
+			assert.False(t, actual.Active)
+		})
+
+		t.Run("case=revoke session by id", func(t *testing.T) {
+			var expected session.Session
+			require.NoError(t, faker.FakeData(&expected))
+			expected.Active = true
+			require.NoError(t, p.CreateIdentity(ctx, expected.Identity))
+			require.NoError(t, p.UpsertSession(ctx, &expected))
+
+			actual, err := p.GetSession(ctx, expected.ID, session.ExpandNothing)
+			require.NoError(t, err)
+			assert.True(t, actual.Active)
+
+			t.Run("on another network", func(t *testing.T) {
+				_, other := testhelpers.NewNetwork(t, ctx, p)
+				err := other.RevokeSessionById(ctx, expected.ID)
+				assert.ErrorIs(t, err, sqlcon.ErrNoRows)
+
+				actual, err = p.GetSession(ctx, expected.ID, session.ExpandNothing)
+				require.NoError(t, err)
+				assert.True(t, actual.Active)
+			})
+
+			require.NoError(t, p.RevokeSessionById(ctx, expected.ID))
 
 			actual, err = p.GetSession(ctx, expected.ID, session.ExpandNothing)
 			require.NoError(t, err)

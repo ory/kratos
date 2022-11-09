@@ -1,3 +1,6 @@
+// Copyright © 2022 Ory Corp
+// SPDX-License-Identifier: Apache-2.0
+
 package identity_test
 
 import (
@@ -59,8 +62,8 @@ func TestSchemaValidatorDisallowsInternalNetworkRequests(t *testing.T) {
 	}
 
 	for _, tc := range [][2]string{
-		{"localhost", "ip 127.0.0.1 is in the 127.0.0.0/8 range"},
-		{"privateRef", "ip 192.168.178.1 is in the 192.168.0.0/16 range"},
+		{"localhost", "is in the private, loopback, or unspecified IP range"}, // could be 127.0.0.1 or ::1
+		{"privateRef", "ip 192.168.178.1 is in the private, loopback, or unspecified IP range"},
 	} {
 		t.Run(fmt.Sprintf("case=%s", tc[0]), func(t *testing.T) {
 			assert.Contains(t, do(t, tc[0]), tc[1])

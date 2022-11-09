@@ -1,3 +1,6 @@
+// Copyright © 2022 Ory Corp
+// SPDX-License-Identifier: Apache-2.0
+
 const request = require("request")
 const urljoin = require("url-join")
 const express = require("express")

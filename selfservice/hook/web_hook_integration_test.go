@@ -1,3 +1,6 @@
+// Copyright © 2022 Ory Corp
+// SPDX-License-Identifier: Apache-2.0
+
 package hook_test
 
 import (
@@ -20,6 +23,7 @@ import (
 
 	"github.com/ory/kratos/schema"
 	"github.com/ory/kratos/text"
+	"github.com/ory/x/jsonnetsecure"
 	"github.com/ory/x/otelx"
 
 	"github.com/ory/kratos/driver/config"
@@ -50,7 +54,13 @@ import (
 func TestWebHooks(t *testing.T) {
 	_, reg := internal.NewFastRegistryWithMocks(t)
 	logger := logrusx.New("kratos", "test")
-	whDeps := x.SimpleLoggerWithClient{L: logger, C: reg.HTTPClient(context.Background()), T: otelx.NewNoop(logger, &otelx.Config{ServiceName: "kratos"})}
+	whDeps := struct {
+		x.SimpleLoggerWithClient
+		*jsonnetsecure.TestProvider
+	}{
+		x.SimpleLoggerWithClient{L: logger, C: reg.HTTPClient(context.Background()), T: otelx.NewNoop(logger, &otelx.Config{ServiceName: "kratos"})},
+		jsonnetsecure.NewTestProvider(t),
+	}
 	type WebHookRequest struct {
 		Body    string
 		Headers http.Header
@@ -728,7 +738,13 @@ func TestDisallowPrivateIPRanges(t *testing.T) {
 	conf.MustSet(ctx, config.ViperKeyClientHTTPNoPrivateIPRanges, true)
 	conf.MustSet(ctx, config.ViperKeyClientHTTPPrivateIPExceptionURLs, []string{"http://localhost/exception"})
 	logger := logrusx.New("kratos", "test")
-	whDeps := x.SimpleLoggerWithClient{L: logger, C: reg.HTTPClient(context.Background()), T: otelx.NewNoop(logger, conf.Tracing(ctx))}
+	whDeps := struct {
+		x.SimpleLoggerWithClient
+		*jsonnetsecure.TestProvider
+	}{
+		x.SimpleLoggerWithClient{L: logger, C: reg.HTTPClient(context.Background()), T: otelx.NewNoop(logger, &otelx.Config{ServiceName: "kratos"})},
+		jsonnetsecure.NewTestProvider(t),
+	}
 
 	req := &http.Request{
 		Header: map[string][]string{"Some-Header": {"Some-Value"}},
@@ -748,7 +764,7 @@ func TestDisallowPrivateIPRanges(t *testing.T) {
 }`))
 		err := wh.ExecuteLoginPostHook(nil, req, node.DefaultGroup, f, s)
 		require.Error(t, err)
-		require.Contains(t, err.Error(), "ip 127.0.0.1 is in the 127.0.0.0/8 range")
+		require.Contains(t, err.Error(), "is in the private, loopback, or unspecified IP range")
 	})
 
 	t.Run("allowed to call exempt url", func(t *testing.T) {
@@ -759,7 +775,7 @@ func TestDisallowPrivateIPRanges(t *testing.T) {
 }`))
 		err := wh.ExecuteLoginPostHook(nil, req, node.DefaultGroup, f, s)
 		require.Error(t, err, "the target does not exist and we still receive an error")
-		require.NotContains(t, err.Error(), "ip 127.0.0.1 is in the 127.0.0.0/8 range", "but the error is not related to the IP range.")
+		require.NotContains(t, err.Error(), "is in the private, loopback, or unspecified IP range", "but the error is not related to the IP range.")
 	})
 
 	t.Run("not allowed to load from source", func(t *testing.T) {
@@ -779,6 +795,6 @@ func TestDisallowPrivateIPRanges(t *testing.T) {
 }`))
 		err := wh.ExecuteLoginPostHook(nil, req, node.DefaultGroup, f, s)
 		require.Error(t, err)
-		require.Contains(t, err.Error(), "ip 192.168.178.0 is in the 192.168.0.0/16 range")
+		require.Contains(t, err.Error(), "ip 192.168.178.0 is in the private, loopback, or unspecified IP range")
 	})
 }

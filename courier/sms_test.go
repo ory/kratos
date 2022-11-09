@@ -1,3 +1,6 @@
+// Copyright © 2022 Ory Corp
+// SPDX-License-Identifier: Apache-2.0
+
 package courier_test
 
 import (
@@ -141,5 +144,5 @@ func TestDisallowedInternalNetwork(t *testing.T) {
 
 	err = c.DispatchQueue(ctx)
 	require.Error(t, err)
-	assert.Contains(t, err.Error(), "ip 127.0.0.1 is in the 127.0.0.0/8 range")
+	assert.Contains(t, err.Error(), "ip 127.0.0.1 is in the private, loopback, or unspecified IP range")
 }

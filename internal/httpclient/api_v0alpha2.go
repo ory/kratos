@@ -142,6 +142,23 @@ type V0alpha2Api interface {
 	AdminGetIdentityExecute(r V0alpha2ApiApiAdminGetIdentityRequest) (*Identity, *http.Response, error)
 
 	/*
+			 * AdminGetSession This endpoint returns the session object with expandables specified.
+			 * This endpoint is useful for:
+
+		Getting a session object with all specified expandables that exist in an administrative context.
+			 * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
+			 * @param id ID is the session's ID.
+			 * @return V0alpha2ApiApiAdminGetSessionRequest
+	*/
+	AdminGetSession(ctx context.Context, id string) V0alpha2ApiApiAdminGetSessionRequest
+
+	/*
+	 * AdminGetSessionExecute executes the request
+	 * @return Session
+	 */
+	AdminGetSessionExecute(r V0alpha2ApiApiAdminGetSessionRequest) (*Session, *http.Response, error)
+
+	/*
 	 * AdminListCourierMessages List Messages
 	 * Lists all messages by given status and recipient.
 	 * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
@@ -2199,6 +2216,161 @@ func (a *V0alpha2ApiService) AdminGetIdentityExecute(r V0alpha2ApiApiAdminGetIde
 	return localVarReturnValue, localVarHTTPResponse, nil
 }
 
+type V0alpha2ApiApiAdminGetSessionRequest struct {
+	ctx        context.Context
+	ApiService V0alpha2Api
+	id         string
+	expand     *[]string
+}
+
+func (r V0alpha2ApiApiAdminGetSessionRequest) Expand(expand []string) V0alpha2ApiApiAdminGetSessionRequest {
+	r.expand = &expand
+	return r
+}
+
+func (r V0alpha2ApiApiAdminGetSessionRequest) Execute() (*Session, *http.Response, error) {
+	return r.ApiService.AdminGetSessionExecute(r)
+}
+
+/*
+  - AdminGetSession This endpoint returns the session object with expandables specified.
+  - This endpoint is useful for:
+
+Getting a session object with all specified expandables that exist in an administrative context.
+  - @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
+  - @param id ID is the session's ID.
+  - @return V0alpha2ApiApiAdminGetSessionRequest
+*/
+func (a *V0alpha2ApiService) AdminGetSession(ctx context.Context, id string) V0alpha2ApiApiAdminGetSessionRequest {
+	return V0alpha2ApiApiAdminGetSessionRequest{
+		ApiService: a,
+		ctx:        ctx,
+		id:         id,
+	}
+}
+
+/*
+ * Execute executes the request
+ * @return Session
+ */
+func (a *V0alpha2ApiService) AdminGetSessionExecute(r V0alpha2ApiApiAdminGetSessionRequest) (*Session, *http.Response, error) {
+	var (
+		localVarHTTPMethod   = http.MethodGet
+		localVarPostBody     interface{}
+		localVarFormFileName string
+		localVarFileName     string
+		localVarFileBytes    []byte
+		localVarReturnValue  *Session
+	)
+
+	localBasePath, err := a.client.cfg.ServerURLWithContext(r.ctx, "V0alpha2ApiService.AdminGetSession")
+	if err != nil {
+		return localVarReturnValue, nil, &GenericOpenAPIError{error: err.Error()}
+	}
+
+	localVarPath := localBasePath + "/admin/sessions/{id}"
+	localVarPath = strings.Replace(localVarPath, "{"+"id"+"}", url.PathEscape(parameterToString(r.id, "")), -1)
+
+	localVarHeaderParams := make(map[string]string)
+	localVarQueryParams := url.Values{}
+	localVarFormParams := url.Values{}
+
+	if r.expand != nil {
+		t := *r.expand
+		if reflect.TypeOf(t).Kind() == reflect.Slice {
+			s := reflect.ValueOf(t)
+			for i := 0; i < s.Len(); i++ {
+				localVarQueryParams.Add("expand", parameterToString(s.Index(i), "multi"))
+			}
+		} else {
+			localVarQueryParams.Add("expand", parameterToString(t, "multi"))
+		}
+	}
+	// to determine the Content-Type header
+	localVarHTTPContentTypes := []string{}
+
+	// set Content-Type header
+	localVarHTTPContentType := selectHeaderContentType(localVarHTTPContentTypes)
+	if localVarHTTPContentType != "" {
+		localVarHeaderParams["Content-Type"] = localVarHTTPContentType
+	}
+
+	// to determine the Accept header
+	localVarHTTPHeaderAccepts := []string{"application/json"}
+
+	// set Accept header
+	localVarHTTPHeaderAccept := selectHeaderAccept(localVarHTTPHeaderAccepts)
+	if localVarHTTPHeaderAccept != "" {
+		localVarHeaderParams["Accept"] = localVarHTTPHeaderAccept
+	}
+	if r.ctx != nil {
+		// API Key Authentication
+		if auth, ok := r.ctx.Value(ContextAPIKeys).(map[string]APIKey); ok {
+			if apiKey, ok := auth["oryAccessToken"]; ok {
+				var key string
+				if apiKey.Prefix != "" {
+					key = apiKey.Prefix + " " + apiKey.Key
+				} else {
+					key = apiKey.Key
+				}
+				localVarHeaderParams["Authorization"] = key
+			}
+		}
+	}
+	req, err := a.client.prepareRequest(r.ctx, localVarPath, localVarHTTPMethod, localVarPostBody, localVarHeaderParams, localVarQueryParams, localVarFormParams, localVarFormFileName, localVarFileName, localVarFileBytes)
+	if err != nil {
+		return localVarReturnValue, nil, err
+	}
+
+	localVarHTTPResponse, err := a.client.callAPI(req)
+	if err != nil || localVarHTTPResponse == nil {
+		return localVarReturnValue, localVarHTTPResponse, err
+	}
+
+	localVarBody, err := io.ReadAll(localVarHTTPResponse.Body)
+	localVarHTTPResponse.Body.Close()
+	localVarHTTPResponse.Body = io.NopCloser(bytes.NewBuffer(localVarBody))
+	if err != nil {
+		return localVarReturnValue, localVarHTTPResponse, err
+	}
+
+	if localVarHTTPResponse.StatusCode >= 300 {
+		newErr := &GenericOpenAPIError{
+			body:  localVarBody,
+			error: localVarHTTPResponse.Status,
+		}
+		if localVarHTTPResponse.StatusCode == 400 {
+			var v JsonError
+			err = a.client.decode(&v, localVarBody, localVarHTTPResponse.Header.Get("Content-Type"))
+			if err != nil {
+				newErr.error = err.Error()
+				return localVarReturnValue, localVarHTTPResponse, newErr
+			}
+			newErr.model = v
+			return localVarReturnValue, localVarHTTPResponse, newErr
+		}
+		var v JsonError
+		err = a.client.decode(&v, localVarBody, localVarHTTPResponse.Header.Get("Content-Type"))
+		if err != nil {
+			newErr.error = err.Error()
+			return localVarReturnValue, localVarHTTPResponse, newErr
+		}
+		newErr.model = v
+		return localVarReturnValue, localVarHTTPResponse, newErr
+	}
+
+	err = a.client.decode(&localVarReturnValue, localVarBody, localVarHTTPResponse.Header.Get("Content-Type"))
+	if err != nil {
+		newErr := &GenericOpenAPIError{
+			body:  localVarBody,
+			error: err.Error(),
+		}
+		return localVarReturnValue, localVarHTTPResponse, newErr
+	}
+
+	return localVarReturnValue, localVarHTTPResponse, nil
+}
+
 type V0alpha2ApiApiAdminListCourierMessagesRequest struct {
 	ctx        context.Context
 	ApiService V0alpha2Api
@@ -2688,6 +2860,7 @@ type V0alpha2ApiApiAdminListSessionsRequest struct {
 	pageSize   *int64
 	pageToken  *string
 	active     *bool
+	expand     *[]string
 }
 
 func (r V0alpha2ApiApiAdminListSessionsRequest) PageSize(pageSize int64) V0alpha2ApiApiAdminListSessionsRequest {
@@ -2700,6 +2873,10 @@ func (r V0alpha2ApiApiAdminListSessionsRequest) PageToken(pageToken string) V0al
 }
 func (r V0alpha2ApiApiAdminListSessionsRequest) Active(active bool) V0alpha2ApiApiAdminListSessionsRequest {
 	r.active = &active
+	return r
+}
+func (r V0alpha2ApiApiAdminListSessionsRequest) Expand(expand []string) V0alpha2ApiApiAdminListSessionsRequest {
+	r.expand = &expand
 	return r
 }
 
@@ -2755,6 +2932,17 @@ func (a *V0alpha2ApiService) AdminListSessionsExecute(r V0alpha2ApiApiAdminListS
 	}
 	if r.active != nil {
 		localVarQueryParams.Add("active", parameterToString(*r.active, ""))
+	}
+	if r.expand != nil {
+		t := *r.expand
+		if reflect.TypeOf(t).Kind() == reflect.Slice {
+			s := reflect.ValueOf(t)
+			for i := 0; i < s.Len(); i++ {
+				localVarQueryParams.Add("expand", parameterToString(s.Index(i), "multi"))
+			}
+		} else {
+			localVarQueryParams.Add("expand", parameterToString(t, "multi"))
+		}
 	}
 	// to determine the Content-Type header
 	localVarHTTPContentTypes := []string{}

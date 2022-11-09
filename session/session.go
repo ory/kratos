@@ -1,3 +1,6 @@
+// Copyright © 2022 Ory Corp
+// SPDX-License-Identifier: Apache-2.0
+
 package session
 
 import (
@@ -247,7 +250,7 @@ func (s *Session) SaveSessionDeviceInformation(r *http.Request) {
 	} else if realClientIP := r.Header.Get("X-Real-IP"); realClientIP != "" {
 		device.IPAddress = &realClientIP
 	} else if forwardedIP := r.Header.Get("X-Forwarded-For"); forwardedIP != "" {
-		ip, _ := httpx.GetClientIPAddress(strings.Split(forwardedIP, ","), httpx.InternalIPSet)
+		ip, _ := httpx.GetClientIPAddressesWithoutInternalIPs(strings.Split(forwardedIP, ","))
 		device.IPAddress = &ip
 	} else {
 		device.IPAddress = &r.RemoteAddr

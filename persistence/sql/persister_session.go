@@ -1,3 +1,6 @@
+// Copyright © 2022 Ory Corp
+// SPDX-License-Identifier: Apache-2.0
+
 package sql
 
 import (
@@ -36,7 +39,8 @@ func (p *Persister) GetSession(ctx context.Context, sid uuid.UUID, expandables s
 	nid := p.NetworkID(ctx)
 
 	q := p.GetConnection(ctx).Q()
-	if len(expandables) > 0 {
+	// if len(expandables) > 0 {
+	if expandables.Has(session.ExpandSessionDevices) {
 		q = q.Eager(expandables.ToEager()...)
 	}
 
@@ -75,7 +79,9 @@ func (p *Persister) ListSessions(ctx context.Context, active *bool, paginatorOpt
 		if active != nil {
 			q = q.Where("active = ?", *active)
 		}
-		if len(expandables) > 0 {
+
+		// if len(expandables) > 0 {
+		if expandables.Has(session.ExpandSessionDevices) {
 			q = q.Eager(expandables.ToEager()...)
 		}
 
@@ -298,6 +304,28 @@ func (p *Persister) RevokeSessionByToken(ctx context.Context, token string) erro
 		"sessions",
 	),
 		token,
+		p.NetworkID(ctx),
+	).ExecWithCount()
+	if err != nil {
+		return sqlcon.HandleError(err)
+	}
+	if count == 0 {
+		return errors.WithStack(sqlcon.ErrNoRows)
+	}
+	return nil
+}
+
+// RevokeSessionById revokes a given session
+func (p *Persister) RevokeSessionById(ctx context.Context, sID uuid.UUID) error {
+	ctx, span := p.r.Tracer(ctx).Tracer().Start(ctx, "persistence.sql.RevokeSessionById")
+	defer span.End()
+
+	// #nosec G201
+	count, err := p.GetConnection(ctx).RawQuery(fmt.Sprintf(
+		"UPDATE %s SET active = false WHERE id = ? AND nid = ?",
+		"sessions",
+	),
+		sID,
 		p.NetworkID(ctx),
 	).ExecWithCount()
 	if err != nil {

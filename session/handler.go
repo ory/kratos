@@ -1,3 +1,6 @@
+// Copyright © 2022 Ory Corp
+// SPDX-License-Identifier: Apache-2.0
+
 package session
 
 import (
@@ -64,18 +67,14 @@ const (
 
 func (h *Handler) RegisterAdminRoutes(admin *x.RouterAdmin) {
 	admin.GET(RouteCollection, h.adminListSessions)
+	admin.GET(RouteSession, h.adminGetSession)
+	admin.DELETE(RouteSession, h.disableSession)
 
 	admin.GET(AdminRouteIdentitiesSessions, h.adminListIdentitySessions)
 	admin.DELETE(AdminRouteIdentitiesSessions, h.adminDeleteIdentitySessions)
 	admin.PATCH(AdminRouteSessionExtendId, h.adminSessionExtend)
 
 	admin.DELETE(RouteCollection, x.RedirectToPublicRoute(h.r))
-	admin.DELETE(RouteSession, x.RedirectToPublicRoute(h.r))
-
-	for _, m := range []string{http.MethodGet, http.MethodHead, http.MethodPost, http.MethodPut} {
-		// Redirect to public endpoint
-		admin.Handle(m, RouteWhoami, x.RedirectToPublicRoute(h.r))
-	}
 }
 
 func (h *Handler) RegisterPublicRoutes(public *x.RouterPublic) {
@@ -280,6 +279,14 @@ type adminListSessionsRequest struct {
 	// required: false
 	// in: query
 	Active bool `json:"active"`
+
+	// ExpandOptions is a query parameter encoded list of all properties that must be expanded in the Session.
+	// Example - ?expand=Identity&expand=Devices
+	// If no value is provided, the expandable properties are skipped.
+	//
+	// required: false
+	// in: query
+	ExpandOptions []Expandable `json:"expand"`
 }
 
 // Session List Response
@@ -331,14 +338,25 @@ func (h *Handler) adminListSessions(w http.ResponseWriter, r *http.Request, ps h
 	}
 
 	// Parse request pagination parameters
-	urlValues := r.URL.Query()
-	opts, err := keysetpagination.Parse(&urlValues)
+	opts, err := keysetpagination.Parse(r.URL.Query())
 	if err != nil {
 		h.r.Writer().WriteError(w, r, herodot.ErrBadRequest.WithError("could not parse parameter page_size"))
 		return
 	}
 
-	sess, total, nextPage, err := h.r.SessionPersister().ListSessions(r.Context(), active, opts, ExpandEverything)
+	var expandables Expandables
+	if es, ok := r.URL.Query()["expand"]; ok {
+		for _, e := range es {
+			expand, ok := ParseExpandable(e)
+			if !ok {
+				h.r.Writer().WriteError(w, r, errors.WithStack(herodot.ErrBadRequest.WithReasonf("Could not parse expand option: %s", e)))
+				return
+			}
+			expandables = append(expandables, expand)
+		}
+	}
+
+	sess, total, nextPage, err := h.r.SessionPersister().ListSessions(r.Context(), active, opts, expandables)
 	if err != nil {
 		h.r.Writer().WriteError(w, r, err)
 		return
@@ -347,6 +365,121 @@ func (h *Handler) adminListSessions(w http.ResponseWriter, r *http.Request, ps h
 	w.Header().Set("x-total-count", fmt.Sprint(total))
 	keysetpagination.Header(w, r.URL, nextPage)
 	h.r.Writer().Write(w, r, sess)
+}
+
+// Session Get Request
+//
+// The request object for getting a session in an administrative context.
+//
+// swagger:parameters adminGetSession
+// nolint:deadcode,unused
+type adminGetSessionRequest struct {
+	// ExpandOptions is a query parameter encoded list of all properties that must be expanded in the Session.
+	// Example - ?expand=Identity&expand=Devices
+	// If no value is provided, the expandable properties are skipped.
+	//
+	// required: false
+	// in: query
+	ExpandOptions []Expandable `json:"expand"`
+
+	// ID is the session's ID.
+	//
+	// required: true
+	// in: path
+	ID string `json:"id"`
+}
+
+// swagger:route GET /admin/sessions/{id} v0alpha2 adminGetSession
+//
+// This endpoint returns the session object with expandables specified.
+//
+// This endpoint is useful for:
+//
+// - Getting a session object with all specified expandables that exist in an administrative context.
+//
+//	Schemes: http, https
+//
+//	Security:
+//	  oryAccessToken:
+//
+//	Responses:
+//	  200: session
+//	  400: jsonError
+//	  default: jsonError
+func (h *Handler) adminGetSession(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	if ps.ByName("id") == "whoami" {
+		// for /admin/sessions/whoami redirect to the public route
+		x.RedirectToPublicRoute(h.r)(w, r, ps)
+		return
+	}
+
+	sID, err := uuid.FromString(ps.ByName("id"))
+	if err != nil {
+		h.r.Writer().WriteError(w, r, herodot.ErrBadRequest.WithError(err.Error()).WithDebug("could not parse UUID"))
+		return
+	}
+
+	var expandables Expandables
+
+	urlValues := r.URL.Query()
+	if es, ok := urlValues["expand"]; ok {
+		for _, e := range es {
+			expand, ok := ParseExpandable(e)
+			if !ok {
+				h.r.Writer().WriteError(w, r, errors.WithStack(herodot.ErrBadRequest.WithReasonf("Could not parse expand option: %s", e)))
+				return
+			}
+			expandables = append(expandables, expand)
+		}
+	}
+
+	sess, err := h.r.SessionPersister().GetSession(r.Context(), sID, expandables)
+	if err != nil {
+		h.r.Writer().WriteError(w, r, err)
+		return
+	}
+
+	h.r.Writer().Write(w, r, sess)
+}
+
+// Deactivate Session Parameters
+//
+// swagger:parameters disableSession
+// nolint:deadcode,unused
+type disableSession struct {
+	// ID is the session's ID.
+	//
+	// required: true
+	// in: path
+	ID string `json:"id"`
+}
+
+// swagger:route DELETE /admin/sessions/{id} identity disableSession
+//
+// # Deactivate a Session
+//
+// Calling this endpoint deactivates the specified session. Session data is not deleted.
+//
+//	Schemes: http, https
+//
+//	Responses:
+//	  204: emptyResponse
+//	  400: jsonError
+//	  401: jsonError
+//	  default: jsonError
+func (h *Handler) disableSession(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	sID, err := uuid.FromString(ps.ByName("id"))
+	if err != nil {
+		h.r.Writer().WriteError(w, r, herodot.ErrBadRequest.WithError(err.Error()).WithDebug("could not parse UUID"))
+		return
+	}
+
+	if err := h.r.SessionPersister().RevokeSessionById(r.Context(), sID); err != nil {
+		h.r.Writer().WriteError(w, r, err)
+		return
+	}
+
+	h.r.Writer().WriteCode(w, r, http.StatusNoContent, nil)
 }
 
 // swagger:parameters adminListIdentitySessions

@@ -11,6 +11,7 @@ Method | HTTP request | Description
 [**AdminDeleteIdentitySessions**](V0alpha2Api.md#AdminDeleteIdentitySessions) | **Delete** /admin/identities/{id}/sessions | Delete &amp; Invalidate an Identity&#39;s Sessions
 [**AdminExtendSession**](V0alpha2Api.md#AdminExtendSession) | **Patch** /admin/sessions/{id}/extend | Extend a Session
 [**AdminGetIdentity**](V0alpha2Api.md#AdminGetIdentity) | **Get** /admin/identities/{id} | Get an Identity
+[**AdminGetSession**](V0alpha2Api.md#AdminGetSession) | **Get** /admin/sessions/{id} | This endpoint returns the session object with expandables specified.
 [**AdminListCourierMessages**](V0alpha2Api.md#AdminListCourierMessages) | **Get** /admin/courier/messages | List Messages
 [**AdminListIdentities**](V0alpha2Api.md#AdminListIdentities) | **Get** /admin/identities | List Identities
 [**AdminListIdentitySessions**](V0alpha2Api.md#AdminListIdentitySessions) | **Get** /admin/identities/{id}/sessions | List an Identity&#39;s Sessions
@@ -527,6 +528,78 @@ Name | Type | Description  | Notes
 [[Back to README]](../README.md)
 
 
+## AdminGetSession
+
+> Session AdminGetSession(ctx, id).Expand(expand).Execute()
+
+This endpoint returns the session object with expandables specified.
+
+
+
+### Example
+
+```go
+package main
+
+import (
+    "context"
+    "fmt"
+    "os"
+    openapiclient "./openapi"
+)
+
+func main() {
+    id := "id_example" // string | ID is the session's ID.
+    expand := []string{"Expand_example"} // []string | ExpandOptions is a query parameter encoded list of all properties that must be expanded in the Session. Example - ?expand=Identity&expand=Devices If no value is provided, the expandable properties are skipped. (optional)
+
+    configuration := openapiclient.NewConfiguration()
+    apiClient := openapiclient.NewAPIClient(configuration)
+    resp, r, err := apiClient.V0alpha2Api.AdminGetSession(context.Background(), id).Expand(expand).Execute()
+    if err != nil {
+        fmt.Fprintf(os.Stderr, "Error when calling `V0alpha2Api.AdminGetSession``: %v\n", err)
+        fmt.Fprintf(os.Stderr, "Full HTTP response: %v\n", r)
+    }
+    // response from `AdminGetSession`: Session
+    fmt.Fprintf(os.Stdout, "Response from `V0alpha2Api.AdminGetSession`: %v\n", resp)
+}
+```
+
+### Path Parameters
+
+
+Name | Type | Description  | Notes
+------------- | ------------- | ------------- | -------------
+**ctx** | **context.Context** | context for authentication, logging, cancellation, deadlines, tracing, etc.
+**id** | **string** | ID is the session&#39;s ID. | 
+
+### Other Parameters
+
+Other parameters are passed through a pointer to a apiAdminGetSessionRequest struct via the builder pattern
+
+
+Name | Type | Description  | Notes
+------------- | ------------- | ------------- | -------------
+
+ **expand** | **[]string** | ExpandOptions is a query parameter encoded list of all properties that must be expanded in the Session. Example - ?expand&#x3D;Identity&amp;expand&#x3D;Devices If no value is provided, the expandable properties are skipped. | 
+
+### Return type
+
+[**Session**](Session.md)
+
+### Authorization
+
+[oryAccessToken](../README.md#oryAccessToken)
+
+### HTTP request headers
+
+- **Content-Type**: Not defined
+- **Accept**: application/json
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints)
+[[Back to Model list]](../README.md#documentation-for-models)
+[[Back to README]](../README.md)
+
+
 ## AdminListCourierMessages
 
 > []Message AdminListCourierMessages(ctx).PerPage(perPage).Page(page).Status(status).Recipient(recipient).Execute()
@@ -745,7 +818,7 @@ Name | Type | Description  | Notes
 
 ## AdminListSessions
 
-> []Session AdminListSessions(ctx).PageSize(pageSize).PageToken(pageToken).Active(active).Execute()
+> []Session AdminListSessions(ctx).PageSize(pageSize).PageToken(pageToken).Active(active).Expand(expand).Execute()
 
 This endpoint returns all sessions that exist.
 
@@ -767,10 +840,11 @@ func main() {
     pageSize := int64(789) // int64 | Items per Page  This is the number of items per page to return. For details on pagination please head over to the [pagination documentation](https://www.ory.sh/docs/ecosystem/api-design#pagination). (optional) (default to 250)
     pageToken := "pageToken_example" // string | Next Page Token  The next page token. For details on pagination please head over to the [pagination documentation](https://www.ory.sh/docs/ecosystem/api-design#pagination). (optional)
     active := true // bool | Active is a boolean flag that filters out sessions based on the state. If no value is provided, all sessions are returned. (optional)
+    expand := []string{"Expand_example"} // []string | ExpandOptions is a query parameter encoded list of all properties that must be expanded in the Session. Example - ?expand=Identity&expand=Devices If no value is provided, the expandable properties are skipped. (optional)
 
     configuration := openapiclient.NewConfiguration()
     apiClient := openapiclient.NewAPIClient(configuration)
-    resp, r, err := apiClient.V0alpha2Api.AdminListSessions(context.Background()).PageSize(pageSize).PageToken(pageToken).Active(active).Execute()
+    resp, r, err := apiClient.V0alpha2Api.AdminListSessions(context.Background()).PageSize(pageSize).PageToken(pageToken).Active(active).Expand(expand).Execute()
     if err != nil {
         fmt.Fprintf(os.Stderr, "Error when calling `V0alpha2Api.AdminListSessions``: %v\n", err)
         fmt.Fprintf(os.Stderr, "Full HTTP response: %v\n", r)
@@ -794,6 +868,7 @@ Name | Type | Description  | Notes
  **pageSize** | **int64** | Items per Page  This is the number of items per page to return. For details on pagination please head over to the [pagination documentation](https://www.ory.sh/docs/ecosystem/api-design#pagination). | [default to 250]
  **pageToken** | **string** | Next Page Token  The next page token. For details on pagination please head over to the [pagination documentation](https://www.ory.sh/docs/ecosystem/api-design#pagination). | 
  **active** | **bool** | Active is a boolean flag that filters out sessions based on the state. If no value is provided, all sessions are returned. | 
+ **expand** | **[]string** | ExpandOptions is a query parameter encoded list of all properties that must be expanded in the Session. Example - ?expand&#x3D;Identity&amp;expand&#x3D;Devices If no value is provided, the expandable properties are skipped. | 
 
 ### Return type
 

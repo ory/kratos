@@ -1,3 +1,6 @@
+// Copyright © 2022 Ory Corp
+// SPDX-License-Identifier: Apache-2.0
+
 package hook
 
 import (
@@ -12,6 +15,7 @@ import (
 	"go.opentelemetry.io/otel/trace"
 
 	"github.com/ory/kratos/ui/node"
+	"github.com/ory/x/jsonnetsecure"
 
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/request"
@@ -39,6 +43,7 @@ type (
 		x.LoggingProvider
 		x.HTTPClientProvider
 		x.TracingProvider
+		jsonnetsecure.VMProvider
 	}
 
 	templateContext struct {
@@ -208,12 +213,12 @@ func (e *WebHook) execute(ctx context.Context, data *templateContext) error {
 	span.SetAttributes(otelx.StringAttrs(attrs)...)
 	defer span.End()
 
-	builder, err := request.NewBuilder(e.conf, e.deps.HTTPClient(ctx), e.deps.Logger())
+	builder, err := request.NewBuilder(e.conf, e.deps)
 	if err != nil {
 		return err
 	}
 
-	req, err := builder.BuildRequest(data)
+	req, err := builder.BuildRequest(ctx, data)
 	if errors.Is(err, request.ErrCancel) {
 		return nil
 	} else if err != nil {

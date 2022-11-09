@@ -769,6 +769,19 @@
             "description": "Active is a boolean flag that filters out sessions based on the state. If no value is provided, all sessions are returned.",
             "name": "active",
             "in": "query"
+          },
+          {
+            "type": "array",
+            "items": {
+              "enum": [
+                "Devices",
+                "Identity"
+              ],
+              "type": "string"
+            },
+            "description": "ExpandOptions is a query parameter encoded list of all properties that must be expanded in the Session.\nExample - ?expand=Identity\u0026expand=Devices\nIf no value is provided, the expandable properties are skipped.",
+            "name": "expand",
+            "in": "query"
           }
         ],
         "responses": {
@@ -797,6 +810,111 @@
             }
           },
           "500": {
+            "description": "jsonError",
+            "schema": {
+              "$ref": "#/definitions/jsonError"
+            }
+          }
+        }
+      }
+    },
+    "/admin/sessions/{id}": {
+      "get": {
+        "security": [
+          {
+            "oryAccessToken": []
+          }
+        ],
+        "description": "This endpoint is useful for:\n\nGetting a session object with all specified expandables that exist in an administrative context.",
+        "schemes": [
+          "http",
+          "https"
+        ],
+        "tags": [
+          "v0alpha2"
+        ],
+        "summary": "This endpoint returns the session object with expandables specified.",
+        "operationId": "adminGetSession",
+        "parameters": [
+          {
+            "type": "array",
+            "items": {
+              "enum": [
+                "Devices",
+                "Identity"
+              ],
+              "type": "string"
+            },
+            "description": "ExpandOptions is a query parameter encoded list of all properties that must be expanded in the Session.\nExample - ?expand=Identity\u0026expand=Devices\nIf no value is provided, the expandable properties are skipped.",
+            "name": "expand",
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "description": "ID is the session's ID.",
+            "name": "id",
+            "in": "path",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "session",
+            "schema": {
+              "$ref": "#/definitions/session"
+            }
+          },
+          "400": {
+            "description": "jsonError",
+            "schema": {
+              "$ref": "#/definitions/jsonError"
+            }
+          },
+          "default": {
+            "description": "jsonError",
+            "schema": {
+              "$ref": "#/definitions/jsonError"
+            }
+          }
+        }
+      },
+      "delete": {
+        "description": "Calling this endpoint deactivates the specified session. Session data is not deleted.",
+        "schemes": [
+          "http",
+          "https"
+        ],
+        "tags": [
+          "identity"
+        ],
+        "summary": "Deactivate a Session",
+        "operationId": "disableSession",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "ID is the session's ID.",
+            "name": "id",
+            "in": "path",
+            "required": true
+          }
+        ],
+        "responses": {
+          "204": {
+            "$ref": "#/responses/emptyResponse"
+          },
+          "400": {
+            "description": "jsonError",
+            "schema": {
+              "$ref": "#/definitions/jsonError"
+            }
+          },
+          "401": {
+            "description": "jsonError",
+            "schema": {
+              "$ref": "#/definitions/jsonError"
+            }
+          },
+          "default": {
             "description": "jsonError",
             "schema": {
               "$ref": "#/definitions/jsonError"
@@ -2985,9 +3103,6 @@
       "type": "string",
       "title": "RecoveryAddressType must not exceed 16 characters as that is the limitation in the SQL Schema."
     },
-    "TemplateType": {
-      "type": "string"
-    },
     "UUID": {"type": "string", "format": "uuid4"},
     "adminCreateIdentityBody": {
       "type": "object",
@@ -3567,7 +3682,18 @@
           "type": "string"
         },
         "template_type": {
-          "$ref": "#/definitions/TemplateType"
+          "type": "string",
+          "enum": [
+            "recovery_invalid",
+            "recovery_valid",
+            "recovery_code_invalid",
+            "recovery_code_valid",
+            "verification_invalid",
+            "verification_valid",
+            "otp",
+            "stub"
+          ],
+          "x-go-enum-desc": "recovery_invalid TypeRecoveryInvalid\nrecovery_valid TypeRecoveryValid\nrecovery_code_invalid TypeRecoveryCodeInvalid\nrecovery_code_valid TypeRecoveryCodeValid\nverification_invalid TypeVerificationInvalid\nverification_valid TypeVerificationValid\notp TypeOTP\nstub TypeTestStub"
         },
         "type": {
           "$ref": "#/definitions/courierMessageType"

@@ -1,3 +1,6 @@
+// Copyright © 2022 Ory Corp
+// SPDX-License-Identifier: Apache-2.0
+
 package oidc
 
 import (
@@ -5,8 +8,6 @@ import (
 	"encoding/json"
 	"net/http"
 	"time"
-
-	"github.com/ory/x/jsonnetsecure"
 
 	"github.com/ory/herodot"
 
@@ -252,7 +253,11 @@ func (s *Strategy) createIdentity(w http.ResponseWriter, r *http.Request, a *reg
 		return nil, s.handleError(w, r, a, provider.Config().ID, nil, err)
 	}
 
-	vm := jsonnetsecure.MakeSecureVM()
+	vm, err := s.d.JsonnetVM(r.Context())
+	if err != nil {
+		return nil, s.handleError(w, r, a, provider.Config().ID, nil, err)
+	}
+
 	vm.ExtCode("claims", jsonClaims.String())
 	evaluated, err := vm.EvaluateAnonymousSnippet(provider.Config().Mapper, jn.String())
 	if err != nil {

@@ -1,3 +1,6 @@
+// Copyright © 2022 Ory Corp
+// SPDX-License-Identifier: Apache-2.0
+
 package login_test
 
 import (
@@ -661,6 +664,7 @@ func TestGetFlow(t *testing.T) {
 		// submit the flow but it is expired
 		u := public.URL + login.RouteSubmitFlow + "?flow=" + f.ID.String()
 		res, err := client.PostForm(u, url.Values{"password_identifier": {"email@ory.sh"}, "csrf_token": {f.CSRFToken}, "password": {"password"}, "method": {"password"}})
+		require.NoError(t, err)
 		resBody, err := io.ReadAll(res.Body)
 		require.NoError(t, err)
 		require.NoError(t, res.Body.Close())
