@@ -6,6 +6,7 @@ Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
 **Body** | Pointer to **string** |  | [optional] 
 **CreatedAt** | Pointer to **time.Time** | CreatedAt is a helper struct field for gobuffalo.pop. | [optional] 
+**Dispatches** | Pointer to [**[]CourierMessageDispatch**](CourierMessageDispatch.md) |  | [optional] 
 **Id** | Pointer to **string** |  | [optional] 
 **Recipient** | Pointer to **string** |  | [optional] 
 **SendCount** | Pointer to **int64** |  | [optional] 
@@ -83,6 +84,31 @@ SetCreatedAt sets CreatedAt field to given value.
 `func (o *Message) HasCreatedAt() bool`
 
 HasCreatedAt returns a boolean if a field has been set.
+
+### GetDispatches
+
+`func (o *Message) GetDispatches() []CourierMessageDispatch`
+
+GetDispatches returns the Dispatches field if non-nil, zero value otherwise.
+
+### GetDispatchesOk
+
+`func (o *Message) GetDispatchesOk() (*[]CourierMessageDispatch, bool)`
+
+GetDispatchesOk returns a tuple with the Dispatches field if it's non-nil, zero value otherwise
+and a boolean to check if the value has been set.
+
+### SetDispatches
+
+`func (o *Message) SetDispatches(v []CourierMessageDispatch)`
+
+SetDispatches sets Dispatches field to given value.
+
+### HasDispatches
+
+`func (o *Message) HasDispatches() bool`
+
+HasDispatches returns a boolean if a field has been set.
 
 ### GetId
 

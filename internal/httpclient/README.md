@@ -147,6 +147,7 @@ Class | Method | HTTP request | Description
  - [AdminIdentityImportCredentials](docs/AdminIdentityImportCredentials.md)
  - [AdminUpdateIdentityBody](docs/AdminUpdateIdentityBody.md)
  - [AuthenticatorAssuranceLevel](docs/AuthenticatorAssuranceLevel.md)
+ - [CourierMessageDispatch](docs/CourierMessageDispatch.md)
  - [CourierMessageStatus](docs/CourierMessageStatus.md)
  - [CourierMessageType](docs/CourierMessageType.md)
  - [ErrorAuthenticatorAssuranceLevelNotSatisfied](docs/ErrorAuthenticatorAssuranceLevelNotSatisfied.md)

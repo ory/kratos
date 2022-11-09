@@ -3227,6 +3227,51 @@ components:
       - state
       - traits
       type: object
+    CourierMessageDispatch:
+      description: |-
+        CourierMessageDispatch represents an attempt of sending a courier message
+        It contains the status of the attempt (failed or successful) and the error if any occured
+      example:
+        updated_at: 2000-01-23T04:56:07.000+00:00
+        created_at: 2000-01-23T04:56:07.000+00:00
+        message_id: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
+        id: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
+        error: error
+        status: failed
+      properties:
+        created_at:
+          description: CreatedAt is a helper struct field for gobuffalo.pop.
+          format: date-time
+          type: string
+        error:
+          description: An optional error
+          type: string
+        id:
+          description: The ID of this message dispatch
+          format: uuid
+          type: string
+        message_id:
+          description: The ID of th message being dispatched
+          format: uuid
+          type: string
+        status:
+          description: |-
+            The status of this dispatch
+            Either "failed" or "success"
+            failed CourierMessageDispatchStatusFailed
+            success CourierMessageDispatchStatusSuccess
+          enum:
+          - failed
+          - success
+          type: string
+          x-go-enum-desc: |-
+            failed CourierMessageDispatchStatusFailed
+            success CourierMessageDispatchStatusSuccess
+        updated_at:
+          description: UpdatedAt is a helper struct field for gobuffalo.pop.
+          format: date-time
+          type: string
+      type: object
     Duration:
       description: |-
         A Duration represents the elapsed time between two instants
@@ -4328,6 +4373,19 @@ components:
       type: array
     message:
       example:
+        dispatches:
+        - updated_at: 2000-01-23T04:56:07.000+00:00
+          created_at: 2000-01-23T04:56:07.000+00:00
+          message_id: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
+          id: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
+          error: error
+          status: failed
+        - updated_at: 2000-01-23T04:56:07.000+00:00
+          created_at: 2000-01-23T04:56:07.000+00:00
+          message_id: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
+          id: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
+          error: error
+          status: failed
         updated_at: 2000-01-23T04:56:07.000+00:00
         subject: subject
         recipient: recipient
@@ -4343,6 +4401,10 @@ components:
           description: CreatedAt is a helper struct field for gobuffalo.pop.
           format: date-time
           type: string
+        dispatches:
+          items:
+            $ref: '#/components/schemas/CourierMessageDispatch'
+          type: array
         id:
           format: uuid
           type: string

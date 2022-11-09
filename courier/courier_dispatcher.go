@@ -6,8 +6,9 @@ package courier
 import (
 	"context"
 
-	"github.com/ory/x/uuidx"
 	"github.com/pkg/errors"
+
+	"github.com/ory/x/uuidx"
 )
 
 func (c *courier) DispatchMessage(ctx context.Context, msg Message) error {

@@ -19,6 +19,7 @@ docs/AdminCreateSelfServiceRecoveryLinkBody.md
 docs/AdminIdentityImportCredentials.md
 docs/AdminUpdateIdentityBody.md
 docs/AuthenticatorAssuranceLevel.md
+docs/CourierMessageDispatch.md
 docs/CourierMessageStatus.md
 docs/CourierMessageType.md
 docs/ErrorAuthenticatorAssuranceLevelNotSatisfied.md
@@ -121,6 +122,7 @@ model_admin_create_self_service_recovery_link_body.go
 model_admin_identity_import_credentials.go
 model_admin_update_identity_body.go
 model_authenticator_assurance_level.go
+model_courier_message_dispatch.go
 model_courier_message_status.go
 model_courier_message_type.go
 model_error_authenticator_assurance_level_not_satisfied.go
