@@ -160,6 +160,9 @@ jobs:
           cd test/e2e; npm ci
           npm i -g expo-cli
         name: Install node deps
+      - run: |
+          sudo apt-get install -y moreutils gettext
+        name: Install tools
       - name: Setup Go
         uses: actions/setup-go@v2
         with:
