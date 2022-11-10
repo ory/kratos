@@ -99,8 +99,7 @@ func (h *Handler) adminListCourierMessages(w http.ResponseWriter, r *http.Reques
 		return
 	}
 
-	q := r.URL.Query()
-	opts, err := keysetpagination.Parse(&q)
+	opts, err := keysetpagination.Parse(r.URL.Query())
 	if err != nil {
 		h.r.Writer().WriteError(w, r, herodot.ErrBadRequest.WithError("could not parse pagination parameters"))
 		return
