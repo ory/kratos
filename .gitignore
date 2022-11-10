@@ -55,3 +55,7 @@ test/e2e/hydra-login-consent/hydra-login-consent
 persistence/sql/migrations/sql/schema.sql
 
 test/e2e/hydra-kratos-login-consent/hydra-kratos-login-consent
+
+*.log
+test/e2e/proxy.json
+test/e2e/kratos.*.yml
