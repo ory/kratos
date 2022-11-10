@@ -61,7 +61,8 @@ func (p *Persister) ListMessages(ctx context.Context, filter courier.MessagesFil
 		return nil, 0, nil, sqlcon.HandleError(err)
 	}
 
-	return messages, int64(count), paginator, nil
+	messages, nextPage := keysetpagination.Result(messages, paginator)
+	return messages, int64(count), nextPage, nil
 }
 
 func (p *Persister) NextMessages(ctx context.Context, limit uint8) (messages []courier.Message, err error) {
