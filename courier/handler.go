@@ -4,12 +4,15 @@
 package courier
 
 import (
+	"fmt"
 	"net/http"
 
 	"github.com/julienschmidt/httprouter"
 
+	"github.com/ory/herodot"
 	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/x"
+	"github.com/ory/x/pagination/keysetpagination"
 	"github.com/ory/x/urlx"
 )
 
@@ -46,14 +49,20 @@ func (h *Handler) RegisterAdminRoutes(admin *x.RouterAdmin) {
 }
 
 // A list of messages.
-// swagger:model courierMessageList
-// nolint:deadcode,unused
-type courierMessageList []Message
+// swagger:model adminListCourierMessagesResponse
+type adminListCourierMessagesResponse struct {
+	// The pagination headers
+	// in: header
+	keysetpagination.ResponseHeaders
 
-// nolint:deadcode,unused
+	// The list of messages
+	// in: body
+	Messages []Message
+}
+
 // swagger:parameters adminListCourierMessages
 type MessagesFilter struct {
-	x.PaginationParams
+	keysetpagination.RequestParameters
 	// Status filters out messages based on status.
 	// If no value is provided, it doesn't take effect on filter.
 	//
@@ -80,7 +89,7 @@ type MessagesFilter struct {
 //	Schemes: http, https
 //
 //	Responses:
-//	  200: courierMessageList
+//	  200: adminListCourierMessagesResponse
 //	  400: jsonError
 //	  500: jsonError
 func (h *Handler) adminListCourierMessages(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
@@ -90,7 +99,14 @@ func (h *Handler) adminListCourierMessages(w http.ResponseWriter, r *http.Reques
 		return
 	}
 
-	l, tc, err := h.r.CourierPersister().ListMessages(r.Context(), filter)
+	q := r.URL.Query()
+	opts, err := keysetpagination.Parse(&q)
+	if err != nil {
+		h.r.Writer().WriteError(w, r, herodot.ErrBadRequest.WithError("could not parse pagination parameters"))
+		return
+	}
+
+	l, total, pagination, err := h.r.CourierPersister().ListMessages(r.Context(), filter, opts)
 	if err != nil {
 		h.r.Writer().WriteError(w, r, err)
 		return
@@ -102,8 +118,11 @@ func (h *Handler) adminListCourierMessages(w http.ResponseWriter, r *http.Reques
 		}
 	}
 
-	x.PaginationHeader(w, urlx.AppendPaths(h.r.Config().SelfAdminURL(r.Context()), AdminRouteMessages), int64(tc), filter.Page, filter.PerPage)
-	h.r.Writer().Write(w, r, l)
+	w.Header().Set("x-total-count", fmt.Sprint(total))
+	keysetpagination.Header(w, urlx.AppendPaths(h.r.Config().SelfAdminURL(r.Context())), pagination)
+	h.r.Writer().Write(w, r, adminListCourierMessagesResponse{
+		Messages: l,
+	})
 }
 
 func parseMessagesFilter(r *http.Request) (MessagesFilter, error) {
@@ -119,12 +138,7 @@ func parseMessagesFilter(r *http.Request) (MessagesFilter, error) {
 		status = &ms
 	}
 
-	page, itemsPerPage := x.ParsePagination(r)
 	return MessagesFilter{
-		PaginationParams: x.PaginationParams{
-			Page:    page,
-			PerPage: itemsPerPage,
-		},
 		Status:    status,
 		Recipient: r.URL.Query().Get("recipient"),
 	}, nil

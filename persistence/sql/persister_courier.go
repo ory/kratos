@@ -12,6 +12,7 @@ import (
 	"github.com/gofrs/uuid"
 	"github.com/pkg/errors"
 
+	"github.com/ory/x/pagination/keysetpagination"
 	"github.com/ory/x/sqlcon"
 
 	"github.com/ory/kratos/courier"
@@ -28,11 +29,16 @@ func (p *Persister) AddMessage(ctx context.Context, m *courier.Message) error {
 	return sqlcon.HandleError(p.GetConnection(ctx).Create(m)) // do not create eager to avoid identity injection.
 }
 
-func (p *Persister) ListMessages(ctx context.Context, filter courier.MessagesFilter) ([]courier.Message, int64, error) {
+func (p *Persister) ListMessages(ctx context.Context, filter courier.MessagesFilter, paginatorOpts []keysetpagination.Option) ([]courier.Message, int64, *keysetpagination.Paginator, error) {
 	ctx, span := p.r.Tracer(ctx).Tracer().Start(ctx, "persistence.sql.ListMessages")
 	defer span.End()
 
 	q := p.GetConnection(ctx).Where("nid=?", p.NetworkID(ctx))
+
+	paginatorOpts = append(paginatorOpts, keysetpagination.WithDefaultSize(paginationDefaultItemsSize))
+	paginatorOpts = append(paginatorOpts, keysetpagination.WithMaxSize(paginationMaxItemsSize))
+	paginatorOpts = append(paginatorOpts, keysetpagination.WithDefaultToken(uuid.Nil.String()))
+	paginator := keysetpagination.GetPaginator(paginatorOpts...)
 
 	if filter.Status != nil {
 		q = q.Where("status=?", *filter.Status)
@@ -43,19 +49,19 @@ func (p *Persister) ListMessages(ctx context.Context, filter courier.MessagesFil
 	}
 
 	messages := make([]courier.Message, 0)
-	if err := q.Paginate(filter.Page, filter.PerPage).
-		Order("created_at DESC").
+	if err := q.Scope(keysetpagination.Paginate[courier.Message](paginator)).
 		Eager("Dispatches").
+		Order("created_at DESC").
 		All(&messages); err != nil {
-		return nil, 0, sqlcon.HandleError(err)
+		return nil, 0, nil, sqlcon.HandleError(err)
 	}
 
 	count, err := q.Count(&courier.Message{})
 	if err != nil {
-		return nil, 0, sqlcon.HandleError(err)
+		return nil, 0, nil, sqlcon.HandleError(err)
 	}
 
-	return messages, int64(count), nil
+	return messages, int64(count), paginator, nil
 }
 
 func (p *Persister) NextMessages(ctx context.Context, limit uint8) (messages []courier.Message, err error) {
