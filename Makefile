@@ -129,11 +129,14 @@ quickstart-dev:
 	docker build -f .docker/Dockerfile-build -t oryd/kratos:latest .
 	docker-compose -f quickstart.yml -f quickstart-standalone.yml -f quickstart-latest.yml $(QUICKSTART_OPTIONS) up --build --force-recreate
 
+authors:  # updates the AUTHORS file
+	curl https://raw.githubusercontent.com/ory/ci/master/authors/authors.sh | env PRODUCT="Ory Kratos" bash
+
 # Formats the code
 .PHONY: format
 format: .bin/goimports .bin/ory node_modules
 	.bin/ory dev headers license --exclude=internal/httpclient
-	goimports -w -local github.com/ory .
+	.bin/goimports -w -local github.com/ory .
 	npm exec -- prettier --write 'test/e2e/**/*{.ts,.js}'
 	npm exec -- prettier --write '.github'
 
