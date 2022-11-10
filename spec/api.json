@@ -528,6 +528,28 @@
         },
         "type": "object"
       },
+      "adminListCourierMessagesResponse": {
+        "properties": {
+          "Messages": {
+            "description": "The list of messages\nin: body",
+            "items": {
+              "$ref": "#/components/schemas/message"
+            },
+            "type": "array"
+          },
+          "link": {
+            "description": "The Link HTTP Header\n\nThe `Link` header contains a comma-delimited list of links to the following pages:\n\nfirst: The first page of results.\nnext: The next page of results.\n\nPages are omitted if they do not exist. For example, if there is no next page, the `next` link is omitted. Examples:\n\n\u003c/admin/sessions?page_size=250\u0026page_token={last_item_uuid}; rel=\"first\",/admin/sessions?page_size=250\u0026page_token=\u003e; rel=\"next\"",
+            "type": "string"
+          },
+          "x-total-count": {
+            "description": "The X-Total-Count HTTP Header\n\nThe `X-Total-Count` header contains the total number of items in the collection.",
+            "format": "int64",
+            "type": "integer"
+          }
+        },
+        "title": "A list of messages.",
+        "type": "object"
+      },
       "authenticatorAssuranceLevel": {
         "description": "The authenticator assurance level can be one of \"aal1\", \"aal2\", or \"aal3\". A higher number means that it is harder\nfor an attacker to compromise the account.\n\nGenerally, \"aal1\" implies that one authentication factor was used while AAL2 implies that two factors (e.g.\npassword + TOTP) have been used.\n\nTo learn more about these levels please head over to: https://www.ory.sh/kratos/docs/concepts/credentials",
         "enum": [
@@ -538,13 +560,6 @@
         ],
         "title": "Authenticator Assurance Level (AAL)",
         "type": "string"
-      },
-      "courierMessageList": {
-        "items": {
-          "$ref": "#/components/schemas/message"
-        },
-        "title": "A list of messages.",
-        "type": "array"
       },
       "courierMessageStatus": {
         "description": "A Message's Status",
@@ -947,6 +962,22 @@
           "$ref": "#/components/schemas/jsonPatch"
         },
         "type": "array"
+      },
+      "keysetPaginationResponseHeaders": {
+        "description": "The `Link` HTTP header contains multiple links (`first`, `next`) formatted as:\n`\u003chttps://{project-slug}.projects.oryapis.com/admin/sessions?page_size=250\u0026page_token=\u003e; rel=\"first\"`\n\nFor details on pagination please head over to the [pagination documentation](https://www.ory.sh/docs/ecosystem/api-design#pagination).",
+        "properties": {
+          "link": {
+            "description": "The Link HTTP Header\n\nThe `Link` header contains a comma-delimited list of links to the following pages:\n\nfirst: The first page of results.\nnext: The next page of results.\n\nPages are omitted if they do not exist. For example, if there is no next page, the `next` link is omitted. Examples:\n\n\u003c/admin/sessions?page_size=250\u0026page_token={last_item_uuid}; rel=\"first\",/admin/sessions?page_size=250\u0026page_token=\u003e; rel=\"next\"",
+            "type": "string"
+          },
+          "x-total-count": {
+            "description": "The X-Total-Count HTTP Header\n\nThe `X-Total-Count` header contains the total number of items in the collection.",
+            "format": "int64",
+            "type": "integer"
+          }
+        },
+        "title": "Pagination Response Header",
+        "type": "object"
       },
       "message": {
         "properties": {
@@ -2907,9 +2938,9 @@
         "operationId": "adminListCourierMessages",
         "parameters": [
           {
-            "description": "Items per Page\n\nThis is the number of items per page.",
+            "description": "Items per Page\n\nThis is the number of items per page to return.\nFor details on pagination please head over to the [pagination documentation](https://www.ory.sh/docs/ecosystem/api-design#pagination).",
             "in": "query",
-            "name": "per_page",
+            "name": "page_size",
             "schema": {
               "default": 250,
               "format": "int64",
@@ -2919,14 +2950,11 @@
             }
           },
           {
-            "description": "Pagination Page\n\nThis value is currently an integer, but it is not sequential. The value is not the page number, but a\nreference. The next page can be any number and some numbers might return an empty list.\n\nFor example, page 2 might not follow after page 1. And even if page 3 and 5 exist, but page 4 might not exist.",
+            "description": "Next Page Token\n\nThe next page token.\nFor details on pagination please head over to the [pagination documentation](https://www.ory.sh/docs/ecosystem/api-design#pagination).",
             "in": "query",
-            "name": "page",
+            "name": "page_token",
             "schema": {
-              "default": 1,
-              "format": "int64",
-              "minimum": 1,
-              "type": "integer"
+              "type": "string"
             }
           },
           {
@@ -2951,11 +2979,11 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/courierMessageList"
+                  "$ref": "#/components/schemas/adminListCourierMessagesResponse"
                 }
               }
             },
-            "description": "courierMessageList"
+            "description": "adminListCourierMessagesResponse"
           },
           "400": {
             "content": {

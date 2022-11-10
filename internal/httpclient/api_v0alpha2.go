@@ -168,9 +168,9 @@ type V0alpha2Api interface {
 
 	/*
 	 * AdminListCourierMessagesExecute executes the request
-	 * @return []Message
+	 * @return AdminListCourierMessagesResponse
 	 */
-	AdminListCourierMessagesExecute(r V0alpha2ApiApiAdminListCourierMessagesRequest) ([]Message, *http.Response, error)
+	AdminListCourierMessagesExecute(r V0alpha2ApiApiAdminListCourierMessagesRequest) (*AdminListCourierMessagesResponse, *http.Response, error)
 
 	/*
 			 * AdminListIdentities List Identities
@@ -2374,18 +2374,18 @@ func (a *V0alpha2ApiService) AdminGetSessionExecute(r V0alpha2ApiApiAdminGetSess
 type V0alpha2ApiApiAdminListCourierMessagesRequest struct {
 	ctx        context.Context
 	ApiService V0alpha2Api
-	perPage    *int64
-	page       *int64
+	pageSize   *int64
+	pageToken  *string
 	status     *CourierMessageStatus
 	recipient  *string
 }
 
-func (r V0alpha2ApiApiAdminListCourierMessagesRequest) PerPage(perPage int64) V0alpha2ApiApiAdminListCourierMessagesRequest {
-	r.perPage = &perPage
+func (r V0alpha2ApiApiAdminListCourierMessagesRequest) PageSize(pageSize int64) V0alpha2ApiApiAdminListCourierMessagesRequest {
+	r.pageSize = &pageSize
 	return r
 }
-func (r V0alpha2ApiApiAdminListCourierMessagesRequest) Page(page int64) V0alpha2ApiApiAdminListCourierMessagesRequest {
-	r.page = &page
+func (r V0alpha2ApiApiAdminListCourierMessagesRequest) PageToken(pageToken string) V0alpha2ApiApiAdminListCourierMessagesRequest {
+	r.pageToken = &pageToken
 	return r
 }
 func (r V0alpha2ApiApiAdminListCourierMessagesRequest) Status(status CourierMessageStatus) V0alpha2ApiApiAdminListCourierMessagesRequest {
@@ -2397,7 +2397,7 @@ func (r V0alpha2ApiApiAdminListCourierMessagesRequest) Recipient(recipient strin
 	return r
 }
 
-func (r V0alpha2ApiApiAdminListCourierMessagesRequest) Execute() ([]Message, *http.Response, error) {
+func (r V0alpha2ApiApiAdminListCourierMessagesRequest) Execute() (*AdminListCourierMessagesResponse, *http.Response, error) {
 	return r.ApiService.AdminListCourierMessagesExecute(r)
 }
 
@@ -2416,16 +2416,16 @@ func (a *V0alpha2ApiService) AdminListCourierMessages(ctx context.Context) V0alp
 
 /*
  * Execute executes the request
- * @return []Message
+ * @return AdminListCourierMessagesResponse
  */
-func (a *V0alpha2ApiService) AdminListCourierMessagesExecute(r V0alpha2ApiApiAdminListCourierMessagesRequest) ([]Message, *http.Response, error) {
+func (a *V0alpha2ApiService) AdminListCourierMessagesExecute(r V0alpha2ApiApiAdminListCourierMessagesRequest) (*AdminListCourierMessagesResponse, *http.Response, error) {
 	var (
 		localVarHTTPMethod   = http.MethodGet
 		localVarPostBody     interface{}
 		localVarFormFileName string
 		localVarFileName     string
 		localVarFileBytes    []byte
-		localVarReturnValue  []Message
+		localVarReturnValue  *AdminListCourierMessagesResponse
 	)
 
 	localBasePath, err := a.client.cfg.ServerURLWithContext(r.ctx, "V0alpha2ApiService.AdminListCourierMessages")
@@ -2439,11 +2439,11 @@ func (a *V0alpha2ApiService) AdminListCourierMessagesExecute(r V0alpha2ApiApiAdm
 	localVarQueryParams := url.Values{}
 	localVarFormParams := url.Values{}
 
-	if r.perPage != nil {
-		localVarQueryParams.Add("per_page", parameterToString(*r.perPage, ""))
+	if r.pageSize != nil {
+		localVarQueryParams.Add("page_size", parameterToString(*r.pageSize, ""))
 	}
-	if r.page != nil {
-		localVarQueryParams.Add("page", parameterToString(*r.page, ""))
+	if r.pageToken != nil {
+		localVarQueryParams.Add("page_token", parameterToString(*r.pageToken, ""))
 	}
 	if r.status != nil {
 		localVarQueryParams.Add("status", parameterToString(*r.status, ""))

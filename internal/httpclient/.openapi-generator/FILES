@@ -17,6 +17,7 @@ docs/AdminCreateIdentityImportCredentialsPasswordConfig.md
 docs/AdminCreateSelfServiceRecoveryCodeBody.md
 docs/AdminCreateSelfServiceRecoveryLinkBody.md
 docs/AdminIdentityImportCredentials.md
+docs/AdminListCourierMessagesResponse.md
 docs/AdminUpdateIdentityBody.md
 docs/AuthenticatorAssuranceLevel.md
 docs/CourierMessageDispatch.md
@@ -40,6 +41,7 @@ docs/InlineResponse2001.md
 docs/InlineResponse503.md
 docs/JsonError.md
 docs/JsonPatch.md
+docs/KeysetPaginationResponseHeaders.md
 docs/LoginRequest.md
 docs/Message.md
 docs/MetadataApi.md
@@ -120,6 +122,7 @@ model_admin_create_identity_import_credentials_password_config.go
 model_admin_create_self_service_recovery_code_body.go
 model_admin_create_self_service_recovery_link_body.go
 model_admin_identity_import_credentials.go
+model_admin_list_courier_messages_response.go
 model_admin_update_identity_body.go
 model_authenticator_assurance_level.go
 model_courier_message_dispatch.go
@@ -142,6 +145,7 @@ model_inline_response_200_1.go
 model_inline_response_503.go
 model_json_error.go
 model_json_patch.go
+model_keyset_pagination_response_headers.go
 model_login_request.go
 model_message.go
 model_needs_privileged_session_error.go

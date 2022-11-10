@@ -7,8 +7,9 @@ import (
 	"context"
 
 	"github.com/gofrs/uuid"
-	"github.com/ory/x/pagination/keysetpagination"
 	"github.com/pkg/errors"
+
+	"github.com/ory/x/pagination/keysetpagination"
 )
 
 var ErrQueueEmpty = errors.New("queue is empty")
