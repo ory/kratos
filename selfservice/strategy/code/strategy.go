@@ -67,7 +67,7 @@ type (
 
 		RecoveryCodePersistenceProvider
 		VerificationCodePersistenceProvider
-		CodeSenderProvider
+		SenderProvider
 
 		schema.IdentityTraitsProvider
 	}

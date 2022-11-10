@@ -25,8 +25,6 @@ func TestVerifyCodeInvalid(t *testing.T) {
 	})
 
 	t.Run("test=with remote resources", func(t *testing.T) {
-		t.Run("test=with remote resources", func(t *testing.T) {
-			testhelpers.TestRemoteTemplates(t, "../courier/builtin/templates/verification_code/invalid", courier.TypeVerificationCodeInvalid)
-		})
+		testhelpers.TestRemoteTemplates(t, "../courier/builtin/templates/verification_code/invalid", courier.TypeVerificationCodeInvalid)
 	})
 }

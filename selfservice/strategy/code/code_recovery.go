@@ -24,8 +24,8 @@ const (
 
 var (
 	ErrCodeNotFound          = herodot.ErrNotFound.WithReasonf("unknown code")
-	ErrCodeAlreadyUsed       = herodot.ErrBadRequest.WithReasonf("The code was already used. Please try again.")
-	ErrCodeSubmittedTooOften = herodot.ErrBadRequest.WithReasonf("The code was submitted too often. Please try again.")
+	ErrCodeAlreadyUsed       = herodot.ErrBadRequest.WithReasonf("The code was already used. Please request another code.")
+	ErrCodeSubmittedTooOften = herodot.ErrBadRequest.WithReasonf("The code was submitted too often. Please request another code.")
 )
 
 type RecoveryCode struct {

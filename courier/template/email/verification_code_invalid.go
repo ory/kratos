@@ -31,17 +31,41 @@ func (t *VerificationCodeInvalid) EmailRecipient() (string, error) {
 }
 
 func (t *VerificationCodeInvalid) EmailSubject(ctx context.Context) (string, error) {
-	subject, err := template.LoadText(ctx, t.d, os.DirFS(t.d.CourierConfig().CourierTemplatesRoot(ctx)), "verification_code/invalid/email.subject.gotmpl", "verification_code/invalid/email.subject*", t.m, t.d.CourierConfig().CourierTemplatesVerificationCodeInvalid(ctx).Subject)
+	subject, err := template.LoadText(
+		ctx,
+		t.d,
+		os.DirFS(t.d.CourierConfig().CourierTemplatesRoot(ctx)),
+		"verification_code/invalid/email.subject.gotmpl",
+		"verification_code/invalid/email.subject*",
+		t.m,
+		t.d.CourierConfig().CourierTemplatesVerificationCodeInvalid(ctx).Subject,
+	)
 
 	return strings.TrimSpace(subject), err
 }
 
 func (t *VerificationCodeInvalid) EmailBody(ctx context.Context) (string, error) {
-	return template.LoadHTML(ctx, t.d, os.DirFS(t.d.CourierConfig().CourierTemplatesRoot(ctx)), "verification_code/invalid/email.body.gotmpl", "verification_code/invalid/email.body*", t.m, t.d.CourierConfig().CourierTemplatesVerificationCodeInvalid(ctx).Body.HTML)
+	return template.LoadHTML(
+		ctx,
+		t.d,
+		os.DirFS(t.d.CourierConfig().CourierTemplatesRoot(ctx)),
+		"verification_code/invalid/email.body.gotmpl",
+		"verification_code/invalid/email.body*",
+		t.m,
+		t.d.CourierConfig().CourierTemplatesVerificationCodeInvalid(ctx).Body.HTML,
+	)
 }
 
 func (t *VerificationCodeInvalid) EmailBodyPlaintext(ctx context.Context) (string, error) {
-	return template.LoadText(ctx, t.d, os.DirFS(t.d.CourierConfig().CourierTemplatesRoot(ctx)), "verification_code/invalid/email.body.plaintext.gotmpl", "verification_code/invalid/email.body.plaintext*", t.m, t.d.CourierConfig().CourierTemplatesVerificationCodeInvalid(ctx).Body.PlainText)
+	return template.LoadText(
+		ctx,
+		t.d,
+		os.DirFS(t.d.CourierConfig().CourierTemplatesRoot(ctx)),
+		"verification_code/invalid/email.body.plaintext.gotmpl",
+		"verification_code/invalid/email.body.plaintext*",
+		t.m,
+		t.d.CourierConfig().CourierTemplatesVerificationCodeInvalid(ctx).Body.PlainText,
+	)
 }
 
 func (t *VerificationCodeInvalid) MarshalJSON() ([]byte, error) {

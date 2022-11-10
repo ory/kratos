@@ -149,14 +149,26 @@ func (p *Persister) UseVerificationCode(ctx context.Context, fID uuid.UUID, code
 	if err := sqlcon.HandleError(p.Transaction(ctx, func(ctx context.Context, tx *pop.Connection) (err error) {
 
 		/* #nosec G201 TableName is static */
-		if err := sqlcon.HandleError(tx.RawQuery(fmt.Sprintf("UPDATE %s SET submit_count = submit_count + 1 WHERE id = ? AND nid = ?", flowTableName), fID, nid).Exec()); err != nil {
+		if err := sqlcon.HandleError(
+			tx.RawQuery(
+				fmt.Sprintf("UPDATE %s SET submit_count = submit_count + 1 WHERE id = ? AND nid = ?", flowTableName),
+				fID,
+				nid,
+			).Exec(),
+		); err != nil {
 			return err
 		}
 
 		var submitCount int
 		// Because MySQL does not support "RETURNING" clauses, but we need the updated `submit_count` later on.
 		/* #nosec G201 TableName is static */
-		if err := sqlcon.HandleError(tx.RawQuery(fmt.Sprintf("SELECT submit_count FROM %s WHERE id = ? AND nid = ?", flowTableName), fID, nid).First(&submitCount)); err != nil {
+		if err := sqlcon.HandleError(
+			tx.RawQuery(
+				fmt.Sprintf("SELECT submit_count FROM %s WHERE id = ? AND nid = ?", flowTableName),
+				fID,
+				nid).
+				First(&submitCount),
+		); err != nil {
 			if errors.Is(err, sqlcon.ErrNoRows) {
 				// Return no error, as that would roll back the transaction
 				return nil
@@ -173,7 +185,10 @@ func (p *Persister) UseVerificationCode(ctx context.Context, fID uuid.UUID, code
 		}
 
 		var verificationCodes []code.VerificationCode
-		if err = sqlcon.HandleError(tx.Where("nid = ? AND selfservice_verification_flow_id = ?", nid, fID).All(&verificationCodes)); err != nil {
+		if err = sqlcon.HandleError(
+			tx.Where("nid = ? AND selfservice_verification_flow_id = ?", nid, fID).
+				All(&verificationCodes),
+		); err != nil {
 			if errors.Is(err, sqlcon.ErrNoRows) {
 				// Return no error, as that would roll back the transaction
 				return nil
@@ -210,8 +225,12 @@ func (p *Persister) UseVerificationCode(ctx context.Context, fID uuid.UUID, code
 
 		/* #nosec G201 TableName is static */
 		return tx.
-			RawQuery(fmt.Sprintf("UPDATE %s SET used_at = ? WHERE id = ? AND nid = ?", verificationCode.TableName(ctx)), time.Now().UTC(), verificationCode.ID, nid).
-			Exec()
+			RawQuery(
+				fmt.Sprintf("UPDATE %s SET used_at = ? WHERE id = ? AND nid = ?", verificationCode.TableName(ctx)),
+				time.Now().UTC(),
+				verificationCode.ID,
+				nid,
+			).Exec()
 	})); err != nil {
 		return nil, err
 	}
@@ -259,5 +278,10 @@ func (p *Persister) DeleteVerificationCodesOfFlow(ctx context.Context, fID uuid.
 	defer span.End()
 
 	/* #nosec G201 TableName is static */
-	return p.GetConnection(ctx).RawQuery(fmt.Sprintf("DELETE FROM %s WHERE selfservice_verification_flow_id = ? AND nid = ?", new(code.VerificationCode).TableName(ctx)), fID, p.NetworkID(ctx)).Exec()
+	return p.GetConnection(ctx).
+		RawQuery(
+			fmt.Sprintf("DELETE FROM %s WHERE selfservice_verification_flow_id = ? AND nid = ?", new(code.VerificationCode).TableName(ctx)),
+			fID,
+			p.NetworkID(ctx),
+		).Exec()
 }

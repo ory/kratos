@@ -32,7 +32,7 @@ func TestVerificationExecutor(t *testing.T) {
 	newServer := func(t *testing.T, i *identity.Identity, ft flow.Type) *httptest.Server {
 		router := httprouter.New()
 		router.GET("/verification/pre", func(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
-			strategy, err := reg.GetActiveVerificationStrategy(context.Background())
+			strategy, err := reg.GetActiveVerificationStrategy(r.Context())
 			require.NoError(t, err)
 			a, err := verification.NewFlow(conf, time.Minute, x.FakeCSRFToken, r, strategy, ft)
 			require.NoError(t, err)
@@ -42,7 +42,7 @@ func TestVerificationExecutor(t *testing.T) {
 		})
 
 		router.GET("/verification/post", func(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
-			strategy, err := reg.GetActiveVerificationStrategy(context.Background())
+			strategy, err := reg.GetActiveVerificationStrategy(r.Context())
 			require.NoError(t, err)
 			a, err := verification.NewFlow(conf, time.Minute, x.FakeCSRFToken, r, strategy, ft)
 			require.NoError(t, err)

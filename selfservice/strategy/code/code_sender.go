@@ -45,25 +45,25 @@ type (
 
 		HTTPClient(ctx context.Context, opts ...httpx.ResilientOptions) *retryablehttp.Client
 	}
-	CodeSenderProvider interface {
-		CodeSender() *CodeSender
+	SenderProvider interface {
+		CodeSender() *Sender
 	}
 
-	CodeSender struct {
+	Sender struct {
 		deps senderDependencies
 	}
 )
 
 var ErrUnknownAddress = herodot.ErrNotFound.WithReason("recovery requested for unknown address")
 
-func NewSender(deps senderDependencies) *CodeSender {
-	return &CodeSender{deps: deps}
+func NewSender(deps senderDependencies) *Sender {
+	return &Sender{deps: deps}
 }
 
 // SendRecoveryCode sends a recovery code to the specified address.
 // If the address does not exist in the store, an email is still being sent to prevent account
 // enumeration attacks. In that case, this function returns the ErrUnknownAddress error.
-func (s *CodeSender) SendRecoveryCode(ctx context.Context, r *http.Request, f *recovery.Flow, via identity.VerifiableAddressType, to string) error {
+func (s *Sender) SendRecoveryCode(ctx context.Context, r *http.Request, f *recovery.Flow, via identity.VerifiableAddressType, to string) error {
 	s.deps.Logger().
 		WithField("via", via).
 		WithSensitiveField("address", to).
@@ -102,7 +102,7 @@ func (s *CodeSender) SendRecoveryCode(ctx context.Context, r *http.Request, f *r
 	return s.SendRecoveryCodeTo(ctx, i, rawCode, code)
 }
 
-func (s *CodeSender) SendRecoveryCodeTo(ctx context.Context, i *identity.Identity, codeString string, code *RecoveryCode) error {
+func (s *Sender) SendRecoveryCodeTo(ctx context.Context, i *identity.Identity, codeString string, code *RecoveryCode) error {
 	s.deps.Audit().
 		WithField("via", code.RecoveryAddress.Via).
 		WithField("identity_id", code.RecoveryAddress.IdentityID).
@@ -128,7 +128,7 @@ func (s *CodeSender) SendRecoveryCodeTo(ctx context.Context, i *identity.Identit
 // SendVerificationCode sends a verification link to the specified address. If the address does not exist in the store, an email is
 // still being sent to prevent account enumeration attacks. In that case, this function returns the ErrUnknownAddress
 // error.
-func (s *CodeSender) SendVerificationCode(ctx context.Context, f *verification.Flow, via identity.VerifiableAddressType, to string) error {
+func (s *Sender) SendVerificationCode(ctx context.Context, f *verification.Flow, via identity.VerifiableAddressType, to string) error {
 	s.deps.Logger().
 		WithField("via", via).
 		WithSensitiveField("address", to).
@@ -172,7 +172,7 @@ func (s *CodeSender) SendVerificationCode(ctx context.Context, f *verification.F
 	return nil
 }
 
-func (s *CodeSender) constructVerificationLink(ctx context.Context, fID uuid.UUID, codeStr string) string {
+func (s *Sender) constructVerificationLink(ctx context.Context, fID uuid.UUID, codeStr string) string {
 	return urlx.CopyWithQuery(
 		urlx.AppendPaths(s.deps.Config().SelfServiceLinkMethodBaseURL(ctx), verification.RouteSubmitFlow),
 		url.Values{
@@ -181,7 +181,7 @@ func (s *CodeSender) constructVerificationLink(ctx context.Context, fID uuid.UUI
 		}).String()
 }
 
-func (s *CodeSender) SendVerificationCodeTo(ctx context.Context, f *verification.Flow, i *identity.Identity, codeString string, code *VerificationCode) error {
+func (s *Sender) SendVerificationCodeTo(ctx context.Context, f *verification.Flow, i *identity.Identity, codeString string, code *VerificationCode) error {
 	s.deps.Audit().
 		WithField("via", code.VerifiableAddress.Via).
 		WithField("identity_id", i.ID).
@@ -208,7 +208,7 @@ func (s *CodeSender) SendVerificationCodeTo(ctx context.Context, f *verification
 	return s.deps.PrivilegedIdentityPool().UpdateVerifiableAddress(ctx, code.VerifiableAddress)
 }
 
-func (s *CodeSender) send(ctx context.Context, via string, t courier.EmailTemplate) error {
+func (s *Sender) send(ctx context.Context, via string, t courier.EmailTemplate) error {
 	switch f := stringsx.SwitchExact(via); {
 	case f.AddCase(identity.AddressTypeEmail):
 		_, err := s.deps.Courier(ctx).QueueEmail(ctx, t)
