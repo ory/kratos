@@ -1,6 +1,6 @@
 version: v1.11.7
 
-dsn: memory
+dsn: sqlite://test/e2e/hydra.sqlite
 
 log:
   level: trace
@@ -11,3 +11,7 @@ urls:
     public: http://localhost:4444/
   login: http://localhost:4446/login
   consent: http://localhost:4446/consent
+
+secrets:
+  system:
+    - "1234567890123456789012345678901"
