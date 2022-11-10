@@ -19,3 +19,39 @@ goroutine_dump/
 inflight_trace_dump/
 
 .vscode
+
+e2e/*.log
+e2e/kratos.*.yml
+e2e/proxy.json
+e2e/cypress/downloads
+
+# Compiled Object files, Static and Dynamic libs (Shared Objects)
+internal/httpclient/*.o
+internal/httpclient/*.a
+internal/httpclient/*.so
+
+# Folders
+internal/httpclient/_obj
+internal/httpclient/_test
+
+# Architecture specific extensions/prefixes
+internal/httpclient/*.[568vq]
+internal/httpclient/[568vq].out
+
+internal/httpclient/*.cgo1.go
+internal/httpclient/*.cgo2.c
+internal/httpclient/_cgo_defun.c
+internal/httpclient/_cgo_gotypes.go
+internal/httpclient/_cgo_export.*
+
+internal/httpclient/_testmain.go
+
+internal/httpclient/*.exe
+internal/httpclient/*.test
+internal/httpclient/*.prof
+
+test/e2e/hydra-login-consent/hydra-login-consent
+
+persistence/sql/migrations/sql/schema.sql
+
+test/e2e/hydra-kratos-login-consent/hydra-kratos-login-consent
