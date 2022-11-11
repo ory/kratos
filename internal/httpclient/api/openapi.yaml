@@ -4363,6 +4363,8 @@ components:
           - recovery_code_valid
           - verification_invalid
           - verification_valid
+          - verification_code_invalid
+          - verification_code_valid
           - otp
           - stub
           type: string
@@ -4373,6 +4375,8 @@ components:
             recovery_code_valid TypeRecoveryCodeValid
             verification_invalid TypeVerificationInvalid
             verification_valid TypeVerificationValid
+            verification_code_invalid TypeVerificationCodeInvalid
+            verification_code_valid TypeVerificationCodeValid
             otp TypeOTP
             stub TypeTestStub
         type:
@@ -7045,6 +7049,32 @@ components:
       items:
         $ref: '#/components/schemas/uiText'
       type: array
+    updateVerificationFlowWithCodeMethodBody:
+      properties:
+        code:
+          description: The verification code
+          type: string
+        csrf_token:
+          description: Sending the anti-csrf token is only required for browser login
+            flows.
+          type: string
+        email:
+          description: |-
+            Email to Verify
+
+            Needs to be set when initiating the flow. If the email is a registered
+            verification email, a verification link will be sent. If the email is not known,
+            a email with details on what happened will be sent instead.
+
+            format: email
+          type: string
+        flow:
+          description: The id of the flow
+          type: string
+        method:
+          description: Method is the recovery method
+          type: string
+      type: object
     verifiableIdentityAddress:
       description: VerifiableAddress is an identity's verifiable address
       example:

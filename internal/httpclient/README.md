@@ -231,6 +231,7 @@ Class | Method | HTTP request | Description
  - [UiNodeScriptAttributes](docs/UiNodeScriptAttributes.md)
  - [UiNodeTextAttributes](docs/UiNodeTextAttributes.md)
  - [UiText](docs/UiText.md)
+ - [UpdateVerificationFlowWithCodeMethodBody](docs/UpdateVerificationFlowWithCodeMethodBody.md)
  - [VerifiableIdentityAddress](docs/VerifiableIdentityAddress.md)
  - [Version](docs/Version.md)
 

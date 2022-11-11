@@ -3690,10 +3690,12 @@
             "recovery_code_valid",
             "verification_invalid",
             "verification_valid",
+            "verification_code_invalid",
+            "verification_code_valid",
             "otp",
             "stub"
           ],
-          "x-go-enum-desc": "recovery_invalid TypeRecoveryInvalid\nrecovery_valid TypeRecoveryValid\nrecovery_code_invalid TypeRecoveryCodeInvalid\nrecovery_code_valid TypeRecoveryCodeValid\nverification_invalid TypeVerificationInvalid\nverification_valid TypeVerificationValid\notp TypeOTP\nstub TypeTestStub"
+          "x-go-enum-desc": "recovery_invalid TypeRecoveryInvalid\nrecovery_valid TypeRecoveryValid\nrecovery_code_invalid TypeRecoveryCodeInvalid\nrecovery_code_valid TypeRecoveryCodeValid\nverification_invalid TypeVerificationInvalid\nverification_valid TypeVerificationValid\nverification_code_invalid TypeVerificationCodeInvalid\nverification_code_valid TypeVerificationCodeValid\notp TypeOTP\nstub TypeTestStub"
         },
         "type": {
           "$ref": "#/definitions/courierMessageType"
@@ -5394,6 +5396,31 @@
       "type": "array",
       "items": {
         "$ref": "#/definitions/uiText"
+      }
+    },
+    "updateVerificationFlowWithCodeMethodBody": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "description": "The verification code",
+          "type": "string"
+        },
+        "csrf_token": {
+          "description": "Sending the anti-csrf token is only required for browser login flows.",
+          "type": "string"
+        },
+        "email": {
+          "description": "Email to Verify\n\nNeeds to be set when initiating the flow. If the email is a registered\nverification email, a verification link will be sent. If the email is not known,\na email with details on what happened will be sent instead.\n\nformat: email",
+          "type": "string"
+        },
+        "flow": {
+          "description": "The id of the flow",
+          "type": "string"
+        },
+        "method": {
+          "description": "Method is the recovery method",
+          "type": "string"
+        }
       }
     },
     "verifiableIdentityAddress": {

@@ -105,6 +105,7 @@ docs/UiNodeMeta.md
 docs/UiNodeScriptAttributes.md
 docs/UiNodeTextAttributes.md
 docs/UiText.md
+docs/UpdateVerificationFlowWithCodeMethodBody.md
 docs/V0alpha2Api.md
 docs/VerifiableIdentityAddress.md
 docs/Version.md
@@ -206,6 +207,7 @@ model_ui_node_meta.go
 model_ui_node_script_attributes.go
 model_ui_node_text_attributes.go
 model_ui_text.go
+model_update_verification_flow_with_code_method_body.go
 model_verifiable_identity_address.go
 model_version.go
 response.go
