@@ -22,7 +22,7 @@ export function getDefaultAuthorizeURL(client: oAuth2Client) {
     client.auth_endpoint,
     "",
     client.id,
-    "0",
+    undefined,
     nonce,
     "https://httpbin.org/anything",
     "code",
@@ -36,7 +36,7 @@ export function getAuthorizeURL(
   auth_endpoint: string,
   audience: string,
   client_id: string,
-  max_age: string,
+  max_age: string | undefined,
   nonce: string,
   redirect_uri: string,
   response_type:
@@ -53,7 +53,9 @@ export function getAuthorizeURL(
   const r = new URL(auth_endpoint)
   r.searchParams.append("audience", audience)
   r.searchParams.append("client_id", client_id)
-  r.searchParams.append("max_age", max_age)
+  if (max_age !== undefined) {
+    r.searchParams.append("max_age", max_age)
+  }
   r.searchParams.append("nonce", nonce)
   r.searchParams.append("prompt", "")
   r.searchParams.append("redirect_uri", redirect_uri)
