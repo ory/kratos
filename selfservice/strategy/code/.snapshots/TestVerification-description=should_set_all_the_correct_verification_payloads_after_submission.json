@@ -4,7 +4,7 @@
     "group": "code",
     "attributes": {
       "name": "code",
-      "type": "number",
+      "type": "text",
       "required": true,
       "disabled": false,
       "node_type": "input"
