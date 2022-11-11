@@ -5,7 +5,7 @@
 
 **Table of Contents**
 
-- [ (2022-11-10)](#2022-11-10)
+- [ (2022-11-11)](#2022-11-11)
   - [Breaking Changes](#breaking-changes)
     - [Bug Fixes](#bug-fixes)
     - [Code Refactoring](#code-refactoring)
@@ -280,7 +280,7 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# [](https://github.com/ory/kratos/compare/v0.10.1...v) (2022-11-10)
+# [](https://github.com/ory/kratos/compare/v0.10.1...v) (2022-11-11)
 
 ## Breaking Changes
 
@@ -515,6 +515,14 @@ SDK Method `getJsonSchema` was renamed to `getIdentitySchema`.
 
 - Hot reloading
   ([b0d8f38](https://github.com/ory/kratos/commit/b0d8f3853886228a64e82437643a82b3970d6ff7))
+- Make embedding easier with internal sdk
+  ([e9aa21f](https://github.com/ory/kratos/commit/e9aa21f02b4bb7b09e268197334beb9c5772d13d))
+- SDK v1 naming
+  ([11f9d30](https://github.com/ory/kratos/commit/11f9d30a5d245b4dfc922a766853eaac2a20a8f5)):
+
+  Find the full
+  [upgrade guide in our documentation](https://www.ory.sh/docs/guides/upgrade/sdk).
+
 - **sdk:** Rename `getJsonSchema` to `getIdentitySchema`
   ([#2606](https://github.com/ory/kratos/issues/2606))
   ([8dc2ecf](https://github.com/ory/kratos/commit/8dc2ecf4919c9a14ef0bd089677de66ab3cfed92))
@@ -649,6 +657,8 @@ SDK Method `getJsonSchema` was renamed to `getIdentitySchema`.
   ([6e8579b](https://github.com/ory/kratos/commit/6e8579b835d54d5ebb5371297ea60f24e915882d))
 - Improve state generation logic
   ([546ee3d](https://github.com/ory/kratos/commit/546ee3dc900874bc0614923b10697388c4e7676b))
+- Ingest hydra bugfix
+  ([3c11216](https://github.com/ory/kratos/commit/3c112165e553161696cf746befb9e03c2e6e07fb))
 - OAuth2 integration ([#2804](https://github.com/ory/kratos/issues/2804))
   ([7c6eb2a](https://github.com/ory/kratos/commit/7c6eb2a5128c6bc76ac7306edafaa54c4893ea82)):
 
@@ -707,6 +717,8 @@ SDK Method `getJsonSchema` was renamed to `getIdentitySchema`.
 - Update for the Ory Network
   ([#2814](https://github.com/ory/kratos/issues/2814))
   ([3e09e58](https://github.com/ory/kratos/commit/3e09e58a695cf5d9d57b9f773e0f50b1fd794915))
+- Upgrade hydra to v2
+  ([fdb108f](https://github.com/ory/kratos/commit/fdb108fe2542569202bfb39ef55e1a7e8c5b5ebf))
 
 ### Reverts
 
@@ -721,6 +733,8 @@ SDK Method `getJsonSchema` was renamed to `getIdentitySchema`.
   ([37018c0](https://github.com/ory/kratos/commit/37018c0161d0affe88c9f2574d043f337579e4a9))
 - **e2e:** Fix flaky assertions
   ([21a8487](https://github.com/ory/kratos/commit/21a8487f984168abbc7279c590c66822414c718e))
+- **e2e:** Fix issuer config
+  ([32454d2](https://github.com/ory/kratos/commit/32454d2fbd169a7839fc3d02786376ef4c7c986d))
 - **e2e:** Fix webauthn regression
   ([26001e7](https://github.com/ory/kratos/commit/26001e7544b60ad0004153773a21c1d04abf9987))
 - **e2e:** Improve webauthn test reliability
@@ -729,12 +743,18 @@ SDK Method `getJsonSchema` was renamed to `getIdentitySchema`.
   ([317fab0](https://github.com/ory/kratos/commit/317fab0fe76a2762a77b3d2f8a75735598cb1c0e))
 - **e2e:** Resolve flaky hydra configuration
   ([d8c82da](https://github.com/ory/kratos/commit/d8c82dabad4f04874647c48ecbf0eda91c7c90fa))
+- **e2e:** Resolve max-age and issuer regression
+  ([0ee4cf0](https://github.com/ory/kratos/commit/0ee4cf058cbda2bef52b3fa830f3db411f442197))
+- **e2e:** Resolve max-age regression
+  ([904f75d](https://github.com/ory/kratos/commit/904f75d254e9513aa3edad4fa3f9ead4d80e46df))
 - **e2e:** Use correct dir
   ([907dbe3](https://github.com/ory/kratos/commit/907dbe3f605d5be5038ddc06029082b2df0914e2))
 - Fix broken assertions
   ([e5f1311](https://github.com/ory/kratos/commit/e5f131138243ad5806c7927dd5a642d029cfad6c))
 - Fix oidc test regression
   ([6c14b68](https://github.com/ory/kratos/commit/6c14b682d0984175495051308985281d72c0988e))
+- Improve e2e tooling
+  ([390ccaa](https://github.com/ory/kratos/commit/390ccaac18023979ff36bc7ee2df6c0d4a90d8c8))
 - Parallelize and speed up config tests
   ([#2611](https://github.com/ory/kratos/issues/2611))
   ([d8dea01](https://github.com/ory/kratos/commit/d8dea0138b09d4dff3c30aa14e0e99e423b355fe))
