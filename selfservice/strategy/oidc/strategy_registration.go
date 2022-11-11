@@ -55,11 +55,10 @@ func (s *Strategy) PopulateRegistrationMethod(r *http.Request, f *registration.F
 	return s.populateMethod(r, f.UI, text.NewInfoRegistrationWith)
 }
 
-// SubmitSelfServiceRegistrationFlowWithOidcMethodBody is used to decode the registration form payload
-// when using the oidc method.
+// Update Registration Flow with OpenID Connect Method
 //
-// swagger:model submitSelfServiceRegistrationFlowWithOidcMethodBody
-type SubmitSelfServiceRegistrationFlowWithOidcMethodBody struct {
+// swagger:model updateRegistrationFlowWithOidcMethod
+type UpdateRegistrationFlowWithOidcMethod struct {
 	// The provider to register with
 	//
 	// required: true
@@ -109,7 +108,7 @@ func (s *Strategy) newLinkDecoder(p interface{}, r *http.Request) error {
 }
 
 func (s *Strategy) Register(w http.ResponseWriter, r *http.Request, f *registration.Flow, i *identity.Identity) (err error) {
-	var p SubmitSelfServiceRegistrationFlowWithOidcMethodBody
+	var p UpdateRegistrationFlowWithOidcMethod
 	if err := s.newLinkDecoder(&p, r); err != nil {
 		return s.handleError(w, r, f, "", nil, err)
 	}

@@ -42,8 +42,10 @@ func (s *Strategy) SettingsStrategyID() string {
 	return identity.CredentialsTypeTOTP.String()
 }
 
-// swagger:model submitSelfServiceSettingsFlowWithTotpMethodBody
-type submitSelfServiceSettingsFlowWithTotpMethodBody struct {
+// Update Settings Flow with TOTP Method
+//
+// swagger:model updateSettingsFlowWithTotpMethod
+type updateSettingsFlowWithTotpMethod struct {
 	// ValidationTOTP must contain a valid TOTP based on the
 	ValidationTOTP string `json:"totp_code"`
 
@@ -68,16 +70,16 @@ type submitSelfServiceSettingsFlowWithTotpMethodBody struct {
 	Flow string `json:"flow"`
 }
 
-func (p *submitSelfServiceSettingsFlowWithTotpMethodBody) GetFlowID() uuid.UUID {
+func (p *updateSettingsFlowWithTotpMethod) GetFlowID() uuid.UUID {
 	return x.ParseUUID(p.Flow)
 }
 
-func (p *submitSelfServiceSettingsFlowWithTotpMethodBody) SetFlowID(rid uuid.UUID) {
+func (p *updateSettingsFlowWithTotpMethod) SetFlowID(rid uuid.UUID) {
 	p.Flow = rid.String()
 }
 
 func (s *Strategy) Settings(w http.ResponseWriter, r *http.Request, f *settings.Flow, ss *session.Session) (*settings.UpdateContext, error) {
-	var p submitSelfServiceSettingsFlowWithTotpMethodBody
+	var p updateSettingsFlowWithTotpMethod
 	ctxUpdate, err := settings.PrepareUpdate(s.d, w, r, f, ss, settings.ContinuityKey(s.SettingsStrategyID()), &p)
 	if errors.Is(err, settings.ErrContinuePreviousAction) {
 		return ctxUpdate, s.continueSettingsFlow(w, r, ctxUpdate, &p)
@@ -123,7 +125,7 @@ func (s *Strategy) decodeSettingsFlow(r *http.Request, dest interface{}) error {
 
 func (s *Strategy) continueSettingsFlow(
 	w http.ResponseWriter, r *http.Request,
-	ctxUpdate *settings.UpdateContext, p *submitSelfServiceSettingsFlowWithTotpMethodBody,
+	ctxUpdate *settings.UpdateContext, p *updateSettingsFlowWithTotpMethod,
 ) error {
 	if err := flow.MethodEnabledAndAllowed(r.Context(), s.SettingsStrategyID(), p.Method, s.d); err != nil {
 		return err
@@ -161,7 +163,7 @@ func (s *Strategy) continueSettingsFlow(
 	return nil
 }
 
-func (s *Strategy) continueSettingsFlowAddTOTP(w http.ResponseWriter, r *http.Request, ctxUpdate *settings.UpdateContext, p *submitSelfServiceSettingsFlowWithTotpMethodBody) (*identity.Identity, error) {
+func (s *Strategy) continueSettingsFlowAddTOTP(w http.ResponseWriter, r *http.Request, ctxUpdate *settings.UpdateContext, p *updateSettingsFlowWithTotpMethod) (*identity.Identity, error) {
 	keyURL := gjson.GetBytes(ctxUpdate.Flow.InternalContext, flow.PrefixInternalContextKey(s.ID(), InternalContextKeyURL)).String()
 	if len(keyURL) == 0 {
 		return nil, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("Could not find they TOTP key in the internal context. This is a code bug and should be reported to https://github.com/ory/kratos/."))
@@ -220,7 +222,7 @@ func (s *Strategy) continueSettingsFlowAddTOTP(w http.ResponseWriter, r *http.Re
 	return i, nil
 }
 
-func (s *Strategy) continueSettingsFlowRemoveTOTP(w http.ResponseWriter, r *http.Request, ctxUpdate *settings.UpdateContext, p *submitSelfServiceSettingsFlowWithTotpMethodBody) (*identity.Identity, error) {
+func (s *Strategy) continueSettingsFlowRemoveTOTP(w http.ResponseWriter, r *http.Request, ctxUpdate *settings.UpdateContext, p *updateSettingsFlowWithTotpMethod) (*identity.Identity, error) {
 	if !p.UnlinkTOTP {
 		return ctxUpdate.Session.Identity, nil
 	}
@@ -288,7 +290,7 @@ func (s *Strategy) PopulateSettingsMethod(r *http.Request, id *identity.Identity
 	return nil
 }
 
-func (s *Strategy) handleSettingsError(w http.ResponseWriter, r *http.Request, ctxUpdate *settings.UpdateContext, p *submitSelfServiceSettingsFlowWithTotpMethodBody, err error) error {
+func (s *Strategy) handleSettingsError(w http.ResponseWriter, r *http.Request, ctxUpdate *settings.UpdateContext, p *updateSettingsFlowWithTotpMethod, err error) error {
 	// Do not pause flow if the flow type is an API flow as we can't save cookies in those flows.
 	if e := new(settings.FlowNeedsReAuth); errors.As(err, &e) && ctxUpdate.Flow != nil && ctxUpdate.Flow.Type == flow.TypeBrowser {
 		if err := s.d.ContinuityManager().Pause(r.Context(), w, r, settings.ContinuityKey(s.SettingsStrategyID()), settings.ContinuityOptions(p, ctxUpdate.GetSessionIdentity())...); err != nil {

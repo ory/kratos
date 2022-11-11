@@ -14,7 +14,7 @@ import (
 	"github.com/ory/kratos/x"
 )
 
-func (h *Handler) importCredentials(ctx context.Context, i *Identity, creds *AdminIdentityImportCredentials) error {
+func (h *Handler) importCredentials(ctx context.Context, i *Identity, creds *IdentityWithCredentials) error {
 	if creds == nil {
 		return nil
 	}

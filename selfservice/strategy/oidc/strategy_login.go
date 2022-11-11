@@ -51,11 +51,10 @@ func (s *Strategy) PopulateLoginMethod(r *http.Request, requestedAAL identity.Au
 	return s.populateMethod(r, l.UI, text.NewInfoLoginWith)
 }
 
-// SubmitSelfServiceLoginFlowWithOidcMethodBody is used to decode the login form payload
-// when using the oidc method.
+// Update Login Flow with OpenID Connect Method
 //
-// swagger:model submitSelfServiceLoginFlowWithOidcMethodBody
-type SubmitSelfServiceLoginFlowWithOidcMethodBody struct {
+// swagger:model updateLoginFlowWithOidcMethod
+type UpdateLoginFlowWithOidcMethod struct {
 	// The provider to register with
 	//
 	// required: true
@@ -142,7 +141,7 @@ func (s *Strategy) Login(w http.ResponseWriter, r *http.Request, f *login.Flow, 
 		return nil, err
 	}
 
-	var p SubmitSelfServiceLoginFlowWithOidcMethodBody
+	var p UpdateLoginFlowWithOidcMethod
 	if err := s.newLinkDecoder(&p, r); err != nil {
 		return nil, s.handleError(w, r, f, "", nil, errors.WithStack(herodot.ErrBadRequest.WithDebug(err.Error()).WithReasonf("Unable to parse HTTP form request: %s", err.Error())))
 	}

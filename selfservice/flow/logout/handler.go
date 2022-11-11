@@ -56,9 +56,9 @@ func NewHandler(d handlerDependencies) *Handler {
 func (h *Handler) RegisterPublicRoutes(router *x.RouterPublic) {
 	h.d.CSRFHandler().IgnorePath(RouteAPIFlow)
 
-	router.GET(RouteInitBrowserFlow, h.createSelfServiceLogoutUrlForBrowsers)
-	router.DELETE(RouteAPIFlow, h.submitSelfServiceLogoutFlowWithoutBrowser)
-	router.GET(RouteSubmitFlow, h.submitLogout)
+	router.GET(RouteInitBrowserFlow, h.createBrowserLogoutFlow)
+	router.DELETE(RouteAPIFlow, h.performNativeLogout)
+	router.GET(RouteSubmitFlow, h.updateLogoutFlow)
 }
 
 func (h *Handler) RegisterAdminRoutes(admin *x.RouterAdmin) {
@@ -67,8 +67,10 @@ func (h *Handler) RegisterAdminRoutes(admin *x.RouterAdmin) {
 	admin.GET(RouteSubmitFlow, x.RedirectToPublicRoute(h.d))
 }
 
-// swagger:model selfServiceLogoutUrl
-type selfServiceLogoutUrl struct {
+// Logout Flow
+//
+// swagger:model logoutFlow
+type logoutFlow struct {
 	// LogoutURL can be opened in a browser to sign the user out.
 	//
 	// format: uri
@@ -81,9 +83,11 @@ type selfServiceLogoutUrl struct {
 	LogoutToken string `json:"logout_token"`
 }
 
-// swagger:parameters createSelfServiceLogoutFlowUrlForBrowsers
+// Create Browser Logout Flow Parameters
+//
+// swagger:parameters createBrowserLogoutFlow
 // nolint:deadcode,unused
-type createSelfServiceLogoutFlowUrlForBrowsers struct {
+type createBrowserLogoutFlow struct {
 	// HTTP Cookies
 	//
 	// If you call this endpoint from a backend, please include the
@@ -94,7 +98,7 @@ type createSelfServiceLogoutFlowUrlForBrowsers struct {
 	Cookie string `json:"cookie"`
 }
 
-// swagger:route GET /self-service/logout/browser v0alpha2 createSelfServiceLogoutFlowUrlForBrowsers
+// swagger:route GET /self-service/logout/browser frontend createBrowserLogoutFlow
 //
 // # Create a Logout URL for Browsers
 //
@@ -115,34 +119,38 @@ type createSelfServiceLogoutFlowUrlForBrowsers struct {
 //	Schemes: http, https
 //
 //	Responses:
-//	  200: selfServiceLogoutUrl
-//	  401: jsonError
-//	  500: jsonError
-func (h *Handler) createSelfServiceLogoutUrlForBrowsers(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+//	  200: logoutFlow
+//	  401: errorGeneric
+//	  500: errorGeneric
+func (h *Handler) createBrowserLogoutFlow(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	sess, err := h.d.SessionManager().FetchFromRequest(r.Context(), r)
 	if err != nil {
 		h.d.Writer().WriteError(w, r, err)
 		return
 	}
 
-	h.d.Writer().Write(w, r, &selfServiceLogoutUrl{
+	h.d.Writer().Write(w, r, &logoutFlow{
 		LogoutToken: sess.LogoutToken,
 		LogoutURL: urlx.CopyWithQuery(urlx.AppendPaths(h.d.Config().SelfPublicURL(r.Context()), RouteSubmitFlow),
 			url.Values{"token": {sess.LogoutToken}}).String(),
 	})
 }
 
-// swagger:parameters submitSelfServiceLogoutFlowWithoutBrowser
+// Perform Native Logout Parameters
+//
+// swagger:parameters performNativeLogout
 // nolint:deadcode,unused
-type submitSelfServiceLogoutFlowWithoutBrowser struct {
+type performNativeLogout struct {
 	// in: body
 	// required: true
-	Body submitSelfServiceLogoutFlowWithoutBrowserBody
+	Body performNativeLogoutBody
 }
 
+// Perform Native Logout Request Body
+//
 // nolint:deadcode,unused
-// swagger:model submitSelfServiceLogoutFlowWithoutBrowserBody
-type submitSelfServiceLogoutFlowWithoutBrowserBody struct {
+// swagger:model performNativeLogoutBody
+type performNativeLogoutBody struct {
 	// The Session Token
 	//
 	// Invalidate this session token.
@@ -151,9 +159,9 @@ type submitSelfServiceLogoutFlowWithoutBrowserBody struct {
 	SessionToken string `json:"session_token"`
 }
 
-// swagger:route DELETE /self-service/logout/api v0alpha2 submitSelfServiceLogoutFlowWithoutBrowser
+// swagger:route DELETE /self-service/logout/api frontend performNativeLogout
 //
-// Perform Logout for APIs, Services, Apps, ...
+// # Perform Logout for Native Apps
 //
 // Use this endpoint to log out an identity using an Ory Session Token. If the Ory Session Token was successfully
 // revoked, the server returns a 204 No Content response. A 204 No Content response is also sent when
@@ -174,10 +182,10 @@ type submitSelfServiceLogoutFlowWithoutBrowserBody struct {
 //
 //	Responses:
 //	  204: emptyResponse
-//	  400: jsonError
-//	  500: jsonError
-func (h *Handler) submitSelfServiceLogoutFlowWithoutBrowser(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
-	var p submitSelfServiceLogoutFlowWithoutBrowserBody
+//	  400: errorGeneric
+//	  default: errorGeneric
+func (h *Handler) performNativeLogout(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+	var p performNativeLogoutBody
 	if err := h.dx.Decode(r, &p,
 		decoderx.HTTPJSONDecoder(),
 		decoderx.HTTPDecoderAllowedMethods("DELETE")); err != nil {
@@ -198,9 +206,11 @@ func (h *Handler) submitSelfServiceLogoutFlowWithoutBrowser(w http.ResponseWrite
 	w.WriteHeader(http.StatusNoContent)
 }
 
+// Update Logout Flow Parameters
+//
 // nolint:deadcode,unused
-// swagger:parameters submitSelfServiceLogoutFlow
-type submitSelfServiceLogoutFlow struct {
+// swagger:parameters updateLogoutFlow
+type updateLogoutFlow struct {
 	// A Valid Logout Token
 	//
 	// If you do not have a logout token because you only have a session cookie,
@@ -215,9 +225,9 @@ type submitSelfServiceLogoutFlow struct {
 	ReturnTo string `json:"return_to"`
 }
 
-// swagger:route GET /self-service/logout v0alpha2 submitSelfServiceLogoutFlow
+// swagger:route GET /self-service/logout frontend updateLogoutFlow
 //
-// # Complete Self-Service Logout
+// # Update Logout Flow
 //
 // This endpoint logs out an identity in a self-service manner.
 //
@@ -241,8 +251,8 @@ type submitSelfServiceLogoutFlow struct {
 //	Responses:
 //	  303: emptyResponse
 //	  204: emptyResponse
-//	  500: jsonError
-func (h *Handler) submitLogout(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+//	  default: errorGeneric
+func (h *Handler) updateLogoutFlow(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	expected := r.URL.Query().Get("token")
 	if len(expected) == 0 {
 		h.d.SelfServiceErrorManager().Forward(r.Context(), w, r, errors.WithStack(herodot.ErrBadRequest.WithReason("Please include a token in the URL query.")))

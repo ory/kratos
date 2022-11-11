@@ -70,7 +70,7 @@ func (h *Handler) RegisterPublicRoutes(public *x.RouterPublic) {
 	h.d.CSRFHandler().IgnorePath(RouteSubmitFlow)
 
 	redirect := session.RedirectOnAuthenticated(h.d)
-	public.GET(RouteInitBrowserFlow, h.d.SessionHandler().IsNotAuthenticated(h.initBrowserFlow, func(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	public.GET(RouteInitBrowserFlow, h.d.SessionHandler().IsNotAuthenticated(h.createBrowserRecoveryFlow, func(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 		if x.IsJSONRequest(r) {
 			h.d.Writer().WriteError(w, r, errors.WithStack(ErrAlreadyLoggedIn))
 		} else {
@@ -78,13 +78,13 @@ func (h *Handler) RegisterPublicRoutes(public *x.RouterPublic) {
 		}
 	}))
 
-	public.GET(RouteInitAPIFlow, h.d.SessionHandler().IsNotAuthenticated(h.initAPIFlow,
+	public.GET(RouteInitAPIFlow, h.d.SessionHandler().IsNotAuthenticated(h.createNativeRecoveryFlow,
 		session.RespondWithJSONErrorOnAuthenticated(h.d.Writer(), ErrAlreadyLoggedIn)))
 
-	public.GET(RouteGetFlow, h.fetch)
+	public.GET(RouteGetFlow, h.getRecoveryFlow)
 
-	public.GET(RouteSubmitFlow, h.submitFlow)
-	public.POST(RouteSubmitFlow, h.submitFlow)
+	public.GET(RouteSubmitFlow, h.updateRecoveryFlow)
+	public.POST(RouteSubmitFlow, h.updateRecoveryFlow)
 }
 
 func (h *Handler) RegisterAdminRoutes(admin *x.RouterAdmin) {
@@ -95,9 +95,9 @@ func (h *Handler) RegisterAdminRoutes(admin *x.RouterAdmin) {
 	admin.POST(RouteSubmitFlow, x.RedirectToPublicRoute(h.d))
 }
 
-// swagger:route GET /self-service/recovery/api v0alpha2 initializeSelfServiceRecoveryFlowWithoutBrowser
+// swagger:route GET /self-service/recovery/api frontend createNativeRecoveryFlow
 //
-// Initialize Recovery Flow for APIs, Services, Apps, ...
+// # Create Recovery Flow for Native Apps
 //
 // This endpoint initiates a recovery flow for API clients such as mobile devices, smart TVs, and so on.
 //
@@ -116,10 +116,10 @@ func (h *Handler) RegisterAdminRoutes(admin *x.RouterAdmin) {
 //	Schemes: http, https
 //
 //	Responses:
-//	  200: selfServiceRecoveryFlow
-//	  500: jsonError
-//	  400: jsonError
-func (h *Handler) initAPIFlow(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+//	  200: recoveryFlow
+//	  400: errorGeneric
+//	  default: errorGeneric
+func (h *Handler) createNativeRecoveryFlow(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 	activeRecoveryStrategy, err := h.d.GetActiveRecoveryStrategy(r.Context())
 	if !h.d.Config().SelfServiceFlowRecoveryEnabled(r.Context()) || err != nil {
 		h.d.SelfServiceErrorManager().Forward(r.Context(), w, r, errors.WithStack(herodot.ErrBadRequest.WithReasonf("Recovery is not allowed because it was disabled.")))
@@ -145,18 +145,20 @@ func (h *Handler) initAPIFlow(w http.ResponseWriter, r *http.Request, _ httprout
 	h.d.Writer().Write(w, r, req)
 }
 
+// Create Browser Recovery Flow Parameters
+//
 // nolint:deadcode,unused
-// swagger:parameters initializeSelfServiceRecoveryFlowForBrowsers
-type initializeSelfServiceRecoveryFlowWithoutBrowser struct {
+// swagger:parameters createBrowserRecoveryFlow
+type createBrowserRecoveryFlow struct {
 	// The URL to return the browser to after the flow was completed.
 	//
 	// in: query
 	ReturnTo string `json:"return_to"`
 }
 
-// swagger:route GET /self-service/recovery/browser v0alpha2 initializeSelfServiceRecoveryFlowForBrowsers
+// swagger:route GET /self-service/recovery/browser frontend createBrowserRecoveryFlow
 //
-// # Initialize Recovery Flow for Browsers
+// # Create Recovery Flow for Browsers
 //
 // This endpoint initializes a browser-based account recovery flow. Once initialized, the browser will be redirected to
 // `selfservice.flows.recovery.ui_url` with the flow ID set as the query parameter `?flow=`. If a valid user session
@@ -172,11 +174,11 @@ type initializeSelfServiceRecoveryFlowWithoutBrowser struct {
 //	Schemes: http, https
 //
 //	Responses:
-//	  200: selfServiceRecoveryFlow
+//	  200: recoveryFlow
 //	  303: emptyResponse
-//	  400: jsonError
-//	  500: jsonError
-func (h *Handler) initBrowserFlow(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+//	  400: errorGeneric
+//	  default: errorGeneric
+func (h *Handler) createBrowserRecoveryFlow(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 	activeRecoveryStrategy, err := h.d.GetActiveRecoveryStrategy(r.Context())
 
 	if !h.d.Config().SelfServiceFlowRecoveryEnabled(r.Context()) || err != nil {
@@ -204,9 +206,11 @@ func (h *Handler) initBrowserFlow(w http.ResponseWriter, r *http.Request, _ http
 	x.AcceptToRedirectOrJSON(w, r, h.d.Writer(), f, redirTo)
 }
 
+// Get Recovery Flow Parameters
+//
 // nolint:deadcode,unused
-// swagger:parameters getSelfServiceRecoveryFlow
-type getSelfServiceRecoveryFlow struct {
+// swagger:parameters getRecoveryFlow
+type getRecoveryFlow struct {
 	// The Flow ID
 	//
 	// The value for this parameter comes from `request` URL Query parameter sent to your
@@ -226,7 +230,7 @@ type getSelfServiceRecoveryFlow struct {
 	Cookies string `json:"Cookie"`
 }
 
-// swagger:route GET /self-service/recovery/flows v0alpha2 getSelfServiceRecoveryFlow
+// swagger:route GET /self-service/recovery/flows frontend getRecoveryFlow
 //
 // # Get Recovery Flow
 //
@@ -241,7 +245,7 @@ type getSelfServiceRecoveryFlow struct {
 //	```js
 //	// pseudo-code example
 //	router.get('/recovery', async function (req, res) {
-//	  const flow = await client.getSelfServiceRecoveryFlow(req.header('Cookie'), req.query['flow'])
+//	  const flow = await client.getRecoveryFlow(req.header('Cookie'), req.query['flow'])
 //
 //	  res.render('recovery', flow)
 //	})
@@ -255,11 +259,11 @@ type getSelfServiceRecoveryFlow struct {
 //	Schemes: http, https
 //
 //	Responses:
-//	  200: selfServiceRecoveryFlow
-//	  404: jsonError
-//	  410: jsonError
-//	  500: jsonError
-func (h *Handler) fetch(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+//	  200: recoveryFlow
+//	  404: errorGeneric
+//	  410: errorGeneric
+//	  default: errorGeneric
+func (h *Handler) getRecoveryFlow(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 	if !h.d.Config().SelfServiceFlowRecoveryEnabled(r.Context()) {
 		h.d.SelfServiceErrorManager().Forward(r.Context(), w, r, errors.WithStack(herodot.ErrBadRequest.WithReasonf("Recovery is not allowed because it was disabled.")))
 		return
@@ -299,9 +303,11 @@ func (h *Handler) fetch(w http.ResponseWriter, r *http.Request, _ httprouter.Par
 	h.d.Writer().Write(w, r, f)
 }
 
+// Update Recovery Flow Parameters
+//
 // nolint:deadcode,unused
-// swagger:parameters submitSelfServiceRecoveryFlow
-type submitSelfServiceRecoveryFlow struct {
+// swagger:parameters updateRecoveryFlow
+type updateRecoveryFlow struct {
 	// The Recovery Flow ID
 	//
 	// The value for this parameter comes from `flow` URL Query parameter sent to your
@@ -323,7 +329,7 @@ type submitSelfServiceRecoveryFlow struct {
 
 	// in: body
 	// required: true
-	Body submitSelfServiceRecoveryFlowBody
+	Body updateRecoveryFlowBody
 
 	// HTTP Cookies
 	//
@@ -335,11 +341,13 @@ type submitSelfServiceRecoveryFlow struct {
 	Cookies string `json:"Cookie"`
 }
 
-// swagger:model submitSelfServiceRecoveryFlowBody
+// Update Recovery Flow Request Body
+//
+// swagger:model updateRecoveryFlowBody
 // nolint:deadcode,unused
-type submitSelfServiceRecoveryFlowBody struct{}
+type updateRecoveryFlowBody struct{}
 
-// swagger:route POST /self-service/recovery v0alpha2 submitSelfServiceRecoveryFlow
+// swagger:route POST /self-service/recovery frontend updateRecoveryFlow
 //
 // # Complete Recovery Flow
 //
@@ -370,13 +378,13 @@ type submitSelfServiceRecoveryFlowBody struct{}
 //		Schemes: http, https
 //
 //	    Responses:
-//	      200: selfServiceRecoveryFlow
+//	      200: recoveryFlow
 //	      303: emptyResponse
-//	      400: selfServiceRecoveryFlow
-//	      410: jsonError
-//	      422: selfServiceBrowserLocationChangeRequiredError
-//	      500: jsonError
-func (h *Handler) submitFlow(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+//	      400: recoveryFlow
+//	      410: errorGeneric
+//	      422: errorBrowserLocationChangeRequired
+//	      default: errorGeneric
+func (h *Handler) updateRecoveryFlow(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	rid, err := flow.GetFlowID(r)
 	if err != nil {
 		h.d.RecoveryFlowErrorHandler().WriteFlowError(w, r, nil, node.DefaultGroup, err)

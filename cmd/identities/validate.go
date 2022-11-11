@@ -56,7 +56,7 @@ Identities can be supplied via STD_IN or JSON files containing a single or an ar
 
 			for src, i := range is {
 				err = ValidateIdentity(cmd, src, i, func(ctx context.Context, id string) (map[string]interface{}, *http.Response, error) {
-					return c.V0alpha2Api.GetIdentitySchema(ctx, id).Execute()
+					return c.IdentityApi.GetIdentitySchema(ctx, id).Execute()
 				})
 				if err != nil {
 					return err
@@ -73,7 +73,7 @@ Identities can be supplied via STD_IN or JSON files containing a single or an ar
 
 var schemas = make(map[string]*jsonschema.Schema)
 
-const createIdentityPath = "api.json#/components/schemas/adminCreateIdentityBody"
+const createIdentityPath = "api.json#/components/schemas/createIdentityBody"
 
 type SchemaGetter = func(ctx context.Context, id string) (map[string]interface{}, *http.Response, error)
 

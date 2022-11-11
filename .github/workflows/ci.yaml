@@ -66,9 +66,9 @@ jobs:
           docker create --name hydra -p 4445:4445 -p 4444:4444 \
             -e DSN=memory \
             -e URLS_SELF_ISSUER=http://localhost:4444/ \
-            -e URLS_LOGIN=http://127.0.0.1:4499/login \
-            -e URLS_CONSENT=http://127.0.0.1:4499/consent \
-            oryd/hydra:v1.9.2-sqlite serve all --dangerous-force-http
+            -e URLS_LOGIN=http://localhost:4499/login \
+            -e URLS_CONSENT=http://localhost:4499/consent \
+            oryd/hydra:v2.0.2 serve all --dev
           docker start hydra
           docker logs -f hydra &> /tmp/hydra.log &
         name: Start Hydra
@@ -160,6 +160,9 @@ jobs:
           cd test/e2e; npm ci
           npm i -g expo-cli
         name: Install node deps
+      - run: |
+          sudo apt-get install -y moreutils gettext
+        name: Install tools
       - name: Setup Go
         uses: actions/setup-go@v2
         with:

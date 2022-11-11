@@ -12,6 +12,8 @@ import (
 	"os"
 	"strings"
 
+	"github.com/ory/x/pagination/migrationpagination"
+
 	"github.com/ory/x/urlx"
 
 	"github.com/ory/kratos/driver/config"
@@ -68,6 +70,8 @@ func (h *Handler) RegisterAdminRoutes(admin *x.RouterAdmin) {
 // nolint:deadcode,unused
 type identitySchema json.RawMessage
 
+// Get Identity JSON Schema Response
+//
 // nolint:deadcode,unused
 // swagger:parameters getIdentitySchema
 type getIdentitySchema struct {
@@ -78,9 +82,11 @@ type getIdentitySchema struct {
 	ID string `json:"id"`
 }
 
-// swagger:route GET /schemas/{id} v0alpha2 getIdentitySchema
+// swagger:route GET /schemas/{id} identity getIdentitySchema
 //
-// Get a JSON Schema
+// # Get Identity JSON Schema
+//
+// Return a specific identity schema.
 //
 //	Produces:
 //	- application/json
@@ -89,8 +95,8 @@ type getIdentitySchema struct {
 //
 //	Responses:
 //	  200: identitySchema
-//	  404: jsonError
-//	  500: jsonError
+//	  404: errorGeneric
+//	  default: errorGeneric
 func (h *Handler) getIdentitySchema(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	ss, err := h.r.IdentityTraitsSchemas(r.Context())
 	if err != nil {
@@ -127,11 +133,13 @@ func (h *Handler) getIdentitySchema(w http.ResponseWriter, r *http.Request, ps h
 	}
 }
 
-// Raw identity Schema list
+// List of Identity JSON Schemas
 //
 // swagger:model identitySchemas
 type IdentitySchemas []identitySchemaContainer
 
+// An Identity JSON Schema Container
+//
 // swagger:model identitySchemaContainer
 type identitySchemaContainer struct {
 	// The ID of the Identity JSON Schema
@@ -140,15 +148,30 @@ type identitySchemaContainer struct {
 	Schema identitySchema `json:"schema"`
 }
 
+// List Identity JSON Schemas Response
+//
 // nolint:deadcode,unused
 // swagger:parameters listIdentitySchemas
 type listIdentitySchemas struct {
-	x.PaginationParams
+	migrationpagination.RequestParameters
 }
 
-// swagger:route GET /schemas v0alpha2 listIdentitySchemas
+// List Identity JSON Schemas Response
 //
-// Get all Identity Schemas
+// swagger:response identitySchemas
+// nolint:deadcode,unused
+type identitySchemasResponse struct {
+	migrationpagination.ResponseHeaderAnnotation
+
+	// in: body
+	Body IdentitySchemas
+}
+
+// swagger:route GET /schemas identity listIdentitySchemas
+//
+// # Get all Identity Schemas
+//
+// Returns a list of all identity schemas currently in use.
 //
 //	Produces:
 //	- application/json
@@ -157,7 +180,7 @@ type listIdentitySchemas struct {
 //
 //	Responses:
 //	  200: identitySchemas
-//	  500: jsonError
+//	  default: errorGeneric
 func (h *Handler) getAll(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	page, itemsPerPage := x.ParsePagination(r)
 

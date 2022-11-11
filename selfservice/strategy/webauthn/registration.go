@@ -26,8 +26,10 @@ import (
 	"github.com/ory/x/urlx"
 )
 
-// swagger:model submitSelfServiceRegistrationFlowWithWebAuthnMethodBody
-type submitSelfServiceRegistrationFlowWithWebAuthnMethodBody struct {
+// Update Registration Flow with WebAuthn Method
+//
+// swagger:model updateRegistrationFlowWithWebAuthnMethod
+type updateRegistrationFlowWithWebAuthnMethod struct {
 	// Register a WebAuthn Security Key
 	//
 	// It is expected that the JSON returned by the WebAuthn registration process
@@ -63,7 +65,7 @@ type submitSelfServiceRegistrationFlowWithWebAuthnMethodBody struct {
 func (s *Strategy) RegisterRegistrationRoutes(_ *x.RouterPublic) {
 }
 
-func (s *Strategy) handleRegistrationError(_ http.ResponseWriter, r *http.Request, f *registration.Flow, p *submitSelfServiceRegistrationFlowWithWebAuthnMethodBody, err error) error {
+func (s *Strategy) handleRegistrationError(_ http.ResponseWriter, r *http.Request, f *registration.Flow, p *updateRegistrationFlowWithWebAuthnMethod, err error) error {
 	if f != nil {
 		if p != nil {
 			for _, n := range container.NewFromJSON("", node.DefaultGroup, p.Traits, "traits").Nodes {
@@ -81,7 +83,7 @@ func (s *Strategy) handleRegistrationError(_ http.ResponseWriter, r *http.Reques
 	return err
 }
 
-func (s *Strategy) decode(p *submitSelfServiceRegistrationFlowWithWebAuthnMethodBody, r *http.Request) error {
+func (s *Strategy) decode(p *updateRegistrationFlowWithWebAuthnMethod, r *http.Request) error {
 	return registration.DecodeBody(p, r, s.hd, s.d.Config(), registrationSchema)
 }
 
@@ -90,7 +92,7 @@ func (s *Strategy) Register(w http.ResponseWriter, r *http.Request, f *registrat
 		return flow.ErrStrategyNotResponsible
 	}
 
-	var p submitSelfServiceRegistrationFlowWithWebAuthnMethodBody
+	var p updateRegistrationFlowWithWebAuthnMethod
 	if err := s.decode(&p, r); err != nil {
 		return s.handleRegistrationError(w, r, f, &p, err)
 	}

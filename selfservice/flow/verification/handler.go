@@ -67,12 +67,12 @@ func (h *Handler) RegisterPublicRoutes(public *x.RouterPublic) {
 	h.d.CSRFHandler().IgnorePath(RouteInitAPIFlow)
 	h.d.CSRFHandler().IgnorePath(RouteSubmitFlow)
 
-	public.GET(RouteInitBrowserFlow, h.initBrowserFlow)
-	public.GET(RouteInitAPIFlow, h.initAPIFlow)
-	public.GET(RouteGetFlow, h.fetch)
+	public.GET(RouteInitBrowserFlow, h.createBrowserVerificationFlow)
+	public.GET(RouteInitAPIFlow, h.createNativeVerificationFlow)
+	public.GET(RouteGetFlow, h.getVerificationFlow)
 
-	public.POST(RouteSubmitFlow, h.submitFlow)
-	public.GET(RouteSubmitFlow, h.submitFlow)
+	public.POST(RouteSubmitFlow, h.updateVerificationFlow)
+	public.GET(RouteSubmitFlow, h.updateVerificationFlow)
 }
 
 func (h *Handler) RegisterAdminRoutes(admin *x.RouterAdmin) {
@@ -117,9 +117,9 @@ func (h *Handler) NewVerificationFlow(w http.ResponseWriter, r *http.Request, ft
 	return f, nil
 }
 
-// swagger:route GET /self-service/verification/api v0alpha2 initializeSelfServiceVerificationFlowWithoutBrowser
+// swagger:route GET /self-service/verification/api frontend createNativeVerificationFlow
 //
-// Initialize Verification Flow for APIs, Services, Apps, ...
+// # Create Verification Flow for Native Apps
 //
 // This endpoint initiates a verification flow for API clients such as mobile devices, smart TVs, and so on.
 //
@@ -131,15 +131,15 @@ func (h *Handler) NewVerificationFlow(w http.ResponseWriter, r *http.Request, ft
 //
 // This endpoint MUST ONLY be used in scenarios such as native mobile apps (React Native, Objective C, Swift, Java, ...).
 //
-// More information can be found at [Ory Kratos Email and Phone Verification Documentation](https://www.ory.sh/docs/kratos/self-service/flows/verify-email-account-activation).
+// More information can be found at [Ory Email and Phone Verification Documentation](https://www.ory.sh/docs/kratos/self-service/flows/verify-email-account-activation).
 //
 //	Schemes: http, https
 //
 //	Responses:
-//	  200: selfServiceVerificationFlow
-//	  500: jsonError
-//	  400: jsonError
-func (h *Handler) initAPIFlow(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+//	  200: verificationFlow
+//	  400: errorGeneric
+//	  default: errorGeneric
+func (h *Handler) createNativeVerificationFlow(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 	if !h.d.Config().SelfServiceFlowVerificationEnabled(r.Context()) {
 		h.d.SelfServiceErrorManager().Forward(r.Context(), w, r, errors.WithStack(herodot.ErrBadRequest.WithReasonf("Verification is not allowed because it was disabled.")))
 		return
@@ -154,18 +154,20 @@ func (h *Handler) initAPIFlow(w http.ResponseWriter, r *http.Request, _ httprout
 	h.d.Writer().Write(w, r, req)
 }
 
+// Create Browser Verification Flow Parameters
+//
 // nolint:deadcode,unused
-// swagger:parameters initializeSelfServiceVerificationFlowForBrowsers
-type initializeSelfServiceVerificationFlowForBrowsers struct {
+// swagger:parameters createBrowserVerificationFlow
+type createBrowserVerificationFlow struct {
 	// The URL to return the browser to after the flow was completed.
 	//
 	// in: query
 	ReturnTo string `json:"return_to"`
 }
 
-// swagger:route GET /self-service/verification/browser v0alpha2 initializeSelfServiceVerificationFlowForBrowsers
+// swagger:route GET /self-service/verification/browser frontend createBrowserVerificationFlow
 //
-// # Initialize Verification Flow for Browser Clients
+// # Create Verification Flow for Browser Clients
 //
 // This endpoint initializes a browser-based account verification flow. Once initialized, the browser will be redirected to
 // `selfservice.flows.verification.ui_url` with the flow ID set as the query parameter `?flow=`.
@@ -179,10 +181,10 @@ type initializeSelfServiceVerificationFlowForBrowsers struct {
 //	Schemes: http, https
 //
 //	Responses:
-//	  200: selfServiceVerificationFlow
+//	  200: verificationFlow
 //	  303: emptyResponse
-//	  500: jsonError
-func (h *Handler) initBrowserFlow(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+//	  default: errorGeneric
+func (h *Handler) createBrowserVerificationFlow(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	if !h.d.Config().SelfServiceFlowVerificationEnabled(r.Context()) {
 		h.d.SelfServiceErrorManager().Forward(r.Context(), w, r, errors.WithStack(herodot.ErrBadRequest.WithReasonf("Verification is not allowed because it was disabled.")))
 		return
@@ -198,9 +200,11 @@ func (h *Handler) initBrowserFlow(w http.ResponseWriter, r *http.Request, ps htt
 	x.AcceptToRedirectOrJSON(w, r, h.d.Writer(), req, redirTo)
 }
 
-// swagger:parameters getSelfServiceVerificationFlow
+// Get Verification Flow Parameters
+//
+// swagger:parameters getVerificationFlow
 // nolint:deadcode,unused
-type getSelfServiceVerificationFlow struct {
+type getVerificationFlow struct {
 	// The Flow ID
 	//
 	// The value for this parameter comes from `request` URL Query parameter sent to your
@@ -220,7 +224,7 @@ type getSelfServiceVerificationFlow struct {
 	Cookie string `json:"cookie"`
 }
 
-// swagger:route GET /self-service/verification/flows v0alpha2 getSelfServiceVerificationFlow
+// swagger:route GET /self-service/verification/flows frontend getVerificationFlow
 //
 // # Get Verification Flow
 //
@@ -235,7 +239,7 @@ type getSelfServiceVerificationFlow struct {
 //		```js
 //		// pseudo-code example
 //		router.get('/recovery', async function (req, res) {
-//		  const flow = await client.getSelfServiceVerificationFlow(req.header('cookie'), req.query['flow'])
+//		  const flow = await client.getVerificationFlow(req.header('cookie'), req.query['flow'])
 //
 //	   res.render('verification', flow)
 //		})
@@ -248,11 +252,11 @@ type getSelfServiceVerificationFlow struct {
 //	Schemes: http, https
 //
 //	Responses:
-//	  200: selfServiceVerificationFlow
-//	  403: jsonError
-//	  404: jsonError
-//	  500: jsonError
-func (h *Handler) fetch(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+//	  200: verificationFlow
+//	  403: errorGeneric
+//	  404: errorGeneric
+//	  default: errorGeneric
+func (h *Handler) getVerificationFlow(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 	if !h.d.Config().SelfServiceFlowVerificationEnabled(r.Context()) {
 		h.d.SelfServiceErrorManager().Forward(r.Context(), w, r, errors.WithStack(herodot.ErrBadRequest.WithReasonf("Verification is not allowed because it was disabled.")))
 		return
@@ -292,9 +296,11 @@ func (h *Handler) fetch(w http.ResponseWriter, r *http.Request, _ httprouter.Par
 	h.d.Writer().Write(w, r, req)
 }
 
+// Update Verification Flow Parameters
+//
 // nolint:deadcode,unused
-// swagger:parameters submitSelfServiceVerificationFlow
-type submitSelfServiceVerificationFlow struct {
+// swagger:parameters updateVerificationFlow
+type updateVerificationFlow struct {
 	// The Verification Flow ID
 	//
 	// The value for this parameter comes from `flow` URL Query parameter sent to your
@@ -316,7 +322,7 @@ type submitSelfServiceVerificationFlow struct {
 
 	// in: body
 	// required: true
-	Body submitSelfServiceVerificationFlowBody
+	Body updateVerificationFlowBody
 
 	// HTTP Cookies
 	//
@@ -328,20 +334,13 @@ type submitSelfServiceVerificationFlow struct {
 	Cookies string `json:"Cookie"`
 }
 
+// Update Verification Flow Request Body
+//
 // nolint:deadcode,unused
-// swagger:model submitSelfServiceVerificationFlowBody
-type submitSelfServiceVerificationFlowBody struct {
+// swagger:model updateVerificationFlowBody
+type updateVerificationFlowBody struct{}
 
-	// Verification Code
-	//
-	// The verification Code which completes the verification request. If the code
-	// is invalid (e.g. expired) an error will be shown to the end-user.
-	//
-	// in: body
-	Code string `json:"code" form:"code"`
-}
-
-// swagger:route POST /self-service/verification v0alpha2 submitSelfServiceVerificationFlow
+// swagger:route POST /self-service/verification frontend updateVerificationFlow
 //
 // # Complete Verification Flow
 //
@@ -372,13 +371,12 @@ type submitSelfServiceVerificationFlowBody struct {
 //	Schemes: http, https
 //
 //	Responses:
-//	  200: selfServiceVerificationFlow
+//	  200: verificationFlow
 //	  303: emptyResponse
-//	  400: selfServiceVerificationFlow
-//	  410: errorFlowReplaced
-//	  410: selfServiceFlowExpiredError
-//	  500: jsonError
-func (h *Handler) submitFlow(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+//	  400: verificationFlow
+//	  410: errorGeneric
+//	  default: errorGeneric
+func (h *Handler) updateVerificationFlow(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	rid, err := flow.GetFlowID(r)
 	if err != nil {
 		h.d.VerificationFlowErrorHandler().WriteFlowError(w, r, nil, node.DefaultGroup, err)

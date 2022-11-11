@@ -6,7 +6,7 @@ package main
 import (
 	"context"
 
-	ory "github.com/ory/kratos-client-go"
+	ory "github.com/ory/client-go"
 	"github.com/ory/kratos/examples/go/pkg"
 )
 
@@ -19,7 +19,7 @@ func getIdentity() *ory.Identity {
 	ctx := context.Background()
 	created := pkg.CreateIdentity(client)
 
-	identity, res, err := client.V0alpha2Api.AdminGetIdentity(ctx, created.Id).Execute()
+	identity, res, err := client.IdentityApi.GetIdentity(ctx, created.Id).Execute()
 	pkg.SDKExitOnError(err, res)
 
 	return identity

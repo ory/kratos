@@ -23,7 +23,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/tidwall/gjson"
 
-	kratos "github.com/ory/kratos-client-go"
+	kratos "github.com/ory/kratos/internal/httpclient"
 	"github.com/ory/kratos/selfservice/flow/settings"
 	"github.com/ory/kratos/text"
 	"github.com/ory/kratos/ui/node"
