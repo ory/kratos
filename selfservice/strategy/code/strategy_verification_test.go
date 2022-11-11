@@ -549,4 +549,30 @@ func TestVerification(t *testing.T) {
 		assert.True(t, gjson.Get(body, "ui.nodes.#(attributes.name==email)").Exists())
 	})
 
+	t.Run("description=should be able to verify already verified email address", func(t *testing.T) {
+		email := strings.ToLower(testhelpers.RandomEmail())
+		createIdentityToRecover(t, reg, email)
+		c := testhelpers.NewClientWithCookies(t)
+
+		body := expectSuccess(t, nil, true, false, func(v url.Values) {
+			v.Set("email", verificationEmail)
+		})
+		message := testhelpers.CourierExpectMessage(t, reg, verificationEmail, "Please verify your email address")
+		code := testhelpers.CourierExpectCodeInMessage(t, message, 1)
+
+		body, res := submitVerificationCode(t, body, c, code)
+		assert.Equal(t, http.StatusOK, res.StatusCode)
+		testhelpers.AssertMessage(t, []byte(body), "You successfully verified your email address.")
+
+		body = expectSuccess(t, nil, true, false, func(v url.Values) {
+			v.Set("email", verificationEmail)
+		})
+		message = testhelpers.CourierExpectMessage(t, reg, verificationEmail, "Please verify your email address")
+		code = testhelpers.CourierExpectCodeInMessage(t, message, 1)
+
+		body, res = submitVerificationCode(t, body, c, code)
+		assert.Equal(t, http.StatusOK, res.StatusCode)
+		testhelpers.AssertMessage(t, []byte(body), "You successfully verified your email address.")
+	})
+
 }

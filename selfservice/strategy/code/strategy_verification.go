@@ -155,7 +155,7 @@ func (s *Strategy) createVerificationCodeForm(action string, code *string, email
 
 	c.Nodes.Append(
 		node.
-			NewInputField("code", code, node.CodeGroup, node.InputAttributeTypeNumber, node.WithRequiredInputAttribute).
+			NewInputField("code", code, node.CodeGroup, node.InputAttributeTypeText, node.WithRequiredInputAttribute).
 			WithMetaLabel(text.NewInfoNodeLabelVerifyOTP()),
 	)
 	c.Nodes.Append(

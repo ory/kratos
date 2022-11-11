@@ -15,7 +15,6 @@ import (
 	"github.com/ory/herodot"
 	"github.com/ory/kratos/courier/template/email"
 
-	"github.com/ory/x/errorsx"
 	"github.com/ory/x/httpx"
 	"github.com/ory/x/sqlcon"
 	"github.com/ory/x/stringsx"
@@ -136,7 +135,7 @@ func (s *Sender) SendVerificationCode(ctx context.Context, f *verification.Flow,
 
 	address, err := s.deps.IdentityPool().FindVerifiableAddressByValue(ctx, via, to)
 	if err != nil {
-		if errorsx.Cause(err) == sqlcon.ErrNoRows {
+		if errors.Is(err, sqlcon.ErrNoRows) {
 			s.deps.Audit().
 				WithField("via", via).
 				WithSensitiveField("email_address", address).
