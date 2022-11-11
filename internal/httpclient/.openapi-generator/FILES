@@ -22,6 +22,7 @@ docs/AuthenticatorAssuranceLevel.md
 docs/CourierMessageStatus.md
 docs/CourierMessageType.md
 docs/ErrorAuthenticatorAssuranceLevelNotSatisfied.md
+docs/ErrorFlowReplaced.md
 docs/GenericError.md
 docs/HealthNotReadyStatus.md
 docs/HealthStatus.md
@@ -51,7 +52,6 @@ docs/RevokedSessions.md
 docs/SelfServiceBrowserLocationChangeRequiredError.md
 docs/SelfServiceError.md
 docs/SelfServiceFlowExpiredError.md
-docs/SelfServiceFlowReplacedError.md
 docs/SelfServiceLoginFlow.md
 docs/SelfServiceLogoutUrl.md
 docs/SelfServiceRecoveryCode.md
@@ -126,6 +126,7 @@ model_authenticator_assurance_level.go
 model_courier_message_status.go
 model_courier_message_type.go
 model_error_authenticator_assurance_level_not_satisfied.go
+model_error_flow_replaced.go
 model_generic_error.go
 model_health_not_ready_status.go
 model_health_status.go
@@ -153,7 +154,6 @@ model_revoked_sessions.go
 model_self_service_browser_location_change_required_error.go
 model_self_service_error.go
 model_self_service_flow_expired_error.go
-model_self_service_flow_replaced_error.go
 model_self_service_login_flow.go
 model_self_service_logout_url.go
 model_self_service_recovery_code.go

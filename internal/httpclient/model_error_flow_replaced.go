@@ -15,8 +15,8 @@ import (
 	"encoding/json"
 )
 
-// SelfServiceFlowReplacedError Is sent when a flow is replaced by a different flow of the same class
-type SelfServiceFlowReplacedError struct {
+// ErrorFlowReplaced Is sent when a flow is replaced by a different flow of the same class
+type ErrorFlowReplaced struct {
 	// The status code
 	Code *int64 `json:"code,omitempty"`
 	// Debug information  This field is often not exposed to protect against leaking sensitive information.
@@ -37,26 +37,26 @@ type SelfServiceFlowReplacedError struct {
 	UseFlowId *string `json:"use_flow_id,omitempty"`
 }
 
-// NewSelfServiceFlowReplacedError instantiates a new SelfServiceFlowReplacedError object
+// NewErrorFlowReplaced instantiates a new ErrorFlowReplaced object
 // This constructor will assign default values to properties that have it defined,
 // and makes sure properties required by API are set, but the set of arguments
 // will change when the set of required properties is changed
-func NewSelfServiceFlowReplacedError(message string) *SelfServiceFlowReplacedError {
-	this := SelfServiceFlowReplacedError{}
+func NewErrorFlowReplaced(message string) *ErrorFlowReplaced {
+	this := ErrorFlowReplaced{}
 	this.Message = message
 	return &this
 }
 
-// NewSelfServiceFlowReplacedErrorWithDefaults instantiates a new SelfServiceFlowReplacedError object
+// NewErrorFlowReplacedWithDefaults instantiates a new ErrorFlowReplaced object
 // This constructor will only assign default values to properties that have it defined,
 // but it doesn't guarantee that properties required by API are set
-func NewSelfServiceFlowReplacedErrorWithDefaults() *SelfServiceFlowReplacedError {
-	this := SelfServiceFlowReplacedError{}
+func NewErrorFlowReplacedWithDefaults() *ErrorFlowReplaced {
+	this := ErrorFlowReplaced{}
 	return &this
 }
 
 // GetCode returns the Code field value if set, zero value otherwise.
-func (o *SelfServiceFlowReplacedError) GetCode() int64 {
+func (o *ErrorFlowReplaced) GetCode() int64 {
 	if o == nil || o.Code == nil {
 		var ret int64
 		return ret
@@ -66,7 +66,7 @@ func (o *SelfServiceFlowReplacedError) GetCode() int64 {
 
 // GetCodeOk returns a tuple with the Code field value if set, nil otherwise
 // and a boolean to check if the value has been set.
-func (o *SelfServiceFlowReplacedError) GetCodeOk() (*int64, bool) {
+func (o *ErrorFlowReplaced) GetCodeOk() (*int64, bool) {
 	if o == nil || o.Code == nil {
 		return nil, false
 	}
@@ -74,7 +74,7 @@ func (o *SelfServiceFlowReplacedError) GetCodeOk() (*int64, bool) {
 }
 
 // HasCode returns a boolean if a field has been set.
-func (o *SelfServiceFlowReplacedError) HasCode() bool {
+func (o *ErrorFlowReplaced) HasCode() bool {
 	if o != nil && o.Code != nil {
 		return true
 	}
@@ -83,12 +83,12 @@ func (o *SelfServiceFlowReplacedError) HasCode() bool {
 }
 
 // SetCode gets a reference to the given int64 and assigns it to the Code field.
-func (o *SelfServiceFlowReplacedError) SetCode(v int64) {
+func (o *ErrorFlowReplaced) SetCode(v int64) {
 	o.Code = &v
 }
 
 // GetDebug returns the Debug field value if set, zero value otherwise.
-func (o *SelfServiceFlowReplacedError) GetDebug() string {
+func (o *ErrorFlowReplaced) GetDebug() string {
 	if o == nil || o.Debug == nil {
 		var ret string
 		return ret
@@ -98,7 +98,7 @@ func (o *SelfServiceFlowReplacedError) GetDebug() string {
 
 // GetDebugOk returns a tuple with the Debug field value if set, nil otherwise
 // and a boolean to check if the value has been set.
-func (o *SelfServiceFlowReplacedError) GetDebugOk() (*string, bool) {
+func (o *ErrorFlowReplaced) GetDebugOk() (*string, bool) {
 	if o == nil || o.Debug == nil {
 		return nil, false
 	}
@@ -106,7 +106,7 @@ func (o *SelfServiceFlowReplacedError) GetDebugOk() (*string, bool) {
 }
 
 // HasDebug returns a boolean if a field has been set.
-func (o *SelfServiceFlowReplacedError) HasDebug() bool {
+func (o *ErrorFlowReplaced) HasDebug() bool {
 	if o != nil && o.Debug != nil {
 		return true
 	}
@@ -115,12 +115,12 @@ func (o *SelfServiceFlowReplacedError) HasDebug() bool {
 }
 
 // SetDebug gets a reference to the given string and assigns it to the Debug field.
-func (o *SelfServiceFlowReplacedError) SetDebug(v string) {
+func (o *ErrorFlowReplaced) SetDebug(v string) {
 	o.Debug = &v
 }
 
 // GetDetails returns the Details field value if set, zero value otherwise.
-func (o *SelfServiceFlowReplacedError) GetDetails() map[string]interface{} {
+func (o *ErrorFlowReplaced) GetDetails() map[string]interface{} {
 	if o == nil || o.Details == nil {
 		var ret map[string]interface{}
 		return ret
@@ -130,7 +130,7 @@ func (o *SelfServiceFlowReplacedError) GetDetails() map[string]interface{} {
 
 // GetDetailsOk returns a tuple with the Details field value if set, nil otherwise
 // and a boolean to check if the value has been set.
-func (o *SelfServiceFlowReplacedError) GetDetailsOk() (map[string]interface{}, bool) {
+func (o *ErrorFlowReplaced) GetDetailsOk() (map[string]interface{}, bool) {
 	if o == nil || o.Details == nil {
 		return nil, false
 	}
@@ -138,7 +138,7 @@ func (o *SelfServiceFlowReplacedError) GetDetailsOk() (map[string]interface{}, b
 }
 
 // HasDetails returns a boolean if a field has been set.
-func (o *SelfServiceFlowReplacedError) HasDetails() bool {
+func (o *ErrorFlowReplaced) HasDetails() bool {
 	if o != nil && o.Details != nil {
 		return true
 	}
@@ -147,12 +147,12 @@ func (o *SelfServiceFlowReplacedError) HasDetails() bool {
 }
 
 // SetDetails gets a reference to the given map[string]interface{} and assigns it to the Details field.
-func (o *SelfServiceFlowReplacedError) SetDetails(v map[string]interface{}) {
+func (o *ErrorFlowReplaced) SetDetails(v map[string]interface{}) {
 	o.Details = v
 }
 
 // GetId returns the Id field value if set, zero value otherwise.
-func (o *SelfServiceFlowReplacedError) GetId() string {
+func (o *ErrorFlowReplaced) GetId() string {
 	if o == nil || o.Id == nil {
 		var ret string
 		return ret
@@ -162,7 +162,7 @@ func (o *SelfServiceFlowReplacedError) GetId() string {
 
 // GetIdOk returns a tuple with the Id field value if set, nil otherwise
 // and a boolean to check if the value has been set.
-func (o *SelfServiceFlowReplacedError) GetIdOk() (*string, bool) {
+func (o *ErrorFlowReplaced) GetIdOk() (*string, bool) {
 	if o == nil || o.Id == nil {
 		return nil, false
 	}
@@ -170,7 +170,7 @@ func (o *SelfServiceFlowReplacedError) GetIdOk() (*string, bool) {
 }
 
 // HasId returns a boolean if a field has been set.
-func (o *SelfServiceFlowReplacedError) HasId() bool {
+func (o *ErrorFlowReplaced) HasId() bool {
 	if o != nil && o.Id != nil {
 		return true
 	}
@@ -179,12 +179,12 @@ func (o *SelfServiceFlowReplacedError) HasId() bool {
 }
 
 // SetId gets a reference to the given string and assigns it to the Id field.
-func (o *SelfServiceFlowReplacedError) SetId(v string) {
+func (o *ErrorFlowReplaced) SetId(v string) {
 	o.Id = &v
 }
 
 // GetMessage returns the Message field value
-func (o *SelfServiceFlowReplacedError) GetMessage() string {
+func (o *ErrorFlowReplaced) GetMessage() string {
 	if o == nil {
 		var ret string
 		return ret
@@ -195,7 +195,7 @@ func (o *SelfServiceFlowReplacedError) GetMessage() string {
 
 // GetMessageOk returns a tuple with the Message field value
 // and a boolean to check if the value has been set.
-func (o *SelfServiceFlowReplacedError) GetMessageOk() (*string, bool) {
+func (o *ErrorFlowReplaced) GetMessageOk() (*string, bool) {
 	if o == nil {
 		return nil, false
 	}
@@ -203,12 +203,12 @@ func (o *SelfServiceFlowReplacedError) GetMessageOk() (*string, bool) {
 }
 
 // SetMessage sets field value
-func (o *SelfServiceFlowReplacedError) SetMessage(v string) {
+func (o *ErrorFlowReplaced) SetMessage(v string) {
 	o.Message = v
 }
 
 // GetReason returns the Reason field value if set, zero value otherwise.
-func (o *SelfServiceFlowReplacedError) GetReason() string {
+func (o *ErrorFlowReplaced) GetReason() string {
 	if o == nil || o.Reason == nil {
 		var ret string
 		return ret
@@ -218,7 +218,7 @@ func (o *SelfServiceFlowReplacedError) GetReason() string {
 
 // GetReasonOk returns a tuple with the Reason field value if set, nil otherwise
 // and a boolean to check if the value has been set.
-func (o *SelfServiceFlowReplacedError) GetReasonOk() (*string, bool) {
+func (o *ErrorFlowReplaced) GetReasonOk() (*string, bool) {
 	if o == nil || o.Reason == nil {
 		return nil, false
 	}
@@ -226,7 +226,7 @@ func (o *SelfServiceFlowReplacedError) GetReasonOk() (*string, bool) {
 }
 
 // HasReason returns a boolean if a field has been set.
-func (o *SelfServiceFlowReplacedError) HasReason() bool {
+func (o *ErrorFlowReplaced) HasReason() bool {
 	if o != nil && o.Reason != nil {
 		return true
 	}
@@ -235,12 +235,12 @@ func (o *SelfServiceFlowReplacedError) HasReason() bool {
 }
 
 // SetReason gets a reference to the given string and assigns it to the Reason field.
-func (o *SelfServiceFlowReplacedError) SetReason(v string) {
+func (o *ErrorFlowReplaced) SetReason(v string) {
 	o.Reason = &v
 }
 
 // GetRequest returns the Request field value if set, zero value otherwise.
-func (o *SelfServiceFlowReplacedError) GetRequest() string {
+func (o *ErrorFlowReplaced) GetRequest() string {
 	if o == nil || o.Request == nil {
 		var ret string
 		return ret
@@ -250,7 +250,7 @@ func (o *SelfServiceFlowReplacedError) GetRequest() string {
 
 // GetRequestOk returns a tuple with the Request field value if set, nil otherwise
 // and a boolean to check if the value has been set.
-func (o *SelfServiceFlowReplacedError) GetRequestOk() (*string, bool) {
+func (o *ErrorFlowReplaced) GetRequestOk() (*string, bool) {
 	if o == nil || o.Request == nil {
 		return nil, false
 	}
@@ -258,7 +258,7 @@ func (o *SelfServiceFlowReplacedError) GetRequestOk() (*string, bool) {
 }
 
 // HasRequest returns a boolean if a field has been set.
-func (o *SelfServiceFlowReplacedError) HasRequest() bool {
+func (o *ErrorFlowReplaced) HasRequest() bool {
 	if o != nil && o.Request != nil {
 		return true
 	}
@@ -267,12 +267,12 @@ func (o *SelfServiceFlowReplacedError) HasRequest() bool {
 }
 
 // SetRequest gets a reference to the given string and assigns it to the Request field.
-func (o *SelfServiceFlowReplacedError) SetRequest(v string) {
+func (o *ErrorFlowReplaced) SetRequest(v string) {
 	o.Request = &v
 }
 
 // GetStatus returns the Status field value if set, zero value otherwise.
-func (o *SelfServiceFlowReplacedError) GetStatus() string {
+func (o *ErrorFlowReplaced) GetStatus() string {
 	if o == nil || o.Status == nil {
 		var ret string
 		return ret
@@ -282,7 +282,7 @@ func (o *SelfServiceFlowReplacedError) GetStatus() string {
 
 // GetStatusOk returns a tuple with the Status field value if set, nil otherwise
 // and a boolean to check if the value has been set.
-func (o *SelfServiceFlowReplacedError) GetStatusOk() (*string, bool) {
+func (o *ErrorFlowReplaced) GetStatusOk() (*string, bool) {
 	if o == nil || o.Status == nil {
 		return nil, false
 	}
@@ -290,7 +290,7 @@ func (o *SelfServiceFlowReplacedError) GetStatusOk() (*string, bool) {
 }
 
 // HasStatus returns a boolean if a field has been set.
-func (o *SelfServiceFlowReplacedError) HasStatus() bool {
+func (o *ErrorFlowReplaced) HasStatus() bool {
 	if o != nil && o.Status != nil {
 		return true
 	}
@@ -299,12 +299,12 @@ func (o *SelfServiceFlowReplacedError) HasStatus() bool {
 }
 
 // SetStatus gets a reference to the given string and assigns it to the Status field.
-func (o *SelfServiceFlowReplacedError) SetStatus(v string) {
+func (o *ErrorFlowReplaced) SetStatus(v string) {
 	o.Status = &v
 }
 
 // GetUseFlowId returns the UseFlowId field value if set, zero value otherwise.
-func (o *SelfServiceFlowReplacedError) GetUseFlowId() string {
+func (o *ErrorFlowReplaced) GetUseFlowId() string {
 	if o == nil || o.UseFlowId == nil {
 		var ret string
 		return ret
@@ -314,7 +314,7 @@ func (o *SelfServiceFlowReplacedError) GetUseFlowId() string {
 
 // GetUseFlowIdOk returns a tuple with the UseFlowId field value if set, nil otherwise
 // and a boolean to check if the value has been set.
-func (o *SelfServiceFlowReplacedError) GetUseFlowIdOk() (*string, bool) {
+func (o *ErrorFlowReplaced) GetUseFlowIdOk() (*string, bool) {
 	if o == nil || o.UseFlowId == nil {
 		return nil, false
 	}
@@ -322,7 +322,7 @@ func (o *SelfServiceFlowReplacedError) GetUseFlowIdOk() (*string, bool) {
 }
 
 // HasUseFlowId returns a boolean if a field has been set.
-func (o *SelfServiceFlowReplacedError) HasUseFlowId() bool {
+func (o *ErrorFlowReplaced) HasUseFlowId() bool {
 	if o != nil && o.UseFlowId != nil {
 		return true
 	}
@@ -331,11 +331,11 @@ func (o *SelfServiceFlowReplacedError) HasUseFlowId() bool {
 }
 
 // SetUseFlowId gets a reference to the given string and assigns it to the UseFlowId field.
-func (o *SelfServiceFlowReplacedError) SetUseFlowId(v string) {
+func (o *ErrorFlowReplaced) SetUseFlowId(v string) {
 	o.UseFlowId = &v
 }
 
-func (o SelfServiceFlowReplacedError) MarshalJSON() ([]byte, error) {
+func (o ErrorFlowReplaced) MarshalJSON() ([]byte, error) {
 	toSerialize := map[string]interface{}{}
 	if o.Code != nil {
 		toSerialize["code"] = o.Code
@@ -367,38 +367,38 @@ func (o SelfServiceFlowReplacedError) MarshalJSON() ([]byte, error) {
 	return json.Marshal(toSerialize)
 }
 
-type NullableSelfServiceFlowReplacedError struct {
-	value *SelfServiceFlowReplacedError
+type NullableErrorFlowReplaced struct {
+	value *ErrorFlowReplaced
 	isSet bool
 }
 
-func (v NullableSelfServiceFlowReplacedError) Get() *SelfServiceFlowReplacedError {
+func (v NullableErrorFlowReplaced) Get() *ErrorFlowReplaced {
 	return v.value
 }
 
-func (v *NullableSelfServiceFlowReplacedError) Set(val *SelfServiceFlowReplacedError) {
+func (v *NullableErrorFlowReplaced) Set(val *ErrorFlowReplaced) {
 	v.value = val
 	v.isSet = true
 }
 
-func (v NullableSelfServiceFlowReplacedError) IsSet() bool {
+func (v NullableErrorFlowReplaced) IsSet() bool {
 	return v.isSet
 }
 
-func (v *NullableSelfServiceFlowReplacedError) Unset() {
+func (v *NullableErrorFlowReplaced) Unset() {
 	v.value = nil
 	v.isSet = false
 }
 
-func NewNullableSelfServiceFlowReplacedError(val *SelfServiceFlowReplacedError) *NullableSelfServiceFlowReplacedError {
-	return &NullableSelfServiceFlowReplacedError{value: val, isSet: true}
+func NewNullableErrorFlowReplaced(val *ErrorFlowReplaced) *NullableErrorFlowReplaced {
+	return &NullableErrorFlowReplaced{value: val, isSet: true}
 }
 
-func (v NullableSelfServiceFlowReplacedError) MarshalJSON() ([]byte, error) {
+func (v NullableErrorFlowReplaced) MarshalJSON() ([]byte, error) {
 	return json.Marshal(v.value)
 }
 
-func (v *NullableSelfServiceFlowReplacedError) UnmarshalJSON(src []byte) error {
+func (v *NullableErrorFlowReplaced) UnmarshalJSON(src []byte) error {
 	v.isSet = true
 	return json.Unmarshal(src, &v.value)
 }

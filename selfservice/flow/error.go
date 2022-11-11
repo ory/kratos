@@ -32,7 +32,7 @@ var (
 
 // Is sent when a flow is replaced by a different flow of the same class
 //
-// swagger:model selfServiceFlowReplacedError
+// swagger:model errorFlowReplaced
 type ReplacedError struct {
 	*herodot.DefaultError `json:"error"`
 
