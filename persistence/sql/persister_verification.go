@@ -148,9 +148,9 @@ func (p *Persister) UseVerificationCode(ctx context.Context, fID uuid.UUID, code
 
 	if err := sqlcon.HandleError(p.Transaction(ctx, func(ctx context.Context, tx *pop.Connection) (err error) {
 
-		/* #nosec G201 TableName is static */
 		if err := sqlcon.HandleError(
 			tx.RawQuery(
+				/* #nosec G201 TableName is static */
 				fmt.Sprintf("UPDATE %s SET submit_count = submit_count + 1 WHERE id = ? AND nid = ?", flowTableName),
 				fID,
 				nid,
@@ -161,13 +161,13 @@ func (p *Persister) UseVerificationCode(ctx context.Context, fID uuid.UUID, code
 
 		var submitCount int
 		// Because MySQL does not support "RETURNING" clauses, but we need the updated `submit_count` later on.
-		/* #nosec G201 TableName is static */
 		if err := sqlcon.HandleError(
 			tx.RawQuery(
+				/* #nosec G201 TableName is static */
 				fmt.Sprintf("SELECT submit_count FROM %s WHERE id = ? AND nid = ?", flowTableName),
 				fID,
-				nid).
-				First(&submitCount),
+				nid,
+			).First(&submitCount),
 		); err != nil {
 			if errors.Is(err, sqlcon.ErrNoRows) {
 				// Return no error, as that would roll back the transaction

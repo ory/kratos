@@ -519,4 +519,34 @@ func TestVerification(t *testing.T) {
 		assert.Equal(t, http.StatusOK, res.StatusCode)
 		testhelpers.AssertMessage(t, []byte(body), "You successfully verified your email address.")
 	})
+
+	t.Run("description=should not be able to use an invalid code more than 5 times", func(t *testing.T) {
+		email := strings.ToLower(testhelpers.RandomEmail())
+		createIdentityToRecover(t, reg, email)
+		c := testhelpers.NewClientWithCookies(t)
+
+		body := expectSuccess(t, nil, true, false, func(v url.Values) {
+			v.Set("email", verificationEmail)
+		})
+		initialFlowId := gjson.Get(body, "id")
+
+		for submitTry := 0; submitTry < 5; submitTry++ {
+			xcbody, _ := submitVerificationCode(t, body, c, "12312312")
+			require.Equal(t, initialFlowId.String(), gjson.Get(xcbody, "id").String())
+
+			testhelpers.AssertMessage(t, []byte(xcbody), "The verification code is invalid or has already been used. Please try again.")
+		}
+
+		// submit an invalid code for the 6th time
+		body, _ = submitVerificationCode(t, body, c, "12312312")
+
+		require.Len(t, gjson.Get(body, "ui.messages").Array(), 1)
+		assert.Equal(t, "The request was submitted too often. Please request another code.", gjson.Get(body, "ui.messages.0.text").String())
+
+		// check that a new flow has been created
+		assert.NotEqual(t, gjson.Get(body, "id"), initialFlowId)
+
+		assert.True(t, gjson.Get(body, "ui.nodes.#(attributes.name==email)").Exists())
+	})
+
 }
