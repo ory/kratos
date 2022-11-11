@@ -65,9 +65,9 @@ func TestSettingsStrategy(t *testing.T) {
 	viperSetProviderConfig(
 		t,
 		conf,
-		newOIDCProvider(t, publicTS, remotePublic, remoteAdmin, "ory", "ory"),
-		newOIDCProvider(t, publicTS, remotePublic, remoteAdmin, "google", "google"),
-		newOIDCProvider(t, publicTS, remotePublic, remoteAdmin, "github", "github"),
+		newOIDCProvider(t, publicTS, remotePublic, remoteAdmin, "ory"),
+		newOIDCProvider(t, publicTS, remotePublic, remoteAdmin, "google"),
+		newOIDCProvider(t, publicTS, remotePublic, remoteAdmin, "github"),
 	)
 	testhelpers.InitKratosServers(t, reg, publicTS, adminTS)
 	testhelpers.SetDefaultIdentitySchema(conf, "file://./stub/settings.schema.json")
