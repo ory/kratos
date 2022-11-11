@@ -20,6 +20,7 @@ docs/CreateRecoveryLinkForIdentityBody.md
 docs/DeleteMySessionsCount.md
 docs/ErrorAuthenticatorAssuranceLevelNotSatisfied.md
 docs/ErrorBrowserLocationChangeRequired.md
+docs/ErrorFlowReplaced.md
 docs/ErrorGeneric.md
 docs/FlowError.md
 docs/FrontendApi.md
@@ -103,6 +104,7 @@ docs/UpdateSettingsFlowWithProfileMethod.md
 docs/UpdateSettingsFlowWithTotpMethod.md
 docs/UpdateSettingsFlowWithWebAuthnMethod.md
 docs/UpdateVerificationFlowBody.md
+docs/UpdateVerificationFlowWithCodeMethodBody.md
 docs/UpdateVerificationFlowWithLinkMethod.md
 docs/V0alpha2Api.md
 docs/VerifiableIdentityAddress.md
@@ -121,6 +123,7 @@ model_create_recovery_link_for_identity_body.go
 model_delete_my_sessions_count.go
 model_error_authenticator_assurance_level_not_satisfied.go
 model_error_browser_location_change_required.go
+model_error_flow_replaced.go
 model_error_generic.go
 model_flow_error.go
 model_generic_error.go
@@ -201,6 +204,7 @@ model_update_settings_flow_with_profile_method.go
 model_update_settings_flow_with_totp_method.go
 model_update_settings_flow_with_web_authn_method.go
 model_update_verification_flow_body.go
+model_update_verification_flow_with_code_method_body.go
 model_update_verification_flow_with_link_method.go
 model_verifiable_identity_address.go
 model_verification_flow.go
