@@ -68,7 +68,7 @@ jobs:
             -e URLS_SELF_ISSUER=http://localhost:4444/ \
             -e URLS_LOGIN=http://127.0.0.1:4499/login \
             -e URLS_CONSENT=http://127.0.0.1:4499/consent \
-            oryd/hydra:v1.9.2-sqlite serve all --dangerous-force-http
+            oryd/hydra:v2.0.2 serve all --dev
           docker start hydra
           docker logs -f hydra &> /tmp/hydra.log &
         name: Start Hydra
