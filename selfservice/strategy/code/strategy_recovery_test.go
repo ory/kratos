@@ -723,7 +723,7 @@ func TestRecovery(t *testing.T) {
 		body = submitRecoveryCode(t, c, body, RecoveryFlowTypeBrowser, "12312312", http.StatusOK)
 
 		require.Len(t, gjson.Get(body, "ui.messages").Array(), 1)
-		assert.Equal(t, "The code was submitted too often. Please request another code.", gjson.Get(body, "ui.messages.0.text").String())
+		assert.Equal(t, "The request was submitted too often. Please request another code.", gjson.Get(body, "ui.messages.0.text").String())
 
 		// check that a new flow has been created
 		assert.NotEqual(t, gjson.Get(body, "id"), initialFlowId)
