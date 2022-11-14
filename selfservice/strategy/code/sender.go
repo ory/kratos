@@ -120,7 +120,12 @@ func (s *RecoveryCodeSender) SendRecoveryCodeTo(ctx context.Context, i *identity
 func (s *RecoveryCodeSender) send(ctx context.Context, via string, t courier.EmailTemplate) error {
 	switch f := stringsx.SwitchExact(via); {
 	case f.AddCase(identity.AddressTypeEmail):
-		_, err := s.deps.Courier(ctx).QueueEmail(ctx, t)
+		c, err := s.deps.Courier(ctx)
+		if err != nil {
+			return err
+		}
+
+		_, err = c.QueueEmail(ctx, t)
 		return err
 	default:
 		return f.ToUnknownCaseErr()

@@ -109,7 +109,12 @@ func Watch(ctx cx.Context, r driver.Registry) error {
 
 	r.Logger().Println("Courier worker started.")
 	if err := graceful.Graceful(func() error {
-		return r.Courier(ctx).Work(ctx)
+		c, err := r.Courier(ctx)
+		if err != nil {
+			return err
+		}
+
+		return c.Work(ctx)
 	}, func(_ cx.Context) error {
 		cancel()
 		return nil

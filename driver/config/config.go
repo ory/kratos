@@ -18,6 +18,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/ory/herodot"
+
 	"github.com/ory/x/contextx"
 
 	"github.com/ory/jsonschema/v3/httploader"
@@ -258,7 +260,7 @@ type (
 		Config() *Config
 	}
 	CourierConfigs interface {
-		CourierSMTPURL(ctx context.Context) *url.URL
+		CourierSMTPURL(ctx context.Context) (*url.URL, error)
 		CourierSMTPClientCertPath(ctx context.Context) string
 		CourierSMTPClientKeyPath(ctx context.Context) string
 		CourierSMTPFrom(ctx context.Context) string
@@ -849,8 +851,13 @@ func (p *Config) SelfAdminURL(ctx context.Context) *url.URL {
 	return p.baseURL(ctx, ViperKeyAdminBaseURL, ViperKeyAdminHost, ViperKeyAdminPort, 4434)
 }
 
-func (p *Config) CourierSMTPURL(ctx context.Context) *url.URL {
-	return p.ParseURIOrFail(ctx, ViperKeyCourierSMTPURL)
+func (p *Config) CourierSMTPURL(ctx context.Context) (*url.URL, error) {
+	source := p.GetProvider(ctx).String(ViperKeyCourierSMTPURL)
+	parsed, err := url.Parse(source)
+	if err != nil {
+		return nil, errors.WithStack(herodot.ErrInternalServerError.WithReason("Unable to parse the project's SMTP URL. Please ensure that it is properly escaped: https://www.ory.sh/dr/3").WithDebugf("%s", err))
+	}
+	return parsed, nil
 }
 
 func (p *Config) OAuth2ProviderHeader(ctx context.Context) http.Header {

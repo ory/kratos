@@ -41,7 +41,7 @@ type (
 	}
 
 	Provider interface {
-		Courier(ctx context.Context) Courier
+		Courier(ctx context.Context) (Courier, error)
 	}
 
 	ConfigProvider interface {
@@ -57,13 +57,17 @@ type (
 	}
 )
 
-func NewCourier(ctx context.Context, deps Dependencies) Courier {
+func NewCourier(ctx context.Context, deps Dependencies) (Courier, error) {
+	smtp, err := newSMTP(ctx, deps)
+	if err != nil {
+		return nil, err
+	}
 	return &courier{
 		smsClient:  newSMS(ctx, deps),
-		smtpClient: newSMTP(ctx, deps),
+		smtpClient: smtp,
 		deps:       deps,
 		backoff:    backoff.NewExponentialBackOff(),
-	}
+	}, nil
 }
 
 func (c *courier) FailOnDispatchError() {

@@ -1107,6 +1107,34 @@ func TestCourierSMS(t *testing.T) {
 	})
 }
 
+func TestCourierSMTPUrl(t *testing.T) {
+	ctx := context.Background()
+
+	for _, tc := range []string{
+		"smtp://a:basdasdasda%2Fc@email-smtp.eu-west-3.amazonaws.com:587/",
+		"smtp://a:b$c@email-smtp.eu-west-3.amazonaws.com:587/",
+		"smtp://a/a:bc@email-smtp.eu-west-3.amazonaws.com:587",
+		"smtp://aa:b+c@email-smtp.eu-west-3.amazonaws.com:587/",
+		"smtp://user?name:password@email-smtp.eu-west-3.amazonaws.com:587/",
+		"smtp://username:pass%2Fword@email-smtp.eu-west-3.amazonaws.com:587/",
+	} {
+		t.Run("case="+tc, func(t *testing.T) {
+			conf, err := config.New(ctx, logrusx.New("", ""), os.Stderr, configx.WithValue(config.ViperKeyCourierSMTPURL, tc), configx.SkipValidation())
+			require.NoError(t, err)
+			parsed, err := conf.CourierSMTPURL(ctx)
+			require.NoError(t, err)
+			assert.Equal(t, tc, parsed.String())
+		})
+	}
+
+	t.Run("invalid", func(t *testing.T) {
+		conf, err := config.New(ctx, logrusx.New("", ""), os.Stderr, configx.WithValue(config.ViperKeyCourierSMTPURL, "smtp://a:b/c@email-smtp.eu-west-3.amazonaws.com:587/"), configx.SkipValidation())
+		require.NoError(t, err)
+		_, err = conf.CourierSMTPURL(ctx)
+		require.Error(t, err)
+	})
+}
+
 func TestCourierMessageTTL(t *testing.T) {
 	ctx := context.Background()
 
