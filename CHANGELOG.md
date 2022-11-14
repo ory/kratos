@@ -348,6 +348,12 @@ SDK Method `getJsonSchema` was renamed to `getIdentitySchema`.
 - Distinguish credential types properly when collecting identifiers
   ([#2873](https://github.com/ory/kratos/issues/2873))
   ([705f7b1](https://github.com/ory/kratos/commit/705f7b105c98b1d68b3e35d6e6893e9cfb661548))
+- Do not crash process on invalid smtp url
+  ([#2890](https://github.com/ory/kratos/issues/2890))
+  ([c5d3ebc](https://github.com/ory/kratos/commit/c5d3ebc6927f7293ee05b65aee745a19ec96ce77)):
+
+  Closes https://github.com/ory-corp/cloud/issues/3321
+
 - Do not double-commit webhooks on registration
   ([#2888](https://github.com/ory/kratos/issues/2888))
   ([88e75d9](https://github.com/ory/kratos/commit/88e75d997348450b1a2a3e4619bcbd614a5582e8))
