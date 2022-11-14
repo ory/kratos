@@ -5,7 +5,7 @@
 
 **Table of Contents**
 
-- [ (2022-11-11)](#2022-11-11)
+- [ (2022-11-14)](#2022-11-14)
   - [Breaking Changes](#breaking-changes)
     - [Bug Fixes](#bug-fixes)
     - [Code Refactoring](#code-refactoring)
@@ -280,7 +280,7 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# [](https://github.com/ory/kratos/compare/v0.10.1...v) (2022-11-11)
+# [](https://github.com/ory/kratos/compare/v0.10.1...v) (2022-11-14)
 
 ## Breaking Changes
 
@@ -348,6 +348,9 @@ SDK Method `getJsonSchema` was renamed to `getIdentitySchema`.
 - Distinguish credential types properly when collecting identifiers
   ([#2873](https://github.com/ory/kratos/issues/2873))
   ([705f7b1](https://github.com/ory/kratos/commit/705f7b105c98b1d68b3e35d6e6893e9cfb661548))
+- Do not double-commit webhooks on registration
+  ([#2888](https://github.com/ory/kratos/issues/2888))
+  ([88e75d9](https://github.com/ory/kratos/commit/88e75d997348450b1a2a3e4619bcbd614a5582e8))
 - Do not invalidate recovery addr on update
   ([#2699](https://github.com/ory/kratos/issues/2699))
   ([1689bb9](https://github.com/ory/kratos/commit/1689bb9f0a52387f699568da6bc773929b1201ae))
