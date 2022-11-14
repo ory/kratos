@@ -656,7 +656,7 @@ func (m *RegistryDefault) SetPersister(p persistence.Persister) {
 	m.persister = p
 }
 
-func (m *RegistryDefault) Courier(ctx context.Context) courier.Courier {
+func (m *RegistryDefault) Courier(ctx context.Context) (courier.Courier, error) {
 	return courier.NewCourier(ctx, m)
 }
 

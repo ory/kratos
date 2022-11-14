@@ -42,9 +42,13 @@ func TestNewSMTP(t *testing.T) {
 
 	setupCourier := func(stringURL string) courier.Courier {
 		conf.MustSet(ctx, config.ViperKeyCourierSMTPURL, stringURL)
-		t.Logf("SMTP URL: %s", conf.CourierSMTPURL(ctx).String())
+		u, err := conf.CourierSMTPURL(ctx)
+		require.NoError(t, err)
+		t.Logf("SMTP URL: %s", u.String())
 
-		return courier.NewCourier(ctx, reg)
+		c, err := courier.NewCourier(ctx, reg)
+		require.NoError(t, err)
+		return c
 	}
 
 	if testing.Short() {
@@ -107,7 +111,8 @@ func TestQueueEmail(t *testing.T) {
 	conf.MustSet(ctx, config.ViperKeyCourierSMTPFrom, "test-stub@ory.sh")
 	reg.Logger().Level = logrus.TraceLevel
 
-	c := reg.Courier(ctx)
+	c, err := reg.Courier(ctx)
+	require.NoError(t, err)
 
 	ctx, cancel := context.WithCancel(ctx)
 	defer cancel()

@@ -210,7 +210,12 @@ func (s *Sender) SendVerificationCodeTo(ctx context.Context, f *verification.Flo
 func (s *Sender) send(ctx context.Context, via string, t courier.EmailTemplate) error {
 	switch f := stringsx.SwitchExact(via); {
 	case f.AddCase(identity.AddressTypeEmail):
-		_, err := s.deps.Courier(ctx).QueueEmail(ctx, t)
+		c, err := s.deps.Courier(ctx)
+		if err != nil {
+			return err
+		}
+
+		_, err = c.QueueEmail(ctx, t)
 		return err
 	default:
 		return f.ToUnknownCaseErr()
