@@ -155,7 +155,7 @@ context("Account Verification Error", () => {
           })
 
           if (s === "code") {
-            it.only("is unable to brute force the code", () => {
+            it("is unable to brute force the code", () => {
               cy.visit(verification)
               cy.get('input[name="email"]').type(identity.email)
               cy.get(`button[value="${s}"]`).click()
