@@ -153,6 +153,41 @@ context("Account Verification Error", () => {
               )
             })
           })
+
+          if (s === "code") {
+            it.only("is unable to brute force the code", () => {
+              cy.visit(verification)
+              cy.get('input[name="email"]').type(identity.email)
+              cy.get(`button[value="${s}"]`).click()
+
+              cy.get('[data-testid="ui/message/1080001"]').should(
+                "contain.text",
+                "An email containing a verification",
+              )
+
+              for (let i = 0; i < 5; i++) {
+                cy.get("input[name='code']").type((i + "").repeat(8)) // Invalid code
+                cy.get("button[value='code']").click()
+                cy.get('[data-testid="ui/message/4070006"]').should(
+                  "have.text",
+                  "The verification code is invalid or has already been used. Please try again.",
+                )
+              }
+
+              cy.get("input[name='code']").type("12312312") // Invalid code
+              cy.get("button[value='code']").click()
+              cy.get('[data-testid="ui/message/4000001"]').should(
+                "have.text",
+                "The request was submitted too often. Please request another code.",
+              )
+              cy.getSession().then(
+                assertVerifiableAddress({
+                  isVerified: false,
+                  email: identity.email,
+                }),
+              )
+            })
+          }
         })
       })
     }
