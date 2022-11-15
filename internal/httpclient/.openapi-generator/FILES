@@ -7,7 +7,6 @@ api_courier.go
 api_frontend.go
 api_identity.go
 api_metadata.go
-api_v0alpha2.go
 client.go
 configuration.go
 docs/AuthenticatorAssuranceLevel.md
@@ -106,7 +105,6 @@ docs/UpdateSettingsFlowWithWebAuthnMethod.md
 docs/UpdateVerificationFlowBody.md
 docs/UpdateVerificationFlowWithCodeMethodBody.md
 docs/UpdateVerificationFlowWithLinkMethod.md
-docs/V0alpha2Api.md
 docs/VerifiableIdentityAddress.md
 docs/VerificationFlow.md
 docs/VerificationFlowState.md
@@ -215,5 +213,4 @@ test/api_courier_test.go
 test/api_frontend_test.go
 test/api_identity_test.go
 test/api_metadata_test.go
-test/api_v0alpha2_test.go
 utils.go

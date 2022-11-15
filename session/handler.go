@@ -69,7 +69,7 @@ const (
 
 func (h *Handler) RegisterAdminRoutes(admin *x.RouterAdmin) {
 	admin.GET(RouteCollection, h.adminListSessions)
-	admin.GET(RouteSession, h.adminGetSession)
+	admin.GET(RouteSession, h.getSession)
 	admin.DELETE(RouteSession, h.disableSession)
 
 	admin.GET(AdminRouteIdentitiesSessions, h.listIdentitySessions)
@@ -367,9 +367,9 @@ func (h *Handler) adminListSessions(w http.ResponseWriter, r *http.Request, ps h
 //
 // The request object for getting a session in an administrative context.
 //
-// swagger:parameters adminGetSession
+// swagger:parameters getSession
 // nolint:deadcode,unused
-type adminGetSessionRequest struct {
+type getSession struct {
 	// ExpandOptions is a query parameter encoded list of all properties that must be expanded in the Session.
 	// Example - ?expand=Identity&expand=Devices
 	// If no value is provided, the expandable properties are skipped.
@@ -385,7 +385,7 @@ type adminGetSessionRequest struct {
 	ID string `json:"id"`
 }
 
-// swagger:route GET /admin/sessions/{id} v0alpha2 adminGetSession
+// swagger:route GET /admin/sessions/{id} identity getSession
 //
 // This endpoint returns the session object with expandables specified.
 //
@@ -402,7 +402,7 @@ type adminGetSessionRequest struct {
 //	  200: session
 //	  400: errorGeneric
 //	  default: errorGeneric
-func (h *Handler) adminGetSession(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+func (h *Handler) getSession(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	if ps.ByName("id") == "whoami" {
 		// for /admin/sessions/whoami redirect to the public route
 		x.RedirectToPublicRoute(h.r)(w, r, ps)

@@ -56,8 +56,6 @@ type APIClient struct {
 	IdentityApi IdentityApi
 
 	MetadataApi MetadataApi
-
-	V0alpha2Api V0alpha2Api
 }
 
 type service struct {
@@ -80,7 +78,6 @@ func NewAPIClient(cfg *Configuration) *APIClient {
 	c.FrontendApi = (*FrontendApiService)(&c.common)
 	c.IdentityApi = (*IdentityApiService)(&c.common)
 	c.MetadataApi = (*MetadataApiService)(&c.common)
-	c.V0alpha2Api = (*V0alpha2ApiService)(&c.common)
 
 	return c
 }

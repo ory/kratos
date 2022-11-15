@@ -806,10 +806,10 @@
           "https"
         ],
         "tags": [
-          "v0alpha2"
+          "identity"
         ],
         "summary": "This endpoint returns the session object with expandables specified.",
-        "operationId": "adminGetSession",
+        "operationId": "getSession",
         "parameters": [
           {
             "type": "array",

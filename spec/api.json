@@ -3927,7 +3927,7 @@
       },
       "get": {
         "description": "This endpoint is useful for:\n\nGetting a session object with all specified expandables that exist in an administrative context.",
-        "operationId": "adminGetSession",
+        "operationId": "getSession",
         "parameters": [
           {
             "description": "ExpandOptions is a query parameter encoded list of all properties that must be expanded in the Session.\nExample - ?expand=Identity\u0026expand=Devices\nIf no value is provided, the expandable properties are skipped.",
@@ -3993,7 +3993,7 @@
         ],
         "summary": "This endpoint returns the session object with expandables specified.",
         "tags": [
-          "v0alpha2"
+          "identity"
         ]
       }
     },
