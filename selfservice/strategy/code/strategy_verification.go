@@ -379,8 +379,7 @@ func (s *Strategy) retryVerificationFlowWithError(w http.ResponseWriter, r *http
 	if x.IsJSONRequest(r) {
 		if toReturn == nil {
 			toReturn = flow.NewFlowReplacedError(text.NewErrorSystemGeneric("An error occured, please retry the flow.")).
-				WithFlow(f).
-				WithDebug(verErr.Error())
+				WithFlow(f)
 		}
 		s.deps.Writer().WriteError(w, r, toReturn)
 	} else {
