@@ -5,7 +5,7 @@
 
 **Table of Contents**
 
-- [ (2022-11-14)](#2022-11-14)
+- [ (2022-11-15)](#2022-11-15)
   - [Breaking Changes](#breaking-changes)
     - [Bug Fixes](#bug-fixes)
     - [Code Refactoring](#code-refactoring)
@@ -280,7 +280,7 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# [](https://github.com/ory/kratos/compare/v0.10.1...v) (2022-11-14)
+# [](https://github.com/ory/kratos/compare/v0.10.1...v) (2022-11-15)
 
 ## Breaking Changes
 
@@ -409,6 +409,9 @@ SDK Method `getJsonSchema` was renamed to `getIdentitySchema`.
   ([#2791](https://github.com/ory/kratos/issues/2791))
   ([aa698e0](https://github.com/ory/kratos/commit/aa698e03a3a96abf1563aea24273735bd9cc412d)),
   closes [#2711](https://github.com/ory/kratos/issues/2711)
+- Incorrect swagger annotation for `getSession`
+  ([#2891](https://github.com/ory/kratos/issues/2891))
+  ([797ea68](https://github.com/ory/kratos/commit/797ea6857e29e5477e0769af5dd51dd7e43080b2))
 - **lint:** Fixed lint error causing ci failures
   ([4aab5e0](https://github.com/ory/kratos/commit/4aab5e0114dd02b8b0ce45376a0fe4bf11e38221))
 - Make `courier.TemplateType` an enum
@@ -619,6 +622,15 @@ SDK Method `getJsonSchema` was renamed to `getIdentitySchema`.
   upgrade ([#2734](https://github.com/ory/kratos/issues/2734))
   ([3852eb4](https://github.com/ory/kratos/commit/3852eb460251a079bad68d08bee2aef23516d168)),
   closes [#2422](https://github.com/ory/kratos/issues/2422)
+- Add verification via `code`
+  ([#2838](https://github.com/ory/kratos/issues/2838))
+  ([a82ee92](https://github.com/ory/kratos/commit/a82ee9295681b8dde96c3c6fb156e791df68613c)),
+  closes [#2824](https://github.com/ory/kratos/issues/2824):
+
+  The new `code` strategy is now supported as a verification strategy. If
+  enabled, the strategy sends a code, instead of a magic link to the user's
+  address, which they can use to verify their address.
+
 - Adding admin session listing api
   ([#2818](https://github.com/ory/kratos/issues/2818))
   ([59588d2](https://github.com/ory/kratos/commit/59588d2e290a8b72125021fa899661622e4cd946))
