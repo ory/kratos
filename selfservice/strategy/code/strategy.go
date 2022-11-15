@@ -90,6 +90,8 @@ func (s *Strategy) VerificationNodeGroup() node.UiNodeGroup {
 	return node.CodeGroup
 }
 
+const CodeLength = 6
+
 func GenerateCode() string {
-	return randx.MustString(8, randx.Numeric)
+	return randx.MustString(CodeLength, randx.Numeric)
 }

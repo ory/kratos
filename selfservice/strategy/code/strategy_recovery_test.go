@@ -956,10 +956,6 @@ func TestRecovery(t *testing.T) {
 		require.NotEmpty(t, action)
 		assert.Equal(t, recoveryEmail, gjson.Get(body, "ui.nodes.#(attributes.name==email).attributes.value").String())
 
-		body = submitRecoveryCode(t, c, body, RecoveryFlowTypeBrowser, "123", http.StatusOK) // Send code that validates field schema
-
-		testhelpers.AssertFieldMessage(t, []byte(body), "code", "does not match pattern \"^\\\\d{8}$\"")
-
 		body = submitRecoveryCode(t, c, body, RecoveryFlowTypeBrowser, "12312312", http.StatusOK) // Now send a wrong code that triggers "global" validation error
 
 		assert.Empty(t, gjson.Get(body, "ui.nodes.#(attributes.name==code).messages").Array())
