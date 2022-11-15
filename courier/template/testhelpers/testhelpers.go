@@ -79,6 +79,10 @@ func TestRemoteTemplates(t *testing.T, basePath string, tmplType courier.Templat
 			return email.NewVerificationInvalid(d, &email.VerificationInvalidModel{})
 		case courier.TypeVerificationValid:
 			return email.NewVerificationValid(d, &email.VerificationValidModel{})
+		case courier.TypeVerificationCodeInvalid:
+			return email.NewVerificationCodeInvalid(d, &email.VerificationCodeInvalidModel{})
+		case courier.TypeVerificationCodeValid:
+			return email.NewVerificationCodeValid(d, &email.VerificationCodeValidModel{})
 		default:
 			return nil
 		}
@@ -97,6 +101,8 @@ func TestRemoteTemplates(t *testing.T, basePath string, tmplType courier.Templat
 			ts.URL+"/email.body.gotmpl",
 			ts.URL+"/email.subject.gotmpl"))
 
+		require.NotNil(t, tpl, "Expected to find template for %s in %s", tmplType, basePath)
+
 		TestRendered(t, ctx, tpl)
 	})
 
@@ -105,6 +111,8 @@ func TestRemoteTemplates(t *testing.T, basePath string, tmplType courier.Templat
 			"base64://"+toBase64(path.Join(basePath, "email.body.plaintext.gotmpl")),
 			"base64://"+toBase64(path.Join(basePath, "email.body.gotmpl")),
 			"base64://"+toBase64(path.Join(basePath, "email.subject.gotmpl"))))
+
+		require.NotNil(t, tpl, "Expected to find template for %s in %s", tmplType, basePath)
 
 		TestRendered(t, ctx, tpl)
 	})
@@ -115,6 +123,7 @@ func TestRemoteTemplates(t *testing.T, basePath string, tmplType courier.Templat
 			"file://"+path.Join(basePath, "email.body.gotmpl"),
 			"file://"+path.Join(basePath, "email.subject.gotmpl")))
 
+		require.NotNil(t, tpl, "Expected to find template for %s in %s", tmplType, basePath)
 		TestRendered(t, ctx, tpl)
 	})
 
@@ -123,6 +132,8 @@ func TestRemoteTemplates(t *testing.T, basePath string, tmplType courier.Templat
 			"",
 			"",
 			"base64://"+toBase64(path.Join(basePath, "email.subject.gotmpl"))))
+
+		require.NotNil(t, tpl, "Expected to find template for %s in %s", tmplType, basePath)
 		TestRendered(t, ctx, tpl)
 	})
 
@@ -131,6 +142,8 @@ func TestRemoteTemplates(t *testing.T, basePath string, tmplType courier.Templat
 			"base64://"+toBase64(path.Join(basePath, "email.body.plaintext.gotmpl")),
 			"base64://"+toBase64(path.Join(basePath, "email.body.gotmpl")),
 			""))
+
+		require.NotNil(t, tpl, "Expected to find template for %s in %s", tmplType, basePath)
 		TestRendered(t, ctx, tpl)
 	})
 }

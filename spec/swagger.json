@@ -3296,6 +3296,60 @@
         }
       }
     },
+    "errorFlowReplaced": {
+      "description": "Is sent when a flow is replaced by a different flow of the same class",
+      "type": "object",
+      "required": [
+        "message"
+      ],
+      "properties": {
+        "code": {
+          "description": "The status code",
+          "type": "integer",
+          "format": "int64",
+          "example": 404
+        },
+        "debug": {
+          "description": "Debug information\n\nThis field is often not exposed to protect against leaking\nsensitive information.",
+          "type": "string",
+          "example": "SQL field \"foo\" is not a bool."
+        },
+        "details": {
+          "description": "Further error details",
+          "type": "object",
+          "additionalProperties": {}
+        },
+        "id": {
+          "description": "The error ID\n\nUseful when trying to identify various errors in application logic.",
+          "type": "string"
+        },
+        "message": {
+          "description": "Error message\n\nThe error's message.",
+          "type": "string",
+          "example": "The resource could not be found"
+        },
+        "reason": {
+          "description": "A human-readable reason for the error",
+          "type": "string",
+          "example": "User with ID 1234 does not exist."
+        },
+        "request": {
+          "description": "The request ID\n\nThe request ID is often exposed internally in order to trace\nerrors across service architectures. This is often a UUID.",
+          "type": "string",
+          "example": "d7ef54b1-ec15-46e6-bccb-524b82c035e6"
+        },
+        "status": {
+          "description": "The status description",
+          "type": "string",
+          "example": "Not Found"
+        },
+        "use_flow_id": {
+          "description": "The flow ID that should be used for the new flow as it contains the correct messages.",
+          "type": "string",
+          "format": "uuid"
+        }
+      }
+    },
     "errorGeneric": {
       "description": "The standard Ory JSON API error format.",
       "type": "object",
@@ -3840,10 +3894,12 @@
             "recovery_code_valid",
             "verification_invalid",
             "verification_valid",
+            "verification_code_invalid",
+            "verification_code_valid",
             "otp",
             "stub"
           ],
-          "x-go-enum-desc": "recovery_invalid TypeRecoveryInvalid\nrecovery_valid TypeRecoveryValid\nrecovery_code_invalid TypeRecoveryCodeInvalid\nrecovery_code_valid TypeRecoveryCodeValid\nverification_invalid TypeVerificationInvalid\nverification_valid TypeVerificationValid\notp TypeOTP\nstub TypeTestStub"
+          "x-go-enum-desc": "recovery_invalid TypeRecoveryInvalid\nrecovery_valid TypeRecoveryValid\nrecovery_code_invalid TypeRecoveryCodeInvalid\nrecovery_code_valid TypeRecoveryCodeValid\nverification_invalid TypeVerificationInvalid\nverification_valid TypeVerificationValid\nverification_code_invalid TypeVerificationCodeInvalid\nverification_code_valid TypeVerificationCodeValid\notp TypeOTP\nstub TypeTestStub"
         },
         "type": {
           "$ref": "#/definitions/courierMessageType"
@@ -5241,6 +5297,31 @@
       "description": "nolint:deadcode,unused",
       "type": "object",
       "title": "Update Verification Flow Request Body"
+    },
+    "updateVerificationFlowWithCodeMethodBody": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "description": "The verification code",
+          "type": "string"
+        },
+        "csrf_token": {
+          "description": "Sending the anti-csrf token is only required for browser login flows.",
+          "type": "string"
+        },
+        "email": {
+          "description": "Email to Verify\n\nNeeds to be set when initiating the flow. If the email is a registered\nverification email, a verification link will be sent. If the email is not known,\na email with details on what happened will be sent instead.\n\nformat: email",
+          "type": "string"
+        },
+        "flow": {
+          "description": "The id of the flow",
+          "type": "string"
+        },
+        "method": {
+          "description": "Method is the recovery method",
+          "type": "string"
+        }
+      }
     },
     "updateVerificationFlowWithLinkMethod": {
       "description": "Update Verification Flow with Link Method",

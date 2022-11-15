@@ -62,3 +62,12 @@ func NewErrorValidationVerificationStateFailure() *Message {
 		Context: context(nil),
 	}
 }
+
+func NewErrorValidationVerificationCodeInvalidOrAlreadyUsed() *Message {
+	return &Message{
+		ID:      ErrorValidationVerificationCodeInvalidOrAlreadyUsed,
+		Text:    "The verification code is invalid or has already been used. Please try again.",
+		Type:    Error,
+		Context: context(nil),
+	}
+}

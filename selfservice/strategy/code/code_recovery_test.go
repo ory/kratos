@@ -16,7 +16,6 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/ory/x/stringslice"
 	"github.com/ory/x/urlx"
 
 	"github.com/ory/kratos/selfservice/flow"
@@ -35,16 +34,6 @@ func TestRecoveryCode(t *testing.T) {
 	}
 
 	req := &http.Request{URL: urlx.ParseOrPanic("https://www.ory.sh/")}
-	t.Run("func=GenerateRecoveryCode", func(t *testing.T) {
-		t.Run("case=creates unique codes", func(t *testing.T) {
-			codes := make([]string, 100)
-			for k := range codes {
-				codes[k] = code.GenerateRecoveryCode()
-			}
-
-			assert.Len(t, stringslice.Unique(codes), len(codes))
-		})
-	})
 
 	t.Run("method=IsExpired", func(t *testing.T) {
 		t.Run("case=returns true if flow is expired", func(t *testing.T) {

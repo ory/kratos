@@ -46,8 +46,8 @@ func TestSender(t *testing.T) {
 
 		require.NoError(t, reg.RecoveryFlowPersister().CreateRecoveryFlow(context.Background(), f))
 
-		require.NoError(t, reg.RecoveryCodeSender().SendRecoveryCode(context.Background(), hr, f, "email", "tracked@ory.sh"))
-		require.ErrorIs(t, reg.RecoveryCodeSender().SendRecoveryCode(context.Background(), hr, f, "email", "not-tracked@ory.sh"), code.ErrUnknownAddress)
+		require.NoError(t, reg.CodeSender().SendRecoveryCode(context.Background(), hr, f, "email", "tracked@ory.sh"))
+		require.ErrorIs(t, reg.CodeSender().SendRecoveryCode(context.Background(), hr, f, "email", "not-tracked@ory.sh"), code.ErrUnknownAddress)
 
 		messages, err := reg.CourierPersister().NextMessages(context.Background(), 12)
 		require.NoError(t, err)

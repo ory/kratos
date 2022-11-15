@@ -80,7 +80,7 @@ func (m *RegistryDefault) PostRecoveryHooks(ctx context.Context) (b []recovery.P
 	return
 }
 
-func (m *RegistryDefault) RecoveryCodeSender() *code.RecoveryCodeSender {
+func (m *RegistryDefault) CodeSender() *code.Sender {
 	if m.selfserviceCodeSender == nil {
 		m.selfserviceCodeSender = code.NewSender(m)
 	}

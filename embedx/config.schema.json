@@ -1184,6 +1184,13 @@
                 },
                 "before": {
                   "$ref": "#/definitions/selfServiceBeforeVerification"
+                },
+                "use": {
+                  "title": "Verification Strategy",
+                  "description": "The strategy to use for verification requests",
+                  "type": "string",
+                  "enum": ["link", "code"],
+                  "default": "code"
                 }
               }
             },
@@ -1620,6 +1627,9 @@
               "$ref": "#/definitions/courierTemplates"
             },
             "verification": {
+              "$ref": "#/definitions/courierTemplates"
+            },
+            "verification_code": {
               "$ref": "#/definitions/courierTemplates"
             }
           }

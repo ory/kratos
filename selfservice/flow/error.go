@@ -30,6 +30,42 @@ var (
 	ErrStrategyAsksToReturnToUI = errors.New("flow strategy is redirecting to the ui")
 )
 
+// Is sent when a flow is replaced by a different flow of the same class
+//
+// swagger:model errorFlowReplaced
+type ReplacedError struct {
+	*herodot.DefaultError `json:"error"`
+
+	// The flow ID that should be used for the new flow as it contains the correct messages.
+	FlowID uuid.UUID `json:"use_flow_id"`
+
+	flow Flow
+
+	// TODO: This error could be enhanced by providing a "flow class" (e.g. "Recovery", "Settings", "Verification", "Login", etc.)
+}
+
+func (e *ReplacedError) WithFlow(flow Flow) *ReplacedError {
+	e.FlowID = flow.GetID()
+	e.flow = flow
+	return e
+}
+
+func (e *ReplacedError) GetFlow() Flow {
+	return e.flow
+}
+
+func (e *ReplacedError) EnhanceJSONError() interface{} {
+	return e
+}
+
+func NewFlowReplacedError(message *text.Message) *ReplacedError {
+	return &ReplacedError{
+		DefaultError: x.ErrGone.WithID(text.ErrIDSelfServiceFlowReplaced).
+			WithError("self-service flow replaced").
+			WithReasonf(message.Text),
+	}
+}
+
 // Is sent when a flow is expired
 //
 // swagger:model selfServiceFlowExpiredError

@@ -87,7 +87,9 @@ func TestVerifier(t *testing.T) {
 
 			h := hook.NewVerifier(reg)
 			require.NoError(t, hf(h, i, originalFlow))
-			expectedVerificationFlow, err := verification.NewPostHookFlow(conf, conf.SelfServiceFlowVerificationRequestLifespan(ctx), "", u, reg.VerificationStrategies(context.Background()), originalFlow)
+			s, err := reg.GetActiveVerificationStrategy(ctx)
+			require.NoError(t, err)
+			expectedVerificationFlow, err := verification.NewPostHookFlow(conf, conf.SelfServiceFlowVerificationRequestLifespan(ctx), "", u, s, originalFlow)
 			require.NoError(t, err)
 
 			var verificationFlow verification.Flow
@@ -118,7 +120,7 @@ func TestVerifier(t *testing.T) {
 			assert.EqualValues(t, identity.VerifiableAddressStatusSent, address2.Status)
 
 			require.NoError(t, hf(h, i, originalFlow))
-			expectedVerificationFlow, err = verification.NewPostHookFlow(conf, conf.SelfServiceFlowVerificationRequestLifespan(ctx), "", u, reg.VerificationStrategies(context.Background()), originalFlow)
+			expectedVerificationFlow, err = verification.NewPostHookFlow(conf, conf.SelfServiceFlowVerificationRequestLifespan(ctx), "", u, s, originalFlow)
 			var verificationFlow2 verification.Flow
 			require.NoError(t, reg.Persister().GetConnection(context.Background()).First(&verificationFlow2))
 			assert.Equal(t, expectedVerificationFlow.RequestURL, verificationFlow2.RequestURL)

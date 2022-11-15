@@ -82,7 +82,7 @@ export const gen = {
 
 // Format is
 export const verifyHrefPattern =
-  /^http:.*\/self-service\/verification\?(((&|)token|(&|)flow)=([\-a-zA-Z0-9]+)){2}$/
+  /^http:.*\/self-service\/verification\?(((&|)code|(&|)token|(&|)flow)=([\-a-zA-Z0-9]+)){2}$/
 
 // intervals define how long to wait for something,
 export const pollInterval = 250 // how long to wait before retry

@@ -56,19 +56,6 @@ func init() {
 	corpx.RegisterFakes()
 }
 
-func assertMessage(t *testing.T, body []byte, message string) {
-	t.Helper()
-	assert.Len(t, gjson.GetBytes(body, "ui.messages").Array(), 1)
-	assert.Equal(t, message, gjson.GetBytes(body, "ui.messages.0.text").String())
-}
-
-func assertFieldMessage(t *testing.T, body []byte, fieldName string, message string) {
-	t.Helper()
-	messages := gjson.GetBytes(body, "ui.nodes.#(attributes.name=="+fieldName+").messages")
-	assert.Len(t, messages.Array(), 1, "expected field %s to have one message, got %s", fieldName, messages)
-	assert.Equal(t, message, messages.Get("0.text").String())
-}
-
 func extractCsrfToken(body []byte) string {
 	return gjson.GetBytes(body, "ui.nodes.#(attributes.name==csrf_token).attributes.value").String()
 }
@@ -161,7 +148,7 @@ func TestAdminStrategy(t *testing.T) {
 		require.True(t, code.ExpiresAt.Before(time.Now().Add(conf.SelfServiceFlowRecoveryRequestLifespan(ctx))))
 
 		body := submitRecoveryLink(t, code.RecoveryLink, code.RecoveryCode)
-		assertMessage(t, body, "You successfully recovered your account. Please change your password or set up an alternative login method (e.g. social sign in) within the next 60.00 minutes.")
+		testhelpers.AssertMessage(t, body, "You successfully recovered your account. Please change your password or set up an alternative login method (e.g. social sign in) within the next 60.00 minutes.")
 	})
 
 	t.Run("description=should not be able to recover with expired code", func(t *testing.T) {
@@ -179,7 +166,7 @@ func TestAdminStrategy(t *testing.T) {
 		require.True(t, code.ExpiresAt.Before(time.Now().Add(conf.SelfServiceFlowRecoveryRequestLifespan(ctx))))
 
 		body := submitRecoveryLink(t, code.RecoveryLink, code.RecoveryCode)
-		assertMessage(t, body, "The recovery flow expired 0.00 minutes ago, please try again.")
+		testhelpers.AssertMessage(t, body, "The recovery flow expired 0.00 minutes ago, please try again.")
 
 		// The recovery address should not be verified if the flow was initiated by the admins
 		addr, err := reg.IdentityPool().FindVerifiableAddressByValue(context.Background(), identity.VerifiableAddressTypeEmail, recoveryEmail)
@@ -204,7 +191,7 @@ func TestAdminStrategy(t *testing.T) {
 
 		body := submitRecoveryLink(t, code.RecoveryLink, code.RecoveryCode)
 
-		assertMessage(t, body, "You successfully recovered your account. Please change your password or set up an alternative login method (e.g. social sign in) within the next 60.00 minutes.")
+		testhelpers.AssertMessage(t, body, "You successfully recovered your account. Please change your password or set up an alternative login method (e.g. social sign in) within the next 60.00 minutes.")
 
 		addr, err := reg.IdentityPool().FindVerifiableAddressByValue(context.Background(), identity.VerifiableAddressTypeEmail, recoveryEmail)
 		assert.NoError(t, err)
@@ -226,7 +213,7 @@ func TestAdminStrategy(t *testing.T) {
 
 		body := submitRecoveryLink(t, c1.RecoveryLink, c2.RecoveryCode)
 
-		assertMessage(t, body, "The recovery code is invalid or has already been used. Please try again.")
+		testhelpers.AssertMessage(t, body, "The recovery code is invalid or has already been used. Please try again.")
 	})
 
 	t.Run("case=form should not contain email field when creating recovery code", func(t *testing.T) {
@@ -728,14 +715,14 @@ func TestRecovery(t *testing.T) {
 		for submitTry := 0; submitTry < 5; submitTry++ {
 			body := submitRecoveryCode(t, c, body, RecoveryFlowTypeBrowser, "12312312", http.StatusOK)
 
-			assertMessage(t, []byte(body), "The recovery code is invalid or has already been used. Please try again.")
+			testhelpers.AssertMessage(t, []byte(body), "The recovery code is invalid or has already been used. Please try again.")
 		}
 
 		// submit an invalid code for the 6th time
 		body = submitRecoveryCode(t, c, body, RecoveryFlowTypeBrowser, "12312312", http.StatusOK)
 
 		require.Len(t, gjson.Get(body, "ui.messages").Array(), 1)
-		assert.Equal(t, "The recovery was submitted too often. Please try again.", gjson.Get(body, "ui.messages.0.text").String())
+		assert.Equal(t, "The request was submitted too often. Please request another code.", gjson.Get(body, "ui.messages.0.text").String())
 
 		// check that a new flow has been created
 		assert.NotEqual(t, gjson.Get(body, "id"), initialFlowId)
@@ -819,7 +806,7 @@ func TestRecovery(t *testing.T) {
 
 		body = submitRecoveryCode(t, c, body, RecoveryFlowTypeBrowser, "12312312", http.StatusOK)
 
-		assertMessage(t, []byte(body), "The recovery code is invalid or has already been used. Please try again.")
+		testhelpers.AssertMessage(t, []byte(body), "The recovery code is invalid or has already been used. Please try again.")
 	})
 
 	t.Run("description=should not be able to submit recover address after flow expired", func(t *testing.T) {
@@ -875,7 +862,7 @@ func TestRecovery(t *testing.T) {
 
 		assert.NotEqual(t, gjson.Get(body, "id"), initialFlowId)
 
-		assertMessage(t, []byte(body), "The recovery flow expired 0.00 minutes ago, please try again.")
+		testhelpers.AssertMessage(t, []byte(body), "The recovery flow expired 0.00 minutes ago, please try again.")
 
 		addr, err := reg.IdentityPool().FindVerifiableAddressByValue(context.Background(), identity.VerifiableAddressTypeEmail, recoveryEmail)
 		require.NoError(t, err)
@@ -899,7 +886,7 @@ func TestRecovery(t *testing.T) {
 		body = submitRecoveryCode(t, c, body, RecoveryFlowTypeBrowser, "", http.StatusOK)
 
 		assert.NotContains(t, gjson.Get(body, "ui.nodes").String(), "Property email is missing.")
-		assertMessage(t, []byte(body), "The recovery code is invalid or has already been used. Please try again.")
+		testhelpers.AssertMessage(t, []byte(body), "The recovery code is invalid or has already been used. Please try again.")
 	})
 
 	t.Run("description=should be able to re-send the recovery code", func(t *testing.T) {
@@ -949,11 +936,11 @@ func TestRecovery(t *testing.T) {
 		recoveryCode2 := testhelpers.CourierExpectCodeInMessage(t, message2, 1)
 
 		body = submitRecoveryCode(t, c, body, RecoveryFlowTypeBrowser, recoveryCode1, http.StatusOK)
-		assertMessage(t, []byte(body), "The recovery code is invalid or has already been used. Please try again.")
+		testhelpers.AssertMessage(t, []byte(body), "The recovery code is invalid or has already been used. Please try again.")
 
 		// For good measure, check that the second code works!
 		body = submitRecoveryCode(t, c, body, RecoveryFlowTypeBrowser, recoveryCode2, http.StatusOK)
-		assertMessage(t, []byte(body), "You successfully recovered your account. Please change your password or set up an alternative login method (e.g. social sign in) within the next 60.00 minutes.")
+		testhelpers.AssertMessage(t, []byte(body), "You successfully recovered your account. Please change your password or set up an alternative login method (e.g. social sign in) within the next 60.00 minutes.")
 	})
 
 	t.Run("description=should not show outdated validation message if newer message appears #2799", func(t *testing.T) {
@@ -971,12 +958,12 @@ func TestRecovery(t *testing.T) {
 
 		body = submitRecoveryCode(t, c, body, RecoveryFlowTypeBrowser, "123", http.StatusOK) // Send code that validates field schema
 
-		assertFieldMessage(t, []byte(body), "code", "does not match pattern \"^\\\\d{8}$\"")
+		testhelpers.AssertFieldMessage(t, []byte(body), "code", "does not match pattern \"^\\\\d{8}$\"")
 
 		body = submitRecoveryCode(t, c, body, RecoveryFlowTypeBrowser, "12312312", http.StatusOK) // Now send a wrong code that triggers "global" validation error
 
 		assert.Empty(t, gjson.Get(body, "ui.nodes.#(attributes.name==code).messages").Array())
-		assertMessage(t, []byte(body), "The recovery code is invalid or has already been used. Please try again.")
+		testhelpers.AssertMessage(t, []byte(body), "The recovery code is invalid or has already been used. Please try again.")
 	})
 }
 

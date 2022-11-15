@@ -93,7 +93,12 @@ func WithFlowReturnTo(returnTo string) FlowOption {
 }
 
 func (h *Handler) NewVerificationFlow(w http.ResponseWriter, r *http.Request, ft flow.Type, opts ...FlowOption) (*Flow, error) {
-	f, err := NewFlow(h.d.Config(), h.d.Config().SelfServiceFlowVerificationRequestLifespan(r.Context()), h.d.GenerateCSRFToken(r), r, h.d.AllVerificationStrategies(), ft)
+	strategy, err := h.d.GetActiveVerificationStrategy(r.Context())
+	if err != nil {
+		return nil, err
+	}
+
+	f, err := NewFlow(h.d.Config(), h.d.Config().SelfServiceFlowVerificationRequestLifespan(r.Context()), h.d.GenerateCSRFToken(r), r, strategy, ft)
 	if err != nil {
 		return nil, err
 	}
@@ -395,6 +400,11 @@ func (h *Handler) updateVerificationFlow(w http.ResponseWriter, r *http.Request,
 	var g node.UiNodeGroup
 	var found bool
 	for _, ss := range h.d.AllVerificationStrategies() {
+		// If an active strategy is set, but it does not match the current strategy, that strategy is not responsible anyways.
+		if f.Active.String() != "" && f.Active.String() != ss.VerificationStrategyID() {
+			continue
+		}
+
 		err := ss.Verify(w, r, f)
 		if errors.Is(err, flow.ErrStrategyNotResponsible) {
 			continue
@@ -415,7 +425,7 @@ func (h *Handler) updateVerificationFlow(w http.ResponseWriter, r *http.Request,
 		return
 	}
 
-	if f.Type == flow.TypeBrowser && !x.IsJSONRequest(r) {
+	if x.IsBrowserRequest(r) {
 		http.Redirect(w, r, f.AppendTo(h.d.Config().SelfServiceFlowVerificationUI(r.Context())).String(), http.StatusSeeOther)
 		return
 	}

@@ -136,7 +136,7 @@ func TestFromOldFlow(t *testing.T) {
 		t.Run(fmt.Sprintf("case=original flow is %s", ft), func(t *testing.T) {
 			f, err := verification.NewFlow(conf, 0, "csrf", &r, nil, ft)
 			require.NoError(t, err)
-			nf, err := verification.FromOldFlow(conf, time.Duration(time.Hour), f.CSRFToken, &r, []verification.Strategy{}, f)
+			nf, err := verification.FromOldFlow(conf, time.Duration(time.Hour), f.CSRFToken, &r, nil, f)
 			require.NoError(t, err)
 			require.Equal(t, flow.TypeBrowser, nf.Type)
 		})

@@ -15,6 +15,7 @@ import (
 	"github.com/gobuffalo/httptest"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"github.com/tidwall/gjson"
 
 	"github.com/ory/kratos/driver"
 	"github.com/ory/kratos/driver/config"
@@ -235,4 +236,17 @@ func GetSelfServiceRedirectLocation(t *testing.T, url string) string {
 	require.NoError(t, err)
 	defer res.Body.Close()
 	return res.Header.Get("Location")
+}
+
+func AssertMessage(t *testing.T, body []byte, message string) {
+	t.Helper()
+	assert.Len(t, gjson.GetBytes(body, "ui.messages").Array(), 1)
+	assert.Equal(t, message, gjson.GetBytes(body, "ui.messages.0.text").String(), "%v", string(body))
+}
+
+func AssertFieldMessage(t *testing.T, body []byte, fieldName string, message string) {
+	t.Helper()
+	messages := gjson.GetBytes(body, "ui.nodes.#(attributes.name=="+fieldName+").messages")
+	assert.Len(t, messages.Array(), 1, "expected field %s to have one message, got %s", fieldName, messages)
+	assert.Equal(t, message, messages.Get("0.text").String(), "%v", string(body))
 }
