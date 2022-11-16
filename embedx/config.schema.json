@@ -2481,7 +2481,8 @@
         "cacheable_sessions": {
           "type": "boolean",
           "title": "Enable Ory Sessions caching",
-          "description": "If enabled allows Ory Sessions to be cached. Only effective in the Ory Network."
+          "description": "If enabled allows Ory Sessions to be cached. Only effective in the Ory Network.",
+          "default": true
         }
       },
       "additionalProperties": false

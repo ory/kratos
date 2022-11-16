@@ -118,7 +118,7 @@ const (
 	ViperKeySessionPath                                      = "session.cookie.path"
 	ViperKeySessionPersistentCookie                          = "session.cookie.persistent"
 	ViperKeySessionWhoAmIAAL                                 = "session.whoami.required_aal"
-	ViperKeySessionWhoAmICaching                             = "session.whoami.caching"
+	ViperKeySessionWhoAmICaching                             = "feature_flags.cacheable_sessions"
 	ViperKeySessionRefreshMinTimeLeft                        = "session.earliest_possible_extend"
 	ViperKeyCookieSameSite                                   = "cookies.same_site"
 	ViperKeyCookieDomain                                     = "cookies.domain"

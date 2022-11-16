@@ -199,12 +199,12 @@ func TestSessionWhoAmI(t *testing.T) {
 			}
 		}
 
-		t.Run("cache enabled", func(t *testing.T) {
-			run(t, true)
-		})
-
 		t.Run("cache disabled", func(t *testing.T) {
 			run(t, false)
+		})
+
+		t.Run("cache enabled", func(t *testing.T) {
+			run(t, true)
 		})
 	})
 
