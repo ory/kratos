@@ -180,7 +180,7 @@ func (s *Strategy) createRecoveryCodeForIdentity(w http.ResponseWriter, r *http.
 	flow.DangerousSkipCSRFCheck = true
 	flow.State = recovery.StateEmailSent
 	flow.UI.Nodes = node.Nodes{}
-	flow.UI.Nodes.Append(node.NewInputField("code", nil, node.CodeGroup, node.InputAttributeTypeNumber, node.WithRequiredInputAttribute).
+	flow.UI.Nodes.Append(node.NewInputField("code", nil, node.CodeGroup, node.InputAttributeTypeText, node.WithRequiredInputAttribute).
 		WithMetaLabel(text.NewInfoNodeLabelVerifyOTP()),
 	)
 
@@ -537,7 +537,7 @@ func (s *Strategy) recoveryHandleFormSubmission(w http.ResponseWriter, r *http.R
 	f.Active = sqlxx.NullString(s.RecoveryNodeGroup())
 	f.State = recovery.StateEmailSent
 	f.UI.Messages.Set(text.NewRecoveryEmailWithCodeSent())
-	f.UI.Nodes.Append(node.NewInputField("code", nil, node.CodeGroup, node.InputAttributeTypeNumber, node.WithRequiredInputAttribute).
+	f.UI.Nodes.Append(node.NewInputField("code", nil, node.CodeGroup, node.InputAttributeTypeText, node.WithRequiredInputAttribute).
 		WithMetaLabel(text.NewInfoNodeLabelVerifyOTP()),
 	)
 	f.UI.Nodes.Append(node.NewInputField("method", s.RecoveryNodeGroup(), node.CodeGroup, node.InputAttributeTypeHidden))
