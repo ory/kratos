@@ -15,8 +15,8 @@ import (
 	"encoding/json"
 )
 
-// UpdateIdentityBody Update Identity Body
-type UpdateIdentityBody struct {
+// SetIdentityBody Set Identity Body
+type SetIdentityBody struct {
 	Credentials *IdentityWithCredentials `json:"credentials,omitempty"`
 	// Store metadata about the user which is only accessible through admin APIs such as `GET /admin/identities/<id>`.
 	MetadataAdmin interface{} `json:"metadata_admin,omitempty"`
@@ -29,28 +29,28 @@ type UpdateIdentityBody struct {
 	Traits map[string]interface{} `json:"traits"`
 }
 
-// NewUpdateIdentityBody instantiates a new UpdateIdentityBody object
+// NewSetIdentityBody instantiates a new SetIdentityBody object
 // This constructor will assign default values to properties that have it defined,
 // and makes sure properties required by API are set, but the set of arguments
 // will change when the set of required properties is changed
-func NewUpdateIdentityBody(schemaId string, state IdentityState, traits map[string]interface{}) *UpdateIdentityBody {
-	this := UpdateIdentityBody{}
+func NewSetIdentityBody(schemaId string, state IdentityState, traits map[string]interface{}) *SetIdentityBody {
+	this := SetIdentityBody{}
 	this.SchemaId = schemaId
 	this.State = state
 	this.Traits = traits
 	return &this
 }
 
-// NewUpdateIdentityBodyWithDefaults instantiates a new UpdateIdentityBody object
+// NewSetIdentityBodyWithDefaults instantiates a new SetIdentityBody object
 // This constructor will only assign default values to properties that have it defined,
 // but it doesn't guarantee that properties required by API are set
-func NewUpdateIdentityBodyWithDefaults() *UpdateIdentityBody {
-	this := UpdateIdentityBody{}
+func NewSetIdentityBodyWithDefaults() *SetIdentityBody {
+	this := SetIdentityBody{}
 	return &this
 }
 
 // GetCredentials returns the Credentials field value if set, zero value otherwise.
-func (o *UpdateIdentityBody) GetCredentials() IdentityWithCredentials {
+func (o *SetIdentityBody) GetCredentials() IdentityWithCredentials {
 	if o == nil || o.Credentials == nil {
 		var ret IdentityWithCredentials
 		return ret
@@ -60,7 +60,7 @@ func (o *UpdateIdentityBody) GetCredentials() IdentityWithCredentials {
 
 // GetCredentialsOk returns a tuple with the Credentials field value if set, nil otherwise
 // and a boolean to check if the value has been set.
-func (o *UpdateIdentityBody) GetCredentialsOk() (*IdentityWithCredentials, bool) {
+func (o *SetIdentityBody) GetCredentialsOk() (*IdentityWithCredentials, bool) {
 	if o == nil || o.Credentials == nil {
 		return nil, false
 	}
@@ -68,7 +68,7 @@ func (o *UpdateIdentityBody) GetCredentialsOk() (*IdentityWithCredentials, bool)
 }
 
 // HasCredentials returns a boolean if a field has been set.
-func (o *UpdateIdentityBody) HasCredentials() bool {
+func (o *SetIdentityBody) HasCredentials() bool {
 	if o != nil && o.Credentials != nil {
 		return true
 	}
@@ -77,12 +77,12 @@ func (o *UpdateIdentityBody) HasCredentials() bool {
 }
 
 // SetCredentials gets a reference to the given IdentityWithCredentials and assigns it to the Credentials field.
-func (o *UpdateIdentityBody) SetCredentials(v IdentityWithCredentials) {
+func (o *SetIdentityBody) SetCredentials(v IdentityWithCredentials) {
 	o.Credentials = &v
 }
 
 // GetMetadataAdmin returns the MetadataAdmin field value if set, zero value otherwise (both if not set or set to explicit null).
-func (o *UpdateIdentityBody) GetMetadataAdmin() interface{} {
+func (o *SetIdentityBody) GetMetadataAdmin() interface{} {
 	if o == nil {
 		var ret interface{}
 		return ret
@@ -93,7 +93,7 @@ func (o *UpdateIdentityBody) GetMetadataAdmin() interface{} {
 // GetMetadataAdminOk returns a tuple with the MetadataAdmin field value if set, nil otherwise
 // and a boolean to check if the value has been set.
 // NOTE: If the value is an explicit nil, `nil, true` will be returned
-func (o *UpdateIdentityBody) GetMetadataAdminOk() (*interface{}, bool) {
+func (o *SetIdentityBody) GetMetadataAdminOk() (*interface{}, bool) {
 	if o == nil || o.MetadataAdmin == nil {
 		return nil, false
 	}
@@ -101,7 +101,7 @@ func (o *UpdateIdentityBody) GetMetadataAdminOk() (*interface{}, bool) {
 }
 
 // HasMetadataAdmin returns a boolean if a field has been set.
-func (o *UpdateIdentityBody) HasMetadataAdmin() bool {
+func (o *SetIdentityBody) HasMetadataAdmin() bool {
 	if o != nil && o.MetadataAdmin != nil {
 		return true
 	}
@@ -110,12 +110,12 @@ func (o *UpdateIdentityBody) HasMetadataAdmin() bool {
 }
 
 // SetMetadataAdmin gets a reference to the given interface{} and assigns it to the MetadataAdmin field.
-func (o *UpdateIdentityBody) SetMetadataAdmin(v interface{}) {
+func (o *SetIdentityBody) SetMetadataAdmin(v interface{}) {
 	o.MetadataAdmin = v
 }
 
 // GetMetadataPublic returns the MetadataPublic field value if set, zero value otherwise (both if not set or set to explicit null).
-func (o *UpdateIdentityBody) GetMetadataPublic() interface{} {
+func (o *SetIdentityBody) GetMetadataPublic() interface{} {
 	if o == nil {
 		var ret interface{}
 		return ret
@@ -126,7 +126,7 @@ func (o *UpdateIdentityBody) GetMetadataPublic() interface{} {
 // GetMetadataPublicOk returns a tuple with the MetadataPublic field value if set, nil otherwise
 // and a boolean to check if the value has been set.
 // NOTE: If the value is an explicit nil, `nil, true` will be returned
-func (o *UpdateIdentityBody) GetMetadataPublicOk() (*interface{}, bool) {
+func (o *SetIdentityBody) GetMetadataPublicOk() (*interface{}, bool) {
 	if o == nil || o.MetadataPublic == nil {
 		return nil, false
 	}
@@ -134,7 +134,7 @@ func (o *UpdateIdentityBody) GetMetadataPublicOk() (*interface{}, bool) {
 }
 
 // HasMetadataPublic returns a boolean if a field has been set.
-func (o *UpdateIdentityBody) HasMetadataPublic() bool {
+func (o *SetIdentityBody) HasMetadataPublic() bool {
 	if o != nil && o.MetadataPublic != nil {
 		return true
 	}
@@ -143,12 +143,12 @@ func (o *UpdateIdentityBody) HasMetadataPublic() bool {
 }
 
 // SetMetadataPublic gets a reference to the given interface{} and assigns it to the MetadataPublic field.
-func (o *UpdateIdentityBody) SetMetadataPublic(v interface{}) {
+func (o *SetIdentityBody) SetMetadataPublic(v interface{}) {
 	o.MetadataPublic = v
 }
 
 // GetSchemaId returns the SchemaId field value
-func (o *UpdateIdentityBody) GetSchemaId() string {
+func (o *SetIdentityBody) GetSchemaId() string {
 	if o == nil {
 		var ret string
 		return ret
@@ -159,7 +159,7 @@ func (o *UpdateIdentityBody) GetSchemaId() string {
 
 // GetSchemaIdOk returns a tuple with the SchemaId field value
 // and a boolean to check if the value has been set.
-func (o *UpdateIdentityBody) GetSchemaIdOk() (*string, bool) {
+func (o *SetIdentityBody) GetSchemaIdOk() (*string, bool) {
 	if o == nil {
 		return nil, false
 	}
@@ -167,12 +167,12 @@ func (o *UpdateIdentityBody) GetSchemaIdOk() (*string, bool) {
 }
 
 // SetSchemaId sets field value
-func (o *UpdateIdentityBody) SetSchemaId(v string) {
+func (o *SetIdentityBody) SetSchemaId(v string) {
 	o.SchemaId = v
 }
 
 // GetState returns the State field value
-func (o *UpdateIdentityBody) GetState() IdentityState {
+func (o *SetIdentityBody) GetState() IdentityState {
 	if o == nil {
 		var ret IdentityState
 		return ret
@@ -183,7 +183,7 @@ func (o *UpdateIdentityBody) GetState() IdentityState {
 
 // GetStateOk returns a tuple with the State field value
 // and a boolean to check if the value has been set.
-func (o *UpdateIdentityBody) GetStateOk() (*IdentityState, bool) {
+func (o *SetIdentityBody) GetStateOk() (*IdentityState, bool) {
 	if o == nil {
 		return nil, false
 	}
@@ -191,12 +191,12 @@ func (o *UpdateIdentityBody) GetStateOk() (*IdentityState, bool) {
 }
 
 // SetState sets field value
-func (o *UpdateIdentityBody) SetState(v IdentityState) {
+func (o *SetIdentityBody) SetState(v IdentityState) {
 	o.State = v
 }
 
 // GetTraits returns the Traits field value
-func (o *UpdateIdentityBody) GetTraits() map[string]interface{} {
+func (o *SetIdentityBody) GetTraits() map[string]interface{} {
 	if o == nil {
 		var ret map[string]interface{}
 		return ret
@@ -207,7 +207,7 @@ func (o *UpdateIdentityBody) GetTraits() map[string]interface{} {
 
 // GetTraitsOk returns a tuple with the Traits field value
 // and a boolean to check if the value has been set.
-func (o *UpdateIdentityBody) GetTraitsOk() (map[string]interface{}, bool) {
+func (o *SetIdentityBody) GetTraitsOk() (map[string]interface{}, bool) {
 	if o == nil {
 		return nil, false
 	}
@@ -215,11 +215,11 @@ func (o *UpdateIdentityBody) GetTraitsOk() (map[string]interface{}, bool) {
 }
 
 // SetTraits sets field value
-func (o *UpdateIdentityBody) SetTraits(v map[string]interface{}) {
+func (o *SetIdentityBody) SetTraits(v map[string]interface{}) {
 	o.Traits = v
 }
 
-func (o UpdateIdentityBody) MarshalJSON() ([]byte, error) {
+func (o SetIdentityBody) MarshalJSON() ([]byte, error) {
 	toSerialize := map[string]interface{}{}
 	if o.Credentials != nil {
 		toSerialize["credentials"] = o.Credentials
@@ -242,38 +242,38 @@ func (o UpdateIdentityBody) MarshalJSON() ([]byte, error) {
 	return json.Marshal(toSerialize)
 }
 
-type NullableUpdateIdentityBody struct {
-	value *UpdateIdentityBody
+type NullableSetIdentityBody struct {
+	value *SetIdentityBody
 	isSet bool
 }
 
-func (v NullableUpdateIdentityBody) Get() *UpdateIdentityBody {
+func (v NullableSetIdentityBody) Get() *SetIdentityBody {
 	return v.value
 }
 
-func (v *NullableUpdateIdentityBody) Set(val *UpdateIdentityBody) {
+func (v *NullableSetIdentityBody) Set(val *SetIdentityBody) {
 	v.value = val
 	v.isSet = true
 }
 
-func (v NullableUpdateIdentityBody) IsSet() bool {
+func (v NullableSetIdentityBody) IsSet() bool {
 	return v.isSet
 }
 
-func (v *NullableUpdateIdentityBody) Unset() {
+func (v *NullableSetIdentityBody) Unset() {
 	v.value = nil
 	v.isSet = false
 }
 
-func NewNullableUpdateIdentityBody(val *UpdateIdentityBody) *NullableUpdateIdentityBody {
-	return &NullableUpdateIdentityBody{value: val, isSet: true}
+func NewNullableSetIdentityBody(val *SetIdentityBody) *NullableSetIdentityBody {
+	return &NullableSetIdentityBody{value: val, isSet: true}
 }
 
-func (v NullableUpdateIdentityBody) MarshalJSON() ([]byte, error) {
+func (v NullableSetIdentityBody) MarshalJSON() ([]byte, error) {
 	return json.Marshal(v.value)
 }
 
-func (v *NullableUpdateIdentityBody) UnmarshalJSON(src []byte) error {
+func (v *NullableSetIdentityBody) UnmarshalJSON(src []byte) error {
 	v.isSet = true
 	return json.Unmarshal(src, &v.value)
 }

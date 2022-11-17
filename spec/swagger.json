@@ -310,8 +310,8 @@
         "tags": [
           "identity"
         ],
-        "summary": "Update an Identity",
-        "operationId": "updateIdentity",
+        "summary": "Set Identity",
+        "operationId": "setIdentity",
         "parameters": [
           {
             "type": "string",
@@ -324,7 +324,7 @@
             "name": "Body",
             "in": "body",
             "schema": {
-              "$ref": "#/definitions/updateIdentityBody"
+              "$ref": "#/definitions/setIdentityBody"
             }
           }
         ],
@@ -4358,6 +4358,39 @@
         }
       }
     },
+    "setIdentityBody": {
+      "description": "Set Identity Body",
+      "type": "object",
+      "required": [
+        "schema_id",
+        "traits",
+        "state"
+      ],
+      "properties": {
+        "credentials": {
+          "$ref": "#/definitions/identityWithCredentials"
+        },
+        "metadata_admin": {
+          "description": "Store metadata about the user which is only accessible through admin APIs such as `GET /admin/identities/\u003cid\u003e`.",
+          "type": "object"
+        },
+        "metadata_public": {
+          "description": "Store metadata about the identity which the identity itself can see when calling for example the\nsession endpoint. Do not store sensitive information (e.g. credit score) about the identity in this field.",
+          "type": "object"
+        },
+        "schema_id": {
+          "description": "SchemaID is the ID of the JSON Schema to be used for validating the identity's traits. If set\nwill update the Identity's SchemaID.",
+          "type": "string"
+        },
+        "state": {
+          "$ref": "#/definitions/identityState"
+        },
+        "traits": {
+          "description": "Traits represent an identity's traits. The identity is able to create, modify, and delete traits\nin a self-service manner. The input will always be validated against the JSON Schema defined\nin `schema_id`.",
+          "type": "object"
+        }
+      }
+    },
     "settingsFlow": {
       "description": "This flow is used when an identity wants to update settings\n(e.g. profile data, passwords, ...) in a selfservice manner.\n\nWe recommend reading the [User Settings Documentation](../self-service/flows/user-settings)",
       "type": "object",
@@ -4824,39 +4857,6 @@
       "type": "array",
       "items": {
         "$ref": "#/definitions/uiText"
-      }
-    },
-    "updateIdentityBody": {
-      "description": "Update Identity Body",
-      "type": "object",
-      "required": [
-        "schema_id",
-        "traits",
-        "state"
-      ],
-      "properties": {
-        "credentials": {
-          "$ref": "#/definitions/identityWithCredentials"
-        },
-        "metadata_admin": {
-          "description": "Store metadata about the user which is only accessible through admin APIs such as `GET /admin/identities/\u003cid\u003e`.",
-          "type": "object"
-        },
-        "metadata_public": {
-          "description": "Store metadata about the identity which the identity itself can see when calling for example the\nsession endpoint. Do not store sensitive information (e.g. credit score) about the identity in this field.",
-          "type": "object"
-        },
-        "schema_id": {
-          "description": "SchemaID is the ID of the JSON Schema to be used for validating the identity's traits. If set\nwill update the Identity's SchemaID.",
-          "type": "string"
-        },
-        "state": {
-          "$ref": "#/definitions/identityState"
-        },
-        "traits": {
-          "description": "Traits represent an identity's traits. The identity is able to create, modify, and delete traits\nin a self-service manner. The input will always be validated against the JSON Schema defined\nin `schema_id`.",
-          "type": "object"
-        }
       }
     },
     "updateLoginFlowBody": {

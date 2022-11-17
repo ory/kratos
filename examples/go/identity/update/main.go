@@ -20,7 +20,7 @@ func updateIdentity() *ory.Identity {
 	ctx := context.Background()
 	toUpdate := pkg.CreateIdentity(client)
 
-	identity, res, err := client.IdentityApi.UpdateIdentity(ctx, toUpdate.Id).UpdateIdentityBody(ory.UpdateIdentityBody{
+	identity, res, err := client.IdentityApi.SetIdentity(ctx, toUpdate.Id).SetIdentityBody(ory.SetIdentityBody{
 		Traits: map[string]interface{}{
 			"email": "dev+not-" + x.NewUUID().String() + "@ory.sh",
 		},

@@ -258,20 +258,20 @@ type IdentityApi interface {
 	PatchIdentityExecute(r IdentityApiApiPatchIdentityRequest) (*Identity, *http.Response, error)
 
 	/*
-			 * UpdateIdentity Update an Identity
+			 * SetIdentity Set Identity
 			 * This endpoint updates an [identity](https://www.ory.sh/docs/kratos/concepts/identity-user-model). The full identity
 		payload (except credentials) is expected. It is possible to update the identity's credentials as well.
 			 * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
 			 * @param id ID must be set to the ID of identity you want to update
-			 * @return IdentityApiApiUpdateIdentityRequest
+			 * @return IdentityApiApiSetIdentityRequest
 	*/
-	UpdateIdentity(ctx context.Context, id string) IdentityApiApiUpdateIdentityRequest
+	SetIdentity(ctx context.Context, id string) IdentityApiApiSetIdentityRequest
 
 	/*
-	 * UpdateIdentityExecute executes the request
+	 * SetIdentityExecute executes the request
 	 * @return Identity
 	 */
-	UpdateIdentityExecute(r IdentityApiApiUpdateIdentityRequest) (*Identity, *http.Response, error)
+	SetIdentityExecute(r IdentityApiApiSetIdentityRequest) (*Identity, *http.Response, error)
 }
 
 // IdentityApiService IdentityApi service
@@ -2456,33 +2456,33 @@ func (a *IdentityApiService) PatchIdentityExecute(r IdentityApiApiPatchIdentityR
 	return localVarReturnValue, localVarHTTPResponse, nil
 }
 
-type IdentityApiApiUpdateIdentityRequest struct {
-	ctx                context.Context
-	ApiService         IdentityApi
-	id                 string
-	updateIdentityBody *UpdateIdentityBody
+type IdentityApiApiSetIdentityRequest struct {
+	ctx             context.Context
+	ApiService      IdentityApi
+	id              string
+	setIdentityBody *SetIdentityBody
 }
 
-func (r IdentityApiApiUpdateIdentityRequest) UpdateIdentityBody(updateIdentityBody UpdateIdentityBody) IdentityApiApiUpdateIdentityRequest {
-	r.updateIdentityBody = &updateIdentityBody
+func (r IdentityApiApiSetIdentityRequest) SetIdentityBody(setIdentityBody SetIdentityBody) IdentityApiApiSetIdentityRequest {
+	r.setIdentityBody = &setIdentityBody
 	return r
 }
 
-func (r IdentityApiApiUpdateIdentityRequest) Execute() (*Identity, *http.Response, error) {
-	return r.ApiService.UpdateIdentityExecute(r)
+func (r IdentityApiApiSetIdentityRequest) Execute() (*Identity, *http.Response, error) {
+	return r.ApiService.SetIdentityExecute(r)
 }
 
 /*
-  - UpdateIdentity Update an Identity
+  - SetIdentity Set Identity
   - This endpoint updates an [identity](https://www.ory.sh/docs/kratos/concepts/identity-user-model). The full identity
 
 payload (except credentials) is expected. It is possible to update the identity's credentials as well.
   - @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
   - @param id ID must be set to the ID of identity you want to update
-  - @return IdentityApiApiUpdateIdentityRequest
+  - @return IdentityApiApiSetIdentityRequest
 */
-func (a *IdentityApiService) UpdateIdentity(ctx context.Context, id string) IdentityApiApiUpdateIdentityRequest {
-	return IdentityApiApiUpdateIdentityRequest{
+func (a *IdentityApiService) SetIdentity(ctx context.Context, id string) IdentityApiApiSetIdentityRequest {
+	return IdentityApiApiSetIdentityRequest{
 		ApiService: a,
 		ctx:        ctx,
 		id:         id,
@@ -2493,7 +2493,7 @@ func (a *IdentityApiService) UpdateIdentity(ctx context.Context, id string) Iden
  * Execute executes the request
  * @return Identity
  */
-func (a *IdentityApiService) UpdateIdentityExecute(r IdentityApiApiUpdateIdentityRequest) (*Identity, *http.Response, error) {
+func (a *IdentityApiService) SetIdentityExecute(r IdentityApiApiSetIdentityRequest) (*Identity, *http.Response, error) {
 	var (
 		localVarHTTPMethod   = http.MethodPut
 		localVarPostBody     interface{}
@@ -2503,7 +2503,7 @@ func (a *IdentityApiService) UpdateIdentityExecute(r IdentityApiApiUpdateIdentit
 		localVarReturnValue  *Identity
 	)
 
-	localBasePath, err := a.client.cfg.ServerURLWithContext(r.ctx, "IdentityApiService.UpdateIdentity")
+	localBasePath, err := a.client.cfg.ServerURLWithContext(r.ctx, "IdentityApiService.SetIdentity")
 	if err != nil {
 		return localVarReturnValue, nil, &GenericOpenAPIError{error: err.Error()}
 	}
@@ -2533,7 +2533,7 @@ func (a *IdentityApiService) UpdateIdentityExecute(r IdentityApiApiUpdateIdentit
 		localVarHeaderParams["Accept"] = localVarHTTPHeaderAccept
 	}
 	// body params
-	localVarPostBody = r.updateIdentityBody
+	localVarPostBody = r.setIdentityBody
 	if r.ctx != nil {
 		// API Key Authentication
 		if auth, ok := r.ctx.Value(ContextAPIKeys).(map[string]APIKey); ok {

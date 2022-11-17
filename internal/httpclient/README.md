@@ -124,7 +124,7 @@ Class | Method | HTTP request | Description
 *IdentityApi* | [**ListIdentitySessions**](docs/IdentityApi.md#listidentitysessions) | **Get** /admin/identities/{id}/sessions | List an Identity&#39;s Sessions
 *IdentityApi* | [**ListSessions**](docs/IdentityApi.md#listsessions) | **Get** /admin/sessions | List All Sessions
 *IdentityApi* | [**PatchIdentity**](docs/IdentityApi.md#patchidentity) | **Patch** /admin/identities/{id} | Patch an Identity
-*IdentityApi* | [**UpdateIdentity**](docs/IdentityApi.md#updateidentity) | **Put** /admin/identities/{id} | Update an Identity
+*IdentityApi* | [**SetIdentity**](docs/IdentityApi.md#setidentity) | **Put** /admin/identities/{id} | Set Identity
 *MetadataApi* | [**GetVersion**](docs/MetadataApi.md#getversion) | **Get** /version | Return Running Software Version.
 *MetadataApi* | [**IsAlive**](docs/MetadataApi.md#isalive) | **Get** /health/alive | Check HTTP Server Status
 *MetadataApi* | [**IsReady**](docs/MetadataApi.md#isready) | **Get** /health/ready | Check HTTP Server and Database Status
@@ -184,6 +184,7 @@ Class | Method | HTTP request | Description
  - [Session](docs/Session.md)
  - [SessionAuthenticationMethod](docs/SessionAuthenticationMethod.md)
  - [SessionDevice](docs/SessionDevice.md)
+ - [SetIdentityBody](docs/SetIdentityBody.md)
  - [SettingsFlow](docs/SettingsFlow.md)
  - [SettingsFlowState](docs/SettingsFlowState.md)
  - [SuccessfulNativeLogin](docs/SuccessfulNativeLogin.md)
@@ -200,7 +201,6 @@ Class | Method | HTTP request | Description
  - [UiNodeScriptAttributes](docs/UiNodeScriptAttributes.md)
  - [UiNodeTextAttributes](docs/UiNodeTextAttributes.md)
  - [UiText](docs/UiText.md)
- - [UpdateIdentityBody](docs/UpdateIdentityBody.md)
  - [UpdateLoginFlowBody](docs/UpdateLoginFlowBody.md)
  - [UpdateLoginFlowWithLookupSecretMethod](docs/UpdateLoginFlowWithLookupSecretMethod.md)
  - [UpdateLoginFlowWithOidcMethod](docs/UpdateLoginFlowWithOidcMethod.md)

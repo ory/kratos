@@ -415,11 +415,11 @@ func (h *Handler) create(w http.ResponseWriter, r *http.Request, _ httprouter.Pa
 	)
 }
 
-// Update Identity Parameters
+// Set Identity Parameters
 //
-// swagger:parameters updateIdentity
+// swagger:parameters setIdentity
 // nolint:deadcode,unused
-type updateIdentity struct {
+type setIdentity struct {
 	// ID must be set to the ID of identity you want to update
 	//
 	// required: true
@@ -430,9 +430,9 @@ type updateIdentity struct {
 	Body UpdateIdentityBody
 }
 
-// Update Identity Body
+// Set Identity Body
 //
-// swagger:model updateIdentityBody
+// swagger:model setIdentityBody
 type UpdateIdentityBody struct {
 	// SchemaID is the ID of the JSON Schema to be used for validating the identity's traits. If set
 	// will update the Identity's SchemaID.
@@ -467,9 +467,9 @@ type UpdateIdentityBody struct {
 	State State `json:"state"`
 }
 
-// swagger:route PUT /admin/identities/{id} identity updateIdentity
+// swagger:route PUT /admin/identities/{id} identity setIdentity
 //
-// # Update an Identity
+// # Set Identity
 //
 // This endpoint updates an [identity](https://www.ory.sh/docs/kratos/concepts/identity-user-model). The full identity
 // payload (except credentials) is expected. It is possible to update the identity's credentials as well.
