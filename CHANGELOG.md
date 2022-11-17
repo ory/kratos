@@ -620,6 +620,10 @@ SDK Method `getJsonSchema` was renamed to `getIdentitySchema`.
   ([94a3741](https://github.com/ory/kratos/commit/94a37416011086582e309f62dc2c45ca84083a33))
 - Add pre-hooks to settings, verification, recovery
   ([c0ceaf3](https://github.com/ory/kratos/commit/c0ceaf31f9327cca903c19b77597cae4587737e6))
+- Add session cache header feature flag
+  ([#2899](https://github.com/ory/kratos/issues/2899))
+  ([02a92b4](https://github.com/ory/kratos/commit/02a92b4d8ab5ced5d0d9387b38491990fa7cb724)),
+  closes [ory-corp/cloud#3283](https://github.com/ory-corp/cloud/issues/3283)
 - Add support for firebase scrypt hashes on identity import and login hash
   upgrade ([#2734](https://github.com/ory/kratos/issues/2734))
   ([3852eb4](https://github.com/ory/kratos/commit/3852eb460251a079bad68d08bee2aef23516d168)),
