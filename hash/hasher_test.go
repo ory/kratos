@@ -6,6 +6,7 @@ package hash_test
 import (
 	"context"
 	"crypto/rand"
+	"encoding/base64"
 	"fmt"
 	"testing"
 
@@ -249,4 +250,29 @@ func TestCompare(t *testing.T) {
 	assert.Error(t, hash.Compare(context.Background(), []byte("test"), []byte("$scrypt$ln=16385,r=8,p=1$2npRo7P03Mt8keSoMbyD/tKFWyUzjiQf2svUaNDSrhA=$MiCzNcIplSMqSBrm4HckjYqYhaVPPjTARTzwB1cVNYE=")))
 	assert.Error(t, hash.Compare(context.Background(), []byte("tesu"), []byte("$scrypt$ln=16384,r=8,p=1$2npRo7P03Mt8keSoMbyD/tKFWyUzjiQf2svUaNDSrhA=$MiCzNcIplSMqSBrm4HckjYqYhaVPPjTARTzwB1cVNYE=")))
 	assert.Error(t, hash.Compare(context.Background(), []byte("tesu"), []byte("$scrypt$ln=abc,r=8,p=1$2npRo7P03Mt8keSoMbyD/tKFWyUzjiQf2svUaNDSrhA=$MiCzNcIplSMqSBrm4HckjYqYhaVPPjTARTzwB1cVNYE=")))
+
+	assert.Nil(t, hash.Compare(context.Background(), []byte("test"), []byte("$md5$CY9rzUYh03PK3k6DJie09g==")))
+	assert.Nil(t, hash.CompareMD5(context.Background(), []byte("test"), []byte("$md5$CY9rzUYh03PK3k6DJie09g==")))
+	assert.Error(t, hash.Compare(context.Background(), []byte("test"), []byte("$md5$WhBei51A4TKXgNYuoiZdig==")))
+	assert.Error(t, hash.Compare(context.Background(), []byte("test"), []byte("$md5$Dk/E5LQLsx4yt8QbUbvpdg==")))
+
+	assert.Nil(t, hash.Compare(context.Background(), []byte("ory"), []byte("$md5$ptoWyof5SobW+pbZu2QXoQ==")))
+	assert.Nil(t, hash.CompareMD5(context.Background(), []byte("ory"), []byte("$md5$ptoWyof5SobW+pbZu2QXoQ==")))
+	assert.Error(t, hash.Compare(context.Background(), []byte("ory"), []byte("$md5$4skj967KRHFsnPFoL5dMMw==")))
+
+	assert.ErrorIs(t, hash.Compare(context.Background(), []byte("ory"), []byte("$md5$$")), hash.ErrInvalidHash)
+	assert.Error(t, hash.Compare(context.Background(), []byte("ory"), []byte("$md5$$$")))
+	assert.Error(t, hash.Compare(context.Background(), []byte("ory"), []byte("$md5$pf=$$")))
+	assert.ErrorIs(t, hash.Compare(context.Background(), []byte("ory"), []byte("$md5$pf=MTIz$Z$")), base64.CorruptInputError(0))
+	assert.ErrorIs(t, hash.Compare(context.Background(), []byte("ory"), []byte("$md5$pf=MTIz$Z$")), base64.CorruptInputError(0))
+	assert.ErrorIs(t, hash.Compare(context.Background(), []byte("ory"), []byte("$md5$pf=MTIz$MTIz$Z")), base64.CorruptInputError(0))
+
+	assert.Nil(t, hash.Compare(context.Background(), []byte("test"), []byte("$md5$pf=e1NBTFR9e1BBU1NXT1JEfQ==$MTIz$q+RdKCgc+ipCAcm5ChQwlQ=="))) // pf={SALT}{PASSWORD} salt=123
+	assert.Error(t, hash.Compare(context.Background(), []byte("test"), []byte("$md5$pf=e1NBTFR9e1BBU1NXT1JEfQ==$MTIz$hh8ZTp1hGPPZQqcr4+UXSQ==")))
+
+	assert.Nil(t, hash.CompareMD5(context.Background(), []byte("test"), []byte("$md5$pf=e1NBTFR9JCR7UEFTU1dPUkR9$MTIzNA==$ud392Z8rfZ+Ou7ZFXYLKbA=="))) // pf={SALT}$${PASSWORD} salt=1234
+	assert.Error(t, hash.CompareMD5(context.Background(), []byte("test1"), []byte("$md5$pf=e1NBTFR9JCR7UEFTU1dPUkR9$MTIzNA==$ud392Z8rfZ+Ou7ZFXYLKbA==")))
+
+	assert.Nil(t, hash.CompareMD5(context.Background(), []byte("ory"), []byte("$md5$pf=e1BBU1NXT1JEfXtTQUxUfSQ/$MTIzNDU2Nzg5$8PhwWanVRnpJAFK4NUjR0w=="))) // pf={PASSWORD}{SALT}$? salt=123456789
+	assert.Error(t, hash.CompareMD5(context.Background(), []byte("ory1"), []byte("$md5$pf=e1BBU1NXT1JEfXtTQUxUfSQ/$MTIzNDU2Nzg5$8PhwWanVRnpJAFK4NUjR0w==")))
 }
