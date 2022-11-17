@@ -147,44 +147,65 @@ func TestSessionWhoAmI(t *testing.T) {
 	})
 
 	t.Run("case=http methods", func(t *testing.T) {
-		client := testhelpers.NewClientWithCookies(t)
+		run := func(t *testing.T, cacheEnabled bool) {
+			conf.MustSet(ctx, config.ViperKeySessionWhoAmICaching, cacheEnabled)
+			client := testhelpers.NewClientWithCookies(t)
 
-		// No cookie yet -> 401
-		res, err := client.Get(ts.URL + RouteWhoami)
-		require.NoError(t, err)
-		assertNoCSRFCookieInResponse(t, ts, client, res) // Test that no CSRF cookie is ever set here.
-		assert.NotEmpty(t, res.Header.Get("Ory-Session-Cache-For"))
+			// No cookie yet -> 401
+			res, err := client.Get(ts.URL + RouteWhoami)
+			require.NoError(t, err)
+			assertNoCSRFCookieInResponse(t, ts, client, res) // Test that no CSRF cookie is ever set here.
 
-		// Set cookie
-		reg.CSRFHandler().IgnorePath("/set")
-		testhelpers.MockHydrateCookieClient(t, client, ts.URL+"/set")
-
-		// Cookie set -> 200 (GET)
-		for _, method := range []string{
-			"GET",
-			"POST",
-			"PUT",
-			"DELETE",
-		} {
-			t.Run("http_method="+method, func(t *testing.T) {
-				req, err := http.NewRequest(method, ts.URL+RouteWhoami, nil)
-				require.NoError(t, err)
-
-				res, err = client.Do(req)
-				require.NoError(t, err)
-				body, err := io.ReadAll(res.Body)
-				require.NoError(t, err)
-				assertNoCSRFCookieInResponse(t, ts, client, res) // Test that no CSRF cookie is ever set here.
-
-				assert.EqualValues(t, http.StatusOK, res.StatusCode)
-				assert.NotEmpty(t, res.Header.Get("X-Kratos-Authenticated-Identity-Id"))
+			if cacheEnabled {
 				assert.NotEmpty(t, res.Header.Get("Ory-Session-Cache-For"))
+			} else {
+				assert.Empty(t, res.Header.Get("Ory-Session-Cache-For"))
+			}
 
-				assert.Empty(t, gjson.GetBytes(body, "identity.credentials"))
-				assert.Equal(t, "mp", gjson.GetBytes(body, "identity.metadata_public.public").String(), "%s", body)
-				assert.False(t, gjson.GetBytes(body, "identity.metadata_admin").Exists())
-			})
+			// Set cookie
+			reg.CSRFHandler().IgnorePath("/set")
+			testhelpers.MockHydrateCookieClient(t, client, ts.URL+"/set")
+
+			// Cookie set -> 200 (GET)
+			for _, method := range []string{
+				"GET",
+				"POST",
+				"PUT",
+				"DELETE",
+			} {
+				t.Run("http_method="+method, func(t *testing.T) {
+					req, err := http.NewRequest(method, ts.URL+RouteWhoami, nil)
+					require.NoError(t, err)
+
+					res, err = client.Do(req)
+					require.NoError(t, err)
+					body, err := io.ReadAll(res.Body)
+					require.NoError(t, err)
+					assertNoCSRFCookieInResponse(t, ts, client, res) // Test that no CSRF cookie is ever set here.
+
+					assert.EqualValues(t, http.StatusOK, res.StatusCode)
+					assert.NotEmpty(t, res.Header.Get("X-Kratos-Authenticated-Identity-Id"))
+
+					if cacheEnabled {
+						assert.NotEmpty(t, res.Header.Get("Ory-Session-Cache-For"))
+					} else {
+						assert.Empty(t, res.Header.Get("Ory-Session-Cache-For"))
+					}
+
+					assert.Empty(t, gjson.GetBytes(body, "identity.credentials"))
+					assert.Equal(t, "mp", gjson.GetBytes(body, "identity.metadata_public.public").String(), "%s", body)
+					assert.False(t, gjson.GetBytes(body, "identity.metadata_admin").Exists())
+				})
+			}
 		}
+
+		t.Run("cache disabled", func(t *testing.T) {
+			run(t, false)
+		})
+
+		t.Run("cache enabled", func(t *testing.T) {
+			run(t, true)
+		})
 	})
 
 	/*

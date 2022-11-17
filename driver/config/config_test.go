@@ -608,6 +608,10 @@ func TestSession(t *testing.T) {
 	assert.Equal(t, true, p.SessionPersistentCookie(ctx))
 	p.MustSet(ctx, config.ViperKeySessionPersistentCookie, false)
 	assert.Equal(t, false, p.SessionPersistentCookie(ctx))
+
+	assert.Equal(t, true, p.SessionWhoAmICaching(ctx))
+	p.MustSet(ctx, config.ViperKeySessionWhoAmICaching, false)
+	assert.Equal(t, false, p.SessionWhoAmICaching(ctx))
 }
 
 func TestCookies(t *testing.T) {

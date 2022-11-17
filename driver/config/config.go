@@ -118,6 +118,7 @@ const (
 	ViperKeySessionPath                                      = "session.cookie.path"
 	ViperKeySessionPersistentCookie                          = "session.cookie.persistent"
 	ViperKeySessionWhoAmIAAL                                 = "session.whoami.required_aal"
+	ViperKeySessionWhoAmICaching                             = "feature_flags.cacheable_sessions"
 	ViperKeySessionRefreshMinTimeLeft                        = "session.earliest_possible_extend"
 	ViperKeyCookieSameSite                                   = "cookies.same_site"
 	ViperKeyCookieDomain                                     = "cookies.domain"
@@ -1249,6 +1250,10 @@ func (p *Config) CookieDomain(ctx context.Context) string {
 
 func (p *Config) SessionWhoAmIAAL(ctx context.Context) string {
 	return p.GetProvider(ctx).String(ViperKeySessionWhoAmIAAL)
+}
+
+func (p *Config) SessionWhoAmICaching(ctx context.Context) bool {
+	return p.GetProvider(ctx).Bool(ViperKeySessionWhoAmICaching)
 }
 
 func (p *Config) SessionRefreshMinTimeLeft(ctx context.Context) time.Duration {

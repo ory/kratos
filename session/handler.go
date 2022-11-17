@@ -185,9 +185,10 @@ type toSession struct {
 //	  default: errorGeneric
 func (h *Handler) whoami(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	s, err := h.r.SessionManager().FetchFromRequest(r.Context(), r)
+	c := h.r.Config()
 	if err != nil {
-		// We cache errors where no session was found.
-		if noSess := new(ErrNoActiveSessionFound); errors.As(err, &noSess) && noSess.credentialsMissing {
+		// We cache errors (and set cache header only when configured) where no session was found.
+		if noSess := new(ErrNoActiveSessionFound); c.SessionWhoAmICaching(r.Context()) && errors.As(err, &noSess) && noSess.credentialsMissing {
 			w.Header().Set("Ory-Session-Cache-For", fmt.Sprintf("%d", int64(time.Minute.Seconds())))
 		}
 
@@ -197,7 +198,6 @@ func (h *Handler) whoami(w http.ResponseWriter, r *http.Request, ps httprouter.P
 	}
 
 	var aalErr *ErrAALNotSatisfied
-	c := h.r.Config()
 	if err := h.r.SessionManager().DoesSessionSatisfy(r, s, c.SessionWhoAmIAAL(r.Context())); errors.As(err, &aalErr) {
 		h.r.Audit().WithRequest(r).WithError(err).Info("Session was found but AAL is not satisfied for calling this endpoint.")
 		h.r.Writer().WriteError(w, r, err)
@@ -213,7 +213,11 @@ func (h *Handler) whoami(w http.ResponseWriter, r *http.Request, ps httprouter.P
 
 	// Set userId as the X-Kratos-Authenticated-Identity-Id header.
 	w.Header().Set("X-Kratos-Authenticated-Identity-Id", s.Identity.ID.String())
-	w.Header().Set("Ory-Session-Cache-For", fmt.Sprintf("%d", int64(time.Until(s.ExpiresAt).Seconds())))
+
+	// Set Cache header only when configured
+	if c.SessionWhoAmICaching(r.Context()) {
+		w.Header().Set("Ory-Session-Cache-For", fmt.Sprintf("%d", int64(time.Until(s.ExpiresAt).Seconds())))
+	}
 
 	if err := h.r.SessionManager().RefreshCookie(r.Context(), w, r, s); err != nil {
 		h.r.Audit().WithRequest(r).WithError(err).Info("Could not re-issue cookie.")
