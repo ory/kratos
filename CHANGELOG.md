@@ -5,7 +5,7 @@
 
 **Table of Contents**
 
-- [ (2022-11-15)](#2022-11-15)
+- [ (2022-11-17)](#2022-11-17)
   - [Breaking Changes](#breaking-changes)
     - [Bug Fixes](#bug-fixes)
     - [Code Refactoring](#code-refactoring)
@@ -280,7 +280,7 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# [](https://github.com/ory/kratos/compare/v0.10.1...v) (2022-11-15)
+# [](https://github.com/ory/kratos/compare/v0.10.1...v) (2022-11-17)
 
 ## Breaking Changes
 
@@ -311,6 +311,8 @@ SDK Method `getJsonSchema` was renamed to `getIdentitySchema`.
 
   This PR adds the Apple ID issuer url to the provider simplifying the setup.
 
+- Add missing go.mod to docker build
+  ([7c4964e](https://github.com/ory/kratos/commit/7c4964ef65769b40f1ec572a87c2c4106a800bf9))
 - Add support for verified Graph API calls for facebook oidc provider
   ([#2547](https://github.com/ory/kratos/issues/2547))
   ([1ba7c66](https://github.com/ory/kratos/commit/1ba7c66fc4897b676690f0ac701a0b68aee4f151))
