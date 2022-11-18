@@ -43,9 +43,9 @@ type EmailAddress struct {
 type Introspection struct {
 	Active       bool   `json:"active"`
 	ClientID     string `json:"client_id"`
-	AuthorizedAt int32  `json:"authorized_at"`
-	CreatedAt    int32  `json:"created_at"`
-	ExpiresAt    int32  `json:"expires_at"`
+	AuthorizedAt uint32 `json:"authorized_at"`
+	CreatedAt    uint32 `json:"created_at"`
+	ExpiresAt    uint32 `json:"expires_at"`
 	Status       string `json:"status"`
 	Scope        string `json:"scope"`
 	AuthType     string `json:"auth_type"`
