@@ -302,6 +302,9 @@ SDK Method `getJsonSchema` was renamed to `getIdentitySchema`.
 
 ### Bug Fixes
 
+- Active attribute based off IsActive checks
+  ([#2901](https://github.com/ory/kratos/issues/2901))
+  ([bcbf68e](https://github.com/ory/kratos/commit/bcbf68e716aa62f684acbe91e8c35f6c006a4706))
 - Add issuerURL for apple id
   ([#2565](https://github.com/ory/kratos/issues/2565))
   ([2aeb0a2](https://github.com/ory/kratos/commit/2aeb0a210e6e6433f1a9d9e6a75b21b8e3083239)):
