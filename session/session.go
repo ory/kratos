@@ -148,6 +148,17 @@ func (s Session) TableName(ctx context.Context) string {
 	return "sessions"
 }
 
+func (s Session) MarshalJSON() ([]byte, error) {
+	type sl Session
+	s.Active = s.IsActive()
+
+	result, err := json.Marshal(sl(s))
+	if err != nil {
+		return nil, err
+	}
+	return result, nil
+}
+
 func (s *Session) CompletedLoginFor(method identity.CredentialsType, aal identity.AuthenticatorAssuranceLevel) {
 	s.AMR = append(s.AMR, AuthenticationMethod{Method: method, AAL: aal, CompletedAt: time.Now().UTC()})
 }
