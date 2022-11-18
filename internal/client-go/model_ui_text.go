@@ -22,6 +22,7 @@ type UiText struct {
 	Id      int64                  `json:"id"`
 	// The message text. Written in american english.
 	Text string `json:"text"`
+	// The message type. info Info error Error success Success
 	Type string `json:"type"`
 }
 
