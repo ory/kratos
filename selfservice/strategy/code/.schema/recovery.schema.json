@@ -11,8 +11,7 @@
       ]
     },
     "code": {
-      "type": "string",
-      "pattern": "^\\d{8}$"
+      "type": "string"
     },
     "email": {
       "type": "string",

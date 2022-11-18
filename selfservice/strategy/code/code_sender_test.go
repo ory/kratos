@@ -56,12 +56,12 @@ func TestSender(t *testing.T) {
 		assert.EqualValues(t, "tracked@ory.sh", messages[0].Recipient)
 		assert.Contains(t, messages[0].Subject, "Recover access to your account")
 
-		assert.Regexp(t, `(\d{8})`, messages[0].Body)
+		assert.Regexp(t, testhelpers.CodeRegex, messages[0].Body)
 
 		assert.EqualValues(t, "not-tracked@ory.sh", messages[1].Recipient)
 		assert.Contains(t, messages[1].Subject, "Account access attempted")
 
-		assert.NotRegexp(t, `(\d{8})`, messages[1].Body, "Expected message to not contain an 8 digit recovery code, but it did: ", messages[1].Body)
+		assert.NotRegexp(t, testhelpers.CodeRegex, messages[1].Body, "Expected message to not contain an 8 digit recovery code, but it did: ", messages[1].Body)
 	})
 
 }
