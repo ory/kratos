@@ -1,3 +1,6 @@
+// Copyright © 2022 Ory Corp
+// SPDX-License-Identifier: Apache-2.0
+
 import { authenticator } from "otplib"
 import { gen } from "../../../helpers"
 import { routes as express } from "../../../helpers/express"
@@ -8,8 +11,8 @@ context("OIDC Provider 2FA", () => {
   const client = {
     auth_endpoint: "http://localhost:4744/oauth2/auth",
     token_endpoint: "http://localhost:4744/oauth2/token",
-    id: "dummy-client",
-    secret: "secret",
+    id: Cypress.env("OIDC_DUMMY_CLIENT_ID"),
+    secret: Cypress.env("OIDC_DUMMY_CLIENT_SECRET"),
     token_endpoint_auth_method: "client_secret_basic",
     grant_types: ["authorization_code", "refresh_token"],
     response_types: ["code", "id_token"],

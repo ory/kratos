@@ -1,3 +1,6 @@
+// Copyright © 2022 Ory Corp
+// SPDX-License-Identifier: Apache-2.0
+
 package lookup_test
 
 import (
@@ -14,7 +17,7 @@ import (
 
 	"github.com/gofrs/uuid"
 
-	kratos "github.com/ory/kratos-client-go"
+	kratos "github.com/ory/kratos/internal/httpclient"
 	"github.com/ory/kratos/selfservice/flow"
 
 	"github.com/stretchr/testify/assert"
@@ -373,7 +376,7 @@ func TestCompleteSettings(t *testing.T) {
 					v.Set(node.LookupConfirm, "true")
 				}
 
-				checkIdentity := func(t *testing.T, id *identity.Identity, f *kratos.SelfServiceSettingsFlow) {
+				checkIdentity := func(t *testing.T, id *identity.Identity, f *kratos.SettingsFlow) {
 					_, cred, err := reg.PrivilegedIdentityPool().FindByCredentialsIdentifier(context.Background(), identity.CredentialsTypeLookup, id.ID.String())
 					require.NoError(t, err)
 					assert.NotContains(t, gjson.GetBytes(cred.Config, "recovery_codes").Raw, "key-1")
@@ -466,7 +469,7 @@ func TestCompleteSettings(t *testing.T) {
 					v.Set(node.LookupDisable, "true")
 				}
 
-				checkIdentity := func(t *testing.T, id *identity.Identity, f *kratos.SelfServiceSettingsFlow) {
+				checkIdentity := func(t *testing.T, id *identity.Identity, f *kratos.SettingsFlow) {
 					_, _, err := reg.PrivilegedIdentityPool().FindByCredentialsIdentifier(context.Background(), identity.CredentialsTypeLookup, id.ID.String())
 					require.ErrorIs(t, err, sqlcon.ErrNoRows)
 

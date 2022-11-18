@@ -1,3 +1,6 @@
+// Copyright © 2022 Ory Corp
+// SPDX-License-Identifier: Apache-2.0
+
 package persistence
 
 import (
@@ -45,6 +48,7 @@ type Persister interface {
 	link.RecoveryTokenPersister
 	link.VerificationTokenPersister
 	code.RecoveryCodePersister
+	code.VerificationCodePersister
 
 	CleanupDatabase(context.Context, time.Duration, time.Duration, int) error
 	Close(context.Context) error

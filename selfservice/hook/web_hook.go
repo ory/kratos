@@ -1,3 +1,6 @@
+// Copyright © 2022 Ory Corp
+// SPDX-License-Identifier: Apache-2.0
+
 package hook
 
 import (
@@ -12,6 +15,7 @@ import (
 	"go.opentelemetry.io/otel/trace"
 
 	"github.com/ory/kratos/ui/node"
+	"github.com/ory/x/jsonnetsecure"
 
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/request"
@@ -28,17 +32,24 @@ import (
 	"github.com/ory/x/otelx"
 )
 
-var _ registration.PostHookPostPersistExecutor = new(WebHook)
-var _ registration.PostHookPrePersistExecutor = new(WebHook)
-var _ verification.PostHookExecutor = new(WebHook)
-var _ recovery.PostHookExecutor = new(WebHook)
-var _ settings.PostHookPostPersistExecutor = new(WebHook)
+var (
+	_ registration.PostHookPostPersistExecutor = new(WebHook)
+	_ registration.PostHookPrePersistExecutor  = new(WebHook)
+
+	_ verification.PostHookExecutor = new(WebHook)
+
+	_ recovery.PostHookExecutor = new(WebHook)
+
+	_ settings.PostHookPostPersistExecutor = new(WebHook)
+	_ settings.PostHookPrePersistExecutor  = new(WebHook)
+)
 
 type (
 	webHookDependencies interface {
 		x.LoggingProvider
 		x.HTTPClientProvider
 		x.TracingProvider
+		jsonnetsecure.VMProvider
 	}
 
 	templateContext struct {
@@ -150,6 +161,10 @@ func (e *WebHook) ExecuteRegistrationPreHook(_ http.ResponseWriter, req *http.Re
 
 func (e *WebHook) ExecutePostRegistrationPrePersistHook(_ http.ResponseWriter, req *http.Request, flow *registration.Flow, id *identity.Identity) error {
 	ctx, _ := e.deps.Tracer(req.Context()).Tracer().Start(req.Context(), "selfservice.hook.ExecutePostRegistrationPrePersistHook")
+	if !gjson.GetBytes(e.conf, "can_interrupt").Bool() {
+		return nil
+	}
+
 	return e.execute(ctx, &templateContext{
 		Flow:           flow,
 		RequestHeaders: req.Header,
@@ -161,6 +176,10 @@ func (e *WebHook) ExecutePostRegistrationPrePersistHook(_ http.ResponseWriter, r
 
 func (e *WebHook) ExecutePostRegistrationPostPersistHook(_ http.ResponseWriter, req *http.Request, flow *registration.Flow, session *session.Session) error {
 	ctx, _ := e.deps.Tracer(req.Context()).Tracer().Start(req.Context(), "selfservice.hook.ExecutePostRegistrationPostPersistHook")
+	if gjson.GetBytes(e.conf, "can_interrupt").Bool() {
+		return nil
+	}
+
 	return e.execute(ctx, &templateContext{
 		Flow:           flow,
 		RequestHeaders: req.Header,
@@ -182,6 +201,25 @@ func (e *WebHook) ExecuteSettingsPreHook(_ http.ResponseWriter, req *http.Reques
 
 func (e *WebHook) ExecuteSettingsPostPersistHook(_ http.ResponseWriter, req *http.Request, flow *settings.Flow, id *identity.Identity) error {
 	ctx, _ := e.deps.Tracer(req.Context()).Tracer().Start(req.Context(), "selfservice.hook.ExecuteSettingsPostPersistHook")
+	if gjson.GetBytes(e.conf, "can_interrupt").Bool() {
+		return nil
+	}
+
+	return e.execute(ctx, &templateContext{
+		Flow:           flow,
+		RequestHeaders: req.Header,
+		RequestMethod:  req.Method,
+		RequestURL:     x.RequestURL(req).String(),
+		Identity:       id,
+	})
+}
+
+func (e *WebHook) ExecuteSettingsPrePersistHook(_ http.ResponseWriter, req *http.Request, flow *settings.Flow, id *identity.Identity) error {
+	ctx, _ := e.deps.Tracer(req.Context()).Tracer().Start(req.Context(), "selfservice.hook.ExecuteSettingsPrePersistHook")
+	if !gjson.GetBytes(e.conf, "can_interrupt").Bool() {
+		return nil
+	}
+
 	return e.execute(ctx, &templateContext{
 		Flow:           flow,
 		RequestHeaders: req.Header,
@@ -208,12 +246,12 @@ func (e *WebHook) execute(ctx context.Context, data *templateContext) error {
 	span.SetAttributes(otelx.StringAttrs(attrs)...)
 	defer span.End()
 
-	builder, err := request.NewBuilder(e.conf, e.deps.HTTPClient(ctx), e.deps.Logger())
+	builder, err := request.NewBuilder(e.conf, e.deps)
 	if err != nil {
 		return err
 	}
 
-	req, err := builder.BuildRequest(data)
+	req, err := builder.BuildRequest(ctx, data)
 	if errors.Is(err, request.ErrCancel) {
 		return nil
 	} else if err != nil {

@@ -1,3 +1,6 @@
+// Copyright © 2022 Ory Corp
+// SPDX-License-Identifier: Apache-2.0
+
 import { gen } from "../../../helpers"
 import * as oauth2 from "../../../helpers/oauth2"
 import * as httpbin from "../../../helpers/httpbin"
@@ -10,8 +13,8 @@ context("OpenID Provider", () => {
   const client = {
     auth_endpoint: "http://localhost:4744/oauth2/auth",
     token_endpoint: "http://localhost:4744/oauth2/token",
-    id: "dummy-client",
-    secret: "secret",
+    id: Cypress.env("OIDC_DUMMY_CLIENT_ID"),
+    secret: Cypress.env("OIDC_DUMMY_CLIENT_SECRET"),
     token_endpoint_auth_method: "client_secret_basic",
     grant_types: ["authorization_code", "refresh_token"],
     response_types: ["code", "id_token"],
@@ -123,8 +126,9 @@ context("OpenID Provider", () => {
     })
 
     odicLogin()
-    cy.getCookie("oauth2_authentication_session_insecure").should("not.be.null")
-    cy.getCookie("oauth2_authentication_session_insecure").then((cookie) => {
+    console.log(cy.getCookies())
+    cy.getCookie("ory_hydra_session_dev").should("not.be.null")
+    cy.getCookie("ory_hydra_session_dev").then((cookie) => {
       let expected = Date.now() / 1000 + 1234
       let precision = 10
       expect(cookie.expiry).to.be.lessThan(expected + precision)
@@ -139,6 +143,6 @@ context("OpenID Provider", () => {
     })
 
     odicLogin()
-    cy.getCookie("oauth2_authentication_session_insecure").should("be.null")
+    cy.getCookie("ory_hydra_session_dev").should("be.null")
   })
 })

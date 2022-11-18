@@ -1,3 +1,6 @@
+// Copyright © 2022 Ory Corp
+// SPDX-License-Identifier: Apache-2.0
+
 package text
 
 func NewInfoNodeLabelVerifyOTP() *Message {
@@ -36,6 +39,14 @@ func NewInfoNodeLabelSubmit() *Message {
 	return &Message{
 		ID:   InfoNodeLabelSubmit,
 		Text: "Submit",
+		Type: Info,
+	}
+}
+
+func NewInfoNodeLabelReturn() *Message {
+	return &Message{
+		ID:   InfoNodeLabelReturn,
+		Text: "Return",
 		Type: Info,
 	}
 }

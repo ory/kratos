@@ -1,3 +1,6 @@
+// Copyright © 2022 Ory Corp
+// SPDX-License-Identifier: Apache-2.0
+
 package test
 
 import (
@@ -5,6 +8,8 @@ import (
 	"fmt"
 	"testing"
 	"time"
+
+	"github.com/ory/x/pagination/migrationpagination"
 
 	"github.com/gobuffalo/pop/v6"
 	"github.com/gofrs/uuid"
@@ -109,9 +114,9 @@ func TestPersister(ctx context.Context, newNetworkUnlessExisting NetworkWrapper,
 
 		t.Run("case=list messages", func(t *testing.T) {
 			status := courier.MessageStatusProcessing
-			filter := courier.MessagesFilter{
+			filter := courier.ListCourierMessagesParameters{
 				Status: &status,
-				PaginationParams: x.PaginationParams{
+				RequestParameters: migrationpagination.RequestParameters{
 					Page:    1,
 					PerPage: 100,
 				},

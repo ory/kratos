@@ -1,3 +1,6 @@
+// Copyright © 2022 Ory Corp
+// SPDX-License-Identifier: Apache-2.0
+
 package webauthn_test
 
 import (
@@ -14,7 +17,7 @@ import (
 
 	"github.com/duo-labs/webauthn/protocol"
 
-	kratos "github.com/ory/kratos-client-go"
+	kratos "github.com/ory/kratos/internal/httpclient"
 	"github.com/ory/kratos/text"
 	"github.com/ory/x/snapshotx"
 
@@ -129,7 +132,7 @@ func TestCompleteLogin(t *testing.T) {
 		return &id
 	}
 
-	submitWebAuthnLoginFlowWithClient := func(t *testing.T, isSPA bool, f *kratos.SelfServiceLoginFlow, contextFixture []byte, client *http.Client, cb func(values url.Values)) (string, *http.Response, *kratos.SelfServiceLoginFlow) {
+	submitWebAuthnLoginFlowWithClient := func(t *testing.T, isSPA bool, f *kratos.LoginFlow, contextFixture []byte, client *http.Client, cb func(values url.Values)) (string, *http.Response, *kratos.LoginFlow) {
 		// We inject the session to replay
 		interim, err := reg.LoginFlowPersister().GetLoginFlow(context.Background(), uuid.FromStringOrNil(f.Id))
 		require.NoError(t, err)
@@ -144,12 +147,12 @@ func TestCompleteLogin(t *testing.T) {
 		return body, res, f
 	}
 
-	submitWebAuthnLoginWithClient := func(t *testing.T, isSPA bool, id *identity.Identity, contextFixture []byte, client *http.Client, cb func(values url.Values), opts ...testhelpers.InitFlowWithOption) (string, *http.Response, *kratos.SelfServiceLoginFlow) {
+	submitWebAuthnLoginWithClient := func(t *testing.T, isSPA bool, id *identity.Identity, contextFixture []byte, client *http.Client, cb func(values url.Values), opts ...testhelpers.InitFlowWithOption) (string, *http.Response, *kratos.LoginFlow) {
 		f := testhelpers.InitializeLoginFlowViaBrowser(t, client, publicTS, false, isSPA, false, false, opts...)
 		return submitWebAuthnLoginFlowWithClient(t, isSPA, f, contextFixture, client, cb)
 	}
 
-	submitWebAuthnLogin := func(t *testing.T, isSPA bool, id *identity.Identity, contextFixture []byte, cb func(values url.Values), opts ...testhelpers.InitFlowWithOption) (string, *http.Response, *kratos.SelfServiceLoginFlow) {
+	submitWebAuthnLogin := func(t *testing.T, isSPA bool, id *identity.Identity, contextFixture []byte, cb func(values url.Values), opts ...testhelpers.InitFlowWithOption) (string, *http.Response, *kratos.LoginFlow) {
 		browserClient := testhelpers.NewHTTPClientWithIdentitySessionCookie(t, reg, id)
 		return submitWebAuthnLoginWithClient(t, isSPA, id, contextFixture, browserClient, cb, opts...)
 	}

@@ -1,3 +1,6 @@
+// Copyright © 2022 Ory Corp
+// SPDX-License-Identifier: Apache-2.0
+
 package verification_test
 
 import (
@@ -66,7 +69,9 @@ func TestHandleError(t *testing.T) {
 
 	newFlow := func(t *testing.T, ttl time.Duration, ft flow.Type) *verification.Flow {
 		req := &http.Request{URL: urlx.ParseOrPanic("/")}
-		f, err := verification.NewFlow(conf, ttl, x.FakeCSRFToken, req, reg.VerificationStrategies(context.Background()), ft)
+		strategy, err := reg.GetActiveVerificationStrategy(context.Background())
+		require.NoError(t, err)
+		f, err := verification.NewFlow(conf, ttl, x.FakeCSRFToken, req, strategy, ft)
 		require.NoError(t, err)
 		require.NoError(t, reg.VerificationFlowPersister().CreateVerificationFlow(context.Background(), f))
 		f, err = reg.VerificationFlowPersister().GetVerificationFlow(context.Background(), f.ID)
@@ -80,7 +85,7 @@ func TestHandleError(t *testing.T) {
 		defer res.Body.Close()
 		require.Contains(t, res.Request.URL.String(), conf.SelfServiceFlowErrorURL(ctx).String()+"?id=")
 
-		sse, _, err := sdk.V0alpha2Api.GetSelfServiceError(context.Background()).Id(res.Request.URL.Query().Get("id")).Execute()
+		sse, _, err := sdk.FrontendApi.GetFlowError(context.Background()).Id(res.Request.URL.Query().Get("id")).Execute()
 		require.NoError(t, err)
 
 		return sse.Error, nil

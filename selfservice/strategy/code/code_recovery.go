@@ -1,3 +1,6 @@
+// Copyright © 2022 Ory Corp
+// SPDX-License-Identifier: Apache-2.0
+
 package code
 
 import (
@@ -8,7 +11,6 @@ import (
 	"github.com/gofrs/uuid"
 
 	"github.com/ory/herodot"
-	"github.com/ory/x/randx"
 
 	"github.com/ory/kratos/identity"
 )
@@ -21,9 +23,9 @@ const (
 )
 
 var (
-	ErrCodeNotFound          = herodot.ErrNotFound.WithReasonf("unknown recovery code")
-	ErrCodeAlreadyUsed       = herodot.ErrBadRequest.WithReasonf("recovery code was already used")
-	ErrCodeSubmittedTooOften = herodot.ErrBadRequest.WithReasonf("The recovery was submitted too often. Please try again.")
+	ErrCodeNotFound          = herodot.ErrNotFound.WithReasonf("unknown code")
+	ErrCodeAlreadyUsed       = herodot.ErrBadRequest.WithReasonf("The code was already used. Please request another code.")
+	ErrCodeSubmittedTooOften = herodot.ErrBadRequest.WithReasonf("The request was submitted too often. Please request another code.")
 )
 
 type RecoveryCode struct {
@@ -81,10 +83,6 @@ func (r RecoveryCode) WasUsed() bool {
 
 func (f RecoveryCode) IsValid() bool {
 	return !f.IsExpired() && !f.WasUsed()
-}
-
-func GenerateRecoveryCode() string {
-	return randx.MustString(8, randx.Numeric)
 }
 
 type CreateRecoveryCodeParams struct {

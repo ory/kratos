@@ -1,3 +1,6 @@
+// Copyright © 2022 Ory Corp
+// SPDX-License-Identifier: Apache-2.0
+
 package internal
 
 import (
@@ -6,6 +9,7 @@ import (
 	"testing"
 
 	"github.com/ory/x/contextx"
+	"github.com/ory/x/jsonnetsecure"
 
 	"github.com/gofrs/uuid"
 
@@ -61,6 +65,7 @@ func NewFastRegistryWithMocks(t *testing.T) (*config.Config, *driver.RegistryDef
 			return &hook.Error{Config: c.Config}
 		},
 	})
+	reg.WithJsonnetVMProvider(jsonnetsecure.NewTestProvider(t))
 
 	require.NoError(t, reg.Persister().MigrateUp(context.Background()))
 	require.NotEqual(t, uuid.Nil, reg.Persister().NetworkID(context.Background()))

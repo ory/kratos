@@ -1,3 +1,6 @@
+// Copyright © 2022 Ory Corp
+// SPDX-License-Identifier: Apache-2.0
+
 package settings_test
 
 import (
@@ -94,7 +97,7 @@ func TestHandleError(t *testing.T) {
 		defer res.Body.Close()
 		require.Contains(t, res.Request.URL.String(), conf.SelfServiceFlowErrorURL(ctx).String()+"?id=")
 
-		sse, _, err := sdk.V0alpha2Api.GetSelfServiceError(context.Background()).
+		sse, _, err := sdk.FrontendApi.GetFlowError(context.Background()).
 			Id(res.Request.URL.Query().Get("id")).Execute()
 		require.NoError(t, err)
 

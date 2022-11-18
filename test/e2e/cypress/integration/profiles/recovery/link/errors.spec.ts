@@ -1,3 +1,6 @@
+// Copyright © 2022 Ory Corp
+// SPDX-License-Identifier: Apache-2.0
+
 import { APP_URL, appPrefix, gen, parseHtml } from "../../../../helpers"
 import { routes as react } from "../../../../helpers/react"
 import { routes as express } from "../../../../helpers/express"

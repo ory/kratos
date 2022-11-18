@@ -1,3 +1,6 @@
+// Copyright © 2022 Ory Corp
+// SPDX-License-Identifier: Apache-2.0
+
 package driver
 
 import (
@@ -9,6 +12,7 @@ import (
 	"time"
 
 	"github.com/ory/x/contextx"
+	"github.com/ory/x/jsonnetsecure"
 
 	"github.com/ory/x/popx"
 
@@ -137,7 +141,7 @@ type RegistryDefault struct {
 	selfserviceVerificationExecutor *verification.HookExecutor
 
 	selfserviceLinkSender *link.Sender
-	selfserviceCodeSender *code.RecoveryCodeSender
+	selfserviceCodeSender *code.Sender
 
 	selfserviceRecoveryErrorHandler *recovery.ErrorHandler
 	selfserviceRecoveryHandler      *recovery.Handler
@@ -154,6 +158,15 @@ type RegistryDefault struct {
 	buildDate    string
 
 	csrfTokenGenerator x.CSRFToken
+
+	jsonnetVMProvider jsonnetsecure.VMProvider
+}
+
+func (m *RegistryDefault) JsonnetVM(ctx context.Context) (jsonnetsecure.VM, error) {
+	if m.jsonnetVMProvider == nil {
+		m.jsonnetVMProvider = &jsonnetsecure.DefaultProvider{Subcommand: "jsonnet"}
+	}
+	return m.jsonnetVMProvider.JsonnetVM(ctx)
 }
 
 func (m *RegistryDefault) Audit() *logrusx.Logger {
@@ -213,11 +226,18 @@ func (m *RegistryDefault) RegisterRoutes(ctx context.Context, public *x.RouterPu
 }
 
 func NewRegistryDefault() *RegistryDefault {
-	return &RegistryDefault{}
+	return &RegistryDefault{
+		trc: otelx.NewNoop(nil, new(otelx.Config)),
+	}
 }
 
 func (m *RegistryDefault) WithLogger(l *logrusx.Logger) Registry {
 	m.l = l
+	return m
+}
+
+func (m *RegistryDefault) WithJsonnetVMProvider(p jsonnetsecure.VMProvider) Registry {
+	m.jsonnetVMProvider = p
 	return m
 }
 
@@ -348,7 +368,7 @@ func (m *RegistryDefault) AllLoginStrategies() login.Strategies {
 	return loginStrategies
 }
 
-func (m *RegistryDefault) ActiveCredentialsCounterStrategies(ctx context.Context) (activeCredentialsCounterStrategies []identity.ActiveCredentialsCounter) {
+func (m *RegistryDefault) ActiveCredentialsCounterStrategies(_ context.Context) (activeCredentialsCounterStrategies []identity.ActiveCredentialsCounter) {
 	for _, strategy := range m.selfServiceStrategies() {
 		if s, ok := strategy.(identity.ActiveCredentialsCounter); ok {
 			activeCredentialsCounterStrategies = append(activeCredentialsCounterStrategies, s)
@@ -497,20 +517,13 @@ func (m *RegistryDefault) ContinuityCookieManager(ctx context.Context) sessions.
 
 func (m *RegistryDefault) Tracer(ctx context.Context) *otelx.Tracer {
 	if m.trc == nil {
-		// Tracing is initialized only once so it can not be hot reloaded or context-aware.
-		t, err := otelx.New("Ory Kratos", m.l, m.Config().Tracing(ctx))
-		if err != nil {
-			m.Logger().WithError(err).Fatalf("Unable to initialize Tracer.")
-			t = otelx.NewNoop(m.l, m.Config().Tracing(ctx))
-		}
-		m.trc = t
+		return otelx.NewNoop(m.l, m.Config().Tracing(ctx)) // should never happen
 	}
-
-	if m.trc.Tracer() == nil {
-		m.trc = otelx.NewNoop(m.l, m.Config().Tracing(ctx))
-	}
-
 	return m.trc
+}
+
+func (m *RegistryDefault) SetTracer(t *otelx.Tracer) {
+	m.trc = t
 }
 
 func (m *RegistryDefault) SessionManager() session.Manager {
@@ -559,18 +572,21 @@ func (m *RegistryDefault) Init(ctx context.Context, ctxer contextx.Contextualize
 
 	o := newOptions(opts)
 
+	var instrumentedDriverOpts []instrumentedsql.Opt
+	if m.Tracer(ctx).IsLoaded() {
+		instrumentedDriverOpts = []instrumentedsql.Opt{
+			instrumentedsql.WithTracer(otelsql.NewTracer()),
+		}
+	}
+	if o.replaceTracer != nil {
+		m.trc = o.replaceTracer(m.trc)
+	}
+
 	bc := backoff.NewExponentialBackOff()
 	bc.MaxElapsedTime = time.Minute * 5
 	bc.Reset()
 	return errors.WithStack(
 		backoff.Retry(func() error {
-			var opts []instrumentedsql.Opt
-			if m.Tracer(ctx).IsLoaded() {
-				opts = []instrumentedsql.Opt{
-					instrumentedsql.WithTracer(otelsql.NewTracer()),
-				}
-			}
-
 			m.WithContextualizer(ctxer)
 
 			// Use maxIdleConnTime - see comment below for https://github.com/gobuffalo/pop/pull/637
@@ -589,7 +605,7 @@ func (m *RegistryDefault) Init(ctx context.Context, ctxer contextx.Contextualize
 				// ConnMaxIdleTime:           connMaxIdleTime,
 				Pool:                      pool,
 				UseInstrumentedDriver:     m.Tracer(ctx).IsLoaded(),
-				InstrumentedDriverOptions: opts,
+				InstrumentedDriverOptions: instrumentedDriverOpts,
 			})
 			if err != nil {
 				m.Logger().WithError(err).Warnf("Unable to connect to database, retrying.")
@@ -640,7 +656,7 @@ func (m *RegistryDefault) SetPersister(p persistence.Persister) {
 	m.persister = p
 }
 
-func (m *RegistryDefault) Courier(ctx context.Context) courier.Courier {
+func (m *RegistryDefault) Courier(ctx context.Context) (courier.Courier, error) {
 	return courier.NewCourier(ctx, m)
 }
 
@@ -703,6 +719,9 @@ func (m *RegistryDefault) VerificationTokenPersister() link.VerificationTokenPer
 	return m.Persister()
 }
 
+func (m *RegistryDefault) VerificationCodePersister() code.VerificationCodePersister {
+	return m.Persister()
+}
 func (m *RegistryDefault) Persister() persistence.Persister {
 	return m.persister
 }

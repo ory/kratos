@@ -1,3 +1,6 @@
+// Copyright © 2022 Ory Corp
+// SPDX-License-Identifier: Apache-2.0
+
 package courier
 
 import (
@@ -80,12 +83,12 @@ func (c *courier) dispatchSMS(ctx context.Context, msg Message) error {
 		return err
 	}
 
-	builder, err := request.NewBuilder(c.smsClient.RequestConfig, c.deps.HTTPClient(ctx), c.deps.Logger())
+	builder, err := request.NewBuilder(c.smsClient.RequestConfig, c.deps)
 	if err != nil {
 		return err
 	}
 
-	req, err := builder.BuildRequest(&sendSMSRequestBody{
+	req, err := builder.BuildRequest(ctx, &sendSMSRequestBody{
 		To:   msg.Recipient,
 		From: c.deps.CourierConfig().CourierSMSFrom(ctx),
 		Body: body,

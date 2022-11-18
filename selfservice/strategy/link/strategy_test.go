@@ -1,3 +1,6 @@
+// Copyright © 2022 Ory Corp
+// SPDX-License-Identifier: Apache-2.0
+
 package link_test
 
 import (
@@ -21,4 +24,5 @@ func initViper(t *testing.T, c *config.Config) {
 	c.MustSet(ctx, config.ViperKeySelfServiceRecoveryUse, "link")
 	c.MustSet(ctx, config.ViperKeySelfServiceRecoveryEnabled, true)
 	c.MustSet(ctx, config.ViperKeySelfServiceVerificationEnabled, true)
+	c.MustSet(ctx, config.ViperKeySelfServiceVerificationUse, "link")
 }

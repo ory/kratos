@@ -5,4 +5,3 @@ cypress/videos
 cypress/screenshots
 *.log
 *.yml
-

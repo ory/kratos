@@ -1,3 +1,6 @@
+// Copyright © 2022 Ory Corp
+// SPDX-License-Identifier: Apache-2.0
+
 package xsql
 
 import (
@@ -36,6 +39,7 @@ func CleanSQL(t *testing.T, c *pop.Connection) {
 		new(link.RecoveryToken).TableName(ctx),
 		new(link.VerificationToken).TableName(ctx),
 		new(code.RecoveryCode).TableName(ctx),
+		new(code.VerificationCode).TableName(ctx),
 
 		new(recovery.Flow).TableName(ctx),
 

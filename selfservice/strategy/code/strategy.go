@@ -1,3 +1,6 @@
+// Copyright © 2022 Ory Corp
+// SPDX-License-Identifier: Apache-2.0
+
 package code
 
 import (
@@ -8,16 +11,22 @@ import (
 	"github.com/ory/kratos/selfservice/errorx"
 	"github.com/ory/kratos/selfservice/flow/recovery"
 	"github.com/ory/kratos/selfservice/flow/settings"
+	"github.com/ory/kratos/selfservice/flow/verification"
 	"github.com/ory/kratos/session"
 	"github.com/ory/kratos/ui/container"
 	"github.com/ory/kratos/ui/node"
 	"github.com/ory/kratos/x"
 	"github.com/ory/x/decoderx"
+	"github.com/ory/x/randx"
 )
 
 var _ recovery.Strategy = new(Strategy)
 var _ recovery.AdminHandler = new(Strategy)
 var _ recovery.PublicHandler = new(Strategy)
+
+var _ verification.Strategy = new(Strategy)
+var _ verification.AdminHandler = new(Strategy)
+var _ verification.PublicHandler = new(Strategy)
 
 type (
 	// FlowMethod contains the configuration for this selfservice strategy.
@@ -52,8 +61,13 @@ type (
 		recovery.StrategyProvider
 		recovery.HookExecutorProvider
 
+		verification.FlowPersistenceProvider
+		verification.StrategyProvider
+		verification.HookExecutorProvider
+
 		RecoveryCodePersistenceProvider
-		RecoveryCodeSenderProvider
+		VerificationCodePersistenceProvider
+		SenderProvider
 
 		schema.IdentityTraitsProvider
 	}
@@ -74,4 +88,10 @@ func (s *Strategy) RecoveryNodeGroup() node.UiNodeGroup {
 
 func (s *Strategy) VerificationNodeGroup() node.UiNodeGroup {
 	return node.CodeGroup
+}
+
+const CodeLength = 6
+
+func GenerateCode() string {
+	return randx.MustString(CodeLength, randx.Numeric)
 }

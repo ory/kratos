@@ -1,3 +1,6 @@
+// Copyright © 2022 Ory Corp
+// SPDX-License-Identifier: Apache-2.0
+
 package identity
 
 import (
@@ -14,7 +17,7 @@ import (
 
 type SchemaExtensionCredentials struct {
 	i *Identity
-	v []string
+	v map[CredentialsType][]string
 	l sync.Mutex
 }
 
@@ -31,11 +34,13 @@ func (r *SchemaExtensionCredentials) setIdentifier(ct CredentialsType, value int
 			Config:      sqlxx.JSONRawMessage{},
 		}
 	}
+	if r.v == nil {
+		r.v = make(map[CredentialsType][]string)
+	}
 
-	r.v = stringslice.Unique(append(r.v, strings.ToLower(fmt.Sprintf("%s", value))))
-	cred.Identifiers = r.v
+	r.v[ct] = stringslice.Unique(append(r.v[ct], strings.ToLower(fmt.Sprintf("%s", value))))
+	cred.Identifiers = r.v[ct]
 	r.i.SetCredentials(ct, *cred)
-
 }
 
 func (r *SchemaExtensionCredentials) Run(_ jsonschema.ValidationContext, s schema.ExtensionConfig, value interface{}) error {

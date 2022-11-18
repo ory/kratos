@@ -1,3 +1,6 @@
+// Copyright © 2022 Ory Corp
+// SPDX-License-Identifier: Apache-2.0
+
 package config_test
 
 import (
@@ -605,6 +608,10 @@ func TestSession(t *testing.T) {
 	assert.Equal(t, true, p.SessionPersistentCookie(ctx))
 	p.MustSet(ctx, config.ViperKeySessionPersistentCookie, false)
 	assert.Equal(t, false, p.SessionPersistentCookie(ctx))
+
+	assert.Equal(t, true, p.SessionWhoAmICaching(ctx))
+	p.MustSet(ctx, config.ViperKeySessionWhoAmICaching, false)
+	assert.Equal(t, false, p.SessionWhoAmICaching(ctx))
 }
 
 func TestCookies(t *testing.T) {
@@ -1101,6 +1108,34 @@ func TestCourierSMS(t *testing.T) {
 		assert.False(t, conf.CourierSMSEnabled(ctx))
 		snapshotx.SnapshotTExcept(t, conf.CourierSMSRequestConfig(ctx), nil)
 		assert.Equal(t, "Ory Kratos", conf.CourierSMSFrom(ctx))
+	})
+}
+
+func TestCourierSMTPUrl(t *testing.T) {
+	ctx := context.Background()
+
+	for _, tc := range []string{
+		"smtp://a:basdasdasda%2Fc@email-smtp.eu-west-3.amazonaws.com:587/",
+		"smtp://a:b$c@email-smtp.eu-west-3.amazonaws.com:587/",
+		"smtp://a/a:bc@email-smtp.eu-west-3.amazonaws.com:587",
+		"smtp://aa:b+c@email-smtp.eu-west-3.amazonaws.com:587/",
+		"smtp://user?name:password@email-smtp.eu-west-3.amazonaws.com:587/",
+		"smtp://username:pass%2Fword@email-smtp.eu-west-3.amazonaws.com:587/",
+	} {
+		t.Run("case="+tc, func(t *testing.T) {
+			conf, err := config.New(ctx, logrusx.New("", ""), os.Stderr, configx.WithValue(config.ViperKeyCourierSMTPURL, tc), configx.SkipValidation())
+			require.NoError(t, err)
+			parsed, err := conf.CourierSMTPURL(ctx)
+			require.NoError(t, err)
+			assert.Equal(t, tc, parsed.String())
+		})
+	}
+
+	t.Run("invalid", func(t *testing.T) {
+		conf, err := config.New(ctx, logrusx.New("", ""), os.Stderr, configx.WithValue(config.ViperKeyCourierSMTPURL, "smtp://a:b/c@email-smtp.eu-west-3.amazonaws.com:587/"), configx.SkipValidation())
+		require.NoError(t, err)
+		_, err = conf.CourierSMTPURL(ctx)
+		require.Error(t, err)
 	})
 }
 
