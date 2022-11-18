@@ -16,8 +16,8 @@ import (
 	"time"
 )
 
-// OAuth2Client struct for OAuth2Client
-type OAuth2Client struct {
+// KratosOAuth2Client struct for KratosOAuth2Client
+type KratosOAuth2Client struct {
 	AllowedCorsOrigins []string `json:"allowed_cors_origins,omitempty"`
 	Audience           []string `json:"audience,omitempty"`
 	// Specify a time duration in milliseconds, seconds, minutes, hours.
@@ -101,25 +101,25 @@ type OAuth2Client struct {
 	UserinfoSignedResponseAlg *string `json:"userinfo_signed_response_alg,omitempty"`
 }
 
-// NewOAuth2Client instantiates a new OAuth2Client object
+// NewKratosOAuth2Client instantiates a new KratosOAuth2Client object
 // This constructor will assign default values to properties that have it defined,
 // and makes sure properties required by API are set, but the set of arguments
 // will change when the set of required properties is changed
-func NewOAuth2Client() *OAuth2Client {
-	this := OAuth2Client{}
+func NewKratosOAuth2Client() *KratosOAuth2Client {
+	this := KratosOAuth2Client{}
 	return &this
 }
 
-// NewOAuth2ClientWithDefaults instantiates a new OAuth2Client object
+// NewKratosOAuth2ClientWithDefaults instantiates a new KratosOAuth2Client object
 // This constructor will only assign default values to properties that have it defined,
 // but it doesn't guarantee that properties required by API are set
-func NewOAuth2ClientWithDefaults() *OAuth2Client {
-	this := OAuth2Client{}
+func NewKratosOAuth2ClientWithDefaults() *KratosOAuth2Client {
+	this := KratosOAuth2Client{}
 	return &this
 }
 
 // GetAllowedCorsOrigins returns the AllowedCorsOrigins field value if set, zero value otherwise.
-func (o *OAuth2Client) GetAllowedCorsOrigins() []string {
+func (o *KratosOAuth2Client) GetAllowedCorsOrigins() []string {
 	if o == nil || o.AllowedCorsOrigins == nil {
 		var ret []string
 		return ret
@@ -129,7 +129,7 @@ func (o *OAuth2Client) GetAllowedCorsOrigins() []string {
 
 // GetAllowedCorsOriginsOk returns a tuple with the AllowedCorsOrigins field value if set, nil otherwise
 // and a boolean to check if the value has been set.
-func (o *OAuth2Client) GetAllowedCorsOriginsOk() ([]string, bool) {
+func (o *KratosOAuth2Client) GetAllowedCorsOriginsOk() ([]string, bool) {
 	if o == nil || o.AllowedCorsOrigins == nil {
 		return nil, false
 	}
@@ -137,7 +137,7 @@ func (o *OAuth2Client) GetAllowedCorsOriginsOk() ([]string, bool) {
 }
 
 // HasAllowedCorsOrigins returns a boolean if a field has been set.
-func (o *OAuth2Client) HasAllowedCorsOrigins() bool {
+func (o *KratosOAuth2Client) HasAllowedCorsOrigins() bool {
 	if o != nil && o.AllowedCorsOrigins != nil {
 		return true
 	}
@@ -146,12 +146,12 @@ func (o *OAuth2Client) HasAllowedCorsOrigins() bool {
 }
 
 // SetAllowedCorsOrigins gets a reference to the given []string and assigns it to the AllowedCorsOrigins field.
-func (o *OAuth2Client) SetAllowedCorsOrigins(v []string) {
+func (o *KratosOAuth2Client) SetAllowedCorsOrigins(v []string) {
 	o.AllowedCorsOrigins = v
 }
 
 // GetAudience returns the Audience field value if set, zero value otherwise.
-func (o *OAuth2Client) GetAudience() []string {
+func (o *KratosOAuth2Client) GetAudience() []string {
 	if o == nil || o.Audience == nil {
 		var ret []string
 		return ret
@@ -161,7 +161,7 @@ func (o *OAuth2Client) GetAudience() []string {
 
 // GetAudienceOk returns a tuple with the Audience field value if set, nil otherwise
 // and a boolean to check if the value has been set.
-func (o *OAuth2Client) GetAudienceOk() ([]string, bool) {
+func (o *KratosOAuth2Client) GetAudienceOk() ([]string, bool) {
 	if o == nil || o.Audience == nil {
 		return nil, false
 	}
@@ -169,7 +169,7 @@ func (o *OAuth2Client) GetAudienceOk() ([]string, bool) {
 }
 
 // HasAudience returns a boolean if a field has been set.
-func (o *OAuth2Client) HasAudience() bool {
+func (o *KratosOAuth2Client) HasAudience() bool {
 	if o != nil && o.Audience != nil {
 		return true
 	}
@@ -178,12 +178,12 @@ func (o *OAuth2Client) HasAudience() bool {
 }
 
 // SetAudience gets a reference to the given []string and assigns it to the Audience field.
-func (o *OAuth2Client) SetAudience(v []string) {
+func (o *KratosOAuth2Client) SetAudience(v []string) {
 	o.Audience = v
 }
 
 // GetAuthorizationCodeGrantAccessTokenLifespan returns the AuthorizationCodeGrantAccessTokenLifespan field value if set, zero value otherwise.
-func (o *OAuth2Client) GetAuthorizationCodeGrantAccessTokenLifespan() string {
+func (o *KratosOAuth2Client) GetAuthorizationCodeGrantAccessTokenLifespan() string {
 	if o == nil || o.AuthorizationCodeGrantAccessTokenLifespan == nil {
 		var ret string
 		return ret
@@ -193,7 +193,7 @@ func (o *OAuth2Client) GetAuthorizationCodeGrantAccessTokenLifespan() string {
 
 // GetAuthorizationCodeGrantAccessTokenLifespanOk returns a tuple with the AuthorizationCodeGrantAccessTokenLifespan field value if set, nil otherwise
 // and a boolean to check if the value has been set.
-func (o *OAuth2Client) GetAuthorizationCodeGrantAccessTokenLifespanOk() (*string, bool) {
+func (o *KratosOAuth2Client) GetAuthorizationCodeGrantAccessTokenLifespanOk() (*string, bool) {
 	if o == nil || o.AuthorizationCodeGrantAccessTokenLifespan == nil {
 		return nil, false
 	}
@@ -201,7 +201,7 @@ func (o *OAuth2Client) GetAuthorizationCodeGrantAccessTokenLifespanOk() (*string
 }
 
 // HasAuthorizationCodeGrantAccessTokenLifespan returns a boolean if a field has been set.
-func (o *OAuth2Client) HasAuthorizationCodeGrantAccessTokenLifespan() bool {
+func (o *KratosOAuth2Client) HasAuthorizationCodeGrantAccessTokenLifespan() bool {
 	if o != nil && o.AuthorizationCodeGrantAccessTokenLifespan != nil {
 		return true
 	}
@@ -210,12 +210,12 @@ func (o *OAuth2Client) HasAuthorizationCodeGrantAccessTokenLifespan() bool {
 }
 
 // SetAuthorizationCodeGrantAccessTokenLifespan gets a reference to the given string and assigns it to the AuthorizationCodeGrantAccessTokenLifespan field.
-func (o *OAuth2Client) SetAuthorizationCodeGrantAccessTokenLifespan(v string) {
+func (o *KratosOAuth2Client) SetAuthorizationCodeGrantAccessTokenLifespan(v string) {
 	o.AuthorizationCodeGrantAccessTokenLifespan = &v
 }
 
 // GetAuthorizationCodeGrantIdTokenLifespan returns the AuthorizationCodeGrantIdTokenLifespan field value if set, zero value otherwise.
-func (o *OAuth2Client) GetAuthorizationCodeGrantIdTokenLifespan() string {
+func (o *KratosOAuth2Client) GetAuthorizationCodeGrantIdTokenLifespan() string {
 	if o == nil || o.AuthorizationCodeGrantIdTokenLifespan == nil {
 		var ret string
 		return ret
@@ -225,7 +225,7 @@ func (o *OAuth2Client) GetAuthorizationCodeGrantIdTokenLifespan() string {
 
 // GetAuthorizationCodeGrantIdTokenLifespanOk returns a tuple with the AuthorizationCodeGrantIdTokenLifespan field value if set, nil otherwise
 // and a boolean to check if the value has been set.
-func (o *OAuth2Client) GetAuthorizationCodeGrantIdTokenLifespanOk() (*string, bool) {
+func (o *KratosOAuth2Client) GetAuthorizationCodeGrantIdTokenLifespanOk() (*string, bool) {
 	if o == nil || o.AuthorizationCodeGrantIdTokenLifespan == nil {
 		return nil, false
 	}
@@ -233,7 +233,7 @@ func (o *OAuth2Client) GetAuthorizationCodeGrantIdTokenLifespanOk() (*string, bo
 }
 
 // HasAuthorizationCodeGrantIdTokenLifespan returns a boolean if a field has been set.
-func (o *OAuth2Client) HasAuthorizationCodeGrantIdTokenLifespan() bool {
+func (o *KratosOAuth2Client) HasAuthorizationCodeGrantIdTokenLifespan() bool {
 	if o != nil && o.AuthorizationCodeGrantIdTokenLifespan != nil {
 		return true
 	}
@@ -242,12 +242,12 @@ func (o *OAuth2Client) HasAuthorizationCodeGrantIdTokenLifespan() bool {
 }
 
 // SetAuthorizationCodeGrantIdTokenLifespan gets a reference to the given string and assigns it to the AuthorizationCodeGrantIdTokenLifespan field.
-func (o *OAuth2Client) SetAuthorizationCodeGrantIdTokenLifespan(v string) {
+func (o *KratosOAuth2Client) SetAuthorizationCodeGrantIdTokenLifespan(v string) {
 	o.AuthorizationCodeGrantIdTokenLifespan = &v
 }
 
 // GetAuthorizationCodeGrantRefreshTokenLifespan returns the AuthorizationCodeGrantRefreshTokenLifespan field value if set, zero value otherwise.
-func (o *OAuth2Client) GetAuthorizationCodeGrantRefreshTokenLifespan() string {
+func (o *KratosOAuth2Client) GetAuthorizationCodeGrantRefreshTokenLifespan() string {
 	if o == nil || o.AuthorizationCodeGrantRefreshTokenLifespan == nil {
 		var ret string
 		return ret
@@ -257,7 +257,7 @@ func (o *OAuth2Client) GetAuthorizationCodeGrantRefreshTokenLifespan() string {
 
 // GetAuthorizationCodeGrantRefreshTokenLifespanOk returns a tuple with the AuthorizationCodeGrantRefreshTokenLifespan field value if set, nil otherwise
 // and a boolean to check if the value has been set.
-func (o *OAuth2Client) GetAuthorizationCodeGrantRefreshTokenLifespanOk() (*string, bool) {
+func (o *KratosOAuth2Client) GetAuthorizationCodeGrantRefreshTokenLifespanOk() (*string, bool) {
 	if o == nil || o.AuthorizationCodeGrantRefreshTokenLifespan == nil {
 		return nil, false
 	}
@@ -265,7 +265,7 @@ func (o *OAuth2Client) GetAuthorizationCodeGrantRefreshTokenLifespanOk() (*strin
 }
 
 // HasAuthorizationCodeGrantRefreshTokenLifespan returns a boolean if a field has been set.
-func (o *OAuth2Client) HasAuthorizationCodeGrantRefreshTokenLifespan() bool {
+func (o *KratosOAuth2Client) HasAuthorizationCodeGrantRefreshTokenLifespan() bool {
 	if o != nil && o.AuthorizationCodeGrantRefreshTokenLifespan != nil {
 		return true
 	}
@@ -274,12 +274,12 @@ func (o *OAuth2Client) HasAuthorizationCodeGrantRefreshTokenLifespan() bool {
 }
 
 // SetAuthorizationCodeGrantRefreshTokenLifespan gets a reference to the given string and assigns it to the AuthorizationCodeGrantRefreshTokenLifespan field.
-func (o *OAuth2Client) SetAuthorizationCodeGrantRefreshTokenLifespan(v string) {
+func (o *KratosOAuth2Client) SetAuthorizationCodeGrantRefreshTokenLifespan(v string) {
 	o.AuthorizationCodeGrantRefreshTokenLifespan = &v
 }
 
 // GetBackchannelLogoutSessionRequired returns the BackchannelLogoutSessionRequired field value if set, zero value otherwise.
-func (o *OAuth2Client) GetBackchannelLogoutSessionRequired() bool {
+func (o *KratosOAuth2Client) GetBackchannelLogoutSessionRequired() bool {
 	if o == nil || o.BackchannelLogoutSessionRequired == nil {
 		var ret bool
 		return ret
@@ -289,7 +289,7 @@ func (o *OAuth2Client) GetBackchannelLogoutSessionRequired() bool {
 
 // GetBackchannelLogoutSessionRequiredOk returns a tuple with the BackchannelLogoutSessionRequired field value if set, nil otherwise
 // and a boolean to check if the value has been set.
-func (o *OAuth2Client) GetBackchannelLogoutSessionRequiredOk() (*bool, bool) {
+func (o *KratosOAuth2Client) GetBackchannelLogoutSessionRequiredOk() (*bool, bool) {
 	if o == nil || o.BackchannelLogoutSessionRequired == nil {
 		return nil, false
 	}
@@ -297,7 +297,7 @@ func (o *OAuth2Client) GetBackchannelLogoutSessionRequiredOk() (*bool, bool) {
 }
 
 // HasBackchannelLogoutSessionRequired returns a boolean if a field has been set.
-func (o *OAuth2Client) HasBackchannelLogoutSessionRequired() bool {
+func (o *KratosOAuth2Client) HasBackchannelLogoutSessionRequired() bool {
 	if o != nil && o.BackchannelLogoutSessionRequired != nil {
 		return true
 	}
@@ -306,12 +306,12 @@ func (o *OAuth2Client) HasBackchannelLogoutSessionRequired() bool {
 }
 
 // SetBackchannelLogoutSessionRequired gets a reference to the given bool and assigns it to the BackchannelLogoutSessionRequired field.
-func (o *OAuth2Client) SetBackchannelLogoutSessionRequired(v bool) {
+func (o *KratosOAuth2Client) SetBackchannelLogoutSessionRequired(v bool) {
 	o.BackchannelLogoutSessionRequired = &v
 }
 
 // GetBackchannelLogoutUri returns the BackchannelLogoutUri field value if set, zero value otherwise.
-func (o *OAuth2Client) GetBackchannelLogoutUri() string {
+func (o *KratosOAuth2Client) GetBackchannelLogoutUri() string {
 	if o == nil || o.BackchannelLogoutUri == nil {
 		var ret string
 		return ret
@@ -321,7 +321,7 @@ func (o *OAuth2Client) GetBackchannelLogoutUri() string {
 
 // GetBackchannelLogoutUriOk returns a tuple with the BackchannelLogoutUri field value if set, nil otherwise
 // and a boolean to check if the value has been set.
-func (o *OAuth2Client) GetBackchannelLogoutUriOk() (*string, bool) {
+func (o *KratosOAuth2Client) GetBackchannelLogoutUriOk() (*string, bool) {
 	if o == nil || o.BackchannelLogoutUri == nil {
 		return nil, false
 	}
@@ -329,7 +329,7 @@ func (o *OAuth2Client) GetBackchannelLogoutUriOk() (*string, bool) {
 }
 
 // HasBackchannelLogoutUri returns a boolean if a field has been set.
-func (o *OAuth2Client) HasBackchannelLogoutUri() bool {
+func (o *KratosOAuth2Client) HasBackchannelLogoutUri() bool {
 	if o != nil && o.BackchannelLogoutUri != nil {
 		return true
 	}
@@ -338,12 +338,12 @@ func (o *OAuth2Client) HasBackchannelLogoutUri() bool {
 }
 
 // SetBackchannelLogoutUri gets a reference to the given string and assigns it to the BackchannelLogoutUri field.
-func (o *OAuth2Client) SetBackchannelLogoutUri(v string) {
+func (o *KratosOAuth2Client) SetBackchannelLogoutUri(v string) {
 	o.BackchannelLogoutUri = &v
 }
 
 // GetClientCredentialsGrantAccessTokenLifespan returns the ClientCredentialsGrantAccessTokenLifespan field value if set, zero value otherwise.
-func (o *OAuth2Client) GetClientCredentialsGrantAccessTokenLifespan() string {
+func (o *KratosOAuth2Client) GetClientCredentialsGrantAccessTokenLifespan() string {
 	if o == nil || o.ClientCredentialsGrantAccessTokenLifespan == nil {
 		var ret string
 		return ret
@@ -353,7 +353,7 @@ func (o *OAuth2Client) GetClientCredentialsGrantAccessTokenLifespan() string {
 
 // GetClientCredentialsGrantAccessTokenLifespanOk returns a tuple with the ClientCredentialsGrantAccessTokenLifespan field value if set, nil otherwise
 // and a boolean to check if the value has been set.
-func (o *OAuth2Client) GetClientCredentialsGrantAccessTokenLifespanOk() (*string, bool) {
+func (o *KratosOAuth2Client) GetClientCredentialsGrantAccessTokenLifespanOk() (*string, bool) {
 	if o == nil || o.ClientCredentialsGrantAccessTokenLifespan == nil {
 		return nil, false
 	}
@@ -361,7 +361,7 @@ func (o *OAuth2Client) GetClientCredentialsGrantAccessTokenLifespanOk() (*string
 }
 
 // HasClientCredentialsGrantAccessTokenLifespan returns a boolean if a field has been set.
-func (o *OAuth2Client) HasClientCredentialsGrantAccessTokenLifespan() bool {
+func (o *KratosOAuth2Client) HasClientCredentialsGrantAccessTokenLifespan() bool {
 	if o != nil && o.ClientCredentialsGrantAccessTokenLifespan != nil {
 		return true
 	}
@@ -370,12 +370,12 @@ func (o *OAuth2Client) HasClientCredentialsGrantAccessTokenLifespan() bool {
 }
 
 // SetClientCredentialsGrantAccessTokenLifespan gets a reference to the given string and assigns it to the ClientCredentialsGrantAccessTokenLifespan field.
-func (o *OAuth2Client) SetClientCredentialsGrantAccessTokenLifespan(v string) {
+func (o *KratosOAuth2Client) SetClientCredentialsGrantAccessTokenLifespan(v string) {
 	o.ClientCredentialsGrantAccessTokenLifespan = &v
 }
 
 // GetClientId returns the ClientId field value if set, zero value otherwise.
-func (o *OAuth2Client) GetClientId() string {
+func (o *KratosOAuth2Client) GetClientId() string {
 	if o == nil || o.ClientId == nil {
 		var ret string
 		return ret
@@ -385,7 +385,7 @@ func (o *OAuth2Client) GetClientId() string {
 
 // GetClientIdOk returns a tuple with the ClientId field value if set, nil otherwise
 // and a boolean to check if the value has been set.
-func (o *OAuth2Client) GetClientIdOk() (*string, bool) {
+func (o *KratosOAuth2Client) GetClientIdOk() (*string, bool) {
 	if o == nil || o.ClientId == nil {
 		return nil, false
 	}
@@ -393,7 +393,7 @@ func (o *OAuth2Client) GetClientIdOk() (*string, bool) {
 }
 
 // HasClientId returns a boolean if a field has been set.
-func (o *OAuth2Client) HasClientId() bool {
+func (o *KratosOAuth2Client) HasClientId() bool {
 	if o != nil && o.ClientId != nil {
 		return true
 	}
@@ -402,12 +402,12 @@ func (o *OAuth2Client) HasClientId() bool {
 }
 
 // SetClientId gets a reference to the given string and assigns it to the ClientId field.
-func (o *OAuth2Client) SetClientId(v string) {
+func (o *KratosOAuth2Client) SetClientId(v string) {
 	o.ClientId = &v
 }
 
 // GetClientName returns the ClientName field value if set, zero value otherwise.
-func (o *OAuth2Client) GetClientName() string {
+func (o *KratosOAuth2Client) GetClientName() string {
 	if o == nil || o.ClientName == nil {
 		var ret string
 		return ret
@@ -417,7 +417,7 @@ func (o *OAuth2Client) GetClientName() string {
 
 // GetClientNameOk returns a tuple with the ClientName field value if set, nil otherwise
 // and a boolean to check if the value has been set.
-func (o *OAuth2Client) GetClientNameOk() (*string, bool) {
+func (o *KratosOAuth2Client) GetClientNameOk() (*string, bool) {
 	if o == nil || o.ClientName == nil {
 		return nil, false
 	}
@@ -425,7 +425,7 @@ func (o *OAuth2Client) GetClientNameOk() (*string, bool) {
 }
 
 // HasClientName returns a boolean if a field has been set.
-func (o *OAuth2Client) HasClientName() bool {
+func (o *KratosOAuth2Client) HasClientName() bool {
 	if o != nil && o.ClientName != nil {
 		return true
 	}
@@ -434,12 +434,12 @@ func (o *OAuth2Client) HasClientName() bool {
 }
 
 // SetClientName gets a reference to the given string and assigns it to the ClientName field.
-func (o *OAuth2Client) SetClientName(v string) {
+func (o *KratosOAuth2Client) SetClientName(v string) {
 	o.ClientName = &v
 }
 
 // GetClientSecret returns the ClientSecret field value if set, zero value otherwise.
-func (o *OAuth2Client) GetClientSecret() string {
+func (o *KratosOAuth2Client) GetClientSecret() string {
 	if o == nil || o.ClientSecret == nil {
 		var ret string
 		return ret
@@ -449,7 +449,7 @@ func (o *OAuth2Client) GetClientSecret() string {
 
 // GetClientSecretOk returns a tuple with the ClientSecret field value if set, nil otherwise
 // and a boolean to check if the value has been set.
-func (o *OAuth2Client) GetClientSecretOk() (*string, bool) {
+func (o *KratosOAuth2Client) GetClientSecretOk() (*string, bool) {
 	if o == nil || o.ClientSecret == nil {
 		return nil, false
 	}
@@ -457,7 +457,7 @@ func (o *OAuth2Client) GetClientSecretOk() (*string, bool) {
 }
 
 // HasClientSecret returns a boolean if a field has been set.
-func (o *OAuth2Client) HasClientSecret() bool {
+func (o *KratosOAuth2Client) HasClientSecret() bool {
 	if o != nil && o.ClientSecret != nil {
 		return true
 	}
@@ -466,12 +466,12 @@ func (o *OAuth2Client) HasClientSecret() bool {
 }
 
 // SetClientSecret gets a reference to the given string and assigns it to the ClientSecret field.
-func (o *OAuth2Client) SetClientSecret(v string) {
+func (o *KratosOAuth2Client) SetClientSecret(v string) {
 	o.ClientSecret = &v
 }
 
 // GetClientSecretExpiresAt returns the ClientSecretExpiresAt field value if set, zero value otherwise.
-func (o *OAuth2Client) GetClientSecretExpiresAt() int64 {
+func (o *KratosOAuth2Client) GetClientSecretExpiresAt() int64 {
 	if o == nil || o.ClientSecretExpiresAt == nil {
 		var ret int64
 		return ret
@@ -481,7 +481,7 @@ func (o *OAuth2Client) GetClientSecretExpiresAt() int64 {
 
 // GetClientSecretExpiresAtOk returns a tuple with the ClientSecretExpiresAt field value if set, nil otherwise
 // and a boolean to check if the value has been set.
-func (o *OAuth2Client) GetClientSecretExpiresAtOk() (*int64, bool) {
+func (o *KratosOAuth2Client) GetClientSecretExpiresAtOk() (*int64, bool) {
 	if o == nil || o.ClientSecretExpiresAt == nil {
 		return nil, false
 	}
@@ -489,7 +489,7 @@ func (o *OAuth2Client) GetClientSecretExpiresAtOk() (*int64, bool) {
 }
 
 // HasClientSecretExpiresAt returns a boolean if a field has been set.
-func (o *OAuth2Client) HasClientSecretExpiresAt() bool {
+func (o *KratosOAuth2Client) HasClientSecretExpiresAt() bool {
 	if o != nil && o.ClientSecretExpiresAt != nil {
 		return true
 	}
@@ -498,12 +498,12 @@ func (o *OAuth2Client) HasClientSecretExpiresAt() bool {
 }
 
 // SetClientSecretExpiresAt gets a reference to the given int64 and assigns it to the ClientSecretExpiresAt field.
-func (o *OAuth2Client) SetClientSecretExpiresAt(v int64) {
+func (o *KratosOAuth2Client) SetClientSecretExpiresAt(v int64) {
 	o.ClientSecretExpiresAt = &v
 }
 
 // GetClientUri returns the ClientUri field value if set, zero value otherwise.
-func (o *OAuth2Client) GetClientUri() string {
+func (o *KratosOAuth2Client) GetClientUri() string {
 	if o == nil || o.ClientUri == nil {
 		var ret string
 		return ret
@@ -513,7 +513,7 @@ func (o *OAuth2Client) GetClientUri() string {
 
 // GetClientUriOk returns a tuple with the ClientUri field value if set, nil otherwise
 // and a boolean to check if the value has been set.
-func (o *OAuth2Client) GetClientUriOk() (*string, bool) {
+func (o *KratosOAuth2Client) GetClientUriOk() (*string, bool) {
 	if o == nil || o.ClientUri == nil {
 		return nil, false
 	}
@@ -521,7 +521,7 @@ func (o *OAuth2Client) GetClientUriOk() (*string, bool) {
 }
 
 // HasClientUri returns a boolean if a field has been set.
-func (o *OAuth2Client) HasClientUri() bool {
+func (o *KratosOAuth2Client) HasClientUri() bool {
 	if o != nil && o.ClientUri != nil {
 		return true
 	}
@@ -530,12 +530,12 @@ func (o *OAuth2Client) HasClientUri() bool {
 }
 
 // SetClientUri gets a reference to the given string and assigns it to the ClientUri field.
-func (o *OAuth2Client) SetClientUri(v string) {
+func (o *KratosOAuth2Client) SetClientUri(v string) {
 	o.ClientUri = &v
 }
 
 // GetContacts returns the Contacts field value if set, zero value otherwise.
-func (o *OAuth2Client) GetContacts() []string {
+func (o *KratosOAuth2Client) GetContacts() []string {
 	if o == nil || o.Contacts == nil {
 		var ret []string
 		return ret
@@ -545,7 +545,7 @@ func (o *OAuth2Client) GetContacts() []string {
 
 // GetContactsOk returns a tuple with the Contacts field value if set, nil otherwise
 // and a boolean to check if the value has been set.
-func (o *OAuth2Client) GetContactsOk() ([]string, bool) {
+func (o *KratosOAuth2Client) GetContactsOk() ([]string, bool) {
 	if o == nil || o.Contacts == nil {
 		return nil, false
 	}
@@ -553,7 +553,7 @@ func (o *OAuth2Client) GetContactsOk() ([]string, bool) {
 }
 
 // HasContacts returns a boolean if a field has been set.
-func (o *OAuth2Client) HasContacts() bool {
+func (o *KratosOAuth2Client) HasContacts() bool {
 	if o != nil && o.Contacts != nil {
 		return true
 	}
@@ -562,12 +562,12 @@ func (o *OAuth2Client) HasContacts() bool {
 }
 
 // SetContacts gets a reference to the given []string and assigns it to the Contacts field.
-func (o *OAuth2Client) SetContacts(v []string) {
+func (o *KratosOAuth2Client) SetContacts(v []string) {
 	o.Contacts = v
 }
 
 // GetCreatedAt returns the CreatedAt field value if set, zero value otherwise.
-func (o *OAuth2Client) GetCreatedAt() time.Time {
+func (o *KratosOAuth2Client) GetCreatedAt() time.Time {
 	if o == nil || o.CreatedAt == nil {
 		var ret time.Time
 		return ret
@@ -577,7 +577,7 @@ func (o *OAuth2Client) GetCreatedAt() time.Time {
 
 // GetCreatedAtOk returns a tuple with the CreatedAt field value if set, nil otherwise
 // and a boolean to check if the value has been set.
-func (o *OAuth2Client) GetCreatedAtOk() (*time.Time, bool) {
+func (o *KratosOAuth2Client) GetCreatedAtOk() (*time.Time, bool) {
 	if o == nil || o.CreatedAt == nil {
 		return nil, false
 	}
@@ -585,7 +585,7 @@ func (o *OAuth2Client) GetCreatedAtOk() (*time.Time, bool) {
 }
 
 // HasCreatedAt returns a boolean if a field has been set.
-func (o *OAuth2Client) HasCreatedAt() bool {
+func (o *KratosOAuth2Client) HasCreatedAt() bool {
 	if o != nil && o.CreatedAt != nil {
 		return true
 	}
@@ -594,12 +594,12 @@ func (o *OAuth2Client) HasCreatedAt() bool {
 }
 
 // SetCreatedAt gets a reference to the given time.Time and assigns it to the CreatedAt field.
-func (o *OAuth2Client) SetCreatedAt(v time.Time) {
+func (o *KratosOAuth2Client) SetCreatedAt(v time.Time) {
 	o.CreatedAt = &v
 }
 
 // GetFrontchannelLogoutSessionRequired returns the FrontchannelLogoutSessionRequired field value if set, zero value otherwise.
-func (o *OAuth2Client) GetFrontchannelLogoutSessionRequired() bool {
+func (o *KratosOAuth2Client) GetFrontchannelLogoutSessionRequired() bool {
 	if o == nil || o.FrontchannelLogoutSessionRequired == nil {
 		var ret bool
 		return ret
@@ -609,7 +609,7 @@ func (o *OAuth2Client) GetFrontchannelLogoutSessionRequired() bool {
 
 // GetFrontchannelLogoutSessionRequiredOk returns a tuple with the FrontchannelLogoutSessionRequired field value if set, nil otherwise
 // and a boolean to check if the value has been set.
-func (o *OAuth2Client) GetFrontchannelLogoutSessionRequiredOk() (*bool, bool) {
+func (o *KratosOAuth2Client) GetFrontchannelLogoutSessionRequiredOk() (*bool, bool) {
 	if o == nil || o.FrontchannelLogoutSessionRequired == nil {
 		return nil, false
 	}
@@ -617,7 +617,7 @@ func (o *OAuth2Client) GetFrontchannelLogoutSessionRequiredOk() (*bool, bool) {
 }
 
 // HasFrontchannelLogoutSessionRequired returns a boolean if a field has been set.
-func (o *OAuth2Client) HasFrontchannelLogoutSessionRequired() bool {
+func (o *KratosOAuth2Client) HasFrontchannelLogoutSessionRequired() bool {
 	if o != nil && o.FrontchannelLogoutSessionRequired != nil {
 		return true
 	}
@@ -626,12 +626,12 @@ func (o *OAuth2Client) HasFrontchannelLogoutSessionRequired() bool {
 }
 
 // SetFrontchannelLogoutSessionRequired gets a reference to the given bool and assigns it to the FrontchannelLogoutSessionRequired field.
-func (o *OAuth2Client) SetFrontchannelLogoutSessionRequired(v bool) {
+func (o *KratosOAuth2Client) SetFrontchannelLogoutSessionRequired(v bool) {
 	o.FrontchannelLogoutSessionRequired = &v
 }
 
 // GetFrontchannelLogoutUri returns the FrontchannelLogoutUri field value if set, zero value otherwise.
-func (o *OAuth2Client) GetFrontchannelLogoutUri() string {
+func (o *KratosOAuth2Client) GetFrontchannelLogoutUri() string {
 	if o == nil || o.FrontchannelLogoutUri == nil {
 		var ret string
 		return ret
@@ -641,7 +641,7 @@ func (o *OAuth2Client) GetFrontchannelLogoutUri() string {
 
 // GetFrontchannelLogoutUriOk returns a tuple with the FrontchannelLogoutUri field value if set, nil otherwise
 // and a boolean to check if the value has been set.
-func (o *OAuth2Client) GetFrontchannelLogoutUriOk() (*string, bool) {
+func (o *KratosOAuth2Client) GetFrontchannelLogoutUriOk() (*string, bool) {
 	if o == nil || o.FrontchannelLogoutUri == nil {
 		return nil, false
 	}
@@ -649,7 +649,7 @@ func (o *OAuth2Client) GetFrontchannelLogoutUriOk() (*string, bool) {
 }
 
 // HasFrontchannelLogoutUri returns a boolean if a field has been set.
-func (o *OAuth2Client) HasFrontchannelLogoutUri() bool {
+func (o *KratosOAuth2Client) HasFrontchannelLogoutUri() bool {
 	if o != nil && o.FrontchannelLogoutUri != nil {
 		return true
 	}
@@ -658,12 +658,12 @@ func (o *OAuth2Client) HasFrontchannelLogoutUri() bool {
 }
 
 // SetFrontchannelLogoutUri gets a reference to the given string and assigns it to the FrontchannelLogoutUri field.
-func (o *OAuth2Client) SetFrontchannelLogoutUri(v string) {
+func (o *KratosOAuth2Client) SetFrontchannelLogoutUri(v string) {
 	o.FrontchannelLogoutUri = &v
 }
 
 // GetGrantTypes returns the GrantTypes field value if set, zero value otherwise.
-func (o *OAuth2Client) GetGrantTypes() []string {
+func (o *KratosOAuth2Client) GetGrantTypes() []string {
 	if o == nil || o.GrantTypes == nil {
 		var ret []string
 		return ret
@@ -673,7 +673,7 @@ func (o *OAuth2Client) GetGrantTypes() []string {
 
 // GetGrantTypesOk returns a tuple with the GrantTypes field value if set, nil otherwise
 // and a boolean to check if the value has been set.
-func (o *OAuth2Client) GetGrantTypesOk() ([]string, bool) {
+func (o *KratosOAuth2Client) GetGrantTypesOk() ([]string, bool) {
 	if o == nil || o.GrantTypes == nil {
 		return nil, false
 	}
@@ -681,7 +681,7 @@ func (o *OAuth2Client) GetGrantTypesOk() ([]string, bool) {
 }
 
 // HasGrantTypes returns a boolean if a field has been set.
-func (o *OAuth2Client) HasGrantTypes() bool {
+func (o *KratosOAuth2Client) HasGrantTypes() bool {
 	if o != nil && o.GrantTypes != nil {
 		return true
 	}
@@ -690,12 +690,12 @@ func (o *OAuth2Client) HasGrantTypes() bool {
 }
 
 // SetGrantTypes gets a reference to the given []string and assigns it to the GrantTypes field.
-func (o *OAuth2Client) SetGrantTypes(v []string) {
+func (o *KratosOAuth2Client) SetGrantTypes(v []string) {
 	o.GrantTypes = v
 }
 
 // GetImplicitGrantAccessTokenLifespan returns the ImplicitGrantAccessTokenLifespan field value if set, zero value otherwise.
-func (o *OAuth2Client) GetImplicitGrantAccessTokenLifespan() string {
+func (o *KratosOAuth2Client) GetImplicitGrantAccessTokenLifespan() string {
 	if o == nil || o.ImplicitGrantAccessTokenLifespan == nil {
 		var ret string
 		return ret
@@ -705,7 +705,7 @@ func (o *OAuth2Client) GetImplicitGrantAccessTokenLifespan() string {
 
 // GetImplicitGrantAccessTokenLifespanOk returns a tuple with the ImplicitGrantAccessTokenLifespan field value if set, nil otherwise
 // and a boolean to check if the value has been set.
-func (o *OAuth2Client) GetImplicitGrantAccessTokenLifespanOk() (*string, bool) {
+func (o *KratosOAuth2Client) GetImplicitGrantAccessTokenLifespanOk() (*string, bool) {
 	if o == nil || o.ImplicitGrantAccessTokenLifespan == nil {
 		return nil, false
 	}
@@ -713,7 +713,7 @@ func (o *OAuth2Client) GetImplicitGrantAccessTokenLifespanOk() (*string, bool) {
 }
 
 // HasImplicitGrantAccessTokenLifespan returns a boolean if a field has been set.
-func (o *OAuth2Client) HasImplicitGrantAccessTokenLifespan() bool {
+func (o *KratosOAuth2Client) HasImplicitGrantAccessTokenLifespan() bool {
 	if o != nil && o.ImplicitGrantAccessTokenLifespan != nil {
 		return true
 	}
@@ -722,12 +722,12 @@ func (o *OAuth2Client) HasImplicitGrantAccessTokenLifespan() bool {
 }
 
 // SetImplicitGrantAccessTokenLifespan gets a reference to the given string and assigns it to the ImplicitGrantAccessTokenLifespan field.
-func (o *OAuth2Client) SetImplicitGrantAccessTokenLifespan(v string) {
+func (o *KratosOAuth2Client) SetImplicitGrantAccessTokenLifespan(v string) {
 	o.ImplicitGrantAccessTokenLifespan = &v
 }
 
 // GetImplicitGrantIdTokenLifespan returns the ImplicitGrantIdTokenLifespan field value if set, zero value otherwise.
-func (o *OAuth2Client) GetImplicitGrantIdTokenLifespan() string {
+func (o *KratosOAuth2Client) GetImplicitGrantIdTokenLifespan() string {
 	if o == nil || o.ImplicitGrantIdTokenLifespan == nil {
 		var ret string
 		return ret
@@ -737,7 +737,7 @@ func (o *OAuth2Client) GetImplicitGrantIdTokenLifespan() string {
 
 // GetImplicitGrantIdTokenLifespanOk returns a tuple with the ImplicitGrantIdTokenLifespan field value if set, nil otherwise
 // and a boolean to check if the value has been set.
-func (o *OAuth2Client) GetImplicitGrantIdTokenLifespanOk() (*string, bool) {
+func (o *KratosOAuth2Client) GetImplicitGrantIdTokenLifespanOk() (*string, bool) {
 	if o == nil || o.ImplicitGrantIdTokenLifespan == nil {
 		return nil, false
 	}
@@ -745,7 +745,7 @@ func (o *OAuth2Client) GetImplicitGrantIdTokenLifespanOk() (*string, bool) {
 }
 
 // HasImplicitGrantIdTokenLifespan returns a boolean if a field has been set.
-func (o *OAuth2Client) HasImplicitGrantIdTokenLifespan() bool {
+func (o *KratosOAuth2Client) HasImplicitGrantIdTokenLifespan() bool {
 	if o != nil && o.ImplicitGrantIdTokenLifespan != nil {
 		return true
 	}
@@ -754,12 +754,12 @@ func (o *OAuth2Client) HasImplicitGrantIdTokenLifespan() bool {
 }
 
 // SetImplicitGrantIdTokenLifespan gets a reference to the given string and assigns it to the ImplicitGrantIdTokenLifespan field.
-func (o *OAuth2Client) SetImplicitGrantIdTokenLifespan(v string) {
+func (o *KratosOAuth2Client) SetImplicitGrantIdTokenLifespan(v string) {
 	o.ImplicitGrantIdTokenLifespan = &v
 }
 
 // GetJwks returns the Jwks field value if set, zero value otherwise (both if not set or set to explicit null).
-func (o *OAuth2Client) GetJwks() interface{} {
+func (o *KratosOAuth2Client) GetJwks() interface{} {
 	if o == nil {
 		var ret interface{}
 		return ret
@@ -770,7 +770,7 @@ func (o *OAuth2Client) GetJwks() interface{} {
 // GetJwksOk returns a tuple with the Jwks field value if set, nil otherwise
 // and a boolean to check if the value has been set.
 // NOTE: If the value is an explicit nil, `nil, true` will be returned
-func (o *OAuth2Client) GetJwksOk() (*interface{}, bool) {
+func (o *KratosOAuth2Client) GetJwksOk() (*interface{}, bool) {
 	if o == nil || o.Jwks == nil {
 		return nil, false
 	}
@@ -778,7 +778,7 @@ func (o *OAuth2Client) GetJwksOk() (*interface{}, bool) {
 }
 
 // HasJwks returns a boolean if a field has been set.
-func (o *OAuth2Client) HasJwks() bool {
+func (o *KratosOAuth2Client) HasJwks() bool {
 	if o != nil && o.Jwks != nil {
 		return true
 	}
@@ -787,12 +787,12 @@ func (o *OAuth2Client) HasJwks() bool {
 }
 
 // SetJwks gets a reference to the given interface{} and assigns it to the Jwks field.
-func (o *OAuth2Client) SetJwks(v interface{}) {
+func (o *KratosOAuth2Client) SetJwks(v interface{}) {
 	o.Jwks = v
 }
 
 // GetJwksUri returns the JwksUri field value if set, zero value otherwise.
-func (o *OAuth2Client) GetJwksUri() string {
+func (o *KratosOAuth2Client) GetJwksUri() string {
 	if o == nil || o.JwksUri == nil {
 		var ret string
 		return ret
@@ -802,7 +802,7 @@ func (o *OAuth2Client) GetJwksUri() string {
 
 // GetJwksUriOk returns a tuple with the JwksUri field value if set, nil otherwise
 // and a boolean to check if the value has been set.
-func (o *OAuth2Client) GetJwksUriOk() (*string, bool) {
+func (o *KratosOAuth2Client) GetJwksUriOk() (*string, bool) {
 	if o == nil || o.JwksUri == nil {
 		return nil, false
 	}
@@ -810,7 +810,7 @@ func (o *OAuth2Client) GetJwksUriOk() (*string, bool) {
 }
 
 // HasJwksUri returns a boolean if a field has been set.
-func (o *OAuth2Client) HasJwksUri() bool {
+func (o *KratosOAuth2Client) HasJwksUri() bool {
 	if o != nil && o.JwksUri != nil {
 		return true
 	}
@@ -819,12 +819,12 @@ func (o *OAuth2Client) HasJwksUri() bool {
 }
 
 // SetJwksUri gets a reference to the given string and assigns it to the JwksUri field.
-func (o *OAuth2Client) SetJwksUri(v string) {
+func (o *KratosOAuth2Client) SetJwksUri(v string) {
 	o.JwksUri = &v
 }
 
 // GetJwtBearerGrantAccessTokenLifespan returns the JwtBearerGrantAccessTokenLifespan field value if set, zero value otherwise.
-func (o *OAuth2Client) GetJwtBearerGrantAccessTokenLifespan() string {
+func (o *KratosOAuth2Client) GetJwtBearerGrantAccessTokenLifespan() string {
 	if o == nil || o.JwtBearerGrantAccessTokenLifespan == nil {
 		var ret string
 		return ret
@@ -834,7 +834,7 @@ func (o *OAuth2Client) GetJwtBearerGrantAccessTokenLifespan() string {
 
 // GetJwtBearerGrantAccessTokenLifespanOk returns a tuple with the JwtBearerGrantAccessTokenLifespan field value if set, nil otherwise
 // and a boolean to check if the value has been set.
-func (o *OAuth2Client) GetJwtBearerGrantAccessTokenLifespanOk() (*string, bool) {
+func (o *KratosOAuth2Client) GetJwtBearerGrantAccessTokenLifespanOk() (*string, bool) {
 	if o == nil || o.JwtBearerGrantAccessTokenLifespan == nil {
 		return nil, false
 	}
@@ -842,7 +842,7 @@ func (o *OAuth2Client) GetJwtBearerGrantAccessTokenLifespanOk() (*string, bool) 
 }
 
 // HasJwtBearerGrantAccessTokenLifespan returns a boolean if a field has been set.
-func (o *OAuth2Client) HasJwtBearerGrantAccessTokenLifespan() bool {
+func (o *KratosOAuth2Client) HasJwtBearerGrantAccessTokenLifespan() bool {
 	if o != nil && o.JwtBearerGrantAccessTokenLifespan != nil {
 		return true
 	}
@@ -851,12 +851,12 @@ func (o *OAuth2Client) HasJwtBearerGrantAccessTokenLifespan() bool {
 }
 
 // SetJwtBearerGrantAccessTokenLifespan gets a reference to the given string and assigns it to the JwtBearerGrantAccessTokenLifespan field.
-func (o *OAuth2Client) SetJwtBearerGrantAccessTokenLifespan(v string) {
+func (o *KratosOAuth2Client) SetJwtBearerGrantAccessTokenLifespan(v string) {
 	o.JwtBearerGrantAccessTokenLifespan = &v
 }
 
 // GetLogoUri returns the LogoUri field value if set, zero value otherwise.
-func (o *OAuth2Client) GetLogoUri() string {
+func (o *KratosOAuth2Client) GetLogoUri() string {
 	if o == nil || o.LogoUri == nil {
 		var ret string
 		return ret
@@ -866,7 +866,7 @@ func (o *OAuth2Client) GetLogoUri() string {
 
 // GetLogoUriOk returns a tuple with the LogoUri field value if set, nil otherwise
 // and a boolean to check if the value has been set.
-func (o *OAuth2Client) GetLogoUriOk() (*string, bool) {
+func (o *KratosOAuth2Client) GetLogoUriOk() (*string, bool) {
 	if o == nil || o.LogoUri == nil {
 		return nil, false
 	}
@@ -874,7 +874,7 @@ func (o *OAuth2Client) GetLogoUriOk() (*string, bool) {
 }
 
 // HasLogoUri returns a boolean if a field has been set.
-func (o *OAuth2Client) HasLogoUri() bool {
+func (o *KratosOAuth2Client) HasLogoUri() bool {
 	if o != nil && o.LogoUri != nil {
 		return true
 	}
@@ -883,12 +883,12 @@ func (o *OAuth2Client) HasLogoUri() bool {
 }
 
 // SetLogoUri gets a reference to the given string and assigns it to the LogoUri field.
-func (o *OAuth2Client) SetLogoUri(v string) {
+func (o *KratosOAuth2Client) SetLogoUri(v string) {
 	o.LogoUri = &v
 }
 
 // GetMetadata returns the Metadata field value if set, zero value otherwise (both if not set or set to explicit null).
-func (o *OAuth2Client) GetMetadata() interface{} {
+func (o *KratosOAuth2Client) GetMetadata() interface{} {
 	if o == nil {
 		var ret interface{}
 		return ret
@@ -899,7 +899,7 @@ func (o *OAuth2Client) GetMetadata() interface{} {
 // GetMetadataOk returns a tuple with the Metadata field value if set, nil otherwise
 // and a boolean to check if the value has been set.
 // NOTE: If the value is an explicit nil, `nil, true` will be returned
-func (o *OAuth2Client) GetMetadataOk() (*interface{}, bool) {
+func (o *KratosOAuth2Client) GetMetadataOk() (*interface{}, bool) {
 	if o == nil || o.Metadata == nil {
 		return nil, false
 	}
@@ -907,7 +907,7 @@ func (o *OAuth2Client) GetMetadataOk() (*interface{}, bool) {
 }
 
 // HasMetadata returns a boolean if a field has been set.
-func (o *OAuth2Client) HasMetadata() bool {
+func (o *KratosOAuth2Client) HasMetadata() bool {
 	if o != nil && o.Metadata != nil {
 		return true
 	}
@@ -916,12 +916,12 @@ func (o *OAuth2Client) HasMetadata() bool {
 }
 
 // SetMetadata gets a reference to the given interface{} and assigns it to the Metadata field.
-func (o *OAuth2Client) SetMetadata(v interface{}) {
+func (o *KratosOAuth2Client) SetMetadata(v interface{}) {
 	o.Metadata = v
 }
 
 // GetOwner returns the Owner field value if set, zero value otherwise.
-func (o *OAuth2Client) GetOwner() string {
+func (o *KratosOAuth2Client) GetOwner() string {
 	if o == nil || o.Owner == nil {
 		var ret string
 		return ret
@@ -931,7 +931,7 @@ func (o *OAuth2Client) GetOwner() string {
 
 // GetOwnerOk returns a tuple with the Owner field value if set, nil otherwise
 // and a boolean to check if the value has been set.
-func (o *OAuth2Client) GetOwnerOk() (*string, bool) {
+func (o *KratosOAuth2Client) GetOwnerOk() (*string, bool) {
 	if o == nil || o.Owner == nil {
 		return nil, false
 	}
@@ -939,7 +939,7 @@ func (o *OAuth2Client) GetOwnerOk() (*string, bool) {
 }
 
 // HasOwner returns a boolean if a field has been set.
-func (o *OAuth2Client) HasOwner() bool {
+func (o *KratosOAuth2Client) HasOwner() bool {
 	if o != nil && o.Owner != nil {
 		return true
 	}
@@ -948,12 +948,12 @@ func (o *OAuth2Client) HasOwner() bool {
 }
 
 // SetOwner gets a reference to the given string and assigns it to the Owner field.
-func (o *OAuth2Client) SetOwner(v string) {
+func (o *KratosOAuth2Client) SetOwner(v string) {
 	o.Owner = &v
 }
 
 // GetPolicyUri returns the PolicyUri field value if set, zero value otherwise.
-func (o *OAuth2Client) GetPolicyUri() string {
+func (o *KratosOAuth2Client) GetPolicyUri() string {
 	if o == nil || o.PolicyUri == nil {
 		var ret string
 		return ret
@@ -963,7 +963,7 @@ func (o *OAuth2Client) GetPolicyUri() string {
 
 // GetPolicyUriOk returns a tuple with the PolicyUri field value if set, nil otherwise
 // and a boolean to check if the value has been set.
-func (o *OAuth2Client) GetPolicyUriOk() (*string, bool) {
+func (o *KratosOAuth2Client) GetPolicyUriOk() (*string, bool) {
 	if o == nil || o.PolicyUri == nil {
 		return nil, false
 	}
@@ -971,7 +971,7 @@ func (o *OAuth2Client) GetPolicyUriOk() (*string, bool) {
 }
 
 // HasPolicyUri returns a boolean if a field has been set.
-func (o *OAuth2Client) HasPolicyUri() bool {
+func (o *KratosOAuth2Client) HasPolicyUri() bool {
 	if o != nil && o.PolicyUri != nil {
 		return true
 	}
@@ -980,12 +980,12 @@ func (o *OAuth2Client) HasPolicyUri() bool {
 }
 
 // SetPolicyUri gets a reference to the given string and assigns it to the PolicyUri field.
-func (o *OAuth2Client) SetPolicyUri(v string) {
+func (o *KratosOAuth2Client) SetPolicyUri(v string) {
 	o.PolicyUri = &v
 }
 
 // GetPostLogoutRedirectUris returns the PostLogoutRedirectUris field value if set, zero value otherwise.
-func (o *OAuth2Client) GetPostLogoutRedirectUris() []string {
+func (o *KratosOAuth2Client) GetPostLogoutRedirectUris() []string {
 	if o == nil || o.PostLogoutRedirectUris == nil {
 		var ret []string
 		return ret
@@ -995,7 +995,7 @@ func (o *OAuth2Client) GetPostLogoutRedirectUris() []string {
 
 // GetPostLogoutRedirectUrisOk returns a tuple with the PostLogoutRedirectUris field value if set, nil otherwise
 // and a boolean to check if the value has been set.
-func (o *OAuth2Client) GetPostLogoutRedirectUrisOk() ([]string, bool) {
+func (o *KratosOAuth2Client) GetPostLogoutRedirectUrisOk() ([]string, bool) {
 	if o == nil || o.PostLogoutRedirectUris == nil {
 		return nil, false
 	}
@@ -1003,7 +1003,7 @@ func (o *OAuth2Client) GetPostLogoutRedirectUrisOk() ([]string, bool) {
 }
 
 // HasPostLogoutRedirectUris returns a boolean if a field has been set.
-func (o *OAuth2Client) HasPostLogoutRedirectUris() bool {
+func (o *KratosOAuth2Client) HasPostLogoutRedirectUris() bool {
 	if o != nil && o.PostLogoutRedirectUris != nil {
 		return true
 	}
@@ -1012,12 +1012,12 @@ func (o *OAuth2Client) HasPostLogoutRedirectUris() bool {
 }
 
 // SetPostLogoutRedirectUris gets a reference to the given []string and assigns it to the PostLogoutRedirectUris field.
-func (o *OAuth2Client) SetPostLogoutRedirectUris(v []string) {
+func (o *KratosOAuth2Client) SetPostLogoutRedirectUris(v []string) {
 	o.PostLogoutRedirectUris = v
 }
 
 // GetRedirectUris returns the RedirectUris field value if set, zero value otherwise.
-func (o *OAuth2Client) GetRedirectUris() []string {
+func (o *KratosOAuth2Client) GetRedirectUris() []string {
 	if o == nil || o.RedirectUris == nil {
 		var ret []string
 		return ret
@@ -1027,7 +1027,7 @@ func (o *OAuth2Client) GetRedirectUris() []string {
 
 // GetRedirectUrisOk returns a tuple with the RedirectUris field value if set, nil otherwise
 // and a boolean to check if the value has been set.
-func (o *OAuth2Client) GetRedirectUrisOk() ([]string, bool) {
+func (o *KratosOAuth2Client) GetRedirectUrisOk() ([]string, bool) {
 	if o == nil || o.RedirectUris == nil {
 		return nil, false
 	}
@@ -1035,7 +1035,7 @@ func (o *OAuth2Client) GetRedirectUrisOk() ([]string, bool) {
 }
 
 // HasRedirectUris returns a boolean if a field has been set.
-func (o *OAuth2Client) HasRedirectUris() bool {
+func (o *KratosOAuth2Client) HasRedirectUris() bool {
 	if o != nil && o.RedirectUris != nil {
 		return true
 	}
@@ -1044,12 +1044,12 @@ func (o *OAuth2Client) HasRedirectUris() bool {
 }
 
 // SetRedirectUris gets a reference to the given []string and assigns it to the RedirectUris field.
-func (o *OAuth2Client) SetRedirectUris(v []string) {
+func (o *KratosOAuth2Client) SetRedirectUris(v []string) {
 	o.RedirectUris = v
 }
 
 // GetRefreshTokenGrantAccessTokenLifespan returns the RefreshTokenGrantAccessTokenLifespan field value if set, zero value otherwise.
-func (o *OAuth2Client) GetRefreshTokenGrantAccessTokenLifespan() string {
+func (o *KratosOAuth2Client) GetRefreshTokenGrantAccessTokenLifespan() string {
 	if o == nil || o.RefreshTokenGrantAccessTokenLifespan == nil {
 		var ret string
 		return ret
@@ -1059,7 +1059,7 @@ func (o *OAuth2Client) GetRefreshTokenGrantAccessTokenLifespan() string {
 
 // GetRefreshTokenGrantAccessTokenLifespanOk returns a tuple with the RefreshTokenGrantAccessTokenLifespan field value if set, nil otherwise
 // and a boolean to check if the value has been set.
-func (o *OAuth2Client) GetRefreshTokenGrantAccessTokenLifespanOk() (*string, bool) {
+func (o *KratosOAuth2Client) GetRefreshTokenGrantAccessTokenLifespanOk() (*string, bool) {
 	if o == nil || o.RefreshTokenGrantAccessTokenLifespan == nil {
 		return nil, false
 	}
@@ -1067,7 +1067,7 @@ func (o *OAuth2Client) GetRefreshTokenGrantAccessTokenLifespanOk() (*string, boo
 }
 
 // HasRefreshTokenGrantAccessTokenLifespan returns a boolean if a field has been set.
-func (o *OAuth2Client) HasRefreshTokenGrantAccessTokenLifespan() bool {
+func (o *KratosOAuth2Client) HasRefreshTokenGrantAccessTokenLifespan() bool {
 	if o != nil && o.RefreshTokenGrantAccessTokenLifespan != nil {
 		return true
 	}
@@ -1076,12 +1076,12 @@ func (o *OAuth2Client) HasRefreshTokenGrantAccessTokenLifespan() bool {
 }
 
 // SetRefreshTokenGrantAccessTokenLifespan gets a reference to the given string and assigns it to the RefreshTokenGrantAccessTokenLifespan field.
-func (o *OAuth2Client) SetRefreshTokenGrantAccessTokenLifespan(v string) {
+func (o *KratosOAuth2Client) SetRefreshTokenGrantAccessTokenLifespan(v string) {
 	o.RefreshTokenGrantAccessTokenLifespan = &v
 }
 
 // GetRefreshTokenGrantIdTokenLifespan returns the RefreshTokenGrantIdTokenLifespan field value if set, zero value otherwise.
-func (o *OAuth2Client) GetRefreshTokenGrantIdTokenLifespan() string {
+func (o *KratosOAuth2Client) GetRefreshTokenGrantIdTokenLifespan() string {
 	if o == nil || o.RefreshTokenGrantIdTokenLifespan == nil {
 		var ret string
 		return ret
@@ -1091,7 +1091,7 @@ func (o *OAuth2Client) GetRefreshTokenGrantIdTokenLifespan() string {
 
 // GetRefreshTokenGrantIdTokenLifespanOk returns a tuple with the RefreshTokenGrantIdTokenLifespan field value if set, nil otherwise
 // and a boolean to check if the value has been set.
-func (o *OAuth2Client) GetRefreshTokenGrantIdTokenLifespanOk() (*string, bool) {
+func (o *KratosOAuth2Client) GetRefreshTokenGrantIdTokenLifespanOk() (*string, bool) {
 	if o == nil || o.RefreshTokenGrantIdTokenLifespan == nil {
 		return nil, false
 	}
@@ -1099,7 +1099,7 @@ func (o *OAuth2Client) GetRefreshTokenGrantIdTokenLifespanOk() (*string, bool) {
 }
 
 // HasRefreshTokenGrantIdTokenLifespan returns a boolean if a field has been set.
-func (o *OAuth2Client) HasRefreshTokenGrantIdTokenLifespan() bool {
+func (o *KratosOAuth2Client) HasRefreshTokenGrantIdTokenLifespan() bool {
 	if o != nil && o.RefreshTokenGrantIdTokenLifespan != nil {
 		return true
 	}
@@ -1108,12 +1108,12 @@ func (o *OAuth2Client) HasRefreshTokenGrantIdTokenLifespan() bool {
 }
 
 // SetRefreshTokenGrantIdTokenLifespan gets a reference to the given string and assigns it to the RefreshTokenGrantIdTokenLifespan field.
-func (o *OAuth2Client) SetRefreshTokenGrantIdTokenLifespan(v string) {
+func (o *KratosOAuth2Client) SetRefreshTokenGrantIdTokenLifespan(v string) {
 	o.RefreshTokenGrantIdTokenLifespan = &v
 }
 
 // GetRefreshTokenGrantRefreshTokenLifespan returns the RefreshTokenGrantRefreshTokenLifespan field value if set, zero value otherwise.
-func (o *OAuth2Client) GetRefreshTokenGrantRefreshTokenLifespan() string {
+func (o *KratosOAuth2Client) GetRefreshTokenGrantRefreshTokenLifespan() string {
 	if o == nil || o.RefreshTokenGrantRefreshTokenLifespan == nil {
 		var ret string
 		return ret
@@ -1123,7 +1123,7 @@ func (o *OAuth2Client) GetRefreshTokenGrantRefreshTokenLifespan() string {
 
 // GetRefreshTokenGrantRefreshTokenLifespanOk returns a tuple with the RefreshTokenGrantRefreshTokenLifespan field value if set, nil otherwise
 // and a boolean to check if the value has been set.
-func (o *OAuth2Client) GetRefreshTokenGrantRefreshTokenLifespanOk() (*string, bool) {
+func (o *KratosOAuth2Client) GetRefreshTokenGrantRefreshTokenLifespanOk() (*string, bool) {
 	if o == nil || o.RefreshTokenGrantRefreshTokenLifespan == nil {
 		return nil, false
 	}
@@ -1131,7 +1131,7 @@ func (o *OAuth2Client) GetRefreshTokenGrantRefreshTokenLifespanOk() (*string, bo
 }
 
 // HasRefreshTokenGrantRefreshTokenLifespan returns a boolean if a field has been set.
-func (o *OAuth2Client) HasRefreshTokenGrantRefreshTokenLifespan() bool {
+func (o *KratosOAuth2Client) HasRefreshTokenGrantRefreshTokenLifespan() bool {
 	if o != nil && o.RefreshTokenGrantRefreshTokenLifespan != nil {
 		return true
 	}
@@ -1140,12 +1140,12 @@ func (o *OAuth2Client) HasRefreshTokenGrantRefreshTokenLifespan() bool {
 }
 
 // SetRefreshTokenGrantRefreshTokenLifespan gets a reference to the given string and assigns it to the RefreshTokenGrantRefreshTokenLifespan field.
-func (o *OAuth2Client) SetRefreshTokenGrantRefreshTokenLifespan(v string) {
+func (o *KratosOAuth2Client) SetRefreshTokenGrantRefreshTokenLifespan(v string) {
 	o.RefreshTokenGrantRefreshTokenLifespan = &v
 }
 
 // GetRegistrationAccessToken returns the RegistrationAccessToken field value if set, zero value otherwise.
-func (o *OAuth2Client) GetRegistrationAccessToken() string {
+func (o *KratosOAuth2Client) GetRegistrationAccessToken() string {
 	if o == nil || o.RegistrationAccessToken == nil {
 		var ret string
 		return ret
@@ -1155,7 +1155,7 @@ func (o *OAuth2Client) GetRegistrationAccessToken() string {
 
 // GetRegistrationAccessTokenOk returns a tuple with the RegistrationAccessToken field value if set, nil otherwise
 // and a boolean to check if the value has been set.
-func (o *OAuth2Client) GetRegistrationAccessTokenOk() (*string, bool) {
+func (o *KratosOAuth2Client) GetRegistrationAccessTokenOk() (*string, bool) {
 	if o == nil || o.RegistrationAccessToken == nil {
 		return nil, false
 	}
@@ -1163,7 +1163,7 @@ func (o *OAuth2Client) GetRegistrationAccessTokenOk() (*string, bool) {
 }
 
 // HasRegistrationAccessToken returns a boolean if a field has been set.
-func (o *OAuth2Client) HasRegistrationAccessToken() bool {
+func (o *KratosOAuth2Client) HasRegistrationAccessToken() bool {
 	if o != nil && o.RegistrationAccessToken != nil {
 		return true
 	}
@@ -1172,12 +1172,12 @@ func (o *OAuth2Client) HasRegistrationAccessToken() bool {
 }
 
 // SetRegistrationAccessToken gets a reference to the given string and assigns it to the RegistrationAccessToken field.
-func (o *OAuth2Client) SetRegistrationAccessToken(v string) {
+func (o *KratosOAuth2Client) SetRegistrationAccessToken(v string) {
 	o.RegistrationAccessToken = &v
 }
 
 // GetRegistrationClientUri returns the RegistrationClientUri field value if set, zero value otherwise.
-func (o *OAuth2Client) GetRegistrationClientUri() string {
+func (o *KratosOAuth2Client) GetRegistrationClientUri() string {
 	if o == nil || o.RegistrationClientUri == nil {
 		var ret string
 		return ret
@@ -1187,7 +1187,7 @@ func (o *OAuth2Client) GetRegistrationClientUri() string {
 
 // GetRegistrationClientUriOk returns a tuple with the RegistrationClientUri field value if set, nil otherwise
 // and a boolean to check if the value has been set.
-func (o *OAuth2Client) GetRegistrationClientUriOk() (*string, bool) {
+func (o *KratosOAuth2Client) GetRegistrationClientUriOk() (*string, bool) {
 	if o == nil || o.RegistrationClientUri == nil {
 		return nil, false
 	}
@@ -1195,7 +1195,7 @@ func (o *OAuth2Client) GetRegistrationClientUriOk() (*string, bool) {
 }
 
 // HasRegistrationClientUri returns a boolean if a field has been set.
-func (o *OAuth2Client) HasRegistrationClientUri() bool {
+func (o *KratosOAuth2Client) HasRegistrationClientUri() bool {
 	if o != nil && o.RegistrationClientUri != nil {
 		return true
 	}
@@ -1204,12 +1204,12 @@ func (o *OAuth2Client) HasRegistrationClientUri() bool {
 }
 
 // SetRegistrationClientUri gets a reference to the given string and assigns it to the RegistrationClientUri field.
-func (o *OAuth2Client) SetRegistrationClientUri(v string) {
+func (o *KratosOAuth2Client) SetRegistrationClientUri(v string) {
 	o.RegistrationClientUri = &v
 }
 
 // GetRequestObjectSigningAlg returns the RequestObjectSigningAlg field value if set, zero value otherwise.
-func (o *OAuth2Client) GetRequestObjectSigningAlg() string {
+func (o *KratosOAuth2Client) GetRequestObjectSigningAlg() string {
 	if o == nil || o.RequestObjectSigningAlg == nil {
 		var ret string
 		return ret
@@ -1219,7 +1219,7 @@ func (o *OAuth2Client) GetRequestObjectSigningAlg() string {
 
 // GetRequestObjectSigningAlgOk returns a tuple with the RequestObjectSigningAlg field value if set, nil otherwise
 // and a boolean to check if the value has been set.
-func (o *OAuth2Client) GetRequestObjectSigningAlgOk() (*string, bool) {
+func (o *KratosOAuth2Client) GetRequestObjectSigningAlgOk() (*string, bool) {
 	if o == nil || o.RequestObjectSigningAlg == nil {
 		return nil, false
 	}
@@ -1227,7 +1227,7 @@ func (o *OAuth2Client) GetRequestObjectSigningAlgOk() (*string, bool) {
 }
 
 // HasRequestObjectSigningAlg returns a boolean if a field has been set.
-func (o *OAuth2Client) HasRequestObjectSigningAlg() bool {
+func (o *KratosOAuth2Client) HasRequestObjectSigningAlg() bool {
 	if o != nil && o.RequestObjectSigningAlg != nil {
 		return true
 	}
@@ -1236,12 +1236,12 @@ func (o *OAuth2Client) HasRequestObjectSigningAlg() bool {
 }
 
 // SetRequestObjectSigningAlg gets a reference to the given string and assigns it to the RequestObjectSigningAlg field.
-func (o *OAuth2Client) SetRequestObjectSigningAlg(v string) {
+func (o *KratosOAuth2Client) SetRequestObjectSigningAlg(v string) {
 	o.RequestObjectSigningAlg = &v
 }
 
 // GetRequestUris returns the RequestUris field value if set, zero value otherwise.
-func (o *OAuth2Client) GetRequestUris() []string {
+func (o *KratosOAuth2Client) GetRequestUris() []string {
 	if o == nil || o.RequestUris == nil {
 		var ret []string
 		return ret
@@ -1251,7 +1251,7 @@ func (o *OAuth2Client) GetRequestUris() []string {
 
 // GetRequestUrisOk returns a tuple with the RequestUris field value if set, nil otherwise
 // and a boolean to check if the value has been set.
-func (o *OAuth2Client) GetRequestUrisOk() ([]string, bool) {
+func (o *KratosOAuth2Client) GetRequestUrisOk() ([]string, bool) {
 	if o == nil || o.RequestUris == nil {
 		return nil, false
 	}
@@ -1259,7 +1259,7 @@ func (o *OAuth2Client) GetRequestUrisOk() ([]string, bool) {
 }
 
 // HasRequestUris returns a boolean if a field has been set.
-func (o *OAuth2Client) HasRequestUris() bool {
+func (o *KratosOAuth2Client) HasRequestUris() bool {
 	if o != nil && o.RequestUris != nil {
 		return true
 	}
@@ -1268,12 +1268,12 @@ func (o *OAuth2Client) HasRequestUris() bool {
 }
 
 // SetRequestUris gets a reference to the given []string and assigns it to the RequestUris field.
-func (o *OAuth2Client) SetRequestUris(v []string) {
+func (o *KratosOAuth2Client) SetRequestUris(v []string) {
 	o.RequestUris = v
 }
 
 // GetResponseTypes returns the ResponseTypes field value if set, zero value otherwise.
-func (o *OAuth2Client) GetResponseTypes() []string {
+func (o *KratosOAuth2Client) GetResponseTypes() []string {
 	if o == nil || o.ResponseTypes == nil {
 		var ret []string
 		return ret
@@ -1283,7 +1283,7 @@ func (o *OAuth2Client) GetResponseTypes() []string {
 
 // GetResponseTypesOk returns a tuple with the ResponseTypes field value if set, nil otherwise
 // and a boolean to check if the value has been set.
-func (o *OAuth2Client) GetResponseTypesOk() ([]string, bool) {
+func (o *KratosOAuth2Client) GetResponseTypesOk() ([]string, bool) {
 	if o == nil || o.ResponseTypes == nil {
 		return nil, false
 	}
@@ -1291,7 +1291,7 @@ func (o *OAuth2Client) GetResponseTypesOk() ([]string, bool) {
 }
 
 // HasResponseTypes returns a boolean if a field has been set.
-func (o *OAuth2Client) HasResponseTypes() bool {
+func (o *KratosOAuth2Client) HasResponseTypes() bool {
 	if o != nil && o.ResponseTypes != nil {
 		return true
 	}
@@ -1300,12 +1300,12 @@ func (o *OAuth2Client) HasResponseTypes() bool {
 }
 
 // SetResponseTypes gets a reference to the given []string and assigns it to the ResponseTypes field.
-func (o *OAuth2Client) SetResponseTypes(v []string) {
+func (o *KratosOAuth2Client) SetResponseTypes(v []string) {
 	o.ResponseTypes = v
 }
 
 // GetScope returns the Scope field value if set, zero value otherwise.
-func (o *OAuth2Client) GetScope() string {
+func (o *KratosOAuth2Client) GetScope() string {
 	if o == nil || o.Scope == nil {
 		var ret string
 		return ret
@@ -1315,7 +1315,7 @@ func (o *OAuth2Client) GetScope() string {
 
 // GetScopeOk returns a tuple with the Scope field value if set, nil otherwise
 // and a boolean to check if the value has been set.
-func (o *OAuth2Client) GetScopeOk() (*string, bool) {
+func (o *KratosOAuth2Client) GetScopeOk() (*string, bool) {
 	if o == nil || o.Scope == nil {
 		return nil, false
 	}
@@ -1323,7 +1323,7 @@ func (o *OAuth2Client) GetScopeOk() (*string, bool) {
 }
 
 // HasScope returns a boolean if a field has been set.
-func (o *OAuth2Client) HasScope() bool {
+func (o *KratosOAuth2Client) HasScope() bool {
 	if o != nil && o.Scope != nil {
 		return true
 	}
@@ -1332,12 +1332,12 @@ func (o *OAuth2Client) HasScope() bool {
 }
 
 // SetScope gets a reference to the given string and assigns it to the Scope field.
-func (o *OAuth2Client) SetScope(v string) {
+func (o *KratosOAuth2Client) SetScope(v string) {
 	o.Scope = &v
 }
 
 // GetSectorIdentifierUri returns the SectorIdentifierUri field value if set, zero value otherwise.
-func (o *OAuth2Client) GetSectorIdentifierUri() string {
+func (o *KratosOAuth2Client) GetSectorIdentifierUri() string {
 	if o == nil || o.SectorIdentifierUri == nil {
 		var ret string
 		return ret
@@ -1347,7 +1347,7 @@ func (o *OAuth2Client) GetSectorIdentifierUri() string {
 
 // GetSectorIdentifierUriOk returns a tuple with the SectorIdentifierUri field value if set, nil otherwise
 // and a boolean to check if the value has been set.
-func (o *OAuth2Client) GetSectorIdentifierUriOk() (*string, bool) {
+func (o *KratosOAuth2Client) GetSectorIdentifierUriOk() (*string, bool) {
 	if o == nil || o.SectorIdentifierUri == nil {
 		return nil, false
 	}
@@ -1355,7 +1355,7 @@ func (o *OAuth2Client) GetSectorIdentifierUriOk() (*string, bool) {
 }
 
 // HasSectorIdentifierUri returns a boolean if a field has been set.
-func (o *OAuth2Client) HasSectorIdentifierUri() bool {
+func (o *KratosOAuth2Client) HasSectorIdentifierUri() bool {
 	if o != nil && o.SectorIdentifierUri != nil {
 		return true
 	}
@@ -1364,12 +1364,12 @@ func (o *OAuth2Client) HasSectorIdentifierUri() bool {
 }
 
 // SetSectorIdentifierUri gets a reference to the given string and assigns it to the SectorIdentifierUri field.
-func (o *OAuth2Client) SetSectorIdentifierUri(v string) {
+func (o *KratosOAuth2Client) SetSectorIdentifierUri(v string) {
 	o.SectorIdentifierUri = &v
 }
 
 // GetSubjectType returns the SubjectType field value if set, zero value otherwise.
-func (o *OAuth2Client) GetSubjectType() string {
+func (o *KratosOAuth2Client) GetSubjectType() string {
 	if o == nil || o.SubjectType == nil {
 		var ret string
 		return ret
@@ -1379,7 +1379,7 @@ func (o *OAuth2Client) GetSubjectType() string {
 
 // GetSubjectTypeOk returns a tuple with the SubjectType field value if set, nil otherwise
 // and a boolean to check if the value has been set.
-func (o *OAuth2Client) GetSubjectTypeOk() (*string, bool) {
+func (o *KratosOAuth2Client) GetSubjectTypeOk() (*string, bool) {
 	if o == nil || o.SubjectType == nil {
 		return nil, false
 	}
@@ -1387,7 +1387,7 @@ func (o *OAuth2Client) GetSubjectTypeOk() (*string, bool) {
 }
 
 // HasSubjectType returns a boolean if a field has been set.
-func (o *OAuth2Client) HasSubjectType() bool {
+func (o *KratosOAuth2Client) HasSubjectType() bool {
 	if o != nil && o.SubjectType != nil {
 		return true
 	}
@@ -1396,12 +1396,12 @@ func (o *OAuth2Client) HasSubjectType() bool {
 }
 
 // SetSubjectType gets a reference to the given string and assigns it to the SubjectType field.
-func (o *OAuth2Client) SetSubjectType(v string) {
+func (o *KratosOAuth2Client) SetSubjectType(v string) {
 	o.SubjectType = &v
 }
 
 // GetTokenEndpointAuthMethod returns the TokenEndpointAuthMethod field value if set, zero value otherwise.
-func (o *OAuth2Client) GetTokenEndpointAuthMethod() string {
+func (o *KratosOAuth2Client) GetTokenEndpointAuthMethod() string {
 	if o == nil || o.TokenEndpointAuthMethod == nil {
 		var ret string
 		return ret
@@ -1411,7 +1411,7 @@ func (o *OAuth2Client) GetTokenEndpointAuthMethod() string {
 
 // GetTokenEndpointAuthMethodOk returns a tuple with the TokenEndpointAuthMethod field value if set, nil otherwise
 // and a boolean to check if the value has been set.
-func (o *OAuth2Client) GetTokenEndpointAuthMethodOk() (*string, bool) {
+func (o *KratosOAuth2Client) GetTokenEndpointAuthMethodOk() (*string, bool) {
 	if o == nil || o.TokenEndpointAuthMethod == nil {
 		return nil, false
 	}
@@ -1419,7 +1419,7 @@ func (o *OAuth2Client) GetTokenEndpointAuthMethodOk() (*string, bool) {
 }
 
 // HasTokenEndpointAuthMethod returns a boolean if a field has been set.
-func (o *OAuth2Client) HasTokenEndpointAuthMethod() bool {
+func (o *KratosOAuth2Client) HasTokenEndpointAuthMethod() bool {
 	if o != nil && o.TokenEndpointAuthMethod != nil {
 		return true
 	}
@@ -1428,12 +1428,12 @@ func (o *OAuth2Client) HasTokenEndpointAuthMethod() bool {
 }
 
 // SetTokenEndpointAuthMethod gets a reference to the given string and assigns it to the TokenEndpointAuthMethod field.
-func (o *OAuth2Client) SetTokenEndpointAuthMethod(v string) {
+func (o *KratosOAuth2Client) SetTokenEndpointAuthMethod(v string) {
 	o.TokenEndpointAuthMethod = &v
 }
 
 // GetTokenEndpointAuthSigningAlg returns the TokenEndpointAuthSigningAlg field value if set, zero value otherwise.
-func (o *OAuth2Client) GetTokenEndpointAuthSigningAlg() string {
+func (o *KratosOAuth2Client) GetTokenEndpointAuthSigningAlg() string {
 	if o == nil || o.TokenEndpointAuthSigningAlg == nil {
 		var ret string
 		return ret
@@ -1443,7 +1443,7 @@ func (o *OAuth2Client) GetTokenEndpointAuthSigningAlg() string {
 
 // GetTokenEndpointAuthSigningAlgOk returns a tuple with the TokenEndpointAuthSigningAlg field value if set, nil otherwise
 // and a boolean to check if the value has been set.
-func (o *OAuth2Client) GetTokenEndpointAuthSigningAlgOk() (*string, bool) {
+func (o *KratosOAuth2Client) GetTokenEndpointAuthSigningAlgOk() (*string, bool) {
 	if o == nil || o.TokenEndpointAuthSigningAlg == nil {
 		return nil, false
 	}
@@ -1451,7 +1451,7 @@ func (o *OAuth2Client) GetTokenEndpointAuthSigningAlgOk() (*string, bool) {
 }
 
 // HasTokenEndpointAuthSigningAlg returns a boolean if a field has been set.
-func (o *OAuth2Client) HasTokenEndpointAuthSigningAlg() bool {
+func (o *KratosOAuth2Client) HasTokenEndpointAuthSigningAlg() bool {
 	if o != nil && o.TokenEndpointAuthSigningAlg != nil {
 		return true
 	}
@@ -1460,12 +1460,12 @@ func (o *OAuth2Client) HasTokenEndpointAuthSigningAlg() bool {
 }
 
 // SetTokenEndpointAuthSigningAlg gets a reference to the given string and assigns it to the TokenEndpointAuthSigningAlg field.
-func (o *OAuth2Client) SetTokenEndpointAuthSigningAlg(v string) {
+func (o *KratosOAuth2Client) SetTokenEndpointAuthSigningAlg(v string) {
 	o.TokenEndpointAuthSigningAlg = &v
 }
 
 // GetTosUri returns the TosUri field value if set, zero value otherwise.
-func (o *OAuth2Client) GetTosUri() string {
+func (o *KratosOAuth2Client) GetTosUri() string {
 	if o == nil || o.TosUri == nil {
 		var ret string
 		return ret
@@ -1475,7 +1475,7 @@ func (o *OAuth2Client) GetTosUri() string {
 
 // GetTosUriOk returns a tuple with the TosUri field value if set, nil otherwise
 // and a boolean to check if the value has been set.
-func (o *OAuth2Client) GetTosUriOk() (*string, bool) {
+func (o *KratosOAuth2Client) GetTosUriOk() (*string, bool) {
 	if o == nil || o.TosUri == nil {
 		return nil, false
 	}
@@ -1483,7 +1483,7 @@ func (o *OAuth2Client) GetTosUriOk() (*string, bool) {
 }
 
 // HasTosUri returns a boolean if a field has been set.
-func (o *OAuth2Client) HasTosUri() bool {
+func (o *KratosOAuth2Client) HasTosUri() bool {
 	if o != nil && o.TosUri != nil {
 		return true
 	}
@@ -1492,12 +1492,12 @@ func (o *OAuth2Client) HasTosUri() bool {
 }
 
 // SetTosUri gets a reference to the given string and assigns it to the TosUri field.
-func (o *OAuth2Client) SetTosUri(v string) {
+func (o *KratosOAuth2Client) SetTosUri(v string) {
 	o.TosUri = &v
 }
 
 // GetUpdatedAt returns the UpdatedAt field value if set, zero value otherwise.
-func (o *OAuth2Client) GetUpdatedAt() time.Time {
+func (o *KratosOAuth2Client) GetUpdatedAt() time.Time {
 	if o == nil || o.UpdatedAt == nil {
 		var ret time.Time
 		return ret
@@ -1507,7 +1507,7 @@ func (o *OAuth2Client) GetUpdatedAt() time.Time {
 
 // GetUpdatedAtOk returns a tuple with the UpdatedAt field value if set, nil otherwise
 // and a boolean to check if the value has been set.
-func (o *OAuth2Client) GetUpdatedAtOk() (*time.Time, bool) {
+func (o *KratosOAuth2Client) GetUpdatedAtOk() (*time.Time, bool) {
 	if o == nil || o.UpdatedAt == nil {
 		return nil, false
 	}
@@ -1515,7 +1515,7 @@ func (o *OAuth2Client) GetUpdatedAtOk() (*time.Time, bool) {
 }
 
 // HasUpdatedAt returns a boolean if a field has been set.
-func (o *OAuth2Client) HasUpdatedAt() bool {
+func (o *KratosOAuth2Client) HasUpdatedAt() bool {
 	if o != nil && o.UpdatedAt != nil {
 		return true
 	}
@@ -1524,12 +1524,12 @@ func (o *OAuth2Client) HasUpdatedAt() bool {
 }
 
 // SetUpdatedAt gets a reference to the given time.Time and assigns it to the UpdatedAt field.
-func (o *OAuth2Client) SetUpdatedAt(v time.Time) {
+func (o *KratosOAuth2Client) SetUpdatedAt(v time.Time) {
 	o.UpdatedAt = &v
 }
 
 // GetUserinfoSignedResponseAlg returns the UserinfoSignedResponseAlg field value if set, zero value otherwise.
-func (o *OAuth2Client) GetUserinfoSignedResponseAlg() string {
+func (o *KratosOAuth2Client) GetUserinfoSignedResponseAlg() string {
 	if o == nil || o.UserinfoSignedResponseAlg == nil {
 		var ret string
 		return ret
@@ -1539,7 +1539,7 @@ func (o *OAuth2Client) GetUserinfoSignedResponseAlg() string {
 
 // GetUserinfoSignedResponseAlgOk returns a tuple with the UserinfoSignedResponseAlg field value if set, nil otherwise
 // and a boolean to check if the value has been set.
-func (o *OAuth2Client) GetUserinfoSignedResponseAlgOk() (*string, bool) {
+func (o *KratosOAuth2Client) GetUserinfoSignedResponseAlgOk() (*string, bool) {
 	if o == nil || o.UserinfoSignedResponseAlg == nil {
 		return nil, false
 	}
@@ -1547,7 +1547,7 @@ func (o *OAuth2Client) GetUserinfoSignedResponseAlgOk() (*string, bool) {
 }
 
 // HasUserinfoSignedResponseAlg returns a boolean if a field has been set.
-func (o *OAuth2Client) HasUserinfoSignedResponseAlg() bool {
+func (o *KratosOAuth2Client) HasUserinfoSignedResponseAlg() bool {
 	if o != nil && o.UserinfoSignedResponseAlg != nil {
 		return true
 	}
@@ -1556,11 +1556,11 @@ func (o *OAuth2Client) HasUserinfoSignedResponseAlg() bool {
 }
 
 // SetUserinfoSignedResponseAlg gets a reference to the given string and assigns it to the UserinfoSignedResponseAlg field.
-func (o *OAuth2Client) SetUserinfoSignedResponseAlg(v string) {
+func (o *KratosOAuth2Client) SetUserinfoSignedResponseAlg(v string) {
 	o.UserinfoSignedResponseAlg = &v
 }
 
-func (o OAuth2Client) MarshalJSON() ([]byte, error) {
+func (o KratosOAuth2Client) MarshalJSON() ([]byte, error) {
 	toSerialize := map[string]interface{}{}
 	if o.AllowedCorsOrigins != nil {
 		toSerialize["allowed_cors_origins"] = o.AllowedCorsOrigins
@@ -1700,38 +1700,38 @@ func (o OAuth2Client) MarshalJSON() ([]byte, error) {
 	return json.Marshal(toSerialize)
 }
 
-type NullableOAuth2Client struct {
-	value *OAuth2Client
+type NullableKratosOAuth2Client struct {
+	value *KratosOAuth2Client
 	isSet bool
 }
 
-func (v NullableOAuth2Client) Get() *OAuth2Client {
+func (v NullableKratosOAuth2Client) Get() *KratosOAuth2Client {
 	return v.value
 }
 
-func (v *NullableOAuth2Client) Set(val *OAuth2Client) {
+func (v *NullableKratosOAuth2Client) Set(val *KratosOAuth2Client) {
 	v.value = val
 	v.isSet = true
 }
 
-func (v NullableOAuth2Client) IsSet() bool {
+func (v NullableKratosOAuth2Client) IsSet() bool {
 	return v.isSet
 }
 
-func (v *NullableOAuth2Client) Unset() {
+func (v *NullableKratosOAuth2Client) Unset() {
 	v.value = nil
 	v.isSet = false
 }
 
-func NewNullableOAuth2Client(val *OAuth2Client) *NullableOAuth2Client {
-	return &NullableOAuth2Client{value: val, isSet: true}
+func NewNullableKratosOAuth2Client(val *KratosOAuth2Client) *NullableKratosOAuth2Client {
+	return &NullableKratosOAuth2Client{value: val, isSet: true}
 }
 
-func (v NullableOAuth2Client) MarshalJSON() ([]byte, error) {
+func (v NullableKratosOAuth2Client) MarshalJSON() ([]byte, error) {
 	return json.Marshal(v.value)
 }
 
-func (v *NullableOAuth2Client) UnmarshalJSON(src []byte) error {
+func (v *NullableKratosOAuth2Client) UnmarshalJSON(src []byte) error {
 	v.isSet = true
 	return json.Unmarshal(src, &v.value)
 }
