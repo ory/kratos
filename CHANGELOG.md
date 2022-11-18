@@ -5,7 +5,7 @@
 
 **Table of Contents**
 
-- [ (2022-11-17)](#2022-11-17)
+- [ (2022-11-18)](#2022-11-18)
   - [Breaking Changes](#breaking-changes)
     - [Bug Fixes](#bug-fixes)
     - [Code Refactoring](#code-refactoring)
@@ -280,7 +280,7 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# [](https://github.com/ory/kratos/compare/v0.10.1...v) (2022-11-17)
+# [](https://github.com/ory/kratos/compare/v0.10.1...v) (2022-11-18)
 
 ## Breaking Changes
 
@@ -663,6 +663,9 @@ SDK Method `getJsonSchema` was renamed to `getIdentitySchema`.
 - Automatic TLS certificate reloading
   ([#2744](https://github.com/ory/kratos/issues/2744))
   ([09751e6](https://github.com/ory/kratos/commit/09751e6a03783701af60ce606633694ef67deacc))
+- Change code length to 6 numbers
+  ([#2894](https://github.com/ory/kratos/issues/2894))
+  ([56feb07](https://github.com/ory/kratos/commit/56feb079c3b99856c03cd8beb950673c10310520))
 - **cli:** Helper for cleaning up stale records
   ([#2406](https://github.com/ory/kratos/issues/2406))
   ([29d6376](https://github.com/ory/kratos/commit/29d6376e22e4de617ec63ca0a5dcb4dbf34c7c37)),
