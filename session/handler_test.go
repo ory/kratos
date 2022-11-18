@@ -649,6 +649,52 @@ func TestHandlerAdminSessionManagement(t *testing.T) {
 		})
 	})
 
+	t.Run("case=session status should be false for inactive identity", func(t *testing.T) {
+		client := testhelpers.NewClientWithCookies(t)
+		var s *Session
+		require.NoError(t, faker.FakeData(&s))
+		s.Active = true
+		s.Identity.State = identity.StateInactive
+		require.NoError(t, reg.Persister().CreateIdentity(ctx, s.Identity))
+
+		assert.Equal(t, uuid.Nil, s.ID)
+		require.NoError(t, reg.SessionPersister().UpsertSession(ctx, s))
+		assert.NotEqual(t, uuid.Nil, s.ID)
+		assert.NotEqual(t, uuid.Nil, s.Identity.ID)
+
+		req, _ := http.NewRequest("GET", ts.URL+"/admin/sessions/"+s.ID.String()+"?expand=Identity", nil)
+		res, err := client.Do(req)
+		require.NoError(t, err)
+		assert.Equal(t, http.StatusOK, res.StatusCode)
+
+		body, err := io.ReadAll(res.Body)
+		require.NoError(t, err)
+		assert.Equal(t, "false", gjson.GetBytes(body, "active").String(), "%s", body)
+	})
+
+	t.Run("case=session status should be false when session expiry is past", func(t *testing.T) {
+		client := testhelpers.NewClientWithCookies(t)
+		var s *Session
+		require.NoError(t, faker.FakeData(&s))
+		s.Active = true
+		s.ExpiresAt = time.Now().Add(-time.Hour * 1)
+		require.NoError(t, reg.Persister().CreateIdentity(ctx, s.Identity))
+
+		assert.Equal(t, uuid.Nil, s.ID)
+		require.NoError(t, reg.SessionPersister().UpsertSession(ctx, s))
+		assert.NotEqual(t, uuid.Nil, s.ID)
+		assert.NotEqual(t, uuid.Nil, s.Identity.ID)
+
+		req, _ := http.NewRequest("GET", ts.URL+"/admin/sessions/"+s.ID.String(), nil)
+		res, err := client.Do(req)
+		require.NoError(t, err)
+		assert.Equal(t, http.StatusOK, res.StatusCode)
+
+		body, err := io.ReadAll(res.Body)
+		require.NoError(t, err)
+		assert.Equal(t, "false", gjson.GetBytes(body, "active").String(), "%s", body)
+	})
+
 	t.Run("case=should return 400 when bad UUID is sent", func(t *testing.T) {
 		client := testhelpers.NewClientWithCookies(t)
 
