@@ -79,7 +79,7 @@ func (e *Verifier) do(r *http.Request, i *identity.Identity, f flow.Flow) error 
 			return err
 		}
 
-		if err := strategy.SendVerificationEmail(r.Context(), verificationFlow, i, address); err != nil {
+		if err := strategy.SendVerificationChallenge(r.Context(), verificationFlow, i, address); err != nil {
 			return err
 		}
 

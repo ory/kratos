@@ -26,7 +26,7 @@ type (
 		VerificationNodeGroup() node.UiNodeGroup
 		PopulateVerificationMethod(*http.Request, *Flow) error
 		Verify(w http.ResponseWriter, r *http.Request, f *Flow) (err error)
-		SendVerificationEmail(context.Context, *Flow, *identity.Identity, *identity.VerifiableAddress) error
+		SendVerificationChallenge(context.Context, *Flow, *identity.Identity, *identity.VerifiableAddress) error
 	}
 	AdminHandler interface {
 		RegisterAdminVerificationRoutes(admin *x.RouterAdmin)
