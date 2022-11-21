@@ -103,6 +103,7 @@ sdk: .bin/swagger .bin/ory node_modules
 			-p file://.schema/openapi/patches/generic_error.yaml \
 			-p file://.schema/openapi/patches/nulls.yaml \
 			-p file://.schema/openapi/patches/common.yaml \
+			-p file://.schema/openapi/patches/hydra.yaml \
 			spec/swagger.json spec/api.json
 
 	rm -rf internal/httpclient
