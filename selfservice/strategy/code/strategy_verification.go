@@ -290,8 +290,8 @@ func (s *Strategy) verificationUseCode(w http.ResponseWriter, r *http.Request, c
 	f.UI.Messages.Set(text.NewInfoSelfServiceVerificationSuccessful())
 	f.UI.
 		Nodes.
-		Append(node.NewAnchorField("go-back", returnTo.String(), node.CodeGroup, text.NewInfoNodeLabelReturn()).
-			WithMetaLabel(text.NewInfoNodeLabelReturn()))
+		Append(node.NewAnchorField("continue", returnTo.String(), node.CodeGroup, text.NewInfoNodeLabelContinue()).
+			WithMetaLabel(text.NewInfoNodeLabelContinue()))
 
 	if err := s.deps.VerificationFlowPersister().UpdateVerificationFlow(r.Context(), f); err != nil {
 		return s.retryVerificationFlowWithError(w, r, flow.TypeBrowser, err)

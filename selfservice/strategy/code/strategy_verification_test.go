@@ -405,7 +405,7 @@ func TestVerification(t *testing.T) {
 		require.NoError(t, err)
 		body := ioutilx.MustReadAll(res.Body)
 
-		assert.Equal(t, returnToURL, gjson.GetBytes(body, "ui.nodes.#(attributes.id==go-back).attributes.href").String())
+		assert.Equal(t, returnToURL, gjson.GetBytes(body, "ui.nodes.#(attributes.id==continue).attributes.href").String())
 	})
 
 	t.Run("case=should respond with replaced error if successful code is submitted again via api", func(t *testing.T) {

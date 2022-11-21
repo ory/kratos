@@ -80,7 +80,7 @@ const (
 	InfoNodeLabelVerifyOTP                         // 1070006
 	InfoNodeLabelEmail                             // 1070007
 	InfoNodeLabelResendOTP                         // 1070008
-	InfoNodeLabelReturn                            // 1070009
+	InfoNodeLabelContinue                          // 1070009
 )
 
 const (
