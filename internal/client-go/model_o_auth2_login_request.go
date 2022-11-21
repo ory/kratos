@@ -19,7 +19,7 @@ import (
 type OAuth2LoginRequest struct {
 	// ID is the identifier (\\\"login challenge\\\") of the login request. It is used to identify the session.
 	Challenge   *string                                   `json:"challenge,omitempty"`
-	Client      *KratosOAuth2Client                       `json:"client,omitempty"`
+	Client      *OAuth2Client                             `json:"client,omitempty"`
 	OidcContext *OAuth2ConsentRequestOpenIDConnectContext `json:"oidc_context,omitempty"`
 	// RequestURL is the original OAuth 2.0 Authorization URL requested by the OAuth 2.0 client. It is the URL which initiates the OAuth 2.0 Authorization Code or OAuth 2.0 Implicit flow. This URL is typically not needed, but might come in handy if you want to deal with additional request parameters.
 	RequestUrl                   *string  `json:"request_url,omitempty"`
@@ -83,9 +83,9 @@ func (o *OAuth2LoginRequest) SetChallenge(v string) {
 }
 
 // GetClient returns the Client field value if set, zero value otherwise.
-func (o *OAuth2LoginRequest) GetClient() KratosOAuth2Client {
+func (o *OAuth2LoginRequest) GetClient() OAuth2Client {
 	if o == nil || o.Client == nil {
-		var ret KratosOAuth2Client
+		var ret OAuth2Client
 		return ret
 	}
 	return *o.Client
@@ -93,7 +93,7 @@ func (o *OAuth2LoginRequest) GetClient() KratosOAuth2Client {
 
 // GetClientOk returns a tuple with the Client field value if set, nil otherwise
 // and a boolean to check if the value has been set.
-func (o *OAuth2LoginRequest) GetClientOk() (*KratosOAuth2Client, bool) {
+func (o *OAuth2LoginRequest) GetClientOk() (*OAuth2Client, bool) {
 	if o == nil || o.Client == nil {
 		return nil, false
 	}
@@ -109,8 +109,8 @@ func (o *OAuth2LoginRequest) HasClient() bool {
 	return false
 }
 
-// SetClient gets a reference to the given KratosOAuth2Client and assigns it to the Client field.
-func (o *OAuth2LoginRequest) SetClient(v KratosOAuth2Client) {
+// SetClient gets a reference to the given OAuth2Client and assigns it to the Client field.
+func (o *OAuth2LoginRequest) SetClient(v OAuth2Client) {
 	o.Client = &v
 }
 

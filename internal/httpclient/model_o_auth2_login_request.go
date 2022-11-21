@@ -15,12 +15,12 @@ import (
 	"encoding/json"
 )
 
-// KratosOAuth2LoginRequest OAuth2LoginRequest struct for OAuth2LoginRequest
-type KratosOAuth2LoginRequest struct {
+// OAuth2LoginRequest OAuth2LoginRequest struct for OAuth2LoginRequest
+type OAuth2LoginRequest struct {
 	// ID is the identifier (\\\"login challenge\\\") of the login request. It is used to identify the session.
-	Challenge   *string                                         `json:"challenge,omitempty"`
-	Client      *KratosOAuth2Client                             `json:"client,omitempty"`
-	OidcContext *KratosOAuth2ConsentRequestOpenIDConnectContext `json:"oidc_context,omitempty"`
+	Challenge   *string                                   `json:"challenge,omitempty"`
+	Client      *OAuth2Client                             `json:"client,omitempty"`
+	OidcContext *OAuth2ConsentRequestOpenIDConnectContext `json:"oidc_context,omitempty"`
 	// RequestURL is the original OAuth 2.0 Authorization URL requested by the OAuth 2.0 client. It is the URL which initiates the OAuth 2.0 Authorization Code or OAuth 2.0 Implicit flow. This URL is typically not needed, but might come in handy if you want to deal with additional request parameters.
 	RequestUrl                   *string  `json:"request_url,omitempty"`
 	RequestedAccessTokenAudience []string `json:"requested_access_token_audience,omitempty"`
@@ -33,25 +33,25 @@ type KratosOAuth2LoginRequest struct {
 	Subject *string `json:"subject,omitempty"`
 }
 
-// NewKratosOAuth2LoginRequest instantiates a new KratosOAuth2LoginRequest object
+// NewOAuth2LoginRequest instantiates a new OAuth2LoginRequest object
 // This constructor will assign default values to properties that have it defined,
 // and makes sure properties required by API are set, but the set of arguments
 // will change when the set of required properties is changed
-func NewKratosOAuth2LoginRequest() *KratosOAuth2LoginRequest {
-	this := KratosOAuth2LoginRequest{}
+func NewOAuth2LoginRequest() *OAuth2LoginRequest {
+	this := OAuth2LoginRequest{}
 	return &this
 }
 
-// NewKratosOAuth2LoginRequestWithDefaults instantiates a new KratosOAuth2LoginRequest object
+// NewOAuth2LoginRequestWithDefaults instantiates a new OAuth2LoginRequest object
 // This constructor will only assign default values to properties that have it defined,
 // but it doesn't guarantee that properties required by API are set
-func NewKratosOAuth2LoginRequestWithDefaults() *KratosOAuth2LoginRequest {
-	this := KratosOAuth2LoginRequest{}
+func NewOAuth2LoginRequestWithDefaults() *OAuth2LoginRequest {
+	this := OAuth2LoginRequest{}
 	return &this
 }
 
 // GetChallenge returns the Challenge field value if set, zero value otherwise.
-func (o *KratosOAuth2LoginRequest) GetChallenge() string {
+func (o *OAuth2LoginRequest) GetChallenge() string {
 	if o == nil || o.Challenge == nil {
 		var ret string
 		return ret
@@ -61,7 +61,7 @@ func (o *KratosOAuth2LoginRequest) GetChallenge() string {
 
 // GetChallengeOk returns a tuple with the Challenge field value if set, nil otherwise
 // and a boolean to check if the value has been set.
-func (o *KratosOAuth2LoginRequest) GetChallengeOk() (*string, bool) {
+func (o *OAuth2LoginRequest) GetChallengeOk() (*string, bool) {
 	if o == nil || o.Challenge == nil {
 		return nil, false
 	}
@@ -69,7 +69,7 @@ func (o *KratosOAuth2LoginRequest) GetChallengeOk() (*string, bool) {
 }
 
 // HasChallenge returns a boolean if a field has been set.
-func (o *KratosOAuth2LoginRequest) HasChallenge() bool {
+func (o *OAuth2LoginRequest) HasChallenge() bool {
 	if o != nil && o.Challenge != nil {
 		return true
 	}
@@ -78,14 +78,14 @@ func (o *KratosOAuth2LoginRequest) HasChallenge() bool {
 }
 
 // SetChallenge gets a reference to the given string and assigns it to the Challenge field.
-func (o *KratosOAuth2LoginRequest) SetChallenge(v string) {
+func (o *OAuth2LoginRequest) SetChallenge(v string) {
 	o.Challenge = &v
 }
 
 // GetClient returns the Client field value if set, zero value otherwise.
-func (o *KratosOAuth2LoginRequest) GetClient() KratosOAuth2Client {
+func (o *OAuth2LoginRequest) GetClient() OAuth2Client {
 	if o == nil || o.Client == nil {
-		var ret KratosOAuth2Client
+		var ret OAuth2Client
 		return ret
 	}
 	return *o.Client
@@ -93,7 +93,7 @@ func (o *KratosOAuth2LoginRequest) GetClient() KratosOAuth2Client {
 
 // GetClientOk returns a tuple with the Client field value if set, nil otherwise
 // and a boolean to check if the value has been set.
-func (o *KratosOAuth2LoginRequest) GetClientOk() (*KratosOAuth2Client, bool) {
+func (o *OAuth2LoginRequest) GetClientOk() (*OAuth2Client, bool) {
 	if o == nil || o.Client == nil {
 		return nil, false
 	}
@@ -101,7 +101,7 @@ func (o *KratosOAuth2LoginRequest) GetClientOk() (*KratosOAuth2Client, bool) {
 }
 
 // HasClient returns a boolean if a field has been set.
-func (o *KratosOAuth2LoginRequest) HasClient() bool {
+func (o *OAuth2LoginRequest) HasClient() bool {
 	if o != nil && o.Client != nil {
 		return true
 	}
@@ -109,15 +109,15 @@ func (o *KratosOAuth2LoginRequest) HasClient() bool {
 	return false
 }
 
-// SetClient gets a reference to the given KratosOAuth2Client and assigns it to the Client field.
-func (o *KratosOAuth2LoginRequest) SetClient(v KratosOAuth2Client) {
+// SetClient gets a reference to the given OAuth2Client and assigns it to the Client field.
+func (o *OAuth2LoginRequest) SetClient(v OAuth2Client) {
 	o.Client = &v
 }
 
 // GetOidcContext returns the OidcContext field value if set, zero value otherwise.
-func (o *KratosOAuth2LoginRequest) GetOidcContext() KratosOAuth2ConsentRequestOpenIDConnectContext {
+func (o *OAuth2LoginRequest) GetOidcContext() OAuth2ConsentRequestOpenIDConnectContext {
 	if o == nil || o.OidcContext == nil {
-		var ret KratosOAuth2ConsentRequestOpenIDConnectContext
+		var ret OAuth2ConsentRequestOpenIDConnectContext
 		return ret
 	}
 	return *o.OidcContext
@@ -125,7 +125,7 @@ func (o *KratosOAuth2LoginRequest) GetOidcContext() KratosOAuth2ConsentRequestOp
 
 // GetOidcContextOk returns a tuple with the OidcContext field value if set, nil otherwise
 // and a boolean to check if the value has been set.
-func (o *KratosOAuth2LoginRequest) GetOidcContextOk() (*KratosOAuth2ConsentRequestOpenIDConnectContext, bool) {
+func (o *OAuth2LoginRequest) GetOidcContextOk() (*OAuth2ConsentRequestOpenIDConnectContext, bool) {
 	if o == nil || o.OidcContext == nil {
 		return nil, false
 	}
@@ -133,7 +133,7 @@ func (o *KratosOAuth2LoginRequest) GetOidcContextOk() (*KratosOAuth2ConsentReque
 }
 
 // HasOidcContext returns a boolean if a field has been set.
-func (o *KratosOAuth2LoginRequest) HasOidcContext() bool {
+func (o *OAuth2LoginRequest) HasOidcContext() bool {
 	if o != nil && o.OidcContext != nil {
 		return true
 	}
@@ -141,13 +141,13 @@ func (o *KratosOAuth2LoginRequest) HasOidcContext() bool {
 	return false
 }
 
-// SetOidcContext gets a reference to the given KratosOAuth2ConsentRequestOpenIDConnectContext and assigns it to the OidcContext field.
-func (o *KratosOAuth2LoginRequest) SetOidcContext(v KratosOAuth2ConsentRequestOpenIDConnectContext) {
+// SetOidcContext gets a reference to the given OAuth2ConsentRequestOpenIDConnectContext and assigns it to the OidcContext field.
+func (o *OAuth2LoginRequest) SetOidcContext(v OAuth2ConsentRequestOpenIDConnectContext) {
 	o.OidcContext = &v
 }
 
 // GetRequestUrl returns the RequestUrl field value if set, zero value otherwise.
-func (o *KratosOAuth2LoginRequest) GetRequestUrl() string {
+func (o *OAuth2LoginRequest) GetRequestUrl() string {
 	if o == nil || o.RequestUrl == nil {
 		var ret string
 		return ret
@@ -157,7 +157,7 @@ func (o *KratosOAuth2LoginRequest) GetRequestUrl() string {
 
 // GetRequestUrlOk returns a tuple with the RequestUrl field value if set, nil otherwise
 // and a boolean to check if the value has been set.
-func (o *KratosOAuth2LoginRequest) GetRequestUrlOk() (*string, bool) {
+func (o *OAuth2LoginRequest) GetRequestUrlOk() (*string, bool) {
 	if o == nil || o.RequestUrl == nil {
 		return nil, false
 	}
@@ -165,7 +165,7 @@ func (o *KratosOAuth2LoginRequest) GetRequestUrlOk() (*string, bool) {
 }
 
 // HasRequestUrl returns a boolean if a field has been set.
-func (o *KratosOAuth2LoginRequest) HasRequestUrl() bool {
+func (o *OAuth2LoginRequest) HasRequestUrl() bool {
 	if o != nil && o.RequestUrl != nil {
 		return true
 	}
@@ -174,12 +174,12 @@ func (o *KratosOAuth2LoginRequest) HasRequestUrl() bool {
 }
 
 // SetRequestUrl gets a reference to the given string and assigns it to the RequestUrl field.
-func (o *KratosOAuth2LoginRequest) SetRequestUrl(v string) {
+func (o *OAuth2LoginRequest) SetRequestUrl(v string) {
 	o.RequestUrl = &v
 }
 
 // GetRequestedAccessTokenAudience returns the RequestedAccessTokenAudience field value if set, zero value otherwise.
-func (o *KratosOAuth2LoginRequest) GetRequestedAccessTokenAudience() []string {
+func (o *OAuth2LoginRequest) GetRequestedAccessTokenAudience() []string {
 	if o == nil || o.RequestedAccessTokenAudience == nil {
 		var ret []string
 		return ret
@@ -189,7 +189,7 @@ func (o *KratosOAuth2LoginRequest) GetRequestedAccessTokenAudience() []string {
 
 // GetRequestedAccessTokenAudienceOk returns a tuple with the RequestedAccessTokenAudience field value if set, nil otherwise
 // and a boolean to check if the value has been set.
-func (o *KratosOAuth2LoginRequest) GetRequestedAccessTokenAudienceOk() ([]string, bool) {
+func (o *OAuth2LoginRequest) GetRequestedAccessTokenAudienceOk() ([]string, bool) {
 	if o == nil || o.RequestedAccessTokenAudience == nil {
 		return nil, false
 	}
@@ -197,7 +197,7 @@ func (o *KratosOAuth2LoginRequest) GetRequestedAccessTokenAudienceOk() ([]string
 }
 
 // HasRequestedAccessTokenAudience returns a boolean if a field has been set.
-func (o *KratosOAuth2LoginRequest) HasRequestedAccessTokenAudience() bool {
+func (o *OAuth2LoginRequest) HasRequestedAccessTokenAudience() bool {
 	if o != nil && o.RequestedAccessTokenAudience != nil {
 		return true
 	}
@@ -206,12 +206,12 @@ func (o *KratosOAuth2LoginRequest) HasRequestedAccessTokenAudience() bool {
 }
 
 // SetRequestedAccessTokenAudience gets a reference to the given []string and assigns it to the RequestedAccessTokenAudience field.
-func (o *KratosOAuth2LoginRequest) SetRequestedAccessTokenAudience(v []string) {
+func (o *OAuth2LoginRequest) SetRequestedAccessTokenAudience(v []string) {
 	o.RequestedAccessTokenAudience = v
 }
 
 // GetRequestedScope returns the RequestedScope field value if set, zero value otherwise.
-func (o *KratosOAuth2LoginRequest) GetRequestedScope() []string {
+func (o *OAuth2LoginRequest) GetRequestedScope() []string {
 	if o == nil || o.RequestedScope == nil {
 		var ret []string
 		return ret
@@ -221,7 +221,7 @@ func (o *KratosOAuth2LoginRequest) GetRequestedScope() []string {
 
 // GetRequestedScopeOk returns a tuple with the RequestedScope field value if set, nil otherwise
 // and a boolean to check if the value has been set.
-func (o *KratosOAuth2LoginRequest) GetRequestedScopeOk() ([]string, bool) {
+func (o *OAuth2LoginRequest) GetRequestedScopeOk() ([]string, bool) {
 	if o == nil || o.RequestedScope == nil {
 		return nil, false
 	}
@@ -229,7 +229,7 @@ func (o *KratosOAuth2LoginRequest) GetRequestedScopeOk() ([]string, bool) {
 }
 
 // HasRequestedScope returns a boolean if a field has been set.
-func (o *KratosOAuth2LoginRequest) HasRequestedScope() bool {
+func (o *OAuth2LoginRequest) HasRequestedScope() bool {
 	if o != nil && o.RequestedScope != nil {
 		return true
 	}
@@ -238,12 +238,12 @@ func (o *KratosOAuth2LoginRequest) HasRequestedScope() bool {
 }
 
 // SetRequestedScope gets a reference to the given []string and assigns it to the RequestedScope field.
-func (o *KratosOAuth2LoginRequest) SetRequestedScope(v []string) {
+func (o *OAuth2LoginRequest) SetRequestedScope(v []string) {
 	o.RequestedScope = v
 }
 
 // GetSessionId returns the SessionId field value if set, zero value otherwise.
-func (o *KratosOAuth2LoginRequest) GetSessionId() string {
+func (o *OAuth2LoginRequest) GetSessionId() string {
 	if o == nil || o.SessionId == nil {
 		var ret string
 		return ret
@@ -253,7 +253,7 @@ func (o *KratosOAuth2LoginRequest) GetSessionId() string {
 
 // GetSessionIdOk returns a tuple with the SessionId field value if set, nil otherwise
 // and a boolean to check if the value has been set.
-func (o *KratosOAuth2LoginRequest) GetSessionIdOk() (*string, bool) {
+func (o *OAuth2LoginRequest) GetSessionIdOk() (*string, bool) {
 	if o == nil || o.SessionId == nil {
 		return nil, false
 	}
@@ -261,7 +261,7 @@ func (o *KratosOAuth2LoginRequest) GetSessionIdOk() (*string, bool) {
 }
 
 // HasSessionId returns a boolean if a field has been set.
-func (o *KratosOAuth2LoginRequest) HasSessionId() bool {
+func (o *OAuth2LoginRequest) HasSessionId() bool {
 	if o != nil && o.SessionId != nil {
 		return true
 	}
@@ -270,12 +270,12 @@ func (o *KratosOAuth2LoginRequest) HasSessionId() bool {
 }
 
 // SetSessionId gets a reference to the given string and assigns it to the SessionId field.
-func (o *KratosOAuth2LoginRequest) SetSessionId(v string) {
+func (o *OAuth2LoginRequest) SetSessionId(v string) {
 	o.SessionId = &v
 }
 
 // GetSkip returns the Skip field value if set, zero value otherwise.
-func (o *KratosOAuth2LoginRequest) GetSkip() bool {
+func (o *OAuth2LoginRequest) GetSkip() bool {
 	if o == nil || o.Skip == nil {
 		var ret bool
 		return ret
@@ -285,7 +285,7 @@ func (o *KratosOAuth2LoginRequest) GetSkip() bool {
 
 // GetSkipOk returns a tuple with the Skip field value if set, nil otherwise
 // and a boolean to check if the value has been set.
-func (o *KratosOAuth2LoginRequest) GetSkipOk() (*bool, bool) {
+func (o *OAuth2LoginRequest) GetSkipOk() (*bool, bool) {
 	if o == nil || o.Skip == nil {
 		return nil, false
 	}
@@ -293,7 +293,7 @@ func (o *KratosOAuth2LoginRequest) GetSkipOk() (*bool, bool) {
 }
 
 // HasSkip returns a boolean if a field has been set.
-func (o *KratosOAuth2LoginRequest) HasSkip() bool {
+func (o *OAuth2LoginRequest) HasSkip() bool {
 	if o != nil && o.Skip != nil {
 		return true
 	}
@@ -302,12 +302,12 @@ func (o *KratosOAuth2LoginRequest) HasSkip() bool {
 }
 
 // SetSkip gets a reference to the given bool and assigns it to the Skip field.
-func (o *KratosOAuth2LoginRequest) SetSkip(v bool) {
+func (o *OAuth2LoginRequest) SetSkip(v bool) {
 	o.Skip = &v
 }
 
 // GetSubject returns the Subject field value if set, zero value otherwise.
-func (o *KratosOAuth2LoginRequest) GetSubject() string {
+func (o *OAuth2LoginRequest) GetSubject() string {
 	if o == nil || o.Subject == nil {
 		var ret string
 		return ret
@@ -317,7 +317,7 @@ func (o *KratosOAuth2LoginRequest) GetSubject() string {
 
 // GetSubjectOk returns a tuple with the Subject field value if set, nil otherwise
 // and a boolean to check if the value has been set.
-func (o *KratosOAuth2LoginRequest) GetSubjectOk() (*string, bool) {
+func (o *OAuth2LoginRequest) GetSubjectOk() (*string, bool) {
 	if o == nil || o.Subject == nil {
 		return nil, false
 	}
@@ -325,7 +325,7 @@ func (o *KratosOAuth2LoginRequest) GetSubjectOk() (*string, bool) {
 }
 
 // HasSubject returns a boolean if a field has been set.
-func (o *KratosOAuth2LoginRequest) HasSubject() bool {
+func (o *OAuth2LoginRequest) HasSubject() bool {
 	if o != nil && o.Subject != nil {
 		return true
 	}
@@ -334,11 +334,11 @@ func (o *KratosOAuth2LoginRequest) HasSubject() bool {
 }
 
 // SetSubject gets a reference to the given string and assigns it to the Subject field.
-func (o *KratosOAuth2LoginRequest) SetSubject(v string) {
+func (o *OAuth2LoginRequest) SetSubject(v string) {
 	o.Subject = &v
 }
 
-func (o KratosOAuth2LoginRequest) MarshalJSON() ([]byte, error) {
+func (o OAuth2LoginRequest) MarshalJSON() ([]byte, error) {
 	toSerialize := map[string]interface{}{}
 	if o.Challenge != nil {
 		toSerialize["challenge"] = o.Challenge
@@ -370,38 +370,38 @@ func (o KratosOAuth2LoginRequest) MarshalJSON() ([]byte, error) {
 	return json.Marshal(toSerialize)
 }
 
-type NullableKratosOAuth2LoginRequest struct {
-	value *KratosOAuth2LoginRequest
+type NullableOAuth2LoginRequest struct {
+	value *OAuth2LoginRequest
 	isSet bool
 }
 
-func (v NullableKratosOAuth2LoginRequest) Get() *KratosOAuth2LoginRequest {
+func (v NullableOAuth2LoginRequest) Get() *OAuth2LoginRequest {
 	return v.value
 }
 
-func (v *NullableKratosOAuth2LoginRequest) Set(val *KratosOAuth2LoginRequest) {
+func (v *NullableOAuth2LoginRequest) Set(val *OAuth2LoginRequest) {
 	v.value = val
 	v.isSet = true
 }
 
-func (v NullableKratosOAuth2LoginRequest) IsSet() bool {
+func (v NullableOAuth2LoginRequest) IsSet() bool {
 	return v.isSet
 }
 
-func (v *NullableKratosOAuth2LoginRequest) Unset() {
+func (v *NullableOAuth2LoginRequest) Unset() {
 	v.value = nil
 	v.isSet = false
 }
 
-func NewNullableKratosOAuth2LoginRequest(val *KratosOAuth2LoginRequest) *NullableKratosOAuth2LoginRequest {
-	return &NullableKratosOAuth2LoginRequest{value: val, isSet: true}
+func NewNullableOAuth2LoginRequest(val *OAuth2LoginRequest) *NullableOAuth2LoginRequest {
+	return &NullableOAuth2LoginRequest{value: val, isSet: true}
 }
 
-func (v NullableKratosOAuth2LoginRequest) MarshalJSON() ([]byte, error) {
+func (v NullableOAuth2LoginRequest) MarshalJSON() ([]byte, error) {
 	return json.Marshal(v.value)
 }
 
-func (v *NullableKratosOAuth2LoginRequest) UnmarshalJSON(src []byte) error {
+func (v *NullableOAuth2LoginRequest) UnmarshalJSON(src []byte) error {
 	v.isSet = true
 	return json.Unmarshal(src, &v.value)
 }

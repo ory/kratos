@@ -26,9 +26,9 @@ type LoginFlow struct {
 	// ID represents the flow's unique ID. When performing the login flow, this represents the id in the login UI's query parameter: http://<selfservice.flows.login.ui_url>/?flow=<flow_id>
 	Id string `json:"id"`
 	// IssuedAt is the time (UTC) when the flow started.
-	IssuedAt             time.Time                 `json:"issued_at"`
-	Oauth2LoginChallenge NullableString            `json:"oauth2_login_challenge,omitempty"`
-	Oauth2LoginRequest   *KratosOAuth2LoginRequest `json:"oauth2_login_request,omitempty"`
+	IssuedAt             time.Time           `json:"issued_at"`
+	Oauth2LoginChallenge NullableString      `json:"oauth2_login_challenge,omitempty"`
+	Oauth2LoginRequest   *OAuth2LoginRequest `json:"oauth2_login_request,omitempty"`
 	// Refresh stores whether this login flow should enforce re-authentication.
 	Refresh *bool `json:"refresh,omitempty"`
 	// RequestURL is the initial URL that was requested from Ory Kratos. It can be used to forward information contained in the URL's path or query for example.
@@ -246,9 +246,9 @@ func (o *LoginFlow) UnsetOauth2LoginChallenge() {
 }
 
 // GetOauth2LoginRequest returns the Oauth2LoginRequest field value if set, zero value otherwise.
-func (o *LoginFlow) GetOauth2LoginRequest() KratosOAuth2LoginRequest {
+func (o *LoginFlow) GetOauth2LoginRequest() OAuth2LoginRequest {
 	if o == nil || o.Oauth2LoginRequest == nil {
-		var ret KratosOAuth2LoginRequest
+		var ret OAuth2LoginRequest
 		return ret
 	}
 	return *o.Oauth2LoginRequest
@@ -256,7 +256,7 @@ func (o *LoginFlow) GetOauth2LoginRequest() KratosOAuth2LoginRequest {
 
 // GetOauth2LoginRequestOk returns a tuple with the Oauth2LoginRequest field value if set, nil otherwise
 // and a boolean to check if the value has been set.
-func (o *LoginFlow) GetOauth2LoginRequestOk() (*KratosOAuth2LoginRequest, bool) {
+func (o *LoginFlow) GetOauth2LoginRequestOk() (*OAuth2LoginRequest, bool) {
 	if o == nil || o.Oauth2LoginRequest == nil {
 		return nil, false
 	}
@@ -272,8 +272,8 @@ func (o *LoginFlow) HasOauth2LoginRequest() bool {
 	return false
 }
 
-// SetOauth2LoginRequest gets a reference to the given KratosOAuth2LoginRequest and assigns it to the Oauth2LoginRequest field.
-func (o *LoginFlow) SetOauth2LoginRequest(v KratosOAuth2LoginRequest) {
+// SetOauth2LoginRequest gets a reference to the given OAuth2LoginRequest and assigns it to the Oauth2LoginRequest field.
+func (o *LoginFlow) SetOauth2LoginRequest(v OAuth2LoginRequest) {
 	o.Oauth2LoginRequest = &v
 }
 
