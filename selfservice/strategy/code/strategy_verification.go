@@ -301,7 +301,7 @@ func (s *Strategy) verificationUseCode(w http.ResponseWriter, r *http.Request, c
 }
 
 func (s *Strategy) getRedirectURL(ctx context.Context, f *verification.Flow) *url.URL {
-	defaultRedirectURL := s.deps.Config().SelfServiceFlowVerificationReturnTo(ctx, f.AppendTo(s.deps.Config().SelfServiceFlowVerificationUI(ctx)))
+	defaultRedirectURL := s.deps.Config().SelfServiceBrowserDefaultReturnTo(ctx)
 
 	verificationRequestURL, err := urlx.Parse(f.GetRequestURL())
 	if err != nil {
