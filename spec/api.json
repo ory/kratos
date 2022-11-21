@@ -2210,7 +2210,14 @@
             "type": "string"
           },
           "type": {
-            "$ref": "#/components/schemas/uiTextType"
+            "description": "The message type.\ninfo Info\nerror Error\nsuccess Success",
+            "enum": [
+              "info",
+              "error",
+              "success"
+            ],
+            "type": "string",
+            "x-go-enum-desc": "info Info\nerror Error\nsuccess Success"
           }
         },
         "required": [
@@ -2219,9 +2226,6 @@
           "type"
         ],
         "type": "object"
-      },
-      "uiTextType": {
-        "type": "string"
       },
       "uiTexts": {
         "items": {

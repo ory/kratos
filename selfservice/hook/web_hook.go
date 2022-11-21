@@ -307,7 +307,7 @@ func parseWebhookResponse(resp *http.Response) (err error) {
 	for _, msg := range hookResponse.Messages {
 		messages := text.Messages{}
 		for _, detail := range msg.DetailedMessages {
-			var msgType text.Type
+			var msgType text.UITextType
 			if detail.Type == "error" {
 				msgType = text.Error
 			} else {

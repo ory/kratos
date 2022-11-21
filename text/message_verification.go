@@ -22,7 +22,7 @@ func NewErrorValidationVerificationFlowExpired(expiredAt time.Time) *Message {
 func NewInfoSelfServiceVerificationSuccessful() *Message {
 	return &Message{
 		ID:   InfoSelfServiceVerificationSuccessful,
-		Type: Info,
+		Type: Success,
 		Text: "You successfully verified your email address.",
 	}
 }
