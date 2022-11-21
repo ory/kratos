@@ -25,7 +25,7 @@ selfservice:
     lookup_secret:
       enabled: true
     link:
-      enabled: false
+      enabled: true
     code:
       enabled: true
 
@@ -46,6 +46,7 @@ selfservice:
     verification:
       enabled: true
       ui_url: http://127.0.0.1:4455/verification
+      use: code
       after:
         default_browser_return_url: http://127.0.0.1:4455/
 

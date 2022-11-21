@@ -4,6 +4,7 @@
 package link
 
 import (
+	"context"
 	"net/http"
 	"net/url"
 	"time"
@@ -85,9 +86,11 @@ func (s *Strategy) handleVerificationError(w http.ResponseWriter, r *http.Reques
 	return err
 }
 
-// swagger:model submitSelfServiceVerificationFlowWithLinkMethodBody
+// Update Verification Flow with Link Method
+//
+// swagger:model updateVerificationFlowWithLinkMethod
 // nolint:deadcode,unused
-type submitSelfServiceVerificationFlowWithLinkMethodBody struct {
+type updateVerificationFlowWithLinkMethod struct {
 	// Email to Verify
 	//
 	// Needs to be set when initiating the flow. If the email is a registered
@@ -182,14 +185,6 @@ func (s *Strategy) verificationHandleFormSubmission(w http.ResponseWriter, r *ht
 	return nil
 }
 
-// nolint:deadcode,unused
-// swagger:parameters selfServiceBrowserVerify
-type selfServiceBrowserVerifyParameters struct {
-	// required: true
-	// in: query
-	Token string `json:"token"`
-}
-
 func (s *Strategy) verificationUseToken(w http.ResponseWriter, r *http.Request, body *verificationSubmitPayload, f *verification.Flow) error {
 	token, err := s.d.VerificationTokenPersister().UseVerificationToken(r.Context(), f.ID, body.Token)
 	if err != nil {
@@ -259,7 +254,7 @@ func (s *Strategy) retryVerificationFlowWithMessage(w http.ResponseWriter, r *ht
 	s.d.Logger().WithRequest(r).WithField("message", message).Debug("A verification flow is being retried because a validation error occurred.")
 
 	f, err := verification.NewFlow(s.d.Config(),
-		s.d.Config().SelfServiceFlowVerificationRequestLifespan(r.Context()), s.d.CSRFHandler().RegenerateToken(w, r), r, s.d.VerificationStrategies(r.Context()), ft)
+		s.d.Config().SelfServiceFlowVerificationRequestLifespan(r.Context()), s.d.CSRFHandler().RegenerateToken(w, r), r, s, ft)
 	if err != nil {
 		return s.handleVerificationError(w, r, f, nil, err)
 	}
@@ -283,7 +278,7 @@ func (s *Strategy) retryVerificationFlowWithError(w http.ResponseWriter, r *http
 	s.d.Logger().WithRequest(r).WithError(verErr).Debug("A verification flow is being retried because an error occurred.")
 
 	f, err := verification.NewFlow(s.d.Config(),
-		s.d.Config().SelfServiceFlowVerificationRequestLifespan(r.Context()), s.d.CSRFHandler().RegenerateToken(w, r), r, s.d.VerificationStrategies(r.Context()), ft)
+		s.d.Config().SelfServiceFlowVerificationRequestLifespan(r.Context()), s.d.CSRFHandler().RegenerateToken(w, r), r, s, ft)
 	if err != nil {
 		return s.handleVerificationError(w, r, f, nil, err)
 	}
@@ -308,4 +303,14 @@ func (s *Strategy) retryVerificationFlowWithError(w http.ResponseWriter, r *http
 	}
 
 	return errors.WithStack(flow.ErrCompletedByStrategy)
+}
+
+func (s *Strategy) SendVerificationEmail(ctx context.Context, f *verification.Flow, i *identity.Identity, a *identity.VerifiableAddress) error {
+
+	token := NewSelfServiceVerificationToken(a, f, s.d.Config().SelfServiceLinkMethodLifespan(ctx))
+	if err := s.d.VerificationTokenPersister().CreateVerificationToken(ctx, token); err != nil {
+		return err
+	}
+
+	return s.d.LinkSender().SendVerificationTokenTo(ctx, f, i, a, token)
 }

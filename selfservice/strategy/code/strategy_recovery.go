@@ -45,7 +45,7 @@ func (s *Strategy) RegisterPublicRecoveryRoutes(public *x.RouterPublic) {
 }
 
 func (s *Strategy) RegisterAdminRecoveryRoutes(admin *x.RouterAdmin) {
-	wrappedCreateRecoveryCode := strategy.IsDisabled(s.deps, s.RecoveryStrategyID(), s.createRecoveryCode)
+	wrappedCreateRecoveryCode := strategy.IsDisabled(s.deps, s.RecoveryStrategyID(), s.createRecoveryCodeForIdentity)
 	admin.POST(RouteAdminCreateRecoveryCode, wrappedCreateRecoveryCode)
 }
 
@@ -63,16 +63,20 @@ func (s *Strategy) PopulateRecoveryMethod(r *http.Request, f *recovery.Flow) err
 	return nil
 }
 
-// swagger:parameters adminCreateSelfServiceRecoveryCode
+// Create Recovery Code for Identity Parameters
+//
+// swagger:parameters createRecoveryCodeForIdentity
 //
 // nolint
-type adminCreateSelfServiceRecoveryCode struct {
+type createRecoveryCodeForIdentity struct {
 	// in: body
-	Body adminCreateSelfServiceRecoveryCodeBody
+	Body createRecoveryCodeForIdentityBody
 }
 
-// swagger:model adminCreateSelfServiceRecoveryCodeBody
-type adminCreateSelfServiceRecoveryCodeBody struct {
+// Create Recovery Code for Identity Request Body
+//
+// swagger:model createRecoveryCodeForIdentityBody
+type createRecoveryCodeForIdentityBody struct {
 	// Identity to Recover
 	//
 	// The identity's ID you wish to recover.
@@ -94,9 +98,13 @@ type adminCreateSelfServiceRecoveryCodeBody struct {
 	ExpiresIn string `json:"expires_in"`
 }
 
-// swagger:model selfServiceRecoveryCode
+// Recovery Code for Identity
+//
+// Used when an administrator creates a recovery code for an identity.
+//
+// swagger:model recoveryCodeForIdentity
 // nolint
-type selfServiceRecoveryCode struct {
+type recoveryCodeForIdentity struct {
 	// RecoveryLink with flow
 	//
 	// This link opens the recovery UI with an empty `code` field.
@@ -116,7 +124,7 @@ type selfServiceRecoveryCode struct {
 	ExpiresAt time.Time `json:"expires_at"`
 }
 
-// swagger:route POST /admin/recovery/code v0alpha2 adminCreateSelfServiceRecoveryCode
+// swagger:route POST /admin/recovery/code identity createRecoveryCodeForIdentity
 //
 // # Create a Recovery Code
 //
@@ -132,12 +140,12 @@ type selfServiceRecoveryCode struct {
 //	Schemes: http, https
 //
 //	Responses:
-//		201: selfServiceRecoveryCode
-//		400: jsonError
-//		404: jsonError
-//		500: jsonError
-func (s *Strategy) createRecoveryCode(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
-	var p adminCreateSelfServiceRecoveryCodeBody
+//		201: recoveryCodeForIdentity
+//		400: errorGeneric
+//		404: errorGeneric
+//		default: errorGeneric
+func (s *Strategy) createRecoveryCodeForIdentity(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+	var p createRecoveryCodeForIdentityBody
 	if err := s.dx.Decode(r, &p, decoderx.HTTPJSONDecoder()); err != nil {
 		s.deps.Writer().WriteError(w, r, err)
 		return
@@ -172,7 +180,7 @@ func (s *Strategy) createRecoveryCode(w http.ResponseWriter, r *http.Request, _ 
 	flow.DangerousSkipCSRFCheck = true
 	flow.State = recovery.StateEmailSent
 	flow.UI.Nodes = node.Nodes{}
-	flow.UI.Nodes.Append(node.NewInputField("code", nil, node.CodeGroup, node.InputAttributeTypeNumber, node.WithRequiredInputAttribute).
+	flow.UI.Nodes.Append(node.NewInputField("code", nil, node.CodeGroup, node.InputAttributeTypeText, node.WithRequiredInputAttribute).
 		WithMetaLabel(text.NewInfoNodeLabelVerifyOTP()),
 	)
 
@@ -194,7 +202,7 @@ func (s *Strategy) createRecoveryCode(w http.ResponseWriter, r *http.Request, _ 
 		return
 	}
 
-	rawCode := GenerateRecoveryCode()
+	rawCode := GenerateCode()
 
 	if _, err := s.deps.RecoveryCodePersister().CreateRecoveryCode(ctx, &CreateRecoveryCodeParams{
 		RawCode:    rawCode,
@@ -212,7 +220,7 @@ func (s *Strategy) createRecoveryCode(w http.ResponseWriter, r *http.Request, _ 
 		WithSensitiveField("recovery_code", rawCode).
 		Info("A recovery code has been created.")
 
-	body := &selfServiceRecoveryCode{
+	body := &recoveryCodeForIdentity{
 		ExpiresAt: flow.ExpiresAt.UTC(),
 		RecoveryLink: urlx.CopyWithQuery(
 			s.deps.Config().SelfServiceFlowRecoveryUI(ctx),
@@ -225,9 +233,11 @@ func (s *Strategy) createRecoveryCode(w http.ResponseWriter, r *http.Request, _ 
 	s.deps.Writer().WriteCode(w, r, http.StatusCreated, body, herodot.UnescapedHTML)
 }
 
-// swagger:model submitSelfServiceRecoveryFlowWithCodeMethodBody
+// Update Recovery Flow with Code Method
+//
+// swagger:model updateRecoveryFlowWithCodeMethod
 // nolint:deadcode,unused
-type submitSelfServiceRecoveryFlowWithCodeMethodBody struct {
+type updateRecoveryFlowWithCodeMethod struct {
 	// Email to Recover
 	//
 	// Needs to be set when initiating the flow. If the email is a registered
@@ -509,7 +519,7 @@ func (s *Strategy) recoveryHandleFormSubmission(w http.ResponseWriter, r *http.R
 		return s.HandleRecoveryError(w, r, f, body, err)
 	}
 
-	if err := s.deps.RecoveryCodeSender().SendRecoveryCode(ctx, r, f, identity.VerifiableAddressTypeEmail, body.Email); err != nil {
+	if err := s.deps.CodeSender().SendRecoveryCode(ctx, r, f, identity.VerifiableAddressTypeEmail, body.Email); err != nil {
 		if !errors.Is(err, ErrUnknownAddress) {
 			return s.HandleRecoveryError(w, r, f, body, err)
 		}
@@ -527,7 +537,7 @@ func (s *Strategy) recoveryHandleFormSubmission(w http.ResponseWriter, r *http.R
 	f.Active = sqlxx.NullString(s.RecoveryNodeGroup())
 	f.State = recovery.StateEmailSent
 	f.UI.Messages.Set(text.NewRecoveryEmailWithCodeSent())
-	f.UI.Nodes.Append(node.NewInputField("code", nil, node.CodeGroup, node.InputAttributeTypeNumber, node.WithRequiredInputAttribute).
+	f.UI.Nodes.Append(node.NewInputField("code", nil, node.CodeGroup, node.InputAttributeTypeText, node.WithRequiredInputAttribute).
 		WithMetaLabel(text.NewInfoNodeLabelVerifyOTP()),
 	)
 	f.UI.Nodes.Append(node.NewInputField("method", s.RecoveryNodeGroup(), node.CodeGroup, node.InputAttributeTypeHidden))

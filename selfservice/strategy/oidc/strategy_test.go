@@ -68,16 +68,16 @@ func TestStrategy(t *testing.T) {
 	routerP := x.NewRouterPublic()
 	routerA := x.NewRouterAdmin()
 	ts, _ := testhelpers.NewKratosServerWithRouters(t, reg, routerP, routerA)
-
+	invalid := newOIDCProvider(t, ts, remotePublic, remoteAdmin, "invalid-issuer")
 	viperSetProviderConfig(
 		t,
 		conf,
-		newOIDCProvider(t, ts, remotePublic, remoteAdmin, "valid", "client"),
+		newOIDCProvider(t, ts, remotePublic, remoteAdmin, "valid"),
 		oidc.Configuration{
 			Provider:     "generic",
 			ID:           "invalid-issuer",
-			ClientID:     "client-invalid",
-			ClientSecret: "secret",
+			ClientID:     invalid.ClientID,
+			ClientSecret: invalid.ClientSecret,
 			// We replace this URL to cause an issuer validation mismatch.
 			IssuerURL: strings.Replace(remotePublic, "localhost", "127.0.0.1", 1) + "/",
 			Mapper:    "file://./stub/oidc.hydra.jsonnet",
@@ -232,6 +232,7 @@ func TestStrategy(t *testing.T) {
 	})
 
 	t.Run("case=should fail because the issuer is mismatching", func(t *testing.T) {
+		scope = []string{"openid"}
 		for k, v := range []string{
 			loginAction(newLoginFlow(t, returnTS.URL, time.Minute).ID),
 			registerAction(newRegistrationFlow(t, returnTS.URL, time.Minute).ID),
@@ -733,7 +734,7 @@ func TestPostEndpointRedirect(t *testing.T) {
 	viperSetProviderConfig(
 		t,
 		conf,
-		newOIDCProvider(t, publicTS, remotePublic, remoteAdmin, "apple", "client"),
+		newOIDCProvider(t, publicTS, remotePublic, remoteAdmin, "apple"),
 	)
 	testhelpers.InitKratosServers(t, reg, publicTS, adminTS)
 

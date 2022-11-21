@@ -9,9 +9,8 @@ import (
 
 	"github.com/julienschmidt/httprouter"
 
-	"github.com/ory/hydra-client-go/client"
-	"github.com/ory/hydra-client-go/client/admin"
-	"github.com/ory/hydra-client-go/models"
+	client "github.com/ory/hydra-client-go"
+
 	"github.com/ory/x/osx"
 	"github.com/ory/x/pointerx"
 	"github.com/ory/x/urlx"
@@ -35,26 +34,33 @@ func main() {
 	router := httprouter.New()
 
 	adminURL := urlx.ParseOrPanic(osx.GetenvDefault("HYDRA_ADMIN_URL", "http://localhost:4445"))
-	hc := client.NewHTTPClientWithConfig(nil, &client.TransportConfig{Schemes: []string{adminURL.Scheme}, Host: adminURL.Host, BasePath: adminURL.Path})
+	cfg := client.NewConfiguration()
+	cfg.Servers = client.ServerConfigurations{
+		{URL: adminURL.String()},
+	}
+	hc := client.NewAPIClient(cfg)
 
 	router.GET("/", func(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 		w.Write([]byte(`ok`))
 	})
 	router.GET("/login", func(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
-		res, err := hc.Admin.GetLoginRequest(admin.NewGetLoginRequestParams().
-			WithLoginChallenge(r.URL.Query().Get("login_challenge")))
+		res, _, err := hc.OAuth2Api.GetOAuth2LoginRequest(r.Context()).LoginChallenge(r.URL.Query().Get("login_challenge")).Execute()
 		if !checkReq(w, err) {
 			return
 		}
-		if *res.Payload.Skip {
-			res, err := hc.Admin.AcceptLoginRequest(admin.NewAcceptLoginRequestParams().
-				WithLoginChallenge(r.URL.Query().Get("login_challenge")).
-				WithBody(&models.AcceptLoginRequest{Remember: true, RememberFor: 3600,
-					Subject: res.Payload.Subject}))
+
+		if res.Skip {
+			res, _, err := hc.OAuth2Api.AcceptOAuth2LoginRequest(r.Context()).
+				LoginChallenge(r.URL.Query().Get("login_challenge")).
+				AcceptOAuth2LoginRequest(client.AcceptOAuth2LoginRequest{
+					Remember:    pointerx.Bool(true),
+					RememberFor: pointerx.Int64(3600),
+					Subject:     res.Subject,
+				}).Execute()
 			if !checkReq(w, err) {
 				return
 			}
-			http.Redirect(w, r, *res.Payload.RedirectTo, http.StatusFound)
+			http.Redirect(w, r, res.RedirectTo, http.StatusFound)
 			return
 		}
 
@@ -73,46 +79,52 @@ func main() {
 
 	router.POST("/login", func(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 		check(r.ParseForm())
+		remember := pointerx.Bool(r.Form.Get("remember") == "true")
 		if r.Form.Get("action") == "accept" {
-			res, err := hc.Admin.AcceptLoginRequest(admin.NewAcceptLoginRequestParams().
-				WithLoginChallenge(r.URL.Query().Get("login_challenge")).
-				WithBody(&models.AcceptLoginRequest{
-					RememberFor: 3600, Remember: r.Form.Get("remember") == "true",
-					Subject: pointerx.String(r.Form.Get("username"))}))
+			res, _, err := hc.OAuth2Api.AcceptOAuth2LoginRequest(r.Context()).
+				LoginChallenge(r.URL.Query().Get("login_challenge")).
+				AcceptOAuth2LoginRequest(client.AcceptOAuth2LoginRequest{
+					RememberFor: pointerx.Int64(3600),
+					Remember:    remember,
+					Subject:     r.Form.Get("username"),
+				}).Execute()
+
 			if !checkReq(w, err) {
 				return
 			}
-			http.Redirect(w, r, *res.Payload.RedirectTo, http.StatusFound)
+			http.Redirect(w, r, res.RedirectTo, http.StatusFound)
 			return
 		}
-		res, err := hc.Admin.RejectLoginRequest(admin.NewRejectLoginRequestParams().
-			WithLoginChallenge(r.URL.Query().Get("login_challenge")).
-			WithBody(&models.RejectRequest{Error: "login rejected request"}))
+		res, _, err := hc.OAuth2Api.RejectOAuth2LoginRequest(r.Context()).LoginChallenge(r.URL.Query().Get("login_challenge")).
+			RejectOAuth2Request(client.RejectOAuth2Request{Error: pointerx.String("login rejected request")}).Execute()
 		if !checkReq(w, err) {
 			return
 		}
-		http.Redirect(w, r, *res.Payload.RedirectTo, http.StatusFound)
+		http.Redirect(w, r, res.RedirectTo, http.StatusFound)
 	})
 
 	router.GET("/consent", func(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
-		res, err := hc.Admin.GetConsentRequest(admin.NewGetConsentRequestParams().
-			WithConsentChallenge(r.URL.Query().Get("consent_challenge")))
+		res, _, err := hc.OAuth2Api.GetOAuth2ConsentRequest(r.Context()).ConsentChallenge(r.URL.Query().
+			Get("consent_challenge")).Execute()
 		if !checkReq(w, err) {
 			return
 		}
-		if res.Payload.Skip {
-			res, err := hc.Admin.AcceptConsentRequest(admin.NewAcceptConsentRequestParams().
-				WithConsentChallenge(r.URL.Query().Get("consent_challenge")).
-				WithBody(&models.AcceptConsentRequest{GrantScope: res.Payload.RequestedScope}))
+
+		if *res.Skip {
+			res, _, err := hc.OAuth2Api.AcceptOAuth2ConsentRequest(r.Context()).
+				ConsentChallenge(r.URL.Query().Get("consent_challenge")).
+				AcceptOAuth2ConsentRequest(client.AcceptOAuth2ConsentRequest{
+					GrantScope: res.RequestedScope,
+				}).Execute()
 			if !checkReq(w, err) {
 				return
 			}
-			http.Redirect(w, r, *res.Payload.RedirectTo, http.StatusFound)
+			http.Redirect(w, r, res.RedirectTo, http.StatusFound)
 			return
 		}
 
 		checkoxes := ""
-		for _, s := range res.Payload.RequestedScope {
+		for _, s := range res.RequestedScope {
 			checkoxes += fmt.Sprintf(`<li><input type="checkbox" name="scope" value="%s" id="%s"/>%s</li>`, s, s, s)
 		}
 
@@ -134,30 +146,33 @@ func main() {
 
 	router.POST("/consent", func(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 		_ = r.ParseForm()
+		remember := pointerx.Bool(r.Form.Get("remember") == "true")
 		if r.Form.Get("action") == "accept" {
-			res, err := hc.Admin.AcceptConsentRequest(admin.NewAcceptConsentRequestParams().
-				WithConsentChallenge(r.URL.Query().Get("consent_challenge")).
-				WithBody(&models.AcceptConsentRequest{
-					Session: &models.ConsentRequestSession{
-						IDToken: map[string]interface{}{
+			res, _, err := hc.OAuth2Api.AcceptOAuth2ConsentRequest(r.Context()).
+				ConsentChallenge(r.URL.Query().Get("consent_challenge")).
+				AcceptOAuth2ConsentRequest(client.AcceptOAuth2ConsentRequest{
+					Session: &client.AcceptOAuth2ConsentRequestSession{
+						IdToken: map[string]interface{}{
 							"website": r.Form.Get("website"),
 						},
 					},
-					Remember: r.Form.Get("remember") == "true", RememberFor: 3600,
-					GrantScope: r.Form["scope"]}))
+					RememberFor: pointerx.Int64(3600),
+					Remember:    remember,
+					GrantScope:  r.Form["scope"]},
+				).Execute()
 			if !checkReq(w, err) {
 				return
 			}
-			http.Redirect(w, r, *res.Payload.RedirectTo, http.StatusFound)
+			http.Redirect(w, r, res.RedirectTo, http.StatusFound)
 			return
 		}
-		res, err := hc.Admin.RejectConsentRequest(admin.NewRejectConsentRequestParams().
-			WithConsentChallenge(r.URL.Query().Get("consent_challenge")).
-			WithBody(&models.RejectRequest{Error: "consent rejected request"}))
+		res, _, err := hc.OAuth2Api.RejectOAuth2ConsentRequest(r.Context()).
+			ConsentChallenge(r.URL.Query().Get("consent_challenge")).
+			RejectOAuth2Request(client.RejectOAuth2Request{Error: pointerx.String("consent rejected request")}).Execute()
 		if !checkReq(w, err) {
 			return
 		}
-		http.Redirect(w, r, *res.Payload.RedirectTo, http.StatusFound)
+		http.Redirect(w, r, res.RedirectTo, http.StatusFound)
 	})
 
 	addr := ":" + osx.GetenvDefault("PORT", "4446")

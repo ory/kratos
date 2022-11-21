@@ -32,7 +32,7 @@ import (
 	"github.com/ory/kratos/x"
 )
 
-// swagger:model selfServiceRegistrationFlow
+// swagger:model registrationFlow
 type Flow struct {
 	// ID represents the flow's unique ID. When performing the registration flow, this
 	// represents the id in the registration ui's query parameter: http://<selfservice.flows.registration.ui_url>/?flow=<id>
@@ -50,7 +50,7 @@ type Flow struct {
 	// is being used as an identity provider in a Hydra OAuth2 flow. Kratos
 	// populates this field by retrieving its value from Hydra and it is used by
 	// the login and consent UIs.
-	HydraLoginRequest *hydraclientgo.LoginRequest `json:"oauth2_login_request,omitempty" faker:"-" db:"-"`
+	HydraLoginRequest *hydraclientgo.OAuth2LoginRequest `json:"oauth2_login_request,omitempty" faker:"-" db:"-"`
 
 	// Type represents the flow's type which can be either "api" or "browser", depending on the flow interaction.
 	//

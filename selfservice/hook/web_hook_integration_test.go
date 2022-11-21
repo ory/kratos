@@ -425,15 +425,16 @@ func TestWebHooks(t *testing.T) {
 			expectedError: nil,
 		},
 		{
-			uc:         "Post Registration Post Persists Hook - block",
+			uc:         "Post Registration Post Persist Hook - block has no effect",
 			createFlow: func() flow.Flow { return &registration.Flow{ID: x.NewUUID()} },
 			callWebHook: func(wh *hook.WebHook, req *http.Request, f flow.Flow, s *session.Session) error {
 				return wh.ExecutePostRegistrationPostPersistHook(nil, req, f.(*registration.Flow), s)
 			},
+			// This would usually error, but post persist does not execute blocking web hooks, so we expect no error.
 			webHookResponse: func() (int, []byte) {
 				return http.StatusBadRequest, webHookResponse
 			},
-			expectedError: webhookError,
+			expectedError: nil,
 		},
 		{
 			uc:         "Post Registration Pre Persist Hook - no block",
@@ -513,7 +514,18 @@ func TestWebHooks(t *testing.T) {
 			expectedError: nil,
 		},
 		{
-			uc:         "Post Settings Hook - block",
+			uc:         "Post Settings Hook Pre Persist - block",
+			createFlow: func() flow.Flow { return &settings.Flow{ID: x.NewUUID()} },
+			callWebHook: func(wh *hook.WebHook, req *http.Request, f flow.Flow, s *session.Session) error {
+				return wh.ExecuteSettingsPrePersistHook(nil, req, f.(*settings.Flow), s.Identity)
+			},
+			webHookResponse: func() (int, []byte) {
+				return http.StatusBadRequest, webHookResponse
+			},
+			expectedError: webhookError,
+		},
+		{
+			uc:         "Post Settings Hook Post Persist - block has no effect",
 			createFlow: func() flow.Flow { return &settings.Flow{ID: x.NewUUID()} },
 			callWebHook: func(wh *hook.WebHook, req *http.Request, f flow.Flow, s *session.Session) error {
 				return wh.ExecuteSettingsPostPersistHook(nil, req, f.(*settings.Flow), s.Identity)
@@ -521,7 +533,7 @@ func TestWebHooks(t *testing.T) {
 			webHookResponse: func() (int, []byte) {
 				return http.StatusBadRequest, webHookResponse
 			},
-			expectedError: webhookError,
+			expectedError: nil,
 		},
 	} {
 		t.Run("uc="+tc.uc, func(t *testing.T) {
@@ -764,7 +776,7 @@ func TestDisallowPrivateIPRanges(t *testing.T) {
 }`))
 		err := wh.ExecuteLoginPostHook(nil, req, node.DefaultGroup, f, s)
 		require.Error(t, err)
-		require.Contains(t, err.Error(), "is in the private, loopback, or unspecified IP range")
+		require.Contains(t, err.Error(), "private, loopback, or unspecified IP range")
 	})
 
 	t.Run("allowed to call exempt url", func(t *testing.T) {

@@ -36,7 +36,7 @@ context("Account Verification Registration Errors", () => {
       beforeEach(() => {
         cy.enableVerification()
         cy.disableRecovery()
-        cy.shortLinkLifespan()
+        cy.shortCodeLifespan()
         cy.longVerificationLifespan()
 
         cy.deleteMail()
@@ -47,16 +47,16 @@ context("Account Verification Registration Errors", () => {
       })
 
       it("is unable to verify the email address if the code is no longer valid and resend the code", () => {
-        cy.shortLinkLifespan()
+        cy.shortCodeLifespan()
         cy.verifyEmailButExpired({
           expect: { email: identity.email, password: identity.password },
         })
 
-        cy.longLinkLifespan()
+        cy.longCodeLifespan()
 
         cy.get(appPrefix(app) + 'input[name="email"]').should("be.empty")
         cy.get('input[name="email"]').type(identity.email)
-        cy.get('button[value="link"]').click()
+        cy.get('button[value="code"]').click()
         cy.get('[data-testid="ui/message/1080001"]').should(
           "contain.text",
           "An email containing a verification",

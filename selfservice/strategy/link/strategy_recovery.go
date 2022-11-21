@@ -44,7 +44,7 @@ func (s *Strategy) RegisterPublicRecoveryRoutes(public *x.RouterPublic) {
 }
 
 func (s *Strategy) RegisterAdminRecoveryRoutes(admin *x.RouterAdmin) {
-	wrappedCreateRecoveryLink := strategy.IsDisabled(s.d, s.RecoveryStrategyID(), s.createRecoveryLink)
+	wrappedCreateRecoveryLink := strategy.IsDisabled(s.d, s.RecoveryStrategyID(), s.createRecoveryLinkForIdentity)
 	admin.POST(RouteAdminCreateRecoveryLink, wrappedCreateRecoveryLink)
 }
 
@@ -59,16 +59,20 @@ func (s *Strategy) PopulateRecoveryMethod(r *http.Request, f *recovery.Flow) err
 	return nil
 }
 
-// swagger:parameters adminCreateSelfServiceRecoveryLink
+// Create Recovery Link for Identity Parameters
+//
+// swagger:parameters createRecoveryLinkForIdentity
 //
 // nolint
-type adminCreateSelfServiceRecoveryLink struct {
+type createRecoveryLinkForIdentity struct {
 	// in: body
-	Body adminCreateSelfServiceRecoveryLinkBody
+	Body createRecoveryLinkForIdentityBody
 }
 
-// swagger:model adminCreateSelfServiceRecoveryLinkBody
-type adminCreateSelfServiceRecoveryLinkBody struct {
+// Create Recovery Link for Identity Request Body
+//
+// swagger:model createRecoveryLinkForIdentityBody
+type createRecoveryLinkForIdentityBody struct {
 	// Identity to Recover
 	//
 	// The identity's ID you wish to recover.
@@ -90,9 +94,13 @@ type adminCreateSelfServiceRecoveryLinkBody struct {
 	ExpiresIn string `json:"expires_in"`
 }
 
-// swagger:model selfServiceRecoveryLink
+// Identity Recovery Link
+//
+// Used when an administrator creates a recovery link for an identity.
+//
+// swagger:model recoveryLinkForIdentity
 // nolint
-type selfServiceRecoveryLink struct {
+type recoveryLinkForIdentity struct {
 	// Recovery Link
 	//
 	// This link can be used to recover the account.
@@ -107,7 +115,7 @@ type selfServiceRecoveryLink struct {
 	ExpiresAt time.Time `json:"expires_at"`
 }
 
-// swagger:route POST /admin/recovery/link v0alpha2 adminCreateSelfServiceRecoveryLink
+// swagger:route POST /admin/recovery/link identity createRecoveryLinkForIdentity
 //
 // # Create a Recovery Link
 //
@@ -123,12 +131,12 @@ type selfServiceRecoveryLink struct {
 //	Schemes: http, https
 //
 //	Responses:
-//	  200: selfServiceRecoveryLink
-//	  400: jsonError
-//	  404: jsonError
-//	  500: jsonError
-func (s *Strategy) createRecoveryLink(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
-	var p adminCreateSelfServiceRecoveryLinkBody
+//	  200: recoveryLinkForIdentity
+//	  400: errorGeneric
+//	  404: errorGeneric
+//	  default: errorGeneric
+func (s *Strategy) createRecoveryLinkForIdentity(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+	var p createRecoveryLinkForIdentityBody
 	if err := s.dx.Decode(r, &p, decoderx.HTTPJSONDecoder()); err != nil {
 		s.d.Writer().WriteError(w, r, err)
 		return
@@ -180,7 +188,7 @@ func (s *Strategy) createRecoveryLink(w http.ResponseWriter, r *http.Request, _ 
 		WithSensitiveField("recovery_link_token", token).
 		Info("A recovery link has been created.")
 
-	s.d.Writer().Write(w, r, &selfServiceRecoveryLink{
+	s.d.Writer().Write(w, r, &recoveryLinkForIdentity{
 		ExpiresAt: req.ExpiresAt.UTC(),
 		RecoveryLink: urlx.CopyWithQuery(
 			urlx.AppendPaths(s.d.Config().SelfPublicURL(r.Context()), recovery.RouteSubmitFlow),
@@ -191,9 +199,11 @@ func (s *Strategy) createRecoveryLink(w http.ResponseWriter, r *http.Request, _ 
 		herodot.UnescapedHTML)
 }
 
-// swagger:model submitSelfServiceRecoveryFlowWithLinkMethodBody
+// Update Recovery Flow with Link Method
+//
+// swagger:model updateRecoveryFlowWithLinkMethod
 // nolint:deadcode,unused
-type submitSelfServiceRecoveryFlowWithLinkMethodBody struct {
+type updateRecoveryFlowWithLinkMethod struct {
 	// Email to Recover
 	//
 	// Needs to be set when initiating the flow. If the email is a registered

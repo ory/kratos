@@ -85,7 +85,7 @@ func (h *Handler) RegisterPublicRoutes(public *x.RouterPublic) {
 	h.d.CSRFHandler().IgnorePath(RouteInitAPIFlow)
 	h.d.CSRFHandler().IgnorePath(RouteSubmitFlow)
 
-	public.GET(RouteInitBrowserFlow, h.d.SessionHandler().IsAuthenticated(h.initBrowserFlow, func(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	public.GET(RouteInitBrowserFlow, h.d.SessionHandler().IsAuthenticated(h.createBrowserSettingsFlow, func(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 		if x.IsJSONRequest(r) {
 			h.d.Writer().WriteError(w, r, session.NewErrNoActiveSessionFound())
 		} else {
@@ -99,11 +99,11 @@ func (h *Handler) RegisterPublicRoutes(public *x.RouterPublic) {
 		}
 	}))
 
-	public.GET(RouteInitAPIFlow, h.d.SessionHandler().IsAuthenticated(h.initApiFlow, nil))
-	public.GET(RouteGetFlow, h.d.SessionHandler().IsAuthenticated(h.fetchPublicFlow, OnUnauthenticated(h.d)))
+	public.GET(RouteInitAPIFlow, h.d.SessionHandler().IsAuthenticated(h.createNativeSettingsFlow, nil))
+	public.GET(RouteGetFlow, h.d.SessionHandler().IsAuthenticated(h.getSettingsFlow, OnUnauthenticated(h.d)))
 
-	public.POST(RouteSubmitFlow, h.d.SessionHandler().IsAuthenticated(h.submitSettingsFlow, OnUnauthenticated(h.d)))
-	public.GET(RouteSubmitFlow, h.d.SessionHandler().IsAuthenticated(h.submitSettingsFlow, OnUnauthenticated(h.d)))
+	public.POST(RouteSubmitFlow, h.d.SessionHandler().IsAuthenticated(h.updateSettingsFlow, OnUnauthenticated(h.d)))
+	public.GET(RouteSubmitFlow, h.d.SessionHandler().IsAuthenticated(h.updateSettingsFlow, OnUnauthenticated(h.d)))
 }
 
 func (h *Handler) RegisterAdminRoutes(admin *x.RouterAdmin) {
@@ -162,18 +162,20 @@ func (h *Handler) FromOldFlow(w http.ResponseWriter, r *http.Request, i *identit
 	return nf, nil
 }
 
-// swagger:parameters initializeSelfServiceSettingsFlowWithoutBrowser
+// Create Native Settings Flow Parameters
+//
+// swagger:parameters createNativeSettingsFlow
 // nolint:deadcode,unused
-type initializeSelfServiceSettingsFlowWithoutBrowser struct {
+type createNativeSettingsFlow struct {
 	// The Session Token of the Identity performing the settings flow.
 	//
 	// in: header
 	SessionToken string `json:"X-Session-Token"`
 }
 
-// swagger:route GET /self-service/settings/api v0alpha2 initializeSelfServiceSettingsFlowWithoutBrowser
+// swagger:route GET /self-service/settings/api frontend createNativeSettingsFlow
 //
-// Initialize Settings Flow for APIs, Services, Apps, ...
+// # Create Settings Flow for Native Apps
 //
 // This endpoint initiates a settings flow for API clients such as mobile devices, smart TVs, and so on.
 // You must provide a valid Ory Kratos Session Token for this endpoint to respond with HTTP 200 OK.
@@ -201,10 +203,10 @@ type initializeSelfServiceSettingsFlowWithoutBrowser struct {
 //	   Schemes: http, https
 //
 //	   Responses:
-//		  200: selfServiceSettingsFlow
-//		  400: jsonError
-//		  500: jsonError
-func (h *Handler) initApiFlow(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+//		  200: settingsFlow
+//		  400: errorGeneric
+//		  default: errorGeneric
+func (h *Handler) createNativeSettingsFlow(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 	s, err := h.d.SessionManager().FetchFromRequest(r.Context(), r)
 	if err != nil {
 		h.d.Writer().WriteError(w, r, err)
@@ -225,9 +227,11 @@ func (h *Handler) initApiFlow(w http.ResponseWriter, r *http.Request, _ httprout
 	h.d.Writer().Write(w, r, f)
 }
 
+// Create Browser Settings Flow Parameters
+//
 // nolint:deadcode,unused
-// swagger:parameters initializeSelfServiceSettingsFlowForBrowsers
-type initializeSelfServiceSettingsFlowForBrowsers struct {
+// swagger:parameters createBrowserSettingsFlow
+type createBrowserSettingsFlow struct {
 	// The URL to return the browser to after the flow was completed.
 	//
 	// in: query
@@ -243,9 +247,9 @@ type initializeSelfServiceSettingsFlowForBrowsers struct {
 	Cookies string `json:"Cookie"`
 }
 
-// swagger:route GET /self-service/settings/browser v0alpha2 initializeSelfServiceSettingsFlowForBrowsers
+// swagger:route GET /self-service/settings/browser frontend createBrowserSettingsFlow
 //
-// # Initialize Settings Flow for Browsers
+// # Create Settings Flow for Browsers
 //
 // This endpoint initializes a browser-based user settings flow. Once initialized, the browser will be redirected to
 // `selfservice.flows.settings.ui_url` with the flow ID set as the query parameter `?flow=`. If no valid
@@ -277,13 +281,13 @@ type initializeSelfServiceSettingsFlowForBrowsers struct {
 //	Schemes: http, https
 //
 //	Responses:
-//	  200: selfServiceSettingsFlow
+//	  200: settingsFlow
 //	  303: emptyResponse
-//	  400: jsonError
-//	  401: jsonError
-//	  403: jsonError
-//	  500: jsonError
-func (h *Handler) initBrowserFlow(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+//	  400: errorGeneric
+//	  401: errorGeneric
+//	  403: errorGeneric
+//	  default: errorGeneric
+func (h *Handler) createBrowserSettingsFlow(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	s, err := h.d.SessionManager().FetchFromRequest(r.Context(), r)
 	if err != nil {
 		h.d.SelfServiceErrorManager().Forward(r.Context(), w, r, err)
@@ -305,9 +309,11 @@ func (h *Handler) initBrowserFlow(w http.ResponseWriter, r *http.Request, ps htt
 	x.AcceptToRedirectOrJSON(w, r, h.d.Writer(), f, redirTo)
 }
 
+// Get Settings Flow
+//
 // nolint:deadcode,unused
-// swagger:parameters getSelfServiceSettingsFlow
-type getSelfServiceSettingsFlow struct {
+// swagger:parameters getSettingsFlow
+type getSettingsFlow struct {
 	// ID is the Settings Flow ID
 	//
 	// The value for this parameter comes from `flow` URL Query parameter sent to your
@@ -335,7 +341,7 @@ type getSelfServiceSettingsFlow struct {
 	Cookies string `json:"Cookie"`
 }
 
-// swagger:route GET /self-service/settings/flows v0alpha2 getSelfServiceSettingsFlow
+// swagger:route GET /self-service/settings/flows frontend getSettingsFlow
 //
 // # Get Settings Flow
 //
@@ -365,13 +371,13 @@ type getSelfServiceSettingsFlow struct {
 //	Schemes: http, https
 //
 //	Responses:
-//	  200: selfServiceSettingsFlow
-//	  401: jsonError
-//	  403: jsonError
-//	  404: jsonError
-//	  410: jsonError
-//	  500: jsonError
-func (h *Handler) fetchPublicFlow(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+//	  200: settingsFlow
+//	  401: errorGeneric
+//	  403: errorGeneric
+//	  404: errorGeneric
+//	  410: errorGeneric
+//	  default: errorGeneric
+func (h *Handler) getSettingsFlow(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	if err := h.fetchFlow(w, r); err != nil {
 		h.d.Writer().WriteError(w, r, err)
 		return
@@ -418,9 +424,11 @@ func (h *Handler) fetchFlow(w http.ResponseWriter, r *http.Request) error {
 	return nil
 }
 
+// Update Settings Flow Parameters
+//
 // nolint:deadcode,unused
-// swagger:parameters submitSelfServiceSettingsFlow
-type submitSelfServiceSettingsFlow struct {
+// swagger:parameters updateSettingsFlow
+type updateSettingsFlow struct {
 	// The Settings Flow ID
 	//
 	// The value for this parameter comes from `flow` URL Query parameter sent to your
@@ -432,7 +440,7 @@ type submitSelfServiceSettingsFlow struct {
 
 	// in: body
 	// required: true
-	Body submitSelfServiceSettingsFlowBody
+	Body updateSettingsFlowBody
 
 	// The Session Token of the Identity performing the settings flow.
 	//
@@ -449,11 +457,13 @@ type submitSelfServiceSettingsFlow struct {
 	Cookies string `json:"Cookie"`
 }
 
-// swagger:model submitSelfServiceSettingsFlowBody
+// Update Settings Flow Request Body
+//
+// swagger:model updateSettingsFlowBody
 // nolint:deadcode,unused
-type submitSelfServiceSettingsFlowBody struct{}
+type updateSettingsFlowBody struct{}
 
-// swagger:route POST /self-service/settings v0alpha2 submitSelfServiceSettingsFlow
+// swagger:route POST /self-service/settings frontend updateSettingsFlow
 //
 // # Complete Settings Flow
 //
@@ -514,15 +524,15 @@ type submitSelfServiceSettingsFlowBody struct{}
 //	Schemes: http, https
 //
 //	Responses:
-//	  200: selfServiceSettingsFlow
+//	  200: settingsFlow
 //	  303: emptyResponse
-//	  400: selfServiceSettingsFlow
-//	  401: jsonError
-//	  403: jsonError
-//	  410: jsonError
-//	  422: selfServiceBrowserLocationChangeRequiredError
-//	  500: jsonError
-func (h *Handler) submitSettingsFlow(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+//	  400: settingsFlow
+//	  401: errorGeneric
+//	  403: errorGeneric
+//	  410: errorGeneric
+//	  422: errorBrowserLocationChangeRequired
+//	  default: errorGeneric
+func (h *Handler) updateSettingsFlow(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	rid, err := GetFlowID(r)
 	if err != nil {
 		h.d.SettingsFlowErrorHandler().WriteFlowError(w, r, node.DefaultGroup, nil, nil, err)

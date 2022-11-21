@@ -71,7 +71,10 @@ func TestManager(t *testing.T) {
 	})
 
 	t.Run("method=SendVerificationLink", func(t *testing.T) {
-		f, err := verification.NewFlow(conf, time.Hour, "", u, reg.VerificationStrategies(context.Background()), flow.TypeBrowser)
+		strategy, err := reg.GetActiveVerificationStrategy(ctx)
+		require.NoError(t, err)
+
+		f, err := verification.NewFlow(conf, time.Hour, "", u, strategy, flow.TypeBrowser)
 		require.NoError(t, err)
 
 		require.NoError(t, reg.VerificationFlowPersister().CreateVerificationFlow(context.Background(), f))

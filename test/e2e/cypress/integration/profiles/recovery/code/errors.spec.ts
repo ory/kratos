@@ -61,7 +61,7 @@ context("Account Recovery Errors", () => {
         cy.get("button[value='code']").click()
         cy.get('[data-testid="ui/message/4000001"]').should(
           "have.text",
-          "The recovery was submitted too often. Please try again.",
+          "The request was submitted too often. Please request another code.",
         )
         cy.noSession()
         cy.get(appPrefix(app) + "input[name='email']").type(identity.email)

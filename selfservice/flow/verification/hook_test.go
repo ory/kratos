@@ -32,7 +32,9 @@ func TestVerificationExecutor(t *testing.T) {
 	newServer := func(t *testing.T, i *identity.Identity, ft flow.Type) *httptest.Server {
 		router := httprouter.New()
 		router.GET("/verification/pre", func(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
-			a, err := verification.NewFlow(conf, time.Minute, x.FakeCSRFToken, r, reg.VerificationStrategies(context.Background()), ft)
+			strategy, err := reg.GetActiveVerificationStrategy(r.Context())
+			require.NoError(t, err)
+			a, err := verification.NewFlow(conf, time.Minute, x.FakeCSRFToken, r, strategy, ft)
 			require.NoError(t, err)
 			if testhelpers.SelfServiceHookErrorHandler(t, w, r, verification.ErrHookAbortFlow, reg.VerificationExecutor().PreVerificationHook(w, r, a)) {
 				_, _ = w.Write([]byte("ok"))
@@ -40,7 +42,9 @@ func TestVerificationExecutor(t *testing.T) {
 		})
 
 		router.GET("/verification/post", func(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
-			a, err := verification.NewFlow(conf, time.Minute, x.FakeCSRFToken, r, reg.VerificationStrategies(context.Background()), ft)
+			strategy, err := reg.GetActiveVerificationStrategy(r.Context())
+			require.NoError(t, err)
+			a, err := verification.NewFlow(conf, time.Minute, x.FakeCSRFToken, r, strategy, ft)
 			require.NoError(t, err)
 			a.RequestURL = x.RequestURL(r).String()
 			if testhelpers.SelfServiceHookErrorHandler(t, w, r, verification.ErrHookAbortFlow, reg.VerificationExecutor().PostVerificationHook(w, r, a, i)) {

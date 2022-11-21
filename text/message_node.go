@@ -43,6 +43,14 @@ func NewInfoNodeLabelSubmit() *Message {
 	}
 }
 
+func NewInfoNodeLabelReturn() *Message {
+	return &Message{
+		ID:   InfoNodeLabelReturn,
+		Text: "Return",
+		Type: Info,
+	}
+}
+
 func NewInfoNodeLabelID() *Message {
 	return &Message{
 		ID:   InfoNodeLabelID,

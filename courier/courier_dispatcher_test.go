@@ -38,7 +38,8 @@ func TestDispatchMessageWithInvalidSMTP(t *testing.T) {
 	ctx, cancel := context.WithCancel(ctx)
 	defer cancel()
 
-	c := reg.Courier(ctx)
+	c, err := reg.Courier(ctx)
+	require.NoError(t, err)
 
 	t.Run("case=failed sending", func(t *testing.T) {
 		id := queueNewMessage(t, ctx, c, reg)
@@ -76,7 +77,8 @@ func TestDispatchMessage2(t *testing.T) {
 	conf, reg := internal.NewRegistryDefaultWithDSN(t, "")
 	conf.MustSet(ctx, config.ViperKeyCourierMessageRetries, 1)
 
-	c := reg.Courier(ctx)
+	c, err := reg.Courier(ctx)
+	require.NoError(t, err)
 
 	ctx, cancel := context.WithCancel(ctx)
 	defer cancel()

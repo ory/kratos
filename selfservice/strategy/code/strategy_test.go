@@ -7,11 +7,15 @@ import (
 	"context"
 	"testing"
 
+	"github.com/stretchr/testify/assert"
+
 	"github.com/ory/kratos/internal/testhelpers"
+	"github.com/ory/x/stringslice"
 
 	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/selfservice/flow/recovery"
+	"github.com/ory/kratos/selfservice/strategy/code"
 )
 
 func initViper(t *testing.T, ctx context.Context, c *config.Config) {
@@ -23,4 +27,14 @@ func initViper(t *testing.T, ctx context.Context, c *config.Config) {
 	c.MustSet(ctx, config.ViperKeySelfServiceRecoveryEnabled, true)
 	c.MustSet(ctx, config.ViperKeySelfServiceRecoveryUse, "code")
 	c.MustSet(ctx, config.ViperKeySelfServiceVerificationEnabled, true)
+	c.MustSet(ctx, config.ViperKeySelfServiceVerificationUse, "code")
+}
+
+func TestGenerateCode(t *testing.T) {
+	codes := make([]string, 100)
+	for k := range codes {
+		codes[k] = code.GenerateCode()
+	}
+
+	assert.Len(t, stringslice.Unique(codes), len(codes))
 }

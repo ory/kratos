@@ -10,6 +10,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/ory/x/pagination/migrationpagination"
+
 	"github.com/gobuffalo/pop/v6"
 	"github.com/gofrs/uuid"
 
@@ -19,7 +21,6 @@ import (
 
 	"github.com/ory/kratos/courier"
 	"github.com/ory/kratos/x"
-	"github.com/ory/x/pagination/keysetpagination"
 	"github.com/ory/x/sqlcon"
 	"github.com/ory/x/uuidx"
 )
@@ -115,10 +116,14 @@ func TestPersister(ctx context.Context, newNetworkUnlessExisting NetworkWrapper,
 
 		t.Run("case=list messages", func(t *testing.T) {
 			status := courier.MessageStatusProcessing
-			filter := courier.MessagesFilter{
+			filter := courier.ListCourierMessagesParameters{
 				Status: &status,
+				RequestParameters: migrationpagination.RequestParameters{
+					Page:    1,
+					PerPage: 100,
+				},
 			}
-			ms, total, paginator, err := p.ListMessages(ctx, filter, keysetpagination.With())
+			ms, total, err := p.ListMessages(ctx, filter)
 
 			require.NoError(t, err)
 			assert.Len(t, ms, len(messages))

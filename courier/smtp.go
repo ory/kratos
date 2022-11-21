@@ -30,8 +30,12 @@ type smtpClient struct {
 	NewTemplateFromMessage func(d template.Dependencies, msg Message) (EmailTemplate, error)
 }
 
-func newSMTP(ctx context.Context, deps Dependencies) *smtpClient {
-	uri := deps.CourierConfig().CourierSMTPURL(ctx)
+func newSMTP(ctx context.Context, deps Dependencies) (*smtpClient, error) {
+	uri, err := deps.CourierConfig().CourierSMTPURL(ctx)
+	if err != nil {
+		return nil, err
+	}
+
 	var tlsCertificates []tls.Certificate
 	clientCertPath := deps.CourierConfig().CourierSMTPClientCertPath(ctx)
 	clientKeyPath := deps.CourierConfig().CourierSMTPClientKeyPath(ctx)
@@ -94,7 +98,7 @@ func newSMTP(ctx context.Context, deps Dependencies) *smtpClient {
 
 		GetTemplateType:        GetEmailTemplateType,
 		NewTemplateFromMessage: NewEmailTemplateFromMessage,
-	}
+	}, nil
 }
 
 func (c *courier) SetGetEmailTemplateType(f func(t EmailTemplate) (TemplateType, error)) {

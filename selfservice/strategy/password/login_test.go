@@ -25,8 +25,8 @@ import (
 
 	"github.com/ory/x/urlx"
 
-	kratos "github.com/ory/kratos-client-go"
 	"github.com/ory/kratos/hash"
+	kratos "github.com/ory/kratos/internal/httpclient"
 	"github.com/ory/x/assertx"
 	"github.com/ory/x/errorsx"
 	"github.com/ory/x/ioutilx"
@@ -157,7 +157,7 @@ func TestCompleteLogin(t *testing.T) {
 			assert.Contains(t, gjson.Get(actual, "message").String(), "Unable to locate the resource", "%s", actual)
 		}
 
-		fakeFlow := &kratos.SelfServiceLoginFlow{
+		fakeFlow := &kratos.LoginFlow{
 			Ui: kratos.UiContainer{
 				Action: publicTS.URL + login.RouteSubmitFlow + "?flow=" + x.NewUUID().String()},
 		}

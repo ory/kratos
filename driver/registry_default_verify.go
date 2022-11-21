@@ -48,6 +48,13 @@ func (m *RegistryDefault) LinkSender() *link.Sender {
 	return m.selfserviceLinkSender
 }
 
+// GetActiveVerificationStrategy returns the currently active verification strategy
+// If no verification strategy has been set, an error is returned
+func (m *RegistryDefault) GetActiveVerificationStrategy(ctx context.Context) (verification.Strategy, error) {
+	activeVerificationStrategy := m.Config().SelfServiceFlowVerificationUse(ctx)
+	return m.VerificationStrategies(ctx).Strategy(activeVerificationStrategy)
+}
+
 func (m *RegistryDefault) VerificationStrategies(ctx context.Context) (verificationStrategies verification.Strategies) {
 	for _, strategy := range m.selfServiceStrategies() {
 		if s, ok := strategy.(verification.Strategy); ok {

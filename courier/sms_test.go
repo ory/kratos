@@ -86,7 +86,8 @@ func TestQueueSMS(t *testing.T) {
 	conf.MustSet(ctx, config.ViperKeyCourierSMTPURL, "http://foo.url")
 	reg.Logger().Level = logrus.TraceLevel
 
-	c := reg.Courier(ctx)
+	c, err := reg.Courier(ctx)
+	require.NoError(t, err)
 
 	ctx, cancel := context.WithCancel(ctx)
 	defer t.Cleanup(cancel)
@@ -132,11 +133,12 @@ func TestDisallowedInternalNetwork(t *testing.T) {
 	conf.MustSet(ctx, config.ViperKeyClientHTTPNoPrivateIPRanges, true)
 	reg.Logger().Level = logrus.TraceLevel
 
-	c := reg.Courier(ctx)
+	c, err := reg.Courier(ctx)
+	require.NoError(t, err)
 	c.(interface {
 		FailOnDispatchError()
 	}).FailOnDispatchError()
-	_, err := c.QueueSMS(ctx, sms.NewTestStub(reg, &sms.TestStubModel{
+	_, err = c.QueueSMS(ctx, sms.NewTestStub(reg, &sms.TestStubModel{
 		To:   "+12065550101",
 		Body: "test-sms-body-1",
 	}))
@@ -144,5 +146,5 @@ func TestDisallowedInternalNetwork(t *testing.T) {
 
 	err = c.DispatchQueue(ctx)
 	require.Error(t, err)
-	assert.Contains(t, err.Error(), "ip 127.0.0.1 is in the private, loopback, or unspecified IP range")
+	assert.Contains(t, err.Error(), "is in the private, loopback, or unspecified IP range")
 }
