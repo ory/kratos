@@ -71,3 +71,12 @@ func NewErrorValidationVerificationCodeInvalidOrAlreadyUsed() *Message {
 		Context: context(nil),
 	}
 }
+
+func NewVerificationEmailWithCodeSent() *Message {
+	return &Message{
+		ID:      InfoSelfServiceVerificationEmailWithCodeSent,
+		Type:    Info,
+		Text:    "An email containing a verification code has been sent to the email address you provided.",
+		Context: context(nil),
+	}
+}

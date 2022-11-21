@@ -64,4 +64,9 @@ func TestIDs(t *testing.T) {
 
 	assert.Equal(t, 4060006, int(ErrorValidationRecoveryCodeInvalidOrAlreadyUsed))
 	assert.Equal(t, 4070006, int(ErrorValidationVerificationCodeInvalidOrAlreadyUsed))
+
+	assert.Equal(t, 1080000, int(InfoSelfServiceVerification))
+	assert.Equal(t, 1080001, int(InfoSelfServiceVerificationEmailSent))
+	assert.Equal(t, 1080002, int(InfoSelfServiceVerificationSuccessful))
+	assert.Equal(t, 1080003, int(InfoSelfServiceVerificationEmailWithCodeSent))
 }

@@ -230,7 +230,7 @@ func (s *Strategy) verificationHandleFormSubmission(w http.ResponseWriter, r *ht
 	f.State = verification.StateEmailSent
 
 	f.UI = s.createVerificationCodeForm(flow.AppendFlowTo(urlx.AppendPaths(s.deps.Config().SelfPublicURL(r.Context()), verification.RouteSubmitFlow), f.ID).String(), nil, &body.Email)
-	f.UI.Messages.Set(text.NewVerificationEmailSent())
+	f.UI.Messages.Set(text.NewVerificationEmailWithCodeSent())
 	f.UI.SetCSRF(s.deps.GenerateCSRFToken(r))
 
 	if err := s.deps.VerificationFlowPersister().UpdateVerificationFlow(r.Context(), f); err != nil {

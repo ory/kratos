@@ -84,9 +84,10 @@ const (
 )
 
 const (
-	InfoSelfServiceVerification           ID = 1080000 + iota // 1080000
-	InfoSelfServiceVerificationEmailSent                      // 1080001
-	InfoSelfServiceVerificationSuccessful                     // 1080002
+	InfoSelfServiceVerification                  ID = 1080000 + iota // 1080000
+	InfoSelfServiceVerificationEmailSent                             // 1080001
+	InfoSelfServiceVerificationSuccessful                            // 1080002
+	InfoSelfServiceVerificationEmailWithCodeSent                     // 1080003
 )
 
 const (
