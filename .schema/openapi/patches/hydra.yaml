@@ -6,30 +6,30 @@
 # Also see https://github.com/ory/sdk/issues/226
 - op: copy
   from: /components/schemas/OAuth2Client
-  path: /components/schemas/kratosOAuth2Client
+  path: /components/schemas/oAuth2Client
 - op: remove
   path: /components/schemas/OAuth2Client
 - op: replace
   path: /components/schemas/OAuth2LoginRequest/properties/client/$ref
-  value: '#/components/schemas/kratosOAuth2Client'
+  value: '#/components/schemas/oAuth2Client'
 
 - op: copy
   from: /components/schemas/OAuth2ConsentRequestOpenIDConnectContext
-  path: /components/schemas/kratosOAuth2ConsentRequestOpenIDConnectContext
+  path: /components/schemas/oAuth2ConsentRequestOpenIDConnectContext
 - op: remove
   path: /components/schemas/OAuth2ConsentRequestOpenIDConnectContext
 - op: replace
   path: /components/schemas/OAuth2LoginRequest/properties/oidc_context/$ref
-  value: '#/components/schemas/kratosOAuth2ConsentRequestOpenIDConnectContext'
+  value: '#/components/schemas/oAuth2ConsentRequestOpenIDConnectContext'
 
 - op: copy
   from: /components/schemas/OAuth2LoginRequest
-  path: /components/schemas/kratosOAuth2LoginRequest
+  path: /components/schemas/oAuth2LoginRequest
 - op: remove
   path: /components/schemas/OAuth2LoginRequest
 - op: replace
   path: /components/schemas/loginFlow/properties/oauth2_login_request/$ref
-  value: '#/components/schemas/kratosOAuth2LoginRequest'
+  value: '#/components/schemas/oAuth2LoginRequest'
 - op: replace
   path: /components/schemas/registrationFlow/properties/oauth2_login_request/$ref
-  value: '#/components/schemas/kratosOAuth2LoginRequest'
+  value: '#/components/schemas/oAuth2LoginRequest'
