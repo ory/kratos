@@ -5,7 +5,7 @@
 
 **Table of Contents**
 
-- [ (2022-11-18)](#2022-11-18)
+- [ (2022-11-21)](#2022-11-21)
   - [Breaking Changes](#breaking-changes)
     - [Bug Fixes](#bug-fixes)
     - [Code Refactoring](#code-refactoring)
@@ -280,7 +280,7 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# [](https://github.com/ory/kratos/compare/v0.10.1...v) (2022-11-18)
+# [](https://github.com/ory/kratos/compare/v0.10.1...v) (2022-11-21)
 
 ## Breaking Changes
 
@@ -578,6 +578,8 @@ SDK Method `getJsonSchema` was renamed to `getIdentitySchema`.
 
 ### Features
 
+- Add "success" UITextType ([#2900](https://github.com/ory/kratos/issues/2900))
+  ([2ff34b6](https://github.com/ory/kratos/commit/2ff34b604757c46aae5cf3cbb23f39f982341486))
 - Add admin get api for session
   ([#2855](https://github.com/ory/kratos/issues/2855))
   ([1aa1321](https://github.com/ory/kratos/commit/1aa13211d1459e7453c2ba8fec69fee1c79aecbc))
