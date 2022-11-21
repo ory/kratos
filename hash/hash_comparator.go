@@ -399,9 +399,12 @@ func decodeSSHAHash(encodedHash string) (hasher string, salt, hash []byte, err e
 	}
 
 	decoded, err := base64.StdEncoding.DecodeString(string(encodedHash[index_of_hash_begin:]))
+	if err != nil {
+		return "", nil, nil, ErrInvalidHash
+	}
 
-	if len(decoded) < index_of_salt_begin+1 || err != nil {
-		return "", nil, nil, err
+	if len(decoded) < index_of_salt_begin+1 {
+		return "", nil, nil, ErrInvalidHash
 	}
 
 	salt = decoded[index_of_salt_begin:]

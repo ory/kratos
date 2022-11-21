@@ -246,6 +246,7 @@ func TestCompare(t *testing.T) {
 	assert.Nil(t, hash.Compare(context.Background(), []byte("test123"), []byte("{SSHA}JFZFs0oHzxbMwkSJmYVeI8MnTDy/276a")))
 	assert.Nil(t, hash.CompareSSHA(context.Background(), []byte("test123"), []byte("{SSHA}JFZFs0oHzxbMwkSJmYVeI8MnTDy/276a")))
 	assert.Error(t, hash.CompareSSHA(context.Background(), []byte("badtest"), []byte("{SSHA}JFZFs0oHzxbMwkSJmYVeI8MnTDy/276a")))
+	assert.Error(t, hash.Compare(context.Background(), []byte(""), []byte("{SSHA}tooshort")))
 
 	assert.Nil(t, hash.Compare(context.Background(), []byte("test123"), []byte("{SSHA256}czO44OTV17PcF1cRxWrLZLy9xHd7CWyVYplr1rOhuMlx/7IK")))
 	assert.Nil(t, hash.CompareSSHA(context.Background(), []byte("test123"), []byte("{SSHA256}czO44OTV17PcF1cRxWrLZLy9xHd7CWyVYplr1rOhuMlx/7IK")))
