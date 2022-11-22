@@ -36,7 +36,7 @@ func TestIDs(t *testing.T) {
 	assert.Equal(t, 1070006, int(InfoNodeLabelVerifyOTP))
 	assert.Equal(t, 1070007, int(InfoNodeLabelEmail))
 	assert.Equal(t, 1070008, int(InfoNodeLabelResendOTP))
-	assert.Equal(t, 1070009, int(InfoNodeLabelReturn))
+	assert.Equal(t, 1070009, int(InfoNodeLabelContinue))
 
 	assert.Equal(t, 1080000, int(InfoSelfServiceVerification))
 
@@ -64,4 +64,9 @@ func TestIDs(t *testing.T) {
 
 	assert.Equal(t, 4060006, int(ErrorValidationRecoveryCodeInvalidOrAlreadyUsed))
 	assert.Equal(t, 4070006, int(ErrorValidationVerificationCodeInvalidOrAlreadyUsed))
+
+	assert.Equal(t, 1080000, int(InfoSelfServiceVerification))
+	assert.Equal(t, 1080001, int(InfoSelfServiceVerificationEmailSent))
+	assert.Equal(t, 1080002, int(InfoSelfServiceVerificationSuccessful))
+	assert.Equal(t, 1080003, int(InfoSelfServiceVerificationEmailWithCodeSent))
 }
