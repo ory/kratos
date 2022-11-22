@@ -178,7 +178,7 @@ type Message struct {
 	TemplateType TemplateType             `json:"template_type" db:"template_type"`
 	TemplateData []byte                   `json:"-" db:"template_data"`
 	SendCount    int                      `json:"send_count" db:"send_count"`
-	Dispatches   []CourierMessageDispatch `json:"dispatches" has_many:"courier_message_dispatches" fk_id:"message_id"`
+	Dispatches   []CourierMessageDispatch `json:"dispatches" has_many:"courier_message_dispatches" fk_id:"message_id" faker:"-"`
 
 	// CreatedAt is a helper struct field for gobuffalo.pop.
 	CreatedAt time.Time `json:"created_at" faker:"-" db:"created_at"`
