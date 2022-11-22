@@ -5,7 +5,7 @@
 
 **Table of Contents**
 
-- [ (2022-11-21)](#2022-11-21)
+- [ (2022-11-22)](#2022-11-22)
   - [Breaking Changes](#breaking-changes)
     - [Bug Fixes](#bug-fixes)
     - [Code Refactoring](#code-refactoring)
@@ -280,7 +280,7 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# [](https://github.com/ory/kratos/compare/v0.10.1...v) (2022-11-21)
+# [](https://github.com/ory/kratos/compare/v0.10.1...v) (2022-11-22)
 
 ## Breaking Changes
 
@@ -518,6 +518,13 @@ SDK Method `getJsonSchema` was renamed to `getIdentitySchema`.
 - Use process-isolated Jsonnet VM
   ([#2869](https://github.com/ory/kratos/issues/2869))
   ([9eeedc0](https://github.com/ory/kratos/commit/9eeedc06408c447077b630fff65e9ca4ed1ec59a))
+- Verification redirect & continue label
+  ([#2905](https://github.com/ory/kratos/issues/2905))
+  ([e1119e8](https://github.com/ory/kratos/commit/e1119e8f2e0372152d7d8367e7843fd5a49bf728)):
+
+  This PR resolves an issue with the redirect after a successful verification,
+  if not specified.
+
 - Wrap migration error in WithStack
   ([#2636](https://github.com/ory/kratos/issues/2636))
   ([4ce9f1e](https://github.com/ory/kratos/commit/4ce9f1ebb39cccfd36c4f0fb4a2ae2a17fbc18cc))
