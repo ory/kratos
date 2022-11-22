@@ -1041,8 +1041,8 @@ Cypress.Commands.add(
         cy.get(`button[name="method"][value="code"]`).click()
 
         if (redirectTo) {
-          cy.get(`[data-testid="node/anchor/go-back"`)
-            .contains("Return")
+          cy.get(`[data-testid="node/anchor/continue"`)
+            .contains("Continue")
             .click()
           cy.url().should("be.equal", redirectTo)
         }

@@ -50,7 +50,7 @@ func NewInfoSelfServiceSettingsUpdateSuccess() *Message {
 	return &Message{
 		ID:   InfoSelfServiceSettingsUpdateSuccess,
 		Text: "Your changes have been saved!",
-		Type: Info,
+		Type: Success,
 	}
 }
 

@@ -230,7 +230,7 @@ func (s *Strategy) verificationHandleFormSubmission(w http.ResponseWriter, r *ht
 	f.State = verification.StateEmailSent
 
 	f.UI = s.createVerificationCodeForm(flow.AppendFlowTo(urlx.AppendPaths(s.deps.Config().SelfPublicURL(r.Context()), verification.RouteSubmitFlow), f.ID).String(), nil, &body.Email)
-	f.UI.Messages.Set(text.NewVerificationEmailSent())
+	f.UI.Messages.Set(text.NewVerificationEmailWithCodeSent())
 	f.UI.SetCSRF(s.deps.GenerateCSRFToken(r))
 
 	if err := s.deps.VerificationFlowPersister().UpdateVerificationFlow(r.Context(), f); err != nil {
@@ -290,8 +290,8 @@ func (s *Strategy) verificationUseCode(w http.ResponseWriter, r *http.Request, c
 	f.UI.Messages.Set(text.NewInfoSelfServiceVerificationSuccessful())
 	f.UI.
 		Nodes.
-		Append(node.NewAnchorField("go-back", returnTo.String(), node.CodeGroup, text.NewInfoNodeLabelReturn()).
-			WithMetaLabel(text.NewInfoNodeLabelReturn()))
+		Append(node.NewAnchorField("continue", returnTo.String(), node.CodeGroup, text.NewInfoNodeLabelContinue()).
+			WithMetaLabel(text.NewInfoNodeLabelContinue()))
 
 	if err := s.deps.VerificationFlowPersister().UpdateVerificationFlow(r.Context(), f); err != nil {
 		return s.retryVerificationFlowWithError(w, r, flow.TypeBrowser, err)
@@ -301,7 +301,7 @@ func (s *Strategy) verificationUseCode(w http.ResponseWriter, r *http.Request, c
 }
 
 func (s *Strategy) getRedirectURL(ctx context.Context, f *verification.Flow) *url.URL {
-	defaultRedirectURL := s.deps.Config().SelfServiceFlowVerificationReturnTo(ctx, f.AppendTo(s.deps.Config().SelfServiceFlowVerificationUI(ctx)))
+	defaultRedirectURL := s.deps.Config().SelfServiceBrowserDefaultReturnTo(ctx)
 
 	verificationRequestURL, err := urlx.Parse(f.GetRequestURL())
 	if err != nil {
