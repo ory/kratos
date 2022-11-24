@@ -44,6 +44,7 @@ func (p *Persister) ListMessages(ctx context.Context, filter courier.ListCourier
 		q = q.Where("recipient=?", filter.Recipient)
 	}
 
+	opts = append(opts, keysetpagination.WithDefaultToken(uuid.Nil.String()))
 	paginator := keysetpagination.GetPaginator(opts...)
 
 	messages := make([]courier.Message, 0)
