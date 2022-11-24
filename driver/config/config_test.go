@@ -609,9 +609,9 @@ func TestSession(t *testing.T) {
 	p.MustSet(ctx, config.ViperKeySessionPersistentCookie, false)
 	assert.Equal(t, false, p.SessionPersistentCookie(ctx))
 
-	assert.Equal(t, true, p.SessionWhoAmICaching(ctx))
-	p.MustSet(ctx, config.ViperKeySessionWhoAmICaching, false)
 	assert.Equal(t, false, p.SessionWhoAmICaching(ctx))
+	p.MustSet(ctx, config.ViperKeySessionWhoAmICaching, true)
+	assert.Equal(t, true, p.SessionWhoAmICaching(ctx))
 }
 
 func TestCookies(t *testing.T) {

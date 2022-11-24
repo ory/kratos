@@ -5,7 +5,7 @@
 
 **Table of Contents**
 
-- [ (2022-11-22)](#2022-11-22)
+- [ (2022-11-23)](#2022-11-23)
   - [Breaking Changes](#breaking-changes)
     - [Bug Fixes](#bug-fixes)
     - [Code Refactoring](#code-refactoring)
@@ -280,7 +280,7 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# [](https://github.com/ory/kratos/compare/v0.10.1...v) (2022-11-22)
+# [](https://github.com/ory/kratos/compare/v0.10.1...v) (2022-11-23)
 
 ## Breaking Changes
 
@@ -503,6 +503,12 @@ SDK Method `getJsonSchema` was renamed to `getIdentitySchema`.
 - **sdk:** Rust compile issue with required enum
   ([#2619](https://github.com/ory/kratos/issues/2619))
   ([8800085](https://github.com/ory/kratos/commit/8800085d5bde32367217170d00f7141b7ea46733))
+- Send out correct verification invalid email in code strategy
+  ([#2908](https://github.com/ory/kratos/issues/2908))
+  ([d2bb67a](https://github.com/ory/kratos/commit/d2bb67af64d031613f2516b4848208d4f709e7b4))
+- Set cache default to false
+  ([#2906](https://github.com/ory/kratos/issues/2906))
+  ([e407f92](https://github.com/ory/kratos/commit/e407f92572b7823f70df17d463400807f14c8ae8))
 - Take over return_to param from unauthorized settings to login flow
   ([#2787](https://github.com/ory/kratos/issues/2787))
   ([504fb36](https://github.com/ory/kratos/commit/504fb36b6e72900808666dde778906a069f3c48b))
