@@ -130,7 +130,7 @@ func (h *Handler) listCourierMessages(w http.ResponseWriter, r *http.Request, _ 
 	h.r.Writer().Write(w, r, l)
 }
 
-func parseMessagesFilter(r *http.Request) (ListCourierMessagesParameters, *keysetpagination.Paginator, error) {
+func parseMessagesFilter(r *http.Request) (ListCourierMessagesParameters, []keysetpagination.Option, error) {
 	var status *MessageStatus
 
 	if r.URL.Query().Has("status") {
@@ -147,12 +147,11 @@ func parseMessagesFilter(r *http.Request) (ListCourierMessagesParameters, *keyse
 	if err != nil {
 		return ListCourierMessagesParameters{}, nil, err
 	}
-	paginator := keysetpagination.GetPaginator(opts...)
 
 	return ListCourierMessagesParameters{
 		Status:    status,
 		Recipient: r.URL.Query().Get("recipient"),
-	}, paginator, nil
+	}, opts, nil
 }
 
 // Get Courier Message Parameters

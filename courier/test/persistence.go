@@ -117,8 +117,7 @@ func TestPersister(ctx context.Context, newNetworkUnlessExisting NetworkWrapper,
 			filter := courier.ListCourierMessagesParameters{
 				Status: &status,
 			}
-			paginator := keysetpagination.GetPaginator()
-			ms, total, _, err := p.ListMessages(ctx, filter, paginator)
+			ms, total, _, err := p.ListMessages(ctx, filter, []keysetpagination.Option{})
 
 			require.NoError(t, err)
 			assert.Len(t, ms, len(messages))
@@ -127,7 +126,7 @@ func TestPersister(ctx context.Context, newNetworkUnlessExisting NetworkWrapper,
 
 			t.Run("on another network", func(t *testing.T) {
 				_, p := newNetwork(t, ctx)
-				ms, tc, _, err := p.ListMessages(ctx, filter, paginator)
+				ms, tc, _, err := p.ListMessages(ctx, filter, []keysetpagination.Option{})
 
 				require.NoError(t, err)
 				require.Len(t, ms, 0)

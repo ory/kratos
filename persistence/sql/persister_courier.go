@@ -30,7 +30,7 @@ func (p *Persister) AddMessage(ctx context.Context, m *courier.Message) error {
 	return sqlcon.HandleError(p.GetConnection(ctx).Create(m)) // do not create eager to avoid identity injection.
 }
 
-func (p *Persister) ListMessages(ctx context.Context, filter courier.ListCourierMessagesParameters, paginator *keysetpagination.Paginator) ([]courier.Message, int64, *keysetpagination.Paginator, error) {
+func (p *Persister) ListMessages(ctx context.Context, filter courier.ListCourierMessagesParameters, opts []keysetpagination.Option) ([]courier.Message, int64, *keysetpagination.Paginator, error) {
 	ctx, span := p.r.Tracer(ctx).Tracer().Start(ctx, "persistence.sql.ListMessages")
 	defer span.End()
 
@@ -43,6 +43,8 @@ func (p *Persister) ListMessages(ctx context.Context, filter courier.ListCourier
 	if filter.Recipient != "" {
 		q = q.Where("recipient=?", filter.Recipient)
 	}
+
+	paginator := keysetpagination.GetPaginator(opts...)
 
 	messages := make([]courier.Message, 0)
 	if err := q.Order("created_at DESC").
