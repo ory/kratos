@@ -7,29 +7,9 @@ import (
 	"context"
 
 	"github.com/pkg/errors"
-
-	"github.com/ory/x/uuidx"
 )
 
 func (c *courier) DispatchMessage(ctx context.Context, msg Message) error {
-	maxRetries := c.deps.CourierConfig().CourierMessageRetries(ctx)
-
-	if msg.SendCount > maxRetries {
-		if err := c.deps.CourierPersister().SetMessageStatus(ctx, msg.ID, MessageStatusAbandoned); err != nil {
-			c.deps.Logger().
-				WithError(err).
-				WithField("message_id", msg.ID).
-				Error(`Unable to reset the retried message's status to "abandoned".`)
-			return err
-		}
-
-		// Skip the message
-		c.deps.Logger().
-			WithField("message_id", msg.ID).
-			Warnf(`Message was abandoned because it did not deliver after %d attempts`, msg.SendCount)
-		return nil
-	}
-
 	if err := c.deps.CourierPersister().IncrementMessageSendCount(ctx, msg.ID); err != nil {
 		c.deps.Logger().
 			WithError(err).
@@ -70,6 +50,8 @@ func (c *courier) DispatchMessage(ctx context.Context, msg Message) error {
 }
 
 func (c *courier) DispatchQueue(ctx context.Context) error {
+	maxRetries := c.deps.CourierConfig().CourierMessageRetries(ctx)
+
 	messages, err := c.deps.CourierPersister().NextMessages(ctx, 10)
 	if err != nil {
 		if errors.Is(err, ErrQueueEmpty) {
@@ -79,14 +61,22 @@ func (c *courier) DispatchQueue(ctx context.Context) error {
 	}
 
 	for k, msg := range messages {
-		if err := c.DispatchMessage(ctx, msg); err != nil {
+		if msg.SendCount > maxRetries {
+			if err := c.deps.CourierPersister().SetMessageStatus(ctx, msg.ID, MessageStatusAbandoned); err != nil {
+				c.deps.Logger().
+					WithError(err).
+					WithField("message_id", msg.ID).
+					Error(`Unable to set the retried message's status to "abandoned".`)
+				return err
+			}
+			// Skip the message
+			c.deps.Logger().
+				WithField("message_id", msg.ID).
+				Warnf(`Message was abandoned because it did not deliver after %d attempts`, msg.SendCount)
 
-			if err := c.deps.CourierPersister().RecordDispatch(ctx, CourierMessageDispatch{
-				ID:        uuidx.NewV4(),
-				MessageID: msg.ID,
-				Error:     err.Error(),
-				Status:    CourierMessageDispatchStatusFailed,
-			}); err != nil {
+		} else if err := c.DispatchMessage(ctx, msg); err != nil {
+
+			if err := c.deps.CourierPersister().RecordDispatch(ctx, msg.ID, CourierMessageDispatchStatusFailed, err.Error()); err != nil {
 				c.deps.Logger().
 					WithError(err).
 					WithField("message_id", msg.ID).
@@ -106,19 +96,13 @@ func (c *courier) DispatchQueue(ctx context.Context) error {
 			}
 
 			return err
-		} else {
-			if err := c.deps.CourierPersister().RecordDispatch(ctx, CourierMessageDispatch{
-				ID:        uuidx.NewV4(),
-				MessageID: msg.ID,
-				Status:    CourierMessageDispatchStatusSuccess,
-			}); err != nil {
-				c.deps.Logger().
-					WithError(err).
-					WithField("message_id", msg.ID).
-					Error(`Unable to record success log entry.`)
-			}
+		} else if err := c.deps.CourierPersister().RecordDispatch(ctx, msg.ID, CourierMessageDispatchStatusSuccess, ""); err != nil {
+			c.deps.Logger().
+				WithError(err).
+				WithField("message_id", msg.ID).
+				Error(`Unable to record success log entry.`)
+			// continue with execution, as the message was successfully dispatched
 		}
-
 	}
 
 	return nil

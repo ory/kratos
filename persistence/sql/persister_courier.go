@@ -12,7 +12,9 @@ import (
 	"github.com/gofrs/uuid"
 	"github.com/pkg/errors"
 
+	"github.com/ory/x/pagination/keysetpagination"
 	"github.com/ory/x/sqlcon"
+	"github.com/ory/x/uuidx"
 
 	"github.com/ory/kratos/courier"
 )
@@ -28,7 +30,7 @@ func (p *Persister) AddMessage(ctx context.Context, m *courier.Message) error {
 	return sqlcon.HandleError(p.GetConnection(ctx).Create(m)) // do not create eager to avoid identity injection.
 }
 
-func (p *Persister) ListMessages(ctx context.Context, filter courier.ListCourierMessagesParameters) ([]courier.Message, int64, error) {
+func (p *Persister) ListMessages(ctx context.Context, filter courier.ListCourierMessagesParameters, paginator *keysetpagination.Paginator) ([]courier.Message, int64, *keysetpagination.Paginator, error) {
 	ctx, span := p.r.Tracer(ctx).Tracer().Start(ctx, "persistence.sql.ListMessages")
 	defer span.End()
 
@@ -43,16 +45,19 @@ func (p *Persister) ListMessages(ctx context.Context, filter courier.ListCourier
 	}
 
 	messages := make([]courier.Message, 0)
-	if err := q.Paginate(filter.Page, filter.PerPage).Order("created_at DESC").All(&messages); err != nil {
-		return nil, 0, sqlcon.HandleError(err)
+	if err := q.Order("created_at DESC").
+		Scope(keysetpagination.Paginate[courier.Message](paginator)).
+		All(&messages); err != nil {
+		return nil, 0, nil, sqlcon.HandleError(err)
 	}
 
 	count, err := q.Count(&courier.Message{})
 	if err != nil {
-		return nil, 0, sqlcon.HandleError(err)
+		return nil, 0, nil, sqlcon.HandleError(err)
 	}
 
-	return messages, int64(count), nil
+	messages, nextPage := keysetpagination.Result(messages, paginator)
+	return messages, int64(count), nextPage, nil
 }
 
 func (p *Persister) NextMessages(ctx context.Context, limit uint8) (messages []courier.Message, err error) {
@@ -171,11 +176,33 @@ func (p *Persister) IncrementMessageSendCount(ctx context.Context, id uuid.UUID)
 	return nil
 }
 
-func (p *Persister) RecordDispatch(ctx context.Context, dispatch courier.CourierMessageDispatch) error {
-	ctx, span := p.r.Tracer(ctx).Tracer().Start(ctx, "persistence.sql.RecordError")
+func (p *Persister) FetchMessage(ctx context.Context, msgID uuid.UUID) (*courier.Message, error) {
+	ctx, span := p.r.Tracer(ctx).Tracer().Start(ctx, "persistence.sql.FetchMessage")
 	defer span.End()
 
-	dispatch.NID = p.NetworkID(ctx)
+	var message courier.Message
+	if err := p.GetConnection(ctx).
+		Where("id = ? AND nid = ?", msgID, p.NetworkID(ctx)).
+		Eager().
+		First(&message); err != nil {
+		return nil, sqlcon.HandleError(err)
+	}
+
+	return &message, nil
+}
+
+func (p *Persister) RecordDispatch(ctx context.Context, msgID uuid.UUID, status courier.CourierMessageDispatchStatus, err string) error {
+	ctx, span := p.r.Tracer(ctx).Tracer().Start(ctx, "persistence.sql.RecordDispatch")
+	defer span.End()
+
+	dispatch := courier.MessageDispatch{
+		ID:        uuidx.NewV4(),
+		MessageID: msgID,
+		Error:     err,
+		Status:    status,
+		NID:       p.NetworkID(ctx),
+	}
+
 	if err := p.GetConnection(ctx).Create(&dispatch); err != nil {
 		return sqlcon.HandleError(err)
 	}

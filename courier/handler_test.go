@@ -49,7 +49,7 @@ func TestHandler(t *testing.T) {
 
 	var getList = func(t *testing.T, tsName string, qs string) gjson.Result {
 		t.Helper()
-		href := courier.AdminRouteMessages + qs
+		href := courier.AdminRouteListMessages + qs
 		ts := adminTS
 
 		if tsName == "public" {
@@ -187,7 +187,7 @@ func TestHandler(t *testing.T) {
 		})
 		t.Run("case=should return with http status BadRequest when given status is invalid", func(t *testing.T) {
 			qs := `?page=1&status=invalid_status`
-			res, err := adminTS.Client().Get(adminTS.URL + courier.AdminRouteMessages + qs)
+			res, err := adminTS.Client().Get(adminTS.URL + courier.AdminRouteListMessages + qs)
 
 			require.NoError(t, err)
 			assert.Equal(t, http.StatusBadRequest, res.StatusCode, "status code should be equal to StatusBadRequest")

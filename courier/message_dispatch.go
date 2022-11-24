@@ -17,15 +17,15 @@ const (
 	CourierMessageDispatchStatusSuccess CourierMessageDispatchStatus = "success"
 )
 
-// CourierMessageDispatch represents an attempt of sending a courier message
+// MessageDispatch represents an attempt of sending a courier message
 // It contains the status of the attempt (failed or successful) and the error if any occured
 //
-// swagger:model CourierMessageDispatch
-type CourierMessageDispatch struct {
+// swagger:model messageDispatch
+type MessageDispatch struct {
 	// The ID of this message dispatch
 	ID uuid.UUID `json:"id" db:"dispatch_id"`
 
-	// The ID of th message being dispatched
+	// The ID of the message being dispatched
 	MessageID uuid.UUID `json:"message_id" db:"message_id"`
 
 	// The status of this dispatch
@@ -43,6 +43,6 @@ type CourierMessageDispatch struct {
 	NID uuid.UUID `json:"-" db:"nid"`
 }
 
-func (CourierMessageDispatch) TableName() string {
+func (MessageDispatch) TableName() string {
 	return "courier_message_dispatches"
 }
