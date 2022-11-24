@@ -408,18 +408,31 @@
       },
       "authenticatorAssuranceLevel": {
         "description": "The authenticator assurance level can be one of \"aal1\", \"aal2\", or \"aal3\". A higher number means that it is harder\nfor an attacker to compromise the account.\n\nGenerally, \"aal1\" implies that one authentication factor was used while AAL2 implies that two factors (e.g.\npassword + TOTP) have been used.\n\nTo learn more about these levels please head over to: https://www.ory.sh/kratos/docs/concepts/credentials",
-        "enum": ["aal0", "aal1", "aal2", "aal3"],
+        "enum": [
+          "aal0",
+          "aal1",
+          "aal2",
+          "aal3"
+        ],
         "title": "Authenticator Assurance Level (AAL)",
         "type": "string"
       },
       "courierMessageStatus": {
         "description": "A Message's Status",
-        "enum": ["queued", "sent", "processing", "abandoned"],
+        "enum": [
+          "queued",
+          "sent",
+          "processing",
+          "abandoned"
+        ],
         "type": "string"
       },
       "courierMessageType": {
         "description": "It can either be `email` or `phone`",
-        "enum": ["email", "phone"],
+        "enum": [
+          "email",
+          "phone"
+        ],
         "title": "A Message's Type",
         "type": "string"
       },
@@ -461,7 +474,10 @@
             "type": "array"
           }
         },
-        "required": ["schema_id", "traits"],
+        "required": [
+          "schema_id",
+          "traits"
+        ],
         "type": "object"
       },
       "createRecoveryCodeForIdentityBody": {
@@ -478,7 +494,9 @@
             "type": "string"
           }
         },
-        "required": ["identity_id"],
+        "required": [
+          "identity_id"
+        ],
         "type": "object"
       },
       "createRecoveryLinkForIdentityBody": {
@@ -495,7 +513,9 @@
             "type": "string"
           }
         },
-        "required": ["identity_id"],
+        "required": [
+          "identity_id"
+        ],
         "type": "object"
       },
       "deleteMySessionsCount": {
@@ -555,7 +575,9 @@
             "type": "string"
           }
         },
-        "required": ["message"],
+        "required": [
+          "message"
+        ],
         "title": "ErrAALNotSatisfied is returned when an active session was found but the requested AAL is not satisfied.",
         "type": "object"
       },
@@ -606,7 +628,9 @@
             "type": "string"
           }
         },
-        "required": ["message"],
+        "required": [
+          "message"
+        ],
         "title": "Is sent when a flow requires a browser to change its location.",
         "type": "object"
       },
@@ -659,7 +683,9 @@
             "type": "string"
           }
         },
-        "required": ["message"],
+        "required": [
+          "message"
+        ],
         "type": "object"
       },
       "errorGeneric": {
@@ -669,7 +695,9 @@
             "$ref": "#/components/schemas/genericError"
           }
         },
-        "required": ["error"],
+        "required": [
+          "error"
+        ],
         "title": "JSON API Error Response",
         "type": "object"
       },
@@ -694,7 +722,9 @@
             "type": "string"
           }
         },
-        "required": ["id"],
+        "required": [
+          "id"
+        ],
         "type": "object"
       },
       "genericError": {
@@ -740,7 +770,9 @@
             "type": "string"
           }
         },
-        "required": ["message"],
+        "required": [
+          "message"
+        ],
         "type": "object"
       },
       "healthNotReadyStatus": {
@@ -829,7 +861,12 @@
             "x-omitempty": true
           }
         },
-        "required": ["id", "schema_id", "schema_url", "traits"],
+        "required": [
+          "id",
+          "schema_id",
+          "schema_url",
+          "traits"
+        ],
         "title": "Identity represents an Ory Kratos identity",
         "type": "object"
       },
@@ -912,7 +949,13 @@
       },
       "identityCredentialsType": {
         "description": "and so on.",
-        "enum": ["password", "totp", "oidc", "webauthn", "lookup_secret"],
+        "enum": [
+          "password",
+          "totp",
+          "oidc",
+          "webauthn",
+          "lookup_secret"
+        ],
         "title": "CredentialsType  represents several different credential types, like password credentials, passwordless credentials,",
         "type": "string"
       },
@@ -942,7 +985,10 @@
       },
       "identityState": {
         "description": "The state can either be `active` or `inactive`.",
-        "enum": ["active", "inactive"],
+        "enum": [
+          "active",
+          "inactive"
+        ],
         "title": "An Identity's State",
         "type": "string"
       },
@@ -1005,7 +1051,10 @@
             "type": "string"
           }
         },
-        "required": ["subject", "provider"],
+        "required": [
+          "subject",
+          "provider"
+        ],
         "type": "object"
       },
       "identityWithCredentialsPassword": {
@@ -1054,7 +1103,10 @@
             "example": "foobar"
           }
         },
-        "required": ["op", "path"],
+        "required": [
+          "op",
+          "path"
+        ],
         "type": "object"
       },
       "jsonPatchDocument": {
@@ -1146,7 +1198,10 @@
             "type": "string"
           }
         },
-        "required": ["logout_url", "logout_token"],
+        "required": [
+          "logout_url",
+          "logout_token"
+        ],
         "type": "object"
       },
       "message": {
@@ -1161,7 +1216,7 @@
           },
           "dispatches": {
             "items": {
-              "$ref": "#/components/schemas/CourierMessageDispatch"
+              "$ref": "#/components/schemas/messageDispatch"
             },
             "type": "array"
           },
@@ -1200,6 +1255,45 @@
           },
           "type": {
             "$ref": "#/components/schemas/courierMessageType"
+          },
+          "updated_at": {
+            "description": "UpdatedAt is a helper struct field for gobuffalo.pop.",
+            "format": "date-time",
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "messageDispatch": {
+        "description": "MessageDispatch represents an attempt of sending a courier message\nIt contains the status of the attempt (failed or successful) and the error if any occured",
+        "properties": {
+          "created_at": {
+            "description": "CreatedAt is a helper struct field for gobuffalo.pop.",
+            "format": "date-time",
+            "type": "string"
+          },
+          "error": {
+            "description": "An optional error",
+            "type": "string"
+          },
+          "id": {
+            "description": "The ID of this message dispatch",
+            "format": "uuid",
+            "type": "string"
+          },
+          "message_id": {
+            "description": "The ID of the message being dispatched",
+            "format": "uuid",
+            "type": "string"
+          },
+          "status": {
+            "description": "The status of this dispatch\nEither \"failed\" or \"success\"\nfailed CourierMessageDispatchStatusFailed\nsuccess CourierMessageDispatchStatusSuccess",
+            "enum": [
+              "failed",
+              "success"
+            ],
+            "type": "string",
+            "x-go-enum-desc": "failed CourierMessageDispatchStatusFailed\nsuccess CourierMessageDispatchStatusSuccess"
           },
           "updated_at": {
             "description": "UpdatedAt is a helper struct field for gobuffalo.pop.",
@@ -1256,7 +1350,10 @@
             "type": "string"
           }
         },
-        "required": ["message", "redirect_browser_to"],
+        "required": [
+          "message",
+          "redirect_browser_to"
+        ],
         "title": "Is sent when a privileged session is required to perform the settings update.",
         "type": "object"
       },
@@ -1306,7 +1403,9 @@
             "type": "string"
           }
         },
-        "required": ["session_token"],
+        "required": [
+          "session_token"
+        ],
         "title": "Perform Native Logout Request Body",
         "type": "object"
       },
@@ -1327,7 +1426,10 @@
             "type": "string"
           }
         },
-        "required": ["recovery_link", "recovery_code"],
+        "required": [
+          "recovery_link",
+          "recovery_code"
+        ],
         "title": "Recovery Code for Identity",
         "type": "object"
       },
@@ -1385,7 +1487,11 @@
       },
       "recoveryFlowState": {
         "description": "The state represents the state of the recovery flow.\n\nchoose_method: ask the user to choose a method (e.g. recover account via email)\nsent_email: the email has been sent to the user\npassed_challenge: the request was successful and the recovery challenge was passed.",
-        "enum": ["choose_method", "sent_email", "passed_challenge"],
+        "enum": [
+          "choose_method",
+          "sent_email",
+          "passed_challenge"
+        ],
         "title": "Recovery Flow State",
         "type": "string"
       },
@@ -1412,7 +1518,11 @@
             "$ref": "#/components/schemas/RecoveryAddressType"
           }
         },
-        "required": ["id", "value", "via"],
+        "required": [
+          "id",
+          "value",
+          "via"
+        ],
         "type": "object"
       },
       "recoveryLinkForIdentity": {
@@ -1428,7 +1538,9 @@
             "type": "string"
           }
         },
-        "required": ["recovery_link"],
+        "required": [
+          "recovery_link"
+        ],
         "title": "Identity Recovery Link",
         "type": "object"
       },
@@ -1540,7 +1652,9 @@
             "type": "string"
           }
         },
-        "required": ["message"],
+        "required": [
+          "message"
+        ],
         "type": "object"
       },
       "selfServiceFlowType": {
@@ -1592,7 +1706,10 @@
             "type": "string"
           }
         },
-        "required": ["id", "identity"],
+        "required": [
+          "id",
+          "identity"
+        ],
         "type": "object"
       },
       "sessionAuthenticationMethod": {
@@ -1653,7 +1770,9 @@
             "type": "string"
           }
         },
-        "required": ["id"],
+        "required": [
+          "id"
+        ],
         "type": "object"
       },
       "settingsFlow": {
@@ -1714,7 +1833,10 @@
       },
       "settingsFlowState": {
         "description": "show_form: No user data has been collected, or it is invalid, and thus the form should be shown.\nsuccess: Indicates that the settings flow has been updated successfully with the provided data.\nDone will stay true when repeatedly checking. If set to true, done will revert back to false only\nwhen a flow with invalid (e.g. \"please use a valid phone number\") data was sent.",
-        "enum": ["show_form", "success"],
+        "enum": [
+          "show_form",
+          "success"
+        ],
         "title": "State represents the state of this flow. It knows two states:",
         "type": "string"
       },
@@ -1729,7 +1851,9 @@
             "type": "string"
           }
         },
-        "required": ["session"],
+        "required": [
+          "session"
+        ],
         "type": "object"
       },
       "successfulNativeRegistration": {
@@ -1746,7 +1870,9 @@
             "type": "string"
           }
         },
-        "required": ["identity"],
+        "required": [
+          "identity"
+        ],
         "type": "object"
       },
       "tokenPagination": {
@@ -1799,7 +1925,11 @@
             "$ref": "#/components/schemas/uiNodes"
           }
         },
-        "required": ["action", "method", "nodes"],
+        "required": [
+          "action",
+          "method",
+          "nodes"
+        ],
         "type": "object"
       },
       "uiNode": {
@@ -1832,12 +1962,24 @@
           },
           "type": {
             "description": "The node's type\ntext Text\ninput Input\nimg Image\na Anchor\nscript Script",
-            "enum": ["text", "input", "img", "a", "script"],
+            "enum": [
+              "text",
+              "input",
+              "img",
+              "a",
+              "script"
+            ],
             "type": "string",
             "x-go-enum-desc": "text Text\ninput Input\nimg Image\na Anchor\nscript Script"
           }
         },
-        "required": ["type", "group", "attributes", "messages", "meta"],
+        "required": [
+          "type",
+          "group",
+          "attributes",
+          "messages",
+          "meta"
+        ],
         "title": "Node represents a flow's nodes",
         "type": "object"
       },
@@ -1859,7 +2001,12 @@
             "$ref": "#/components/schemas/uiText"
           }
         },
-        "required": ["href", "title", "id", "node_type"],
+        "required": [
+          "href",
+          "title",
+          "id",
+          "node_type"
+        ],
         "title": "AnchorAttributes represents the attributes of an anchor node.",
         "type": "object"
       },
@@ -1918,7 +2065,13 @@
             "type": "integer"
           }
         },
-        "required": ["src", "id", "width", "height", "node_type"],
+        "required": [
+          "src",
+          "id",
+          "width",
+          "height",
+          "node_type"
+        ],
         "title": "ImageAttributes represents the attributes of an image node.",
         "type": "object"
       },
@@ -1989,7 +2142,12 @@
             "nullable": true
           }
         },
-        "required": ["name", "type", "disabled", "node_type"],
+        "required": [
+          "name",
+          "type",
+          "disabled",
+          "node_type"
+        ],
         "type": "object"
       },
       "uiNodeMeta": {
@@ -2069,7 +2227,11 @@
             "$ref": "#/components/schemas/uiText"
           }
         },
-        "required": ["text", "id", "node_type"],
+        "required": [
+          "text",
+          "id",
+          "node_type"
+        ],
         "title": "TextAttributes represents the attributes of a text node.",
         "type": "object"
       },
@@ -2103,7 +2265,11 @@
             "x-go-enum-desc": "info Info\nerror Error\nsuccess Success"
           }
         },
-        "required": ["id", "text", "type"],
+        "required": [
+          "id",
+          "text",
+          "type"
+        ],
         "type": "object"
       },
       "uiTexts": {
@@ -2136,7 +2302,11 @@
             "type": "object"
           }
         },
-        "required": ["schema_id", "traits", "state"],
+        "required": [
+          "schema_id",
+          "traits",
+          "state"
+        ],
         "type": "object"
       },
       "updateLoginFlowBody": {
@@ -2184,7 +2354,10 @@
             "type": "string"
           }
         },
-        "required": ["method", "lookup_secret"],
+        "required": [
+          "method",
+          "lookup_secret"
+        ],
         "type": "object"
       },
       "updateLoginFlowWithOidcMethod": {
@@ -2207,7 +2380,10 @@
             "type": "object"
           }
         },
-        "required": ["provider", "method"],
+        "required": [
+          "provider",
+          "method"
+        ],
         "type": "object"
       },
       "updateLoginFlowWithPasswordMethod": {
@@ -2234,7 +2410,11 @@
             "type": "string"
           }
         },
-        "required": ["method", "password", "identifier"],
+        "required": [
+          "method",
+          "password",
+          "identifier"
+        ],
         "type": "object"
       },
       "updateLoginFlowWithTotpMethod": {
@@ -2253,7 +2433,10 @@
             "type": "string"
           }
         },
-        "required": ["method", "totp_code"],
+        "required": [
+          "method",
+          "totp_code"
+        ],
         "type": "object"
       },
       "updateLoginFlowWithWebAuthnMethod": {
@@ -2276,7 +2459,10 @@
             "type": "string"
           }
         },
-        "required": ["identifier", "method"],
+        "required": [
+          "identifier",
+          "method"
+        ],
         "type": "object"
       },
       "updateRecoveryFlowBody": {
@@ -2317,7 +2503,9 @@
             "type": "string"
           }
         },
-        "required": ["method"],
+        "required": [
+          "method"
+        ],
         "type": "object"
       },
       "updateRecoveryFlowWithLinkMethod": {
@@ -2336,7 +2524,10 @@
             "type": "string"
           }
         },
-        "required": ["email", "method"],
+        "required": [
+          "email",
+          "method"
+        ],
         "type": "object"
       },
       "updateRegistrationFlowBody": {
@@ -2381,7 +2572,10 @@
             "type": "object"
           }
         },
-        "required": ["provider", "method"],
+        "required": [
+          "provider",
+          "method"
+        ],
         "type": "object"
       },
       "updateRegistrationFlowWithPasswordMethod": {
@@ -2404,7 +2598,11 @@
             "type": "object"
           }
         },
-        "required": ["password", "traits", "method"],
+        "required": [
+          "password",
+          "traits",
+          "method"
+        ],
         "type": "object"
       },
       "updateRegistrationFlowWithWebAuthnMethod": {
@@ -2431,7 +2629,10 @@
             "type": "string"
           }
         },
-        "required": ["traits", "method"],
+        "required": [
+          "traits",
+          "method"
+        ],
         "type": "object"
       },
       "updateSettingsFlowBody": {
@@ -2499,7 +2700,9 @@
             "type": "string"
           }
         },
-        "required": ["method"],
+        "required": [
+          "method"
+        ],
         "type": "object"
       },
       "updateSettingsFlowWithOidcMethod": {
@@ -2526,7 +2729,9 @@
             "type": "string"
           }
         },
-        "required": ["method"],
+        "required": [
+          "method"
+        ],
         "title": "Update Settings Flow with OpenID Connect Method",
         "type": "object"
       },
@@ -2546,7 +2751,10 @@
             "type": "string"
           }
         },
-        "required": ["password", "method"],
+        "required": [
+          "password",
+          "method"
+        ],
         "type": "object"
       },
       "updateSettingsFlowWithProfileMethod": {
@@ -2565,7 +2773,10 @@
             "type": "object"
           }
         },
-        "required": ["traits", "method"],
+        "required": [
+          "traits",
+          "method"
+        ],
         "title": "Update Settings Flow with Profile Method",
         "type": "object"
       },
@@ -2589,7 +2800,9 @@
             "type": "boolean"
           }
         },
-        "required": ["method"],
+        "required": [
+          "method"
+        ],
         "type": "object"
       },
       "updateSettingsFlowWithWebAuthnMethod": {
@@ -2616,7 +2829,9 @@
             "type": "string"
           }
         },
-        "required": ["method"],
+        "required": [
+          "method"
+        ],
         "type": "object"
       },
       "updateVerificationFlowBody": {
@@ -2675,7 +2890,10 @@
             "type": "string"
           }
         },
-        "required": ["email", "method"],
+        "required": [
+          "email",
+          "method"
+        ],
         "type": "object"
       },
       "verifiableIdentityAddress": {
@@ -2717,7 +2935,12 @@
             "$ref": "#/components/schemas/identityVerifiableAddressType"
           }
         },
-        "required": ["value", "verified", "via", "status"],
+        "required": [
+          "value",
+          "verified",
+          "via",
+          "status"
+        ],
         "type": "object"
       },
       "verificationFlow": {
@@ -2760,13 +2983,22 @@
             "$ref": "#/components/schemas/uiContainer"
           }
         },
-        "required": ["id", "type", "ui", "state"],
+        "required": [
+          "id",
+          "type",
+          "ui",
+          "state"
+        ],
         "title": "A Verification Flow",
         "type": "object"
       },
       "verificationFlowState": {
         "description": "The state represents the state of the verification flow.\n\nchoose_method: ask the user to choose a method (e.g. recover account via email)\nsent_email: the email has been sent to the user\npassed_challenge: the request was successful and the recovery challenge was passed.",
-        "enum": ["choose_method", "sent_email", "passed_challenge"],
+        "enum": [
+          "choose_method",
+          "sent_email",
+          "passed_challenge"
+        ],
         "title": "Verification Flow State",
         "type": "string"
       },
@@ -2821,7 +3053,9 @@
           }
         },
         "summary": "Get WebAuthn JavaScript",
-        "tags": ["frontend"]
+        "tags": [
+          "frontend"
+        ]
       }
     },
     "/admin/courier/messages": {
@@ -2897,7 +3131,67 @@
           }
         ],
         "summary": "List Messages",
-        "tags": ["courier"]
+        "tags": [
+          "courier"
+        ]
+      }
+    },
+    "/admin/courier/messages/{id}": {
+      "get": {
+        "description": "Gets a specific messages by the given ID.",
+        "operationId": "getCourierMessage",
+        "parameters": [
+          {
+            "description": "MessageID is the ID of the message.",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/message"
+                }
+              }
+            },
+            "description": "message"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/errorGeneric"
+                }
+              }
+            },
+            "description": "errorGeneric"
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/errorGeneric"
+                }
+              }
+            },
+            "description": "errorGeneric"
+          }
+        },
+        "security": [
+          {
+            "oryAccessToken": []
+          }
+        ],
+        "summary": "Get a Message",
+        "tags": [
+          "courier"
+        ]
       }
     },
     "/admin/identities": {
@@ -2950,7 +3244,9 @@
           }
         ],
         "summary": "List Identities",
-        "tags": ["identity"]
+        "tags": [
+          "identity"
+        ]
       },
       "post": {
         "description": "Create an [identity](https://www.ory.sh/docs/kratos/concepts/identity-user-model).  This endpoint can also be used to\n[import credentials](https://www.ory.sh/docs/kratos/manage-identities/import-user-accounts-identities)\nfor instance passwords, social sign in configurations or multifactor methods.",
@@ -3013,7 +3309,9 @@
           }
         ],
         "summary": "Create an Identity",
-        "tags": ["identity"]
+        "tags": [
+          "identity"
+        ]
       }
     },
     "/admin/identities/{id}": {
@@ -3062,7 +3360,9 @@
           }
         ],
         "summary": "Delete an Identity",
-        "tags": ["identity"]
+        "tags": [
+          "identity"
+        ]
       },
       "get": {
         "description": "Return an [identity](https://www.ory.sh/docs/kratos/concepts/identity-user-model) by its ID. You can optionally\ninclude credentials (e.g. social sign in connections) in the response by using the `include_credential` query parameter.",
@@ -3127,7 +3427,9 @@
           }
         ],
         "summary": "Get an Identity",
-        "tags": ["identity"]
+        "tags": [
+          "identity"
+        ]
       },
       "patch": {
         "description": "Partially updates an [identity's](https://www.ory.sh/docs/kratos/concepts/identity-user-model) field using [JSON Patch](https://jsonpatch.com/).\nThe fields `id`, `stateChangedAt` and `credentials` can not be updated using this method.",
@@ -3211,7 +3513,9 @@
           }
         ],
         "summary": "Patch an Identity",
-        "tags": ["identity"]
+        "tags": [
+          "identity"
+        ]
       },
       "put": {
         "description": "This endpoint updates an [identity](https://www.ory.sh/docs/kratos/concepts/identity-user-model). The full identity\npayload (except credentials) is expected. It is possible to update the identity's credentials as well.",
@@ -3295,7 +3599,9 @@
           }
         ],
         "summary": "Update an Identity",
-        "tags": ["identity"]
+        "tags": [
+          "identity"
+        ]
       }
     },
     "/admin/identities/{id}/sessions": {
@@ -3364,7 +3670,9 @@
           }
         ],
         "summary": "Delete \u0026 Invalidate an Identity's Sessions",
-        "tags": ["identity"]
+        "tags": [
+          "identity"
+        ]
       },
       "get": {
         "description": "This endpoint returns all sessions that belong to the given Identity.",
@@ -3452,7 +3760,9 @@
           }
         ],
         "summary": "List an Identity's Sessions",
-        "tags": ["identity"]
+        "tags": [
+          "identity"
+        ]
       }
     },
     "/admin/recovery/code": {
@@ -3512,7 +3822,9 @@
           }
         },
         "summary": "Create a Recovery Code",
-        "tags": ["identity"]
+        "tags": [
+          "identity"
+        ]
       }
     },
     "/admin/recovery/link": {
@@ -3572,7 +3884,9 @@
           }
         },
         "summary": "Create a Recovery Link",
-        "tags": ["identity"]
+        "tags": [
+          "identity"
+        ]
       }
     },
     "/admin/sessions": {
@@ -3614,7 +3928,10 @@
             "name": "expand",
             "schema": {
               "items": {
-                "enum": ["Devices", "Identity"],
+                "enum": [
+                  "Devices",
+                  "Identity"
+                ],
                 "type": "string"
               },
               "type": "array"
@@ -3652,7 +3969,9 @@
           }
         ],
         "summary": "List All Sessions",
-        "tags": ["identity"]
+        "tags": [
+          "identity"
+        ]
       }
     },
     "/admin/sessions/{id}": {
@@ -3706,7 +4025,9 @@
           }
         },
         "summary": "Deactivate a Session",
-        "tags": ["identity"]
+        "tags": [
+          "identity"
+        ]
       },
       "get": {
         "description": "This endpoint is useful for:\n\nGetting a session object with all specified expandables that exist in an administrative context.",
@@ -3718,7 +4039,10 @@
             "name": "expand",
             "schema": {
               "items": {
-                "enum": ["Devices", "Identity"],
+                "enum": [
+                  "Devices",
+                  "Identity"
+                ],
                 "type": "string"
               },
               "type": "array"
@@ -3772,7 +4096,9 @@
           }
         ],
         "summary": "This endpoint returns the session object with expandables specified.",
-        "tags": ["identity"]
+        "tags": [
+          "identity"
+        ]
       }
     },
     "/admin/sessions/{id}/extend": {
@@ -3838,7 +4164,9 @@
           }
         ],
         "summary": "Extend a Session",
-        "tags": ["identity"]
+        "tags": [
+          "identity"
+        ]
       }
     },
     "/health/alive": {
@@ -3856,7 +4184,9 @@
                       "type": "string"
                     }
                   },
-                  "required": ["status"],
+                  "required": [
+                    "status"
+                  ],
                   "type": "object"
                 }
               }
@@ -3875,7 +4205,9 @@
           }
         },
         "summary": "Check HTTP Server Status",
-        "tags": ["metadata"]
+        "tags": [
+          "metadata"
+        ]
       }
     },
     "/health/ready": {
@@ -3893,7 +4225,9 @@
                       "type": "string"
                     }
                   },
-                  "required": ["status"],
+                  "required": [
+                    "status"
+                  ],
                   "type": "object"
                 }
               }
@@ -3913,7 +4247,9 @@
                       "type": "object"
                     }
                   },
-                  "required": ["errors"],
+                  "required": [
+                    "errors"
+                  ],
                   "type": "object"
                 }
               }
@@ -3922,7 +4258,9 @@
           }
         },
         "summary": "Check HTTP Server and Database Status",
-        "tags": ["metadata"]
+        "tags": [
+          "metadata"
+        ]
       }
     },
     "/schemas": {
@@ -3970,7 +4308,9 @@
           }
         },
         "summary": "Get all Identity Schemas",
-        "tags": ["identity"]
+        "tags": [
+          "identity"
+        ]
       }
     },
     "/schemas/{id}": {
@@ -4021,7 +4361,9 @@
           }
         },
         "summary": "Get Identity JSON Schema",
-        "tags": ["identity"]
+        "tags": [
+          "identity"
+        ]
       }
     },
     "/self-service/errors": {
@@ -4082,7 +4424,9 @@
           }
         },
         "summary": "Get User-Flow Errors",
-        "tags": ["frontend"]
+        "tags": [
+          "frontend"
+        ]
       }
     },
     "/self-service/login": {
@@ -4188,7 +4532,9 @@
           }
         },
         "summary": "Submit a Login Flow",
-        "tags": ["frontend"]
+        "tags": [
+          "frontend"
+        ]
       }
     },
     "/self-service/login/api": {
@@ -4254,7 +4600,9 @@
           }
         },
         "summary": "Create Login Flow for Native Apps",
-        "tags": ["frontend"]
+        "tags": [
+          "frontend"
+        ]
       }
     },
     "/self-service/login/browser": {
@@ -4339,7 +4687,9 @@
           }
         },
         "summary": "Create Login Flow for Browsers",
-        "tags": ["frontend"]
+        "tags": [
+          "frontend"
+        ]
       }
     },
     "/self-service/login/flows": {
@@ -4418,7 +4768,9 @@
           }
         },
         "summary": "Get Login Flow",
-        "tags": ["frontend"]
+        "tags": [
+          "frontend"
+        ]
       }
     },
     "/self-service/logout": {
@@ -4462,7 +4814,9 @@
           }
         },
         "summary": "Update Logout Flow",
-        "tags": ["frontend"]
+        "tags": [
+          "frontend"
+        ]
       }
     },
     "/self-service/logout/api": {
@@ -4506,7 +4860,9 @@
           }
         },
         "summary": "Perform Logout for Native Apps",
-        "tags": ["frontend"]
+        "tags": [
+          "frontend"
+        ]
       }
     },
     "/self-service/logout/browser": {
@@ -4556,7 +4912,9 @@
           }
         },
         "summary": "Create a Logout URL for Browsers",
-        "tags": ["frontend"]
+        "tags": [
+          "frontend"
+        ]
       }
     },
     "/self-service/recovery": {
@@ -4662,7 +5020,9 @@
           }
         },
         "summary": "Complete Recovery Flow",
-        "tags": ["frontend"]
+        "tags": [
+          "frontend"
+        ]
       }
     },
     "/self-service/recovery/api": {
@@ -4702,7 +5062,9 @@
           }
         },
         "summary": "Create Recovery Flow for Native Apps",
-        "tags": ["frontend"]
+        "tags": [
+          "frontend"
+        ]
       }
     },
     "/self-service/recovery/browser": {
@@ -4755,7 +5117,9 @@
           }
         },
         "summary": "Create Recovery Flow for Browsers",
-        "tags": ["frontend"]
+        "tags": [
+          "frontend"
+        ]
       }
     },
     "/self-service/recovery/flows": {
@@ -4824,7 +5188,9 @@
           }
         },
         "summary": "Get Recovery Flow",
-        "tags": ["frontend"]
+        "tags": [
+          "frontend"
+        ]
       }
     },
     "/self-service/registration": {
@@ -4922,7 +5288,9 @@
           }
         },
         "summary": "Update Registration Flow",
-        "tags": ["frontend"]
+        "tags": [
+          "frontend"
+        ]
       }
     },
     "/self-service/registration/api": {
@@ -4962,7 +5330,9 @@
           }
         },
         "summary": "Create Registration Flow for Native Apps",
-        "tags": ["frontend"]
+        "tags": [
+          "frontend"
+        ]
       }
     },
     "/self-service/registration/browser": {
@@ -5013,7 +5383,9 @@
           }
         },
         "summary": "Create Registration Flow for Browsers",
-        "tags": ["frontend"]
+        "tags": [
+          "frontend"
+        ]
       }
     },
     "/self-service/registration/flows": {
@@ -5092,7 +5464,9 @@
           }
         },
         "summary": "Get Registration Flow",
-        "tags": ["frontend"]
+        "tags": [
+          "frontend"
+        ]
       }
     },
     "/self-service/settings": {
@@ -5223,7 +5597,9 @@
           }
         ],
         "summary": "Complete Settings Flow",
-        "tags": ["frontend"]
+        "tags": [
+          "frontend"
+        ]
       }
     },
     "/self-service/settings/api": {
@@ -5273,7 +5649,9 @@
           }
         },
         "summary": "Create Settings Flow for Native Apps",
-        "tags": ["frontend"]
+        "tags": [
+          "frontend"
+        ]
       }
     },
     "/self-service/settings/browser": {
@@ -5354,7 +5732,9 @@
           }
         },
         "summary": "Create Settings Flow for Browsers",
-        "tags": ["frontend"]
+        "tags": [
+          "frontend"
+        ]
       }
     },
     "/self-service/settings/flows": {
@@ -5451,7 +5831,9 @@
           }
         },
         "summary": "Get Settings Flow",
-        "tags": ["frontend"]
+        "tags": [
+          "frontend"
+        ]
       }
     },
     "/self-service/verification": {
@@ -5547,7 +5929,9 @@
           }
         },
         "summary": "Complete Verification Flow",
-        "tags": ["frontend"]
+        "tags": [
+          "frontend"
+        ]
       }
     },
     "/self-service/verification/api": {
@@ -5587,7 +5971,9 @@
           }
         },
         "summary": "Create Verification Flow for Native Apps",
-        "tags": ["frontend"]
+        "tags": [
+          "frontend"
+        ]
       }
     },
     "/self-service/verification/browser": {
@@ -5630,7 +6016,9 @@
           }
         },
         "summary": "Create Verification Flow for Browser Clients",
-        "tags": ["frontend"]
+        "tags": [
+          "frontend"
+        ]
       }
     },
     "/self-service/verification/flows": {
@@ -5699,7 +6087,9 @@
           }
         },
         "summary": "Get Verification Flow",
-        "tags": ["frontend"]
+        "tags": [
+          "frontend"
+        ]
       }
     },
     "/sessions": {
@@ -5767,7 +6157,9 @@
           }
         },
         "summary": "Disable my other sessions",
-        "tags": ["frontend"]
+        "tags": [
+          "frontend"
+        ]
       },
       "get": {
         "description": "This endpoints returns all other active sessions that belong to the logged-in user.\nThe current session can be retrieved by calling the `/sessions/whoami` endpoint.",
@@ -5849,7 +6241,9 @@
           }
         },
         "summary": "Get My Active Sessions",
-        "tags": ["frontend"]
+        "tags": [
+          "frontend"
+        ]
       }
     },
     "/sessions/whoami": {
@@ -5919,7 +6313,9 @@
           }
         },
         "summary": "Check Who the Current HTTP Session Belongs To",
-        "tags": ["frontend"]
+        "tags": [
+          "frontend"
+        ]
       }
     },
     "/sessions/{id}": {
@@ -5989,7 +6385,9 @@
           }
         },
         "summary": "Disable one of my sessions",
-        "tags": ["frontend"]
+        "tags": [
+          "frontend"
+        ]
       }
     },
     "/version": {
@@ -6007,7 +6405,9 @@
                       "type": "string"
                     }
                   },
-                  "required": ["version"],
+                  "required": [
+                    "version"
+                  ],
                   "type": "object"
                 }
               }
@@ -6016,7 +6416,9 @@
           }
         },
         "summary": "Return Running Software Version.",
-        "tags": ["metadata"]
+        "tags": [
+          "metadata"
+        ]
       }
     }
   },

@@ -21,6 +21,7 @@ type Message struct {
 	Body *string `json:"body,omitempty"`
 	// CreatedAt is a helper struct field for gobuffalo.pop.
 	CreatedAt    *time.Time            `json:"created_at,omitempty"`
+	Dispatches   []MessageDispatch     `json:"dispatches,omitempty"`
 	Id           *string               `json:"id,omitempty"`
 	Recipient    *string               `json:"recipient,omitempty"`
 	SendCount    *int64                `json:"send_count,omitempty"`
@@ -111,6 +112,38 @@ func (o *Message) HasCreatedAt() bool {
 // SetCreatedAt gets a reference to the given time.Time and assigns it to the CreatedAt field.
 func (o *Message) SetCreatedAt(v time.Time) {
 	o.CreatedAt = &v
+}
+
+// GetDispatches returns the Dispatches field value if set, zero value otherwise.
+func (o *Message) GetDispatches() []MessageDispatch {
+	if o == nil || o.Dispatches == nil {
+		var ret []MessageDispatch
+		return ret
+	}
+	return o.Dispatches
+}
+
+// GetDispatchesOk returns a tuple with the Dispatches field value if set, nil otherwise
+// and a boolean to check if the value has been set.
+func (o *Message) GetDispatchesOk() ([]MessageDispatch, bool) {
+	if o == nil || o.Dispatches == nil {
+		return nil, false
+	}
+	return o.Dispatches, true
+}
+
+// HasDispatches returns a boolean if a field has been set.
+func (o *Message) HasDispatches() bool {
+	if o != nil && o.Dispatches != nil {
+		return true
+	}
+
+	return false
+}
+
+// SetDispatches gets a reference to the given []MessageDispatch and assigns it to the Dispatches field.
+func (o *Message) SetDispatches(v []MessageDispatch) {
+	o.Dispatches = v
 }
 
 // GetId returns the Id field value if set, zero value otherwise.
@@ -376,6 +409,9 @@ func (o Message) MarshalJSON() ([]byte, error) {
 	}
 	if o.CreatedAt != nil {
 		toSerialize["created_at"] = o.CreatedAt
+	}
+	if o.Dispatches != nil {
+		toSerialize["dispatches"] = o.Dispatches
 	}
 	if o.Id != nil {
 		toSerialize["id"] = o.Id

@@ -20,15 +20,15 @@ import (
 type Message struct {
 	Body *string `json:"body,omitempty"`
 	// CreatedAt is a helper struct field for gobuffalo.pop.
-	CreatedAt    *time.Time               `json:"created_at,omitempty"`
-	Dispatches   []CourierMessageDispatch `json:"dispatches,omitempty"`
-	Id           *string                  `json:"id,omitempty"`
-	Recipient    *string                  `json:"recipient,omitempty"`
-	SendCount    *int64                   `json:"send_count,omitempty"`
-	Status       *CourierMessageStatus    `json:"status,omitempty"`
-	Subject      *string                  `json:"subject,omitempty"`
-	TemplateType *string                  `json:"template_type,omitempty"`
-	Type         *CourierMessageType      `json:"type,omitempty"`
+	CreatedAt    *time.Time            `json:"created_at,omitempty"`
+	Dispatches   []MessageDispatch     `json:"dispatches,omitempty"`
+	Id           *string               `json:"id,omitempty"`
+	Recipient    *string               `json:"recipient,omitempty"`
+	SendCount    *int64                `json:"send_count,omitempty"`
+	Status       *CourierMessageStatus `json:"status,omitempty"`
+	Subject      *string               `json:"subject,omitempty"`
+	TemplateType *string               `json:"template_type,omitempty"`
+	Type         *CourierMessageType   `json:"type,omitempty"`
 	// UpdatedAt is a helper struct field for gobuffalo.pop.
 	UpdatedAt *time.Time `json:"updated_at,omitempty"`
 }
@@ -115,9 +115,9 @@ func (o *Message) SetCreatedAt(v time.Time) {
 }
 
 // GetDispatches returns the Dispatches field value if set, zero value otherwise.
-func (o *Message) GetDispatches() []CourierMessageDispatch {
+func (o *Message) GetDispatches() []MessageDispatch {
 	if o == nil || o.Dispatches == nil {
-		var ret []CourierMessageDispatch
+		var ret []MessageDispatch
 		return ret
 	}
 	return o.Dispatches
@@ -125,7 +125,7 @@ func (o *Message) GetDispatches() []CourierMessageDispatch {
 
 // GetDispatchesOk returns a tuple with the Dispatches field value if set, nil otherwise
 // and a boolean to check if the value has been set.
-func (o *Message) GetDispatchesOk() ([]CourierMessageDispatch, bool) {
+func (o *Message) GetDispatchesOk() ([]MessageDispatch, bool) {
 	if o == nil || o.Dispatches == nil {
 		return nil, false
 	}
@@ -141,8 +141,8 @@ func (o *Message) HasDispatches() bool {
 	return false
 }
 
-// SetDispatches gets a reference to the given []CourierMessageDispatch and assigns it to the Dispatches field.
-func (o *Message) SetDispatches(v []CourierMessageDispatch) {
+// SetDispatches gets a reference to the given []MessageDispatch and assigns it to the Dispatches field.
+func (o *Message) SetDispatches(v []MessageDispatch) {
 	o.Dispatches = v
 }
 
