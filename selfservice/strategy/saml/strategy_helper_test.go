@@ -31,6 +31,7 @@ import (
 	"github.com/ory/kratos/internal/testhelpers"
 	"github.com/ory/kratos/selfservice/strategy/saml"
 	"github.com/ory/kratos/x"
+	"github.com/ory/x/fetcher"
 )
 
 var TimeNow = func() time.Time { return time.Now().UTC() }
@@ -162,7 +163,10 @@ func InitTestMiddlewareWithoutMetadata(t *testing.T, idpSsoUrl string, idpEntity
 
 func GetAndDecryptAssertion(t *testing.T, samlResponseFile string, key *rsa.PrivateKey) (*crewjamsaml.Assertion, error) {
 	// Load saml response test file
-	samlResponse, err := ioutil.ReadFile(samlResponseFile)
+	samlResponseBuffer, err := fetcher.NewFetcher().Fetch("file://" + samlResponseFile)
+	require.NoError(t, err)
+
+	samlResponse, err := ioutil.ReadAll(samlResponseBuffer)
 	require.NoError(t, err)
 
 	// Decrypt saml response assertion

@@ -10,6 +10,7 @@ import (
 	"testing"
 
 	"github.com/ory/kratos/selfservice/strategy/saml"
+	"github.com/ory/x/fetcher"
 	"github.com/stretchr/testify/require"
 	"gotest.tools/assert"
 	is "gotest.tools/assert/cmp"
@@ -95,8 +96,11 @@ func TestXmlMetadataValues(t *testing.T) {
 	assert.Check(t, is.Equal("text/xml",
 		res.Header.Get("Content-Type")))
 
-	expectedMetadata, err := ioutil.ReadFile("./testdata/expected_metadata.xml")
-	assert.NilError(t, err)
+	expectedMetadataBuffer, err := fetcher.NewFetcher().Fetch("file://testdata/expected_metadata.xml")
+	require.NoError(t, err)
+
+	expectedMetadata, err := ioutil.ReadAll(expectedMetadataBuffer)
+	require.NoError(t, err)
 
 	// The string is parse to a struct
 	var expectedStructMetadata Metadata

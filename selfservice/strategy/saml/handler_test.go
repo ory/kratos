@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/ory/kratos/selfservice/strategy/saml"
+	"github.com/ory/x/fetcher"
 	"github.com/stretchr/testify/require"
 
 	"gotest.tools/assert"
@@ -73,7 +74,10 @@ func TestMustParseCertificate(t *testing.T) {
 
 	saml.DestroyMiddlewareIfExists("samlProvider")
 
-	certificate, err := ioutil.ReadFile("testdata/samlkratos.crt")
+	certificateBuffer, err := fetcher.NewFetcher().Fetch("file://testdata/samlkratos.crt")
+	require.NoError(t, err)
+
+	certificate, err := ioutil.ReadAll(certificateBuffer)
 	require.NoError(t, err)
 
 	cert, err := saml.MustParseCertificate(certificate)

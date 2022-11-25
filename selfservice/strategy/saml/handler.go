@@ -11,7 +11,6 @@ import (
 	"io/ioutil"
 	"net/http"
 	"net/url"
-	"path/filepath"
 	"strings"
 
 	"github.com/pkg/errors"
@@ -29,6 +28,7 @@ import (
 	"github.com/ory/kratos/session"
 	"github.com/ory/kratos/x"
 	"github.com/ory/x/decoderx"
+	"github.com/ory/x/fetcher"
 	"github.com/ory/x/jsonx"
 )
 
@@ -168,29 +168,20 @@ func (h *Handler) instantiateMiddleware(ctx context.Context, config config.Confi
 
 		// The metadata file is provided
 		metadataURL := providerConfig.IDPInformation["idp_metadata_url"]
-		if strings.HasPrefix(metadataURL, "file://") {
-			metadataURL = strings.Replace(metadataURL, "file://", "", 1)
-			metadataURL = filepath.Clean(metadataURL)
-			metadataPlainText, err := ioutil.ReadFile(metadataURL)
-			if err != nil {
-				return err
-			}
 
-			idpMetadata, err = samlsp.ParseMetadata([]byte(metadataPlainText))
-			if err != nil {
-				return err
-			}
+		metadataBuffer, err := fetcher.NewFetcher().Fetch(metadataURL)
+		if err != nil {
+			return err
+		}
 
-		} else {
-			idpMetadataURL, err := url.Parse(metadataURL)
-			if err != nil {
-				return err
-			}
-			// Parse the content of metadata file into a Golang struct
-			idpMetadata, err = samlsp.FetchMetadata(context.Background(), http.DefaultClient, *idpMetadataURL)
-			if err != nil {
-				return err
-			}
+		metadata, err := ioutil.ReadAll(metadataBuffer)
+		if err != nil {
+			return err
+		}
+
+		idpMetadata, err = samlsp.ParseMetadata(metadata)
+		if err != nil {
+			return err
 		}
 
 	} else {
@@ -214,7 +205,12 @@ func (h *Handler) instantiateMiddleware(ctx context.Context, config config.Confi
 		}
 
 		// The certificate of the IDP
-		certificate, err := ioutil.ReadFile(strings.Replace(providerConfig.IDPInformation["idp_certificate_path"], "file://", "", 1))
+		certificateBuffer, err := fetcher.NewFetcher().Fetch(providerConfig.IDPInformation["idp_certificate_path"])
+		if err != nil {
+			return err
+		}
+
+		certificate, err := ioutil.ReadAll(certificateBuffer)
 		if err != nil {
 			return err
 		}
