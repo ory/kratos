@@ -357,7 +357,7 @@ func (s *Strategy) Config(ctx context.Context) (*ConfigurationCollection, error)
 func (s *Strategy) populateMethod(r *http.Request, c *container.Container, message func(provider string) *text.Message) error {
 	conf, err := s.Config(r.Context())
 	if err != nil {
-		return err
+		return ErrInvalidSAMLConfiguration.WithTrace(err)
 	}
 
 	// does not need sorting because there is only one field
@@ -370,7 +370,7 @@ func (s *Strategy) populateMethod(r *http.Request, c *container.Container, messa
 func (s *Strategy) handleError(w http.ResponseWriter, r *http.Request, f flow.Flow, provider string, traits []byte, err error) error {
 	switch rf := f.(type) {
 	case *login.Flow:
-		return err
+		return ErrAPIFlowNotSupported.WithTrace(err)
 	case *registration.Flow:
 		// Reset all nodes to not confuse users.
 		// This is kinda hacky and will probably need to be updated at some point.
@@ -384,24 +384,24 @@ func (s *Strategy) handleError(w http.ResponseWriter, r *http.Request, f flow.Fl
 		if traits != nil {
 			ds, err := s.d.Config().DefaultIdentityTraitsSchemaURL(r.Context())
 			if err != nil {
-				return err
+				return ErrInvalidSAMLConfiguration.WithTrace(err)
 			}
 
 			traitNodes, err := container.NodesFromJSONSchema(r.Context(), node.SAMLGroup, ds.String(), "", nil)
 			if err != nil {
-				return err
+				return herodot.ErrInternalServerError.WithTrace(err)
 			}
 
 			rf.UI.Nodes = append(rf.UI.Nodes, traitNodes...)
 			rf.UI.UpdateNodeValuesFromJSON(traits, "traits", node.SAMLGroup)
 		}
 
-		return err
+		return herodot.ErrInternalServerError.WithTrace(err)
 	case *settings.Flow:
-		return err
+		return ErrAPIFlowNotSupported.WithTrace(err)
 	}
 
-	return err
+	return herodot.ErrInternalServerError.WithTrace(err)
 }
 
 func (s *Strategy) CountActiveCredentials(cc map[identity.CredentialsType]identity.Credentials) (count int, err error) {

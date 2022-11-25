@@ -19,6 +19,7 @@ import (
 	"github.com/crewjam/saml/samlsp"
 	"github.com/julienschmidt/httprouter"
 
+	"github.com/ory/herodot"
 	"github.com/ory/kratos/continuity"
 	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/selfservice/errorx"
@@ -154,34 +155,33 @@ func (h *Handler) instantiateMiddleware(ctx context.Context, config config.Confi
 	// Key pair to encrypt and sign SAML requests
 	keyPair, err := tls.LoadX509KeyPair(strings.Replace(providerConfig.PublicCertPath, "file://", "", 1), strings.Replace(providerConfig.PrivateKeyPath, "file://", "", 1))
 	if err != nil {
-		return err
+		return herodot.ErrNotFound.WithTrace(err)
 	}
 	keyPair.Leaf, err = x509.ParseCertificate(keyPair.Certificate[0])
 	if err != nil {
-		return err
+		return herodot.ErrNotFound.WithTrace(err)
 	}
 
 	var idpMetadata *samlidp.EntityDescriptor
 
 	// We check if the metadata file is provided
 	if providerConfig.IDPInformation["idp_metadata_url"] != "" {
-
 		// The metadata file is provided
 		metadataURL := providerConfig.IDPInformation["idp_metadata_url"]
 
 		metadataBuffer, err := fetcher.NewFetcher().Fetch(metadataURL)
 		if err != nil {
-			return err
+			return herodot.ErrNotFound.WithTrace(err)
 		}
 
 		metadata, err := ioutil.ReadAll(metadataBuffer)
 		if err != nil {
-			return err
+			return herodot.ErrInternalServerError.WithTrace(err)
 		}
 
 		idpMetadata, err = samlsp.ParseMetadata(metadata)
 		if err != nil {
-			return err
+			return ErrInvalidSAMLMetadataError.WithTrace(err)
 		}
 
 	} else {
@@ -189,36 +189,36 @@ func (h *Handler) instantiateMiddleware(ctx context.Context, config config.Confi
 		// So were are creating a minimalist IDP metadata based on what is provided by the user on the config file
 		entityIDURL, err := url.Parse(providerConfig.IDPInformation["idp_entity_id"])
 		if err != nil {
-			return err
+			return herodot.ErrNotFound.WithTrace(err)
 		}
 
 		// The IDP SSO URL
 		IDPSSOURL, err := url.Parse(providerConfig.IDPInformation["idp_sso_url"])
 		if err != nil {
-			return err
+			return herodot.ErrNotFound.WithTrace(err)
 		}
 
 		// The IDP Logout URL
 		IDPlogoutURL, err := url.Parse(providerConfig.IDPInformation["idp_logout_url"])
 		if err != nil {
-			return err
+			return herodot.ErrNotFound.WithTrace(err)
 		}
 
 		// The certificate of the IDP
 		certificateBuffer, err := fetcher.NewFetcher().Fetch(providerConfig.IDPInformation["idp_certificate_path"])
 		if err != nil {
-			return err
+			return herodot.ErrNotFound.WithTrace(err)
 		}
 
 		certificate, err := ioutil.ReadAll(certificateBuffer)
 		if err != nil {
-			return err
+			return herodot.ErrInternalServerError.WithTrace(err)
 		}
 
 		// We parse it into a x509.Certificate object
 		IDPCertificate, err := MustParseCertificate(certificate)
 		if err != nil {
-			return err
+			return ErrInvalidCertificateError.WithTrace(err)
 		}
 
 		// Because the metadata file is not provided, we need to simulate an IDP to create artificial metadata from the data entered in the conf file
@@ -238,7 +238,7 @@ func (h *Handler) instantiateMiddleware(ctx context.Context, config config.Confi
 	// The main URL
 	rootURL, err := url.Parse(config.SelfServiceBrowserDefaultReturnTo(ctx).String())
 	if err != nil {
-		return err
+		return herodot.ErrNotFound.WithTrace(err)
 	}
 
 	// Here we create a MiddleWare to transform Kratos into a Service Provider
@@ -263,7 +263,7 @@ func (h *Handler) instantiateMiddleware(ctx context.Context, config config.Confi
 		},
 	})
 	if err != nil {
-		return err
+		return herodot.ErrInternalServerError.WithTrace(err)
 	}
 
 	// It's better to use SHA256 than SHA1
@@ -278,7 +278,7 @@ func (h *Handler) instantiateMiddleware(ctx context.Context, config config.Confi
 
 		u, err := url.Parse(publicUrlString + RouteSamlAcsWithSlash)
 		if err != nil {
-			return err
+			return herodot.ErrNotFound.WithTrace(err)
 		}
 		samlMiddleWare.ServiceProvider.AcsURL = *u
 
@@ -287,7 +287,7 @@ func (h *Handler) instantiateMiddleware(ctx context.Context, config config.Confi
 		publicUrlString = publicUrlString[:len(publicUrlString)-1]
 		u, err := url.Parse(publicUrlString + RouteSamlAcsWithSlash)
 		if err != nil {
-			return err
+			return herodot.ErrNotFound.WithTrace(err)
 		}
 		samlMiddleWare.ServiceProvider.AcsURL = *u
 	}
@@ -295,7 +295,7 @@ func (h *Handler) instantiateMiddleware(ctx context.Context, config config.Confi
 	// Crewjam library use default route for ACS and metadata but we want to overwrite them
 	metadata, err := url.Parse(publicUrlString + RouteMetadata)
 	if err != nil {
-		return err
+		return herodot.ErrNotFound.WithTrace(err)
 	}
 	samlMiddleWare.ServiceProvider.MetadataURL = *metadata
 
@@ -337,22 +337,25 @@ func CreateSAMLProviderConfig(config config.Config, ctx context.Context, pid str
 	if err := jsonx.
 		NewStrictDecoder(bytes.NewBuffer(conf)).
 		Decode(&c); err != nil {
-		return nil, errors.Wrapf(err, "Unable to decode config %v", string(conf))
+		return nil, ErrInvalidSAMLConfiguration.WithReasonf("Unable to decode config %v", string(conf)).WithTrace(err)
 	}
 
 	if len(c.SAMLProviders) == 0 {
-		return nil, errors.Errorf("Please indicate a SAML Identity Provider in your configuration file")
+		return nil, ErrInvalidSAMLConfiguration.WithReason("Please indicate a SAML Identity Provider in your configuration file")
 	}
 
 	providerConfig, err := c.ProviderConfig(pid)
 	if err != nil {
-		return nil, err
+		return nil, ErrInvalidSAMLConfiguration.WithTrace(err)
 	}
 
 	if providerConfig.IDPInformation == nil {
-		return nil, errors.Errorf("Please include your Identity Provider information in the configuration file.")
+		return nil, ErrInvalidSAMLConfiguration.WithReasonf("Please include your Identity Provider information in the configuration file.").WithTrace(err)
 	}
 
+	/**
+	* SAMLTODO errors
+	 */
 	// _, sso_exists := providerConfig.IDPInformation["idp_sso_url"]
 	_, sso_exists := providerConfig.IDPInformation["idp_sso_url"]
 	_, entity_id_exists := providerConfig.IDPInformation["idp_entity_id"]
@@ -361,35 +364,35 @@ func CreateSAMLProviderConfig(config config.Config, ctx context.Context, pid str
 	_, metadata_exists := providerConfig.IDPInformation["idp_metadata_url"]
 
 	if (!metadata_exists && (!sso_exists || !entity_id_exists || !certificate_exists || !logout_url_exists)) || len(providerConfig.IDPInformation) > 4 {
-		return nil, errors.Errorf("Please check your IDP information in the configuration file")
+		return nil, ErrInvalidSAMLConfiguration.WithReason("Please check your IDP information in the configuration file").WithTrace(err)
 	}
 
 	if providerConfig.ID == "" {
-		return nil, errors.Errorf("Provider must have an ID")
+		return nil, ErrInvalidSAMLConfiguration.WithReason("Provider must have an ID").WithTrace(err)
 	}
 
 	if providerConfig.Label == "" {
-		return nil, errors.Errorf("Provider must have a label")
+		return nil, ErrInvalidSAMLConfiguration.WithReason("Provider must have a label").WithTrace(err)
 	}
 
 	if providerConfig.PrivateKeyPath == "" {
-		return nil, errors.Errorf("Provider must have a private key")
+		return nil, ErrInvalidSAMLConfiguration.WithReason("Provider must have a private key").WithTrace(err)
 	}
 
 	if providerConfig.PublicCertPath == "" {
-		return nil, errors.Errorf("Provider must have a public certificate")
+		return nil, ErrInvalidSAMLConfiguration.WithReason("Provider must have a public certificate").WithTrace(err)
 	}
 
 	if providerConfig.AttributesMap == nil || len(providerConfig.AttributesMap) == 0 {
-		return nil, errors.Errorf("Provider must have an attributes map")
+		return nil, ErrInvalidSAMLConfiguration.WithReason("Provider must have an attributes map").WithTrace(err)
 	}
 
 	if providerConfig.AttributesMap["id"] == "" {
-		return nil, errors.Errorf("You must have an ID field in your attribute_map")
+		return nil, ErrInvalidSAMLConfiguration.WithReason("You must have an ID field in your attribute_map").WithTrace(err)
 	}
 
 	if providerConfig.Mapper == "" {
-		return nil, errors.Errorf("Provider must have a mapper url")
+		return nil, ErrInvalidSAMLConfiguration.WithReason("Provider must have a mapper url").WithTrace(err)
 	}
 
 	return providerConfig, nil

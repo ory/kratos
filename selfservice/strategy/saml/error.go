@@ -1,6 +1,11 @@
 package saml
 
-import "github.com/ory/herodot"
+import (
+	"net/http"
+
+	"github.com/ory/herodot"
+	"google.golang.org/grpc/codes"
+)
 
 var (
 	ErrScopeMissing = herodot.ErrBadRequest.
@@ -13,4 +18,25 @@ var (
 
 	ErrAPIFlowNotSupported = herodot.ErrBadRequest.WithError("API-based flows are not supported for this method").
 				WithReason("SAML SignIn and Registeration are only supported for flows initiated using the Browser endpoint.")
+
+	ErrInvalidSAMLMetadataError = herodot.DefaultError{
+		StatusField:   http.StatusText(http.StatusOK),
+		ErrorField:    "Not valid SAML metadata file",
+		CodeField:     http.StatusOK,
+		GRPCCodeField: codes.InvalidArgument,
+	}
+
+	ErrInvalidCertificateError = herodot.DefaultError{
+		StatusField:   http.StatusText(http.StatusOK),
+		ErrorField:    "Not valid certificate",
+		CodeField:     http.StatusOK,
+		GRPCCodeField: codes.InvalidArgument,
+	}
+
+	ErrInvalidSAMLConfiguration = herodot.DefaultError{
+		StatusField:   http.StatusText(http.StatusOK),
+		ErrorField:    "Invalid SAML configuration in the configuration file",
+		CodeField:     http.StatusOK,
+		GRPCCodeField: codes.InvalidArgument,
+	}
 )

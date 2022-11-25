@@ -102,7 +102,7 @@ func TestInitSAMLWithoutPoviderID(t *testing.T) {
 
 	resp, _ := NewTestClient(t, nil).Get(ts.URL + "/self-service/methods/saml/metadata/samlProvider")
 	body, _ := ioutil.ReadAll(resp.Body)
-	assert.Contains(t, string(body), "\"code\":404,\"status\":\"Not Found\"")
+	assert.Contains(t, string(body), "Invalid SAML configuration in the configuration file")
 }
 
 func TestInitSAMLWithoutPoviderLabel(t *testing.T) {
