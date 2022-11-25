@@ -19,6 +19,8 @@ replace (
 	gopkg.in/DataDog/dd-trace-go.v1 => gopkg.in/DataDog/dd-trace-go.v1 v1.27.1-0.20201005154917-54b73b3e126a
 )
 
+replace github.com/ory/x => ../../ory/x
+
 require (
 	github.com/Masterminds/sprig/v3 v3.2.2
 	github.com/arbovm/levenshtein v0.0.0-20160628152529-48b4e1c0c4d0
