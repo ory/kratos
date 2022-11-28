@@ -24,10 +24,13 @@ import (
 	"github.com/ory/kratos/x"
 	"github.com/ory/x/ioutilx"
 	"github.com/ory/x/urlx"
+	"github.com/ory/x/uuidx"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
+
+var defaultPageToken = url.QueryEscape(new(courier.Message).DefaultPageToken())
 
 func TestHandler(t *testing.T) {
 	ctx := context.Background()
@@ -47,7 +50,7 @@ func TestHandler(t *testing.T) {
 		require.NoError(t, err)
 		require.NoError(t, res.Body.Close())
 
-		require.EqualValues(t, expectCode, res.StatusCode, "%s", body)
+		assert.EqualValues(t, expectCode, res.StatusCode, "%s", body)
 		return gjson.ParseBytes(body)
 	}
 
@@ -99,7 +102,7 @@ func TestHandler(t *testing.T) {
 
 		t.Run("paging", func(t *testing.T) {
 			t.Run("case=should return half of the messages", func(t *testing.T) {
-				qs := fmt.Sprintf("?page=1&per_page=%d", msgCount/2)
+				qs := fmt.Sprintf("?page_token=%s&page_size=%d", defaultPageToken, msgCount/2)
 
 				for _, name := range tss {
 					t.Run("endpoint="+name, func(t *testing.T) {
@@ -109,7 +112,7 @@ func TestHandler(t *testing.T) {
 				}
 			})
 			t.Run("case=should return no message", func(t *testing.T) {
-				qs := `?page=2&per_page=250`
+				qs := `?page_token=id=1232&page_size=250`
 
 				for _, name := range tss {
 					t.Run("endpoint="+name, func(t *testing.T) {
@@ -121,7 +124,7 @@ func TestHandler(t *testing.T) {
 		})
 		t.Run("filtering", func(t *testing.T) {
 			t.Run("case=should return all queued messages", func(t *testing.T) {
-				qs := `?page=1&per_page=250&status=queued`
+				qs := fmt.Sprintf(`?page_token=%s&page_size=250&status=queued`, defaultPageToken)
 
 				for _, name := range tss {
 					t.Run("endpoint="+name, func(t *testing.T) {
@@ -135,7 +138,7 @@ func TestHandler(t *testing.T) {
 				}
 			})
 			t.Run("case=should return all processing messages", func(t *testing.T) {
-				qs := `?page=1&per_page=250&status=processing`
+				qs := fmt.Sprintf(`?page_token=%s&page_size=250&status=processing`, defaultPageToken)
 
 				for _, name := range tss {
 					t.Run("endpoint="+name, func(t *testing.T) {
@@ -149,7 +152,7 @@ func TestHandler(t *testing.T) {
 				}
 			})
 			t.Run("case=should return all messages with recipient equals to noreply@ory.sh", func(t *testing.T) {
-				qs := `?page=1&per_page=250&recipient=noreply@ory.sh`
+				qs := fmt.Sprintf(`?page_token=%s&page_size=250&recipient=noreply@ory.sh`, defaultPageToken)
 
 				for _, name := range tss {
 					t.Run("endpoint="+name, func(t *testing.T) {
@@ -190,7 +193,8 @@ func TestHandler(t *testing.T) {
 			}
 		})
 		t.Run("case=should return with http status BadRequest when given status is invalid", func(t *testing.T) {
-			qs := `?page=1&status=invalid_status`
+			qs := fmt.Sprintf(`?page_token=%s&page_size=250&status=invalid_status`, defaultPageToken)
+
 			res, err := adminTS.Client().Get(adminTS.URL + courier.AdminRouteListMessages + qs)
 
 			require.NoError(t, err)
@@ -238,7 +242,7 @@ func getNextToken(links []string) string {
 	return g[1]
 }
 
-func TestPagination(t *testing.T) {
+func TestPaginationWithOrder(t *testing.T) {
 	ctx := context.Background()
 	conf, reg := internal.NewFastRegistryWithMocks(t)
 	// Start kratos server
@@ -265,8 +269,13 @@ func TestPagination(t *testing.T) {
 		return gjson.ParseBytes(body), links
 	}
 
+	expectedUUIDs := ""
+
 	for i := 11; i <= 20; i++ {
-		uuid := uuid.FromStringOrNil(fmt.Sprintf("%d000000-0000-0000-0000-000000000000", i))
+
+		uuid := uuidx.NewV4()
+
+		expectedUUIDs = expectedUUIDs + uuid.String()
 
 		msg := createMessage(uuid, i)
 		msg.NID = reg.Persister().NetworkID(ctx)
@@ -278,8 +287,10 @@ func TestPagination(t *testing.T) {
 	require.Len(t, r.Array(), 5)
 	require.Len(t, links, 2)
 
+	actualUUIDs := ""
+
 	for _, m := range r.Array() {
-		t.Logf("%v", m.Get("id"))
+		actualUUIDs = m.Get("id").String() + actualUUIDs
 	}
 
 	nextToken := getNextToken(links)
@@ -287,6 +298,8 @@ func TestPagination(t *testing.T) {
 	r, _ = getList(t, nextToken, 5)
 
 	for _, m := range r.Array() {
-		t.Logf("%v", m.Get("id"))
+		actualUUIDs = m.Get("id").String() + actualUUIDs
 	}
+
+	assert.Equal(t, expectedUUIDs, actualUUIDs)
 }
