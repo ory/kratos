@@ -44,12 +44,13 @@ func (p *Persister) ListMessages(ctx context.Context, filter courier.ListCourier
 		q = q.Where("recipient=?", filter.Recipient)
 	}
 
-	opts = append(opts, keysetpagination.WithDefaultToken(uuid.Nil.String()))
+	opts = append(opts, keysetpagination.WithDefaultToken(new(courier.Message).DefaultPageToken()))
+	opts = append(opts, keysetpagination.WithDefaultSize(10))
+	opts = append(opts, keysetpagination.WithColumn("created_at", "DESC"))
 	paginator := keysetpagination.GetPaginator(opts...)
 
-	messages := make([]courier.Message, 0)
-	if err := q.Order("created_at DESC").
-		Scope(keysetpagination.Paginate[courier.Message](paginator)).
+	messages := make([]courier.Message, paginator.Size())
+	if err := q.Scope(keysetpagination.Paginate[courier.Message](paginator)).
 		All(&messages); err != nil {
 		return nil, 0, nil, sqlcon.HandleError(err)
 	}

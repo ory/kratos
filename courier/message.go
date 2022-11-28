@@ -6,6 +6,7 @@ package courier
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"time"
 
 	"github.com/gofrs/uuid"
@@ -187,7 +188,11 @@ type Message struct {
 }
 
 func (m Message) PageToken() string {
-	return m.ID.String()
+	return fmt.Sprintf("id=%s/created_at=%s", m.ID.String(), m.CreatedAt.String())
+}
+
+func (m Message) DefaultPageToken() string {
+	return fmt.Sprintf("id=%s/created_at=%s", uuid.Nil.String(), time.Date(9999, 12, 31, 23, 59, 59, 0, time.UTC))
 }
 
 func (m Message) TableName(ctx context.Context) string {

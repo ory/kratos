@@ -9,9 +9,12 @@ import (
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
+	"net/url"
+	"regexp"
 	"testing"
 
 	"github.com/bxcodec/faker/v3"
+	"github.com/gofrs/uuid"
 	"github.com/tidwall/gjson"
 
 	"github.com/ory/kratos/courier"
@@ -19,6 +22,7 @@ import (
 	"github.com/ory/kratos/internal"
 	"github.com/ory/kratos/internal/testhelpers"
 	"github.com/ory/kratos/x"
+	"github.com/ory/x/ioutilx"
 	"github.com/ory/x/urlx"
 
 	"github.com/stretchr/testify/assert"
@@ -193,4 +197,96 @@ func TestHandler(t *testing.T) {
 			assert.Equal(t, http.StatusBadRequest, res.StatusCode, "status code should be equal to StatusBadRequest")
 		})
 	})
+}
+
+func createMessage(id uuid.UUID, i int) courier.Message {
+
+	status := func(i int) courier.MessageStatus {
+		if i%2 == 0 {
+			return courier.MessageStatusAbandoned
+		}
+		return courier.MessageStatusSent
+	}
+
+	templateType := func(i int) courier.TemplateType {
+		if i%2 == 0 {
+			return courier.TypeRecoveryCodeInvalid
+		}
+		return courier.TypeRecoveryCodeValid
+	}
+
+	return courier.Message{
+		ID:           id,
+		Status:       status(i),
+		Type:         courier.MessageTypeEmail,
+		Recipient:    fmt.Sprintf("test%d@test.com", i),
+		Body:         fmt.Sprintf("test body %d", i),
+		Subject:      fmt.Sprintf("test subject %d", i),
+		TemplateType: templateType(i),
+		SendCount:    9,
+	}
+}
+
+func getNextToken(links []string) string {
+
+	nextLink := links[1]
+
+	re := regexp.MustCompile("<.*page_token=(?P<uuid>.*)>.*")
+
+	g := re.FindStringSubmatch(nextLink)
+
+	return g[1]
+}
+
+func TestPagination(t *testing.T) {
+	ctx := context.Background()
+	conf, reg := internal.NewFastRegistryWithMocks(t)
+	// Start kratos server
+	_, adminTS := testhelpers.NewKratosServerWithCSRF(t, reg)
+
+	conf.MustSet(ctx, config.ViperKeyAdminBaseURL, adminTS.URL)
+
+	var getList = func(t *testing.T, pageToken string, pageSize int) (gjson.Result, []string) {
+		t.Helper()
+		v := url.Values{}
+		if pageToken != "" {
+			v.Add("page_token", pageToken)
+		}
+		if pageSize > 0 {
+			v.Add("page_size", fmt.Sprintf("%d", pageSize))
+		}
+
+		href := adminTS.URL + courier.AdminRouteListMessages + "?" + v.Encode()
+
+		resp, err := adminTS.Client().Get(href)
+		require.NoError(t, err)
+		body := ioutilx.MustReadAll(resp.Body)
+		links := resp.Header.Values("link")
+		return gjson.ParseBytes(body), links
+	}
+
+	for i := 11; i <= 20; i++ {
+		uuid := uuid.FromStringOrNil(fmt.Sprintf("%d000000-0000-0000-0000-000000000000", i))
+
+		msg := createMessage(uuid, i)
+		msg.NID = reg.Persister().NetworkID(ctx)
+		// time.Sleep(1 * time.Second)
+		require.NoError(t, reg.Persister().GetConnection(ctx).Create(&msg))
+	}
+
+	r, links := getList(t, "", 5)
+	require.Len(t, r.Array(), 5)
+	require.Len(t, links, 2)
+
+	for _, m := range r.Array() {
+		t.Logf("%v", m.Get("id"))
+	}
+
+	nextToken := getNextToken(links)
+
+	r, _ = getList(t, nextToken, 5)
+
+	for _, m := range r.Array() {
+		t.Logf("%v", m.Get("id"))
+	}
 }
