@@ -208,6 +208,11 @@
                 }
               ]
             },
+            "can_interrupt": {
+              "type": "boolean",
+              "default": false,
+              "description": "If enabled allows the web hook to interrupt / abort the self-service flow. It only applies to certain flows (registration/verification/login/settings) and requires a valid response format."
+            },
             "auth": {
               "type": "object",
               "title": "Auth mechanisms",
@@ -223,6 +228,41 @@
             },
             "additionalProperties": false
           },
+          "anyOf": [
+            {
+              "not": {
+                "properties": {
+                  "response": {
+                    "properties": {
+                      "ignore": {
+                        "enum": [
+                          true
+                        ]
+                      }
+                    },
+                    "required": [
+                      "ignore"
+                    ]
+                  }
+                },
+                "required": [
+                  "response"
+                ]
+              }
+            },
+            {
+              "properties": {
+                "can_interrupt": {
+                  "enum": [
+                    false
+                  ]
+                }
+              },
+              "require": [
+                "can_interrupt"
+              ]
+            }
+          ],
           "additionalProperties": false,
           "required": [
             "url",
@@ -340,8 +380,8 @@
             "yandex",
             "apple",
             "spotify",
-            "dingtalk",
-            "netid"
+            "netid",
+            "dingtalk"
           ],
           "examples": [
             "google"
@@ -755,6 +795,33 @@
         }
       }
     },
+    "selfServiceBeforeSettings": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "hooks": {
+          "$ref": "#/definitions/selfServiceHooks"
+        }
+      }
+    },
+    "selfServiceBeforeRecovery": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "hooks": {
+          "$ref": "#/definitions/selfServiceHooks"
+        }
+      }
+    },
+    "selfServiceBeforeVerification": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "hooks": {
+          "$ref": "#/definitions/selfServiceHooks"
+        }
+      }
+    },
     "selfServiceAfterRegistration": {
       "type": "object",
       "additionalProperties": false,
@@ -988,6 +1055,9 @@
                 },
                 "after": {
                   "$ref": "#/definitions/selfServiceAfterSettings"
+                },
+                "before": {
+                  "$ref": "#/definitions/selfServiceBeforeSettings"
                 }
               }
             },
@@ -1111,6 +1181,16 @@
                     "1m",
                     "1s"
                   ]
+                },
+                "before": {
+                  "$ref": "#/definitions/selfServiceBeforeVerification"
+                },
+                "use": {
+                  "title": "Verification Strategy",
+                  "description": "The strategy to use for verification requests",
+                  "type": "string",
+                  "enum": ["link", "code"],
+                  "default": "code"
                 }
               }
             },
@@ -1149,6 +1229,19 @@
                     "1m",
                     "1s"
                   ]
+                },
+                "before": {
+                  "$ref": "#/definitions/selfServiceBeforeRecovery"
+                },
+                "use": {
+                  "title": "Recovery Strategy",
+                  "description": "The strategy to use for recovery requests",
+                  "type": "string",
+                  "enum": [
+                    "link",
+                    "code"
+                  ],
+                  "default": "code"
                 }
               }
             },
@@ -1192,7 +1285,7 @@
                 "enabled": {
                   "type": "boolean",
                   "title": "Enables Link Method",
-                  "default": true
+                  "default": false
                 },
                 "config": {
                   "type": "object",
@@ -1208,6 +1301,35 @@
                     },
                     "lifespan": {
                       "title": "How long a link is valid for",
+                      "type": "string",
+                      "pattern": "^([0-9]+(ns|us|ms|s|m|h))+$",
+                      "default": "1h",
+                      "examples": [
+                        "1h",
+                        "1m",
+                        "1s"
+                      ]
+                    }
+                  }
+                }
+              }
+            },
+            "code": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "enabled": {
+                  "type": "boolean",
+                  "title": "Enables Code Method",
+                  "default": true
+                },
+                "config": {
+                  "type": "object",
+                  "title": "Code Configuration",
+                  "description": "Additional configuration for the code strategy.",
+                  "properties": {
+                    "lifespan": {
+                      "title": "How long a code is valid for",
                       "type": "string",
                       "pattern": "^([0-9]+(ns|us|ms|s|m|h))+$",
                       "default": "1h",
@@ -1435,6 +1557,49 @@
         }
       }
     },
+    "database": {
+      "type": "object",
+      "title": "Database related configuration",
+      "description": "Miscellaneous settings used in database related tasks (cleanup, etc.)",
+      "properties": {
+        "cleanup": {
+          "type": "object",
+          "title": "Database cleanup settings",
+          "description": "Settings that controls how the database cleanup process is configured (delays, batch size, etc.)",
+          "properties": {
+            "batch_size": {
+              "type": "integer",
+              "title": "Number of records to clean in one iteration",
+              "description": "Controls how many records should be purged from one table during database cleanup task",
+              "minimum": 1,
+              "default": 100
+            },
+            "sleep": {
+              "type": "object",
+              "title": "Delays between various database cleanup phases",
+              "description": "Configures delays between each step of the cleanup process. It is useful to tune the process so it will be efficient and performant.",
+              "properties": {
+                "tables": {
+                  "type": "string",
+                  "title": "Delay between each table cleanups",
+                  "description": "Controls the delay time between cleaning each table in one cleanup iteration",
+                  "pattern": "^[0-9]+(ns|us|ms|s|m|h)$",
+                  "default": "1m"
+                }
+              }
+            },
+            "older_than": {
+              "type": "string",
+              "title": "Remove records older than",
+              "description": "Controls how old records do we want to leave",
+              "pattern": "^[0-9]+(ns|us|ms|s|m|h)$",
+              "default": "0s"
+            }
+          }
+        }
+      },
+      "additionalProperties": false
+    },
     "dsn": {
       "type": "string",
       "title": "Data Source Name",
@@ -1458,7 +1623,13 @@
             "recovery": {
               "$ref": "#/definitions/courierTemplates"
             },
+            "recovery_code": {
+              "$ref": "#/definitions/courierTemplates"
+            },
             "verification": {
+              "$ref": "#/definitions/courierTemplates"
+            },
+            "verification_code": {
               "$ref": "#/definitions/courierTemplates"
             }
           }
@@ -1531,6 +1702,9 @@
               "title": "SMTP Headers",
               "description": "These headers will be passed in the SMTP conversation -- e.g. when using the AWS SES SMTP interface for cross-account sending.",
               "type": "object",
+              "additionalProperties": {
+                "type": "string"
+              },
               "examples": [
                 {
                   "X-SES-SOURCE-ARN": "arn:aws:ses:us-west-2:123456789012:identity/example.com",
@@ -1583,7 +1757,7 @@
                   "type": "string",
                   "description": "The HTTP method to use (GET, POST, etc)."
                 },
-                "header": {
+                "headers": {
                   "type": "object",
                   "description": "The HTTP headers that must be applied to request",
                   "additionalProperties": {
@@ -1630,6 +1804,36 @@
       "required": [
         "smtp"
       ],
+      "additionalProperties": false
+    },
+    "oauth2_provider": {
+      "title": "OAuth2 Provider Configuration",
+      "type": "object",
+      "properties": {
+        "url": {
+          "title": "OAuth 2.0 Provider URL.",
+          "description": "If set, the login and registration flows will handle the Ory OAuth 2.0 & OpenID `login_challenge` query parameter to serve as an OpenID Connect Provider. This URL should point to Ory Hydra when you are not running on the Ory Network and be left untouched otherwise.",
+          "type": "string",
+          "format": "uri",
+          "examples": [
+            "https://some-slug.projects.oryapis.com",
+            "https://domain-of-ory-hydra:4445"
+          ]
+        },
+        "headers": {
+          "title": "HTTP Request Headers",
+          "description": "These headers will be passed in HTTP request to the OAuth2 Provider.",
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          },
+          "examples": [
+            {
+              "Authorization": "Bearer some-token"
+            }
+          ]
+        }
+      },
       "additionalProperties": false
     },
     "serve": {
@@ -1846,7 +2050,7 @@
       "additionalProperties": false
     },
     "tracing": {
-      "$ref": "https://raw.githubusercontent.com/ory/x/v0.0.392/otelx/config.schema.json"
+      "$ref": "https://raw.githubusercontent.com/ory/x/v0.0.513/otelx/config.schema.json"
     },
     "log": {
       "title": "Log",
@@ -2162,7 +2366,7 @@
             },
             "persistent": {
               "title": "Make Session Cookie Persistent",
-              "description": "If set to true will persist the cookie in the end-user's browser using the `max-age` parameter which is set to the `session.lifespan` value. Persistent cookies are not deleted when the browser is closed (e.g. on reboot or alt+f4).",
+              "description": "If set to true will persist the cookie in the end-user's browser using the `max-age` parameter which is set to the `session.lifespan` value. Persistent cookies are not deleted when the browser is closed (e.g. on reboot or alt+f4). This option affects the Ory OAuth2 and OpenID Provider's remember feature as well.",
               "type": "boolean",
               "default": true
             },
@@ -2256,10 +2460,32 @@
               "description": "Disallow all outgoing HTTP calls to private IP ranges. This feature can help protect against SSRF attacks.",
               "type": "boolean",
               "default": false
+            },
+            "private_ip_exception_urls": {
+              "title": "Add exempt URLs to private IP ranges",
+              "description": "Allows the given URLs to be called despite them being in the private IP range. URLs need to have an exact and case-sensitive match to be excempt.",
+              "type": "array",
+              "items": {
+                "type": "string",
+                "format": "uri-reference"
+              },
+              "default": []
             }
           }
         }
       }
+    },
+    "feature_flags": {
+      "title": "Feature flags",
+      "properties": {
+        "cacheable_sessions": {
+          "type": "boolean",
+          "title": "Enable Ory Sessions caching",
+          "description": "If enabled allows Ory Sessions to be cached. Only effective in the Ory Network.",
+          "default": false
+        }
+      },
+      "additionalProperties": false
     }
   },
   "allOf": [
