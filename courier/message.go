@@ -190,7 +190,7 @@ type Message struct {
 	// required: true
 	SendCount int `json:"send_count" db:"send_count"`
 
-	Dispatches []MessageDispatch `json:"dispatches,omitempty" has_many:"courier_message_dispatches" fk_id:"message_id" faker:"-"`
+	Dispatches []MessageDispatch `json:"dispatches,omitempty" has_many:"courier_message_dispatches" order_by:"created_at desc" fk_id:"message_id" faker:"-"`
 
 	// CreatedAt is a helper struct field for gobuffalo.pop.
 	// required: true
