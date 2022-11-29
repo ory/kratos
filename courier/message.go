@@ -188,11 +188,11 @@ type Message struct {
 }
 
 func (m Message) PageToken() string {
-	return fmt.Sprintf("id=%s/created_at=%s", m.ID.String(), m.CreatedAt.Format(time.RFC3339))
+	return fmt.Sprintf("id=%s/created_at=%s", m.ID.String(), m.CreatedAt.Format(time.RFC3339Nano))
 }
 
 func (m Message) DefaultPageToken() string {
-	return fmt.Sprintf("id=%s/created_at=%s", uuid.Nil.String(), time.Date(9999, 12, 31, 23, 59, 59, 0, time.UTC).Format(time.RFC3339))
+	return fmt.Sprintf("id=%s/created_at=%s", uuid.Nil.String(), time.Date(9999, 12, 31, 23, 59, 59, 0, time.UTC).Format(time.RFC3339Nano))
 }
 
 func (m Message) TableName(ctx context.Context) string {
