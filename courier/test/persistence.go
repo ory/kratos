@@ -194,7 +194,7 @@ func TestPersister(ctx context.Context, newNetworkUnlessExisting NetworkWrapper,
 		t.Run("case=RecordDispatch", func(t *testing.T) {
 			msgID := messages[0].ID
 
-			err := p.RecordDispatch(ctx, msgID, courier.CourierMessageDispatchStatusFailed, errors.New("testerror").Error())
+			err := p.RecordDispatch(ctx, msgID, courier.CourierMessageDispatchStatusFailed, errors.New("testerror"))
 			require.NoError(t, err)
 
 			message, err := p.FetchMessage(ctx, msgID)
