@@ -1,8 +1,8 @@
 CREATE TABLE courier_message_dispatches (
-  dispatch_id CHAR(36) PRIMARY KEY,
+  id CHAR(36) PRIMARY KEY,
   message_id CHAR(36) NOT NULL,
-  status TEXT NOT NULL,
-  error TEXT,
+  status VARCHAR(7) NOT NULL,
+  error JSON,
   nid CHAR(36) NOT NULL,
   created_at timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   updated_at timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,

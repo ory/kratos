@@ -7,6 +7,8 @@ import (
 	"time"
 
 	"github.com/gofrs/uuid"
+
+	"github.com/ory/x/sqlxx"
 )
 
 // swagger:enum CourierMessageDispatchStatus
@@ -23,21 +25,26 @@ const (
 // swagger:model messageDispatch
 type MessageDispatch struct {
 	// The ID of this message dispatch
-	ID uuid.UUID `json:"id" db:"dispatch_id"`
+	// required: true
+	ID uuid.UUID `json:"id" db:"id"`
 
 	// The ID of the message being dispatched
+	// required: true
 	MessageID uuid.UUID `json:"message_id" db:"message_id"`
 
 	// The status of this dispatch
 	// Either "failed" or "success"
+	// required: true
 	Status CourierMessageDispatchStatus `json:"status" db:"status"`
 
 	// An optional error
-	Error string `json:"error" db:"error"`
+	Error sqlxx.JSONRawMessage `json:"error,omitempty" db:"error"`
 
 	// CreatedAt is a helper struct field for gobuffalo.pop.
+	// required: true
 	CreatedAt time.Time `json:"created_at" db:"created_at"`
 	// UpdatedAt is a helper struct field for gobuffalo.pop.
+	// required: true
 	UpdatedAt time.Time `json:"updated_at" db:"updated_at"`
 
 	NID uuid.UUID `json:"-" db:"nid"`

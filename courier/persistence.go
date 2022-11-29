@@ -35,7 +35,7 @@ type (
 
 		// Records an attempt of sending out a courier message
 		// Returns an error if it fails
-		RecordDispatch(ctx context.Context, msgID uuid.UUID, status CourierMessageDispatchStatus, err string) error
+		RecordDispatch(ctx context.Context, msgID uuid.UUID, status CourierMessageDispatchStatus, err error) error
 
 		CreateTestData(ctx context.Context) error
 	}

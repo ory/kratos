@@ -219,7 +219,8 @@ func (c *courier) dispatchEmail(ctx context.Context, msg Message) error {
 				return err
 			}
 		}
-		return errors.WithStack(err)
+		return errors.WithStack(herodot.ErrInternalServerError.
+			WithError(err.Error()).WithReason("failed to send email via smtp"))
 	}
 
 	c.deps.Logger().

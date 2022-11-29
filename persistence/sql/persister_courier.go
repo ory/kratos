@@ -6,12 +6,14 @@ package sql
 import (
 	"context"
 	"database/sql"
+	"encoding/json"
 	"fmt"
 
 	"github.com/gobuffalo/pop/v6"
 	"github.com/gofrs/uuid"
 	"github.com/pkg/errors"
 
+	"github.com/ory/herodot"
 	"github.com/ory/x/pagination/keysetpagination"
 	"github.com/ory/x/sqlcon"
 	"github.com/ory/x/uuidx"
@@ -195,16 +197,25 @@ func (p *Persister) FetchMessage(ctx context.Context, msgID uuid.UUID) (*courier
 	return &message, nil
 }
 
-func (p *Persister) RecordDispatch(ctx context.Context, msgID uuid.UUID, status courier.CourierMessageDispatchStatus, err string) error {
+func (p *Persister) RecordDispatch(ctx context.Context, msgID uuid.UUID, status courier.CourierMessageDispatchStatus, err error) error {
 	ctx, span := p.r.Tracer(ctx).Tracer().Start(ctx, "persistence.sql.RecordDispatch")
 	defer span.End()
 
 	dispatch := courier.MessageDispatch{
 		ID:        uuidx.NewV4(),
 		MessageID: msgID,
-		Error:     err,
 		Status:    status,
 		NID:       p.NetworkID(ctx),
+	}
+
+	if err != nil {
+		// We use herodot as a carrier for the error's data
+		her := herodot.ToDefaultError(err, "")
+		content, mErr := json.Marshal(her)
+		if mErr != nil {
+			return errors.WithStack(mErr)
+		}
+		dispatch.Error = content
 	}
 
 	if err := p.GetConnection(ctx).Create(&dispatch); err != nil {

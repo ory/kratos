@@ -76,7 +76,7 @@ func (c *courier) DispatchQueue(ctx context.Context) error {
 
 		} else if err := c.DispatchMessage(ctx, msg); err != nil {
 
-			if err := c.deps.CourierPersister().RecordDispatch(ctx, msg.ID, CourierMessageDispatchStatusFailed, err.Error()); err != nil {
+			if err := c.deps.CourierPersister().RecordDispatch(ctx, msg.ID, CourierMessageDispatchStatusFailed, err); err != nil {
 				c.deps.Logger().
 					WithError(err).
 					WithField("message_id", msg.ID).
@@ -96,7 +96,7 @@ func (c *courier) DispatchQueue(ctx context.Context) error {
 			}
 
 			return err
-		} else if err := c.deps.CourierPersister().RecordDispatch(ctx, msg.ID, CourierMessageDispatchStatusSuccess, ""); err != nil {
+		} else if err := c.deps.CourierPersister().RecordDispatch(ctx, msg.ID, CourierMessageDispatchStatusSuccess, nil); err != nil {
 			c.deps.Logger().
 				WithError(err).
 				WithField("message_id", msg.ID).

@@ -169,21 +169,34 @@ func (mt *MessageType) UnmarshalJSON(data []byte) error {
 
 // swagger:model message
 type Message struct {
-	ID           uuid.UUID         `json:"id" faker:"-" db:"id"`
-	NID          uuid.UUID         `json:"-" faker:"-" db:"nid"`
-	Status       MessageStatus     `json:"status" db:"status"`
-	Type         MessageType       `json:"type" db:"type"`
-	Recipient    string            `json:"recipient" db:"recipient"`
-	Body         string            `json:"body" db:"body"`
-	Subject      string            `json:"subject" db:"subject"`
-	TemplateType TemplateType      `json:"template_type" db:"template_type"`
-	TemplateData []byte            `json:"-" db:"template_data"`
-	SendCount    int               `json:"send_count" db:"send_count"`
-	Dispatches   []MessageDispatch `json:"dispatches,omitempty" has_many:"courier_message_dispatches" fk_id:"message_id" faker:"-"`
+	// required: true
+	ID uuid.UUID `json:"id" faker:"-" db:"id"`
+
+	NID uuid.UUID `json:"-" faker:"-" db:"nid"`
+	// required: true
+	Status MessageStatus `json:"status" db:"status"`
+	// required: true
+	Type MessageType `json:"type" db:"type"`
+	// required: true
+	Recipient string `json:"recipient" db:"recipient"`
+	// required: true
+	Body string `json:"body" db:"body"`
+	// required: true
+	Subject string `json:"subject" db:"subject"`
+	// required: true
+	TemplateType TemplateType `json:"template_type" db:"template_type"`
+
+	TemplateData []byte `json:"-" db:"template_data"`
+	// required: true
+	SendCount int `json:"send_count" db:"send_count"`
+
+	Dispatches []MessageDispatch `json:"dispatches,omitempty" has_many:"courier_message_dispatches" fk_id:"message_id" faker:"-"`
 
 	// CreatedAt is a helper struct field for gobuffalo.pop.
+	// required: true
 	CreatedAt time.Time `json:"created_at" faker:"-" db:"created_at"`
 	// UpdatedAt is a helper struct field for gobuffalo.pop.
+	// required: true
 	UpdatedAt time.Time `json:"updated_at" faker:"-" db:"updated_at"`
 }
 

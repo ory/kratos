@@ -1238,6 +1238,7 @@
             "type": "string"
           },
           "template_type": {
+            "description": "\nrecovery_invalid TypeRecoveryInvalid\nrecovery_valid TypeRecoveryValid\nrecovery_code_invalid TypeRecoveryCodeInvalid\nrecovery_code_valid TypeRecoveryCodeValid\nverification_invalid TypeVerificationInvalid\nverification_valid TypeVerificationValid\nverification_code_invalid TypeVerificationCodeInvalid\nverification_code_valid TypeVerificationCodeValid\notp TypeOTP\nstub TypeTestStub",
             "enum": [
               "recovery_invalid",
               "recovery_valid",
@@ -1262,6 +1263,18 @@
             "type": "string"
           }
         },
+        "required": [
+          "id",
+          "status",
+          "type",
+          "recipient",
+          "body",
+          "subject",
+          "template_type",
+          "send_count",
+          "created_at",
+          "updated_at"
+        ],
         "type": "object"
       },
       "messageDispatch": {
@@ -1273,8 +1286,7 @@
             "type": "string"
           },
           "error": {
-            "description": "An optional error",
-            "type": "string"
+            "$ref": "#/components/schemas/JSONRawMessage"
           },
           "id": {
             "description": "The ID of this message dispatch",
@@ -1301,6 +1313,13 @@
             "type": "string"
           }
         },
+        "required": [
+          "id",
+          "message_id",
+          "status",
+          "created_at",
+          "updated_at"
+        ],
         "type": "object"
       },
       "needsPrivilegedSessionError": {
