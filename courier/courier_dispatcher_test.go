@@ -9,6 +9,7 @@ import (
 
 	"github.com/gofrs/uuid"
 	"github.com/stretchr/testify/require"
+	"github.com/tidwall/gjson"
 
 	"github.com/ory/kratos/courier"
 	"github.com/ory/kratos/courier/template"
@@ -93,6 +94,6 @@ func TestDispatchQueue(t *testing.T) {
 	require.Equal(t, id, message.ID)
 
 	require.Len(t, message.Dispatches, 2)
-	require.Contains(t, message.Dispatches[0].Error, "connect: can't assign requested address")
-	require.Contains(t, message.Dispatches[1].Error, "connect: can't assign requested address")
+	require.Contains(t, gjson.GetBytes(message.Dispatches[0].Error, "reason").String(), "failed to send email via smtp")
+	require.Contains(t, gjson.GetBytes(message.Dispatches[1].Error, "reason").String(), "failed to send email via smtp")
 }

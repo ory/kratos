@@ -22,9 +22,7 @@ import (
 	"github.com/ory/kratos/internal"
 	"github.com/ory/kratos/internal/testhelpers"
 	"github.com/ory/kratos/x"
-	"github.com/ory/x/ioutilx"
 	"github.com/ory/x/urlx"
-	"github.com/ory/x/uuidx"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -240,66 +238,4 @@ func getNextToken(links []string) string {
 	g := re.FindStringSubmatch(nextLink)
 
 	return g[1]
-}
-
-func TestPaginationWithOrder(t *testing.T) {
-	ctx := context.Background()
-	conf, reg := internal.NewFastRegistryWithMocks(t)
-	// Start kratos server
-	_, adminTS := testhelpers.NewKratosServerWithCSRF(t, reg)
-
-	conf.MustSet(ctx, config.ViperKeyAdminBaseURL, adminTS.URL)
-
-	var getList = func(t *testing.T, pageToken string, pageSize int) (gjson.Result, []string) {
-		t.Helper()
-		v := url.Values{}
-		if pageToken != "" {
-			v.Add("page_token", pageToken)
-		}
-		if pageSize > 0 {
-			v.Add("page_size", fmt.Sprintf("%d", pageSize))
-		}
-
-		href := adminTS.URL + courier.AdminRouteListMessages + "?" + v.Encode()
-
-		resp, err := adminTS.Client().Get(href)
-		require.NoError(t, err)
-		body := ioutilx.MustReadAll(resp.Body)
-		links := resp.Header.Values("link")
-		return gjson.ParseBytes(body), links
-	}
-
-	expectedUUIDs := ""
-
-	for i := 11; i <= 20; i++ {
-
-		uuid := uuidx.NewV4()
-
-		expectedUUIDs = expectedUUIDs + uuid.String()
-
-		msg := createMessage(uuid, i)
-		msg.NID = reg.Persister().NetworkID(ctx)
-		// time.Sleep(1 * time.Second)
-		require.NoError(t, reg.Persister().GetConnection(ctx).Create(&msg))
-	}
-
-	r, links := getList(t, "", 5)
-	require.Len(t, r.Array(), 5)
-	require.Len(t, links, 2)
-
-	actualUUIDs := ""
-
-	for _, m := range r.Array() {
-		actualUUIDs = m.Get("id").String() + actualUUIDs
-	}
-
-	nextToken := getNextToken(links)
-
-	r, _ = getList(t, nextToken, 5)
-
-	for _, m := range r.Array() {
-		actualUUIDs = m.Get("id").String() + actualUUIDs
-	}
-
-	assert.Equal(t, expectedUUIDs, actualUUIDs)
 }

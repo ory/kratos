@@ -51,7 +51,6 @@ func (h *Handler) RegisterPublicRoutes(public *x.RouterPublic) {
 
 func (h *Handler) RegisterAdminRoutes(admin *x.RouterAdmin) {
 	admin.GET(AdminRouteListMessages, h.listCourierMessages)
-	admin.POST(AdminRouteListMessages+"/test-data", h.postTestData)
 	admin.GET(AdminRouteGetMessage, h.getCourierMessage)
 }
 
@@ -200,14 +199,4 @@ func (h *Handler) getCourierMessage(w http.ResponseWriter, r *http.Request, ps h
 	}
 
 	h.r.Writer().Write(w, r, message)
-}
-
-func (h *Handler) postTestData(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-
-	if err := h.r.CourierPersister().CreateTestData(r.Context()); err != nil {
-		h.r.Writer().WriteError(w, r, err)
-		return
-	}
-
-	h.r.Writer().WriteCreated(w, r, "/", nil)
 }
