@@ -262,7 +262,7 @@ func (e *WebHook) execute(ctx context.Context, data *templateContext) error {
 	go func() {
 		defer close(errChan)
 
-		resp, err := e.deps.HTTPClient(ctx).Do(req)
+		resp, err := e.deps.HTTPClient(ctx).Do(req.WithContext(ctx))
 		if err != nil {
 			errChan <- errors.WithStack(err)
 			return
