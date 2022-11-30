@@ -1149,6 +1149,10 @@ github.com/ory/x v0.0.517-0.20221128091752-551ffb438eeb h1:a3U3DXqBbUr90ElIuzwRW
 github.com/ory/x v0.0.517-0.20221128091752-551ffb438eeb/go.mod h1:xUtRpoiRARyJNPVk/fcCNKzyp25Foxt9GPlj8pd7egY=
 github.com/ory/x v0.0.517-0.20221128100459-e2df1f5d26ba h1:z/ElG4rbwrxjkqaTsEDNEP3NyxrM5GW00WPuiVkgCb8=
 github.com/ory/x v0.0.517-0.20221128100459-e2df1f5d26ba/go.mod h1:xUtRpoiRARyJNPVk/fcCNKzyp25Foxt9GPlj8pd7egY=
+github.com/ory/x v0.0.518-0.20221130104542-b94c6f320cce h1:ZeWblm5vjgkq/R/xD+3ZU1L5UvNp93CrhZNyvlGgjZQ=
+github.com/ory/x v0.0.518-0.20221130104542-b94c6f320cce/go.mod h1:xUtRpoiRARyJNPVk/fcCNKzyp25Foxt9GPlj8pd7egY=
+github.com/ory/x v0.0.518-0.20221130125643-031a59af1925 h1:PvrVOQXY+VPASWyNPRqFPhUBUV8C68wmIUXZ7PEZRRA=
+github.com/ory/x v0.0.518-0.20221130125643-031a59af1925/go.mod h1:xUtRpoiRARyJNPVk/fcCNKzyp25Foxt9GPlj8pd7egY=
 github.com/otiai10/copy v1.2.0/go.mod h1:rrF5dJ5F0t/EWSYODDu4j9/vEeYHMkc8jt0zJChqQWw=
 github.com/otiai10/curr v0.0.0-20150429015615-9b4961190c95/go.mod h1:9qAhocn7zKJG+0mI8eUu6xqkFDYS2kb2saOteoSB3cE=
 github.com/otiai10/curr v1.0.0/go.mod h1:LskTG5wDwr8Rs+nNQ+1LlxRjAtTZZjtJW4rMXl6j4vs=

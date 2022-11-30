@@ -6,13 +6,13 @@ package courier
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 	"time"
 
 	"github.com/gofrs/uuid"
 	"github.com/pkg/errors"
 
 	"github.com/ory/herodot"
+	"github.com/ory/x/pagination/keysetpagination"
 	"github.com/ory/x/stringsx"
 )
 
@@ -200,12 +200,20 @@ type Message struct {
 	UpdatedAt time.Time `json:"updated_at" faker:"-" db:"updated_at"`
 }
 
-func (m Message) PageToken() string {
-	return fmt.Sprintf("id=%s/created_at=%s", m.ID.String(), m.CreatedAt.Format(time.RFC3339Nano))
+const dbFormat = "2006-01-02 15:04:05.99999+07:00"
+
+func (m Message) PageToken() keysetpagination.PageToken {
+	return keysetpagination.MapPageToken{
+		"id":         m.ID.String(),
+		"created_at": m.CreatedAt.Format(dbFormat),
+	}
 }
 
-func (m Message) DefaultPageToken() string {
-	return fmt.Sprintf("id=%s/created_at=%s", uuid.Nil.String(), time.Date(9999, 12, 31, 23, 59, 59, 0, time.UTC).Format(time.RFC3339Nano))
+func (m Message) DefaultPageToken() keysetpagination.PageToken {
+	return keysetpagination.MapPageToken{
+		"id":         uuid.Nil.String(),
+		"created_at": time.Date(2200, 12, 31, 23, 59, 59, 0, time.UTC).Format(dbFormat),
+	}
 }
 
 func (m Message) TableName(ctx context.Context) string {

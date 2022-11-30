@@ -143,7 +143,7 @@ func parseMessagesFilter(r *http.Request) (ListCourierMessagesParameters, []keys
 		status = &ms
 	}
 
-	opts, err := keysetpagination.Parse(r.URL.Query())
+	opts, err := keysetpagination.Parse(r.URL.Query(), keysetpagination.NewMapPageToken)
 	if err != nil {
 		return ListCourierMessagesParameters{}, nil, err
 	}

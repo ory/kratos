@@ -9,9 +9,9 @@ import (
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
-	"net/url"
 	"regexp"
 	"testing"
+	"time"
 
 	"github.com/bxcodec/faker/v3"
 	"github.com/gofrs/uuid"
@@ -22,13 +22,14 @@ import (
 	"github.com/ory/kratos/internal"
 	"github.com/ory/kratos/internal/testhelpers"
 	"github.com/ory/kratos/x"
+	"github.com/ory/x/pagination/keysetpagination"
 	"github.com/ory/x/urlx"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
-var defaultPageToken = url.QueryEscape(new(courier.Message).DefaultPageToken())
+var defaultPageToken = new(courier.Message).DefaultPageToken().Encode()
 
 func TestHandler(t *testing.T) {
 	ctx := context.Background()
@@ -110,7 +111,11 @@ func TestHandler(t *testing.T) {
 				}
 			})
 			t.Run("case=should return no message", func(t *testing.T) {
-				qs := `?page_token=id=1232&page_size=250`
+				token := keysetpagination.MapPageToken{
+					"id":         "1232",
+					"created_at": time.Now().Add(time.Duration(-10) * time.Hour).Format("2006-01-02 15:04:05.99999-07:00"),
+				}
+				qs := fmt.Sprintf(`?page_token=%s&page_size=%s`, token.Encode(), "250")
 
 				for _, name := range tss {
 					t.Run("endpoint="+name, func(t *testing.T) {
