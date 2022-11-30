@@ -12,6 +12,7 @@ import (
 
 	"github.com/gobuffalo/pop/v6"
 	"github.com/gofrs/uuid"
+	"github.com/tidwall/gjson"
 
 	"github.com/bxcodec/faker/v3"
 	"github.com/stretchr/testify/assert"
@@ -201,7 +202,7 @@ func TestPersister(ctx context.Context, newNetworkUnlessExisting NetworkWrapper,
 			require.NoError(t, err)
 
 			require.Len(t, message.Dispatches, 1)
-			assert.Equal(t, "testerror", message.Dispatches[0].Error)
+			assert.Equal(t, "testerror", gjson.GetBytes(message.Dispatches[0].Error, "message").String())
 
 			t.Run("can not get on another network", func(t *testing.T) {
 				_, p := newNetwork(t, ctx)
