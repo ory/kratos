@@ -9,12 +9,10 @@ import (
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
-	"regexp"
 	"testing"
 	"time"
 
 	"github.com/bxcodec/faker/v3"
-	"github.com/gofrs/uuid"
 	"github.com/tidwall/gjson"
 
 	"github.com/ory/kratos/courier"
@@ -204,43 +202,4 @@ func TestHandler(t *testing.T) {
 			assert.Equal(t, http.StatusBadRequest, res.StatusCode, "status code should be equal to StatusBadRequest")
 		})
 	})
-}
-
-func createMessage(id uuid.UUID, i int) courier.Message {
-
-	status := func(i int) courier.MessageStatus {
-		if i%2 == 0 {
-			return courier.MessageStatusAbandoned
-		}
-		return courier.MessageStatusSent
-	}
-
-	templateType := func(i int) courier.TemplateType {
-		if i%2 == 0 {
-			return courier.TypeRecoveryCodeInvalid
-		}
-		return courier.TypeRecoveryCodeValid
-	}
-
-	return courier.Message{
-		ID:           id,
-		Status:       status(i),
-		Type:         courier.MessageTypeEmail,
-		Recipient:    fmt.Sprintf("test%d@test.com", i),
-		Body:         fmt.Sprintf("test body %d", i),
-		Subject:      fmt.Sprintf("test subject %d", i),
-		TemplateType: templateType(i),
-		SendCount:    9,
-	}
-}
-
-func getNextToken(links []string) string {
-
-	nextLink := links[1]
-
-	re := regexp.MustCompile("<.*page_token=(?P<uuid>.*)>.*")
-
-	g := re.FindStringSubmatch(nextLink)
-
-	return g[1]
 }
