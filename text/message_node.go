@@ -43,10 +43,10 @@ func NewInfoNodeLabelSubmit() *Message {
 	}
 }
 
-func NewInfoNodeLabelReturn() *Message {
+func NewInfoNodeLabelContinue() *Message {
 	return &Message{
-		ID:   InfoNodeLabelReturn,
-		Text: "Return",
+		ID:   InfoNodeLabelContinue,
+		Text: "Continue",
 		Type: Info,
 	}
 }

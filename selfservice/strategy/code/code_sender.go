@@ -139,8 +139,8 @@ func (s *Sender) SendVerificationCode(ctx context.Context, f *verification.Flow,
 			s.deps.Audit().
 				WithField("via", via).
 				WithSensitiveField("email_address", address).
-				Info("Sending out invalid verification email because address is unknown.")
-			if err := s.send(ctx, string(via), email.NewVerificationInvalid(s.deps, &email.VerificationInvalidModel{To: to})); err != nil {
+				Info("Sending out invalid verification via code email because address is unknown.")
+			if err := s.send(ctx, string(via), email.NewVerificationCodeInvalid(s.deps, &email.VerificationCodeInvalidModel{To: to})); err != nil {
 				return err
 			}
 			return errors.Cause(ErrUnknownAddress)

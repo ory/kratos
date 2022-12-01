@@ -44,10 +44,7 @@ context("Account Verification Settings Success", () => {
             cy.get('input[name="email"]').type(identity.email)
             cy.get(`button[value="${s}"]`).click()
 
-            cy.get('[data-testid="ui/message/1080001"]').should(
-              "contain.text",
-              "An email containing a verification",
-            )
+            cy.contains("An email containing a verification")
 
             cy.get(`[name="method"][value="${s}"]`).should("exist")
 
@@ -59,10 +56,7 @@ context("Account Verification Settings Success", () => {
             cy.get('input[name="email"]').type(email)
             cy.get(`button[value="${s}"]`).click()
 
-            cy.get('[data-testid="ui/message/1080001"]').should(
-              "contain.text",
-              "An email containing a verification",
-            )
+            cy.contains("An email containing a verification")
 
             cy.getMail().should((message) => {
               expect(message.subject.trim()).to.equal(

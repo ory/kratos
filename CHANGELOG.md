@@ -5,7 +5,7 @@
 
 **Table of Contents**
 
-- [ (2022-11-18)](#2022-11-18)
+- [ (2022-11-23)](#2022-11-23)
   - [Breaking Changes](#breaking-changes)
     - [Bug Fixes](#bug-fixes)
     - [Code Refactoring](#code-refactoring)
@@ -280,7 +280,7 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# [](https://github.com/ory/kratos/compare/v0.10.1...v) (2022-11-18)
+# [](https://github.com/ory/kratos/compare/v0.10.1...v) (2022-11-23)
 
 ## Breaking Changes
 
@@ -503,6 +503,12 @@ SDK Method `getJsonSchema` was renamed to `getIdentitySchema`.
 - **sdk:** Rust compile issue with required enum
   ([#2619](https://github.com/ory/kratos/issues/2619))
   ([8800085](https://github.com/ory/kratos/commit/8800085d5bde32367217170d00f7141b7ea46733))
+- Send out correct verification invalid email in code strategy
+  ([#2908](https://github.com/ory/kratos/issues/2908))
+  ([d2bb67a](https://github.com/ory/kratos/commit/d2bb67af64d031613f2516b4848208d4f709e7b4))
+- Set cache default to false
+  ([#2906](https://github.com/ory/kratos/issues/2906))
+  ([e407f92](https://github.com/ory/kratos/commit/e407f92572b7823f70df17d463400807f14c8ae8))
 - Take over return_to param from unauthorized settings to login flow
   ([#2787](https://github.com/ory/kratos/issues/2787))
   ([504fb36](https://github.com/ory/kratos/commit/504fb36b6e72900808666dde778906a069f3c48b))
@@ -518,6 +524,13 @@ SDK Method `getJsonSchema` was renamed to `getIdentitySchema`.
 - Use process-isolated Jsonnet VM
   ([#2869](https://github.com/ory/kratos/issues/2869))
   ([9eeedc0](https://github.com/ory/kratos/commit/9eeedc06408c447077b630fff65e9ca4ed1ec59a))
+- Verification redirect & continue label
+  ([#2905](https://github.com/ory/kratos/issues/2905))
+  ([e1119e8](https://github.com/ory/kratos/commit/e1119e8f2e0372152d7d8367e7843fd5a49bf728)):
+
+  This PR resolves an issue with the redirect after a successful verification,
+  if not specified.
+
 - Wrap migration error in WithStack
   ([#2636](https://github.com/ory/kratos/issues/2636))
   ([4ce9f1e](https://github.com/ory/kratos/commit/4ce9f1ebb39cccfd36c4f0fb4a2ae2a17fbc18cc))
@@ -578,6 +591,8 @@ SDK Method `getJsonSchema` was renamed to `getIdentitySchema`.
 
 ### Features
 
+- Add "success" UITextType ([#2900](https://github.com/ory/kratos/issues/2900))
+  ([2ff34b6](https://github.com/ory/kratos/commit/2ff34b604757c46aae5cf3cbb23f39f982341486))
 - Add admin get api for session
   ([#2855](https://github.com/ory/kratos/issues/2855))
   ([1aa1321](https://github.com/ory/kratos/commit/1aa13211d1459e7453c2ba8fec69fee1c79aecbc))

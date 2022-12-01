@@ -4813,12 +4813,16 @@
           "type": "string"
         },
         "type": {
-          "$ref": "#/definitions/uiTextType"
+          "description": "The message type.\ninfo Info\nerror Error\nsuccess Success",
+          "type": "string",
+          "enum": [
+            "info",
+            "error",
+            "success"
+          ],
+          "x-go-enum-desc": "info Info\nerror Error\nsuccess Success"
         }
       }
-    },
-    "uiTextType": {
-      "type": "string"
     },
     "uiTexts": {
       "type": "array",

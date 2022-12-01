@@ -7,6 +7,7 @@ import (
 	"context"
 	"crypto/aes"
 	"crypto/cipher"
+	"crypto/md5" // #nosec G501
 	"crypto/subtle"
 	"encoding/base64"
 	"fmt"
@@ -38,6 +39,8 @@ func Compare(ctx context.Context, password []byte, hash []byte) error {
 		return CompareScrypt(ctx, password, hash)
 	case IsFirebaseScryptHash(hash):
 		return CompareFirebaseScrypt(ctx, password, hash)
+	case IsMD5Hash(hash):
+		return CompareMD5(ctx, password, hash)
 	default:
 		return errors.WithStack(ErrUnknownHashAlgorithm)
 	}
@@ -173,6 +176,30 @@ func CompareFirebaseScrypt(_ context.Context, password []byte, hash []byte) erro
 	return errors.WithStack(ErrMismatchedHashAndPassword)
 }
 
+func CompareMD5(_ context.Context, password []byte, hash []byte) error {
+	// Extract the hash from the encoded password
+	pf, salt, hash, err := decodeMD5Hash(string(hash))
+	if err != nil {
+		return err
+	}
+
+	arg := password
+	if salt != nil {
+		r := strings.NewReplacer("{SALT}", string(salt), "{PASSWORD}", string(password))
+		arg = []byte(r.Replace(string(pf)))
+	}
+	// #nosec G401
+	otherHash := md5.Sum(arg)
+
+	// Check that the contents of the hashed passwords are identical. Note
+	// that we are using the subtle.ConstantTimeCompare() function for this
+	// to help prevent timing attacks.
+	if subtle.ConstantTimeCompare(hash, otherHash[:]) == 1 {
+		return nil
+	}
+	return errors.WithStack(ErrMismatchedHashAndPassword)
+}
+
 var (
 	isBcryptHash         = regexp.MustCompile(`^\$2[abzy]?\$`)
 	isArgon2idHash       = regexp.MustCompile(`^\$argon2id\$`)
@@ -180,6 +207,7 @@ var (
 	isPbkdf2Hash         = regexp.MustCompile(`^\$pbkdf2-sha[0-9]{1,3}\$`)
 	isScryptHash         = regexp.MustCompile(`^\$scrypt\$`)
 	isFirebaseScryptHash = regexp.MustCompile(`^\$firescrypt\$`)
+	isMD5Hash            = regexp.MustCompile(`^\$md5\$`)
 )
 
 func IsBcryptHash(hash []byte) bool {
@@ -204,6 +232,10 @@ func IsScryptHash(hash []byte) bool {
 
 func IsFirebaseScryptHash(hash []byte) bool {
 	return isFirebaseScryptHash.Match(hash)
+}
+
+func IsMD5Hash(hash []byte) bool {
+	return isMD5Hash.Match(hash)
 }
 
 func decodeArgon2idHash(encodedHash string) (p *config.Argon2, salt, hash []byte, err error) {
@@ -349,4 +381,41 @@ func decodeFirebaseScryptHash(encodedHash string) (p *Scrypt, salt, saltSeparato
 	}
 
 	return p, salt, saltSeparator, hash, signerKey, nil
+}
+
+// decodeMD5Hash decodes MD5 encoded password hash.
+// format without salt: $md5$<hash>
+// format with salt $md5$pf=<salting-format>$<salt>$<hash>
+func decodeMD5Hash(encodedHash string) (pf, salt, hash []byte, err error) {
+	parts := strings.Split(encodedHash, "$")
+
+	switch len(parts) {
+	case 3:
+		hash, err := base64.StdEncoding.Strict().DecodeString(parts[2])
+		return nil, nil, hash, err
+	case 5:
+		_, err = fmt.Sscanf(parts[2], "pf=%s", &pf)
+		if err != nil {
+			return nil, nil, nil, err
+		}
+
+		pf, err := base64.StdEncoding.Strict().DecodeString(string(pf))
+		if err != nil {
+			return nil, nil, nil, err
+		}
+
+		salt, err = base64.StdEncoding.Strict().DecodeString(parts[3])
+		if err != nil {
+			return nil, nil, nil, err
+		}
+
+		hash, err = base64.StdEncoding.Strict().DecodeString(parts[4])
+		if err != nil {
+			return nil, nil, nil, err
+		}
+
+		return pf, salt, hash, nil
+	default:
+		return nil, nil, nil, ErrInvalidHash
+	}
 }

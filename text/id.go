@@ -80,13 +80,14 @@ const (
 	InfoNodeLabelVerifyOTP                         // 1070006
 	InfoNodeLabelEmail                             // 1070007
 	InfoNodeLabelResendOTP                         // 1070008
-	InfoNodeLabelReturn                            // 1070009
+	InfoNodeLabelContinue                          // 1070009
 )
 
 const (
-	InfoSelfServiceVerification           ID = 1080000 + iota // 1080000
-	InfoSelfServiceVerificationEmailSent                      // 1080001
-	InfoSelfServiceVerificationSuccessful                     // 1080002
+	InfoSelfServiceVerification                  ID = 1080000 + iota // 1080000
+	InfoSelfServiceVerificationEmailSent                             // 1080001
+	InfoSelfServiceVerificationSuccessful                            // 1080002
+	InfoSelfServiceVerificationEmailWithCodeSent                     // 1080003
 )
 
 const (

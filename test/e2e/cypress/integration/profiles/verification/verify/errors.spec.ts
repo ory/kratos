@@ -109,10 +109,7 @@ context("Account Verification Error", () => {
             cy.get('input[name="email"]').type(identity.email)
             cy.get(`button[value="${s}"]`).click()
 
-            cy.get('[data-testid="ui/message/1080001"]').should(
-              "contain.text",
-              "An email containing a verification",
-            )
+            cy.contains("An email containing a verification")
             cy.get(`[name="method"][value="${s}"]`).should("exist")
             cy.verifyEmailButExpired({
               expect: { email: identity.email },
@@ -124,10 +121,7 @@ context("Account Verification Error", () => {
             cy.get('input[name="email"]').type(identity.email)
             cy.get(`button[value="${s}"]`).click()
 
-            cy.get('[data-testid="ui/message/1080001"]').should(
-              "contain.text",
-              "An email containing a verification",
-            )
+            cy.contains("An email containing a verification")
 
             cy.getMail().then((mail) => {
               const link = parseHtml(mail.body).querySelector("a")
@@ -160,10 +154,7 @@ context("Account Verification Error", () => {
               cy.get('input[name="email"]').type(identity.email)
               cy.get(`button[value="${s}"]`).click()
 
-              cy.get('[data-testid="ui/message/1080001"]').should(
-                "contain.text",
-                "An email containing a verification",
-              )
+              cy.contains("An email containing a verification")
 
               for (let i = 0; i < 5; i++) {
                 cy.get("input[name='code']").type((i + "").repeat(8)) // Invalid code
