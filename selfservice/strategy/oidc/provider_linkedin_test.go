@@ -117,9 +117,10 @@ func TestProviderLinkedin_Claims(t *testing.T) {
 	require.NoError(t, err)
 
 	assert.Equal(t, &oidc.Claims{
-		Name:     "John",
-		LastName: "Doe",
-		Email:    "john.doe@gmail.com",
-		Picture:  "https://media-exp1.licdn.com/dms/image/D5F04AQG1h-anJtsLeA/profile-displayphoto-shrink_400_400/0/1661502148285?e=1674086400&v=beta&t=SMgXuiZ5DiiPf4iMrTPQWoCnFRh4Y-DfoWjopUZ0qCo",
+		Name:      "John Doe",
+		GivenName: "John",
+		LastName:  "Doe",
+		Email:     "john.doe@gmail.com",
+		Picture:   "https://media-exp1.licdn.com/dms/image/D5F04AQG1h-anJtsLeA/profile-displayphoto-shrink_400_400/0/1661502148285?e=1674086400&v=beta&t=SMgXuiZ5DiiPf4iMrTPQWoCnFRh4Y-DfoWjopUZ0qCo",
 	}, actual)
 }

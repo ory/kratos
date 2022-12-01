@@ -3,15 +3,18 @@ package oidc
 import (
 	"context"
 	"encoding/json"
-	"io"
+	"fmt"
 	"net/http"
 	"net/url"
+	"strings"
 
+	"github.com/hashicorp/go-retryablehttp"
 	"github.com/pkg/errors"
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/linkedin"
 
 	"github.com/ory/herodot"
+	"github.com/ory/x/httpx"
 	"github.com/ory/x/stringslice"
 	"github.com/ory/x/stringsx"
 )
@@ -96,47 +99,74 @@ func (l *ProviderLinkedIn) AuthCodeURLOptions(r ider) []oauth2.AuthCodeOption {
 	return []oauth2.AuthCodeOption{}
 }
 
-func (l *ProviderLinkedIn) ApiCall(url string, result interface{}, exchange *oauth2.Token) error {
-	var bearer = "Bearer " + exchange.AccessToken
-	req, err := http.NewRequest(http.MethodGet, string(url), nil)
+func (l *ProviderLinkedIn) ApiGetCall(client *retryablehttp.Client, url string, result interface{}) error {
+	req, err := retryablehttp.NewRequest(http.MethodGet, string(url), nil)
 	if err != nil {
 		return errors.WithStack(err)
 	}
-	req.Header.Add("Authorization", bearer)
-	client := &http.Client{}
 	resp, err := client.Do(req)
 	if err != nil {
 		return errors.WithStack(err)
 	}
 	defer resp.Body.Close()
-	body, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return errors.WithStack(err)
-	}
-	err = json.Unmarshal(body, result)
-	if err != nil {
+	if err := json.NewDecoder(resp.Body).Decode(result); err != nil {
 		return errors.WithStack(err)
 	}
 
 	return nil
 }
 
-func (l *ProviderLinkedIn) Introspection(result interface{}, exchange *oauth2.Token) error {
-	resp, err := http.PostForm(string(IntrospectionURL),
-		url.Values{"client_id": {l.config.ClientID}, "client_secret": {l.config.ClientSecret}, "token": {exchange.AccessToken}})
+func (l *ProviderLinkedIn) Profile(client *retryablehttp.Client) (*Profile, error) {
+	var profile Profile
 
+	if err := l.ApiGetCall(client, ProfileUrl, &profile); err != nil {
+		return nil, errors.WithStack(err)
+	}
+	return &profile, nil
+}
+
+func (l *ProviderLinkedIn) Email(client *retryablehttp.Client) (*EmailAddress, error) {
+	var emailaddress EmailAddress
+
+	if err := l.ApiGetCall(client, EmailUrl, &emailaddress); err != nil {
+		return nil, errors.WithStack(err)
+	}
+
+	return &emailaddress, nil
+}
+
+func (l *ProviderLinkedIn) Introspection(client *retryablehttp.Client, result interface{}, exchange *oauth2.Token) error {
+	form := url.Values{"client_id": {l.config.ClientID}, "client_secret": {l.config.ClientSecret}, "token": {exchange.AccessToken}}
+	req, err := retryablehttp.NewRequest(http.MethodPost, string(IntrospectionURL), strings.NewReader(form.Encode()))
+	if err != nil {
+		return errors.WithStack(err)
+	}
+	req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
+	req.PostForm = form
+	resp, err := client.Do(req)
 	if err != nil {
 		return errors.WithStack(err)
 	}
 
 	defer resp.Body.Close()
-	body, err := io.ReadAll(resp.Body)
-	if err != nil {
+	if err := json.NewDecoder(resp.Body).Decode(result); err != nil {
 		return errors.WithStack(err)
 	}
-	err = json.Unmarshal(body, result)
-	if err != nil {
+
+	return nil
+}
+
+func (l *ProviderLinkedIn) VerifyScopes(client *retryablehttp.Client, exchange *oauth2.Token) error {
+	var introspection Introspection
+
+	if err := l.Introspection(client, &introspection, exchange); err != nil {
 		return errors.WithStack(err)
+	}
+	grantedScopes := stringsx.Splitx(introspection.Scope, ",")
+	for _, check := range l.Config().Scope {
+		if !stringslice.Has(grantedScopes, check) {
+			return errors.WithStack(ErrScopeMissing)
+		}
 	}
 
 	return nil
@@ -144,35 +174,33 @@ func (l *ProviderLinkedIn) Introspection(result interface{}, exchange *oauth2.To
 
 func (l *ProviderLinkedIn) Claims(ctx context.Context, exchange *oauth2.Token, query url.Values) (*Claims, error) {
 
-	var introspection Introspection
-	var profile Profile
-	var emailaddress EmailAddress
+	var profile *Profile
+	var emailaddress *EmailAddress
 
-	err := l.Introspection(&introspection, exchange)
-
+	o, err := l.OAuth2(ctx)
 	if err != nil {
 		return nil, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("%s", err))
 	}
-	grantedScopes := stringsx.Splitx(introspection.Scope, ",")
-	for _, check := range l.Config().Scope {
-		if !stringslice.Has(grantedScopes, check) {
-			return nil, errors.WithStack(ErrScopeMissing)
-		}
+
+	client := l.reg.HTTPClient(ctx, httpx.ResilientClientWithClient(o.Client(ctx, exchange)))
+	if err = l.VerifyScopes(client, exchange); err != nil {
+		return nil, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("%s", err))
 	}
-	err = l.ApiCall(ProfileUrl, &profile, exchange)
+	profile, err = l.Profile(client)
 	if err != nil {
 		return nil, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("%s", err))
 	}
-	err = l.ApiCall(EmailUrl, &emailaddress, exchange)
+	emailaddress, err = l.Email(client)
 	if err != nil {
 		return nil, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("%s", err))
 	}
 
 	claims := &Claims{
-		Email:    emailaddress.Elements[0].Handle.EmailAddress,
-		Name:     profile.LocalizedFirstName,
-		LastName: profile.LocalizedLastName,
-		Picture:  profile.ProfilePicture.DisplayImage.Elements[2].Identifiers[0].Identifier,
+		Email:     emailaddress.Elements[0].Handle.EmailAddress,
+		Name:      fmt.Sprintf("%s %s", profile.LocalizedFirstName, profile.LocalizedLastName),
+		GivenName: profile.LocalizedFirstName,
+		LastName:  profile.LocalizedLastName,
+		Picture:   profile.ProfilePicture.DisplayImage.Elements[2].Identifiers[0].Identifier,
 	}
 
 	return claims, nil
