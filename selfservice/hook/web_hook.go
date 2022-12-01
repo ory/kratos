@@ -57,6 +57,7 @@ type (
 		RequestHeaders http.Header        `json:"request_headers"`
 		RequestMethod  string             `json:"request_method"`
 		RequestURL     string             `json:"request_url"`
+		RequestCookies map[string]string  `json:"request_cookies"`
 		Identity       *identity.Identity `json:"identity,omitempty"`
 	}
 
@@ -82,6 +83,16 @@ type (
 	}
 )
 
+func cookies(req *http.Request) map[string]string {
+	cookies := make(map[string]string)
+	for _, c := range req.Cookies() {
+		if c.Name != "" {
+			cookies[c.Name] = c.Value
+		}
+	}
+	return cookies
+}
+
 func NewWebHook(r webHookDependencies, c json.RawMessage) *WebHook {
 	return &WebHook{deps: r, conf: c}
 }
@@ -93,6 +104,7 @@ func (e *WebHook) ExecuteLoginPreHook(_ http.ResponseWriter, req *http.Request, 
 		RequestHeaders: req.Header,
 		RequestMethod:  req.Method,
 		RequestURL:     x.RequestURL(req).String(),
+		RequestCookies: cookies(req),
 	})
 }
 
@@ -103,6 +115,7 @@ func (e *WebHook) ExecuteLoginPostHook(_ http.ResponseWriter, req *http.Request,
 		RequestHeaders: req.Header,
 		RequestMethod:  req.Method,
 		RequestURL:     x.RequestURL(req).String(),
+		RequestCookies: cookies(req),
 		Identity:       session.Identity,
 	})
 }
@@ -114,6 +127,7 @@ func (e *WebHook) ExecuteVerificationPreHook(_ http.ResponseWriter, req *http.Re
 		RequestHeaders: req.Header,
 		RequestMethod:  req.Method,
 		RequestURL:     x.RequestURL(req).String(),
+		RequestCookies: cookies(req),
 	})
 }
 
@@ -124,6 +138,7 @@ func (e *WebHook) ExecutePostVerificationHook(_ http.ResponseWriter, req *http.R
 		RequestHeaders: req.Header,
 		RequestMethod:  req.Method,
 		RequestURL:     x.RequestURL(req).String(),
+		RequestCookies: cookies(req),
 		Identity:       id,
 	})
 }
@@ -134,6 +149,7 @@ func (e *WebHook) ExecuteRecoveryPreHook(_ http.ResponseWriter, req *http.Reques
 		Flow:           flow,
 		RequestHeaders: req.Header,
 		RequestMethod:  req.Method,
+		RequestCookies: cookies(req),
 		RequestURL:     x.RequestURL(req).String(),
 	})
 }
@@ -145,6 +161,7 @@ func (e *WebHook) ExecutePostRecoveryHook(_ http.ResponseWriter, req *http.Reque
 		RequestHeaders: req.Header,
 		RequestMethod:  req.Method,
 		RequestURL:     x.RequestURL(req).String(),
+		RequestCookies: cookies(req),
 		Identity:       session.Identity,
 	})
 }
@@ -156,6 +173,7 @@ func (e *WebHook) ExecuteRegistrationPreHook(_ http.ResponseWriter, req *http.Re
 		RequestHeaders: req.Header,
 		RequestMethod:  req.Method,
 		RequestURL:     x.RequestURL(req).String(),
+		RequestCookies: cookies(req),
 	})
 }
 
@@ -170,6 +188,7 @@ func (e *WebHook) ExecutePostRegistrationPrePersistHook(_ http.ResponseWriter, r
 		RequestHeaders: req.Header,
 		RequestMethod:  req.Method,
 		RequestURL:     x.RequestURL(req).String(),
+		RequestCookies: cookies(req),
 		Identity:       id,
 	})
 }
@@ -185,6 +204,7 @@ func (e *WebHook) ExecutePostRegistrationPostPersistHook(_ http.ResponseWriter, 
 		RequestHeaders: req.Header,
 		RequestMethod:  req.Method,
 		RequestURL:     x.RequestURL(req).String(),
+		RequestCookies: cookies(req),
 		Identity:       session.Identity,
 	})
 }
@@ -196,6 +216,7 @@ func (e *WebHook) ExecuteSettingsPreHook(_ http.ResponseWriter, req *http.Reques
 		RequestHeaders: req.Header,
 		RequestMethod:  req.Method,
 		RequestURL:     x.RequestURL(req).String(),
+		RequestCookies: cookies(req),
 	})
 }
 
@@ -210,6 +231,7 @@ func (e *WebHook) ExecuteSettingsPostPersistHook(_ http.ResponseWriter, req *htt
 		RequestHeaders: req.Header,
 		RequestMethod:  req.Method,
 		RequestURL:     x.RequestURL(req).String(),
+		RequestCookies: cookies(req),
 		Identity:       id,
 	})
 }
@@ -225,6 +247,7 @@ func (e *WebHook) ExecuteSettingsPrePersistHook(_ http.ResponseWriter, req *http
 		RequestHeaders: req.Header,
 		RequestMethod:  req.Method,
 		RequestURL:     x.RequestURL(req).String(),
+		RequestCookies: cookies(req),
 		Identity:       id,
 	})
 }
