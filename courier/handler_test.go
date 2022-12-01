@@ -5,6 +5,7 @@ package courier_test
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"net/http"
@@ -13,6 +14,7 @@ import (
 	"time"
 
 	"github.com/bxcodec/faker/v3"
+	"github.com/gofrs/uuid"
 	"github.com/tidwall/gjson"
 
 	"github.com/ory/kratos/courier"
@@ -20,7 +22,9 @@ import (
 	"github.com/ory/kratos/internal"
 	"github.com/ory/kratos/internal/testhelpers"
 	"github.com/ory/kratos/x"
+	"github.com/ory/x/ioutilx"
 	"github.com/ory/x/pagination/keysetpagination"
+	"github.com/ory/x/snapshotx"
 	"github.com/ory/x/urlx"
 
 	"github.com/stretchr/testify/assert"
@@ -34,6 +38,20 @@ func TestHandler(t *testing.T) {
 	conf, reg := internal.NewFastRegistryWithMocks(t)
 	// Start kratos server
 	publicTS, adminTS := testhelpers.NewKratosServerWithCSRF(t, reg)
+
+	tss := []struct {
+		name string
+		s    *httptest.Server
+	}{
+		{
+			name: "public",
+			s:    publicTS,
+		},
+		{
+			name: "admin",
+			s:    adminTS,
+		},
+	}
 
 	mockServerURL := urlx.ParseOrPanic(publicTS.URL)
 	conf.MustSet(ctx, config.ViperKeyAdminBaseURL, adminTS.URL)
@@ -95,15 +113,13 @@ func TestHandler(t *testing.T) {
 			require.NoError(t, reg.CourierPersister().SetMessageStatus(context.Background(), messages[i].ID, courier.MessageStatusProcessing))
 		}
 
-		tss := [...]string{"public", "admin"}
-
 		t.Run("paging", func(t *testing.T) {
 			t.Run("case=should return half of the messages", func(t *testing.T) {
 				qs := fmt.Sprintf("?page_token=%s&page_size=%d", defaultPageToken, msgCount/2)
 
-				for _, name := range tss {
-					t.Run("endpoint="+name, func(t *testing.T) {
-						parsed := getList(t, name, qs)
+				for _, tc := range tss {
+					t.Run("endpoint="+tc.name, func(t *testing.T) {
+						parsed := getList(t, tc.name, qs)
 						assert.Len(t, parsed.Array(), msgCount/2)
 					})
 				}
@@ -115,9 +131,9 @@ func TestHandler(t *testing.T) {
 				}
 				qs := fmt.Sprintf(`?page_token=%s&page_size=%s`, token.Encode(), "250")
 
-				for _, name := range tss {
-					t.Run("endpoint="+name, func(t *testing.T) {
-						parsed := getList(t, name, qs)
+				for _, tc := range tss {
+					t.Run("endpoint="+tc.name, func(t *testing.T) {
+						parsed := getList(t, tc.name, qs)
 						assert.Len(t, parsed.Array(), 0)
 					})
 				}
@@ -127,9 +143,9 @@ func TestHandler(t *testing.T) {
 			t.Run("case=should return all queued messages", func(t *testing.T) {
 				qs := fmt.Sprintf(`?page_token=%s&page_size=250&status=queued`, defaultPageToken)
 
-				for _, name := range tss {
-					t.Run("endpoint="+name, func(t *testing.T) {
-						parsed := getList(t, name, qs)
+				for _, tc := range tss {
+					t.Run("endpoint="+tc.name, func(t *testing.T) {
+						parsed := getList(t, tc.name, qs)
 						assert.Len(t, parsed.Array(), msgCount-procCount)
 
 						for _, item := range parsed.Array() {
@@ -141,9 +157,9 @@ func TestHandler(t *testing.T) {
 			t.Run("case=should return all processing messages", func(t *testing.T) {
 				qs := fmt.Sprintf(`?page_token=%s&page_size=250&status=processing`, defaultPageToken)
 
-				for _, name := range tss {
-					t.Run("endpoint="+name, func(t *testing.T) {
-						parsed := getList(t, name, qs)
+				for _, tc := range tss {
+					t.Run("endpoint="+tc.name, func(t *testing.T) {
+						parsed := getList(t, tc.name, qs)
 						assert.Len(t, parsed.Array(), procCount)
 
 						for _, item := range parsed.Array() {
@@ -155,9 +171,9 @@ func TestHandler(t *testing.T) {
 			t.Run("case=should return all messages with recipient equals to noreply@ory.sh", func(t *testing.T) {
 				qs := fmt.Sprintf(`?page_token=%s&page_size=250&recipient=noreply@ory.sh`, defaultPageToken)
 
-				for _, name := range tss {
-					t.Run("endpoint="+name, func(t *testing.T) {
-						parsed := getList(t, name, qs)
+				for _, tc := range tss {
+					t.Run("endpoint="+tc.name, func(t *testing.T) {
+						parsed := getList(t, tc.name, qs)
 						assert.Len(t, parsed.Array(), rcptOryCount)
 
 						for _, item := range parsed.Array() {
@@ -169,9 +185,9 @@ func TestHandler(t *testing.T) {
 		})
 		t.Run("case=body should be redacted if kratos is not in dev mode", func(t *testing.T) {
 			conf.MustSet(ctx, "dev", false)
-			for _, name := range tss {
-				t.Run("endpoint="+name, func(t *testing.T) {
-					parsed := getList(t, name, "")
+			for _, tc := range tss {
+				t.Run("endpoint="+tc.name, func(t *testing.T) {
+					parsed := getList(t, tc.name, "")
 					require.Len(t, parsed.Array(), msgCount, "%s", parsed.Raw)
 
 					for _, item := range parsed.Array() {
@@ -182,9 +198,9 @@ func TestHandler(t *testing.T) {
 		})
 		t.Run("case=body should not be redacted if kratos is in dev mode", func(t *testing.T) {
 			conf.MustSet(ctx, "dev", true)
-			for _, name := range tss {
-				t.Run("endpoint="+name, func(t *testing.T) {
-					parsed := getList(t, name, "")
+			for _, tc := range tss {
+				t.Run("endpoint="+tc.name, func(t *testing.T) {
+					parsed := getList(t, tc.name, "")
 					require.Len(t, parsed.Array(), msgCount, "%s", parsed.Raw)
 
 					for _, item := range parsed.Array() {
@@ -200,6 +216,68 @@ func TestHandler(t *testing.T) {
 
 			require.NoError(t, err)
 			assert.Equal(t, http.StatusBadRequest, res.StatusCode, "status code should be equal to StatusBadRequest")
+		})
+
+	})
+	t.Run("handler=getCourierMessage", func(t *testing.T) {
+
+		message := courier.Message{}
+		require.NoError(t, faker.FakeData(&message))
+		message.Type = courier.MessageTypeEmail
+		message.Body = "body content"
+		require.NoError(t, reg.CourierPersister().AddMessage(context.Background(), &message))
+		require.NoError(t, reg.CourierPersister().RecordDispatch(ctx, message.ID, courier.CourierMessageDispatchStatusSuccess, errors.New("some error")))
+
+		getCourierMessag := func(s *httptest.Server, id string) gjson.Result {
+
+			r, err := s.Client().Get(s.URL + "/admin/courier/messages/" + id)
+			require.NoError(t, err)
+			return gjson.ParseBytes(ioutilx.MustReadAll(r.Body))
+		}
+
+		t.Run("case=should return a message by id", func(t *testing.T) {
+			conf.MustSet(ctx, "dev", true)
+
+			for _, tc := range tss {
+				t.Run("endpoint="+tc.name, func(t *testing.T) {
+					body := getCourierMessag(tc.s, message.ID.String())
+					assert.Equal(t, message.ID.String(), body.Get("id").String())
+					assert.Equal(t, message.Recipient, body.Get("recipient").String())
+					assert.Equal(t, message.Body, body.Get("body").String())
+
+					// assert Eager works
+					assert.NotEmpty(t, body.Get("dispatches").Array())
+				})
+			}
+		})
+		t.Run("case=does not contain body if not in production", func(t *testing.T) {
+			conf.MustSet(ctx, "dev", false)
+
+			for _, tc := range tss {
+				t.Run("endpoint="+tc.name, func(t *testing.T) {
+					body := getCourierMessag(tc.s, message.ID.String())
+					assert.Equal(t, message.ID.String(), body.Get("id").String())
+					assert.Equal(t, "<redacted-unless-dev-mode>", body.Get("body").String())
+				})
+			}
+		})
+		t.Run("case=returns an error if parameter is malformed", func(t *testing.T) {
+			for _, tc := range tss {
+				t.Run("endpoint="+tc.name, func(t *testing.T) {
+					body := getCourierMessag(tc.s, "not-a-uuid")
+
+					snapshotx.SnapshotT(t, body.String())
+				})
+			}
+		})
+		t.Run("case=returns an error if no message is found", func(t *testing.T) {
+			for _, tc := range tss {
+				t.Run("endpoint="+tc.name, func(t *testing.T) {
+					body := getCourierMessag(tc.s, uuid.Nil.String())
+
+					snapshotx.SnapshotT(t, body.String())
+				})
+			}
 		})
 	})
 }

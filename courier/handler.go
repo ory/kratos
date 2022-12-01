@@ -198,5 +198,9 @@ func (h *Handler) getCourierMessage(w http.ResponseWriter, r *http.Request, ps h
 		return
 	}
 
+	if !h.r.Config().IsInsecureDevMode(r.Context()) {
+		message.Body = "<redacted-unless-dev-mode>"
+	}
+
 	h.r.Writer().Write(w, r, message)
 }
