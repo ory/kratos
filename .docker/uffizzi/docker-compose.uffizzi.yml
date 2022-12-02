@@ -1,0 +1,70 @@
+version: '3.7'
+
+x-uffizzi:
+  ingress:
+    service: nginx
+    port: 8081
+
+services:
+  kratos:
+    image: "${APP_IMAGE}"
+    environment:
+      - DSN=postgres://kratos:secret@127.0.0.1:5432/kratos?sslmode=disable&max_conns=20&max_idle_conns=4
+      - LOG_LEVEL=debug
+    entrypoint: ["/bin/sh"]
+    command: ["-c", "/usr/src/app/kratos_run.sh"]
+    ports:
+      - '4433:4433' # public
+      - '4434:4434' # admin
+    restart: unless-stopped
+    depends_on:
+      - postgresd
+    deploy:
+      resources:
+        limits:
+          memory: 2000m
+          
+  kratos-selfservice-ui-node:
+    image: oryd/kratos-selfservice-ui-node:v0.11.0
+    ports:
+      - "4455:4455"
+    entrypoint: ["/bin/sh"]
+    command: ["-c", "export KRATOS_PUBLIC_URL=\"http://127.0.0.1:4433\" && export KRATOS_BROWSER_URL=\"$$UFFIZZI_URL/kratos-public/\" && npm run serve"]    
+    environment:
+      - PORT=4455
+      - SECURITY_MODE=
+
+
+  nginx:
+    image: nginx:alpine
+    restart: unless-stopped
+    ports:
+      - "8081:8081"
+    volumes: 
+      - ./.docker/uffizzi/nginx:/etc/nginx
+      - ./.docker/uffizzi/nginx/html:/usr/share/nginx/html
+
+
+  postgresd:
+    image: postgres:9.6
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_USER=kratos
+      - POSTGRES_PASSWORD=secret
+      - POSTGRES_DB=kratos
+
+
+  mailslurper:
+    image: oryd/mailslurper:latest-smtps
+    entrypoint: "/bin/sh"
+    command: ["-c", "chmod a+x /go/src/github.com/mailslurper/mailslurper/cmd/mailslurper/run/run.sh && /go/src/github.com/mailslurper/mailslurper/cmd/mailslurper/run/run.sh"]
+    volumes: 
+      - ./.docker/uffizzi/mailslurper:/go/src/github.com/mailslurper/mailslurper/cmd/mailslurper/run
+    ports:
+      - '4436:4436'
+      - '4437:4437'
+    deploy:
+      resources:
+        limits:
+          memory: 2000m
