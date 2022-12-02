@@ -119,7 +119,12 @@ func TestWebHooks(t *testing.T) {
 					"identity_id": null,
    					"headers": %s,
 					"method": "%s",
-					"url": "%s"
+					"url": "%s",
+					"cookies": {
+						"Some-Cookie-1": "Some-Cookie-Value",
+						"Some-Cookie-2": "Some-other-Cookie-Value",
+						"Some-Cookie-3": "Third-Cookie-Value"
+					}
 				}`, f.GetID(), string(h), req.Method, "http://www.ory.sh/some_end_point")
 	}
 
@@ -130,7 +135,12 @@ func TestWebHooks(t *testing.T) {
 					"identity_id": "%s",
    					"headers": %s,
 					"method": "%s",
-					"url": "%s"
+					"url": "%s",
+					"cookies": {
+						"Some-Cookie-1": "Some-Cookie-Value",
+						"Some-Cookie-2": "Some-other-Cookie-Value",
+						"Some-Cookie-3": "Third-Cookie-Value"
+					}
 				}`, f.GetID(), s.Identity.ID, string(h), req.Method, "http://www.ory.sh/some_end_point")
 	}
 
@@ -275,12 +285,28 @@ func TestWebHooks(t *testing.T) {
 						t.Run("method="+method, func(t *testing.T) {
 							f := tc.createFlow()
 							req := &http.Request{
-								Host:       "www.ory.sh",
-								Header:     map[string][]string{"Some-Header": {"Some-Value"}},
+								Host: "www.ory.sh",
+								Header: map[string][]string{
+									"Some-Header": {"Some-Value"},
+									"Cookie":      {"Some-Cookie-1=Some-Cookie-Value; Some-Cookie-2=Some-other-Cookie-Value", "Some-Cookie-3=Third-Cookie-Value"},
+								},
 								RequestURI: "/some_end_point",
 								Method:     http.MethodPost,
 								URL:        &url.URL{Path: "/some_end_point"},
 							}
+							cookie, err := req.Cookie("Some-Cookie-1")
+							require.NoError(t, err)
+							require.Equal(t, cookie.Name, "Some-Cookie-1")
+							require.Equal(t, cookie.Value, "Some-Cookie-Value")
+							cookie, err = req.Cookie("Some-Cookie-2")
+							require.NoError(t, err)
+							require.Equal(t, cookie.Name, "Some-Cookie-2")
+							require.Equal(t, cookie.Value, "Some-other-Cookie-Value")
+							cookie, err = req.Cookie("Some-Cookie-3")
+							require.NoError(t, err)
+							require.Equal(t, cookie.Name, "Some-Cookie-3")
+							require.Equal(t, cookie.Value, "Third-Cookie-Value")
+
 							s := &session.Session{ID: x.NewUUID(), Identity: &identity.Identity{ID: x.NewUUID()}}
 							whr := &WebHookRequest{}
 							ts := newServer(webHookEndPoint(whr))
@@ -293,7 +319,7 @@ func TestWebHooks(t *testing.T) {
 
 							wh := hook.NewWebHook(&whDeps, conf)
 
-							err := tc.callWebHook(wh, req, f, s)
+							err = tc.callWebHook(wh, req, f, s)
 							if method == "GARBAGE" {
 								assert.Error(t, err)
 								return
@@ -541,8 +567,11 @@ func TestWebHooks(t *testing.T) {
 				t.Run("method="+method, func(t *testing.T) {
 					f := tc.createFlow()
 					req := &http.Request{
-						Host:       "www.ory.sh",
-						Header:     map[string][]string{"Some-Header": {"Some-Value"}, "X-Forwarded-Proto": {"https"}},
+						Host: "www.ory.sh",
+						Header: map[string][]string{
+							"Some-Header":       {"Some-Value"},
+							"X-Forwarded-Proto": {"https"},
+							"Cookie":            {"Some-Cookie-1=Some-Cookie-Value; Some-Cookie-2=Some-other-Cookie-Value", "Some-Cookie-3=Third-Cookie-Value"}},
 						RequestURI: "/some_end_point",
 						Method:     http.MethodPost,
 						URL: &url.URL{
