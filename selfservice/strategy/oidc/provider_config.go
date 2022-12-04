@@ -167,6 +167,8 @@ func (c ConfigurationCollection) Provider(id string, reg dependencies) (Provider
 				return NewProviderLinkedIn(&p, reg), nil
 			case addProviderName("patreon"):
 				return NewProviderPatreon(&p, reg), nil
+			case addProviderName("lark"):
+				return NewProviderLark(&p, reg), nil
 			}
 			return nil, errors.Errorf("provider type %s is not supported, supported are: %v", p.Provider, providerNames)
 		}

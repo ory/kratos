@@ -22,7 +22,7 @@ type ProviderLark struct {
 	reg    dependencies
 }
 
-func NewProviderProviderLark(
+func NewProviderLark(
 	config *Configuration,
 	reg dependencies,
 ) *ProviderLark {
