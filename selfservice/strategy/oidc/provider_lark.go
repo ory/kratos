@@ -11,10 +11,11 @@ import (
 	"time"
 
 	"github.com/hashicorp/go-retryablehttp"
-	"github.com/ory/herodot"
-	"github.com/ory/x/httpx"
 	"github.com/pkg/errors"
 	"golang.org/x/oauth2"
+
+	"github.com/ory/herodot"
+	"github.com/ory/x/httpx"
 )
 
 type ProviderLark struct {
