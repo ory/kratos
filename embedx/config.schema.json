@@ -381,7 +381,8 @@
             "apple",
             "spotify",
             "netid",
-            "dingtalk"
+            "dingtalk",
+            "lark"
           ],
           "examples": [
             "google"
@@ -1189,7 +1190,10 @@
                   "title": "Verification Strategy",
                   "description": "The strategy to use for verification requests",
                   "type": "string",
-                  "enum": ["link", "code"],
+                  "enum": [
+                    "link",
+                    "code"
+                  ],
                   "default": "code"
                 }
               }

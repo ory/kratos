@@ -381,7 +381,8 @@
             "apple",
             "spotify",
             "netid",
-            "dingtalk"
+            "dingtalk",
+            "lark"
           ],
           "examples": [
             "google"
