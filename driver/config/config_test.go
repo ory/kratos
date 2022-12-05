@@ -19,6 +19,7 @@ import (
 	"time"
 
 	"github.com/ory/x/httpx"
+	"github.com/ory/x/randx"
 
 	"github.com/ory/x/snapshotx"
 
@@ -946,7 +947,8 @@ func TestIdentitySchemaValidation(t *testing.T) {
 		assert.NoError(t,
 			os.MkdirAll(tdir, // DO NOT CHANGE THIS: https://github.com/fsnotify/fsnotify/issues/340
 				os.ModePerm))
-		tmpConfig, err := os.Create(filepath.Join(tdir, "config.yaml"))
+		configFileName := randx.MustString(8, randx.Alpha)
+		tmpConfig, err := os.Create(filepath.Join(tdir, configFileName+".config.yaml"))
 		assert.NoError(t, err)
 
 		marshalAndWrite(t, ctx, tmpConfig, i)
