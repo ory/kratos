@@ -4,10 +4,10 @@
 package oidc
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"net/url"
-	"strings"
 	"time"
 
 	"github.com/hashicorp/go-retryablehttp"
@@ -30,23 +30,6 @@ func NewProviderLark(
 		config: config,
 		reg:    reg,
 	}
-}
-
-type larkClaim struct {
-	Sub          string `json:"sub"`
-	Name         string `json:"name"`
-	Picture      string `json:"picture"`
-	OpenID       string `json:"open_id"`
-	UnionID      string `json:"union_id"`
-	EnName       string `json:"en_name"`
-	TenantKey    string `json:"tenant_key"`
-	AvatarURL    string `json:"avatar_url"`
-	AvatarThumb  string `json:"avatar_thumb"`
-	AvatarMiddle string `json:"avatar_middle"`
-	AvatarBig    string `json:"avatar_big"`
-	Email        string `json:"email"`
-	UserID       string `json:"user_id"`
-	Mobile       string `json:"mobile"`
 }
 
 func (g *ProviderLark) Config() *Configuration {
@@ -72,6 +55,22 @@ func (g *ProviderLark) OAuth2(ctx context.Context) (*oauth2.Config, error) {
 }
 
 func (g *ProviderLark) Claims(ctx context.Context, exchange *oauth2.Token, query url.Values) (*Claims, error) {
+	type larkClaim struct {
+		Sub          string `json:"sub"`
+		Name         string `json:"name"`
+		Picture      string `json:"picture"`
+		OpenID       string `json:"open_id"`
+		UnionID      string `json:"union_id"`
+		EnName       string `json:"en_name"`
+		TenantKey    string `json:"tenant_key"`
+		AvatarURL    string `json:"avatar_url"`
+		AvatarThumb  string `json:"avatar_thumb"`
+		AvatarMiddle string `json:"avatar_middle"`
+		AvatarBig    string `json:"avatar_big"`
+		Email        string `json:"email"`
+		UserID       string `json:"user_id"`
+		Mobile       string `json:"mobile"`
+	}
 	var (
 		userEndpoint = "https://passport.feishu.cn/suite/passport/oauth/userinfo"
 		accessToken  = exchange.AccessToken
@@ -146,13 +145,11 @@ func (g *ProviderLark) Exchange(ctx context.Context, code string, opts ...oauth2
 		return nil, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("%s", err))
 	}
 
-	r := strings.NewReader(string(bs))
 	client := g.reg.HTTPClient(ctx, httpx.ResilientClientDisallowInternalIPs())
-	req, err := retryablehttp.NewRequest("POST", conf.Endpoint.TokenURL, r)
+	req, err := retryablehttp.NewRequest("POST", conf.Endpoint.TokenURL, bytes.NewBuffer(bs))
 	if err != nil {
 		return nil, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("%s", err))
 	}
-
 	req.Header.Add("Content-Type", "application/json;charset=UTF-8")
 
 	resp, err := client.Do(req)

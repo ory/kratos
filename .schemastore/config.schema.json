@@ -414,7 +414,8 @@
             "netid",
             "dingtalk",
             "patreon",
-            "linkedin"
+            "linkedin",
+            "lark"
           ],
           "examples": [
             "google"
