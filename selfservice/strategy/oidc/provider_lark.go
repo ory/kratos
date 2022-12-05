@@ -119,6 +119,7 @@ func (g *ProviderLark) Exchange(ctx context.Context, code string, opts ...oauth2
 			ClientSecret string `json:"client_secret"`
 			Code         string `json:"code"`
 			GrantType    string `json:"grant_type"`
+			RedirectURI  string `json:"redirect_uri"`
 		}
 		larkTokenResp struct {
 			AccessToken      string `json:"access_token"`
@@ -139,6 +140,7 @@ func (g *ProviderLark) Exchange(ctx context.Context, code string, opts ...oauth2
 		ClientSecret: conf.ClientSecret,
 		Code:         code,
 		GrantType:    "authorization_code",
+		RedirectURI:  g.config.Redir(g.reg.Config().OIDCRedirectURIBase(ctx)),
 	}
 
 	bs, err := json.Marshal(pTokenParams)
