@@ -114,6 +114,9 @@ const (
 	messageTypePhoneText = "phone"
 )
 
+// The format we need to use in the Page tokens, as it's the only format that is understood by all DBs
+const dbFormat = "2006-01-02 15:04:05.99999+07:00"
+
 func ToMessageType(str string) (MessageType, error) {
 	switch s := stringsx.SwitchExact(str); {
 	case s.AddCase(messageTypeEmailText):
@@ -190,7 +193,9 @@ type Message struct {
 	// required: true
 	SendCount int `json:"send_count" db:"send_count"`
 
-	Dispatches []MessageDispatch `json:"dispatches,omitempty" has_many:"courier_message_dispatches" order_by:"created_at desc" fk_id:"message_id" faker:"-"`
+	// Dispatches store information about the attempts of delivering a message
+	// May contain an error if any happened, or just the `success` state.
+	Dispatches []MessageDispatch `json:"dispatches,omitempty" has_many:"courier_message_dispatches" order_by:"created_at desc" faker:"-"`
 
 	// CreatedAt is a helper struct field for gobuffalo.pop.
 	// required: true
@@ -199,8 +204,6 @@ type Message struct {
 	// required: true
 	UpdatedAt time.Time `json:"updated_at" faker:"-" db:"updated_at"`
 }
-
-const dbFormat = "2006-01-02 15:04:05.99999+07:00"
 
 func (m Message) PageToken() keysetpagination.PageToken {
 	return keysetpagination.MapPageToken{
