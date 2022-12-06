@@ -13,6 +13,7 @@ import (
 	"time"
 
 	"github.com/ory/x/httpx"
+	"github.com/ory/x/pagination/keysetpagination"
 	"github.com/ory/x/stringsx"
 
 	"github.com/pkg/errors"
@@ -140,8 +141,12 @@ type Session struct {
 	NID   uuid.UUID `json:"-"  faker:"-" db:"nid"`
 }
 
-func (s Session) PageToken() string {
-	return s.ID.String()
+func (s Session) PageToken() keysetpagination.PageToken {
+	return keysetpagination.StringPageToken(s.ID.String())
+}
+
+func (s Session) DefaultPageToken() keysetpagination.PageToken {
+	return keysetpagination.StringPageToken(uuid.Nil.String())
 }
 
 func (s Session) TableName(ctx context.Context) string {

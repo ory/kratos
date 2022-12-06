@@ -71,7 +71,7 @@ func (p *Persister) ListSessions(ctx context.Context, active *bool, paginatorOpt
 
 	paginatorOpts = append(paginatorOpts, keysetpagination.WithDefaultSize(paginationDefaultItemsSize))
 	paginatorOpts = append(paginatorOpts, keysetpagination.WithMaxSize(paginationMaxItemsSize))
-	paginatorOpts = append(paginatorOpts, keysetpagination.WithDefaultToken(uuid.Nil.String()))
+	paginatorOpts = append(paginatorOpts, keysetpagination.WithDefaultToken(new(session.Session).DefaultPageToken()))
 	paginator := keysetpagination.GetPaginator(paginatorOpts...)
 
 	if err := p.Transaction(ctx, func(ctx context.Context, c *pop.Connection) error {

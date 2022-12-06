@@ -5,14 +5,14 @@ package test
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"testing"
 	"time"
 
-	"github.com/ory/x/pagination/migrationpagination"
-
 	"github.com/gobuffalo/pop/v6"
 	"github.com/gofrs/uuid"
+	"github.com/tidwall/gjson"
 
 	"github.com/bxcodec/faker/v3"
 	"github.com/stretchr/testify/assert"
@@ -20,6 +20,7 @@ import (
 
 	"github.com/ory/kratos/courier"
 	"github.com/ory/kratos/x"
+	"github.com/ory/x/pagination/keysetpagination"
 	"github.com/ory/x/sqlcon"
 )
 
@@ -116,21 +117,17 @@ func TestPersister(ctx context.Context, newNetworkUnlessExisting NetworkWrapper,
 			status := courier.MessageStatusProcessing
 			filter := courier.ListCourierMessagesParameters{
 				Status: &status,
-				RequestParameters: migrationpagination.RequestParameters{
-					Page:    1,
-					PerPage: 100,
-				},
 			}
-			ms, tc, err := p.ListMessages(ctx, filter)
+			ms, total, _, err := p.ListMessages(ctx, filter, []keysetpagination.Option{})
 
 			require.NoError(t, err)
 			assert.Len(t, ms, len(messages))
-			assert.Equal(t, int64(len(messages)), tc)
+			assert.Equal(t, int64(len(messages)), total)
 			assert.Equal(t, messages[len(messages)-1].ID, ms[0].ID)
 
 			t.Run("on another network", func(t *testing.T) {
 				_, p := newNetwork(t, ctx)
-				ms, tc, err := p.ListMessages(ctx, filter)
+				ms, tc, _, err := p.ListMessages(ctx, filter, []keysetpagination.Option{})
 
 				require.NoError(t, err)
 				require.Len(t, ms, 0)
@@ -175,6 +172,42 @@ func TestPersister(ctx context.Context, newNetworkUnlessExisting NetworkWrapper,
 			t.Run("can not update on another network", func(t *testing.T) {
 				_, p := newNetwork(t, ctx)
 				err := p.SetMessageStatus(ctx, id, courier.MessageStatusProcessing)
+				require.ErrorIs(t, err, sqlcon.ErrNoRows)
+			})
+		})
+
+		t.Run("case=FetchMessage", func(t *testing.T) {
+			msgID := messages[0].ID
+
+			message, err := p.FetchMessage(ctx, msgID)
+			require.NoError(t, err)
+			require.Equal(t, msgID, message.ID)
+
+			t.Run("can not get on another network", func(t *testing.T) {
+				_, p := newNetwork(t, ctx)
+
+				_, err := p.FetchMessage(ctx, msgID)
+				require.ErrorIs(t, err, sqlcon.ErrNoRows)
+			})
+
+		})
+
+		t.Run("case=RecordDispatch", func(t *testing.T) {
+			msgID := messages[0].ID
+
+			err := p.RecordDispatch(ctx, msgID, courier.CourierMessageDispatchStatusFailed, errors.New("testerror"))
+			require.NoError(t, err)
+
+			message, err := p.FetchMessage(ctx, msgID)
+			require.NoError(t, err)
+
+			require.Len(t, message.Dispatches, 1)
+			assert.Equal(t, "testerror", gjson.GetBytes(message.Dispatches[0].Error, "message").String())
+
+			t.Run("can not get on another network", func(t *testing.T) {
+				_, p := newNetwork(t, ctx)
+
+				_, err := p.FetchMessage(ctx, msgID)
 				require.ErrorIs(t, err, sqlcon.ErrNoRows)
 			})
 		})

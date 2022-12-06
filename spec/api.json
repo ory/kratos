@@ -1214,6 +1214,12 @@
             "format": "date-time",
             "type": "string"
           },
+          "dispatches": {
+            "items": {
+              "$ref": "#/components/schemas/messageDispatch"
+            },
+            "type": "array"
+          },
           "id": {
             "format": "uuid",
             "type": "string"
@@ -1232,6 +1238,7 @@
             "type": "string"
           },
           "template_type": {
+            "description": "\nrecovery_invalid TypeRecoveryInvalid\nrecovery_valid TypeRecoveryValid\nrecovery_code_invalid TypeRecoveryCodeInvalid\nrecovery_code_valid TypeRecoveryCodeValid\nverification_invalid TypeVerificationInvalid\nverification_valid TypeVerificationValid\nverification_code_invalid TypeVerificationCodeInvalid\nverification_code_valid TypeVerificationCodeValid\notp TypeOTP\nstub TypeTestStub",
             "enum": [
               "recovery_invalid",
               "recovery_valid",
@@ -1256,6 +1263,63 @@
             "type": "string"
           }
         },
+        "required": [
+          "id",
+          "status",
+          "type",
+          "recipient",
+          "body",
+          "subject",
+          "template_type",
+          "send_count",
+          "created_at",
+          "updated_at"
+        ],
+        "type": "object"
+      },
+      "messageDispatch": {
+        "description": "MessageDispatch represents an attempt of sending a courier message\nIt contains the status of the attempt (failed or successful) and the error if any occured",
+        "properties": {
+          "created_at": {
+            "description": "CreatedAt is a helper struct field for gobuffalo.pop.",
+            "format": "date-time",
+            "type": "string"
+          },
+          "error": {
+            "$ref": "#/components/schemas/JSONRawMessage"
+          },
+          "id": {
+            "description": "The ID of this message dispatch",
+            "format": "uuid",
+            "type": "string"
+          },
+          "message_id": {
+            "description": "The ID of the message being dispatched",
+            "format": "uuid",
+            "type": "string"
+          },
+          "status": {
+            "description": "The status of this dispatch\nEither \"failed\" or \"success\"\nfailed CourierMessageDispatchStatusFailed\nsuccess CourierMessageDispatchStatusSuccess",
+            "enum": [
+              "failed",
+              "success"
+            ],
+            "type": "string",
+            "x-go-enum-desc": "failed CourierMessageDispatchStatusFailed\nsuccess CourierMessageDispatchStatusSuccess"
+          },
+          "updated_at": {
+            "description": "UpdatedAt is a helper struct field for gobuffalo.pop.",
+            "format": "date-time",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "message_id",
+          "status",
+          "created_at",
+          "updated_at"
+        ],
         "type": "object"
       },
       "needsPrivilegedSessionError": {
@@ -3019,9 +3083,9 @@
         "operationId": "listCourierMessages",
         "parameters": [
           {
-            "description": "Items per Page\n\nThis is the number of items per page.",
+            "description": "Items per Page\n\nThis is the number of items per page to return.\nFor details on pagination please head over to the [pagination documentation](https://www.ory.sh/docs/ecosystem/api-design#pagination).",
             "in": "query",
-            "name": "per_page",
+            "name": "page_size",
             "schema": {
               "default": 250,
               "format": "int64",
@@ -3031,14 +3095,11 @@
             }
           },
           {
-            "description": "Pagination Page\n\nThis value is currently an integer, but it is not sequential. The value is not the page number, but a\nreference. The next page can be any number and some numbers might return an empty list.\n\nFor example, page 2 might not follow after page 1. And even if page 3 and 5 exist, but page 4 might not exist.",
+            "description": "Next Page Token\n\nThe next page token.\nFor details on pagination please head over to the [pagination documentation](https://www.ory.sh/docs/ecosystem/api-design#pagination).",
             "in": "query",
-            "name": "page",
+            "name": "page_token",
             "schema": {
-              "default": 1,
-              "format": "int64",
-              "minimum": 1,
-              "type": "integer"
+              "type": "string"
             }
           },
           {
@@ -3089,6 +3150,64 @@
           }
         ],
         "summary": "List Messages",
+        "tags": [
+          "courier"
+        ]
+      }
+    },
+    "/admin/courier/messages/{id}": {
+      "get": {
+        "description": "Gets a specific messages by the given ID.",
+        "operationId": "getCourierMessage",
+        "parameters": [
+          {
+            "description": "MessageID is the ID of the message.",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/message"
+                }
+              }
+            },
+            "description": "message"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/errorGeneric"
+                }
+              }
+            },
+            "description": "errorGeneric"
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/errorGeneric"
+                }
+              }
+            },
+            "description": "errorGeneric"
+          }
+        },
+        "security": [
+          {
+            "oryAccessToken": []
+          }
+        ],
+        "summary": "Get a Message",
         "tags": [
           "courier"
         ]

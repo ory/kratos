@@ -70,17 +70,14 @@
             "type": "integer",
             "format": "int64",
             "default": 250,
-            "description": "Items per Page\n\nThis is the number of items per page.",
-            "name": "per_page",
+            "description": "Items per Page\n\nThis is the number of items per page to return.\nFor details on pagination please head over to the [pagination documentation](https://www.ory.sh/docs/ecosystem/api-design#pagination).",
+            "name": "page_size",
             "in": "query"
           },
           {
-            "minimum": 1,
-            "type": "integer",
-            "format": "int64",
-            "default": 1,
-            "description": "Pagination Page\n\nThis value is currently an integer, but it is not sequential. The value is not the page number, but a\nreference. The next page can be any number and some numbers might return an empty list.\n\nFor example, page 2 might not follow after page 1. And even if page 3 and 5 exist, but page 4 might not exist.",
-            "name": "page",
+            "type": "string",
+            "description": "Next Page Token\n\nThe next page token.\nFor details on pagination please head over to the [pagination documentation](https://www.ory.sh/docs/ecosystem/api-design#pagination).",
+            "name": "page_token",
             "in": "query"
           },
           {
@@ -100,6 +97,57 @@
         "responses": {
           "200": {
             "$ref": "#/responses/listCourierMessages"
+          },
+          "400": {
+            "description": "errorGeneric",
+            "schema": {
+              "$ref": "#/definitions/errorGeneric"
+            }
+          },
+          "default": {
+            "description": "errorGeneric",
+            "schema": {
+              "$ref": "#/definitions/errorGeneric"
+            }
+          }
+        }
+      }
+    },
+    "/admin/courier/messages/{id}": {
+      "get": {
+        "security": [
+          {
+            "oryAccessToken": []
+          }
+        ],
+        "description": "Gets a specific messages by the given ID.",
+        "produces": [
+          "application/json"
+        ],
+        "schemes": [
+          "http",
+          "https"
+        ],
+        "tags": [
+          "courier"
+        ],
+        "summary": "Get a Message",
+        "operationId": "getCourierMessage",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "MessageID is the ID of the message.",
+            "name": "id",
+            "in": "path",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "message",
+            "schema": {
+              "$ref": "#/definitions/message"
+            }
           },
           "400": {
             "description": "errorGeneric",
@@ -3859,6 +3907,18 @@
     },
     "message": {
       "type": "object",
+      "required": [
+        "id",
+        "status",
+        "type",
+        "recipient",
+        "body",
+        "subject",
+        "template_type",
+        "send_count",
+        "created_at",
+        "updated_at"
+      ],
       "properties": {
         "body": {
           "type": "string"
@@ -3867,6 +3927,12 @@
           "description": "CreatedAt is a helper struct field for gobuffalo.pop.",
           "type": "string",
           "format": "date-time"
+        },
+        "dispatches": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/messageDispatch"
+          }
         },
         "id": {
           "type": "string",
@@ -3886,6 +3952,7 @@
           "type": "string"
         },
         "template_type": {
+          "description": "\nrecovery_invalid TypeRecoveryInvalid\nrecovery_valid TypeRecoveryValid\nrecovery_code_invalid TypeRecoveryCodeInvalid\nrecovery_code_valid TypeRecoveryCodeValid\nverification_invalid TypeVerificationInvalid\nverification_valid TypeVerificationValid\nverification_code_invalid TypeVerificationCodeInvalid\nverification_code_valid TypeVerificationCodeValid\notp TypeOTP\nstub TypeTestStub",
           "type": "string",
           "enum": [
             "recovery_invalid",
@@ -3903,6 +3970,51 @@
         },
         "type": {
           "$ref": "#/definitions/courierMessageType"
+        },
+        "updated_at": {
+          "description": "UpdatedAt is a helper struct field for gobuffalo.pop.",
+          "type": "string",
+          "format": "date-time"
+        }
+      }
+    },
+    "messageDispatch": {
+      "description": "MessageDispatch represents an attempt of sending a courier message\nIt contains the status of the attempt (failed or successful) and the error if any occured",
+      "type": "object",
+      "required": [
+        "id",
+        "message_id",
+        "status",
+        "created_at",
+        "updated_at"
+      ],
+      "properties": {
+        "created_at": {
+          "description": "CreatedAt is a helper struct field for gobuffalo.pop.",
+          "type": "string",
+          "format": "date-time"
+        },
+        "error": {
+          "$ref": "#/definitions/JSONRawMessage"
+        },
+        "id": {
+          "description": "The ID of this message dispatch",
+          "type": "string",
+          "format": "uuid"
+        },
+        "message_id": {
+          "description": "The ID of the message being dispatched",
+          "type": "string",
+          "format": "uuid"
+        },
+        "status": {
+          "description": "The status of this dispatch\nEither \"failed\" or \"success\"\nfailed CourierMessageDispatchStatusFailed\nsuccess CourierMessageDispatchStatusSuccess",
+          "type": "string",
+          "enum": [
+            "failed",
+            "success"
+          ],
+          "x-go-enum-desc": "failed CourierMessageDispatchStatusFailed\nsuccess CourierMessageDispatchStatusSuccess"
         },
         "updated_at": {
           "description": "UpdatedAt is a helper struct field for gobuffalo.pop.",

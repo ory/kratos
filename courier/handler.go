@@ -4,19 +4,24 @@
 package courier
 
 import (
+	"fmt"
 	"net/http"
 
+	"github.com/gofrs/uuid"
+
+	"github.com/ory/herodot"
+	"github.com/ory/x/pagination/keysetpagination"
 	"github.com/ory/x/pagination/migrationpagination"
 
 	"github.com/julienschmidt/httprouter"
 
 	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/x"
-	"github.com/ory/x/urlx"
 )
 
 const AdminRouteCourier = "/courier"
-const AdminRouteMessages = AdminRouteCourier + "/messages"
+const AdminRouteListMessages = AdminRouteCourier + "/messages"
+const AdminRouteGetMessage = AdminRouteCourier + "/messages/:msgID"
 
 type (
 	handlerDependencies interface {
@@ -39,12 +44,14 @@ func NewHandler(r handlerDependencies) *Handler {
 }
 
 func (h *Handler) RegisterPublicRoutes(public *x.RouterPublic) {
-	h.r.CSRFHandler().IgnoreGlobs(x.AdminPrefix+AdminRouteMessages, AdminRouteMessages)
-	public.GET(x.AdminPrefix+AdminRouteMessages, x.RedirectToAdminRoute(h.r))
+	h.r.CSRFHandler().IgnoreGlobs(x.AdminPrefix+AdminRouteListMessages, AdminRouteListMessages)
+	public.GET(x.AdminPrefix+AdminRouteListMessages, x.RedirectToAdminRoute(h.r))
+	public.GET(x.AdminPrefix+AdminRouteGetMessage, x.RedirectToAdminRoute(h.r))
 }
 
 func (h *Handler) RegisterAdminRoutes(admin *x.RouterAdmin) {
-	admin.GET(AdminRouteMessages, h.listCourierMessages)
+	admin.GET(AdminRouteListMessages, h.listCourierMessages)
+	admin.GET(AdminRouteGetMessage, h.getCourierMessage)
 }
 
 // Paginated Courier Message List Response
@@ -62,10 +69,9 @@ type listCourierMessagesResponse struct {
 
 // Paginated List Courier Message Parameters
 //
-// nolint:deadcode,unused
 // swagger:parameters listCourierMessages
 type ListCourierMessagesParameters struct {
-	migrationpagination.RequestParameters
+	keysetpagination.RequestParameters
 
 	// Status filters out messages based on status.
 	// If no value is provided, it doesn't take effect on filter.
@@ -101,13 +107,13 @@ type ListCourierMessagesParameters struct {
 //	  400: errorGeneric
 //	  default: errorGeneric
 func (h *Handler) listCourierMessages(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
-	filter, err := parseMessagesFilter(r)
+	filter, paginator, err := parseMessagesFilter(r)
 	if err != nil {
 		h.r.Writer().WriteErrorCode(w, r, http.StatusBadRequest, err)
 		return
 	}
 
-	l, tc, err := h.r.CourierPersister().ListMessages(r.Context(), filter)
+	l, tc, nextPage, err := h.r.CourierPersister().ListMessages(r.Context(), filter, paginator)
 	if err != nil {
 		h.r.Writer().WriteError(w, r, err)
 		return
@@ -119,30 +125,82 @@ func (h *Handler) listCourierMessages(w http.ResponseWriter, r *http.Request, _ 
 		}
 	}
 
-	x.PaginationHeader(w, urlx.AppendPaths(h.r.Config().SelfAdminURL(r.Context()), AdminRouteMessages), int64(tc), filter.Page, filter.PerPage)
+	w.Header().Set("X-Total-Count", fmt.Sprint(tc))
+	keysetpagination.Header(w, r.URL, nextPage)
 	h.r.Writer().Write(w, r, l)
 }
 
-func parseMessagesFilter(r *http.Request) (ListCourierMessagesParameters, error) {
+func parseMessagesFilter(r *http.Request) (ListCourierMessagesParameters, []keysetpagination.Option, error) {
 	var status *MessageStatus
 
 	if r.URL.Query().Has("status") {
 		ms, err := ToMessageStatus(r.URL.Query().Get("status"))
 
 		if err != nil {
-			return ListCourierMessagesParameters{}, err
+			return ListCourierMessagesParameters{}, nil, err
 		}
 
 		status = &ms
 	}
 
-	page, itemsPerPage := x.ParsePagination(r)
+	opts, err := keysetpagination.Parse(r.URL.Query(), keysetpagination.NewMapPageToken)
+	if err != nil {
+		return ListCourierMessagesParameters{}, nil, err
+	}
+
 	return ListCourierMessagesParameters{
-		RequestParameters: migrationpagination.RequestParameters{
-			Page:    page,
-			PerPage: itemsPerPage,
-		},
 		Status:    status,
 		Recipient: r.URL.Query().Get("recipient"),
-	}, nil
+	}, opts, nil
+}
+
+// Get Courier Message Parameters
+//
+// swagger:parameters getCourierMessage
+// nolint:deadcode,unused
+type getCourierMessage struct {
+	// MessageID is the ID of the message.
+	//
+	// required: true
+	// in: path
+	MessageID string `json:"id"`
+}
+
+// swagger:route GET /admin/courier/messages/{id} courier getCourierMessage
+//
+// # Get a Message
+//
+// Gets a specific messages by the given ID.
+//
+//	Produces:
+//	- application/json
+//
+//	Security:
+//		oryAccessToken:
+//
+//	Schemes: http, https
+//
+//	Responses:
+//		200: message
+//		400: errorGeneric
+//		default: errorGeneric
+func (h *Handler) getCourierMessage(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	msgID, err := uuid.FromString(ps.ByName("msgID"))
+
+	if err != nil {
+		h.r.Writer().WriteError(w, r, herodot.ErrBadRequest.WithError(err.Error()).WithDebugf("could not parse parameter {id} as UUID, got %s", ps.ByName("id")))
+		return
+	}
+
+	message, err := h.r.CourierPersister().FetchMessage(r.Context(), msgID)
+	if err != nil {
+		h.r.Writer().WriteError(w, r, err)
+		return
+	}
+
+	if !h.r.Config().IsInsecureDevMode(r.Context()) {
+		message.Body = "<redacted-unless-dev-mode>"
+	}
+
+	h.r.Writer().Write(w, r, message)
 }

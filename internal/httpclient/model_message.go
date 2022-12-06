@@ -18,26 +18,38 @@ import (
 
 // Message struct for Message
 type Message struct {
-	Body *string `json:"body,omitempty"`
+	Body string `json:"body"`
 	// CreatedAt is a helper struct field for gobuffalo.pop.
-	CreatedAt    *time.Time            `json:"created_at,omitempty"`
-	Id           *string               `json:"id,omitempty"`
-	Recipient    *string               `json:"recipient,omitempty"`
-	SendCount    *int64                `json:"send_count,omitempty"`
-	Status       *CourierMessageStatus `json:"status,omitempty"`
-	Subject      *string               `json:"subject,omitempty"`
-	TemplateType *string               `json:"template_type,omitempty"`
-	Type         *CourierMessageType   `json:"type,omitempty"`
+	CreatedAt  time.Time            `json:"created_at"`
+	Dispatches []MessageDispatch    `json:"dispatches,omitempty"`
+	Id         string               `json:"id"`
+	Recipient  string               `json:"recipient"`
+	SendCount  int64                `json:"send_count"`
+	Status     CourierMessageStatus `json:"status"`
+	Subject    string               `json:"subject"`
+	//  recovery_invalid TypeRecoveryInvalid recovery_valid TypeRecoveryValid recovery_code_invalid TypeRecoveryCodeInvalid recovery_code_valid TypeRecoveryCodeValid verification_invalid TypeVerificationInvalid verification_valid TypeVerificationValid verification_code_invalid TypeVerificationCodeInvalid verification_code_valid TypeVerificationCodeValid otp TypeOTP stub TypeTestStub
+	TemplateType string             `json:"template_type"`
+	Type         CourierMessageType `json:"type"`
 	// UpdatedAt is a helper struct field for gobuffalo.pop.
-	UpdatedAt *time.Time `json:"updated_at,omitempty"`
+	UpdatedAt time.Time `json:"updated_at"`
 }
 
 // NewMessage instantiates a new Message object
 // This constructor will assign default values to properties that have it defined,
 // and makes sure properties required by API are set, but the set of arguments
 // will change when the set of required properties is changed
-func NewMessage() *Message {
+func NewMessage(body string, createdAt time.Time, id string, recipient string, sendCount int64, status CourierMessageStatus, subject string, templateType string, type_ CourierMessageType, updatedAt time.Time) *Message {
 	this := Message{}
+	this.Body = body
+	this.CreatedAt = createdAt
+	this.Id = id
+	this.Recipient = recipient
+	this.SendCount = sendCount
+	this.Status = status
+	this.Subject = subject
+	this.TemplateType = templateType
+	this.Type = type_
+	this.UpdatedAt = updatedAt
 	return &this
 }
 
@@ -49,356 +61,311 @@ func NewMessageWithDefaults() *Message {
 	return &this
 }
 
-// GetBody returns the Body field value if set, zero value otherwise.
+// GetBody returns the Body field value
 func (o *Message) GetBody() string {
-	if o == nil || o.Body == nil {
+	if o == nil {
 		var ret string
 		return ret
 	}
-	return *o.Body
+
+	return o.Body
 }
 
-// GetBodyOk returns a tuple with the Body field value if set, nil otherwise
+// GetBodyOk returns a tuple with the Body field value
 // and a boolean to check if the value has been set.
 func (o *Message) GetBodyOk() (*string, bool) {
-	if o == nil || o.Body == nil {
+	if o == nil {
 		return nil, false
 	}
-	return o.Body, true
+	return &o.Body, true
 }
 
-// HasBody returns a boolean if a field has been set.
-func (o *Message) HasBody() bool {
-	if o != nil && o.Body != nil {
-		return true
-	}
-
-	return false
-}
-
-// SetBody gets a reference to the given string and assigns it to the Body field.
+// SetBody sets field value
 func (o *Message) SetBody(v string) {
-	o.Body = &v
+	o.Body = v
 }
 
-// GetCreatedAt returns the CreatedAt field value if set, zero value otherwise.
+// GetCreatedAt returns the CreatedAt field value
 func (o *Message) GetCreatedAt() time.Time {
-	if o == nil || o.CreatedAt == nil {
+	if o == nil {
 		var ret time.Time
 		return ret
 	}
-	return *o.CreatedAt
+
+	return o.CreatedAt
 }
 
-// GetCreatedAtOk returns a tuple with the CreatedAt field value if set, nil otherwise
+// GetCreatedAtOk returns a tuple with the CreatedAt field value
 // and a boolean to check if the value has been set.
 func (o *Message) GetCreatedAtOk() (*time.Time, bool) {
-	if o == nil || o.CreatedAt == nil {
+	if o == nil {
 		return nil, false
 	}
-	return o.CreatedAt, true
+	return &o.CreatedAt, true
 }
 
-// HasCreatedAt returns a boolean if a field has been set.
-func (o *Message) HasCreatedAt() bool {
-	if o != nil && o.CreatedAt != nil {
+// SetCreatedAt sets field value
+func (o *Message) SetCreatedAt(v time.Time) {
+	o.CreatedAt = v
+}
+
+// GetDispatches returns the Dispatches field value if set, zero value otherwise.
+func (o *Message) GetDispatches() []MessageDispatch {
+	if o == nil || o.Dispatches == nil {
+		var ret []MessageDispatch
+		return ret
+	}
+	return o.Dispatches
+}
+
+// GetDispatchesOk returns a tuple with the Dispatches field value if set, nil otherwise
+// and a boolean to check if the value has been set.
+func (o *Message) GetDispatchesOk() ([]MessageDispatch, bool) {
+	if o == nil || o.Dispatches == nil {
+		return nil, false
+	}
+	return o.Dispatches, true
+}
+
+// HasDispatches returns a boolean if a field has been set.
+func (o *Message) HasDispatches() bool {
+	if o != nil && o.Dispatches != nil {
 		return true
 	}
 
 	return false
 }
 
-// SetCreatedAt gets a reference to the given time.Time and assigns it to the CreatedAt field.
-func (o *Message) SetCreatedAt(v time.Time) {
-	o.CreatedAt = &v
+// SetDispatches gets a reference to the given []MessageDispatch and assigns it to the Dispatches field.
+func (o *Message) SetDispatches(v []MessageDispatch) {
+	o.Dispatches = v
 }
 
-// GetId returns the Id field value if set, zero value otherwise.
+// GetId returns the Id field value
 func (o *Message) GetId() string {
-	if o == nil || o.Id == nil {
+	if o == nil {
 		var ret string
 		return ret
 	}
-	return *o.Id
+
+	return o.Id
 }
 
-// GetIdOk returns a tuple with the Id field value if set, nil otherwise
+// GetIdOk returns a tuple with the Id field value
 // and a boolean to check if the value has been set.
 func (o *Message) GetIdOk() (*string, bool) {
-	if o == nil || o.Id == nil {
+	if o == nil {
 		return nil, false
 	}
-	return o.Id, true
+	return &o.Id, true
 }
 
-// HasId returns a boolean if a field has been set.
-func (o *Message) HasId() bool {
-	if o != nil && o.Id != nil {
-		return true
-	}
-
-	return false
-}
-
-// SetId gets a reference to the given string and assigns it to the Id field.
+// SetId sets field value
 func (o *Message) SetId(v string) {
-	o.Id = &v
+	o.Id = v
 }
 
-// GetRecipient returns the Recipient field value if set, zero value otherwise.
+// GetRecipient returns the Recipient field value
 func (o *Message) GetRecipient() string {
-	if o == nil || o.Recipient == nil {
+	if o == nil {
 		var ret string
 		return ret
 	}
-	return *o.Recipient
+
+	return o.Recipient
 }
 
-// GetRecipientOk returns a tuple with the Recipient field value if set, nil otherwise
+// GetRecipientOk returns a tuple with the Recipient field value
 // and a boolean to check if the value has been set.
 func (o *Message) GetRecipientOk() (*string, bool) {
-	if o == nil || o.Recipient == nil {
+	if o == nil {
 		return nil, false
 	}
-	return o.Recipient, true
+	return &o.Recipient, true
 }
 
-// HasRecipient returns a boolean if a field has been set.
-func (o *Message) HasRecipient() bool {
-	if o != nil && o.Recipient != nil {
-		return true
-	}
-
-	return false
-}
-
-// SetRecipient gets a reference to the given string and assigns it to the Recipient field.
+// SetRecipient sets field value
 func (o *Message) SetRecipient(v string) {
-	o.Recipient = &v
+	o.Recipient = v
 }
 
-// GetSendCount returns the SendCount field value if set, zero value otherwise.
+// GetSendCount returns the SendCount field value
 func (o *Message) GetSendCount() int64 {
-	if o == nil || o.SendCount == nil {
+	if o == nil {
 		var ret int64
 		return ret
 	}
-	return *o.SendCount
+
+	return o.SendCount
 }
 
-// GetSendCountOk returns a tuple with the SendCount field value if set, nil otherwise
+// GetSendCountOk returns a tuple with the SendCount field value
 // and a boolean to check if the value has been set.
 func (o *Message) GetSendCountOk() (*int64, bool) {
-	if o == nil || o.SendCount == nil {
+	if o == nil {
 		return nil, false
 	}
-	return o.SendCount, true
+	return &o.SendCount, true
 }
 
-// HasSendCount returns a boolean if a field has been set.
-func (o *Message) HasSendCount() bool {
-	if o != nil && o.SendCount != nil {
-		return true
-	}
-
-	return false
-}
-
-// SetSendCount gets a reference to the given int64 and assigns it to the SendCount field.
+// SetSendCount sets field value
 func (o *Message) SetSendCount(v int64) {
-	o.SendCount = &v
+	o.SendCount = v
 }
 
-// GetStatus returns the Status field value if set, zero value otherwise.
+// GetStatus returns the Status field value
 func (o *Message) GetStatus() CourierMessageStatus {
-	if o == nil || o.Status == nil {
+	if o == nil {
 		var ret CourierMessageStatus
 		return ret
 	}
-	return *o.Status
+
+	return o.Status
 }
 
-// GetStatusOk returns a tuple with the Status field value if set, nil otherwise
+// GetStatusOk returns a tuple with the Status field value
 // and a boolean to check if the value has been set.
 func (o *Message) GetStatusOk() (*CourierMessageStatus, bool) {
-	if o == nil || o.Status == nil {
+	if o == nil {
 		return nil, false
 	}
-	return o.Status, true
+	return &o.Status, true
 }
 
-// HasStatus returns a boolean if a field has been set.
-func (o *Message) HasStatus() bool {
-	if o != nil && o.Status != nil {
-		return true
-	}
-
-	return false
-}
-
-// SetStatus gets a reference to the given CourierMessageStatus and assigns it to the Status field.
+// SetStatus sets field value
 func (o *Message) SetStatus(v CourierMessageStatus) {
-	o.Status = &v
+	o.Status = v
 }
 
-// GetSubject returns the Subject field value if set, zero value otherwise.
+// GetSubject returns the Subject field value
 func (o *Message) GetSubject() string {
-	if o == nil || o.Subject == nil {
+	if o == nil {
 		var ret string
 		return ret
 	}
-	return *o.Subject
+
+	return o.Subject
 }
 
-// GetSubjectOk returns a tuple with the Subject field value if set, nil otherwise
+// GetSubjectOk returns a tuple with the Subject field value
 // and a boolean to check if the value has been set.
 func (o *Message) GetSubjectOk() (*string, bool) {
-	if o == nil || o.Subject == nil {
+	if o == nil {
 		return nil, false
 	}
-	return o.Subject, true
+	return &o.Subject, true
 }
 
-// HasSubject returns a boolean if a field has been set.
-func (o *Message) HasSubject() bool {
-	if o != nil && o.Subject != nil {
-		return true
-	}
-
-	return false
-}
-
-// SetSubject gets a reference to the given string and assigns it to the Subject field.
+// SetSubject sets field value
 func (o *Message) SetSubject(v string) {
-	o.Subject = &v
+	o.Subject = v
 }
 
-// GetTemplateType returns the TemplateType field value if set, zero value otherwise.
+// GetTemplateType returns the TemplateType field value
 func (o *Message) GetTemplateType() string {
-	if o == nil || o.TemplateType == nil {
+	if o == nil {
 		var ret string
 		return ret
 	}
-	return *o.TemplateType
+
+	return o.TemplateType
 }
 
-// GetTemplateTypeOk returns a tuple with the TemplateType field value if set, nil otherwise
+// GetTemplateTypeOk returns a tuple with the TemplateType field value
 // and a boolean to check if the value has been set.
 func (o *Message) GetTemplateTypeOk() (*string, bool) {
-	if o == nil || o.TemplateType == nil {
+	if o == nil {
 		return nil, false
 	}
-	return o.TemplateType, true
+	return &o.TemplateType, true
 }
 
-// HasTemplateType returns a boolean if a field has been set.
-func (o *Message) HasTemplateType() bool {
-	if o != nil && o.TemplateType != nil {
-		return true
-	}
-
-	return false
-}
-
-// SetTemplateType gets a reference to the given string and assigns it to the TemplateType field.
+// SetTemplateType sets field value
 func (o *Message) SetTemplateType(v string) {
-	o.TemplateType = &v
+	o.TemplateType = v
 }
 
-// GetType returns the Type field value if set, zero value otherwise.
+// GetType returns the Type field value
 func (o *Message) GetType() CourierMessageType {
-	if o == nil || o.Type == nil {
+	if o == nil {
 		var ret CourierMessageType
 		return ret
 	}
-	return *o.Type
+
+	return o.Type
 }
 
-// GetTypeOk returns a tuple with the Type field value if set, nil otherwise
+// GetTypeOk returns a tuple with the Type field value
 // and a boolean to check if the value has been set.
 func (o *Message) GetTypeOk() (*CourierMessageType, bool) {
-	if o == nil || o.Type == nil {
+	if o == nil {
 		return nil, false
 	}
-	return o.Type, true
+	return &o.Type, true
 }
 
-// HasType returns a boolean if a field has been set.
-func (o *Message) HasType() bool {
-	if o != nil && o.Type != nil {
-		return true
-	}
-
-	return false
-}
-
-// SetType gets a reference to the given CourierMessageType and assigns it to the Type field.
+// SetType sets field value
 func (o *Message) SetType(v CourierMessageType) {
-	o.Type = &v
+	o.Type = v
 }
 
-// GetUpdatedAt returns the UpdatedAt field value if set, zero value otherwise.
+// GetUpdatedAt returns the UpdatedAt field value
 func (o *Message) GetUpdatedAt() time.Time {
-	if o == nil || o.UpdatedAt == nil {
+	if o == nil {
 		var ret time.Time
 		return ret
 	}
-	return *o.UpdatedAt
+
+	return o.UpdatedAt
 }
 
-// GetUpdatedAtOk returns a tuple with the UpdatedAt field value if set, nil otherwise
+// GetUpdatedAtOk returns a tuple with the UpdatedAt field value
 // and a boolean to check if the value has been set.
 func (o *Message) GetUpdatedAtOk() (*time.Time, bool) {
-	if o == nil || o.UpdatedAt == nil {
+	if o == nil {
 		return nil, false
 	}
-	return o.UpdatedAt, true
+	return &o.UpdatedAt, true
 }
 
-// HasUpdatedAt returns a boolean if a field has been set.
-func (o *Message) HasUpdatedAt() bool {
-	if o != nil && o.UpdatedAt != nil {
-		return true
-	}
-
-	return false
-}
-
-// SetUpdatedAt gets a reference to the given time.Time and assigns it to the UpdatedAt field.
+// SetUpdatedAt sets field value
 func (o *Message) SetUpdatedAt(v time.Time) {
-	o.UpdatedAt = &v
+	o.UpdatedAt = v
 }
 
 func (o Message) MarshalJSON() ([]byte, error) {
 	toSerialize := map[string]interface{}{}
-	if o.Body != nil {
+	if true {
 		toSerialize["body"] = o.Body
 	}
-	if o.CreatedAt != nil {
+	if true {
 		toSerialize["created_at"] = o.CreatedAt
 	}
-	if o.Id != nil {
+	if o.Dispatches != nil {
+		toSerialize["dispatches"] = o.Dispatches
+	}
+	if true {
 		toSerialize["id"] = o.Id
 	}
-	if o.Recipient != nil {
+	if true {
 		toSerialize["recipient"] = o.Recipient
 	}
-	if o.SendCount != nil {
+	if true {
 		toSerialize["send_count"] = o.SendCount
 	}
-	if o.Status != nil {
+	if true {
 		toSerialize["status"] = o.Status
 	}
-	if o.Subject != nil {
+	if true {
 		toSerialize["subject"] = o.Subject
 	}
-	if o.TemplateType != nil {
+	if true {
 		toSerialize["template_type"] = o.TemplateType
 	}
-	if o.Type != nil {
+	if true {
 		toSerialize["type"] = o.Type
 	}
-	if o.UpdatedAt != nil {
+	if true {
 		toSerialize["updated_at"] = o.UpdatedAt
 	}
 	return json.Marshal(toSerialize)

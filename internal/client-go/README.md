@@ -79,6 +79,7 @@ All URIs are relative to *http://localhost*
 
 Class | Method | HTTP request | Description
 ------------ | ------------- | ------------- | -------------
+*CourierApi* | [**GetCourierMessage**](docs/CourierApi.md#getcouriermessage) | **Get** /admin/courier/messages/{id} | Get a Message
 *CourierApi* | [**ListCourierMessages**](docs/CourierApi.md#listcouriermessages) | **Get** /admin/courier/messages | List Messages
 *FrontendApi* | [**CreateBrowserLoginFlow**](docs/FrontendApi.md#createbrowserloginflow) | **Get** /self-service/login/browser | Create Login Flow for Browsers
 *FrontendApi* | [**CreateBrowserLogoutFlow**](docs/FrontendApi.md#createbrowserlogoutflow) | **Get** /self-service/logout/browser | Create a Logout URL for Browsers
@@ -168,6 +169,7 @@ Class | Method | HTTP request | Description
  - [LoginFlow](docs/LoginFlow.md)
  - [LogoutFlow](docs/LogoutFlow.md)
  - [Message](docs/Message.md)
+ - [MessageDispatch](docs/MessageDispatch.md)
  - [NeedsPrivilegedSessionError](docs/NeedsPrivilegedSessionError.md)
  - [OAuth2Client](docs/OAuth2Client.md)
  - [OAuth2ConsentRequestOpenIDConnectContext](docs/OAuth2ConsentRequestOpenIDConnectContext.md)
