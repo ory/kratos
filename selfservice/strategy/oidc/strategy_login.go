@@ -125,17 +125,17 @@ func (s *Strategy) processLogin(w http.ResponseWriter, r *http.Request, a *login
 	// UPDATE TOKEN
 	var it string
 	if idToken, ok := token.Extra("id_token").(string); ok {
-		if it, err = s.d.Cipher().Encrypt(r.Context(), []byte(idToken)); err != nil {
+		if it, err = s.d.Cipher(r.Context()).Encrypt(r.Context(), []byte(idToken)); err != nil {
 			return nil, s.handleError(w, r, a, provider.Config().ID, nil, err)
 		}
 	}
 
-	cat, err := s.d.Cipher().Encrypt(r.Context(), []byte(token.AccessToken))
+	cat, err := s.d.Cipher(r.Context()).Encrypt(r.Context(), []byte(token.AccessToken))
 	if err != nil {
 		return nil, s.handleError(w, r, a, provider.Config().ID, nil, err)
 	}
 
-	crt, err := s.d.Cipher().Encrypt(r.Context(), []byte(token.RefreshToken))
+	crt, err := s.d.Cipher(r.Context()).Encrypt(r.Context(), []byte(token.RefreshToken))
 	if err != nil {
 		return nil, s.handleError(w, r, a, provider.Config().ID, nil, err)
 	}
