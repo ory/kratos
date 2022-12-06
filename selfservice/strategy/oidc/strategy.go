@@ -401,15 +401,10 @@ func (s *Strategy) handleCallback(w http.ResponseWriter, r *http.Request, ps htt
 		err            error
 	)
 
-	req, _, err := s.validateCallback(w, r)
-	if err != nil {
-		s.forwardError(w, r, req, err)
-		return
-	}
 	if loadingEnabled {
 		redirectTo, err = redirectTo.Parse(loadingUrl)
 		if err != nil {
-			s.forwardError(w, r, req, err)
+			s.forwardError(w, r, nil, err)
 			return
 		}
 		query := redirectTo.Query()
@@ -420,9 +415,11 @@ func (s *Strategy) handleCallback(w http.ResponseWriter, r *http.Request, ps htt
 		}
 		redirectTo.RawQuery = query.Encode()
 		http.Redirect(w, r, redirectTo.String(), http.StatusSeeOther)
+		return
 	}
 
-	panic("not implemented")
+	s.handleExchange(w, r, ps)
+
 }
 
 func (s *Strategy) populateMethod(r *http.Request, c *container.Container, message func(provider string) *text.Message) error {

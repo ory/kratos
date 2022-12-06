@@ -1017,6 +1017,27 @@
           "type": "object",
           "additionalProperties": false,
           "properties": {
+            "loading": {
+              "type": "object",
+              "properties": {
+                "ui_url": {
+                  "title": "URL of the Loading page.",
+                  "description": "URL where the Loading UI is hosted. Check the [doc](TBD).",
+                  "type": "string",
+                  "format": "uri-reference",
+                  "examples": [
+                    "https://my-app.com/user/loading"
+                  ],
+                  "default": "https://www.ory.sh/kratos/docs/fallback/settings"
+                },
+                "enabled": {
+                  "type": "boolean",
+                  "title": "Enable Loading Page",
+                  "description": "If set to true will enable [Loading](TBD).",
+                  "default": true
+                }
+              }
+            },
             "settings": {
               "type": "object",
               "additionalProperties": false,
