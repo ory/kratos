@@ -56,6 +56,7 @@ func (g *ProviderLark) OAuth2(ctx context.Context) (*oauth2.Config, error) {
 }
 
 func (g *ProviderLark) Claims(ctx context.Context, exchange *oauth2.Token, query url.Values) (*Claims, error) {
+	// larkClaim is defined in the https://open.feishu.cn/document/common-capabilities/sso/api/get-user-info
 	type larkClaim struct {
 		Sub          string `json:"sub"`
 		Name         string `json:"name"`
