@@ -696,6 +696,9 @@
               },
               {
                 "$ref": "#/definitions/selfServiceWebHook"
+              },
+              {
+                "$ref": "#/definitions/selfServiceRequireVerifiedAddressHook"
               }
             ]
           },
@@ -782,7 +785,22 @@
           "$ref": "#/definitions/selfServiceAfterOIDCLoginMethod"
         },
         "hooks": {
-          "$ref": "#/definitions/selfServiceHooks"
+          "type": "array",
+          "items": {
+            "anyOf": [
+              {
+                "$ref": "#/definitions/selfServiceWebHook"
+              },
+              {
+                "$ref": "#/definitions/selfServiceSessionRevokerHook"
+              },
+              {
+                "$ref": "#/definitions/selfServiceRequireVerifiedAddressHook"
+              }
+            ]
+          },
+          "uniqueItems": true,
+          "additionalItems": false
         }
       }
     },
