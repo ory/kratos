@@ -20,7 +20,8 @@ import (
 type Message struct {
 	Body string `json:"body"`
 	// CreatedAt is a helper struct field for gobuffalo.pop.
-	CreatedAt  time.Time            `json:"created_at"`
+	CreatedAt time.Time `json:"created_at"`
+	// Dispatches store information about the attempts of delivering a message May contain an error if any happened, or just the `success` state.
 	Dispatches []MessageDispatch    `json:"dispatches,omitempty"`
 	Id         string               `json:"id"`
 	Recipient  string               `json:"recipient"`

@@ -1215,6 +1215,7 @@
             "type": "string"
           },
           "dispatches": {
+            "description": "Dispatches store information about the attempts of delivering a message\nMay contain an error if any happened, or just the `success` state.",
             "items": {
               "$ref": "#/components/schemas/messageDispatch"
             },
