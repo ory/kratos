@@ -1,3 +1,6 @@
+// Copyright © 2022 Ory Corp
+// SPDX-License-Identifier: Apache-2.0
+
 package hash
 
 import (
@@ -14,7 +17,7 @@ type Hasher interface {
 }
 
 type HashProvider interface {
-	Hasher() Hasher
+	Hasher(ctx context.Context) Hasher
 }
 
 const tracingComponent = "github.com/ory/kratos/hash"

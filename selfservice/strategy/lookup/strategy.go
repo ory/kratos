@@ -1,3 +1,6 @@
+// Copyright © 2022 Ory Corp
+// SPDX-License-Identifier: Apache-2.0
+
 package lookup
 
 import (
@@ -20,7 +23,7 @@ import (
 	"github.com/ory/x/decoderx"
 )
 
-//var _ login.Strategy = new(Strategy)
+// var _ login.Strategy = new(Strategy)
 var _ settings.Strategy = new(Strategy)
 var _ identity.ActiveCredentialsCounter = new(Strategy)
 

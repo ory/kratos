@@ -1,3 +1,6 @@
+// Copyright © 2022 Ory Corp
+// SPDX-License-Identifier: Apache-2.0
+
 package sql
 
 import (
@@ -9,7 +12,7 @@ import (
 )
 
 func (p *Persister) hmacValue(ctx context.Context, value string) string {
-	return p.hmacValueWithSecret(ctx, value, p.r.Config(ctx).SecretsSession()[0])
+	return p.hmacValueWithSecret(ctx, value, p.r.Config().SecretsSession(ctx)[0])
 }
 
 func (p *Persister) hmacValueWithSecret(ctx context.Context, value string, secret []byte) string {
@@ -21,7 +24,7 @@ func (p *Persister) hmacValueWithSecret(ctx context.Context, value string, secre
 }
 
 func (p *Persister) hmacConstantCompare(ctx context.Context, value, hash string) bool {
-	for _, secret := range p.r.Config(ctx).SecretsSession() {
+	for _, secret := range p.r.Config().SecretsSession(ctx) {
 		if subtle.ConstantTimeCompare([]byte(p.hmacValueWithSecret(ctx, value, secret)), []byte(hash)) == 1 {
 			return true
 		}

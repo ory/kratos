@@ -1,3 +1,6 @@
+// Copyright © 2022 Ory Corp
+// SPDX-License-Identifier: Apache-2.0
+
 package main
 
 import (
@@ -44,7 +47,7 @@ func init() {
 		"NewInfoNodeLabelSave":                       text.NewInfoNodeLabelSave(),
 		"NewInfoNodeLabelSubmit":                     text.NewInfoNodeLabelSubmit(),
 		"NewInfoNodeLabelID":                         text.NewInfoNodeLabelID(),
-		"NewErrorValidationSettingsFlowExpired":      text.NewErrorValidationSettingsFlowExpired(time.Second),
+		"NewErrorValidationSettingsFlowExpired":      text.NewErrorValidationSettingsFlowExpired(aSecondAgo),
 		"NewInfoSelfServiceSettingsTOTPQRCode":       text.NewInfoSelfServiceSettingsTOTPQRCode(),
 		"NewInfoSelfServiceSettingsTOTPSecret":       text.NewInfoSelfServiceSettingsTOTPSecret("{secret}"),
 		"NewInfoSelfServiceSettingsTOTPSecretLabel":  text.NewInfoSelfServiceSettingsTOTPSecretLabel(),
@@ -66,12 +69,14 @@ func init() {
 		"NewInfoSelfServiceRegisterWebAuthn":                      text.NewInfoSelfServiceSettingsRegisterWebAuthn(),
 		"NewInfoSelfServiceRegisterWebAuthnDisplayName":           text.NewInfoSelfServiceRegisterWebAuthnDisplayName(),
 		"NewInfoSelfServiceRemoveWebAuthn":                        text.NewInfoSelfServiceRemoveWebAuthn("{name}", aSecondAgo),
-		"NewErrorValidationVerificationFlowExpired":               text.NewErrorValidationVerificationFlowExpired(-time.Second),
+		"NewErrorValidationVerificationFlowExpired":               text.NewErrorValidationVerificationFlowExpired(aSecondAgo),
 		"NewInfoSelfServiceVerificationSuccessful":                text.NewInfoSelfServiceVerificationSuccessful(),
 		"NewVerificationEmailSent":                                text.NewVerificationEmailSent(),
+		"NewVerificationEmailWithCodeSent":                        text.NewVerificationEmailWithCodeSent(),
 		"NewErrorValidationVerificationTokenInvalidOrAlreadyUsed": text.NewErrorValidationVerificationTokenInvalidOrAlreadyUsed(),
 		"NewErrorValidationVerificationRetrySuccess":              text.NewErrorValidationVerificationRetrySuccess(),
 		"NewErrorValidationVerificationStateFailure":              text.NewErrorValidationVerificationStateFailure(),
+		"NewErrorValidationVerificationCodeInvalidOrAlreadyUsed":  text.NewErrorValidationVerificationCodeInvalidOrAlreadyUsed(),
 		"NewErrorSystemGeneric":                                   text.NewErrorSystemGeneric("{reason}"),
 		"NewValidationErrorGeneric":                               text.NewValidationErrorGeneric("{reason}"),
 		"NewValidationErrorRequired":                              text.NewValidationErrorRequired("{field}"),
@@ -97,7 +102,7 @@ func init() {
 		"NewInfoLoginLookup":                                      text.NewInfoLoginLookup(),
 		"NewInfoLoginVerify":                                      text.NewInfoLoginVerify(),
 		"NewInfoLoginWith":                                        text.NewInfoLoginWith("{provider}"),
-		"NewErrorValidationLoginFlowExpired":                      text.NewErrorValidationLoginFlowExpired(time.Second),
+		"NewErrorValidationLoginFlowExpired":                      text.NewErrorValidationLoginFlowExpired(aSecondAgo),
 		"NewErrorValidationLoginNoStrategyFound":                  text.NewErrorValidationLoginNoStrategyFound(),
 		"NewErrorValidationRegistrationNoStrategyFound":           text.NewErrorValidationRegistrationNoStrategyFound(),
 		"NewErrorValidationSettingsNoStrategyFound":               text.NewErrorValidationSettingsNoStrategyFound(),
@@ -107,14 +112,18 @@ func init() {
 		"NewInfoRegistration":                                     text.NewInfoRegistration(),
 		"NewInfoRegistrationWith":                                 text.NewInfoRegistrationWith("{provider}"),
 		"NewInfoRegistrationContinue":                             text.NewInfoRegistrationContinue(),
-		"NewErrorValidationRegistrationFlowExpired":               text.NewErrorValidationRegistrationFlowExpired(time.Second),
-		"NewErrorValidationRecoveryFlowExpired":                   text.NewErrorValidationRecoveryFlowExpired(time.Second),
+		"NewErrorValidationRegistrationFlowExpired":               text.NewErrorValidationRegistrationFlowExpired(aSecondAgo),
+		"NewErrorValidationRecoveryFlowExpired":                   text.NewErrorValidationRecoveryFlowExpired(aSecondAgo),
 		"NewRecoverySuccessful":                                   text.NewRecoverySuccessful(inAMinute),
 		"NewRecoveryEmailSent":                                    text.NewRecoveryEmailSent(),
+		"NewRecoveryEmailWithCodeSent":                            text.NewRecoveryEmailWithCodeSent(),
 		"NewErrorValidationRecoveryTokenInvalidOrAlreadyUsed":     text.NewErrorValidationRecoveryTokenInvalidOrAlreadyUsed(),
+		"NewErrorValidationRecoveryCodeInvalidOrAlreadyUsed":      text.NewErrorValidationRecoveryCodeInvalidOrAlreadyUsed(),
 		"NewErrorValidationRecoveryRetrySuccess":                  text.NewErrorValidationRecoveryRetrySuccess(),
 		"NewErrorValidationRecoveryStateFailure":                  text.NewErrorValidationRecoveryStateFailure(),
 		"NewInfoNodeInputEmail":                                   text.NewInfoNodeInputEmail(),
+		"NewInfoNodeResendOTP":                                    text.NewInfoNodeResendOTP(),
+		"NewInfoNodeLabelContinue":                                text.NewInfoNodeLabelContinue(),
 		"NewInfoSelfServiceSettingsRegisterWebAuthn":              text.NewInfoSelfServiceSettingsRegisterWebAuthn(),
 		"NewInfoLoginWebAuthnPasswordless":                        text.NewInfoLoginWebAuthnPasswordless(),
 		"NewInfoSelfServiceRegistrationRegisterWebAuthn":          text.NewInfoSelfServiceRegistrationRegisterWebAuthn(),
@@ -136,8 +145,15 @@ func main() {
 		os.Exit(1)
 	}
 
-	if err := writeMessages(filepath.Join(os.Args[2], "concepts/ui-user-interface.mdx")); err != nil {
+	sortedMessages := sortMessages()
+
+	if err := writeMessages(filepath.Join(os.Args[2], "concepts/ui-user-interface.mdx"), sortedMessages); err != nil {
 		_, _ = fmt.Fprintf(os.Stderr, "Unable to generate message table: %+v\n", err)
+		os.Exit(1)
+	}
+
+	if err := writeMessagesJson(filepath.Join(os.Args[2], "concepts/messages.json"), sortedMessages); err != nil {
+		_, _ = fmt.Fprintf(os.Stderr, "Unable to generate messages.json: %+v\n", err)
 		os.Exit(1)
 	}
 
@@ -154,12 +170,7 @@ func codeEncode(in interface{}) string {
 	return string(out)
 }
 
-func writeMessages(path string) error {
-	content, err := os.ReadFile(path)
-	if err != nil {
-		return err
-	}
-
+func sortMessages() []*text.Message {
 	var toSort []*text.Message
 	for _, m := range messages {
 		toSort = append(toSort, m)
@@ -172,8 +183,17 @@ func writeMessages(path string) error {
 		return toSort[i].ID < toSort[j].ID
 	})
 
+	return toSort
+}
+
+func writeMessages(path string, sortedMessages []*text.Message) error {
+	content, err := os.ReadFile(path)
+	if err != nil {
+		return err
+	}
+
 	var w bytes.Buffer
-	for _, m := range toSort {
+	for _, m := range sortedMessages {
 		w.WriteString(fmt.Sprintf(`###### %s (%d)
 
 %s
@@ -183,6 +203,25 @@ func writeMessages(path string) error {
 
 	r := regexp.MustCompile(`(?s)<!-- START MESSAGE TABLE -->(.*?)<!-- END MESSAGE TABLE -->`)
 	result := r.ReplaceAllString(string(content), "<!-- START MESSAGE TABLE -->\n"+w.String()+"\n<!-- END MESSAGE TABLE -->")
+
+	f, err := os.OpenFile(path, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0755)
+	if err != nil {
+		return err
+	}
+
+	if _, err := f.WriteString(result); err != nil {
+		return err
+	}
+
+	if err := f.Close(); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func writeMessagesJson(path string, sortedMessages []*text.Message) error {
+	result := codeEncode(sortedMessages)
 
 	f, err := os.OpenFile(path, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0755)
 	if err != nil {

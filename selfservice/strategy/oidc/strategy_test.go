@@ -1,3 +1,6 @@
+// Copyright © 2022 Ory Corp
+// SPDX-License-Identifier: Apache-2.0
+
 package oidc_test
 
 import (
@@ -5,7 +8,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"net/http/cookiejar"
 	"net/http/httptest"
@@ -45,44 +48,45 @@ import (
 	"github.com/ory/kratos/x"
 )
 
-const debugRedirects = false
-
 func TestStrategy(t *testing.T) {
+	ctx := context.Background()
 	if testing.Short() {
 		t.Skip()
 	}
 
 	var (
-		conf, reg        = internal.NewFastRegistryWithMocks(t)
-		subject, website string
-		scope            []string
+		conf, reg = internal.NewFastRegistryWithMocks(t)
+		subject   string
+		claims    idTokenClaims
+		scope     []string
 	)
-
-	remoteAdmin, remotePublic, hydraIntegrationTSURL := newHydra(t, &subject, &website, &scope)
+	remoteAdmin, remotePublic, hydraIntegrationTSURL := newHydra(t, &subject, &claims, &scope)
 	returnTS := newReturnTs(t, reg)
+	conf.MustSet(ctx, config.ViperKeyURLsAllowedReturnToDomains, []string{returnTS.URL})
 	uiTS := newUI(t, reg)
 	errTS := testhelpers.NewErrorTestServer(t, reg)
 	routerP := x.NewRouterPublic()
 	routerA := x.NewRouterAdmin()
 	ts, _ := testhelpers.NewKratosServerWithRouters(t, reg, routerP, routerA)
-
+	invalid := newOIDCProvider(t, ts, remotePublic, remoteAdmin, "invalid-issuer")
 	viperSetProviderConfig(
 		t,
 		conf,
-		newOIDCProvider(t, ts, remotePublic, remoteAdmin, "valid", "client"),
+		newOIDCProvider(t, ts, remotePublic, remoteAdmin, "valid"),
 		oidc.Configuration{
 			Provider:     "generic",
 			ID:           "invalid-issuer",
-			ClientID:     "client",
-			ClientSecret: "secret",
-			IssuerURL:    strings.Replace(remotePublic, "127.0.0.1", "localhost", 1) + "/",
-			Mapper:       "file://./stub/oidc.hydra.jsonnet",
+			ClientID:     invalid.ClientID,
+			ClientSecret: invalid.ClientSecret,
+			// We replace this URL to cause an issuer validation mismatch.
+			IssuerURL: strings.Replace(remotePublic, "localhost", "127.0.0.1", 1) + "/",
+			Mapper:    "file://./stub/oidc.hydra.jsonnet",
 		},
 	)
 
-	conf.MustSet(config.ViperKeySelfServiceRegistrationEnabled, true)
+	conf.MustSet(ctx, config.ViperKeySelfServiceRegistrationEnabled, true)
 	testhelpers.SetDefaultIdentitySchema(conf, "file://./stub/registration.schema.json")
-	conf.MustSet(config.HookStrategyKey(config.ViperKeySelfServiceRegistrationAfter,
+	conf.MustSet(ctx, config.HookStrategyKey(config.ViperKeySelfServiceRegistrationAfter,
 		identity.CredentialsTypeOIDC.String()), []config.SelfServiceHook{{Name: "session"}})
 
 	t.Logf("Kratos Public URL: %s", ts.URL)
@@ -135,10 +139,10 @@ func TestStrategy(t *testing.T) {
 
 	var makeRequestWithCookieJar = func(t *testing.T, provider string, action string, fv url.Values, jar *cookiejar.Jar) (*http.Response, []byte) {
 		fv.Set("provider", provider)
-		res, err := newClient(t, jar).PostForm(action, fv)
+		res, err := testhelpers.NewClientWithCookieJar(t, jar, false).PostForm(action, fv)
 		require.NoError(t, err, action)
 
-		body, err := ioutil.ReadAll(res.Body)
+		body, err := io.ReadAll(res.Body)
 		require.NoError(t, res.Body.Close())
 		require.NoError(t, err)
 
@@ -176,11 +180,13 @@ func TestStrategy(t *testing.T) {
 	var ai = func(t *testing.T, res *http.Response, body []byte) {
 		assert.Contains(t, res.Request.URL.String(), returnTS.URL)
 		assert.Equal(t, subject, gjson.GetBytes(body, "identity.traits.subject").String(), "%s", body)
+		assert.Equal(t, claims.traits.website, gjson.GetBytes(body, "identity.traits.website").String(), "%s", body)
+		assert.Equal(t, claims.metadataPublic.picture, gjson.GetBytes(body, "identity.metadata_public.picture").String(), "%s", body)
 	}
 
 	var newLoginFlow = func(t *testing.T, redirectTo string, exp time.Duration) (req *login.Flow) {
 		// Use NewLoginFlow to instantiate the request but change the things we need to control a copy of it.
-		req, err := reg.LoginHandler().NewLoginFlow(httptest.NewRecorder(),
+		req, _, err := reg.LoginHandler().NewLoginFlow(httptest.NewRecorder(),
 			&http.Request{URL: urlx.ParseOrPanic(redirectTo)}, flow.TypeBrowser)
 		require.NoError(t, err)
 		req.RequestURL = redirectTo
@@ -226,6 +232,7 @@ func TestStrategy(t *testing.T) {
 	})
 
 	t.Run("case=should fail because the issuer is mismatching", func(t *testing.T) {
+		scope = []string{"openid"}
 		for k, v := range []string{
 			loginAction(newLoginFlow(t, returnTS.URL, time.Minute).ID),
 			registerAction(newRegistrationFlow(t, returnTS.URL, time.Minute).ID),
@@ -318,6 +325,42 @@ func TestStrategy(t *testing.T) {
 		assert.Contains(t, gjson.GetBytes(body, "ui.nodes.#(attributes.name==traits.subject).messages.0.text").String(), "is not valid", "%s\n%s", gjson.GetBytes(body, "ui.nodes.#(attributes.name==traits.subject)").Raw, body)
 	})
 
+	t.Run("case=cannot register multiple accounts with the same OIDC account", func(t *testing.T) {
+		subject = "oidc-register-then-login@ory.sh"
+		scope = []string{"openid", "offline"}
+
+		expectTokens := func(t *testing.T, provider string, body []byte) {
+			i, err := reg.PrivilegedIdentityPool().GetIdentityConfidential(context.Background(), uuid.FromStringOrNil(gjson.GetBytes(body, "identity.id").String()))
+			require.NoError(t, err)
+			c := i.Credentials[identity.CredentialsTypeOIDC].Config
+			assert.NotEmpty(t, gjson.GetBytes(c, "providers.0.initial_access_token").String())
+			assertx.EqualAsJSONExcept(
+				t,
+				json.RawMessage(fmt.Sprintf(`{"providers": [{"subject":"%s","provider":"%s"}]}`, subject, provider)),
+				json.RawMessage(c),
+				[]string{"providers.0.initial_id_token", "providers.0.initial_access_token", "providers.0.initial_refresh_token"},
+			)
+		}
+
+		t.Run("case=should pass registration", func(t *testing.T) {
+			r := newRegistrationFlow(t, returnTS.URL, time.Minute)
+			action := afv(t, r.ID, "valid")
+			res, body := makeRequest(t, "valid", action, url.Values{})
+			ai(t, res, body)
+			expectTokens(t, "valid", body)
+		})
+
+		t.Run("case=try another registration", func(t *testing.T) {
+			returnTo := fmt.Sprintf("%s/home?query=true", returnTS.URL)
+			r := newRegistrationFlow(t, fmt.Sprintf("%s?return_to=%s", returnTS.URL, url.QueryEscape(returnTo)), time.Minute)
+			action := afv(t, r.ID, "valid")
+			res, body := makeRequest(t, "valid", action, url.Values{})
+			assert.Equal(t, returnTo, res.Request.URL.String())
+			ai(t, res, body)
+			expectTokens(t, "valid", body)
+		})
+	})
+
 	t.Run("case=register and then login", func(t *testing.T) {
 		subject = "register-then-login@ory.sh"
 		scope = []string{"openid", "offline"}
@@ -381,6 +424,20 @@ func TestStrategy(t *testing.T) {
 		})
 	})
 
+	t.Run("case=login without registered account with return_to", func(t *testing.T) {
+		subject = "login-without-register-return-to@ory.sh"
+		scope = []string{"openid"}
+		returnTo := "/foo"
+
+		t.Run("case=should pass login", func(t *testing.T) {
+			r := newLoginFlow(t, fmt.Sprintf("%s?return_to=%s", returnTS.URL, returnTo), time.Minute)
+			action := afv(t, r.ID, "valid")
+			res, body := makeRequest(t, "valid", action, url.Values{})
+			assert.True(t, strings.HasSuffix(res.Request.URL.String(), returnTo))
+			ai(t, res, body)
+		})
+	})
+
 	t.Run("case=register and register again but login", func(t *testing.T) {
 		subject = "register-twice@ory.sh"
 		scope = []string{"openid"}
@@ -398,12 +455,25 @@ func TestStrategy(t *testing.T) {
 			res, body := makeRequest(t, "valid", action, url.Values{})
 			ai(t, res, body)
 		})
+
+		t.Run("case=should pass third time registration with return to", func(t *testing.T) {
+			returnTo := "/foo"
+			r := newLoginFlow(t, fmt.Sprintf("%s?return_to=%s", returnTS.URL, returnTo), time.Minute)
+			action := afv(t, r.ID, "valid")
+			res, body := makeRequest(t, "valid", action, url.Values{})
+			assert.True(t, strings.HasSuffix(res.Request.URL.String(), returnTo))
+			ai(t, res, body)
+		})
 	})
 
 	t.Run("case=register, merge, and complete data", func(t *testing.T) {
 		subject = "incomplete-data@ory.sh"
 		scope = []string{"openid"}
-		website = "https://www.ory.sh/kratos"
+		claims = idTokenClaims{}
+		claims.traits.website = "https://www.ory.sh/kratos"
+		claims.traits.groups = []string{"group1", "group2"}
+		claims.metadataPublic.picture = "picture.png"
+		claims.metadataAdmin.phoneNumber = "911"
 
 		t.Run("case=should fail registration on first attempt", func(t *testing.T) {
 			r := newRegistrationFlow(t, returnTS.URL, time.Minute)
@@ -424,6 +494,7 @@ func TestStrategy(t *testing.T) {
 			ai(t, res, body)
 			assert.Equal(t, "https://www.ory.sh/kratos", gjson.GetBytes(body, "identity.traits.website").String(), "%s", body)
 			assert.Equal(t, "valid-name", gjson.GetBytes(body, "identity.traits.name").String(), "%s", body)
+			assert.Equal(t, "[\"group1\",\"group2\"]", gjson.GetBytes(body, "identity.traits.groups").String(), "%s", body)
 		})
 	})
 
@@ -494,7 +565,7 @@ func TestStrategy(t *testing.T) {
 	})
 
 	t.Run("method=TestPopulateSignUpMethod", func(t *testing.T) {
-		conf.MustSet(config.ViperKeyPublicBaseURL, "https://foo/")
+		conf.MustSet(ctx, config.ViperKeyPublicBaseURL, "https://foo/")
 
 		sr, err := registration.NewFlow(conf, time.Minute, "nosurf", &http.Request{URL: urlx.ParseOrPanic("/")}, flow.TypeBrowser)
 		require.NoError(t, err)
@@ -504,7 +575,7 @@ func TestStrategy(t *testing.T) {
 	})
 
 	t.Run("method=TestPopulateLoginMethod", func(t *testing.T) {
-		conf.MustSet(config.ViperKeyPublicBaseURL, "https://foo/")
+		conf.MustSet(ctx, config.ViperKeyPublicBaseURL, "https://foo/")
 
 		sr, err := login.NewFlow(conf, time.Minute, "nosurf", &http.Request{URL: urlx.ParseOrPanic("/")}, flow.TypeBrowser)
 		require.NoError(t, err)
@@ -666,20 +737,21 @@ func TestDisabledEndpoint(t *testing.T) {
 
 func TestPostEndpointRedirect(t *testing.T) {
 	var (
-		conf, reg        = internal.NewFastRegistryWithMocks(t)
-		subject, website string
-		scope            []string
+		conf, reg = internal.NewFastRegistryWithMocks(t)
+		subject   string
+		claims    idTokenClaims
+		scope     []string
 	)
 	testhelpers.StrategyEnable(t, conf, identity.CredentialsTypeOIDC.String(), true)
 
-	remoteAdmin, remotePublic, _ := newHydra(t, &subject, &website, &scope)
+	remoteAdmin, remotePublic, _ := newHydra(t, &subject, &claims, &scope)
 
 	publicTS, adminTS := testhelpers.NewKratosServers(t)
 
 	viperSetProviderConfig(
 		t,
 		conf,
-		newOIDCProvider(t, publicTS, remotePublic, remoteAdmin, "apple", "client"),
+		newOIDCProvider(t, publicTS, remotePublic, remoteAdmin, "apple"),
 	)
 	testhelpers.InitKratosServers(t, reg, publicTS, adminTS)
 

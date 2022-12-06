@@ -1,15 +1,10 @@
+// Copyright © 2022 Ory Corp
+// SPDX-License-Identifier: Apache-2.0
+
 package serve_test
 
 import (
-	"encoding/base64"
-	"io/ioutil"
-	"os"
-	"path/filepath"
 	"testing"
-
-	"github.com/stretchr/testify/require"
-
-	"github.com/ory/kratos/x"
 
 	"github.com/ory/kratos/internal/testhelpers"
 )
@@ -19,19 +14,7 @@ func TestServe(t *testing.T) {
 }
 
 func TestServeTLSBase64(t *testing.T) {
-	certPath := filepath.Join(os.TempDir(), "e2e_test_cert_"+x.NewUUID().String()+".pem")
-	keyPath := filepath.Join(os.TempDir(), "e2e_test_key_"+x.NewUUID().String()+".pem")
-
-	testhelpers.GenerateTLSCertificateFilesForTests(t, certPath, keyPath)
-
-	certRaw, err := ioutil.ReadFile(certPath)
-	require.NoError(t, err)
-
-	keyRaw, err := ioutil.ReadFile(keyPath)
-	require.NoError(t, err)
-
-	certBase64 := base64.StdEncoding.EncodeToString(certRaw)
-	keyBase64 := base64.StdEncoding.EncodeToString(keyRaw)
+	_, _, certBase64, keyBase64 := testhelpers.GenerateTLSCertificateFilesForTests(t)
 	publicPort, adminPort := testhelpers.StartE2EServerOnly(t,
 		"./stub/kratos.yml",
 		true,
@@ -46,10 +29,7 @@ func TestServeTLSBase64(t *testing.T) {
 }
 
 func TestServeTLSPaths(t *testing.T) {
-	certPath := filepath.Join(os.TempDir(), "e2e_test_cert_"+x.NewUUID().String()+".pem")
-	keyPath := filepath.Join(os.TempDir(), "e2e_test_key_"+x.NewUUID().String()+".pem")
-
-	testhelpers.GenerateTLSCertificateFilesForTests(t, certPath, keyPath)
+	certPath, keyPath, _, _ := testhelpers.GenerateTLSCertificateFilesForTests(t)
 
 	publicPort, adminPort := testhelpers.StartE2EServerOnly(t,
 		"./stub/kratos.yml",

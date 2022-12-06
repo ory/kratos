@@ -1,3 +1,6 @@
+// Copyright © 2022 Ory Corp
+// SPDX-License-Identifier: Apache-2.0
+
 package registration
 
 import (
@@ -55,7 +58,7 @@ func (s *ErrorHandler) PrepareReplacementForExpiredFlow(w http.ResponseWriter, r
 		return nil, err
 	}
 
-	a.UI.Messages.Add(text.NewErrorValidationRegistrationFlowExpired(e.Ago))
+	a.UI.Messages.Add(text.NewErrorValidationRegistrationFlowExpired(e.ExpiredAt))
 	if err := s.d.RegistrationFlowPersister().UpdateRegistrationFlow(r.Context(), a); err != nil {
 		return nil, err
 	}
@@ -87,7 +90,7 @@ func (s *ErrorHandler) WriteFlowError(
 		if f.Type == flow.TypeAPI || x.IsJSONRequest(r) {
 			s.d.Writer().WriteError(w, r, expired)
 		} else {
-			http.Redirect(w, r, expired.GetFlow().AppendTo(s.d.Config(r.Context()).SelfServiceFlowRegistrationUI()).String(), http.StatusSeeOther)
+			http.Redirect(w, r, expired.GetFlow().AppendTo(s.d.Config().SelfServiceFlowRegistrationUI(r.Context())).String(), http.StatusSeeOther)
 		}
 		return
 	}
@@ -98,7 +101,7 @@ func (s *ErrorHandler) WriteFlowError(
 		return
 	}
 
-	ds, err := s.d.Config(r.Context()).DefaultIdentityTraitsSchemaURL()
+	ds, err := s.d.Config().DefaultIdentityTraitsSchemaURL(r.Context())
 	if err != nil {
 		s.forward(w, r, f, err)
 		return
@@ -115,7 +118,7 @@ func (s *ErrorHandler) WriteFlowError(
 	}
 
 	if f.Type == flow.TypeBrowser && !x.IsJSONRequest(r) {
-		http.Redirect(w, r, f.AppendTo(s.d.Config(r.Context()).SelfServiceFlowRegistrationUI()).String(), http.StatusFound)
+		http.Redirect(w, r, f.AppendTo(s.d.Config().SelfServiceFlowRegistrationUI(r.Context())).String(), http.StatusFound)
 		return
 	}
 

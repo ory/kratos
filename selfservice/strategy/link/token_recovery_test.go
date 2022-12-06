@@ -1,3 +1,6 @@
+// Copyright © 2022 Ory Corp
+// SPDX-License-Identifier: Apache-2.0
+
 package link_test
 
 import (
@@ -45,4 +48,9 @@ func TestRecoveryToken(t *testing.T) {
 			assert.EqualError(t, token.Valid(), f.Valid().Error())
 		})
 	})
+}
+
+func TestRecoveryTokenType(t *testing.T) {
+	assert.Equal(t, 1, int(link.RecoveryTokenTypeAdmin))
+	assert.Equal(t, 2, int(link.RecoveryTokenTypeSelfService))
 }

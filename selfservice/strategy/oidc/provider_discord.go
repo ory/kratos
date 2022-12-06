@@ -1,3 +1,6 @@
+// Copyright © 2022 Ory Corp
+// SPDX-License-Identifier: Apache-2.0
+
 package oidc
 
 import (
@@ -43,7 +46,7 @@ func (d *ProviderDiscord) oauth2(ctx context.Context) *oauth2.Config {
 			AuthURL:  discordgo.EndpointOauth2 + "authorize",
 			TokenURL: discordgo.EndpointOauth2 + "token",
 		},
-		RedirectURL: d.config.Redir(d.reg.Config(ctx).OIDCRedirectURIBase()),
+		RedirectURL: d.config.Redir(d.reg.Config().OIDCRedirectURIBase(ctx)),
 		Scopes:      d.config.Scope,
 	}
 }

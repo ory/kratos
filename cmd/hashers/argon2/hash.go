@@ -1,3 +1,6 @@
+// Copyright © 2022 Ory Corp
+// SPDX-License-Identifier: Apache-2.0
+
 package argon2
 
 import (
@@ -28,6 +31,8 @@ func newHashCmd() *cobra.Command {
 			if err != nil {
 				return err
 			}
+
+			flagConfig.ctx = cmd.Context()
 
 			hasher := hash.NewHasherArgon2(conf)
 			hashes := make([][]byte, len(args))

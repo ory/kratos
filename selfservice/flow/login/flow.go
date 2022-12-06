@@ -1,3 +1,6 @@
+// Copyright © 2022 Ory Corp
+// SPDX-License-Identifier: Apache-2.0
+
 package login
 
 import (
@@ -17,11 +20,12 @@ import (
 
 	"github.com/ory/x/stringsx"
 
+	hydraclientgo "github.com/ory/hydra-client-go"
+
 	"github.com/ory/kratos/driver/config"
+	"github.com/ory/kratos/hydra"
 
 	"github.com/ory/kratos/ui/container"
-
-	"github.com/ory/kratos/corp"
 
 	"github.com/gofrs/uuid"
 	"github.com/pkg/errors"
@@ -40,7 +44,7 @@ import (
 //
 // Once a login flow is completed successfully, a session cookie or session token will be issued.
 //
-// swagger:model selfServiceLoginFlow
+// swagger:model loginFlow
 type Flow struct {
 	// ID represents the flow's unique ID. When performing the login flow, this
 	// represents the id in the login UI's query parameter: http://<selfservice.flows.login.ui_url>/?flow=<flow_id>
@@ -48,6 +52,18 @@ type Flow struct {
 	// required: true
 	ID  uuid.UUID `json:"id" faker:"-" db:"id" rw:"r"`
 	NID uuid.UUID `json:"-"  faker:"-" db:"nid"`
+
+	// Ory OAuth 2.0 Login Challenge.
+	//
+	// This value is set using the `login_challenge` query parameter of the registration and login endpoints.
+	// If set will cooperate with Ory OAuth2 and OpenID to act as an OAuth2 server / OpenID Provider.
+	OAuth2LoginChallenge uuid.NullUUID `json:"oauth2_login_challenge,omitempty" faker:"-" db:"oauth2_login_challenge"`
+
+	// HydraLoginRequest is an optional field whose presence indicates that Kratos
+	// is being used as an identity provider in a Hydra OAuth2 flow. Kratos
+	// populates this field by retrieving its value from Hydra and it is used by
+	// the login and consent UIs.
+	HydraLoginRequest *hydraclientgo.OAuth2LoginRequest `json:"oauth2_login_request,omitempty" faker:"-" db:"-"`
 
 	// Type represents the flow's type which can be either "api" or "browser", depending on the flow interaction.
 	//
@@ -112,22 +128,28 @@ func NewFlow(conf *config.Config, exp time.Duration, csrf string, r *http.Reques
 
 	// Pre-validate the return to URL which is contained in the HTTP request.
 	_, err := x.SecureRedirectTo(r,
-		conf.SelfServiceBrowserDefaultReturnTo(),
+		conf.SelfServiceBrowserDefaultReturnTo(r.Context()),
 		x.SecureRedirectUseSourceURL(requestURL),
-		x.SecureRedirectAllowURLs(conf.SelfServiceBrowserAllowedReturnToDomains()),
-		x.SecureRedirectAllowSelfServiceURLs(conf.SelfPublicURL()),
+		x.SecureRedirectAllowURLs(conf.SelfServiceBrowserAllowedReturnToDomains(r.Context())),
+		x.SecureRedirectAllowSelfServiceURLs(conf.SelfPublicURL(r.Context())),
 	)
 	if err != nil {
 		return nil, err
 	}
 
+	hlc, err := hydra.GetLoginChallengeID(conf, r)
+	if err != nil {
+		return nil, err
+	}
+
 	return &Flow{
-		ID:        id,
-		ExpiresAt: now.Add(exp),
-		IssuedAt:  now,
+		ID:                   id,
+		OAuth2LoginChallenge: hlc,
+		ExpiresAt:            now.Add(exp),
+		IssuedAt:             now,
 		UI: &container.Container{
 			Method: "POST",
-			Action: flow.AppendFlowTo(urlx.AppendPaths(conf.SelfPublicURL(), RouteSubmitFlow), id).String(),
+			Action: flow.AppendFlowTo(urlx.AppendPaths(conf.SelfPublicURL(r.Context()), RouteSubmitFlow), id).String(),
 		},
 		RequestURL: requestURL,
 		CSRFToken:  csrf,
@@ -149,7 +171,7 @@ func (f *Flow) GetRequestURL() string {
 }
 
 func (f Flow) TableName(ctx context.Context) string {
-	return corp.ContextualizeTableName(ctx, "selfservice_login_flows")
+	return "selfservice_login_flows"
 }
 
 func (f Flow) WhereID(ctx context.Context, alias string) string {
@@ -192,6 +214,10 @@ func (f Flow) MarshalJSON() ([]byte, error) {
 }
 
 func (f *Flow) SetReturnTo() {
+	// Return to is already set, do not overwrite it.
+	if len(f.ReturnTo) > 0 {
+		return
+	}
 	if u, err := url.Parse(f.RequestURL); err == nil {
 		f.ReturnTo = u.Query().Get("return_to")
 	}
@@ -205,4 +231,8 @@ func (f *Flow) AfterFind(*pop.Connection) error {
 func (f *Flow) AfterSave(*pop.Connection) error {
 	f.SetReturnTo()
 	return nil
+}
+
+func (f *Flow) GetUI() *container.Container {
+	return f.UI
 }

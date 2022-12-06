@@ -1,3 +1,6 @@
+// Copyright © 2022 Ory Corp
+// SPDX-License-Identifier: Apache-2.0
+
 package oidc
 
 import (
@@ -10,6 +13,7 @@ import (
 
 	"github.com/ory/kratos/session"
 
+	"github.com/ory/kratos/ui/node"
 	"github.com/ory/x/sqlcon"
 
 	"github.com/ory/kratos/selfservice/flow/registration"
@@ -47,11 +51,10 @@ func (s *Strategy) PopulateLoginMethod(r *http.Request, requestedAAL identity.Au
 	return s.populateMethod(r, l.UI, text.NewInfoLoginWith)
 }
 
-// SubmitSelfServiceLoginFlowWithOidcMethodBody is used to decode the login form payload
-// when using the oidc method.
+// Update Login Flow with OpenID Connect Method
 //
-// swagger:model submitSelfServiceLoginFlowWithOidcMethodBody
-type SubmitSelfServiceLoginFlowWithOidcMethodBody struct {
+// swagger:model updateLoginFlowWithOidcMethod
+type UpdateLoginFlowWithOidcMethod struct {
 	// The provider to register with
 	//
 	// required: true
@@ -85,11 +88,21 @@ func (s *Strategy) processLogin(w http.ResponseWriter, r *http.Request, a *login
 			// not need additional consent/login.
 
 			// This is kinda hacky but the only way to ensure seamless login/registration flows when using OIDC.
-
 			s.d.Logger().WithField("provider", provider.Config().ID).WithField("subject", claims.Subject).Debug("Received successful OpenID Connect callback but user is not registered. Re-initializing registration flow now.")
 
+			// If return_to was set before, we need to preserve it.
+			var opts []registration.FlowOption
+			if len(a.ReturnTo) > 0 {
+				opts = append(opts, registration.WithFlowReturnTo(a.ReturnTo))
+			}
+
 			// This flow only works for browsers anyways.
-			aa, err := s.d.RegistrationHandler().NewRegistrationFlow(w, r, flow.TypeBrowser)
+			aa, err := s.d.RegistrationHandler().NewRegistrationFlow(w, r, flow.TypeBrowser, opts...)
+			if err != nil {
+				return nil, s.handleError(w, r, a, provider.Config().ID, nil, err)
+			}
+
+			aa.RequestURL, err = x.TakeOverReturnToParameter(a.RequestURL, aa.RequestURL)
 			if err != nil {
 				return nil, s.handleError(w, r, a, provider.Config().ID, nil, err)
 			}
@@ -147,7 +160,7 @@ func (s *Strategy) processLogin(w http.ResponseWriter, r *http.Request, a *login
 			}
 
 			i.Credentials[s.ID()] = *c
-			if err = s.d.LoginHookExecutor().PostLoginHook(w, r, identity.CredentialsTypeOIDC, a, i, sess); err != nil {
+			if err = s.d.LoginHookExecutor().PostLoginHook(w, r, identity.CredentialsTypeOIDC, node.OpenIDConnectGroup, a, i, sess); err != nil {
 				return nil, s.handleError(w, r, a, provider.Config().ID, nil, err)
 			}
 			return nil, nil
@@ -162,7 +175,7 @@ func (s *Strategy) Login(w http.ResponseWriter, r *http.Request, f *login.Flow, 
 		return nil, err
 	}
 
-	var p SubmitSelfServiceLoginFlowWithOidcMethodBody
+	var p UpdateLoginFlowWithOidcMethod
 	if err := s.newLinkDecoder(&p, r); err != nil {
 		return nil, s.handleError(w, r, f, "", nil, errors.WithStack(herodot.ErrBadRequest.WithDebug(err.Error()).WithReasonf("Unable to parse HTTP form request: %s", err.Error())))
 	}
@@ -195,7 +208,7 @@ func (s *Strategy) Login(w http.ResponseWriter, r *http.Request, f *login.Flow, 
 		return
 	}
 
-	state := x.NewUUID().String()
+	state := generateState(f.ID.String())
 	if err := s.d.ContinuityManager().Pause(r.Context(), w, r, sessionName,
 		continuity.WithPayload(&authCodeContainer{
 			State:  state,

@@ -1,3 +1,6 @@
+// Copyright © 2022 Ory Corp
+// SPDX-License-Identifier: Apache-2.0
+
 package password
 
 import (
@@ -20,11 +23,10 @@ import (
 	"github.com/ory/x/errorsx"
 )
 
-// SubmitSelfServiceRegistrationFlowWithPasswordMethodBody is used to decode the registration form payload
-// when using the password method.
+// Update Registration Flow with Password Method
 //
-// swagger:model submitSelfServiceRegistrationFlowWithPasswordMethodBody
-type SubmitSelfServiceRegistrationFlowWithPasswordMethodBody struct {
+// swagger:model updateRegistrationFlowWithPasswordMethod
+type UpdateRegistrationFlowWithPasswordMethod struct {
 	// Password to sign the user up with
 	//
 	// required: true
@@ -49,7 +51,7 @@ type SubmitSelfServiceRegistrationFlowWithPasswordMethodBody struct {
 func (s *Strategy) RegisterRegistrationRoutes(_ *x.RouterPublic) {
 }
 
-func (s *Strategy) handleRegistrationError(_ http.ResponseWriter, r *http.Request, f *registration.Flow, p *SubmitSelfServiceRegistrationFlowWithPasswordMethodBody, err error) error {
+func (s *Strategy) handleRegistrationError(_ http.ResponseWriter, r *http.Request, f *registration.Flow, p *UpdateRegistrationFlowWithPasswordMethod, err error) error {
 	if f != nil {
 		if p != nil {
 			for _, n := range container.NewFromJSON("", node.ProfileGroup, p.Traits, "traits").Nodes {
@@ -66,8 +68,8 @@ func (s *Strategy) handleRegistrationError(_ http.ResponseWriter, r *http.Reques
 	return err
 }
 
-func (s *Strategy) decode(p *SubmitSelfServiceRegistrationFlowWithPasswordMethodBody, r *http.Request) error {
-	return registration.DecodeBody(p, r, s.hd, s.d.Config(r.Context()), registrationSchema)
+func (s *Strategy) decode(p *UpdateRegistrationFlowWithPasswordMethod, r *http.Request) error {
+	return registration.DecodeBody(p, r, s.hd, s.d.Config(), registrationSchema)
 }
 
 func (s *Strategy) Register(w http.ResponseWriter, r *http.Request, f *registration.Flow, i *identity.Identity) (err error) {
@@ -75,12 +77,12 @@ func (s *Strategy) Register(w http.ResponseWriter, r *http.Request, f *registrat
 		return err
 	}
 
-	var p SubmitSelfServiceRegistrationFlowWithPasswordMethodBody
+	var p UpdateRegistrationFlowWithPasswordMethod
 	if err := s.decode(&p, r); err != nil {
 		return s.handleRegistrationError(w, r, f, &p, err)
 	}
 
-	if err := flow.EnsureCSRF(s.d, r, f.Type, s.d.Config(r.Context()).DisableAPIFlowEnforcement(), s.d.GenerateCSRFToken, p.CSRFToken); err != nil {
+	if err := flow.EnsureCSRF(s.d, r, f.Type, s.d.Config().DisableAPIFlowEnforcement(r.Context()), s.d.GenerateCSRFToken, p.CSRFToken); err != nil {
 		return s.handleRegistrationError(w, r, f, &p, err)
 	}
 
@@ -92,7 +94,7 @@ func (s *Strategy) Register(w http.ResponseWriter, r *http.Request, f *registrat
 		p.Traits = json.RawMessage("{}")
 	}
 
-	hpw, err := s.d.Hasher().Generate(r.Context(), []byte(p.Password))
+	hpw, err := s.d.Hasher(r.Context()).Generate(r.Context(), []byte(p.Password))
 	if err != nil {
 		return s.handleRegistrationError(w, r, f, &p, err)
 	}
@@ -135,7 +137,7 @@ func (s *Strategy) validateCredentials(ctx context.Context, i *identity.Identity
 }
 
 func (s *Strategy) PopulateRegistrationMethod(r *http.Request, f *registration.Flow) error {
-	ds, err := s.d.Config(r.Context()).DefaultIdentityTraitsSchemaURL()
+	ds, err := s.d.Config().DefaultIdentityTraitsSchemaURL(r.Context())
 	if err != nil {
 		return err
 	}
@@ -150,7 +152,7 @@ func (s *Strategy) PopulateRegistrationMethod(r *http.Request, f *registration.F
 	}
 
 	f.UI.SetCSRF(s.d.GenerateCSRFToken(r))
-	f.UI.Nodes.Upsert(NewPasswordNode("password"))
+	f.UI.Nodes.Upsert(NewPasswordNode("password", node.InputAttributeAutocompleteNewPassword))
 	f.UI.Nodes.Append(node.NewInputField("method", "password", node.PasswordGroup, node.InputAttributeTypeSubmit).WithMetaLabel(text.NewInfoRegistration()))
 
 	return nil

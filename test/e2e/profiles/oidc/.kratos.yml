@@ -8,8 +8,8 @@ selfservice:
             id: hydra
             label: Ory
             provider: generic
-            client_id: kratos-client
-            client_secret: kratos-secret
+            client_id: ${OIDC_HYDRA_CLIENT_ID}
+            client_secret: ${OIDC_HYDRA_CLIENT_SECRET}
             issuer_url: http://localhost:4444/
             scope:
               - offline
@@ -17,8 +17,8 @@ selfservice:
           -
             id: google
             provider: generic
-            client_id: google-client
-            client_secret: kratos-secret
+            client_id: ${OIDC_GOOGLE_CLIENT_ID}
+            client_secret: ${OIDC_GOOGLE_CLIENT_SECRET}
             issuer_url: http://localhost:4444/
             scope:
               - offline
@@ -26,8 +26,8 @@ selfservice:
           -
             id: github
             provider: generic
-            client_id: github-client
-            client_secret: kratos-secret
+            client_id: ${OIDC_GITHUB_CLIENT_ID}
+            client_secret: ${OIDC_GITHUB_CLIENT_SECRET}
             issuer_url: http://localhost:4444/
             scope:
               - offline

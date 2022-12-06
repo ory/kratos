@@ -1,0 +1,13 @@
+coverage:
+  status:
+    project:
+      default:
+        target: 70%
+        threshold: 5%
+        only_pulls: true
+        base: auto
+ignore:
+  - "test"
+  - "internal"
+  - "docs"
+  - "contrib"

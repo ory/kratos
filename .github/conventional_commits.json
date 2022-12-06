@@ -1,0 +1,5 @@
+{
+  "$schema": "https://raw.githubusercontent.com/ory/ci/master/conventional_commit_config/dist/config.schema.json",
+  "addTypes": ["improvement", "perf"],
+  "addScopes": ["cli", "sql"]
+}

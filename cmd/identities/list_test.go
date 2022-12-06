@@ -1,11 +1,12 @@
+// Copyright © 2022 Ory Corp
+// SPDX-License-Identifier: Apache-2.0
+
 package identities_test
 
 import (
 	"context"
 	"strings"
 	"testing"
-
-	"github.com/spf13/cobra"
 
 	"github.com/ory/kratos/cmd/identities"
 
@@ -18,7 +19,7 @@ import (
 )
 
 func TestListCmd(t *testing.T) {
-	c := identities.NewListIdentitiesCmd(new(cobra.Command))
+	c := identities.NewListIdentitiesCmd()
 	reg := setup(t, c)
 	require.NoError(t, c.Flags().Set(cmdx.FlagQuiet, "true"))
 

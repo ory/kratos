@@ -1,3 +1,6 @@
+// Copyright © 2022 Ory Corp
+// SPDX-License-Identifier: Apache-2.0
+
 package oidc
 
 import (
@@ -44,8 +47,8 @@ func (s *Strategy) SettingsStrategyID() string {
 	return s.ID().String()
 }
 
-func (s *Strategy) decoderSettings(p *submitSelfServiceSettingsFlowWithOidcMethodBody, r *http.Request) error {
-	ds, err := s.d.Config(r.Context()).DefaultIdentityTraitsSchemaURL()
+func (s *Strategy) decoderSettings(p *updateSettingsFlowWithOidcMethod, r *http.Request) error {
+	ds, err := s.d.Config().DefaultIdentityTraitsSchemaURL(r.Context())
 	if err != nil {
 		return err
 	}
@@ -175,9 +178,11 @@ func (s *Strategy) PopulateSettingsMethod(r *http.Request, id *identity.Identity
 	return nil
 }
 
+// Update Settings Flow with OpenID Connect Method
+//
 // nolint:deadcode,unused
-// swagger:model submitSelfServiceSettingsFlowWithOidcMethodBody
-type submitSelfServiceSettingsFlowWithOidcMethodBody struct {
+// swagger:model updateSettingsFlowWithOidcMethod
+type updateSettingsFlowWithOidcMethod struct {
 	// Method
 	//
 	// Should be set to profile when trying to update a profile.
@@ -212,23 +217,23 @@ type submitSelfServiceSettingsFlowWithOidcMethodBody struct {
 	Traits json.RawMessage `json:"traits"`
 }
 
-func (p *submitSelfServiceSettingsFlowWithOidcMethodBody) GetFlowID() uuid.UUID {
+func (p *updateSettingsFlowWithOidcMethod) GetFlowID() uuid.UUID {
 	return x.ParseUUID(p.FlowID)
 }
 
-func (p *submitSelfServiceSettingsFlowWithOidcMethodBody) SetFlowID(rid uuid.UUID) {
+func (p *updateSettingsFlowWithOidcMethod) SetFlowID(rid uuid.UUID) {
 	p.FlowID = rid.String()
 }
 
 func (s *Strategy) Settings(w http.ResponseWriter, r *http.Request, f *settings.Flow, ss *session.Session) (*settings.UpdateContext, error) {
-	var p submitSelfServiceSettingsFlowWithOidcMethodBody
+	var p updateSettingsFlowWithOidcMethod
 	if err := s.decoderSettings(&p, r); err != nil {
 		return nil, err
 	}
 
 	ctxUpdate, err := settings.PrepareUpdate(s.d, w, r, f, ss, settings.ContinuityKey(s.SettingsStrategyID()), &p)
 	if errors.Is(err, settings.ErrContinuePreviousAction) {
-		if !s.d.Config(r.Context()).SelfServiceStrategy(s.SettingsStrategyID()).Enabled {
+		if !s.d.Config().SelfServiceStrategy(r.Context(), s.SettingsStrategyID()).Enabled {
 			return nil, errors.WithStack(herodot.ErrNotFound.WithReason(strategy.EndpointDisabledMessage))
 		}
 
@@ -255,7 +260,7 @@ func (s *Strategy) Settings(w http.ResponseWriter, r *http.Request, f *settings.
 		return nil, errors.WithStack(flow.ErrStrategyNotResponsible)
 	}
 
-	if !s.d.Config(r.Context()).SelfServiceStrategy(s.SettingsStrategyID()).Enabled {
+	if !s.d.Config().SelfServiceStrategy(r.Context(), s.SettingsStrategyID()).Enabled {
 		return nil, errors.WithStack(herodot.ErrNotFound.WithReason(strategy.EndpointDisabledMessage))
 	}
 
@@ -312,12 +317,12 @@ func (s *Strategy) isLinkable(r *http.Request, ctxUpdate *settings.UpdateContext
 	return i, nil
 }
 
-func (s *Strategy) initLinkProvider(w http.ResponseWriter, r *http.Request, ctxUpdate *settings.UpdateContext, p *submitSelfServiceSettingsFlowWithOidcMethodBody) error {
+func (s *Strategy) initLinkProvider(w http.ResponseWriter, r *http.Request, ctxUpdate *settings.UpdateContext, p *updateSettingsFlowWithOidcMethod) error {
 	if _, err := s.isLinkable(r, ctxUpdate, p.Link); err != nil {
 		return s.handleSettingsError(w, r, ctxUpdate, p, err)
 	}
 
-	if ctxUpdate.Session.AuthenticatedAt.Add(s.d.Config(r.Context()).SelfServiceFlowSettingsPrivilegedSessionMaxAge()).Before(time.Now()) {
+	if ctxUpdate.Session.AuthenticatedAt.Add(s.d.Config().SelfServiceFlowSettingsPrivilegedSessionMaxAge(r.Context())).Before(time.Now()) {
 		return s.handleSettingsError(w, r, ctxUpdate, p, errors.WithStack(settings.NewFlowNeedsReAuth()))
 	}
 
@@ -336,7 +341,7 @@ func (s *Strategy) initLinkProvider(w http.ResponseWriter, r *http.Request, ctxU
 		return s.handleSettingsError(w, r, ctxUpdate, p, err)
 	}
 
-	state := x.NewUUID().String()
+	state := generateState(ctxUpdate.Flow.ID.String())
 	if err := s.d.ContinuityManager().Pause(r.Context(), w, r, sessionName,
 		continuity.WithPayload(&authCodeContainer{
 			State:  state,
@@ -358,9 +363,9 @@ func (s *Strategy) initLinkProvider(w http.ResponseWriter, r *http.Request, ctxU
 }
 
 func (s *Strategy) linkProvider(w http.ResponseWriter, r *http.Request, ctxUpdate *settings.UpdateContext, token *oauth2.Token, claims *Claims, provider Provider) error {
-	p := &submitSelfServiceSettingsFlowWithOidcMethodBody{
+	p := &updateSettingsFlowWithOidcMethod{
 		Link: provider.Config().ID, FlowID: ctxUpdate.Flow.ID.String()}
-	if ctxUpdate.Session.AuthenticatedAt.Add(s.d.Config(r.Context()).SelfServiceFlowSettingsPrivilegedSessionMaxAge()).Before(time.Now()) {
+	if ctxUpdate.Session.AuthenticatedAt.Add(s.d.Config().SelfServiceFlowSettingsPrivilegedSessionMaxAge(r.Context())).Before(time.Now()) {
 		return s.handleSettingsError(w, r, ctxUpdate, p, errors.WithStack(settings.NewFlowNeedsReAuth()))
 	}
 
@@ -371,17 +376,17 @@ func (s *Strategy) linkProvider(w http.ResponseWriter, r *http.Request, ctxUpdat
 
 	var it string
 	if idToken, ok := token.Extra("id_token").(string); ok {
-		if it, err = s.d.Cipher().Encrypt(r.Context(), []byte(idToken)); err != nil {
+		if it, err = s.d.Cipher(r.Context()).Encrypt(r.Context(), []byte(idToken)); err != nil {
 			return s.handleSettingsError(w, r, ctxUpdate, p, err)
 		}
 	}
 
-	cat, err := s.d.Cipher().Encrypt(r.Context(), []byte(token.AccessToken))
+	cat, err := s.d.Cipher(r.Context()).Encrypt(r.Context(), []byte(token.AccessToken))
 	if err != nil {
 		return s.handleSettingsError(w, r, ctxUpdate, p, err)
 	}
 
-	crt, err := s.d.Cipher().Encrypt(r.Context(), []byte(token.RefreshToken))
+	crt, err := s.d.Cipher(r.Context()).Encrypt(r.Context(), []byte(token.RefreshToken))
 	if err != nil {
 		return s.handleSettingsError(w, r, ctxUpdate, p, err)
 	}
@@ -420,8 +425,8 @@ func (s *Strategy) linkProvider(w http.ResponseWriter, r *http.Request, ctxUpdat
 	return nil
 }
 
-func (s *Strategy) unlinkProvider(w http.ResponseWriter, r *http.Request, ctxUpdate *settings.UpdateContext, p *submitSelfServiceSettingsFlowWithOidcMethodBody) error {
-	if ctxUpdate.Session.AuthenticatedAt.Add(s.d.Config(r.Context()).SelfServiceFlowSettingsPrivilegedSessionMaxAge()).Before(time.Now()) {
+func (s *Strategy) unlinkProvider(w http.ResponseWriter, r *http.Request, ctxUpdate *settings.UpdateContext, p *updateSettingsFlowWithOidcMethod) error {
+	if ctxUpdate.Session.AuthenticatedAt.Add(s.d.Config().SelfServiceFlowSettingsPrivilegedSessionMaxAge(r.Context())).Before(time.Now()) {
 		return s.handleSettingsError(w, r, ctxUpdate, p, errors.WithStack(settings.NewFlowNeedsReAuth()))
 	}
 
@@ -483,7 +488,7 @@ func (s *Strategy) unlinkProvider(w http.ResponseWriter, r *http.Request, ctxUpd
 	return errors.WithStack(flow.ErrCompletedByStrategy)
 }
 
-func (s *Strategy) handleSettingsError(w http.ResponseWriter, r *http.Request, ctxUpdate *settings.UpdateContext, p *submitSelfServiceSettingsFlowWithOidcMethodBody, err error) error {
+func (s *Strategy) handleSettingsError(w http.ResponseWriter, r *http.Request, ctxUpdate *settings.UpdateContext, p *updateSettingsFlowWithOidcMethod, err error) error {
 	if e := new(settings.FlowNeedsReAuth); errors.As(err, &e) {
 		if err := s.d.ContinuityManager().Pause(r.Context(), w, r,
 			settings.ContinuityKey(s.SettingsStrategyID()), settings.ContinuityOptions(p, ctxUpdate.Session.Identity)...); err != nil {

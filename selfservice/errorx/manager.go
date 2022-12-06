@@ -1,3 +1,6 @@
+// Copyright © 2022 Ory Corp
+// SPDX-License-Identifier: Apache-2.0
+
 package errorx
 
 import (
@@ -47,7 +50,7 @@ func (m *Manager) Create(ctx context.Context, w http.ResponseWriter, r *http.Req
 	q := url.Values{}
 	q.Set("id", id.String())
 
-	return urlx.CopyWithQuery(m.d.Config(ctx).SelfServiceFlowErrorURL(), q).String(), nil
+	return urlx.CopyWithQuery(m.d.Config().SelfServiceFlowErrorURL(ctx), q).String(), nil
 }
 
 // Forward is a simple helper that saves all errors in the store and forwards the HTTP Request

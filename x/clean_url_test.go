@@ -1,8 +1,11 @@
+// Copyright © 2022 Ory Corp
+// SPDX-License-Identifier: Apache-2.0
+
 package x
 
 import (
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -28,7 +31,7 @@ func TestCleanPath(t *testing.T) {
 			res, err := ts.Client().Get(ts.URL + tc[0])
 			require.NoError(t, err)
 			defer res.Body.Close()
-			body, err := ioutil.ReadAll(res.Body)
+			body, err := io.ReadAll(res.Body)
 			require.NoError(t, err)
 			assert.Equal(t, string(body), tc[1])
 		})

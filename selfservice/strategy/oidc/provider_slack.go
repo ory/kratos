@@ -1,3 +1,6 @@
+// Copyright © 2022 Ory Corp
+// SPDX-License-Identifier: Apache-2.0
+
 package oidc
 
 import (
@@ -45,7 +48,7 @@ func (d *ProviderSlack) oauth2(ctx context.Context) *oauth2.Config {
 			AuthURL:  "https://slack.com/oauth/authorize",
 			TokenURL: slack.APIURL + "oauth.access",
 		},
-		RedirectURL: d.config.Redir(d.reg.Config(ctx).OIDCRedirectURIBase()),
+		RedirectURL: d.config.Redir(d.reg.Config().OIDCRedirectURIBase(ctx)),
 		Scopes:      d.config.Scope,
 	}
 }

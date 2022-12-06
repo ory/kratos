@@ -1,3 +1,6 @@
+// Copyright © 2022 Ory Corp
+// SPDX-License-Identifier: Apache-2.0
+
 package driver_test
 
 import (
@@ -15,6 +18,8 @@ import (
 )
 
 func TestRegistryDefault_IdentityTraitsSchemas(t *testing.T) {
+	ctx := context.Background()
+
 	conf, reg := internal.NewFastRegistryWithMocks(t)
 	defaultSchema := schema.Schema{
 		ID:     "default",
@@ -27,7 +32,7 @@ func TestRegistryDefault_IdentityTraitsSchemas(t *testing.T) {
 		RawURL: "file://other.schema.json",
 	}
 
-	conf.MustSet(config.ViperKeyIdentitySchemas, []config.Schema{
+	conf.MustSet(ctx, config.ViperKeyIdentitySchemas, []config.Schema{
 		{ID: altSchema.ID, URL: altSchema.RawURL},
 		{ID: defaultSchema.ID, URL: defaultSchema.RawURL},
 	})

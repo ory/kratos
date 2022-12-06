@@ -1,6 +1,10 @@
+// Copyright © 2022 Ory Corp
+// SPDX-License-Identifier: Apache-2.0
+
 package verification_test
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 	"net/url"
@@ -24,6 +28,7 @@ import (
 )
 
 func TestFlow(t *testing.T) {
+	ctx := context.Background()
 	conf, _ := internal.NewFastRegistryWithMocks(t)
 
 	must := func(r *verification.Flow, err error) *verification.Flow {
@@ -54,7 +59,7 @@ func TestFlow(t *testing.T) {
 		_, err := verification.NewFlow(conf, 0, "csrf", &http.Request{URL: &url.URL{Path: "/", RawQuery: "return_to=https://not-allowed/foobar"}, Host: "ory.sh"}, nil, flow.TypeBrowser)
 		require.Error(t, err)
 
-		_, err = verification.NewFlow(conf, 0, "csrf", &http.Request{URL: &url.URL{Path: "/", RawQuery: "return_to=" + urlx.AppendPaths(conf.SelfPublicURL(), "/self-service/login/browser").String()}, Host: "ory.sh"}, nil, flow.TypeBrowser)
+		_, err = verification.NewFlow(conf, 0, "csrf", &http.Request{URL: &url.URL{Path: "/", RawQuery: "return_to=" + urlx.AppendPaths(conf.SelfPublicURL(ctx), "/self-service/login/browser").String()}, Host: "ory.sh"}, nil, flow.TypeBrowser)
 		require.NoError(t, err)
 	})
 
@@ -121,8 +126,9 @@ func TestFlowEncodeJSON(t *testing.T) {
 }
 
 func TestFromOldFlow(t *testing.T) {
+	ctx := context.Background()
 	conf := internal.NewConfigurationWithDefaults(t)
-	r := http.Request{URL: &url.URL{Path: "/", RawQuery: "return_to=" + urlx.AppendPaths(conf.SelfPublicURL(), "/self-service/login/browser").String()}, Host: "ory.sh"}
+	r := http.Request{URL: &url.URL{Path: "/", RawQuery: "return_to=" + urlx.AppendPaths(conf.SelfPublicURL(ctx), "/self-service/login/browser").String()}, Host: "ory.sh"}
 	for _, ft := range []flow.Type{
 		flow.TypeAPI,
 		flow.TypeBrowser,
@@ -130,7 +136,7 @@ func TestFromOldFlow(t *testing.T) {
 		t.Run(fmt.Sprintf("case=original flow is %s", ft), func(t *testing.T) {
 			f, err := verification.NewFlow(conf, 0, "csrf", &r, nil, ft)
 			require.NoError(t, err)
-			nf, err := verification.FromOldFlow(conf, time.Duration(time.Hour), f.CSRFToken, &r, []verification.Strategy{}, f)
+			nf, err := verification.FromOldFlow(conf, time.Duration(time.Hour), f.CSRFToken, &r, nil, f)
 			require.NoError(t, err)
 			require.Equal(t, flow.TypeBrowser, nf.Type)
 		})

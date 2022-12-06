@@ -25,11 +25,33 @@
         "website": {
           "type": "string",
           "format": "uri"
+        },
+        "groups": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
         }
       },
       "required": [
         "subject"
       ]
+    },
+    "metadata_public": {
+      "type": "object",
+      "properties": {
+        "picture": {
+          "type": "string"
+        }
+      }
+    },
+    "metadata_admin": {
+      "type": "object",
+      "properties": {
+        "phone_number": {
+          "type": "string"
+        }
+      }
     }
   },
   "additionalProperties": false

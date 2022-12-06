@@ -12,8 +12,12 @@ selfservice:
     - http://localhost:4455
     - https://www.ory.sh/
     - https://example.org/
+    - https://www.example.org/
   methods:
     link:
+      config:
+        lifespan: 1h
+    code:
       config:
         lifespan: 1h
 
@@ -35,9 +39,11 @@ serve:
     base_url: http://kratos:4434/
 
 hashers:
-  algorithm: bcrypt
-  bcrypt:
-    cost: 4
+  algorithm: argon2
+  argon2:
+    memory: 1KB
+    iterations: 1
+    parallelism: 1
 
 courier:
   smtp:

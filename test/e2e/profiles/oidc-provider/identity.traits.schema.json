@@ -1,0 +1,57 @@
+{
+  "$id": "https://schemas.ory.sh/presets/kratos/quickstart/email-password/identity.schema.json",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Person",
+  "type": "object",
+  "properties": {
+    "traits": {
+      "type": "object",
+      "properties": {
+        "email": {
+          "type": "string",
+          "format": "email",
+          "title": "E-Mail",
+          "minLength": 3,
+          "ory.sh/kratos": {
+            "credentials": {
+              "password": {
+                "identifier": true
+              },
+              "webauthn": {
+                "identifier": true
+              }
+            }
+          }
+        },
+        "website": {
+          "title": "Website",
+          "type": "string",
+          "format": "uri",
+          "minLength": 10
+        },
+        "tos": {
+          "title": "Accept Terms of Service",
+          "type": "boolean"
+        },
+        "age": {
+          "title": "Age",
+          "type": "number",
+          "maximum": 300
+        },
+        "consent": {
+          "title": "Consent",
+          "type": "boolean"
+        },
+        "newsletter": {
+          "title": "Newsletter",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "email",
+        "website"
+      ],
+      "additionalProperties": false
+    }
+  }
+}

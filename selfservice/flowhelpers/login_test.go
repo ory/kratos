@@ -1,3 +1,6 @@
+// Copyright © 2022 Ory Corp
+// SPDX-License-Identifier: Apache-2.0
+
 package flowhelpers_test
 
 import (
@@ -29,7 +32,9 @@ func TestGuessForcedLoginIdentifier(t *testing.T) {
 	i.Credentials[identity.CredentialsTypePassword] = ic
 	require.NoError(t, reg.IdentityManager().Create(context.Background(), i))
 
-	sess, err := session.NewActiveSession(i, conf, time.Now(), identity.CredentialsTypePassword, identity.AuthenticatorAssuranceLevel1)
+	req := httptest.NewRequest("GET", "/sessions/whoami", nil)
+
+	sess, err := session.NewActiveSession(req, i, conf, time.Now(), identity.CredentialsTypePassword, identity.AuthenticatorAssuranceLevel1)
 	require.NoError(t, err)
 	reg.SessionPersister().UpsertSession(context.Background(), sess)
 

@@ -4,6 +4,8 @@ selfservice:
       enabled: true
     link:
       enabled: true
+    code:
+      enabled: true
 
   flows:
     settings:
@@ -14,6 +16,7 @@ selfservice:
       ui_url: http://localhost:4455/verification
       enabled: true
       lifespan: 5m
+      use: code
       after:
         default_browser_return_url: http://localhost:4455/
 
@@ -32,8 +35,8 @@ selfservice:
 
 identity:
   schemas:
-  - id: default
-    url: file://test/e2e/profiles/verification/identity.traits.schema.json
+    - id: default
+      url: file://test/e2e/profiles/verification/identity.traits.schema.json
 
 secrets:
   cipher:

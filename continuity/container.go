@@ -1,10 +1,11 @@
+// Copyright © 2022 Ory Corp
+// SPDX-License-Identifier: Apache-2.0
+
 package continuity
 
 import (
 	"context"
 	"time"
-
-	"github.com/ory/kratos/corp"
 
 	"github.com/gofrs/uuid"
 	"github.com/pkg/errors"
@@ -42,7 +43,7 @@ func (c *Container) UTC() *Container {
 }
 
 func (c Container) TableName(ctx context.Context) string {
-	return corp.ContextualizeTableName(ctx, "continuity_containers")
+	return "continuity_containers"
 }
 
 func NewContainer(name string, o managerOptions) *Container {

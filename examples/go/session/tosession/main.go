@@ -1,14 +1,17 @@
+// Copyright © 2022 Ory Corp
+// SPDX-License-Identifier: Apache-2.0
+
 package main
 
 import (
 	"github.com/ory/kratos/examples/go/pkg"
 
-	ory "github.com/ory/kratos-client-go"
+	ory "github.com/ory/client-go"
 )
 
 // If you use Open Source this would be:
 //
-//var client = pkg.NewSDKForSelfHosted("http://127.0.0.1:4433")
+// var client = pkg.NewSDKForSelfHosted("http://127.0.0.1:4433")
 var client = pkg.NewSDK("playground")
 
 func toSession() *ory.Session {
@@ -16,10 +19,8 @@ func toSession() *ory.Session {
 	email, password := pkg.RandomCredentials()
 	_, sessionToken := pkg.CreateIdentityWithSession(client, email, password)
 
-	session, res, err := client.V0alpha2Api.
-		ToSessionExecute(ory.
-			V0alpha2ApiApiToSessionRequest{}.
-			XSessionToken(sessionToken))
+	session, res, err := client.FrontendApi.ToSessionExecute(ory.FrontendApiApiToSessionRequest{}.
+		XSessionToken(sessionToken))
 	pkg.SDKExitOnError(err, res)
 	return session
 }

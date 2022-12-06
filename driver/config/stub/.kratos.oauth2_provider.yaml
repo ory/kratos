@@ -1,0 +1,4 @@
+oauth2_provider:
+  url: https://oauth2_provider/
+  headers:
+    Authorization: Basic

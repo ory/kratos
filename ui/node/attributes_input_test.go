@@ -1,10 +1,13 @@
+// Copyright © 2022 Ory Corp
+// SPDX-License-Identifier: Apache-2.0
+
 package node
 
 import (
 	"bytes"
 	"context"
 	"fmt"
-	"io/ioutil"
+	"os"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -19,7 +22,7 @@ func TestFieldFromPath(t *testing.T) {
 
 	var ctx = context.Background()
 	t.Run("all properties are properly transferred", func(t *testing.T) {
-		schema, err := ioutil.ReadFile("./fixtures/all_formats.schema.json")
+		schema, err := os.ReadFile("./fixtures/all_formats.schema.json")
 		require.NoError(t, err)
 
 		c := jsonschema.NewCompiler()
@@ -37,6 +40,12 @@ func TestFieldFromPath(t *testing.T) {
 			assert.EqualValues(t, gjson.GetBytes(schema, fmt.Sprintf("properties.%s.test_expected_type", path.Name)).String(), attr.Type)
 			assert.True(t, !gjson.GetBytes(schema, fmt.Sprintf("properties.%s.test_expected_pattern", path.Name)).Exists() ||
 				(gjson.GetBytes(schema, fmt.Sprintf("properties.%s.test_expected_pattern", path.Name)).Bool() && attr.Pattern != ""))
+
+			expectedAutocomplete := gjson.GetBytes(schema, fmt.Sprintf("properties.%s.test_expected_autocomplete", path.Name))
+
+			if expectedAutocomplete.Exists() {
+				assert.EqualValues(t, expectedAutocomplete.String(), attr.Autocomplete)
+			}
 		}
 	})
 }

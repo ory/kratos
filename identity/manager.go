@@ -1,8 +1,13 @@
+// Copyright © 2022 Ory Corp
+// SPDX-License-Identifier: Apache-2.0
+
 package identity
 
 import (
 	"context"
 	"reflect"
+
+	"github.com/ory/kratos/driver/config"
 
 	"github.com/gofrs/uuid"
 
@@ -21,6 +26,7 @@ var ErrProtectedFieldModified = herodot.ErrForbidden.
 
 type (
 	managerDependencies interface {
+		config.Provider
 		PoolProvider
 		courier.Provider
 		ValidationProvider
@@ -62,6 +68,10 @@ func newManagerOptions(opts []ManagerOption) *managerOptions {
 }
 
 func (m *Manager) Create(ctx context.Context, i *Identity, opts ...ManagerOption) error {
+	if i.SchemaID == "" {
+		i.SchemaID = m.r.Config().DefaultIdentityTraitsSchemaID(ctx)
+	}
+
 	o := newManagerOptions(opts)
 	if err := m.validate(ctx, i, o); err != nil {
 		return err

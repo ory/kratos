@@ -1,3 +1,6 @@
+// Copyright © 2022 Ory Corp
+// SPDX-License-Identifier: Apache-2.0
+
 package oidc
 
 import (
@@ -57,7 +60,7 @@ func (g *ProviderGenericOIDC) oauth2ConfigFromEndpoint(ctx context.Context, endp
 		ClientSecret: g.config.ClientSecret,
 		Endpoint:     endpoint,
 		Scopes:       scope,
-		RedirectURL:  g.config.Redir(g.reg.Config(ctx).OIDCRedirectURIBase()),
+		RedirectURL:  g.config.Redir(g.reg.Config().OIDCRedirectURIBase(ctx)),
 	}
 }
 
@@ -94,6 +97,12 @@ func (g *ProviderGenericOIDC) verifyAndDecodeClaimsWithProvider(ctx context.Cont
 	if err := token.Claims(&claims); err != nil {
 		return nil, errors.WithStack(herodot.ErrBadRequest.WithReasonf("%s", err))
 	}
+
+	var rawClaims map[string]interface{}
+	if err := token.Claims(&rawClaims); err != nil {
+		return nil, errors.WithStack(herodot.ErrBadRequest.WithReasonf("%s", err))
+	}
+	claims.RawClaims = rawClaims
 
 	return &claims, nil
 }

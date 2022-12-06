@@ -17,7 +17,7 @@ build() {
   log "Building ${SERVICE_NAME} binary"
   go env -w GOPROXY="proxy.golang.org,direct"
   go mod download
-  go build -gcflags "all=-N -l" -o /${SERVICE_NAME}
+  go build -buildvcs=false -gcflags "all=-N -l" -o /${SERVICE_NAME}
 }
 
 start() {

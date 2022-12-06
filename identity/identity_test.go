@@ -1,3 +1,6 @@
+// Copyright © 2022 Ory Corp
+// SPDX-License-Identifier: Apache-2.0
+
 package identity
 
 import (
@@ -169,6 +172,15 @@ func TestMarshalIdentityWithCredentialsWhenCredentialsNil(t *testing.T) {
 	assert.False(t, gjson.Get(b.String(), "credentials").Exists())
 }
 
+func TestMarshalIdentityWithAdminMetadata(t *testing.T) {
+	i := NewIdentity(config.DefaultIdentityTraitsSchemaID)
+	i.MetadataAdmin = []byte(`{"some":"metadata"}`)
+
+	var b bytes.Buffer
+	require.Nil(t, json.NewEncoder(&b).Encode(WithAdminMetadataInJSON(*i)))
+	assert.Equal(t, "metadata", gjson.GetBytes(i.MetadataAdmin, "some").String(), "Original metadata_admin should not be touched by marshalling")
+}
+
 func TestMarshalIdentityWithCredentialsMetadata(t *testing.T) {
 	i := NewIdentity(config.DefaultIdentityTraitsSchemaID)
 	credentials := map[CredentialsType]Credentials{
@@ -188,7 +200,7 @@ func TestMarshalIdentityWithCredentialsMetadata(t *testing.T) {
 
 	assert.JSONEq(t, "{\"password\":{\"type\":\"password\",\"identifiers\":null,\"updated_at\":\"0001-01-01T00:00:00Z\",\"created_at\":\"0001-01-01T00:00:00Z\",\"version\":0}}", credentialsInJson.Raw)
 	assert.Equal(t, credentials, i.Credentials, "Original credentials should not be touched by marshalling")
-	assert.Equal(t, "metadata", gjson.GetBytes(i.MetadataAdmin, "some").String(), "Original credentials should not be touched by marshalling")
+	assert.Equal(t, "metadata", gjson.GetBytes(i.MetadataAdmin, "some").String(), "Original metadata_admin should not be touched by marshalling")
 }
 
 func TestMarshalIdentityWithAll(t *testing.T) {

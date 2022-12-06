@@ -9,7 +9,7 @@ identity:
       url: https://example.com
 
 courier:
-  message_ttl: 50m
+  message_retries: 50
   smtp:
     connection_uri: smtps://foo:bar@my-mailserver:1234/
     from_address: no-reply@ory.kratos.sh
@@ -20,5 +20,5 @@ courier:
       url: https://sms.example.com
       method: POST
       body: file://request.config.twilio.jsonnet
-      header:
+      headers:
         'Content-Type': "application/x-www-form-urlencoded"

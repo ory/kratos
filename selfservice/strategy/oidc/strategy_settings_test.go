@@ -1,3 +1,6 @@
+// Copyright © 2022 Ory Corp
+// SPDX-License-Identifier: Apache-2.0
+
 package oidc_test
 
 import (
@@ -12,7 +15,7 @@ import (
 
 	"github.com/ory/x/snapshotx"
 
-	kratos "github.com/ory/kratos-client-go"
+	kratos "github.com/ory/kratos/internal/httpclient"
 	"github.com/ory/kratos/ui/container"
 	"github.com/ory/kratos/ui/node"
 
@@ -42,6 +45,7 @@ func init() {
 }
 
 func TestSettingsStrategy(t *testing.T) {
+	ctx := context.Background()
 	if testing.Short() {
 		t.Skip()
 	}
@@ -49,11 +53,11 @@ func TestSettingsStrategy(t *testing.T) {
 	var (
 		conf, reg = internal.NewFastRegistryWithMocks(t)
 		subject   string
-		website   string
+		claims    idTokenClaims
 		scope     []string
 	)
 
-	remoteAdmin, remotePublic, _ := newHydra(t, &subject, &website, &scope)
+	remoteAdmin, remotePublic, _ := newHydra(t, &subject, &claims, &scope)
 	uiTS := newUI(t, reg)
 	errTS := testhelpers.NewErrorTestServer(t, reg)
 	publicTS, adminTS := testhelpers.NewKratosServers(t)
@@ -61,13 +65,13 @@ func TestSettingsStrategy(t *testing.T) {
 	viperSetProviderConfig(
 		t,
 		conf,
-		newOIDCProvider(t, publicTS, remotePublic, remoteAdmin, "ory", "ory"),
-		newOIDCProvider(t, publicTS, remotePublic, remoteAdmin, "google", "google"),
-		newOIDCProvider(t, publicTS, remotePublic, remoteAdmin, "github", "github"),
+		newOIDCProvider(t, publicTS, remotePublic, remoteAdmin, "ory"),
+		newOIDCProvider(t, publicTS, remotePublic, remoteAdmin, "google"),
+		newOIDCProvider(t, publicTS, remotePublic, remoteAdmin, "github"),
 	)
 	testhelpers.InitKratosServers(t, reg, publicTS, adminTS)
 	testhelpers.SetDefaultIdentitySchema(conf, "file://./stub/settings.schema.json")
-	conf.MustSet(config.ViperKeySelfServiceBrowserDefaultReturnTo, "https://www.ory.sh/kratos")
+	conf.MustSet(ctx, config.ViperKeySelfServiceBrowserDefaultReturnTo, "https://www.ory.sh/kratos")
 
 	// Make test data for this test run unique
 	testID := x.NewUUID().String()
@@ -127,7 +131,7 @@ func TestSettingsStrategy(t *testing.T) {
 	}
 
 	// does the same as new profile request but uses the SDK
-	var nprSDK = func(t *testing.T, client *http.Client, redirectTo string, exp time.Duration) *kratos.SelfServiceSettingsFlow {
+	var nprSDK = func(t *testing.T, client *http.Client, redirectTo string, exp time.Duration) *kratos.SettingsFlow {
 		return testhelpers.InitializeSettingsFlowViaBrowser(t, client, false, publicTS)
 	}
 
@@ -158,7 +162,7 @@ func TestSettingsStrategy(t *testing.T) {
 	t.Run("case=should not be able to fetch another user's data", func(t *testing.T) {
 		req := newProfileFlow(t, agents["password"], "", time.Hour)
 
-		_, _, err := testhelpers.NewSDKCustomClient(publicTS, agents["oryer"]).V0alpha2Api.GetSelfServiceSettingsFlow(context.Background()).Id(req.ID.String()).Execute()
+		_, _, err := testhelpers.NewSDKCustomClient(publicTS, agents["oryer"]).FrontendApi.GetSettingsFlow(context.Background()).Id(req.ID.String()).Execute()
 		require.Error(t, err)
 		assert.Contains(t, err.Error(), "403")
 	})
@@ -166,7 +170,7 @@ func TestSettingsStrategy(t *testing.T) {
 	t.Run("case=should fetch the settings request and expect data to be set appropriately", func(t *testing.T) {
 		req := newProfileFlow(t, agents["password"], "", time.Hour)
 
-		rs, _, err := testhelpers.NewSDKCustomClient(publicTS, agents["password"]).V0alpha2Api.GetSelfServiceSettingsFlow(context.Background()).Id(req.ID.String()).Execute()
+		rs, _, err := testhelpers.NewSDKCustomClient(publicTS, agents["password"]).FrontendApi.GetSettingsFlow(context.Background()).Id(req.ID.String()).Execute()
 		require.NoError(t, err)
 
 		// Check our sanity. Does the SDK relay the same info that we expect and got from the store?
@@ -204,7 +208,7 @@ func TestSettingsStrategy(t *testing.T) {
 		}
 	})
 
-	var action = func(req *kratos.SelfServiceSettingsFlow) string {
+	var action = func(req *kratos.SettingsFlow) string {
 		return req.Ui.Action
 	}
 
@@ -240,13 +244,13 @@ func TestSettingsStrategy(t *testing.T) {
 
 	var reset = func(t *testing.T) func() {
 		return func() {
-			conf.MustSet(config.ViperKeySelfServiceSettingsPrivilegedAuthenticationAfter, time.Minute*5)
+			conf.MustSet(ctx, config.ViperKeySelfServiceSettingsPrivilegedAuthenticationAfter, time.Minute*5)
 			agents = testhelpers.AddAndLoginIdentities(t, reg, publicTS, users)
 		}
 	}
 
 	t.Run("suite=unlink", func(t *testing.T) {
-		var unlink = func(t *testing.T, agent, provider string) (body []byte, res *http.Response, req *kratos.SelfServiceSettingsFlow) {
+		var unlink = func(t *testing.T, agent, provider string) (body []byte, res *http.Response, req *kratos.SettingsFlow) {
 			req = nprSDK(t, agents[agent], "", time.Hour)
 			body, res = testhelpers.HTTPPostForm(t, agents[agent], action(req),
 				&url.Values{"csrf_token": {x.FakeCSRFToken}, "unlink": {provider}})
@@ -299,14 +303,14 @@ func TestSettingsStrategy(t *testing.T) {
 		t.Run("case=should not be able to unlink a connection without a privileged session", func(t *testing.T) {
 			agent, provider := "githuber", "github"
 
-			var runUnauthed = func(t *testing.T) *kratos.SelfServiceSettingsFlow {
-				conf.MustSet(config.ViperKeySelfServiceSettingsPrivilegedAuthenticationAfter, time.Millisecond)
+			var runUnauthed = func(t *testing.T) *kratos.SettingsFlow {
+				conf.MustSet(ctx, config.ViperKeySelfServiceSettingsPrivilegedAuthenticationAfter, time.Millisecond)
 				time.Sleep(time.Millisecond)
 				t.Cleanup(reset(t))
 				_, res, req := unlink(t, agent, provider)
 				assert.Contains(t, res.Request.URL.String(), uiTS.URL+"/login")
 
-				rs, _, err := testhelpers.NewSDKCustomClient(publicTS, agents[agent]).V0alpha2Api.GetSelfServiceSettingsFlow(context.Background()).Id(req.Id).Execute()
+				rs, _, err := testhelpers.NewSDKCustomClient(publicTS, agents[agent]).FrontendApi.GetSettingsFlow(context.Background()).Id(req.Id).Execute()
 				require.NoError(t, err)
 				require.EqualValues(t, settings.StateShowForm, rs.State)
 
@@ -323,7 +327,7 @@ func TestSettingsStrategy(t *testing.T) {
 				req := runUnauthed(t)
 
 				// fake login by allowing longer sessions...
-				conf.MustSet(config.ViperKeySelfServiceSettingsPrivilegedAuthenticationAfter, time.Minute*5)
+				conf.MustSet(ctx, config.ViperKeySelfServiceSettingsPrivilegedAuthenticationAfter, time.Minute*5)
 
 				body, res := testhelpers.HTTPPostForm(t, agents[agent], action(req),
 					&url.Values{"csrf_token": {x.FakeCSRFToken}, "unlink": {provider}})
@@ -337,7 +341,7 @@ func TestSettingsStrategy(t *testing.T) {
 	})
 
 	t.Run("suite=link", func(t *testing.T) {
-		var link = func(t *testing.T, agent, provider string) (body []byte, res *http.Response, req *kratos.SelfServiceSettingsFlow) {
+		var link = func(t *testing.T, agent, provider string) (body []byte, res *http.Response, req *kratos.SettingsFlow) {
 			req = nprSDK(t, agents[agent], "", time.Hour)
 			body, res = testhelpers.HTTPPostForm(t, agents[agent], action(req),
 				&url.Values{"csrf_token": {x.FakeCSRFToken}, "link": {provider}})
@@ -422,7 +426,7 @@ func TestSettingsStrategy(t *testing.T) {
 			updatedFlow, res, originalFlow := link(t, agent, provider)
 			assert.Contains(t, res.Request.URL.String(), uiTS.URL)
 
-			updatedFlowSDK, _, err := testhelpers.NewSDKCustomClient(publicTS, agents[agent]).V0alpha2Api.GetSelfServiceSettingsFlow(context.Background()).Id(originalFlow.Id).Execute()
+			updatedFlowSDK, _, err := testhelpers.NewSDKCustomClient(publicTS, agents[agent]).FrontendApi.GetSettingsFlow(context.Background()).Id(originalFlow.Id).Execute()
 			require.NoError(t, err)
 			require.EqualValues(t, settings.StateSuccess, updatedFlowSDK.State)
 
@@ -449,7 +453,7 @@ func TestSettingsStrategy(t *testing.T) {
 			_, res, req := link(t, agent, provider)
 			assert.Contains(t, res.Request.URL.String(), uiTS.URL)
 
-			rs, _, err := testhelpers.NewSDKCustomClient(publicTS, agents[agent]).V0alpha2Api.GetSelfServiceSettingsFlow(context.Background()).Id(req.Id).Execute()
+			rs, _, err := testhelpers.NewSDKCustomClient(publicTS, agents[agent]).FrontendApi.GetSettingsFlow(context.Background()).Id(req.Id).Execute()
 			require.NoError(t, err)
 			require.EqualValues(t, settings.StateSuccess, rs.State)
 
@@ -462,14 +466,14 @@ func TestSettingsStrategy(t *testing.T) {
 			agent, provider := "githuber", "google"
 			subject = "hackerman+new+google+" + testID
 
-			var runUnauthed = func(t *testing.T) *kratos.SelfServiceSettingsFlow {
-				conf.MustSet(config.ViperKeySelfServiceSettingsPrivilegedAuthenticationAfter, time.Millisecond)
+			var runUnauthed = func(t *testing.T) *kratos.SettingsFlow {
+				conf.MustSet(ctx, config.ViperKeySelfServiceSettingsPrivilegedAuthenticationAfter, time.Millisecond)
 				time.Sleep(time.Millisecond)
 				t.Cleanup(reset(t))
 				_, res, req := link(t, agent, provider)
 				assert.Contains(t, res.Request.URL.String(), uiTS.URL+"/login")
 
-				rs, _, err := testhelpers.NewSDKCustomClient(publicTS, agents[agent]).V0alpha2Api.GetSelfServiceSettingsFlow(context.Background()).Id(req.Id).Execute()
+				rs, _, err := testhelpers.NewSDKCustomClient(publicTS, agents[agent]).FrontendApi.GetSettingsFlow(context.Background()).Id(req.Id).Execute()
 				require.NoError(t, err)
 				require.EqualValues(t, settings.StateShowForm, rs.State)
 
@@ -486,7 +490,7 @@ func TestSettingsStrategy(t *testing.T) {
 				req := runUnauthed(t)
 
 				// fake login by allowing longer sessions...
-				conf.MustSet(config.ViperKeySelfServiceSettingsPrivilegedAuthenticationAfter, time.Minute*5)
+				conf.MustSet(ctx, config.ViperKeySelfServiceSettingsPrivilegedAuthenticationAfter, time.Minute*5)
 
 				body, res := testhelpers.HTTPPostForm(t, agents[agent], action(req),
 					&url.Values{"csrf_token": {x.FakeCSRFToken}, "unlink": {provider}})
@@ -501,14 +505,15 @@ func TestSettingsStrategy(t *testing.T) {
 }
 
 func TestPopulateSettingsMethod(t *testing.T) {
+	ctx := context.Background()
 	nreg := func(t *testing.T, conf *oidc.ConfigurationCollection) *driver.RegistryDefault {
 		c, reg := internal.NewFastRegistryWithMocks(t)
 
 		testhelpers.SetDefaultIdentitySchema(c, "file://stub/registration.schema.json")
-		c.MustSet(config.ViperKeyPublicBaseURL, "https://www.ory.sh/")
+		c.MustSet(ctx, config.ViperKeyPublicBaseURL, "https://www.ory.sh/")
 
 		// Enabled per default:
-		// 		conf.Set(configuration.ViperKeySelfServiceStrategyConfig+"."+string(identity.CredentialsTypePassword), map[string]interface{}{"enabled": true})
+		// 		conf.Set(ctx, configuration.ViperKeySelfServiceStrategyConfig+"."+string(identity.CredentialsTypePassword), map[string]interface{}{"enabled": true})
 		viperSetProviderConfig(t, c, conf.Providers...)
 		return reg
 	}

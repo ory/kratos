@@ -1,3 +1,6 @@
+// Copyright © 2022 Ory Corp
+// SPDX-License-Identifier: Apache-2.0
+
 package identity
 
 import (
@@ -5,7 +8,7 @@ import (
 	"reflect"
 	"time"
 
-	"github.com/ory/kratos/corp"
+	"github.com/ory/kratos/ui/node"
 
 	"github.com/gofrs/uuid"
 
@@ -42,6 +45,23 @@ func (c CredentialsType) String() string {
 	return string(c)
 }
 
+func (c CredentialsType) ToUiNodeGroup() node.UiNodeGroup {
+	switch c {
+	case CredentialsTypePassword:
+		return node.PasswordGroup
+	case CredentialsTypeOIDC:
+		return node.OpenIDConnectGroup
+	case CredentialsTypeTOTP:
+		return node.TOTPGroup
+	case CredentialsTypeWebAuthn:
+		return node.WebAuthnGroup
+	case CredentialsTypeLookup:
+		return node.LookupGroup
+	default:
+		return node.DefaultGroup
+	}
+}
+
 // Please make sure to add all of these values to the test that ensures they are created during migration
 const (
 	CredentialsTypePassword CredentialsType = "password"
@@ -55,6 +75,7 @@ const (
 	// CredentialsTypeRecoveryLink is a special credential type linked to the link strategy (recovery flow).
 	// It is not used within the credentials object itself.
 	CredentialsTypeRecoveryLink CredentialsType = "link_recovery"
+	CredentialsTypeRecoveryCode CredentialsType = "code_recovery"
 )
 
 // Credentials represents a specific credential type
@@ -130,23 +151,23 @@ type (
 )
 
 func (c CredentialsTypeTable) TableName(ctx context.Context) string {
-	return corp.ContextualizeTableName(ctx, "identity_credential_types")
+	return "identity_credential_types"
 }
 
 func (c CredentialsCollection) TableName(ctx context.Context) string {
-	return corp.ContextualizeTableName(ctx, "identity_credentials")
+	return "identity_credentials"
 }
 
 func (c Credentials) TableName(ctx context.Context) string {
-	return corp.ContextualizeTableName(ctx, "identity_credentials")
+	return "identity_credentials"
 }
 
 func (c CredentialIdentifierCollection) TableName(ctx context.Context) string {
-	return corp.ContextualizeTableName(ctx, "identity_credential_identifiers")
+	return "identity_credential_identifiers"
 }
 
 func (c CredentialIdentifier) TableName(ctx context.Context) string {
-	return corp.ContextualizeTableName(ctx, "identity_credential_identifiers")
+	return "identity_credential_identifiers"
 }
 
 func CredentialsEqual(a, b map[CredentialsType]Credentials) bool {

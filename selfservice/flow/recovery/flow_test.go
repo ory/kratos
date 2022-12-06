@@ -1,6 +1,10 @@
+// Copyright © 2022 Ory Corp
+// SPDX-License-Identifier: Apache-2.0
+
 package recovery_test
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 	"net/url"
@@ -23,6 +27,7 @@ import (
 )
 
 func TestFlow(t *testing.T) {
+	ctx := context.Background()
 	conf, _ := internal.NewFastRegistryWithMocks(t)
 
 	must := func(r *recovery.Flow, err error) *recovery.Flow {
@@ -56,7 +61,7 @@ func TestFlow(t *testing.T) {
 		_, err := recovery.NewFlow(conf, 0, "csrf", &http.Request{URL: &url.URL{Path: "/", RawQuery: "return_to=https://not-allowed/foobar"}, Host: "ory.sh"}, nil, flow.TypeBrowser)
 		require.Error(t, err)
 
-		_, err = recovery.NewFlow(conf, 0, "csrf", &http.Request{URL: &url.URL{Path: "/", RawQuery: "return_to=" + urlx.AppendPaths(conf.SelfPublicURL(), "/self-service/login/browser").String()}, Host: "ory.sh"}, nil, flow.TypeBrowser)
+		_, err = recovery.NewFlow(conf, 0, "csrf", &http.Request{URL: &url.URL{Path: "/", RawQuery: "return_to=" + urlx.AppendPaths(conf.SelfPublicURL(ctx), "/self-service/login/browser").String()}, Host: "ory.sh"}, nil, flow.TypeBrowser)
 		require.NoError(t, err)
 	})
 }
@@ -86,8 +91,9 @@ func TestFlowEncodeJSON(t *testing.T) {
 }
 
 func TestFromOldFlow(t *testing.T) {
+	ctx := context.Background()
 	conf := internal.NewConfigurationWithDefaults(t)
-	r := http.Request{URL: &url.URL{Path: "/", RawQuery: "return_to=" + urlx.AppendPaths(conf.SelfPublicURL(), "/self-service/login/browser").String()}, Host: "ory.sh"}
+	r := http.Request{URL: &url.URL{Path: "/", RawQuery: "return_to=" + urlx.AppendPaths(conf.SelfPublicURL(ctx), "/self-service/login/browser").String()}, Host: "ory.sh"}
 	for _, ft := range []flow.Type{
 		flow.TypeAPI,
 		flow.TypeBrowser,
@@ -95,9 +101,19 @@ func TestFromOldFlow(t *testing.T) {
 		t.Run(fmt.Sprintf("case=original flow is %s", ft), func(t *testing.T) {
 			f, err := recovery.NewFlow(conf, 0, "csrf", &r, nil, ft)
 			require.NoError(t, err)
-			nF, err := recovery.FromOldFlow(conf, time.Duration(time.Hour), f.CSRFToken, &r, []recovery.Strategy{}, *f)
+			nF, err := recovery.FromOldFlow(conf, time.Duration(time.Hour), f.CSRFToken, &r, nil, *f)
 			require.NoError(t, err)
 			require.Equal(t, flow.TypeBrowser, nF.Type)
 		})
 	}
+}
+
+func TestFlowDontOverrideReturnTo(t *testing.T) {
+	f := &recovery.Flow{ReturnTo: "/foo"}
+	f.SetReturnTo()
+	assert.Equal(t, "/foo", f.ReturnTo)
+
+	f = &recovery.Flow{RequestURL: "https://foo.bar?return_to=/bar"}
+	f.SetReturnTo()
+	assert.Equal(t, "/bar", f.ReturnTo)
 }

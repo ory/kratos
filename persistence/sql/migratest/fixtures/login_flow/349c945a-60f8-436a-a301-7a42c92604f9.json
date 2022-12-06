@@ -1,0 +1,17 @@
+{
+  "id": "349c945a-60f8-436a-a301-7a42c92604f9",
+  "oauth2_login_challenge": "3caddfd5-9903-4bce-83ff-cae36f42dff7",
+  "type": "browser",
+  "expires_at": "2013-10-07T08:23:19Z",
+  "issued_at": "2013-10-07T08:23:19Z",
+  "request_url": "http://kratos:4433/self-service/browser/flows/login?login_challenge=3caddfd599034bce83ffcae36f42dff7",
+  "ui": {
+    "action": "",
+    "method": "",
+    "nodes": null
+  },
+  "created_at": "2013-10-07T08:23:19Z",
+  "updated_at": "2013-10-07T08:23:19Z",
+  "refresh": false,
+  "requested_aal": "aal2"
+}

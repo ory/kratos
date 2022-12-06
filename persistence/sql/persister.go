@@ -1,13 +1,17 @@
+// Copyright © 2022 Ory Corp
+// SPDX-License-Identifier: Apache-2.0
+
 package sql
 
 import (
 	"context"
 	"embed"
 	"fmt"
+	"time"
+
+	"github.com/ory/x/contextx"
 
 	"github.com/ory/x/fsx"
-
-	"github.com/ory/kratos/corp"
 
 	"github.com/gobuffalo/pop/v6"
 	"github.com/gobuffalo/pop/v6/columns"
@@ -37,6 +41,7 @@ type (
 		identity.ValidationProvider
 		x.LoggingProvider
 		config.Provider
+		contextx.Provider
 		x.TracingProvider
 	}
 	Persister struct {
@@ -63,12 +68,8 @@ func NewPersister(ctx context.Context, r persisterDependencies, c *pop.Connectio
 	}, nil
 }
 
-func (p *Persister) NetworkID() uuid.UUID {
-	if p.nid == uuid.Nil {
-		panic("NetworkID called before initialized")
-	}
-
-	return p.nid
+func (p *Persister) NetworkID(ctx context.Context) uuid.UUID {
+	return p.r.Contextualizer().Network(ctx, p.nid)
 }
 
 func (p Persister) WithNetworkID(sid uuid.UUID) persistence.Persister {
@@ -94,7 +95,7 @@ func (p *Persister) MigrationStatus(ctx context.Context) (popx.MigrationStatuses
 
 	status, err := p.mb.Status(ctx)
 	if err != nil {
-		return nil, err
+		return nil, errors.WithStack(err)
 	}
 
 	if !status.HasPending() {
@@ -136,6 +137,57 @@ type quotable interface {
 type node interface {
 	GetID() uuid.UUID
 	GetNID() uuid.UUID
+}
+
+func (p *Persister) CleanupDatabase(ctx context.Context, wait time.Duration, older time.Duration, batchSize int) error {
+	currentTime := time.Now().Add(-older)
+	p.r.Logger().Printf("Cleaning up records older than %s\n", currentTime)
+
+	p.r.Logger().Println("Cleaning up expired sessions")
+	if err := p.DeleteExpiredSessions(ctx, currentTime, batchSize); err != nil {
+		return err
+	}
+	time.Sleep(wait)
+
+	p.r.Logger().Println("Cleaning up expired continuity containers")
+	if err := p.DeleteExpiredContinuitySessions(ctx, currentTime, batchSize); err != nil {
+		return err
+	}
+	time.Sleep(wait)
+
+	p.r.Logger().Println("Cleaning up expired login flows")
+	if err := p.DeleteExpiredLoginFlows(ctx, currentTime, batchSize); err != nil {
+		return err
+	}
+	time.Sleep(wait)
+
+	p.r.Logger().Println("Cleaning up expired recovery flows")
+	if err := p.DeleteExpiredRecoveryFlows(ctx, currentTime, batchSize); err != nil {
+		return err
+	}
+	time.Sleep(wait)
+
+	p.r.Logger().Println("Cleaning up expired registation flows")
+	if err := p.DeleteExpiredRegistrationFlows(ctx, currentTime, batchSize); err != nil {
+		return err
+	}
+	time.Sleep(wait)
+
+	p.r.Logger().Println("Cleaning up expired settings flows")
+	if err := p.DeleteExpiredSettingsFlows(ctx, currentTime, batchSize); err != nil {
+		return err
+	}
+	time.Sleep(wait)
+
+	p.r.Logger().Println("Cleaning up expired verification flows")
+	if err := p.DeleteExpiredVerificationFlows(ctx, currentTime, batchSize); err != nil {
+		return err
+	}
+	time.Sleep(wait)
+
+	p.r.Logger().Println("Successfully cleaned up the latest batch of the SQL database! " +
+		"This should be re-run periodically, to be sure that all expired data is purged.")
+	return nil
 }
 
 func (p *Persister) update(ctx context.Context, v node, columnNames ...string) error {
@@ -193,7 +245,7 @@ func (p *Persister) delete(ctx context.Context, v interface{}, id uuid.UUID) err
 	ctx, span := p.r.Tracer(ctx).Tracer().Start(ctx, "persistence.sql.delete")
 	defer span.End()
 
-	nid := corp.ContextualizeNID(ctx, p.nid)
+	nid := p.NetworkID(ctx)
 
 	tabler, ok := v.(interface {
 		TableName(ctx context.Context) string

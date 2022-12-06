@@ -1,0 +1,8 @@
+{
+  "error": {
+    "code": 400,
+    "message": "The request was malformed or contained invalid parameters",
+    "reason": "Value from \"expires_in\" must result to a future time: -1h",
+    "status": "Bad Request"
+  }
+}

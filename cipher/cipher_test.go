@@ -1,3 +1,6 @@
+// Copyright © 2022 Ory Corp
+// SPDX-License-Identifier: Apache-2.0
+
 package cipher_test
 
 import (
@@ -16,6 +19,7 @@ import (
 )
 
 func TestCipher(t *testing.T) {
+	ctx := context.Background()
 	cfg, reg := internal.NewFastRegistryWithMocks(t)
 	goodSecret := []string{"secret-thirty-two-character-long"}
 
@@ -28,13 +32,13 @@ func TestCipher(t *testing.T) {
 		t.Run(fmt.Sprintf("cipher=%T", c), func(t *testing.T) {
 
 			t.Run("case=all_work", func(t *testing.T) {
-				cfg.MustSet(config.ViperKeySecretsCipher, goodSecret)
+				cfg.MustSet(ctx, config.ViperKeySecretsCipher, goodSecret)
 				testAllWork(t, c, cfg)
 			})
 
 			t.Run("case=encryption_failed", func(t *testing.T) {
 				// unset secret
-				err := cfg.Set(config.ViperKeySecretsCipher, []string{})
+				err := cfg.Set(ctx, config.ViperKeySecretsCipher, []string{})
 				require.NoError(t, err)
 
 				// secret have to be set
@@ -42,7 +46,7 @@ func TestCipher(t *testing.T) {
 				require.Error(t, err)
 
 				// unset secret
-				err = cfg.Set(config.ViperKeySecretsCipher, []string{"bad-length"})
+				err = cfg.Set(ctx, config.ViperKeySecretsCipher, []string{"bad-length"})
 				require.NoError(t, err)
 
 				// bad secret length
@@ -56,7 +60,7 @@ func TestCipher(t *testing.T) {
 
 			t.Run("case=decryption_failed", func(t *testing.T) {
 				// set secret
-				err := cfg.Set(config.ViperKeySecretsCipher, goodSecret)
+				err := cfg.Set(ctx, config.ViperKeySecretsCipher, goodSecret)
 				require.NoError(t, err)
 
 				//
@@ -67,7 +71,7 @@ func TestCipher(t *testing.T) {
 				require.Error(t, err)
 
 				// unset secret
-				err = cfg.Set(config.ViperKeySecretsCipher, []string{})
+				err = cfg.Set(ctx, config.ViperKeySecretsCipher, []string{})
 				require.NoError(t, err)
 
 				_, err = c.Decrypt(context.Background(), "not-empty")
@@ -77,14 +81,16 @@ func TestCipher(t *testing.T) {
 	}
 	c := cipher.NewNoop(reg)
 	t.Run(fmt.Sprintf("cipher=%T", c), func(t *testing.T) {
-		cfg.MustSet(config.ViperKeySecretsCipher, goodSecret)
+		cfg.MustSet(ctx, config.ViperKeySecretsCipher, goodSecret)
 		testAllWork(t, c, cfg)
 	})
 }
 
 func testAllWork(t *testing.T, c cipher.Cipher, cfg *config.Config) {
+	ctx := context.Background()
+
 	goodSecret := []string{"secret-thirty-two-character-long"}
-	cfg.MustSet(config.ViperKeySecretsCipher, goodSecret)
+	cfg.MustSet(ctx, config.ViperKeySecretsCipher, goodSecret)
 
 	message := "my secret message!"
 

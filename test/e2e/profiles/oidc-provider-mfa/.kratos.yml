@@ -1,0 +1,54 @@
+clients:
+  http:
+    disallow_private_ip_ranges: false
+selfservice:
+  flows:
+    settings:
+      ui_url: http://localhost:4455/settings
+      privileged_session_max_age: 5m
+      required_aal: highest_available
+
+    logout:
+      after:
+        default_browser_return_url: http://localhost:4455/login
+
+    registration:
+      ui_url: http://localhost:4455/registration
+      after:
+        password:
+          hooks:
+            - hook: session
+
+    login:
+      ui_url: http://localhost:4455/login
+    error:
+      ui_url: http://localhost:4455/error
+    verification:
+      ui_url: http://localhost:4455/verify
+    recovery:
+      ui_url: http://localhost:4455/recovery
+
+  methods:
+    totp:
+      enabled: true
+      config:
+        issuer: issuer.ory.sh
+    webauthn:
+      enabled: true
+      config:
+        rp:
+          id: localhost
+          origin: http://localhost:4455
+          display_name: Ory
+
+oauth2_provider:
+  url: "http://localhost:4745"
+
+identity:
+  schemas:
+    - id: default
+      url: file://test/e2e/profiles/oidc-provider-mfa/identity.traits.schema.json
+
+session:
+  whoami:
+    required_aal: highest_available

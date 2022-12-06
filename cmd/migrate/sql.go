@@ -1,18 +1,6 @@
-/*
-Copyright © 2019 NAME HERE <EMAIL ADDRESS>
+// Copyright © 2022 Ory Corp
+// SPDX-License-Identifier: Apache-2.0
 
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-*/
 package migrate
 
 import (
@@ -40,8 +28,8 @@ You can read in the database URL using the -e flag, for example:
 
 Before running this command on an existing database, create a back up!
 `,
-		Run: func(cmd *cobra.Command, args []string) {
-			cliclient.NewMigrateHandler().MigrateSQL(cmd, args)
+		RunE: func(cmd *cobra.Command, args []string) error {
+			return cliclient.NewMigrateHandler().MigrateSQL(cmd, args)
 		},
 	}
 

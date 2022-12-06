@@ -1,3 +1,6 @@
+// Copyright © 2022 Ory Corp
+// SPDX-License-Identifier: Apache-2.0
+
 package recovery
 
 import (
@@ -12,7 +15,6 @@ import (
 	"github.com/gofrs/uuid"
 	"github.com/pkg/errors"
 
-	"github.com/ory/kratos/corp"
 	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/selfservice/flow"
 	"github.com/ory/kratos/ui/container"
@@ -27,7 +29,7 @@ import (
 //
 // We recommend reading the [Account Recovery Documentation](../self-service/flows/password-reset-account-recovery)
 //
-// swagger:model selfServiceRecoveryFlow
+// swagger:model recoveryFlow
 type Flow struct {
 	// ID represents the request's unique ID. When performing the recovery flow, this
 	// represents the id in the recovery ui's query parameter: http://<selfservice.flows.recovery.ui_url>?request=<id>
@@ -62,7 +64,7 @@ type Flow struct {
 	// ReturnTo contains the requested return_to URL.
 	ReturnTo string `json:"return_to,omitempty" db:"-"`
 
-	// Active, if set, contains the registration method that is being used. It is initially
+	// Active, if set, contains the recovery method that is being used. It is initially
 	// not set.
 	Active sqlxx.NullString `json:"active,omitempty" faker:"-" db:"active_method"`
 
@@ -92,54 +94,61 @@ type Flow struct {
 	// RecoveredIdentityID is a helper struct field for gobuffalo.pop.
 	RecoveredIdentityID uuid.NullUUID `json:"-" faker:"-" db:"recovered_identity_id"`
 	NID                 uuid.UUID     `json:"-"  faker:"-" db:"nid"`
+
+	// DangerousSkipCSRFCheck indicates whether anti CSRF measures should be enforced in this flow
+	//
+	// This is needed, because we can not enforce these measures, if the flow has been initialized by someone else than
+	// the user.
+	DangerousSkipCSRFCheck bool `json:"-" faker:"-" db:"skip_csrf_check"`
 }
 
-func NewFlow(conf *config.Config, exp time.Duration, csrf string, r *http.Request, strategies Strategies, ft flow.Type) (*Flow, error) {
+func NewFlow(conf *config.Config, exp time.Duration, csrf string, r *http.Request, strategy Strategy, ft flow.Type) (*Flow, error) {
 	now := time.Now().UTC()
 	id := x.NewUUID()
 
 	// Pre-validate the return to URL which is contained in the HTTP request.
 	requestURL := x.RequestURL(r).String()
 	_, err := x.SecureRedirectTo(r,
-		conf.SelfServiceBrowserDefaultReturnTo(),
+		conf.SelfServiceBrowserDefaultReturnTo(r.Context()),
 		x.SecureRedirectUseSourceURL(requestURL),
-		x.SecureRedirectAllowURLs(conf.SelfServiceBrowserAllowedReturnToDomains()),
-		x.SecureRedirectAllowSelfServiceURLs(conf.SelfPublicURL()),
+		x.SecureRedirectAllowURLs(conf.SelfServiceBrowserAllowedReturnToDomains(r.Context())),
+		x.SecureRedirectAllowSelfServiceURLs(conf.SelfPublicURL(r.Context())),
 	)
 	if err != nil {
 		return nil, err
 	}
 
-	req := &Flow{
+	flow := &Flow{
 		ID:         id,
 		ExpiresAt:  now.Add(exp),
 		IssuedAt:   now,
 		RequestURL: requestURL,
 		UI: &container.Container{
 			Method: "POST",
-			Action: flow.AppendFlowTo(urlx.AppendPaths(conf.SelfPublicURL(), RouteSubmitFlow), id).String(),
+			Action: flow.AppendFlowTo(urlx.AppendPaths(conf.SelfPublicURL(r.Context()), RouteSubmitFlow), id).String(),
 		},
 		State:     StateChooseMethod,
 		CSRFToken: csrf,
 		Type:      ft,
 	}
 
-	for _, strategy := range strategies {
-		if err := strategy.PopulateRecoveryMethod(r, req); err != nil {
+	if strategy != nil {
+		flow.Active = sqlxx.NullString(strategy.RecoveryNodeGroup())
+		if err := strategy.PopulateRecoveryMethod(r, flow); err != nil {
 			return nil, err
 		}
 	}
 
-	return req, nil
+	return flow, nil
 }
 
-func FromOldFlow(conf *config.Config, exp time.Duration, csrf string, r *http.Request, strategies Strategies, of Flow) (*Flow, error) {
+func FromOldFlow(conf *config.Config, exp time.Duration, csrf string, r *http.Request, strategy Strategy, of Flow) (*Flow, error) {
 	f := of.Type
 	// Using the same flow in the recovery/verification context can lead to using API flow in a verification/recovery email
 	if of.Type == flow.TypeAPI {
 		f = flow.TypeBrowser
 	}
-	nf, err := NewFlow(conf, exp, csrf, r, strategies, f)
+	nf, err := NewFlow(conf, exp, csrf, r, strategy, f)
 	if err != nil {
 		return nil, err
 	}
@@ -157,7 +166,7 @@ func (f *Flow) GetRequestURL() string {
 }
 
 func (f Flow) TableName(ctx context.Context) string {
-	return corp.ContextualizeTableName(ctx, "selfservice_recovery_flows")
+	return "selfservice_recovery_flows"
 }
 
 func (f Flow) GetID() uuid.UUID {
@@ -191,6 +200,10 @@ func (f Flow) MarshalJSON() ([]byte, error) {
 }
 
 func (f *Flow) SetReturnTo() {
+	// Return to is already set, do not overwrite it.
+	if len(f.ReturnTo) > 0 {
+		return
+	}
 	if u, err := url.Parse(f.RequestURL); err == nil {
 		f.ReturnTo = u.Query().Get("return_to")
 	}
@@ -204,4 +217,8 @@ func (f *Flow) AfterFind(*pop.Connection) error {
 func (f *Flow) AfterSave(*pop.Connection) error {
 	f.SetReturnTo()
 	return nil
+}
+
+func (f *Flow) GetUI() *container.Container {
+	return f.UI
 }

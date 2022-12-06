@@ -1,3 +1,6 @@
+// Copyright © 2022 Ory Corp
+// SPDX-License-Identifier: Apache-2.0
+
 package identities_test
 
 import (
@@ -7,8 +10,6 @@ import (
 	"testing"
 
 	"github.com/tidwall/gjson"
-
-	"github.com/spf13/cobra"
 
 	"github.com/ory/kratos/cmd/identities"
 
@@ -22,7 +23,7 @@ import (
 )
 
 func TestDeleteCmd(t *testing.T) {
-	c := identities.NewDeleteIdentityCmd(new(cobra.Command))
+	c := identities.NewDeleteIdentityCmd()
 	reg := setup(t, c)
 
 	t.Run("case=deletes successfully", func(t *testing.T) {

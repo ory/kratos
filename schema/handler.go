@@ -1,3 +1,6 @@
+// Copyright © 2022 Ory Corp
+// SPDX-License-Identifier: Apache-2.0
+
 package schema
 
 import (
@@ -5,10 +8,11 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"net/http"
 	"os"
 	"strings"
+
+	"github.com/ory/x/pagination/migrationpagination"
 
 	"github.com/ory/x/urlx"
 
@@ -49,9 +53,9 @@ func (h *Handler) RegisterPublicRoutes(public *x.RouterPublic) {
 		"/"+SchemasPath+"/*",
 		x.AdminPrefix+"/"+SchemasPath+"/*",
 	)
-	public.GET(fmt.Sprintf("/%s/:id", SchemasPath), h.getByID)
+	public.GET(fmt.Sprintf("/%s/:id", SchemasPath), h.getIdentitySchema)
 	public.GET(fmt.Sprintf("/%s", SchemasPath), h.getAll)
-	public.GET(fmt.Sprintf("%s/%s/:id", x.AdminPrefix, SchemasPath), h.getByID)
+	public.GET(fmt.Sprintf("%s/%s/:id", x.AdminPrefix, SchemasPath), h.getIdentitySchema)
 	public.GET(fmt.Sprintf("%s/%s", x.AdminPrefix, SchemasPath), h.getAll)
 }
 
@@ -62,13 +66,15 @@ func (h *Handler) RegisterAdminRoutes(admin *x.RouterAdmin) {
 
 // Raw JSON Schema
 //
-// swagger:model jsonSchema
+// swagger:model identitySchema
 // nolint:deadcode,unused
-type jsonSchema json.RawMessage
+type identitySchema json.RawMessage
 
+// Get Identity JSON Schema Response
+//
 // nolint:deadcode,unused
-// swagger:parameters getJsonSchema
-type getJsonSchema struct {
+// swagger:parameters getIdentitySchema
+type getIdentitySchema struct {
 	// ID must be set to the ID of schema you want to get
 	//
 	// required: true
@@ -76,20 +82,22 @@ type getJsonSchema struct {
 	ID string `json:"id"`
 }
 
-// swagger:route GET /schemas/{id} v0alpha2 getJsonSchema
+// swagger:route GET /schemas/{id} identity getIdentitySchema
 //
-// Get a JSON Schema
+// # Get Identity JSON Schema
 //
-//     Produces:
-//     - application/json
+// Return a specific identity schema.
 //
-//     Schemes: http, https
+//	Produces:
+//	- application/json
 //
-//     Responses:
-//       200: jsonSchema
-//       404: jsonError
-//       500: jsonError
-func (h *Handler) getByID(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+//	Schemes: http, https
+//
+//	Responses:
+//	  200: identitySchema
+//	  404: errorGeneric
+//	  default: errorGeneric
+func (h *Handler) getIdentitySchema(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	ss, err := h.r.IdentityTraitsSchemas(r.Context())
 	if err != nil {
 		h.r.Writer().WriteError(w, r, errors.WithStack(herodot.ErrInternalServerError.WithWrap(err)))
@@ -125,37 +133,54 @@ func (h *Handler) getByID(w http.ResponseWriter, r *http.Request, ps httprouter.
 	}
 }
 
-// Raw identity Schema list
+// List of Identity JSON Schemas
 //
 // swagger:model identitySchemas
-type IdentitySchemas []identitySchema
+type IdentitySchemas []identitySchemaContainer
 
-// swagger:model identitySchema
-type identitySchema struct {
+// An Identity JSON Schema Container
+//
+// swagger:model identitySchemaContainer
+type identitySchemaContainer struct {
 	// The ID of the Identity JSON Schema
 	ID string `json:"id"`
 	// The actual Identity JSON Schema
-	Schema json.RawMessage `json:"schema"`
+	Schema identitySchema `json:"schema"`
 }
 
+// List Identity JSON Schemas Response
+//
 // nolint:deadcode,unused
 // swagger:parameters listIdentitySchemas
 type listIdentitySchemas struct {
-	x.PaginationParams
+	migrationpagination.RequestParameters
 }
 
-// swagger:route GET /schemas v0alpha2 listIdentitySchemas
+// List Identity JSON Schemas Response
 //
-// Get all Identity Schemas
+// swagger:response identitySchemas
+// nolint:deadcode,unused
+type identitySchemasResponse struct {
+	migrationpagination.ResponseHeaderAnnotation
+
+	// in: body
+	Body IdentitySchemas
+}
+
+// swagger:route GET /schemas identity listIdentitySchemas
 //
-//     Produces:
-//     - application/json
+// # Get all Identity Schemas
 //
-//     Schemes: http, https
+// Returns a list of all identity schemas currently in use.
 //
-//     Responses:
-//       200: identitySchemas
-//       500: jsonError
+//	Produces:
+//	- application/json
+//
+//	Schemes: http, https
+//
+//	Responses:
+//	  200: identitySchemas
+//	  default: errorGeneric
 func (h *Handler) getAll(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	page, itemsPerPage := x.ParsePagination(r)
 
@@ -176,20 +201,20 @@ func (h *Handler) getAll(w http.ResponseWriter, r *http.Request, ps httprouter.P
 			return
 		}
 
-		raw, err := ioutil.ReadAll(src)
+		raw, err := io.ReadAll(src)
 		_ = src.Close()
 		if err != nil {
 			h.r.Writer().WriteError(w, r, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("The file for this JSON Schema ID could not be found or opened. This is a configuration issue.").WithDebugf("%+v", err)))
 			return
 		}
 
-		ss = append(ss, identitySchema{
+		ss = append(ss, identitySchemaContainer{
 			ID:     schema.ID,
 			Schema: raw,
 		})
 	}
 
-	x.PaginationHeader(w, urlx.AppendPaths(h.r.Config(r.Context()).SelfPublicURL(), fmt.Sprintf("/%s", SchemasPath)), int64(total), page, itemsPerPage)
+	x.PaginationHeader(w, urlx.AppendPaths(h.r.Config().SelfPublicURL(r.Context()), fmt.Sprintf("/%s", SchemasPath)), int64(total), page, itemsPerPage)
 	h.r.Writer().Write(w, r, ss)
 }
 

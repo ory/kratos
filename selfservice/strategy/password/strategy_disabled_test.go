@@ -1,7 +1,10 @@
+// Copyright © 2022 Ory Corp
+// SPDX-License-Identifier: Apache-2.0
+
 package password_test
 
 import (
-	"io/ioutil"
+	"io"
 	"net/http"
 	"net/url"
 	"testing"
@@ -28,10 +31,10 @@ func TestDisabledEndpoint(t *testing.T) {
 
 		res, err := c.PostForm(f.Ui.Action, url.Values{"method": {"password"}, "password_identifier": []string{"identifier"}, "password": []string{"password"}})
 		require.NoError(t, err)
+		defer res.Body.Close()
 		assert.Equal(t, http.StatusNotFound, res.StatusCode)
 
-		defer res.Body.Close()
-		b, err := ioutil.ReadAll(res.Body)
+		b, err := io.ReadAll(res.Body)
 		assert.Contains(t, string(b), "This endpoint was disabled by system administrator", "%s", b)
 	})
 
@@ -40,10 +43,10 @@ func TestDisabledEndpoint(t *testing.T) {
 
 		res, err := c.PostForm(f.Ui.Action, url.Values{"method": {"password"}, "password_identifier": []string{"identifier"}, "password": []string{"password"}})
 		require.NoError(t, err)
+		defer res.Body.Close()
 		assert.Equal(t, http.StatusNotFound, res.StatusCode)
 
-		defer res.Body.Close()
-		b, err := ioutil.ReadAll(res.Body)
+		b, err := io.ReadAll(res.Body)
 		assert.Contains(t, string(b), "This endpoint was disabled by system administrator", "%s", b)
 	})
 
@@ -62,10 +65,10 @@ func TestDisabledEndpoint(t *testing.T) {
 				"password": {"bar"},
 			})
 			require.NoError(t, err)
+			defer res.Body.Close()
 			assert.Equal(t, http.StatusNotFound, res.StatusCode)
 
-			defer res.Body.Close()
-			b, err := ioutil.ReadAll(res.Body)
+			b, err := io.ReadAll(res.Body)
 			assert.Contains(t, string(b), "This endpoint was disabled by system administrator", "%s", b)
 		})
 	})

@@ -1,3 +1,6 @@
+// Copyright © 2022 Ory Corp
+// SPDX-License-Identifier: Apache-2.0
+
 package settings
 
 import (
@@ -16,8 +19,6 @@ import (
 	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/ui/container"
 	"github.com/ory/x/urlx"
-
-	"github.com/ory/kratos/corp"
 
 	"github.com/gofrs/uuid"
 	"github.com/pkg/errors"
@@ -39,7 +40,7 @@ import (
 //
 // We recommend reading the [User Settings Documentation](../self-service/flows/user-settings)
 //
-// swagger:model selfServiceSettingsFlow
+// swagger:model settingsFlow
 type Flow struct {
 	// ID represents the flow's unique ID. When performing the settings flow, this
 	// represents the id in the settings ui's query parameter: http://<selfservice.flows.settings.ui_url>?flow=<id>
@@ -127,10 +128,10 @@ func NewFlow(conf *config.Config, exp time.Duration, r *http.Request, i *identit
 	// Pre-validate the return to URL which is contained in the HTTP request.
 	requestURL := x.RequestURL(r).String()
 	_, err := x.SecureRedirectTo(r,
-		conf.SelfServiceBrowserDefaultReturnTo(),
+		conf.SelfServiceBrowserDefaultReturnTo(r.Context()),
 		x.SecureRedirectUseSourceURL(requestURL),
-		x.SecureRedirectAllowURLs(conf.SelfServiceBrowserAllowedReturnToDomains()),
-		x.SecureRedirectAllowSelfServiceURLs(conf.SelfPublicURL()),
+		x.SecureRedirectAllowURLs(conf.SelfServiceBrowserAllowedReturnToDomains(r.Context())),
+		x.SecureRedirectAllowSelfServiceURLs(conf.SelfPublicURL(r.Context())),
 	)
 	if err != nil {
 		return nil, err
@@ -147,7 +148,7 @@ func NewFlow(conf *config.Config, exp time.Duration, r *http.Request, i *identit
 		State:      StateShowForm,
 		UI: &container.Container{
 			Method: "POST",
-			Action: flow.AppendFlowTo(urlx.AppendPaths(conf.SelfPublicURL(), RouteSubmitFlow), id).String(),
+			Action: flow.AppendFlowTo(urlx.AppendPaths(conf.SelfPublicURL(r.Context()), RouteSubmitFlow), id).String(),
 		},
 		InternalContext: []byte("{}"),
 	}, nil
@@ -162,7 +163,7 @@ func (f *Flow) GetRequestURL() string {
 }
 
 func (f Flow) TableName(ctx context.Context) string {
-	return corp.ContextualizeTableName(ctx, "selfservice_settings_flows")
+	return "selfservice_settings_flows"
 }
 
 func (f Flow) GetID() uuid.UUID {
@@ -203,6 +204,10 @@ func (f Flow) MarshalJSON() ([]byte, error) {
 }
 
 func (f *Flow) SetReturnTo() {
+	// Return to is already set, do not overwrite it.
+	if len(f.ReturnTo) > 0 {
+		return
+	}
 	if u, err := url.Parse(f.RequestURL); err == nil {
 		f.ReturnTo = u.Query().Get("return_to")
 	}
@@ -216,4 +221,8 @@ func (f *Flow) AfterFind(*pop.Connection) error {
 func (f *Flow) AfterSave(*pop.Connection) error {
 	f.SetReturnTo()
 	return nil
+}
+
+func (f *Flow) GetUI() *container.Container {
+	return f.UI
 }

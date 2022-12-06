@@ -1,11 +1,14 @@
+// Copyright © 2022 Ory Corp
+// SPDX-License-Identifier: Apache-2.0
+
 package testhelpers
 
 import (
 	"context"
 	"encoding/base64"
-	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
+	"os"
 	"path"
 	"testing"
 
@@ -24,7 +27,7 @@ import (
 
 func SetupRemoteConfig(t *testing.T, ctx context.Context, plaintext string, html string, subject string) *driver.RegistryDefault {
 	_, reg := internal.NewFastRegistryWithMocks(t)
-	require.NoError(t, reg.Config(ctx).Set(config.ViperKeyCourierTemplatesRecoveryInvalidEmail, &config.CourierEmailTemplate{
+	require.NoError(t, reg.Config().Set(ctx, config.ViperKeyCourierTemplatesRecoveryInvalidEmail, &config.CourierEmailTemplate{
 		Body: &config.CourierEmailBodyTemplate{
 			PlainText: plaintext,
 			HTML:      html,
@@ -52,7 +55,7 @@ func TestRemoteTemplates(t *testing.T, basePath string, tmplType courier.Templat
 	t.Cleanup(cancel)
 
 	toBase64 := func(filePath string) string {
-		f, err := ioutil.ReadFile(filePath)
+		f, err := os.ReadFile(filePath)
 		require.NoError(t, err)
 		return base64.StdEncoding.EncodeToString(f)
 	}
@@ -66,12 +69,20 @@ func TestRemoteTemplates(t *testing.T, basePath string, tmplType courier.Templat
 			return email.NewRecoveryInvalid(d, &email.RecoveryInvalidModel{})
 		case courier.TypeRecoveryValid:
 			return email.NewRecoveryValid(d, &email.RecoveryValidModel{})
+		case courier.TypeRecoveryCodeValid:
+			return email.NewRecoveryCodeValid(d, &email.RecoveryCodeValidModel{})
+		case courier.TypeRecoveryCodeInvalid:
+			return email.NewRecoveryCodeInvalid(d, &email.RecoveryCodeInvalidModel{})
 		case courier.TypeTestStub:
 			return email.NewTestStub(d, &email.TestStubModel{})
 		case courier.TypeVerificationInvalid:
 			return email.NewVerificationInvalid(d, &email.VerificationInvalidModel{})
 		case courier.TypeVerificationValid:
 			return email.NewVerificationValid(d, &email.VerificationValidModel{})
+		case courier.TypeVerificationCodeInvalid:
+			return email.NewVerificationCodeInvalid(d, &email.VerificationCodeInvalidModel{})
+		case courier.TypeVerificationCodeValid:
+			return email.NewVerificationCodeValid(d, &email.VerificationCodeValidModel{})
 		default:
 			return nil
 		}
@@ -90,6 +101,8 @@ func TestRemoteTemplates(t *testing.T, basePath string, tmplType courier.Templat
 			ts.URL+"/email.body.gotmpl",
 			ts.URL+"/email.subject.gotmpl"))
 
+		require.NotNil(t, tpl, "Expected to find template for %s in %s", tmplType, basePath)
+
 		TestRendered(t, ctx, tpl)
 	})
 
@@ -98,6 +111,8 @@ func TestRemoteTemplates(t *testing.T, basePath string, tmplType courier.Templat
 			"base64://"+toBase64(path.Join(basePath, "email.body.plaintext.gotmpl")),
 			"base64://"+toBase64(path.Join(basePath, "email.body.gotmpl")),
 			"base64://"+toBase64(path.Join(basePath, "email.subject.gotmpl"))))
+
+		require.NotNil(t, tpl, "Expected to find template for %s in %s", tmplType, basePath)
 
 		TestRendered(t, ctx, tpl)
 	})
@@ -108,6 +123,7 @@ func TestRemoteTemplates(t *testing.T, basePath string, tmplType courier.Templat
 			"file://"+path.Join(basePath, "email.body.gotmpl"),
 			"file://"+path.Join(basePath, "email.subject.gotmpl")))
 
+		require.NotNil(t, tpl, "Expected to find template for %s in %s", tmplType, basePath)
 		TestRendered(t, ctx, tpl)
 	})
 
@@ -116,6 +132,8 @@ func TestRemoteTemplates(t *testing.T, basePath string, tmplType courier.Templat
 			"",
 			"",
 			"base64://"+toBase64(path.Join(basePath, "email.subject.gotmpl"))))
+
+		require.NotNil(t, tpl, "Expected to find template for %s in %s", tmplType, basePath)
 		TestRendered(t, ctx, tpl)
 	})
 
@@ -124,6 +142,8 @@ func TestRemoteTemplates(t *testing.T, basePath string, tmplType courier.Templat
 			"base64://"+toBase64(path.Join(basePath, "email.body.plaintext.gotmpl")),
 			"base64://"+toBase64(path.Join(basePath, "email.body.gotmpl")),
 			""))
+
+		require.NotNil(t, tpl, "Expected to find template for %s in %s", tmplType, basePath)
 		TestRendered(t, ctx, tpl)
 	})
 }

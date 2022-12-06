@@ -1,0 +1,14 @@
+{
+  "id": "ef18b06e-4700-4021-9949-ef783cd86be8",
+  "oauth2_login_challenge": "3caddfd5-9903-4bce-83ff-cae36f42dff7",
+  "type": "browser",
+  "expires_at": "2013-10-07T08:23:19Z",
+  "issued_at": "2013-10-07T08:23:19Z",
+  "request_url": "http://kratos:4433/self-service/browser/flows/registration?login_challenge=",
+  "active": "password",
+  "ui": {
+    "action": "",
+    "method": "",
+    "nodes": null
+  }
+}

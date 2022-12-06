@@ -1,8 +1,11 @@
+// Copyright © 2022 Ory Corp
+// SPDX-License-Identifier: Apache-2.0
+
 package verification_test
 
 import (
 	"context"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"testing"
 	"time"
@@ -35,8 +38,9 @@ import (
 )
 
 func TestHandleError(t *testing.T) {
+	ctx := context.Background()
 	conf, reg := internal.NewFastRegistryWithMocks(t)
-	conf.MustSet(config.ViperKeySelfServiceVerificationEnabled, true)
+	conf.MustSet(ctx, config.ViperKeySelfServiceVerificationEnabled, true)
 
 	public, _ := testhelpers.NewKratosServer(t, reg)
 
@@ -65,7 +69,9 @@ func TestHandleError(t *testing.T) {
 
 	newFlow := func(t *testing.T, ttl time.Duration, ft flow.Type) *verification.Flow {
 		req := &http.Request{URL: urlx.ParseOrPanic("/")}
-		f, err := verification.NewFlow(conf, ttl, x.FakeCSRFToken, req, reg.VerificationStrategies(context.Background()), ft)
+		strategy, err := reg.GetActiveVerificationStrategy(context.Background())
+		require.NoError(t, err)
+		f, err := verification.NewFlow(conf, ttl, x.FakeCSRFToken, req, strategy, ft)
 		require.NoError(t, err)
 		require.NoError(t, reg.VerificationFlowPersister().CreateVerificationFlow(context.Background(), f))
 		f, err = reg.VerificationFlowPersister().GetVerificationFlow(context.Background(), f.ID)
@@ -77,9 +83,9 @@ func TestHandleError(t *testing.T) {
 		res, err := ts.Client().Get(ts.URL + "/error")
 		require.NoError(t, err)
 		defer res.Body.Close()
-		require.Contains(t, res.Request.URL.String(), conf.SelfServiceFlowErrorURL().String()+"?id=")
+		require.Contains(t, res.Request.URL.String(), conf.SelfServiceFlowErrorURL(ctx).String()+"?id=")
 
-		sse, _, err := sdk.V0alpha2Api.GetSelfServiceError(context.Background()).Id(res.Request.URL.Query().Get("id")).Execute()
+		sse, _, err := sdk.FrontendApi.GetFlowError(context.Background()).Id(res.Request.URL.Query().Get("id")).Execute()
 		require.NoError(t, err)
 
 		return sse.Error, nil
@@ -107,9 +113,9 @@ func TestHandleError(t *testing.T) {
 		require.NoError(t, err)
 		defer res.Body.Close()
 		assert.Contains(t, res.Header.Get("Content-Type"), "application/json")
-		assert.NotContains(t, res.Request.URL.String(), conf.SelfServiceFlowErrorURL().String()+"?id=")
+		assert.NotContains(t, res.Request.URL.String(), conf.SelfServiceFlowErrorURL(ctx).String()+"?id=")
 
-		body, err := ioutil.ReadAll(res.Body)
+		body, err := io.ReadAll(res.Body)
 		require.NoError(t, err)
 		assert.Contains(t, string(body), "system error")
 	})
@@ -135,7 +141,7 @@ func TestHandleError(t *testing.T) {
 				require.Contains(t, res.Request.URL.String(), public.URL+verification.RouteGetFlow)
 				require.Equal(t, http.StatusOK, res.StatusCode, "%+v", res.Request)
 
-				body, err := ioutil.ReadAll(res.Body)
+				body, err := io.ReadAll(res.Body)
 				require.NoError(t, err)
 				assert.Equal(t, int(text.ErrorValidationVerificationFlowExpired), int(gjson.GetBytes(body, "ui.messages.0.id").Int()), string(body))
 				assert.NotEqual(t, verificationFlow.ID.String(), gjson.GetBytes(body, "id").String())
@@ -153,7 +159,7 @@ func TestHandleError(t *testing.T) {
 				defer res.Body.Close()
 				require.Equal(t, http.StatusBadRequest, res.StatusCode)
 
-				body, err := ioutil.ReadAll(res.Body)
+				body, err := io.ReadAll(res.Body)
 				require.NoError(t, err)
 				assert.Equal(t, int(text.ErrorValidationInvalidCredentials), int(gjson.GetBytes(body, "ui.messages.0.id").Int()), "%s", body)
 				assert.Equal(t, verificationFlow.ID.String(), gjson.GetBytes(body, "id").String())
@@ -171,7 +177,7 @@ func TestHandleError(t *testing.T) {
 				defer res.Body.Close()
 				require.Equal(t, http.StatusInternalServerError, res.StatusCode)
 
-				body, err := ioutil.ReadAll(res.Body)
+				body, err := io.ReadAll(res.Body)
 				require.NoError(t, err)
 				assert.JSONEq(t, x.MustEncodeJSON(t, flowError), gjson.GetBytes(body, "error").Raw)
 			})
@@ -183,7 +189,7 @@ func TestHandleError(t *testing.T) {
 			res, err := ts.Client().Get(ts.URL + "/error")
 			require.NoError(t, err)
 			defer res.Body.Close()
-			assert.Contains(t, res.Request.URL.String(), conf.SelfServiceFlowVerificationUI().String()+"?flow=")
+			assert.Contains(t, res.Request.URL.String(), conf.SelfServiceFlowVerificationUI(ctx).String()+"?flow=")
 
 			vf, err := reg.VerificationFlowPersister().GetVerificationFlow(context.Background(), uuid.FromStringOrNil(res.Request.URL.Query().Get("flow")))
 			require.NoError(t, err)

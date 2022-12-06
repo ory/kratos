@@ -1,3 +1,6 @@
+// Copyright © 2022 Ory Corp
+// SPDX-License-Identifier: Apache-2.0
+
 package test
 
 import (
@@ -5,6 +8,8 @@ import (
 	"fmt"
 	"testing"
 	"time"
+
+	"github.com/ory/x/pagination/migrationpagination"
 
 	"github.com/gobuffalo/pop/v6"
 	"github.com/gofrs/uuid"
@@ -20,7 +25,7 @@ import (
 
 type PersisterWrapper interface {
 	GetConnection(ctx context.Context) *pop.Connection
-	NetworkID() uuid.UUID
+	NetworkID(ctx context.Context) uuid.UUID
 	courier.Persister
 }
 
@@ -95,6 +100,44 @@ func TestPersister(ctx context.Context, newNetworkUnlessExisting NetworkWrapper,
 			require.ErrorIs(t, err, courier.ErrQueueEmpty)
 		})
 
+		t.Run("case=incrementing send count", func(t *testing.T) {
+			originalSendCount := messages[0].SendCount
+			require.NoError(t, p.SetMessageStatus(ctx, messages[0].ID, courier.MessageStatusQueued))
+
+			require.NoError(t, p.IncrementMessageSendCount(ctx, messages[0].ID))
+			ms, err := p.NextMessages(ctx, 1)
+			require.NoError(t, err)
+			require.Len(t, ms, 1)
+			assert.Equal(t, messages[0].ID, ms[0].ID)
+			assert.Equal(t, originalSendCount+1, ms[0].SendCount)
+		})
+
+		t.Run("case=list messages", func(t *testing.T) {
+			status := courier.MessageStatusProcessing
+			filter := courier.ListCourierMessagesParameters{
+				Status: &status,
+				RequestParameters: migrationpagination.RequestParameters{
+					Page:    1,
+					PerPage: 100,
+				},
+			}
+			ms, tc, err := p.ListMessages(ctx, filter)
+
+			require.NoError(t, err)
+			assert.Len(t, ms, len(messages))
+			assert.Equal(t, int64(len(messages)), tc)
+			assert.Equal(t, messages[len(messages)-1].ID, ms[0].ID)
+
+			t.Run("on another network", func(t *testing.T) {
+				_, p := newNetwork(t, ctx)
+				ms, tc, err := p.ListMessages(ctx, filter)
+
+				require.NoError(t, err)
+				require.Len(t, ms, 0)
+				require.Equal(t, int64(0), tc)
+			})
+		})
+
 		t.Run("case=network", func(t *testing.T) {
 			id := x.NewUUID()
 
@@ -104,7 +147,7 @@ func TestPersister(ctx context.Context, newNetworkUnlessExisting NetworkWrapper,
 
 				assert.EqualValues(t, id, expected.ID)
 				assert.EqualValues(t, nid, expected.NID)
-				assert.EqualValues(t, nid, p.NetworkID())
+				assert.EqualValues(t, nid, p.NetworkID(ctx))
 
 				actual, err := p.LatestQueuedMessage(ctx)
 				require.NoError(t, err)

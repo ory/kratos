@@ -1,10 +1,12 @@
+// Copyright © 2022 Ory Corp
+// SPDX-License-Identifier: Apache-2.0
+
 package template_test
 
 import (
 	"context"
 	"encoding/base64"
 	"fmt"
-	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
 	"os"
@@ -105,7 +107,7 @@ func TestLoadTextTemplate(t *testing.T) {
 		t.Run("case=base64 encoded data", func(t *testing.T) {
 			t.Run("html template", func(t *testing.T) {
 				m := map[string]interface{}{"lang": "en_US"}
-				f, err := ioutil.ReadFile("courier/builtin/templates/test_stub/email.body.html.en_US.gotmpl")
+				f, err := os.ReadFile("courier/builtin/templates/test_stub/email.body.html.en_US.gotmpl")
 				require.NoError(t, err)
 				b64 := base64.StdEncoding.EncodeToString(f)
 				tp, err := template.LoadHTML(ctx, reg, nil, "", "", m, "base64://"+b64)
@@ -115,7 +117,7 @@ func TestLoadTextTemplate(t *testing.T) {
 
 			t.Run("case=plaintext", func(t *testing.T) {
 				m := map[string]interface{}{"Body": "something"}
-				f, err := ioutil.ReadFile("courier/builtin/templates/test_stub/email.body.plaintext.gotmpl")
+				f, err := os.ReadFile("courier/builtin/templates/test_stub/email.body.plaintext.gotmpl")
 				require.NoError(t, err)
 
 				b64 := base64.StdEncoding.EncodeToString(f)
@@ -182,7 +184,7 @@ func TestLoadTextTemplate(t *testing.T) {
 		})
 
 		t.Run("case=disallowed resources", func(t *testing.T) {
-			require.NoError(t, reg.Config(ctx).Source().Set(config.ViperKeyClientHTTPNoPrivateIPRanges, true))
+			require.NoError(t, reg.Config().GetProvider(ctx).Set(config.ViperKeyClientHTTPNoPrivateIPRanges, true))
 			reg.HTTPClient(ctx).RetryMax = 1
 			reg.HTTPClient(ctx).RetryWaitMax = time.Millisecond
 

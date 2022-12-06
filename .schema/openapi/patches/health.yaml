@@ -15,13 +15,13 @@
       responses:
         '200':
           content:
-            application/json:
+            'application/json':
               schema:
                 "$ref": "#/components/schemas/healthStatus"
           description: {{.ProjectHumanName}} is ready to accept connections.
         '500':
           content:
-            application/json:
+            'application/json':
               schema:
                 "$ref": "#/components/schemas/genericError"
           description: genericError
@@ -44,7 +44,7 @@
       responses:
         '200':
           content:
-            application/json:
+            'application/json':
               schema:
                 type: object
                 properties:
@@ -54,7 +54,7 @@
           description: {{.ProjectHumanName}} is ready to accept requests.
         '503':
           content:
-            application/json:
+            'application/json':
               schema:
                 properties:
                   errors:
@@ -82,7 +82,7 @@
       responses:
         '200':
           content:
-            application/json:
+            'application/json':
               schema:
                 type: object
                 properties:

@@ -1,8 +1,12 @@
+// Copyright © 2022 Ory Corp
+// SPDX-License-Identifier: Apache-2.0
+
 package x_test
 
 import (
+	"context"
 	"encoding/json"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
@@ -39,10 +43,12 @@ func TestSecureContentNegotiationRedirection(t *testing.T) {
 	ts := httptest.NewServer(router)
 	defer ts.Close()
 
+	ctx := context.Background()
+
 	defaultReturnTo := ts.URL + "/default-return-to"
-	conf.MustSet(config.ViperKeySelfServiceBrowserDefaultReturnTo, defaultReturnTo)
-	conf.MustSet(config.ViperKeyPublicBaseURL, ts.URL)
-	conf.MustSet(config.ViperKeyURLsAllowedReturnToDomains, []string{ts.URL})
+	conf.MustSet(ctx, config.ViperKeySelfServiceBrowserDefaultReturnTo, defaultReturnTo)
+	conf.MustSet(ctx, config.ViperKeyPublicBaseURL, ts.URL)
+	conf.MustSet(ctx, config.ViperKeyURLsAllowedReturnToDomains, []string{ts.URL})
 
 	run := func(t *testing.T, href string, contentType string) (*http.Response, string) {
 		req, err := http.NewRequest("GET", href, nil)
@@ -50,7 +56,7 @@ func TestSecureContentNegotiationRedirection(t *testing.T) {
 		req.Header.Add("Accept", contentType)
 		res, err := ts.Client().Do(req)
 		require.NoError(t, err)
-		body, err := ioutil.ReadAll(res.Body)
+		body, err := io.ReadAll(res.Body)
 		require.NoError(t, err)
 		require.NoError(t, res.Body.Close())
 		return res, string(body)
@@ -98,6 +104,27 @@ func TestSecureRedirectToIsAllowedHost(t *testing.T) {
 	}
 }
 
+func TestTakeOverReturnToParameter(t *testing.T) {
+	type testCase struct {
+		fromUrl           string
+		toURL             string
+		expectedOutputUrl string
+	}
+	tests := map[string]testCase{
+		"case=return_to is taken over":                                             {fromUrl: "https://original.bar?return_to=https://allowed.domain", toURL: "https://output.bar", expectedOutputUrl: "https://output.bar?return_to=https%3A%2F%2Fallowed.domain"},
+		"case=only return_to is taken over when multiple query parameters are set": {fromUrl: "https://original.bar?return_to=https://allowed.domain&flow=12312", toURL: "https://output.bar", expectedOutputUrl: "https://output.bar?return_to=https%3A%2F%2Fallowed.domain"},
+		"case=output query parameters are preserved":                               {fromUrl: "https://original.bar?return_to=https://allowed.domain", toURL: "https://output.bar?flow=123321", expectedOutputUrl: "https://output.bar?flow=123321&return_to=https%3A%2F%2Fallowed.domain"},
+		"case=when original return_to is empty do nothing":                         {fromUrl: "https://original.bar?return_to=", toURL: "https://output.bar?flow=123123", expectedOutputUrl: "https://output.bar?flow=123123"},
+	}
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			output, err := x.TakeOverReturnToParameter(tc.fromUrl, tc.toURL)
+			require.NoError(t, err)
+			assert.Equal(t, output, tc.expectedOutputUrl)
+		})
+	}
+}
+
 func TestSecureRedirectTo(t *testing.T) {
 
 	var newServer = func(t *testing.T, isTLS bool, isRelative bool, expectErr bool, opts func(ts *httptest.Server) []x.SecureRedirectOption) *httptest.Server {
@@ -137,7 +164,7 @@ func TestSecureRedirectTo(t *testing.T) {
 		res, err := ts.Client().Get(ts.URL + "/" + path)
 		require.NoError(t, err)
 
-		body, err := ioutil.ReadAll(res.Body)
+		body, err := io.ReadAll(res.Body)
 		require.NoError(t, err)
 		require.NoError(t, res.Body.Close())
 		return res, string(body)

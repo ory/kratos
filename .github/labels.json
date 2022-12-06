@@ -2,79 +2,57 @@
   {
     "name": "package/2fa",
     "color": "0A28FD",
-    "aliases": [
-      "module:2fa"
-    ]
+    "aliases": ["module:2fa"]
   },
   {
     "name": "package/cli",
     "color": "0A28FD",
-    "aliases": [
-      "module:cli"
-    ]
+    "aliases": ["module:cli"]
   },
   {
     "name": "package/courier",
     "color": "0A28FD",
-    "aliases": [
-      "module:courier"
-    ]
+    "aliases": ["module:courier"]
   },
   {
     "name": "package/courier",
     "color": "0A28FD",
-    "aliases": [
-      "module:docs"
-    ]
+    "aliases": ["module:docs"]
   },
   {
     "name": "package/selfservice/errorx",
     "color": "0A28FD",
-    "aliases": [
-      "module:errorx"
-    ]
+    "aliases": ["module:errorx"]
   },
   {
     "name": "package/identity",
     "color": "0A28FD",
-    "aliases": [
-      "module:identity"
-    ]
+    "aliases": ["module:identity"]
   },
   {
     "name": "package/persistence/sql",
     "color": "0A28FD",
-    "aliases": [
-      "module:migrations"
-    ]
+    "aliases": ["module:migrations"]
   },
   {
     "name": "package/selfservice",
     "color": "0A28FD",
-    "aliases": [
-      "module:selfservice"
-    ]
+    "aliases": ["module:selfservice"]
   },
   {
     "name": "package/selfservice/oidc",
     "color": "0A28FD",
-    "aliases": [
-      "module:ss/oidc"
-    ]
+    "aliases": ["module:ss/oidc"]
   },
   {
     "name": "package/selfservice/password",
     "color": "0A28FD",
-    "aliases": [
-      "module:ss/password"
-    ]
+    "aliases": ["module:ss/password"]
   },
   {
     "name": "package/selfservice/verification",
     "color": "0A28FD",
-    "aliases": [
-      "module:verification"
-    ]
+    "aliases": ["module:verification"]
   },
   {
     "name": "package/selfservice/recovery",
@@ -84,8 +62,6 @@
   {
     "name": "package/session",
     "color": "0A28FD",
-    "aliases": [
-      "module:session"
-    ]
+    "aliases": ["module:session"]
   }
 ]

@@ -1,0 +1,8 @@
+{
+  "error": {
+    "code": 404,
+    "message": "Unable to locate the resource",
+    "reason": "could not find identity",
+    "status": "Not Found"
+  }
+}

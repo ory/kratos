@@ -1,3 +1,6 @@
+// Copyright © 2022 Ory Corp
+// SPDX-License-Identifier: Apache-2.0
+
 package password_test
 
 import (
@@ -39,15 +42,17 @@ var flows = []string{"spa", "api", "browser"}
 var registrationSchema []byte
 
 func newRegistrationRegistry(t *testing.T) *driver.RegistryDefault {
+	ctx := context.Background()
 	conf, reg := internal.NewFastRegistryWithMocks(t)
-	conf.MustSet(config.ViperKeySelfServiceStrategyConfig+"."+string(identity.CredentialsTypePassword), map[string]interface{}{"enabled": true})
+	conf.MustSet(ctx, config.ViperKeySelfServiceStrategyConfig+"."+string(identity.CredentialsTypePassword), map[string]interface{}{"enabled": true})
 	return reg
 }
 
 func TestRegistration(t *testing.T) {
+	ctx := context.Background()
 	t.Run("case=registration", func(t *testing.T) {
 		reg := newRegistrationRegistry(t)
-		conf := reg.Config(context.Background())
+		conf := reg.Config()
 
 		router := x.NewRouterPublic()
 		admin := x.NewRouterAdmin()
@@ -61,8 +66,8 @@ func TestRegistration(t *testing.T) {
 		// set the "return to" server, which will assert the session state
 		// (redirTS: enforce that a session exists, redirNoSessionTS: enforce that no session exists)
 		var useReturnToFromTS = func(ts *httptest.Server) {
-			conf.MustSet(config.ViperKeySelfServiceBrowserDefaultReturnTo, ts.URL+"/default-return-to")
-			conf.MustSet(config.ViperKeySelfServiceRegistrationAfter+"."+config.DefaultBrowserReturnURL, ts.URL+"/registration-return-ts")
+			conf.MustSet(ctx, config.ViperKeySelfServiceBrowserDefaultReturnTo, ts.URL+"/default-return-to")
+			conf.MustSet(ctx, config.ViperKeySelfServiceRegistrationAfter+"."+config.DefaultBrowserReturnURL, ts.URL+"/registration-return-ts")
 		}
 
 		useReturnToFromTS(redirTS)
@@ -133,9 +138,9 @@ func TestRegistration(t *testing.T) {
 
 		t.Run("case=should pass and set up a session", func(t *testing.T) {
 			testhelpers.SetDefaultIdentitySchema(conf, "file://./stub/registration.schema.json")
-			conf.MustSet(config.HookStrategyKey(config.ViperKeySelfServiceRegistrationAfter, identity.CredentialsTypePassword.String()), []config.SelfServiceHook{{Name: "session"}})
+			conf.MustSet(ctx, config.HookStrategyKey(config.ViperKeySelfServiceRegistrationAfter, identity.CredentialsTypePassword.String()), []config.SelfServiceHook{{Name: "session"}})
 			t.Cleanup(func() {
-				conf.MustSet(config.HookStrategyKey(config.ViperKeySelfServiceRegistrationAfter, identity.CredentialsTypePassword.String()), nil)
+				conf.MustSet(ctx, config.HookStrategyKey(config.ViperKeySelfServiceRegistrationAfter, identity.CredentialsTypePassword.String()), nil)
 			})
 
 			t.Run("type=api", func(t *testing.T) {
@@ -172,7 +177,7 @@ func TestRegistration(t *testing.T) {
 
 		t.Run("case=should not set up a session if hook is not configured", func(t *testing.T) {
 			testhelpers.SetDefaultIdentitySchema(conf, "file://./stub/registration.schema.json")
-			conf.MustSet(config.HookStrategyKey(config.ViperKeySelfServiceRegistrationAfter, identity.CredentialsTypePassword.String()), nil)
+			conf.MustSet(ctx, config.HookStrategyKey(config.ViperKeySelfServiceRegistrationAfter, identity.CredentialsTypePassword.String()), nil)
 
 			t.Run("type=api", func(t *testing.T) {
 				body := expectNoLogin(t, true, false, nil, func(v url.Values) {
@@ -204,9 +209,9 @@ func TestRegistration(t *testing.T) {
 
 		t.Run("case=should fail to register the same user again", func(t *testing.T) {
 			testhelpers.SetDefaultIdentitySchema(conf, "file://./stub/registration.schema.json")
-			conf.MustSet(config.HookStrategyKey(config.ViperKeySelfServiceRegistrationAfter, identity.CredentialsTypePassword.String()), []config.SelfServiceHook{{Name: "session"}})
+			conf.MustSet(ctx, config.HookStrategyKey(config.ViperKeySelfServiceRegistrationAfter, identity.CredentialsTypePassword.String()), []config.SelfServiceHook{{Name: "session"}})
 			t.Cleanup(func() {
-				conf.MustSet(config.HookStrategyKey(config.ViperKeySelfServiceRegistrationAfter, identity.CredentialsTypePassword.String()), nil)
+				conf.MustSet(ctx, config.HookStrategyKey(config.ViperKeySelfServiceRegistrationAfter, identity.CredentialsTypePassword.String()), nil)
 			})
 
 			var applyTransform = func(values, transform func(v url.Values)) func(v url.Values) {
@@ -331,7 +336,7 @@ func TestRegistration(t *testing.T) {
 
 			t.Run("type=spa", func(t *testing.T) {
 				browserClient := testhelpers.NewClientWithCookies(t)
-				f := testhelpers.InitializeRegistrationFlowViaBrowser(t, browserClient, publicTS, true)
+				f := testhelpers.InitializeRegistrationFlowViaBrowser(t, browserClient, publicTS, true, false, false)
 				c := f.Ui
 
 				actual, _ := testhelpers.RegistrationMakeRequest(t, false, true, f, browserClient, testhelpers.EncodeFormAsJSON(t, false, valuesFirst(testhelpers.SDKFormFieldsToURLValues(c.Nodes))))
@@ -342,7 +347,7 @@ func TestRegistration(t *testing.T) {
 
 			t.Run("type=browser", func(t *testing.T) {
 				browserClient := testhelpers.NewClientWithCookies(t)
-				f := testhelpers.InitializeRegistrationFlowViaBrowser(t, browserClient, publicTS, false)
+				f := testhelpers.InitializeRegistrationFlowViaBrowser(t, browserClient, publicTS, false, false, false)
 				c := f.Ui
 
 				actual, _ := testhelpers.RegistrationMakeRequest(t, false, false, f, browserClient, valuesFirst(testhelpers.SDKFormFieldsToURLValues(c.Nodes)).Encode())
@@ -354,9 +359,9 @@ func TestRegistration(t *testing.T) {
 
 		t.Run("case=should work even if password is just numbers", func(t *testing.T) {
 			testhelpers.SetDefaultIdentitySchema(conf, "file://stub/registration.schema.json")
-			conf.MustSet(config.HookStrategyKey(config.ViperKeySelfServiceRegistrationAfter, identity.CredentialsTypePassword.String()), []config.SelfServiceHook{{Name: "session"}})
+			conf.MustSet(ctx, config.HookStrategyKey(config.ViperKeySelfServiceRegistrationAfter, identity.CredentialsTypePassword.String()), []config.SelfServiceHook{{Name: "session"}})
 			t.Cleanup(func() {
-				conf.MustSet(config.HookStrategyKey(config.ViperKeySelfServiceRegistrationAfter, identity.CredentialsTypePassword.String()), nil)
+				conf.MustSet(ctx, config.HookStrategyKey(config.ViperKeySelfServiceRegistrationAfter, identity.CredentialsTypePassword.String()), nil)
 			})
 
 			t.Run("type=api", func(t *testing.T) {
@@ -404,14 +409,14 @@ func TestRegistration(t *testing.T) {
 
 		t.Run("case=should work with regular JSON", func(t *testing.T) {
 			testhelpers.SetDefaultIdentitySchema(conf, "file://stub/registration.schema.json")
-			conf.MustSet(config.HookStrategyKey(config.ViperKeySelfServiceRegistrationAfter, identity.CredentialsTypePassword.String()), []config.SelfServiceHook{{Name: "session"}})
+			conf.MustSet(ctx, config.HookStrategyKey(config.ViperKeySelfServiceRegistrationAfter, identity.CredentialsTypePassword.String()), []config.SelfServiceHook{{Name: "session"}})
 			t.Cleanup(func() {
-				conf.MustSet(config.HookStrategyKey(config.ViperKeySelfServiceRegistrationAfter, identity.CredentialsTypePassword.String()), nil)
+				conf.MustSet(ctx, config.HookStrategyKey(config.ViperKeySelfServiceRegistrationAfter, identity.CredentialsTypePassword.String()), nil)
 			})
 
 			hc := testhelpers.NewClientWithCookies(t)
 			hc.Transport = testhelpers.NewTransportWithLogger(hc.Transport, t)
-			payload := testhelpers.InitializeRegistrationFlowViaBrowser(t, hc, publicTS, false)
+			payload := testhelpers.InitializeRegistrationFlowViaBrowser(t, hc, publicTS, false, false, false)
 			values := testhelpers.SDKFormFieldsToURLValues(payload.Ui.Nodes)
 			time.Sleep(time.Millisecond) // add a bit of delay to allow `1ns` to time out.
 
@@ -430,12 +435,12 @@ func TestRegistration(t *testing.T) {
 		})
 
 		t.Run("case=should choose the correct identity schema", func(t *testing.T) {
-			conf.MustSet(config.ViperKeyDefaultIdentitySchemaID, "advanced-user")
-			conf.MustSet(config.ViperKeyIdentitySchemas, config.Schemas{
+			conf.MustSet(ctx, config.ViperKeyDefaultIdentitySchemaID, "advanced-user")
+			conf.MustSet(ctx, config.ViperKeyIdentitySchemas, config.Schemas{
 				{ID: "does-not-exist", URL: "file://./stub/not-exists.schema.json"},
 				{ID: "advanced-user", URL: "file://./stub/registration.secondary.schema.json"},
 			})
-			conf.MustSet(config.HookStrategyKey(config.ViperKeySelfServiceRegistrationAfter, identity.CredentialsTypePassword.String()), nil)
+			conf.MustSet(ctx, config.HookStrategyKey(config.ViperKeySelfServiceRegistrationAfter, identity.CredentialsTypePassword.String()), nil)
 
 			username := "registration-custom-schema"
 			t.Run("type=api", func(t *testing.T) {
@@ -470,24 +475,26 @@ func TestRegistration(t *testing.T) {
 	t.Run("method=PopulateSignUpMethod", func(t *testing.T) {
 		conf, reg := internal.NewFastRegistryWithMocks(t)
 
-		conf.MustSet(config.ViperKeyPublicBaseURL, "https://foo/")
+		conf.MustSet(ctx, config.ViperKeyPublicBaseURL, "https://foo/")
 		testhelpers.SetDefaultIdentitySchema(conf, "file://stub/sort.schema.json")
-		conf.MustSet(config.ViperKeySelfServiceStrategyConfig+"."+string(identity.CredentialsTypePassword)+".enabled", true)
+		conf.MustSet(ctx, config.ViperKeySelfServiceStrategyConfig+"."+string(identity.CredentialsTypePassword)+".enabled", true)
 
 		router := x.NewRouterPublic()
 		publicTS, _ := testhelpers.NewKratosServerWithRouters(t, reg, router, x.NewRouterAdmin())
 		_ = testhelpers.NewRegistrationUIFlowEchoServer(t, reg)
 
 		browserClient := testhelpers.NewClientWithCookies(t)
-		f := testhelpers.InitializeRegistrationFlowViaBrowser(t, browserClient, publicTS, false)
+		f := testhelpers.InitializeRegistrationFlowViaBrowser(t, browserClient, publicTS, false, false, false)
 
 		assertx.EqualAsJSON(t, container.Container{
-			Action: conf.SelfPublicURL().String() + registration.RouteSubmitFlow + "?flow=" + f.Id,
+			Action: conf.SelfPublicURL(ctx).String() + registration.RouteSubmitFlow + "?flow=" + f.Id,
 			Method: "POST",
 			Nodes: node.Nodes{
 				node.NewCSRFNode(x.FakeCSRFToken),
 				node.NewInputField("traits.username", nil, node.PasswordGroup, node.InputAttributeTypeText),
-				node.NewInputField("password", nil, node.PasswordGroup, node.InputAttributeTypePassword, node.WithRequiredInputAttribute).WithMetaLabel(text.NewInfoNodeInputPassword()),
+				node.NewInputField("password", nil, node.PasswordGroup, node.InputAttributeTypePassword, node.WithRequiredInputAttribute, node.WithInputAttributes(func(a *node.InputAttributes) {
+					a.Autocomplete = node.InputAttributeAutocompleteNewPassword
+				})).WithMetaLabel(text.NewInfoNodeInputPassword()),
 				node.NewInputField("traits.bar", nil, node.PasswordGroup, node.InputAttributeTypeText),
 				node.NewInputField("method", "password", node.PasswordGroup, node.InputAttributeTypeSubmit).WithMetaLabel(text.NewInfoRegistration()),
 			},

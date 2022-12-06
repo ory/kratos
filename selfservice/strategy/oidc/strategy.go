@@ -1,19 +1,26 @@
+// Copyright © 2022 Ory Corp
+// SPDX-License-Identifier: Apache-2.0
+
 package oidc
 
 import (
 	"bytes"
 	"context"
+	"encoding/base64"
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"path/filepath"
 	"strings"
 
 	"github.com/ory/kratos/cipher"
+	"github.com/ory/x/jsonnetsecure"
 
 	"github.com/ory/kratos/text"
 
 	"github.com/ory/kratos/ui/container"
 	"github.com/ory/x/decoderx"
+	"github.com/ory/x/stringsx"
 
 	"github.com/ory/kratos/ui/node"
 
@@ -90,6 +97,8 @@ type dependencies interface {
 	continuity.ManagementProvider
 
 	cipher.Provider
+
+	jsonnetsecure.VMProvider
 }
 
 func isForced(req interface{}) bool {
@@ -111,6 +120,11 @@ type authCodeContainer struct {
 	FlowID string          `json:"flow_id"`
 	State  string          `json:"state"`
 	Traits json.RawMessage `json:"traits"`
+}
+
+func generateState(flowID string) string {
+	state := x.NewUUID().String()
+	return base64.RawURLEncoding.EncodeToString([]byte(fmt.Sprintf("%s:%s", flowID, state)))
 }
 
 func (s *Strategy) CountActiveFirstFactorCredentials(cc map[identity.CredentialsType]identity.Credentials) (count int, err error) {
@@ -164,7 +178,7 @@ func (s *Strategy) setRoutes(r *x.RouterPublic) {
 
 // Redirect POST request to GET rewriting form fields to query params.
 func (s *Strategy) redirectToGET(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
-	publicUrl := s.d.Config(r.Context()).SelfPublicURL()
+	publicUrl := s.d.Config().SelfPublicURL(r.Context())
 	dest := *r.URL
 	dest.Host = publicUrl.Host
 	dest.Scheme = publicUrl.Scheme
@@ -242,7 +256,7 @@ func (s *Strategy) validateFlow(ctx context.Context, r *http.Request, rid uuid.U
 
 func (s *Strategy) validateCallback(w http.ResponseWriter, r *http.Request) (flow.Flow, *authCodeContainer, error) {
 	var (
-		code  = r.URL.Query().Get("code")
+		code  = stringsx.Coalesce(r.URL.Query().Get("code"), r.URL.Query().Get("authCode"))
 		state = r.URL.Query().Get("state")
 	)
 
@@ -281,7 +295,7 @@ func (s *Strategy) alreadyAuthenticated(w http.ResponseWriter, r *http.Request, 
 		if _, ok := req.(*settings.Flow); ok {
 			// ignore this if it's a settings flow
 		} else if !isForced(req) {
-			http.Redirect(w, r, s.d.Config(r.Context()).SelfServiceBrowserDefaultReturnTo().String(), http.StatusSeeOther)
+			http.Redirect(w, r, s.d.Config().SelfServiceBrowserDefaultReturnTo(r.Context()).String(), http.StatusSeeOther)
 			return true
 		}
 	}
@@ -291,7 +305,7 @@ func (s *Strategy) alreadyAuthenticated(w http.ResponseWriter, r *http.Request, 
 
 func (s *Strategy) handleCallback(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	var (
-		code = r.URL.Query().Get("code")
+		code = stringsx.Coalesce(r.URL.Query().Get("code"), r.URL.Query().Get("authCode"))
 		pid  = ps.ByName("provider")
 	)
 
@@ -315,13 +329,16 @@ func (s *Strategy) handleCallback(w http.ResponseWriter, r *http.Request, ps htt
 		return
 	}
 
-	conf, err := provider.OAuth2(r.Context())
-	if err != nil {
-		s.forwardError(w, r, req, s.handleError(w, r, req, pid, nil, err))
-		return
+	te, ok := provider.(TokenExchanger)
+	if !ok {
+		te, err = provider.OAuth2(r.Context())
+		if err != nil {
+			s.forwardError(w, r, req, s.handleError(w, r, req, pid, nil, err))
+			return
+		}
 	}
 
-	token, err := conf.Exchange(r.Context(), code)
+	token, err := te.Exchange(r.Context(), code)
 	if err != nil {
 		s.forwardError(w, r, req, s.handleError(w, r, req, pid, nil, err))
 		return
@@ -386,7 +403,7 @@ func (s *Strategy) populateMethod(r *http.Request, c *container.Container, messa
 func (s *Strategy) Config(ctx context.Context) (*ConfigurationCollection, error) {
 	var c ConfigurationCollection
 
-	conf := s.d.Config(ctx).SelfServiceStrategy(string(s.ID())).Config
+	conf := s.d.Config().SelfServiceStrategy(ctx, string(s.ID())).Config
 	if err := jsonx.
 		NewStrictDecoder(bytes.NewBuffer(conf)).
 		Decode(&c); err != nil {
@@ -439,7 +456,7 @@ func (s *Strategy) handleError(w http.ResponseWriter, r *http.Request, f flow.Fl
 		AddProvider(rf.UI, provider, text.NewInfoRegistrationContinue())
 
 		if traits != nil {
-			ds, err := s.d.Config(r.Context()).DefaultIdentityTraitsSchemaURL()
+			ds, err := s.d.Config().DefaultIdentityTraitsSchemaURL(r.Context())
 			if err != nil {
 				return err
 			}

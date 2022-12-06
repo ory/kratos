@@ -1,3 +1,6 @@
+// Copyright © 2022 Ory Corp
+// SPDX-License-Identifier: Apache-2.0
+
 package oidc
 
 import (
@@ -6,8 +9,11 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/ory/herodot"
+
 	"github.com/ory/x/fetcher"
 
+	"github.com/tidwall/gjson"
 	"github.com/tidwall/sjson"
 
 	"github.com/ory/x/decoderx"
@@ -22,9 +28,6 @@ import (
 
 	"github.com/ory/kratos/continuity"
 
-	"github.com/google/go-jsonnet"
-	"github.com/tidwall/gjson"
-
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/selfservice/flow"
 	"github.com/ory/kratos/selfservice/flow/registration"
@@ -32,6 +35,13 @@ import (
 )
 
 var _ registration.Strategy = new(Strategy)
+
+type MetadataType string
+
+const (
+	PublicMetadata MetadataType = "identity.metadata_public"
+	AdminMetadata  MetadataType = "identity.metadata_admin"
+)
 
 func (s *Strategy) RegisterRegistrationRoutes(r *x.RouterPublic) {
 	s.setRoutes(r)
@@ -45,11 +55,10 @@ func (s *Strategy) PopulateRegistrationMethod(r *http.Request, f *registration.F
 	return s.populateMethod(r, f.UI, text.NewInfoRegistrationWith)
 }
 
-// SubmitSelfServiceRegistrationFlowWithOidcMethodBody is used to decode the registration form payload
-// when using the oidc method.
+// Update Registration Flow with OpenID Connect Method
 //
-// swagger:model submitSelfServiceRegistrationFlowWithOidcMethodBody
-type SubmitSelfServiceRegistrationFlowWithOidcMethodBody struct {
+// swagger:model updateRegistrationFlowWithOidcMethod
+type UpdateRegistrationFlowWithOidcMethod struct {
 	// The provider to register with
 	//
 	// required: true
@@ -70,7 +79,7 @@ type SubmitSelfServiceRegistrationFlowWithOidcMethodBody struct {
 }
 
 func (s *Strategy) newLinkDecoder(p interface{}, r *http.Request) error {
-	ds, err := s.d.Config(r.Context()).DefaultIdentityTraitsSchemaURL()
+	ds, err := s.d.Config().DefaultIdentityTraitsSchemaURL(r.Context())
 	if err != nil {
 		return err
 	}
@@ -99,7 +108,7 @@ func (s *Strategy) newLinkDecoder(p interface{}, r *http.Request) error {
 }
 
 func (s *Strategy) Register(w http.ResponseWriter, r *http.Request, f *registration.Flow, i *identity.Identity) (err error) {
-	var p SubmitSelfServiceRegistrationFlowWithOidcMethodBody
+	var p UpdateRegistrationFlowWithOidcMethod
 	if err := s.newLinkDecoder(&p, r); err != nil {
 		return s.handleError(w, r, f, "", nil, err)
 	}
@@ -132,7 +141,7 @@ func (s *Strategy) Register(w http.ResponseWriter, r *http.Request, f *registrat
 		return errors.WithStack(registration.ErrAlreadyLoggedIn)
 	}
 
-	state := x.NewUUID().String()
+	state := generateState(f.ID.String())
 	if err := s.d.ContinuityManager().Pause(r.Context(), w, r, sessionName,
 		continuity.WithPayload(&authCodeContainer{
 			State:  state,
@@ -168,8 +177,19 @@ func (s *Strategy) processRegistration(w http.ResponseWriter, r *http.Request, a
 			WithField("subject", claims.Subject).
 			Debug("Received successful OpenID Connect callback but user is already registered. Re-initializing login flow now.")
 
+		// If return_to was set before, we need to preserve it.
+		var opts []login.FlowOption
+		if len(a.ReturnTo) > 0 {
+			opts = append(opts, login.WithFlowReturnTo(a.ReturnTo))
+		}
+
 		// This endpoint only handles browser flow at the moment.
-		ar, err := s.d.LoginHandler().NewLoginFlow(w, r, flow.TypeBrowser)
+		ar, _, err := s.d.LoginHandler().NewLoginFlow(w, r, flow.TypeBrowser, opts...)
+		if err != nil {
+			return nil, s.handleError(w, r, a, provider.Config().ID, nil, err)
+		}
+
+		ar.RequestURL, err = x.TakeOverReturnToParameter(a.RequestURL, ar.RequestURL)
 		if err != nil {
 			return nil, s.handleError(w, r, a, provider.Config().ID, nil, err)
 		}
@@ -186,51 +206,10 @@ func (s *Strategy) processRegistration(w http.ResponseWriter, r *http.Request, a
 		return nil, s.handleError(w, r, a, provider.Config().ID, nil, err)
 	}
 
-	var jsonClaims bytes.Buffer
-	if err := json.NewEncoder(&jsonClaims).Encode(claims); err != nil {
-		return nil, s.handleError(w, r, a, provider.Config().ID, nil, err)
-	}
-
-	i := identity.NewIdentity(s.d.Config(r.Context()).DefaultIdentityTraitsSchemaID())
-
-	vm := jsonnet.MakeVM()
-	vm.ExtCode("claims", jsonClaims.String())
-	evaluated, err := vm.EvaluateAnonymousSnippet(provider.Config().Mapper, jn.String())
-	if err != nil {
-		return nil, s.handleError(w, r, a, provider.Config().ID, nil, err)
-	} else if traits := gjson.Get(evaluated, "identity.traits"); !traits.IsObject() {
-		i.Traits = []byte{'{', '}'}
-		s.d.Logger().
-			WithRequest(r).
-			WithField("oidc_provider", provider.Config().ID).
-			WithSensitiveField("oidc_claims", claims).
-			WithField("mapper_jsonnet_output", evaluated).
-			WithField("mapper_jsonnet_url", provider.Config().Mapper).
-			Error("OpenID Connect Jsonnet mapper did not return an object for key identity.traits. Please check your Jsonnet code!")
-	} else {
-		i.Traits = []byte(traits.Raw)
-	}
-
-	s.d.Logger().
-		WithRequest(r).
-		WithField("oidc_provider", provider.Config().ID).
-		WithSensitiveField("oidc_claims", claims).
-		WithSensitiveField("mapper_jsonnet_output", evaluated).
-		WithField("mapper_jsonnet_url", provider.Config().Mapper).
-		Debug("OpenID Connect Jsonnet mapper completed.")
-
-	i.Traits, err = merge(container.Traits, json.RawMessage(i.Traits))
+	i, err := s.createIdentity(w, r, a, claims, provider, container, jn)
 	if err != nil {
 		return nil, s.handleError(w, r, a, provider.Config().ID, nil, err)
 	}
-
-	s.d.Logger().
-		WithRequest(r).
-		WithField("oidc_provider", provider.Config().ID).
-		WithSensitiveField("identity_traits", i.Traits).
-		WithSensitiveField("mapper_jsonnet_output", evaluated).
-		WithField("mapper_jsonnet_url", provider.Config().Mapper).
-		Debug("Merged form values and OpenID Connect Jsonnet output.")
 
 	// Validate the identity itself
 	if err := s.d.IdentityValidator().Validate(r.Context(), i); err != nil {
@@ -239,17 +218,17 @@ func (s *Strategy) processRegistration(w http.ResponseWriter, r *http.Request, a
 
 	var it string
 	if idToken, ok := token.Extra("id_token").(string); ok {
-		if it, err = s.d.Cipher().Encrypt(r.Context(), []byte(idToken)); err != nil {
+		if it, err = s.d.Cipher(r.Context()).Encrypt(r.Context(), []byte(idToken)); err != nil {
 			return nil, s.handleError(w, r, a, provider.Config().ID, i.Traits, err)
 		}
 	}
 
-	cat, err := s.d.Cipher().Encrypt(r.Context(), []byte(token.AccessToken))
+	cat, err := s.d.Cipher(r.Context()).Encrypt(r.Context(), []byte(token.AccessToken))
 	if err != nil {
 		return nil, s.handleError(w, r, a, provider.Config().ID, i.Traits, err)
 	}
 
-	crt, err := s.d.Cipher().Encrypt(r.Context(), []byte(token.RefreshToken))
+	crt, err := s.d.Cipher(r.Context()).Encrypt(r.Context(), []byte(token.RefreshToken))
 	if err != nil {
 		return nil, s.handleError(w, r, a, provider.Config().ID, i.Traits, err)
 	}
@@ -265,4 +244,86 @@ func (s *Strategy) processRegistration(w http.ResponseWriter, r *http.Request, a
 	}
 
 	return nil, nil
+}
+
+func (s *Strategy) createIdentity(w http.ResponseWriter, r *http.Request, a *registration.Flow, claims *Claims, provider Provider, container *authCodeContainer, jn *bytes.Buffer) (*identity.Identity, error) {
+	var jsonClaims bytes.Buffer
+	if err := json.NewEncoder(&jsonClaims).Encode(claims); err != nil {
+		return nil, s.handleError(w, r, a, provider.Config().ID, nil, err)
+	}
+
+	vm, err := s.d.JsonnetVM(r.Context())
+	if err != nil {
+		return nil, s.handleError(w, r, a, provider.Config().ID, nil, err)
+	}
+
+	vm.ExtCode("claims", jsonClaims.String())
+	evaluated, err := vm.EvaluateAnonymousSnippet(provider.Config().Mapper, jn.String())
+	if err != nil {
+		return nil, s.handleError(w, r, a, provider.Config().ID, nil, err)
+	}
+
+	i := identity.NewIdentity(s.d.Config().DefaultIdentityTraitsSchemaID(r.Context()))
+	if err := s.setTraits(w, r, a, claims, provider, container, evaluated, i); err != nil {
+		return nil, s.handleError(w, r, a, provider.Config().ID, i.Traits, err)
+	}
+
+	if err := s.setMetadata(evaluated, i, PublicMetadata); err != nil {
+		return nil, s.handleError(w, r, a, provider.Config().ID, i.Traits, err)
+	}
+
+	if err := s.setMetadata(evaluated, i, AdminMetadata); err != nil {
+		return nil, s.handleError(w, r, a, provider.Config().ID, i.Traits, err)
+	}
+
+	s.d.Logger().
+		WithRequest(r).
+		WithField("oidc_provider", provider.Config().ID).
+		WithSensitiveField("oidc_claims", claims).
+		WithSensitiveField("mapper_jsonnet_output", evaluated).
+		WithField("mapper_jsonnet_url", provider.Config().Mapper).
+		Debug("OpenID Connect Jsonnet mapper completed.")
+	return i, nil
+}
+
+func (s *Strategy) setTraits(w http.ResponseWriter, r *http.Request, a *registration.Flow, claims *Claims, provider Provider, container *authCodeContainer, evaluated string, i *identity.Identity) error {
+	jsonTraits := gjson.Get(evaluated, "identity.traits")
+	if !jsonTraits.IsObject() {
+		return errors.WithStack(herodot.ErrInternalServerError.WithReasonf("OpenID Connect Jsonnet mapper did not return an object for key identity.traits. Please check your Jsonnet code!"))
+	}
+
+	traits, err := merge(container.Traits, json.RawMessage(jsonTraits.Raw))
+	if err != nil {
+		return s.handleError(w, r, a, provider.Config().ID, nil, err)
+	}
+
+	i.Traits = traits
+	s.d.Logger().
+		WithRequest(r).
+		WithField("oidc_provider", provider.Config().ID).
+		WithSensitiveField("identity_traits", i.Traits).
+		WithSensitiveField("mapper_jsonnet_output", evaluated).
+		WithField("mapper_jsonnet_url", provider.Config().Mapper).
+		Debug("Merged form values and OpenID Connect Jsonnet output.")
+	return nil
+}
+
+func (s *Strategy) setMetadata(evaluated string, i *identity.Identity, m MetadataType) error {
+	if m != PublicMetadata && m != AdminMetadata {
+		return errors.Errorf("undefined metadata type: %s", m)
+	}
+
+	metadata := gjson.Get(evaluated, string(m))
+	if metadata.Exists() && !metadata.IsObject() {
+		return errors.WithStack(herodot.ErrInternalServerError.WithReasonf("OpenID Connect Jsonnet mapper did not return an object for key %s. Please check your Jsonnet code!", m))
+	}
+
+	switch m {
+	case PublicMetadata:
+		i.MetadataPublic = []byte(metadata.Raw)
+	case AdminMetadata:
+		i.MetadataAdmin = []byte(metadata.Raw)
+	}
+
+	return nil
 }

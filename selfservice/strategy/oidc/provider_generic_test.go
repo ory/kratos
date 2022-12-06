@@ -1,3 +1,6 @@
+// Copyright © 2022 Ory Corp
+// SPDX-License-Identifier: Apache-2.0
+
 package oidc_test
 
 import (
@@ -48,8 +51,9 @@ func makeAuthCodeURL(t *testing.T, r *login.Flow, reg *driver.RegistryDefault) s
 }
 
 func TestProviderGenericOIDC_AddAuthCodeURLOptions(t *testing.T) {
+	ctx := context.Background()
 	conf, reg := internal.NewFastRegistryWithMocks(t)
-	conf.MustSet(config.ViperKeyPublicBaseURL, "https://ory.sh")
+	conf.MustSet(ctx, config.ViperKeyPublicBaseURL, "https://ory.sh")
 	t.Run("case=redirectURI is public base url", func(t *testing.T) {
 		r := &login.Flow{ID: x.NewUUID(), Refresh: true}
 		actual, err := url.ParseRequestURI(makeAuthCodeURL(t, r, reg))
@@ -58,9 +62,9 @@ func TestProviderGenericOIDC_AddAuthCodeURLOptions(t *testing.T) {
 	})
 
 	t.Run("case=redirectURI is public base url", func(t *testing.T) {
-		conf.MustSet(config.ViperKeyOIDCBaseRedirectURL, "https://example.org")
+		conf.MustSet(ctx, config.ViperKeyOIDCBaseRedirectURL, "https://example.org")
 		t.Cleanup(func() {
-			conf.MustSet(config.ViperKeyOIDCBaseRedirectURL, nil)
+			conf.MustSet(ctx, config.ViperKeyOIDCBaseRedirectURL, nil)
 		})
 		r := &login.Flow{ID: x.NewUUID(), Refresh: true}
 		actual, err := url.ParseRequestURI(makeAuthCodeURL(t, r, reg))

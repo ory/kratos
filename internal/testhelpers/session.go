@@ -1,3 +1,6 @@
+// Copyright © 2022 Ory Corp
+// SPDX-License-Identifier: Apache-2.0
+
 package testhelpers
 
 import (
@@ -25,7 +28,7 @@ type SessionLifespanProvider struct {
 	e time.Duration
 }
 
-func (p *SessionLifespanProvider) SessionLifespan() time.Duration {
+func (p *SessionLifespanProvider) SessionLifespan(ctx context.Context) time.Duration {
 	return p.e
 }
 
@@ -137,7 +140,8 @@ func NewHTTPClientWithSessionToken(t *testing.T, reg *driver.RegistryDefault, se
 }
 
 func NewHTTPClientWithArbitrarySessionToken(t *testing.T, reg *driver.RegistryDefault) *http.Client {
-	s, err := session.NewActiveSession(
+	req := x.NewTestHTTPRequest(t, "GET", "/sessions/whoami", nil)
+	s, err := session.NewActiveSession(req,
 		&identity.Identity{ID: x.NewUUID(), State: identity.StateActive},
 		NewSessionLifespanProvider(time.Hour),
 		time.Now(),
@@ -150,7 +154,8 @@ func NewHTTPClientWithArbitrarySessionToken(t *testing.T, reg *driver.RegistryDe
 }
 
 func NewHTTPClientWithArbitrarySessionCookie(t *testing.T, reg *driver.RegistryDefault) *http.Client {
-	s, err := session.NewActiveSession(
+	req := x.NewTestHTTPRequest(t, "GET", "/sessions/whoami", nil)
+	s, err := session.NewActiveSession(req,
 		&identity.Identity{ID: x.NewUUID(), State: identity.StateActive},
 		NewSessionLifespanProvider(time.Hour),
 		time.Now(),
@@ -163,7 +168,8 @@ func NewHTTPClientWithArbitrarySessionCookie(t *testing.T, reg *driver.RegistryD
 }
 
 func NewNoRedirectHTTPClientWithArbitrarySessionCookie(t *testing.T, reg *driver.RegistryDefault) *http.Client {
-	s, err := session.NewActiveSession(
+	req := x.NewTestHTTPRequest(t, "GET", "/sessions/whoami", nil)
+	s, err := session.NewActiveSession(req,
 		&identity.Identity{ID: x.NewUUID(), State: identity.StateActive},
 		NewSessionLifespanProvider(time.Hour),
 		time.Now(),
@@ -176,7 +182,9 @@ func NewNoRedirectHTTPClientWithArbitrarySessionCookie(t *testing.T, reg *driver
 }
 
 func NewHTTPClientWithIdentitySessionCookie(t *testing.T, reg *driver.RegistryDefault, id *identity.Identity) *http.Client {
-	s, err := session.NewActiveSession(id,
+	req := x.NewTestHTTPRequest(t, "GET", "/sessions/whoami", nil)
+	s, err := session.NewActiveSession(req,
+		id,
 		NewSessionLifespanProvider(time.Hour),
 		time.Now(),
 		identity.CredentialsTypePassword,
@@ -188,7 +196,9 @@ func NewHTTPClientWithIdentitySessionCookie(t *testing.T, reg *driver.RegistryDe
 }
 
 func NewHTTPClientWithIdentitySessionToken(t *testing.T, reg *driver.RegistryDefault, id *identity.Identity) *http.Client {
-	s, err := session.NewActiveSession(id,
+	req := x.NewTestHTTPRequest(t, "GET", "/sessions/whoami", nil)
+	s, err := session.NewActiveSession(req,
+		id,
 		NewSessionLifespanProvider(time.Hour),
 		time.Now(),
 		identity.CredentialsTypePassword,
@@ -209,4 +219,12 @@ func EnsureAAL(t *testing.T, c *http.Client, ts *httptest.Server, aal string, me
 		assert.EqualValues(t, method, gjson.GetBytes(sess, "authentication_methods.#(method=="+method+").method").String())
 	}
 	assert.Len(t, gjson.GetBytes(sess, "authentication_methods").Array(), 1+len(methods))
+}
+
+func NewAuthorizedTransport(t *testing.T, reg *driver.RegistryDefault, sess *session.Session) *x.TransportWithHeader {
+	maybePersistSession(t, reg, sess)
+
+	return x.NewTransportWithHeader(http.Header{
+		"Authorization": {"Bearer " + sess.Token},
+	})
 }

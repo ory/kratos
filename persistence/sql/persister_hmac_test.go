@@ -1,9 +1,14 @@
+// Copyright © 2022 Ory Corp
+// SPDX-License-Identifier: Apache-2.0
+
 package sql
 
 import (
 	"context"
 	"os"
 	"testing"
+
+	"github.com/ory/x/contextx"
 
 	"github.com/ory/x/configx"
 	"github.com/ory/x/otelx"
@@ -25,6 +30,15 @@ type logRegistryOnly struct {
 	c *config.Config
 }
 
+func (l *logRegistryOnly) Config() *config.Config {
+	return l.c
+}
+
+func (l *logRegistryOnly) Contextualizer() contextx.Contextualizer {
+	//TODO implement me
+	panic("implement me")
+}
+
 func (l *logRegistryOnly) IdentityTraitsSchemas(ctx context.Context) (schema.Schemas, error) {
 	panic("implement me")
 }
@@ -40,10 +54,6 @@ func (l *logRegistryOnly) Logger() *logrusx.Logger {
 	return l.l
 }
 
-func (l *logRegistryOnly) Config(_ context.Context) *config.Config {
-	return l.c
-}
-
 func (l *logRegistryOnly) Audit() *logrusx.Logger {
 	panic("implement me")
 }
@@ -55,8 +65,9 @@ func (l *logRegistryOnly) Tracer(ctx context.Context) *otelx.Tracer {
 var _ persisterDependencies = &logRegistryOnly{}
 
 func TestPersisterHMAC(t *testing.T) {
+	ctx := context.Background()
 	conf := config.MustNew(t, logrusx.New("", ""), os.Stderr, configx.SkipValidation())
-	conf.MustSet(config.ViperKeySecretsDefault, []string{"foobarbaz"})
+	conf.MustSet(ctx, config.ViperKeySecretsDefault, []string{"foobarbaz"})
 	c, err := pop.NewConnection(&pop.ConnectionDetails{URL: "sqlite://foo?mode=memory"})
 	require.NoError(t, err)
 	p, err := NewPersister(context.Background(), &logRegistryOnly{c: conf}, c)
@@ -67,11 +78,11 @@ func TestPersisterHMAC(t *testing.T) {
 	assert.False(t, p.hmacConstantCompare(context.Background(), "hashme", p.hmacValue(context.Background(), "notme")))
 
 	hash := p.hmacValue(context.Background(), "hashme")
-	conf.MustSet(config.ViperKeySecretsDefault, []string{"notfoobarbaz"})
+	conf.MustSet(ctx, config.ViperKeySecretsDefault, []string{"notfoobarbaz"})
 	assert.False(t, p.hmacConstantCompare(context.Background(), "hashme", hash))
 	assert.True(t, p.hmacConstantCompare(context.Background(), "hashme", p.hmacValue(context.Background(), "hashme")))
 
-	conf.MustSet(config.ViperKeySecretsDefault, []string{"notfoobarbaz", "foobarbaz"})
+	conf.MustSet(ctx, config.ViperKeySecretsDefault, []string{"notfoobarbaz", "foobarbaz"})
 	assert.True(t, p.hmacConstantCompare(context.Background(), "hashme", hash))
 	assert.True(t, p.hmacConstantCompare(context.Background(), "hashme", p.hmacValue(context.Background(), "hashme")))
 	assert.NotEqual(t, hash, p.hmacValue(context.Background(), "hashme"))

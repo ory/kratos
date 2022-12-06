@@ -1,3 +1,6 @@
+// Copyright © 2022 Ory Corp
+// SPDX-License-Identifier: Apache-2.0
+
 package webauthn
 
 import (
@@ -112,8 +115,8 @@ func (s *Strategy) NodeGroup() node.UiNodeGroup {
 }
 
 func (s *Strategy) newWebAuthn(ctx context.Context) (*webauthn.WebAuthn, error) {
-	c := s.d.Config(ctx)
-	web, err := webauthn.New(c.WebAuthnConfig())
+	c := s.d.Config()
+	web, err := webauthn.New(c.WebAuthnConfig(ctx))
 	if err != nil {
 		return nil, errors.WithStack(err)
 	}
@@ -123,7 +126,7 @@ func (s *Strategy) newWebAuthn(ctx context.Context) (*webauthn.WebAuthn, error) 
 
 func (s *Strategy) CompletedAuthenticationMethod(ctx context.Context) session.AuthenticationMethod {
 	aal := identity.AuthenticatorAssuranceLevel1
-	if !s.d.Config(ctx).WebAuthnForPasswordless() {
+	if !s.d.Config().WebAuthnForPasswordless(ctx) {
 		aal = identity.AuthenticatorAssuranceLevel2
 	}
 	return session.AuthenticationMethod{

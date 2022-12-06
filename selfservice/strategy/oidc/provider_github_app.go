@@ -1,3 +1,6 @@
+// Copyright © 2022 Ory Corp
+// SPDX-License-Identifier: Apache-2.0
+
 package oidc
 
 import (
@@ -41,7 +44,7 @@ func (g *ProviderGitHubApp) oauth2(ctx context.Context) *oauth2.Config {
 		ClientSecret: g.config.ClientSecret,
 		Endpoint:     github.Endpoint,
 		Scopes:       g.config.Scope,
-		RedirectURL:  g.config.Redir(g.reg.Config(ctx).OIDCRedirectURIBase()),
+		RedirectURL:  g.config.Redir(g.reg.Config().OIDCRedirectURIBase(ctx)),
 	}
 }
 

@@ -1,3 +1,6 @@
+// Copyright © 2022 Ory Corp
+// SPDX-License-Identifier: Apache-2.0
+
 package recovery
 
 import (
@@ -7,17 +10,25 @@ import (
 
 	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/identity"
+	"github.com/ory/kratos/selfservice/flow"
 	"github.com/ory/kratos/session"
+	"github.com/ory/kratos/ui/node"
 	"github.com/ory/kratos/x"
 )
 
 type (
+	PreHookExecutor interface {
+		ExecuteRecoveryPreHook(w http.ResponseWriter, r *http.Request, a *Flow) error
+	}
+	PreHookExecutorFunc func(w http.ResponseWriter, r *http.Request, a *Flow) error
+
 	PostHookExecutor interface {
 		ExecutePostRecoveryHook(w http.ResponseWriter, r *http.Request, a *Flow, s *session.Session) error
 	}
 	PostHookExecutorFunc func(w http.ResponseWriter, r *http.Request, a *Flow, s *session.Session) error
 
 	HooksProvider interface {
+		PreRecoveryHooks(ctx context.Context) []PreHookExecutor
 		PostRecoveryHooks(ctx context.Context) []PostHookExecutor
 	}
 )
@@ -28,6 +39,10 @@ func PostHookRecoveryExecutorNames(e []PostHookExecutor) []string {
 		names[k] = fmt.Sprintf("%T", ee)
 	}
 	return names
+}
+
+func (f PreHookExecutorFunc) ExecuteRecoveryPreHook(w http.ResponseWriter, r *http.Request, a *Flow) error {
+	return f(w, r, a)
 }
 
 func (f PostHookExecutorFunc) ExecutePostRecoveryHook(w http.ResponseWriter, r *http.Request, a *Flow, s *session.Session) error {
@@ -41,6 +56,7 @@ type (
 		identity.ValidationProvider
 		session.PersistenceProvider
 		HooksProvider
+		x.CSRFTokenGeneratorProvider
 		x.LoggingProvider
 		x.WriterProvider
 	}
@@ -67,7 +83,11 @@ func (e *HookExecutor) PostRecoveryHook(w http.ResponseWriter, r *http.Request, 
 		Debug("Running ExecutePostRecoveryHooks.")
 	for k, executor := range e.d.PostRecoveryHooks(r.Context()) {
 		if err := executor.ExecutePostRecoveryHook(w, r, a, s); err != nil {
-			return err
+			var traits identity.Traits
+			if s.Identity != nil {
+				traits = s.Identity.Traits
+			}
+			return flow.HandleHookError(w, r, a, traits, node.LinkGroup, err, e.d, e.d)
 		}
 
 		e.d.Logger().WithRequest(r).
@@ -75,13 +95,23 @@ func (e *HookExecutor) PostRecoveryHook(w http.ResponseWriter, r *http.Request, 
 			WithField("executor_position", k).
 			WithField("executors", PostHookRecoveryExecutorNames(e.d.PostRecoveryHooks(r.Context()))).
 			WithField("identity_id", s.Identity.ID).
-			Debug("ExecutePostVerificationHook completed successfully.")
+			Debug("ExecutePostRecoveryHook completed successfully.")
 	}
 
 	e.d.Logger().
 		WithRequest(r).
 		WithField("identity_id", s.Identity.ID).
-		Debug("Post verification execution hooks completed successfully.")
+		Debug("Post recovery execution hooks completed successfully.")
+
+	return nil
+}
+
+func (e *HookExecutor) PreRecoveryHook(w http.ResponseWriter, r *http.Request, a *Flow) error {
+	for _, executor := range e.d.PreRecoveryHooks(r.Context()) {
+		if err := executor.ExecuteRecoveryPreHook(w, r, a); err != nil {
+			return err
+		}
+	}
 
 	return nil
 }

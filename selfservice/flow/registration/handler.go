@@ -1,9 +1,14 @@
+// Copyright © 2022 Ory Corp
+// SPDX-License-Identifier: Apache-2.0
+
 package registration
 
 import (
 	"net/http"
+	"net/url"
 	"time"
 
+	"github.com/ory/kratos/hydra"
 	"github.com/ory/kratos/text"
 
 	"github.com/ory/nosurf"
@@ -21,6 +26,7 @@ import (
 	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/selfservice/errorx"
 	"github.com/ory/kratos/selfservice/flow"
+	"github.com/ory/kratos/selfservice/flow/logout"
 	"github.com/ory/kratos/session"
 	"github.com/ory/kratos/x"
 )
@@ -38,6 +44,7 @@ type (
 	handlerDependencies interface {
 		config.Provider
 		errorx.ManagementProvider
+		hydra.HydraProvider
 		session.HandlerProvider
 		session.ManagementProvider
 		x.WriterProvider
@@ -64,14 +71,14 @@ func (h *Handler) RegisterPublicRoutes(public *x.RouterPublic) {
 	h.d.CSRFHandler().IgnorePath(RouteInitAPIFlow)
 	h.d.CSRFHandler().IgnorePath(RouteSubmitFlow)
 
-	public.GET(RouteInitBrowserFlow, h.initBrowserFlow)
-	public.GET(RouteInitAPIFlow, h.d.SessionHandler().IsNotAuthenticated(h.initApiFlow,
+	public.GET(RouteInitBrowserFlow, h.createBrowserRegistrationFlow)
+	public.GET(RouteInitAPIFlow, h.d.SessionHandler().IsNotAuthenticated(h.createNativeRegistrationFlow,
 		session.RespondWithJSONErrorOnAuthenticated(h.d.Writer(), errors.WithStack(ErrAlreadyLoggedIn))))
 
-	public.GET(RouteGetFlow, h.fetchFlow)
+	public.GET(RouteGetFlow, h.getRegistrationFlow)
 
-	public.POST(RouteSubmitFlow, h.d.SessionHandler().IsNotAuthenticated(h.submitFlow, h.onAuthenticated))
-	public.GET(RouteSubmitFlow, h.d.SessionHandler().IsNotAuthenticated(h.submitFlow, h.onAuthenticated))
+	public.POST(RouteSubmitFlow, h.d.SessionHandler().IsNotAuthenticated(h.updateRegistrationFlow, h.onAuthenticated))
+	public.GET(RouteSubmitFlow, h.d.SessionHandler().IsNotAuthenticated(h.updateRegistrationFlow, h.onAuthenticated))
 }
 
 func (h *Handler) onAuthenticated(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
@@ -91,15 +98,25 @@ func (h *Handler) RegisterAdminRoutes(admin *x.RouterAdmin) {
 	admin.GET(RouteSubmitFlow, x.RedirectToPublicRoute(h.d))
 }
 
-func (h *Handler) NewRegistrationFlow(w http.ResponseWriter, r *http.Request, ft flow.Type) (*Flow, error) {
+type FlowOption func(f *Flow)
 
-	if !h.d.Config(r.Context()).SelfServiceFlowRegistrationEnabled() {
+func WithFlowReturnTo(returnTo string) FlowOption {
+	return func(f *Flow) {
+		f.ReturnTo = returnTo
+	}
+}
+
+func (h *Handler) NewRegistrationFlow(w http.ResponseWriter, r *http.Request, ft flow.Type, opts ...FlowOption) (*Flow, error) {
+	if !h.d.Config().SelfServiceFlowRegistrationEnabled(r.Context()) {
 		return nil, errors.WithStack(ErrRegistrationDisabled)
 	}
 
-	f, err := NewFlow(h.d.Config(r.Context()), h.d.Config(r.Context()).SelfServiceFlowRegistrationRequestLifespan(), h.d.GenerateCSRFToken(r), r, ft)
+	f, err := NewFlow(h.d.Config(), h.d.Config().SelfServiceFlowRegistrationRequestLifespan(r.Context()), h.d.GenerateCSRFToken(r), r, ft)
 	if err != nil {
 		return nil, err
+	}
+	for _, o := range opts {
+		o(f)
 	}
 
 	for _, s := range h.d.RegistrationStrategies(r.Context()) {
@@ -108,7 +125,7 @@ func (h *Handler) NewRegistrationFlow(w http.ResponseWriter, r *http.Request, ft
 		}
 	}
 
-	ds, err := h.d.Config(r.Context()).DefaultIdentityTraitsSchemaURL()
+	ds, err := h.d.Config().DefaultIdentityTraitsSchemaURL(r.Context())
 	if err != nil {
 		return nil, err
 	}
@@ -138,9 +155,9 @@ func (h *Handler) FromOldFlow(w http.ResponseWriter, r *http.Request, of Flow) (
 	return nf, nil
 }
 
-// swagger:route GET /self-service/registration/api v0alpha2 initializeSelfServiceRegistrationFlowWithoutBrowser
+// swagger:route GET /self-service/registration/api frontend createNativeRegistrationFlow
 //
-// Initialize Registration Flow for APIs, Services, Apps, ...
+// # Create Registration Flow for Native Apps
 //
 // This endpoint initiates a registration flow for API clients such as mobile devices, smart TVs, and so on.
 //
@@ -162,13 +179,13 @@ func (h *Handler) FromOldFlow(w http.ResponseWriter, r *http.Request, of Flow) (
 //
 // More information can be found at [Ory Kratos User Login](https://www.ory.sh/docs/kratos/self-service/flows/user-login) and [User Registration Documentation](https://www.ory.sh/docs/kratos/self-service/flows/user-registration).
 //
-//     Schemes: http, https
+//	Schemes: http, https
 //
-//     Responses:
-//       200: selfServiceRegistrationFlow
-//       400: jsonError
-//       500: jsonError
-func (h *Handler) initApiFlow(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+//	Responses:
+//	  200: registrationFlow
+//	  400: errorGeneric
+//	  default: errorGeneric
+func (h *Handler) createNativeRegistrationFlow(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 	a, err := h.NewRegistrationFlow(w, r, flow.TypeAPI)
 	if err != nil {
 		h.d.Writer().WriteError(w, r, err)
@@ -178,18 +195,33 @@ func (h *Handler) initApiFlow(w http.ResponseWriter, r *http.Request, _ httprout
 	h.d.Writer().Write(w, r, a)
 }
 
+// Create Browser Registration Flow Parameters
+//
 // nolint:deadcode,unused
-// swagger:parameters initializeSelfServiceRegistrationFlowForBrowsers
-type initializeSelfServiceRegistrationFlowForBrowsers struct {
+// swagger:parameters createBrowserRegistrationFlow
+type createBrowserRegistrationFlow struct {
 	// The URL to return the browser to after the flow was completed.
 	//
 	// in: query
 	ReturnTo string `json:"return_to"`
+
+	// Ory OAuth 2.0 Login Challenge.
+	//
+	// If set will cooperate with Ory OAuth2 and OpenID to act as an OAuth2 server / OpenID Provider.
+	//
+	// The value for this parameter comes from `login_challenge` URL Query parameter sent to your
+	// application (e.g. `/registration?login_challenge=abcde`).
+	//
+	// This feature is compatible with Ory Hydra when not running on the Ory Network.
+	//
+	// required: false
+	// in: query
+	LoginChallenge string `json:"login_challenge"`
 }
 
-// swagger:route GET /self-service/registration/browser v0alpha2 initializeSelfServiceRegistrationFlowForBrowsers
+// swagger:route GET /self-service/registration/browser frontend createBrowserRegistrationFlow
 //
-// Initialize Registration Flow for Browsers
+// # Create Registration Flow for Browsers
 //
 // This endpoint initializes a browser-based user registration flow. This endpoint will set the appropriate
 // cookies and anti-CSRF measures required for browser-based flows.
@@ -217,39 +249,60 @@ type initializeSelfServiceRegistrationFlowForBrowsers struct {
 //
 // More information can be found at [Ory Kratos User Login](https://www.ory.sh/docs/kratos/self-service/flows/user-login) and [User Registration Documentation](https://www.ory.sh/docs/kratos/self-service/flows/user-registration).
 //
-//     Schemes: http, https
+//	Schemes: http, https
 //
-//     Produces:
-//     - application/json
+//	Produces:
+//	- application/json
 //
-//     Responses:
-//       200: selfServiceRegistrationFlow
-//       303: emptyResponse
-//       500: jsonError
-func (h *Handler) initBrowserFlow(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+//	Responses:
+//	  200: registrationFlow
+//	  303: emptyResponse
+//	  default: errorGeneric
+func (h *Handler) createBrowserRegistrationFlow(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	a, err := h.NewRegistrationFlow(w, r, flow.TypeBrowser)
 	if err != nil {
 		h.d.SelfServiceErrorManager().Forward(r.Context(), w, r, err)
 		return
 	}
 
-	if _, err := h.d.SessionManager().FetchFromRequest(r.Context(), r); err == nil {
+	if sess, err := h.d.SessionManager().FetchFromRequest(r.Context(), r); err == nil {
+		if r.URL.Query().Has("login_challenge") {
+			logoutUrl := urlx.AppendPaths(h.d.Config().SelfPublicURL(r.Context()), logout.RouteSubmitFlow)
+			self := urlx.CopyWithQuery(
+				urlx.AppendPaths(h.d.Config().SelfPublicURL(r.Context()), RouteInitBrowserFlow),
+				r.URL.Query(),
+			).String()
+
+			http.Redirect(
+				w,
+				r,
+				urlx.CopyWithQuery(logoutUrl, url.Values{
+					"token":     {sess.LogoutToken},
+					"return_to": {self},
+				}).String(),
+				http.StatusFound,
+			)
+			return
+		}
+
 		if x.IsJSONRequest(r) {
 			h.d.Writer().WriteError(w, r, errors.WithStack(ErrAlreadyLoggedIn))
 			return
 		}
 
-		http.Redirect(w, r, h.d.Config(r.Context()).SelfServiceBrowserDefaultReturnTo().String(), http.StatusSeeOther)
+		http.Redirect(w, r, h.d.Config().SelfServiceBrowserDefaultReturnTo(r.Context()).String(), http.StatusSeeOther)
 		return
 	}
 
-	redirTo := a.AppendTo(h.d.Config(r.Context()).SelfServiceFlowRegistrationUI()).String()
+	redirTo := a.AppendTo(h.d.Config().SelfServiceFlowRegistrationUI(r.Context())).String()
 	x.AcceptToRedirectOrJSON(w, r, h.d.Writer(), a, redirTo)
 }
 
+// Get Registration Flow Parameters
+//
 // nolint:deadcode,unused
-// swagger:parameters getSelfServiceRegistrationFlow
-type getSelfServiceRegistrationFlow struct {
+// swagger:parameters getRegistrationFlow
+type getRegistrationFlow struct {
 	// The Registration Flow ID
 	//
 	// The value for this parameter comes from `flow` URL Query parameter sent to your
@@ -269,9 +322,9 @@ type getSelfServiceRegistrationFlow struct {
 	Cookies string `json:"Cookie"`
 }
 
-// swagger:route GET /self-service/registration/flows v0alpha2 getSelfServiceRegistrationFlow
+// swagger:route GET /self-service/registration/flows frontend getRegistrationFlow
 //
-// Get Registration Flow
+// # Get Registration Flow
 //
 // This endpoint returns a registration flow's context with, for example, error details and other information.
 //
@@ -284,9 +337,9 @@ type getSelfServiceRegistrationFlow struct {
 //	```js
 //	// pseudo-code example
 //	router.get('/registration', async function (req, res) {
-//	  const flow = await client.getSelfServiceRegistrationFlow(req.header('cookie'), req.query['flow'])
+//	  const flow = await client.getRegistrationFlow(req.header('cookie'), req.query['flow'])
 //
-//    res.render('registration', flow)
+//	  res.render('registration', flow)
 //	})
 //	```
 //
@@ -297,20 +350,19 @@ type getSelfServiceRegistrationFlow struct {
 //
 // More information can be found at [Ory Kratos User Login](https://www.ory.sh/docs/kratos/self-service/flows/user-login) and [User Registration Documentation](https://www.ory.sh/docs/kratos/self-service/flows/user-registration).
 //
-//     Produces:
-//     - application/json
+//	Produces:
+//	- application/json
 //
-//     Schemes: http, https
+//	Schemes: http, https
 //
-//     Responses:
-//       200: selfServiceRegistrationFlow
-//       403: jsonError
-//       404: jsonError
-//       410: jsonError
-//       500: jsonError
-func (h *Handler) fetchFlow(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-
-	if !h.d.Config(r.Context()).SelfServiceFlowRegistrationEnabled() {
+//	Responses:
+//	  200: registrationFlow
+//	  403: errorGeneric
+//	  404: errorGeneric
+//	  410: errorGeneric
+//	  default: errorGeneric
+func (h *Handler) getRegistrationFlow(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	if !h.d.Config().SelfServiceFlowRegistrationEnabled(r.Context()) {
 		h.d.SelfServiceErrorManager().Forward(r.Context(), w, r, errors.WithStack(ErrRegistrationDisabled))
 		return
 	}
@@ -331,7 +383,7 @@ func (h *Handler) fetchFlow(w http.ResponseWriter, r *http.Request, ps httproute
 
 	if ar.ExpiresAt.Before(time.Now()) {
 		if ar.Type == flow.TypeBrowser {
-			redirectURL := flow.GetFlowExpiredRedirectURL(h.d.Config(r.Context()), RouteInitBrowserFlow, ar.ReturnTo)
+			redirectURL := flow.GetFlowExpiredRedirectURL(r.Context(), h.d.Config(), RouteInitBrowserFlow, ar.ReturnTo)
 
 			h.d.Writer().WriteError(w, r, errors.WithStack(x.ErrGone.WithID(text.ErrIDSelfServiceFlowExpired).
 				WithReason("The registration flow has expired. Redirect the user to the registration flow init endpoint to initialize a new registration flow.").
@@ -341,16 +393,29 @@ func (h *Handler) fetchFlow(w http.ResponseWriter, r *http.Request, ps httproute
 		}
 		h.d.Writer().WriteError(w, r, errors.WithStack(x.ErrGone.WithID(text.ErrIDSelfServiceFlowExpired).
 			WithReason("The registration flow has expired. Call the registration flow init API endpoint to initialize a new registration flow.").
-			WithDetail("api", urlx.AppendPaths(h.d.Config(r.Context()).SelfPublicURL(), RouteInitAPIFlow).String())))
+			WithDetail("api", urlx.AppendPaths(h.d.Config().SelfPublicURL(r.Context()), RouteInitAPIFlow).String())))
 		return
+	}
+
+	if ar.OAuth2LoginChallenge.Valid {
+		hlr, err := h.d.Hydra().GetLoginRequest(r.Context(), ar.OAuth2LoginChallenge)
+		if err != nil {
+			// We don't redirect back to the third party on errors because Hydra doesn't
+			// give us the 3rd party return_uri when it redirects to the login UI.
+			h.d.SelfServiceErrorManager().Forward(r.Context(), w, r, err)
+			return
+		}
+		ar.HydraLoginRequest = hlr
 	}
 
 	h.d.Writer().Write(w, r, ar)
 }
 
-// swagger:parameters submitSelfServiceRegistrationFlow
+// Update Registration Flow Parameters
+//
+// swagger:parameters updateRegistrationFlow
 // nolint:deadcode,unused
-type submitSelfServiceRegistrationFlow struct {
+type updateRegistrationFlow struct {
 	// The Registration Flow ID
 	//
 	// The value for this parameter comes from `flow` URL Query parameter sent to your
@@ -362,7 +427,7 @@ type submitSelfServiceRegistrationFlow struct {
 
 	// in: body
 	// required: true
-	Body submitSelfServiceRegistrationFlowBody
+	Body updateRegistrationFlowBody
 
 	// HTTP Cookies
 	//
@@ -374,13 +439,15 @@ type submitSelfServiceRegistrationFlow struct {
 	Cookies string `json:"Cookie"`
 }
 
-// swagger:model submitSelfServiceRegistrationFlowBody
-// nolint:deadcode,unused
-type submitSelfServiceRegistrationFlowBody struct{}
-
-// swagger:route POST /self-service/registration v0alpha2 submitSelfServiceRegistrationFlow
+// Update Registration Request Body
 //
-// Submit a Registration Flow
+// swagger:model updateRegistrationFlowBody
+// nolint:deadcode,unused
+type updateRegistrationFlowBody struct{}
+
+// swagger:route POST /self-service/registration frontend updateRegistrationFlow
+//
+// # Update Registration Flow
 //
 // Use this endpoint to complete a registration flow by sending an identity's traits and password. This endpoint
 // behaves differently for API and browser flows.
@@ -403,31 +470,31 @@ type submitSelfServiceRegistrationFlowBody struct{}
 // If this endpoint is called with `Accept: application/json` in the header, the response contains the flow without a redirect. In the
 // case of an error, the `error.id` of the JSON response body can be one of:
 //
-// - `session_already_available`: The user is already signed in.
-// - `security_csrf_violation`: Unable to fetch the flow because a CSRF violation occurred.
-// - `security_identity_mismatch`: The requested `?return_to` address is not allowed to be used. Adjust this in the configuration!
-// - `browser_location_change_required`: Usually sent when an AJAX request indicates that the browser needs to open a specific URL.
-//		Most likely used in Social Sign In flows.
+//   - `session_already_available`: The user is already signed in.
+//   - `security_csrf_violation`: Unable to fetch the flow because a CSRF violation occurred.
+//   - `security_identity_mismatch`: The requested `?return_to` address is not allowed to be used. Adjust this in the configuration!
+//   - `browser_location_change_required`: Usually sent when an AJAX request indicates that the browser needs to open a specific URL.
+//     Most likely used in Social Sign In flows.
 //
 // More information can be found at [Ory Kratos User Login](https://www.ory.sh/docs/kratos/self-service/flows/user-login) and [User Registration Documentation](https://www.ory.sh/docs/kratos/self-service/flows/user-registration).
 //
-//     Schemes: http, https
+//	Schemes: http, https
 //
-//     Consumes:
-//     - application/json
-//     - application/x-www-form-urlencoded
+//	Consumes:
+//	- application/json
+//	- application/x-www-form-urlencoded
 //
-//     Produces:
-//     - application/json
+//	Produces:
+//	- application/json
 //
-//     Responses:
-//       200: successfulSelfServiceRegistrationWithoutBrowser
-//       303: emptyResponse
-//       400: selfServiceRegistrationFlow
-//       410: jsonError
-//       422: selfServiceBrowserLocationChangeRequiredError
-//       500: jsonError
-func (h *Handler) submitFlow(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+//	Responses:
+//	  200: successfulNativeRegistration
+//	  303: emptyResponse
+//	  400: registrationFlow
+//	  410: errorGeneric
+//	  422: errorBrowserLocationChangeRequired
+//	  default: errorGeneric
+func (h *Handler) updateRegistrationFlow(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 	rid, err := flow.GetFlowID(r)
 	if err != nil {
 		h.d.RegistrationFlowErrorHandler().WriteFlowError(w, r, nil, node.DefaultGroup, err)
@@ -442,7 +509,7 @@ func (h *Handler) submitFlow(w http.ResponseWriter, r *http.Request, _ httproute
 
 	if _, err := h.d.SessionManager().FetchFromRequest(r.Context(), r); err == nil {
 		if f.Type == flow.TypeBrowser {
-			http.Redirect(w, r, h.d.Config(r.Context()).SelfServiceBrowserDefaultReturnTo().String(), http.StatusSeeOther)
+			http.Redirect(w, r, h.d.Config().SelfServiceBrowserDefaultReturnTo(r.Context()).String(), http.StatusSeeOther)
 			return
 		}
 
@@ -455,7 +522,7 @@ func (h *Handler) submitFlow(w http.ResponseWriter, r *http.Request, _ httproute
 		return
 	}
 
-	i := identity.NewIdentity(h.d.Config(r.Context()).DefaultIdentityTraitsSchemaID())
+	i := identity.NewIdentity(h.d.Config().DefaultIdentityTraitsSchemaID(r.Context()))
 	var s Strategy
 	for _, ss := range h.d.AllRegistrationStrategies() {
 		if err := ss.Register(w, r, f, i); errors.Is(err, flow.ErrStrategyNotResponsible) {

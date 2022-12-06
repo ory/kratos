@@ -1,3 +1,6 @@
+// Copyright © 2022 Ory Corp
+// SPDX-License-Identifier: Apache-2.0
+
 package lookup_test
 
 import (
@@ -31,9 +34,10 @@ import (
 var lookupCodeGJSONQuery = "ui.nodes.#(attributes.name==" + identity.CredentialsTypeLookup.String() + ")"
 
 func TestCompleteLogin(t *testing.T) {
+	ctx := context.Background()
 	conf, reg := internal.NewFastRegistryWithMocks(t)
-	conf.MustSet(config.ViperKeySelfServiceStrategyConfig+"."+string(identity.CredentialsTypePassword)+".enabled", false)
-	conf.MustSet(config.ViperKeySelfServiceStrategyConfig+"."+string(identity.CredentialsTypeLookup)+".enabled", true)
+	conf.MustSet(ctx, config.ViperKeySelfServiceStrategyConfig+"."+string(identity.CredentialsTypePassword)+".enabled", false)
+	conf.MustSet(ctx, config.ViperKeySelfServiceStrategyConfig+"."+string(identity.CredentialsTypeLookup)+".enabled", true)
 
 	router := x.NewRouterPublic()
 	publicTS, _ := testhelpers.NewKratosServerWithRouters(t, reg, router, x.NewRouterAdmin())
@@ -43,11 +47,11 @@ func TestCompleteLogin(t *testing.T) {
 	redirTS := testhelpers.NewRedirSessionEchoTS(t, reg)
 
 	// Overwrite these two to make it more explicit when tests fail
-	conf.MustSet(config.ViperKeySelfServiceErrorUI, errTS.URL+"/error-ts")
-	conf.MustSet(config.ViperKeySelfServiceLoginUI, uiTS.URL+"/login-ts")
+	conf.MustSet(ctx, config.ViperKeySelfServiceErrorUI, errTS.URL+"/error-ts")
+	conf.MustSet(ctx, config.ViperKeySelfServiceLoginUI, uiTS.URL+"/login-ts")
 
 	testhelpers.SetDefaultIdentitySchema(conf, "file://./stub/login.schema.json")
-	conf.MustSet(config.ViperKeySecretsDefault, []string{"not-a-secure-session-key"})
+	conf.MustSet(ctx, config.ViperKeySecretsDefault, []string{"not-a-secure-session-key"})
 
 	t.Run("case=lookup payload is set when identity has lookup", func(t *testing.T) {
 		id, _ := createIdentity(t, reg)
@@ -88,7 +92,7 @@ func TestCompleteLogin(t *testing.T) {
 	}
 
 	doBrowserFlowWithClient := func(t *testing.T, spa bool, v func(url.Values), id *identity.Identity, browserClient *http.Client, forced bool) (string, *http.Response) {
-		f := testhelpers.InitializeLoginFlowViaBrowser(t, browserClient, publicTS, forced, spa, testhelpers.InitFlowWithAAL(identity.AuthenticatorAssuranceLevel2))
+		f := testhelpers.InitializeLoginFlowViaBrowser(t, browserClient, publicTS, forced, spa, false, false, testhelpers.InitFlowWithAAL(identity.AuthenticatorAssuranceLevel2))
 		values := testhelpers.SDKFormFieldsToURLValues(f.Ui.Nodes)
 		values.Set("method", identity.CredentialsTypeLookup.String())
 		v(values)

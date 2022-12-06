@@ -1,15 +1,12 @@
 linters:
   enable:
-    - deadcode
     - errcheck
     - gosimple
     - govet
     - staticcheck
-    - structcheck
     - typecheck
     - unused
     - gosec
-    - varcheck
 #    - golint
     - goimports
   disable:

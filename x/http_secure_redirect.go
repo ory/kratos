@@ -1,3 +1,6 @@
+// Copyright © 2022 Ory Corp
+// SPDX-License-Identifier: Apache-2.0
+
 package x
 
 import (
@@ -20,6 +23,7 @@ import (
 type secureRedirectOptions struct {
 	allowlist       []url.URL
 	defaultReturnTo *url.URL
+	returnTo        string
 	sourceURL       string
 }
 
@@ -37,6 +41,13 @@ func SecureRedirectAllowURLs(urls []url.URL) SecureRedirectOption {
 func SecureRedirectUseSourceURL(source string) SecureRedirectOption {
 	return func(o *secureRedirectOptions) {
 		o.sourceURL = source
+	}
+}
+
+// SecureRedirectReturnTo uses the provided URL to redirect the user to it.
+func SecureRedirectReturnTo(returnTo string) SecureRedirectOption {
+	return func(o *secureRedirectOptions) {
+		o.returnTo = returnTo
 	}
 }
 
@@ -65,6 +76,26 @@ func SecureRedirectToIsAllowedHost(returnTo *url.URL, allowed url.URL) bool {
 	return strings.EqualFold(allowed.Host, returnTo.Host)
 }
 
+func TakeOverReturnToParameter(from string, to string) (string, error) {
+	fromURL, err := url.Parse(from)
+	if err != nil {
+		return "", err
+	}
+	returnTo := fromURL.Query().Get("return_to")
+	// Empty return_to parameter, return early
+	if returnTo == "" {
+		return to, nil
+	}
+	toURL, err := url.Parse(to)
+	if err != nil {
+		return "", err
+	}
+	toQuery := toURL.Query()
+	toQuery.Set("return_to", returnTo)
+	toURL.RawQuery = toQuery.Encode()
+	return toURL.String(), nil
+}
+
 // SecureRedirectTo implements a HTTP redirector who mitigates open redirect vulnerabilities by
 // working with allow lists.
 func SecureRedirectTo(r *http.Request, defaultReturnTo *url.URL, opts ...SecureRedirectOption) (returnTo *url.URL, err error) {
@@ -81,14 +112,18 @@ func SecureRedirectTo(r *http.Request, defaultReturnTo *url.URL, opts ...SecureR
 	if o.sourceURL != "" {
 		source, err = url.ParseRequestURI(o.sourceURL)
 		if err != nil {
-			return nil, herodot.ErrInternalServerError.WithWrap(err).WithReasonf("Unable to parse the original request URL: %s", err)
+			return nil, errors.WithStack(herodot.ErrInternalServerError.WithWrap(err).WithReasonf("Unable to parse the original request URL: %s", err))
 		}
 	}
 
-	if len(source.Query().Get("return_to")) == 0 {
+	rawReturnTo := stringsx.Coalesce(o.returnTo, source.Query().Get("return_to"))
+	if rawReturnTo == "" {
 		return o.defaultReturnTo, nil
-	} else if returnTo, err = url.Parse(source.Query().Get("return_to")); err != nil {
-		return nil, herodot.ErrInternalServerError.WithWrap(err).WithReasonf("Unable to parse the return_to query parameter as an URL: %s", err)
+	}
+
+	returnTo, err = url.Parse(rawReturnTo)
+	if err != nil {
+		return nil, errors.WithStack(herodot.ErrInternalServerError.WithWrap(err).WithReasonf("Unable to parse the return_to query parameter as an URL: %s", err))
 	}
 
 	returnTo.Host = stringsx.Coalesce(returnTo.Host, o.defaultReturnTo.Host)
@@ -129,11 +164,11 @@ func SecureContentNegotiationRedirection(
 	case "text/html":
 		fallthrough
 	default:
-		ret, err := SecureRedirectTo(r, c.SelfServiceBrowserDefaultReturnTo(),
+		ret, err := SecureRedirectTo(r, c.SelfServiceBrowserDefaultReturnTo(r.Context()),
 			append([]SecureRedirectOption{
 				SecureRedirectUseSourceURL(requestURL),
-				SecureRedirectAllowURLs(c.SelfServiceBrowserAllowedReturnToDomains()),
-				SecureRedirectAllowSelfServiceURLs(c.SelfPublicURL()),
+				SecureRedirectAllowURLs(c.SelfServiceBrowserAllowedReturnToDomains(r.Context())),
+				SecureRedirectAllowSelfServiceURLs(c.SelfPublicURL(r.Context())),
 			}, opts...)...,
 		)
 		if err != nil {

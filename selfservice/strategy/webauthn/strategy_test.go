@@ -1,3 +1,6 @@
+// Copyright © 2022 Ory Corp
+// SPDX-License-Identifier: Apache-2.0
+
 package webauthn_test
 
 import (
@@ -25,7 +28,7 @@ func TestCompletedAuthenticationMethod(t *testing.T) {
 		AAL:    identity.AuthenticatorAssuranceLevel2,
 	}, strategy.CompletedAuthenticationMethod(context.Background()))
 
-	conf.MustSet(config.ViperKeyWebAuthnPasswordless, true)
+	conf.MustSet(ctx, config.ViperKeyWebAuthnPasswordless, true)
 	assert.Equal(t, session.AuthenticationMethod{
 		Method: strategy.ID(),
 		AAL:    identity.AuthenticatorAssuranceLevel1,

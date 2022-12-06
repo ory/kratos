@@ -1,3 +1,6 @@
+// Copyright © 2022 Ory Corp
+// SPDX-License-Identifier: Apache-2.0
+
 package hook_test
 
 import (
@@ -29,6 +32,7 @@ import (
 )
 
 func TestVerifier(t *testing.T) {
+	ctx := context.Background()
 	u := &http.Request{URL: urlx.ParseOrPanic("https://www.ory.sh/")}
 	for k, hf := range map[string]func(*hook.Verifier, *identity.Identity, flow.Flow) error{
 		"settings": func(h *hook.Verifier, i *identity.Identity, f flow.Flow) error {
@@ -43,8 +47,8 @@ func TestVerifier(t *testing.T) {
 		t.Run("name="+k, func(t *testing.T) {
 			conf, reg := internal.NewFastRegistryWithMocks(t)
 			testhelpers.SetDefaultIdentitySchema(conf, "file://./stub/verify.schema.json")
-			conf.MustSet(config.ViperKeyPublicBaseURL, "https://www.ory.sh/")
-			conf.MustSet(config.ViperKeyCourierSMTPURL, "smtp://foo@bar@dev.null/")
+			conf.MustSet(ctx, config.ViperKeyPublicBaseURL, "https://www.ory.sh/")
+			conf.MustSet(ctx, config.ViperKeyCourierSMTPURL, "smtp://foo@bar@dev.null/")
 
 			i := identity.NewIdentity(config.DefaultIdentityTraitsSchemaID)
 			i.Traits = identity.Traits(`{"emails":["foo@ory.sh","bar@ory.sh","baz@ory.sh"]}`)
@@ -83,7 +87,9 @@ func TestVerifier(t *testing.T) {
 
 			h := hook.NewVerifier(reg)
 			require.NoError(t, hf(h, i, originalFlow))
-			expectedVerificationFlow, err := verification.NewPostHookFlow(conf, conf.SelfServiceFlowVerificationRequestLifespan(), "", u, reg.VerificationStrategies(context.Background()), originalFlow)
+			s, err := reg.GetActiveVerificationStrategy(ctx)
+			require.NoError(t, err)
+			expectedVerificationFlow, err := verification.NewPostHookFlow(conf, conf.SelfServiceFlowVerificationRequestLifespan(ctx), "", u, s, originalFlow)
 			require.NoError(t, err)
 
 			var verificationFlow verification.Flow
@@ -114,7 +120,7 @@ func TestVerifier(t *testing.T) {
 			assert.EqualValues(t, identity.VerifiableAddressStatusSent, address2.Status)
 
 			require.NoError(t, hf(h, i, originalFlow))
-			expectedVerificationFlow, err = verification.NewPostHookFlow(conf, conf.SelfServiceFlowVerificationRequestLifespan(), "", u, reg.VerificationStrategies(context.Background()), originalFlow)
+			expectedVerificationFlow, err = verification.NewPostHookFlow(conf, conf.SelfServiceFlowVerificationRequestLifespan(ctx), "", u, s, originalFlow)
 			var verificationFlow2 verification.Flow
 			require.NoError(t, reg.Persister().GetConnection(context.Background()).First(&verificationFlow2))
 			assert.Equal(t, expectedVerificationFlow.RequestURL, verificationFlow2.RequestURL)

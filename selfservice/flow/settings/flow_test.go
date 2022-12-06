@@ -1,12 +1,18 @@
+// Copyright © 2022 Ory Corp
+// SPDX-License-Identifier: Apache-2.0
+
 package settings_test
 
 import (
+	"context"
 	"crypto/tls"
 	"fmt"
 	"net/http"
 	"net/url"
 	"testing"
 	"time"
+
+	"github.com/gofrs/uuid"
 
 	"github.com/ory/kratos/selfservice/flow/registration"
 
@@ -33,7 +39,7 @@ func TestFakeFlow(t *testing.T) {
 	var r settings.Flow
 	require.NoError(t, faker.FakeData(&r))
 
-	assert.NotEmpty(t, r.ID)
+	assert.Equal(t, uuid.Nil, r.ID)
 	assert.NotEmpty(t, r.IssuedAt)
 	assert.NotEmpty(t, r.ExpiresAt)
 	assert.NotEmpty(t, r.RequestURL)
@@ -41,6 +47,7 @@ func TestFakeFlow(t *testing.T) {
 }
 
 func TestNewFlow(t *testing.T) {
+	ctx := context.Background()
 	conf := internal.NewConfigurationWithDefaults(t)
 
 	id := &identity.Identity{ID: x.NewUUID()}
@@ -57,7 +64,7 @@ func TestNewFlow(t *testing.T) {
 		_, err := registration.NewFlow(conf, 0, "csrf", &http.Request{URL: &url.URL{Path: "/", RawQuery: "return_to=https://not-allowed/foobar"}, Host: "ory.sh"}, flow.TypeBrowser)
 		require.Error(t, err)
 
-		_, err = registration.NewFlow(conf, 0, "csrf", &http.Request{URL: &url.URL{Path: "/", RawQuery: "return_to=" + urlx.AppendPaths(conf.SelfPublicURL(), "/self-service/login/browser").String()}, Host: "ory.sh"}, flow.TypeBrowser)
+		_, err = registration.NewFlow(conf, 0, "csrf", &http.Request{URL: &url.URL{Path: "/", RawQuery: "return_to=" + urlx.AppendPaths(conf.SelfPublicURL(ctx), "/self-service/login/browser").String()}, Host: "ory.sh"}, flow.TypeBrowser)
 		require.NoError(t, err)
 	})
 
@@ -163,4 +170,14 @@ func TestFlowEncodeJSON(t *testing.T) {
 	assert.EqualValues(t, "", gjson.Get(jsonx.TestMarshalJSONString(t, &settings.Flow{RequestURL: "https://foo.bar?foo=bar"}), "return_to").String())
 	assert.EqualValues(t, "/bar", gjson.Get(jsonx.TestMarshalJSONString(t, &settings.Flow{RequestURL: "https://foo.bar?return_to=/bar"}), "return_to").String())
 	assert.EqualValues(t, "/bar", gjson.Get(jsonx.TestMarshalJSONString(t, settings.Flow{RequestURL: "https://foo.bar?return_to=/bar"}), "return_to").String())
+}
+
+func TestFlowDontOverrideReturnTo(t *testing.T) {
+	f := &settings.Flow{ReturnTo: "/foo"}
+	f.SetReturnTo()
+	assert.Equal(t, "/foo", f.ReturnTo)
+
+	f = &settings.Flow{RequestURL: "https://foo.bar?return_to=/bar"}
+	f.SetReturnTo()
+	assert.Equal(t, "/bar", f.ReturnTo)
 }

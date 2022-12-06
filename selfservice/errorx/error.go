@@ -1,3 +1,6 @@
+// Copyright © 2022 Ory Corp
+// SPDX-License-Identifier: Apache-2.0
+
 package errorx
 
 import (
@@ -6,12 +9,10 @@ import (
 	"encoding/json"
 	"time"
 
-	"github.com/ory/kratos/corp"
-
 	"github.com/gofrs/uuid"
 )
 
-// swagger:model selfServiceError
+// swagger:model flowError
 type ErrorContainer struct {
 	// ID of the error container.
 	//
@@ -34,5 +35,5 @@ type ErrorContainer struct {
 }
 
 func (e ErrorContainer) TableName(ctx context.Context) string {
-	return corp.ContextualizeTableName(ctx, "selfservice_errors")
+	return "selfservice_errors"
 }

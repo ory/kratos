@@ -1,12 +1,15 @@
+// Copyright © 2022 Ory Corp
+// SPDX-License-Identifier: Apache-2.0
+
 package identity
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	"github.com/gofrs/uuid"
 
-	"github.com/ory/kratos/corp"
 	"github.com/ory/x/sqlxx"
 )
 
@@ -35,7 +38,6 @@ type VerifiableAddressStatus string
 type VerifiableAddress struct {
 	// The ID
 	//
-	// required: true
 	ID uuid.UUID `json:"id" db:"id" faker:"-"`
 
 	// The address value
@@ -97,7 +99,7 @@ func (v VerifiableAddressType) HTMLFormInputType() string {
 }
 
 func (a VerifiableAddress) TableName(ctx context.Context) string {
-	return corp.ContextualizeTableName(ctx, "identity_verifiable_addresses")
+	return "identity_verifiable_addresses"
 }
 
 func NewVerifiableEmailAddress(value string, identity uuid.UUID) *VerifiableAddress {
@@ -130,4 +132,9 @@ func (a VerifiableAddress) GetNID() uuid.UUID {
 
 func (a VerifiableAddress) ValidateNID() error {
 	return nil
+}
+
+// Hash returns a unique string representation for the recovery address.
+func (a VerifiableAddress) Hash() string {
+	return fmt.Sprintf("%v|%v|%v|%v|%v|%v", a.Value, a.Verified, a.Via, a.Status, a.IdentityID, a.NID)
 }

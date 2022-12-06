@@ -1,9 +1,12 @@
+// Copyright © 2022 Ory Corp
+// SPDX-License-Identifier: Apache-2.0
+
 package sql
 
 import (
 	"context"
-
-	"github.com/ory/kratos/corp"
+	"fmt"
+	"time"
 
 	"github.com/gofrs/uuid"
 
@@ -16,7 +19,7 @@ func (p *Persister) CreateRegistrationFlow(ctx context.Context, r *registration.
 	ctx, span := p.r.Tracer(ctx).Tracer().Start(ctx, "persistence.sql.CreateRegistrationFlow")
 	defer span.End()
 
-	r.NID = corp.ContextualizeNID(ctx, p.nid)
+	r.NID = p.NetworkID(ctx)
 	r.EnsureInternalContext()
 	return p.GetConnection(ctx).Create(r)
 }
@@ -27,7 +30,7 @@ func (p *Persister) UpdateRegistrationFlow(ctx context.Context, r *registration.
 
 	r.EnsureInternalContext()
 	cp := *r
-	cp.NID = corp.ContextualizeNID(ctx, p.nid)
+	cp.NID = p.NetworkID(ctx)
 	return p.update(ctx, cp)
 }
 
@@ -37,9 +40,26 @@ func (p *Persister) GetRegistrationFlow(ctx context.Context, id uuid.UUID) (*reg
 
 	var r registration.Flow
 	if err := p.GetConnection(ctx).Where("id = ? AND nid = ?",
-		id, corp.ContextualizeNID(ctx, p.nid)).First(&r); err != nil {
+		id, p.NetworkID(ctx)).First(&r); err != nil {
 		return nil, sqlcon.HandleError(err)
 	}
 
 	return &r, nil
+}
+
+func (p *Persister) DeleteExpiredRegistrationFlows(ctx context.Context, expiresAt time.Time, limit int) error {
+	// #nosec G201
+	err := p.GetConnection(ctx).RawQuery(fmt.Sprintf(
+		"DELETE FROM %s WHERE id in (SELECT id FROM (SELECT id FROM %s c WHERE expires_at <= ? and nid = ? ORDER BY expires_at ASC LIMIT %d ) AS s )",
+		new(registration.Flow).TableName(ctx),
+		new(registration.Flow).TableName(ctx),
+		limit,
+	),
+		expiresAt,
+		p.NetworkID(ctx),
+	).Exec()
+	if err != nil {
+		return sqlcon.HandleError(err)
+	}
+	return nil
 }

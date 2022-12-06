@@ -1,9 +1,15 @@
+// Copyright © 2022 Ory Corp
+// SPDX-License-Identifier: Apache-2.0
+
 package identity_test
 
 import (
 	"context"
 	"fmt"
 	"testing"
+	"time"
+
+	"github.com/ory/x/sqlxx"
 
 	"github.com/ory/kratos/internal/testhelpers"
 
@@ -20,8 +26,8 @@ import (
 func TestManager(t *testing.T) {
 	conf, reg := internal.NewFastRegistryWithMocks(t)
 	testhelpers.SetDefaultIdentitySchema(conf, "file://./stub/manager.schema.json")
-	conf.MustSet(config.ViperKeyPublicBaseURL, "https://www.ory.sh/")
-	conf.MustSet(config.ViperKeyCourierSMTPURL, "smtp://foo@bar@dev.null/")
+	conf.MustSet(ctx, config.ViperKeyPublicBaseURL, "https://www.ory.sh/")
+	conf.MustSet(ctx, config.ViperKeyCourierSMTPURL, "smtp://foo@bar@dev.null/")
 
 	t.Run("case=should fail to create because validation fails", func(t *testing.T) {
 		i := identity.NewIdentity(config.DefaultIdentityTraitsSchemaID)
@@ -248,5 +254,25 @@ func TestManager(t *testing.T) {
 			// That is why we only check the identity in the store.
 			checkExtensionFields(fromStore, "email-updatetraits-1@ory.sh")(t)
 		})
+	})
+}
+
+func TestManagerNoDefaultNamedSchema(t *testing.T) {
+	conf, reg := internal.NewFastRegistryWithMocks(t)
+	conf.MustSet(ctx, config.ViperKeyDefaultIdentitySchemaID, "user_v0")
+	conf.MustSet(ctx, config.ViperKeyIdentitySchemas, config.Schemas{
+		{ID: "user_v0", URL: "file://./stub/manager.schema.json"},
+	})
+	conf.MustSet(ctx, config.ViperKeyPublicBaseURL, "https://www.ory.sh/")
+
+	t.Run("case=should create identity with default schema", func(t *testing.T) {
+		stateChangedAt := sqlxx.NullTime(time.Now().UTC())
+		original := &identity.Identity{
+			SchemaID:       "",
+			Traits:         []byte(identity.Traits(`{"email":"foo@ory.sh"}`)),
+			State:          identity.StateActive,
+			StateChangedAt: &stateChangedAt,
+		}
+		require.NoError(t, reg.IdentityManager().Create(context.Background(), original))
 	})
 }

@@ -1,3 +1,6 @@
+// Copyright © 2022 Ory Corp
+// SPDX-License-Identifier: Apache-2.0
+
 package recovery_test
 
 import (
@@ -10,6 +13,7 @@ import (
 	"github.com/ory/kratos/session"
 
 	"github.com/ory/kratos/selfservice/flow/recovery"
+	"github.com/ory/kratos/selfservice/strategy/code"
 
 	"github.com/gobuffalo/httptest"
 	"github.com/julienschmidt/httprouter"
@@ -25,15 +29,24 @@ import (
 )
 
 func TestRecoveryExecutor(t *testing.T) {
+	ctx := context.Background()
 	conf, reg := internal.NewFastRegistryWithMocks(t)
+	s := code.NewStrategy(reg)
 
 	newServer := func(t *testing.T, i *identity.Identity, ft flow.Type) *httptest.Server {
 		router := httprouter.New()
+		router.GET("/recovery/pre", func(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+			a, err := recovery.NewFlow(conf, time.Minute, x.FakeCSRFToken, r, s, ft)
+			require.NoError(t, err)
+			if testhelpers.SelfServiceHookErrorHandler(t, w, r, recovery.ErrHookAbortFlow, reg.RecoveryExecutor().PreRecoveryHook(w, r, a)) {
+				_, _ = w.Write([]byte("ok"))
+			}
+		})
 
 		router.GET("/recovery/post", func(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
-			a, err := recovery.NewFlow(conf, time.Minute, x.FakeCSRFToken, r, reg.RecoveryStrategies(context.Background()), ft)
+			a, err := recovery.NewFlow(conf, time.Minute, x.FakeCSRFToken, r, s, ft)
 			require.NoError(t, err)
-			s, _ := session.NewActiveSession(
+			s, _ := session.NewActiveSession(r,
 				i,
 				conf,
 				time.Now().UTC(),
@@ -48,7 +61,7 @@ func TestRecoveryExecutor(t *testing.T) {
 
 		ts := httptest.NewServer(router)
 		t.Cleanup(ts.Close)
-		conf.MustSet(config.ViperKeyPublicBaseURL, ts.URL)
+		conf.MustSet(ctx, config.ViperKeyPublicBaseURL, ts.URL)
 		return ts
 	}
 
@@ -65,7 +78,7 @@ func TestRecoveryExecutor(t *testing.T) {
 
 		t.Run("case=pass if hooks pass", func(t *testing.T) {
 			t.Cleanup(testhelpers.SelfServiceHookConfigReset(t, conf))
-			conf.MustSet(config.HookStrategyKey(config.ViperKeySelfServiceRecoveryAfter, config.HookGlobal),
+			conf.MustSet(ctx, config.HookStrategyKey(config.ViperKeySelfServiceRecoveryAfter, config.HookGlobal),
 				[]config.SelfServiceHook{{Name: "err", Config: []byte(`{}`)}})
 			i := testhelpers.SelfServiceHookFakeIdentity(t)
 			ts := newServer(t, i, flow.TypeBrowser)
@@ -77,7 +90,7 @@ func TestRecoveryExecutor(t *testing.T) {
 
 		t.Run("case=fail if hooks fail", func(t *testing.T) {
 			t.Cleanup(testhelpers.SelfServiceHookConfigReset(t, conf))
-			conf.MustSet(config.HookStrategyKey(config.ViperKeySelfServiceRecoveryAfter, config.HookGlobal),
+			conf.MustSet(ctx, config.HookStrategyKey(config.ViperKeySelfServiceRecoveryAfter, config.HookGlobal),
 				[]config.SelfServiceHook{{Name: "err", Config: []byte(`{"ExecutePostRecoveryHook": "abort"}`)}})
 			i := testhelpers.SelfServiceHookFakeIdentity(t)
 			ts := newServer(t, i, flow.TypeBrowser)
@@ -88,4 +101,15 @@ func TestRecoveryExecutor(t *testing.T) {
 			assert.Equal(t, "", body)
 		})
 	})
+
+	for _, kind := range []flow.Type{flow.TypeBrowser, flow.TypeAPI} {
+		t.Run("type="+string(kind)+"/method=PreRecoveryHook", testhelpers.TestSelfServicePreHook(
+			config.ViperKeySelfServiceRecoveryBeforeHooks,
+			testhelpers.SelfServiceMakeRecoveryPreHookRequest,
+			func(t *testing.T) *httptest.Server {
+				return newServer(t, nil, kind)
+			},
+			conf,
+		))
+	}
 }

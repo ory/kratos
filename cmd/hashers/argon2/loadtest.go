@@ -1,3 +1,6 @@
+// Copyright © 2022 Ory Corp
+// SPDX-License-Identifier: Apache-2.0
+
 package argon2
 
 import (
@@ -69,6 +72,8 @@ func newLoadTestCmd() *cobra.Command {
 			if err != nil {
 				return err
 			}
+
+			flagConf.ctx = cmd.Context()
 
 			conf, err := configProvider(cmd, flagConf)
 			if err != nil {

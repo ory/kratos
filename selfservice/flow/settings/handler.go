@@ -1,3 +1,6 @@
+// Copyright © 2022 Ory Corp
+// SPDX-License-Identifier: Apache-2.0
+
 package settings
 
 import (
@@ -18,6 +21,7 @@ import (
 	"github.com/ory/kratos/schema"
 	"github.com/ory/kratos/selfservice/errorx"
 	"github.com/ory/kratos/selfservice/flow"
+	"github.com/ory/kratos/selfservice/flow/login"
 	"github.com/ory/kratos/session"
 	"github.com/ory/kratos/text"
 	"github.com/ory/kratos/ui/node"
@@ -81,19 +85,25 @@ func (h *Handler) RegisterPublicRoutes(public *x.RouterPublic) {
 	h.d.CSRFHandler().IgnorePath(RouteInitAPIFlow)
 	h.d.CSRFHandler().IgnorePath(RouteSubmitFlow)
 
-	public.GET(RouteInitBrowserFlow, h.d.SessionHandler().IsAuthenticated(h.initBrowserFlow, func(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	public.GET(RouteInitBrowserFlow, h.d.SessionHandler().IsAuthenticated(h.createBrowserSettingsFlow, func(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 		if x.IsJSONRequest(r) {
 			h.d.Writer().WriteError(w, r, session.NewErrNoActiveSessionFound())
 		} else {
-			http.Redirect(w, r, h.d.Config(r.Context()).SelfServiceFlowLoginUI().String(), http.StatusSeeOther)
+			loginFlowUrl := h.d.Config().SelfPublicURL(r.Context()).JoinPath(login.RouteInitBrowserFlow).String()
+			redirectUrl, err := x.TakeOverReturnToParameter(r.URL.String(), loginFlowUrl)
+			if err != nil {
+				http.Redirect(w, r, h.d.Config().SelfServiceFlowLoginUI(r.Context()).String(), http.StatusSeeOther)
+			} else {
+				http.Redirect(w, r, redirectUrl, http.StatusSeeOther)
+			}
 		}
 	}))
 
-	public.GET(RouteInitAPIFlow, h.d.SessionHandler().IsAuthenticated(h.initApiFlow, nil))
-	public.GET(RouteGetFlow, h.d.SessionHandler().IsAuthenticated(h.fetchPublicFlow, OnUnauthenticated(h.d)))
+	public.GET(RouteInitAPIFlow, h.d.SessionHandler().IsAuthenticated(h.createNativeSettingsFlow, nil))
+	public.GET(RouteGetFlow, h.d.SessionHandler().IsAuthenticated(h.getSettingsFlow, OnUnauthenticated(h.d)))
 
-	public.POST(RouteSubmitFlow, h.d.SessionHandler().IsAuthenticated(h.submitSettingsFlow, OnUnauthenticated(h.d)))
-	public.GET(RouteSubmitFlow, h.d.SessionHandler().IsAuthenticated(h.submitSettingsFlow, OnUnauthenticated(h.d)))
+	public.POST(RouteSubmitFlow, h.d.SessionHandler().IsAuthenticated(h.updateSettingsFlow, OnUnauthenticated(h.d)))
+	public.GET(RouteSubmitFlow, h.d.SessionHandler().IsAuthenticated(h.updateSettingsFlow, OnUnauthenticated(h.d)))
 }
 
 func (h *Handler) RegisterAdminRoutes(admin *x.RouterAdmin) {
@@ -107,10 +117,15 @@ func (h *Handler) RegisterAdminRoutes(admin *x.RouterAdmin) {
 }
 
 func (h *Handler) NewFlow(w http.ResponseWriter, r *http.Request, i *identity.Identity, ft flow.Type) (*Flow, error) {
-	f, err := NewFlow(h.d.Config(r.Context()), h.d.Config(r.Context()).SelfServiceFlowSettingsFlowLifespan(), r, i, ft)
+	f, err := NewFlow(h.d.Config(), h.d.Config().SelfServiceFlowSettingsFlowLifespan(r.Context()), r, i, ft)
 	if err != nil {
 		return nil, err
 	}
+
+	if err := h.d.SettingsHookExecutor().PreSettingsHook(w, r, f); err != nil {
+		return nil, err
+	}
+
 	for _, strategy := range h.d.SettingsStrategies(r.Context()) {
 		if err := h.d.ContinuityManager().Abort(r.Context(), w, r, ContinuityKey(strategy.SettingsStrategyID())); err != nil {
 			return nil, err
@@ -121,7 +136,7 @@ func (h *Handler) NewFlow(w http.ResponseWriter, r *http.Request, i *identity.Id
 		}
 	}
 
-	ds, err := h.d.Config(r.Context()).DefaultIdentityTraitsSchemaURL()
+	ds, err := h.d.Config().DefaultIdentityTraitsSchemaURL(r.Context())
 	if err != nil {
 		return nil, err
 	}
@@ -147,18 +162,20 @@ func (h *Handler) FromOldFlow(w http.ResponseWriter, r *http.Request, i *identit
 	return nf, nil
 }
 
-// swagger:parameters initializeSelfServiceSettingsFlowWithoutBrowser
+// Create Native Settings Flow Parameters
+//
+// swagger:parameters createNativeSettingsFlow
 // nolint:deadcode,unused
-type initializeSelfServiceSettingsFlowWithoutBrowser struct {
+type createNativeSettingsFlow struct {
 	// The Session Token of the Identity performing the settings flow.
 	//
 	// in: header
 	SessionToken string `json:"X-Session-Token"`
 }
 
-// swagger:route GET /self-service/settings/api v0alpha2 initializeSelfServiceSettingsFlowWithoutBrowser
+// swagger:route GET /self-service/settings/api frontend createNativeSettingsFlow
 //
-// Initialize Settings Flow for APIs, Services, Apps, ...
+// # Create Settings Flow for Native Apps
 //
 // This endpoint initiates a settings flow for API clients such as mobile devices, smart TVs, and so on.
 // You must provide a valid Ory Kratos Session Token for this endpoint to respond with HTTP 200 OK.
@@ -183,20 +200,20 @@ type initializeSelfServiceSettingsFlowWithoutBrowser struct {
 //
 // More information can be found at [Ory Kratos User Settings & Profile Management Documentation](../self-service/flows/user-settings).
 //
-//     Schemes: http, https
+//	   Schemes: http, https
 //
-//     Responses:
-//       200: selfServiceSettingsFlow
-//       400: jsonError
-//       500: jsonError
-func (h *Handler) initApiFlow(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+//	   Responses:
+//		  200: settingsFlow
+//		  400: errorGeneric
+//		  default: errorGeneric
+func (h *Handler) createNativeSettingsFlow(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 	s, err := h.d.SessionManager().FetchFromRequest(r.Context(), r)
 	if err != nil {
 		h.d.Writer().WriteError(w, r, err)
 		return
 	}
 
-	if err := h.d.SessionManager().DoesSessionSatisfy(r, s, h.d.Config(r.Context()).SelfServiceSettingsRequiredAAL()); err != nil {
+	if err := h.d.SessionManager().DoesSessionSatisfy(r, s, h.d.Config().SelfServiceSettingsRequiredAAL(r.Context())); err != nil {
 		h.d.Writer().WriteError(w, r, err)
 		return
 	}
@@ -210,18 +227,29 @@ func (h *Handler) initApiFlow(w http.ResponseWriter, r *http.Request, _ httprout
 	h.d.Writer().Write(w, r, f)
 }
 
+// Create Browser Settings Flow Parameters
+//
 // nolint:deadcode,unused
-// swagger:parameters initializeSelfServiceSettingsFlowForBrowsers
-type initializeSelfServiceSettingsFlowForBrowsers struct {
+// swagger:parameters createBrowserSettingsFlow
+type createBrowserSettingsFlow struct {
 	// The URL to return the browser to after the flow was completed.
 	//
 	// in: query
 	ReturnTo string `json:"return_to"`
+
+	// HTTP Cookies
+	//
+	// When using the SDK in a browser app, on the server side you must include the HTTP Cookie Header
+	// sent by the client to your server here. This ensures that CSRF and session cookies are respected.
+	//
+	// in: header
+	// name: Cookie
+	Cookies string `json:"Cookie"`
 }
 
-// swagger:route GET /self-service/settings/browser v0alpha2 initializeSelfServiceSettingsFlowForBrowsers
+// swagger:route GET /self-service/settings/browser frontend createBrowserSettingsFlow
 //
-// Initialize Settings Flow for Browsers
+// # Create Settings Flow for Browsers
 //
 // This endpoint initializes a browser-based user settings flow. Once initialized, the browser will be redirected to
 // `selfservice.flows.settings.ui_url` with the flow ID set as the query parameter `?flow=`. If no valid
@@ -250,23 +278,23 @@ type initializeSelfServiceSettingsFlowForBrowsers struct {
 //
 // More information can be found at [Ory Kratos User Settings & Profile Management Documentation](../self-service/flows/user-settings).
 //
-//     Schemes: http, https
+//	Schemes: http, https
 //
-//     Responses:
-//       200: selfServiceSettingsFlow
-//       303: emptyResponse
-//       400: jsonError
-//       401: jsonError
-//       403: jsonError
-//       500: jsonError
-func (h *Handler) initBrowserFlow(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+//	Responses:
+//	  200: settingsFlow
+//	  303: emptyResponse
+//	  400: errorGeneric
+//	  401: errorGeneric
+//	  403: errorGeneric
+//	  default: errorGeneric
+func (h *Handler) createBrowserSettingsFlow(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	s, err := h.d.SessionManager().FetchFromRequest(r.Context(), r)
 	if err != nil {
 		h.d.SelfServiceErrorManager().Forward(r.Context(), w, r, err)
 		return
 	}
 
-	if err := h.d.SessionManager().DoesSessionSatisfy(r, s, h.d.Config(r.Context()).SelfServiceSettingsRequiredAAL()); err != nil {
+	if err := h.d.SessionManager().DoesSessionSatisfy(r, s, h.d.Config().SelfServiceSettingsRequiredAAL(r.Context())); err != nil {
 		h.d.SettingsFlowErrorHandler().WriteFlowError(w, r, node.DefaultGroup, nil, nil, err)
 		return
 	}
@@ -277,13 +305,15 @@ func (h *Handler) initBrowserFlow(w http.ResponseWriter, r *http.Request, ps htt
 		return
 	}
 
-	redirTo := f.AppendTo(h.d.Config(r.Context()).SelfServiceFlowSettingsUI()).String()
+	redirTo := f.AppendTo(h.d.Config().SelfServiceFlowSettingsUI(r.Context())).String()
 	x.AcceptToRedirectOrJSON(w, r, h.d.Writer(), f, redirTo)
 }
 
+// Get Settings Flow
+//
 // nolint:deadcode,unused
-// swagger:parameters getSelfServiceSettingsFlow
-type getSelfServiceSettingsFlow struct {
+// swagger:parameters getSettingsFlow
+type getSettingsFlow struct {
 	// ID is the Settings Flow ID
 	//
 	// The value for this parameter comes from `flow` URL Query parameter sent to your
@@ -311,9 +341,9 @@ type getSelfServiceSettingsFlow struct {
 	Cookies string `json:"Cookie"`
 }
 
-// swagger:route GET /self-service/settings/flows v0alpha2 getSelfServiceSettingsFlow
+// swagger:route GET /self-service/settings/flows frontend getSettingsFlow
 //
-// Get Settings Flow
+// # Get Settings Flow
 //
 // When accessing this endpoint through Ory Kratos' Public API you must ensure that either the Ory Kratos Session Cookie
 // or the Ory Kratos Session Token are set.
@@ -328,26 +358,26 @@ type getSelfServiceSettingsFlow struct {
 // If this endpoint is called via an AJAX request, the response contains the flow without a redirect. In the
 // case of an error, the `error.id` of the JSON response body can be one of:
 //
-// - `security_csrf_violation`: Unable to fetch the flow because a CSRF violation occurred.
-// - `session_inactive`: No Ory Session was found - sign in a user first.
-// - `security_identity_mismatch`: The flow was interrupted with `session_refresh_required` but apparently some other
-//		identity logged in instead.
+//   - `security_csrf_violation`: Unable to fetch the flow because a CSRF violation occurred.
+//   - `session_inactive`: No Ory Session was found - sign in a user first.
+//   - `security_identity_mismatch`: The flow was interrupted with `session_refresh_required` but apparently some other
+//     identity logged in instead.
 //
 // More information can be found at [Ory Kratos User Settings & Profile Management Documentation](../self-service/flows/user-settings).
 //
-//     Produces:
-//     - application/json
+//	Produces:
+//	- application/json
 //
-//     Schemes: http, https
+//	Schemes: http, https
 //
-//     Responses:
-//       200: selfServiceSettingsFlow
-//       401: jsonError
-//       403: jsonError
-//       404: jsonError
-//       410: jsonError
-//       500: jsonError
-func (h *Handler) fetchPublicFlow(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+//	Responses:
+//	  200: settingsFlow
+//	  401: errorGeneric
+//	  403: errorGeneric
+//	  404: errorGeneric
+//	  410: errorGeneric
+//	  default: errorGeneric
+func (h *Handler) getSettingsFlow(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	if err := h.fetchFlow(w, r); err != nil {
 		h.d.Writer().WriteError(w, r, err)
 		return
@@ -370,13 +400,13 @@ func (h *Handler) fetchFlow(w http.ResponseWriter, r *http.Request) error {
 		return errors.WithStack(herodot.ErrForbidden.WithID(text.ErrIDInitiatedBySomeoneElse).WithReasonf("The request was made for another identity and has been blocked for security reasons."))
 	}
 
-	if err := h.d.SessionManager().DoesSessionSatisfy(r, sess, h.d.Config(r.Context()).SelfServiceSettingsRequiredAAL()); err != nil {
+	if err := h.d.SessionManager().DoesSessionSatisfy(r, sess, h.d.Config().SelfServiceSettingsRequiredAAL(r.Context())); err != nil {
 		return err
 	}
 
 	if pr.ExpiresAt.Before(time.Now().UTC()) {
 		if pr.Type == flow.TypeBrowser {
-			redirectURL := flow.GetFlowExpiredRedirectURL(h.d.Config(r.Context()), RouteInitBrowserFlow, pr.ReturnTo)
+			redirectURL := flow.GetFlowExpiredRedirectURL(r.Context(), h.d.Config(), RouteInitBrowserFlow, pr.ReturnTo)
 
 			h.d.Writer().WriteError(w, r, errors.WithStack(x.ErrGone.
 				WithReason("The settings flow has expired. Redirect the user to the settings flow init endpoint to initialize a new settings flow.").
@@ -386,7 +416,7 @@ func (h *Handler) fetchFlow(w http.ResponseWriter, r *http.Request) error {
 		}
 		h.d.Writer().WriteError(w, r, errors.WithStack(x.ErrGone.
 			WithReason("The settings flow has expired. Call the settings flow init API endpoint to initialize a new settings flow.").
-			WithDetail("api", urlx.AppendPaths(h.d.Config(r.Context()).SelfPublicURL(), RouteInitAPIFlow).String())))
+			WithDetail("api", urlx.AppendPaths(h.d.Config().SelfPublicURL(r.Context()), RouteInitAPIFlow).String())))
 		return nil
 	}
 
@@ -394,9 +424,11 @@ func (h *Handler) fetchFlow(w http.ResponseWriter, r *http.Request) error {
 	return nil
 }
 
+// Update Settings Flow Parameters
+//
 // nolint:deadcode,unused
-// swagger:parameters submitSelfServiceSettingsFlow
-type submitSelfServiceSettingsFlow struct {
+// swagger:parameters updateSettingsFlow
+type updateSettingsFlow struct {
 	// The Settings Flow ID
 	//
 	// The value for this parameter comes from `flow` URL Query parameter sent to your
@@ -408,7 +440,7 @@ type submitSelfServiceSettingsFlow struct {
 
 	// in: body
 	// required: true
-	Body submitSelfServiceSettingsFlowBody
+	Body updateSettingsFlowBody
 
 	// The Session Token of the Identity performing the settings flow.
 	//
@@ -425,13 +457,15 @@ type submitSelfServiceSettingsFlow struct {
 	Cookies string `json:"Cookie"`
 }
 
-// swagger:model submitSelfServiceSettingsFlowBody
-// nolint:deadcode,unused
-type submitSelfServiceSettingsFlowBody struct{}
-
-// swagger:route POST /self-service/settings v0alpha2 submitSelfServiceSettingsFlow
+// Update Settings Flow Request Body
 //
-// Complete Settings Flow
+// swagger:model updateSettingsFlowBody
+// nolint:deadcode,unused
+type updateSettingsFlowBody struct{}
+
+// swagger:route POST /self-service/settings frontend updateSettingsFlow
+//
+// # Complete Settings Flow
 //
 // Use this endpoint to complete a settings flow by sending an identity's updated password. This endpoint
 // behaves differently for API and browser flows.
@@ -464,41 +498,41 @@ type submitSelfServiceSettingsFlowBody struct{}
 // If this endpoint is called with a `Accept: application/json` HTTP header, the response contains the flow without a redirect. In the
 // case of an error, the `error.id` of the JSON response body can be one of:
 //
-// - `session_refresh_required`: The identity requested to change something that needs a privileged session. Redirect
-//		the identity to the login init endpoint with query parameters `?refresh=true&return_to=<the-current-browser-url>`,
-//		or initiate a refresh login flow otherwise.
-// - `security_csrf_violation`: Unable to fetch the flow because a CSRF violation occurred.
-// - `session_inactive`: No Ory Session was found - sign in a user first.
-// - `security_identity_mismatch`: The flow was interrupted with `session_refresh_required` but apparently some other
-//		identity logged in instead.
-// - `security_identity_mismatch`: The requested `?return_to` address is not allowed to be used. Adjust this in the configuration!
-// - `browser_location_change_required`: Usually sent when an AJAX request indicates that the browser needs to open a specific URL.
-//		Most likely used in Social Sign In flows.
+//   - `session_refresh_required`: The identity requested to change something that needs a privileged session. Redirect
+//     the identity to the login init endpoint with query parameters `?refresh=true&return_to=<the-current-browser-url>`,
+//     or initiate a refresh login flow otherwise.
+//   - `security_csrf_violation`: Unable to fetch the flow because a CSRF violation occurred.
+//   - `session_inactive`: No Ory Session was found - sign in a user first.
+//   - `security_identity_mismatch`: The flow was interrupted with `session_refresh_required` but apparently some other
+//     identity logged in instead.
+//   - `security_identity_mismatch`: The requested `?return_to` address is not allowed to be used. Adjust this in the configuration!
+//   - `browser_location_change_required`: Usually sent when an AJAX request indicates that the browser needs to open a specific URL.
+//     Most likely used in Social Sign In flows.
 //
 // More information can be found at [Ory Kratos User Settings & Profile Management Documentation](../self-service/flows/user-settings).
 //
-//     Consumes:
-//     - application/json
-//     - application/x-www-form-urlencoded
+//	Consumes:
+//	- application/json
+//	- application/x-www-form-urlencoded
 //
-//     Produces:
-//     - application/json
+//	Produces:
+//	- application/json
 //
-//     Security:
-//       sessionToken:
+//	Security:
+//	  sessionToken:
 //
-//     Schemes: http, https
+//	Schemes: http, https
 //
-//     Responses:
-//       200: selfServiceSettingsFlow
-//       303: emptyResponse
-//       400: selfServiceSettingsFlow
-//       401: jsonError
-//       403: jsonError
-//       410: jsonError
-//       422: selfServiceBrowserLocationChangeRequiredError
-//       500: jsonError
-func (h *Handler) submitSettingsFlow(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+//	Responses:
+//	  200: settingsFlow
+//	  303: emptyResponse
+//	  400: settingsFlow
+//	  401: errorGeneric
+//	  403: errorGeneric
+//	  410: errorGeneric
+//	  422: errorBrowserLocationChangeRequired
+//	  default: errorGeneric
+func (h *Handler) updateSettingsFlow(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	rid, err := GetFlowID(r)
 	if err != nil {
 		h.d.SettingsFlowErrorHandler().WriteFlowError(w, r, node.DefaultGroup, nil, nil, err)
@@ -520,7 +554,7 @@ func (h *Handler) submitSettingsFlow(w http.ResponseWriter, r *http.Request, ps 
 		return
 	}
 
-	if err := h.d.SessionManager().DoesSessionSatisfy(r, ss, h.d.Config(r.Context()).SelfServiceSettingsRequiredAAL()); err != nil {
+	if err := h.d.SessionManager().DoesSessionSatisfy(r, ss, h.d.Config().SelfServiceSettingsRequiredAAL(r.Context())); err != nil {
 		h.d.SettingsFlowErrorHandler().WriteFlowError(w, r, node.DefaultGroup, f, nil, err)
 		return
 	}

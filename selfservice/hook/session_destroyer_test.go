@@ -1,3 +1,6 @@
+// Copyright © 2022 Ory Corp
+// SPDX-License-Identifier: Apache-2.0
+
 package hook_test
 
 import (
@@ -8,6 +11,7 @@ import (
 	"github.com/ory/kratos/internal/testhelpers"
 
 	"github.com/ory/kratos/corpx"
+	"github.com/ory/kratos/ui/node"
 
 	"github.com/bxcodec/faker/v3"
 	"github.com/gobuffalo/httptest"
@@ -27,9 +31,10 @@ func init() {
 }
 
 func TestSessionDestroyer(t *testing.T) {
+	ctx := context.Background()
 	conf, reg := internal.NewFastRegistryWithMocks(t)
 
-	conf.MustSet(config.ViperKeyPublicBaseURL, "http://localhost/")
+	conf.MustSet(ctx, config.ViperKeyPublicBaseURL, "http://localhost/")
 	testhelpers.SetDefaultIdentitySchema(conf, "file://./stub/stub.schema.json")
 
 	h := hook.NewSessionDestroyer(reg)
@@ -44,6 +49,7 @@ func TestSessionDestroyer(t *testing.T) {
 				return h.ExecuteLoginPostHook(
 					httptest.NewRecorder(),
 					new(http.Request),
+					node.DefaultGroup,
 					nil,
 					&session.Session{Identity: i},
 				)
@@ -79,7 +85,7 @@ func TestSessionDestroyer(t *testing.T) {
 			}
 
 			for k := range sessions {
-				sess, err := reg.SessionPersister().GetSession(context.Background(), sessions[k].ID)
+				sess, err := reg.SessionPersister().GetSession(context.Background(), sessions[k].ID, session.ExpandNothing)
 				require.NoError(t, err)
 				assert.True(t, sess.IsActive())
 			}
@@ -88,7 +94,7 @@ func TestSessionDestroyer(t *testing.T) {
 			require.NoError(t, tc.hook(&i))
 
 			for k := range sessions {
-				sess, err := reg.SessionPersister().GetSession(context.Background(), sessions[k].ID)
+				sess, err := reg.SessionPersister().GetSession(context.Background(), sessions[k].ID, session.ExpandNothing)
 				require.NoError(t, err)
 				assert.False(t, sess.IsActive())
 			}

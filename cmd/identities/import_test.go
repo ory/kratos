@@ -1,13 +1,14 @@
+// Copyright © 2022 Ory Corp
+// SPDX-License-Identifier: Apache-2.0
+
 package identities_test
 
 import (
 	"bytes"
 	"context"
 	"encoding/json"
-	"io/ioutil"
+	"os"
 	"testing"
-
-	"github.com/spf13/cobra"
 
 	"github.com/ory/kratos/cmd/identities"
 
@@ -16,22 +17,22 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/tidwall/gjson"
 
-	kratos "github.com/ory/kratos-client-go"
 	"github.com/ory/kratos/driver/config"
+	kratos "github.com/ory/kratos/internal/httpclient"
 )
 
 func TestImportCmd(t *testing.T) {
-	c := identities.NewImportIdentitiesCmd(new(cobra.Command))
+	c := identities.NewImportIdentitiesCmd()
 	reg := setup(t, c)
 
 	t.Run("case=imports a new identity from file", func(t *testing.T) {
-		i := kratos.AdminCreateIdentityBody{
+		i := kratos.CreateIdentityBody{
 			SchemaId: config.DefaultIdentityTraitsSchemaID,
 			Traits:   map[string]interface{}{},
 		}
 		ij, err := json.Marshal(i)
 		require.NoError(t, err)
-		f, err := ioutil.TempFile("", "")
+		f, err := os.CreateTemp("", "")
 		require.NoError(t, err)
 		_, err = f.Write(ij)
 		require.NoError(t, err)
@@ -46,7 +47,7 @@ func TestImportCmd(t *testing.T) {
 	})
 
 	t.Run("case=imports multiple identities from single file", func(t *testing.T) {
-		i := []kratos.AdminCreateIdentityBody{
+		i := []kratos.CreateIdentityBody{
 			{
 				SchemaId: config.DefaultIdentityTraitsSchemaID,
 				Traits:   map[string]interface{}{},
@@ -58,7 +59,7 @@ func TestImportCmd(t *testing.T) {
 		}
 		ij, err := json.Marshal(i)
 		require.NoError(t, err)
-		f, err := ioutil.TempFile("", "")
+		f, err := os.CreateTemp("", "")
 		require.NoError(t, err)
 		_, err = f.Write(ij)
 		require.NoError(t, err)
@@ -78,7 +79,7 @@ func TestImportCmd(t *testing.T) {
 	})
 
 	t.Run("case=imports a new identity from STD_IN", func(t *testing.T) {
-		i := []kratos.AdminCreateIdentityBody{
+		i := []kratos.CreateIdentityBody{
 			{
 				SchemaId: config.DefaultIdentityTraitsSchemaID,
 				Traits:   map[string]interface{}{},
@@ -106,7 +107,7 @@ func TestImportCmd(t *testing.T) {
 	})
 
 	t.Run("case=imports multiple identities from STD_IN", func(t *testing.T) {
-		i := kratos.AdminCreateIdentityBody{
+		i := kratos.CreateIdentityBody{
 			SchemaId: config.DefaultIdentityTraitsSchemaID,
 			Traits:   map[string]interface{}{},
 		}

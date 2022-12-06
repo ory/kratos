@@ -1,3 +1,6 @@
+// Copyright © 2022 Ory Corp
+// SPDX-License-Identifier: Apache-2.0
+
 package courier
 
 import (
@@ -29,8 +32,7 @@ type smsClient struct {
 
 func newSMS(ctx context.Context, deps Dependencies) *smsClient {
 	return &smsClient{
-		RequestConfig: deps.CourierConfig(ctx).CourierSMSRequestConfig(),
-
+		RequestConfig:          deps.CourierConfig().CourierSMSRequestConfig(ctx),
 		GetTemplateType:        SMSTemplateType,
 		NewTemplateFromMessage: NewSMSTemplateFromMessage,
 	}
@@ -67,7 +69,7 @@ func (c *courier) QueueSMS(ctx context.Context, t SMSTemplate) (uuid.UUID, error
 }
 
 func (c *courier) dispatchSMS(ctx context.Context, msg Message) error {
-	if !c.deps.CourierConfig(ctx).CourierSMSEnabled() {
+	if !c.deps.CourierConfig().CourierSMSEnabled(ctx) {
 		return errors.WithStack(herodot.ErrInternalServerError.WithReasonf("Courier tried to deliver an sms but courier.sms.enabled is set to false!"))
 	}
 
@@ -81,14 +83,14 @@ func (c *courier) dispatchSMS(ctx context.Context, msg Message) error {
 		return err
 	}
 
-	builder, err := request.NewBuilder(c.smsClient.RequestConfig, c.deps.HTTPClient(ctx), c.deps.Logger())
+	builder, err := request.NewBuilder(c.smsClient.RequestConfig, c.deps)
 	if err != nil {
 		return err
 	}
 
-	req, err := builder.BuildRequest(&sendSMSRequestBody{
+	req, err := builder.BuildRequest(ctx, &sendSMSRequestBody{
 		To:   msg.Recipient,
-		From: c.deps.CourierConfig(ctx).CourierSMSFrom(),
+		From: c.deps.CourierConfig().CourierSMSFrom(ctx),
 		Body: body,
 	})
 	if err != nil {

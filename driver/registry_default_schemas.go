@@ -1,3 +1,6 @@
+// Copyright © 2022 Ory Corp
+// SPDX-License-Identifier: Apache-2.0
+
 package driver
 
 import (
@@ -10,7 +13,7 @@ import (
 )
 
 func (m *RegistryDefault) IdentityTraitsSchemas(ctx context.Context) (schema.Schemas, error) {
-	ms, err := m.Config(ctx).IdentityTraitsSchemas()
+	ms, err := m.Config().IdentityTraitsSchemas(ctx)
 	if err != nil {
 		return nil, err
 	}

@@ -1,31 +1,41 @@
-const request = require('request')
-const urljoin = require('url-join')
-const express = require('express')
-const fs = require('fs')
+// Copyright © 2022 Ory Corp
+// SPDX-License-Identifier: Apache-2.0
+
+const request = require("request")
+const urljoin = require("url-join")
+const express = require("express")
+const fs = require("fs")
 
 const app = express()
 
-const proxy = (base, prefix = null) => (req, res, next) => {
-  let url = urljoin(base, req.url)
-  if (prefix) {
-    url = urljoin(base, prefix, req.url)
+const proxy =
+  (base, prefix = null) =>
+  (req, res, next) => {
+    let url = urljoin(base, req.url)
+    if (prefix) {
+      url = urljoin(base, prefix, req.url)
+    }
+    req
+      .pipe(request(url, { followRedirect: false }).on("error", next))
+      .pipe(res)
   }
-  req
-    .pipe(request(url, {followRedirect: false}).on('error', next))
-    .pipe(res)
-}
 
-app.use('/self-service/', proxy(process.env.KRATOS_PUBLIC_URL, '/self-service/'))
-app.use('/schemas/', proxy(process.env.KRATOS_PUBLIC_URL, '/schemas/'))
-app.use('/.well-known/', proxy(process.env.KRATOS_PUBLIC_URL, '/.well-known/'))
+app.use(
+  "/self-service/",
+  proxy(process.env.KRATOS_PUBLIC_URL, "/self-service/"),
+)
+app.use("/schemas/", proxy(process.env.KRATOS_PUBLIC_URL, "/schemas/"))
+app.use("/.well-known/", proxy(process.env.KRATOS_PUBLIC_URL, "/.well-known/"))
 
-app.use('/', (req, res, next) => {
-  const pc = JSON.parse(fs.readFileSync(require.resolve('../proxy.json')).toString())
+app.use("/", (req, res, next) => {
+  const pc = JSON.parse(
+    fs.readFileSync(require.resolve("../proxy.json")).toString(),
+  )
   switch (pc) {
-    case 'react':
+    case "react":
       proxy(process.env.KRATOS_UI_REACT_URL)(req, res, next)
       return
-    case 'react-native':
+    case "react-native":
       proxy(process.env.KRATOS_UI_REACT_NATIVE_URL)(req, res, next)
       return
   }

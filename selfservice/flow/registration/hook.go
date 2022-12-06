@@ -1,3 +1,6 @@
+// Copyright © 2022 Ory Corp
+// SPDX-License-Identifier: Apache-2.0
+
 package registration
 
 import (
@@ -7,10 +10,14 @@ import (
 	"time"
 
 	"github.com/pkg/errors"
+	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/trace"
 
+	"github.com/ory/x/otelx/semconv"
 	"github.com/ory/x/sqlcon"
 
 	"github.com/ory/kratos/driver/config"
+	"github.com/ory/kratos/hydra"
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/schema"
 	"github.com/ory/kratos/selfservice/flow"
@@ -52,9 +59,11 @@ func PostHookPostPersistExecutorNames(e []PostHookPostPersistExecutor) []string 
 func (f PreHookExecutorFunc) ExecuteRegistrationPreHook(w http.ResponseWriter, r *http.Request, a *Flow) error {
 	return f(w, r, a)
 }
+
 func (f PostHookPostPersistExecutorFunc) ExecutePostRegistrationPostPersistHook(w http.ResponseWriter, r *http.Request, a *Flow, s *session.Session) error {
 	return f(w, r, a, s)
 }
+
 func (f PostHookPrePersistExecutorFunc) ExecutePostRegistrationPrePersistHook(w http.ResponseWriter, r *http.Request, a *Flow, i *identity.Identity) error {
 	return f(w, r, a, i)
 }
@@ -67,6 +76,9 @@ type (
 		session.PersistenceProvider
 		session.ManagementProvider
 		HooksProvider
+		hydra.HydraProvider
+		x.CSRFTokenGeneratorProvider
+		x.HTTPClientProvider
 		x.LoggingProvider
 		x.WriterProvider
 	}
@@ -101,7 +113,12 @@ func (e *HookExecutor) PostRegistrationHook(w http.ResponseWriter, r *http.Reque
 					Debug("A ExecutePostRegistrationPrePersistHook hook aborted early.")
 				return nil
 			}
-			return err
+
+			var traits identity.Traits
+			if i != nil {
+				traits = i.Traits
+			}
+			return flow.HandleHookError(w, r, a, traits, ct.ToUiNodeGroup(), err, e.d, e.d)
 		}
 
 		e.d.Logger().WithRequest(r).
@@ -126,12 +143,13 @@ func (e *HookExecutor) PostRegistrationHook(w http.ResponseWriter, r *http.Reque
 	}
 
 	// Verify the redirect URL before we do any other processing.
-	c := e.d.Config(r.Context())
-	returnTo, err := x.SecureRedirectTo(r, c.SelfServiceBrowserDefaultReturnTo(),
+	c := e.d.Config()
+	returnTo, err := x.SecureRedirectTo(r, c.SelfServiceBrowserDefaultReturnTo(r.Context()),
+		x.SecureRedirectReturnTo(a.ReturnTo),
 		x.SecureRedirectUseSourceURL(a.RequestURL),
-		x.SecureRedirectAllowURLs(c.SelfServiceBrowserAllowedReturnToDomains()),
-		x.SecureRedirectAllowSelfServiceURLs(c.SelfPublicURL()),
-		x.SecureRedirectOverrideDefaultReturnTo(c.SelfServiceFlowRegistrationReturnTo(ct.String())),
+		x.SecureRedirectAllowURLs(c.SelfServiceBrowserAllowedReturnToDomains(r.Context())),
+		x.SecureRedirectAllowSelfServiceURLs(c.SelfPublicURL(r.Context())),
+		x.SecureRedirectOverrideDefaultReturnTo(c.SelfServiceFlowRegistrationReturnTo(r.Context(), ct.String())),
 	)
 	if err != nil {
 		return err
@@ -141,8 +159,16 @@ func (e *HookExecutor) PostRegistrationHook(w http.ResponseWriter, r *http.Reque
 		WithRequest(r).
 		WithField("identity_id", i.ID).
 		Info("A new identity has registered using self-service registration.")
+	trace.SpanFromContext(r.Context()).AddEvent(
+		semconv.EventIdentityCreated,
+		trace.WithAttributes(
+			attribute.String(semconv.AttrIdentityID, i.ID.String()),
+			attribute.String(semconv.AttrNID, i.NID.String()),
+			attribute.String("flow", string(a.Type)),
+		),
+	)
 
-	s, err := session.NewActiveSession(i, e.d.Config(r.Context()), time.Now().UTC(), ct, identity.AuthenticatorAssuranceLevel1)
+	s, err := session.NewActiveSession(r, i, e.d.Config(), time.Now().UTC(), ct, identity.AuthenticatorAssuranceLevel1)
 	if err != nil {
 		return err
 	}
@@ -165,7 +191,12 @@ func (e *HookExecutor) PostRegistrationHook(w http.ResponseWriter, r *http.Reque
 					Debug("A ExecutePostRegistrationPostPersistHook hook aborted early.")
 				return nil
 			}
-			return err
+
+			var traits identity.Traits
+			if i != nil {
+				traits = i.Traits
+			}
+			return flow.HandleHookError(w, r, a, traits, ct.ToUiNodeGroup(), err, e.d, e.d)
 		}
 
 		e.d.Logger().WithRequest(r).
@@ -188,7 +219,16 @@ func (e *HookExecutor) PostRegistrationHook(w http.ResponseWriter, r *http.Reque
 		return nil
 	}
 
-	x.ContentNegotiationRedirection(w, r, s.Declassify(), e.d.Writer(), returnTo.String())
+	finalReturnTo := returnTo.String()
+	if a.OAuth2LoginChallenge.Valid {
+		cr, err := e.d.Hydra().AcceptLoginRequest(r.Context(), a.OAuth2LoginChallenge.UUID, i.ID.String(), s.AMR)
+		if err != nil {
+			return err
+		}
+		finalReturnTo = cr
+	}
+
+	x.ContentNegotiationRedirection(w, r, s.Declassify(), e.d.Writer(), finalReturnTo)
 	return nil
 }
 

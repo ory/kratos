@@ -1,3 +1,6 @@
+// Copyright © 2022 Ory Corp
+// SPDX-License-Identifier: Apache-2.0
+
 package identity
 
 import (
@@ -13,8 +16,6 @@ import (
 	"github.com/tidwall/gjson"
 
 	"github.com/ory/kratos/cipher"
-
-	"github.com/ory/kratos/corp"
 
 	"github.com/ory/herodot"
 	"github.com/ory/x/sqlxx"
@@ -47,17 +48,9 @@ func (lt State) IsValid() error {
 	return errors.New("identity state is not valid")
 }
 
-//type IdentifierCredential struct {
-//	Subject      string `json:"subject"`
-//	Provider     string `json:"provider"`
-//	AccessToken  string `json:"access_token"`
-//	RefreshToken string `json:"refresh_token"`
-//}
-
 // Identity represents an Ory Kratos identity
 //
-// An identity can be a real human, a service, an IoT device - everything that
-// can be described as an "actor" in a system.
+// An [identity](https://www.ory.sh/docs/kratos/concepts/identity-user-model) represents a (human) user in Ory.
 //
 // swagger:model identity
 type Identity struct {
@@ -171,7 +164,7 @@ func (t *Traits) UnmarshalJSON(data []byte) error {
 }
 
 func (i Identity) TableName(ctx context.Context) string {
-	return corp.ContextualizeTableName(ctx, "identities")
+	return "identities"
 }
 
 func (i *Identity) lock() *sync.RWMutex {
@@ -321,6 +314,14 @@ func (i *Identity) UnmarshalJSON(b []byte) error {
 	return err
 }
 
+type WithAdminMetadataInJSON Identity
+
+func (i WithAdminMetadataInJSON) MarshalJSON() ([]byte, error) {
+	type localIdentity Identity
+	i.Credentials = nil
+	return json.Marshal(localIdentity(i))
+}
+
 type WithCredentialsAndAdminMetadataInJSON Identity
 
 func (i WithCredentialsAndAdminMetadataInJSON) MarshalJSON() ([]byte, error) {
@@ -388,7 +389,7 @@ func (i *Identity) WithDeclassifiedCredentialsOIDC(ctx context.Context, c cipher
 				ciphertext := v.Get(token).String()
 
 				var plaintext []byte
-				plaintext, err = c.Cipher().Decrypt(ctx, ciphertext)
+				plaintext, err = c.Cipher(ctx).Decrypt(ctx, ciphertext)
 				if err != nil {
 					return false
 				}

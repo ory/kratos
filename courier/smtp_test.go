@@ -1,3 +1,6 @@
+// Copyright © 2022 Ory Corp
+// SPDX-License-Identifier: Apache-2.0
+
 package courier_test
 
 import (
@@ -9,7 +12,7 @@ import (
 	"encoding/pem"
 	"flag"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"math/big"
 	"net/http"
 	"os"
@@ -38,10 +41,14 @@ func TestNewSMTP(t *testing.T) {
 	conf, reg := internal.NewFastRegistryWithMocks(t)
 
 	setupCourier := func(stringURL string) courier.Courier {
-		conf.MustSet(config.ViperKeyCourierSMTPURL, stringURL)
-		t.Logf("SMTP URL: %s", conf.CourierSMTPURL().String())
+		conf.MustSet(ctx, config.ViperKeyCourierSMTPURL, stringURL)
+		u, err := conf.CourierSMTPURL(ctx)
+		require.NoError(t, err)
+		t.Logf("SMTP URL: %s", u.String())
 
-		return courier.NewCourier(ctx, reg)
+		c, err := courier.NewCourier(ctx, reg)
+		require.NoError(t, err)
+		return c
 	}
 
 	if testing.Short() {
@@ -68,8 +75,8 @@ func TestNewSMTP(t *testing.T) {
 	defer os.Remove(clientCert.Name())
 	defer os.Remove(clientKey.Name())
 
-	conf.Set(config.ViperKeyCourierSMTPClientCertPath, clientCert.Name())
-	conf.Set(config.ViperKeyCourierSMTPClientKeyPath, clientKey.Name())
+	conf.Set(ctx, config.ViperKeyCourierSMTPClientCertPath, clientCert.Name())
+	conf.Set(ctx, config.ViperKeyCourierSMTPClientKeyPath, clientKey.Name())
 
 	clientPEM, err := tls.LoadX509KeyPair(clientCert.Name(), clientKey.Name())
 	require.NoError(t, err)
@@ -82,7 +89,7 @@ func TestNewSMTP(t *testing.T) {
 	assert.Contains(t, smtpWithCert.SmtpDialer().TLSConfig.Certificates, clientPEM, "TLS config should contain client pem")
 
 	//error case: invalid client key
-	conf.Set(config.ViperKeyCourierSMTPClientKeyPath, clientCert.Name()) //mixup client key and client cert
+	conf.Set(ctx, config.ViperKeyCourierSMTPClientKeyPath, clientCert.Name()) //mixup client key and client cert
 	smtpWithCert = setupCourier("smtps://subdomain.my-server:1234/?server_name=my-server")
 	assert.Equal(t, len(smtpWithCert.SmtpDialer().TLSConfig.Certificates), 0, "TLS config certificates should be empty")
 }
@@ -100,11 +107,12 @@ func TestQueueEmail(t *testing.T) {
 	ctx := context.Background()
 
 	conf, reg := internal.NewRegistryDefaultWithDSN(t, "")
-	conf.MustSet(config.ViperKeyCourierSMTPURL, smtp)
-	conf.MustSet(config.ViperKeyCourierSMTPFrom, "test-stub@ory.sh")
+	conf.MustSet(ctx, config.ViperKeyCourierSMTPURL, smtp)
+	conf.MustSet(ctx, config.ViperKeyCourierSMTPFrom, "test-stub@ory.sh")
 	reg.Logger().Level = logrus.TraceLevel
 
-	c := reg.Courier(ctx)
+	c, err := reg.Courier(ctx)
+	require.NoError(t, err)
 
 	ctx, cancel := context.WithCancel(ctx)
 	defer cancel()
@@ -126,11 +134,12 @@ func TestQueueEmail(t *testing.T) {
 	require.NotEqual(t, uuid.Nil, id)
 
 	// The third email contains a sender name and custom headers
-	conf.MustSet(config.ViperKeyCourierSMTPFromName, "Bob")
-	conf.MustSet(config.ViperKeyCourierSMTPHeaders+".test-stub-header1", "foo")
-	conf.MustSet(config.ViperKeyCourierSMTPHeaders+".test-stub-header2", "bar")
-	customerHeaders := conf.CourierSMTPHeaders()
+	conf.MustSet(ctx, config.ViperKeyCourierSMTPFromName, "Bob")
+	conf.MustSet(ctx, config.ViperKeyCourierSMTPHeaders+".test-stub-header1", "foo")
+	conf.MustSet(ctx, config.ViperKeyCourierSMTPHeaders+".test-stub-header2", "bar")
+	customerHeaders := conf.CourierSMTPHeaders(ctx)
 	require.Len(t, customerHeaders, 2)
+
 	id, err = c.QueueEmail(ctx, templates.NewTestStub(reg, &templates.TestStubModel{
 		To:      "test-recipient-3@example.org",
 		Subject: "test-subject-3",
@@ -153,7 +162,7 @@ func TestQueueEmail(t *testing.T) {
 			}
 
 			defer res.Body.Close()
-			body, err = ioutil.ReadAll(res.Body)
+			body, err = io.ReadAll(res.Body)
 			if err != nil {
 				return err
 			}
@@ -209,7 +218,7 @@ func generateTestClientCert() (clientCert *os.File, clientKey *os.File, err erro
 	if err != nil {
 		return nil, nil, err
 	}
-	clientCert, err = ioutil.TempFile("./test", "testCert")
+	clientCert, err = os.CreateTemp("./test", "testCert")
 	if err != nil {
 		return nil, nil, err
 	}
@@ -217,7 +226,7 @@ func generateTestClientCert() (clientCert *os.File, clientKey *os.File, err erro
 	pem.Encode(clientCert, &pem.Block{Type: "CERTIFICATE", Bytes: cert})
 	clientCert.Close()
 
-	clientKey, err = ioutil.TempFile("./test", "testKey")
+	clientKey, err = os.CreateTemp("./test", "testKey")
 	if err != nil {
 		return nil, nil, err
 	}

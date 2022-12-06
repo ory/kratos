@@ -1,3 +1,6 @@
+// Copyright © 2022 Ory Corp
+// SPDX-License-Identifier: Apache-2.0
+
 package webauthn
 
 import (
@@ -46,8 +49,10 @@ const (
 	InternalContextKeySessionData = "session_data"
 )
 
-// swagger:model submitSelfServiceSettingsFlowWithWebAuthnMethodBody
-type submitSelfServiceSettingsFlowWithWebAuthnMethodBody struct {
+// Update Settings Flow with WebAuthn Method
+//
+// swagger:model updateSettingsFlowWithWebAuthnMethod
+type updateSettingsFlowWithWebAuthnMethod struct {
 	// Register a WebAuthn Security Key
 	//
 	// It is expected that the JSON returned by the WebAuthn registration process
@@ -80,11 +85,11 @@ type submitSelfServiceSettingsFlowWithWebAuthnMethodBody struct {
 	Flow string `json:"flow"`
 }
 
-func (p *submitSelfServiceSettingsFlowWithWebAuthnMethodBody) GetFlowID() uuid.UUID {
+func (p *updateSettingsFlowWithWebAuthnMethod) GetFlowID() uuid.UUID {
 	return x.ParseUUID(p.Flow)
 }
 
-func (p *submitSelfServiceSettingsFlowWithWebAuthnMethodBody) SetFlowID(rid uuid.UUID) {
+func (p *updateSettingsFlowWithWebAuthnMethod) SetFlowID(rid uuid.UUID) {
 	p.Flow = rid.String()
 }
 
@@ -92,7 +97,7 @@ func (s *Strategy) Settings(w http.ResponseWriter, r *http.Request, f *settings.
 	if f.Type != flow.TypeBrowser {
 		return nil, flow.ErrStrategyNotResponsible
 	}
-	var p submitSelfServiceSettingsFlowWithWebAuthnMethodBody
+	var p updateSettingsFlowWithWebAuthnMethod
 	ctxUpdate, err := settings.PrepareUpdate(s.d, w, r, f, ss, settings.ContinuityKey(s.SettingsStrategyID()), &p)
 	if errors.Is(err, settings.ErrContinuePreviousAction) {
 		return ctxUpdate, s.continueSettingsFlow(w, r, ctxUpdate, &p)
@@ -138,18 +143,18 @@ func (s *Strategy) decodeSettingsFlow(r *http.Request, dest interface{}) error {
 
 func (s *Strategy) continueSettingsFlow(
 	w http.ResponseWriter, r *http.Request,
-	ctxUpdate *settings.UpdateContext, p *submitSelfServiceSettingsFlowWithWebAuthnMethodBody,
+	ctxUpdate *settings.UpdateContext, p *updateSettingsFlowWithWebAuthnMethod,
 ) error {
 	if len(p.Register+p.Remove) > 0 {
 		if err := flow.MethodEnabledAndAllowed(r.Context(), s.SettingsStrategyID(), s.SettingsStrategyID(), s.d); err != nil {
 			return err
 		}
 
-		if err := flow.EnsureCSRF(s.d, r, ctxUpdate.Flow.Type, s.d.Config(r.Context()).DisableAPIFlowEnforcement(), s.d.GenerateCSRFToken, p.CSRFToken); err != nil {
+		if err := flow.EnsureCSRF(s.d, r, ctxUpdate.Flow.Type, s.d.Config().DisableAPIFlowEnforcement(r.Context()), s.d.GenerateCSRFToken, p.CSRFToken); err != nil {
 			return err
 		}
 
-		if ctxUpdate.Session.AuthenticatedAt.Add(s.d.Config(r.Context()).SelfServiceFlowSettingsPrivilegedSessionMaxAge()).Before(time.Now()) {
+		if ctxUpdate.Session.AuthenticatedAt.Add(s.d.Config().SelfServiceFlowSettingsPrivilegedSessionMaxAge(r.Context())).Before(time.Now()) {
 			return errors.WithStack(settings.NewFlowNeedsReAuth())
 		}
 	} else {
@@ -165,7 +170,7 @@ func (s *Strategy) continueSettingsFlow(
 	return errors.New("ended up in unexpected state")
 }
 
-func (s *Strategy) continueSettingsFlowRemove(w http.ResponseWriter, r *http.Request, ctxUpdate *settings.UpdateContext, p *submitSelfServiceSettingsFlowWithWebAuthnMethodBody) error {
+func (s *Strategy) continueSettingsFlowRemove(w http.ResponseWriter, r *http.Request, ctxUpdate *settings.UpdateContext, p *updateSettingsFlowWithWebAuthnMethod) error {
 	i, err := s.d.PrivilegedIdentityPool().GetIdentityConfidential(r.Context(), ctxUpdate.Session.IdentityID)
 	if err != nil {
 		return err
@@ -221,7 +226,7 @@ func (s *Strategy) continueSettingsFlowRemove(w http.ResponseWriter, r *http.Req
 	return nil
 }
 
-func (s *Strategy) continueSettingsFlowAdd(w http.ResponseWriter, r *http.Request, ctxUpdate *settings.UpdateContext, p *submitSelfServiceSettingsFlowWithWebAuthnMethodBody) error {
+func (s *Strategy) continueSettingsFlowAdd(w http.ResponseWriter, r *http.Request, ctxUpdate *settings.UpdateContext, p *updateSettingsFlowWithWebAuthnMethod) error {
 	webAuthnSession := gjson.GetBytes(ctxUpdate.Flow.InternalContext, flow.PrefixInternalContextKey(s.ID(), InternalContextKeySessionData))
 	if !webAuthnSession.IsObject() {
 		return errors.WithStack(herodot.ErrInternalServerError.WithReasonf("Expected WebAuthN in internal context to be an object."))
@@ -259,10 +264,10 @@ func (s *Strategy) continueSettingsFlowAdd(w http.ResponseWriter, r *http.Reques
 		return errors.WithStack(herodot.ErrInternalServerError.WithReasonf("Unable to decode identity credentials.").WithDebug(err.Error()))
 	}
 
-	wc := CredentialFromWebAuthn(credential, s.d.Config(r.Context()).WebAuthnForPasswordless())
+	wc := CredentialFromWebAuthn(credential, s.d.Config().WebAuthnForPasswordless(r.Context()))
 	wc.AddedAt = time.Now().UTC().Round(time.Second)
 	wc.DisplayName = p.RegisterDisplayName
-	wc.IsPasswordless = s.d.Config(r.Context()).WebAuthnForPasswordless()
+	wc.IsPasswordless = s.d.Config().WebAuthnForPasswordless(r.Context())
 	cc.UserHandle = ctxUpdate.Session.IdentityID[:]
 
 	cc.Credentials = append(cc.Credentials, *wc)
@@ -287,7 +292,7 @@ func (s *Strategy) continueSettingsFlowAdd(w http.ResponseWriter, r *http.Reques
 	}
 
 	aal := identity.AuthenticatorAssuranceLevel1
-	if !s.d.Config(r.Context()).WebAuthnForPasswordless() {
+	if !s.d.Config().WebAuthnForPasswordless(r.Context()) {
 		aal = identity.AuthenticatorAssuranceLevel2
 	}
 
@@ -371,7 +376,7 @@ func (s *Strategy) PopulateSettingsMethod(r *http.Request, id *identity.Identity
 		return errors.WithStack(err)
 	}
 
-	f.UI.Nodes.Upsert(NewWebAuthnScript(urlx.AppendPaths(s.d.Config(r.Context()).SelfPublicURL(), webAuthnRoute).String(), jsOnLoad))
+	f.UI.Nodes.Upsert(NewWebAuthnScript(urlx.AppendPaths(s.d.Config().SelfPublicURL(r.Context()), webAuthnRoute).String(), jsOnLoad))
 	f.UI.Nodes.Upsert(NewWebAuthnConnectionName())
 	f.UI.Nodes.Upsert(NewWebAuthnConnectionTrigger(string(injectWebAuthnOptions)).
 		WithMetaLabel(text.NewInfoSelfServiceSettingsRegisterWebAuthn()))
@@ -379,7 +384,7 @@ func (s *Strategy) PopulateSettingsMethod(r *http.Request, id *identity.Identity
 	return nil
 }
 
-func (s *Strategy) handleSettingsError(w http.ResponseWriter, r *http.Request, ctxUpdate *settings.UpdateContext, p *submitSelfServiceSettingsFlowWithWebAuthnMethodBody, err error) error {
+func (s *Strategy) handleSettingsError(w http.ResponseWriter, r *http.Request, ctxUpdate *settings.UpdateContext, p *updateSettingsFlowWithWebAuthnMethod, err error) error {
 	// Do not pause flow if the flow type is an API flow as we can't save cookies in those flows.
 	if e := new(settings.FlowNeedsReAuth); errors.As(err, &e) && ctxUpdate.Flow != nil && ctxUpdate.Flow.Type == flow.TypeBrowser {
 		if err := s.d.ContinuityManager().Pause(r.Context(), w, r, settings.ContinuityKey(s.SettingsStrategyID()), settings.ContinuityOptions(p, ctxUpdate.GetSessionIdentity())...); err != nil {

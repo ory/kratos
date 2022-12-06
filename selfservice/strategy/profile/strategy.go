@@ -1,3 +1,6 @@
+// Copyright © 2022 Ory Corp
+// SPDX-License-Identifier: Apache-2.0
+
 package profile
 
 import (
@@ -6,6 +9,8 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/ory/jsonschema/v3"
+
 	"github.com/ory/kratos/text"
 
 	"github.com/gofrs/uuid"
@@ -13,7 +18,6 @@ import (
 	"github.com/tidwall/sjson"
 
 	"github.com/ory/herodot"
-	"github.com/ory/jsonschema/v3"
 	"github.com/ory/kratos/continuity"
 	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/identity"
@@ -64,11 +68,6 @@ type (
 	}
 )
 
-// swagger:model settingsProfileFormConfig
-type SettingsProfileRequestMethod struct {
-	*container.Container
-}
-
 func NewStrategy(d strategyDependencies) *Strategy {
 	return &Strategy{d: d, dc: decoderx.NewHTTP()}
 }
@@ -80,7 +79,7 @@ func (s *Strategy) SettingsStrategyID() string {
 func (s *Strategy) RegisterSettingsRoutes(public *x.RouterPublic) {}
 
 func (s *Strategy) PopulateSettingsMethod(r *http.Request, id *identity.Identity, f *settings.Flow) error {
-	schemas, err := s.d.Config(r.Context()).IdentityTraitsSchemas()
+	schemas, err := s.d.Config().IdentityTraitsSchemas(r.Context())
 	if err != nil {
 		return err
 	}
@@ -109,7 +108,7 @@ func (s *Strategy) PopulateSettingsMethod(r *http.Request, id *identity.Identity
 }
 
 func (s *Strategy) Settings(w http.ResponseWriter, r *http.Request, f *settings.Flow, ss *session.Session) (*settings.UpdateContext, error) {
-	var p submitSelfServiceSettingsFlowWithProfileMethodBody
+	var p updateSettingsFlowWithProfileMethod
 	ctxUpdate, err := settings.PrepareUpdate(s.d, w, r, f, ss, settings.ContinuityKey(s.SettingsStrategyID()), &p)
 	if errors.Is(err, settings.ErrContinuePreviousAction) {
 		return ctxUpdate, s.continueFlow(w, r, ctxUpdate, &p)
@@ -144,12 +143,12 @@ func (s *Strategy) Settings(w http.ResponseWriter, r *http.Request, f *settings.
 	return ctxUpdate, nil
 }
 
-func (s *Strategy) continueFlow(w http.ResponseWriter, r *http.Request, ctxUpdate *settings.UpdateContext, p *submitSelfServiceSettingsFlowWithProfileMethodBody) error {
+func (s *Strategy) continueFlow(w http.ResponseWriter, r *http.Request, ctxUpdate *settings.UpdateContext, p *updateSettingsFlowWithProfileMethod) error {
 	if err := flow.MethodEnabledAndAllowed(r.Context(), s.SettingsStrategyID(), p.Method, s.d); err != nil {
 		return err
 	}
 
-	if err := flow.EnsureCSRF(s.d, r, ctxUpdate.Flow.Type, s.d.Config(r.Context()).DisableAPIFlowEnforcement(), s.d.GenerateCSRFToken, p.CSRFToken); err != nil {
+	if err := flow.EnsureCSRF(s.d, r, ctxUpdate.Flow.Type, s.d.Config().DisableAPIFlowEnforcement(r.Context()), s.d.GenerateCSRFToken, p.CSRFToken); err != nil {
 		return err
 	}
 
@@ -162,7 +161,7 @@ func (s *Strategy) continueFlow(w http.ResponseWriter, r *http.Request, ctxUpdat
 	}
 
 	options := []identity.ManagerOption{identity.ManagerExposeValidationErrorsForInternalTypeAssertion}
-	ttl := s.d.Config(r.Context()).SelfServiceFlowSettingsPrivilegedSessionMaxAge()
+	ttl := s.d.Config().SelfServiceFlowSettingsPrivilegedSessionMaxAge(r.Context())
 	if ctxUpdate.Session.AuthenticatedAt.Add(ttl).After(time.Now()) {
 		options = append(options, identity.ManagerAllowWriteProtectedTraits)
 	}
@@ -179,10 +178,14 @@ func (s *Strategy) continueFlow(w http.ResponseWriter, r *http.Request, ctxUpdat
 	return nil
 }
 
+// Update Settings Flow with Profile Method
+//
 // nolint:deadcode,unused
-// swagger:model submitSelfServiceSettingsFlowWithProfileMethodBody
-type submitSelfServiceSettingsFlowWithProfileMethodBody struct {
-	// Traits contains all of the identity's traits.
+// swagger:model updateSettingsFlowWithProfileMethod
+type updateSettingsFlowWithProfileMethod struct {
+	// Traits
+	//
+	// The identity's traits.
 	//
 	// required: true
 	Traits json.RawMessage `json:"traits"`
@@ -205,11 +208,11 @@ type submitSelfServiceSettingsFlowWithProfileMethodBody struct {
 	CSRFToken string `json:"csrf_token"`
 }
 
-func (p *submitSelfServiceSettingsFlowWithProfileMethodBody) GetFlowID() uuid.UUID {
+func (p *updateSettingsFlowWithProfileMethod) GetFlowID() uuid.UUID {
 	return x.ParseUUID(p.FlowID)
 }
 
-func (p *submitSelfServiceSettingsFlowWithProfileMethodBody) SetFlowID(rid uuid.UUID) {
+func (p *updateSettingsFlowWithProfileMethod) SetFlowID(rid uuid.UUID) {
 	p.FlowID = rid.String()
 }
 
@@ -225,7 +228,7 @@ func (s *Strategy) hydrateForm(r *http.Request, ar *settings.Flow, ss *session.S
 
 // handleSettingsError is a convenience function for handling all types of errors that may occur (e.g. validation error)
 // during a settings request.
-func (s *Strategy) handleSettingsError(w http.ResponseWriter, r *http.Request, puc *settings.UpdateContext, traits json.RawMessage, p *submitSelfServiceSettingsFlowWithProfileMethodBody, err error) error {
+func (s *Strategy) handleSettingsError(w http.ResponseWriter, r *http.Request, puc *settings.UpdateContext, traits json.RawMessage, p *updateSettingsFlowWithProfileMethod, err error) error {
 	if e := new(settings.FlowNeedsReAuth); errors.As(err, &e) {
 		if err := s.d.ContinuityManager().Pause(r.Context(), w, r,
 			settings.ContinuityKey(s.SettingsStrategyID()),

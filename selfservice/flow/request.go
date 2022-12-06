@@ -1,3 +1,6 @@
+// Copyright © 2022 Ory Corp
+// SPDX-License-Identifier: Apache-2.0
+
 package flow
 
 import (
@@ -103,7 +106,7 @@ func MethodEnabledAndAllowed(ctx context.Context, expected, actual string, d int
 		return errors.WithStack(ErrStrategyNotResponsible)
 	}
 
-	if !d.Config(ctx).SelfServiceStrategy(expected).Enabled {
+	if !d.Config().SelfServiceStrategy(ctx, expected).Enabled {
 		return errors.WithStack(herodot.ErrNotFound.WithReason(strategy.EndpointDisabledMessage))
 	}
 
