@@ -125,7 +125,7 @@ func (h *Handler) listCourierMessages(w http.ResponseWriter, r *http.Request, _ 
 		}
 	}
 
-	w.Header().Set("x-total-count", fmt.Sprint(tc))
+	w.Header().Set("X-Total-Count", fmt.Sprint(tc))
 	keysetpagination.Header(w, r.URL, nextPage)
 	h.r.Writer().Write(w, r, l)
 }
