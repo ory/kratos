@@ -10,6 +10,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"net/url"
 	"path/filepath"
 	"strings"
 
@@ -52,6 +53,7 @@ const (
 
 	RouteAuth     = RouteBase + "/auth/:flow"
 	RouteCallback = RouteBase + "/callback/:provider"
+	RouteExchange = RouteBase + "/exchange/:provider"
 )
 
 var _ identity.ActiveCredentialsCounter = new(Strategy)
@@ -162,6 +164,10 @@ func (s *Strategy) setRoutes(r *x.RouterPublic) {
 		r.GET(RouteCallback, wrappedHandleCallback)
 	}
 
+	wrappedHandleExchange := strategy.IsDisabled(s.d, s.ID().String(), s.handleExchange)
+	if handle, _, _ := r.Lookup("GET", RouteExchange); handle == nil {
+		r.GET(RouteExchange, wrappedHandleExchange)
+	}
 	// Apple can use the POST request method when calling the callback
 	if handle, _, _ := r.Lookup("POST", RouteCallback); handle == nil {
 		// Hardcoded path to Apple provider, I don't have a better way of doing it right now.
@@ -303,7 +309,7 @@ func (s *Strategy) alreadyAuthenticated(w http.ResponseWriter, r *http.Request, 
 	return false
 }
 
-func (s *Strategy) handleCallback(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+func (s *Strategy) handleExchange(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	var (
 		code = stringsx.Coalesce(r.URL.Query().Get("code"), r.URL.Query().Get("authCode"))
 		pid  = ps.ByName("provider")
@@ -385,6 +391,38 @@ func (s *Strategy) handleCallback(w http.ResponseWriter, r *http.Request, ps htt
 			WithDetailf("cause", "Unexpected type in OpenID Connect flow: %T", a))))
 		return
 	}
+}
+
+func (s *Strategy) handleCallback(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	var (
+		redirectTo     = &url.URL{}
+		loadingEnabled = s.d.Config().SelfServiceFlowLoadingEnabled(r.Context())
+		loadingUrl     = s.d.Config().SelfServiceFlowLoadingUI(r.Context())
+		err            error
+	)
+
+	req, _, err := s.validateCallback(w, r)
+	if err != nil {
+		s.forwardError(w, r, req, err)
+		return
+	}
+	if loadingEnabled {
+		redirectTo, err = redirectTo.Parse(loadingUrl)
+		if err != nil {
+			s.forwardError(w, r, req, err)
+			return
+		}
+		query := redirectTo.Query()
+		for k, vs := range r.URL.Query() {
+			for _, v := range vs {
+				query.Add(k, v)
+			}
+		}
+		redirectTo.RawQuery = query.Encode()
+		http.Redirect(w, r, redirectTo.String(), http.StatusSeeOther)
+	}
+
+	panic("not implemented")
 }
 
 func (s *Strategy) populateMethod(r *http.Request, c *container.Container, message func(provider string) *text.Message) error {

@@ -7,6 +7,7 @@ import (
 	stdctx "context"
 	"crypto/tls"
 	"net/http"
+	"time"
 
 	"github.com/pkg/errors"
 	"github.com/rs/cors"
@@ -121,8 +122,9 @@ func ServePublic(r driver.Registry, cmd *cobra.Command, args []string, slOpts *s
 
 	// #nosec G112 - the correct settings are set by graceful.WithDefaults
 	server := graceful.WithDefaults(&http.Server{
-		Handler:   handler,
-		TLSConfig: &tls.Config{GetCertificate: certs, MinVersion: tls.VersionTLS12},
+		Handler:      handler,
+		TLSConfig:    &tls.Config{GetCertificate: certs, MinVersion: tls.VersionTLS12},
+		WriteTimeout: 120 * time.Second,
 	})
 	addr := c.PublicListenOn(ctx)
 
