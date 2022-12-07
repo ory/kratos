@@ -338,7 +338,7 @@ func (h *Handler) adminListSessions(w http.ResponseWriter, r *http.Request, ps h
 	}
 
 	// Parse request pagination parameters
-	opts, err := keysetpagination.Parse(r.URL.Query(), keysetpagination.NewStringPageToken)
+	opts, err := keysetpagination.Parse(r.URL.Query(), keysetpagination.NewMapPageToken)
 	if err != nil {
 		h.r.Writer().WriteError(w, r, herodot.ErrBadRequest.WithError("could not parse parameter page_size"))
 		return
