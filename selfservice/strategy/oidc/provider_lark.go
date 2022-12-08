@@ -4,11 +4,9 @@
 package oidc
 
 import (
-	"bytes"
 	"context"
 	"encoding/json"
 	"net/url"
-	"time"
 
 	"github.com/hashicorp/go-retryablehttp"
 	"github.com/pkg/errors"
@@ -19,8 +17,7 @@ import (
 )
 
 type ProviderLark struct {
-	config *Configuration
-	reg    dependencies
+	*ProviderGenericOIDC
 }
 
 func NewProviderLark(
@@ -28,8 +25,10 @@ func NewProviderLark(
 	reg dependencies,
 ) *ProviderLark {
 	return &ProviderLark{
-		config: config,
-		reg:    reg,
+		&ProviderGenericOIDC{
+			config: config,
+			reg:    reg,
+		},
 	}
 }
 
@@ -48,7 +47,7 @@ func (g *ProviderLark) OAuth2(ctx context.Context) (*oauth2.Config, error) {
 		ClientID:     g.config.ClientID,
 		ClientSecret: g.config.ClientSecret,
 		Endpoint:     endpoint,
-		// DingTalk only allow to set scopes: openid or openid corpid
+		// Lark uses fixed scope that can not be configured in runtime
 		Scopes:      g.config.Scope,
 		RedirectURL: g.config.Redir(g.reg.Config().OIDCRedirectURIBase(ctx)),
 	}, nil
@@ -110,68 +109,4 @@ func (g *ProviderLark) Claims(ctx context.Context, exchange *oauth2.Token, query
 
 func (pl *ProviderLark) AuthCodeURLOptions(r ider) []oauth2.AuthCodeOption {
 	return []oauth2.AuthCodeOption{}
-}
-
-func (g *ProviderLark) Exchange(ctx context.Context, code string, opts ...oauth2.AuthCodeOption) (*oauth2.Token, error) {
-
-	type (
-		larkExchangeReq struct {
-			ClientId     string `json:"client_id"`
-			ClientSecret string `json:"client_secret"`
-			Code         string `json:"code"`
-			GrantType    string `json:"grant_type"`
-			RedirectURI  string `json:"redirect_uri"`
-		}
-		larkTokenResp struct {
-			AccessToken      string `json:"access_token"`
-			TokenType        string `json:"token_type"`
-			ExpiresIn        int64  `json:"expires_in"`
-			RefreshToken     string `json:"refresh_token"`
-			RefreshExpiresIn int64  `json:"refresh_expires_in"`
-		}
-	)
-
-	conf, err := g.OAuth2(ctx)
-	if err != nil {
-		return nil, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("%s", err))
-	}
-
-	pTokenParams := &larkExchangeReq{
-		ClientId:     conf.ClientID,
-		ClientSecret: conf.ClientSecret,
-		Code:         code,
-		GrantType:    "authorization_code",
-		RedirectURI:  g.config.Redir(g.reg.Config().OIDCRedirectURIBase(ctx)),
-	}
-
-	bs, err := json.Marshal(pTokenParams)
-	if err != nil {
-		return nil, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("%s", err))
-	}
-
-	client := g.reg.HTTPClient(ctx, httpx.ResilientClientDisallowInternalIPs())
-	req, err := retryablehttp.NewRequest("POST", conf.Endpoint.TokenURL, bytes.NewBuffer(bs))
-	if err != nil {
-		return nil, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("%s", err))
-	}
-	req.Header.Add("Content-Type", "application/json;charset=UTF-8")
-
-	resp, err := client.Do(req)
-	if err != nil {
-		return nil, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("%s", err))
-	}
-	defer resp.Body.Close()
-
-	var dToken larkTokenResp
-	if err := json.NewDecoder(resp.Body).Decode(&dToken); err != nil {
-		return nil, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("%s", err))
-	}
-	token := &oauth2.Token{
-		AccessToken:  dToken.AccessToken,
-		TokenType:    dToken.TokenType,
-		RefreshToken: dToken.RefreshToken,
-		Expiry:       time.Unix(time.Now().Unix()+int64(dToken.ExpiresIn), 0),
-	}
-
-	return token, nil
 }
