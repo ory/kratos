@@ -8,6 +8,8 @@ import (
 
 	"github.com/gofrs/uuid"
 	"github.com/pkg/errors"
+
+	"github.com/ory/x/pagination/keysetpagination"
 )
 
 var ErrQueueEmpty = errors.New("queue is empty")
@@ -26,7 +28,14 @@ type (
 
 		// ListMessages lists all messages in the store given the page, itemsPerPage, status and recipient.
 		// Returns list of messages, total count of messages satisfied by given filter, and error if any
-		ListMessages(ctx context.Context, filter ListCourierMessagesParameters) ([]Message, int64, error)
+		ListMessages(context.Context, ListCourierMessagesParameters, []keysetpagination.Option) ([]Message, int64, *keysetpagination.Paginator, error)
+
+		// FetchMessage returns a message with the id or nil and an error if not found
+		FetchMessage(context.Context, uuid.UUID) (*Message, error)
+
+		// Records an attempt of sending out a courier message
+		// Returns an error if it fails
+		RecordDispatch(ctx context.Context, msgID uuid.UUID, status CourierMessageDispatchStatus, err error) error
 	}
 	PersistenceProvider interface {
 		CourierPersister() Persister

@@ -108,13 +108,14 @@ func ServePublic(r driver.Registry, cmd *cobra.Command, args []string, slOpts *s
 	r.RegisterPublicRoutes(ctx, router)
 	r.PrometheusManager().RegisterRouter(router.Router)
 
-	if options, enabled := r.Config().CORS(ctx, "public"); enabled {
-		n.UseFunc(cors.New(options).ServeHTTP)
+	var handler http.Handler = n
+	options, enabled := r.Config().CORS(ctx, "public")
+	if enabled {
+		handler = cors.New(options).Handler(handler)
 	}
 
 	certs := c.GetTLSCertificatesForPublic(ctx)
 
-	var handler http.Handler = n
 	if tracer := r.Tracer(ctx); tracer.IsLoaded() {
 		handler = otelx.TraceHandler(handler, otelhttp.WithTracerProvider(tracer.Provider()))
 	}

@@ -62,8 +62,8 @@ func TestSchemaValidatorDisallowsInternalNetworkRequests(t *testing.T) {
 	}
 
 	for _, tc := range [][2]string{
-		{"localhost", "is in the private, loopback, or unspecified IP range"},
-		{"privateRef", "is in the private, loopback, or unspecified IP range"},
+		{"localhost", "is not a public IP address"},
+		{"privateRef", "is not a public IP address"},
 	} {
 		t.Run(fmt.Sprintf("case=%s", tc[0]), func(t *testing.T) {
 			assert.Contains(t, do(t, tc[0]), tc[1])

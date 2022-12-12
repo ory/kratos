@@ -158,7 +158,7 @@ func (c *courier) QueueEmail(ctx context.Context, t EmailTemplate) (uuid.UUID, e
 
 func (c *courier) dispatchEmail(ctx context.Context, msg Message) error {
 	if c.smtpClient.Host == "" {
-		return errors.WithStack(herodot.ErrInternalServerError.WithReasonf("Courier tried to deliver an email but %s is not set!", config.ViperKeyCourierSMTPURL))
+		return errors.WithStack(herodot.ErrInternalServerError.WithErrorf("Courier tried to deliver an email but %s is not set!", config.ViperKeyCourierSMTPURL))
 	}
 
 	from := c.deps.CourierConfig().CourierSMTPFrom(ctx)
@@ -204,7 +204,6 @@ func (c *courier) dispatchEmail(ctx context.Context, msg Message) error {
 			WithError(err).
 			WithField("smtp_server", fmt.Sprintf("%s:%d", c.smtpClient.Host, c.smtpClient.Port)).
 			WithField("smtp_ssl_enabled", c.smtpClient.SSL).
-			// WithField("email_to", msg.Recipient).
 			WithField("message_from", from).
 			Error("Unable to send email using SMTP connection.")
 
@@ -220,7 +219,8 @@ func (c *courier) dispatchEmail(ctx context.Context, msg Message) error {
 				return err
 			}
 		}
-		return errors.WithStack(err)
+		return errors.WithStack(herodot.ErrInternalServerError.
+			WithError(err.Error()).WithReason("failed to send email via smtp"))
 	}
 
 	c.deps.Logger().
