@@ -7,7 +7,7 @@
     "start": "nodemon ./proxy.js"
   },
   "dependencies": {
-    "express": "^4.17.1",
+    "express": "^4.17.3",
     "nodemon": "^2.0.4",
     "request": "^2.88.2",
     "url-join": "^4.0.1"
