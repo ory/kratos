@@ -11,9 +11,6 @@ import (
 func SessionGetStringRelayState(r *http.Request, s sessions.StoreExact, id string, key interface{}) (string, error) {
 
 	cipherRelayState := r.PostForm.Get("RelayState")
-	if cipherRelayState == "" {
-		return "", errors.New("The RelayState is empty or not exists")
-	}
 
 	// Reconstructs the cookie from the ciphered value
 	continuityCookie := &http.Cookie{
@@ -22,8 +19,7 @@ func SessionGetStringRelayState(r *http.Request, s sessions.StoreExact, id strin
 		MaxAge: 300,
 	}
 
-	r2 := r.Clone(r.Context())
-	r2.AddCookie(continuityCookie)
+	r.AddCookie(continuityCookie)
 
 	check := func(v map[interface{}]interface{}) (string, error) {
 		vv, ok := v[key]
@@ -37,7 +33,7 @@ func SessionGetStringRelayState(r *http.Request, s sessions.StoreExact, id strin
 	}
 
 	var exactErr error
-	sessionCookie, err := s.GetExact(r2, id, func(s *sessions.Session) bool {
+	sessionCookie, err := s.GetExact(r, id, func(s *sessions.Session) bool {
 		_, exactErr = check(s.Values)
 		return exactErr == nil
 	})
