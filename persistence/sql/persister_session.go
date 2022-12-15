@@ -58,6 +58,7 @@ func (p *Persister) GetSession(ctx context.Context, sid uuid.UUID, expandables s
 		s.Identity = i
 	}
 
+	s.Active = s.IsActive()
 	return &s, nil
 }
 
