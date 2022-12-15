@@ -475,7 +475,7 @@ func TestCompleteSettings(t *testing.T) {
 
 					actualFlow, err := reg.SettingsFlowPersister().GetSettingsFlow(context.Background(), uuid.FromStringOrNil(f.Id))
 					require.NoError(t, err)
-					assert.Equal(t, "{}", gjson.GetBytes(actualFlow.InternalContext, flow.PrefixInternalContextKey(identity.CredentialsTypeLookup, lookup.InternalContextKeyRegenerated)).Raw)
+					assert.Empty(t, gjson.GetBytes(actualFlow.InternalContext, flow.PrefixInternalContextKey(identity.CredentialsTypeLookup, lookup.InternalContextKeyRegenerated)).Raw)
 				}
 
 				t.Run("type=api", func(t *testing.T) {
