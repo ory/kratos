@@ -78,6 +78,12 @@ func (p *Persister) ListSessions(ctx context.Context, active *bool, paginatorOpt
 		q := c.Where("nid = ?", nid)
 		if active != nil {
 			q = q.Where("active = ?", *active)
+
+			if *active {
+				q.Where("expires_at >= ?", time.Now())
+			} else {
+				q.Where("expires_at < ?", time.Now())
+			}
 		}
 
 		// if len(expandables) > 0 {
@@ -134,6 +140,12 @@ func (p *Persister) ListSessionsByIdentity(ctx context.Context, iID uuid.UUID, a
 		}
 		if active != nil {
 			q = q.Where("active = ?", *active)
+
+			if *active {
+				q.Where("expires_at >= ?", time.Now())
+			} else {
+				q.Where("expires_at < ?", time.Now())
+			}
 		}
 		if len(expandables) > 0 {
 			q = q.Eager(expandables.ToEager()...)

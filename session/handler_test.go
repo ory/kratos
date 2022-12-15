@@ -731,8 +731,10 @@ func TestHandlerAdminSessionManagement(t *testing.T) {
 			sess[j].Identity = i
 			if j < numSessionsActive {
 				sess[j].Active = true
+				sess[j].ExpiresAt = time.Now().Add(time.Hour)
 			} else {
 				sess[j].Active = false
+				sess[j].ExpiresAt = time.Now().Add(-time.Hour)
 			}
 			require.NoError(t, reg.SessionPersister().UpsertSession(ctx, &sess[j]))
 		}
@@ -782,6 +784,12 @@ func TestHandlerAdminSessionManagement(t *testing.T) {
 			require.NoError(t, faker.FakeData(&sess[j]))
 			sess[j].Identity = i
 			sess[j].Active = j%2 == 0
+
+			if sess[j].Active {
+				sess[j].ExpiresAt = time.Now().Add(time.Hour)
+			} else {
+				sess[j].ExpiresAt = time.Now().Add(-time.Hour)
+			}
 			require.NoError(t, reg.SessionPersister().UpsertSession(ctx, &sess[j]))
 		}
 
