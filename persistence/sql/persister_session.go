@@ -134,6 +134,11 @@ func (p *Persister) ListSessionsByIdentity(ctx context.Context, iID uuid.UUID, a
 	nid := p.NetworkID(ctx)
 
 	if err := p.Transaction(ctx, func(ctx context.Context, c *pop.Connection) error {
+		i, err := p.GetIdentity(ctx, iID)
+		if err != nil {
+			return sqlcon.HandleError(err)
+		}
+
 		q := c.Where("identity_id = ? AND nid = ?", iID, nid)
 		if except != uuid.Nil {
 			q = q.Where("id != ?", except)
@@ -165,11 +170,6 @@ func (p *Persister) ListSessionsByIdentity(ctx context.Context, iID uuid.UUID, a
 
 		if expandables.Has(session.ExpandSessionIdentity) {
 			for _, s := range s {
-				i, err := p.GetIdentity(ctx, s.IdentityID)
-				if err != nil {
-					return err
-				}
-
 				s.Identity = i
 			}
 		}
