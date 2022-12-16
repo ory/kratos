@@ -1037,23 +1037,17 @@ func TestIdentitySchemaValidation(t *testing.T) {
 
 				// There are a bunch of log messages beeing logged. We are looking for a specific one.
 				timeout := time.After(time.Millisecond * 500)
-			outer:
-				for {
+				var success = false
+				for !success {
 					for _, v := range hook.AllEntries() {
 						s, err := v.String()
-						if err != nil {
-							t.Errorf("Unexpected Error: %s", err.Error())
-							continue
-						}
-
-						if strings.Contains(s, "The changed identity schema configuration is invalid and could not be loaded.") {
-							break outer
-						}
+						assert.NoErrorf(t, err, "Unexpected Error")
+						success = strings.Contains(s, "The changed identity schema configuration is invalid and could not be loaded.")
 					}
 
 					select {
 					case <-ctx.Done():
-						panic("the test could not complete as the context timed out before the file watcher updated")
+						t.Fatal("the test could not complete as the context timed out before the file watcher updated")
 					case <-timeout:
 						t.Fatal("Expected log line was not encountered within specified timeout")
 					default: //nothing
