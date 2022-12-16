@@ -186,6 +186,7 @@ func (c *courier) dispatchEmail(ctx context.Context, msg Message) error {
 		c.deps.Logger().
 			WithError(err).
 			WithField("message_id", msg.ID).
+			WithField("message_nid", msg.NID).
 			Error(`Unable to get email template from message.`)
 	} else {
 		htmlBody, err := tmpl.EmailBody(ctx)
@@ -193,6 +194,7 @@ func (c *courier) dispatchEmail(ctx context.Context, msg Message) error {
 			c.deps.Logger().
 				WithError(err).
 				WithField("message_id", msg.ID).
+				WithField("message_nid", msg.NID).
 				Error(`Unable to get email body from template.`)
 		} else {
 			gm.AddAlternative("text/html", htmlBody)
@@ -205,6 +207,8 @@ func (c *courier) dispatchEmail(ctx context.Context, msg Message) error {
 			WithField("smtp_server", fmt.Sprintf("%s:%d", c.smtpClient.Host, c.smtpClient.Port)).
 			WithField("smtp_ssl_enabled", c.smtpClient.SSL).
 			WithField("message_from", from).
+			WithField("message_id", msg.ID).
+			WithField("message_nid", msg.NID).
 			Error("Unable to send email using SMTP connection.")
 
 		var protoErr *textproto.Error
@@ -215,6 +219,7 @@ func (c *courier) dispatchEmail(ctx context.Context, msg Message) error {
 				c.deps.Logger().
 					WithError(err).
 					WithField("message_id", msg.ID).
+					WithField("message_nid", msg.NID).
 					Error(`Unable to reset the retried message's status to "abandoned".`)
 				return err
 			}
@@ -225,6 +230,7 @@ func (c *courier) dispatchEmail(ctx context.Context, msg Message) error {
 
 	c.deps.Logger().
 		WithField("message_id", msg.ID).
+		WithField("message_nid", msg.NID).
 		WithField("message_type", msg.Type).
 		WithField("message_template_type", msg.TemplateType).
 		WithField("message_subject", msg.Subject).
