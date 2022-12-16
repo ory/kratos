@@ -12,6 +12,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"net/url"
+	"sort"
 	"testing"
 	"time"
 
@@ -985,6 +986,104 @@ func TestHandler(t *testing.T) {
 			t.Run("endpoint="+name, func(t *testing.T) {
 				remove(t, ts, "/identities/"+x.NewUUID().String(), http.StatusNotFound)
 			})
+		}
+	})
+
+	t.Run("case=should delete credential of a specific user and no longer be able to retrieve it", func(t *testing.T) {
+		createIdentities := func(identities map[identity.CredentialsType]string) func(t *testing.T) *identity.Identity {
+			return func(t *testing.T) *identity.Identity {
+				i := identity.NewIdentity("")
+				for ct, config := range identities {
+					i.SetCredentials(ct, identity.Credentials{
+						Type:   ct,
+						Config: sqlxx.JSONRawMessage(config),
+					})
+				}
+				i.Traits = identity.Traits("{}")
+				require.NoError(t, reg.Persister().CreateIdentity(context.Background(), i))
+				return i
+			}
+		}
+
+		for name, ts := range map[string]*httptest.Server{"public": publicTS, "admin": adminTS} {
+			t.Run("type=remove unknown identity/"+name, func(t *testing.T) {
+				remove(t, ts, "/identities/"+x.NewUUID().String()+"/credential/azerty", http.StatusNotFound)
+			})
+			t.Run("type=remove unknown type/"+name, func(t *testing.T) {
+				i := createIdentities(map[identity.CredentialsType]string{identity.CredentialsTypePassword: `{"secret":"pst"}`})(t)
+				remove(t, ts, "/identities/"+i.ID.String()+"/credential/azerty", http.StatusNotFound)
+			})
+			t.Run("type=remove password type/"+name, func(t *testing.T) {
+				i := createIdentities(map[identity.CredentialsType]string{identity.CredentialsTypePassword: `{"secret":"pst"}`})(t)
+				remove(t, ts, "/identities/"+i.ID.String()+"/credential/password", http.StatusBadRequest)
+			})
+			t.Run("type=remove oidc type/"+name, func(t *testing.T) {
+				i := createIdentities(map[identity.CredentialsType]string{identity.CredentialsTypeOIDC: `{"id":"pst"}`})(t)
+				remove(t, ts, "/identities/"+i.ID.String()+"/credential/oidc", http.StatusBadRequest)
+			})
+			t.Run("type=remove webauthn passwordless type/"+name, func(t *testing.T) {
+				i := createIdentities(map[identity.CredentialsType]string{identity.CredentialsTypeWebAuthn: `{"credentials":[{"id":"THTndqZP5Mjvae1BFvJMaMfEMm7O7HE1ju+7PBaYA7Y=","added_at":"2022-12-16T14:11:55Z","public_key":"pQECAyYgASFYIMJLQhJxQRzhnKPTcPCUODOmxYDYo2obrm9bhp5lvSZ3IlggXjhZvJaPUqF9PXqZqTdWYPR7R+b2n/Wi+IxKKXsS4rU=","display_name":"test","authenticator":{"aaguid":"rc4AAjW8xgpkiwsl8fBVAw==","sign_count":0,"clone_warning":false},"is_passwordless":true,"attestation_type":"none"}],"user_handle":"Ef5JiMpMRwuzauWs/9J0gQ=="}`})(t)
+				remove(t, ts, "/identities/"+i.ID.String()+"/credential/webauthn", http.StatusBadRequest)
+			})
+			for ct, ctConf := range map[identity.CredentialsType]string{
+				identity.CredentialsTypeLookup:   `{"recovery_codes": [{"code": "aaa"}]}`,
+				identity.CredentialsTypeTOTP:     `{"totp_url":"otpauth://totp/test"}`,
+				identity.CredentialsTypeWebAuthn: `{"credentials":[{"id":"THTndqZP5Mjvae1BFvJMaMfEMm7O7HE1ju+7PBaYA7Y=","added_at":"2022-12-16T14:11:55Z","public_key":"pQECAyYgASFYIMJLQhJxQRzhnKPTcPCUODOmxYDYo2obrm9bhp5lvSZ3IlggXjhZvJaPUqF9PXqZqTdWYPR7R+b2n/Wi+IxKKXsS4rU=","display_name":"test","authenticator":{"aaguid":"rc4AAjW8xgpkiwsl8fBVAw==","sign_count":0,"clone_warning":false},"is_passwordless":false,"attestation_type":"none"}],"user_handle":"Ef5JiMpMRwuzauWs/9J0gQ=="}`,
+			} {
+				t.Run("type=remove "+string(ct)+"/"+name, func(t *testing.T) {
+					for _, tc := range []struct {
+						desc  string
+						exist bool
+						setup func(t *testing.T) *identity.Identity
+					}{
+						{
+							desc:  "with",
+							exist: true,
+							setup: createIdentities(map[identity.CredentialsType]string{identity.CredentialsTypePassword: `{"secret":"pst"}`, ct: ctConf}),
+						},
+						{
+							desc:  "without",
+							exist: false,
+							setup: createIdentities(map[identity.CredentialsType]string{identity.CredentialsTypePassword: `{"secret":"pst"}`}),
+						},
+						{
+							desc:  "multiple",
+							exist: true,
+							setup: createIdentities(map[identity.CredentialsType]string{identity.CredentialsTypePassword: `{"secret":"pst"}`, identity.CredentialsTypeOIDC: `{"id":"pst"}`, ct: ctConf}),
+						},
+					} {
+						t.Run("type=remove "+string(ct)+"/"+name+"/"+tc.desc, func(t *testing.T) {
+							i := tc.setup(t)
+							credName := string(ct)
+							// Initial Querying
+							resBefore := get(t, ts, "/identities/"+i.ID.String(), http.StatusOK)
+							assert.EqualValues(t, i.ID.String(), resBefore.Get("id").String(), "%s", resBefore.Raw)
+							assert.True(t, resBefore.Get("credentials").Exists())
+							if tc.exist {
+								assert.True(t, resBefore.Get("credentials").Get(credName).Exists())
+								// Remove
+								remove(t, ts, "/identities/"+i.ID.String()+"/credential/"+credName, http.StatusNoContent)
+								// Query back
+								resAfter := get(t, ts, "/identities/"+i.ID.String(), http.StatusOK)
+								assert.EqualValues(t, i.ID.String(), resAfter.Get("id").String(), "%s", resAfter.Raw)
+								assert.True(t, resAfter.Get("credentials").Exists())
+								// Check results
+								expected := resBefore.Get("credentials").Map()
+								delete(expected, credName)
+								expectedKeys := x.Keys(expected)
+								sort.Strings(expectedKeys)
+								result := resAfter.Get("credentials").Map()
+								resultKeys := x.Keys(result)
+								sort.Strings(resultKeys)
+								assert.Equal(t, resultKeys, expectedKeys)
+							} else {
+								assert.False(t, resBefore.Get("credentials").Get(credName).Exists())
+								remove(t, ts, "/identities/"+i.ID.String()+"/credential/"+credName, http.StatusNotFound)
+							}
+						})
+					}
+				})
+			}
 		}
 	})
 }

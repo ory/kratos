@@ -33,7 +33,7 @@ import (
 
 const RouteCollection = "/identities"
 const RouteItem = RouteCollection + "/:id"
-const RouteMfaItem = RouteItem + "/credential/:type"
+const RouteCredentialItem = RouteItem + "/credential/:type"
 
 type (
 	handlerDependencies interface {
@@ -69,7 +69,9 @@ func NewHandler(r handlerDependencies) *Handler {
 func (h *Handler) RegisterPublicRoutes(public *x.RouterPublic) {
 	h.r.CSRFHandler().IgnoreGlobs(
 		RouteCollection, RouteCollection+"/*",
+		RouteCollection+"/*/credential/*",
 		x.AdminPrefix+RouteCollection, x.AdminPrefix+RouteCollection+"/*",
+		x.AdminPrefix+RouteCollection+"/*/credential/*",
 	)
 
 	public.GET(RouteCollection, x.RedirectToAdminRoute(h.r))
@@ -78,7 +80,7 @@ func (h *Handler) RegisterPublicRoutes(public *x.RouterPublic) {
 	public.POST(RouteCollection, x.RedirectToAdminRoute(h.r))
 	public.PUT(RouteItem, x.RedirectToAdminRoute(h.r))
 	public.PATCH(RouteItem, x.RedirectToAdminRoute(h.r))
-	public.DELETE(RouteMfaItem, x.RedirectToAdminRoute(h.r))
+	public.DELETE(RouteCredentialItem, x.RedirectToAdminRoute(h.r))
 
 	public.GET(x.AdminPrefix+RouteCollection, x.RedirectToAdminRoute(h.r))
 	public.GET(x.AdminPrefix+RouteItem, x.RedirectToAdminRoute(h.r))
@@ -86,7 +88,7 @@ func (h *Handler) RegisterPublicRoutes(public *x.RouterPublic) {
 	public.POST(x.AdminPrefix+RouteCollection, x.RedirectToAdminRoute(h.r))
 	public.PUT(x.AdminPrefix+RouteItem, x.RedirectToAdminRoute(h.r))
 	public.PATCH(x.AdminPrefix+RouteItem, x.RedirectToAdminRoute(h.r))
-	public.DELETE(x.AdminPrefix+RouteMfaItem, x.RedirectToAdminRoute(h.r))
+	public.DELETE(x.AdminPrefix+RouteCredentialItem, x.RedirectToAdminRoute(h.r))
 }
 
 func (h *Handler) RegisterAdminRoutes(admin *x.RouterAdmin) {
@@ -98,7 +100,7 @@ func (h *Handler) RegisterAdminRoutes(admin *x.RouterAdmin) {
 	admin.POST(RouteCollection, h.create)
 	admin.PUT(RouteItem, h.update)
 
-	admin.DELETE(RouteMfaItem, h.deleteCredential)
+	admin.DELETE(RouteCredentialItem, h.deleteCredential)
 }
 
 // Paginated Identity List Response
@@ -731,7 +733,7 @@ func (h *Handler) deleteCredential(w http.ResponseWriter, r *http.Request, ps ht
 
 	cred, ok := identity.GetCredentials(CredentialsType(ps.ByName("type")))
 	if !ok {
-		h.r.Writer().WriteError(w, r, errors.WithStack(herodot.ErrBadRequest.WithReasonf("You tried to remove a %s but this user have no %s set up.", ps.ByName("type"), ps.ByName("type"))))
+		h.r.Writer().WriteError(w, r, errors.WithStack(herodot.ErrNotFound.WithReasonf("You tried to remove a %s but this user have no %s set up.", ps.ByName("type"), ps.ByName("type"))))
 		return
 	}
 
@@ -756,10 +758,11 @@ func (h *Handler) deleteCredential(w http.ResponseWriter, r *http.Request, ps ht
 		}
 
 		if count < 2 && wasPasswordless {
-			h.r.Writer().WriteError(w, r, errors.WithStack(herodot.ErrForbidden.WithReason("Unable to remove this security key because it would lock this user out of his account")))
+			h.r.Writer().WriteError(w, r, errors.WithStack(herodot.ErrBadRequest.WithReason("Unable to remove this security key because it would lock this user out of his account")))
 			return
 		}
 	case CredentialsTypeOIDC:
+		fallthrough
 	case CredentialsTypePassword:
 		h.r.Writer().WriteError(w, r, errors.WithStack(herodot.ErrBadRequest.WithReasonf("You can't remove the first factor credentials")))
 		return
