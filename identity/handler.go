@@ -33,6 +33,7 @@ import (
 
 const RouteCollection = "/identities"
 const RouteItem = RouteCollection + "/:id"
+const RouteMfaItem = RouteItem + "/credential/:type"
 
 type (
 	handlerDependencies interface {
@@ -77,6 +78,7 @@ func (h *Handler) RegisterPublicRoutes(public *x.RouterPublic) {
 	public.POST(RouteCollection, x.RedirectToAdminRoute(h.r))
 	public.PUT(RouteItem, x.RedirectToAdminRoute(h.r))
 	public.PATCH(RouteItem, x.RedirectToAdminRoute(h.r))
+	public.DELETE(RouteMfaItem, x.RedirectToAdminRoute(h.r))
 
 	public.GET(x.AdminPrefix+RouteCollection, x.RedirectToAdminRoute(h.r))
 	public.GET(x.AdminPrefix+RouteItem, x.RedirectToAdminRoute(h.r))
@@ -84,6 +86,7 @@ func (h *Handler) RegisterPublicRoutes(public *x.RouterPublic) {
 	public.POST(x.AdminPrefix+RouteCollection, x.RedirectToAdminRoute(h.r))
 	public.PUT(x.AdminPrefix+RouteItem, x.RedirectToAdminRoute(h.r))
 	public.PATCH(x.AdminPrefix+RouteItem, x.RedirectToAdminRoute(h.r))
+	public.DELETE(x.AdminPrefix+RouteMfaItem, x.RedirectToAdminRoute(h.r))
 }
 
 func (h *Handler) RegisterAdminRoutes(admin *x.RouterAdmin) {
@@ -94,6 +97,8 @@ func (h *Handler) RegisterAdminRoutes(admin *x.RouterAdmin) {
 
 	admin.POST(RouteCollection, h.create)
 	admin.PUT(RouteItem, h.update)
+
+	admin.DELETE(RouteMfaItem, h.deleteCredential)
 }
 
 // Paginated Identity List Response
@@ -674,4 +679,101 @@ func (h *Handler) patch(w http.ResponseWriter, r *http.Request, ps httprouter.Pa
 	}
 
 	h.r.Writer().Write(w, r, WithCredentialsMetadataAndAdminMetadataInJSON(*identity))
+}
+
+// Delete Credential Parameters
+//
+// swagger:parameters deleteCredential
+// nolint:deadcode,unused
+type deleteCredential struct {
+	// ID is the identity's ID.
+	//
+	// required: true
+	// in: path
+	ID string `json:"id"`
+
+	// Type is the credential's Type.
+	// One of totp, webauthn, lookup
+	//
+	// required: true
+	// in: path
+	Type string `json:"type"`
+}
+
+// swagger:route DELETE /admin/identities/{id}/credential/{type} identity deleteCredential
+//
+// # Delete a credential for a specific identity
+//
+// Delete an [identity](https://www.ory.sh/docs/kratos/concepts/identity-user-model) credential by its type
+// You can only delete credential types that are not first factor (password, oidc, or webauthn passwordless)
+//
+//	Consumes:
+//	- application/json
+//
+//	Produces:
+//	- application/json
+//
+//	Schemes: http, https
+//
+//	Security:
+//	  oryAccessToken:
+//
+//	Responses:
+//	  200: identity
+//	  404: errorGeneric
+//	  default: errorGeneric
+func (h *Handler) deleteCredential(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	identity, err := h.r.PrivilegedIdentityPool().GetIdentityConfidential(r.Context(), x.ParseUUID(ps.ByName("id")))
+	if err != nil {
+		h.r.Writer().WriteError(w, r, err)
+		return
+	}
+
+	cred, ok := identity.GetCredentials(CredentialsType(ps.ByName("type")))
+	if !ok {
+		h.r.Writer().WriteError(w, r, errors.WithStack(herodot.ErrBadRequest.WithReasonf("You tried to remove a %s but this user have no %s set up.", ps.ByName("type"), ps.ByName("type"))))
+		return
+	}
+
+	switch cred.Type {
+	case CredentialsTypeWebAuthn:
+		var cc CredentialsWebAuthnConfig
+		if err := json.Unmarshal(cred.Config, &cc); err != nil {
+			h.r.Writer().WriteError(w, r, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("Unable to decode identity credentials.").WithDebug(err.Error())))
+			return
+		}
+
+		var wasPasswordless bool
+		for _, cred := range cc.Credentials {
+			if cred.IsPasswordless {
+				wasPasswordless = true
+			}
+		}
+
+		count, err := h.r.IdentityManager().CountActiveFirstFactorCredentials(r.Context(), identity)
+		if err != nil {
+			h.r.Writer().WriteError(w, r, errors.WithStack(herodot.ErrBadRequest.WithWrap(err)))
+		}
+
+		if count < 2 && wasPasswordless {
+			h.r.Writer().WriteError(w, r, errors.WithStack(herodot.ErrForbidden.WithReason("Unable to remove this security key because it would lock this user out of his account")))
+			return
+		}
+	case CredentialsTypeOIDC:
+	case CredentialsTypePassword:
+		h.r.Writer().WriteError(w, r, errors.WithStack(herodot.ErrBadRequest.WithReasonf("You can't remove the first factor credentials")))
+		return
+	}
+
+	identity.DeleteCredentialsType(cred.Type)
+	if err := h.r.IdentityManager().Update(
+		r.Context(),
+		identity,
+		ManagerAllowWriteProtectedTraits,
+	); err != nil {
+		h.r.Writer().WriteError(w, r, err)
+		return
+	}
+
+	w.WriteHeader(http.StatusNoContent)
 }

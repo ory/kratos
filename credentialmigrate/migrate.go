@@ -9,11 +9,10 @@ import (
 	"github.com/pkg/errors"
 
 	"github.com/ory/kratos/identity"
-	"github.com/ory/kratos/selfservice/strategy/webauthn"
 )
 
 // UpgradeWebAuthnCredential migrates a webauthn credential from an older version to a newer version.
-func UpgradeWebAuthnCredential(i *identity.Identity, ic *identity.Credentials, c *webauthn.CredentialsConfig) {
+func UpgradeWebAuthnCredential(i *identity.Identity, ic *identity.Credentials, c *identity.CredentialsWebAuthnConfig) {
 	if ic.Version == 0 {
 		if len(c.UserHandle) == 0 {
 			c.UserHandle = i.ID[:]
@@ -30,7 +29,7 @@ func UpgradeWebAuthnCredentials(i *identity.Identity, c *identity.Credentials) e
 		return nil
 	}
 
-	var cred webauthn.CredentialsConfig
+	var cred identity.CredentialsWebAuthnConfig
 	if err := json.Unmarshal(c.Config, &cred); err != nil {
 		return errors.WithStack(err)
 	}

@@ -75,6 +75,23 @@ type IdentityApi interface {
 	CreateRecoveryLinkForIdentityExecute(r IdentityApiApiCreateRecoveryLinkForIdentityRequest) (*RecoveryLinkForIdentity, *http.Response, error)
 
 	/*
+			 * DeleteCredential Delete a credential for a specific identity
+			 * Delete an [identity](https://www.ory.sh/docs/kratos/concepts/identity-user-model) credential by its type
+		You can only delete credential types that are not first factor (password, oidc, or webauthn passwordless)
+			 * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
+			 * @param id ID is the identity's ID.
+			 * @param type_ Type is the credential's Type. One of totp, webauthn, lookup
+			 * @return IdentityApiApiDeleteCredentialRequest
+	*/
+	DeleteCredential(ctx context.Context, id string, type_ string) IdentityApiApiDeleteCredentialRequest
+
+	/*
+	 * DeleteCredentialExecute executes the request
+	 * @return Identity
+	 */
+	DeleteCredentialExecute(r IdentityApiApiDeleteCredentialRequest) (*Identity, *http.Response, error)
+
+	/*
 			 * DeleteIdentity Delete an Identity
 			 * Calling this endpoint irrecoverably and permanently deletes the [identity](https://www.ory.sh/docs/kratos/concepts/identity-user-model) given its ID. This action can not be undone.
 		This endpoint returns 204 when the identity was deleted or when the identity was not found, in which case it is
@@ -673,6 +690,148 @@ func (a *IdentityApiService) CreateRecoveryLinkForIdentityExecute(r IdentityApiA
 			}
 			newErr.model = v
 			return localVarReturnValue, localVarHTTPResponse, newErr
+		}
+		if localVarHTTPResponse.StatusCode == 404 {
+			var v ErrorGeneric
+			err = a.client.decode(&v, localVarBody, localVarHTTPResponse.Header.Get("Content-Type"))
+			if err != nil {
+				newErr.error = err.Error()
+				return localVarReturnValue, localVarHTTPResponse, newErr
+			}
+			newErr.model = v
+			return localVarReturnValue, localVarHTTPResponse, newErr
+		}
+		var v ErrorGeneric
+		err = a.client.decode(&v, localVarBody, localVarHTTPResponse.Header.Get("Content-Type"))
+		if err != nil {
+			newErr.error = err.Error()
+			return localVarReturnValue, localVarHTTPResponse, newErr
+		}
+		newErr.model = v
+		return localVarReturnValue, localVarHTTPResponse, newErr
+	}
+
+	err = a.client.decode(&localVarReturnValue, localVarBody, localVarHTTPResponse.Header.Get("Content-Type"))
+	if err != nil {
+		newErr := &GenericOpenAPIError{
+			body:  localVarBody,
+			error: err.Error(),
+		}
+		return localVarReturnValue, localVarHTTPResponse, newErr
+	}
+
+	return localVarReturnValue, localVarHTTPResponse, nil
+}
+
+type IdentityApiApiDeleteCredentialRequest struct {
+	ctx        context.Context
+	ApiService IdentityApi
+	id         string
+	type_      string
+}
+
+func (r IdentityApiApiDeleteCredentialRequest) Execute() (*Identity, *http.Response, error) {
+	return r.ApiService.DeleteCredentialExecute(r)
+}
+
+/*
+  - DeleteCredential Delete a credential for a specific identity
+  - Delete an [identity](https://www.ory.sh/docs/kratos/concepts/identity-user-model) credential by its type
+
+You can only delete credential types that are not first factor (password, oidc, or webauthn passwordless)
+  - @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
+  - @param id ID is the identity's ID.
+  - @param type_ Type is the credential's Type. One of totp, webauthn, lookup
+  - @return IdentityApiApiDeleteCredentialRequest
+*/
+func (a *IdentityApiService) DeleteCredential(ctx context.Context, id string, type_ string) IdentityApiApiDeleteCredentialRequest {
+	return IdentityApiApiDeleteCredentialRequest{
+		ApiService: a,
+		ctx:        ctx,
+		id:         id,
+		type_:      type_,
+	}
+}
+
+/*
+ * Execute executes the request
+ * @return Identity
+ */
+func (a *IdentityApiService) DeleteCredentialExecute(r IdentityApiApiDeleteCredentialRequest) (*Identity, *http.Response, error) {
+	var (
+		localVarHTTPMethod   = http.MethodDelete
+		localVarPostBody     interface{}
+		localVarFormFileName string
+		localVarFileName     string
+		localVarFileBytes    []byte
+		localVarReturnValue  *Identity
+	)
+
+	localBasePath, err := a.client.cfg.ServerURLWithContext(r.ctx, "IdentityApiService.DeleteCredential")
+	if err != nil {
+		return localVarReturnValue, nil, &GenericOpenAPIError{error: err.Error()}
+	}
+
+	localVarPath := localBasePath + "/admin/identities/{id}/credential/{type}"
+	localVarPath = strings.Replace(localVarPath, "{"+"id"+"}", url.PathEscape(parameterToString(r.id, "")), -1)
+	localVarPath = strings.Replace(localVarPath, "{"+"type"+"}", url.PathEscape(parameterToString(r.type_, "")), -1)
+
+	localVarHeaderParams := make(map[string]string)
+	localVarQueryParams := url.Values{}
+	localVarFormParams := url.Values{}
+
+	// to determine the Content-Type header
+	localVarHTTPContentTypes := []string{}
+
+	// set Content-Type header
+	localVarHTTPContentType := selectHeaderContentType(localVarHTTPContentTypes)
+	if localVarHTTPContentType != "" {
+		localVarHeaderParams["Content-Type"] = localVarHTTPContentType
+	}
+
+	// to determine the Accept header
+	localVarHTTPHeaderAccepts := []string{"application/json"}
+
+	// set Accept header
+	localVarHTTPHeaderAccept := selectHeaderAccept(localVarHTTPHeaderAccepts)
+	if localVarHTTPHeaderAccept != "" {
+		localVarHeaderParams["Accept"] = localVarHTTPHeaderAccept
+	}
+	if r.ctx != nil {
+		// API Key Authentication
+		if auth, ok := r.ctx.Value(ContextAPIKeys).(map[string]APIKey); ok {
+			if apiKey, ok := auth["oryAccessToken"]; ok {
+				var key string
+				if apiKey.Prefix != "" {
+					key = apiKey.Prefix + " " + apiKey.Key
+				} else {
+					key = apiKey.Key
+				}
+				localVarHeaderParams["Authorization"] = key
+			}
+		}
+	}
+	req, err := a.client.prepareRequest(r.ctx, localVarPath, localVarHTTPMethod, localVarPostBody, localVarHeaderParams, localVarQueryParams, localVarFormParams, localVarFormFileName, localVarFileName, localVarFileBytes)
+	if err != nil {
+		return localVarReturnValue, nil, err
+	}
+
+	localVarHTTPResponse, err := a.client.callAPI(req)
+	if err != nil || localVarHTTPResponse == nil {
+		return localVarReturnValue, localVarHTTPResponse, err
+	}
+
+	localVarBody, err := io.ReadAll(localVarHTTPResponse.Body)
+	localVarHTTPResponse.Body.Close()
+	localVarHTTPResponse.Body = io.NopCloser(bytes.NewBuffer(localVarBody))
+	if err != nil {
+		return localVarReturnValue, localVarHTTPResponse, err
+	}
+
+	if localVarHTTPResponse.StatusCode >= 300 {
+		newErr := &GenericOpenAPIError{
+			body:  localVarBody,
+			error: localVarHTTPResponse.Status,
 		}
 		if localVarHTTPResponse.StatusCode == 404 {
 			var v ErrorGeneric

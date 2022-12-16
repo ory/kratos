@@ -1,7 +1,7 @@
 // Copyright © 2022 Ory Corp
 // SPDX-License-Identifier: Apache-2.0
 
-package lookup
+package identity
 
 import (
 	"time"
@@ -13,12 +13,12 @@ import (
 )
 
 // CredentialsConfig is the struct that is being used as part of the identity credentials.
-type CredentialsConfig struct {
+type CredentialsLookupConfig struct {
 	// List of recovery codes
 	RecoveryCodes []RecoveryCode `json:"recovery_codes"`
 }
 
-func (c *CredentialsConfig) ToNode() *node.Node {
+func (c *CredentialsLookupConfig) ToNode() *node.Node {
 	messages := make([]text.Message, len(c.RecoveryCodes))
 	formatted := make([]string, len(c.RecoveryCodes))
 	for k, code := range c.RecoveryCodes {

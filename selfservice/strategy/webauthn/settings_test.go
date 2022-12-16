@@ -448,7 +448,7 @@ func TestCompleteSettings(t *testing.T) {
 			allCred, ok := id.GetCredentials(identity.CredentialsTypeWebAuthn)
 			assert.True(t, ok)
 
-			var cc webauthn.CredentialsConfig
+			var cc identity.CredentialsWebAuthnConfig
 			require.NoError(t, json.Unmarshal(allCred.Config, &cc))
 			require.Len(t, cc.Credentials, 2)
 

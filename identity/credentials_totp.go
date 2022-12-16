@@ -1,10 +1,10 @@
 // Copyright © 2022 Ory Corp
 // SPDX-License-Identifier: Apache-2.0
 
-package totp
+package identity
 
 // CredentialsConfig is the struct that is being used as part of the identity credentials.
-type CredentialsConfig struct {
+type CredentialsTOTPConfig struct {
 	// TOTPURL is the TOTP URL
 	//
 	// For more details see: https://github.com/google/google-authenticator/wiki/Key-Uri-Format

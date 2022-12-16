@@ -1,21 +1,21 @@
 // Copyright © 2022 Ory Corp
 // SPDX-License-Identifier: Apache-2.0
 
-package lookup_test
+package identity_test
 
 import (
 	_ "embed"
 	"testing"
 	"time"
 
+	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/internal/testhelpers"
-	"github.com/ory/kratos/selfservice/strategy/lookup"
 
 	"github.com/ory/x/sqlxx"
 )
 
 func TestToNode(t *testing.T) {
-	c := lookup.CredentialsConfig{RecoveryCodes: []lookup.RecoveryCode{
+	c := identity.CredentialsLookupConfig{RecoveryCodes: []identity.RecoveryCode{
 		{Code: "foo", UsedAt: sqlxx.NullTime(time.Unix(1629199958, 0).UTC())},
 		{Code: "bar"},
 		{Code: "baz"},
