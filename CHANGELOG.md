@@ -302,6 +302,9 @@ The `/admin/courier/messages` endpoint now uses `keysetpagination` instead.
 
 ### Features
 
+- Add NID to logs in courier
+  ([#2956](https://github.com/ory/kratos/issues/2956))
+  ([b407aa9](https://github.com/ory/kratos/commit/b407aa9427382f38dd8a992a6998202a7b6ba83a))
 - Require verification on login
   ([#2927](https://github.com/ory/kratos/issues/2927))
   ([efb8ae8](https://github.com/ory/kratos/commit/efb8ae89cbc31477c2696a0df4c89d6dbf856d27))
