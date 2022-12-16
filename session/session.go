@@ -250,19 +250,9 @@ func (s *Session) SaveSessionDeviceInformation(r *http.Request) {
 		device.UserAgent = stringsx.GetPointer(strings.Join(agent, " "))
 	}
 
-	if trueClientIP := r.Header.Get("True-Client-IP"); trueClientIP != "" {
-		device.IPAddress = &trueClientIP
-	} else if realClientIP := r.Header.Get("X-Real-IP"); realClientIP != "" {
-		device.IPAddress = &realClientIP
-	} else if forwardedIP := r.Header.Get("X-Forwarded-For"); forwardedIP != "" {
-		ip, _ := httpx.GetClientIPAddressesWithoutInternalIPs(strings.Split(forwardedIP, ","))
-		device.IPAddress = &ip
-	} else {
-		device.IPAddress = &r.RemoteAddr
-	}
+	device.IPAddress = stringsx.GetPointer(httpx.ClientIP(r))
 
 	var clientGeoLocation []string
-
 	if r.Header.Get("Cf-Ipcity") != "" {
 		clientGeoLocation = append(clientGeoLocation, r.Header.Get("Cf-Ipcity"))
 	}
