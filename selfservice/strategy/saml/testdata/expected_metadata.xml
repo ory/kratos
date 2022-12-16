@@ -1,4 +1,4 @@
-<EntityDescriptor xmlns="urn:oasis:names:tc:SAML:2.0:metadata" validUntil="2022-04-09T14:39:19.503Z" entityID="http://127.0.0.1:40809/self-service/methods/saml/metadata">
+<EntityDescriptor xmlns="urn:oasis:names:tc:SAML:2.0:metadata" validUntil="2022-04-09T14:39:19.503Z" entityID="http://127.0.0.1:40809/self-service/methods/saml/metadata/:provider">
   <SPSSODescriptor xmlns="urn:oasis:names:tc:SAML:2.0:metadata" validUntil="2022-04-09T14:39:19.502917923Z" protocolSupportEnumeration="urn:oasis:names:tc:SAML:2.0:protocol" AuthnRequestsSigned="true" WantAssertionsSigned="true">
     <KeyDescriptor use="encryption">
       <KeyInfo xmlns="http://www.w3.org/2000/09/xmldsig#">
@@ -19,7 +19,8 @@
       </KeyInfo>
     </KeyDescriptor>
     <SingleLogoutService Binding="urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST" Location="https://www.ory.sh/saml/slo" ResponseLocation="https://www.ory.sh/saml/slo"></SingleLogoutService>
-    <AssertionConsumerService Binding="urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST" Location="http://127.0.0.1:40809/self-service/methods/saml/acs" index="1"></AssertionConsumerService>
-    <AssertionConsumerService Binding="urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Artifact" Location="http://127.0.0.1:40809/self-service/methods/saml/acs" index="2"></AssertionConsumerService>
+    <NameIDFormat>urn:oasis:names:tc:SAML:1.1:nameid-format:unspecified</NameIDFormat>
+    <AssertionConsumerService Binding="urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST" Location="http://127.0.0.1:40809/self-service/methods/saml/acs/samlProvider" index="1"></AssertionConsumerService>
+    <AssertionConsumerService Binding="urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Artifact" Location="http://127.0.0.1:40809/self-service/methods/saml/acs/samlProvider" index="2"></AssertionConsumerService>
   </SPSSODescriptor>
 </EntityDescriptor>

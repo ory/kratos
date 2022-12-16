@@ -38,7 +38,7 @@ func TestInitMiddleWareWithoutMetadata(t *testing.T) {
 	middleWare, _, _, err := InitTestMiddlewareWithoutMetadata(t,
 		"https://samltest.id/idp/profile/SAML2/Redirect/SSO",
 		"https://samltest.id/saml/idp",
-		"file://testdata/samlkratos.crt",
+		"file://testdata/idp_cert.pem",
 		"https://samltest.id/idp/profile/SAML2/Redirect/SSO")
 
 	require.NoError(t, err)
@@ -74,7 +74,7 @@ func TestMustParseCertificate(t *testing.T) {
 
 	saml.DestroyMiddlewareIfExists("samlProvider")
 
-	certificateBuffer, err := fetcher.NewFetcher().Fetch("file://testdata/samlkratos.crt")
+	certificateBuffer, err := fetcher.NewFetcher().Fetch("file://testdata/sp_cert.pem")
 	require.NoError(t, err)
 
 	certificate, err := ioutil.ReadAll(certificateBuffer)
@@ -83,13 +83,13 @@ func TestMustParseCertificate(t *testing.T) {
 	cert, err := saml.MustParseCertificate(certificate)
 
 	require.NoError(t, err)
-	assert.Check(t, cert.Issuer.Country[0] == "AU")
-	assert.Check(t, cert.Issuer.Organization[0] == "Internet Widgits Pty Ltd")
-	assert.Check(t, cert.Issuer.Province[0] == "Some-State")
-	assert.Check(t, cert.Subject.Country[0] == "AU")
-	assert.Check(t, cert.Subject.Organization[0] == "Internet Widgits Pty Ltd")
-	assert.Check(t, cert.Subject.Province[0] == "Some-State")
-	assert.Check(t, cert.NotBefore.String() == "2022-02-21 11:08:20 +0000 UTC")
-	assert.Check(t, cert.NotAfter.String() == "2023-02-21 11:08:20 +0000 UTC")
-	assert.Check(t, cert.SerialNumber.String() == "485646075402096403898806020771481121115125312047")
+	assert.Check(t, cert.Issuer.Country[0] == "US")
+	assert.Check(t, cert.Issuer.Organization[0] == "foo")
+	assert.Check(t, cert.Issuer.Province[0] == "GA")
+	assert.Check(t, cert.Subject.Country[0] == "US")
+	assert.Check(t, cert.Subject.Organization[0] == "foo")
+	assert.Check(t, cert.Subject.Province[0] == "GA")
+	assert.Check(t, cert.NotBefore.String() == "2013-10-02 00:08:51 +0000 UTC")
+	assert.Check(t, cert.NotAfter.String() == "2014-10-02 00:08:51 +0000 UTC")
+	assert.Check(t, cert.SerialNumber.String() == "14253244695696570161")
 }

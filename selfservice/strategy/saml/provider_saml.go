@@ -26,7 +26,7 @@ func NewProviderSAML(
 	}
 }
 
-// Translate attributes from saml asseryion into kratos claims
+// Translate attributes from saml assertion into kratos claims
 func (d *ProviderSAML) Claims(ctx context.Context, config *config.Config, attributeSAML samlsp.Attributes, pid string) (*Claims, error) {
 
 	var c ConfigurationCollection

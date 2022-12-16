@@ -2,7 +2,6 @@ package saml_test
 
 import (
 	"encoding/xml"
-	"fmt"
 	"io"
 	"io/ioutil"
 	"net/http"
@@ -75,8 +74,6 @@ func TestXmlMetadataExist(t *testing.T) {
 	assert.NilError(t, err)
 	res, err := NewTestClient(t, nil).Get(ts.URL + "/self-service/methods/saml/metadata/samlProvider")
 	assert.NilError(t, err)
-	body, _ := ioutil.ReadAll(res.Body)
-	fmt.Println(body)
 	assert.Check(t, is.Equal(http.StatusOK, res.StatusCode))
 	assert.Check(t, is.Equal("text/xml", res.Header.Get("Content-Type")))
 }

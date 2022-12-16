@@ -31,7 +31,7 @@ require (
 	github.com/cenkalti/backoff v2.2.1+incompatible
 	github.com/coreos/go-oidc v2.2.1+incompatible
 	github.com/cortesi/modd v0.0.0-20210323234521-b35eddab86cc
-	github.com/crewjam/saml v0.4.6
+	github.com/crewjam/saml v0.4.10
 	github.com/davecgh/go-spew v1.1.1
 	github.com/davidrjonas/semver-cli v0.0.0-20190116233701-ee19a9a0dda6
 	github.com/dgraph-io/ristretto v0.1.1
@@ -44,9 +44,9 @@ require (
 	github.com/go-swagger/go-swagger v0.30.3
 	github.com/gobuffalo/fizz v1.14.4
 	github.com/gobuffalo/httptest v1.5.2
-	github.com/gobuffalo/pop/v6 v6.1.2-0.20230124165254-ec9229dbf7d7
-	github.com/gofrs/uuid v4.3.1+incompatible
-	github.com/golang-jwt/jwt/v4 v4.1.0
+	github.com/gobuffalo/pop/v6 v6.0.8
+	github.com/gofrs/uuid v4.3.0+incompatible
+	github.com/golang-jwt/jwt/v4 v4.4.2
 	github.com/golang/gddo v0.0.0-20190904175337-72a348e765d2
 	github.com/golang/mock v1.6.0
 	github.com/google/go-github/v27 v27.0.1
@@ -59,6 +59,7 @@ require (
 	github.com/hashicorp/golang-lru v0.5.4
 	github.com/imdario/mergo v0.3.13
 	github.com/inhies/go-bytesize v0.0.0-20220417184213-4913239db9cf
+	github.com/instana/testify v1.6.2-0.20200721153833-94b1851f4d65
 	github.com/jarcoal/httpmock v1.0.5
 	github.com/jteeuwen/go-bindata v3.0.7+incompatible
 	github.com/julienschmidt/httprouter v1.3.0
@@ -102,6 +103,7 @@ require (
 	golang.org/x/oauth2 v0.4.0
 	golang.org/x/sync v0.1.0
 	golang.org/x/tools v0.2.0
+	google.golang.org/grpc v1.50.1
 	gotest.tools v2.2.0+incompatible
 )
 
@@ -326,8 +328,7 @@ require (
 	golang.org/x/time v0.1.0 // indirect
 	golang.org/x/xerrors v0.0.0-20220907171357-04be3eba64a2 // indirect
 	google.golang.org/appengine v1.6.7 // indirect
-	google.golang.org/genproto v0.0.0-20221227171554-f9683d7f8bef // indirect
-	google.golang.org/grpc v1.52.0 // indirect
+	google.golang.org/genproto v0.0.0-20221025140454-527a21cfbd71 // indirect
 	google.golang.org/protobuf v1.28.1 // indirect
 	gopkg.in/alecthomas/kingpin.v2 v2.2.6 // indirect
 	gopkg.in/alexcesaro/quotedprintable.v3 v3.0.0-20150716171945-2caba252f4dc // indirect

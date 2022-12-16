@@ -135,7 +135,7 @@ func NewStrategy(d registrationStrategyDependencies) *Strategy {
 
 // We indicate here that when the ACS endpoint receives a POST request, we call the handleCallback method to process it
 func (s *Strategy) setRoutes(r *x.RouterPublic) {
-	wrappedHandleCallback := strategy.IsDisabled(s.d, s.ID().String(), s.handleCallback)
+	wrappedHandleCallback := strategy.IsDisabled(s.d, s.ID().String(), s.HandleCallback)
 	if handle, _, _ := r.Lookup("POST", RouteAcs); handle == nil {
 		r.POST(RouteAcs, wrappedHandleCallback)
 	} // ACS SUPPORT
@@ -256,18 +256,20 @@ func (s *Strategy) validateCallback(w http.ResponseWriter, r *http.Request) (flo
 }
 
 // Handle /selfservice/methods/saml/acs/:provider | Receive SAML response, parse the attributes and start auth flow
-func (s *Strategy) handleCallback(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+func (s *Strategy) HandleCallback(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	// We get the provider ID form the URL
 	pid := ps.ByName("provider")
 
 	if err := r.ParseForm(); err != nil {
 		s.d.SelfServiceErrorManager().Forward(r.Context(), w, r, s.handleError(w, r, nil, pid, nil, err))
+		return
 	}
 
 	req, _, err := s.validateCallback(w, r)
 	if err != nil {
 		if req != nil {
 			s.forwardError(w, r, s.handleError(w, r, req, pid, nil, err))
+			return
 		} else {
 			s.d.SelfServiceErrorManager().Forward(r.Context(), w, r, s.handleError(w, r, nil, pid, nil, err))
 		}
@@ -277,13 +279,17 @@ func (s *Strategy) handleCallback(w http.ResponseWriter, r *http.Request, ps htt
 	m, err := GetMiddleware(pid)
 	if err != nil {
 		s.forwardError(w, r, err)
+		return
 	}
 
 	// We get the possible SAML request IDs
 	possibleRequestIDs := GetPossibleRequestIDs(r, *m)
+
+	// We parse the SAML Response to get the SAML Assertion
 	assertion, err := m.ServiceProvider.ParseResponse(r, possibleRequestIDs)
 	if err != nil {
 		s.forwardError(w, r, err)
+		return
 	}
 
 	// We get the user's attributes from the SAML Response (assertion)
@@ -313,6 +319,7 @@ func (s *Strategy) handleCallback(w http.ResponseWriter, r *http.Request, ps htt
 		if ff, err := s.processLoginOrRegister(w, r, a, provider, claims); err != nil {
 			if ff != nil {
 				s.forwardError(w, r, err)
+				return
 			}
 			s.forwardError(w, r, err)
 		}

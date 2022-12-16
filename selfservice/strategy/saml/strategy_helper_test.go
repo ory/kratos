@@ -23,7 +23,6 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/tidwall/gjson"
-	"gotest.tools/golden"
 
 	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/identity"
@@ -103,10 +102,11 @@ func InitTestMiddleware(t *testing.T, idpInformation map[string]string) (*samlsp
 	ts, _ := testhelpers.NewKratosServerWithRouters(t, reg, routerP, routerA)
 
 	attributesMap := make(map[string]string)
-	attributesMap["id"] = "mail"
+	attributesMap["id"] = "urn:oid:1.3.6.1.4.1.5923.1.1.1.6"
 	attributesMap["firstname"] = "givenName"
 	attributesMap["lastname"] = "sn"
-	attributesMap["email"] = "mail"
+	attributesMap["email"] = "urn:oid:1.3.6.1.4.1.5923.1.1.1.6"
+	attributesMap["groups"] = "urn:oid:1.3.6.1.4.1.5923.1.1.1.1"
 
 	// Initiates the service provider
 	ViperSetProviderConfig(
@@ -116,8 +116,8 @@ func InitTestMiddleware(t *testing.T, idpInformation map[string]string) (*samlsp
 			ID:             "samlProvider",
 			Label:          "samlProviderLabel",
 			Provider:       "generic",
-			PublicCertPath: "file://testdata/myservice.cert",
-			PrivateKeyPath: "file://testdata/myservice.key",
+			PublicCertPath: "file://testdata/sp_cert.pem",
+			PrivateKeyPath: "file://testdata/sp_key.pem",
 			Mapper:         "file://testdata/saml.jsonnet",
 			AttributesMap:  attributesMap,
 			IDPInformation: idpInformation,
@@ -129,15 +129,15 @@ func InitTestMiddleware(t *testing.T, idpInformation map[string]string) (*samlsp
 	conf.MustSet(context.Background(), config.HookStrategyKey(config.ViperKeySelfServiceRegistrationAfter,
 		identity.CredentialsTypeSAML.String()), []config.SelfServiceHook{{Name: "session"}})
 
-	t.Logf("Kratos Public URL: %s", ts.URL)
+	// t.Logf("Kratos Public URL: %s", ts.URL)
 
 	// Instantiates the MiddleWare
 	_, err := NewTestClient(t, nil).Get(ts.URL + "/self-service/methods/saml/metadata/samlProvider")
 	require.NoError(t, err)
 	middleware, err := saml.GetMiddleware("samlProvider")
 	require.NoError(t, err)
-	middleware.ServiceProvider.Key = mustParsePrivateKey(golden.Get(t, "key.pem")).(*rsa.PrivateKey)
-	middleware.ServiceProvider.Certificate = mustParseCertificate(golden.Get(t, "cert.pem"))
+	//middleware.ServiceProvider.Key = mustParsePrivateKey(golden.Get(t, "sp_key.pem")).(*rsa.PrivateKey)
+	//middleware.ServiceProvider.Certificate = mustParseCertificate(golden.Get(t, "sp_cert.pem"))
 
 	return middleware, strategy, ts, err
 }

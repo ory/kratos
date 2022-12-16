@@ -12,6 +12,7 @@ local claims = {
       // Therefore we only return the email if it (a) exists and (b) is marked verified
       // by Discord.
       [if "email" in claims && claims.email_verified then "email" else null]: claims.email,
+      [if "groups" in claims then "groups" else null]: claims.groups,
     },
   },
 }

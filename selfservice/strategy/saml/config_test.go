@@ -225,7 +225,7 @@ func TestAttributesMapWithAnExtraField(t *testing.T) {
 	idpInformation := make(map[string]string)
 	idpInformation["idp_sso_url"] = "https://samltest.id/idp/profile/SAML2/Redirect/SSO"
 	idpInformation["idp_entity_id"] = "https://samltest.id/saml/idp"
-	idpInformation["idp_certificate_path"] = "file://testdata/samlkratos.crt"
+	idpInformation["idp_certificate_path"] = "file://testdata/idp_cert.pem"
 	idpInformation["idp_logout_url"] = "https://samltest.id/idp/profile/SAML2/Redirect/SSO"
 
 	// Initiates the service provider
@@ -235,8 +235,8 @@ func TestAttributesMapWithAnExtraField(t *testing.T) {
 		saml.Configuration{
 			ID:             "samlProvider",
 			Label:          "samlProviderLabel",
-			PublicCertPath: "file://testdata/myservice.cert",
-			PrivateKeyPath: "file://testdata/myservice.key",
+			PublicCertPath: "file://testdata/sp_cert.pem",
+			PrivateKeyPath: "file://testdata/sp_key.pem",
 			Mapper:         "file://testdata/saml.jsonnet",
 			AttributesMap:  attributesMap,
 			IDPInformation: idpInformation,
