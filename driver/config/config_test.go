@@ -14,6 +14,7 @@ import (
 	"net/url"
 	"os"
 	"path/filepath"
+	"strings"
 	"sync"
 	"testing"
 	"time"
@@ -1042,14 +1043,35 @@ func TestIdentitySchemaValidation(t *testing.T) {
 					marshalAndWrite(t, ctx, tmpConfig, i)
 				}(t, ctx, tmpConfig, i)
 
-				select {
-				case <-ctx.Done():
-					panic("the test could not complete as the context timed out before the file watcher updated")
-				case <-c:
-					lastHook, err := hook.LastEntry().String()
-					assert.NoError(t, err)
+				go func() {
+					for range c {
+						// If we don't drain c the sender will block
+					}
+				}()
 
-					assert.Contains(t, lastHook, "The changed identity schema configuration is invalid and could not be loaded.")
+				// There are a bunch of log messages beeing logged. We are looking for a specific one.
+				timeout := time.After(time.Millisecond * 500)
+			outer:
+				for {
+					for _, v := range hook.AllEntries() {
+						s, err := v.String()
+						if err != nil {
+							t.Errorf("Unexpected Error: %s", err.Error())
+							continue
+						}
+
+						if strings.Contains(s, "The changed identity schema configuration is invalid and could not be loaded.") {
+							break outer
+						}
+					}
+
+					select {
+					case <-ctx.Done():
+						panic("the test could not complete as the context timed out before the file watcher updated")
+					case <-timeout:
+						t.Fatal("Expected log line was not encountered within specified timeout")
+					default: //nothing
+					}
 				}
 
 				wg.Wait()
