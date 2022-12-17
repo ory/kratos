@@ -1041,7 +1041,7 @@ func TestIdentitySchemaValidation(t *testing.T) {
 				for !success {
 					for _, v := range hook.AllEntries() {
 						s, err := v.String()
-						assert.NoErrorf(t, err, "Unexpected Error")
+						require.NoError(t, err)
 						success = success || strings.Contains(s, "The changed identity schema configuration is invalid and could not be loaded.")
 					}
 
