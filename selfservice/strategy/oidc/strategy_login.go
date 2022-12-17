@@ -160,7 +160,7 @@ func (s *Strategy) processLogin(w http.ResponseWriter, r *http.Request, a *login
 			}
 
 			i.Credentials[s.ID()] = *c
-			if err = s.d.LoginHookExecutor().PostLoginHook(w, r, node.OpenIDConnectGroup, a, i, sess); err != nil {
+			if err = s.d.LoginHookExecutor().PostLoginHook(w, r, identity.CredentialsTypeOIDC, node.OpenIDConnectGroup, a, i, sess); err != nil {
 				return nil, s.handleError(w, r, a, provider.Config().ID, nil, err)
 			}
 			return nil, nil
