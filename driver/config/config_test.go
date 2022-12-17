@@ -1042,7 +1042,7 @@ func TestIdentitySchemaValidation(t *testing.T) {
 					for _, v := range hook.AllEntries() {
 						s, err := v.String()
 						assert.NoErrorf(t, err, "Unexpected Error")
-						success = strings.Contains(s, "The changed identity schema configuration is invalid and could not be loaded.")
+						success = success || strings.Contains(s, "The changed identity schema configuration is invalid and could not be loaded.")
 					}
 
 					select {
