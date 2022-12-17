@@ -6,10 +6,10 @@ package migratest
 import (
 	"context"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
+	"sync"
 	"testing"
 	"time"
 
@@ -97,8 +97,10 @@ func TestMigrations(t *testing.T) {
 
 	var test = func(db string, c *pop.Connection) func(t *testing.T) {
 		return func(t *testing.T) {
+			t.Parallel()
+
 			ctx := context.Background()
-			l := logrusx.New("", "", logrusx.ForceLevel(logrus.DebugLevel))
+			l := logrusx.New("", "", logrusx.ForceLevel(logrus.ErrorLevel))
 
 			t.Logf("Cleaning up before migrations")
 			_ = os.Remove("../migrations/sql/schema.sql")
@@ -131,6 +133,8 @@ func TestMigrations(t *testing.T) {
 			})
 
 			t.Run("suite=fixtures", func(t *testing.T) {
+				wg := &sync.WaitGroup{}
+
 				d, err := driver.New(
 					context.Background(),
 					os.Stderr,
@@ -149,6 +153,10 @@ func TestMigrations(t *testing.T) {
 				require.NoError(t, err)
 
 				t.Run("case=identity", func(t *testing.T) {
+					wg.Add(1)
+					defer wg.Done()
+					t.Parallel()
+
 					ids, err := d.PrivilegedIdentityPool().ListIdentities(context.Background(), 0, 1000)
 					require.NoError(t, err)
 					require.NotEmpty(t, ids)
@@ -157,7 +165,7 @@ func TestMigrations(t *testing.T) {
 					for _, id := range ids {
 						found = append(found, id.ID.String())
 						actual, err := d.PrivilegedIdentityPool().GetIdentityConfidential(context.Background(), id.ID)
-						require.NoError(t, err)
+						require.NoError(t, err, "ID: %s", id.ID)
 
 						for _, a := range actual.VerifiableAddresses {
 							CompareWithFixture(t, a, "identity_verification_address", a.ID.String())
@@ -177,6 +185,10 @@ func TestMigrations(t *testing.T) {
 				})
 
 				t.Run("case=verification_token", func(t *testing.T) {
+					wg.Add(1)
+					defer wg.Done()
+					t.Parallel()
+
 					var ids []link.VerificationToken
 
 					require.NoError(t, c.All(&ids))
@@ -188,6 +200,10 @@ func TestMigrations(t *testing.T) {
 				})
 
 				t.Run("case=session", func(t *testing.T) {
+					wg.Add(1)
+					defer wg.Done()
+					t.Parallel()
+
 					var ids []session.Session
 					require.NoError(t, c.Select("id").All(&ids))
 					require.NotEmpty(t, ids)
@@ -204,6 +220,10 @@ func TestMigrations(t *testing.T) {
 				})
 
 				t.Run("case=login", func(t *testing.T) {
+					wg.Add(1)
+					defer wg.Done()
+					t.Parallel()
+
 					var ids []login.Flow
 					require.NoError(t, c.Select("id").All(&ids))
 					require.NotEmpty(t, ids)
@@ -219,6 +239,10 @@ func TestMigrations(t *testing.T) {
 				})
 
 				t.Run("case=registration", func(t *testing.T) {
+					wg.Add(1)
+					defer wg.Done()
+					t.Parallel()
+
 					var ids []registration.Flow
 					require.NoError(t, c.Select("id").All(&ids))
 					require.NotEmpty(t, ids)
@@ -234,6 +258,10 @@ func TestMigrations(t *testing.T) {
 				})
 
 				t.Run("case=settings_flow", func(t *testing.T) {
+					wg.Add(1)
+					defer wg.Done()
+					t.Parallel()
+
 					var ids []settings.Flow
 					require.NoError(t, c.Select("id").All(&ids))
 					require.NotEmpty(t, ids)
@@ -249,6 +277,10 @@ func TestMigrations(t *testing.T) {
 				})
 
 				t.Run("case=recovery_flow", func(t *testing.T) {
+					wg.Add(1)
+					defer wg.Done()
+					t.Parallel()
+
 					var ids []recovery.Flow
 					require.NoError(t, c.Select("id").All(&ids))
 					require.NotEmpty(t, ids)
@@ -264,6 +296,10 @@ func TestMigrations(t *testing.T) {
 				})
 
 				t.Run("case=verification_flow", func(t *testing.T) {
+					wg.Add(1)
+					defer wg.Done()
+					t.Parallel()
+
 					var ids []verification.Flow
 					require.NoError(t, c.Select("id").All(&ids))
 					require.NotEmpty(t, ids)
@@ -279,6 +315,10 @@ func TestMigrations(t *testing.T) {
 				})
 
 				t.Run("case=recovery_token", func(t *testing.T) {
+					wg.Add(1)
+					defer wg.Done()
+					t.Parallel()
+
 					var ids []link.RecoveryToken
 					require.NoError(t, c.All(&ids))
 					require.NotEmpty(t, ids)
@@ -292,6 +332,10 @@ func TestMigrations(t *testing.T) {
 				})
 
 				t.Run("case=recovery_code", func(t *testing.T) {
+					wg.Add(1)
+					defer wg.Done()
+					t.Parallel()
+
 					var ids []code.RecoveryCode
 					require.NoError(t, c.All(&ids))
 					require.NotEmpty(t, ids)
@@ -305,6 +349,10 @@ func TestMigrations(t *testing.T) {
 				})
 
 				t.Run("suite=constraints", func(t *testing.T) {
+					// This is not really a parallel test, but we have to mark it parallel so the other tests run first.
+					t.Parallel()
+					wg.Wait()
+
 					sr, err := d.SettingsFlowPersister().GetSettingsFlow(context.Background(), x.ParseUUID("a79bfcf1-68ae-49de-8b23-4f96921b8341"))
 					require.NoError(t, err)
 
@@ -312,7 +360,7 @@ func TestMigrations(t *testing.T) {
 
 					_, err = d.SettingsFlowPersister().GetSettingsFlow(context.Background(), x.ParseUUID("a79bfcf1-68ae-49de-8b23-4f96921b8341"))
 					require.Error(t, err)
-					require.True(t, errors.Is(err, sqlcon.ErrNoRows))
+					require.ErrorIs(t, err, sqlcon.ErrNoRows)
 				})
 			})
 
