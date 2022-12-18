@@ -660,6 +660,11 @@
     },
     "/admin/recovery/code": {
       "post": {
+        "security": [
+          {
+            "oryAccessToken": []
+          }
+        ],
         "description": "This endpoint creates a recovery code which should be given to the user in order for them to recover\n(or activate) their account.",
         "consumes": [
           "application/json"
@@ -715,6 +720,11 @@
     },
     "/admin/recovery/link": {
       "post": {
+        "security": [
+          {
+            "oryAccessToken": []
+          }
+        ],
         "description": "This endpoint creates a recovery link which should be given to the user in order for them to recover\n(or activate) their account.",
         "consumes": [
           "application/json"
@@ -902,6 +912,11 @@
         }
       },
       "delete": {
+        "security": [
+          {
+            "oryAccessToken": []
+          }
+        ],
         "description": "Calling this endpoint deactivates the specified session. Session data is not deleted.",
         "schemes": [
           "http",
