@@ -5,7 +5,7 @@
 
 **Table of Contents**
 
-- [ (2022-12-17)](#2022-12-17)
+- [ (2022-12-18)](#2022-12-18)
   - [Breaking Changes](#breaking-changes)
     - [Bug Fixes](#bug-fixes)
     - [Features](#features)
@@ -285,7 +285,7 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# [](https://github.com/ory/kratos/compare/v0.11.0...v) (2022-12-17)
+# [](https://github.com/ory/kratos/compare/v0.11.0...v) (2022-12-18)
 
 ## Breaking Changes
 
@@ -303,8 +303,18 @@ The `/admin/courier/messages` endpoint now uses `keysetpagination` instead.
   [#2922](https://github.com/ory/kratos/issues/2922)
   ([#2934](https://github.com/ory/kratos/issues/2934))
   ([1ed6839](https://github.com/ory/kratos/commit/1ed6839369baeecc99610d9f04d78dfee53ad72a))
+- Dont reset to false ([#2965](https://github.com/ory/kratos/issues/2965))
+  ([ae8ad7b](https://github.com/ory/kratos/commit/ae8ad7be5b6f3dbb9142bee55448a71c7df44e52))
 - Flaky test now stable
   ([4e5dcd0](https://github.com/ory/kratos/commit/4e5dcd0df6baffda8b15eda37fd7a247793f3297))
+- Update pquerna/otp to fix TOTP URL encoding
+  ([#2951](https://github.com/ory/kratos/issues/2951))
+  ([7248636](https://github.com/ory/kratos/commit/72486368f5403c02772e4a99ed9edc34e84c217c)):
+
+  v1.4.0 fixes generating TOTP URLs. Query params now use %20 instead of + to
+  encode spaces. + was not correctly interpreted by some Android authenticator
+  apps, and would show up in the issuer name, e.g. "My+Issuer" instead of "My
+  Issuer".
 
 ### Features
 
