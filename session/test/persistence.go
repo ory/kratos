@@ -237,7 +237,7 @@ func TestPersister(ctx context.Context, conf *config.Config, p interface {
 					for _, s := range actual {
 						actualSessionIds = append(actualSessionIds, s.ID)
 					}
-					assert.Equal(t, len(tc.expectedSessionIds), len(actual))
+
 					assert.Equal(t, int64(len(tc.expectedSessionIds)), total)
 					assert.ElementsMatch(t, tc.expectedSessionIds, actualSessionIds)
 				})

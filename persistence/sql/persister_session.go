@@ -81,7 +81,7 @@ func (p *Persister) ListSessions(ctx context.Context, active *bool, paginatorOpt
 			if *active {
 				q.Where("active = ? AND expires_at >= ?", *active, time.Now().UTC())
 			} else {
-				q.Where("active = ? OR expires_at < ?", *active, time.Now().UTC())
+				q.Where("(active = ? OR expires_at < ?)", *active, time.Now().UTC())
 			}
 		}
 
@@ -142,7 +142,7 @@ func (p *Persister) ListSessionsByIdentity(ctx context.Context, iID uuid.UUID, a
 			if *active {
 				q.Where("active = ? AND expires_at >= ?", *active, time.Now().UTC())
 			} else {
-				q.Where("active = ? OR expires_at < ?", *active, time.Now().UTC())
+				q.Where("(active = ? OR expires_at < ?)", *active, time.Now().UTC())
 			}
 		}
 		if len(expandables) > 0 {
