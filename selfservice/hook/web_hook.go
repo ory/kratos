@@ -8,6 +8,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"time"
 
 	"github.com/pkg/errors"
 	"github.com/tidwall/gjson"
@@ -282,6 +283,8 @@ func (e *WebHook) execute(ctx context.Context, data *templateContext) error {
 	}
 
 	errChan := make(chan error, 1)
+	e.deps.Logger().WithRequest(req.Request).Info("Dispatching webhook")
+	t0 := time.Now()
 	go func() {
 		defer close(errChan)
 
@@ -307,9 +310,16 @@ func (e *WebHook) execute(ctx context.Context, data *templateContext) error {
 	}()
 
 	if gjson.GetBytes(e.conf, "response.ignore").Bool() {
+		traceID, spanID := span.SpanContext().TraceID(), span.SpanContext().SpanID()
 		go func() {
-			err := <-errChan
-			e.deps.Logger().WithError(err).Warning("A web hook request failed but the error was ignored because the configuration indicated that the upstream response should be ignored.")
+			if err := <-errChan; err != nil {
+				e.deps.Logger().WithField("otel", map[string]string{
+					"trace_id": traceID.String(),
+					"span_id":  spanID.String(),
+				}).WithError(err).Warning("Webhook request failed but the error was ignored because the configuration indicated that the upstream response should be ignored.")
+			} else {
+				e.deps.Logger().WithField("duration", time.Since(t0)).Info("Webhook request succeeded")
+			}
 		}()
 		return nil
 	}
@@ -323,7 +333,7 @@ func parseWebhookResponse(resp *http.Response) (err error) {
 	}
 	var hookResponse rawHookResponse
 	if err := json.NewDecoder(resp.Body).Decode(&hookResponse); err != nil {
-		return errors.Wrap(err, "hook response could not be unmarshalled properly from JSON")
+		return errors.Wrap(err, "webhook response could not be unmarshalled properly from JSON")
 	}
 
 	var validationErrs []*schema.ValidationError
@@ -343,11 +353,11 @@ func parseWebhookResponse(resp *http.Response) (err error) {
 				Context: detail.Context,
 			})
 		}
-		validationErrs = append(validationErrs, schema.NewHookValidationError(msg.InstancePtr, "a web-hook target returned an error", messages))
+		validationErrs = append(validationErrs, schema.NewHookValidationError(msg.InstancePtr, "a webhook target returned an error", messages))
 	}
 
 	if len(validationErrs) == 0 {
-		return errors.New("error while parsing hook response: got no validation errors")
+		return errors.New("error while parsing webhook response: got no validation errors")
 	}
 
 	return schema.NewValidationListError(validationErrs)
