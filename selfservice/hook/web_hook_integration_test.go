@@ -842,10 +842,7 @@ func TestDisallowPrivateIPRanges(t *testing.T) {
 }
 
 func TestAsyncWebhook(t *testing.T) {
-	conf, reg := internal.NewFastRegistryWithMocks(t)
-	_ = conf
-	// conf.MustSet(ctx, config.ViperKeyClientHTTPNoPrivateIPRanges, true)
-	// conf.MustSet(ctx, config.ViperKeyClientHTTPPrivateIPExceptionURLs, []string{webhookReceiver.URL})
+	_, reg := internal.NewFastRegistryWithMocks(t)
 	logger := logrusx.New("kratos", "test")
 	logHook := new(test.Hook)
 	logger.Logger.Hooks.Add(logHook)
@@ -866,6 +863,7 @@ func TestAsyncWebhook(t *testing.T) {
 	}
 	incomingCtx, incomingCancel := context.WithCancel(context.Background())
 	if deadline, ok := t.Deadline(); ok {
+		// cancel this context one second before test timeout for clean shutdown
 		var cleanup context.CancelFunc
 		incomingCtx, cleanup = context.WithDeadline(incomingCtx, deadline.Add(-time.Second))
 		defer cleanup()
@@ -881,7 +879,6 @@ func TestAsyncWebhook(t *testing.T) {
 		w.Write([]byte("ok"))
 	}))
 	t.Cleanup(webhookReceiver.Close)
-	// defer webhookReceiver.Close()
 
 	wh := hook.NewWebHook(&whDeps, json.RawMessage(fmt.Sprintf(`
 		{
@@ -902,7 +899,7 @@ func TestAsyncWebhook(t *testing.T) {
 	}
 	// at this point, a goroutine is in the middle of the call to our test handler and waiting for a response
 	incomingCancel() // simulate the incoming Kratos request having finished
-	testFor := time.After(200 * time.Millisecond)
+	timeout := time.After(200 * time.Millisecond)
 	for done := false; !done; {
 		if last := logHook.LastEntry(); last != nil {
 			msg, err := last.String()
@@ -911,7 +908,7 @@ func TestAsyncWebhook(t *testing.T) {
 		}
 
 		select {
-		case <-testFor:
+		case <-timeout:
 			done = true
 		case <-time.After(50 * time.Millisecond):
 			// continue loop
@@ -919,16 +916,17 @@ func TestAsyncWebhook(t *testing.T) {
 	}
 	logHook.Reset()
 	close(blockHandlerOnExit)
-	testFor = time.After(200 * time.Millisecond)
-	for done := false; !done; {
+	timeout = time.After(200 * time.Millisecond)
+	for {
 		if last := logHook.LastEntry(); last != nil {
 			msg, err := last.String()
 			require.NoError(t, err)
 			assert.Contains(t, msg, "Webhook request succeeded")
+			break
 		}
 		select {
-		case <-testFor:
-			done = true
+		case <-timeout:
+			t.Fatal("timed out waiting for successful webhook completion")
 		case <-time.After(50 * time.Millisecond):
 			// continue loop
 		}
