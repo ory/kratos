@@ -14,6 +14,7 @@ func (c *courier) DispatchMessage(ctx context.Context, msg Message) error {
 		c.deps.Logger().
 			WithError(err).
 			WithField("message_id", msg.ID).
+			WithField("message_nid", msg.NID).
 			Error(`Unable to increment the message's "send_count" field`)
 		return err
 	}
@@ -35,12 +36,14 @@ func (c *courier) DispatchMessage(ctx context.Context, msg Message) error {
 		c.deps.Logger().
 			WithError(err).
 			WithField("message_id", msg.ID).
+			WithField("message_nid", msg.NID).
 			Error(`Unable to set the message status to "sent".`)
 		return err
 	}
 
 	c.deps.Logger().
 		WithField("message_id", msg.ID).
+		WithField("message_nid", msg.NID).
 		WithField("message_type", msg.Type).
 		WithField("message_template_type", msg.TemplateType).
 		WithField("message_subject", msg.Subject).
@@ -66,12 +69,14 @@ func (c *courier) DispatchQueue(ctx context.Context) error {
 				c.deps.Logger().
 					WithError(err).
 					WithField("message_id", msg.ID).
+					WithField("message_nid", msg.NID).
 					Error(`Unable to set the retried message's status to "abandoned".`)
 				return err
 			}
 			// Skip the message
 			c.deps.Logger().
 				WithField("message_id", msg.ID).
+				WithField("message_nid", msg.NID).
 				Warnf(`Message was abandoned because it did not deliver after %d attempts`, msg.SendCount)
 
 		} else if err := c.DispatchMessage(ctx, msg); err != nil {
@@ -80,6 +85,7 @@ func (c *courier) DispatchQueue(ctx context.Context) error {
 				c.deps.Logger().
 					WithError(err).
 					WithField("message_id", msg.ID).
+					WithField("message_nid", msg.NID).
 					Error(`Unable to record failure log entry.`)
 			}
 
@@ -91,6 +97,7 @@ func (c *courier) DispatchQueue(ctx context.Context) error {
 					c.deps.Logger().
 						WithError(err).
 						WithField("message_id", replace.ID).
+						WithField("message_nid", replace.NID).
 						Error(`Unable to reset the failed message's status to "queued".`)
 				}
 			}
@@ -100,6 +107,7 @@ func (c *courier) DispatchQueue(ctx context.Context) error {
 			c.deps.Logger().
 				WithError(err).
 				WithField("message_id", msg.ID).
+				WithField("message_nid", msg.NID).
 				Error(`Unable to record success log entry.`)
 			// continue with execution, as the message was successfully dispatched
 		}
