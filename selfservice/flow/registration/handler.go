@@ -290,7 +290,16 @@ func (h *Handler) createBrowserRegistrationFlow(w http.ResponseWriter, r *http.R
 			return
 		}
 
-		http.Redirect(w, r, h.d.Config().SelfServiceBrowserDefaultReturnTo(r.Context()).String(), http.StatusSeeOther)
+		returnTo, redirErr := x.SecureRedirectTo(r, h.d.Config().SelfServiceBrowserDefaultReturnTo(r.Context()),
+			x.SecureRedirectAllowSelfServiceURLs(h.d.Config().SelfPublicURL(r.Context())),
+			x.SecureRedirectAllowURLs(h.d.Config().SelfServiceBrowserAllowedReturnToDomains(r.Context())),
+		)
+		if redirErr != nil {
+			h.d.SelfServiceErrorManager().Forward(r.Context(), w, r, redirErr)
+			return
+		}
+
+		http.Redirect(w, r, returnTo.String(), http.StatusSeeOther)
 		return
 	}
 
