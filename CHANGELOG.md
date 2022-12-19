@@ -5,7 +5,7 @@
 
 **Table of Contents**
 
-- [ (2022-12-18)](#2022-12-18)
+- [ (2022-12-19)](#2022-12-19)
   - [Breaking Changes](#breaking-changes)
     - [Bug Fixes](#bug-fixes)
     - [Features](#features)
@@ -285,7 +285,7 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# [](https://github.com/ory/kratos/compare/v0.11.0...v) (2022-12-18)
+# [](https://github.com/ory/kratos/compare/v0.11.0...v) (2022-12-19)
 
 ## Breaking Changes
 
@@ -307,6 +307,9 @@ The `/admin/courier/messages` endpoint now uses `keysetpagination` instead.
   ([ae8ad7b](https://github.com/ory/kratos/commit/ae8ad7be5b6f3dbb9142bee55448a71c7df44e52))
 - Flaky test now stable
   ([4e5dcd0](https://github.com/ory/kratos/commit/4e5dcd0df6baffda8b15eda37fd7a247793f3297))
+- Respect `return_to` URL parameter in registration flow when the user is
+  already registered ([#2957](https://github.com/ory/kratos/issues/2957))
+  ([3462ce1](https://github.com/ory/kratos/commit/3462ce1512d03529b613421a69bcf4c1d5e98e08))
 - Update pquerna/otp to fix TOTP URL encoding
   ([#2951](https://github.com/ory/kratos/issues/2951))
   ([7248636](https://github.com/ory/kratos/commit/72486368f5403c02772e4a99ed9edc34e84c217c)):
