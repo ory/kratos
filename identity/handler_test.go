@@ -1023,7 +1023,12 @@ func TestHandler(t *testing.T) {
 			})
 			t.Run("type=remove webauthn passwordless type/"+name, func(t *testing.T) {
 				i := createIdentities(map[identity.CredentialsType]string{identity.CredentialsTypeWebAuthn: `{"credentials":[{"id":"THTndqZP5Mjvae1BFvJMaMfEMm7O7HE1ju+7PBaYA7Y=","added_at":"2022-12-16T14:11:55Z","public_key":"pQECAyYgASFYIMJLQhJxQRzhnKPTcPCUODOmxYDYo2obrm9bhp5lvSZ3IlggXjhZvJaPUqF9PXqZqTdWYPR7R+b2n/Wi+IxKKXsS4rU=","display_name":"test","authenticator":{"aaguid":"rc4AAjW8xgpkiwsl8fBVAw==","sign_count":0,"clone_warning":false},"is_passwordless":true,"attestation_type":"none"}],"user_handle":"Ef5JiMpMRwuzauWs/9J0gQ=="}`})(t)
-				remove(t, ts, "/identities/"+i.ID.String()+"/credential/webauthn", http.StatusBadRequest)
+				remove(t, ts, "/identities/"+i.ID.String()+"/credential/webauthn", http.StatusNoContent)
+				// Check that webauthn has not been deleted
+				res := get(t, ts, "/identities/"+i.ID.String(), http.StatusOK)
+				assert.EqualValues(t, i.ID.String(), res.Get("id").String(), "%s", res.Raw)
+				assert.True(t, res.Get("credentials").Exists())
+				assert.True(t, res.Get("credentials").Get("webauthn").Exists())
 			})
 			for ct, ctConf := range map[identity.CredentialsType]string{
 				identity.CredentialsTypeLookup:   `{"recovery_codes": [{"code": "aaa"}]}`,

@@ -685,9 +685,9 @@ func (h *Handler) patch(w http.ResponseWriter, r *http.Request, ps httprouter.Pa
 
 // Delete Credential Parameters
 //
-// swagger:parameters deleteCredential
+// swagger:parameters deleteIdentityCredential
 // nolint:deadcode,unused
-type deleteCredential struct {
+type deleteIdentityCredential struct {
 	// ID is the identity's ID.
 	//
 	// required: true
@@ -702,7 +702,7 @@ type deleteCredential struct {
 	Type string `json:"type"`
 }
 
-// swagger:route DELETE /admin/identities/{id}/credential/{type} identity deleteCredential
+// swagger:route DELETE /admin/identities/{id}/credential/{type} identity deleteIdentityCredential
 //
 // # Delete a credential for a specific identity
 //
@@ -738,6 +738,10 @@ func (h *Handler) deleteCredential(w http.ResponseWriter, r *http.Request, ps ht
 	}
 
 	switch cred.Type {
+	case CredentialsTypeLookup:
+		fallthrough
+	case CredentialsTypeTOTP:
+		identity.DeleteCredentialsType(cred.Type)
 	case CredentialsTypeWebAuthn:
 		var cc CredentialsWebAuthnConfig
 		if err := json.Unmarshal(cred.Config, &cc); err != nil {
@@ -745,22 +749,26 @@ func (h *Handler) deleteCredential(w http.ResponseWriter, r *http.Request, ps ht
 			return
 		}
 
-		var wasPasswordless bool
-		for _, cred := range cc.Credentials {
+		updated := make([]CredentialWebAuthn, 0)
+		for k, cred := range cc.Credentials {
 			if cred.IsPasswordless {
-				wasPasswordless = true
+				updated = append(updated, cc.Credentials[k])
 			}
 		}
 
-		count, err := h.r.IdentityManager().CountActiveFirstFactorCredentials(r.Context(), identity)
-		if err != nil {
-			h.r.Writer().WriteError(w, r, errors.WithStack(herodot.ErrBadRequest.WithWrap(err)))
+		if len(updated) == 0 {
+			identity.DeleteCredentialsType(CredentialsTypeWebAuthn)
+			break
 		}
 
-		if count < 2 && wasPasswordless {
-			h.r.Writer().WriteError(w, r, errors.WithStack(herodot.ErrBadRequest.WithReason("Unable to remove this security key because it would lock this user out of his account")))
+		cc.Credentials = updated
+		cred.Config, err = json.Marshal(cc)
+		if err != nil {
+			h.r.Writer().WriteError(w, r, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("Unable to encode identity credentials.").WithDebug(err.Error())))
 			return
 		}
+
+		identity.SetCredentials(CredentialsTypeWebAuthn, *cred)
 	case CredentialsTypeOIDC:
 		fallthrough
 	case CredentialsTypePassword:
@@ -768,7 +776,6 @@ func (h *Handler) deleteCredential(w http.ResponseWriter, r *http.Request, ps ht
 		return
 	}
 
-	identity.DeleteCredentialsType(cred.Type)
 	if err := h.r.IdentityManager().Update(
 		r.Context(),
 		identity,
