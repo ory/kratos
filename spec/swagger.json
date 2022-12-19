@@ -549,7 +549,7 @@
           "identity"
         ],
         "summary": "Delete a credential for a specific identity",
-        "operationId": "deleteCredential",
+        "operationId": "deleteIdentityCredential",
         "parameters": [
           {
             "type": "string",

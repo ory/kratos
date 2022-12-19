@@ -3627,7 +3627,7 @@
     "/admin/identities/{id}/credential/{type}": {
       "delete": {
         "description": "Delete an [identity](https://www.ory.sh/docs/kratos/concepts/identity-user-model) credential by its type\nYou can only delete credential types that are not first factor (password, oidc, or webauthn passwordless)",
-        "operationId": "deleteCredential",
+        "operationId": "deleteIdentityCredential",
         "parameters": [
           {
             "description": "ID is the identity's ID.",
