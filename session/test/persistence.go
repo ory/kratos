@@ -210,7 +210,7 @@ func TestPersister(ctx context.Context, conf *config.Config, p interface {
 				t.Run("case=ListSessionsByIdentity - other network", func(t *testing.T) {
 					_, other := testhelpers.NewNetwork(t, ctx, p)
 					actual, total, err := other.ListSessionsByIdentity(ctx, i.ID, nil, 1, 10, uuid.Nil, session.ExpandNothing)
-					require.Error(t, err)
+					require.NoError(t, err)
 					require.Equal(t, int64(0), total)
 					assert.Len(t, actual, 0)
 				})

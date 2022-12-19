@@ -822,7 +822,7 @@ func TestHandlerAdminSessionManagement(t *testing.T) {
 
 				var sessions []Session
 				require.NoError(t, json.NewDecoder(res.Body).Decode(&sessions))
-				require.Equal(t, len(sessions), len(tc.expectedIDs))
+				require.Equal(t, len(tc.expectedIDs), len(sessions))
 
 				for _, id := range tc.expectedIDs {
 					found := false
