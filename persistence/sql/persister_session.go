@@ -78,12 +78,10 @@ func (p *Persister) ListSessions(ctx context.Context, active *bool, paginatorOpt
 	if err := p.Transaction(ctx, func(ctx context.Context, c *pop.Connection) error {
 		q := c.Where("nid = ?", nid)
 		if active != nil {
-			q = q.Where("active = ?", *active)
-
 			if *active {
-				q.Where("expires_at >= ?", time.Now())
+				q.Where("active = ? AND expires_at >= ?", *active, time.Now().UTC())
 			} else {
-				q.Where("expires_at < ?", time.Now())
+				q.Where("active = ? OR expires_at < ?", *active, time.Now().UTC())
 			}
 		}
 
@@ -113,6 +111,7 @@ func (p *Persister) ListSessions(ctx context.Context, active *bool, paginatorOpt
 					return err
 				}
 
+				sess.Active = sess.IsActive()
 				sess.Identity = i
 			}
 		}
@@ -135,22 +134,15 @@ func (p *Persister) ListSessionsByIdentity(ctx context.Context, iID uuid.UUID, a
 	nid := p.NetworkID(ctx)
 
 	if err := p.Transaction(ctx, func(ctx context.Context, c *pop.Connection) error {
-		i, err := p.GetIdentity(ctx, iID)
-		if err != nil {
-			return sqlcon.HandleError(err)
-		}
-
 		q := c.Where("identity_id = ? AND nid = ?", iID, nid)
 		if except != uuid.Nil {
 			q = q.Where("id != ?", except)
 		}
 		if active != nil {
-			q = q.Where("active = ?", *active)
-
 			if *active {
-				q.Where("expires_at >= ?", time.Now())
+				q.Where("active = ? AND expires_at >= ?", *active, time.Now().UTC())
 			} else {
-				q.Where("expires_at < ?", time.Now())
+				q.Where("active = ? OR expires_at < ?", *active, time.Now().UTC())
 			}
 		}
 		if len(expandables) > 0 {
@@ -170,7 +162,13 @@ func (p *Persister) ListSessionsByIdentity(ctx context.Context, iID uuid.UUID, a
 		}
 
 		if expandables.Has(session.ExpandSessionIdentity) {
+			i, err := p.GetIdentity(ctx, iID)
+			if err != nil {
+				return sqlcon.HandleError(err)
+			}
+
 			for _, s := range s {
+				s.Active = s.IsActive()
 				s.Identity = i
 			}
 		}
