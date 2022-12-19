@@ -3841,6 +3841,11 @@
             "description": "errorGeneric"
           }
         },
+        "security": [
+          {
+            "oryAccessToken": []
+          }
+        ],
         "summary": "Create a Recovery Code",
         "tags": [
           "identity"
@@ -3903,6 +3908,11 @@
             "description": "errorGeneric"
           }
         },
+        "security": [
+          {
+            "oryAccessToken": []
+          }
+        ],
         "summary": "Create a Recovery Link",
         "tags": [
           "identity"
@@ -4044,6 +4054,11 @@
             "description": "errorGeneric"
           }
         },
+        "security": [
+          {
+            "oryAccessToken": []
+          }
+        ],
         "summary": "Deactivate a Session",
         "tags": [
           "identity"

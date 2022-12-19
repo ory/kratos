@@ -465,11 +465,14 @@ type disableSession struct {
 //
 //	Schemes: http, https
 //
+//	Security:
+//		oryAccessToken:
+//
 //	Responses:
-//	  204: emptyResponse
-//	  400: errorGeneric
-//	  401: errorGeneric
-//	  default: errorGeneric
+//		204: emptyResponse
+//		400: errorGeneric
+//		401: errorGeneric
+//		default: errorGeneric
 func (h *Handler) disableSession(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	sID, err := uuid.FromString(ps.ByName("id"))
 	if err != nil {

@@ -139,6 +139,9 @@ type recoveryCodeForIdentity struct {
 //
 //	Schemes: http, https
 //
+//	Security:
+//		oryAccessToken:
+//
 //	Responses:
 //		201: recoveryCodeForIdentity
 //		400: errorGeneric
