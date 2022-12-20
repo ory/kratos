@@ -293,6 +293,8 @@ The `/admin/courier/messages` endpoint now uses `keysetpagination` instead.
 
 ### Bug Fixes
 
+- Add missing indexes ([#2973](https://github.com/ory/kratos/issues/2973))
+  ([bbb3995](https://github.com/ory/kratos/commit/bbb399572926bd433928b22764f7b3558bb0c21d))
 - Add missing indexes for identity delete
   ([#2952](https://github.com/ory/kratos/issues/2952))
   ([dc311f9](https://github.com/ory/kratos/commit/dc311f9a9dc0dbb26e2375b3cd4232a4e8cccb61)):
