@@ -288,7 +288,7 @@ func TestPersister(ctx context.Context, conf *config.Config, p interface {
 					require.Equal(t, len(tc.expected), len(actual))
 					require.Equal(t, int64(len(tc.expected)), total)
 					assert.Equal(t, true, nextPage.IsLast())
-					assert.Equal(t, uuid.Nil.String(), nextPage.Token().Encode())
+					assert.Equal(t, actual[len(actual)-1].DefaultPageToken().Encode(), nextPage.Token().Encode())
 					assert.Equal(t, 250, nextPage.Size())
 					for _, es := range tc.expected {
 						found := false
@@ -312,7 +312,7 @@ func TestPersister(ctx context.Context, conf *config.Config, p interface {
 				require.Equal(t, 6, len(actual))
 				require.Equal(t, int64(6), total)
 				assert.Equal(t, true, page.IsLast())
-				assert.Equal(t, uuid.Nil.String(), page.Token().Encode())
+				assert.Equal(t, actual[len(actual)-1].DefaultPageToken().Encode(), page.Token().Encode())
 				assert.Equal(t, 250, page.Size())
 			})
 
@@ -325,7 +325,7 @@ func TestPersister(ctx context.Context, conf *config.Config, p interface {
 				assert.Len(t, firstPageItems, 3)
 
 				assert.Equal(t, false, page1.IsLast())
-				assert.Equal(t, firstPageItems[len(firstPageItems)-1].ID.String(), page1.Token().Encode())
+				assert.Equal(t, firstPageItems[len(firstPageItems)-1].PageToken().Encode(), page1.Token().Encode())
 				assert.Equal(t, 3, page1.Size())
 
 				// Validate secondPageItems page

@@ -537,12 +537,14 @@ func TestHandlerAdminSessionManagement(t *testing.T) {
 		})
 
 		t.Run("list sessions", func(t *testing.T) {
+			expectedPageToken := s.DefaultPageToken().Encode()
+
 			req, _ := http.NewRequest("GET", ts.URL+"/admin/sessions/", nil)
 			res, err := client.Do(req)
 			require.NoError(t, err)
 			assert.Equal(t, http.StatusOK, res.StatusCode)
 			assert.Equal(t, "1", res.Header.Get("X-Total-Count"))
-			assert.Equal(t, "</admin/sessions?page_size=250&page_token=00000000-0000-0000-0000-000000000000>; rel=\"first\"", res.Header.Get("Link"))
+			assert.Equal(t, "</admin/sessions?page_size=250&page_token="+expectedPageToken+">; rel=\"first\"", res.Header.Get("Link"))
 
 			var sessions []Session
 			require.NoError(t, json.NewDecoder(res.Body).Decode(&sessions))
@@ -585,12 +587,14 @@ func TestHandlerAdminSessionManagement(t *testing.T) {
 				},
 			} {
 				t.Run(fmt.Sprintf("description=%s", tc.description), func(t *testing.T) {
+					expectedPageToken := s.DefaultPageToken().Encode()
+
 					req, _ := http.NewRequest("GET", ts.URL+"/admin/sessions?"+tc.expand, nil)
 					res, err := client.Do(req)
 					require.NoError(t, err)
 					assert.Equal(t, http.StatusOK, res.StatusCode)
 					assert.Equal(t, "1", res.Header.Get("X-Total-Count"))
-					assert.Equal(t, "</admin/sessions?"+tc.expand+"page_size=250&page_token=00000000-0000-0000-0000-000000000000>; rel=\"first\"", res.Header.Get("Link"))
+					assert.Equal(t, "</admin/sessions?"+tc.expand+"page_size=250&page_token="+expectedPageToken+">; rel=\"first\"", res.Header.Get("Link"))
 
 					body := ioutilx.MustReadAll(res.Body)
 					assert.Equal(t, s.ID.String(), gjson.GetBytes(body, "0.id").String())

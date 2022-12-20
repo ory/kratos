@@ -141,12 +141,21 @@ type Session struct {
 	NID   uuid.UUID `json:"-"  faker:"-" db:"nid"`
 }
 
+// The format we need to use in the Page tokens, as it's the only format that is understood by all DBs
+const dbFormat = "2006-01-02 15:04:05.99999+07:00"
+
 func (s Session) PageToken() keysetpagination.PageToken {
-	return keysetpagination.StringPageToken(s.ID.String())
+	return keysetpagination.MapPageToken{
+		"id":         s.ID.String(),
+		"created_at": s.CreatedAt.Format(dbFormat),
+	}
 }
 
 func (s Session) DefaultPageToken() keysetpagination.PageToken {
-	return keysetpagination.StringPageToken(uuid.Nil.String())
+	return keysetpagination.MapPageToken{
+		"id":         uuid.Nil.String(),
+		"created_at": time.Date(2200, 12, 31, 23, 59, 59, 0, time.UTC).Format(dbFormat),
+	}
 }
 
 func (s Session) TableName(ctx context.Context) string {

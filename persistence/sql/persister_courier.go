@@ -52,6 +52,7 @@ func (p *Persister) ListMessages(ctx context.Context, filter courier.ListCourier
 
 	opts = append(opts, keysetpagination.WithDefaultToken(new(courier.Message).DefaultPageToken()))
 	opts = append(opts, keysetpagination.WithDefaultSize(10))
+	opts = append(opts, keysetpagination.WithMaxSize(paginationMaxItemsSize))
 	opts = append(opts, keysetpagination.WithColumn("created_at", "DESC"))
 	paginator := keysetpagination.GetPaginator(opts...)
 
