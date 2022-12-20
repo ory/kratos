@@ -632,6 +632,48 @@ func TestHandlerAdminSessionManagement(t *testing.T) {
 			assert.False(t, session.Active)
 		})
 
+		t.Run("case=session status should be false when session expiry is past", func(t *testing.T) {
+			client := testhelpers.NewClientWithCookies(t)
+
+			s.ExpiresAt = time.Now().Add(-time.Hour * 1)
+			require.NoError(t, reg.SessionPersister().UpsertSession(ctx, s))
+
+			assert.NotEqual(t, uuid.Nil, s.ID)
+			assert.NotEqual(t, uuid.Nil, s.Identity.ID)
+
+			req, _ := http.NewRequest("GET", ts.URL+"/admin/sessions/"+s.ID.String(), nil)
+			res, err := client.Do(req)
+			require.NoError(t, err)
+			assert.Equal(t, http.StatusOK, res.StatusCode)
+
+			body, err := io.ReadAll(res.Body)
+			require.NoError(t, err)
+			assert.Equal(t, "false", gjson.GetBytes(body, "active").String(), "%s", body)
+		})
+
+		t.Run("case=session status should be false for inactive identity", func(t *testing.T) {
+			client := testhelpers.NewClientWithCookies(t)
+			var s1 *Session
+			require.NoError(t, faker.FakeData(&s1))
+			s1.Active = true
+			s1.Identity.State = identity.StateInactive
+			require.NoError(t, reg.Persister().CreateIdentity(ctx, s1.Identity))
+
+			assert.Equal(t, uuid.Nil, s1.ID)
+			require.NoError(t, reg.SessionPersister().UpsertSession(ctx, s1))
+			assert.NotEqual(t, uuid.Nil, s1.ID)
+			assert.NotEqual(t, uuid.Nil, s1.Identity.ID)
+
+			req, _ := http.NewRequest("GET", ts.URL+"/admin/sessions/"+s1.ID.String()+"?expand=Identity", nil)
+			res, err := client.Do(req)
+			require.NoError(t, err)
+			assert.Equal(t, http.StatusOK, res.StatusCode)
+
+			body, err := io.ReadAll(res.Body)
+			require.NoError(t, err)
+			assert.Equal(t, "false", gjson.GetBytes(body, "active").String(), "%s", body)
+		})
+
 		req, _ := http.NewRequest("DELETE", ts.URL+"/admin/identities/"+s.Identity.ID.String()+"/sessions", nil)
 		res, err := client.Do(req)
 		require.NoError(t, err)
@@ -647,52 +689,6 @@ func TestHandlerAdminSessionManagement(t *testing.T) {
 			assert.Equal(t, http.StatusOK, res.StatusCode)
 			assert.JSONEq(t, "[]", string(ioutilx.MustReadAll(res.Body)))
 		})
-	})
-
-	t.Run("case=session status should be false for inactive identity", func(t *testing.T) {
-		client := testhelpers.NewClientWithCookies(t)
-		var s *Session
-		require.NoError(t, faker.FakeData(&s))
-		s.Active = true
-		s.Identity.State = identity.StateInactive
-		require.NoError(t, reg.Persister().CreateIdentity(ctx, s.Identity))
-
-		assert.Equal(t, uuid.Nil, s.ID)
-		require.NoError(t, reg.SessionPersister().UpsertSession(ctx, s))
-		assert.NotEqual(t, uuid.Nil, s.ID)
-		assert.NotEqual(t, uuid.Nil, s.Identity.ID)
-
-		req, _ := http.NewRequest("GET", ts.URL+"/admin/sessions/"+s.ID.String()+"?expand=Identity", nil)
-		res, err := client.Do(req)
-		require.NoError(t, err)
-		assert.Equal(t, http.StatusOK, res.StatusCode)
-
-		body, err := io.ReadAll(res.Body)
-		require.NoError(t, err)
-		assert.Equal(t, "false", gjson.GetBytes(body, "active").String(), "%s", body)
-	})
-
-	t.Run("case=session status should be false when session expiry is past", func(t *testing.T) {
-		client := testhelpers.NewClientWithCookies(t)
-		var s *Session
-		require.NoError(t, faker.FakeData(&s))
-		s.Active = true
-		s.ExpiresAt = time.Now().Add(-time.Hour * 1)
-		require.NoError(t, reg.Persister().CreateIdentity(ctx, s.Identity))
-
-		assert.Equal(t, uuid.Nil, s.ID)
-		require.NoError(t, reg.SessionPersister().UpsertSession(ctx, s))
-		assert.NotEqual(t, uuid.Nil, s.ID)
-		assert.NotEqual(t, uuid.Nil, s.Identity.ID)
-
-		req, _ := http.NewRequest("GET", ts.URL+"/admin/sessions/"+s.ID.String(), nil)
-		res, err := client.Do(req)
-		require.NoError(t, err)
-		assert.Equal(t, http.StatusOK, res.StatusCode)
-
-		body, err := io.ReadAll(res.Body)
-		require.NoError(t, err)
-		assert.Equal(t, "false", gjson.GetBytes(body, "active").String(), "%s", body)
 	})
 
 	t.Run("case=should return 400 when bad UUID is sent", func(t *testing.T) {
@@ -719,8 +715,9 @@ func TestHandlerAdminSessionManagement(t *testing.T) {
 
 	t.Run("case=should return pagination headers on list response", func(t *testing.T) {
 		client := testhelpers.NewClientWithCookies(t)
-		i := identity.NewIdentity("")
-		require.NoError(t, reg.IdentityManager().Create(ctx, i))
+		var i *identity.Identity
+		require.NoError(t, faker.FakeData(&i))
+		require.NoError(t, reg.Persister().CreateIdentity(ctx, i))
 
 		numSessions := 5
 		numSessionsActive := 2
@@ -731,30 +728,35 @@ func TestHandlerAdminSessionManagement(t *testing.T) {
 			sess[j].Identity = i
 			if j < numSessionsActive {
 				sess[j].Active = true
+				sess[j].ExpiresAt = time.Now().Add(time.Hour)
 			} else {
 				sess[j].Active = false
+				sess[j].ExpiresAt = time.Now().Add(-time.Hour)
 			}
 			require.NoError(t, reg.SessionPersister().UpsertSession(ctx, &sess[j]))
 		}
 
 		for _, tc := range []struct {
 			activeOnly         string
-			expectedTotalCount int
+			expectedSessionIds []uuid.UUID
 		}{
 			{
 				activeOnly:         "true",
-				expectedTotalCount: numSessionsActive,
+				expectedSessionIds: []uuid.UUID{sess[0].ID, sess[1].ID},
 			},
 			{
 				activeOnly:         "false",
-				expectedTotalCount: numSessions - numSessionsActive,
+				expectedSessionIds: []uuid.UUID{sess[2].ID, sess[3].ID, sess[4].ID},
 			},
 			{
 				activeOnly:         "",
-				expectedTotalCount: numSessions,
+				expectedSessionIds: []uuid.UUID{sess[0].ID, sess[1].ID, sess[2].ID, sess[3].ID, sess[4].ID},
 			},
 		} {
 			t.Run(fmt.Sprintf("active=%#v", tc.activeOnly), func(t *testing.T) {
+				sessions, _, _ := reg.SessionPersister().ListSessionsByIdentity(ctx, i.ID, nil, 1, 10, uuid.Nil, ExpandEverything)
+				require.Equal(t, 5, len(sessions))
+
 				reqURL := ts.URL + "/admin/identities/" + i.ID.String() + "/sessions"
 				if tc.activeOnly != "" {
 					reqURL += "?active=" + tc.activeOnly
@@ -763,66 +765,19 @@ func TestHandlerAdminSessionManagement(t *testing.T) {
 				res, err := client.Do(req)
 				require.NoError(t, err)
 				require.Equal(t, http.StatusOK, res.StatusCode)
+
+				var actualSessions []Session
+				require.NoError(t, json.NewDecoder(res.Body).Decode(&actualSessions))
+				actualSessionIds := make([]uuid.UUID, 0)
+				for _, s := range actualSessions {
+					actualSessionIds = append(actualSessionIds, s.ID)
+				}
 
 				totalCount, err := strconv.Atoi(res.Header.Get("X-Total-Count"))
 				require.NoError(t, err)
-				require.Equal(t, tc.expectedTotalCount, totalCount)
-				require.NotEqual(t, "", res.Header.Get("Link"))
-			})
-		}
-	})
-
-	t.Run("case=should respect active on list", func(t *testing.T) {
-		client := testhelpers.NewClientWithCookies(t)
-		i := identity.NewIdentity("")
-		require.NoError(t, reg.IdentityManager().Create(ctx, i))
-
-		sess := make([]Session, 2)
-		for j := range sess {
-			require.NoError(t, faker.FakeData(&sess[j]))
-			sess[j].Identity = i
-			sess[j].Active = j%2 == 0
-			require.NoError(t, reg.SessionPersister().UpsertSession(ctx, &sess[j]))
-		}
-
-		for _, tc := range []struct {
-			activeOnly  string
-			expectedIDs []uuid.UUID
-		}{
-			{
-				activeOnly:  "true",
-				expectedIDs: []uuid.UUID{sess[0].ID},
-			},
-			{
-				activeOnly:  "false",
-				expectedIDs: []uuid.UUID{sess[1].ID},
-			},
-			{
-				activeOnly:  "",
-				expectedIDs: []uuid.UUID{sess[0].ID, sess[1].ID},
-			},
-		} {
-			t.Run(fmt.Sprintf("active=%#v", tc.activeOnly), func(t *testing.T) {
-				reqURL := ts.URL + "/admin/identities/" + i.ID.String() + "/sessions"
-				if tc.activeOnly != "" {
-					reqURL += "?active=" + tc.activeOnly
-				}
-				req, _ := http.NewRequest("GET", reqURL, nil)
-				res, err := client.Do(req)
-				require.NoError(t, err)
-				require.Equal(t, http.StatusOK, res.StatusCode)
-
-				var sessions []Session
-				require.NoError(t, json.NewDecoder(res.Body).Decode(&sessions))
-				require.Equal(t, len(sessions), len(tc.expectedIDs))
-
-				for _, id := range tc.expectedIDs {
-					found := false
-					for _, s := range sessions {
-						found = found || s.ID == id
-					}
-					assert.True(t, found)
-				}
+				assert.Equal(t, len(tc.expectedSessionIds), totalCount)
+				assert.NotEqual(t, "", res.Header.Get("Link"))
+				assert.ElementsMatch(t, tc.expectedSessionIds, actualSessionIds)
 			})
 		}
 	})

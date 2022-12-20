@@ -152,6 +152,8 @@ jobs:
         name: Install Firefox
       - uses: browser-actions/setup-geckodriver@latest
         name: Install Geckodriver
+        with:
+          geckodriver-version: 0.32.0
       - uses: ory/ci/checkout@master
         with:
           fetch-depth: 2

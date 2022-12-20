@@ -13,6 +13,7 @@ import (
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/trace"
 
+	"github.com/ory/x/httpx"
 	"github.com/ory/x/otelx/semconv"
 	"github.com/ory/x/sqlcon"
 
@@ -164,6 +165,7 @@ func (e *HookExecutor) PostRegistrationHook(w http.ResponseWriter, r *http.Reque
 		trace.WithAttributes(
 			attribute.String(semconv.AttrIdentityID, i.ID.String()),
 			attribute.String(semconv.AttrNID, i.NID.String()),
+			attribute.String(semconv.AttrClientIP, httpx.ClientIP(r)),
 			attribute.String("flow", string(a.Type)),
 		),
 	)
