@@ -5,7 +5,7 @@
 
 **Table of Contents**
 
-- [ (2022-12-19)](#2022-12-19)
+- [ (2022-12-20)](#2022-12-20)
   - [Breaking Changes](#breaking-changes)
     - [Bug Fixes](#bug-fixes)
     - [Features](#features)
@@ -285,7 +285,7 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# [](https://github.com/ory/kratos/compare/v0.11.0...v) (2022-12-19)
+# [](https://github.com/ory/kratos/compare/v0.11.0...v) (2022-12-20)
 
 ## Breaking Changes
 
@@ -307,9 +307,21 @@ The `/admin/courier/messages` endpoint now uses `keysetpagination` instead.
   ([ae8ad7b](https://github.com/ory/kratos/commit/ae8ad7be5b6f3dbb9142bee55448a71c7df44e52))
 - Flaky test now stable
   ([4e5dcd0](https://github.com/ory/kratos/commit/4e5dcd0df6baffda8b15eda37fd7a247793f3297))
+- Listing sessions query ([#2958](https://github.com/ory/kratos/issues/2958))
+  ([3e06c99](https://github.com/ory/kratos/commit/3e06c991ad557f4629ef7412c256ede2386a7bed)),
+  closes [#2930](https://github.com/ory/kratos/issues/2930)
 - Respect `return_to` URL parameter in registration flow when the user is
   already registered ([#2957](https://github.com/ory/kratos/issues/2957))
   ([3462ce1](https://github.com/ory/kratos/commit/3462ce1512d03529b613421a69bcf4c1d5e98e08))
+- Spurious cancelation of async webhooks, better tracing
+  ([#2969](https://github.com/ory/kratos/issues/2969))
+  ([72de640](https://github.com/ory/kratos/commit/72de640bad75da29424222bd613a21d10e1811ec)):
+
+  Previously, async webhooks (response.ignore=true) would be canceled early once
+  the incoming Kratos request was served and it's associated context released.
+  We now dissociate the cancellation of async hooks from the normal request
+  processing flow.
+
 - Update pquerna/otp to fix TOTP URL encoding
   ([#2951](https://github.com/ory/kratos/issues/2951))
   ([7248636](https://github.com/ory/kratos/commit/72486368f5403c02772e4a99ed9edc34e84c217c)):
