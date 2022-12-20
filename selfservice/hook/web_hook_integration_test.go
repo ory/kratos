@@ -861,6 +861,7 @@ func TestAsyncWebhook(t *testing.T) {
 		URL:    &url.URL{Path: "/some_end_point"},
 		Method: http.MethodPost,
 	}
+
 	incomingCtx, incomingCancel := context.WithCancel(context.Background())
 	if deadline, ok := t.Deadline(); ok {
 		// cancel this context one second before test timeout for clean shutdown
@@ -868,6 +869,7 @@ func TestAsyncWebhook(t *testing.T) {
 		incomingCtx, cleanup = context.WithDeadline(incomingCtx, deadline.Add(-time.Second))
 		defer cleanup()
 	}
+
 	req = req.WithContext(incomingCtx)
 	s := &session.Session{ID: x.NewUUID(), Identity: &identity.Identity{ID: x.NewUUID()}}
 	f := &login.Flow{ID: x.NewUUID()}
@@ -899,31 +901,17 @@ func TestAsyncWebhook(t *testing.T) {
 	}
 	// at this point, a goroutine is in the middle of the call to our test handler and waiting for a response
 	incomingCancel() // simulate the incoming Kratos request having finished
+	close(blockHandlerOnExit)
 	timeout := time.After(200 * time.Millisecond)
-	for done := false; !done; {
-		if last := logHook.LastEntry(); last != nil {
-			msg, err := last.String()
-			require.NoError(t, err)
-			assert.Contains(t, msg, "Dispatching webhook")
+	var found bool
+	for !found {
+		for _, entry := range logHook.AllEntries() {
+			if entry.Message == "Webhook request succeeded" {
+				found = true
+				break
+			}
 		}
 
-		select {
-		case <-timeout:
-			done = true
-		case <-time.After(50 * time.Millisecond):
-			// continue loop
-		}
-	}
-	logHook.Reset()
-	close(blockHandlerOnExit)
-	timeout = time.After(200 * time.Millisecond)
-	for {
-		if last := logHook.LastEntry(); last != nil {
-			msg, err := last.String()
-			require.NoError(t, err)
-			assert.Contains(t, msg, "Webhook request succeeded")
-			break
-		}
 		select {
 		case <-timeout:
 			t.Fatal("timed out waiting for successful webhook completion")
@@ -931,4 +919,5 @@ func TestAsyncWebhook(t *testing.T) {
 			// continue loop
 		}
 	}
+	require.True(t, found)
 }
