@@ -310,6 +310,9 @@ The `/admin/courier/messages` endpoint now uses `keysetpagination` instead.
 - Listing sessions query ([#2958](https://github.com/ory/kratos/issues/2958))
   ([3e06c99](https://github.com/ory/kratos/commit/3e06c991ad557f4629ef7412c256ede2386a7bed)),
   closes [#2930](https://github.com/ory/kratos/issues/2930)
+- Pin geckodriver version to bypass GitHub API quota
+  ([#2972](https://github.com/ory/kratos/issues/2972))
+  ([585cb9e](https://github.com/ory/kratos/commit/585cb9e79be5de8b3d684313edb72bb703ffaa78))
 - Respect `return_to` URL parameter in registration flow when the user is
   already registered ([#2957](https://github.com/ory/kratos/issues/2957))
   ([3462ce1](https://github.com/ory/kratos/commit/3462ce1512d03529b613421a69bcf4c1d5e98e08))
@@ -331,8 +334,13 @@ The `/admin/courier/messages` endpoint now uses `keysetpagination` instead.
   apps, and would show up in the issuer name, e.g. "My+Issuer" instead of "My
   Issuer".
 
+- Webhook tracing instrumentation+memory leak
+  ([f0044a3](https://github.com/ory/kratos/commit/f0044a365b39a5f940d6d268977744f8fcb2e49b))
+
 ### Features
 
+- Add client IP to span events
+  ([7ce3a74](https://github.com/ory/kratos/commit/7ce3a7471243898e111ca3e2b5d1346131c55dae))
 - Add NID to logs in courier
   ([#2956](https://github.com/ory/kratos/issues/2956))
   ([b407aa9](https://github.com/ory/kratos/commit/b407aa9427382f38dd8a992a6998202a7b6ba83a))
