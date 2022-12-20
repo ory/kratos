@@ -7,7 +7,6 @@ import (
 	"context"
 	"database/sql"
 	"encoding/json"
-	"fmt"
 
 	"github.com/gobuffalo/pop/v6"
 	"github.com/gofrs/uuid"
@@ -137,11 +136,7 @@ func (p *Persister) SetMessageStatus(ctx context.Context, id uuid.UUID, ms couri
 	defer span.End()
 
 	count, err := p.GetConnection(ctx).RawQuery(
-		// #nosec G201
-		fmt.Sprintf(
-			"UPDATE %s SET status = ? WHERE id = ? AND nid = ?",
-			"courier_messages",
-		),
+		"UPDATE courier_messages SET status = ? WHERE id = ? AND nid = ?",
 		ms,
 		id,
 		p.NetworkID(ctx),
@@ -162,11 +157,7 @@ func (p *Persister) IncrementMessageSendCount(ctx context.Context, id uuid.UUID)
 	defer span.End()
 
 	count, err := p.GetConnection(ctx).RawQuery(
-		// #nosec G201
-		fmt.Sprintf(
-			"UPDATE %s SET send_count = send_count + 1 WHERE id = ? AND nid = ?",
-			"courier_messages",
-		),
+		"UPDATE courier_messages SET send_count = send_count + 1 WHERE id = ? AND nid = ?",
 		id,
 		p.NetworkID(ctx),
 	).ExecWithCount()
