@@ -120,7 +120,7 @@ func (p *Persister) ListSessions(ctx context.Context, active *bool, paginatorOpt
 		return nil, 0, nil, err
 	}
 
-	s, nextPage := keysetpagination.Result[session.Session](s, paginator)
+	s, nextPage := keysetpagination.Result(s, paginator)
 	return s, t, nextPage, nil
 }
 

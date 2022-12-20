@@ -77,7 +77,7 @@ require (
 	github.com/ory/jsonschema/v3 v3.0.7
 	github.com/ory/mail/v3 v3.0.0
 	github.com/ory/nosurf v1.2.7
-	github.com/ory/x v0.0.521-0.20221216212409-f080646b8e21
+	github.com/ory/x v0.0.523
 	github.com/phayes/freeport v0.0.0-20180830031419-95f893ade6f2
 	github.com/pkg/errors v0.9.1
 	github.com/pquerna/otp v1.4.0
