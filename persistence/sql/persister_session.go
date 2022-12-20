@@ -58,6 +58,7 @@ func (p *Persister) GetSession(ctx context.Context, sid uuid.UUID, expandables s
 		s.Identity = i
 	}
 
+	s.Active = s.IsActive()
 	return &s, nil
 }
 
@@ -77,7 +78,11 @@ func (p *Persister) ListSessions(ctx context.Context, active *bool, paginatorOpt
 	if err := p.Transaction(ctx, func(ctx context.Context, c *pop.Connection) error {
 		q := c.Where("nid = ?", nid)
 		if active != nil {
-			q = q.Where("active = ?", *active)
+			if *active {
+				q.Where("active = ? AND expires_at >= ?", *active, time.Now().UTC())
+			} else {
+				q.Where("(active = ? OR expires_at < ?)", *active, time.Now().UTC())
+			}
 		}
 
 		// if len(expandables) > 0 {
@@ -106,6 +111,7 @@ func (p *Persister) ListSessions(ctx context.Context, active *bool, paginatorOpt
 					return err
 				}
 
+				sess.Active = sess.IsActive()
 				sess.Identity = i
 			}
 		}
@@ -133,7 +139,11 @@ func (p *Persister) ListSessionsByIdentity(ctx context.Context, iID uuid.UUID, a
 			q = q.Where("id != ?", except)
 		}
 		if active != nil {
-			q = q.Where("active = ?", *active)
+			if *active {
+				q.Where("active = ? AND expires_at >= ?", *active, time.Now().UTC())
+			} else {
+				q.Where("(active = ? OR expires_at < ?)", *active, time.Now().UTC())
+			}
 		}
 		if len(expandables) > 0 {
 			q = q.Eager(expandables.ToEager()...)
@@ -152,12 +162,13 @@ func (p *Persister) ListSessionsByIdentity(ctx context.Context, iID uuid.UUID, a
 		}
 
 		if expandables.Has(session.ExpandSessionIdentity) {
-			for _, s := range s {
-				i, err := p.GetIdentity(ctx, s.IdentityID)
-				if err != nil {
-					return err
-				}
+			i, err := p.GetIdentity(ctx, iID)
+			if err != nil {
+				return sqlcon.HandleError(err)
+			}
 
+			for _, s := range s {
+				s.Active = s.IsActive()
 				s.Identity = i
 			}
 		}
