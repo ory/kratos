@@ -517,6 +517,7 @@ func (m *RegistryDefault) ContinuityCookieManager(ctx context.Context) sessions.
 
 func (m *RegistryDefault) Tracer(ctx context.Context) *otelx.Tracer {
 	if m.trc == nil {
+		m.Logger().WithError(errors.WithStack(errors.New(""))).Warn("No tracer setup in RegistryDefault")
 		return otelx.NewNoop(m.l, m.Config().Tracing(ctx)) // should never happen
 	}
 	return m.trc
