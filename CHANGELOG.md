@@ -5,7 +5,7 @@
 
 **Table of Contents**
 
-- [ (2022-12-23)](#2022-12-23)
+- [ (2022-12-26)](#2022-12-26)
   - [Breaking Changes](#breaking-changes)
     - [Bug Fixes](#bug-fixes)
     - [Features](#features)
@@ -285,7 +285,7 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# [](https://github.com/ory/kratos/compare/v0.11.0...v) (2022-12-23)
+# [](https://github.com/ory/kratos/compare/v0.11.0...v) (2022-12-26)
 
 ## Breaking Changes
 
@@ -315,6 +315,13 @@ The `/admin/courier/messages` endpoint now uses `keysetpagination` instead.
 - Pin geckodriver version to bypass GitHub API quota
   ([#2972](https://github.com/ory/kratos/issues/2972))
   ([585cb9e](https://github.com/ory/kratos/commit/585cb9e79be5de8b3d684313edb72bb703ffaa78))
+- Remove unused x-session-cookie parameter
+  ([#2983](https://github.com/ory/kratos/issues/2983))
+  ([56b5c26](https://github.com/ory/kratos/commit/56b5c26e666af2442b3e99449b62b2f76a3a4677)):
+
+  This patch removes the undocumented and experimental `X-Session-Cookie` header
+  from the `/sessions/whoami` endpoint.
+
 - Respect `return_to` URL parameter in registration flow when the user is
   already registered ([#2957](https://github.com/ory/kratos/issues/2957))
   ([3462ce1](https://github.com/ory/kratos/commit/3462ce1512d03529b613421a69bcf4c1d5e98e08))
