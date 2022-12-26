@@ -20,6 +20,15 @@ type ProviderLark struct {
 	*ProviderGenericOIDC
 }
 
+var (
+	larkAuthEndpoint = oauth2.Endpoint{
+		AuthURL:   "https://passport.feishu.cn/suite/passport/oauth/authorize",
+		TokenURL:  "https://passport.feishu.cn/suite/passport/oauth/token",
+		AuthStyle: oauth2.AuthStyleInParams,
+	}
+	larkUserEndpoint = "https://passport.feishu.cn/suite/passport/oauth/userinfo"
+)
+
 func NewProviderLark(
 	config *Configuration,
 	reg dependencies,
@@ -37,16 +46,11 @@ func (g *ProviderLark) Config() *Configuration {
 }
 
 func (g *ProviderLark) OAuth2(ctx context.Context) (*oauth2.Config, error) {
-	var endpoint = oauth2.Endpoint{
-		AuthURL:   "https://passport.feishu.cn/suite/passport/oauth/authorize",
-		TokenURL:  "https://passport.feishu.cn/suite/passport/oauth/token",
-		AuthStyle: oauth2.AuthStyleInParams,
-	}
 
 	return &oauth2.Config{
 		ClientID:     g.config.ClientID,
 		ClientSecret: g.config.ClientSecret,
-		Endpoint:     endpoint,
+		Endpoint:     larkAuthEndpoint,
 		// Lark uses fixed scope that can not be configured in runtime
 		Scopes:      g.config.Scope,
 		RedirectURL: g.config.Redir(g.reg.Config().OIDCRedirectURIBase(ctx)),
@@ -73,18 +77,16 @@ func (g *ProviderLark) Claims(ctx context.Context, exchange *oauth2.Token, query
 		Mobile       string `json:"mobile"`
 	}
 	var (
-		userEndpoint = "https://passport.feishu.cn/suite/passport/oauth/userinfo"
-		accessToken  = exchange.AccessToken
-		client       = g.reg.HTTPClient(ctx, httpx.ResilientClientDisallowInternalIPs())
-		user         larkClaim
+		client = g.reg.HTTPClient(ctx, httpx.ResilientClientDisallowInternalIPs())
+		user   larkClaim
 	)
 
-	req, err := retryablehttp.NewRequest("GET", userEndpoint, nil)
+	req, err := retryablehttp.NewRequest("GET", larkUserEndpoint, nil)
 	if err != nil {
 		return nil, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("%s", err))
 	}
 
-	req.Header.Add("Authorization", "Bearer "+accessToken)
+	exchange.SetAuthHeader(req.Request)
 	resp, err := client.Do(req)
 	if err != nil {
 		return nil, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("%s", err))
@@ -96,7 +98,7 @@ func (g *ProviderLark) Claims(ctx context.Context, exchange *oauth2.Token, query
 	}
 
 	return &Claims{
-		Issuer:      userEndpoint,
+		Issuer:      larkUserEndpoint,
 		Subject:     user.OpenID,
 		Name:        user.Name,
 		Nickname:    user.Name,
