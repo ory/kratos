@@ -68,9 +68,8 @@ func (s *ManagerHTTP) UpsertAndIssueCookie(ctx context.Context, w http.ResponseW
 
 func (s *ManagerHTTP) RefreshCookie(ctx context.Context, w http.ResponseWriter, r *http.Request, session *Session) error {
 	// If it is a session token there is nothing to do.
-	cookieHeader := r.Header.Get("X-Session-Cookie")
 	_, cookieErr := r.Cookie(s.cookieName(r.Context()))
-	if len(cookieHeader) == 0 && errors.Is(cookieErr, http.ErrNoCookie) {
+	if errors.Is(cookieErr, http.ErrNoCookie) {
 		return nil
 	}
 
@@ -156,12 +155,6 @@ func getCookieExpiry(s *sessions.Session) *time.Time {
 }
 
 func (s *ManagerHTTP) getCookie(r *http.Request) (*sessions.Session, error) {
-	if cookie := r.Header.Get("X-Session-Cookie"); len(cookie) > 0 {
-		rr := *r
-		r = &rr
-		r.Header = http.Header{"Cookie": []string{s.cookieName(r.Context()) + "=" + cookie}}
-	}
-
 	return s.r.CookieManager(r.Context()).Get(r, s.cookieName(r.Context()))
 }
 
