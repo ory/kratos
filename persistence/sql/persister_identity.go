@@ -458,14 +458,6 @@ func (p *Persister) GetIdentity(ctx context.Context, id uuid.UUID) (*identity.Id
 
 	i.Credentials = nil
 
-	if err := p.findVerifiableAddresses(ctx, &i); err != nil {
-		return nil, sqlcon.HandleError(err)
-	}
-
-	if err := p.findRecoveryAddresses(ctx, &i); err != nil {
-		return nil, sqlcon.HandleError(err)
-	}
-
 	if err := p.injectTraitsSchemaURL(ctx, &i); err != nil {
 		return nil, err
 	}

@@ -102,7 +102,7 @@ type Identity struct {
 	// ---
 	// x-omitempty: true
 	// ---
-	VerifiableAddresses []VerifiableAddress `json:"verifiable_addresses,omitempty" faker:"-" has_many:"identity_verifiable_addresses" fk_id:"identity_id"`
+	VerifiableAddresses []VerifiableAddress `json:"verifiable_addresses,omitempty" faker:"-" has_many:"identity_verifiable_addresses" fk_id:"identity_id" order_by:"id asc"`
 
 	// RecoveryAddresses contains all the addresses that can be used to recover an identity.
 	//
@@ -110,7 +110,7 @@ type Identity struct {
 	// ---
 	// x-omitempty: true
 	// ---
-	RecoveryAddresses []RecoveryAddress `json:"recovery_addresses,omitempty" faker:"-" has_many:"identity_recovery_addresses" fk_id:"identity_id"`
+	RecoveryAddresses []RecoveryAddress `json:"recovery_addresses,omitempty" faker:"-" has_many:"identity_recovery_addresses" fk_id:"identity_id" order_by:"id asc"`
 
 	// Store metadata about the identity which the identity itself can see when calling for example the
 	// session endpoint. Do not store sensitive information (e.g. credit score) about the identity in this field.
