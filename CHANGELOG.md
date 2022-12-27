@@ -5,7 +5,7 @@
 
 **Table of Contents**
 
-- [ (2022-12-26)](#2022-12-26)
+- [ (2022-12-27)](#2022-12-27)
   - [Breaking Changes](#breaking-changes)
     - [Bug Fixes](#bug-fixes)
     - [Features](#features)
@@ -285,7 +285,7 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# [](https://github.com/ory/kratos/compare/v0.11.0...v) (2022-12-26)
+# [](https://github.com/ory/kratos/compare/v0.11.0...v) (2022-12-27)
 
 ## Breaking Changes
 
@@ -315,6 +315,9 @@ The `/admin/courier/messages` endpoint now uses `keysetpagination` instead.
 - Pin geckodriver version to bypass GitHub API quota
   ([#2972](https://github.com/ory/kratos/issues/2972))
   ([585cb9e](https://github.com/ory/kratos/commit/585cb9e79be5de8b3d684313edb72bb703ffaa78))
+- Remove duplicate query in GetIdentity
+  ([#2987](https://github.com/ory/kratos/issues/2987))
+  ([33b01bb](https://github.com/ory/kratos/commit/33b01bbb0e53fc8ac0127531de72ee1b680be656))
 - Remove unused x-session-cookie parameter
   ([#2983](https://github.com/ory/kratos/issues/2983))
   ([56b5c26](https://github.com/ory/kratos/commit/56b5c26e666af2442b3e99449b62b2f76a3a4677)):
@@ -353,6 +356,9 @@ The `/admin/courier/messages` endpoint now uses `keysetpagination` instead.
 - Add NID to logs in courier
   ([#2956](https://github.com/ory/kratos/issues/2956))
   ([b407aa9](https://github.com/ory/kratos/commit/b407aa9427382f38dd8a992a6998202a7b6ba83a))
+- Improve error message when no session is found
+  ([#2988](https://github.com/ory/kratos/issues/2988))
+  ([7ad2b97](https://github.com/ory/kratos/commit/7ad2b970089cee2209b3afeaaffd7e04f803918d))
 - Require verification on login
   ([#2927](https://github.com/ory/kratos/issues/2927))
   ([efb8ae8](https://github.com/ory/kratos/commit/efb8ae89cbc31477c2696a0df4c89d6dbf856d27))
