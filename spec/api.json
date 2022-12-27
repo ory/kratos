@@ -4130,7 +4130,7 @@
             "oryAccessToken": []
           }
         ],
-        "summary": "This endpoint returns the session object with expandables specified.",
+        "summary": "Get Session",
         "tags": [
           "identity"
         ]

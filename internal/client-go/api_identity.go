@@ -168,7 +168,7 @@ type IdentityApi interface {
 	GetIdentitySchemaExecute(r IdentityApiApiGetIdentitySchemaRequest) (map[string]interface{}, *http.Response, error)
 
 	/*
-			 * GetSession This endpoint returns the session object with expandables specified.
+			 * GetSession Get Session
 			 * This endpoint is useful for:
 
 		Getting a session object with all specified expandables that exist in an administrative context.
@@ -1586,7 +1586,7 @@ func (r IdentityApiApiGetSessionRequest) Execute() (*Session, *http.Response, er
 }
 
 /*
-  - GetSession This endpoint returns the session object with expandables specified.
+  - GetSession Get Session
   - This endpoint is useful for:
 
 Getting a session object with all specified expandables that exist in an administrative context.
