@@ -16,3 +16,5 @@ func RespondWithJSONErrorOnAuthenticated(h herodot.Writer, err error) httprouter
 		h.WriteError(w, r, err)
 	}
 }
+
+var ErrNoSessionFound = herodot.ErrUnauthorized.WithReasonf("No valid session credentials found in the request.")
