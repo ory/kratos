@@ -192,8 +192,8 @@ func (h *Handler) whoami(w http.ResponseWriter, r *http.Request, ps httprouter.P
 			w.Header().Set("Ory-Session-Cache-For", fmt.Sprintf("%d", int64(time.Minute.Seconds())))
 		}
 
-		h.r.Audit().WithRequest(r).WithError(err).Info("No valid session cookie found.")
-		h.r.Writer().WriteError(w, r, herodot.ErrUnauthorized.WithWrap(err).WithReasonf("No valid session cookie found."))
+		h.r.Audit().WithRequest(r).WithError(err).Info("No valid session found.")
+		h.r.Writer().WriteError(w, r, ErrNoSessionFound.WithWrap(err))
 		return
 	}
 
