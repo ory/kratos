@@ -7,7 +7,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -61,7 +61,7 @@ func TestHandler(t *testing.T) {
 		t.Helper()
 		res, err := base.Client().Get(base.URL + href)
 		require.NoError(t, err)
-		body, err := ioutil.ReadAll(res.Body)
+		body, err := io.ReadAll(res.Body)
 		require.NoError(t, err)
 		require.NoError(t, res.Body.Close())
 

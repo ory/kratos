@@ -4,7 +4,11 @@
 package hook
 
 import (
+	"context"
 	"net/http"
+
+	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/trace"
 
 	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/identity"
@@ -14,6 +18,7 @@ import (
 	"github.com/ory/kratos/selfservice/flow/verification"
 	"github.com/ory/kratos/session"
 	"github.com/ory/kratos/x"
+	"github.com/ory/x/otelx"
 )
 
 var _ registration.PostHookPostPersistExecutor = new(Verifier)
@@ -36,11 +41,15 @@ func NewVerifier(r verifierDependencies) *Verifier {
 }
 
 func (e *Verifier) ExecutePostRegistrationPostPersistHook(_ http.ResponseWriter, r *http.Request, f *registration.Flow, s *session.Session) error {
-	return e.do(r, s.Identity, f)
+	return otelx.WithSpan(r.Context(), "selfservice.hook.ExecutePostRegistrationPostPersistHook", func(ctx context.Context) error {
+		return e.do(r.WithContext(ctx), s.Identity, f)
+	}, trace.WithAttributes(attribute.String("hook", "verifier")))
 }
 
 func (e *Verifier) ExecuteSettingsPostPersistHook(w http.ResponseWriter, r *http.Request, a *settings.Flow, i *identity.Identity) error {
-	return e.do(r, i, a)
+	return otelx.WithSpan(r.Context(), "selfservice.hook.ExecuteSettingsPostPersistHook", func(ctx context.Context) error {
+		return e.do(r.WithContext(ctx), i, a)
+	}, trace.WithAttributes(attribute.String("hook", "verifier")))
 }
 
 func (e *Verifier) do(r *http.Request, i *identity.Identity, f flow.Flow) error {
