@@ -866,7 +866,7 @@
         "tags": [
           "identity"
         ],
-        "summary": "This endpoint returns the session object with expandables specified.",
+        "summary": "Get Session",
         "operationId": "getSession",
         "parameters": [
           {

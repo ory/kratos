@@ -391,7 +391,7 @@ type getSession struct {
 
 // swagger:route GET /admin/sessions/{id} identity getSession
 //
-// This endpoint returns the session object with expandables specified.
+// # Get Session
 //
 // This endpoint is useful for:
 //

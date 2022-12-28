@@ -119,7 +119,7 @@ Class | Method | HTTP request | Description
 *IdentityApi* | [**ExtendSession**](docs/IdentityApi.md#extendsession) | **Patch** /admin/sessions/{id}/extend | Extend a Session
 *IdentityApi* | [**GetIdentity**](docs/IdentityApi.md#getidentity) | **Get** /admin/identities/{id} | Get an Identity
 *IdentityApi* | [**GetIdentitySchema**](docs/IdentityApi.md#getidentityschema) | **Get** /schemas/{id} | Get Identity JSON Schema
-*IdentityApi* | [**GetSession**](docs/IdentityApi.md#getsession) | **Get** /admin/sessions/{id} | This endpoint returns the session object with expandables specified.
+*IdentityApi* | [**GetSession**](docs/IdentityApi.md#getsession) | **Get** /admin/sessions/{id} | Get Session
 *IdentityApi* | [**ListIdentities**](docs/IdentityApi.md#listidentities) | **Get** /admin/identities | List Identities
 *IdentityApi* | [**ListIdentitySchemas**](docs/IdentityApi.md#listidentityschemas) | **Get** /schemas | Get all Identity Schemas
 *IdentityApi* | [**ListIdentitySessions**](docs/IdentityApi.md#listidentitysessions) | **Get** /admin/identities/{id}/sessions | List an Identity&#39;s Sessions
