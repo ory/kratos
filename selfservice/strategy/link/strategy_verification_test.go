@@ -212,7 +212,7 @@ func TestVerification(t *testing.T) {
 		assert.Equal(t, "The verification token is invalid or has already been used. Please retry the flow.", sr.Ui.Messages[0].Text)
 	})
 
-	t.Run("description=should not be able to use an outdated link", func(t *testing.T) {
+	t.Run("description=should not be able to request link with an outdated flow", func(t *testing.T) {
 		conf.MustSet(ctx, config.ViperKeySelfServiceVerificationRequestLifespan, time.Millisecond*200)
 		t.Cleanup(func() {
 			conf.MustSet(ctx, config.ViperKeySelfServiceVerificationRequestLifespan, time.Minute)
@@ -230,7 +230,7 @@ func TestVerification(t *testing.T) {
 		assert.Contains(t, res.Request.URL.String(), conf.SelfServiceFlowVerificationUI(ctx).String())
 	})
 
-	t.Run("description=should not be able to use an outdated flow", func(t *testing.T) {
+	t.Run("description=should not be able to use link with an outdated flow", func(t *testing.T) {
 		conf.MustSet(ctx, config.ViperKeySelfServiceVerificationRequestLifespan, time.Millisecond*200)
 		t.Cleanup(func() {
 			conf.MustSet(ctx, config.ViperKeySelfServiceVerificationRequestLifespan, time.Minute)
@@ -248,6 +248,8 @@ func TestVerification(t *testing.T) {
 
 		time.Sleep(time.Millisecond * 201)
 
+		//Clear cookies as link might be opened in another browser
+		c = testhelpers.NewClientWithCookies(t)
 		res, err := c.Get(verificationLink)
 		require.NoError(t, err)
 
