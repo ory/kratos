@@ -17,7 +17,7 @@ import (
 	"github.com/ory/kratos/session"
 )
 
-var _ login.PostHookExecutor = new(SessionDestroyer)
+var _ login.PostHookExecutor = new(AddressVerifier)
 
 type AddressVerifier struct{}
 

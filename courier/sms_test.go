@@ -123,11 +123,11 @@ func TestDisallowedInternalNetwork(t *testing.T) {
 	ctx := context.Background()
 
 	conf, reg := internal.NewFastRegistryWithMocks(t)
-	conf.MustSet(ctx, config.ViperKeyCourierSMSRequestConfig, fmt.Sprintf(`{
+	conf.MustSet(ctx, config.ViperKeyCourierSMSRequestConfig, `{
 		"url": "http://127.0.0.1/",
 		"method": "GET",
 		"body": "file://./stub/request.config.twilio.jsonnet"
-	}`))
+	}`)
 	conf.MustSet(ctx, config.ViperKeyCourierSMSEnabled, true)
 	conf.MustSet(ctx, config.ViperKeyCourierSMTPURL, "http://foo.url")
 	conf.MustSet(ctx, config.ViperKeyClientHTTPNoPrivateIPRanges, true)

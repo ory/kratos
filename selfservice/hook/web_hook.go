@@ -109,7 +109,7 @@ func (e *WebHook) ExecuteLoginPreHook(_ http.ResponseWriter, req *http.Request, 
 			RequestURL:     x.RequestURL(req).String(),
 			RequestCookies: cookies(req),
 		})
-	})
+	}, trace.WithAttributes(attribute.String("hook", KeyWebHook)))
 }
 
 func (e *WebHook) ExecuteLoginPostHook(_ http.ResponseWriter, req *http.Request, _ node.UiNodeGroup, flow *login.Flow, session *session.Session) error {
@@ -122,7 +122,7 @@ func (e *WebHook) ExecuteLoginPostHook(_ http.ResponseWriter, req *http.Request,
 			RequestCookies: cookies(req),
 			Identity:       session.Identity,
 		})
-	})
+	}, trace.WithAttributes(attribute.String("hook", KeyWebHook)))
 }
 
 func (e *WebHook) ExecuteVerificationPreHook(_ http.ResponseWriter, req *http.Request, flow *verification.Flow) error {
@@ -134,7 +134,7 @@ func (e *WebHook) ExecuteVerificationPreHook(_ http.ResponseWriter, req *http.Re
 			RequestURL:     x.RequestURL(req).String(),
 			RequestCookies: cookies(req),
 		})
-	})
+	}, trace.WithAttributes(attribute.String("hook", KeyWebHook)))
 }
 
 func (e *WebHook) ExecutePostVerificationHook(_ http.ResponseWriter, req *http.Request, flow *verification.Flow, id *identity.Identity) error {
@@ -147,7 +147,7 @@ func (e *WebHook) ExecutePostVerificationHook(_ http.ResponseWriter, req *http.R
 			RequestCookies: cookies(req),
 			Identity:       id,
 		})
-	})
+	}, trace.WithAttributes(attribute.String("hook", KeyWebHook)))
 }
 
 func (e *WebHook) ExecuteRecoveryPreHook(_ http.ResponseWriter, req *http.Request, flow *recovery.Flow) error {
@@ -159,7 +159,7 @@ func (e *WebHook) ExecuteRecoveryPreHook(_ http.ResponseWriter, req *http.Reques
 			RequestCookies: cookies(req),
 			RequestURL:     x.RequestURL(req).String(),
 		})
-	})
+	}, trace.WithAttributes(attribute.String("hook", KeyWebHook)))
 }
 
 func (e *WebHook) ExecutePostRecoveryHook(_ http.ResponseWriter, req *http.Request, flow *recovery.Flow, session *session.Session) error {
@@ -172,7 +172,7 @@ func (e *WebHook) ExecutePostRecoveryHook(_ http.ResponseWriter, req *http.Reque
 			RequestCookies: cookies(req),
 			Identity:       session.Identity,
 		})
-	})
+	}, trace.WithAttributes(attribute.String("hook", KeyWebHook)))
 }
 
 func (e *WebHook) ExecuteRegistrationPreHook(_ http.ResponseWriter, req *http.Request, flow *registration.Flow) error {
@@ -184,7 +184,7 @@ func (e *WebHook) ExecuteRegistrationPreHook(_ http.ResponseWriter, req *http.Re
 			RequestURL:     x.RequestURL(req).String(),
 			RequestCookies: cookies(req),
 		})
-	})
+	}, trace.WithAttributes(attribute.String("hook", KeyWebHook)))
 }
 
 func (e *WebHook) ExecutePostRegistrationPrePersistHook(_ http.ResponseWriter, req *http.Request, flow *registration.Flow, id *identity.Identity) error {
@@ -200,7 +200,7 @@ func (e *WebHook) ExecutePostRegistrationPrePersistHook(_ http.ResponseWriter, r
 			RequestCookies: cookies(req),
 			Identity:       id,
 		})
-	})
+	}, trace.WithAttributes(attribute.String("hook", KeyWebHook)))
 }
 
 func (e *WebHook) ExecutePostRegistrationPostPersistHook(_ http.ResponseWriter, req *http.Request, flow *registration.Flow, session *session.Session) error {
@@ -216,7 +216,7 @@ func (e *WebHook) ExecutePostRegistrationPostPersistHook(_ http.ResponseWriter, 
 			RequestCookies: cookies(req),
 			Identity:       session.Identity,
 		})
-	})
+	}, trace.WithAttributes(attribute.String("hook", KeyWebHook)))
 }
 
 func (e *WebHook) ExecuteSettingsPreHook(_ http.ResponseWriter, req *http.Request, flow *settings.Flow) error {
@@ -228,7 +228,7 @@ func (e *WebHook) ExecuteSettingsPreHook(_ http.ResponseWriter, req *http.Reques
 			RequestURL:     x.RequestURL(req).String(),
 			RequestCookies: cookies(req),
 		})
-	})
+	}, trace.WithAttributes(attribute.String("hook", KeyWebHook)))
 }
 
 func (e *WebHook) ExecuteSettingsPostPersistHook(_ http.ResponseWriter, req *http.Request, flow *settings.Flow, id *identity.Identity) error {
@@ -244,7 +244,7 @@ func (e *WebHook) ExecuteSettingsPostPersistHook(_ http.ResponseWriter, req *htt
 			RequestCookies: cookies(req),
 			Identity:       id,
 		})
-	})
+	}, trace.WithAttributes(attribute.String("hook", KeyWebHook)))
 }
 
 func (e *WebHook) ExecuteSettingsPrePersistHook(_ http.ResponseWriter, req *http.Request, flow *settings.Flow, id *identity.Identity) error {
@@ -260,7 +260,7 @@ func (e *WebHook) ExecuteSettingsPrePersistHook(_ http.ResponseWriter, req *http
 			RequestCookies: cookies(req),
 			Identity:       id,
 		})
-	})
+	}, trace.WithAttributes(attribute.String("hook", KeyWebHook)))
 }
 
 func (e *WebHook) execute(ctx context.Context, data *templateContext) error {

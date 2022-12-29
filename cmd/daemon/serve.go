@@ -166,7 +166,7 @@ func ServeAdmin(r driver.Registry, cmd *cobra.Command, args []string, slOpts *se
 	)
 
 	if r.Config().DisableAdminHealthRequestLog(ctx) {
-		adminLogger.ExcludePaths(x.AdminPrefix+healthx.AliveCheckPath, x.AdminPrefix+healthx.ReadyCheckPath)
+		adminLogger.ExcludePaths(x.AdminPrefix+healthx.AliveCheckPath, x.AdminPrefix+healthx.ReadyCheckPath, x.AdminPrefix+prometheus.MetricsPrometheusPath)
 	}
 	n.Use(adminLogger)
 	n.UseFunc(x.RedirectAdminMiddleware)
@@ -183,7 +183,12 @@ func ServeAdmin(r driver.Registry, cmd *cobra.Command, args []string, slOpts *se
 
 	var handler http.Handler = n
 	if tracer := r.Tracer(ctx); tracer.IsLoaded() {
-		handler = otelx.TraceHandler(handler, otelhttp.WithTracerProvider(tracer.Provider()))
+		handler = otelx.TraceHandler(handler,
+			otelhttp.WithTracerProvider(tracer.Provider()),
+			otelhttp.WithFilter(func(req *http.Request) bool {
+				return req.URL.Path != x.AdminPrefix+prometheus.MetricsPrometheusPath
+			}),
+		)
 	}
 
 	// #nosec G112 - the correct settings are set by graceful.WithDefaults

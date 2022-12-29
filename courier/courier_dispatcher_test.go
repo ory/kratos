@@ -53,6 +53,7 @@ func TestDispatchMessageWithInvalidSMTP(t *testing.T) {
 		require.Error(t, err)
 
 		messages, err := reg.CourierPersister().NextMessages(ctx, 10)
+		require.NoError(t, err)
 		require.Len(t, messages, 1)
 	})
 }
