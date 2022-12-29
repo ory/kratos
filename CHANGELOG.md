@@ -366,6 +366,8 @@ The `/admin/courier/messages` endpoint now uses `keysetpagination` instead.
 - Improve error message when no session is found
   ([#2988](https://github.com/ory/kratos/issues/2988))
   ([7ad2b97](https://github.com/ory/kratos/commit/7ad2b970089cee2209b3afeaaffd7e04f803918d))
+- Improve tracing ([#2992](https://github.com/ory/kratos/issues/2992))
+  ([04d0280](https://github.com/ory/kratos/commit/04d0280ca1338b93ac6e3026a8a2d852fbb46ef2))
 - Require verification on login
   ([#2927](https://github.com/ory/kratos/issues/2927))
   ([efb8ae8](https://github.com/ory/kratos/commit/efb8ae89cbc31477c2696a0df4c89d6dbf856d27))
