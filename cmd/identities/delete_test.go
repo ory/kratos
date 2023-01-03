@@ -37,7 +37,7 @@ func TestDeleteCmd(t *testing.T) {
 		assert.Equal(t, i.ID.String(), gjson.Parse(stdOut).String())
 
 		// expect identity to be deleted
-		_, err := reg.Persister().GetIdentity(context.Background(), i.ID)
+		_, err := reg.Persister().GetIdentity(context.Background(), i.ID, identity.ExpandNothing)
 		assert.True(t, errors.Is(err, sqlcon.ErrNoRows))
 	})
 
@@ -49,7 +49,7 @@ func TestDeleteCmd(t *testing.T) {
 		assert.Equal(t, `["`+strings.Join(ids, "\",\"")+"\"]\n", stdOut)
 
 		for _, i := range is {
-			_, err := reg.Persister().GetIdentity(context.Background(), i.ID)
+			_, err := reg.Persister().GetIdentity(context.Background(), i.ID, identity.ExpandNothing)
 			assert.Error(t, err)
 		}
 	})

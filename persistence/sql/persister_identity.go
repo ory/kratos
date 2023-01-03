@@ -7,10 +7,11 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"github.com/ory/kratos/credentialmigrate"
+	"github.com/ory/x/otelx"
+	"go.opentelemetry.io/otel/attribute"
 	"strings"
 	"time"
-
-	"github.com/ory/kratos/credentialmigrate"
 
 	"github.com/ory/jsonschema/v3"
 	"github.com/ory/x/sqlxx"
@@ -161,7 +162,7 @@ func (p *Persister) createIdentityCredentials(ctx context.Context, i *identity.I
 
 		cred.IdentityID = i.ID
 		cred.NID = nid
-		cred.CredentialTypeID = ct.ID
+		cred.IdentityCredentialTypeID = ct.ID
 		if err := c.Create(&cred); err != nil {
 			return sqlcon.HandleError(err)
 		}
@@ -361,17 +362,29 @@ func (p *Persister) CreateIdentity(ctx context.Context, i *identity.Identity) er
 	})
 }
 
-func (p *Persister) ListIdentities(ctx context.Context, page, perPage int) ([]identity.Identity, error) {
+func (p *Persister) ListIdentities(ctx context.Context, expand sqlxx.Expandables, page, perPage int) (res []identity.Identity, err error) {
 	ctx, span := p.r.Tracer(ctx).Tracer().Start(ctx, "persistence.sql.ListIdentities")
-	defer span.End()
+	defer otelx.End(span, &err)
+	span.SetAttributes(
+		attribute.Int("page", page),
+		attribute.Int("per_page", perPage),
+		attribute.StringSlice("expand", expand.ToEager()),
+		attribute.String("network.id", p.NetworkID(ctx).String()),
+	)
 
 	is := make([]identity.Identity, 0)
 
+	query := p.GetConnection(ctx).
+		Where("nid = ?", p.NetworkID(ctx)).
+		Paginate(page, perPage).
+		Order("id DESC")
+
+	if len(expand) > 0 {
+		query = query.EagerPreload(expand.ToEager()...)
+	}
+
 	/* #nosec G201 TableName is static */
-	if err := sqlcon.HandleError(p.GetConnection(ctx).Where("nid = ?", p.NetworkID(ctx)).
-		EagerPreload("VerifiableAddresses", "RecoveryAddresses").
-		Paginate(page, perPage).Order("id DESC").
-		All(&is)); err != nil {
+	if err := sqlcon.HandleError(query.All(&is)); err != nil {
 		return nil, err
 	}
 
@@ -447,16 +460,35 @@ func (p *Persister) DeleteIdentity(ctx context.Context, id uuid.UUID) error {
 	return p.delete(ctx, new(identity.Identity), id)
 }
 
-func (p *Persister) GetIdentity(ctx context.Context, id uuid.UUID) (*identity.Identity, error) {
+func (p *Persister) GetIdentity(ctx context.Context, id uuid.UUID, expand sqlxx.Expandables) (res *identity.Identity, err error) {
 	ctx, span := p.r.Tracer(ctx).Tracer().Start(ctx, "persistence.sql.GetIdentity")
-	defer span.End()
+	defer otelx.End(span, &err)
+
+	span.SetAttributes(
+		attribute.String("identity.id", id.String()),
+		attribute.StringSlice("expand", expand.ToEager()),
+		attribute.String("network.id", p.NetworkID(ctx).String()),
+	)
+
+	con := p.GetConnection(ctx)
+	query := con.Where("id = ? AND nid = ?", id, p.NetworkID(ctx))
+	if len(expand) > 0 {
+		query = query.EagerPreload(expand.ToEager()...)
+	}
 
 	var i identity.Identity
-	if err := p.GetConnection(ctx).EagerPreload("VerifiableAddresses", "RecoveryAddresses").Where("id = ? AND nid = ?", id, p.NetworkID(ctx)).First(&i); err != nil {
+	if err := query.First(&i); err != nil {
 		return nil, sqlcon.HandleError(err)
 	}
 
-	i.Credentials = nil
+	if !expand.Has(identity.ExpandFieldCredentials) {
+		i.Credentials = nil
+		i.InternalCredentials = nil
+	} else {
+		if err := credentialmigrate.UpgradeCredentials(&i); err != nil {
+			return nil, err
+		}
+	}
 
 	if err := p.injectTraitsSchemaURL(ctx, &i); err != nil {
 		return nil, err
@@ -465,61 +497,11 @@ func (p *Persister) GetIdentity(ctx context.Context, id uuid.UUID) (*identity.Id
 	return &i, nil
 }
 
-func (p *Persister) GetIdentityConfidential(ctx context.Context, id uuid.UUID) (*identity.Identity, error) {
+func (p *Persister) GetIdentityConfidential(ctx context.Context, id uuid.UUID) (res *identity.Identity, err error) {
 	ctx, span := p.r.Tracer(ctx).Tracer().Start(ctx, "persistence.sql.GetIdentityConfidential")
-	defer span.End()
+	defer otelx.End(span, &err)
 
-	var i identity.Identity
-
-	nid := p.NetworkID(ctx)
-	if err := p.GetConnection(ctx).Where("id = ? AND nid = ?", id, nid).First(&i); err != nil {
-		return nil, sqlcon.HandleError(err)
-	}
-
-	var creds identity.CredentialsCollection
-	if err := p.GetConnection(ctx).Where("identity_id = ? AND nid = ?", id, nid).All(&creds); err != nil {
-		return nil, sqlcon.HandleError(err)
-	}
-
-	i.Credentials = make(map[identity.CredentialsType]identity.Credentials)
-	for k := range creds {
-		cred := &creds[k]
-
-		var ct identity.CredentialsTypeTable
-		if err := p.GetConnection(ctx).Find(&ct, cred.CredentialTypeID); err != nil {
-			return nil, sqlcon.HandleError(err)
-		}
-		cred.Type = ct.Name
-
-		var cids identity.CredentialIdentifierCollection
-		if err := p.GetConnection(ctx).Where("identity_credential_id = ? AND nid = ?", cred.ID, nid).All(&cids); err != nil {
-			return nil, sqlcon.HandleError(err)
-		}
-
-		cred.Identifiers = make([]string, len(cids))
-		for kk, cid := range cids {
-			cred.Identifiers[kk] = cid.Identifier
-		}
-
-		i.Credentials[cred.Type] = *cred
-	}
-
-	if err := credentialmigrate.UpgradeCredentials(&i); err != nil {
-		return nil, err
-	}
-
-	if err := p.findRecoveryAddresses(ctx, &i); err != nil {
-		return nil, err
-	}
-	if err := p.findVerifiableAddresses(ctx, &i); err != nil {
-		return nil, err
-	}
-
-	if err := p.injectTraitsSchemaURL(ctx, &i); err != nil {
-		return nil, err
-	}
-
-	return &i, nil
+	return p.GetIdentity(ctx, id, identity.ExpandEverything)
 }
 
 func (p *Persister) FindVerifiableAddressByValue(ctx context.Context, via identity.VerifiableAddressType, value string) (*identity.VerifiableAddress, error) {

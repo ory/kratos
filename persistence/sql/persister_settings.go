@@ -6,6 +6,7 @@ package sql
 import (
 	"context"
 	"fmt"
+	"github.com/ory/kratos/identity"
 	"time"
 
 	"github.com/gofrs/uuid"
@@ -37,7 +38,7 @@ func (p *Persister) GetSettingsFlow(ctx context.Context, id uuid.UUID) (*setting
 		return nil, sqlcon.HandleError(err)
 	}
 
-	r.Identity, err = p.GetIdentity(ctx, r.IdentityID)
+	r.Identity, err = p.GetIdentity(ctx, r.IdentityID, identity.ExpandDefault)
 	if err != nil {
 		return nil, err
 	}

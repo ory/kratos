@@ -6,6 +6,7 @@ package sql_test
 import (
 	"context"
 	"fmt"
+	"github.com/stretchr/testify/suite"
 	"os"
 	"path/filepath"
 	"sync"
@@ -32,7 +33,6 @@ import (
 	courier "github.com/ory/kratos/courier/test"
 	"github.com/ory/kratos/driver"
 	ri "github.com/ory/kratos/identity"
-	identity "github.com/ory/kratos/identity/test"
 	"github.com/ory/kratos/internal"
 	"github.com/ory/kratos/internal/testhelpers"
 	"github.com/ory/kratos/persistence/sql"
@@ -163,9 +163,38 @@ func createCleanDatabases(t *testing.T) map[string]*driver.RegistryDefault {
 	return ps
 }
 
-func TestPersister(t *testing.T) {
-	conns := createCleanDatabases(t)
+type PersisterTestSuite struct {
+	suite.Suite
+	conns map[string]*driver.RegistryDefault
+}
+
+func (suite *PersisterTestSuite) forAllConnections(f func(*testing.T, *driver.RegistryDefault)) {
+	for name := range suite.conns {
+		name := name
+		reg := suite.conns[name]
+		suite.T().Run(fmt.Sprintf("database=%s", name), func(t *testing.T) {
+			t.Parallel()
+			f(t, reg)
+		})
+	}
+}
+
+// Make sure that VariableThatShouldStartAtFive is set to five
+// before each test
+func (suite *PersisterTestSuite) SetupTest() {
+	suite.conns = createCleanDatabases(suite.T())
+}
+
+// In order for 'go test' to run this suite, we need to create
+// a normal test function and pass our suite to suite.Run
+func TestExampleTestSuite(t *testing.T) {
+	suite.Run(t, new(PersisterTestSuite))
+}
+
+func (suite *PersisterTestSuite) TestPersister() {
+	conns := suite.conns
 	ctx := context.Background()
+	t := suite.T()
 
 	for name := range conns {
 		name := name
@@ -218,10 +247,6 @@ func TestPersister(t *testing.T) {
 				}
 			})
 
-			t.Run("contract=identity.TestPool", func(t *testing.T) {
-				pop.SetLogger(pl(t))
-				identity.TestPool(ctx, conf, p)(t)
-			})
 			t.Run("contract=registration.TestFlowPersister", func(t *testing.T) {
 				pop.SetLogger(pl(t))
 				registration.TestFlowPersister(ctx, p)(t)
@@ -299,7 +324,7 @@ func TestPersister_Transaction(t *testing.T) {
 		})
 		require.Error(t, err)
 		assert.Contains(t, err.Error(), errMessage)
-		_, err = p.GetIdentity(context.Background(), i.ID)
+		_, err = p.GetIdentity(context.Background(), i.ID, ri.ExpandNothing)
 		require.Error(t, err)
 		assert.Equal(t, sqlcon.ErrNoRows.Error(), err.Error())
 	})

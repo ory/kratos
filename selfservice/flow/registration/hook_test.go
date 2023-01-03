@@ -77,7 +77,7 @@ func TestRegistrationExecutor(t *testing.T) {
 					assert.EqualValues(t, http.StatusOK, res.StatusCode)
 					assert.EqualValues(t, "https://www.ory.sh/", res.Request.URL.String())
 
-					actual, err := reg.IdentityPool().GetIdentity(context.Background(), i.ID)
+					actual, err := reg.IdentityPool().GetIdentity(context.Background(), i.ID, identity.ExpandNothing)
 					require.NoError(t, err)
 					assert.Equal(t, actual.Traits, i.Traits)
 				})
@@ -100,7 +100,7 @@ func TestRegistrationExecutor(t *testing.T) {
 					assert.EqualValues(t, http.StatusOK, res.StatusCode)
 					assert.Equal(t, "", body)
 
-					_, err := reg.IdentityPool().GetIdentity(context.Background(), i.ID)
+					_, err := reg.IdentityPool().GetIdentity(context.Background(), i.ID, identity.ExpandNothing)
 					require.Error(t, err)
 				})
 

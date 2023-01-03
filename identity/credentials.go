@@ -5,6 +5,7 @@ package identity
 
 import (
 	"context"
+	"github.com/gobuffalo/pop/v6"
 	"reflect"
 	"time"
 
@@ -84,8 +85,6 @@ const (
 type Credentials struct {
 	ID uuid.UUID `json:"-" db:"id"`
 
-	CredentialTypeID uuid.UUID `json:"-" db:"identity_credential_type_id"`
-
 	// Type discriminates between different types of credentials.
 	Type CredentialsType `json:"type" db:"-"`
 
@@ -107,6 +106,27 @@ type Credentials struct {
 	// UpdatedAt is a helper struct field for gobuffalo.pop.
 	UpdatedAt time.Time `json:"updated_at" db:"updated_at"`
 	NID       uuid.UUID `json:"-"  faker:"-" db:"nid"`
+
+	IdentityCredentialTypeID uuid.UUID                      `json:"-" db:"identity_credential_type_id"`
+	IdentityCredentialType   CredentialsTypeTable           `json:"-" faker:"-" belongs_to:"identity_credential_types"`
+	CredentialIdentifiers    CredentialIdentifierCollection `json:"-" faker:"-" has_many:"identity_credential_identifiers" fk_id:"identity_credential_id" order_by:"id asc"`
+}
+
+func (c *Credentials) AfterEagerFind(tx *pop.Connection) error {
+	return c.setCredentials()
+}
+
+func (c *Credentials) setCredentials() error {
+	c.Type = c.IdentityCredentialType.Name
+	c.Identifiers = make([]string, 0, len(c.CredentialIdentifiers))
+	for _, id := range c.CredentialIdentifiers {
+		c.Identifiers = append(c.Identifiers, id.Identifier)
+	}
+	return nil
+}
+
+func (c Credentials) TableName(ctx context.Context) string {
+	return "identity_credentials"
 }
 
 type (
@@ -155,10 +175,6 @@ func (c CredentialsTypeTable) TableName(ctx context.Context) string {
 }
 
 func (c CredentialsCollection) TableName(ctx context.Context) string {
-	return "identity_credentials"
-}
-
-func (c Credentials) TableName(ctx context.Context) string {
 	return "identity_credentials"
 }
 

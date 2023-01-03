@@ -72,7 +72,7 @@ func TestVerifier(t *testing.T) {
 			actual.VerifiedAt = &verifiedAt
 			require.NoError(t, reg.PrivilegedIdentityPool().UpdateVerifiableAddress(context.Background(), actual))
 
-			i, err = reg.IdentityPool().GetIdentity(context.Background(), i.ID)
+			i, err = reg.IdentityPool().GetIdentity(context.Background(), i.ID, identity.ExpandDefault)
 			require.NoError(t, err)
 
 			var originalFlow flow.Flow
