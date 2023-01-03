@@ -5,6 +5,7 @@ package identity
 
 import (
 	"context"
+
 	"github.com/ory/x/sqlxx"
 
 	"github.com/gofrs/uuid"
@@ -66,5 +67,8 @@ type (
 
 		// ListRecoveryAddresses lists all tracked recovery addresses.
 		ListRecoveryAddresses(ctx context.Context, page, itemsPerPage int) ([]RecoveryAddress, error)
+
+		// HydrateIdentityAssociations hydrates the associations of an identity.
+		HydrateIdentityAssociations(ctx context.Context, i *Identity, expandables Expandables) error
 	}
 )

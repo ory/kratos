@@ -5,10 +5,11 @@ package session
 
 import (
 	"context"
-	"github.com/ory/x/otelx"
 	"net/http"
 	"net/url"
 	"time"
+
+	"github.com/ory/x/otelx"
 
 	"github.com/ory/x/randx"
 
@@ -257,7 +258,7 @@ func (s *ManagerHTTP) DoesSessionSatisfy(r *http.Request, sess *Session, request
 
 		// If credentials are not expanded, we load them here.
 		if len(i.Credentials) == 0 {
-			if err := s.r.SessionPersister().GetConnection(r.Context()).Load(&i, identity.ExpandCredentials.ToEager()...); err != nil {
+			if err := s.r.PrivilegedIdentityPool().HydrateIdentityAssociations(r.Context(), &i, identity.ExpandCredentials); err != nil {
 				return err
 			}
 		}
@@ -282,13 +283,14 @@ func (s *ManagerHTTP) DoesSessionSatisfy(r *http.Request, sess *Session, request
 		return NewErrAALNotSatisfied(
 			urlx.CopyWithQuery(urlx.AppendPaths(s.r.Config().SelfPublicURL(r.Context()), "/self-service/login/browser"), url.Values{"aal": {"aal2"}}).String())
 	}
+
 	return errors.Errorf("requested unknown aal: %s", requestedAAL)
 }
 
 func (s *ManagerHTTP) SessionAddAuthenticationMethods(ctx context.Context, sid uuid.UUID, ams ...AuthenticationMethod) (err error) {
 	ctx, span := s.r.Tracer(ctx).Tracer().Start(ctx, "sessions.ManagerHTTP.SessionAddAuthenticationMethods")
 	defer otelx.End(span, &err)
-	
+
 	// Since we added the method, it also means that we have authenticated it
 	sess, err := s.r.SessionPersister().GetSession(ctx, sid, ExpandNothing)
 	if err != nil {

@@ -5,9 +5,10 @@ package identity
 
 import (
 	"context"
+	"reflect"
+
 	"github.com/ory/kratos/x"
 	"github.com/ory/x/otelx"
-	"reflect"
 
 	"github.com/ory/kratos/driver/config"
 
@@ -87,7 +88,7 @@ func (m *Manager) Create(ctx context.Context, i *Identity, opts ...ManagerOption
 }
 
 func (m *Manager) requiresPrivilegedAccess(ctx context.Context, original, updated *Identity, o *managerOptions) (err error) {
-	ctx, span := m.r.Tracer(ctx).Tracer().Start(ctx, "identity.Manager.requiresPrivilegedAccess")
+	_, span := m.r.Tracer(ctx).Tracer().Start(ctx, "identity.Manager.requiresPrivilegedAccess")
 	defer otelx.End(span, &err)
 
 	if !o.AllowWriteProtectedTraits {

@@ -6,8 +6,9 @@ package sql
 import (
 	"context"
 	"fmt"
-	"github.com/ory/kratos/identity"
 	"time"
+
+	"github.com/ory/kratos/identity"
 
 	"github.com/gofrs/uuid"
 

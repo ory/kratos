@@ -10,9 +10,10 @@ import (
 	"strings"
 	"time"
 
+	"github.com/ory/kratos/credentialmigrate"
+
 	"go.opentelemetry.io/otel/attribute"
 
-	"github.com/ory/kratos/credentialmigrate"
 	"github.com/ory/x/otelx"
 
 	"github.com/ory/jsonschema/v3"
@@ -112,7 +113,7 @@ WHERE ici.identifier = ?
 		nid,
 		ct,
 	).First(&find); err != nil {
-		if errors.Cause(err) == sql.ErrNoRows {
+		if errors.Is(err, sql.ErrNoRows) {
 			return nil, nil, sqlcon.HandleError(err) // herodot.ErrNotFound.WithTrace(err).WithReasonf(`No identity matching credentials identifier "%s" could be found.`, match)
 		}
 
@@ -282,30 +283,6 @@ func (p *Persister) createRecoveryAddresses(ctx context.Context, i *identity.Ide
 	return nil
 }
 
-func (p *Persister) findVerifiableAddresses(ctx context.Context, i *identity.Identity) error {
-	ctx, span := p.r.Tracer(ctx).Tracer().Start(ctx, "persistence.sql.findVerifiableAddresses")
-	defer span.End()
-
-	var addresses []identity.VerifiableAddress
-	if err := p.GetConnection(ctx).Where("identity_id = ? AND nid = ?", i.ID, p.NetworkID(ctx)).Order("id ASC").All(&addresses); err != nil {
-		return err
-	}
-	i.VerifiableAddresses = addresses
-	return nil
-}
-
-func (p *Persister) findRecoveryAddresses(ctx context.Context, i *identity.Identity) error {
-	ctx, span := p.r.Tracer(ctx).Tracer().Start(ctx, "persistence.sql.findRecoveryAddresses")
-	defer span.End()
-
-	var addresses []identity.RecoveryAddress
-	if err := p.GetConnection(ctx).Where("identity_id = ? AND nid = ?", i.ID, p.NetworkID(ctx)).Order("id ASC").All(&addresses); err != nil {
-		return err
-	}
-	i.RecoveryAddresses = addresses
-	return nil
-}
-
 func (p *Persister) CountIdentities(ctx context.Context) (int64, error) {
 	ctx, span := p.r.Tracer(ctx).Tracer().Start(ctx, "persistence.sql.CountIdentities")
 	defer span.End()
@@ -364,6 +341,22 @@ func (p *Persister) CreateIdentity(ctx context.Context, i *identity.Identity) er
 	})
 }
 
+func (p *Persister) HydrateIdentityAssociations(ctx context.Context, i *identity.Identity, expand identity.Expandables) (err error) {
+	ctx, span := p.r.Tracer(ctx).Tracer().Start(ctx, "persistence.sql.HydrateIdentityAssociations")
+	defer otelx.End(span, &err)
+
+	con := p.GetConnection(ctx)
+	if err := con.Load(i, expand.ToEager()...); err != nil {
+		return err
+	}
+
+	if err := p.injectTraitsSchemaURL(ctx, i); err != nil {
+		return err
+	}
+
+	return p.afterFindIdentity(ctx, con, i, expand)
+}
+
 func (p *Persister) ListIdentities(ctx context.Context, expand identity.Expandables, page, perPage int) (res []identity.Identity, err error) {
 	ctx, span := p.r.Tracer(ctx).Tracer().Start(ctx, "persistence.sql.ListIdentities")
 	defer otelx.End(span, &err)
@@ -376,7 +369,8 @@ func (p *Persister) ListIdentities(ctx context.Context, expand identity.Expandab
 
 	is := make([]identity.Identity, 0)
 
-	query := p.GetConnection(ctx).
+	con := p.GetConnection(ctx)
+	query := con.
 		Where("nid = ?", p.NetworkID(ctx)).
 		Paginate(page, perPage).
 		Order("id DESC")
@@ -391,9 +385,12 @@ func (p *Persister) ListIdentities(ctx context.Context, expand identity.Expandab
 	}
 
 	schemaCache := map[string]string{}
-
 	for k := range is {
 		i := &is[k]
+		if err := p.afterFindIdentity(ctx, con, i, expand); err != nil {
+			return nil, err
+		}
+
 		if err := i.ValidateNID(); err != nil {
 			return nil, sqlcon.HandleError(err)
 		}
@@ -483,13 +480,8 @@ func (p *Persister) GetIdentity(ctx context.Context, id uuid.UUID, expand identi
 		return nil, sqlcon.HandleError(err)
 	}
 
-	if !expand.Has(identity.ExpandFieldCredentials) {
-		i.Credentials = nil
-		i.InternalCredentials = nil
-	} else {
-		if err := credentialmigrate.UpgradeCredentials(&i); err != nil {
-			return nil, err
-		}
+	if err := p.afterFindIdentity(ctx, con, &i, expand); err != nil {
+		return nil, err
 	}
 
 	if err := p.injectTraitsSchemaURL(ctx, &i); err != nil {
@@ -580,6 +572,20 @@ func (p *Persister) validateIdentity(ctx context.Context, i *identity.Identity) 
 			return errors.WithStack(herodot.ErrBadRequest.WithReasonf("%s", err))
 		}
 		return err
+	}
+
+	return nil
+}
+
+func (p *Persister) afterFindIdentity(ctx context.Context, con *pop.Connection, i *identity.Identity, expand identity.Expandables) error {
+	if err := i.AfterEagerFind(con); err != nil {
+		return err
+	}
+
+	if expand.Has(identity.ExpandFieldCredentials) {
+		if err := credentialmigrate.UpgradeCredentials(i); err != nil {
+			return err
+		}
 	}
 
 	return nil

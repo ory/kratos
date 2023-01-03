@@ -193,6 +193,7 @@ func TestMigrations(t *testing.T) {
 					for _, id := range ids {
 						actual, err := d.PrivilegedIdentityPool().GetIdentityConfidential(context.Background(), id.ID)
 						require.NoError(t, err)
+						found = append(found, actual.ID.String())
 
 						CompareWithFixture(t, identity.WithCredentialsAndAdminMetadataInJSON(*actual), "identity", id.ID.String())
 					}

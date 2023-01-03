@@ -5,9 +5,10 @@ package identity
 
 import (
 	"context"
-	"github.com/gobuffalo/pop/v6"
 	"reflect"
 	"time"
+
+	"github.com/gobuffalo/pop/v6"
 
 	"github.com/ory/kratos/ui/node"
 

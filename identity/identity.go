@@ -8,9 +8,10 @@ import (
 	"database/sql/driver"
 	"encoding/json"
 	"fmt"
-	"github.com/gobuffalo/pop/v6"
 	"sync"
 	"time"
+
+	"github.com/gobuffalo/pop/v6"
 
 	"github.com/tidwall/sjson"
 
@@ -132,7 +133,11 @@ type Identity struct {
 }
 
 func (i *Identity) AfterEagerFind(tx *pop.Connection) error {
-	return i.setCredentials(tx)
+	if err := i.setCredentials(tx); err != nil {
+		return err
+	}
+
+	return i.ValidateNID()
 }
 
 func (i *Identity) setCredentials(tx *pop.Connection) error {

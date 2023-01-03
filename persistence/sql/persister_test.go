@@ -6,11 +6,12 @@ package sql_test
 import (
 	"context"
 	"fmt"
-	"github.com/stretchr/testify/suite"
 	"os"
 	"path/filepath"
 	"sync"
 	"testing"
+
+	"github.com/stretchr/testify/suite"
 
 	"github.com/ory/x/dbal"
 
@@ -187,7 +188,7 @@ func (suite *PersisterTestSuite) SetupTest() {
 
 // In order for 'go test' to run this suite, we need to create
 // a normal test function and pass our suite to suite.Run
-func TestExampleTestSuite(t *testing.T) {
+func TestPersisterTestSuite(t *testing.T) {
 	suite.Run(t, new(PersisterTestSuite))
 }
 

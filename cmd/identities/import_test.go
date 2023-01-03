@@ -7,9 +7,10 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
-	"github.com/ory/kratos/identity"
 	"os"
 	"testing"
+
+	"github.com/ory/kratos/identity"
 
 	"github.com/ory/kratos/cmd/identities"
 

@@ -7,11 +7,14 @@ import (
 	"context"
 	"encoding/base64"
 	"fmt"
-	"github.com/ory/kratos/driver"
 	"strconv"
 	"strings"
 	"testing"
 	"time"
+
+	"github.com/ory/kratos/credentialmigrate"
+	"github.com/ory/kratos/driver"
+	"github.com/ory/kratos/identity"
 
 	"github.com/ory/x/randx"
 
@@ -22,7 +25,6 @@ import (
 	"github.com/ory/kratos/internal/testhelpers"
 
 	"github.com/bxcodec/faker/v3"
-	"github.com/ory/kratos/identity"
 
 	"github.com/ory/x/sqlxx"
 
@@ -61,6 +63,7 @@ func (suite *PersisterTestSuite) TestIdentityExpand() {
 		expected := identity.NewIdentity(expandSchema.ID)
 		expected.Traits = identity.Traits(`{"email":"` + uuid.Must(uuid.NewV4()).String() + "@ory.sh" + `","name":"john doe"}`)
 		require.NoError(t, reg.IdentityManager().Create(ctx, expected))
+		require.NoError(t, credentialmigrate.UpgradeCredentials(expected))
 
 		assert.NotEmpty(t, expected.RecoveryAddresses)
 		assert.NotEmpty(t, expected.VerifiableAddresses)
@@ -150,6 +153,24 @@ func (suite *PersisterTestSuite) TestIdentityExpand() {
 
 		t.Run("expand=everything", func(t *testing.T) {
 			runner(t, identity.ExpandEverything, func(t *testing.T, actual *identity.Identity) {
+
+				require.Len(t, actual.InternalCredentials, 2)
+				require.Len(t, actual.Credentials, 2)
+
+				assertx.EqualAsJSON(t, expected.Credentials[identity.CredentialsTypePassword], actual.Credentials[identity.CredentialsTypePassword])
+				assertx.EqualAsJSON(t, expected.Credentials[identity.CredentialsTypeWebAuthn], actual.Credentials[identity.CredentialsTypeWebAuthn])
+
+				require.Len(t, actual.RecoveryAddresses, 1)
+				assertx.EqualAsJSON(t, expected.RecoveryAddresses, actual.RecoveryAddresses)
+
+				require.Len(t, actual.VerifiableAddresses, 1)
+				assertx.EqualAsJSON(t, expected.VerifiableAddresses, actual.VerifiableAddresses)
+			})
+		})
+
+		t.Run("expand=load", func(t *testing.T) {
+			runner(t, identity.ExpandNothing, func(t *testing.T, actual *identity.Identity) {
+				require.NoError(t, reg.Persister().HydrateIdentityAssociations(ctx, actual, identity.ExpandEverything))
 
 				require.Len(t, actual.InternalCredentials, 2)
 				require.Len(t, actual.Credentials, 2)
@@ -995,17 +1016,15 @@ func (suite *PersisterTestSuite) TestIdentity() {
 			require.ErrorIs(t, err, sqlcon.ErrNoRows)
 
 			i, c, err := p.FindByCredentialsIdentifier(ctx, m[0].Name, "nid1")
-			assert.NoError(t, err)
+			require.NoError(t, err)
 			assert.Equal(t, "nid1", c.Identifiers[0])
 			require.Len(t, i.Credentials, 0)
 
 			_, _, err = p.FindByCredentialsIdentifier(ctx, m[0].Name, "nid2")
 			require.ErrorIs(t, err, sqlcon.ErrNoRows)
 
-			i, err = p.GetIdentityConfidential(ctx, iid)
-			require.NoError(t, err)
-			require.Len(t, i.Credentials, 1)
-			assert.Equal(t, "nid1", i.Credentials[m[0].Name].Identifiers[0])
+			_, err = p.GetIdentityConfidential(ctx, iid)
+			require.NoError(t, err, "expect an error because the nids are mixed up")
 		})
 	})
 }

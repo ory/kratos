@@ -6,8 +6,9 @@ package sql
 import (
 	"context"
 	"fmt"
-	"github.com/ory/x/otelx"
 	"time"
+
+	"github.com/ory/x/otelx"
 
 	"github.com/ory/kratos/identity"
 

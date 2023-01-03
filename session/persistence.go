@@ -5,8 +5,9 @@ package session
 
 import (
 	"context"
-	"github.com/gobuffalo/pop/v6"
 	"time"
+
+	"github.com/gobuffalo/pop/v6"
 
 	"github.com/ory/kratos/identity"
 
