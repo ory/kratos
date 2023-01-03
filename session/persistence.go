@@ -5,6 +5,7 @@ package session
 
 import (
 	"context"
+	"github.com/gobuffalo/pop/v6"
 	"time"
 
 	"github.com/ory/kratos/identity"
@@ -19,6 +20,8 @@ type PersistenceProvider interface {
 }
 
 type Persister interface {
+	GetConnection(ctx context.Context) *pop.Connection
+
 	// GetSession retrieves a session from the store.
 	GetSession(ctx context.Context, sid uuid.UUID, expandables Expandables) (*Session, error)
 

@@ -196,6 +196,7 @@ func (s *ManagerHTTP) FetchFromRequest(ctx context.Context, r *http.Request) (*S
 		return nil, errors.WithStack(NewErrNoActiveSessionFound())
 	}
 
+	se.Identity = se.Identity.CopyWithoutCredentials()
 	return se, nil
 }
 
@@ -229,19 +230,23 @@ func (s *ManagerHTTP) DoesSessionSatisfy(r *http.Request, sess *Session, request
 			return nil
 		}
 	case config.HighestAvailableAAL:
-		i, err := s.r.PrivilegedIdentityPool().GetIdentityConfidential(r.Context(), sess.IdentityID)
-		if err != nil {
-			return err
+		i := *sess.Identity
+
+		// If credentials are not expanded, we load them here.
+		if len(i.Credentials) == 0 {
+			if err := s.r.SessionPersister().GetConnection(r.Context()).Load(&i, identity.ExpandCredentials.ToEager()...); err != nil {
+				return err
+			}
 		}
 
 		available := identity.NoAuthenticatorAssuranceLevel
-		if firstCount, err := s.r.IdentityManager().CountActiveFirstFactorCredentials(r.Context(), i); err != nil {
+		if firstCount, err := s.r.IdentityManager().CountActiveFirstFactorCredentials(r.Context(), &i); err != nil {
 			return err
 		} else if firstCount > 0 {
 			available = identity.AuthenticatorAssuranceLevel1
 		}
 
-		if secondCount, err := s.r.IdentityManager().CountActiveMultiFactorCredentials(r.Context(), i); err != nil {
+		if secondCount, err := s.r.IdentityManager().CountActiveMultiFactorCredentials(r.Context(), &i); err != nil {
 			return err
 		} else if secondCount > 0 {
 			available = identity.AuthenticatorAssuranceLevel2
