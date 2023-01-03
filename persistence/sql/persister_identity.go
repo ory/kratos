@@ -7,11 +7,13 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
-	"github.com/ory/kratos/credentialmigrate"
-	"github.com/ory/x/otelx"
-	"go.opentelemetry.io/otel/attribute"
 	"strings"
 	"time"
+
+	"go.opentelemetry.io/otel/attribute"
+
+	"github.com/ory/kratos/credentialmigrate"
+	"github.com/ory/x/otelx"
 
 	"github.com/ory/jsonschema/v3"
 	"github.com/ory/x/sqlxx"
@@ -362,7 +364,7 @@ func (p *Persister) CreateIdentity(ctx context.Context, i *identity.Identity) er
 	})
 }
 
-func (p *Persister) ListIdentities(ctx context.Context, expand sqlxx.Expandables, page, perPage int) (res []identity.Identity, err error) {
+func (p *Persister) ListIdentities(ctx context.Context, expand identity.Expandables, page, perPage int) (res []identity.Identity, err error) {
 	ctx, span := p.r.Tracer(ctx).Tracer().Start(ctx, "persistence.sql.ListIdentities")
 	defer otelx.End(span, &err)
 	span.SetAttributes(
@@ -460,7 +462,7 @@ func (p *Persister) DeleteIdentity(ctx context.Context, id uuid.UUID) error {
 	return p.delete(ctx, new(identity.Identity), id)
 }
 
-func (p *Persister) GetIdentity(ctx context.Context, id uuid.UUID, expand sqlxx.Expandables) (res *identity.Identity, err error) {
+func (p *Persister) GetIdentity(ctx context.Context, id uuid.UUID, expand identity.Expandables) (res *identity.Identity, err error) {
 	ctx, span := p.r.Tracer(ctx).Tracer().Start(ctx, "persistence.sql.GetIdentity")
 	defer otelx.End(span, &err)
 

@@ -6,8 +6,9 @@ package sql
 import (
 	"context"
 	"fmt"
-	"github.com/ory/kratos/identity"
 	"time"
+
+	"github.com/ory/kratos/identity"
 
 	"github.com/ory/x/pagination/keysetpagination"
 
@@ -256,7 +257,7 @@ func (p *Persister) DeleteSessionsByIdentity(ctx context.Context, identityID uui
 	return nil
 }
 
-func (p *Persister) GetSessionByToken(ctx context.Context, token string, expandables session.Expandables) (*session.Session, error) {
+func (p *Persister) GetSessionByToken(ctx context.Context, token string, expand session.Expandables, identityExpand identity.Expandables) (*session.Session, error) {
 	ctx, span := p.r.Tracer(ctx).Tracer().Start(ctx, "persistence.sql.GetSessionByToken")
 	defer span.End()
 
@@ -265,8 +266,8 @@ func (p *Persister) GetSessionByToken(ctx context.Context, token string, expanda
 	nid := p.NetworkID(ctx)
 
 	q := p.GetConnection(ctx).Q()
-	if len(expandables) > 0 {
-		q = q.Eager(expandables.ToEager()...)
+	if len(expand) > 0 {
+		q = q.Eager(expand.ToEager()...)
 	}
 
 	if err := q.Where("token = ? AND nid = ?", token, nid).First(&s); err != nil {
@@ -275,8 +276,8 @@ func (p *Persister) GetSessionByToken(ctx context.Context, token string, expanda
 
 	// This is needed because of how identities are fetched from the store (if we use eager not all fields are
 	// available!).
-	if expandables.Has(session.ExpandSessionIdentity) {
-		i, err := p.GetIdentity(ctx, s.IdentityID, identity.ExpandDefault)
+	if expand.Has(session.ExpandSessionIdentity) {
+		i, err := p.GetIdentity(ctx, s.IdentityID, identityExpand)
 		if err != nil {
 			return nil, err
 		}
