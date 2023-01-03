@@ -5,6 +5,8 @@ package identity
 
 import (
 	"context"
+	"github.com/ory/kratos/x"
+	"github.com/ory/x/otelx"
 	"reflect"
 
 	"github.com/ory/kratos/driver/config"
@@ -28,6 +30,7 @@ type (
 	managerDependencies interface {
 		config.Provider
 		PoolProvider
+		x.TracingProvider
 		courier.Provider
 		ValidationProvider
 		ActiveCredentialsCounterStrategyProvider
@@ -67,7 +70,10 @@ func newManagerOptions(opts []ManagerOption) *managerOptions {
 	return &o
 }
 
-func (m *Manager) Create(ctx context.Context, i *Identity, opts ...ManagerOption) error {
+func (m *Manager) Create(ctx context.Context, i *Identity, opts ...ManagerOption) (err error) {
+	ctx, span := m.r.Tracer(ctx).Tracer().Start(ctx, "identity.Manager.Create")
+	defer otelx.End(span, &err)
+
 	if i.SchemaID == "" {
 		i.SchemaID = m.r.Config().DefaultIdentityTraitsSchemaID(ctx)
 	}
@@ -80,7 +86,10 @@ func (m *Manager) Create(ctx context.Context, i *Identity, opts ...ManagerOption
 	return m.r.IdentityPool().(PrivilegedPool).CreateIdentity(ctx, i)
 }
 
-func (m *Manager) requiresPrivilegedAccess(_ context.Context, original, updated *Identity, o *managerOptions) error {
+func (m *Manager) requiresPrivilegedAccess(ctx context.Context, original, updated *Identity, o *managerOptions) (err error) {
+	ctx, span := m.r.Tracer(ctx).Tracer().Start(ctx, "identity.Manager.requiresPrivilegedAccess")
+	defer otelx.End(span, &err)
+
 	if !o.AllowWriteProtectedTraits {
 		if !CredentialsEqual(updated.Credentials, original.Credentials) {
 			// reset the identity
@@ -99,7 +108,10 @@ func (m *Manager) requiresPrivilegedAccess(_ context.Context, original, updated 
 	return nil
 }
 
-func (m *Manager) Update(ctx context.Context, updated *Identity, opts ...ManagerOption) error {
+func (m *Manager) Update(ctx context.Context, updated *Identity, opts ...ManagerOption) (err error) {
+	ctx, span := m.r.Tracer(ctx).Tracer().Start(ctx, "identity.Manager.Update")
+	defer otelx.End(span, &err)
+
 	o := newManagerOptions(opts)
 	if err := m.validate(ctx, updated, o); err != nil {
 		return err
@@ -117,7 +129,10 @@ func (m *Manager) Update(ctx context.Context, updated *Identity, opts ...Manager
 	return m.r.IdentityPool().(PrivilegedPool).UpdateIdentity(ctx, updated)
 }
 
-func (m *Manager) UpdateSchemaID(ctx context.Context, id uuid.UUID, schemaID string, opts ...ManagerOption) error {
+func (m *Manager) UpdateSchemaID(ctx context.Context, id uuid.UUID, schemaID string, opts ...ManagerOption) (err error) {
+	ctx, span := m.r.Tracer(ctx).Tracer().Start(ctx, "identity.Manager.UpdateSchemaID")
+	defer otelx.End(span, &err)
+
 	o := newManagerOptions(opts)
 	original, err := m.r.IdentityPool().(PrivilegedPool).GetIdentityConfidential(ctx, id)
 	if err != nil {
@@ -136,7 +151,10 @@ func (m *Manager) UpdateSchemaID(ctx context.Context, id uuid.UUID, schemaID str
 	return m.r.IdentityPool().(PrivilegedPool).UpdateIdentity(ctx, original)
 }
 
-func (m *Manager) SetTraits(ctx context.Context, id uuid.UUID, traits Traits, opts ...ManagerOption) (*Identity, error) {
+func (m *Manager) SetTraits(ctx context.Context, id uuid.UUID, traits Traits, opts ...ManagerOption) (_ *Identity, err error) {
+	ctx, span := m.r.Tracer(ctx).Tracer().Start(ctx, "identity.Manager.SetTraits")
+	defer otelx.End(span, &err)
+
 	o := newManagerOptions(opts)
 	original, err := m.r.IdentityPool().(PrivilegedPool).GetIdentityConfidential(ctx, id)
 	if err != nil {
@@ -157,7 +175,10 @@ func (m *Manager) SetTraits(ctx context.Context, id uuid.UUID, traits Traits, op
 	return updated, nil
 }
 
-func (m *Manager) UpdateTraits(ctx context.Context, id uuid.UUID, traits Traits, opts ...ManagerOption) error {
+func (m *Manager) UpdateTraits(ctx context.Context, id uuid.UUID, traits Traits, opts ...ManagerOption) (err error) {
+	ctx, span := m.r.Tracer(ctx).Tracer().Start(ctx, "identity.Manager.UpdateTraits")
+	defer otelx.End(span, &err)
+
 	updated, err := m.SetTraits(ctx, id, traits, opts...)
 	if err != nil {
 		return err
@@ -166,7 +187,10 @@ func (m *Manager) UpdateTraits(ctx context.Context, id uuid.UUID, traits Traits,
 	return m.r.IdentityPool().(PrivilegedPool).UpdateIdentity(ctx, updated)
 }
 
-func (m *Manager) validate(ctx context.Context, i *Identity, o *managerOptions) error {
+func (m *Manager) validate(ctx context.Context, i *Identity, o *managerOptions) (err error) {
+	ctx, span := m.r.Tracer(ctx).Tracer().Start(ctx, "identity.Manager.validate")
+	defer otelx.End(span, &err)
+
 	if err := m.r.IdentityValidator().Validate(ctx, i); err != nil {
 		if _, ok := errorsx.Cause(err).(*jsonschema.ValidationError); ok && !o.ExposeValidationErrors {
 			return herodot.ErrBadRequest.WithReasonf("%s", err).WithWrap(err)
@@ -178,6 +202,9 @@ func (m *Manager) validate(ctx context.Context, i *Identity, o *managerOptions) 
 }
 
 func (m *Manager) CountActiveFirstFactorCredentials(ctx context.Context, i *Identity) (count int, err error) {
+	ctx, span := m.r.Tracer(ctx).Tracer().Start(ctx, "identity.Manager.CountActiveFirstFactorCredentials")
+	defer otelx.End(span, &err)
+
 	for _, strategy := range m.r.ActiveCredentialsCounterStrategies(ctx) {
 		current, err := strategy.CountActiveFirstFactorCredentials(i.Credentials)
 		if err != nil {
@@ -190,6 +217,9 @@ func (m *Manager) CountActiveFirstFactorCredentials(ctx context.Context, i *Iden
 }
 
 func (m *Manager) CountActiveMultiFactorCredentials(ctx context.Context, i *Identity) (count int, err error) {
+	ctx, span := m.r.Tracer(ctx).Tracer().Start(ctx, "identity.Manager.CountActiveMultiFactorCredentials")
+	defer otelx.End(span, &err)
+
 	for _, strategy := range m.r.ActiveCredentialsCounterStrategies(ctx) {
 		current, err := strategy.CountActiveMultiFactorCredentials(i.Credentials)
 		if err != nil {
