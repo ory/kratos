@@ -310,8 +310,7 @@ func (e *WebHook) execute(ctx context.Context, data *templateContext) error {
 		// incoming request context is cancelled.
 		//
 		// The webhook will still cancel after 30 seconds as that is the configured timeout for the HTTP client.
-		req = req.WithContext(context.Background())
-		// spanOpts = append(spanOpts, trace.WithNewRoot())
+		req = req.WithContext(trace.ContextWithSpan(context.Background(), span))
 	}
 
 	startTime := time.Now()
