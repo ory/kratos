@@ -332,6 +332,9 @@ The `/admin/courier/messages` endpoint now uses `keysetpagination` instead.
 - Respect `return_to` URL parameter in registration flow when the user is
   already registered ([#2957](https://github.com/ory/kratos/issues/2957))
   ([3462ce1](https://github.com/ory/kratos/commit/3462ce1512d03529b613421a69bcf4c1d5e98e08))
+- Set accept header for GitLab
+  ([#2998](https://github.com/ory/kratos/issues/2998))
+  ([e892113](https://github.com/ory/kratos/commit/e892113cc00a010490492def7f128bfb5c15b8de))
 - Spurious cancelation of async webhooks, better tracing
   ([#2969](https://github.com/ory/kratos/issues/2969))
   ([72de640](https://github.com/ory/kratos/commit/72de640bad75da29424222bd613a21d10e1811ec)):
