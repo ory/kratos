@@ -43,28 +43,28 @@ type (
 		r managerDependencies
 	}
 
-	managerOptions struct {
+	ManagerOptions struct {
 		ExposeValidationErrors    bool
 		AllowWriteProtectedTraits bool
 	}
 
-	ManagerOption func(*managerOptions)
+	ManagerOption func(*ManagerOptions)
 )
 
 func NewManager(r managerDependencies) *Manager {
 	return &Manager{r: r}
 }
 
-func ManagerExposeValidationErrorsForInternalTypeAssertion(options *managerOptions) {
+func ManagerExposeValidationErrorsForInternalTypeAssertion(options *ManagerOptions) {
 	options.ExposeValidationErrors = true
 }
 
-func ManagerAllowWriteProtectedTraits(options *managerOptions) {
+func ManagerAllowWriteProtectedTraits(options *ManagerOptions) {
 	options.AllowWriteProtectedTraits = true
 }
 
-func newManagerOptions(opts []ManagerOption) *managerOptions {
-	var o managerOptions
+func newManagerOptions(opts []ManagerOption) *ManagerOptions {
+	var o ManagerOptions
 	for _, f := range opts {
 		f(&o)
 	}
@@ -80,14 +80,14 @@ func (m *Manager) Create(ctx context.Context, i *Identity, opts ...ManagerOption
 	}
 
 	o := newManagerOptions(opts)
-	if err := m.validate(ctx, i, o); err != nil {
+	if err := m.ValidateIdentity(ctx, i, o); err != nil {
 		return err
 	}
 
 	return m.r.IdentityPool().(PrivilegedPool).CreateIdentity(ctx, i)
 }
 
-func (m *Manager) requiresPrivilegedAccess(ctx context.Context, original, updated *Identity, o *managerOptions) (err error) {
+func (m *Manager) requiresPrivilegedAccess(ctx context.Context, original, updated *Identity, o *ManagerOptions) (err error) {
 	_, span := m.r.Tracer(ctx).Tracer().Start(ctx, "identity.Manager.requiresPrivilegedAccess")
 	defer otelx.End(span, &err)
 
@@ -114,7 +114,7 @@ func (m *Manager) Update(ctx context.Context, updated *Identity, opts ...Manager
 	defer otelx.End(span, &err)
 
 	o := newManagerOptions(opts)
-	if err := m.validate(ctx, updated, o); err != nil {
+	if err := m.ValidateIdentity(ctx, updated, o); err != nil {
 		return err
 	}
 
@@ -145,7 +145,7 @@ func (m *Manager) UpdateSchemaID(ctx context.Context, id uuid.UUID, schemaID str
 	}
 
 	original.SchemaID = schemaID
-	if err := m.validate(ctx, original, o); err != nil {
+	if err := m.ValidateIdentity(ctx, original, o); err != nil {
 		return err
 	}
 
@@ -165,7 +165,7 @@ func (m *Manager) SetTraits(ctx context.Context, id uuid.UUID, traits Traits, op
 	// original is used to check whether protected traits were modified
 	updated := deepcopy.Copy(original).(*Identity)
 	updated.Traits = traits
-	if err := m.validate(ctx, updated, o); err != nil {
+	if err := m.ValidateIdentity(ctx, updated, o); err != nil {
 		return nil, err
 	}
 
@@ -188,7 +188,7 @@ func (m *Manager) UpdateTraits(ctx context.Context, id uuid.UUID, traits Traits,
 	return m.r.IdentityPool().(PrivilegedPool).UpdateIdentity(ctx, updated)
 }
 
-func (m *Manager) validate(ctx context.Context, i *Identity, o *managerOptions) (err error) {
+func (m *Manager) ValidateIdentity(ctx context.Context, i *Identity, o *ManagerOptions) (err error) {
 	ctx, span := m.r.Tracer(ctx).Tracer().Start(ctx, "identity.Manager.validate")
 	defer otelx.End(span, &err)
 

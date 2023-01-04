@@ -7,11 +7,8 @@ import (
 	"context"
 	"fmt"
 	"os"
-	"path/filepath"
 	"sync"
 	"testing"
-
-	"github.com/stretchr/testify/suite"
 
 	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/schema"
@@ -23,7 +20,6 @@ import (
 	"github.com/go-errors/errors"
 	"github.com/gobuffalo/pop/v6"
 	"github.com/gobuffalo/pop/v6/logging"
-	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
@@ -32,6 +28,7 @@ import (
 	courier "github.com/ory/kratos/courier/test"
 	"github.com/ory/kratos/driver"
 	ri "github.com/ory/kratos/identity"
+	identity "github.com/ory/kratos/identity/test"
 	"github.com/ory/kratos/internal"
 	"github.com/ory/kratos/internal/testhelpers"
 	"github.com/ory/kratos/persistence/sql"
@@ -51,11 +48,9 @@ import (
 	"github.com/ory/x/sqlcon/dockertest"
 )
 
-var sqlite = fmt.Sprintf("sqlite3://%s.sqlite?_fk=true&mode=rwc", filepath.Join(os.TempDir(), uuid.New().String()))
-
 func init() {
 	corpx.RegisterFakes()
-	// op.Debug = true
+	//pop.Debug = true
 }
 
 // nolint:staticcheck
@@ -162,38 +157,9 @@ func createCleanDatabases(t *testing.T) map[string]*driver.RegistryDefault {
 	return ps
 }
 
-type PersisterTestSuite struct {
-	suite.Suite
-	conns map[string]*driver.RegistryDefault
-}
-
-func (suite *PersisterTestSuite) forAllConnections(f func(*testing.T, *driver.RegistryDefault)) {
-	for name := range suite.conns {
-		name := name
-		reg := suite.conns[name]
-		suite.T().Run(fmt.Sprintf("database=%s", name), func(t *testing.T) {
-			t.Parallel()
-			f(t, reg)
-		})
-	}
-}
-
-// Make sure that VariableThatShouldStartAtFive is set to five
-// before each test
-func (suite *PersisterTestSuite) SetupTest() {
-	suite.conns = createCleanDatabases(suite.T())
-}
-
-// In order for 'go test' to run this suite, we need to create
-// a normal test function and pass our suite to suite.Run
-func TestPersisterTestSuite(t *testing.T) {
-	suite.Run(t, new(PersisterTestSuite))
-}
-
-func (suite *PersisterTestSuite) TestPersister() {
-	conns := suite.conns
+func TestPersister(t *testing.T) {
+	conns := createCleanDatabases(t)
 	ctx := context.Background()
-	t := suite.T()
 
 	for name := range conns {
 		name := name
@@ -246,6 +212,10 @@ func (suite *PersisterTestSuite) TestPersister() {
 				}
 			})
 
+			t.Run("contract=identity.TestPool", func(t *testing.T) {
+				pop.SetLogger(pl(t))
+				identity.TestPool(ctx, conf, p, reg.IdentityManager())(t)
+			})
 			t.Run("contract=registration.TestFlowPersister", func(t *testing.T) {
 				pop.SetLogger(pl(t))
 				registration.TestFlowPersister(ctx, p)(t)
