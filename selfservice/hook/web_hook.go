@@ -288,7 +288,7 @@ func (e *WebHook) execute(ctx context.Context, data *templateContext) error {
 		httpClient     = e.deps.HTTPClient(ctx)
 		ignoreResponse = gjson.GetBytes(e.conf, "response.ignore").Bool()
 		canInterrupt   = gjson.GetBytes(e.conf, "can_interrupt").Bool()
-		tracer         = trace.SpanFromContext(ctx).TracerProvider().Tracer("kratos-webhooks")
+		tracer         = e.deps.Tracer(ctx).Tracer()
 		spanOpts       = []trace.SpanStartOption{trace.WithAttributes(attrs...)}
 		errChan        = make(chan error, 1)
 	)

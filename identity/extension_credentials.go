@@ -8,9 +8,9 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/ory/go-convenience/stringslice"
 	"github.com/ory/jsonschema/v3"
 	"github.com/ory/x/sqlxx"
+	"github.com/ory/x/stringslice"
 
 	"github.com/ory/kratos/schema"
 )

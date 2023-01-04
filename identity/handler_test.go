@@ -100,12 +100,8 @@ func TestHandler(t *testing.T) {
 
 	var makePatch = func(t *testing.T, patches ...patch) []patch {
 		t.Helper()
-		result := make([]patch, 0, len(patches))
-
-		for _, patch := range patches {
-			result = append(result, patch)
-		}
-
+		result := make([]patch, len(patches))
+		copy(result, patches)
 		return result
 	}
 
