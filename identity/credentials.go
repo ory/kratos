@@ -121,6 +121,9 @@ func (c *Credentials) setCredentials() error {
 	c.Type = c.IdentityCredentialType.Name
 	c.Identifiers = make([]string, 0, len(c.CredentialIdentifiers))
 	for _, id := range c.CredentialIdentifiers {
+		if c.NID != id.NID {
+			continue
+		}
 		c.Identifiers = append(c.Identifiers, id.Identifier)
 	}
 	return nil

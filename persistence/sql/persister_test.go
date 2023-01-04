@@ -13,8 +13,6 @@ import (
 
 	"github.com/stretchr/testify/suite"
 
-	"github.com/ory/x/dbal"
-
 	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/schema"
 	"github.com/ory/x/sqlxx"
@@ -100,7 +98,7 @@ func pl(t *testing.T) func(lvl logging.Level, s string, args ...interface{}) {
 }
 
 func createCleanDatabases(t *testing.T) map[string]*driver.RegistryDefault {
-	conns := map[string]string{"sqlite": dbal.NewSQLiteTestDatabase(t)}
+	conns := map[string]string{"sqlite": "sqlite://file:" + t.TempDir() + "/db.sqlite?_fk=true"}
 
 	var l sync.Mutex
 	if !testing.Short() {
@@ -132,7 +130,7 @@ func createCleanDatabases(t *testing.T) map[string]*driver.RegistryDefault {
 	for name, dsn := range conns {
 		go func(name, dsn string) {
 			defer wg.Done()
-			t.Logf("Connecting to %s", name)
+			t.Logf("Connecting to %s: %s", name, dsn)
 			_, reg := internal.NewRegistryDefaultWithDSN(t, dsn)
 			p := reg.Persister().(*sql.Persister)
 

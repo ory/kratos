@@ -10,8 +10,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/ory/kratos/credentialmigrate"
-
 	"go.opentelemetry.io/otel/attribute"
 
 	"github.com/ory/x/otelx"
@@ -350,11 +348,11 @@ func (p *Persister) HydrateIdentityAssociations(ctx context.Context, i *identity
 		return err
 	}
 
-	if err := p.injectTraitsSchemaURL(ctx, i); err != nil {
+	if err := i.AfterEagerFind(con); err != nil {
 		return err
 	}
 
-	return p.afterFindIdentity(ctx, con, i, expand)
+	return p.injectTraitsSchemaURL(ctx, i)
 }
 
 func (p *Persister) ListIdentities(ctx context.Context, expand identity.Expandables, page, perPage int) (res []identity.Identity, err error) {
@@ -387,13 +385,6 @@ func (p *Persister) ListIdentities(ctx context.Context, expand identity.Expandab
 	schemaCache := map[string]string{}
 	for k := range is {
 		i := &is[k]
-		if err := p.afterFindIdentity(ctx, con, i, expand); err != nil {
-			return nil, err
-		}
-
-		if err := i.ValidateNID(); err != nil {
-			return nil, sqlcon.HandleError(err)
-		}
 
 		if u, ok := schemaCache[i.SchemaID]; ok {
 			i.SchemaURL = u
@@ -478,10 +469,6 @@ func (p *Persister) GetIdentity(ctx context.Context, id uuid.UUID, expand identi
 	var i identity.Identity
 	if err := query.First(&i); err != nil {
 		return nil, sqlcon.HandleError(err)
-	}
-
-	if err := p.afterFindIdentity(ctx, con, &i, expand); err != nil {
-		return nil, err
 	}
 
 	if err := p.injectTraitsSchemaURL(ctx, &i); err != nil {
@@ -572,20 +559,6 @@ func (p *Persister) validateIdentity(ctx context.Context, i *identity.Identity) 
 			return errors.WithStack(herodot.ErrBadRequest.WithReasonf("%s", err))
 		}
 		return err
-	}
-
-	return nil
-}
-
-func (p *Persister) afterFindIdentity(ctx context.Context, con *pop.Connection, i *identity.Identity, expand identity.Expandables) error {
-	if err := i.AfterEagerFind(con); err != nil {
-		return err
-	}
-
-	if expand.Has(identity.ExpandFieldCredentials) {
-		if err := credentialmigrate.UpgradeCredentials(i); err != nil {
-			return err
-		}
 	}
 
 	return nil

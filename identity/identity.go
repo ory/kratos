@@ -11,6 +11,8 @@ import (
 	"sync"
 	"time"
 
+	"github.com/samber/lo"
+
 	"github.com/gobuffalo/pop/v6"
 
 	"github.com/tidwall/sjson"
@@ -137,7 +139,11 @@ func (i *Identity) AfterEagerFind(tx *pop.Connection) error {
 		return err
 	}
 
-	return i.ValidateNID()
+	if err := i.validate(); err != nil {
+		return err
+	}
+
+	return UpgradeCredentials(i)
 }
 
 func (i *Identity) setCredentials(tx *pop.Connection) error {
@@ -145,6 +151,9 @@ func (i *Identity) setCredentials(tx *pop.Connection) error {
 	i.Credentials = make(map[CredentialsType]Credentials, len(creds))
 	for k := range creds {
 		cred := &creds[k]
+		if cred.NID != i.NID {
+			continue
+		}
 		if err := cred.AfterEagerFind(tx); err != nil {
 			return err
 
@@ -368,27 +377,25 @@ func (i WithCredentialsMetadataAndAdminMetadataInJSON) MarshalJSON() ([]byte, er
 	return json.Marshal(localIdentity(i))
 }
 
-func (i *Identity) ValidateNID() error {
+func (i *Identity) validate() error {
 	expected := i.NID
 	if expected == uuid.Nil {
 		return errors.WithStack(herodot.ErrInternalServerError.WithReason("Received empty nid."))
 	}
 
-	for _, r := range i.RecoveryAddresses {
-		if r.NID != expected {
-			return errors.WithStack(herodot.ErrInternalServerError.WithReason("Mismatching nid for recovery addresses."))
-		}
-	}
+	i.RecoveryAddresses = lo.Filter(i.RecoveryAddresses, func(v RecoveryAddress, key int) bool {
+		return v.NID == expected
+	})
 
-	for _, r := range i.VerifiableAddresses {
-		if r.NID != expected {
-			return errors.WithStack(herodot.ErrInternalServerError.WithReason("Mismatching nid for verifiable addresses."))
-		}
-	}
+	i.VerifiableAddresses = lo.Filter(i.VerifiableAddresses, func(v VerifiableAddress, key int) bool {
+		return v.NID == expected
+	})
 
-	for _, r := range i.Credentials {
-		if r.NID != expected {
-			return errors.WithStack(herodot.ErrInternalServerError.WithReason("Mismatching nid for credentials."))
+	for k := range i.Credentials {
+		c := i.Credentials[k]
+		if c.NID != expected {
+			delete(i.Credentials, k)
+			continue
 		}
 	}
 

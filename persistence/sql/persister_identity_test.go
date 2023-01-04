@@ -12,7 +12,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/ory/kratos/credentialmigrate"
 	"github.com/ory/kratos/driver"
 	"github.com/ory/kratos/identity"
 
@@ -63,7 +62,7 @@ func (suite *PersisterTestSuite) TestIdentityExpand() {
 		expected := identity.NewIdentity(expandSchema.ID)
 		expected.Traits = identity.Traits(`{"email":"` + uuid.Must(uuid.NewV4()).String() + "@ory.sh" + `","name":"john doe"}`)
 		require.NoError(t, reg.IdentityManager().Create(ctx, expected))
-		require.NoError(t, credentialmigrate.UpgradeCredentials(expected))
+		require.NoError(t, identity.UpgradeCredentials(expected))
 
 		assert.NotEmpty(t, expected.RecoveryAddresses)
 		assert.NotEmpty(t, expected.VerifiableAddresses)
@@ -1023,8 +1022,10 @@ func (suite *PersisterTestSuite) TestIdentity() {
 			_, _, err = p.FindByCredentialsIdentifier(ctx, m[0].Name, "nid2")
 			require.ErrorIs(t, err, sqlcon.ErrNoRows)
 
-			_, err = p.GetIdentityConfidential(ctx, iid)
-			require.NoError(t, err, "expect an error because the nids are mixed up")
+			i, err = p.GetIdentityConfidential(ctx, iid)
+			require.NoError(t, err)
+			require.Len(t, i.Credentials, 1)
+			assert.Equal(t, "nid1", i.Credentials[m[0].Name].Identifiers[0])
 		})
 	})
 }

@@ -1,21 +1,20 @@
 // Copyright © 2023 Ory Corp
 // SPDX-License-Identifier: Apache-2.0
 
-package credentialmigrate
+package identity
 
 import (
 	"encoding/json"
 	"fmt"
+
 	"github.com/tidwall/gjson"
 	"github.com/tidwall/sjson"
 
 	"github.com/pkg/errors"
-
-	"github.com/ory/kratos/identity"
 )
 
-func UpgradeWebAuthnCredentials(i *identity.Identity, c *identity.Credentials) (err error) {
-	if c.Type != identity.CredentialsTypeWebAuthn {
+func UpgradeWebAuthnCredentials(i *Identity, c *Credentials) (err error) {
+	if c.Type != CredentialsTypeWebAuthn {
 		return nil
 	}
 
@@ -59,7 +58,7 @@ func UpgradeWebAuthnCredentials(i *identity.Identity, c *identity.Credentials) (
 }
 
 // UpgradeCredentials migrates a set of older WebAuthn credentials to newer ones.
-func UpgradeCredentials(i *identity.Identity) error {
+func UpgradeCredentials(i *Identity) error {
 	for k := range i.Credentials {
 		c := i.Credentials[k]
 		if err := UpgradeWebAuthnCredentials(i, &c); err != nil {
