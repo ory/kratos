@@ -45,6 +45,11 @@ func (p *Persister) ListMessages(ctx context.Context, filter courier.ListCourier
 		q = q.Where("recipient=?", filter.Recipient)
 	}
 
+	count, err := q.Count(&courier.Message{})
+	if err != nil {
+		return nil, 0, nil, sqlcon.HandleError(err)
+	}
+
 	opts = append(opts, keysetpagination.WithDefaultToken(new(courier.Message).DefaultPageToken()))
 	opts = append(opts, keysetpagination.WithDefaultSize(10))
 	opts = append(opts, keysetpagination.WithColumn("created_at", "DESC"))
@@ -53,11 +58,6 @@ func (p *Persister) ListMessages(ctx context.Context, filter courier.ListCourier
 	messages := make([]courier.Message, paginator.Size())
 	if err := q.Scope(keysetpagination.Paginate[courier.Message](paginator)).
 		All(&messages); err != nil {
-		return nil, 0, nil, sqlcon.HandleError(err)
-	}
-
-	count, err := q.Count(&courier.Message{})
-	if err != nil {
 		return nil, 0, nil, sqlcon.HandleError(err)
 	}
 
