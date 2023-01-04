@@ -42,11 +42,7 @@ func UpgradeWebAuthnCredentials(i *Identity, c *Credentials) (err error) {
 			}
 
 			c.Config, err = sjson.SetBytes(c.Config, fmt.Sprintf("credentials.%d.is_passwordless", index), false)
-			if err != nil {
-				return false
-			}
-
-			return true
+			return err == nil
 		})
 		if err != nil {
 			return errors.WithStack(err)
