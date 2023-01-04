@@ -5,44 +5,56 @@ package credentialmigrate
 
 import (
 	"encoding/json"
+	"fmt"
+	"github.com/tidwall/gjson"
+	"github.com/tidwall/sjson"
 
 	"github.com/pkg/errors"
 
 	"github.com/ory/kratos/identity"
-	"github.com/ory/kratos/selfservice/strategy/webauthn"
 )
 
-// UpgradeWebAuthnCredential migrates a webauthn credential from an older version to a newer version.
-func UpgradeWebAuthnCredential(i *identity.Identity, ic *identity.Credentials, c *webauthn.CredentialsConfig) {
-	if ic.Version == 0 {
-		if len(c.UserHandle) == 0 {
-			c.UserHandle = i.ID[:]
-		}
-
-		// We do not set c.IsPasswordless as it defaults to false anyways, which is the correct migration .
-
-		ic.Version = 1
-	}
-}
-
-func UpgradeWebAuthnCredentials(i *identity.Identity, c *identity.Credentials) error {
+func UpgradeWebAuthnCredentials(i *identity.Identity, c *identity.Credentials) (err error) {
 	if c.Type != identity.CredentialsTypeWebAuthn {
 		return nil
 	}
 
-	var cred webauthn.CredentialsConfig
-	if err := json.Unmarshal(c.Config, &cred); err != nil {
-		return errors.WithStack(err)
+	version := c.Version
+	if version == 0 {
+		if gjson.GetBytes(c.Config, "user_handle").String() == "" {
+			id, err := json.Marshal(i.ID[:])
+			if err != nil {
+				return errors.WithStack(err)
+			}
+
+			c.Config, err = sjson.SetRawBytes(c.Config, "user_handle", id)
+			if err != nil {
+				return errors.WithStack(err)
+			}
+		}
+
+		var index = -1
+		var err error
+		gjson.GetBytes(c.Config, "credentials").ForEach(func(key, value gjson.Result) bool {
+			index++
+
+			if value.Get("is_passwordless").Exists() {
+				return true
+			}
+
+			c.Config, err = sjson.SetBytes(c.Config, fmt.Sprintf("credentials.%d.is_passwordless", index), false)
+			if err != nil {
+				return false
+			}
+
+			return true
+		})
+		if err != nil {
+			return errors.WithStack(err)
+		}
+
+		c.Version = 1
 	}
-
-	UpgradeWebAuthnCredential(i, c, &cred)
-
-	updatedConf, err := json.Marshal(&cred)
-	if err != nil {
-		return errors.WithStack(err)
-	}
-
-	c.Config = updatedConf
 	return nil
 }
 
