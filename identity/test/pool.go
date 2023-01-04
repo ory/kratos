@@ -81,7 +81,7 @@ func TestPool(ctx context.Context, conf *config.Config, p interface {
 			runner := func(t *testing.T, expand sqlxx.Expandables, cb func(*testing.T, *identity.Identity)) {
 				assertion := func(t *testing.T, actual *identity.Identity) {
 					assertx.EqualAsJSONExcept(t, expected, actual, []string{
-						"verifiable_addresses", "recovery_addresses", "updated_at", "created_at", "credentials",
+						"verifiable_addresses", "recovery_addresses", "updated_at", "created_at", "credentials", "state_changed_at",
 					})
 					cb(t, actual)
 				}
