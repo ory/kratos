@@ -6,6 +6,7 @@ package oidc
 import (
 	"context"
 	"encoding/json"
+	"net/http"
 	"net/url"
 	"path"
 
@@ -85,11 +86,16 @@ func (g *ProviderGitLab) Claims(ctx context.Context, exchange *oauth2.Token, que
 		return nil, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("%s", err))
 	}
 
+	req.Header.Set("Accept", "application/json")
 	resp, err := client.Do(req)
 	if err != nil {
 		return nil, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("%s", err))
 	}
 	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return nil, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("Expected the GitLab userinfo endpoint to return a 200 OK response but got %d instead.", resp.StatusCode))
+	}
 
 	var claims Claims
 	if err := json.NewDecoder(resp.Body).Decode(&claims); err != nil {
