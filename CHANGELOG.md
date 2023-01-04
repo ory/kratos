@@ -5,7 +5,7 @@
 
 **Table of Contents**
 
-- [ (2022-12-29)](#2022-12-29)
+- [ (2023-01-04)](#2023-01-04)
   - [Breaking Changes](#breaking-changes)
     - [Bug Fixes](#bug-fixes)
     - [Documentation](#documentation)
@@ -287,7 +287,7 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# [](https://github.com/ory/kratos/compare/v0.11.0...v) (2022-12-29)
+# [](https://github.com/ory/kratos/compare/v0.11.0...v) (2023-01-04)
 
 ## Breaking Changes
 
@@ -317,6 +317,8 @@ The `/admin/courier/messages` endpoint now uses `keysetpagination` instead.
 - Pin geckodriver version to bypass GitHub API quota
   ([#2972](https://github.com/ory/kratos/issues/2972))
   ([585cb9e](https://github.com/ory/kratos/commit/585cb9e79be5de8b3d684313edb72bb703ffaa78))
+- Quickstart demos ([#2940](https://github.com/ory/kratos/issues/2940))
+  ([a7720b2](https://github.com/ory/kratos/commit/a7720b2ba389c08c83c4f3118b83e1fc044773cc))
 - Remove duplicate query in GetIdentity
   ([#2987](https://github.com/ory/kratos/issues/2987))
   ([33b01bb](https://github.com/ory/kratos/commit/33b01bbb0e53fc8ac0127531de72ee1b680be656))
@@ -348,6 +350,8 @@ The `/admin/courier/messages` endpoint now uses `keysetpagination` instead.
   apps, and would show up in the issuer name, e.g. "My+Issuer" instead of "My
   Issuer".
 
+- Update year
+  ([d77e2cf](https://github.com/ory/kratos/commit/d77e2cf56ceab4c73e1c2fd579d43ae25a19d345))
 - Webhook tracing instrumentation+memory leak
   ([f0044a3](https://github.com/ory/kratos/commit/f0044a365b39a5f940d6d268977744f8fcb2e49b))
 
@@ -380,6 +384,9 @@ The `/admin/courier/messages` endpoint now uses `keysetpagination` instead.
 - Regenerate csrf if verification flow expired
   ([#2455](https://github.com/ory/kratos/issues/2455))
   ([7025081](https://github.com/ory/kratos/commit/7025081b76171ce0a8f312a7b671aead1bb21215))
+- Update integrity snapshots
+  ([#3000](https://github.com/ory/kratos/issues/3000))
+  ([6d26e5c](https://github.com/ory/kratos/commit/6d26e5c735a28ecb8b2d8cd142751ef679e19e86))
 
 # [0.11.0](https://github.com/ory/kratos/compare/v0.10.1...v0.11.0) (2022-12-02)
 
