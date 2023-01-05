@@ -6,14 +6,14 @@ package sql_test
 import (
 	"context"
 	"fmt"
-	"os"
-	"sync"
-	"testing"
-
 	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/schema"
 	"github.com/ory/x/sqlxx"
 	"github.com/ory/x/urlx"
+	"os"
+	"sync"
+	"testing"
+	"time"
 
 	"github.com/ory/kratos/x/xsql"
 
@@ -50,6 +50,9 @@ import (
 
 func init() {
 	corpx.RegisterFakes()
+	pop.SetNowFunc(func() time.Time {
+		return time.Now().UTC().Round(time.Second)
+	})
 	//pop.Debug = true
 }
 
