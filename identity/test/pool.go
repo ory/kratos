@@ -117,8 +117,8 @@ func TestPool(ctx context.Context, conf *config.Config, p interface {
 					require.Len(t, actual.InternalCredentials, 2)
 					require.Len(t, actual.Credentials, 2)
 
-					assertx.EqualAsJSON(t, expected.Credentials[identity.CredentialsTypePassword], actual.Credentials[identity.CredentialsTypePassword])
-					assertx.EqualAsJSON(t, expected.Credentials[identity.CredentialsTypeWebAuthn], actual.Credentials[identity.CredentialsTypeWebAuthn])
+					assertx.EqualAsJSONExcept(t, expected.Credentials[identity.CredentialsTypePassword], actual.Credentials[identity.CredentialsTypePassword], []string{"updated_at", "created_at"})
+					assertx.EqualAsJSONExcept(t, expected.Credentials[identity.CredentialsTypeWebAuthn], actual.Credentials[identity.CredentialsTypeWebAuthn], []string{"updated_at", "created_at"})
 				})
 			})
 
@@ -129,7 +129,7 @@ func TestPool(ctx context.Context, conf *config.Config, p interface {
 					assert.Empty(t, actual.VerifiableAddresses)
 
 					require.Len(t, actual.RecoveryAddresses, 1)
-					assertx.EqualAsJSON(t, expected.RecoveryAddresses, actual.RecoveryAddresses)
+					assertx.EqualAsJSONExcept(t, expected.RecoveryAddresses, actual.RecoveryAddresses, []string{"0.updated_at", "0.created_at"})
 				})
 			})
 
@@ -140,7 +140,7 @@ func TestPool(ctx context.Context, conf *config.Config, p interface {
 					assert.Empty(t, actual.RecoveryAddresses)
 
 					require.Len(t, actual.VerifiableAddresses, 1)
-					assertx.EqualAsJSON(t, expected.VerifiableAddresses, actual.VerifiableAddresses)
+					assertx.EqualAsJSONExcept(t, expected.VerifiableAddresses, actual.VerifiableAddresses, []string{"0.updated_at", "0.created_at"})
 				})
 			})
 
@@ -151,10 +151,10 @@ func TestPool(ctx context.Context, conf *config.Config, p interface {
 					assert.Empty(t, actual.InternalCredentials)
 
 					require.Len(t, actual.RecoveryAddresses, 1)
-					assertx.EqualAsJSON(t, expected.RecoveryAddresses, actual.RecoveryAddresses)
+					assertx.EqualAsJSONExcept(t, expected.RecoveryAddresses, actual.RecoveryAddresses, []string{"0.updated_at", "0.created_at"})
 
 					require.Len(t, actual.VerifiableAddresses, 1)
-					assertx.EqualAsJSON(t, expected.VerifiableAddresses, actual.VerifiableAddresses)
+					assertx.EqualAsJSONExcept(t, expected.VerifiableAddresses, actual.VerifiableAddresses, []string{"0.updated_at", "0.created_at"})
 				})
 			})
 
@@ -164,14 +164,14 @@ func TestPool(ctx context.Context, conf *config.Config, p interface {
 					require.Len(t, actual.InternalCredentials, 2)
 					require.Len(t, actual.Credentials, 2)
 
-					assertx.EqualAsJSON(t, expected.Credentials[identity.CredentialsTypePassword], actual.Credentials[identity.CredentialsTypePassword])
-					assertx.EqualAsJSON(t, expected.Credentials[identity.CredentialsTypeWebAuthn], actual.Credentials[identity.CredentialsTypeWebAuthn])
+					assertx.EqualAsJSONExcept(t, expected.Credentials[identity.CredentialsTypePassword], actual.Credentials[identity.CredentialsTypePassword], []string{"updated_at", "created_at"})
+					assertx.EqualAsJSONExcept(t, expected.Credentials[identity.CredentialsTypeWebAuthn], actual.Credentials[identity.CredentialsTypeWebAuthn], []string{"updated_at", "created_at"})
 
 					require.Len(t, actual.RecoveryAddresses, 1)
-					assertx.EqualAsJSON(t, expected.RecoveryAddresses, actual.RecoveryAddresses)
+					assertx.EqualAsJSONExcept(t, expected.RecoveryAddresses, actual.RecoveryAddresses, []string{"0.updated_at", "0.created_at"})
 
 					require.Len(t, actual.VerifiableAddresses, 1)
-					assertx.EqualAsJSON(t, expected.VerifiableAddresses, actual.VerifiableAddresses)
+					assertx.EqualAsJSONExcept(t, expected.VerifiableAddresses, actual.VerifiableAddresses, []string{"0.updated_at", "0.created_at"})
 				})
 			})
 
@@ -182,14 +182,14 @@ func TestPool(ctx context.Context, conf *config.Config, p interface {
 					require.Len(t, actual.InternalCredentials, 2)
 					require.Len(t, actual.Credentials, 2)
 
-					assertx.EqualAsJSON(t, expected.Credentials[identity.CredentialsTypePassword], actual.Credentials[identity.CredentialsTypePassword])
-					assertx.EqualAsJSON(t, expected.Credentials[identity.CredentialsTypeWebAuthn], actual.Credentials[identity.CredentialsTypeWebAuthn])
+					assertx.EqualAsJSONExcept(t, expected.Credentials[identity.CredentialsTypePassword], actual.Credentials[identity.CredentialsTypePassword], []string{"updated_at", "created_at"})
+					assertx.EqualAsJSONExcept(t, expected.Credentials[identity.CredentialsTypeWebAuthn], actual.Credentials[identity.CredentialsTypeWebAuthn], []string{"updated_at", "created_at"})
 
 					require.Len(t, actual.RecoveryAddresses, 1)
-					assertx.EqualAsJSON(t, expected.RecoveryAddresses, actual.RecoveryAddresses)
+					assertx.EqualAsJSONExcept(t, expected.RecoveryAddresses, actual.RecoveryAddresses, []string{"0.updated_at", "0.created_at"})
 
 					require.Len(t, actual.VerifiableAddresses, 1)
-					assertx.EqualAsJSON(t, expected.VerifiableAddresses, actual.VerifiableAddresses)
+					assertx.EqualAsJSONExcept(t, expected.VerifiableAddresses, actual.VerifiableAddresses, []string{"0.updated_at", "0.created_at"})
 				})
 			})
 		})

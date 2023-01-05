@@ -5,7 +5,6 @@ go 1.19
 replace (
 	github.com/bradleyjkemp/cupaloy/v2 => github.com/aeneasr/cupaloy/v2 v2.6.1-0.20210924214125-3dfdd01210a3
 
-	github.com/gobuffalo/pop/v6 => github.com/gobuffalo/pop/v6 v6.1.1-0.20230102153939-35967190380a
 	github.com/gorilla/sessions => github.com/ory/sessions v1.2.2-0.20220110165800-b09c17334dc2
 	github.com/knadh/koanf => github.com/aeneasr/koanf v0.14.1-0.20211230115640-aa3902b3267a
 
@@ -43,7 +42,7 @@ require (
 	github.com/go-swagger/go-swagger v0.30.3
 	github.com/gobuffalo/fizz v1.14.4
 	github.com/gobuffalo/httptest v1.5.2
-	github.com/gobuffalo/pop/v6 v6.0.8
+	github.com/gobuffalo/pop/v6 v6.1.1-0.20230102153939-35967190380a
 	github.com/gofrs/uuid v4.3.1+incompatible
 	github.com/golang-jwt/jwt/v4 v4.1.0
 	github.com/golang/gddo v0.0.0-20190904175337-72a348e765d2
