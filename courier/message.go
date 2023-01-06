@@ -115,7 +115,7 @@ const (
 )
 
 // The format we need to use in the Page tokens, as it's the only format that is understood by all DBs
-const dbFormat = "2006-01-02 15:04:05.99999+07:00"
+const dbFormat = "2006-01-02 15:04:05.99999"
 
 func ToMessageType(str string) (MessageType, error) {
 	switch s := stringsx.SwitchExact(str); {

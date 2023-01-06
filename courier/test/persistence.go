@@ -126,12 +126,60 @@ func TestPersister(ctx context.Context, newNetworkUnlessExisting NetworkWrapper,
 			assert.Equal(t, messages[len(messages)-1].ID, ms[0].ID)
 
 			t.Run("on another network", func(t *testing.T) {
-				_, p := newNetwork(t, ctx)
-				ms, tc, _, err := p.ListMessages(ctx, filter, []keysetpagination.Option{})
+				nid1, p1 := newNetwork(t, ctx)
+				ms, tc, _, err := p1.ListMessages(ctx, filter, []keysetpagination.Option{})
 
 				require.NoError(t, err)
 				require.Len(t, ms, 0)
 				require.Equal(t, int64(0), tc)
+
+				// Due to a bug in the pagination query definition, it was possible to retrieve messages from another `network`
+				// using the pagination query. That required that 2 message's `created_at` timestamps were equal, to trigger
+				// the `OR` clause of the paginated query.
+				// This part of the tests "simulates" this behavior, by forcing the same timestamps on multiple messages across
+				// different networks.
+				nid2, p2 := newNetwork(t, ctx)
+				const timeFormat = "2006-01-02 15:04:05.99999"
+				msg1 := courier.Message{
+					ID:     uuid.FromStringOrNil("10000000-0000-0000-0000-000000000000"),
+					NID:    nid1,
+					Status: courier.MessageStatusProcessing,
+				}
+				err = p1.GetConnection(ctx).Create(&msg1)
+				require.NoError(t, err)
+
+				msg2 := courier.Message{
+					ID:     uuid.FromStringOrNil("20000000-0000-0000-0000-000000000000"),
+					NID:    nid1,
+					Status: courier.MessageStatusProcessing,
+				}
+				err = p1.GetConnection(ctx).Create(&msg2)
+				require.NoError(t, err)
+				msg3 := courier.Message{
+					ID:     uuid.FromStringOrNil("30000000-0000-0000-0000-000000000000"),
+					NID:    nid2,
+					Status: courier.MessageStatusProcessing,
+				}
+				err = p2.GetConnection(ctx).Create(&msg3)
+				require.NoError(t, err)
+				now := time.Now().UTC().Truncate(time.Second).Format(timeFormat)
+
+				// Set all `created_at` timestamps to the same value to force the `OR` clause of the paginated query.
+				// `created_at` is set by "pop" and does not allow a manual override, apart from using `pop.SetNowFunc`, but that also influences the other tests in this
+				// suite, as it just overrides a global function.
+				require.NoError(t, p1.GetConnection(ctx).RawQuery("UPDATE courier_messages SET created_at = ? WHERE id = ? AND nid = ?", now, msg1.ID, nid1).Exec())
+				// get the "updated" message from the
+				require.NoError(t, p1.GetConnection(ctx).Where("id = ? AND nid = ?", msg1.ID, msg1.NID).First(&msg1))
+				require.NoError(t, p1.GetConnection(ctx).RawQuery("UPDATE courier_messages SET created_at = ? WHERE id = ? AND nid = ?", now, msg2.ID, nid1).Exec())
+				require.NoError(t, p2.GetConnection(ctx).RawQuery("UPDATE courier_messages SET created_at = ? WHERE id = ? AND nid = ?", now, msg3.ID, nid2).Exec())
+
+				// Use the updated first message's PageToken as the basis for the paginated request.
+				ms, _, _, err = p1.ListMessages(ctx, filter, []keysetpagination.Option{keysetpagination.WithToken(msg1.PageToken())})
+				require.NoError(t, err)
+
+				// The response should just contain the "next" message from network1, and not the message from network2
+				require.Len(t, ms, 1)
+				assert.Equal(t, ms[0].ID, msg2.ID)
 			})
 		})
 
@@ -174,6 +222,7 @@ func TestPersister(ctx context.Context, newNetworkUnlessExisting NetworkWrapper,
 				err := p.SetMessageStatus(ctx, id, courier.MessageStatusProcessing)
 				require.ErrorIs(t, err, sqlcon.ErrNoRows)
 			})
+
 		})
 
 		t.Run("case=FetchMessage", func(t *testing.T) {
