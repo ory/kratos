@@ -10,6 +10,8 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
+	"io"
+	"net/http"
 	"net/url"
 
 	"github.com/hashicorp/go-retryablehttp"
@@ -80,11 +82,20 @@ func (g *ProviderFacebook) Claims(ctx context.Context, exchange *oauth2.Token, q
 		return nil, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("%s", err))
 	}
 
+	exchange.SetAuthHeader(req.Request)
 	resp, err := client.Do(req)
+	defer resp.Body.Close()
+
 	if err != nil {
 		return nil, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("%s", err))
 	}
-	defer resp.Body.Close()
+	if resp.StatusCode != http.StatusOK {
+		body, err := io.ReadAll(resp.Body)
+		if err != nil {
+			return nil, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("%s", err))
+		}
+		return nil, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("%s", string(body)))
+	}
 
 	var user struct {
 		Id            string `json:"id,omitempty"`
@@ -102,6 +113,7 @@ func (g *ProviderFacebook) Claims(ctx context.Context, exchange *oauth2.Token, q
 		BirthDay string `json:"birthday,omitempty"`
 		Gender   string `json:"gender,omitempty"`
 	}
+
 	if err := json.NewDecoder(resp.Body).Decode(&user); err != nil {
 		return nil, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("%s", err))
 	}
