@@ -84,11 +84,12 @@ func (g *ProviderFacebook) Claims(ctx context.Context, exchange *oauth2.Token, q
 
 	exchange.SetAuthHeader(req.Request)
 	resp, err := client.Do(req)
-	defer resp.Body.Close()
 
 	if err != nil {
 		return nil, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("%s", err))
 	}
+
+	defer resp.Body.Close()
 	if resp.StatusCode != http.StatusOK {
 		body, err := io.ReadAll(resp.Body)
 		if err != nil {
