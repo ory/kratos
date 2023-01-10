@@ -242,6 +242,7 @@ func (e *HookExecutor) PostSettingsHook(w http.ResponseWriter, r *http.Request, 
 	ctxUpdate.Flow.UI = newFlow.UI
 	ctxUpdate.Flow.UI.ResetMessages()
 	ctxUpdate.Flow.UI.AddMessage(node.DefaultGroup, text.NewInfoSelfServiceSettingsUpdateSuccess())
+	ctxUpdate.Flow.InternalContext = newFlow.InternalContext
 	if err := e.d.SettingsFlowPersister().UpdateSettingsFlow(r.Context(), ctxUpdate.Flow); err != nil {
 		return err
 	}
