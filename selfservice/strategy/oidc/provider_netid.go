@@ -86,6 +86,10 @@ func (n *ProviderNetID) Claims(ctx context.Context, exchange *oauth2.Token, _ ur
 	}
 	defer resp.Body.Close()
 
+	if err := logUpstreamError(n.reg.Logger(), resp); err != nil {
+		return nil, err
+	}
+
 	var claims Claims
 	if err := json.NewDecoder(resp.Body).Decode(&claims); err != nil {
 		return nil, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("%s", err))

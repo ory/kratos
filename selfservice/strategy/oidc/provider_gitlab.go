@@ -6,7 +6,6 @@ package oidc
 import (
 	"context"
 	"encoding/json"
-	"net/http"
 	"net/url"
 	"path"
 
@@ -93,8 +92,8 @@ func (g *ProviderGitLab) Claims(ctx context.Context, exchange *oauth2.Token, que
 	}
 	defer resp.Body.Close()
 
-	if resp.StatusCode != http.StatusOK {
-		return nil, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("Expected the GitLab userinfo endpoint to return a 200 OK response but got %d instead.", resp.StatusCode))
+	if err := logUpstreamError(g.reg.Logger(), resp); err != nil {
+		return nil, err
 	}
 
 	var claims Claims

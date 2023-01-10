@@ -3,7 +3,15 @@
 
 package oidc
 
-import "github.com/ory/herodot"
+import (
+	"io"
+	"net/http"
+
+	"github.com/pkg/errors"
+
+	"github.com/ory/herodot"
+	"github.com/ory/x/logrusx"
+)
 
 var (
 	ErrScopeMissing = herodot.ErrBadRequest.
@@ -17,3 +25,17 @@ var (
 	ErrAPIFlowNotSupported = herodot.ErrBadRequest.WithError("API-based flows are not supported for this method").
 				WithReasonf("Social Sign In and OpenID Connect are only supported for flows initiated using the Browser endpoint.")
 )
+
+func logUpstreamError(l *logrusx.Logger, resp *http.Response) error {
+	if resp.StatusCode == http.StatusOK {
+		return nil
+	}
+
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		l = l.WithError(err)
+	}
+
+	l.WithField("response_code", resp.StatusCode).WithField("response_body", string(body)).Error("The upstream OIDC provider returned a non 200 status code.")
+	return errors.WithStack(herodot.ErrInternalServerError.WithReasonf("OpenID Connect provider returned a %d status code but 200 is expected.", resp.StatusCode))
+}
