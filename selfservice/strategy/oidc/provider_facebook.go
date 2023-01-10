@@ -86,6 +86,10 @@ func (g *ProviderFacebook) Claims(ctx context.Context, exchange *oauth2.Token, q
 	}
 	defer resp.Body.Close()
 
+	if err := logUpstreamError(g.reg.Logger(), resp); err != nil {
+		return nil, err
+	}
+
 	var user struct {
 		Id            string `json:"id,omitempty"`
 		Name          string `json:"name,omitempty"`

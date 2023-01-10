@@ -350,6 +350,11 @@ func (s *Strategy) handleCallback(w http.ResponseWriter, r *http.Request, ps htt
 		return
 	}
 
+	if err := claims.Validate(); err != nil {
+		s.forwardError(w, r, req, s.handleError(w, r, req, pid, nil, err))
+		return
+	}
+
 	switch a := req.(type) {
 	case *login.Flow:
 		if ff, err := s.processLogin(w, r, a, token, claims, provider, cntnr); err != nil {
