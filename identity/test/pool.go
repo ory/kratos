@@ -61,9 +61,9 @@ func TestPool(ctx context.Context, conf *config.Config, p interface {
 				},
 			})
 
-			require.NoError(t, p.GetConnection(ctx).RawQuery("DELETE FROM identities WHERE true").Exec())
+			require.NoError(t, p.GetConnection(ctx).RawQuery("DELETE FROM identities WHERE nid = ?", nid).Exec())
 			t.Cleanup(func() {
-				require.NoError(t, p.GetConnection(ctx).RawQuery("DELETE FROM identities WHERE true").Exec())
+				require.NoError(t, p.GetConnection(ctx).RawQuery("DELETE FROM identities WHERE nid = ?", nid).Exec())
 			})
 
 			expected := identity.NewIdentity(expandSchema.ID)
