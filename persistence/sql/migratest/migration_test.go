@@ -157,15 +157,14 @@ func TestMigrations(t *testing.T) {
 					defer wg.Done()
 					t.Parallel()
 
-					ids, err := d.PrivilegedIdentityPool().ListIdentities(context.Background(), 0, 1000)
+					ids, err := d.PrivilegedIdentityPool().ListIdentities(context.Background(), identity.ExpandEverything, 0, 1000)
 					require.NoError(t, err)
 					require.NotEmpty(t, ids)
 
 					var found []string
-					for _, id := range ids {
+					for y, id := range ids {
 						found = append(found, id.ID.String())
-						actual, err := d.PrivilegedIdentityPool().GetIdentityConfidential(context.Background(), id.ID)
-						require.NoError(t, err, "ID: %s", id.ID)
+						actual := &ids[y]
 
 						for _, a := range actual.VerifiableAddresses {
 							CompareWithFixture(t, a, "identity_verification_address", a.ID.String())
@@ -175,9 +174,27 @@ func TestMigrations(t *testing.T) {
 							CompareWithFixture(t, a, "identity_recovery_address", a.ID.String())
 						}
 
-						// Prevents ordering to get in the way.
-						actual.VerifiableAddresses = nil
-						actual.RecoveryAddresses = nil
+						CompareWithFixture(t, identity.WithCredentialsAndAdminMetadataInJSON(*actual), "identity", id.ID.String())
+					}
+
+					migratest.ContainsExpectedIds(t, filepath.Join("fixtures", "identity"), found)
+				})
+
+				t.Run("case=identity", func(t *testing.T) {
+					wg.Add(1)
+					defer wg.Done()
+					t.Parallel()
+
+					ids, err := d.PrivilegedIdentityPool().ListIdentities(context.Background(), identity.ExpandEverything, 0, 1000)
+					require.NoError(t, err)
+					require.NotEmpty(t, ids)
+
+					var found []string
+					for _, id := range ids {
+						actual, err := d.PrivilegedIdentityPool().GetIdentityConfidential(context.Background(), id.ID)
+						require.NoError(t, err)
+						found = append(found, actual.ID.String())
+
 						CompareWithFixture(t, identity.WithCredentialsAndAdminMetadataInJSON(*actual), "identity", id.ID.String())
 					}
 

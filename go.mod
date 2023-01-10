@@ -4,6 +4,7 @@ go 1.19
 
 replace (
 	github.com/bradleyjkemp/cupaloy/v2 => github.com/aeneasr/cupaloy/v2 v2.6.1-0.20210924214125-3dfdd01210a3
+
 	github.com/gorilla/sessions => github.com/ory/sessions v1.2.2-0.20220110165800-b09c17334dc2
 	github.com/knadh/koanf => github.com/aeneasr/koanf v0.14.1-0.20211230115640-aa3902b3267a
 
@@ -41,8 +42,8 @@ require (
 	github.com/go-swagger/go-swagger v0.30.3
 	github.com/gobuffalo/fizz v1.14.4
 	github.com/gobuffalo/httptest v1.5.2
-	github.com/gobuffalo/pop/v6 v6.0.8
-	github.com/gofrs/uuid v4.3.0+incompatible
+	github.com/gobuffalo/pop/v6 v6.1.1-0.20230102153939-35967190380a
+	github.com/gofrs/uuid v4.3.1+incompatible
 	github.com/golang-jwt/jwt/v4 v4.1.0
 	github.com/golang/gddo v0.0.0-20190904175337-72a348e765d2
 	github.com/golang/mock v1.6.0
@@ -77,11 +78,12 @@ require (
 	github.com/ory/jsonschema/v3 v3.0.7
 	github.com/ory/mail/v3 v3.0.0
 	github.com/ory/nosurf v1.2.7
-	github.com/ory/x v0.0.523
+	github.com/ory/x v0.0.527
 	github.com/phayes/freeport v0.0.0-20180830031419-95f893ade6f2
 	github.com/pkg/errors v0.9.1
 	github.com/pquerna/otp v1.4.0
 	github.com/rs/cors v1.8.2
+	github.com/samber/lo v1.37.0
 	github.com/sirupsen/logrus v1.9.0
 	github.com/slack-go/slack v0.7.4
 	github.com/spf13/cobra v1.6.1
@@ -313,6 +315,7 @@ require (
 	go.uber.org/atomic v1.10.0 // indirect
 	go.uber.org/multierr v1.7.0 // indirect
 	go.uber.org/zap v1.17.0 // indirect
+	golang.org/x/exp v0.0.0-20220303212507-bbda1eaf7a17 // indirect
 	golang.org/x/mod v0.7.0 // indirect
 	golang.org/x/sys v0.3.0 // indirect
 	golang.org/x/term v0.3.0 // indirect

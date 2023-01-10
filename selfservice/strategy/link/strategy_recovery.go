@@ -171,7 +171,7 @@ func (s *Strategy) createRecoveryLinkForIdentity(w http.ResponseWriter, r *http.
 		return
 	}
 
-	id, err := s.d.IdentityPool().GetIdentity(r.Context(), p.IdentityID)
+	id, err := s.d.IdentityPool().GetIdentity(r.Context(), p.IdentityID, identity.ExpandDefault)
 	if errors.Is(err, sqlcon.ErrNoRows) {
 		s.d.Writer().WriteError(w, r, errors.WithStack(herodot.ErrBadRequest.WithReasonf("The requested identity id does not exist.").WithWrap(err)))
 		return
@@ -350,7 +350,7 @@ func (s *Strategy) recoveryUseToken(w http.ResponseWriter, r *http.Request, fID 
 		return s.retryRecoveryFlowWithError(w, r, flow.TypeBrowser, err)
 	}
 
-	recovered, err := s.d.IdentityPool().GetIdentity(r.Context(), token.IdentityID)
+	recovered, err := s.d.IdentityPool().GetIdentity(r.Context(), token.IdentityID, identity.ExpandDefault)
 	if err != nil {
 		return s.HandleRecoveryError(w, r, f, nil, err)
 	}

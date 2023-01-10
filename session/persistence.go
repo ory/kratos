@@ -7,6 +7,10 @@ import (
 	"context"
 	"time"
 
+	"github.com/gobuffalo/pop/v6"
+
+	"github.com/ory/kratos/identity"
+
 	"github.com/ory/x/pagination/keysetpagination"
 
 	"github.com/gofrs/uuid"
@@ -17,6 +21,8 @@ type PersistenceProvider interface {
 }
 
 type Persister interface {
+	GetConnection(ctx context.Context) *pop.Connection
+
 	// GetSession retrieves a session from the store.
 	GetSession(ctx context.Context, sid uuid.UUID, expandables Expandables) (*Session, error)
 
@@ -39,7 +45,7 @@ type Persister interface {
 	//
 	// Functionality is similar to GetSession but accepts a session token
 	// instead of a session ID.
-	GetSessionByToken(ctx context.Context, token string, expandables Expandables) (*Session, error)
+	GetSessionByToken(ctx context.Context, token string, expandables Expandables, identityExpandables identity.Expandables) (*Session, error)
 
 	// DeleteExpiredSessions deletes sessions that expired before the given time.
 	DeleteExpiredSessions(context.Context, time.Time, int) error

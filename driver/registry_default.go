@@ -723,6 +723,7 @@ func (m *RegistryDefault) VerificationTokenPersister() link.VerificationTokenPer
 func (m *RegistryDefault) VerificationCodePersister() code.VerificationCodePersister {
 	return m.Persister()
 }
+
 func (m *RegistryDefault) Persister() persistence.Persister {
 	return m.persister
 }

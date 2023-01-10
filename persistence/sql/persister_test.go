@@ -7,11 +7,9 @@ import (
 	"context"
 	"fmt"
 	"os"
-	"path/filepath"
 	"sync"
 	"testing"
-
-	"github.com/ory/x/dbal"
+	"time"
 
 	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/schema"
@@ -23,7 +21,6 @@ import (
 	"github.com/go-errors/errors"
 	"github.com/gobuffalo/pop/v6"
 	"github.com/gobuffalo/pop/v6/logging"
-	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
@@ -52,11 +49,12 @@ import (
 	"github.com/ory/x/sqlcon/dockertest"
 )
 
-var sqlite = fmt.Sprintf("sqlite3://%s.sqlite?_fk=true&mode=rwc", filepath.Join(os.TempDir(), uuid.New().String()))
-
 func init() {
 	corpx.RegisterFakes()
-	// op.Debug = true
+	pop.SetNowFunc(func() time.Time {
+		return time.Now().UTC().Round(time.Second)
+	})
+	//pop.Debug = true
 }
 
 // nolint:staticcheck
@@ -99,7 +97,7 @@ func pl(t *testing.T) func(lvl logging.Level, s string, args ...interface{}) {
 }
 
 func createCleanDatabases(t *testing.T) map[string]*driver.RegistryDefault {
-	conns := map[string]string{"sqlite": dbal.NewSQLiteTestDatabase(t)}
+	conns := map[string]string{"sqlite": "sqlite://file:" + t.TempDir() + "/db.sqlite?_fk=true"}
 
 	var l sync.Mutex
 	if !testing.Short() {
@@ -131,7 +129,7 @@ func createCleanDatabases(t *testing.T) map[string]*driver.RegistryDefault {
 	for name, dsn := range conns {
 		go func(name, dsn string) {
 			defer wg.Done()
-			t.Logf("Connecting to %s", name)
+			t.Logf("Connecting to %s: %s", name, dsn)
 			_, reg := internal.NewRegistryDefaultWithDSN(t, dsn)
 			p := reg.Persister().(*sql.Persister)
 
@@ -220,7 +218,7 @@ func TestPersister(t *testing.T) {
 
 			t.Run("contract=identity.TestPool", func(t *testing.T) {
 				pop.SetLogger(pl(t))
-				identity.TestPool(ctx, conf, p)(t)
+				identity.TestPool(ctx, conf, p, reg.IdentityManager())(t)
 			})
 			t.Run("contract=registration.TestFlowPersister", func(t *testing.T) {
 				pop.SetLogger(pl(t))
@@ -299,7 +297,7 @@ func TestPersister_Transaction(t *testing.T) {
 		})
 		require.Error(t, err)
 		assert.Contains(t, err.Error(), errMessage)
-		_, err = p.GetIdentity(context.Background(), i.ID)
+		_, err = p.GetIdentity(context.Background(), i.ID, ri.ExpandNothing)
 		require.Error(t, err)
 		assert.Equal(t, sqlcon.ErrNoRows.Error(), err.Error())
 	})
