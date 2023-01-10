@@ -77,7 +77,7 @@ func (s *Sender) SendRecoveryLink(ctx context.Context, r *http.Request, f *recov
 	}
 
 	// Get the identity associated with the recovery address
-	i, err := s.r.IdentityPool().GetIdentity(ctx, address.IdentityID)
+	i, err := s.r.IdentityPool().GetIdentity(ctx, address.IdentityID, identity.ExpandDefault)
 	if err != nil {
 		return err
 	}
@@ -119,7 +119,7 @@ func (s *Sender) SendVerificationLink(ctx context.Context, f *verification.Flow,
 	}
 
 	// Get the identity associated with the recovery address
-	i, err := s.r.IdentityPool().GetIdentity(ctx, address.IdentityID)
+	i, err := s.r.IdentityPool().GetIdentity(ctx, address.IdentityID, identity.ExpandDefault)
 	if err != nil {
 		return err
 	}

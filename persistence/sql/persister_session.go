@@ -8,6 +8,10 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/ory/x/otelx"
+
+	"github.com/ory/kratos/identity"
+
 	"github.com/ory/x/pagination/keysetpagination"
 
 	"github.com/ory/x/stringsx"
@@ -30,9 +34,9 @@ const SessionDeviceLocationMaxLength = 512
 const paginationMaxItemsSize = 1000
 const paginationDefaultItemsSize = 250
 
-func (p *Persister) GetSession(ctx context.Context, sid uuid.UUID, expandables session.Expandables) (*session.Session, error) {
+func (p *Persister) GetSession(ctx context.Context, sid uuid.UUID, expandables session.Expandables) (_ *session.Session, err error) {
 	ctx, span := p.r.Tracer(ctx).Tracer().Start(ctx, "persistence.sql.GetSession")
-	defer span.End()
+	defer otelx.End(span, &err)
 
 	var s session.Session
 	s.Devices = make([]session.Device, 0)
@@ -51,7 +55,7 @@ func (p *Persister) GetSession(ctx context.Context, sid uuid.UUID, expandables s
 	if expandables.Has(session.ExpandSessionIdentity) {
 		// This is needed because of how identities are fetched from the store (if we use eager not all fields are
 		// available!).
-		i, err := p.GetIdentity(ctx, s.IdentityID)
+		i, err := p.GetIdentity(ctx, s.IdentityID, identity.ExpandDefault)
 		if err != nil {
 			return nil, err
 		}
@@ -62,9 +66,9 @@ func (p *Persister) GetSession(ctx context.Context, sid uuid.UUID, expandables s
 	return &s, nil
 }
 
-func (p *Persister) ListSessions(ctx context.Context, active *bool, paginatorOpts []keysetpagination.Option, expandables session.Expandables) ([]session.Session, int64, *keysetpagination.Paginator, error) {
+func (p *Persister) ListSessions(ctx context.Context, active *bool, paginatorOpts []keysetpagination.Option, expandables session.Expandables) (_ []session.Session, _ int64, _ *keysetpagination.Paginator, err error) {
 	ctx, span := p.r.Tracer(ctx).Tracer().Start(ctx, "persistence.sql.ListSessions")
-	defer span.End()
+	defer otelx.End(span, &err)
 
 	s := make([]session.Session, 0)
 	t := int64(0)
@@ -106,7 +110,7 @@ func (p *Persister) ListSessions(ctx context.Context, active *bool, paginatorOpt
 			for index := range s {
 				sess := &(s[index])
 
-				i, err := p.GetIdentity(ctx, sess.IdentityID)
+				i, err := p.GetIdentity(ctx, sess.IdentityID, identity.ExpandDefault)
 				if err != nil {
 					return err
 				}
@@ -125,9 +129,9 @@ func (p *Persister) ListSessions(ctx context.Context, active *bool, paginatorOpt
 }
 
 // ListSessionsByIdentity retrieves sessions for an identity from the store.
-func (p *Persister) ListSessionsByIdentity(ctx context.Context, iID uuid.UUID, active *bool, page, perPage int, except uuid.UUID, expandables session.Expandables) ([]*session.Session, int64, error) {
+func (p *Persister) ListSessionsByIdentity(ctx context.Context, iID uuid.UUID, active *bool, page, perPage int, except uuid.UUID, expandables session.Expandables) (_ []*session.Session, _ int64, err error) {
 	ctx, span := p.r.Tracer(ctx).Tracer().Start(ctx, "persistence.sql.ListSessionsByIdentity")
-	defer span.End()
+	defer otelx.End(span, &err)
 
 	s := make([]*session.Session, 0)
 	t := int64(0)
@@ -162,7 +166,7 @@ func (p *Persister) ListSessionsByIdentity(ctx context.Context, iID uuid.UUID, a
 		}
 
 		if expandables.Has(session.ExpandSessionIdentity) {
-			i, err := p.GetIdentity(ctx, iID)
+			i, err := p.GetIdentity(ctx, iID, identity.ExpandDefault)
 			if err != nil {
 				return sqlcon.HandleError(err)
 			}
@@ -183,9 +187,9 @@ func (p *Persister) ListSessionsByIdentity(ctx context.Context, iID uuid.UUID, a
 // UpsertSession creates a session if not found else updates.
 // This operation also inserts Session device records when a session is being created.
 // The update operation skips updating Session device records since only one record would need to be updated in this case.
-func (p *Persister) UpsertSession(ctx context.Context, s *session.Session) error {
+func (p *Persister) UpsertSession(ctx context.Context, s *session.Session) (err error) {
 	ctx, span := p.r.Tracer(ctx).Tracer().Start(ctx, "persistence.sql.UpsertSession")
-	defer span.End()
+	defer otelx.End(span, &err)
 
 	s.NID = p.NetworkID(ctx)
 
@@ -227,16 +231,16 @@ func (p *Persister) UpsertSession(ctx context.Context, s *session.Session) error
 	}))
 }
 
-func (p *Persister) DeleteSession(ctx context.Context, sid uuid.UUID) error {
+func (p *Persister) DeleteSession(ctx context.Context, sid uuid.UUID) (err error) {
 	ctx, span := p.r.Tracer(ctx).Tracer().Start(ctx, "persistence.sql.DeleteSession")
-	defer span.End()
+	defer otelx.End(span, &err)
 
 	return p.delete(ctx, new(session.Session), sid)
 }
 
-func (p *Persister) DeleteSessionsByIdentity(ctx context.Context, identityID uuid.UUID) error {
+func (p *Persister) DeleteSessionsByIdentity(ctx context.Context, identityID uuid.UUID) (err error) {
 	ctx, span := p.r.Tracer(ctx).Tracer().Start(ctx, "persistence.sql.DeleteSessionsByIdentity")
-	defer span.End()
+	defer otelx.End(span, &err)
 
 	// #nosec G201
 	count, err := p.GetConnection(ctx).RawQuery(fmt.Sprintf(
@@ -255,17 +259,17 @@ func (p *Persister) DeleteSessionsByIdentity(ctx context.Context, identityID uui
 	return nil
 }
 
-func (p *Persister) GetSessionByToken(ctx context.Context, token string, expandables session.Expandables) (*session.Session, error) {
+func (p *Persister) GetSessionByToken(ctx context.Context, token string, expand session.Expandables, identityExpand identity.Expandables) (res *session.Session, err error) {
 	ctx, span := p.r.Tracer(ctx).Tracer().Start(ctx, "persistence.sql.GetSessionByToken")
-	defer span.End()
+	defer otelx.End(span, &err)
 
 	var s session.Session
 	s.Devices = make([]session.Device, 0)
 	nid := p.NetworkID(ctx)
 
 	q := p.GetConnection(ctx).Q()
-	if len(expandables) > 0 {
-		q = q.Eager(expandables.ToEager()...)
+	if len(expand) > 0 {
+		q = q.Eager(expand.ToEager()...)
 	}
 
 	if err := q.Where("token = ? AND nid = ?", token, nid).First(&s); err != nil {
@@ -274,8 +278,8 @@ func (p *Persister) GetSessionByToken(ctx context.Context, token string, expanda
 
 	// This is needed because of how identities are fetched from the store (if we use eager not all fields are
 	// available!).
-	if expandables.Has(session.ExpandSessionIdentity) {
-		i, err := p.GetIdentity(ctx, s.IdentityID)
+	if expand.Has(session.ExpandSessionIdentity) {
+		i, err := p.GetIdentity(ctx, s.IdentityID, identityExpand)
 		if err != nil {
 			return nil, err
 		}
@@ -284,9 +288,9 @@ func (p *Persister) GetSessionByToken(ctx context.Context, token string, expanda
 	return &s, nil
 }
 
-func (p *Persister) DeleteSessionByToken(ctx context.Context, token string) error {
+func (p *Persister) DeleteSessionByToken(ctx context.Context, token string) (err error) {
 	ctx, span := p.r.Tracer(ctx).Tracer().Start(ctx, "persistence.sql.DeleteSessionByToken")
-	defer span.End()
+	defer otelx.End(span, &err)
 
 	// #nosec G201
 	count, err := p.GetConnection(ctx).RawQuery(fmt.Sprintf(
@@ -305,9 +309,9 @@ func (p *Persister) DeleteSessionByToken(ctx context.Context, token string) erro
 	return nil
 }
 
-func (p *Persister) RevokeSessionByToken(ctx context.Context, token string) error {
+func (p *Persister) RevokeSessionByToken(ctx context.Context, token string) (err error) {
 	ctx, span := p.r.Tracer(ctx).Tracer().Start(ctx, "persistence.sql.RevokeSessionByToken")
-	defer span.End()
+	defer otelx.End(span, &err)
 
 	// #nosec G201
 	count, err := p.GetConnection(ctx).RawQuery(fmt.Sprintf(
@@ -327,9 +331,9 @@ func (p *Persister) RevokeSessionByToken(ctx context.Context, token string) erro
 }
 
 // RevokeSessionById revokes a given session
-func (p *Persister) RevokeSessionById(ctx context.Context, sID uuid.UUID) error {
+func (p *Persister) RevokeSessionById(ctx context.Context, sID uuid.UUID) (err error) {
 	ctx, span := p.r.Tracer(ctx).Tracer().Start(ctx, "persistence.sql.RevokeSessionById")
-	defer span.End()
+	defer otelx.End(span, &err)
 
 	// #nosec G201
 	count, err := p.GetConnection(ctx).RawQuery(fmt.Sprintf(
@@ -350,12 +354,12 @@ func (p *Persister) RevokeSessionById(ctx context.Context, sID uuid.UUID) error 
 
 // RevokeSession revokes a given session. If the session does not exist or was not modified,
 // it effectively has been revoked already, and therefore that case does not return an error.
-func (p *Persister) RevokeSession(ctx context.Context, iID, sID uuid.UUID) error {
+func (p *Persister) RevokeSession(ctx context.Context, iID, sID uuid.UUID) (err error) {
 	ctx, span := p.r.Tracer(ctx).Tracer().Start(ctx, "persistence.sql.RevokeSession")
-	defer span.End()
+	defer otelx.End(span, &err)
 
 	// #nosec G201
-	err := p.GetConnection(ctx).RawQuery(fmt.Sprintf(
+	err = p.GetConnection(ctx).RawQuery(fmt.Sprintf(
 		"UPDATE %s SET active = false WHERE id = ? AND identity_id = ? AND nid = ?",
 		"sessions",
 	),
@@ -370,9 +374,9 @@ func (p *Persister) RevokeSession(ctx context.Context, iID, sID uuid.UUID) error
 }
 
 // RevokeSessionsIdentityExcept marks all except the given session of an identity inactive.
-func (p *Persister) RevokeSessionsIdentityExcept(ctx context.Context, iID, sID uuid.UUID) (int, error) {
+func (p *Persister) RevokeSessionsIdentityExcept(ctx context.Context, iID, sID uuid.UUID) (res int, err error) {
 	ctx, span := p.r.Tracer(ctx).Tracer().Start(ctx, "persistence.sql.RevokeSessionsIdentityExcept")
-	defer span.End()
+	defer otelx.End(span, &err)
 
 	// #nosec G201
 	count, err := p.GetConnection(ctx).RawQuery(fmt.Sprintf(
@@ -389,8 +393,10 @@ func (p *Persister) RevokeSessionsIdentityExcept(ctx context.Context, iID, sID u
 	return count, nil
 }
 
-func (p *Persister) DeleteExpiredSessions(ctx context.Context, expiresAt time.Time, limit int) error {
-	err := p.GetConnection(ctx).RawQuery(fmt.Sprintf(
+func (p *Persister) DeleteExpiredSessions(ctx context.Context, expiresAt time.Time, limit int) (err error) {
+	ctx, span := p.r.Tracer(ctx).Tracer().Start(ctx, "persistence.sql.DeleteExpiredSessions")
+	defer otelx.End(span, &err)
+	err = p.GetConnection(ctx).RawQuery(fmt.Sprintf(
 		"DELETE FROM %s WHERE id in (SELECT id FROM (SELECT id FROM %s c WHERE expires_at <= ? and nid = ? ORDER BY expires_at ASC LIMIT %d ) AS s )",
 		"sessions",
 		"sessions",

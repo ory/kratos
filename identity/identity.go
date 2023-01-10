@@ -11,6 +11,10 @@ import (
 	"sync"
 	"time"
 
+	"github.com/samber/lo"
+
+	"github.com/gobuffalo/pop/v6"
+
 	"github.com/tidwall/sjson"
 
 	"github.com/tidwall/gjson"
@@ -119,12 +123,45 @@ type Identity struct {
 	// Store metadata about the user which is only accessible through admin APIs such as `GET /admin/identities/<id>`.
 	MetadataAdmin sqlxx.NullJSONRawMessage `json:"metadata_admin,omitempty" faker:"-" db:"metadata_admin"`
 
+	// InternalCredentials is an internal representation of the credentials.
+	InternalCredentials CredentialsCollection `json:"-" faker:"-" has_many:"identity_credentials" fk_id:"identity_id" order_by:"id asc"`
+
 	// CreatedAt is a helper struct field for gobuffalo.pop.
 	CreatedAt time.Time `json:"created_at" db:"created_at"`
 
 	// UpdatedAt is a helper struct field for gobuffalo.pop.
 	UpdatedAt time.Time `json:"updated_at" db:"updated_at"`
 	NID       uuid.UUID `json:"-"  faker:"-" db:"nid"`
+}
+
+func (i *Identity) AfterEagerFind(tx *pop.Connection) error {
+	if err := i.setCredentials(tx); err != nil {
+		return err
+	}
+
+	if err := i.validate(); err != nil {
+		return err
+	}
+
+	return UpgradeCredentials(i)
+}
+
+func (i *Identity) setCredentials(tx *pop.Connection) error {
+	creds := i.InternalCredentials
+	i.Credentials = make(map[CredentialsType]Credentials, len(creds))
+	for k := range creds {
+		cred := &creds[k]
+		if cred.NID != i.NID {
+			continue
+		}
+		if err := cred.AfterEagerFind(tx); err != nil {
+			return err
+
+		}
+		i.Credentials[cred.Type] = *cred
+	}
+
+	return nil
 }
 
 // Traits represent an identity's traits. The identity is able to create, modify, and delete traits
@@ -340,27 +377,25 @@ func (i WithCredentialsMetadataAndAdminMetadataInJSON) MarshalJSON() ([]byte, er
 	return json.Marshal(localIdentity(i))
 }
 
-func (i *Identity) ValidateNID() error {
+func (i *Identity) validate() error {
 	expected := i.NID
 	if expected == uuid.Nil {
 		return errors.WithStack(herodot.ErrInternalServerError.WithReason("Received empty nid."))
 	}
 
-	for _, r := range i.RecoveryAddresses {
-		if r.NID != expected {
-			return errors.WithStack(herodot.ErrInternalServerError.WithReason("Mismatching nid for recovery addresses."))
-		}
-	}
+	i.RecoveryAddresses = lo.Filter(i.RecoveryAddresses, func(v RecoveryAddress, key int) bool {
+		return v.NID == expected
+	})
 
-	for _, r := range i.VerifiableAddresses {
-		if r.NID != expected {
-			return errors.WithStack(herodot.ErrInternalServerError.WithReason("Mismatching nid for verifiable addresses."))
-		}
-	}
+	i.VerifiableAddresses = lo.Filter(i.VerifiableAddresses, func(v VerifiableAddress, key int) bool {
+		return v.NID == expected
+	})
 
-	for _, r := range i.Credentials {
-		if r.NID != expected {
-			return errors.WithStack(herodot.ErrInternalServerError.WithReason("Mismatching nid for credentials."))
+	for k := range i.Credentials {
+		c := i.Credentials[k]
+		if c.NID != expected {
+			delete(i.Credentials, k)
+			continue
 		}
 	}
 

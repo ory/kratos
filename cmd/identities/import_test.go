@@ -10,6 +10,8 @@ import (
 	"os"
 	"testing"
 
+	"github.com/ory/kratos/identity"
+
 	"github.com/ory/kratos/cmd/identities"
 
 	"github.com/gofrs/uuid"
@@ -42,7 +44,7 @@ func TestImportCmd(t *testing.T) {
 
 		id, err := uuid.FromString(gjson.Get(stdOut, "id").String())
 		require.NoError(t, err)
-		_, err = reg.Persister().GetIdentity(context.Background(), id)
+		_, err = reg.Persister().GetIdentity(context.Background(), id, identity.ExpandNothing)
 		assert.NoError(t, err)
 	})
 
@@ -69,12 +71,12 @@ func TestImportCmd(t *testing.T) {
 
 		id, err := uuid.FromString(gjson.Get(stdOut, "0.id").String())
 		require.NoError(t, err)
-		_, err = reg.Persister().GetIdentity(context.Background(), id)
+		_, err = reg.Persister().GetIdentity(context.Background(), id, identity.ExpandNothing)
 		assert.NoError(t, err)
 
 		id, err = uuid.FromString(gjson.Get(stdOut, "1.id").String())
 		require.NoError(t, err)
-		_, err = reg.Persister().GetIdentity(context.Background(), id)
+		_, err = reg.Persister().GetIdentity(context.Background(), id, identity.ExpandNothing)
 		assert.NoError(t, err)
 	})
 
@@ -97,12 +99,12 @@ func TestImportCmd(t *testing.T) {
 
 		id, err := uuid.FromString(gjson.Get(stdOut, "0.id").String())
 		require.NoError(t, err)
-		_, err = reg.Persister().GetIdentity(context.Background(), id)
+		_, err = reg.Persister().GetIdentity(context.Background(), id, identity.ExpandNothing)
 		assert.NoError(t, err)
 
 		id, err = uuid.FromString(gjson.Get(stdOut, "1.id").String())
 		require.NoError(t, err)
-		_, err = reg.Persister().GetIdentity(context.Background(), id)
+		_, err = reg.Persister().GetIdentity(context.Background(), id, identity.ExpandNothing)
 		assert.NoError(t, err)
 	})
 
@@ -119,7 +121,7 @@ func TestImportCmd(t *testing.T) {
 
 		id, err := uuid.FromString(gjson.Get(stdOut, "id").String())
 		require.NoError(t, err)
-		_, err = reg.Persister().GetIdentity(context.Background(), id)
+		_, err = reg.Persister().GetIdentity(context.Background(), id, identity.ExpandNothing)
 		assert.NoError(t, err)
 	})
 }

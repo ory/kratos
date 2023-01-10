@@ -9,6 +9,8 @@ import (
 	"net/url"
 	"time"
 
+	"github.com/ory/x/otelx"
+
 	"github.com/ory/x/randx"
 
 	"github.com/gorilla/sessions"
@@ -37,6 +39,7 @@ type (
 		identity.ManagementProvider
 		x.CookieProvider
 		x.CSRFProvider
+		x.TracingProvider
 		PersistenceProvider
 	}
 	ManagerHTTP struct {
@@ -54,7 +57,10 @@ func NewManagerHTTP(r managerHTTPDependencies) *ManagerHTTP {
 	}
 }
 
-func (s *ManagerHTTP) UpsertAndIssueCookie(ctx context.Context, w http.ResponseWriter, r *http.Request, ss *Session) error {
+func (s *ManagerHTTP) UpsertAndIssueCookie(ctx context.Context, w http.ResponseWriter, r *http.Request, ss *Session) (err error) {
+	ctx, span := s.r.Tracer(ctx).Tracer().Start(ctx, "sessions.ManagerHTTP.UpsertAndIssueCookie")
+	defer otelx.End(span, &err)
+
 	if err := s.r.SessionPersister().UpsertSession(ctx, ss); err != nil {
 		return err
 	}
@@ -66,7 +72,10 @@ func (s *ManagerHTTP) UpsertAndIssueCookie(ctx context.Context, w http.ResponseW
 	return nil
 }
 
-func (s *ManagerHTTP) RefreshCookie(ctx context.Context, w http.ResponseWriter, r *http.Request, session *Session) error {
+func (s *ManagerHTTP) RefreshCookie(ctx context.Context, w http.ResponseWriter, r *http.Request, session *Session) (err error) {
+	ctx, span := s.r.Tracer(ctx).Tracer().Start(ctx, "sessions.ManagerHTTP.RefreshCookie")
+	defer otelx.End(span, &err)
+
 	// If it is a session token there is nothing to do.
 	_, cookieErr := r.Cookie(s.cookieName(r.Context()))
 	if errors.Is(cookieErr, http.ErrNoCookie) {
@@ -88,7 +97,10 @@ func (s *ManagerHTTP) RefreshCookie(ctx context.Context, w http.ResponseWriter, 
 	return nil
 }
 
-func (s *ManagerHTTP) IssueCookie(ctx context.Context, w http.ResponseWriter, r *http.Request, session *Session) error {
+func (s *ManagerHTTP) IssueCookie(ctx context.Context, w http.ResponseWriter, r *http.Request, session *Session) (err error) {
+	ctx, span := s.r.Tracer(ctx).Tracer().Start(ctx, "sessions.ManagerHTTP.IssueCookie")
+	defer otelx.End(span, &err)
+
 	cookie, err := s.r.CookieManager(r.Context()).Get(r, s.cookieName(ctx))
 	// Fix for https://github.com/ory/kratos/issues/1695
 	if err != nil && cookie == nil {
@@ -159,6 +171,9 @@ func (s *ManagerHTTP) getCookie(r *http.Request) (*sessions.Session, error) {
 }
 
 func (s *ManagerHTTP) extractToken(r *http.Request) string {
+	_, span := s.r.Tracer(r.Context()).Tracer().Start(r.Context(), "sessions.ManagerHTTP.extractToken")
+	defer span.End()
+
 	if token := r.Header.Get("X-Session-Token"); len(token) > 0 {
 		return token
 	}
@@ -178,13 +193,16 @@ func (s *ManagerHTTP) extractToken(r *http.Request) string {
 	return token
 }
 
-func (s *ManagerHTTP) FetchFromRequest(ctx context.Context, r *http.Request) (*Session, error) {
+func (s *ManagerHTTP) FetchFromRequest(ctx context.Context, r *http.Request) (_ *Session, err error) {
+	ctx, span := s.r.Tracer(ctx).Tracer().Start(ctx, "sessions.ManagerHTTP.FetchFromRequest")
+	defer otelx.End(span, &err)
+
 	token := s.extractToken(r)
 	if token == "" {
 		return nil, errors.WithStack(NewErrNoCredentialsForSession())
 	}
 
-	se, err := s.r.SessionPersister().GetSessionByToken(ctx, token, ExpandEverything)
+	se, err := s.r.SessionPersister().GetSessionByToken(ctx, token, ExpandEverything, identity.ExpandDefault)
 	if err != nil {
 		if errors.Is(err, herodot.ErrNotFound) || errors.Is(err, sqlcon.ErrNoRows) {
 			return nil, errors.WithStack(NewErrNoActiveSessionFound())
@@ -200,7 +218,10 @@ func (s *ManagerHTTP) FetchFromRequest(ctx context.Context, r *http.Request) (*S
 	return se, nil
 }
 
-func (s *ManagerHTTP) PurgeFromRequest(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
+func (s *ManagerHTTP) PurgeFromRequest(ctx context.Context, w http.ResponseWriter, r *http.Request) (err error) {
+	ctx, span := s.r.Tracer(ctx).Tracer().Start(ctx, "sessions.ManagerHTTP.PurgeFromRequest")
+	defer otelx.End(span, &err)
+
 	if token, ok := bearerTokenFromRequest(r); ok {
 		return errors.WithStack(s.r.SessionPersister().RevokeSessionByToken(ctx, token))
 	}
@@ -222,7 +243,10 @@ func (s *ManagerHTTP) PurgeFromRequest(ctx context.Context, w http.ResponseWrite
 	return nil
 }
 
-func (s *ManagerHTTP) DoesSessionSatisfy(r *http.Request, sess *Session, requestedAAL string) error {
+func (s *ManagerHTTP) DoesSessionSatisfy(r *http.Request, sess *Session, requestedAAL string) (err error) {
+	_, span := s.r.Tracer(r.Context()).Tracer().Start(r.Context(), "sessions.ManagerHTTP.DoesSessionSatisfy")
+	defer otelx.End(span, &err)
+
 	sess.SetAuthenticatorAssuranceLevel()
 	switch requestedAAL {
 	case string(identity.AuthenticatorAssuranceLevel1):
@@ -230,19 +254,23 @@ func (s *ManagerHTTP) DoesSessionSatisfy(r *http.Request, sess *Session, request
 			return nil
 		}
 	case config.HighestAvailableAAL:
-		i, err := s.r.PrivilegedIdentityPool().GetIdentityConfidential(r.Context(), sess.IdentityID)
-		if err != nil {
-			return err
+		i := *sess.Identity
+
+		// If credentials are not expanded, we load them here.
+		if len(i.Credentials) == 0 {
+			if err := s.r.PrivilegedIdentityPool().HydrateIdentityAssociations(r.Context(), &i, identity.ExpandCredentials); err != nil {
+				return err
+			}
 		}
 
 		available := identity.NoAuthenticatorAssuranceLevel
-		if firstCount, err := s.r.IdentityManager().CountActiveFirstFactorCredentials(r.Context(), i); err != nil {
+		if firstCount, err := s.r.IdentityManager().CountActiveFirstFactorCredentials(r.Context(), &i); err != nil {
 			return err
 		} else if firstCount > 0 {
 			available = identity.AuthenticatorAssuranceLevel1
 		}
 
-		if secondCount, err := s.r.IdentityManager().CountActiveMultiFactorCredentials(r.Context(), i); err != nil {
+		if secondCount, err := s.r.IdentityManager().CountActiveMultiFactorCredentials(r.Context(), &i); err != nil {
 			return err
 		} else if secondCount > 0 {
 			available = identity.AuthenticatorAssuranceLevel2
@@ -255,10 +283,14 @@ func (s *ManagerHTTP) DoesSessionSatisfy(r *http.Request, sess *Session, request
 		return NewErrAALNotSatisfied(
 			urlx.CopyWithQuery(urlx.AppendPaths(s.r.Config().SelfPublicURL(r.Context()), "/self-service/login/browser"), url.Values{"aal": {"aal2"}}).String())
 	}
+
 	return errors.Errorf("requested unknown aal: %s", requestedAAL)
 }
 
-func (s *ManagerHTTP) SessionAddAuthenticationMethods(ctx context.Context, sid uuid.UUID, ams ...AuthenticationMethod) error {
+func (s *ManagerHTTP) SessionAddAuthenticationMethods(ctx context.Context, sid uuid.UUID, ams ...AuthenticationMethod) (err error) {
+	ctx, span := s.r.Tracer(ctx).Tracer().Start(ctx, "sessions.ManagerHTTP.SessionAddAuthenticationMethods")
+	defer otelx.End(span, &err)
+
 	// Since we added the method, it also means that we have authenticated it
 	sess, err := s.r.SessionPersister().GetSession(ctx, sid, ExpandNothing)
 	if err != nil {
