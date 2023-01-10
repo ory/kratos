@@ -16,5 +16,4 @@ func TestClaimsValidate(t *testing.T) {
 	require.Error(t, (&Claims{Subject: "not-empty"}).Validate())
 	require.Error(t, (&Claims{Subject: "not-empty"}).Validate())
 	require.NoError(t, (&Claims{Issuer: "not-empty", Subject: "not-empty"}).Validate())
-	require.NoError(t, (&Claims{Issuer: "not-empty", Subject: "not-empty"}).Validate())
 }
