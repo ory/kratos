@@ -5,7 +5,7 @@
 
 **Table of Contents**
 
-- [ (2023-01-04)](#2023-01-04)
+- [ (2023-01-10)](#2023-01-10)
   - [Breaking Changes](#breaking-changes)
     - [Bug Fixes](#bug-fixes)
     - [Documentation](#documentation)
@@ -287,7 +287,7 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# [](https://github.com/ory/kratos/compare/v0.11.0...v) (2023-01-04)
+# [](https://github.com/ory/kratos/compare/v0.11.0...v) (2023-01-10)
 
 ## Breaking Changes
 
@@ -375,6 +375,14 @@ The `/admin/courier/messages` endpoint now uses `keysetpagination` instead.
   ([7ad2b97](https://github.com/ory/kratos/commit/7ad2b970089cee2209b3afeaaffd7e04f803918d))
 - Improve tracing ([#2992](https://github.com/ory/kratos/issues/2992))
   ([04d0280](https://github.com/ory/kratos/commit/04d0280ca1338b93ac6e3026a8a2d852fbb46ef2))
+- Remove duplicate queries from whoami calls
+  ([#2995](https://github.com/ory/kratos/issues/2995))
+  ([b50a222](https://github.com/ory/kratos/commit/b50a22298eedef30a45979866163921604bc698a)),
+  closes [#2402](https://github.com/ory/kratos/issues/2402):
+
+  Introduces an expand API to the identity persister which greatly improves
+  whoami performance.
+
 - Require verification on login
   ([#2927](https://github.com/ory/kratos/issues/2927))
   ([efb8ae8](https://github.com/ory/kratos/commit/efb8ae89cbc31477c2696a0df4c89d6dbf856d27))
