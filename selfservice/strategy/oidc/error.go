@@ -33,7 +33,7 @@ func logUpstreamError(l *logrusx.Logger, resp *http.Response) error {
 
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
-		body = []byte(err.Error())
+		l = l.WithError(err)
 	}
 
 	l.WithField("response_code", resp.StatusCode).WithField("response_body", string(body)).Error("The upstream OIDC provider returned a non 200 status code.")
