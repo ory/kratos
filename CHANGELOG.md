@@ -329,6 +329,8 @@ The `/admin/courier/messages` endpoint now uses `keysetpagination` instead.
   This patch removes the undocumented and experimental `X-Session-Cookie` header
   from the `/sessions/whoami` endpoint.
 
+- Resilient social sign in ([#3011](https://github.com/ory/kratos/issues/3011))
+  ([ca35b45](https://github.com/ory/kratos/commit/ca35b45a26c6781be81086a7677344fc165dac9f))
 - Respect `return_to` URL parameter in registration flow when the user is
   already registered ([#2957](https://github.com/ory/kratos/issues/2957))
   ([3462ce1](https://github.com/ory/kratos/commit/3462ce1512d03529b613421a69bcf4c1d5e98e08))
