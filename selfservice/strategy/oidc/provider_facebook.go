@@ -96,7 +96,7 @@ func (g *ProviderFacebook) Claims(ctx context.Context, exchange *oauth2.Token, q
 			return nil, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("%s", err))
 		}
 		g.reg.Logger().Errorf("Unexpected response from graph /me endpoint: %s", string(body))
-		return nil, errors.WithStack(herodot.ErrInternalServerError.WithReason("Unnable to fetch user metadata from graph/me endpoint"))
+		return nil, errors.WithStack(herodot.ErrInternalServerError.WithReason("Unable to fetch user metadata from graph/me endpoint"))
 	}
 
 	var user struct {
