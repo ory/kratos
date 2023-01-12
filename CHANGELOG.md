@@ -5,7 +5,7 @@
 
 **Table of Contents**
 
-- [ (2023-01-10)](#2023-01-10)
+- [ (2023-01-12)](#2023-01-12)
   - [Breaking Changes](#breaking-changes)
     - [Bug Fixes](#bug-fixes)
     - [Documentation](#documentation)
@@ -287,7 +287,7 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# [](https://github.com/ory/kratos/compare/v0.11.0...v) (2023-01-10)
+# [](https://github.com/ory/kratos/compare/v0.11.0...v) (2023-01-12)
 
 ## Breaking Changes
 
@@ -314,6 +314,9 @@ The `/admin/courier/messages` endpoint now uses `keysetpagination` instead.
 - Listing sessions query ([#2958](https://github.com/ory/kratos/issues/2958))
   ([3e06c99](https://github.com/ory/kratos/commit/3e06c991ad557f4629ef7412c256ede2386a7bed)),
   closes [#2930](https://github.com/ory/kratos/issues/2930)
+- Missing index on courier list count
+  ([#3002](https://github.com/ory/kratos/issues/3002))
+  ([3b50711](https://github.com/ory/kratos/commit/3b507110d6e0296e90d3c495515bf2a066b7c09b))
 - Pin geckodriver version to bypass GitHub API quota
   ([#2972](https://github.com/ory/kratos/issues/2972))
   ([585cb9e](https://github.com/ory/kratos/commit/585cb9e79be5de8b3d684313edb72bb703ffaa78))
@@ -337,6 +340,8 @@ The `/admin/courier/messages` endpoint now uses `keysetpagination` instead.
 - Set accept header for GitLab
   ([#2998](https://github.com/ory/kratos/issues/2998))
   ([e892113](https://github.com/ory/kratos/commit/e892113cc00a010490492def7f128bfb5c15b8de))
+- Set config at the start
+  ([e58bc6e](https://github.com/ory/kratos/commit/e58bc6e9bacd5c9c6ee9369beb843a4c54059ae2))
 - Spurious cancelation of async webhooks, better tracing
   ([#2969](https://github.com/ory/kratos/issues/2969))
   ([72de640](https://github.com/ory/kratos/commit/72de640bad75da29424222bd613a21d10e1811ec)):
@@ -346,6 +351,10 @@ The `/admin/courier/messages` endpoint now uses `keysetpagination` instead.
   We now dissociate the cancellation of async hooks from the normal request
   processing flow.
 
+- TOTP internal context after saving settings
+  ([#2960](https://github.com/ory/kratos/issues/2960))
+  ([8b647b1](https://github.com/ory/kratos/commit/8b647b1f54bb674982b982ce483fbd877e42c43a)),
+  closes [#2680](https://github.com/ory/kratos/issues/2680)
 - Update pquerna/otp to fix TOTP URL encoding
   ([#2951](https://github.com/ory/kratos/issues/2951))
   ([7248636](https://github.com/ory/kratos/commit/72486368f5403c02772e4a99ed9edc34e84c217c)):
@@ -394,6 +403,8 @@ The `/admin/courier/messages` endpoint now uses `keysetpagination` instead.
 
 ### Tests
 
+- Improve parallelization
+  ([e8e8ce5](https://github.com/ory/kratos/commit/e8e8ce5eb3713f28ce1c9a05564ec7f74b48ab4d))
 - Regenerate csrf if verification flow expired
   ([#2455](https://github.com/ory/kratos/issues/2455))
   ([7025081](https://github.com/ory/kratos/commit/7025081b76171ce0a8f312a7b671aead1bb21215))
