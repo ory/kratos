@@ -45,21 +45,41 @@ func TestPool(ctx context.Context, conf *config.Config, p interface {
 	persistence.Persister
 }, m *identity.Manager) func(t *testing.T) {
 	return func(t *testing.T) {
+		exampleServerURL := urlx.ParseOrPanic("http://example.com")
+		conf.MustSet(ctx, config.ViperKeyPublicBaseURL, exampleServerURL.String())
+
 		nid, p := testhelpers.NewNetworkUnlessExisting(t, ctx, p)
+		expandSchema := schema.Schema{
+			ID:     "expandSchema",
+			URL:    urlx.ParseOrPanic("file://./stub/expand.schema.json"),
+			RawURL: "file://./stub/expand.schema.json",
+		}
+		defaultSchema := schema.Schema{
+			ID:     config.DefaultIdentityTraitsSchemaID,
+			URL:    urlx.ParseOrPanic("file://./stub/identity.schema.json"),
+			RawURL: "file://./stub/identity.schema.json",
+		}
+		altSchema := schema.Schema{
+			ID:     "altSchema",
+			URL:    urlx.ParseOrPanic("file://./stub/identity-2.schema.json"),
+			RawURL: "file://./stub/identity-2.schema.json",
+		}
+		conf.MustSet(ctx, config.ViperKeyIdentitySchemas, []config.Schema{
+			{
+				ID:  altSchema.ID,
+				URL: altSchema.RawURL,
+			},
+			{
+				ID:  defaultSchema.ID,
+				URL: defaultSchema.RawURL,
+			},
+			{
+				ID:  expandSchema.ID,
+				URL: expandSchema.RawURL,
+			},
+		})
 
 		t.Run("case=expand", func(t *testing.T) {
-			expandSchema := schema.Schema{
-				ID:     "expandSchema",
-				URL:    urlx.ParseOrPanic("file://./stub/expand.schema.json"),
-				RawURL: "file://./stub/expand.schema.json",
-			}
-
-			conf.MustSet(ctx, config.ViperKeyIdentitySchemas, []config.Schema{
-				{
-					ID:  expandSchema.ID,
-					URL: expandSchema.RawURL,
-				},
-			})
 
 			require.NoError(t, p.GetConnection(ctx).RawQuery("DELETE FROM identities WHERE nid = ?", nid).Exec())
 			t.Cleanup(func() {
@@ -194,31 +214,7 @@ func TestPool(ctx context.Context, conf *config.Config, p interface {
 			})
 		})
 
-		exampleServerURL := urlx.ParseOrPanic("http://example.com")
-		conf.MustSet(ctx, config.ViperKeyPublicBaseURL, exampleServerURL.String())
-		defaultSchema := schema.Schema{
-			ID:     config.DefaultIdentityTraitsSchemaID,
-			URL:    urlx.ParseOrPanic("file://./stub/identity.schema.json"),
-			RawURL: "file://./stub/identity.schema.json",
-		}
-		altSchema := schema.Schema{
-			ID:     "altSchema",
-			URL:    urlx.ParseOrPanic("file://./stub/identity-2.schema.json"),
-			RawURL: "file://./stub/identity-2.schema.json",
-		}
-		conf.MustSet(ctx, config.ViperKeyIdentitySchemas, []config.Schema{
-			{
-				ID:  altSchema.ID,
-				URL: altSchema.RawURL,
-			},
-			{
-				ID:  defaultSchema.ID,
-				URL: defaultSchema.RawURL,
-			},
-		})
-
 		var createdIDs []uuid.UUID
-
 		var passwordIdentity = func(schemaID string, credentialsID string) *identity.Identity {
 			i := identity.NewIdentity(schemaID)
 			i.SetCredentials(identity.CredentialsTypePassword, identity.Credentials{
