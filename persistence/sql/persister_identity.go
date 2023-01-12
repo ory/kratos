@@ -462,15 +462,15 @@ func (p *Persister) GetIdentity(ctx context.Context, id uuid.UUID, expand identi
 	var i identity.Identity
 
 	return &i, p.Transaction(ctx, func(ctx context.Context, con *pop.Connection) error {
-		query := con.Select("identity.*").Where("id = ? AND nid = ?", id, p.NetworkID(ctx))
+		query := con.Select(`identities.id AS "identities.id"`).Where("identities.id = ? AND identities.nid = ?", id, p.NetworkID(ctx))
 		if len(expand) > 0 {
 			query = query.EagerPreload(expand.ToEager()...)
 		}
 
 		if expand.Has(identity.ExpandFieldVerifiableAddresses) {
 			query.
-				Select("identity_verifiable_addresses.*").
-				LeftJoin(new(identity.VerifiableAddress).TableName(ctx) "as ", "identity_verifiable_addresses.identity_id = identities.id").Where("identity_verifiable_addresses.nid = ?", p.NetworkID(ctx))
+				Select(`identity_verifiable_addresses.id AS "identity_verifiable_addresses.id"`).
+				LeftJoin(new(identity.VerifiableAddress).TableName(ctx), "identity_verifiable_addresses.identity_id = identities.id").Where("identity_verifiable_addresses.nid = ?", p.NetworkID(ctx))
 		}
 
 		if expand.Has(identity.ExpandFieldRecoveryAddresses) {
