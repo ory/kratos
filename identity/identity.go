@@ -106,7 +106,83 @@ type Identity struct {
 	// ---
 	// x-omitempty: true
 	// ---
-	VerifiableAddresses []VerifiableAddress `json:"verifiable_addresses,omitempty" faker:"-" has_many:"identity_verifiable_addresses" fk_id:"identity_id" order_by:"id asc"`
+	VerifiableAddresses []VerifiableAddress `db:"-" json:"verifiable_addresses,omitempty" faker:"-" has_many:"identity_verifiable_addresses" fk_id:"identity_id" order_by:"id asc"`
+
+	// RecoveryAddresses contains all the addresses that can be used to recover an identity.
+	//
+	// Extensions:
+	// ---
+	// x-omitempty: true
+	// ---
+	RecoveryAddresses []RecoveryAddress `json:"recovery_addresses,omitempty" faker:"-" has_many:"identity_recovery_addresses" fk_id:"identity_id" order_by:"id asc"`
+
+	// Store metadata about the identity which the identity itself can see when calling for example the
+	// session endpoint. Do not store sensitive information (e.g. credit score) about the identity in this field.
+	MetadataPublic sqlxx.NullJSONRawMessage `json:"metadata_public" faker:"-" db:"metadata_public"`
+
+	// Store metadata about the user which is only accessible through admin APIs such as `GET /admin/identities/<id>`.
+	MetadataAdmin sqlxx.NullJSONRawMessage `json:"metadata_admin,omitempty" faker:"-" db:"metadata_admin"`
+
+	// InternalCredentials is an internal representation of the credentials.
+	InternalCredentials CredentialsCollection `json:"-" faker:"-" has_many:"identity_credentials" fk_id:"identity_id" order_by:"id asc"`
+
+	// CreatedAt is a helper struct field for gobuffalo.pop.
+	CreatedAt time.Time `json:"created_at" db:"created_at"`
+
+	// UpdatedAt is a helper struct field for gobuffalo.pop.
+	UpdatedAt time.Time `json:"updated_at" db:"updated_at"`
+	NID       uuid.UUID `json:"-"  faker:"-" db:"nid"`
+}
+type IdentityRead struct {
+	l *sync.RWMutex `db:"-" faker:"-"`
+
+	// ID is the identity's unique identifier.
+	//
+	// The Identity ID can not be changed and can not be chosen. This ensures future
+	// compatibility and optimization for distributed stores such as CockroachDB.
+	//
+	// required: true
+	ID uuid.UUID `json:"id" faker:"-" db:"id"`
+
+	// Credentials represents all credentials that can be used for authenticating this identity.
+	Credentials map[CredentialsType]Credentials `json:"credentials,omitempty" faker:"-" db:"-"`
+
+	//// IdentifierCredentials contains the access and refresh token for oidc identifier
+	//IdentifierCredentials []IdentifierCredential `json:"identifier_credentials,omitempty" faker:"-" db:"-"`
+
+	// SchemaID is the ID of the JSON Schema to be used for validating the identity's traits.
+	//
+	// required: true
+	SchemaID string `json:"schema_id" faker:"-" db:"schema_id"`
+
+	// SchemaURL is the URL of the endpoint where the identity's traits schema can be fetched from.
+	//
+	// format: url
+	// required: true
+	SchemaURL string `json:"schema_url" faker:"-" db:"-"`
+
+	// State is the identity's state.
+	//
+	// This value has currently no effect.
+	State State `json:"state" faker:"-" db:"state"`
+
+	// StateChangedAt contains the last time when the identity's state changed.
+	StateChangedAt *sqlxx.NullTime `json:"state_changed_at,omitempty" faker:"-" db:"state_changed_at"`
+
+	// Traits represent an identity's traits. The identity is able to create, modify, and delete traits
+	// in a self-service manner. The input will always be validated against the JSON Schema defined
+	// in `schema_url`.
+	//
+	// required: true
+	Traits Traits `json:"traits" faker:"-" db:"traits"`
+
+	// VerifiableAddresses contains all the addresses that can be verified by the user.
+	//
+	// Extensions:
+	// ---
+	// x-omitempty: true
+	// ---
+	VerifiableAddresses []VerifiableAddress `db:"verifiable_addresses" json:"verifiable_addresses,omitempty" faker:"-" has_many:"identity_verifiable_addresses" fk_id:"identity_id" order_by:"id asc"`
 
 	// RecoveryAddresses contains all the addresses that can be used to recover an identity.
 	//
@@ -201,6 +277,10 @@ func (t *Traits) UnmarshalJSON(data []byte) error {
 }
 
 func (i Identity) TableName(ctx context.Context) string {
+	return "identities"
+}
+
+func (i IdentityRead) TableName(ctx context.Context) string {
 	return "identities"
 }
 

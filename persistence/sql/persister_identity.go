@@ -459,23 +459,45 @@ func (p *Persister) GetIdentity(ctx context.Context, id uuid.UUID, expand identi
 		attribute.StringSlice("expand", expand.ToEager()),
 		attribute.String("network.id", p.NetworkID(ctx).String()),
 	)
-
-	con := p.GetConnection(ctx)
-	query := con.Where("id = ? AND nid = ?", id, p.NetworkID(ctx))
-	if len(expand) > 0 {
-		query = query.EagerPreload(expand.ToEager()...)
-	}
-
 	var i identity.Identity
-	if err := query.First(&i); err != nil {
-		return nil, sqlcon.HandleError(err)
-	}
 
-	if err := p.injectTraitsSchemaURL(ctx, &i); err != nil {
-		return nil, err
-	}
+	return &i, p.Transaction(ctx, func(ctx context.Context, con *pop.Connection) error {
+		query := con.Select("identity.*").Where("id = ? AND nid = ?", id, p.NetworkID(ctx))
+		if len(expand) > 0 {
+			query = query.EagerPreload(expand.ToEager()...)
+		}
 
-	return &i, nil
+		if expand.Has(identity.ExpandFieldVerifiableAddresses) {
+			query.
+				Select("identity_verifiable_addresses.*").
+				LeftJoin(new(identity.VerifiableAddress).TableName(ctx) "as ", "identity_verifiable_addresses.identity_id = identities.id").Where("identity_verifiable_addresses.nid = ?", p.NetworkID(ctx))
+		}
+
+		if expand.Has(identity.ExpandFieldRecoveryAddresses) {
+			query.
+				LeftJoin(new(identity.RecoveryAddress).TableName(ctx), "identity_recovery_addresses.identity_id = identities.id").Where("identity_recovery_addresses.nid = ?", p.NetworkID(ctx))
+		}
+
+		statement, args := query.ToSQL(pop.NewModel(&i, ctx))
+		fmt.Printf("\n\nstatement: %s\n\n", statement)
+
+		var ii identity.IdentityRead
+		if err := con.TX.Tx.SelectContext(ctx, &ii, statement, args...); err != nil {
+			return sqlcon.HandleError(err)
+		}
+
+		i = identity.Identity(ii)
+
+		if err := i.AfterEagerFind(con); err != nil {
+			return err
+		}
+
+		if err := p.injectTraitsSchemaURL(ctx, &i); err != nil {
+			return err
+		}
+
+		return nil
+	})
 }
 
 func (p *Persister) GetIdentityConfidential(ctx context.Context, id uuid.UUID) (res *identity.Identity, err error) {
