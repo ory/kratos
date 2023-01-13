@@ -8,6 +8,8 @@ import (
 	"fmt"
 	"time"
 
+	"golang.org/x/sync/errgroup"
+
 	"github.com/ory/x/otelx"
 
 	"github.com/ory/kratos/identity"
@@ -164,21 +166,22 @@ func (p *Persister) ListSessionsByIdentity(ctx context.Context, iID uuid.UUID, a
 		if err := q.Paginate(page, perPage).All(&s); err != nil {
 			return sqlcon.HandleError(err)
 		}
-
-		if expandables.Has(session.ExpandSessionIdentity) {
-			i, err := p.GetIdentity(ctx, iID, identity.ExpandDefault)
-			if err != nil {
-				return sqlcon.HandleError(err)
-			}
-
-			for _, s := range s {
-				s.Active = s.IsActive()
-				s.Identity = i
-			}
-		}
 		return nil
 	}); err != nil {
 		return nil, 0, err
+	}
+
+	if expandables.Has(session.ExpandSessionIdentity) {
+		i, err := p.GetIdentity(ctx, iID, identity.ExpandDefault)
+		if err != nil {
+			return nil, 0, sqlcon.HandleError(err)
+		}
+
+		for k := range s {
+			ss := s[k]
+			ss.Identity = i
+			ss.Active = ss.IsActive()
+		}
 	}
 
 	return s, t, nil
@@ -267,24 +270,40 @@ func (p *Persister) GetSessionByToken(ctx context.Context, token string, expand 
 	s.Devices = make([]session.Device, 0)
 	nid := p.NetworkID(ctx)
 
-	q := p.GetConnection(ctx).Q()
-	if len(expand) > 0 {
-		q = q.Eager(expand.ToEager()...)
+	con := p.GetConnection(ctx)
+	if err := con.Where("token = ? AND nid = ?", token, nid).First(&s); err != nil {
+		return nil, sqlcon.HandleError(err)
 	}
 
-	if err := q.Where("token = ? AND nid = ?", token, nid).First(&s); err != nil {
-		return nil, sqlcon.HandleError(err)
+	var (
+		i  *identity.Identity
+		sd []session.Device
+	)
+
+	eg, ctx := errgroup.WithContext(ctx)
+	if expand.Has(session.ExpandSessionDevices) {
+		eg.Go(func() error {
+			return sqlcon.HandleError(con.WithContext(ctx).
+				Where("session_id = ? AND nid = ?", s.ID, nid).All(&sd))
+		})
 	}
 
 	// This is needed because of how identities are fetched from the store (if we use eager not all fields are
 	// available!).
 	if expand.Has(session.ExpandSessionIdentity) {
-		i, err := p.GetIdentity(ctx, s.IdentityID, identityExpand)
-		if err != nil {
-			return nil, err
-		}
-		s.Identity = i
+		eg.Go(func() (err error) {
+			i, err = p.GetIdentity(ctx, s.IdentityID, identityExpand)
+			return err
+		})
 	}
+
+	if err := eg.Wait(); err != nil {
+		return nil, err
+	}
+
+	s.Identity = i
+	s.Devices = sd
+
 	return &s, nil
 }
 
