@@ -87,14 +87,9 @@ func (d *ProviderPatreon) Claims(ctx context.Context, exchange *oauth2.Token, qu
 		return nil, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("%s", err))
 	}
 
-	var bytes []byte
-	_, bufferErr := res.Body.Read(bytes)
-	if bufferErr != nil {
-		return nil, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("%s", bufferErr))
-	}
-
-	var data PatreonIdentityResponse
-	jsonErr := json.Unmarshal(bytes, &data)
+	defer res.Body.Close()
+	data := PatreonIdentityResponse{}
+	jsonErr := json.NewDecoder(res.Body).Decode(&data)
 	if jsonErr != nil {
 		return nil, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("%s", jsonErr))
 	}
