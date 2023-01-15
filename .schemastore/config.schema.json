@@ -697,6 +697,9 @@
               },
               {
                 "$ref": "#/definitions/selfServiceWebHook"
+              },
+              {
+                "$ref": "#/definitions/selfServiceRequireVerifiedAddressHook"
               }
             ]
           },
@@ -783,7 +786,22 @@
           "$ref": "#/definitions/selfServiceAfterOIDCLoginMethod"
         },
         "hooks": {
-          "$ref": "#/definitions/selfServiceHooks"
+          "type": "array",
+          "items": {
+            "anyOf": [
+              {
+                "$ref": "#/definitions/selfServiceWebHook"
+              },
+              {
+                "$ref": "#/definitions/selfServiceSessionRevokerHook"
+              },
+              {
+                "$ref": "#/definitions/selfServiceRequireVerifiedAddressHook"
+              }
+            ]
+          },
+          "uniqueItems": true,
+          "additionalItems": false
         }
       }
     },
@@ -2051,7 +2069,7 @@
       "additionalProperties": false
     },
     "tracing": {
-      "$ref": "https://raw.githubusercontent.com/ory/x/v0.0.513/otelx/config.schema.json"
+      "$ref": "https://raw.githubusercontent.com/ory/x/v0.0.531/otelx/config.schema.json"
     },
     "log": {
       "title": "Log",
