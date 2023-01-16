@@ -91,16 +91,16 @@ func (p *Persister) ListSessions(ctx context.Context, active *bool, paginatorOpt
 			}
 		}
 
-		if len(expandables) > 0 {
-			q = q.Eager(expandables.ToEager()...)
-		}
-
 		// Get the total count of matching items
 		total, err := q.Count(new(session.Session))
 		if err != nil {
 			return sqlcon.HandleError(err)
 		}
 		t = int64(total)
+
+		if len(expandables) > 0 {
+			q = q.EagerPreload(expandables.ToEager()...)
+		}
 
 		// Get the paginated list of matching items
 		if err := q.Scope(keysetpagination.Paginate[session.Session](paginator)).All(&s); err != nil {
@@ -113,6 +113,9 @@ func (p *Persister) ListSessions(ctx context.Context, active *bool, paginatorOpt
 	}
 
 	for k := range s {
+		if s[k].Identity == nil {
+			continue
+		}
 		if err := p.injectTraitsSchemaURL(ctx, s[k].Identity); err != nil {
 			return nil, 0, nil, err
 		}
