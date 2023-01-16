@@ -585,7 +585,7 @@ func TestHandlerAdminSessionManagement(t *testing.T) {
 				},
 			} {
 				t.Run(fmt.Sprintf("description=%s", tc.description), func(t *testing.T) {
-					req, _ := http.NewRequest("GET", ts.URL+"/admin/sessions/"+tc.expand, nil)
+					req, _ := http.NewRequest("GET", ts.URL+"/admin/sessions?"+tc.expand, nil)
 					res, err := client.Do(req)
 					require.NoError(t, err)
 					assert.Equal(t, http.StatusOK, res.StatusCode)
