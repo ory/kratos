@@ -5,6 +5,8 @@ go 1.19
 replace (
 	github.com/bradleyjkemp/cupaloy/v2 => github.com/aeneasr/cupaloy/v2 v2.6.1-0.20210924214125-3dfdd01210a3
 
+	github.com/go-sql-driver/mysql => github.com/go-sql-driver/mysql v1.7.0
+
 	github.com/gorilla/sessions => github.com/ory/sessions v1.2.2-0.20220110165800-b09c17334dc2
 	github.com/knadh/koanf => github.com/aeneasr/koanf v0.14.1-0.20211230115640-aa3902b3267a
 
