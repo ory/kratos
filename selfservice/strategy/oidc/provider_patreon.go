@@ -6,8 +6,11 @@ package oidc
 import (
 	"context"
 	"encoding/json"
-	"net/http"
 	"net/url"
+
+	"github.com/hashicorp/go-retryablehttp"
+
+	"github.com/ory/x/httpx"
 
 	"github.com/pkg/errors"
 	"golang.org/x/oauth2"
@@ -79,10 +82,17 @@ func (d *ProviderPatreon) AuthCodeURLOptions(r ider) []oauth2.AuthCodeOption {
 func (d *ProviderPatreon) Claims(ctx context.Context, exchange *oauth2.Token, query url.Values) (*Claims, error) {
 	identityUrl := "https://www.patreon.com/api/oauth2/v2/identity?fields%5Buser%5D=first_name,last_name,url,full_name,email,image_url"
 
-	cl := http.Client{}
-	req, _ := http.NewRequest("GET", identityUrl, nil)
+	o := d.oauth2(ctx)
+	client := d.reg.HTTPClient(ctx, httpx.ResilientClientWithClient(o.Client(ctx, exchange)))
+
+	req, err := retryablehttp.NewRequest("GET", identityUrl, nil)
+	if err != nil {
+		return nil, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("%s", err))
+	}
+	req.Header.Add("Content-Type", "application/json")
 	req.Header.Add("Authorization", "Bearer "+exchange.AccessToken)
-	res, err := cl.Do(req)
+
+	res, err := client.Do(req)
 	if err != nil {
 		return nil, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("%s", err))
 	}
