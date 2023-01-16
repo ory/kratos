@@ -3,7 +3,11 @@
 
 package session
 
-import "strings"
+import (
+	"strings"
+
+	"github.com/ory/kratos/identity"
+)
 
 // Expandable controls what fields to expand for sessions.
 // swagger:enum Expandable
@@ -69,4 +73,6 @@ var ExpandDefault = Expandables{
 var ExpandEverything = Expandables{
 	ExpandSessionDevices,
 	ExpandSessionIdentity,
+	Expandable(ExpandSessionIdentity.String() + "." + identity.ExpandFieldRecoveryAddresses.String()),
+	Expandable(ExpandSessionIdentity.String() + "." + identity.ExpandFieldVerifiableAddresses.String()),
 }

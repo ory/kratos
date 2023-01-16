@@ -526,7 +526,7 @@ func (p *Persister) GetIdentity(ctx context.Context, id uuid.UUID, expand identi
 	}
 
 	if err := eg.Wait(); err != nil {
-		return nil, sqlcon.HandleError(err)
+		return nil, err
 	}
 
 	i.VerifiableAddresses = verifiableAddresses
