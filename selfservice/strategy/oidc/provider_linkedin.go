@@ -9,8 +9,6 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
-	"os"
-	"strings"
 
 	"github.com/hashicorp/go-retryablehttp"
 	"github.com/pkg/errors"
@@ -19,8 +17,6 @@ import (
 
 	"github.com/ory/herodot"
 	"github.com/ory/x/httpx"
-	"github.com/ory/x/stringslice"
-	"github.com/ory/x/stringsx"
 )
 
 type Profile struct {
@@ -139,43 +135,6 @@ func (l *ProviderLinkedIn) Email(client *retryablehttp.Client) (*EmailAddress, e
 	return &emailaddress, nil
 }
 
-func (l *ProviderLinkedIn) Introspection(client *retryablehttp.Client, result interface{}, exchange *oauth2.Token) error {
-	form := url.Values{"client_id": {l.config.ClientID}, "client_secret": {l.config.ClientSecret}, "token": {exchange.AccessToken}}
-	req, err := retryablehttp.NewRequest(http.MethodPost, string(IntrospectionURL), strings.NewReader(form.Encode()))
-	if err != nil {
-		return errors.WithStack(err)
-	}
-	req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
-	req.PostForm = form
-	resp, err := client.Do(req)
-	if err != nil {
-		return errors.WithStack(err)
-	}
-
-	defer resp.Body.Close()
-	if err := json.NewDecoder(resp.Body).Decode(result); err != nil {
-		return errors.WithStack(err)
-	}
-
-	return nil
-}
-
-func (l *ProviderLinkedIn) VerifyScopes(client *retryablehttp.Client, exchange *oauth2.Token) error {
-	var introspection Introspection
-
-	if err := l.Introspection(client, &introspection, exchange); err != nil {
-		return errors.WithStack(err)
-	}
-	grantedScopes := stringsx.Splitx(introspection.Scope, ",")
-	for _, check := range l.Config().Scope {
-		if !stringslice.Has(grantedScopes, check) {
-			return errors.WithStack(ErrScopeMissing)
-		}
-	}
-
-	return nil
-}
-
 func (l *ProviderLinkedIn) Claims(ctx context.Context, exchange *oauth2.Token, query url.Values) (*Claims, error) {
 
 	var profile *Profile
@@ -187,9 +146,6 @@ func (l *ProviderLinkedIn) Claims(ctx context.Context, exchange *oauth2.Token, q
 	}
 
 	client := l.reg.HTTPClient(ctx, httpx.ResilientClientWithClient(o.Client(ctx, exchange)))
-	if err = l.VerifyScopes(client, exchange); err != nil {
-		return nil, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("%s", err))
-	}
 	profile, err = l.Profile(client)
 	if err != nil {
 		return nil, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("%s", err))
