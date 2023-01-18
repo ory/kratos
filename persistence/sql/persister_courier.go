@@ -1,4 +1,4 @@
-// Copyright © 2022 Ory Corp
+// Copyright © 2023 Ory Corp
 // SPDX-License-Identifier: Apache-2.0
 
 package sql
@@ -7,7 +7,6 @@ import (
 	"context"
 	"database/sql"
 	"encoding/json"
-	"fmt"
 
 	"github.com/gobuffalo/pop/v6"
 	"github.com/gofrs/uuid"
@@ -46,6 +45,11 @@ func (p *Persister) ListMessages(ctx context.Context, filter courier.ListCourier
 		q = q.Where("recipient=?", filter.Recipient)
 	}
 
+	count, err := q.Count(&courier.Message{})
+	if err != nil {
+		return nil, 0, nil, sqlcon.HandleError(err)
+	}
+
 	opts = append(opts, keysetpagination.WithDefaultToken(new(courier.Message).DefaultPageToken()))
 	opts = append(opts, keysetpagination.WithDefaultSize(10))
 	opts = append(opts, keysetpagination.WithColumn("created_at", "DESC"))
@@ -54,11 +58,6 @@ func (p *Persister) ListMessages(ctx context.Context, filter courier.ListCourier
 	messages := make([]courier.Message, paginator.Size())
 	if err := q.Scope(keysetpagination.Paginate[courier.Message](paginator)).
 		All(&messages); err != nil {
-		return nil, 0, nil, sqlcon.HandleError(err)
-	}
-
-	count, err := q.Count(&courier.Message{})
-	if err != nil {
 		return nil, 0, nil, sqlcon.HandleError(err)
 	}
 
@@ -137,11 +136,7 @@ func (p *Persister) SetMessageStatus(ctx context.Context, id uuid.UUID, ms couri
 	defer span.End()
 
 	count, err := p.GetConnection(ctx).RawQuery(
-		// #nosec G201
-		fmt.Sprintf(
-			"UPDATE %s SET status = ? WHERE id = ? AND nid = ?",
-			"courier_messages",
-		),
+		"UPDATE courier_messages SET status = ? WHERE id = ? AND nid = ?",
 		ms,
 		id,
 		p.NetworkID(ctx),
@@ -162,11 +157,7 @@ func (p *Persister) IncrementMessageSendCount(ctx context.Context, id uuid.UUID)
 	defer span.End()
 
 	count, err := p.GetConnection(ctx).RawQuery(
-		// #nosec G201
-		fmt.Sprintf(
-			"UPDATE %s SET send_count = send_count + 1 WHERE id = ? AND nid = ?",
-			"courier_messages",
-		),
+		"UPDATE courier_messages SET send_count = send_count + 1 WHERE id = ? AND nid = ?",
 		id,
 		p.NetworkID(ctx),
 	).ExecWithCount()

@@ -1,4 +1,4 @@
-// Copyright © 2022 Ory Corp
+// Copyright © 2023 Ory Corp
 // SPDX-License-Identifier: Apache-2.0
 
 package oidc
@@ -74,6 +74,10 @@ func (g *ProviderYandex) Claims(ctx context.Context, exchange *oauth2.Token, que
 		return nil, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("%s", err))
 	}
 	defer resp.Body.Close()
+
+	if err := logUpstreamError(g.reg.Logger(), resp); err != nil {
+		return nil, err
+	}
 
 	var user struct {
 		Id           string `json:"id,omitempty"`

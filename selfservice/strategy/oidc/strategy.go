@@ -1,4 +1,4 @@
-// Copyright © 2022 Ory Corp
+// Copyright © 2023 Ory Corp
 // SPDX-License-Identifier: Apache-2.0
 
 package oidc
@@ -346,6 +346,11 @@ func (s *Strategy) handleCallback(w http.ResponseWriter, r *http.Request, ps htt
 
 	claims, err := provider.Claims(r.Context(), token, r.URL.Query())
 	if err != nil {
+		s.forwardError(w, r, req, s.handleError(w, r, req, pid, nil, err))
+		return
+	}
+
+	if err := claims.Validate(); err != nil {
 		s.forwardError(w, r, req, s.handleError(w, r, req, pid, nil, err))
 		return
 	}
