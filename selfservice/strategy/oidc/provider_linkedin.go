@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
+	"os"
 	"strings"
 
 	"github.com/hashicorp/go-retryablehttp"
@@ -199,6 +200,8 @@ func (l *ProviderLinkedIn) Claims(ctx context.Context, exchange *oauth2.Token, q
 	}
 
 	claims := &Claims{
+		Subject:   profile.ID,
+		Issuer:    "https://login.linkedin.com/",
 		Email:     emailaddress.Elements[0].Handle.EmailAddress,
 		Name:      fmt.Sprintf("%s %s", profile.LocalizedFirstName, profile.LocalizedLastName),
 		GivenName: profile.LocalizedFirstName,
