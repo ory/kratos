@@ -1,4 +1,4 @@
-// Copyright © 2022 Ory Corp
+// Copyright © 2023 Ory Corp
 // SPDX-License-Identifier: Apache-2.0
 
 package identity
@@ -143,7 +143,7 @@ type listIdentitiesParameters struct {
 //	  default: errorGeneric
 func (h *Handler) list(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 	page, itemsPerPage := x.ParsePagination(r)
-	is, err := h.r.IdentityPool().ListIdentities(r.Context(), page, itemsPerPage)
+	is, err := h.r.IdentityPool().ListIdentities(r.Context(), ExpandDefault, page, itemsPerPage)
 	if err != nil {
 		h.r.Writer().WriteError(w, r, err)
 		return

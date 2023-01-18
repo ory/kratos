@@ -81,6 +81,8 @@ jobs:
       - run: go list -json > go.list
       - name: Run nancy
         uses: sonatype-nexus-community/nancy-github-action@v1.0.2
+        with:
+          nancyVersion: v1.0.42
       - run: npm install
         name: Install node deps
       - name: Run golangci-lint

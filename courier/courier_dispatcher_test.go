@@ -1,4 +1,4 @@
-// Copyright © 2022 Ory Corp
+// Copyright © 2023 Ory Corp
 // SPDX-License-Identifier: Apache-2.0
 
 package courier_test
@@ -53,6 +53,7 @@ func TestDispatchMessageWithInvalidSMTP(t *testing.T) {
 		require.Error(t, err)
 
 		messages, err := reg.CourierPersister().NextMessages(ctx, 10)
+		require.NoError(t, err)
 		require.Len(t, messages, 1)
 	})
 }

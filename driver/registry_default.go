@@ -1,4 +1,4 @@
-// Copyright © 2022 Ory Corp
+// Copyright © 2023 Ory Corp
 // SPDX-License-Identifier: Apache-2.0
 
 package driver
@@ -723,6 +723,7 @@ func (m *RegistryDefault) VerificationTokenPersister() link.VerificationTokenPer
 func (m *RegistryDefault) VerificationCodePersister() code.VerificationCodePersister {
 	return m.Persister()
 }
+
 func (m *RegistryDefault) Persister() persistence.Persister {
 	return m.persister
 }

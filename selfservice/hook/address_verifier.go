@@ -1,4 +1,4 @@
-// Copyright © 2022 Ory Corp
+// Copyright © 2023 Ory Corp
 // SPDX-License-Identifier: Apache-2.0
 
 package hook
@@ -17,7 +17,7 @@ import (
 	"github.com/ory/kratos/session"
 )
 
-var _ login.PostHookExecutor = new(SessionDestroyer)
+var _ login.PostHookExecutor = new(AddressVerifier)
 
 type AddressVerifier struct{}
 
