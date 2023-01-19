@@ -10,6 +10,8 @@ import (
 	"strings"
 	"time"
 
+	"golang.org/x/sync/errgroup"
+
 	"go.opentelemetry.io/otel/attribute"
 
 	"github.com/ory/x/otelx"
@@ -460,15 +462,79 @@ func (p *Persister) GetIdentity(ctx context.Context, id uuid.UUID, expand identi
 		attribute.String("network.id", p.NetworkID(ctx).String()),
 	)
 
+	nid := p.NetworkID(ctx)
 	con := p.GetConnection(ctx)
-	query := con.Where("id = ? AND nid = ?", id, p.NetworkID(ctx))
-	if len(expand) > 0 {
-		query = query.EagerPreload(expand.ToEager()...)
-	}
+	query := con.Where("id = ? AND nid = ?", id, nid)
 
-	var i identity.Identity
+	var (
+		i                   identity.Identity
+		credentials         []identity.Credentials
+		verifiableAddresses []identity.VerifiableAddress
+		recoveryAddresses   []identity.RecoveryAddress
+	)
+
 	if err := query.First(&i); err != nil {
 		return nil, sqlcon.HandleError(err)
+	}
+
+	eg, ctx := errgroup.WithContext(ctx)
+	if expand.Has(identity.ExpandFieldRecoveryAddresses) {
+		eg.Go(func() error {
+			// We use WithContext to get a copy of the connection struct, which solves the race detector
+			// from complaining incorrectly.
+			//
+			// https://github.com/gobuffalo/pop/issues/723
+			if err := con.WithContext(ctx).
+				Where("identity_id = ? AND nid = ?", i.ID, nid).
+				Order("id ASC").
+				All(&recoveryAddresses); err != nil {
+				return sqlcon.HandleError(err)
+			}
+			return nil
+		})
+	}
+
+	if expand.Has(identity.ExpandFieldVerifiableAddresses) {
+		eg.Go(func() error {
+			// We use WithContext to get a copy of the connection struct, which solves the race detector
+			// from complaining incorrectly.
+			//
+			// https://github.com/gobuffalo/pop/issues/723
+			if err := con.WithContext(ctx).
+				Order("id ASC").
+				Where("identity_id = ? AND nid = ?", i.ID, nid).All(&verifiableAddresses); err != nil {
+				return sqlcon.HandleError(err)
+			}
+			return nil
+		})
+	}
+
+	if expand.Has(identity.ExpandFieldCredentials) {
+		eg.Go(func() error {
+			// We use WithContext to get a copy of the connection struct, which solves the race detector
+			// from complaining incorrectly.
+			//
+			// https://github.com/gobuffalo/pop/issues/723
+			if err := con.WithContext(ctx).
+				EagerPreload("IdentityCredentialType", "CredentialIdentifiers").
+				Where("identity_id = ? AND nid = ?", i.ID, nid).
+				All(&credentials); err != nil {
+				return sqlcon.HandleError(err)
+			}
+			return nil
+		})
+	}
+
+	if err := eg.Wait(); err != nil {
+		return nil, err
+	}
+
+	i.VerifiableAddresses = verifiableAddresses
+	i.RecoveryAddresses = recoveryAddresses
+	i.InternalCredentials = credentials
+
+	if err := i.AfterEagerFind(con); err != nil {
+		return nil, err
 	}
 
 	if err := p.injectTraitsSchemaURL(ctx, &i); err != nil {
