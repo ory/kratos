@@ -3959,7 +3959,7 @@
             "schema": {
               "enum": [
                 "identity",
-                "device"
+                "devices"
               ],
               "items": {
                 "type": "string"
@@ -4073,6 +4073,10 @@
             "in": "query",
             "name": "expand",
             "schema": {
+              "enum": [
+                "identity",
+                "devices"
+              ],
               "items": {
                 "type": "string"
               },

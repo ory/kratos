@@ -878,7 +878,6 @@
             "items": {
               "type": "string"
             },
-            "example": "identity",
             "description": "ExpandOptions is a query parameter encoded list of all properties that must be expanded in the Session.\nExample - ?expand=Identity\u0026expand=Devices\nIf no value is provided, the expandable properties are skipped.",
             "name": "expand",
             "in": "query"
