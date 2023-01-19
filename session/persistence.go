@@ -30,7 +30,7 @@ type Persister interface {
 	ListSessions(ctx context.Context, active *bool, paginatorOpts []keysetpagination.Option, expandables Expandables) ([]Session, int64, *keysetpagination.Paginator, error)
 
 	// ListSessionsByIdentity retrieves sessions for an identity from the store.
-	ListSessionsByIdentity(ctx context.Context, iID uuid.UUID, active *bool, page, perPage int, except uuid.UUID, expandables Expandables) ([]*Session, int64, error)
+	ListSessionsByIdentity(ctx context.Context, iID uuid.UUID, active *bool, page, perPage int, except uuid.UUID, expandables Expandables) ([]Session, int64, error)
 
 	// UpsertSession inserts or updates a session into / in the store.
 	UpsertSession(ctx context.Context, s *Session) error

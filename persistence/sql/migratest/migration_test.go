@@ -180,12 +180,12 @@ func TestMigrations(t *testing.T) {
 					migratest.ContainsExpectedIds(t, filepath.Join("fixtures", "identity"), found)
 				})
 
-				t.Run("case=identity", func(t *testing.T) {
+				t.Run("case=identity_get", func(t *testing.T) {
 					wg.Add(1)
 					defer wg.Done()
 					t.Parallel()
 
-					ids, err := d.PrivilegedIdentityPool().ListIdentities(context.Background(), identity.ExpandEverything, 0, 1000)
+					ids, err := d.PrivilegedIdentityPool().ListIdentities(context.Background(), identity.ExpandNothing, 0, 1000)
 					require.NoError(t, err)
 					require.NotEmpty(t, ids)
 

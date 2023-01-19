@@ -278,6 +278,13 @@ func (s *Session) Refresh(ctx context.Context, c lifespanProvider) *Session {
 	return s
 }
 
+func (s *Session) MarshalJSON() ([]byte, error) {
+	type ss Session
+	out := ss(*s)
+	out.Active = s.IsActive()
+	return json.Marshal(out)
+}
+
 func (s *Session) CanBeRefreshed(ctx context.Context, c refreshWindowProvider) bool {
 	return s.ExpiresAt.Add(-c.SessionRefreshMinTimeLeft(ctx)).Before(time.Now())
 }

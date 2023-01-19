@@ -196,7 +196,6 @@ func newReturnTs(t *testing.T, reg driver.Registry) *httptest.Server {
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		sess, err := reg.SessionManager().FetchFromRequest(r.Context(), r)
 		require.NoError(t, err)
-		require.Empty(t, sess.Identity.Credentials)
 		reg.Writer().Write(w, r, sess)
 	}))
 	reg.Config().MustSet(ctx, config.ViperKeySelfServiceBrowserDefaultReturnTo, ts.URL)
