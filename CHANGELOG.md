@@ -5,7 +5,7 @@
 
 **Table of Contents**
 
-- [ (2023-01-18)](#2023-01-18)
+- [ (2023-01-19)](#2023-01-19)
   - [Bug Fixes](#bug-fixes)
   - [Features](#features)
 - [0.11.1 (2023-01-14)](#0111-2023-01-14)
@@ -291,7 +291,7 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# [](https://github.com/ory/kratos/compare/v0.11.1...v) (2023-01-18)
+# [](https://github.com/ory/kratos/compare/v0.11.1...v) (2023-01-19)
 
 ### Bug Fixes
 
@@ -303,6 +303,9 @@
 
 - Add patreon oidc provider ([#3021](https://github.com/ory/kratos/issues/3021))
   ([20ea29e](https://github.com/ory/kratos/commit/20ea29e018b33231cf6b2743de74d2233f756c2a))
+- Parallelize get identity and session calls
+  ([#3023](https://github.com/ory/kratos/issues/3023))
+  ([6393519](https://github.com/ory/kratos/commit/6393519977bc3d804673b5669166e07c561f1c79))
 
 # [0.11.1](https://github.com/ory/kratos/compare/v0.11.0...v0.11.1) (2023-01-14)
 
