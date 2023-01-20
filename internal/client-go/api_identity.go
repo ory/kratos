@@ -91,21 +91,21 @@ type IdentityApi interface {
 	DeleteIdentityExecute(r IdentityApiApiDeleteIdentityRequest) (*http.Response, error)
 
 	/*
-			 * DeleteIdentityCredential Delete a credential for a specific identity
+			 * DeleteIdentityCredentials Delete a credential for a specific identity
 			 * Delete an [identity](https://www.ory.sh/docs/kratos/concepts/identity-user-model) credential by its type
-		You can only delete credential types that are not first factor (password, oidc, or webauthn passwordless)
+		You can only delete second factor (aal2) credentials.
 			 * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
 			 * @param id ID is the identity's ID.
 			 * @param type_ Type is the credential's Type. One of totp, webauthn, lookup
-			 * @return IdentityApiApiDeleteIdentityCredentialRequest
+			 * @return IdentityApiApiDeleteIdentityCredentialsRequest
 	*/
-	DeleteIdentityCredential(ctx context.Context, id string, type_ string) IdentityApiApiDeleteIdentityCredentialRequest
+	DeleteIdentityCredentials(ctx context.Context, id string, type_ string) IdentityApiApiDeleteIdentityCredentialsRequest
 
 	/*
-	 * DeleteIdentityCredentialExecute executes the request
+	 * DeleteIdentityCredentialsExecute executes the request
 	 * @return Identity
 	 */
-	DeleteIdentityCredentialExecute(r IdentityApiApiDeleteIdentityCredentialRequest) (*Identity, *http.Response, error)
+	DeleteIdentityCredentialsExecute(r IdentityApiApiDeleteIdentityCredentialsRequest) (*Identity, *http.Response, error)
 
 	/*
 	 * DeleteIdentitySessions Delete & Invalidate an Identity's Sessions
@@ -879,29 +879,29 @@ func (a *IdentityApiService) DeleteIdentityExecute(r IdentityApiApiDeleteIdentit
 	return localVarHTTPResponse, nil
 }
 
-type IdentityApiApiDeleteIdentityCredentialRequest struct {
+type IdentityApiApiDeleteIdentityCredentialsRequest struct {
 	ctx        context.Context
 	ApiService IdentityApi
 	id         string
 	type_      string
 }
 
-func (r IdentityApiApiDeleteIdentityCredentialRequest) Execute() (*Identity, *http.Response, error) {
-	return r.ApiService.DeleteIdentityCredentialExecute(r)
+func (r IdentityApiApiDeleteIdentityCredentialsRequest) Execute() (*Identity, *http.Response, error) {
+	return r.ApiService.DeleteIdentityCredentialsExecute(r)
 }
 
 /*
-  - DeleteIdentityCredential Delete a credential for a specific identity
+  - DeleteIdentityCredentials Delete a credential for a specific identity
   - Delete an [identity](https://www.ory.sh/docs/kratos/concepts/identity-user-model) credential by its type
 
-You can only delete credential types that are not first factor (password, oidc, or webauthn passwordless)
+You can only delete second factor (aal2) credentials.
   - @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
   - @param id ID is the identity's ID.
   - @param type_ Type is the credential's Type. One of totp, webauthn, lookup
-  - @return IdentityApiApiDeleteIdentityCredentialRequest
+  - @return IdentityApiApiDeleteIdentityCredentialsRequest
 */
-func (a *IdentityApiService) DeleteIdentityCredential(ctx context.Context, id string, type_ string) IdentityApiApiDeleteIdentityCredentialRequest {
-	return IdentityApiApiDeleteIdentityCredentialRequest{
+func (a *IdentityApiService) DeleteIdentityCredentials(ctx context.Context, id string, type_ string) IdentityApiApiDeleteIdentityCredentialsRequest {
+	return IdentityApiApiDeleteIdentityCredentialsRequest{
 		ApiService: a,
 		ctx:        ctx,
 		id:         id,
@@ -913,7 +913,7 @@ func (a *IdentityApiService) DeleteIdentityCredential(ctx context.Context, id st
  * Execute executes the request
  * @return Identity
  */
-func (a *IdentityApiService) DeleteIdentityCredentialExecute(r IdentityApiApiDeleteIdentityCredentialRequest) (*Identity, *http.Response, error) {
+func (a *IdentityApiService) DeleteIdentityCredentialsExecute(r IdentityApiApiDeleteIdentityCredentialsRequest) (*Identity, *http.Response, error) {
 	var (
 		localVarHTTPMethod   = http.MethodDelete
 		localVarPostBody     interface{}
@@ -923,12 +923,12 @@ func (a *IdentityApiService) DeleteIdentityCredentialExecute(r IdentityApiApiDel
 		localVarReturnValue  *Identity
 	)
 
-	localBasePath, err := a.client.cfg.ServerURLWithContext(r.ctx, "IdentityApiService.DeleteIdentityCredential")
+	localBasePath, err := a.client.cfg.ServerURLWithContext(r.ctx, "IdentityApiService.DeleteIdentityCredentials")
 	if err != nil {
 		return localVarReturnValue, nil, &GenericOpenAPIError{error: err.Error()}
 	}
 
-	localVarPath := localBasePath + "/admin/identities/{id}/credential/{type}"
+	localVarPath := localBasePath + "/admin/identities/{id}/credentials/{type}"
 	localVarPath = strings.Replace(localVarPath, "{"+"id"+"}", url.PathEscape(parameterToString(r.id, "")), -1)
 	localVarPath = strings.Replace(localVarPath, "{"+"type"+"}", url.PathEscape(parameterToString(r.type_, "")), -1)
 

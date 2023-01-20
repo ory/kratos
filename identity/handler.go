@@ -33,7 +33,7 @@ import (
 
 const RouteCollection = "/identities"
 const RouteItem = RouteCollection + "/:id"
-const RouteCredentialItem = RouteItem + "/credential/:type"
+const RouteCredentialItem = RouteItem + "/credentials/:type"
 
 type (
 	handlerDependencies interface {
@@ -69,9 +69,9 @@ func NewHandler(r handlerDependencies) *Handler {
 func (h *Handler) RegisterPublicRoutes(public *x.RouterPublic) {
 	h.r.CSRFHandler().IgnoreGlobs(
 		RouteCollection, RouteCollection+"/*",
-		RouteCollection+"/*/credential/*",
+		RouteCollection+"/*/credentials/*",
 		x.AdminPrefix+RouteCollection, x.AdminPrefix+RouteCollection+"/*",
-		x.AdminPrefix+RouteCollection+"/*/credential/*",
+		x.AdminPrefix+RouteCollection+"/*/credentials/*",
 	)
 
 	public.GET(RouteCollection, x.RedirectToAdminRoute(h.r))
@@ -100,7 +100,7 @@ func (h *Handler) RegisterAdminRoutes(admin *x.RouterAdmin) {
 	admin.POST(RouteCollection, h.create)
 	admin.PUT(RouteItem, h.update)
 
-	admin.DELETE(RouteCredentialItem, h.deleteCredential)
+	admin.DELETE(RouteCredentialItem, h.deleteIdentityCredentials)
 }
 
 // Paginated Identity List Response
@@ -685,9 +685,9 @@ func (h *Handler) patch(w http.ResponseWriter, r *http.Request, ps httprouter.Pa
 
 // Delete Credential Parameters
 //
-// swagger:parameters deleteIdentityCredential
+// swagger:parameters deleteIdentityCredentials
 // nolint:deadcode,unused
-type deleteIdentityCredential struct {
+type deleteIdentityCredentials struct {
 	// ID is the identity's ID.
 	//
 	// required: true
@@ -697,17 +697,18 @@ type deleteIdentityCredential struct {
 	// Type is the credential's Type.
 	// One of totp, webauthn, lookup
 	//
+	// enum: totp,webauthn,lookup
 	// required: true
 	// in: path
 	Type string `json:"type"`
 }
 
-// swagger:route DELETE /admin/identities/{id}/credential/{type} identity deleteIdentityCredential
+// swagger:route DELETE /admin/identities/{id}/credentials/{type} identity deleteIdentityCredentials
 //
 // # Delete a credential for a specific identity
 //
 // Delete an [identity](https://www.ory.sh/docs/kratos/concepts/identity-user-model) credential by its type
-// You can only delete credential types that are not first factor (password, oidc, or webauthn passwordless)
+// You can only delete second factor (aal2) credentials.
 //
 //	Consumes:
 //	- application/json
@@ -724,7 +725,7 @@ type deleteIdentityCredential struct {
 //	  200: identity
 //	  404: errorGeneric
 //	  default: errorGeneric
-func (h *Handler) deleteCredential(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+func (h *Handler) deleteIdentityCredentials(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	identity, err := h.r.PrivilegedIdentityPool().GetIdentityConfidential(r.Context(), x.ParseUUID(ps.ByName("id")))
 	if err != nil {
 		h.r.Writer().WriteError(w, r, err)
@@ -772,7 +773,10 @@ func (h *Handler) deleteCredential(w http.ResponseWriter, r *http.Request, ps ht
 	case CredentialsTypeOIDC:
 		fallthrough
 	case CredentialsTypePassword:
-		h.r.Writer().WriteError(w, r, errors.WithStack(herodot.ErrBadRequest.WithReasonf("You can't remove the first factor credentials")))
+		h.r.Writer().WriteError(w, r, errors.WithStack(herodot.ErrBadRequest.WithReasonf("You can't remove first factor credentials.")))
+		return
+	default:
+		h.r.Writer().WriteError(w, r, errors.WithStack(herodot.ErrBadRequest.WithReasonf("Unknown credentials type %s.", cred.Type)))
 		return
 	}
 

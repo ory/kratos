@@ -1011,23 +1011,24 @@ func TestHandler(t *testing.T) {
 
 		for name, ts := range map[string]*httptest.Server{"public": publicTS, "admin": adminTS} {
 			t.Run("type=remove unknown identity/"+name, func(t *testing.T) {
-				remove(t, ts, "/identities/"+x.NewUUID().String()+"/credential/azerty", http.StatusNotFound)
+				remove(t, ts, "/identities/"+x.NewUUID().String()+"/credentials/azerty", http.StatusNotFound)
 			})
 			t.Run("type=remove unknown type/"+name, func(t *testing.T) {
 				i := createIdentities(map[identity.CredentialsType]string{identity.CredentialsTypePassword: `{"secret":"pst"}`})(t)
-				remove(t, ts, "/identities/"+i.ID.String()+"/credential/azerty", http.StatusNotFound)
+				remove(t, ts, "/identities/"+i.ID.String()+"/credentials/azerty", http.StatusNotFound)
 			})
 			t.Run("type=remove password type/"+name, func(t *testing.T) {
 				i := createIdentities(map[identity.CredentialsType]string{identity.CredentialsTypePassword: `{"secret":"pst"}`})(t)
-				remove(t, ts, "/identities/"+i.ID.String()+"/credential/password", http.StatusBadRequest)
+				remove(t, ts, "/identities/"+i.ID.String()+"/credentials/password", http.StatusBadRequest)
 			})
 			t.Run("type=remove oidc type/"+name, func(t *testing.T) {
 				i := createIdentities(map[identity.CredentialsType]string{identity.CredentialsTypeOIDC: `{"id":"pst"}`})(t)
-				remove(t, ts, "/identities/"+i.ID.String()+"/credential/oidc", http.StatusBadRequest)
+				remove(t, ts, "/identities/"+i.ID.String()+"/credentials/oidc", http.StatusBadRequest)
 			})
 			t.Run("type=remove webauthn passwordless type/"+name, func(t *testing.T) {
-				i := createIdentities(map[identity.CredentialsType]string{identity.CredentialsTypeWebAuthn: `{"credentials":[{"id":"THTndqZP5Mjvae1BFvJMaMfEMm7O7HE1ju+7PBaYA7Y=","added_at":"2022-12-16T14:11:55Z","public_key":"pQECAyYgASFYIMJLQhJxQRzhnKPTcPCUODOmxYDYo2obrm9bhp5lvSZ3IlggXjhZvJaPUqF9PXqZqTdWYPR7R+b2n/Wi+IxKKXsS4rU=","display_name":"test","authenticator":{"aaguid":"rc4AAjW8xgpkiwsl8fBVAw==","sign_count":0,"clone_warning":false},"is_passwordless":true,"attestation_type":"none"}],"user_handle":"Ef5JiMpMRwuzauWs/9J0gQ=="}`})(t)
-				remove(t, ts, "/identities/"+i.ID.String()+"/credential/webauthn", http.StatusNoContent)
+				expected := `{"credentials":[{"id":"THTndqZP5Mjvae1BFvJMaMfEMm7O7HE1ju+7PBaYA7Y=","added_at":"2022-12-16T14:11:55Z","public_key":"pQECAyYgASFYIMJLQhJxQRzhnKPTcPCUODOmxYDYo2obrm9bhp5lvSZ3IlggXjhZvJaPUqF9PXqZqTdWYPR7R+b2n/Wi+IxKKXsS4rU=","display_name":"test","authenticator":{"aaguid":"rc4AAjW8xgpkiwsl8fBVAw==","sign_count":0,"clone_warning":false},"is_passwordless":true,"attestation_type":"none"}],"user_handle":"Ef5JiMpMRwuzauWs/9J0gQ=="}`
+				i := createIdentities(map[identity.CredentialsType]string{identity.CredentialsTypeWebAuthn: expected})(t)
+				remove(t, ts, "/identities/"+i.ID.String()+"/credentials/webauthn", http.StatusNoContent)
 				// Check that webauthn has not been deleted
 				res := get(t, ts, "/identities/"+i.ID.String(), http.StatusOK)
 				assert.EqualValues(t, i.ID.String(), res.Get("id").String(), "%s", res.Raw)
@@ -1071,7 +1072,7 @@ func TestHandler(t *testing.T) {
 							if tc.exist {
 								assert.True(t, resBefore.Get("credentials").Get(credName).Exists())
 								// Remove
-								remove(t, ts, "/identities/"+i.ID.String()+"/credential/"+credName, http.StatusNoContent)
+								remove(t, ts, "/identities/"+i.ID.String()+"/credentials/"+credName, http.StatusNoContent)
 								// Query back
 								resAfter := get(t, ts, "/identities/"+i.ID.String(), http.StatusOK)
 								assert.EqualValues(t, i.ID.String(), resAfter.Get("id").String(), "%s", resAfter.Raw)
@@ -1087,7 +1088,7 @@ func TestHandler(t *testing.T) {
 								assert.Equal(t, resultKeys, expectedKeys)
 							} else {
 								assert.False(t, resBefore.Get("credentials").Get(credName).Exists())
-								remove(t, ts, "/identities/"+i.ID.String()+"/credential/"+credName, http.StatusNotFound)
+								remove(t, ts, "/identities/"+i.ID.String()+"/credentials/"+credName, http.StatusNotFound)
 							}
 						})
 					}

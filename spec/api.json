@@ -3624,10 +3624,10 @@
         ]
       }
     },
-    "/admin/identities/{id}/credential/{type}": {
+    "/admin/identities/{id}/credentials/{type}": {
       "delete": {
-        "description": "Delete an [identity](https://www.ory.sh/docs/kratos/concepts/identity-user-model) credential by its type\nYou can only delete credential types that are not first factor (password, oidc, or webauthn passwordless)",
-        "operationId": "deleteIdentityCredential",
+        "description": "Delete an [identity](https://www.ory.sh/docs/kratos/concepts/identity-user-model) credential by its type\nYou can only delete second factor (aal2) credentials.",
+        "operationId": "deleteIdentityCredentials",
         "parameters": [
           {
             "description": "ID is the identity's ID.",
@@ -3644,6 +3644,11 @@
             "name": "type",
             "required": true,
             "schema": {
+              "enum": [
+                "totp",
+                "webauthn",
+                "lookup"
+              ],
               "type": "string"
             }
           }
