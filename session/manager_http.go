@@ -195,7 +195,13 @@ func (s *ManagerHTTP) extractToken(r *http.Request) string {
 
 func (s *ManagerHTTP) FetchFromRequest(ctx context.Context, r *http.Request) (_ *Session, err error) {
 	ctx, span := s.r.Tracer(ctx).Tracer().Start(ctx, "sessions.ManagerHTTP.FetchFromRequest")
-	defer otelx.End(span, &err)
+	defer func() {
+		if e := new(ErrNoActiveSessionFound); errors.As(err, &e) {
+			span.End()
+		} else {
+			otelx.End(span, &err)
+		}
+	}()
 
 	token := s.extractToken(r)
 	if token == "" {
