@@ -71,7 +71,6 @@ require (
 	github.com/ory/client-go v0.2.0-alpha.60
 	github.com/ory/dockertest/v3 v3.9.1
 	github.com/ory/go-acc v0.2.8
-	github.com/ory/go-convenience v0.1.0
 	github.com/ory/graceful v0.1.3
 	github.com/ory/herodot v0.9.13
 	github.com/ory/hydra-client-go v1.11.9-0.20221102130300-f558e85344c8
