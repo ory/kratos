@@ -10,8 +10,6 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/ory/kratos/x"
-
 	"github.com/gofrs/uuid"
 	"github.com/pkg/errors"
 
@@ -35,7 +33,7 @@ func (p *Persister) Add(ctx context.Context, csrfToken string, errs error) (uuid
 	}
 
 	c := &errorx.ErrorContainer{
-		ID:        x.NewUUID(),
+		ID:        uuid.Nil,
 		NID:       p.NetworkID(ctx),
 		CSRFToken: csrfToken,
 		Errors:    buf.Bytes(),
