@@ -12,7 +12,6 @@ import (
 	"github.com/pkg/errors"
 
 	"github.com/ory/kratos/identity"
-	"github.com/ory/kratos/x"
 
 	"github.com/gobuffalo/pop/v6"
 	"github.com/gofrs/uuid"
@@ -249,7 +248,7 @@ func (p *Persister) CreateVerificationCode(ctx context.Context, c *code.CreateVe
 	now := time.Now().UTC()
 
 	verificationCode := &code.VerificationCode{
-		ID:        x.NewUUID(),
+		ID:        uuid.Nil,
 		CodeHMAC:  p.hmacValue(ctx, c.RawCode),
 		ExpiresAt: now.Add(c.ExpiresIn),
 		IssuedAt:  now,

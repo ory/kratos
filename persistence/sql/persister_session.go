@@ -180,9 +180,13 @@ func (p *Persister) UpsertSession(ctx context.Context, s *session.Session) (err 
 	s.NID = p.NetworkID(ctx)
 
 	return errors.WithStack(p.Transaction(ctx, func(ctx context.Context, tx *pop.Connection) error {
-		exists, err := tx.Where("id = ? AND nid = ?", s.ID, s.NID).Exists(new(session.Session))
-		if err != nil {
-			return sqlcon.HandleError(err)
+		exists := false
+		if !s.ID.IsNil() {
+			var err error
+			exists, err = tx.Where("id = ? AND nid = ?", s.ID, s.NID).Exists(new(session.Session))
+			if err != nil {
+				return sqlcon.HandleError(err)
+			}
 		}
 
 		if exists {

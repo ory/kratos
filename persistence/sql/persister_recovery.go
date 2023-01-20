@@ -19,7 +19,6 @@ import (
 	"github.com/ory/kratos/selfservice/flow/recovery"
 	"github.com/ory/kratos/selfservice/strategy/code"
 	"github.com/ory/kratos/selfservice/strategy/link"
-	"github.com/ory/kratos/x"
 	"github.com/ory/x/sqlcon"
 )
 
@@ -143,7 +142,7 @@ func (p *Persister) CreateRecoveryCode(ctx context.Context, dto *code.CreateReco
 	now := time.Now()
 
 	recoveryCode := &code.RecoveryCode{
-		ID:         x.NewUUID(),
+		ID:         uuid.Nil,
 		CodeHMAC:   p.hmacValue(ctx, dto.RawCode),
 		ExpiresAt:  now.UTC().Add(dto.ExpiresIn),
 		IssuedAt:   now,

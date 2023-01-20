@@ -36,7 +36,7 @@ import (
 type persisterTestCase struct {
 	ro          []continuity.ManagerOption
 	wo          []continuity.ManagerOption
-	expected    interface{}
+	expected    *persisterTestPayload
 	expectedErr error
 }
 
