@@ -43,6 +43,7 @@ type (
 type (
 	executorDependencies interface {
 		config.Provider
+		identity.ManagementProvider
 		hydra.HydraProvider
 		identity.ManagementProvider
 		session.ManagementProvider
