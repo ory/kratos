@@ -208,7 +208,7 @@ func (s *Strategy) ID() identity.CredentialsType {
 }
 
 func (s *Strategy) validateFlow(ctx context.Context, r *http.Request, rid uuid.UUID) (flow.Flow, error) {
-	if x.IsZeroUUID(rid) {
+	if rid.IsNil() {
 		return nil, errors.WithStack(herodot.ErrBadRequest.WithReason("The session cookie contains invalid values and the flow could not be executed. Please try again."))
 	}
 

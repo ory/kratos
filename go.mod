@@ -50,7 +50,6 @@ require (
 	github.com/google/go-github/v27 v27.0.1
 	github.com/google/go-github/v38 v38.1.0
 	github.com/google/go-jsonnet v0.19.0
-	github.com/google/uuid v1.3.0
 	github.com/gorilla/sessions v1.2.1
 	github.com/gtank/cryptopasta v0.0.0-20170601214702-1f550f6f2f69
 	github.com/hashicorp/consul/api v1.18.0
@@ -187,6 +186,7 @@ require (
 	github.com/google/go-querystring v1.0.0 // indirect
 	github.com/google/pprof v0.0.0-20221010195024-131d412537ea // indirect
 	github.com/google/shlex v0.0.0-20191202100458-e7afc7fbc510 // indirect
+	github.com/google/uuid v1.3.0 // indirect
 	github.com/gorilla/css v1.0.0 // indirect
 	github.com/gorilla/handlers v1.5.1 // indirect
 	github.com/gorilla/securecookie v1.1.1 // indirect
