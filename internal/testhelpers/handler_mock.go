@@ -12,7 +12,7 @@ import (
 	"time"
 
 	"github.com/bxcodec/faker/v3"
-	"github.com/google/uuid"
+	"github.com/gofrs/uuid"
 	"github.com/julienschmidt/httprouter"
 	"github.com/pkg/errors"
 	"github.com/stretchr/testify/assert"
@@ -73,7 +73,7 @@ func MockMakeAuthenticatedRequestWithClient(t *testing.T, reg mockDeps, conf *co
 }
 
 func MockMakeAuthenticatedRequestWithClientAndID(t *testing.T, reg mockDeps, conf *config.Config, router *httprouter.Router, req *http.Request, client *http.Client, id *identity.Identity) ([]byte, *http.Response) {
-	set := "/" + uuid.New().String() + "/set"
+	set := "/" + uuid.Must(uuid.NewV4()).String() + "/set"
 	if id == nil {
 		router.GET(set, MockSetSession(t, reg, conf))
 	} else {

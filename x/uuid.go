@@ -4,21 +4,15 @@
 package x
 
 import (
-	db "github.com/gofrs/uuid"
-	"github.com/google/uuid"
+	"github.com/gofrs/uuid"
 )
 
-var EmptyUUID db.UUID
+var EmptyUUID uuid.UUID
 
-func NewUUID() db.UUID {
-	return db.UUID(uuid.New())
+func NewUUID() uuid.UUID {
+	return uuid.Must(uuid.NewV4())
 }
 
-func ParseUUID(in string) db.UUID {
-	id, _ := uuid.Parse(in)
-	return db.UUID(id)
-}
-
-func IsZeroUUID(id db.UUID) bool {
-	return id == db.UUID{}
+func ParseUUID(in string) uuid.UUID {
+	return uuid.FromStringOrNil(in)
 }
