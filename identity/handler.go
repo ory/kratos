@@ -598,7 +598,7 @@ type deleteIdentity struct {
 //	  404: errorGeneric
 //	  default: errorGeneric
 func (h *Handler) delete(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	if err := h.r.IdentityPool().(PrivilegedPool).DeleteIdentity(r.Context(), x.ParseUUID(ps.ByName("id"))); err != nil {
+	if err := h.r.PrivilegedIdentityPool().DeleteIdentity(r.Context(), x.ParseUUID(ps.ByName("id"))); err != nil {
 		h.r.Writer().WriteError(w, r, err)
 		return
 	}
