@@ -683,6 +683,43 @@ func (h *Handler) patch(w http.ResponseWriter, r *http.Request, ps httprouter.Pa
 	h.r.Writer().Write(w, r, WithCredentialsMetadataAndAdminMetadataInJSON(*identity))
 }
 
+func deletCredentialWebAuthFromIdentity(identity *Identity) (*Identity, error) {
+	cred, ok := identity.GetCredentials(CredentialsTypeWebAuthn)
+	if !ok {
+		// This should never happend as it's checked earlier in the code;
+		// But we never know...
+		return nil, errors.WithStack(herodot.ErrNotFound.WithReasonf("You tried to remove a CredentialsTypeWebAuthn but this user have no CredentialsTypeWebAuthn set up."))
+	}
+
+	var cc CredentialsWebAuthnConfig
+	if err := json.Unmarshal(cred.Config, &cc); err != nil {
+		// Database has been tampered or the json schema are incompatible (migration issue);
+		return nil, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("Unable to decode identity credentials.").WithDebug(err.Error()))
+	}
+
+	updated := make([]CredentialWebAuthn, 0)
+	for k, cred := range cc.Credentials {
+		if cred.IsPasswordless {
+			updated = append(updated, cc.Credentials[k])
+		}
+	}
+
+	if len(updated) == 0 {
+		identity.DeleteCredentialsType(CredentialsTypeWebAuthn)
+		return identity, nil
+	}
+
+	cc.Credentials = updated
+	message, err := json.Marshal(cc)
+	if err != nil {
+		return nil, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("Unable to encode identity credentials.").WithDebug(err.Error()))
+	}
+
+	cred.Config = message
+	identity.SetCredentials(CredentialsTypeWebAuthn, *cred)
+	return identity, nil
+}
+
 // Delete Credential Parameters
 //
 // swagger:parameters deleteIdentityCredentials
@@ -744,32 +781,11 @@ func (h *Handler) deleteIdentityCredentials(w http.ResponseWriter, r *http.Reque
 	case CredentialsTypeTOTP:
 		identity.DeleteCredentialsType(cred.Type)
 	case CredentialsTypeWebAuthn:
-		var cc CredentialsWebAuthnConfig
-		if err := json.Unmarshal(cred.Config, &cc); err != nil {
-			h.r.Writer().WriteError(w, r, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("Unable to decode identity credentials.").WithDebug(err.Error())))
-			return
-		}
-
-		updated := make([]CredentialWebAuthn, 0)
-		for k, cred := range cc.Credentials {
-			if cred.IsPasswordless {
-				updated = append(updated, cc.Credentials[k])
-			}
-		}
-
-		if len(updated) == 0 {
-			identity.DeleteCredentialsType(CredentialsTypeWebAuthn)
-			break
-		}
-
-		cc.Credentials = updated
-		cred.Config, err = json.Marshal(cc)
+		identity, err = deletCredentialWebAuthFromIdentity(identity)
 		if err != nil {
-			h.r.Writer().WriteError(w, r, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("Unable to encode identity credentials.").WithDebug(err.Error())))
+			h.r.Writer().WriteError(w, r, err)
 			return
 		}
-
-		identity.SetCredentials(CredentialsTypeWebAuthn, *cred)
 	case CredentialsTypeOIDC:
 		fallthrough
 	case CredentialsTypePassword:

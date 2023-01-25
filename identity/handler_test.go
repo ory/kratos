@@ -994,7 +994,8 @@ func TestHandler(t *testing.T) {
 	})
 
 	t.Run("case=should delete credential of a specific user and no longer be able to retrieve it", func(t *testing.T) {
-		createIdentities := func(identities map[identity.CredentialsType]string) func(t *testing.T) *identity.Identity {
+		ignoreDefault := []string{"id", "schema_url", "state_changed_at", "created_at", "updated_at"}
+		createIdentity := func(identities map[identity.CredentialsType]string) func(t *testing.T) *identity.Identity {
 			return func(t *testing.T) *identity.Identity {
 				i := identity.NewIdentity("")
 				for ct, config := range identities {
@@ -1008,32 +1009,111 @@ func TestHandler(t *testing.T) {
 				return i
 			}
 		}
-
 		for name, ts := range map[string]*httptest.Server{"public": publicTS, "admin": adminTS} {
 			t.Run("type=remove unknown identity/"+name, func(t *testing.T) {
 				remove(t, ts, "/identities/"+x.NewUUID().String()+"/credentials/azerty", http.StatusNotFound)
 			})
 			t.Run("type=remove unknown type/"+name, func(t *testing.T) {
-				i := createIdentities(map[identity.CredentialsType]string{identity.CredentialsTypePassword: `{"secret":"pst"}`})(t)
+				i := createIdentity(map[identity.CredentialsType]string{
+					identity.CredentialsTypePassword: `{"secret":"pst"}`,
+				})(t)
 				remove(t, ts, "/identities/"+i.ID.String()+"/credentials/azerty", http.StatusNotFound)
 			})
 			t.Run("type=remove password type/"+name, func(t *testing.T) {
-				i := createIdentities(map[identity.CredentialsType]string{identity.CredentialsTypePassword: `{"secret":"pst"}`})(t)
+				i := createIdentity(map[identity.CredentialsType]string{
+					identity.CredentialsTypePassword: `{"secret":"pst"}`,
+				})(t)
 				remove(t, ts, "/identities/"+i.ID.String()+"/credentials/password", http.StatusBadRequest)
 			})
 			t.Run("type=remove oidc type/"+name, func(t *testing.T) {
-				i := createIdentities(map[identity.CredentialsType]string{identity.CredentialsTypeOIDC: `{"id":"pst"}`})(t)
+				i := createIdentity(map[identity.CredentialsType]string{
+					identity.CredentialsTypeOIDC: `{"id":"pst"}`,
+				})(t)
 				remove(t, ts, "/identities/"+i.ID.String()+"/credentials/oidc", http.StatusBadRequest)
 			})
 			t.Run("type=remove webauthn passwordless type/"+name, func(t *testing.T) {
 				expected := `{"credentials":[{"id":"THTndqZP5Mjvae1BFvJMaMfEMm7O7HE1ju+7PBaYA7Y=","added_at":"2022-12-16T14:11:55Z","public_key":"pQECAyYgASFYIMJLQhJxQRzhnKPTcPCUODOmxYDYo2obrm9bhp5lvSZ3IlggXjhZvJaPUqF9PXqZqTdWYPR7R+b2n/Wi+IxKKXsS4rU=","display_name":"test","authenticator":{"aaguid":"rc4AAjW8xgpkiwsl8fBVAw==","sign_count":0,"clone_warning":false},"is_passwordless":true,"attestation_type":"none"}],"user_handle":"Ef5JiMpMRwuzauWs/9J0gQ=="}`
-				i := createIdentities(map[identity.CredentialsType]string{identity.CredentialsTypeWebAuthn: expected})(t)
+				i := createIdentity(map[identity.CredentialsType]string{identity.CredentialsTypeWebAuthn: expected})(t)
 				remove(t, ts, "/identities/"+i.ID.String()+"/credentials/webauthn", http.StatusNoContent)
 				// Check that webauthn has not been deleted
 				res := get(t, ts, "/identities/"+i.ID.String(), http.StatusOK)
 				assert.EqualValues(t, i.ID.String(), res.Get("id").String(), "%s", res.Raw)
-				assert.True(t, res.Get("credentials").Exists())
-				assert.True(t, res.Get("credentials").Get("webauthn").Exists())
+
+				actual, err := reg.PrivilegedIdentityPool().GetIdentityConfidential(ctx, uuid.FromStringOrNil(res.Get("id").String()))
+				require.NoError(t, err)
+				snapshotx.SnapshotT(t, identity.WithCredentialsAndAdminMetadataInJSON(*actual), snapshotx.ExceptNestedKeys(append(ignoreDefault, "hashed_password")...), snapshotx.ExceptPaths("credentials.oidc.identifiers"))
+			})
+			t.Run("type=remove webauthn passwordless and multiple fido mfa type/"+name, func(t *testing.T) {
+				var config = identity.CredentialsWebAuthnConfig{
+					Credentials: identity.CredentialsWebAuthn{{
+						// Passwordless 1
+						ID:          []byte("THTndqZP5Mjvae1BFvJMaMfEMm7O7HE1ju+7PBaYA7Y="),
+						AddedAt:     time.Date(2022, 12, 16, 14, 11, 55, 0, time.UTC),
+						PublicKey:   []byte("pQECAyYgASFYIMJLQhJxQRzhnKPTcPCUODOmxYDYo2obrm9bhp5lvSZ3IlggXjhZvJaPUqF9PXqZqTdWYPR7R+b2n/Wi+IxKKXsS4rU="),
+						DisplayName: "test",
+						Authenticator: identity.AuthenticatorWebAuthn{
+							AAGUID:       []byte("rc4AAjW8xgpkiwsl8fBVAw=="),
+							SignCount:    0,
+							CloneWarning: false,
+						},
+						IsPasswordless:  true,
+						AttestationType: "none",
+					}, {
+						// Passwordless 2
+						ID:          []byte("THTndqZP5Mjvae1BFvJMaMfEMm7O7HE2ju+7PBaYA7Y="),
+						AddedAt:     time.Date(2022, 12, 16, 14, 11, 55, 0, time.UTC),
+						PublicKey:   []byte("pQECAyYgASFYIMJLQhJxQRzhnKPTcPCUODOmxYDYo2obrm9bhp5lvSZ3IlggXjhZvJaPUqF9PXqZqTdWYPR7R+b2n/Wi+IxKKXsS4rU="),
+						DisplayName: "test",
+						Authenticator: identity.AuthenticatorWebAuthn{
+							AAGUID:       []byte("rc4AAjW8xgpkiwsl8fBVAw=="),
+							SignCount:    0,
+							CloneWarning: false,
+						},
+						IsPasswordless:  true,
+						AttestationType: "none",
+					}, {
+						// MFA 1
+						ID:          []byte("THTndqZP5Mjvae1BFvJMaMfEMm7O7HE3ju+7PBaYA7Y="),
+						AddedAt:     time.Date(2022, 12, 16, 14, 11, 55, 0, time.UTC),
+						PublicKey:   []byte("pQECAyYgASFYIMJLQhJxQRzhnKPTcPCUODOmxYDYo2obrm9bhp5lvSZ3IlggXjhZvJaPUqF9PXqZqTdWYPR7R+b2n/Wi+IxKKXsS4rU="),
+						DisplayName: "test",
+						Authenticator: identity.AuthenticatorWebAuthn{
+							AAGUID:       []byte("rc4AAjW8xgpkiwsl8fBVAw=="),
+							SignCount:    0,
+							CloneWarning: false,
+						},
+						IsPasswordless:  false,
+						AttestationType: "none",
+					}, {
+						// MFA 2
+						ID:          []byte("THTndqZP5Mjvae1BFvJMaMfEMm7O7HE4ju+7PBaYA7Y="),
+						AddedAt:     time.Date(2022, 12, 16, 14, 11, 55, 0, time.UTC),
+						PublicKey:   []byte("pQECAyYgASFYIMJLQhJxQRzhnKPTcPCUODOmxYDYo2obrm9bhp5lvSZ3IlggXjhZvJaPUqF9PXqZqTdWYPR7R+b2n/Wi+IxKKXsS4rU="),
+						DisplayName: "test",
+						Authenticator: identity.AuthenticatorWebAuthn{
+							AAGUID:       []byte("rc4AAjW8xgpkiwsl8fBVAw=="),
+							SignCount:    0,
+							CloneWarning: false,
+						},
+						IsPasswordless:  false,
+						AttestationType: "none",
+					},
+					},
+					UserHandle: []byte("Ef5JiMpMRwuzauWs/9J0gQ=="),
+				}
+
+				message, err := json.Marshal(config)
+				require.NoError(t, err)
+
+				i := createIdentity(map[identity.CredentialsType]string{identity.CredentialsTypeWebAuthn: string(message)})(t)
+				remove(t, ts, "/identities/"+i.ID.String()+"/credentials/webauthn", http.StatusNoContent)
+				// Check that webauthn has not been deleted
+				res := get(t, ts, "/identities/"+i.ID.String(), http.StatusOK)
+				assert.EqualValues(t, i.ID.String(), res.Get("id").String(), "%s", res.Raw)
+
+				actual, err := reg.PrivilegedIdentityPool().GetIdentityConfidential(ctx, uuid.FromStringOrNil(res.Get("id").String()))
+				require.NoError(t, err)
+				snapshotx.SnapshotT(t, identity.WithCredentialsAndAdminMetadataInJSON(*actual), snapshotx.ExceptNestedKeys(append(ignoreDefault, "hashed_password")...), snapshotx.ExceptPaths("credentials.oidc.identifiers"))
 			})
 			for ct, ctConf := range map[identity.CredentialsType]string{
 				identity.CredentialsTypeLookup:   `{"recovery_codes": [{"code": "aaa"}]}`,
@@ -1049,17 +1129,26 @@ func TestHandler(t *testing.T) {
 						{
 							desc:  "with",
 							exist: true,
-							setup: createIdentities(map[identity.CredentialsType]string{identity.CredentialsTypePassword: `{"secret":"pst"}`, ct: ctConf}),
+							setup: createIdentity(map[identity.CredentialsType]string{
+								identity.CredentialsTypePassword: `{"secret":"pst"}`,
+								ct:                               ctConf,
+							}),
 						},
 						{
 							desc:  "without",
 							exist: false,
-							setup: createIdentities(map[identity.CredentialsType]string{identity.CredentialsTypePassword: `{"secret":"pst"}`}),
+							setup: createIdentity(map[identity.CredentialsType]string{
+								identity.CredentialsTypePassword: `{"secret":"pst"}`,
+							}),
 						},
 						{
 							desc:  "multiple",
 							exist: true,
-							setup: createIdentities(map[identity.CredentialsType]string{identity.CredentialsTypePassword: `{"secret":"pst"}`, identity.CredentialsTypeOIDC: `{"id":"pst"}`, ct: ctConf}),
+							setup: createIdentity(map[identity.CredentialsType]string{
+								identity.CredentialsTypePassword: `{"secret":"pst"}`,
+								identity.CredentialsTypeOIDC:     `{"id":"pst"}`,
+								ct:                               ctConf,
+							}),
 						},
 					} {
 						t.Run("type=remove "+string(ct)+"/"+name+"/"+tc.desc, func(t *testing.T) {
