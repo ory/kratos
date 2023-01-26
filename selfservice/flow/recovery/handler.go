@@ -147,8 +147,10 @@ func (h *Handler) createNativeRecoveryFlow(w http.ResponseWriter, r *http.Reques
 
 // Create Browser Recovery Flow Parameters
 //
-// nolint:deadcode,unused
 // swagger:parameters createBrowserRecoveryFlow
+//
+//nolint:deadcode,unused
+//lint:ignore U1000 Used to generate Swagger and OpenAPI definitions
 type createBrowserRecoveryFlow struct {
 	// The URL to return the browser to after the flow was completed.
 	//
@@ -208,8 +210,10 @@ func (h *Handler) createBrowserRecoveryFlow(w http.ResponseWriter, r *http.Reque
 
 // Get Recovery Flow Parameters
 //
-// nolint:deadcode,unused
 // swagger:parameters getRecoveryFlow
+//
+//nolint:deadcode,unused
+//lint:ignore U1000 Used to generate Swagger and OpenAPI definitions
 type getRecoveryFlow struct {
 	// The Flow ID
 	//
@@ -305,8 +309,10 @@ func (h *Handler) getRecoveryFlow(w http.ResponseWriter, r *http.Request, _ http
 
 // Update Recovery Flow Parameters
 //
-// nolint:deadcode,unused
 // swagger:parameters updateRecoveryFlow
+//
+//nolint:deadcode,unused
+//lint:ignore U1000 Used to generate Swagger and OpenAPI definitions
 type updateRecoveryFlow struct {
 	// The Recovery Flow ID
 	//
@@ -344,7 +350,9 @@ type updateRecoveryFlow struct {
 // Update Recovery Flow Request Body
 //
 // swagger:model updateRecoveryFlowBody
-// nolint:deadcode,unused
+//
+//nolint:deadcode,unused
+//lint:ignore U1000 Used to generate Swagger and OpenAPI definitions
 type updateRecoveryFlowBody struct{}
 
 // swagger:route POST /self-service/recovery frontend updateRecoveryFlow

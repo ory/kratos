@@ -10,7 +10,6 @@ import (
 	dhelper "github.com/ory/x/sqlcon/dockertest"
 )
 
-// nolint:staticcheck
 func TestMain(m *testing.M) {
 	atexit := dhelper.NewOnExit()
 	atexit.Add(x.CleanUpTestSMTP)

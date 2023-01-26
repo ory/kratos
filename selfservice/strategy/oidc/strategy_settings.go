@@ -180,8 +180,10 @@ func (s *Strategy) PopulateSettingsMethod(r *http.Request, id *identity.Identity
 
 // Update Settings Flow with OpenID Connect Method
 //
-// nolint:deadcode,unused
 // swagger:model updateSettingsFlowWithOidcMethod
+//
+//nolint:deadcode,unused
+//lint:ignore U1000 Used to generate Swagger and OpenAPI definitions
 type updateSettingsFlowWithOidcMethod struct {
 	// Method
 	//

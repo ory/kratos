@@ -165,7 +165,9 @@ func (h *Handler) FromOldFlow(w http.ResponseWriter, r *http.Request, i *identit
 // Create Native Settings Flow Parameters
 //
 // swagger:parameters createNativeSettingsFlow
-// nolint:deadcode,unused
+//
+//nolint:deadcode,unused
+//lint:ignore U1000 Used to generate Swagger and OpenAPI definitions
 type createNativeSettingsFlow struct {
 	// The Session Token of the Identity performing the settings flow.
 	//
@@ -229,8 +231,10 @@ func (h *Handler) createNativeSettingsFlow(w http.ResponseWriter, r *http.Reques
 
 // Create Browser Settings Flow Parameters
 //
-// nolint:deadcode,unused
 // swagger:parameters createBrowserSettingsFlow
+//
+//nolint:deadcode,unused
+//lint:ignore U1000 Used to generate Swagger and OpenAPI definitions
 type createBrowserSettingsFlow struct {
 	// The URL to return the browser to after the flow was completed.
 	//
@@ -311,8 +315,10 @@ func (h *Handler) createBrowserSettingsFlow(w http.ResponseWriter, r *http.Reque
 
 // Get Settings Flow
 //
-// nolint:deadcode,unused
 // swagger:parameters getSettingsFlow
+//
+//nolint:deadcode,unused
+//lint:ignore U1000 Used to generate Swagger and OpenAPI definitions
 type getSettingsFlow struct {
 	// ID is the Settings Flow ID
 	//
@@ -426,8 +432,10 @@ func (h *Handler) fetchFlow(w http.ResponseWriter, r *http.Request) error {
 
 // Update Settings Flow Parameters
 //
-// nolint:deadcode,unused
 // swagger:parameters updateSettingsFlow
+//
+//nolint:deadcode,unused
+//lint:ignore U1000 Used to generate Swagger and OpenAPI definitions
 type updateSettingsFlow struct {
 	// The Settings Flow ID
 	//
@@ -460,7 +468,9 @@ type updateSettingsFlow struct {
 // Update Settings Flow Request Body
 //
 // swagger:model updateSettingsFlowBody
-// nolint:deadcode,unused
+//
+//nolint:deadcode,unused
+//lint:ignore U1000 Used to generate Swagger and OpenAPI definitions
 type updateSettingsFlowBody struct{}
 
 // swagger:route POST /self-service/settings frontend updateSettingsFlow

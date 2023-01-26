@@ -63,7 +63,8 @@ func (s *Strategy) PopulateRecoveryMethod(r *http.Request, f *recovery.Flow) err
 //
 // swagger:parameters createRecoveryLinkForIdentity
 //
-// nolint
+//nolint:deadcode,unused
+//lint:ignore U1000 Used to generate Swagger and OpenAPI definitions
 type createRecoveryLinkForIdentity struct {
 	// in: body
 	Body createRecoveryLinkForIdentityBody
@@ -99,7 +100,6 @@ type createRecoveryLinkForIdentityBody struct {
 // Used when an administrator creates a recovery link for an identity.
 //
 // swagger:model recoveryLinkForIdentity
-// nolint
 type recoveryLinkForIdentity struct {
 	// Recovery Link
 	//
@@ -205,7 +205,9 @@ func (s *Strategy) createRecoveryLinkForIdentity(w http.ResponseWriter, r *http.
 // Update Recovery Flow with Link Method
 //
 // swagger:model updateRecoveryFlowWithLinkMethod
-// nolint:deadcode,unused
+//
+//nolint:deadcode,unused
+//lint:ignore U1000 Used to generate Swagger and OpenAPI definitions
 type updateRecoveryFlowWithLinkMethod struct {
 	// Email to Recover
 	//

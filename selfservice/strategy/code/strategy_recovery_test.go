@@ -127,6 +127,7 @@ func TestAdminStrategy(t *testing.T) {
 		res, err = publicTS.Client().PostForm(action, url.Values{
 			"code": {code},
 		})
+		require.NoError(t, err)
 		assert.Equal(t, http.StatusOK, res.StatusCode)
 
 		return ioutilx.MustReadAll(res.Body)
@@ -764,6 +765,7 @@ func TestRecovery(t *testing.T) {
 					Id(flowId).
 					Execute()
 
+				require.NoError(t, err)
 				body := ioutilx.MustReadAll(res.Body)
 				require.NotEmpty(t, body)
 

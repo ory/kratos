@@ -156,8 +156,10 @@ func (h *Handler) createNativeVerificationFlow(w http.ResponseWriter, r *http.Re
 
 // Create Browser Verification Flow Parameters
 //
-// nolint:deadcode,unused
 // swagger:parameters createBrowserVerificationFlow
+//
+//nolint:deadcode,unused
+//lint:ignore U1000 Used to generate Swagger and OpenAPI definitions
 type createBrowserVerificationFlow struct {
 	// The URL to return the browser to after the flow was completed.
 	//
@@ -203,7 +205,9 @@ func (h *Handler) createBrowserVerificationFlow(w http.ResponseWriter, r *http.R
 // Get Verification Flow Parameters
 //
 // swagger:parameters getVerificationFlow
-// nolint:deadcode,unused
+//
+//nolint:deadcode,unused
+//lint:ignore U1000 Used to generate Swagger and OpenAPI definitions
 type getVerificationFlow struct {
 	// The Flow ID
 	//
@@ -298,8 +302,10 @@ func (h *Handler) getVerificationFlow(w http.ResponseWriter, r *http.Request, _ 
 
 // Update Verification Flow Parameters
 //
-// nolint:deadcode,unused
 // swagger:parameters updateVerificationFlow
+//
+//nolint:deadcode,unused
+//lint:ignore U1000 Used to generate Swagger and OpenAPI definitions
 type updateVerificationFlow struct {
 	// The Verification Flow ID
 	//
@@ -336,8 +342,10 @@ type updateVerificationFlow struct {
 
 // Update Verification Flow Request Body
 //
-// nolint:deadcode,unused
 // swagger:model updateVerificationFlowBody
+//
+//nolint:deadcode,unused
+//lint:ignore U1000 Used to generate Swagger and OpenAPI definitions
 type updateVerificationFlowBody struct{}
 
 // swagger:route POST /self-service/verification frontend updateVerificationFlow
