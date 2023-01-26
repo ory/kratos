@@ -99,17 +99,6 @@ func TestHandler(t *testing.T) {
 
 	type patch map[string]interface{}
 
-	var makePatch = func(t *testing.T, patches ...patch) []patch {
-		t.Helper()
-		result := make([]patch, 0, len(patches))
-
-		for _, patch := range patches {
-			result = append(result, patch)
-		}
-
-		return result
-	}
-
 	t.Run("case=should return an empty list", func(t *testing.T) {
 		for name, ts := range map[string]*httptest.Server{"public": publicTS, "admin": adminTS} {
 			t.Run("endpoint="+name, func(t *testing.T) {
@@ -542,11 +531,11 @@ func TestHandler(t *testing.T) {
 
 			for name, ts := range map[string]*httptest.Server{"public": publicTS, "admin": adminTS} {
 				t.Run("endpoint="+name, func(t *testing.T) {
-					ur := makePatch(t, patch{
-						"op": "replace", "path": "/state", "value": identity.StateInactive,
-					})
+					patch := []patch{
+						{"op": "replace", "path": "/state", "value": identity.StateInactive},
+					}
 
-					res := send(t, ts, "PATCH", "/identities/"+i.ID.String(), http.StatusOK, &ur)
+					res := send(t, ts, "PATCH", "/identities/"+i.ID.String(), http.StatusOK, &patch)
 					assert.EqualValues(t, uuid, res.Get("traits.subject").String(), "%s", res.Raw)
 					assert.False(t, res.Get("metadata_admin.admin").Exists(), "%s", res.Raw)
 					assert.False(t, res.Get("metadata_public.public").Exists(), "%s", res.Raw)
@@ -571,11 +560,11 @@ func TestHandler(t *testing.T) {
 
 			for name, ts := range map[string]*httptest.Server{"public": publicTS, "admin": adminTS} {
 				t.Run("endpoint="+name, func(t *testing.T) {
-					ur := makePatch(t, patch{
-						"op": "replace", "path": "/schema_id", "value": "invalid-id",
-					})
+					patch := []patch{
+						{"op": "replace", "path": "/schema_id", "value": "invalid-id"},
+					}
 
-					res := send(t, ts, "PATCH", "/identities/"+i.ID.String(), http.StatusBadRequest, &ur)
+					res := send(t, ts, "PATCH", "/identities/"+i.ID.String(), http.StatusBadRequest, &patch)
 					assert.Contains(t, res.Get("error.reason").String(), "invalid-id", "%s", res.Raw)
 
 					res = get(t, ts, "/identities/"+i.ID.String(), http.StatusOK)
@@ -596,9 +585,11 @@ func TestHandler(t *testing.T) {
 
 			for name, ts := range map[string]*httptest.Server{"public": publicTS, "admin": adminTS} {
 				t.Run("endpoint="+name, func(t *testing.T) {
-					ur := makePatch(t, patch{"op": "replace", "path": "/state", "value": "invalid-value"})
+					patch := []patch{
+						{"op": "replace", "path": "/state", "value": "invalid-value"},
+					}
 
-					res := send(t, ts, "PATCH", "/identities/"+i.ID.String(), http.StatusBadRequest, &ur)
+					res := send(t, ts, "PATCH", "/identities/"+i.ID.String(), http.StatusBadRequest, &patch)
 					assert.EqualValues(t, "identity state is not valid", res.Get("error.reason").String(), "%s", res.Raw)
 
 					res = get(t, ts, "/identities/"+i.ID.String(), http.StatusOK)
@@ -619,9 +610,11 @@ func TestHandler(t *testing.T) {
 
 			for name, ts := range map[string]*httptest.Server{"public": publicTS, "admin": adminTS} {
 				t.Run("endpoint="+name, func(t *testing.T) {
-					ur := makePatch(t, patch{"op": "replace", "path": "/traits/subject", "value": "patched-subject"})
+					patch := []patch{
+						{"op": "replace", "path": "/traits/subject", "value": "patched-subject"},
+					}
 
-					res := send(t, ts, "PATCH", "/identities/"+i.ID.String(), http.StatusOK, &ur)
+					res := send(t, ts, "PATCH", "/identities/"+i.ID.String(), http.StatusOK, &patch)
 					assert.EqualValues(t, "patched-subject", res.Get("traits.subject").String(), "%s", res.Raw)
 
 					res = get(t, ts, "/identities/"+i.ID.String(), http.StatusOK)
@@ -649,9 +642,11 @@ func TestHandler(t *testing.T) {
 			for name, ts := range map[string]*httptest.Server{"public": publicTS, "admin": adminTS} {
 
 				t.Run("endpoint="+name, func(t *testing.T) {
-					ur := makePatch(t, patch{"op": "replace", "path": "/credentials", "value": "patched-credentials"})
+					patch := []patch{
+						{"op": "replace", "path": "/credentials", "value": "patched-credentials"},
+					}
 
-					res := send(t, ts, "PATCH", "/identities/"+i.ID.String(), http.StatusBadRequest, &ur)
+					res := send(t, ts, "PATCH", "/identities/"+i.ID.String(), http.StatusBadRequest, &patch)
 
 					assert.EqualValues(t, "patch includes denied path: /credentials", res.Get("error.reason").String(), "%s", res.Raw)
 				})
@@ -690,13 +685,11 @@ func TestHandler(t *testing.T) {
 					loginResponse := testhelpers.SubmitLoginForm(t, true, ts.Client(), ts, values, false, true, 200, "")
 					require.NotEmpty(t, gjson.Get(loginResponse, "session_token").String(), "expected to find a session token, found none")
 
-					ur := makePatch(t, patch{
-						"op": "replace", "path": "/metadata_public", "value": map[string]string{
-							"role": "user",
-						},
-					})
+					patch := []patch{
+						{"op": "replace", "path": "/metadata_public", "value": map[string]string{"role": "user"}},
+					}
 
-					res := send(t, ts, "PATCH", "/identities/"+i.ID.String(), http.StatusOK, &ur)
+					res := send(t, ts, "PATCH", "/identities/"+i.ID.String(), http.StatusOK, &patch)
 					assert.EqualValues(t, "user", res.Get("metadata_public.role").String(), "%s", res.Raw)
 					assert.NotEqualValues(t, i.StateChangedAt, sqlxx.NullTime(res.Get("state_changed_at").Time()), "%s", res.Raw)
 
@@ -908,12 +901,12 @@ func TestHandler(t *testing.T) {
 					res := send(t, ts, "POST", "/identities", http.StatusCreated, &cr)
 
 					id := res.Get("id").String()
-					res = send(t, ts, "PUT", "/identities/"+id, http.StatusOK, &identity.UpdateIdentityBody{
+					_ = send(t, ts, "PUT", "/identities/"+id, http.StatusOK, &identity.UpdateIdentityBody{
 						SchemaID: "employee",
 						Traits:   []byte(`{"email":"` + x.NewUUID().String() + `@ory.sh"}`),
 					})
 
-					res = send(t, ts, "PUT", "/identities/"+id, http.StatusOK, &identity.UpdateIdentityBody{
+					_ = send(t, ts, "PUT", "/identities/"+id, http.StatusOK, &identity.UpdateIdentityBody{
 						SchemaID: "employee",
 						Traits:   []byte(`{}`),
 					})

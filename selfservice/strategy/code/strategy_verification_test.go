@@ -364,8 +364,7 @@ func TestVerification(t *testing.T) {
 		require.Len(t, cl.Jar.Cookies(urlx.ParseOrPanic(public.URL)), 1)
 		assert.Contains(t, cl.Jar.Cookies(urlx.ParseOrPanic(public.URL))[0].Name, x.CSRFTokenName)
 
-		actualBody, res := submitVerificationCode(t, body, cl, code)
-
+		actualBody, _ := submitVerificationCode(t, body, cl, code)
 		assert.EqualValues(t, "passed_challenge", gjson.Get(actualBody, "state").String())
 	})
 
@@ -435,6 +434,7 @@ func TestVerification(t *testing.T) {
 
 		c := testhelpers.NewDebugClient(t)
 		res, err = c.Post(action, "application/json", strings.NewReader(fmt.Sprintf(`{"code": "%v"}`, code)))
+		require.NoError(t, err)
 		assert.Equal(t, http.StatusOK, res.StatusCode)
 
 		f1 := ioutilx.MustReadAll(res.Body)
@@ -442,6 +442,7 @@ func TestVerification(t *testing.T) {
 		assert.EqualValues(t, "passed_challenge", gjson.GetBytes(f1, "state").String())
 
 		res, err = c.Post(action, "application/json", strings.NewReader(fmt.Sprintf(`{"code": "%v"}`, code)))
+		require.NoError(t, err)
 		assert.Equal(t, http.StatusGone, res.StatusCode)
 
 		f2 := ioutilx.MustReadAll(res.Body)

@@ -89,7 +89,9 @@ func (s *Strategy) handleVerificationError(w http.ResponseWriter, r *http.Reques
 // Update Verification Flow with Link Method
 //
 // swagger:model updateVerificationFlowWithLinkMethod
-// nolint:deadcode,unused
+//
+//nolint:deadcode,unused
+//lint:ignore U1000 Used to generate Swagger and OpenAPI definitions
 type updateVerificationFlowWithLinkMethod struct {
 	// Email to Verify
 	//

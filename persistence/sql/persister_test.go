@@ -57,7 +57,6 @@ func init() {
 	//pop.Debug = true
 }
 
-// nolint:staticcheck
 func TestMain(m *testing.M) {
 	atexit := dockertest.NewOnExit()
 	atexit.Add(func() {

@@ -85,6 +85,7 @@ func startE2EServerOnly(t *testing.T, configFile string, isTLS bool, configOptio
 	)
 
 	//nolint:staticcheck
+	//lint:ignore SA1029 we really want this
 	ctx = context.WithValue(ctx, "dsn", dsn)
 	ctx, cancel := context.WithCancel(ctx)
 	executor := &cmdx.CommandExecuter{

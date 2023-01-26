@@ -396,19 +396,6 @@ func TestViperProvider(t *testing.T) {
 	})
 }
 
-type InterceptHook struct {
-	lastEntry *logrus.Entry
-}
-
-func (l InterceptHook) Levels() []logrus.Level {
-	return []logrus.Level{logrus.FatalLevel}
-}
-
-func (l InterceptHook) Fire(e *logrus.Entry) error {
-	l.lastEntry = e
-	return nil
-}
-
 func TestBcrypt(t *testing.T) {
 	ctx := context.Background()
 	p := config.MustNew(t, logrusx.New("", ""), os.Stderr, configx.SkipValidation())
@@ -684,7 +671,7 @@ func TestViperProvider_DSN(t *testing.T) {
 		var exitCode int
 		l := logrusx.New("", "", logrusx.WithExitFunc(func(i int) {
 			exitCode = i
-		}), logrusx.WithHook(InterceptHook{}))
+		}))
 		p := config.MustNew(t, l, os.Stderr, configx.SkipValidation())
 
 		assert.Equal(t, dsn, p.DSN(ctx))

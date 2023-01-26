@@ -197,8 +197,10 @@ func (h *Handler) createNativeRegistrationFlow(w http.ResponseWriter, r *http.Re
 
 // Create Browser Registration Flow Parameters
 //
-// nolint:deadcode,unused
 // swagger:parameters createBrowserRegistrationFlow
+//
+//nolint:deadcode,unused
+//lint:ignore U1000 Used to generate Swagger and OpenAPI definitions
 type createBrowserRegistrationFlow struct {
 	// The URL to return the browser to after the flow was completed.
 	//
@@ -309,8 +311,10 @@ func (h *Handler) createBrowserRegistrationFlow(w http.ResponseWriter, r *http.R
 
 // Get Registration Flow Parameters
 //
-// nolint:deadcode,unused
 // swagger:parameters getRegistrationFlow
+//
+//nolint:deadcode,unused
+//lint:ignore U1000 Used to generate Swagger and OpenAPI definitions
 type getRegistrationFlow struct {
 	// The Registration Flow ID
 	//
@@ -423,7 +427,9 @@ func (h *Handler) getRegistrationFlow(w http.ResponseWriter, r *http.Request, ps
 // Update Registration Flow Parameters
 //
 // swagger:parameters updateRegistrationFlow
-// nolint:deadcode,unused
+//
+//nolint:deadcode,unused
+//lint:ignore U1000 Used to generate Swagger and OpenAPI definitions
 type updateRegistrationFlow struct {
 	// The Registration Flow ID
 	//
@@ -451,7 +457,9 @@ type updateRegistrationFlow struct {
 // Update Registration Request Body
 //
 // swagger:model updateRegistrationFlowBody
-// nolint:deadcode,unused
+//
+//nolint:deadcode,unused
+//lint:ignore U1000 Used to generate Swagger and OpenAPI definitions
 type updateRegistrationFlowBody struct{}
 
 // swagger:route POST /self-service/registration frontend updateRegistrationFlow
