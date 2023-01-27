@@ -29,7 +29,7 @@ type Profile struct {
 				} `json:"identifiers"`
 			} `json:"elements"`
 		} `json:"displayImage~"`
-	} `json:"profilePicture", omitempty`
+	} `json:"profilePicture",omitempty`
 	ID string `json:"id"`
 }
 
