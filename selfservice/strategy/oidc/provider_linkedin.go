@@ -140,13 +140,10 @@ func (l *ProviderLinkedIn) ProfilePicture(profile *Profile) string {
 		switch len(elements) {
 		case 0:
 			return ""
-			break
 		case 1:
 			return elements[0].Identifiers[0].Identifier
-			break
 		case 2:
 			return elements[1].Identifiers[0].Identifier
-			break
 		default:
 			return elements[2].Identifiers[0].Identifier
 		}
