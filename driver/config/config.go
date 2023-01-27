@@ -78,6 +78,8 @@ const (
 	ViperKeyCourierTemplatesVerificationValidEmail           = "courier.templates.verification.valid.email"
 	ViperKeyCourierTemplatesVerificationCodeInvalidEmail     = "courier.templates.verification_code.invalid.email"
 	ViperKeyCourierTemplatesVerificationCodeValidEmail       = "courier.templates.verification_code.valid.email"
+	ViperKeyCourierMailerEnabled                             = "courier.mailer.enabled"
+	ViperKeyCourierMailerRequestConfig                       = "courier.mailer.request_config"
 	ViperKeyCourierSMTPFrom                                  = "courier.smtp.from_address"
 	ViperKeyCourierSMTPFromName                              = "courier.smtp.from_name"
 	ViperKeyCourierSMTPHeaders                               = "courier.smtp.headers"
@@ -264,6 +266,8 @@ type (
 		Config() *Config
 	}
 	CourierConfigs interface {
+		CourierMailerEnabled(ctx context.Context) bool
+		CourierMailerRequestConfig(ctx context.Context) json.RawMessage
 		CourierSMTPURL(ctx context.Context) (*url.URL, error)
 		CourierSMTPClientCertPath(ctx context.Context) string
 		CourierSMTPClientKeyPath(ctx context.Context) string
@@ -976,6 +980,29 @@ func (p *Config) SelfServiceFlowLogoutRedirectURL(ctx context.Context) *url.URL 
 	return p.GetProvider(ctx).RequestURIF(ViperKeySelfServiceLogoutBrowserDefaultReturnTo, p.SelfServiceBrowserDefaultReturnTo(ctx))
 }
 
+func (p *Config) CourierMailerEnabled(ctx context.Context) bool {
+	return p.GetProvider(ctx).Bool(ViperKeyCourierMailerEnabled)
+}
+
+func (p *Config) CourierMailerRequestConfig(ctx context.Context) json.RawMessage {
+	if !p.GetProvider(ctx).Bool(ViperKeyCourierMailerEnabled) {
+		return nil
+	}
+
+	out, err := p.GetProvider(ctx).Marshal(kjson.Parser())
+	if err != nil {
+		p.l.WithError(err).Warn("Unable to marshal mailer request configuration.")
+		return nil
+	}
+
+	config := gjson.GetBytes(out, ViperKeyCourierMailerRequestConfig).Raw
+	if len(config) <= 0 {
+		return json.RawMessage("{}")
+	}
+
+	return json.RawMessage(config)
+}
+
 func (p *Config) CourierSMTPClientCertPath(ctx context.Context) string {
 	return p.GetProvider(ctx).StringF(ViperKeyCourierSMTPClientCertPath, "")
 }
@@ -1078,7 +1105,7 @@ func (p *Config) CourierSMSRequestConfig(ctx context.Context) json.RawMessage {
 
 	out, err := p.GetProvider(ctx).Marshal(kjson.Parser())
 	if err != nil {
-		p.l.WithError(err).Warn("Unable to marshal self service strategy configuration.")
+		p.l.WithError(err).Warn("Unable to marshal SMS request configuration.")
 		return nil
 	}
 
