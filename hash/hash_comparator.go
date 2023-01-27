@@ -360,6 +360,8 @@ func compareSHAHelper(hasher string, raw []byte, hash []byte) error {
 	case "sha512":
 		sum := sha512.Sum512(raw)
 		sha = sum[:]
+	default:
+		return errors.WithStack(ErrMismatchedHashAndPassword)
 	}
 
 	encodedHash := []byte(base64.StdEncoding.EncodeToString(hash))
@@ -396,6 +398,9 @@ func decodeSSHAHash(encodedHash string) (hasher string, salt, hash []byte, err e
 		hasher = "sha512"
 		index_of_hash_begin = 9
 		index_of_salt_begin = 64
+
+	default:
+		return "", nil, nil, ErrInvalidHash
 	}
 
 	decoded, err := base64.StdEncoding.DecodeString(string(encodedHash[index_of_hash_begin:]))
