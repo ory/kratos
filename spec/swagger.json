@@ -819,15 +819,15 @@
             "in": "query"
           },
           {
+            "enum": [
+              "identity",
+              "devices"
+            ],
             "type": "array",
             "items": {
-              "enum": [
-                "Devices",
-                "Identity"
-              ],
               "type": "string"
             },
-            "description": "ExpandOptions is a query parameter encoded list of all properties that must be expanded in the Session.\nExample - ?expand=Identity\u0026expand=Devices\nIf no value is provided, the expandable properties are skipped.",
+            "description": "ExpandOptions is a query parameter encoded list of all properties that must be expanded in the Session.\nIf no value is provided, the expandable properties are skipped.",
             "name": "expand",
             "in": "query"
           }
@@ -870,12 +870,12 @@
         "operationId": "getSession",
         "parameters": [
           {
+            "enum": [
+              "identity",
+              "devices"
+            ],
             "type": "array",
             "items": {
-              "enum": [
-                "Devices",
-                "Identity"
-              ],
               "type": "string"
             },
             "description": "ExpandOptions is a query parameter encoded list of all properties that must be expanded in the Session.\nExample - ?expand=Identity\u0026expand=Devices\nIf no value is provided, the expandable properties are skipped.",

@@ -97,7 +97,9 @@ func pl(t *testing.T) func(lvl logging.Level, s string, args ...interface{}) {
 }
 
 func createCleanDatabases(t *testing.T) map[string]*driver.RegistryDefault {
-	conns := map[string]string{"sqlite": "sqlite://file:" + t.TempDir() + "/db.sqlite?_fk=true"}
+	conns := map[string]string{
+		"sqlite": "sqlite://file:" + t.TempDir() + "/db.sqlite?_fk=true",
+	}
 
 	var l sync.Mutex
 	if !testing.Short() {
