@@ -1,3 +1,6 @@
+// Copyright © 2023 Ory Corp
+// SPDX-License-Identifier: Apache-2.0
+
 package text
 
 import (
@@ -106,13 +109,13 @@ func NewInfoLoginWith(provider string) *Message {
 	}
 }
 
-func NewErrorValidationLoginFlowExpired(ago time.Duration) *Message {
+func NewErrorValidationLoginFlowExpired(expiredAt time.Time) *Message {
 	return &Message{
 		ID:   ErrorValidationLoginFlowExpired,
-		Text: fmt.Sprintf("The login flow expired %.2f minutes ago, please try again.", ago.Minutes()),
+		Text: fmt.Sprintf("The login flow expired %.2f minutes ago, please try again.", Now().Sub(expiredAt).Minutes()),
 		Type: Error,
 		Context: context(map[string]interface{}{
-			"expired_at": Now().UTC().Add(ago),
+			"expired_at": expiredAt,
 		}),
 	}
 }

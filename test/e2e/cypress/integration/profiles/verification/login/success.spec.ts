@@ -1,19 +1,22 @@
-import { appPrefix, gen } from '../../../../helpers'
-import { routes as react } from '../../../../helpers/react'
-import { routes as express } from '../../../../helpers/express'
+// Copyright © 2023 Ory Corp
+// SPDX-License-Identifier: Apache-2.0
 
-context('Account Verification Login Success', () => {
+import { appPrefix, gen } from "../../../../helpers"
+import { routes as react } from "../../../../helpers/react"
+import { routes as express } from "../../../../helpers/express"
+
+context("Account Verification Login Success", () => {
   ;[
     {
       login: react.login,
-      app: 'react' as 'react',
-      profile: 'verification'
+      app: "react" as "react",
+      profile: "verification",
     },
     {
       login: express.login,
-      app: 'express' as 'express',
-      profile: 'verification'
-    }
+      app: "express" as "express",
+      profile: "verification",
+    },
   ].forEach(({ profile, login, app }) => {
     describe(`for app ${app}`, () => {
       before(() => {
@@ -23,7 +26,7 @@ context('Account Verification Login Success', () => {
         cy.proxy(app)
       })
 
-      it('is able to login after successful email verification', () => {
+      it("is able to login after successful email verification", () => {
         cy.deleteMail()
 
         const identity = gen.identityWithWebsite()
@@ -36,7 +39,7 @@ context('Account Verification Login Success', () => {
         cy.get('input[name="password"]').type(identity.password)
         cy.get('button[value="password"]').click()
 
-        cy.location('pathname').should('not.contain', '/login')
+        cy.location("pathname").should("not.contain", "/login")
 
         cy.getSession()
       })

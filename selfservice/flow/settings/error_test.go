@@ -1,3 +1,6 @@
+// Copyright © 2023 Ory Corp
+// SPDX-License-Identifier: Apache-2.0
+
 package settings_test
 
 import (
@@ -94,7 +97,7 @@ func TestHandleError(t *testing.T) {
 		defer res.Body.Close()
 		require.Contains(t, res.Request.URL.String(), conf.SelfServiceFlowErrorURL(ctx).String()+"?id=")
 
-		sse, _, err := sdk.V0alpha2Api.GetSelfServiceError(context.Background()).
+		sse, _, err := sdk.FrontendApi.GetFlowError(context.Background()).
 			Id(res.Request.URL.Query().Get("id")).Execute()
 		require.NoError(t, err)
 
@@ -141,8 +144,10 @@ func TestHandleError(t *testing.T) {
 			t.Run("case=expired error", func(t *testing.T) {
 				t.Cleanup(reset)
 
+				req := httptest.NewRequest("GET", "/sessions/whoami", nil)
+
 				// This needs an authenticated client in order to call the RouteGetFlow endpoint
-				s, err := session.NewActiveSession(ctx, &id, testhelpers.NewSessionLifespanProvider(time.Hour), time.Now(), identity.CredentialsTypePassword, identity.AuthenticatorAssuranceLevel1)
+				s, err := session.NewActiveSession(req, &id, testhelpers.NewSessionLifespanProvider(time.Hour), time.Now(), identity.CredentialsTypePassword, identity.AuthenticatorAssuranceLevel1)
 				require.NoError(t, err)
 				c := testhelpers.NewHTTPClientWithSessionToken(t, reg, s)
 

@@ -1,3 +1,6 @@
+// Copyright © 2023 Ory Corp
+// SPDX-License-Identifier: Apache-2.0
+
 package courier
 
 import (
@@ -12,8 +15,6 @@ import (
 )
 
 type (
-	TemplateType string
-
 	EmailTemplate interface {
 		json.Marshaler
 		EmailSubject(context.Context) (string, error)
@@ -23,13 +24,22 @@ type (
 	}
 )
 
+// A Template's type
+//
+// swagger:enum TemplateType
+type TemplateType string
+
 const (
-	TypeRecoveryInvalid     TemplateType = "recovery_invalid"
-	TypeRecoveryValid       TemplateType = "recovery_valid"
-	TypeVerificationInvalid TemplateType = "verification_invalid"
-	TypeVerificationValid   TemplateType = "verification_valid"
-	TypeOTP                 TemplateType = "otp"
-	TypeTestStub            TemplateType = "stub"
+	TypeRecoveryInvalid         TemplateType = "recovery_invalid"
+	TypeRecoveryValid           TemplateType = "recovery_valid"
+	TypeRecoveryCodeInvalid     TemplateType = "recovery_code_invalid"
+	TypeRecoveryCodeValid       TemplateType = "recovery_code_valid"
+	TypeVerificationInvalid     TemplateType = "verification_invalid"
+	TypeVerificationValid       TemplateType = "verification_valid"
+	TypeVerificationCodeInvalid TemplateType = "verification_code_invalid"
+	TypeVerificationCodeValid   TemplateType = "verification_code_valid"
+	TypeOTP                     TemplateType = "otp"
+	TypeTestStub                TemplateType = "stub"
 )
 
 func GetEmailTemplateType(t EmailTemplate) (TemplateType, error) {
@@ -38,10 +48,18 @@ func GetEmailTemplateType(t EmailTemplate) (TemplateType, error) {
 		return TypeRecoveryInvalid, nil
 	case *email.RecoveryValid:
 		return TypeRecoveryValid, nil
+	case *email.RecoveryCodeInvalid:
+		return TypeRecoveryCodeInvalid, nil
+	case *email.RecoveryCodeValid:
+		return TypeRecoveryCodeValid, nil
 	case *email.VerificationInvalid:
 		return TypeVerificationInvalid, nil
 	case *email.VerificationValid:
 		return TypeVerificationValid, nil
+	case *email.VerificationCodeInvalid:
+		return TypeVerificationCodeInvalid, nil
+	case *email.VerificationCodeValid:
+		return TypeVerificationCodeValid, nil
 	case *email.TestStub:
 		return TypeTestStub, nil
 	default:
@@ -63,6 +81,18 @@ func NewEmailTemplateFromMessage(d template.Dependencies, msg Message) (EmailTem
 			return nil, err
 		}
 		return email.NewRecoveryValid(d, &t), nil
+	case TypeRecoveryCodeInvalid:
+		var t email.RecoveryCodeInvalidModel
+		if err := json.Unmarshal(msg.TemplateData, &t); err != nil {
+			return nil, err
+		}
+		return email.NewRecoveryCodeInvalid(d, &t), nil
+	case TypeRecoveryCodeValid:
+		var t email.RecoveryCodeValidModel
+		if err := json.Unmarshal(msg.TemplateData, &t); err != nil {
+			return nil, err
+		}
+		return email.NewRecoveryCodeValid(d, &t), nil
 	case TypeVerificationInvalid:
 		var t email.VerificationInvalidModel
 		if err := json.Unmarshal(msg.TemplateData, &t); err != nil {
@@ -75,6 +105,18 @@ func NewEmailTemplateFromMessage(d template.Dependencies, msg Message) (EmailTem
 			return nil, err
 		}
 		return email.NewVerificationValid(d, &t), nil
+	case TypeVerificationCodeInvalid:
+		var t email.VerificationCodeInvalidModel
+		if err := json.Unmarshal(msg.TemplateData, &t); err != nil {
+			return nil, err
+		}
+		return email.NewVerificationCodeInvalid(d, &t), nil
+	case TypeVerificationCodeValid:
+		var t email.VerificationCodeValidModel
+		if err := json.Unmarshal(msg.TemplateData, &t); err != nil {
+			return nil, err
+		}
+		return email.NewVerificationCodeValid(d, &t), nil
 	case TypeTestStub:
 		var t email.TestStubModel
 		if err := json.Unmarshal(msg.TemplateData, &t); err != nil {

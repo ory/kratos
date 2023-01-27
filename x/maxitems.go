@@ -1,3 +1,6 @@
+// Copyright © 2023 Ory Corp
+// SPDX-License-Identifier: Apache-2.0
+
 package x
 
 // MaxItemsPerPage is used to prevent DoS attacks against large lists by limiting the items per page to 500.

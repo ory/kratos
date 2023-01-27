@@ -1,3 +1,6 @@
+// Copyright © 2023 Ory Corp
+// SPDX-License-Identifier: Apache-2.0
+
 package logout_test
 
 import (
@@ -8,6 +11,8 @@ import (
 	"net/http/cookiejar"
 	"net/url"
 	"testing"
+
+	"github.com/ory/kratos/session"
 
 	"github.com/julienschmidt/httprouter"
 	"github.com/stretchr/testify/assert"
@@ -51,7 +56,7 @@ func TestLogout(t *testing.T) {
 		_, res := testhelpers.HTTPRequestJSON(t, hc, "DELETE", public.URL+"/self-service/logout/api", json.RawMessage(`{"session_token": "`+sess.Token+`"}`))
 		assert.Equal(t, http.StatusNoContent, res.StatusCode)
 
-		actual, err := reg.SessionPersister().GetSession(ctx, sess.ID)
+		actual, err := reg.SessionPersister().GetSession(ctx, sess.ID, session.ExpandNothing)
 		require.NoError(t, err)
 		assert.False(t, actual.IsActive())
 
@@ -237,8 +242,8 @@ func TestLogout(t *testing.T) {
 
 		res, err := hc.Do(req)
 		require.NoError(t, err)
+		defer res.Body.Close()
 		// here we check that the redirect status is 303
 		require.Equal(t, http.StatusSeeOther, res.StatusCode)
-		defer res.Body.Close()
 	})
 }

@@ -1,28 +1,31 @@
+// Copyright © 2023 Ory Corp
+// SPDX-License-Identifier: Apache-2.0
+
 import {
   appPrefix,
   assertVerifiableAddress,
   gen,
   parseHtml,
-  verifyHrefPattern
-} from '../../../../helpers'
+  verifyHrefPattern,
+} from "../../../../helpers"
 
-import { routes as react } from '../../../../helpers/react'
-import { routes as express } from '../../../../helpers/express'
+import { routes as react } from "../../../../helpers/react"
+import { routes as express } from "../../../../helpers/express"
 
-context('Account Verification Settings Error', () => {
+context("Account Verification Settings Error", () => {
   ;[
     {
       settings: react.settings,
       base: react.base,
-      app: 'react' as 'react',
-      profile: 'verification'
+      app: "react" as "react",
+      profile: "verification",
     },
     {
       settings: express.settings,
       base: express.base,
-      app: 'express' as 'express',
-      profile: 'verification'
-    }
+      app: "express" as "express",
+      profile: "verification",
+    },
   ].forEach(({ profile, settings, app, base }) => {
     describe(`for app ${app}`, () => {
       before(() => {
@@ -31,14 +34,14 @@ context('Account Verification Settings Error', () => {
         cy.proxy(app)
       })
 
-      describe('error flow', () => {
+      describe("error flow", () => {
         let identity
         before(() => {
           cy.deleteMail()
         })
 
         beforeEach(() => {
-          cy.longLinkLifespan()
+          cy.longCodeLifespan()
           identity = gen.identityWithWebsite()
           cy.clearAllCookies()
           cy.registerApi(identity)
@@ -48,8 +51,8 @@ context('Account Verification Settings Error', () => {
           cy.visit(settings)
         })
 
-        it('is unable to verify the email address if the code is no longer valid', () => {
-          cy.shortLinkLifespan()
+        it("is unable to verify the email address if the code is no longer valid", () => {
+          cy.shortCodeLifespan()
           cy.visit(settings)
 
           const email = `not-${identity.email}`
@@ -59,29 +62,29 @@ context('Account Verification Settings Error', () => {
           cy.get('button[value="profile"]').click()
 
           cy.verifyEmailButExpired({
-            expect: { email, password: identity.password }
+            expect: { email, password: identity.password },
           })
         })
 
-        it('is unable to verify the email address if the code is incorrect', () => {
+        it("is unable to verify the email address if the code is incorrect", () => {
           const email = `not-${identity.email}`
           cy.get('input[name="traits.email"]').clear().type(email)
           cy.get('button[value="profile"]').click()
 
           cy.getMail().then((mail) => {
-            const link = parseHtml(mail.body).querySelector('a')
+            const link = parseHtml(mail.body).querySelector("a")
 
             expect(verifyHrefPattern.test(link.href)).to.be.true
 
-            cy.visit(link.href + '-not') // add random stuff to the confirm challenge
+            cy.visit(link.href + "-not") // add random stuff to the confirm challenge
             cy.log(link.href)
             cy.getSession().then(
-              assertVerifiableAddress({ isVerified: false, email })
+              assertVerifiableAddress({ isVerified: false, email }),
             )
           })
         })
 
-        xit('should not update the traits until the email has been verified and the old email has accepted the change', () => {
+        xit("should not update the traits until the email has been verified and the old email has accepted the change", () => {
           // FIXME https://github.com/ory/kratos/issues/292
         })
       })

@@ -1,21 +1,24 @@
-import { appPrefix, assertRecoveryAddress, gen } from '../../../../helpers'
-import { routes as react } from '../../../../helpers/react'
-import { routes as express } from '../../../../helpers/express'
+// Copyright © 2023 Ory Corp
+// SPDX-License-Identifier: Apache-2.0
 
-context('Account Recovery Success', () => {
+import { appPrefix, assertRecoveryAddress, gen } from "../../../../helpers"
+import { routes as react } from "../../../../helpers/react"
+import { routes as express } from "../../../../helpers/express"
+
+context("Account Recovery Success", () => {
   ;[
     {
       settings: react.settings,
       base: react.base,
-      app: 'react' as 'react',
-      profile: 'spa'
+      app: "react" as "react",
+      profile: "spa",
     },
     {
       settings: express.settings,
       base: express.base,
-      app: 'express' as 'express',
-      profile: 'recovery'
-    }
+      app: "express" as "express",
+      profile: "recovery",
+    },
   ].forEach(({ settings, profile, base, app }) => {
     describe(`for app ${app}`, () => {
       before(() => {
@@ -38,7 +41,7 @@ context('Account Recovery Success', () => {
         cy.login({ ...identity, cookieUrl: base })
       })
 
-      it('should update the recovery address when updating the email', () => {
+      it("should update the recovery address when updating the email", () => {
         cy.visit(settings)
         const email = gen.email()
         cy.get(appPrefix(app) + 'input[name="traits.email"]')
@@ -46,12 +49,12 @@ context('Account Recovery Success', () => {
           .type(email)
         cy.get('button[value="profile"]').click()
         cy.expectSettingsSaved()
-        cy.get('input[name="traits.email"]').should('contain.value', email)
+        cy.get('input[name="traits.email"]').should("contain.value", email)
 
         cy.getSession().should(assertRecoveryAddress({ email }))
       })
 
-      xit('should not show an immediate error when a recovery address already exists', () => {
+      xit("should not show an immediate error when a recovery address already exists", () => {
         // account enumeration prevention, needs to be implemented.
       })
     })

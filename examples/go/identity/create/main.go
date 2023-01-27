@@ -1,9 +1,12 @@
+// Copyright © 2023 Ory Corp
+// SPDX-License-Identifier: Apache-2.0
+
 package main
 
 import (
 	"context"
 
-	ory "github.com/ory/kratos-client-go"
+	ory "github.com/ory/client-go"
 	"github.com/ory/kratos/examples/go/pkg"
 	"github.com/ory/kratos/x"
 )
@@ -16,8 +19,8 @@ var client = pkg.NewSDK("playground")
 func createIdentity() *ory.Identity {
 	ctx := context.Background()
 
-	identity, res, err := client.V0alpha2Api.AdminCreateIdentity(ctx).
-		AdminCreateIdentityBody(ory.AdminCreateIdentityBody{
+	identity, res, err := client.IdentityApi.CreateIdentity(ctx).
+		CreateIdentityBody(ory.CreateIdentityBody{
 			SchemaId: "default",
 			Traits: map[string]interface{}{
 				"email": "dev+" + x.NewUUID().String() + "@ory.sh",

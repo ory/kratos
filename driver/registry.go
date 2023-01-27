@@ -1,9 +1,13 @@
+// Copyright © 2023 Ory Corp
+// SPDX-License-Identifier: Apache-2.0
+
 package driver
 
 import (
 	"context"
 
 	"github.com/ory/x/contextx"
+	"github.com/ory/x/jsonnetsecure"
 	"github.com/ory/x/otelx"
 	prometheus "github.com/ory/x/prometheusx"
 
@@ -21,6 +25,7 @@ import (
 	"github.com/ory/kratos/selfservice/flow/recovery"
 	"github.com/ory/kratos/selfservice/flow/settings"
 	"github.com/ory/kratos/selfservice/flow/verification"
+	"github.com/ory/kratos/selfservice/strategy/code"
 	"github.com/ory/kratos/selfservice/strategy/link"
 
 	"github.com/ory/x/healthx"
@@ -47,6 +52,7 @@ type Registry interface {
 	Init(ctx context.Context, ctxer contextx.Contextualizer, opts ...RegistryOption) error
 
 	WithLogger(l *logrusx.Logger) Registry
+	WithJsonnetVMProvider(jsonnetsecure.VMProvider) Registry
 
 	WithCSRFHandler(c nosurf.Handler)
 	WithCSRFTokenGenerator(cg x.CSRFToken)
@@ -61,6 +67,7 @@ type Registry interface {
 	RegisterAdminRoutes(ctx context.Context, admin *x.RouterAdmin)
 	PrometheusManager() *prometheus.MetricsManager
 	Tracer(context.Context) *otelx.Tracer
+	SetTracer(*otelx.Tracer)
 
 	config.Provider
 	CourierConfig() config.CourierConfigs
@@ -71,6 +78,7 @@ type Registry interface {
 	x.WriterProvider
 	x.LoggingProvider
 	x.HTTPClientProvider
+	jsonnetsecure.VMProvider
 
 	continuity.ManagementProvider
 	continuity.PersistenceProvider
@@ -133,6 +141,9 @@ type Registry interface {
 	link.VerificationTokenPersistenceProvider
 	link.RecoveryTokenPersistenceProvider
 
+	code.SenderProvider
+	code.RecoveryCodePersistenceProvider
+
 	recovery.FlowPersistenceProvider
 	recovery.ErrorHandlerProvider
 	recovery.HandlerProvider
@@ -152,12 +163,20 @@ func NewRegistryFromDSN(ctx context.Context, c *config.Config, l *logrusx.Logger
 		return nil, errors.Errorf("driver of type %T does not implement interface Registry", driver)
 	}
 
+	tracer, err := otelx.New("Ory Kratos", l, c.Tracing(ctx))
+	if err != nil {
+		l.WithError(err).Fatalf("failed to initialize tracer")
+		tracer = otelx.NewNoop(l, c.Tracing(ctx))
+	}
+	registry.SetTracer(tracer)
+
 	return registry.WithLogger(l).WithConfig(c), nil
 }
 
 type options struct {
 	skipNetworkInit bool
 	config          *config.Config
+	replaceTracer   func(*otelx.Tracer) *otelx.Tracer
 }
 
 type RegistryOption func(*options)
@@ -169,6 +188,12 @@ func SkipNetworkInit(o *options) {
 func WithConfig(config *config.Config) func(o *options) {
 	return func(o *options) {
 		o.config = config
+	}
+}
+
+func ReplaceTracer(f func(*otelx.Tracer) *otelx.Tracer) func(o *options) {
+	return func(o *options) {
+		o.replaceTracer = f
 	}
 }
 

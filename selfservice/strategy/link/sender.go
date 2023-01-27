@@ -1,3 +1,6 @@
+// Copyright © 2023 Ory Corp
+// SPDX-License-Identifier: Apache-2.0
+
 package link
 
 import (
@@ -74,7 +77,7 @@ func (s *Sender) SendRecoveryLink(ctx context.Context, r *http.Request, f *recov
 	}
 
 	// Get the identity associated with the recovery address
-	i, err := s.r.IdentityPool().GetIdentity(ctx, address.IdentityID)
+	i, err := s.r.IdentityPool().GetIdentity(ctx, address.IdentityID, identity.ExpandDefault)
 	if err != nil {
 		return err
 	}
@@ -116,7 +119,7 @@ func (s *Sender) SendVerificationLink(ctx context.Context, f *verification.Flow,
 	}
 
 	// Get the identity associated with the recovery address
-	i, err := s.r.IdentityPool().GetIdentity(ctx, address.IdentityID)
+	i, err := s.r.IdentityPool().GetIdentity(ctx, address.IdentityID, identity.ExpandDefault)
 	if err != nil {
 		return err
 	}
@@ -188,7 +191,11 @@ func (s *Sender) SendVerificationTokenTo(ctx context.Context, f *verification.Fl
 func (s *Sender) send(ctx context.Context, via string, t courier.EmailTemplate) error {
 	switch via {
 	case identity.AddressTypeEmail:
-		_, err := s.r.Courier(ctx).QueueEmail(ctx, t)
+		c, err := s.r.Courier(ctx)
+		if err != nil {
+			return err
+		}
+		_, err = c.QueueEmail(ctx, t)
 		return err
 	default:
 		return errors.Errorf("received unexpected via type: %s", via)

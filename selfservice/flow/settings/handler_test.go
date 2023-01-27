@@ -1,3 +1,6 @@
+// Copyright © 2023 Ory Corp
+// SPDX-License-Identifier: Apache-2.0
+
 package settings_test
 
 import (
@@ -18,7 +21,7 @@ import (
 
 	"github.com/gofrs/uuid"
 
-	kratos "github.com/ory/kratos-client-go"
+	kratos "github.com/ory/kratos/internal/httpclient"
 
 	"github.com/ory/kratos/corpx"
 
@@ -142,10 +145,43 @@ func TestHandler(t *testing.T) {
 		})
 
 		t.Run("description=init a flow as browser", func(t *testing.T) {
-			t.Run("description=without privileges", func(t *testing.T) {
-				res, body := initSPAFlow(t, new(http.Client))
-				assert.Equal(t, http.StatusUnauthorized, res.StatusCode, "%s", body)
-				assert.Equal(t, text.ErrNoActiveSession, gjson.GetBytes(body, "error.id").String(), "%s", body)
+			t.Run("case=unauthorized users are redirected to login preserving redirect_to param", func(t *testing.T) {
+				c := testhelpers.NewClientWithCookies(t)
+				// prevent the redirect
+				c.CheckRedirect = func(req *http.Request, via []*http.Request) error {
+					return http.ErrUseLastResponse
+				}
+				returnTo := "?return_to=validRedirect"
+				req, err := http.NewRequest("GET", publicTS.URL+settings.RouteInitBrowserFlow+returnTo, nil)
+				require.NoError(t, err)
+
+				res, err := c.Do(req)
+				require.NoError(t, err)
+				defer res.Body.Close()
+				// here we check that the redirect status is 303
+				require.Equal(t, http.StatusSeeOther, res.StatusCode)
+				location, err := res.Location()
+				require.NoError(t, err)
+				require.Equal(t, publicTS.URL+login.RouteInitBrowserFlow+returnTo, location.String())
+			})
+
+			t.Run("case=unauthorized users are redirected to login", func(t *testing.T) {
+				c := testhelpers.NewClientWithCookies(t)
+				// prevent the redirect
+				c.CheckRedirect = func(req *http.Request, via []*http.Request) error {
+					return http.ErrUseLastResponse
+				}
+				req, err := http.NewRequest("GET", publicTS.URL+settings.RouteInitBrowserFlow, nil)
+				require.NoError(t, err)
+
+				res, err := c.Do(req)
+				require.NoError(t, err)
+				defer res.Body.Close()
+				// here we check that the redirect status is 303
+				require.Equal(t, http.StatusSeeOther, res.StatusCode)
+				location, err := res.Location()
+				require.NoError(t, err)
+				require.Equal(t, publicTS.URL+login.RouteInitBrowserFlow, location.String())
 			})
 
 			t.Run("description=success", func(t *testing.T) {
@@ -173,13 +209,22 @@ func TestHandler(t *testing.T) {
 
 				res, err := c.Do(req)
 				require.NoError(t, err)
+				defer res.Body.Close()
 				// here we check that the redirect status is 303
 				require.Equal(t, http.StatusSeeOther, res.StatusCode)
-				defer res.Body.Close()
+				location, err := res.Location()
+				require.NoError(t, err)
+				require.Contains(t, location.String(), conf.SelfServiceFlowSettingsUI(ctx).String())
 			})
 		})
 
 		t.Run("description=init a flow as SPA", func(t *testing.T) {
+			t.Run("description=without privileges", func(t *testing.T) {
+				res, body := initSPAFlow(t, new(http.Client))
+				assert.Equal(t, http.StatusUnauthorized, res.StatusCode, "%s", body)
+				assert.Equal(t, text.ErrNoActiveSession, gjson.GetBytes(body, "error.id").String(), "%s", body)
+			})
+
 			t.Run("description=success", func(t *testing.T) {
 				user1 := testhelpers.NewHTTPClientWithArbitrarySessionToken(t, reg)
 				res, body := initSPAFlow(t, user1)
@@ -206,7 +251,7 @@ func TestHandler(t *testing.T) {
 
 	t.Run("endpoint=fetch", func(t *testing.T) {
 		t.Run("description=fetching a non-existent flow should return a 404 error", func(t *testing.T) {
-			_, _, err := testhelpers.NewSDKCustomClient(publicTS, otherUser).V0alpha2Api.GetSelfServiceSettingsFlow(context.Background()).Id("i-do-not-exist").Execute()
+			_, _, err := testhelpers.NewSDKCustomClient(publicTS, otherUser).FrontendApi.GetSettingsFlow(context.Background()).Id("i-do-not-exist").Execute()
 			require.Error(t, err)
 
 			require.IsType(t, new(kratos.GenericOpenAPIError), err, "%T", err)
@@ -217,7 +262,7 @@ func TestHandler(t *testing.T) {
 			pr := newExpiredFlow()
 			require.NoError(t, reg.SettingsFlowPersister().CreateSettingsFlow(context.Background(), pr))
 
-			_, _, err := testhelpers.NewSDKCustomClient(publicTS, primaryUser).V0alpha2Api.GetSelfServiceSettingsFlow(context.Background()).Id(pr.ID.String()).Execute()
+			_, _, err := testhelpers.NewSDKCustomClient(publicTS, primaryUser).FrontendApi.GetSettingsFlow(context.Background()).Id(pr.ID.String()).Execute()
 			require.Error(t, err)
 
 			require.IsType(t, new(kratos.GenericOpenAPIError), err, "%T", err)
@@ -284,7 +329,7 @@ func TestHandler(t *testing.T) {
 				rid := res.Request.URL.Query().Get("flow")
 				require.NotEmpty(t, rid)
 
-				_, _, err = testhelpers.NewSDKCustomClient(publicTS, otherUser).V0alpha2Api.GetSelfServiceSettingsFlow(context.Background()).Id(rid).Execute()
+				_, _, err = testhelpers.NewSDKCustomClient(publicTS, otherUser).FrontendApi.GetSettingsFlow(context.Background()).Id(rid).Execute()
 				require.Error(t, err)
 				require.IsType(t, new(kratos.GenericOpenAPIError), err, "%T", err)
 				assert.Equal(t, int64(http.StatusForbidden), gjson.GetBytes(err.(*kratos.GenericOpenAPIError).Body(), "error.code").Int(), "should return a 403 error because the identities from the cookies do not match")
@@ -321,7 +366,7 @@ func TestHandler(t *testing.T) {
 
 				res, body := initFlow(t, aal2Identity, false)
 				require.Equal(t, http.StatusOK, res.StatusCode)
-				var f kratos.SelfServiceSettingsFlow
+				var f kratos.SettingsFlow
 				require.NoError(t, json.Unmarshal(body, &f))
 
 				conf.MustSet(ctx, config.ViperKeySelfServiceSettingsRequiredAAL, config.HighestAvailableAAL)
@@ -338,7 +383,7 @@ func TestHandler(t *testing.T) {
 
 				res, body := initFlow(t, aal2Identity, false)
 				require.Equal(t, http.StatusOK, res.StatusCode)
-				var f kratos.SelfServiceSettingsFlow
+				var f kratos.SettingsFlow
 				require.NoError(t, json.Unmarshal(body, &f))
 
 				conf.MustSet(ctx, config.ViperKeySelfServiceSettingsRequiredAAL, config.HighestAvailableAAL)
@@ -355,7 +400,7 @@ func TestHandler(t *testing.T) {
 
 				res, body := initFlow(t, aal2Identity, true)
 				require.Equal(t, http.StatusOK, res.StatusCode)
-				var f kratos.SelfServiceSettingsFlow
+				var f kratos.SettingsFlow
 				require.NoError(t, json.Unmarshal(body, &f))
 
 				conf.MustSet(ctx, config.ViperKeySelfServiceSettingsRequiredAAL, config.HighestAvailableAAL)
@@ -370,7 +415,7 @@ func TestHandler(t *testing.T) {
 				user1 := testhelpers.NewHTTPClientWithArbitrarySessionToken(t, reg)
 				user2 := testhelpers.NewHTTPClientWithArbitrarySessionToken(t, reg)
 				_, body := initFlow(t, user1, true)
-				var f kratos.SelfServiceSettingsFlow
+				var f kratos.SettingsFlow
 				require.NoError(t, json.Unmarshal(body, &f))
 
 				actual, res := testhelpers.SettingsMakeRequest(t, true, false, &f, user2, `{"method":"not-exists"}`)
@@ -382,7 +427,7 @@ func TestHandler(t *testing.T) {
 				user1 := testhelpers.NewHTTPClientWithArbitrarySessionCookie(t, reg)
 				user2 := testhelpers.NewHTTPClientWithArbitrarySessionCookie(t, reg)
 				_, body := initFlow(t, user1, true)
-				var f kratos.SelfServiceSettingsFlow
+				var f kratos.SettingsFlow
 				require.NoError(t, json.Unmarshal(body, &f))
 
 				actual, res := testhelpers.SettingsMakeRequest(t, false, true, &f, user2, `{"method":"not-exists"}`)
@@ -394,12 +439,38 @@ func TestHandler(t *testing.T) {
 				user1 := testhelpers.NewHTTPClientWithArbitrarySessionCookie(t, reg)
 				user2 := testhelpers.NewHTTPClientWithArbitrarySessionCookie(t, reg)
 				_, body := initFlow(t, user1, true)
-				var f kratos.SelfServiceSettingsFlow
+				var f kratos.SettingsFlow
 				require.NoError(t, json.Unmarshal(body, &f))
 
 				actual, res := testhelpers.SettingsMakeRequest(t, false, false, &f, user2, `{"method":"not-exists"}`)
 				assert.Equal(t, http.StatusBadRequest, res.StatusCode)
 				assert.Equal(t, "You must restart the flow because the resumable session was initiated by another person.", gjson.Get(actual, "ui.messages.0.text").String(), actual)
+			})
+		})
+
+		t.Run("description=submit - kratos session cookie issued", func(t *testing.T) {
+			t.Run("type=spa", func(t *testing.T) {
+				_, body := initFlow(t, primaryUser, false)
+				var f kratos.SettingsFlow
+				require.NoError(t, json.Unmarshal(body, &f))
+
+				actual, res := testhelpers.SettingsMakeRequest(t, false, true, &f, primaryUser, fmt.Sprintf(`{"method":"profile", "numby": 15, "csrf_token": "%s"}`, x.FakeCSRFToken))
+				assert.Equal(t, http.StatusOK, res.StatusCode)
+				require.Len(t, primaryUser.Jar.Cookies(urlx.ParseOrPanic(publicTS.URL+login.RouteGetFlow)), 1)
+				require.Contains(t, fmt.Sprintf("%v", primaryUser.Jar.Cookies(urlx.ParseOrPanic(publicTS.URL))), "ory_kratos_session")
+				assert.Equal(t, "Your changes have been saved!", gjson.Get(actual, "ui.messages.0.text").String(), actual)
+			})
+
+			t.Run("type=browser", func(t *testing.T) {
+				_, body := initFlow(t, primaryUser, false)
+				var f kratos.SettingsFlow
+				require.NoError(t, json.Unmarshal(body, &f))
+
+				actual, res := testhelpers.SettingsMakeRequest(t, false, false, &f, primaryUser, `method=profile&traits.numby=15&csrf_token=`+x.FakeCSRFToken)
+				assert.Equal(t, http.StatusOK, res.StatusCode)
+				require.Len(t, primaryUser.Jar.Cookies(urlx.ParseOrPanic(publicTS.URL+login.RouteGetFlow)), 1)
+				require.Contains(t, fmt.Sprintf("%v", primaryUser.Jar.Cookies(urlx.ParseOrPanic(publicTS.URL))), "ory_kratos_session")
+				assert.Equal(t, "Your changes have been saved!", gjson.Get(actual, "ui.messages.0.text").String(), actual)
 			})
 		})
 	})

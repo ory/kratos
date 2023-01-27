@@ -1,3 +1,6 @@
+// Copyright © 2023 Ory Corp
+// SPDX-License-Identifier: Apache-2.0
+
 package hook_test
 
 import (
@@ -16,10 +19,12 @@ import (
 	"testing"
 	"time"
 
+	"github.com/sirupsen/logrus/hooks/test"
 	"github.com/stretchr/testify/require"
 
 	"github.com/ory/kratos/schema"
 	"github.com/ory/kratos/text"
+	"github.com/ory/x/jsonnetsecure"
 	"github.com/ory/x/otelx"
 
 	"github.com/ory/kratos/driver/config"
@@ -50,7 +55,13 @@ import (
 func TestWebHooks(t *testing.T) {
 	_, reg := internal.NewFastRegistryWithMocks(t)
 	logger := logrusx.New("kratos", "test")
-	whDeps := x.SimpleLoggerWithClient{L: logger, C: reg.HTTPClient(context.Background()), T: otelx.NewNoop(logger, &otelx.Config{ServiceName: "kratos"})}
+	whDeps := struct {
+		x.SimpleLoggerWithClient
+		*jsonnetsecure.TestProvider
+	}{
+		x.SimpleLoggerWithClient{L: logger, C: reg.HTTPClient(context.Background()), T: otelx.NewNoop(logger, &otelx.Config{ServiceName: "kratos"})},
+		jsonnetsecure.NewTestProvider(t),
+	}
 	type WebHookRequest struct {
 		Body    string
 		Headers http.Header
@@ -109,7 +120,12 @@ func TestWebHooks(t *testing.T) {
 					"identity_id": null,
    					"headers": %s,
 					"method": "%s",
-					"url": "%s"
+					"url": "%s",
+					"cookies": {
+						"Some-Cookie-1": "Some-Cookie-Value",
+						"Some-Cookie-2": "Some-other-Cookie-Value",
+						"Some-Cookie-3": "Third-Cookie-Value"
+					}
 				}`, f.GetID(), string(h), req.Method, "http://www.ory.sh/some_end_point")
 	}
 
@@ -120,7 +136,12 @@ func TestWebHooks(t *testing.T) {
 					"identity_id": "%s",
    					"headers": %s,
 					"method": "%s",
-					"url": "%s"
+					"url": "%s",
+					"cookies": {
+						"Some-Cookie-1": "Some-Cookie-Value",
+						"Some-Cookie-2": "Some-other-Cookie-Value",
+						"Some-Cookie-3": "Third-Cookie-Value"
+					}
 				}`, f.GetID(), s.Identity.ID, string(h), req.Method, "http://www.ory.sh/some_end_point")
 	}
 
@@ -265,12 +286,28 @@ func TestWebHooks(t *testing.T) {
 						t.Run("method="+method, func(t *testing.T) {
 							f := tc.createFlow()
 							req := &http.Request{
-								Host:       "www.ory.sh",
-								Header:     map[string][]string{"Some-Header": {"Some-Value"}},
+								Host: "www.ory.sh",
+								Header: map[string][]string{
+									"Some-Header": {"Some-Value"},
+									"Cookie":      {"Some-Cookie-1=Some-Cookie-Value; Some-Cookie-2=Some-other-Cookie-Value", "Some-Cookie-3=Third-Cookie-Value"},
+								},
 								RequestURI: "/some_end_point",
 								Method:     http.MethodPost,
 								URL:        &url.URL{Path: "/some_end_point"},
 							}
+							cookie, err := req.Cookie("Some-Cookie-1")
+							require.NoError(t, err)
+							require.Equal(t, cookie.Name, "Some-Cookie-1")
+							require.Equal(t, cookie.Value, "Some-Cookie-Value")
+							cookie, err = req.Cookie("Some-Cookie-2")
+							require.NoError(t, err)
+							require.Equal(t, cookie.Name, "Some-Cookie-2")
+							require.Equal(t, cookie.Value, "Some-other-Cookie-Value")
+							cookie, err = req.Cookie("Some-Cookie-3")
+							require.NoError(t, err)
+							require.Equal(t, cookie.Name, "Some-Cookie-3")
+							require.Equal(t, cookie.Value, "Third-Cookie-Value")
+
 							s := &session.Session{ID: x.NewUUID(), Identity: &identity.Identity{ID: x.NewUUID()}}
 							whr := &WebHookRequest{}
 							ts := newServer(webHookEndPoint(whr))
@@ -283,7 +320,7 @@ func TestWebHooks(t *testing.T) {
 
 							wh := hook.NewWebHook(&whDeps, conf)
 
-							err := tc.callWebHook(wh, req, f, s)
+							err = tc.callWebHook(wh, req, f, s)
 							if method == "GARBAGE" {
 								assert.Error(t, err)
 								return
@@ -329,7 +366,7 @@ func TestWebHooks(t *testing.T) {
 		}`,
 	)
 
-	webhookError := schema.NewValidationListError([]*schema.ValidationError{schema.NewHookValidationError("#/traits/username", "a web-hook target returned an error", text.Messages{{ID: 1234, Type: "info", Text: "error message"}})})
+	webhookError := schema.NewValidationListError([]*schema.ValidationError{schema.NewHookValidationError("#/traits/username", "a webhook target returned an error", text.Messages{{ID: 1234, Type: "info", Text: "error message"}})})
 	for _, tc := range []struct {
 		uc              string
 		callWebHook     func(wh *hook.WebHook, req *http.Request, f flow.Flow, s *session.Session) error
@@ -415,15 +452,16 @@ func TestWebHooks(t *testing.T) {
 			expectedError: nil,
 		},
 		{
-			uc:         "Post Registration Post Persists Hook - block",
+			uc:         "Post Registration Post Persist Hook - block has no effect",
 			createFlow: func() flow.Flow { return &registration.Flow{ID: x.NewUUID()} },
 			callWebHook: func(wh *hook.WebHook, req *http.Request, f flow.Flow, s *session.Session) error {
 				return wh.ExecutePostRegistrationPostPersistHook(nil, req, f.(*registration.Flow), s)
 			},
+			// This would usually error, but post persist does not execute blocking web hooks, so we expect no error.
 			webHookResponse: func() (int, []byte) {
 				return http.StatusBadRequest, webHookResponse
 			},
-			expectedError: webhookError,
+			expectedError: nil,
 		},
 		{
 			uc:         "Post Registration Pre Persist Hook - no block",
@@ -503,7 +541,18 @@ func TestWebHooks(t *testing.T) {
 			expectedError: nil,
 		},
 		{
-			uc:         "Post Settings Hook - block",
+			uc:         "Post Settings Hook Pre Persist - block",
+			createFlow: func() flow.Flow { return &settings.Flow{ID: x.NewUUID()} },
+			callWebHook: func(wh *hook.WebHook, req *http.Request, f flow.Flow, s *session.Session) error {
+				return wh.ExecuteSettingsPrePersistHook(nil, req, f.(*settings.Flow), s.Identity)
+			},
+			webHookResponse: func() (int, []byte) {
+				return http.StatusBadRequest, webHookResponse
+			},
+			expectedError: webhookError,
+		},
+		{
+			uc:         "Post Settings Hook Post Persist - block has no effect",
 			createFlow: func() flow.Flow { return &settings.Flow{ID: x.NewUUID()} },
 			callWebHook: func(wh *hook.WebHook, req *http.Request, f flow.Flow, s *session.Session) error {
 				return wh.ExecuteSettingsPostPersistHook(nil, req, f.(*settings.Flow), s.Identity)
@@ -511,7 +560,7 @@ func TestWebHooks(t *testing.T) {
 			webHookResponse: func() (int, []byte) {
 				return http.StatusBadRequest, webHookResponse
 			},
-			expectedError: webhookError,
+			expectedError: nil,
 		},
 	} {
 		t.Run("uc="+tc.uc, func(t *testing.T) {
@@ -519,8 +568,11 @@ func TestWebHooks(t *testing.T) {
 				t.Run("method="+method, func(t *testing.T) {
 					f := tc.createFlow()
 					req := &http.Request{
-						Host:       "www.ory.sh",
-						Header:     map[string][]string{"Some-Header": {"Some-Value"}, "X-Forwarded-Proto": {"https"}},
+						Host: "www.ory.sh",
+						Header: map[string][]string{
+							"Some-Header":       {"Some-Value"},
+							"X-Forwarded-Proto": {"https"},
+							"Cookie":            {"Some-Cookie-1=Some-Cookie-Value; Some-Cookie-2=Some-other-Cookie-Value", "Some-Cookie-3=Third-Cookie-Value"}},
 						RequestURI: "/some_end_point",
 						Method:     http.MethodPost,
 						URL: &url.URL{
@@ -728,7 +780,13 @@ func TestDisallowPrivateIPRanges(t *testing.T) {
 	conf.MustSet(ctx, config.ViperKeyClientHTTPNoPrivateIPRanges, true)
 	conf.MustSet(ctx, config.ViperKeyClientHTTPPrivateIPExceptionURLs, []string{"http://localhost/exception"})
 	logger := logrusx.New("kratos", "test")
-	whDeps := x.SimpleLoggerWithClient{L: logger, C: reg.HTTPClient(context.Background()), T: otelx.NewNoop(logger, conf.Tracing(ctx))}
+	whDeps := struct {
+		x.SimpleLoggerWithClient
+		*jsonnetsecure.TestProvider
+	}{
+		x.SimpleLoggerWithClient{L: logger, C: reg.HTTPClient(context.Background()), T: otelx.NewNoop(logger, &otelx.Config{ServiceName: "kratos"})},
+		jsonnetsecure.NewTestProvider(t),
+	}
 
 	req := &http.Request{
 		Header: map[string][]string{"Some-Header": {"Some-Value"}},
@@ -748,7 +806,7 @@ func TestDisallowPrivateIPRanges(t *testing.T) {
 }`))
 		err := wh.ExecuteLoginPostHook(nil, req, node.DefaultGroup, f, s)
 		require.Error(t, err)
-		require.Contains(t, err.Error(), "ip 127.0.0.1 is in the 127.0.0.0/8 range")
+		require.Contains(t, err.Error(), "is not a public IP address")
 	})
 
 	t.Run("allowed to call exempt url", func(t *testing.T) {
@@ -759,7 +817,7 @@ func TestDisallowPrivateIPRanges(t *testing.T) {
 }`))
 		err := wh.ExecuteLoginPostHook(nil, req, node.DefaultGroup, f, s)
 		require.Error(t, err, "the target does not exist and we still receive an error")
-		require.NotContains(t, err.Error(), "ip 127.0.0.1 is in the 127.0.0.0/8 range", "but the error is not related to the IP range.")
+		require.NotContains(t, err.Error(), "is not a public IP address", "but the error is not related to the IP range.")
 	})
 
 	t.Run("not allowed to load from source", func(t *testing.T) {
@@ -779,6 +837,87 @@ func TestDisallowPrivateIPRanges(t *testing.T) {
 }`))
 		err := wh.ExecuteLoginPostHook(nil, req, node.DefaultGroup, f, s)
 		require.Error(t, err)
-		require.Contains(t, err.Error(), "ip 192.168.178.0 is in the 192.168.0.0/16 range")
+		require.Contains(t, err.Error(), "192.168.178.0 is not a public IP address")
 	})
+}
+
+func TestAsyncWebhook(t *testing.T) {
+	_, reg := internal.NewFastRegistryWithMocks(t)
+	logger := logrusx.New("kratos", "test")
+	logHook := new(test.Hook)
+	logger.Logger.Hooks.Add(logHook)
+	whDeps := struct {
+		x.SimpleLoggerWithClient
+		*jsonnetsecure.TestProvider
+	}{
+		x.SimpleLoggerWithClient{L: logger, C: reg.HTTPClient(context.Background()), T: otelx.NewNoop(logger, &otelx.Config{ServiceName: "kratos"})},
+		jsonnetsecure.NewTestProvider(t),
+	}
+
+	req := &http.Request{
+		Header: map[string][]string{"Some-Header": {"Some-Value"}},
+		Host:   "www.ory.sh",
+		TLS:    new(tls.ConnectionState),
+		URL:    &url.URL{Path: "/some_end_point"},
+		Method: http.MethodPost,
+	}
+
+	incomingCtx, incomingCancel := context.WithCancel(context.Background())
+	if deadline, ok := t.Deadline(); ok {
+		// cancel this context one second before test timeout for clean shutdown
+		var cleanup context.CancelFunc
+		incomingCtx, cleanup = context.WithDeadline(incomingCtx, deadline.Add(-time.Second))
+		defer cleanup()
+	}
+
+	req = req.WithContext(incomingCtx)
+	s := &session.Session{ID: x.NewUUID(), Identity: &identity.Identity{ID: x.NewUUID()}}
+	f := &login.Flow{ID: x.NewUUID()}
+
+	handlerEntered, blockHandlerOnExit := make(chan struct{}), make(chan struct{})
+	webhookReceiver := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		close(handlerEntered)
+		<-blockHandlerOnExit
+		w.Write([]byte("ok"))
+	}))
+	t.Cleanup(webhookReceiver.Close)
+
+	wh := hook.NewWebHook(&whDeps, json.RawMessage(fmt.Sprintf(`
+		{
+			"url": %q,
+			"method": "GET",
+			"body": "file://stub/test_body.jsonnet",
+			"response": {
+				"ignore": true
+			}
+		}`, webhookReceiver.URL)))
+	err := wh.ExecuteLoginPostHook(nil, req, node.DefaultGroup, f, s)
+	require.NoError(t, err) // execution returns immediately for async webhook
+	select {
+	case <-time.After(200 * time.Millisecond):
+		t.Fatal("timed out waiting for webhook request to reach test handler")
+	case <-handlerEntered:
+		// ok
+	}
+	// at this point, a goroutine is in the middle of the call to our test handler and waiting for a response
+	incomingCancel() // simulate the incoming Kratos request having finished
+	close(blockHandlerOnExit)
+	timeout := time.After(200 * time.Millisecond)
+	var found bool
+	for !found {
+		for _, entry := range logHook.AllEntries() {
+			if entry.Message == "Webhook request succeeded" {
+				found = true
+				break
+			}
+		}
+
+		select {
+		case <-timeout:
+			t.Fatal("timed out waiting for successful webhook completion")
+		case <-time.After(50 * time.Millisecond):
+			// continue loop
+		}
+	}
+	require.True(t, found)
 }

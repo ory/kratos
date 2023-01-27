@@ -1,3 +1,6 @@
+// Copyright © 2023 Ory Corp
+// SPDX-License-Identifier: Apache-2.0
+
 package main
 
 import (
@@ -5,7 +8,7 @@ import (
 
 	"github.com/ory/kratos/examples/go/pkg"
 
-	ory "github.com/ory/kratos-client-go"
+	ory "github.com/ory/client-go"
 )
 
 // If you use Open Source this would be:
@@ -13,11 +16,11 @@ import (
 // var client = pkg.NewSDKForSelfHosted("http://127.0.0.1:4433")
 var client = pkg.NewSDK("playground")
 
-func performRecovery(email string) *ory.SelfServiceRecoveryFlow {
+func performRecovery(email string) *ory.RecoveryFlow {
 	ctx := context.Background()
 
 	// Initialize the flow
-	flow, res, err := client.V0alpha2Api.InitializeSelfServiceRecoveryFlowWithoutBrowser(ctx).Execute()
+	flow, res, err := client.FrontendApi.CreateNativeRecoveryFlow(ctx).Execute()
 	pkg.SDKExitOnError(err, res)
 
 	// If you want, print the flow here:
@@ -25,8 +28,8 @@ func performRecovery(email string) *ory.SelfServiceRecoveryFlow {
 	//	pkg.PrintJSONPretty(flow)
 
 	// Submit the form
-	afterSubmit, res, err := client.V0alpha2Api.SubmitSelfServiceRecoveryFlow(ctx).Flow(flow.Id).
-		SubmitSelfServiceRecoveryFlowBody(ory.SubmitSelfServiceRecoveryFlowWithLinkMethodBodyAsSubmitSelfServiceRecoveryFlowBody(&ory.SubmitSelfServiceRecoveryFlowWithLinkMethodBody{
+	afterSubmit, res, err := client.FrontendApi.UpdateRecoveryFlow(ctx).Flow(flow.Id).
+		UpdateRecoveryFlowBody(ory.UpdateRecoveryFlowWithLinkMethodAsUpdateRecoveryFlowBody(&ory.UpdateRecoveryFlowWithLinkMethod{
 			Email:  email,
 			Method: "link",
 		})).Execute()

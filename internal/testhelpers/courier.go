@@ -1,3 +1,6 @@
+// Copyright © 2023 Ory Corp
+// SPDX-License-Identifier: Apache-2.0
+
 package testhelpers
 
 import (
@@ -26,9 +29,19 @@ func CourierExpectMessage(t *testing.T, reg interface {
 
 func CourierExpectLinkInMessage(t *testing.T, message *courier.Message, offset int) string {
 	if offset == 0 {
-		offset++
+		offset = 1
 	}
 	match := regexp.MustCompile(`(http[^\s]+)`).FindStringSubmatch(message.Body)
+	require.Len(t, match, offset*2)
+
+	return match[offset]
+}
+
+func CourierExpectCodeInMessage(t *testing.T, message *courier.Message, offset int) string {
+	if offset == 0 {
+		offset = 1
+	}
+	match := regexp.MustCompile(CodeRegex).FindStringSubmatch(message.Body)
 	require.Len(t, match, offset*2)
 
 	return match[offset]

@@ -1,3 +1,6 @@
+// Copyright © 2023 Ory Corp
+// SPDX-License-Identifier: Apache-2.0
+
 package courier_test
 
 import (
@@ -15,11 +18,15 @@ import (
 
 func TestGetTemplateType(t *testing.T) {
 	for expectedType, tmpl := range map[courier.TemplateType]courier.EmailTemplate{
-		courier.TypeRecoveryInvalid:     &email.RecoveryInvalid{},
-		courier.TypeRecoveryValid:       &email.RecoveryValid{},
-		courier.TypeVerificationInvalid: &email.VerificationInvalid{},
-		courier.TypeVerificationValid:   &email.VerificationValid{},
-		courier.TypeTestStub:            &email.TestStub{},
+		courier.TypeRecoveryInvalid:         &email.RecoveryInvalid{},
+		courier.TypeRecoveryValid:           &email.RecoveryValid{},
+		courier.TypeRecoveryCodeInvalid:     &email.RecoveryCodeInvalid{},
+		courier.TypeRecoveryCodeValid:       &email.RecoveryCodeValid{},
+		courier.TypeVerificationInvalid:     &email.VerificationInvalid{},
+		courier.TypeVerificationValid:       &email.VerificationValid{},
+		courier.TypeVerificationCodeInvalid: &email.VerificationCodeInvalid{},
+		courier.TypeVerificationCodeValid:   &email.VerificationCodeValid{},
+		courier.TypeTestStub:                &email.TestStub{},
 	} {
 		t.Run(fmt.Sprintf("case=%s", expectedType), func(t *testing.T) {
 			actualType, err := courier.GetEmailTemplateType(tmpl)
@@ -34,11 +41,15 @@ func TestNewEmailTemplateFromMessage(t *testing.T) {
 	ctx := context.Background()
 
 	for tmplType, expectedTmpl := range map[courier.TemplateType]courier.EmailTemplate{
-		courier.TypeRecoveryInvalid:     email.NewRecoveryInvalid(reg, &email.RecoveryInvalidModel{To: "foo"}),
-		courier.TypeRecoveryValid:       email.NewRecoveryValid(reg, &email.RecoveryValidModel{To: "bar", RecoveryURL: "http://foo.bar"}),
-		courier.TypeVerificationInvalid: email.NewVerificationInvalid(reg, &email.VerificationInvalidModel{To: "baz"}),
-		courier.TypeVerificationValid:   email.NewVerificationValid(reg, &email.VerificationValidModel{To: "faz", VerificationURL: "http://bar.foo"}),
-		courier.TypeTestStub:            email.NewTestStub(reg, &email.TestStubModel{To: "far", Subject: "test subject", Body: "test body"}),
+		courier.TypeRecoveryInvalid:         email.NewRecoveryInvalid(reg, &email.RecoveryInvalidModel{To: "foo"}),
+		courier.TypeRecoveryValid:           email.NewRecoveryValid(reg, &email.RecoveryValidModel{To: "bar", RecoveryURL: "http://foo.bar"}),
+		courier.TypeRecoveryCodeValid:       email.NewRecoveryCodeValid(reg, &email.RecoveryCodeValidModel{To: "bar", RecoveryCode: "12345678"}),
+		courier.TypeRecoveryCodeInvalid:     email.NewRecoveryCodeInvalid(reg, &email.RecoveryCodeInvalidModel{To: "bar"}),
+		courier.TypeVerificationInvalid:     email.NewVerificationInvalid(reg, &email.VerificationInvalidModel{To: "baz"}),
+		courier.TypeVerificationValid:       email.NewVerificationValid(reg, &email.VerificationValidModel{To: "faz", VerificationURL: "http://bar.foo"}),
+		courier.TypeVerificationCodeInvalid: email.NewVerificationCodeInvalid(reg, &email.VerificationCodeInvalidModel{To: "baz"}),
+		courier.TypeVerificationCodeValid:   email.NewVerificationCodeValid(reg, &email.VerificationCodeValidModel{To: "faz", VerificationURL: "http://bar.foo", VerificationCode: "123456678"}),
+		courier.TypeTestStub:                email.NewTestStub(reg, &email.TestStubModel{To: "far", Subject: "test subject", Body: "test body"}),
 	} {
 		t.Run(fmt.Sprintf("case=%s", tmplType), func(t *testing.T) {
 			tmplData, err := json.Marshal(expectedTmpl)

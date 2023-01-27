@@ -1,3 +1,6 @@
+// Copyright © 2023 Ory Corp
+// SPDX-License-Identifier: Apache-2.0
+
 package pkg
 
 import (
@@ -12,7 +15,7 @@ import (
 
 	"github.com/ory/kratos/internal/testhelpers"
 
-	ory "github.com/ory/kratos-client-go"
+	ory "github.com/ory/client-go"
 )
 
 func PrintJSONPretty(v interface{}) {

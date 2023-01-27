@@ -1,9 +1,13 @@
+// Copyright © 2023 Ory Corp
+// SPDX-License-Identifier: Apache-2.0
+
 package testhelpers
 
 import (
-	"context"
 	"testing"
 	"time"
+
+	"github.com/ory/kratos/x"
 
 	"github.com/stretchr/testify/require"
 
@@ -14,11 +18,11 @@ import (
 )
 
 func CreateSession(t *testing.T, reg driver.Registry) *session.Session {
-	ctx := context.Background()
+	req := x.NewTestHTTPRequest(t, "GET", "/sessions/whoami", nil)
 	i := identity.NewIdentity(config.DefaultIdentityTraitsSchemaID)
-	require.NoError(t, reg.PrivilegedIdentityPool().CreateIdentity(ctx, i))
-	sess, err := session.NewActiveSession(ctx, i, reg.Config(), time.Now().UTC(), identity.CredentialsTypePassword, identity.AuthenticatorAssuranceLevel1)
+	require.NoError(t, reg.PrivilegedIdentityPool().CreateIdentity(req.Context(), i))
+	sess, err := session.NewActiveSession(req, i, reg.Config(), time.Now().UTC(), identity.CredentialsTypePassword, identity.AuthenticatorAssuranceLevel1)
 	require.NoError(t, err)
-	require.NoError(t, reg.SessionPersister().UpsertSession(ctx, sess))
+	require.NoError(t, reg.SessionPersister().UpsertSession(req.Context(), sess))
 	return sess
 }

@@ -1,3 +1,6 @@
+// Copyright © 2023 Ory Corp
+// SPDX-License-Identifier: Apache-2.0
+
 package cmd
 
 import (
@@ -6,8 +9,8 @@ import (
 	"os"
 
 	"github.com/ory/kratos/cmd/cleanup"
-
 	"github.com/ory/kratos/driver/config"
+	"github.com/ory/x/jsonnetsecure"
 
 	"github.com/ory/kratos/cmd/courier"
 	"github.com/ory/kratos/cmd/hashers"
@@ -23,25 +26,29 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// RootCmd represents the base command when called without any subcommands
 func NewRootCmd() (cmd *cobra.Command) {
 	cmd = &cobra.Command{
 		Use: "kratos",
 	}
+	cmdx.EnableUsageTemplating(cmd)
+
 	courier.RegisterCommandRecursive(cmd, nil, nil)
-	cmd.AddCommand(identities.NewGetCmd(cmd))
-	cmd.AddCommand(identities.NewDeleteCmd(cmd))
+	cmd.AddCommand(identities.NewGetCmd())
+	cmd.AddCommand(identities.NewDeleteCmd())
 	cmd.AddCommand(jsonnet.NewFormatCmd())
 	hashers.RegisterCommandRecursive(cmd)
-	cmd.AddCommand(identities.NewImportCmd(cmd))
+	cmd.AddCommand(identities.NewImportCmd())
 	cmd.AddCommand(jsonnet.NewLintCmd())
-	cmd.AddCommand(identities.NewListCmd(cmd))
+	cmd.AddCommand(identities.NewListCmd())
 	migrate.RegisterCommandRecursive(cmd)
 	serve.RegisterCommandRecursive(cmd, nil, nil)
 	cleanup.RegisterCommandRecursive(cmd)
 	remote.RegisterCommandRecursive(cmd)
 	cmd.AddCommand(identities.NewValidateCmd())
 	cmd.AddCommand(cmdx.Version(&config.Version, &config.Commit, &config.Date))
+
+	// Registers a hidden "jsonnet" subcommand for process-isolated Jsonnet VMs.
+	cmd.AddCommand(jsonnetsecure.NewJsonnetCmd())
 
 	return cmd
 }

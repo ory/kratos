@@ -1,3 +1,6 @@
+// Copyright © 2023 Ory Corp
+// SPDX-License-Identifier: Apache-2.0
+
 package x_test
 
 import (
@@ -97,6 +100,27 @@ func TestSecureRedirectToIsAllowedHost(t *testing.T) {
 			redirectURL, err := url.Parse(tc.redirectURL)
 			require.NoError(t, err)
 			assert.Equal(t, x.SecureRedirectToIsAllowedHost(redirectURL, *allowedURL), tc.valid)
+		})
+	}
+}
+
+func TestTakeOverReturnToParameter(t *testing.T) {
+	type testCase struct {
+		fromUrl           string
+		toURL             string
+		expectedOutputUrl string
+	}
+	tests := map[string]testCase{
+		"case=return_to is taken over":                                             {fromUrl: "https://original.bar?return_to=https://allowed.domain", toURL: "https://output.bar", expectedOutputUrl: "https://output.bar?return_to=https%3A%2F%2Fallowed.domain"},
+		"case=only return_to is taken over when multiple query parameters are set": {fromUrl: "https://original.bar?return_to=https://allowed.domain&flow=12312", toURL: "https://output.bar", expectedOutputUrl: "https://output.bar?return_to=https%3A%2F%2Fallowed.domain"},
+		"case=output query parameters are preserved":                               {fromUrl: "https://original.bar?return_to=https://allowed.domain", toURL: "https://output.bar?flow=123321", expectedOutputUrl: "https://output.bar?flow=123321&return_to=https%3A%2F%2Fallowed.domain"},
+		"case=when original return_to is empty do nothing":                         {fromUrl: "https://original.bar?return_to=", toURL: "https://output.bar?flow=123123", expectedOutputUrl: "https://output.bar?flow=123123"},
+	}
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			output, err := x.TakeOverReturnToParameter(tc.fromUrl, tc.toURL)
+			require.NoError(t, err)
+			assert.Equal(t, output, tc.expectedOutputUrl)
 		})
 	}
 }

@@ -1,3 +1,6 @@
+// Copyright © 2023 Ory Corp
+// SPDX-License-Identifier: Apache-2.0
+
 package config
 
 import (
@@ -14,6 +17,8 @@ import (
 	"strings"
 	"testing"
 	"time"
+
+	"github.com/ory/herodot"
 
 	"github.com/ory/x/contextx"
 
@@ -67,8 +72,12 @@ const (
 	ViperKeyCourierTemplatesPath                             = "courier.template_override_path"
 	ViperKeyCourierTemplatesRecoveryInvalidEmail             = "courier.templates.recovery.invalid.email"
 	ViperKeyCourierTemplatesRecoveryValidEmail               = "courier.templates.recovery.valid.email"
+	ViperKeyCourierTemplatesRecoveryCodeInvalidEmail         = "courier.templates.recovery_code.invalid.email"
+	ViperKeyCourierTemplatesRecoveryCodeValidEmail           = "courier.templates.recovery_code.valid.email"
 	ViperKeyCourierTemplatesVerificationInvalidEmail         = "courier.templates.verification.invalid.email"
 	ViperKeyCourierTemplatesVerificationValidEmail           = "courier.templates.verification.valid.email"
+	ViperKeyCourierTemplatesVerificationCodeInvalidEmail     = "courier.templates.verification_code.invalid.email"
+	ViperKeyCourierTemplatesVerificationCodeValidEmail       = "courier.templates.verification_code.valid.email"
 	ViperKeyCourierSMTPFrom                                  = "courier.smtp.from_address"
 	ViperKeyCourierSMTPFromName                              = "courier.smtp.from_name"
 	ViperKeyCourierSMTPHeaders                               = "courier.smtp.headers"
@@ -109,6 +118,7 @@ const (
 	ViperKeySessionPath                                      = "session.cookie.path"
 	ViperKeySessionPersistentCookie                          = "session.cookie.persistent"
 	ViperKeySessionWhoAmIAAL                                 = "session.whoami.required_aal"
+	ViperKeySessionWhoAmICaching                             = "feature_flags.cacheable_sessions"
 	ViperKeySessionRefreshMinTimeLeft                        = "session.earliest_possible_extend"
 	ViperKeyCookieSameSite                                   = "cookies.same_site"
 	ViperKeyCookieDomain                                     = "cookies.domain"
@@ -136,6 +146,7 @@ const (
 	ViperKeySelfServiceRecoveryAfter                         = "selfservice.flows.recovery.after"
 	ViperKeySelfServiceRecoveryBeforeHooks                   = "selfservice.flows.recovery.before.hooks"
 	ViperKeySelfServiceRecoveryEnabled                       = "selfservice.flows.recovery.enabled"
+	ViperKeySelfServiceRecoveryUse                           = "selfservice.flows.recovery.use"
 	ViperKeySelfServiceRecoveryUI                            = "selfservice.flows.recovery.ui_url"
 	ViperKeySelfServiceRecoveryRequestLifespan               = "selfservice.flows.recovery.lifespan"
 	ViperKeySelfServiceRecoveryBrowserDefaultReturnTo        = "selfservice.flows.recovery.after." + DefaultBrowserReturnURL
@@ -145,6 +156,7 @@ const (
 	ViperKeySelfServiceVerificationBrowserDefaultReturnTo    = "selfservice.flows.verification.after." + DefaultBrowserReturnURL
 	ViperKeySelfServiceVerificationAfter                     = "selfservice.flows.verification.after"
 	ViperKeySelfServiceVerificationBeforeHooks               = "selfservice.flows.verification.before.hooks"
+	ViperKeySelfServiceVerificationUse                       = "selfservice.flows.verification.use"
 	ViperKeyDefaultIdentitySchemaID                          = "identity.default_schema_id"
 	ViperKeyIdentitySchemas                                  = "identity.schemas"
 	ViperKeyHasherAlgorithm                                  = "hashers.algorithm"
@@ -162,6 +174,7 @@ const (
 	ViperKeyDatabaseCleanupBatchSize                         = "database.cleanup.batch_size"
 	ViperKeyLinkLifespan                                     = "selfservice.methods.link.config.lifespan"
 	ViperKeyLinkBaseURL                                      = "selfservice.methods.link.config.base_url"
+	ViperKeyCodeLifespan                                     = "selfservice.methods.code.config.lifespan"
 	ViperKeyPasswordHaveIBeenPwnedHost                       = "selfservice.methods.password.config.haveibeenpwned_host"
 	ViperKeyPasswordHaveIBeenPwnedEnabled                    = "selfservice.methods.password.config.haveibeenpwned_enabled"
 	ViperKeyPasswordMaxBreaches                              = "selfservice.methods.password.config.max_breaches"
@@ -175,6 +188,8 @@ const (
 	ViperKeyWebAuthnRPOrigin                                 = "selfservice.methods.webauthn.config.rp.origin"
 	ViperKeyWebAuthnRPIcon                                   = "selfservice.methods.webauthn.config.rp.issuer"
 	ViperKeyWebAuthnPasswordless                             = "selfservice.methods.webauthn.config.passwordless"
+	ViperKeyOAuth2ProviderURL                                = "oauth2_provider.url"
+	ViperKeyOAuth2ProviderHeader                             = "oauth2_provider.headers"
 	ViperKeyClientHTTPNoPrivateIPRanges                      = "clients.http.disallow_private_ip_ranges"
 	ViperKeyClientHTTPPrivateIPExceptionURLs                 = "clients.http.private_ip_exception_urls"
 	ViperKeyVersion                                          = "version"
@@ -249,7 +264,7 @@ type (
 		Config() *Config
 	}
 	CourierConfigs interface {
-		CourierSMTPURL(ctx context.Context) *url.URL
+		CourierSMTPURL(ctx context.Context) (*url.URL, error)
 		CourierSMTPClientCertPath(ctx context.Context) string
 		CourierSMTPClientKeyPath(ctx context.Context) string
 		CourierSMTPFrom(ctx context.Context) string
@@ -264,6 +279,10 @@ type (
 		CourierTemplatesVerificationValid(ctx context.Context) *CourierEmailTemplate
 		CourierTemplatesRecoveryInvalid(ctx context.Context) *CourierEmailTemplate
 		CourierTemplatesRecoveryValid(ctx context.Context) *CourierEmailTemplate
+		CourierTemplatesRecoveryCodeInvalid(ctx context.Context) *CourierEmailTemplate
+		CourierTemplatesRecoveryCodeValid(ctx context.Context) *CourierEmailTemplate
+		CourierTemplatesVerificationCodeInvalid(ctx context.Context) *CourierEmailTemplate
+		CourierTemplatesVerificationCodeValid(ctx context.Context) *CourierEmailTemplate
 		CourierMessageRetries(ctx context.Context) int
 	}
 )
@@ -622,6 +641,10 @@ func (p *Config) SelfServiceFlowRecoveryEnabled(ctx context.Context) bool {
 	return p.GetProvider(ctx).Bool(ViperKeySelfServiceRecoveryEnabled)
 }
 
+func (p *Config) SelfServiceFlowRecoveryUse(ctx context.Context) string {
+	return p.GetProvider(ctx).String(ViperKeySelfServiceRecoveryUse)
+}
+
 func (p *Config) SelfServiceFlowLoginBeforeHooks(ctx context.Context) []SelfServiceHook {
 	return p.selfServiceHooks(ctx, ViperKeySelfServiceLoginBeforeHooks)
 }
@@ -632,6 +655,9 @@ func (p *Config) SelfServiceFlowRecoveryBeforeHooks(ctx context.Context) []SelfS
 
 func (p *Config) SelfServiceFlowVerificationBeforeHooks(ctx context.Context) []SelfServiceHook {
 	return p.selfServiceHooks(ctx, ViperKeySelfServiceVerificationBeforeHooks)
+}
+func (p *Config) SelfServiceFlowVerificationUse(ctx context.Context) string {
+	return p.GetProvider(ctx).String(ViperKeySelfServiceVerificationUse)
 }
 
 func (p *Config) SelfServiceFlowSettingsBeforeHooks(ctx context.Context) []SelfServiceHook {
@@ -711,7 +737,7 @@ func (p *Config) SelfServiceStrategy(ctx context.Context, strategy string) *Self
 			fallthrough
 		case "profile":
 			fallthrough
-		case "link":
+		case "code":
 			s.Enabled = true
 		}
 	}
@@ -834,8 +860,44 @@ func (p *Config) SelfAdminURL(ctx context.Context) *url.URL {
 	return p.baseURL(ctx, ViperKeyAdminBaseURL, ViperKeyAdminHost, ViperKeyAdminPort, 4434)
 }
 
-func (p *Config) CourierSMTPURL(ctx context.Context) *url.URL {
-	return p.ParseURIOrFail(ctx, ViperKeyCourierSMTPURL)
+func (p *Config) CourierSMTPURL(ctx context.Context) (*url.URL, error) {
+	source := p.GetProvider(ctx).String(ViperKeyCourierSMTPURL)
+	parsed, err := url.Parse(source)
+	if err != nil {
+		return nil, errors.WithStack(herodot.ErrInternalServerError.WithReason("Unable to parse the project's SMTP URL. Please ensure that it is properly escaped: https://www.ory.sh/dr/3").WithDebugf("%s", err))
+	}
+	return parsed, nil
+}
+
+func (p *Config) OAuth2ProviderHeader(ctx context.Context) http.Header {
+	hh := map[string]string{}
+	if err := p.GetProvider(ctx).Unmarshal(ViperKeyOAuth2ProviderHeader, &hh); err != nil {
+		p.l.WithError(errors.WithStack(err)).
+			Errorf("Configuration value from key %s could not be decoded.", ViperKeyOAuth2ProviderHeader)
+		return nil
+	}
+
+	h := make(http.Header)
+	for k, v := range hh {
+		h.Set(k, v)
+	}
+
+	return h
+}
+
+func (p *Config) OAuth2ProviderURL(ctx context.Context) *url.URL {
+	k := ViperKeyOAuth2ProviderURL
+	v := p.GetProvider(ctx).String(k)
+	if v == "" {
+		return nil
+	}
+	parsed, err := p.ParseAbsoluteOrRelativeURI(v)
+	if err != nil {
+		p.l.WithError(errors.WithStack(err)).
+			Errorf("Configuration value from key %s is not a valid URL: %s", k, v)
+		return nil
+	}
+	return parsed
 }
 
 func (p *Config) SelfServiceFlowLoginUI(ctx context.Context) *url.URL {
@@ -858,7 +920,7 @@ func (p *Config) SelfServiceFlowRecoveryUI(ctx context.Context) *url.URL {
 	return p.ParseAbsoluteOrRelativeURIOrFail(ctx, ViperKeySelfServiceRecoveryUI)
 }
 
-// SessionLifespan returns nil when the value is not set.
+// SessionLifespan returns time.Hour*24 when the value is not set.
 func (p *Config) SessionLifespan(ctx context.Context) time.Duration {
 	return p.GetProvider(ctx).DurationF(ViperKeySessionLifespan, time.Hour*24)
 }
@@ -983,6 +1045,22 @@ func (p *Config) CourierTemplatesRecoveryInvalid(ctx context.Context) *CourierEm
 
 func (p *Config) CourierTemplatesRecoveryValid(ctx context.Context) *CourierEmailTemplate {
 	return p.CourierTemplatesHelper(ctx, ViperKeyCourierTemplatesRecoveryValidEmail)
+}
+
+func (p *Config) CourierTemplatesRecoveryCodeInvalid(ctx context.Context) *CourierEmailTemplate {
+	return p.CourierTemplatesHelper(ctx, ViperKeyCourierTemplatesRecoveryCodeInvalidEmail)
+}
+
+func (p *Config) CourierTemplatesRecoveryCodeValid(ctx context.Context) *CourierEmailTemplate {
+	return p.CourierTemplatesHelper(ctx, ViperKeyCourierTemplatesRecoveryCodeValidEmail)
+}
+
+func (p *Config) CourierTemplatesVerificationCodeInvalid(ctx context.Context) *CourierEmailTemplate {
+	return p.CourierTemplatesHelper(ctx, ViperKeyCourierTemplatesVerificationCodeInvalidEmail)
+}
+
+func (p *Config) CourierTemplatesVerificationCodeValid(ctx context.Context) *CourierEmailTemplate {
+	return p.CourierTemplatesHelper(ctx, ViperKeyCourierTemplatesVerificationCodeValidEmail)
 }
 
 func (p *Config) CourierMessageRetries(ctx context.Context) int {
@@ -1123,6 +1201,10 @@ func (p *Config) SelfServiceLinkMethodBaseURL(ctx context.Context) *url.URL {
 	return p.GetProvider(ctx).RequestURIF(ViperKeyLinkBaseURL, p.SelfPublicURL(ctx))
 }
 
+func (p *Config) SelfServiceCodeMethodLifespan(ctx context.Context) time.Duration {
+	return p.GetProvider(ctx).DurationF(ViperKeyCodeLifespan, time.Hour)
+}
+
 func (p *Config) DatabaseCleanupSleepTables(ctx context.Context) time.Duration {
 	return p.GetProvider(ctx).Duration(ViperKeyDatabaseCleanupSleepTables)
 }
@@ -1168,6 +1250,10 @@ func (p *Config) CookieDomain(ctx context.Context) string {
 
 func (p *Config) SessionWhoAmIAAL(ctx context.Context) string {
 	return p.GetProvider(ctx).String(ViperKeySessionWhoAmIAAL)
+}
+
+func (p *Config) SessionWhoAmICaching(ctx context.Context) bool {
+	return p.GetProvider(ctx).Bool(ViperKeySessionWhoAmICaching)
 }
 
 func (p *Config) SessionRefreshMinTimeLeft(ctx context.Context) time.Duration {
@@ -1284,8 +1370,11 @@ func (p *Config) CipherAlgorithm(ctx context.Context) string {
 	}
 }
 
-func (p *Config) GetTSLCertificatesForPublic(ctx context.Context) []tls.Certificate {
-	return p.getTSLCertificates(
+type CertFunc = func(*tls.ClientHelloInfo) (*tls.Certificate, error)
+
+func (p *Config) GetTLSCertificatesForPublic(ctx context.Context) CertFunc {
+	return p.getTLSCertificates(
+		ctx,
 		"public",
 		p.GetProvider(ctx).String(ViperKeyPublicTLSCertBase64),
 		p.GetProvider(ctx).String(ViperKeyPublicTLSKeyBase64),
@@ -1294,8 +1383,9 @@ func (p *Config) GetTSLCertificatesForPublic(ctx context.Context) []tls.Certific
 	)
 }
 
-func (p *Config) GetTSLCertificatesForAdmin(ctx context.Context) []tls.Certificate {
-	return p.getTSLCertificates(
+func (p *Config) GetTLSCertificatesForAdmin(ctx context.Context) CertFunc {
+	return p.getTLSCertificates(
+		ctx,
 		"admin",
 		p.GetProvider(ctx).String(ViperKeyAdminTLSCertBase64),
 		p.GetProvider(ctx).String(ViperKeyAdminTLSKeyBase64),
@@ -1304,16 +1394,31 @@ func (p *Config) GetTSLCertificatesForAdmin(ctx context.Context) []tls.Certifica
 	)
 }
 
-func (p *Config) getTSLCertificates(daemon, certBase64, keyBase64, certPath, keyPath string) []tls.Certificate {
-	cert, err := tlsx.Certificate(certBase64, keyBase64, certPath, keyPath)
-
-	if err == nil {
+func (p *Config) getTLSCertificates(ctx context.Context, daemon, certBase64, keyBase64, certPath, keyPath string) CertFunc {
+	if certBase64 != "" && keyBase64 != "" {
+		cert, err := tlsx.CertificateFromBase64(certBase64, keyBase64)
+		if err != nil {
+			p.l.WithError(err).Fatalf("Unable to load HTTPS TLS Certificate")
+			return nil // reachable in unit tests when Fatalf is hooked
+		}
 		p.l.Infof("Setting up HTTPS for %s", daemon)
-		return cert
-	} else if !errors.Is(err, tlsx.ErrNoCertificatesConfigured) {
-		p.l.WithError(err).Fatalf("Unable to load HTTPS TLS Certificate")
+		return func(*tls.ClientHelloInfo) (*tls.Certificate, error) { return &cert, nil }
 	}
-
+	if certPath != "" && keyPath != "" {
+		errs := make(chan error, 1)
+		getCert, err := tlsx.GetCertificate(ctx, certPath, keyPath, errs)
+		if err != nil {
+			p.l.WithError(err).Fatalf("Unable to load HTTPS TLS Certificate")
+			return nil // reachable in unit tests when Fatalf is hooked
+		}
+		go func() {
+			for err := range errs {
+				p.l.WithError(err).Error("Failed to reload TLS certificates, using previous certificates")
+			}
+		}()
+		p.l.Infof("Setting up HTTPS for %s (automatic certificate reloading active)", daemon)
+		return getCert
+	}
 	p.l.Infof("TLS has not been configured for %s, skipping", daemon)
 	return nil
 }

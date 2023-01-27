@@ -1,3 +1,6 @@
+// Copyright © 2023 Ory Corp
+// SPDX-License-Identifier: Apache-2.0
+
 package identity_test
 
 import (
@@ -38,6 +41,12 @@ func TestSchemaExtensionCredentials(t *testing.T) {
 			schema: "file://./stub/extension/credentials/multi.schema.json",
 			expect: []string{"foo@ory.sh", "bar@ory.sh", "foobar"},
 			ct:     identity.CredentialsTypePassword,
+		},
+		{
+			doc:    `{"emails":["foo@ory.sh","foo@ory.sh","bar@ory.sh"], "username": "foobar"}`,
+			schema: "file://./stub/extension/credentials/multi.schema.json",
+			expect: []string{"foo@ory.sh", "bar@ory.sh"},
+			ct:     identity.CredentialsTypeWebAuthn,
 		},
 		{
 			doc:    `{"emails":["FOO@ory.sh","bar@ory.sh"], "username": "foobar"}`,

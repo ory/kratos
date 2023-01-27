@@ -1,3 +1,6 @@
+// Copyright © 2023 Ory Corp
+// SPDX-License-Identifier: Apache-2.0
+
 package session
 
 import (
@@ -15,6 +18,9 @@ import (
 // ErrNoActiveSessionFound is returned when no active cookie session could be found in the request.
 type ErrNoActiveSessionFound struct {
 	*herodot.DefaultError `json:"error"`
+
+	// True when the request had no credentials in it.
+	credentialsMissing bool
 }
 
 // NewErrNoActiveSessionFound creates a new ErrNoActiveSessionFound
@@ -22,6 +28,13 @@ func NewErrNoActiveSessionFound() *ErrNoActiveSessionFound {
 	return &ErrNoActiveSessionFound{
 		DefaultError: herodot.ErrUnauthorized.WithID(text.ErrNoActiveSession).WithError("request does not have a valid authentication session").WithReason("No active session was found in this request."),
 	}
+}
+
+// NewErrNoCredentialsForSession creates a new NewErrNoCredentialsForSession
+func NewErrNoCredentialsForSession() *ErrNoActiveSessionFound {
+	e := NewErrNoActiveSessionFound()
+	e.credentialsMissing = true
+	return e
 }
 
 func (e *ErrNoActiveSessionFound) EnhanceJSONError() interface{} {
@@ -40,14 +53,10 @@ func (e *ErrAALNotSatisfied) EnhanceJSONError() interface{} {
 	return e
 }
 
-func (e *ErrAALNotSatisfied) PassReturnToParameter(requestURL string) error {
+func (e *ErrAALNotSatisfied) PassReturnToAndLoginChallengeParameters(requestURL string) error {
 	req, err := url.Parse(requestURL)
 	if err != nil {
 		return err
-	}
-	returnTo := req.Query().Get("return_to")
-	if len(returnTo) == 0 {
-		return nil
 	}
 
 	u, err := url.Parse(e.RedirectTo)
@@ -55,7 +64,17 @@ func (e *ErrAALNotSatisfied) PassReturnToParameter(requestURL string) error {
 		return err
 	}
 	q := u.Query()
-	q.Set("return_to", returnTo)
+
+	hlc := req.Query().Get("login_challenge")
+	if len(hlc) != 0 {
+		q.Set("login_challenge", hlc)
+	}
+
+	returnTo := req.Query().Get("return_to")
+	if len(returnTo) != 0 {
+		q.Set("return_to", returnTo)
+	}
+
 	u.RawQuery = q.Encode()
 	e.RedirectTo = u.String()
 

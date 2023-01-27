@@ -1,3 +1,6 @@
+// Copyright © 2023 Ory Corp
+// SPDX-License-Identifier: Apache-2.0
+
 package recovery_test
 
 import (
@@ -98,7 +101,7 @@ func TestFromOldFlow(t *testing.T) {
 		t.Run(fmt.Sprintf("case=original flow is %s", ft), func(t *testing.T) {
 			f, err := recovery.NewFlow(conf, 0, "csrf", &r, nil, ft)
 			require.NoError(t, err)
-			nF, err := recovery.FromOldFlow(conf, time.Duration(time.Hour), f.CSRFToken, &r, []recovery.Strategy{}, *f)
+			nF, err := recovery.FromOldFlow(conf, time.Duration(time.Hour), f.CSRFToken, &r, nil, *f)
 			require.NoError(t, err)
 			require.Equal(t, flow.TypeBrowser, nF.Type)
 		})

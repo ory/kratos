@@ -1,21 +1,24 @@
-import { appPrefix, gen, website } from '../../../../helpers'
-import { routes as react } from '../../../../helpers/react'
-import { routes as express } from '../../../../helpers/express'
+// Copyright © 2023 Ory Corp
+// SPDX-License-Identifier: Apache-2.0
 
-context('Social Sign Out Successes', () => {
+import { appPrefix, gen, website } from "../../../../helpers"
+import { routes as react } from "../../../../helpers/react"
+import { routes as express } from "../../../../helpers/express"
+
+context("Social Sign Out Successes", () => {
   ;[
     {
       base: react.base,
       registration: react.registration,
-      app: 'react' as 'react',
-      profile: 'spa'
+      app: "react" as "react",
+      profile: "spa",
     },
     {
       base: express.base,
       registration: express.registration,
-      app: 'express' as 'express',
-      profile: 'oidc'
-    }
+      app: "express" as "express",
+      profile: "oidc",
+    },
   ].forEach(({ base, registration, profile, app }) => {
     describe(`for app ${app}`, () => {
       before(() => {
@@ -30,13 +33,21 @@ context('Social Sign Out Successes', () => {
       beforeEach(() => {
         cy.visit(base)
         const email = gen.email()
-        cy.registerOidc({ email, website, route: registration })
+        cy.registerOidc({ app, email, website, route: registration })
       })
 
-      it('should sign out and be able to sign in again', () => {
-        cy.get(`${appPrefix(app)} [data-testid="logout"]:not(disabled)`).click()
+      it("should sign out and be able to sign in again", () => {
+        if (app === "express") {
+          cy.get(
+            `${appPrefix(app)} [data-testid="logout"] a:not(disabled)`,
+          ).click()
+        } else {
+          cy.get(
+            `${appPrefix(app)} [data-testid="logout"]:not(disabled)`,
+          ).click()
+        }
         cy.noSession()
-        cy.url().should('include', '/login')
+        cy.url().should("include", "/login")
       })
     })
   })

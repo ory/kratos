@@ -1,20 +1,23 @@
-import { assertVerifiableAddress, gen } from '../../../../helpers'
+// Copyright © 2023 Ory Corp
+// SPDX-License-Identifier: Apache-2.0
 
-import { routes as react } from '../../../../helpers/react'
-import { routes as express } from '../../../../helpers/express'
+import { assertVerifiableAddress, gen } from "../../../../helpers"
 
-context('Account Verification Registration Success', () => {
+import { routes as react } from "../../../../helpers/react"
+import { routes as express } from "../../../../helpers/express"
+
+context("Account Verification Registration Success", () => {
   ;[
     {
       registration: react.registration,
-      app: 'react' as 'react',
-      profile: 'verification'
+      app: "react" as "react",
+      profile: "verification",
     },
     {
       registration: express.registration,
-      app: 'express' as 'express',
-      profile: 'verification'
-    }
+      app: "express" as "express",
+      profile: "verification",
+    },
   ].forEach(({ profile, registration, app }) => {
     describe(`for app ${app}`, () => {
       before(() => {
@@ -35,7 +38,7 @@ context('Account Verification Registration Success', () => {
       const up = (value) => `up-${value}`
       const { email, password } = gen.identity()
 
-      it('is able to verify the email address after sign up', () => {
+      it("is able to verify the email address after sign up", () => {
         const identity = gen.identityWithWebsite()
         const { email, password } = identity
         cy.registerApi(identity)
@@ -43,14 +46,14 @@ context('Account Verification Registration Success', () => {
         cy.getSession().should((session) =>
           assertVerifiableAddress({
             isVerified: false,
-            email
-          })(session)
+            email,
+          })(session),
         )
 
         cy.verifyEmail({ expect: { email, password } })
       })
 
-      xit('sends the warning email on double sign up', () => {
+      xit("sends the warning email on double sign up", () => {
         // FIXME https://github.com/ory/kratos/issues/133
         cy.clearAllCookies()
         cy.register({ email, password: up(password) })
@@ -60,7 +63,7 @@ context('Account Verification Registration Success', () => {
         cy.verifyEmail({ expect: { email, password } })
       })
 
-      it('is redirected to after_verification_return_to after verification', () => {
+      it("is redirected to after_verification_return_to after verification", () => {
         cy.clearAllCookies()
         const { email, password } = gen.identity()
         cy.register({
@@ -68,16 +71,16 @@ context('Account Verification Registration Success', () => {
           password,
           query: {
             after_verification_return_to:
-              'http://localhost:4455/verification_callback'
-          }
+              "http://localhost:4455/verification_callback",
+          },
         })
         cy.login({ email, password })
         cy.verifyEmail({
           expect: {
             email,
             password,
-            redirectTo: 'http://localhost:4455/verification_callback'
-          }
+            redirectTo: "http://localhost:4455/verification_callback",
+          },
         })
       })
     })

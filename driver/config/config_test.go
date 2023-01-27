@@ -1,3 +1,6 @@
+// Copyright © 2023 Ory Corp
+// SPDX-License-Identifier: Apache-2.0
+
 package config_test
 
 import (
@@ -11,20 +14,18 @@ import (
 	"net/url"
 	"os"
 	"path/filepath"
+	"strings"
 	"sync"
 	"testing"
 	"time"
 
 	"github.com/ory/x/httpx"
+	"github.com/ory/x/randx"
 
 	"github.com/ory/x/snapshotx"
 
 	"github.com/ghodss/yaml"
 	"github.com/spf13/cobra"
-
-	"github.com/ory/x/watcherx"
-
-	"github.com/ory/kratos/x"
 
 	"github.com/ory/kratos/internal/testhelpers"
 
@@ -511,6 +512,7 @@ func TestViperProvider_Defaults(t *testing.T) {
 				assert.True(t, p.SelfServiceStrategy(ctx, "password").Enabled)
 				assert.True(t, p.SelfServiceStrategy(ctx, "profile").Enabled)
 				assert.True(t, p.SelfServiceStrategy(ctx, "link").Enabled)
+				assert.True(t, p.SelfServiceStrategy(ctx, "code").Enabled)
 				assert.False(t, p.SelfServiceStrategy(ctx, "oidc").Enabled)
 			},
 		},
@@ -537,7 +539,8 @@ func TestViperProvider_Defaults(t *testing.T) {
 				assert.False(t, p.SelfServiceFlowVerificationEnabled(ctx))
 				assert.True(t, p.SelfServiceStrategy(ctx, "password").Enabled)
 				assert.True(t, p.SelfServiceStrategy(ctx, "profile").Enabled)
-				assert.True(t, p.SelfServiceStrategy(ctx, "link").Enabled)
+				assert.False(t, p.SelfServiceStrategy(ctx, "link").Enabled)
+				assert.True(t, p.SelfServiceStrategy(ctx, "code").Enabled)
 				assert.True(t, p.SelfServiceStrategy(ctx, "oidc").Enabled)
 			},
 		},
@@ -553,7 +556,8 @@ func TestViperProvider_Defaults(t *testing.T) {
 			assert.False(t, p.SelfServiceFlowVerificationEnabled(ctx))
 			assert.True(t, p.SelfServiceStrategy(ctx, "password").Enabled)
 			assert.True(t, p.SelfServiceStrategy(ctx, "profile").Enabled)
-			assert.True(t, p.SelfServiceStrategy(ctx, "link").Enabled)
+			assert.False(t, p.SelfServiceStrategy(ctx, "link").Enabled)
+			assert.True(t, p.SelfServiceStrategy(ctx, "code").Enabled)
 			assert.False(t, p.SelfServiceStrategy(ctx, "oidc").Enabled)
 		})
 	}
@@ -604,6 +608,10 @@ func TestSession(t *testing.T) {
 	assert.Equal(t, true, p.SessionPersistentCookie(ctx))
 	p.MustSet(ctx, config.ViperKeySessionPersistentCookie, false)
 	assert.Equal(t, false, p.SessionPersistentCookie(ctx))
+
+	assert.Equal(t, false, p.SessionWhoAmICaching(ctx))
+	p.MustSet(ctx, config.ViperKeySessionWhoAmICaching, true)
+	assert.Equal(t, true, p.SessionWhoAmICaching(ctx))
 }
 
 func TestCookies(t *testing.T) {
@@ -775,126 +783,106 @@ func TestViperProvider_HaveIBeenPwned(t *testing.T) {
 	})
 }
 
+func newTestConfig(t *testing.T) (_ *config.Config, _ *test.Hook, exited *bool) {
+	l := logrusx.New("", "")
+	h := new(test.Hook)
+	exited = new(bool)
+	l.Logger.Hooks.Add(h)
+	l.Logger.ExitFunc = func(code int) { *exited = true }
+	config := config.MustNew(t, l, os.Stderr, configx.SkipValidation())
+	return config, h, exited
+}
+
 func TestLoadingTLSConfig(t *testing.T) {
 	ctx := context.Background()
 	t.Parallel()
 
-	certPath := filepath.Join(os.TempDir(), "e2e_test_cert_"+x.NewUUID().String()+".pem")
-	keyPath := filepath.Join(os.TempDir(), "e2e_test_key_"+x.NewUUID().String()+".pem")
+	certPath, keyPath, certBase64, keyBase64 := testhelpers.GenerateTLSCertificateFilesForTests(t)
 
-	testhelpers.GenerateTLSCertificateFilesForTests(t, certPath, keyPath)
+	t.Run("case=public: no TLS config", func(t *testing.T) {
+		p, hook, exited := newTestConfig(t)
+		assert.Nil(t, p.GetTLSCertificatesForPublic(ctx))
+		assert.Equal(t, "TLS has not been configured for public, skipping", hook.LastEntry().Message)
+		assert.False(t, *exited)
+	})
 
-	certRaw, err := os.ReadFile(certPath)
-	assert.Nil(t, err)
-
-	keyRaw, err := os.ReadFile(keyPath)
-	assert.Nil(t, err)
-
-	certBase64 := base64.StdEncoding.EncodeToString(certRaw)
-	keyBase64 := base64.StdEncoding.EncodeToString(keyRaw)
+	t.Run("case=admin: no TLS config", func(t *testing.T) {
+		p, hook, exited := newTestConfig(t)
+		assert.Nil(t, p.GetTLSCertificatesForAdmin(ctx))
+		assert.Equal(t, "TLS has not been configured for admin, skipping", hook.LastEntry().Message)
+		assert.False(t, *exited)
+	})
 
 	t.Run("case=public: loading inline base64 certificate", func(t *testing.T) {
-		logger := logrusx.New("", "")
-		logger.Logger.ExitFunc = func(code int) { panic("") }
-		hook := new(test.Hook)
-		logger.Logger.Hooks.Add(hook)
-
-		p := config.MustNew(t, logger, os.Stderr, configx.SkipValidation())
+		p, hook, exited := newTestConfig(t)
 		p.MustSet(ctx, config.ViperKeyPublicTLSKeyBase64, keyBase64)
 		p.MustSet(ctx, config.ViperKeyPublicTLSCertBase64, certBase64)
-		assert.NotNil(t, p.GetTSLCertificatesForPublic(ctx))
+		assert.NotNil(t, p.GetTLSCertificatesForPublic(ctx))
 		assert.Equal(t, "Setting up HTTPS for public", hook.LastEntry().Message)
+		assert.False(t, *exited)
 	})
 
 	t.Run("case=public: loading certificate from a file", func(t *testing.T) {
-		logger := logrusx.New("", "")
-		logger.Logger.ExitFunc = func(code int) { panic("") }
-		hook := new(test.Hook)
-		logger.Logger.Hooks.Add(hook)
-
-		p := config.MustNew(t, logger, os.Stderr, configx.SkipValidation())
+		p, hook, exited := newTestConfig(t)
 		p.MustSet(ctx, config.ViperKeyPublicTLSKeyPath, keyPath)
 		p.MustSet(ctx, config.ViperKeyPublicTLSCertPath, certPath)
-		assert.NotNil(t, p.GetTSLCertificatesForPublic(ctx))
-		assert.Equal(t, "Setting up HTTPS for public", hook.LastEntry().Message)
+		assert.NotNil(t, p.GetTLSCertificatesForPublic(ctx))
+		assert.Equal(t, "Setting up HTTPS for public (automatic certificate reloading active)", hook.LastEntry().Message)
+		assert.False(t, *exited)
 	})
 
 	t.Run("case=public: failing to load inline base64 certificate", func(t *testing.T) {
-		logger := logrusx.New("", "")
-		logger.Logger.ExitFunc = func(code int) {}
-		hook := new(test.Hook)
-		logger.Logger.Hooks.Add(hook)
-
-		p := config.MustNew(t, logger, os.Stderr, configx.SkipValidation())
+		p, hook, exited := newTestConfig(t)
 		p.MustSet(ctx, config.ViperKeyPublicTLSKeyBase64, "empty")
 		p.MustSet(ctx, config.ViperKeyPublicTLSCertBase64, certBase64)
-		assert.Nil(t, p.GetTSLCertificatesForPublic(ctx))
-		assert.Equal(t, "TLS has not been configured for public, skipping", hook.LastEntry().Message)
+		assert.Nil(t, p.GetTLSCertificatesForPublic(ctx))
+		assert.Equal(t, "Unable to load HTTPS TLS Certificate", hook.LastEntry().Message)
+		assert.True(t, *exited)
 	})
 
 	t.Run("case=public: failing to load certificate from a file", func(t *testing.T) {
-		logger := logrusx.New("", "")
-		logger.Logger.ExitFunc = func(code int) {}
-		hook := new(test.Hook)
-		logger.Logger.Hooks.Add(hook)
-
-		p := config.MustNew(t, logger, os.Stderr, configx.SkipValidation())
+		p, hook, exited := newTestConfig(t)
 		p.MustSet(ctx, config.ViperKeyPublicTLSKeyPath, "/dev/null")
 		p.MustSet(ctx, config.ViperKeyPublicTLSCertPath, certPath)
-		assert.Nil(t, p.GetTSLCertificatesForPublic(ctx))
-		assert.Equal(t, "TLS has not been configured for public, skipping", hook.LastEntry().Message)
+		assert.Nil(t, p.GetTLSCertificatesForPublic(ctx))
+		assert.Equal(t, "Unable to load HTTPS TLS Certificate", hook.LastEntry().Message)
+		assert.True(t, *exited)
 	})
 
 	t.Run("case=admin: loading inline base64 certificate", func(t *testing.T) {
-		logger := logrusx.New("", "")
-		logger.Logger.ExitFunc = func(code int) { panic("") }
-		hook := new(test.Hook)
-		logger.Logger.Hooks.Add(hook)
-
-		p := config.MustNew(t, logger, os.Stderr, configx.SkipValidation())
+		p, hook, exited := newTestConfig(t)
 		p.MustSet(ctx, config.ViperKeyAdminTLSKeyBase64, keyBase64)
 		p.MustSet(ctx, config.ViperKeyAdminTLSCertBase64, certBase64)
-		assert.NotNil(t, p.GetTSLCertificatesForAdmin(ctx))
+		assert.NotNil(t, p.GetTLSCertificatesForAdmin(ctx))
 		assert.Equal(t, "Setting up HTTPS for admin", hook.LastEntry().Message)
+		assert.False(t, *exited)
 	})
 
 	t.Run("case=admin: loading certificate from a file", func(t *testing.T) {
-		logger := logrusx.New("", "")
-		logger.Logger.ExitFunc = func(code int) { panic("") }
-		hook := new(test.Hook)
-		logger.Logger.Hooks.Add(hook)
-
-		p := config.MustNew(t, logger, os.Stderr, configx.SkipValidation())
+		p, hook, exited := newTestConfig(t)
 		p.MustSet(ctx, config.ViperKeyAdminTLSKeyPath, keyPath)
 		p.MustSet(ctx, config.ViperKeyAdminTLSCertPath, certPath)
-		assert.NotNil(t, p.GetTSLCertificatesForAdmin(ctx))
-		assert.Equal(t, "Setting up HTTPS for admin", hook.LastEntry().Message)
+		assert.NotNil(t, p.GetTLSCertificatesForAdmin(ctx))
+		assert.Equal(t, "Setting up HTTPS for admin (automatic certificate reloading active)", hook.LastEntry().Message)
+		assert.False(t, *exited)
 	})
 
 	t.Run("case=admin: failing to load inline base64 certificate", func(t *testing.T) {
-		logger := logrusx.New("", "")
-		logger.Logger.ExitFunc = func(code int) {}
-		hook := new(test.Hook)
-		logger.Logger.Hooks.Add(hook)
-
-		p := config.MustNew(t, logger, os.Stderr, configx.SkipValidation())
+		p, hook, exited := newTestConfig(t)
 		p.MustSet(ctx, config.ViperKeyAdminTLSKeyBase64, "empty")
 		p.MustSet(ctx, config.ViperKeyAdminTLSCertBase64, certBase64)
-		assert.Nil(t, p.GetTSLCertificatesForAdmin(ctx))
-		assert.Equal(t, "TLS has not been configured for admin, skipping", hook.LastEntry().Message)
+		assert.Nil(t, p.GetTLSCertificatesForAdmin(ctx))
+		assert.Equal(t, "Unable to load HTTPS TLS Certificate", hook.LastEntry().Message)
+		assert.True(t, *exited)
 	})
 
 	t.Run("case=admin: failing to load certificate from a file", func(t *testing.T) {
-		logger := logrusx.New("", "")
-		logger.Logger.ExitFunc = func(code int) {}
-		hook := new(test.Hook)
-		logger.Logger.Hooks.Add(hook)
-
-		p := config.MustNew(t, logger, os.Stderr, configx.SkipValidation())
+		p, hook, exited := newTestConfig(t)
 		p.MustSet(ctx, config.ViperKeyAdminTLSKeyPath, "/dev/null")
 		p.MustSet(ctx, config.ViperKeyAdminTLSCertPath, certPath)
-		assert.Nil(t, p.GetTSLCertificatesForAdmin(ctx))
-		assert.Equal(t, "TLS has not been configured for admin, skipping", hook.LastEntry().Message)
+		assert.Nil(t, p.GetTLSCertificatesForAdmin(ctx))
+		assert.Equal(t, "Unable to load HTTPS TLS Certificate", hook.LastEntry().Message)
+		assert.True(t, *exited)
 	})
 
 }
@@ -952,31 +940,31 @@ func TestIdentitySchemaValidation(t *testing.T) {
 		assert.NoError(t, tmpFile.Sync())
 	}
 
-	testWatch := func(t *testing.T, ctx context.Context, cmd *cobra.Command, i *configFile) (*config.Config, *test.Hook, *os.File, *configFile, chan bool) {
-		c := make(chan bool, 1)
+	testWatch := func(t *testing.T, ctx context.Context, cmd *cobra.Command, identity *configFile) (*config.Config, *test.Hook, func([]map[string]string)) {
 		tdir := t.TempDir()
 		assert.NoError(t,
 			os.MkdirAll(tdir, // DO NOT CHANGE THIS: https://github.com/fsnotify/fsnotify/issues/340
 				os.ModePerm))
-		tmpConfig, err := os.Create(filepath.Join(tdir, "config.yaml"))
+		configFileName := randx.MustString(8, randx.Alpha)
+		tmpConfig, err := os.Create(filepath.Join(tdir, configFileName+".config.yaml"))
 		assert.NoError(t, err)
+		t.Cleanup(func() { tmpConfig.Close() })
 
-		marshalAndWrite(t, ctx, tmpConfig, i)
+		marshalAndWrite(t, ctx, tmpConfig, identity)
 
 		l := logrusx.New("kratos-"+tmpConfig.Name(), "test")
 		hook := test.NewLocal(l.Logger)
 
-		conf, err := config.New(ctx, l, os.Stderr,
-			configx.WithConfigFiles(tmpConfig.Name()),
-			configx.AttachWatcher(func(event watcherx.Event, err error) {
-				c <- true
-			}))
+		conf, err := config.New(ctx, l, os.Stderr, configx.WithConfigFiles(tmpConfig.Name()))
 		assert.NoError(t, err)
 
 		// clean the hooks since it will throw an event on first boot
 		hook.Reset()
 
-		return conf, hook, tmpConfig, i, c
+		return conf, hook, func(schemas []map[string]string) {
+			identity.Identity.Schemas = schemas
+			marshalAndWrite(t, ctx, tmpConfig, identity)
+		}
 	}
 
 	t.Run("case=skip invalid schema validation", func(t *testing.T) {
@@ -1032,34 +1020,38 @@ func TestIdentitySchemaValidation(t *testing.T) {
 
 		invalidIdentity := setup(t, "stub/.identity.invalid.json")
 
-		for _, i := range identities {
-			t.Run("test=identity file "+i.identityFileName, func(t *testing.T) {
+		for _, identity := range identities {
+			t.Run("test=identity file "+identity.identityFileName, func(t *testing.T) {
 				ctx, cancel := context.WithTimeout(ctx, time.Second*30)
+				t.Cleanup(cancel)
 
-				_, hook, tmpConfig, i, c := testWatch(t, ctx, &cobra.Command{}, i)
-				// Change the identity config to an invalid file
-				i.Identity.Schemas = invalidIdentity.Identity.Schemas
-
-				t.Cleanup(func() {
-					cancel()
-					tmpConfig.Close()
-				})
+				_, hook, writeSchema := testWatch(t, ctx, &cobra.Command{}, identity)
 
 				var wg sync.WaitGroup
 				wg.Add(1)
-				go func(t *testing.T, ctx context.Context, tmpFile *os.File, identity *configFile) {
+				go func() {
 					defer wg.Done()
-					marshalAndWrite(t, ctx, tmpConfig, i)
-				}(t, ctx, tmpConfig, i)
+					// Change the identity config to an invalid file
+					writeSchema(invalidIdentity.Identity.Schemas)
+				}()
 
-				select {
-				case <-ctx.Done():
-					panic("the test could not complete as the context timed out before the file watcher updated")
-				case <-c:
-					lastHook, err := hook.LastEntry().String()
-					assert.NoError(t, err)
+				// There are a bunch of log messages beeing logged. We are looking for a specific one.
+				timeout := time.After(time.Millisecond * 500)
+				var success = false
+				for !success {
+					for _, v := range hook.AllEntries() {
+						s, err := v.String()
+						require.NoError(t, err)
+						success = success || strings.Contains(s, "The changed identity schema configuration is invalid and could not be loaded.")
+					}
 
-					assert.Contains(t, lastHook, "The changed identity schema configuration is invalid and could not be loaded.")
+					select {
+					case <-ctx.Done():
+						t.Fatal("the test could not complete as the context timed out before the file watcher updated")
+					case <-timeout:
+						t.Fatal("Expected log line was not encountered within specified timeout")
+					default: //nothing
+					}
 				}
 
 				wg.Wait()
@@ -1123,6 +1115,34 @@ func TestCourierSMS(t *testing.T) {
 	})
 }
 
+func TestCourierSMTPUrl(t *testing.T) {
+	ctx := context.Background()
+
+	for _, tc := range []string{
+		"smtp://a:basdasdasda%2Fc@email-smtp.eu-west-3.amazonaws.com:587/",
+		"smtp://a:b$c@email-smtp.eu-west-3.amazonaws.com:587/",
+		"smtp://a/a:bc@email-smtp.eu-west-3.amazonaws.com:587",
+		"smtp://aa:b+c@email-smtp.eu-west-3.amazonaws.com:587/",
+		"smtp://user?name:password@email-smtp.eu-west-3.amazonaws.com:587/",
+		"smtp://username:pass%2Fword@email-smtp.eu-west-3.amazonaws.com:587/",
+	} {
+		t.Run("case="+tc, func(t *testing.T) {
+			conf, err := config.New(ctx, logrusx.New("", ""), os.Stderr, configx.WithValue(config.ViperKeyCourierSMTPURL, tc), configx.SkipValidation())
+			require.NoError(t, err)
+			parsed, err := conf.CourierSMTPURL(ctx)
+			require.NoError(t, err)
+			assert.Equal(t, tc, parsed.String())
+		})
+	}
+
+	t.Run("invalid", func(t *testing.T) {
+		conf, err := config.New(ctx, logrusx.New("", ""), os.Stderr, configx.WithValue(config.ViperKeyCourierSMTPURL, "smtp://a:b/c@email-smtp.eu-west-3.amazonaws.com:587/"), configx.SkipValidation())
+		require.NoError(t, err)
+		_, err = conf.CourierSMTPURL(ctx)
+		require.Error(t, err)
+	})
+}
+
 func TestCourierMessageTTL(t *testing.T) {
 	ctx := context.Background()
 
@@ -1135,6 +1155,23 @@ func TestCourierMessageTTL(t *testing.T) {
 	t.Run("case=defaults", func(t *testing.T) {
 		conf, _ := config.New(ctx, logrusx.New("", ""), os.Stderr, configx.SkipValidation())
 		assert.Equal(t, conf.CourierMessageRetries(ctx), 5)
+	})
+}
+
+func TestOAuth2Provider(t *testing.T) {
+	ctx := context.Background()
+
+	t.Run("case=configs set", func(t *testing.T) {
+		conf, _ := config.New(ctx, logrusx.New("", ""), os.Stderr,
+			configx.WithConfigFiles("stub/.kratos.oauth2_provider.yaml"), configx.SkipValidation())
+		assert.Equal(t, "https://oauth2_provider/", conf.OAuth2ProviderURL(ctx).String())
+		assert.Equal(t, http.Header{"Authorization": {"Basic"}}, conf.OAuth2ProviderHeader(ctx))
+	})
+
+	t.Run("case=defaults", func(t *testing.T) {
+		conf, _ := config.New(ctx, logrusx.New("", ""), os.Stderr, configx.SkipValidation())
+		assert.Empty(t, conf.OAuth2ProviderURL(ctx))
+		assert.Empty(t, conf.OAuth2ProviderHeader(ctx))
 	})
 }
 

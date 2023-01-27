@@ -1,3 +1,6 @@
+// Copyright © 2023 Ory Corp
+// SPDX-License-Identifier: Apache-2.0
+
 package driver
 
 import (
@@ -5,6 +8,7 @@ import (
 
 	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/selfservice/flow/recovery"
+	"github.com/ory/kratos/selfservice/strategy/code"
 )
 
 func (m *RegistryDefault) RecoveryFlowErrorHandler() *recovery.ErrorHandler {
@@ -32,6 +36,13 @@ func (m *RegistryDefault) RecoveryStrategies(ctx context.Context) (recoveryStrat
 		}
 	}
 	return
+}
+
+// GetActiveRecoveryStrategy returns the currently active recovery strategy
+// If no recovery strategy has been set, an error is returned
+func (m *RegistryDefault) GetActiveRecoveryStrategy(ctx context.Context) (recovery.Strategy, error) {
+	activeRecoveryStrategy := m.Config().SelfServiceFlowRecoveryUse(ctx)
+	return m.RecoveryStrategies(ctx).Strategy(activeRecoveryStrategy)
 }
 
 func (m *RegistryDefault) AllRecoveryStrategies() (recoveryStrategies recovery.Strategies) {
@@ -67,4 +78,12 @@ func (m *RegistryDefault) PostRecoveryHooks(ctx context.Context) (b []recovery.P
 	}
 
 	return
+}
+
+func (m *RegistryDefault) CodeSender() *code.Sender {
+	if m.selfserviceCodeSender == nil {
+		m.selfserviceCodeSender = code.NewSender(m)
+	}
+
+	return m.selfserviceCodeSender
 }

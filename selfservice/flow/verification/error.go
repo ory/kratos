@@ -1,3 +1,6 @@
+// Copyright © 2023 Ory Corp
+// SPDX-License-Identifier: Apache-2.0
+
 package verification
 
 import (
@@ -28,6 +31,7 @@ type (
 		errorx.ManagementProvider
 		x.WriterProvider
 		x.LoggingProvider
+		x.CSRFProvider
 		x.CSRFTokenGeneratorProvider
 		config.Provider
 		FlowPersistenceProvider
@@ -66,16 +70,25 @@ func (s *ErrorHandler) WriteFlowError(
 	}
 
 	if e := new(flow.ExpiredError); errors.As(err, &e) {
+		strategy, err := s.d.VerificationStrategies(r.Context()).Strategy(f.Active.String())
+		if err != nil {
+			strategy, err = s.d.GetActiveVerificationStrategy(r.Context())
+			// Can't retry the verification if no strategy has been set
+			if err != nil {
+				s.d.SelfServiceErrorManager().Forward(r.Context(), w, r, err)
+				return
+			}
+		}
 		// create new flow because the old one is not valid
 		a, err := FromOldFlow(s.d.Config(), s.d.Config().SelfServiceFlowVerificationRequestLifespan(r.Context()),
-			s.d.GenerateCSRFToken(r), r, s.d.VerificationStrategies(r.Context()), f)
+			s.d.CSRFHandler().RegenerateToken(w, r), r, strategy, f)
 		if err != nil {
 			// failed to create a new session and redirect to it, handle that error as a new one
 			s.WriteFlowError(w, r, f, group, err)
 			return
 		}
 
-		a.UI.Messages.Add(text.NewErrorValidationVerificationFlowExpired(e.Ago))
+		a.UI.Messages.Add(text.NewErrorValidationVerificationFlowExpired(e.ExpiredAt))
 		if err := s.d.VerificationFlowPersister().CreateVerificationFlow(r.Context(), a); err != nil {
 			s.forward(w, r, a, err)
 			return

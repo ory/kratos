@@ -1,3 +1,6 @@
+// Copyright © 2023 Ory Corp
+// SPDX-License-Identifier: Apache-2.0
+
 package password_test
 
 import (
@@ -13,7 +16,7 @@ import (
 	"github.com/ory/kratos/internal/settingshelpers"
 	"github.com/ory/kratos/text"
 
-	kratos "github.com/ory/kratos-client-go"
+	kratos "github.com/ory/kratos/internal/httpclient"
 
 	"github.com/ory/kratos/corpx"
 
@@ -381,7 +384,7 @@ func TestSettings(t *testing.T) {
 			conf.MustSet(ctx, config.ViperKeySelfServiceSettingsAfter, nil)
 		})
 
-		var run = func(t *testing.T, f *kratos.SelfServiceSettingsFlow, isAPI bool, c *http.Client, id *identity.Identity) {
+		var run = func(t *testing.T, f *kratos.SettingsFlow, isAPI bool, c *http.Client, id *identity.Identity) {
 			values := testhelpers.SDKFormFieldsToURLValues(f.Ui.Nodes)
 			values.Set("method", "password")
 			values.Set("password", randx.MustString(16, randx.AlphaNum))

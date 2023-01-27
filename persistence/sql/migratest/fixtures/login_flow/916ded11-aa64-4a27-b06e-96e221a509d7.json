@@ -1,5 +1,6 @@
 {
   "id": "916ded11-aa64-4a27-b06e-96e221a509d7",
+  "oauth2_login_challenge": null,
   "type": "browser",
   "expires_at": "2013-10-07T08:23:19Z",
   "issued_at": "2013-10-07T08:23:19Z",

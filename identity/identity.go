@@ -1,3 +1,6 @@
+// Copyright © 2023 Ory Corp
+// SPDX-License-Identifier: Apache-2.0
+
 package identity
 
 import (
@@ -7,6 +10,10 @@ import (
 	"fmt"
 	"sync"
 	"time"
+
+	"github.com/samber/lo"
+
+	"github.com/gobuffalo/pop/v6"
 
 	"github.com/tidwall/sjson"
 
@@ -45,17 +52,9 @@ func (lt State) IsValid() error {
 	return errors.New("identity state is not valid")
 }
 
-//type IdentifierCredential struct {
-//	Subject      string `json:"subject"`
-//	Provider     string `json:"provider"`
-//	AccessToken  string `json:"access_token"`
-//	RefreshToken string `json:"refresh_token"`
-//}
-
 // Identity represents an Ory Kratos identity
 //
-// An identity can be a real human, a service, an IoT device - everything that
-// can be described as an "actor" in a system.
+// An [identity](https://www.ory.sh/docs/kratos/concepts/identity-user-model) represents a (human) user in Ory.
 //
 // swagger:model identity
 type Identity struct {
@@ -107,7 +106,7 @@ type Identity struct {
 	// ---
 	// x-omitempty: true
 	// ---
-	VerifiableAddresses []VerifiableAddress `json:"verifiable_addresses,omitempty" faker:"-" has_many:"identity_verifiable_addresses" fk_id:"identity_id"`
+	VerifiableAddresses []VerifiableAddress `json:"verifiable_addresses,omitempty" faker:"-" has_many:"identity_verifiable_addresses" fk_id:"identity_id" order_by:"id asc"`
 
 	// RecoveryAddresses contains all the addresses that can be used to recover an identity.
 	//
@@ -115,7 +114,7 @@ type Identity struct {
 	// ---
 	// x-omitempty: true
 	// ---
-	RecoveryAddresses []RecoveryAddress `json:"recovery_addresses,omitempty" faker:"-" has_many:"identity_recovery_addresses" fk_id:"identity_id"`
+	RecoveryAddresses []RecoveryAddress `json:"recovery_addresses,omitempty" faker:"-" has_many:"identity_recovery_addresses" fk_id:"identity_id" order_by:"id asc"`
 
 	// Store metadata about the identity which the identity itself can see when calling for example the
 	// session endpoint. Do not store sensitive information (e.g. credit score) about the identity in this field.
@@ -124,12 +123,45 @@ type Identity struct {
 	// Store metadata about the user which is only accessible through admin APIs such as `GET /admin/identities/<id>`.
 	MetadataAdmin sqlxx.NullJSONRawMessage `json:"metadata_admin,omitempty" faker:"-" db:"metadata_admin"`
 
+	// InternalCredentials is an internal representation of the credentials.
+	InternalCredentials CredentialsCollection `json:"-" faker:"-" has_many:"identity_credentials" fk_id:"identity_id" order_by:"id asc"`
+
 	// CreatedAt is a helper struct field for gobuffalo.pop.
 	CreatedAt time.Time `json:"created_at" db:"created_at"`
 
 	// UpdatedAt is a helper struct field for gobuffalo.pop.
 	UpdatedAt time.Time `json:"updated_at" db:"updated_at"`
 	NID       uuid.UUID `json:"-"  faker:"-" db:"nid"`
+}
+
+func (i *Identity) AfterEagerFind(tx *pop.Connection) error {
+	if err := i.setCredentials(tx); err != nil {
+		return err
+	}
+
+	if err := i.validate(); err != nil {
+		return err
+	}
+
+	return UpgradeCredentials(i)
+}
+
+func (i *Identity) setCredentials(tx *pop.Connection) error {
+	creds := i.InternalCredentials
+	i.Credentials = make(map[CredentialsType]Credentials, len(creds))
+	for k := range creds {
+		cred := &creds[k]
+		if cred.NID != i.NID {
+			continue
+		}
+		if err := cred.AfterEagerFind(tx); err != nil {
+			return err
+
+		}
+		i.Credentials[cred.Type] = *cred
+	}
+
+	return nil
 }
 
 // Traits represent an identity's traits. The identity is able to create, modify, and delete traits
@@ -319,6 +351,14 @@ func (i *Identity) UnmarshalJSON(b []byte) error {
 	return err
 }
 
+type WithAdminMetadataInJSON Identity
+
+func (i WithAdminMetadataInJSON) MarshalJSON() ([]byte, error) {
+	type localIdentity Identity
+	i.Credentials = nil
+	return json.Marshal(localIdentity(i))
+}
+
 type WithCredentialsAndAdminMetadataInJSON Identity
 
 func (i WithCredentialsAndAdminMetadataInJSON) MarshalJSON() ([]byte, error) {
@@ -337,27 +377,25 @@ func (i WithCredentialsMetadataAndAdminMetadataInJSON) MarshalJSON() ([]byte, er
 	return json.Marshal(localIdentity(i))
 }
 
-func (i *Identity) ValidateNID() error {
+func (i *Identity) validate() error {
 	expected := i.NID
 	if expected == uuid.Nil {
 		return errors.WithStack(herodot.ErrInternalServerError.WithReason("Received empty nid."))
 	}
 
-	for _, r := range i.RecoveryAddresses {
-		if r.NID != expected {
-			return errors.WithStack(herodot.ErrInternalServerError.WithReason("Mismatching nid for recovery addresses."))
-		}
-	}
+	i.RecoveryAddresses = lo.Filter(i.RecoveryAddresses, func(v RecoveryAddress, key int) bool {
+		return v.NID == expected
+	})
 
-	for _, r := range i.VerifiableAddresses {
-		if r.NID != expected {
-			return errors.WithStack(herodot.ErrInternalServerError.WithReason("Mismatching nid for verifiable addresses."))
-		}
-	}
+	i.VerifiableAddresses = lo.Filter(i.VerifiableAddresses, func(v VerifiableAddress, key int) bool {
+		return v.NID == expected
+	})
 
-	for _, r := range i.Credentials {
-		if r.NID != expected {
-			return errors.WithStack(herodot.ErrInternalServerError.WithReason("Mismatching nid for credentials."))
+	for k := range i.Credentials {
+		c := i.Credentials[k]
+		if c.NID != expected {
+			delete(i.Credentials, k)
+			continue
 		}
 	}
 

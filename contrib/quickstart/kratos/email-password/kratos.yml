@@ -1,4 +1,4 @@
-version: v0.7.1-alpha.1
+version: v0.11.0
 
 dsn: memory
 
@@ -18,6 +18,16 @@ selfservice:
   methods:
     password:
       enabled: true
+    totp:
+      config:
+        issuer: Kratos
+      enabled: true
+    lookup_secret:
+      enabled: true
+    link:
+      enabled: true
+    code:
+      enabled: true
 
   flows:
     error:
@@ -26,14 +36,17 @@ selfservice:
     settings:
       ui_url: http://127.0.0.1:4455/settings
       privileged_session_max_age: 15m
+      required_aal: highest_available
 
     recovery:
       enabled: true
       ui_url: http://127.0.0.1:4455/recovery
+      use: code
 
     verification:
       enabled: true
       ui_url: http://127.0.0.1:4455/verification
+      use: code
       after:
         default_browser_return_url: http://127.0.0.1:4455/
 
@@ -51,8 +64,7 @@ selfservice:
       after:
         password:
           hooks:
-            -
-              hook: session
+            - hook: session
 
 log:
   level: debug

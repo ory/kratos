@@ -1,3 +1,6 @@
+// Copyright © 2023 Ory Corp
+// SPDX-License-Identifier: Apache-2.0
+
 package oidc
 
 import (
@@ -11,6 +14,7 @@ import (
 	"strings"
 
 	"github.com/ory/kratos/cipher"
+	"github.com/ory/x/jsonnetsecure"
 
 	"github.com/ory/kratos/text"
 
@@ -93,6 +97,8 @@ type dependencies interface {
 	continuity.ManagementProvider
 
 	cipher.Provider
+
+	jsonnetsecure.VMProvider
 }
 
 func isForced(req interface{}) bool {
@@ -340,6 +346,11 @@ func (s *Strategy) handleCallback(w http.ResponseWriter, r *http.Request, ps htt
 
 	claims, err := provider.Claims(r.Context(), token, r.URL.Query())
 	if err != nil {
+		s.forwardError(w, r, req, s.handleError(w, r, req, pid, nil, err))
+		return
+	}
+
+	if err := claims.Validate(); err != nil {
 		s.forwardError(w, r, req, s.handleError(w, r, req, pid, nil, err))
 		return
 	}

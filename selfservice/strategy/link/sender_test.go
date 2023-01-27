@@ -1,3 +1,6 @@
+// Copyright © 2023 Ory Corp
+// SPDX-License-Identifier: Apache-2.0
+
 package link_test
 
 import (
@@ -25,6 +28,7 @@ import (
 func TestManager(t *testing.T) {
 	ctx := context.Background()
 	conf, reg := internal.NewFastRegistryWithMocks(t)
+	initViper(t, conf)
 	testhelpers.SetDefaultIdentitySchema(conf, "file://./stub/default.schema.json")
 	conf.MustSet(ctx, config.ViperKeyPublicBaseURL, "https://www.ory.sh/")
 	conf.MustSet(ctx, config.ViperKeyCourierSMTPURL, "smtp://foo@bar@dev.null/")
@@ -39,7 +43,9 @@ func TestManager(t *testing.T) {
 	hr := httptest.NewRequest("GET", "https://www.ory.sh", nil)
 
 	t.Run("method=SendRecoveryLink", func(t *testing.T) {
-		f, err := recovery.NewFlow(conf, time.Hour, "", u, reg.RecoveryStrategies(context.Background()), flow.TypeBrowser)
+		s, err := reg.RecoveryStrategies(ctx).Strategy("link")
+		require.NoError(t, err)
+		f, err := recovery.NewFlow(conf, time.Hour, "", u, s, flow.TypeBrowser)
 		require.NoError(t, err)
 
 		require.NoError(t, reg.RecoveryFlowPersister().CreateRecoveryFlow(context.Background(), f))
@@ -65,7 +71,10 @@ func TestManager(t *testing.T) {
 	})
 
 	t.Run("method=SendVerificationLink", func(t *testing.T) {
-		f, err := verification.NewFlow(conf, time.Hour, "", u, reg.VerificationStrategies(context.Background()), flow.TypeBrowser)
+		strategy, err := reg.GetActiveVerificationStrategy(ctx)
+		require.NoError(t, err)
+
+		f, err := verification.NewFlow(conf, time.Hour, "", u, strategy, flow.TypeBrowser)
 		require.NoError(t, err)
 
 		require.NoError(t, reg.VerificationFlowPersister().CreateVerificationFlow(context.Background(), f))

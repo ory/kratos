@@ -1,6 +1,6 @@
 {
   "id": "dcde5aaa-f789-4d3d-ae1f-76da8d57e67c",
-  "active": true,
+  "active": false,
   "expires_at": "2013-10-07T08:23:19Z",
   "authenticated_at": "2013-10-07T08:23:19Z",
   "authenticator_assurance_level": "aal1",
@@ -34,5 +34,6 @@
     "metadata_public": null,
     "created_at": "2013-10-07T08:23:19Z",
     "updated_at": "2013-10-07T08:23:19Z"
-  }
+  },
+  "devices": []
 }

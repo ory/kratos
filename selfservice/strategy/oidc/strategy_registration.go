@@ -1,3 +1,6 @@
+// Copyright © 2023 Ory Corp
+// SPDX-License-Identifier: Apache-2.0
+
 package oidc
 
 import (
@@ -5,8 +8,6 @@ import (
 	"encoding/json"
 	"net/http"
 	"time"
-
-	"github.com/ory/x/jsonnetsecure"
 
 	"github.com/ory/herodot"
 
@@ -54,11 +55,10 @@ func (s *Strategy) PopulateRegistrationMethod(r *http.Request, f *registration.F
 	return s.populateMethod(r, f.UI, text.NewInfoRegistrationWith)
 }
 
-// SubmitSelfServiceRegistrationFlowWithOidcMethodBody is used to decode the registration form payload
-// when using the oidc method.
+// Update Registration Flow with OpenID Connect Method
 //
-// swagger:model submitSelfServiceRegistrationFlowWithOidcMethodBody
-type SubmitSelfServiceRegistrationFlowWithOidcMethodBody struct {
+// swagger:model updateRegistrationFlowWithOidcMethod
+type UpdateRegistrationFlowWithOidcMethod struct {
 	// The provider to register with
 	//
 	// required: true
@@ -108,7 +108,7 @@ func (s *Strategy) newLinkDecoder(p interface{}, r *http.Request) error {
 }
 
 func (s *Strategy) Register(w http.ResponseWriter, r *http.Request, f *registration.Flow, i *identity.Identity) (err error) {
-	var p SubmitSelfServiceRegistrationFlowWithOidcMethodBody
+	var p UpdateRegistrationFlowWithOidcMethod
 	if err := s.newLinkDecoder(&p, r); err != nil {
 		return s.handleError(w, r, f, "", nil, err)
 	}
@@ -184,7 +184,12 @@ func (s *Strategy) processRegistration(w http.ResponseWriter, r *http.Request, a
 		}
 
 		// This endpoint only handles browser flow at the moment.
-		ar, err := s.d.LoginHandler().NewLoginFlow(w, r, flow.TypeBrowser, opts...)
+		ar, _, err := s.d.LoginHandler().NewLoginFlow(w, r, flow.TypeBrowser, opts...)
+		if err != nil {
+			return nil, s.handleError(w, r, a, provider.Config().ID, nil, err)
+		}
+
+		ar.RequestURL, err = x.TakeOverReturnToParameter(a.RequestURL, ar.RequestURL)
 		if err != nil {
 			return nil, s.handleError(w, r, a, provider.Config().ID, nil, err)
 		}
@@ -247,7 +252,11 @@ func (s *Strategy) createIdentity(w http.ResponseWriter, r *http.Request, a *reg
 		return nil, s.handleError(w, r, a, provider.Config().ID, nil, err)
 	}
 
-	vm := jsonnetsecure.MakeSecureVM()
+	vm, err := s.d.JsonnetVM(r.Context())
+	if err != nil {
+		return nil, s.handleError(w, r, a, provider.Config().ID, nil, err)
+	}
+
 	vm.ExtCode("claims", jsonClaims.String())
 	evaluated, err := vm.EvaluateAnonymousSnippet(provider.Config().Mapper, jn.String())
 	if err != nil {

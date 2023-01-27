@@ -1,15 +1,21 @@
+// Copyright © 2023 Ory Corp
+// SPDX-License-Identifier: Apache-2.0
+
 package sql
 
 import (
 	"context"
 	"database/sql"
-	"fmt"
+	"encoding/json"
 
 	"github.com/gobuffalo/pop/v6"
 	"github.com/gofrs/uuid"
 	"github.com/pkg/errors"
 
+	"github.com/ory/herodot"
+	"github.com/ory/x/pagination/keysetpagination"
 	"github.com/ory/x/sqlcon"
+	"github.com/ory/x/uuidx"
 
 	"github.com/ory/kratos/courier"
 )
@@ -25,7 +31,7 @@ func (p *Persister) AddMessage(ctx context.Context, m *courier.Message) error {
 	return sqlcon.HandleError(p.GetConnection(ctx).Create(m)) // do not create eager to avoid identity injection.
 }
 
-func (p *Persister) ListMessages(ctx context.Context, filter courier.MessagesFilter) ([]courier.Message, int64, error) {
+func (p *Persister) ListMessages(ctx context.Context, filter courier.ListCourierMessagesParameters, opts []keysetpagination.Option) ([]courier.Message, int64, *keysetpagination.Paginator, error) {
 	ctx, span := p.r.Tracer(ctx).Tracer().Start(ctx, "persistence.sql.ListMessages")
 	defer span.End()
 
@@ -39,17 +45,24 @@ func (p *Persister) ListMessages(ctx context.Context, filter courier.MessagesFil
 		q = q.Where("recipient=?", filter.Recipient)
 	}
 
-	messages := make([]courier.Message, 0)
-	if err := q.Paginate(filter.Page, filter.PerPage).Order("created_at DESC").All(&messages); err != nil {
-		return nil, 0, sqlcon.HandleError(err)
-	}
-
 	count, err := q.Count(&courier.Message{})
 	if err != nil {
-		return nil, 0, sqlcon.HandleError(err)
+		return nil, 0, nil, sqlcon.HandleError(err)
 	}
 
-	return messages, int64(count), nil
+	opts = append(opts, keysetpagination.WithDefaultToken(new(courier.Message).DefaultPageToken()))
+	opts = append(opts, keysetpagination.WithDefaultSize(10))
+	opts = append(opts, keysetpagination.WithColumn("created_at", "DESC"))
+	paginator := keysetpagination.GetPaginator(opts...)
+
+	messages := make([]courier.Message, paginator.Size())
+	if err := q.Scope(keysetpagination.Paginate[courier.Message](paginator)).
+		All(&messages); err != nil {
+		return nil, 0, nil, sqlcon.HandleError(err)
+	}
+
+	messages, nextPage := keysetpagination.Result(messages, paginator)
+	return messages, int64(count), nextPage, nil
 }
 
 func (p *Persister) NextMessages(ctx context.Context, limit uint8) (messages []courier.Message, err error) {
@@ -123,11 +136,7 @@ func (p *Persister) SetMessageStatus(ctx context.Context, id uuid.UUID, ms couri
 	defer span.End()
 
 	count, err := p.GetConnection(ctx).RawQuery(
-		// #nosec G201
-		fmt.Sprintf(
-			"UPDATE %s SET status = ? WHERE id = ? AND nid = ?",
-			"courier_messages",
-		),
+		"UPDATE courier_messages SET status = ? WHERE id = ? AND nid = ?",
 		ms,
 		id,
 		p.NetworkID(ctx),
@@ -148,11 +157,7 @@ func (p *Persister) IncrementMessageSendCount(ctx context.Context, id uuid.UUID)
 	defer span.End()
 
 	count, err := p.GetConnection(ctx).RawQuery(
-		// #nosec G201
-		fmt.Sprintf(
-			"UPDATE %s SET send_count = send_count + 1 WHERE id = ? AND nid = ?",
-			"courier_messages",
-		),
+		"UPDATE courier_messages SET send_count = send_count + 1 WHERE id = ? AND nid = ?",
 		id,
 		p.NetworkID(ctx),
 	).ExecWithCount()
@@ -163,6 +168,49 @@ func (p *Persister) IncrementMessageSendCount(ctx context.Context, id uuid.UUID)
 
 	if count == 0 {
 		return errors.WithStack(sqlcon.ErrNoRows)
+	}
+
+	return nil
+}
+
+func (p *Persister) FetchMessage(ctx context.Context, msgID uuid.UUID) (*courier.Message, error) {
+	ctx, span := p.r.Tracer(ctx).Tracer().Start(ctx, "persistence.sql.FetchMessage")
+	defer span.End()
+
+	var message courier.Message
+	if err := p.GetConnection(ctx).
+		Where("id = ? AND nid = ?", msgID, p.NetworkID(ctx)).
+		Eager().
+		First(&message); err != nil {
+		return nil, sqlcon.HandleError(err)
+	}
+
+	return &message, nil
+}
+
+func (p *Persister) RecordDispatch(ctx context.Context, msgID uuid.UUID, status courier.CourierMessageDispatchStatus, err error) error {
+	ctx, span := p.r.Tracer(ctx).Tracer().Start(ctx, "persistence.sql.RecordDispatch")
+	defer span.End()
+
+	dispatch := courier.MessageDispatch{
+		ID:        uuidx.NewV4(),
+		MessageID: msgID,
+		Status:    status,
+		NID:       p.NetworkID(ctx),
+	}
+
+	if err != nil {
+		// We use herodot as a carrier for the error's data
+		her := herodot.ToDefaultError(err, "")
+		content, mErr := json.Marshal(her)
+		if mErr != nil {
+			return errors.WithStack(mErr)
+		}
+		dispatch.Error = content
+	}
+
+	if err := p.GetConnection(ctx).Create(&dispatch); err != nil {
+		return sqlcon.HandleError(err)
 	}
 
 	return nil

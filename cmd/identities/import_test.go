@@ -1,3 +1,6 @@
+// Copyright © 2023 Ory Corp
+// SPDX-License-Identifier: Apache-2.0
+
 package identities_test
 
 import (
@@ -7,7 +10,7 @@ import (
 	"os"
 	"testing"
 
-	"github.com/spf13/cobra"
+	"github.com/ory/kratos/identity"
 
 	"github.com/ory/kratos/cmd/identities"
 
@@ -16,16 +19,16 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/tidwall/gjson"
 
-	kratos "github.com/ory/kratos-client-go"
 	"github.com/ory/kratos/driver/config"
+	kratos "github.com/ory/kratos/internal/httpclient"
 )
 
 func TestImportCmd(t *testing.T) {
-	c := identities.NewImportIdentitiesCmd(new(cobra.Command))
+	c := identities.NewImportIdentitiesCmd()
 	reg := setup(t, c)
 
 	t.Run("case=imports a new identity from file", func(t *testing.T) {
-		i := kratos.AdminCreateIdentityBody{
+		i := kratos.CreateIdentityBody{
 			SchemaId: config.DefaultIdentityTraitsSchemaID,
 			Traits:   map[string]interface{}{},
 		}
@@ -41,12 +44,12 @@ func TestImportCmd(t *testing.T) {
 
 		id, err := uuid.FromString(gjson.Get(stdOut, "id").String())
 		require.NoError(t, err)
-		_, err = reg.Persister().GetIdentity(context.Background(), id)
+		_, err = reg.Persister().GetIdentity(context.Background(), id, identity.ExpandNothing)
 		assert.NoError(t, err)
 	})
 
 	t.Run("case=imports multiple identities from single file", func(t *testing.T) {
-		i := []kratos.AdminCreateIdentityBody{
+		i := []kratos.CreateIdentityBody{
 			{
 				SchemaId: config.DefaultIdentityTraitsSchemaID,
 				Traits:   map[string]interface{}{},
@@ -68,17 +71,17 @@ func TestImportCmd(t *testing.T) {
 
 		id, err := uuid.FromString(gjson.Get(stdOut, "0.id").String())
 		require.NoError(t, err)
-		_, err = reg.Persister().GetIdentity(context.Background(), id)
+		_, err = reg.Persister().GetIdentity(context.Background(), id, identity.ExpandNothing)
 		assert.NoError(t, err)
 
 		id, err = uuid.FromString(gjson.Get(stdOut, "1.id").String())
 		require.NoError(t, err)
-		_, err = reg.Persister().GetIdentity(context.Background(), id)
+		_, err = reg.Persister().GetIdentity(context.Background(), id, identity.ExpandNothing)
 		assert.NoError(t, err)
 	})
 
 	t.Run("case=imports a new identity from STD_IN", func(t *testing.T) {
-		i := []kratos.AdminCreateIdentityBody{
+		i := []kratos.CreateIdentityBody{
 			{
 				SchemaId: config.DefaultIdentityTraitsSchemaID,
 				Traits:   map[string]interface{}{},
@@ -96,17 +99,17 @@ func TestImportCmd(t *testing.T) {
 
 		id, err := uuid.FromString(gjson.Get(stdOut, "0.id").String())
 		require.NoError(t, err)
-		_, err = reg.Persister().GetIdentity(context.Background(), id)
+		_, err = reg.Persister().GetIdentity(context.Background(), id, identity.ExpandNothing)
 		assert.NoError(t, err)
 
 		id, err = uuid.FromString(gjson.Get(stdOut, "1.id").String())
 		require.NoError(t, err)
-		_, err = reg.Persister().GetIdentity(context.Background(), id)
+		_, err = reg.Persister().GetIdentity(context.Background(), id, identity.ExpandNothing)
 		assert.NoError(t, err)
 	})
 
 	t.Run("case=imports multiple identities from STD_IN", func(t *testing.T) {
-		i := kratos.AdminCreateIdentityBody{
+		i := kratos.CreateIdentityBody{
 			SchemaId: config.DefaultIdentityTraitsSchemaID,
 			Traits:   map[string]interface{}{},
 		}
@@ -118,7 +121,7 @@ func TestImportCmd(t *testing.T) {
 
 		id, err := uuid.FromString(gjson.Get(stdOut, "id").String())
 		require.NoError(t, err)
-		_, err = reg.Persister().GetIdentity(context.Background(), id)
+		_, err = reg.Persister().GetIdentity(context.Background(), id, identity.ExpandNothing)
 		assert.NoError(t, err)
 	})
 }

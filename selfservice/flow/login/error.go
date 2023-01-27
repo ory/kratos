@@ -1,3 +1,6 @@
+// Copyright © 2023 Ory Corp
+// SPDX-License-Identifier: Apache-2.0
+
 package login
 
 import (
@@ -62,7 +65,7 @@ func (s *ErrorHandler) PrepareReplacementForExpiredFlow(w http.ResponseWriter, r
 		return nil, err
 	}
 
-	a.UI.Messages.Add(text.NewErrorValidationLoginFlowExpired(e.Ago))
+	a.UI.Messages.Add(text.NewErrorValidationLoginFlowExpired(e.ExpiredAt))
 	if err := s.d.LoginFlowPersister().UpdateLoginFlow(r.Context(), a); err != nil {
 		return nil, err
 	}

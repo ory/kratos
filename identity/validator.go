@@ -1,3 +1,6 @@
+// Copyright © 2023 Ory Corp
+// SPDX-License-Identifier: Apache-2.0
+
 package identity
 
 import (
@@ -7,6 +10,7 @@ import (
 
 	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/schema"
+	"github.com/ory/x/otelx"
 )
 
 type (
@@ -52,9 +56,11 @@ func (v *Validator) ValidateWithRunner(ctx context.Context, i *Identity, runners
 }
 
 func (v *Validator) Validate(ctx context.Context, i *Identity) error {
-	return v.ValidateWithRunner(ctx, i,
-		NewSchemaExtensionCredentials(i),
-		NewSchemaExtensionVerification(i, v.d.Config().SelfServiceFlowVerificationRequestLifespan(ctx)),
-		NewSchemaExtensionRecovery(i),
-	)
+	return otelx.WithSpan(ctx, "identity.Validator.Validate", func(ctx context.Context) error {
+		return v.ValidateWithRunner(ctx, i,
+			NewSchemaExtensionCredentials(i),
+			NewSchemaExtensionVerification(i, v.d.Config().SelfServiceFlowVerificationRequestLifespan(ctx)),
+			NewSchemaExtensionRecovery(i),
+		)
+	})
 }

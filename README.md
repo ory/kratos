@@ -22,18 +22,44 @@
     <a href="https://github.com/ory/kratos/blob/master/CODE_OF_CONDUCT.md" alt="Ory Code of Conduct"><img src="https://img.shields.io/badge/ory-code%20of%20conduct-green" /></a>
 </>
 
-Ory Kratos is the first cloud native Identity and User Management System in the
-world. Finally, it is no longer necessary to implement a User Login process for
-the umpteenth time!
+Ory Kratos is _the_ developer-friendly, security-hardened and battle-test
+Identity, User Management and Authentication system for the Cloud. Finally, it
+is no longer necessary to implement User Login for the umpteenth time!
 
-## Ory Kratos in Ory Cloud
+## Ory Kratos on the Ory Network
 
-The easiest way to get started with Ory Software is in Ory Cloud! Ory Cloud is
-[**free forever for developers**](https://console.ory.sh/registration?utm_source=github&utm_medium=banner&utm_campaign=kratos-readme),
-no credit card required.
+The [Ory Network](https://www.ory.sh/cloud) is the fastest, most secure and
+worry-free way to use Ory's Services. **Ory Identities** is powered by the Ory
+Kratos open source identity server, and it's fully API-compatible.
+
+The Ory Network provides the infrastructure for modern end-to-end security:
+
+- **Identity & credential management scaling to billions of users and devices**
+- **Registration, Login and Account management flows for passkey, biometric,
+  social, SSO and multi-factor authentication**
+- **Pre-built login, registration and account management pages and components**
+- OAuth2 and OpenID provider for single sign on, API access and
+  machine-to-machine authorization
+- Low-latency permission checks based on Google's Zanzibar model and with
+  built-in support for the Ory Permission Language
+
+It's fully managed, highly available, developer & compliance-friendly!
+
+- GDPR-friendly secure storage with data locality
+- Cloud-native APIs, compatible with Ory's Open Source servers
+- Comprehensive admin tools with the web-based Ory Console and the Ory Command
+  Line Interface (CLI)
+- Extensive documentation, straightforward examples and easy-to-follow guides
+- Fair, usage-based [pricing](https://www.ory.sh/pricing)
+
+Sign up for a
+[**free developer account**](https://console.ory.sh/registration?utm_source=github&utm_medium=banner&utm_campaign=kratos-readme)
+today!
+
+### Quickstart
 
 Install the [Ory CLI](https://www.ory.sh/docs/guides/cli/installation) and
-create a new project to get started with Ory Kratos right away:
+create a new project to get started with Ory Identities right away:
 
 ```
 # If you don't have Ory CLI installed yet:
@@ -47,15 +73,13 @@ ory auth
 ory create project
 ```
 
-Ory Cloud ships administrative user interfaces, hosted pages (e.g. for login or
-registration), support for custom domains, collaborative features for your
-colleagues, integration services, and much more!
-
 <!-- START doctoc generated TOC please keep comment here to allow auto update -->
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 
 **Table of Contents**
 
+- [Ory Kratos on the Ory Network](#ory-kratos-on-the-ory-network)
+  - [Quickstart](#quickstart)
 - [What is Ory Kratos?](#what-is-ory-kratos)
   - [Who is using it?](#who-is-using-it)
 - [Getting Started](#getting-started)
@@ -234,7 +258,7 @@ that your company deserves a spot here, reach out to
                 </picture>
             </td>
             <td><a href="https://unifiedglobalarchiving.com/data-detect/">unifiedglobalarchiving.com/data-detect/</a></td>
-        </tr>        
+        </tr>
         <tr>
             <td>Adopter *</td>
             <td>Sainsbury's</td>
@@ -267,7 +291,7 @@ that your company deserves a spot here, reach out to
                 </picture>
             </td>
             <td><a href="https://reyah.eu/">reyah.eu</a></td>
-        </tr>        
+        </tr>
         <tr>
             <td>Adopter *</td>
             <td>Zero</td>
@@ -278,7 +302,7 @@ that your company deserves a spot here, reach out to
                 </picture>
             </td>
             <td><a href="https://getzero.dev/">getzero.dev</a></td>
-        </tr>        
+        </tr>
         <tr>
             <td>Adopter *</td>
             <td>Padis</td>
@@ -311,7 +335,7 @@ that your company deserves a spot here, reach out to
                 </picture>
             </td>
             <td><a href="https://securityonionsolutions.com/">securityonionsolutions.com</a></td>
-        </tr>        
+        </tr>
         <tr>
             <td>Adopter *</td>
             <td>Factly</td>
@@ -355,7 +379,7 @@ that your company deserves a spot here, reach out to
                 </picture>
             </td>
             <td><a href="https://spiri.bo/">spiri.bo</a></td>
-        </tr>        
+        </tr>
         <tr>
             <td>Sponsor</td>
             <td>Strivacity</td>
@@ -466,6 +490,53 @@ that your company deserves a spot here, reach out to
             </td>
             <td><a href="https://www.lunasec.io/">lunasec.io</a></td>
         </tr>
+            <tr>
+            <td>Adopter *</td>
+            <td>Serlo</td>
+            <td align="center">
+                <picture>
+                    <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/ory/meta/master/static/adopters/light/serlo.svg" />
+                    <img height="32px" src="https://raw.githubusercontent.com/ory/meta/master/static/adopters/dark/serlo.svg" alt="Serlo">
+                </picture>
+            </td>
+            <td><a href="https://serlo.org/">serlo.org</a></td>
+        </tr>
+        </tr>
+            <tr>
+            <td>Adopter *</td>
+            <td>dyrector.io</td>
+            <td align="center">
+                <picture>
+                    <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/ory/meta/master/static/adopters/light/dyrector_io.svg" />
+                    <img height="32px" src="https://raw.githubusercontent.com/ory/meta/master/static/adopters/dark/dyrector_io.svg" alt="dyrector.io">
+                </picture>
+            </td>
+            <td><a href="https://dyrector.io/">dyrector.io</a></td>
+        </tr>
+        </tr>
+            <tr>
+            <td>Adopter *</td>
+            <td>Stackspin</td>
+            <td align="center">
+                <picture>
+                    <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/ory/meta/master/static/adopters/light/stackspin.svg" />
+                    <img height="32px" src="https://raw.githubusercontent.com/ory/meta/master/static/adopters/dark/stackspin.svg" alt="stackspin.net">
+                </picture>
+            </td>
+            <td><a href="https://www.stackspin.net/">stackspin.net</a></td>
+        </tr>
+        </tr>
+            <tr>
+            <td>Adopter *</td>
+            <td>Amplitude</td>
+            <td align="center">
+                <picture>
+                    <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/ory/meta/master/static/adopters/light/amplitude.svg" />
+                    <img height="32px" src="https://raw.githubusercontent.com/ory/meta/master/static/adopters/dark/amplitude.svg" alt="amplitude.com">
+                </picture>
+            </td>
+            <td><a href="https://amplitude.com/">amplitude.com</a></td>
+        </tr>
     </tbody>
 </table>
 
@@ -529,8 +600,8 @@ deal with: Self-service Login and Registration, Multi-Factor Authentication
 
 [Ory Hydra](https://github.com/ory/hydra) is an OpenID Certified™ OAuth2 and
 OpenID Connect Provider which easily connects to any existing identity system by
-writing a tiny "bridge" application. Gives absolute control over user interface
-and user experience flows.
+writing a tiny "bridge" application. It gives absolute control over the user
+interface and user experience flows.
 
 ### Ory Oathkeeper: Identity & Access Proxy
 
@@ -694,6 +765,11 @@ You can also run this command from a sub folder.
 ##### End-to-End Tests
 
 We use [Cypress](https://www.cypress.io) to run our e2e tests.
+
+⚠️ To run Cypress on ARM based Mac's, at the moment it is
+[necessary to install Rosetta 2](https://www.cypress.io/blog/2021/01/20/running-cypress-on-the-apple-m1-silicon-arm-architecture-using-rosetta-2/).
+To install, use the command -
+`softwareupdate --install-rosetta --agree-to-license`
 
 The simplest way to develop e2e tests is:
 
