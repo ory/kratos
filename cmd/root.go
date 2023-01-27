@@ -35,6 +35,7 @@ func NewRootCmd() (cmd *cobra.Command) {
 	courier.RegisterCommandRecursive(cmd, nil, nil)
 	cmd.AddCommand(identities.NewGetCmd())
 	cmd.AddCommand(identities.NewDeleteCmd())
+	cmd.AddCommand(identities.NewPatchCmd())
 	cmd.AddCommand(jsonnet.NewFormatCmd())
 	hashers.RegisterCommandRecursive(cmd)
 	cmd.AddCommand(identities.NewImportCmd())
