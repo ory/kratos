@@ -8,7 +8,7 @@ local claims =
     traits:
     {
       email: claims.email,
-      picture: claims.picture,
+      [if "picture" in claims then "picture" else null]: claims.picture,
       name:
       {
         first: claims.name,

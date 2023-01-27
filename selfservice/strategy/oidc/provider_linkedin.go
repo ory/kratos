@@ -6,7 +6,6 @@ package oidc
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 	"net/http"
 	"net/url"
 
@@ -22,7 +21,7 @@ import (
 type Profile struct {
 	LocalizedLastName  string `json:"localizedLastName"`
 	LocalizedFirstName string `json:"localizedFirstName"`
-	ProfilePicture     struct {
+	ProfilePicture     *struct {
 		DisplayImage struct {
 			Elements []struct {
 				Identifiers []struct {
@@ -30,7 +29,7 @@ type Profile struct {
 				} `json:"identifiers"`
 			} `json:"elements"`
 		} `json:"displayImage~"`
-	} `json:"profilePicture"`
+	} `json:"profilePicture", omitempty`
 	ID string `json:"id"`
 }
 
@@ -135,10 +134,32 @@ func (l *ProviderLinkedIn) Email(client *retryablehttp.Client) (*EmailAddress, e
 	return &emailaddress, nil
 }
 
+func (l *ProviderLinkedIn) ProfilePicture(profile *Profile) string {
+	if profile.ProfilePicture != nil {
+		var elements = (*profile.ProfilePicture).DisplayImage.Elements
+		switch len(elements) {
+		case 0:
+			return ""
+			break
+		case 1:
+			return elements[0].Identifiers[0].Identifier
+			break
+		case 2:
+			return elements[1].Identifiers[0].Identifier
+			break
+		default:
+			return elements[2].Identifiers[0].Identifier
+		}
+	}
+
+	return ""
+}
+
 func (l *ProviderLinkedIn) Claims(ctx context.Context, exchange *oauth2.Token, query url.Values) (*Claims, error) {
 
 	var profile *Profile
 	var emailaddress *EmailAddress
+	var profilePicture string
 
 	o, err := l.OAuth2(ctx)
 	if err != nil {
@@ -155,14 +176,15 @@ func (l *ProviderLinkedIn) Claims(ctx context.Context, exchange *oauth2.Token, q
 		return nil, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("%s", err))
 	}
 
+	profilePicture = l.ProfilePicture(profile)
+
 	claims := &Claims{
 		Subject:   profile.ID,
 		Issuer:    "https://login.linkedin.com/",
 		Email:     emailaddress.Elements[0].Handle.EmailAddress,
-		Name:      fmt.Sprintf("%s %s", profile.LocalizedFirstName, profile.LocalizedLastName),
 		GivenName: profile.LocalizedFirstName,
 		LastName:  profile.LocalizedLastName,
-		Picture:   profile.ProfilePicture.DisplayImage.Elements[2].Identifiers[0].Identifier,
+		Picture:   profilePicture,
 	}
 
 	return claims, nil
