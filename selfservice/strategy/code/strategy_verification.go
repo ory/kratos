@@ -1,4 +1,4 @@
-// Copyright © 2022 Ory Corp
+// Copyright © 2023 Ory Corp
 // SPDX-License-Identifier: Apache-2.0
 
 package code
@@ -259,7 +259,7 @@ func (s *Strategy) verificationUseCode(w http.ResponseWriter, r *http.Request, c
 		return s.retryVerificationFlowWithError(w, r, f.Type, err)
 	}
 
-	i, err := s.deps.IdentityPool().GetIdentity(r.Context(), code.VerifiableAddress.IdentityID)
+	i, err := s.deps.IdentityPool().GetIdentity(r.Context(), code.VerifiableAddress.IdentityID, identity.ExpandDefault)
 	if err != nil {
 		return s.retryVerificationFlowWithError(w, r, f.Type, err)
 	}

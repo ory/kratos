@@ -363,7 +363,7 @@
         },
         "provider": {
           "title": "Provider",
-          "description": "Can be one of github, github-app, gitlab, generic, google, microsoft, discord, slack, facebook, auth0, vk, yandex, spotify, dingtalk.",
+          "description": "Can be one of github, github-app, gitlab, generic, google, microsoft, discord, slack, facebook, auth0, vk, yandex, apple, spotify, netid, dingtalk, patreon.",
           "type": "string",
           "enum": [
             "github",
@@ -381,7 +381,8 @@
             "apple",
             "spotify",
             "netid",
-            "dingtalk"
+            "dingtalk",
+            "patreon"
           ],
           "examples": [
             "google"
@@ -696,6 +697,9 @@
               },
               {
                 "$ref": "#/definitions/selfServiceWebHook"
+              },
+              {
+                "$ref": "#/definitions/selfServiceRequireVerifiedAddressHook"
               }
             ]
           },
@@ -782,7 +786,22 @@
           "$ref": "#/definitions/selfServiceAfterOIDCLoginMethod"
         },
         "hooks": {
-          "$ref": "#/definitions/selfServiceHooks"
+          "type": "array",
+          "items": {
+            "anyOf": [
+              {
+                "$ref": "#/definitions/selfServiceWebHook"
+              },
+              {
+                "$ref": "#/definitions/selfServiceSessionRevokerHook"
+              },
+              {
+                "$ref": "#/definitions/selfServiceRequireVerifiedAddressHook"
+              }
+            ]
+          },
+          "uniqueItems": true,
+          "additionalItems": false
         }
       }
     },

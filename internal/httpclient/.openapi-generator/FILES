@@ -48,6 +48,7 @@ docs/JsonPatch.md
 docs/LoginFlow.md
 docs/LogoutFlow.md
 docs/Message.md
+docs/MessageDispatch.md
 docs/MetadataApi.md
 docs/NeedsPrivilegedSessionError.md
 docs/OAuth2Client.md
@@ -148,6 +149,7 @@ model_json_patch.go
 model_login_flow.go
 model_logout_flow.go
 model_message.go
+model_message_dispatch.go
 model_needs_privileged_session_error.go
 model_o_auth2_client.go
 model_o_auth2_consent_request_open_id_connect_context.go

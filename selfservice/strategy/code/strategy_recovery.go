@@ -1,4 +1,4 @@
-// Copyright © 2022 Ory Corp
+// Copyright © 2023 Ory Corp
 // SPDX-License-Identifier: Apache-2.0
 
 package code
@@ -139,6 +139,9 @@ type recoveryCodeForIdentity struct {
 //
 //	Schemes: http, https
 //
+//	Security:
+//		oryAccessToken:
+//
 //	Responses:
 //		201: recoveryCodeForIdentity
 //		400: errorGeneric
@@ -193,7 +196,7 @@ func (s *Strategy) createRecoveryCodeForIdentity(w http.ResponseWriter, r *http.
 		return
 	}
 
-	id, err := s.deps.IdentityPool().GetIdentity(ctx, p.IdentityID)
+	id, err := s.deps.IdentityPool().GetIdentity(ctx, p.IdentityID, identity.ExpandDefault)
 	if notFoundErr := sqlcon.ErrNoRows; errors.As(err, &notFoundErr) {
 		s.deps.Writer().WriteError(w, r, notFoundErr.WithReasonf("could not find identity"))
 		return
@@ -424,7 +427,7 @@ func (s *Strategy) recoveryUseCode(w http.ResponseWriter, r *http.Request, body 
 		return s.retryRecoveryFlowWithError(w, r, f.Type, err)
 	}
 
-	recovered, err := s.deps.IdentityPool().GetIdentity(ctx, code.IdentityID)
+	recovered, err := s.deps.IdentityPool().GetIdentity(ctx, code.IdentityID, identity.ExpandDefault)
 	if err != nil {
 		return s.HandleRecoveryError(w, r, f, nil, err)
 	}

@@ -1,4 +1,4 @@
-// Copyright © 2022 Ory Corp
+// Copyright © 2023 Ory Corp
 // SPDX-License-Identifier: Apache-2.0
 
 package courier
@@ -161,7 +161,7 @@ func (c *courier) dispatchEmail(ctx context.Context, msg Message) error {
 		return c.dispatchMailerEmail(ctx, msg)
 	}
 	if c.smtpClient.Host == "" {
-		return errors.WithStack(herodot.ErrInternalServerError.WithReasonf("Courier tried to deliver an email but %s is not set!", config.ViperKeyCourierSMTPURL))
+		return errors.WithStack(herodot.ErrInternalServerError.WithErrorf("Courier tried to deliver an email but %s is not set!", config.ViperKeyCourierSMTPURL))
 	}
 
 	from := c.deps.CourierConfig().CourierSMTPFrom(ctx)
@@ -189,6 +189,7 @@ func (c *courier) dispatchEmail(ctx context.Context, msg Message) error {
 		c.deps.Logger().
 			WithError(err).
 			WithField("message_id", msg.ID).
+			WithField("message_nid", msg.NID).
 			Error(`Unable to get email template from message.`)
 	} else {
 		htmlBody, err := tmpl.EmailBody(ctx)
@@ -196,6 +197,7 @@ func (c *courier) dispatchEmail(ctx context.Context, msg Message) error {
 			c.deps.Logger().
 				WithError(err).
 				WithField("message_id", msg.ID).
+				WithField("message_nid", msg.NID).
 				Error(`Unable to get email body from template.`)
 		} else {
 			gm.AddAlternative("text/html", htmlBody)
@@ -207,8 +209,9 @@ func (c *courier) dispatchEmail(ctx context.Context, msg Message) error {
 			WithError(err).
 			WithField("smtp_server", fmt.Sprintf("%s:%d", c.smtpClient.Host, c.smtpClient.Port)).
 			WithField("smtp_ssl_enabled", c.smtpClient.SSL).
-			// WithField("email_to", msg.Recipient).
 			WithField("message_from", from).
+			WithField("message_id", msg.ID).
+			WithField("message_nid", msg.NID).
 			Error("Unable to send email using SMTP connection.")
 
 		var protoErr *textproto.Error
@@ -219,15 +222,18 @@ func (c *courier) dispatchEmail(ctx context.Context, msg Message) error {
 				c.deps.Logger().
 					WithError(err).
 					WithField("message_id", msg.ID).
+					WithField("message_nid", msg.NID).
 					Error(`Unable to reset the retried message's status to "abandoned".`)
 				return err
 			}
 		}
-		return errors.WithStack(err)
+		return errors.WithStack(herodot.ErrInternalServerError.
+			WithError(err.Error()).WithReason("failed to send email via smtp"))
 	}
 
 	c.deps.Logger().
 		WithField("message_id", msg.ID).
+		WithField("message_nid", msg.NID).
 		WithField("message_type", msg.Type).
 		WithField("message_template_type", msg.TemplateType).
 		WithField("message_subject", msg.Subject).

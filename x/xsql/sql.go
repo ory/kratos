@@ -1,4 +1,4 @@
-// Copyright © 2022 Ory Corp
+// Copyright © 2023 Ory Corp
 // SPDX-License-Identifier: Apache-2.0
 
 package xsql
@@ -28,6 +28,7 @@ func CleanSQL(t *testing.T, c *pop.Connection) {
 	ctx := context.Background()
 	for _, table := range []string{
 		new(continuity.Container).TableName(ctx),
+		new(courier.MessageDispatch).TableName(),
 		new(courier.Message).TableName(ctx),
 
 		new(session.Device).TableName(ctx),

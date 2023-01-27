@@ -1,4 +1,4 @@
-// Copyright © 2022 Ory Corp
+// Copyright © 2023 Ory Corp
 // SPDX-License-Identifier: Apache-2.0
 
 package driver
@@ -517,6 +517,7 @@ func (m *RegistryDefault) ContinuityCookieManager(ctx context.Context) sessions.
 
 func (m *RegistryDefault) Tracer(ctx context.Context) *otelx.Tracer {
 	if m.trc == nil {
+		m.Logger().WithError(errors.WithStack(errors.New(""))).Warn("No tracer setup in RegistryDefault")
 		return otelx.NewNoop(m.l, m.Config().Tracing(ctx)) // should never happen
 	}
 	return m.trc
@@ -722,6 +723,7 @@ func (m *RegistryDefault) VerificationTokenPersister() link.VerificationTokenPer
 func (m *RegistryDefault) VerificationCodePersister() code.VerificationCodePersister {
 	return m.Persister()
 }
+
 func (m *RegistryDefault) Persister() persistence.Persister {
 	return m.persister
 }

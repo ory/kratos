@@ -1,4 +1,4 @@
-// Copyright © 2022 Ory Corp
+// Copyright © 2023 Ory Corp
 // SPDX-License-Identifier: Apache-2.0
 
 package session
@@ -16,3 +16,5 @@ func RespondWithJSONErrorOnAuthenticated(h herodot.Writer, err error) httprouter
 		h.WriteError(w, r, err)
 	}
 }
+
+var ErrNoSessionFound = herodot.ErrUnauthorized.WithReasonf("No valid session credentials found in the request.")

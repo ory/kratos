@@ -1,4 +1,4 @@
-// Copyright © 2022 Ory Corp
+// Copyright © 2023 Ory Corp
 // SPDX-License-Identifier: Apache-2.0
 
 package template_test
@@ -191,11 +191,11 @@ func TestLoadTextTemplate(t *testing.T) {
 			_, err := template.LoadHTML(ctx, reg, nil, "", "", map[string]interface{}{}, "http://localhost:8080/1234")
 
 			require.Error(t, err)
-			assert.Contains(t, err.Error(), "is in the")
+			assert.Contains(t, err.Error(), "is not a public IP address")
 
 			_, err = template.LoadText(ctx, reg, nil, "", "", map[string]interface{}{}, "http://localhost:8080/1234")
 			require.Error(t, err)
-			assert.Contains(t, err.Error(), "is in the")
+			assert.Contains(t, err.Error(), "is not a public IP address")
 
 		})
 

@@ -1,4 +1,4 @@
-// Copyright © 2022 Ory Corp
+// Copyright © 2023 Ory Corp
 // SPDX-License-Identifier: Apache-2.0
 
 package hook_test
@@ -19,6 +19,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/sirupsen/logrus/hooks/test"
 	"github.com/stretchr/testify/require"
 
 	"github.com/ory/kratos/schema"
@@ -365,7 +366,7 @@ func TestWebHooks(t *testing.T) {
 		}`,
 	)
 
-	webhookError := schema.NewValidationListError([]*schema.ValidationError{schema.NewHookValidationError("#/traits/username", "a web-hook target returned an error", text.Messages{{ID: 1234, Type: "info", Text: "error message"}})})
+	webhookError := schema.NewValidationListError([]*schema.ValidationError{schema.NewHookValidationError("#/traits/username", "a webhook target returned an error", text.Messages{{ID: 1234, Type: "info", Text: "error message"}})})
 	for _, tc := range []struct {
 		uc              string
 		callWebHook     func(wh *hook.WebHook, req *http.Request, f flow.Flow, s *session.Session) error
@@ -805,7 +806,7 @@ func TestDisallowPrivateIPRanges(t *testing.T) {
 }`))
 		err := wh.ExecuteLoginPostHook(nil, req, node.DefaultGroup, f, s)
 		require.Error(t, err)
-		require.Contains(t, err.Error(), "private, loopback, or unspecified IP range")
+		require.Contains(t, err.Error(), "is not a public IP address")
 	})
 
 	t.Run("allowed to call exempt url", func(t *testing.T) {
@@ -816,7 +817,7 @@ func TestDisallowPrivateIPRanges(t *testing.T) {
 }`))
 		err := wh.ExecuteLoginPostHook(nil, req, node.DefaultGroup, f, s)
 		require.Error(t, err, "the target does not exist and we still receive an error")
-		require.NotContains(t, err.Error(), "is in the private, loopback, or unspecified IP range", "but the error is not related to the IP range.")
+		require.NotContains(t, err.Error(), "is not a public IP address", "but the error is not related to the IP range.")
 	})
 
 	t.Run("not allowed to load from source", func(t *testing.T) {
@@ -836,6 +837,87 @@ func TestDisallowPrivateIPRanges(t *testing.T) {
 }`))
 		err := wh.ExecuteLoginPostHook(nil, req, node.DefaultGroup, f, s)
 		require.Error(t, err)
-		require.Contains(t, err.Error(), "ip 192.168.178.0 is in the private, loopback, or unspecified IP range")
+		require.Contains(t, err.Error(), "192.168.178.0 is not a public IP address")
 	})
+}
+
+func TestAsyncWebhook(t *testing.T) {
+	_, reg := internal.NewFastRegistryWithMocks(t)
+	logger := logrusx.New("kratos", "test")
+	logHook := new(test.Hook)
+	logger.Logger.Hooks.Add(logHook)
+	whDeps := struct {
+		x.SimpleLoggerWithClient
+		*jsonnetsecure.TestProvider
+	}{
+		x.SimpleLoggerWithClient{L: logger, C: reg.HTTPClient(context.Background()), T: otelx.NewNoop(logger, &otelx.Config{ServiceName: "kratos"})},
+		jsonnetsecure.NewTestProvider(t),
+	}
+
+	req := &http.Request{
+		Header: map[string][]string{"Some-Header": {"Some-Value"}},
+		Host:   "www.ory.sh",
+		TLS:    new(tls.ConnectionState),
+		URL:    &url.URL{Path: "/some_end_point"},
+		Method: http.MethodPost,
+	}
+
+	incomingCtx, incomingCancel := context.WithCancel(context.Background())
+	if deadline, ok := t.Deadline(); ok {
+		// cancel this context one second before test timeout for clean shutdown
+		var cleanup context.CancelFunc
+		incomingCtx, cleanup = context.WithDeadline(incomingCtx, deadline.Add(-time.Second))
+		defer cleanup()
+	}
+
+	req = req.WithContext(incomingCtx)
+	s := &session.Session{ID: x.NewUUID(), Identity: &identity.Identity{ID: x.NewUUID()}}
+	f := &login.Flow{ID: x.NewUUID()}
+
+	handlerEntered, blockHandlerOnExit := make(chan struct{}), make(chan struct{})
+	webhookReceiver := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		close(handlerEntered)
+		<-blockHandlerOnExit
+		w.Write([]byte("ok"))
+	}))
+	t.Cleanup(webhookReceiver.Close)
+
+	wh := hook.NewWebHook(&whDeps, json.RawMessage(fmt.Sprintf(`
+		{
+			"url": %q,
+			"method": "GET",
+			"body": "file://stub/test_body.jsonnet",
+			"response": {
+				"ignore": true
+			}
+		}`, webhookReceiver.URL)))
+	err := wh.ExecuteLoginPostHook(nil, req, node.DefaultGroup, f, s)
+	require.NoError(t, err) // execution returns immediately for async webhook
+	select {
+	case <-time.After(200 * time.Millisecond):
+		t.Fatal("timed out waiting for webhook request to reach test handler")
+	case <-handlerEntered:
+		// ok
+	}
+	// at this point, a goroutine is in the middle of the call to our test handler and waiting for a response
+	incomingCancel() // simulate the incoming Kratos request having finished
+	close(blockHandlerOnExit)
+	timeout := time.After(200 * time.Millisecond)
+	var found bool
+	for !found {
+		for _, entry := range logHook.AllEntries() {
+			if entry.Message == "Webhook request succeeded" {
+				found = true
+				break
+			}
+		}
+
+		select {
+		case <-timeout:
+			t.Fatal("timed out waiting for successful webhook completion")
+		case <-time.After(50 * time.Millisecond):
+			// continue loop
+		}
+	}
+	require.True(t, found)
 }

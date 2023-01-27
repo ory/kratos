@@ -1,4 +1,4 @@
-// Copyright © 2022 Ory Corp
+// Copyright © 2023 Ory Corp
 // SPDX-License-Identifier: Apache-2.0
 
 package session
@@ -192,8 +192,8 @@ func (h *Handler) whoami(w http.ResponseWriter, r *http.Request, ps httprouter.P
 			w.Header().Set("Ory-Session-Cache-For", fmt.Sprintf("%d", int64(time.Minute.Seconds())))
 		}
 
-		h.r.Audit().WithRequest(r).WithError(err).Info("No valid session cookie found.")
-		h.r.Writer().WriteError(w, r, herodot.ErrUnauthorized.WithWrap(err).WithReasonf("No valid session cookie found."))
+		h.r.Audit().WithRequest(r).WithError(err).Info("No valid session found.")
+		h.r.Writer().WriteError(w, r, ErrNoSessionFound.WithWrap(err))
 		return
 	}
 
@@ -287,12 +287,12 @@ type listSessionsRequest struct {
 	Active bool `json:"active"`
 
 	// ExpandOptions is a query parameter encoded list of all properties that must be expanded in the Session.
-	// Example - ?expand=Identity&expand=Devices
 	// If no value is provided, the expandable properties are skipped.
 	//
 	// required: false
+	// enum: identity,devices
 	// in: query
-	ExpandOptions []Expandable `json:"expand"`
+	ExpandOptions []string `json:"expand"`
 }
 
 // Session List Response
@@ -338,7 +338,7 @@ func (h *Handler) adminListSessions(w http.ResponseWriter, r *http.Request, ps h
 	}
 
 	// Parse request pagination parameters
-	opts, err := keysetpagination.Parse(r.URL.Query())
+	opts, err := keysetpagination.Parse(r.URL.Query(), keysetpagination.NewStringPageToken)
 	if err != nil {
 		h.r.Writer().WriteError(w, r, herodot.ErrBadRequest.WithError("could not parse parameter page_size"))
 		return
@@ -379,8 +379,9 @@ type getSession struct {
 	// If no value is provided, the expandable properties are skipped.
 	//
 	// required: false
+	// enum: identity,devices
 	// in: query
-	ExpandOptions []Expandable `json:"expand"`
+	ExpandOptions []string `json:"expand"`
 
 	// ID is the session's ID.
 	//
@@ -391,7 +392,7 @@ type getSession struct {
 
 // swagger:route GET /admin/sessions/{id} identity getSession
 //
-// This endpoint returns the session object with expandables specified.
+// # Get Session
 //
 // This endpoint is useful for:
 //
@@ -465,11 +466,14 @@ type disableSession struct {
 //
 //	Schemes: http, https
 //
+//	Security:
+//		oryAccessToken:
+//
 //	Responses:
-//	  204: emptyResponse
-//	  400: errorGeneric
-//	  401: errorGeneric
-//	  default: errorGeneric
+//		204: emptyResponse
+//		400: errorGeneric
+//		401: errorGeneric
+//		default: errorGeneric
 func (h *Handler) disableSession(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	sID, err := uuid.FromString(ps.ByName("id"))
 	if err != nil {

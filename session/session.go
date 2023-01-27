@@ -1,4 +1,4 @@
-// Copyright © 2022 Ory Corp
+// Copyright © 2023 Ory Corp
 // SPDX-License-Identifier: Apache-2.0
 
 package session
@@ -13,6 +13,7 @@ import (
 	"time"
 
 	"github.com/ory/x/httpx"
+	"github.com/ory/x/pagination/keysetpagination"
 	"github.com/ory/x/stringsx"
 
 	"github.com/pkg/errors"
@@ -140,23 +141,16 @@ type Session struct {
 	NID   uuid.UUID `json:"-"  faker:"-" db:"nid"`
 }
 
-func (s Session) PageToken() string {
-	return s.ID.String()
+func (s Session) PageToken() keysetpagination.PageToken {
+	return keysetpagination.StringPageToken(s.ID.String())
+}
+
+func (s Session) DefaultPageToken() keysetpagination.PageToken {
+	return keysetpagination.StringPageToken(uuid.Nil.String())
 }
 
 func (s Session) TableName(ctx context.Context) string {
 	return "sessions"
-}
-
-func (s Session) MarshalJSON() ([]byte, error) {
-	type sl Session
-	s.Active = s.IsActive()
-
-	result, err := json.Marshal(sl(s))
-	if err != nil {
-		return nil, err
-	}
-	return result, nil
 }
 
 func (s *Session) CompletedLoginFor(method identity.CredentialsType, aal identity.AuthenticatorAssuranceLevel) {
@@ -256,19 +250,9 @@ func (s *Session) SaveSessionDeviceInformation(r *http.Request) {
 		device.UserAgent = stringsx.GetPointer(strings.Join(agent, " "))
 	}
 
-	if trueClientIP := r.Header.Get("True-Client-IP"); trueClientIP != "" {
-		device.IPAddress = &trueClientIP
-	} else if realClientIP := r.Header.Get("X-Real-IP"); realClientIP != "" {
-		device.IPAddress = &realClientIP
-	} else if forwardedIP := r.Header.Get("X-Forwarded-For"); forwardedIP != "" {
-		ip, _ := httpx.GetClientIPAddressesWithoutInternalIPs(strings.Split(forwardedIP, ","))
-		device.IPAddress = &ip
-	} else {
-		device.IPAddress = &r.RemoteAddr
-	}
+	device.IPAddress = stringsx.GetPointer(httpx.ClientIP(r))
 
 	var clientGeoLocation []string
-
 	if r.Header.Get("Cf-Ipcity") != "" {
 		clientGeoLocation = append(clientGeoLocation, r.Header.Get("Cf-Ipcity"))
 	}
@@ -292,6 +276,13 @@ func (s *Session) IsActive() bool {
 func (s *Session) Refresh(ctx context.Context, c lifespanProvider) *Session {
 	s.ExpiresAt = time.Now().Add(c.SessionLifespan(ctx)).UTC()
 	return s
+}
+
+func (s *Session) MarshalJSON() ([]byte, error) {
+	type ss Session
+	out := ss(*s)
+	out.Active = s.IsActive()
+	return json.Marshal(out)
 }
 
 func (s *Session) CanBeRefreshed(ctx context.Context, c refreshWindowProvider) bool {

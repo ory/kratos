@@ -1,4 +1,4 @@
-// Copyright © 2022 Ory Corp
+// Copyright © 2023 Ory Corp
 // SPDX-License-Identifier: Apache-2.0
 
 package identity_test
@@ -233,7 +233,7 @@ func TestManager(t *testing.T) {
 			require.NoError(t, reg.IdentityManager().UpdateTraits(context.Background(), original.ID, identity.Traits(`{"email":"baz@ory.sh","email_verify":"baz@ory.sh","email_recovery":"baz@ory.sh","email_creds":"baz@ory.sh","unprotected": "bar"}`)))
 			checkExtensionFieldsForIdentities(t, "baz@ory.sh", original)
 
-			actual, err := reg.IdentityPool().GetIdentity(context.Background(), original.ID)
+			actual, err := reg.IdentityPool().GetIdentity(context.Background(), original.ID, identity.ExpandNothing)
 			require.NoError(t, err)
 			assert.JSONEq(t, `{"email":"baz@ory.sh","email_verify":"baz@ory.sh","email_recovery":"baz@ory.sh","email_creds":"baz@ory.sh","unprotected": "bar"}`, string(actual.Traits))
 		})

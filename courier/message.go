@@ -1,4 +1,4 @@
-// Copyright © 2022 Ory Corp
+// Copyright © 2023 Ory Corp
 // SPDX-License-Identifier: Apache-2.0
 
 package courier
@@ -12,6 +12,7 @@ import (
 	"github.com/pkg/errors"
 
 	"github.com/ory/herodot"
+	"github.com/ory/x/pagination/keysetpagination"
 	"github.com/ory/x/stringsx"
 )
 
@@ -113,6 +114,9 @@ const (
 	messageTypePhoneText = "phone"
 )
 
+// The format we need to use in the Page tokens, as it's the only format that is understood by all DBs
+const dbFormat = "2006-01-02 15:04:05.99999"
+
 func ToMessageType(str string) (MessageType, error) {
 	switch s := stringsx.SwitchExact(str); {
 	case s.AddCase(messageTypeEmailText):
@@ -168,21 +172,51 @@ func (mt *MessageType) UnmarshalJSON(data []byte) error {
 
 // swagger:model message
 type Message struct {
-	ID           uuid.UUID     `json:"id" faker:"-" db:"id"`
-	NID          uuid.UUID     `json:"-" faker:"-" db:"nid"`
-	Status       MessageStatus `json:"status" db:"status"`
-	Type         MessageType   `json:"type" db:"type"`
-	Recipient    string        `json:"recipient" db:"recipient"`
-	Body         string        `json:"body" db:"body"`
-	Subject      string        `json:"subject" db:"subject"`
-	TemplateType TemplateType  `json:"template_type" db:"template_type"`
-	TemplateData []byte        `json:"-" db:"template_data"`
-	SendCount    int           `json:"send_count" db:"send_count"`
+	// required: true
+	ID uuid.UUID `json:"id" faker:"-" db:"id"`
+
+	NID uuid.UUID `json:"-" faker:"-" db:"nid"`
+	// required: true
+	Status MessageStatus `json:"status" db:"status"`
+	// required: true
+	Type MessageType `json:"type" db:"type"`
+	// required: true
+	Recipient string `json:"recipient" db:"recipient"`
+	// required: true
+	Body string `json:"body" db:"body"`
+	// required: true
+	Subject string `json:"subject" db:"subject"`
+	// required: true
+	TemplateType TemplateType `json:"template_type" db:"template_type"`
+
+	TemplateData []byte `json:"-" db:"template_data"`
+	// required: true
+	SendCount int `json:"send_count" db:"send_count"`
+
+	// Dispatches store information about the attempts of delivering a message
+	// May contain an error if any happened, or just the `success` state.
+	Dispatches []MessageDispatch `json:"dispatches,omitempty" has_many:"courier_message_dispatches" order_by:"created_at desc" faker:"-"`
 
 	// CreatedAt is a helper struct field for gobuffalo.pop.
+	// required: true
 	CreatedAt time.Time `json:"created_at" faker:"-" db:"created_at"`
 	// UpdatedAt is a helper struct field for gobuffalo.pop.
+	// required: true
 	UpdatedAt time.Time `json:"updated_at" faker:"-" db:"updated_at"`
+}
+
+func (m Message) PageToken() keysetpagination.PageToken {
+	return keysetpagination.MapPageToken{
+		"id":         m.ID.String(),
+		"created_at": m.CreatedAt.Format(dbFormat),
+	}
+}
+
+func (m Message) DefaultPageToken() keysetpagination.PageToken {
+	return keysetpagination.MapPageToken{
+		"id":         uuid.Nil.String(),
+		"created_at": time.Date(2200, 12, 31, 23, 59, 59, 0, time.UTC).Format(dbFormat),
+	}
 }
 
 func (m Message) TableName(ctx context.Context) string {

@@ -1,4 +1,4 @@
-// Copyright © 2022 Ory Corp
+// Copyright © 2023 Ory Corp
 // SPDX-License-Identifier: Apache-2.0
 
 package password
@@ -25,6 +25,7 @@ import (
 	"github.com/ory/herodot"
 	"github.com/ory/kratos/driver/config"
 	"github.com/ory/x/httpx"
+	"github.com/ory/x/otelx"
 )
 
 const hashCacheItemTTL = time.Hour
@@ -162,6 +163,12 @@ func (s *DefaultPasswordValidator) fetch(hpw []byte, apiDNSName string) (int64, 
 }
 
 func (s *DefaultPasswordValidator) Validate(ctx context.Context, identifier, password string) error {
+	return otelx.WithSpan(ctx, "password.DefaultPasswordValidator.Validate", func(ctx context.Context) error {
+		return s.validate(ctx, identifier, password)
+	})
+}
+
+func (s *DefaultPasswordValidator) validate(ctx context.Context, identifier, password string) error {
 	passwordPolicyConfig := s.reg.Config().PasswordPolicyConfig(ctx)
 
 	if len(password) < int(passwordPolicyConfig.MinPasswordLength) {
