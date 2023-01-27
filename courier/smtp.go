@@ -157,6 +157,9 @@ func (c *courier) QueueEmail(ctx context.Context, t EmailTemplate) (uuid.UUID, e
 }
 
 func (c *courier) dispatchEmail(ctx context.Context, msg Message) error {
+	if c.deps.CourierConfig().CourierMailerEnabled(ctx) {
+		return c.dispatchMailerEmail(ctx, msg)
+	}
 	if c.smtpClient.Host == "" {
 		return errors.WithStack(herodot.ErrInternalServerError.WithReasonf("Courier tried to deliver an email but %s is not set!", config.ViperKeyCourierSMTPURL))
 	}
