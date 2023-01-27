@@ -7,8 +7,8 @@ import (
 	"context"
 	"crypto/aes"
 	"crypto/cipher"
-	"crypto/md5" // #nosec G501
-	"crypto/sha1"
+	"crypto/md5"  // #nosec G501
+	"crypto/sha1" // #nosec G505 - compatibility for imported passwords
 	"crypto/sha256"
 	"crypto/sha512"
 	"crypto/subtle"
@@ -412,7 +412,7 @@ func compareSHAHelper(hasher string, raw []byte, hash []byte) error {
 
 	switch hasher {
 	case "sha1":
-		sum := sha1.Sum(raw)
+		sum := sha1.Sum(raw) // #nosec G401 - compatibility for imported passwords
 		sha = sum[:]
 	case "sha256":
 		sum := sha256.Sum256(raw)
