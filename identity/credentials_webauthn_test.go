@@ -1,12 +1,10 @@
 // Copyright © 2023 Ory Corp
 // SPDX-License-Identifier: Apache-2.0
 
-package webauthn
+package identity
 
 import (
 	"testing"
-
-	"github.com/ory/kratos/identity"
 
 	"github.com/duo-labs/webauthn/webauthn"
 	"github.com/stretchr/testify/assert"
@@ -27,16 +25,16 @@ func TestCredentialConversion(t *testing.T) {
 	actual := CredentialFromWebAuthn(expected, false).ToWebAuthn()
 	assert.Equal(t, expected, actual)
 
-	actualList := Credentials{*CredentialFromWebAuthn(expected, false)}.ToWebAuthnFiltered(identity.AuthenticatorAssuranceLevel2)
+	actualList := CredentialsWebAuthn{*CredentialFromWebAuthn(expected, false)}.ToWebAuthnFiltered(AuthenticatorAssuranceLevel2)
 	assert.Equal(t, []webauthn.Credential{*expected}, actualList)
 
-	actualList = Credentials{*CredentialFromWebAuthn(expected, true)}.ToWebAuthnFiltered(identity.AuthenticatorAssuranceLevel1)
+	actualList = CredentialsWebAuthn{*CredentialFromWebAuthn(expected, true)}.ToWebAuthnFiltered(AuthenticatorAssuranceLevel1)
 	assert.Equal(t, []webauthn.Credential{*expected}, actualList)
 
-	actualList = Credentials{*CredentialFromWebAuthn(expected, true)}.ToWebAuthnFiltered(identity.AuthenticatorAssuranceLevel2)
+	actualList = CredentialsWebAuthn{*CredentialFromWebAuthn(expected, true)}.ToWebAuthnFiltered(AuthenticatorAssuranceLevel2)
 	assert.Len(t, actualList, 0)
 
-	actualList = Credentials{*CredentialFromWebAuthn(expected, false)}.ToWebAuthnFiltered(identity.AuthenticatorAssuranceLevel1)
+	actualList = CredentialsWebAuthn{*CredentialFromWebAuthn(expected, false)}.ToWebAuthnFiltered(AuthenticatorAssuranceLevel1)
 	assert.Len(t, actualList, 0)
 
 	fromWebAuthn := CredentialFromWebAuthn(expected, true)
