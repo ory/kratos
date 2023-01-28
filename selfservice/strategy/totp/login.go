@@ -111,7 +111,7 @@ func (s *Strategy) Login(w http.ResponseWriter, r *http.Request, f *login.Flow, 
 		return nil, s.handleLoginError(r, f, errors.WithStack(schema.NewNoTOTPDeviceRegistered()))
 	}
 
-	var o CredentialsConfig
+	var o identity.CredentialsTOTPConfig
 	if err := json.Unmarshal(c.Config, &o); err != nil {
 		return nil, errors.WithStack(herodot.ErrInternalServerError.WithReason("The TOTP credentials could not be decoded properly").WithDebug(err.Error()).WithWrap(err))
 	}

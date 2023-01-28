@@ -116,7 +116,7 @@ func (s *Strategy) Login(w http.ResponseWriter, r *http.Request, f *login.Flow, 
 		return nil, s.handleLoginError(r, f, err)
 	}
 
-	var o CredentialsConfig
+	var o identity.CredentialsLookupConfig
 	if err := json.Unmarshal(c.Config, &o); err != nil {
 		return nil, errors.WithStack(herodot.ErrInternalServerError.WithReason("The lookup secrets could not be decoded properly").WithDebug(err.Error()).WithWrap(err))
 	}

@@ -221,7 +221,7 @@ func (s *Strategy) continueSettingsFlowReveal(w http.ResponseWriter, r *http.Req
 		return err
 	}
 
-	var creds CredentialsConfig
+	var creds identity.CredentialsLookupConfig
 	if err := json.Unmarshal(cred.Config, &creds); err != nil {
 		return errors.WithStack(herodot.ErrInternalServerError.WithReasonf("Unable to decode lookup codes from JSON.").WithDebug(err.Error()))
 	}
@@ -247,16 +247,16 @@ func (s *Strategy) continueSettingsFlowReveal(w http.ResponseWriter, r *http.Req
 }
 
 func (s *Strategy) continueSettingsFlowRegenerate(w http.ResponseWriter, r *http.Request, ctxUpdate *settings.UpdateContext, p *updateSettingsFlowWithLookupMethod) error {
-	codes := make([]RecoveryCode, numCodes)
+	codes := make([]identity.RecoveryCode, numCodes)
 	for k := range codes {
-		codes[k] = RecoveryCode{Code: randx.MustString(8, randx.AlphaLowerNum)}
+		codes[k] = identity.RecoveryCode{Code: randx.MustString(8, randx.AlphaLowerNum)}
 	}
 
 	for _, n := range allSettingsNodes {
 		ctxUpdate.Flow.UI.Nodes.Remove(n)
 	}
 
-	ctxUpdate.Flow.UI.Nodes.Upsert((&CredentialsConfig{RecoveryCodes: codes}).ToNode())
+	ctxUpdate.Flow.UI.Nodes.Upsert((&identity.CredentialsLookupConfig{RecoveryCodes: codes}).ToNode())
 	ctxUpdate.Flow.UI.Nodes.Upsert(NewConfirmLookupNode())
 
 	var err error
@@ -278,12 +278,12 @@ func (s *Strategy) continueSettingsFlowConfirm(w http.ResponseWriter, r *http.Re
 		return errors.WithStack(herodot.ErrBadRequest.WithReasonf("You must (re-)generate recovery backup codes before you can save them."))
 	}
 
-	rc := make([]RecoveryCode, len(codes))
+	rc := make([]identity.RecoveryCode, len(codes))
 	for k := range rc {
-		rc[k] = RecoveryCode{Code: codes[k].Get("code").String()}
+		rc[k] = identity.RecoveryCode{Code: codes[k].Get("code").String()}
 	}
 
-	co, err := json.Marshal(&CredentialsConfig{RecoveryCodes: rc})
+	co, err := json.Marshal(&identity.CredentialsLookupConfig{RecoveryCodes: rc})
 	if err != nil {
 		return errors.WithStack(herodot.ErrInternalServerError.WithReasonf("Unable to encode totp options to JSON: %s", err))
 	}

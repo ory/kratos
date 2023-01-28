@@ -140,8 +140,8 @@ func (s *Strategy) Register(w http.ResponseWriter, r *http.Request, f *registrat
 		return s.handleRegistrationError(w, r, f, &p, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("Unable to create WebAuthn credential: %s", err)))
 	}
 
-	var cc CredentialsConfig
-	wc := CredentialFromWebAuthn(credential, true)
+	var cc identity.CredentialsWebAuthnConfig
+	wc := identity.CredentialFromWebAuthn(credential, true)
 	wc.AddedAt = time.Now().UTC().Round(time.Second)
 	wc.DisplayName = p.RegisterDisplayName
 	wc.IsPasswordless = s.d.Config().WebAuthnForPasswordless(r.Context())

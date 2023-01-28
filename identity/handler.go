@@ -33,6 +33,7 @@ import (
 
 const RouteCollection = "/identities"
 const RouteItem = RouteCollection + "/:id"
+const RouteCredentialItem = RouteItem + "/credentials/:type"
 
 type (
 	handlerDependencies interface {
@@ -68,7 +69,9 @@ func NewHandler(r handlerDependencies) *Handler {
 func (h *Handler) RegisterPublicRoutes(public *x.RouterPublic) {
 	h.r.CSRFHandler().IgnoreGlobs(
 		RouteCollection, RouteCollection+"/*",
+		RouteCollection+"/*/credentials/*",
 		x.AdminPrefix+RouteCollection, x.AdminPrefix+RouteCollection+"/*",
+		x.AdminPrefix+RouteCollection+"/*/credentials/*",
 	)
 
 	public.GET(RouteCollection, x.RedirectToAdminRoute(h.r))
@@ -77,6 +80,7 @@ func (h *Handler) RegisterPublicRoutes(public *x.RouterPublic) {
 	public.POST(RouteCollection, x.RedirectToAdminRoute(h.r))
 	public.PUT(RouteItem, x.RedirectToAdminRoute(h.r))
 	public.PATCH(RouteItem, x.RedirectToAdminRoute(h.r))
+	public.DELETE(RouteCredentialItem, x.RedirectToAdminRoute(h.r))
 
 	public.GET(x.AdminPrefix+RouteCollection, x.RedirectToAdminRoute(h.r))
 	public.GET(x.AdminPrefix+RouteItem, x.RedirectToAdminRoute(h.r))
@@ -84,6 +88,7 @@ func (h *Handler) RegisterPublicRoutes(public *x.RouterPublic) {
 	public.POST(x.AdminPrefix+RouteCollection, x.RedirectToAdminRoute(h.r))
 	public.PUT(x.AdminPrefix+RouteItem, x.RedirectToAdminRoute(h.r))
 	public.PATCH(x.AdminPrefix+RouteItem, x.RedirectToAdminRoute(h.r))
+	public.DELETE(x.AdminPrefix+RouteCredentialItem, x.RedirectToAdminRoute(h.r))
 }
 
 func (h *Handler) RegisterAdminRoutes(admin *x.RouterAdmin) {
@@ -94,6 +99,8 @@ func (h *Handler) RegisterAdminRoutes(admin *x.RouterAdmin) {
 
 	admin.POST(RouteCollection, h.create)
 	admin.PUT(RouteItem, h.update)
+
+	admin.DELETE(RouteCredentialItem, h.deleteIdentityCredentials)
 }
 
 // Paginated Identity List Response
@@ -674,4 +681,129 @@ func (h *Handler) patch(w http.ResponseWriter, r *http.Request, ps httprouter.Pa
 	}
 
 	h.r.Writer().Write(w, r, WithCredentialsMetadataAndAdminMetadataInJSON(*identity))
+}
+
+func deletCredentialWebAuthFromIdentity(identity *Identity) (*Identity, error) {
+	cred, ok := identity.GetCredentials(CredentialsTypeWebAuthn)
+	if !ok {
+		// This should never happend as it's checked earlier in the code;
+		// But we never know...
+		return nil, errors.WithStack(herodot.ErrNotFound.WithReasonf("You tried to remove a CredentialsTypeWebAuthn but this user have no CredentialsTypeWebAuthn set up."))
+	}
+
+	var cc CredentialsWebAuthnConfig
+	if err := json.Unmarshal(cred.Config, &cc); err != nil {
+		// Database has been tampered or the json schema are incompatible (migration issue);
+		return nil, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("Unable to decode identity credentials.").WithDebug(err.Error()))
+	}
+
+	updated := make([]CredentialWebAuthn, 0)
+	for k, cred := range cc.Credentials {
+		if cred.IsPasswordless {
+			updated = append(updated, cc.Credentials[k])
+		}
+	}
+
+	if len(updated) == 0 {
+		identity.DeleteCredentialsType(CredentialsTypeWebAuthn)
+		return identity, nil
+	}
+
+	cc.Credentials = updated
+	message, err := json.Marshal(cc)
+	if err != nil {
+		return nil, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("Unable to encode identity credentials.").WithDebug(err.Error()))
+	}
+
+	cred.Config = message
+	identity.SetCredentials(CredentialsTypeWebAuthn, *cred)
+	return identity, nil
+}
+
+// Delete Credential Parameters
+//
+// swagger:parameters deleteIdentityCredentials
+// nolint:deadcode,unused
+type deleteIdentityCredentials struct {
+	// ID is the identity's ID.
+	//
+	// required: true
+	// in: path
+	ID string `json:"id"`
+
+	// Type is the credential's Type.
+	// One of totp, webauthn, lookup
+	//
+	// enum: totp,webauthn,lookup
+	// required: true
+	// in: path
+	Type string `json:"type"`
+}
+
+// swagger:route DELETE /admin/identities/{id}/credentials/{type} identity deleteIdentityCredentials
+//
+// # Delete a credential for a specific identity
+//
+// Delete an [identity](https://www.ory.sh/docs/kratos/concepts/identity-user-model) credential by its type
+// You can only delete second factor (aal2) credentials.
+//
+//	Consumes:
+//	- application/json
+//
+//	Produces:
+//	- application/json
+//
+//	Schemes: http, https
+//
+//	Security:
+//	  oryAccessToken:
+//
+//	Responses:
+//	  200: identity
+//	  404: errorGeneric
+//	  default: errorGeneric
+func (h *Handler) deleteIdentityCredentials(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	identity, err := h.r.PrivilegedIdentityPool().GetIdentityConfidential(r.Context(), x.ParseUUID(ps.ByName("id")))
+	if err != nil {
+		h.r.Writer().WriteError(w, r, err)
+		return
+	}
+
+	cred, ok := identity.GetCredentials(CredentialsType(ps.ByName("type")))
+	if !ok {
+		h.r.Writer().WriteError(w, r, errors.WithStack(herodot.ErrNotFound.WithReasonf("You tried to remove a %s but this user have no %s set up.", ps.ByName("type"), ps.ByName("type"))))
+		return
+	}
+
+	switch cred.Type {
+	case CredentialsTypeLookup:
+		fallthrough
+	case CredentialsTypeTOTP:
+		identity.DeleteCredentialsType(cred.Type)
+	case CredentialsTypeWebAuthn:
+		identity, err = deletCredentialWebAuthFromIdentity(identity)
+		if err != nil {
+			h.r.Writer().WriteError(w, r, err)
+			return
+		}
+	case CredentialsTypeOIDC:
+		fallthrough
+	case CredentialsTypePassword:
+		h.r.Writer().WriteError(w, r, errors.WithStack(herodot.ErrBadRequest.WithReasonf("You can't remove first factor credentials.")))
+		return
+	default:
+		h.r.Writer().WriteError(w, r, errors.WithStack(herodot.ErrBadRequest.WithReasonf("Unknown credentials type %s.", cred.Type)))
+		return
+	}
+
+	if err := h.r.IdentityManager().Update(
+		r.Context(),
+		identity,
+		ManagerAllowWriteProtectedTraits,
+	); err != nil {
+		h.r.Writer().WriteError(w, r, err)
+		return
+	}
+
+	w.WriteHeader(http.StatusNoContent)
 }

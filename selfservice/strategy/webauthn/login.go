@@ -109,7 +109,7 @@ func (s *Strategy) populateLoginMethod(r *http.Request, sr *login.Flow, i *ident
 		return nil
 	}
 
-	var conf CredentialsConfig
+	var conf identity.CredentialsWebAuthnConfig
 	if err := json.Unmarshal(cred.Config, &conf); err != nil {
 		return errors.WithStack(err)
 	}
@@ -291,7 +291,7 @@ func (s *Strategy) loginAuthenticate(_ http.ResponseWriter, r *http.Request, f *
 		return nil, s.handleLoginError(r, f, errors.WithStack(schema.NewNoWebAuthnRegistered()))
 	}
 
-	var o CredentialsConfig
+	var o identity.CredentialsWebAuthnConfig
 	if err := json.Unmarshal(c.Config, &o); err != nil {
 		return nil, s.handleLoginError(r, f, errors.WithStack(herodot.ErrInternalServerError.WithReason("The WebAuthn credentials could not be decoded properly").WithDebug(err.Error()).WithWrap(err)))
 	}
