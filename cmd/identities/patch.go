@@ -124,6 +124,6 @@ func NewPatchIdentityCmd() *cobra.Command {
 
 	cmdx.Must(c.MarkFlagRequired("op"), "")
 	cmdx.Must(c.MarkFlagRequired("path"), "")
-	
+
 	return c
 }
