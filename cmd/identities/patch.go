@@ -116,11 +116,14 @@ func NewPatchIdentityCmd() *cobra.Command {
 			return nil
 		},
 	}
+
 	c.Flags().StringP("from", "f", "", "This field is used together with operation 'move' and uses JSON Pointer notation.")
 	c.Flags().StringP("op", "o", "", "The JSON Patch operation. Valid values are: 'add', 'remove', 'replace', 'move', 'copy' and 'test'")
 	c.Flags().StringP("path", "p", "", "The JSON Pointer to the target key.")
 	c.Flags().StringP("value", "v", "", "The value to be used. Only available for 'add' and 'replace' operations..")
-	c.MarkFlagRequired("op")
-	c.MarkFlagRequired("path")
+
+	cmdx.Must(c.MarkFlagRequired("op"), "")
+	cmdx.Must(c.MarkFlagRequired("path"), "")
+	
 	return c
 }
