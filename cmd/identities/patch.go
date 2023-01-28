@@ -74,16 +74,19 @@ func NewPatchIdentityCmd() *cobra.Command {
 				Path: path,
 			}
 			if from != "" {
+				if op != "move" {
+					cmdx.Fatalf("From is only used in 'move' operations.")
+				}
 				jsonPatch.From = &from
 			}
 			if value != "" {
 				var parsedValue interface{}
 				err = json.Unmarshal([]byte(value), &parsedValue)
 				if err != nil {
-					_, _ = fmt.Fprintln(cmd.ErrOrStderr(), "Could not parse value")
-					return cmdx.FailSilently(cmd)
+					jsonPatch.Value = value
+				} else {
+					jsonPatch.Value = parsedValue
 				}
-				jsonPatch.Value = parsedValue
 			}
 			var (
 				patched = make([]kratos.Identity, 0, len(args))
