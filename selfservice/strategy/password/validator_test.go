@@ -7,7 +7,7 @@ import (
 	"bytes"
 	"context"
 	"crypto/rand"
-	"crypto/sha1"
+	"crypto/sha1" // #nosec G505 - compatibility for imported passwords
 	"errors"
 	"fmt"
 	"io"

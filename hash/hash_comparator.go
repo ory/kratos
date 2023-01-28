@@ -7,7 +7,10 @@ import (
 	"context"
 	"crypto/aes"
 	"crypto/cipher"
-	"crypto/md5" // #nosec G501
+	"crypto/md5"  // #nosec G501
+	"crypto/sha1" // #nosec G505 - compatibility for imported passwords
+	"crypto/sha256"
+	"crypto/sha512"
 	"crypto/subtle"
 	"encoding/base64"
 	"fmt"
@@ -37,6 +40,10 @@ func Compare(ctx context.Context, password []byte, hash []byte) error {
 		return ComparePbkdf2(ctx, password, hash)
 	case IsScryptHash(hash):
 		return CompareScrypt(ctx, password, hash)
+	case IsSSHAHash(hash):
+		return CompareSSHA(ctx, password, hash)
+	case IsSHAHash(hash):
+		return CompareSHA(ctx, password, hash)
 	case IsFirebaseScryptHash(hash):
 		return CompareFirebaseScrypt(ctx, password, hash)
 	case IsMD5Hash(hash):
@@ -142,6 +149,31 @@ func CompareScrypt(_ context.Context, password []byte, hash []byte) error {
 	return errors.WithStack(ErrMismatchedHashAndPassword)
 }
 
+func CompareSSHA(_ context.Context, password []byte, hash []byte) error {
+	hasher, salt, hash, err := decodeSSHAHash(string(hash))
+
+	if err != nil {
+		return err
+	}
+
+	raw := append(password[:], salt[:]...)
+
+	return compareSHAHelper(hasher, raw, hash)
+}
+
+func CompareSHA(_ context.Context, password []byte, hash []byte) error {
+
+	hasher, pf, salt, hash, err := decodeSHAHash(string(hash))
+	if err != nil {
+		return err
+	}
+
+	r := strings.NewReplacer("{SALT}", string(salt), "{PASSWORD}", string(password))
+	raw := []byte(r.Replace(string(pf)))
+
+	return compareSHAHelper(hasher, raw, hash)
+}
+
 func CompareFirebaseScrypt(_ context.Context, password []byte, hash []byte) error {
 	// Extract the parameters, salt and derived key from the encoded password
 	// hash.
@@ -206,36 +238,36 @@ var (
 	isArgon2iHash        = regexp.MustCompile(`^\$argon2i\$`)
 	isPbkdf2Hash         = regexp.MustCompile(`^\$pbkdf2-sha[0-9]{1,3}\$`)
 	isScryptHash         = regexp.MustCompile(`^\$scrypt\$`)
+	isSSHAHash           = regexp.MustCompile(`^{SSHA(256|512)?}.*`)
+	isSHAHash            = regexp.MustCompile(`^\$sha(1|256|512)\$`)
 	isFirebaseScryptHash = regexp.MustCompile(`^\$firescrypt\$`)
 	isMD5Hash            = regexp.MustCompile(`^\$md5\$`)
 )
 
-func IsBcryptHash(hash []byte) bool {
-	return isBcryptHash.Match(hash)
-}
+func IsBcryptHash(hash []byte) bool         { return isBcryptHash.Match(hash) }
+func IsArgon2idHash(hash []byte) bool       { return isArgon2idHash.Match(hash) }
+func IsArgon2iHash(hash []byte) bool        { return isArgon2iHash.Match(hash) }
+func IsPbkdf2Hash(hash []byte) bool         { return isPbkdf2Hash.Match(hash) }
+func IsScryptHash(hash []byte) bool         { return isScryptHash.Match(hash) }
+func IsSSHAHash(hash []byte) bool           { return isSSHAHash.Match(hash) }
+func IsSHAHash(hash []byte) bool            { return isSHAHash.Match(hash) }
+func IsFirebaseScryptHash(hash []byte) bool { return isFirebaseScryptHash.Match(hash) }
+func IsMD5Hash(hash []byte) bool            { return isMD5Hash.Match(hash) }
 
-func IsArgon2idHash(hash []byte) bool {
-	return isArgon2idHash.Match(hash)
-}
-
-func IsArgon2iHash(hash []byte) bool {
-	return isArgon2iHash.Match(hash)
-}
-
-func IsPbkdf2Hash(hash []byte) bool {
-	return isPbkdf2Hash.Match(hash)
-}
-
-func IsScryptHash(hash []byte) bool {
-	return isScryptHash.Match(hash)
-}
-
-func IsFirebaseScryptHash(hash []byte) bool {
-	return isFirebaseScryptHash.Match(hash)
-}
-
-func IsMD5Hash(hash []byte) bool {
-	return isMD5Hash.Match(hash)
+func IsValidHashFormat(hash []byte) bool {
+	if IsBcryptHash(hash) ||
+		IsArgon2idHash(hash) ||
+		IsArgon2iHash(hash) ||
+		IsPbkdf2Hash(hash) ||
+		IsScryptHash(hash) ||
+		IsSSHAHash(hash) ||
+		IsSHAHash(hash) ||
+		IsFirebaseScryptHash(hash) ||
+		IsMD5Hash(hash) {
+		return true
+	} else {
+		return false
+	}
 }
 
 func decodeArgon2idHash(encodedHash string) (p *config.Argon2, salt, hash []byte, err error) {
@@ -337,6 +369,113 @@ func decodeScryptHash(encodedHash string) (p *Scrypt, salt, hash []byte, err err
 	p.KeyLength = uint32(len(hash))
 
 	return p, salt, hash, nil
+}
+
+// decodeSHAHash decodes SHA[1|256|512] encoded password hash in custom PHC format.
+// format: $sha1$pf=<salting-format>$<salt>$<hash>
+func decodeSHAHash(encodedHash string) (hasher string, pf, salt, hash []byte, err error) {
+	parts := strings.Split(encodedHash, "$")
+
+	if len(parts) != 5 {
+		return "", nil, nil, nil, ErrInvalidHash
+	}
+
+	hasher = parts[1]
+
+	_, err = fmt.Sscanf(parts[2], "pf=%s", &pf)
+	if err != nil {
+		return "", nil, nil, nil, err
+	}
+
+	pf, err = base64.StdEncoding.Strict().DecodeString(string(pf))
+	if err != nil {
+		return "", nil, nil, nil, err
+	}
+
+	salt, err = base64.StdEncoding.Strict().DecodeString(parts[3])
+	if err != nil {
+		return "", nil, nil, nil, err
+	}
+
+	hash, err = base64.StdEncoding.Strict().DecodeString(parts[4])
+	if err != nil {
+		return "", nil, nil, nil, err
+	}
+
+	return hasher, pf, salt, hash, nil
+}
+
+// used for CompareSHA and CompareSSHA
+func compareSHAHelper(hasher string, raw []byte, hash []byte) error {
+
+	var sha []byte
+
+	switch hasher {
+	case "sha1":
+		sum := sha1.Sum(raw) // #nosec G401 - compatibility for imported passwords
+		sha = sum[:]
+	case "sha256":
+		sum := sha256.Sum256(raw)
+		sha = sum[:]
+	case "sha512":
+		sum := sha512.Sum512(raw)
+		sha = sum[:]
+	default:
+		return errors.WithStack(ErrMismatchedHashAndPassword)
+	}
+
+	encodedHash := []byte(base64.StdEncoding.EncodeToString(hash))
+	newEncodedHash := []byte(base64.StdEncoding.EncodeToString(sha))
+
+	// Check that the contents of the hashed passwords are identical.
+	// subtle.ConstantTimeCompare() is used to help prevent timing attacks.
+	if subtle.ConstantTimeCompare(encodedHash, newEncodedHash) == 1 {
+		return nil
+	}
+	return errors.WithStack(ErrMismatchedHashAndPassword)
+}
+
+// decodeSSHAHash decodes SSHA[1|256|512] encoded password hash in usual {SSHA...} format.
+func decodeSSHAHash(encodedHash string) (hasher string, salt, hash []byte, err error) {
+	re := regexp.MustCompile(`\{([^}]*)\}`)
+	match := re.FindStringSubmatch(string(encodedHash))
+
+	var index_of_salt_begin int
+	var index_of_hash_begin int
+
+	switch match[1] {
+	case "SSHA":
+		hasher = "sha1"
+		index_of_hash_begin = 6
+		index_of_salt_begin = 20
+
+	case "SSHA256":
+		hasher = "sha256"
+		index_of_hash_begin = 9
+		index_of_salt_begin = 32
+
+	case "SSHA512":
+		hasher = "sha512"
+		index_of_hash_begin = 9
+		index_of_salt_begin = 64
+
+	default:
+		return "", nil, nil, ErrInvalidHash
+	}
+
+	decoded, err := base64.StdEncoding.DecodeString(string(encodedHash[index_of_hash_begin:]))
+	if err != nil {
+		return "", nil, nil, ErrInvalidHash
+	}
+
+	if len(decoded) < index_of_salt_begin+1 {
+		return "", nil, nil, ErrInvalidHash
+	}
+
+	salt = decoded[index_of_salt_begin:]
+	hash = decoded[:index_of_salt_begin]
+
+	return hasher, salt, hash, nil
 }
 
 // decodeFirebaseScryptHash decodes Firebase Scrypt encoded password hash.

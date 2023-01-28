@@ -34,7 +34,7 @@ func UpgradeWebAuthnCredentials(i *Identity, c *Credentials) (err error) {
 
 		var index = -1
 		var err error
-		gjson.GetBytes(c.Config, "credentials").ForEach(func(key, value gjson.Result) bool {
+		gjson.GetBytes(c.Config, "credentials").ForEach(func(_, value gjson.Result) bool {
 			index++
 
 			if value.Get("is_passwordless").Exists() {
