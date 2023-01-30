@@ -22,11 +22,10 @@ import (
 )
 
 type EcontIdentityResponse struct {
-	Issuer    string `json:"iss,omitempty"`
-	Subject   string `json:"sub,omitempty"`
-	Name      string `json:"name,omitempty"`
-	Username  string `json:"user_name,omitempty"`
-	AccountId int    `json:"account_id,omitempty"`
+	Issuer   string `json:"iss,omitempty"`
+	Subject  string `json:"sub,omitempty"`
+	Name     string `json:"name,omitempty"`
+	Username string `json:"user_name,omitempty"`
 }
 
 type ProviderEcont struct {
@@ -150,9 +149,11 @@ func (g *ProviderEcont) Claims(ctx context.Context, exchange *oauth2.Token, quer
 
 	req, err := retryablehttp.NewRequest("GET", u.String(), nil)
 
-	q := req.URL.Query()
-	q.Add("access_token", exchange.AccessToken)
-	req.URL.RawQuery = q.Encode()
+	if req != nil {
+		q := req.URL.Query()
+		q.Add("access_token", exchange.AccessToken)
+		req.URL.RawQuery = q.Encode()
+	}
 
 	if err != nil {
 		return nil, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("%s", err))
@@ -171,6 +172,7 @@ func (g *ProviderEcont) Claims(ctx context.Context, exchange *oauth2.Token, quer
 		Issuer:  "https://login.econt.com/",
 		Subject: data.Username,
 		Email:   data.Username,
+		Name:    data.Name,
 	}
 	return claims, nil
 }
