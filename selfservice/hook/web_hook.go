@@ -10,6 +10,8 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/ory/herodot"
+
 	"github.com/pkg/errors"
 	"github.com/tidwall/gjson"
 	"go.opentelemetry.io/otel/attribute"
@@ -188,7 +190,7 @@ func (e *WebHook) ExecuteRegistrationPreHook(_ http.ResponseWriter, req *http.Re
 }
 
 func (e *WebHook) ExecutePostRegistrationPrePersistHook(_ http.ResponseWriter, req *http.Request, flow *registration.Flow, id *identity.Identity) error {
-	if !gjson.GetBytes(e.conf, "can_interrupt").Bool() {
+	if !(gjson.GetBytes(e.conf, "can_interrupt").Bool() || gjson.GetBytes(e.conf, "response.parse").Bool()) {
 		return nil
 	}
 	return otelx.WithSpan(req.Context(), "selfservice.hook.ExecutePostRegistrationPrePersistHook", func(ctx context.Context) error {
@@ -204,7 +206,7 @@ func (e *WebHook) ExecutePostRegistrationPrePersistHook(_ http.ResponseWriter, r
 }
 
 func (e *WebHook) ExecutePostRegistrationPostPersistHook(_ http.ResponseWriter, req *http.Request, flow *registration.Flow, session *session.Session) error {
-	if gjson.GetBytes(e.conf, "can_interrupt").Bool() {
+	if gjson.GetBytes(e.conf, "can_interrupt").Bool() || gjson.GetBytes(e.conf, "response.parse").Bool() {
 		return nil
 	}
 	return otelx.WithSpan(req.Context(), "selfservice.hook.ExecutePostRegistrationPostPersistHook", func(ctx context.Context) error {
@@ -288,10 +290,15 @@ func (e *WebHook) execute(ctx context.Context, data *templateContext) error {
 		httpClient     = e.deps.HTTPClient(ctx)
 		ignoreResponse = gjson.GetBytes(e.conf, "response.ignore").Bool()
 		canInterrupt   = gjson.GetBytes(e.conf, "can_interrupt").Bool()
+		parseResponse  = gjson.GetBytes(e.conf, "response.parse").Bool()
 		tracer         = trace.SpanFromContext(ctx).TracerProvider().Tracer("kratos-webhooks")
 		spanOpts       = []trace.SpanStartOption{trace.WithAttributes(attrs...)}
 		errChan        = make(chan error, 1)
 	)
+
+	if ignoreResponse && (parseResponse || canInterrupt) {
+		return errors.WithStack(herodot.ErrInternalServerError.WithReasonf("A webhook is configured to ignore the response but also to parse the response. This is not possible."))
+	}
 
 	ctx, span := tracer.Start(ctx, "selfservice.webhook", spanOpts...)
 	e.deps.Logger().WithRequest(req.Request).Info("Dispatching webhook")
@@ -323,14 +330,21 @@ func (e *WebHook) execute(ctx context.Context, data *templateContext) error {
 
 		if resp.StatusCode >= http.StatusBadRequest {
 			span.SetStatus(codes.Error, "HTTP status code >= 400")
-			if canInterrupt {
-				if err := parseWebhookResponse(resp); err != nil {
+			if canInterrupt || parseResponse {
+				if err := parseWebhookResponse(resp, data.Identity); err != nil {
 					span.SetStatus(codes.Error, err.Error())
 					errChan <- err
 				}
 			}
 			errChan <- fmt.Errorf("webhook failed with status code %v", resp.StatusCode)
 			return
+		}
+
+		if parseResponse {
+			if err := parseWebhookResponse(resp, data.Identity); err != nil {
+				span.SetStatus(codes.Error, err.Error())
+				errChan <- err
+			}
 		}
 
 		errChan <- nil
@@ -355,38 +369,91 @@ func (e *WebHook) execute(ctx context.Context, data *templateContext) error {
 	return <-errChan
 }
 
-func parseWebhookResponse(resp *http.Response) (err error) {
+func parseWebhookResponse(resp *http.Response, id *identity.Identity) (err error) {
 	if resp == nil {
 		return errors.Errorf("empty response provided from the webhook")
 	}
-	var hookResponse rawHookResponse
-	if err := json.NewDecoder(resp.Body).Decode(&hookResponse); err != nil {
-		return errors.Wrap(err, "webhook response could not be unmarshalled properly from JSON")
-	}
 
-	var validationErrs []*schema.ValidationError
-	for _, msg := range hookResponse.Messages {
-		messages := text.Messages{}
-		for _, detail := range msg.DetailedMessages {
-			var msgType text.UITextType
-			if detail.Type == "error" {
-				msgType = text.Error
-			} else {
-				msgType = text.Info
-			}
-			messages.Add(&text.Message{
-				ID:      text.ID(detail.ID),
-				Text:    detail.Text,
-				Type:    msgType,
-				Context: detail.Context,
-			})
+	if resp.StatusCode == http.StatusOK {
+		var hookResponse struct {
+			Identity *identity.Identity `json:"identity"`
 		}
-		validationErrs = append(validationErrs, schema.NewHookValidationError(msg.InstancePtr, "a webhook target returned an error", messages))
+
+		if err := json.NewDecoder(resp.Body).Decode(&hookResponse); err != nil {
+			return errors.Wrap(err, "webhook response could not be unmarshalled properly from JSON")
+		}
+
+		if hookResponse.Identity == nil {
+			return nil
+		}
+
+		if len(hookResponse.Identity.Traits) > 0 {
+			id.Traits = hookResponse.Identity.Traits
+		}
+
+		if len(hookResponse.Identity.SchemaID) > 0 {
+			id.SchemaID = hookResponse.Identity.SchemaID
+		}
+
+		if len(hookResponse.Identity.State) > 0 {
+			id.State = hookResponse.Identity.State
+		}
+
+		if len(hookResponse.Identity.VerifiableAddresses) > 0 {
+			id.VerifiableAddresses = hookResponse.Identity.VerifiableAddresses
+		}
+
+		if len(hookResponse.Identity.VerifiableAddresses) > 0 {
+			id.VerifiableAddresses = hookResponse.Identity.VerifiableAddresses
+		}
+
+		if len(hookResponse.Identity.RecoveryAddresses) > 0 {
+			id.RecoveryAddresses = hookResponse.Identity.RecoveryAddresses
+		}
+
+		if len(hookResponse.Identity.MetadataPublic) > 0 {
+			id.MetadataPublic = hookResponse.Identity.MetadataPublic
+		}
+
+		if len(hookResponse.Identity.MetadataAdmin) > 0 {
+			id.MetadataAdmin = hookResponse.Identity.MetadataAdmin
+		}
+
+		return nil
+	} else if resp.StatusCode == http.StatusNoContent {
+		return nil
+	} else if resp.StatusCode >= http.StatusBadRequest {
+		var hookResponse rawHookResponse
+		if err := json.NewDecoder(resp.Body).Decode(&hookResponse); err != nil {
+			return errors.Wrap(err, "webhook response could not be unmarshalled properly from JSON")
+		}
+
+		var validationErrs []*schema.ValidationError
+		for _, msg := range hookResponse.Messages {
+			messages := text.Messages{}
+			for _, detail := range msg.DetailedMessages {
+				var msgType text.UITextType
+				if detail.Type == "error" {
+					msgType = text.Error
+				} else {
+					msgType = text.Info
+				}
+				messages.Add(&text.Message{
+					ID:      text.ID(detail.ID),
+					Text:    detail.Text,
+					Type:    msgType,
+					Context: detail.Context,
+				})
+			}
+			validationErrs = append(validationErrs, schema.NewHookValidationError(msg.InstancePtr, "a webhook target returned an error", messages))
+		}
+
+		if len(validationErrs) == 0 {
+			return errors.New("error while parsing webhook response: got no validation errors")
+		}
+
+		return schema.NewValidationListError(validationErrs)
 	}
 
-	if len(validationErrs) == 0 {
-		return errors.New("error while parsing webhook response: got no validation errors")
-	}
-
-	return schema.NewValidationListError(validationErrs)
+	return nil
 }

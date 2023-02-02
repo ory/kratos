@@ -1,0 +1,51 @@
+{
+  "id": "00000000-0000-0000-0000-000000000000",
+  "credentials": {
+    "password": {
+      "type": "password",
+      "identifiers": [
+        "test"
+      ],
+      "config": {
+        "hashed_password": "$argon2id$v=19$m=65536,t=1,p=1$Z3JlZW5hbmRlcnNlY3JldA$Z3JlZW5hbmRlcnNlY3JldA"
+      },
+      "version": 0,
+      "created_at": "0001-01-01T00:00:00Z",
+      "updated_at": "0001-01-01T00:00:00Z"
+    }
+  },
+  "schema_id": "default",
+  "schema_url": "file://stub/default.schema.json",
+  "state": "active",
+  "traits": {
+    "email": "some@other-example.org"
+  },
+  "verifiable_addresses": [
+    {
+      "id": "00000000-0000-0000-0000-000000000000",
+      "value": "some@other-example.org",
+      "verified": false,
+      "via": "email",
+      "status": "",
+      "created_at": "0001-01-01T00:00:00Z",
+      "updated_at": "0001-01-01T00:00:00Z"
+    }
+  ],
+  "recovery_addresses": [
+    {
+      "id": "00000000-0000-0000-0000-000000000000",
+      "value": "some@example.org",
+      "via": "email",
+      "created_at": "0001-01-01T00:00:00Z",
+      "updated_at": "0001-01-01T00:00:00Z"
+    }
+  ],
+  "metadata_public": {
+    "public": "data"
+  },
+  "metadata_admin": {
+    "admin": "data"
+  },
+  "created_at": "0001-01-01T00:00:00Z",
+  "updated_at": "0001-01-01T00:00:00Z"
+}

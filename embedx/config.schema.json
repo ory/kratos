@@ -174,7 +174,23 @@
                   "type": "boolean",
                   "description": "Ignore the response from the web hook. If enabled the request will be made asynchronously which can be useful if you only wish to notify another system but do not parse the response.",
                   "default": false
+                },
+                "parse": {
+                  "type": "boolean",
+                  "default": false,
+                  "description": "If enabled parses the response before saving the flow result. Set this value to true if you would like to modify the identity, for example identity metadata, before saving it during registration. When enabled, you may also abort the registration, verification, login or settings flow due to, for example, a validation flow. Head over to the [web hook documentation](https://www.ory.sh/docs/kratos/hooks/configure-hooks) for more information."
                 }
+              },
+              "not": {
+                "properties": {
+                  "ignore": {
+                    "const": true
+                  },
+                  "parse": {
+                    "const": true
+                  }
+                },
+                "required":["ignore","parse"]
               }
             },
             "url": {
@@ -211,7 +227,7 @@
             "can_interrupt": {
               "type": "boolean",
               "default": false,
-              "description": "If enabled allows the web hook to interrupt / abort the self-service flow. It only applies to certain flows (registration/verification/login/settings) and requires a valid response format."
+              "description": "Deprecated, please use `response.parse` instead. If enabled allows the web hook to interrupt / abort the self-service flow. It only applies to certain flows (registration/verification/login/settings) and requires a valid response format."
             },
             "auth": {
               "type": "object",
@@ -1208,7 +1224,10 @@
                   "title": "Verification Strategy",
                   "description": "The strategy to use for verification requests",
                   "type": "string",
-                  "enum": ["link", "code"],
+                  "enum": [
+                    "link",
+                    "code"
+                  ],
                   "default": "code"
                 }
               }
