@@ -10,6 +10,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/ory/x/pointerx"
+
 	"golang.org/x/sync/errgroup"
 
 	"go.opentelemetry.io/otel/attribute"
@@ -257,9 +259,26 @@ func (p *Persister) normalizeAllAddressess(ctx context.Context, id *identity.Ide
 
 func (p *Persister) normalizeVerifiableAddresses(ctx context.Context, id *identity.Identity) {
 	for k := range id.VerifiableAddresses {
-		id.VerifiableAddresses[k].IdentityID = id.ID
-		id.VerifiableAddresses[k].NID = p.NetworkID(ctx)
-		id.VerifiableAddresses[k].Value = stringToLowerTrim(id.VerifiableAddresses[k].Value)
+		v := id.VerifiableAddresses[k]
+
+		v.IdentityID = id.ID
+		v.NID = p.NetworkID(ctx)
+		v.Value = stringToLowerTrim(v.Value)
+		v.Via = x.Coalesce(v.Via, identity.AddressTypeEmail)
+		if len(v.Status) == 0 {
+			if v.Verified {
+				v.Status = identity.VerifiableAddressStatusCompleted
+			} else {
+				v.Status = identity.VerifiableAddressStatusPending
+			}
+		}
+
+		// If verified is true but no timestamp is set, we default to time.Now
+		if v.Verified && (v.VerifiedAt == nil || time.Time(*v.VerifiedAt).IsZero()) {
+			v.VerifiedAt = pointerx.Ptr(sqlxx.NullTime(time.Now()))
+		}
+
+		id.VerifiableAddresses[k] = v
 	}
 }
 
@@ -268,6 +287,7 @@ func (p *Persister) normalizeRecoveryAddresses(ctx context.Context, id *identity
 		id.RecoveryAddresses[k].IdentityID = id.ID
 		id.RecoveryAddresses[k].NID = p.NetworkID(ctx)
 		id.RecoveryAddresses[k].Value = stringToLowerTrim(id.RecoveryAddresses[k].Value)
+		id.RecoveryAddresses[k].Via = x.Coalesce(id.RecoveryAddresses[k].Via, identity.AddressTypeEmail)
 	}
 }
 

@@ -1,8 +1,6 @@
 // Copyright © 2023 Ory Corp
 // SPDX-License-Identifier: Apache-2.0
 
-import { Session } from "@ory/kratos-client"
-
 export interface MailMessage {
   fromAddress: string
   toAddresses: Array<string>
@@ -150,6 +148,15 @@ declare global {
         strategy?: Strategy
         returnTo?: string
       }): Chainable<void>
+
+      /**
+       *  Sets the post registration hook.
+       *
+       * @param hooks
+       */
+      setPostPasswordRegistrationHooks(
+        hooks: Array<{ hook: string; config?: any }>,
+      )
 
       /**
        * Submits a verification flow via the Browser

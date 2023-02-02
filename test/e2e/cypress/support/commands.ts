@@ -209,6 +209,13 @@ Cypress.Commands.add("enableLoginForVerifiedAddressOnly", () => {
   })
 })
 
+Cypress.Commands.add("setPostPasswordRegistrationHooks", (hooks) => {
+  updateConfigFile((config) => {
+    config.selfservice.flows.registration["after"].password = { hooks }
+    return config
+  })
+})
+
 Cypress.Commands.add("shortLoginLifespan", ({} = {}) => {
   updateConfigFile((config) => {
     config.selfservice.flows.login.lifespan = "100ms"
