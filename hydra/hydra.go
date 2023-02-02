@@ -110,6 +110,16 @@ func (h *DefaultHydra) AcceptLoginRequest(ctx context.Context, hlc uuid.UUID, su
 				WithDetail("status_code", r.StatusCode).
 				WithDebug(err.Error())
 		}
+
+		if openApiErr := new(hydraclientgo.GenericOpenAPIError); errors.As(err, &openApiErr) {
+			switch oauth2Err := openApiErr.Model().(type) {
+			case hydraclientgo.ErrorOAuth2:
+				innerErr = innerErr.WithDetail("oauth2_error_hint", oauth2Err.GetErrorHint())
+			case *hydraclientgo.ErrorOAuth2:
+				innerErr = innerErr.WithDetail("oauth2_error_hint", oauth2Err.GetErrorHint())
+			}
+		}
+
 		return "", errors.WithStack(innerErr)
 	}
 
@@ -134,6 +144,16 @@ func (h *DefaultHydra) GetLoginRequest(ctx context.Context, hlc uuid.NullUUID) (
 				WithDetail("status_code", r.StatusCode).
 				WithDebug(err.Error())
 		}
+
+		if openApiErr := new(hydraclientgo.GenericOpenAPIError); errors.As(err, &openApiErr) {
+			switch oauth2Err := openApiErr.Model().(type) {
+			case hydraclientgo.ErrorOAuth2:
+				innerErr = innerErr.WithDetail("oauth2_error_hint", oauth2Err.GetErrorHint())
+			case *hydraclientgo.ErrorOAuth2:
+				innerErr = innerErr.WithDetail("oauth2_error_hint", oauth2Err.GetErrorHint())
+			}
+		}
+
 		return nil, errors.WithStack(innerErr)
 	}
 
