@@ -316,6 +316,19 @@
 - Parallelize get identity and session calls
   ([#3023](https://github.com/ory/kratos/issues/3023))
   ([6393519](https://github.com/ory/kratos/commit/6393519977bc3d804673b5669166e07c561f1c79))
+- Return hydra error messages
+  ([b3d037b](https://github.com/ory/kratos/commit/b3d037b33b248f1873f09d641e5d61376bcfde80))
+- Webhooks that update identities
+  ([2cbee3e](https://github.com/ory/kratos/commit/2cbee3e8eea6bac376faf9382bf5b15acb732f03)),
+  closes [#2161](https://github.com/ory/kratos/issues/2161):
+
+  Introduces a new configuration `response.parse` in webhooks. This enables
+  updating of identity data during registration, including admin/public
+  metadata, identity traits, enabling/disabling identity, and modifying
+  verified/recovery addresses.
+
+  Please note that `can_interrupt` is being deprecated in favor of
+  `response.parse`.
 
 # [0.11.1](https://github.com/ory/kratos/compare/v0.11.0...v0.11.1) (2023-01-14)
 
