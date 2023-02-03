@@ -5,7 +5,7 @@
 
 **Table of Contents**
 
-- [ (2023-01-19)](#2023-01-19)
+- [ (2023-02-03)](#2023-02-03)
   - [Bug Fixes](#bug-fixes)
   - [Features](#features)
 - [0.11.1 (2023-01-14)](#0111-2023-01-14)
@@ -291,18 +291,28 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# [](https://github.com/ory/kratos/compare/v0.11.1...v) (2023-01-19)
+# [](https://github.com/ory/kratos/compare/v0.11.1...v) (2023-02-03)
 
 ### Bug Fixes
 
 - Handle upstream errors in patreon provider
   ([#3032](https://github.com/ory/kratos/issues/3032))
   ([39fa31f](https://github.com/ory/kratos/commit/39fa31f85deb3f015aa0f1b30b4a17e4b51d461b))
+- Remove network omit flag ([#3066](https://github.com/ory/kratos/issues/3066))
+  ([c629b72](https://github.com/ory/kratos/commit/c629b72be42001e3e1671d61cc8348373b686844))
 
 ### Features
 
+- Add a new admin API to remove a specific 2nd factor credential
+  ([#2962](https://github.com/ory/kratos/issues/2962))
+  ([44556a4](https://github.com/ory/kratos/commit/44556a468ef233b18fd0f16a83a4e1b2e5f05dcf)),
+  closes [#2505](https://github.com/ory/kratos/issues/2505)
 - Add patreon oidc provider ([#3021](https://github.com/ory/kratos/issues/3021))
   ([20ea29e](https://github.com/ory/kratos/commit/20ea29e018b33231cf6b2743de74d2233f756c2a))
+- Allow importing (salted) SHA hashing algorithms
+  ([#2741](https://github.com/ory/kratos/issues/2741))
+  ([132255e](https://github.com/ory/kratos/commit/132255eff24a3f5a7fc2249a0ecf9b8716a8f1e7)),
+  closes [#2422](https://github.com/ory/kratos/issues/2422)
 - Parallelize get identity and session calls
   ([#3023](https://github.com/ory/kratos/issues/3023))
   ([6393519](https://github.com/ory/kratos/commit/6393519977bc3d804673b5669166e07c561f1c79))
