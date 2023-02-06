@@ -1,9 +1,9 @@
 // Copyright © 2023 Ory Corp
 // SPDX-License-Identifier: Apache-2.0
 
-import { APP_URL, appPrefix, gen, parseHtml } from "../../../../helpers"
-import { routes as react } from "../../../../helpers/react"
+import { appPrefix, gen, parseHtml } from "../../../../helpers"
 import { routes as express } from "../../../../helpers/express"
+import { routes as react } from "../../../../helpers/react"
 
 context("Account Recovery Errors", () => {
   ;[
@@ -94,7 +94,7 @@ context("Account Recovery Errors", () => {
         cy.location("pathname").should("eq", "/recovery")
         cy.get('[data-testid="ui/message/1060002"]').should(
           "have.text",
-          "An email containing a recovery link has been sent to the email address you provided.",
+          "An email containing a recovery link has been sent to the email address you provided. If you have not received an email, check the spelling of the address.",
         )
         cy.get('input[name="email"]').should("have.value", email)
 

@@ -2,8 +2,8 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { appPrefix, assertRecoveryAddress, gen } from "../../../../helpers"
-import { routes as react } from "../../../../helpers/react"
 import { routes as express } from "../../../../helpers/express"
+import { routes as react } from "../../../../helpers/react"
 
 context("Account Recovery With Code Success", () => {
   ;[
@@ -53,7 +53,7 @@ context("Account Recovery With Code Success", () => {
         cy.get("button[value='code']").click()
         cy.get('[data-testid="ui/message/1060003"]').should(
           "have.text",
-          "An email containing a recovery code has been sent to the email address you provided.",
+          "An email containing a recovery code has been sent to the email address you provided. If you have not received an email, check the spelling of the address.",
         )
 
         cy.recoveryEmailWithCode({ expect: { email: identity.email } })
@@ -91,7 +91,7 @@ context("Account Recovery With Code Success", () => {
         cy.get("button[value='code']").click()
         cy.get('[data-testid="ui/message/1060003"]').should(
           "have.text",
-          "An email containing a recovery code has been sent to the email address you provided.",
+          "An email containing a recovery code has been sent to the email address you provided. If you have not received an email, check the spelling of the address.",
         )
         cy.get("input[name='code']").type("12312312") // Invalid code
         cy.get("button[value='code']").click()
@@ -123,7 +123,7 @@ context("Account Recovery With Code Success", () => {
         cy.get("button[value='code']").click()
         cy.get('[data-testid="ui/message/1060003"]').should(
           "have.text",
-          "An email containing a recovery code has been sent to the email address you provided.",
+          "An email containing a recovery code has been sent to the email address you provided. If you have not received an email, check the spelling of the address.",
         )
 
         cy.recoveryEmailWithCode({
@@ -172,7 +172,7 @@ context("Account Recovery With Code Success", () => {
     cy.get("button[value='code']").click()
     cy.get('[data-testid="ui/message/1060003"]').should(
       "have.text",
-      "An email containing a recovery code has been sent to the email address you provided.",
+      "An email containing a recovery code has been sent to the email address you provided. If you have not received an email, check the spelling of the address.",
     )
 
     cy.recoveryEmailWithCode({ expect: { email: identity.email } })
