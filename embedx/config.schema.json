@@ -1659,35 +1659,7 @@
           "type": "object",
           "properties": {
             "recovery": {
-              "invalid": {
-                "additionalProperties": false,
-                "type": "object",
-                "properties": {
-                  "send": {
-                    "type": "boolean",
-                    "description": "Enable sending invalid recovery email",
-                    "default": true
-                  },
-                  "email": {
-                    "$ref": "#/definitions/emailCourierTemplate"
-                  }
-                },
-                "required": [
-                  "email"
-                ]
-              },
-              "valid": {
-                "additionalProperties": false,
-                "type": "object",
-                "properties": {
-                  "email": {
-                    "$ref": "#/definitions/emailCourierTemplate"
-                  }
-                },
-                "required": [
-                  "email"
-                ]
-              }
+              "$ref": "#/definitions/courierTemplates"
             },
             "recovery_code": {
               "$ref": "#/definitions/courierTemplates"
