@@ -1,3 +1,6 @@
+// Copyright © 2023 Ory Corp
+// SPDX-License-Identifier: Apache-2.0
+
 package text
 
 import (
@@ -56,7 +59,7 @@ type Message struct {
 	// The message type.
 	//
 	// required: true
-	Type Type `json:"type"`
+	Type UITextType `json:"type"`
 
 	// The message's context. Useful when customizing messages.
 	Context json.RawMessage `json:"context,omitempty" faker:"-"`

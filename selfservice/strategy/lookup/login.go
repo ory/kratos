@@ -1,3 +1,6 @@
+// Copyright © 2023 Ory Corp
+// SPDX-License-Identifier: Apache-2.0
+
 package lookup
 
 import (
@@ -67,10 +70,10 @@ func (s *Strategy) handleLoginError(r *http.Request, f *login.Flow, err error) e
 	return err
 }
 
-// submitSelfServiceLoginFlowWithLookupSecretMethodBody is used to decode the login form payload.
+// Update Login Flow with Lookup Secret Method
 //
-// swagger:model submitSelfServiceLoginFlowWithLookupSecretMethodBody
-type submitSelfServiceLoginFlowWithLookupSecretMethodBody struct {
+// swagger:model updateLoginFlowWithLookupSecretMethod
+type updateLoginFlowWithLookupSecretMethod struct {
 	// Method should be set to "lookup_secret" when logging in using the lookup_secret strategy.
 	//
 	// required: true
@@ -94,7 +97,7 @@ func (s *Strategy) Login(w http.ResponseWriter, r *http.Request, f *login.Flow, 
 		return nil, err
 	}
 
-	var p submitSelfServiceLoginFlowWithLookupSecretMethodBody
+	var p updateLoginFlowWithLookupSecretMethod
 	if err := s.hd.Decode(r, &p,
 		decoderx.HTTPDecoderSetValidatePayloads(true),
 		decoderx.MustHTTPRawJSONSchemaCompiler(loginSchema),
@@ -113,7 +116,7 @@ func (s *Strategy) Login(w http.ResponseWriter, r *http.Request, f *login.Flow, 
 		return nil, s.handleLoginError(r, f, err)
 	}
 
-	var o CredentialsConfig
+	var o identity.CredentialsLookupConfig
 	if err := json.Unmarshal(c.Config, &o); err != nil {
 		return nil, errors.WithStack(herodot.ErrInternalServerError.WithReason("The lookup secrets could not be decoded properly").WithDebug(err.Error()).WithWrap(err))
 	}

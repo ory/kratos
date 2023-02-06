@@ -1,9 +1,14 @@
+// Copyright © 2023 Ory Corp
+// SPDX-License-Identifier: Apache-2.0
+
 package test
 
 import (
 	"context"
 	"testing"
 	"time"
+
+	"github.com/ory/x/pagination/keysetpagination"
 
 	"github.com/ory/x/pointerx"
 
@@ -97,109 +102,14 @@ func TestPersister(ctx context.Context, conf *config.Config, p interface {
 			})
 
 			t.Run("method=get by token", func(t *testing.T) {
-				sess, err := p.GetSessionByToken(ctx, expected.Token, session.ExpandEverything)
+				sess, err := p.GetSessionByToken(ctx, expected.Token, session.ExpandEverything, identity.ExpandDefault)
 				check(sess, err)
 				checkDevices(sess.Devices, err)
 
 				t.Run("on another network", func(t *testing.T) {
 					_, p := testhelpers.NewNetwork(t, ctx, p)
-					_, err := p.GetSessionByToken(ctx, expected.Token, session.ExpandNothing)
+					_, err := p.GetSessionByToken(ctx, expected.Token, session.ExpandNothing, identity.ExpandDefault)
 					assert.ErrorIs(t, err, sqlcon.ErrNoRows)
-				})
-			})
-
-			t.Run("method=list by identity", func(t *testing.T) {
-				i := identity.NewIdentity("")
-				require.NoError(t, p.CreateIdentity(ctx, i))
-				sess := make([]session.Session, 4)
-				for j := range sess {
-					require.NoError(t, faker.FakeData(&sess[j]))
-					sess[j].Identity = i
-					sess[j].Active = j%2 == 0
-
-					var device session.Device
-					require.NoError(t, faker.FakeData(&device))
-					sess[j].Devices = []session.Device{
-						device,
-					}
-					require.NoError(t, p.UpsertSession(ctx, &sess[j]))
-				}
-
-				for _, tc := range []struct {
-					desc     string
-					except   uuid.UUID
-					expected []session.Session
-					active   *bool
-				}{
-					{
-						desc:     "all",
-						expected: sess,
-					},
-					{
-						desc:   "except one",
-						except: sess[0].ID,
-						expected: []session.Session{
-							sess[1],
-							sess[2],
-							sess[3],
-						},
-					},
-					{
-						desc:   "active only",
-						active: pointerx.Bool(true),
-						expected: []session.Session{
-							sess[0],
-							sess[2],
-						},
-					},
-					{
-						desc:   "active only and except",
-						active: pointerx.Bool(true),
-						except: sess[0].ID,
-						expected: []session.Session{
-							sess[2],
-						},
-					},
-					{
-						desc:   "inactive only",
-						active: pointerx.Bool(false),
-						expected: []session.Session{
-							sess[1],
-							sess[3],
-						},
-					},
-					{
-						desc:   "inactive only and except",
-						active: pointerx.Bool(false),
-						except: sess[3].ID,
-						expected: []session.Session{
-							sess[1],
-						},
-					},
-				} {
-					t.Run("case="+tc.desc, func(t *testing.T) {
-						actual, err := p.ListSessionsByIdentity(ctx, i.ID, tc.active, 1, 10, tc.except, session.ExpandEverything)
-						require.NoError(t, err)
-
-						require.Equal(t, len(tc.expected), len(actual))
-						for _, es := range tc.expected {
-							found := false
-							for _, as := range actual {
-								if as.ID == es.ID {
-									found = true
-									assert.Equal(t, len(es.Devices), len(as.Devices))
-								}
-							}
-							assert.True(t, found)
-						}
-					})
-				}
-
-				t.Run("other network", func(t *testing.T) {
-					_, other := testhelpers.NewNetwork(t, ctx, p)
-					actual, err := other.ListSessionsByIdentity(ctx, i.ID, nil, 1, 10, uuid.Nil, session.ExpandNothing)
-					require.NoError(t, err)
-					assert.Len(t, actual, 0)
 				})
 			})
 
@@ -207,7 +117,7 @@ func TestPersister(ctx context.Context, conf *config.Config, p interface {
 				expected.AuthenticatorAssuranceLevel = identity.AuthenticatorAssuranceLevel3
 				require.NoError(t, p.UpsertSession(ctx, &expected))
 
-				actual, err := p.GetSessionByToken(ctx, expected.Token, session.ExpandDefault)
+				actual, err := p.GetSessionByToken(ctx, expected.Token, session.ExpandDefault, identity.ExpandDefault)
 				check(actual, err)
 				assert.Equal(t, identity.AuthenticatorAssuranceLevel3, actual.AuthenticatorAssuranceLevel)
 			})
@@ -216,9 +126,222 @@ func TestPersister(ctx context.Context, conf *config.Config, p interface {
 				expected.AMR = nil
 				require.NoError(t, p.UpsertSession(ctx, &expected))
 
-				actual, err := p.GetSessionByToken(ctx, expected.Token, session.ExpandDefault)
+				actual, err := p.GetSessionByToken(ctx, expected.Token, session.ExpandDefault, identity.ExpandDefault)
 				check(actual, err)
 				assert.Empty(t, actual.AMR)
+			})
+		})
+
+		t.Run("case=list sessions", func(t *testing.T) {
+			var identity1 identity.Identity
+			require.NoError(t, faker.FakeData(&identity1))
+
+			// Second identity to test listing by identity isolation
+			var identity2 identity.Identity
+			var identity2Session session.Session
+			require.NoError(t, faker.FakeData(&identity2))
+			require.NoError(t, faker.FakeData(&identity2Session))
+
+			// Create seed identities
+			_, l := testhelpers.NewNetwork(t, ctx, p)
+			require.NoError(t, l.CreateIdentity(ctx, &identity1))
+			require.NoError(t, l.CreateIdentity(ctx, &identity2))
+
+			seedSessionIDs := make([]uuid.UUID, 5)
+			seedSessionsList := make([]session.Session, 5)
+			for j := range seedSessionsList {
+				require.NoError(t, faker.FakeData(&seedSessionsList[j]))
+				seedSessionsList[j].Identity = &identity1
+				seedSessionsList[j].Active = j%2 == 0
+
+				if seedSessionsList[j].Active {
+					seedSessionsList[j].ExpiresAt = time.Now().UTC().Add(time.Hour)
+				} else {
+					seedSessionsList[j].ExpiresAt = time.Now().UTC().Add(-time.Hour)
+				}
+
+				var device session.Device
+				require.NoError(t, faker.FakeData(&device))
+				seedSessionsList[j].Devices = []session.Device{
+					device,
+				}
+				require.NoError(t, l.UpsertSession(ctx, &seedSessionsList[j]))
+				seedSessionIDs[j] = seedSessionsList[j].ID
+			}
+
+			identity2Session.Identity = &identity2
+			identity2Session.Active = true
+			identity2Session.ExpiresAt = time.Now().UTC().Add(time.Hour)
+			require.NoError(t, l.UpsertSession(ctx, &identity2Session))
+
+			for _, tc := range []struct {
+				desc               string
+				except             uuid.UUID
+				expectedSessionIds []uuid.UUID
+				active             *bool
+			}{
+				{
+					desc:               "all",
+					expectedSessionIds: seedSessionIDs,
+				},
+				{
+					desc:   "except one",
+					except: seedSessionsList[0].ID,
+					expectedSessionIds: []uuid.UUID{
+						seedSessionIDs[1],
+						seedSessionIDs[2],
+						seedSessionIDs[3],
+						seedSessionIDs[4],
+					},
+				},
+				{
+					desc:   "active only",
+					active: pointerx.Bool(true),
+					expectedSessionIds: []uuid.UUID{
+						seedSessionIDs[0],
+						seedSessionIDs[2],
+						seedSessionIDs[4],
+					},
+				},
+				{
+					desc:   "active only and except",
+					active: pointerx.Bool(true),
+					except: seedSessionsList[0].ID,
+					expectedSessionIds: []uuid.UUID{
+						seedSessionIDs[2],
+						seedSessionIDs[4],
+					},
+				},
+				{
+					desc:   "inactive only",
+					active: pointerx.Bool(false),
+					expectedSessionIds: []uuid.UUID{
+						seedSessionIDs[1],
+						seedSessionIDs[3],
+					},
+				},
+				{
+					desc:   "inactive only and except",
+					active: pointerx.Bool(false),
+					except: seedSessionsList[3].ID,
+					expectedSessionIds: []uuid.UUID{
+						seedSessionIDs[1],
+					},
+				},
+			} {
+				t.Run("case=by Identity "+tc.desc, func(t *testing.T) {
+					actual, total, err := l.ListSessionsByIdentity(ctx, identity1.ID, tc.active, 1, 10, tc.except, session.ExpandEverything)
+					require.NoError(t, err)
+
+					actualSessionIds := make([]uuid.UUID, 0)
+					for _, s := range actual {
+						actualSessionIds = append(actualSessionIds, s.ID)
+					}
+
+					assert.Equal(t, int64(len(tc.expectedSessionIds)), total)
+					assert.ElementsMatch(t, tc.expectedSessionIds, actualSessionIds)
+				})
+			}
+
+			t.Run("case=by Identity on other network", func(t *testing.T) {
+				_, other := testhelpers.NewNetwork(t, ctx, p)
+				actual, total, err := other.ListSessionsByIdentity(ctx, identity1.ID, nil, 1, 10, uuid.Nil, session.ExpandNothing)
+				require.NoError(t, err)
+				require.Equal(t, int64(0), total)
+				assert.Len(t, actual, 0)
+			})
+
+			for _, tc := range []struct {
+				desc     string
+				except   uuid.UUID
+				expected []session.Session
+				active   *bool
+			}{
+				{
+					desc:     "all",
+					expected: append(seedSessionsList, identity2Session),
+				},
+				{
+					desc:   "active only",
+					active: pointerx.Bool(true),
+					expected: []session.Session{
+						seedSessionsList[0],
+						seedSessionsList[2],
+						seedSessionsList[4],
+						identity2Session,
+					},
+				},
+				{
+					desc:   "inactive only",
+					active: pointerx.Bool(false),
+					expected: []session.Session{
+						seedSessionsList[1],
+						seedSessionsList[3],
+					},
+				},
+			} {
+				t.Run("case=all "+tc.desc, func(t *testing.T) {
+					paginatorOpts := make([]keysetpagination.Option, 0)
+					actual, total, nextPage, err := l.ListSessions(ctx, tc.active, paginatorOpts, session.ExpandEverything)
+					require.NoError(t, err, "%+v", err)
+
+					require.Equal(t, len(tc.expected), len(actual))
+					require.Equal(t, int64(len(tc.expected)), total)
+					assert.Equal(t, true, nextPage.IsLast())
+					assert.Equal(t, uuid.Nil.String(), nextPage.Token().Encode())
+					assert.Equal(t, 250, nextPage.Size())
+					for _, es := range tc.expected {
+						found := false
+						for _, as := range actual {
+							if as.ID == es.ID {
+								found = true
+								assert.Equal(t, len(es.Devices), len(as.Devices))
+								assert.Equal(t, es.Identity.ID.String(), as.Identity.ID.String())
+							}
+						}
+						assert.True(t, found)
+					}
+				})
+			}
+
+			t.Run("case=all sessions pagination only one page", func(t *testing.T) {
+				paginatorOpts := make([]keysetpagination.Option, 0)
+				actual, total, page, err := l.ListSessions(ctx, nil, paginatorOpts, session.ExpandEverything)
+				require.NoError(t, err)
+
+				require.Equal(t, 6, len(actual))
+				require.Equal(t, int64(6), total)
+				assert.Equal(t, true, page.IsLast())
+				assert.Equal(t, uuid.Nil.String(), page.Token().Encode())
+				assert.Equal(t, 250, page.Size())
+			})
+
+			t.Run("case=all sessions pagination multiple pages", func(t *testing.T) {
+				paginatorOpts := make([]keysetpagination.Option, 0)
+				paginatorOpts = append(paginatorOpts, keysetpagination.WithSize(3))
+				firstPageItems, total, page1, err := l.ListSessions(ctx, nil, paginatorOpts, session.ExpandEverything)
+				require.NoError(t, err)
+				require.Equal(t, int64(6), total)
+				assert.Len(t, firstPageItems, 3)
+
+				assert.Equal(t, false, page1.IsLast())
+				assert.Equal(t, firstPageItems[len(firstPageItems)-1].ID.String(), page1.Token().Encode())
+				assert.Equal(t, 3, page1.Size())
+
+				// Validate secondPageItems page
+				secondPageItems, total, page2, err := l.ListSessions(ctx, nil, page1.ToOptions(), session.ExpandEverything)
+				require.NoError(t, err)
+
+				acutalIDs := make([]uuid.UUID, 0)
+				for _, s := range append(firstPageItems, secondPageItems...) {
+					acutalIDs = append(acutalIDs, s.ID)
+				}
+				assert.ElementsMatch(t, append(seedSessionIDs, identity2Session.ID), acutalIDs)
+
+				require.Equal(t, int64(6), total)
+				assert.Len(t, secondPageItems, 3)
+				assert.True(t, page2.IsLast())
+				assert.Equal(t, 3, page2.Size())
 			})
 		})
 
@@ -253,7 +376,7 @@ func TestPersister(ctx context.Context, conf *config.Config, p interface {
 				err := other.DeleteSessionByToken(ctx, expected.Token)
 				assert.ErrorIs(t, err, sqlcon.ErrNoRows)
 
-				_, err = p.GetSessionByToken(ctx, expected.Token, session.ExpandNothing)
+				_, err = p.GetSessionByToken(ctx, expected.Token, session.ExpandNothing, identity.ExpandDefault)
 				assert.NoError(t, err)
 			})
 
@@ -284,6 +407,34 @@ func TestPersister(ctx context.Context, conf *config.Config, p interface {
 			})
 
 			require.NoError(t, p.RevokeSessionByToken(ctx, expected.Token))
+
+			actual, err = p.GetSession(ctx, expected.ID, session.ExpandNothing)
+			require.NoError(t, err)
+			assert.False(t, actual.Active)
+		})
+
+		t.Run("case=revoke session by id", func(t *testing.T) {
+			var expected session.Session
+			require.NoError(t, faker.FakeData(&expected))
+			expected.Active = true
+			require.NoError(t, p.CreateIdentity(ctx, expected.Identity))
+			require.NoError(t, p.UpsertSession(ctx, &expected))
+
+			actual, err := p.GetSession(ctx, expected.ID, session.ExpandNothing)
+			require.NoError(t, err)
+			assert.True(t, actual.Active)
+
+			t.Run("on another network", func(t *testing.T) {
+				_, other := testhelpers.NewNetwork(t, ctx, p)
+				err := other.RevokeSessionById(ctx, expected.ID)
+				assert.ErrorIs(t, err, sqlcon.ErrNoRows)
+
+				actual, err = p.GetSession(ctx, expected.ID, session.ExpandNothing)
+				require.NoError(t, err)
+				assert.True(t, actual.Active)
+			})
+
+			require.NoError(t, p.RevokeSessionById(ctx, expected.ID))
 
 			actual, err = p.GetSession(ctx, expected.ID, session.ExpandNothing)
 			require.NoError(t, err)
@@ -322,9 +473,10 @@ func TestPersister(ctx context.Context, conf *config.Config, p interface {
 			require.NoError(t, err)
 			assert.Equal(t, 1, n)
 
-			actual, err := p.ListSessionsByIdentity(ctx, sessions[0].IdentityID, nil, 1, 10, uuid.Nil, session.ExpandNothing)
+			actual, total, err := p.ListSessionsByIdentity(ctx, sessions[0].IdentityID, nil, 1, 10, uuid.Nil, session.ExpandNothing)
 			require.NoError(t, err)
 			require.Len(t, actual, 2)
+			require.Equal(t, int64(2), total)
 
 			if actual[0].ID == sessions[0].ID {
 				assert.True(t, actual[0].Active)
@@ -335,9 +487,10 @@ func TestPersister(ctx context.Context, conf *config.Config, p interface {
 				assert.False(t, actual[0].Active)
 			}
 
-			otherIdentitiesSessions, err := p.ListSessionsByIdentity(ctx, sessions[2].IdentityID, nil, 1, 10, uuid.Nil, session.ExpandNothing)
+			otherIdentitiesSessions, total, err := p.ListSessionsByIdentity(ctx, sessions[2].IdentityID, nil, 1, 10, uuid.Nil, session.ExpandNothing)
 			require.NoError(t, err)
 			require.Len(t, actual, 2)
+			require.Equal(t, int64(2), total)
 
 			for _, s := range otherIdentitiesSessions {
 				assert.True(t, s.Active)
@@ -369,9 +522,10 @@ func TestPersister(ctx context.Context, conf *config.Config, p interface {
 
 			require.NoError(t, p.RevokeSession(ctx, sessions[0].IdentityID, sessions[0].ID))
 
-			actual, err := p.ListSessionsByIdentity(ctx, sessions[0].IdentityID, nil, 1, 10, uuid.Nil, session.ExpandNothing)
+			actual, total, err := p.ListSessionsByIdentity(ctx, sessions[0].IdentityID, nil, 1, 10, uuid.Nil, session.ExpandNothing)
 			require.NoError(t, err)
 			require.Len(t, actual, 2)
+			require.Equal(t, int64(2), total)
 
 			if actual[0].ID == sessions[0].ID {
 				assert.False(t, actual[0].Active)
@@ -430,9 +584,9 @@ func TestPersister(ctx context.Context, conf *config.Config, p interface {
 			_, err = p.GetSession(ctx, sid2, session.ExpandNothing)
 			require.ErrorIs(t, err, sqlcon.ErrNoRows)
 
-			_, err = p.GetSessionByToken(ctx, t1, session.ExpandNothing)
+			_, err = p.GetSessionByToken(ctx, t1, session.ExpandNothing, identity.ExpandDefault)
 			require.NoError(t, err)
-			_, err = p.GetSessionByToken(ctx, t2, session.ExpandNothing)
+			_, err = p.GetSessionByToken(ctx, t2, session.ExpandNothing, identity.ExpandDefault)
 			require.ErrorIs(t, err, sqlcon.ErrNoRows)
 		})
 	}

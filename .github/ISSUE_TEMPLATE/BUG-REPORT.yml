@@ -1,3 +1,6 @@
+# AUTO-GENERATED, DO NOT EDIT!
+# Please edit the original at https://github.com/ory/meta/blob/master/templates/repository/common/.github/ISSUE_TEMPLATE/BUG-REPORT.yml
+
 description: "Create a bug report"
 labels:
   - bug
@@ -22,7 +25,7 @@ body:
             Guidelines](https://github.com/ory/kratos/blob/master/CONTRIBUTING.md)."
           required: true
         - label:
-            "This issue affects my [Ory Cloud](https://www.ory.sh/) project."
+            "This issue affects my [Ory Network](https://www.ory.sh/) project."
         - label:
             "I have joined the [Ory Community Slack](https://slack.ory.sh)."
         - label:
@@ -86,7 +89,7 @@ body:
   - attributes:
       label: "On which operating system are you observing this issue?"
       options:
-        - Ory Cloud
+        - Ory Network
         - macOS
         - Linux
         - Windows
@@ -97,7 +100,7 @@ body:
   - attributes:
       label: "In which environment are you deploying?"
       options:
-        - Ory Cloud
+        - Ory Network
         - Docker
         - "Docker Compose"
         - "Kubernetes with Helm"

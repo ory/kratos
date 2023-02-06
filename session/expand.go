@@ -1,47 +1,41 @@
+// Copyright © 2023 Ory Corp
+// SPDX-License-Identifier: Apache-2.0
+
 package session
 
+import (
+	"strings"
+
+	"github.com/ory/x/sqlxx"
+)
+
 // Expandable controls what fields to expand for sessions.
-type Expandable string
-
-// Expandables is a list of Expandable values.
-type Expandables []Expandable
-
-// String returns a string representation of the Expandable.
-func (e Expandable) String() string {
-	return string(e)
-}
-
-// ToEager returns the fields used by pop's Eager command.
-func (e Expandables) ToEager() []string {
-	var s []string
-	for _, e := range e {
-		if e == ExpandSessionIdentity {
-			continue
-		}
-		s = append(s, e.String())
-	}
-	return s
-}
-
-// Has returns true if the Expandable is in the list.
-func (e Expandables) Has(search Expandable) bool {
-	for _, e := range e {
-		if e == search {
-			return true
-		}
-	}
-	return false
-}
+type Expandable = sqlxx.Expandable
 
 const (
 	// ExpandSessionDevices expands devices related to the session
 	ExpandSessionDevices Expandable = "Devices"
 	// ExpandSessionIdentity expands Identity related to the session
-	ExpandSessionIdentity Expandable = "Identity"
+	ExpandSessionIdentity                  Expandable = "Identity"
+	ExpandSessionIdentityRecoveryAddress   Expandable = "Identity.RecoveryAddresses"
+	ExpandSessionIdentityVerifiableAddress Expandable = "Identity.VerifiableAddresses"
 )
 
+var expandablesMap = map[string]Expandable{
+	"devices":  ExpandSessionDevices,
+	"identity": ExpandSessionIdentity,
+}
+
+// Expandables is a list of Expandable values.
+type Expandables = sqlxx.Expandables
+
+func ParseExpandable(in string) (Expandable, bool) {
+	e, ok := expandablesMap[strings.ToLower(in)]
+	return e, ok
+}
+
 // ExpandNothing expands nothing
-var ExpandNothing []Expandable
+var ExpandNothing Expandables
 
 // ExpandDefault expands the default fields of a session
 // - Associated Identity

@@ -1,3 +1,6 @@
+// Copyright © 2023 Ory Corp
+// SPDX-License-Identifier: Apache-2.0
+
 package password_test
 
 import (
@@ -333,7 +336,7 @@ func TestRegistration(t *testing.T) {
 
 			t.Run("type=spa", func(t *testing.T) {
 				browserClient := testhelpers.NewClientWithCookies(t)
-				f := testhelpers.InitializeRegistrationFlowViaBrowser(t, browserClient, publicTS, true)
+				f := testhelpers.InitializeRegistrationFlowViaBrowser(t, browserClient, publicTS, true, false, false)
 				c := f.Ui
 
 				actual, _ := testhelpers.RegistrationMakeRequest(t, false, true, f, browserClient, testhelpers.EncodeFormAsJSON(t, false, valuesFirst(testhelpers.SDKFormFieldsToURLValues(c.Nodes))))
@@ -344,7 +347,7 @@ func TestRegistration(t *testing.T) {
 
 			t.Run("type=browser", func(t *testing.T) {
 				browserClient := testhelpers.NewClientWithCookies(t)
-				f := testhelpers.InitializeRegistrationFlowViaBrowser(t, browserClient, publicTS, false)
+				f := testhelpers.InitializeRegistrationFlowViaBrowser(t, browserClient, publicTS, false, false, false)
 				c := f.Ui
 
 				actual, _ := testhelpers.RegistrationMakeRequest(t, false, false, f, browserClient, valuesFirst(testhelpers.SDKFormFieldsToURLValues(c.Nodes)).Encode())
@@ -413,7 +416,7 @@ func TestRegistration(t *testing.T) {
 
 			hc := testhelpers.NewClientWithCookies(t)
 			hc.Transport = testhelpers.NewTransportWithLogger(hc.Transport, t)
-			payload := testhelpers.InitializeRegistrationFlowViaBrowser(t, hc, publicTS, false)
+			payload := testhelpers.InitializeRegistrationFlowViaBrowser(t, hc, publicTS, false, false, false)
 			values := testhelpers.SDKFormFieldsToURLValues(payload.Ui.Nodes)
 			time.Sleep(time.Millisecond) // add a bit of delay to allow `1ns` to time out.
 
@@ -481,7 +484,7 @@ func TestRegistration(t *testing.T) {
 		_ = testhelpers.NewRegistrationUIFlowEchoServer(t, reg)
 
 		browserClient := testhelpers.NewClientWithCookies(t)
-		f := testhelpers.InitializeRegistrationFlowViaBrowser(t, browserClient, publicTS, false)
+		f := testhelpers.InitializeRegistrationFlowViaBrowser(t, browserClient, publicTS, false, false, false)
 
 		assertx.EqualAsJSON(t, container.Container{
 			Action: conf.SelfPublicURL(ctx).String() + registration.RouteSubmitFlow + "?flow=" + f.Id,

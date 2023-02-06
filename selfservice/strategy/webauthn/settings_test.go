@@ -1,3 +1,6 @@
+// Copyright © 2023 Ory Corp
+// SPDX-License-Identifier: Apache-2.0
+
 package webauthn_test
 
 import (
@@ -20,7 +23,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/tidwall/gjson"
 
-	kratos "github.com/ory/kratos-client-go"
+	kratos "github.com/ory/kratos/internal/httpclient"
 	"github.com/ory/kratos/selfservice/flow/settings"
 	"github.com/ory/kratos/text"
 	"github.com/ory/kratos/ui/node"
@@ -341,7 +344,8 @@ func TestCompleteSettings(t *testing.T) {
 
 			actualFlow, err := reg.SettingsFlowPersister().GetSettingsFlow(context.Background(), uuid.FromStringOrNil(f.Id))
 			require.NoError(t, err)
-			assert.Empty(t, gjson.GetBytes(actualFlow.InternalContext, flow.PrefixInternalContextKey(identity.CredentialsTypeWebAuthn, webauthn.InternalContextKeySessionData)))
+			// new session data has been generated
+			assert.NotEqual(t, settingsFixtureSuccessInternalContext, gjson.GetBytes(actualFlow.InternalContext, flow.PrefixInternalContextKey(identity.CredentialsTypeWebAuthn, webauthn.InternalContextKeySessionData)))
 
 			testhelpers.EnsureAAL(t, browserClient, publicTS, "aal2", string(identity.CredentialsTypeWebAuthn))
 		}
@@ -445,7 +449,7 @@ func TestCompleteSettings(t *testing.T) {
 			allCred, ok := id.GetCredentials(identity.CredentialsTypeWebAuthn)
 			assert.True(t, ok)
 
-			var cc webauthn.CredentialsConfig
+			var cc identity.CredentialsWebAuthnConfig
 			require.NoError(t, json.Unmarshal(allCred.Config, &cc))
 			require.Len(t, cc.Credentials, 2)
 

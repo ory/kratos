@@ -1,3 +1,6 @@
+// Copyright © 2023 Ory Corp
+// SPDX-License-Identifier: Apache-2.0
+
 package registration
 
 import (
@@ -13,7 +16,10 @@ import (
 
 	"github.com/ory/x/sqlxx"
 
+	hydraclientgo "github.com/ory/hydra-client-go"
+
 	"github.com/ory/kratos/driver/config"
+	"github.com/ory/kratos/hydra"
 	"github.com/ory/kratos/ui/container"
 
 	"github.com/gofrs/uuid"
@@ -26,13 +32,25 @@ import (
 	"github.com/ory/kratos/x"
 )
 
-// swagger:model selfServiceRegistrationFlow
+// swagger:model registrationFlow
 type Flow struct {
 	// ID represents the flow's unique ID. When performing the registration flow, this
 	// represents the id in the registration ui's query parameter: http://<selfservice.flows.registration.ui_url>/?flow=<id>
 	//
 	// required: true
 	ID uuid.UUID `json:"id" faker:"-" db:"id"`
+
+	// Ory OAuth 2.0 Login Challenge.
+	//
+	// This value is set using the `login_challenge` query parameter of the registration and login endpoints.
+	// If set will cooperate with Ory OAuth2 and OpenID to act as an OAuth2 server / OpenID Provider.
+	OAuth2LoginChallenge uuid.NullUUID `json:"oauth2_login_challenge,omitempty" faker:"-" db:"oauth2_login_challenge"`
+
+	// HydraLoginRequest is an optional field whose presence indicates that Kratos
+	// is being used as an identity provider in a Hydra OAuth2 flow. Kratos
+	// populates this field by retrieving its value from Hydra and it is used by
+	// the login and consent UIs.
+	HydraLoginRequest *hydraclientgo.OAuth2LoginRequest `json:"oauth2_login_request,omitempty" faker:"-" db:"-"`
 
 	// Type represents the flow's type which can be either "api" or "browser", depending on the flow interaction.
 	//
@@ -98,11 +116,17 @@ func NewFlow(conf *config.Config, exp time.Duration, csrf string, r *http.Reques
 		return nil, err
 	}
 
+	hlc, err := hydra.GetLoginChallengeID(conf, r)
+	if err != nil {
+		return nil, err
+	}
+
 	return &Flow{
-		ID:         id,
-		ExpiresAt:  now.Add(exp),
-		IssuedAt:   now,
-		RequestURL: requestURL,
+		ID:                   id,
+		OAuth2LoginChallenge: hlc,
+		ExpiresAt:            now.Add(exp),
+		IssuedAt:             now,
+		RequestURL:           requestURL,
 		UI: &container.Container{
 			Method: "POST",
 			Action: flow.AppendFlowTo(urlx.AppendPaths(conf.SelfPublicURL(r.Context()), RouteSubmitFlow), id).String(),

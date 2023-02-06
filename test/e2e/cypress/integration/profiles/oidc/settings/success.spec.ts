@@ -1,3 +1,6 @@
+// Copyright © 2023 Ory Corp
+// SPDX-License-Identifier: Apache-2.0
+
 import { appPrefix, gen, website } from "../../../../helpers"
 import { routes as react } from "../../../../helpers/react"
 import { routes as express } from "../../../../helpers/express"
@@ -52,6 +55,7 @@ context("Social Sign In Settings Success", () => {
         email = gen.email()
 
         cy.registerOidc({
+          app,
           email,
           expectSession: true,
           website,

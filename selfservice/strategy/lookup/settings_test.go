@@ -1,3 +1,6 @@
+// Copyright © 2023 Ory Corp
+// SPDX-License-Identifier: Apache-2.0
+
 package lookup_test
 
 import (
@@ -14,7 +17,7 @@ import (
 
 	"github.com/gofrs/uuid"
 
-	kratos "github.com/ory/kratos-client-go"
+	kratos "github.com/ory/kratos/internal/httpclient"
 	"github.com/ory/kratos/selfservice/flow"
 
 	"github.com/stretchr/testify/assert"
@@ -42,14 +45,14 @@ func createIdentityWithoutLookup(t *testing.T, reg driver.Registry) *identity.Id
 	return id
 }
 
-func createIdentity(t *testing.T, reg driver.Registry) (*identity.Identity, []lookup.RecoveryCode) {
-	codes := make([]lookup.RecoveryCode, 12)
+func createIdentity(t *testing.T, reg driver.Registry) (*identity.Identity, []identity.RecoveryCode) {
+	codes := make([]identity.RecoveryCode, 12)
 	for k := range codes {
 		var usedAt sqlxx.NullTime
 		if k%3 == 1 {
 			usedAt = sqlxx.NullTime(time.Unix(int64(1629199958+k), 0))
 		}
-		codes[k] = lookup.RecoveryCode{Code: fmt.Sprintf("key-%d", k), UsedAt: usedAt}
+		codes[k] = identity.RecoveryCode{Code: fmt.Sprintf("key-%d", k), UsedAt: usedAt}
 	}
 	identifier := x.NewUUID().String() + "@ory.sh"
 	password := x.NewUUID().String()
@@ -66,7 +69,7 @@ func createIdentity(t *testing.T, reg driver.Registry) (*identity.Identity, []lo
 		},
 	}
 
-	rc, err := json.Marshal(&lookup.CredentialsConfig{RecoveryCodes: codes})
+	rc, err := json.Marshal(&identity.CredentialsLookupConfig{RecoveryCodes: codes})
 	require.NoError(t, err)
 	require.NoError(t, reg.PrivilegedIdentityPool().CreateIdentity(context.Background(), i))
 	i.Credentials = map[identity.CredentialsType]identity.Credentials{
@@ -373,7 +376,7 @@ func TestCompleteSettings(t *testing.T) {
 					v.Set(node.LookupConfirm, "true")
 				}
 
-				checkIdentity := func(t *testing.T, id *identity.Identity, f *kratos.SelfServiceSettingsFlow) {
+				checkIdentity := func(t *testing.T, id *identity.Identity, f *kratos.SettingsFlow) {
 					_, cred, err := reg.PrivilegedIdentityPool().FindByCredentialsIdentifier(context.Background(), identity.CredentialsTypeLookup, id.ID.String())
 					require.NoError(t, err)
 					assert.NotContains(t, gjson.GetBytes(cred.Config, "recovery_codes").Raw, "key-1")
@@ -466,13 +469,13 @@ func TestCompleteSettings(t *testing.T) {
 					v.Set(node.LookupDisable, "true")
 				}
 
-				checkIdentity := func(t *testing.T, id *identity.Identity, f *kratos.SelfServiceSettingsFlow) {
+				checkIdentity := func(t *testing.T, id *identity.Identity, f *kratos.SettingsFlow) {
 					_, _, err := reg.PrivilegedIdentityPool().FindByCredentialsIdentifier(context.Background(), identity.CredentialsTypeLookup, id.ID.String())
 					require.ErrorIs(t, err, sqlcon.ErrNoRows)
 
 					actualFlow, err := reg.SettingsFlowPersister().GetSettingsFlow(context.Background(), uuid.FromStringOrNil(f.Id))
 					require.NoError(t, err)
-					assert.Equal(t, "{}", gjson.GetBytes(actualFlow.InternalContext, flow.PrefixInternalContextKey(identity.CredentialsTypeLookup, lookup.InternalContextKeyRegenerated)).Raw)
+					assert.Empty(t, gjson.GetBytes(actualFlow.InternalContext, flow.PrefixInternalContextKey(identity.CredentialsTypeLookup, lookup.InternalContextKeyRegenerated)).Raw)
 				}
 
 				t.Run("type=api", func(t *testing.T) {

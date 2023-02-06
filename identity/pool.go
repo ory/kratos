@@ -1,7 +1,12 @@
+// Copyright © 2023 Ory Corp
+// SPDX-License-Identifier: Apache-2.0
+
 package identity
 
 import (
 	"context"
+
+	"github.com/ory/x/sqlxx"
 
 	"github.com/gofrs/uuid"
 )
@@ -9,14 +14,14 @@ import (
 type (
 	Pool interface {
 		// ListIdentities lists all identities in the store given the page and itemsPerPage.
-		ListIdentities(ctx context.Context, page, itemsPerPage int) ([]Identity, error)
+		ListIdentities(ctx context.Context, expandables sqlxx.Expandables, page, itemsPerPage int) ([]Identity, error)
 
 		// CountIdentities counts the number of identities in the store.
 		CountIdentities(ctx context.Context) (int64, error)
 
 		// GetIdentity returns an identity by its id. Will return an error if the identity does not exist or backend
 		// connectivity is broken.
-		GetIdentity(context.Context, uuid.UUID) (*Identity, error)
+		GetIdentity(context.Context, uuid.UUID, sqlxx.Expandables) (*Identity, error)
 
 		// FindVerifiableAddressByValue returns a matching address or sql.ErrNoRows if no address could be found.
 		FindVerifiableAddressByValue(ctx context.Context, via VerifiableAddressType, address string) (*VerifiableAddress, error)
@@ -62,5 +67,8 @@ type (
 
 		// ListRecoveryAddresses lists all tracked recovery addresses.
 		ListRecoveryAddresses(ctx context.Context, page, itemsPerPage int) ([]RecoveryAddress, error)
+
+		// HydrateIdentityAssociations hydrates the associations of an identity.
+		HydrateIdentityAssociations(ctx context.Context, i *Identity, expandables Expandables) error
 	}
 )

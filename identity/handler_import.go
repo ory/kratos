@@ -1,3 +1,6 @@
+// Copyright © 2023 Ory Corp
+// SPDX-License-Identifier: Apache-2.0
+
 package identity
 
 import (
@@ -11,7 +14,7 @@ import (
 	"github.com/ory/kratos/x"
 )
 
-func (h *Handler) importCredentials(ctx context.Context, i *Identity, creds *AdminIdentityImportCredentials) error {
+func (h *Handler) importCredentials(ctx context.Context, i *Identity, creds *IdentityWithCredentials) error {
 	if creds == nil {
 		return nil
 	}
@@ -45,7 +48,7 @@ func (h *Handler) importPasswordCredentials(ctx context.Context, i *Identity, cr
 		creds.Config.HashedPassword = string(hashed)
 	}
 
-	if !(hash.IsArgon2idHash(hashed) || hash.IsArgon2iHash(hashed) || hash.IsBcryptHash(hashed) || hash.IsPbkdf2Hash(hashed) || hash.IsScryptHash(hashed) || hash.IsFirebaseScryptHash(hashed)) {
+	if !(hash.IsValidHashFormat(hashed)) {
 		return errors.WithStack(herodot.ErrBadRequest.WithReasonf("The imported password does not match any known hash format. For more information see https://www.ory.sh/dr/2"))
 	}
 

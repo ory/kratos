@@ -1,3 +1,6 @@
+// Copyright © 2023 Ory Corp
+// SPDX-License-Identifier: Apache-2.0
+
 package identity
 
 import (
@@ -30,6 +33,14 @@ type CredentialsOIDCProvider struct {
 
 // NewCredentialsOIDC creates a new OIDC credential.
 func NewCredentialsOIDC(idToken, accessToken, refreshToken, provider, subject string) (*Credentials, error) {
+	if provider == "" {
+		return nil, errors.New("received empty provider in oidc credentials")
+	}
+
+	if subject == "" {
+		return nil, errors.New("received empty provider in oidc credentials")
+	}
+
 	var b bytes.Buffer
 	if err := json.NewEncoder(&b).Encode(CredentialsOIDC{
 		Providers: []CredentialsOIDCProvider{

@@ -1,3 +1,6 @@
+// Copyright © 2023 Ory Corp
+// SPDX-License-Identifier: Apache-2.0
+
 package registration
 
 import (
@@ -7,10 +10,15 @@ import (
 	"time"
 
 	"github.com/pkg/errors"
+	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/trace"
 
+	"github.com/ory/x/httpx"
+	"github.com/ory/x/otelx/semconv"
 	"github.com/ory/x/sqlcon"
 
 	"github.com/ory/kratos/driver/config"
+	"github.com/ory/kratos/hydra"
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/schema"
 	"github.com/ory/kratos/selfservice/flow"
@@ -69,7 +77,9 @@ type (
 		session.PersistenceProvider
 		session.ManagementProvider
 		HooksProvider
+		hydra.HydraProvider
 		x.CSRFTokenGeneratorProvider
+		x.HTTPClientProvider
 		x.LoggingProvider
 		x.WriterProvider
 	}
@@ -150,6 +160,15 @@ func (e *HookExecutor) PostRegistrationHook(w http.ResponseWriter, r *http.Reque
 		WithRequest(r).
 		WithField("identity_id", i.ID).
 		Info("A new identity has registered using self-service registration.")
+	trace.SpanFromContext(r.Context()).AddEvent(
+		semconv.EventIdentityCreated,
+		trace.WithAttributes(
+			attribute.String(semconv.AttrIdentityID, i.ID.String()),
+			attribute.String(semconv.AttrNID, i.NID.String()),
+			attribute.String(semconv.AttrClientIP, httpx.ClientIP(r)),
+			attribute.String("flow", string(a.Type)),
+		),
+	)
 
 	s, err := session.NewActiveSession(r, i, e.d.Config(), time.Now().UTC(), ct, identity.AuthenticatorAssuranceLevel1)
 	if err != nil {
@@ -202,7 +221,16 @@ func (e *HookExecutor) PostRegistrationHook(w http.ResponseWriter, r *http.Reque
 		return nil
 	}
 
-	x.ContentNegotiationRedirection(w, r, s.Declassify(), e.d.Writer(), returnTo.String())
+	finalReturnTo := returnTo.String()
+	if a.OAuth2LoginChallenge.Valid {
+		cr, err := e.d.Hydra().AcceptLoginRequest(r.Context(), a.OAuth2LoginChallenge.UUID, i.ID.String(), s.AMR)
+		if err != nil {
+			return err
+		}
+		finalReturnTo = cr
+	}
+
+	x.ContentNegotiationRedirection(w, r, s.Declassify(), e.d.Writer(), finalReturnTo)
 	return nil
 }
 

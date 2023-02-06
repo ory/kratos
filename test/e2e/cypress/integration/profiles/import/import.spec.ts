@@ -1,3 +1,6 @@
+// Copyright © 2023 Ory Corp
+// SPDX-License-Identifier: Apache-2.0
+
 import { routes as express } from "../../../helpers/express"
 import { gen, KRATOS_ADMIN, website } from "../../../helpers"
 
@@ -108,7 +111,7 @@ context("Import Identities", () => {
     })
 
     cy.visit(express.login)
-    cy.triggerOidc({ url: express.login })
+    cy.triggerOidc("express")
 
     cy.get("#username").clear().type(email)
     cy.get("#remember").click()

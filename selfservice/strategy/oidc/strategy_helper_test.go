@@ -1,3 +1,6 @@
+// Copyright © 2023 Ory Corp
+// SPDX-License-Identifier: Apache-2.0
+
 package oidc_test
 
 import (
@@ -7,10 +10,10 @@ import (
 	"fmt"
 	"io"
 	"net/http"
-	"net/http/cookiejar"
 	"net/http/httptest"
 	"net/url"
 	"os"
+	"strings"
 	"testing"
 	"time"
 
@@ -70,42 +73,37 @@ func (token *idTokenClaims) MarshalJSON() ([]byte, error) {
 	})
 }
 
-func createClient(t *testing.T, remote string, redir, id string) {
+func createClient(t *testing.T, remote string, redir string) (id, secret string) {
 	require.NoError(t, resilience.Retry(logrusx.New("", ""), time.Second*10, time.Minute*2, func() error {
-		if req, err := http.NewRequest("DELETE", remote+"/clients/"+id, nil); err != nil {
-			return err
-		} else if _, err := http.DefaultClient.Do(req); err != nil {
-			return err
-		}
-
 		var b bytes.Buffer
 		require.NoError(t, json.NewEncoder(&b).Encode(&struct {
-			ClientID      string   `json:"client_id"`
-			ClientSecret  string   `json:"client_secret"`
 			Scope         string   `json:"scope"`
 			GrantTypes    []string `json:"grant_types"`
 			ResponseTypes []string `json:"response_types"`
 			RedirectURIs  []string `json:"redirect_uris"`
 		}{
-			ClientID:      id,
-			ClientSecret:  "secret",
 			GrantTypes:    []string{"authorization_code", "refresh_token"},
 			ResponseTypes: []string{"code"},
 			Scope:         "offline offline_access openid",
 			RedirectURIs:  []string{redir},
 		}))
 
-		res, err := http.Post(remote+"/clients", "application/json", &b)
+		res, err := http.Post(remote+"/admin/clients", "application/json", &b)
 		if err != nil {
 			return err
 		}
 		defer res.Body.Close()
 
 		if http.StatusCreated != res.StatusCode {
-			return errors.Errorf("got status code: %d", http.StatusCreated)
+			return errors.Errorf("got status code: %d", res.StatusCode)
 		}
+
+		body := ioutilx.MustReadAll(res.Body)
+		id = gjson.GetBytes(body, "client_id").String()
+		secret = gjson.GetBytes(body, "client_secret").String()
 		return nil
 	}))
+	return
 }
 
 func newHydraIntegration(t *testing.T, remote *string, subject *string, claims *idTokenClaims, scope *[]string, addr string) (*http.Server, string) {
@@ -149,7 +147,7 @@ func newHydraIntegration(t *testing.T, remote *string, subject *string, claims *
 		require.NoError(t, json.NewEncoder(&b).Encode(&p{
 			Subject: *subject,
 		}))
-		href := urlx.MustJoin(*remote, "/oauth2/auth/requests/login/accept") + "?login_challenge=" + challenge
+		href := urlx.MustJoin(*remote, "/admin/oauth2/auth/requests/login/accept") + "?login_challenge=" + challenge
 		do(w, r, href, &b)
 	})
 
@@ -164,13 +162,14 @@ func newHydraIntegration(t *testing.T, remote *string, subject *string, claims *
 		msg, err := json.Marshal(claims)
 		require.NoError(t, err)
 		require.NoError(t, json.NewEncoder(&b).Encode(&p{GrantScope: *scope, Session: msg}))
-		href := urlx.MustJoin(*remote, "/oauth2/auth/requests/consent/accept") + "?consent_challenge=" + challenge
+		href := urlx.MustJoin(*remote, "/admin/oauth2/auth/requests/consent/accept") + "?consent_challenge=" + challenge
 		do(w, r, href, &b)
 	})
 
 	if addr == "" {
 		server := httptest.NewServer(router)
 		t.Cleanup(server.Close)
+		server.URL = strings.Replace(server.URL, "127.0.0.1", "localhost", 1)
 		return server.Config, server.URL
 	}
 
@@ -197,7 +196,6 @@ func newReturnTs(t *testing.T, reg driver.Registry) *httptest.Server {
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		sess, err := reg.SessionManager().FetchFromRequest(r.Context(), r)
 		require.NoError(t, err)
-		require.Empty(t, sess.Identity.Credentials)
 		reg.Writer().Write(w, r, sess)
 	}))
 	reg.Config().MustSet(ctx, config.ViperKeySelfServiceBrowserDefaultReturnTo, ts.URL)
@@ -246,14 +244,14 @@ func newHydra(t *testing.T, subject *string, claims *idTokenClaims, scope *[]str
 		require.NoError(t, err)
 		hydra, err := pool.RunWithOptions(&dockertest.RunOptions{
 			Repository: "oryd/hydra",
-			Tag:        "v1.9.2-sqlite",
+			Tag:        "v2.0.2",
 			Env: []string{
 				"DSN=memory",
-				fmt.Sprintf("URLS_SELF_ISSUER=http://127.0.0.1:%d/", publicPort),
+				fmt.Sprintf("URLS_SELF_ISSUER=http://localhost:%d/", publicPort),
 				"URLS_LOGIN=" + hydraIntegrationTSURL + "/login",
 				"URLS_CONSENT=" + hydraIntegrationTSURL + "/consent",
 			},
-			Cmd:          []string{"serve", "all", "--dangerous-force-http"},
+			Cmd:          []string{"serve", "all", "--dev"},
 			ExposedPorts: []string{"4444/tcp", "4445/tcp"},
 			PortBindings: map[docker.Port][]docker.PortBinding{
 				"4444/tcp": {{HostPort: fmt.Sprintf("%d/tcp", publicPort)}},
@@ -268,8 +266,8 @@ func newHydra(t *testing.T, subject *string, claims *idTokenClaims, scope *[]str
 		require.NotEmpty(t, hydra.GetPort("4444/tcp"), "%+v", hydra.Container.NetworkSettings.Ports)
 		require.NotEmpty(t, hydra.GetPort("4445/tcp"), "%+v", hydra.Container)
 
-		remotePublic = "http://127.0.0.1:" + hydra.GetPort("4444/tcp")
-		remoteAdmin = "http://127.0.0.1:" + hydra.GetPort("4445/tcp")
+		remotePublic = "http://localhost:" + hydra.GetPort("4444/tcp")
+		remoteAdmin = "http://localhost:" + hydra.GetPort("4445/tcp")
 	}
 
 	t.Logf("Ory Hydra running at: %s %s", remotePublic, remoteAdmin)
@@ -282,15 +280,15 @@ func newOIDCProvider(
 	kratos *httptest.Server,
 	hydraPublic string,
 	hydraAdmin string,
-	id, clientID string,
+	id string,
 ) oidc.Configuration {
-	createClient(t, hydraAdmin, kratos.URL+oidc.RouteBase+"/callback/"+id, clientID)
+	clientID, secret := createClient(t, hydraAdmin, kratos.URL+oidc.RouteBase+"/callback/"+id)
 
 	return oidc.Configuration{
 		Provider:     "generic",
 		ID:           id,
 		ClientID:     clientID,
-		ClientSecret: "secret",
+		ClientSecret: secret,
 		IssuerURL:    hydraPublic + "/",
 		Mapper:       "file://./stub/oidc.hydra.jsonnet",
 	}
@@ -300,29 +298,6 @@ func viperSetProviderConfig(t *testing.T, conf *config.Config, providers ...oidc
 	ctx := context.Background()
 	conf.MustSet(ctx, config.ViperKeySelfServiceStrategyConfig+"."+string(identity.CredentialsTypeOIDC)+".config", &oidc.ConfigurationCollection{Providers: providers})
 	conf.MustSet(ctx, config.ViperKeySelfServiceStrategyConfig+"."+string(identity.CredentialsTypeOIDC)+".enabled", true)
-}
-
-func newClient(t *testing.T, jar *cookiejar.Jar) *http.Client {
-	if jar == nil {
-		j, err := cookiejar.New(nil)
-		jar = j
-		require.NoError(t, err)
-	}
-	return &http.Client{
-		Jar: jar,
-		CheckRedirect: func(req *http.Request, via []*http.Request) error {
-			if debugRedirects {
-				t.Logf("Redirect: %s", req.URL.String())
-			}
-			if len(via) >= 20 {
-				for k, v := range via {
-					t.Logf("Failed with redirect (%d): %s", k, v.URL.String())
-				}
-				return errors.New("stopped after 20 redirects")
-			}
-			return nil
-		},
-	}
 }
 
 // AssertSystemError asserts an error ui response

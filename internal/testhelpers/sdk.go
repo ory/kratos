@@ -1,3 +1,6 @@
+// Copyright © 2023 Ory Corp
+// SPDX-License-Identifier: Apache-2.0
+
 package testhelpers
 
 import (
@@ -12,7 +15,7 @@ import (
 	"github.com/ory/kratos/x"
 	"github.com/ory/x/pointerx"
 
-	kratos "github.com/ory/kratos-client-go"
+	kratos "github.com/ory/kratos/internal/httpclient"
 )
 
 func NewSDKClient(ts *httptest.Server) *kratos.APIClient {

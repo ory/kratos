@@ -1,3 +1,6 @@
+// Copyright © 2023 Ory Corp
+// SPDX-License-Identifier: Apache-2.0
+
 import { appPrefix, gen, website } from "../../../../helpers"
 import { routes as express } from "../../../../helpers/express"
 import { routes as react } from "../../../../helpers/react"
@@ -39,12 +42,18 @@ context("Testing logout flows", () => {
       it("should sign out and be able to sign in again", () => {
         cy.getSession()
         cy.getCookie("ory_kratos_session").should("not.be.null")
-        cy.get(
-          `${appPrefix(app)} [data-testid="logout"]:not(.disabled)`,
-        ).click()
+        if (app === "express") {
+          cy.get(
+            `${appPrefix(app)} [data-testid="logout"] a:not(.disabled)`,
+          ).click()
+        } else {
+          cy.get(
+            `${appPrefix(app)} [data-testid="logout"]:not(.disabled)`,
+          ).click()
+        }
+        cy.getCookie("ory_kratos_session").should("be.null")
         cy.noSession()
         cy.url().should("include", "/login")
-        cy.getCookie("ory_kratos_session").should("be.null")
       })
     })
   })

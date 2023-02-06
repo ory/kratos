@@ -1,3 +1,6 @@
+// Copyright © 2023 Ory Corp
+// SPDX-License-Identifier: Apache-2.0
+
 package session_test
 
 import (
@@ -12,8 +15,6 @@ import (
 	"github.com/ory/nosurf"
 
 	"github.com/ory/kratos/driver"
-
-	"github.com/ory/x/urlx"
 
 	"github.com/julienschmidt/httprouter"
 	"github.com/stretchr/testify/assert"
@@ -103,6 +104,13 @@ func TestManagerHTTP(t *testing.T) {
 			require.Len(t, rec.Result().Cookies(), 1)
 			return rec.Result().Cookies()[0]
 		}
+
+		t.Run("case=immutability", func(t *testing.T) {
+			cookie1 := getCookie(t, x.NewTestHTTPRequest(t, "GET", "https://baseurl.com/bar", nil))
+			cookie2 := getCookie(t, x.NewTestHTTPRequest(t, "GET", "https://baseurl.com/bar", nil))
+
+			assert.NotEqual(t, cookie1.Value, cookie2.Value)
+		})
 
 		t.Run("case=with default options", func(t *testing.T) {
 			actual := getCookie(t, httptest.NewRequest("GET", "https://baseurl.com/bar", nil))
@@ -266,40 +274,6 @@ func TestManagerHTTP(t *testing.T) {
 			res, err := c.Get(pts.URL + "/session/set/invalid")
 			require.NoError(t, err)
 			assert.EqualValues(t, http.StatusInternalServerError, res.StatusCode)
-		})
-
-		t.Run("case=valid and uses x-session-cookie", func(t *testing.T) {
-			req := x.NewTestHTTPRequest(t, "GET", "/sessions/whoami", nil)
-			conf.MustSet(ctx, config.ViperKeySessionLifespan, "1m")
-
-			i := identity.Identity{Traits: []byte("{}")}
-			require.NoError(t, reg.PrivilegedIdentityPool().CreateIdentity(context.Background(), &i))
-			s, _ = session.NewActiveSession(req, &i, conf, time.Now(), identity.CredentialsTypePassword, identity.AuthenticatorAssuranceLevel1)
-
-			c := testhelpers.NewClientWithCookies(t)
-			testhelpers.MockHydrateCookieClient(t, c, pts.URL+"/session/set")
-
-			cookies := c.Jar.Cookies(urlx.ParseOrPanic(pts.URL))
-			require.Len(t, cookies, 2, "expect two cookies, one csrf, one session")
-
-			var cookie *http.Cookie
-			for _, c := range cookies {
-				if c.Name == "ory_kratos_session" {
-					cookie = c
-					break
-				}
-			}
-			require.NotNil(t, cookie, "must find the kratos session cookie")
-
-			assert.Equal(t, "ory_kratos_session", cookie.Name)
-
-			req, err := http.NewRequest("GET", pts.URL+"/session/get", nil)
-			require.NoError(t, err)
-			req.Header.Set("Cookie", "ory_kratos_session=not-valid")
-			req.Header.Set("X-Session-Cookie", cookie.Value)
-			res, err := http.DefaultClient.Do(req)
-			require.NoError(t, err)
-			assert.EqualValues(t, http.StatusOK, res.StatusCode)
 		})
 
 		t.Run("case=valid bearer auth as fallback", func(t *testing.T) {

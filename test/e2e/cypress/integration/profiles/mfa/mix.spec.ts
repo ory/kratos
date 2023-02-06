@@ -1,3 +1,6 @@
+// Copyright © 2023 Ory Corp
+// SPDX-License-Identifier: Apache-2.0
+
 import { APP_URL, appPrefix, gen, website } from "../../../helpers"
 import { authenticator } from "otplib"
 import { routes as react } from "../../../helpers/react"
@@ -119,6 +122,7 @@ context("2FA with various methods", () => {
             cy.get('[name="totp_code"]').then(($e) => {
               cy.wrap($e).type(authenticator.generate(secret))
             })
+
             cy.get('[name="method"][value="totp"]').click()
             cy.location("pathname").should("not.include", "/login")
 

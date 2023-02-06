@@ -66,9 +66,9 @@ jobs:
           docker create --name hydra -p 4445:4445 -p 4444:4444 \
             -e DSN=memory \
             -e URLS_SELF_ISSUER=http://localhost:4444/ \
-            -e URLS_LOGIN=http://127.0.0.1:4499/login \
-            -e URLS_CONSENT=http://127.0.0.1:4499/consent \
-            oryd/hydra:v1.9.2-sqlite serve all --dangerous-force-http
+            -e URLS_LOGIN=http://localhost:4499/login \
+            -e URLS_CONSENT=http://localhost:4499/consent \
+            oryd/hydra:v2.0.2 serve all --dev
           docker start hydra
           docker logs -f hydra &> /tmp/hydra.log &
         name: Start Hydra
@@ -81,6 +81,8 @@ jobs:
       - run: go list -json > go.list
       - name: Run nancy
         uses: sonatype-nexus-community/nancy-github-action@v1.0.2
+        with:
+          nancyVersion: v1.0.42
       - run: npm install
         name: Install node deps
       - name: Run golangci-lint
@@ -152,6 +154,8 @@ jobs:
         name: Install Firefox
       - uses: browser-actions/setup-geckodriver@latest
         name: Install Geckodriver
+        with:
+          geckodriver-version: 0.32.0
       - uses: ory/ci/checkout@master
         with:
           fetch-depth: 2
@@ -160,6 +164,9 @@ jobs:
           cd test/e2e; npm ci
           npm i -g expo-cli
         name: Install node deps
+      - run: |
+          sudo apt-get install -y moreutils gettext
+        name: Install tools
       - name: Setup Go
         uses: actions/setup-go@v2
         with:

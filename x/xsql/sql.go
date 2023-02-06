@@ -1,3 +1,6 @@
+// Copyright © 2023 Ory Corp
+// SPDX-License-Identifier: Apache-2.0
+
 package xsql
 
 import (
@@ -25,6 +28,7 @@ func CleanSQL(t *testing.T, c *pop.Connection) {
 	ctx := context.Background()
 	for _, table := range []string{
 		new(continuity.Container).TableName(ctx),
+		new(courier.MessageDispatch).TableName(),
 		new(courier.Message).TableName(ctx),
 
 		new(session.Device).TableName(ctx),
@@ -36,6 +40,7 @@ func CleanSQL(t *testing.T, c *pop.Connection) {
 		new(link.RecoveryToken).TableName(ctx),
 		new(link.VerificationToken).TableName(ctx),
 		new(code.RecoveryCode).TableName(ctx),
+		new(code.VerificationCode).TableName(ctx),
 
 		new(recovery.Flow).TableName(ctx),
 

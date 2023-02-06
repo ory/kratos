@@ -1,11 +1,15 @@
+// Copyright © 2023 Ory Corp
+// SPDX-License-Identifier: Apache-2.0
+
 package main
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/ory/kratos/examples/go/pkg"
 
-	ory "github.com/ory/kratos-client-go"
+	ory "github.com/ory/client-go"
 )
 
 // If you use Open Source this would be:
@@ -19,8 +23,8 @@ func performLogout() {
 	_, sessionToken := pkg.CreateIdentityWithSession(client, email, password)
 
 	// Log out using session token
-	res, err := client.V0alpha2Api.SubmitSelfServiceLogoutFlowWithoutBrowserExecute(ory.V0alpha2ApiApiSubmitSelfServiceLogoutFlowWithoutBrowserRequest{}.
-		SubmitSelfServiceLogoutFlowWithoutBrowserBody(ory.SubmitSelfServiceLogoutFlowWithoutBrowserBody{SessionToken: sessionToken}))
+	res, err := client.FrontendApi.PerformNativeLogout(context.Background()).
+		PerformNativeLogoutBody(ory.PerformNativeLogoutBody{SessionToken: sessionToken}).Execute()
 	pkg.SDKExitOnError(err, res)
 }
 

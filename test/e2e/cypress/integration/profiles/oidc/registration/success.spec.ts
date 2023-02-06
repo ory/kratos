@@ -1,3 +1,6 @@
+// Copyright © 2023 Ory Corp
+// SPDX-License-Identifier: Apache-2.0
+
 import { appPrefix, gen, website } from "../../../../helpers"
 import { routes as react } from "../../../../helpers/react"
 import { routes as express } from "../../../../helpers/express"
@@ -41,7 +44,12 @@ context("Social Sign Up Successes", () => {
       it("should be able to sign up with incomplete data and finally be signed in", () => {
         const email = gen.email()
 
-        cy.registerOidc({ email, expectSession: false, route: registration })
+        cy.registerOidc({
+          app,
+          email,
+          expectSession: false,
+          route: registration,
+        })
 
         cy.get("#registration-password").should("not.exist")
         cy.get(appPrefix(app) + '[name="traits.email"]').should(
@@ -85,7 +93,7 @@ context("Social Sign Up Successes", () => {
         cy.triggerOidc(app)
 
         cy.location("pathname").should((loc) => {
-          expect(loc).to.be.oneOf(["/welcome", "/"])
+          expect(loc).to.be.oneOf(["/welcome", "/", "/sessions"])
         })
 
         cy.getSession().should((session) => {
@@ -97,21 +105,21 @@ context("Social Sign Up Successes", () => {
       it("should be able to sign up with complete data", () => {
         const email = gen.email()
 
-        cy.registerOidc({ email, website, route: registration })
+        cy.registerOidc({ app, email, website, route: registration })
         cy.getSession().should(shouldSession(email))
       })
 
       it("should be able to convert a sign up flow to a sign in flow", () => {
         const email = gen.email()
 
-        cy.registerOidc({ email, website, route: registration })
+        cy.registerOidc({ app, email, website, route: registration })
         cy.logout()
         cy.noSession()
         cy.visit(registration)
         cy.triggerOidc(app)
 
         cy.location("pathname").should((path) => {
-          expect(path).to.oneOf(["/", "/welcome"])
+          expect(path).to.oneOf(["/", "/welcome", "/sessions"])
         })
 
         cy.getSession().should(shouldSession(email))
@@ -162,6 +170,7 @@ context("Social Sign Up Successes", () => {
       it("should be able to sign up with redirects", () => {
         const email = gen.email()
         cy.registerOidc({
+          app,
           email,
           website,
           route: registration + "?return_to=https://www.ory.sh/",

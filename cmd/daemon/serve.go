@@ -1,47 +1,40 @@
+// Copyright © 2023 Ory Corp
+// SPDX-License-Identifier: Apache-2.0
+
 package daemon
 
 import (
+	stdctx "context"
 	"crypto/tls"
 	"net/http"
 
-	"github.com/ory/x/servicelocatorx"
-
 	"github.com/pkg/errors"
-	"golang.org/x/net/context"
-
-	"golang.org/x/sync/errgroup"
-
-	"github.com/ory/kratos/schema"
-
-	"github.com/ory/kratos/selfservice/flow/recovery"
-
-	"github.com/ory/x/reqlog"
-
-	"github.com/ory/kratos/cmd/courier"
-	"github.com/ory/kratos/driver/config"
-
 	"github.com/rs/cors"
-
-	prometheus "github.com/ory/x/prometheusx"
-
-	"github.com/ory/analytics-go/v4"
-
-	"github.com/ory/x/healthx"
-	"github.com/ory/x/networkx"
-
-	stdctx "context"
-
 	"github.com/spf13/cobra"
 	"github.com/urfave/negroni"
+	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
+	"golang.org/x/net/context"
+	"golang.org/x/sync/errgroup"
 
+	"github.com/ory/analytics-go/v4"
 	"github.com/ory/graceful"
+	"github.com/ory/x/healthx"
 	"github.com/ory/x/metricsx"
+	"github.com/ory/x/networkx"
+	"github.com/ory/x/otelx"
+	prometheus "github.com/ory/x/prometheusx"
+	"github.com/ory/x/reqlog"
+	"github.com/ory/x/servicelocatorx"
 
+	"github.com/ory/kratos/cmd/courier"
 	"github.com/ory/kratos/driver"
+	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/identity"
+	"github.com/ory/kratos/schema"
 	"github.com/ory/kratos/selfservice/errorx"
 	"github.com/ory/kratos/selfservice/flow/login"
 	"github.com/ory/kratos/selfservice/flow/logout"
+	"github.com/ory/kratos/selfservice/flow/recovery"
 	"github.com/ory/kratos/selfservice/flow/registration"
 	"github.com/ory/kratos/selfservice/flow/settings"
 	"github.com/ory/kratos/selfservice/flow/verification"
@@ -124,7 +117,7 @@ func ServePublic(r driver.Registry, cmd *cobra.Command, args []string, slOpts *s
 	certs := c.GetTLSCertificatesForPublic(ctx)
 
 	if tracer := r.Tracer(ctx); tracer.IsLoaded() {
-		handler = x.TraceHandler(handler)
+		handler = otelx.TraceHandler(handler, otelhttp.WithTracerProvider(tracer.Provider()))
 	}
 
 	// #nosec G112 - the correct settings are set by graceful.WithDefaults
@@ -173,7 +166,7 @@ func ServeAdmin(r driver.Registry, cmd *cobra.Command, args []string, slOpts *se
 	)
 
 	if r.Config().DisableAdminHealthRequestLog(ctx) {
-		adminLogger.ExcludePaths(x.AdminPrefix+healthx.AliveCheckPath, x.AdminPrefix+healthx.ReadyCheckPath)
+		adminLogger.ExcludePaths(x.AdminPrefix+healthx.AliveCheckPath, x.AdminPrefix+healthx.ReadyCheckPath, x.AdminPrefix+prometheus.MetricsPrometheusPath)
 	}
 	n.Use(adminLogger)
 	n.UseFunc(x.RedirectAdminMiddleware)
@@ -190,7 +183,12 @@ func ServeAdmin(r driver.Registry, cmd *cobra.Command, args []string, slOpts *se
 
 	var handler http.Handler = n
 	if tracer := r.Tracer(ctx); tracer.IsLoaded() {
-		handler = x.TraceHandler(n)
+		handler = otelx.TraceHandler(handler,
+			otelhttp.WithTracerProvider(tracer.Provider()),
+			otelhttp.WithFilter(func(req *http.Request) bool {
+				return req.URL.Path != x.AdminPrefix+prometheus.MetricsPrometheusPath
+			}),
+		)
 	}
 
 	// #nosec G112 - the correct settings are set by graceful.WithDefaults

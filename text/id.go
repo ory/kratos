@@ -1,3 +1,6 @@
+// Copyright © 2023 Ory Corp
+// SPDX-License-Identifier: Apache-2.0
+
 package text
 
 // This file MUST not have any imports to modules that are not in the standard library.
@@ -77,12 +80,14 @@ const (
 	InfoNodeLabelVerifyOTP                         // 1070006
 	InfoNodeLabelEmail                             // 1070007
 	InfoNodeLabelResendOTP                         // 1070008
+	InfoNodeLabelContinue                          // 1070009
 )
 
 const (
-	InfoSelfServiceVerification           ID = 1080000 + iota // 1080000
-	InfoSelfServiceVerificationEmailSent                      // 1080001
-	InfoSelfServiceVerificationSuccessful                     // 1080002
+	InfoSelfServiceVerification                  ID = 1080000 + iota // 1080000
+	InfoSelfServiceVerificationEmailSent                             // 1080001
+	InfoSelfServiceVerificationSuccessful                            // 1080002
+	InfoSelfServiceVerificationEmailWithCodeSent                     // 1080003
 )
 
 const (
@@ -142,6 +147,7 @@ const (
 	ErrorValidationVerificationStateFailure                                  // 4070003
 	ErrorValidationVerificationMissingVerificationToken                      // 4070004
 	ErrorValidationVerificationFlowExpired                                   // 4070005
+	ErrorValidationVerificationCodeInvalidOrAlreadyUsed                      // 4070006
 )
 
 const (

@@ -1,3 +1,6 @@
+// Copyright © 2023 Ory Corp
+// SPDX-License-Identifier: Apache-2.0
+
 package oidc_test
 
 import (
@@ -45,8 +48,6 @@ import (
 	"github.com/ory/kratos/x"
 )
 
-const debugRedirects = false
-
 func TestStrategy(t *testing.T) {
 	ctx := context.Background()
 	if testing.Short() {
@@ -67,16 +68,16 @@ func TestStrategy(t *testing.T) {
 	routerP := x.NewRouterPublic()
 	routerA := x.NewRouterAdmin()
 	ts, _ := testhelpers.NewKratosServerWithRouters(t, reg, routerP, routerA)
-
+	invalid := newOIDCProvider(t, ts, remotePublic, remoteAdmin, "invalid-issuer")
 	viperSetProviderConfig(
 		t,
 		conf,
-		newOIDCProvider(t, ts, remotePublic, remoteAdmin, "valid", "client"),
+		newOIDCProvider(t, ts, remotePublic, remoteAdmin, "valid"),
 		oidc.Configuration{
 			Provider:     "generic",
 			ID:           "invalid-issuer",
-			ClientID:     "client-invalid",
-			ClientSecret: "secret",
+			ClientID:     invalid.ClientID,
+			ClientSecret: invalid.ClientSecret,
 			// We replace this URL to cause an issuer validation mismatch.
 			IssuerURL: strings.Replace(remotePublic, "localhost", "127.0.0.1", 1) + "/",
 			Mapper:    "file://./stub/oidc.hydra.jsonnet",
@@ -138,7 +139,7 @@ func TestStrategy(t *testing.T) {
 
 	var makeRequestWithCookieJar = func(t *testing.T, provider string, action string, fv url.Values, jar *cookiejar.Jar) (*http.Response, []byte) {
 		fv.Set("provider", provider)
-		res, err := newClient(t, jar).PostForm(action, fv)
+		res, err := testhelpers.NewClientWithCookieJar(t, jar, false).PostForm(action, fv)
 		require.NoError(t, err, action)
 
 		body, err := io.ReadAll(res.Body)
@@ -185,7 +186,7 @@ func TestStrategy(t *testing.T) {
 
 	var newLoginFlow = func(t *testing.T, redirectTo string, exp time.Duration) (req *login.Flow) {
 		// Use NewLoginFlow to instantiate the request but change the things we need to control a copy of it.
-		req, err := reg.LoginHandler().NewLoginFlow(httptest.NewRecorder(),
+		req, _, err := reg.LoginHandler().NewLoginFlow(httptest.NewRecorder(),
 			&http.Request{URL: urlx.ParseOrPanic(redirectTo)}, flow.TypeBrowser)
 		require.NoError(t, err)
 		req.RequestURL = redirectTo
@@ -231,6 +232,7 @@ func TestStrategy(t *testing.T) {
 	})
 
 	t.Run("case=should fail because the issuer is mismatching", func(t *testing.T) {
+		scope = []string{"openid"}
 		for k, v := range []string{
 			loginAction(newLoginFlow(t, returnTS.URL, time.Minute).ID),
 			registerAction(newRegistrationFlow(t, returnTS.URL, time.Minute).ID),
@@ -732,7 +734,7 @@ func TestPostEndpointRedirect(t *testing.T) {
 	viperSetProviderConfig(
 		t,
 		conf,
-		newOIDCProvider(t, publicTS, remotePublic, remoteAdmin, "apple", "client"),
+		newOIDCProvider(t, publicTS, remotePublic, remoteAdmin, "apple"),
 	)
 	testhelpers.InitKratosServers(t, reg, publicTS, adminTS)
 

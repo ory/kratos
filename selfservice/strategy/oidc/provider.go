@@ -1,8 +1,15 @@
+// Copyright © 2023 Ory Corp
+// SPDX-License-Identifier: Apache-2.0
+
 package oidc
 
 import (
 	"context"
 	"net/url"
+
+	"github.com/pkg/errors"
+
+	"github.com/ory/herodot"
 
 	"golang.org/x/oauth2"
 
@@ -46,4 +53,15 @@ type Claims struct {
 	HD                  string                 `json:"hd,omitempty"`
 	Team                string                 `json:"team,omitempty"`
 	RawClaims           map[string]interface{} `json:"raw_claims,omitempty"`
+}
+
+// Validate checks if the claims are valid.
+func (c *Claims) Validate() error {
+	if c.Subject == "" {
+		return errors.WithStack(herodot.ErrInternalServerError.WithReasonf("provider did not return a subject"))
+	}
+	if c.Issuer == "" {
+		return errors.WithStack(herodot.ErrInternalServerError.WithReasonf("issuer not set in claims"))
+	}
+	return nil
 }

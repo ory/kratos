@@ -1,3 +1,6 @@
+// Copyright © 2023 Ory Corp
+// SPDX-License-Identifier: Apache-2.0
+
 package webauthn
 
 import (
@@ -88,7 +91,7 @@ func (s *Strategy) CountActiveFirstFactorCredentials(cc map[identity.Credentials
 func (s *Strategy) countCredentials(cc map[identity.CredentialsType]identity.Credentials, passwordless bool) (count int, err error) {
 	for _, c := range cc {
 		if c.Type == s.ID() && len(c.Config) > 0 && len(c.Identifiers) > 0 {
-			var conf CredentialsConfig
+			var conf identity.CredentialsWebAuthnConfig
 			if err = json.Unmarshal(c.Config, &conf); err != nil {
 				return 0, errors.WithStack(err)
 			}

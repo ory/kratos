@@ -1,3 +1,6 @@
+// Copyright © 2023 Ory Corp
+// SPDX-License-Identifier: Apache-2.0
+
 package identities
 
 import (
@@ -33,7 +36,7 @@ func NewListIdentitiesCmd() *cobra.Command {
 				return err
 			}
 
-			req := c.V0alpha2Api.AdminListIdentities(cmd.Context())
+			req := c.IdentityApi.ListIdentities(cmd.Context())
 			if len(args) == 2 {
 				page, perPage, err := cmdx.ParsePaginationArgs(cmd, args[0], args[1])
 				if err != nil {

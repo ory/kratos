@@ -1,3 +1,6 @@
+// Copyright © 2023 Ory Corp
+// SPDX-License-Identifier: Apache-2.0
+
 package totp_test
 
 import (
@@ -16,7 +19,7 @@ import (
 	"github.com/pquerna/otp"
 	stdtotp "github.com/pquerna/otp/totp"
 
-	kratos "github.com/ory/kratos-client-go"
+	kratos "github.com/ory/kratos/internal/httpclient"
 	"github.com/ory/kratos/selfservice/strategy/totp"
 	"github.com/ory/kratos/ui/node"
 
@@ -301,7 +304,7 @@ func TestCompleteSettings(t *testing.T) {
 		checkIdentity := func(t *testing.T, id *identity.Identity, key string) {
 			i, cred, err := reg.PrivilegedIdentityPool().FindByCredentialsIdentifier(context.Background(), identity.CredentialsTypeTOTP, id.ID.String())
 			require.NoError(t, err)
-			var c totp.CredentialsConfig
+			var c identity.CredentialsTOTPConfig
 			require.NoError(t, json.Unmarshal(cred.Config, &c))
 			actual, err := otp.NewKeyFromURL(c.TOTPURL)
 			require.NoError(t, err)
@@ -309,7 +312,7 @@ func TestCompleteSettings(t *testing.T) {
 			assert.Contains(t, c.TOTPURL, gjson.GetBytes(i.Traits, "subject").String())
 		}
 
-		run := func(t *testing.T, isAPI, isSPA bool, id *identity.Identity, hc *http.Client, f *kratos.SelfServiceSettingsFlow) {
+		run := func(t *testing.T, isAPI, isSPA bool, id *identity.Identity, hc *http.Client, f *kratos.SettingsFlow) {
 			values := testhelpers.SDKFormFieldsToURLValues(f.Ui.Nodes)
 
 			nodes, err := json.Marshal(f.Ui.Nodes)

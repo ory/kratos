@@ -1,9 +1,14 @@
+// Copyright © 2023 Ory Corp
+// SPDX-License-Identifier: Apache-2.0
+
 package sql
 
 import (
 	"context"
 	"fmt"
 	"time"
+
+	"github.com/ory/kratos/identity"
 
 	"github.com/gofrs/uuid"
 
@@ -34,7 +39,7 @@ func (p *Persister) GetSettingsFlow(ctx context.Context, id uuid.UUID) (*setting
 		return nil, sqlcon.HandleError(err)
 	}
 
-	r.Identity, err = p.GetIdentity(ctx, r.IdentityID)
+	r.Identity, err = p.GetIdentity(ctx, r.IdentityID, identity.ExpandDefault)
 	if err != nil {
 		return nil, err
 	}

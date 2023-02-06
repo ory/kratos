@@ -1,3 +1,6 @@
+// Copyright © 2023 Ory Corp
+// SPDX-License-Identifier: Apache-2.0
+
 package recovery
 
 import (
@@ -86,7 +89,7 @@ func (s *ErrorHandler) WriteFlowError(
 			return
 		}
 
-		a.UI.Messages.Add(text.NewErrorValidationRecoveryFlowExpired(e.Ago))
+		a.UI.Messages.Add(text.NewErrorValidationRecoveryFlowExpired(e.ExpiredAt))
 		if err := s.d.RecoveryFlowPersister().CreateRecoveryFlow(r.Context(), a); err != nil {
 			s.forward(w, r, a, err)
 			return

@@ -1,3 +1,6 @@
+// Copyright © 2023 Ory Corp
+// SPDX-License-Identifier: Apache-2.0
+
 package login_test
 
 import (
@@ -246,6 +249,12 @@ func TestLoginExecutor(t *testing.T) {
 					},
 					conf,
 				))
+			})
+
+			t.Run("requiresAAL2 should return true if there's an error", func(t *testing.T) {
+				requiresAAL2, err := login.RequiresAAL2ForTest(*reg.LoginHookExecutor(), &http.Request{}, &session.Session{})
+				require.NotNil(t, err)
+				require.True(t, requiresAAL2)
 			})
 		})
 	}

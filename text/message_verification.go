@@ -1,3 +1,6 @@
+// Copyright © 2023 Ory Corp
+// SPDX-License-Identifier: Apache-2.0
+
 package text
 
 import (
@@ -5,13 +8,13 @@ import (
 	"time"
 )
 
-func NewErrorValidationVerificationFlowExpired(ago time.Duration) *Message {
+func NewErrorValidationVerificationFlowExpired(expiredAt time.Time) *Message {
 	return &Message{
 		ID:   ErrorValidationVerificationFlowExpired,
-		Text: fmt.Sprintf("The verification flow expired %.2f minutes ago, please try again.", ago.Minutes()),
+		Text: fmt.Sprintf("The verification flow expired %.2f minutes ago, please try again.", (-Until(expiredAt)).Minutes()),
 		Type: Error,
 		Context: context(map[string]interface{}{
-			"expired_at": Now().UTC().Add(ago),
+			"expired_at": expiredAt,
 		}),
 	}
 }
@@ -19,7 +22,7 @@ func NewErrorValidationVerificationFlowExpired(ago time.Duration) *Message {
 func NewInfoSelfServiceVerificationSuccessful() *Message {
 	return &Message{
 		ID:   InfoSelfServiceVerificationSuccessful,
-		Type: Info,
+		Type: Success,
 		Text: "You successfully verified your email address.",
 	}
 }
@@ -56,6 +59,24 @@ func NewErrorValidationVerificationStateFailure() *Message {
 		ID:      ErrorValidationVerificationStateFailure,
 		Text:    "The verification flow reached a failure state and must be retried.",
 		Type:    Error,
+		Context: context(nil),
+	}
+}
+
+func NewErrorValidationVerificationCodeInvalidOrAlreadyUsed() *Message {
+	return &Message{
+		ID:      ErrorValidationVerificationCodeInvalidOrAlreadyUsed,
+		Text:    "The verification code is invalid or has already been used. Please try again.",
+		Type:    Error,
+		Context: context(nil),
+	}
+}
+
+func NewVerificationEmailWithCodeSent() *Message {
+	return &Message{
+		ID:      InfoSelfServiceVerificationEmailWithCodeSent,
+		Type:    Info,
+		Text:    "An email containing a verification code has been sent to the email address you provided.",
 		Context: context(nil),
 	}
 }

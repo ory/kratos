@@ -1,3 +1,6 @@
+// Copyright © 2023 Ory Corp
+// SPDX-License-Identifier: Apache-2.0
+
 package driver
 
 import (
@@ -43,6 +46,13 @@ func (m *RegistryDefault) LinkSender() *link.Sender {
 	}
 
 	return m.selfserviceLinkSender
+}
+
+// GetActiveVerificationStrategy returns the currently active verification strategy
+// If no verification strategy has been set, an error is returned
+func (m *RegistryDefault) GetActiveVerificationStrategy(ctx context.Context) (verification.Strategy, error) {
+	activeVerificationStrategy := m.Config().SelfServiceFlowVerificationUse(ctx)
+	return m.VerificationStrategies(ctx).Strategy(activeVerificationStrategy)
 }
 
 func (m *RegistryDefault) VerificationStrategies(ctx context.Context) (verificationStrategies verification.Strategies) {

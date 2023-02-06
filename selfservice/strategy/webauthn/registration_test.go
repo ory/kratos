@@ -1,3 +1,6 @@
+// Copyright © 2023 Ory Corp
+// SPDX-License-Identifier: Apache-2.0
+
 package webauthn_test
 
 import (
@@ -13,11 +16,11 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/tidwall/gjson"
 
-	kratos "github.com/ory/kratos-client-go"
 	"github.com/ory/kratos/driver"
 	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/internal"
+	kratos "github.com/ory/kratos/internal/httpclient"
 	"github.com/ory/kratos/internal/registrationhelpers"
 	"github.com/ory/kratos/internal/testhelpers"
 	"github.com/ory/kratos/selfservice/flow"
@@ -122,7 +125,7 @@ func TestRegistration(t *testing.T) {
 		for _, f := range flows {
 			t.Run(f, func(t *testing.T) {
 				client := testhelpers.NewClientWithCookies(t)
-				f := testhelpers.InitializeRegistrationFlowViaBrowser(t, client, publicTS, flowToIsSPA(f))
+				f := testhelpers.InitializeRegistrationFlowViaBrowser(t, client, publicTS, flowToIsSPA(f), false, false)
 				testhelpers.SnapshotTExcept(t, f.Ui.Nodes, []string{
 					"0.attributes.value",
 				})
@@ -134,7 +137,7 @@ func TestRegistration(t *testing.T) {
 		for _, f := range flows {
 			t.Run(f, func(t *testing.T) {
 				client := testhelpers.NewClientWithCookies(t)
-				f := testhelpers.InitializeRegistrationFlowViaBrowser(t, client, publicTS, flowToIsSPA(f))
+				f := testhelpers.InitializeRegistrationFlowViaBrowser(t, client, publicTS, flowToIsSPA(f), false, false)
 				testhelpers.SnapshotTExcept(t, f.Ui.Nodes, []string{
 					"2.attributes.value",
 					"5.attributes.onclick",
@@ -190,9 +193,9 @@ func TestRegistration(t *testing.T) {
 		}
 	})
 
-	submitWebAuthnRegistrationWithClient := func(t *testing.T, flow string, contextFixture []byte, client *http.Client, cb func(values url.Values), opts ...testhelpers.InitFlowWithOption) (string, *http.Response, *kratos.SelfServiceRegistrationFlow) {
+	submitWebAuthnRegistrationWithClient := func(t *testing.T, flow string, contextFixture []byte, client *http.Client, cb func(values url.Values), opts ...testhelpers.InitFlowWithOption) (string, *http.Response, *kratos.RegistrationFlow) {
 		isSPA := flow == "spa"
-		f := testhelpers.InitializeRegistrationFlowViaBrowser(t, client, publicTS, isSPA, opts...)
+		f := testhelpers.InitializeRegistrationFlowViaBrowser(t, client, publicTS, isSPA, false, false, opts...)
 
 		// We inject the session to replay
 		interim, err := reg.RegistrationFlowPersister().GetRegistrationFlow(context.Background(), uuid.FromStringOrNil(f.Id))

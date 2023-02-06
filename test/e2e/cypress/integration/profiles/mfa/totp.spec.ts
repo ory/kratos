@@ -1,9 +1,12 @@
+// Copyright © 2023 Ory Corp
+// SPDX-License-Identifier: Apache-2.0
+
 import { gen, website } from "../../../helpers"
 import { authenticator } from "otplib"
 import { routes as react } from "../../../helpers/react"
 import { routes as express } from "../../../helpers/express"
 
-context("2FA lookup secrets", () => {
+context("2FA TOTP", () => {
   ;[
     {
       login: react.login,
@@ -82,7 +85,7 @@ context("2FA lookup secrets", () => {
         })
         cy.get('*[name="method"][value="totp"]').click()
         cy.location("pathname").should((loc) => {
-          expect(loc).to.oneOf(["/welcome", "/"])
+          expect(loc).to.oneOf(["/welcome", "/", "/sessions"])
         })
         cy.getSession({
           expectAal: "aal2",
@@ -240,6 +243,21 @@ context("2FA lookup secrets", () => {
           expectAal: "aal2",
           expectMethods: ["password", "totp", "totp", "totp", "totp"],
         })
+
+        // The React app keeps using the same flow. The following scenario used to be broken,
+        // because the internal context wasn't populated properly in the flow after settings were saved.
+        cy.visit(settings)
+        cy.get('*[name="totp_unlink"]').click()
+        cy.expectSettingsSaved()
+
+        cy.get('[data-testid="node/text/totp_secret_key/text"]').then(($e) => {
+          secret = $e.text().trim()
+        })
+        cy.get('input[name="totp_code"]').then(($e) => {
+          cy.wrap($e).type(authenticator.generate(secret))
+        })
+        cy.get('*[name="method"][value="totp"]').click()
+        cy.expectSettingsSaved()
       })
 
       it("should not show totp as an option if not configured", () => {
@@ -270,6 +288,27 @@ context("2FA lookup secrets", () => {
           "contain.text",
           "The provided authentication code is invalid, please try again.",
         )
+      })
+
+      // The React app keeps using the same flow. The following scenario used to be broken,
+      // because the internal context wasn't populated properly in the flow after settings were saved.
+      it.only("should allow changing other settings and then setting up totp", () => {
+        cy.visit(settings)
+        cy.get('input[name="traits.website"]')
+          .clear()
+          .type("https://some-website.com")
+        cy.get('*[name="method"][value="profile"]').click()
+        cy.expectSettingsSaved()
+
+        let secret
+        cy.get('[data-testid="node/text/totp_secret_key/text"]').then(($e) => {
+          secret = $e.text().trim()
+        })
+        cy.get('input[name="totp_code"]').then(($e) => {
+          cy.wrap($e).type(authenticator.generate(secret))
+        })
+        cy.get('*[name="method"][value="totp"]').click()
+        cy.expectSettingsSaved()
       })
     })
   })

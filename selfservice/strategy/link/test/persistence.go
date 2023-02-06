@@ -1,3 +1,6 @@
+// Copyright © 2023 Ory Corp
+// SPDX-License-Identifier: Apache-2.0
+
 package link
 
 import (
@@ -103,7 +106,7 @@ func TestPersister(ctx context.Context, conf *config.Config, p interface {
 				expected, f := newRecoveryToken(t, "some-user@ory.sh")
 
 				require.NoError(t, p.CreateRecoveryToken(ctx, expected))
-				id, err := p.GetIdentity(ctx, expected.IdentityID)
+				id, err := p.GetIdentity(ctx, expected.IdentityID, identity.ExpandDefault)
 				require.NoError(t, err)
 				require.NoError(t, p.UpdateIdentity(ctx, id))
 

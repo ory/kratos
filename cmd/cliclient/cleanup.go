@@ -1,3 +1,6 @@
+// Copyright © 2023 Ory Corp
+// SPDX-License-Identifier: Apache-2.0
+
 package cliclient
 
 import (
@@ -48,7 +51,7 @@ func (h *CleanupHandler) CleanupSQL(cmd *cobra.Command, args []string) error {
 		return errors.Wrap(err, "An error occurred initializing cleanup")
 	}
 
-	err = d.Init(cmd.Context(), &contextx.Default{}, driver.SkipNetworkInit)
+	err = d.Init(cmd.Context(), &contextx.Default{})
 	if err != nil {
 		return errors.Wrap(err, "An error occurred initializing cleanup")
 	}

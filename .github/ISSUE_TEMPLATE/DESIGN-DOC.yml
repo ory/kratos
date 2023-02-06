@@ -1,3 +1,6 @@
+# AUTO-GENERATED, DO NOT EDIT!
+# Please edit the original at https://github.com/ory/meta/blob/master/templates/repository/common/.github/ISSUE_TEMPLATE/DESIGN-DOC.yml
+
 description:
   "A design document is needed for non-trivial changes to the code base."
 labels:
@@ -33,7 +36,7 @@ body:
             Guidelines](https://github.com/ory/kratos/blob/master/CONTRIBUTING.md)."
           required: true
         - label:
-            "This issue affects my [Ory Cloud](https://www.ory.sh/) project."
+            "This issue affects my [Ory Network](https://www.ory.sh/) project."
         - label:
             "I have joined the [Ory Community Slack](https://slack.ory.sh)."
         - label:
