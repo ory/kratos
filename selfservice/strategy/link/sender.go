@@ -5,7 +5,6 @@ package link
 
 import (
 	"context"
-	"net/http"
 	"net/url"
 
 	"github.com/hashicorp/go-retryablehttp"
@@ -16,7 +15,6 @@ import (
 
 	"github.com/pkg/errors"
 
-	"github.com/ory/x/errorsx"
 	"github.com/ory/x/sqlcon"
 	"github.com/ory/x/urlx"
 
@@ -59,27 +57,28 @@ func NewSender(r senderDependencies) *Sender {
 	return &Sender{r: r}
 }
 
-// SendRecoveryLink sends a recovery link to the specified address. If the address does not exist in the store, an email is
-// still being sent to prevent account enumeration attacks. In that case, this function returns the ErrUnknownAddress
-// error.
-func (s *Sender) SendRecoveryLink(ctx context.Context, r *http.Request, f *recovery.Flow, via identity.VerifiableAddressType, to string) error {
+// SendRecoveryLink sends a recovery link to the specified address
+//
+// If the address does not exist in the store and dispatching invalid emails is enabled (CourierEnableInvalidDispatch is
+// true), an email is still being sent to prevent account enumeration attacks. In that case, this function returns the
+// ErrUnknownAddress error.
+func (s *Sender) SendRecoveryLink(ctx context.Context, f *recovery.Flow, via identity.VerifiableAddressType, to string) error {
 	s.r.Logger().
 		WithField("via", via).
 		WithSensitiveField("address", to).
 		Debug("Preparing verification code.")
 
 	address, err := s.r.IdentityPool().FindRecoveryAddressByValue(ctx, identity.RecoveryAddressTypeEmail, to)
-	if err != nil {
-		if !s.r.Config().CourierTemplatesRecoveryInvalidSend(ctx) {
-			s.r.Logger().Info("Suppressing invalid recovery email.")
-
-			return nil
-		}
-
-		if err := s.send(ctx, string(via), email.NewRecoveryInvalid(s.r, &email.RecoveryInvalidModel{To: to})); err != nil {
+	if errors.Is(err, sqlcon.ErrNoRows) {
+		if !s.r.Config().CourierEnableInvalidDispatch(ctx) {
+			// do nothing
+		} else if err := s.send(ctx, string(via), email.NewRecoveryInvalid(s.r, &email.RecoveryInvalidModel{To: to})); err != nil {
 			return err
 		}
 		return errors.Cause(ErrUnknownAddress)
+	} else if err != nil {
+		// DB error
+		return err
 	}
 
 	// Get the identity associated with the recovery address
@@ -88,7 +87,7 @@ func (s *Sender) SendRecoveryLink(ctx context.Context, r *http.Request, f *recov
 		return err
 	}
 
-	token := NewSelfServiceRecoveryToken(address, f, s.r.Config().SelfServiceLinkMethodLifespan(r.Context()))
+	token := NewSelfServiceRecoveryToken(address, f, s.r.Config().SelfServiceLinkMethodLifespan(ctx))
 	if err := s.r.RecoveryTokenPersister().CreateRecoveryToken(ctx, token); err != nil {
 		return err
 	}
@@ -100,9 +99,11 @@ func (s *Sender) SendRecoveryLink(ctx context.Context, r *http.Request, f *recov
 	return nil
 }
 
-// SendVerificationLink sends a verification link to the specified address. If the address does not exist in the store, an email is
-// still being sent to prevent account enumeration attacks. In that case, this function returns the ErrUnknownAddress
-// error.
+// SendVerificationLink sends a verification link to the specified address
+//
+// If the address does not exist in the store and dispatching invalid emails is enabled (CourierEnableInvalidDispatch is
+// true), an email is still being sent to prevent account enumeration attacks. In that case, this function returns the
+// ErrUnknownAddress error.
 func (s *Sender) SendVerificationLink(ctx context.Context, f *verification.Flow, via identity.VerifiableAddressType, to string) error {
 	s.r.Logger().
 		WithField("via", via).
@@ -110,21 +111,19 @@ func (s *Sender) SendVerificationLink(ctx context.Context, f *verification.Flow,
 		Debug("Preparing verification code.")
 
 	address, err := s.r.IdentityPool().FindVerifiableAddressByValue(ctx, via, to)
-	if err != nil {
-		if errorsx.Cause(err) == sqlcon.ErrNoRows {
-			s.r.Audit().
-				WithField("via", via).
-				WithSensitiveField("email_address", address).
-				Info("Sending out invalid verification email because address is unknown.")
-			if err := s.send(ctx, string(via), email.NewVerificationInvalid(s.r, &email.VerificationInvalidModel{To: to})); err != nil {
-				return err
-			}
-			return errors.Cause(ErrUnknownAddress)
+	if errors.Is(err, sqlcon.ErrNoRows) {
+		if !s.r.Config().CourierEnableInvalidDispatch(ctx) {
+			// do nothing
+		} else if err := s.send(ctx, string(via), email.NewVerificationInvalid(s.r, &email.VerificationInvalidModel{To: to})); err != nil {
+			return err
 		}
+		return errors.Cause(ErrUnknownAddress)
+	} else if err != nil {
+		// DB error
 		return err
 	}
 
-	// Get the identity associated with the recovery address
+	// Get the identity associated with the verification address
 	i, err := s.r.IdentityPool().GetIdentity(ctx, address.IdentityID, identity.ExpandDefault)
 	if err != nil {
 		return err

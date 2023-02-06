@@ -6,7 +6,6 @@ package link_test
 import (
 	"context"
 	"net/http"
-	"net/http/httptest"
 	"testing"
 	"time"
 
@@ -43,8 +42,6 @@ func TestManager(t *testing.T) {
 	i.Traits = identity.Traits(`{"email": "tracked@ory.sh"}`)
 	require.NoError(t, reg.IdentityManager().Create(context.Background(), i))
 
-	hr := httptest.NewRequest("GET", "https://www.ory.sh", nil)
-
 	t.Run("method=SendRecoveryLink", func(t *testing.T) {
 		s, err := reg.RecoveryStrategies(ctx).Strategy("link")
 		require.NoError(t, err)
@@ -53,8 +50,8 @@ func TestManager(t *testing.T) {
 
 		require.NoError(t, reg.RecoveryFlowPersister().CreateRecoveryFlow(context.Background(), f))
 
-		require.NoError(t, reg.LinkSender().SendRecoveryLink(context.Background(), hr, f, "email", "tracked@ory.sh"))
-		require.EqualError(t, reg.LinkSender().SendRecoveryLink(context.Background(), hr, f, "email", "not-tracked@ory.sh"), link.ErrUnknownAddress.Error())
+		require.NoError(t, reg.LinkSender().SendRecoveryLink(context.Background(), f, "email", "tracked@ory.sh"))
+		require.EqualError(t, reg.LinkSender().SendRecoveryLink(context.Background(), f, "email", "not-tracked@ory.sh"), link.ErrUnknownAddress.Error())
 
 		messages, err := reg.CourierPersister().NextMessages(context.Background(), 12)
 		require.NoError(t, err)
@@ -102,25 +99,55 @@ func TestManager(t *testing.T) {
 		assert.EqualValues(t, identity.VerifiableAddressStatusSent, address.Status)
 	})
 
-	t.Run("case=should not send recovery link", func(t *testing.T) {
-		conf.Set(ctx, "courier.templates.recovery.invalid.send", false)
+	t.Run("case=should be able to disable invalid email dispatch", func(t *testing.T) {
+		for _, tc := range []struct {
+			flow string
+			send func(t *testing.T)
+		}{
+			{
+				flow: "recovery",
+				send: func(t *testing.T) {
+					s, err := reg.RecoveryStrategies(ctx).Strategy("link")
+					require.NoError(t, err)
+					f, err := recovery.NewFlow(conf, time.Hour, "", u, s, flow.TypeBrowser)
+					require.NoError(t, err)
 
-		t.Cleanup(func() {
-			conf.Set(ctx, "courier.templates.recovery.invalid.send", true)
-		})
+					require.NoError(t, reg.RecoveryFlowPersister().CreateRecoveryFlow(context.Background(), f))
 
-		s, err := reg.RecoveryStrategies(ctx).Strategy("link")
-		require.NoError(t, err)
-		f, err := recovery.NewFlow(conf, time.Hour, "", u, s, flow.TypeBrowser)
-		require.NoError(t, err)
+					err = reg.LinkSender().SendRecoveryLink(context.Background(), f, "email", "not-tracked@ory.sh")
+					require.ErrorIs(t, err, link.ErrUnknownAddress)
+				},
+			},
+			{
+				flow: "verification",
+				send: func(t *testing.T) {
+					s, err := reg.VerificationStrategies(ctx).Strategy("link")
+					require.NoError(t, err)
+					f, err := verification.NewFlow(conf, time.Hour, "", u, s, flow.TypeBrowser)
+					require.NoError(t, err)
 
-		require.NoError(t, reg.RecoveryFlowPersister().CreateRecoveryFlow(context.Background(), f))
+					require.NoError(t, reg.VerificationFlowPersister().CreateVerificationFlow(context.Background(), f))
 
-		require.Equal(t, reg.LinkSender().SendRecoveryLink(context.Background(), hr, f, "email", "not-tracked@ory.sh"), nil)
+					err = reg.LinkSender().SendVerificationLink(context.Background(), f, "email", "not-tracked@ory.sh")
+					require.ErrorIs(t, err, link.ErrUnknownAddress)
+				},
+			},
+		} {
+			t.Run("strategy="+tc.flow, func(t *testing.T) {
 
-		messages, err := reg.CourierPersister().NextMessages(context.Background(), 0)
+				conf.Set(ctx, config.ViperKeyCourierEnableInvalidDispatch, false)
 
-		require.True(t, errors.Is(err, courier.ErrQueueEmpty))
-		require.Len(t, messages, 0)
+				t.Cleanup(func() {
+					conf.Set(ctx, config.ViperKeyCourierEnableInvalidDispatch, true)
+				})
+
+				tc.send(t)
+
+				messages, err := reg.CourierPersister().NextMessages(context.Background(), 0)
+
+				require.True(t, errors.Is(err, courier.ErrQueueEmpty))
+				require.Len(t, messages, 0)
+			})
+		}
 	})
 }

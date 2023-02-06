@@ -1717,6 +1717,11 @@
             60
           ]
         },
+        "enable_invalid_email_dispatch": {
+          "description": "Defines whether to enable the sending of emails for invalid verification or recovery requests.",
+          "type": "boolean",
+          "default": true
+        },
         "smtp": {
           "title": "SMTP Configuration",
           "description": "Configures outgoing emails using the SMTP protocol.",
