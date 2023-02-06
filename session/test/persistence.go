@@ -196,7 +196,7 @@ func TestPersister(ctx context.Context, conf *config.Config, p interface {
 				},
 				{
 					desc:   "active only",
-					active: pointerx.Bool(true),
+					active: pointerx.Ptr(true),
 					expectedSessionIds: []uuid.UUID{
 						seedSessionIDs[0],
 						seedSessionIDs[2],
@@ -205,7 +205,7 @@ func TestPersister(ctx context.Context, conf *config.Config, p interface {
 				},
 				{
 					desc:   "active only and except",
-					active: pointerx.Bool(true),
+					active: pointerx.Ptr(true),
 					except: seedSessionsList[0].ID,
 					expectedSessionIds: []uuid.UUID{
 						seedSessionIDs[2],
@@ -214,7 +214,7 @@ func TestPersister(ctx context.Context, conf *config.Config, p interface {
 				},
 				{
 					desc:   "inactive only",
-					active: pointerx.Bool(false),
+					active: pointerx.Ptr(false),
 					expectedSessionIds: []uuid.UUID{
 						seedSessionIDs[1],
 						seedSessionIDs[3],
@@ -222,7 +222,7 @@ func TestPersister(ctx context.Context, conf *config.Config, p interface {
 				},
 				{
 					desc:   "inactive only and except",
-					active: pointerx.Bool(false),
+					active: pointerx.Ptr(false),
 					except: seedSessionsList[3].ID,
 					expectedSessionIds: []uuid.UUID{
 						seedSessionIDs[1],
@@ -319,7 +319,7 @@ func TestPersister(ctx context.Context, conf *config.Config, p interface {
 			t.Run("case=all sessions pagination multiple pages", func(t *testing.T) {
 				paginatorOpts := make([]keysetpagination.Option, 0)
 				paginatorOpts = append(paginatorOpts, keysetpagination.WithSize(3))
-				firstPageItems, total, page1, err := l.ListSessions(ctx, nil, paginatorOpts, session.ExpandEverything)
+				firstPageItems, total, page1, err := l.ListSessions(ctx, pointerx.Ptr(true), paginatorOpts, session.ExpandEverything)
 				require.NoError(t, err)
 				require.Equal(t, int64(6), total)
 				assert.Len(t, firstPageItems, 3)
@@ -329,19 +329,18 @@ func TestPersister(ctx context.Context, conf *config.Config, p interface {
 				assert.Equal(t, 3, page1.Size())
 
 				// Validate secondPageItems page
-				secondPageItems, total, page2, err := l.ListSessions(ctx, nil, page1.ToOptions(), session.ExpandEverything)
+				secondPageItems, total, page2, err := l.ListSessions(ctx, pointerx.Ptr(true), page1.ToOptions(), session.ExpandEverything)
 				require.NoError(t, err)
+				require.Equal(t, int64(6), total)
+				assert.Len(t, secondPageItems, 3)
+				assert.True(t, page2.IsLast())
+				assert.Equal(t, 3, page2.Size())
 
 				acutalIDs := make([]uuid.UUID, 0)
 				for _, s := range append(firstPageItems, secondPageItems...) {
 					acutalIDs = append(acutalIDs, s.ID)
 				}
 				assert.ElementsMatch(t, append(seedSessionIDs, identity2Session.ID), acutalIDs)
-
-				require.Equal(t, int64(6), total)
-				assert.Len(t, secondPageItems, 3)
-				assert.True(t, page2.IsLast())
-				assert.Equal(t, 3, page2.Size())
 			})
 		})
 
