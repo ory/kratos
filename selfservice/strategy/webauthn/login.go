@@ -239,7 +239,7 @@ func (s *Strategy) loginPasswordless(w http.ResponseWriter, r *http.Request, f *
 		return nil, s.handleLoginError(r, f, errors.WithStack(herodot.ErrBadRequest.WithReason("identifier is required")))
 	}
 
-	i, _, err = s.d.PrivilegedIdentityPool().FindByCredentialsIdentifier(r.Context(), s.ID(), p.Identifier)
+	i, _, err = s.d.PrivilegedIdentityPool().FindByCredentialsTypeAndIdentifier(r.Context(), s.ID(), p.Identifier)
 	if err != nil {
 		time.Sleep(x.RandomDelay(s.d.Config().HasherArgon2(r.Context()).ExpectedDuration, s.d.Config().HasherArgon2(r.Context()).ExpectedDeviation))
 		return nil, s.handleLoginError(r, f, errors.WithStack(schema.NewNoWebAuthnCredentials()))

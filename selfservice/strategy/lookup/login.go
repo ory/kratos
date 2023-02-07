@@ -110,7 +110,7 @@ func (s *Strategy) Login(w http.ResponseWriter, r *http.Request, f *login.Flow, 
 		return nil, s.handleLoginError(r, f, err)
 	}
 
-	i, c, err := s.d.PrivilegedIdentityPool().FindByCredentialsIdentifier(r.Context(), s.ID(), identityID.String())
+	i, c, err := s.d.PrivilegedIdentityPool().FindByCredentialsTypeAndIdentifier(r.Context(), s.ID(), identityID.String())
 	if errors.Is(err, sqlcon.ErrNoRows) {
 		return nil, s.handleLoginError(r, f, errors.WithStack(schema.NewNoLookupDefined()))
 	} else if err != nil {
