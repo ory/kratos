@@ -135,10 +135,10 @@ func TestManager(t *testing.T) {
 		} {
 			t.Run("strategy="+tc.flow, func(t *testing.T) {
 
-				conf.Set(ctx, config.ViperKeyCourierEnableInvalidDispatch, false)
+				conf.Set(ctx, config.ViperKeyCourierEnableInvalidMessageDispatch, false)
 
 				t.Cleanup(func() {
-					conf.Set(ctx, config.ViperKeyCourierEnableInvalidDispatch, true)
+					conf.Set(ctx, config.ViperKeyCourierEnableInvalidMessageDispatch, true)
 				})
 
 				tc.send(t)

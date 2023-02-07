@@ -69,7 +69,7 @@ const (
 	ViperKeyCourierSMTPURL                                   = "courier.smtp.connection_uri"
 	ViperKeyCourierSMTPClientCertPath                        = "courier.smtp.client_cert_path"
 	ViperKeyCourierSMTPClientKeyPath                         = "courier.smtp.client_key_path"
-	ViperKeyCourierEnableInvalidDispatch                     = "courier.enable_invalid_email_dispatch"
+	ViperKeyCourierEnableInvalidMessageDispatch              = "courier.enable_invalid_message_dispatch"
 	ViperKeyCourierTemplatesPath                             = "courier.template_override_path"
 	ViperKeyCourierTemplatesRecoveryInvalidEmail             = "courier.templates.recovery.invalid.email"
 	ViperKeyCourierTemplatesRecoveryValidEmail               = "courier.templates.recovery.valid.email"
@@ -1049,7 +1049,7 @@ func (p *Config) CourierTemplatesRecoveryValid(ctx context.Context) *CourierEmai
 }
 
 func (p *Config) CourierEnableInvalidDispatch(ctx context.Context) bool {
-	return p.p.BoolF(ViperKeyCourierEnableInvalidDispatch, true)
+	return p.p.BoolF(ViperKeyCourierEnableInvalidMessageDispatch, true)
 }
 
 func (p *Config) CourierTemplatesRecoveryCodeInvalid(ctx context.Context) *CourierEmailTemplate {
