@@ -42,7 +42,7 @@ import (
 
 	"github.com/ory/x/tlsx"
 
-	"github.com/google/uuid"
+	"github.com/gofrs/uuid"
 
 	"github.com/stretchr/testify/require"
 
@@ -755,7 +755,7 @@ func (p *Config) SecretsDefault(ctx context.Context) [][]byte {
 	secrets := pp.Strings(ViperKeySecretsDefault)
 
 	if len(secrets) == 0 {
-		secrets = []string{uuid.New().String()}
+		secrets = []string{uuid.Must(uuid.NewV4()).String()}
 		p.MustSet(ctx, ViperKeySecretsDefault, secrets)
 	}
 

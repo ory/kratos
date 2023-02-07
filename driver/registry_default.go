@@ -586,71 +586,77 @@ func (m *RegistryDefault) Init(ctx context.Context, ctxer contextx.Contextualize
 	bc := backoff.NewExponentialBackOff()
 	bc.MaxElapsedTime = time.Minute * 5
 	bc.Reset()
-	return errors.WithStack(
-		backoff.Retry(func() error {
-			m.WithContextualizer(ctxer)
+	err := backoff.Retry(func() error {
+		m.WithContextualizer(ctxer)
 
-			// Use maxIdleConnTime - see comment below for https://github.com/gobuffalo/pop/pull/637
-			pool, idlePool, connMaxLifetime, _, cleanedDSN := sqlcon.ParseConnectionOptions(m.l, m.Config().DSN(ctx))
-			m.Logger().
-				WithField("pool", pool).
-				WithField("idlePool", idlePool).
-				WithField("connMaxLifetime", connMaxLifetime).
-				Debug("Connecting to SQL Database")
-			c, err := pop.NewConnection(&pop.ConnectionDetails{
-				URL:             sqlcon.FinalizeDSN(m.l, cleanedDSN),
-				IdlePool:        idlePool,
-				ConnMaxLifetime: connMaxLifetime,
-				// This has been released with pop 5.3.4 but kratos needs https://github.com/gobuffalo/pop/pull/637
-				// to be merged first
-				// ConnMaxIdleTime:           connMaxIdleTime,
-				Pool:                      pool,
-				UseInstrumentedDriver:     m.Tracer(ctx).IsLoaded(),
-				InstrumentedDriverOptions: instrumentedDriverOpts,
-			})
-			if err != nil {
-				m.Logger().WithError(err).Warnf("Unable to connect to database, retrying.")
-				return errors.WithStack(err)
-			}
-			if err := c.Open(); err != nil {
-				m.Logger().WithError(err).Warnf("Unable to open database, retrying.")
-				return errors.WithStack(err)
-			}
-			p, err := sql.NewPersister(ctx, m, c)
-			if err != nil {
-				m.Logger().WithError(err).Warnf("Unable to initialize persister, retrying.")
+		pool, idlePool, connMaxLifetime, connMaxIdleTime, cleanedDSN := sqlcon.ParseConnectionOptions(m.l, m.Config().DSN(ctx))
+		m.Logger().
+			WithField("pool", pool).
+			WithField("idlePool", idlePool).
+			WithField("connMaxLifetime", connMaxLifetime).
+			Debug("Connecting to SQL Database")
+		c, err := pop.NewConnection(&pop.ConnectionDetails{
+			URL:                       sqlcon.FinalizeDSN(m.l, cleanedDSN),
+			IdlePool:                  idlePool,
+			ConnMaxLifetime:           connMaxLifetime,
+			ConnMaxIdleTime:           connMaxIdleTime,
+			Pool:                      pool,
+			UseInstrumentedDriver:     m.Tracer(ctx).IsLoaded(),
+			InstrumentedDriverOptions: instrumentedDriverOpts,
+		})
+		if err != nil {
+			m.Logger().WithError(err).Warnf("Unable to connect to database, retrying.")
+			return errors.WithStack(err)
+		}
+		if err := c.Open(); err != nil {
+			m.Logger().WithError(err).Warnf("Unable to open database, retrying.")
+			return errors.WithStack(err)
+		}
+		p, err := sql.NewPersister(ctx, m, c)
+		if err != nil {
+			m.Logger().WithError(err).Warnf("Unable to initialize persister, retrying.")
+			return err
+		}
+
+		if err := p.Ping(); err != nil {
+			m.Logger().WithError(err).Warnf("Unable to ping database, retrying.")
+			return err
+		}
+
+		// if dsn is memory we have to run the migrations on every start
+		if dbal.IsMemorySQLite(m.Config().DSN(ctx)) || m.Config().DSN(ctx) == "memory" {
+			m.Logger().Infoln("Ory Kratos is running migrations on every startup as DSN is memory. This means your data is lost when Kratos terminates.")
+			if err := p.MigrateUp(ctx); err != nil {
+				m.Logger().WithError(err).Warnf("Unable to run migrations, retrying.")
 				return err
 			}
+		}
 
-			if err := p.Ping(); err != nil {
-				m.Logger().WithError(err).Warnf("Unable to ping database, retrying.")
-				return err
-			}
-
-			// if dsn is memory we have to run the migrations on every start
-			if dbal.IsMemorySQLite(m.Config().DSN(ctx)) || m.Config().DSN(ctx) == "memory" {
-				m.Logger().Infoln("Ory Kratos is running migrations on every startup as DSN is memory. This means your data is lost when Kratos terminates.")
-				if err := p.MigrateUp(ctx); err != nil {
-					m.Logger().WithError(err).Warnf("Unable to run migrations, retrying.")
-					return err
-				}
-			}
-
-			if o.skipNetworkInit {
-				m.persister = p
-				return nil
-			}
-
-			net, err := p.DetermineNetwork(ctx)
-			if err != nil {
-				m.Logger().WithError(err).Warnf("Unable to determine network, retrying.")
-				return err
-			}
-
-			m.persister = p.WithNetworkID(net.ID)
+		if o.skipNetworkInit {
+			m.persister = p
 			return nil
-		}, bc),
-	)
+		}
+
+		net, err := p.DetermineNetwork(ctx)
+		if err != nil {
+			m.Logger().WithError(err).Warnf("Unable to determine network, retrying.")
+			return err
+		}
+
+		m.persister = p.WithNetworkID(net.ID)
+		return nil
+	}, bc)
+
+	if err != nil {
+		return err
+	}
+
+	if o.inspect != nil {
+		if err := o.inspect(m); err != nil {
+			return errors.WithStack(err)
+		}
+	}
+	return nil
 }
 
 func (m *RegistryDefault) SetPersister(p persistence.Persister) {

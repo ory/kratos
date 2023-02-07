@@ -28,8 +28,6 @@ import (
 
 	"github.com/gofrs/uuid"
 	"github.com/pkg/errors"
-
-	"github.com/ory/kratos/x"
 )
 
 // An Identity's State
@@ -301,7 +299,10 @@ func (i *Identity) ParseCredentials(t CredentialsType, config interface{}) (*Cre
 }
 
 func (i *Identity) CopyWithoutCredentials() *Identity {
-	var ii = *i
+	i.lock().RLock()
+	defer i.lock().RUnlock()
+	ii := *i
+	ii.l = new(sync.RWMutex)
 	ii.Credentials = nil
 	return &ii
 }
@@ -313,7 +314,7 @@ func NewIdentity(traitsSchemaID string) *Identity {
 
 	stateChangedAt := sqlxx.NullTime(time.Now().UTC())
 	return &Identity{
-		ID:                  x.NewUUID(),
+		ID:                  uuid.Nil,
 		Credentials:         map[CredentialsType]Credentials{},
 		Traits:              Traits("{}"),
 		SchemaID:            traitsSchemaID,

@@ -195,7 +195,13 @@ func (s *ManagerHTTP) extractToken(r *http.Request) string {
 
 func (s *ManagerHTTP) FetchFromRequest(ctx context.Context, r *http.Request) (_ *Session, err error) {
 	ctx, span := s.r.Tracer(ctx).Tracer().Start(ctx, "sessions.ManagerHTTP.FetchFromRequest")
-	defer otelx.End(span, &err)
+	defer func() {
+		if e := new(ErrNoActiveSessionFound); errors.As(err, &e) {
+			span.End()
+		} else {
+			otelx.End(span, &err)
+		}
+	}()
 
 	token := s.extractToken(r)
 	if token == "" {
@@ -251,7 +257,7 @@ func (s *ManagerHTTP) PurgeFromRequest(ctx context.Context, w http.ResponseWrite
 }
 
 func (s *ManagerHTTP) DoesSessionSatisfy(r *http.Request, sess *Session, requestedAAL string) (err error) {
-	_, span := s.r.Tracer(r.Context()).Tracer().Start(r.Context(), "sessions.ManagerHTTP.DoesSessionSatisfy")
+	ctx, span := s.r.Tracer(r.Context()).Tracer().Start(r.Context(), "sessions.ManagerHTTP.DoesSessionSatisfy")
 	defer otelx.End(span, &err)
 
 	sess.SetAuthenticatorAssuranceLevel()
@@ -261,23 +267,28 @@ func (s *ManagerHTTP) DoesSessionSatisfy(r *http.Request, sess *Session, request
 			return nil
 		}
 	case config.HighestAvailableAAL:
-		i := *sess.Identity
-
-		// If credentials are not expanded, we load them here.
-		if len(i.Credentials) == 0 {
-			if err := s.r.PrivilegedIdentityPool().HydrateIdentityAssociations(r.Context(), &i, identity.ExpandCredentials); err != nil {
+		i := sess.Identity
+		if i == nil {
+			i, err = s.r.IdentityPool().GetIdentity(ctx, sess.IdentityID, identity.ExpandCredentials)
+			if err != nil {
+				return err
+			}
+			sess.Identity = i
+		} else if len(i.Credentials) == 0 {
+			// If credentials are not expanded, we load them here.
+			if err := s.r.PrivilegedIdentityPool().HydrateIdentityAssociations(ctx, i, identity.ExpandCredentials); err != nil {
 				return err
 			}
 		}
 
 		available := identity.NoAuthenticatorAssuranceLevel
-		if firstCount, err := s.r.IdentityManager().CountActiveFirstFactorCredentials(r.Context(), &i); err != nil {
+		if firstCount, err := s.r.IdentityManager().CountActiveFirstFactorCredentials(ctx, i); err != nil {
 			return err
 		} else if firstCount > 0 {
 			available = identity.AuthenticatorAssuranceLevel1
 		}
 
-		if secondCount, err := s.r.IdentityManager().CountActiveMultiFactorCredentials(r.Context(), &i); err != nil {
+		if secondCount, err := s.r.IdentityManager().CountActiveMultiFactorCredentials(ctx, i); err != nil {
 			return err
 		} else if secondCount > 0 {
 			available = identity.AuthenticatorAssuranceLevel2
@@ -288,7 +299,7 @@ func (s *ManagerHTTP) DoesSessionSatisfy(r *http.Request, sess *Session, request
 		}
 
 		return NewErrAALNotSatisfied(
-			urlx.CopyWithQuery(urlx.AppendPaths(s.r.Config().SelfPublicURL(r.Context()), "/self-service/login/browser"), url.Values{"aal": {"aal2"}}).String())
+			urlx.CopyWithQuery(urlx.AppendPaths(s.r.Config().SelfPublicURL(ctx), "/self-service/login/browser"), url.Values{"aal": {"aal2"}}).String())
 	}
 
 	return errors.Errorf("requested unknown aal: %s", requestedAAL)

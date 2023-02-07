@@ -31,7 +31,6 @@ import (
 	"github.com/ory/kratos/schema"
 	"github.com/ory/kratos/selfservice/flow"
 	"github.com/ory/kratos/selfservice/flow/login"
-	"github.com/ory/kratos/session"
 	"github.com/ory/x/decoderx"
 )
 
@@ -192,7 +191,7 @@ type updateLoginFlowWithWebAuthnMethod struct {
 	Login string `json:"webauthn_login"`
 }
 
-func (s *Strategy) Login(w http.ResponseWriter, r *http.Request, f *login.Flow, ss *session.Session) (i *identity.Identity, err error) {
+func (s *Strategy) Login(w http.ResponseWriter, r *http.Request, f *login.Flow, identityID uuid.UUID) (i *identity.Identity, err error) {
 	if f.Type != flow.TypeBrowser {
 		return nil, flow.ErrStrategyNotResponsible
 	}
@@ -221,13 +220,13 @@ func (s *Strategy) Login(w http.ResponseWriter, r *http.Request, f *login.Flow, 
 	}
 
 	if s.d.Config().WebAuthnForPasswordless(r.Context()) || f.IsForced() && f.RequestedAAL == identity.AuthenticatorAssuranceLevel1 {
-		return s.loginPasswordless(w, r, f, ss, &p)
+		return s.loginPasswordless(w, r, f, &p)
 	}
 
-	return s.loginMultiFactor(w, r, f, ss, &p)
+	return s.loginMultiFactor(w, r, f, identityID, &p)
 }
 
-func (s *Strategy) loginPasswordless(w http.ResponseWriter, r *http.Request, f *login.Flow, _ *session.Session, p *updateLoginFlowWithWebAuthnMethod) (i *identity.Identity, err error) {
+func (s *Strategy) loginPasswordless(w http.ResponseWriter, r *http.Request, f *login.Flow, p *updateLoginFlowWithWebAuthnMethod) (i *identity.Identity, err error) {
 	if err := login.CheckAAL(f, identity.AuthenticatorAssuranceLevel1); err != nil {
 		return nil, s.handleLoginError(r, f, err)
 	}
@@ -334,9 +333,9 @@ func (s *Strategy) loginAuthenticate(_ http.ResponseWriter, r *http.Request, f *
 	return i, nil
 }
 
-func (s *Strategy) loginMultiFactor(w http.ResponseWriter, r *http.Request, f *login.Flow, ss *session.Session, p *updateLoginFlowWithWebAuthnMethod) (*identity.Identity, error) {
+func (s *Strategy) loginMultiFactor(w http.ResponseWriter, r *http.Request, f *login.Flow, identityID uuid.UUID, p *updateLoginFlowWithWebAuthnMethod) (*identity.Identity, error) {
 	if err := login.CheckAAL(f, identity.AuthenticatorAssuranceLevel2); err != nil {
 		return nil, err
 	}
-	return s.loginAuthenticate(w, r, f, ss.IdentityID, p, identity.AuthenticatorAssuranceLevel2)
+	return s.loginAuthenticate(w, r, f, identityID, p, identity.AuthenticatorAssuranceLevel2)
 }

@@ -15,7 +15,7 @@ import (
 	"encoding/json"
 )
 
-// UpdateSettingsFlowWithOidcMethod nolint:deadcode,unused
+// UpdateSettingsFlowWithOidcMethod Update Settings Flow with OpenID Connect Method
 type UpdateSettingsFlowWithOidcMethod struct {
 	// Flow ID is the flow's ID.  in: query
 	Flow *string `json:"flow,omitempty"`

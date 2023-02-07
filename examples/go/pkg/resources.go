@@ -8,14 +8,14 @@ import (
 	"log"
 	"strings"
 
-	"github.com/google/uuid"
+	"github.com/gofrs/uuid"
 
 	ory "github.com/ory/client-go"
 )
 
 func RandomCredentials() (email, password string) {
-	email = "dev+" + uuid.New().String() + "@ory.sh"
-	password = strings.ReplaceAll(uuid.New().String(), "-", "")
+	email = "dev+" + uuid.Must(uuid.NewV4()).String() + "@ory.sh"
+	password = strings.ReplaceAll(uuid.Must(uuid.NewV4()).String(), "-", "")
 	return
 }
 

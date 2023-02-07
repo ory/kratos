@@ -214,8 +214,10 @@ func (h *Handler) FromOldFlow(w http.ResponseWriter, r *http.Request, of Flow) (
 
 // Create Native Login Flow Parameters
 //
-// nolint:deadcode,unused
 // swagger:parameters createNativeLoginFlow
+//
+//nolint:deadcode,unused
+//lint:ignore U1000 Used to generate Swagger and OpenAPI definitions
 type createNativeLoginFlow struct {
 	// Refresh a login session
 	//
@@ -288,8 +290,10 @@ func (h *Handler) createNativeLoginFlow(w http.ResponseWriter, r *http.Request, 
 
 // Initialize Browser Login Flow Parameters
 //
-// nolint:deadcode,unused
 // swagger:parameters createBrowserLoginFlow
+//
+//nolint:deadcode,unused
+//lint:ignore U1000 Used to generate Swagger and OpenAPI definitions
 type createBrowserLoginFlow struct {
 	// Refresh a login session
 	//
@@ -441,8 +445,10 @@ func (h *Handler) createBrowserLoginFlow(w http.ResponseWriter, r *http.Request,
 
 // Get Login Flow Parameters
 //
-// nolint:deadcode,unused
 // swagger:parameters getLoginFlow
+//
+//nolint:deadcode,unused
+//lint:ignore U1000 Used to generate Swagger and OpenAPI definitions
 type getLoginFlow struct {
 	// The Login Flow ID
 	//
@@ -549,8 +555,10 @@ func (h *Handler) getLoginFlow(w http.ResponseWriter, r *http.Request, _ httprou
 
 // Update Login Flow Parameters
 //
-// nolint:deadcode,unused
 // swagger:parameters updateLoginFlow
+//
+//nolint:deadcode,unused
+//lint:ignore U1000 Used to generate Swagger and OpenAPI definitions
 type updateLoginFlow struct {
 	// The Login Flow ID
 	//
@@ -581,7 +589,9 @@ type updateLoginFlow struct {
 }
 
 // swagger:model updateLoginFlowBody
-// nolint:deadcode,unused
+//
+//nolint:deadcode,unused
+//lint:ignore U1000 Used to generate Swagger and OpenAPI definitions
 type updateLoginFlowBody struct{}
 
 // swagger:route POST /self-service/login frontend updateLoginFlow
@@ -697,7 +707,7 @@ continueLogin:
 	var i *identity.Identity
 	var group node.UiNodeGroup
 	for _, ss := range h.d.AllLoginStrategies() {
-		interim, err := ss.Login(w, r, f, sess)
+		interim, err := ss.Login(w, r, f, sess.IdentityID)
 		group = ss.NodeGroup()
 		if errors.Is(err, flow.ErrStrategyNotResponsible) {
 			continue

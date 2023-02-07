@@ -5,7 +5,7 @@
 
 **Table of Contents**
 
-- [ (2023-02-03)](#2023-02-03)
+- [ (2023-02-07)](#2023-02-07)
   - [Bug Fixes](#bug-fixes)
   - [Features](#features)
 - [0.11.1 (2023-01-14)](#0111-2023-01-14)
@@ -291,15 +291,33 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# [](https://github.com/ory/kratos/compare/v0.11.1...v) (2023-02-03)
+# [](https://github.com/ory/kratos/compare/v0.11.1...v) (2023-02-07)
 
 ### Bug Fixes
 
+- Avoid unchecked casts from IdentityPool to PrivilegedIdentityPool
+  ([71d35dd](https://github.com/ory/kratos/commit/71d35ddd582b3c7081f66e0cdc0c43457816ab25))
+- Don't treat missing session as error in tracing
+  ([290d28a](https://github.com/ory/kratos/commit/290d28ada1a55b599af7e41e638de699a474f1d8))
 - Handle upstream errors in patreon provider
   ([#3032](https://github.com/ory/kratos/issues/3032))
   ([39fa31f](https://github.com/ory/kratos/commit/39fa31f85deb3f015aa0f1b30b4a17e4b51d461b))
+- Identity.CopyWithoutCredentials
+  ([989c99d](https://github.com/ory/kratos/commit/989c99d6a32e02759a8a7a07606a90832afec460))
+- Lint errors and unused code
+  ([ae49ef0](https://github.com/ory/kratos/commit/ae49ef04ed24c23406a5639d34c2e81ab0130c75))
+- Make session AAL satisfaction check resilient against a nil identity in the
+  session
+  ([5ab1a56](https://github.com/ory/kratos/commit/5ab1a56cfd41e95fbb30b8f93426a27e510c62c7)):
+
+  Also fix tracing.
+
+- Orphaned webhook spans
+  ([a7f9414](https://github.com/ory/kratos/commit/a7f9414460eb214a8f2b2ff96a2b6b303721f806))
 - Remove network omit flag ([#3066](https://github.com/ory/kratos/issues/3066))
   ([c629b72](https://github.com/ory/kratos/commit/c629b72be42001e3e1671d61cc8348373b686844))
+- Set DB connection max idle time
+  ([8d4762c](https://github.com/ory/kratos/commit/8d4762c1bffad14c94ac69575e488fc67d3f5dde))
 
 ### Features
 
@@ -307,12 +325,16 @@
   ([#2962](https://github.com/ory/kratos/issues/2962))
   ([44556a4](https://github.com/ory/kratos/commit/44556a468ef233b18fd0f16a83a4e1b2e5f05dcf)),
   closes [#2505](https://github.com/ory/kratos/issues/2505)
+- Add Inspect option to driver
+  ([8aa75e9](https://github.com/ory/kratos/commit/8aa75e97e4bfee37e7cf551173b516c6244786ff))
 - Add patreon oidc provider ([#3021](https://github.com/ory/kratos/issues/3021))
   ([20ea29e](https://github.com/ory/kratos/commit/20ea29e018b33231cf6b2743de74d2233f756c2a))
 - Allow importing (salted) SHA hashing algorithms
   ([#2741](https://github.com/ory/kratos/issues/2741))
   ([132255e](https://github.com/ory/kratos/commit/132255eff24a3f5a7fc2249a0ecf9b8716a8f1e7)),
   closes [#2422](https://github.com/ory/kratos/issues/2422)
+- Don't pre-generate UUIDs for transient objects
+  ([e17f307](https://github.com/ory/kratos/commit/e17f307732f8ced34727d5f3a70929866a0595e0))
 - Parallelize get identity and session calls
   ([#3023](https://github.com/ory/kratos/issues/3023))
   ([6393519](https://github.com/ory/kratos/commit/6393519977bc3d804673b5669166e07c561f1c79))

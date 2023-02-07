@@ -214,7 +214,7 @@ func NewActiveSession(r *http.Request, i *identity.Identity, c lifespanProvider,
 
 func NewInactiveSession() *Session {
 	return &Session{
-		ID:                          x.NewUUID(),
+		ID:                          uuid.Nil,
 		Token:                       randx.MustString(32, randx.AlphaNum),
 		LogoutToken:                 randx.MustString(32, randx.AlphaNum),
 		Active:                      false,

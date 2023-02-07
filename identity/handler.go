@@ -106,7 +106,9 @@ func (h *Handler) RegisterAdminRoutes(admin *x.RouterAdmin) {
 // Paginated Identity List Response
 //
 // swagger:response listIdentities
-// nolint:deadcode,unused
+//
+//nolint:deadcode,unused
+//lint:ignore U1000 Used to generate Swagger and OpenAPI definitions
 type listIdentitiesResponse struct {
 	migrationpagination.ResponseHeaderAnnotation
 
@@ -119,7 +121,9 @@ type listIdentitiesResponse struct {
 // Paginated List Identity Parameters
 //
 // swagger:parameters listIdentities
-// nolint:deadcode,unused
+//
+//nolint:deadcode,unused
+//lint:ignore U1000 Used to generate Swagger and OpenAPI definitions
 type listIdentitiesParameters struct {
 	migrationpagination.RequestParameters
 }
@@ -168,7 +172,9 @@ func (h *Handler) list(w http.ResponseWriter, r *http.Request, _ httprouter.Para
 // Get Identity Parameters
 //
 // swagger:parameters getIdentity
-// nolint:deadcode,unused
+//
+//nolint:deadcode,unused
+//lint:ignore U1000 Used to generate Swagger and OpenAPI definitions
 type getIdentity struct {
 	// ID must be set to the ID of identity you want to get
 	//
@@ -235,7 +241,9 @@ func (h *Handler) get(w http.ResponseWriter, r *http.Request, ps httprouter.Para
 // Create Identity Parameters
 //
 // swagger:parameters createIdentity
-// nolint:deadcode,unused
+//
+//nolint:deadcode,unused
+//lint:ignore U1000 Used to generate Swagger and OpenAPI definitions
 type createIdentity struct {
 	// in: body
 	Body CreateIdentityBody
@@ -425,7 +433,9 @@ func (h *Handler) create(w http.ResponseWriter, r *http.Request, _ httprouter.Pa
 // Update Identity Parameters
 //
 // swagger:parameters updateIdentity
-// nolint:deadcode,unused
+//
+//nolint:deadcode,unused
+//lint:ignore U1000 Used to generate Swagger and OpenAPI definitions
 type updateIdentity struct {
 	// ID must be set to the ID of identity you want to update
 	//
@@ -556,7 +566,9 @@ func (h *Handler) update(w http.ResponseWriter, r *http.Request, ps httprouter.P
 // Delete Identity Parameters
 //
 // swagger:parameters deleteIdentity
-// nolint:deadcode,unused
+//
+//nolint:deadcode,unused
+//lint:ignore U1000 Used to generate Swagger and OpenAPI definitions
 type deleteIdentity struct {
 	// ID is the identity's ID.
 	//
@@ -586,7 +598,7 @@ type deleteIdentity struct {
 //	  404: errorGeneric
 //	  default: errorGeneric
 func (h *Handler) delete(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	if err := h.r.IdentityPool().(PrivilegedPool).DeleteIdentity(r.Context(), x.ParseUUID(ps.ByName("id"))); err != nil {
+	if err := h.r.PrivilegedIdentityPool().DeleteIdentity(r.Context(), x.ParseUUID(ps.ByName("id"))); err != nil {
 		h.r.Writer().WriteError(w, r, err)
 		return
 	}
@@ -597,7 +609,9 @@ func (h *Handler) delete(w http.ResponseWriter, r *http.Request, ps httprouter.P
 // Patch Identity Parameters
 //
 // swagger:parameters patchIdentity
-// nolint:deadcode,unused
+//
+//nolint:deadcode,unused
+//lint:ignore U1000 Used to generate Swagger and OpenAPI definitions
 type patchIdentity struct {
 	// ID must be set to the ID of identity you want to update
 	//

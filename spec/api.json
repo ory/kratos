@@ -1416,7 +1416,7 @@
         "type": "object"
       },
       "performNativeLogoutBody": {
-        "description": "nolint:deadcode,unused",
+        "description": "Perform Native Logout Request Body",
         "properties": {
           "session_token": {
             "description": "The Session Token\n\nInvalidate this session token.",
@@ -1426,7 +1426,6 @@
         "required": [
           "session_token"
         ],
-        "title": "Perform Native Logout Request Body",
         "type": "object"
       },
       "recoveryCodeForIdentity": {
@@ -2726,7 +2725,7 @@
         "type": "object"
       },
       "updateSettingsFlowWithOidcMethod": {
-        "description": "nolint:deadcode,unused",
+        "description": "Update Settings Flow with OpenID Connect Method",
         "properties": {
           "flow": {
             "description": "Flow ID is the flow's ID.\n\nin: query",
@@ -2752,7 +2751,6 @@
         "required": [
           "method"
         ],
-        "title": "Update Settings Flow with OpenID Connect Method",
         "type": "object"
       },
       "updateSettingsFlowWithPasswordMethod": {
@@ -2778,7 +2776,7 @@
         "type": "object"
       },
       "updateSettingsFlowWithProfileMethod": {
-        "description": "nolint:deadcode,unused",
+        "description": "Update Settings Flow with Profile Method",
         "properties": {
           "csrf_token": {
             "description": "The Anti-CSRF Token\n\nThis token is only required when performing browser flows.",
@@ -2797,7 +2795,6 @@
           "traits",
           "method"
         ],
-        "title": "Update Settings Flow with Profile Method",
         "type": "object"
       },
       "updateSettingsFlowWithTotpMethod": {
@@ -2855,7 +2852,7 @@
         "type": "object"
       },
       "updateVerificationFlowBody": {
-        "description": "nolint:deadcode,unused",
+        "description": "Update Verification Flow Request Body",
         "discriminator": {
           "mapping": {
             "link": "#/components/schemas/updateVerificationFlowWithLinkMethod"
@@ -2866,8 +2863,7 @@
           {
             "$ref": "#/components/schemas/updateVerificationFlowWithLinkMethod"
           }
-        ],
-        "title": "Update Verification Flow Request Body"
+        ]
       },
       "updateVerificationFlowWithCodeMethodBody": {
         "properties": {
