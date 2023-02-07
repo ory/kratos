@@ -294,7 +294,7 @@ func TestRegistration(t *testing.T) {
 						assert.Equal(t, "null\n", actual, "because the registration yielded no session, the user is not expected to be signed in: %s", actual)
 					}
 
-					i, _, err := reg.PrivilegedIdentityPool().FindByCredentialsIdentifier(context.Background(), identity.CredentialsTypeWebAuthn, email)
+					i, _, err := reg.PrivilegedIdentityPool().FindByCredentialsTypeAndIdentifier(context.Background(), identity.CredentialsTypeWebAuthn, email)
 					require.NoError(t, err)
 					assert.Equal(t, email, gjson.GetBytes(i.Traits, "username").String(), "%s", actual)
 				})
@@ -319,7 +319,7 @@ func TestRegistration(t *testing.T) {
 					assert.Equal(t, email, gjson.Get(actual, prefix+"identity.traits.username").String(), "%s", actual)
 					assert.True(t, gjson.Get(actual, prefix+"active").Bool(), "%s", actual)
 
-					i, _, err := reg.PrivilegedIdentityPool().FindByCredentialsIdentifier(context.Background(), identity.CredentialsTypeWebAuthn, email)
+					i, _, err := reg.PrivilegedIdentityPool().FindByCredentialsTypeAndIdentifier(context.Background(), identity.CredentialsTypeWebAuthn, email)
 					require.NoError(t, err)
 					assert.Equal(t, email, gjson.GetBytes(i.Traits, "username").String(), "%s", actual)
 				})

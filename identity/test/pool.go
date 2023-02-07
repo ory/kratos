@@ -600,7 +600,7 @@ func TestPool(ctx context.Context, conf *config.Config, p interface {
 			require.NoError(t, p.CreateIdentity(ctx, expected))
 			createdIDs = append(createdIDs, expected.ID)
 
-			actual, creds, err := p.FindByCredentialsIdentifier(ctx, identity.CredentialsTypePassword, "find-credentials-identifier@ory.sh")
+			actual, creds, err := p.FindByCredentialsTypeAndIdentifier(ctx, identity.CredentialsTypePassword, "find-credentials-identifier@ory.sh")
 			require.NoError(t, err)
 
 			assert.EqualValues(t, expected.Credentials[identity.CredentialsTypePassword].ID, creds.ID)
@@ -614,7 +614,7 @@ func TestPool(ctx context.Context, conf *config.Config, p interface {
 
 			t.Run("not if on another network", func(t *testing.T) {
 				_, p := testhelpers.NewNetwork(t, ctx, p)
-				_, _, err := p.FindByCredentialsIdentifier(ctx, identity.CredentialsTypePassword, "find-credentials-identifier@ory.sh")
+				_, _, err := p.FindByCredentialsTypeAndIdentifier(ctx, identity.CredentialsTypePassword, "find-credentials-identifier@ory.sh")
 				require.ErrorIs(t, err, sqlcon.ErrNoRows)
 			})
 		})
@@ -643,10 +643,10 @@ func TestPool(ctx context.Context, conf *config.Config, p interface {
 					identity.CredentialsTypeLookup,
 				} {
 					t.Run(ct.String(), func(t *testing.T) {
-						_, _, err := p.FindByCredentialsIdentifier(ctx, ct, caseInsensitiveWithSpaces)
+						_, _, err := p.FindByCredentialsTypeAndIdentifier(ctx, ct, caseInsensitiveWithSpaces)
 						require.Error(t, err)
 
-						actual, creds, err := p.FindByCredentialsIdentifier(ctx, ct, caseSensitive)
+						actual, creds, err := p.FindByCredentialsTypeAndIdentifier(ctx, ct, caseSensitive)
 						require.NoError(t, err)
 						assertx.EqualAsJSONExcept(t, expected.Credentials[ct], creds, []string{"created_at", "updated_at", "id"})
 						assertx.EqualAsJSONExcept(t, expected, actual, []string{"created_at", "state_changed_at", "updated_at", "id"})
@@ -661,7 +661,7 @@ func TestPool(ctx context.Context, conf *config.Config, p interface {
 				} {
 					t.Run(ct.String(), func(t *testing.T) {
 						for _, cs := range []string{caseSensitive, caseInsensitiveWithSpaces} {
-							actual, creds, err := p.FindByCredentialsIdentifier(ctx, ct, cs)
+							actual, creds, err := p.FindByCredentialsTypeAndIdentifier(ctx, ct, cs)
 							require.NoError(t, err)
 							ec := expected.Credentials[ct]
 							ec.Identifiers = []string{strings.ToLower(caseSensitive)}
@@ -681,7 +681,7 @@ func TestPool(ctx context.Context, conf *config.Config, p interface {
 			require.NoError(t, p.CreateIdentity(ctx, expected))
 			createdIDs = append(createdIDs, expected.ID)
 
-			actual, creds, err := p.FindByCredentialsIdentifier(ctx, identity.CredentialsTypePassword, identifier)
+			actual, creds, err := p.FindByCredentialsTypeAndIdentifier(ctx, identity.CredentialsTypePassword, identifier)
 			require.NoError(t, err)
 
 			assert.EqualValues(t, expected.Credentials[identity.CredentialsTypePassword].ID, creds.ID)
@@ -693,7 +693,7 @@ func TestPool(ctx context.Context, conf *config.Config, p interface {
 
 			t.Run("not if on another network", func(t *testing.T) {
 				_, p := testhelpers.NewNetwork(t, ctx, p)
-				_, _, err := p.FindByCredentialsIdentifier(ctx, identity.CredentialsTypePassword, identifier)
+				_, _, err := p.FindByCredentialsTypeAndIdentifier(ctx, identity.CredentialsTypePassword, identifier)
 				require.ErrorIs(t, err, sqlcon.ErrNoRows)
 			})
 		})
@@ -1009,12 +1009,12 @@ func TestPool(ctx context.Context, conf *config.Config, p interface {
 			_, err = p.GetIdentityConfidential(ctx, nid1)
 			require.ErrorIs(t, err, sqlcon.ErrNoRows)
 
-			i, c, err := p.FindByCredentialsIdentifier(ctx, m[0].Name, "nid1")
+			i, c, err := p.FindByCredentialsTypeAndIdentifier(ctx, m[0].Name, "nid1")
 			require.NoError(t, err)
 			assert.Equal(t, "nid1", c.Identifiers[0])
 			require.Len(t, i.Credentials, 0)
 
-			_, _, err = p.FindByCredentialsIdentifier(ctx, m[0].Name, "nid2")
+			_, _, err = p.FindByCredentialsTypeAndIdentifier(ctx, m[0].Name, "nid2")
 			require.ErrorIs(t, err, sqlcon.ErrNoRows)
 
 			i, err = p.GetIdentityConfidential(ctx, iid)

@@ -67,7 +67,7 @@ func (s *Strategy) Login(w http.ResponseWriter, r *http.Request, f *login.Flow, 
 		return nil, s.handleLoginError(w, r, f, &p, err)
 	}
 
-	i, c, err := s.d.PrivilegedIdentityPool().FindByCredentialsIdentifier(r.Context(), s.ID(), stringsx.Coalesce(p.Identifier, p.LegacyIdentifier))
+	i, c, err := s.d.PrivilegedIdentityPool().FindByCredentialsTypeAndIdentifier(r.Context(), s.ID(), stringsx.Coalesce(p.Identifier, p.LegacyIdentifier))
 	if err != nil {
 		time.Sleep(x.RandomDelay(s.d.Config().HasherArgon2(r.Context()).ExpectedDuration, s.d.Config().HasherArgon2(r.Context()).ExpectedDeviation))
 		return nil, s.handleLoginError(w, r, f, &p, errors.WithStack(schema.NewInvalidCredentialsError()))

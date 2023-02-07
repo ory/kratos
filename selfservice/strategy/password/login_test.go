@@ -850,7 +850,7 @@ func TestCompleteLogin(t *testing.T) {
 		assert.Equal(t, identifier, gjson.Get(body, "identity.traits.subject").String(), "%s", body)
 
 		// check if password hash algorithm is upgraded
-		_, c, err := reg.PrivilegedIdentityPool().FindByCredentialsIdentifier(context.Background(), identity.CredentialsTypePassword, identifier)
+		_, c, err := reg.PrivilegedIdentityPool().FindByCredentialsTypeAndIdentifier(context.Background(), identity.CredentialsTypePassword, identifier)
 		require.NoError(t, err)
 		var o identity.CredentialsPassword
 		require.NoError(t, json.NewDecoder(bytes.NewBuffer(c.Config)).Decode(&o))

@@ -7,6 +7,7 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"github.com/gobuffalo/pop"
 	"strings"
 	"time"
 
@@ -24,7 +25,6 @@ import (
 	"github.com/ory/kratos/otp"
 	"github.com/ory/kratos/x"
 
-	"github.com/gobuffalo/pop/v6"
 	"github.com/gofrs/uuid"
 	"github.com/pkg/errors"
 
@@ -83,8 +83,49 @@ func (p *Persister) normalizeIdentifier(ct identity.CredentialsType, match strin
 	return match
 }
 
-func (p *Persister) FindByCredentialsIdentifier(ctx context.Context, ct identity.CredentialsType, match string) (*identity.Identity, *identity.Credentials, error) {
+func (p *Persister) FindByCredentialsIdentifier(ctx context.Context, match string) (*identity.Identity, error) {
 	ctx, span := p.r.Tracer(ctx).Tracer().Start(ctx, "persistence.sql.FindByCredentialsIdentifier")
+	defer span.End()
+
+	nid := p.NetworkID(ctx)
+
+	var find struct {
+		IdentityID uuid.UUID `db:"identity_id"`
+	}
+
+	// #nosec G201
+	if err := p.GetConnection(ctx).RawQuery(fmt.Sprintf(`SELECT
+    ic.identity_id
+FROM identity_credentials ic
+    INNER JOIN identity_credential_identifiers ici on ic.id = ici.identity_credential_id
+WHERE ici.identifier = ?
+  AND ic.nid = ?
+  AND ici.nid = ?`,
+		"identity_credentials",
+		"identity_credential_types",
+		"identity_credential_identifiers",
+	),
+		match,
+		nid,
+		nid,
+	).First(&find); err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, sqlcon.HandleError(err) // herodot.ErrNotFound.WithTrace(err).WithReasonf(`No identity matching credentials identifier "%s" could be found.`, match)
+		}
+
+		return nil, sqlcon.HandleError(err)
+	}
+
+	i, err := p.GetIdentityConfidential(ctx, find.IdentityID)
+	if err != nil {
+		return nil, err
+	}
+
+	return i.CopyWithoutCredentials(), nil
+}
+
+func (p *Persister) FindByCredentialsTypeAndIdentifier(ctx context.Context, ct identity.CredentialsType, match string) (*identity.Identity, *identity.Credentials, error) {
+	ctx, span := p.r.Tracer(ctx).Tracer().Start(ctx, "persistence.sql.FindByCredentialsTypeAndIdentifier")
 	defer span.End()
 
 	nid := p.NetworkID(ctx)

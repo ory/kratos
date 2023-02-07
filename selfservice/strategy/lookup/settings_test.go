@@ -214,7 +214,7 @@ func TestCompleteSettings(t *testing.T) {
 		id, codes := createIdentity(t, reg)
 
 		checkIdentity := func(t *testing.T) {
-			_, cred, err := reg.PrivilegedIdentityPool().FindByCredentialsIdentifier(context.Background(), identity.CredentialsTypeLookup, id.ID.String())
+			_, cred, err := reg.PrivilegedIdentityPool().FindByCredentialsTypeAndIdentifier(context.Background(), identity.CredentialsTypeLookup, id.ID.String())
 			require.NoError(t, err)
 			assertx.EqualAsJSON(t, codes, json.RawMessage(gjson.GetBytes(cred.Config, "recovery_codes").Raw))
 		}
@@ -280,7 +280,7 @@ func TestCompleteSettings(t *testing.T) {
 		const reason = "You must (re-)generate recovery backup codes before you can save them."
 
 		checkIdentity := func(t *testing.T) {
-			_, cred, err := reg.PrivilegedIdentityPool().FindByCredentialsIdentifier(context.Background(), identity.CredentialsTypeLookup, id.ID.String())
+			_, cred, err := reg.PrivilegedIdentityPool().FindByCredentialsTypeAndIdentifier(context.Background(), identity.CredentialsTypeLookup, id.ID.String())
 			require.NoError(t, err)
 			assertx.EqualAsJSON(t, codes, json.RawMessage(gjson.GetBytes(cred.Config, "recovery_codes").Raw))
 		}
@@ -315,7 +315,7 @@ func TestCompleteSettings(t *testing.T) {
 		}
 
 		checkIdentity := func(t *testing.T) {
-			_, cred, err := reg.PrivilegedIdentityPool().FindByCredentialsIdentifier(context.Background(), identity.CredentialsTypeLookup, id.ID.String())
+			_, cred, err := reg.PrivilegedIdentityPool().FindByCredentialsTypeAndIdentifier(context.Background(), identity.CredentialsTypeLookup, id.ID.String())
 			require.NoError(t, err)
 			assertx.EqualAsJSON(t, codes, json.RawMessage(gjson.GetBytes(cred.Config, "recovery_codes").Raw))
 		}
@@ -377,7 +377,7 @@ func TestCompleteSettings(t *testing.T) {
 				}
 
 				checkIdentity := func(t *testing.T, id *identity.Identity, f *kratos.SettingsFlow) {
-					_, cred, err := reg.PrivilegedIdentityPool().FindByCredentialsIdentifier(context.Background(), identity.CredentialsTypeLookup, id.ID.String())
+					_, cred, err := reg.PrivilegedIdentityPool().FindByCredentialsTypeAndIdentifier(context.Background(), identity.CredentialsTypeLookup, id.ID.String())
 					require.NoError(t, err)
 					assert.NotContains(t, gjson.GetBytes(cred.Config, "recovery_codes").Raw, "key-1")
 					assert.NotContains(t, gjson.GetBytes(cred.Config, "recovery_codes").Raw, "key-0")
@@ -470,7 +470,7 @@ func TestCompleteSettings(t *testing.T) {
 				}
 
 				checkIdentity := func(t *testing.T, id *identity.Identity, f *kratos.SettingsFlow) {
-					_, _, err := reg.PrivilegedIdentityPool().FindByCredentialsIdentifier(context.Background(), identity.CredentialsTypeLookup, id.ID.String())
+					_, _, err := reg.PrivilegedIdentityPool().FindByCredentialsTypeAndIdentifier(context.Background(), identity.CredentialsTypeLookup, id.ID.String())
 					require.ErrorIs(t, err, sqlcon.ErrNoRows)
 
 					actualFlow, err := reg.SettingsFlowPersister().GetSettingsFlow(context.Background(), uuid.FromStringOrNil(f.Id))

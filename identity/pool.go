@@ -41,8 +41,11 @@ type (
 	PrivilegedPool interface {
 		Pool
 
-		// FindByCredentialsIdentifier returns an identity by querying for it's credential identifiers.
-		FindByCredentialsIdentifier(ctx context.Context, ct CredentialsType, match string) (*Identity, *Credentials, error)
+		// FindByCredentialsTypeAndIdentifier returns an identity by querying for it's credential identifiers.
+		FindByCredentialsIdentifier(ctx context.Context, match string) (*Identity, error)
+
+		// FindByCredentialsTypeAndIdentifier returns an identity by querying for it's credential type and identifiers.
+		FindByCredentialsTypeAndIdentifier(ctx context.Context, ct CredentialsType, match string) (*Identity, *Credentials, error)
 
 		// DeleteIdentity removes an identity by its id. Will return an error
 		// if identity exists, backend connectivity is broken, or trait validation fails.

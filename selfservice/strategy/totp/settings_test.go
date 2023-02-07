@@ -153,7 +153,7 @@ func TestCompleteSettings(t *testing.T) {
 		}
 
 		checkIdentity := func(t *testing.T) {
-			_, cred, err := reg.PrivilegedIdentityPool().FindByCredentialsIdentifier(context.Background(), identity.CredentialsTypeTOTP, id.ID.String())
+			_, cred, err := reg.PrivilegedIdentityPool().FindByCredentialsTypeAndIdentifier(context.Background(), identity.CredentialsTypeTOTP, id.ID.String())
 			require.NoError(t, err)
 			assert.Equal(t, key.URL(), gjson.GetBytes(cred.Config, "totp_url").String())
 		}
@@ -195,7 +195,7 @@ func TestCompleteSettings(t *testing.T) {
 		}
 
 		checkIdentity := func(t *testing.T) {
-			_, _, err := reg.PrivilegedIdentityPool().FindByCredentialsIdentifier(context.Background(), identity.CredentialsTypeTOTP, id.ID.String())
+			_, _, err := reg.PrivilegedIdentityPool().FindByCredentialsTypeAndIdentifier(context.Background(), identity.CredentialsTypeTOTP, id.ID.String())
 			require.ErrorIs(t, err, sqlcon.ErrNoRows)
 		}
 
@@ -230,7 +230,7 @@ func TestCompleteSettings(t *testing.T) {
 		}
 
 		checkIdentity := func(t *testing.T, id *identity.Identity) {
-			_, _, err := reg.PrivilegedIdentityPool().FindByCredentialsIdentifier(context.Background(), identity.CredentialsTypeTOTP, id.ID.String())
+			_, _, err := reg.PrivilegedIdentityPool().FindByCredentialsTypeAndIdentifier(context.Background(), identity.CredentialsTypeTOTP, id.ID.String())
 			require.ErrorIs(t, err, sqlcon.ErrNoRows)
 		}
 
@@ -268,7 +268,7 @@ func TestCompleteSettings(t *testing.T) {
 		}
 
 		checkIdentity := func(t *testing.T, id *identity.Identity) {
-			_, _, err := reg.PrivilegedIdentityPool().FindByCredentialsIdentifier(context.Background(), identity.CredentialsTypeTOTP, id.ID.String())
+			_, _, err := reg.PrivilegedIdentityPool().FindByCredentialsTypeAndIdentifier(context.Background(), identity.CredentialsTypeTOTP, id.ID.String())
 			require.ErrorIs(t, err, sqlcon.ErrNoRows)
 		}
 
@@ -302,7 +302,7 @@ func TestCompleteSettings(t *testing.T) {
 
 	t.Run("type=set up TOTP device", func(t *testing.T) {
 		checkIdentity := func(t *testing.T, id *identity.Identity, key string) {
-			i, cred, err := reg.PrivilegedIdentityPool().FindByCredentialsIdentifier(context.Background(), identity.CredentialsTypeTOTP, id.ID.String())
+			i, cred, err := reg.PrivilegedIdentityPool().FindByCredentialsTypeAndIdentifier(context.Background(), identity.CredentialsTypeTOTP, id.ID.String())
 			require.NoError(t, err)
 			var c identity.CredentialsTOTPConfig
 			require.NoError(t, json.Unmarshal(cred.Config, &c))
