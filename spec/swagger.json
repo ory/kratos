@@ -4189,9 +4189,8 @@
       }
     },
     "performNativeLogoutBody": {
-      "description": "nolint:deadcode,unused",
+      "description": "Perform Native Logout Request Body",
       "type": "object",
-      "title": "Perform Native Logout Request Body",
       "required": [
         "session_token"
       ],
@@ -5363,9 +5362,8 @@
       }
     },
     "updateSettingsFlowWithOidcMethod": {
-      "description": "nolint:deadcode,unused",
+      "description": "Update Settings Flow with OpenID Connect Method",
       "type": "object",
-      "title": "Update Settings Flow with OpenID Connect Method",
       "required": [
         "method"
       ],
@@ -5415,9 +5413,8 @@
       }
     },
     "updateSettingsFlowWithProfileMethod": {
-      "description": "nolint:deadcode,unused",
+      "description": "Update Settings Flow with Profile Method",
       "type": "object",
-      "title": "Update Settings Flow with Profile Method",
       "required": [
         "traits",
         "method"
@@ -5492,9 +5489,8 @@
       }
     },
     "updateVerificationFlowBody": {
-      "description": "nolint:deadcode,unused",
-      "type": "object",
-      "title": "Update Verification Flow Request Body"
+      "description": "Update Verification Flow Request Body",
+      "type": "object"
     },
     "updateVerificationFlowWithCodeMethodBody": {
       "type": "object",
