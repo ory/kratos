@@ -146,6 +146,17 @@ type listIdentitiesParameters struct {
 //	  200: listIdentities
 //	  default: errorGeneric
 func (h *Handler) list(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+	if identifier := r.URL.Query().Get("identifier"); identifier != "" {
+		i, err := h.r.PrivilegedIdentityPool().FindByCredentialsIdentifier(r.Context(), identifier)
+		if err != nil {
+			h.r.Writer().WriteError(w, r, err)
+			return
+		}
+
+		h.r.Writer().Write(w, r, i)
+		return
+	}
+
 	page, itemsPerPage := x.ParsePagination(r)
 	is, err := h.r.IdentityPool().ListIdentities(r.Context(), ExpandDefault, page, itemsPerPage)
 	if err != nil {
