@@ -7,9 +7,11 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	gooidc "github.com/coreos/go-oidc"
-	"github.com/ory/x/stringslice"
 	"net/url"
+
+	gooidc "github.com/coreos/go-oidc"
+
+	"github.com/ory/x/stringslice"
 
 	"github.com/hashicorp/go-retryablehttp"
 	"github.com/pkg/errors"
