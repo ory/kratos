@@ -43,7 +43,7 @@ func TestSender(t *testing.T) {
 
 	i := identity.NewIdentity(config.DefaultIdentityTraitsSchemaID)
 	i.Traits = identity.Traits(`{"email": "tracked@ory.sh"}`)
-	require.NoError(t, reg.IdentityManager().Create(context.Background(), i))
+	require.NoError(t, reg.IdentityManager().Create(ctx, i))
 
 	t.Run("method=SendRecoveryCode", func(t *testing.T) {
 
@@ -52,15 +52,15 @@ func TestSender(t *testing.T) {
 			f, err := recovery.NewFlow(conf, time.Hour, "", u, code.NewStrategy(reg), flow.TypeBrowser)
 			require.NoError(t, err)
 
-			require.NoError(t, reg.RecoveryFlowPersister().CreateRecoveryFlow(context.Background(), f))
+			require.NoError(t, reg.RecoveryFlowPersister().CreateRecoveryFlow(ctx, f))
 
-			require.NoError(t, reg.CodeSender().SendRecoveryCode(context.Background(), f, "email", "tracked@ory.sh"))
-			require.ErrorIs(t, reg.CodeSender().SendRecoveryCode(context.Background(), f, "email", "not-tracked@ory.sh"), code.ErrUnknownAddress)
+			require.NoError(t, reg.CodeSender().SendRecoveryCode(ctx, f, "email", "tracked@ory.sh"))
+			require.ErrorIs(t, reg.CodeSender().SendRecoveryCode(ctx, f, "email", "not-tracked@ory.sh"), code.ErrUnknownAddress)
 		}
 
 		t.Run("case=with default templates", func(t *testing.T) {
 			recoveryCode(t)
-			messages, err := reg.CourierPersister().NextMessages(context.Background(), 12)
+			messages, err := reg.CourierPersister().NextMessages(ctx, 12)
 			require.NoError(t, err)
 			require.Len(t, messages, 2)
 
@@ -85,7 +85,7 @@ func TestSender(t *testing.T) {
 			conf.MustSet(ctx, config.ViperKeyCourierTemplatesRecoveryCodeInvalidEmail, fmt.Sprintf(`{ "subject": "base64://%s", "body": { "plaintext": "base64://%s", "html": "base64://%s" }}`, b64(subject+" invalid"), b64(body), b64(body)))
 			conf.MustSet(ctx, config.ViperKeyCourierTemplatesRecoveryCodeValidEmail, fmt.Sprintf(`{ "subject": "base64://%s", "body": { "plaintext": "base64://%s", "html": "base64://%s" }}`, b64(subject+" valid"), b64(body+" {{ .RecoveryCode }}"), b64(body+" {{ .RecoveryCode }}")))
 			recoveryCode(t)
-			messages, err := reg.CourierPersister().NextMessages(context.Background(), 12)
+			messages, err := reg.CourierPersister().NextMessages(ctx, 12)
 			require.NoError(t, err)
 			require.Len(t, messages, 2)
 
@@ -109,15 +109,15 @@ func TestSender(t *testing.T) {
 			f, err := verification.NewFlow(conf, time.Hour, "", u, code.NewStrategy(reg), flow.TypeBrowser)
 			require.NoError(t, err)
 
-			require.NoError(t, reg.VerificationFlowPersister().CreateVerificationFlow(context.Background(), f))
+			require.NoError(t, reg.VerificationFlowPersister().CreateVerificationFlow(ctx, f))
 
-			require.NoError(t, reg.CodeSender().SendVerificationCode(context.Background(), f, "email", "tracked@ory.sh"))
-			require.ErrorIs(t, reg.CodeSender().SendVerificationCode(context.Background(), f, "email", "not-tracked@ory.sh"), code.ErrUnknownAddress)
+			require.NoError(t, reg.CodeSender().SendVerificationCode(ctx, f, "email", "tracked@ory.sh"))
+			require.ErrorIs(t, reg.CodeSender().SendVerificationCode(ctx, f, "email", "not-tracked@ory.sh"), code.ErrUnknownAddress)
 		}
 
 		t.Run("case=with default templates", func(t *testing.T) {
 			verificationFlow(t)
-			messages, err := reg.CourierPersister().NextMessages(context.Background(), 12)
+			messages, err := reg.CourierPersister().NextMessages(ctx, 12)
 			require.NoError(t, err)
 			require.Len(t, messages, 2)
 
@@ -142,7 +142,7 @@ func TestSender(t *testing.T) {
 			conf.MustSet(ctx, config.ViperKeyCourierTemplatesVerificationCodeInvalidEmail, fmt.Sprintf(`{ "subject": "base64://%s", "body": { "plaintext": "base64://%s", "html": "base64://%s" }}`, b64(subject+" invalid"), b64(body), b64(body)))
 			conf.MustSet(ctx, config.ViperKeyCourierTemplatesVerificationCodeValidEmail, fmt.Sprintf(`{ "subject": "base64://%s", "body": { "plaintext": "base64://%s", "html": "base64://%s" }}`, b64(subject+" valid"), b64(body+" {{ .VerificationCode }}"), b64(body+" {{ .VerificationCode }}")))
 			verificationFlow(t)
-			messages, err := reg.CourierPersister().NextMessages(context.Background(), 12)
+			messages, err := reg.CourierPersister().NextMessages(ctx, 12)
 			require.NoError(t, err)
 			require.Len(t, messages, 2)
 
@@ -171,9 +171,9 @@ func TestSender(t *testing.T) {
 					f, err := recovery.NewFlow(conf, time.Hour, "", u, s, flow.TypeBrowser)
 					require.NoError(t, err)
 
-					require.NoError(t, reg.RecoveryFlowPersister().CreateRecoveryFlow(context.Background(), f))
+					require.NoError(t, reg.RecoveryFlowPersister().CreateRecoveryFlow(ctx, f))
 
-					err = reg.CodeSender().SendRecoveryCode(context.Background(), f, "email", "not-tracked@ory.sh")
+					err = reg.CodeSender().SendRecoveryCode(ctx, f, "email", "not-tracked@ory.sh")
 					require.ErrorIs(t, err, code.ErrUnknownAddress)
 				},
 			},
@@ -185,9 +185,9 @@ func TestSender(t *testing.T) {
 					f, err := verification.NewFlow(conf, time.Hour, "", u, s, flow.TypeBrowser)
 					require.NoError(t, err)
 
-					require.NoError(t, reg.VerificationFlowPersister().CreateVerificationFlow(context.Background(), f))
+					require.NoError(t, reg.VerificationFlowPersister().CreateVerificationFlow(ctx, f))
 
-					err = reg.CodeSender().SendVerificationCode(context.Background(), f, "email", "not-tracked@ory.sh")
+					err = reg.CodeSender().SendVerificationCode(ctx, f, "email", "not-tracked@ory.sh")
 					require.ErrorIs(t, err, code.ErrUnknownAddress)
 				},
 			},
@@ -202,7 +202,7 @@ func TestSender(t *testing.T) {
 
 				tc.send(t)
 
-				messages, err := reg.CourierPersister().NextMessages(context.Background(), 0)
+				messages, err := reg.CourierPersister().NextMessages(ctx, 0)
 
 				require.ErrorIs(t, err, courier.ErrQueueEmpty)
 				require.Len(t, messages, 0)
