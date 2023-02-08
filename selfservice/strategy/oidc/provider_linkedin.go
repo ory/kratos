@@ -9,6 +9,8 @@ import (
 	"net/http"
 	"net/url"
 
+	"github.com/ory/x/otelx"
+
 	"github.com/hashicorp/go-retryablehttp"
 	"github.com/pkg/errors"
 	"golang.org/x/oauth2"
@@ -18,7 +20,7 @@ import (
 	"github.com/ory/x/httpx"
 )
 
-type Profile struct {
+type LinkedInProfile struct {
 	LocalizedLastName  string `json:"localizedLastName"`
 	LocalizedFirstName string `json:"localizedFirstName"`
 	ProfilePicture     *struct {
@@ -33,7 +35,7 @@ type Profile struct {
 	ID string `json:"id"`
 }
 
-type EmailAddress struct {
+type LinkedInEmail struct {
 	Elements []struct {
 		Handle struct {
 			EmailAddress string `json:"emailAddress"`
@@ -42,7 +44,7 @@ type EmailAddress struct {
 	} `json:"elements"`
 }
 
-type Introspection struct {
+type LinkedInIntrospection struct {
 	Active       bool   `json:"active"`
 	ClientID     string `json:"client_id"`
 	AuthorizedAt uint32 `json:"authorized_at"`
@@ -98,65 +100,74 @@ func (l *ProviderLinkedIn) AuthCodeURLOptions(r ider) []oauth2.AuthCodeOption {
 	return []oauth2.AuthCodeOption{}
 }
 
-func (l *ProviderLinkedIn) ApiGetCall(client *retryablehttp.Client, url string, result interface{}) error {
-	req, err := retryablehttp.NewRequest(http.MethodGet, string(url), nil)
+func (l *ProviderLinkedIn) fetch(ctx context.Context, client *retryablehttp.Client, url string, result interface{}) (err error) {
+	ctx, span := l.reg.Tracer(ctx).Tracer().Start(ctx, "selfservice.strategy.oidc.ProviderLinkedIn.fetch")
+	defer otelx.End(span, &err)
+
+	req, err := retryablehttp.NewRequestWithContext(ctx, http.MethodGet, url, nil)
 	if err != nil {
 		return errors.WithStack(err)
 	}
-	resp, err := client.Do(req)
+
+	res, err := client.Do(req)
 	if err != nil {
 		return errors.WithStack(err)
 	}
-	defer resp.Body.Close()
-	if err := json.NewDecoder(resp.Body).Decode(result); err != nil {
+
+	defer res.Body.Close()
+	if err := logUpstreamError(l.reg.Logger(), res); err != nil {
+		return err
+	}
+
+	if err := json.NewDecoder(res.Body).Decode(result); err != nil {
 		return errors.WithStack(err)
 	}
 
 	return nil
 }
 
-func (l *ProviderLinkedIn) Profile(client *retryablehttp.Client) (*Profile, error) {
-	var profile Profile
-
-	if err := l.ApiGetCall(client, ProfileUrl, &profile); err != nil {
-		return nil, errors.WithStack(err)
-	}
-	return &profile, nil
-}
-
-func (l *ProviderLinkedIn) Email(client *retryablehttp.Client) (*EmailAddress, error) {
-	var emailaddress EmailAddress
-
-	if err := l.ApiGetCall(client, EmailUrl, &emailaddress); err != nil {
+func (l *ProviderLinkedIn) Profile(ctx context.Context, client *retryablehttp.Client) (*LinkedInProfile, error) {
+	var result LinkedInProfile
+	if err := l.fetch(ctx, client, ProfileUrl, &result); err != nil {
 		return nil, errors.WithStack(err)
 	}
 
-	return &emailaddress, nil
+	return &result, nil
 }
 
-func (l *ProviderLinkedIn) ProfilePicture(profile *Profile) string {
-	if profile.ProfilePicture != nil {
-		var elements = (*profile.ProfilePicture).DisplayImage.Elements
-		switch len(elements) {
-		case 0:
-			return ""
-		case 1:
-			return elements[0].Identifiers[0].Identifier
-		case 2:
-			return elements[1].Identifiers[0].Identifier
-		default:
-			return elements[2].Identifiers[0].Identifier
-		}
+func (l *ProviderLinkedIn) Email(ctx context.Context, client *retryablehttp.Client) (*LinkedInEmail, error) {
+	var result LinkedInEmail
+	if err := l.fetch(ctx, client, EmailUrl, &result); err != nil {
+		return nil, errors.WithStack(err)
 	}
 
-	return ""
+	return &result, nil
 }
 
-func (l *ProviderLinkedIn) Claims(ctx context.Context, exchange *oauth2.Token, query url.Values) (*Claims, error) {
+func (l *ProviderLinkedIn) ProfilePicture(profile *LinkedInProfile) string {
+	if profile.ProfilePicture == nil {
+		return ""
+	}
 
-	var profile *Profile
-	var emailaddress *EmailAddress
-	var profilePicture string
+	elements := profile.ProfilePicture.DisplayImage.Elements
+	i := len(elements)
+	if i == 0 {
+		return ""
+	} else if i > 3 {
+		i = 3
+	}
+
+	identifiers := elements[i-1].Identifiers
+	if len(identifiers) == 0 {
+		return ""
+	}
+
+	return identifiers[0].Identifier
+}
+
+func (l *ProviderLinkedIn) Claims(ctx context.Context, exchange *oauth2.Token, query url.Values) (_ *Claims, err error) {
+	ctx, span := l.reg.Tracer(ctx).Tracer().Start(ctx, "selfservice.strategy.oidc.ProviderLinkedIn.Claims")
+	defer otelx.End(span, &err)
 
 	o, err := l.OAuth2(ctx)
 	if err != nil {
@@ -164,24 +175,23 @@ func (l *ProviderLinkedIn) Claims(ctx context.Context, exchange *oauth2.Token, q
 	}
 
 	client := l.reg.HTTPClient(ctx, httpx.ResilientClientWithClient(o.Client(ctx, exchange)))
-	profile, err = l.Profile(client)
-	if err != nil {
-		return nil, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("%s", err))
-	}
-	emailaddress, err = l.Email(client)
+	profile, err := l.Profile(ctx, client)
 	if err != nil {
 		return nil, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("%s", err))
 	}
 
-	profilePicture = l.ProfilePicture(profile)
+	email, err := l.Email(ctx, client)
+	if err != nil {
+		return nil, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("%s", err))
+	}
 
 	claims := &Claims{
 		Subject:   profile.ID,
 		Issuer:    "https://login.linkedin.com/",
-		Email:     emailaddress.Elements[0].Handle.EmailAddress,
+		Email:     email.Elements[0].Handle.EmailAddress,
 		GivenName: profile.LocalizedFirstName,
 		LastName:  profile.LocalizedLastName,
-		Picture:   profilePicture,
+		Picture:   l.ProfilePicture(profile),
 	}
 
 	return claims, nil
