@@ -73,21 +73,6 @@ func (n *ProviderNetID) oAuth2(ctx context.Context) (*oauth2.Config, error) {
 }
 
 func (n *ProviderNetID) Claims(ctx context.Context, exchange *oauth2.Token, _ url.Values) (*Claims, error) {
-	raw, ok := exchange.Extra("id_token").(string)
-	if !ok || len(raw) == 0 {
-		return nil, errors.WithStack(ErrIDTokenMissing)
-	}
-
-	p, err := n.provider(ctx)
-	if err != nil {
-		return nil, err
-	}
-
-	claims, err := n.verifyAndDecodeClaimsWithProvider(ctx, p, raw)
-	if err != nil {
-		return nil, err
-	}
-
 	o, err := n.OAuth2(ctx)
 	if err != nil {
 		return nil, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("%s", err))
@@ -107,6 +92,21 @@ func (n *ProviderNetID) Claims(ctx context.Context, exchange *oauth2.Token, _ ur
 	defer resp.Body.Close()
 
 	if err := logUpstreamError(n.reg.Logger(), resp); err != nil {
+		return nil, err
+	}
+
+	p, err := n.provider(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	raw, ok := exchange.Extra("id_token").(string)
+	if !ok || len(raw) == 0 {
+		return nil, errors.WithStack(ErrIDTokenMissing)
+	}
+
+	claims, err := n.verifyAndDecodeClaimsWithProvider(ctx, p, raw)
+	if err != nil {
 		return nil, err
 	}
 
