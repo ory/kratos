@@ -6,6 +6,9 @@ package oidc
 import (
 	"context"
 	"encoding/json"
+	"fmt"
+	gooidc "github.com/coreos/go-oidc"
+	"github.com/ory/x/stringslice"
 	"net/url"
 
 	"github.com/hashicorp/go-retryablehttp"
@@ -31,6 +34,11 @@ func NewProviderNetID(
 	config *Configuration,
 	reg dependencies,
 ) *ProviderNetID {
+	config.IssuerURL = fmt.Sprintf("%s://%s/", defaultBrokerScheme, defaultBrokerHost)
+	if !stringslice.Has(config.Scope, gooidc.ScopeOpenID) {
+		config.Scope = append(config.Scope, gooidc.ScopeOpenID)
+	}
+
 	return &ProviderNetID{
 		ProviderGenericOIDC: &ProviderGenericOIDC{
 			config: config,
