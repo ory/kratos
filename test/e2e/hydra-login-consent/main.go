@@ -9,7 +9,7 @@ import (
 
 	"github.com/julienschmidt/httprouter"
 
-	client "github.com/ory/hydra-client-go"
+	client "github.com/ory/hydra-client-go/v2"
 
 	"github.com/ory/x/osx"
 	"github.com/ory/x/pointerx"

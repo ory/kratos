@@ -15,7 +15,7 @@ import (
 	"github.com/pkg/errors"
 
 	"github.com/ory/herodot"
-	hydraclientgo "github.com/ory/hydra-client-go"
+	hydraclientgo "github.com/ory/hydra-client-go/v2"
 	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/session"
 	"github.com/ory/kratos/x"
