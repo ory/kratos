@@ -84,7 +84,35 @@ func TestProviderClaimsRespectsErrorCodes(t *testing.T) {
 				IssuerURL: "https://broker.netid.de",
 				ID:        "netid",
 				Provider:  "netid",
+				ClientID:  "foo",
 			}, reg),
+			useToken: token.WithExtra(map[string]interface{}{"id_token": "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiZW1haWwiOiJqb2huLmRvZUBleGFtcGxlLmNvbSIsImlhdCI6MTUxNjIzOTAyMiwidGlkIjoiYTliODYzODUtZjMyYy00ODAzLWFmYzgtNGIyMzEyZmJkZjI0IiwiaXNzIjoiaHR0cHM6Ly9icm9rZXIubmV0aWQuZGUvIiwiYXVkIjpbImZvbyJdLCJleHAiOjQwNzE3Mjg1MDR9.Zt_-9jULoENQ7pq6rKrevhecBlWKR2rzNti42EJti_OelCrGbl5zyHYRfIg264VzEY0Zp9BAZTWmcF6Z-cpuD05RddTXZDrrC_47bJeYDL-bjDfKjoSZUt_1JnNFgqeyMA1Ji6HCIsEf_g8QnuSELAO0c-qb2ANmDLVL8_dY6oUmCN5oWLJS2q6xO-Iaz-AuKaGTbLZBcjCe2NB_--kIx4IrgLm78U90X3ePOV0CcYZLNvDgzEsVJ2M4ixKp87bYUaZZ3JJEjuxgnHqKRMExDKron3mvfQtC1L-dZQyeDo3-mCFJL_JhEw9zLmoWFBD7aARrVL_yAe31o26FB3S-Dg"}),
+			hook: func(t *testing.T) {
+				httpmock.RegisterResponder("GET", "https://broker.netid.de/.well-known/openid-configuration",
+					func(req *http.Request) (*http.Response, error) {
+						return httpmock.NewJsonResponse(200, map[string]interface{}{
+							"issuer":   "https://broker.netid.de/",
+							"jwks_uri": "https://broker.netid.de/.well-known/jwks.json",
+						})
+					},
+				)
+				httpmock.RegisterResponder("GET", "https://broker.netid.de/.well-known/jwks.json",
+					func(req *http.Request) (*http.Response, error) {
+						return httpmock.NewJsonResponse(200, json.RawMessage(`{
+  "keys": [
+    {
+      "kty": "RSA",
+      "e": "AQAB",
+      "alg": "RS256",
+      "use": "sig",
+      "n": "uw0hrmZpA5CH5lDnjbCK6ZQD-I0BGxde-ChDzUz5eK4r7VtyMGvAxwD-k-mWw4FJ2NgYmT_T89sAtE6NQqT5u9HAe-CI22lf5LMvmqvMzekcmBAvXNw8VeTV_N6CbS9INJrxf20cObf-kpTxVxlYtYxYwIhYdOw3DwX8y31vI38qHQ4_OzTRo4KFVLCr68MzIHHRI4d5EHrFv1VFjiaa_ATwuwCMUfg0RMnK09FpMCgvp0E6bQeptXhBBNQVQkoC5whT1GzikfSxyeugjQ_XuTt1MKoyYsN2pmfrBdcfWrPYvV_JPgO1MkEtqErvtCByairINfXrHTMOxNWe3sYlXQ"
+    }
+  ]
+}`))
+					},
+				)
+			},
+			expectedClaims: &oidc.Claims{Issuer: "https://broker.netid.de/", Subject: "1234567890", Name: "John Doe", GivenName: "John", FamilyName: "Doe", LastName: "", MiddleName: "", Nickname: "John Doe", PreferredUsername: "John Doe", Profile: "", Picture: "", Website: "", Email: "john.doe@example.com", EmailVerified: true, Gender: "", Birthdate: "01/01/1990", Zoneinfo: "", Locale: "", PhoneNumber: "", PhoneNumberVerified: false, UpdatedAt: 0, HD: "", Team: ""},
 		},
 		{
 			name:             "vk",
