@@ -382,7 +382,8 @@
             "spotify",
             "netid",
             "dingtalk",
-            "patreon"
+            "patreon",
+            "econt"
           ],
           "examples": [
             "google"
