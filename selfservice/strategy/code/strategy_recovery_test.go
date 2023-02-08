@@ -596,6 +596,12 @@ func TestRecovery(t *testing.T) {
 	})
 
 	t.Run("description=should not be able to recover account that does not exist", func(t *testing.T) {
+		conf.Set(ctx, config.ViperKeySelfServiceRecoveryNotifyUnknownRecipients, true)
+
+		t.Cleanup(func() {
+			conf.Set(ctx, config.ViperKeySelfServiceRecoveryNotifyUnknownRecipients, false)
+		})
+
 		var check = func(t *testing.T, c *http.Client, flowType, email string) {
 			withValues := func(v url.Values) {
 				v.Set("email", email)

@@ -514,6 +514,7 @@ func TestViperProvider_Defaults(t *testing.T) {
 				assert.True(t, p.SelfServiceStrategy(ctx, "password").Enabled)
 				assert.True(t, p.SelfServiceStrategy(ctx, "profile").Enabled)
 				assert.True(t, p.SelfServiceStrategy(ctx, "link").Enabled)
+				assert.True(t, p.SelfServiceStrategy(ctx, "code").Enabled)
 				assert.False(t, p.SelfServiceStrategy(ctx, "oidc").Enabled)
 			},
 		},
@@ -529,6 +530,15 @@ func TestViperProvider_Defaults(t *testing.T) {
 				assert.False(t, p.SelfServiceStrategy(ctx, "link").Enabled)
 				assert.True(t, p.SelfServiceStrategy(ctx, "code").Enabled)
 				assert.True(t, p.SelfServiceStrategy(ctx, "oidc").Enabled)
+			},
+		},
+		{
+			init: func() *config.Config {
+				return config.MustNew(t, l, os.Stderr, configx.WithConfigFiles("stub/.kratos.notify-unknown-recipients.yml"), configx.SkipValidation())
+			},
+			expect: func(t *testing.T, p *config.Config) {
+				assert.True(t, p.SelfServiceFlowRecoveryNotifyUnknownRecipients(ctx))
+				assert.True(t, p.SelfServiceFlowVerificationNotifyUnknownRecipients(ctx))
 			},
 		},
 	} {
@@ -547,7 +557,8 @@ func TestViperProvider_Defaults(t *testing.T) {
 			assert.True(t, p.SelfServiceStrategy(ctx, "code").Enabled)
 			assert.False(t, p.SelfServiceStrategy(ctx, "oidc").Enabled)
 
-			assert.True(t, p.CourierEnableInvalidDispatch(ctx))
+			assert.False(t, p.SelfServiceFlowRecoveryNotifyUnknownRecipients(ctx))
+			assert.False(t, p.SelfServiceFlowVerificationNotifyUnknownRecipients(ctx))
 		})
 	}
 

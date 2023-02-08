@@ -38,6 +38,8 @@ func TestSender(t *testing.T) {
 	conf.MustSet(ctx, config.ViperKeyPublicBaseURL, "https://www.ory.sh/")
 	conf.MustSet(ctx, config.ViperKeyCourierSMTPURL, "smtp://foo@bar@dev.null/")
 	conf.MustSet(ctx, config.ViperKeyLinkBaseURL, "https://link-url/")
+	conf.MustSet(ctx, config.ViperKeySelfServiceRecoveryNotifyUnknownRecipients, true)
+	conf.MustSet(ctx, config.ViperKeySelfServiceVerificationNotifyUnknownRecipients, true)
 
 	u := &http.Request{URL: urlx.ParseOrPanic("https://www.ory.sh/")}
 
@@ -160,11 +162,13 @@ func TestSender(t *testing.T) {
 
 	t.Run("case=should be able to disable invalid email dispatch", func(t *testing.T) {
 		for _, tc := range []struct {
-			flow string
-			send func(t *testing.T)
+			flow      string
+			send      func(t *testing.T)
+			configKey string
 		}{
 			{
-				flow: "recovery",
+				flow:      "recovery",
+				configKey: config.ViperKeySelfServiceRecoveryNotifyUnknownRecipients,
 				send: func(t *testing.T) {
 					s, err := reg.RecoveryStrategies(ctx).Strategy("code")
 					require.NoError(t, err)
@@ -178,7 +182,8 @@ func TestSender(t *testing.T) {
 				},
 			},
 			{
-				flow: "verification",
+				flow:      "verification",
+				configKey: config.ViperKeySelfServiceVerificationNotifyUnknownRecipients,
 				send: func(t *testing.T) {
 					s, err := reg.VerificationStrategies(ctx).Strategy("code")
 					require.NoError(t, err)
@@ -194,10 +199,10 @@ func TestSender(t *testing.T) {
 		} {
 			t.Run("strategy="+tc.flow, func(t *testing.T) {
 
-				conf.Set(ctx, config.ViperKeyCourierEnableInvalidMessageDispatch, false)
+				conf.Set(ctx, tc.configKey, false)
 
 				t.Cleanup(func() {
-					conf.Set(ctx, config.ViperKeyCourierEnableInvalidMessageDispatch, true)
+					conf.Set(ctx, tc.configKey, true)
 				})
 
 				tc.send(t)

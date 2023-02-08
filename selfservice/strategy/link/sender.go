@@ -70,14 +70,14 @@ func (s *Sender) SendRecoveryLink(ctx context.Context, f *recovery.Flow, via ide
 
 	address, err := s.r.IdentityPool().FindRecoveryAddressByValue(ctx, identity.RecoveryAddressTypeEmail, to)
 	if errors.Is(err, sqlcon.ErrNoRows) {
-		notifyUnknownRecipient := s.r.Config().CourierEnableInvalidDispatch(ctx)
+		notifyUnknownRecipients := s.r.Config().SelfServiceFlowRecoveryNotifyUnknownRecipients(ctx)
 		s.r.Audit().
 			WithField("via", via).
 			WithField("strategy", "link").
 			WithSensitiveField("email_address", address).
-			WithField("was_notified", notifyUnknownRecipient).
+			WithField("was_notified", notifyUnknownRecipients).
 			Info("Account recovery was requested for an unknown address.")
-		if !notifyUnknownRecipient {
+		if !notifyUnknownRecipients {
 			// do nothing
 		} else if err := s.send(ctx, string(via), email.NewRecoveryInvalid(s.r, &email.RecoveryInvalidModel{To: to})); err != nil {
 			return err
@@ -119,14 +119,14 @@ func (s *Sender) SendVerificationLink(ctx context.Context, f *verification.Flow,
 
 	address, err := s.r.IdentityPool().FindVerifiableAddressByValue(ctx, via, to)
 	if errors.Is(err, sqlcon.ErrNoRows) {
-		notifyUnknownRecipient := s.r.Config().CourierEnableInvalidDispatch(ctx)
+		notifyUnknownRecipients := s.r.Config().SelfServiceFlowVerificationNotifyUnknownRecipients(ctx)
 		s.r.Audit().
 			WithField("via", via).
 			WithField("strategy", "link").
 			WithSensitiveField("email_address", address).
-			WithField("was_notified", notifyUnknownRecipient).
+			WithField("was_notified", notifyUnknownRecipients).
 			Info("Address verification was requested for an unknown address.")
-		if !notifyUnknownRecipient {
+		if !notifyUnknownRecipients {
 			// do nothing
 		} else if err := s.send(ctx, string(via), email.NewVerificationInvalid(s.r, &email.VerificationInvalidModel{To: to})); err != nil {
 			return err

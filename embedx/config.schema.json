@@ -1229,6 +1229,12 @@
                     "code"
                   ],
                   "default": "code"
+                },
+                "notify_unknown_recipient": {
+                  "title": "Notify unknown recipients",
+                  "description": "Whether to notify recipients, if verification was requested for their address.",
+                  "type": "boolean",
+                  "default": false
                 }
               }
             },
@@ -1280,6 +1286,12 @@
                     "code"
                   ],
                   "default": "code"
+                },
+                "notify_unknown_recipient": {
+                  "title": "Notify unknown recipients",
+                  "description": "Whether to notify recipients, if recovery was requested for their account.",
+                  "type": "boolean",
+                  "default": false
                 }
               }
             },
@@ -1688,11 +1700,6 @@
             10,
             60
           ]
-        },
-        "enable_invalid_email_dispatch": {
-          "description": "Defines whether to enable the sending of emails for invalid verification or recovery requests.",
-          "type": "boolean",
-          "default": true
         },
         "smtp": {
           "title": "SMTP Configuration",

@@ -69,7 +69,6 @@ const (
 	ViperKeyCourierSMTPURL                                   = "courier.smtp.connection_uri"
 	ViperKeyCourierSMTPClientCertPath                        = "courier.smtp.client_cert_path"
 	ViperKeyCourierSMTPClientKeyPath                         = "courier.smtp.client_key_path"
-	ViperKeyCourierEnableInvalidMessageDispatch              = "courier.enable_invalid_message_dispatch"
 	ViperKeyCourierTemplatesPath                             = "courier.template_override_path"
 	ViperKeyCourierTemplatesRecoveryInvalidEmail             = "courier.templates.recovery.invalid.email"
 	ViperKeyCourierTemplatesRecoveryValidEmail               = "courier.templates.recovery.valid.email"
@@ -151,6 +150,7 @@ const (
 	ViperKeySelfServiceRecoveryUI                            = "selfservice.flows.recovery.ui_url"
 	ViperKeySelfServiceRecoveryRequestLifespan               = "selfservice.flows.recovery.lifespan"
 	ViperKeySelfServiceRecoveryBrowserDefaultReturnTo        = "selfservice.flows.recovery.after." + DefaultBrowserReturnURL
+	ViperKeySelfServiceRecoveryNotifyUnknownRecipients       = "selfservice.flows.recovery.notify_unknown_recipients"
 	ViperKeySelfServiceVerificationEnabled                   = "selfservice.flows.verification.enabled"
 	ViperKeySelfServiceVerificationUI                        = "selfservice.flows.verification.ui_url"
 	ViperKeySelfServiceVerificationRequestLifespan           = "selfservice.flows.verification.lifespan"
@@ -158,6 +158,7 @@ const (
 	ViperKeySelfServiceVerificationAfter                     = "selfservice.flows.verification.after"
 	ViperKeySelfServiceVerificationBeforeHooks               = "selfservice.flows.verification.before.hooks"
 	ViperKeySelfServiceVerificationUse                       = "selfservice.flows.verification.use"
+	ViperKeySelfServiceVerificationNotifyUnknownRecipients   = "selfservice.flows.verification.notify_unknown_recipients"
 	ViperKeyDefaultIdentitySchemaID                          = "identity.default_schema_id"
 	ViperKeyIdentitySchemas                                  = "identity.schemas"
 	ViperKeyHasherAlgorithm                                  = "hashers.algorithm"
@@ -657,8 +658,13 @@ func (p *Config) SelfServiceFlowRecoveryBeforeHooks(ctx context.Context) []SelfS
 func (p *Config) SelfServiceFlowVerificationBeforeHooks(ctx context.Context) []SelfServiceHook {
 	return p.selfServiceHooks(ctx, ViperKeySelfServiceVerificationBeforeHooks)
 }
+
 func (p *Config) SelfServiceFlowVerificationUse(ctx context.Context) string {
 	return p.GetProvider(ctx).String(ViperKeySelfServiceVerificationUse)
+}
+
+func (p *Config) SelfServiceFlowVerificationNotifyUnknownRecipients(ctx context.Context) bool {
+	return p.GetProvider(ctx).BoolF(ViperKeySelfServiceVerificationNotifyUnknownRecipients, false)
 }
 
 func (p *Config) SelfServiceFlowSettingsBeforeHooks(ctx context.Context) []SelfServiceHook {
@@ -1048,10 +1054,6 @@ func (p *Config) CourierTemplatesRecoveryValid(ctx context.Context) *CourierEmai
 	return p.CourierTemplatesHelper(ctx, ViperKeyCourierTemplatesRecoveryValidEmail)
 }
 
-func (p *Config) CourierEnableInvalidDispatch(ctx context.Context) bool {
-	return p.p.BoolF(ViperKeyCourierEnableInvalidMessageDispatch, true)
-}
-
 func (p *Config) CourierTemplatesRecoveryCodeInvalid(ctx context.Context) *CourierEmailTemplate {
 	return p.CourierTemplatesHelper(ctx, ViperKeyCourierTemplatesRecoveryCodeInvalidEmail)
 }
@@ -1196,6 +1198,10 @@ func (p *Config) SelfServiceFlowRecoveryReturnTo(ctx context.Context) *url.URL {
 
 func (p *Config) SelfServiceFlowRecoveryRequestLifespan(ctx context.Context) time.Duration {
 	return p.GetProvider(ctx).DurationF(ViperKeySelfServiceRecoveryRequestLifespan, time.Hour)
+}
+
+func (p *Config) SelfServiceFlowRecoveryNotifyUnknownRecipients(ctx context.Context) bool {
+	return p.GetProvider(ctx).BoolF(ViperKeySelfServiceRecoveryNotifyUnknownRecipients, false)
 }
 
 func (p *Config) SelfServiceLinkMethodLifespan(ctx context.Context) time.Duration {
