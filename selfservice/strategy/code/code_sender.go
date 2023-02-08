@@ -71,12 +71,19 @@ func (s *Sender) SendRecoveryCode(ctx context.Context, f *recovery.Flow, via ide
 
 	address, err := s.deps.IdentityPool().FindRecoveryAddressByValue(ctx, identity.RecoveryAddressTypeEmail, to)
 	if errors.Is(err, sqlcon.ErrNoRows) {
-		if !s.deps.Config().CourierEnableInvalidDispatch(ctx) {
+		notifyUnknownRecipient := s.deps.Config().CourierEnableInvalidDispatch(ctx)
+		s.deps.Audit().
+			WithField("via", via).
+			WithSensitiveField("email_address", address).
+			WithField("strategy", "code").
+			WithField("was_notified", notifyUnknownRecipient).
+			Info("Account recovery was requested for an unknown address.")
+		if !notifyUnknownRecipient {
 			// do nothing
 		} else if err := s.send(ctx, string(via), email.NewRecoveryCodeInvalid(s.deps, &email.RecoveryCodeInvalidModel{To: to})); err != nil {
 			return err
 		}
-		return ErrUnknownAddress
+		return errors.WithStack(ErrUnknownAddress)
 	} else if err != nil {
 		// DB error
 		return err
@@ -143,12 +150,19 @@ func (s *Sender) SendVerificationCode(ctx context.Context, f *verification.Flow,
 
 	address, err := s.deps.IdentityPool().FindVerifiableAddressByValue(ctx, via, to)
 	if errors.Is(err, sqlcon.ErrNoRows) {
-		if !s.deps.Config().CourierEnableInvalidDispatch(ctx) {
+		notifyUnknownRecipient := s.deps.Config().CourierEnableInvalidDispatch(ctx)
+		s.deps.Audit().
+			WithField("via", via).
+			WithField("strategy", "code").
+			WithSensitiveField("email_address", address).
+			WithField("was_notified", notifyUnknownRecipient).
+			Info("Address verification was requested for an unknown address.")
+		if !notifyUnknownRecipient {
 			// do nothing
 		} else if err := s.send(ctx, string(via), email.NewVerificationCodeInvalid(s.deps, &email.VerificationCodeInvalidModel{To: to})); err != nil {
 			return err
 		}
-		return ErrUnknownAddress
+		return errors.WithStack(ErrUnknownAddress)
 
 	} else if err != nil {
 		return err

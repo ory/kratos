@@ -9,8 +9,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/pkg/errors"
-
 	"github.com/ory/kratos/internal/testhelpers"
 
 	"github.com/stretchr/testify/assert"
@@ -145,7 +143,7 @@ func TestManager(t *testing.T) {
 
 				messages, err := reg.CourierPersister().NextMessages(context.Background(), 0)
 
-				require.True(t, errors.Is(err, courier.ErrQueueEmpty))
+				require.ErrorIs(t, err, courier.ErrQueueEmpty)
 				require.Len(t, messages, 0)
 			})
 		}
