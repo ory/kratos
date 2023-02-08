@@ -63,22 +63,32 @@ func (n *ProviderNetID) oAuth2(ctx context.Context) (*oauth2.Config, error) {
 }
 
 func (n *ProviderNetID) Claims(ctx context.Context, exchange *oauth2.Token, _ url.Values) (*Claims, error) {
+	raw, ok := exchange.Extra("id_token").(string)
+	if !ok || len(raw) == 0 {
+		return nil, errors.WithStack(ErrIDTokenMissing)
+	}
+
+	p, err := n.provider(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	claims, err := n.verifyAndDecodeClaimsWithProvider(ctx, p, raw)
+	if err != nil {
+		return nil, err
+	}
+
 	o, err := n.OAuth2(ctx)
 	if err != nil {
 		return nil, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("%s", err))
 	}
 
-	client := n.reg.HTTPClient(ctx, httpx.ResilientClientDisallowInternalIPs(), httpx.ResilientClientWithClient(o.Client(ctx, exchange)))
+	req, err := retryablehttp.NewRequestWithContext(ctx, "GET", urlx.AppendPaths(n.brokerURL(), "/userinfo").String(), nil)
+	if err != nil {
+		return nil, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("%s", err))
+	}
 
-	u := n.brokerURL()
-	if err != nil {
-		return nil, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("%s", err))
-	}
-	userInfoURL := urlx.AppendPaths(u, "/userinfo")
-	req, err := retryablehttp.NewRequest("GET", userInfoURL.String(), nil)
-	if err != nil {
-		return nil, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("%s", err))
-	}
+	client := n.reg.HTTPClient(ctx, httpx.ResilientClientDisallowInternalIPs(), httpx.ResilientClientWithClient(o.Client(ctx, exchange)))
 
 	resp, err := client.Do(req)
 	if err != nil {
@@ -90,12 +100,14 @@ func (n *ProviderNetID) Claims(ctx context.Context, exchange *oauth2.Token, _ ur
 		return nil, err
 	}
 
-	var claims Claims
-	if err := json.NewDecoder(resp.Body).Decode(&claims); err != nil {
+	var userinfo Claims
+	if err := json.NewDecoder(resp.Body).Decode(&userinfo); err != nil {
 		return nil, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("%s", err))
 	}
 
-	return &claims, nil
+	userinfo.Issuer = claims.Issuer
+	userinfo.Subject = claims.Subject
+	return &userinfo, nil
 }
 
 func (n *ProviderNetID) brokerURL() *url.URL {
