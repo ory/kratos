@@ -7,7 +7,6 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
-	"github.com/gobuffalo/pop"
 	"strings"
 	"time"
 
@@ -25,6 +24,7 @@ import (
 	"github.com/ory/kratos/otp"
 	"github.com/ory/kratos/x"
 
+	"github.com/gobuffalo/pop/v6"
 	"github.com/gofrs/uuid"
 	"github.com/pkg/errors"
 
@@ -96,13 +96,12 @@ func (p *Persister) FindByCredentialsIdentifier(ctx context.Context, match strin
 	// #nosec G201
 	if err := p.GetConnection(ctx).RawQuery(fmt.Sprintf(`SELECT
     ic.identity_id
-FROM identity_credentials ic
-    INNER JOIN identity_credential_identifiers ici on ic.id = ici.identity_credential_id
+FROM %s ic
+    INNER JOIN %s ici on ic.id = ici.identity_credential_id
 WHERE ici.identifier = ?
   AND ic.nid = ?
   AND ici.nid = ?`,
 		"identity_credentials",
-		"identity_credential_types",
 		"identity_credential_identifiers",
 	),
 		match,
