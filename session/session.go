@@ -80,7 +80,7 @@ type Session struct {
 	ID uuid.UUID `json:"id" faker:"-" db:"id"`
 
 	// Active state. If false the session is no longer active.
-	Active bool `json:"active" db:"active"`
+	Active bool `json:"active" db:"-"`
 
 	// The Session Expiry
 	//
