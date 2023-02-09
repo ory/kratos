@@ -72,7 +72,7 @@ require (
 	github.com/ory/go-acc v0.2.9-0.20230103102148-6b1c9a70dbbe
 	github.com/ory/graceful v0.1.3
 	github.com/ory/herodot v0.9.13
-	github.com/ory/hydra-client-go v1.11.9-0.20221102130300-f558e85344c8
+	github.com/ory/hydra-client-go/v2 v2.0.3
 	github.com/ory/jsonschema/v3 v3.0.7
 	github.com/ory/mail/v3 v3.0.0
 	github.com/ory/nosurf v1.2.7

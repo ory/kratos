@@ -27,7 +27,7 @@ import (
 	"github.com/ory/x/resilience"
 	"github.com/ory/x/urlx"
 
-	hydraclientgo "github.com/ory/hydra-client-go"
+	hydraclientgo "github.com/ory/hydra-client-go/v2"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"

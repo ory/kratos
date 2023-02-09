@@ -16,7 +16,7 @@ import (
 
 	"github.com/ory/x/sqlxx"
 
-	hydraclientgo "github.com/ory/hydra-client-go"
+	hydraclientgo "github.com/ory/hydra-client-go/v2"
 
 	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/hydra"
