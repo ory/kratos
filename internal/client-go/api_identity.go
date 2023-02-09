@@ -1888,6 +1888,7 @@ type IdentityApiApiListIdentitiesRequest struct {
 	ApiService IdentityApi
 	perPage    *int64
 	page       *int64
+	identifier *string
 }
 
 func (r IdentityApiApiListIdentitiesRequest) PerPage(perPage int64) IdentityApiApiListIdentitiesRequest {
@@ -1896,6 +1897,10 @@ func (r IdentityApiApiListIdentitiesRequest) PerPage(perPage int64) IdentityApiA
 }
 func (r IdentityApiApiListIdentitiesRequest) Page(page int64) IdentityApiApiListIdentitiesRequest {
 	r.page = &page
+	return r
+}
+func (r IdentityApiApiListIdentitiesRequest) Identifier(identifier string) IdentityApiApiListIdentitiesRequest {
+	r.identifier = &identifier
 	return r
 }
 
@@ -1946,6 +1951,9 @@ func (a *IdentityApiService) ListIdentitiesExecute(r IdentityApiApiListIdentitie
 	}
 	if r.page != nil {
 		localVarQueryParams.Add("page", parameterToString(*r.page, ""))
+	}
+	if r.identifier != nil {
+		localVarQueryParams.Add("identifier", parameterToString(*r.identifier, ""))
 	}
 	// to determine the Content-Type header
 	localVarHTTPContentTypes := []string{}

@@ -126,6 +126,15 @@ type listIdentitiesResponse struct {
 //lint:ignore U1000 Used to generate Swagger and OpenAPI definitions
 type listIdentitiesParameters struct {
 	migrationpagination.RequestParameters
+
+	// Identifier
+	//
+	// This query parameter can be used to lookup an identity using its identifier.
+	// For example - an email address
+	//
+	// required: false
+	// in: query
+	Identifier string `json:"identifier"`
 }
 
 // swagger:route GET /admin/identities identity listIdentities
