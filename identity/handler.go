@@ -162,7 +162,7 @@ func (h *Handler) list(w http.ResponseWriter, r *http.Request, _ httprouter.Para
 			return
 		}
 
-		h.r.Writer().Write(w, r, i)
+		h.r.Writer().Write(w, r, []Identity{*i})
 		return
 	}
 
