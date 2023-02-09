@@ -737,7 +737,9 @@ func deletCredentialWebAuthFromIdentity(identity *Identity) (*Identity, error) {
 // Delete Credential Parameters
 //
 // swagger:parameters deleteIdentityCredentials
-// nolint:deadcode,unused
+//
+//nolint:deadcode,unused
+//lint:ignore U1000 Used to generate Swagger and OpenAPI definitions
 type deleteIdentityCredentials struct {
 	// ID is the identity's ID.
 	//
