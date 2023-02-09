@@ -22,7 +22,6 @@ import (
 
 	"github.com/ory/herodot"
 	"github.com/ory/kratos/identity"
-	"github.com/ory/kratos/x"
 	"github.com/ory/x/randx"
 )
 
@@ -234,23 +233,21 @@ func (s *Session) Activate(r *http.Request, i *identity.Identity, c lifespanProv
 	s.Identity = i
 	s.IdentityID = i.ID
 
-	s.SaveSessionDeviceInformation(r)
+	s.SetSessionDeviceInformation(r)
 	s.SetAuthenticatorAssuranceLevel()
 	return nil
 }
 
-func (s *Session) SaveSessionDeviceInformation(r *http.Request) {
-	var device Device
-
-	device.ID = x.NewUUID()
-	device.SessionID = s.ID
+func (s *Session) SetSessionDeviceInformation(r *http.Request) {
+	device := Device{
+		SessionID: s.ID,
+		IPAddress: stringsx.GetPointer(httpx.ClientIP(r)),
+	}
 
 	agent := r.Header["User-Agent"]
 	if len(agent) > 0 {
 		device.UserAgent = stringsx.GetPointer(strings.Join(agent, " "))
 	}
-
-	device.IPAddress = stringsx.GetPointer(httpx.ClientIP(r))
 
 	var clientGeoLocation []string
 	if r.Header.Get("Cf-Ipcity") != "" {
