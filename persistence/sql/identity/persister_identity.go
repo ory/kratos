@@ -111,7 +111,7 @@ func stringToLowerTrim(match string) string {
 	return strings.ToLower(strings.TrimSpace(match))
 }
 
-func (p *IdentityPersister) normalizeIdentifier(ct identity.CredentialsType, match string) string {
+func NormalizeIdentifier(ct identity.CredentialsType, match string) string {
 	switch ct {
 	case identity.CredentialsTypeLookup:
 		// lookup credentials are case-sensitive
@@ -141,22 +141,21 @@ func (p *IdentityPersister) FindByCredentialsIdentifier(ctx context.Context, ct 
 	}
 
 	// Force case-insensitivity and trimming for identifiers
-	match = p.normalizeIdentifier(ct, match)
+	match = NormalizeIdentifier(ct, match)
 
-	// #nosec G201
-	if err := p.GetConnection(ctx).RawQuery(fmt.Sprintf(`SELECT
-    ic.identity_id
-FROM %s ic
-         INNER JOIN %s ict on ic.identity_credential_type_id = ict.id
-         INNER JOIN %s ici on ic.id = ici.identity_credential_id AND ici.identity_credential_type_id = ict.id
-WHERE ici.identifier = ?
-  AND ic.nid = ?
-  AND ici.nid = ?
-  AND ict.name = ?`,
-		"identity_credentials",
-		"identity_credential_types",
-		"identity_credential_identifiers",
-	),
+	if err := p.GetConnection(ctx).RawQuery(`
+		SELECT
+			ic.identity_id
+		FROM identity_credentials ic
+				INNER JOIN identity_credential_types ict
+					ON ic.identity_credential_type_id = ict.id
+				INNER JOIN identity_credential_identifiers ici
+					ON ic.id = ici.identity_credential_id AND ici.identity_credential_type_id = ict.id
+		WHERE ici.identifier = ?
+		AND ic.nid = ?
+		AND ici.nid = ?
+		AND ict.name = ?
+		LIMIT 1`, // pop doesn't understand how to add a limit clause to this query
 		match,
 		nid,
 		nid,
@@ -221,7 +220,7 @@ func (p *IdentityPersister) createIdentityCredentials(ctx context.Context, i *id
 
 		for _, ids := range cred.Identifiers {
 			// Force case-insensitivity and trimming for identifiers
-			ids = p.normalizeIdentifier(cred.Type, ids)
+			ids = NormalizeIdentifier(cred.Type, ids)
 
 			if len(ids) == 0 {
 				return errors.WithStack(herodot.ErrInternalServerError.WithReasonf("Unable to create identity credentials with missing or empty identifier."))
