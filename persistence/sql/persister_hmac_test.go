@@ -13,9 +13,6 @@ import (
 	"github.com/ory/x/configx"
 	"github.com/ory/x/otelx"
 
-	"github.com/ory/kratos/identity"
-	"github.com/ory/kratos/schema"
-
 	"github.com/gobuffalo/pop/v6"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -36,14 +33,6 @@ func (l *logRegistryOnly) Config() *config.Config {
 
 func (l *logRegistryOnly) Contextualizer() contextx.Contextualizer {
 	//TODO implement me
-	panic("implement me")
-}
-
-func (l *logRegistryOnly) IdentityTraitsSchemas(ctx context.Context) (schema.Schemas, error) {
-	panic("implement me")
-}
-
-func (l *logRegistryOnly) IdentityValidator() *identity.Validator {
 	panic("implement me")
 }
 
@@ -70,7 +59,7 @@ func TestPersisterHMAC(t *testing.T) {
 	conf.MustSet(ctx, config.ViperKeySecretsDefault, []string{"foobarbaz"})
 	c, err := pop.NewConnection(&pop.ConnectionDetails{URL: "sqlite://foo?mode=memory"})
 	require.NoError(t, err)
-	p, err := NewPersister(context.Background(), &logRegistryOnly{c: conf}, c)
+	p, err := NewPersister(context.Background(), &logRegistryOnly{c: conf}, nil, c)
 	require.NoError(t, err)
 
 	assert.True(t, p.hmacConstantCompare(context.Background(), "hashme", p.hmacValue(context.Background(), "hashme")))
