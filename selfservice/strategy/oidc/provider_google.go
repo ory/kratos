@@ -44,6 +44,16 @@ func (g *ProviderGoogle) oauth2ConfigFromEndpoint(ctx context.Context, endpoint 
 	}
 }
 
+func (g *ProviderGenericOIDC) OAuth2(ctx context.Context) (*oauth2.Config, error) {
+	p, err := g.provider(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	endpoint := p.Endpoint()
+	return g.oauth2ConfigFromEndpoint(ctx, endpoint), nil
+}
+
 func (g *ProviderGoogle) AuthCodeURLOptions(r ider) []oauth2.AuthCodeOption {
 	var options []oauth2.AuthCodeOption
 	scope := g.config.Scope
