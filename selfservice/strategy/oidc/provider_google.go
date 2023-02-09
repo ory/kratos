@@ -44,7 +44,7 @@ func (g *ProviderGoogle) oauth2ConfigFromEndpoint(ctx context.Context, endpoint 
 	}
 }
 
-func (g *ProviderGenericOIDC) OAuth2(ctx context.Context) (*oauth2.Config, error) {
+func (g *ProviderGoogle) OAuth2(ctx context.Context) (*oauth2.Config, error) {
 	p, err := g.provider(ctx)
 	if err != nil {
 		return nil, err
