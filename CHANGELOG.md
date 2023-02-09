@@ -5,7 +5,7 @@
 
 **Table of Contents**
 
-- [ (2023-02-08)](#2023-02-08)
+- [ (2023-02-09)](#2023-02-09)
   - [Bug Fixes](#bug-fixes)
   - [Features](#features)
 - [0.11.1 (2023-01-14)](#0111-2023-01-14)
@@ -291,7 +291,7 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# [](https://github.com/ory/kratos/compare/v0.11.1...v) (2023-02-08)
+# [](https://github.com/ory/kratos/compare/v0.11.1...v) (2023-02-09)
 
 ### Bug Fixes
 
@@ -304,6 +304,14 @@
   ([39fa31f](https://github.com/ory/kratos/commit/39fa31f85deb3f015aa0f1b30b4a17e4b51d461b))
 - Identity.CopyWithoutCredentials
   ([989c99d](https://github.com/ory/kratos/commit/989c99d6a32e02759a8a7a07606a90832afec460))
+- Issuer missing from netid claims
+  ([#3080](https://github.com/ory/kratos/issues/3080))
+  ([dec7cbc](https://github.com/ory/kratos/commit/dec7cbc4286cbbe2d787b1f8998ee57054d7c95b)):
+
+  The NetID provider omits the issuer claim in the userinfo response. To resolve
+  this issue, the ID token returned by NetID is now validated and its `sub` and
+  `iss` values are used.
+
 - Lint errors and unused code
   ([ae49ef0](https://github.com/ory/kratos/commit/ae49ef04ed24c23406a5639d34c2e81ab0130c75))
 - Make session AAL satisfaction check resilient against a nil identity in the
@@ -340,6 +348,13 @@
   ([6393519](https://github.com/ory/kratos/commit/6393519977bc3d804673b5669166e07c561f1c79))
 - Return hydra error messages
   ([b3d037b](https://github.com/ory/kratos/commit/b3d037b33b248f1873f09d641e5d61376bcfde80))
+- Social sign in via linkedin
+  ([#3079](https://github.com/ory/kratos/issues/3079))
+  ([5de6bf4](https://github.com/ory/kratos/commit/5de6bf46aba6c13f927ef1c4c425322a34063ca9)),
+  closes [#2856](https://github.com/ory/kratos/issues/2856):
+
+  Adds LinkedIn as a social sign in provider.
+
 - Webhooks that update identities
   ([2cbee3e](https://github.com/ory/kratos/commit/2cbee3e8eea6bac376faf9382bf5b15acb732f03)),
   closes [#2161](https://github.com/ory/kratos/issues/2161):
