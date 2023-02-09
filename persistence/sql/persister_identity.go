@@ -112,12 +112,12 @@ WHERE ici.identifier = ?
 		return nil, sqlcon.HandleError(err)
 	}
 
-	i, err := p.GetIdentityConfidential(ctx, find.IdentityID)
+	i, err := p.GetIdentity(ctx, find.IdentityID, identity.ExpandDefault)
 	if err != nil {
 		return nil, err
 	}
 
-	return i.CopyWithoutCredentials(), nil
+	return i, nil
 }
 
 func (p *Persister) FindByCredentialsTypeAndIdentifier(ctx context.Context, ct identity.CredentialsType, match string) (*identity.Identity, *identity.Credentials, error) {
