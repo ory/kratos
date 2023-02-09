@@ -594,6 +594,26 @@ func TestPool(ctx context.Context, conf *config.Config, p interface {
 		})
 
 		t.Run("case=find identity by its credentials identifier", func(t *testing.T) {
+			expected := passwordIdentity("", "find-identity-by-identifier@ory.sh")
+			expected.Traits = identity.Traits(`{}`)
+
+			require.NoError(t, p.CreateIdentity(ctx, expected))
+			createdIDs = append(createdIDs, expected.ID)
+
+			actual, err := p.FindByCredentialsIdentifier(ctx, "find-identity-by-identifier@ory.sh")
+			require.NoError(t, err)
+
+			expected.Credentials = nil
+			assertEqual(t, expected, actual)
+
+			t.Run("not if on another network", func(t *testing.T) {
+				_, p := testhelpers.NewNetwork(t, ctx, p)
+				_, err := p.FindByCredentialsIdentifier(ctx, "find-identity-by-identifier@ory.sh")
+				require.ErrorIs(t, err, sqlcon.ErrNoRows)
+			})
+		})
+
+		t.Run("case=find identity by its credentials type and identifier", func(t *testing.T) {
 			expected := passwordIdentity("", "find-credentials-identifier@ory.sh")
 			expected.Traits = identity.Traits(`{}`)
 
