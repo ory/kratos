@@ -5,9 +5,11 @@ package oidc
 
 import (
 	"context"
+
 	gooidc "github.com/coreos/go-oidc"
-	"github.com/ory/x/stringslice"
 	"golang.org/x/oauth2"
+
+	"github.com/ory/x/stringslice"
 )
 
 type ProviderGoogle struct {
