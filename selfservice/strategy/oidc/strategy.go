@@ -67,6 +67,7 @@ type dependencies interface {
 	x.CSRFTokenGeneratorProvider
 	x.WriterProvider
 	x.HTTPClientProvider
+	x.TracingProvider
 
 	identity.ValidationProvider
 	identity.PrivilegedPoolProvider

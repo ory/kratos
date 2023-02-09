@@ -11,7 +11,7 @@ import (
 	"github.com/gofrs/uuid"
 
 	"github.com/ory/herodot"
-	hydraclientgo "github.com/ory/hydra-client-go"
+	hydraclientgo "github.com/ory/hydra-client-go/v2"
 
 	"github.com/ory/kratos/hydra"
 	"github.com/ory/kratos/text"

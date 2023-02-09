@@ -9,7 +9,7 @@ import (
 
 	"github.com/gofrs/uuid"
 
-	hydraclientgo "github.com/ory/hydra-client-go"
+	hydraclientgo "github.com/ory/hydra-client-go/v2"
 	"github.com/ory/kratos/session"
 )
 
