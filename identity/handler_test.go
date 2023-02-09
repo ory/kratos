@@ -117,6 +117,10 @@ func TestHandler(t *testing.T) {
 		}
 	})
 
+	t.Run("case=should return 404 on a non-existing resource for identity lookup", func(t *testing.T) {
+		_ = get(t, adminTS, "/identities?identifier=does-not-exist", http.StatusNotFound)
+	})
+
 	t.Run("case=should fail to create an identity because schema id does not exist", func(t *testing.T) {
 		for name, ts := range map[string]*httptest.Server{"public": publicTS, "admin": adminTS} {
 			t.Run("endpoint="+name, func(t *testing.T) {
@@ -373,6 +377,29 @@ func TestHandler(t *testing.T) {
 					assert.Empty(t, res.Get("credentials").String(), "%s", res.Raw)
 				})
 			}
+		})
+
+		t.Run("case=should be able to lookup the identity using identifier", func(t *testing.T) {
+			i1 := &identity.Identity{
+				Credentials: map[identity.CredentialsType]identity.Credentials{
+					identity.CredentialsTypePassword: {
+						Type:        identity.CredentialsTypePassword,
+						Identifiers: []string{"find.by.identifier@bar.com"},
+						Config:      sqlxx.JSONRawMessage(`{"hashed_password":"$2a$08$.cOYmAd.vCpDOoiVJrO5B.hjTLKQQ6cAK40u8uB.FnZDyPvVvQ9Q."}`), // foobar
+					}},
+				State:  identity.StateActive,
+				Traits: identity.Traits(`{"username":"find.by.identifier@bar.com"}`),
+			}
+
+			require.NoError(t, reg.PrivilegedIdentityPool().CreateIdentity(context.Background(), i1))
+
+			res := get(t, adminTS, "/identities?identifier=find.by.identifier@bar.com", http.StatusOK)
+			assert.EqualValues(t, i1.ID.String(), res.Get("0.id").String(), "%s", res.Raw)
+			assert.EqualValues(t, "find.by.identifier@bar.com", res.Get("0.traits.username").String(), "%s", res.Raw)
+			assert.EqualValues(t, defaultSchemaExternalURL, res.Get("0.schema_url").String(), "%s", res.Raw)
+			assert.EqualValues(t, config.DefaultIdentityTraitsSchemaID, res.Get("0.schema_id").String(), "%s", res.Raw)
+			assert.EqualValues(t, identity.StateActive, res.Get("0.state").String(), "%s", res.Raw)
+			assert.Empty(t, res.Get("credentials").String(), "%s", res.Raw)
 		})
 
 		t.Run("case=should get oidc credential", func(t *testing.T) {
