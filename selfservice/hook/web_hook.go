@@ -103,7 +103,7 @@ func NewWebHook(r webHookDependencies, c json.RawMessage) *WebHook {
 }
 
 func (e *WebHook) ExecuteLoginPreHook(_ http.ResponseWriter, req *http.Request, flow *login.Flow) error {
-	return otelx.WithSpan(req.Context(), "selfservice.hook.ExecuteLoginPreHook", func(ctx context.Context) error {
+	return otelx.WithSpan(req.Context(), "selfservice.hook.WebHook.ExecuteLoginPreHook", func(ctx context.Context) error {
 		return e.execute(ctx, &templateContext{
 			Flow:           flow,
 			RequestHeaders: req.Header,
@@ -111,11 +111,11 @@ func (e *WebHook) ExecuteLoginPreHook(_ http.ResponseWriter, req *http.Request, 
 			RequestURL:     x.RequestURL(req).String(),
 			RequestCookies: cookies(req),
 		})
-	}, trace.WithAttributes(attribute.String("hook", KeyWebHook)))
+	})
 }
 
 func (e *WebHook) ExecuteLoginPostHook(_ http.ResponseWriter, req *http.Request, _ node.UiNodeGroup, flow *login.Flow, session *session.Session) error {
-	return otelx.WithSpan(req.Context(), "selfservice.hook.ExecuteLoginPostHook", func(ctx context.Context) error {
+	return otelx.WithSpan(req.Context(), "selfservice.hook.WebHook.ExecuteLoginPostHook", func(ctx context.Context) error {
 		return e.execute(ctx, &templateContext{
 			Flow:           flow,
 			RequestHeaders: req.Header,
@@ -124,11 +124,11 @@ func (e *WebHook) ExecuteLoginPostHook(_ http.ResponseWriter, req *http.Request,
 			RequestCookies: cookies(req),
 			Identity:       session.Identity,
 		})
-	}, trace.WithAttributes(attribute.String("hook", KeyWebHook)))
+	})
 }
 
 func (e *WebHook) ExecuteVerificationPreHook(_ http.ResponseWriter, req *http.Request, flow *verification.Flow) error {
-	return otelx.WithSpan(req.Context(), "selfservice.hook.ExecuteVerificationPreHook", func(ctx context.Context) error {
+	return otelx.WithSpan(req.Context(), "selfservice.hook.WebHook.ExecuteVerificationPreHook", func(ctx context.Context) error {
 		return e.execute(ctx, &templateContext{
 			Flow:           flow,
 			RequestHeaders: req.Header,
@@ -136,11 +136,11 @@ func (e *WebHook) ExecuteVerificationPreHook(_ http.ResponseWriter, req *http.Re
 			RequestURL:     x.RequestURL(req).String(),
 			RequestCookies: cookies(req),
 		})
-	}, trace.WithAttributes(attribute.String("hook", KeyWebHook)))
+	})
 }
 
 func (e *WebHook) ExecutePostVerificationHook(_ http.ResponseWriter, req *http.Request, flow *verification.Flow, id *identity.Identity) error {
-	return otelx.WithSpan(req.Context(), "selfservice.hook.ExecutePostVerificationHook", func(ctx context.Context) error {
+	return otelx.WithSpan(req.Context(), "selfservice.hook.WebHook.ExecutePostVerificationHook", func(ctx context.Context) error {
 		return e.execute(ctx, &templateContext{
 			Flow:           flow,
 			RequestHeaders: req.Header,
@@ -149,11 +149,11 @@ func (e *WebHook) ExecutePostVerificationHook(_ http.ResponseWriter, req *http.R
 			RequestCookies: cookies(req),
 			Identity:       id,
 		})
-	}, trace.WithAttributes(attribute.String("hook", KeyWebHook)))
+	})
 }
 
 func (e *WebHook) ExecuteRecoveryPreHook(_ http.ResponseWriter, req *http.Request, flow *recovery.Flow) error {
-	return otelx.WithSpan(req.Context(), "selfservice.hook.ExecuteRecoveryPreHook", func(ctx context.Context) error {
+	return otelx.WithSpan(req.Context(), "selfservice.hook.WebHook.ExecuteRecoveryPreHook", func(ctx context.Context) error {
 		return e.execute(ctx, &templateContext{
 			Flow:           flow,
 			RequestHeaders: req.Header,
@@ -161,11 +161,11 @@ func (e *WebHook) ExecuteRecoveryPreHook(_ http.ResponseWriter, req *http.Reques
 			RequestCookies: cookies(req),
 			RequestURL:     x.RequestURL(req).String(),
 		})
-	}, trace.WithAttributes(attribute.String("hook", KeyWebHook)))
+	})
 }
 
 func (e *WebHook) ExecutePostRecoveryHook(_ http.ResponseWriter, req *http.Request, flow *recovery.Flow, session *session.Session) error {
-	return otelx.WithSpan(req.Context(), "selfservice.hook.ExecutePostRecoveryHook", func(ctx context.Context) error {
+	return otelx.WithSpan(req.Context(), "selfservice.hook.WebHook.ExecutePostRecoveryHook", func(ctx context.Context) error {
 		return e.execute(ctx, &templateContext{
 			Flow:           flow,
 			RequestHeaders: req.Header,
@@ -174,11 +174,11 @@ func (e *WebHook) ExecutePostRecoveryHook(_ http.ResponseWriter, req *http.Reque
 			RequestCookies: cookies(req),
 			Identity:       session.Identity,
 		})
-	}, trace.WithAttributes(attribute.String("hook", KeyWebHook)))
+	})
 }
 
 func (e *WebHook) ExecuteRegistrationPreHook(_ http.ResponseWriter, req *http.Request, flow *registration.Flow) error {
-	return otelx.WithSpan(req.Context(), "selfservice.hook.ExecuteRegistrationPreHook", func(ctx context.Context) error {
+	return otelx.WithSpan(req.Context(), "selfservice.hook.WebHook.ExecuteRegistrationPreHook", func(ctx context.Context) error {
 		return e.execute(ctx, &templateContext{
 			Flow:           flow,
 			RequestHeaders: req.Header,
@@ -186,14 +186,14 @@ func (e *WebHook) ExecuteRegistrationPreHook(_ http.ResponseWriter, req *http.Re
 			RequestURL:     x.RequestURL(req).String(),
 			RequestCookies: cookies(req),
 		})
-	}, trace.WithAttributes(attribute.String("hook", KeyWebHook)))
+	})
 }
 
 func (e *WebHook) ExecutePostRegistrationPrePersistHook(_ http.ResponseWriter, req *http.Request, flow *registration.Flow, id *identity.Identity) error {
 	if !(gjson.GetBytes(e.conf, "can_interrupt").Bool() || gjson.GetBytes(e.conf, "response.parse").Bool()) {
 		return nil
 	}
-	return otelx.WithSpan(req.Context(), "selfservice.hook.ExecutePostRegistrationPrePersistHook", func(ctx context.Context) error {
+	return otelx.WithSpan(req.Context(), "selfservice.hook.WebHook.ExecutePostRegistrationPrePersistHook", func(ctx context.Context) error {
 		return e.execute(ctx, &templateContext{
 			Flow:           flow,
 			RequestHeaders: req.Header,
@@ -202,14 +202,14 @@ func (e *WebHook) ExecutePostRegistrationPrePersistHook(_ http.ResponseWriter, r
 			RequestCookies: cookies(req),
 			Identity:       id,
 		})
-	}, trace.WithAttributes(attribute.String("hook", KeyWebHook)))
+	})
 }
 
 func (e *WebHook) ExecutePostRegistrationPostPersistHook(_ http.ResponseWriter, req *http.Request, flow *registration.Flow, session *session.Session) error {
 	if gjson.GetBytes(e.conf, "can_interrupt").Bool() || gjson.GetBytes(e.conf, "response.parse").Bool() {
 		return nil
 	}
-	return otelx.WithSpan(req.Context(), "selfservice.hook.ExecutePostRegistrationPostPersistHook", func(ctx context.Context) error {
+	return otelx.WithSpan(req.Context(), "selfservice.hook.WebHook.ExecutePostRegistrationPostPersistHook", func(ctx context.Context) error {
 		return e.execute(ctx, &templateContext{
 			Flow:           flow,
 			RequestHeaders: req.Header,
@@ -218,11 +218,11 @@ func (e *WebHook) ExecutePostRegistrationPostPersistHook(_ http.ResponseWriter, 
 			RequestCookies: cookies(req),
 			Identity:       session.Identity,
 		})
-	}, trace.WithAttributes(attribute.String("hook", KeyWebHook)))
+	})
 }
 
 func (e *WebHook) ExecuteSettingsPreHook(_ http.ResponseWriter, req *http.Request, flow *settings.Flow) error {
-	return otelx.WithSpan(req.Context(), "selfservice.hook.ExecuteSettingsPreHook", func(ctx context.Context) error {
+	return otelx.WithSpan(req.Context(), "selfservice.hook.WebHook.ExecuteSettingsPreHook", func(ctx context.Context) error {
 		return e.execute(ctx, &templateContext{
 			Flow:           flow,
 			RequestHeaders: req.Header,
@@ -230,14 +230,14 @@ func (e *WebHook) ExecuteSettingsPreHook(_ http.ResponseWriter, req *http.Reques
 			RequestURL:     x.RequestURL(req).String(),
 			RequestCookies: cookies(req),
 		})
-	}, trace.WithAttributes(attribute.String("hook", KeyWebHook)))
+	})
 }
 
 func (e *WebHook) ExecuteSettingsPostPersistHook(_ http.ResponseWriter, req *http.Request, flow *settings.Flow, id *identity.Identity) error {
 	if gjson.GetBytes(e.conf, "can_interrupt").Bool() {
 		return nil
 	}
-	return otelx.WithSpan(req.Context(), "selfservice.hook.ExecuteSettingsPostPersistHook", func(ctx context.Context) error {
+	return otelx.WithSpan(req.Context(), "selfservice.hook.WebHook.ExecuteSettingsPostPersistHook", func(ctx context.Context) error {
 		return e.execute(ctx, &templateContext{
 			Flow:           flow,
 			RequestHeaders: req.Header,
@@ -246,14 +246,14 @@ func (e *WebHook) ExecuteSettingsPostPersistHook(_ http.ResponseWriter, req *htt
 			RequestCookies: cookies(req),
 			Identity:       id,
 		})
-	}, trace.WithAttributes(attribute.String("hook", KeyWebHook)))
+	})
 }
 
 func (e *WebHook) ExecuteSettingsPrePersistHook(_ http.ResponseWriter, req *http.Request, flow *settings.Flow, id *identity.Identity) error {
 	if !gjson.GetBytes(e.conf, "can_interrupt").Bool() {
 		return nil
 	}
-	return otelx.WithSpan(req.Context(), "selfservice.hook.ExecuteSettingsPrePersistHook", func(ctx context.Context) error {
+	return otelx.WithSpan(req.Context(), "selfservice.hook.WebHook.ExecuteSettingsPrePersistHook", func(ctx context.Context) error {
 		return e.execute(ctx, &templateContext{
 			Flow:           flow,
 			RequestHeaders: req.Header,
@@ -262,7 +262,7 @@ func (e *WebHook) ExecuteSettingsPrePersistHook(_ http.ResponseWriter, req *http
 			RequestCookies: cookies(req),
 			Identity:       id,
 		})
-	}, trace.WithAttributes(attribute.String("hook", KeyWebHook)))
+	})
 }
 
 func (e *WebHook) execute(ctx context.Context, data *templateContext) error {
