@@ -32,6 +32,7 @@ context("Account Recovery Errors", () => {
         cy.disableVerification()
         cy.enableRecovery()
         cy.useRecoveryStrategy("code")
+        cy.notifyUnknownRecipients("recovery", false)
       })
 
       it("should invalidate flow if wrong code is submitted too often", () => {
@@ -96,6 +97,7 @@ context("Account Recovery Errors", () => {
       })
 
       it("should receive a stub email when recovering a non-existent account", () => {
+        cy.notifyUnknownRecipients("recovery")
         cy.visit(recovery)
 
         const email = gen.email()
@@ -183,6 +185,7 @@ context("Account Recovery Errors", () => {
       })
 
       it("remote recovery email template (recovery_code_invalid)", () => {
+        cy.notifyUnknownRecipients("recovery")
         cy.remoteCourierRecoveryCodeTemplates()
         cy.visit(recovery)
         cy.get(appPrefix(app) + "input[name='email']").type(email())

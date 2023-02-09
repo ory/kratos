@@ -19,7 +19,6 @@ selfservice:
       use: code
       after:
         default_browser_return_url: http://localhost:4455/
-      notify_unknown_recipients: true
 
     logout:
       after:

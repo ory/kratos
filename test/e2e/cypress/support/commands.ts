@@ -738,23 +738,8 @@ Cypress.Commands.add("remoteCourierRecoveryCodeTemplates", ({} = {}) => {
 
 Cypress.Commands.add("resetCourierTemplates", (type) => {
   updateConfigFile((config) => {
-    config.courier.templates = {
-      [type]: {
-        invalid: {
-          email: {
-            body: {},
-            subject: "",
-          },
-        },
-        valid: {
-          email: {
-            body: {
-              body: {},
-              subject: "",
-            },
-          },
-        },
-      },
+    if (config?.courier?.templates && type in config.courier.templates) {
+      delete config.courier.templates[type]
     }
     return config
   })
@@ -1344,6 +1329,16 @@ Cypress.Commands.add(
       cy.get(selector).then(($el) => {
         $el.removeAttr(attribute)
       })
+    })
+  },
+)
+
+Cypress.Commands.add(
+  "notifyUnknownRecipients",
+  (flow: "recovery" | "verification", value: boolean = true) => {
+    cy.updateConfigFile((config) => {
+      config.selfservice.flows[flow].notify_unknown_recipients = value
+      return config
     })
   },
 )

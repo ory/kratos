@@ -34,6 +34,7 @@ context("Account Recovery Errors", () => {
         cy.useRecoveryStrategy("link")
         cy.disableRecoveryStrategy("code")
         cy.clearAllCookies()
+        cy.notifyUnknownRecipients("verification", false)
       })
 
       it("responds with a HTML response on link click of an API flow if the link is expired", () => {
@@ -85,6 +86,7 @@ context("Account Recovery Errors", () => {
       })
 
       it("should receive a stub email when recovering a non-existent account", () => {
+        cy.notifyUnknownRecipients("recovery")
         cy.visit(recovery)
 
         const email = gen.email()
@@ -204,6 +206,7 @@ context("Account Recovery Errors", () => {
       })
 
       it("invalid remote recovery email template", () => {
+        cy.notifyUnknownRecipients("recovery")
         cy.remoteCourierRecoveryTemplates()
         const identity = gen.identityWithWebsite()
         cy.recoverApi({ email: identity.email })

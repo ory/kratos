@@ -14,7 +14,6 @@ selfservice:
       ui_url: http://localhost:4455/recovery
       enabled: true
       lifespan: 5m
-      notify_unknown_recipients: true
 
     logout:
       after:
