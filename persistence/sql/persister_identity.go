@@ -109,7 +109,7 @@ WHERE ici.identifier = ?
 		nid,
 	).First(&find); err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-			return nil, sqlcon.HandleError(err) // herodot.ErrNotFound.WithTrace(err).WithReasonf(`No identity matching credentials identifier "%s" could be found.`, match)
+			return nil, sqlcon.HandleError(err)
 		}
 
 		return nil, sqlcon.HandleError(err)
