@@ -6,7 +6,6 @@ package code
 import (
 	"context"
 	"net/http"
-	"net/url"
 	"time"
 
 	"github.com/pkg/errors"
@@ -277,7 +276,7 @@ func (s *Strategy) verificationUseCode(w http.ResponseWriter, r *http.Request, c
 		return s.retryVerificationFlowWithError(w, r, f.Type, err)
 	}
 
-	returnTo := s.getRedirectURL(r.Context(), f)
+	returnTo := f.ContinueURL(r.Context(), s.deps.Config())
 
 	f.UI = &container.Container{
 		Method: "GET",
@@ -298,28 +297,6 @@ func (s *Strategy) verificationUseCode(w http.ResponseWriter, r *http.Request, c
 	}
 
 	return nil
-}
-
-func (s *Strategy) getRedirectURL(ctx context.Context, f *verification.Flow) *url.URL {
-	defaultRedirectURL := s.deps.Config().SelfServiceBrowserDefaultReturnTo(ctx)
-
-	verificationRequestURL, err := urlx.Parse(f.GetRequestURL())
-	if err != nil {
-		// Initial flow request url is not a valid URL, use the default
-		return defaultRedirectURL
-	}
-
-	verificationRequest := http.Request{URL: verificationRequestURL}
-
-	returnTo, err := x.SecureRedirectTo(&verificationRequest, defaultRedirectURL,
-		x.SecureRedirectAllowSelfServiceURLs(s.deps.Config().SelfPublicURL(ctx)),
-		x.SecureRedirectAllowURLs(s.deps.Config().SelfServiceBrowserAllowedReturnToDomains(ctx)),
-	)
-	if err != nil {
-		// Initial flow request url is not allowd, use the default
-		return defaultRedirectURL
-	}
-	return returnTo
 }
 
 func (s *Strategy) retryVerificationFlowWithMessage(w http.ResponseWriter, r *http.Request, ft flow.Type, message *text.Message) error {

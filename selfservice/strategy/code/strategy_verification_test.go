@@ -368,8 +368,8 @@ func TestVerification(t *testing.T) {
 		assert.EqualValues(t, "passed_challenge", gjson.Get(actualBody, "state").String())
 	})
 
-	newValidFlow := func(t *testing.T, requestURL string) (*verification.Flow, *code.VerificationCode, string) {
-		f, err := verification.NewFlow(conf, time.Hour, x.FakeCSRFToken, httptest.NewRequest("GET", requestURL, nil), code.NewStrategy(reg), flow.TypeBrowser)
+	newValidFlow := func(t *testing.T, fType flow.Type, requestURL string) (*verification.Flow, *code.VerificationCode, string) {
+		f, err := verification.NewFlow(conf, time.Hour, x.FakeCSRFToken, httptest.NewRequest("GET", requestURL, nil), code.NewStrategy(reg), fType)
 		require.NoError(t, err)
 		f.State = verification.StateEmailSent
 		require.NoError(t, reg.VerificationFlowPersister().CreateVerificationFlow(context.Background(), f))
@@ -388,12 +388,16 @@ func TestVerification(t *testing.T) {
 		return f, verificationCode, params.RawCode
 	}
 
+	newValidBrowserFlow := func(t *testing.T, requestURL string) (*verification.Flow, *code.VerificationCode, string) {
+		return newValidFlow(t, flow.TypeBrowser, requestURL)
+	}
+
 	t.Run("case=contains link to return_to", func(t *testing.T) {
 		returnToURL := public.URL + "/after-verification"
 		conf.MustSet(ctx, config.ViperKeyURLsAllowedReturnToDomains, []string{returnToURL})
 		client := &http.Client{}
 
-		f, _, rawCode := newValidFlow(t, public.URL+verification.RouteInitBrowserFlow+"?"+url.Values{"return_to": {returnToURL}}.Encode())
+		f, _, rawCode := newValidBrowserFlow(t, public.URL+verification.RouteInitBrowserFlow+"?"+url.Values{"return_to": {returnToURL}}.Encode())
 
 		action := public.URL + verification.RouteSubmitFlow + "?flow=" + f.ID.String()
 
@@ -574,6 +578,57 @@ func TestVerification(t *testing.T) {
 		body, res = submitVerificationCode(t, body, c, code)
 		assert.Equal(t, http.StatusOK, res.StatusCode)
 		testhelpers.AssertMessage(t, []byte(body), "You successfully verified your email address.")
+	})
+
+	t.Run("case=respects return_to URI parameter", func(t *testing.T) {
+		returnToURL := public.URL + "/after-verification"
+		conf.MustSet(ctx, config.ViperKeyURLsAllowedReturnToDomains, []string{returnToURL})
+
+		for _, fType := range []flow.Type{flow.TypeBrowser, flow.TypeAPI} {
+			t.Run(fmt.Sprintf("type=%s", fType), func(t *testing.T) {
+				client := testhelpers.NewClientWithCookies(t)
+				flow, _, rawCode := newValidFlow(t, fType, public.URL+verification.RouteInitBrowserFlow+"?"+url.Values{"return_to": {returnToURL}}.Encode())
+
+				body := fmt.Sprintf(
+					`{"csrf_token":"%s","code":"%s"}`, flow.CSRFToken, rawCode,
+				)
+
+				res, err := client.Post(public.URL+verification.RouteSubmitFlow+"?"+url.Values{"flow": {flow.ID.String()}}.Encode(), "application/json", bytes.NewBuffer([]byte(body)))
+				require.NoError(t, err)
+				assert.Equal(t, http.StatusOK, res.StatusCode)
+				responseBody := gjson.ParseBytes(ioutilx.MustReadAll(res.Body))
+
+				assert.Equal(t, responseBody.Get("state").String(), "passed_challenge", "%v", responseBody)
+				assert.True(t, responseBody.Get("ui.nodes.#(attributes.id==continue)").Exists(), "%v", responseBody)
+				assert.Equal(t, returnToURL, responseBody.Get("ui.nodes.#(attributes.id==continue).attributes.href").String(), "%v", responseBody)
+			})
+		}
+	})
+
+	t.Run("case=contains default return to url", func(t *testing.T) {
+		globalReturnTo := public.URL + "/global"
+		conf.MustSet(ctx, config.ViperKeySelfServiceBrowserDefaultReturnTo, globalReturnTo)
+
+		for _, fType := range []flow.Type{flow.TypeBrowser, flow.TypeAPI} {
+			t.Run(fmt.Sprintf("type=%s", fType), func(t *testing.T) {
+				client := testhelpers.NewClientWithCookies(t)
+				flow, _, rawCode := newValidFlow(t, fType, public.URL+verification.RouteInitBrowserFlow)
+
+				body := fmt.Sprintf(
+					`{"csrf_token":"%s","code":"%s"}`, flow.CSRFToken, rawCode,
+				)
+
+				res, err := client.Post(public.URL+verification.RouteSubmitFlow+"?"+url.Values{"flow": {flow.ID.String()}}.Encode(), "application/json", bytes.NewBuffer([]byte(body)))
+				require.NoError(t, err)
+				assert.Equal(t, http.StatusOK, res.StatusCode)
+				responseBody := gjson.ParseBytes(ioutilx.MustReadAll(res.Body))
+				t.Logf("%v", responseBody)
+
+				assert.Equal(t, responseBody.Get("state").String(), "passed_challenge", "%v", responseBody)
+				assert.True(t, responseBody.Get("ui.nodes.#(attributes.id==continue)").Exists(), "%v", responseBody)
+				assert.Equal(t, globalReturnTo, responseBody.Get("ui.nodes.#(attributes.id==continue).attributes.href").String(), "%v", responseBody)
+			})
+		}
 	})
 
 }
