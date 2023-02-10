@@ -140,7 +140,7 @@ type listIdentitiesParameters struct {
 //	Schemes: http, https
 //
 //	Security:
-//	  oryAccessToken:
+//	  APIKey:
 //
 //	Responses:
 //	  200: listIdentities
@@ -208,7 +208,7 @@ type getIdentity struct {
 //	Schemes: http, https
 //
 //	Security:
-//	  oryAccessToken:
+//	  APIKey:
 //
 //	Responses:
 //	  200: identity
@@ -375,7 +375,7 @@ type AdminCreateIdentityImportCredentialsOidcProvider struct {
 //	Schemes: http, https
 //
 //	Security:
-//	  oryAccessToken:
+//	  APIKey:
 //
 //	Responses:
 //	  201: identity
@@ -500,7 +500,7 @@ type UpdateIdentityBody struct {
 //	Schemes: http, https
 //
 //	Security:
-//	  oryAccessToken:
+//	  APIKey:
 //
 //	Responses:
 //	  200: identity
@@ -591,7 +591,7 @@ type deleteIdentity struct {
 //	Schemes: http, https
 //
 //	Security:
-//	  oryAccessToken:
+//	  APIKey:
 //
 //	Responses:
 //	  204: emptyResponse
@@ -639,7 +639,7 @@ type patchIdentity struct {
 //	Schemes: http, https
 //
 //	Security:
-//	  oryAccessToken:
+//	  APIKey:
 //
 //	Responses:
 //	  200: identity
@@ -770,7 +770,7 @@ type deleteIdentityCredentials struct {
 //	Schemes: http, https
 //
 //	Security:
-//	  oryAccessToken:
+//	  APIKey:
 //
 //	Responses:
 //	  200: identity

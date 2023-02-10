@@ -143,7 +143,7 @@ type recoveryCodeForIdentity struct {
 //	Schemes: http, https
 //
 //	Security:
-//		oryAccessToken:
+//		APIKey:
 //
 //	Responses:
 //		201: recoveryCodeForIdentity

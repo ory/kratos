@@ -372,7 +372,7 @@ func (a *IdentityApiService) CreateIdentityExecute(r IdentityApiApiCreateIdentit
 	if r.ctx != nil {
 		// API Key Authentication
 		if auth, ok := r.ctx.Value(ContextAPIKeys).(map[string]APIKey); ok {
-			if apiKey, ok := auth["oryAccessToken"]; ok {
+			if apiKey, ok := auth["APIKey"]; ok {
 				var key string
 				if apiKey.Prefix != "" {
 					key = apiKey.Prefix + " " + apiKey.Key
@@ -524,7 +524,7 @@ func (a *IdentityApiService) CreateRecoveryCodeForIdentityExecute(r IdentityApiA
 	if r.ctx != nil {
 		// API Key Authentication
 		if auth, ok := r.ctx.Value(ContextAPIKeys).(map[string]APIKey); ok {
-			if apiKey, ok := auth["oryAccessToken"]; ok {
+			if apiKey, ok := auth["APIKey"]; ok {
 				var key string
 				if apiKey.Prefix != "" {
 					key = apiKey.Prefix + " " + apiKey.Key
@@ -676,7 +676,7 @@ func (a *IdentityApiService) CreateRecoveryLinkForIdentityExecute(r IdentityApiA
 	if r.ctx != nil {
 		// API Key Authentication
 		if auth, ok := r.ctx.Value(ContextAPIKeys).(map[string]APIKey); ok {
-			if apiKey, ok := auth["oryAccessToken"]; ok {
+			if apiKey, ok := auth["APIKey"]; ok {
 				var key string
 				if apiKey.Prefix != "" {
 					key = apiKey.Prefix + " " + apiKey.Key
@@ -823,7 +823,7 @@ func (a *IdentityApiService) DeleteIdentityExecute(r IdentityApiApiDeleteIdentit
 	if r.ctx != nil {
 		// API Key Authentication
 		if auth, ok := r.ctx.Value(ContextAPIKeys).(map[string]APIKey); ok {
-			if apiKey, ok := auth["oryAccessToken"]; ok {
+			if apiKey, ok := auth["APIKey"]; ok {
 				var key string
 				if apiKey.Prefix != "" {
 					key = apiKey.Prefix + " " + apiKey.Key
@@ -956,7 +956,7 @@ func (a *IdentityApiService) DeleteIdentityCredentialsExecute(r IdentityApiApiDe
 	if r.ctx != nil {
 		// API Key Authentication
 		if auth, ok := r.ctx.Value(ContextAPIKeys).(map[string]APIKey); ok {
-			if apiKey, ok := auth["oryAccessToken"]; ok {
+			if apiKey, ok := auth["APIKey"]; ok {
 				var key string
 				if apiKey.Prefix != "" {
 					key = apiKey.Prefix + " " + apiKey.Key
@@ -1090,7 +1090,7 @@ func (a *IdentityApiService) DeleteIdentitySessionsExecute(r IdentityApiApiDelet
 	if r.ctx != nil {
 		// API Key Authentication
 		if auth, ok := r.ctx.Value(ContextAPIKeys).(map[string]APIKey); ok {
-			if apiKey, ok := auth["oryAccessToken"]; ok {
+			if apiKey, ok := auth["APIKey"]; ok {
 				var key string
 				if apiKey.Prefix != "" {
 					key = apiKey.Prefix + " " + apiKey.Key
@@ -1235,7 +1235,7 @@ func (a *IdentityApiService) DisableSessionExecute(r IdentityApiApiDisableSessio
 	if r.ctx != nil {
 		// API Key Authentication
 		if auth, ok := r.ctx.Value(ContextAPIKeys).(map[string]APIKey); ok {
-			if apiKey, ok := auth["oryAccessToken"]; ok {
+			if apiKey, ok := auth["APIKey"]; ok {
 				var key string
 				if apiKey.Prefix != "" {
 					key = apiKey.Prefix + " " + apiKey.Key
@@ -1376,7 +1376,7 @@ func (a *IdentityApiService) ExtendSessionExecute(r IdentityApiApiExtendSessionR
 	if r.ctx != nil {
 		// API Key Authentication
 		if auth, ok := r.ctx.Value(ContextAPIKeys).(map[string]APIKey); ok {
-			if apiKey, ok := auth["oryAccessToken"]; ok {
+			if apiKey, ok := auth["APIKey"]; ok {
 				var key string
 				if apiKey.Prefix != "" {
 					key = apiKey.Prefix + " " + apiKey.Key
@@ -1541,7 +1541,7 @@ func (a *IdentityApiService) GetIdentityExecute(r IdentityApiApiGetIdentityReque
 	if r.ctx != nil {
 		// API Key Authentication
 		if auth, ok := r.ctx.Value(ContextAPIKeys).(map[string]APIKey); ok {
-			if apiKey, ok := auth["oryAccessToken"]; ok {
+			if apiKey, ok := auth["APIKey"]; ok {
 				var key string
 				if apiKey.Prefix != "" {
 					key = apiKey.Prefix + " " + apiKey.Key
@@ -1818,7 +1818,7 @@ func (a *IdentityApiService) GetSessionExecute(r IdentityApiApiGetSessionRequest
 	if r.ctx != nil {
 		// API Key Authentication
 		if auth, ok := r.ctx.Value(ContextAPIKeys).(map[string]APIKey); ok {
-			if apiKey, ok := auth["oryAccessToken"]; ok {
+			if apiKey, ok := auth["APIKey"]; ok {
 				var key string
 				if apiKey.Prefix != "" {
 					key = apiKey.Prefix + " " + apiKey.Key
@@ -1967,7 +1967,7 @@ func (a *IdentityApiService) ListIdentitiesExecute(r IdentityApiApiListIdentitie
 	if r.ctx != nil {
 		// API Key Authentication
 		if auth, ok := r.ctx.Value(ContextAPIKeys).(map[string]APIKey); ok {
-			if apiKey, ok := auth["oryAccessToken"]; ok {
+			if apiKey, ok := auth["APIKey"]; ok {
 				var key string
 				if apiKey.Prefix != "" {
 					key = apiKey.Prefix + " " + apiKey.Key
@@ -2243,7 +2243,7 @@ func (a *IdentityApiService) ListIdentitySessionsExecute(r IdentityApiApiListIde
 	if r.ctx != nil {
 		// API Key Authentication
 		if auth, ok := r.ctx.Value(ContextAPIKeys).(map[string]APIKey); ok {
-			if apiKey, ok := auth["oryAccessToken"]; ok {
+			if apiKey, ok := auth["APIKey"]; ok {
 				var key string
 				if apiKey.Prefix != "" {
 					key = apiKey.Prefix + " " + apiKey.Key
@@ -2426,7 +2426,7 @@ func (a *IdentityApiService) ListSessionsExecute(r IdentityApiApiListSessionsReq
 	if r.ctx != nil {
 		// API Key Authentication
 		if auth, ok := r.ctx.Value(ContextAPIKeys).(map[string]APIKey); ok {
-			if apiKey, ok := auth["oryAccessToken"]; ok {
+			if apiKey, ok := auth["APIKey"]; ok {
 				var key string
 				if apiKey.Prefix != "" {
 					key = apiKey.Prefix + " " + apiKey.Key
@@ -2572,7 +2572,7 @@ func (a *IdentityApiService) PatchIdentityExecute(r IdentityApiApiPatchIdentityR
 	if r.ctx != nil {
 		// API Key Authentication
 		if auth, ok := r.ctx.Value(ContextAPIKeys).(map[string]APIKey); ok {
-			if apiKey, ok := auth["oryAccessToken"]; ok {
+			if apiKey, ok := auth["APIKey"]; ok {
 				var key string
 				if apiKey.Prefix != "" {
 					key = apiKey.Prefix + " " + apiKey.Key
@@ -2738,7 +2738,7 @@ func (a *IdentityApiService) UpdateIdentityExecute(r IdentityApiApiUpdateIdentit
 	if r.ctx != nil {
 		// API Key Authentication
 		if auth, ok := r.ctx.Value(ContextAPIKeys).(map[string]APIKey); ok {
-			if apiKey, ok := auth["oryAccessToken"]; ok {
+			if apiKey, ok := auth["APIKey"]; ok {
 				var key string
 				if apiKey.Prefix != "" {
 					key = apiKey.Prefix + " " + apiKey.Key

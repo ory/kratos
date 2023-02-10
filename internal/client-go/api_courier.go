@@ -131,7 +131,7 @@ func (a *CourierApiService) GetCourierMessageExecute(r CourierApiApiGetCourierMe
 	if r.ctx != nil {
 		// API Key Authentication
 		if auth, ok := r.ctx.Value(ContextAPIKeys).(map[string]APIKey); ok {
-			if apiKey, ok := auth["oryAccessToken"]; ok {
+			if apiKey, ok := auth["APIKey"]; ok {
 				var key string
 				if apiKey.Prefix != "" {
 					key = apiKey.Prefix + " " + apiKey.Key
@@ -296,7 +296,7 @@ func (a *CourierApiService) ListCourierMessagesExecute(r CourierApiApiListCourie
 	if r.ctx != nil {
 		// API Key Authentication
 		if auth, ok := r.ctx.Value(ContextAPIKeys).(map[string]APIKey); ok {
-			if apiKey, ok := auth["oryAccessToken"]; ok {
+			if apiKey, ok := auth["APIKey"]; ok {
 				var key string
 				if apiKey.Prefix != "" {
 					key = apiKey.Prefix + " " + apiKey.Key
