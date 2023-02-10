@@ -87,31 +87,7 @@ func (p *Persister) FindByCredentialsIdentifier(ctx context.Context, match strin
 	ctx, span := p.r.Tracer(ctx).Tracer().Start(ctx, "persistence.sql.FindByCredentialsIdentifier")
 	defer span.End()
 
-	nid := p.NetworkID(ctx)
-
-	var find struct {
-		IdentityID uuid.UUID `db:"identity_id"`
-	}
-
-	// #nosec G201
-	if err := p.GetConnection(ctx).RawQuery(fmt.Sprintf(`SELECT
-    ic.identity_id
-FROM %s ic
-    INNER JOIN %s ici on ic.id = ici.identity_credential_id
-WHERE ici.identifier = ?
-  AND ic.nid = ?
-  AND ici.nid = ?`,
-		"identity_credentials",
-		"identity_credential_identifiers",
-	),
-		match,
-		nid,
-		nid,
-	).First(&find); err != nil {
-		return nil, sqlcon.HandleError(err)
-	}
-
-	i, err := p.GetIdentity(ctx, find.IdentityID, identity.ExpandDefault)
+	i, err := p.findIdentityByIdentifier(ctx, nil, match)
 	if err != nil {
 		return nil, err
 	}
@@ -123,42 +99,10 @@ func (p *Persister) FindByCredentialsTypeAndIdentifier(ctx context.Context, ct i
 	ctx, span := p.r.Tracer(ctx).Tracer().Start(ctx, "persistence.sql.FindByCredentialsTypeAndIdentifier")
 	defer span.End()
 
-	nid := p.NetworkID(ctx)
-
-	var find struct {
-		IdentityID uuid.UUID `db:"identity_id"`
-	}
-
 	// Force case-insensitivity and trimming for identifiers
 	match = p.normalizeIdentifier(ct, match)
 
-	// #nosec G201
-	if err := p.GetConnection(ctx).RawQuery(fmt.Sprintf(`SELECT
-    ic.identity_id
-FROM %s ic
-         INNER JOIN %s ict on ic.identity_credential_type_id = ict.id
-         INNER JOIN %s ici on ic.id = ici.identity_credential_id AND ici.identity_credential_type_id = ict.id
-WHERE ici.identifier = ?
-  AND ic.nid = ?
-  AND ici.nid = ?
-  AND ict.name = ?`,
-		"identity_credentials",
-		"identity_credential_types",
-		"identity_credential_identifiers",
-	),
-		match,
-		nid,
-		nid,
-		ct,
-	).First(&find); err != nil {
-		if errors.Is(err, sql.ErrNoRows) {
-			return nil, nil, sqlcon.HandleError(err) // herodot.ErrNotFound.WithTrace(err).WithReasonf(`No identity matching credentials identifier "%s" could be found.`, match)
-		}
-
-		return nil, nil, sqlcon.HandleError(err)
-	}
-
-	i, err := p.GetIdentityConfidential(ctx, find.IdentityID)
+	i, err := p.findIdentityByIdentifier(ctx, &ct, match)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -169,6 +113,67 @@ WHERE ici.identifier = ?
 	}
 
 	return i.CopyWithoutCredentials(), creds, nil
+}
+
+func (p *Persister) findIdentityByIdentifier(ctx context.Context, ct *identity.CredentialsType, match string) (*identity.Identity, error) {
+	var find struct {
+		IdentityID uuid.UUID `db:"identity_id"`
+	}
+
+	nid := p.NetworkID(ctx)
+
+	if ct != nil {
+		// #nosec G201
+		if err := p.GetConnection(ctx).RawQuery(fmt.Sprintf(`SELECT
+    ic.identity_id
+FROM %s ic
+         INNER JOIN %s ict on ic.identity_credential_type_id = ict.id
+         INNER JOIN %s ici on ic.id = ici.identity_credential_id AND ici.identity_credential_type_id = ict.id
+WHERE ici.identifier = ?
+  AND ic.nid = ?
+  AND ici.nid = ?
+  AND ict.name = ?`,
+			"identity_credentials",
+			"identity_credential_types",
+			"identity_credential_identifiers",
+		),
+			match,
+			nid,
+			nid,
+			ct,
+		).First(&find); err != nil {
+			if errors.Is(err, sql.ErrNoRows) {
+				return nil, sqlcon.HandleError(err) // herodot.ErrNotFound.WithTrace(err).WithReasonf(`No identity matching credentials identifier "%s" could be found.`, match)
+			}
+
+			return nil, sqlcon.HandleError(err)
+		}
+	} else {
+		// #nosec G201
+		if err := p.GetConnection(ctx).RawQuery(fmt.Sprintf(`SELECT
+    ic.identity_id
+FROM %s ic
+    INNER JOIN %s ici on ic.id = ici.identity_credential_id
+WHERE ici.identifier = ?
+  AND ic.nid = ?
+  AND ici.nid = ?`,
+			"identity_credentials",
+			"identity_credential_identifiers",
+		),
+			match,
+			nid,
+			nid,
+		).First(&find); err != nil {
+			return nil, sqlcon.HandleError(err)
+		}
+	}
+
+	i, err := p.GetIdentity(ctx, find.IdentityID, identity.ExpandEverything)
+	if err != nil {
+		return nil, err
+	}
+
+	return i, nil
 }
 
 func (p *Persister) findIdentityCredentialsType(ctx context.Context, ct identity.CredentialsType) (*identity.CredentialsTypeTable, error) {

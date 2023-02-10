@@ -594,21 +594,46 @@ func TestPool(ctx context.Context, conf *config.Config, p interface {
 		})
 
 		t.Run("case=find identity by its credentials identifier", func(t *testing.T) {
-			expected := passwordIdentity("", "find-identity-by-identifier@ory.sh")
-			expected.Traits = identity.Traits(`{}`)
+			var expectedIdentifiers []string
+			var expectedIdentities []*identity.Identity
 
-			require.NoError(t, p.CreateIdentity(ctx, expected))
-			createdIDs = append(createdIDs, expected.ID)
+			for _, c := range []identity.CredentialsType{
+				identity.CredentialsTypePassword,
+				identity.CredentialsTypeOIDC,
+				identity.CredentialsTypeWebAuthn,
+			} {
+				identityIdentifier := fmt.Sprintf("find-identity-by-identifier-%s@ory.sh", c)
+				expected := identity.NewIdentity("")
+				expected.SetCredentials(c, identity.Credentials{Type: c, Identifiers: []string{identityIdentifier}, Config: sqlxx.JSONRawMessage(`{}`)})
 
-			actual, err := p.FindByCredentialsIdentifier(ctx, "find-identity-by-identifier@ory.sh")
-			require.NoError(t, err)
+				require.NoError(t, p.CreateIdentity(ctx, expected))
+				createdIDs = append(createdIDs, expected.ID)
+				expectedIdentifiers = append(expectedIdentifiers, identityIdentifier)
+				expectedIdentities = append(expectedIdentities, expected)
+			}
 
-			expected.Credentials = nil
-			assertEqual(t, expected, actual)
+			for c, ct := range []identity.CredentialsType{
+				identity.CredentialsTypePassword,
+				identity.CredentialsTypeOIDC,
+				identity.CredentialsTypeWebAuthn,
+			} {
+				t.Run(ct.String(), func(t *testing.T) {
+					actual, err := p.FindByCredentialsIdentifier(ctx, expectedIdentifiers[c])
+					require.NoError(t, err)
+
+					expected := expectedIdentities[c]
+					assert.EqualValues(t, expected.Credentials[ct].ID, actual.Credentials[ct].ID)
+					assert.EqualValues(t, expected.Credentials[ct].Identifiers, actual.Credentials[ct].Identifiers)
+
+					expected.Credentials = nil
+					actual.Credentials = nil
+					assertEqual(t, expected, actual)
+				})
+			}
 
 			t.Run("not if on another network", func(t *testing.T) {
 				_, p := testhelpers.NewNetwork(t, ctx, p)
-				_, err := p.FindByCredentialsIdentifier(ctx, "find-identity-by-identifier@ory.sh")
+				_, err := p.FindByCredentialsIdentifier(ctx, "find-identity-by-identifier-password@ory.sh")
 				require.ErrorIs(t, err, sqlcon.ErrNoRows)
 			})
 		})
