@@ -117,10 +117,6 @@ func TestHandler(t *testing.T) {
 		}
 	})
 
-	t.Run("case=should return 404 on a non-existing resource for identity lookup", func(t *testing.T) {
-		_ = get(t, adminTS, "/identities?identifier=does-not-exist", http.StatusNotFound)
-	})
-
 	t.Run("case=should fail to create an identity because schema id does not exist", func(t *testing.T) {
 		for name, ts := range map[string]*httptest.Server{"public": publicTS, "admin": adminTS} {
 			t.Run("endpoint="+name, func(t *testing.T) {
@@ -377,6 +373,11 @@ func TestHandler(t *testing.T) {
 					assert.Empty(t, res.Get("credentials").String(), "%s", res.Raw)
 				})
 			}
+		})
+
+		t.Run("case=should return an empty array on a failed lookup with identifier", func(t *testing.T) {
+			res := get(t, adminTS, "/identities?identifier=find.by.non.existing.identifier@bar.com", http.StatusOK)
+			assert.EqualValues(t, int64(0), res.Get("#").Int(), "%s", res.Raw)
 		})
 
 		t.Run("case=should be able to lookup the identity using identifier", func(t *testing.T) {

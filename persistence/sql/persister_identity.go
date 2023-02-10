@@ -108,7 +108,6 @@ WHERE ici.identifier = ?
 		nid,
 		nid,
 	).First(&find); err != nil {
-
 		return nil, sqlcon.HandleError(err)
 	}
 

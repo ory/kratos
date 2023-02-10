@@ -10,6 +10,8 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/ory/x/sqlcon"
+
 	"github.com/ory/x/pagination/migrationpagination"
 
 	"github.com/ory/kratos/hash"
@@ -158,6 +160,11 @@ func (h *Handler) list(w http.ResponseWriter, r *http.Request, _ httprouter.Para
 	if identifier := r.URL.Query().Get("identifier"); identifier != "" {
 		i, err := h.r.PrivilegedIdentityPool().FindByCredentialsIdentifier(r.Context(), identifier)
 		if err != nil {
+			if errors.Is(err, sqlcon.ErrNoRows) {
+				h.r.Writer().Write(w, r, []Identity{})
+				return
+			}
+
 			h.r.Writer().WriteError(w, r, err)
 			return
 		}
