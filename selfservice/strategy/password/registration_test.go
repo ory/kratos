@@ -9,7 +9,6 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"net/url"
-	"reflect"
 	"strings"
 	"testing"
 	"time"
@@ -290,7 +289,7 @@ func TestRegistration(t *testing.T) {
 		})
 
 		t.Run("case=should return correct error ids from validation failures", func(t *testing.T) {
-			test := func(t *testing.T, constraint string, value any, expectedId text.ID, expectedMesage string) {
+			test := func(t *testing.T, constraint string, setValues func(url.Values), expectedId text.ID, expectedMesage string) {
 				template := `{
 					"$id": "https://example.com/person.schema.json",
 					"$schema": "http://json-schema.org/draft-07/schema#",
@@ -330,20 +329,9 @@ func TestRegistration(t *testing.T) {
 				c := f.Ui
 
 				values := testhelpers.SDKFormFieldsToURLValues(c.Nodes)
+				setValues(values)
 				values.Set("traits.username", "registration-identifier-9")
 				values.Set("password", x.NewUUID().String())
-				const key = "traits.foobar"
-				v := reflect.ValueOf(value)
-				switch v.Kind() {
-				case reflect.Array:
-					fallthrough
-				case reflect.Slice:
-					for i := 0; i < v.Len(); i++ {
-						values.Add(key, fmt.Sprintf("%v", v.Index(i).Interface()))
-					}
-				default:
-					values.Set(key, fmt.Sprintf("%v", value))
-				}
 				actual, _ := testhelpers.RegistrationMakeRequest(t, false, false, f, browserClient, values.Encode())
 
 				assert.NotEmpty(t, gjson.Get(actual, "id").String(), "%s", actual)
@@ -357,52 +345,53 @@ func TestRegistration(t *testing.T) {
 				assert.Equal(t, "error", gjson.Get(actual, "ui.nodes.#(attributes.name==traits.foobar).messages.0.type").String())
 			}
 
+			const key = "traits.foobar"
 			t.Run("case=string violating minLength", func(t *testing.T) {
-				test(t, `"type": "string", "minLength": 5`, "bar", text.ErrorValidationMinLength, "length must be >= 5, but got 3")
+				test(t, `"type": "string", "minLength": 5`, func(v url.Values) { v.Set(key, "bar") }, text.ErrorValidationMinLength, "length must be >= 5, but got 3")
 			})
 
 			t.Run("case=string violating maxLength", func(t *testing.T) {
-				test(t, `"type": "string", "maxLength": 5`, "qwerty", text.ErrorValidationMaxLength, "length must be <= 5, but got 6")
+				test(t, `"type": "string", "maxLength": 5`, func(v url.Values) { v.Set(key, "qwerty") }, text.ErrorValidationMaxLength, "length must be <= 5, but got 6")
 			})
 
 			t.Run("case=string violating pattern", func(t *testing.T) {
-				test(t, `"type": "string", "pattern": "^[a-z]*$"`, "FUBAR", text.ErrorValidationInvalidFormat, "does not match pattern \"^[a-z]*$\"")
+				test(t, `"type": "string", "pattern": "^[a-z]*$"`, func(v url.Values) { v.Set(key, "FUBAR") }, text.ErrorValidationInvalidFormat, "does not match pattern \"^[a-z]*$\"")
 			})
 
 			t.Run("case=number violating minimum", func(t *testing.T) {
-				test(t, `"type": "number", "minimum": 5`, 3, text.ErrorValidationMinimum, "must be >= 5 but found 3")
+				test(t, `"type": "number", "minimum": 5`, func(v url.Values) { v.Set(key, "3") }, text.ErrorValidationMinimum, "must be >= 5 but found 3")
 			})
 
 			t.Run("case=number violating exclusiveMinimum", func(t *testing.T) {
-				test(t, `"type": "number", "exclusiveMinimum": 5`, 5, text.ErrorValidationExclusiveMinimum, "must be > 5 but found 5")
+				test(t, `"type": "number", "exclusiveMinimum": 5`, func(v url.Values) { v.Set(key, "5") }, text.ErrorValidationExclusiveMinimum, "must be > 5 but found 5")
 			})
 
 			t.Run("case=number violating maximum", func(t *testing.T) {
-				test(t, `"type": "number", "maximum": 5`, 6, text.ErrorValidationMaximum, "must be <= 5 but found 6")
+				test(t, `"type": "number", "maximum": 5`, func(v url.Values) { v.Set(key, "6") }, text.ErrorValidationMaximum, "must be <= 5 but found 6")
 			})
 
 			t.Run("case=number violating exclusiveMaximum", func(t *testing.T) {
-				test(t, `"type": "number", "exclusiveMaximum": 5`, 5, text.ErrorValidationExclusiveMaximum, "must be < 5 but found 5")
+				test(t, `"type": "number", "exclusiveMaximum": 5`, func(v url.Values) { v.Set(key, "5") }, text.ErrorValidationExclusiveMaximum, "must be < 5 but found 5")
 			})
 
 			t.Run("case=number violating multipleOf", func(t *testing.T) {
-				test(t, `"type": "number", "multipleOf": 3`, 7, text.ErrorValidationMultipleOf, "7 not multipleOf 3")
+				test(t, `"type": "number", "multipleOf": 3`, func(v url.Values) { v.Set(key, "7") }, text.ErrorValidationMultipleOf, "7 not multipleOf 3")
 			})
 
 			t.Run("case=array violating maxItems", func(t *testing.T) {
-				test(t, `"type": "array", "items": { "type": "string" }, "maxItems": 3`, []string{"a", "b", "c", "d"}, text.ErrorValidationMaxItems, "maximum 3 items allowed, but found 4 items")
+				test(t, `"type": "array", "items": { "type": "string" }, "maxItems": 3`, func(v url.Values) { v.Add(key, "a"); v.Add(key, "b"); v.Add(key, "c"); v.Add(key, "d") }, text.ErrorValidationMaxItems, "maximum 3 items allowed, but found 4 items")
 			})
 
 			t.Run("case=array violating minItems", func(t *testing.T) {
-				test(t, `"type": "array", "items": { "type": "string" }, "minItems": 3`, []string{"a", "b"}, text.ErrorValidationMinItems, "minimum 3 items allowed, but found 2 items")
+				test(t, `"type": "array", "items": { "type": "string" }, "minItems": 3`, func(v url.Values) { v.Add(key, "a"); v.Add(key, "b") }, text.ErrorValidationMinItems, "minimum 3 items allowed, but found 2 items")
 			})
 
 			t.Run("case=array violating uniqueItems", func(t *testing.T) {
-				test(t, `"type": "array", "items": { "type": "string" }, "uniqueItems": true`, []string{"abc", "XYZ", "abc"}, text.ErrorValidationUniqueItems, "items at index 0 and 2 are equal")
+				test(t, `"type": "array", "items": { "type": "string" }, "uniqueItems": true`, func(v url.Values) { v.Add(key, "abc"); v.Add(key, "XYZ"); v.Add(key, "abc") }, text.ErrorValidationUniqueItems, "items at index 0 and 2 are equal")
 			})
 
 			t.Run("case=wrong type", func(t *testing.T) {
-				test(t, `"type": "number"`, "blabla", text.ErrorValidationWrongType, "expected number, but got string")
+				test(t, `"type": "number"`, func(v url.Values) { v.Set(key, "blabla") }, text.ErrorValidationWrongType, "expected number, but got string")
 			})
 		})
 
