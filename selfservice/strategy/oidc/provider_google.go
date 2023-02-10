@@ -57,15 +57,8 @@ func (g *ProviderGoogle) OAuth2(ctx context.Context) (*oauth2.Config, error) {
 }
 
 func (g *ProviderGoogle) AuthCodeURLOptions(r ider) []oauth2.AuthCodeOption {
-	var options []oauth2.AuthCodeOption
 	scope := g.config.Scope
-
-	if isForced(r) {
-		options = append(options, oauth2.SetAuthURLParam("prompt", "login"))
-	}
-	if len(g.config.RequestedClaims) != 0 {
-		options = append(options, oauth2.SetAuthURLParam("claims", string(g.config.RequestedClaims)))
-	}
+	options := g.ProviderGenericOIDC.AuthCodeURLOptions(r)
 
 	if stringslice.Has(scope, gooidc.ScopeOfflineAccess) {
 		options = append(options, oauth2.AccessTypeOffline)
