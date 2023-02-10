@@ -2,8 +2,8 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { appPrefix, gen, website } from "../../../../helpers"
-import { routes as react } from "../../../../helpers/react"
 import { routes as express } from "../../../../helpers/express"
+import { routes as react } from "../../../../helpers/react"
 
 context("Social Sign Up Successes", () => {
   ;[
@@ -78,7 +78,7 @@ context("Social Sign Up Successes", () => {
         cy.get("#registration-password").should("not.exist")
         cy.get('[name="traits.email"]').should("have.value", email)
         cy.get('[name="traits.website"]').should("have.value", "http://s")
-        cy.get('[data-testid="ui/message/4000001"]').should(
+        cy.get('[data-testid="ui/message/4000003"]').should(
           "contain.text",
           "length must be >= 10",
         )
@@ -149,7 +149,7 @@ context("Social Sign Up Successes", () => {
 
         cy.triggerOidc(app)
 
-        cy.get('[data-testid="ui/message/4000001"]').should(
+        cy.get('[data-testid="ui/message/4000003"]').should(
           "contain.text",
           "length must be >= 10",
         )

@@ -108,6 +108,16 @@ const (
 	ErrorValidationNoLookup
 	ErrorValidationSuchNoWebAuthnUser
 	ErrorValidationLookupInvalid
+	ErrorValidationMaxLength
+	ErrorValidationMinimum
+	ErrorValidationExclusiveMinimum
+	ErrorValidationMaximum
+	ErrorValidationExclusiveMaximum
+	ErrorValidationMultipleOf
+	ErrorValidationMaxItems
+	ErrorValidationMinItems
+	ErrorValidationUniqueItems
+	ErrorValidationWrongType
 )
 
 const (

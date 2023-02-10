@@ -288,6 +288,113 @@ func TestRegistration(t *testing.T) {
 			})
 		})
 
+		t.Run("case=should return correct error ids from validation failures", func(t *testing.T) {
+			test := func(t *testing.T, constraint string, setValues func(url.Values), expectedId text.ID, expectedMesage string) {
+				template := `{
+					"$id": "https://example.com/person.schema.json",
+					"$schema": "http://json-schema.org/draft-07/schema#",
+					"title": "Person",
+					"type": "object",
+					"properties": {
+						"traits": {
+							"type": "object",
+							"properties": {
+								"foobar": {
+									%s
+								},
+								"username": {
+									"type": "string",
+									"ory.sh/kratos": {
+										"credentials": {
+											"password": {
+												"identifier": true
+											}
+										}
+									}
+								}
+							},
+							"required": [
+								"foobar",
+								"username"
+							]
+						}
+					},
+					"additionalProperties": false
+				}`
+
+				testhelpers.SetDefaultIdentitySchemaFromRaw(conf, []byte(fmt.Sprintf(template, constraint)))
+
+				browserClient := testhelpers.NewClientWithCookies(t)
+				f := testhelpers.InitializeRegistrationFlowViaBrowser(t, browserClient, publicTS, false, false, false)
+				c := f.Ui
+
+				values := testhelpers.SDKFormFieldsToURLValues(c.Nodes)
+				setValues(values)
+				values.Set("traits.username", "registration-identifier-9")
+				values.Set("password", x.NewUUID().String())
+				actual, _ := testhelpers.RegistrationMakeRequest(t, false, false, f, browserClient, values.Encode())
+
+				assert.NotEmpty(t, gjson.Get(actual, "id").String(), "%s", actual)
+				assert.Contains(t, gjson.Get(actual, "ui.action").String(), publicTS.URL+registration.RouteSubmitFlow, "%s", actual)
+				registrationhelpers.CheckFormContent(t, []byte(actual), "password", "csrf_token", "traits.username")
+				assert.EqualValues(t, "registration-identifier-9", gjson.Get(actual, "ui.nodes.#(attributes.name==traits.username).attributes.value").String(), "%s", actual)
+				assert.Empty(t, gjson.Get(actual, "ui.nodes.messages").Array())
+				assert.Len(t, gjson.Get(actual, "ui.nodes.#(attributes.name==traits.username).messages").Array(), 0)
+				assert.Equal(t, int64(expectedId), gjson.Get(actual, "ui.nodes.#(attributes.name==traits.foobar).messages.0.id").Int())
+				assert.Equal(t, expectedMesage, gjson.Get(actual, "ui.nodes.#(attributes.name==traits.foobar).messages.0.text").String())
+				assert.Equal(t, "error", gjson.Get(actual, "ui.nodes.#(attributes.name==traits.foobar).messages.0.type").String())
+			}
+
+			const key = "traits.foobar"
+			t.Run("case=string violating minLength", func(t *testing.T) {
+				test(t, `"type": "string", "minLength": 5`, func(v url.Values) { v.Set(key, "bar") }, text.ErrorValidationMinLength, "length must be >= 5, but got 3")
+			})
+
+			t.Run("case=string violating maxLength", func(t *testing.T) {
+				test(t, `"type": "string", "maxLength": 5`, func(v url.Values) { v.Set(key, "qwerty") }, text.ErrorValidationMaxLength, "length must be <= 5, but got 6")
+			})
+
+			t.Run("case=string violating pattern", func(t *testing.T) {
+				test(t, `"type": "string", "pattern": "^[a-z]*$"`, func(v url.Values) { v.Set(key, "FUBAR") }, text.ErrorValidationInvalidFormat, "does not match pattern \"^[a-z]*$\"")
+			})
+
+			t.Run("case=number violating minimum", func(t *testing.T) {
+				test(t, `"type": "number", "minimum": 5`, func(v url.Values) { v.Set(key, "3") }, text.ErrorValidationMinimum, "must be >= 5 but found 3")
+			})
+
+			t.Run("case=number violating exclusiveMinimum", func(t *testing.T) {
+				test(t, `"type": "number", "exclusiveMinimum": 5`, func(v url.Values) { v.Set(key, "5") }, text.ErrorValidationExclusiveMinimum, "must be > 5 but found 5")
+			})
+
+			t.Run("case=number violating maximum", func(t *testing.T) {
+				test(t, `"type": "number", "maximum": 5`, func(v url.Values) { v.Set(key, "6") }, text.ErrorValidationMaximum, "must be <= 5 but found 6")
+			})
+
+			t.Run("case=number violating exclusiveMaximum", func(t *testing.T) {
+				test(t, `"type": "number", "exclusiveMaximum": 5`, func(v url.Values) { v.Set(key, "5") }, text.ErrorValidationExclusiveMaximum, "must be < 5 but found 5")
+			})
+
+			t.Run("case=number violating multipleOf", func(t *testing.T) {
+				test(t, `"type": "number", "multipleOf": 3`, func(v url.Values) { v.Set(key, "7") }, text.ErrorValidationMultipleOf, "7 not multipleOf 3")
+			})
+
+			t.Run("case=array violating maxItems", func(t *testing.T) {
+				test(t, `"type": "array", "items": { "type": "string" }, "maxItems": 3`, func(v url.Values) { v.Add(key, "a"); v.Add(key, "b"); v.Add(key, "c"); v.Add(key, "d") }, text.ErrorValidationMaxItems, "maximum 3 items allowed, but found 4 items")
+			})
+
+			t.Run("case=array violating minItems", func(t *testing.T) {
+				test(t, `"type": "array", "items": { "type": "string" }, "minItems": 3`, func(v url.Values) { v.Add(key, "a"); v.Add(key, "b") }, text.ErrorValidationMinItems, "minimum 3 items allowed, but found 2 items")
+			})
+
+			t.Run("case=array violating uniqueItems", func(t *testing.T) {
+				test(t, `"type": "array", "items": { "type": "string" }, "uniqueItems": true`, func(v url.Values) { v.Add(key, "abc"); v.Add(key, "XYZ"); v.Add(key, "abc") }, text.ErrorValidationUniqueItems, "items at index 0 and 2 are equal")
+			})
+
+			t.Run("case=wrong type", func(t *testing.T) {
+				test(t, `"type": "number"`, func(v url.Values) { v.Set(key, "blabla") }, text.ErrorValidationWrongType, "expected number, but got string")
+			})
+		})
+
 		t.Run("case=should return an error because not passing validation and reset previous errors and values", func(t *testing.T) {
 			testhelpers.SetDefaultIdentitySchema(conf, "file://./stub/registration.schema.json")
 

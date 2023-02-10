@@ -1,7 +1,7 @@
 // Copyright © 2023 Ory Corp
 // SPDX-License-Identifier: Apache-2.0
 
-import { APP_URL, appPrefix, gen } from "../../../../helpers"
+import { appPrefix, APP_URL, gen } from "../../../../helpers"
 import { routes as express } from "../../../../helpers/express"
 import { routes as react } from "../../../../helpers/react"
 
@@ -130,7 +130,7 @@ context("Registration success with email profile", () => {
       cy.longRegisterLifespan()
       cy.submitPasswordForm()
 
-      cy.get('*[data-testid^="ui/message/"]').should(
+      cy.get('[data-testid="ui/message/4040001"]').should(
         "contain.text",
         "The registration flow expired",
       )
