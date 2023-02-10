@@ -1,14 +1,19 @@
+// Copyright © 2023 Ory Corp
+// SPDX-License-Identifier: Apache-2.0
+
 package oidc_test
 
 import (
 	"context"
+	"testing"
+
+	"github.com/stretchr/testify/assert"
+	"golang.org/x/oauth2"
+
 	"github.com/ory/kratos/internal"
 	"github.com/ory/kratos/selfservice/flow/login"
 	"github.com/ory/kratos/selfservice/strategy/oidc"
 	"github.com/ory/kratos/x"
-	"github.com/stretchr/testify/assert"
-	"golang.org/x/oauth2"
-	"testing"
 )
 
 func TestProviderGoogle_Scope(t *testing.T) {
