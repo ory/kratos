@@ -523,6 +523,10 @@ func (h *Handler) getLoginFlow(w http.ResponseWriter, r *http.Request, _ httprou
 		return
 	}
 
+	// This behavior diverges from the handling of the login flow expiration when submitting a login flow
+	// This section adds "redirect_to" and "return_to" parameters to the `detail` field of the error, while the other one does not
+	// See https://github.com/ory/kratos/blob/74ae85236928f55156284dd609ca88cafe90b360/selfservice/flow/login/error.go#L88-L98
+	// TODO: Use `f.Valid()` h.d.LoginFlowErrorHandler().WriteFlowError() instead
 	if ar.ExpiresAt.Before(time.Now()) {
 		if ar.Type == flow.TypeBrowser {
 			redirectURL := flow.GetFlowExpiredRedirectURL(r.Context(), h.d.Config(), RouteInitBrowserFlow, ar.ReturnTo)
