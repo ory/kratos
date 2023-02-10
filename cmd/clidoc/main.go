@@ -131,6 +131,9 @@ func init() {
 		"NewInfoSelfServiceContinueLoginWebAuthn":                 text.NewInfoSelfServiceContinueLoginWebAuthn(),
 		"NewInfoSelfServiceLoginContinue":                         text.NewInfoSelfServiceLoginContinue(),
 		"NewErrorValidationSuchNoWebAuthnUser":                    text.NewErrorValidationSuchNoWebAuthnUser(),
+		"NewErrorValidationInvalidPin":                            text.NewErrorValidationInvalidPin(),
+		"NewInfoLoginPinLabel":                                    text.NewInfoLoginPinLabel(),
+		"NewInfoNodeInputPin":                                     text.NewInfoNodeInputPin(),
 	}
 }
 

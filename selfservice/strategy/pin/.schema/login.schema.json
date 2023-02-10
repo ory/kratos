@@ -1,0 +1,36 @@
+{
+  "$id": "https://schemas.ory.sh/kratos/selfservice/strategy/pin/login.schema.json",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "properties": {
+    "csrf_token": {
+      "type": "string"
+    },
+    "pin": {
+      "type": "string",
+      "minLength": 4
+    },
+    "method": {
+      "type": "string"
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "method": {
+            "const": "pin"
+          }
+        },
+        "required": [
+          "method"
+        ]
+      },
+      "then": {
+        "required": [
+          "pin"
+        ]
+      }
+    }
+  ]
+}

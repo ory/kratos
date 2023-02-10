@@ -303,3 +303,13 @@ func NewNoWebAuthnCredentials() error {
 		Messages: new(text.Messages).Add(text.NewErrorValidationSuchNoWebAuthnUser()),
 	})
 }
+
+func NewInvalidPinError() error {
+	return errors.WithStack(&ValidationError{
+		ValidationError: &jsonschema.ValidationError{
+			Message:     `the provided pin code is invalid`,
+			InstancePtr: "#/",
+		},
+		Messages: new(text.Messages).Add(text.NewErrorValidationInvalidPin()),
+	})
+}

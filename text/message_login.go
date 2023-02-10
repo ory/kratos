@@ -183,3 +183,12 @@ func NewInfoSelfServiceLoginContinue() *Message {
 		Type: Info,
 	}
 }
+
+func NewInfoLoginPinLabel() *Message {
+	return &Message{
+		ID:      InfoSelfServiceLoginPinLabel,
+		Type:    Info,
+		Text:    "Pin code",
+		Context: context(nil),
+	}
+}
