@@ -273,9 +273,8 @@ func (s *ManagerHTTP) DoesSessionSatisfy(r *http.Request, sess *Session, request
 			if err != nil {
 				return err
 			}
-			sess.Identity = i
 		} else if len(i.Credentials) == 0 {
-			// If credentials are not expanded, we load them here.
+			i = sess.Identity.CopyWithoutCredentials() // we don't want to modify the identity in the session object
 			if err := s.r.PrivilegedIdentityPool().HydrateIdentityAssociations(ctx, i, identity.ExpandCredentials); err != nil {
 				return err
 			}

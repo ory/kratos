@@ -261,9 +261,9 @@ func (s *Session) SetSessionDeviceInformation(r *http.Request) {
 	s.Devices = append(s.Devices, device)
 }
 
-func (s *Session) Declassify() *Session {
+func (s Session) Declassified() *Session {
 	s.Identity = s.Identity.CopyWithoutCredentials()
-	return s
+	return &s
 }
 
 func (s *Session) IsActive() bool {

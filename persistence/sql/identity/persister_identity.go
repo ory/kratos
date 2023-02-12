@@ -411,10 +411,69 @@ func (p *IdentityPersister) HydrateIdentityAssociations(ctx context.Context, i *
 	ctx, span := p.r.Tracer(ctx).Tracer().Start(ctx, "persistence.sql.HydrateIdentityAssociations")
 	defer otelx.End(span, &err)
 
-	con := p.GetConnection(ctx)
-	if err := con.Load(i, expand.ToEager()...); err != nil {
+	var (
+		con                 = p.GetConnection(ctx)
+		nid                 = p.NetworkID(ctx)
+		credentials         []identity.Credentials
+		verifiableAddresses []identity.VerifiableAddress
+		recoveryAddresses   []identity.RecoveryAddress
+	)
+
+	eg, ctx := errgroup.WithContext(ctx)
+	if expand.Has(identity.ExpandFieldRecoveryAddresses) {
+		eg.Go(func() error {
+			// We use WithContext to get a copy of the connection struct, which solves the race detector
+			// from complaining incorrectly.
+			//
+			// https://github.com/gobuffalo/pop/issues/723
+			if err := con.WithContext(ctx).
+				Where("identity_id = ? AND nid = ?", i.ID, nid).
+				Order("id ASC").
+				All(&recoveryAddresses); err != nil {
+				return sqlcon.HandleError(err)
+			}
+			return nil
+		})
+	}
+
+	if expand.Has(identity.ExpandFieldVerifiableAddresses) {
+		eg.Go(func() error {
+			// We use WithContext to get a copy of the connection struct, which solves the race detector
+			// from complaining incorrectly.
+			//
+			// https://github.com/gobuffalo/pop/issues/723
+			if err := con.WithContext(ctx).
+				Order("id ASC").
+				Where("identity_id = ? AND nid = ?", i.ID, nid).All(&verifiableAddresses); err != nil {
+				return sqlcon.HandleError(err)
+			}
+			return nil
+		})
+	}
+
+	if expand.Has(identity.ExpandFieldCredentials) {
+		eg.Go(func() error {
+			// We use WithContext to get a copy of the connection struct, which solves the race detector
+			// from complaining incorrectly.
+			//
+			// https://github.com/gobuffalo/pop/issues/723
+			if err := con.WithContext(ctx).
+				EagerPreload("IdentityCredentialType", "CredentialIdentifiers").
+				Where("identity_id = ? AND nid = ?", i.ID, nid).
+				All(&credentials); err != nil {
+				return sqlcon.HandleError(err)
+			}
+			return nil
+		})
+	}
+
+	if err := eg.Wait(); err != nil {
 		return err
 	}
+
+	i.VerifiableAddresses = verifiableAddresses
+	i.RecoveryAddresses = recoveryAddresses
+	i.InternalCredentials = credentials
 
 	if err := i.AfterEagerFind(con); err != nil {
 		return err
@@ -447,7 +506,7 @@ func (p *IdentityPersister) ListIdentities(ctx context.Context, params identity.
 	if match := params.CredentialsIdentifier; len(match) > 0 {
 		// When filtering by credentials identifier, we most likely are looking for a username or email. It is therefore
 		// important to normalize the identifier before querying the database.
-		match = p.normalizeIdentifier(identity.CredentialsTypePassword, match)
+		match = NormalizeIdentifier(identity.CredentialsTypePassword, match)
 		query = query.
 			InnerJoin("identity_credentials ic", "ic.identity_id = identities.id").
 			InnerJoin("identity_credential_types ict", "ict.id = ic.identity_credential_type_id").
@@ -532,7 +591,7 @@ func (p *IdentityPersister) DeleteIdentity(ctx context.Context, id uuid.UUID) er
 	return p.delete(ctx, new(identity.Identity), id)
 }
 
-func (p *IdentityPersister) GetIdentity(ctx context.Context, id uuid.UUID, expand identity.Expandables) (res *identity.Identity, err error) {
+func (p *IdentityPersister) GetIdentity(ctx context.Context, id uuid.UUID, expand identity.Expandables) (_ *identity.Identity, err error) {
 	ctx, span := p.r.Tracer(ctx).Tracer().Start(ctx, "persistence.sql.GetIdentity")
 	defer otelx.End(span, &err)
 
@@ -542,82 +601,12 @@ func (p *IdentityPersister) GetIdentity(ctx context.Context, id uuid.UUID, expan
 		attribute.String("network.id", p.NetworkID(ctx).String()),
 	)
 
-	nid := p.NetworkID(ctx)
-	con := p.GetConnection(ctx)
-	query := con.Where("id = ? AND nid = ?", id, nid)
-
-	var (
-		i                   identity.Identity
-		credentials         []identity.Credentials
-		verifiableAddresses []identity.VerifiableAddress
-		recoveryAddresses   []identity.RecoveryAddress
-	)
-
-	if err := query.First(&i); err != nil {
+	var i identity.Identity
+	if err := p.GetConnection(ctx).Where("id = ? AND nid = ?", id, p.NetworkID(ctx)).First(&i); err != nil {
 		return nil, sqlcon.HandleError(err)
 	}
 
-	eg, ctx := errgroup.WithContext(ctx)
-	if expand.Has(identity.ExpandFieldRecoveryAddresses) {
-		eg.Go(func() error {
-			// We use WithContext to get a copy of the connection struct, which solves the race detector
-			// from complaining incorrectly.
-			//
-			// https://github.com/gobuffalo/pop/issues/723
-			if err := con.WithContext(ctx).
-				Where("identity_id = ? AND nid = ?", i.ID, nid).
-				Order("id ASC").
-				All(&recoveryAddresses); err != nil {
-				return sqlcon.HandleError(err)
-			}
-			return nil
-		})
-	}
-
-	if expand.Has(identity.ExpandFieldVerifiableAddresses) {
-		eg.Go(func() error {
-			// We use WithContext to get a copy of the connection struct, which solves the race detector
-			// from complaining incorrectly.
-			//
-			// https://github.com/gobuffalo/pop/issues/723
-			if err := con.WithContext(ctx).
-				Order("id ASC").
-				Where("identity_id = ? AND nid = ?", i.ID, nid).All(&verifiableAddresses); err != nil {
-				return sqlcon.HandleError(err)
-			}
-			return nil
-		})
-	}
-
-	if expand.Has(identity.ExpandFieldCredentials) {
-		eg.Go(func() error {
-			// We use WithContext to get a copy of the connection struct, which solves the race detector
-			// from complaining incorrectly.
-			//
-			// https://github.com/gobuffalo/pop/issues/723
-			if err := con.WithContext(ctx).
-				EagerPreload("IdentityCredentialType", "CredentialIdentifiers").
-				Where("identity_id = ? AND nid = ?", i.ID, nid).
-				All(&credentials); err != nil {
-				return sqlcon.HandleError(err)
-			}
-			return nil
-		})
-	}
-
-	if err := eg.Wait(); err != nil {
-		return nil, err
-	}
-
-	i.VerifiableAddresses = verifiableAddresses
-	i.RecoveryAddresses = recoveryAddresses
-	i.InternalCredentials = credentials
-
-	if err := i.AfterEagerFind(con); err != nil {
-		return nil, err
-	}
-
-	if err := p.InjectTraitsSchemaURL(ctx, &i); err != nil {
+	if err := p.HydrateIdentityAssociations(ctx, &i, expand); err != nil {
 		return nil, err
 	}
 
