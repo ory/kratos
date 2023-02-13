@@ -400,7 +400,9 @@ func TestHandler(t *testing.T) {
 			assert.EqualValues(t, defaultSchemaExternalURL, res.Get("0.schema_url").String(), "%s", res.Raw)
 			assert.EqualValues(t, config.DefaultIdentityTraitsSchemaID, res.Get("0.schema_id").String(), "%s", res.Raw)
 			assert.EqualValues(t, identity.StateActive, res.Get("0.state").String(), "%s", res.Raw)
-			assert.Empty(t, res.Get("credentials").String(), "%s", res.Raw)
+			assert.EqualValues(t, "password", res.Get("0.credentials.password.type").String(), res.Raw)
+			assert.EqualValues(t, "1", res.Get("0.credentials.password.identifiers.#").String(), res.Raw)
+			assert.EqualValues(t, "find.by.identifier@bar.com", res.Get("0.credentials.password.identifiers.0").String(), res.Raw)
 		})
 
 		t.Run("case=should get oidc credential", func(t *testing.T) {

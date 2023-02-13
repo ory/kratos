@@ -631,9 +631,14 @@ func TestPool(ctx context.Context, conf *config.Config, p interface {
 				})
 			}
 
+			t.Run("non existing identifier", func(t *testing.T) {
+				_, err := p.FindByCredentialsIdentifier(ctx, "find-identity-by-identifier-non-existing@ory.sh")
+				require.ErrorIs(t, err, sqlcon.ErrNoRows)
+			})
+
 			t.Run("not if on another network", func(t *testing.T) {
-				_, p := testhelpers.NewNetwork(t, ctx, p)
-				_, err := p.FindByCredentialsIdentifier(ctx, expectedIdentifiers[0])
+				_, on := testhelpers.NewNetwork(t, ctx, p)
+				_, err := on.FindByCredentialsIdentifier(ctx, expectedIdentifiers[0])
 				require.ErrorIs(t, err, sqlcon.ErrNoRows)
 			})
 		})
