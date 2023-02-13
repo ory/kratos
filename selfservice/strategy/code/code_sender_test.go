@@ -38,11 +38,15 @@ func TestSender(t *testing.T) {
 	conf.MustSet(ctx, config.ViperKeyPublicBaseURL, "https://www.ory.sh/")
 	conf.MustSet(ctx, config.ViperKeyCourierSMTPURL, "smtp://foo@bar@dev.null/")
 	conf.MustSet(ctx, config.ViperKeyLinkBaseURL, "https://link-url/")
+	conf.MustSet(ctx, config.ViperKeyCourierSMSFrom, "Kratos Test")
+	conf.MustSet(ctx, config.ViperKeyCourierSMSEnabled, true)
+	conf.MustSet(ctx, config.ViperKeyCourierSMSRequestConfig,
+		`{"url": "https://sms.dev.null","method": "POST","body": "file://./stub/request.config.twilio.jsonnet"}`)
 
 	u := &http.Request{URL: urlx.ParseOrPanic("https://www.ory.sh/")}
 
 	i := identity.NewIdentity(config.DefaultIdentityTraitsSchemaID)
-	i.Traits = identity.Traits(`{"email": "tracked@ory.sh"}`)
+	i.Traits = identity.Traits(`{"email": "tracked@ory.sh", "phone_number": "+498967905178"}`)
 	require.NoError(t, reg.IdentityManager().Create(context.Background(), i))
 
 	hr := httptest.NewRequest("GET", "https://www.ory.sh", nil)
@@ -160,4 +164,48 @@ func TestSender(t *testing.T) {
 		})
 	})
 
+	t.Run("method=SendVerificationCode via=email", func(t *testing.T) {
+		f, err := verification.NewFlow(conf, time.Hour, "", u, code.NewStrategy(reg), flow.TypeBrowser)
+		require.NoError(t, err)
+
+		require.NoError(t, reg.VerificationFlowPersister().CreateVerificationFlow(context.Background(), f))
+
+		require.NoError(t, reg.CodeSender().SendVerificationCode(context.Background(), f, "email", "tracked@ory.sh"))
+		require.ErrorIs(t, reg.CodeSender().SendVerificationCode(context.Background(), f, "email", "not-tracked@ory.sh"), code.ErrUnknownAddress)
+
+		messages, err := reg.CourierPersister().NextMessages(context.Background(), 12)
+		require.NoError(t, err)
+		require.Len(t, messages, 2)
+
+		assert.EqualValues(t, "email", messages[0].Type.String())
+		assert.EqualValues(t, "tracked@ory.sh", messages[0].Recipient)
+		assert.Contains(t, messages[0].Subject, "Please verify your email address")
+
+		assert.Regexp(t, testhelpers.CodeRegex, messages[0].Body)
+
+		assert.EqualValues(t, "email", messages[1].Type.String())
+		assert.EqualValues(t, "not-tracked@ory.sh", messages[1].Recipient)
+		assert.Contains(t, messages[1].Subject, "Someone tried to verify this email address")
+
+		assert.NotRegexp(t, testhelpers.CodeRegex, messages[1].Body, "Expected message to not contain an 8 digit recovery code, but it did: ", messages[1].Body)
+	})
+
+	t.Run("method=SendVerificationCode via=phone", func(t *testing.T) {
+		f, err := verification.NewFlow(conf, time.Hour, "", u, code.NewStrategy(reg), flow.TypeBrowser)
+		require.NoError(t, err)
+
+		require.NoError(t, reg.VerificationFlowPersister().CreateVerificationFlow(context.Background(), f))
+
+		require.NoError(t, reg.CodeSender().SendVerificationCode(context.Background(), f, "phone", "+498967905178"))
+		require.ErrorIs(t, reg.CodeSender().SendVerificationCode(context.Background(), f, "phone", "+498967905179"), code.ErrUnknownAddress)
+
+		messages, err := reg.CourierPersister().NextMessages(context.Background(), 12)
+		require.NoError(t, err)
+		require.Len(t, messages, 1)
+
+		assert.EqualValues(t, "phone", messages[0].Type.String())
+		assert.EqualValues(t, "otp", messages[0].TemplateType)
+		assert.EqualValues(t, "+498967905178", messages[0].Recipient)
+		assert.NotEmpty(t, messages[0].TemplateData)
+	})
 }

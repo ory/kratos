@@ -303,7 +303,7 @@ func (s *Strategy) retryVerificationFlowWithError(w http.ResponseWriter, r *http
 	return errors.WithStack(flow.ErrCompletedByStrategy)
 }
 
-func (s *Strategy) SendVerificationEmail(ctx context.Context, f *verification.Flow, i *identity.Identity, a *identity.VerifiableAddress) error {
+func (s *Strategy) SendVerificationChallenge(ctx context.Context, f *verification.Flow, i *identity.Identity, a *identity.VerifiableAddress) error {
 
 	token := NewSelfServiceVerificationToken(a, f, s.d.Config().SelfServiceLinkMethodLifespan(ctx))
 	if err := s.d.VerificationTokenPersister().CreateVerificationToken(ctx, token); err != nil {
