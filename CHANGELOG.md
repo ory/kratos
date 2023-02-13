@@ -374,6 +374,20 @@
   ([6393519](https://github.com/ory/kratos/commit/6393519977bc3d804673b5669166e07c561f1c79))
 - Return hydra error messages
   ([b3d037b](https://github.com/ory/kratos/commit/b3d037b33b248f1873f09d641e5d61376bcfde80))
+- Show "continue" screen after successful verification
+  ([#3090](https://github.com/ory/kratos/issues/3090))
+  ([fb6b160](https://github.com/ory/kratos/commit/fb6b1600d3d75e5d11fb98445c499a6218e6b869)),
+  closes
+  [/github.com/ory-corp/cloud#3925](https://github.com//github.com/ory-corp/cloud/issues/3925)
+  [/github.com/ory/network#228](https://github.com//github.com/ory/network/issues/228):
+
+  The `link` strategy for verification now shows a confirmation screen with a
+  "continue" link after successful verification, aligning its behavior to the
+  `code` strategy.
+
+  Also fixes a bug, where the `default_browser_return_url` of the verification
+  flow was not respected when using the code strategy.
+
 - Social sign in via linkedin
   ([#3079](https://github.com/ory/kratos/issues/3079))
   ([5de6bf4](https://github.com/ory/kratos/commit/5de6bf46aba6c13f927ef1c4c425322a34063ca9)),
