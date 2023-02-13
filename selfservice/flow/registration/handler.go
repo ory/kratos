@@ -219,6 +219,16 @@ type createBrowserRegistrationFlow struct {
 	// required: false
 	// in: query
 	LoginChallenge string `json:"login_challenge"`
+
+	// The URL to return the browser to after the verification flow was completed.
+	//
+	// After the registration flow is completed, the user will be sent a verification email.
+	// Upon completing the verification flow, this URL will be used to override the default
+	// `selfservice.flows.verification.after.default_redirect_to` value.
+	//
+	// required: false
+	// in: query
+	AfterVerificationReturnTo string `json:"after_verification_return_to"`
 }
 
 // swagger:route GET /self-service/registration/browser frontend createBrowserRegistrationFlow
