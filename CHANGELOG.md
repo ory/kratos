@@ -5,7 +5,7 @@
 
 **Table of Contents**
 
-- [ (2023-02-09)](#2023-02-09)
+- [ (2023-02-10)](#2023-02-10)
   - [Bug Fixes](#bug-fixes)
   - [Features](#features)
 - [0.11.1 (2023-01-14)](#0111-2023-01-14)
@@ -291,7 +291,7 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# [](https://github.com/ory/kratos/compare/v0.11.1...v) (2023-02-09)
+# [](https://github.com/ory/kratos/compare/v0.11.1...v) (2023-02-10)
 
 ### Bug Fixes
 
@@ -324,6 +324,26 @@
   ([a7f9414](https://github.com/ory/kratos/commit/a7f9414460eb214a8f2b2ff96a2b6b303721f806))
 - Remove network omit flag ([#3066](https://github.com/ory/kratos/issues/3066))
   ([c629b72](https://github.com/ory/kratos/commit/c629b72be42001e3e1671d61cc8348373b686844))
+- Report correct errors for json schema validation
+  ([#3085](https://github.com/ory/kratos/issues/3085))
+  ([9477ea4](https://github.com/ory/kratos/commit/9477ea4a7bde6efa73ed94f61c2d4ed66fd43a08)):
+
+  - Implemented the translation of `jsonschema.ValidationError` to errors codes
+    documented
+    [here](https://www.ory.sh/docs/kratos/concepts/ui-user-interface#machine-readable-format)
+  - Added missing error codes for relevant schema errors | Validation | Name |
+    ID | | ------------------ | ------------------------------- | ------- | |
+    `maxLength` | ErrorValidationMaxLength | 4000017 | | `minimum` |
+    ErrorValidationMinimum. | 4000018 | | `exclusiveMinimum` |
+    ErrorValidationExclusiveMinimum | 4000019 | | `maximum` |
+    ErrorValidationMaximum | 4000020 | | `exclusiveMaximum` |
+    ErrorValidationExclusiveMaximum | 4000021 | | `multipleOf` |
+    ErrorValidationMultipleOf | 4000022 | | `maxItems` | ErrorValidationMaxItems
+    | 4000023 | | `minItems` | ErrorValidationMinItems | 4000024 | |
+    `uniqueItems` | ErrorValidationUniqueItems | 4000025 | | `type` |
+    ErrorValidationWrongType | 4000026 |
+  - Updated e2e tests to check these IDs explicitly
+
 - Set DB connection max idle time
   ([8d4762c](https://github.com/ory/kratos/commit/8d4762c1bffad14c94ac69575e488fc67d3f5dde))
 
