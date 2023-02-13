@@ -36,6 +36,7 @@ context("Account Recovery With Code Success", () => {
         cy.disableVerification()
         cy.enableRecovery()
         cy.useRecoveryStrategy("code")
+        cy.notifyUnknownRecipients("recovery", false)
 
         identity = gen.identityWithWebsite()
         cy.registerApi(identity)
