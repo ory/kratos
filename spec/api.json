@@ -5458,6 +5458,14 @@
             "schema": {
               "type": "string"
             }
+          },
+          {
+            "description": "The URL to return the browser to after the verification flow was completed.\n\nAfter the registration flow is completed, the user will be sent a verification email.\nUpon completing the verification flow, this URL will be used to override the default\n`selfservice.flows.verification.after.default_redirect_to` value.",
+            "in": "query",
+            "name": "after_verification_return_to",
+            "schema": {
+              "type": "string"
+            }
           }
         ],
         "responses": {
