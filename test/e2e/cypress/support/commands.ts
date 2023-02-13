@@ -1037,35 +1037,19 @@ Cypress.Commands.add(
       expect(link).to.not.be.null
       expect(link.href).to.contain(APP_URL)
       const params = new URL(link.href).searchParams
-      const flow = params.get("flow")
 
+      cy.visit(link.href)
       if (strategy === "code") {
         const code = params.get("code")
         expect(code).to.not.be.null
-
-        cy.visit(link.href)
-
         cy.get(`button[name="method"][value="code"]`).click()
+      }
 
-        if (redirectTo) {
-          cy.get(`[data-testid="node/anchor/continue"`)
-            .contains("Continue")
-            .click()
-          cy.url().should("be.equal", redirectTo)
-        }
-      } else if (strategy === "link") {
-        cy.request({ url: link.href, followRedirect: false }).should(
-          (response) => {
-            expect(response.status).to.eq(303)
-            if (redirectTo) {
-              expect(response.redirectedToUrl).to.eq(
-                `${redirectTo}?flow=${flow}`,
-              )
-            } else {
-              expect(response.redirectedToUrl).to.not.contain("verification")
-            }
-          },
-        )
+      if (redirectTo) {
+        cy.get(`[data-testid="node/anchor/continue"`)
+          .contains("Continue")
+          .click()
+        cy.url().should("be.equal", redirectTo)
       }
     })
   },
