@@ -1342,3 +1342,9 @@ Cypress.Commands.add(
     })
   },
 )
+
+Cypress.Commands.add("getCourierMessages", () => {
+  return cy.request(KRATOS_ADMIN + "/courier/messages").then((res) => {
+    return res.body
+  })
+})

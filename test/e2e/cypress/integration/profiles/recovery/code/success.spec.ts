@@ -150,6 +150,18 @@ context("Account Recovery With Code Success", () => {
         )
       })
     })
+
+    it("should not notify an unknown recipient", () => {
+      const recipient = gen.email()
+
+      cy.visit(recovery)
+      cy.get('input[name="email"]').type(recipient)
+      cy.get(`[name="method"][value="code"]`).click()
+
+      cy.getCourierMessages().then((messages) => {
+        expect(messages.map((msg) => msg.recipient)).to.not.include(recipient)
+      })
+    })
   })
 
   it("should recover, set password and be redirected", () => {

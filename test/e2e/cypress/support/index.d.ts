@@ -630,6 +630,10 @@ declare global {
        * Remove the specified attribute from the given HTML elements
        */
       removeAttribute(selectors: string[], attribute: string): Chainable<void>
+
+      getCourierMessages(): Chainable<
+        { recipient: string; template_type: string }[]
+      >
     }
   }
 }

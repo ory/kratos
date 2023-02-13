@@ -2,8 +2,8 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { appPrefix, assertRecoveryAddress, gen } from "../../../../helpers"
-import { routes as react } from "../../../../helpers/react"
 import { routes as express } from "../../../../helpers/express"
+import { routes as react } from "../../../../helpers/react"
 
 context("Account Recovery Success", () => {
   ;[
@@ -68,6 +68,18 @@ context("Account Recovery Success", () => {
           email: identity.email,
           password: newPassword,
           cookieUrl: base,
+        })
+      })
+
+      it("should not notify an unknown recipient", () => {
+        const recipient = gen.email()
+
+        cy.visit(recovery)
+        cy.get('input[name="email"]').type(recipient)
+        cy.get(`[name="method"][value="link"]`).click()
+
+        cy.getCourierMessages().then((messages) => {
+          expect(messages.map((msg) => msg.recipient)).to.not.include(recipient)
         })
       })
     })

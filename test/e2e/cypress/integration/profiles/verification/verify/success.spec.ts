@@ -138,6 +138,20 @@ context("Account Verification Settings Success", () => {
               strategy: s,
             })
           })
+
+          it.only("should not notify an unknown recipient", () => {
+            const recipient = gen.email()
+
+            cy.visit(APP_URL + "/self-service/verification/browser")
+            cy.get('input[name="email"]').type(recipient)
+            cy.get(`[name="method"][value="${s}"]`).click()
+
+            cy.getCourierMessages().then((messages) => {
+              expect(messages.map((msg) => msg.recipient)).to.not.include(
+                recipient,
+              )
+            })
+          })
         })
       }
     })
