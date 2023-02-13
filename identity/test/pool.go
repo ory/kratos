@@ -633,7 +633,7 @@ func TestPool(ctx context.Context, conf *config.Config, p interface {
 
 			t.Run("not if on another network", func(t *testing.T) {
 				_, p := testhelpers.NewNetwork(t, ctx, p)
-				_, err := p.FindByCredentialsIdentifier(ctx, "find-identity-by-identifier-password@ory.sh")
+				_, err := p.FindByCredentialsIdentifier(ctx, expectedIdentifiers[0])
 				require.ErrorIs(t, err, sqlcon.ErrNoRows)
 			})
 		})
