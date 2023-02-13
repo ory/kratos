@@ -320,6 +320,8 @@
 
   Also fix tracing.
 
+- Nolint comment
+  ([93e6501](https://github.com/ory/kratos/commit/93e6501c63a253336c081f156ada58458b83ef92))
 - Orphaned webhook spans
   ([a7f9414](https://github.com/ory/kratos/commit/a7f9414460eb214a8f2b2ff96a2b6b303721f806))
 - Remove network omit flag ([#3066](https://github.com/ory/kratos/issues/3066))
@@ -363,6 +365,10 @@
   closes [#2422](https://github.com/ory/kratos/issues/2422)
 - Don't pre-generate UUIDs for transient objects
   ([e17f307](https://github.com/ory/kratos/commit/e17f307732f8ced34727d5f3a70929866a0595e0))
+- Improve tracing span naming in hooks
+  ([bf828d3](https://github.com/ory/kratos/commit/bf828d3f5d56a963529e98958f4039f0dc569979))
+- Let DB generate ID for session devices
+  ([62402c7](https://github.com/ory/kratos/commit/62402c7bed3c57ef5b957572e4b84f56d9c530ae))
 - Parallelize get identity and session calls
   ([#3023](https://github.com/ory/kratos/issues/3023))
   ([6393519](https://github.com/ory/kratos/commit/6393519977bc3d804673b5669166e07c561f1c79))
