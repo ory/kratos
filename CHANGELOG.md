@@ -295,6 +295,10 @@
 
 ### Bug Fixes
 
+- Add `after_verification_return_to` to sdk and api docs
+  ([#3097](https://github.com/ory/kratos/issues/3097))
+  ([c70704c](https://github.com/ory/kratos/commit/c70704cebafff7a92f32928273e4570abb3b1c3d)),
+  closes [#3096](https://github.com/ory/kratos/issues/3096)
 - Avoid unchecked casts from IdentityPool to PrivilegedIdentityPool
   ([71d35dd](https://github.com/ory/kratos/commit/71d35ddd582b3c7081f66e0cdc0c43457816ab25))
 - Don't treat missing session as error in tracing
