@@ -99,9 +99,6 @@ func (p *Persister) FindByCredentialsTypeAndIdentifier(ctx context.Context, ct i
 	ctx, span := p.r.Tracer(ctx).Tracer().Start(ctx, "persistence.sql.FindByCredentialsTypeAndIdentifier")
 	defer span.End()
 
-	// Force case-insensitivity and trimming for identifiers
-	match = p.normalizeIdentifier(ct, match)
-
 	i, err := p.findIdentityByIdentifier(ctx, &ct, match)
 	if err != nil {
 		return nil, nil, err
@@ -123,6 +120,9 @@ func (p *Persister) findIdentityByIdentifier(ctx context.Context, ct *identity.C
 	nid := p.NetworkID(ctx)
 
 	if ct != nil {
+		// Force case-insensitivity and trimming for identifiers
+		match = p.normalizeIdentifier(*ct, match)
+
 		// #nosec G201
 		if err := p.GetConnection(ctx).RawQuery(fmt.Sprintf(`SELECT
     ic.identity_id
@@ -149,6 +149,9 @@ WHERE ici.identifier = ?
 			return nil, sqlcon.HandleError(err)
 		}
 	} else {
+		// Force lowering case and trimming for identifier match
+		match = p.normalizeIdentifier(identity.CredentialsTypePassword, match)
+
 		// #nosec G201
 		if err := p.GetConnection(ctx).RawQuery(fmt.Sprintf(`SELECT
     ic.identity_id
