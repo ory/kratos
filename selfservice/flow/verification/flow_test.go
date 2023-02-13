@@ -156,7 +156,7 @@ func TestContinueURL(t *testing.T) {
 		expect     string
 	}{
 		{
-			desc: "return_to has precendence over global return to",
+			desc: "return_to has precedence over global return to",
 			prep: func(conf *config.Config) {
 				conf.MustSet(context.Background(), config.ViperKeyURLsAllowedReturnToDomains, []string{localReturnTo})
 			},
@@ -174,7 +174,7 @@ func TestContinueURL(t *testing.T) {
 			expect:     globalReturnTo,
 		},
 		{
-			desc: "flow return to has precendence over global return to",
+			desc: "flow return to has precedence over global return to",
 			prep: func(conf *config.Config) {
 				conf.MustSet(context.Background(), config.ViperKeySelfServiceVerificationBrowserDefaultReturnTo, flowReturnTo)
 			},
@@ -182,7 +182,7 @@ func TestContinueURL(t *testing.T) {
 			expect:     flowReturnTo,
 		},
 		{
-			desc: "return_to has precendence over flow return to",
+			desc: "return_to has precedence over flow return to",
 			prep: func(conf *config.Config) {
 				conf.MustSet(context.Background(), config.ViperKeySelfServiceVerificationBrowserDefaultReturnTo, flowReturnTo)
 				conf.MustSet(context.Background(), config.ViperKeyURLsAllowedReturnToDomains, []string{localReturnTo})
