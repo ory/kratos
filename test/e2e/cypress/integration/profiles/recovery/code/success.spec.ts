@@ -150,17 +150,16 @@ context("Account Recovery With Code Success", () => {
           identity.email,
         )
       })
-    })
+      it("should not notify an unknown recipient", () => {
+        const recipient = gen.email()
 
-    it("should not notify an unknown recipient", () => {
-      const recipient = gen.email()
+        cy.visit(recovery)
+        cy.get('input[name="email"]').type(recipient)
+        cy.get(`[name="method"][value="code"]`).click()
 
-      cy.visit(recovery)
-      cy.get('input[name="email"]').type(recipient)
-      cy.get(`[name="method"][value="code"]`).click()
-
-      cy.getCourierMessages().then((messages) => {
-        expect(messages.map((msg) => msg.recipient)).to.not.include(recipient)
+        cy.getCourierMessages().then((messages) => {
+          expect(messages.map((msg) => msg.recipient)).to.not.include(recipient)
+        })
       })
     })
   })
