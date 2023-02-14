@@ -30,20 +30,11 @@ func NewProviderGoogle(
 }
 
 func (g *ProviderGoogle) oauth2ConfigFromEndpoint(ctx context.Context, endpoint oauth2.Endpoint) *oauth2.Config {
-	scope := g.config.Scope
-	if !stringslice.Has(scope, gooidc.ScopeOpenID) {
-		scope = append(scope, gooidc.ScopeOpenID)
-	}
-
-	scope = stringslice.Filter(scope, func(s string) bool { return s == gooidc.ScopeOfflineAccess })
-
-	return &oauth2.Config{
-		ClientID:     g.config.ClientID,
-		ClientSecret: g.config.ClientSecret,
-		Endpoint:     endpoint,
-		Scopes:       scope,
-		RedirectURL:  g.config.Redir(g.reg.Config().OIDCRedirectURIBase(ctx)),
-	}
+	conf := g.ProviderGenericOIDC.oauth2ConfigFromEndpoint(ctx, endpoint)
+	conf.Scopes = stringslice.Filter(conf.Scopes, func(s string) bool {
+		return s == gooidc.ScopeOfflineAccess
+	})
+	return conf
 }
 
 func (g *ProviderGoogle) OAuth2(ctx context.Context) (*oauth2.Config, error) {
@@ -57,10 +48,8 @@ func (g *ProviderGoogle) OAuth2(ctx context.Context) (*oauth2.Config, error) {
 }
 
 func (g *ProviderGoogle) AuthCodeURLOptions(r ider) []oauth2.AuthCodeOption {
-	scope := g.config.Scope
 	options := g.ProviderGenericOIDC.AuthCodeURLOptions(r)
-
-	if stringslice.Has(scope, gooidc.ScopeOfflineAccess) {
+	if stringslice.Has(g.config.Scope, gooidc.ScopeOfflineAccess) {
 		options = append(options, oauth2.AccessTypeOffline)
 	}
 
