@@ -376,7 +376,7 @@ func TestHandler(t *testing.T) {
 		})
 
 		t.Run("case=should return an empty array on a failed lookup with identifier", func(t *testing.T) {
-			res := get(t, adminTS, "/identities?identifier=find.by.non.existing.identifier@bar.com", http.StatusOK)
+			res := get(t, adminTS, "/identities?credentials_identifier=find.by.non.existing.identifier@bar.com", http.StatusOK)
 			assert.EqualValues(t, int64(0), res.Get("#").Int(), "%s", res.Raw)
 		})
 
@@ -394,7 +394,7 @@ func TestHandler(t *testing.T) {
 
 			require.NoError(t, reg.PrivilegedIdentityPool().CreateIdentity(context.Background(), i1))
 
-			res := get(t, adminTS, "/identities?identifier=find.by.identifier@bar.com", http.StatusOK)
+			res := get(t, adminTS, "/identities?credentials_identifier=find.by.identifier@bar.com", http.StatusOK)
 			assert.EqualValues(t, i1.ID.String(), res.Get("0.id").String(), "%s", res.Raw)
 			assert.EqualValues(t, "find.by.identifier@bar.com", res.Get("0.traits.username").String(), "%s", res.Raw)
 			assert.EqualValues(t, defaultSchemaExternalURL, res.Get("0.schema_url").String(), "%s", res.Raw)

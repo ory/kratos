@@ -10,8 +10,6 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/ory/x/sqlcon"
-
 	"github.com/ory/x/pagination/migrationpagination"
 
 	"github.com/ory/kratos/hash"
@@ -129,14 +127,11 @@ type listIdentitiesResponse struct {
 type listIdentitiesParameters struct {
 	migrationpagination.RequestParameters
 
-	// Identifier
-	//
-	// This query parameter can be used to lookup an identity using its identifier.
-	// For example - an email address
+	// CredentialsIdentifier is the identifier (username, email) of the credentials to look up.
 	//
 	// required: false
 	// in: query
-	Identifier string `json:"identifier"`
+	CredentialsIdentifier string `json:"credentials_identifier"`
 }
 
 // swagger:route GET /admin/identities identity listIdentities
@@ -159,43 +154,30 @@ type listIdentitiesParameters struct {
 func (h *Handler) list(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 	page, itemsPerPage := x.ParsePagination(r)
 
-	if identifier := r.URL.Query().Get("identifier"); identifier != "" {
-		i, err := h.r.PrivilegedIdentityPool().FindByCredentialsIdentifier(r.Context(), identifier)
-		if err != nil {
-			if errors.Is(err, sqlcon.ErrNoRows) {
-				h.r.Writer().Write(w, r, []Identity{})
-				return
-			}
+	params := ListIdentityParameters{Expand: ExpandDefault, Page: page, PerPage: itemsPerPage, CredentialsIdentifier: r.URL.Query().Get("credentials_identifier")}
+	if params.CredentialsIdentifier != "" {
+		params.Expand = ExpandEverything
+	}
 
+	is, err := h.r.IdentityPool().ListIdentities(r.Context(), params)
+	if err != nil {
+		h.r.Writer().WriteError(w, r, err)
+		return
+	}
+
+	total := int64(len(is))
+	if params.CredentialsIdentifier == "" {
+		total, err = h.r.IdentityPool().CountIdentities(r.Context())
+		if err != nil {
 			h.r.Writer().WriteError(w, r, err)
 			return
 		}
-
-		// To marshal credentials + admin metadata
-		var iscmam []WithCredentialsMetadataAndAdminMetadataInJSON
-		iscmam = append(iscmam, WithCredentialsMetadataAndAdminMetadataInJSON(*i))
-
-		migrationpagination.PaginationHeader(w, urlx.AppendPaths(h.r.Config().SelfAdminURL(r.Context()), RouteCollection), 1, page, itemsPerPage)
-		h.r.Writer().Write(w, r, iscmam)
-		return
-	}
-
-	is, err := h.r.IdentityPool().ListIdentities(r.Context(), ExpandDefault, page, itemsPerPage)
-	if err != nil {
-		h.r.Writer().WriteError(w, r, err)
-		return
-	}
-
-	total, err := h.r.IdentityPool().CountIdentities(r.Context())
-	if err != nil {
-		h.r.Writer().WriteError(w, r, err)
-		return
 	}
 
 	// Identities using the marshaler for including metadata_admin
-	isam := make([]WithAdminMetadataInJSON, len(is))
+	isam := make([]WithCredentialsMetadataAndAdminMetadataInJSON, len(is))
 	for i, identity := range is {
-		isam[i] = WithAdminMetadataInJSON(identity)
+		isam[i] = WithCredentialsMetadataAndAdminMetadataInJSON(identity)
 	}
 
 	migrationpagination.PaginationHeader(w, urlx.AppendPaths(h.r.Config().SelfAdminURL(r.Context()), RouteCollection), total, page, itemsPerPage)

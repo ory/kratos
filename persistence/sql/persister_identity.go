@@ -83,23 +83,46 @@ func (p *Persister) normalizeIdentifier(ct identity.CredentialsType, match strin
 	return match
 }
 
-func (p *Persister) FindByCredentialsIdentifier(ctx context.Context, match string) (*identity.Identity, error) {
+func (p *Persister) FindByCredentialsIdentifier(ctx context.Context, ct identity.CredentialsType, match string) (*identity.Identity, *identity.Credentials, error) {
 	ctx, span := p.r.Tracer(ctx).Tracer().Start(ctx, "persistence.sql.FindByCredentialsIdentifier")
 	defer span.End()
 
-	i, err := p.findIdentityByIdentifier(ctx, nil, match)
-	if err != nil {
-		return nil, err
+	nid := p.NetworkID(ctx)
+
+	var find struct {
+		IdentityID uuid.UUID `db:"identity_id"`
 	}
 
-	return i, nil
-}
+	// Force case-insensitivity and trimming for identifiers
+	match = p.normalizeIdentifier(ct, match)
 
-func (p *Persister) FindByCredentialsTypeAndIdentifier(ctx context.Context, ct identity.CredentialsType, match string) (*identity.Identity, *identity.Credentials, error) {
-	ctx, span := p.r.Tracer(ctx).Tracer().Start(ctx, "persistence.sql.FindByCredentialsTypeAndIdentifier")
-	defer span.End()
+	// #nosec G201
+	if err := p.GetConnection(ctx).RawQuery(fmt.Sprintf(`SELECT
+    ic.identity_id
+FROM %s ic
+         INNER JOIN %s ict on ic.identity_credential_type_id = ict.id
+         INNER JOIN %s ici on ic.id = ici.identity_credential_id AND ici.identity_credential_type_id = ict.id
+WHERE ici.identifier = ?
+  AND ic.nid = ?
+  AND ici.nid = ?
+  AND ict.name = ?`,
+		"identity_credentials",
+		"identity_credential_types",
+		"identity_credential_identifiers",
+	),
+		match,
+		nid,
+		nid,
+		ct,
+	).First(&find); err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, nil, sqlcon.HandleError(err) // herodot.ErrNotFound.WithTrace(err).WithReasonf(`No identity matching credentials identifier "%s" could be found.`, match)
+		}
 
-	i, err := p.findIdentityByIdentifier(ctx, &ct, match)
+		return nil, nil, sqlcon.HandleError(err)
+	}
+
+	i, err := p.GetIdentityConfidential(ctx, find.IdentityID)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -110,73 +133,6 @@ func (p *Persister) FindByCredentialsTypeAndIdentifier(ctx context.Context, ct i
 	}
 
 	return i.CopyWithoutCredentials(), creds, nil
-}
-
-func (p *Persister) findIdentityByIdentifier(ctx context.Context, ct *identity.CredentialsType, match string) (*identity.Identity, error) {
-	var find struct {
-		IdentityID uuid.UUID `db:"identity_id"`
-	}
-
-	nid := p.NetworkID(ctx)
-
-	if ct != nil {
-		// Force case-insensitivity and trimming for identifiers
-		match = p.normalizeIdentifier(*ct, match)
-
-		// #nosec G201
-		if err := p.GetConnection(ctx).RawQuery(fmt.Sprintf(`SELECT
-    ic.identity_id
-FROM %s ic
-         INNER JOIN %s ict on ic.identity_credential_type_id = ict.id
-         INNER JOIN %s ici on ic.id = ici.identity_credential_id AND ici.identity_credential_type_id = ict.id
-WHERE ici.identifier = ?
-  AND ic.nid = ?
-  AND ici.nid = ?
-  AND ict.name = ?`,
-			"identity_credentials",
-			"identity_credential_types",
-			"identity_credential_identifiers",
-		),
-			match,
-			nid,
-			nid,
-			ct,
-		).First(&find); err != nil {
-			if errors.Is(err, sql.ErrNoRows) {
-				return nil, sqlcon.HandleError(err) // herodot.ErrNotFound.WithTrace(err).WithReasonf(`No identity matching credentials identifier "%s" could be found.`, match)
-			}
-
-			return nil, sqlcon.HandleError(err)
-		}
-	} else {
-		// Force lowering case and trimming for identifier match
-		match = p.normalizeIdentifier(identity.CredentialsTypePassword, match)
-
-		// #nosec G201
-		if err := p.GetConnection(ctx).RawQuery(fmt.Sprintf(`SELECT
-    ic.identity_id
-FROM %s ic
-    INNER JOIN %s ici on ic.id = ici.identity_credential_id
-WHERE ici.identifier = ?
-  AND ic.nid = ?
-  AND ici.nid = ?`,
-			"identity_credentials",
-			"identity_credential_identifiers",
-		),
-			match,
-			nid,
-			nid,
-		).First(&find); err != nil {
-			return nil, sqlcon.HandleError(err)
-		}
-	}
-
-	i, err := p.GetIdentity(ctx, find.IdentityID, identity.ExpandEverything)
-	if err != nil {
-		return nil, err
-	}
-
-	return i, nil
 }
 
 func (p *Persister) findIdentityCredentialsType(ctx context.Context, ct identity.CredentialsType) (*identity.CredentialsTypeTable, error) {
@@ -421,26 +377,37 @@ func (p *Persister) HydrateIdentityAssociations(ctx context.Context, i *identity
 	return p.injectTraitsSchemaURL(ctx, i)
 }
 
-func (p *Persister) ListIdentities(ctx context.Context, expand identity.Expandables, page, perPage int) (res []identity.Identity, err error) {
+func (p *Persister) ListIdentities(ctx context.Context, params identity.ListIdentityParameters) (res []identity.Identity, err error) {
 	ctx, span := p.r.Tracer(ctx).Tracer().Start(ctx, "persistence.sql.ListIdentities")
 	defer otelx.End(span, &err)
 	span.SetAttributes(
-		attribute.Int("page", page),
-		attribute.Int("per_page", perPage),
-		attribute.StringSlice("expand", expand.ToEager()),
+		attribute.Int("page", params.Page),
+		attribute.Int("per_page", params.PerPage),
+		attribute.StringSlice("expand", params.Expand.ToEager()),
 		attribute.String("network.id", p.NetworkID(ctx).String()),
 	)
 
 	is := make([]identity.Identity, 0)
 
 	con := p.GetConnection(ctx)
-	query := con.
-		Where("nid = ?", p.NetworkID(ctx)).
-		Paginate(page, perPage).
-		Order("id DESC")
+	nid := p.NetworkID(ctx)
+	query := con.Where("identities.nid = ?", nid).Paginate(params.Page, params.PerPage).
+		Order("identities.id DESC")
 
-	if len(expand) > 0 {
-		query = query.EagerPreload(expand.ToEager()...)
+	if len(params.Expand) > 0 {
+		query = query.EagerPreload(params.Expand.ToEager()...)
+	}
+
+	if match := params.CredentialsIdentifier; len(match) > 0 {
+		// When filtering by credentials identifier, we most likely are looking for a username or email. It is therefore
+		// important to normalize the identifier before querying the database.
+		match = p.normalizeIdentifier(identity.CredentialsTypePassword, match)
+		query = query.
+			InnerJoin("identity_credentials ic", "ic.identity_id = identities.id").
+			InnerJoin("identity_credential_types ict", "ict.id = ic.identity_credential_type_id").
+			InnerJoin("identity_credential_identifiers ici", "ici.identity_credential_id = ic.id").
+			Where("(ic.nid = ? AND ici.nid = ? AND (ict.name = ? OR ict.name = ?) AND ici.identifier = ?)",
+				nid, nid, identity.CredentialsTypeWebAuthn, identity.CredentialsTypePassword, match)
 	}
 
 	/* #nosec G201 TableName is static */

@@ -12,9 +12,16 @@ import (
 )
 
 type (
+	ListIdentityParameters struct {
+		Expand                Expandables
+		CredentialsIdentifier string
+		Page                  int
+		PerPage               int
+	}
+
 	Pool interface {
 		// ListIdentities lists all identities in the store given the page and itemsPerPage.
-		ListIdentities(ctx context.Context, expandables sqlxx.Expandables, page, itemsPerPage int) ([]Identity, error)
+		ListIdentities(ctx context.Context, params ListIdentityParameters) ([]Identity, error)
 
 		// CountIdentities counts the number of identities in the store.
 		CountIdentities(ctx context.Context) (int64, error)
@@ -41,11 +48,8 @@ type (
 	PrivilegedPool interface {
 		Pool
 
-		// FindByCredentialsTypeAndIdentifier returns an identity by querying for it's credential identifiers.
-		FindByCredentialsIdentifier(ctx context.Context, match string) (*Identity, error)
-
-		// FindByCredentialsTypeAndIdentifier returns an identity by querying for it's credential type and identifiers.
-		FindByCredentialsTypeAndIdentifier(ctx context.Context, ct CredentialsType, match string) (*Identity, *Credentials, error)
+		// FindByCredentialsIdentifier returns an identity by querying for it's credential identifiers.
+		FindByCredentialsIdentifier(ctx context.Context, ct CredentialsType, match string) (*Identity, *Credentials, error)
 
 		// DeleteIdentity removes an identity by its id. Will return an error
 		// if identity exists, backend connectivity is broken, or trait validation fails.

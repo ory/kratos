@@ -113,7 +113,7 @@ func TestPool(ctx context.Context, conf *config.Config, p interface {
 				})
 
 				t.Run("list", func(t *testing.T) {
-					actual, err := p.ListIdentities(ctx, expand, 0, 10)
+					actual, err := p.ListIdentities(ctx, identity.ListIdentityParameters{Expand: expand, Page: 0, PerPage: 10})
 					require.NoError(t, err)
 					require.Len(t, actual, 1)
 					assertion(t, &actual[0])
@@ -569,7 +569,7 @@ func TestPool(ctx context.Context, conf *config.Config, p interface {
 		})
 
 		t.Run("case=list", func(t *testing.T) {
-			is, err := p.ListIdentities(ctx, identity.ExpandDefault, 0, 25)
+			is, err := p.ListIdentities(ctx, identity.ListIdentityParameters{Expand: identity.ExpandDefault, Page: 0, PerPage: 25})
 			require.NoError(t, err)
 			assert.Len(t, is, len(createdIDs))
 			for _, id := range createdIDs {
@@ -587,7 +587,7 @@ func TestPool(ctx context.Context, conf *config.Config, p interface {
 
 			t.Run("no results on other network", func(t *testing.T) {
 				_, p := testhelpers.NewNetwork(t, ctx, p)
-				is, err := p.ListIdentities(ctx, identity.ExpandDefault, 0, 25)
+				is, err := p.ListIdentities(ctx, identity.ListIdentityParameters{Expand: identity.ExpandDefault, Page: 0, PerPage: 25})
 				require.NoError(t, err)
 				assert.Len(t, is, 0)
 			})
@@ -599,8 +599,8 @@ func TestPool(ctx context.Context, conf *config.Config, p interface {
 
 			for _, c := range []identity.CredentialsType{
 				identity.CredentialsTypePassword,
-				identity.CredentialsTypeOIDC,
 				identity.CredentialsTypeWebAuthn,
+				identity.CredentialsTypeOIDC,
 			} {
 				identityIdentifier := fmt.Sprintf("find-identity-by-identifier-%s@ory.sh", c)
 				expected := identity.NewIdentity("")
@@ -612,34 +612,52 @@ func TestPool(ctx context.Context, conf *config.Config, p interface {
 				expectedIdentities = append(expectedIdentities, expected)
 			}
 
+			actual, err := p.ListIdentities(ctx, identity.ListIdentityParameters{
+				Expand: identity.ExpandEverything,
+			})
+			require.NoError(t, err)
+			require.True(t, len(actual) > 0)
+
 			for c, ct := range []identity.CredentialsType{
 				identity.CredentialsTypePassword,
-				identity.CredentialsTypeOIDC,
 				identity.CredentialsTypeWebAuthn,
 			} {
 				t.Run(ct.String(), func(t *testing.T) {
-					actual, err := p.FindByCredentialsIdentifier(ctx, expectedIdentifiers[c])
+					actual, err := p.ListIdentities(ctx, identity.ListIdentityParameters{
+						// Match is normalized
+						CredentialsIdentifier: expectedIdentifiers[c],
+					})
 					require.NoError(t, err)
 
 					expected := expectedIdentities[c]
-					assert.EqualValues(t, expected.Credentials[ct].ID, actual.Credentials[ct].ID)
-					assert.EqualValues(t, expected.Credentials[ct].Identifiers, actual.Credentials[ct].Identifiers)
-
-					expected.Credentials = nil
-					actual.Credentials = nil
-					assertEqual(t, expected, actual)
+					require.Len(t, actual, 1)
+					assertx.EqualAsJSONExcept(t, expected, actual[0], []string{"credentials.config"})
 				})
 			}
 
+			t.Run("only webauthn and password", func(t *testing.T) {
+				actual, err := p.ListIdentities(ctx, identity.ListIdentityParameters{
+					CredentialsIdentifier: "find-identity-by-identifier-oidc@ory.sh",
+				})
+				require.NoError(t, err)
+				assert.Len(t, actual, 0)
+			})
+
 			t.Run("non existing identifier", func(t *testing.T) {
-				_, err := p.FindByCredentialsIdentifier(ctx, "find-identity-by-identifier-non-existing@ory.sh")
-				require.ErrorIs(t, err, sqlcon.ErrNoRows)
+				actual, err := p.ListIdentities(ctx, identity.ListIdentityParameters{
+					CredentialsIdentifier: "find-identity-by-identifier-non-existing@ory.sh",
+				})
+				require.NoError(t, err)
+				assert.Len(t, actual, 0)
 			})
 
 			t.Run("not if on another network", func(t *testing.T) {
 				_, on := testhelpers.NewNetwork(t, ctx, p)
-				_, err := on.FindByCredentialsIdentifier(ctx, expectedIdentifiers[0])
-				require.ErrorIs(t, err, sqlcon.ErrNoRows)
+				actual, err := on.ListIdentities(ctx, identity.ListIdentityParameters{
+					CredentialsIdentifier: expectedIdentifiers[0],
+				})
+				require.NoError(t, err)
+				assert.Len(t, actual, 0)
 			})
 		})
 
@@ -650,7 +668,7 @@ func TestPool(ctx context.Context, conf *config.Config, p interface {
 			require.NoError(t, p.CreateIdentity(ctx, expected))
 			createdIDs = append(createdIDs, expected.ID)
 
-			actual, creds, err := p.FindByCredentialsTypeAndIdentifier(ctx, identity.CredentialsTypePassword, "find-credentials-identifier@ory.sh")
+			actual, creds, err := p.FindByCredentialsIdentifier(ctx, identity.CredentialsTypePassword, "find-credentials-identifier@ory.sh")
 			require.NoError(t, err)
 
 			assert.EqualValues(t, expected.Credentials[identity.CredentialsTypePassword].ID, creds.ID)
@@ -664,7 +682,7 @@ func TestPool(ctx context.Context, conf *config.Config, p interface {
 
 			t.Run("not if on another network", func(t *testing.T) {
 				_, p := testhelpers.NewNetwork(t, ctx, p)
-				_, _, err := p.FindByCredentialsTypeAndIdentifier(ctx, identity.CredentialsTypePassword, "find-credentials-identifier@ory.sh")
+				_, _, err := p.FindByCredentialsIdentifier(ctx, identity.CredentialsTypePassword, "find-credentials-identifier@ory.sh")
 				require.ErrorIs(t, err, sqlcon.ErrNoRows)
 			})
 		})
@@ -693,10 +711,10 @@ func TestPool(ctx context.Context, conf *config.Config, p interface {
 					identity.CredentialsTypeLookup,
 				} {
 					t.Run(ct.String(), func(t *testing.T) {
-						_, _, err := p.FindByCredentialsTypeAndIdentifier(ctx, ct, caseInsensitiveWithSpaces)
+						_, _, err := p.FindByCredentialsIdentifier(ctx, ct, caseInsensitiveWithSpaces)
 						require.Error(t, err)
 
-						actual, creds, err := p.FindByCredentialsTypeAndIdentifier(ctx, ct, caseSensitive)
+						actual, creds, err := p.FindByCredentialsIdentifier(ctx, ct, caseSensitive)
 						require.NoError(t, err)
 						assertx.EqualAsJSONExcept(t, expected.Credentials[ct], creds, []string{"created_at", "updated_at", "id"})
 						assertx.EqualAsJSONExcept(t, expected, actual, []string{"created_at", "state_changed_at", "updated_at", "id"})
@@ -711,7 +729,7 @@ func TestPool(ctx context.Context, conf *config.Config, p interface {
 				} {
 					t.Run(ct.String(), func(t *testing.T) {
 						for _, cs := range []string{caseSensitive, caseInsensitiveWithSpaces} {
-							actual, creds, err := p.FindByCredentialsTypeAndIdentifier(ctx, ct, cs)
+							actual, creds, err := p.FindByCredentialsIdentifier(ctx, ct, cs)
 							require.NoError(t, err)
 							ec := expected.Credentials[ct]
 							ec.Identifiers = []string{strings.ToLower(caseSensitive)}
@@ -731,7 +749,7 @@ func TestPool(ctx context.Context, conf *config.Config, p interface {
 			require.NoError(t, p.CreateIdentity(ctx, expected))
 			createdIDs = append(createdIDs, expected.ID)
 
-			actual, creds, err := p.FindByCredentialsTypeAndIdentifier(ctx, identity.CredentialsTypePassword, identifier)
+			actual, creds, err := p.FindByCredentialsIdentifier(ctx, identity.CredentialsTypePassword, identifier)
 			require.NoError(t, err)
 
 			assert.EqualValues(t, expected.Credentials[identity.CredentialsTypePassword].ID, creds.ID)
@@ -743,7 +761,7 @@ func TestPool(ctx context.Context, conf *config.Config, p interface {
 
 			t.Run("not if on another network", func(t *testing.T) {
 				_, p := testhelpers.NewNetwork(t, ctx, p)
-				_, _, err := p.FindByCredentialsTypeAndIdentifier(ctx, identity.CredentialsTypePassword, identifier)
+				_, _, err := p.FindByCredentialsIdentifier(ctx, identity.CredentialsTypePassword, identifier)
 				require.ErrorIs(t, err, sqlcon.ErrNoRows)
 			})
 		})
@@ -1059,12 +1077,12 @@ func TestPool(ctx context.Context, conf *config.Config, p interface {
 			_, err = p.GetIdentityConfidential(ctx, nid1)
 			require.ErrorIs(t, err, sqlcon.ErrNoRows)
 
-			i, c, err := p.FindByCredentialsTypeAndIdentifier(ctx, m[0].Name, "nid1")
+			i, c, err := p.FindByCredentialsIdentifier(ctx, m[0].Name, "nid1")
 			require.NoError(t, err)
 			assert.Equal(t, "nid1", c.Identifiers[0])
 			require.Len(t, i.Credentials, 0)
 
-			_, _, err = p.FindByCredentialsTypeAndIdentifier(ctx, m[0].Name, "nid2")
+			_, _, err = p.FindByCredentialsIdentifier(ctx, m[0].Name, "nid2")
 			require.ErrorIs(t, err, sqlcon.ErrNoRows)
 
 			i, err = p.GetIdentityConfidential(ctx, iid)
