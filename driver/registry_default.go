@@ -72,7 +72,6 @@ import (
 
 	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/identity"
-	idpersistence "github.com/ory/kratos/persistence/sql/identity"
 	"github.com/ory/kratos/selfservice/errorx"
 	password2 "github.com/ory/kratos/selfservice/strategy/password"
 	"github.com/ory/kratos/session"
@@ -613,7 +612,7 @@ func (m *RegistryDefault) Init(ctx context.Context, ctxer contextx.Contextualize
 			m.Logger().WithError(err).Warnf("Unable to open database, retrying.")
 			return errors.WithStack(err)
 		}
-		p, err := sql.NewPersister(ctx, m, idpersistence.NewPersister(m, c), c)
+		p, err := sql.NewPersister(ctx, m, c)
 		if err != nil {
 			m.Logger().WithError(err).Warnf("Unable to initialize persister, retrying.")
 			return err
@@ -644,7 +643,6 @@ func (m *RegistryDefault) Init(ctx context.Context, ctxer contextx.Contextualize
 			return err
 		}
 
-		// p.PrivilegedPool.(*idpersistence.IdentityPersister).SetNetworkID(net.ID)
 		m.persister = p.WithNetworkID(net.ID)
 		return nil
 	}, bc)

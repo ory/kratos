@@ -20,6 +20,8 @@ import (
 	"github.com/ory/x/logrusx"
 
 	"github.com/ory/kratos/driver/config"
+	"github.com/ory/kratos/identity"
+	"github.com/ory/kratos/schema"
 )
 
 type logRegistryOnly struct {
@@ -50,6 +52,13 @@ func (l *logRegistryOnly) Audit() *logrusx.Logger {
 func (l *logRegistryOnly) Tracer(ctx context.Context) *otelx.Tracer {
 	return otelx.NewNoop(l.l, new(otelx.Config))
 }
+func (l *logRegistryOnly) IdentityTraitsSchemas(ctx context.Context) (schema.Schemas, error) {
+	panic("implement me")
+}
+
+func (l *logRegistryOnly) IdentityValidator() *identity.Validator {
+	panic("implement me")
+}
 
 var _ persisterDependencies = &logRegistryOnly{}
 
@@ -59,7 +68,7 @@ func TestPersisterHMAC(t *testing.T) {
 	conf.MustSet(ctx, config.ViperKeySecretsDefault, []string{"foobarbaz"})
 	c, err := pop.NewConnection(&pop.ConnectionDetails{URL: "sqlite://foo?mode=memory"})
 	require.NoError(t, err)
-	p, err := NewPersister(context.Background(), &logRegistryOnly{c: conf}, nil, c)
+	p, err := NewPersister(context.Background(), &logRegistryOnly{c: conf}, c)
 	require.NoError(t, err)
 
 	assert.True(t, p.hmacConstantCompare(context.Background(), "hashme", p.hmacValue(context.Background(), "hashme")))

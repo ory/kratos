@@ -9,24 +9,24 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/ory/x/contextx"
-
-	"github.com/ory/x/fsx"
-
 	"github.com/gobuffalo/pop/v6"
 	"github.com/gobuffalo/pop/v6/columns"
 	"github.com/gofrs/uuid"
 	"github.com/pkg/errors"
 
-	"github.com/ory/x/networkx"
-	"github.com/ory/x/sqlcon"
-
-	"github.com/ory/x/popx"
-
 	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/persistence"
+	"github.com/ory/kratos/persistence/sql/devices"
+	idpersistence "github.com/ory/kratos/persistence/sql/identity"
+	"github.com/ory/kratos/schema"
+	"github.com/ory/kratos/session"
 	"github.com/ory/kratos/x"
+	"github.com/ory/x/contextx"
+	"github.com/ory/x/fsx"
+	"github.com/ory/x/networkx"
+	"github.com/ory/x/popx"
+	"github.com/ory/x/sqlcon"
 )
 
 var _ persistence.Persister = new(Persister)
@@ -40,6 +40,8 @@ type (
 		config.Provider
 		contextx.Provider
 		x.TracingProvider
+		schema.IdentityTraitsProvider
+		identity.ValidationProvider
 	}
 	Persister struct {
 		nid uuid.UUID
@@ -48,11 +50,13 @@ type (
 		mbs popx.MigrationStatuses
 		r   persisterDependencies
 		p   *networkx.Manager
+
 		identity.PrivilegedPool
+		session.DevicePersister
 	}
 )
 
-func NewPersister(ctx context.Context, r persisterDependencies, pool identity.PrivilegedPool, c *pop.Connection) (*Persister, error) {
+func NewPersister(ctx context.Context, r persisterDependencies, c *pop.Connection) (*Persister, error) {
 	m, err := popx.NewMigrationBox(fsx.Merge(migrations, networkx.Migrations), popx.NewMigrator(c, r.Logger(), r.Tracer(ctx), 0))
 	if err != nil {
 		return nil, err
@@ -60,11 +64,12 @@ func NewPersister(ctx context.Context, r persisterDependencies, pool identity.Pr
 	m.DumpMigrations = false
 
 	return &Persister{
-		c:              c,
-		mb:             m,
-		r:              r,
-		PrivilegedPool: pool,
-		p:              networkx.NewManager(c, r.Logger(), r.Tracer(ctx)),
+		c:               c,
+		mb:              m,
+		r:               r,
+		PrivilegedPool:  idpersistence.NewPersister(r, c),
+		DevicePersister: devices.NewPersister(r, c),
+		p:               networkx.NewManager(c, r.Logger(), r.Tracer(ctx)),
 	}, nil
 }
 
@@ -75,6 +80,10 @@ func (p *Persister) NetworkID(ctx context.Context) uuid.UUID {
 func (p Persister) WithNetworkID(nid uuid.UUID) persistence.Persister {
 	p.nid = nid
 	set, ok := p.PrivilegedPool.(interface{ SetNetworkID(uuid.UUID) })
+	if ok {
+		set.SetNetworkID(nid)
+	}
+	set, ok = p.DevicePersister.(interface{ SetNetworkID(uuid.UUID) })
 	if ok {
 		set.SetNetworkID(nid)
 	}

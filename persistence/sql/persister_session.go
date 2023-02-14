@@ -8,25 +8,17 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/gobuffalo/pop/v6"
+	"github.com/gofrs/uuid"
+	"github.com/pkg/errors"
 	"golang.org/x/sync/errgroup"
 
-	"github.com/ory/x/otelx"
-
 	"github.com/ory/kratos/identity"
-
-	"github.com/ory/x/pagination/keysetpagination"
-
-	"github.com/ory/x/stringsx"
-
-	"github.com/gobuffalo/pop/v6"
-
-	"github.com/pkg/errors"
-
-	"github.com/gofrs/uuid"
-
-	"github.com/ory/x/sqlcon"
-
 	"github.com/ory/kratos/session"
+	"github.com/ory/x/otelx"
+	"github.com/ory/x/pagination/keysetpagination"
+	"github.com/ory/x/sqlcon"
+	"github.com/ory/x/stringsx"
 )
 
 var _ session.Persister = new(Persister)
@@ -212,7 +204,7 @@ func (p *Persister) UpsertSession(ctx context.Context, s *session.Session) (err 
 				device.UserAgent = stringsx.GetPointer(stringsx.TruncateByteLen(*device.UserAgent, SessionDeviceUserAgentMaxLength))
 			}
 
-			if err := sqlcon.HandleError(tx.Create(device)); err != nil {
+			if err := p.DevicePersister.CreateDevice(ctx, device); err != nil {
 				return err
 			}
 		}
