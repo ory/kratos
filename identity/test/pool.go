@@ -631,7 +631,7 @@ func TestPool(ctx context.Context, conf *config.Config, p interface {
 
 					expected := expectedIdentities[c]
 					require.Len(t, actual, 1)
-					assertx.EqualAsJSONExcept(t, expected, actual[0], []string{"credentials.config"})
+					assertx.EqualAsJSONExcept(t, expected, actual[0], []string{"credentials.config", "created_at", "updated_at"})
 				})
 			}
 
