@@ -3237,6 +3237,14 @@
               "minimum": 1,
               "type": "integer"
             }
+          },
+          {
+            "description": "Identifier\n\nThis query parameter can be used to lookup an identity using its identifier.\nFor example - an email address",
+            "in": "query",
+            "name": "identifier",
+            "schema": {
+              "type": "string"
+            }
           }
         ],
         "responses": {

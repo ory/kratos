@@ -375,6 +375,36 @@ func TestHandler(t *testing.T) {
 			}
 		})
 
+		t.Run("case=should return an empty array on a failed lookup with identifier", func(t *testing.T) {
+			res := get(t, adminTS, "/identities?credentials_identifier=find.by.non.existing.identifier@bar.com", http.StatusOK)
+			assert.EqualValues(t, int64(0), res.Get("#").Int(), "%s", res.Raw)
+		})
+
+		t.Run("case=should be able to lookup the identity using identifier", func(t *testing.T) {
+			i1 := &identity.Identity{
+				Credentials: map[identity.CredentialsType]identity.Credentials{
+					identity.CredentialsTypePassword: {
+						Type:        identity.CredentialsTypePassword,
+						Identifiers: []string{"find.by.identifier@bar.com"},
+						Config:      sqlxx.JSONRawMessage(`{"hashed_password":"$2a$08$.cOYmAd.vCpDOoiVJrO5B.hjTLKQQ6cAK40u8uB.FnZDyPvVvQ9Q."}`), // foobar
+					}},
+				State:  identity.StateActive,
+				Traits: identity.Traits(`{"username":"find.by.identifier@bar.com"}`),
+			}
+
+			require.NoError(t, reg.PrivilegedIdentityPool().CreateIdentity(context.Background(), i1))
+
+			res := get(t, adminTS, "/identities?credentials_identifier=find.by.identifier@bar.com", http.StatusOK)
+			assert.EqualValues(t, i1.ID.String(), res.Get("0.id").String(), "%s", res.Raw)
+			assert.EqualValues(t, "find.by.identifier@bar.com", res.Get("0.traits.username").String(), "%s", res.Raw)
+			assert.EqualValues(t, defaultSchemaExternalURL, res.Get("0.schema_url").String(), "%s", res.Raw)
+			assert.EqualValues(t, config.DefaultIdentityTraitsSchemaID, res.Get("0.schema_id").String(), "%s", res.Raw)
+			assert.EqualValues(t, identity.StateActive, res.Get("0.state").String(), "%s", res.Raw)
+			assert.EqualValues(t, "password", res.Get("0.credentials.password.type").String(), res.Raw)
+			assert.EqualValues(t, "1", res.Get("0.credentials.password.identifiers.#").String(), res.Raw)
+			assert.EqualValues(t, "find.by.identifier@bar.com", res.Get("0.credentials.password.identifiers.0").String(), res.Raw)
+		})
+
 		t.Run("case=should get oidc credential", func(t *testing.T) {
 			id := createOidcIdentity(t, "foo.oidc@bar.com", "access_token", "refresh_token", "id_token", true)
 			for name, ts := range map[string]*httptest.Server{"public": publicTS, "admin": adminTS} {

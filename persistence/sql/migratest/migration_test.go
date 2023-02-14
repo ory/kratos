@@ -157,7 +157,7 @@ func TestMigrations(t *testing.T) {
 					defer wg.Done()
 					t.Parallel()
 
-					ids, err := d.PrivilegedIdentityPool().ListIdentities(context.Background(), identity.ExpandEverything, 0, 1000)
+					ids, err := d.PrivilegedIdentityPool().ListIdentities(context.Background(), identity.ListIdentityParameters{Expand: identity.ExpandEverything, Page: 0, PerPage: 1000})
 					require.NoError(t, err)
 					require.NotEmpty(t, ids)
 
@@ -185,7 +185,7 @@ func TestMigrations(t *testing.T) {
 					defer wg.Done()
 					t.Parallel()
 
-					ids, err := d.PrivilegedIdentityPool().ListIdentities(context.Background(), identity.ExpandNothing, 0, 1000)
+					ids, err := d.PrivilegedIdentityPool().ListIdentities(context.Background(), identity.ListIdentityParameters{Expand: identity.ExpandNothing, Page: 0, PerPage: 1000})
 					require.NoError(t, err)
 					require.NotEmpty(t, ids)
 

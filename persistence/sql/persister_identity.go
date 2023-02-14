@@ -377,26 +377,38 @@ func (p *Persister) HydrateIdentityAssociations(ctx context.Context, i *identity
 	return p.injectTraitsSchemaURL(ctx, i)
 }
 
-func (p *Persister) ListIdentities(ctx context.Context, expand identity.Expandables, page, perPage int) (res []identity.Identity, err error) {
+func (p *Persister) ListIdentities(ctx context.Context, params identity.ListIdentityParameters) (res []identity.Identity, err error) {
 	ctx, span := p.r.Tracer(ctx).Tracer().Start(ctx, "persistence.sql.ListIdentities")
 	defer otelx.End(span, &err)
 	span.SetAttributes(
-		attribute.Int("page", page),
-		attribute.Int("per_page", perPage),
-		attribute.StringSlice("expand", expand.ToEager()),
+		attribute.Int("page", params.Page),
+		attribute.Int("per_page", params.PerPage),
+		attribute.StringSlice("expand", params.Expand.ToEager()),
+		attribute.Bool("use:credential_identifier_filter", params.CredentialsIdentifier != ""),
 		attribute.String("network.id", p.NetworkID(ctx).String()),
 	)
 
 	is := make([]identity.Identity, 0)
 
 	con := p.GetConnection(ctx)
-	query := con.
-		Where("nid = ?", p.NetworkID(ctx)).
-		Paginate(page, perPage).
-		Order("id DESC")
+	nid := p.NetworkID(ctx)
+	query := con.Where("identities.nid = ?", nid).Paginate(params.Page, params.PerPage).
+		Order("identities.id DESC")
 
-	if len(expand) > 0 {
-		query = query.EagerPreload(expand.ToEager()...)
+	if len(params.Expand) > 0 {
+		query = query.EagerPreload(params.Expand.ToEager()...)
+	}
+
+	if match := params.CredentialsIdentifier; len(match) > 0 {
+		// When filtering by credentials identifier, we most likely are looking for a username or email. It is therefore
+		// important to normalize the identifier before querying the database.
+		match = p.normalizeIdentifier(identity.CredentialsTypePassword, match)
+		query = query.
+			InnerJoin("identity_credentials ic", "ic.identity_id = identities.id").
+			InnerJoin("identity_credential_types ict", "ict.id = ic.identity_credential_type_id").
+			InnerJoin("identity_credential_identifiers ici", "ici.identity_credential_id = ic.id").
+			Where("(ic.nid = ? AND ici.nid = ? AND ici.identifier = ?)", nid, nid, match).
+			Where("ict.name IN (?)", identity.CredentialsTypeWebAuthn, identity.CredentialsTypePassword)
 	}
 
 	/* #nosec G201 TableName is static */

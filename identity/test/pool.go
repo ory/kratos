@@ -113,7 +113,7 @@ func TestPool(ctx context.Context, conf *config.Config, p interface {
 				})
 
 				t.Run("list", func(t *testing.T) {
-					actual, err := p.ListIdentities(ctx, expand, 0, 10)
+					actual, err := p.ListIdentities(ctx, identity.ListIdentityParameters{Expand: expand, Page: 0, PerPage: 10})
 					require.NoError(t, err)
 					require.Len(t, actual, 1)
 					assertion(t, &actual[0])
@@ -569,7 +569,7 @@ func TestPool(ctx context.Context, conf *config.Config, p interface {
 		})
 
 		t.Run("case=list", func(t *testing.T) {
-			is, err := p.ListIdentities(ctx, identity.ExpandDefault, 0, 25)
+			is, err := p.ListIdentities(ctx, identity.ListIdentityParameters{Expand: identity.ExpandDefault, Page: 0, PerPage: 25})
 			require.NoError(t, err)
 			assert.Len(t, is, len(createdIDs))
 			for _, id := range createdIDs {
@@ -587,13 +587,81 @@ func TestPool(ctx context.Context, conf *config.Config, p interface {
 
 			t.Run("no results on other network", func(t *testing.T) {
 				_, p := testhelpers.NewNetwork(t, ctx, p)
-				is, err := p.ListIdentities(ctx, identity.ExpandDefault, 0, 25)
+				is, err := p.ListIdentities(ctx, identity.ListIdentityParameters{Expand: identity.ExpandDefault, Page: 0, PerPage: 25})
 				require.NoError(t, err)
 				assert.Len(t, is, 0)
 			})
 		})
 
 		t.Run("case=find identity by its credentials identifier", func(t *testing.T) {
+			var expectedIdentifiers []string
+			var expectedIdentities []*identity.Identity
+
+			for _, c := range []identity.CredentialsType{
+				identity.CredentialsTypePassword,
+				identity.CredentialsTypeWebAuthn,
+				identity.CredentialsTypeOIDC,
+			} {
+				identityIdentifier := fmt.Sprintf("find-identity-by-identifier-%s@ory.sh", c)
+				expected := identity.NewIdentity("")
+				expected.SetCredentials(c, identity.Credentials{Type: c, Identifiers: []string{identityIdentifier}, Config: sqlxx.JSONRawMessage(`{}`)})
+
+				require.NoError(t, p.CreateIdentity(ctx, expected))
+				createdIDs = append(createdIDs, expected.ID)
+				expectedIdentifiers = append(expectedIdentifiers, identityIdentifier)
+				expectedIdentities = append(expectedIdentities, expected)
+			}
+
+			actual, err := p.ListIdentities(ctx, identity.ListIdentityParameters{
+				Expand: identity.ExpandEverything,
+			})
+			require.NoError(t, err)
+			require.True(t, len(actual) > 0)
+
+			for c, ct := range []identity.CredentialsType{
+				identity.CredentialsTypePassword,
+				identity.CredentialsTypeWebAuthn,
+			} {
+				t.Run(ct.String(), func(t *testing.T) {
+					actual, err := p.ListIdentities(ctx, identity.ListIdentityParameters{
+						// Match is normalized
+						CredentialsIdentifier: expectedIdentifiers[c],
+					})
+					require.NoError(t, err)
+
+					expected := expectedIdentities[c]
+					require.Len(t, actual, 1)
+					assertx.EqualAsJSONExcept(t, expected, actual[0], []string{"credentials.config", "created_at", "updated_at", "state_changed_at"})
+				})
+			}
+
+			t.Run("only webauthn and password", func(t *testing.T) {
+				actual, err := p.ListIdentities(ctx, identity.ListIdentityParameters{
+					CredentialsIdentifier: "find-identity-by-identifier-oidc@ory.sh",
+				})
+				require.NoError(t, err)
+				assert.Len(t, actual, 0)
+			})
+
+			t.Run("non existing identifier", func(t *testing.T) {
+				actual, err := p.ListIdentities(ctx, identity.ListIdentityParameters{
+					CredentialsIdentifier: "find-identity-by-identifier-non-existing@ory.sh",
+				})
+				require.NoError(t, err)
+				assert.Len(t, actual, 0)
+			})
+
+			t.Run("not if on another network", func(t *testing.T) {
+				_, on := testhelpers.NewNetwork(t, ctx, p)
+				actual, err := on.ListIdentities(ctx, identity.ListIdentityParameters{
+					CredentialsIdentifier: expectedIdentifiers[0],
+				})
+				require.NoError(t, err)
+				assert.Len(t, actual, 0)
+			})
+		})
+
+		t.Run("case=find identity by its credentials type and identifier", func(t *testing.T) {
 			expected := passwordIdentity("", "find-credentials-identifier@ory.sh")
 			expected.Traits = identity.Traits(`{}`)
 
