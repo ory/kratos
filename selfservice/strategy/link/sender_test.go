@@ -6,7 +6,6 @@ package link_test
 import (
 	"context"
 	"net/http"
-	"net/http/httptest"
 	"testing"
 	"time"
 
@@ -15,6 +14,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
+	"github.com/ory/kratos/courier"
 	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/internal"
@@ -33,14 +33,14 @@ func TestManager(t *testing.T) {
 	conf.MustSet(ctx, config.ViperKeyPublicBaseURL, "https://www.ory.sh/")
 	conf.MustSet(ctx, config.ViperKeyCourierSMTPURL, "smtp://foo@bar@dev.null/")
 	conf.MustSet(ctx, config.ViperKeyLinkBaseURL, "https://link-url/")
+	conf.MustSet(ctx, config.ViperKeySelfServiceRecoveryNotifyUnknownRecipients, true)
+	conf.MustSet(ctx, config.ViperKeySelfServiceVerificationNotifyUnknownRecipients, true)
 
 	u := &http.Request{URL: urlx.ParseOrPanic("https://www.ory.sh/")}
 
 	i := identity.NewIdentity(config.DefaultIdentityTraitsSchemaID)
 	i.Traits = identity.Traits(`{"email": "tracked@ory.sh"}`)
 	require.NoError(t, reg.IdentityManager().Create(context.Background(), i))
-
-	hr := httptest.NewRequest("GET", "https://www.ory.sh", nil)
 
 	t.Run("method=SendRecoveryLink", func(t *testing.T) {
 		s, err := reg.RecoveryStrategies(ctx).Strategy("link")
@@ -50,8 +50,8 @@ func TestManager(t *testing.T) {
 
 		require.NoError(t, reg.RecoveryFlowPersister().CreateRecoveryFlow(context.Background(), f))
 
-		require.NoError(t, reg.LinkSender().SendRecoveryLink(context.Background(), hr, f, "email", "tracked@ory.sh"))
-		require.EqualError(t, reg.LinkSender().SendRecoveryLink(context.Background(), hr, f, "email", "not-tracked@ory.sh"), link.ErrUnknownAddress.Error())
+		require.NoError(t, reg.LinkSender().SendRecoveryLink(context.Background(), f, "email", "tracked@ory.sh"))
+		require.EqualError(t, reg.LinkSender().SendRecoveryLink(context.Background(), f, "email", "not-tracked@ory.sh"), link.ErrUnknownAddress.Error())
 
 		messages, err := reg.CourierPersister().NextMessages(context.Background(), 12)
 		require.NoError(t, err)
@@ -97,5 +97,60 @@ func TestManager(t *testing.T) {
 		address, err := reg.IdentityPool().FindVerifiableAddressByValue(context.Background(), identity.VerifiableAddressTypeEmail, "tracked@ory.sh")
 		require.NoError(t, err)
 		assert.EqualValues(t, identity.VerifiableAddressStatusSent, address.Status)
+	})
+
+	t.Run("case=should be able to disable invalid email dispatch", func(t *testing.T) {
+		for _, tc := range []struct {
+			flow      string
+			send      func(t *testing.T)
+			configKey string
+		}{
+			{
+				flow:      "recovery",
+				configKey: config.ViperKeySelfServiceRecoveryNotifyUnknownRecipients,
+				send: func(t *testing.T) {
+					s, err := reg.RecoveryStrategies(ctx).Strategy("link")
+					require.NoError(t, err)
+					f, err := recovery.NewFlow(conf, time.Hour, "", u, s, flow.TypeBrowser)
+					require.NoError(t, err)
+
+					require.NoError(t, reg.RecoveryFlowPersister().CreateRecoveryFlow(context.Background(), f))
+
+					err = reg.LinkSender().SendRecoveryLink(context.Background(), f, "email", "not-tracked@ory.sh")
+					require.ErrorIs(t, err, link.ErrUnknownAddress)
+				},
+			},
+			{
+				flow:      "verification",
+				configKey: config.ViperKeySelfServiceVerificationNotifyUnknownRecipients,
+				send: func(t *testing.T) {
+					s, err := reg.VerificationStrategies(ctx).Strategy("link")
+					require.NoError(t, err)
+					f, err := verification.NewFlow(conf, time.Hour, "", u, s, flow.TypeBrowser)
+					require.NoError(t, err)
+
+					require.NoError(t, reg.VerificationFlowPersister().CreateVerificationFlow(context.Background(), f))
+
+					err = reg.LinkSender().SendVerificationLink(context.Background(), f, "email", "not-tracked@ory.sh")
+					require.ErrorIs(t, err, link.ErrUnknownAddress)
+				},
+			},
+		} {
+			t.Run("strategy="+tc.flow, func(t *testing.T) {
+
+				conf.Set(ctx, tc.configKey, false)
+
+				t.Cleanup(func() {
+					conf.Set(ctx, tc.configKey, true)
+				})
+
+				tc.send(t)
+
+				messages, err := reg.CourierPersister().NextMessages(context.Background(), 0)
+
+				require.ErrorIs(t, err, courier.ErrQueueEmpty)
+				require.Len(t, messages, 0)
+			})
+		}
 	})
 }

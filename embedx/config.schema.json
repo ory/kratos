@@ -1230,6 +1230,12 @@
                     "code"
                   ],
                   "default": "code"
+                },
+                "notify_unknown_recipients": {
+                  "title": "Notify unknown recipients",
+                  "description": "Whether to notify recipients, if verification was requested for their address.",
+                  "type": "boolean",
+                  "default": false
                 }
               }
             },
@@ -1281,6 +1287,12 @@
                     "code"
                   ],
                   "default": "code"
+                },
+                "notify_unknown_recipients": {
+                  "title": "Notify unknown recipients",
+                  "description": "Whether to notify recipients, if recovery was requested for their account.",
+                  "type": "boolean",
+                  "default": false
                 }
               }
             },

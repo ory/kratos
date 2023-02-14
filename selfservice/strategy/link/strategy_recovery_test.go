@@ -416,6 +416,11 @@ func TestRecovery(t *testing.T) {
 	})
 
 	t.Run("description=should try to recover an email that does not exist", func(t *testing.T) {
+		conf.Set(ctx, config.ViperKeySelfServiceRecoveryNotifyUnknownRecipients, true)
+
+		t.Cleanup(func() {
+			conf.Set(ctx, config.ViperKeySelfServiceRecoveryNotifyUnknownRecipients, false)
+		})
 		var email string
 		var check = func(t *testing.T, actual string) {
 			assert.EqualValues(t, node.LinkGroup, gjson.Get(actual, "active").String(), "%s", actual)

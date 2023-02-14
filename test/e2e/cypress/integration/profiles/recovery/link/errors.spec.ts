@@ -1,9 +1,9 @@
 // Copyright © 2023 Ory Corp
 // SPDX-License-Identifier: Apache-2.0
 
-import { APP_URL, appPrefix, gen, parseHtml } from "../../../../helpers"
-import { routes as react } from "../../../../helpers/react"
+import { appPrefix, gen, parseHtml } from "../../../../helpers"
 import { routes as express } from "../../../../helpers/express"
+import { routes as react } from "../../../../helpers/react"
 
 context("Account Recovery Errors", () => {
   ;[
@@ -34,6 +34,7 @@ context("Account Recovery Errors", () => {
         cy.useRecoveryStrategy("link")
         cy.disableRecoveryStrategy("code")
         cy.clearAllCookies()
+        cy.notifyUnknownRecipients("verification", false)
       })
 
       it("responds with a HTML response on link click of an API flow if the link is expired", () => {
@@ -85,6 +86,7 @@ context("Account Recovery Errors", () => {
       })
 
       it("should receive a stub email when recovering a non-existent account", () => {
+        cy.notifyUnknownRecipients("recovery")
         cy.visit(recovery)
 
         const email = gen.email()
@@ -94,7 +96,7 @@ context("Account Recovery Errors", () => {
         cy.location("pathname").should("eq", "/recovery")
         cy.get('[data-testid="ui/message/1060002"]').should(
           "have.text",
-          "An email containing a recovery link has been sent to the email address you provided.",
+          "An email containing a recovery link has been sent to the email address you provided. If you have not received an email, check the spelling of the address and make sure to use the address you registered with.",
         )
         cy.get('input[name="email"]').should("have.value", email)
 
@@ -204,6 +206,7 @@ context("Account Recovery Errors", () => {
       })
 
       it("invalid remote recovery email template", () => {
+        cy.notifyUnknownRecipients("recovery")
         cy.remoteCourierRecoveryTemplates()
         const identity = gen.identityWithWebsite()
         cy.recoverApi({ email: identity.email })
