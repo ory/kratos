@@ -644,7 +644,7 @@ func (m *RegistryDefault) Init(ctx context.Context, ctxer contextx.Contextualize
 			return err
 		}
 
-		p.PrivilegedPool.(*idpersistence.IdentityPersister).SetNetworkID(net.ID)
+		// p.PrivilegedPool.(*idpersistence.IdentityPersister).SetNetworkID(net.ID)
 		m.persister = p.WithNetworkID(net.ID)
 		return nil
 	}, bc)

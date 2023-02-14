@@ -68,9 +68,8 @@ func (p *IdentityPersister) NetworkID(ctx context.Context) uuid.UUID {
 	return p.r.Contextualizer().Network(ctx, p.nid)
 }
 
-func (p *IdentityPersister) SetNetworkID(sid uuid.UUID) *IdentityPersister {
-	p.nid = sid
-	return p
+func (p *IdentityPersister) SetNetworkID(nid uuid.UUID) {
+	p.nid = nid
 }
 
 func WithTransaction(ctx context.Context, tx *pop.Connection) context.Context {

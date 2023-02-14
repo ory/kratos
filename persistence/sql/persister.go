@@ -72,8 +72,12 @@ func (p *Persister) NetworkID(ctx context.Context) uuid.UUID {
 	return p.r.Contextualizer().Network(ctx, p.nid)
 }
 
-func (p Persister) WithNetworkID(sid uuid.UUID) persistence.Persister {
-	p.nid = sid
+func (p Persister) WithNetworkID(nid uuid.UUID) persistence.Persister {
+	p.nid = nid
+	set, ok := p.PrivilegedPool.(interface{ SetNetworkID(uuid.UUID) })
+	if ok {
+		set.SetNetworkID(nid)
+	}
 	return &p
 }
 

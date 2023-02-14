@@ -23,8 +23,6 @@ import (
 
 	"github.com/ory/kratos/driver"
 	"github.com/ory/kratos/driver/config"
-	"github.com/ory/kratos/persistence/sql"
-	idpersistence "github.com/ory/kratos/persistence/sql/identity"
 	"github.com/ory/kratos/selfservice/hook"
 	"github.com/ory/kratos/x"
 )
@@ -89,7 +87,7 @@ func NewRegistryDefaultWithDSN(t *testing.T, dsn string) (*config.Config, *drive
 	actual, err := reg.Persister().DetermineNetwork(context.Background())
 	require.NoError(t, err)
 	reg.SetPersister(reg.Persister().WithNetworkID(actual.ID))
-	reg.Persister().(*sql.Persister).PrivilegedPool.(*idpersistence.IdentityPersister).SetNetworkID(actual.ID)
+	// reg.Persister().(*sql.Persister).PrivilegedPool.(*idpersistence.IdentityPersister).SetNetworkID(actual.ID)
 
 	require.EqualValues(t, reg.Persister().NetworkID(context.Background()), actual.ID)
 	require.NotEqual(t, uuid.Nil, reg.Persister().NetworkID(context.Background()))
