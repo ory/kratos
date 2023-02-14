@@ -384,7 +384,7 @@ func (p *Persister) ListIdentities(ctx context.Context, params identity.ListIden
 		attribute.Int("page", params.Page),
 		attribute.Int("per_page", params.PerPage),
 		attribute.StringSlice("expand", params.Expand.ToEager()),
-		attribute.String("credential_identifier", params.CredentialsIdentifier),
+		attribute.Bool("use:credential_identifier_filter", params.CredentialsIdentifier != ""),
 		attribute.String("network.id", p.NetworkID(ctx).String()),
 	)
 
@@ -407,8 +407,8 @@ func (p *Persister) ListIdentities(ctx context.Context, params identity.ListIden
 			InnerJoin("identity_credentials ic", "ic.identity_id = identities.id").
 			InnerJoin("identity_credential_types ict", "ict.id = ic.identity_credential_type_id").
 			InnerJoin("identity_credential_identifiers ici", "ici.identity_credential_id = ic.id").
-			Where("(ic.nid = ? AND ici.nid = ? AND (ict.name = ? OR ict.name = ?) AND ici.identifier = ?)",
-				nid, nid, identity.CredentialsTypeWebAuthn, identity.CredentialsTypePassword, match)
+			Where("(ic.nid = ? AND ici.nid = ? AND ici.identifier = ?)", nid, nid, match).
+			Where("ict.name IN (?)", identity.CredentialsTypeWebAuthn, identity.CredentialsTypePassword)
 	}
 
 	/* #nosec G201 TableName is static */
