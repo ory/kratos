@@ -76,6 +76,11 @@ type UpdateRegistrationFlowWithOidcMethod struct {
 	//
 	// required: true
 	Method string `json:"method"`
+
+	// Transient data to pass along to any webhooks
+	//
+	// required: false
+	TransientPayload json.RawMessage `json:"transient_payload,omitempty"`
 }
 
 func (s *Strategy) newLinkDecoder(p interface{}, r *http.Request) error {
@@ -113,6 +118,8 @@ func (s *Strategy) Register(w http.ResponseWriter, r *http.Request, f *registrat
 		return s.handleError(w, r, f, "", nil, err)
 	}
 
+	f.TransientPayload = p.TransientPayload
+
 	var pid = p.Provider // this can come from both url query and post body
 	if pid == "" {
 		return errors.WithStack(flow.ErrStrategyNotResponsible)
@@ -144,9 +151,10 @@ func (s *Strategy) Register(w http.ResponseWriter, r *http.Request, f *registrat
 	state := generateState(f.ID.String())
 	if err := s.d.ContinuityManager().Pause(r.Context(), w, r, sessionName,
 		continuity.WithPayload(&authCodeContainer{
-			State:  state,
-			FlowID: f.ID.String(),
-			Traits: p.Traits,
+			State:            state,
+			FlowID:           f.ID.String(),
+			Traits:           p.Traits,
+			TransientPayload: f.TransientPayload,
 		}),
 		continuity.WithLifespan(time.Minute*30)); err != nil {
 		return s.handleError(w, r, f, pid, nil, err)

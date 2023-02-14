@@ -46,6 +46,11 @@ type UpdateRegistrationFlowWithPasswordMethod struct {
 	//
 	// required: true
 	Method string `json:"method"`
+
+	// Transient data to pass along to any webhooks
+	//
+	// required: false
+	TransientPayload json.RawMessage `json:"transient_payload,omitempty"`
 }
 
 func (s *Strategy) RegisterRegistrationRoutes(_ *x.RouterPublic) {
@@ -81,6 +86,8 @@ func (s *Strategy) Register(w http.ResponseWriter, r *http.Request, f *registrat
 	if err := s.decode(&p, r); err != nil {
 		return s.handleRegistrationError(w, r, f, &p, err)
 	}
+
+	f.TransientPayload = p.TransientPayload
 
 	if err := flow.EnsureCSRF(s.d, r, f.Type, s.d.Config().DisableAPIFlowEnforcement(r.Context()), s.d.GenerateCSRFToken, p.CSRFToken); err != nil {
 		return s.handleRegistrationError(w, r, f, &p, err)
