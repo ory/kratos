@@ -5,18 +5,19 @@
 
 **Table of Contents**
 
-- [ (2023-02-13)](#2023-02-13)
-  - [Bug Fixes](#bug-fixes)
-  - [Features](#features)
-- [0.11.1 (2023-01-14)](#0111-2023-01-14)
+- [ (2023-02-14)](#2023-02-14)
   - [Breaking Changes](#breaking-changes)
+    - [Bug Fixes](#bug-fixes)
+    - [Features](#features)
+- [0.11.1 (2023-01-14)](#0111-2023-01-14)
+  - [Breaking Changes](#breaking-changes-1)
     - [Bug Fixes](#bug-fixes-1)
     - [Code Generation](#code-generation)
     - [Documentation](#documentation)
     - [Features](#features-1)
     - [Tests](#tests)
 - [0.11.0 (2022-12-02)](#0110-2022-12-02)
-  - [Breaking Changes](#breaking-changes-1)
+  - [Breaking Changes](#breaking-changes-2)
     - [Bug Fixes](#bug-fixes-2)
     - [Code Generation](#code-generation-1)
     - [Code Refactoring](#code-refactoring)
@@ -29,7 +30,7 @@
   - [Bug Fixes](#bug-fixes-3)
   - [Code Generation](#code-generation-2)
 - [0.10.0 (2022-05-30)](#0100-2022-05-30)
-  - [Breaking Changes](#breaking-changes-2)
+  - [Breaking Changes](#breaking-changes-3)
     - [Bug Fixes](#bug-fixes-4)
     - [Code Generation](#code-generation-3)
     - [Code Refactoring](#code-refactoring-1)
@@ -38,7 +39,7 @@
     - [Tests](#tests-2)
     - [Unclassified](#unclassified-1)
 - [0.9.0-alpha.3 (2022-03-25)](#090-alpha3-2022-03-25)
-  - [Breaking Changes](#breaking-changes-3)
+  - [Breaking Changes](#breaking-changes-4)
     - [Bug Fixes](#bug-fixes-5)
     - [Code Generation](#code-generation-4)
     - [Documentation](#documentation-3)
@@ -46,7 +47,7 @@
   - [Bug Fixes](#bug-fixes-6)
   - [Code Generation](#code-generation-5)
 - [0.9.0-alpha.1 (2022-03-21)](#090-alpha1-2022-03-21)
-  - [Breaking Changes](#breaking-changes-4)
+  - [Breaking Changes](#breaking-changes-5)
     - [Bug Fixes](#bug-fixes-7)
     - [Code Generation](#code-generation-6)
     - [Code Refactoring](#code-refactoring-2)
@@ -55,7 +56,7 @@
     - [Tests](#tests-3)
     - [Unclassified](#unclassified-2)
 - [0.8.3-alpha.1.pre.0 (2022-01-21)](#083-alpha1pre0-2022-01-21)
-  - [Breaking Changes](#breaking-changes-5)
+  - [Breaking Changes](#breaking-changes-6)
     - [Bug Fixes](#bug-fixes-8)
     - [Code Generation](#code-generation-7)
     - [Code Refactoring](#code-refactoring-3)
@@ -73,7 +74,7 @@
   - [Features](#features-6)
   - [Tests](#tests-5)
 - [0.8.0-alpha.4.pre.0 (2021-11-09)](#080-alpha4pre0-2021-11-09)
-  - [Breaking Changes](#breaking-changes-6)
+  - [Breaking Changes](#breaking-changes-7)
     - [Bug Fixes](#bug-fixes-11)
     - [Code Generation](#code-generation-10)
     - [Documentation](#documentation-8)
@@ -85,7 +86,7 @@
 - [0.8.0-alpha.2 (2021-10-28)](#080-alpha2-2021-10-28)
   - [Code Generation](#code-generation-12)
 - [0.8.0-alpha.1 (2021-10-27)](#080-alpha1-2021-10-27)
-  - [Breaking Changes](#breaking-changes-7)
+  - [Breaking Changes](#breaking-changes-8)
     - [Bug Fixes](#bug-fixes-13)
     - [Code Generation](#code-generation-13)
     - [Code Refactoring](#code-refactoring-4)
@@ -115,7 +116,7 @@
   - [Documentation](#documentation-12)
   - [Tests](#tests-9)
 - [0.7.0-alpha.1 (2021-07-13)](#070-alpha1-2021-07-13)
-  - [Breaking Changes](#breaking-changes-8)
+  - [Breaking Changes](#breaking-changes-9)
     - [Bug Fixes](#bug-fixes-17)
     - [Code Generation](#code-generation-19)
     - [Code Refactoring](#code-refactoring-5)
@@ -124,7 +125,7 @@
     - [Tests](#tests-10)
     - [Unclassified](#unclassified-4)
 - [0.6.3-alpha.1 (2021-05-17)](#063-alpha1-2021-05-17)
-  - [Breaking Changes](#breaking-changes-9)
+  - [Breaking Changes](#breaking-changes-10)
     - [Bug Fixes](#bug-fixes-18)
     - [Code Generation](#code-generation-20)
     - [Code Refactoring](#code-refactoring-6)
@@ -139,7 +140,7 @@
   - [Code Generation](#code-generation-23)
   - [Features](#features-13)
 - [0.6.0-alpha.1 (2021-05-05)](#060-alpha1-2021-05-05)
-  - [Breaking Changes](#breaking-changes-10)
+  - [Breaking Changes](#breaking-changes-11)
     - [Bug Fixes](#bug-fixes-20)
     - [Code Generation](#code-generation-24)
     - [Code Refactoring](#code-refactoring-7)
@@ -179,7 +180,7 @@
   - [Tests](#tests-15)
   - [Unclassified](#unclassified-7)
 - [0.5.0-alpha.1 (2020-10-15)](#050-alpha1-2020-10-15)
-  - [Breaking Changes](#breaking-changes-11)
+  - [Breaking Changes](#breaking-changes-12)
     - [Bug Fixes](#bug-fixes-26)
     - [Code Generation](#code-generation-30)
     - [Code Refactoring](#code-refactoring-9)
@@ -204,7 +205,7 @@
   - [Bug Fixes](#bug-fixes-31)
   - [Code Generation](#code-generation-35)
 - [0.4.0-alpha.1 (2020-07-08)](#040-alpha1-2020-07-08)
-  - [Breaking Changes](#breaking-changes-12)
+  - [Breaking Changes](#breaking-changes-13)
     - [Bug Fixes](#bug-fixes-32)
     - [Code Generation](#code-generation-36)
     - [Code Refactoring](#code-refactoring-10)
@@ -212,7 +213,7 @@
     - [Features](#features-20)
     - [Unclassified](#unclassified-9)
 - [0.3.0-alpha.1 (2020-05-15)](#030-alpha1-2020-05-15)
-  - [Breaking Changes](#breaking-changes-13)
+  - [Breaking Changes](#breaking-changes-14)
     - [Bug Fixes](#bug-fixes-33)
     - [Chores](#chores)
     - [Code Refactoring](#code-refactoring-11)
@@ -223,7 +224,7 @@
   - [Chores](#chores-1)
   - [Documentation](#documentation-25)
 - [0.2.0-alpha.2 (2020-05-04)](#020-alpha2-2020-05-04)
-  - [Breaking Changes](#breaking-changes-14)
+  - [Breaking Changes](#breaking-changes-15)
     - [Bug Fixes](#bug-fixes-34)
     - [Chores](#chores-2)
     - [Code Refactoring](#code-refactoring-12)
@@ -291,7 +292,15 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# [](https://github.com/ory/kratos/compare/v0.11.1...v) (2023-02-13)
+# [](https://github.com/ory/kratos/compare/v0.11.1...v) (2023-02-14)
+
+## Breaking Changes
+
+By default, Kratos no longer sends out these Emails. If you want to keep
+notifying unknown addresses (keep the current behavior), set
+`selfservice.flows.recovery.notify_unknown_recipients` to `true` for recovery,
+or `selfservice.flows.verification.notify_unknown_recipients` for verification
+flows.
 
 ### Bug Fixes
 
@@ -373,6 +382,16 @@
   ([bf828d3](https://github.com/ory/kratos/commit/bf828d3f5d56a963529e98958f4039f0dc569979))
 - Let DB generate ID for session devices
   ([62402c7](https://github.com/ory/kratos/commit/62402c7bed3c57ef5b957572e4b84f56d9c530ae))
+- Make notification to unknown recipients configurable
+  ([#3075](https://github.com/ory/kratos/issues/3075))
+  ([1a5ead4](https://github.com/ory/kratos/commit/1a5ead43a60e7a0388617877a9f16d1dec61459b)),
+  closes [#2345](https://github.com/ory/kratos/issues/2345)
+  [#2585](https://github.com/ory/kratos/issues/2585):
+
+  Added the ability to configure whether the system should notify unknown
+  recipients, if some tries to recover their account or verify their address
+  ("anti-account-enumeration measures").
+
 - Parallelize get identity and session calls
   ([#3023](https://github.com/ory/kratos/issues/3023))
   ([6393519](https://github.com/ory/kratos/commit/6393519977bc3d804673b5669166e07c561f1c79))
