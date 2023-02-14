@@ -206,8 +206,8 @@
           },
           {
             "type": "string",
-            "description": "Identifier\n\nThis query parameter can be used to lookup an identity using its identifier.\nFor example - an email address",
-            "name": "identifier",
+            "description": "CredentialsIdentifier is the identifier (username, email) of the credentials to look up.",
+            "name": "credentials_identifier",
             "in": "query"
           }
         ],

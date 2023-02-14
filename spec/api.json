@@ -3239,9 +3239,9 @@
             }
           },
           {
-            "description": "Identifier\n\nThis query parameter can be used to lookup an identity using its identifier.\nFor example - an email address",
+            "description": "CredentialsIdentifier is the identifier (username, email) of the credentials to look up.",
             "in": "query",
-            "name": "identifier",
+            "name": "credentials_identifier",
             "schema": {
               "type": "string"
             }
