@@ -384,6 +384,7 @@ func (p *Persister) ListIdentities(ctx context.Context, params identity.ListIden
 		attribute.Int("page", params.Page),
 		attribute.Int("per_page", params.PerPage),
 		attribute.StringSlice("expand", params.Expand.ToEager()),
+		attribute.String("credential_identifier", params.CredentialsIdentifier),
 		attribute.String("network.id", p.NetworkID(ctx).String()),
 	)
 
