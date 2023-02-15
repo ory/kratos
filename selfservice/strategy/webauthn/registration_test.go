@@ -171,6 +171,31 @@ func TestRegistration(t *testing.T) {
 		}
 	})
 
+	t.Run("case=should reject invalid transient payload", func(t *testing.T) {
+		email := testhelpers.RandomEmail()
+
+		var values = func(v url.Values) {
+			v.Set("traits.username", email)
+			v.Set("traits.foobar", "bar")
+			v.Set("transient_payload", "42")
+			v.Set(node.WebAuthnRegister, "{}")
+			v.Del("method")
+		}
+
+		for _, f := range flows {
+			t.Run("type="+f, func(t *testing.T) {
+				actual := registrationhelpers.ExpectValidationError(t, publicTS, conf, f, values)
+
+				assert.NotEmpty(t, gjson.Get(actual, "id").String(), "%s", actual)
+				assert.Contains(t, gjson.Get(actual, "ui.action").String(), publicTS.URL+registration.RouteSubmitFlow, "%s", actual)
+				registrationhelpers.CheckFormContent(t, []byte(actual), node.WebAuthnRegisterTrigger, "csrf_token", "traits.username", "traits.foobar")
+				assert.Equal(t, "bar", gjson.Get(actual, "ui.nodes.#(attributes.name==traits.foobar).attributes.value").String(), "%s", actual)
+				assert.Equal(t, email, gjson.Get(actual, "ui.nodes.#(attributes.name==traits.username).attributes.value").String(), "%s", actual)
+				assert.Equal(t, int64(4000026), gjson.Get(actual, "ui.nodes.#(attributes.name==transient_payload).messages.0.id").Int(), "%s", actual)
+			})
+		}
+	})
+
 	t.Run("case=should return an error because webauthn response is invalid", func(t *testing.T) {
 		email := testhelpers.RandomEmail()
 		var values = func(v url.Values) {
