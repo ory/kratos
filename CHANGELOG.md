@@ -5,7 +5,7 @@
 
 **Table of Contents**
 
-- [ (2023-02-14)](#2023-02-14)
+- [ (2023-02-15)](#2023-02-15)
   - [Breaking Changes](#breaking-changes)
     - [Bug Fixes](#bug-fixes)
     - [Features](#features)
@@ -292,7 +292,7 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# [](https://github.com/ory/kratos/compare/v0.11.1...v) (2023-02-14)
+# [](https://github.com/ory/kratos/compare/v0.11.1...v) (2023-02-15)
 
 ## Breaking Changes
 
@@ -310,6 +310,10 @@ flows.
   closes [#3096](https://github.com/ory/kratos/issues/3096)
 - Avoid unchecked casts from IdentityPool to PrivilegedIdentityPool
   ([71d35dd](https://github.com/ory/kratos/commit/71d35ddd582b3c7081f66e0cdc0c43457816ab25))
+- Correctly apply patches to identity metadata
+  ([#3103](https://github.com/ory/kratos/issues/3103))
+  ([1193a56](https://github.com/ory/kratos/commit/1193a5681fbc25d03c1e26a4296fa0b9abd2452b)),
+  closes [#2950](https://github.com/ory/kratos/issues/2950)
 - Don't treat missing session as error in tracing
   ([290d28a](https://github.com/ory/kratos/commit/290d28ada1a55b599af7e41e638de699a474f1d8))
 - Handle upstream errors in patreon provider
