@@ -41,9 +41,7 @@ import (
 	"github.com/ory/kratos/x"
 )
 
-func TestPool(ctx context.Context, conf *config.Config, p interface {
-	persistence.Persister
-}, m *identity.Manager) func(t *testing.T) {
+func TestPool(ctx context.Context, conf *config.Config, p persistence.Persister, m *identity.Manager) func(t *testing.T) {
 	return func(t *testing.T) {
 		exampleServerURL := urlx.ParseOrPanic("http://example.com")
 		conf.MustSet(ctx, config.ViperKeyPublicBaseURL, exampleServerURL.String())

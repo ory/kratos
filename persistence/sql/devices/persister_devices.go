@@ -34,8 +34,9 @@ func (p *DevicePersister) NetworkID(ctx context.Context) uuid.UUID {
 	return p.ctxer.Contextualizer().Network(ctx, p.nid)
 }
 
-func (p *DevicePersister) SetNetworkID(nid uuid.UUID) {
+func (p DevicePersister) WithNetworkID(nid uuid.UUID) session.DevicePersister {
 	p.nid = nid
+	return &p
 }
 
 func (p *DevicePersister) CreateDevice(ctx context.Context, d *session.Device) error {

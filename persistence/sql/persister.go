@@ -79,13 +79,15 @@ func (p *Persister) NetworkID(ctx context.Context) uuid.UUID {
 
 func (p Persister) WithNetworkID(nid uuid.UUID) persistence.Persister {
 	p.nid = nid
-	set, ok := p.PrivilegedPool.(interface{ SetNetworkID(uuid.UUID) })
-	if ok {
-		set.SetNetworkID(nid)
+	if pp, ok := p.PrivilegedPool.(interface {
+		WithNetworkID(uuid.UUID) identity.PrivilegedPool
+	}); ok {
+		p.PrivilegedPool = pp.WithNetworkID(nid)
 	}
-	set, ok = p.DevicePersister.(interface{ SetNetworkID(uuid.UUID) })
-	if ok {
-		set.SetNetworkID(nid)
+	if dp, ok := p.DevicePersister.(interface {
+		WithNetworkID(uuid.UUID) session.DevicePersister
+	}); ok {
+		p.DevicePersister = dp.WithNetworkID(nid)
 	}
 	return &p
 }
