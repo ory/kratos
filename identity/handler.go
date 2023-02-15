@@ -679,37 +679,53 @@ func (h *Handler) patch(w http.ResponseWriter, r *http.Request, ps httprouter.Pa
 	credentials := identity.Credentials
 	oldState := identity.State
 
-	if err := jsonx.ApplyJSONPatch(requestBody, identity, "/id", "/stateChangedAt", "/credentials"); err != nil {
-		h.r.Writer().WriteError(w, r, errors.WithStack(herodot.ErrBadRequest.WithReasonf("%s", err).WithWrap(err)))
+	patchedIdentity := WithAdminMetadataInJSON(*identity)
+
+	if err := jsonx.ApplyJSONPatch(requestBody, &patchedIdentity, "/id", "/stateChangedAt", "/credentials"); err != nil {
+		h.r.Writer().WriteError(w, r, errors.WithStack(
+			herodot.
+				ErrBadRequest.
+				WithReasonf("An error occured when applying the JSON patch").
+				WithErrorf("%v", err).
+				WithWrap(err),
+		))
 		return
 	}
 
 	// See https://github.com/ory/cloud/issues/148
 	// The apply patch operation overrides the credentials with an empty map.
-	identity.Credentials = credentials
+	patchedIdentity.Credentials = credentials
 
-	if oldState != identity.State {
+	if oldState != patchedIdentity.State {
 		// Check if the changed state was actually valid
-		if err := identity.State.IsValid(); err != nil {
-			h.r.Writer().WriteError(w, r, errors.WithStack(herodot.ErrBadRequest.WithReasonf("%s", err).WithWrap(err)))
+		if err := patchedIdentity.State.IsValid(); err != nil {
+			h.r.Writer().WriteError(w, r, errors.WithStack(
+				herodot.
+					ErrBadRequest.
+					WithReasonf("The supplied state ('%s') was not valid. Valid states are ('%s', '%s').", string(patchedIdentity.State), StateActive, StateInactive).
+					WithErrorf("%v", err).
+					WithWrap(err),
+			))
 			return
 		}
 
 		// If the state changed, we need to update the timestamp of it
 		stateChangedAt := sqlxx.NullTime(time.Now())
-		identity.StateChangedAt = &stateChangedAt
+		patchedIdentity.StateChangedAt = &stateChangedAt
 	}
+
+	updatedIdenty := Identity(patchedIdentity)
 
 	if err := h.r.IdentityManager().Update(
 		r.Context(),
-		identity,
+		&updatedIdenty,
 		ManagerAllowWriteProtectedTraits,
 	); err != nil {
 		h.r.Writer().WriteError(w, r, err)
 		return
 	}
 
-	h.r.Writer().Write(w, r, WithCredentialsMetadataAndAdminMetadataInJSON(*identity))
+	h.r.Writer().Write(w, r, WithCredentialsMetadataAndAdminMetadataInJSON(updatedIdenty))
 }
 
 func deletCredentialWebAuthFromIdentity(identity *Identity) (*Identity, error) {

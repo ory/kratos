@@ -554,182 +554,6 @@ func TestHandler(t *testing.T) {
 			}
 		})
 
-		t.Run("case=PATCH update of state should update state changed at timestamp", func(t *testing.T) {
-			uuid := x.NewUUID().String()
-			i := &identity.Identity{Traits: identity.Traits(fmt.Sprintf(`{"subject":"%s"}`, uuid))}
-			require.NoError(t, reg.PrivilegedIdentityPool().CreateIdentity(context.Background(), i))
-
-			for name, ts := range map[string]*httptest.Server{"public": publicTS, "admin": adminTS} {
-				t.Run("endpoint="+name, func(t *testing.T) {
-					patch := []patch{
-						{"op": "replace", "path": "/state", "value": identity.StateInactive},
-					}
-
-					res := send(t, ts, "PATCH", "/identities/"+i.ID.String(), http.StatusOK, &patch)
-					assert.EqualValues(t, uuid, res.Get("traits.subject").String(), "%s", res.Raw)
-					assert.False(t, res.Get("metadata_admin.admin").Exists(), "%s", res.Raw)
-					assert.False(t, res.Get("metadata_public.public").Exists(), "%s", res.Raw)
-					assert.EqualValues(t, identity.StateInactive, res.Get("state").String(), "%s", res.Raw)
-					assert.NotEqualValues(t, i.StateChangedAt, sqlxx.NullTime(res.Get("state_changed_at").Time()), "%s", res.Raw)
-
-					res = get(t, ts, "/identities/"+i.ID.String(), http.StatusOK)
-					assert.EqualValues(t, i.ID.String(), res.Get("id").String(), "%s", res.Raw)
-					assert.EqualValues(t, uuid, res.Get("traits.subject").String(), "%s", res.Raw)
-					assert.False(t, res.Get("metadata_admin.admin").Exists(), "%s", res.Raw)
-					assert.False(t, res.Get("metadata_public.public").Exists(), "%s", res.Raw)
-					assert.EqualValues(t, identity.StateInactive, res.Get("state").String(), "%s", res.Raw)
-					assert.NotEqualValues(t, i.StateChangedAt, sqlxx.NullTime(res.Get("state_changed_at").Time()), "%s", res.Raw)
-				})
-			}
-		})
-
-		t.Run("case=PATCH update should not persist if schema id is invalid", func(t *testing.T) {
-			uuid := x.NewUUID().String()
-			i := &identity.Identity{Traits: identity.Traits(fmt.Sprintf(`{"subject":"%s"}`, uuid))}
-			require.NoError(t, reg.PrivilegedIdentityPool().CreateIdentity(context.Background(), i))
-
-			for name, ts := range map[string]*httptest.Server{"public": publicTS, "admin": adminTS} {
-				t.Run("endpoint="+name, func(t *testing.T) {
-					patch := []patch{
-						{"op": "replace", "path": "/schema_id", "value": "invalid-id"},
-					}
-
-					res := send(t, ts, "PATCH", "/identities/"+i.ID.String(), http.StatusBadRequest, &patch)
-					assert.Contains(t, res.Get("error.reason").String(), "invalid-id", "%s", res.Raw)
-
-					res = get(t, ts, "/identities/"+i.ID.String(), http.StatusOK)
-					// Assert that the schema ID is unchanged
-					assert.EqualValues(t, i.SchemaID, res.Get("schema_id").String(), "%s", res.Raw)
-					assert.EqualValues(t, uuid, res.Get("traits.subject").String(), "%s", res.Raw)
-					assert.False(t, res.Get("metadata_admin.admin").Exists(), "%s", res.Raw)
-					assert.False(t, res.Get("metadata_public.public").Exists(), "%s", res.Raw)
-
-				})
-			}
-		})
-
-		t.Run("case=PATCH update should not persist if invalid state is supplied", func(t *testing.T) {
-			uuid := x.NewUUID().String()
-			i := &identity.Identity{Traits: identity.Traits(fmt.Sprintf(`{"subject":"%s"}`, uuid))}
-			require.NoError(t, reg.PrivilegedIdentityPool().CreateIdentity(context.Background(), i))
-
-			for name, ts := range map[string]*httptest.Server{"public": publicTS, "admin": adminTS} {
-				t.Run("endpoint="+name, func(t *testing.T) {
-					patch := []patch{
-						{"op": "replace", "path": "/state", "value": "invalid-value"},
-					}
-
-					res := send(t, ts, "PATCH", "/identities/"+i.ID.String(), http.StatusBadRequest, &patch)
-					assert.EqualValues(t, "identity state is not valid", res.Get("error.reason").String(), "%s", res.Raw)
-
-					res = get(t, ts, "/identities/"+i.ID.String(), http.StatusOK)
-					// Assert that the schema ID is unchanged
-					assert.EqualValues(t, i.SchemaID, res.Get("schema_id").String(), "%s", res.Raw)
-					assert.EqualValues(t, uuid, res.Get("traits.subject").String(), "%s", res.Raw)
-					assert.False(t, res.Get("metadata_admin.admin").Exists(), "%s", res.Raw)
-					assert.False(t, res.Get("metadata_public.public").Exists(), "%s", res.Raw)
-					assert.NotEqualValues(t, i.StateChangedAt, sqlxx.NullTime(res.Get("state_changed_at").Time()), "%s", res.Raw)
-				})
-			}
-		})
-
-		t.Run("case=PATCH update should update nested fields", func(t *testing.T) {
-			uuid := x.NewUUID().String()
-			i := &identity.Identity{Traits: identity.Traits(fmt.Sprintf(`{"subject":"%s"}`, uuid))}
-			require.NoError(t, reg.PrivilegedIdentityPool().CreateIdentity(context.Background(), i))
-
-			for name, ts := range map[string]*httptest.Server{"public": publicTS, "admin": adminTS} {
-				t.Run("endpoint="+name, func(t *testing.T) {
-					patch := []patch{
-						{"op": "replace", "path": "/traits/subject", "value": "patched-subject"},
-					}
-
-					res := send(t, ts, "PATCH", "/identities/"+i.ID.String(), http.StatusOK, &patch)
-					assert.EqualValues(t, "patched-subject", res.Get("traits.subject").String(), "%s", res.Raw)
-
-					res = get(t, ts, "/identities/"+i.ID.String(), http.StatusOK)
-					// Assert that the schema ID is unchanged
-					assert.EqualValues(t, i.SchemaID, res.Get("schema_id").String(), "%s", res.Raw)
-					assert.EqualValues(t, "patched-subject", res.Get("traits.subject").String(), "%s", res.Raw)
-				})
-			}
-		})
-
-		t.Run("case=PATCH should fail if no JSON payload is sent", func(t *testing.T) {
-			for name, ts := range map[string]*httptest.Server{"public": publicTS, "admin": adminTS} {
-				t.Run("endpoint="+name, func(t *testing.T) {
-					res := send(t, ts, "PATCH", "/identities/"+i.ID.String(), http.StatusBadRequest, nil)
-					assert.Contains(t, res.Get("error.reason").String(), `unexpected end of JSON input`, res.Raw)
-				})
-			}
-		})
-
-		t.Run("case=PATCH should fail if credentials are updated", func(t *testing.T) {
-			uuid := x.NewUUID().String()
-			i := &identity.Identity{Traits: identity.Traits(fmt.Sprintf(`{"subject":"%s"}`, uuid))}
-			require.NoError(t, reg.PrivilegedIdentityPool().CreateIdentity(context.Background(), i))
-
-			for name, ts := range map[string]*httptest.Server{"public": publicTS, "admin": adminTS} {
-
-				t.Run("endpoint="+name, func(t *testing.T) {
-					patch := []patch{
-						{"op": "replace", "path": "/credentials", "value": "patched-credentials"},
-					}
-
-					res := send(t, ts, "PATCH", "/identities/"+i.ID.String(), http.StatusBadRequest, &patch)
-
-					assert.EqualValues(t, "patch includes denied path: /credentials", res.Get("error.reason").String(), "%s", res.Raw)
-				})
-			}
-		})
-
-		t.Run("case=PATCH should not invalidate credentials ory/cloud#148", func(t *testing.T) {
-			// see https://github.com/ory/cloud/issues/148
-
-			createCredentials := func(t *testing.T) (*identity.Identity, string, string) {
-				t.Helper()
-				uuid := x.NewUUID().String()
-				email := uuid + "@ory.sh"
-				password := "ljanf123akf"
-				p, err := reg.Hasher(ctx).Generate(context.Background(), []byte(password))
-				require.NoError(t, err)
-				i := &identity.Identity{Traits: identity.Traits(`{"email":"` + email + `"}`)}
-				i.SetCredentials(identity.CredentialsTypePassword, identity.Credentials{
-					Type:        identity.CredentialsTypePassword,
-					Identifiers: []string{email},
-					Config:      sqlxx.JSONRawMessage(`{"hashed_password":"` + string(p) + `"}`),
-				})
-				require.NoError(t, reg.PrivilegedIdentityPool().CreateIdentity(context.Background(), i))
-				return i, email, password
-			}
-
-			for name, ts := range map[string]*httptest.Server{"public": publicTS, "admin": adminTS} {
-				t.Run("endpoint="+name, func(t *testing.T) {
-					i, email, password := createCredentials(t)
-					values := func(v url.Values) {
-						v.Set("identifier", email)
-						v.Set("password", password)
-					}
-
-					// verify login works initially
-					loginResponse := testhelpers.SubmitLoginForm(t, true, ts.Client(), ts, values, false, true, 200, "")
-					require.NotEmpty(t, gjson.Get(loginResponse, "session_token").String(), "expected to find a session token, found none")
-
-					patch := []patch{
-						{"op": "replace", "path": "/metadata_public", "value": map[string]string{"role": "user"}},
-					}
-
-					res := send(t, ts, "PATCH", "/identities/"+i.ID.String(), http.StatusOK, &patch)
-					assert.EqualValues(t, "user", res.Get("metadata_public.role").String(), "%s", res.Raw)
-					assert.NotEqualValues(t, i.StateChangedAt, sqlxx.NullTime(res.Get("state_changed_at").Time()), "%s", res.Raw)
-
-					loginResponse = testhelpers.SubmitLoginForm(t, true, ts.Client(), ts, values, false, true, 200, "")
-					msgs := gjson.Get(loginResponse, "ui.messages")
-					require.Empty(t, msgs.Array(), "expected to find no messages: %s", msgs.String())
-				})
-			}
-		})
-
 		t.Run("case=should delete a user and no longer be able to retrieve it", func(t *testing.T) {
 			for name, ts := range map[string]*httptest.Server{"public": publicTS, "admin": adminTS} {
 				t.Run("endpoint="+name, func(t *testing.T) {
@@ -739,6 +563,224 @@ func TestHandler(t *testing.T) {
 				})
 			}
 		})
+	})
+
+	t.Run("case=PATCH update of state should update state changed at timestamp", func(t *testing.T) {
+		uuid := x.NewUUID().String()
+		i := &identity.Identity{Traits: identity.Traits(fmt.Sprintf(`{"subject":"%s"}`, uuid))}
+		require.NoError(t, reg.PrivilegedIdentityPool().CreateIdentity(context.Background(), i))
+
+		for name, ts := range map[string]*httptest.Server{"public": publicTS, "admin": adminTS} {
+			t.Run("endpoint="+name, func(t *testing.T) {
+				patch := []patch{
+					{"op": "replace", "path": "/state", "value": identity.StateInactive},
+				}
+
+				res := send(t, ts, "PATCH", "/identities/"+i.ID.String(), http.StatusOK, &patch)
+				assert.EqualValues(t, uuid, res.Get("traits.subject").String(), "%s", res.Raw)
+				assert.False(t, res.Get("metadata_admin.admin").Exists(), "%s", res.Raw)
+				assert.False(t, res.Get("metadata_public.public").Exists(), "%s", res.Raw)
+				assert.EqualValues(t, identity.StateInactive, res.Get("state").String(), "%s", res.Raw)
+				assert.NotEqualValues(t, i.StateChangedAt, sqlxx.NullTime(res.Get("state_changed_at").Time()), "%s", res.Raw)
+
+				res = get(t, ts, "/identities/"+i.ID.String(), http.StatusOK)
+				assert.EqualValues(t, i.ID.String(), res.Get("id").String(), "%s", res.Raw)
+				assert.EqualValues(t, uuid, res.Get("traits.subject").String(), "%s", res.Raw)
+				assert.False(t, res.Get("metadata_admin.admin").Exists(), "%s", res.Raw)
+				assert.False(t, res.Get("metadata_public.public").Exists(), "%s", res.Raw)
+				assert.EqualValues(t, identity.StateInactive, res.Get("state").String(), "%s", res.Raw)
+				assert.NotEqualValues(t, i.StateChangedAt, sqlxx.NullTime(res.Get("state_changed_at").Time()), "%s", res.Raw)
+			})
+		}
+	})
+
+	t.Run("case=PATCH update should not persist if schema id is invalid", func(t *testing.T) {
+		uuid := x.NewUUID().String()
+		i := &identity.Identity{Traits: identity.Traits(fmt.Sprintf(`{"subject":"%s"}`, uuid))}
+		require.NoError(t, reg.PrivilegedIdentityPool().CreateIdentity(context.Background(), i))
+
+		for name, ts := range map[string]*httptest.Server{"public": publicTS, "admin": adminTS} {
+			t.Run("endpoint="+name, func(t *testing.T) {
+				patch := []patch{
+					{"op": "replace", "path": "/schema_id", "value": "invalid-id"},
+				}
+
+				res := send(t, ts, "PATCH", "/identities/"+i.ID.String(), http.StatusBadRequest, &patch)
+				assert.Contains(t, res.Get("error.reason").String(), "invalid-id", "%s", res.Raw)
+
+				res = get(t, ts, "/identities/"+i.ID.String(), http.StatusOK)
+				// Assert that the schema ID is unchanged
+				assert.EqualValues(t, i.SchemaID, res.Get("schema_id").String(), "%s", res.Raw)
+				assert.EqualValues(t, uuid, res.Get("traits.subject").String(), "%s", res.Raw)
+				assert.False(t, res.Get("metadata_admin.admin").Exists(), "%s", res.Raw)
+				assert.False(t, res.Get("metadata_public.public").Exists(), "%s", res.Raw)
+
+			})
+		}
+	})
+
+	t.Run("case=PATCH update should not persist if invalid state is supplied", func(t *testing.T) {
+		uuid := x.NewUUID().String()
+		i := &identity.Identity{Traits: identity.Traits(fmt.Sprintf(`{"subject":"%s"}`, uuid))}
+		require.NoError(t, reg.PrivilegedIdentityPool().CreateIdentity(context.Background(), i))
+
+		for name, ts := range map[string]*httptest.Server{"public": publicTS, "admin": adminTS} {
+			t.Run("endpoint="+name, func(t *testing.T) {
+				patch := []patch{
+					{"op": "replace", "path": "/state", "value": "invalid-value"},
+				}
+
+				res := send(t, ts, "PATCH", "/identities/"+i.ID.String(), http.StatusBadRequest, &patch)
+				assert.EqualValues(t, "The supplied state ('invalid-value') was not valid. Valid states are ('active', 'inactive').", res.Get("error.reason").String(), "%s", res.Raw)
+
+				res = get(t, ts, "/identities/"+i.ID.String(), http.StatusOK)
+				// Assert that the schema ID is unchanged
+				assert.EqualValues(t, i.SchemaID, res.Get("schema_id").String(), "%s", res.Raw)
+				assert.EqualValues(t, uuid, res.Get("traits.subject").String(), "%s", res.Raw)
+				assert.False(t, res.Get("metadata_admin.admin").Exists(), "%s", res.Raw)
+				assert.False(t, res.Get("metadata_public.public").Exists(), "%s", res.Raw)
+				assert.NotEqualValues(t, i.StateChangedAt, sqlxx.NullTime(res.Get("state_changed_at").Time()), "%s", res.Raw)
+			})
+		}
+	})
+
+	t.Run("case=PATCH update should update nested fields", func(t *testing.T) {
+		uuid := x.NewUUID().String()
+		i := &identity.Identity{Traits: identity.Traits(fmt.Sprintf(`{"subject":"%s"}`, uuid))}
+		require.NoError(t, reg.PrivilegedIdentityPool().CreateIdentity(context.Background(), i))
+
+		for name, ts := range map[string]*httptest.Server{"public": publicTS, "admin": adminTS} {
+			t.Run("endpoint="+name, func(t *testing.T) {
+				patch := []patch{
+					{"op": "replace", "path": "/traits/subject", "value": "patched-subject"},
+				}
+
+				res := send(t, ts, "PATCH", "/identities/"+i.ID.String(), http.StatusOK, &patch)
+				assert.EqualValues(t, "patched-subject", res.Get("traits.subject").String(), "%s", res.Raw)
+
+				res = get(t, ts, "/identities/"+i.ID.String(), http.StatusOK)
+				// Assert that the schema ID is unchanged
+				assert.EqualValues(t, i.SchemaID, res.Get("schema_id").String(), "%s", res.Raw)
+				assert.EqualValues(t, "patched-subject", res.Get("traits.subject").String(), "%s", res.Raw)
+			})
+		}
+	})
+
+	t.Run("case=PATCH should fail if no JSON payload is sent", func(t *testing.T) {
+		uuid := x.NewUUID().String()
+		i := &identity.Identity{Traits: identity.Traits(fmt.Sprintf(`{"subject":"%s"}`, uuid))}
+		require.NoError(t, reg.PrivilegedIdentityPool().CreateIdentity(context.Background(), i))
+		for name, ts := range map[string]*httptest.Server{"public": publicTS, "admin": adminTS} {
+			t.Run("endpoint="+name, func(t *testing.T) {
+				res := send(t, ts, "PATCH", "/identities/"+i.ID.String(), http.StatusBadRequest, nil)
+				assert.Contains(t, res.Get("error.message").String(), `unexpected end of JSON input`, res.Raw)
+			})
+		}
+	})
+
+	t.Run("case=PATCH should fail if credentials are updated", func(t *testing.T) {
+		uuid := x.NewUUID().String()
+		i := &identity.Identity{Traits: identity.Traits(fmt.Sprintf(`{"subject":"%s"}`, uuid))}
+		require.NoError(t, reg.PrivilegedIdentityPool().CreateIdentity(context.Background(), i))
+
+		for name, ts := range map[string]*httptest.Server{"public": publicTS, "admin": adminTS} {
+
+			t.Run("endpoint="+name, func(t *testing.T) {
+				patch := []patch{
+					{"op": "replace", "path": "/credentials", "value": "patched-credentials"},
+				}
+
+				res := send(t, ts, "PATCH", "/identities/"+i.ID.String(), http.StatusBadRequest, &patch)
+
+				assert.EqualValues(t, "patch includes denied path: /credentials", res.Get("error.message").String(), "%s", res.Raw)
+			})
+		}
+	})
+
+	t.Run("case=PATCH should not invalidate credentials ory/cloud#148", func(t *testing.T) {
+		// see https://github.com/ory/cloud/issues/148
+
+		createCredentials := func(t *testing.T) (*identity.Identity, string, string) {
+			t.Helper()
+			uuid := x.NewUUID().String()
+			email := uuid + "@ory.sh"
+			password := "ljanf123akf"
+			p, err := reg.Hasher(ctx).Generate(context.Background(), []byte(password))
+			require.NoError(t, err)
+			i := &identity.Identity{Traits: identity.Traits(`{"email":"` + email + `"}`)}
+			i.SetCredentials(identity.CredentialsTypePassword, identity.Credentials{
+				Type:        identity.CredentialsTypePassword,
+				Identifiers: []string{email},
+				Config:      sqlxx.JSONRawMessage(`{"hashed_password":"` + string(p) + `"}`),
+			})
+			require.NoError(t, reg.PrivilegedIdentityPool().CreateIdentity(context.Background(), i))
+			return i, email, password
+		}
+
+		for name, ts := range map[string]*httptest.Server{"public": publicTS, "admin": adminTS} {
+			t.Run("endpoint="+name, func(t *testing.T) {
+				i, email, password := createCredentials(t)
+				values := func(v url.Values) {
+					v.Set("identifier", email)
+					v.Set("password", password)
+				}
+
+				// verify login works initially
+				loginResponse := testhelpers.SubmitLoginForm(t, true, ts.Client(), ts, values, false, true, 200, "")
+				require.NotEmpty(t, gjson.Get(loginResponse, "session_token").String(), "expected to find a session token, found none")
+
+				patch := []patch{
+					{"op": "replace", "path": "/metadata_public", "value": map[string]string{"role": "user"}},
+				}
+
+				res := send(t, ts, "PATCH", "/identities/"+i.ID.String(), http.StatusOK, &patch)
+				assert.EqualValues(t, "user", res.Get("metadata_public.role").String(), "%s", res.Raw)
+				assert.NotEqualValues(t, i.StateChangedAt, sqlxx.NullTime(res.Get("state_changed_at").Time()), "%s", res.Raw)
+
+				loginResponse = testhelpers.SubmitLoginForm(t, true, ts.Client(), ts, values, false, true, 200, "")
+				msgs := gjson.Get(loginResponse, "ui.messages")
+				require.Empty(t, msgs.Array(), "expected to find no messages: %s", msgs.String())
+			})
+		}
+	})
+
+	t.Run("case=PATCH should update metadata_admin correctly", func(t *testing.T) {
+		uuid := x.NewUUID().String()
+		i := &identity.Identity{Traits: identity.Traits(fmt.Sprintf(`{"subject":"%s"}`, uuid))}
+		require.NoError(t, reg.PrivilegedIdentityPool().CreateIdentity(context.Background(), i))
+
+		for name, ts := range map[string]*httptest.Server{"public": publicTS, "admin": adminTS} {
+			t.Run("endpoint="+name, func(t *testing.T) {
+				patch := []patch{
+					{"op": "add", "path": "/metadata_admin", "value": "metadata admin"},
+				}
+
+				res := send(t, ts, "PATCH", "/identities/"+i.ID.String(), http.StatusOK, &patch)
+
+				assert.True(t, res.Get("metadata_admin").Exists(), "%s", res.Raw)
+				assert.EqualValues(t, "metadata admin", res.Get("metadata_admin").String(), "%s", res.Raw)
+			})
+		}
+	})
+
+	t.Run("case=PATCH should update nested metadata_admin fields correctly", func(t *testing.T) {
+		uuid := x.NewUUID().String()
+		i := &identity.Identity{MetadataAdmin: sqlxx.NullJSONRawMessage(fmt.Sprintf(`{"id": "%s", "allowed": true}`, uuid))}
+		require.NoError(t, reg.PrivilegedIdentityPool().CreateIdentity(context.Background(), i))
+
+		for name, ts := range map[string]*httptest.Server{"public": publicTS, "admin": adminTS} {
+			t.Run("endpoint="+name, func(t *testing.T) {
+				patch := []patch{
+					{"op": "replace", "path": "/metadata_admin/allowed", "value": "false"},
+				}
+
+				res := send(t, ts, "PATCH", "/identities/"+i.ID.String(), http.StatusOK, &patch)
+
+				assert.True(t, res.Get("metadata_admin.allowed").Exists(), "%s", res.Raw)
+				assert.EqualValues(t, false, res.Get("metadata_admin.allowed").Bool(), "%s", res.Raw)
+				assert.EqualValues(t, uuid, res.Get("metadata_admin.id").String(), "%s", res.Raw)
+			})
+		}
 	})
 
 	t.Run("case=should return entity with credentials metadata", func(t *testing.T) {
