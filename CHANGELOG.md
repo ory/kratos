@@ -317,6 +317,9 @@ flows.
   ([39fa31f](https://github.com/ory/kratos/commit/39fa31f85deb3f015aa0f1b30b4a17e4b51d461b))
 - Identity.CopyWithoutCredentials
   ([989c99d](https://github.com/ory/kratos/commit/989c99d6a32e02759a8a7a07606a90832afec460))
+- Implement offline scope in the way google expects
+  ([#3088](https://github.com/ory/kratos/issues/3088))
+  ([39043d4](https://github.com/ory/kratos/commit/39043d451e154af44123ba031381f0e3c10fbb00))
 - Issuer missing from netid claims
   ([#3080](https://github.com/ory/kratos/issues/3080))
   ([dec7cbc](https://github.com/ory/kratos/commit/dec7cbc4286cbbe2d787b1f8998ee57054d7c95b)):
@@ -378,6 +381,8 @@ flows.
   closes [#2422](https://github.com/ory/kratos/issues/2422)
 - Don't pre-generate UUIDs for transient objects
   ([e17f307](https://github.com/ory/kratos/commit/e17f307732f8ced34727d5f3a70929866a0595e0))
+- Identity by identifier ([#3077](https://github.com/ory/kratos/issues/3077))
+  ([c288d4d](https://github.com/ory/kratos/commit/c288d4d136bca1a9ed3931b4827967eb44e80ede))
 - Improve tracing span naming in hooks
   ([bf828d3](https://github.com/ory/kratos/commit/bf828d3f5d56a963529e98958f4039f0dc569979))
 - Let DB generate ID for session devices

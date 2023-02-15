@@ -126,6 +126,12 @@ type listIdentitiesResponse struct {
 //lint:ignore U1000 Used to generate Swagger and OpenAPI definitions
 type listIdentitiesParameters struct {
 	migrationpagination.RequestParameters
+
+	// CredentialsIdentifier is the identifier (username, email) of the credentials to look up.
+	//
+	// required: false
+	// in: query
+	CredentialsIdentifier string `json:"credentials_identifier"`
 }
 
 // swagger:route GET /admin/identities identity listIdentities
@@ -147,22 +153,31 @@ type listIdentitiesParameters struct {
 //	  default: errorGeneric
 func (h *Handler) list(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 	page, itemsPerPage := x.ParsePagination(r)
-	is, err := h.r.IdentityPool().ListIdentities(r.Context(), ExpandDefault, page, itemsPerPage)
+
+	params := ListIdentityParameters{Expand: ExpandDefault, Page: page, PerPage: itemsPerPage, CredentialsIdentifier: r.URL.Query().Get("credentials_identifier")}
+	if params.CredentialsIdentifier != "" {
+		params.Expand = ExpandEverything
+	}
+
+	is, err := h.r.IdentityPool().ListIdentities(r.Context(), params)
 	if err != nil {
 		h.r.Writer().WriteError(w, r, err)
 		return
 	}
 
-	total, err := h.r.IdentityPool().CountIdentities(r.Context())
-	if err != nil {
-		h.r.Writer().WriteError(w, r, err)
-		return
+	total := int64(len(is))
+	if params.CredentialsIdentifier == "" {
+		total, err = h.r.IdentityPool().CountIdentities(r.Context())
+		if err != nil {
+			h.r.Writer().WriteError(w, r, err)
+			return
+		}
 	}
 
 	// Identities using the marshaler for including metadata_admin
-	isam := make([]WithAdminMetadataInJSON, len(is))
+	isam := make([]WithCredentialsMetadataAndAdminMetadataInJSON, len(is))
 	for i, identity := range is {
-		isam[i] = WithAdminMetadataInJSON(identity)
+		isam[i] = WithCredentialsMetadataAndAdminMetadataInJSON(identity)
 	}
 
 	migrationpagination.PaginationHeader(w, urlx.AppendPaths(h.r.Config().SelfAdminURL(r.Context()), RouteCollection), total, page, itemsPerPage)

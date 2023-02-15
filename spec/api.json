@@ -3237,6 +3237,14 @@
               "minimum": 1,
               "type": "integer"
             }
+          },
+          {
+            "description": "CredentialsIdentifier is the identifier (username, email) of the credentials to look up.",
+            "in": "query",
+            "name": "credentials_identifier",
+            "schema": {
+              "type": "string"
+            }
           }
         ],
         "responses": {

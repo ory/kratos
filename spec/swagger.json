@@ -203,6 +203,12 @@
             "description": "Pagination Page\n\nThis value is currently an integer, but it is not sequential. The value is not the page number, but a\nreference. The next page can be any number and some numbers might return an empty list.\n\nFor example, page 2 might not follow after page 1. And even if page 3 and 5 exist, but page 4 might not exist.",
             "name": "page",
             "in": "query"
+          },
+          {
+            "type": "string",
+            "description": "CredentialsIdentifier is the identifier (username, email) of the credentials to look up.",
+            "name": "credentials_identifier",
+            "in": "query"
           }
         ],
         "responses": {

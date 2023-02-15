@@ -1884,10 +1884,11 @@ func (a *IdentityApiService) GetSessionExecute(r IdentityApiApiGetSessionRequest
 }
 
 type IdentityApiApiListIdentitiesRequest struct {
-	ctx        context.Context
-	ApiService IdentityApi
-	perPage    *int64
-	page       *int64
+	ctx                   context.Context
+	ApiService            IdentityApi
+	perPage               *int64
+	page                  *int64
+	credentialsIdentifier *string
 }
 
 func (r IdentityApiApiListIdentitiesRequest) PerPage(perPage int64) IdentityApiApiListIdentitiesRequest {
@@ -1896,6 +1897,10 @@ func (r IdentityApiApiListIdentitiesRequest) PerPage(perPage int64) IdentityApiA
 }
 func (r IdentityApiApiListIdentitiesRequest) Page(page int64) IdentityApiApiListIdentitiesRequest {
 	r.page = &page
+	return r
+}
+func (r IdentityApiApiListIdentitiesRequest) CredentialsIdentifier(credentialsIdentifier string) IdentityApiApiListIdentitiesRequest {
+	r.credentialsIdentifier = &credentialsIdentifier
 	return r
 }
 
@@ -1946,6 +1951,9 @@ func (a *IdentityApiService) ListIdentitiesExecute(r IdentityApiApiListIdentitie
 	}
 	if r.page != nil {
 		localVarQueryParams.Add("page", parameterToString(*r.page, ""))
+	}
+	if r.credentialsIdentifier != nil {
+		localVarQueryParams.Add("credentials_identifier", parameterToString(*r.credentialsIdentifier, ""))
 	}
 	// to determine the Content-Type header
 	localVarHTTPContentTypes := []string{}
