@@ -12,6 +12,7 @@ import (
 
 	"github.com/beevik/etree"
 	"github.com/crewjam/saml"
+	"github.com/ory/kratos/identity"
 
 	dsig "github.com/russellhaering/goxmldsig"
 	"gotest.tools/assert"
@@ -55,9 +56,6 @@ func TestHappyPath(t *testing.T) {
 
 	// We send the request to Kratos
 	strategy.HandleCallback(resp, req, ps)
-
-	ids, _ := strategy.D().PrivilegedIdentityPool().ListIdentities(context.Background(), 0, 1000)
-	_ = ids
 
 	// This is the Happy Path, the HTTP response code should be 302 (Found status)
 	assert.Check(t, !strings.Contains(resp.HeaderMap["Location"][0], "error"))
@@ -498,7 +496,7 @@ func TestAddXMLCommentsInSAMLAttributes(t *testing.T) {
 	strategy.HandleCallback(resp, req, ps)
 
 	// Get all identities
-	ids, _ := strategy.D().PrivilegedIdentityPool().ListIdentities(context.Background(), 0, 1000)
+	ids, _ := strategy.D().PrivilegedIdentityPool().ListIdentities(context.Background(), identity.ExpandEverything, 0, 1000)
 	traitsMap := make(map[string]interface{})
 	json.Unmarshal(ids[0].Traits, &traitsMap)
 
@@ -682,7 +680,7 @@ func TestXSW3AssertionWrap1(t *testing.T) {
 	strategy.HandleCallback(resp, req, ps)
 
 	// Get all identities
-	ids, _ := strategy.D().PrivilegedIdentityPool().ListIdentities(context.Background(), 0, 1000)
+	ids, _ := strategy.D().PrivilegedIdentityPool().ListIdentities(context.Background(), identity.ExpandEverything, 0, 1000)
 
 	// We have to check that there is either an error or an identity created without the modified attribute
 	assert.Check(t, strings.Contains(resp.HeaderMap["Location"][0], "error") || strings.Contains(string(ids[0].Traits), "alice@example.com"))
@@ -744,7 +742,7 @@ func TestXSW4AssertionWrap2(t *testing.T) {
 	strategy.HandleCallback(resp, req, ps)
 
 	// Get all identities
-	ids, _ := strategy.D().PrivilegedIdentityPool().ListIdentities(context.Background(), 0, 1000)
+	ids, _ := strategy.D().PrivilegedIdentityPool().ListIdentities(context.Background(), identity.ExpandEverything, 0, 1000)
 
 	// We have to check that there is either an error or an identity created without the modified attribute
 	assert.Check(t, strings.Contains(resp.HeaderMap["Location"][0], "error") || strings.Contains(string(ids[0].Traits), "alice@example.com"))
@@ -806,7 +804,7 @@ func TestXSW5AssertionWrap3(t *testing.T) {
 	strategy.HandleCallback(resp, req, ps)
 
 	// Get all identities
-	ids, _ := strategy.D().PrivilegedIdentityPool().ListIdentities(context.Background(), 0, 1000)
+	ids, _ := strategy.D().PrivilegedIdentityPool().ListIdentities(context.Background(), identity.ExpandEverything, 0, 1000)
 
 	// We have to check that there is either an error or an identity created without the modified attribute
 	assert.Check(t, strings.Contains(resp.HeaderMap["Location"][0], "error") || strings.Contains(string(ids[0].Traits), "alice@example.com"))
@@ -868,7 +866,7 @@ func TestXSW6AssertionWrap4(t *testing.T) {
 	strategy.HandleCallback(resp, req, ps)
 
 	// Get all identities
-	ids, _ := strategy.D().PrivilegedIdentityPool().ListIdentities(context.Background(), 0, 1000)
+	ids, _ := strategy.D().PrivilegedIdentityPool().ListIdentities(context.Background(), identity.ExpandEverything, 0, 1000)
 
 	// We have to check that there is either an error or an identity created without the modified attribute
 	assert.Check(t, strings.Contains(resp.HeaderMap["Location"][0], "error") || strings.Contains(string(ids[0].Traits), "alice@example.com"))
@@ -930,7 +928,7 @@ func TestXSW7AssertionWrap5(t *testing.T) {
 	strategy.HandleCallback(resp, req, ps)
 
 	// Get all identities
-	ids, _ := strategy.D().PrivilegedIdentityPool().ListIdentities(context.Background(), 0, 1000)
+	ids, _ := strategy.D().PrivilegedIdentityPool().ListIdentities(context.Background(), identity.ExpandEverything, 0, 1000)
 
 	// We have to check that there is either an error or an identity created without the modified attribute
 	assert.Check(t, strings.Contains(resp.HeaderMap["Location"][0], "error") || strings.Contains(string(ids[0].Traits), "alice@example.com"))
@@ -990,7 +988,7 @@ func TestXSW8AssertionWrap6(t *testing.T) {
 	strategy.HandleCallback(resp, req, ps)
 
 	// Get all identities
-	ids, _ := strategy.D().PrivilegedIdentityPool().ListIdentities(context.Background(), 0, 1000)
+	ids, _ := strategy.D().PrivilegedIdentityPool().ListIdentities(context.Background(), identity.ExpandEverything, 0, 1000)
 
 	// We have to check that there is either an error or an identity created without the modified attribute
 	assert.Check(t, strings.Contains(resp.HeaderMap["Location"][0], "error") || strings.Contains(string(ids[0].Traits), "alice@example.com"))

@@ -49,16 +49,14 @@ func (m *ManagerRelayState) Pause(ctx context.Context, w http.ResponseWriter, r 
 	}
 	c := NewContainer(name, *o)
 
-	// We have to put the continuity value in the cookie to ensure that value are passed between API and UI
-	// It is also useful to pass the value between SP and IDP with POST method because RelayState will take its value from cookie
+	if err := m.dr.ContinuityPersister().SaveContinuitySession(r.Context(), c); err != nil {
+		return errors.WithStack(err)
+	}
+
 	if err = x.SessionPersistValues(w, r, m.dc.ContinuityCookieManager(ctx), CookieName, map[string]interface{}{
 		name: c.ID.String(),
 	}); err != nil {
 		return err
-	}
-
-	if err := m.dr.ContinuityPersister().SaveContinuitySession(r.Context(), c); err != nil {
-		return errors.WithStack(err)
 	}
 
 	return nil

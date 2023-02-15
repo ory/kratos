@@ -3,7 +3,9 @@ package saml
 import (
 	"bytes"
 	"context"
+	"encoding/base64"
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"strings"
 
@@ -124,6 +126,11 @@ type authCodeContainer struct {
 	Traits json.RawMessage `json:"traits"`
 }
 
+func generateState(flowID string) string {
+	state := x.NewUUID().String()
+	return base64.RawURLEncoding.EncodeToString([]byte(fmt.Sprintf("%s:%s", flowID, state)))
+}
+
 func NewStrategy(d registrationStrategyDependencies) *Strategy {
 	return &Strategy{
 		d:  d,
@@ -178,7 +185,7 @@ func (s *Strategy) GetAttributesFromAssertion(assertion *saml.Assertion) (map[st
 }
 
 func (s *Strategy) validateFlow(ctx context.Context, r *http.Request, rid uuid.UUID) (flow.Flow, error) {
-	if x.IsZeroUUID(rid) {
+	if rid.IsNil() {
 		return nil, errors.WithStack(herodot.ErrBadRequest.WithReason("The session cookie contains invalid values and the flow could not be executed. Please try again."))
 	}
 

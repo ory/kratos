@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/gofrs/uuid"
 	"github.com/google/go-jsonnet"
 	"github.com/pkg/errors"
 	"github.com/tidwall/gjson"
@@ -74,7 +75,7 @@ func (s *Strategy) processLogin(w http.ResponseWriter, r *http.Request, a *login
 	return nil, nil
 }
 
-func (s *Strategy) Login(w http.ResponseWriter, r *http.Request, f *login.Flow, ss *session.Session) (i *identity.Identity, err error) {
+func (s *Strategy) Login(w http.ResponseWriter, r *http.Request, f *login.Flow, identityID uuid.UUID) (i *identity.Identity, err error) {
 	if err := login.CheckAAL(f, identity.AuthenticatorAssuranceLevel1); err != nil {
 		return nil, err
 	}
@@ -102,7 +103,7 @@ func (s *Strategy) Login(w http.ResponseWriter, r *http.Request, f *login.Flow, 
 		return
 	}
 
-	state := x.NewUUID().String()
+	state := generateState(f.ID.String())
 	if err := s.d.RelayStateContinuityManager().Pause(r.Context(), w, r, sessionName,
 		continuity.WithPayload(&authCodeContainer{
 			State:  state,
