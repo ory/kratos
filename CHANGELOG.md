@@ -5,7 +5,7 @@
 
 **Table of Contents**
 
-- [ (2023-02-15)](#2023-02-15)
+- [ (2023-02-16)](#2023-02-16)
   - [Breaking Changes](#breaking-changes)
     - [Bug Fixes](#bug-fixes)
     - [Features](#features)
@@ -292,7 +292,7 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# [](https://github.com/ory/kratos/compare/v0.11.1...v) (2023-02-15)
+# [](https://github.com/ory/kratos/compare/v0.11.1...v) (2023-02-16)
 
 ## Breaking Changes
 
@@ -342,6 +342,10 @@ flows.
 
 - Nolint comment
   ([93e6501](https://github.com/ory/kratos/commit/93e6501c63a253336c081f156ada58458b83ef92))
+- Only return one result set for credentials_identifier
+  ([#3107](https://github.com/ory/kratos/issues/3107))
+  ([59f35d1](https://github.com/ory/kratos/commit/59f35d11e61a246d1079ac02cb8958ba81b37f75)),
+  closes [#3105](https://github.com/ory/kratos/issues/3105)
 - Orphaned webhook spans
   ([a7f9414](https://github.com/ory/kratos/commit/a7f9414460eb214a8f2b2ff96a2b6b303721f806))
 - Remove network omit flag ([#3066](https://github.com/ory/kratos/issues/3066))
