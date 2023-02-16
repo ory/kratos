@@ -749,6 +749,23 @@ func TestWebHooks(t *testing.T) {
 		assert.Error(t, err)
 	})
 
+	t.Run("must not error when template is erroneous and responses are ignored", func(t *testing.T) {
+		ts := newServer(webHookHttpCodeEndPoint(200))
+		req := &http.Request{
+			Header: map[string][]string{"Some-Header": {"Some-Value"}},
+			Host:   "www.ory.sh",
+			TLS:    new(tls.ConnectionState),
+			URL:    &url.URL{Path: "/some_end_point"},
+			Method: http.MethodPost,
+		}
+		f := &login.Flow{ID: x.NewUUID()}
+		conf := json.RawMessage(fmt.Sprintf(`{"url": "%s", "method": "GET", "body": "file://./stub/bad_template.jsonnet", "response": {"ignore": true}}`, ts.URL+path))
+		wh := hook.NewWebHook(&whDeps, conf)
+
+		err := wh.ExecuteLoginPreHook(nil, req, f)
+		assert.NoError(t, err)
+	})
+
 	t.Run("must not make request", func(t *testing.T) {
 		req := &http.Request{
 			Header: map[string][]string{"Some-Header": {"Some-Value"}},
