@@ -537,7 +537,7 @@ func (s *Strategy) recoveryHandleFormSubmission(w http.ResponseWriter, r *http.R
 	// re-initialize the UI with a "clean" new state
 	f.UI = &container.Container{
 		Method: "POST",
-		Action: flow.AppendFlowTo(urlx.AppendPaths(s.deps.Config().SelfPublicURL(r.Context()), recovery.RouteSubmitFlow), f.ID).String(),
+		Action: flow.AppendFlowTo(urlx.AppendPaths(s.deps.Config().SelfPublicURL(r.Context()), recovery.RouteSubmitFlow), f.ID, flow.TypeRecovery).String(),
 	}
 
 	f.UI.SetCSRF(s.deps.GenerateCSRFToken(r))

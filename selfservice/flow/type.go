@@ -3,11 +3,11 @@
 
 package flow
 
-// Type is the flow type.
+// Type is the flow client type.
 //
-// The flow type can either be `api` or `browser`.
+// The flow client type can either be `api` or `browser`.
 //
-// swagger:model selfServiceFlowType
+// swagger:model selfServiceFlowClientType
 type Type string
 
 const (
@@ -22,3 +22,18 @@ func (t Type) IsBrowser() bool {
 func (t Type) IsAPI() bool {
 	return t == TypeAPI
 }
+
+// Type is the flow type.
+//
+// The flow type can be `login`, `recovery`, `registration`, `settings`, `verification`.
+//
+// swagger:model selfServiceFlowType
+type FlowType string
+
+const (
+	TypeLogin        FlowType = "login"
+	TypeRecovery     FlowType = "recovery"
+	TypeRegistration FlowType = "registration"
+	TypeSettings     FlowType = "settings"
+	TypeVerification FlowType = "verification"
+)

@@ -106,7 +106,7 @@ func NewFlow(conf *config.Config, exp time.Duration, csrf string, r *http.Reques
 
 	// Pre-validate the return to URL which is contained in the HTTP request.
 	requestURL := x.RequestURL(r).String()
-	_, err := x.SecureRedirectTo(r,
+	redirectTo, err := x.SecureRedirectTo(r,
 		conf.SelfServiceBrowserDefaultReturnTo(r.Context()),
 		x.SecureRedirectUseSourceURL(requestURL),
 		x.SecureRedirectAllowURLs(conf.SelfServiceBrowserAllowedReturnToDomains(r.Context())),
@@ -114,6 +114,11 @@ func NewFlow(conf *config.Config, exp time.Duration, csrf string, r *http.Reques
 	)
 	if err != nil {
 		return nil, err
+	}
+
+	returnTo := ""
+	if redirectTo.String() != conf.SelfServiceBrowserDefaultReturnTo(r.Context()).String() {
+		returnTo = redirectTo.String()
 	}
 
 	hlc, err := hydra.GetLoginChallengeID(conf, r)
@@ -127,9 +132,10 @@ func NewFlow(conf *config.Config, exp time.Duration, csrf string, r *http.Reques
 		ExpiresAt:            now.Add(exp),
 		IssuedAt:             now,
 		RequestURL:           requestURL,
+		ReturnTo:             returnTo,
 		UI: &container.Container{
 			Method: "POST",
-			Action: flow.AppendFlowTo(urlx.AppendPaths(conf.SelfPublicURL(r.Context()), RouteSubmitFlow), id).String(),
+			Action: flow.AppendFlowTo(urlx.AppendPaths(conf.SelfPublicURL(r.Context()), RouteSubmitFlow), id, flow.TypeRegistration).String(),
 		},
 		CSRFToken:       csrf,
 		Type:            ft,
@@ -157,7 +163,7 @@ func (f *Flow) Valid() error {
 }
 
 func (f *Flow) AppendTo(src *url.URL) *url.URL {
-	return flow.AppendFlowTo(src, f.ID)
+	return flow.AppendFlowTo(src, f.ID, flow.TypeRegistration)
 }
 
 func (f *Flow) GetType() flow.Type {
@@ -168,6 +174,18 @@ func (f *Flow) GetRequestURL() string {
 	return f.RequestURL
 }
 
+func (f *Flow) GetReturnTo() *url.URL {
+	if f.ReturnTo == "" {
+		return nil
+	}
+
+	url, err := url.Parse(f.ReturnTo)
+	if err != nil {
+		return nil
+	}
+
+	return url
+}
 func (f *Flow) EnsureInternalContext() {
 	if !gjson.ParseBytes(f.InternalContext).IsObject() {
 		f.InternalContext = []byte("{}")

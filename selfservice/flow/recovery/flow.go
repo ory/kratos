@@ -108,7 +108,7 @@ func NewFlow(conf *config.Config, exp time.Duration, csrf string, r *http.Reques
 
 	// Pre-validate the return to URL which is contained in the HTTP request.
 	requestURL := x.RequestURL(r).String()
-	_, err := x.SecureRedirectTo(r,
+	redirectTo, err := x.SecureRedirectTo(r,
 		conf.SelfServiceBrowserDefaultReturnTo(r.Context()),
 		x.SecureRedirectUseSourceURL(requestURL),
 		x.SecureRedirectAllowURLs(conf.SelfServiceBrowserAllowedReturnToDomains(r.Context())),
@@ -118,14 +118,20 @@ func NewFlow(conf *config.Config, exp time.Duration, csrf string, r *http.Reques
 		return nil, err
 	}
 
+	returnTo := ""
+	if redirectTo.String() != conf.SelfServiceBrowserDefaultReturnTo(r.Context()).String() {
+		returnTo = redirectTo.String()
+	}
+
 	flow := &Flow{
 		ID:         id,
 		ExpiresAt:  now.Add(exp),
 		IssuedAt:   now,
 		RequestURL: requestURL,
+		ReturnTo:   returnTo,
 		UI: &container.Container{
 			Method: "POST",
-			Action: flow.AppendFlowTo(urlx.AppendPaths(conf.SelfPublicURL(r.Context()), RouteSubmitFlow), id).String(),
+			Action: flow.AppendFlowTo(urlx.AppendPaths(conf.SelfPublicURL(r.Context()), RouteSubmitFlow), id, flow.TypeRecovery).String(),
 		},
 		State:     StateChooseMethod,
 		CSRFToken: csrf,
@@ -165,6 +171,19 @@ func (f *Flow) GetRequestURL() string {
 	return f.RequestURL
 }
 
+func (f *Flow) GetReturnTo() *url.URL {
+	if f.ReturnTo == "" {
+		return nil
+	}
+
+	url, err := url.Parse(f.ReturnTo)
+	if err != nil {
+		return nil
+	}
+
+	return url
+}
+
 func (f Flow) TableName(ctx context.Context) string {
 	return "selfservice_recovery_flows"
 }
@@ -185,7 +204,7 @@ func (f *Flow) Valid() error {
 }
 
 func (f *Flow) AppendTo(src *url.URL) *url.URL {
-	return urlx.CopyWithQuery(src, url.Values{"flow": {f.ID.String()}})
+	return flow.AppendFlowTo(src, f.ID, flow.TypeRecovery)
 }
 
 func (f *Flow) SetCSRFToken(token string) {

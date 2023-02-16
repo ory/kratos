@@ -19,8 +19,8 @@ import (
 	"github.com/ory/x/urlx"
 )
 
-func AppendFlowTo(src *url.URL, id uuid.UUID) *url.URL {
-	return urlx.CopyWithQuery(src, url.Values{"flow": {id.String()}})
+func AppendFlowTo(src *url.URL, id uuid.UUID, flowType FlowType) *url.URL {
+	return urlx.CopyWithQuery(src, url.Values{"flow": {id.String()}, "type": {string(flowType)}})
 }
 
 func GetFlowID(r *http.Request) (uuid.UUID, error) {
@@ -35,6 +35,7 @@ type Flow interface {
 	GetID() uuid.UUID
 	GetType() Type
 	GetRequestURL() string
+	GetReturnTo() *url.URL
 	AppendTo(*url.URL) *url.URL
 	GetUI() *container.Container
 }

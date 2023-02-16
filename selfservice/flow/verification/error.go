@@ -101,6 +101,10 @@ func (s *ErrorHandler) WriteFlowError(
 			http.Redirect(w, r, urlx.CopyWithQuery(urlx.AppendPaths(s.d.Config().SelfPublicURL(r.Context()),
 				RouteGetFlow), url.Values{"id": {a.ID.String()}}).String(), http.StatusSeeOther)
 		} else {
+			if a.GetReturnTo() != nil {
+				http.Redirect(w, r, a.AppendTo(f.GetReturnTo()).String(), http.StatusSeeOther)
+				return
+			}
 			http.Redirect(w, r, a.AppendTo(s.d.Config().SelfServiceFlowVerificationUI(r.Context())).String(), http.StatusSeeOther)
 		}
 		return
@@ -118,6 +122,10 @@ func (s *ErrorHandler) WriteFlowError(
 	}
 
 	if f.Type == flow.TypeBrowser && !x.IsJSONRequest(r) {
+		if f.GetReturnTo() != nil {
+			http.Redirect(w, r, f.AppendTo(f.GetReturnTo()).String(), http.StatusSeeOther)
+			return
+		}
 		http.Redirect(w, r, f.AppendTo(s.d.Config().SelfServiceFlowVerificationUI(r.Context())).String(), http.StatusSeeOther)
 		return
 	}

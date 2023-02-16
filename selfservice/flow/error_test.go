@@ -66,8 +66,12 @@ func (t *testFlow) GetRequestURL() string {
 	return t.RequestURL
 }
 
+func (t *testFlow) GetReturnTo() *url.URL {
+	return nil
+}
+
 func (t *testFlow) AppendTo(url *url.URL) *url.URL {
-	return AppendFlowTo(url, t.ID)
+	return AppendFlowTo(url, t.ID, TypeLogin)
 }
 
 func (t *testFlow) GetUI() *container.Container {

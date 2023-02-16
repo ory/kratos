@@ -127,7 +127,7 @@ func NewFlow(conf *config.Config, exp time.Duration, csrf string, r *http.Reques
 	requestURL := x.RequestURL(r).String()
 
 	// Pre-validate the return to URL which is contained in the HTTP request.
-	_, err := x.SecureRedirectTo(r,
+	redirectTo, err := x.SecureRedirectTo(r,
 		conf.SelfServiceBrowserDefaultReturnTo(r.Context()),
 		x.SecureRedirectUseSourceURL(requestURL),
 		x.SecureRedirectAllowURLs(conf.SelfServiceBrowserAllowedReturnToDomains(r.Context())),
@@ -135,6 +135,11 @@ func NewFlow(conf *config.Config, exp time.Duration, csrf string, r *http.Reques
 	)
 	if err != nil {
 		return nil, err
+	}
+
+	returnTo := ""
+	if redirectTo.String() != conf.SelfServiceBrowserDefaultReturnTo(r.Context()).String() {
+		returnTo = redirectTo.String()
 	}
 
 	hlc, err := hydra.GetLoginChallengeID(conf, r)
@@ -149,9 +154,10 @@ func NewFlow(conf *config.Config, exp time.Duration, csrf string, r *http.Reques
 		IssuedAt:             now,
 		UI: &container.Container{
 			Method: "POST",
-			Action: flow.AppendFlowTo(urlx.AppendPaths(conf.SelfPublicURL(r.Context()), RouteSubmitFlow), id).String(),
+			Action: flow.AppendFlowTo(urlx.AppendPaths(conf.SelfPublicURL(r.Context()), RouteSubmitFlow), id, flow.TypeLogin).String(),
 		},
 		RequestURL: requestURL,
+		ReturnTo:   returnTo,
 		CSRFToken:  csrf,
 		Type:       flowType,
 		Refresh:    r.URL.Query().Get("refresh") == "true",
@@ -168,6 +174,19 @@ func (f *Flow) GetType() flow.Type {
 
 func (f *Flow) GetRequestURL() string {
 	return f.RequestURL
+}
+
+func (f *Flow) GetReturnTo() *url.URL {
+	if f.ReturnTo == "" {
+		return nil
+	}
+
+	url, err := url.Parse(f.ReturnTo)
+	if err != nil {
+		return nil
+	}
+
+	return url
 }
 
 func (f Flow) TableName(ctx context.Context) string {
@@ -194,7 +213,7 @@ func (f *Flow) IsForced() bool {
 }
 
 func (f *Flow) AppendTo(src *url.URL) *url.URL {
-	return flow.AppendFlowTo(src, f.ID)
+	return flow.AppendFlowTo(src, f.ID, flow.TypeLogin)
 }
 
 func (f Flow) GetNID() uuid.UUID {

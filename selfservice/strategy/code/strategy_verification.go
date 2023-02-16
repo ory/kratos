@@ -177,7 +177,7 @@ func (s *Strategy) createVerificationCodeForm(action string, code *string, email
 }
 
 func (s *Strategy) handleLinkClick(w http.ResponseWriter, r *http.Request, f *verification.Flow, code string) error {
-	f.UI = s.createVerificationCodeForm(flow.AppendFlowTo(urlx.AppendPaths(s.deps.Config().SelfPublicURL(r.Context()), verification.RouteSubmitFlow), f.ID).String(), &code, nil)
+	f.UI = s.createVerificationCodeForm(flow.AppendFlowTo(urlx.AppendPaths(s.deps.Config().SelfPublicURL(r.Context()), verification.RouteSubmitFlow), f.ID, flow.TypeVerification).String(), &code, nil)
 
 	// In the verification flow, we can't enforce CSRF if the flow is opened from an email, so we initialize the CSRF
 	// token here, so all subsequent interactions are protected
@@ -228,7 +228,7 @@ func (s *Strategy) verificationHandleFormSubmission(w http.ResponseWriter, r *ht
 
 	f.State = verification.StateEmailSent
 
-	f.UI = s.createVerificationCodeForm(flow.AppendFlowTo(urlx.AppendPaths(s.deps.Config().SelfPublicURL(r.Context()), verification.RouteSubmitFlow), f.ID).String(), nil, &body.Email)
+	f.UI = s.createVerificationCodeForm(flow.AppendFlowTo(urlx.AppendPaths(s.deps.Config().SelfPublicURL(r.Context()), verification.RouteSubmitFlow), f.ID, flow.TypeVerification).String(), nil, &body.Email)
 	f.UI.Messages.Set(text.NewVerificationEmailWithCodeSent())
 	f.UI.SetCSRF(s.deps.GenerateCSRFToken(r))
 

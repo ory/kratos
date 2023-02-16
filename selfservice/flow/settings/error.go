@@ -171,6 +171,10 @@ func (s *ErrorHandler) WriteFlowError(
 		if f.Type == flow.TypeAPI || x.IsJSONRequest(r) {
 			s.d.Writer().WriteError(w, r, expired)
 		} else {
+			if expired.GetFlow().GetReturnTo() != nil {
+				http.Redirect(w, r, expired.GetFlow().AppendTo(f.GetReturnTo()).String(), http.StatusSeeOther)
+				return
+			}
 			http.Redirect(w, r, expired.GetFlow().AppendTo(s.d.Config().SelfServiceFlowSettingsUI(r.Context())).String(), http.StatusSeeOther)
 		}
 		return
@@ -180,6 +184,10 @@ func (s *ErrorHandler) WriteFlowError(
 		if shouldRespondWithJSON {
 			s.d.Writer().Write(w, r, f)
 		} else {
+			if f.GetReturnTo() != nil {
+				http.Redirect(w, r, f.AppendTo(f.GetReturnTo()).String(), http.StatusSeeOther)
+				return
+			}
 			http.Redirect(w, r, f.AppendTo(s.d.Config().SelfServiceFlowSettingsUI(r.Context())).String(), http.StatusSeeOther)
 		}
 		return
@@ -220,6 +228,10 @@ func (s *ErrorHandler) WriteFlowError(
 	}
 
 	if f.Type == flow.TypeBrowser && !x.IsJSONRequest(r) {
+		if f.GetReturnTo() != nil {
+			http.Redirect(w, r, f.AppendTo(f.GetReturnTo()).String(), http.StatusSeeOther)
+			return
+		}
 		http.Redirect(w, r, f.AppendTo(s.d.Config().SelfServiceFlowSettingsUI(r.Context())).String(), http.StatusSeeOther)
 		return
 	}
