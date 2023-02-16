@@ -3032,7 +3032,7 @@
       }
     },
     "securitySchemes": {
-      "oryAccessToken": {
+      "oryApiKey": {
         "in": "header",
         "name": "Authorization",
         "type": "apiKey"
@@ -3143,7 +3143,7 @@
         },
         "security": [
           {
-            "oryAccessToken": []
+            "oryApiKey": []
           }
         ],
         "summary": "List Messages",
@@ -3201,7 +3201,7 @@
         },
         "security": [
           {
-            "oryAccessToken": []
+            "oryApiKey": []
           }
         ],
         "summary": "Get a Message",
@@ -3256,7 +3256,7 @@
         },
         "security": [
           {
-            "oryAccessToken": []
+            "oryApiKey": []
           }
         ],
         "summary": "List Identities",
@@ -3321,7 +3321,7 @@
         },
         "security": [
           {
-            "oryAccessToken": []
+            "oryApiKey": []
           }
         ],
         "summary": "Create an Identity",
@@ -3372,7 +3372,7 @@
         },
         "security": [
           {
-            "oryAccessToken": []
+            "oryApiKey": []
           }
         ],
         "summary": "Delete an Identity",
@@ -3439,7 +3439,7 @@
         },
         "security": [
           {
-            "oryAccessToken": []
+            "oryApiKey": []
           }
         ],
         "summary": "Get an Identity",
@@ -3525,7 +3525,7 @@
         },
         "security": [
           {
-            "oryAccessToken": []
+            "oryApiKey": []
           }
         ],
         "summary": "Patch an Identity",
@@ -3611,7 +3611,7 @@
         },
         "security": [
           {
-            "oryAccessToken": []
+            "oryApiKey": []
           }
         ],
         "summary": "Update an Identity",
@@ -3683,7 +3683,7 @@
         },
         "security": [
           {
-            "oryAccessToken": []
+            "oryApiKey": []
           }
         ],
         "summary": "Delete a credential for a specific identity",
@@ -3754,7 +3754,7 @@
         },
         "security": [
           {
-            "oryAccessToken": []
+            "oryApiKey": []
           }
         ],
         "summary": "Delete \u0026 Invalidate an Identity's Sessions",
@@ -3844,7 +3844,7 @@
         },
         "security": [
           {
-            "oryAccessToken": []
+            "oryApiKey": []
           }
         ],
         "summary": "List an Identity's Sessions",
@@ -3911,7 +3911,7 @@
         },
         "security": [
           {
-            "oryAccessToken": []
+            "oryApiKey": []
           }
         ],
         "summary": "Create a Recovery Code",
@@ -3978,7 +3978,7 @@
         },
         "security": [
           {
-            "oryAccessToken": []
+            "oryApiKey": []
           }
         ],
         "summary": "Create a Recovery Link",
@@ -4063,7 +4063,7 @@
         },
         "security": [
           {
-            "oryAccessToken": []
+            "oryApiKey": []
           }
         ],
         "summary": "List All Sessions",
@@ -4124,7 +4124,7 @@
         },
         "security": [
           {
-            "oryAccessToken": []
+            "oryApiKey": []
           }
         ],
         "summary": "Deactivate a Session",
@@ -4195,7 +4195,7 @@
         },
         "security": [
           {
-            "oryAccessToken": []
+            "oryApiKey": []
           }
         ],
         "summary": "Get Session",
@@ -4263,7 +4263,7 @@
         },
         "security": [
           {
-            "oryAccessToken": []
+            "oryApiKey": []
           }
         ],
         "summary": "Extend a Session",

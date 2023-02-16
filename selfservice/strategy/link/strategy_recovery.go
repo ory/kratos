@@ -131,7 +131,7 @@ type recoveryLinkForIdentity struct {
 //	Schemes: http, https
 //
 //	Security:
-//	  oryAccessToken:
+//	  oryApiKey:
 //
 //	Responses:
 //	  200: recoveryLinkForIdentity

@@ -18,7 +18,7 @@
 //	- application/json
 //
 //	SecurityDefinitions:
-//	oryAccessToken:
+//	oryApiKey:
 //	     type: apiKey
 //	     name: Authorization
 //	     in: header

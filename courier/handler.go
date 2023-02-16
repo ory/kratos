@@ -100,7 +100,7 @@ type ListCourierMessagesParameters struct {
 //	- application/json
 //
 //	Security:
-//	  oryAccessToken:
+//	  oryApiKey:
 //
 //	Schemes: http, https
 //
@@ -180,7 +180,7 @@ type getCourierMessage struct {
 //	- application/json
 //
 //	Security:
-//		oryAccessToken:
+//		oryApiKey:
 //
 //	Schemes: http, https
 //

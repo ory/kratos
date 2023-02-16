@@ -237,7 +237,7 @@ Class | Method | HTTP request | Description
 
 
 
-### oryAccessToken
+### oryApiKey
 
 - **Type**: API key
 - **API key parameter name**: Authorization

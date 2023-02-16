@@ -253,7 +253,7 @@ type deleteIdentitySessions struct {
 //	Schemes: http, https
 //
 //	Security:
-//	  oryAccessToken:
+//	  oryApiKey:
 //
 //	Responses:
 //	  204: emptyResponse
@@ -326,7 +326,7 @@ type listSessionsResponse struct {
 //	Schemes: http, https
 //
 //	Security:
-//	  oryAccessToken:
+//	  oryApiKey:
 //
 //	Responses:
 //	  200: listSessions
@@ -411,7 +411,7 @@ type getSession struct {
 //	Schemes: http, https
 //
 //	Security:
-//	  oryAccessToken:
+//	  oryApiKey:
 //
 //	Responses:
 //	  200: session
@@ -479,7 +479,7 @@ type disableSession struct {
 //	Schemes: http, https
 //
 //	Security:
-//		oryAccessToken:
+//		oryApiKey:
 //
 //	Responses:
 //		204: emptyResponse
@@ -545,7 +545,7 @@ type listIdentitySessionsResponse struct {
 //	Schemes: http, https
 //
 //	Security:
-//	  oryAccessToken:
+//	  oryApiKey:
 //
 //	Responses:
 //	  200: listIdentitySessions
@@ -828,7 +828,7 @@ type extendSession struct {
 //	Schemes: http, https
 //
 //	Security:
-//	  oryAccessToken:
+//	  oryApiKey:
 //
 //	Responses:
 //	  200: session
