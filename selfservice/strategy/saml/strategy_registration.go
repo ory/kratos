@@ -2,14 +2,11 @@ package saml
 
 import (
 	"bytes"
-	"context"
 	"encoding/json"
 	"net/http"
 
-	"github.com/google/go-jsonnet"
 	"github.com/pkg/errors"
 
-	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/identity"
 	"github.com/ory/x/decoderx"
 
@@ -17,7 +14,6 @@ import (
 	"github.com/ory/kratos/selfservice/flow/registration"
 	"github.com/ory/kratos/text"
 
-	"github.com/tidwall/gjson"
 	"github.com/tidwall/sjson"
 
 	"github.com/ory/kratos/x"
@@ -31,87 +27,66 @@ func (s *Strategy) RegisterRegistrationRoutes(r *x.RouterPublic) {
 	s.setRoutes(r)
 }
 
-func (s *Strategy) GetRegistrationIdentity(r *http.Request, ctx context.Context, provider Provider, claims *Claims, logsEnabled bool) (*identity.Identity, error) {
-	// Fetch fetches the file contents from the mapper file.
-	jn, err := s.f.Fetch(provider.Config().Mapper)
-	if err != nil {
-		return nil, err
-	}
-
+func (s *Strategy) createIdentity(w http.ResponseWriter, r *http.Request, a *registration.Flow, claims *Claims, provider Provider) (*identity.Identity, error) {
 	var jsonClaims bytes.Buffer
 	if err := json.NewEncoder(&jsonClaims).Encode(claims); err != nil {
-		return nil, err
+		return nil, s.handleError(w, r, a, provider.Config().ID, nil, err)
 	}
 
-	// Identity Creation
-	i := identity.NewIdentity(config.DefaultIdentityTraitsSchemaID)
+	i := identity.NewIdentity(s.d.Config().DefaultIdentityTraitsSchemaID(r.Context()))
+	if err := s.setTraits(w, r, a, claims, provider, jsonClaims, i); err != nil {
+		return nil, s.handleError(w, r, a, provider.Config().ID, i.Traits, err)
+	}
 
-	vm := jsonnet.MakeVM()
-	vm.ExtCode("claims", jsonClaims.String())
-	evaluated, err := vm.EvaluateAnonymousSnippet(provider.Config().Mapper, jn.String())
+	s.d.Logger().
+		WithRequest(r).
+		WithField("saml_provider", provider.Config().ID).
+		WithSensitiveField("saml_claims", claims).
+		Debug("SAML Connect completed.")
+	return i, nil
+}
+
+func (s *Strategy) setTraits(w http.ResponseWriter, r *http.Request, a *registration.Flow, claims *Claims, provider Provider, jsonClaims bytes.Buffer, i *identity.Identity) error {
+
+	traitsMap := make(map[string]interface{})
+	json.Unmarshal(jsonClaims.Bytes(), &traitsMap)
+	delete(traitsMap, "iss")
+	delete(traitsMap, "email_verified")
+	delete(traitsMap, "sub")
+	traits, err := json.Marshal(traitsMap)
 	if err != nil {
-		return nil, err
-	} else if traits := gjson.Get(evaluated, "identity.traits"); !traits.IsObject() {
-		i.Traits = []byte{'{', '}'}
-		if logsEnabled {
-			s.d.Logger().
-				WithRequest(r).
-				WithField("Provider", provider.Config().ID).
-				WithSensitiveField("saml_claims", claims).
-				WithField("mapper_jsonnet_output", evaluated).
-				WithField("mapper_jsonnet_url", provider.Config().Mapper).
-				Error("SAML Jsonnet mapper did not return an object for key identity.traits. Please check your Jsonnet code!")
-		}
-	} else {
-		i.Traits = []byte(traits.Raw)
+		return s.handleError(w, r, a, provider.Config().ID, i.Traits, err)
 	}
+	i.Traits = identity.Traits(traits)
 
-	if logsEnabled {
-		s.d.Logger().
-			WithRequest(r).
-			WithField("saml_provider", provider.Config().ID).
-			WithSensitiveField("saml_claims", claims).
-			WithSensitiveField("mapper_jsonnet_output", evaluated).
-			WithField("mapper_jsonnet_url", provider.Config().Mapper).
-			Debug("SAML Jsonnet mapper completed.")
+	s.d.Logger().
+		WithRequest(r).
+		WithField("oidc_provider", provider.Config().ID).
+		WithSensitiveField("identity_traits", i.Traits).
+		WithField("mapper_jsonnet_url", provider.Config().Mapper).
+		Debug("Merged form values and OpenID Connect Jsonnet output.")
+	return nil
+}
 
-		s.d.Logger().
-			WithRequest(r).
-			WithField("saml_provider", provider.Config().ID).
-			WithSensitiveField("identity_traits", i.Traits).
-			WithSensitiveField("mapper_jsonnet_output", evaluated).
-			WithField("mapper_jsonnet_url", provider.Config().Mapper).
-			Debug("Merged form values and SAML Jsonnet output.")
+func (s *Strategy) processRegistration(w http.ResponseWriter, r *http.Request, a *registration.Flow, provider Provider, claims *Claims) error {
+	i, err := s.createIdentity(w, r, a, claims, provider)
+	if err != nil {
+		return s.handleError(w, r, a, provider.Config().ID, nil, err)
 	}
 
 	// Verify the identity
-	if err := s.d.IdentityValidator().Validate(ctx, i); err != nil {
-		return i, err
+	if err := s.d.IdentityValidator().Validate(r.Context(), i); err != nil {
+		return s.handleError(w, r, a, provider.Config().ID, nil, err)
 	}
 
 	// Create new uniq credentials identifier for user is database
 	creds, err := identity.NewCredentialsSAML(claims.Subject, provider.Config().ID)
 	if err != nil {
-		return i, err
+		return s.handleError(w, r, a, provider.Config().ID, nil, err)
 	}
 
 	// Set the identifiers to the identity
 	i.SetCredentials(s.ID(), *creds)
-
-	return i, nil
-}
-
-func (s *Strategy) processRegistration(w http.ResponseWriter, r *http.Request, a *registration.Flow, provider Provider, claims *Claims) error {
-
-	i, err := s.GetRegistrationIdentity(r, r.Context(), provider, claims, true)
-	if err != nil {
-		if i == nil {
-			return s.handleError(w, r, a, provider.Config().ID, nil, err)
-		} else {
-			return s.handleError(w, r, a, provider.Config().ID, i.Traits, err)
-		}
-	}
-
 	if err := s.d.RegistrationExecutor().PostRegistrationHook(w, r, identity.CredentialsTypeSAML, a, i); err != nil {
 		return s.handleError(w, r, a, provider.Config().ID, i.Traits, err)
 	}

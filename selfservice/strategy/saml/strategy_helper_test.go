@@ -156,7 +156,6 @@ func InitTestMiddlewareWithoutMetadata(t *testing.T, idpSsoUrl string, idpEntity
 	idpInformation["idp_sso_url"] = idpSsoUrl
 	idpInformation["idp_entity_id"] = idpEntityId
 	idpInformation["idp_certificate_path"] = idpCertifiatePath
-	idpInformation["idp_logout_url"] = idpLogoutUrl
 
 	return InitTestMiddleware(t, idpInformation)
 }

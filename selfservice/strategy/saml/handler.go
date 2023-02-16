@@ -142,13 +142,13 @@ func (h *Handler) instantiateMiddleware(ctx context.Context, config config.Confi
 	}
 
 	// Key pair to encrypt and sign SAML requests
-	keyPair, err := tls.LoadX509KeyPair(strings.Replace(providerConfig.PublicCertPath, "file://", "", 1), strings.Replace(providerConfig.PrivateKeyPath, "file://", "", 1)) // TODO : Fetcher
+	keyPair, err := tls.LoadX509KeyPair(strings.Replace(providerConfig.PublicCertPath, "file://", "", 1), strings.Replace(providerConfig.PrivateKeyPath, "file://", "", 1))
 	if err != nil {
-		return herodot.ErrNotFound.WithTrace(err) // TODO : Replace with File not found error
+		return herodot.ErrInternalServerError.WithReason("An error occurred while retrieving the key pair used by SAML")
 	}
 	keyPair.Leaf, err = x509.ParseCertificate(keyPair.Certificate[0])
 	if err != nil {
-		return herodot.ErrNotFound.WithTrace(err)
+		return herodot.ErrInternalServerError.WithReason("An error occurred while using the certificate associated with SAML")
 	}
 
 	var idpMetadata *samlidp.EntityDescriptor
@@ -187,12 +187,6 @@ func (h *Handler) instantiateMiddleware(ctx context.Context, config config.Confi
 			return herodot.ErrNotFound.WithTrace(err)
 		}
 
-		// The IDP Logout URL
-		IDPlogoutURL, err := url.Parse(providerConfig.IDPInformation["idp_logout_url"])
-		if err != nil {
-			return herodot.ErrNotFound.WithTrace(err)
-		}
-
 		// The certificate of the IDP
 		certificateBuffer, err := fetcher.NewFetcher().Fetch(providerConfig.IDPInformation["idp_certificate_path"])
 		if err != nil {
@@ -212,12 +206,9 @@ func (h *Handler) instantiateMiddleware(ctx context.Context, config config.Confi
 
 		// Because the metadata file is not provided, we need to simulate an IDP to create artificial metadata from the data entered in the conf file
 		tempIDP := samlidp.IdentityProvider{
-			Key:         nil,
 			Certificate: IDPCertificate,
-			Logger:      nil,
 			MetadataURL: *entityIDURL,
 			SSOURL:      *IDPSSOURL,
-			LogoutURL:   *IDPlogoutURL,
 		}
 
 		// Now we assign our reconstructed metadata to our SP
@@ -282,7 +273,7 @@ func (h *Handler) instantiateMiddleware(ctx context.Context, config config.Confi
 	}
 
 	// Crewjam library use default route for ACS and metadata but we want to overwrite them
-	metadata, err := url.Parse(publicUrlString + RouteMetadata)
+	metadata, err := url.Parse(publicUrlString + strings.Replace(RouteMetadata, ":provider", providerConfig.ID, 1))
 	if err != nil {
 		return herodot.ErrNotFound.WithTrace(err)
 	}
@@ -302,7 +293,7 @@ func (h *Handler) instantiateMiddleware(ctx context.Context, config config.Confi
 // Return the singleton MiddleWare
 func GetMiddleware(pid string) (*samlsp.Middleware, error) {
 	if samlMiddlewares[pid] == nil {
-		return nil, errors.Errorf("An error occurred while retrieving the middeware, it is null") // TODO : Improve error message
+		return nil, errors.Errorf("An error occurred during the connection with SAML.")
 	}
 	return samlMiddlewares[pid], nil
 }
@@ -342,17 +333,12 @@ func CreateSAMLProviderConfig(config config.Config, ctx context.Context, pid str
 		return nil, ErrInvalidSAMLConfiguration.WithReasonf("Please include your Identity Provider information in the configuration file.").WithTrace(err)
 	}
 
-	/**
-	* SAMLTODO errors
-	 */
-	// _, sso_exists := providerConfig.IDPInformation["idp_sso_url"]
 	_, sso_exists := providerConfig.IDPInformation["idp_sso_url"]
 	_, entity_id_exists := providerConfig.IDPInformation["idp_entity_id"]
 	_, certificate_exists := providerConfig.IDPInformation["idp_certificate_path"]
-	_, logout_url_exists := providerConfig.IDPInformation["idp_logout_url"]
 	_, metadata_exists := providerConfig.IDPInformation["idp_metadata_url"]
 
-	if (!metadata_exists && (!sso_exists || !entity_id_exists || !certificate_exists || !logout_url_exists)) || len(providerConfig.IDPInformation) > 4 {
+	if (!metadata_exists && (!sso_exists || !entity_id_exists || !certificate_exists)) || len(providerConfig.IDPInformation) > 3 {
 		return nil, ErrInvalidSAMLConfiguration.WithReason("Please check your IDP information in the configuration file").WithTrace(err)
 	}
 

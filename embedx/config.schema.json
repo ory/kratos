@@ -446,14 +446,6 @@
                 "https://foo.bar.com/path/to/certificate"
               ]
             },
-            "idp_logout_url": {
-              "title": "IDP Logout URL",
-              "description": "The URL of the Single Log Out (SLO) API of the IDP",
-              "type": "string",
-              "examples": [
-                "https://path/to/logout"
-              ]
-            },
             "idp_sso_url": {
               "title": "IDP SSO URL",
               "description": "The URL of the SSO Handler at the IDP",
@@ -482,17 +474,14 @@
               },
               "then": {
                 "required": [
-                  "idp_logout_url",
                   "idp_certificate_path",
-                  "idp_entity_id"
+                  "idp_entity_id",
+                  "idp_sso_url"
                 ]
               },
               "else":{
                 "properties": {
                   "idp_certificate_path": {
-                    "const": {}
-                  },
-                  "idp_logout_url": {
                     "const": {}
                   },
                   "idp_entity_id":{

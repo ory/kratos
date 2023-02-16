@@ -171,26 +171,6 @@ func TestCountActiveCredentials(t *testing.T) {
 	gotest.Check(t, count == 1)
 }
 
-func TestGetRegistrationIdentity(t *testing.T) {
-	if testing.Short() {
-		t.Skip()
-	}
-
-	saml.DestroyMiddlewareIfExists("samlProvider")
-
-	middleware, strategy, _, _ := InitTestMiddlewareWithMetadata(t,
-		"file://testdata/SP_IDPMetadata.xml")
-
-	provider, _ := strategy.Provider(context.Background(), "samlProvider")
-	assertion, _ := GetAndDecryptAssertion(t, "./testdata/SP_SamlResponse.xml", middleware.ServiceProvider.Key)
-	attributes, _ := strategy.GetAttributesFromAssertion(assertion)
-	claims, _ := provider.Claims(context.Background(), strategy.D().Config(), attributes, "samlProvider")
-
-	i, err := strategy.GetRegistrationIdentity(nil, context.Background(), provider, claims, false)
-	require.NoError(t, err)
-	gotest.Check(t, i != nil)
-}
-
 func TestCountActiveFirstFactorCredentials(t *testing.T) {
 	_, reg := internal.NewFastRegistryWithMocks(t)
 	strategy := saml.NewStrategy(reg)

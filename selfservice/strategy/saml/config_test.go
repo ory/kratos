@@ -34,7 +34,6 @@ func TestInitSAMLWithoutProvider(t *testing.T) {
 	idpInformation["idp_sso_url"] = "https://samltest.id/idp/profile/SAML2/Redirect/SSO"
 	idpInformation["idp_entity_id"] = "https://samltest.id/saml/idp"
 	idpInformation["idp_certificate_path"] = "file://testdata/samlkratos.crt"
-	idpInformation["idp_logout_url"] = "https://samltest.id/idp/profile/SAML2/Redirect/SSO"
 
 	// Initiates without service provider
 	ViperSetProviderConfig(
@@ -75,7 +74,6 @@ func TestInitSAMLWithoutPoviderID(t *testing.T) {
 	idpInformation["idp_sso_url"] = "https://samltest.id/idp/profile/SAML2/Redirect/SSO"
 	idpInformation["idp_entity_id"] = "https://samltest.id/saml/idp"
 	idpInformation["idp_certificate_path"] = "file://testdata/samlkratos.crt"
-	idpInformation["idp_logout_url"] = "https://samltest.id/idp/profile/SAML2/Redirect/SSO"
 
 	// Initiates the service provider
 	ViperSetProviderConfig(
@@ -125,7 +123,6 @@ func TestInitSAMLWithoutPoviderLabel(t *testing.T) {
 	idpInformation["idp_sso_url"] = "https://samltest.id/idp/profile/SAML2/Redirect/SSO"
 	idpInformation["idp_entity_id"] = "https://samltest.id/saml/idp"
 	idpInformation["idp_certificate_path"] = "file://testdata/samlkratos.crt"
-	idpInformation["idp_logout_url"] = "https://samltest.id/idp/profile/SAML2/Redirect/SSO"
 
 	// Initiates the service provider
 	ViperSetProviderConfig(
@@ -174,7 +171,6 @@ func TestAttributesMapWithoutID(t *testing.T) {
 	idpInformation["idp_sso_url"] = "https://samltest.id/idp/profile/SAML2/Redirect/SSO"
 	idpInformation["idp_entity_id"] = "https://samltest.id/saml/idp"
 	idpInformation["idp_certificate_path"] = "file://testdata/samlkratos.crt"
-	idpInformation["idp_logout_url"] = "https://samltest.id/idp/profile/SAML2/Redirect/SSO"
 
 	// Initiates the service provider
 	ViperSetProviderConfig(
@@ -226,7 +222,6 @@ func TestAttributesMapWithAnExtraField(t *testing.T) {
 	idpInformation["idp_sso_url"] = "https://samltest.id/idp/profile/SAML2/Redirect/SSO"
 	idpInformation["idp_entity_id"] = "https://samltest.id/saml/idp"
 	idpInformation["idp_certificate_path"] = "file://testdata/idp_cert.pem"
-	idpInformation["idp_logout_url"] = "https://samltest.id/idp/profile/SAML2/Redirect/SSO"
 
 	// Initiates the service provider
 	ViperSetProviderConfig(
@@ -319,7 +314,6 @@ func TestInitSAMLWithMissingIDPInformationField(t *testing.T) {
 	idpInformation := make(map[string]string)
 	idpInformation["idp_sso_url"] = "https://samltest.id/idp/profile/SAML2/Redirect/SSO"
 	idpInformation["idp_entity_id"] = "https://samltest.id/saml/idp"
-	idpInformation["idp_logout_url"] = "https://samltest.id/idp/profile/SAML2/Redirect/SSO"
 
 	// Initiates the service provider
 	ViperSetProviderConfig(
@@ -369,7 +363,6 @@ func TestInitSAMLWithExtraIDPInformationField(t *testing.T) {
 	idpInformation["idp_sso_url"] = "https://samltest.id/idp/profile/SAML2/Redirect/SSO"
 	idpInformation["idp_entity_id"] = "https://samltest.id/saml/idp"
 	idpInformation["idp_certificate_path"] = "file://testdata/samlkratos.crt"
-	idpInformation["idp_logout_url"] = "https://samltest.id/idp/profile/SAML2/Redirect/SSO"
 	idpInformation["evil"] = "evil"
 
 	// Initiates the service provider

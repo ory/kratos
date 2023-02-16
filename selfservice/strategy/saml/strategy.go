@@ -61,6 +61,7 @@ type registrationStrategyDependencies interface {
 	x.WriterProvider
 	x.CSRFTokenGeneratorProvider
 	x.CSRFProvider
+	x.HTTPClientProvider
 
 	config.Provider
 

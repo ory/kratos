@@ -24,7 +24,7 @@ func TestInitMiddleWareWithMetadata(t *testing.T) {
 	require.NoError(t, err)
 	assert.Check(t, middleWare != nil)
 	assert.Check(t, middleWare.ServiceProvider.IDPMetadata != nil)
-	assert.Check(t, middleWare.ServiceProvider.MetadataURL.Path == "/self-service/methods/saml/metadata/:provider")
+	assert.Check(t, middleWare.ServiceProvider.MetadataURL.Path == "/self-service/methods/saml/metadata/samlProvider")
 	assert.Check(t, middleWare.ServiceProvider.IDPMetadata.EntityID == "https://idp.testshib.org/idp/shibboleth")
 }
 
@@ -44,7 +44,7 @@ func TestInitMiddleWareWithoutMetadata(t *testing.T) {
 	require.NoError(t, err)
 	assert.Check(t, middleWare != nil)
 	assert.Check(t, middleWare.ServiceProvider.IDPMetadata != nil)
-	assert.Check(t, middleWare.ServiceProvider.MetadataURL.Path == "/self-service/methods/saml/metadata/:provider")
+	assert.Check(t, middleWare.ServiceProvider.MetadataURL.Path == "/self-service/methods/saml/metadata/samlProvider")
 	assert.Check(t, middleWare.ServiceProvider.IDPMetadata.EntityID == "https://samltest.id/saml/idp")
 }
 
@@ -63,7 +63,7 @@ func TestGetMiddleware(t *testing.T) {
 	require.NoError(t, err)
 	assert.Check(t, middleWare != nil)
 	assert.Check(t, middleWare.ServiceProvider.IDPMetadata != nil)
-	assert.Check(t, middleWare.ServiceProvider.MetadataURL.Path == "/self-service/methods/saml/metadata/:provider")
+	assert.Check(t, middleWare.ServiceProvider.MetadataURL.Path == "/self-service/methods/saml/metadata/samlProvider")
 	assert.Check(t, middleWare.ServiceProvider.IDPMetadata.EntityID == "https://idp.testshib.org/idp/shibboleth")
 }
 
