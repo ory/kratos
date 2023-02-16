@@ -612,6 +612,11 @@ func TestPool(ctx context.Context, conf *config.Config, p interface {
 				expectedIdentities = append(expectedIdentities, expected)
 			}
 
+			create := identity.NewIdentity("")
+			create.SetCredentials(identity.CredentialsTypePassword, identity.Credentials{Type: identity.CredentialsTypePassword, Identifiers: []string{"find-identity-by-identifier-common@ory.sh"}, Config: sqlxx.JSONRawMessage(`{}`)})
+			create.SetCredentials(identity.CredentialsTypeWebAuthn, identity.Credentials{Type: identity.CredentialsTypeWebAuthn, Identifiers: []string{"find-identity-by-identifier-common@ory.sh"}, Config: sqlxx.JSONRawMessage(`{}`)})
+			require.NoError(t, p.CreateIdentity(ctx, create))
+
 			actual, err := p.ListIdentities(ctx, identity.ListIdentityParameters{
 				Expand: identity.ExpandEverything,
 			})
@@ -641,6 +646,14 @@ func TestPool(ctx context.Context, conf *config.Config, p interface {
 				})
 				require.NoError(t, err)
 				assert.Len(t, actual, 0)
+			})
+
+			t.Run("one result set even if multiple matches", func(t *testing.T) {
+				actual, err := p.ListIdentities(ctx, identity.ListIdentityParameters{
+					CredentialsIdentifier: "find-identity-by-identifier-common@ory.sh",
+				})
+				require.NoError(t, err)
+				assert.Len(t, actual, 1)
 			})
 
 			t.Run("non existing identifier", func(t *testing.T) {
