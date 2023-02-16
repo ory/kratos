@@ -392,8 +392,7 @@ func (p *Persister) ListIdentities(ctx context.Context, params identity.ListIden
 
 	con := p.GetConnection(ctx)
 	nid := p.NetworkID(ctx)
-	query := con.Where("identities.nid = ?", nid).Paginate(params.Page, params.PerPage).
-		Order("identities.id DESC")
+	query := con.Where("identities.nid = ?", nid).Order("identities.id DESC")
 
 	if len(params.Expand) > 0 {
 		query = query.EagerPreload(params.Expand.ToEager()...)
@@ -408,7 +407,10 @@ func (p *Persister) ListIdentities(ctx context.Context, params identity.ListIden
 			InnerJoin("identity_credential_types ict", "ict.id = ic.identity_credential_type_id").
 			InnerJoin("identity_credential_identifiers ici", "ici.identity_credential_id = ic.id").
 			Where("(ic.nid = ? AND ici.nid = ? AND ici.identifier = ?)", nid, nid, match).
-			Where("ict.name IN (?)", identity.CredentialsTypeWebAuthn, identity.CredentialsTypePassword)
+			Where("ict.name IN (?)", identity.CredentialsTypeWebAuthn, identity.CredentialsTypePassword).
+			Limit(1)
+	} else {
+		query = query.Paginate(params.Page, params.PerPage)
 	}
 
 	/* #nosec G201 TableName is static */
