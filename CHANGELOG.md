@@ -5,7 +5,7 @@
 
 **Table of Contents**
 
-- [ (2023-02-16)](#2023-02-16)
+- [ (2023-02-17)](#2023-02-17)
   - [Breaking Changes](#breaking-changes)
     - [Bug Fixes](#bug-fixes)
     - [Features](#features)
@@ -292,7 +292,7 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# [](https://github.com/ory/kratos/compare/v0.11.1...v) (2023-02-16)
+# [](https://github.com/ory/kratos/compare/v0.11.1...v) (2023-02-17)
 
 ## Breaking Changes
 
@@ -334,6 +334,9 @@ flows.
 
 - Lint errors and unused code
   ([ae49ef0](https://github.com/ory/kratos/commit/ae49ef04ed24c23406a5639d34c2e81ab0130c75))
+- Make async webhooks fully async
+  ([#3111](https://github.com/ory/kratos/issues/3111))
+  ([342bfb0](https://github.com/ory/kratos/commit/342bfb0332d235a2d535493d586192815b7d4974))
 - Make session AAL satisfaction check resilient against a nil identity in the
   session
   ([5ab1a56](https://github.com/ory/kratos/commit/5ab1a56cfd41e95fbb30b8f93426a27e510c62c7)):
