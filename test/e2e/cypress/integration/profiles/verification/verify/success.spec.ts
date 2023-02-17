@@ -139,7 +139,7 @@ context("Account Verification Settings Success", () => {
             })
           })
 
-          it.only("should not notify an unknown recipient", () => {
+          it("should not notify an unknown recipient", () => {
             const recipient = gen.email()
 
             cy.visit(APP_URL + "/self-service/verification/browser")

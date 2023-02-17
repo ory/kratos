@@ -4,6 +4,7 @@
 import { appPrefix, gen, website } from "../../../../helpers"
 import { routes as express } from "../../../../helpers/express"
 import { routes as react } from "../../../../helpers/react"
+import { testRegistrationWebhook } from "../../../../helpers/webhook"
 
 context("Social Sign Up Successes", () => {
   ;[
@@ -100,6 +101,22 @@ context("Social Sign Up Successes", () => {
           shouldSession(email)(session)
           expect(session.identity.traits.consent).to.equal(true)
         })
+      })
+
+      it("should pass transient_payload to webhook", () => {
+        testRegistrationWebhook(
+          (hooks) => cy.setupHooks("registration", "after", "oidc", hooks),
+          () => {
+            const email = gen.email()
+            cy.registerOidc({
+              app,
+              email,
+              website,
+              route: registration,
+            })
+            cy.getSession().should(shouldSession(email))
+          },
+        )
       })
 
       it("should be able to sign up with complete data", () => {

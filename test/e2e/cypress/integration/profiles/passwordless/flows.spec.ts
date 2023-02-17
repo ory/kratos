@@ -1,9 +1,10 @@
 // Copyright © 2023 Ory Corp
 // SPDX-License-Identifier: Apache-2.0
 
-import { appPrefix, gen, website } from "../../../helpers"
+import { appPrefix, gen } from "../../../helpers"
 import { routes as express } from "../../../helpers/express"
 import { routes as react } from "../../../helpers/react"
+import { testRegistrationWebhook } from "../../../helpers/webhook"
 
 const signup = (registration: string, app: string, email = gen.email()) => {
   cy.visit(registration)
@@ -123,6 +124,15 @@ context("Passwordless registration", () => {
           expect(session.identity.traits.email).to.equal(email)
           expect(session.identity.traits.website).to.equal("https://www.ory.sh")
         })
+      })
+
+      it("should pass transient_payload to webhook", () => {
+        testRegistrationWebhook(
+          (hooks) => cy.setupHooks("registration", "after", "webauthn", hooks),
+          () => {
+            signup(registration, app)
+          },
+        )
       })
 
       it("should be able to login with registered account", () => {

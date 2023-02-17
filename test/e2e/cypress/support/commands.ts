@@ -209,11 +209,15 @@ Cypress.Commands.add("enableLoginForVerifiedAddressOnly", () => {
   })
 })
 
-Cypress.Commands.add("setPostPasswordRegistrationHooks", (hooks) => {
+Cypress.Commands.add("setupHooks", (flow, phase, kind, hooks) => {
   updateConfigFile((config) => {
-    config.selfservice.flows.registration["after"].password = { hooks }
+    config.selfservice.flows[flow][phase][kind] = { hooks }
     return config
   })
+})
+
+Cypress.Commands.add("setPostPasswordRegistrationHooks", (hooks) => {
+  cy.setupHooks("registration", "after", "password", hooks)
 })
 
 Cypress.Commands.add("shortLoginLifespan", ({} = {}) => {

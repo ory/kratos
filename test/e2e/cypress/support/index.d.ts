@@ -150,13 +150,30 @@ declare global {
       }): Chainable<void>
 
       /**
+       *  Sets the hook.
+       *
+       * @param hooks
+       */
+      setupHooks(
+        flow:
+          | "registration"
+          | "login"
+          | "recovery"
+          | "verification"
+          | "settings",
+        phase: "before" | "after",
+        kind: "password" | "webauthn" | "oidc",
+        hooks: Array<{ hook: string; config?: any }>,
+      ): Chainable<void>
+
+      /**
        *  Sets the post registration hook.
        *
        * @param hooks
        */
       setPostPasswordRegistrationHooks(
         hooks: Array<{ hook: string; config?: any }>,
-      )
+      ): Chainable<void>
 
       /**
        * Submits a verification flow via the Browser
