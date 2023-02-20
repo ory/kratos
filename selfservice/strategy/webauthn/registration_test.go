@@ -326,6 +326,35 @@ func TestRegistration(t *testing.T) {
 			}
 		})
 
+		t.Run("case=should accept valid transient payload", func(t *testing.T) {
+			useReturnToFromTS(redirNoSessionTS)
+			t.Cleanup(func() {
+				useReturnToFromTS(redirTS)
+			})
+			conf.MustSet(ctx, config.HookStrategyKey(config.ViperKeySelfServiceRegistrationAfter, identity.CredentialsTypePassword.String()), nil)
+
+			for _, f := range flows {
+				t.Run("type="+f, func(t *testing.T) {
+					email := testhelpers.RandomEmail()
+					actual := makeSuccessfulRegistration(t, f, redirNoSessionTS.URL+"/registration-return-ts", func(v url.Values) {
+						values(email)(v)
+						v.Set("transient_payload.stuff", "42")
+					})
+
+					if f == "spa" {
+						assert.Equal(t, email, gjson.Get(actual, "identity.traits.username").String(), "%s", actual)
+						assert.False(t, gjson.Get(actual, "session").Exists(), "because the registration yielded no session, the user is not expected to be signed in: %s", actual)
+					} else {
+						assert.Equal(t, "null\n", actual, "because the registration yielded no session, the user is not expected to be signed in: %s", actual)
+					}
+
+					i, _, err := reg.PrivilegedIdentityPool().FindByCredentialsIdentifier(context.Background(), identity.CredentialsTypeWebAuthn, email)
+					require.NoError(t, err)
+					assert.Equal(t, email, gjson.GetBytes(i.Traits, "username").String(), "%s", actual)
+				})
+			}
+		})
+
 		t.Run("case=should create the identity and a session and use the correct schema", func(t *testing.T) {
 			conf.MustSet(ctx, config.HookStrategyKey(config.ViperKeySelfServiceRegistrationAfter, identity.CredentialsTypeWebAuthn.String()), []config.SelfServiceHook{{Name: "session"}})
 			conf.MustSet(ctx, config.ViperKeyDefaultIdentitySchemaID, "advanced-user")

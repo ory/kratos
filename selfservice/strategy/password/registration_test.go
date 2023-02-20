@@ -143,10 +143,10 @@ func TestRegistration(t *testing.T) {
 				conf.MustSet(ctx, config.HookStrategyKey(config.ViperKeySelfServiceRegistrationAfter, identity.CredentialsTypePassword.String()), nil)
 			})
 
-			for _, typ := range []string{"api", "spa", "browser"} {
-				t.Run(fmt.Sprintf("type=%s", typ), func(t *testing.T) {
+			for _, f := range flows {
+				t.Run("type="+f, func(t *testing.T) {
 					username := x.NewUUID().String()
-					body := registrationhelpers.ExpectValidationError(t, publicTS, conf, typ, func(v url.Values) {
+					body := registrationhelpers.ExpectValidationError(t, publicTS, conf, f, func(v url.Values) {
 						v.Set("traits.username", username)
 						v.Set("password", x.NewUUID().String())
 						v.Set("traits.foobar", "bar")
