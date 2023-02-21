@@ -118,9 +118,10 @@ type Strategy struct {
 }
 
 type authCodeContainer struct {
-	FlowID string          `json:"flow_id"`
-	State  string          `json:"state"`
-	Traits json.RawMessage `json:"traits"`
+	FlowID           string          `json:"flow_id"`
+	State            string          `json:"state"`
+	Traits           json.RawMessage `json:"traits"`
+	TransientPayload json.RawMessage `json:"transient_payload"`
 }
 
 func generateState(flowID string) string {
@@ -367,6 +368,7 @@ func (s *Strategy) handleCallback(w http.ResponseWriter, r *http.Request, ps htt
 		}
 		return
 	case *registration.Flow:
+		a.TransientPayload = cntnr.TransientPayload
 		if ff, err := s.processRegistration(w, r, a, token, claims, provider, cntnr); err != nil {
 			if ff != nil {
 				s.forwardError(w, r, ff, err)

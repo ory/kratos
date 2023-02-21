@@ -1597,6 +1597,10 @@
             "description": "ReturnTo contains the requested return_to URL.",
             "type": "string"
           },
+          "transient_payload": {
+            "description": "TransientPayload is used to pass data from the registration to a webhook",
+            "type": "object"
+          },
           "type": {
             "$ref": "#/components/schemas/selfServiceFlowType"
           },
@@ -2589,6 +2593,10 @@
           "traits": {
             "description": "The identity traits",
             "type": "object"
+          },
+          "transient_payload": {
+            "description": "Transient data to pass along to any webhooks",
+            "type": "object"
           }
         },
         "required": [
@@ -2615,6 +2623,10 @@
           "traits": {
             "description": "The identity's traits",
             "type": "object"
+          },
+          "transient_payload": {
+            "description": "Transient data to pass along to any webhooks",
+            "type": "object"
           }
         },
         "required": [
@@ -2637,6 +2649,10 @@
           },
           "traits": {
             "description": "The identity's traits",
+            "type": "object"
+          },
+          "transient_payload": {
+            "description": "Transient data to pass along to any webhooks",
             "type": "object"
           },
           "webauthn_register": {
