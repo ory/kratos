@@ -5,7 +5,7 @@
 
 **Table of Contents**
 
-- [ (2023-02-17)](#2023-02-17)
+- [ (2023-02-21)](#2023-02-21)
   - [Breaking Changes](#breaking-changes)
     - [Bug Fixes](#bug-fixes)
     - [Features](#features)
@@ -292,7 +292,7 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# [](https://github.com/ory/kratos/compare/v0.11.1...v) (2023-02-17)
+# [](https://github.com/ory/kratos/compare/v0.11.1...v) (2023-02-21)
 
 ## Breaking Changes
 
@@ -390,6 +390,9 @@ flows.
   ([#2741](https://github.com/ory/kratos/issues/2741))
   ([132255e](https://github.com/ory/kratos/commit/132255eff24a3f5a7fc2249a0ecf9b8716a8f1e7)),
   closes [#2422](https://github.com/ory/kratos/issues/2422)
+- Allow passing transient data from registration to webhook
+  ([#3104](https://github.com/ory/kratos/issues/3104))
+  ([4a3a076](https://github.com/ory/kratos/commit/4a3a07657d2eb2a39d777565b58882cb48e928fa))
 - Don't pre-generate UUIDs for transient objects
   ([e17f307](https://github.com/ory/kratos/commit/e17f307732f8ced34727d5f3a70929866a0595e0))
 - Identity by identifier ([#3077](https://github.com/ory/kratos/issues/3077))
