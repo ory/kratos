@@ -20,22 +20,19 @@ type ManagementProvider interface {
 	ContinuityManager() Manager
 }
 
-type ManagementProviderRelayState interface {
-	RelayStateContinuityManager() Manager
-}
-
 type Manager interface {
 	Pause(ctx context.Context, w http.ResponseWriter, r *http.Request, name string, opts ...ManagerOption) error
 	Continue(ctx context.Context, w http.ResponseWriter, r *http.Request, name string, opts ...ManagerOption) (*Container, error)
-	Abort(ctx context.Context, w http.ResponseWriter, r *http.Request, name string) error
+	Abort(ctx context.Context, w http.ResponseWriter, r *http.Request, name string, opts ...ManagerOption) error
 }
 
 type managerOptions struct {
-	iid        uuid.UUID
-	ttl        time.Duration
-	payload    json.RawMessage
-	payloadRaw interface{}
-	cleanUp    bool
+	iid           uuid.UUID
+	ttl           time.Duration
+	payload       json.RawMessage
+	payloadRaw    interface{}
+	cleanUp       bool
+	useRelayState bool
 }
 
 type ManagerOption func(*managerOptions) error
@@ -84,6 +81,13 @@ func WithPayload(payload interface{}) ManagerOption {
 		}
 		o.payload = b.Bytes()
 		o.payloadRaw = payload
+		return nil
+	}
+}
+
+func UseRelayState() ManagerOption {
+	return func(o *managerOptions) error {
+		o.useRelayState = true
 		return nil
 	}
 }

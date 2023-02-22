@@ -34,7 +34,7 @@ func (s *Strategy) createIdentity(w http.ResponseWriter, r *http.Request, a *reg
 	}
 
 	i := identity.NewIdentity(s.d.Config().DefaultIdentityTraitsSchemaID(r.Context()))
-	if err := s.setTraits(w, r, a, claims, provider, jsonClaims, i); err != nil {
+	if err := s.setTraits(w, r, claims, provider, jsonClaims, i); err != nil {
 		return nil, s.handleError(w, r, a, provider.Config().ID, i.Traits, err)
 	}
 
@@ -46,7 +46,7 @@ func (s *Strategy) createIdentity(w http.ResponseWriter, r *http.Request, a *reg
 	return i, nil
 }
 
-func (s *Strategy) setTraits(w http.ResponseWriter, r *http.Request, a *registration.Flow, claims *Claims, provider Provider, jsonClaims bytes.Buffer, i *identity.Identity) error {
+func (s *Strategy) setTraits(w http.ResponseWriter, r *http.Request, claims *Claims, provider Provider, jsonClaims bytes.Buffer, i *identity.Identity) error {
 
 	traitsMap := make(map[string]interface{})
 	json.Unmarshal(jsonClaims.Bytes(), &traitsMap)
@@ -55,7 +55,7 @@ func (s *Strategy) setTraits(w http.ResponseWriter, r *http.Request, a *registra
 	delete(traitsMap, "sub")
 	traits, err := json.Marshal(traitsMap)
 	if err != nil {
-		return s.handleError(w, r, a, provider.Config().ID, i.Traits, err)
+		return err
 	}
 	i.Traits = identity.Traits(traits)
 
@@ -119,7 +119,7 @@ func (s *Strategy) newLinkDecoder(p interface{}, r *http.Request) error {
 		return errors.WithStack(err)
 	}
 
-	if err := s.hd.Decode(r, &p, compiler,
+	if err := s.dec.Decode(r, &p, compiler,
 		decoderx.HTTPKeepRequestBody(true),
 		decoderx.HTTPDecoderSetValidatePayloads(false),
 		decoderx.HTTPDecoderUseQueryAndBody(),

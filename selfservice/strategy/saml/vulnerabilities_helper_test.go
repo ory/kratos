@@ -217,12 +217,12 @@ func startContinuity(resp *httptest.ResponseRecorder, r *http.Request, strategy 
 	strategy.D().LoginFlowPersister().CreateLoginFlow(r.Context(), f)
 	state := x.NewUUID().String()
 
-	strategy.D().RelayStateContinuityManager().Pause(r.Context(), resp, r, "ory_kratos_saml_auth_code_session",
+	strategy.D().ContinuityManager().Pause(r.Context(), resp, r, "ory_kratos_saml_auth_code_session",
 		continuity.WithPayload(&authCodeContainer{
 			State:  state,
 			FlowID: f.ID.String(),
 		}),
-		continuity.WithLifespan(time.Minute*30))
+		continuity.WithLifespan(time.Minute*30), continuity.UseRelayState())
 }
 
 func initRouterParams() httprouter.Params {

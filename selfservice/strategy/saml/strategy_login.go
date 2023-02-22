@@ -7,9 +7,7 @@ import (
 	"time"
 
 	"github.com/gofrs/uuid"
-	"github.com/google/go-jsonnet"
 	"github.com/pkg/errors"
-	"github.com/tidwall/gjson"
 
 	"github.com/ory/herodot"
 	"github.com/ory/kratos/continuity"
@@ -58,7 +56,7 @@ type SubmitSelfServiceLoginFlowWithSAMLMethodBody struct {
 // Login and give a session to the user
 func (s *Strategy) processLogin(w http.ResponseWriter, r *http.Request, a *login.Flow, provider Provider, c *identity.Credentials, i *identity.Identity, claims *Claims) (*registration.Flow, error) {
 
-	s.updateIdentityTraits(i, provider, claims)
+	s.updateIdentityTraits(w, r, i, provider, claims)
 
 	var o identity.CredentialsSAML
 	if err := json.NewDecoder(bytes.NewBuffer(c.Config)).Decode(&o); err != nil {
@@ -104,13 +102,13 @@ func (s *Strategy) Login(w http.ResponseWriter, r *http.Request, f *login.Flow, 
 	}
 
 	state := generateState(f.ID.String())
-	if err := s.d.RelayStateContinuityManager().Pause(r.Context(), w, r, sessionName,
+	if err := s.d.ContinuityManager().Pause(r.Context(), w, r, sessionName,
 		continuity.WithPayload(&authCodeContainer{
 			State:  state,
 			FlowID: f.ID.String(),
 			Traits: p.Traits,
 		}),
-		continuity.WithLifespan(time.Minute*30)); err != nil {
+		continuity.WithLifespan(time.Minute*30), continuity.UseRelayState()); err != nil {
 		return nil, s.handleError(w, r, f, pid, nil, err)
 	}
 
@@ -142,28 +140,17 @@ func (s *Strategy) PopulateLoginMethod(r *http.Request, requestedAAL identity.Au
 }
 
 // In order to do a JustInTimeProvisioning, it is important to update the identity traits at each new SAML connection
-func (s *Strategy) updateIdentityTraits(i *identity.Identity, provider Provider, claims *Claims) error {
-	jn, err := s.f.Fetch(provider.Config().Mapper)
-	if err != nil {
-		return nil
-	}
+func (s *Strategy) updateIdentityTraits(w http.ResponseWriter, r *http.Request, i *identity.Identity, provider Provider, claims *Claims) error {
 
 	var jsonClaims bytes.Buffer
 	if err := json.NewEncoder(&jsonClaims).Encode(claims); err != nil {
-		return nil
+		return err
 	}
 
-	vm := jsonnet.MakeVM()
-	vm.ExtCode("claims", jsonClaims.String())
-	evaluated, err := vm.EvaluateAnonymousSnippet(provider.Config().Mapper, jn.String())
-	if err != nil {
+	if err := s.setTraits(w, r, claims, provider, jsonClaims, i); err != nil {
 		return err
-	} else if traits := gjson.Get(evaluated, "identity.traits"); !traits.IsObject() {
-		i.Traits = []byte{'{', '}'}
-		return errors.New("SAML Jsonnet mapper did not return an object for key identity.traits. Please check your Jsonnet code!")
-	} else {
-		i.Traits = []byte(traits.Raw)
-		return nil
 	}
+
+	return nil
 
 }

@@ -22,11 +22,18 @@ type CredentialsSAML struct {
 // swagger:model identityCredentialsSamlProvider
 type CredentialsSAMLProvider struct {
 	Subject  string `json:"subject"`
-	Provider string `json:"samlProvider"`
+	Provider string `json:"saml_provider"`
 }
 
 // Create an uniq identifier for user in database. Its look like "id + the id of the saml provider"
 func NewCredentialsSAML(subject string, provider string) (*Credentials, error) {
+	if provider == "" {
+		return nil, errors.New("received empty provider in saml credentials")
+	}
+
+	if subject == "" {
+		return nil, errors.New("received empty provider in saml credentials")
+	}
 	var b bytes.Buffer
 	if err := json.NewEncoder(&b).Encode(CredentialsSAML{
 		Providers: []CredentialsSAMLProvider{

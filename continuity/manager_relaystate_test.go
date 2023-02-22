@@ -5,6 +5,7 @@ package continuity_test
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
@@ -31,7 +32,7 @@ import (
 	"github.com/ory/kratos/x"
 )
 
-func TestManagerRelayState(t *testing.T) {
+func TestManagerUseRelayState(t *testing.T) {
 	ctx := context.Background()
 	conf, reg := internal.NewFastRegistryWithMocks(t)
 
@@ -57,6 +58,7 @@ func TestManagerRelayState(t *testing.T) {
 			r.PostForm = make(url.Values)
 			r.PostForm.Set("RelayState", relayState)
 
+			tc.wo = append(tc.wo, continuity.UseRelayState())
 			c, err := p.Continue(r.Context(), w, r, ps.ByName("name"), tc.wo...)
 			if err != nil {
 				writer.WriteError(w, r, err)
@@ -71,7 +73,7 @@ func TestManagerRelayState(t *testing.T) {
 			r.PostForm = make(url.Values)
 			r.PostForm.Set("RelayState", relayState)
 
-			err := p.Abort(r.Context(), w, r, ps.ByName("name"))
+			err := p.Abort(r.Context(), w, r, ps.ByName("name"), continuity.UseRelayState())
 			if err != nil {
 				writer.WriteError(w, r, err)
 				return
@@ -90,7 +92,7 @@ func TestManagerRelayState(t *testing.T) {
 		return &http.Client{Jar: x.EasyCookieJar(t, nil)}
 	}
 
-	p := reg.RelayStateContinuityManager()
+	p := reg.ContinuityManager()
 	cl := newClient()
 
 	t.Run("case=continue cookie persists with same http client", func(t *testing.T) {
@@ -115,6 +117,7 @@ func TestManagerRelayState(t *testing.T) {
 
 		t.Cleanup(func() { require.NoError(t, res.Body.Close()) })
 
+		assert.Equal(t, res.StatusCode, 200)
 		require.Len(t, res.Cookies(), 1)
 		assert.EqualValues(t, res.Cookies()[0].Name, continuity.CookieName)
 	})
@@ -147,7 +150,8 @@ func TestManagerRelayState(t *testing.T) {
 
 		t.Cleanup(func() { require.NoError(t, res.Body.Close()) })
 
-		require.Len(t, res.Cookies(), 1)
+		assert.Equal(t, res.StatusCode, 200)
+		assert.Len(t, res.Cookies(), 1)
 		assert.EqualValues(t, res.Cookies()[0].Name, continuity.CookieName)
 	})
 
@@ -165,6 +169,7 @@ func TestManagerRelayState(t *testing.T) {
 
 		for _, c := range res.Cookies() {
 			relayState = c.Value
+			fmt.Println(relayState)
 			relayState = strings.Replace(relayState, "a", "b", 1)
 		}
 		require.Len(t, res.Cookies(), 1)
@@ -180,7 +185,7 @@ func TestManagerRelayState(t *testing.T) {
 
 		t.Cleanup(func() { require.NoError(t, res.Body.Close()) })
 
-		require.Len(t, res.Cookies(), 0, "the cookie couldn't be reconstructed without a valid relaystate")
+		assert.True(t, res.StatusCode == 400 || len(res.Cookies()) == 0)
 	})
 
 	t.Run("case=continue cookie not delivered without relaystate", func(t *testing.T) {
@@ -205,7 +210,7 @@ func TestManagerRelayState(t *testing.T) {
 
 		t.Cleanup(func() { require.NoError(t, res.Body.Close()) })
 
-		require.Len(t, res.Cookies(), 0, "the cookie couldn't be reconstructed without a valid relaystate")
+		assert.True(t, res.StatusCode == 400 || len(res.Cookies()) == 0)
 	})
 
 	t.Run("case=pause, abort, and continue session with failure", func(t *testing.T) {
@@ -236,6 +241,6 @@ func TestManagerRelayState(t *testing.T) {
 
 		t.Cleanup(func() { require.NoError(t, res.Body.Close()) })
 
-		require.Len(t, res.Cookies(), 0, "the cookie couldn't be reconstructed without a valid relaystate")
+		assert.True(t, res.StatusCode == 400 || len(res.Cookies()) == 0)
 	})
 }

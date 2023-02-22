@@ -36,7 +36,7 @@ type ConfigurationCollection struct {
 	SAMLProviders []Configuration `json:"providers"`
 }
 
-func (c ConfigurationCollection) Provider(id string, reg registrationStrategyDependencies) (Provider, error) {
+func (c ConfigurationCollection) Provider(id string, reg dependencies) (Provider, error) {
 	for k := range c.SAMLProviders {
 		p := c.SAMLProviders[k]
 		if p.ID == id {

@@ -13,12 +13,12 @@ import (
 
 type ProviderSAML struct {
 	config *Configuration
-	reg    registrationStrategyDependencies
+	reg    dependencies
 }
 
 func NewProviderSAML(
 	config *Configuration,
-	reg registrationStrategyDependencies,
+	reg dependencies,
 ) *ProviderSAML {
 	return &ProviderSAML{
 		config: config,

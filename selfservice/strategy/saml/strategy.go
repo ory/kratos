@@ -17,19 +17,18 @@ import (
 	"github.com/tidwall/gjson"
 
 	"github.com/ory/herodot"
+	"github.com/ory/kratos/cipher"
+	"github.com/ory/kratos/schema"
 	"github.com/ory/kratos/text"
 	"github.com/ory/kratos/ui/container"
 	"github.com/ory/kratos/ui/node"
 
-	"github.com/go-playground/validator/v10"
-
 	"github.com/ory/x/decoderx"
-	"github.com/ory/x/fetcher"
+	"github.com/ory/x/jsonnetsecure"
 	"github.com/ory/x/jsonx"
 
 	"github.com/ory/kratos/continuity"
 	"github.com/ory/kratos/driver/config"
-	"github.com/ory/kratos/hash"
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/selfservice/errorx"
 	"github.com/ory/kratos/selfservice/flow"
@@ -56,50 +55,57 @@ const (
 
 var _ identity.ActiveCredentialsCounter = new(Strategy)
 
-type registrationStrategyDependencies interface {
-	x.LoggingProvider
-	x.WriterProvider
-	x.CSRFTokenGeneratorProvider
-	x.CSRFProvider
-	x.HTTPClientProvider
+type dependencies interface {
+	errorx.ManagementProvider
 
 	config.Provider
 
-	continuity.ManagementProvider
-	continuity.ManagementProviderRelayState
+	x.LoggingProvider
+	x.CookieProvider
+	x.CSRFProvider
+	x.CSRFTokenGeneratorProvider
+	x.WriterProvider
+	x.HTTPClientProvider
+	x.TracingProvider
 
-	errorx.ManagementProvider
-	hash.HashProvider
+	identity.ValidationProvider
+	identity.PrivilegedPoolProvider
+	identity.ActiveCredentialsCounterStrategyProvider
+	identity.ManagementProvider
 
-	registration.HandlerProvider
-	registration.HooksProvider
-	registration.ErrorHandlerProvider
-	registration.HookExecutorProvider
-	registration.FlowPersistenceProvider
+	session.ManagementProvider
+	session.HandlerProvider
 
-	login.HooksProvider
-	login.ErrorHandlerProvider
 	login.HookExecutorProvider
 	login.FlowPersistenceProvider
+	login.HooksProvider
+	login.StrategyProvider
 	login.HandlerProvider
+	login.ErrorHandlerProvider
 
+	registration.HookExecutorProvider
+	registration.FlowPersistenceProvider
+	registration.HooksProvider
+	registration.StrategyProvider
+	registration.HandlerProvider
+	registration.ErrorHandlerProvider
+
+	settings.ErrorHandlerProvider
 	settings.FlowPersistenceProvider
 	settings.HookExecutorProvider
-	settings.HooksProvider
-	settings.ErrorHandlerProvider
 
-	identity.PrivilegedPoolProvider
-	identity.ValidationProvider
+	continuity.ManagementProvider
 
-	session.HandlerProvider
-	session.ManagementProvider
+	cipher.Provider
+
+	jsonnetsecure.VMProvider
 }
 
 func (s *Strategy) ID() identity.CredentialsType {
 	return identity.CredentialsTypeSAML
 }
 
-func (s *Strategy) D() registrationStrategyDependencies {
+func (s *Strategy) D() dependencies {
 	return s.d
 }
 
@@ -115,10 +121,9 @@ func isForced(req interface{}) bool {
 }
 
 type Strategy struct {
-	d  registrationStrategyDependencies
-	f  *fetcher.Fetcher
-	v  *validator.Validate
-	hd *decoderx.HTTP
+	d         dependencies
+	validator *schema.Validator
+	dec       *decoderx.HTTP
 }
 
 type authCodeContainer struct {
@@ -132,12 +137,10 @@ func generateState(flowID string) string {
 	return base64.RawURLEncoding.EncodeToString([]byte(fmt.Sprintf("%s:%s", flowID, state)))
 }
 
-func NewStrategy(d registrationStrategyDependencies) *Strategy {
+func NewStrategy(d dependencies) *Strategy {
 	return &Strategy{
-		d:  d,
-		f:  fetcher.NewFetcher(),
-		v:  validator.New(),
-		hd: decoderx.NewHTTP(),
+		d:         d,
+		validator: schema.NewValidator(),
 	}
 }
 
@@ -247,7 +250,7 @@ func (s *Strategy) alreadyAuthenticated(w http.ResponseWriter, r *http.Request, 
 
 func (s *Strategy) validateCallback(w http.ResponseWriter, r *http.Request) (flow.Flow, *authCodeContainer, error) {
 	var cntnr authCodeContainer
-	if _, err := s.d.RelayStateContinuityManager().Continue(r.Context(), w, r, sessionName, continuity.WithPayload(&cntnr)); err != nil {
+	if _, err := s.d.ContinuityManager().Continue(r.Context(), w, r, sessionName, continuity.WithPayload(&cntnr), continuity.UseRelayState()); err != nil {
 		return nil, nil, err
 	}
 
@@ -286,7 +289,7 @@ func (s *Strategy) HandleCallback(w http.ResponseWriter, r *http.Request, ps htt
 
 	m, err := GetMiddleware(pid)
 	if err != nil {
-		s.forwardError(w, r, err)
+		s.forwardError(w, r, s.handleError(w, r, req, pid, nil, err))
 		return
 	}
 
@@ -296,28 +299,28 @@ func (s *Strategy) HandleCallback(w http.ResponseWriter, r *http.Request, ps htt
 	// We parse the SAML Response to get the SAML Assertion
 	assertion, err := m.ServiceProvider.ParseResponse(r, possibleRequestIDs)
 	if err != nil {
-		s.forwardError(w, r, err)
+		s.forwardError(w, r, s.handleError(w, r, req, pid, nil, err))
 		return
 	}
 
 	// We get the user's attributes from the SAML Response (assertion)
 	attributes, err := s.GetAttributesFromAssertion(assertion)
 	if err != nil {
-		s.forwardError(w, r, err)
+		s.forwardError(w, r, s.handleError(w, r, req, pid, nil, err))
 		return
 	}
 
 	// We get the provider information from the config file
 	provider, err := s.Provider(r.Context(), pid)
 	if err != nil {
-		s.forwardError(w, r, err)
+		s.forwardError(w, r, s.handleError(w, r, req, pid, nil, err))
 		return
 	}
 
 	// We translate SAML Attributes into claims (To create an identity we need these claims)
 	claims, err := provider.Claims(r.Context(), s.d.Config(), attributes, pid)
 	if err != nil {
-		s.forwardError(w, r, err)
+		s.forwardError(w, r, s.handleError(w, r, req, pid, nil, err))
 		return
 	}
 
@@ -326,10 +329,10 @@ func (s *Strategy) HandleCallback(w http.ResponseWriter, r *http.Request, ps htt
 		// Now that we have the claims and the provider, we have to decide if we log or register the user
 		if ff, err := s.processLoginOrRegister(w, r, a, provider, claims); err != nil {
 			if ff != nil {
-				s.forwardError(w, r, err)
+				s.forwardError(w, r, s.handleError(w, r, req, pid, nil, err))
 				return
 			}
-			s.forwardError(w, r, err)
+			s.forwardError(w, r, s.handleError(w, r, req, pid, nil, err))
 		}
 		return
 	}
@@ -385,7 +388,7 @@ func (s *Strategy) populateMethod(r *http.Request, c *container.Container, messa
 func (s *Strategy) handleError(w http.ResponseWriter, r *http.Request, f flow.Flow, provider string, traits []byte, err error) error {
 	switch rf := f.(type) {
 	case *login.Flow:
-		return ErrAPIFlowNotSupported.WithTrace(err)
+		return err
 	case *registration.Flow:
 		// Reset all nodes to not confuse users.
 		// This is kinda hacky and will probably need to be updated at some point.
@@ -399,24 +402,22 @@ func (s *Strategy) handleError(w http.ResponseWriter, r *http.Request, f flow.Fl
 		if traits != nil {
 			ds, err := s.d.Config().DefaultIdentityTraitsSchemaURL(r.Context())
 			if err != nil {
-				return ErrInvalidSAMLConfiguration.WithTrace(err)
+				return err
 			}
 
-			traitNodes, err := container.NodesFromJSONSchema(r.Context(), node.SAMLGroup, ds.String(), "", nil)
+			traitNodes, err := container.NodesFromJSONSchema(r.Context(), node.OpenIDConnectGroup, ds.String(), "", nil)
 			if err != nil {
-				return herodot.ErrInternalServerError.WithTrace(err)
+				return err
 			}
 
 			rf.UI.Nodes = append(rf.UI.Nodes, traitNodes...)
-			rf.UI.UpdateNodeValuesFromJSON(traits, "traits", node.SAMLGroup)
+			rf.UI.UpdateNodeValuesFromJSON(traits, "traits", node.OpenIDConnectGroup)
 		}
 
-		return herodot.ErrInternalServerError.WithTrace(err)
-	case *settings.Flow:
-		return ErrAPIFlowNotSupported.WithTrace(err)
+		return err
 	}
 
-	return herodot.ErrInternalServerError.WithTrace(err)
+	return err
 }
 
 func (s *Strategy) CountActiveCredentials(cc map[identity.CredentialsType]identity.Credentials) (count int, err error) {

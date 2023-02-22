@@ -110,9 +110,6 @@ type RegistryDefault struct {
 
 	continuityManager continuity.Manager
 
-	x.RelayStateProvider
-	session.ManagementProvider
-
 	schemaHandler *schema.Handler
 
 	sessionHandler *session.Handler
@@ -676,21 +673,8 @@ func (m *RegistryDefault) Courier(ctx context.Context) (courier.Courier, error) 
 }
 
 func (m *RegistryDefault) ContinuityManager() continuity.Manager {
-	// If m.continuityManager is nil or not a continuity.ManagerCookie
-	switch m.continuityManager.(type) {
-	case *continuity.ManagerCookie:
-	default:
+	if m.continuityManager == nil {
 		m.continuityManager = continuity.NewManagerCookie(m)
-	}
-	return m.continuityManager
-}
-
-func (m *RegistryDefault) RelayStateContinuityManager() continuity.Manager {
-	// If m.continuityManager is nil or not a continuity.ManagerRelayState
-	switch m.continuityManager.(type) {
-	case *continuity.ManagerRelayState:
-	default:
-		m.continuityManager = continuity.NewManagerRelayState(m, m)
 	}
 	return m.continuityManager
 }
