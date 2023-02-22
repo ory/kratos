@@ -15,8 +15,6 @@ import (
 
 	"github.com/ory/x/servicelocatorx"
 
-	"github.com/ory/x/fsx"
-
 	"github.com/ory/kratos/identity"
 
 	"github.com/bradleyjkemp/cupaloy/v2"
@@ -124,7 +122,7 @@ func TestMigrations(t *testing.T) {
 
 			t.Run("suite=up", func(t *testing.T) {
 				tm, err := popx.NewMigrationBox(
-					fsx.Merge(os.DirFS("../migrations/sql")),
+					os.DirFS("../migrations/sql"),
 					popx.NewMigrator(c, logrusx.New("", "", logrusx.ForceLevel(logrus.DebugLevel)), nil, 1*time.Minute),
 					popx.WithTestdata(t, os.DirFS("./testdata")),
 				)

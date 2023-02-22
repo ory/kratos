@@ -128,6 +128,10 @@ func (p *Persister) MigrateUp(ctx context.Context) error {
 	return p.mb.Up(ctx)
 }
 
+func (p *Persister) MigrationBox() *popx.MigrationBox {
+	return p.mb
+}
+
 func (p *Persister) Migrator() *popx.Migrator {
 	return p.mb.Migrator
 }
