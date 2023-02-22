@@ -12,6 +12,7 @@ import (
 	"github.com/gobuffalo/pop/v6"
 	"github.com/gobuffalo/pop/v6/columns"
 	"github.com/gofrs/uuid"
+	"github.com/laher/mergefs"
 	"github.com/pkg/errors"
 
 	"github.com/ory/kratos/driver/config"
@@ -23,7 +24,6 @@ import (
 	"github.com/ory/kratos/session"
 	"github.com/ory/kratos/x"
 	"github.com/ory/x/contextx"
-	"github.com/ory/x/fsx"
 	"github.com/ory/x/networkx"
 	"github.com/ory/x/popx"
 	"github.com/ory/x/sqlcon"
@@ -57,7 +57,7 @@ type (
 )
 
 func NewPersister(ctx context.Context, r persisterDependencies, c *pop.Connection) (*Persister, error) {
-	m, err := popx.NewMigrationBox(fsx.Merge(migrations, networkx.Migrations), popx.NewMigrator(c, r.Logger(), r.Tracer(ctx), 0))
+	m, err := popx.NewMigrationBox(mergefs.Merge(migrations, networkx.Migrations), popx.NewMigrator(c, r.Logger(), r.Tracer(ctx), 0))
 	if err != nil {
 		return nil, err
 	}
