@@ -2006,6 +2006,81 @@
         ]
       }
     },
+    "/self-service/saml/idp":{
+      "get":{
+        "description": "This endpoint is to redirect the user to the idp auth flow",
+        "operationId": "getUrlIdp",
+        "response": {
+          "302":{
+            "$ref": "#/components/responses/emptyResponse"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/genericError"
+                }
+              }
+            },
+            "description": "genericError"
+          }
+        },
+        "summary": "Redirect the user to the IDP flow",
+        "tags": [
+          "public"
+        ]
+      }
+    },
+    "/self-service/saml/metadata":{
+      "get":{
+        "description": "This endpoint is for the IDP to obtain kratos metadata",
+        "operationId": "getSamlMetadata",
+        "response": {
+          "302":{
+            "$ref": "#/components/responses/emptyResponse"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/genericError"
+                }
+              }
+            },
+            "description": "genericError"
+          }
+        },
+        "summary": "Expose metadata of the SAML Service Provider (Kratos)",
+        "tags": [
+          "public"
+        ]
+      }
+    },
+    "/self-service/saml/acs":{
+      "get":{
+        "description": "AssertionConsumerService : handle saml response from the IDP",
+        "operationId": "getSamlAcs",
+        "response": {
+          "302":{
+            "$ref": "#/components/responses/emptyResponse"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/genericError"
+                }
+              }
+            },
+            "description": "genericError"
+          }
+        },
+        "summary": "Handle SAML response from the IDP",
+        "tags": [
+          "public"
+        ]
+      }
+    },
     "/self-service/login/flows": {
       "get": {
         "description": "This endpoint returns a login flow's context with, for example, error details and other information.\n\nMore information can be found at [Ory Kratos User Login and User Registration Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-login-user-registration).",

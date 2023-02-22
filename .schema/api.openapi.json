@@ -1932,6 +1932,81 @@
         ]
       }
     },
+    "/self-service/saml/metadata":{
+      "get":{
+        "description": "This endpoint is for the IDP to obtain kratos metadata",
+        "operationId": "getSamlMetadata",
+        "response": {
+          "302":{
+            "$ref": "#/components/responses/emptyResponse"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/genericError"
+                }
+              }
+            },
+            "description": "genericError"
+          }
+        },
+        "summary": "Expose metadata of the SAML Service Provider (Kratos)",
+        "tags": [
+          "public"
+        ]
+      }
+    },
+    "/self-service/saml/idp":{
+      "get":{
+        "description": "This endpoint is to redirect the user to the idp auth flow",
+        "operationId": "getUrlIdp",
+        "response": {
+          "302":{
+            "$ref": "#/components/responses/emptyResponse"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/genericError"
+                }
+              }
+            },
+            "description": "genericError"
+          }
+        },
+        "summary": "Redirect the user to the IDP flow",
+        "tags": [
+          "public"
+        ]
+      }
+    },
+    "/self-service/saml/acs":{
+      "get":{
+        "description": "AssertionConsumerService : handle saml response from the IDP",
+        "operationId": "getSamlAcs",
+        "response": {
+          "302":{
+            "$ref": "#/components/responses/emptyResponse"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/genericError"
+                }
+              }
+            },
+            "description": "genericError"
+          }
+        },
+        "summary": "Handle SAML response from the IDP",
+        "tags": [
+          "public"
+        ]
+      }
+    },
     "/self-service/login/browser": {
       "get": {
         "description": "This endpoint initializes a browser-based user login flow. Once initialized, the browser will be redirected to\n`selfservice.flows.login.ui_url` with the flow ID set as the query parameter `?flow=`. If a valid user session\nexists already, the browser will be redirected to `urls.default_redirect_url` unless the query parameter\n`?refresh=true` was set.\n\nThis endpoint is NOT INTENDED for API clients and only works with browsers (Chrome, Firefox, ...).\n\nMore information can be found at [Ory Kratos User Login and User Registration Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-login-user-registration).",

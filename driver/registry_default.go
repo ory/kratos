@@ -67,6 +67,7 @@ import (
 	"github.com/ory/kratos/selfservice/flow/logout"
 	"github.com/ory/kratos/selfservice/flow/registration"
 	"github.com/ory/kratos/selfservice/strategy/oidc"
+	"github.com/ory/kratos/selfservice/strategy/saml"
 
 	"github.com/ory/herodot"
 
@@ -131,6 +132,8 @@ type RegistryDefault struct {
 	selfserviceLoginHandler             *login.Handler
 	selfserviceLoginRequestErrorHandler *login.ErrorHandler
 
+	selfserviceSAMLHandler *saml.Handler
+
 	selfserviceSettingsHandler      *settings.Handler
 	selfserviceSettingsErrorHandler *settings.ErrorHandler
 	selfserviceSettingsExecutor     *settings.HookExecutor
@@ -175,6 +178,7 @@ func (m *RegistryDefault) Audit() *logrusx.Logger {
 
 func (m *RegistryDefault) RegisterPublicRoutes(ctx context.Context, router *x.RouterPublic) {
 	m.LoginHandler().RegisterPublicRoutes(router)
+	m.SAMLHandler().RegisterPublicRoutes(router)
 	m.RegistrationHandler().RegisterPublicRoutes(router)
 	m.LogoutHandler().RegisterPublicRoutes(router)
 	m.SettingsHandler().RegisterPublicRoutes(router)
@@ -313,6 +317,7 @@ func (m *RegistryDefault) selfServiceStrategies() []interface{} {
 		m.selfserviceStrategies = []interface{}{
 			password2.NewStrategy(m),
 			oidc.NewStrategy(m),
+			saml.NewStrategy(m),
 			profile.NewStrategy(m),
 			code.NewStrategy(m),
 			link.NewStrategy(m),
