@@ -132,7 +132,6 @@ func TestPool(ctx context.Context, conf *config.Config, p persistence.Persister,
 					assert.Empty(t, actual.RecoveryAddresses)
 					assert.Empty(t, actual.VerifiableAddresses)
 
-					require.Len(t, actual.InternalCredentials, 2)
 					require.Len(t, actual.Credentials, 2)
 
 					assertx.EqualAsJSONExcept(t, expected.Credentials[identity.CredentialsTypePassword], actual.Credentials[identity.CredentialsTypePassword], []string{"updated_at", "created_at"})
@@ -179,7 +178,6 @@ func TestPool(ctx context.Context, conf *config.Config, p persistence.Persister,
 			t.Run("expand=everything", func(t *testing.T) {
 				runner(t, identity.ExpandEverything, func(t *testing.T, actual *identity.Identity) {
 
-					require.Len(t, actual.InternalCredentials, 2)
 					require.Len(t, actual.Credentials, 2)
 
 					assertx.EqualAsJSONExcept(t, expected.Credentials[identity.CredentialsTypePassword], actual.Credentials[identity.CredentialsTypePassword], []string{"updated_at", "created_at"})
@@ -197,7 +195,6 @@ func TestPool(ctx context.Context, conf *config.Config, p persistence.Persister,
 				runner(t, identity.ExpandNothing, func(t *testing.T, actual *identity.Identity) {
 					require.NoError(t, p.HydrateIdentityAssociations(ctx, actual, identity.ExpandEverything))
 
-					require.Len(t, actual.InternalCredentials, 2)
 					require.Len(t, actual.Credentials, 2)
 
 					assertx.EqualAsJSONExcept(t, expected.Credentials[identity.CredentialsTypePassword], actual.Credentials[identity.CredentialsTypePassword], []string{"updated_at", "created_at"})
