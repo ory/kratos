@@ -61,7 +61,7 @@ require (
 	github.com/jteeuwen/go-bindata v3.0.7+incompatible
 	github.com/julienschmidt/httprouter v1.3.0
 	github.com/knadh/koanf v1.4.4
-	github.com/laher/mergefs v0.1.1
+	github.com/laher/mergefs v0.1.2-0.20230223191438-d16611b2f4e7
 	github.com/luna-duclos/instrumentedsql v1.1.3
 	github.com/mattn/goveralls v0.0.7
 	github.com/mikefarah/yq/v4 v4.19.1
