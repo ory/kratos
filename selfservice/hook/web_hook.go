@@ -264,110 +264,133 @@ func (e *WebHook) ExecuteSettingsPrePersistHook(_ http.ResponseWriter, req *http
 		})
 	})
 }
+func attributesFromTemplateContext(data *templateContext) []attribute.KeyValue {
+	attr := []attribute.KeyValue{
+		attribute.String("webhook.flow.id", data.Flow.GetID().String()),
+	}
+	if data.Identity != nil {
+		attr = append(attr,
+			attribute.String("webhook.identity.id", data.Identity.ID.String()),
+			attribute.String("webhook.identity.nid", data.Identity.NID.String()),
+		)
+	}
+	return attr
+}
+
+func (e *WebHook) executeAsync(ctx context.Context, data *templateContext, ignoreResponse, canInterrupt, parseResponse bool) {
+	httpClient := e.deps.HTTPClient(ctx)
+	tracer := trace.SpanFromContext(ctx).TracerProvider().Tracer("kratos-webhooks")
+	go func() {
+		_, span := tracer.Start(ctx, "selfservice.webhook.async",
+			trace.WithSpanKind(trace.SpanKindConsumer),
+			trace.WithAttributes(attributesFromTemplateContext(data)...))
+		defer span.End()
+
+		// This is one of the few places where spawning a context.Background() is ok. We need to do this
+		// because the function runs asynchronously and we don't want to cancel the request if the
+		// incoming request context is cancelled.
+		//
+		// The webhook will still cancel after 30 seconds as that is the configured timeout for the HTTP client.
+		innerCtx, cancel := context.WithTimeout(trace.ContextWithSpan(context.Background(), span), httpClient.HTTPClient.Timeout)
+		defer cancel()
+
+		_ = e.executeSync(innerCtx, data, ignoreResponse, canInterrupt, parseResponse)
+	}()
+}
+
+func (e *WebHook) executeSync(ctx context.Context, data *templateContext, ignoreResponse, canInterrupt, parseResponse bool) (finalErr error) {
+	var (
+		httpClient = e.deps.HTTPClient(ctx)
+		tracer     = trace.SpanFromContext(ctx).TracerProvider().Tracer("kratos-webhooks")
+	)
+	ctx, span := tracer.Start(ctx, "selfservice.webhook.execute", trace.WithAttributes(
+		attributesFromTemplateContext(data)...))
+	defer span.End()
+	traceID, spanID := span.SpanContext().TraceID(), span.SpanContext().SpanID()
+	logger := e.deps.Logger().WithField("otel", map[string]string{
+		"trace_id": traceID.String(),
+		"span_id":  spanID.String(),
+	}).WithField("webhook_flow_id", data.Flow.GetID())
+	startTime := time.Now()
+
+	defer func() {
+		log := logger.WithField("duration", time.Since(startTime))
+		if finalErr != nil {
+			span.SetStatus(codes.Error, finalErr.Error())
+			span.RecordError(finalErr)
+			log = log.WithError(finalErr)
+			if ignoreResponse {
+				log.Warning("Webhook request failed but the error was ignored because the configuration indicated that the upstream response should be ignored.")
+			} else {
+				log.Warning("Webhook request failed.")
+			}
+		} else {
+			log.Info("Webhook request finished")
+		}
+	}()
+
+	builder, err := request.NewBuilder(e.conf, e.deps)
+	if err != nil {
+		return errors.WithStack(err)
+	}
+
+	req, err := builder.BuildRequest(ctx, data)
+	if errors.Is(err, request.ErrCancel) {
+		span.AddEvent("WebhookCanceled")
+		logger.WithError(err).Info("Webhook was canceled")
+		return nil
+	} else if err != nil {
+		return errors.WithStack(err)
+	}
+
+	span.SetAttributes(semconv.HTTPClientAttributesFromHTTPRequest(req.Request)...)
+
+	logger.WithRequest(req.Request).Info("Dispatching webhook")
+
+	req = req.WithContext(ctx)
+
+	resp, err := httpClient.Do(req)
+	if err != nil {
+		return errors.WithStack(err)
+	}
+	defer resp.Body.Close()
+	span.SetAttributes(semconv.HTTPAttributesFromHTTPStatusCode(resp.StatusCode)...)
+
+	if resp.StatusCode >= http.StatusBadRequest {
+		span.SetStatus(codes.Error, "HTTP status code >= 400")
+		if canInterrupt || parseResponse {
+			if err := parseWebhookResponse(resp, data.Identity); err != nil {
+				return err
+			}
+		}
+		return fmt.Errorf("webhook failed with status code %v", resp.StatusCode)
+	}
+
+	if parseResponse {
+		if err := parseWebhookResponse(resp, data.Identity); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
 
 func (e *WebHook) execute(ctx context.Context, data *templateContext) error {
 	var (
-		httpClient     = e.deps.HTTPClient(ctx)
 		ignoreResponse = gjson.GetBytes(e.conf, "response.ignore").Bool()
 		canInterrupt   = gjson.GetBytes(e.conf, "can_interrupt").Bool()
 		parseResponse  = gjson.GetBytes(e.conf, "response.parse").Bool()
-		tracer         = trace.SpanFromContext(ctx).TracerProvider().Tracer("kratos-webhooks")
 	)
 	if ignoreResponse && (parseResponse || canInterrupt) {
 		return errors.WithStack(herodot.ErrInternalServerError.WithReasonf("A webhook is configured to ignore the response but also to parse the response. This is not possible."))
 	}
 
-	makeRequest := func() (finalErr error) {
-		if ignoreResponse {
-			// This is one of the few places where spawning a context.Background() is ok. We need to do this
-			// because the function runs asynchronously and we don't want to cancel the request if the
-			// incoming request context is cancelled.
-			//
-			// The webhook will still cancel after 30 seconds as that is the configured timeout for the HTTP client.
-			var cancel context.CancelFunc
-			ctx, cancel = context.WithTimeout(context.Background(), httpClient.HTTPClient.Timeout)
-			defer cancel()
-		}
-		ctx, span := tracer.Start(ctx, "selfservice.webhook")
-		defer span.End()
-		startTime := time.Now()
-
-		defer func() {
-			traceID, spanID := span.SpanContext().TraceID(), span.SpanContext().SpanID()
-			logger := e.deps.Logger().WithField("otel", map[string]string{
-				"trace_id": traceID.String(),
-				"span_id":  spanID.String(),
-			})
-			if finalErr != nil {
-				if ignoreResponse {
-					logger.WithField("duration", time.Since(startTime)).WithError(finalErr).Warning("Webhook request failed but the error was ignored because the configuration indicated that the upstream response should be ignored.")
-				}
-			} else {
-				logger.WithField("duration", time.Since(startTime)).Info("Webhook request succeeded")
-			}
-		}()
-
-		builder, err := request.NewBuilder(e.conf, e.deps)
-		if err != nil {
-			return err
-		}
-
-		req, err := builder.BuildRequest(ctx, data)
-		if errors.Is(err, request.ErrCancel) {
-			return nil
-		} else if err != nil {
-			return err
-		}
-
-		span.SetAttributes(semconv.HTTPClientAttributesFromHTTPRequest(req.Request)...)
-		if data.Identity != nil {
-			span.SetAttributes(
-				attribute.String("webhook.identity.id", data.Identity.ID.String()),
-				attribute.String("webhook.identity.nid", data.Identity.NID.String()),
-			)
-		}
-
-		e.deps.Logger().WithRequest(req.Request).Info("Dispatching webhook")
-
-		req = req.WithContext(ctx)
-
-		resp, err := httpClient.Do(req)
-		if err != nil {
-			span.SetStatus(codes.Error, err.Error())
-			return errors.WithStack(err)
-		}
-		defer resp.Body.Close()
-		span.SetAttributes(semconv.HTTPAttributesFromHTTPStatusCode(resp.StatusCode)...)
-
-		if resp.StatusCode >= http.StatusBadRequest {
-			span.SetStatus(codes.Error, "HTTP status code >= 400")
-			if canInterrupt || parseResponse {
-				if err := parseWebhookResponse(resp, data.Identity); err != nil {
-					span.SetStatus(codes.Error, err.Error())
-					return err
-				}
-			}
-			return fmt.Errorf("webhook failed with status code %v", resp.StatusCode)
-		}
-
-		if parseResponse {
-			if err := parseWebhookResponse(resp, data.Identity); err != nil {
-				span.SetStatus(codes.Error, err.Error())
-				return err
-			}
-		}
-
+	if ignoreResponse {
+		e.executeAsync(ctx, data, ignoreResponse, canInterrupt, parseResponse)
 		return nil
+	} else {
+		return e.executeSync(ctx, data, ignoreResponse, canInterrupt, parseResponse)
 	}
-
-	if !ignoreResponse {
-		return makeRequest()
-	}
-	go func() {
-		// we cannot handle the error as we are running async, and it is logged anyway
-		_ = makeRequest()
-	}()
-	return nil
 }
 
 func parseWebhookResponse(resp *http.Response, id *identity.Identity) (err error) {
