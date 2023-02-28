@@ -12,10 +12,9 @@ import (
 
 	"github.com/ory/x/pagination/migrationpagination"
 
+	"github.com/ory/kratos/cipher"
 	"github.com/ory/kratos/hash"
 	"github.com/ory/kratos/x"
-
-	"github.com/ory/kratos/cipher"
 
 	"github.com/ory/herodot"
 
@@ -31,6 +30,7 @@ import (
 	"github.com/ory/kratos/driver/config"
 )
 
+const RouteSearchCollection = "/identity"
 const RouteCollection = "/identities"
 const RouteItem = RouteCollection + "/:id"
 const RouteCredentialItem = RouteItem + "/credentials/:type"
@@ -74,6 +74,7 @@ func (h *Handler) RegisterPublicRoutes(public *x.RouterPublic) {
 		x.AdminPrefix+RouteCollection+"/*/credentials/*",
 	)
 
+	public.GET(RouteSearchCollection, x.RedirectToAdminRoute(h.r))
 	public.GET(RouteCollection, x.RedirectToAdminRoute(h.r))
 	public.GET(RouteItem, x.RedirectToAdminRoute(h.r))
 	public.DELETE(RouteItem, x.RedirectToAdminRoute(h.r))
@@ -92,6 +93,7 @@ func (h *Handler) RegisterPublicRoutes(public *x.RouterPublic) {
 }
 
 func (h *Handler) RegisterAdminRoutes(admin *x.RouterAdmin) {
+	admin.GET(RouteSearchCollection, h.search)
 	admin.GET(RouteCollection, h.list)
 	admin.GET(RouteItem, h.get)
 	admin.DELETE(RouteItem, h.delete)
@@ -118,9 +120,50 @@ type listIdentitiesResponse struct {
 	Body []Identity
 }
 
+<<<<<<< HEAD
 // Paginated List Identity Parameters
 //
 // swagger:parameters listIdentities
+=======
+// swagger:route GET /admin/identity v0alpha2 adminGetIdentity
+//
+// Search an Identity
+//
+// Get identity with match parameter and its type.
+//
+// - `?match=foo@bar.com&type=password`
+//
+//     Consumes:
+//     - application/json
+//
+//     Produces:
+//     - application/json
+//
+//     Schemes: http, https
+//
+//     Security:
+//       oryAccessToken:
+//
+//     Responses:
+//       200: identity
+//       404: jsonError
+//       500: jsonError
+func (h *Handler) search(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+	match, kind, err := x.ParseSearch(r)
+	if err != nil {
+		h.r.Writer().WriteError(w, r, err)
+		return
+	}
+	i, _, err := h.r.PrivilegedIdentityPool().FindByCredentialsIdentifier(r.Context(), kind, match)
+	if err != nil {
+		h.r.Writer().WriteError(w, r, err)
+		return
+	}
+	h.r.Writer().Write(w, r, WithCredentialsMetadataAndAdminMetadataInJSON(*i))
+}
+
+// swagger:route GET /admin/identities v0alpha2 adminListIdentities
+>>>>>>> 59008dc47 (feat: add search for identity)
 //
 //nolint:deadcode,unused
 //lint:ignore U1000 Used to generate Swagger and OpenAPI definitions
@@ -136,7 +179,13 @@ type listIdentitiesParameters struct {
 
 // swagger:route GET /admin/identities identity listIdentities
 //
+<<<<<<< HEAD
 // # List Identities
+=======
+// Lists all identities. Support search only with match parameter and its type.
+//
+// - `?match=foo@bar.com&type=password`
+>>>>>>> 59008dc47 (feat: add search for identity)
 //
 // Lists all [identities](https://www.ory.sh/docs/kratos/concepts/identity-user-model) in the system.
 //
