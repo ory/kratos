@@ -146,10 +146,11 @@ type listIdentitiesResponse struct {
 //
 //     Responses:
 //       200: identity
+//       400: jsonError
 //       404: jsonError
 //       500: jsonError
 func (h *Handler) search(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
-	match, kind, err := x.ParseSearch(r)
+	match, kind, err := ParseSearch(r)
 	if err != nil {
 		h.r.Writer().WriteError(w, r, err)
 		return

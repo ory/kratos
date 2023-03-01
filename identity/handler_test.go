@@ -109,6 +109,14 @@ func TestHandler(t *testing.T) {
 		}
 	})
 
+	t.Run("case=should 404 on a non-existing resource for search", func(t *testing.T) {
+		for name, ts := range map[string]*httptest.Server{"public": publicTS, "admin": adminTS} {
+			t.Run("endpoint="+name, func(t *testing.T) {
+				_ = get(t, ts, "/identity?match=foo@bar.com&type=password", http.StatusNotFound)
+			})
+		}
+	})
+
 	t.Run("case=should return 404 on a non-existing resource", func(t *testing.T) {
 		for name, ts := range map[string]*httptest.Server{"public": publicTS, "admin": adminTS} {
 			t.Run("endpoint="+name, func(t *testing.T) {
@@ -404,7 +412,21 @@ func TestHandler(t *testing.T) {
 			assert.EqualValues(t, "1", res.Get("0.credentials.password.identifiers.#").String(), res.Raw)
 			assert.EqualValues(t, "find.by.identifier@bar.com", res.Get("0.credentials.password.identifiers.0").String(), res.Raw)
 		})
-
+		t.Run("case=should be able to find the identity", func(t *testing.T) {
+			identifier := "foo.search@bar.com"
+			id := createOidcIdentity(t, identifier, "access_token", "refresh_token", "id_token", true)
+			for name, ts := range map[string]*httptest.Server{"public": publicTS, "admin": adminTS} {
+				t.Run("endpoint="+name, func(t *testing.T) {
+					res := get(t, ts, "/identity?type=oidc&match=bar:"+identifier, http.StatusOK)
+					assert.EqualValues(t, id, res.Get("id").String(), "%s", res.Raw)
+					assert.EqualValues(t, identifier, res.Get("traits.subject").String(), "%s", res.Raw)
+					assert.EqualValues(t, defaultSchemaExternalURL, res.Get("schema_url").String(), "%s", res.Raw)
+					assert.EqualValues(t, config.DefaultIdentityTraitsSchemaID, res.Get("schema_id").String(), "%s", res.Raw)
+					assert.EqualValues(t, identity.StateActive, res.Get("state").String(), "%s", res.Raw)
+					assert.Empty(t, res.Get("credentials").String(), "%s", res.Raw)
+				})
+			}
+		})
 		t.Run("case=should get oidc credential", func(t *testing.T) {
 			id := createOidcIdentity(t, "foo.oidc@bar.com", "access_token", "refresh_token", "id_token", true)
 			for name, ts := range map[string]*httptest.Server{"public": publicTS, "admin": adminTS} {

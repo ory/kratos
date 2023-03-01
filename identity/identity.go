@@ -8,6 +8,7 @@ import (
 	"database/sql/driver"
 	"encoding/json"
 	"fmt"
+	"net/http"
 	"sync"
 	"time"
 
@@ -460,4 +461,13 @@ func (i *Identity) WithDeclassifiedCredentialsOIDC(ctx context.Context, c cipher
 	ii := *i
 	ii.Credentials = credsToPublish
 	return &ii, nil
+}
+
+func ParseSearch(r *http.Request) (match string, kind CredentialsType, err error) {
+	match = r.URL.Query().Get("match")
+	kind = CredentialsType(r.URL.Query().Get("type"))
+	if kind == "" || match == "" {
+		return "", "", errors.WithStack(herodot.ErrBadRequest.WithReasonf("You must set the credential type and match"))
+	}
+	return
 }
