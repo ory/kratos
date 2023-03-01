@@ -103,6 +103,11 @@ type Configuration struct {
 	//
 	// More information: https://openid.net/specs/openid-connect-core-1_0.html#ClaimsParameter
 	RequestedClaims json.RawMessage `json:"requested_claims"`
+
+	// AllowedUpstreamParameters is a list of keys that are passed to the OpenID Connect Provider's login page.
+	//
+	// This map is used to verify parameters from the client's request when submitting a login/registration oidc flow.
+	AllowedUpstreamParameters []string `json:"allowed_upstream_parameters"`
 }
 
 func (p Configuration) Redir(public *url.URL) string {

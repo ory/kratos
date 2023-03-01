@@ -74,6 +74,14 @@ type UpdateLoginFlowWithOidcMethod struct {
 
 	// The identity traits. This is a placeholder for the registration flow.
 	Traits json.RawMessage `json:"traits"`
+
+	// UpstreamParameters are the parameters that are passed to the upstream identity provider.
+	//
+	// These parameters are optional and depends on the upstream identity provider.
+	// UpstreamParameters are validated against the provider's AllowedUpstreamParameters configuration.
+	//
+	// required: false
+	UpstreamParameters json.RawMessage `json:"upstream_parameters"`
 }
 
 func (s *Strategy) processLogin(w http.ResponseWriter, r *http.Request, a *login.Flow, token *oauth2.Token, claims *Claims, provider Provider, container *authCodeContainer) (*registration.Flow, error) {
@@ -192,7 +200,31 @@ func (s *Strategy) Login(w http.ResponseWriter, r *http.Request, f *login.Flow, 
 		return nil, s.handleError(w, r, f, pid, nil, errors.WithStack(herodot.ErrInternalServerError.WithReason("Could not update flow").WithDebug(err.Error())))
 	}
 
-	codeURL := c.AuthCodeURL(state, provider.AuthCodeURLOptions(req)...)
+	var up map[string]string
+	if err := json.NewDecoder(bytes.NewBuffer(p.UpstreamParameters)).Decode(&up); err != nil {
+		return nil, err
+	}
+
+	authCodeOptions := provider.AuthCodeURLOptions(req)
+
+	for _, aup := range provider.Config().AllowedUpstreamParameters {
+		if v, ok := up[aup]; !ok {
+			err := errors.WithStack(herodot.ErrBadRequest.WithReasonf("Upstream parameter %s is not allowed", aup))
+			s.d.Logger().
+				WithRequest(r).
+				WithError(err).
+				WithField("provider", pid).
+				WithField("upstream_parameter", aup).
+				WithField("upstream_parameter_value", v)
+
+			return nil, s.handleError(w, r, f, pid, nil, err)
+		} else {
+			authCodeOptions = append(authCodeOptions, oauth2.SetAuthURLParam(aup, v))
+		}
+	}
+
+	codeURL := c.AuthCodeURL(state, authCodeOptions...)
+
 	if x.IsJSONRequest(r) {
 		s.d.Writer().WriteError(w, r, flow.NewBrowserLocationChangeRequiredError(codeURL))
 	} else {

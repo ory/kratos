@@ -190,7 +190,10 @@
                     "const": true
                   }
                 },
-                "required":["ignore","parse"]
+                "required": [
+                  "ignore",
+                  "parse"
+                ]
               }
             },
             "url": {
@@ -508,6 +511,18 @@
         },
         "requested_claims": {
           "$ref": "#/definitions/OIDCClaims"
+        },
+        "allowed_upstream_parameters": {
+          "title": "Allowed Upstream Parameters",
+          "description": "A list of allowed parameters are passed to the upstream identity provider.",
+          "type": "array",
+          "items": {
+            "type": "string",
+            "examples": [
+              "login_hint",
+              "hd"
+            ]
+          }
         }
       },
       "additionalProperties": false,
