@@ -120,35 +120,30 @@ type listIdentitiesResponse struct {
 	Body []Identity
 }
 
-<<<<<<< HEAD
-// Paginated List Identity Parameters
+// swagger:route GET /admin/identity identity getIdentity
 //
-// swagger:parameters listIdentities
-=======
-// swagger:route GET /admin/identity v0alpha2 adminGetIdentity
-//
-// Search an Identity
+// # Get an Identity
 //
 // Get identity with match parameter and its type.
 //
 // - `?match=foo@bar.com&type=password`
 //
-//     Consumes:
-//     - application/json
+//	Consumes:
+//	- application/json
 //
-//     Produces:
-//     - application/json
+//	Produces:
+//	- application/json
 //
-//     Schemes: http, https
+//	Schemes: http, https
 //
-//     Security:
-//       oryAccessToken:
+//	Security:
+//	  oryAccessToken:
 //
-//     Responses:
-//       200: identity
-//       400: jsonError
-//       404: jsonError
-//       500: jsonError
+//	Responses:
+//	  200: identity
+//	  400: jsonError
+//	  404: jsonError
+//	  500: jsonError
 func (h *Handler) search(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 	match, kind, err := ParseSearch(r)
 	if err != nil {
@@ -163,8 +158,9 @@ func (h *Handler) search(w http.ResponseWriter, r *http.Request, _ httprouter.Pa
 	h.r.Writer().Write(w, r, WithCredentialsMetadataAndAdminMetadataInJSON(*i))
 }
 
-// swagger:route GET /admin/identities v0alpha2 adminListIdentities
->>>>>>> 59008dc47 (feat: add search for identity)
+// Paginated List Identity Parameters
+//
+// swagger:parameters listIdentities
 //
 //nolint:deadcode,unused
 //lint:ignore U1000 Used to generate Swagger and OpenAPI definitions
@@ -180,13 +176,7 @@ type listIdentitiesParameters struct {
 
 // swagger:route GET /admin/identities identity listIdentities
 //
-<<<<<<< HEAD
 // # List Identities
-=======
-// Lists all identities. Support search only with match parameter and its type.
-//
-// - `?match=foo@bar.com&type=password`
->>>>>>> 59008dc47 (feat: add search for identity)
 //
 // Lists all [identities](https://www.ory.sh/docs/kratos/concepts/identity-user-model) in the system.
 //
