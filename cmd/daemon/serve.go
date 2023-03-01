@@ -128,7 +128,7 @@ func ServePublic(r driver.Registry, cmd *cobra.Command, args []string, slOpts *s
 	addr := c.PublicListenOn(ctx)
 
 	l.Printf("Starting the public httpd on: %s", addr)
-	if err := graceful.Graceful(func() error {
+	if err := graceful.GracefulContext(ctx, func() error {
 		listener, err := networkx.MakeListener(addr, c.PublicSocketPermission(ctx))
 		if err != nil {
 			return err
@@ -200,7 +200,7 @@ func ServeAdmin(r driver.Registry, cmd *cobra.Command, args []string, slOpts *se
 	addr := c.AdminListenOn(ctx)
 
 	l.Printf("Starting the admin httpd on: %s", addr)
-	if err := graceful.Graceful(func() error {
+	if err := graceful.GracefulContext(ctx, func() error {
 		listener, err := networkx.MakeListener(addr, c.AdminSocketPermission(ctx))
 		if err != nil {
 			return err
