@@ -566,6 +566,43 @@ func TestStrategy(t *testing.T) {
 
 		snapshotx.SnapshotTExcept(t, sr.UI, []string{"action", "nodes.0.attributes.value"})
 	})
+
+	t.Run("case=upstream parameters should be passed on to provider", func(t *testing.T) {
+		subject = "oidc-upstream-parameters@ory.sh"
+		scope = []string{"openid", "offline"}
+
+		t.Run("case=should pass when registering", func(t *testing.T) {
+			// create a client that does not follow redirects
+			c := &http.Client{
+				CheckRedirect: func(req *http.Request, via []*http.Request) error {
+					return http.ErrUseLastResponse
+				},
+			}
+
+			f := newRegistrationFlow(t, returnTS.URL, time.Minute)
+			action := afv(t, f.ID, "valid")
+
+			fv := url.Values{}
+
+			fv.Set("provider", "valid")
+			fv.Set("upstream_parameters.login_hint", "oidc-upstream-parameters@ory.sh")
+
+			res, err := c.PostForm(action, fv)
+
+			require.NoError(t, err)
+
+			assert.Contains(t, "login_hint='oidc-upstream-parameters@ory.sh'", res.Request.URL.String())
+		})
+
+		t.Run("case=should pass when logging in", func(t *testing.T) {
+			f := newLoginFlow(t, returnTS.URL, time.Minute)
+
+			res, _ := makeRequest(t, "valid", f.UI.Action, url.Values{
+				"upstream_parameters.login_hint": {"oidc-upstream-parameters@ory.sh"},
+			})
+			assert.Contains(t, "oidc-upstream-parameters@ory.sh'", res.Request.URL.String())
+		})
+	})
 }
 
 func TestCountActiveFirstFactorCredentials(t *testing.T) {

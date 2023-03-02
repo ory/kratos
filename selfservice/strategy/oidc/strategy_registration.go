@@ -88,7 +88,7 @@ type UpdateRegistrationFlowWithOidcMethod struct {
 	// UpstreamParameters are validated against the provider's AllowedUpstreamParameters configuration.
 	//
 	// required: false
-	UpstreamParameters json.RawMessage `json:"upstream_parameters"`
+	UpstreamParameters json.RawMessage `json:"upstream_parameters,omitempty"`
 }
 
 func (s *Strategy) newLinkDecoder(p interface{}, r *http.Request) error {
@@ -173,19 +173,7 @@ func (s *Strategy) Register(w http.ResponseWriter, r *http.Request, f *registrat
 		return err
 	}
 
-	upstreamParamaters, err := UpstreamParameters(provider, up)
-
-	if err != nil {
-		s.d.Logger().
-			WithRequest(r).
-			WithError(err).
-			WithField("provider", pid).
-			WithField("sent_parameters", up)
-
-		return s.handleError(w, r, f, pid, nil, err)
-	}
-
-	codeURL := c.AuthCodeURL(state, append(provider.AuthCodeURLOptions(req), upstreamParamaters...)...)
+	codeURL := c.AuthCodeURL(state, append(provider.AuthCodeURLOptions(req), UpstreamParameters(provider, up)...)...)
 
 	if x.IsJSONRequest(r) {
 		s.d.Writer().WriteError(w, r, flow.NewBrowserLocationChangeRequiredError(codeURL))

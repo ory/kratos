@@ -16,6 +16,13 @@
     "transient_payload": {
       "type": "object",
       "additionalProperties": true
+    },
+    "upstream_parameters": {
+      "type": "object",
+      "login_hint": {
+        "type": "string"
+      },
+      "additionalProperties": true
     }
   }
 }
