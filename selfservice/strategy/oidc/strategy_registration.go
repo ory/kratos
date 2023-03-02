@@ -81,6 +81,14 @@ type UpdateRegistrationFlowWithOidcMethod struct {
 	//
 	// required: false
 	TransientPayload json.RawMessage `json:"transient_payload,omitempty"`
+
+	// UpstreamParameters are the parameters that are passed to the upstream identity provider.
+	//
+	// These parameters are optional and depends on the upstream identity provider.
+	// UpstreamParameters are validated against the provider's AllowedUpstreamParameters configuration.
+	//
+	// required: false
+	UpstreamParameters json.RawMessage `json:"upstream_parameters"`
 }
 
 func (s *Strategy) newLinkDecoder(p interface{}, r *http.Request) error {
@@ -160,7 +168,25 @@ func (s *Strategy) Register(w http.ResponseWriter, r *http.Request, f *registrat
 		return s.handleError(w, r, f, pid, nil, err)
 	}
 
-	codeURL := c.AuthCodeURL(state, provider.AuthCodeURLOptions(req)...)
+	var up map[string]string
+	if err := json.NewDecoder(bytes.NewBuffer(p.UpstreamParameters)).Decode(&up); err != nil {
+		return err
+	}
+
+	upstreamParamaters, err := UpstreamParameters(provider, up)
+
+	if err != nil {
+		s.d.Logger().
+			WithRequest(r).
+			WithError(err).
+			WithField("provider", pid).
+			WithField("sent_parameters", up)
+
+		return s.handleError(w, r, f, pid, nil, err)
+	}
+
+	codeURL := c.AuthCodeURL(state, append(provider.AuthCodeURLOptions(req), upstreamParamaters...)...)
+
 	if x.IsJSONRequest(r) {
 		s.d.Writer().WriteError(w, r, flow.NewBrowserLocationChangeRequiredError(codeURL))
 	} else {

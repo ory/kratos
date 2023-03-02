@@ -65,3 +65,21 @@ func (c *Claims) Validate() error {
 	}
 	return nil
 }
+
+func UpstreamParameters(provider Provider, sentProviders map[string]string) ([]oauth2.AuthCodeOption, error) {
+	allowedProviders := make(map[string]struct{}, len(provider.Config().AllowedUpstreamParameters))
+	for _, p := range provider.Config().AllowedUpstreamParameters {
+		allowedProviders[p] = struct{}{}
+	}
+
+	params := make([]oauth2.AuthCodeOption, 0)
+
+	for up, v := range sentProviders {
+		if _, ok := allowedProviders[up]; !ok {
+			return nil, errors.WithStack(herodot.ErrBadRequest.WithReasonf("Upstream parameter %s is not allowed", up))
+		}
+		params = append(params, oauth2.SetAuthURLParam(up, v))
+	}
+
+	return params, nil
+}

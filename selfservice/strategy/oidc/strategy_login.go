@@ -205,25 +205,19 @@ func (s *Strategy) Login(w http.ResponseWriter, r *http.Request, f *login.Flow, 
 		return nil, err
 	}
 
-	authCodeOptions := provider.AuthCodeURLOptions(req)
+	upstreamParamaters, err := UpstreamParameters(provider, up)
 
-	for _, aup := range provider.Config().AllowedUpstreamParameters {
-		if v, ok := up[aup]; !ok {
-			err := errors.WithStack(herodot.ErrBadRequest.WithReasonf("Upstream parameter %s is not allowed", aup))
-			s.d.Logger().
-				WithRequest(r).
-				WithError(err).
-				WithField("provider", pid).
-				WithField("upstream_parameter", aup).
-				WithField("upstream_parameter_value", v)
+	if err != nil {
+		s.d.Logger().
+			WithRequest(r).
+			WithError(err).
+			WithField("provider", pid).
+			WithField("sent_parameters", up)
 
-			return nil, s.handleError(w, r, f, pid, nil, err)
-		} else {
-			authCodeOptions = append(authCodeOptions, oauth2.SetAuthURLParam(aup, v))
-		}
+		return nil, s.handleError(w, r, f, pid, nil, err)
 	}
 
-	codeURL := c.AuthCodeURL(state, authCodeOptions...)
+	codeURL := c.AuthCodeURL(state, append(provider.AuthCodeURLOptions(req), upstreamParamaters...)...)
 
 	if x.IsJSONRequest(r) {
 		s.d.Writer().WriteError(w, r, flow.NewBrowserLocationChangeRequiredError(codeURL))
