@@ -1192,8 +1192,8 @@ func (p *Config) SelfServiceFlowVerificationAfterHooks(ctx context.Context, stra
 	return p.selfServiceHooks(ctx, HookStrategyKey(ViperKeySelfServiceVerificationAfter, strategy))
 }
 
-func (p *Config) SelfServiceFlowRecoveryReturnTo(ctx context.Context) *url.URL {
-	return p.GetProvider(ctx).RequestURIF(ViperKeySelfServiceRecoveryBrowserDefaultReturnTo, p.SelfServiceBrowserDefaultReturnTo(ctx))
+func (p *Config) SelfServiceFlowRecoveryReturnTo(ctx context.Context, defaultReturnTo *url.URL) *url.URL {
+	return p.GetProvider(ctx).RequestURIF(ViperKeySelfServiceRecoveryBrowserDefaultReturnTo, defaultReturnTo)
 }
 
 func (p *Config) SelfServiceFlowRecoveryRequestLifespan(ctx context.Context) time.Duration {
