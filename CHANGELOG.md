@@ -5,9 +5,10 @@
 
 **Table of Contents**
 
-- [ (2023-02-22)](#2023-02-22)
+- [ (2023-03-03)](#2023-03-03)
   - [Breaking Changes](#breaking-changes)
     - [Bug Fixes](#bug-fixes)
+    - [Code Refactoring](#code-refactoring)
     - [Features](#features)
 - [0.11.1 (2023-01-14)](#0111-2023-01-14)
   - [Breaking Changes](#breaking-changes-1)
@@ -20,7 +21,7 @@
   - [Breaking Changes](#breaking-changes-2)
     - [Bug Fixes](#bug-fixes-2)
     - [Code Generation](#code-generation-1)
-    - [Code Refactoring](#code-refactoring)
+    - [Code Refactoring](#code-refactoring-1)
     - [Documentation](#documentation-1)
     - [Features](#features-2)
     - [Reverts](#reverts)
@@ -33,7 +34,7 @@
   - [Breaking Changes](#breaking-changes-3)
     - [Bug Fixes](#bug-fixes-4)
     - [Code Generation](#code-generation-3)
-    - [Code Refactoring](#code-refactoring-1)
+    - [Code Refactoring](#code-refactoring-2)
     - [Documentation](#documentation-2)
     - [Features](#features-3)
     - [Tests](#tests-2)
@@ -50,7 +51,7 @@
   - [Breaking Changes](#breaking-changes-5)
     - [Bug Fixes](#bug-fixes-7)
     - [Code Generation](#code-generation-6)
-    - [Code Refactoring](#code-refactoring-2)
+    - [Code Refactoring](#code-refactoring-3)
     - [Documentation](#documentation-4)
     - [Features](#features-4)
     - [Tests](#tests-3)
@@ -59,7 +60,7 @@
   - [Breaking Changes](#breaking-changes-6)
     - [Bug Fixes](#bug-fixes-8)
     - [Code Generation](#code-generation-7)
-    - [Code Refactoring](#code-refactoring-3)
+    - [Code Refactoring](#code-refactoring-4)
     - [Documentation](#documentation-5)
     - [Features](#features-5)
     - [Tests](#tests-4)
@@ -89,7 +90,7 @@
   - [Breaking Changes](#breaking-changes-8)
     - [Bug Fixes](#bug-fixes-13)
     - [Code Generation](#code-generation-13)
-    - [Code Refactoring](#code-refactoring-4)
+    - [Code Refactoring](#code-refactoring-5)
     - [Documentation](#documentation-9)
     - [Features](#features-8)
     - [Reverts](#reverts-1)
@@ -119,7 +120,7 @@
   - [Breaking Changes](#breaking-changes-9)
     - [Bug Fixes](#bug-fixes-17)
     - [Code Generation](#code-generation-19)
-    - [Code Refactoring](#code-refactoring-5)
+    - [Code Refactoring](#code-refactoring-6)
     - [Documentation](#documentation-13)
     - [Features](#features-11)
     - [Tests](#tests-10)
@@ -128,7 +129,7 @@
   - [Breaking Changes](#breaking-changes-10)
     - [Bug Fixes](#bug-fixes-18)
     - [Code Generation](#code-generation-20)
-    - [Code Refactoring](#code-refactoring-6)
+    - [Code Refactoring](#code-refactoring-7)
 - [0.6.2-alpha.1 (2021-05-14)](#062-alpha1-2021-05-14)
   - [Code Generation](#code-generation-21)
   - [Documentation](#documentation-14)
@@ -143,7 +144,7 @@
   - [Breaking Changes](#breaking-changes-11)
     - [Bug Fixes](#bug-fixes-20)
     - [Code Generation](#code-generation-24)
-    - [Code Refactoring](#code-refactoring-7)
+    - [Code Refactoring](#code-refactoring-8)
     - [Documentation](#documentation-15)
     - [Features](#features-14)
     - [Tests](#tests-11)
@@ -158,7 +159,7 @@
 - [0.5.4-alpha.1 (2020-11-11)](#054-alpha1-2020-11-11)
   - [Bug Fixes](#bug-fixes-22)
   - [Code Generation](#code-generation-26)
-  - [Code Refactoring](#code-refactoring-8)
+  - [Code Refactoring](#code-refactoring-9)
   - [Documentation](#documentation-17)
   - [Features](#features-16)
 - [0.5.3-alpha.1 (2020-10-27)](#053-alpha1-2020-10-27)
@@ -183,7 +184,7 @@
   - [Breaking Changes](#breaking-changes-12)
     - [Bug Fixes](#bug-fixes-26)
     - [Code Generation](#code-generation-30)
-    - [Code Refactoring](#code-refactoring-9)
+    - [Code Refactoring](#code-refactoring-10)
     - [Documentation](#documentation-21)
     - [Features](#features-19)
     - [Tests](#tests-16)
@@ -208,7 +209,7 @@
   - [Breaking Changes](#breaking-changes-13)
     - [Bug Fixes](#bug-fixes-32)
     - [Code Generation](#code-generation-36)
-    - [Code Refactoring](#code-refactoring-10)
+    - [Code Refactoring](#code-refactoring-11)
     - [Documentation](#documentation-23)
     - [Features](#features-20)
     - [Unclassified](#unclassified-9)
@@ -216,7 +217,7 @@
   - [Breaking Changes](#breaking-changes-14)
     - [Bug Fixes](#bug-fixes-33)
     - [Chores](#chores)
-    - [Code Refactoring](#code-refactoring-11)
+    - [Code Refactoring](#code-refactoring-12)
     - [Documentation](#documentation-24)
     - [Features](#features-21)
     - [Unclassified](#unclassified-10)
@@ -227,17 +228,17 @@
   - [Breaking Changes](#breaking-changes-15)
     - [Bug Fixes](#bug-fixes-34)
     - [Chores](#chores-2)
-    - [Code Refactoring](#code-refactoring-12)
+    - [Code Refactoring](#code-refactoring-13)
     - [Documentation](#documentation-26)
     - [Features](#features-22)
     - [Unclassified](#unclassified-11)
 - [0.1.1-alpha.1 (2020-02-18)](#011-alpha1-2020-02-18)
   - [Bug Fixes](#bug-fixes-35)
-  - [Code Refactoring](#code-refactoring-13)
+  - [Code Refactoring](#code-refactoring-14)
   - [Documentation](#documentation-27)
 - [0.1.0-alpha.6 (2020-02-16)](#010-alpha6-2020-02-16)
   - [Bug Fixes](#bug-fixes-36)
-  - [Code Refactoring](#code-refactoring-14)
+  - [Code Refactoring](#code-refactoring-15)
   - [Documentation](#documentation-28)
   - [Features](#features-23)
 - [0.1.0-alpha.5 (2020-02-06)](#010-alpha5-2020-02-06)
@@ -292,7 +293,7 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# [](https://github.com/ory/kratos/compare/v0.11.1...v) (2023-02-22)
+# [](https://github.com/ory/kratos/compare/v0.11.1...v) (2023-03-03)
 
 ## Breaking Changes
 
@@ -375,6 +376,11 @@ flows.
 
 - Set DB connection max idle time
   ([8d4762c](https://github.com/ory/kratos/commit/8d4762c1bffad14c94ac69575e488fc67d3f5dde))
+
+### Code Refactoring
+
+- Identity persistence ([#3101](https://github.com/ory/kratos/issues/3101))
+  ([ceb5cc2](https://github.com/ory/kratos/commit/ceb5cc2b8a78be2f5b65d9a026c01ff0afe106af))
 
 ### Features
 
