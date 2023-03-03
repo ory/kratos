@@ -104,6 +104,19 @@ func TestVerification(t *testing.T) {
 		return string(ioutilx.MustReadAll(res.Body)), res
 	}
 
+	var submitVerificationCodeApi = func(t *testing.T, body string, code string) (string, *http.Response) {
+		c := http.Client{}
+		action := gjson.Get(body, "ui.action").String()
+		require.NotEmpty(t, action, "%v", string(body))
+
+		res, err := c.PostForm(action, url.Values{
+			"code": {code},
+		})
+		require.NoError(t, err)
+
+		return string(ioutilx.MustReadAll(res.Body)), res
+	}
+
 	t.Run("description=should set all the correct verification payloads after submission", func(t *testing.T) {
 		body := expectSuccess(t, nil, false, false, func(v url.Values) {
 			v.Set("email", "test@ory.sh")
@@ -289,7 +302,7 @@ func TestVerification(t *testing.T) {
 	})
 
 	t.Run("description=should verify an email address", func(t *testing.T) {
-		var check = func(t *testing.T, actual string) {
+		var check = func(t *testing.T, useApi bool, actual string) {
 			assert.EqualValues(t, string(node.CodeGroup), gjson.Get(actual, "active").String(), "%s", actual)
 			assert.EqualValues(t, verificationEmail, gjson.Get(actual, "ui.nodes.#(attributes.name==email).attributes.value").String(), "%s", actual)
 			assertx.EqualAsJSON(t, text.NewVerificationEmailWithCodeSent(), json.RawMessage(gjson.Get(actual, "ui.messages.0").Raw))
@@ -312,7 +325,12 @@ func TestVerification(t *testing.T) {
 			code := gjson.GetBytes(f, "ui.nodes.#(attributes.name==code).attributes.value").String()
 			require.NotEmpty(t, code)
 
-			body, res := submitVerificationCode(t, string(f), cl, code)
+			var body string
+			if useApi {
+				body, res = submitVerificationCodeApi(t, string(f), code)
+			} else {
+				body, res = submitVerificationCode(t, string(f), cl, code)
+			}
 
 			assert.Equal(t, http.StatusOK, res.StatusCode)
 			assert.EqualValues(t, "passed_challenge", gjson.Get(body, "state").String())
@@ -334,15 +352,19 @@ func TestVerification(t *testing.T) {
 		}
 
 		t.Run("type=browser", func(t *testing.T) {
-			check(t, expectSuccess(t, nil, false, false, values))
+			check(t, false, expectSuccess(t, nil, false, false, values))
+		})
+
+		t.Run("type=browser flow api check", func(t *testing.T) {
+			check(t, true, expectSuccess(t, nil, false, false, values))
 		})
 
 		t.Run("type=spa", func(t *testing.T) {
-			check(t, expectSuccess(t, nil, false, true, values))
+			check(t, false, expectSuccess(t, nil, false, true, values))
 		})
 
 		t.Run("type=api", func(t *testing.T) {
-			check(t, expectSuccess(t, nil, true, false, values))
+			check(t, false, expectSuccess(t, nil, true, false, values))
 		})
 	})
 

@@ -483,7 +483,7 @@ func TestVerificationApiInitMixedCheck(t *testing.T) {
 			assert.True(t, time.Time(*address.VerifiedAt).Add(time.Second*5).After(time.Now()))
 		}
 
-		var checkApi = func(t *testing.T, actual string) {
+		var checkApi = func(t *testing.T, actionUrl string) {
 			message := testhelpers.CourierExpectMessage(t, reg, verificationEmail, "Please verify your email address")
 			assert.Contains(t, message.Body, "please verify your account by clicking the following link")
 
@@ -495,11 +495,11 @@ func TestVerificationApiInitMixedCheck(t *testing.T) {
 			verificationLinkRequest, err := http.NewRequest("GET", verificationLink, nil)
 			require.NoError(t, err)
 
-			c := testhelpers.NewClientWithCookies(t)
-			res, err := c.Do(testhelpers.NewRequest(t, true, "POST", gjson.Get(actual, "ui.action").String(),
+			c := http.Client{}
+			res, err := c.Do(testhelpers.NewRequest(t, true, "POST", actionUrl,
 				bytes.NewBufferString(testhelpers.EncodeFormAsJSON(t, true,
 					url.Values{"token": {verificationLinkRequest.URL.Query().Get("token")}}))))
-			require.NoError(t, err)
+			require.NoError(t, err, "%s", actionUrl)
 
 			assert.Equal(t, http.StatusOK, res.StatusCode)
 			assert.Contains(t, res.Request.URL.String(), verification.RouteSubmitFlow)
@@ -514,25 +514,31 @@ func TestVerificationApiInitMixedCheck(t *testing.T) {
 			v.Set("email", verificationEmail)
 		}
 
-		t.Run("type=browser", func(t *testing.T) {
+		t.Run("type=browser flow and browser check", func(t *testing.T) {
 			actual := expectSuccess(t, nil, false, false, values)
 			assertx.EqualAsJSON(t, text.NewVerificationEmailSent(), json.RawMessage(gjson.Get(actual, "browser_flow.ui.messages.0").Raw))
 			checkBrowser(t)
 		})
 
-		t.Run("type=spa", func(t *testing.T) {
+		t.Run("type=browser flow and api check", func(t *testing.T) {
+			actual := expectSuccess(t, nil, false, false, values)
+			assertx.EqualAsJSON(t, text.NewVerificationEmailSent(), json.RawMessage(gjson.Get(actual, "browser_flow.ui.messages.0").Raw))
+			checkApi(t, gjson.Get(actual, "browser_flow.ui.action").String())
+		})
+
+		t.Run("type=spa flow and api check", func(t *testing.T) {
 			actual := expectSuccess(t, nil, false, true, values)
 			assertx.EqualAsJSON(t, text.NewVerificationEmailSent(), json.RawMessage(gjson.Get(actual, "ui.messages.0").Raw))
-			checkApi(t, actual)
+			checkApi(t, gjson.Get(actual, "ui.action").String())
 		})
 
-		t.Run("type=api and api check", func(t *testing.T) {
+		t.Run("type=api flow and api check", func(t *testing.T) {
 			actual := expectSuccess(t, nil, true, false, values)
 			assertx.EqualAsJSON(t, text.NewVerificationEmailSent(), json.RawMessage(gjson.Get(actual, "ui.messages.0").Raw))
-			checkApi(t, actual)
+			checkApi(t, gjson.Get(actual, "ui.action").String())
 		})
 
-		t.Run("type=api and browser check", func(t *testing.T) {
+		t.Run("type=api flow and browser check", func(t *testing.T) {
 			actual := expectSuccess(t, nil, true, false, values)
 			assertx.EqualAsJSON(t, text.NewVerificationEmailSent(), json.RawMessage(gjson.Get(actual, "ui.messages.0").Raw))
 			checkBrowser(t)
