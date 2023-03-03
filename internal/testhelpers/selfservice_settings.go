@@ -197,7 +197,7 @@ func NewSettingsAPIServer(t *testing.T, reg *driver.RegistryDefault, ids map[str
 
 	reg.Config().MustSet(ctx, config.ViperKeyPublicBaseURL, tsp.URL)
 	reg.Config().MustSet(ctx, config.ViperKeyAdminBaseURL, tsa.URL)
-	// #nosec G112
+	//#nosec G112
 	return tsp, tsa, AddAndLoginIdentities(t, reg, &httptest.Server{Config: &http.Server{Handler: public}, URL: tsp.URL}, ids)
 }
 

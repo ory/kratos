@@ -522,7 +522,7 @@ func (p *IdentityPersister) ListIdentities(ctx context.Context, params identity.
 		query = query.Paginate(params.Page, params.PerPage)
 	}
 
-	/* #nosec G201 TableName is static */
+	//#nosec G201 -- TableName is static
 	if err := sqlcon.HandleError(query.All(&is)); err != nil {
 		return nil, err
 	}
@@ -570,7 +570,7 @@ func (p *IdentityPersister) UpdateIdentity(ctx context.Context, i *identity.Iden
 			return err
 		}
 
-		/* #nosec G201 TableName is static */
+		//#nosec G201 -- TableName is static
 		if err := tx.RawQuery(
 			fmt.Sprintf(
 				`DELETE FROM %s WHERE identity_id = ? AND nid = ?`,
@@ -669,7 +669,7 @@ func (p *IdentityPersister) VerifyAddress(ctx context.Context, code string) (err
 	}
 
 	count, err := p.GetConnection(ctx).RawQuery(
-		/* #nosec G201 TableName is static */
+		//#nosec G201 -- TableName is static
 		fmt.Sprintf(
 			"UPDATE %s SET status = ?, verified = true, verified_at = ?, code = ? WHERE nid = ? AND code = ? AND expires_at > ?",
 			new(identity.VerifiableAddress).TableName(ctx),
@@ -762,7 +762,7 @@ func (p *IdentityPersister) update(ctx context.Context, v node, columnNames ...s
 		cols = columns.ForStructWithAlias(v, tn, model.As, model.IDField())
 	}
 
-	// #nosec
+	//#nosec
 	stmt := fmt.Sprintf("SELECT COUNT(id) FROM %s AS %s WHERE %s.id = ? AND %s.nid = ?",
 		quoter.Quote(model.TableName()),
 		model.Alias(),
@@ -777,7 +777,7 @@ func (p *IdentityPersister) update(ctx context.Context, v node, columnNames ...s
 		return errors.WithStack(sqlcon.ErrNoRows)
 	}
 
-	// #nosec
+	//#nosec
 	stmt = fmt.Sprintf("UPDATE %s AS %s SET %s WHERE %s AND %s.nid = :nid",
 		quoter.Quote(model.TableName()),
 		model.Alias(),

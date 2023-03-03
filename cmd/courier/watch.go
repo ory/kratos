@@ -73,7 +73,7 @@ func ServeMetrics(ctx context.Context, r driver.Registry) error {
 		handler = otelx.NewHandler(handler, "cmd.courier.ServeMetrics", otelhttp.WithTracerProvider(tp))
 	}
 
-	// #nosec G112 - the correct settings are set by graceful.WithDefaults
+	//#nosec G112 -- the correct settings are set by graceful.WithDefaults
 	server := graceful.WithDefaults(&http.Server{
 		Addr:    c.MetricsListenOn(ctx),
 		Handler: handler,

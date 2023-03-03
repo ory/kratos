@@ -176,7 +176,7 @@ func newHydraIntegration(t *testing.T, remote *string, subject *string, claims *
 	parsed, err := url.ParseRequestURI(addr)
 	require.NoError(t, err)
 
-	// #nosec G112
+	//#nosec G112
 	server := &http.Server{Addr: ":" + parsed.Port(), Handler: router}
 	go func(t *testing.T) {
 		if err := server.ListenAndServe(); err != http.ErrServerClosed {

@@ -10,8 +10,7 @@ import (
 
 	"github.com/hashicorp/go-retryablehttp"
 
-	/* #nosec G505 sha1 is used for k-anonymity */
-	"crypto/sha1"
+	"crypto/sha1" //#nosec G505 sha1 is used for k-anonymity
 	"fmt"
 	"net/http"
 	"strconv"
@@ -188,7 +187,7 @@ func (s *DefaultPasswordValidator) validate(ctx context.Context, identifier, pas
 		return nil
 	}
 
-	/* #nosec G401 sha1 is used for k-anonymity */
+	//#nosec G401 -- sha1 is used for k-anonymity
 	h := sha1.New()
 	if _, err := h.Write([]byte(password)); err != nil {
 		return err

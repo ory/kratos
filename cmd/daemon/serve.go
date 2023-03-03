@@ -120,7 +120,7 @@ func ServePublic(r driver.Registry, cmd *cobra.Command, args []string, slOpts *s
 		handler = otelx.TraceHandler(handler, otelhttp.WithTracerProvider(tracer.Provider()))
 	}
 
-	// #nosec G112 - the correct settings are set by graceful.WithDefaults
+	//#nosec G112 -- the correct settings are set by graceful.WithDefaults
 	server := graceful.WithDefaults(&http.Server{
 		Handler:   handler,
 		TLSConfig: &tls.Config{GetCertificate: certs, MinVersion: tls.VersionTLS12},
@@ -191,7 +191,7 @@ func ServeAdmin(r driver.Registry, cmd *cobra.Command, args []string, slOpts *se
 		)
 	}
 
-	// #nosec G112 - the correct settings are set by graceful.WithDefaults
+	//#nosec G112 -- the correct settings are set by graceful.WithDefaults
 	server := graceful.WithDefaults(&http.Server{
 		Handler:   handler,
 		TLSConfig: &tls.Config{GetCertificate: certs, MinVersion: tls.VersionTLS12},

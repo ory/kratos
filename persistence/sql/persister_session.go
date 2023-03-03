@@ -236,10 +236,10 @@ func (p *Persister) DeleteSessionsByIdentity(ctx context.Context, identityID uui
 	ctx, span := p.r.Tracer(ctx).Tracer().Start(ctx, "persistence.sql.DeleteSessionsByIdentity")
 	defer otelx.End(span, &err)
 
-	// #nosec G201
+	//#nosec G201 -- TableName is static
 	count, err := p.GetConnection(ctx).RawQuery(fmt.Sprintf(
 		"DELETE FROM %s WHERE identity_id = ? AND nid = ?",
-		"sessions",
+		new(session.Session).TableName(ctx),
 	),
 		identityID,
 		p.NetworkID(ctx),
@@ -302,10 +302,10 @@ func (p *Persister) DeleteSessionByToken(ctx context.Context, token string) (err
 	ctx, span := p.r.Tracer(ctx).Tracer().Start(ctx, "persistence.sql.DeleteSessionByToken")
 	defer otelx.End(span, &err)
 
-	// #nosec G201
+	//#nosec G201 -- TableName is static
 	count, err := p.GetConnection(ctx).RawQuery(fmt.Sprintf(
 		"DELETE FROM %s WHERE token = ? AND nid = ?",
-		"sessions",
+		new(session.Session).TableName(ctx),
 	),
 		token,
 		p.NetworkID(ctx),
@@ -323,10 +323,10 @@ func (p *Persister) RevokeSessionByToken(ctx context.Context, token string) (err
 	ctx, span := p.r.Tracer(ctx).Tracer().Start(ctx, "persistence.sql.RevokeSessionByToken")
 	defer otelx.End(span, &err)
 
-	// #nosec G201
+	//#nosec G201 -- TableName is static
 	count, err := p.GetConnection(ctx).RawQuery(fmt.Sprintf(
 		"UPDATE %s SET active = false WHERE token = ? AND nid = ?",
-		"sessions",
+		new(session.Session).TableName(ctx),
 	),
 		token,
 		p.NetworkID(ctx),
@@ -345,10 +345,10 @@ func (p *Persister) RevokeSessionById(ctx context.Context, sID uuid.UUID) (err e
 	ctx, span := p.r.Tracer(ctx).Tracer().Start(ctx, "persistence.sql.RevokeSessionById")
 	defer otelx.End(span, &err)
 
-	// #nosec G201
+	//#nosec G201 -- TableName is static
 	count, err := p.GetConnection(ctx).RawQuery(fmt.Sprintf(
 		"UPDATE %s SET active = false WHERE id = ? AND nid = ?",
-		"sessions",
+		new(session.Session).TableName(ctx),
 	),
 		sID,
 		p.NetworkID(ctx),
@@ -368,10 +368,10 @@ func (p *Persister) RevokeSession(ctx context.Context, iID, sID uuid.UUID) (err 
 	ctx, span := p.r.Tracer(ctx).Tracer().Start(ctx, "persistence.sql.RevokeSession")
 	defer otelx.End(span, &err)
 
-	// #nosec G201
+	//#nosec G201 -- TableName is static
 	err = p.GetConnection(ctx).RawQuery(fmt.Sprintf(
 		"UPDATE %s SET active = false WHERE id = ? AND identity_id = ? AND nid = ?",
-		"sessions",
+		new(session.Session).TableName(ctx),
 	),
 		sID,
 		iID,
@@ -388,10 +388,10 @@ func (p *Persister) RevokeSessionsIdentityExcept(ctx context.Context, iID, sID u
 	ctx, span := p.r.Tracer(ctx).Tracer().Start(ctx, "persistence.sql.RevokeSessionsIdentityExcept")
 	defer otelx.End(span, &err)
 
-	// #nosec G201
+	//#nosec G201 -- TableName is static
 	count, err := p.GetConnection(ctx).RawQuery(fmt.Sprintf(
 		"UPDATE %s SET active = false WHERE identity_id = ? AND id != ? AND nid = ?",
-		"sessions",
+		new(session.Session).TableName(ctx),
 	),
 		iID,
 		sID,
@@ -406,10 +406,12 @@ func (p *Persister) RevokeSessionsIdentityExcept(ctx context.Context, iID, sID u
 func (p *Persister) DeleteExpiredSessions(ctx context.Context, expiresAt time.Time, limit int) (err error) {
 	ctx, span := p.r.Tracer(ctx).Tracer().Start(ctx, "persistence.sql.DeleteExpiredSessions")
 	defer otelx.End(span, &err)
+
+	//#nosec G201 -- TableName is static
 	err = p.GetConnection(ctx).RawQuery(fmt.Sprintf(
 		"DELETE FROM %s WHERE id in (SELECT id FROM (SELECT id FROM %s c WHERE expires_at <= ? and nid = ? ORDER BY expires_at ASC LIMIT %d ) AS s )",
-		"sessions",
-		"sessions",
+		new(session.Session).TableName(ctx),
+		new(session.Session).TableName(ctx),
 		limit,
 	),
 		expiresAt,
