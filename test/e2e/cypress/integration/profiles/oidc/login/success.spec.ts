@@ -55,7 +55,7 @@ context("Social Sign In Successes", () => {
         cy.location("href").should("eq", "https://www.example.org/")
       })
 
-      it.only("should be able to log in with upstream parameters", () => {
+      it("should be able to log in with upstream parameters", () => {
         const email = gen.email()
         cy.registerOidc({
           app,
