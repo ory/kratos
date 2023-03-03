@@ -205,7 +205,17 @@ func (s *Strategy) Login(w http.ResponseWriter, r *http.Request, f *login.Flow, 
 		return nil, err
 	}
 
-	codeURL := c.AuthCodeURL(state, append(provider.AuthCodeURLOptions(req), UpstreamParameters(provider, up)...)...)
+	upstreamParameters, err := UpstreamParameters(provider, up)
+	if err != nil {
+		s.d.Logger().
+			WithRequest(r).
+			WithError(err).
+			WithField("provider", pid).
+			WithField("upstream_parameters", up)
+
+		return nil, s.handleError(w, r, f, pid, nil, err)
+	}
+	codeURL := c.AuthCodeURL(state, append(provider.AuthCodeURLOptions(req), upstreamParameters...)...)
 
 	if x.IsJSONRequest(r) {
 		s.d.Writer().WriteError(w, r, flow.NewBrowserLocationChangeRequiredError(codeURL))
