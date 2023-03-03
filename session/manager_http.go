@@ -274,7 +274,6 @@ func (s *ManagerHTTP) DoesSessionSatisfy(r *http.Request, sess *Session, request
 				return err
 			}
 		} else if len(i.Credentials) == 0 {
-			i = sess.Identity.CopyWithoutCredentials() // we don't want to modify the identity in the session object
 			if err := s.r.PrivilegedIdentityPool().HydrateIdentityAssociations(ctx, i, identity.ExpandCredentials); err != nil {
 				return err
 			}
