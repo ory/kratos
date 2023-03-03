@@ -10,7 +10,7 @@ import (
 
 	"github.com/hashicorp/go-retryablehttp"
 
-	"crypto/sha1" //#nosec G505 sha1 is used for k-anonymity
+	"crypto/sha1" //#nosec G505 -- sha1 is used for k-anonymity
 	"fmt"
 	"net/http"
 	"strconv"

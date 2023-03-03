@@ -522,7 +522,6 @@ func (p *IdentityPersister) ListIdentities(ctx context.Context, params identity.
 		query = query.Paginate(params.Page, params.PerPage)
 	}
 
-	//#nosec G201 -- TableName is static
 	if err := sqlcon.HandleError(query.All(&is)); err != nil {
 		return nil, err
 	}
@@ -762,7 +761,7 @@ func (p *IdentityPersister) update(ctx context.Context, v node, columnNames ...s
 		cols = columns.ForStructWithAlias(v, tn, model.As, model.IDField())
 	}
 
-	//#nosec
+	//#nosec G201 -- TableName is static
 	stmt := fmt.Sprintf("SELECT COUNT(id) FROM %s AS %s WHERE %s.id = ? AND %s.nid = ?",
 		quoter.Quote(model.TableName()),
 		model.Alias(),
@@ -777,7 +776,7 @@ func (p *IdentityPersister) update(ctx context.Context, v node, columnNames ...s
 		return errors.WithStack(sqlcon.ErrNoRows)
 	}
 
-	//#nosec
+	//#nosec G201 -- TableName is static
 	stmt = fmt.Sprintf("UPDATE %s AS %s SET %s WHERE %s AND %s.nid = :nid",
 		quoter.Quote(model.TableName()),
 		model.Alias(),
