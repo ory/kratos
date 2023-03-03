@@ -275,7 +275,7 @@ func AssertRegistrationRespectsValidation(t *testing.T, reg *driver.RegistryDefa
 	})
 }
 
-func AssertCommonErrorCases(t *testing.T, reg *driver.RegistryDefault, flows []string) {
+func AssertCommonErrorCases(t *testing.T, flows []string) {
 	ctx := context.Background()
 	conf, reg := internal.NewFastRegistryWithMocks(t)
 	testhelpers.SetDefaultIdentitySchemaFromRaw(conf, basicSchema)

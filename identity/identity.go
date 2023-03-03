@@ -137,7 +137,7 @@ func (i *Identity) AfterEagerFind(tx *pop.Connection) error {
 		return err
 	}
 
-	if err := i.validate(); err != nil {
+	if err := i.Validate(); err != nil {
 		return err
 	}
 
@@ -378,7 +378,7 @@ func (i WithCredentialsMetadataAndAdminMetadataInJSON) MarshalJSON() ([]byte, er
 	return json.Marshal(localIdentity(i))
 }
 
-func (i *Identity) validate() error {
+func (i *Identity) Validate() error {
 	expected := i.NID
 	if expected == uuid.Nil {
 		return errors.WithStack(herodot.ErrInternalServerError.WithReason("Received empty nid."))

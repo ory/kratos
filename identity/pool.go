@@ -77,5 +77,8 @@ type (
 
 		// HydrateIdentityAssociations hydrates the associations of an identity.
 		HydrateIdentityAssociations(ctx context.Context, i *Identity, expandables Expandables) error
+
+		// InjectTraitsSchemaURL sets the identity's traits JSON schema URL from the schema's ID.
+		InjectTraitsSchemaURL(ctx context.Context, i *Identity) error
 	}
 )

@@ -7,11 +7,12 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/ory/kratos/cmd/cliclient"
+	"github.com/ory/kratos/driver"
 	"github.com/ory/x/configx"
 )
 
 // migrateSqlCmd represents the sql command
-func NewMigrateSQLCmd() *cobra.Command {
+func NewMigrateSQLCmd(opts ...driver.RegistryOption) *cobra.Command {
 	c := &cobra.Command{
 		Use:   "sql <database-url>",
 		Short: "Create SQL schemas and apply migration plans",
@@ -29,7 +30,7 @@ You can read in the database URL using the -e flag, for example:
 Before running this command on an existing database, create a back up!
 `,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			return cliclient.NewMigrateHandler().MigrateSQL(cmd, args)
+			return cliclient.NewMigrateHandler().MigrateSQL(cmd, args, opts...)
 		},
 	}
 

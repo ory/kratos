@@ -267,7 +267,7 @@ func TestValidateNID(t *testing.T) {
 		},
 	} {
 		t.Run(fmt.Sprintf("case=%d", k), func(t *testing.T) {
-			err := tc.i.validate()
+			err := tc.i.Validate()
 			if tc.expectedErr {
 				require.Error(t, err)
 			} else {

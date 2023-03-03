@@ -41,9 +41,7 @@ import (
 	"github.com/ory/kratos/x"
 )
 
-func TestPool(ctx context.Context, conf *config.Config, p interface {
-	persistence.Persister
-}, m *identity.Manager) func(t *testing.T) {
+func TestPool(ctx context.Context, conf *config.Config, p persistence.Persister, m *identity.Manager) func(t *testing.T) {
 	return func(t *testing.T) {
 		exampleServerURL := urlx.ParseOrPanic("http://example.com")
 		conf.MustSet(ctx, config.ViperKeyPublicBaseURL, exampleServerURL.String())
@@ -134,7 +132,6 @@ func TestPool(ctx context.Context, conf *config.Config, p interface {
 					assert.Empty(t, actual.RecoveryAddresses)
 					assert.Empty(t, actual.VerifiableAddresses)
 
-					require.Len(t, actual.InternalCredentials, 2)
 					require.Len(t, actual.Credentials, 2)
 
 					assertx.EqualAsJSONExcept(t, expected.Credentials[identity.CredentialsTypePassword], actual.Credentials[identity.CredentialsTypePassword], []string{"updated_at", "created_at"})
@@ -181,7 +178,6 @@ func TestPool(ctx context.Context, conf *config.Config, p interface {
 			t.Run("expand=everything", func(t *testing.T) {
 				runner(t, identity.ExpandEverything, func(t *testing.T, actual *identity.Identity) {
 
-					require.Len(t, actual.InternalCredentials, 2)
 					require.Len(t, actual.Credentials, 2)
 
 					assertx.EqualAsJSONExcept(t, expected.Credentials[identity.CredentialsTypePassword], actual.Credentials[identity.CredentialsTypePassword], []string{"updated_at", "created_at"})
@@ -199,7 +195,6 @@ func TestPool(ctx context.Context, conf *config.Config, p interface {
 				runner(t, identity.ExpandNothing, func(t *testing.T, actual *identity.Identity) {
 					require.NoError(t, p.HydrateIdentityAssociations(ctx, actual, identity.ExpandEverything))
 
-					require.Len(t, actual.InternalCredentials, 2)
 					require.Len(t, actual.Credentials, 2)
 
 					assertx.EqualAsJSONExcept(t, expected.Credentials[identity.CredentialsTypePassword], actual.Credentials[identity.CredentialsTypePassword], []string{"updated_at", "created_at"})
