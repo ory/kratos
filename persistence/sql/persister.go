@@ -259,30 +259,3 @@ func (p *Persister) update(ctx context.Context, v node, columnNames ...string) e
 	}
 	return nil
 }
-
-func (p *Persister) delete(ctx context.Context, v interface{}, id uuid.UUID) error {
-	ctx, span := p.r.Tracer(ctx).Tracer().Start(ctx, "persistence.sql.delete")
-	defer span.End()
-
-	nid := p.NetworkID(ctx)
-
-	tabler, ok := v.(interface {
-		TableName(ctx context.Context) string
-	})
-	if !ok {
-		return errors.Errorf("expected model to have TableName signature but got: %T", v)
-	}
-
-	/* #nosec G201 TableName is static */
-	count, err := p.GetConnection(ctx).RawQuery(fmt.Sprintf("DELETE FROM %s WHERE id = ? AND nid = ?", tabler.TableName(ctx)),
-		id,
-		nid,
-	).ExecWithCount()
-	if err != nil {
-		return sqlcon.HandleError(err)
-	}
-	if count == 0 {
-		return errors.WithStack(sqlcon.ErrNoRows)
-	}
-	return nil
-}

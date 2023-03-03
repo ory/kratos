@@ -217,7 +217,19 @@ func (p *Persister) DeleteSession(ctx context.Context, sid uuid.UUID) (err error
 	ctx, span := p.r.Tracer(ctx).Tracer().Start(ctx, "persistence.sql.DeleteSession")
 	defer otelx.End(span, &err)
 
-	return p.delete(ctx, new(session.Session), sid)
+	nid := p.NetworkID(ctx)
+	//#nosec G201 -- TableName is static
+	count, err := p.GetConnection(ctx).RawQuery(fmt.Sprintf("DELETE FROM %s WHERE id = ? AND nid = ?", new(session.Session).TableName(ctx)),
+		sid,
+		nid,
+	).ExecWithCount()
+	if err != nil {
+		return sqlcon.HandleError(err)
+	}
+	if count == 0 {
+		return errors.WithStack(sqlcon.ErrNoRows)
+	}
+	return nil
 }
 
 func (p *Persister) DeleteSessionsByIdentity(ctx context.Context, identityID uuid.UUID) (err error) {
