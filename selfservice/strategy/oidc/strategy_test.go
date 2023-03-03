@@ -547,26 +547,6 @@ func TestStrategy(t *testing.T) {
 		assert.Greater(t, authAt2.Sub(authAt1).Milliseconds(), int64(0), "%s - %s : %s - %s", authAt2, authAt1, body2, body1)
 	})
 
-	t.Run("method=TestPopulateSignUpMethod", func(t *testing.T) {
-		conf.MustSet(ctx, config.ViperKeyPublicBaseURL, "https://foo/")
-
-		sr, err := registration.NewFlow(conf, time.Minute, "nosurf", &http.Request{URL: urlx.ParseOrPanic("/")}, flow.TypeBrowser)
-		require.NoError(t, err)
-		require.NoError(t, reg.RegistrationStrategies(context.Background()).MustStrategy(identity.CredentialsTypeOIDC).(*oidc.Strategy).PopulateRegistrationMethod(&http.Request{}, sr))
-
-		snapshotx.SnapshotTExcept(t, sr.UI, []string{"action", "nodes.0.attributes.value"})
-	})
-
-	t.Run("method=TestPopulateLoginMethod", func(t *testing.T) {
-		conf.MustSet(ctx, config.ViperKeyPublicBaseURL, "https://foo/")
-
-		sr, err := login.NewFlow(conf, time.Minute, "nosurf", &http.Request{URL: urlx.ParseOrPanic("/")}, flow.TypeBrowser)
-		require.NoError(t, err)
-		require.NoError(t, reg.LoginStrategies(context.Background()).MustStrategy(identity.CredentialsTypeOIDC).(*oidc.Strategy).PopulateLoginMethod(&http.Request{}, identity.AuthenticatorAssuranceLevel1, sr))
-
-		snapshotx.SnapshotTExcept(t, sr.UI, []string{"action", "nodes.0.attributes.value"})
-	})
-
 	t.Run("case=upstream parameters should be passed on to provider", func(t *testing.T) {
 		subject = "oidc-upstream-parameters@ory.sh"
 		scope = []string{"openid", "offline"}
@@ -656,6 +636,26 @@ func TestStrategy(t *testing.T) {
 			// upstream parameters that are not on the allow list will be ignored and not passed on to the upstream provider.
 			require.Empty(t, loc.Query().Get("lol"))
 		})
+	})
+
+	t.Run("method=TestPopulateSignUpMethod", func(t *testing.T) {
+		conf.MustSet(ctx, config.ViperKeyPublicBaseURL, "https://foo/")
+
+		sr, err := registration.NewFlow(conf, time.Minute, "nosurf", &http.Request{URL: urlx.ParseOrPanic("/")}, flow.TypeBrowser)
+		require.NoError(t, err)
+		require.NoError(t, reg.RegistrationStrategies(context.Background()).MustStrategy(identity.CredentialsTypeOIDC).(*oidc.Strategy).PopulateRegistrationMethod(&http.Request{}, sr))
+
+		snapshotx.SnapshotTExcept(t, sr.UI, []string{"action", "nodes.0.attributes.value"})
+	})
+
+	t.Run("method=TestPopulateLoginMethod", func(t *testing.T) {
+		conf.MustSet(ctx, config.ViperKeyPublicBaseURL, "https://foo/")
+
+		sr, err := login.NewFlow(conf, time.Minute, "nosurf", &http.Request{URL: urlx.ParseOrPanic("/")}, flow.TypeBrowser)
+		require.NoError(t, err)
+		require.NoError(t, reg.LoginStrategies(context.Background()).MustStrategy(identity.CredentialsTypeOIDC).(*oidc.Strategy).PopulateLoginMethod(&http.Request{}, identity.AuthenticatorAssuranceLevel1, sr))
+
+		snapshotx.SnapshotTExcept(t, sr.UI, []string{"action", "nodes.0.attributes.value"})
 	})
 }
 
