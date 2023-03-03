@@ -31,7 +31,6 @@ import (
 	"github.com/ory/kratos/x"
 
 	"github.com/gobuffalo/pop/v6"
-	"github.com/gobuffalo/pop/v6/columns"
 	"github.com/gofrs/uuid"
 	"github.com/pkg/errors"
 
@@ -580,7 +579,7 @@ func (p *IdentityPersister) UpdateIdentity(ctx context.Context, i *identity.Iden
 			return sqlcon.HandleError(err)
 		}
 
-		if err := p.update(WithTransaction(ctx, tx), i); err != nil {
+		if err := update.Generic(WithTransaction(ctx, tx), tx, p.r.Tracer(ctx).Tracer(), i); err != nil {
 			return err
 		}
 
@@ -729,65 +728,5 @@ func (p *IdentityPersister) InjectTraitsSchemaURL(ctx context.Context, i *identi
 			`The JSON Schema "%s" for this identity's traits could not be found.`, i.SchemaID))
 	}
 	i.SchemaURL = s.SchemaURL(p.r.Config().SelfPublicURL(ctx)).String()
-	return nil
-}
-
-type quotable interface {
-	Quote(key string) string
-}
-
-type node interface {
-	GetID() uuid.UUID
-	GetNID() uuid.UUID
-}
-
-func (p *IdentityPersister) update(ctx context.Context, v node, columnNames ...string) (err error) {
-	ctx, span := p.r.Tracer(ctx).Tracer().Start(ctx, "persistence.sql.update")
-	otelx.End(span, &err)
-
-	c := p.GetConnection(ctx)
-	quoter, ok := c.Dialect.(quotable)
-	if !ok {
-		return errors.Errorf("store is not a quoter: %T", p.c.Store)
-	}
-
-	model := pop.NewModel(v, ctx)
-	tn := model.TableName()
-
-	cols := columns.Columns{}
-	if len(columnNames) > 0 && tn == model.TableName() {
-		cols = columns.NewColumnsWithAlias(tn, model.As, model.IDField())
-		cols.Add(columnNames...)
-	} else {
-		cols = columns.ForStructWithAlias(v, tn, model.As, model.IDField())
-	}
-
-	//#nosec G201 -- TableName is static
-	stmt := fmt.Sprintf("SELECT COUNT(id) FROM %s AS %s WHERE %s.id = ? AND %s.nid = ?",
-		quoter.Quote(model.TableName()),
-		model.Alias(),
-		model.Alias(),
-		model.Alias(),
-	)
-
-	var count int
-	if err := c.Store.GetContext(ctx, &count, c.Dialect.TranslateSQL(stmt), v.GetID(), v.GetNID()); err != nil {
-		return sqlcon.HandleError(err)
-	} else if count == 0 {
-		return errors.WithStack(sqlcon.ErrNoRows)
-	}
-
-	//#nosec G201 -- TableName is static
-	stmt = fmt.Sprintf("UPDATE %s AS %s SET %s WHERE %s AND %s.nid = :nid",
-		quoter.Quote(model.TableName()),
-		model.Alias(),
-		cols.Writeable().QuotedUpdateString(quoter),
-		model.WhereNamedID(),
-		model.Alias(),
-	)
-
-	if _, err := c.Store.NamedExecContext(ctx, stmt, v); err != nil {
-		return sqlcon.HandleError(err)
-	}
 	return nil
 }
