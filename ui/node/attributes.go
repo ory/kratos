@@ -98,6 +98,9 @@ type InputAttributes struct {
 	//
 	// required: true
 	NodeType string `json:"node_type"`
+
+	// React key property to make input field unique to prevent element sharing when that can cause problems
+	Key string `json:"key,omitempty"`
 }
 
 // ImageAttributes represents the attributes of an image node.
