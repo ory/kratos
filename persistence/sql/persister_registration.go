@@ -12,6 +12,7 @@ import (
 
 	"github.com/ory/x/sqlcon"
 
+	"github.com/ory/kratos/persistence/sql/update"
 	"github.com/ory/kratos/selfservice/flow/registration"
 )
 
@@ -31,7 +32,7 @@ func (p *Persister) UpdateRegistrationFlow(ctx context.Context, r *registration.
 	r.EnsureInternalContext()
 	cp := *r
 	cp.NID = p.NetworkID(ctx)
-	return p.update(ctx, cp)
+	return update.Generic(ctx, p.GetConnection(ctx), p.r.Tracer(ctx).Tracer(), cp)
 }
 
 func (p *Persister) GetRegistrationFlow(ctx context.Context, id uuid.UUID) (*registration.Flow, error) {

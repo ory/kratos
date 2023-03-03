@@ -15,6 +15,7 @@ import (
 	"github.com/gofrs/uuid"
 
 	"github.com/ory/kratos/identity"
+	"github.com/ory/kratos/persistence/sql/update"
 	"github.com/ory/kratos/selfservice/flow"
 	"github.com/ory/kratos/selfservice/flow/recovery"
 	"github.com/ory/kratos/selfservice/strategy/code"
@@ -51,7 +52,7 @@ func (p *Persister) UpdateRecoveryFlow(ctx context.Context, r *recovery.Flow) er
 
 	cp := *r
 	cp.NID = p.NetworkID(ctx)
-	return p.update(ctx, cp)
+	return update.Generic(ctx, p.GetConnection(ctx), p.r.Tracer(ctx).Tracer(), cp)
 }
 
 func (p *Persister) CreateRecoveryToken(ctx context.Context, token *link.RecoveryToken) error {

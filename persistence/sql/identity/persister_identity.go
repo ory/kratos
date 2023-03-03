@@ -26,6 +26,7 @@ import (
 	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/otp"
+	"github.com/ory/kratos/persistence/sql/update"
 	"github.com/ory/kratos/schema"
 	"github.com/ory/kratos/x"
 
@@ -697,7 +698,7 @@ func (p *IdentityPersister) UpdateVerifiableAddress(ctx context.Context, address
 
 	address.NID = p.NetworkID(ctx)
 	address.Value = stringToLowerTrim(address.Value)
-	return p.update(ctx, address)
+	return update.Generic(ctx, p.GetConnection(ctx), p.r.Tracer(ctx).Tracer(), address)
 }
 
 func (p *IdentityPersister) validateIdentity(ctx context.Context, i *identity.Identity) (err error) {

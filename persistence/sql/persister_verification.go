@@ -12,6 +12,7 @@ import (
 	"github.com/pkg/errors"
 
 	"github.com/ory/kratos/identity"
+	"github.com/ory/kratos/persistence/sql/update"
 
 	"github.com/gobuffalo/pop/v6"
 	"github.com/gofrs/uuid"
@@ -53,7 +54,7 @@ func (p *Persister) UpdateVerificationFlow(ctx context.Context, r *verification.
 
 	cp := *r
 	cp.NID = p.NetworkID(ctx)
-	return p.update(ctx, cp)
+	return update.Generic(ctx, p.GetConnection(ctx), p.r.Tracer(ctx).Tracer(), cp)
 }
 
 func (p *Persister) CreateVerificationToken(ctx context.Context, token *link.VerificationToken) error {

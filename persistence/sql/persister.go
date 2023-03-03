@@ -6,11 +6,9 @@ package sql
 import (
 	"context"
 	"embed"
-	"fmt"
 	"time"
 
 	"github.com/gobuffalo/pop/v6"
-	"github.com/gobuffalo/pop/v6/columns"
 	"github.com/gofrs/uuid"
 	"github.com/laher/mergefs"
 	"github.com/pkg/errors"
@@ -26,7 +24,6 @@ import (
 	"github.com/ory/x/contextx"
 	"github.com/ory/x/networkx"
 	"github.com/ory/x/popx"
-	"github.com/ory/x/sqlcon"
 )
 
 var _ persistence.Persister = new(Persister)
@@ -149,15 +146,6 @@ func (p *Persister) Ping() error {
 	return errors.WithStack(p.c.Store.(pinger).Ping())
 }
 
-type quotable interface {
-	Quote(key string) string
-}
-
-type node interface {
-	GetID() uuid.UUID
-	GetNID() uuid.UUID
-}
-
 func (p *Persister) CleanupDatabase(ctx context.Context, wait time.Duration, older time.Duration, batchSize int) error {
 	currentTime := time.Now().Add(-older)
 	p.r.Logger().Printf("Cleaning up records older than %s\n", currentTime)
@@ -206,56 +194,5 @@ func (p *Persister) CleanupDatabase(ctx context.Context, wait time.Duration, old
 
 	p.r.Logger().Println("Successfully cleaned up the latest batch of the SQL database! " +
 		"This should be re-run periodically, to be sure that all expired data is purged.")
-	return nil
-}
-
-func (p *Persister) update(ctx context.Context, v node, columnNames ...string) error {
-	ctx, span := p.r.Tracer(ctx).Tracer().Start(ctx, "persistence.sql.update")
-	defer span.End()
-
-	c := p.GetConnection(ctx)
-	quoter, ok := c.Dialect.(quotable)
-	if !ok {
-		return errors.Errorf("store is not a quoter: %T", p.c.Store)
-	}
-
-	model := pop.NewModel(v, ctx)
-	tn := model.TableName()
-
-	cols := columns.Columns{}
-	if len(columnNames) > 0 && tn == model.TableName() {
-		cols = columns.NewColumnsWithAlias(tn, model.As, model.IDField())
-		cols.Add(columnNames...)
-	} else {
-		cols = columns.ForStructWithAlias(v, tn, model.As, model.IDField())
-	}
-
-	//#nosec G201 -- TableName is static
-	stmt := fmt.Sprintf("SELECT COUNT(id) FROM %s AS %s WHERE %s.id = ? AND %s.nid = ?",
-		quoter.Quote(model.TableName()),
-		model.Alias(),
-		model.Alias(),
-		model.Alias(),
-	)
-
-	var count int
-	if err := c.Store.GetContext(ctx, &count, c.Dialect.TranslateSQL(stmt), v.GetID(), v.GetNID()); err != nil {
-		return sqlcon.HandleError(err)
-	} else if count == 0 {
-		return errors.WithStack(sqlcon.ErrNoRows)
-	}
-
-	//#nosec G201 -- TableName is static
-	stmt = fmt.Sprintf("UPDATE %s AS %s SET %s WHERE %s AND %s.nid = :nid",
-		quoter.Quote(model.TableName()),
-		model.Alias(),
-		cols.Writeable().QuotedUpdateString(quoter),
-		model.WhereNamedID(),
-		model.Alias(),
-	)
-
-	if _, err := c.Store.NamedExecContext(ctx, stmt, v); err != nil {
-		return sqlcon.HandleError(err)
-	}
 	return nil
 }

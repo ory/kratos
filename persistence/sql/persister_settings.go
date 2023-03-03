@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/ory/kratos/identity"
+	"github.com/ory/kratos/persistence/sql/update"
 
 	"github.com/gofrs/uuid"
 
@@ -54,7 +55,7 @@ func (p *Persister) UpdateSettingsFlow(ctx context.Context, r *settings.Flow) er
 	r.EnsureInternalContext()
 	cp := *r
 	cp.NID = p.NetworkID(ctx)
-	return p.update(ctx, cp)
+	return update.Generic(ctx, p.GetConnection(ctx), p.r.Tracer(ctx).Tracer(), cp)
 }
 
 func (p *Persister) DeleteExpiredSettingsFlows(ctx context.Context, expiresAt time.Time, limit int) error {
