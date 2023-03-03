@@ -27,6 +27,8 @@ type UpdateRegistrationFlowWithOidcMethod struct {
 	Traits map[string]interface{} `json:"traits,omitempty"`
 	// Transient data to pass along to any webhooks
 	TransientPayload map[string]interface{} `json:"transient_payload,omitempty"`
+	// UpstreamParameters are the parameters that are passed to the upstream identity provider.  These parameters are optional and depends on the upstream identity provider. UpstreamParameters are validated against the provider's AllowedUpstreamParameters configuration.
+	UpstreamParameters map[string]interface{} `json:"upstream_parameters,omitempty"`
 }
 
 // NewUpdateRegistrationFlowWithOidcMethod instantiates a new UpdateRegistrationFlowWithOidcMethod object
@@ -192,6 +194,38 @@ func (o *UpdateRegistrationFlowWithOidcMethod) SetTransientPayload(v map[string]
 	o.TransientPayload = v
 }
 
+// GetUpstreamParameters returns the UpstreamParameters field value if set, zero value otherwise.
+func (o *UpdateRegistrationFlowWithOidcMethod) GetUpstreamParameters() map[string]interface{} {
+	if o == nil || o.UpstreamParameters == nil {
+		var ret map[string]interface{}
+		return ret
+	}
+	return o.UpstreamParameters
+}
+
+// GetUpstreamParametersOk returns a tuple with the UpstreamParameters field value if set, nil otherwise
+// and a boolean to check if the value has been set.
+func (o *UpdateRegistrationFlowWithOidcMethod) GetUpstreamParametersOk() (map[string]interface{}, bool) {
+	if o == nil || o.UpstreamParameters == nil {
+		return nil, false
+	}
+	return o.UpstreamParameters, true
+}
+
+// HasUpstreamParameters returns a boolean if a field has been set.
+func (o *UpdateRegistrationFlowWithOidcMethod) HasUpstreamParameters() bool {
+	if o != nil && o.UpstreamParameters != nil {
+		return true
+	}
+
+	return false
+}
+
+// SetUpstreamParameters gets a reference to the given map[string]interface{} and assigns it to the UpstreamParameters field.
+func (o *UpdateRegistrationFlowWithOidcMethod) SetUpstreamParameters(v map[string]interface{}) {
+	o.UpstreamParameters = v
+}
+
 func (o UpdateRegistrationFlowWithOidcMethod) MarshalJSON() ([]byte, error) {
 	toSerialize := map[string]interface{}{}
 	if o.CsrfToken != nil {
@@ -208,6 +242,9 @@ func (o UpdateRegistrationFlowWithOidcMethod) MarshalJSON() ([]byte, error) {
 	}
 	if o.TransientPayload != nil {
 		toSerialize["transient_payload"] = o.TransientPayload
+	}
+	if o.UpstreamParameters != nil {
+		toSerialize["upstream_parameters"] = o.UpstreamParameters
 	}
 	return json.Marshal(toSerialize)
 }

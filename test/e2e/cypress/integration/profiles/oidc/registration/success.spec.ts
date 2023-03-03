@@ -195,6 +195,22 @@ context("Social Sign Up Successes", () => {
         cy.location("href").should("eq", "https://www.ory.sh/")
         cy.logout()
       })
+
+      it("should be able to register with upstream parameters", () => {
+        const email = gen.email()
+        cy.intercept("**/self-service/registration*").as("getHydraRegistration")
+
+        cy.visit(registration + "?return_to=https://www.example.org/")
+
+        cy.addInputElement("form", "login_hint", email)
+
+        cy.triggerOidc(app)
+
+        // once a request to get settings responds, 'cy.wait' will resolve
+        cy.wait("@getHydraRegistration")
+          .its("response.headers.location")
+          .should("include", "login_hint=" + encodeURIComponent(email))
+      })
     })
   })
 })

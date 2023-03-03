@@ -751,8 +751,11 @@ Cypress.Commands.add("resetCourierTemplates", (type) => {
 
 Cypress.Commands.add(
   "loginOidc",
-  ({ app, expectSession = true, url = APP_URL + "/login" }) => {
+  ({ app, expectSession = true, url = APP_URL + "/login", preTriggerHook }) => {
     cy.visit(url)
+    if (preTriggerHook) {
+      preTriggerHook()
+    }
     cy.triggerOidc(app, "hydra")
     cy.location("href").should("not.eq", "/consent")
     if (expectSession) {
@@ -1317,6 +1320,15 @@ Cypress.Commands.add(
       cy.get(selector).then(($el) => {
         $el.removeAttr(attribute)
       })
+    })
+  },
+)
+
+Cypress.Commands.add(
+  "addInputElement",
+  (parent: string, attribute: string, value: string) => {
+    cy.get(parent).then(($el) => {
+      $el.append(`<input type="hidden" name="${attribute}" value="${value}" />`)
     })
   },
 )

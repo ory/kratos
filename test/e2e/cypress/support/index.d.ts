@@ -375,6 +375,7 @@ declare global {
         app: app
         expectSession?: boolean
         url?: string
+        preTriggerHook?: () => void
       }): Chainable<void>
 
       /**
@@ -647,6 +648,15 @@ declare global {
        * Remove the specified attribute from the given HTML elements
        */
       removeAttribute(selectors: string[], attribute: string): Chainable<void>
+
+      /**
+       * Add an input element to the DOM as a child of the given parent
+       */
+      addInputElement(
+        parent: string,
+        attribute: string,
+        value: string,
+      ): Chainable<void>
 
       getCourierMessages(): Chainable<
         { recipient: string; template_type: string }[]

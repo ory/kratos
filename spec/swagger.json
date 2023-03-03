@@ -5121,6 +5121,10 @@
         "traits": {
           "description": "The identity traits. This is a placeholder for the registration flow.",
           "type": "object"
+        },
+        "upstream_parameters": {
+          "description": "UpstreamParameters are the parameters that are passed to the upstream identity provider.\n\nThese parameters are optional and depends on the upstream identity provider.\nUpstreamParameters are validated against the provider's AllowedUpstreamParameters configuration.",
+          "type": "object"
         }
       }
     },
@@ -5284,6 +5288,10 @@
         },
         "transient_payload": {
           "description": "Transient data to pass along to any webhooks",
+          "type": "object"
+        },
+        "upstream_parameters": {
+          "description": "UpstreamParameters are the parameters that are passed to the upstream identity provider.\n\nThese parameters are optional and depends on the upstream identity provider.\nUpstreamParameters are validated against the provider's AllowedUpstreamParameters configuration.",
           "type": "object"
         }
       }
