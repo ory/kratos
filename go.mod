@@ -3,21 +3,15 @@ module github.com/ory/kratos
 go 1.19
 
 replace (
-	github.com/bradleyjkemp/cupaloy/v2 => github.com/aeneasr/cupaloy/v2 v2.6.1-0.20210924214125-3dfdd01210a3
-
 	github.com/go-sql-driver/mysql => github.com/go-sql-driver/mysql v1.7.0
 
-	github.com/gorilla/sessions => github.com/ory/sessions v1.2.2-0.20220110165800-b09c17334dc2
-	github.com/knadh/koanf => github.com/aeneasr/koanf v0.14.1-0.20211230115640-aa3902b3267a
+	github.com/gorilla/sessions => github.com/ory/sessions v1.2.2-0.20220110165800-b09c17334dc2 // https://github.com/gorilla/sessions/pull/255
 
-	github.com/mattn/go-sqlite3 => github.com/mattn/go-sqlite3 v1.14.7-0.20210414154423-1157a4212dcb
-	github.com/oleiade/reflections => github.com/oleiade/reflections v1.0.1
-
-	github.com/ory/client-go => ./internal/client-go
+	github.com/mattn/go-sqlite3 => github.com/mattn/go-sqlite3 v1.14.16
 
 	// Use the internal httpclient which can be generated in this codebase but mark it as the
 	// official SDK, allowing for the Ory CLI to consume Ory Kratos' CLI commands.
-	gopkg.in/DataDog/dd-trace-go.v1 => gopkg.in/DataDog/dd-trace-go.v1 v1.27.1-0.20201005154917-54b73b3e126a
+	github.com/ory/client-go => ./internal/client-go
 )
 
 require (
@@ -60,7 +54,7 @@ require (
 	github.com/jarcoal/httpmock v1.0.5
 	github.com/jteeuwen/go-bindata v3.0.7+incompatible
 	github.com/julienschmidt/httprouter v1.3.0
-	github.com/knadh/koanf v1.4.4
+	github.com/knadh/koanf v1.5.0
 	github.com/laher/mergefs v0.1.2-0.20230223191438-d16611b2f4e7
 	github.com/luna-duclos/instrumentedsql v1.1.3
 	github.com/mattn/goveralls v0.0.7
@@ -231,7 +225,7 @@ require (
 	github.com/mattn/go-colorable v0.1.13 // indirect
 	github.com/mattn/go-isatty v0.0.16 // indirect
 	github.com/mattn/go-runewidth v0.0.12 // indirect
-	github.com/mattn/go-sqlite3 v2.0.3+incompatible // indirect
+	github.com/mattn/go-sqlite3 v1.14.16 // indirect
 	github.com/matttproud/golang_protobuf_extensions v1.0.4 // indirect
 	github.com/microcosm-cc/bluemonday v1.0.21 // indirect
 	github.com/mitchellh/copystructure v1.2.0 // indirect
