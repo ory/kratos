@@ -571,14 +571,14 @@ func TestStrategy(t *testing.T) {
 		subject = "oidc-upstream-parameters@ory.sh"
 		scope = []string{"openid", "offline"}
 
-		t.Run("case=should pass when registering", func(t *testing.T) {
-			// create a client that does not follow redirects
-			c := &http.Client{
-				CheckRedirect: func(req *http.Request, via []*http.Request) error {
-					return http.ErrUseLastResponse
-				},
-			}
+		// We need to disable redirects because the upstream parameters are only passed on to the provider
+		c := &http.Client{
+			CheckRedirect: func(req *http.Request, via []*http.Request) error {
+				return http.ErrUseLastResponse
+			},
+		}
 
+		t.Run("case=should pass when registering", func(t *testing.T) {
 			f := newRegistrationFlow(t, returnTS.URL, time.Minute)
 			action := afv(t, f.ID, "valid")
 
@@ -586,21 +586,75 @@ func TestStrategy(t *testing.T) {
 
 			fv.Set("provider", "valid")
 			fv.Set("upstream_parameters.login_hint", "oidc-upstream-parameters@ory.sh")
+			fv.Set("upstream_parameters.hd", "ory.sh")
 
 			res, err := c.PostForm(action, fv)
+			require.NoError(t, err)
+			require.Equal(t, http.StatusSeeOther, res.StatusCode)
 
+			loc, err := res.Location()
 			require.NoError(t, err)
 
-			assert.Contains(t, "login_hint='oidc-upstream-parameters@ory.sh'", res.Request.URL.String())
+			require.Equal(t, "oidc-upstream-parameters@ory.sh", loc.Query().Get("login_hint"))
+			require.Equal(t, "ory.sh", loc.Query().Get("hd"))
 		})
 
 		t.Run("case=should pass when logging in", func(t *testing.T) {
 			f := newLoginFlow(t, returnTS.URL, time.Minute)
 
-			res, _ := makeRequest(t, "valid", f.UI.Action, url.Values{
-				"upstream_parameters.login_hint": {"oidc-upstream-parameters@ory.sh"},
-			})
-			assert.Contains(t, "oidc-upstream-parameters@ory.sh'", res.Request.URL.String())
+			action := afv(t, f.ID, "valid")
+
+			fv := url.Values{}
+
+			fv.Set("provider", "valid")
+			fv.Set("upstream_parameters.login_hint", "oidc-upstream-parameters@ory.sh")
+			fv.Set("upstream_parameters.hd", "ory.sh")
+
+			res, err := c.PostForm(action, fv)
+			require.NoError(t, err)
+			require.Equal(t, http.StatusSeeOther, res.StatusCode)
+
+			loc, err := res.Location()
+			require.NoError(t, err)
+
+			require.Equal(t, "oidc-upstream-parameters@ory.sh", loc.Query().Get("login_hint"))
+			require.Equal(t, "ory.sh", loc.Query().Get("hd"))
+		})
+
+		t.Run("case=should ignore invalid parameters when logging in", func(t *testing.T) {
+			f := newLoginFlow(t, returnTS.URL, time.Minute)
+			action := afv(t, f.ID, "valid")
+
+			fv := url.Values{}
+			fv.Set("lol", "invalid")
+
+			res, err := c.PostForm(action, fv)
+			require.NoError(t, err)
+			require.Equal(t, http.StatusSeeOther, res.StatusCode)
+
+			loc, err := res.Location()
+			require.NoError(t, err)
+
+			// upstream parameters that are not on the allow list will be ignored and not passed on to the upstream provider.
+			require.Empty(t, loc.Query().Get("lol"))
+		})
+
+		t.Run("case=should ignore invalid parameters when registering", func(t *testing.T) {
+			f := newRegistrationFlow(t, returnTS.URL, time.Minute)
+			action := afv(t, f.ID, "valid")
+
+			fv := url.Values{}
+			fv.Set("lol", "invalid")
+
+			res, err := c.PostForm(action, fv)
+			require.NoError(t, err)
+			require.Equal(t, http.StatusFound, res.StatusCode)
+
+			loc, err := res.Location()
+			require.NoError(t, err)
+
+			// upstream parameters that are not on the allow list will be ignored and not passed on to the upstream provider.
+			require.Empty(t, loc.Query().Get("lol"))
 		})
 	})
 }
