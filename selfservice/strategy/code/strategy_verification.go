@@ -157,19 +157,19 @@ func (s *Strategy) createVerificationCodeForm(action string, code *string, email
 			NewInputField("code", code, node.CodeGroup, node.InputAttributeTypeText, node.WithRequiredInputAttribute).
 			WithMetaLabel(text.NewInfoNodeLabelVerifyOTP()),
 	)
-	c.Nodes.Append(
-		node.NewInputField("method", s.VerificationNodeGroup(), node.CodeGroup, node.InputAttributeTypeHidden),
-	)
-
-	c.Nodes.Append(
-		node.NewInputField("method", s.VerificationStrategyID(), node.CodeGroup, node.InputAttributeTypeSubmit).
-			WithMetaLabel(text.NewInfoNodeLabelSubmit()),
-	)
 
 	if email != nil {
 		c.Nodes.Append(
+			node.NewInputField("method", s.VerificationStrategyID(), node.CodeGroup, node.InputAttributeTypeHidden),
+		)
+		c.Nodes.Append(
 			node.NewInputField("email", email, node.CodeGroup, node.InputAttributeTypeSubmit).
 				WithMetaLabel(text.NewInfoNodeResendOTP()),
+		)
+	} else {
+		c.Nodes.Append(
+			node.NewInputField("method", s.VerificationStrategyID(), node.CodeGroup, node.InputAttributeTypeSubmit).
+				WithMetaLabel(text.NewInfoNodeLabelSubmit()),
 		)
 	}
 
