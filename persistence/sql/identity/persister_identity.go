@@ -87,7 +87,7 @@ func (p *IdentityPersister) GetConnection(ctx context.Context) *pop.Connection {
 
 func (p *IdentityPersister) ListVerifiableAddresses(ctx context.Context, page, itemsPerPage int) (a []identity.VerifiableAddress, err error) {
 	ctx, span := p.r.Tracer(ctx).Tracer().Start(ctx, "persistence.sql.ListVerifiableAddresses")
-	otelx.End(span, &err)
+	defer otelx.End(span, &err)
 
 	if err := p.GetConnection(ctx).Where("nid = ?", p.NetworkID(ctx)).Order("id DESC").Paginate(page, x.MaxItemsPerPage(itemsPerPage)).All(&a); err != nil {
 		return nil, sqlcon.HandleError(err)
@@ -98,7 +98,7 @@ func (p *IdentityPersister) ListVerifiableAddresses(ctx context.Context, page, i
 
 func (p *IdentityPersister) ListRecoveryAddresses(ctx context.Context, page, itemsPerPage int) (a []identity.RecoveryAddress, err error) {
 	ctx, span := p.r.Tracer(ctx).Tracer().Start(ctx, "persistence.sql.ListRecoveryAddresses")
-	otelx.End(span, &err)
+	defer otelx.End(span, &err)
 
 	if err := p.GetConnection(ctx).Where("nid = ?", p.NetworkID(ctx)).Order("id DESC").Paginate(page, x.MaxItemsPerPage(itemsPerPage)).All(&a); err != nil {
 		return nil, sqlcon.HandleError(err)
@@ -132,7 +132,7 @@ func NormalizeIdentifier(ct identity.CredentialsType, match string) string {
 
 func (p *IdentityPersister) FindByCredentialsIdentifier(ctx context.Context, ct identity.CredentialsType, match string) (_ *identity.Identity, _ *identity.Credentials, err error) {
 	ctx, span := p.r.Tracer(ctx).Tracer().Start(ctx, "persistence.sql.FindByCredentialsIdentifier")
-	otelx.End(span, &err)
+	defer otelx.End(span, &err)
 
 	nid := p.NetworkID(ctx)
 
@@ -183,7 +183,7 @@ func (p *IdentityPersister) FindByCredentialsIdentifier(ctx context.Context, ct 
 
 func (p *IdentityPersister) findIdentityCredentialsType(ctx context.Context, ct identity.CredentialsType) (_ *identity.CredentialsTypeTable, err error) {
 	ctx, span := p.r.Tracer(ctx).Tracer().Start(ctx, "persistence.sql.findIdentityCredentialsType")
-	otelx.End(span, &err)
+	defer otelx.End(span, &err)
 
 	var m identity.CredentialsTypeTable
 	if err := p.GetConnection(ctx).Where("name = ?", ct).First(&m); err != nil {
@@ -194,7 +194,7 @@ func (p *IdentityPersister) findIdentityCredentialsType(ctx context.Context, ct 
 
 func (p *IdentityPersister) createIdentityCredentials(ctx context.Context, i *identity.Identity) (err error) {
 	ctx, span := p.r.Tracer(ctx).Tracer().Start(ctx, "persistence.sql.createIdentityCredentials")
-	otelx.End(span, &err)
+	defer otelx.End(span, &err)
 
 	c := p.GetConnection(ctx)
 
@@ -244,7 +244,7 @@ func (p *IdentityPersister) createIdentityCredentials(ctx context.Context, i *id
 
 func (p *IdentityPersister) createVerifiableAddresses(ctx context.Context, i *identity.Identity) (err error) {
 	ctx, span := p.r.Tracer(ctx).Tracer().Start(ctx, "persistence.sql.createVerifiableAddresses")
-	otelx.End(span, &err)
+	defer otelx.End(span, &err)
 
 	for k := range i.VerifiableAddresses {
 		if err := p.GetConnection(ctx).Create(&i.VerifiableAddresses[k]); err != nil {
@@ -258,7 +258,7 @@ func updateAssociation[T interface {
 	Hash() string
 }](ctx context.Context, p *IdentityPersister, i *identity.Identity, inID []T) (err error) {
 	ctx, span := p.r.Tracer(ctx).Tracer().Start(ctx, "persistence.sql.updateAssociation")
-	otelx.End(span, &err)
+	defer otelx.End(span, &err)
 
 	var inDB []T
 	if err := p.GetConnection(ctx).
@@ -342,7 +342,7 @@ func (p *IdentityPersister) normalizeRecoveryAddresses(ctx context.Context, id *
 
 func (p *IdentityPersister) createRecoveryAddresses(ctx context.Context, i *identity.Identity) (err error) {
 	ctx, span := p.r.Tracer(ctx).Tracer().Start(ctx, "persistence.sql.createRecoveryAddresses")
-	otelx.End(span, &err)
+	defer otelx.End(span, &err)
 
 	for k := range i.RecoveryAddresses {
 		if err := p.GetConnection(ctx).Create(&i.RecoveryAddresses[k]); err != nil {
@@ -354,7 +354,7 @@ func (p *IdentityPersister) createRecoveryAddresses(ctx context.Context, i *iden
 
 func (p *IdentityPersister) CountIdentities(ctx context.Context) (n int64, err error) {
 	ctx, span := p.r.Tracer(ctx).Tracer().Start(ctx, "persistence.sql.CountIdentities")
-	otelx.End(span, &err)
+	defer otelx.End(span, &err)
 
 	count, err := p.c.WithContext(ctx).Where("nid = ?", p.NetworkID(ctx)).Count(new(identity.Identity))
 	if err != nil {
@@ -365,7 +365,7 @@ func (p *IdentityPersister) CountIdentities(ctx context.Context) (n int64, err e
 
 func (p *IdentityPersister) CreateIdentity(ctx context.Context, i *identity.Identity) (err error) {
 	ctx, span := p.r.Tracer(ctx).Tracer().Start(ctx, "persistence.sql.CreateIdentity")
-	otelx.End(span, &err)
+	defer otelx.End(span, &err)
 
 	i.NID = p.NetworkID(ctx)
 
@@ -660,7 +660,7 @@ func (p *IdentityPersister) FindRecoveryAddressByValue(ctx context.Context, via 
 
 func (p *IdentityPersister) VerifyAddress(ctx context.Context, code string) (err error) {
 	ctx, span := p.r.Tracer(ctx).Tracer().Start(ctx, "persistence.sql.VerifyAddress")
-	otelx.End(span, &err)
+	defer otelx.End(span, &err)
 
 	newCode, err := otp.New()
 	if err != nil {
@@ -693,7 +693,7 @@ func (p *IdentityPersister) VerifyAddress(ctx context.Context, code string) (err
 
 func (p *IdentityPersister) UpdateVerifiableAddress(ctx context.Context, address *identity.VerifiableAddress) (err error) {
 	ctx, span := p.r.Tracer(ctx).Tracer().Start(ctx, "persistence.sql.UpdateVerifiableAddress")
-	otelx.End(span, &err)
+	defer otelx.End(span, &err)
 
 	address.NID = p.NetworkID(ctx)
 	address.Value = stringToLowerTrim(address.Value)
@@ -702,7 +702,7 @@ func (p *IdentityPersister) UpdateVerifiableAddress(ctx context.Context, address
 
 func (p *IdentityPersister) validateIdentity(ctx context.Context, i *identity.Identity) (err error) {
 	ctx, span := p.r.Tracer(ctx).Tracer().Start(ctx, "persistence.sql.validateIdentity")
-	otelx.End(span, &err)
+	defer otelx.End(span, &err)
 
 	if err := p.r.IdentityValidator().ValidateWithRunner(ctx, i); err != nil {
 		if _, ok := errorsx.Cause(err).(*jsonschema.ValidationError); ok {
@@ -716,7 +716,7 @@ func (p *IdentityPersister) validateIdentity(ctx context.Context, i *identity.Id
 
 func (p *IdentityPersister) InjectTraitsSchemaURL(ctx context.Context, i *identity.Identity) (err error) {
 	ctx, span := p.r.Tracer(ctx).Tracer().Start(ctx, "persistence.sql.InjectTraitsSchemaURL")
-	otelx.End(span, &err)
+	defer otelx.End(span, &err)
 
 	ss, err := p.r.IdentityTraitsSchemas(ctx)
 	if err != nil {

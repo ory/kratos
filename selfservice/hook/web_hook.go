@@ -284,9 +284,7 @@ func (e *WebHook) execute(ctx context.Context, data *templateContext) error {
 			// incoming request context is cancelled.
 			//
 			// The webhook will still cancel after 30 seconds as that is the configured timeout for the HTTP client.
-			var cancel context.CancelFunc
-			ctx, cancel = context.WithTimeout(context.Background(), httpClient.HTTPClient.Timeout)
-			defer cancel()
+			ctx = trace.ContextWithSpan(context.Background(), trace.SpanFromContext(ctx))
 		}
 		ctx, span := tracer.Start(ctx, "selfservice.webhook")
 		defer span.End()
