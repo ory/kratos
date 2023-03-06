@@ -457,6 +457,15 @@ func (s *Strategy) handleError(w http.ResponseWriter, r *http.Request, f flow.Fl
 		// Reset all nodes to not confuse users.
 		// This is kinda hacky and will probably need to be updated at some point.
 
+		if errors.Is(err, registration.ErrDuplicateCredentials) {
+			lf, err := s.registrationToLogin(w, r, rf, provider)
+			if err != nil {
+				return err
+			}
+			x.AcceptToRedirectOrJSON(w, r, s.d.Writer(), lf, lf.AppendTo(s.d.Config().SelfServiceFlowLoginUI(r.Context())).String())
+			return nil
+		}
+
 		rf.UI.Nodes = node.Nodes{}
 
 		// Adds the "Continue" button

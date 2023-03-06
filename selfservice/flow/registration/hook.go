@@ -138,7 +138,10 @@ func (e *HookExecutor) PostRegistrationHook(w http.ResponseWriter, r *http.Reque
 		// would imply that the identity has to exist already.
 	} else if err := e.d.IdentityManager().Create(r.Context(), i); err != nil {
 		if errors.Is(err, sqlcon.ErrUniqueViolation) {
-			return schema.NewDuplicateCredentialsError()
+			// TODO: instead of throwing a duplicate error, we should return
+			// the user to a login screen with a message that the account already exists.
+			// we could even pre-fill the email address from the OIDC provider.
+			return ErrDuplicateCredentials
 		}
 		return err
 	}

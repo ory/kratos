@@ -185,6 +185,31 @@ func (s *Strategy) Register(w http.ResponseWriter, r *http.Request, f *registrat
 	return errors.WithStack(flow.ErrCompletedByStrategy)
 }
 
+func (s *Strategy) registrationToLogin(w http.ResponseWriter, r *http.Request, a *registration.Flow, providerID string) (*login.Flow, error) {
+	// If return_to was set before, we need to preserve it.
+	var opts []login.FlowOption
+	if len(a.ReturnTo) > 0 {
+		opts = append(opts, login.WithFlowReturnTo(a.ReturnTo))
+	}
+
+	if len(a.UI.Messages) > 0 {
+		opts = append(opts, login.WithFormErrorMessage(a.UI.Messages))
+	}
+
+	// This endpoint only handles browser flow at the moment.
+	ar, _, err := s.d.LoginHandler().NewLoginFlow(w, r, flow.TypeBrowser, opts...)
+	if err != nil {
+		return nil, s.handleError(w, r, a, providerID, nil, err)
+	}
+
+	ar.RequestURL, err = x.TakeOverReturnToParameter(a.RequestURL, ar.RequestURL)
+	if err != nil {
+		return nil, s.handleError(w, r, a, providerID, nil, err)
+	}
+
+	return ar, nil
+}
+
 func (s *Strategy) processRegistration(w http.ResponseWriter, r *http.Request, a *registration.Flow, token *oauth2.Token, claims *Claims, provider Provider, container *authCodeContainer) (*login.Flow, error) {
 	if _, _, err := s.d.PrivilegedIdentityPool().FindByCredentialsIdentifier(r.Context(), identity.CredentialsTypeOIDC, identity.OIDCUniqueID(provider.Config().ID, claims.Subject)); err == nil {
 		// If the identity already exists, we should perform the login flow instead.
@@ -200,26 +225,15 @@ func (s *Strategy) processRegistration(w http.ResponseWriter, r *http.Request, a
 			WithField("subject", claims.Subject).
 			Debug("Received successful OpenID Connect callback but user is already registered. Re-initializing login flow now.")
 
-		// If return_to was set before, we need to preserve it.
-		var opts []login.FlowOption
-		if len(a.ReturnTo) > 0 {
-			opts = append(opts, login.WithFlowReturnTo(a.ReturnTo))
-		}
-
-		// This endpoint only handles browser flow at the moment.
-		ar, _, err := s.d.LoginHandler().NewLoginFlow(w, r, flow.TypeBrowser, opts...)
+		lf, err := s.registrationToLogin(w, r, a, provider.Config().ID)
 		if err != nil {
-			return nil, s.handleError(w, r, a, provider.Config().ID, nil, err)
+			return nil, err
 		}
 
-		ar.RequestURL, err = x.TakeOverReturnToParameter(a.RequestURL, ar.RequestURL)
-		if err != nil {
-			return nil, s.handleError(w, r, a, provider.Config().ID, nil, err)
+		if _, err := s.processLogin(w, r, lf, token, claims, provider, container); err != nil {
+			return lf, err
 		}
 
-		if _, err := s.processLogin(w, r, ar, token, claims, provider, container); err != nil {
-			return ar, err
-		}
 		return nil, nil
 	}
 
