@@ -3769,7 +3769,8 @@
           "type": "string"
         },
         "schema": {
-          "$ref": "#/definitions/identitySchema"
+          "description": "The actual Identity JSON Schema",
+          "type": "object"
         }
       }
     },
