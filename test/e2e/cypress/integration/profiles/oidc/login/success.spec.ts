@@ -67,7 +67,7 @@ context("Social Sign In Successes", () => {
         cy.location("href").should("eq", "https://www.example.org/")
         cy.logout()
         cy.noSession()
-        cy.intercept("POST", "**/self-service/login*").as("getHydraLogin")
+        cy.intercept("GET", "**/oauth2/auth*").as("getHydraLogin")
         cy.loginOidc({
           app,
           url: login + "?return_to=https://www.example.org/",
@@ -77,9 +77,9 @@ context("Social Sign In Successes", () => {
             cy.addInputElement("form", "upstream_parameters.login_hint", email)
           },
         })
-        // once a request to get settings responds, 'cy.wait' will resolve
+        // once a request to getHydraLogin responds, 'cy.wait' will resolve
         cy.wait("@getHydraLogin")
-          .its("response.headers.location")
+          .its("request.url")
           .should("include", "login_hint=" + encodeURIComponent(email))
 
         cy.location("href").should("eq", "https://www.example.org/")

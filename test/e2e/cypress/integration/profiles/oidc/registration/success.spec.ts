@@ -198,17 +198,17 @@ context("Social Sign Up Successes", () => {
 
       it("should be able to register with upstream parameters", () => {
         const email = gen.email()
-        cy.intercept("**/self-service/registration*").as("getHydraRegistration")
+        cy.intercept("GET", "**/oauth2/auth*").as("getHydraRegistration")
 
         cy.visit(registration + "?return_to=https://www.example.org/")
 
-        cy.addInputElement("form", "login_hint", email)
+        cy.addInputElement("form", "upstream_parameters.login_hint", email)
 
         cy.triggerOidc(app)
 
-        // once a request to get settings responds, 'cy.wait' will resolve
+        // once a request to getHydraRegistration responds, 'cy.wait' will resolve
         cy.wait("@getHydraRegistration")
-          .its("response.headers.location")
+          .its("request.url")
           .should("include", "login_hint=" + encodeURIComponent(email))
       })
     })
