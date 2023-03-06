@@ -5,7 +5,7 @@
 
 **Table of Contents**
 
-- [ (2023-03-03)](#2023-03-03)
+- [ (2023-03-06)](#2023-03-06)
   - [Breaking Changes](#breaking-changes)
     - [Bug Fixes](#bug-fixes)
     - [Code Refactoring](#code-refactoring)
@@ -293,7 +293,7 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# [](https://github.com/ory/kratos/compare/v0.11.1...v) (2023-03-03)
+# [](https://github.com/ory/kratos/compare/v0.11.1...v) (2023-03-06)
 
 ## Breaking Changes
 
@@ -376,6 +376,9 @@ flows.
 
 - Set DB connection max idle time
   ([8d4762c](https://github.com/ory/kratos/commit/8d4762c1bffad14c94ac69575e488fc67d3f5dde))
+- Webhook tracing and missing defers
+  ([#3145](https://github.com/ory/kratos/issues/3145))
+  ([46eb063](https://github.com/ory/kratos/commit/46eb063f414a0ad9b901407cf781002ccb97ad93))
 
 ### Code Refactoring
 
