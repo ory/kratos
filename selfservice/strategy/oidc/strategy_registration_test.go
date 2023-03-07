@@ -8,11 +8,12 @@ import (
 	"reflect"
 	"testing"
 
+	"golang.org/x/oauth2"
+
 	"github.com/ory/kratos/schema"
 	"github.com/ory/kratos/selfservice/flow/login"
 	"github.com/ory/kratos/selfservice/flow/registration"
 	"github.com/ory/x/decoderx"
-	"golang.org/x/oauth2"
 )
 
 func TestStrategy_processRegistration(t *testing.T) {
