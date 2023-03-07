@@ -440,6 +440,8 @@ func (h *Handler) createBrowserLoginFlow(w http.ResponseWriter, r *http.Request,
 		return
 	}
 
+	a.HydraLoginRequest = hlr
+
 	x.AcceptToRedirectOrJSON(w, r, h.d.Writer(), a, a.AppendTo(h.d.Config().SelfServiceFlowLoginUI(r.Context())).String())
 }
 
