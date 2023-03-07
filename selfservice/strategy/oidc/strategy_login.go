@@ -77,8 +77,7 @@ type UpdateLoginFlowWithOidcMethod struct {
 
 	// UpstreamParameters are the parameters that are passed to the upstream identity provider.
 	//
-	// These parameters are optional and depends on the upstream identity provider.
-	// UpstreamParameters are validated against the provider's AllowedUpstreamParameters configuration.
+	// These parameters are optional and depend on the upstream identity provider.	// UpstreamParameters are validated against the provider's AllowedUpstreamParameters configuration.
 	//
 	// required: false
 	UpstreamParameters json.RawMessage `json:"upstream_parameters"`
@@ -205,16 +204,7 @@ func (s *Strategy) Login(w http.ResponseWriter, r *http.Request, f *login.Flow, 
 		return nil, err
 	}
 
-	upstreamParameters, err := UpstreamParameters(provider, up)
-	if err != nil {
-		s.d.Logger().
-			WithRequest(r).
-			WithError(err).
-			WithField("provider", pid).
-			WithField("upstream_parameters", up)
-
-		return nil, s.handleError(w, r, f, pid, nil, err)
-	}
+	upstreamParameters := UpstreamParameters(provider, up)
 
 	upstreamParameters = append(upstreamParameters, provider.AuthCodeURLOptions(req)...)
 

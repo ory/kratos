@@ -66,13 +66,13 @@ func (c *Claims) Validate() error {
 	return nil
 }
 
-func UpstreamParameters(provider Provider, sentProviders map[string]string) ([]oauth2.AuthCodeOption, error) {
+func UpstreamParameters(provider Provider, upstreamParameters map[string]string) []oauth2.AuthCodeOption {
 	// validation of sent providers are already handled in the `oidc/.schema/link.schema.json` file.
-	// `sentProviders` will always only contain allowed parameters based on the configuration.
+	// `upstreamParameters` will always only contain allowed parameters based on the configuration.
 	var params []oauth2.AuthCodeOption
-	for up, v := range sentProviders {
+	for up, v := range upstreamParameters {
 		params = append(params, oauth2.SetAuthURLParam(up, v))
 	}
 
-	return params, nil
+	return params
 }
