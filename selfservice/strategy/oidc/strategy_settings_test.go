@@ -465,29 +465,31 @@ func TestSettingsStrategy(t *testing.T) {
 		t.Run("case=upstream parameters", func(t *testing.T) {
 			t.Cleanup(reset(t))
 
-			// We need to disable redirects because the upstream parameters are only passed on to the provider
-			c := &http.Client{
-				CheckRedirect: func(req *http.Request, via []*http.Request) error {
-					return http.ErrUseLastResponse
-				},
-			}
+			subject = "hackerman+new-connection-new-oidc-with-parameters+" + testID
+			scope = []string{"openid", "offline"}
+			agent, provider := "password", "google"
+
+			a := agents[agent]
 
 			t.Run("case=should be able to pass upstream paramters when linking a connection", func(t *testing.T) {
-				subject = "hackerman+new-connection-new-oidc-with-parameters+" + testID
-				scope = []string{"openid", "offline"}
+				c := &http.Client{}
+				req := nprSDK(t, a, "", time.Hour)
+				// copy over the client so we can disable redirects
+				*c = *a
+				// We need to disable redirects because the upstream parameters are only passed on to the provider
+				c.CheckRedirect = func(req *http.Request, via []*http.Request) error {
+					return http.ErrUseLastResponse
+				}
 
-				agent, provider := "password", "google"
-
-				req := nprSDK(t, agents[agent], "", time.Hour)
-				values := url.Values{}
+				values := &url.Values{}
 				values.Set("csrf_token", x.FakeCSRFToken)
 				values.Set("link", provider)
 				values.Set("upstream_parameters.login_hint", "foo@bar.com")
 				values.Set("upstream_parameters.hd", "bar.com")
 
-				resp, err := c.PostForm(action(req), values)
+				resp, err := c.PostForm(action(req), *values)
 				require.NoError(t, err)
-				require.Equal(t, http.StatusFound, resp.StatusCode)
+				require.Equal(t, http.StatusSeeOther, resp.StatusCode)
 
 				loc, err := resp.Location()
 				require.NoError(t, err)
@@ -497,20 +499,23 @@ func TestSettingsStrategy(t *testing.T) {
 			})
 
 			t.Run("case=invalid query parameters should be ignored", func(t *testing.T) {
-				subject = "hackerman+new-connection-new-oidc-with-parameters+" + testID
-				scope = []string{"openid", "offline"}
+				c := &http.Client{}
+				req := nprSDK(t, a, "", time.Hour)
+				// copy over the client so we can disable redirects
+				*c = *a
+				// We need to disable redirects because the upstream parameters are only passed on to the provider
+				c.CheckRedirect = func(req *http.Request, via []*http.Request) error {
+					return http.ErrUseLastResponse
+				}
 
-				agent, provider := "password", "google"
-
-				req := nprSDK(t, agents[agent], "", time.Hour)
-				values := url.Values{}
+				values := &url.Values{}
 				values.Set("csrf_token", x.FakeCSRFToken)
 				values.Set("link", provider)
 				values.Set("upstream_parameters.lol", "invalid")
 
-				resp, err := c.PostForm(action(req), values)
+				resp, err := c.PostForm(action(req), *values)
 				require.NoError(t, err)
-				require.Equal(t, http.StatusFound, resp.StatusCode)
+				require.Equal(t, http.StatusSeeOther, resp.StatusCode)
 
 				loc, err := resp.Location()
 				require.NoError(t, err)
