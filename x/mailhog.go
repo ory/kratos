@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"net/http"
 	"os"
+	"sync"
 	"time"
 
 	"github.com/cenkalti/backoff"
@@ -15,12 +16,18 @@ import (
 	"github.com/ory/dockertest/v3"
 )
 
-var resources []*dockertest.Resource
+var (
+	resourceMux sync.Mutex
+	resources   []*dockertest.Resource
+)
 
 func CleanUpTestSMTP() {
+	resourceMux.Lock()
+	defer resourceMux.Unlock()
 	for _, resource := range resources {
 		resource.Close()
 	}
+	resources = nil
 }
 
 func RunTestSMTP() (smtp, api string, err error) {
@@ -53,7 +60,9 @@ func RunTestSMTP() (smtp, api string, err error) {
 	if err != nil {
 		return "", "", err
 	}
+	resourceMux.Lock()
 	resources = append(resources, resource)
+	resourceMux.Unlock()
 
 	smtp = fmt.Sprintf("smtp://test:test@127.0.0.1:%s/?disable_starttls=true", resource.GetPort("1025/tcp"))
 	api = fmt.Sprintf("http://127.0.0.1:%s", resource.GetPort("8025/tcp"))
