@@ -27,7 +27,7 @@ type UpdateRegistrationFlowWithOidcMethod struct {
 	Traits map[string]interface{} `json:"traits,omitempty"`
 	// Transient data to pass along to any webhooks
 	TransientPayload map[string]interface{} `json:"transient_payload,omitempty"`
-	// UpstreamParameters are the parameters that are passed to the upstream identity provider.  These parameters are optional and depends on the upstream identity provider. UpstreamParameters are validated against the provider's AllowedUpstreamParameters configuration.
+	// UpstreamParameters are the parameters that are passed to the upstream identity provider.  These parameters are optional and depend on what the upstream identity provider supports. Supported parameters are: `login_hint` (string): The `login_hint` parameter suppresses the account chooser and either pre-fills the email box on the sign-in form, or selects the proper session. `hd` (string): The `hd` parameter limits the login/registration process to a Google Organization, e.g. `mycollege.edu`.
 	UpstreamParameters map[string]interface{} `json:"upstream_parameters,omitempty"`
 }
 
