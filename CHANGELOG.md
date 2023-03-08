@@ -5,7 +5,7 @@
 
 **Table of Contents**
 
-- [ (2023-03-07)](#2023-03-07)
+- [ (2023-03-08)](#2023-03-08)
   - [Breaking Changes](#breaking-changes)
     - [Bug Fixes](#bug-fixes)
     - [Code Refactoring](#code-refactoring)
@@ -293,7 +293,7 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# [](https://github.com/ory/kratos/compare/v0.11.1...v) (2023-03-07)
+# [](https://github.com/ory/kratos/compare/v0.11.1...v) (2023-03-08)
 
 ## Breaking Changes
 
@@ -309,6 +309,14 @@ flows.
   ([#3097](https://github.com/ory/kratos/issues/3097))
   ([c70704c](https://github.com/ory/kratos/commit/c70704cebafff7a92f32928273e4570abb3b1c3d)),
   closes [#3096](https://github.com/ory/kratos/issues/3096)
+- Add `HydraLoginRequest` on flow creation
+  ([#3152](https://github.com/ory/kratos/issues/3152))
+  ([09312dd](https://github.com/ory/kratos/commit/09312dd2d7f89eadbae603e4c8891f39630a2570)),
+  closes [#3108](https://github.com/ory/kratos/issues/3108):
+
+  The oauth2_login_request field was missing when initially creating the login
+  flow.
+
 - Avoid unchecked casts from IdentityPool to PrivilegedIdentityPool
   ([71d35dd](https://github.com/ory/kratos/commit/71d35ddd582b3c7081f66e0cdc0c43457816ab25))
 - Correctly apply patches to identity metadata
