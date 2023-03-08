@@ -606,7 +606,7 @@ func TestStrategy(t *testing.T) {
 			action := afv(t, f.ID, "valid")
 
 			fv := url.Values{}
-			fv.Set("lol", "invalid")
+			fv.Set("upstream_parameters.lol", "invalid")
 
 			res, err := c.PostForm(action, fv)
 			require.NoError(t, err)
@@ -624,7 +624,7 @@ func TestStrategy(t *testing.T) {
 			action := afv(t, f.ID, "valid")
 
 			fv := url.Values{}
-			fv.Set("lol", "invalid")
+			fv.Set("upstream_parameters.lol", "invalid")
 
 			res, err := c.PostForm(action, fv)
 			require.NoError(t, err)

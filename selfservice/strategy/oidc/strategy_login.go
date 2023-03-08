@@ -77,7 +77,10 @@ type UpdateLoginFlowWithOidcMethod struct {
 
 	// UpstreamParameters are the parameters that are passed to the upstream identity provider.
 	//
-	// These parameters are optional and depend on the upstream identity provider.	// UpstreamParameters are validated against the provider's AllowedUpstreamParameters configuration.
+	// These parameters are optional and depend on what the upstream identity provider supports.
+	// Supported parameters are:
+	// - `login_hint` (string): The `login_hint` parameter suppresses the account chooser and either pre-fills the email box on the sign-in form, or selects the proper session.
+	// - `hd` (string): The `hd` parameter limits the login/registration process to a Google Organization, e.g. `mycollege.edu`.
 	//
 	// required: false
 	UpstreamParameters json.RawMessage `json:"upstream_parameters"`
@@ -204,12 +207,7 @@ func (s *Strategy) Login(w http.ResponseWriter, r *http.Request, f *login.Flow, 
 		return nil, err
 	}
 
-	upstreamParameters := UpstreamParameters(provider, up)
-
-	upstreamParameters = append(upstreamParameters, provider.AuthCodeURLOptions(req)...)
-
-	codeURL := c.AuthCodeURL(state, upstreamParameters...)
-
+	codeURL := c.AuthCodeURL(state, append(provider.AuthCodeURLOptions(req), UpstreamParameters(provider, up)...)...)
 	if x.IsJSONRequest(r) {
 		s.d.Writer().WriteError(w, r, flow.NewBrowserLocationChangeRequiredError(codeURL))
 	} else {
