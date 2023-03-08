@@ -487,8 +487,13 @@ func TestSettingsStrategy(t *testing.T) {
 
 				resp, err := c.PostForm(action(req), values)
 				require.NoError(t, err)
-				require.EqualValues(t, "foo@bar.com", resp.Request.URL.Query().Get("login_hint"))
-				require.EqualValues(t, "bar.com", resp.Request.URL.Query().Get("hd"))
+				require.Equal(t, http.StatusFound, resp.StatusCode)
+
+				loc, err := resp.Location()
+				require.NoError(t, err)
+
+				require.EqualValues(t, "foo@bar.com", loc.Query().Get("login_hint"))
+				require.EqualValues(t, "bar.com", loc.Query().Get("hd"))
 			})
 
 			t.Run("case=invalid query parameters should be ignored", func(t *testing.T) {
@@ -505,7 +510,12 @@ func TestSettingsStrategy(t *testing.T) {
 
 				resp, err := c.PostForm(action(req), values)
 				require.NoError(t, err)
-				require.Empty(t, resp.Request.URL.Query().Get("lol"))
+				require.Equal(t, http.StatusFound, resp.StatusCode)
+
+				loc, err := resp.Location()
+				require.NoError(t, err)
+
+				require.Empty(t, loc.Query().Get("lol"))
 			})
 		})
 

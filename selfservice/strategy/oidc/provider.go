@@ -76,7 +76,7 @@ func (c *Claims) Validate() error {
 // - `login_hint` (string): The `login_hint` parameter suppresses the account chooser and either pre-fills the email box on the sign-in form, or selects the proper session.
 // - `hd` (string): The `hd` parameter limits the login/registration process to a Google Organization, e.g. `mycollege.edu`.
 func UpstreamParameters(provider Provider, upstreamParameters map[string]string) []oauth2.AuthCodeOption {
-	// validation of upstream parameters are already handled in the `oidc/.schema/link.schema.json` file.
+	// validation of upstream parameters are already handled in the `oidc/.schema/link.schema.json` and `oidc/.schema/settings.schema.json` file.
 	// `upstreamParameters` will always only contain allowed parameters based on the configuration.
 
 	// we double check the parameters here to prevent any potential security issues.
