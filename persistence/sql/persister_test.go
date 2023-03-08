@@ -235,9 +235,9 @@ func TestPersister(t *testing.T) {
 			})
 			t.Run("contract=settings.TestFlowPersister", func(t *testing.T) {
 				pop.SetLogger(pl(t))
-				settings.TestRequestPersister(ctx, conf, p)(t)
+				settings.TestFlowPersister(ctx, conf, p)(t)
 			})
-			t.Run("contract=session.TestFlowPersister", func(t *testing.T) {
+			t.Run("contract=session.TestPersister", func(t *testing.T) {
 				pop.SetLogger(pl(t))
 				session.TestPersister(ctx, conf, p)(t)
 			})
@@ -246,7 +246,7 @@ func TestPersister(t *testing.T) {
 				upsert, insert := sqltesthelpers.DefaultNetworkWrapper(p)
 				courier.TestPersister(ctx, upsert, insert)(t)
 			})
-			t.Run("contract=verification.TestPersister", func(t *testing.T) {
+			t.Run("contract=verification.TestFlowPersister", func(t *testing.T) {
 				pop.SetLogger(pl(t))
 				verification.TestFlowPersister(ctx, conf, p)(t)
 			})
