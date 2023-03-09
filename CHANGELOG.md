@@ -317,6 +317,8 @@ flows.
   The oauth2_login_request field was missing when initially creating the login
   flow.
 
+- Add mutex to test SMTP server setup/teardown
+  ([20c2359](https://github.com/ory/kratos/commit/20c2359407044c81850759e27b03c371cb0e4886))
 - Avoid unchecked casts from IdentityPool to PrivilegedIdentityPool
   ([71d35dd](https://github.com/ory/kratos/commit/71d35ddd582b3c7081f66e0cdc0c43457816ab25))
 - Correctly apply patches to identity metadata
@@ -390,6 +392,8 @@ flows.
 
 - Set DB connection max idle time
   ([8d4762c](https://github.com/ory/kratos/commit/8d4762c1bffad14c94ac69575e488fc67d3f5dde))
+- Test contract names
+  ([e9ac00b](https://github.com/ory/kratos/commit/e9ac00b3941641a955f5d8f32f25a4031c87a726))
 - Use type alias instead of type definition
   ([#3148](https://github.com/ory/kratos/issues/3148))
   ([dba3803](https://github.com/ory/kratos/commit/dba38032d5939ff7286560ec19d83a89fe0410ce))
