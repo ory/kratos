@@ -325,6 +325,9 @@ flows.
   ([#3103](https://github.com/ory/kratos/issues/3103))
   ([1193a56](https://github.com/ory/kratos/commit/1193a5681fbc25d03c1e26a4296fa0b9abd2452b)),
   closes [#2950](https://github.com/ory/kratos/issues/2950)
+- Don't reuse ports in courier/SMTP tests
+  ([#3156](https://github.com/ory/kratos/issues/3156))
+  ([e260fcf](https://github.com/ory/kratos/commit/e260fcf06181ce9339edc729ab74826aa4be78cf))
 - Don't treat missing session as error in tracing
   ([290d28a](https://github.com/ory/kratos/commit/290d28ada1a55b599af7e41e638de699a474f1d8))
 - Handle upstream errors in patreon provider
