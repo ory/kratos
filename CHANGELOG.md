@@ -5,7 +5,7 @@
 
 **Table of Contents**
 
-- [ (2023-03-08)](#2023-03-08)
+- [ (2023-03-09)](#2023-03-09)
   - [Breaking Changes](#breaking-changes)
     - [Bug Fixes](#bug-fixes)
     - [Code Refactoring](#code-refactoring)
@@ -293,7 +293,7 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# [](https://github.com/ory/kratos/compare/v0.11.1...v) (2023-03-08)
+# [](https://github.com/ory/kratos/compare/v0.11.1...v) (2023-03-09)
 
 ## Breaking Changes
 
@@ -381,6 +381,12 @@ flows.
     `uniqueItems` | ErrorValidationUniqueItems | 4000025 | | `type` |
     ErrorValidationWrongType | 4000026 |
   - Updated e2e tests to check these IDs explicitly
+
+- Respect the after recovery return to URL from config
+  ([#3141](https://github.com/ory/kratos/issues/3141))
+  ([3467fd3](https://github.com/ory/kratos/commit/3467fd3b860dd2ad915449e3fff7e4da2d2c61ca)):
+
+  Fixes https://github.com/ory-corp/cloud/issues/1405
 
 - Set DB connection max idle time
   ([8d4762c](https://github.com/ory/kratos/commit/8d4762c1bffad14c94ac69575e488fc67d3f5dde))
