@@ -7,8 +7,9 @@ import (
 	"context"
 	"reflect"
 
-	"github.com/ory/kratos/x"
 	"github.com/ory/x/otelx"
+
+	"github.com/ory/kratos/x"
 
 	"github.com/ory/kratos/driver/config"
 
@@ -86,6 +87,25 @@ func (m *Manager) Create(ctx context.Context, i *Identity, opts ...ManagerOption
 	}
 
 	return m.r.PrivilegedIdentityPool().CreateIdentity(ctx, i)
+}
+
+func (m *Manager) CreateIdentities(ctx context.Context, identities []*Identity, opts ...ManagerOption) (err error) {
+	ctx, span := m.r.Tracer(ctx).Tracer().Start(ctx, "identity.Manager.CreateIdentities")
+	defer otelx.End(span, &err)
+
+	for _, i := range identities {
+		if i.SchemaID == "" {
+			i.SchemaID = m.r.Config().DefaultIdentityTraitsSchemaID(ctx)
+		}
+
+		o := newManagerOptions(opts)
+		if err := m.ValidateIdentity(ctx, i, o); err != nil {
+			return err
+		}
+	}
+
+	err = m.r.PrivilegedIdentityPool().CreateIdentities(ctx, identities...)
+	return err
 }
 
 func (m *Manager) requiresPrivilegedAccess(ctx context.Context, original, updated *Identity, o *ManagerOptions) (err error) {

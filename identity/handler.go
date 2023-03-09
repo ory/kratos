@@ -31,9 +31,11 @@ import (
 	"github.com/ory/kratos/driver/config"
 )
 
-const RouteCollection = "/identities"
-const RouteItem = RouteCollection + "/:id"
-const RouteCredentialItem = RouteItem + "/credentials/:type"
+const (
+	RouteCollection     = "/identities"
+	RouteItem           = RouteCollection + "/:id"
+	RouteCredentialItem = RouteItem + "/credentials/:type"
+)
 
 type (
 	handlerDependencies interface {
@@ -98,6 +100,7 @@ func (h *Handler) RegisterAdminRoutes(admin *x.RouterAdmin) {
 	admin.PATCH(RouteItem, h.patch)
 
 	admin.POST(RouteCollection, h.create)
+	admin.PATCH(RouteCollection, h.batchPatchIdentities)
 	admin.PUT(RouteItem, h.update)
 
 	admin.DELETE(RouteCredentialItem, h.deleteIdentityCredentials)
@@ -404,28 +407,8 @@ func (h *Handler) create(w http.ResponseWriter, r *http.Request, _ httprouter.Pa
 		return
 	}
 
-	stateChangedAt := sqlxx.NullTime(time.Now())
-	state := StateActive
-	if cr.State != "" {
-		if err := cr.State.IsValid(); err != nil {
-			h.r.Writer().WriteError(w, r, errors.WithStack(herodot.ErrBadRequest.WithReasonf("%s", err).WithWrap(err)))
-			return
-		}
-		state = cr.State
-	}
-
-	i := &Identity{
-		SchemaID:            cr.SchemaID,
-		Traits:              []byte(cr.Traits),
-		State:               state,
-		StateChangedAt:      &stateChangedAt,
-		VerifiableAddresses: cr.VerifiableAddresses,
-		RecoveryAddresses:   cr.RecoveryAddresses,
-		MetadataAdmin:       []byte(cr.MetadataAdmin),
-		MetadataPublic:      []byte(cr.MetadataPublic),
-	}
-
-	if err := h.importCredentials(r.Context(), i, cr.Credentials); err != nil {
+	i, err := h.identityFromCreateIdentityBody(r.Context(), &cr)
+	if err != nil {
 		h.r.Writer().WriteError(w, r, err)
 		return
 	}
@@ -443,6 +426,105 @@ func (h *Handler) create(w http.ResponseWriter, r *http.Request, _ httprouter.Pa
 		).String(),
 		WithCredentialsMetadataAndAdminMetadataInJSON(*i),
 	)
+}
+
+func (h *Handler) identityFromCreateIdentityBody(ctx context.Context, cr *CreateIdentityBody) (*Identity, error) {
+	stateChangedAt := sqlxx.NullTime(time.Now())
+	state := StateActive
+	if cr.State != "" {
+		if err := cr.State.IsValid(); err != nil {
+			return nil, errors.WithStack(herodot.ErrBadRequest.WithReasonf("%s", err).WithWrap(err))
+		}
+		state = cr.State
+	}
+
+	i := &Identity{
+		SchemaID:            cr.SchemaID,
+		Traits:              []byte(cr.Traits),
+		State:               state,
+		StateChangedAt:      &stateChangedAt,
+		VerifiableAddresses: cr.VerifiableAddresses,
+		RecoveryAddresses:   cr.RecoveryAddresses,
+		MetadataAdmin:       []byte(cr.MetadataAdmin),
+		MetadataPublic:      []byte(cr.MetadataPublic),
+	}
+
+	if err := h.importCredentials(ctx, i, cr.Credentials); err != nil {
+		return nil, err
+	}
+
+	return i, nil
+}
+
+// swagger:route PATCH /admin/identities identity batchPatchIdentities
+//
+// # Create and deletes multiple identities
+//
+// Creates or delete multiple
+// [identities](https://www.ory.sh/docs/kratos/concepts/identity-user-model).
+// This endpoint can also be used to [import
+// credentials](https://www.ory.sh/docs/kratos/manage-identities/import-user-accounts-identities)
+// for instance passwords, social sign in configurations or multifactor methods.
+//
+//	Consumes:
+//	- application/json
+//
+//	Produces:
+//	- application/json
+//
+//	Schemes: http, https
+//
+//	Security:
+//	  oryAccessToken:
+//
+//	Responses:
+//	  200: batchPatchIdentitiesResponse
+//	  400: errorGeneric
+//	  409: errorGeneric
+//	  default: errorGeneric
+func (h *Handler) batchPatchIdentities(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+	var (
+		req BatchPatchIdentitiesBody
+		res batchPatchIdentitiesResponse
+	)
+	if err := jsonx.NewStrictDecoder(r.Body).Decode(&req); err != nil {
+		h.r.Writer().WriteErrorCode(w, r, http.StatusBadRequest, errors.WithStack(err))
+		return
+	}
+
+	res.Identities = make([]*BatchIdentityPatchResponse, len(req.Identities))
+	// Array to look up the index of the identity in the identities array.
+	indexInIdentities := make([]*int, len(req.Identities))
+	identities := make([]*Identity, 0, len(req.Identities))
+
+	for i, patch := range req.Identities {
+		if patch.Create != nil {
+			res.Identities[i] = &BatchIdentityPatchResponse{
+				Action:  ActionCreate,
+				PatchID: patch.ID,
+			}
+			identity, err := h.identityFromCreateIdentityBody(r.Context(), patch.Create)
+			if err != nil {
+				h.r.Writer().WriteError(w, r, err)
+				return
+			}
+			identities = append(identities, identity)
+			idx := len(identities) - 1
+			indexInIdentities[i] = &idx
+		}
+	}
+
+	if err := h.r.IdentityManager().CreateIdentities(r.Context(), identities); err != nil {
+		h.r.Writer().WriteError(w, r, err)
+		return
+	}
+	for resIdx, identitiesIdx := range indexInIdentities {
+		if identitiesIdx != nil {
+			res.Identities[resIdx].IdentityID = &identities[*identitiesIdx].ID
+		}
+	}
+
+	h.r.Writer().Write(w, r, &res)
 }
 
 // Update Identity Parameters

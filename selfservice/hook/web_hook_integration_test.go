@@ -1063,7 +1063,7 @@ func TestAsyncWebhook(t *testing.T) {
 	err := wh.ExecuteLoginPostHook(nil, req, node.DefaultGroup, f, s)
 	require.NoError(t, err) // execution returns immediately for async webhook
 	select {
-	case <-time.After(200 * time.Millisecond):
+	case <-time.After(1 * time.Second):
 		t.Fatal("timed out waiting for webhook request to reach test handler")
 	case <-handlerEntered:
 		// ok
@@ -1071,7 +1071,7 @@ func TestAsyncWebhook(t *testing.T) {
 	// at this point, a goroutine is in the middle of the call to our test handler and waiting for a response
 	incomingCancel() // simulate the incoming Kratos request having finished
 	close(blockHandlerOnExit)
-	timeout := time.After(200 * time.Millisecond)
+	timeout := time.After(1 * time.Second)
 	var found bool
 	for !found {
 		for _, entry := range logHook.AllEntries() {

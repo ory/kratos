@@ -417,6 +417,19 @@
         "title": "Authenticator Assurance Level (AAL)",
         "type": "string"
       },
+      "batchPatchIdentitiesResponse": {
+        "description": "Patch identities response",
+        "properties": {
+          "identities": {
+            "description": "The patch responses for the individual identities.",
+            "items": {
+              "$ref": "#/components/schemas/identityPatchResponse"
+            },
+            "type": "array"
+          }
+        },
+        "type": "object"
+      },
       "continueWith": {
         "discriminator": {
           "mapping": {
@@ -1043,6 +1056,44 @@
         "title": "CredentialsType  represents several different credential types, like password credentials, passwordless credentials,",
         "type": "string"
       },
+      "identityPatch": {
+        "description": "Payload for patching an identity",
+        "properties": {
+          "create": {
+            "$ref": "#/components/schemas/createIdentityBody"
+          },
+          "patch_id": {
+            "description": "The ID of this patch.\n\nThe patch ID is optional. If specified, the ID will be returned in the\nresponse, so consumers of this API can correlate the response with the\npatch.",
+            "format": "uuid",
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "identityPatchResponse": {
+        "description": "Response for a single identity patch",
+        "properties": {
+          "action": {
+            "description": "The action for this specific patch\ncreate ActionCreate  Create this identity.",
+            "enum": [
+              "create"
+            ],
+            "type": "string",
+            "x-go-enum-desc": "create ActionCreate  Create this identity."
+          },
+          "identity": {
+            "description": "The identity ID payload of this patch",
+            "format": "uuid",
+            "type": "string"
+          },
+          "patch_id": {
+            "description": "The ID of this patch response, if an ID was specified in the patch.",
+            "format": "uuid",
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
       "identitySchema": {
         "description": "Raw JSON Schema",
         "type": "object"
@@ -1496,6 +1547,19 @@
             "maximum": 1000,
             "minimum": 1,
             "type": "integer"
+          }
+        },
+        "type": "object"
+      },
+      "patchIdentitiesBody": {
+        "description": "Patch Identities Body",
+        "properties": {
+          "identities": {
+            "description": "Identities holds the list of patches to apply\n\nrequired",
+            "items": {
+              "$ref": "#/components/schemas/identityPatch"
+            },
+            "type": "array"
           }
         },
         "type": "object"
@@ -3395,6 +3459,71 @@
           }
         ],
         "summary": "List Identities",
+        "tags": [
+          "identity"
+        ]
+      },
+      "patch": {
+        "description": "Creates or delete multiple\n[identities](https://www.ory.sh/docs/kratos/concepts/identity-user-model).\nThis endpoint can also be used to [import\ncredentials](https://www.ory.sh/docs/kratos/manage-identities/import-user-accounts-identities)\nfor instance passwords, social sign in configurations or multifactor methods.",
+        "operationId": "batchPatchIdentities",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/patchIdentitiesBody"
+              }
+            }
+          },
+          "x-originalParamName": "Body"
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/batchPatchIdentitiesResponse"
+                }
+              }
+            },
+            "description": "batchPatchIdentitiesResponse"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/errorGeneric"
+                }
+              }
+            },
+            "description": "errorGeneric"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/errorGeneric"
+                }
+              }
+            },
+            "description": "errorGeneric"
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/errorGeneric"
+                }
+              }
+            },
+            "description": "errorGeneric"
+          }
+        },
+        "security": [
+          {
+            "oryAccessToken": []
+          }
+        ],
+        "summary": "Create and deletes multiple identities",
         "tags": [
           "identity"
         ]

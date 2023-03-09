@@ -11,10 +11,11 @@ import (
 	"testing"
 	"time"
 
-	"github.com/ory/kratos/driver/config"
-	"github.com/ory/kratos/schema"
 	"github.com/ory/x/sqlxx"
 	"github.com/ory/x/urlx"
+
+	"github.com/ory/kratos/driver/config"
+	"github.com/ory/kratos/schema"
 
 	"github.com/ory/kratos/x/xsql"
 
@@ -23,6 +24,9 @@ import (
 	"github.com/gobuffalo/pop/v6/logging"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+
+	"github.com/ory/x/sqlcon"
+	"github.com/ory/x/sqlcon/dockertest"
 
 	continuity "github.com/ory/kratos/continuity/test"
 	"github.com/ory/kratos/corpx"
@@ -45,8 +49,6 @@ import (
 	link "github.com/ory/kratos/selfservice/strategy/link/test"
 	session "github.com/ory/kratos/session/test"
 	"github.com/ory/kratos/x"
-	"github.com/ory/x/sqlcon"
-	"github.com/ory/x/sqlcon/dockertest"
 )
 
 func init() {

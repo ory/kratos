@@ -62,6 +62,10 @@ type (
 		// if identity exists, backend connectivity is broken, or trait validation fails.
 		CreateIdentity(context.Context, *Identity) error
 
+		// CreateIdentities creates multiple identities. It is capable of setting credentials without encoding. Will return an error
+		// if identity exists, backend connectivity is broken, or trait validation fails.
+		CreateIdentities(context.Context, ...*Identity) error
+
 		// UpdateIdentity updates an identity including its confidential / privileged / protected data.
 		UpdateIdentity(context.Context, *Identity) error
 
