@@ -412,6 +412,32 @@ flows.
   ([8aa75e9](https://github.com/ory/kratos/commit/8aa75e97e4bfee37e7cf551173b516c6244786ff))
 - Add patreon oidc provider ([#3021](https://github.com/ory/kratos/issues/3021))
   ([20ea29e](https://github.com/ory/kratos/commit/20ea29e018b33231cf6b2743de74d2233f756c2a))
+- Add upstream parameters to oidc provider
+  ([#3138](https://github.com/ory/kratos/issues/3138))
+  ([b6b1679](https://github.com/ory/kratos/commit/b6b1679c3bd053cd08ff8f26c762735e380fed67)),
+  closes [#3127](https://github.com/ory/kratos/issues/3127)
+  [#2069](https://github.com/ory/kratos/issues/2069):
+
+  This PR introduces the upstream OIDC query parameters `login_hint` and `hd`.
+
+  To send additional upstream parameters the form can post this on a login,
+  registration or settings link submit. For example the form below does an OIDC
+  flow to Google. We can now add additional parameters such as `login_hint` and
+  `hd` to the upstream request to Google login with a pre-filled email
+  `email@example.com`:
+
+  ```html
+  <form action="https://kratos/self-service/login?flow=">
+    <input type="submit" name="provider" value="google" />
+    <input
+      type="hidden"
+      name="upstream_parameters.login_hint"
+      value="email@example.com"
+    />
+    <input type="hidden" name="upstream_parameters.hd" value="example.com" />
+  </form>
+  ```
+
 - Allow importing (salted) SHA hashing algorithms
   ([#2741](https://github.com/ory/kratos/issues/2741))
   ([132255e](https://github.com/ory/kratos/commit/132255eff24a3f5a7fc2249a0ecf9b8716a8f1e7)),
