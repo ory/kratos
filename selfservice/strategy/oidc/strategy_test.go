@@ -547,6 +547,97 @@ func TestStrategy(t *testing.T) {
 		assert.Greater(t, authAt2.Sub(authAt1).Milliseconds(), int64(0), "%s - %s : %s - %s", authAt2, authAt1, body2, body1)
 	})
 
+	t.Run("case=upstream parameters should be passed on to provider", func(t *testing.T) {
+		subject = "oidc-upstream-parameters@ory.sh"
+		scope = []string{"openid", "offline"}
+
+		// We need to disable redirects because the upstream parameters are only passed on to the provider
+		c := &http.Client{
+			CheckRedirect: func(req *http.Request, via []*http.Request) error {
+				return http.ErrUseLastResponse
+			},
+		}
+
+		t.Run("case=should pass when registering", func(t *testing.T) {
+			f := newRegistrationFlow(t, returnTS.URL, time.Minute)
+			action := afv(t, f.ID, "valid")
+
+			fv := url.Values{}
+
+			fv.Set("provider", "valid")
+			fv.Set("upstream_parameters.login_hint", "oidc-upstream-parameters@ory.sh")
+			fv.Set("upstream_parameters.hd", "ory.sh")
+
+			res, err := c.PostForm(action, fv)
+			require.NoError(t, err)
+			require.Equal(t, http.StatusSeeOther, res.StatusCode)
+
+			loc, err := res.Location()
+			require.NoError(t, err)
+
+			require.Equal(t, "oidc-upstream-parameters@ory.sh", loc.Query().Get("login_hint"))
+			require.Equal(t, "ory.sh", loc.Query().Get("hd"))
+		})
+
+		t.Run("case=should pass when logging in", func(t *testing.T) {
+			f := newLoginFlow(t, returnTS.URL, time.Minute)
+
+			action := afv(t, f.ID, "valid")
+
+			fv := url.Values{}
+
+			fv.Set("provider", "valid")
+			fv.Set("upstream_parameters.login_hint", "oidc-upstream-parameters@ory.sh")
+			fv.Set("upstream_parameters.hd", "ory.sh")
+
+			res, err := c.PostForm(action, fv)
+			require.NoError(t, err)
+			require.Equal(t, http.StatusSeeOther, res.StatusCode)
+
+			loc, err := res.Location()
+			require.NoError(t, err)
+
+			require.Equal(t, "oidc-upstream-parameters@ory.sh", loc.Query().Get("login_hint"))
+			require.Equal(t, "ory.sh", loc.Query().Get("hd"))
+		})
+
+		t.Run("case=should ignore invalid parameters when logging in", func(t *testing.T) {
+			f := newLoginFlow(t, returnTS.URL, time.Minute)
+			action := afv(t, f.ID, "valid")
+
+			fv := url.Values{}
+			fv.Set("upstream_parameters.lol", "invalid")
+
+			res, err := c.PostForm(action, fv)
+			require.NoError(t, err)
+			require.Equal(t, http.StatusSeeOther, res.StatusCode)
+
+			loc, err := res.Location()
+			require.NoError(t, err)
+
+			// upstream parameters that are not on the allow list will be ignored and not passed on to the upstream provider.
+			require.Empty(t, loc.Query().Get("lol"))
+		})
+
+		t.Run("case=should ignore invalid parameters when registering", func(t *testing.T) {
+			f := newRegistrationFlow(t, returnTS.URL, time.Minute)
+			action := afv(t, f.ID, "valid")
+
+			fv := url.Values{}
+			fv.Set("upstream_parameters.lol", "invalid")
+
+			res, err := c.PostForm(action, fv)
+			require.NoError(t, err)
+			require.Equal(t, http.StatusFound, res.StatusCode)
+
+			loc, err := res.Location()
+			require.NoError(t, err)
+
+			// upstream parameters that are not on the allow list will be ignored and not passed on to the upstream provider.
+			require.Empty(t, loc.Query().Get("lol"))
+		})
+	})
+
 	t.Run("method=TestPopulateSignUpMethod", func(t *testing.T) {
 		conf.MustSet(ctx, config.ViperKeyPublicBaseURL, "https://foo/")
 

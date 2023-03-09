@@ -190,7 +190,10 @@
                     "const": true
                   }
                 },
-                "required":["ignore","parse"]
+                "required": [
+                  "ignore",
+                  "parse"
+                ]
               }
             },
             "url": {

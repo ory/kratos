@@ -81,6 +81,16 @@ type UpdateRegistrationFlowWithOidcMethod struct {
 	//
 	// required: false
 	TransientPayload json.RawMessage `json:"transient_payload,omitempty"`
+
+	// UpstreamParameters are the parameters that are passed to the upstream identity provider.
+	//
+	// These parameters are optional and depend on what the upstream identity provider supports.
+	// Supported parameters are:
+	// - `login_hint` (string): The `login_hint` parameter suppresses the account chooser and either pre-fills the email box on the sign-in form, or selects the proper session.
+	// - `hd` (string): The `hd` parameter limits the login/registration process to a Google Organization, e.g. `mycollege.edu`.
+	//
+	// required: false
+	UpstreamParameters json.RawMessage `json:"upstream_parameters"`
 }
 
 func (s *Strategy) newLinkDecoder(p interface{}, r *http.Request) error {
@@ -160,7 +170,12 @@ func (s *Strategy) Register(w http.ResponseWriter, r *http.Request, f *registrat
 		return s.handleError(w, r, f, pid, nil, err)
 	}
 
-	codeURL := c.AuthCodeURL(state, provider.AuthCodeURLOptions(req)...)
+	var up map[string]string
+	if err := json.NewDecoder(bytes.NewBuffer(p.UpstreamParameters)).Decode(&up); err != nil {
+		return err
+	}
+
+	codeURL := c.AuthCodeURL(state, append(provider.AuthCodeURLOptions(req), UpstreamParameters(provider, up)...)...)
 	if x.IsJSONRequest(r) {
 		s.d.Writer().WriteError(w, r, flow.NewBrowserLocationChangeRequiredError(codeURL))
 	} else {

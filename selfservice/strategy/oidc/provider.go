@@ -65,3 +65,32 @@ func (c *Claims) Validate() error {
 	}
 	return nil
 }
+
+// UpstreamParameters returns a list of oauth2.AuthCodeOption based on the upstream parameters.
+//
+// Only allowed parameters are returned and the rest is ignored.
+// Allowed parameters are also defined in the `oidc/.schema/link.schema.json` file, however,
+// this function also validates the parameters to prevent any potential security issues.
+//
+// Allowed parameters are:
+// - `login_hint` (string): The `login_hint` parameter suppresses the account chooser and either pre-fills the email box on the sign-in form, or selects the proper session.
+// - `hd` (string): The `hd` parameter limits the login/registration process to a Google Organization, e.g. `mycollege.edu`.
+func UpstreamParameters(provider Provider, upstreamParameters map[string]string) []oauth2.AuthCodeOption {
+	// validation of upstream parameters are already handled in the `oidc/.schema/link.schema.json` and `oidc/.schema/settings.schema.json` file.
+	// `upstreamParameters` will always only contain allowed parameters based on the configuration.
+
+	// we double check the parameters here to prevent any potential security issues.
+	allowedParameters := map[string]struct{}{
+		"login_hint": {},
+		"hd":         {},
+	}
+
+	var params []oauth2.AuthCodeOption
+	for up, v := range upstreamParameters {
+		if _, ok := allowedParameters[up]; ok {
+			params = append(params, oauth2.SetAuthURLParam(up, v))
+		}
+	}
+
+	return params
+}
