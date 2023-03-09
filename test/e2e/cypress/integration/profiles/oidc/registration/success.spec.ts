@@ -3,16 +3,17 @@
 
 import { appPrefix, gen, website } from "../../../../helpers"
 import { routes as express } from "../../../../helpers/express"
+import { routes as react } from "../../../../helpers/react"
 import { testRegistrationWebhook } from "../../../../helpers/webhook"
 
 context("Social Sign Up Successes", () => {
   ;[
-    // {
-    //   login: react.login,
-    //   registration: react.registration,
-    //   app: "react" as "react",
-    //   profile: "spa",
-    // },
+    {
+      login: react.login,
+      registration: react.registration,
+      app: "react" as "react",
+      profile: "spa",
+    },
     {
       login: express.login,
       registration: express.registration,
@@ -219,12 +220,17 @@ context("Social Sign Up Successes", () => {
 
         cy.get('input[name="traits.email"]').type(email)
         cy.get('input[name="password"]').type(password)
-        const website = "https://www.example.org/"
         cy.get('input[name="traits.website"]').type(website)
         cy.get('[name="traits.consent"]').siblings("label").click()
         cy.get('[name="traits.newsletter"]').siblings("label").click()
 
         cy.submitPasswordForm()
+
+        cy.location("pathname").should("not.contain", "/registration")
+
+        cy.getSession().should(shouldSession(email))
+
+        cy.logout()
         cy.noSession()
 
         // register the account through the OIDC provider
@@ -246,7 +252,9 @@ context("Social Sign Up Successes", () => {
         cy.get("[name='provider'][value='google']").should("be.visible")
         cy.get("[name='provider'][value='github']").should("be.visible")
 
-        cy.get("[data-testid='forgot-password-link']").should("be.visible")
+        if (app === "express") {
+          cy.get("[data-testid='forgot-password-link']").should("be.visible")
+        }
 
         cy.get("input[name='identifier']").type(email)
         cy.get("input[name='password']").type(password)
