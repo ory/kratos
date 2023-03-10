@@ -104,8 +104,8 @@ func WithFlowReturnTo(returnTo string) FlowOption {
 
 func WithFormErrorMessage(messages []text.Message) FlowOption {
 	return func(f *Flow) {
-		for _, m := range messages {
-			f.UI.Messages.Add(&m)
+		for i := range messages {
+			f.UI.Messages.Add(&messages[i])
 		}
 	}
 }
