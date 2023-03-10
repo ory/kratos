@@ -1,0 +1,61 @@
+name: Publish
+on:
+  push:
+    branches:
+      - master
+
+jobs:
+  publish:
+    name: Build, Publish, and Deploy
+    environment: 'development'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - uses: actions/setup-go@v2
+        with:
+          go-version: "1.19"
+
+      - name: Set up gcloud Cloud SDK environment
+        uses: google-github-actions/setup-gcloud@v0.2.0
+        with:
+          service_account_key: ${{ secrets.DEV_GKE_GITHUB_SA_KEY }}
+          project_id: ${{ secrets.DEV_GOOGLE_CLOUD_PROJECT_ID }}
+
+      - name: Configure Docker to use the gcloud CLI for authentication
+        run: gcloud --quiet auth configure-docker europe-north1-docker.pkg.dev
+
+      - name: Get GKE Credentials
+        uses: google-github-actions/get-gke-credentials@v0.2.1
+        with:
+          cluster_name: ${{ secrets.DEV_GKE_CLUSTER_NAME }}
+          location: europe-north1
+          credentials: ${{ secrets.DEV_GKE_GITHUB_SA_KEY }}
+
+      - name: Set project ID, artifacts repo name and location
+        run: |-
+          gcloud config set core/project ${{ secrets.DEV_GOOGLE_CLOUD_PROJECT_ID }}
+          gcloud config set artifacts/repository otto-gke-docker-imgs
+          gcloud config set artifacts/location europe-north1
+
+      - name: Generate image tag
+        id: imageTag
+        run: |-
+          DATE=$(date +%Y%m%d%H%M)
+          TAG="$DATE.${GITHUB_SHA:0:10}"
+          echo "tag=$TAG" >> $GITHUB_OUTPUT
+          echo "tag=$TAG"
+
+      - name: Compile
+        run: |-
+          make install
+      - name: Build Docker image
+        run: |-
+          make docker
+
+          docker tag "oryd/kratos:latest" "europe-north1-docker.pkg.dev/${{ secrets.DEV_GOOGLE_CLOUD_PROJECT_ID }}/otto-gke-docker-imgs/kratos:${{ steps.imageTag.outputs.tag }}"
+
+      - name: Push Docker image to Google Container Registry
+        run: |-
+          docker push "europe-north1-docker.pkg.dev/${{ secrets.DEV_GOOGLE_CLOUD_PROJECT_ID }}/otto-gke-docker-imgs/kratos:${{ steps.imageTag.outputs.tag }}"
