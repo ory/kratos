@@ -185,29 +185,30 @@ func (s *Strategy) Register(w http.ResponseWriter, r *http.Request, f *registrat
 	return errors.WithStack(flow.ErrCompletedByStrategy)
 }
 
-func (s *Strategy) registrationToLogin(w http.ResponseWriter, r *http.Request, a *registration.Flow, providerID string) (*login.Flow, error) {
+func (s *Strategy) registrationToLogin(w http.ResponseWriter, r *http.Request, rf *registration.Flow, providerID string) (*login.Flow, error) {
 	// If return_to was set before, we need to preserve it.
 	var opts []login.FlowOption
-	if len(a.ReturnTo) > 0 {
-		opts = append(opts, login.WithFlowReturnTo(a.ReturnTo))
+	if len(rf.ReturnTo) > 0 {
+		opts = append(opts, login.WithFlowReturnTo(rf.ReturnTo))
 	}
 
-	if len(a.UI.Messages) > 0 {
-		opts = append(opts, login.WithFormErrorMessage(a.UI.Messages))
+	if len(rf.UI.Messages) > 0 {
+		opts = append(opts, login.WithFormErrorMessage(rf.UI.Messages))
 	}
 
 	// This endpoint only handles browser flow at the moment.
-	ar, _, err := s.d.LoginHandler().NewLoginFlow(w, r, flow.TypeBrowser, opts...)
+	lf, _, err := s.d.LoginHandler().NewLoginFlow(w, r, flow.TypeBrowser, opts...)
+
 	if err != nil {
-		return nil, s.handleError(w, r, a, providerID, nil, err)
+		return nil, s.handleError(w, r, rf, providerID, nil, err)
 	}
 
-	ar.RequestURL, err = x.TakeOverReturnToParameter(a.RequestURL, ar.RequestURL)
+	lf.RequestURL, err = x.TakeOverReturnToParameter(rf.RequestURL, lf.RequestURL)
 	if err != nil {
-		return nil, s.handleError(w, r, a, providerID, nil, err)
+		return nil, s.handleError(w, r, rf, providerID, nil, err)
 	}
 
-	return ar, nil
+	return lf, nil
 }
 
 func (s *Strategy) processRegistration(w http.ResponseWriter, r *http.Request, a *registration.Flow, token *oauth2.Token, claims *Claims, provider Provider, container *authCodeContainer) (*login.Flow, error) {
