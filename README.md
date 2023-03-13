@@ -630,7 +630,7 @@ Running identity infrastructure requires
 
 If you think you found a security vulnerability, please refrain from posting it
 publicly on the forums, the chat, or GitHub and send us an email to
-[security@ory.am](mailto:security@ory.sh) instead.
+[security@ory.sh](mailto:security@ory.sh) instead.
 
 ## Telemetry
 
