@@ -140,7 +140,7 @@ func (e *HookExecutor) PostRegistrationHook(w http.ResponseWriter, r *http.Reque
 			// In this case the user is already registered through another method.
 			// We handle this case by returning a spcial error that is handled by
 			// the caller.
-			return ErrDuplicateCredentialsOnOIDCLink
+			return ErrDuplicateCredentials
 		}
 		return err
 	}

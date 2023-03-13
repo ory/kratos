@@ -6,6 +6,7 @@ package registration
 import (
 	"net/http"
 
+	"github.com/ory/kratos/schema"
 	"github.com/ory/kratos/ui/node"
 
 	"github.com/ory/kratos/selfservice/flow"
@@ -23,6 +24,7 @@ var (
 	ErrHookAbortFlow                  = errors.New("aborted registration hook execution")
 	ErrAlreadyLoggedIn                = herodot.ErrBadRequest.WithID(text.ErrIDAlreadyLoggedIn).WithError("you are already logged in").WithReason("A valid session was detected and thus registration is not possible.")
 	ErrRegistrationDisabled           = herodot.ErrBadRequest.WithID(text.ErrIDSelfServiceFlowDisabled).WithError("registration flow disabled").WithReason("Registration is not allowed because it was disabled.")
+	ErrDuplicateCredentials           = herodot.ErrBadRequest.WithError(text.NewErrorValidationDuplicateCredentials().Text)
 	ErrDuplicateCredentialsOnOIDCLink = herodot.ErrBadRequest.WithError(text.NewErrorValidationDuplicateCredentialsOnOIDCLink().Text)
 )
 
@@ -73,6 +75,11 @@ func (s *ErrorHandler) WriteFlowError(
 	group node.UiNodeGroup,
 	err error,
 ) {
+
+	if errors.Is(err, ErrDuplicateCredentials) {
+		err = schema.NewDuplicateCredentialsError()
+	}
+
 	s.d.Audit().
 		WithError(err).
 		WithRequest(r).
