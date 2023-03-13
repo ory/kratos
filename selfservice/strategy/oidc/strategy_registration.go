@@ -200,18 +200,18 @@ func (s *Strategy) registrationToLogin(w http.ResponseWriter, r *http.Request, r
 	lf, _, err := s.d.LoginHandler().NewLoginFlow(w, r, flow.TypeBrowser, opts...)
 
 	if err != nil {
-		return nil, s.handleError(w, r, rf, providerID, nil, err)
+		return nil, err
 	}
 
 	lf.RequestURL, err = x.TakeOverReturnToParameter(rf.RequestURL, lf.RequestURL)
 	if err != nil {
-		return nil, s.handleError(w, r, rf, providerID, nil, err)
+		return nil, err
 	}
 
 	return lf, nil
 }
 
-func (s *Strategy) processRegistration(w http.ResponseWriter, r *http.Request, a *registration.Flow, token *oauth2.Token, claims *Claims, provider Provider, container *authCodeContainer) (*login.Flow, error) {
+func (s *Strategy) processRegistration(w http.ResponseWriter, r *http.Request, rf *registration.Flow, token *oauth2.Token, claims *Claims, provider Provider, container *authCodeContainer) (*login.Flow, error) {
 	if _, _, err := s.d.PrivilegedIdentityPool().FindByCredentialsIdentifier(r.Context(), identity.CredentialsTypeOIDC, identity.OIDCUniqueID(provider.Config().ID, claims.Subject)); err == nil {
 		// If the identity already exists, we should perform the login flow instead.
 
@@ -226,13 +226,13 @@ func (s *Strategy) processRegistration(w http.ResponseWriter, r *http.Request, a
 			WithField("subject", claims.Subject).
 			Debug("Received successful OpenID Connect callback but user is already registered. Re-initializing login flow now.")
 
-		lf, err := s.registrationToLogin(w, r, a, provider.Config().ID)
+		lf, err := s.registrationToLogin(w, r, rf, provider.Config().ID)
 		if err != nil {
-			return nil, err
+			return nil, s.handleError(w, r, rf, provider.Config().ID, nil, err)
 		}
 
 		if _, err := s.processLogin(w, r, lf, token, claims, provider, container); err != nil {
-			return lf, err
+			return lf, s.handleError(w, r, rf, provider.Config().ID, nil, err)
 		}
 
 		return nil, nil
@@ -241,44 +241,44 @@ func (s *Strategy) processRegistration(w http.ResponseWriter, r *http.Request, a
 	fetch := fetcher.NewFetcher(fetcher.WithClient(s.d.HTTPClient(r.Context())))
 	jn, err := fetch.Fetch(provider.Config().Mapper)
 	if err != nil {
-		return nil, s.handleError(w, r, a, provider.Config().ID, nil, err)
+		return nil, s.handleError(w, r, rf, provider.Config().ID, nil, err)
 	}
 
-	i, err := s.createIdentity(w, r, a, claims, provider, container, jn)
+	i, err := s.createIdentity(w, r, rf, claims, provider, container, jn)
 	if err != nil {
-		return nil, s.handleError(w, r, a, provider.Config().ID, nil, err)
+		return nil, s.handleError(w, r, rf, provider.Config().ID, nil, err)
 	}
 
 	// Validate the identity itself
 	if err := s.d.IdentityValidator().Validate(r.Context(), i); err != nil {
-		return nil, s.handleError(w, r, a, provider.Config().ID, i.Traits, err)
+		return nil, s.handleError(w, r, rf, provider.Config().ID, i.Traits, err)
 	}
 
 	var it string
 	if idToken, ok := token.Extra("id_token").(string); ok {
 		if it, err = s.d.Cipher(r.Context()).Encrypt(r.Context(), []byte(idToken)); err != nil {
-			return nil, s.handleError(w, r, a, provider.Config().ID, i.Traits, err)
+			return nil, s.handleError(w, r, rf, provider.Config().ID, i.Traits, err)
 		}
 	}
 
 	cat, err := s.d.Cipher(r.Context()).Encrypt(r.Context(), []byte(token.AccessToken))
 	if err != nil {
-		return nil, s.handleError(w, r, a, provider.Config().ID, i.Traits, err)
+		return nil, s.handleError(w, r, rf, provider.Config().ID, i.Traits, err)
 	}
 
 	crt, err := s.d.Cipher(r.Context()).Encrypt(r.Context(), []byte(token.RefreshToken))
 	if err != nil {
-		return nil, s.handleError(w, r, a, provider.Config().ID, i.Traits, err)
+		return nil, s.handleError(w, r, rf, provider.Config().ID, i.Traits, err)
 	}
 
 	creds, err := identity.NewCredentialsOIDC(it, cat, crt, provider.Config().ID, claims.Subject)
 	if err != nil {
-		return nil, s.handleError(w, r, a, provider.Config().ID, i.Traits, err)
+		return nil, s.handleError(w, r, rf, provider.Config().ID, i.Traits, err)
 	}
 
 	i.SetCredentials(s.ID(), *creds)
-	if err := s.d.RegistrationExecutor().PostRegistrationHook(w, r, identity.CredentialsTypeOIDC, a, i); err != nil {
-		return nil, s.handleError(w, r, a, provider.Config().ID, i.Traits, err)
+	if err := s.d.RegistrationExecutor().PostRegistrationHook(w, r, identity.CredentialsTypeOIDC, rf, i); err != nil {
+		return nil, s.handleError(w, r, rf, provider.Config().ID, i.Traits, err)
 	}
 
 	return nil, nil
