@@ -481,7 +481,7 @@ func TestStrategy(t *testing.T) {
 		})
 	})
 
-	t.Run("case=should fail to register if email is already being used by password credentials", func(t *testing.T) {
+	t.Run("case=should fail to register and return fresh login flow if email is already being used by password credentials", func(t *testing.T) {
 		subject = "email-exist-with-password-strategy@ory.sh"
 		scope = []string{"openid"}
 
@@ -499,7 +499,8 @@ func TestStrategy(t *testing.T) {
 			r := newRegistrationFlow(t, returnTS.URL, time.Minute)
 			action := afv(t, r.ID, "valid")
 			res, body := makeRequest(t, "valid", action, url.Values{})
-			aue(t, res, body, "An account with the same identifier (email, phone, username, ...) exists already.")
+			aue(t, res, body, "An account with the same identifier (email, phone, username, ...) exists already. Please sign in to your existing account and link your social profile in the settings page.")
+			require.Contains(t, gjson.GetBytes(body, "ui.action").String(), "/self-service/login")
 		})
 
 		t.Run("case=should fail login", func(t *testing.T) {

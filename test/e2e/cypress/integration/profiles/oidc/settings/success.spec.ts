@@ -42,7 +42,7 @@ context("Social Sign In Settings Success", () => {
         cy.get('input[name="traits.website"]').clear().type(website)
         cy.triggerOidc(app, "hydra")
 
-        cy.get('[data-testid="ui/message/4000007"]').should(
+        cy.get('[data-testid="ui/message/4000027"]').should(
           "contain.text",
           "An account with the same identifier",
         )

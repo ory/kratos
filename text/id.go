@@ -118,6 +118,7 @@ const (
 	ErrorValidationMinItems
 	ErrorValidationUniqueItems
 	ErrorValidationWrongType
+	ErrorValidationDuplicateCredentialsOnOIDCLink
 )
 
 const (

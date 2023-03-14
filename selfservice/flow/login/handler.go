@@ -102,6 +102,14 @@ func WithFlowReturnTo(returnTo string) FlowOption {
 	}
 }
 
+func WithFormErrorMessage(messages []text.Message) FlowOption {
+	return func(f *Flow) {
+		for i := range messages {
+			f.UI.Messages.Add(&messages[i])
+		}
+	}
+}
+
 func (h *Handler) NewLoginFlow(w http.ResponseWriter, r *http.Request, ft flow.Type, opts ...FlowOption) (*Flow, *session.Session, error) {
 	conf := h.d.Config()
 	f, err := NewFlow(conf, conf.SelfServiceFlowLoginRequestLifespan(r.Context()), h.d.GenerateCSRFToken(r), r, ft)

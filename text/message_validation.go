@@ -164,6 +164,15 @@ func NewErrorValidationDuplicateCredentials() *Message {
 	}
 }
 
+func NewErrorValidationDuplicateCredentialsOnOIDCLink() *Message {
+	return &Message{
+		ID:      ErrorValidationDuplicateCredentialsOnOIDCLink,
+		Text:    "An account with the same identifier (email, phone, username, ...) exists already. Please sign in to your existing account and link your social profile in the settings page.",
+		Type:    Error,
+		Context: context(nil),
+	}
+}
+
 func NewErrorValidationTOTPVerifierWrong() *Message {
 	return &Message{
 		ID:      ErrorValidationTOTPVerifierWrong,
