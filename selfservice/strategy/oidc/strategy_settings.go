@@ -12,12 +12,15 @@ import (
 	"time"
 
 	"github.com/tidwall/sjson"
+	"go.opentelemetry.io/otel/attribute"
 
 	"golang.org/x/oauth2"
 
 	"github.com/ory/kratos/continuity"
 	"github.com/ory/kratos/selfservice/strategy"
+	"github.com/ory/kratos/x/events"
 	"github.com/ory/x/decoderx"
+	"github.com/ory/x/otelx/semconv"
 
 	"github.com/ory/kratos/session"
 
@@ -432,6 +435,13 @@ func (s *Strategy) linkProvider(w http.ResponseWriter, r *http.Request, ctxUpdat
 			return s.handleSettingsError(w, r, ctxUpdate, p, err)
 		}
 	}
+
+	events.Add(r.Context(), s.d, events.AccountLinked,
+		attribute.String(semconv.AttrIdentityID, i.ID.String()),
+		attribute.String("ProviderLabel", provider.Config().Label),
+		attribute.String("ProviderID", provider.Config().ID),
+		attribute.String("ProviderProvider", provider.Config().Provider),
+	)
 
 	i.Credentials[s.ID()] = *creds
 	if err := s.d.SettingsHookExecutor().PostSettingsHook(w, r, s.SettingsStrategyID(), ctxUpdate, i, settings.WithCallback(func(ctxUpdate *settings.UpdateContext) error {

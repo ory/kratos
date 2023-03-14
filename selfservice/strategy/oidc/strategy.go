@@ -100,6 +100,8 @@ type dependencies interface {
 	cipher.Provider
 
 	jsonnetsecure.VMProvider
+
+	x.NetworkIDProvider
 }
 
 func isForced(req interface{}) bool {
