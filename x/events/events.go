@@ -3,7 +3,7 @@ package events
 import (
 	"context"
 
-	"github.com/gofrs/uuid"
+	"github.com/ory/kratos/x"
 	"github.com/ory/x/otelx/semconv"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/trace"
@@ -38,16 +38,12 @@ const (
 	AdminSessionTerminated      = "AdminSessionTerminated"
 )
 
-type NetworkIDProvider interface {
-	NetworkID(ctx context.Context) uuid.UUID
-}
-
 // Add adds an event to the current span in the context.
-func Add(ctx context.Context, n NetworkIDProvider, event string, opt ...trace.EventOption) {
+func Add(ctx context.Context, n x.NetworkIDProvider, event string, opt ...attribute.KeyValue) {
 	trace.SpanFromContext(ctx).AddEvent(
 		event,
-		append(opt, trace.WithAttributes(
-			attribute.String(semconv.AttrNID, n.NetworkID(ctx).String()),
-		))...,
+		trace.WithAttributes(
+			append(opt, attribute.String(semconv.AttrNID, n.NetworkID(ctx).String()))...,
+		),
 	)
 }
