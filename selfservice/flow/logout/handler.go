@@ -8,18 +8,22 @@ import (
 	"net/url"
 
 	"github.com/pkg/errors"
+	"go.opentelemetry.io/otel/attribute"
 
 	"github.com/ory/herodot"
 	"github.com/ory/x/decoderx"
+	"github.com/ory/x/otelx/semconv"
 	"github.com/ory/x/sqlcon"
 	"github.com/ory/x/urlx"
 
 	"github.com/julienschmidt/httprouter"
 
 	"github.com/ory/kratos/driver/config"
+	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/selfservice/errorx"
 	"github.com/ory/kratos/session"
 	"github.com/ory/kratos/x"
+	"github.com/ory/kratos/x/events"
 )
 
 const (
@@ -36,6 +40,7 @@ type (
 		session.PersistenceProvider
 		errorx.ManagementProvider
 		config.Provider
+		x.NetworkIDProvider
 	}
 	HandlerProvider interface {
 		LogoutHandler() *Handler
@@ -198,6 +203,16 @@ func (h *Handler) performNativeLogout(w http.ResponseWriter, r *http.Request, _ 
 		h.d.Writer().WriteError(w, r, err)
 		return
 	}
+	sess, err := h.d.SessionPersister().GetSessionByToken(r.Context(), p.SessionToken, session.ExpandNothing, identity.ExpandNothing)
+	if err != nil {
+		if errors.Is(err, sqlcon.ErrNoRows) {
+			h.d.Writer().WriteError(w, r, errors.WithStack(herodot.ErrForbidden.WithReason("The provided Ory Session Token could not be found, is invalid, or otherwise malformed.")))
+			return
+		}
+
+		h.d.Writer().WriteError(w, r, err)
+		return
+	}
 
 	if err := h.d.SessionPersister().RevokeSessionByToken(r.Context(), p.SessionToken); err != nil {
 		if errors.Is(err, sqlcon.ErrNoRows) {
@@ -208,6 +223,9 @@ func (h *Handler) performNativeLogout(w http.ResponseWriter, r *http.Request, _ 
 		h.d.Writer().WriteError(w, r, err)
 		return
 	}
+
+	events.Add(r.Context(), h.d, events.SignOut,
+		attribute.String(semconv.AttrIdentityID, sess.IdentityID.String()))
 
 	w.WriteHeader(http.StatusNoContent)
 }
@@ -285,6 +303,10 @@ func (h *Handler) updateLogoutFlow(w http.ResponseWriter, r *http.Request, ps ht
 		h.d.SelfServiceErrorManager().Forward(r.Context(), w, r, err)
 		return
 	}
+
+	events.Add(r.Context(), h.d, events.SignOut,
+		attribute.String(semconv.AttrIdentityID, sess.IdentityID.String()),
+	)
 
 	h.completeLogout(w, r)
 }
