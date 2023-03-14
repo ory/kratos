@@ -183,7 +183,7 @@ func (e *HookExecutor) PostLoginHook(w http.ResponseWriter, r *http.Request, g n
 		events.Add(r.Context(), e.d, events.LoginSuccessful,
 			attribute.String(semconv.AttrIdentityID, i.ID.String()),
 			attribute.String(semconv.AttrClientIP, httpx.ClientIP(r)),
-			attribute.String("flow", string(flow.TypeAPI)),
+			attribute.String("flow", string(a.Type)),
 		)
 
 		response := &APIFlowResponse{Session: s, Token: s.Token}
@@ -208,7 +208,7 @@ func (e *HookExecutor) PostLoginHook(w http.ResponseWriter, r *http.Request, g n
 	events.Add(r.Context(), e.d, events.LoginSuccessful,
 		attribute.String(semconv.AttrIdentityID, i.ID.String()),
 		attribute.String(semconv.AttrClientIP, httpx.ClientIP(r)),
-		attribute.String("flow", string(flow.TypeBrowser)),
+		attribute.String("flow", string(a.Type)),
 	)
 
 	if x.IsJSONRequest(r) {

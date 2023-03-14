@@ -6,6 +6,9 @@ package sql
 import (
 	"context"
 	"fmt"
+	"github.com/ory/kratos/identity"
+	"github.com/ory/kratos/x/events"
+	"go.opentelemetry.io/otel/attribute"
 	"time"
 
 	"github.com/gobuffalo/pop/v6"
@@ -20,9 +23,17 @@ import (
 
 var _ login.FlowPersister = new(Persister)
 
-func (p *Persister) CreateLoginFlow(ctx context.Context, r *login.Flow) error {
+func (p *Persister) CreateLoginFlow(ctx context.Context, r *login.Flow) (err error) {
 	ctx, span := p.r.Tracer(ctx).Tracer().Start(ctx, "persistence.sql.CreateLoginFlow")
 	defer span.End()
+	defer func(e *error) {
+		if e != nil && r.RequestedAAL > identity.AuthenticatorAssuranceLevel1 {
+			events.Add(ctx, p, events.MFAPrompted,
+				attribute.String("LoginMethod", r.Active.String()),
+				attribute.String("RequestedAAL", string(r.RequestedAAL)),
+				attribute.String("flow", string(r.Type)))
+		}
+	}(&err)
 
 	r.NID = p.NetworkID(ctx)
 	r.EnsureInternalContext()
