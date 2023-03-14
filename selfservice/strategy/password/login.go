@@ -7,13 +7,13 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"github.com/ory/kratos/x/events"
+	"github.com/ory/x/otelx/semconv"
+	"go.opentelemetry.io/otel/attribute"
 	"net/http"
 	"time"
 
 	"github.com/ory/kratos/selfservice/flowhelpers"
-	"go.opentelemetry.io/otel/attribute"
-
-	"github.com/ory/x/otelx/semconv"
 	"github.com/ory/x/stringsx"
 
 	"github.com/gofrs/uuid"
@@ -31,7 +31,6 @@ import (
 	"github.com/ory/kratos/text"
 	"github.com/ory/kratos/ui/node"
 	"github.com/ory/kratos/x"
-	"github.com/ory/kratos/x/events"
 )
 
 func (s *Strategy) RegisterLoginRoutes(r *x.RouterPublic) {
@@ -79,14 +78,13 @@ func (s *Strategy) Login(w http.ResponseWriter, r *http.Request, f *login.Flow, 
 	var o identity.CredentialsPassword
 	d := json.NewDecoder(bytes.NewBuffer(c.Config))
 	if err := d.Decode(&o); err != nil {
-		return nil, herodot.ErrInternalServerError.WithReason("The password credentials could not be decoded properly").WithDebug(err.Error()).WithWrap(err)
+		return nil, s.handleLoginError(w, r, f, &p, herodot.ErrInternalServerError.WithReason("The password credentials could not be decoded properly").WithDebug(err.Error()).WithWrap(err))
 	}
 
 	if err := hash.Compare(r.Context(), []byte(p.Password), []byte(o.HashedPassword)); err != nil {
 		err = errors.WithStack(schema.NewInvalidCredentialsError())
 
 		events.Add(r.Context(), s.d, events.LoginFailed,
-			attribute.String(semconv.AttrNID, i.NID.String()),
 			attribute.String(semconv.AttrIdentityID, i.ID.String()),
 			attribute.String("LoginMethod", "Password"),
 			attribute.String("Reason", err.Error()),

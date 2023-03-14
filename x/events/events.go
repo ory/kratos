@@ -10,9 +10,9 @@ import (
 )
 
 const (
-	SignupSuccessful      = "SignupSuccessful"
+	SignupSuccessful      = semconv.EventIdentityCreated
 	SignupFailed          = "SignupFailed"
-	LoginSuccessful       = "LoginSuccessful"
+	LoginSuccessful       = semconv.EventSessionIssued
 	LoginFailed           = "LoginFailed"
 	MFAPrompted           = "MFAPrompted"
 	MFASuccessful         = "MFASuccessful"

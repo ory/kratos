@@ -6,12 +6,9 @@ package login
 import (
 	"context"
 	"fmt"
+	"github.com/ory/kratos/x/events"
 	"net/http"
 	"time"
-
-	"github.com/pkg/errors"
-	"go.opentelemetry.io/otel/attribute"
-	"go.opentelemetry.io/otel/trace"
 
 	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/hydra"
@@ -24,6 +21,8 @@ import (
 	"github.com/ory/x/httpx"
 	"github.com/ory/x/otelx"
 	"github.com/ory/x/otelx/semconv"
+	"github.com/pkg/errors"
+	"go.opentelemetry.io/otel/attribute"
 )
 
 type (
@@ -53,6 +52,8 @@ type (
 		x.TracingProvider
 
 		HooksProvider
+
+		x.NetworkIDProvider
 	}
 	HookExecutor struct {
 		d executorDependencies
@@ -178,14 +179,11 @@ func (e *HookExecutor) PostLoginHook(w http.ResponseWriter, r *http.Request, g n
 			WithField("session_id", s.ID).
 			WithField("identity_id", i.ID).
 			Info("Identity authenticated successfully and was issued an Ory Kratos Session Token.")
-		trace.SpanFromContext(r.Context()).AddEvent(
-			semconv.EventSessionIssued,
-			trace.WithAttributes(
-				attribute.String(semconv.AttrIdentityID, i.ID.String()),
-				attribute.String(semconv.AttrNID, i.NID.String()),
-				attribute.String(semconv.AttrClientIP, httpx.ClientIP(r)),
-				attribute.String("flow", string(flow.TypeAPI)),
-			),
+
+		events.Add(r.Context(), e.d, events.LoginSuccessful,
+			attribute.String(semconv.AttrIdentityID, i.ID.String()),
+			attribute.String(semconv.AttrClientIP, httpx.ClientIP(r)),
+			attribute.String("flow", string(flow.TypeAPI)),
 		)
 
 		response := &APIFlowResponse{Session: s, Token: s.Token}
@@ -207,14 +205,10 @@ func (e *HookExecutor) PostLoginHook(w http.ResponseWriter, r *http.Request, g n
 		WithField("identity_id", i.ID).
 		WithField("session_id", s.ID).
 		Info("Identity authenticated successfully and was issued an Ory Kratos Session Cookie.")
-	trace.SpanFromContext(r.Context()).AddEvent(
-		semconv.EventSessionIssued,
-		trace.WithAttributes(
-			attribute.String(semconv.AttrIdentityID, i.ID.String()),
-			attribute.String(semconv.AttrNID, i.NID.String()),
-			attribute.String(semconv.AttrClientIP, httpx.ClientIP(r)),
-			attribute.String("flow", string(flow.TypeBrowser)),
-		),
+	events.Add(r.Context(), e.d, events.LoginSuccessful,
+		attribute.String(semconv.AttrIdentityID, i.ID.String()),
+		attribute.String(semconv.AttrClientIP, httpx.ClientIP(r)),
+		attribute.String("flow", string(flow.TypeBrowser)),
 	)
 
 	if x.IsJSONRequest(r) {

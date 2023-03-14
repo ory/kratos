@@ -4,6 +4,10 @@
 package registration
 
 import (
+	"github.com/ory/kratos/x/events"
+	"github.com/ory/x/httpx"
+	"github.com/ory/x/otelx/semconv"
+	"go.opentelemetry.io/otel/attribute"
 	"net/http"
 
 	"github.com/ory/kratos/schema"
@@ -37,6 +41,8 @@ type (
 
 		FlowPersistenceProvider
 		HandlerProvider
+
+		x.NetworkIDProvider
 	}
 
 	ErrorHandlerProvider interface{ RegistrationFlowErrorHandler() *ErrorHandler }
@@ -85,6 +91,9 @@ func (s *ErrorHandler) WriteFlowError(
 		WithRequest(r).
 		WithField("registration_flow", f).
 		Info("Encountered self-service flow error.")
+	events.Add(r.Context(), s.d, events.SignupFailed,
+		attribute.String(semconv.AttrClientIP, httpx.ClientIP(r)),
+		attribute.String("flow", string(f.Type)))
 
 	if f == nil {
 		s.forward(w, r, nil, err)
