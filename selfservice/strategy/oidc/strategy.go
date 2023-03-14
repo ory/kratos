@@ -463,8 +463,10 @@ func (s *Strategy) handleError(w http.ResponseWriter, r *http.Request, f flow.Fl
 			if err != nil {
 				return err
 			}
+			// return a new login flow with the error message embedded in the login flow.
 			x.AcceptToRedirectOrJSON(w, r, s.d.Writer(), lf, lf.AppendTo(s.d.Config().SelfServiceFlowLoginUI(r.Context())).String())
-			return nil
+			// ensure the function does not continue to execute
+			return registration.ErrHookAbortFlow
 		}
 
 		rf.UI.Nodes = node.Nodes{}
