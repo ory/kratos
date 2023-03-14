@@ -64,6 +64,8 @@ type registrationStrategyDependencies interface {
 	session.HandlerProvider
 	session.ManagementProvider
 	session.PersistenceProvider
+
+	x.NetworkIDProvider
 }
 
 type Strategy struct {

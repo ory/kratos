@@ -7,11 +7,13 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
-	"github.com/ory/kratos/x/events"
-	"github.com/ory/x/otelx/semconv"
-	"go.opentelemetry.io/otel/attribute"
 	"net/http"
 	"time"
+
+	"go.opentelemetry.io/otel/attribute"
+
+	"github.com/ory/kratos/x/events"
+	"github.com/ory/x/otelx/semconv"
 
 	"github.com/ory/kratos/selfservice/flowhelpers"
 	"github.com/ory/x/stringsx"

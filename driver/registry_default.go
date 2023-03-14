@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"github.com/gofrs/uuid"
+
 	"github.com/ory/x/contextx"
 	"github.com/ory/x/jsonnetsecure"
 

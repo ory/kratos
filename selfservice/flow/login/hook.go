@@ -6,9 +6,13 @@ package login
 import (
 	"context"
 	"fmt"
-	"github.com/ory/kratos/x/events"
 	"net/http"
 	"time"
+
+	"github.com/ory/kratos/x/events"
+
+	"github.com/pkg/errors"
+	"go.opentelemetry.io/otel/attribute"
 
 	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/hydra"
@@ -21,8 +25,6 @@ import (
 	"github.com/ory/x/httpx"
 	"github.com/ory/x/otelx"
 	"github.com/ory/x/otelx/semconv"
-	"github.com/pkg/errors"
-	"go.opentelemetry.io/otel/attribute"
 )
 
 type (

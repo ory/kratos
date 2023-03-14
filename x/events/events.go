@@ -1,12 +1,16 @@
+// Copyright © 2023 Ory Corp
+// SPDX-License-Identifier: Apache-2.0
+
 package events
 
 import (
 	"context"
 
-	"github.com/ory/kratos/x"
-	"github.com/ory/x/otelx/semconv"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/trace"
+
+	"github.com/ory/kratos/x"
+	"github.com/ory/x/otelx/semconv"
 )
 
 const (

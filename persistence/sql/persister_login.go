@@ -6,10 +6,12 @@ package sql
 import (
 	"context"
 	"fmt"
+	"time"
+
+	"go.opentelemetry.io/otel/attribute"
+
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/x/events"
-	"go.opentelemetry.io/otel/attribute"
-	"time"
 
 	"github.com/gobuffalo/pop/v6"
 

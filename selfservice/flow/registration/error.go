@@ -4,11 +4,13 @@
 package registration
 
 import (
+	"net/http"
+
+	"go.opentelemetry.io/otel/attribute"
+
 	"github.com/ory/kratos/x/events"
 	"github.com/ory/x/httpx"
 	"github.com/ory/x/otelx/semconv"
-	"go.opentelemetry.io/otel/attribute"
-	"net/http"
 
 	"github.com/ory/kratos/schema"
 	"github.com/ory/kratos/ui/node"
