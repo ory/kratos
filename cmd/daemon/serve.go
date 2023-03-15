@@ -6,8 +6,9 @@ package daemon
 import (
 	stdctx "context"
 	"crypto/tls"
-	"github.com/ory/x/otelx/semconv"
 	"net/http"
+
+	"github.com/ory/x/otelx/semconv"
 
 	"github.com/pkg/errors"
 	"github.com/rs/cors"
@@ -87,6 +88,7 @@ func ServePublic(r driver.Registry, cmd *cobra.Command, args []string, slOpts *s
 		publicLogger.ExcludePaths(healthx.AliveCheckPath, healthx.ReadyCheckPath)
 	}
 
+	n.Use(semconv.Middleware)
 	n.Use(publicLogger)
 	n.Use(x.HTTPLoaderContextMiddleware(r))
 	n.Use(sqa(ctx, cmd, r))
@@ -99,8 +101,6 @@ func ServePublic(r driver.Registry, cmd *cobra.Command, args []string, slOpts *s
 	n.UseFunc(x.CleanPath) // Prevent double slashes from breaking CSRF.
 	r.WithCSRFHandler(csrf)
 	n.UseHandler(r.CSRFHandler())
-
-	n.Use(semconv.Middleware)
 
 	// Disable CSRF for these endpoints
 	csrf.DisablePath(healthx.AliveCheckPath)
@@ -171,13 +171,12 @@ func ServeAdmin(r driver.Registry, cmd *cobra.Command, args []string, slOpts *se
 	if r.Config().DisableAdminHealthRequestLog(ctx) {
 		adminLogger.ExcludePaths(x.AdminPrefix+healthx.AliveCheckPath, x.AdminPrefix+healthx.ReadyCheckPath, x.AdminPrefix+prometheus.MetricsPrometheusPath)
 	}
+	n.Use(semconv.Middleware)
 	n.Use(adminLogger)
 	n.UseFunc(x.RedirectAdminMiddleware)
 	n.Use(x.HTTPLoaderContextMiddleware(r))
 	n.Use(sqa(ctx, cmd, r))
 	n.Use(r.PrometheusManager())
-
-	n.Use(semconv.Middleware)
 
 	router := x.NewRouterAdmin()
 	r.RegisterAdminRoutes(ctx, router)

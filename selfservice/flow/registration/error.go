@@ -7,8 +7,10 @@ import (
 	"net/http"
 
 	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/trace"
 
 	"github.com/ory/kratos/x/events"
+	"github.com/ory/x/otelx/semconv"
 
 	"github.com/ory/kratos/schema"
 	"github.com/ory/kratos/ui/node"
@@ -91,8 +93,20 @@ func (s *ErrorHandler) WriteFlowError(
 		WithRequest(r).
 		WithField("registration_flow", f).
 		Info("Encountered self-service flow error.")
-	events.Add(r.Context(), s.d, events.SignupFailed,
-		attribute.String("flow", string(f.Type)))
+
+	var flowType flow.Type
+	if f != nil {
+		flowType = f.Type
+	}
+
+	trace.SpanFromContext(r.Context()).AddEvent(
+		events.LoginSuccessful.String(),
+		trace.WithAttributes(
+			append(semconv.AttributesFromContext(r.Context()),
+				attribute.String("flow", string(flowType)),
+			)...,
+		),
+	)
 
 	if f == nil {
 		s.forward(w, r, nil, err)

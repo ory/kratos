@@ -13,6 +13,7 @@ import (
 
 	"github.com/tidwall/sjson"
 	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/trace"
 
 	"golang.org/x/oauth2"
 
@@ -436,11 +437,17 @@ func (s *Strategy) linkProvider(w http.ResponseWriter, r *http.Request, ctxUpdat
 		}
 	}
 
-	events.Add(r.Context(), s.d, events.AccountLinked,
-		semconv.AttrIdentityID(i.ID),
-		attribute.String("ProviderLabel", provider.Config().Label),
-		attribute.String("ProviderID", provider.Config().ID),
-		attribute.String("ProviderProvider", provider.Config().Provider),
+	// TODO: this is probably not the right place to do this, but we don't have way to tell whether OIDC providers changed inside the hook executors.
+	trace.SpanFromContext(r.Context()).AddEvent(
+		events.LoginSuccessful.String(),
+		trace.WithAttributes(
+			append(semconv.AttributesFromContext(r.Context()),
+				semconv.AttrIdentityID(i.ID),
+				attribute.String("ProviderLabel", provider.Config().Label),
+				attribute.String("ProviderID", provider.Config().ID),
+				attribute.String("ProviderProvider", provider.Config().Provider),
+			)...,
+		),
 	)
 
 	i.Credentials[s.ID()] = *creds

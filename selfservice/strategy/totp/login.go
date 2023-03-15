@@ -8,6 +8,7 @@ import (
 	"net/http"
 
 	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/trace"
 
 	"github.com/ory/kratos/x/events"
 	"github.com/ory/x/otelx/semconv"
@@ -127,12 +128,17 @@ func (s *Strategy) Login(w http.ResponseWriter, r *http.Request, f *login.Flow, 
 	}
 
 	if !totp.Validate(p.TOTPCode, key.Secret()) {
-		events.Add(r.Context(), s.d, events.MFAFailed,
-			semconv.AttrIdentityID(i.ID),
-			attribute.String("LoginMethod", f.Active.String()),
-			attribute.String("RequestedAAL", string(f.RequestedAAL)),
-			attribute.String("flow", string(f.Type)))
-
+		trace.SpanFromContext(r.Context()).AddEvent(
+			events.LoginSuccessful.String(),
+			trace.WithAttributes(
+				append(semconv.AttributesFromContext(r.Context()),
+					semconv.AttrIdentityID(i.ID),
+					attribute.String("LoginMethod", f.Active.String()),
+					attribute.String("RequestedAAL", string(f.RequestedAAL)),
+					attribute.String("flow", string(f.Type)),
+				)...,
+			),
+		)
 		return nil, s.handleLoginError(r, f, errors.WithStack(schema.NewTOTPVerifierWrongError("#/")))
 	}
 
@@ -141,11 +147,16 @@ func (s *Strategy) Login(w http.ResponseWriter, r *http.Request, f *login.Flow, 
 		return nil, s.handleLoginError(r, f, errors.WithStack(herodot.ErrInternalServerError.WithReason("Could not update flow").WithDebug(err.Error())))
 	}
 
-	events.Add(r.Context(), s.d, events.MFASuccessful,
-		semconv.AttrIdentityID(i.ID),
-		attribute.String("LoginMethod", f.Active.String()),
-		attribute.String("RequestedAAL", string(f.RequestedAAL)),
-		attribute.String("flow", string(f.Type)))
-
+	trace.SpanFromContext(r.Context()).AddEvent(
+		events.LoginSuccessful.String(),
+		trace.WithAttributes(
+			append(semconv.AttributesFromContext(r.Context()),
+				semconv.AttrIdentityID(i.ID),
+				attribute.String("LoginMethod", f.Active.String()),
+				attribute.String("RequestedAAL", string(f.RequestedAAL)),
+				attribute.String("flow", string(f.Type)),
+			)...,
+		),
+	)
 	return i, nil
 }

@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/trace"
 
 	"github.com/ory/kratos/x/events"
 	"github.com/ory/x/otelx/semconv"
@@ -86,10 +87,16 @@ func (s *Strategy) Login(w http.ResponseWriter, r *http.Request, f *login.Flow, 
 	if err := hash.Compare(r.Context(), []byte(p.Password), []byte(o.HashedPassword)); err != nil {
 		err = errors.WithStack(schema.NewInvalidCredentialsError())
 
-		events.Add(r.Context(), s.d, events.LoginFailed,
-			semconv.AttrIdentityID(i.ID),
-			attribute.String("LoginMethod", "Password"),
-			attribute.String("Reason", err.Error()),
+		trace.SpanFromContext(r.Context()).AddEvent(
+			events.LoginSuccessful.String(),
+			trace.WithAttributes(
+				append(semconv.AttributesFromContext(r.Context()),
+					semconv.AttrIdentityID(i.ID),
+					// TODO: replace with consts
+					attribute.String("LoginMethod", "Password"),
+					attribute.String("Reason", err.Error()),
+				)...,
+			),
 		)
 		return nil, s.handleLoginError(w, r, f, &p, err)
 	}

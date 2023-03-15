@@ -13,6 +13,7 @@ import (
 
 	"github.com/pkg/errors"
 	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/trace"
 
 	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/hydra"
@@ -181,9 +182,14 @@ func (e *HookExecutor) PostLoginHook(w http.ResponseWriter, r *http.Request, g n
 			WithField("identity_id", i.ID).
 			Info("Identity authenticated successfully and was issued an Ory Kratos Session Token.")
 
-		events.Add(r.Context(), e.d, events.LoginSuccessful,
-			semconv.AttrIdentityID(i.ID),
-			attribute.String("flow", string(a.Type)),
+		trace.SpanFromContext(r.Context()).AddEvent(
+			events.LoginSuccessful.String(),
+			trace.WithAttributes(
+				append(semconv.AttributesFromContext(r.Context()),
+					semconv.AttrIdentityID(i.ID),
+					attribute.String("flow", string(a.Type)),
+				)...,
+			),
 		)
 
 		response := &APIFlowResponse{Session: s, Token: s.Token}
@@ -206,9 +212,14 @@ func (e *HookExecutor) PostLoginHook(w http.ResponseWriter, r *http.Request, g n
 		WithField("session_id", s.ID).
 		Info("Identity authenticated successfully and was issued an Ory Kratos Session Cookie.")
 
-	events.Add(r.Context(), e.d, events.LoginSuccessful,
-		semconv.AttrIdentityID(i.ID),
-		attribute.String("flow", string(a.Type)),
+	trace.SpanFromContext(r.Context()).AddEvent(
+		events.LoginSuccessful.String(),
+		trace.WithAttributes(
+			append(semconv.AttributesFromContext(r.Context()),
+				semconv.AttrIdentityID(i.ID),
+				attribute.String("flow", string(a.Type)),
+			)...,
+		),
 	)
 
 	if x.IsJSONRequest(r) {
