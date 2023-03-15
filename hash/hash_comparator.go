@@ -60,6 +60,9 @@ func CompareBcrypt(_ context.Context, password []byte, hash []byte) error {
 
 	err := bcrypt.CompareHashAndPassword(hash, password)
 	if err != nil {
+		if errors.Is(err, bcrypt.ErrMismatchedHashAndPassword) {
+			return errors.WithStack(ErrMismatchedHashAndPassword)
+		}
 		return err
 	}
 
