@@ -5,7 +5,7 @@
 
 **Table of Contents**
 
-- [ (2023-03-13)](#2023-03-13)
+- [ (2023-03-15)](#2023-03-15)
   - [Breaking Changes](#breaking-changes)
     - [Bug Fixes](#bug-fixes)
     - [Code Refactoring](#code-refactoring)
@@ -294,7 +294,7 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# [](https://github.com/ory/kratos/compare/v0.11.1...v) (2023-03-13)
+# [](https://github.com/ory/kratos/compare/v0.11.1...v) (2023-03-15)
 
 ## Breaking Changes
 
@@ -404,6 +404,9 @@ flows.
 - Webhook tracing and missing defers
   ([#3145](https://github.com/ory/kratos/issues/3145))
   ([46eb063](https://github.com/ory/kratos/commit/46eb063f414a0ad9b901407cf781002ccb97ad93))
+- Wrong context in logout trace span
+  ([#3168](https://github.com/ory/kratos/issues/3168))
+  ([b9ccccf](https://github.com/ory/kratos/commit/b9ccccf0f1b6a5ba903293133b2be15b528c8308))
 
 ### Code Refactoring
 
@@ -464,6 +467,37 @@ flows.
   ([c288d4d](https://github.com/ory/kratos/commit/c288d4d136bca1a9ed3931b4827967eb44e80ede))
 - Improve tracing span naming in hooks
   ([bf828d3](https://github.com/ory/kratos/commit/bf828d3f5d56a963529e98958f4039f0dc569979))
+- Improved oidc flow on duplicate account registration
+  ([#3151](https://github.com/ory/kratos/issues/3151))
+  ([4d2fda4](https://github.com/ory/kratos/commit/4d2fda453b16349589e941af06fcce312c2e5c37)):
+
+  This PR improves the OIDC registration flow when a duplicate account error
+  happens.
+
+  Currently the flow looks as follows:
+
+  1. User registers with password (or other credentials)
+  2. User forgot they registered with password and tries to login through an
+     OIDC provider (e.g. Google)
+  3. Kratos attempts a registration since the OIDC credentials do not exist
+  4. (optional) User needs to add missing traits (e.g. full name) which could
+     not be retrieved from the OIDC provider
+  5. User gets a duplicate account error with a "Continue" button.
+  6. After submitting the "Continue" button the flow continues again to the OIDC
+     provider, back to Kratos and redirects to UI with duplicate error (Steps 3
+     to 5)
+
+  Instead of causing a confusing redirect loop we should show the user the error
+  with a fresh login flow (since the account exists). This also gives the user
+  the option to do a recovery flow.
+
+  1. User registers with password (or other credentials)
+  2. User forgot they registered with password and tries to login through an
+     OIDC provider (e.g. Google)
+  3. Kratos attempts a registration since the OIDC credentials do not exist
+  4. (optional) User needs to add missing traits
+  5. User is returned to a Login flow with the duplication error
+
 - Let DB generate ID for session devices
   ([62402c7](https://github.com/ory/kratos/commit/62402c7bed3c57ef5b957572e4b84f56d9c530ae))
 - Make notification to unknown recipients configurable
