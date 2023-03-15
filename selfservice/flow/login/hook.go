@@ -22,7 +22,6 @@ import (
 	"github.com/ory/kratos/ui/container"
 	"github.com/ory/kratos/ui/node"
 	"github.com/ory/kratos/x"
-	"github.com/ory/x/httpx"
 	"github.com/ory/x/otelx"
 	"github.com/ory/x/otelx/semconv"
 )
@@ -183,8 +182,7 @@ func (e *HookExecutor) PostLoginHook(w http.ResponseWriter, r *http.Request, g n
 			Info("Identity authenticated successfully and was issued an Ory Kratos Session Token.")
 
 		events.Add(r.Context(), e.d, events.LoginSuccessful,
-			attribute.String(semconv.AttrIdentityID, i.ID.String()),
-			attribute.String(semconv.AttrClientIP, httpx.ClientIP(r)),
+			semconv.AttrIdentityID(i.ID),
 			attribute.String("flow", string(a.Type)),
 		)
 
@@ -207,9 +205,9 @@ func (e *HookExecutor) PostLoginHook(w http.ResponseWriter, r *http.Request, g n
 		WithField("identity_id", i.ID).
 		WithField("session_id", s.ID).
 		Info("Identity authenticated successfully and was issued an Ory Kratos Session Cookie.")
+
 	events.Add(r.Context(), e.d, events.LoginSuccessful,
-		attribute.String(semconv.AttrIdentityID, i.ID.String()),
-		attribute.String(semconv.AttrClientIP, httpx.ClientIP(r)),
+		semconv.AttrIdentityID(i.ID),
 		attribute.String("flow", string(a.Type)),
 	)
 

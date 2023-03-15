@@ -10,7 +10,6 @@ import (
 	"go.opentelemetry.io/otel/attribute"
 
 	"github.com/ory/kratos/x/events"
-	"github.com/ory/x/httpx"
 	"github.com/ory/x/otelx/semconv"
 
 	"github.com/gofrs/uuid"
@@ -129,8 +128,7 @@ func (s *Strategy) Login(w http.ResponseWriter, r *http.Request, f *login.Flow, 
 
 	if !totp.Validate(p.TOTPCode, key.Secret()) {
 		events.Add(r.Context(), s.d, events.MFAFailed,
-			attribute.String(semconv.AttrIdentityID, i.ID.String()),
-			attribute.String(semconv.AttrClientIP, httpx.ClientIP(r)),
+			semconv.AttrIdentityID(i.ID),
 			attribute.String("LoginMethod", f.Active.String()),
 			attribute.String("RequestedAAL", string(f.RequestedAAL)),
 			attribute.String("flow", string(f.Type)))
@@ -144,8 +142,7 @@ func (s *Strategy) Login(w http.ResponseWriter, r *http.Request, f *login.Flow, 
 	}
 
 	events.Add(r.Context(), s.d, events.MFASuccessful,
-		attribute.String(semconv.AttrIdentityID, i.ID.String()),
-		attribute.String(semconv.AttrClientIP, httpx.ClientIP(r)),
+		semconv.AttrIdentityID(i.ID),
 		attribute.String("LoginMethod", f.Active.String()),
 		attribute.String("RequestedAAL", string(f.RequestedAAL)),
 		attribute.String("flow", string(f.Type)))

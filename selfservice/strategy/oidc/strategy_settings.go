@@ -437,7 +437,7 @@ func (s *Strategy) linkProvider(w http.ResponseWriter, r *http.Request, ctxUpdat
 	}
 
 	events.Add(r.Context(), s.d, events.AccountLinked,
-		attribute.String(semconv.AttrIdentityID, i.ID.String()),
+		semconv.AttrIdentityID(i.ID),
 		attribute.String("ProviderLabel", provider.Config().Label),
 		attribute.String("ProviderID", provider.Config().ID),
 		attribute.String("ProviderProvider", provider.Config().Provider),

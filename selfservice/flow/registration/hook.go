@@ -14,7 +14,6 @@ import (
 	"github.com/pkg/errors"
 	"go.opentelemetry.io/otel/attribute"
 
-	"github.com/ory/x/httpx"
 	"github.com/ory/x/otelx/semconv"
 	"github.com/ory/x/sqlcon"
 
@@ -167,8 +166,7 @@ func (e *HookExecutor) PostRegistrationHook(w http.ResponseWriter, r *http.Reque
 		Info("A new identity has registered using self-service registration.")
 	events.Add(r.Context(), e.d,
 		events.SignupSuccessful,
-		attribute.String(semconv.AttrIdentityID, i.ID.String()),
-		attribute.String(semconv.AttrClientIP, httpx.ClientIP(r)),
+		semconv.AttrIdentityID(i.ID),
 		attribute.String("flow", string(a.Type)),
 	)
 

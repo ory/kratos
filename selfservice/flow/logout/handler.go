@@ -8,7 +8,6 @@ import (
 	"net/url"
 
 	"github.com/pkg/errors"
-	"go.opentelemetry.io/otel/attribute"
 
 	"github.com/ory/herodot"
 	"github.com/ory/x/decoderx"
@@ -224,8 +223,7 @@ func (h *Handler) performNativeLogout(w http.ResponseWriter, r *http.Request, _ 
 		return
 	}
 
-	events.Add(r.Context(), h.d, events.SignOut,
-		attribute.String(semconv.AttrIdentityID, sess.IdentityID.String()))
+	events.Add(r.Context(), h.d, events.SignOut, semconv.AttrIdentityID(sess.IdentityID))
 
 	w.WriteHeader(http.StatusNoContent)
 }
@@ -304,9 +302,7 @@ func (h *Handler) updateLogoutFlow(w http.ResponseWriter, r *http.Request, ps ht
 		return
 	}
 
-	events.Add(r.Context(), h.d, events.SignOut,
-		attribute.String(semconv.AttrIdentityID, sess.IdentityID.String()),
-	)
+	events.Add(r.Context(), h.d, events.SignOut, semconv.AttrIdentityID(sess.IdentityID))
 
 	h.completeLogout(w, r)
 }

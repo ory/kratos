@@ -14,23 +14,23 @@ import (
 )
 
 const (
-	SignupSuccessful      = semconv.EventIdentityCreated
-	SignupFailed          = "SignupFailed"
-	LoginSuccessful       = semconv.EventSessionIssued
-	LoginFailed           = "LoginFailed"
-	MFAPrompted           = "MFAPrompted"
-	MFASuccessful         = "MFASuccessful"
-	MFAFailed             = "MFAFailed"
-	RecoveryStarted       = "RecoveryStarted"
-	RecoverySuccessful    = "RecoverySuccessful"
-	VerificationStarted   = "VerificationStarted"
-	VerificationSuccesful = "VerificationSuccesful"
-	ProfileUpdated        = "ProfileUpdated"
-	ProfileUpdateFailed   = "ProfileUpdateFailed"
-	CredentialsAdded      = "CredentialsAdded"
-	CredentialsRemoved    = "CredentialsRemoved"
-	AccountLinked         = "AccountLinked"
-	SignOut               = "SignOut"
+	SignupSuccessful      semconv.Event = semconv.EventIdentityCreated
+	SignupFailed          semconv.Event = "SignupFailed"
+	LoginSuccessful       semconv.Event = semconv.EventSessionIssued
+	LoginFailed           semconv.Event = "LoginFailed"
+	MFAPrompted           semconv.Event = "MFAPrompted"
+	MFASuccessful         semconv.Event = "MFASuccessful"
+	MFAFailed             semconv.Event = "MFAFailed"
+	RecoveryStarted       semconv.Event = "RecoveryStarted"
+	RecoverySuccessful    semconv.Event = "RecoverySuccessful"
+	VerificationStarted   semconv.Event = "VerificationStarted"
+	VerificationSuccesful semconv.Event = "VerificationSuccesful"
+	ProfileUpdated        semconv.Event = "ProfileUpdated"
+	ProfileUpdateFailed   semconv.Event = "ProfileUpdateFailed"
+	CredentialsAdded      semconv.Event = "CredentialsAdded"
+	CredentialsRemoved    semconv.Event = "CredentialsRemoved"
+	AccountLinked         semconv.Event = "AccountLinked"
+	SignOut               semconv.Event = "SignOut"
 )
 
 const (
@@ -43,11 +43,11 @@ const (
 )
 
 // Add adds an event to the current span in the context.
-func Add(ctx context.Context, n x.NetworkIDProvider, event string, opt ...attribute.KeyValue) {
-	trace.SpanFromContext(ctx).AddEvent(
-		event,
+func Add(ctx context.Context, n x.NetworkIDProvider, event semconv.Event, opt ...attribute.KeyValue) {
+	trace.SpanFromContext(semconv.ContextWithAttributes(ctx)).AddEvent(
+		string(event),
 		trace.WithAttributes(
-			append(opt, attribute.String(semconv.AttrNID, n.NetworkID(ctx).String()))...,
+			opt...,
 		),
 	)
 }
