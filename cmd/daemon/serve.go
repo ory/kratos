@@ -6,6 +6,7 @@ package daemon
 import (
 	stdctx "context"
 	"crypto/tls"
+	"github.com/ory/x/otelx/semconv"
 	"net/http"
 
 	"github.com/pkg/errors"
@@ -99,6 +100,8 @@ func ServePublic(r driver.Registry, cmd *cobra.Command, args []string, slOpts *s
 	r.WithCSRFHandler(csrf)
 	n.UseHandler(r.CSRFHandler())
 
+	n.Use(semconv.Middleware)
+
 	// Disable CSRF for these endpoints
 	csrf.DisablePath(healthx.AliveCheckPath)
 	csrf.DisablePath(healthx.ReadyCheckPath)
@@ -173,6 +176,8 @@ func ServeAdmin(r driver.Registry, cmd *cobra.Command, args []string, slOpts *se
 	n.Use(x.HTTPLoaderContextMiddleware(r))
 	n.Use(sqa(ctx, cmd, r))
 	n.Use(r.PrometheusManager())
+
+	n.Use(semconv.Middleware)
 
 	router := x.NewRouterAdmin()
 	r.RegisterAdminRoutes(ctx, router)

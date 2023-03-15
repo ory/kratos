@@ -5,9 +5,15 @@ package webauthn
 
 import (
 	"encoding/json"
+	"go.opentelemetry.io/otel/trace"
 	"net/http"
 	"strings"
 	"time"
+
+	"go.opentelemetry.io/otel/attribute"
+
+	"github.com/ory/kratos/x/events"
+	"github.com/ory/x/otelx/semconv"
 
 	"github.com/ory/kratos/selfservice/flowhelpers"
 
@@ -329,6 +335,18 @@ func (s *Strategy) loginAuthenticate(_ http.ResponseWriter, r *http.Request, f *
 	if err = s.d.LoginFlowPersister().UpdateLoginFlow(r.Context(), f); err != nil {
 		return nil, s.handleLoginError(r, f, errors.WithStack(herodot.ErrInternalServerError.WithReason("Could not update flow").WithDebug(err.Error())))
 	}
+
+	trace.SpanFromContext(r.Context()).AddEvent(
+		events.MFASuccessful.String(),
+		trace.WithAttributes(
+			append(semconv.AttributesFromContext(r.Context()),
+				semconv.AttrIdentityID(i.ID),
+				attribute.String("LoginMethod", f.Active.String()),
+				attribute.String("RequestedAAL", string(f.RequestedAAL)),
+				attribute.String("flow", string(f.Type)),
+			)...,
+		),
+	)
 
 	return i, nil
 }
