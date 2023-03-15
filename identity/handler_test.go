@@ -22,6 +22,7 @@ import (
 	"github.com/ory/x/snapshotx"
 
 	"github.com/bxcodec/faker/v3"
+	"github.com/peterhellberg/link"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/tidwall/gjson"
@@ -1004,13 +1005,49 @@ func TestHandler(t *testing.T) {
 	})
 
 	t.Run("case=should list all identities", func(t *testing.T) {
+		expected, err := reg.IdentityPool().ListIdentities(ctx, identity.ListIdentityParameters{PerPage: 1000})
+		require.NoError(t, err)
+		expectedIDs := make([]string, len(expected))
+		for k, v := range expected {
+			expectedIDs[k] = v.ID.String()
+		}
+
 		for name, ts := range map[string]*httptest.Server{"public": publicTS, "admin": adminTS} {
 			t.Run("endpoint="+name, func(t *testing.T) {
 				res := get(t, ts, "/identities", http.StatusOK)
-				assert.False(t, res.Get("0.credentials").Exists(), "credentials config should be omitted: %s", res.Raw)
-				assert.True(t, res.Get("0.metadata_public").Exists(), "metadata_public config should be included: %s", res.Raw)
-				assert.True(t, res.Get("0.metadata_admin").Exists(), "metadata_admin config should be included: %s", res.Raw)
-				assert.EqualValues(t, "baz", res.Get(`#(traits.bar=="baz").traits.bar`).String(), "%s", res.Raw)
+				assert.Falsef(t, res.Get("0.credentials").Exists(), "credentials config should be omitted: %s", res.Raw)
+				assert.Truef(t, res.Get("0.metadata_public").Exists(), "metadata_public config should be included: %s", res.Raw)
+				assert.Truef(t, res.Get("0.metadata_admin").Exists(), "metadata_admin config should be included: %s", res.Raw)
+				assert.Truef(t, res.Get(`#(traits.bar=="baz").traits.bar`).Exists(), "some identity should have the traits {bar: baz}: %s", res.Raw)
+
+				assert.EqualValuesf(t, len(expectedIDs), int(res.Get("#").Num), "%s", res.Raw)
+				res.Get("#.id").ForEach(func(key, value gjson.Result) bool {
+					return assert.Contains(t, expectedIDs, value.String(), "%s", res.Raw)
+				})
+
+				actualIDs := make([]string, 0, len(expectedIDs))
+				for reqURL := ts.URL + "/identities?per_page=5&page=1"; ; {
+					res, err := ts.Client().Get(reqURL)
+					require.NoError(t, err)
+					body, err := io.ReadAll(res.Body)
+					require.NoError(t, err)
+					require.NoError(t, res.Body.Close())
+
+					require.EqualValues(t, http.StatusOK, res.StatusCode, "%s", body)
+					var ids []identity.Identity
+					require.NoError(t, json.Unmarshal(body, &ids))
+					for _, id := range ids {
+						actualIDs = append(actualIDs, id.ID.String())
+					}
+
+					links := link.ParseHeader(res.Header)
+					next, ok := links["next"]
+					if !ok {
+						break
+					}
+					reqURL = next.URI
+				}
+				assert.ElementsMatch(t, expectedIDs, actualIDs)
 			})
 		}
 	})
