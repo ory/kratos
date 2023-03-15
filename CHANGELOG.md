@@ -5,7 +5,7 @@
 
 **Table of Contents**
 
-- [ (2023-03-14)](#2023-03-14)
+- [ (2023-03-15)](#2023-03-15)
   - [Breaking Changes](#breaking-changes)
     - [Bug Fixes](#bug-fixes)
     - [Code Refactoring](#code-refactoring)
@@ -294,7 +294,7 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# [](https://github.com/ory/kratos/compare/v0.11.1...v) (2023-03-14)
+# [](https://github.com/ory/kratos/compare/v0.11.1...v) (2023-03-15)
 
 ## Breaking Changes
 
@@ -404,6 +404,9 @@ flows.
 - Webhook tracing and missing defers
   ([#3145](https://github.com/ory/kratos/issues/3145))
   ([46eb063](https://github.com/ory/kratos/commit/46eb063f414a0ad9b901407cf781002ccb97ad93))
+- Wrong context in logout trace span
+  ([#3168](https://github.com/ory/kratos/issues/3168))
+  ([b9ccccf](https://github.com/ory/kratos/commit/b9ccccf0f1b6a5ba903293133b2be15b528c8308))
 
 ### Code Refactoring
 
