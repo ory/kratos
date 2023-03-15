@@ -167,7 +167,7 @@ func (e *HookExecutor) PostRegistrationHook(w http.ResponseWriter, r *http.Reque
 		Info("A new identity has registered using self-service registration.")
 
 	trace.SpanFromContext(r.Context()).AddEvent(
-		events.LoginSuccessful.String(),
+		events.SignupSuccessful.String(),
 		trace.WithAttributes(
 			append(semconv.AttributesFromContext(r.Context()),
 				semconv.AttrIdentityID(i.ID),

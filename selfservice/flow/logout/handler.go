@@ -310,12 +310,6 @@ func (h *Handler) updateLogoutFlow(w http.ResponseWriter, r *http.Request, ps ht
 		return
 	}
 
-	x := append(semconv.AttributesFromContext(r.Context()),
-		semconv.AttrIdentityID(sess.IdentityID),
-	)
-
-	_ = x
-
 	trace.SpanFromContext(r.Context()).AddEvent(
 		events.SignOut.String(),
 		trace.WithAttributes(

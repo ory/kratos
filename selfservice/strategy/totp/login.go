@@ -129,7 +129,7 @@ func (s *Strategy) Login(w http.ResponseWriter, r *http.Request, f *login.Flow, 
 
 	if !totp.Validate(p.TOTPCode, key.Secret()) {
 		trace.SpanFromContext(r.Context()).AddEvent(
-			events.LoginSuccessful.String(),
+			events.MFAFailed.String(),
 			trace.WithAttributes(
 				append(semconv.AttributesFromContext(r.Context()),
 					semconv.AttrIdentityID(i.ID),
@@ -148,7 +148,7 @@ func (s *Strategy) Login(w http.ResponseWriter, r *http.Request, f *login.Flow, 
 	}
 
 	trace.SpanFromContext(r.Context()).AddEvent(
-		events.LoginSuccessful.String(),
+		events.MFASuccessful.String(),
 		trace.WithAttributes(
 			append(semconv.AttributesFromContext(r.Context()),
 				semconv.AttrIdentityID(i.ID),

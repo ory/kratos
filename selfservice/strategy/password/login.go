@@ -88,7 +88,7 @@ func (s *Strategy) Login(w http.ResponseWriter, r *http.Request, f *login.Flow, 
 		err = errors.WithStack(schema.NewInvalidCredentialsError())
 
 		trace.SpanFromContext(r.Context()).AddEvent(
-			events.LoginSuccessful.String(),
+			events.LoginFailed.String(),
 			trace.WithAttributes(
 				append(semconv.AttributesFromContext(r.Context()),
 					semconv.AttrIdentityID(i.ID),

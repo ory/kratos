@@ -100,7 +100,7 @@ func (s *ErrorHandler) WriteFlowError(
 	}
 
 	trace.SpanFromContext(r.Context()).AddEvent(
-		events.LoginSuccessful.String(),
+		events.SignupFailed.String(),
 		trace.WithAttributes(
 			append(semconv.AttributesFromContext(r.Context()),
 				attribute.String("flow", string(flowType)),

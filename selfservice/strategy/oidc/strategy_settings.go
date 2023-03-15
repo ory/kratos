@@ -439,7 +439,7 @@ func (s *Strategy) linkProvider(w http.ResponseWriter, r *http.Request, ctxUpdat
 
 	// TODO: this is probably not the right place to do this, but we don't have way to tell whether OIDC providers changed inside the hook executors.
 	trace.SpanFromContext(r.Context()).AddEvent(
-		events.LoginSuccessful.String(),
+		events.AccountLinked.String(),
 		trace.WithAttributes(
 			append(semconv.AttributesFromContext(r.Context()),
 				semconv.AttrIdentityID(i.ID),
