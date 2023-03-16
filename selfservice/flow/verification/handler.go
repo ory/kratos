@@ -178,7 +178,7 @@ type createBrowserVerificationFlow struct {
 //
 // This endpoint is NOT INTENDED for API clients and only works with browsers (Chrome, Firefox, ...).
 //
-// More information can be found at [Ory Kratos Email and Phone Verification Documentation](https://www.ory.sh/docs/kratos/selfservice/flows/verify-email-account-activation).
+// More information can be found at [Ory Kratos Email and Phone Verification Documentation](https://www.ory.sh/docs/kratos/self-service/flows/verify-email-account-activation).
 //
 //	Schemes: http, https
 //
@@ -240,15 +240,16 @@ type getVerificationFlow struct {
 // If you use the browser-flow for server-side apps, the services need to run on a common top-level-domain
 // and you need to forward the incoming HTTP Cookie header to this endpoint:
 //
-//		```js
-//		// pseudo-code example
-//		router.get('/recovery', async function (req, res) {
-//		  const flow = await client.getVerificationFlow(req.header('cookie'), req.query['flow'])
+//	```js
+//	// pseudo-code example
+//	router.get('/recovery', async function (req, res) {
+//	  const flow = await client.getVerificationFlow(req.header('cookie'), req.query['flow'])
 //
-//	   res.render('verification', flow)
-//		})
+//	  res.render('verification', flow)
+//	})
+//	```
 //
-// More information can be found at [Ory Kratos Email and Phone Verification Documentation](https://www.ory.sh/docs/kratos/selfservice/flows/verify-email-account-activation).
+// More information can be found at [Ory Kratos Email and Phone Verification Documentation](https://www.ory.sh/docs/kratos/self-service/flows/verify-email-account-activation).
 //
 //	Produces:
 //	- application/json
@@ -367,7 +368,7 @@ type updateVerificationFlowBody struct{}
 //     (if the link was valid) and instructs the user to update their password, or a redirect to the Verification UI URL with
 //     a new Verification Flow ID which contains an error message that the verification link was invalid.
 //
-// More information can be found at [Ory Kratos Email and Phone Verification Documentation](https://www.ory.sh/docs/kratos/selfservice/flows/verify-email-account-activation).
+// More information can be found at [Ory Kratos Email and Phone Verification Documentation](https://www.ory.sh/docs/kratos/self-service/flows/verify-email-account-activation).
 //
 //	Consumes:
 //	- application/json
