@@ -5,7 +5,7 @@
 
 **Table of Contents**
 
-- [ (2023-03-15)](#2023-03-15)
+- [ (2023-03-16)](#2023-03-16)
   - [Breaking Changes](#breaking-changes)
     - [Bug Fixes](#bug-fixes)
     - [Code Refactoring](#code-refactoring)
@@ -294,7 +294,7 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# [](https://github.com/ory/kratos/compare/v0.11.1...v) (2023-03-15)
+# [](https://github.com/ory/kratos/compare/v0.11.1...v) (2023-03-16)
 
 ## Breaking Changes
 
@@ -326,6 +326,9 @@ flows.
   ([#3103](https://github.com/ory/kratos/issues/3103))
   ([1193a56](https://github.com/ory/kratos/commit/1193a5681fbc25d03c1e26a4296fa0b9abd2452b)),
   closes [#2950](https://github.com/ory/kratos/issues/2950)
+- Do not omit last page on identity list
+  ([#3169](https://github.com/ory/kratos/issues/3169))
+  ([f95f48a](https://github.com/ory/kratos/commit/f95f48a79395b7b99c7482c0974bc5188e007cc0))
 - Don't reuse ports in courier/SMTP tests
   ([#3156](https://github.com/ory/kratos/issues/3156))
   ([e260fcf](https://github.com/ory/kratos/commit/e260fcf06181ce9339edc729ab74826aa4be78cf))
