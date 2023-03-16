@@ -418,6 +418,9 @@ flows.
 
 ### Documentation
 
+- Fix broken docs links and code example to get verification flow
+  ([#3170](https://github.com/ory/kratos/issues/3170))
+  ([bdbddcc](https://github.com/ory/kratos/commit/bdbddcce2909b290e2e04dee493519b842715ab4))
 - Update security email ([#3164](https://github.com/ory/kratos/issues/3164))
   ([9252f5a](https://github.com/ory/kratos/commit/9252f5a3c746927a2f537efc39cb1eb0aba167a5))
 
