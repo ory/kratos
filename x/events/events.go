@@ -4,12 +4,6 @@
 package events
 
 import (
-	"context"
-
-	"go.opentelemetry.io/otel/attribute"
-	"go.opentelemetry.io/otel/trace"
-
-	"github.com/ory/kratos/x"
 	"github.com/ory/x/otelx/semconv"
 )
 
@@ -41,13 +35,3 @@ const (
 	AdminAccountRecoveryStarted = "AdminAccountRecoveryStarted"
 	AdminSessionTerminated      = "AdminSessionTerminated"
 )
-
-// Add adds an event to the current span in the context.
-func Add(ctx context.Context, n x.NetworkIDProvider, event semconv.Event, opt ...attribute.KeyValue) {
-	trace.SpanFromContext(semconv.ContextWithAttributes(ctx)).AddEvent(
-		string(event),
-		trace.WithAttributes(
-			opt...,
-		),
-	)
-}

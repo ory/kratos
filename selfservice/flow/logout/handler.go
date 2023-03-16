@@ -40,7 +40,6 @@ type (
 		session.PersistenceProvider
 		errorx.ManagementProvider
 		config.Provider
-		x.NetworkIDProvider
 	}
 	HandlerProvider interface {
 		LogoutHandler() *Handler

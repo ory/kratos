@@ -43,8 +43,6 @@ type (
 
 		FlowPersistenceProvider
 		HandlerProvider
-
-		x.NetworkIDProvider
 	}
 
 	ErrorHandlerProvider interface{ RegistrationFlowErrorHandler() *ErrorHandler }

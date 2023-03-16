@@ -82,8 +82,6 @@ type (
 		x.HTTPClientProvider
 		x.LoggingProvider
 		x.WriterProvider
-
-		x.NetworkIDProvider
 	}
 	HookExecutor struct {
 		d executorDependencies

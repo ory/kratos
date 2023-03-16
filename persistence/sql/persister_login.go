@@ -6,6 +6,8 @@ package sql
 import (
 	"context"
 	"fmt"
+	"github.com/ory/x/otelx/semconv"
+	"go.opentelemetry.io/otel/trace"
 	"time"
 
 	"go.opentelemetry.io/otel/attribute"
@@ -28,12 +30,21 @@ var _ login.FlowPersister = new(Persister)
 func (p *Persister) CreateLoginFlow(ctx context.Context, r *login.Flow) (err error) {
 	ctx, span := p.r.Tracer(ctx).Tracer().Start(ctx, "persistence.sql.CreateLoginFlow")
 	defer span.End()
+
+	// TODO: put this somewhere else
 	defer func(e *error) {
 		if e != nil && r.RequestedAAL > identity.AuthenticatorAssuranceLevel1 {
-			events.Add(ctx, p, events.MFAPrompted,
-				attribute.String("LoginMethod", r.Active.String()),
-				attribute.String("RequestedAAL", string(r.RequestedAAL)),
-				attribute.String("flow", string(r.Type)))
+
+			trace.SpanFromContext(ctx).AddEvent(
+				events.MFAPrompted.String(),
+				trace.WithAttributes(
+					append(semconv.AttributesFromContext(ctx),
+						attribute.String("LoginMethod", r.Active.String()),
+						attribute.String("RequestedAAL", string(r.RequestedAAL)),
+						attribute.String("flow", string(r.Type)),
+					)...,
+				),
+			)
 		}
 	}(&err)
 

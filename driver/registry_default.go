@@ -11,8 +11,6 @@ import (
 	"sync"
 	"time"
 
-	"github.com/gofrs/uuid"
-
 	"github.com/ory/x/contextx"
 	"github.com/ory/x/jsonnetsecure"
 
@@ -799,11 +797,4 @@ func (m *RegistryDefault) Contextualizer() contextx.Contextualizer {
 		panic("registry Contextualizer not set")
 	}
 	return m.ctxer
-}
-
-func (r *RegistryDefault) NetworkID(ctx context.Context) uuid.UUID {
-	if r.persister == nil {
-		panic("no persister, but expected to have one")
-	}
-	return r.persister.NetworkID(ctx)
 }

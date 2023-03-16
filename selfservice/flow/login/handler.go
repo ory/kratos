@@ -4,6 +4,10 @@
 package login
 
 import (
+	"github.com/ory/kratos/x/events"
+	"github.com/ory/x/otelx/semconv"
+	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/trace"
 	"net/http"
 	"net/url"
 	"time"
@@ -181,6 +185,17 @@ preLoginHook:
 
 	if sess != nil && f.RequestedAAL > sess.AuthenticatorAssuranceLevel && f.RequestedAAL > identity.AuthenticatorAssuranceLevel1 {
 		f.UI.Messages.Add(text.NewInfoLoginMFA())
+
+		trace.SpanFromContext(r.Context()).AddEvent(
+			events.MFAPrompted.String(),
+			trace.WithAttributes(
+				append(semconv.AttributesFromContext(r.Context()),
+					attribute.String("LoginMethod", f.Active.String()),
+					attribute.String("RequestedAAL", string(f.RequestedAAL)),
+					attribute.String("flow", string(f.Type)),
+				)...,
+			),
+		)
 	}
 
 	var s Strategy

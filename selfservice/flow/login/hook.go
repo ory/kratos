@@ -54,8 +54,6 @@ type (
 		x.TracingProvider
 
 		HooksProvider
-
-		x.NetworkIDProvider
 	}
 	HookExecutor struct {
 		d executorDependencies
