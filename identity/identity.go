@@ -417,7 +417,7 @@ func (i *Identity) WithDeclassifiedCredentialsOIDC(ctx context.Context, c cipher
 		toPublish := original
 		toPublish.Config = []byte{}
 
-		for _, token := range []string{"initial_id_token", "initial_access_token", "initial_refresh_token"} {
+		for _, token := range []string{"initial_id_token", "initial_access_token", "initial_refresh_token", "current_id_token", "current_access_token", "current_refresh_token"} {
 			var i int
 			var err error
 			gjson.GetBytes(original.Config, "providers").ForEach(func(_, v gjson.Result) bool {

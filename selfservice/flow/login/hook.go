@@ -44,9 +44,7 @@ type (
 type (
 	executorDependencies interface {
 		config.Provider
-		identity.ManagementProvider
 		hydra.HydraProvider
-		identity.ManagementProvider
 		session.ManagementProvider
 		session.PersistenceProvider
 		x.CSRFTokenGeneratorProvider
@@ -114,11 +112,12 @@ func (e *HookExecutor) handleLoginError(_ http.ResponseWriter, r *http.Request, 
 	return flowError
 }
 
-func (e *HookExecutor) PostLoginHook(w http.ResponseWriter, r *http.Request, ct identity.CredentialsType, g node.UiNodeGroup, a *Flow, i *identity.Identity, s *session.Session) (err error) {
+func (e *HookExecutor) PostLoginHook(w http.ResponseWriter, r *http.Request, g node.UiNodeGroup, a *Flow, i *identity.Identity, s *session.Session) (err error) {
 	ctx := r.Context()
 	ctx, span := e.d.Tracer(ctx).Tracer().Start(ctx, "HookExecutor.PostLoginHook")
 	r = r.WithContext(ctx)
 	defer otelx.End(span, &err)
+
 	if err := s.Activate(r, i, e.d.Config(), time.Now().UTC()); err != nil {
 		return err
 	}
@@ -199,15 +198,6 @@ func (e *HookExecutor) PostLoginHook(w http.ResponseWriter, r *http.Request, ct 
 		return nil
 	}
 
-	if ct == identity.CredentialsTypeOIDC {
-		options := []identity.ManagerOption{
-			identity.ManagerExposeValidationErrorsForInternalTypeAssertion,
-			identity.ManagerAllowWriteProtectedTraits,
-		}
-		if err := e.d.IdentityManager().Update(r.Context(), i, options...); err != nil {
-			return errors.WithStack(err)
-		}
-	}
 	if err := e.d.SessionManager().UpsertAndIssueCookie(r.Context(), w, r, s); err != nil {
 		return errors.WithStack(err)
 	}

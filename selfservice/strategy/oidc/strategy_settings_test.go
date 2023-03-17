@@ -234,6 +234,9 @@ func TestSettingsStrategy(t *testing.T) {
 					assert.NotEmpty(t, p.InitialIDToken)
 					assert.NotEmpty(t, p.InitialAccessToken)
 					assert.NotEmpty(t, p.InitialRefreshToken)
+					assert.NotEmpty(t, p.CurrentIDToken)
+					assert.NotEmpty(t, p.CurrentAccessToken)
+					assert.NotEmpty(t, p.CurrentRefreshToken)
 				}
 				break
 			}

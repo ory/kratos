@@ -4,9 +4,13 @@
 package identity
 
 import (
+	"bytes"
 	"context"
+	"encoding/json"
 	"reflect"
 	"time"
+
+	"github.com/pkg/errors"
 
 	"github.com/gobuffalo/pop/v6"
 
@@ -115,6 +119,10 @@ type Credentials struct {
 
 func (c *Credentials) AfterEagerFind(tx *pop.Connection) error {
 	return c.setCredentials()
+}
+
+func (c *Credentials) UnmarshalConfig(target interface{}) error {
+	return errors.WithStack(json.NewDecoder(bytes.NewBuffer(c.Config)).Decode(&target))
 }
 
 func (c *Credentials) setCredentials() error {

@@ -716,7 +716,6 @@ continueLogin:
 
 	var i *identity.Identity
 	var group node.UiNodeGroup
-	var s Strategy
 	for _, ss := range h.d.AllLoginStrategies() {
 		interim, err := ss.Login(w, r, f, sess.IdentityID)
 		group = ss.NodeGroup()
@@ -738,16 +737,15 @@ continueLogin:
 		method := ss.CompletedAuthenticationMethod(r.Context())
 		sess.CompletedLoginFor(method.Method, method.AAL)
 		i = interim
-		s = ss
 		break
 	}
 
-	if i == nil || s == nil {
+	if i == nil {
 		h.d.LoginFlowErrorHandler().WriteFlowError(w, r, f, node.DefaultGroup, errors.WithStack(schema.NewNoLoginStrategyResponsible()))
 		return
 	}
 
-	if err := h.d.LoginHookExecutor().PostLoginHook(w, r, s.ID(), group, f, i, sess); err != nil {
+	if err := h.d.LoginHookExecutor().PostLoginHook(w, r, group, f, i, sess); err != nil {
 		if errors.Is(err, ErrAddressNotVerified) {
 			h.d.LoginFlowErrorHandler().WriteFlowError(w, r, f, node.DefaultGroup, errors.WithStack(schema.NewAddressNotVerifiedError()))
 			return

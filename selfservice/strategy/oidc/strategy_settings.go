@@ -425,6 +425,9 @@ func (s *Strategy) linkProvider(w http.ResponseWriter, r *http.Request, ctxUpdat
 			InitialAccessToken:  cat,
 			InitialRefreshToken: crt,
 			InitialIDToken:      it,
+			CurrentAccessToken:  cat,
+			CurrentRefreshToken: crt,
+			CurrentIDToken:      it,
 		})
 
 		creds.Config, err = json.Marshal(conf)

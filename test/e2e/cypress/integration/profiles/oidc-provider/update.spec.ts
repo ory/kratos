@@ -1,13 +1,11 @@
 // Copyright © 2022 Ory Corp
 // SPDX-License-Identifier: Apache-2.0
 
-import {appPrefix, gen, website} from "../../../helpers"
+import { appPrefix, gen, website } from "../../../helpers"
 import { routes as express } from "../../../helpers/express"
-import * as httpbin from "../../../helpers/httpbin"
-import {routes as react} from "../../../helpers/react";
-import * as oauth2 from "../../../helpers/oauth2";
+import { routes as react } from "../../../helpers/react"
 
-context( "OpenID Provider Update", () => {
+context("OpenID Provider Update", () => {
   ;[
     {
       login: react.login,
@@ -21,10 +19,9 @@ context( "OpenID Provider Update", () => {
       app: "express" as "express",
       profile: "oidc",
     },
-
-  ].forEach(({login, registration, profile, app}) => {
+  ].forEach(({ login, registration, profile, app }) => {
     describe(`for app ${app}`, () => {
-      before( () => {
+      before(() => {
         cy.useConfigProfile(profile)
         cy.proxy(app)
       })
@@ -99,12 +96,56 @@ context( "OpenID Provider Update", () => {
         })
         cy.getSession().then((session) => {
           shouldSession(email)(session)
-          cy.getFullIdentityById({id: session.identity.id}).then ( (identity) => {
-            expect(identity.credentials.oidc.config.providers[0].initial_access_token).to.not.be.empty
-            expect(identity.credentials.oidc.config.providers[0].initial_id_token).to.not.be.empty
-            expect(identity.credentials.oidc.config.providers[0].initial_refresh_token).to.not.be.empty
-            expect(identity.credentials.oidc.config.providers[0].provider).to.eq("hydra")
-          })
+          cy.getFullIdentityById({ id: session.identity.id }).then(
+            (identity) => {
+              expect(
+                identity.credentials.oidc.config.providers[0]
+                  .initial_access_token,
+              ).to.not.be.empty
+              expect(
+                identity.credentials.oidc.config.providers[0].initial_id_token,
+              ).to.not.be.empty
+              expect(
+                identity.credentials.oidc.config.providers[0]
+                  .initial_refresh_token,
+              ).to.not.be.empty
+              expect(
+                identity.credentials.oidc.config.providers[0]
+                  .current_access_token,
+              ).to.not.be.empty
+              expect(
+                identity.credentials.oidc.config.providers[0].current_id_token,
+              ).to.not.be.empty
+              expect(
+                identity.credentials.oidc.config.providers[0]
+                  .current_refresh_token,
+              ).to.not.be.empty
+
+              expect(
+                identity.credentials.oidc.config.providers[0]
+                  .initial_access_token,
+              ).to.not.eq(
+                identity.credentials.oidc.config.providers[0]
+                  .current_access_token,
+              )
+              expect(
+                identity.credentials.oidc.config.providers[0].initial_id_token,
+              ).to.not.eq(
+                identity.credentials.oidc.config.providers[0].current_id_token,
+              )
+              expect(
+                identity.credentials.oidc.config.providers[0]
+                  .initial_refresh_token,
+              ).to.not.eq(
+                identity.credentials.oidc.config.providers[0]
+                  .current_refresh_token,
+              )
+
+              expect(
+                identity.credentials.oidc.config.providers[0].provider,
+              ).to.eq("hydra")
+            },
+          )
         })
       })
     })

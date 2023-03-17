@@ -9,7 +9,7 @@ export PATH               := .bin:${PATH}
 export PWD                := $(shell pwd)
 export BUILD_DATE         := $(shell date -u +"%Y-%m-%dT%H:%M:%SZ")
 export VCS_REF            := $(shell git rev-parse HEAD)
-export QUICKSTART_OPTIONS ?=
+export QUICKSTART_OPTIONS ?= ""
 
 GO_DEPENDENCIES = github.com/ory/go-acc \
 				  github.com/golang/mock/mockgen \
