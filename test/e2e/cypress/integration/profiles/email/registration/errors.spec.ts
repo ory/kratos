@@ -63,7 +63,7 @@ describe("Registration failures with email profile", () => {
             .should("have.value", "12345678")
 
           cy.submitPasswordForm()
-          cy.get('*[data-testid^="ui/message"]').should(
+          cy.get('[data-testid="ui/message/4000005"]').should(
             "contain.text",
             "data breaches",
           )
@@ -75,7 +75,7 @@ describe("Registration failures with email profile", () => {
           cy.get('input[name="password"]').type(identity)
 
           cy.submitPasswordForm()
-          cy.get('*[data-testid^="ui/message"]').should(
+          cy.get('[data-testid="ui/message/4000005"]').should(
             "contain.text",
             "too similar",
           )
@@ -113,7 +113,8 @@ describe("Registration failures with email profile", () => {
             .invoke("text")
             .then((text) => {
               expect(text.trim()).to.be.oneOf([
-                '"" is not valid "email"length must be >= 3, but got 0',
+                '"" is not valid "email"',
+                "length must be >= 3, but got 0",
                 "Property email is missing.",
               ])
             })
@@ -176,7 +177,7 @@ describe("Registration failures with email profile", () => {
           cy.get('input[name="traits.website"]').type("http://s")
 
           cy.submitPasswordForm()
-          cy.get('*[data-testid^="ui/message"]').should(
+          cy.get('[data-testid="ui/message/4000003"]').should(
             "contain.text",
             "length must be >= 10",
           )
@@ -190,15 +191,15 @@ describe("Registration failures with email profile", () => {
           cy.get('input[name="password"]').then(($el) => $el.remove())
 
           cy.submitPasswordForm()
-          cy.get('*[data-testid^="ui/message"]').should(
+          cy.get('[data-testid="ui/message/4000002"]').should(
             "contain.text",
             "Property website is missing.",
           )
-          cy.get('*[data-testid^="ui/message"]').should(
+          cy.get('[data-testid="ui/message/4000002"]').should(
             "contain.text",
             "Property email is missing.",
           )
-          cy.get('*[data-testid^="ui/message"]').should(
+          cy.get('[data-testid="ui/message/4000002"]').should(
             "contain.text",
             "Property password is missing.",
           )
@@ -219,7 +220,7 @@ describe("Registration failures with email profile", () => {
           cy.get('input[name="traits.age"]').type("600")
 
           cy.submitPasswordForm()
-          cy.get('*[data-testid^="ui/message"]').should(
+          cy.get('[data-testid="ui/message/4000020"]').should(
             "contain.text",
             "must be <= 300 but found 600",
           )

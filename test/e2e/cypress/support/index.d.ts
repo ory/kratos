@@ -1,8 +1,6 @@
 // Copyright © 2023 Ory Corp
 // SPDX-License-Identifier: Apache-2.0
 
-import { Session } from "@ory/kratos-client"
-
 export interface MailMessage {
   fromAddress: string
   toAddresses: Array<string>
@@ -150,6 +148,32 @@ declare global {
         strategy?: Strategy
         returnTo?: string
       }): Chainable<void>
+
+      /**
+       *  Sets the hook.
+       *
+       * @param hooks
+       */
+      setupHooks(
+        flow:
+          | "registration"
+          | "login"
+          | "recovery"
+          | "verification"
+          | "settings",
+        phase: "before" | "after",
+        kind: "password" | "webauthn" | "oidc",
+        hooks: Array<{ hook: string; config?: any }>,
+      ): Chainable<void>
+
+      /**
+       *  Sets the post registration hook.
+       *
+       * @param hooks
+       */
+      setPostPasswordRegistrationHooks(
+        hooks: Array<{ hook: string; config?: any }>,
+      ): Chainable<void>
 
       /**
        * Submits a verification flow via the Browser
@@ -351,6 +375,7 @@ declare global {
         app: app
         expectSession?: boolean
         url?: string
+        preTriggerHook?: () => void
       }): Chainable<void>
 
       /**
@@ -565,6 +590,17 @@ declare global {
       enableLoginForVerifiedAddressOnly(): Chainable<void>
 
       /**
+       * Sets the value for the `notify_unknown_recipients` key for a flow
+       *
+       * @param flow the flow for which to set the config value
+       * @param value the value, defaults to true
+       */
+      notifyUnknownRecipients(
+        flow: "recovery" | "verification",
+        value?: boolean,
+      ): Chainable<void>
+
+      /**
        * Sign a user in via the API and return the session.
        *
        * @param opts
@@ -624,6 +660,19 @@ declare global {
        * Remove the specified attribute from the given HTML elements
        */
       removeAttribute(selectors: string[], attribute: string): Chainable<void>
+
+      /**
+       * Add an input element to the DOM as a child of the given parent
+       */
+      addInputElement(
+        parent: string,
+        attribute: string,
+        value: string,
+      ): Chainable<void>
+
+      getCourierMessages(): Chainable<
+        { recipient: string; template_type: string }[]
+      >
     }
   }
 }

@@ -8,6 +8,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/gofrs/uuid"
+
 	"github.com/ory/kratos/internal/testhelpers"
 
 	"github.com/stretchr/testify/assert"
@@ -27,7 +29,7 @@ func TestPersister(ctx context.Context, p interface {
 	identity.PrivilegedPool
 }) func(t *testing.T) {
 	var createIdentity = func(t *testing.T) *identity.Identity {
-		id := identity.Identity{ID: x.NewUUID()}
+		id := identity.Identity{}
 		require.NoError(t, p.CreateIdentity(ctx, &id))
 		return &id
 	}
@@ -62,6 +64,7 @@ func TestPersister(ctx context.Context, p interface {
 			expected := createContainer(t)
 
 			require.NoError(t, p.SaveContinuitySession(ctx, &expected))
+			require.NotEqual(t, uuid.Nil, expected.ID)
 			require.NoError(t, p.DeleteContinuitySession(ctx, expected.ID))
 
 			_, err := p.GetContinuitySession(ctx, expected.ID)

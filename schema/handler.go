@@ -67,13 +67,17 @@ func (h *Handler) RegisterAdminRoutes(admin *x.RouterAdmin) {
 // Raw JSON Schema
 //
 // swagger:model identitySchema
-// nolint:deadcode,unused
-type identitySchema json.RawMessage
+//
+//nolint:deadcode,unused
+//lint:ignore U1000 Used to generate Swagger and OpenAPI definitions
+type identitySchema = json.RawMessage
 
 // Get Identity JSON Schema Response
 //
-// nolint:deadcode,unused
 // swagger:parameters getIdentitySchema
+//
+//nolint:deadcode,unused
+//lint:ignore U1000 Used to generate Swagger and OpenAPI definitions
 type getIdentitySchema struct {
 	// ID must be set to the ID of schema you want to get
 	//
@@ -150,8 +154,10 @@ type identitySchemaContainer struct {
 
 // List Identity JSON Schemas Response
 //
-// nolint:deadcode,unused
 // swagger:parameters listIdentitySchemas
+//
+//nolint:deadcode,unused
+//lint:ignore U1000 Used to generate Swagger and OpenAPI definitions
 type listIdentitySchemas struct {
 	migrationpagination.RequestParameters
 }
@@ -159,7 +165,9 @@ type listIdentitySchemas struct {
 // List Identity JSON Schemas Response
 //
 // swagger:response identitySchemas
-// nolint:deadcode,unused
+//
+//nolint:deadcode,unused
+//lint:ignore U1000 Used to generate Swagger and OpenAPI definitions
 type identitySchemasResponse struct {
 	migrationpagination.ResponseHeaderAnnotation
 

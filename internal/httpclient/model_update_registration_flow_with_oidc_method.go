@@ -25,6 +25,10 @@ type UpdateRegistrationFlowWithOidcMethod struct {
 	Provider string `json:"provider"`
 	// The identity traits
 	Traits map[string]interface{} `json:"traits,omitempty"`
+	// Transient data to pass along to any webhooks
+	TransientPayload map[string]interface{} `json:"transient_payload,omitempty"`
+	// UpstreamParameters are the parameters that are passed to the upstream identity provider.  These parameters are optional and depend on what the upstream identity provider supports. Supported parameters are: `login_hint` (string): The `login_hint` parameter suppresses the account chooser and either pre-fills the email box on the sign-in form, or selects the proper session. `hd` (string): The `hd` parameter limits the login/registration process to a Google Organization, e.g. `mycollege.edu`.
+	UpstreamParameters map[string]interface{} `json:"upstream_parameters,omitempty"`
 }
 
 // NewUpdateRegistrationFlowWithOidcMethod instantiates a new UpdateRegistrationFlowWithOidcMethod object
@@ -158,6 +162,70 @@ func (o *UpdateRegistrationFlowWithOidcMethod) SetTraits(v map[string]interface{
 	o.Traits = v
 }
 
+// GetTransientPayload returns the TransientPayload field value if set, zero value otherwise.
+func (o *UpdateRegistrationFlowWithOidcMethod) GetTransientPayload() map[string]interface{} {
+	if o == nil || o.TransientPayload == nil {
+		var ret map[string]interface{}
+		return ret
+	}
+	return o.TransientPayload
+}
+
+// GetTransientPayloadOk returns a tuple with the TransientPayload field value if set, nil otherwise
+// and a boolean to check if the value has been set.
+func (o *UpdateRegistrationFlowWithOidcMethod) GetTransientPayloadOk() (map[string]interface{}, bool) {
+	if o == nil || o.TransientPayload == nil {
+		return nil, false
+	}
+	return o.TransientPayload, true
+}
+
+// HasTransientPayload returns a boolean if a field has been set.
+func (o *UpdateRegistrationFlowWithOidcMethod) HasTransientPayload() bool {
+	if o != nil && o.TransientPayload != nil {
+		return true
+	}
+
+	return false
+}
+
+// SetTransientPayload gets a reference to the given map[string]interface{} and assigns it to the TransientPayload field.
+func (o *UpdateRegistrationFlowWithOidcMethod) SetTransientPayload(v map[string]interface{}) {
+	o.TransientPayload = v
+}
+
+// GetUpstreamParameters returns the UpstreamParameters field value if set, zero value otherwise.
+func (o *UpdateRegistrationFlowWithOidcMethod) GetUpstreamParameters() map[string]interface{} {
+	if o == nil || o.UpstreamParameters == nil {
+		var ret map[string]interface{}
+		return ret
+	}
+	return o.UpstreamParameters
+}
+
+// GetUpstreamParametersOk returns a tuple with the UpstreamParameters field value if set, nil otherwise
+// and a boolean to check if the value has been set.
+func (o *UpdateRegistrationFlowWithOidcMethod) GetUpstreamParametersOk() (map[string]interface{}, bool) {
+	if o == nil || o.UpstreamParameters == nil {
+		return nil, false
+	}
+	return o.UpstreamParameters, true
+}
+
+// HasUpstreamParameters returns a boolean if a field has been set.
+func (o *UpdateRegistrationFlowWithOidcMethod) HasUpstreamParameters() bool {
+	if o != nil && o.UpstreamParameters != nil {
+		return true
+	}
+
+	return false
+}
+
+// SetUpstreamParameters gets a reference to the given map[string]interface{} and assigns it to the UpstreamParameters field.
+func (o *UpdateRegistrationFlowWithOidcMethod) SetUpstreamParameters(v map[string]interface{}) {
+	o.UpstreamParameters = v
+}
+
 func (o UpdateRegistrationFlowWithOidcMethod) MarshalJSON() ([]byte, error) {
 	toSerialize := map[string]interface{}{}
 	if o.CsrfToken != nil {
@@ -171,6 +239,12 @@ func (o UpdateRegistrationFlowWithOidcMethod) MarshalJSON() ([]byte, error) {
 	}
 	if o.Traits != nil {
 		toSerialize["traits"] = o.Traits
+	}
+	if o.TransientPayload != nil {
+		toSerialize["transient_payload"] = o.TransientPayload
+	}
+	if o.UpstreamParameters != nil {
+		toSerialize["upstream_parameters"] = o.UpstreamParameters
 	}
 	return json.Marshal(toSerialize)
 }

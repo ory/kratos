@@ -25,8 +25,8 @@ func TestExpandables_ToEager_skips_Identity(t *testing.T) {
 	e := ExpandEverything
 
 	res := e.ToEager()
-	assert.Equal(t, 1, len(res))
-	assert.Equal(t, []string{string(ExpandSessionDevices)}, res)
+	assert.Equal(t, 2, len(res))
+	assert.Equal(t, []string{string(ExpandSessionDevices), string(ExpandSessionIdentity)}, res)
 }
 
 func TestExpandables_ExpandNothing_IsEmpty(t *testing.T) {

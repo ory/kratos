@@ -16,7 +16,7 @@ import (
 
 	"github.com/ory/x/sqlxx"
 
-	hydraclientgo "github.com/ory/hydra-client-go"
+	hydraclientgo "github.com/ory/hydra-client-go/v2"
 
 	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/hydra"
@@ -98,6 +98,9 @@ type Flow struct {
 	// CSRFToken contains the anti-csrf token associated with this flow. Only set for browser flows.
 	CSRFToken string    `json:"-" db:"csrf_token"`
 	NID       uuid.UUID `json:"-"  faker:"-" db:"nid"`
+
+	// TransientPayload is used to pass data from the registration to a webhook
+	TransientPayload json.RawMessage `json:"transient_payload,omitempty"  faker:"-" db:"-"`
 }
 
 func NewFlow(conf *config.Config, exp time.Duration, csrf string, r *http.Request, ft flow.Type) (*Flow, error) {

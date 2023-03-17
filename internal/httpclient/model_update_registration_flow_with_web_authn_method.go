@@ -23,6 +23,8 @@ type UpdateRegistrationFlowWithWebAuthnMethod struct {
 	Method string `json:"method"`
 	// The identity's traits
 	Traits map[string]interface{} `json:"traits"`
+	// Transient data to pass along to any webhooks
+	TransientPayload map[string]interface{} `json:"transient_payload,omitempty"`
 	// Register a WebAuthn Security Key  It is expected that the JSON returned by the WebAuthn registration process is included here.
 	WebauthnRegister *string `json:"webauthn_register,omitempty"`
 	// Name of the WebAuthn Security Key to be Added  A human-readable name for the security key which will be added.
@@ -128,6 +130,38 @@ func (o *UpdateRegistrationFlowWithWebAuthnMethod) SetTraits(v map[string]interf
 	o.Traits = v
 }
 
+// GetTransientPayload returns the TransientPayload field value if set, zero value otherwise.
+func (o *UpdateRegistrationFlowWithWebAuthnMethod) GetTransientPayload() map[string]interface{} {
+	if o == nil || o.TransientPayload == nil {
+		var ret map[string]interface{}
+		return ret
+	}
+	return o.TransientPayload
+}
+
+// GetTransientPayloadOk returns a tuple with the TransientPayload field value if set, nil otherwise
+// and a boolean to check if the value has been set.
+func (o *UpdateRegistrationFlowWithWebAuthnMethod) GetTransientPayloadOk() (map[string]interface{}, bool) {
+	if o == nil || o.TransientPayload == nil {
+		return nil, false
+	}
+	return o.TransientPayload, true
+}
+
+// HasTransientPayload returns a boolean if a field has been set.
+func (o *UpdateRegistrationFlowWithWebAuthnMethod) HasTransientPayload() bool {
+	if o != nil && o.TransientPayload != nil {
+		return true
+	}
+
+	return false
+}
+
+// SetTransientPayload gets a reference to the given map[string]interface{} and assigns it to the TransientPayload field.
+func (o *UpdateRegistrationFlowWithWebAuthnMethod) SetTransientPayload(v map[string]interface{}) {
+	o.TransientPayload = v
+}
+
 // GetWebauthnRegister returns the WebauthnRegister field value if set, zero value otherwise.
 func (o *UpdateRegistrationFlowWithWebAuthnMethod) GetWebauthnRegister() string {
 	if o == nil || o.WebauthnRegister == nil {
@@ -202,6 +236,9 @@ func (o UpdateRegistrationFlowWithWebAuthnMethod) MarshalJSON() ([]byte, error) 
 	}
 	if true {
 		toSerialize["traits"] = o.Traits
+	}
+	if o.TransientPayload != nil {
+		toSerialize["transient_payload"] = o.TransientPayload
 	}
 	if o.WebauthnRegister != nil {
 		toSerialize["webauthn_register"] = o.WebauthnRegister

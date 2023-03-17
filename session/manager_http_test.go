@@ -549,6 +549,25 @@ func TestDoesSessionSatisfy(t *testing.T) {
 			} else {
 				require.NoError(t, err)
 			}
+
+			// This should still work even if the session does not have identity data attached yet...
+			s.Identity = nil
+			err = reg.SessionManager().DoesSessionSatisfy((&http.Request{}).WithContext(context.Background()), s, string(tc.requested))
+			if tc.err != nil {
+				require.ErrorAs(t, err, &tc.err)
+			} else {
+				require.NoError(t, err)
+			}
+
+			// ..or no credentials attached.
+			s.Identity = id
+			s.Identity.Credentials = nil
+			err = reg.SessionManager().DoesSessionSatisfy((&http.Request{}).WithContext(context.Background()), s, string(tc.requested))
+			if tc.err != nil {
+				require.ErrorAs(t, err, &tc.err)
+			} else {
+				require.NoError(t, err)
+			}
 		})
 	}
 }

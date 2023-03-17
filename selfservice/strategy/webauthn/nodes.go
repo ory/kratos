@@ -11,6 +11,7 @@ import (
 
 	"github.com/ory/x/stringsx"
 
+	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/text"
 	"github.com/ory/kratos/ui/node"
 )
@@ -49,7 +50,7 @@ func NewWebAuthnConnectionName() *node.Node {
 		WithMetaLabel(text.NewInfoSelfServiceRegisterWebAuthnDisplayName())
 }
 
-func NewWebAuthnUnlink(c *Credential) *node.Node {
+func NewWebAuthnUnlink(c *identity.CredentialWebAuthn) *node.Node {
 	return node.NewInputField(node.WebAuthnRemove, fmt.Sprintf("%x", c.ID), node.WebAuthnGroup,
 		node.InputAttributeTypeSubmit).
 		WithMetaLabel(text.NewInfoSelfServiceRemoveWebAuthn(stringsx.Coalesce(c.DisplayName, "unnamed"), c.AddedAt))

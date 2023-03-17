@@ -30,15 +30,13 @@ import (
 	"github.com/ory/kratos/x"
 )
 
-func TestRequestPersister(ctx context.Context, conf *config.Config, p interface {
-	persistence.Persister
-}) func(t *testing.T) {
-	var clearids = func(r *settings.Flow) {
-		r.ID = uuid.UUID{}
-		r.Identity.ID = uuid.UUID{}
-		r.IdentityID = uuid.UUID{}
-	}
+func clearids(r *settings.Flow) {
+	r.ID = uuid.Nil
+	r.Identity.ID = uuid.Nil
+	r.IdentityID = uuid.Nil
+}
 
+func TestFlowPersister(ctx context.Context, conf *config.Config, p persistence.Persister) func(t *testing.T) {
 	return func(t *testing.T) {
 		_, p := testhelpers.NewNetworkUnlessExisting(t, ctx, p)
 
@@ -49,11 +47,13 @@ func TestRequestPersister(ctx context.Context, conf *config.Config, p interface 
 			require.Error(t, err)
 		})
 
-		var newFlow = func(t *testing.T) *settings.Flow {
+		newFlow := func(t *testing.T) *settings.Flow {
 			var r settings.Flow
 			require.NoError(t, faker.FakeData(&r))
 			clearids(&r)
 			require.NoError(t, p.CreateIdentity(ctx, r.Identity))
+			require.NotZero(t, r.Identity.ID)
+			r.IdentityID = r.Identity.ID
 			return &r
 		}
 
@@ -147,7 +147,7 @@ func TestRequestPersister(ctx context.Context, conf *config.Config, p interface 
 			expected.Identity = nil
 			expected.IdentityID = uuid.Nil
 			err := p.CreateSettingsFlow(ctx, &expected)
-			require.Error(t, err, "%+s", expected)
+			require.Errorf(t, err, "%+v", expected)
 		})
 
 		t.Run("case=should create and update a settings request", func(t *testing.T) {

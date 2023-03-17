@@ -3,3 +3,5 @@ project: kratos
 pre_release_hooks:
   - make sdk
   - ./script/render-schemas.sh
+  - git config --unset user.email
+  - git config --unset user.name

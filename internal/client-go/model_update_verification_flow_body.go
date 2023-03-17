@@ -16,7 +16,7 @@ import (
 	"fmt"
 )
 
-// UpdateVerificationFlowBody - nolint:deadcode,unused
+// UpdateVerificationFlowBody - Update Verification Flow Request Body
 type UpdateVerificationFlowBody struct {
 	UpdateVerificationFlowWithLinkMethod *UpdateVerificationFlowWithLinkMethod
 }

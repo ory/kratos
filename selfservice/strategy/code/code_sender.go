@@ -5,7 +5,6 @@ package code
 
 import (
 	"context"
-	"net/http"
 	"net/url"
 
 	"github.com/gofrs/uuid"
@@ -59,21 +58,35 @@ func NewSender(deps senderDependencies) *Sender {
 	return &Sender{deps: deps}
 }
 
-// SendRecoveryCode sends a recovery code to the specified address.
-// If the address does not exist in the store, an email is still being sent to prevent account
-// enumeration attacks. In that case, this function returns the ErrUnknownAddress error.
-func (s *Sender) SendRecoveryCode(ctx context.Context, r *http.Request, f *recovery.Flow, via identity.VerifiableAddressType, to string) error {
+// SendRecoveryCode sends a recovery code to the specified address
+//
+// If the address does not exist in the store and dispatching invalid emails is enabled (CourierEnableInvalidDispatch is
+// true), an email is still being sent to prevent account enumeration attacks. In that case, this function returns the
+// ErrUnknownAddress error.
+func (s *Sender) SendRecoveryCode(ctx context.Context, f *recovery.Flow, via identity.VerifiableAddressType, to string) error {
 	s.deps.Logger().
 		WithField("via", via).
 		WithSensitiveField("address", to).
 		Debug("Preparing recovery code.")
 
 	address, err := s.deps.IdentityPool().FindRecoveryAddressByValue(ctx, identity.RecoveryAddressTypeEmail, to)
-	if err != nil {
-		if err := s.send(ctx, string(via), email.NewRecoveryCodeInvalid(s.deps, &email.RecoveryCodeInvalidModel{To: to})); err != nil {
+	if errors.Is(err, sqlcon.ErrNoRows) {
+		notifyUnknownRecipients := s.deps.Config().SelfServiceFlowRecoveryNotifyUnknownRecipients(ctx)
+		s.deps.Audit().
+			WithField("via", via).
+			WithSensitiveField("email_address", address).
+			WithField("strategy", "code").
+			WithField("was_notified", notifyUnknownRecipients).
+			Info("Account recovery was requested for an unknown address.")
+		if !notifyUnknownRecipients {
+			// do nothing
+		} else if err := s.send(ctx, string(via), email.NewRecoveryCodeInvalid(s.deps, &email.RecoveryCodeInvalidModel{To: to})); err != nil {
 			return err
 		}
-		return ErrUnknownAddress
+		return errors.WithStack(ErrUnknownAddress)
+	} else if err != nil {
+		// DB error
+		return err
 	}
 
 	// Get the identity associated with the recovery address
@@ -90,7 +103,7 @@ func (s *Sender) SendRecoveryCode(ctx context.Context, r *http.Request, f *recov
 		CreateRecoveryCode(ctx, &CreateRecoveryCodeParams{
 			RawCode:         rawCode,
 			CodeType:        RecoveryCodeTypeSelfService,
-			ExpiresIn:       s.deps.Config().SelfServiceCodeMethodLifespan(r.Context()),
+			ExpiresIn:       s.deps.Config().SelfServiceCodeMethodLifespan(ctx),
 			RecoveryAddress: address,
 			FlowID:          f.ID,
 			IdentityID:      i.ID,
@@ -124,9 +137,11 @@ func (s *Sender) SendRecoveryCodeTo(ctx context.Context, i *identity.Identity, c
 	return s.send(ctx, string(code.RecoveryAddress.Via), email.NewRecoveryCodeValid(s.deps, &emailModel))
 }
 
-// SendVerificationCode sends a verification link to the specified address. If the address does not exist in the store, an email is
-// still being sent to prevent account enumeration attacks. In that case, this function returns the ErrUnknownAddress
-// error.
+// SendVerificationCode sends a verification code & link to the specified address
+//
+// If the address does not exist in the store and dispatching invalid emails is enabled (CourierEnableInvalidDispatch is
+// true), an email is still being sent to prevent account enumeration attacks. In that case, this function returns the
+// ErrUnknownAddress error.
 func (s *Sender) SendVerificationCode(ctx context.Context, f *verification.Flow, via identity.VerifiableAddressType, to string) error {
 	s.deps.Logger().
 		WithField("via", via).
@@ -134,17 +149,22 @@ func (s *Sender) SendVerificationCode(ctx context.Context, f *verification.Flow,
 		Debug("Preparing verification code.")
 
 	address, err := s.deps.IdentityPool().FindVerifiableAddressByValue(ctx, via, to)
-	if err != nil {
-		if errors.Is(err, sqlcon.ErrNoRows) {
-			s.deps.Audit().
-				WithField("via", via).
-				WithSensitiveField("email_address", address).
-				Info("Sending out invalid verification via code email because address is unknown.")
-			if err := s.send(ctx, string(via), email.NewVerificationCodeInvalid(s.deps, &email.VerificationCodeInvalidModel{To: to})); err != nil {
-				return err
-			}
-			return errors.Cause(ErrUnknownAddress)
+	if errors.Is(err, sqlcon.ErrNoRows) {
+		notifyUnknownRecipients := s.deps.Config().SelfServiceFlowVerificationNotifyUnknownRecipients(ctx)
+		s.deps.Audit().
+			WithField("via", via).
+			WithField("strategy", "code").
+			WithSensitiveField("email_address", address).
+			WithField("was_notified", notifyUnknownRecipients).
+			Info("Address verification was requested for an unknown address.")
+		if !notifyUnknownRecipients {
+			// do nothing
+		} else if err := s.send(ctx, string(via), email.NewVerificationCodeInvalid(s.deps, &email.VerificationCodeInvalidModel{To: to})); err != nil {
+			return err
 		}
+		return errors.WithStack(ErrUnknownAddress)
+
+	} else if err != nil {
 		return err
 	}
 

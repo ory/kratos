@@ -4,8 +4,7 @@ selfservice:
       enabled: true
       config:
         providers:
-          -
-            id: hydra
+          - id: hydra
             label: Ory
             provider: generic
             client_id: ${OIDC_HYDRA_CLIENT_ID}
@@ -14,8 +13,7 @@ selfservice:
             scope:
               - offline
             mapper_url: file://test/e2e/profiles/oidc/hydra.jsonnet
-          -
-            id: google
+          - id: google
             provider: generic
             client_id: ${OIDC_GOOGLE_CLIENT_ID}
             client_secret: ${OIDC_GOOGLE_CLIENT_SECRET}
@@ -23,8 +21,7 @@ selfservice:
             scope:
               - offline
             mapper_url: file://test/e2e/profiles/oidc/hydra.jsonnet
-          -
-            id: github
+          - id: github
             provider: generic
             client_id: ${OIDC_GITHUB_CLIENT_ID}
             client_secret: ${OIDC_GITHUB_CLIENT_SECRET}
@@ -45,10 +42,12 @@ selfservice:
     registration:
       ui_url: http://localhost:4455/registration
       after:
+        password:
+          hooks:
+            - hook: session
         oidc:
           hooks:
-            -
-              hook: session
+            - hook: session
     login:
       ui_url: http://localhost:4455/login
     error:
@@ -60,9 +59,13 @@ selfservice:
 
 identity:
   schemas:
-  - id: default
-    url: file://test/e2e/profiles/oidc/identity.traits.schema.json
+    - id: default
+      url: file://test/e2e/profiles/oidc/identity.traits.schema.json
 
 secrets:
   cipher:
     - secret-thirty-two-character-long
+
+session:
+  whoami:
+    required_aal: aal1

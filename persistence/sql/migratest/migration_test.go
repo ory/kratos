@@ -15,8 +15,6 @@ import (
 
 	"github.com/ory/x/servicelocatorx"
 
-	"github.com/ory/x/fsx"
-
 	"github.com/ory/kratos/identity"
 
 	"github.com/bradleyjkemp/cupaloy/v2"
@@ -124,7 +122,7 @@ func TestMigrations(t *testing.T) {
 
 			t.Run("suite=up", func(t *testing.T) {
 				tm, err := popx.NewMigrationBox(
-					fsx.Merge(os.DirFS("../migrations/sql")),
+					os.DirFS("../migrations/sql"),
 					popx.NewMigrator(c, logrusx.New("", "", logrusx.ForceLevel(logrus.DebugLevel)), nil, 1*time.Minute),
 					popx.WithTestdata(t, os.DirFS("./testdata")),
 				)
@@ -157,7 +155,7 @@ func TestMigrations(t *testing.T) {
 					defer wg.Done()
 					t.Parallel()
 
-					ids, err := d.PrivilegedIdentityPool().ListIdentities(context.Background(), identity.ExpandEverything, 0, 1000)
+					ids, err := d.PrivilegedIdentityPool().ListIdentities(context.Background(), identity.ListIdentityParameters{Expand: identity.ExpandEverything, Page: 0, PerPage: 1000})
 					require.NoError(t, err)
 					require.NotEmpty(t, ids)
 
@@ -180,12 +178,12 @@ func TestMigrations(t *testing.T) {
 					migratest.ContainsExpectedIds(t, filepath.Join("fixtures", "identity"), found)
 				})
 
-				t.Run("case=identity", func(t *testing.T) {
+				t.Run("case=identity_get", func(t *testing.T) {
 					wg.Add(1)
 					defer wg.Done()
 					t.Parallel()
 
-					ids, err := d.PrivilegedIdentityPool().ListIdentities(context.Background(), identity.ExpandEverything, 0, 1000)
+					ids, err := d.PrivilegedIdentityPool().ListIdentities(context.Background(), identity.ListIdentityParameters{Expand: identity.ExpandNothing, Page: 0, PerPage: 1000})
 					require.NoError(t, err)
 					require.NotEmpty(t, ids)
 

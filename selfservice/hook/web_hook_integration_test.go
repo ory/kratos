@@ -19,6 +19,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/ory/x/snapshotx"
+
 	"github.com/sirupsen/logrus/hooks/test"
 	"github.com/stretchr/testify/require"
 
@@ -117,7 +119,6 @@ func TestWebHooks(t *testing.T) {
 		h, _ := json.Marshal(req.Header)
 		return fmt.Sprintf(`{
    					"flow_id": "%s",
-					"identity_id": null,
    					"headers": %s,
 					"method": "%s",
 					"url": "%s",
@@ -143,6 +144,23 @@ func TestWebHooks(t *testing.T) {
 						"Some-Cookie-3": "Third-Cookie-Value"
 					}
 				}`, f.GetID(), s.Identity.ID, string(h), req.Method, "http://www.ory.sh/some_end_point")
+	}
+
+	bodyWithFlowAndIdentityAndTransientPayload := func(req *http.Request, f flow.Flow, s *session.Session, tp json.RawMessage) string {
+		h, _ := json.Marshal(req.Header)
+		return fmt.Sprintf(`{
+   					"flow_id": "%s",
+					"identity_id": "%s",
+   					"headers": %s,
+					"method": "%s",
+					"url": "%s",
+					"cookies": {
+						"Some-Cookie-1": "Some-Cookie-Value",
+						"Some-Cookie-2": "Some-other-Cookie-Value",
+						"Some-Cookie-3": "Third-Cookie-Value"
+					},
+					"transient_payload": %s
+				}`, f.GetID(), s.Identity.ID, string(h), req.Method, "http://www.ory.sh/some_end_point", string(tp))
 	}
 
 	for _, tc := range []struct {
@@ -182,13 +200,28 @@ func TestWebHooks(t *testing.T) {
 			},
 		},
 		{
-			uc:         "Post Registration Hook",
-			createFlow: func() flow.Flow { return &registration.Flow{ID: x.NewUUID()} },
+			uc: "Post Registration Hook",
+			createFlow: func() flow.Flow {
+				return &registration.Flow{
+					ID: x.NewUUID(),
+					TransientPayload: json.RawMessage(`{
+					"stuff": {
+						"name": "fubar",
+						"numbers": [42, 12345, 3.1415]
+					}
+				}`),
+				}
+			},
 			callWebHook: func(wh *hook.WebHook, req *http.Request, f flow.Flow, s *session.Session) error {
 				return wh.ExecutePostRegistrationPostPersistHook(nil, req, f.(*registration.Flow), s)
 			},
 			expectedBody: func(req *http.Request, f flow.Flow, s *session.Session) string {
-				return bodyWithFlowAndIdentity(req, f, s)
+				return bodyWithFlowAndIdentityAndTransientPayload(req, f, s, json.RawMessage(`{
+					"stuff": {
+						"name": "fubar",
+						"numbers": [42, 12345, 3.1415]
+					}
+				}`))
 			},
 		},
 		{
@@ -607,6 +640,90 @@ func TestWebHooks(t *testing.T) {
 		})
 	}
 
+	t.Run("update identity fields", func(t *testing.T) {
+		run := func(t *testing.T, id identity.Identity, responseCode int, response []byte) *identity.WithCredentialsAndAdminMetadataInJSON {
+			f := &registration.Flow{ID: x.NewUUID()}
+			req := &http.Request{
+				Host:       "www.ory.sh",
+				Header:     map[string][]string{},
+				RequestURI: "/some_end_point",
+				Method:     http.MethodPost,
+				URL:        &url.URL{Path: "some_end_point"},
+			}
+			ts := newServer(webHookHttpCodeWithBodyEndPoint(t, responseCode, response))
+			conf := json.RawMessage(fmt.Sprintf(`{"url": "%s", "method": "POST", "body": "%s", "response": {"parse":true}}`, ts.URL+path, "file://./stub/test_body.jsonnet"))
+			wh := hook.NewWebHook(&whDeps, conf)
+			in := &id
+			err := wh.ExecutePostRegistrationPrePersistHook(nil, req, f, in)
+			require.NoError(t, err)
+			result := identity.WithCredentialsAndAdminMetadataInJSON(*in)
+			return &result
+		}
+
+		t.Run("case=update identity fields", func(t *testing.T) {
+			expected := identity.Identity{
+				Credentials: map[identity.CredentialsType]identity.Credentials{identity.CredentialsTypePassword: {Type: "password", Identifiers: []string{"test"}, Config: []byte(`{"hashed_password":"$argon2id$v=19$m=65536,t=1,p=1$Z3JlZW5hbmRlcnNlY3JldA$Z3JlZW5hbmRlcnNlY3JldA"}`)}},
+				SchemaID:    "default",
+				SchemaURL:   "file://stub/default.schema.json",
+				State:       identity.StateActive,
+				Traits:      []byte(`{"email":"some@example.org"}`),
+				VerifiableAddresses: []identity.VerifiableAddress{{
+					Value:    "some@example.org",
+					Verified: false,
+					Via:      "email",
+					Status:   identity.VerifiableAddressStatusPending,
+				}},
+				RecoveryAddresses: []identity.RecoveryAddress{{
+					Value: "some@example.org",
+					Via:   "email",
+				}},
+				MetadataPublic:      []byte(`{"public":"data"}`),
+				MetadataAdmin:       []byte(`{"admin":"data"}`),
+				InternalCredentials: identity.CredentialsCollection{{Type: "password", Identifiers: []string{"test"}, Config: []byte(`{}`)}},
+			}
+
+			t.Run("case=body is empty", func(t *testing.T) {
+				actual := run(t, expected, http.StatusOK, []byte(`{}`))
+				snapshotx.SnapshotT(t, &actual)
+			})
+
+			t.Run("case=identity is present but empty", func(t *testing.T) {
+				actual := run(t, expected, http.StatusOK, []byte(`{"identity":{}}`))
+				snapshotx.SnapshotT(t, &actual)
+			})
+
+			t.Run("case=identity has updated traits", func(t *testing.T) {
+				actual := run(t, expected, http.StatusOK, []byte(`{"identity":{"traits":{"email":"some@other-example.org"}}}`))
+				snapshotx.SnapshotT(t, &actual)
+			})
+
+			t.Run("case=identity has updated state", func(t *testing.T) {
+				actual := run(t, expected, http.StatusOK, []byte(`{"identity":{"state":"inactive"}}`))
+				snapshotx.SnapshotT(t, &actual)
+			})
+
+			t.Run("case=identity has updated public metadata", func(t *testing.T) {
+				actual := run(t, expected, http.StatusOK, []byte(`{"identity":{"metadata_public":{"useful":"metadata"}}}`))
+				snapshotx.SnapshotT(t, &actual)
+			})
+
+			t.Run("case=identity has updated admin metadata", func(t *testing.T) {
+				actual := run(t, expected, http.StatusOK, []byte(`{"identity":{"metadata_admin":{"useful":"metadata"}}}`))
+				snapshotx.SnapshotT(t, &actual)
+			})
+
+			t.Run("case=identity has updated verified addresses", func(t *testing.T) {
+				actual := run(t, expected, http.StatusOK, []byte(`{"identity":{"traits":{"email":"some@other-example.org"},"verifiable_addresses":[{"value":"some@other-example.org","via":"email"}]}}`))
+				snapshotx.SnapshotT(t, &actual)
+			})
+
+			t.Run("case=identity has updated recovery addresses", func(t *testing.T) {
+				actual := run(t, expected, http.StatusOK, []byte(`{"identity":{"traits":{"email":"some@other-example.org"},"recovery_addresses":[{"value":"some@other-example.org","via":"email"}]}}`))
+				snapshotx.SnapshotT(t, &actual)
+			})
+		})
+	})
+
 	t.Run("must error when config is erroneous", func(t *testing.T) {
 		req := &http.Request{
 			Header: map[string][]string{"Some-Header": {"Some-Value"}},
@@ -618,6 +735,24 @@ func TestWebHooks(t *testing.T) {
 		}
 		f := &login.Flow{ID: x.NewUUID()}
 		conf := json.RawMessage("not valid json")
+		wh := hook.NewWebHook(&whDeps, conf)
+
+		err := wh.ExecuteLoginPreHook(nil, req, f)
+		assert.Error(t, err)
+	})
+
+	t.Run("cannot have parse and ignore both set", func(t *testing.T) {
+		ts := newServer(webHookHttpCodeEndPoint(200))
+		req := &http.Request{
+			Header: map[string][]string{"Some-Header": {"Some-Value"}},
+			Host:   "www.ory.sh",
+			TLS:    new(tls.ConnectionState),
+			URL:    &url.URL{Path: "/some_end_point"},
+
+			Method: http.MethodPost,
+		}
+		f := &login.Flow{ID: x.NewUUID()}
+		conf := json.RawMessage(fmt.Sprintf(`{"url": "%s", "method": "GET", "body": "./stub/test_body.jsonnet", "response": {"ignore": true, "parse": true}}`, ts.URL+path))
 		wh := hook.NewWebHook(&whDeps, conf)
 
 		err := wh.ExecuteLoginPreHook(nil, req, f)
@@ -643,6 +778,23 @@ func TestWebHooks(t *testing.T) {
 
 		err := wh.ExecuteLoginPreHook(nil, req, f)
 		assert.Error(t, err)
+	})
+
+	t.Run("must not error when template is erroneous and responses are ignored", func(t *testing.T) {
+		ts := newServer(webHookHttpCodeEndPoint(200))
+		req := &http.Request{
+			Header: map[string][]string{"Some-Header": {"Some-Value"}},
+			Host:   "www.ory.sh",
+			TLS:    new(tls.ConnectionState),
+			URL:    &url.URL{Path: "/some_end_point"},
+			Method: http.MethodPost,
+		}
+		f := &login.Flow{ID: x.NewUUID()}
+		conf := json.RawMessage(fmt.Sprintf(`{"url": "%s", "method": "GET", "body": "file://./stub/bad_template.jsonnet", "response": {"ignore": true}}`, ts.URL+path))
+		wh := hook.NewWebHook(&whDeps, conf)
+
+		err := wh.ExecuteLoginPreHook(nil, req, f)
+		assert.NoError(t, err)
 	})
 
 	t.Run("must not make request", func(t *testing.T) {

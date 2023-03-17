@@ -48,7 +48,7 @@ func (c Container) TableName(ctx context.Context) string {
 
 func NewContainer(name string, o managerOptions) *Container {
 	return &Container{
-		ID:         x.NewUUID(),
+		ID:         uuid.Nil,
 		Name:       name,
 		IdentityID: x.PointToUUID(o.iid),
 		ExpiresAt:  time.Now().Add(o.ttl).UTC().Truncate(time.Second),

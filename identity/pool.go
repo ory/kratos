@@ -12,9 +12,16 @@ import (
 )
 
 type (
+	ListIdentityParameters struct {
+		Expand                Expandables
+		CredentialsIdentifier string
+		Page                  int
+		PerPage               int
+	}
+
 	Pool interface {
 		// ListIdentities lists all identities in the store given the page and itemsPerPage.
-		ListIdentities(ctx context.Context, expandables sqlxx.Expandables, page, itemsPerPage int) ([]Identity, error)
+		ListIdentities(ctx context.Context, params ListIdentityParameters) ([]Identity, error)
 
 		// CountIdentities counts the number of identities in the store.
 		CountIdentities(ctx context.Context) (int64, error)
@@ -70,5 +77,8 @@ type (
 
 		// HydrateIdentityAssociations hydrates the associations of an identity.
 		HydrateIdentityAssociations(ctx context.Context, i *Identity, expandables Expandables) error
+
+		// InjectTraitsSchemaURL sets the identity's traits JSON schema URL from the schema's ID.
+		InjectTraitsSchemaURL(ctx context.Context, i *Identity) error
 	}
 )

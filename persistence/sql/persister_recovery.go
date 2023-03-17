@@ -15,11 +15,11 @@ import (
 	"github.com/gofrs/uuid"
 
 	"github.com/ory/kratos/identity"
+	"github.com/ory/kratos/persistence/sql/update"
 	"github.com/ory/kratos/selfservice/flow"
 	"github.com/ory/kratos/selfservice/flow/recovery"
 	"github.com/ory/kratos/selfservice/strategy/code"
 	"github.com/ory/kratos/selfservice/strategy/link"
-	"github.com/ory/kratos/x"
 	"github.com/ory/x/sqlcon"
 )
 
@@ -52,7 +52,7 @@ func (p *Persister) UpdateRecoveryFlow(ctx context.Context, r *recovery.Flow) er
 
 	cp := *r
 	cp.NID = p.NetworkID(ctx)
-	return p.update(ctx, cp)
+	return update.Generic(ctx, p.GetConnection(ctx), p.r.Tracer(ctx).Tracer(), cp)
 }
 
 func (p *Persister) CreateRecoveryToken(ctx context.Context, token *link.RecoveryToken) error {
@@ -102,7 +102,7 @@ func (p *Persister) UseRecoveryToken(ctx context.Context, fID uuid.UUID, token s
 		}
 		rt.RecoveryAddress = &ra
 
-		/* #nosec G201 TableName is static */
+		//#nosec G201 -- TableName is static
 		return tx.RawQuery(fmt.Sprintf("UPDATE %s SET used=true, used_at=? WHERE id=? AND nid = ?", rt.TableName(ctx)), time.Now().UTC(), rt.ID, nid).Exec()
 	})); err != nil {
 		return nil, err
@@ -115,12 +115,12 @@ func (p *Persister) DeleteRecoveryToken(ctx context.Context, token string) error
 	ctx, span := p.r.Tracer(ctx).Tracer().Start(ctx, "persistence.sql.DeleteRecoveryToken")
 	defer span.End()
 
-	/* #nosec G201 TableName is static */
+	//#nosec G201 -- TableName is static
 	return p.GetConnection(ctx).RawQuery(fmt.Sprintf("DELETE FROM %s WHERE token=? AND nid = ?", new(link.RecoveryToken).TableName(ctx)), token, p.NetworkID(ctx)).Exec()
 }
 
 func (p *Persister) DeleteExpiredRecoveryFlows(ctx context.Context, expiresAt time.Time, limit int) error {
-	// #nosec G201
+	//#nosec G201 -- TableName is static
 	err := p.GetConnection(ctx).RawQuery(fmt.Sprintf(
 		"DELETE FROM %s WHERE id in (SELECT id FROM (SELECT id FROM %s c WHERE expires_at <= ? and nid = ? ORDER BY expires_at ASC LIMIT %d ) AS s )",
 		new(recovery.Flow).TableName(ctx),
@@ -143,7 +143,7 @@ func (p *Persister) CreateRecoveryCode(ctx context.Context, dto *code.CreateReco
 	now := time.Now()
 
 	recoveryCode := &code.RecoveryCode{
-		ID:         x.NewUUID(),
+		ID:         uuid.Nil,
 		CodeHMAC:   p.hmacValue(ctx, dto.RawCode),
 		ExpiresAt:  now.UTC().Add(dto.ExpiresIn),
 		IssuedAt:   now,
@@ -187,14 +187,14 @@ func (p *Persister) UseRecoveryCode(ctx context.Context, fID uuid.UUID, codeVal 
 
 	if err := sqlcon.HandleError(p.Transaction(ctx, func(ctx context.Context, tx *pop.Connection) (err error) {
 
-		/* #nosec G201 TableName is static */
+		//#nosec G201 -- TableName is static
 		if err := sqlcon.HandleError(tx.RawQuery(fmt.Sprintf("UPDATE %s SET submit_count = submit_count + 1 WHERE id = ? AND nid = ?", flowTableName), fID, nid).Exec()); err != nil {
 			return err
 		}
 
 		var submitCount int
 		// Because MySQL does not support "RETURNING" clauses, but we need the updated `submit_count` later on.
-		/* #nosec G201 TableName is static */
+		//#nosec G201 -- TableName is static
 		if err := sqlcon.HandleError(tx.RawQuery(fmt.Sprintf("SELECT submit_count FROM %s WHERE id = ? AND nid = ?", flowTableName), fID, nid).First(&submitCount)); err != nil {
 			if errors.Is(err, sqlcon.ErrNoRows) {
 				// Return no error, as that would roll back the transaction
@@ -249,7 +249,7 @@ func (p *Persister) UseRecoveryCode(ctx context.Context, fID uuid.UUID, codeVal 
 		}
 		recoveryCode.RecoveryAddress = &ra
 
-		/* #nosec G201 TableName is static */
+		//#nosec G201 -- TableName is static
 		return sqlcon.HandleError(tx.RawQuery(fmt.Sprintf("UPDATE %s SET used_at = ? WHERE id = ? AND nid = ?", recoveryCode.TableName(ctx)), time.Now().UTC(), recoveryCode.ID, nid).Exec())
 	})); err != nil {
 		return nil, err
@@ -274,6 +274,6 @@ func (p *Persister) DeleteRecoveryCodesOfFlow(ctx context.Context, fID uuid.UUID
 	ctx, span := p.r.Tracer(ctx).Tracer().Start(ctx, "persistence.sql.DeleteRecoveryCodesOfFlow")
 	defer span.End()
 
-	/* #nosec G201 TableName is static */
+	//#nosec G201 -- TableName is static
 	return p.GetConnection(ctx).RawQuery(fmt.Sprintf("DELETE FROM %s WHERE selfservice_recovery_flow_id = ? AND nid = ?", new(code.RecoveryCode).TableName(ctx)), fID, p.NetworkID(ctx)).Exec()
 }

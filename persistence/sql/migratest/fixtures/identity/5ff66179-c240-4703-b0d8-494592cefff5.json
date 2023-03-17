@@ -13,6 +13,16 @@
       "version": 0,
       "created_at": "2013-10-07T08:23:19Z",
       "updated_at": "2013-10-07T08:23:19Z"
+    },
+    "totp": {
+      "type": "totp",
+      "identifiers": [],
+      "config": {
+        "totp_url": "otpauth://totp/Example:alice@google.com?secret=JBSWY3DPEHPK3PXP\u0026issuer=Example"
+      },
+      "version": 0,
+      "created_at": "2013-10-07T08:23:19Z",
+      "updated_at": "2013-10-07T08:23:19Z"
     }
   },
   "schema_id": "default",

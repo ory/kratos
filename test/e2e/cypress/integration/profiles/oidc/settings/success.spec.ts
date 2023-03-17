@@ -2,8 +2,8 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { appPrefix, gen, website } from "../../../../helpers"
-import { routes as react } from "../../../../helpers/react"
 import { routes as express } from "../../../../helpers/express"
+import { routes as react } from "../../../../helpers/react"
 
 context("Social Sign In Settings Success", () => {
   ;[
@@ -42,7 +42,7 @@ context("Social Sign In Settings Success", () => {
         cy.get('input[name="traits.website"]').clear().type(website)
         cy.triggerOidc(app, "hydra")
 
-        cy.get('[data-testid="ui/message/4000007"]').should(
+        cy.get('[data-testid="ui/message/4000027"]').should(
           "contain.text",
           "An account with the same identifier",
         )
@@ -110,7 +110,16 @@ context("Social Sign In Settings Success", () => {
           cy.logout()
 
           cy.visit(login)
+
+          // we create an intercept for login so we make sure the login endpoint is called
+          cy.intercept("GET", "**/oauth2/auth*").as("login")
+
           cy.get('[value="google"]').click()
+
+          // wait for the login endpoint to be called
+          cy.wait("@login")
+
+          // check the session
           cy.getSession()
         })
 

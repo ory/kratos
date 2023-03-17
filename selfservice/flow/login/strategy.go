@@ -7,6 +7,8 @@ import (
 	"context"
 	"net/http"
 
+	"github.com/gofrs/uuid"
+
 	"github.com/ory/kratos/session"
 
 	"github.com/pkg/errors"
@@ -21,7 +23,7 @@ type Strategy interface {
 	NodeGroup() node.UiNodeGroup
 	RegisterLoginRoutes(*x.RouterPublic)
 	PopulateLoginMethod(r *http.Request, requestedAAL identity.AuthenticatorAssuranceLevel, sr *Flow) error
-	Login(w http.ResponseWriter, r *http.Request, f *Flow, ss *session.Session) (i *identity.Identity, err error)
+	Login(w http.ResponseWriter, r *http.Request, f *Flow, identityID uuid.UUID) (i *identity.Identity, err error)
 	CompletedAuthenticationMethod(ctx context.Context) session.AuthenticationMethod
 }
 

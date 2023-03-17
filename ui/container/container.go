@@ -193,7 +193,7 @@ func (c *Container) ParseError(group node.UiNodeGroup, err error) error {
 			var causes = e.Causes
 			if len(e.Causes) == 0 {
 				pointer, _ := jsonschemax.JSONPointerToDotNotation(e.InstancePtr)
-				c.AddMessage(group, text.NewValidationErrorGeneric(e.Message), pointer)
+				c.AddMessage(group, translateValidationError(e), pointer)
 				return nil
 			}
 
@@ -213,6 +213,38 @@ func (c *Container) ParseError(group node.UiNodeGroup, err error) error {
 		return nil
 	}
 	return err
+}
+
+func translateValidationError(err *jsonschema.ValidationError) *text.Message {
+	segments := strings.Split(err.SchemaPtr, "/")
+	switch segments[len(segments)-1] {
+	case "minLength":
+		return text.NewErrorValidationMinLength(err.Message)
+	case "maxLength":
+		return text.NewErrorValidationMaxLength(err.Message)
+	case "pattern":
+		return text.NewErrorValidationInvalidFormat(err.Message)
+	case "minimum":
+		return text.NewErrorValidationMinimum(err.Message)
+	case "exclusiveMinimum":
+		return text.NewErrorValidationExclusiveMinimum(err.Message)
+	case "maximum":
+		return text.NewErrorValidationMaximum(err.Message)
+	case "exclusiveMaximum":
+		return text.NewErrorValidationExclusiveMaximum(err.Message)
+	case "multipleOf":
+		return text.NewErrorValidationMultipleOf(err.Message)
+	case "maxItems":
+		return text.NewErrorValidationMaxItems(err.Message)
+	case "minItems":
+		return text.NewErrorValidationMinItems(err.Message)
+	case "uniqueItems":
+		return text.NewErrorValidationUniqueItems(err.Message)
+	case "type":
+		return text.NewErrorValidationWrongType(err.Message)
+	default:
+		return text.NewValidationErrorGeneric(err.Message)
+	}
 }
 
 // UpdateNodeValuesFromJSON sets the container's fields to the provided values.

@@ -22,6 +22,7 @@ import (
 	"github.com/ory/kratos/ui/node"
 	"github.com/ory/kratos/x"
 	"github.com/ory/x/httpx"
+	"github.com/ory/x/otelx"
 	"github.com/ory/x/otelx/semconv"
 )
 
@@ -51,6 +52,7 @@ type (
 		x.CSRFTokenGeneratorProvider
 		x.WriterProvider
 		x.LoggingProvider
+		x.TracingProvider
 
 		HooksProvider
 	}
@@ -112,7 +114,11 @@ func (e *HookExecutor) handleLoginError(_ http.ResponseWriter, r *http.Request, 
 	return flowError
 }
 
-func (e *HookExecutor) PostLoginHook(w http.ResponseWriter, r *http.Request, ct identity.CredentialsType, g node.UiNodeGroup, a *Flow, i *identity.Identity, s *session.Session) error {
+func (e *HookExecutor) PostLoginHook(w http.ResponseWriter, r *http.Request, ct identity.CredentialsType, g node.UiNodeGroup, a *Flow, i *identity.Identity, s *session.Session) (err error) {
+	ctx := r.Context()
+	ctx, span := e.d.Tracer(ctx).Tracer().Start(ctx, "HookExecutor.PostLoginHook")
+	r = r.WithContext(ctx)
+	defer otelx.End(span, &err)
 	if err := s.Activate(r, i, e.d.Config(), time.Now().UTC()); err != nil {
 		return err
 	}
@@ -130,7 +136,8 @@ func (e *HookExecutor) PostLoginHook(w http.ResponseWriter, r *http.Request, ct 
 		return err
 	}
 
-	s = s.Declassify()
+	classified := s
+	s = s.Declassified()
 
 	e.d.Logger().
 		WithRequest(r).
@@ -183,7 +190,7 @@ func (e *HookExecutor) PostLoginHook(w http.ResponseWriter, r *http.Request, ct 
 		)
 
 		response := &APIFlowResponse{Session: s, Token: s.Token}
-		if required, _ := e.requiresAAL2(r, s, a); required {
+		if required, _ := e.requiresAAL2(r, classified, a); required {
 			// If AAL is not satisfied, we omit the identity to preserve the user's privacy in case of a phishing attack.
 			response.Session.Identity = nil
 		}
@@ -251,7 +258,7 @@ func (e *HookExecutor) PostLoginHook(w http.ResponseWriter, r *http.Request, ct 
 		finalReturnTo = rt
 	}
 
-	x.ContentNegotiationRedirection(w, r, s.Declassify(), e.d.Writer(), finalReturnTo)
+	x.ContentNegotiationRedirection(w, r, s, e.d.Writer(), finalReturnTo)
 	return nil
 }
 

@@ -18,16 +18,6 @@ type ValidationError struct {
 	Messages text.Messages
 }
 
-func NewMinLengthError(instancePtr string, expected, actual int) error {
-	return errors.WithStack(&ValidationError{
-		ValidationError: &jsonschema.ValidationError{
-			Message:     fmt.Sprintf("length must be >= %d, but got %d", expected, actual),
-			InstancePtr: instancePtr,
-		},
-		Messages: new(text.Messages).Add(text.NewErrorValidationMinLength(expected, actual)),
-	})
-}
-
 func NewRequiredError(missingPtr, missingFieldName string) error {
 	return errors.WithStack(&ValidationError{
 		ValidationError: &jsonschema.ValidationError{
@@ -38,16 +28,6 @@ func NewRequiredError(missingPtr, missingFieldName string) error {
 			},
 		},
 		Messages: new(text.Messages).Add(text.NewValidationErrorRequired(missingFieldName)),
-	})
-}
-
-func NewInvalidFormatError(instancePtr, format, value string) error {
-	return errors.WithStack(&ValidationError{
-		ValidationError: &jsonschema.ValidationError{
-			Message:     fmt.Sprintf("%q is not valid %q", value, format),
-			InstancePtr: instancePtr,
-		},
-		Messages: new(text.Messages).Add(text.NewErrorValidationInvalidFormat(value, format)),
 	})
 }
 

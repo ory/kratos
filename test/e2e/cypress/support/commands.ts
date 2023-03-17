@@ -209,6 +209,17 @@ Cypress.Commands.add("enableLoginForVerifiedAddressOnly", () => {
   })
 })
 
+Cypress.Commands.add("setupHooks", (flow, phase, kind, hooks) => {
+  updateConfigFile((config) => {
+    config.selfservice.flows[flow][phase][kind] = { hooks }
+    return config
+  })
+})
+
+Cypress.Commands.add("setPostPasswordRegistrationHooks", (hooks) => {
+  cy.setupHooks("registration", "after", "password", hooks)
+})
+
 Cypress.Commands.add("shortLoginLifespan", ({} = {}) => {
   updateConfigFile((config) => {
     config.selfservice.flows.login.lifespan = "100ms"
@@ -731,23 +742,8 @@ Cypress.Commands.add("remoteCourierRecoveryCodeTemplates", ({} = {}) => {
 
 Cypress.Commands.add("resetCourierTemplates", (type) => {
   updateConfigFile((config) => {
-    config.courier.templates = {
-      [type]: {
-        invalid: {
-          email: {
-            body: {},
-            subject: "",
-          },
-        },
-        valid: {
-          email: {
-            body: {
-              body: {},
-              subject: "",
-            },
-          },
-        },
-      },
+    if (config?.courier?.templates && type in config.courier.templates) {
+      delete config.courier.templates[type]
     }
     return config
   })
@@ -755,8 +751,11 @@ Cypress.Commands.add("resetCourierTemplates", (type) => {
 
 Cypress.Commands.add(
   "loginOidc",
-  ({ app, expectSession = true, url = APP_URL + "/login" }) => {
+  ({ app, expectSession = true, url = APP_URL + "/login", preTriggerHook }) => {
     cy.visit(url)
+    if (preTriggerHook) {
+      preTriggerHook()
+    }
     cy.triggerOidc(app, "hydra")
     cy.location("href").should("not.eq", "/consent")
     if (expectSession) {
@@ -1043,35 +1042,19 @@ Cypress.Commands.add(
       expect(link).to.not.be.null
       expect(link.href).to.contain(APP_URL)
       const params = new URL(link.href).searchParams
-      const flow = params.get("flow")
 
+      cy.visit(link.href)
       if (strategy === "code") {
         const code = params.get("code")
         expect(code).to.not.be.null
-
-        cy.visit(link.href)
-
         cy.get(`button[name="method"][value="code"]`).click()
+      }
 
-        if (redirectTo) {
-          cy.get(`[data-testid="node/anchor/continue"`)
-            .contains("Continue")
-            .click()
-          cy.url().should("be.equal", redirectTo)
-        }
-      } else if (strategy === "link") {
-        cy.request({ url: link.href, followRedirect: false }).should(
-          (response) => {
-            expect(response.status).to.eq(303)
-            if (redirectTo) {
-              expect(response.redirectedToUrl).to.eq(
-                `${redirectTo}?flow=${flow}`,
-              )
-            } else {
-              expect(response.redirectedToUrl).to.not.contain("verification")
-            }
-          },
-        )
+      if (redirectTo) {
+        cy.get(`[data-testid="node/anchor/continue"`)
+          .contains("Continue")
+          .click()
+        cy.url().should("be.equal", redirectTo)
       }
     })
   },
@@ -1353,3 +1336,28 @@ Cypress.Commands.add(
     })
   },
 )
+
+Cypress.Commands.add(
+  "addInputElement",
+  (parent: string, attribute: string, value: string) => {
+    cy.get(parent).then(($el) => {
+      $el.append(`<input type="hidden" name="${attribute}" value="${value}" />`)
+    })
+  },
+)
+
+Cypress.Commands.add(
+  "notifyUnknownRecipients",
+  (flow: "recovery" | "verification", value: boolean = true) => {
+    cy.updateConfigFile((config) => {
+      config.selfservice.flows[flow].notify_unknown_recipients = value
+      return config
+    })
+  },
+)
+
+Cypress.Commands.add("getCourierMessages", () => {
+  return cy.request(KRATOS_ADMIN + "/courier/messages").then((res) => {
+    return res.body
+  })
+})

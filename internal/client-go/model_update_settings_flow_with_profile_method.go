@@ -15,7 +15,7 @@ import (
 	"encoding/json"
 )
 
-// UpdateSettingsFlowWithProfileMethod nolint:deadcode,unused
+// UpdateSettingsFlowWithProfileMethod Update Settings Flow with Profile Method
 type UpdateSettingsFlowWithProfileMethod struct {
 	// The Anti-CSRF Token  This token is only required when performing browser flows.
 	CsrfToken *string `json:"csrf_token,omitempty"`

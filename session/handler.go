@@ -101,8 +101,10 @@ func (h *Handler) RegisterPublicRoutes(public *x.RouterPublic) {
 
 // Check Session Request Parameters
 //
-// nolint:deadcode,unused
 // swagger:parameters toSession
+//
+//nolint:deadcode,unused
+//lint:ignore U1000 Used to generate Swagger and OpenAPI definitions
 type toSession struct {
 	// Set the Session Token when calling from non-browser clients. A session token has a format of `MP2YWEMeM8MxjkGKpH4dqOQ4Q4DlSPaj`.
 	//
@@ -231,7 +233,9 @@ func (h *Handler) whoami(w http.ResponseWriter, r *http.Request, ps httprouter.P
 // Delete Identity Session Parameters
 //
 // swagger:parameters deleteIdentitySessions
-// nolint:deadcode,unused
+//
+//nolint:deadcode,unused
+//lint:ignore U1000 Used to generate Swagger and OpenAPI definitions
 type deleteIdentitySessions struct {
 	// ID is the identity's ID.
 	//
@@ -276,7 +280,9 @@ func (h *Handler) deleteIdentitySessions(w http.ResponseWriter, r *http.Request,
 // The request object for listing sessions in an administrative context.
 //
 // swagger:parameters listSessions
-// nolint:deadcode,unused
+//
+//nolint:deadcode,unused
+//lint:ignore U1000 Used to generate Swagger and OpenAPI definitions
 type listSessionsRequest struct {
 	keysetpagination.RequestParameters
 
@@ -287,12 +293,12 @@ type listSessionsRequest struct {
 	Active bool `json:"active"`
 
 	// ExpandOptions is a query parameter encoded list of all properties that must be expanded in the Session.
-	// Example - ?expand=Identity&expand=Devices
 	// If no value is provided, the expandable properties are skipped.
 	//
 	// required: false
+	// enum: identity,devices
 	// in: query
-	ExpandOptions []Expandable `json:"expand"`
+	ExpandOptions []string `json:"expand"`
 }
 
 // Session List Response
@@ -300,7 +306,9 @@ type listSessionsRequest struct {
 // The response given when listing sessions in an administrative context.
 //
 // swagger:response listSessions
-// nolint:deadcode,unused
+//
+//nolint:deadcode,unused
+//lint:ignore U1000 Used to generate Swagger and OpenAPI definitions
 type listSessionsResponse struct {
 	keysetpagination.ResponseHeaders
 
@@ -372,15 +380,18 @@ func (h *Handler) adminListSessions(w http.ResponseWriter, r *http.Request, ps h
 // The request object for getting a session in an administrative context.
 //
 // swagger:parameters getSession
-// nolint:deadcode,unused
+//
+//nolint:deadcode,unused
+//lint:ignore U1000 Used to generate Swagger and OpenAPI definitions
 type getSession struct {
 	// ExpandOptions is a query parameter encoded list of all properties that must be expanded in the Session.
 	// Example - ?expand=Identity&expand=Devices
 	// If no value is provided, the expandable properties are skipped.
 	//
 	// required: false
+	// enum: identity,devices
 	// in: query
-	ExpandOptions []Expandable `json:"expand"`
+	ExpandOptions []string `json:"expand"`
 
 	// ID is the session's ID.
 	//
@@ -448,7 +459,9 @@ func (h *Handler) getSession(w http.ResponseWriter, r *http.Request, ps httprout
 // Deactivate Session Parameters
 //
 // swagger:parameters disableSession
-// nolint:deadcode,unused
+//
+//nolint:deadcode,unused
+//lint:ignore U1000 Used to generate Swagger and OpenAPI definitions
 type disableSession struct {
 	// ID is the session's ID.
 	//
@@ -491,7 +504,9 @@ func (h *Handler) disableSession(w http.ResponseWriter, r *http.Request, ps http
 // List Identity Sessions Parameters
 //
 // swagger:parameters listIdentitySessions
-// nolint:deadcode,unused
+//
+//nolint:deadcode,unused
+//lint:ignore U1000 Used to generate Swagger and OpenAPI definitions
 type listIdentitySessionsRequest struct {
 	migrationpagination.RequestParameters
 
@@ -511,7 +526,9 @@ type listIdentitySessionsRequest struct {
 // List Identity Sessions Response
 //
 // swagger:response listIdentitySessions
-// nolint:deadcode,unused
+//
+//nolint:deadcode,unused
+//lint:ignore U1000 Used to generate Swagger and OpenAPI definitions
 type listIdentitySessionsResponse struct {
 	migrationpagination.ResponseHeaderAnnotation
 
@@ -575,8 +592,10 @@ type deleteMySessionsCount struct {
 
 // Disable My Other Session Parameters
 //
-// nolint:deadcode,unused
 // swagger:parameters disableMyOtherSessions
+//
+//nolint:deadcode,unused
+//lint:ignore U1000 Used to generate Swagger and OpenAPI definitions
 type disableMyOtherSessions struct {
 	// Set the Session Token when calling from non-browser clients. A session token has a format of `MP2YWEMeM8MxjkGKpH4dqOQ4Q4DlSPaj`.
 	//
@@ -627,7 +646,9 @@ func (h *Handler) deleteMySessions(w http.ResponseWriter, r *http.Request, _ htt
 // Disable My Session Parameters
 //
 // swagger:parameters disableMySession
-// nolint:deadcode,unused
+//
+//nolint:deadcode,unused
+//lint:ignore U1000 Used to generate Swagger and OpenAPI definitions
 type disableMySession struct {
 	// ID is the session's ID.
 	//
@@ -667,7 +688,7 @@ type disableMySession struct {
 func (h *Handler) deleteMySession(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	sid := ps.ByName("id")
 	if sid == "whoami" {
-		// Special case where we actually want to handle the whomai endpoint.
+		// Special case where we actually want to handle the whoami endpoint.
 		h.whoami(w, r, ps)
 		return
 	}
@@ -700,7 +721,9 @@ func (h *Handler) deleteMySession(w http.ResponseWriter, r *http.Request, ps htt
 // List My Session Parameters
 //
 // swagger:parameters listMySessions
-// nolint:deadcode,unused
+//
+//nolint:deadcode,unused
+//lint:ignore U1000 Used to generate Swagger and OpenAPI definitions
 type listMySessionsParameters struct {
 	x.PaginationParams
 
@@ -722,7 +745,9 @@ type listMySessionsParameters struct {
 // List My Session Response
 //
 // swagger:response listMySessions
-// nolint:deadcode,unused
+//
+//nolint:deadcode,unused
+//lint:ignore U1000 Used to generate Swagger and OpenAPI definitions
 type listMySessionsResponse struct {
 	migrationpagination.ResponseHeaderAnnotation
 
@@ -780,7 +805,9 @@ func (h *Handler) IsAuthenticated(wrap httprouter.Handle, onUnauthenticated http
 }
 
 // swagger:parameters extendSession
-// nolint:deadcode,unused
+//
+//nolint:deadcode,unused
+//lint:ignore U1000 Used to generate Swagger and OpenAPI definitions
 type extendSession struct {
 	// ID is the session's ID.
 	//

@@ -7,7 +7,7 @@ import (
 	"bytes"
 	"context"
 	"crypto/rand"
-	"crypto/sha1" // #nosec G505 - compatibility for imported passwords
+	"crypto/sha1" //#nosec G505 -- compatibility for imported passwords
 	"crypto/sha256"
 	"crypto/sha512"
 	"encoding/base64"

@@ -18,6 +18,7 @@ import (
 	"github.com/ory/x/uuidx"
 
 	"github.com/ory/kratos/courier"
+	"github.com/ory/kratos/persistence/sql/update"
 )
 
 var _ courier.Persister = new(Persister)
@@ -89,7 +90,7 @@ func (p *Persister) NextMessages(ctx context.Context, limit uint8) (messages []c
 		for i := range m {
 			message := &m[i]
 			message.Status = courier.MessageStatusProcessing
-			if err := p.update(ctx, message, "status"); err != nil {
+			if err := update.Generic(ctx, p.GetConnection(ctx), p.r.Tracer(ctx).Tracer(), message, "status"); err != nil {
 				return err
 			}
 		}

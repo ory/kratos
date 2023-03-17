@@ -15,6 +15,10 @@
     },
     "method": {
       "type": "string"
+    },
+    "transient_payload": {
+      "type": "object",
+      "additionalProperties": true
     }
   },
   "if": {

@@ -283,7 +283,7 @@ func TestPersister(ctx context.Context, conf *config.Config, p interface {
 				t.Run("case=all "+tc.desc, func(t *testing.T) {
 					paginatorOpts := make([]keysetpagination.Option, 0)
 					actual, total, nextPage, err := l.ListSessions(ctx, tc.active, paginatorOpts, session.ExpandEverything)
-					require.NoError(t, err)
+					require.NoError(t, err, "%+v", err)
 
 					require.Equal(t, len(tc.expected), len(actual))
 					require.Equal(t, int64(len(tc.expected)), total)

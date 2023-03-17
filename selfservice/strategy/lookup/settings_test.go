@@ -45,14 +45,14 @@ func createIdentityWithoutLookup(t *testing.T, reg driver.Registry) *identity.Id
 	return id
 }
 
-func createIdentity(t *testing.T, reg driver.Registry) (*identity.Identity, []lookup.RecoveryCode) {
-	codes := make([]lookup.RecoveryCode, 12)
+func createIdentity(t *testing.T, reg driver.Registry) (*identity.Identity, []identity.RecoveryCode) {
+	codes := make([]identity.RecoveryCode, 12)
 	for k := range codes {
 		var usedAt sqlxx.NullTime
 		if k%3 == 1 {
 			usedAt = sqlxx.NullTime(time.Unix(int64(1629199958+k), 0))
 		}
-		codes[k] = lookup.RecoveryCode{Code: fmt.Sprintf("key-%d", k), UsedAt: usedAt}
+		codes[k] = identity.RecoveryCode{Code: fmt.Sprintf("key-%d", k), UsedAt: usedAt}
 	}
 	identifier := x.NewUUID().String() + "@ory.sh"
 	password := x.NewUUID().String()
@@ -69,7 +69,7 @@ func createIdentity(t *testing.T, reg driver.Registry) (*identity.Identity, []lo
 		},
 	}
 
-	rc, err := json.Marshal(&lookup.CredentialsConfig{RecoveryCodes: codes})
+	rc, err := json.Marshal(&identity.CredentialsLookupConfig{RecoveryCodes: codes})
 	require.NoError(t, err)
 	require.NoError(t, reg.PrivilegedIdentityPool().CreateIdentity(context.Background(), i))
 	i.Credentials = map[identity.CredentialsType]identity.Credentials{

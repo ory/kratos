@@ -27,8 +27,7 @@ import (
 
 func TestNewIdentity(t *testing.T) {
 	i := NewIdentity(config.DefaultIdentityTraitsSchemaID)
-	assert.NotEmpty(t, i.ID)
-	// assert.NotEmpty(t, i.Metadata)
+	assert.Equal(t, uuid.Nil, i.ID)
 	assert.NotEmpty(t, i.Traits)
 	assert.NotNil(t, i.Credentials)
 	assert.True(t, i.IsActive())
@@ -268,7 +267,7 @@ func TestValidateNID(t *testing.T) {
 		},
 	} {
 		t.Run(fmt.Sprintf("case=%d", k), func(t *testing.T) {
-			err := tc.i.validate()
+			err := tc.i.Validate()
 			if tc.expectedErr {
 				require.Error(t, err)
 			} else {

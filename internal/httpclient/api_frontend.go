@@ -195,7 +195,7 @@ type FrontendApi interface {
 
 		This endpoint is NOT INTENDED for API clients and only works with browsers (Chrome, Firefox, ...).
 
-		More information can be found at [Ory Kratos Email and Phone Verification Documentation](https://www.ory.sh/docs/kratos/selfservice/flows/verify-email-account-activation).
+		More information can be found at [Ory Kratos Email and Phone Verification Documentation](https://www.ory.sh/docs/kratos/self-service/flows/verify-email-account-activation).
 			 * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
 			 * @return FrontendApiApiCreateBrowserVerificationFlowRequest
 	*/
@@ -559,8 +559,9 @@ type FrontendApi interface {
 
 		res.render('verification', flow)
 		})
+		```
 
-		More information can be found at [Ory Kratos Email and Phone Verification Documentation](https://www.ory.sh/docs/kratos/selfservice/flows/verify-email-account-activation).
+		More information can be found at [Ory Kratos Email and Phone Verification Documentation](https://www.ory.sh/docs/kratos/self-service/flows/verify-email-account-activation).
 			 * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
 			 * @return FrontendApiApiGetVerificationFlowRequest
 	*/
@@ -905,7 +906,7 @@ type FrontendApi interface {
 		(if the link was valid) and instructs the user to update their password, or a redirect to the Verification UI URL with
 		a new Verification Flow ID which contains an error message that the verification link was invalid.
 
-		More information can be found at [Ory Kratos Email and Phone Verification Documentation](https://www.ory.sh/docs/kratos/selfservice/flows/verify-email-account-activation).
+		More information can be found at [Ory Kratos Email and Phone Verification Documentation](https://www.ory.sh/docs/kratos/self-service/flows/verify-email-account-activation).
 			 * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
 			 * @return FrontendApiApiUpdateVerificationFlowRequest
 	*/
@@ -1379,10 +1380,11 @@ func (a *FrontendApiService) CreateBrowserRecoveryFlowExecute(r FrontendApiApiCr
 }
 
 type FrontendApiApiCreateBrowserRegistrationFlowRequest struct {
-	ctx            context.Context
-	ApiService     FrontendApi
-	returnTo       *string
-	loginChallenge *string
+	ctx                       context.Context
+	ApiService                FrontendApi
+	returnTo                  *string
+	loginChallenge            *string
+	afterVerificationReturnTo *string
 }
 
 func (r FrontendApiApiCreateBrowserRegistrationFlowRequest) ReturnTo(returnTo string) FrontendApiApiCreateBrowserRegistrationFlowRequest {
@@ -1391,6 +1393,10 @@ func (r FrontendApiApiCreateBrowserRegistrationFlowRequest) ReturnTo(returnTo st
 }
 func (r FrontendApiApiCreateBrowserRegistrationFlowRequest) LoginChallenge(loginChallenge string) FrontendApiApiCreateBrowserRegistrationFlowRequest {
 	r.loginChallenge = &loginChallenge
+	return r
+}
+func (r FrontendApiApiCreateBrowserRegistrationFlowRequest) AfterVerificationReturnTo(afterVerificationReturnTo string) FrontendApiApiCreateBrowserRegistrationFlowRequest {
+	r.afterVerificationReturnTo = &afterVerificationReturnTo
 	return r
 }
 
@@ -1466,6 +1472,9 @@ func (a *FrontendApiService) CreateBrowserRegistrationFlowExecute(r FrontendApiA
 	}
 	if r.loginChallenge != nil {
 		localVarQueryParams.Add("login_challenge", parameterToString(*r.loginChallenge, ""))
+	}
+	if r.afterVerificationReturnTo != nil {
+		localVarQueryParams.Add("after_verification_return_to", parameterToString(*r.afterVerificationReturnTo, ""))
 	}
 	// to determine the Content-Type header
 	localVarHTTPContentTypes := []string{}
@@ -1734,7 +1743,7 @@ If this endpoint is called via an AJAX request, the response contains the recove
 
 This endpoint is NOT INTENDED for API clients and only works with browsers (Chrome, Firefox, ...).
 
-More information can be found at [Ory Kratos Email and Phone Verification Documentation](https://www.ory.sh/docs/kratos/selfservice/flows/verify-email-account-activation).
+More information can be found at [Ory Kratos Email and Phone Verification Documentation](https://www.ory.sh/docs/kratos/self-service/flows/verify-email-account-activation).
   - @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
   - @return FrontendApiApiCreateBrowserVerificationFlowRequest
 */
@@ -3721,8 +3730,9 @@ const flow = await client.getVerificationFlow(req.header('cookie'), req.query['f
 
 res.render('verification', flow)
 })
+```
 
-More information can be found at [Ory Kratos Email and Phone Verification Documentation](https://www.ory.sh/docs/kratos/selfservice/flows/verify-email-account-activation).
+More information can be found at [Ory Kratos Email and Phone Verification Documentation](https://www.ory.sh/docs/kratos/self-service/flows/verify-email-account-activation).
   - @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
   - @return FrontendApiApiGetVerificationFlowRequest
 */
@@ -5439,7 +5449,7 @@ does not have any API capabilities. The server responds with a HTTP 303 See Othe
 (if the link was valid) and instructs the user to update their password, or a redirect to the Verification UI URL with
 a new Verification Flow ID which contains an error message that the verification link was invalid.
 
-More information can be found at [Ory Kratos Email and Phone Verification Documentation](https://www.ory.sh/docs/kratos/selfservice/flows/verify-email-account-activation).
+More information can be found at [Ory Kratos Email and Phone Verification Documentation](https://www.ory.sh/docs/kratos/self-service/flows/verify-email-account-activation).
   - @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
   - @return FrontendApiApiUpdateVerificationFlowRequest
 */

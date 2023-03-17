@@ -188,7 +188,7 @@ func runLoadTest(cmd *cobra.Command, conf *argon2Config, reqPerMin int) (*result
 		eg.Go(func(i int) func() error {
 			return func() error {
 				// wait randomly before starting, max. sample time
-				// #nosec G404 - just a timeout to collect statistical data
+				//#nosec G404 -- just a timeout to collect statistical data
 				t := time.Duration(rand.Intn(int(sampleTime)))
 				timer := time.NewTimer(t)
 				defer timer.Stop()

@@ -1,9 +1,9 @@
 // Copyright © 2023 Ory Corp
 // SPDX-License-Identifier: Apache-2.0
 
-import { extractRecoveryCode, appPrefix, gen, email } from "../../../../helpers"
-import { routes as react } from "../../../../helpers/react"
+import { appPrefix, email, extractRecoveryCode, gen } from "../../../../helpers"
 import { routes as express } from "../../../../helpers/express"
+import { routes as react } from "../../../../helpers/react"
 
 context("Account Recovery Errors", () => {
   ;[
@@ -32,6 +32,7 @@ context("Account Recovery Errors", () => {
         cy.disableVerification()
         cy.enableRecovery()
         cy.useRecoveryStrategy("code")
+        cy.notifyUnknownRecipients("recovery", false)
       })
 
       it("should invalidate flow if wrong code is submitted too often", () => {
@@ -42,7 +43,7 @@ context("Account Recovery Errors", () => {
         cy.get("button[value='code']").click()
         cy.get('[data-testid="ui/message/1060003"]').should(
           "have.text",
-          "An email containing a recovery code has been sent to the email address you provided.",
+          "An email containing a recovery code has been sent to the email address you provided. If you have not received an email, check the spelling of the address and make sure to use the address you registered with.",
         )
         cy.recoveryEmailWithCode({
           expect: { email: identity.email, enterCode: false },
@@ -68,7 +69,7 @@ context("Account Recovery Errors", () => {
         cy.get("button[value='code']").click()
         cy.get('[data-testid="ui/message/1060003"]').should(
           "have.text",
-          "An email containing a recovery code has been sent to the email address you provided.",
+          "An email containing a recovery code has been sent to the email address you provided. If you have not received an email, check the spelling of the address and make sure to use the address you registered with.",
         )
         cy.recoveryEmailWithCode({
           expect: { email: identity.email, enterCode: false },
@@ -96,6 +97,7 @@ context("Account Recovery Errors", () => {
       })
 
       it("should receive a stub email when recovering a non-existent account", () => {
+        cy.notifyUnknownRecipients("recovery")
         cy.visit(recovery)
 
         const email = gen.email()
@@ -105,7 +107,7 @@ context("Account Recovery Errors", () => {
         cy.location("pathname").should("eq", "/recovery")
         cy.get('[data-testid="ui/message/1060003"]').should(
           "have.text",
-          "An email containing a recovery code has been sent to the email address you provided.",
+          "An email containing a recovery code has been sent to the email address you provided. If you have not received an email, check the spelling of the address and make sure to use the address you registered with.",
         )
         cy.get('input[name="code"]').should("be.visible")
 
@@ -139,7 +141,7 @@ context("Account Recovery Errors", () => {
         cy.get("button[value='code']").click()
         cy.get('[data-testid="ui/message/1060003"]').should(
           "have.text",
-          "An email containing a recovery code has been sent to the email address you provided.",
+          "An email containing a recovery code has been sent to the email address you provided. If you have not received an email, check the spelling of the address and make sure to use the address you registered with.",
         )
         cy.get("input[name='code']").type("01234567") // Invalid code
         cy.get("button[value='code']").click()
@@ -174,7 +176,7 @@ context("Account Recovery Errors", () => {
         cy.get("button[value='code']").click()
         cy.get('[data-testid="ui/message/1060003"]').should(
           "have.text",
-          "An email containing a recovery code has been sent to the email address you provided.",
+          "An email containing a recovery code has been sent to the email address you provided. If you have not received an email, check the spelling of the address and make sure to use the address you registered with.",
         )
 
         cy.getMail().then((mail) => {
@@ -183,13 +185,14 @@ context("Account Recovery Errors", () => {
       })
 
       it("remote recovery email template (recovery_code_invalid)", () => {
+        cy.notifyUnknownRecipients("recovery")
         cy.remoteCourierRecoveryCodeTemplates()
         cy.visit(recovery)
         cy.get(appPrefix(app) + "input[name='email']").type(email())
         cy.get("button[value='code']").click()
         cy.get('[data-testid="ui/message/1060003"]').should(
           "have.text",
-          "An email containing a recovery code has been sent to the email address you provided.",
+          "An email containing a recovery code has been sent to the email address you provided. If you have not received an email, check the spelling of the address and make sure to use the address you registered with.",
         )
 
         cy.getMail().then((mail) => {

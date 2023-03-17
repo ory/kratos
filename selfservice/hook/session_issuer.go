@@ -9,8 +9,6 @@ import (
 	"time"
 
 	"github.com/pkg/errors"
-	"go.opentelemetry.io/otel/attribute"
-	"go.opentelemetry.io/otel/trace"
 
 	"github.com/ory/kratos/selfservice/flow"
 	"github.com/ory/kratos/selfservice/flow/registration"
@@ -42,9 +40,9 @@ func NewSessionIssuer(r sessionIssuerDependencies) *SessionIssuer {
 }
 
 func (e *SessionIssuer) ExecutePostRegistrationPostPersistHook(w http.ResponseWriter, r *http.Request, a *registration.Flow, s *session.Session) error {
-	return otelx.WithSpan(r.Context(), "selfservice.hook.ExecutePostRegistrationPostPersistHook", func(ctx context.Context) error {
+	return otelx.WithSpan(r.Context(), "selfservice.hook.SessionIssuer.ExecutePostRegistrationPostPersistHook", func(ctx context.Context) error {
 		return e.executePostRegistrationPostPersistHook(w, r.WithContext(ctx), a, s)
-	}, trace.WithAttributes(attribute.String("hook", KeySessionIssuer)))
+	})
 }
 
 func (e *SessionIssuer) executePostRegistrationPostPersistHook(w http.ResponseWriter, r *http.Request, a *registration.Flow, s *session.Session) error {

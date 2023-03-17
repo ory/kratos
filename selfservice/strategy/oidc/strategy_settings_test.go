@@ -462,6 +462,68 @@ func TestSettingsStrategy(t *testing.T) {
 			checkCredentials(t, true, users[agent].ID, provider, subject, true)
 		})
 
+		t.Run("case=upstream parameters", func(t *testing.T) {
+			t.Cleanup(reset(t))
+
+			subject = "hackerman+new-connection-new-oidc-with-parameters+" + testID
+			scope = []string{"openid", "offline"}
+			agent, provider := "password", "google"
+
+			a := agents[agent]
+
+			t.Run("case=should be able to pass upstream paramters when linking a connection", func(t *testing.T) {
+				c := &http.Client{}
+				req := nprSDK(t, a, "", time.Hour)
+				// copy over the client so we can disable redirects
+				*c = *a
+				// We need to disable redirects because the upstream parameters are only passed on to the provider
+				c.CheckRedirect = func(req *http.Request, via []*http.Request) error {
+					return http.ErrUseLastResponse
+				}
+
+				values := &url.Values{}
+				values.Set("csrf_token", x.FakeCSRFToken)
+				values.Set("link", provider)
+				values.Set("upstream_parameters.login_hint", "foo@bar.com")
+				values.Set("upstream_parameters.hd", "bar.com")
+
+				resp, err := c.PostForm(action(req), *values)
+				require.NoError(t, err)
+				require.Equal(t, http.StatusSeeOther, resp.StatusCode)
+
+				loc, err := resp.Location()
+				require.NoError(t, err)
+
+				require.EqualValues(t, "foo@bar.com", loc.Query().Get("login_hint"))
+				require.EqualValues(t, "bar.com", loc.Query().Get("hd"))
+			})
+
+			t.Run("case=invalid query parameters should be ignored", func(t *testing.T) {
+				c := &http.Client{}
+				req := nprSDK(t, a, "", time.Hour)
+				// copy over the client so we can disable redirects
+				*c = *a
+				// We need to disable redirects because the upstream parameters are only passed on to the provider
+				c.CheckRedirect = func(req *http.Request, via []*http.Request) error {
+					return http.ErrUseLastResponse
+				}
+
+				values := &url.Values{}
+				values.Set("csrf_token", x.FakeCSRFToken)
+				values.Set("link", provider)
+				values.Set("upstream_parameters.lol", "invalid")
+
+				resp, err := c.PostForm(action(req), *values)
+				require.NoError(t, err)
+				require.Equal(t, http.StatusSeeOther, resp.StatusCode)
+
+				loc, err := resp.Location()
+				require.NoError(t, err)
+
+				require.Empty(t, loc.Query().Get("lol"))
+			})
+		})
+
 		t.Run("case=should not be able to link a connection without a privileged session", func(t *testing.T) {
 			agent, provider := "githuber", "google"
 			subject = "hackerman+new+google+" + testID

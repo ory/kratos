@@ -7,20 +7,29 @@ import (
 	"fmt"
 	"net/http"
 	"os"
+	"sync"
 	"time"
 
 	"github.com/cenkalti/backoff"
+	"github.com/phayes/freeport"
 	"github.com/pkg/errors"
 
 	"github.com/ory/dockertest/v3"
+	"github.com/ory/dockertest/v3/docker"
 )
 
-var resources []*dockertest.Resource
+var (
+	resourceMux sync.Mutex
+	resources   []*dockertest.Resource
+)
 
 func CleanUpTestSMTP() {
+	resourceMux.Lock()
+	defer resourceMux.Unlock()
 	for _, resource := range resources {
 		resource.Close()
 	}
+	resources = nil
 }
 
 func RunTestSMTP() (smtp, api string, err error) {
@@ -34,6 +43,15 @@ func RunTestSMTP() (smtp, api string, err error) {
 	if err != nil {
 		return "", "", err
 	}
+	if err := pool.Client.Ping(); err != nil {
+		return "", "", err
+	}
+
+	ports, err := freeport.GetFreePorts(2)
+	if err != nil {
+		return "", "", err
+	}
+	smtpPort, apiPort := ports[0], ports[1]
 
 	resource, err := pool.
 		RunWithOptions(&dockertest.RunOptions{
@@ -49,14 +67,20 @@ func RunTestSMTP() (smtp, api string, err error) {
 				"-jim-linkspeed-min=1250",
 				"-jim-linkspeed-max=12500",
 			},
+			PortBindings: map[docker.Port][]docker.PortBinding{
+				"8025/tcp": {{HostPort: fmt.Sprintf("%d/tcp", apiPort)}},
+				"1025/tcp": {{HostPort: fmt.Sprintf("%d/tcp", smtpPort)}},
+			},
 		})
 	if err != nil {
 		return "", "", err
 	}
+	resourceMux.Lock()
 	resources = append(resources, resource)
+	resourceMux.Unlock()
 
-	smtp = fmt.Sprintf("smtp://test:test@127.0.0.1:%s/?disable_starttls=true", resource.GetPort("1025/tcp"))
-	api = fmt.Sprintf("http://127.0.0.1:%s", resource.GetPort("8025/tcp"))
+	smtp = fmt.Sprintf("smtp://test:test@127.0.0.1:%d/?disable_starttls=true", smtpPort)
+	api = fmt.Sprintf("http://127.0.0.1:%d", apiPort)
 	if err := backoff.Retry(func() error {
 		res, err := http.Get(api + "/api/v2/messages")
 		if err != nil {

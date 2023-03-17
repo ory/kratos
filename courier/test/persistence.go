@@ -184,9 +184,31 @@ func TestPersister(ctx context.Context, newNetworkUnlessExisting NetworkWrapper,
 		})
 
 		t.Run("case=network", func(t *testing.T) {
+
+			t.Run("generates id on creation", func(t *testing.T) {
+				expected := courier.Message{ID: uuid.Nil}
+				require.NoError(t, p.AddMessage(ctx, &expected))
+
+				assert.NotEqual(t, uuid.Nil, expected.ID)
+				assert.EqualValues(t, nid, expected.NID)
+				assert.EqualValues(t, nid, p.NetworkID(ctx))
+
+				actual, err := p.LatestQueuedMessage(ctx)
+				require.NoError(t, err)
+				assert.EqualValues(t, expected.ID, actual.ID)
+				assert.EqualValues(t, nid, actual.NID)
+
+				actuals, err := p.NextMessages(ctx, 255)
+				require.NoError(t, err)
+
+				actual = &actuals[0]
+				assert.EqualValues(t, expected.ID, actual.ID)
+				assert.EqualValues(t, nid, actual.NID)
+			})
+
 			id := x.NewUUID()
 
-			t.Run("sets id on creation", func(t *testing.T) {
+			t.Run("persists id on creation", func(t *testing.T) {
 				expected := courier.Message{ID: id}
 				require.NoError(t, p.AddMessage(ctx, &expected))
 

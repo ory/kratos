@@ -67,6 +67,7 @@ type dependencies interface {
 	x.CSRFTokenGeneratorProvider
 	x.WriterProvider
 	x.HTTPClientProvider
+	x.TracingProvider
 
 	identity.ValidationProvider
 	identity.PrivilegedPoolProvider
@@ -117,9 +118,10 @@ type Strategy struct {
 }
 
 type authCodeContainer struct {
-	FlowID string          `json:"flow_id"`
-	State  string          `json:"state"`
-	Traits json.RawMessage `json:"traits"`
+	FlowID           string          `json:"flow_id"`
+	State            string          `json:"state"`
+	Traits           json.RawMessage `json:"traits"`
+	TransientPayload json.RawMessage `json:"transient_payload"`
 }
 
 func generateState(flowID string) string {
@@ -208,7 +210,7 @@ func (s *Strategy) ID() identity.CredentialsType {
 }
 
 func (s *Strategy) validateFlow(ctx context.Context, r *http.Request, rid uuid.UUID) (flow.Flow, error) {
-	if x.IsZeroUUID(rid) {
+	if rid.IsNil() {
 		return nil, errors.WithStack(herodot.ErrBadRequest.WithReason("The session cookie contains invalid values and the flow could not be executed. Please try again."))
 	}
 
@@ -366,6 +368,7 @@ func (s *Strategy) handleCallback(w http.ResponseWriter, r *http.Request, ps htt
 		}
 		return
 	case *registration.Flow:
+		a.TransientPayload = cntnr.TransientPayload
 		if ff, err := s.processRegistration(w, r, a, token, claims, provider, cntnr); err != nil {
 			if ff != nil {
 				s.forwardError(w, r, ff, err)
@@ -453,6 +456,18 @@ func (s *Strategy) handleError(w http.ResponseWriter, r *http.Request, f flow.Fl
 	case *registration.Flow:
 		// Reset all nodes to not confuse users.
 		// This is kinda hacky and will probably need to be updated at some point.
+
+		if errors.Is(err, registration.ErrDuplicateCredentials) {
+			rf.UI.Messages.Add(text.NewErrorValidationDuplicateCredentialsOnOIDCLink())
+			lf, err := s.registrationToLogin(w, r, rf, provider)
+			if err != nil {
+				return err
+			}
+			// return a new login flow with the error message embedded in the login flow.
+			x.AcceptToRedirectOrJSON(w, r, s.d.Writer(), lf, lf.AppendTo(s.d.Config().SelfServiceFlowLoginUI(r.Context())).String())
+			// ensure the function does not continue to execute
+			return registration.ErrHookAbortFlow
+		}
 
 		rf.UI.Nodes = node.Nodes{}
 

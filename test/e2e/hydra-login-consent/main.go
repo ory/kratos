@@ -9,7 +9,7 @@ import (
 
 	"github.com/julienschmidt/httprouter"
 
-	client "github.com/ory/hydra-client-go"
+	client "github.com/ory/hydra-client-go/v2"
 
 	"github.com/ory/x/osx"
 	"github.com/ory/x/pointerx"
@@ -176,7 +176,7 @@ func main() {
 	})
 
 	addr := ":" + osx.GetenvDefault("PORT", "4446")
-	// #nosec G112
+	//#nosec G112
 	server := &http.Server{Addr: addr, Handler: router}
 	fmt.Printf("Starting web server at %s\n", addr)
 	check(server.ListenAndServe())

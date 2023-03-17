@@ -384,7 +384,7 @@ func TestSettings(t *testing.T) {
 			conf.MustSet(ctx, config.ViperKeySelfServiceSettingsAfter, nil)
 		})
 
-		var run = func(t *testing.T, f *kratos.SettingsFlow, isAPI bool, c *http.Client, id *identity.Identity) {
+		var run = func(t *testing.T, f *kratos.SettingsFlow, isAPI bool, c *http.Client, _ *identity.Identity) {
 			values := testhelpers.SDKFormFieldsToURLValues(f.Ui.Nodes)
 			values.Set("method", "password")
 			values.Set("password", randx.MustString(16, randx.AlphaNum))

@@ -88,8 +88,7 @@ func TestRegistration(t *testing.T) {
 	//}
 
 	t.Run("AssertCommonErrorCases", func(t *testing.T) {
-		reg := newRegistrationRegistry(t)
-		registrationhelpers.AssertCommonErrorCases(t, reg, flows)
+		registrationhelpers.AssertCommonErrorCases(t, flows)
 	})
 
 	t.Run("AssertRegistrationRespectsValidation", func(t *testing.T) {
@@ -167,6 +166,31 @@ func TestRegistration(t *testing.T) {
 				registrationhelpers.CheckFormContent(t, []byte(actual), node.WebAuthnRegisterTrigger, "csrf_token", "traits.username", "traits.foobar")
 				assert.Contains(t, gjson.Get(actual, "ui.nodes.#(attributes.name==traits.foobar).messages.0").String(), `Property foobar is missing`, "%s", actual)
 				assert.Equal(t, email, gjson.Get(actual, "ui.nodes.#(attributes.name==traits.username).attributes.value").String(), "%s", actual)
+			})
+		}
+	})
+
+	t.Run("case=should reject invalid transient payload", func(t *testing.T) {
+		email := testhelpers.RandomEmail()
+
+		var values = func(v url.Values) {
+			v.Set("traits.username", email)
+			v.Set("traits.foobar", "bar")
+			v.Set("transient_payload", "42")
+			v.Set(node.WebAuthnRegister, "{}")
+			v.Del("method")
+		}
+
+		for _, f := range flows {
+			t.Run("type="+f, func(t *testing.T) {
+				actual := registrationhelpers.ExpectValidationError(t, publicTS, conf, f, values)
+
+				assert.NotEmpty(t, gjson.Get(actual, "id").String(), "%s", actual)
+				assert.Contains(t, gjson.Get(actual, "ui.action").String(), publicTS.URL+registration.RouteSubmitFlow, "%s", actual)
+				registrationhelpers.CheckFormContent(t, []byte(actual), node.WebAuthnRegisterTrigger, "csrf_token", "traits.username", "traits.foobar")
+				assert.Equal(t, "bar", gjson.Get(actual, "ui.nodes.#(attributes.name==traits.foobar).attributes.value").String(), "%s", actual)
+				assert.Equal(t, email, gjson.Get(actual, "ui.nodes.#(attributes.name==traits.username).attributes.value").String(), "%s", actual)
+				assert.Equal(t, int64(4000026), gjson.Get(actual, "ui.nodes.#(attributes.name==transient_payload).messages.0.id").Int(), "%s", actual)
 			})
 		}
 	})
@@ -286,6 +310,35 @@ func TestRegistration(t *testing.T) {
 				t.Run("type="+f, func(t *testing.T) {
 					email := testhelpers.RandomEmail()
 					actual := makeSuccessfulRegistration(t, f, redirNoSessionTS.URL+"/registration-return-ts", values(email))
+
+					if f == "spa" {
+						assert.Equal(t, email, gjson.Get(actual, "identity.traits.username").String(), "%s", actual)
+						assert.False(t, gjson.Get(actual, "session").Exists(), "because the registration yielded no session, the user is not expected to be signed in: %s", actual)
+					} else {
+						assert.Equal(t, "null\n", actual, "because the registration yielded no session, the user is not expected to be signed in: %s", actual)
+					}
+
+					i, _, err := reg.PrivilegedIdentityPool().FindByCredentialsIdentifier(context.Background(), identity.CredentialsTypeWebAuthn, email)
+					require.NoError(t, err)
+					assert.Equal(t, email, gjson.GetBytes(i.Traits, "username").String(), "%s", actual)
+				})
+			}
+		})
+
+		t.Run("case=should accept valid transient payload", func(t *testing.T) {
+			useReturnToFromTS(redirNoSessionTS)
+			t.Cleanup(func() {
+				useReturnToFromTS(redirTS)
+			})
+			conf.MustSet(ctx, config.HookStrategyKey(config.ViperKeySelfServiceRegistrationAfter, identity.CredentialsTypePassword.String()), nil)
+
+			for _, f := range flows {
+				t.Run("type="+f, func(t *testing.T) {
+					email := testhelpers.RandomEmail()
+					actual := makeSuccessfulRegistration(t, f, redirNoSessionTS.URL+"/registration-return-ts", func(v url.Values) {
+						values(email)(v)
+						v.Set("transient_payload.stuff", "42")
+					})
 
 					if f == "spa" {
 						assert.Equal(t, email, gjson.Get(actual, "identity.traits.username").String(), "%s", actual)

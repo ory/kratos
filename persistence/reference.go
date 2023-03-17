@@ -57,6 +57,7 @@ type Persister interface {
 	MigrateDown(c context.Context, steps int) error
 	MigrateUp(c context.Context) error
 	Migrator() *popx.Migrator
+	MigrationBox() *popx.MigrationBox
 	GetConnection(ctx context.Context) *pop.Connection
 	Transaction(ctx context.Context, callback func(ctx context.Context, connection *pop.Connection) error) error
 	Networker

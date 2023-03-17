@@ -971,7 +971,8 @@
             "type": "string"
           },
           "schema": {
-            "$ref": "#/components/schemas/identitySchema"
+            "description": "The actual Identity JSON Schema",
+            "type": "object"
           }
         },
         "type": "object"
@@ -1416,7 +1417,7 @@
         "type": "object"
       },
       "performNativeLogoutBody": {
-        "description": "nolint:deadcode,unused",
+        "description": "Perform Native Logout Request Body",
         "properties": {
           "session_token": {
             "description": "The Session Token\n\nInvalidate this session token.",
@@ -1426,7 +1427,6 @@
         "required": [
           "session_token"
         ],
-        "title": "Perform Native Logout Request Body",
         "type": "object"
       },
       "recoveryCodeForIdentity": {
@@ -1597,6 +1597,10 @@
           "return_to": {
             "description": "ReturnTo contains the requested return_to URL.",
             "type": "string"
+          },
+          "transient_payload": {
+            "description": "TransientPayload is used to pass data from the registration to a webhook",
+            "type": "object"
           },
           "type": {
             "$ref": "#/components/schemas/selfServiceFlowType"
@@ -2398,6 +2402,10 @@
           "traits": {
             "description": "The identity traits. This is a placeholder for the registration flow.",
             "type": "object"
+          },
+          "upstream_parameters": {
+            "description": "UpstreamParameters are the parameters that are passed to the upstream identity provider.\n\nThese parameters are optional and depend on what the upstream identity provider supports.\nSupported parameters are:\n`login_hint` (string): The `login_hint` parameter suppresses the account chooser and either pre-fills the email box on the sign-in form, or selects the proper session.\n`hd` (string): The `hd` parameter limits the login/registration process to a Google Organization, e.g. `mycollege.edu`.",
+            "type": "object"
           }
         },
         "required": [
@@ -2590,6 +2598,14 @@
           "traits": {
             "description": "The identity traits",
             "type": "object"
+          },
+          "transient_payload": {
+            "description": "Transient data to pass along to any webhooks",
+            "type": "object"
+          },
+          "upstream_parameters": {
+            "description": "UpstreamParameters are the parameters that are passed to the upstream identity provider.\n\nThese parameters are optional and depend on what the upstream identity provider supports.\nSupported parameters are:\n`login_hint` (string): The `login_hint` parameter suppresses the account chooser and either pre-fills the email box on the sign-in form, or selects the proper session.\n`hd` (string): The `hd` parameter limits the login/registration process to a Google Organization, e.g. `mycollege.edu`.",
+            "type": "object"
           }
         },
         "required": [
@@ -2616,6 +2632,10 @@
           "traits": {
             "description": "The identity's traits",
             "type": "object"
+          },
+          "transient_payload": {
+            "description": "Transient data to pass along to any webhooks",
+            "type": "object"
           }
         },
         "required": [
@@ -2638,6 +2658,10 @@
           },
           "traits": {
             "description": "The identity's traits",
+            "type": "object"
+          },
+          "transient_payload": {
+            "description": "Transient data to pass along to any webhooks",
             "type": "object"
           },
           "webauthn_register": {
@@ -2726,7 +2750,7 @@
         "type": "object"
       },
       "updateSettingsFlowWithOidcMethod": {
-        "description": "nolint:deadcode,unused",
+        "description": "Update Settings Flow with OpenID Connect Method",
         "properties": {
           "flow": {
             "description": "Flow ID is the flow's ID.\n\nin: query",
@@ -2747,12 +2771,15 @@
           "unlink": {
             "description": "Unlink this provider\n\nEither this or `link` must be set.\n\ntype: string\nin: body",
             "type": "string"
+          },
+          "upstream_parameters": {
+            "description": "UpstreamParameters are the parameters that are passed to the upstream identity provider.\n\nThese parameters are optional and depend on what the upstream identity provider supports.\nSupported parameters are:\n`login_hint` (string): The `login_hint` parameter suppresses the account chooser and either pre-fills the email box on the sign-in form, or selects the proper session.\n`hd` (string): The `hd` parameter limits the login/registration process to a Google Organization, e.g. `mycollege.edu`.",
+            "type": "object"
           }
         },
         "required": [
           "method"
         ],
-        "title": "Update Settings Flow with OpenID Connect Method",
         "type": "object"
       },
       "updateSettingsFlowWithPasswordMethod": {
@@ -2778,7 +2805,7 @@
         "type": "object"
       },
       "updateSettingsFlowWithProfileMethod": {
-        "description": "nolint:deadcode,unused",
+        "description": "Update Settings Flow with Profile Method",
         "properties": {
           "csrf_token": {
             "description": "The Anti-CSRF Token\n\nThis token is only required when performing browser flows.",
@@ -2797,7 +2824,6 @@
           "traits",
           "method"
         ],
-        "title": "Update Settings Flow with Profile Method",
         "type": "object"
       },
       "updateSettingsFlowWithTotpMethod": {
@@ -2855,7 +2881,7 @@
         "type": "object"
       },
       "updateVerificationFlowBody": {
-        "description": "nolint:deadcode,unused",
+        "description": "Update Verification Flow Request Body",
         "discriminator": {
           "mapping": {
             "link": "#/components/schemas/updateVerificationFlowWithLinkMethod"
@@ -2866,8 +2892,7 @@
           {
             "$ref": "#/components/schemas/updateVerificationFlowWithLinkMethod"
           }
-        ],
-        "title": "Update Verification Flow Request Body"
+        ]
       },
       "updateVerificationFlowWithCodeMethodBody": {
         "properties": {
@@ -2964,7 +2989,7 @@
         "type": "object"
       },
       "verificationFlow": {
-        "description": "Used to verify an out-of-band communication\nchannel such as an email address or a phone number.\n\nFor more information head over to: https://www.ory.sh/docs/kratos/selfservice/flows/verify-email-account-activation",
+        "description": "Used to verify an out-of-band communication\nchannel such as an email address or a phone number.\n\nFor more information head over to: https://www.ory.sh/docs/kratos/self-service/flows/verify-email-account-activation",
         "properties": {
           "active": {
             "description": "Active, if set, contains the registration method that is being used. It is initially\nnot set.",
@@ -3240,6 +3265,14 @@
               "format": "int64",
               "minimum": 1,
               "type": "integer"
+            }
+          },
+          {
+            "description": "CredentialsIdentifier is the identifier (username, email) of the credentials to look up.",
+            "in": "query",
+            "name": "credentials_identifier",
+            "schema": {
+              "type": "string"
             }
           }
         ],
@@ -3624,6 +3657,78 @@
         ]
       }
     },
+    "/admin/identities/{id}/credentials/{type}": {
+      "delete": {
+        "description": "Delete an [identity](https://www.ory.sh/docs/kratos/concepts/identity-user-model) credential by its type\nYou can only delete second factor (aal2) credentials.",
+        "operationId": "deleteIdentityCredentials",
+        "parameters": [
+          {
+            "description": "ID is the identity's ID.",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "Type is the credential's Type.\nOne of totp, webauthn, lookup",
+            "in": "path",
+            "name": "type",
+            "required": true,
+            "schema": {
+              "enum": [
+                "totp",
+                "webauthn",
+                "lookup"
+              ],
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/identity"
+                }
+              }
+            },
+            "description": "identity"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/errorGeneric"
+                }
+              }
+            },
+            "description": "errorGeneric"
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/errorGeneric"
+                }
+              }
+            },
+            "description": "errorGeneric"
+          }
+        },
+        "security": [
+          {
+            "oryAccessToken": []
+          }
+        ],
+        "summary": "Delete a credential for a specific identity",
+        "tags": [
+          "identity"
+        ]
+      }
+    },
     "/admin/identities/{id}/sessions": {
       "delete": {
         "description": "Calling this endpoint irrecoverably and permanently deletes and invalidates all sessions that belong to the given Identity.",
@@ -3953,15 +4058,15 @@
             }
           },
           {
-            "description": "ExpandOptions is a query parameter encoded list of all properties that must be expanded in the Session.\nExample - ?expand=Identity\u0026expand=Devices\nIf no value is provided, the expandable properties are skipped.",
+            "description": "ExpandOptions is a query parameter encoded list of all properties that must be expanded in the Session.\nIf no value is provided, the expandable properties are skipped.",
             "in": "query",
             "name": "expand",
             "schema": {
+              "enum": [
+                "identity",
+                "devices"
+              ],
               "items": {
-                "enum": [
-                  "Devices",
-                  "Identity"
-                ],
                 "type": "string"
               },
               "type": "array"
@@ -4073,11 +4178,11 @@
             "in": "query",
             "name": "expand",
             "schema": {
+              "enum": [
+                "identity",
+                "devices"
+              ],
               "items": {
-                "enum": [
-                  "Devices",
-                  "Identity"
-                ],
                 "type": "string"
               },
               "type": "array"
@@ -5390,6 +5495,14 @@
             "schema": {
               "type": "string"
             }
+          },
+          {
+            "description": "The URL to return the browser to after the verification flow was completed.\n\nAfter the registration flow is completed, the user will be sent a verification email.\nUpon completing the verification flow, this URL will be used to override the default\n`selfservice.flows.verification.after.default_redirect_to` value.",
+            "in": "query",
+            "name": "after_verification_return_to",
+            "schema": {
+              "type": "string"
+            }
           }
         ],
         "responses": {
@@ -5873,7 +5986,7 @@
     },
     "/self-service/verification": {
       "post": {
-        "description": "Use this endpoint to complete a verification flow. This endpoint\nbehaves differently for API and browser flows and has several states:\n\n`choose_method` expects `flow` (in the URL query) and `email` (in the body) to be sent\nand works with API- and Browser-initiated flows.\nFor API clients and Browser clients with HTTP Header `Accept: application/json` it either returns a HTTP 200 OK when the form is valid and HTTP 400 OK when the form is invalid\nand a HTTP 303 See Other redirect with a fresh verification flow if the flow was otherwise invalid (e.g. expired).\nFor Browser clients without HTTP Header `Accept` or with `Accept: text/*` it returns a HTTP 303 See Other redirect to the Verification UI URL with the Verification Flow ID appended.\n`sent_email` is the success state after `choose_method` when using the `link` method and allows the user to request another verification email. It\nworks for both API and Browser-initiated flows and returns the same responses as the flow in `choose_method` state.\n`passed_challenge` expects a `token` to be sent in the URL query and given the nature of the flow (\"sending a verification link\")\ndoes not have any API capabilities. The server responds with a HTTP 303 See Other redirect either to the Settings UI URL\n(if the link was valid) and instructs the user to update their password, or a redirect to the Verification UI URL with\na new Verification Flow ID which contains an error message that the verification link was invalid.\n\nMore information can be found at [Ory Kratos Email and Phone Verification Documentation](https://www.ory.sh/docs/kratos/selfservice/flows/verify-email-account-activation).",
+        "description": "Use this endpoint to complete a verification flow. This endpoint\nbehaves differently for API and browser flows and has several states:\n\n`choose_method` expects `flow` (in the URL query) and `email` (in the body) to be sent\nand works with API- and Browser-initiated flows.\nFor API clients and Browser clients with HTTP Header `Accept: application/json` it either returns a HTTP 200 OK when the form is valid and HTTP 400 OK when the form is invalid\nand a HTTP 303 See Other redirect with a fresh verification flow if the flow was otherwise invalid (e.g. expired).\nFor Browser clients without HTTP Header `Accept` or with `Accept: text/*` it returns a HTTP 303 See Other redirect to the Verification UI URL with the Verification Flow ID appended.\n`sent_email` is the success state after `choose_method` when using the `link` method and allows the user to request another verification email. It\nworks for both API and Browser-initiated flows and returns the same responses as the flow in `choose_method` state.\n`passed_challenge` expects a `token` to be sent in the URL query and given the nature of the flow (\"sending a verification link\")\ndoes not have any API capabilities. The server responds with a HTTP 303 See Other redirect either to the Settings UI URL\n(if the link was valid) and instructs the user to update their password, or a redirect to the Verification UI URL with\na new Verification Flow ID which contains an error message that the verification link was invalid.\n\nMore information can be found at [Ory Kratos Email and Phone Verification Documentation](https://www.ory.sh/docs/kratos/self-service/flows/verify-email-account-activation).",
         "operationId": "updateVerificationFlow",
         "parameters": [
           {
@@ -6013,7 +6126,7 @@
     },
     "/self-service/verification/browser": {
       "get": {
-        "description": "This endpoint initializes a browser-based account verification flow. Once initialized, the browser will be redirected to\n`selfservice.flows.verification.ui_url` with the flow ID set as the query parameter `?flow=`.\n\nIf this endpoint is called via an AJAX request, the response contains the recovery flow without any redirects.\n\nThis endpoint is NOT INTENDED for API clients and only works with browsers (Chrome, Firefox, ...).\n\nMore information can be found at [Ory Kratos Email and Phone Verification Documentation](https://www.ory.sh/docs/kratos/selfservice/flows/verify-email-account-activation).",
+        "description": "This endpoint initializes a browser-based account verification flow. Once initialized, the browser will be redirected to\n`selfservice.flows.verification.ui_url` with the flow ID set as the query parameter `?flow=`.\n\nIf this endpoint is called via an AJAX request, the response contains the recovery flow without any redirects.\n\nThis endpoint is NOT INTENDED for API clients and only works with browsers (Chrome, Firefox, ...).\n\nMore information can be found at [Ory Kratos Email and Phone Verification Documentation](https://www.ory.sh/docs/kratos/self-service/flows/verify-email-account-activation).",
         "operationId": "createBrowserVerificationFlow",
         "parameters": [
           {
@@ -6058,7 +6171,7 @@
     },
     "/self-service/verification/flows": {
       "get": {
-        "description": "This endpoint returns a verification flow's context with, for example, error details and other information.\n\nBrowser flows expect the anti-CSRF cookie to be included in the request's HTTP Cookie Header.\nFor AJAX requests you must ensure that cookies are included in the request or requests will fail.\n\nIf you use the browser-flow for server-side apps, the services need to run on a common top-level-domain\nand you need to forward the incoming HTTP Cookie header to this endpoint:\n\n```js\npseudo-code example\nrouter.get('/recovery', async function (req, res) {\nconst flow = await client.getVerificationFlow(req.header('cookie'), req.query['flow'])\n\nres.render('verification', flow)\n})\n\nMore information can be found at [Ory Kratos Email and Phone Verification Documentation](https://www.ory.sh/docs/kratos/selfservice/flows/verify-email-account-activation).",
+        "description": "This endpoint returns a verification flow's context with, for example, error details and other information.\n\nBrowser flows expect the anti-CSRF cookie to be included in the request's HTTP Cookie Header.\nFor AJAX requests you must ensure that cookies are included in the request or requests will fail.\n\nIf you use the browser-flow for server-side apps, the services need to run on a common top-level-domain\nand you need to forward the incoming HTTP Cookie header to this endpoint:\n\n```js\npseudo-code example\nrouter.get('/recovery', async function (req, res) {\nconst flow = await client.getVerificationFlow(req.header('cookie'), req.query['flow'])\n\nres.render('verification', flow)\n})\n```\n\nMore information can be found at [Ory Kratos Email and Phone Verification Documentation](https://www.ory.sh/docs/kratos/self-service/flows/verify-email-account-activation).",
         "operationId": "getVerificationFlow",
         "parameters": [
           {

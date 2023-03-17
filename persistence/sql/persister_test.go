@@ -57,7 +57,6 @@ func init() {
 	//pop.Debug = true
 }
 
-// nolint:staticcheck
 func TestMain(m *testing.M) {
 	atexit := dockertest.NewOnExit()
 	atexit.Add(func() {
@@ -97,7 +96,9 @@ func pl(t *testing.T) func(lvl logging.Level, s string, args ...interface{}) {
 }
 
 func createCleanDatabases(t *testing.T) map[string]*driver.RegistryDefault {
-	conns := map[string]string{"sqlite": "sqlite://file:" + t.TempDir() + "/db.sqlite?_fk=true"}
+	conns := map[string]string{
+		"sqlite": "sqlite://file:" + t.TempDir() + "/db.sqlite?_fk=true",
+	}
 
 	var l sync.Mutex
 	if !testing.Short() {
@@ -234,9 +235,9 @@ func TestPersister(t *testing.T) {
 			})
 			t.Run("contract=settings.TestFlowPersister", func(t *testing.T) {
 				pop.SetLogger(pl(t))
-				settings.TestRequestPersister(ctx, conf, p)(t)
+				settings.TestFlowPersister(ctx, conf, p)(t)
 			})
-			t.Run("contract=session.TestFlowPersister", func(t *testing.T) {
+			t.Run("contract=session.TestPersister", func(t *testing.T) {
 				pop.SetLogger(pl(t))
 				session.TestPersister(ctx, conf, p)(t)
 			})
@@ -245,7 +246,7 @@ func TestPersister(t *testing.T) {
 				upsert, insert := sqltesthelpers.DefaultNetworkWrapper(p)
 				courier.TestPersister(ctx, upsert, insert)(t)
 			})
-			t.Run("contract=verification.TestPersister", func(t *testing.T) {
+			t.Run("contract=verification.TestFlowPersister", func(t *testing.T) {
 				pop.SetLogger(pl(t))
 				verification.TestFlowPersister(ctx, conf, p)(t)
 			})

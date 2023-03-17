@@ -186,7 +186,7 @@ func (s *Strategy) continueSettingsFlowAddTOTP(w http.ResponseWriter, r *http.Re
 		return nil, schema.NewTOTPVerifierWrongError("#/totp_code")
 	}
 
-	co, err := json.Marshal(&CredentialsConfig{TOTPURL: key.URL()})
+	co, err := json.Marshal(&identity.CredentialsTOTPConfig{TOTPURL: key.URL()})
 	if err != nil {
 		return nil, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("Unable to encode totp options to JSON: %s", err))
 	}

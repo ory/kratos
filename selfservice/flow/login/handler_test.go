@@ -569,6 +569,13 @@ func TestFlowLifecycle(t *testing.T) {
 				res, _ := initAuthenticatedFlow(t, url.Values{"login_challenge": {hydra.FAKE_SUCCESS}}, false)
 				require.Contains(t, res.Request.URL.String(), loginTS.URL)
 			})
+
+			t.Run("case=oauth2 flow init adds oauth2_login_request field", func(t *testing.T) {
+				res, body := initSPAFlow(t, url.Values{"login_challenge": {hydra.FAKE_SUCCESS}})
+				assert.NotContains(t, res.Request.URL.String(), loginTS.URL)
+
+				assert.NotEmpty(t, gjson.GetBytes(body, "oauth2_login_request").Value(), "%s", body)
+			})
 		})
 
 		t.Run("case=relative redirect when self-service login ui is a relative URL", func(t *testing.T) {

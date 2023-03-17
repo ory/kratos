@@ -76,7 +76,7 @@ func TestSchemaValidator(t *testing.T) {
 	defer ctrl.Finish()
 
 	router := httprouter.New()
-	router.GET("/schema/:name", func(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	router.GET("/schema/:name", func(w http.ResponseWriter, _ *http.Request, ps httprouter.Params) {
 		_, _ = w.Write([]byte(`{
   "$id": "https://example.com/person.schema.json",
   "$schema": "http://json-schema.org/draft-07/schema#",

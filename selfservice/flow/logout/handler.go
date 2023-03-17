@@ -86,7 +86,9 @@ type logoutFlow struct {
 // Create Browser Logout Flow Parameters
 //
 // swagger:parameters createBrowserLogoutFlow
-// nolint:deadcode,unused
+//
+//nolint:deadcode,unused
+//lint:ignore U1000 Used to generate Swagger and OpenAPI definitions
 type createBrowserLogoutFlow struct {
 	// HTTP Cookies
 	//
@@ -139,7 +141,9 @@ func (h *Handler) createBrowserLogoutFlow(w http.ResponseWriter, r *http.Request
 // Perform Native Logout Parameters
 //
 // swagger:parameters performNativeLogout
-// nolint:deadcode,unused
+//
+//nolint:deadcode,unused
+//lint:ignore U1000 Used to generate Swagger and OpenAPI definitions
 type performNativeLogout struct {
 	// in: body
 	// required: true
@@ -148,8 +152,10 @@ type performNativeLogout struct {
 
 // Perform Native Logout Request Body
 //
-// nolint:deadcode,unused
 // swagger:model performNativeLogoutBody
+//
+//nolint:deadcode,unused
+//lint:ignore U1000 Used to generate Swagger and OpenAPI definitions
 type performNativeLogoutBody struct {
 	// The Session Token
 	//
@@ -208,8 +214,10 @@ func (h *Handler) performNativeLogout(w http.ResponseWriter, r *http.Request, _ 
 
 // Update Logout Flow Parameters
 //
-// nolint:deadcode,unused
 // swagger:parameters updateLogoutFlow
+//
+//nolint:deadcode,unused
+//lint:ignore U1000 Used to generate Swagger and OpenAPI definitions
 type updateLogoutFlow struct {
 	// A Valid Logout Token
 	//

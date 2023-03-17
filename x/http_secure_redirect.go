@@ -76,12 +76,14 @@ func SecureRedirectToIsAllowedHost(returnTo *url.URL, allowed url.URL) bool {
 	return strings.EqualFold(allowed.Host, returnTo.Host)
 }
 
-func TakeOverReturnToParameter(from string, to string) (string, error) {
+// TakeOverReturnToParameter carries over the return_to parameter to a new URL
+// If `from` does not contain the `return_to` query parameter, the first non-empty value from `fallback` is used instead.
+func TakeOverReturnToParameter(from string, to string, fallback ...string) (string, error) {
 	fromURL, err := url.Parse(from)
 	if err != nil {
 		return "", err
 	}
-	returnTo := fromURL.Query().Get("return_to")
+	returnTo := stringsx.Coalesce(append([]string{fromURL.Query().Get("return_to")}, fallback...)...)
 	// Empty return_to parameter, return early
 	if returnTo == "" {
 		return to, nil
