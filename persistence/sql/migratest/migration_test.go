@@ -88,7 +88,7 @@ func TestMigrations(t *testing.T) {
 				connections["mysql"] = dockertest.ConnectToTestMySQLPop(t)
 			},
 			func() {
-				connections["cockroach"] = dockertest.ConnectToTestCockroachDBPop(t)
+				connections["cockroach"] = dockertest.ConnectPop(t, dockertest.RunTestCockroachDBWithVersion(t, "v22.2.6"))
 			},
 		})
 	}
