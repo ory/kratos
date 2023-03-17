@@ -19,6 +19,8 @@ import (
 type UpdateRegistrationFlowWithOidcMethod struct {
 	// The CSRF Token
 	CsrfToken *string `json:"csrf_token,omitempty"`
+	// Only used in API-type flows, when an id token has been received by mobile app directly from oidc provider.
+	IdToken *string `json:"id_token,omitempty"`
 	// Method to use  This field must be set to `oidc` when using the oidc method.
 	Method string `json:"method"`
 	// The provider to register with
@@ -80,6 +82,38 @@ func (o *UpdateRegistrationFlowWithOidcMethod) HasCsrfToken() bool {
 // SetCsrfToken gets a reference to the given string and assigns it to the CsrfToken field.
 func (o *UpdateRegistrationFlowWithOidcMethod) SetCsrfToken(v string) {
 	o.CsrfToken = &v
+}
+
+// GetIdToken returns the IdToken field value if set, zero value otherwise.
+func (o *UpdateRegistrationFlowWithOidcMethod) GetIdToken() string {
+	if o == nil || o.IdToken == nil {
+		var ret string
+		return ret
+	}
+	return *o.IdToken
+}
+
+// GetIdTokenOk returns a tuple with the IdToken field value if set, nil otherwise
+// and a boolean to check if the value has been set.
+func (o *UpdateRegistrationFlowWithOidcMethod) GetIdTokenOk() (*string, bool) {
+	if o == nil || o.IdToken == nil {
+		return nil, false
+	}
+	return o.IdToken, true
+}
+
+// HasIdToken returns a boolean if a field has been set.
+func (o *UpdateRegistrationFlowWithOidcMethod) HasIdToken() bool {
+	if o != nil && o.IdToken != nil {
+		return true
+	}
+
+	return false
+}
+
+// SetIdToken gets a reference to the given string and assigns it to the IdToken field.
+func (o *UpdateRegistrationFlowWithOidcMethod) SetIdToken(v string) {
+	o.IdToken = &v
 }
 
 // GetMethod returns the Method field value
@@ -230,6 +264,9 @@ func (o UpdateRegistrationFlowWithOidcMethod) MarshalJSON() ([]byte, error) {
 	toSerialize := map[string]interface{}{}
 	if o.CsrfToken != nil {
 		toSerialize["csrf_token"] = o.CsrfToken
+	}
+	if o.IdToken != nil {
+		toSerialize["id_token"] = o.IdToken
 	}
 	if true {
 		toSerialize["method"] = o.Method

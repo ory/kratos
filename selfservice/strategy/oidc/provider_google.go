@@ -6,7 +6,7 @@ package oidc
 import (
 	"context"
 
-	gooidc "github.com/coreos/go-oidc"
+	gooidc "github.com/coreos/go-oidc/v3/oidc"
 	"golang.org/x/oauth2"
 
 	"github.com/ory/x/stringslice"

@@ -19,6 +19,8 @@ import (
 type UpdateSettingsFlowWithOidcMethod struct {
 	// Flow ID is the flow's ID.  in: query
 	Flow *string `json:"flow,omitempty"`
+	// Only used in API-type flows, when an id token has been received by mobile app directly from oidc provider.
+	IdToken *string `json:"id_token,omitempty"`
 	// Link this provider  Either this or `unlink` must be set.  type: string in: body
 	Link *string `json:"link,omitempty"`
 	// Method  Should be set to profile when trying to update a profile.
@@ -79,6 +81,38 @@ func (o *UpdateSettingsFlowWithOidcMethod) HasFlow() bool {
 // SetFlow gets a reference to the given string and assigns it to the Flow field.
 func (o *UpdateSettingsFlowWithOidcMethod) SetFlow(v string) {
 	o.Flow = &v
+}
+
+// GetIdToken returns the IdToken field value if set, zero value otherwise.
+func (o *UpdateSettingsFlowWithOidcMethod) GetIdToken() string {
+	if o == nil || o.IdToken == nil {
+		var ret string
+		return ret
+	}
+	return *o.IdToken
+}
+
+// GetIdTokenOk returns a tuple with the IdToken field value if set, nil otherwise
+// and a boolean to check if the value has been set.
+func (o *UpdateSettingsFlowWithOidcMethod) GetIdTokenOk() (*string, bool) {
+	if o == nil || o.IdToken == nil {
+		return nil, false
+	}
+	return o.IdToken, true
+}
+
+// HasIdToken returns a boolean if a field has been set.
+func (o *UpdateSettingsFlowWithOidcMethod) HasIdToken() bool {
+	if o != nil && o.IdToken != nil {
+		return true
+	}
+
+	return false
+}
+
+// SetIdToken gets a reference to the given string and assigns it to the IdToken field.
+func (o *UpdateSettingsFlowWithOidcMethod) SetIdToken(v string) {
+	o.IdToken = &v
 }
 
 // GetLink returns the Link field value if set, zero value otherwise.
@@ -237,6 +271,9 @@ func (o UpdateSettingsFlowWithOidcMethod) MarshalJSON() ([]byte, error) {
 	toSerialize := map[string]interface{}{}
 	if o.Flow != nil {
 		toSerialize["flow"] = o.Flow
+	}
+	if o.IdToken != nil {
+		toSerialize["id_token"] = o.IdToken
 	}
 	if o.Link != nil {
 		toSerialize["link"] = o.Link

@@ -251,3 +251,12 @@ func NewErrorValidationSuchNoWebAuthnUser() *Message {
 		Context: context(nil),
 	}
 }
+
+func NewErrorValidationOIDCUserNotFound() *Message {
+	return &Message{
+		ID:      ErrorValidationOIDCUserNotFound,
+		Text:    "User with the provided identifier not found.",
+		Type:    Error,
+		Context: context(nil),
+	}
+}

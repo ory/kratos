@@ -119,6 +119,7 @@ const (
 	ErrorValidationUniqueItems
 	ErrorValidationWrongType
 	ErrorValidationDuplicateCredentialsOnOIDCLink
+	ErrorValidationOIDCUserNotFound
 )
 
 const (

@@ -7,6 +7,7 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"path"
 	"time"
 
 	"github.com/pkg/errors"
@@ -248,6 +249,29 @@ func (e *HookExecutor) PostLoginHook(w http.ResponseWriter, r *http.Request, g n
 		finalReturnTo = rt
 	}
 
+	isWebView, err := flow.IsWebViewFlow(r.Context(), e.d.Config(), a)
+	if err != nil {
+		return err
+	}
+	if isWebView {
+		response := &APIFlowResponse{Session: s, Token: s.Token}
+		required, err := e.requiresAAL2(r, s, a)
+		if err != nil {
+			return err
+		}
+		if required {
+			// If AAL is not satisfied, we omit the identity to preserve the user's privacy in case of a phishing attack.
+			response.Session.Identity = nil
+		}
+		w.Header().Set("Content-Type", "application/json")
+		returnTo.Path = path.Join(returnTo.Path, "success")
+		query := returnTo.Query()
+		query.Set("session_token", s.Token)
+		returnTo.RawQuery = query.Encode()
+		w.Header().Set("Location", returnTo.String())
+		e.d.Writer().WriteCode(w, r, http.StatusSeeOther, response)
+		return nil
+	}
 	x.ContentNegotiationRedirection(w, r, s, e.d.Writer(), finalReturnTo)
 	return nil
 }

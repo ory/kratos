@@ -114,6 +114,7 @@ const (
 	ViperKeySelfServiceStrategyConfig                        = "selfservice.methods"
 	ViperKeySelfServiceBrowserDefaultReturnTo                = "selfservice." + DefaultBrowserReturnURL
 	ViperKeyURLsAllowedReturnToDomains                       = "selfservice.allowed_return_urls"
+	ViperKeySelfServiceWebViewRedirectURL                    = "selfservice.webview_redirect_uri"
 	ViperKeySelfServiceRegistrationEnabled                   = "selfservice.flows.registration.enabled"
 	ViperKeySelfServiceRegistrationUI                        = "selfservice.flows.registration.ui_url"
 	ViperKeySelfServiceRegistrationRequestLifespan           = "selfservice.flows.registration.lifespan"
@@ -801,6 +802,10 @@ func (p *Config) SecretsCipher(ctx context.Context) [][32]byte {
 
 func (p *Config) SelfServiceBrowserDefaultReturnTo(ctx context.Context) *url.URL {
 	return p.ParseAbsoluteOrRelativeURIOrFail(ctx, ViperKeySelfServiceBrowserDefaultReturnTo)
+}
+
+func (p *Config) SelfServiceWebViewRedirectURL(ctx context.Context) *url.URL {
+	return p.GetProvider(ctx).URIF(ViperKeySelfServiceWebViewRedirectURL, nil)
 }
 
 func (p *Config) guessBaseURL(ctx context.Context, keyHost, keyPort string, defaultPort int) *url.URL {

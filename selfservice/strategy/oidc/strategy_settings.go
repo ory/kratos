@@ -8,6 +8,7 @@ import (
 	"context"
 	_ "embed"
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"time"
 
@@ -135,10 +136,6 @@ func (s *Strategy) linkableProviders(ctx context.Context, r *http.Request, conf 
 }
 
 func (s *Strategy) PopulateSettingsMethod(r *http.Request, id *identity.Identity, sr *settings.Flow) error {
-	if sr.Type != flow.TypeBrowser {
-		return nil
-	}
-
 	conf, err := s.Config(r.Context())
 	if err != nil {
 		return err
@@ -230,6 +227,11 @@ type updateSettingsFlowWithOidcMethod struct {
 	//
 	// required: false
 	UpstreamParameters json.RawMessage `json:"upstream_parameters"`
+
+	// Only used in API-type flows, when an id token has been received by mobile app directly from oidc provider.
+	//
+	// required: false
+	IDToken string `json:"id_token"`
 }
 
 func (p *updateSettingsFlowWithOidcMethod) GetFlowID() uuid.UUID {
@@ -285,9 +287,39 @@ func (s *Strategy) Settings(w http.ResponseWriter, r *http.Request, f *settings.
 			InstancePtr: "#/",
 		}))
 	} else if l > 0 {
-		if err := s.initLinkProvider(w, r, ctxUpdate, &p); err != nil {
-			return nil, err
+		switch f.Type {
+		case flow.TypeAPI:
+			provider, err := s.provider(r.Context(), r, p.Link)
+			if err != nil {
+				return nil, s.handleSettingsError(w, r, ctxUpdate, &p, err)
+			}
+			var claims *Claims
+			token := &oauth2.Token{}
+			if apiFlowProvider, ok := provider.(APIFlowProvider); ok {
+				if len(p.IDToken) > 0 {
+					token = token.WithExtra(map[string]string{"id_token": p.IDToken})
+					claims, err = apiFlowProvider.ClaimsFromIDToken(r.Context(), p.IDToken)
+					if err != nil {
+						return nil, errors.WithStack(err)
+					}
+				} else {
+					return nil, ErrIDTokenMissing
+				}
+			} else {
+				return nil, ErrProviderNoAPISupport
+			}
+
+			if err := s.linkProvider(w, r, ctxUpdate, token, claims, provider); err != nil {
+				return nil, err
+			}
+		case flow.TypeBrowser:
+			if err := s.initLinkProvider(w, r, ctxUpdate, &p); err != nil {
+				return nil, err
+			}
+		default:
+			return nil, errors.WithStack(errors.New(fmt.Sprintf("Not supported flow type: %s", f.Type)))
 		}
+
 		return ctxUpdate, nil
 	} else if u > 0 {
 		if err := s.unlinkProvider(w, r, ctxUpdate, &p); err != nil {

@@ -5315,6 +5315,10 @@
           "description": "The CSRF Token",
           "type": "string"
         },
+        "id_token": {
+          "description": "Only used in API-type flows, when an id token has been received by mobile app directly from oidc provider.",
+          "type": "string"
+        },
         "method": {
           "description": "Method to use\n\nThis field must be set to `oidc` when using the oidc method.",
           "type": "string"
@@ -5479,6 +5483,10 @@
           "description": "The CSRF Token",
           "type": "string"
         },
+        "id_token": {
+          "description": "Only used in API-type flows, when an id token has been received by mobile app directly from oidc provider.",
+          "type": "string"
+        },
         "method": {
           "description": "Method to use\n\nThis field must be set to `oidc` when using the oidc method.",
           "type": "string"
@@ -5612,6 +5620,10 @@
       "properties": {
         "flow": {
           "description": "Flow ID is the flow's ID.\n\nin: query",
+          "type": "string"
+        },
+        "id_token": {
+          "description": "Only used in API-type flows, when an id token has been received by mobile app directly from oidc provider.",
           "type": "string"
         },
         "link": {

@@ -57,6 +57,28 @@
           }
         }
       }
+    },
+    {
+      "type": "input",
+      "group": "oidc",
+      "attributes": {
+        "name": "provider",
+        "type": "submit",
+        "value": "check_audience",
+        "disabled": false,
+        "node_type": "input"
+      },
+      "messages": [],
+      "meta": {
+        "label": {
+          "id": 1010002,
+          "text": "Sign in with check_audience",
+          "type": "info",
+          "context": {
+            "provider": "check_audience"
+          }
+        }
+      }
     }
   ]
 }

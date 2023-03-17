@@ -13,7 +13,7 @@ import (
 	"github.com/ory/herodot"
 	"github.com/ory/x/stringslice"
 
-	gooidc "github.com/coreos/go-oidc"
+	gooidc "github.com/coreos/go-oidc/v3/oidc"
 )
 
 var _ Provider = new(ProviderGenericOIDC)
@@ -87,10 +87,21 @@ func (g *ProviderGenericOIDC) AuthCodeURLOptions(r ider) []oauth2.AuthCodeOption
 	return options
 }
 
-func (g *ProviderGenericOIDC) verifyAndDecodeClaimsWithProvider(ctx context.Context, provider *gooidc.Provider, raw string) (*Claims, error) {
-	token, err := provider.Verifier(&gooidc.Config{ClientID: g.config.ClientID}).Verify(ctx, raw)
+func (g *ProviderGenericOIDC) verifyAndDecodeClaimsWithProvider(ctx context.Context, provider *gooidc.Provider, rawIDToken string) (*Claims, error) {
+	skipClientIDCheck := g.config.AllowedAudiences != nil && len(g.config.AllowedAudiences) > 0
+	token, err := provider.
+		Verifier(&gooidc.Config{
+			ClientID:          g.config.ClientID,
+			SkipClientIDCheck: skipClientIDCheck,
+		}).
+		Verify(ctx, rawIDToken)
 	if err != nil {
 		return nil, errors.WithStack(herodot.ErrBadRequest.WithReasonf("%s", err))
+	}
+	if skipClientIDCheck {
+		if err := verifyAudience(token.Audience, g.config.AllowedAudiences); err != nil {
+			return nil, errors.WithStack(herodot.ErrBadRequest.WithReasonf("%s", err))
+		}
 	}
 
 	var claims Claims
@@ -107,16 +118,31 @@ func (g *ProviderGenericOIDC) verifyAndDecodeClaimsWithProvider(ctx context.Cont
 	return &claims, nil
 }
 
+func verifyAudience(received []string, expected []string) error {
+	for _, r := range received {
+		for _, e := range expected {
+			if r == e {
+				return nil
+			}
+		}
+	}
+	return errors.Errorf("oidc: audience not valid: %v", received)
+}
+
 func (g *ProviderGenericOIDC) Claims(ctx context.Context, exchange *oauth2.Token, query url.Values) (*Claims, error) {
 	raw, ok := exchange.Extra("id_token").(string)
 	if !ok || len(raw) == 0 {
 		return nil, errors.WithStack(ErrIDTokenMissing)
 	}
 
+	return g.ClaimsFromIDToken(ctx, raw)
+}
+
+func (g *ProviderGenericOIDC) ClaimsFromIDToken(ctx context.Context, rawIDToken string) (*Claims, error) {
 	p, err := g.provider(ctx)
 	if err != nil {
 		return nil, err
 	}
 
-	return g.verifyAndDecodeClaimsWithProvider(ctx, p, raw)
+	return g.verifyAndDecodeClaimsWithProvider(ctx, p, rawIDToken)
 }

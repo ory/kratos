@@ -29,6 +29,10 @@
         },
         "additionalProperties": false
       }
+    },
+    "id_token": {
+      "type": "string",
+      "minLength": 1
     }
   }
 }
