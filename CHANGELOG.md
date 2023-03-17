@@ -5,7 +5,7 @@
 
 **Table of Contents**
 
-- [ (2023-03-16)](#2023-03-16)
+- [ (2023-03-17)](#2023-03-17)
   - [Breaking Changes](#breaking-changes)
     - [Bug Fixes](#bug-fixes)
     - [Code Refactoring](#code-refactoring)
@@ -294,7 +294,7 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# [](https://github.com/ory/kratos/compare/v0.11.1...v) (2023-03-16)
+# [](https://github.com/ory/kratos/compare/v0.11.1...v) (2023-03-17)
 
 ## Breaking Changes
 
@@ -434,6 +434,15 @@ flows.
   ([8aa75e9](https://github.com/ory/kratos/commit/8aa75e97e4bfee37e7cf551173b516c6244786ff))
 - Add patreon oidc provider ([#3021](https://github.com/ory/kratos/issues/3021))
   ([20ea29e](https://github.com/ory/kratos/commit/20ea29e018b33231cf6b2743de74d2233f756c2a))
+- Add token prefixes to session and logout tokens
+  ([#3132](https://github.com/ory/kratos/issues/3132))
+  ([8210cd0](https://github.com/ory/kratos/commit/8210cd09200d370b101072649fddd1ad9a7f32a9)):
+
+  This feature adds token prefixes to Ory session and logout tokens:
+
+  - `ory_st_`: Ory session token prefix
+  - `ory_lt_`: Logout token prefix
+
 - Add upstream parameters to oidc provider
   ([#3138](https://github.com/ory/kratos/issues/3138))
   ([b6b1679](https://github.com/ory/kratos/commit/b6b1679c3bd053cd08ff8f26c762735e380fed67)),
@@ -469,6 +478,8 @@ flows.
   ([4a3a076](https://github.com/ory/kratos/commit/4a3a07657d2eb2a39d777565b58882cb48e928fa))
 - Don't pre-generate UUIDs for transient objects
   ([e17f307](https://github.com/ory/kratos/commit/e17f307732f8ced34727d5f3a70929866a0595e0))
+- Drop unused index ([#3165](https://github.com/ory/kratos/issues/3165))
+  ([852dea9](https://github.com/ory/kratos/commit/852dea90881a7c9abdbfc127a2e8d1cc0aacb166))
 - Identity by identifier ([#3077](https://github.com/ory/kratos/issues/3077))
   ([c288d4d](https://github.com/ory/kratos/commit/c288d4d136bca1a9ed3931b4827967eb44e80ede))
 - Improve tracing span naming in hooks
