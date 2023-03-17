@@ -41,6 +41,8 @@ var UnknownConnectionValidationError = &jsonschema.ValidationError{
 	Message: "can not unlink non-existing OpenID Connect connection", InstancePtr: "#/"}
 var ConnectionExistValidationError = &jsonschema.ValidationError{
 	Message: "can not link unknown or already existing OpenID Connect connection", InstancePtr: "#/"}
+var UnlinkAllFirstFactorConnectionsError = &jsonschema.ValidationError{
+	Message: "can not unlink OpenID Connect connection because it is the last remaining first factor credential", InstancePtr: "#/"}
 
 func (s *Strategy) RegisterSettingsRoutes(router *x.RouterPublic) {}
 
@@ -87,21 +89,12 @@ func (s *Strategy) linkedProviders(ctx context.Context, r *http.Request, conf *C
 		return nil, errors.WithStack(err)
 	}
 
-	count, err := s.d.IdentityManager().CountActiveFirstFactorCredentials(ctx, confidential)
-	if err != nil {
-		return nil, err
-	}
-
-	if count < 2 {
-		// This means that we're able to remove a connection because it is the last configured credential. If it is
-		// removed, the identity is no longer able to sign in.
-		return nil, nil
-	}
-
 	var result []Provider
 	for _, p := range available.Providers {
 		prov, err := conf.Provider(p.Provider, s.d)
-		if err != nil {
+		if errors.Is(err, herodot.ErrNotFound) {
+			continue
+		} else if err != nil {
 			return nil, err
 		}
 		result = append(result, prov)
@@ -172,8 +165,17 @@ func (s *Strategy) PopulateSettingsMethod(r *http.Request, id *identity.Identity
 		sr.UI.GetNodes().Append(NewLinkNode(l.Config().ID))
 	}
 
-	for _, l := range linked {
-		sr.UI.GetNodes().Append(NewUnlinkNode(l.Config().ID))
+	count, err := s.d.IdentityManager().CountActiveFirstFactorCredentials(r.Context(), confidential)
+	if err != nil {
+		return err
+	}
+
+	if count > 1 {
+		// This means that we're able to remove a connection because it is the last configured credential. If it is
+		// removed, the identity is no longer able to sign in.
+		for _, l := range linked {
+			sr.UI.GetNodes().Append(NewUnlinkNode(l.Config().ID))
+		}
 	}
 
 	return nil
@@ -466,7 +468,16 @@ func (s *Strategy) unlinkProvider(w http.ResponseWriter, r *http.Request, ctxUpd
 	var cc identity.CredentialsOIDC
 	creds, err := i.ParseCredentials(s.ID(), &cc)
 	if err != nil {
-		return s.handleSettingsError(w, r, ctxUpdate, p, errors.WithStack(UnknownConnectionValidationError))
+		return s.handleSettingsError(w, r, ctxUpdate, p, err)
+	}
+
+	count, err := s.d.IdentityManager().CountActiveFirstFactorCredentials(r.Context(), i)
+	if err != nil {
+		return s.handleSettingsError(w, r, ctxUpdate, p, err)
+	}
+
+	if count < 2 {
+		return s.handleSettingsError(w, r, ctxUpdate, p, errors.WithStack(UnlinkAllFirstFactorConnectionsError))
 	}
 
 	var found bool

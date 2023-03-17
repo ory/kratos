@@ -117,58 +117,82 @@ type ConfigurationCollection struct {
 }
 
 func (c ConfigurationCollection) Provider(id string, reg dependencies) (Provider, error) {
-	for k := range c.Providers {
-		p := c.Providers[k]
-		if p.ID == id {
-			var providerNames []string
-			var addProviderName = func(pn string) string {
-				providerNames = append(providerNames, pn)
-				return pn
-			}
+	// !!! WARNING !!!
+	//
+	// If you add a provider here, please also add a test to
+	// provider_private_net_test.go
+	var providers = map[string]func(config Configuration) Provider{
+		"generic": func(c Configuration) Provider {
+			return NewProviderGenericOIDC(&c, reg)
+		},
+		"google": func(c Configuration) Provider {
+			return NewProviderGoogle(&c, reg)
+		},
+		"github": func(c Configuration) Provider {
+			return NewProviderGitHub(&c, reg)
+		},
+		"github-app": func(c Configuration) Provider {
+			return NewProviderGitHubApp(&c, reg)
+		},
+		"gitlab": func(c Configuration) Provider {
+			return NewProviderGitLab(&c, reg)
+		},
+		"microsoft": func(c Configuration) Provider {
+			return NewProviderMicrosoft(&c, reg)
+		},
+		"discord": func(c Configuration) Provider {
+			return NewProviderDiscord(&c, reg)
+		},
+		"slack": func(c Configuration) Provider {
+			return NewProviderSlack(&c, reg)
+		},
+		"facebook": func(c Configuration) Provider {
+			return NewProviderFacebook(&c, reg)
+		},
+		"auth0": func(c Configuration) Provider {
+			return NewProviderAuth0(&c, reg)
+		},
+		"vk": func(c Configuration) Provider {
+			return NewProviderVK(&c, reg)
+		},
+		"yandex": func(c Configuration) Provider {
+			return NewProviderYandex(&c, reg)
+		},
+		"apple": func(c Configuration) Provider {
+			return NewProviderApple(&c, reg)
+		},
+		"spotify": func(c Configuration) Provider {
+			return NewProviderSpotify(&c, reg)
+		},
+		"netid": func(c Configuration) Provider {
+			return NewProviderNetID(&c, reg)
+		},
+		"dingtalk": func(c Configuration) Provider {
+			return NewProviderDingTalk(&c, reg)
+		},
+		"linkedin": func(c Configuration) Provider {
+			return NewProviderLinkedIn(&c, reg)
+		},
+		"patreon": func(c Configuration) Provider {
+			return NewProviderPatreon(&c, reg)
+		},
+	}
+	providerNames := func() []string {
+		var names []string
+		for pn := range providers {
+			names = append(names, pn)
+		}
+		return names
+	}
 
-			// !!! WARNING !!!
-			//
-			// If you add a provider here, please also add a test to
-			// provider_private_net_test.go
-			switch p.Provider {
-			case addProviderName("generic"):
-				return NewProviderGenericOIDC(&p, reg), nil
-			case addProviderName("google"):
-				return NewProviderGoogle(&p, reg), nil
-			case addProviderName("github"):
-				return NewProviderGitHub(&p, reg), nil
-			case addProviderName("github-app"):
-				return NewProviderGitHubApp(&p, reg), nil
-			case addProviderName("gitlab"):
-				return NewProviderGitLab(&p, reg), nil
-			case addProviderName("microsoft"):
-				return NewProviderMicrosoft(&p, reg), nil
-			case addProviderName("discord"):
-				return NewProviderDiscord(&p, reg), nil
-			case addProviderName("slack"):
-				return NewProviderSlack(&p, reg), nil
-			case addProviderName("facebook"):
-				return NewProviderFacebook(&p, reg), nil
-			case addProviderName("auth0"):
-				return NewProviderAuth0(&p, reg), nil
-			case addProviderName("vk"):
-				return NewProviderVK(&p, reg), nil
-			case addProviderName("yandex"):
-				return NewProviderYandex(&p, reg), nil
-			case addProviderName("apple"):
-				return NewProviderApple(&p, reg), nil
-			case addProviderName("spotify"):
-				return NewProviderSpotify(&p, reg), nil
-			case addProviderName("netid"):
-				return NewProviderNetID(&p, reg), nil
-			case addProviderName("dingtalk"):
-				return NewProviderDingTalk(&p, reg), nil
-			case addProviderName("linkedin"):
-				return NewProviderLinkedIn(&p, reg), nil
-			case addProviderName("patreon"):
-				return NewProviderPatreon(&p, reg), nil
+	// find provider config for id
+	for _, p := range c.Providers {
+		if p.ID == id {
+			f, ok := providers[p.Provider]
+			if !ok {
+				return nil, errors.Errorf("provider type %s is not supported, supported are: %v", p.Provider, providerNames())
 			}
-			return nil, errors.Errorf("provider type %s is not supported, supported are: %v", p.Provider, providerNames)
+			return f(p), nil
 		}
 	}
 	return nil, errors.WithStack(herodot.ErrNotFound.WithReasonf(`OpenID Connect Provider "%s" is unknown or has not been configured`, id))
