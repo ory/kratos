@@ -43,6 +43,7 @@ base=$(pwd)
 setup=yes
 dev=no
 nokill=no
+cleanup=no
 for i in "$@"; do
   case $i in
   --no-kill)
@@ -61,11 +62,14 @@ for i in "$@"; do
     dev=yes
     shift # past argument=value
     ;;
+  --cleanup)
+    cleanup=yes
+    shift # past argument=value
+    ;;
   esac
 done
 
-prepare() {
-  if [[ "${nokill}" == "no" ]]; then
+cleanup() {
     killall node || true
     killall modd || true
     killall webhook || true
@@ -73,6 +77,11 @@ prepare() {
     killall hydra-login-consent || true
     killall hydra-kratos-login-consent || true
     docker kill kratos_test_hydra || true
+}
+
+prepare() {
+  if [[ "${nokill}" == "no" ]]; then
+    cleanup
   fi
 
   if [ -z ${TEST_DATABASE_POSTGRESQL+x} ]; then
@@ -339,6 +348,11 @@ the path where the kratos-selfservice-ui-node project is checked out:
   $0 ..."
 }
 
+if [[ "${cleanup}" == "yes" ]]; then
+  cleanup
+  exit 0
+fi
+
 export TEST_DATABASE_SQLITE="sqlite:///$(mktemp -d -t ci-XXXXXXXXXX)/db.sqlite?_fk=true"
 export TEST_DATABASE_MEMORY="memory"
 
@@ -374,4 +388,5 @@ esac
 if [[ "${setup}" == "yes" ]]; then
   prepare
 fi
+
 run "${db}"
