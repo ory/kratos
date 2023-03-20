@@ -147,7 +147,9 @@ context("Registration success with email profile with webhooks", () => {
           expect(identity.schema_id).to.equal("default")
           expect(identity.schema_url).to.equal(`${APP_URL}/schemas/ZGVmYXVsdA`)
           expect(identity.traits.email).to.equal("updated-" + email)
-          expect(identity.metadata_public.some).to.equal("public fields")
+          expect((identity as any).metadata_public.some).to.equal(
+            "public fields",
+          )
           expect(identity.verifiable_addresses[0].verified).to.equal(true)
           expect(identity.verifiable_addresses[0].verified_at).not.to.be.empty
           expect(identity.verifiable_addresses[0].via).to.eq("email")

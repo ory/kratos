@@ -1,6 +1,9 @@
 // Copyright © 2023 Ory Corp
 // SPDX-License-Identifier: Apache-2.0
 
+import { Session as KratosSession } from "@ory/kratos-client"
+import { OryKratosConfiguration } from "./config"
+
 export interface MailMessage {
   fromAddress: string
   toAddresses: Array<string>
@@ -36,7 +39,7 @@ declare global {
         expectMethods?: Array<
           "password" | "webauthn" | "lookup_secret" | "totp"
         >
-      }): Chainable<Session>
+      }): Chainable<KratosSession>
 
       /**
        * Expect that the browser has no valid Ory Kratos Cookie Session.
@@ -53,7 +56,7 @@ declare global {
         password: string
         expectSession?: boolean
         cookieUrl?: string
-      }): Chainable<Response<Session | undefined>>
+      }): Chainable<Response<KratosSession | undefined>>
 
       /**
        * Sign up a user
@@ -91,6 +94,7 @@ declare global {
       performEmailVerification(opts?: {
         expect?: { email?: string; redirectTo?: string }
         strategy?: Strategy
+        useLinkFromEmail?: boolean
       }): Chainable<void>
 
       /**
@@ -111,7 +115,7 @@ declare global {
         email: string
         password: string
         fields: { [key: string]: string }
-      }): Chainable<Session>
+      }): Chainable<KratosSession>
 
       /**
        * Submits a recovery flow via the API
@@ -136,7 +140,7 @@ declare global {
        *
        * @param cb
        */
-      updateConfigFile(cb: (arg: any) => any): Chainable<any>
+      updateConfigFile(cb: (arg: OryKratosConfiguration) => any): Chainable<any>
 
       /**
        * Submits a verification flow via the API
@@ -257,7 +261,10 @@ declare global {
        *
        * @param opts
        */
-      reauth(opts: { expect: { email; success?: boolean } }): Chainable<void>
+      reauth(opts: {
+        expect: { email; success?: boolean }
+        type: { email?: string; password?: string }
+      }): Chainable<void>
 
       /**
        * Re-authenticates a user.
@@ -510,7 +517,7 @@ declare global {
        * @param opts
        */
       verifyEmailButExpired(opts?: {
-        expect: { password?: string; email: string }
+        expect: { email: string }
         strategy?: Strategy
       }): Chainable<void>
 
@@ -571,7 +578,7 @@ declare global {
       recoverEmail(opts: {
         expect: { email: string }
         shouldVisit?: boolean
-      }): Chainable<string>
+      }): Chainable<MailMessage>
 
       /**
        * Expect a verification email which is valid.
@@ -608,7 +615,7 @@ declare global {
       loginApi(opts: {
         email: string
         password: string
-      }): Chainable<{ session: Session }>
+      }): Chainable<{ session: KratosSession }>
 
       /**
        * Same as loginApi but uses dark magic to avoid cookie issues.
@@ -618,7 +625,7 @@ declare global {
       loginApiWithoutCookies(opts: {
         email: string
         password: string
-      }): Chainable<{ session: Session }>
+      }): Chainable<{ session: KratosSession }>
 
       /**
        * Which app to proxy
@@ -658,9 +665,24 @@ declare global {
         value: string,
       ): Chainable<void>
 
+      /**
+       * Fetches the courier messages from the admin API
+       */
       getCourierMessages(): Chainable<
         { recipient: string; template_type: string }[]
       >
+
+      /**
+       * Enable the verification UI after registration hook
+       */
+      enableVerificationUIAfterRegistration(
+        strategy: "password" | "oidc" | "webauthn",
+      ): Chainable<void>
+
+      /**
+       * Extracts a verification code from the received email
+       */
+      getVerificationCodeFromEmail(email: string): Chainable<string>
     }
   }
 }
