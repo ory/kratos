@@ -9,6 +9,10 @@ api_metadata.go
 client.go
 configuration.go
 docs/AuthenticatorAssuranceLevel.md
+docs/ContinueWith.md
+docs/ContinueWithSetOrySessionToken.md
+docs/ContinueWithVerificationUi.md
+docs/ContinueWithVerificationUiFlow.md
 docs/CourierApi.md
 docs/CourierMessageStatus.md
 docs/CourierMessageType.md
@@ -113,6 +117,10 @@ git_push.sh
 go.mod
 go.sum
 model_authenticator_assurance_level.go
+model_continue_with.go
+model_continue_with_set_ory_session_token.go
+model_continue_with_verification_ui.go
+model_continue_with_verification_ui_flow.go
 model_courier_message_status.go
 model_courier_message_type.go
 model_create_identity_body.go

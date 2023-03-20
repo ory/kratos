@@ -135,6 +135,10 @@ Class | Method | HTTP request | Description
 ## Documentation For Models
 
  - [AuthenticatorAssuranceLevel](docs/AuthenticatorAssuranceLevel.md)
+ - [ContinueWith](docs/ContinueWith.md)
+ - [ContinueWithSetOrySessionToken](docs/ContinueWithSetOrySessionToken.md)
+ - [ContinueWithVerificationUi](docs/ContinueWithVerificationUi.md)
+ - [ContinueWithVerificationUiFlow](docs/ContinueWithVerificationUiFlow.md)
  - [CourierMessageStatus](docs/CourierMessageStatus.md)
  - [CourierMessageType](docs/CourierMessageType.md)
  - [CreateIdentityBody](docs/CreateIdentityBody.md)

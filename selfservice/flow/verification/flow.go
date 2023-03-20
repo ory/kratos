@@ -23,6 +23,8 @@ import (
 	"github.com/ory/x/urlx"
 )
 
+var _ flow.Flow = new(Flow)
+
 // A Verification Flow
 //
 // Used to verify an out-of-band communication

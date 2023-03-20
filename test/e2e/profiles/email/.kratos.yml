@@ -13,15 +13,14 @@ selfservice:
       after:
         password:
           hooks:
-            -
-              hook: session
+            - hook: session
 
     login:
       ui_url: http://localhost:4455/login
     error:
       ui_url: http://localhost:4455/error
     verification:
-      ui_url: http://localhost:4455/verify
+      ui_url: http://localhost:4455/verification
     recovery:
       ui_url: http://localhost:4455/recovery
 

@@ -109,7 +109,7 @@ selfservice:
               body: /path/to/template.jsonnet
 
     settings:
-      ui_url:  http://test.kratos.ory.sh/settings
+      ui_url: http://test.kratos.ory.sh/settings
       lifespan: 99m
       privileged_session_max_age: 5m
       after:

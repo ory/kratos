@@ -84,8 +84,7 @@ type VerifiableAddress struct {
 
 	// IdentityID is a helper struct field for gobuffalo.pop.
 	IdentityID uuid.UUID `json:"-" faker:"-" db:"identity_id"`
-	// CreatedAt is a helper struct field for gobuffalo.pop.
-	NID uuid.UUID `json:"-"  faker:"-" db:"nid"`
+	NID        uuid.UUID `json:"-"  faker:"-" db:"nid"`
 }
 
 func (v VerifiableAddressType) HTMLFormInputType() string {

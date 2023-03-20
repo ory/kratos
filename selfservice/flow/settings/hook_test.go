@@ -46,11 +46,14 @@ func TestSettingsExecutor(t *testing.T) {
 				},
 			})
 
-			newServer := func(t *testing.T, ft flow.Type) *httptest.Server {
+			newServer := func(t *testing.T, i *identity.Identity, ft flow.Type) *httptest.Server {
+				t.Helper()
 				router := httprouter.New()
 				handleErr := testhelpers.SelfServiceHookSettingsErrorHandler
 				router.GET("/settings/pre", func(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
-					i := testhelpers.SelfServiceHookCreateFakeIdentity(t, reg)
+					if i == nil {
+						i = testhelpers.SelfServiceHookCreateFakeIdentity(t, reg)
+					}
 					sess, _ := session.NewActiveSession(r, i, conf, time.Now().UTC(), identity.CredentialsTypePassword, identity.AuthenticatorAssuranceLevel1)
 
 					f, err := settings.NewFlow(conf, time.Minute, r, sess.Identity, ft)
@@ -61,7 +64,9 @@ func TestSettingsExecutor(t *testing.T) {
 				})
 
 				router.GET("/settings/post", func(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
-					i := testhelpers.SelfServiceHookCreateFakeIdentity(t, reg)
+					if i == nil {
+						i = testhelpers.SelfServiceHookCreateFakeIdentity(t, reg)
+					}
 					sess, _ := session.NewActiveSession(r, i, conf, time.Now().UTC(), identity.CredentialsTypePassword, identity.AuthenticatorAssuranceLevel1)
 
 					a, err := settings.NewFlow(conf, time.Minute, r, sess.Identity, ft)
@@ -91,7 +96,7 @@ func TestSettingsExecutor(t *testing.T) {
 				t.Run("case=pass without hooks", func(t *testing.T) {
 					t.Cleanup(testhelpers.SelfServiceHookConfigReset(t, conf))
 
-					res, _ := makeRequestPost(t, newServer(t, flow.TypeBrowser), false, url.Values{})
+					res, _ := makeRequestPost(t, newServer(t, nil, flow.TypeBrowser), false, url.Values{})
 					assert.EqualValues(t, http.StatusOK, res.StatusCode)
 					assert.Contains(t, res.Request.URL.String(), uiURL)
 				})
@@ -100,7 +105,7 @@ func TestSettingsExecutor(t *testing.T) {
 					t.Cleanup(testhelpers.SelfServiceHookConfigReset(t, conf))
 
 					viperSetPost(strategy, []config.SelfServiceHook{{Name: "err", Config: []byte(`{}`)}})
-					res, _ := makeRequestPost(t, newServer(t, flow.TypeBrowser), false, url.Values{})
+					res, _ := makeRequestPost(t, newServer(t, nil, flow.TypeBrowser), false, url.Values{})
 					assert.EqualValues(t, http.StatusOK, res.StatusCode)
 					assert.Contains(t, res.Request.URL.String(), uiURL)
 				})
@@ -109,7 +114,7 @@ func TestSettingsExecutor(t *testing.T) {
 					t.Cleanup(testhelpers.SelfServiceHookConfigReset(t, conf))
 
 					viperSetPost(strategy, []config.SelfServiceHook{{Name: "err", Config: []byte(`{"ExecuteSettingsPrePersistHook": "abort"}`)}})
-					res, body := makeRequestPost(t, newServer(t, flow.TypeBrowser), false, url.Values{})
+					res, body := makeRequestPost(t, newServer(t, nil, flow.TypeBrowser), false, url.Values{})
 					assert.EqualValues(t, http.StatusOK, res.StatusCode)
 					assert.Equal(t, "", body)
 				})
@@ -119,7 +124,7 @@ func TestSettingsExecutor(t *testing.T) {
 					conf.MustSet(ctx, config.ViperKeyURLsAllowedReturnToDomains, []string{"https://www.ory.sh/"})
 					testhelpers.SelfServiceHookSettingsSetDefaultRedirectTo(t, conf, "https://www.ory.sh")
 
-					res, _ := makeRequestPost(t, newServer(t, flow.TypeBrowser), false, url.Values{"return_to": {"https://www.ory.sh/kratos/"}})
+					res, _ := makeRequestPost(t, newServer(t, nil, flow.TypeBrowser), false, url.Values{"return_to": {"https://www.ory.sh/kratos/"}})
 					assert.EqualValues(t, http.StatusOK, res.StatusCode)
 					assert.EqualValues(t, "https://www.ory.sh/kratos/", res.Request.URL.String())
 				})
@@ -128,7 +133,7 @@ func TestSettingsExecutor(t *testing.T) {
 					t.Cleanup(testhelpers.SelfServiceHookConfigReset(t, conf))
 					testhelpers.SelfServiceHookSettingsSetDefaultRedirectTo(t, conf, "https://www.ory.sh/kratos")
 
-					res, _ := makeRequestPost(t, newServer(t, flow.TypeBrowser), false, url.Values{})
+					res, _ := makeRequestPost(t, newServer(t, nil, flow.TypeBrowser), false, url.Values{})
 					assert.EqualValues(t, http.StatusOK, res.StatusCode)
 					assert.EqualValues(t, "https://www.ory.sh/kratos/", res.Request.URL.String())
 				})
@@ -138,7 +143,7 @@ func TestSettingsExecutor(t *testing.T) {
 					testhelpers.SelfServiceHookSettingsSetDefaultRedirectTo(t, conf, "https://www.ory.sh/not-kratos")
 					testhelpers.SelfServiceHookSettingsSetDefaultRedirectToStrategy(t, conf, strategy, "https://www.ory.sh/kratos")
 
-					res, _ := makeRequestPost(t, newServer(t, flow.TypeBrowser), false, url.Values{})
+					res, _ := makeRequestPost(t, newServer(t, nil, flow.TypeBrowser), false, url.Values{})
 					assert.EqualValues(t, http.StatusOK, res.StatusCode)
 					assert.EqualValues(t, "https://www.ory.sh/kratos/", res.Request.URL.String())
 				})
@@ -146,7 +151,7 @@ func TestSettingsExecutor(t *testing.T) {
 				t.Run("case=pass if hooks pass", func(t *testing.T) {
 					t.Cleanup(testhelpers.SelfServiceHookConfigReset(t, conf))
 					viperSetPost(strategy, []config.SelfServiceHook{{Name: "err", Config: []byte(`{}`)}})
-					res, _ := makeRequestPost(t, newServer(t, flow.TypeBrowser), false, url.Values{})
+					res, _ := makeRequestPost(t, newServer(t, nil, flow.TypeBrowser), false, url.Values{})
 					assert.EqualValues(t, http.StatusOK, res.StatusCode)
 					assert.Contains(t, res.Request.URL.String(), uiURL)
 				})
@@ -154,7 +159,7 @@ func TestSettingsExecutor(t *testing.T) {
 				t.Run("case=send a json response for API clients", func(t *testing.T) {
 					t.Cleanup(testhelpers.SelfServiceHookConfigReset(t, conf))
 					viperSetPost(strategy, nil)
-					res, body := makeRequestPost(t, newServer(t, flow.TypeAPI), true, url.Values{})
+					res, body := makeRequestPost(t, newServer(t, nil, flow.TypeAPI), true, url.Values{})
 					assert.EqualValues(t, http.StatusOK, res.StatusCode)
 					assert.NotEmpty(t, gjson.Get(body, "identity.id"))
 				})
@@ -162,7 +167,7 @@ func TestSettingsExecutor(t *testing.T) {
 				t.Run("case=pass without hooks for browser flow with application/json", func(t *testing.T) {
 					t.Cleanup(testhelpers.SelfServiceHookConfigReset(t, conf))
 
-					res, body := makeRequestPost(t, newServer(t, flow.TypeBrowser), true, url.Values{})
+					res, body := makeRequestPost(t, newServer(t, nil, flow.TypeBrowser), true, url.Values{})
 					assert.EqualValues(t, http.StatusOK, res.StatusCode)
 					assert.NotEmpty(t, gjson.Get(body, "identity.id"))
 				})
@@ -173,7 +178,7 @@ func TestSettingsExecutor(t *testing.T) {
 					config.ViperKeySelfServiceSettingsBeforeHooks,
 					testhelpers.SelfServiceMakeSettingsPreHookRequest,
 					func(t *testing.T) *httptest.Server {
-						return newServer(t, kind)
+						return newServer(t, nil, kind)
 					},
 					conf,
 				))

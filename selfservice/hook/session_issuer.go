@@ -52,10 +52,12 @@ func (e *SessionIssuer) executePostRegistrationPostPersistHook(w http.ResponseWr
 	}
 
 	if a.Type == flow.TypeAPI {
+		a.AddContinueWith(flow.NewContinueWithSetToken(s.Token))
 		e.r.Writer().Write(w, r, &registration.APIFlowResponse{
-			Session:  s,
-			Token:    s.Token,
-			Identity: s.Identity,
+			Session:      s,
+			Token:        s.Token,
+			Identity:     s.Identity,
+			ContinueWith: a.ContinueWithItems,
 		})
 		return errors.WithStack(registration.ErrHookAbortFlow)
 	}
@@ -68,8 +70,9 @@ func (e *SessionIssuer) executePostRegistrationPostPersistHook(w http.ResponseWr
 	// SPA flows additionally send the session
 	if x.IsJSONRequest(r) {
 		e.r.Writer().Write(w, r, &registration.APIFlowResponse{
-			Session:  s,
-			Identity: s.Identity,
+			Session:      s,
+			Identity:     s.Identity,
+			ContinueWith: a.ContinueWithItems,
 		})
 		return errors.WithStack(registration.ErrHookAbortFlow)
 	}
