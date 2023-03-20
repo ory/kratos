@@ -94,3 +94,10 @@ func NewRegistryDefaultWithDSN(t *testing.T, dsn string) (*config.Config, *drive
 
 	return c, reg.(*driver.RegistryDefault)
 }
+
+func NewVeryFastRegistryWithoutDB(t *testing.T) (*config.Config, *driver.RegistryDefault) {
+	c := NewConfigurationWithDefaults(t)
+	reg, err := driver.NewRegistryFromDSN(context.Background(), c, logrusx.New("", ""))
+	require.NoError(t, err)
+	return c, reg.(*driver.RegistryDefault)
+}
