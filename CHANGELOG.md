@@ -5,7 +5,7 @@
 
 **Table of Contents**
 
-- [ (2023-03-20)](#2023-03-20)
+- [ (2023-03-21)](#2023-03-21)
   - [Breaking Changes](#breaking-changes)
     - [Bug Fixes](#bug-fixes)
     - [Code Refactoring](#code-refactoring)
@@ -295,7 +295,7 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# [](https://github.com/ory/kratos/compare/v0.11.1...v) (2023-03-20)
+# [](https://github.com/ory/kratos/compare/v0.11.1...v) (2023-03-21)
 
 ## Breaking Changes
 
@@ -568,6 +568,9 @@ flows.
 
 ### Tests
 
+- **e2e:** Fix compile errors in commands
+  ([#3179](https://github.com/ory/kratos/issues/3179))
+  ([0002668](https://github.com/ory/kratos/commit/00026682b548b1f33e255a8ee865d90ea127a254))
 - Parallelize several unit tests
   ([#3081](https://github.com/ory/kratos/issues/3081))
   ([5403f86](https://github.com/ory/kratos/commit/5403f863d21a6fb5ba4b8572fb054d52e5a8205d))
