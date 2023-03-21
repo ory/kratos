@@ -177,6 +177,7 @@ jobs:
         with:
           repository: ory/kratos-selfservice-ui-react-native
           path: react-native-ui
+          ref: jonas-jonas/feat/verificationIdAfterRegistration
       - run: |
           cd react-native-ui
           npm install
