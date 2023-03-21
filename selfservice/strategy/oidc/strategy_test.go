@@ -18,9 +18,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/ory/x/sqlxx"
-
 	"github.com/ory/x/snapshotx"
+	"github.com/ory/x/sqlxx"
 
 	"github.com/ory/kratos/text"
 
@@ -233,6 +232,12 @@ func TestStrategy(t *testing.T) {
 	var newRegistrationFlowBrowser = func(t *testing.T, redirectTo string, exp time.Duration) *registration.Flow {
 		return newRegistrationFlow(t, redirectTo, exp, flow.TypeBrowser)
 	}
+	// _ = assertSystemError
+	// _ = asem
+	// _ = ai
+	// _ = newLoginFlowBrowser
+	// _ = registerAction
+	// _ = loginAction
 
 	t.Run("case=should fail because provider does not exist", func(t *testing.T) {
 		for k, v := range []string{
@@ -687,11 +692,14 @@ func TestStrategy(t *testing.T) {
 
 			t.Run("case=webview", func(t *testing.T) {
 				body := testhelpers.SubmitRegistrationForm(t, false, webViewHTTPClient, ts, values,
-					false, http.StatusFound, ts.URL+"/self-service/methods/oidc/callback/valid",
+					false, http.StatusOK, uiTS.URL,
 					testhelpers.InitFlowWithReturnTo(webviewRedirectURI))
 
 				assert.Empty(t, gjson.Get(body, "session_token"), "%s", body)
 				assert.Empty(t, gjson.Get(body, "session"), "%s", body)
+				assert.Len(t, gjson.Get(body, "ui.messages").Array(), 1, "%s", body)
+				assert.EqualValues(t, gjson.Get(body, "ui.messages.0.id").Int(), text.ErrorValidationDuplicateCredentialsOnOIDCLink, "%s", body)
+				assert.Contains(t, gjson.Get(body, "ui.messages.0.text").String(), "An account with the same identifier", "%s", body)
 			})
 		})
 
@@ -705,11 +713,14 @@ func TestStrategy(t *testing.T) {
 
 			t.Run("case=webview", func(t *testing.T) {
 				body := testhelpers.SubmitLoginForm(t, false, webViewHTTPClient, ts, values,
-					false, false, http.StatusFound, ts.URL+"/self-service/methods/oidc/callback/valid",
+					false, false, http.StatusOK, uiTS.URL,
 					testhelpers.InitFlowWithReturnTo(webviewRedirectURI))
 
 				assert.Empty(t, gjson.Get(body, "session_token"), "%s", body)
 				assert.Empty(t, gjson.Get(body, "session"), "%s", body)
+				assert.Len(t, gjson.Get(body, "ui.messages").Array(), 1, "%s", body)
+				assert.EqualValues(t, gjson.Get(body, "ui.messages.0.id").Int(), text.ErrorValidationDuplicateCredentialsOnOIDCLink, "%s", body)
+				assert.Contains(t, gjson.Get(body, "ui.messages.0.text").String(), "An account with the same identifier", "%s", body)
 			})
 		})
 	})

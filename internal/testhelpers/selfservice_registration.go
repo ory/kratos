@@ -65,12 +65,12 @@ func InitializeRegistrationFlowViaBrowser(t *testing.T, client *http.Client, ts 
 		flowID = gjson.GetBytes(body, "id").String()
 	}
 
-	rs, _, err := NewSDKCustomClient(ts, client).FrontendApi.GetRegistrationFlow(context.Background()).Id(flowID).Execute()
+	rs, res, err := NewSDKCustomClient(ts, client).FrontendApi.GetRegistrationFlow(context.Background()).Id(flowID).Execute()
 	if expectGetError {
 		require.Error(t, err)
 		require.Nil(t, rs)
 	} else {
-		require.NoError(t, err)
+		require.NoError(t, err, "%#v", string(ioutilx.MustReadAll(res.Body)))
 		assert.Empty(t, rs.Active)
 	}
 	return rs
@@ -119,6 +119,7 @@ func SubmitRegistrationForm(
 	expectedURL string,
 	opts ...InitFlowWithOption,
 ) string {
+	t.Helper()
 	if hc == nil {
 		hc = new(http.Client)
 	}

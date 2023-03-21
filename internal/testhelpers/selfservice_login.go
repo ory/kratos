@@ -208,6 +208,7 @@ func SubmitLoginForm(
 	expectedURL string,
 	opts ...InitFlowWithOption,
 ) string {
+	t.Helper()
 	if hc == nil {
 		hc = new(http.Client)
 		if !isAPI {
