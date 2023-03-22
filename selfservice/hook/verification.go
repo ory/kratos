@@ -96,10 +96,6 @@ func (e *Verifier) do(w http.ResponseWriter, r *http.Request, i *identity.Identi
 		}
 
 		f.AddContinueWith(flow.NewContinueWithVerificationUI(verificationFlow, address.Value, flowURL))
-
-		if err := e.r.PrivilegedIdentityPool().UpdateVerifiableAddress(r.Context(), address); err != nil {
-			return err
-		}
 	}
 	return nil
 }
