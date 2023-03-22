@@ -36,9 +36,9 @@ func (m *RegistryDefault) HookAddressVerifier() *hook.AddressVerifier {
 	return m.hookAddressVerifier
 }
 
-func (m *RegistryDefault) HookShowVerificationUI() *hook.ShowVerificationUI {
+func (m *RegistryDefault) HookShowVerificationUI() *hook.ShowVerificationUIHook {
 	if m.hookShowVerificationUI == nil {
-		m.hookShowVerificationUI = hook.NewShowVerificationUI(m)
+		m.hookShowVerificationUI = hook.NewShowVerificationUIHook(m)
 	}
 	return m.hookShowVerificationUI
 }

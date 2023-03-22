@@ -324,7 +324,7 @@ func TestDriverDefault_Hooks(t *testing.T) {
 				},
 				expect: func(reg *driver.RegistryDefault) []registration.PostHookPostPersistExecutor {
 					return []registration.PostHookPostPersistExecutor{
-						hook.NewShowVerificationUI(reg),
+						hook.NewShowVerificationUIHook(reg),
 					}
 				},
 			},

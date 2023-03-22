@@ -26,25 +26,28 @@ type (
 	}
 
 	ShowVerfificationUIProvider interface {
-		HookShowVerificationUI() *ShowVerificationUI
+		HookShowVerificationUI() *ShowVerificationUIHook
 	}
 
-	ShowVerificationUI struct {
+	// ShowVerificationUIHook is a post registration hook that redirects browser clients to the verification UI.
+	ShowVerificationUIHook struct {
 		d showVerificationUIDependencies
 	}
 )
 
-func NewShowVerificationUI(d showVerificationUIDependencies) *ShowVerificationUI {
-	return &ShowVerificationUI{d: d}
+func NewShowVerificationUIHook(d showVerificationUIDependencies) *ShowVerificationUIHook {
+	return &ShowVerificationUIHook{d: d}
 }
 
-func (e *ShowVerificationUI) ExecutePostRegistrationPostPersistHook(w http.ResponseWriter, r *http.Request, f *registration.Flow, s *session.Session) error {
+// ExecutePostRegistrationPostPersistHook adds redirect headers and status code if the request is a browser request.
+// If the request is not a browser request, this hook does nothing.
+func (e *ShowVerificationUIHook) ExecutePostRegistrationPostPersistHook(w http.ResponseWriter, r *http.Request, f *registration.Flow, s *session.Session) error {
 	return otelx.WithSpan(r.Context(), "selfservice.hook.SessionIssuer.ExecutePostRegistrationPostPersistHook", func(ctx context.Context) error {
 		return e.execute(w, r.WithContext(ctx), f, s)
 	})
 }
 
-func (e *ShowVerificationUI) execute(w http.ResponseWriter, r *http.Request, f *registration.Flow, s *session.Session) error {
+func (e *ShowVerificationUIHook) execute(w http.ResponseWriter, r *http.Request, f *registration.Flow, s *session.Session) error {
 	if !x.IsBrowserRequest(r) {
 		// this hook is only intended to be used by browsers, as it redirects to the verification ui
 		// JSON API clients should use the `continue_with` field to continue the flow
@@ -60,7 +63,7 @@ func (e *ShowVerificationUI) execute(w http.ResponseWriter, r *http.Request, f *
 
 	if vf != nil {
 		redir := e.d.Config().SelfServiceFlowVerificationUI(r.Context())
-		x.ContentNegotiationRedirection(w, r, s.Declassified(), e.d.Writer(), vf.AppendTo(redir).String())
+		http.Redirect(w, r, vf.AppendTo(redir).String(), http.StatusSeeOther)
 	}
 
 	return nil

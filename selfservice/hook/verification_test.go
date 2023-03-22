@@ -93,11 +93,8 @@ func TestVerifier(t *testing.T) {
 			fView := vf.(*flow.ContinueWithVerificationUI).Flow
 
 			expectedVerificationFlow, err := reg.VerificationFlowPersister().GetVerificationFlow(ctx, fView.ID)
-
-			var verificationFlow verification.Flow
-			require.NoError(t, reg.Persister().GetConnection(context.Background()).First(&verificationFlow))
-
-			assert.Equal(t, expectedVerificationFlow.RequestURL, verificationFlow.RequestURL)
+			require.NoError(t, err)
+			require.Equal(t, expectedVerificationFlow.State, verification.StateEmailSent)
 
 			messages, err := reg.CourierPersister().NextMessages(context.Background(), 12)
 			require.NoError(t, err)
@@ -134,9 +131,6 @@ func TestVerifier(t *testing.T) {
 			assert.Emptyf(t, originalFlow.ContinueWith(), "%+v", originalFlow.ContinueWith())
 
 			require.NoError(t, err)
-			var verificationFlow2 verification.Flow
-			require.NoError(t, reg.Persister().GetConnection(context.Background()).First(&verificationFlow2))
-			assert.Equal(t, expectedVerificationFlow.RequestURL, verificationFlow2.RequestURL)
 			messages, err = reg.CourierPersister().NextMessages(context.Background(), 12)
 			require.EqualError(t, err, courier.ErrQueueEmpty.Error())
 			assert.Len(t, messages, 0)
