@@ -5,7 +5,7 @@
 
 **Table of Contents**
 
-- [ (2023-03-21)](#2023-03-21)
+- [ (2023-03-22)](#2023-03-22)
   - [Breaking Changes](#breaking-changes)
     - [Bug Fixes](#bug-fixes)
     - [Code Refactoring](#code-refactoring)
@@ -295,7 +295,7 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# [](https://github.com/ory/kratos/compare/v0.11.1...v) (2023-03-21)
+# [](https://github.com/ory/kratos/compare/v0.11.1...v) (2023-03-22)
 
 ## Breaking Changes
 
@@ -307,6 +307,8 @@ flows.
 
 ### Bug Fixes
 
+- Access rules example ([#3178](https://github.com/ory/kratos/issues/3178))
+  ([a206772](https://github.com/ory/kratos/commit/a206772d78efed6febe783ee88dae92de80063d0))
 - Add `after_verification_return_to` to sdk and api docs
   ([#3097](https://github.com/ory/kratos/issues/3097))
   ([c70704c](https://github.com/ory/kratos/commit/c70704cebafff7a92f32928273e4570abb3b1c3d)),
