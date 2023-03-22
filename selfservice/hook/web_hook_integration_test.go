@@ -682,9 +682,8 @@ func TestWebHooks(t *testing.T) {
 					Value: "some@example.org",
 					Via:   "email",
 				}},
-				MetadataPublic:      []byte(`{"public":"data"}`),
-				MetadataAdmin:       []byte(`{"admin":"data"}`),
-				InternalCredentials: identity.CredentialsCollection{{Type: "password", Identifiers: []string{"test"}, Config: []byte(`{}`)}},
+				MetadataPublic: []byte(`{"public":"data"}`),
+				MetadataAdmin:  []byte(`{"admin":"data"}`),
 			}
 
 			t.Run("case=body is empty", func(t *testing.T) {

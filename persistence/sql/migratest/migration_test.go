@@ -66,7 +66,8 @@ func CompareWithFixture(t *testing.T, actual interface{}, prefix string, id stri
 	s := snapshotFor("fixtures", prefix)
 	actualJSON, err := json.MarshalIndent(actual, "", "  ")
 	require.NoError(t, err)
-	assert.NoError(t, s.SnapshotWithName(id, actualJSON))
+	err = s.SnapshotWithName(id, actualJSON)
+	assert.NoErrorf(t, err, "actual = %s", string(actualJSON))
 }
 
 func TestMigrations_SQLite(t *testing.T) {

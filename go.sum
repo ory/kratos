@@ -501,8 +501,8 @@ github.com/gobuffalo/packr/v2 v2.2.0/go.mod h1:CaAwI0GPIAv+5wKLtv8Afwl+Cm78K/I/V
 github.com/gobuffalo/plush/v4 v4.1.16/go.mod h1:6t7swVsarJ8qSLw1qyAH/KbrcSTwdun2ASEQkOznakg=
 github.com/gobuffalo/plush/v4 v4.1.18 h1:bnPjdMTEUQHqj9TNX2Ck3mxEXYZa+0nrFMNM07kpX9g=
 github.com/gobuffalo/plush/v4 v4.1.18/go.mod h1:xi2tJIhFI4UdzIL8sxZtzGYOd2xbBpcFbLZlIPGGZhU=
-github.com/gobuffalo/pop/v6 v6.1.2-0.20230124165254-ec9229dbf7d7 h1:lwf/5cRw46IrLrhZnCg8J9NKgskkwMPuVvEOc2Wy72I=
-github.com/gobuffalo/pop/v6 v6.1.2-0.20230124165254-ec9229dbf7d7/go.mod h1:1n7jAmI1i7fxuXPZjZb0VBPQDbksRtCoFnrDV5IsvaI=
+github.com/gobuffalo/pop/v6 v6.1.2-0.20230318123913-c85387acc9a0 h1:+LF3Enal3HZ+rFmaLZfBRNHKqtnoA0d8jk0Iio8InZM=
+github.com/gobuffalo/pop/v6 v6.1.2-0.20230318123913-c85387acc9a0/go.mod h1:1n7jAmI1i7fxuXPZjZb0VBPQDbksRtCoFnrDV5IsvaI=
 github.com/gobuffalo/syncx v0.0.0-20190224160051-33c29581e754/go.mod h1:HhnNqWY95UYwwW3uSASeV7vtgYkT2t16hJgV3AEPUpw=
 github.com/gobuffalo/tags/v3 v3.1.4 h1:X/ydLLPhgXV4h04Hp2xlbI2oc5MDaa7eub6zw8oHjsM=
 github.com/gobuffalo/tags/v3 v3.1.4/go.mod h1:ArRNo3ErlHO8BtdA0REaZxijuWnWzF6PUXngmMXd2I0=

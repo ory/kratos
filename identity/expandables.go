@@ -9,11 +9,9 @@ type Expandable = sqlxx.Expandable
 type Expandables = sqlxx.Expandables
 
 const (
-	ExpandFieldVerifiableAddresses   Expandable = "VerifiableAddresses"
-	ExpandFieldRecoveryAddresses     Expandable = "RecoveryAddresses"
-	ExpandFieldCredentials           Expandable = "InternalCredentials"
-	ExpandFieldCredentialType        Expandable = "InternalCredentials.IdentityCredentialType"
-	ExpandFieldCredentialIdentifiers Expandable = "InternalCredentials.CredentialIdentifiers"
+	ExpandFieldVerifiableAddresses Expandable = "VerifiableAddresses"
+	ExpandFieldRecoveryAddresses   Expandable = "RecoveryAddresses"
+	ExpandFieldCredentials         Expandable = "Credentials"
 )
 
 // ExpandNothing expands nothing
@@ -31,8 +29,6 @@ var ExpandDefault = Expandables{
 // ExpandCredentials expands the identity's credentials.
 var ExpandCredentials = Expandables{
 	ExpandFieldCredentials,
-	ExpandFieldCredentialType,
-	ExpandFieldCredentialIdentifiers,
 }
 
 // ExpandEverything expands all the fields of an identity.
@@ -40,6 +36,4 @@ var ExpandEverything = Expandables{
 	ExpandFieldVerifiableAddresses,
 	ExpandFieldRecoveryAddresses,
 	ExpandFieldCredentials,
-	ExpandFieldCredentialType,
-	ExpandFieldCredentialIdentifiers,
 }

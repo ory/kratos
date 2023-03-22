@@ -48,8 +48,8 @@ func CleanSQL(t *testing.T, c *pop.Connection) {
 
 		new(errorx.ErrorContainer).TableName(ctx),
 
-		new(identity.CredentialIdentifierCollection).TableName(ctx),
-		new(identity.CredentialsCollection).TableName(ctx),
+		new(identity.CredentialIdentifier).TableName(ctx),
+		new(identity.Credentials).TableName(ctx),
 		new(identity.VerifiableAddress).TableName(ctx),
 		new(identity.RecoveryAddress).TableName(ctx),
 		new(identity.Identity).TableName(ctx),

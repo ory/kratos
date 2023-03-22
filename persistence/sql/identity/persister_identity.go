@@ -7,6 +7,7 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"sort"
 	"strings"
 	"time"
 
@@ -417,7 +418,7 @@ func (p *IdentityPersister) HydrateIdentityAssociations(ctx context.Context, i *
 	var (
 		con                 = p.GetConnection(ctx)
 		nid                 = p.NetworkID(ctx)
-		credentials         []identity.Credentials
+		credentials         map[identity.CredentialsType]identity.Credentials
 		verifiableAddresses []identity.VerifiableAddress
 		recoveryAddresses   []identity.RecoveryAddress
 	)
@@ -455,18 +456,17 @@ func (p *IdentityPersister) HydrateIdentityAssociations(ctx context.Context, i *
 	}
 
 	if expand.Has(identity.ExpandFieldCredentials) {
-		eg.Go(func() error {
+		eg.Go(func() (err error) {
 			// We use WithContext to get a copy of the connection struct, which solves the race detector
 			// from complaining incorrectly.
 			//
 			// https://github.com/gobuffalo/pop/issues/723
-			if err := con.WithContext(ctx).
-				EagerPreload("IdentityCredentialType", "CredentialIdentifiers").
-				Where("identity_id = ? AND nid = ?", i.ID, nid).
-				All(&credentials); err != nil {
-				return sqlcon.HandleError(err)
-			}
-			return nil
+			con := con.WithContext(ctx)
+			credentials, err = QueryForCredentials(con, Where{
+				"(identity_credentials.identity_id = ? AND identity_credentials.nid = ?)",
+				[]interface{}{i.ID, nid},
+			})
+			return
 		})
 	}
 
@@ -476,13 +476,96 @@ func (p *IdentityPersister) HydrateIdentityAssociations(ctx context.Context, i *
 
 	i.VerifiableAddresses = verifiableAddresses
 	i.RecoveryAddresses = recoveryAddresses
-	i.InternalCredentials = credentials
+	i.Credentials = credentials
 
-	if err := i.AfterEagerFind(con); err != nil {
+	if err := i.Validate(); err != nil {
+		return err
+	}
+
+	if err := identity.UpgradeCredentials(i); err != nil {
 		return err
 	}
 
 	return p.InjectTraitsSchemaURL(ctx, i)
+}
+
+type queryCredentials struct {
+	ID         uuid.UUID                `db:"cred_id"`
+	IdentityID uuid.UUID                `db:"identity_id"`
+	NID        uuid.UUID                `db:"nid"`
+	Type       identity.CredentialsType `db:"cred_type"`
+	TypeID     uuid.UUID                `db:"cred_type_id"`
+	Identifier string                   `db:"cred_identifier"`
+	Config     sqlxx.JSONRawMessage     `db:"cred_config"`
+	Version    int                      `db:"cred_version"`
+	CreatedAt  time.Time                `db:"created_at"`
+	UpdatedAt  time.Time                `db:"updated_at"`
+}
+
+func (queryCredentials) TableName() string {
+	return "identity_credentials"
+}
+
+type Where struct {
+	Condition string
+	Args      []interface{}
+}
+
+func QueryForCredentials(con *pop.Connection, where ...Where) (map[identity.CredentialsType]identity.Credentials, error) {
+	q := con.Select(
+		"identity_credentials.id cred_id",
+		"identity_credentials.identity_id identity_id",
+		"identity_credentials.nid nid",
+		"ict.name cred_type",
+		"ict.id cred_type_id",
+		"COALESCE(ici.identifier, '') cred_identifier",
+		"identity_credentials.config cred_config",
+		"identity_credentials.version cred_version",
+		"identity_credentials.created_at created_at",
+		"identity_credentials.updated_at updated_at",
+	).InnerJoin(
+		"identity_credential_types ict",
+		"(identity_credentials.identity_credential_type_id = ict.id)",
+	).LeftJoin(
+		"identity_credential_identifiers ici",
+		"(ici.identity_credential_id = identity_credentials.id AND ici.nid = identity_credentials.nid)",
+	)
+	for _, w := range where {
+		q = q.Where(w.Condition, w.Args...)
+	}
+	var creds []queryCredentials
+	if err := q.All(&creds); err != nil {
+		return nil, sqlcon.HandleError(err)
+	}
+	credentials := map[identity.CredentialsType]identity.Credentials{}
+	for _, cred := range creds {
+		identifiers := credentials[cred.Type].Identifiers
+		if cred.Identifier != "" {
+			identifiers = append(identifiers, cred.Identifier)
+		}
+		if identifiers == nil {
+			identifiers = make([]string, 0)
+		}
+		c := identity.Credentials{
+			ID:                       cred.ID,
+			IdentityID:               cred.IdentityID,
+			NID:                      cred.NID,
+			Type:                     cred.Type,
+			IdentityCredentialTypeID: cred.TypeID,
+			Identifiers:              identifiers,
+			Config:                   cred.Config,
+			Version:                  cred.Version,
+			CreatedAt:                cred.CreatedAt,
+			UpdatedAt:                cred.UpdatedAt,
+		}
+		credentials[cred.Type] = c
+	}
+	for k := range credentials {
+		// We need deterministic ordering for testing, but sorting in the
+		// database can be expensive under certain circumstances.
+		sort.Strings(credentials[k].Identifiers)
+	}
+	return credentials, nil
 }
 
 func (p *IdentityPersister) ListIdentities(ctx context.Context, params identity.ListIdentityParameters) (res []identity.Identity, err error) {
@@ -503,10 +586,6 @@ func (p *IdentityPersister) ListIdentities(ctx context.Context, params identity.
 	nid := p.NetworkID(ctx)
 	query := con.Where("identities.nid = ?", nid).Order("identities.id DESC")
 
-	if len(params.Expand) > 0 {
-		query = query.EagerPreload(params.Expand.ToEager()...)
-	}
-
 	if match := params.CredentialsIdentifier; len(match) > 0 {
 		// When filtering by credentials identifier, we most likely are looking for a username or email. It is therefore
 		// important to normalize the identifier before querying the database.
@@ -524,6 +603,14 @@ func (p *IdentityPersister) ListIdentities(ctx context.Context, params identity.
 
 	if err := sqlcon.HandleError(query.All(&is)); err != nil {
 		return nil, err
+	}
+
+	if len(params.Expand) > 0 {
+		for i := range is {
+			if err := p.HydrateIdentityAssociations(ctx, &is[i], params.Expand); err != nil {
+				return nil, err
+			}
+		}
 	}
 
 	schemaCache := map[string]string{}
