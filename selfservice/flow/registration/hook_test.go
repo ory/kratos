@@ -161,7 +161,7 @@ func TestRegistrationExecutor(t *testing.T) {
 					assert.Empty(t, gjson.Get(body, "session_token"))
 				})
 
-				t.Run("case=should return flow id as part of return to", func(t *testing.T) {
+				t.Run("case=should redirect to verification ui if show_verification_ui hook is set", func(t *testing.T) {
 					verificationTS := testhelpers.NewVerificationUIFlowEchoServer(t, reg)
 					t.Cleanup(testhelpers.SelfServiceHookConfigReset(t, conf))
 					conf.Set(ctx, config.ViperKeySelfServiceVerificationEnabled, true)
@@ -179,7 +179,7 @@ func TestRegistrationExecutor(t *testing.T) {
 					assert.NotEmpty(t, res.Request.URL.Query().Get("flow"))
 				})
 
-				t.Run("case=should return flow ids as part of return to for multiple verifiable email addresses", func(t *testing.T) {
+				t.Run("case=should redirect to first verification ui if show_verification_ui hook is set and multiple verifiable addresses", func(t *testing.T) {
 					verificationTS := testhelpers.NewVerificationUIFlowEchoServer(t, reg)
 					t.Cleanup(testhelpers.SelfServiceHookConfigReset(t, conf))
 					conf.Set(ctx, config.ViperKeySelfServiceVerificationEnabled, true)

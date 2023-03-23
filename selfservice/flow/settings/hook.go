@@ -283,7 +283,8 @@ func (e *HookExecutor) PostSettingsHook(w http.ResponseWriter, r *http.Request, 
 		if err != nil {
 			return err
 		}
-		// ContinueWith items are transient items, not stored in the database, and need to be carried over here, so they can be returned to the client here.
+		// ContinueWith items are transient items, not stored in the database, and need to be carried over here, so
+		// they can be returned to the client.
 		updatedFlow.ContinueWithItems = ctxUpdate.Flow.ContinueWithItems
 
 		e.d.Writer().Write(w, r, updatedFlow)
@@ -299,7 +300,8 @@ func (e *HookExecutor) PostSettingsHook(w http.ResponseWriter, r *http.Request, 
 		if err != nil {
 			return err
 		}
-		// ContinueWith items are transient items, not stored in the database, and need to be carried over here, so they can be returned to the client here.
+		// ContinueWith items are transient items, not stored in the database, and need to be carried over here, so
+		// they can be returned to the client.
 		updatedFlow.ContinueWithItems = ctxUpdate.Flow.ContinueWithItems
 
 		e.d.Writer().Write(w, r, updatedFlow)

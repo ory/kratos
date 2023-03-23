@@ -65,7 +65,7 @@ func (e *Verifier) do(w http.ResponseWriter, r *http.Request, i *identity.Identi
 		if address.Status != identity.VerifiableAddressStatusPending {
 			continue
 		}
-		var csrf string
+		csrf := ""
 		if f.GetType() == flow.TypeBrowser {
 			csrf = e.r.CSRFHandler().RegenerateToken(w, r)
 		}
