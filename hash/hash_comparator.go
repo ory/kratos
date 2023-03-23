@@ -78,7 +78,7 @@ func CompareArgon2id(_ context.Context, password []byte, hash []byte) error {
 	}
 
 	// Derive the key from the other password using the same parameters.
-	otherHash := argon2.IDKey([]byte(password), salt, p.Iterations, uint32(p.Memory), p.Parallelism, p.KeyLength)
+	otherHash := argon2.IDKey(password, salt, p.Iterations, uint32(p.Memory), p.Parallelism, p.KeyLength)
 
 	return comparePasswordHashConstantTime(hash, otherHash)
 }
@@ -92,7 +92,7 @@ func CompareArgon2i(_ context.Context, password []byte, hash []byte) error {
 	}
 
 	// Derive the key from the other password using the same parameters.
-	otherHash := argon2.Key([]byte(password), salt, p.Iterations, uint32(p.Memory), p.Parallelism, p.KeyLength)
+	otherHash := argon2.Key(password, salt, p.Iterations, uint32(p.Memory), p.Parallelism, p.KeyLength)
 
 	return comparePasswordHashConstantTime(hash, otherHash)
 }

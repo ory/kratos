@@ -57,7 +57,7 @@ func (h *Argon2) Generate(ctx context.Context, password []byte) ([]byte, error) 
 	// Pass the plaintext password, salt and parameters to the argon2.IDKey
 	// function. This will generate a hash of the password using the Argon2id
 	// variant.
-	hash := argon2.IDKey([]byte(password), salt, p.Iterations, toKB(p.Memory), p.Parallelism, p.KeyLength)
+	hash := argon2.IDKey(password, salt, p.Iterations, toKB(p.Memory), p.Parallelism, p.KeyLength)
 
 	var b bytes.Buffer
 	if _, err := fmt.Fprintf(
