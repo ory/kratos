@@ -180,7 +180,7 @@ func (h *Handler) list(w http.ResponseWriter, r *http.Request, _ httprouter.Para
 		isam[i] = WithCredentialsMetadataAndAdminMetadataInJSON(identity)
 	}
 
-	migrationpagination.PaginationHeader(w, urlx.AppendPaths(h.r.Config().SelfAdminURL(r.Context()), RouteCollection), total+int64(itemsPerPage), page, itemsPerPage)
+	migrationpagination.PaginationHeader(w, urlx.AppendPaths(h.r.Config().SelfAdminURL(r.Context()), RouteCollection), total, page, itemsPerPage)
 	h.r.Writer().Write(w, r, isam)
 }
 
