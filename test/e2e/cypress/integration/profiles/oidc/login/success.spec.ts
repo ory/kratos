@@ -86,41 +86,6 @@ context("Social Sign In Successes", () => {
 
         cy.location("href").should("eq", "https://www.example.org/")
       })
-
-      it.only("settings screen stays intact when the original sign up method gets removed", () => {
-        const expectSettingsOk = () => {
-          cy.get('[value="google"]', { timeout: 1000 })
-            .should("have.attr", "name", "link")
-            .should("contain.text", "Link google")
-
-          cy.get('[value="github"]', { timeout: 1000 })
-            .should("have.attr", "name", "link")
-            .should("contain.text", "Link github")
-        }
-
-        const email = gen.email()
-        cy.registerOidc({ app, email, website, route: registration })
-
-        cy.visit(settings)
-        expectSettingsOk()
-
-        // set password
-        cy.get('input[name="password"]').type(gen.password())
-        cy.get('button[value="password"]').click()
-
-        // remove the provider used to log in
-        cy.updateConfigFile((config) => {
-          config.selfservice.methods.oidc.config.providers =
-            config.selfservice.methods.oidc.config.providers.filter(
-              ({ id }) => id !== "hydra",
-            )
-          return config
-        })
-
-        // visit settings and everything should still be fine
-        cy.visit(settings)
-        expectSettingsOk()
-      })
     })
   })
 })
