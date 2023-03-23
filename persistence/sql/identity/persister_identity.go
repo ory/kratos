@@ -660,6 +660,14 @@ func (p *IdentityPersister) ListIdentities(ctx context.Context, params identity.
 			schemaCache[i.SchemaID] = i.SchemaURL
 		}
 
+		if err := i.Validate(); err != nil {
+			return nil, err
+		}
+
+		if err := identity.UpgradeCredentials(i); err != nil {
+			return nil, err
+		}
+
 		is[k] = *i
 	}
 
