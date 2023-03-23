@@ -462,10 +462,14 @@ func (p *IdentityPersister) HydrateIdentityAssociations(ctx context.Context, i *
 			//
 			// https://github.com/gobuffalo/pop/issues/723
 			con := con.WithContext(ctx)
-			credentials, err = QueryForCredentials(con, Where{
+			creds, err := QueryForCredentials(con, Where{
 				"(identity_credentials.identity_id = ? AND identity_credentials.nid = ?)",
 				[]interface{}{i.ID, nid},
 			})
+			if err != nil {
+				return err
+			}
+			credentials = creds[i.ID]
 			return
 		})
 	}
@@ -511,7 +515,9 @@ type Where struct {
 	Args      []interface{}
 }
 
-func QueryForCredentials(con *pop.Connection, where ...Where) (map[identity.CredentialsType]identity.Credentials, error) {
+// QueryForCredentials queries for identity credentials with custom WHERE
+// clauses, returning the results resolved by the owning identity's UUID.
+func QueryForCredentials(con *pop.Connection, where ...Where) (map[uuid.UUID](map[identity.CredentialsType]identity.Credentials), error) {
 	q := con.Select(
 		"identity_credentials.id cred_id",
 		"identity_credentials.identity_id identity_id",
@@ -531,41 +537,48 @@ func QueryForCredentials(con *pop.Connection, where ...Where) (map[identity.Cred
 		"(ici.identity_credential_id = identity_credentials.id AND ici.nid = identity_credentials.nid)",
 	)
 	for _, w := range where {
-		q = q.Where(w.Condition, w.Args...)
+		q = q.Where("("+w.Condition+")", w.Args...)
 	}
-	var creds []queryCredentials
-	if err := q.All(&creds); err != nil {
+	var results []queryCredentials
+	if err := q.All(&results); err != nil {
 		return nil, sqlcon.HandleError(err)
 	}
-	credentials := map[identity.CredentialsType]identity.Credentials{}
-	for _, cred := range creds {
-		identifiers := credentials[cred.Type].Identifiers
-		if cred.Identifier != "" {
-			identifiers = append(identifiers, cred.Identifier)
+	credentialsPerIdentity := map[uuid.UUID](map[identity.CredentialsType]identity.Credentials){}
+	for _, res := range results {
+		credentials, ok := credentialsPerIdentity[res.IdentityID]
+		if !ok {
+			credentialsPerIdentity[res.IdentityID] = make(map[identity.CredentialsType]identity.Credentials)
+			credentials = credentialsPerIdentity[res.IdentityID]
+		}
+		identifiers := credentials[res.Type].Identifiers
+		if res.Identifier != "" {
+			identifiers = append(identifiers, res.Identifier)
 		}
 		if identifiers == nil {
 			identifiers = make([]string, 0)
 		}
 		c := identity.Credentials{
-			ID:                       cred.ID,
-			IdentityID:               cred.IdentityID,
-			NID:                      cred.NID,
-			Type:                     cred.Type,
-			IdentityCredentialTypeID: cred.TypeID,
+			ID:                       res.ID,
+			IdentityID:               res.IdentityID,
+			NID:                      res.NID,
+			Type:                     res.Type,
+			IdentityCredentialTypeID: res.TypeID,
 			Identifiers:              identifiers,
-			Config:                   cred.Config,
-			Version:                  cred.Version,
-			CreatedAt:                cred.CreatedAt,
-			UpdatedAt:                cred.UpdatedAt,
+			Config:                   res.Config,
+			Version:                  res.Version,
+			CreatedAt:                res.CreatedAt,
+			UpdatedAt:                res.UpdatedAt,
 		}
-		credentials[cred.Type] = c
+		credentials[res.Type] = c
 	}
-	for k := range credentials {
-		// We need deterministic ordering for testing, but sorting in the
-		// database can be expensive under certain circumstances.
-		sort.Strings(credentials[k].Identifiers)
+	// We need deterministic ordering for testing, but sorting in the
+	// database can be expensive under certain circumstances.
+	for _, creds := range credentialsPerIdentity {
+		for k := range creds {
+			sort.Strings(creds[k].Identifiers)
+		}
 	}
-	return credentials, nil
+	return credentialsPerIdentity, nil
 }
 
 func (p *IdentityPersister) ListIdentities(ctx context.Context, params identity.ListIdentityParameters) (res []identity.Identity, err error) {
@@ -586,6 +599,18 @@ func (p *IdentityPersister) ListIdentities(ctx context.Context, params identity.
 	nid := p.NetworkID(ctx)
 	query := con.Where("identities.nid = ?", nid).Order("identities.id DESC")
 
+	// Credentials are not expanded through `EagerPreload` but manually after
+	// fetching the identities, hence we filter out the relevant expand options.
+	var expandExceptCredentials sqlxx.Expandables
+	for _, e := range params.Expand {
+		if e != identity.ExpandFieldCredentials {
+			expandExceptCredentials = append(expandExceptCredentials, e)
+		}
+	}
+	if len(expandExceptCredentials) > 0 {
+		query = query.EagerPreload(expandExceptCredentials.ToEager()...)
+	}
+
 	if match := params.CredentialsIdentifier; len(match) > 0 {
 		// When filtering by credentials identifier, we most likely are looking for a username or email. It is therefore
 		// important to normalize the identifier before querying the database.
@@ -605,11 +630,20 @@ func (p *IdentityPersister) ListIdentities(ctx context.Context, params identity.
 		return nil, err
 	}
 
-	if len(params.Expand) > 0 {
-		for i := range is {
-			if err := p.HydrateIdentityAssociations(ctx, &is[i], params.Expand); err != nil {
-				return nil, err
-			}
+	if params.Expand.Has(identity.ExpandFieldCredentials) {
+		var ids []interface{}
+		for k := range is {
+			ids = append(ids, is[k].ID)
+		}
+		creds, err := QueryForCredentials(con,
+			Where{"(identity_credentials.nid = ?)", []interface{}{nid}},
+			Where{"(identity_credentials.identity_id IN (?) )", ids},
+		)
+		if err != nil {
+			return nil, err
+		}
+		for k := range is {
+			is[k].Credentials = creds[is[k].ID]
 		}
 	}
 
