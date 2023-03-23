@@ -315,6 +315,19 @@ func TestDriverDefault_Hooks(t *testing.T) {
 					}
 				},
 			},
+			{
+				uc: "show_verification_ui is configured",
+				prep: func(conf *config.Config) {
+					conf.MustSet(ctx, config.ViperKeySelfServiceRegistrationAfter+".hooks", []map[string]interface{}{
+						{"hook": "show_verification_ui"},
+					})
+				},
+				expect: func(reg *driver.RegistryDefault) []registration.PostHookPostPersistExecutor {
+					return []registration.PostHookPostPersistExecutor{
+						hook.NewShowVerificationUIHook(reg),
+					}
+				},
+			},
 		} {
 			t.Run(fmt.Sprintf("after/uc=%s", tc.uc), func(t *testing.T) {
 				conf, reg := internal.NewVeryFastRegistryWithoutDB(t)

@@ -16,6 +16,9 @@ selfservice:
     recovery:
       enabled: true
 
+    verification:
+      enabled: false
+
   methods:
     totp:
       enabled: true

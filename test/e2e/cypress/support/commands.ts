@@ -507,10 +507,8 @@ Cypress.Commands.add(
     cy.request({ url })
       .then(({ body }) => {
         const form = body.ui
-        // label should still exist after request, for more detail: #2591
-        expect(form.nodes[1].meta).to.not.be.null
-        expect(form.nodes[1].meta.label).to.not.be.null
-        expect(form.nodes[1].meta.label.text).to.equal("Email")
+        expect(form.nodes.some((node) => node.meta?.label?.text === "Email")).to
+          .be.true
 
         return cy.request({
           method: form.method,
@@ -1328,4 +1326,40 @@ Cypress.Commands.add("getCourierMessages", () => {
   return cy.request(KRATOS_ADMIN + "/courier/messages").then((res) => {
     return res.body
   })
+})
+
+Cypress.Commands.add(
+  "enableVerificationUIAfterRegistration",
+  (strategy: "password" | "oidc" | "webauthn") => {
+    cy.updateConfigFile((config) => {
+      if (!config.selfservice.flows.registration.after[strategy]) {
+        config.selfservice.flows.registration.after = {
+          [strategy]: { hooks: [] },
+        }
+      }
+
+      const hooks =
+        config.selfservice.flows.registration.after[strategy].hooks || []
+      config.selfservice.flows.registration.after[strategy].hooks = [
+        ...hooks.filter((h) => h.hook !== "show_verification_ui"),
+        { hook: "show_verification_ui" },
+      ]
+      return config
+    })
+  },
+)
+
+Cypress.Commands.add("getVerificationCodeFromEmail", (email) => {
+  return cy
+    .getMail({ removeMail: true })
+    .should((message) => {
+      expect(message.subject).to.equal("Please verify your email address")
+      expect(message.toAddresses[0].trim()).to.equal(email)
+    })
+    .then((message) => {
+      const code = extractRecoveryCode(message.body)
+      expect(code).to.not.be.undefined
+      expect(code.length).to.equal(6)
+      return code
+    })
 })

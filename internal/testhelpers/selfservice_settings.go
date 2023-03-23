@@ -45,6 +45,7 @@ func NewSettingsUIFlowEchoServer(t *testing.T, reg driver.Registry) *httptest.Se
 }
 
 func InitializeSettingsFlowViaBrowser(t *testing.T, client *http.Client, isSPA bool, ts *httptest.Server) *kratos.SettingsFlow {
+	t.Helper()
 	publicClient := NewSDKCustomClient(ts, client)
 
 	req, err := http.NewRequest("GET", ts.URL+settings.RouteInitBrowserFlow, nil)
@@ -66,9 +67,9 @@ func InitializeSettingsFlowViaBrowser(t *testing.T, client *http.Client, isSPA b
 
 	require.NoError(t, res.Body.Close())
 
-	rs, _, err := publicClient.FrontendApi.GetSettingsFlow(context.Background()).
+	rs, res, err := publicClient.FrontendApi.GetSettingsFlow(context.Background()).
 		Id(flowID).Execute()
-	require.NoError(t, err)
+	require.NoError(t, err, "%s", ioutilx.MustReadAll(res.Body))
 	assert.Empty(t, rs.Active)
 
 	return rs

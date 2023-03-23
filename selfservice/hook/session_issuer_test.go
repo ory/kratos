@@ -5,7 +5,6 @@ package hook_test
 
 import (
 	"context"
-	"errors"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -44,8 +43,13 @@ func TestSessionIssuer(t *testing.T) {
 
 			i := identity.NewIdentity(config.DefaultIdentityTraitsSchemaID)
 			require.NoError(t, reg.PrivilegedIdentityPool().CreateIdentity(context.Background(), i))
+
+			f := &registration.Flow{Type: flow.TypeBrowser}
+
 			require.NoError(t, h.ExecutePostRegistrationPostPersistHook(w, &r,
-				&registration.Flow{Type: flow.TypeBrowser}, &session.Session{ID: sid, Identity: i, Token: randx.MustString(12, randx.AlphaLowerNum)}))
+				f, &session.Session{ID: sid, Identity: i, Token: randx.MustString(12, randx.AlphaLowerNum)}))
+
+			require.Empty(t, f.ContinueWithItems)
 
 			got, err := reg.SessionPersister().GetSession(context.Background(), sid, session.ExpandNothing)
 			require.NoError(t, err)
@@ -63,8 +67,14 @@ func TestSessionIssuer(t *testing.T) {
 			f := &registration.Flow{Type: flow.TypeAPI}
 
 			require.NoError(t, reg.PrivilegedIdentityPool().CreateIdentity(context.Background(), i))
+
 			err := h.ExecutePostRegistrationPostPersistHook(w, &http.Request{Header: http.Header{"Accept": {"application/json"}}}, f, s)
-			require.True(t, errors.Is(err, registration.ErrHookAbortFlow), "%+v", err)
+			require.ErrorIs(t, err, registration.ErrHookAbortFlow, "%+v", err)
+			require.Len(t, f.ContinueWithItems, 1)
+
+			st := f.ContinueWithItems[0]
+			require.IsType(t, &flow.ContinueWithSetToken{}, st)
+			assert.NotEmpty(t, st.(*flow.ContinueWithSetToken).OrySessionToken)
 
 			got, err := reg.SessionPersister().GetSession(context.Background(), s.ID, session.ExpandNothing)
 			require.NoError(t, err)
@@ -87,7 +97,8 @@ func TestSessionIssuer(t *testing.T) {
 
 			require.NoError(t, reg.PrivilegedIdentityPool().CreateIdentity(context.Background(), i))
 			err := h.ExecutePostRegistrationPostPersistHook(w, &http.Request{Header: http.Header{"Accept": {"application/json"}}}, f, s)
-			require.True(t, errors.Is(err, registration.ErrHookAbortFlow), "%+v", err)
+			require.ErrorIs(t, err, registration.ErrHookAbortFlow, "%+v", err)
+			require.Empty(t, f.ContinueWithItems)
 
 			got, err := reg.SessionPersister().GetSession(context.Background(), s.ID, session.ExpandNothing)
 			require.NoError(t, err)
