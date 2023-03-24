@@ -57,8 +57,9 @@ func TestManager(t *testing.T) {
 	checkExtensionFieldsForIdentities := func(t *testing.T, expected string, original *identity.Identity) {
 		fromStore, err := reg.PrivilegedIdentityPool().GetIdentityConfidential(context.Background(), original.ID)
 		require.NoError(t, err)
-		for k, i := range []identity.Identity{*original, *fromStore} {
-			t.Run(fmt.Sprintf("identity=%d", k), checkExtensionFields(&i, expected))
+		identities := []identity.Identity{*original, *fromStore}
+		for k := range identities {
+			t.Run(fmt.Sprintf("identity=%d", k), checkExtensionFields(&identities[k], expected))
 		}
 	}
 

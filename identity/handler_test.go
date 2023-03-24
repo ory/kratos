@@ -582,8 +582,6 @@ func TestHandler(t *testing.T) {
 				{Create: validCreateIdentityBody("valid-patch", 4)},
 			}
 
-			//anotherValidBody := validCreateIdentityBody("valid-patch", 42)
-
 			for _, tt := range []struct {
 				name         string
 				body         *identity.CreateIdentityBody
@@ -675,8 +673,13 @@ func TestHandler(t *testing.T) {
 					assertJSONArrayElementsMatch(t, emails, res.Get("credentials.password.identifiers"))
 					assertJSONArrayElementsMatch(t, emails, res.Get("recovery_addresses.#.value"))
 					assertJSONArrayElementsMatch(t, emails, res.Get("verifiable_addresses.#.value"))
-					assert.Len(t, res.Get("verifiable_addresses.#(verified=true)#").Array(), 0)
-					assert.Len(t, res.Get("verifiable_addresses.#(verified=false)#").Array(), 4)
+
+					// Test that the verified addresses are imported correctly
+					assert.Len(t, res.Get("verifiable_addresses.#(verified=true)#").Array(), 2)
+					assert.Len(t, res.Get("verifiable_addresses.#(verified=false)#").Array(), 2)
+					assert.Len(t, res.Get("verifiable_addresses.#(status=pending)#").Array(), 2)
+					assert.Len(t, res.Get("verifiable_addresses.#(status=sent)#").Array(), 1)
+					assert.Len(t, res.Get("verifiable_addresses.#(status=completed)#").Array(), 1)
 				})
 			}
 		})
@@ -1360,11 +1363,26 @@ func validCreateIdentityBody(prefix string, i int) *identity.CreateIdentityBody 
 		Emails   []string `json:"emails"`
 		Username string   `json:"username"`
 	}{}
+
+	verificationStates := []identity.VerifiableAddressStatus{
+		identity.VerifiableAddressStatusPending,
+		identity.VerifiableAddressStatusSent,
+		identity.VerifiableAddressStatusCompleted,
+	}
+
 	for j := 0; j < 4; j++ {
 		email := fmt.Sprintf("%s-%d-%d@ory.sh", prefix, i, j)
 		traits.Emails = append(traits.Emails, email)
-		verifiableAddresses = append(verifiableAddresses, identity.VerifiableAddress{Value: email, Verified: j%2 == 0, Status: "completed"})
-		recoveryAddresses = append(recoveryAddresses, identity.RecoveryAddress{Value: email, Via: identity.RecoveryAddressTypeEmail})
+		verifiableAddresses = append(verifiableAddresses, identity.VerifiableAddress{
+			Value:    email,
+			Via:      identity.VerifiableAddressTypeEmail,
+			Verified: j%2 == 0,
+			Status:   verificationStates[j%len(verificationStates)],
+		})
+		recoveryAddresses = append(recoveryAddresses, identity.RecoveryAddress{
+			Value: email,
+			Via:   identity.RecoveryAddressTypeEmail,
+		})
 	}
 	traits.Username = traits.Emails[0]
 	rawTraits, _ := json.Marshal(traits)
