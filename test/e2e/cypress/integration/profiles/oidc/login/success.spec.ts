@@ -9,18 +9,16 @@ context("Social Sign In Successes", () => {
     {
       login: react.login,
       registration: react.registration,
-      settings: react.settings,
       app: "react" as "react",
       profile: "spa",
     },
     {
       login: express.login,
       registration: express.registration,
-      settings: express.settings,
       app: "express" as "express",
       profile: "oidc",
     },
-  ].forEach(({ login, registration, profile, app, settings }) => {
+  ].forEach(({ login, registration, profile, app }) => {
     describe(`for app ${app}`, () => {
       before(() => {
         cy.useConfigProfile(profile)
