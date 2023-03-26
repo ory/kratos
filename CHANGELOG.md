@@ -5,7 +5,7 @@
 
 **Table of Contents**
 
-- [ (2023-03-23)](#2023-03-23)
+- [ (2023-03-26)](#2023-03-26)
   - [Breaking Changes](#breaking-changes)
     - [Bug Fixes](#bug-fixes)
     - [Code Refactoring](#code-refactoring)
@@ -296,7 +296,7 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# [](https://github.com/ory/kratos/compare/v0.11.1...v) (2023-03-23)
+# [](https://github.com/ory/kratos/compare/v0.11.1...v) (2023-03-26)
 
 ## Breaking Changes
 
@@ -310,6 +310,10 @@ flows.
 
 - Access rules example ([#3178](https://github.com/ory/kratos/issues/3178))
   ([a206772](https://github.com/ory/kratos/commit/a206772d78efed6febe783ee88dae92de80063d0))
+- Account settings broken on OIDC removal
+  ([#3185](https://github.com/ory/kratos/issues/3185))
+  ([61ae531](https://github.com/ory/kratos/commit/61ae531ba86636e1ad4d63e37df47ef76dfa5f29)),
+  closes [ory-corp/cloud#3514](https://github.com/ory-corp/cloud/issues/3514)
 - Add `after_verification_return_to` to sdk and api docs
   ([#3097](https://github.com/ory/kratos/issues/3097))
   ([c70704c](https://github.com/ory/kratos/commit/c70704cebafff7a92f32928273e4570abb3b1c3d)),
@@ -536,6 +540,15 @@ flows.
 - Parallelize get identity and session calls
   ([#3023](https://github.com/ory/kratos/issues/3023))
   ([6393519](https://github.com/ory/kratos/commit/6393519977bc3d804673b5669166e07c561f1c79))
+- Refactor credentials fetching
+  ([#3183](https://github.com/ory/kratos/issues/3183))
+  ([590269f](https://github.com/ory/kratos/commit/590269f91e24203f987124cfbf11d31c04c1d35c)):
+
+  This change revamps the way we fetch identity credentials. We no longer need
+  most of the helper fields for gobuffalo/pop inside the `Identity` and
+  `Credentials` structures, and we collect all the credentials in one joined
+  query rather than using pop's `EagerPreload` functionality.
+
 - Return hydra error messages
   ([b3d037b](https://github.com/ory/kratos/commit/b3d037b33b248f1873f09d641e5d61376bcfde80))
 - Return verification flow ID after registration flow
