@@ -131,6 +131,33 @@ func (m *Manager) Update(ctx context.Context, updated *Identity, opts ...Manager
 	return m.r.PrivilegedIdentityPool().UpdateIdentity(ctx, updated)
 }
 
+func (m *Manager) UpdateCredentials(ctx context.Context, id uuid.UUID, ct CredentialsType, cb func(*Credentials) error, opts ...ManagerOption) (err error) {
+	ctx, span := m.r.Tracer(ctx).Tracer().Start(ctx, "identity.Manager.Update")
+	defer otelx.End(span, &err)
+
+	updated, err := m.r.PrivilegedIdentityPool().GetIdentityConfidential(ctx, id)
+	if err != nil {
+		return err
+	}
+
+	c, ok := updated.GetCredentials(ct)
+	if !ok {
+		return errors.WithStack(herodot.ErrInternalServerError.WithReasonf("Expected credentials of type %s to exist but they did not.", ct))
+	}
+
+	if err := cb(c); err != nil {
+		return err
+	}
+
+	updated.SetCredentials(ct, *c)
+	o := newManagerOptions(opts)
+	if err := m.ValidateIdentity(ctx, updated, o); err != nil {
+		return err
+	}
+
+	return m.r.PrivilegedIdentityPool().UpdateIdentity(ctx, updated)
+}
+
 func (m *Manager) UpdateSchemaID(ctx context.Context, id uuid.UUID, schemaID string, opts ...ManagerOption) (err error) {
 	ctx, span := m.r.Tracer(ctx).Tracer().Start(ctx, "identity.Manager.UpdateSchemaID")
 	defer otelx.End(span, &err)

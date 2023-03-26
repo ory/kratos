@@ -9,6 +9,11 @@ import (
 	"testing"
 	"time"
 
+	"github.com/tidwall/gjson"
+	"github.com/tidwall/sjson"
+
+	"github.com/ory/x/assertx"
+
 	"github.com/ory/x/sqlxx"
 
 	"github.com/ory/kratos/internal/testhelpers"
@@ -201,6 +206,54 @@ func TestManager(t *testing.T) {
 		count, err = reg.IdentityManager().CountActiveMultiFactorCredentials(ctx, id)
 		require.NoError(t, err)
 		assert.Equal(t, 1, count)
+	})
+
+	t.Run("method=UpdateCredentials", func(t *testing.T) {
+		original := identity.NewIdentity(config.DefaultIdentityTraitsSchemaID)
+		original.Traits = newTraits("update_creds@ory.sh", "")
+		original.Credentials[identity.CredentialsTypePassword] = identity.Credentials{
+			Type:        identity.CredentialsTypePassword,
+			Identifiers: []string{"update_creds@ory.sh"},
+			Config:      []byte(`{"hashed_password":"$argon2id$v=19$m=32,t=2,p=4$cm94YnRVOW5jZzFzcVE4bQ$MNzk5BtR2vUhrp6qQEjRNw"}`),
+		}
+		original.Credentials[identity.CredentialsTypeWebAuthn] = identity.Credentials{
+			Type:        identity.CredentialsTypeWebAuthn,
+			Identifiers: []string{"foo"},
+			Config:      []byte(`{"credentials":[{"is_passwordless":false}]}`),
+			Version:     1,
+		}
+		require.NoError(t, reg.IdentityManager().Create(context.Background(), original))
+
+		t.Run("case=can not update non-existing credentials", func(t *testing.T) {
+			require.Error(t, reg.IdentityManager().UpdateCredentials(context.Background(), original.ID, identity.CredentialsTypeOIDC, func(c *identity.Credentials) error {
+				return nil
+			}))
+		})
+
+		t.Run("case=propagates error", func(t *testing.T) {
+			err := errors.New("foo")
+			require.ErrorIs(t, reg.IdentityManager().UpdateCredentials(context.Background(), original.ID, identity.CredentialsTypePassword, func(c *identity.Credentials) error {
+				return err
+			}), err)
+		})
+
+		t.Run("case=updates credentials", func(t *testing.T) {
+			require.NoError(t, reg.IdentityManager().UpdateCredentials(context.Background(), original.ID, identity.CredentialsTypePassword, func(c *identity.Credentials) (err error) {
+				c.Config, err = sjson.SetBytes(c.Config, "new_key", "new_value")
+				return nil
+			}))
+
+			fromStore, err := reg.PrivilegedIdentityPool().GetIdentityConfidential(context.Background(), original.ID)
+			require.NoError(t, err)
+
+			actual, ok := fromStore.GetCredentials(identity.CredentialsTypePassword)
+			require.True(t, ok)
+			assert.Equal(t, "new_value", gjson.GetBytes(actual.Config, "new_key").String())
+
+			actual, ok = fromStore.GetCredentials(identity.CredentialsTypeWebAuthn)
+			require.True(t, ok)
+			assertx.EqualAsJSONExcept(t, actual, original.Credentials[identity.CredentialsTypeWebAuthn], []string{"updated_at"}, "other credentials should not be changed")
+		})
 	})
 
 	t.Run("method=UpdateTraits", func(t *testing.T) {
