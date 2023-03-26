@@ -257,7 +257,7 @@ func TestSettingsStrategy(t *testing.T) {
 			return
 		}
 
-		var unlinkInvalid = func(agent, provider string) func(t *testing.T) {
+		var unlinkInvalid = func(agent, provider, errorMessage string) func(t *testing.T) {
 			return func(t *testing.T) {
 				body, res, req := unlink(t, agent, provider)
 
@@ -267,27 +267,26 @@ func TestSettingsStrategy(t *testing.T) {
 
 				// The original options to link google and github are still there
 				t.Run("flow=fetch", func(t *testing.T) {
-					snapshotx.SnapshotTExcept(t, req.Ui.Nodes, []string{"0.attributes.value", "1.attributes.value"})
+					snapshotx.SnapshotT(t, req.Ui.Nodes, snapshotx.ExceptPaths("0.attributes.value", "1.attributes.value"))
 				})
 
 				t.Run("flow=json", func(t *testing.T) {
-					snapshotx.SnapshotTExcept(t, json.RawMessage(gjson.GetBytes(body, `ui.nodes`).Raw), []string{"0.attributes.value", "1.attributes.value"})
+					snapshotx.SnapshotT(t, json.RawMessage(gjson.GetBytes(body, `ui.nodes`).Raw), snapshotx.ExceptPaths("0.attributes.value", "1.attributes.value"))
 				})
 
 				assert.Contains(t, gjson.GetBytes(body, "ui.action").String(), publicTS.URL+settings.RouteSubmitFlow+"?flow=")
-				assert.Contains(t, gjson.GetBytes(body, `ui.messages.0.text`).String(),
-					"can not unlink non-existing OpenID Connect")
+				assert.Contains(t, gjson.GetBytes(body, `ui.messages.0.text`).String(), errorMessage)
 			}
 		}
 
 		t.Run("case=should not be able to unlink the last remaining connection",
-			unlinkInvalid("oryer", "ory"))
+			unlinkInvalid("oryer", "ory", "can not unlink OpenID Connect connection because it is the last remaining first factor credential"))
 
 		t.Run("case=should not be able to unlink an non-existing connection",
-			unlinkInvalid("oryer", "i-do-not-exist"))
+			unlinkInvalid("githuber", "i-do-not-exist", "can not unlink non-existing OpenID Connect connection"))
 
 		t.Run("case=should not be able to unlink a connection not yet linked",
-			unlinkInvalid("githuber", "google"))
+			unlinkInvalid("githuber", "google", "can not unlink non-existing OpenID Connect connection"))
 
 		t.Run("case=should unlink a connection", func(t *testing.T) {
 			agent, provider := "githuber", "github"
