@@ -32,8 +32,6 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/tidwall/gjson"
 
-	"github.com/ory/x/sqlxx"
-
 	"github.com/ory/x/urlx"
 
 	"github.com/ory/kratos/driver/config"
@@ -671,17 +669,17 @@ func TestCountActiveFirstFactorCredentials(t *testing.T) {
 	}
 
 	for k, tc := range []struct {
-		in       identity.CredentialsCollection
+		in       map[identity.CredentialsType]identity.Credentials
 		expected int
 	}{
 		{
-			in: identity.CredentialsCollection{{
+			in: map[identity.CredentialsType]identity.Credentials{strategy.ID(): {
 				Type:   strategy.ID(),
-				Config: sqlxx.JSONRawMessage{},
+				Config: []byte{},
 			}},
 		},
 		{
-			in: identity.CredentialsCollection{{
+			in: map[identity.CredentialsType]identity.Credentials{strategy.ID(): {
 				Type: strategy.ID(),
 				Config: toJson(identity.CredentialsOIDC{Providers: []identity.CredentialsOIDCProvider{
 					{Subject: "foo", Provider: "bar"},
@@ -689,7 +687,7 @@ func TestCountActiveFirstFactorCredentials(t *testing.T) {
 			}},
 		},
 		{
-			in: identity.CredentialsCollection{{
+			in: map[identity.CredentialsType]identity.Credentials{strategy.ID(): {
 				Type:        strategy.ID(),
 				Identifiers: []string{""},
 				Config: toJson(identity.CredentialsOIDC{Providers: []identity.CredentialsOIDCProvider{
@@ -698,7 +696,7 @@ func TestCountActiveFirstFactorCredentials(t *testing.T) {
 			}},
 		},
 		{
-			in: identity.CredentialsCollection{{
+			in: map[identity.CredentialsType]identity.Credentials{strategy.ID(): {
 				Type:        strategy.ID(),
 				Identifiers: []string{"bar:"},
 				Config: toJson(identity.CredentialsOIDC{Providers: []identity.CredentialsOIDCProvider{
@@ -707,7 +705,7 @@ func TestCountActiveFirstFactorCredentials(t *testing.T) {
 			}},
 		},
 		{
-			in: identity.CredentialsCollection{{
+			in: map[identity.CredentialsType]identity.Credentials{strategy.ID(): {
 				Type:        strategy.ID(),
 				Identifiers: []string{":foo"},
 				Config: toJson(identity.CredentialsOIDC{Providers: []identity.CredentialsOIDCProvider{
@@ -716,7 +714,7 @@ func TestCountActiveFirstFactorCredentials(t *testing.T) {
 			}},
 		},
 		{
-			in: identity.CredentialsCollection{{
+			in: map[identity.CredentialsType]identity.Credentials{strategy.ID(): {
 				Type:        strategy.ID(),
 				Identifiers: []string{"not-bar:foo"},
 				Config: toJson(identity.CredentialsOIDC{Providers: []identity.CredentialsOIDCProvider{
@@ -725,7 +723,7 @@ func TestCountActiveFirstFactorCredentials(t *testing.T) {
 			}},
 		},
 		{
-			in: identity.CredentialsCollection{{
+			in: map[identity.CredentialsType]identity.Credentials{strategy.ID(): {
 				Type:        strategy.ID(),
 				Identifiers: []string{"bar:not-foo"},
 				Config: toJson(identity.CredentialsOIDC{Providers: []identity.CredentialsOIDCProvider{
@@ -734,7 +732,7 @@ func TestCountActiveFirstFactorCredentials(t *testing.T) {
 			}},
 		},
 		{
-			in: identity.CredentialsCollection{{
+			in: map[identity.CredentialsType]identity.Credentials{strategy.ID(): {
 				Type:        strategy.ID(),
 				Identifiers: []string{"bar:foo"},
 				Config: toJson(identity.CredentialsOIDC{Providers: []identity.CredentialsOIDCProvider{

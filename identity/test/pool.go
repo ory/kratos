@@ -123,7 +123,6 @@ func TestPool(ctx context.Context, conf *config.Config, p persistence.Persister,
 					assert.Empty(t, actual.RecoveryAddresses)
 					assert.Empty(t, actual.VerifiableAddresses)
 					assert.Empty(t, actual.Credentials)
-					assert.Empty(t, actual.InternalCredentials)
 				})
 			})
 
@@ -142,7 +141,6 @@ func TestPool(ctx context.Context, conf *config.Config, p persistence.Persister,
 			t.Run("expand=recovery address", func(t *testing.T) {
 				runner(t, sqlxx.Expandables{identity.ExpandFieldRecoveryAddresses}, func(t *testing.T, actual *identity.Identity) {
 					assert.Empty(t, actual.Credentials)
-					assert.Empty(t, actual.InternalCredentials)
 					assert.Empty(t, actual.VerifiableAddresses)
 
 					require.Len(t, actual.RecoveryAddresses, 1)
@@ -153,7 +151,6 @@ func TestPool(ctx context.Context, conf *config.Config, p persistence.Persister,
 			t.Run("expand=verification address", func(t *testing.T) {
 				runner(t, sqlxx.Expandables{identity.ExpandFieldVerifiableAddresses}, func(t *testing.T, actual *identity.Identity) {
 					assert.Empty(t, actual.Credentials)
-					assert.Empty(t, actual.InternalCredentials)
 					assert.Empty(t, actual.RecoveryAddresses)
 
 					require.Len(t, actual.VerifiableAddresses, 1)
@@ -165,7 +162,6 @@ func TestPool(ctx context.Context, conf *config.Config, p persistence.Persister,
 				runner(t, identity.ExpandDefault, func(t *testing.T, actual *identity.Identity) {
 
 					assert.Empty(t, actual.Credentials)
-					assert.Empty(t, actual.InternalCredentials)
 
 					require.Len(t, actual.RecoveryAddresses, 1)
 					assertx.EqualAsJSONExcept(t, expected.RecoveryAddresses, actual.RecoveryAddresses, []string{"0.updated_at", "0.created_at"})

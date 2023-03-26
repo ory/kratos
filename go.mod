@@ -42,7 +42,7 @@ require (
 	github.com/go-swagger/go-swagger v0.30.3
 	github.com/gobuffalo/fizz v1.14.4
 	github.com/gobuffalo/httptest v1.5.2
-	github.com/gobuffalo/pop/v6 v6.1.2-0.20230124165254-ec9229dbf7d7
+	github.com/gobuffalo/pop/v6 v6.1.2-0.20230318123913-c85387acc9a0
 	github.com/gofrs/uuid v4.3.1+incompatible
 	github.com/golang-jwt/jwt/v4 v4.1.0
 	github.com/golang/gddo v0.0.0-20190904175337-72a348e765d2
