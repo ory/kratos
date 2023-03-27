@@ -8,23 +8,23 @@ import (
 )
 
 const (
-	SignupSuccessful      semconv.Event = semconv.EventIdentityCreated
-	SignupFailed          semconv.Event = "SignupFailed"
-	LoginSuccessful       semconv.Event = semconv.EventSessionIssued
-	LoginFailed           semconv.Event = "LoginFailed"
-	MFAPrompted           semconv.Event = "MFAPrompted"
-	MFASuccessful         semconv.Event = "MFASuccessful"
-	MFAFailed             semconv.Event = "MFAFailed"
-	RecoveryStarted       semconv.Event = "RecoveryStarted"
-	RecoverySuccessful    semconv.Event = "RecoverySuccessful"
-	VerificationStarted   semconv.Event = "VerificationStarted"
-	VerificationSuccesful semconv.Event = "VerificationSuccesful"
-	ProfileUpdated        semconv.Event = "ProfileUpdated"
-	ProfileUpdateFailed   semconv.Event = "ProfileUpdateFailed"
-	CredentialsAdded      semconv.Event = "CredentialsAdded"
-	CredentialsRemoved    semconv.Event = "CredentialsRemoved"
-	AccountLinked         semconv.Event = "AccountLinked"
-	SignOut               semconv.Event = "SignOut"
+	SignupSuccessful       semconv.Event = semconv.EventIdentityCreated
+	SignupFailed           semconv.Event = "SignupFailed"
+	LoginSuccessful        semconv.Event = semconv.EventSessionIssued
+	LoginFailed            semconv.Event = "LoginFailed"
+	MFAPrompted            semconv.Event = "MFAPrompted"
+	MFASuccessful          semconv.Event = "MFASuccessful"
+	MFAFailed              semconv.Event = "MFAFailed"
+	RecoveryStarted        semconv.Event = "RecoveryStarted"
+	RecoverySuccessful     semconv.Event = "RecoverySuccessful"
+	VerificationStarted    semconv.Event = "VerificationStarted"
+	VerificationSuccessful semconv.Event = "VerificationSuccessful"
+	ProfileUpdated         semconv.Event = "ProfileUpdated"
+	ProfileUpdateFailed    semconv.Event = "ProfileUpdateFailed"
+	CredentialsAdded       semconv.Event = "CredentialsAdded"
+	CredentialsRemoved     semconv.Event = "CredentialsRemoved"
+	AccountLinked          semconv.Event = "AccountLinked"
+	SignOut                semconv.Event = "SignOut"
 )
 
 const (
