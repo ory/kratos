@@ -24,6 +24,7 @@ var _ settings.PostHookPostPersistExecutor = new(Verifier)
 type (
 	verifierDependencies interface {
 		config.Provider
+		x.CSRFTokenGeneratorProvider
 		x.CSRFProvider
 		verification.StrategyProvider
 		verification.FlowPersistenceProvider
@@ -66,8 +67,14 @@ func (e *Verifier) do(w http.ResponseWriter, r *http.Request, i *identity.Identi
 			continue
 		}
 		csrf := ""
-		if f.GetType() == flow.TypeBrowser {
+		// TODO: this is pretty ugly, we should probably have a better way to handle CSRF tokens here.
+		if f.GetType() != flow.TypeBrowser {
+		} else if _, ok := f.(*registration.Flow); ok {
+			// If this hook is executed from a registration flow, we need to regenerate the CSRF token.
 			csrf = e.r.CSRFHandler().RegenerateToken(w, r)
+		} else {
+			// If it came from a settings flow, there already is a CSRF token, so we can just use that.
+			csrf = e.r.GenerateCSRFToken(r)
 		}
 		verificationFlow, err := verification.NewPostHookFlow(e.r.Config(),
 			e.r.Config().SelfServiceFlowVerificationRequestLifespan(r.Context()),
