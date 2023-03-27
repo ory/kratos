@@ -5,7 +5,7 @@
 
 **Table of Contents**
 
-- [ (2023-03-26)](#2023-03-26)
+- [ (2023-03-27)](#2023-03-27)
   - [Breaking Changes](#breaking-changes)
     - [Bug Fixes](#bug-fixes)
     - [Code Refactoring](#code-refactoring)
@@ -296,7 +296,7 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# [](https://github.com/ory/kratos/compare/v0.11.1...v) (2023-03-26)
+# [](https://github.com/ory/kratos/compare/v0.11.1...v) (2023-03-27)
 
 ## Breaking Changes
 
@@ -379,6 +379,14 @@ flows.
   closes [#3105](https://github.com/ory/kratos/issues/3105)
 - Orphaned webhook spans
   ([a7f9414](https://github.com/ory/kratos/commit/a7f9414460eb214a8f2b2ff96a2b6b303721f806))
+- Re-use existing CSRF token in verification flows
+  ([#3188](https://github.com/ory/kratos/issues/3188))
+  ([08a3447](https://github.com/ory/kratos/commit/08a344761e049c64cffafca2f94c942468201d24)):
+
+  - fix: re-use existing CSRF token in verification flows
+
+  - chore: fix if/else
+
 - Remove network omit flag ([#3066](https://github.com/ory/kratos/issues/3066))
   ([c629b72](https://github.com/ory/kratos/commit/c629b72be42001e3e1671d61cc8348373b686844))
 - Report correct errors for json schema validation
