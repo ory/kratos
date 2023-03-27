@@ -13,6 +13,7 @@ import (
 	"net/http/httptest"
 	"net/url"
 	"sort"
+	"strconv"
 	"testing"
 	"time"
 
@@ -568,6 +569,16 @@ func TestHandler(t *testing.T) {
 	})
 
 	t.Run("suite=PATCH identities", func(t *testing.T) {
+		t.Run("case=fails on > 100 identities", func(t *testing.T) {
+			tooMany := make([]*identity.BatchIdentityPatch, identity.BatchPatchIdentitiesLimit+1)
+			for i := range tooMany {
+				tooMany[i] = &identity.BatchIdentityPatch{Create: validCreateIdentityBody("too-many-patches", i)}
+			}
+			res := send(t, adminTS, "PATCH", "/identities", http.StatusBadRequest,
+				&identity.BatchPatchIdentitiesBody{Identities: tooMany})
+			assert.Contains(t, res.Get("error.reason").String(), strconv.Itoa(identity.BatchPatchIdentitiesLimit),
+				"the error reason should contain the limit")
+		})
 		t.Run("case=fails all on a bad identity", func(t *testing.T) {
 			// Test setup: we have a list of valid identitiy patches and a list of invalid ones.
 			// Each run adds one invalid patch to the list and sends it to the server.

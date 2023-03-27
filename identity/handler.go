@@ -35,6 +35,8 @@ const (
 	RouteCollection     = "/identities"
 	RouteItem           = RouteCollection + "/:id"
 	RouteCredentialItem = RouteItem + "/credentials/:type"
+
+	BatchPatchIdentitiesLimit = 100
 )
 
 type (
@@ -489,6 +491,14 @@ func (h *Handler) batchPatchIdentities(w http.ResponseWriter, r *http.Request, _
 	)
 	if err := jsonx.NewStrictDecoder(r.Body).Decode(&req); err != nil {
 		h.r.Writer().WriteErrorCode(w, r, http.StatusBadRequest, errors.WithStack(err))
+		return
+	}
+
+	if len(req.Identities) > BatchPatchIdentitiesLimit {
+		h.r.Writer().WriteErrorCode(w, r, http.StatusBadRequest,
+			errors.WithStack(herodot.ErrBadRequest.WithReasonf(
+				"The maximum number of identities that can be created or deleted at once is %d.",
+				BatchPatchIdentitiesLimit)))
 		return
 	}
 
