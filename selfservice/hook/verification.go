@@ -68,10 +68,11 @@ func (e *Verifier) do(w http.ResponseWriter, r *http.Request, i *identity.Identi
 		}
 		csrf := ""
 		// TODO: this is pretty ugly, we should probably have a better way to handle CSRF tokens here.
-		if _, ok := f.(*registration.Flow); ok {
+		if f.GetType() != flow.TypeBrowser {
+		} else if _, ok := f.(*registration.Flow); ok {
 			// If this hook is executed from a registration flow, we need to regenerate the CSRF token.
 			csrf = e.r.CSRFHandler().RegenerateToken(w, r)
-		} else if f.GetType() == flow.TypeBrowser {
+		} else {
 			// If it came from a settings flow, there already is a CSRF token, so we can just use that.
 			csrf = e.r.GenerateCSRFToken(r)
 		}
