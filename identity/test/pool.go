@@ -6,6 +6,7 @@ package test
 import (
 	"context"
 	"encoding/base64"
+	"encoding/json"
 	"fmt"
 	"strconv"
 	"strings"
@@ -62,6 +63,11 @@ func TestPool(ctx context.Context, conf *config.Config, p persistence.Persister,
 			URL:    urlx.ParseOrPanic("file://./stub/identity-2.schema.json"),
 			RawURL: "file://./stub/identity-2.schema.json",
 		}
+		multipleEmailsSchema := schema.Schema{
+			ID:     "multiple_emails",
+			URL:    urlx.ParseOrPanic("file://./stub/handler/multiple_emails.schema.json"),
+			RawURL: "file://./stub/identity-2.schema.json",
+		}
 		conf.MustSet(ctx, config.ViperKeyIdentitySchemas, []config.Schema{
 			{
 				ID:  altSchema.ID,
@@ -74,6 +80,10 @@ func TestPool(ctx context.Context, conf *config.Config, p persistence.Persister,
 			{
 				ID:  expandSchema.ID,
 				URL: expandSchema.RawURL,
+			},
+			{
+				ID:  multipleEmailsSchema.ID,
+				URL: multipleEmailsSchema.RawURL,
 			},
 		})
 
@@ -288,6 +298,39 @@ func TestPool(ctx context.Context, conf *config.Config, p persistence.Persister,
 				count, err := p.CountIdentities(ctx)
 				require.NoError(t, err)
 				assert.EqualValues(t, int64(0), count)
+			})
+		})
+
+		t.Run("suite=create multiple identities", func(t *testing.T) {
+			t.Run("create multiple identities", func(t *testing.T) {
+				identities := make([]*identity.Identity, 100)
+				for i := range identities {
+					identities[i] = NewTestIdentity(4, "persister-create-multiple", i)
+				}
+				require.NoError(t, p.CreateIdentities(ctx, identities...))
+
+				for _, id := range identities {
+					idFromDB, err := p.GetIdentity(ctx, id.ID, identity.ExpandEverything)
+					require.NoError(t, err)
+
+					credFromDB := idFromDB.Credentials[identity.CredentialsTypePassword]
+					assert.Equal(t, id.ID, idFromDB.ID)
+					assert.Equal(t, id.SchemaID, idFromDB.SchemaID)
+					assert.Equal(t, id.SchemaURL, idFromDB.SchemaURL)
+					assert.Equal(t, id.State, idFromDB.State)
+
+					// We test that the values are plausible in the handler test already.
+					assert.Equal(t, len(id.VerifiableAddresses), len(idFromDB.VerifiableAddresses))
+					assert.Equal(t, len(id.RecoveryAddresses), len(idFromDB.RecoveryAddresses))
+
+					assert.Equal(t, id.Credentials["password"].Identifiers, credFromDB.Identifiers)
+					assert.WithinDuration(t, time.Now().UTC(), credFromDB.CreatedAt, time.Minute)
+					assert.WithinDuration(t, time.Now().UTC(), credFromDB.UpdatedAt, time.Minute)
+					assert.WithinDuration(t, id.CreatedAt, idFromDB.CreatedAt, time.Second)
+					assert.WithinDuration(t, id.UpdatedAt, idFromDB.UpdatedAt, time.Second)
+
+					require.NoError(t, p.DeleteIdentity(ctx, id.ID))
+				}
 			})
 		})
 
@@ -1095,4 +1138,52 @@ func TestPool(ctx context.Context, conf *config.Config, p persistence.Persister,
 			assert.Equal(t, "nid1", i.Credentials[m[0].Name].Identifiers[0])
 		})
 	}
+}
+
+func NewTestIdentity(numAddresses int, prefix string, i int) *identity.Identity {
+	var (
+		verifiableAddresses []identity.VerifiableAddress
+		recoveryAddresses   []identity.RecoveryAddress
+	)
+	traits := struct {
+		Emails   []string `json:"emails"`
+		Username string   `json:"username"`
+	}{}
+
+	verificationStates := []identity.VerifiableAddressStatus{
+		identity.VerifiableAddressStatusPending,
+		identity.VerifiableAddressStatusSent,
+		identity.VerifiableAddressStatusCompleted,
+	}
+
+	for j := 0; j < numAddresses; j++ {
+		email := fmt.Sprintf("%s-%d-%d@ory.sh", prefix, i, j)
+		traits.Emails = append(traits.Emails, email)
+		verifiableAddresses = append(verifiableAddresses, identity.VerifiableAddress{
+			Value:    email,
+			Via:      identity.VerifiableAddressTypeEmail,
+			Verified: j%2 == 0,
+			Status:   verificationStates[j%len(verificationStates)],
+		})
+		recoveryAddresses = append(recoveryAddresses, identity.RecoveryAddress{
+			Value: email,
+			Via:   identity.RecoveryAddressTypeEmail,
+		})
+	}
+	traits.Username = traits.Emails[0]
+	rawTraits, _ := json.Marshal(traits)
+
+	id := &identity.Identity{
+		SchemaID:            "multiple_emails",
+		Traits:              rawTraits,
+		VerifiableAddresses: verifiableAddresses,
+		RecoveryAddresses:   recoveryAddresses,
+		State:               "active",
+	}
+	id.SetCredentials(identity.CredentialsTypePassword, identity.Credentials{
+		Type:        identity.CredentialsTypePassword,
+		Identifiers: []string{traits.Username},
+		Config:      sqlxx.JSONRawMessage(`{}`)})
+
+	return id
 }

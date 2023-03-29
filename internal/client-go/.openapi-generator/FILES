@@ -9,6 +9,7 @@ api_metadata.go
 client.go
 configuration.go
 docs/AuthenticatorAssuranceLevel.md
+docs/BatchPatchIdentitiesResponse.md
 docs/ContinueWith.md
 docs/ContinueWithSetOrySessionToken.md
 docs/ContinueWithVerificationUi.md
@@ -37,6 +38,8 @@ docs/IdentityCredentialsOidc.md
 docs/IdentityCredentialsOidcProvider.md
 docs/IdentityCredentialsPassword.md
 docs/IdentityCredentialsType.md
+docs/IdentityPatch.md
+docs/IdentityPatchResponse.md
 docs/IdentitySchemaContainer.md
 docs/IdentityState.md
 docs/IdentityWithCredentials.md
@@ -58,6 +61,7 @@ docs/OAuth2Client.md
 docs/OAuth2ConsentRequestOpenIDConnectContext.md
 docs/OAuth2LoginRequest.md
 docs/Pagination.md
+docs/PatchIdentitiesBody.md
 docs/PerformNativeLogoutBody.md
 docs/RecoveryCodeForIdentity.md
 docs/RecoveryFlow.md
@@ -117,6 +121,7 @@ git_push.sh
 go.mod
 go.sum
 model_authenticator_assurance_level.go
+model_batch_patch_identities_response.go
 model_continue_with.go
 model_continue_with_set_ory_session_token.go
 model_continue_with_verification_ui.go
@@ -142,6 +147,8 @@ model_identity_credentials_oidc.go
 model_identity_credentials_oidc_provider.go
 model_identity_credentials_password.go
 model_identity_credentials_type.go
+model_identity_patch.go
+model_identity_patch_response.go
 model_identity_schema_container.go
 model_identity_state.go
 model_identity_with_credentials.go
@@ -162,6 +169,7 @@ model_o_auth2_client.go
 model_o_auth2_consent_request_open_id_connect_context.go
 model_o_auth2_login_request.go
 model_pagination.go
+model_patch_identities_body.go
 model_perform_native_logout_body.go
 model_recovery_code_for_identity.go
 model_recovery_flow.go

@@ -24,7 +24,7 @@ import (
 	"github.com/ory/kratos/session"
 )
 
-func CleanSQL(t *testing.T, c *pop.Connection) {
+func CleanSQL(t testing.TB, c *pop.Connection) {
 	ctx := context.Background()
 	for _, table := range []string{
 		new(continuity.Container).TableName(ctx),

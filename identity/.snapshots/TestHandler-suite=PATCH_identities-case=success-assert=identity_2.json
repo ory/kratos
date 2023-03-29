@@ -1,0 +1,25 @@
+{
+  "credentials": {
+    "password": {
+      "type": "password",
+      "version": 0
+    }
+  },
+  "metadata_admin": {
+    "admin-2": "admin"
+  },
+  "metadata_public": {
+    "public-2": "public"
+  },
+  "schema_id": "multiple_emails",
+  "state": "active",
+  "traits": {
+    "emails": [
+      "batch-import-2-0@ory.sh",
+      "batch-import-2-1@ory.sh",
+      "batch-import-2-2@ory.sh",
+      "batch-import-2-3@ory.sh"
+    ],
+    "username": "batch-import-2-0@ory.sh"
+  }
+}
