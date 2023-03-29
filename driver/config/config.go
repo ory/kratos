@@ -18,44 +18,32 @@ import (
 	"testing"
 	"time"
 
-	"github.com/ory/herodot"
-
-	"github.com/ory/x/contextx"
-
-	"github.com/ory/jsonschema/v3/httploader"
-	"github.com/ory/x/httpx"
-	"github.com/ory/x/otelx"
-
-	"golang.org/x/net/publicsuffix"
-
 	"github.com/duo-labs/webauthn/protocol"
-
 	"github.com/duo-labs/webauthn/webauthn"
-
-	"github.com/ory/x/jsonschemax"
-
-	"github.com/ory/x/watcherx"
-
-	"github.com/ory/jsonschema/v3"
-
-	"github.com/ory/kratos/embedx"
-
-	"github.com/ory/x/tlsx"
-
 	"github.com/gofrs/uuid"
-
-	"github.com/stretchr/testify/require"
-
 	"github.com/inhies/go-bytesize"
 	kjson "github.com/knadh/koanf/parsers/json"
 	"github.com/pkg/errors"
 	"github.com/rs/cors"
+	"github.com/stretchr/testify/require"
 	"github.com/tidwall/gjson"
+	"go.opentelemetry.io/otel/trace"
+	"golang.org/x/net/publicsuffix"
 
+	"github.com/ory/herodot"
+	"github.com/ory/jsonschema/v3"
+	"github.com/ory/jsonschema/v3/httploader"
+	"github.com/ory/kratos/embedx"
 	"github.com/ory/x/configx"
+	"github.com/ory/x/contextx"
+	"github.com/ory/x/httpx"
+	"github.com/ory/x/jsonschemax"
 	"github.com/ory/x/jsonx"
 	"github.com/ory/x/logrusx"
+	"github.com/ory/x/otelx"
 	"github.com/ory/x/stringsx"
+	"github.com/ory/x/tlsx"
+	"github.com/ory/x/watcherx"
 )
 
 const (
@@ -414,6 +402,10 @@ func (p *Config) validateIdentitySchemas(ctx context.Context) error {
 		httpx.ResilientClientWithLogger(p.l),
 		httpx.ResilientClientWithMaxRetry(2),
 		httpx.ResilientClientWithConnectionTimeout(30 * time.Second),
+		// Tracing still works correctly even though we pass a no-op tracer
+		// here, because the otelhttp package will preferentially use the
+		// tracer from the incoming request context over this one.
+		httpx.ResilientClientWithTracer(trace.NewNoopTracerProvider().Tracer("github.com/ory/kratos/driver/config")),
 	}
 
 	if o, ok := ctx.Value(validateIdentitySchemasClientKey).([]httpx.ResilientOptions); ok {
