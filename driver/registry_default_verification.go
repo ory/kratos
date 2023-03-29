@@ -6,12 +6,13 @@ package driver
 import (
 	"context"
 
+	"github.com/pkg/errors"
+
 	"github.com/ory/herodot"
 	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/selfservice/flow/verification"
 	"github.com/ory/kratos/selfservice/strategy/link"
-	"github.com/pkg/errors"
 )
 
 func (m *RegistryDefault) VerificationFlowPersister() verification.FlowPersister {
