@@ -869,3 +869,57 @@ func TestDefaultRegistry_AllStrategies(t *testing.T) {
 		}
 	})
 }
+
+func TestGetActiveRecoveryStrategy(t *testing.T) {
+	t.Parallel()
+	conf, reg := internal.NewVeryFastRegistryWithoutDB(t)
+	t.Run("returns error if active strategy is disabled", func(t *testing.T) {
+		conf.Set(context.Background(), "selfservice.methods.code.enabled", false)
+		conf.Set(context.Background(), config.ViperKeySelfServiceRecoveryUse, "code")
+
+		_, err := reg.GetActiveRecoveryStrategy(context.Background())
+		require.Error(t, err)
+	})
+
+	t.Run("returns active strategy", func(t *testing.T) {
+		for _, sID := range []string{
+			"code", "link",
+		} {
+			t.Run(fmt.Sprintf("strategy=%s", sID), func(t *testing.T) {
+				conf.Set(context.Background(), fmt.Sprintf("selfservice.methods.%s.enabled", sID), true)
+				conf.Set(context.Background(), config.ViperKeySelfServiceRecoveryUse, sID)
+
+				s, err := reg.GetActiveRecoveryStrategy(context.Background())
+				require.NoError(t, err)
+				require.Equal(t, sID, s.RecoveryStrategyID())
+			})
+		}
+	})
+}
+
+func TestGetActiveVerificationStrategy(t *testing.T) {
+	t.Parallel()
+	conf, reg := internal.NewVeryFastRegistryWithoutDB(t)
+	t.Run("returns error if active strategy is disabled", func(t *testing.T) {
+		conf.Set(context.Background(), "selfservice.methods.code.enabled", false)
+		conf.Set(context.Background(), config.ViperKeySelfServiceVerificationUse, "code")
+
+		_, err := reg.GetActiveVerificationStrategy(context.Background())
+		require.Error(t, err)
+	})
+
+	t.Run("returns active strategy", func(t *testing.T) {
+		for _, sID := range []string{
+			"code", "link",
+		} {
+			t.Run(fmt.Sprintf("strategy=%s", sID), func(t *testing.T) {
+				conf.Set(context.Background(), fmt.Sprintf("selfservice.methods.%s.enabled", sID), true)
+				conf.Set(context.Background(), config.ViperKeySelfServiceVerificationUse, sID)
+
+				s, err := reg.GetActiveVerificationStrategy(context.Background())
+				require.NoError(t, err)
+				require.Equal(t, sID, s.VerificationStrategyID())
+			})
+		}
+	})
+}

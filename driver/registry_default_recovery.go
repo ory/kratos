@@ -6,9 +6,11 @@ package driver
 import (
 	"context"
 
+	"github.com/ory/herodot"
 	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/selfservice/flow/recovery"
 	"github.com/ory/kratos/selfservice/strategy/code"
+	"github.com/pkg/errors"
 )
 
 func (m *RegistryDefault) RecoveryFlowErrorHandler() *recovery.ErrorHandler {
@@ -41,8 +43,13 @@ func (m *RegistryDefault) RecoveryStrategies(ctx context.Context) (recoveryStrat
 // GetActiveRecoveryStrategy returns the currently active recovery strategy
 // If no recovery strategy has been set, an error is returned
 func (m *RegistryDefault) GetActiveRecoveryStrategy(ctx context.Context) (recovery.Strategy, error) {
-	activeRecoveryStrategy := m.Config().SelfServiceFlowRecoveryUse(ctx)
-	return m.RecoveryStrategies(ctx).Strategy(activeRecoveryStrategy)
+	as := m.Config().SelfServiceFlowRecoveryUse(ctx)
+	s, err := m.RecoveryStrategies(ctx).Strategy(as)
+	if err != nil {
+		return nil, errors.WithStack(herodot.ErrBadRequest.
+			WithReasonf("The active recovery strategy %s is not enabled. Please enable it in the configuration.", as))
+	}
+	return s, nil
 }
 
 func (m *RegistryDefault) AllRecoveryStrategies() (recoveryStrategies recovery.Strategies) {
