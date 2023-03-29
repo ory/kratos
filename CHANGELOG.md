@@ -5,7 +5,7 @@
 
 **Table of Contents**
 
-- [ (2023-03-27)](#2023-03-27)
+- [ (2023-03-29)](#2023-03-29)
   - [Breaking Changes](#breaking-changes)
     - [Bug Fixes](#bug-fixes)
     - [Code Refactoring](#code-refactoring)
@@ -296,7 +296,7 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# [](https://github.com/ory/kratos/compare/v0.11.1...v) (2023-03-27)
+# [](https://github.com/ory/kratos/compare/v0.11.1...v) (2023-03-29)
 
 ## Breaking Changes
 
@@ -448,6 +448,10 @@ flows.
   ([#2962](https://github.com/ory/kratos/issues/2962))
   ([44556a4](https://github.com/ory/kratos/commit/44556a468ef233b18fd0f16a83a4e1b2e5f05dcf)),
   closes [#2505](https://github.com/ory/kratos/issues/2505)
+- Add API to batch insert identities
+  ([#3157](https://github.com/ory/kratos/issues/3157))
+  ([829bda7](https://github.com/ory/kratos/commit/829bda701acfd6706ffd72845414d177895ff8fe)),
+  closes [ory/network#266](https://github.com/ory/network/issues/266)
 - Add Inspect option to driver
   ([8aa75e9](https://github.com/ory/kratos/commit/8aa75e97e4bfee37e7cf551173b516c6244786ff))
 - Add patreon oidc provider ([#3021](https://github.com/ory/kratos/issues/3021))
