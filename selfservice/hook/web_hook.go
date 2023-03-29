@@ -287,7 +287,7 @@ func (e *WebHook) execute(ctx context.Context, data *templateContext) error {
 			ctx = trace.ContextWithSpan(context.Background(), trace.SpanFromContext(ctx))
 		}
 		ctx, span := tracer.Start(ctx, "selfservice.webhook")
-		defer span.End()
+		defer otelx.End(span, &finalErr)
 		startTime := time.Now()
 
 		defer func() {
@@ -295,13 +295,15 @@ func (e *WebHook) execute(ctx context.Context, data *templateContext) error {
 			logger := e.deps.Logger().WithField("otel", map[string]string{
 				"trace_id": traceID.String(),
 				"span_id":  spanID.String(),
-			})
+			}).WithField("duration", time.Since(startTime))
 			if finalErr != nil {
 				if ignoreResponse {
-					logger.WithField("duration", time.Since(startTime)).WithError(finalErr).Warning("Webhook request failed but the error was ignored because the configuration indicated that the upstream response should be ignored.")
+					logger.WithError(finalErr).Warning("Webhook request failed but the error was ignored because the configuration indicated that the upstream response should be ignored")
+				} else {
+					logger.WithError(finalErr).Error("Webhook request failed")
 				}
 			} else {
-				logger.WithField("duration", time.Since(startTime)).Info("Webhook request succeeded")
+				logger.Info("Webhook request succeeded")
 			}
 		}()
 
@@ -310,14 +312,21 @@ func (e *WebHook) execute(ctx context.Context, data *templateContext) error {
 			return err
 		}
 
+		span.SetAttributes(
+			attribute.String("webhook.jsonnet.template-uri", builder.Config.TemplateURI),
+			attribute.Bool("webhook.can_interrupt", canInterrupt),
+			attribute.Bool("webhook.response.ignore", ignoreResponse),
+			attribute.Bool("webhook.response.parse", parseResponse),
+		)
+
 		req, err := builder.BuildRequest(ctx, data)
 		if errors.Is(err, request.ErrCancel) {
+			span.SetAttributes(attribute.Bool("webhook.jsonnet.canceled", true))
 			return nil
 		} else if err != nil {
 			return err
 		}
 
-		span.SetAttributes(semconv.HTTPClientAttributesFromHTTPRequest(req.Request)...)
 		if data.Identity != nil {
 			span.SetAttributes(
 				attribute.String("webhook.identity.id", data.Identity.ID.String()),
@@ -331,7 +340,6 @@ func (e *WebHook) execute(ctx context.Context, data *templateContext) error {
 
 		resp, err := httpClient.Do(req)
 		if err != nil {
-			span.SetStatus(codes.Error, err.Error())
 			return errors.WithStack(err)
 		}
 		defer resp.Body.Close()
@@ -341,7 +349,6 @@ func (e *WebHook) execute(ctx context.Context, data *templateContext) error {
 			span.SetStatus(codes.Error, "HTTP status code >= 400")
 			if canInterrupt || parseResponse {
 				if err := parseWebhookResponse(resp, data.Identity); err != nil {
-					span.SetStatus(codes.Error, err.Error())
 					return err
 				}
 			}
@@ -350,7 +357,6 @@ func (e *WebHook) execute(ctx context.Context, data *templateContext) error {
 
 		if parseResponse {
 			if err := parseWebhookResponse(resp, data.Identity); err != nil {
-				span.SetStatus(codes.Error, err.Error())
 				return err
 			}
 		}
