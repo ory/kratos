@@ -302,58 +302,10 @@ func TestPool(ctx context.Context, conf *config.Config, p persistence.Persister,
 		})
 
 		t.Run("suite=create multiple identities", func(t *testing.T) {
-			newIdentity := func(prefix string, i int) *identity.Identity {
-				var (
-					verifiableAddresses []identity.VerifiableAddress
-					recoveryAddresses   []identity.RecoveryAddress
-				)
-				traits := struct {
-					Emails   []string `json:"emails"`
-					Username string   `json:"username"`
-				}{}
-
-				verificationStates := []identity.VerifiableAddressStatus{
-					identity.VerifiableAddressStatusPending,
-					identity.VerifiableAddressStatusSent,
-					identity.VerifiableAddressStatusCompleted,
-				}
-
-				for j := 0; j < 4; j++ {
-					email := fmt.Sprintf("%s-%d-%d@ory.sh", prefix, i, j)
-					traits.Emails = append(traits.Emails, email)
-					verifiableAddresses = append(verifiableAddresses, identity.VerifiableAddress{
-						Value:    email,
-						Via:      identity.VerifiableAddressTypeEmail,
-						Verified: j%2 == 0,
-						Status:   verificationStates[j%len(verificationStates)],
-					})
-					recoveryAddresses = append(recoveryAddresses, identity.RecoveryAddress{
-						Value: email,
-						Via:   identity.RecoveryAddressTypeEmail,
-					})
-				}
-				traits.Username = traits.Emails[0]
-				rawTraits, _ := json.Marshal(traits)
-
-				id := &identity.Identity{
-					SchemaID:            "multiple_emails",
-					Traits:              rawTraits,
-					VerifiableAddresses: verifiableAddresses,
-					RecoveryAddresses:   recoveryAddresses,
-					State:               "active",
-				}
-				id.SetCredentials(identity.CredentialsTypePassword, identity.Credentials{
-					Type:        identity.CredentialsTypePassword,
-					Identifiers: []string{traits.Username},
-					Config:      sqlxx.JSONRawMessage(`{}`)})
-
-				return id
-			}
-
 			t.Run("create multiple identities", func(t *testing.T) {
-				identities := make([]*identity.Identity, 10)
+				identities := make([]*identity.Identity, 100)
 				for i := range identities {
-					identities[i] = newIdentity("persister-create-multiple", i)
+					identities[i] = NewTestIdentity(4, "persister-create-multiple", i)
 				}
 				require.NoError(t, p.CreateIdentities(ctx, identities...))
 
@@ -1186,4 +1138,52 @@ func TestPool(ctx context.Context, conf *config.Config, p persistence.Persister,
 			assert.Equal(t, "nid1", i.Credentials[m[0].Name].Identifiers[0])
 		})
 	}
+}
+
+func NewTestIdentity(numAddresses int, prefix string, i int) *identity.Identity {
+	var (
+		verifiableAddresses []identity.VerifiableAddress
+		recoveryAddresses   []identity.RecoveryAddress
+	)
+	traits := struct {
+		Emails   []string `json:"emails"`
+		Username string   `json:"username"`
+	}{}
+
+	verificationStates := []identity.VerifiableAddressStatus{
+		identity.VerifiableAddressStatusPending,
+		identity.VerifiableAddressStatusSent,
+		identity.VerifiableAddressStatusCompleted,
+	}
+
+	for j := 0; j < numAddresses; j++ {
+		email := fmt.Sprintf("%s-%d-%d@ory.sh", prefix, i, j)
+		traits.Emails = append(traits.Emails, email)
+		verifiableAddresses = append(verifiableAddresses, identity.VerifiableAddress{
+			Value:    email,
+			Via:      identity.VerifiableAddressTypeEmail,
+			Verified: j%2 == 0,
+			Status:   verificationStates[j%len(verificationStates)],
+		})
+		recoveryAddresses = append(recoveryAddresses, identity.RecoveryAddress{
+			Value: email,
+			Via:   identity.RecoveryAddressTypeEmail,
+		})
+	}
+	traits.Username = traits.Emails[0]
+	rawTraits, _ := json.Marshal(traits)
+
+	id := &identity.Identity{
+		SchemaID:            "multiple_emails",
+		Traits:              rawTraits,
+		VerifiableAddresses: verifiableAddresses,
+		RecoveryAddresses:   recoveryAddresses,
+		State:               "active",
+	}
+	id.SetCredentials(identity.CredentialsTypePassword, identity.Credentials{
+		Type:        identity.CredentialsTypePassword,
+		Identifiers: []string{traits.Username},
+		Config:      sqlxx.JSONRawMessage(`{}`)})
+
+	return id
 }

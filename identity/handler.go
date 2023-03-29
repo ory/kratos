@@ -36,7 +36,7 @@ const (
 	RouteItem           = RouteCollection + "/:id"
 	RouteCredentialItem = RouteItem + "/credentials/:type"
 
-	BatchPatchIdentitiesLimit = 100
+	BatchPatchIdentitiesLimit = 2000
 )
 
 type (

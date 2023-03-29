@@ -11,6 +11,8 @@ import (
 	"testing"
 	"time"
 
+	"golang.org/x/sync/errgroup"
+
 	"github.com/ory/x/sqlxx"
 	"github.com/ory/x/urlx"
 
@@ -64,7 +66,7 @@ func TestMain(m *testing.M) {
 	dockertest.KillAllTestDatabases()
 }
 
-func pl(t *testing.T) func(lvl logging.Level, s string, args ...interface{}) {
+func pl(t testing.TB) func(lvl logging.Level, s string, args ...interface{}) {
 	return func(lvl logging.Level, s string, args ...interface{}) {
 		if pop.Debug == false {
 			return
@@ -93,7 +95,7 @@ func pl(t *testing.T) func(lvl logging.Level, s string, args ...interface{}) {
 	}
 }
 
-func createCleanDatabases(t *testing.T) map[string]*driver.RegistryDefault {
+func createCleanDatabases(t testing.TB) map[string]*driver.RegistryDefault {
 	conns := map[string]string{
 		"sqlite": "sqlite://file:" + t.TempDir() + "/db.sqlite?_fk=true",
 	}
@@ -319,4 +321,63 @@ func TestPersister_Transaction(t *testing.T) {
 		require.Error(t, err)
 		assert.Equal(t, sqlcon.ErrNoRows.Error(), err.Error())
 	})
+}
+
+func Benchmark_BatchCreateIdentities(b *testing.B) {
+	conns := createCleanDatabases(b)
+	ctx := context.Background()
+	batchSizes := []int{1, 10, 100, 500, 800, 900, 1000, 2000, 3000}
+	parallelRequests := []int{1, 4, 8, 16}
+
+	for name := range conns {
+		name := name
+		reg := conns[name]
+		b.Run(fmt.Sprintf("database=%s", name), func(b *testing.B) {
+			conf := reg.Config()
+			_, p := testhelpers.NewNetwork(b, ctx, reg.Persister())
+			multipleEmailsSchema := schema.Schema{
+				ID:     "multiple_emails",
+				URL:    urlx.ParseOrPanic("file://./stub/handler/multiple_emails.schema.json"),
+				RawURL: "file://./stub/identity-2.schema.json",
+			}
+			conf.MustSet(ctx, config.ViperKeyIdentitySchemas, []config.Schema{
+				{
+					ID:  multipleEmailsSchema.ID,
+					URL: multipleEmailsSchema.RawURL,
+				},
+			})
+			conf.MustSet(ctx, config.ViperKeyPublicBaseURL, "http://localhost/")
+
+			run := 0
+			for _, batchSize := range batchSizes {
+				b.Run(fmt.Sprintf("batch-size=%d", batchSize), func(b *testing.B) {
+					for _, paralellism := range parallelRequests {
+						b.Run(fmt.Sprintf("parallelism=%d", paralellism), func(b *testing.B) {
+							start := time.Now()
+							for i := 0; i < b.N; i++ {
+								wg := new(errgroup.Group)
+								for paralell := 0; paralell < paralellism; paralell++ {
+									paralell := paralell
+									wg.Go(func() error {
+										identities := make([]*ri.Identity, batchSize)
+										prefix := fmt.Sprintf("bench-insert-run-%d", run+paralell)
+										for j := range identities {
+											identities[j] = identity.NewTestIdentity(1, prefix, j)
+										}
+
+										return p.CreateIdentities(ctx, identities...)
+									})
+								}
+								assert.NoError(b, wg.Wait())
+								run += paralellism
+							}
+							end := time.Now()
+							b.ReportMetric(float64(paralellism*batchSize*b.N), "identites_created")
+							b.ReportMetric(float64(paralellism*batchSize*b.N)/end.Sub(start).Seconds(), "identities/s")
+						})
+					}
+				})
+			}
+		})
+	}
 }
