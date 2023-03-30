@@ -509,6 +509,8 @@ flows.
   ([c288d4d](https://github.com/ory/kratos/commit/c288d4d136bca1a9ed3931b4827967eb44e80ede))
 - Improve tracing span naming in hooks
   ([bf828d3](https://github.com/ory/kratos/commit/bf828d3f5d56a963529e98958f4039f0dc569979))
+- Improve webhook diagnostics
+  ([d4eb2f6](https://github.com/ory/kratos/commit/d4eb2f6b728a211f1e1454559c2eff73f2f77936))
 - Improved oidc flow on duplicate account registration
   ([#3151](https://github.com/ory/kratos/issues/3151))
   ([4d2fda4](https://github.com/ory/kratos/commit/4d2fda453b16349589e941af06fcce312c2e5c37)):
@@ -552,6 +554,8 @@ flows.
   recipients, if some tries to recover their account or verify their address
   ("anti-account-enumeration measures").
 
+- Make password validator (HIBP check) cancelable and add tracing
+  ([28f8914](https://github.com/ory/kratos/commit/28f8914bfb8276d38e08b9be9a3ad1c59d1410bb))
 - Parallelize get identity and session calls
   ([#3023](https://github.com/ory/kratos/issues/3023))
   ([6393519](https://github.com/ory/kratos/commit/6393519977bc3d804673b5669166e07c561f1c79))
