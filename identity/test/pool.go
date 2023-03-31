@@ -677,6 +677,7 @@ func TestPool(ctx context.Context, conf *config.Config, p persistence.Persister,
 			t.Run("only webauthn and password", func(t *testing.T) {
 				actual, err := p.ListIdentities(ctx, identity.ListIdentityParameters{
 					CredentialsIdentifier: "find-identity-by-identifier-oidc@ory.sh",
+					Expand:                identity.ExpandEverything,
 				})
 				require.NoError(t, err)
 				assert.Len(t, actual, 0)
@@ -685,6 +686,7 @@ func TestPool(ctx context.Context, conf *config.Config, p persistence.Persister,
 			t.Run("one result set even if multiple matches", func(t *testing.T) {
 				actual, err := p.ListIdentities(ctx, identity.ListIdentityParameters{
 					CredentialsIdentifier: "find-identity-by-identifier-common@ory.sh",
+					Expand:                identity.ExpandEverything,
 				})
 				require.NoError(t, err)
 				assert.Len(t, actual, 1)
@@ -693,6 +695,7 @@ func TestPool(ctx context.Context, conf *config.Config, p persistence.Persister,
 			t.Run("non existing identifier", func(t *testing.T) {
 				actual, err := p.ListIdentities(ctx, identity.ListIdentityParameters{
 					CredentialsIdentifier: "find-identity-by-identifier-non-existing@ory.sh",
+					Expand:                identity.ExpandEverything,
 				})
 				require.NoError(t, err)
 				assert.Len(t, actual, 0)
@@ -702,6 +705,7 @@ func TestPool(ctx context.Context, conf *config.Config, p persistence.Persister,
 				_, on := testhelpers.NewNetwork(t, ctx, p)
 				actual, err := on.ListIdentities(ctx, identity.ListIdentityParameters{
 					CredentialsIdentifier: expectedIdentifiers[0],
+					Expand:                identity.ExpandEverything,
 				})
 				require.NoError(t, err)
 				assert.Len(t, actual, 0)

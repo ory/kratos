@@ -697,6 +697,10 @@ func (p *IdentityPersister) ListIdentities(ctx context.Context, params identity.
 		return nil, err
 	}
 
+	if len(is) == 0 {
+		return is, nil
+	}
+
 	if params.Expand.Has(identity.ExpandFieldCredentials) {
 		var ids []interface{}
 		for k := range is {
