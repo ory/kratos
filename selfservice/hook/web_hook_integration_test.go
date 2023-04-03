@@ -167,17 +167,17 @@ func TestWebHooks(t *testing.T) {
 		h, _ := json.Marshal(req.Header)
 		return fmt.Sprintf(`{
    					"flow_id": "%s",
-					"identity_id": "%s",
-					"session_id": "%s",
+						"identity_id": "%s",
+						"session_id": "%s",
    					"headers": %s,
-					"method": "%s",
-					"url": "%s",
-					"cookies": {
-						"Some-Cookie-1": "Some-Cookie-Value",
-						"Some-Cookie-2": "Some-other-Cookie-Value",
-						"Some-Cookie-3": "Third-Cookie-Value"
-					},
-					"transient_payload": %s
+						"method": "%s",
+						"url": "%s",
+						"cookies": {
+							"Some-Cookie-1": "Some-Cookie-Value",
+							"Some-Cookie-2": "Some-other-Cookie-Value",
+							"Some-Cookie-3": "Third-Cookie-Value"
+						},
+						"transient_payload": %s
 				}`, f.GetID(), s.Identity.ID, s.ID, string(h), req.Method, "http://www.ory.sh/some_end_point", string(tp))
 	}
 
