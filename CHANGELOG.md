@@ -5,7 +5,7 @@
 
 **Table of Contents**
 
-- [ (2023-03-30)](#2023-03-30)
+- [ (2023-04-03)](#2023-04-03)
   - [Breaking Changes](#breaking-changes)
     - [Bug Fixes](#bug-fixes)
     - [Code Refactoring](#code-refactoring)
@@ -296,7 +296,7 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# [](https://github.com/ory/kratos/compare/v0.11.1...v) (2023-03-30)
+# [](https://github.com/ory/kratos/compare/v0.11.1...v) (2023-04-03)
 
 ## Breaking Changes
 
@@ -310,6 +310,9 @@ flows.
 
 - Access rules example ([#3178](https://github.com/ory/kratos/issues/3178))
   ([a206772](https://github.com/ory/kratos/commit/a206772d78efed6febe783ee88dae92de80063d0))
+- Account experience redirects to verification page
+  ([#3195](https://github.com/ory/kratos/issues/3195))
+  ([2e96d75](https://github.com/ory/kratos/commit/2e96d75c2e0a1c9a884e2d3342725fb1983b495d))
 - Account settings broken on OIDC removal
   ([#3185](https://github.com/ory/kratos/issues/3185))
   ([61ae531](https://github.com/ory/kratos/commit/61ae531ba86636e1ad4d63e37df47ef76dfa5f29)),
@@ -355,6 +358,12 @@ flows.
 - Implement offline scope in the way google expects
   ([#3088](https://github.com/ory/kratos/issues/3088))
   ([39043d4](https://github.com/ory/kratos/commit/39043d451e154af44123ba031381f0e3c10fbb00))
+- Invalid SQL syntax in ListIdentities
+  ([#3202](https://github.com/ory/kratos/issues/3202))
+  ([162ab9b](https://github.com/ory/kratos/commit/162ab9b5634329135b1b729ad401701019aca222)):
+
+  PostgresQL does not support `... WHERE x IN ( )` with an empty argument list.
+
 - Issuer missing from netid claims
   ([#3080](https://github.com/ory/kratos/issues/3080))
   ([dec7cbc](https://github.com/ory/kratos/commit/dec7cbc4286cbbe2d787b1f8998ee57054d7c95b)):
