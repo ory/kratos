@@ -64,6 +64,7 @@ type (
 		RequestURL     string             `json:"request_url"`
 		RequestCookies map[string]string  `json:"request_cookies"`
 		Identity       *identity.Identity `json:"identity,omitempty"`
+		Session        *session.Session   `json:"session,omitempty"`
 	}
 
 	WebHook struct {
@@ -123,6 +124,7 @@ func (e *WebHook) ExecuteLoginPostHook(_ http.ResponseWriter, req *http.Request,
 			RequestURL:     x.RequestURL(req).String(),
 			RequestCookies: cookies(req),
 			Identity:       session.Identity,
+			Session:        session,
 		})
 	})
 }
@@ -173,6 +175,7 @@ func (e *WebHook) ExecutePostRecoveryHook(_ http.ResponseWriter, req *http.Reque
 			RequestURL:     x.RequestURL(req).String(),
 			RequestCookies: cookies(req),
 			Identity:       session.Identity,
+			Session:        session,
 		})
 	})
 }
@@ -217,6 +220,7 @@ func (e *WebHook) ExecutePostRegistrationPostPersistHook(_ http.ResponseWriter, 
 			RequestURL:     x.RequestURL(req).String(),
 			RequestCookies: cookies(req),
 			Identity:       session.Identity,
+			Session:        session,
 		})
 	})
 }
