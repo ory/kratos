@@ -239,7 +239,7 @@ func (s *Strategy) processRegistration(w http.ResponseWriter, r *http.Request, r
 	}
 
 	fetch := fetcher.NewFetcher(fetcher.WithClient(s.d.HTTPClient(r.Context())))
-	jn, err := fetch.Fetch(provider.Config().Mapper)
+	jn, err := fetch.FetchContext(r.Context(), provider.Config().Mapper)
 	if err != nil {
 		return nil, s.handleError(w, r, rf, provider.Config().ID, nil, err)
 	}
