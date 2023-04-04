@@ -578,6 +578,8 @@ func (m *RegistryDefault) Init(ctx context.Context, ctxer contextx.Contextualize
 	if m.Tracer(ctx).IsLoaded() {
 		instrumentedDriverOpts = []instrumentedsql.Opt{
 			instrumentedsql.WithTracer(otelsql.NewTracer()),
+			instrumentedsql.WithOpsExcluded(instrumentedsql.OpSQLRowsNext),
+			instrumentedsql.WithOmitArgs(), // don't risk leaking PII or secrets
 		}
 	}
 	if o.replaceTracer != nil {
