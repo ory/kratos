@@ -15,6 +15,7 @@ import (
 	"time"
 
 	"github.com/ory/x/urlx"
+	"github.com/pkg/errors"
 
 	"github.com/ory/x/sqlxx"
 
@@ -57,6 +58,8 @@ func TestFlowLifecycle(t *testing.T) {
 
 	errorTS := testhelpers.NewErrorTestServer(t, reg)
 	conf.MustSet(ctx, config.ViperKeySelfServiceBrowserDefaultReturnTo, "https://www.ory.sh")
+	conf.MustSet(ctx, config.ViperKeyURLsAllowedReturnToDomains, []string{"https://www.ory.sh", "https://example.com"})
+
 	testhelpers.SetDefaultIdentitySchema(conf, "file://./stub/password.schema.json")
 
 	assertion := func(body []byte, isForced, isApi bool) {
@@ -588,6 +591,25 @@ func TestFlowLifecycle(t *testing.T) {
 				assert.NotContains(t, res.Request.URL.String(), loginTS.URL)
 
 				assert.NotEmpty(t, gjson.GetBytes(body, "oauth2_login_request").Value(), "%s", body)
+			})
+
+			t.Run("case=oauth2 flow init should override return_to to the oauth2 request_url", func(t *testing.T) {
+				route := login.RouteInitBrowserFlow
+				req := x.NewTestHTTPRequest(t, "GET", ts.URL+route, nil)
+				req.URL.RawQuery = url.Values{
+					"return_to":       {"https://example.com"},
+					"login_challenge": {hydra.FAKE_SUCCESS},
+				}.Encode()
+
+				c := &http.Client{}
+				res, err := c.Do(req)
+				require.NoError(t, errors.WithStack(err))
+
+				body, err := io.ReadAll(res.Body)
+				require.NoError(t, errors.WithStack(err))
+
+				require.Equal(t, http.StatusOK, res.StatusCode)
+				assert.Equal(t, "https://www.ory.sh", gjson.GetBytes(body, "return_to").Value())
 			})
 		})
 

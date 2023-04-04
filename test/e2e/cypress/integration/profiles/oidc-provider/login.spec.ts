@@ -189,7 +189,6 @@ context("OpenID Provider - change between flows", () => {
   }
 
   before(() => {
-    cy.deleteMail()
     cy.useConfigProfile("oidc-provider")
     cy.proxy("express")
   })
@@ -215,8 +214,10 @@ context("OpenID Provider - change between flows", () => {
     cy.deleteMail()
     cy.longRecoveryLifespan()
     cy.longLinkLifespan()
+    cy.disableVerification()
     cy.enableRecovery()
     cy.useRecoveryStrategy("code")
+    cy.notifyUnknownRecipients("recovery", false)
 
     const identity = gen.identityWithWebsite()
     cy.registerApi(identity)

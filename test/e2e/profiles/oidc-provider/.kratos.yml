@@ -7,7 +7,7 @@ selfservice:
   methods:
     password:
       enabled: true
-    link:
+    code:
       enabled: true
   flows:
     settings:
