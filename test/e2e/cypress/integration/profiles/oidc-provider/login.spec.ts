@@ -2,11 +2,12 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { gen } from "../../../helpers"
-import * as oauth2 from "../../../helpers/oauth2"
 import * as httpbin from "../../../helpers/httpbin"
+import * as oauth2 from "../../../helpers/oauth2"
 
 context("OpenID Provider", () => {
   before(() => {
+    cy.deleteMail()
     cy.useConfigProfile("oidc-provider")
     cy.proxy("express")
   })
@@ -144,5 +145,109 @@ context("OpenID Provider", () => {
 
     odicLogin()
     cy.getCookie("ory_hydra_session_dev").should("be.null")
+  })
+})
+
+context("OpenID Provider - change between flows", () => {
+  const client = {
+    auth_endpoint: "http://localhost:4744/oauth2/auth",
+    token_endpoint: "http://localhost:4744/oauth2/token",
+    id: Cypress.env("OIDC_DUMMY_CLIENT_ID"),
+    secret: Cypress.env("OIDC_DUMMY_CLIENT_SECRET"),
+    token_endpoint_auth_method: "client_secret_basic",
+    grant_types: ["authorization_code", "refresh_token"],
+    response_types: ["code", "id_token"],
+    scopes: ["openid", "offline", "email", "website"],
+    callbacks: [
+      "http://localhost:5555/callback",
+      "https://httpbin.org/anything",
+    ],
+  }
+
+  function doConsent() {
+    cy.url().should("contain", "/consent")
+
+    // consent ui
+    cy.get("#openid").click()
+    cy.get("#offline").click()
+    cy.get("#accept").click()
+
+    const scope = ["offline", "openid"]
+    httpbin.checkToken(client, scope, (token: any) => {
+      expect(token).to.have.property("access_token")
+      expect(token).to.have.property("id_token")
+      expect(token).to.have.property("refresh_token")
+      expect(token).to.have.property("token_type")
+      expect(token).to.have.property("expires_in")
+      expect(token.scope).to.equal("offline openid")
+      let idToken = JSON.parse(
+        decodeURIComponent(escape(window.atob(token.id_token.split(".")[1]))),
+      )
+      expect(idToken).to.have.property("amr")
+      expect(idToken.amr).to.deep.equal(["password"])
+    })
+  }
+
+  before(() => {
+    cy.deleteMail()
+    cy.useConfigProfile("oidc-provider")
+    cy.proxy("express")
+  })
+
+  it("switch to registration flow", () => {
+    const identity = gen.identityWithWebsite()
+
+    const url = oauth2.getDefaultAuthorizeURL(client)
+
+    cy.visit(url)
+    cy.get("[href*='/registration']").click()
+    cy.url().should("contain", "/registration")
+
+    cy.get("[name='traits.email']").type(identity.email)
+    cy.get("[name='password']").type(identity.password)
+    cy.get("[name='traits.website']").type(identity.fields["traits.website"])
+    cy.get("[type='submit']").click()
+
+    doConsent()
+  })
+
+  it("switch to recovery flow", () => {
+    cy.deleteMail()
+    cy.longRecoveryLifespan()
+    cy.longLinkLifespan()
+    cy.enableRecovery()
+    cy.useRecoveryStrategy("code")
+
+    const identity = gen.identityWithWebsite()
+    cy.registerApi(identity)
+
+    const url = oauth2.getDefaultAuthorizeURL(client)
+    cy.visit(url)
+    cy.get("[href*='/recovery']").click()
+
+    cy.get("input[name='email']").type(identity.email)
+    cy.get("button[value='code']").click()
+    cy.get('[data-testid="ui/message/1060003"]').should(
+      "have.text",
+      "An email containing a recovery code has been sent to the email address you provided. If you have not received an email, check the spelling of the address and make sure to use the address you registered with.",
+    )
+
+    cy.recoveryEmailWithCode({ expect: { email: identity.email } })
+    cy.get("button[value='code']").click()
+
+    cy.get('[data-testid="ui/message/1060001"]', { timeout: 30000 }).should(
+      "contain.text",
+      "You successfully recovered your account. ",
+    )
+
+    cy.getSession()
+    cy.location("pathname").should("eq", "/settings")
+    // do a password change
+    const newPassword = gen.password()
+    cy.get('input[name="password"]').clear().type(newPassword)
+    cy.get('button[value="password"]').click()
+
+    // we should now end up on the consent screen
+    doConsent()
   })
 })
