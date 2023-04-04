@@ -1,4 +1,4 @@
-// Copyright © 2022 Ory Corp
+// Copyright © 2023 Ory Corp
 // SPDX-License-Identifier: Apache-2.0
 
 package registration
@@ -197,8 +197,10 @@ func (h *Handler) createNativeRegistrationFlow(w http.ResponseWriter, r *http.Re
 
 // Create Browser Registration Flow Parameters
 //
-// nolint:deadcode,unused
 // swagger:parameters createBrowserRegistrationFlow
+//
+//nolint:deadcode,unused
+//lint:ignore U1000 Used to generate Swagger and OpenAPI definitions
 type createBrowserRegistrationFlow struct {
 	// The URL to return the browser to after the flow was completed.
 	//
@@ -217,6 +219,16 @@ type createBrowserRegistrationFlow struct {
 	// required: false
 	// in: query
 	LoginChallenge string `json:"login_challenge"`
+
+	// The URL to return the browser to after the verification flow was completed.
+	//
+	// After the registration flow is completed, the user will be sent a verification email.
+	// Upon completing the verification flow, this URL will be used to override the default
+	// `selfservice.flows.verification.after.default_redirect_to` value.
+	//
+	// required: false
+	// in: query
+	AfterVerificationReturnTo string `json:"after_verification_return_to"`
 }
 
 // swagger:route GET /self-service/registration/browser frontend createBrowserRegistrationFlow
@@ -290,7 +302,16 @@ func (h *Handler) createBrowserRegistrationFlow(w http.ResponseWriter, r *http.R
 			return
 		}
 
-		http.Redirect(w, r, h.d.Config().SelfServiceBrowserDefaultReturnTo(r.Context()).String(), http.StatusSeeOther)
+		returnTo, redirErr := x.SecureRedirectTo(r, h.d.Config().SelfServiceBrowserDefaultReturnTo(r.Context()),
+			x.SecureRedirectAllowSelfServiceURLs(h.d.Config().SelfPublicURL(r.Context())),
+			x.SecureRedirectAllowURLs(h.d.Config().SelfServiceBrowserAllowedReturnToDomains(r.Context())),
+		)
+		if redirErr != nil {
+			h.d.SelfServiceErrorManager().Forward(r.Context(), w, r, redirErr)
+			return
+		}
+
+		http.Redirect(w, r, returnTo.String(), http.StatusSeeOther)
 		return
 	}
 
@@ -300,8 +321,10 @@ func (h *Handler) createBrowserRegistrationFlow(w http.ResponseWriter, r *http.R
 
 // Get Registration Flow Parameters
 //
-// nolint:deadcode,unused
 // swagger:parameters getRegistrationFlow
+//
+//nolint:deadcode,unused
+//lint:ignore U1000 Used to generate Swagger and OpenAPI definitions
 type getRegistrationFlow struct {
 	// The Registration Flow ID
 	//
@@ -414,7 +437,9 @@ func (h *Handler) getRegistrationFlow(w http.ResponseWriter, r *http.Request, ps
 // Update Registration Flow Parameters
 //
 // swagger:parameters updateRegistrationFlow
-// nolint:deadcode,unused
+//
+//nolint:deadcode,unused
+//lint:ignore U1000 Used to generate Swagger and OpenAPI definitions
 type updateRegistrationFlow struct {
 	// The Registration Flow ID
 	//
@@ -442,7 +467,9 @@ type updateRegistrationFlow struct {
 // Update Registration Request Body
 //
 // swagger:model updateRegistrationFlowBody
-// nolint:deadcode,unused
+//
+//nolint:deadcode,unused
+//lint:ignore U1000 Used to generate Swagger and OpenAPI definitions
 type updateRegistrationFlowBody struct{}
 
 // swagger:route POST /self-service/registration frontend updateRegistrationFlow

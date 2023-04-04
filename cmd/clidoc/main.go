@@ -1,4 +1,4 @@
-// Copyright © 2022 Ory Corp
+// Copyright © 2023 Ory Corp
 // SPDX-License-Identifier: Apache-2.0
 
 package main
@@ -72,6 +72,7 @@ func init() {
 		"NewErrorValidationVerificationFlowExpired":               text.NewErrorValidationVerificationFlowExpired(aSecondAgo),
 		"NewInfoSelfServiceVerificationSuccessful":                text.NewInfoSelfServiceVerificationSuccessful(),
 		"NewVerificationEmailSent":                                text.NewVerificationEmailSent(),
+		"NewVerificationEmailWithCodeSent":                        text.NewVerificationEmailWithCodeSent(),
 		"NewErrorValidationVerificationTokenInvalidOrAlreadyUsed": text.NewErrorValidationVerificationTokenInvalidOrAlreadyUsed(),
 		"NewErrorValidationVerificationRetrySuccess":              text.NewErrorValidationVerificationRetrySuccess(),
 		"NewErrorValidationVerificationStateFailure":              text.NewErrorValidationVerificationStateFailure(),
@@ -79,11 +80,22 @@ func init() {
 		"NewErrorSystemGeneric":                                   text.NewErrorSystemGeneric("{reason}"),
 		"NewValidationErrorGeneric":                               text.NewValidationErrorGeneric("{reason}"),
 		"NewValidationErrorRequired":                              text.NewValidationErrorRequired("{field}"),
-		"NewErrorValidationMinLength":                             text.NewErrorValidationMinLength(1, 2),
-		"NewErrorValidationInvalidFormat":                         text.NewErrorValidationInvalidFormat("{format}", "{value}"),
+		"NewErrorValidationMinLength":                             text.NewErrorValidationMinLength("length must be >= 5, but got 3"),
+		"NewErrorValidationMaxLength":                             text.NewErrorValidationMaxLength("length must be <= 5, but got 6"),
+		"NewErrorValidationInvalidFormat":                         text.NewErrorValidationInvalidFormat("does not match pattern \"^[a-z]*$\""),
+		"NewErrorValidationMinimum":                               text.NewErrorValidationMinimum("must be >= 5 but found 3"),
+		"NewErrorValidationExclusiveMinimum":                      text.NewErrorValidationExclusiveMinimum("must be > 5 but found 5"),
+		"NewErrorValidationMaximum":                               text.NewErrorValidationMaximum("must be <= 5 but found 6"),
+		"NewErrorValidationExclusiveMaximum":                      text.NewErrorValidationExclusiveMaximum("must be < 5 but found 5"),
+		"NewErrorValidationMultipleOf":                            text.NewErrorValidationMultipleOf("7 not multipleOf 3"),
+		"NewErrorValidationMaxItems":                              text.NewErrorValidationMaxItems("maximum 3 items allowed, but found 4 items"),
+		"NewErrorValidationMinItems":                              text.NewErrorValidationMinItems("minimum 3 items allowed, but found 2 items"),
+		"NewErrorValidationUniqueItems":                           text.NewErrorValidationUniqueItems("items at index 0 and 2 are equal"),
+		"NewErrorValidationWrongType":                             text.NewErrorValidationWrongType("expected number, but got string"),
 		"NewErrorValidationPasswordPolicyViolation":               text.NewErrorValidationPasswordPolicyViolation("{reason}"),
 		"NewErrorValidationInvalidCredentials":                    text.NewErrorValidationInvalidCredentials(),
 		"NewErrorValidationDuplicateCredentials":                  text.NewErrorValidationDuplicateCredentials(),
+		"NewErrorValidationDuplicateCredentialsOnOIDCLink":        text.NewErrorValidationDuplicateCredentialsOnOIDCLink(),
 		"NewErrorValidationTOTPVerifierWrong":                     text.NewErrorValidationTOTPVerifierWrong(),
 		"NewErrorValidationLookupAlreadyUsed":                     text.NewErrorValidationLookupAlreadyUsed(),
 		"NewErrorValidationLookupInvalid":                         text.NewErrorValidationLookupInvalid(),
@@ -122,7 +134,7 @@ func init() {
 		"NewErrorValidationRecoveryStateFailure":                  text.NewErrorValidationRecoveryStateFailure(),
 		"NewInfoNodeInputEmail":                                   text.NewInfoNodeInputEmail(),
 		"NewInfoNodeResendOTP":                                    text.NewInfoNodeResendOTP(),
-		"NewInfoNodeLabelReturn":                                  text.NewInfoNodeLabelReturn(),
+		"NewInfoNodeLabelContinue":                                text.NewInfoNodeLabelContinue(),
 		"NewInfoSelfServiceSettingsRegisterWebAuthn":              text.NewInfoSelfServiceSettingsRegisterWebAuthn(),
 		"NewInfoLoginWebAuthnPasswordless":                        text.NewInfoLoginWebAuthnPasswordless(),
 		"NewInfoSelfServiceRegistrationRegisterWebAuthn":          text.NewInfoSelfServiceRegistrationRegisterWebAuthn(),

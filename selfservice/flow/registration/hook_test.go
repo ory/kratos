@@ -1,4 +1,4 @@
-// Copyright © 2022 Ory Corp
+// Copyright © 2023 Ory Corp
 // SPDX-License-Identifier: Apache-2.0
 
 package registration_test
@@ -22,6 +22,7 @@ import (
 	"github.com/ory/kratos/internal/testhelpers"
 	"github.com/ory/kratos/selfservice/flow"
 	"github.com/ory/kratos/selfservice/flow/registration"
+	"github.com/ory/kratos/selfservice/hook"
 	"github.com/ory/kratos/x"
 )
 
@@ -77,7 +78,7 @@ func TestRegistrationExecutor(t *testing.T) {
 					assert.EqualValues(t, http.StatusOK, res.StatusCode)
 					assert.EqualValues(t, "https://www.ory.sh/", res.Request.URL.String())
 
-					actual, err := reg.IdentityPool().GetIdentity(context.Background(), i.ID)
+					actual, err := reg.IdentityPool().GetIdentity(context.Background(), i.ID, identity.ExpandNothing)
 					require.NoError(t, err)
 					assert.Equal(t, actual.Traits, i.Traits)
 				})
@@ -100,7 +101,7 @@ func TestRegistrationExecutor(t *testing.T) {
 					assert.EqualValues(t, http.StatusOK, res.StatusCode)
 					assert.Equal(t, "", body)
 
-					_, err := reg.IdentityPool().GetIdentity(context.Background(), i.ID)
+					_, err := reg.IdentityPool().GetIdentity(context.Background(), i.ID, identity.ExpandNothing)
 					require.Error(t, err)
 				})
 
@@ -158,6 +159,44 @@ func TestRegistrationExecutor(t *testing.T) {
 					assert.NotEmpty(t, gjson.Get(body, "identity.id"))
 					assert.Empty(t, gjson.Get(body, "session.token"))
 					assert.Empty(t, gjson.Get(body, "session_token"))
+				})
+
+				t.Run("case=should redirect to verification ui if show_verification_ui hook is set", func(t *testing.T) {
+					verificationTS := testhelpers.NewVerificationUIFlowEchoServer(t, reg)
+					t.Cleanup(testhelpers.SelfServiceHookConfigReset(t, conf))
+					conf.Set(ctx, config.ViperKeySelfServiceVerificationEnabled, true)
+					conf.Set(ctx, config.ViperKeySelfServiceRegistrationAfter+".hooks", []map[string]interface{}{
+						{
+							"hook": hook.KeyVerificationUI,
+						},
+					})
+					i := testhelpers.SelfServiceHookFakeIdentity(t)
+					i.Traits = identity.Traits(`{"email": "verifiable@ory.sh"}`)
+
+					res, _ := makeRequestPost(t, newServer(t, i, flow.TypeBrowser), false, url.Values{})
+					assert.EqualValues(t, http.StatusOK, res.StatusCode)
+					assert.Contains(t, res.Request.URL.String(), verificationTS.URL)
+					assert.NotEmpty(t, res.Request.URL.Query().Get("flow"))
+				})
+
+				t.Run("case=should redirect to first verification ui if show_verification_ui hook is set and multiple verifiable addresses", func(t *testing.T) {
+					verificationTS := testhelpers.NewVerificationUIFlowEchoServer(t, reg)
+					t.Cleanup(testhelpers.SelfServiceHookConfigReset(t, conf))
+					conf.Set(ctx, config.ViperKeySelfServiceVerificationEnabled, true)
+					conf.Set(ctx, config.ViperKeySelfServiceRegistrationAfter+".hooks", []map[string]interface{}{
+						{
+							"hook": hook.KeyVerificationUI,
+						},
+					})
+
+					i := testhelpers.SelfServiceHookFakeIdentity(t)
+					i.SchemaID = testhelpers.UseIdentitySchema(t, conf, "file://./stub/registration-multi-email.schema.json")
+					i.Traits = identity.Traits(`{"emails": ["one@ory.sh", "two@ory.sh"]}`)
+
+					res, _ := makeRequestPost(t, newServer(t, i, flow.TypeBrowser), false, url.Values{})
+					assert.EqualValues(t, http.StatusOK, res.StatusCode)
+					assert.Contains(t, res.Request.URL.String(), verificationTS.URL)
+					assert.NotEmpty(t, res.Request.URL.Query().Get("flow"))
 				})
 			})
 

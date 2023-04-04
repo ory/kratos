@@ -1,4 +1,4 @@
-// Copyright © 2022 Ory Corp
+// Copyright © 2023 Ory Corp
 // SPDX-License-Identifier: Apache-2.0
 
 package login
@@ -21,6 +21,8 @@ import (
 	"github.com/ory/kratos/ui/container"
 	"github.com/ory/kratos/ui/node"
 	"github.com/ory/kratos/x"
+	"github.com/ory/x/httpx"
+	"github.com/ory/x/otelx"
 	"github.com/ory/x/otelx/semconv"
 )
 
@@ -48,6 +50,7 @@ type (
 		x.CSRFTokenGeneratorProvider
 		x.WriterProvider
 		x.LoggingProvider
+		x.TracingProvider
 
 		HooksProvider
 	}
@@ -109,7 +112,12 @@ func (e *HookExecutor) handleLoginError(_ http.ResponseWriter, r *http.Request, 
 	return flowError
 }
 
-func (e *HookExecutor) PostLoginHook(w http.ResponseWriter, r *http.Request, g node.UiNodeGroup, a *Flow, i *identity.Identity, s *session.Session) error {
+func (e *HookExecutor) PostLoginHook(w http.ResponseWriter, r *http.Request, g node.UiNodeGroup, a *Flow, i *identity.Identity, s *session.Session) (err error) {
+	ctx := r.Context()
+	ctx, span := e.d.Tracer(ctx).Tracer().Start(ctx, "HookExecutor.PostLoginHook")
+	r = r.WithContext(ctx)
+	defer otelx.End(span, &err)
+
 	if err := s.Activate(r, i, e.d.Config(), time.Now().UTC()); err != nil {
 		return err
 	}
@@ -127,7 +135,8 @@ func (e *HookExecutor) PostLoginHook(w http.ResponseWriter, r *http.Request, g n
 		return err
 	}
 
-	s = s.Declassify()
+	classified := s
+	s = s.Declassified()
 
 	e.d.Logger().
 		WithRequest(r).
@@ -174,12 +183,13 @@ func (e *HookExecutor) PostLoginHook(w http.ResponseWriter, r *http.Request, g n
 			trace.WithAttributes(
 				attribute.String(semconv.AttrIdentityID, i.ID.String()),
 				attribute.String(semconv.AttrNID, i.NID.String()),
+				attribute.String(semconv.AttrClientIP, httpx.ClientIP(r)),
 				attribute.String("flow", string(flow.TypeAPI)),
 			),
 		)
 
 		response := &APIFlowResponse{Session: s, Token: s.Token}
-		if required, _ := e.requiresAAL2(r, s, a); required {
+		if required, _ := e.requiresAAL2(r, classified, a); required {
 			// If AAL is not satisfied, we omit the identity to preserve the user's privacy in case of a phishing attack.
 			response.Session.Identity = nil
 		}
@@ -202,6 +212,7 @@ func (e *HookExecutor) PostLoginHook(w http.ResponseWriter, r *http.Request, g n
 		trace.WithAttributes(
 			attribute.String(semconv.AttrIdentityID, i.ID.String()),
 			attribute.String(semconv.AttrNID, i.NID.String()),
+			attribute.String(semconv.AttrClientIP, httpx.ClientIP(r)),
 			attribute.String("flow", string(flow.TypeBrowser)),
 		),
 	)
@@ -237,7 +248,7 @@ func (e *HookExecutor) PostLoginHook(w http.ResponseWriter, r *http.Request, g n
 		finalReturnTo = rt
 	}
 
-	x.ContentNegotiationRedirection(w, r, s.Declassify(), e.d.Writer(), finalReturnTo)
+	x.ContentNegotiationRedirection(w, r, s, e.d.Writer(), finalReturnTo)
 	return nil
 }
 

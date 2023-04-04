@@ -1,4 +1,4 @@
-// Copyright © 2022 Ory Corp
+// Copyright © 2023 Ory Corp
 // SPDX-License-Identifier: Apache-2.0
 
 package config_test
@@ -14,18 +14,18 @@ import (
 	"net/url"
 	"os"
 	"path/filepath"
+	"strings"
 	"sync"
 	"testing"
 	"time"
 
 	"github.com/ory/x/httpx"
+	"github.com/ory/x/randx"
 
 	"github.com/ory/x/snapshotx"
 
 	"github.com/ghodss/yaml"
 	"github.com/spf13/cobra"
-
-	"github.com/ory/x/watcherx"
 
 	"github.com/ory/kratos/internal/testhelpers"
 
@@ -396,19 +396,6 @@ func TestViperProvider(t *testing.T) {
 	})
 }
 
-type InterceptHook struct {
-	lastEntry *logrus.Entry
-}
-
-func (l InterceptHook) Levels() []logrus.Level {
-	return []logrus.Level{logrus.FatalLevel}
-}
-
-func (l InterceptHook) Fire(e *logrus.Entry) error {
-	l.lastEntry = e
-	return nil
-}
-
 func TestBcrypt(t *testing.T) {
 	ctx := context.Background()
 	p := config.MustNew(t, logrusx.New("", ""), os.Stderr, configx.SkipValidation())
@@ -527,6 +514,7 @@ func TestViperProvider_Defaults(t *testing.T) {
 				assert.True(t, p.SelfServiceStrategy(ctx, "password").Enabled)
 				assert.True(t, p.SelfServiceStrategy(ctx, "profile").Enabled)
 				assert.True(t, p.SelfServiceStrategy(ctx, "link").Enabled)
+				assert.True(t, p.SelfServiceStrategy(ctx, "code").Enabled)
 				assert.False(t, p.SelfServiceStrategy(ctx, "oidc").Enabled)
 			},
 		},
@@ -544,6 +532,15 @@ func TestViperProvider_Defaults(t *testing.T) {
 				assert.True(t, p.SelfServiceStrategy(ctx, "oidc").Enabled)
 			},
 		},
+		{
+			init: func() *config.Config {
+				return config.MustNew(t, l, os.Stderr, configx.WithConfigFiles("stub/.kratos.notify-unknown-recipients.yml"), configx.SkipValidation())
+			},
+			expect: func(t *testing.T, p *config.Config) {
+				assert.True(t, p.SelfServiceFlowRecoveryNotifyUnknownRecipients(ctx))
+				assert.True(t, p.SelfServiceFlowVerificationNotifyUnknownRecipients(ctx))
+			},
+		},
 	} {
 		t.Run(fmt.Sprintf("case=%d", k), func(t *testing.T) {
 			p := tc.init()
@@ -559,6 +556,9 @@ func TestViperProvider_Defaults(t *testing.T) {
 			assert.False(t, p.SelfServiceStrategy(ctx, "link").Enabled)
 			assert.True(t, p.SelfServiceStrategy(ctx, "code").Enabled)
 			assert.False(t, p.SelfServiceStrategy(ctx, "oidc").Enabled)
+
+			assert.False(t, p.SelfServiceFlowRecoveryNotifyUnknownRecipients(ctx))
+			assert.False(t, p.SelfServiceFlowVerificationNotifyUnknownRecipients(ctx))
 		})
 	}
 
@@ -579,10 +579,10 @@ func TestViperProvider_ReturnTo(t *testing.T) {
 
 	p.MustSet(ctx, config.ViperKeySelfServiceBrowserDefaultReturnTo, "https://www.ory.sh/")
 	assert.Equal(t, "https://www.ory.sh/", p.SelfServiceFlowVerificationReturnTo(ctx, urlx.ParseOrPanic("https://www.ory.sh/")).String())
-	assert.Equal(t, "https://www.ory.sh/", p.SelfServiceFlowRecoveryReturnTo(ctx).String())
+	assert.Equal(t, "https://www.ory.sh/", p.SelfServiceFlowRecoveryReturnTo(ctx, urlx.ParseOrPanic("https://www.ory.sh/")).String())
 
 	p.MustSet(ctx, config.ViperKeySelfServiceRecoveryBrowserDefaultReturnTo, "https://www.ory.sh/recovery")
-	assert.Equal(t, "https://www.ory.sh/recovery", p.SelfServiceFlowRecoveryReturnTo(ctx).String())
+	assert.Equal(t, "https://www.ory.sh/recovery", p.SelfServiceFlowRecoveryReturnTo(ctx, urlx.ParseOrPanic("https://www.ory.sh/")).String())
 
 	p.MustSet(ctx, config.ViperKeySelfServiceVerificationBrowserDefaultReturnTo, "https://www.ory.sh/verification")
 	assert.Equal(t, "https://www.ory.sh/verification", p.SelfServiceFlowVerificationReturnTo(ctx, urlx.ParseOrPanic("https://www.ory.sh/")).String())
@@ -609,9 +609,9 @@ func TestSession(t *testing.T) {
 	p.MustSet(ctx, config.ViperKeySessionPersistentCookie, false)
 	assert.Equal(t, false, p.SessionPersistentCookie(ctx))
 
-	assert.Equal(t, true, p.SessionWhoAmICaching(ctx))
-	p.MustSet(ctx, config.ViperKeySessionWhoAmICaching, false)
 	assert.Equal(t, false, p.SessionWhoAmICaching(ctx))
+	p.MustSet(ctx, config.ViperKeySessionWhoAmICaching, true)
+	assert.Equal(t, true, p.SessionWhoAmICaching(ctx))
 }
 
 func TestCookies(t *testing.T) {
@@ -684,7 +684,7 @@ func TestViperProvider_DSN(t *testing.T) {
 		var exitCode int
 		l := logrusx.New("", "", logrusx.WithExitFunc(func(i int) {
 			exitCode = i
-		}), logrusx.WithHook(InterceptHook{}))
+		}))
 		p := config.MustNew(t, l, os.Stderr, configx.SkipValidation())
 
 		assert.Equal(t, dsn, p.DSN(ctx))
@@ -940,31 +940,31 @@ func TestIdentitySchemaValidation(t *testing.T) {
 		assert.NoError(t, tmpFile.Sync())
 	}
 
-	testWatch := func(t *testing.T, ctx context.Context, cmd *cobra.Command, i *configFile) (*config.Config, *test.Hook, *os.File, *configFile, chan bool) {
-		c := make(chan bool, 1)
+	testWatch := func(t *testing.T, ctx context.Context, cmd *cobra.Command, identity *configFile) (*config.Config, *test.Hook, func([]map[string]string)) {
 		tdir := t.TempDir()
 		assert.NoError(t,
 			os.MkdirAll(tdir, // DO NOT CHANGE THIS: https://github.com/fsnotify/fsnotify/issues/340
 				os.ModePerm))
-		tmpConfig, err := os.Create(filepath.Join(tdir, "config.yaml"))
+		configFileName := randx.MustString(8, randx.Alpha)
+		tmpConfig, err := os.Create(filepath.Join(tdir, configFileName+".config.yaml"))
 		assert.NoError(t, err)
+		t.Cleanup(func() { tmpConfig.Close() })
 
-		marshalAndWrite(t, ctx, tmpConfig, i)
+		marshalAndWrite(t, ctx, tmpConfig, identity)
 
 		l := logrusx.New("kratos-"+tmpConfig.Name(), "test")
 		hook := test.NewLocal(l.Logger)
 
-		conf, err := config.New(ctx, l, os.Stderr,
-			configx.WithConfigFiles(tmpConfig.Name()),
-			configx.AttachWatcher(func(event watcherx.Event, err error) {
-				c <- true
-			}))
+		conf, err := config.New(ctx, l, os.Stderr, configx.WithConfigFiles(tmpConfig.Name()))
 		assert.NoError(t, err)
 
 		// clean the hooks since it will throw an event on first boot
 		hook.Reset()
 
-		return conf, hook, tmpConfig, i, c
+		return conf, hook, func(schemas []map[string]string) {
+			identity.Identity.Schemas = schemas
+			marshalAndWrite(t, ctx, tmpConfig, identity)
+		}
 	}
 
 	t.Run("case=skip invalid schema validation", func(t *testing.T) {
@@ -1020,34 +1020,38 @@ func TestIdentitySchemaValidation(t *testing.T) {
 
 		invalidIdentity := setup(t, "stub/.identity.invalid.json")
 
-		for _, i := range identities {
-			t.Run("test=identity file "+i.identityFileName, func(t *testing.T) {
+		for _, identity := range identities {
+			t.Run("test=identity file "+identity.identityFileName, func(t *testing.T) {
 				ctx, cancel := context.WithTimeout(ctx, time.Second*30)
+				t.Cleanup(cancel)
 
-				_, hook, tmpConfig, i, c := testWatch(t, ctx, &cobra.Command{}, i)
-				// Change the identity config to an invalid file
-				i.Identity.Schemas = invalidIdentity.Identity.Schemas
-
-				t.Cleanup(func() {
-					cancel()
-					tmpConfig.Close()
-				})
+				_, hook, writeSchema := testWatch(t, ctx, &cobra.Command{}, identity)
 
 				var wg sync.WaitGroup
 				wg.Add(1)
-				go func(t *testing.T, ctx context.Context, tmpFile *os.File, identity *configFile) {
+				go func() {
 					defer wg.Done()
-					marshalAndWrite(t, ctx, tmpConfig, i)
-				}(t, ctx, tmpConfig, i)
+					// Change the identity config to an invalid file
+					writeSchema(invalidIdentity.Identity.Schemas)
+				}()
 
-				select {
-				case <-ctx.Done():
-					panic("the test could not complete as the context timed out before the file watcher updated")
-				case <-c:
-					lastHook, err := hook.LastEntry().String()
-					assert.NoError(t, err)
+				// There are a bunch of log messages beeing logged. We are looking for a specific one.
+				timeout := time.After(time.Millisecond * 500)
+				var success = false
+				for !success {
+					for _, v := range hook.AllEntries() {
+						s, err := v.String()
+						require.NoError(t, err)
+						success = success || strings.Contains(s, "The changed identity schema configuration is invalid and could not be loaded.")
+					}
 
-					assert.Contains(t, lastHook, "The changed identity schema configuration is invalid and could not be loaded.")
+					select {
+					case <-ctx.Done():
+						t.Fatal("the test could not complete as the context timed out before the file watcher updated")
+					case <-timeout:
+						t.Fatal("Expected log line was not encountered within specified timeout")
+					default: //nothing
+					}
 				}
 
 				wg.Wait()

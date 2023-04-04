@@ -1,4 +1,4 @@
-// Copyright © 2022 Ory Corp
+// Copyright © 2023 Ory Corp
 // SPDX-License-Identifier: Apache-2.0
 
 package settings
@@ -242,6 +242,7 @@ func (e *HookExecutor) PostSettingsHook(w http.ResponseWriter, r *http.Request, 
 	ctxUpdate.Flow.UI = newFlow.UI
 	ctxUpdate.Flow.UI.ResetMessages()
 	ctxUpdate.Flow.UI.AddMessage(node.DefaultGroup, text.NewInfoSelfServiceSettingsUpdateSuccess())
+	ctxUpdate.Flow.InternalContext = newFlow.InternalContext
 	if err := e.d.SettingsFlowPersister().UpdateSettingsFlow(r.Context(), ctxUpdate.Flow); err != nil {
 		return err
 	}
@@ -282,6 +283,9 @@ func (e *HookExecutor) PostSettingsHook(w http.ResponseWriter, r *http.Request, 
 		if err != nil {
 			return err
 		}
+		// ContinueWith items are transient items, not stored in the database, and need to be carried over here, so
+		// they can be returned to the client.
+		updatedFlow.ContinueWithItems = ctxUpdate.Flow.ContinueWithItems
 
 		e.d.Writer().Write(w, r, updatedFlow)
 		return nil
@@ -296,6 +300,9 @@ func (e *HookExecutor) PostSettingsHook(w http.ResponseWriter, r *http.Request, 
 		if err != nil {
 			return err
 		}
+		// ContinueWith items are transient items, not stored in the database, and need to be carried over here, so
+		// they can be returned to the client.
+		updatedFlow.ContinueWithItems = ctxUpdate.Flow.ContinueWithItems
 
 		e.d.Writer().Write(w, r, updatedFlow)
 		return nil

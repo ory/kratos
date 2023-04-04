@@ -590,8 +590,8 @@ github.com/ory/gojsonreference v0.0.0-20190720135523-6b606c2d8ee8/go.mod h1:wsH1
 github.com/ory/gojsonschema v1.1.1-0.20190919112458-f254ca73d5e9/go.mod h1:BNZpdJgB74KOLSsWFvzw6roXg1I6O51WO8roMmW+T7Y=
 github.com/ory/herodot v0.6.2/go.mod h1:3BOneqcyBsVybCPAJoi92KN2BpJHcmDqAMcAAaJiJow=
 github.com/ory/herodot v0.7.0/go.mod h1:YXKOfAXYdQojDP5sD8m0ajowq3+QXNdtxA+QiUXBwn0=
-github.com/ory/hydra-client-go v1.11.9-0.20221102130300-f558e85344c8 h1:lxE11nBH6k0DvE1GMhWnZewGLAqVMSDj7cUhdHr9BHI=
-github.com/ory/hydra-client-go v1.11.9-0.20221102130300-f558e85344c8/go.mod h1:4YuBuwUEC4yiyDrnKjGYc1tB3gUXan4ZiUYMjXJbfxA=
+github.com/ory/hydra-client-go/v2 v2.0.3 h1:jIx968J9RBnjRuaQ21QMLCwZoa28FPvzYWAQ+88XVLw=
+github.com/ory/hydra-client-go/v2 v2.0.3/go.mod h1:FRuayIF1H/HD2umlad8c3h7RuHpcmsjBDpW0/R2OQ/U=
 github.com/ory/jsonschema/v3 v3.0.1/go.mod h1:jgLHekkFk0uiGdEWGleC+tOm6JSSP8cbf17PnBuGXlw=
 github.com/ory/viper v1.5.6/go.mod h1:TYmpFpKLxjQwvT4f0QPpkOn4sDXU1kDgAwJpgLYiQ28=
 github.com/ory/viper v1.7.4/go.mod h1:T6sodNZKNGPpashUOk7EtXz2isovz8oCd57GNVkkNmE=

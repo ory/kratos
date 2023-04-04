@@ -1,4 +1,4 @@
-// Copyright © 2022 Ory Corp
+// Copyright © 2023 Ory Corp
 // SPDX-License-Identifier: Apache-2.0
 
 package identity
@@ -10,6 +10,8 @@ import (
 	"fmt"
 	"sync"
 	"time"
+
+	"github.com/samber/lo"
 
 	"github.com/tidwall/sjson"
 
@@ -24,8 +26,6 @@ import (
 
 	"github.com/gofrs/uuid"
 	"github.com/pkg/errors"
-
-	"github.com/ory/kratos/x"
 )
 
 // An Identity's State
@@ -67,8 +67,8 @@ type Identity struct {
 	// Credentials represents all credentials that can be used for authenticating this identity.
 	Credentials map[CredentialsType]Credentials `json:"credentials,omitempty" faker:"-" db:"-"`
 
-	//// IdentifierCredentials contains the access and refresh token for oidc identifier
-	//IdentifierCredentials []IdentifierCredential `json:"identifier_credentials,omitempty" faker:"-" db:"-"`
+	// // IdentifierCredentials contains the access and refresh token for oidc identifier
+	// IdentifierCredentials []IdentifierCredential `json:"identifier_credentials,omitempty" faker:"-" db:"-"`
 
 	// SchemaID is the ID of the JSON Schema to be used for validating the identity's traits.
 	//
@@ -102,7 +102,7 @@ type Identity struct {
 	// ---
 	// x-omitempty: true
 	// ---
-	VerifiableAddresses []VerifiableAddress `json:"verifiable_addresses,omitempty" faker:"-" has_many:"identity_verifiable_addresses" fk_id:"identity_id"`
+	VerifiableAddresses []VerifiableAddress `json:"verifiable_addresses,omitempty" faker:"-" has_many:"identity_verifiable_addresses" fk_id:"identity_id" order_by:"id asc"`
 
 	// RecoveryAddresses contains all the addresses that can be used to recover an identity.
 	//
@@ -110,7 +110,7 @@ type Identity struct {
 	// ---
 	// x-omitempty: true
 	// ---
-	RecoveryAddresses []RecoveryAddress `json:"recovery_addresses,omitempty" faker:"-" has_many:"identity_recovery_addresses" fk_id:"identity_id"`
+	RecoveryAddresses []RecoveryAddress `json:"recovery_addresses,omitempty" faker:"-" has_many:"identity_recovery_addresses" fk_id:"identity_id" order_by:"id asc"`
 
 	// Store metadata about the identity which the identity itself can see when calling for example the
 	// session endpoint. Do not store sensitive information (e.g. credit score) about the identity in this field.
@@ -264,7 +264,10 @@ func (i *Identity) ParseCredentials(t CredentialsType, config interface{}) (*Cre
 }
 
 func (i *Identity) CopyWithoutCredentials() *Identity {
-	var ii = *i
+	i.lock().RLock()
+	defer i.lock().RUnlock()
+	ii := *i
+	ii.l = new(sync.RWMutex)
 	ii.Credentials = nil
 	return &ii
 }
@@ -276,7 +279,7 @@ func NewIdentity(traitsSchemaID string) *Identity {
 
 	stateChangedAt := sqlxx.NullTime(time.Now().UTC())
 	return &Identity{
-		ID:                  x.NewUUID(),
+		ID:                  uuid.Nil,
 		Credentials:         map[CredentialsType]Credentials{},
 		Traits:              Traits("{}"),
 		SchemaID:            traitsSchemaID,
@@ -340,31 +343,49 @@ func (i WithCredentialsMetadataAndAdminMetadataInJSON) MarshalJSON() ([]byte, er
 	return json.Marshal(localIdentity(i))
 }
 
-func (i *Identity) ValidateNID() error {
+func (i *Identity) Validate() error {
 	expected := i.NID
 	if expected == uuid.Nil {
 		return errors.WithStack(herodot.ErrInternalServerError.WithReason("Received empty nid."))
 	}
 
-	for _, r := range i.RecoveryAddresses {
-		if r.NID != expected {
-			return errors.WithStack(herodot.ErrInternalServerError.WithReason("Mismatching nid for recovery addresses."))
-		}
-	}
+	i.RecoveryAddresses = lo.Filter(i.RecoveryAddresses, func(v RecoveryAddress, key int) bool {
+		return v.NID == expected
+	})
 
-	for _, r := range i.VerifiableAddresses {
-		if r.NID != expected {
-			return errors.WithStack(herodot.ErrInternalServerError.WithReason("Mismatching nid for verifiable addresses."))
-		}
-	}
+	i.VerifiableAddresses = lo.Filter(i.VerifiableAddresses, func(v VerifiableAddress, key int) bool {
+		return v.NID == expected
+	})
 
-	for _, r := range i.Credentials {
-		if r.NID != expected {
-			return errors.WithStack(herodot.ErrInternalServerError.WithReason("Mismatching nid for credentials."))
+	for k := range i.Credentials {
+		c := i.Credentials[k]
+		if c.NID != expected {
+			delete(i.Credentials, k)
+			continue
 		}
 	}
 
 	return nil
+}
+
+// CollectVerifiableAddresses returns a slice of all verifiable addresses of the given identities.
+func CollectVerifiableAddresses(i []*Identity) (res []VerifiableAddress) {
+	res = make([]VerifiableAddress, 0, len(i))
+	for _, id := range i {
+		res = append(res, id.VerifiableAddresses...)
+	}
+
+	return res
+}
+
+// CollectRecoveryAddresses returns a slice of all recovery addresses of the given identities.
+func CollectRecoveryAddresses(i []*Identity) (res []RecoveryAddress) {
+	res = make([]RecoveryAddress, 0, len(i))
+	for _, id := range i {
+		res = append(res, id.RecoveryAddresses...)
+	}
+
+	return res
 }
 
 func (i *Identity) WithDeclassifiedCredentialsOIDC(ctx context.Context, c cipher.Provider) (*Identity, error) {
@@ -424,4 +445,91 @@ func (i *Identity) WithDeclassifiedCredentialsOIDC(ctx context.Context, c cipher
 	ii := *i
 	ii.Credentials = credsToPublish
 	return &ii, nil
+}
+
+// Patch Identities Parameters
+//
+// swagger:parameters batchPatchIdentities
+//
+//nolint:deadcode,unused
+//lint:ignore U1000 Used to generate Swagger and OpenAPI definitions
+type batchPatchIdentitites struct {
+	// in: body
+	Body BatchPatchIdentitiesBody
+}
+
+// Patch Identities Body
+//
+// swagger:model patchIdentitiesBody
+//
+//lint:ignore U1000 Used to generate Swagger and OpenAPI definitions
+type BatchPatchIdentitiesBody struct {
+	// Identities holds the list of patches to apply
+	//
+	// required
+	Identities []*BatchIdentityPatch `json:"identities"`
+
+	// Future fields:
+	// RemotePatchesURL string
+	// Async bool
+}
+
+// Payload for patching an identity
+//
+// swagger:model identityPatch
+//
+//lint:ignore U1000 Used to generate Swagger and OpenAPI definitions
+type BatchIdentityPatch struct {
+	// The identity to create.
+	Create *CreateIdentityBody `json:"create"`
+
+	// The ID of this patch.
+	//
+	// The patch ID is optional. If specified, the ID will be returned in the
+	// response, so consumers of this API can correlate the response with the
+	// patch.
+	ID *uuid.UUID `json:"patch_id"`
+}
+
+// swagger:enum BatchPatchAction
+//
+//lint:ignore U1000 Used to generate Swagger and OpenAPI definitions
+type BatchPatchAction string
+
+const (
+	// Create this identity.
+	ActionCreate BatchPatchAction = "create"
+
+	// Future actions:
+	//
+	// Delete this identity.
+	// ActionDelete BatchPatchAction = "delete"
+	//
+	// ActionUpdate BatchPatchAction = "update"
+)
+
+// Patch identities response
+//
+// swagger:model batchPatchIdentitiesResponse
+//
+//lint:ignore U1000 Used to generate Swagger and OpenAPI definitions
+type batchPatchIdentitiesResponse struct {
+	// The patch responses for the individual identities.
+	Identities []*BatchIdentityPatchResponse `json:"identities"`
+}
+
+// Response for a single identity patch
+//
+// swagger:model identityPatchResponse
+//
+//lint:ignore U1000 Used to generate Swagger and OpenAPI definitions
+type BatchIdentityPatchResponse struct {
+	// The action for this specific patch
+	Action BatchPatchAction `json:"action"`
+
+	// The identity ID payload of this patch
+	IdentityID *uuid.UUID `json:"identity,omitempty"`
+
+	// The ID of this patch response, if an ID was specified in the patch.
+	PatchID *uuid.UUID `json:"patch_id,omitempty"`
 }

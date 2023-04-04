@@ -59,3 +59,8 @@ test/e2e/hydra-kratos-login-consent/hydra-kratos-login-consent
 *.log
 test/e2e/proxy.json
 test/e2e/kratos.*.yml
+
+# Kratos executable
+kratos
+# VSCode debug artifact
+__debug_bin

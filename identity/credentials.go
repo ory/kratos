@@ -1,4 +1,4 @@
-// Copyright © 2022 Ory Corp
+// Copyright © 2023 Ory Corp
 // SPDX-License-Identifier: Apache-2.0
 
 package identity
@@ -8,10 +8,9 @@ import (
 	"reflect"
 	"time"
 
-	"github.com/ory/kratos/ui/node"
-
 	"github.com/gofrs/uuid"
 
+	"github.com/ory/kratos/ui/node"
 	"github.com/ory/x/sqlxx"
 )
 
@@ -84,10 +83,9 @@ const (
 type Credentials struct {
 	ID uuid.UUID `json:"-" db:"id"`
 
-	CredentialTypeID uuid.UUID `json:"-" db:"identity_credential_type_id"`
-
 	// Type discriminates between different types of credentials.
-	Type CredentialsType `json:"type" db:"-"`
+	Type                     CredentialsType `json:"type" db:"-"`
+	IdentityCredentialTypeID uuid.UUID       `json:"-" db:"identity_credential_type_id"`
 
 	// Identifiers represents a list of unique identifiers this credential type matches.
 	Identifiers []string `json:"identifiers" db:"-"`
@@ -107,6 +105,10 @@ type Credentials struct {
 	// UpdatedAt is a helper struct field for gobuffalo.pop.
 	UpdatedAt time.Time `json:"updated_at" db:"updated_at"`
 	NID       uuid.UUID `json:"-"  faker:"-" db:"nid"`
+}
+
+func (c Credentials) TableName(ctx context.Context) string {
+	return "identity_credentials"
 }
 
 type (
@@ -132,12 +134,6 @@ type (
 	}
 
 	// swagger:ignore
-	CredentialsCollection []Credentials
-
-	// swagger:ignore
-	CredentialIdentifierCollection []CredentialIdentifier
-
-	// swagger:ignore
 	ActiveCredentialsCounter interface {
 		ID() CredentialsType
 		CountActiveFirstFactorCredentials(cc map[CredentialsType]Credentials) (int, error)
@@ -152,18 +148,6 @@ type (
 
 func (c CredentialsTypeTable) TableName(ctx context.Context) string {
 	return "identity_credential_types"
-}
-
-func (c CredentialsCollection) TableName(ctx context.Context) string {
-	return "identity_credentials"
-}
-
-func (c Credentials) TableName(ctx context.Context) string {
-	return "identity_credentials"
-}
-
-func (c CredentialIdentifierCollection) TableName(ctx context.Context) string {
-	return "identity_credential_identifiers"
 }
 
 func (c CredentialIdentifier) TableName(ctx context.Context) string {

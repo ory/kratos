@@ -1,4 +1,4 @@
-// Copyright © 2022 Ory Corp
+// Copyright © 2023 Ory Corp
 // SPDX-License-Identifier: Apache-2.0
 
 package registration
@@ -16,7 +16,7 @@ import (
 
 	"github.com/ory/x/sqlxx"
 
-	hydraclientgo "github.com/ory/hydra-client-go"
+	hydraclientgo "github.com/ory/hydra-client-go/v2"
 
 	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/hydra"
@@ -97,7 +97,16 @@ type Flow struct {
 
 	// CSRFToken contains the anti-csrf token associated with this flow. Only set for browser flows.
 	CSRFToken string    `json:"-" db:"csrf_token"`
-	NID       uuid.UUID `json:"-"  faker:"-" db:"nid"`
+	NID       uuid.UUID `json:"-" faker:"-" db:"nid"`
+
+	// TransientPayload is used to pass data from the registration to a webhook
+	TransientPayload json.RawMessage `json:"transient_payload,omitempty" faker:"-" db:"-"`
+
+	// Contains a list of actions, that could follow this flow
+	//
+	// It can, for example, contain a reference to the verification flow, created as part of the user's
+	// registration.
+	ContinueWithItems []flow.ContinueWith `json:"-" db:"-" faker:"-" `
 }
 
 func NewFlow(conf *config.Config, exp time.Duration, csrf string, r *http.Request, ft flow.Type) (*Flow, error) {
@@ -202,4 +211,12 @@ func (f *Flow) AfterSave(*pop.Connection) error {
 
 func (f *Flow) GetUI() *container.Container {
 	return f.UI
+}
+
+func (f *Flow) AddContinueWith(c flow.ContinueWith) {
+	f.ContinueWithItems = append(f.ContinueWithItems, c)
+}
+
+func (f *Flow) ContinueWith() []flow.ContinueWith {
+	return f.ContinueWithItems
 }

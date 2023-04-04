@@ -1,4 +1,4 @@
-// Copyright © 2022 Ory Corp
+// Copyright © 2023 Ory Corp
 // SPDX-License-Identifier: Apache-2.0
 
 package webauthn
@@ -60,6 +60,11 @@ type updateRegistrationFlowWithWebAuthnMethod struct {
 	//
 	// swagger:ignore
 	Flow string `json:"flow"`
+
+	// Transient data to pass along to any webhooks
+	//
+	// required: false
+	TransientPayload json.RawMessage `json:"transient_payload,omitempty"`
 }
 
 func (s *Strategy) RegisterRegistrationRoutes(_ *x.RouterPublic) {
@@ -96,6 +101,8 @@ func (s *Strategy) Register(w http.ResponseWriter, r *http.Request, f *registrat
 	if err := s.decode(&p, r); err != nil {
 		return s.handleRegistrationError(w, r, f, &p, err)
 	}
+
+	f.TransientPayload = p.TransientPayload
 
 	if err := flow.EnsureCSRF(s.d, r, f.Type, s.d.Config().DisableAPIFlowEnforcement(r.Context()), s.d.GenerateCSRFToken, p.CSRFToken); err != nil {
 		return s.handleRegistrationError(w, r, f, &p, err)
@@ -140,8 +147,8 @@ func (s *Strategy) Register(w http.ResponseWriter, r *http.Request, f *registrat
 		return s.handleRegistrationError(w, r, f, &p, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("Unable to create WebAuthn credential: %s", err)))
 	}
 
-	var cc CredentialsConfig
-	wc := CredentialFromWebAuthn(credential, true)
+	var cc identity.CredentialsWebAuthnConfig
+	wc := identity.CredentialFromWebAuthn(credential, true)
 	wc.AddedAt = time.Now().UTC().Round(time.Second)
 	wc.DisplayName = p.RegisterDisplayName
 	wc.IsPasswordless = s.d.Config().WebAuthnForPasswordless(r.Context())

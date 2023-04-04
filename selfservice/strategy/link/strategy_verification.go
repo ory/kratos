@@ -1,4 +1,4 @@
-// Copyright © 2022 Ory Corp
+// Copyright © 2023 Ory Corp
 // SPDX-License-Identifier: Apache-2.0
 
 package link
@@ -16,6 +16,7 @@ import (
 	"github.com/ory/kratos/selfservice/flow"
 	"github.com/ory/kratos/selfservice/flow/verification"
 	"github.com/ory/kratos/text"
+	"github.com/ory/kratos/ui/container"
 	"github.com/ory/kratos/ui/node"
 	"github.com/ory/kratos/x"
 	"github.com/ory/x/decoderx"
@@ -89,7 +90,9 @@ func (s *Strategy) handleVerificationError(w http.ResponseWriter, r *http.Reques
 // Update Verification Flow with Link Method
 //
 // swagger:model updateVerificationFlowWithLinkMethod
-// nolint:deadcode,unused
+//
+//nolint:deadcode,unused
+//lint:ignore U1000 Used to generate Swagger and OpenAPI definitions
 type updateVerificationFlowWithLinkMethod struct {
 	// Email to Verify
 	//
@@ -199,16 +202,7 @@ func (s *Strategy) verificationUseToken(w http.ResponseWriter, r *http.Request, 
 		return s.retryVerificationFlowWithError(w, r, flow.TypeBrowser, err)
 	}
 
-	f.UI.Messages.Clear()
-	f.State = verification.StatePassedChallenge
-	// See https://github.com/ory/kratos/issues/1547
-	f.SetCSRFToken(flow.GetCSRFToken(s.d, w, r, f.Type))
-	f.UI.Messages.Set(text.NewInfoSelfServiceVerificationSuccessful())
-	if err := s.d.VerificationFlowPersister().UpdateVerificationFlow(r.Context(), f); err != nil {
-		return s.retryVerificationFlowWithError(w, r, flow.TypeBrowser, err)
-	}
-
-	i, err := s.d.IdentityPool().GetIdentity(r.Context(), token.VerifiableAddress.IdentityID)
+	i, err := s.d.IdentityPool().GetIdentity(r.Context(), token.VerifiableAddress.IdentityID, identity.ExpandDefault)
 	if err != nil {
 		return s.retryVerificationFlowWithError(w, r, flow.TypeBrowser, err)
 	}
@@ -226,28 +220,32 @@ func (s *Strategy) verificationUseToken(w http.ResponseWriter, r *http.Request, 
 		return s.retryVerificationFlowWithError(w, r, flow.TypeBrowser, err)
 	}
 
-	defaultRedirectURL := s.d.Config().SelfServiceFlowVerificationReturnTo(r.Context(), f.AppendTo(s.d.Config().SelfServiceFlowVerificationUI(r.Context())))
+	returnTo := f.ContinueURL(r.Context(), s.d.Config())
 
-	verificationRequestURL, err := urlx.Parse(f.GetRequestURL())
-	if err != nil {
-		s.d.Logger().Debugf("error parsing verification requestURL: %s\n", err)
-		http.Redirect(w, r, defaultRedirectURL.String(), http.StatusSeeOther)
-		return errors.WithStack(flow.ErrCompletedByStrategy)
+	f.UI.
+		Nodes.
+		Append(node.NewAnchorField("continue", returnTo.String(), node.CodeGroup, text.NewInfoNodeLabelContinue()).
+			WithMetaLabel(text.NewInfoNodeLabelContinue()))
+
+	f.UI = &container.Container{
+		Method: "GET",
+		Action: returnTo.String(),
 	}
-	verificationRequest := http.Request{URL: verificationRequestURL}
+	f.UI.Messages.Clear()
+	f.State = verification.StatePassedChallenge
+	// See https://github.com/ory/kratos/issues/1547
+	f.SetCSRFToken(flow.GetCSRFToken(s.d, w, r, f.Type))
+	f.UI.Messages.Set(text.NewInfoSelfServiceVerificationSuccessful())
+	f.UI.
+		Nodes.
+		Append(node.NewAnchorField("continue", returnTo.String(), node.LinkGroup, text.NewInfoNodeLabelContinue()).
+			WithMetaLabel(text.NewInfoNodeLabelContinue()))
 
-	returnTo, err := x.SecureRedirectTo(&verificationRequest, defaultRedirectURL,
-		x.SecureRedirectAllowSelfServiceURLs(s.d.Config().SelfPublicURL(r.Context())),
-		x.SecureRedirectAllowURLs(s.d.Config().SelfServiceBrowserAllowedReturnToDomains(r.Context())),
-	)
-	if err != nil {
-		s.d.Logger().Debugf("error parsing redirectTo from verification: %s\n", err)
-		http.Redirect(w, r, defaultRedirectURL.String(), http.StatusSeeOther)
-		return errors.WithStack(flow.ErrCompletedByStrategy)
+	if err := s.d.VerificationFlowPersister().UpdateVerificationFlow(r.Context(), f); err != nil {
+		return s.retryVerificationFlowWithError(w, r, flow.TypeBrowser, err)
 	}
 
-	http.Redirect(w, r, f.AppendTo(returnTo).String(), http.StatusSeeOther)
-	return errors.WithStack(flow.ErrCompletedByStrategy)
+	return nil
 }
 
 func (s *Strategy) retryVerificationFlowWithMessage(w http.ResponseWriter, r *http.Request, ft flow.Type, message *text.Message) error {

@@ -1,4 +1,4 @@
-// Copyright © 2022 Ory Corp
+// Copyright © 2023 Ory Corp
 // SPDX-License-Identifier: Apache-2.0
 
 package recovery_test
@@ -279,6 +279,7 @@ func TestGetFlow(t *testing.T) {
 		// submit the flow but it is expired
 		u := public.URL + recovery.RouteSubmitFlow + "?flow=" + f.ID.String()
 		res, err := client.PostForm(u, url.Values{"email": {"email@ory.sh"}, "csrf_token": {f.CSRFToken}, "method": {"link"}})
+		require.NoError(t, err)
 		resBody, err := io.ReadAll(res.Body)
 		require.NoError(t, err)
 		require.NoError(t, res.Body.Close())

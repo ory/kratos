@@ -1,4 +1,4 @@
-// Copyright © 2022 Ory Corp
+// Copyright © 2023 Ory Corp
 // SPDX-License-Identifier: Apache-2.0
 
 package code
@@ -67,7 +67,8 @@ func (s *Strategy) PopulateRecoveryMethod(r *http.Request, f *recovery.Flow) err
 //
 // swagger:parameters createRecoveryCodeForIdentity
 //
-// nolint
+//nolint:deadcode,unused
+//lint:ignore U1000 Used to generate Swagger and OpenAPI definitions
 type createRecoveryCodeForIdentity struct {
 	// in: body
 	Body createRecoveryCodeForIdentityBody
@@ -103,7 +104,9 @@ type createRecoveryCodeForIdentityBody struct {
 // Used when an administrator creates a recovery code for an identity.
 //
 // swagger:model recoveryCodeForIdentity
-// nolint
+//
+//nolint:deadcode,unused
+//lint:ignore U1000 Used to generate Swagger and OpenAPI definitions
 type recoveryCodeForIdentity struct {
 	// RecoveryLink with flow
 	//
@@ -138,6 +141,9 @@ type recoveryCodeForIdentity struct {
 //	- application/json
 //
 //	Schemes: http, https
+//
+//	Security:
+//		oryAccessToken:
 //
 //	Responses:
 //		201: recoveryCodeForIdentity
@@ -193,7 +199,7 @@ func (s *Strategy) createRecoveryCodeForIdentity(w http.ResponseWriter, r *http.
 		return
 	}
 
-	id, err := s.deps.IdentityPool().GetIdentity(ctx, p.IdentityID)
+	id, err := s.deps.IdentityPool().GetIdentity(ctx, p.IdentityID, identity.ExpandDefault)
 	if notFoundErr := sqlcon.ErrNoRows; errors.As(err, &notFoundErr) {
 		s.deps.Writer().WriteError(w, r, notFoundErr.WithReasonf("could not find identity"))
 		return
@@ -236,7 +242,9 @@ func (s *Strategy) createRecoveryCodeForIdentity(w http.ResponseWriter, r *http.
 // Update Recovery Flow with Code Method
 //
 // swagger:model updateRecoveryFlowWithCodeMethod
-// nolint:deadcode,unused
+//
+//nolint:deadcode,unused
+//lint:ignore U1000 Used to generate Swagger and OpenAPI definitions
 type updateRecoveryFlowWithCodeMethod struct {
 	// Email to Recover
 	//
@@ -372,21 +380,15 @@ func (s *Strategy) recoveryIssueSession(w http.ResponseWriter, r *http.Request, 
 		return s.retryRecoveryFlowWithError(w, r, f.Type, err)
 	}
 
-	// Carry `return_to` parameter over from recovery flow
-	sfRequestURL, err := url.Parse(sf.RequestURL)
-	if err != nil {
-		return s.retryRecoveryFlowWithError(w, r, f.Type, err)
+	returnToURL := s.deps.Config().SelfServiceFlowRecoveryReturnTo(r.Context(), nil)
+	returnTo := ""
+	if returnToURL != nil {
+		returnTo = returnToURL.String()
 	}
-
-	fRequestURL, err := url.Parse(f.RequestURL)
+	sf.RequestURL, err = x.TakeOverReturnToParameter(f.RequestURL, sf.RequestURL, returnTo)
 	if err != nil {
-		return s.retryRecoveryFlowWithError(w, r, f.Type, err)
+		return s.retryRecoveryFlowWithError(w, r, flow.TypeBrowser, err)
 	}
-
-	sfQuery := sfRequestURL.Query()
-	sfQuery.Set("return_to", fRequestURL.Query().Get("return_to"))
-	sfRequestURL.RawQuery = sfQuery.Encode()
-	sf.RequestURL = sfRequestURL.String()
 
 	if err := s.deps.RecoveryExecutor().PostRecoveryHook(w, r, f, sess); err != nil {
 		return s.retryRecoveryFlowWithError(w, r, f.Type, err)
@@ -424,7 +426,7 @@ func (s *Strategy) recoveryUseCode(w http.ResponseWriter, r *http.Request, body 
 		return s.retryRecoveryFlowWithError(w, r, f.Type, err)
 	}
 
-	recovered, err := s.deps.IdentityPool().GetIdentity(ctx, code.IdentityID)
+	recovered, err := s.deps.IdentityPool().GetIdentity(ctx, code.IdentityID, identity.ExpandDefault)
 	if err != nil {
 		return s.HandleRecoveryError(w, r, f, nil, err)
 	}
@@ -519,7 +521,7 @@ func (s *Strategy) recoveryHandleFormSubmission(w http.ResponseWriter, r *http.R
 		return s.HandleRecoveryError(w, r, f, body, err)
 	}
 
-	if err := s.deps.CodeSender().SendRecoveryCode(ctx, r, f, identity.VerifiableAddressTypeEmail, body.Email); err != nil {
+	if err := s.deps.CodeSender().SendRecoveryCode(ctx, f, identity.VerifiableAddressTypeEmail, body.Email); err != nil {
 		if !errors.Is(err, ErrUnknownAddress) {
 			return s.HandleRecoveryError(w, r, f, body, err)
 		}

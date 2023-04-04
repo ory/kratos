@@ -1,4 +1,4 @@
-// Copyright © 2022 Ory Corp
+// Copyright © 2023 Ory Corp
 // SPDX-License-Identifier: Apache-2.0
 
 package text
@@ -23,7 +23,7 @@ func NewRecoverySuccessful(privilegedSessionExpiresAt time.Time) *Message {
 	hasLeft := Until(privilegedSessionExpiresAt)
 	return &Message{
 		ID:   InfoSelfServiceRecoverySuccessful,
-		Type: Info,
+		Type: Success,
 		Text: fmt.Sprintf("You successfully recovered your account. Please change your password or set up an alternative login method (e.g. social sign in) within the next %.2f minutes.", hasLeft.Minutes()),
 		Context: context(map[string]interface{}{
 			"privilegedSessionExpiresAt": privilegedSessionExpiresAt,
@@ -35,7 +35,7 @@ func NewRecoveryEmailSent() *Message {
 	return &Message{
 		ID:      InfoSelfServiceRecoveryEmailSent,
 		Type:    Info,
-		Text:    "An email containing a recovery link has been sent to the email address you provided.",
+		Text:    "An email containing a recovery link has been sent to the email address you provided. If you have not received an email, check the spelling of the address and make sure to use the address you registered with.",
 		Context: context(nil),
 	}
 }
@@ -44,7 +44,7 @@ func NewRecoveryEmailWithCodeSent() *Message {
 	return &Message{
 		ID:      InfoSelfServiceRecoveryEmailWithCodeSent,
 		Type:    Info,
-		Text:    "An email containing a recovery code has been sent to the email address you provided.",
+		Text:    "An email containing a recovery code has been sent to the email address you provided. If you have not received an email, check the spelling of the address and make sure to use the address you registered with.",
 		Context: context(nil),
 	}
 }

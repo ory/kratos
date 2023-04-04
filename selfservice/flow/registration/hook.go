@@ -1,4 +1,4 @@
-// Copyright © 2022 Ory Corp
+// Copyright © 2023 Ory Corp
 // SPDX-License-Identifier: Apache-2.0
 
 package registration
@@ -13,13 +13,13 @@ import (
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/trace"
 
+	"github.com/ory/x/httpx"
 	"github.com/ory/x/otelx/semconv"
 	"github.com/ory/x/sqlcon"
 
 	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/hydra"
 	"github.com/ory/kratos/identity"
-	"github.com/ory/kratos/schema"
 	"github.com/ory/kratos/selfservice/flow"
 	"github.com/ory/kratos/session"
 	"github.com/ory/kratos/x"
@@ -137,7 +137,10 @@ func (e *HookExecutor) PostRegistrationHook(w http.ResponseWriter, r *http.Reque
 		// would imply that the identity has to exist already.
 	} else if err := e.d.IdentityManager().Create(r.Context(), i); err != nil {
 		if errors.Is(err, sqlcon.ErrUniqueViolation) {
-			return schema.NewDuplicateCredentialsError()
+			// In this case the user is already registered through another method.
+			// We handle this case by returning a spcial error that is handled by
+			// the caller.
+			return ErrDuplicateCredentials
 		}
 		return err
 	}
@@ -164,6 +167,7 @@ func (e *HookExecutor) PostRegistrationHook(w http.ResponseWriter, r *http.Reque
 		trace.WithAttributes(
 			attribute.String(semconv.AttrIdentityID, i.ID.String()),
 			attribute.String(semconv.AttrNID, i.NID.String()),
+			attribute.String(semconv.AttrClientIP, httpx.ClientIP(r)),
 			attribute.String("flow", string(a.Type)),
 		),
 	)
@@ -215,7 +219,10 @@ func (e *HookExecutor) PostRegistrationHook(w http.ResponseWriter, r *http.Reque
 		Debug("Post registration execution hooks completed successfully.")
 
 	if a.Type == flow.TypeAPI || x.IsJSONRequest(r) {
-		e.d.Writer().Write(w, r, &APIFlowResponse{Identity: i})
+		e.d.Writer().Write(w, r, &APIFlowResponse{
+			Identity:     i,
+			ContinueWith: a.ContinueWith(),
+		})
 		return nil
 	}
 
@@ -228,7 +235,7 @@ func (e *HookExecutor) PostRegistrationHook(w http.ResponseWriter, r *http.Reque
 		finalReturnTo = cr
 	}
 
-	x.ContentNegotiationRedirection(w, r, s.Declassify(), e.d.Writer(), finalReturnTo)
+	x.ContentNegotiationRedirection(w, r, s.Declassified(), e.d.Writer(), finalReturnTo)
 	return nil
 }
 

@@ -1,4 +1,4 @@
-// Copyright © 2022 Ory Corp
+// Copyright © 2023 Ory Corp
 // SPDX-License-Identifier: Apache-2.0
 
 package settings_test
@@ -290,6 +290,7 @@ func TestHandler(t *testing.T) {
 			// submit the flow but it is expired
 			u := publicTS.URL + settings.RouteSubmitFlow + "?flow=" + f.ID.String()
 			res, err := client.PostForm(u, url.Values{"method": {"password"}, "csrf_token": {"csrf"}, "password": {"password"}})
+			require.NoError(t, err)
 			resBody, err := io.ReadAll(res.Body)
 			require.NoError(t, err)
 			require.NoError(t, res.Body.Close())

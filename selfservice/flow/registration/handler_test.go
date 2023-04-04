@@ -1,4 +1,4 @@
-// Copyright © 2022 Ory Corp
+// Copyright © 2023 Ory Corp
 // SPDX-License-Identifier: Apache-2.0
 
 package registration_test
@@ -43,6 +43,10 @@ func TestHandlerRedirectOnAuthenticated(t *testing.T) {
 	router := x.NewRouterPublic()
 	ts, _ := testhelpers.NewKratosServerWithRouters(t, reg, router, x.NewRouterAdmin())
 
+	// Set it first as otherwise it will overwrite the ViperKeySelfServiceBrowserDefaultReturnTo key;
+	returnToTS := testhelpers.NewRedirTS(t, "return_to", conf)
+	conf.MustSet(ctx, config.ViperKeyURLsAllowedReturnToDomains, []string{returnToTS.URL})
+
 	redirTS := testhelpers.NewRedirTS(t, "already authenticated", conf)
 	conf.MustSet(ctx, config.ViperKeySelfServiceRegistrationEnabled, true)
 	testhelpers.SetDefaultIdentitySchema(conf, "file://./stub/identity.schema.json")
@@ -57,6 +61,12 @@ func TestHandlerRedirectOnAuthenticated(t *testing.T) {
 		body, res := testhelpers.MockMakeAuthenticatedRequest(t, reg, conf, router.Router, x.NewTestHTTPRequest(t, "GET", ts.URL+registration.RouteInitAPIFlow, nil))
 		assert.Contains(t, res.Request.URL.String(), registration.RouteInitAPIFlow)
 		assertx.EqualAsJSON(t, registration.ErrAlreadyLoggedIn, json.RawMessage(gjson.GetBytes(body, "error").Raw))
+	})
+
+	t.Run("does redirect to return_to url on authenticated request", func(t *testing.T) {
+		body, res := testhelpers.MockMakeAuthenticatedRequest(t, reg, conf, router.Router, x.NewTestHTTPRequest(t, "GET", ts.URL+registration.RouteInitBrowserFlow+"?return_to="+returnToTS.URL, nil))
+		assert.Contains(t, res.Request.URL.String(), returnToTS.URL)
+		assert.EqualValues(t, "return_to", string(body))
 	})
 }
 
@@ -332,6 +342,7 @@ func TestGetFlow(t *testing.T) {
 		// submit the flow but it is expired
 		u := public.URL + registration.RouteSubmitFlow + "?flow=" + f.ID.String()
 		res, err := client.PostForm(u, url.Values{"method": {"password"}, "csrf_token": {f.CSRFToken}, "password": {"password"}, "traits.email": {"email@ory.sh"}})
+		require.NoError(t, err)
 		resBody, err := io.ReadAll(res.Body)
 		require.NoError(t, err)
 		require.NoError(t, res.Body.Close())

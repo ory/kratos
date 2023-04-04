@@ -1,4 +1,4 @@
-// Copyright © 2022 Ory Corp
+// Copyright © 2023 Ory Corp
 // SPDX-License-Identifier: Apache-2.0
 
 package oidc
@@ -60,7 +60,6 @@ func (g *ProviderVK) OAuth2(ctx context.Context) (*oauth2.Config, error) {
 }
 
 func (g *ProviderVK) Claims(ctx context.Context, exchange *oauth2.Token, query url.Values) (*Claims, error) {
-
 	o, err := g.OAuth2(ctx)
 	if err != nil {
 		return nil, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("%s", err))
@@ -78,13 +77,17 @@ func (g *ProviderVK) Claims(ctx context.Context, exchange *oauth2.Token, query u
 	}
 	defer resp.Body.Close()
 
+	if err := logUpstreamError(g.reg.Logger(), resp); err != nil {
+		return nil, err
+	}
+
 	type User struct {
 		Id        int    `json:"id,omitempty"`
 		FirstName string `json:"first_name,omitempty"`
 		LastName  string `json:"last_name,omitempty"`
 		Nickname  string `json:"nickname,omitempty"`
 		Picture   string `json:"photo_200,omitempty"`
-		Email     string
+		Email     string `json:"-"`
 		Gender    int    `json:"sex,omitempty"`
 		BirthDay  string `json:"bdate,omitempty"`
 	}
@@ -97,10 +100,14 @@ func (g *ProviderVK) Claims(ctx context.Context, exchange *oauth2.Token, query u
 		return nil, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("%s", err))
 	}
 
+	if len(response.Result) == 0 {
+		return nil, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("VK did not return a user in the userinfo request."))
+	}
+
 	user := response.Result[0]
 
-	if email := exchange.Extra("email"); email != nil {
-		user.Email = email.(string)
+	if email, ok := exchange.Extra("email").(string); ok {
+		user.Email = email
 	}
 
 	gender := ""

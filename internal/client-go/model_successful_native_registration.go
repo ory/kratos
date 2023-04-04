@@ -17,8 +17,10 @@ import (
 
 // SuccessfulNativeRegistration The Response for Registration Flows via API
 type SuccessfulNativeRegistration struct {
-	Identity Identity `json:"identity"`
-	Session  *Session `json:"session,omitempty"`
+	// Contains a list of actions, that could follow this flow  It can, for example, this will contain a reference to the verification flow, created as part of the user's registration or the token of the session.
+	ContinueWith []ContinueWith `json:"continue_with,omitempty"`
+	Identity     Identity       `json:"identity"`
+	Session      *Session       `json:"session,omitempty"`
 	// The Session Token  This field is only set when the session hook is configured as a post-registration hook.  A session token is equivalent to a session cookie, but it can be sent in the HTTP Authorization Header:  Authorization: bearer ${session-token}  The session token is only issued for API flows, not for Browser flows!
 	SessionToken *string `json:"session_token,omitempty"`
 }
@@ -39,6 +41,38 @@ func NewSuccessfulNativeRegistration(identity Identity) *SuccessfulNativeRegistr
 func NewSuccessfulNativeRegistrationWithDefaults() *SuccessfulNativeRegistration {
 	this := SuccessfulNativeRegistration{}
 	return &this
+}
+
+// GetContinueWith returns the ContinueWith field value if set, zero value otherwise.
+func (o *SuccessfulNativeRegistration) GetContinueWith() []ContinueWith {
+	if o == nil || o.ContinueWith == nil {
+		var ret []ContinueWith
+		return ret
+	}
+	return o.ContinueWith
+}
+
+// GetContinueWithOk returns a tuple with the ContinueWith field value if set, nil otherwise
+// and a boolean to check if the value has been set.
+func (o *SuccessfulNativeRegistration) GetContinueWithOk() ([]ContinueWith, bool) {
+	if o == nil || o.ContinueWith == nil {
+		return nil, false
+	}
+	return o.ContinueWith, true
+}
+
+// HasContinueWith returns a boolean if a field has been set.
+func (o *SuccessfulNativeRegistration) HasContinueWith() bool {
+	if o != nil && o.ContinueWith != nil {
+		return true
+	}
+
+	return false
+}
+
+// SetContinueWith gets a reference to the given []ContinueWith and assigns it to the ContinueWith field.
+func (o *SuccessfulNativeRegistration) SetContinueWith(v []ContinueWith) {
+	o.ContinueWith = v
 }
 
 // GetIdentity returns the Identity field value
@@ -131,6 +165,9 @@ func (o *SuccessfulNativeRegistration) SetSessionToken(v string) {
 
 func (o SuccessfulNativeRegistration) MarshalJSON() ([]byte, error) {
 	toSerialize := map[string]interface{}{}
+	if o.ContinueWith != nil {
+		toSerialize["continue_with"] = o.ContinueWith
+	}
 	if true {
 		toSerialize["identity"] = o.Identity
 	}

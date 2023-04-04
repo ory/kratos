@@ -1,4 +1,4 @@
-// Copyright © 2022 Ory Corp
+// Copyright © 2023 Ory Corp
 // SPDX-License-Identifier: Apache-2.0
 
 package totp_test
@@ -304,7 +304,7 @@ func TestCompleteSettings(t *testing.T) {
 		checkIdentity := func(t *testing.T, id *identity.Identity, key string) {
 			i, cred, err := reg.PrivilegedIdentityPool().FindByCredentialsIdentifier(context.Background(), identity.CredentialsTypeTOTP, id.ID.String())
 			require.NoError(t, err)
-			var c totp.CredentialsConfig
+			var c identity.CredentialsTOTPConfig
 			require.NoError(t, json.Unmarshal(cred.Config, &c))
 			actual, err := otp.NewKeyFromURL(c.TOTPURL)
 			require.NoError(t, err)

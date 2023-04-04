@@ -1,4 +1,4 @@
-// Copyright © 2022 Ory Corp
+// Copyright © 2023 Ory Corp
 // SPDX-License-Identifier: Apache-2.0
 
 package driver
@@ -104,6 +104,7 @@ type Registry interface {
 	courier.PersistenceProvider
 
 	schema.HandlerProvider
+	schema.IdentityTraitsProvider
 
 	password2.ValidationProvider
 
@@ -177,6 +178,7 @@ type options struct {
 	skipNetworkInit bool
 	config          *config.Config
 	replaceTracer   func(*otelx.Tracer) *otelx.Tracer
+	inspect         func(Registry) error
 }
 
 type RegistryOption func(*options)
@@ -194,6 +196,12 @@ func WithConfig(config *config.Config) func(o *options) {
 func ReplaceTracer(f func(*otelx.Tracer) *otelx.Tracer) func(o *options) {
 	return func(o *options) {
 		o.replaceTracer = f
+	}
+}
+
+func Inspect(f func(reg Registry) error) func(o *options) {
+	return func(o *options) {
+		o.inspect = f
 	}
 }
 

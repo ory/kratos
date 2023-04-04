@@ -1,4 +1,4 @@
-// Copyright © 2022 Ory Corp
+// Copyright © 2023 Ory Corp
 // SPDX-License-Identifier: Apache-2.0
 
 package sql
@@ -7,6 +7,9 @@ import (
 	"context"
 	"fmt"
 	"time"
+
+	"github.com/ory/kratos/identity"
+	"github.com/ory/kratos/persistence/sql/update"
 
 	"github.com/gofrs/uuid"
 
@@ -37,7 +40,7 @@ func (p *Persister) GetSettingsFlow(ctx context.Context, id uuid.UUID) (*setting
 		return nil, sqlcon.HandleError(err)
 	}
 
-	r.Identity, err = p.GetIdentity(ctx, r.IdentityID)
+	r.Identity, err = p.PrivilegedPool.GetIdentity(ctx, r.IdentityID, identity.ExpandDefault)
 	if err != nil {
 		return nil, err
 	}
@@ -52,11 +55,11 @@ func (p *Persister) UpdateSettingsFlow(ctx context.Context, r *settings.Flow) er
 	r.EnsureInternalContext()
 	cp := *r
 	cp.NID = p.NetworkID(ctx)
-	return p.update(ctx, cp)
+	return update.Generic(ctx, p.GetConnection(ctx), p.r.Tracer(ctx).Tracer(), cp)
 }
 
 func (p *Persister) DeleteExpiredSettingsFlows(ctx context.Context, expiresAt time.Time, limit int) error {
-	// #nosec G201
+	//#nosec G201 -- TableName is static
 	err := p.GetConnection(ctx).RawQuery(fmt.Sprintf(
 		"DELETE FROM %s WHERE id in (SELECT id FROM (SELECT id FROM %s c WHERE expires_at <= ? and nid = ? ORDER BY expires_at ASC LIMIT %d ) AS s )",
 		new(settings.Flow).TableName(ctx),

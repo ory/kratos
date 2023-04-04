@@ -1,4 +1,4 @@
-// Copyright © 2022 Ory Corp
+// Copyright © 2023 Ory Corp
 // SPDX-License-Identifier: Apache-2.0
 
 import { routes as express } from "../../../helpers/express"
@@ -15,7 +15,7 @@ describe("Registration failures with email profile", () => {
     cy.visit(express.registration, { failOnStatusCode: false })
     cy.get('[data-testid="code-box"]').should(
       "contain.text",
-      "is in the private, loopback, or unspecified IP range", // could be ::1 or 127.0.0.1
+      "is not a public IP address", // could be ::1 or 127.0.0.1
     )
   })
 
@@ -24,7 +24,7 @@ describe("Registration failures with email profile", () => {
     cy.visit(express.registration, { failOnStatusCode: false })
     cy.get('[data-testid="code-box"]').should(
       "contain.text",
-      "ip 192.168.178.1 is in the private, loopback, or unspecified IP range",
+      "192.168.178.1 is not a public IP address",
     )
   })
 
@@ -33,7 +33,7 @@ describe("Registration failures with email profile", () => {
     cy.visit(express.login, { failOnStatusCode: false })
     cy.get('[data-testid="code-box"]').should(
       "contain.text",
-      "ip 192.168.178.2 is in the private, loopback, or unspecified IP range",
+      "192.168.178.2 is not a public IP address",
     )
   })
 
@@ -46,7 +46,7 @@ describe("Registration failures with email profile", () => {
     cy.get('[type="submit"]').click()
     cy.get('[data-testid="code-box"]').should(
       "contain.text",
-      "ip 192.168.178.3 is in the private, loopback, or unspecified IP range",
+      "192.168.178.3 is not a public IP address",
     )
   })
 })

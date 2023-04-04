@@ -1,4 +1,4 @@
-// Copyright © 2022 Ory Corp
+// Copyright © 2023 Ory Corp
 // SPDX-License-Identifier: Apache-2.0
 
 package jsonnet
@@ -47,7 +47,7 @@ Use -w or --write to write output back to files instead of stdout.
 					cmdx.Must(err, `JSONNet file "%s" could not be formatted: %s`, file, err)
 
 					if shouldWrite {
-						err := os.WriteFile(file, []byte(output), 0644) // #nosec
+						err := os.WriteFile(file, []byte(output), 0644) //#nosec
 						cmdx.Must(err, `Could not write to file "%s" because: %s`, file, err)
 					} else {
 						fmt.Println(output)

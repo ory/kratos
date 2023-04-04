@@ -52,6 +52,19 @@
   },
   {
     "type": "input",
+    "group": "default",
+    "attributes": {
+      "name": "csrf_token",
+      "type": "hidden",
+      "required": true,
+      "disabled": false,
+      "node_type": "input"
+    },
+    "messages": [],
+    "meta": {}
+  },
+  {
+    "type": "input",
     "group": "code",
     "attributes": {
       "name": "email",
@@ -63,23 +76,10 @@
     "messages": [],
     "meta": {
       "label": {
-        "id": 1070007,
+        "id": 1070008,
         "text": "Resend code",
         "type": "info"
       }
     }
-  },
-  {
-    "type": "input",
-    "group": "default",
-    "attributes": {
-      "name": "csrf_token",
-      "type": "hidden",
-      "required": true,
-      "disabled": false,
-      "node_type": "input"
-    },
-    "messages": [],
-    "meta": {}
   }
 ]

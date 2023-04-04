@@ -1,4 +1,4 @@
-// Copyright © 2022 Ory Corp
+// Copyright © 2023 Ory Corp
 // SPDX-License-Identifier: Apache-2.0
 
 package identity
@@ -58,8 +58,19 @@ func (r *SchemaExtensionVerification) Run(ctx jsonschema.ValidationContext, s sc
 }
 
 func (r *SchemaExtensionVerification) Finish() error {
-	r.i.VerifiableAddresses = r.v
+	r.i.VerifiableAddresses = merge(r.v, r.i.VerifiableAddresses)
 	return nil
+}
+
+// merge merges the base with the overrides through comparison with `has`. It changes the base slice in place.
+func merge(base []VerifiableAddress, overrides []VerifiableAddress) []VerifiableAddress {
+	for i := range base {
+		if override := has(overrides, &base[i]); override != nil {
+			base[i] = *override
+		}
+	}
+
+	return base
 }
 
 func (r *SchemaExtensionVerification) appendAddress(address *VerifiableAddress) {

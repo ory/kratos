@@ -1,4 +1,4 @@
-// Copyright © 2022 Ory Corp
+// Copyright © 2023 Ory Corp
 // SPDX-License-Identifier: Apache-2.0
 
 package session_test
@@ -15,8 +15,6 @@ import (
 	"github.com/ory/nosurf"
 
 	"github.com/ory/kratos/driver"
-
-	"github.com/ory/x/urlx"
 
 	"github.com/julienschmidt/httprouter"
 	"github.com/stretchr/testify/assert"
@@ -276,40 +274,6 @@ func TestManagerHTTP(t *testing.T) {
 			res, err := c.Get(pts.URL + "/session/set/invalid")
 			require.NoError(t, err)
 			assert.EqualValues(t, http.StatusInternalServerError, res.StatusCode)
-		})
-
-		t.Run("case=valid and uses x-session-cookie", func(t *testing.T) {
-			req := x.NewTestHTTPRequest(t, "GET", "/sessions/whoami", nil)
-			conf.MustSet(ctx, config.ViperKeySessionLifespan, "1m")
-
-			i := identity.Identity{Traits: []byte("{}")}
-			require.NoError(t, reg.PrivilegedIdentityPool().CreateIdentity(context.Background(), &i))
-			s, _ = session.NewActiveSession(req, &i, conf, time.Now(), identity.CredentialsTypePassword, identity.AuthenticatorAssuranceLevel1)
-
-			c := testhelpers.NewClientWithCookies(t)
-			testhelpers.MockHydrateCookieClient(t, c, pts.URL+"/session/set")
-
-			cookies := c.Jar.Cookies(urlx.ParseOrPanic(pts.URL))
-			require.Len(t, cookies, 2, "expect two cookies, one csrf, one session")
-
-			var cookie *http.Cookie
-			for _, c := range cookies {
-				if c.Name == "ory_kratos_session" {
-					cookie = c
-					break
-				}
-			}
-			require.NotNil(t, cookie, "must find the kratos session cookie")
-
-			assert.Equal(t, "ory_kratos_session", cookie.Name)
-
-			req, err := http.NewRequest("GET", pts.URL+"/session/get", nil)
-			require.NoError(t, err)
-			req.Header.Set("Cookie", "ory_kratos_session=not-valid")
-			req.Header.Set("X-Session-Cookie", cookie.Value)
-			res, err := http.DefaultClient.Do(req)
-			require.NoError(t, err)
-			assert.EqualValues(t, http.StatusOK, res.StatusCode)
 		})
 
 		t.Run("case=valid bearer auth as fallback", func(t *testing.T) {
@@ -580,6 +544,25 @@ func TestDoesSessionSatisfy(t *testing.T) {
 			require.NoError(t, s.Activate(req, id, conf, time.Now().UTC()))
 
 			err := reg.SessionManager().DoesSessionSatisfy((&http.Request{}).WithContext(context.Background()), s, string(tc.requested))
+			if tc.err != nil {
+				require.ErrorAs(t, err, &tc.err)
+			} else {
+				require.NoError(t, err)
+			}
+
+			// This should still work even if the session does not have identity data attached yet...
+			s.Identity = nil
+			err = reg.SessionManager().DoesSessionSatisfy((&http.Request{}).WithContext(context.Background()), s, string(tc.requested))
+			if tc.err != nil {
+				require.ErrorAs(t, err, &tc.err)
+			} else {
+				require.NoError(t, err)
+			}
+
+			// ..or no credentials attached.
+			s.Identity = id
+			s.Identity.Credentials = nil
+			err = reg.SessionManager().DoesSessionSatisfy((&http.Request{}).WithContext(context.Background()), s, string(tc.requested))
 			if tc.err != nil {
 				require.ErrorAs(t, err, &tc.err)
 			} else {

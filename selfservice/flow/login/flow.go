@@ -1,4 +1,4 @@
-// Copyright © 2022 Ory Corp
+// Copyright © 2023 Ory Corp
 // SPDX-License-Identifier: Apache-2.0
 
 package login
@@ -20,7 +20,7 @@ import (
 
 	"github.com/ory/x/stringsx"
 
-	hydraclientgo "github.com/ory/hydra-client-go"
+	hydraclientgo "github.com/ory/hydra-client-go/v2"
 
 	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/hydra"

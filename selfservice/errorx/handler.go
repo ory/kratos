@@ -1,4 +1,4 @@
-// Copyright © 2022 Ory Corp
+// Copyright © 2023 Ory Corp
 // SPDX-License-Identifier: Apache-2.0
 
 package errorx
@@ -55,8 +55,10 @@ func (h *Handler) RegisterAdminRoutes(public *x.RouterAdmin) {
 	public.GET(RouteGet, x.RedirectToPublicRoute(h.r))
 }
 
-// nolint:deadcode,unused
 // swagger:parameters getFlowError
+//
+//nolint:deadcode,unused
+//lint:ignore U1000 Used to generate Swagger and OpenAPI definitions
 type getFlowError struct {
 	// Error is the error's ID
 	//

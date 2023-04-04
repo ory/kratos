@@ -513,6 +513,30 @@ that your company deserves a spot here, reach out to
             </td>
             <td><a href="https://dyrector.io/">dyrector.io</a></td>
         </tr>
+        </tr>
+            <tr>
+            <td>Adopter *</td>
+            <td>Stackspin</td>
+            <td align="center">
+                <picture>
+                    <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/ory/meta/master/static/adopters/light/stackspin.svg" />
+                    <img height="32px" src="https://raw.githubusercontent.com/ory/meta/master/static/adopters/dark/stackspin.svg" alt="stackspin.net">
+                </picture>
+            </td>
+            <td><a href="https://www.stackspin.net/">stackspin.net</a></td>
+        </tr>
+        </tr>
+            <tr>
+            <td>Adopter *</td>
+            <td>Amplitude</td>
+            <td align="center">
+                <picture>
+                    <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/ory/meta/master/static/adopters/light/amplitude.svg" />
+                    <img height="32px" src="https://raw.githubusercontent.com/ory/meta/master/static/adopters/dark/amplitude.svg" alt="amplitude.com">
+                </picture>
+            </td>
+            <td><a href="https://amplitude.com/">amplitude.com</a></td>
+        </tr>
     </tbody>
 </table>
 
@@ -605,8 +629,9 @@ Running identity infrastructure requires
 ### Disclosing vulnerabilities
 
 If you think you found a security vulnerability, please refrain from posting it
-publicly on the forums, the chat, or GitHub and send us an email to
-[hi@ory.am](mailto:hi@ory.sh) instead.
+publicly on the forums, the chat, or GitHub. You can find all info for
+responsible disclosure in our
+[security.txt](https://www.ory.sh/.well-known/security.txt).
 
 ## Telemetry
 

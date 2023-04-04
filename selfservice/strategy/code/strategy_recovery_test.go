@@ -1,4 +1,4 @@
-// Copyright © 2022 Ory Corp
+// Copyright © 2023 Ory Corp
 // SPDX-License-Identifier: Apache-2.0
 
 package code_test
@@ -12,11 +12,11 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"net/url"
-	"strings"
 	"testing"
 	"time"
 
 	"github.com/davecgh/go-spew/spew"
+	"github.com/gofrs/uuid"
 	errors "github.com/pkg/errors"
 
 	"github.com/ory/kratos/driver"
@@ -127,6 +127,7 @@ func TestAdminStrategy(t *testing.T) {
 		res, err = publicTS.Client().PostForm(action, url.Values{
 			"code": {code},
 		})
+		require.NoError(t, err)
 		assert.Equal(t, http.StatusOK, res.StatusCode)
 
 		return ioutilx.MustReadAll(res.Body)
@@ -201,7 +202,7 @@ func TestAdminStrategy(t *testing.T) {
 	})
 
 	t.Run("case=should not be able to use code from different flow", func(t *testing.T) {
-		email := strings.ToLower(testhelpers.RandomEmail())
+		email := testhelpers.RandomEmail()
 		i := createIdentityToRecover(t, reg, email)
 
 		c1, _, err := createCode(i.ID.String(), pointerx.String("1h"))
@@ -217,7 +218,7 @@ func TestAdminStrategy(t *testing.T) {
 	})
 
 	t.Run("case=form should not contain email field when creating recovery code", func(t *testing.T) {
-		email := strings.ToLower(testhelpers.RandomEmail())
+		email := testhelpers.RandomEmail()
 		i := createIdentityToRecover(t, reg, email)
 
 		c1, _, err := createCode(i.ID.String(), pointerx.String("1h"))
@@ -400,7 +401,7 @@ func TestRecovery(t *testing.T) {
 	}
 
 	t.Run("description=should recover an account", func(t *testing.T) {
-		var checkRecovery = func(t *testing.T, client *http.Client, flowType, recoveryEmail, recoverySubmissionResponse, returnTo string) string {
+		var checkRecovery = func(t *testing.T, client *http.Client, flowType, recoveryEmail, recoverySubmissionResponse string) string {
 
 			ExpectVerfiableAddressStatus(t, recoveryEmail, identity.VerifiableAddressStatusPending)
 
@@ -426,7 +427,7 @@ func TestRecovery(t *testing.T) {
 			recoverySubmissionResponse := submitRecovery(t, client, RecoveryFlowTypeBrowser, func(v url.Values) {
 				v.Set("email", email)
 			}, http.StatusOK)
-			body := checkRecovery(t, client, RecoveryFlowTypeBrowser, email, recoverySubmissionResponse, "")
+			body := checkRecovery(t, client, RecoveryFlowTypeBrowser, email, recoverySubmissionResponse)
 
 			assert.Equal(t, text.NewRecoverySuccessful(time.Now().Add(time.Hour)).Text,
 				gjson.Get(body, "ui.messages.0.text").String())
@@ -446,7 +447,7 @@ func TestRecovery(t *testing.T) {
 			recoverySubmissionResponse := submitRecovery(t, client, RecoveryFlowTypeSPA, func(v url.Values) {
 				v.Set("email", email)
 			}, http.StatusOK)
-			body := checkRecovery(t, client, RecoveryFlowTypeSPA, email, recoverySubmissionResponse, "")
+			body := checkRecovery(t, client, RecoveryFlowTypeSPA, email, recoverySubmissionResponse)
 			assert.Equal(t, "browser_location_change_required", gjson.Get(body, "error.id").String())
 			assert.Contains(t, gjson.Get(body, "redirect_browser_to").String(), "settings-ts?")
 		})
@@ -458,40 +459,82 @@ func TestRecovery(t *testing.T) {
 			recoverySubmissionResponse := submitRecovery(t, client, RecoveryFlowTypeAPI, func(v url.Values) {
 				v.Set("email", email)
 			}, http.StatusOK)
-			body := checkRecovery(t, client, RecoveryFlowTypeAPI, email, recoverySubmissionResponse, "")
+			body := checkRecovery(t, client, RecoveryFlowTypeAPI, email, recoverySubmissionResponse)
 			assert.Equal(t, "browser_location_change_required", gjson.Get(body, "error.id").String())
 			assert.Contains(t, gjson.Get(body, "redirect_browser_to").String(), "settings-ts?")
 		})
 
 		t.Run("description=should return browser to return url", func(t *testing.T) {
-			client := testhelpers.NewClientWithCookies(t)
-			email := "recoverme@ory.sh"
-			returnTo := "https://www.ory.sh"
-			createIdentityToRecover(t, reg, email)
+			returnTo := public.URL + "/return-to"
+			conf.Set(ctx, config.ViperKeyURLsAllowedReturnToDomains, []string{returnTo})
+			for _, tc := range []struct {
+				desc     string
+				returnTo string
+				f        func(t *testing.T, client *http.Client) *kratos.RecoveryFlow
+			}{
+				{
+					desc:     "should use return_to from recovery flow",
+					returnTo: returnTo,
+					f: func(t *testing.T, client *http.Client) *kratos.RecoveryFlow {
+						return testhelpers.InitializeRecoveryFlowViaBrowser(t, client, false, public, url.Values{"return_to": []string{returnTo}})
+					},
+				},
+				{
+					desc:     "should use return_to from config",
+					returnTo: returnTo,
+					f: func(t *testing.T, client *http.Client) *kratos.RecoveryFlow {
+						conf.Set(ctx, config.ViperKeySelfServiceRecoveryBrowserDefaultReturnTo, returnTo)
+						t.Cleanup(func() {
+							conf.Set(ctx, config.ViperKeySelfServiceRecoveryBrowserDefaultReturnTo, "")
+						})
+						return testhelpers.InitializeRecoveryFlowViaBrowser(t, client, false, public, nil)
+					},
+				},
+				{
+					desc:     "no return to",
+					returnTo: "",
+					f: func(t *testing.T, client *http.Client) *kratos.RecoveryFlow {
+						return testhelpers.InitializeRecoveryFlowViaBrowser(t, client, false, public, nil)
+					},
+				},
+			} {
+				t.Run(fmt.Sprintf("%s", tc.desc), func(t *testing.T) {
+					client := testhelpers.NewClientWithCookies(t)
+					email := testhelpers.RandomEmail()
+					createIdentityToRecover(t, reg, email)
 
-			client.Transport = testhelpers.NewTransportWithLogger(http.DefaultTransport, t).RoundTripper
+					client.Transport = testhelpers.NewTransportWithLogger(http.DefaultTransport, t).RoundTripper
 
-			f := testhelpers.InitializeRecoveryFlowViaBrowser(t, client, false, public, url.Values{"return_to": []string{returnTo}})
+					f := tc.f(t, client)
 
-			formPayload := testhelpers.SDKFormFieldsToURLValues(f.Ui.Nodes)
-			formPayload.Set("email", email)
+					formPayload := testhelpers.SDKFormFieldsToURLValues(f.Ui.Nodes)
+					formPayload.Set("email", email)
 
-			body, res := testhelpers.RecoveryMakeRequest(t, false, f, client, formPayload.Encode())
-			assert.EqualValues(t, http.StatusOK, res.StatusCode, "%s", body)
-			expectedURL := testhelpers.ExpectURL(false, public.URL+recovery.RouteSubmitFlow, conf.SelfServiceFlowRecoveryUI(ctx).String())
-			assert.Contains(t, res.Request.URL.String(), expectedURL, "%+v\n\t%s", res.Request, body)
+					body, res := testhelpers.RecoveryMakeRequest(t, false, f, client, formPayload.Encode())
+					assert.EqualValues(t, http.StatusOK, res.StatusCode, "%s", body)
+					expectedURL := testhelpers.ExpectURL(false, public.URL+recovery.RouteSubmitFlow, conf.SelfServiceFlowRecoveryUI(ctx).String())
+					assert.Contains(t, res.Request.URL.String(), expectedURL, "%+v\n\t%s", res.Request, body)
 
-			body = checkRecovery(t, client, RecoveryFlowTypeBrowser, email, body, returnTo)
+					body = checkRecovery(t, client, RecoveryFlowTypeBrowser, email, body)
 
-			assert.Equal(t, text.NewRecoverySuccessful(time.Now().Add(time.Hour)).Text,
-				gjson.Get(body, "ui.messages.0.text").String())
+					assert.Equal(t, text.NewRecoverySuccessful(time.Now().Add(time.Hour)).Text,
+						gjson.Get(body, "ui.messages.0.text").String())
 
-			res, err := client.Get(public.URL + session.RouteWhoami)
-			require.NoError(t, err)
-			body = string(x.MustReadAll(res.Body))
-			require.NoError(t, res.Body.Close())
-			assert.Equal(t, "code_recovery", gjson.Get(body, "authentication_methods.0.method").String(), "%s", body)
-			assert.Equal(t, "aal1", gjson.Get(body, "authenticator_assurance_level").String(), "%s", body)
+					settingsId := gjson.Get(body, "id").String()
+
+					sf, err := reg.SettingsFlowPersister().GetSettingsFlow(ctx, uuid.Must(uuid.FromString(settingsId)))
+					require.NoError(t, err)
+
+					require.Equal(t, tc.returnTo, sf.ReturnTo)
+
+					res, err = client.Get(public.URL + session.RouteWhoami)
+					require.NoError(t, err)
+					body = string(x.MustReadAll(res.Body))
+					require.NoError(t, res.Body.Close())
+					assert.Equal(t, "code_recovery", gjson.Get(body, "authentication_methods.0.method").String(), "%s", body)
+					assert.Equal(t, "aal1", gjson.Get(body, "authenticator_assurance_level").String(), "%s", body)
+				})
+			}
 		})
 	})
 
@@ -595,6 +638,12 @@ func TestRecovery(t *testing.T) {
 	})
 
 	t.Run("description=should not be able to recover account that does not exist", func(t *testing.T) {
+		conf.Set(ctx, config.ViperKeySelfServiceRecoveryNotifyUnknownRecipients, true)
+
+		t.Cleanup(func() {
+			conf.Set(ctx, config.ViperKeySelfServiceRecoveryNotifyUnknownRecipients, false)
+		})
+
 		var check = func(t *testing.T, c *http.Client, flowType, email string) {
 			withValues := func(v url.Values) {
 				v.Set("email", email)
@@ -664,7 +713,7 @@ func TestRecovery(t *testing.T) {
 			conf.MustSet(ctx, config.HookStrategyKey(config.ViperKeySelfServiceRegistrationAfter, identity.CredentialsTypePassword.String()), nil)
 		})
 
-		email := strings.ToLower(testhelpers.RandomEmail())
+		email := testhelpers.RandomEmail()
 		id := createIdentityToRecover(t, reg, email)
 
 		req := httptest.NewRequest("GET", "/sessions/whoami", nil)
@@ -704,7 +753,7 @@ func TestRecovery(t *testing.T) {
 	})
 
 	t.Run("description=should not be able to use an invalid code more than 5 times", func(t *testing.T) {
-		email := strings.ToLower(testhelpers.RandomEmail())
+		email := testhelpers.RandomEmail()
 		createIdentityToRecover(t, reg, email)
 		c := testhelpers.NewClientWithCookies(t)
 		body := submitRecovery(t, c, RecoveryFlowTypeBrowser, func(v url.Values) {
@@ -734,7 +783,7 @@ func TestRecovery(t *testing.T) {
 		for _, testCase := range flowTypeCases {
 			t.Run("type="+testCase.FlowType, func(t *testing.T) {
 				c := testCase.GetClient(t)
-				recoveryEmail := strings.ToLower(testhelpers.RandomEmail())
+				recoveryEmail := testhelpers.RandomEmail()
 				_ = createIdentityToRecover(t, reg, recoveryEmail)
 
 				actual := submitRecovery(t, c, testCase.FlowType, func(v url.Values) {
@@ -764,6 +813,7 @@ func TestRecovery(t *testing.T) {
 					Id(flowId).
 					Execute()
 
+				require.NoError(t, err)
 				body := ioutilx.MustReadAll(res.Body)
 				require.NotEmpty(t, body)
 
@@ -890,7 +940,7 @@ func TestRecovery(t *testing.T) {
 	})
 
 	t.Run("description=should be able to re-send the recovery code", func(t *testing.T) {
-		recoveryEmail := strings.ToLower(testhelpers.RandomEmail())
+		recoveryEmail := testhelpers.RandomEmail()
 		createIdentityToRecover(t, reg, recoveryEmail)
 
 		c := testhelpers.NewClientWithCookies(t)
@@ -913,7 +963,7 @@ func TestRecovery(t *testing.T) {
 	})
 
 	t.Run("description=should not be able to use first code after re-sending email", func(t *testing.T) {
-		recoveryEmail := strings.ToLower(testhelpers.RandomEmail())
+		recoveryEmail := testhelpers.RandomEmail()
 		createIdentityToRecover(t, reg, recoveryEmail)
 
 		c := testhelpers.NewClientWithCookies(t)
@@ -944,7 +994,7 @@ func TestRecovery(t *testing.T) {
 	})
 
 	t.Run("description=should not show outdated validation message if newer message appears #2799", func(t *testing.T) {
-		recoveryEmail := strings.ToLower(testhelpers.RandomEmail())
+		recoveryEmail := testhelpers.RandomEmail()
 		createIdentityToRecover(t, reg, recoveryEmail)
 
 		c := testhelpers.NewClientWithCookies(t)

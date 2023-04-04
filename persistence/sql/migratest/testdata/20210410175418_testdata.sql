@@ -21,3 +21,4 @@ INSERT INTO identity_verifiable_addresses (id, nid, status, via, verified, value
 
 INSERT INTO identities (id, nid, schema_id, traits, created_at, updated_at) VALUES ('196d8c1e-4f04-40f0-94b3-5ec43996b28a', '884f556e-eb3a-4b9f-bee3-11345642c6c0', 'default', '{"email":"foobar@ory.sh"}', '2013-10-07 08:23:19', '2013-10-07 08:23:19');
 INSERT INTO identities (id, nid, schema_id, traits, created_at, updated_at) VALUES ('ed253b2c-48ed-4c58-9b6f-1dc963c30a66', '884f556e-eb3a-4b9f-bee3-11345642c6c0', 'default', '{"email":"bazbar@ory.sh"}', '2013-10-07 08:23:19', '2013-10-07 08:23:19');
+

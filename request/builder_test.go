@@ -1,4 +1,4 @@
-// Copyright © 2022 Ory Corp
+// Copyright © 2023 Ory Corp
 // SPDX-License-Identifier: Apache-2.0
 
 package request
@@ -247,8 +247,8 @@ func TestBuildRequest(t *testing.T) {
 				rb, err := NewBuilder(json.RawMessage(tc.rawConfig), newTestDependencyProvider(t))
 				require.NoError(t, err)
 
-				assert.Equal(t, tc.bodyTemplateURI, rb.conf.TemplateURI)
-				assert.Equal(t, tc.authStrategy, rb.conf.Auth.Type)
+				assert.Equal(t, tc.bodyTemplateURI, rb.Config.TemplateURI)
+				assert.Equal(t, tc.authStrategy, rb.Config.Auth.Type)
 
 				req, err := rb.BuildRequest(context.Background(), tc.body)
 				require.NoError(t, err)

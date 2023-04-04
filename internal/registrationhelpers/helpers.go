@@ -1,4 +1,4 @@
-// Copyright © 2022 Ory Corp
+// Copyright © 2023 Ory Corp
 // SPDX-License-Identifier: Apache-2.0
 
 package registrationhelpers
@@ -275,7 +275,7 @@ func AssertRegistrationRespectsValidation(t *testing.T, reg *driver.RegistryDefa
 	})
 }
 
-func AssertCommonErrorCases(t *testing.T, reg *driver.RegistryDefault, flows []string) {
+func AssertCommonErrorCases(t *testing.T, flows []string) {
 	ctx := context.Background()
 	conf, reg := internal.NewFastRegistryWithMocks(t)
 	testhelpers.SetDefaultIdentitySchemaFromRaw(conf, basicSchema)

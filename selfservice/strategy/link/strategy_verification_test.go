@@ -1,10 +1,9 @@
-// Copyright © 2022 Ory Corp
+// Copyright © 2023 Ory Corp
 // SPDX-License-Identifier: Apache-2.0
 
 package link_test
 
 import (
-	"bytes"
 	"context"
 	_ "embed"
 	"encoding/json"
@@ -167,6 +166,11 @@ func TestVerification(t *testing.T) {
 	})
 
 	t.Run("description=should try to verify an email that does not exist", func(t *testing.T) {
+		conf.Set(ctx, config.ViperKeySelfServiceVerificationNotifyUnknownRecipients, true)
+
+		t.Cleanup(func() {
+			conf.Set(ctx, config.ViperKeySelfServiceVerificationNotifyUnknownRecipients, false)
+		})
 		var email string
 		var check = func(t *testing.T, actual string) {
 			assert.EqualValues(t, string(node.LinkGroup), gjson.Get(actual, "active").String(), "%s", actual)
@@ -212,7 +216,7 @@ func TestVerification(t *testing.T) {
 		assert.Equal(t, "The verification token is invalid or has already been used. Please retry the flow.", sr.Ui.Messages[0].Text)
 	})
 
-	t.Run("description=should not be able to use an outdated link", func(t *testing.T) {
+	t.Run("description=should not be able to request link with an outdated flow", func(t *testing.T) {
 		conf.MustSet(ctx, config.ViperKeySelfServiceVerificationRequestLifespan, time.Millisecond*200)
 		t.Cleanup(func() {
 			conf.MustSet(ctx, config.ViperKeySelfServiceVerificationRequestLifespan, time.Minute)
@@ -230,7 +234,7 @@ func TestVerification(t *testing.T) {
 		assert.Contains(t, res.Request.URL.String(), conf.SelfServiceFlowVerificationUI(ctx).String())
 	})
 
-	t.Run("description=should not be able to use an outdated flow", func(t *testing.T) {
+	t.Run("description=should not be able to use link with an outdated flow", func(t *testing.T) {
 		conf.MustSet(ctx, config.ViperKeySelfServiceVerificationRequestLifespan, time.Millisecond*200)
 		t.Cleanup(func() {
 			conf.MustSet(ctx, config.ViperKeySelfServiceVerificationRequestLifespan, time.Minute)
@@ -248,6 +252,8 @@ func TestVerification(t *testing.T) {
 
 		time.Sleep(time.Millisecond * 201)
 
+		//Clear cookies as link might be opened in another browser
+		c = testhelpers.NewClientWithCookies(t)
 		res, err := c.Get(verificationLink)
 		require.NoError(t, err)
 
@@ -345,8 +351,8 @@ func TestVerification(t *testing.T) {
 		check(t, expectSuccess(t, nil, false, false, values))
 	})
 
-	newValidFlow := func(t *testing.T, requestURL string) (*verification.Flow, *link.VerificationToken) {
-		f, err := verification.NewFlow(conf, time.Hour, x.FakeCSRFToken, httptest.NewRequest("GET", requestURL, nil), nil, flow.TypeBrowser)
+	newValidFlow := func(t *testing.T, fType flow.Type, requestURL string) (*verification.Flow, *link.VerificationToken) {
+		f, err := verification.NewFlow(conf, time.Hour, x.FakeCSRFToken, httptest.NewRequest("GET", requestURL, nil), nil, fType)
 		require.NoError(t, err)
 		f.State = verification.StateEmailSent
 		require.NoError(t, reg.VerificationFlowPersister().CreateVerificationFlow(context.Background(), f))
@@ -359,39 +365,57 @@ func TestVerification(t *testing.T) {
 		return f, token
 	}
 
+	newValidBrowserFlow := func(t *testing.T, requestURL string) (*verification.Flow, *link.VerificationToken) {
+		return newValidFlow(t, flow.TypeBrowser, requestURL)
+	}
+
 	t.Run("case=respects return_to URI parameter", func(t *testing.T) {
 		returnToURL := public.URL + "/after-verification"
 		conf.MustSet(ctx, config.ViperKeyURLsAllowedReturnToDomains, []string{returnToURL})
-		client := &http.Client{
-			CheckRedirect: func(req *http.Request, via []*http.Request) error {
-				return http.ErrUseLastResponse
-			},
+
+		for _, fType := range []flow.Type{flow.TypeBrowser, flow.TypeAPI} {
+			t.Run(fmt.Sprintf("type=%s", fType), func(t *testing.T) {
+				client := testhelpers.NewClientWithCookies(t)
+				flow, token := newValidFlow(t, fType, public.URL+verification.RouteInitBrowserFlow+"?"+url.Values{"return_to": {returnToURL}}.Encode())
+
+				res, err := client.Get(public.URL + verification.RouteSubmitFlow + "?" + url.Values{"flow": {flow.ID.String()}, "token": {token.Token}}.Encode())
+				require.NoError(t, err)
+				assert.Equal(t, http.StatusOK, res.StatusCode)
+				responseBody := gjson.ParseBytes(ioutilx.MustReadAll(res.Body))
+
+				assert.Equal(t, responseBody.Get("state").String(), "passed_challenge", "%v", responseBody)
+				assert.True(t, responseBody.Get("ui.nodes.#(attributes.id==continue)").Exists(), "%v", responseBody)
+				assert.Equal(t, returnToURL, responseBody.Get("ui.nodes.#(attributes.id==continue).attributes.href").String(), "%v", responseBody)
+			})
 		}
+	})
 
-		conf.MustSet(ctx, config.ViperKeySelfServiceVerificationRequestLifespan, time.Millisecond*200)
-		t.Cleanup(func() {
-			conf.MustSet(ctx, config.ViperKeySelfServiceVerificationRequestLifespan, time.Minute)
-		})
+	t.Run("case=contains default return to url", func(t *testing.T) {
+		globalReturnTo := public.URL + "/global"
+		conf.MustSet(ctx, config.ViperKeySelfServiceBrowserDefaultReturnTo, globalReturnTo)
 
-		flow, token := newValidFlow(t, public.URL+verification.RouteInitBrowserFlow+"?"+url.Values{"return_to": {returnToURL}}.Encode())
+		for _, fType := range []flow.Type{flow.TypeBrowser, flow.TypeAPI} {
+			t.Run(fmt.Sprintf("type=%s", fType), func(t *testing.T) {
+				client := testhelpers.NewClientWithCookies(t)
+				flow, token := newValidFlow(t, fType, public.URL+verification.RouteInitBrowserFlow)
 
-		body := fmt.Sprintf(
-			`{"csrf_token":"%s","email":"%s"}`, flow.CSRFToken, verificationEmail,
-		)
+				res, err := client.Get(public.URL + verification.RouteSubmitFlow + "?" + url.Values{"flow": {flow.ID.String()}, "token": {token.Token}}.Encode())
+				require.NoError(t, err)
+				assert.Equal(t, http.StatusOK, res.StatusCode)
+				responseBody := gjson.ParseBytes(ioutilx.MustReadAll(res.Body))
 
-		res, err := client.Post(public.URL+verification.RouteSubmitFlow+"?"+url.Values{"flow": {flow.ID.String()}, "token": {token.Token}}.Encode(), "application/json", bytes.NewBuffer([]byte(body)))
-		require.NoError(t, err)
-		assert.Equal(t, http.StatusSeeOther, res.StatusCode)
-		redirectURL, err := res.Location()
-		require.NoError(t, err)
-		assert.Equal(t, returnToURL+"?flow="+flow.ID.String(), redirectURL.String())
+				assert.Equal(t, responseBody.Get("state").String(), "passed_challenge", "%v", responseBody)
+				assert.True(t, responseBody.Get("ui.nodes.#(attributes.id==continue)").Exists(), "%v", responseBody)
+				assert.Equal(t, globalReturnTo, responseBody.Get("ui.nodes.#(attributes.id==continue).attributes.href").String(), "%v", responseBody)
+			})
+		}
 	})
 
 	t.Run("case=should not be able to use code from different flow", func(t *testing.T) {
 
-		f1, _ := newValidFlow(t, public.URL+verification.RouteInitBrowserFlow)
+		f1, _ := newValidBrowserFlow(t, public.URL+verification.RouteInitBrowserFlow)
 
-		_, t2 := newValidFlow(t, public.URL+verification.RouteInitBrowserFlow)
+		_, t2 := newValidBrowserFlow(t, public.URL+verification.RouteInitBrowserFlow)
 
 		formValues := url.Values{
 			"flow":  {f1.ID.String()},

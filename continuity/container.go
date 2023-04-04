@@ -1,4 +1,4 @@
-// Copyright © 2022 Ory Corp
+// Copyright © 2023 Ory Corp
 // SPDX-License-Identifier: Apache-2.0
 
 package continuity
@@ -48,7 +48,7 @@ func (c Container) TableName(ctx context.Context) string {
 
 func NewContainer(name string, o managerOptions) *Container {
 	return &Container{
-		ID:         x.NewUUID(),
+		ID:         uuid.Nil,
 		Name:       name,
 		IdentityID: x.PointToUUID(o.iid),
 		ExpiresAt:  time.Now().Add(o.ttl).UTC().Truncate(time.Second),

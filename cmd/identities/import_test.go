@@ -1,4 +1,4 @@
-// Copyright © 2022 Ory Corp
+// Copyright © 2023 Ory Corp
 // SPDX-License-Identifier: Apache-2.0
 
 package identities_test
@@ -9,6 +9,8 @@ import (
 	"encoding/json"
 	"os"
 	"testing"
+
+	"github.com/ory/kratos/identity"
 
 	"github.com/ory/kratos/cmd/identities"
 
@@ -42,7 +44,7 @@ func TestImportCmd(t *testing.T) {
 
 		id, err := uuid.FromString(gjson.Get(stdOut, "id").String())
 		require.NoError(t, err)
-		_, err = reg.Persister().GetIdentity(context.Background(), id)
+		_, err = reg.Persister().GetIdentity(context.Background(), id, identity.ExpandNothing)
 		assert.NoError(t, err)
 	})
 
@@ -69,12 +71,12 @@ func TestImportCmd(t *testing.T) {
 
 		id, err := uuid.FromString(gjson.Get(stdOut, "0.id").String())
 		require.NoError(t, err)
-		_, err = reg.Persister().GetIdentity(context.Background(), id)
+		_, err = reg.Persister().GetIdentity(context.Background(), id, identity.ExpandNothing)
 		assert.NoError(t, err)
 
 		id, err = uuid.FromString(gjson.Get(stdOut, "1.id").String())
 		require.NoError(t, err)
-		_, err = reg.Persister().GetIdentity(context.Background(), id)
+		_, err = reg.Persister().GetIdentity(context.Background(), id, identity.ExpandNothing)
 		assert.NoError(t, err)
 	})
 
@@ -97,12 +99,12 @@ func TestImportCmd(t *testing.T) {
 
 		id, err := uuid.FromString(gjson.Get(stdOut, "0.id").String())
 		require.NoError(t, err)
-		_, err = reg.Persister().GetIdentity(context.Background(), id)
+		_, err = reg.Persister().GetIdentity(context.Background(), id, identity.ExpandNothing)
 		assert.NoError(t, err)
 
 		id, err = uuid.FromString(gjson.Get(stdOut, "1.id").String())
 		require.NoError(t, err)
-		_, err = reg.Persister().GetIdentity(context.Background(), id)
+		_, err = reg.Persister().GetIdentity(context.Background(), id, identity.ExpandNothing)
 		assert.NoError(t, err)
 	})
 
@@ -119,7 +121,7 @@ func TestImportCmd(t *testing.T) {
 
 		id, err := uuid.FromString(gjson.Get(stdOut, "id").String())
 		require.NoError(t, err)
-		_, err = reg.Persister().GetIdentity(context.Background(), id)
+		_, err = reg.Persister().GetIdentity(context.Background(), id, identity.ExpandNothing)
 		assert.NoError(t, err)
 	})
 }

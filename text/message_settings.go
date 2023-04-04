@@ -1,4 +1,4 @@
-// Copyright © 2022 Ory Corp
+// Copyright © 2023 Ory Corp
 // SPDX-License-Identifier: Apache-2.0
 
 package text
@@ -50,7 +50,7 @@ func NewInfoSelfServiceSettingsUpdateSuccess() *Message {
 	return &Message{
 		ID:   InfoSelfServiceSettingsUpdateSuccess,
 		Text: "Your changes have been saved!",
-		Type: Info,
+		Type: Success,
 	}
 }
 

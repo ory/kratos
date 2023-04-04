@@ -1,4 +1,4 @@
-// Copyright © 2022 Ory Corp
+// Copyright © 2023 Ory Corp
 // SPDX-License-Identifier: Apache-2.0
 
 package schema_test
@@ -14,6 +14,8 @@ import (
 	"os"
 	"strings"
 	"testing"
+
+	"github.com/ory/client-go"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -188,7 +190,7 @@ func TestHandler(t *testing.T) {
 
 		body := getFromTSPaginated(0, 2, http.StatusOK)
 
-		var result schema.IdentitySchemas
+		var result []client.IdentitySchemaContainer
 		require.NoError(t, json.Unmarshal(body, &result))
 
 		ids_orig := []string{}
@@ -197,7 +199,7 @@ func TestHandler(t *testing.T) {
 		}
 		ids_list := []string{}
 		for _, s := range result {
-			ids_list = append(ids_list, s.ID)
+			ids_list = append(ids_list, *s.Id)
 		}
 		for _, id := range ids_orig {
 			require.Contains(t, ids_list, id)
@@ -205,8 +207,10 @@ func TestHandler(t *testing.T) {
 
 		for _, s := range schemas {
 			for _, r := range result {
-				if r.ID == s.ID {
-					assert.JSONEq(t, string(getFromFS(s.ID)), string(r.Schema))
+				if *r.Id == s.ID {
+					j, err := json.Marshal(r.Schema)
+					require.NoError(t, err)
+					assert.JSONEq(t, string(getFromFS(s.ID)), string(j))
 				}
 			}
 		}

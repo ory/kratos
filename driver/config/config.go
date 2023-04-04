@@ -1,4 +1,4 @@
-// Copyright © 2022 Ory Corp
+// Copyright © 2023 Ory Corp
 // SPDX-License-Identifier: Apache-2.0
 
 package config
@@ -18,44 +18,32 @@ import (
 	"testing"
 	"time"
 
-	"github.com/ory/herodot"
-
-	"github.com/ory/x/contextx"
-
-	"github.com/ory/jsonschema/v3/httploader"
-	"github.com/ory/x/httpx"
-	"github.com/ory/x/otelx"
-
-	"golang.org/x/net/publicsuffix"
-
 	"github.com/duo-labs/webauthn/protocol"
-
 	"github.com/duo-labs/webauthn/webauthn"
-
-	"github.com/ory/x/jsonschemax"
-
-	"github.com/ory/x/watcherx"
-
-	"github.com/ory/jsonschema/v3"
-
-	"github.com/ory/kratos/embedx"
-
-	"github.com/ory/x/tlsx"
-
-	"github.com/google/uuid"
-
-	"github.com/stretchr/testify/require"
-
+	"github.com/gofrs/uuid"
 	"github.com/inhies/go-bytesize"
 	kjson "github.com/knadh/koanf/parsers/json"
 	"github.com/pkg/errors"
 	"github.com/rs/cors"
+	"github.com/stretchr/testify/require"
 	"github.com/tidwall/gjson"
+	"go.opentelemetry.io/otel/trace"
+	"golang.org/x/net/publicsuffix"
 
+	"github.com/ory/herodot"
+	"github.com/ory/jsonschema/v3"
+	"github.com/ory/jsonschema/v3/httploader"
+	"github.com/ory/kratos/embedx"
 	"github.com/ory/x/configx"
+	"github.com/ory/x/contextx"
+	"github.com/ory/x/httpx"
+	"github.com/ory/x/jsonschemax"
 	"github.com/ory/x/jsonx"
 	"github.com/ory/x/logrusx"
+	"github.com/ory/x/otelx"
 	"github.com/ory/x/stringsx"
+	"github.com/ory/x/tlsx"
+	"github.com/ory/x/watcherx"
 )
 
 const (
@@ -150,6 +138,7 @@ const (
 	ViperKeySelfServiceRecoveryUI                            = "selfservice.flows.recovery.ui_url"
 	ViperKeySelfServiceRecoveryRequestLifespan               = "selfservice.flows.recovery.lifespan"
 	ViperKeySelfServiceRecoveryBrowserDefaultReturnTo        = "selfservice.flows.recovery.after." + DefaultBrowserReturnURL
+	ViperKeySelfServiceRecoveryNotifyUnknownRecipients       = "selfservice.flows.recovery.notify_unknown_recipients"
 	ViperKeySelfServiceVerificationEnabled                   = "selfservice.flows.verification.enabled"
 	ViperKeySelfServiceVerificationUI                        = "selfservice.flows.verification.ui_url"
 	ViperKeySelfServiceVerificationRequestLifespan           = "selfservice.flows.verification.lifespan"
@@ -157,6 +146,7 @@ const (
 	ViperKeySelfServiceVerificationAfter                     = "selfservice.flows.verification.after"
 	ViperKeySelfServiceVerificationBeforeHooks               = "selfservice.flows.verification.before.hooks"
 	ViperKeySelfServiceVerificationUse                       = "selfservice.flows.verification.use"
+	ViperKeySelfServiceVerificationNotifyUnknownRecipients   = "selfservice.flows.verification.notify_unknown_recipients"
 	ViperKeyDefaultIdentitySchemaID                          = "identity.default_schema_id"
 	ViperKeyIdentitySchemas                                  = "identity.schemas"
 	ViperKeyHasherAlgorithm                                  = "hashers.algorithm"
@@ -333,7 +323,7 @@ func (s Schemas) FindSchemaByID(id string) (*Schema, error) {
 	return nil, errors.Errorf("unable to find identity schema with id: %s", id)
 }
 
-func MustNew(t *testing.T, l *logrusx.Logger, stdOutOrErr io.Writer, opts ...configx.OptionModifier) *Config {
+func MustNew(t testing.TB, l *logrusx.Logger, stdOutOrErr io.Writer, opts ...configx.OptionModifier) *Config {
 	p, err := New(context.TODO(), l, stdOutOrErr, opts...)
 	require.NoError(t, err)
 	return p
@@ -412,6 +402,10 @@ func (p *Config) validateIdentitySchemas(ctx context.Context) error {
 		httpx.ResilientClientWithLogger(p.l),
 		httpx.ResilientClientWithMaxRetry(2),
 		httpx.ResilientClientWithConnectionTimeout(30 * time.Second),
+		// Tracing still works correctly even though we pass a no-op tracer
+		// here, because the otelhttp package will preferentially use the
+		// tracer from the incoming request context over this one.
+		httpx.ResilientClientWithTracer(trace.NewNoopTracerProvider().Tracer("github.com/ory/kratos/driver/config")),
 	}
 
 	if o, ok := ctx.Value(validateIdentitySchemasClientKey).([]httpx.ResilientOptions); ok {
@@ -656,8 +650,13 @@ func (p *Config) SelfServiceFlowRecoveryBeforeHooks(ctx context.Context) []SelfS
 func (p *Config) SelfServiceFlowVerificationBeforeHooks(ctx context.Context) []SelfServiceHook {
 	return p.selfServiceHooks(ctx, ViperKeySelfServiceVerificationBeforeHooks)
 }
+
 func (p *Config) SelfServiceFlowVerificationUse(ctx context.Context) string {
 	return p.GetProvider(ctx).String(ViperKeySelfServiceVerificationUse)
+}
+
+func (p *Config) SelfServiceFlowVerificationNotifyUnknownRecipients(ctx context.Context) bool {
+	return p.GetProvider(ctx).BoolF(ViperKeySelfServiceVerificationNotifyUnknownRecipients, false)
 }
 
 func (p *Config) SelfServiceFlowSettingsBeforeHooks(ctx context.Context) []SelfServiceHook {
@@ -754,7 +753,7 @@ func (p *Config) SecretsDefault(ctx context.Context) [][]byte {
 	secrets := pp.Strings(ViperKeySecretsDefault)
 
 	if len(secrets) == 0 {
-		secrets = []string{uuid.New().String()}
+		secrets = []string{uuid.Must(uuid.NewV4()).String()}
 		p.MustSet(ctx, ViperKeySecretsDefault, secrets)
 	}
 
@@ -1185,12 +1184,16 @@ func (p *Config) SelfServiceFlowVerificationAfterHooks(ctx context.Context, stra
 	return p.selfServiceHooks(ctx, HookStrategyKey(ViperKeySelfServiceVerificationAfter, strategy))
 }
 
-func (p *Config) SelfServiceFlowRecoveryReturnTo(ctx context.Context) *url.URL {
-	return p.GetProvider(ctx).RequestURIF(ViperKeySelfServiceRecoveryBrowserDefaultReturnTo, p.SelfServiceBrowserDefaultReturnTo(ctx))
+func (p *Config) SelfServiceFlowRecoveryReturnTo(ctx context.Context, defaultReturnTo *url.URL) *url.URL {
+	return p.GetProvider(ctx).RequestURIF(ViperKeySelfServiceRecoveryBrowserDefaultReturnTo, defaultReturnTo)
 }
 
 func (p *Config) SelfServiceFlowRecoveryRequestLifespan(ctx context.Context) time.Duration {
 	return p.GetProvider(ctx).DurationF(ViperKeySelfServiceRecoveryRequestLifespan, time.Hour)
+}
+
+func (p *Config) SelfServiceFlowRecoveryNotifyUnknownRecipients(ctx context.Context) bool {
+	return p.GetProvider(ctx).BoolF(ViperKeySelfServiceRecoveryNotifyUnknownRecipients, false)
 }
 
 func (p *Config) SelfServiceLinkMethodLifespan(ctx context.Context) time.Duration {

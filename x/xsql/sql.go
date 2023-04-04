@@ -1,4 +1,4 @@
-// Copyright © 2022 Ory Corp
+// Copyright © 2023 Ory Corp
 // SPDX-License-Identifier: Apache-2.0
 
 package xsql
@@ -24,10 +24,11 @@ import (
 	"github.com/ory/kratos/session"
 )
 
-func CleanSQL(t *testing.T, c *pop.Connection) {
+func CleanSQL(t testing.TB, c *pop.Connection) {
 	ctx := context.Background()
 	for _, table := range []string{
 		new(continuity.Container).TableName(ctx),
+		new(courier.MessageDispatch).TableName(),
 		new(courier.Message).TableName(ctx),
 
 		new(session.Device).TableName(ctx),
@@ -47,8 +48,8 @@ func CleanSQL(t *testing.T, c *pop.Connection) {
 
 		new(errorx.ErrorContainer).TableName(ctx),
 
-		new(identity.CredentialIdentifierCollection).TableName(ctx),
-		new(identity.CredentialsCollection).TableName(ctx),
+		new(identity.CredentialIdentifier).TableName(ctx),
+		new(identity.Credentials).TableName(ctx),
 		new(identity.VerifiableAddress).TableName(ctx),
 		new(identity.RecoveryAddress).TableName(ctx),
 		new(identity.Identity).TableName(ctx),

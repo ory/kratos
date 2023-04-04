@@ -1,4 +1,4 @@
-// Copyright © 2022 Ory Corp
+// Copyright © 2023 Ory Corp
 // SPDX-License-Identifier: Apache-2.0
 
 package recovery
@@ -51,14 +51,6 @@ func (s Strategies) Strategy(id string) (Strategy, error) {
 	}
 
 	return nil, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("unable to find strategy for %s have %v", id, ids))
-}
-
-func (s Strategies) MustStrategy(id string) Strategy {
-	strategy, err := s.Strategy(id)
-	if err != nil {
-		panic(err)
-	}
-	return strategy
 }
 
 func (s Strategies) RegisterPublicRoutes(r *x.RouterPublic) {

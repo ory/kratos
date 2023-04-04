@@ -1,4 +1,4 @@
-// Copyright © 2022 Ory Corp
+// Copyright © 2023 Ory Corp
 // SPDX-License-Identifier: Apache-2.0
 
 package password_test
@@ -384,7 +384,7 @@ func TestSettings(t *testing.T) {
 			conf.MustSet(ctx, config.ViperKeySelfServiceSettingsAfter, nil)
 		})
 
-		var run = func(t *testing.T, f *kratos.SettingsFlow, isAPI bool, c *http.Client, id *identity.Identity) {
+		var run = func(t *testing.T, f *kratos.SettingsFlow, isAPI bool, c *http.Client, _ *identity.Identity) {
 			values := testhelpers.SDKFormFieldsToURLValues(f.Ui.Nodes)
 			values.Set("method", "password")
 			values.Set("password", randx.MustString(16, randx.AlphaNum))

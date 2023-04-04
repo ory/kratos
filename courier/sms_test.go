@@ -1,4 +1,4 @@
-// Copyright © 2022 Ory Corp
+// Copyright © 2023 Ory Corp
 // SPDX-License-Identifier: Apache-2.0
 
 package courier_test
@@ -123,11 +123,11 @@ func TestDisallowedInternalNetwork(t *testing.T) {
 	ctx := context.Background()
 
 	conf, reg := internal.NewFastRegistryWithMocks(t)
-	conf.MustSet(ctx, config.ViperKeyCourierSMSRequestConfig, fmt.Sprintf(`{
+	conf.MustSet(ctx, config.ViperKeyCourierSMSRequestConfig, `{
 		"url": "http://127.0.0.1/",
 		"method": "GET",
 		"body": "file://./stub/request.config.twilio.jsonnet"
-	}`))
+	}`)
 	conf.MustSet(ctx, config.ViperKeyCourierSMSEnabled, true)
 	conf.MustSet(ctx, config.ViperKeyCourierSMTPURL, "http://foo.url")
 	conf.MustSet(ctx, config.ViperKeyClientHTTPNoPrivateIPRanges, true)
@@ -146,5 +146,5 @@ func TestDisallowedInternalNetwork(t *testing.T) {
 
 	err = c.DispatchQueue(ctx)
 	require.Error(t, err)
-	assert.Contains(t, err.Error(), "is in the private, loopback, or unspecified IP range")
+	assert.Contains(t, err.Error(), "127.0.0.1 is not a public IP address")
 }

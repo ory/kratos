@@ -1,0 +1,1 @@
+DROP TABLE courier_message_dispatches;

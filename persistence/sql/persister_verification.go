@@ -1,4 +1,4 @@
-// Copyright © 2022 Ory Corp
+// Copyright © 2023 Ory Corp
 // SPDX-License-Identifier: Apache-2.0
 
 package sql
@@ -12,7 +12,7 @@ import (
 	"github.com/pkg/errors"
 
 	"github.com/ory/kratos/identity"
-	"github.com/ory/kratos/x"
+	"github.com/ory/kratos/persistence/sql/update"
 
 	"github.com/gobuffalo/pop/v6"
 	"github.com/gofrs/uuid"
@@ -54,7 +54,7 @@ func (p *Persister) UpdateVerificationFlow(ctx context.Context, r *verification.
 
 	cp := *r
 	cp.NID = p.NetworkID(ctx)
-	return p.update(ctx, cp)
+	return update.Generic(ctx, p.GetConnection(ctx), p.r.Tracer(ctx).Tracer(), cp)
 }
 
 func (p *Persister) CreateVerificationToken(ctx context.Context, token *link.VerificationToken) error {
@@ -102,7 +102,7 @@ func (p *Persister) UseVerificationToken(ctx context.Context, fID uuid.UUID, tok
 
 		rt.VerifiableAddress = &va
 
-		/* #nosec G201 TableName is static */
+		//#nosec G201 -- TableName is static
 		return tx.RawQuery(fmt.Sprintf("UPDATE %s SET used=true, used_at=? WHERE id=? AND nid = ?", rt.TableName(ctx)), time.Now().UTC(), rt.ID, nid).Exec()
 	})); err != nil {
 		return nil, err
@@ -116,12 +116,12 @@ func (p *Persister) DeleteVerificationToken(ctx context.Context, token string) e
 	defer span.End()
 
 	nid := p.NetworkID(ctx)
-	/* #nosec G201 TableName is static */
+	//#nosec G201 -- TableName is static
 	return p.GetConnection(ctx).RawQuery(fmt.Sprintf("DELETE FROM %s WHERE token=? AND nid = ?", new(link.VerificationToken).TableName(ctx)), token, nid).Exec()
 }
 
 func (p *Persister) DeleteExpiredVerificationFlows(ctx context.Context, expiresAt time.Time, limit int) error {
-	// #nosec G201
+	//#nosec G201 -- TableName is static
 	err := p.GetConnection(ctx).RawQuery(fmt.Sprintf(
 		"DELETE FROM %s WHERE id in (SELECT id FROM (SELECT id FROM %s c WHERE expires_at <= ? and nid = ? ORDER BY expires_at ASC LIMIT %d ) AS s )",
 		new(verification.Flow).TableName(ctx),
@@ -150,7 +150,7 @@ func (p *Persister) UseVerificationCode(ctx context.Context, fID uuid.UUID, code
 
 		if err := sqlcon.HandleError(
 			tx.RawQuery(
-				/* #nosec G201 TableName is static */
+				//#nosec G201 -- TableName is static
 				fmt.Sprintf("UPDATE %s SET submit_count = submit_count + 1 WHERE id = ? AND nid = ?", flowTableName),
 				fID,
 				nid,
@@ -163,7 +163,7 @@ func (p *Persister) UseVerificationCode(ctx context.Context, fID uuid.UUID, code
 		// Because MySQL does not support "RETURNING" clauses, but we need the updated `submit_count` later on.
 		if err := sqlcon.HandleError(
 			tx.RawQuery(
-				/* #nosec G201 TableName is static */
+				//#nosec G201 -- TableName is static
 				fmt.Sprintf("SELECT submit_count FROM %s WHERE id = ? AND nid = ?", flowTableName),
 				fID,
 				nid,
@@ -223,7 +223,7 @@ func (p *Persister) UseVerificationCode(ctx context.Context, fID uuid.UUID, code
 
 		verificationCode.VerifiableAddress = &va
 
-		/* #nosec G201 TableName is static */
+		//#nosec G201 -- TableName is static
 		return tx.
 			RawQuery(
 				fmt.Sprintf("UPDATE %s SET used_at = ? WHERE id = ? AND nid = ?", verificationCode.TableName(ctx)),
@@ -249,7 +249,7 @@ func (p *Persister) CreateVerificationCode(ctx context.Context, c *code.CreateVe
 	now := time.Now().UTC()
 
 	verificationCode := &code.VerificationCode{
-		ID:        x.NewUUID(),
+		ID:        uuid.Nil,
 		CodeHMAC:  p.hmacValue(ctx, c.RawCode),
 		ExpiresAt: now.Add(c.ExpiresIn),
 		IssuedAt:  now,
@@ -277,7 +277,7 @@ func (p *Persister) DeleteVerificationCodesOfFlow(ctx context.Context, fID uuid.
 	ctx, span := p.r.Tracer(ctx).Tracer().Start(ctx, "persistence.sql.DeleteVerificationCodesOfFlow")
 	defer span.End()
 
-	/* #nosec G201 TableName is static */
+	//#nosec G201 -- TableName is static
 	return p.GetConnection(ctx).
 		RawQuery(
 			fmt.Sprintf("DELETE FROM %s WHERE selfservice_verification_flow_id = ? AND nid = ?", new(code.VerificationCode).TableName(ctx)),

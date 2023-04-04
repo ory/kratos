@@ -1,4 +1,4 @@
-// Copyright © 2022 Ory Corp
+// Copyright © 2023 Ory Corp
 // SPDX-License-Identifier: Apache-2.0
 
 package text
@@ -80,13 +80,14 @@ const (
 	InfoNodeLabelVerifyOTP                         // 1070006
 	InfoNodeLabelEmail                             // 1070007
 	InfoNodeLabelResendOTP                         // 1070008
-	InfoNodeLabelReturn                            // 1070009
+	InfoNodeLabelContinue                          // 1070009
 )
 
 const (
-	InfoSelfServiceVerification           ID = 1080000 + iota // 1080000
-	InfoSelfServiceVerificationEmailSent                      // 1080001
-	InfoSelfServiceVerificationSuccessful                     // 1080002
+	InfoSelfServiceVerification                  ID = 1080000 + iota // 1080000
+	InfoSelfServiceVerificationEmailSent                             // 1080001
+	InfoSelfServiceVerificationSuccessful                            // 1080002
+	InfoSelfServiceVerificationEmailWithCodeSent                     // 1080003
 )
 
 const (
@@ -107,6 +108,17 @@ const (
 	ErrorValidationNoLookup
 	ErrorValidationSuchNoWebAuthnUser
 	ErrorValidationLookupInvalid
+	ErrorValidationMaxLength
+	ErrorValidationMinimum
+	ErrorValidationExclusiveMinimum
+	ErrorValidationMaximum
+	ErrorValidationExclusiveMaximum
+	ErrorValidationMultipleOf
+	ErrorValidationMaxItems
+	ErrorValidationMinItems
+	ErrorValidationUniqueItems
+	ErrorValidationWrongType
+	ErrorValidationDuplicateCredentialsOnOIDCLink
 )
 
 const (

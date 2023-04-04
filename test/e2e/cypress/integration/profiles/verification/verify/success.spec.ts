@@ -1,9 +1,9 @@
-// Copyright © 2022 Ory Corp
+// Copyright © 2023 Ory Corp
 // SPDX-License-Identifier: Apache-2.0
 
 import { APP_URL, assertVerifiableAddress, gen } from "../../../../helpers"
-import { routes as react } from "../../../../helpers/react"
 import { routes as express } from "../../../../helpers/express"
+import { routes as react } from "../../../../helpers/react"
 import { Strategy } from "../../../../support"
 
 context("Account Verification Settings Success", () => {
@@ -32,6 +32,7 @@ context("Account Verification Settings Success", () => {
 
           beforeEach(() => {
             cy.useVerificationStrategy(s)
+            cy.notifyUnknownRecipients("verification", false)
             identity = gen.identity()
             cy.register(identity)
             cy.deleteMail({ atLeast: 1 }) // clean up registration email
@@ -44,10 +45,7 @@ context("Account Verification Settings Success", () => {
             cy.get('input[name="email"]').type(identity.email)
             cy.get(`button[value="${s}"]`).click()
 
-            cy.get('[data-testid="ui/message/1080001"]').should(
-              "contain.text",
-              "An email containing a verification",
-            )
+            cy.contains("An email containing a verification")
 
             cy.get(`[name="method"][value="${s}"]`).should("exist")
 
@@ -55,14 +53,12 @@ context("Account Verification Settings Success", () => {
           })
 
           it("should request verification for an email that does not exist yet", () => {
+            cy.notifyUnknownRecipients("verification")
             const email = `not-${identity.email}`
             cy.get('input[name="email"]').type(email)
             cy.get(`button[value="${s}"]`).click()
 
-            cy.get('[data-testid="ui/message/1080001"]').should(
-              "contain.text",
-              "An email containing a verification",
-            )
+            cy.contains("An email containing a verification")
 
             cy.getMail().should((message) => {
               expect(message.subject.trim()).to.equal(
@@ -140,6 +136,20 @@ context("Account Verification Settings Success", () => {
                 redirectTo: "http://localhost:4455/verification_callback",
               },
               strategy: s,
+            })
+          })
+
+          it("should not notify an unknown recipient", () => {
+            const recipient = gen.email()
+
+            cy.visit(APP_URL + "/self-service/verification/browser")
+            cy.get('input[name="email"]').type(recipient)
+            cy.get(`[name="method"][value="${s}"]`).click()
+
+            cy.getCourierMessages().then((messages) => {
+              expect(messages.map((msg) => msg.recipient)).to.not.include(
+                recipient,
+              )
             })
           })
         })

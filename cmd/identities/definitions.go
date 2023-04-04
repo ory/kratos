@@ -1,4 +1,4 @@
-// Copyright © 2022 Ory Corp
+// Copyright © 2023 Ory Corp
 // SPDX-License-Identifier: Apache-2.0
 
 package identities
@@ -18,7 +18,7 @@ type (
 	}
 )
 
-func (_ outputIdentity) Header() []string {
+func (outputIdentity) Header() []string {
 	return []string{"ID", "VERIFIED ADDRESSES", "RECOVERY ADDRESSES", "SCHEMA ID", "SCHEMA URL"}
 }
 
@@ -56,7 +56,7 @@ func (i outputIdentity) Interface() interface{} {
 	return i
 }
 
-func (_ outputIdentityCollection) Header() []string {
+func (outputIdentityCollection) Header() []string {
 	return outputIdentity{}.Header()
 }
 

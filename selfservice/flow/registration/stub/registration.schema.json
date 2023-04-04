@@ -9,6 +9,19 @@
       "properties": {
         "bar": {
           "type": "string"
+        },
+        "email": {
+          "type": "string",
+          "ory.sh/kratos": {
+            "credentials": {
+              "password": {
+                "identifier": true
+              }
+            },
+            "verification": {
+              "via": "email"
+            }
+          }
         }
       }
     }

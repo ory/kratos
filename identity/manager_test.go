@@ -1,4 +1,4 @@
-// Copyright © 2022 Ory Corp
+// Copyright © 2023 Ory Corp
 // SPDX-License-Identifier: Apache-2.0
 
 package identity_test
@@ -57,8 +57,9 @@ func TestManager(t *testing.T) {
 	checkExtensionFieldsForIdentities := func(t *testing.T, expected string, original *identity.Identity) {
 		fromStore, err := reg.PrivilegedIdentityPool().GetIdentityConfidential(context.Background(), original.ID)
 		require.NoError(t, err)
-		for k, i := range []identity.Identity{*original, *fromStore} {
-			t.Run(fmt.Sprintf("identity=%d", k), checkExtensionFields(&i, expected))
+		identities := []identity.Identity{*original, *fromStore}
+		for k := range identities {
+			t.Run(fmt.Sprintf("identity=%d", k), checkExtensionFields(&identities[k], expected))
 		}
 	}
 
@@ -233,7 +234,7 @@ func TestManager(t *testing.T) {
 			require.NoError(t, reg.IdentityManager().UpdateTraits(context.Background(), original.ID, identity.Traits(`{"email":"baz@ory.sh","email_verify":"baz@ory.sh","email_recovery":"baz@ory.sh","email_creds":"baz@ory.sh","unprotected": "bar"}`)))
 			checkExtensionFieldsForIdentities(t, "baz@ory.sh", original)
 
-			actual, err := reg.IdentityPool().GetIdentity(context.Background(), original.ID)
+			actual, err := reg.IdentityPool().GetIdentity(context.Background(), original.ID, identity.ExpandNothing)
 			require.NoError(t, err)
 			assert.JSONEq(t, `{"email":"baz@ory.sh","email_verify":"baz@ory.sh","email_recovery":"baz@ory.sh","email_creds":"baz@ory.sh","unprotected": "bar"}`, string(actual.Traits))
 		})
