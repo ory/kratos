@@ -5,7 +5,7 @@
 
 **Table of Contents**
 
-- [ (2023-04-03)](#2023-04-03)
+- [ (2023-04-04)](#2023-04-04)
   - [Breaking Changes](#breaking-changes)
     - [Bug Fixes](#bug-fixes)
     - [Code Refactoring](#code-refactoring)
@@ -296,7 +296,7 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# [](https://github.com/ory/kratos/compare/v0.11.1...v) (2023-04-03)
+# [](https://github.com/ory/kratos/compare/v0.11.1...v) (2023-04-04)
 
 ## Breaking Changes
 
@@ -399,6 +399,8 @@ flows.
 
   - chore: fix if/else
 
+- Reduce SQL tracing noise
+  ([1650426](https://github.com/ory/kratos/commit/1650426a2b59cd46035e5556ff8f69994602e88e))
 - Remove network omit flag ([#3066](https://github.com/ory/kratos/issues/3066))
   ([c629b72](https://github.com/ory/kratos/commit/c629b72be42001e3e1671d61cc8348373b686844))
 - Report correct errors for json schema validation
@@ -429,6 +431,10 @@ flows.
 
 - Set DB connection max idle time
   ([8d4762c](https://github.com/ory/kratos/commit/8d4762c1bffad14c94ac69575e488fc67d3f5dde))
+- Set proper maxAge for session cookies
+  ([#3209](https://github.com/ory/kratos/issues/3209))
+  ([1180c05](https://github.com/ory/kratos/commit/1180c051b34eb5de786d6b4e4bd94e863f60d06a)),
+  closes [#3208](https://github.com/ory/kratos/issues/3208)
 - Test contract names
   ([e9ac00b](https://github.com/ory/kratos/commit/e9ac00b3941641a955f5d8f32f25a4031c87a726))
 - Use type alias instead of type definition
@@ -514,6 +520,8 @@ flows.
   ([e17f307](https://github.com/ory/kratos/commit/e17f307732f8ced34727d5f3a70929866a0595e0))
 - Drop unused index ([#3165](https://github.com/ory/kratos/issues/3165))
   ([852dea9](https://github.com/ory/kratos/commit/852dea90881a7c9abdbfc127a2e8d1cc0aacb166))
+- Even more tracing of hidden HTTP requests
+  ([9d8b1e2](https://github.com/ory/kratos/commit/9d8b1e223072e66d284c9e7890060678b77c1d4f))
 - Identity by identifier ([#3077](https://github.com/ory/kratos/issues/3077))
   ([c288d4d](https://github.com/ory/kratos/commit/c288d4d136bca1a9ed3931b4827967eb44e80ede))
 - Improve tracing span naming in hooks
