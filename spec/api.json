@@ -3046,6 +3046,7 @@
         "description": "Update Verification Flow Request Body",
         "discriminator": {
           "mapping": {
+            "code": "#/components/schemas/updateVerificationFlowWithCodeMethod",
             "link": "#/components/schemas/updateVerificationFlowWithLinkMethod"
           },
           "propertyName": "method"
@@ -3053,10 +3054,13 @@
         "oneOf": [
           {
             "$ref": "#/components/schemas/updateVerificationFlowWithLinkMethod"
+          },
+          {
+            "$ref": "#/components/schemas/updateVerificationFlowWithCodeMethod"
           }
         ]
       },
-      "updateVerificationFlowWithCodeMethodBody": {
+      "updateVerificationFlowWithCodeMethod": {
         "properties": {
           "code": {
             "description": "The verification code",
