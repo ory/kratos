@@ -215,7 +215,7 @@ func (e *WebHook) ExecutePostRegistrationPostPersistHook(_ http.ResponseWriter, 
 	// if the request is canceled.
 	var cancel context.CancelFunc
 	ctx := trace.ContextWithSpan(context.Background(), trace.SpanFromContext(req.Context()))
-	ctx, cancel = context.WithTimeout(ctx, time.Second*30)
+	ctx, cancel = context.WithTimeout(ctx, 5*time.Minute)
 	defer cancel()
 
 	return otelx.WithSpan(ctx, "selfservice.hook.WebHook.ExecutePostRegistrationPostPersistHook", func(ctx context.Context) error {
@@ -295,7 +295,7 @@ func (e *WebHook) execute(ctx context.Context, data *templateContext) error {
 			// The webhook will still cancel after 30 seconds as that is the configured timeout for the HTTP client.
 			var cancel context.CancelFunc
 			ctx = trace.ContextWithSpan(context.Background(), trace.SpanFromContext(ctx))
-			ctx, cancel = context.WithTimeout(ctx, time.Second*30)
+			ctx, cancel = context.WithTimeout(ctx, 5*time.Minute)
 			defer cancel()
 		}
 		ctx, span := tracer.Start(ctx, "selfservice.webhook")
