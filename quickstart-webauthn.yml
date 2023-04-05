@@ -1,0 +1,14 @@
+version: "3.7"
+
+services:
+  kratos-migrate:
+    volumes:
+      - type: bind
+        source: ./contrib/quickstart/kratos/webauthn
+        target: /etc/config/kratos
+
+  kratos:
+    volumes:
+      - type: bind
+        source: ./contrib/quickstart/kratos/webauthn
+        target: /etc/config/kratos

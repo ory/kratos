@@ -10,7 +10,7 @@ services:
         target: /var/lib/sqlite
         read_only: false
       - type: bind
-        source: ./contrib/quickstart/kratos/webauthn
+        source: ./contrib/quickstart/kratos/email-password
         target: /etc/config/kratos
     command: -c /etc/config/kratos/kratos.yml migrate sql -e --yes
     restart: on-failure
@@ -42,7 +42,7 @@ services:
         target: /var/lib/sqlite
         read_only: false
       - type: bind
-        source: ./contrib/quickstart/kratos/webauthn
+        source: ./contrib/quickstart/kratos/email-password
         target: /etc/config/kratos
     networks:
       - intranet
