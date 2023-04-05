@@ -5,7 +5,7 @@
 
 **Table of Contents**
 
-- [ (2023-04-04)](#2023-04-04)
+- [ (2023-04-05)](#2023-04-05)
   - [Breaking Changes](#breaking-changes)
     - [Bug Fixes](#bug-fixes)
     - [Code Refactoring](#code-refactoring)
@@ -296,7 +296,7 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# [](https://github.com/ory/kratos/compare/v0.11.1...v) (2023-04-04)
+# [](https://github.com/ory/kratos/compare/v0.11.1...v) (2023-04-05)
 
 ## Breaking Changes
 
@@ -329,6 +329,9 @@ flows.
   The oauth2_login_request field was missing when initially creating the login
   flow.
 
+- Add missing `code` discriminator in updateVerificationFlow
+  ([#3213](https://github.com/ory/kratos/issues/3213))
+  ([21576be](https://github.com/ory/kratos/commit/21576bebc0d8c3796a4a16b1972ff42889814d61))
 - Add missing index ([#3181](https://github.com/ory/kratos/issues/3181))
   ([756bed4](https://github.com/ory/kratos/commit/756bed4db3789428117ec105ac0713a52d610938))
 - Add mutex to test SMTP server setup/teardown
@@ -358,6 +361,14 @@ flows.
 - Implement offline scope in the way google expects
   ([#3088](https://github.com/ory/kratos/issues/3088))
   ([39043d4](https://github.com/ory/kratos/commit/39043d451e154af44123ba031381f0e3c10fbb00))
+- Improve webhook resilience
+  ([#3200](https://github.com/ory/kratos/issues/3200))
+  ([0a05d99](https://github.com/ory/kratos/commit/0a05d9941c6be549acfe65a78f4a8b21d6efbcdc)):
+
+  - fix: improve webhook logging
+  - chore: bump x
+  - feat: decouple context in PostRegistrationPostPersist hook
+
 - Invalid SQL syntax in ListIdentities
   ([#3202](https://github.com/ory/kratos/issues/3202))
   ([162ab9b](https://github.com/ory/kratos/commit/162ab9b5634329135b1b729ad401701019aca222)):
