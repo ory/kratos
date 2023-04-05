@@ -193,6 +193,7 @@ func (e *WebHook) ExecutePostRegistrationPrePersistHook(_ http.ResponseWriter, r
 	if !(gjson.GetBytes(e.conf, "can_interrupt").Bool() || gjson.GetBytes(e.conf, "response.parse").Bool()) {
 		return nil
 	}
+
 	return otelx.WithSpan(req.Context(), "selfservice.hook.WebHook.ExecutePostRegistrationPrePersistHook", func(ctx context.Context) error {
 		return e.execute(ctx, &templateContext{
 			Flow:           flow,
@@ -209,7 +210,15 @@ func (e *WebHook) ExecutePostRegistrationPostPersistHook(_ http.ResponseWriter, 
 	if gjson.GetBytes(e.conf, "can_interrupt").Bool() || gjson.GetBytes(e.conf, "response.parse").Bool() {
 		return nil
 	}
-	return otelx.WithSpan(req.Context(), "selfservice.hook.WebHook.ExecutePostRegistrationPostPersistHook", func(ctx context.Context) error {
+
+	// We want to decouple the request from the hook execution, so that the hooks still execute even
+	// if the request is canceled.
+	var cancel context.CancelFunc
+	ctx := trace.ContextWithSpan(context.Background(), trace.SpanFromContext(req.Context()))
+	ctx, cancel = context.WithTimeout(ctx, 5*time.Minute)
+	defer cancel()
+
+	return otelx.WithSpan(ctx, "selfservice.hook.WebHook.ExecutePostRegistrationPostPersistHook", func(ctx context.Context) error {
 		return e.execute(ctx, &templateContext{
 			Flow:           flow,
 			RequestHeaders: req.Header,
@@ -284,7 +293,10 @@ func (e *WebHook) execute(ctx context.Context, data *templateContext) error {
 			// incoming request context is cancelled.
 			//
 			// The webhook will still cancel after 30 seconds as that is the configured timeout for the HTTP client.
+			var cancel context.CancelFunc
 			ctx = trace.ContextWithSpan(context.Background(), trace.SpanFromContext(ctx))
+			ctx, cancel = context.WithTimeout(ctx, 5*time.Minute)
+			defer cancel()
 		}
 		ctx, span := tracer.Start(ctx, "selfservice.webhook")
 		defer otelx.End(span, &finalErr)
