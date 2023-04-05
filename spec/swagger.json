@@ -5738,7 +5738,7 @@
       "description": "Update Verification Flow Request Body",
       "type": "object"
     },
-    "updateVerificationFlowWithCodeMethodBody": {
+    "updateVerificationFlowWithCodeMethod": {
       "type": "object",
       "properties": {
         "code": {

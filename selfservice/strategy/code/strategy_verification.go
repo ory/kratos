@@ -69,8 +69,8 @@ func (s *Strategy) PopulateVerificationMethod(r *http.Request, f *verification.F
 	return nil
 }
 
-func (s *Strategy) decodeVerification(r *http.Request) (*updateVerificationFlowWithCodeMethodBody, error) {
-	var body updateVerificationFlowWithCodeMethodBody
+func (s *Strategy) decodeVerification(r *http.Request) (*updateVerificationFlowWithCodeMethod, error) {
+	var body updateVerificationFlowWithCodeMethod
 
 	compiler, err := decoderx.HTTPRawJSONSchemaCompiler(verificationMethodSchema)
 	if err != nil {
@@ -91,7 +91,7 @@ func (s *Strategy) decodeVerification(r *http.Request) (*updateVerificationFlowW
 }
 
 // handleVerificationError is a convenience function for handling all types of errors that may occur (e.g. validation error).
-func (s *Strategy) handleVerificationError(w http.ResponseWriter, r *http.Request, f *verification.Flow, body *updateVerificationFlowWithCodeMethodBody, err error) error {
+func (s *Strategy) handleVerificationError(w http.ResponseWriter, r *http.Request, f *verification.Flow, body *updateVerificationFlowWithCodeMethod, err error) error {
 	if f != nil {
 		f.UI.SetCSRF(s.deps.GenerateCSRFToken(r))
 		f.UI.GetNodes().Upsert(
@@ -102,8 +102,8 @@ func (s *Strategy) handleVerificationError(w http.ResponseWriter, r *http.Reques
 	return err
 }
 
-// swagger:model updateVerificationFlowWithCodeMethodBody
-type updateVerificationFlowWithCodeMethodBody struct {
+// swagger:model updateVerificationFlowWithCodeMethod
+type updateVerificationFlowWithCodeMethod struct {
 	// Email to Verify
 	//
 	// Needs to be set when initiating the flow. If the email is a registered
@@ -131,7 +131,7 @@ type updateVerificationFlowWithCodeMethodBody struct {
 }
 
 // getMethod returns the method of this submission or "" if no method could be found
-func (body *updateVerificationFlowWithCodeMethodBody) getMethod() string {
+func (body *updateVerificationFlowWithCodeMethod) getMethod() string {
 	if body.Method != "" {
 		return body.Method
 	}
@@ -193,7 +193,7 @@ func (s *Strategy) handleLinkClick(w http.ResponseWriter, r *http.Request, f *ve
 	return errors.WithStack(flow.ErrCompletedByStrategy)
 }
 
-func (s *Strategy) verificationHandleFormSubmission(w http.ResponseWriter, r *http.Request, f *verification.Flow, body *updateVerificationFlowWithCodeMethodBody) error {
+func (s *Strategy) verificationHandleFormSubmission(w http.ResponseWriter, r *http.Request, f *verification.Flow, body *updateVerificationFlowWithCodeMethod) error {
 	if len(body.Code) > 0 {
 		if r.Method == http.MethodGet {
 			// Special case: in the code strategy we send out links as well, that contain the code

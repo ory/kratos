@@ -111,7 +111,7 @@ docs/UpdateSettingsFlowWithProfileMethod.md
 docs/UpdateSettingsFlowWithTotpMethod.md
 docs/UpdateSettingsFlowWithWebAuthnMethod.md
 docs/UpdateVerificationFlowBody.md
-docs/UpdateVerificationFlowWithCodeMethodBody.md
+docs/UpdateVerificationFlowWithCodeMethod.md
 docs/UpdateVerificationFlowWithLinkMethod.md
 docs/VerifiableIdentityAddress.md
 docs/VerificationFlow.md
@@ -219,7 +219,7 @@ model_update_settings_flow_with_profile_method.go
 model_update_settings_flow_with_totp_method.go
 model_update_settings_flow_with_web_authn_method.go
 model_update_verification_flow_body.go
-model_update_verification_flow_with_code_method_body.go
+model_update_verification_flow_with_code_method.go
 model_update_verification_flow_with_link_method.go
 model_verifiable_identity_address.go
 model_verification_flow.go
