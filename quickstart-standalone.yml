@@ -1,4 +1,4 @@
-version: "3.7"
+version: '3.7'
 
 services:
   kratos-selfservice-ui-node:
@@ -7,4 +7,4 @@ services:
     environment:
       - PORT=4455
       - SECURITY_MODE=
-      - KRATOS_BROWSER_URL=http://localhost:4433/
+      - KRATOS_BROWSER_URL=http://127.0.0.1:4433/

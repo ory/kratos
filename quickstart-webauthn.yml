@@ -12,3 +12,7 @@ services:
       - type: bind
         source: ./contrib/quickstart/kratos/webauthn
         target: /etc/config/kratos
+
+  kratos-selfservice-ui-node:
+    environment:
+      - KRATOS_BROWSER_URL=http://localhost:4433/
