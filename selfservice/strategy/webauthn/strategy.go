@@ -7,8 +7,6 @@ import (
 	"context"
 	"encoding/json"
 
-	"github.com/duo-labs/webauthn/webauthn"
-
 	"github.com/pkg/errors"
 
 	"github.com/ory/kratos/continuity"
@@ -112,16 +110,6 @@ func (s *Strategy) ID() identity.CredentialsType {
 
 func (s *Strategy) NodeGroup() node.UiNodeGroup {
 	return node.WebAuthnGroup
-}
-
-func (s *Strategy) newWebAuthn(ctx context.Context) (*webauthn.WebAuthn, error) {
-	c := s.d.Config()
-	web, err := webauthn.New(c.WebAuthnConfig(ctx))
-	if err != nil {
-		return nil, errors.WithStack(err)
-	}
-
-	return web, nil
 }
 
 func (s *Strategy) CompletedAuthenticationMethod(ctx context.Context) session.AuthenticationMethod {

@@ -242,12 +242,12 @@ func (s *Strategy) continueSettingsFlowAdd(w http.ResponseWriter, r *http.Reques
 		return errors.WithStack(herodot.ErrBadRequest.WithReasonf("Unable to parse WebAuthn response: %s", err))
 	}
 
-	web, err := s.newWebAuthn(r.Context())
+	web, err := webauthn.New(s.d.Config().WebAuthnConfig(r.Context()))
 	if err != nil {
 		return errors.WithStack(herodot.ErrInternalServerError.WithReasonf("Unable to get webAuthn config.").WithDebug(err.Error()))
 	}
 
-	credential, err := web.CreateCredential(&wrappedUser{id: ctxUpdate.Session.IdentityID[:]}, webAuthnSess, webAuthnResponse)
+	credential, err := web.CreateCredential(NewUser(ctxUpdate.Session.IdentityID[:], nil, web.Config), webAuthnSess, webAuthnResponse)
 	if err != nil {
 		return errors.WithStack(herodot.ErrInternalServerError.WithReasonf("Unable to create WebAuthn credential: %s", err))
 	}
@@ -356,12 +356,12 @@ func (s *Strategy) PopulateSettingsMethod(r *http.Request, id *identity.Identity
 		}
 	}
 
-	web, err := s.newWebAuthn(r.Context())
+	web, err := webauthn.New(s.d.Config().WebAuthnConfig(r.Context()))
 	if err != nil {
 		return err
 	}
 
-	option, sessionData, err := web.BeginRegistration(&wrappedUser{id: id.ID[:]})
+	option, sessionData, err := web.BeginRegistration(NewUser(id.ID[:], nil, web.Config))
 	if err != nil {
 		return errors.WithStack(err)
 	}
