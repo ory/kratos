@@ -126,18 +126,6 @@ type Flow struct {
 	SessionTokenExchangeCode string `json:"session_token_exchange_code,omitempty" faker:"-" db:"-"`
 }
 
-type options struct {
-	RedirectToOverride string
-}
-
-type NewFlowOptions func(*options)
-
-func WithRedirectToOverride(redirectTo string) NewFlowOptions {
-	return func(o *options) {
-		o.RedirectToOverride = redirectTo
-	}
-}
-
 func NewFlow(conf *config.Config, exp time.Duration, csrf string, r *http.Request, flowType flow.Type) (*Flow, error) {
 	now := time.Now().UTC()
 	id := x.NewUUID()

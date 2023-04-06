@@ -603,6 +603,10 @@ func TestFlowLifecycle(t *testing.T) {
 				conf.MustSet(ctx, config.ViperKeyURLsAllowedReturnToDomains, []string{"https://www.ory.sh", "https://example.com"})
 				conf.MustSet(ctx, config.ViperKeyOAuth2ProviderReturnToEnabled, true)
 
+				t.Cleanup(func() {
+					conf.MustSet(ctx, config.ViperKeyOAuth2ProviderReturnToEnabled, false)
+				})
+
 				res, _ := initUnauthenticatedFlow(t, url.Values{
 					"return_to":       {"https://example.com"},
 					"login_challenge": {hydra.FAKE_SUCCESS},

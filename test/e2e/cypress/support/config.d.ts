@@ -971,6 +971,7 @@ export interface WebHookAuthBasicAuthProperties {
 export interface OAuth2ProviderConfiguration {
   url?: OAuth20ProviderURL
   headers?: HTTPRequestHeaders
+  return_to_enabled?: boolean
 }
 /**
  * These headers will be passed in HTTP request to the OAuth2 Provider.

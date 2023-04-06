@@ -24,12 +24,6 @@ context("OpenID Provider", () => {
   before(() => {
     cy.deleteMail()
     cy.useConfigProfile("oidc-provider")
-    cy.updateConfigFile((config) => {
-      config.selfservice.allowed_return_urls = [
-        oauth2.getDefaultAuthorizeURL(client),
-      ]
-      return config
-    })
     cy.proxy("express")
   })
 
@@ -201,6 +195,7 @@ context("OpenID Provider - change between flows", () => {
       config.selfservice.allowed_return_urls = [
         oauth2.getDefaultAuthorizeURL(client),
       ]
+      config.oauth2_provider.return_to_enabled = true
       return config
     })
     cy.proxy("express")
