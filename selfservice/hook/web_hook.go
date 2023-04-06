@@ -18,6 +18,7 @@ import (
 	"go.opentelemetry.io/otel/codes"
 	semconv "go.opentelemetry.io/otel/semconv/v1.11.0"
 	"go.opentelemetry.io/otel/trace"
+	grpccodes "google.golang.org/grpc/codes"
 
 	"github.com/ory/kratos/ui/node"
 	"github.com/ory/x/jsonnetsecure"
@@ -352,6 +353,15 @@ func (e *WebHook) execute(ctx context.Context, data *templateContext) error {
 
 		resp, err := httpClient.Do(req)
 		if err != nil {
+			if te := interface{ Timeout() bool }(nil); errors.As(err, &te) && te.Timeout() || errors.Is(err, context.DeadlineExceeded) {
+				return herodot.DefaultError{
+					CodeField:     http.StatusGatewayTimeout,
+					StatusField:   http.StatusText(http.StatusGatewayTimeout),
+					GRPCCodeField: grpccodes.DeadlineExceeded,
+					ErrorField:    err.Error(),
+					ReasonField:   "A third-party upstream service could not be reached. Please try again later.",
+				}.WithWrap(errors.WithStack(err))
+			}
 			return errors.WithStack(err)
 		}
 		defer resp.Body.Close()
@@ -364,15 +374,18 @@ func (e *WebHook) execute(ctx context.Context, data *templateContext) error {
 					return err
 				}
 			}
-			return fmt.Errorf("webhook failed with status code %v", resp.StatusCode)
-		}
-
-		if parseResponse {
-			if err := parseWebhookResponse(resp, data.Identity); err != nil {
-				return err
+			return herodot.DefaultError{
+				CodeField:     http.StatusBadGateway,
+				StatusField:   http.StatusText(http.StatusBadGateway),
+				GRPCCodeField: grpccodes.Aborted,
+				ReasonField:   "A third-party upstream service responded improperly. Please try again later.",
+				ErrorField:    fmt.Sprintf("webhook failed with status code %v", resp.StatusCode),
 			}
 		}
 
+		if parseResponse {
+			return parseWebhookResponse(resp, data.Identity)
+		}
 		return nil
 	}
 

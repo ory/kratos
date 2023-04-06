@@ -125,8 +125,8 @@ func TestHandler(t *testing.T) {
 		t.Run("description=init a flow as API", func(t *testing.T) {
 			t.Run("description=without privileges", func(t *testing.T) {
 				res, body := initFlow(t, new(http.Client), true)
-				assert.Equal(t, http.StatusUnauthorized, res.StatusCode, "%s", body)
-				assert.Equal(t, text.ErrNoActiveSession, gjson.GetBytes(body, "error.id").String(), "%s", body)
+				assert.Equalf(t, http.StatusUnauthorized, res.StatusCode, "%s", body)
+				assert.Equalf(t, text.ErrNoActiveSession, gjson.GetBytes(body, "error.id").String(), "%s", body)
 			})
 
 			t.Run("description=success", func(t *testing.T) {
@@ -139,7 +139,7 @@ func TestHandler(t *testing.T) {
 			t.Run("description=can not init if identity has aal2 but session has aal1", func(t *testing.T) {
 				conf.MustSet(ctx, config.ViperKeySelfServiceSettingsRequiredAAL, config.HighestAvailableAAL)
 				res, body := initFlow(t, aal2Identity, true)
-				assert.Equal(t, http.StatusForbidden, res.StatusCode, "%s", body)
+				assert.Equalf(t, http.StatusForbidden, res.StatusCode, "%s", body)
 				assertx.EqualAsJSON(t, session.NewErrAALNotSatisfied(publicTS.URL+"/self-service/login/browser?aal=aal2"), json.RawMessage(body))
 			})
 		})
@@ -221,8 +221,8 @@ func TestHandler(t *testing.T) {
 		t.Run("description=init a flow as SPA", func(t *testing.T) {
 			t.Run("description=without privileges", func(t *testing.T) {
 				res, body := initSPAFlow(t, new(http.Client))
-				assert.Equal(t, http.StatusUnauthorized, res.StatusCode, "%s", body)
-				assert.Equal(t, text.ErrNoActiveSession, gjson.GetBytes(body, "error.id").String(), "%s", body)
+				assert.Equalf(t, http.StatusUnauthorized, res.StatusCode, "%s", body)
+				assert.Equalf(t, text.ErrNoActiveSession, gjson.GetBytes(body, "error.id").String(), "%s", body)
 			})
 
 			t.Run("description=success", func(t *testing.T) {
@@ -254,7 +254,7 @@ func TestHandler(t *testing.T) {
 			_, _, err := testhelpers.NewSDKCustomClient(publicTS, otherUser).FrontendApi.GetSettingsFlow(context.Background()).Id("i-do-not-exist").Execute()
 			require.Error(t, err)
 
-			require.IsType(t, new(kratos.GenericOpenAPIError), err, "%T", err)
+			require.IsTypef(t, new(kratos.GenericOpenAPIError), err, "%T", err)
 			assert.Equal(t, int64(http.StatusNotFound), gjson.GetBytes(err.(*kratos.GenericOpenAPIError).Body(), "error.code").Int())
 		})
 
@@ -265,7 +265,7 @@ func TestHandler(t *testing.T) {
 			_, _, err := testhelpers.NewSDKCustomClient(publicTS, primaryUser).FrontendApi.GetSettingsFlow(context.Background()).Id(pr.ID.String()).Execute()
 			require.Error(t, err)
 
-			require.IsType(t, new(kratos.GenericOpenAPIError), err, "%T", err)
+			require.IsTypef(t, new(kratos.GenericOpenAPIError), err, "%T", err)
 			assert.Equal(t, int64(http.StatusGone), gjson.GetBytes(err.(*kratos.GenericOpenAPIError).Body(), "error.code").Int())
 		})
 
@@ -320,7 +320,7 @@ func TestHandler(t *testing.T) {
 
 				require.EqualValues(t, res.StatusCode, http.StatusForbidden)
 				body = ioutilx.MustReadAll(res.Body)
-				assert.Contains(t, gjson.GetBytes(body, "error.reason").String(), "The request was made for another identity and has been blocked for security reasons", "%s", body)
+				assert.Containsf(t, gjson.GetBytes(body, "error.reason").String(), "The request was made for another identity and has been blocked for security reasons", "%s", body)
 			})
 
 			t.Run("type=browser", func(t *testing.T) {
@@ -332,7 +332,7 @@ func TestHandler(t *testing.T) {
 
 				_, _, err = testhelpers.NewSDKCustomClient(publicTS, otherUser).FrontendApi.GetSettingsFlow(context.Background()).Id(rid).Execute()
 				require.Error(t, err)
-				require.IsType(t, new(kratos.GenericOpenAPIError), err, "%T", err)
+				require.IsTypef(t, new(kratos.GenericOpenAPIError), err, "%T", err)
 				assert.Equal(t, int64(http.StatusForbidden), gjson.GetBytes(err.(*kratos.GenericOpenAPIError).Body(), "error.code").Int(), "should return a 403 error because the identities from the cookies do not match")
 			})
 

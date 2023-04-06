@@ -15,6 +15,7 @@ import (
 	"github.com/ory/jsonschema/v3"
 
 	"github.com/ory/herodot"
+	"github.com/ory/x/otelx"
 	"github.com/ory/x/sqlcon"
 
 	"github.com/ory/kratos/selfservice/errorx"
@@ -22,11 +23,11 @@ import (
 
 var _ errorx.Persister = new(Persister)
 
-func (p *Persister) Add(ctx context.Context, csrfToken string, errs error) (uuid.UUID, error) {
-	ctx, span := p.r.Tracer(ctx).Tracer().Start(ctx, "persistence.sql.Add")
-	defer span.End()
+func (p *Persister) CreateErrorContainer(ctx context.Context, csrfToken string, errs error) (containerID uuid.UUID, err error) {
+	ctx, span := p.r.Tracer(ctx).Tracer().Start(ctx, "persistence.sql.CreateErrorContainer")
+	defer otelx.End(span, &err)
 
-	buf, err := p.encodeSelfServiceErrors(ctx, errs)
+	message, err := p.encodeSelfServiceErrors(ctx, errs)
 	if err != nil {
 		return uuid.Nil, err
 	}
@@ -35,7 +36,7 @@ func (p *Persister) Add(ctx context.Context, csrfToken string, errs error) (uuid
 		ID:        uuid.Nil,
 		NID:       p.NetworkID(ctx),
 		CSRFToken: csrfToken,
-		Errors:    buf.Bytes(),
+		Errors:    message,
 		WasSeen:   false,
 	}
 
@@ -46,9 +47,9 @@ func (p *Persister) Add(ctx context.Context, csrfToken string, errs error) (uuid
 	return c.ID, nil
 }
 
-func (p *Persister) Read(ctx context.Context, id uuid.UUID) (*errorx.ErrorContainer, error) {
-	ctx, span := p.r.Tracer(ctx).Tracer().Start(ctx, "persistence.sql.Read")
-	defer span.End()
+func (p *Persister) ReadErrorContainer(ctx context.Context, id uuid.UUID) (_ *errorx.ErrorContainer, err error) {
+	ctx, span := p.r.Tracer(ctx).Tracer().Start(ctx, "persistence.sql.ReadErrorContainer")
+	defer otelx.End(span, &err)
 
 	var ec errorx.ErrorContainer
 	if err := p.GetConnection(ctx).Where("id = ? AND nid = ?", id, p.NetworkID(ctx)).First(&ec); err != nil {
@@ -64,9 +65,9 @@ func (p *Persister) Read(ctx context.Context, id uuid.UUID) (*errorx.ErrorContai
 	return &ec, nil
 }
 
-func (p *Persister) Clear(ctx context.Context, olderThan time.Duration, force bool) (err error) {
-	ctx, span := p.r.Tracer(ctx).Tracer().Start(ctx, "persistence.sql.Clear")
-	defer span.End()
+func (p *Persister) ClearErrorContainers(ctx context.Context, olderThan time.Duration, force bool) (err error) {
+	ctx, span := p.r.Tracer(ctx).Tracer().Start(ctx, "persistence.sql.ClearErrorContainers")
+	defer otelx.End(span, &err)
 
 	if force {
 		err = p.GetConnection(ctx).RawQuery(
@@ -81,10 +82,7 @@ func (p *Persister) Clear(ctx context.Context, olderThan time.Duration, force bo
 	return sqlcon.HandleError(err)
 }
 
-func (p *Persister) encodeSelfServiceErrors(ctx context.Context, e error) (*bytes.Buffer, error) {
-	_, span := p.r.Tracer(ctx).Tracer().Start(ctx, "persistence.sql.encodeSelfServiceErrors")
-	defer span.End()
-
+func (p *Persister) encodeSelfServiceErrors(ctx context.Context, e error) ([]byte, error) {
 	if e == nil {
 		return nil, errors.WithStack(herodot.ErrInternalServerError.WithDebug("A nil error was passed to the error manager which is most likely a code bug."))
 	}
@@ -102,5 +100,5 @@ func (p *Persister) encodeSelfServiceErrors(ctx context.Context, e error) (*byte
 		return nil, errors.WithStack(herodot.ErrInternalServerError.WithReason("Unable to encode error messages.").WithDebug(err.Error()))
 	}
 
-	return &b, nil
+	return b.Bytes(), nil
 }
