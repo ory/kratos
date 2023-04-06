@@ -199,7 +199,7 @@ func (s *Strategy) PopulateRegistrationMethod(r *http.Request, f *registration.F
 
 	web, err := webauthn.New(s.d.Config().WebAuthnConfig(r.Context()))
 	if err != nil {
-		return err
+		return errors.WithStack(err)
 	}
 
 	webauthID := x.NewUUID()

@@ -358,7 +358,7 @@ func (s *Strategy) PopulateSettingsMethod(r *http.Request, id *identity.Identity
 
 	web, err := webauthn.New(s.d.Config().WebAuthnConfig(r.Context()))
 	if err != nil {
-		return err
+		return errors.WithStack(err)
 	}
 
 	option, sessionData, err := web.BeginRegistration(NewUser(id.ID[:], nil, web.Config))
