@@ -43,7 +43,7 @@ require (
 	github.com/gobuffalo/httptest v1.5.2
 	github.com/gobuffalo/pop/v6 v6.1.2-0.20230318123913-c85387acc9a0
 	github.com/gofrs/uuid v4.3.1+incompatible
-	github.com/golang-jwt/jwt/v4 v4.1.0
+	github.com/golang-jwt/jwt/v4 v4.4.2
 	github.com/golang/gddo v0.0.0-20190904175337-72a348e765d2
 	github.com/golang/mock v1.6.0
 	github.com/google/go-github/v27 v27.0.1
@@ -102,7 +102,6 @@ require (
 	golang.org/x/oauth2 v0.4.0
 	golang.org/x/sync v0.1.0
 	golang.org/x/tools/cmd/cover v0.1.0-deprecated
-	golang.org/x/tools v0.2.0
 	google.golang.org/grpc v1.52.0
 	gotest.tools v2.2.0+incompatible
 )
