@@ -432,7 +432,7 @@ func (h *Handler) createBrowserLoginFlow(w http.ResponseWriter, r *http.Request,
 		// different flows, such as login to registration and login to recovery.
 		// After completing a complex flow, such as recovery, we want the user
 		// to be redirected back to the original flow.
-		if hlr.RequestUrl != "" {
+		if hlr.RequestUrl != "" && h.d.Config().OAuth2ProviderReturnToEnabled(r.Context()) {
 			// replace the return_to query parameter
 			q := r.URL.Query()
 			q.Set("return_to", hlr.RequestUrl)

@@ -240,10 +240,6 @@ func TestOAuth2Provider(t *testing.T) {
 	hydraAdmin, hydraPublic := newHydra(t, uiTS.URL, uiTS.URL)
 	conf.MustSet(ctx, config.ViperKeyOAuth2ProviderURL, hydraAdmin)
 
-	// Kratos automatically adds the request URL from Hydra to the `return_to` parameter.
-	// We need to allow this URL in the config.
-	reg.Config().MustSet(ctx, config.ViperKeyURLsAllowedReturnToDomains, []string{hydraPublic})
-
 	hydraAdminClient = createHydraOAuth2ApiClient(hydraAdmin)
 	clientID := createOAuth2Client(t, ctx, hydraAdminClient, []string{clientAppTS.URL}, "profile email")
 

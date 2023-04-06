@@ -180,6 +180,7 @@ const (
 	ViperKeyWebAuthnPasswordless                             = "selfservice.methods.webauthn.config.passwordless"
 	ViperKeyOAuth2ProviderURL                                = "oauth2_provider.url"
 	ViperKeyOAuth2ProviderHeader                             = "oauth2_provider.headers"
+	ViperKeyOAuth2ProviderReturnToEnabled                    = "oauth2_provider.return_to_enabled"
 	ViperKeyClientHTTPNoPrivateIPRanges                      = "clients.http.disallow_private_ip_ranges"
 	ViperKeyClientHTTPPrivateIPExceptionURLs                 = "clients.http.private_ip_exception_urls"
 	ViperKeyVersion                                          = "version"
@@ -882,6 +883,10 @@ func (p *Config) OAuth2ProviderHeader(ctx context.Context) http.Header {
 	}
 
 	return h
+}
+
+func (p *Config) OAuth2ProviderReturnToEnabled(ctx context.Context) bool {
+	return p.GetProvider(ctx).Bool(ViperKeyOAuth2ProviderReturnToEnabled)
 }
 
 func (p *Config) OAuth2ProviderURL(ctx context.Context) *url.URL {

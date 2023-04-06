@@ -59,7 +59,6 @@ func TestFlowLifecycle(t *testing.T) {
 
 	errorTS := testhelpers.NewErrorTestServer(t, reg)
 	conf.MustSet(ctx, config.ViperKeySelfServiceBrowserDefaultReturnTo, "https://www.ory.sh")
-	conf.MustSet(ctx, config.ViperKeyURLsAllowedReturnToDomains, []string{"https://www.ory.sh", "https://example.com"})
 
 	testhelpers.SetDefaultIdentitySchema(conf, "file://./stub/password.schema.json")
 
@@ -601,7 +600,10 @@ func TestFlowLifecycle(t *testing.T) {
 			conf.MustSet(ctx, config.ViperKeyOAuth2ProviderURL, "https://fake-hydra")
 
 			t.Run("case=oauth2 flow init should override return_to to the oauth2 request_url", func(t *testing.T) {
-				res, body := initUnauthenticatedFlow(t, url.Values{
+				conf.MustSet(ctx, config.ViperKeyURLsAllowedReturnToDomains, []string{"https://www.ory.sh", "https://example.com"})
+				conf.MustSet(ctx, config.ViperKeyOAuth2ProviderReturnToEnabled, true)
+
+				res, _ := initUnauthenticatedFlow(t, url.Values{
 					"return_to":       {"https://example.com"},
 					"login_challenge": {hydra.FAKE_SUCCESS},
 				}, false)
@@ -615,7 +617,7 @@ func TestFlowLifecycle(t *testing.T) {
 				res, err := c.Do(req)
 				require.NoError(t, err)
 
-				body, err = io.ReadAll(res.Body)
+				body, err := io.ReadAll(res.Body)
 				require.NoError(t, errors.WithStack(err))
 
 				require.NoError(t, res.Body.Close())
