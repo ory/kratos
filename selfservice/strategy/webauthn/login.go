@@ -119,16 +119,16 @@ func (s *Strategy) populateLoginMethod(r *http.Request, sr *login.Flow, i *ident
 	}
 
 	if len(webAuthCreds) == 0 {
-		// Identity has no webauth
+		// Identity has no webauthn
 		return ErrNoCredentials
 	}
 
-	web, err := s.newWebAuthn(r.Context())
+	web, err := webauthn.New(s.d.Config().WebAuthnConfig(r.Context()))
 	if err != nil {
 		return errors.WithStack(herodot.ErrInternalServerError.WithReasonf("Unable to initiate WebAuth.").WithDebug(err.Error()))
 	}
 
-	options, sessionData, err := web.BeginLogin(&wrappedUser{id: conf.UserHandle, c: webAuthCreds})
+	options, sessionData, err := web.BeginLogin(NewUser(conf.UserHandle, webAuthCreds, web.Config))
 	if err != nil {
 		return errors.WithStack(herodot.ErrInternalServerError.WithReasonf("Unable to initiate WebAuth login.").WithDebug(err.Error()))
 	}
@@ -295,7 +295,7 @@ func (s *Strategy) loginAuthenticate(_ http.ResponseWriter, r *http.Request, f *
 		return nil, s.handleLoginError(r, f, errors.WithStack(herodot.ErrInternalServerError.WithReason("The WebAuthn credentials could not be decoded properly").WithDebug(err.Error()).WithWrap(err)))
 	}
 
-	web, err := s.newWebAuthn(r.Context())
+	web, err := webauthn.New(s.d.Config().WebAuthnConfig(r.Context()))
 	if err != nil {
 		return nil, s.handleLoginError(r, f, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("Unable to get webAuthn config.").WithDebug(err.Error())))
 	}
@@ -315,7 +315,7 @@ func (s *Strategy) loginAuthenticate(_ http.ResponseWriter, r *http.Request, f *
 		webAuthCreds = o.Credentials.ToWebAuthn()
 	}
 
-	if _, err := web.ValidateLogin(&wrappedUser{id: o.UserHandle, c: webAuthCreds}, webAuthnSess, webAuthnResponse); err != nil {
+	if _, err := web.ValidateLogin(NewUser(o.UserHandle, webAuthCreds, web.Config), webAuthnSess, webAuthnResponse); err != nil {
 		return nil, s.handleLoginError(r, f, errors.WithStack(schema.NewWebAuthnVerifierWrongError("#/")))
 	}
 
