@@ -14,8 +14,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/ory/x/urlx"
 	"github.com/pkg/errors"
+
+	"github.com/ory/x/urlx"
 
 	"github.com/ory/x/sqlxx"
 
