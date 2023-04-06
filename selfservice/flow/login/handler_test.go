@@ -606,8 +606,6 @@ func TestFlowLifecycle(t *testing.T) {
 				}, false)
 				require.Equal(t, http.StatusOK, res.StatusCode)
 				require.Contains(t, res.Request.URL.String(), loginTS.URL)
-				b := string(body)
-				assert.Contains(t, b, "https://ory.sh")
 
 				c := ts.Client()
 				req := x.NewTestHTTPRequest(t, "GET", ts.URL+login.RouteGetFlow, nil)
@@ -621,8 +619,6 @@ func TestFlowLifecycle(t *testing.T) {
 
 				require.NoError(t, res.Body.Close())
 
-				b = string(body)
-				assert.Contains(t, b, "https://example.com")
 				assert.Equal(t, "https://www.ory.sh", gjson.GetBytes(body, "return_to").Value())
 			})
 

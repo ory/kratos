@@ -6,11 +6,6 @@ import * as httpbin from "../../../helpers/httpbin"
 import * as oauth2 from "../../../helpers/oauth2"
 
 context("OpenID Provider", () => {
-  before(() => {
-    cy.deleteMail()
-    cy.useConfigProfile("oidc-provider")
-    cy.proxy("express")
-  })
   const client = {
     auth_endpoint: "http://localhost:4744/oauth2/auth",
     token_endpoint: "http://localhost:4744/oauth2/token",
@@ -25,6 +20,18 @@ context("OpenID Provider", () => {
       "https://httpbin.org/anything",
     ],
   }
+
+  before(() => {
+    cy.deleteMail()
+    cy.useConfigProfile("oidc-provider")
+    cy.updateConfigFile((config) => {
+      config.selfservice.allowed_return_urls = [
+        oauth2.getDefaultAuthorizeURL(client),
+      ]
+      return config
+    })
+    cy.proxy("express")
+  })
 
   it("login", () => {
     const email = gen.email()
@@ -164,7 +171,7 @@ context("OpenID Provider - change between flows", () => {
     ],
   }
 
-  function doConsent() {
+  function doConsent(amrs?: string[]) {
     cy.url().should("contain", "/consent")
 
     // consent ui
@@ -184,12 +191,18 @@ context("OpenID Provider - change between flows", () => {
         decodeURIComponent(escape(window.atob(token.id_token.split(".")[1]))),
       )
       expect(idToken).to.have.property("amr")
-      expect(idToken.amr).to.deep.equal(["password"])
+      expect(idToken.amr).to.deep.equal(amrs || ["password"])
     })
   }
 
   before(() => {
     cy.useConfigProfile("oidc-provider")
+    cy.updateConfigFile((config) => {
+      config.selfservice.allowed_return_urls = [
+        oauth2.getDefaultAuthorizeURL(client),
+      ]
+      return config
+    })
     cy.proxy("express")
   })
 
@@ -248,7 +261,11 @@ context("OpenID Provider - change between flows", () => {
     cy.get('input[name="password"]').clear().type(newPassword)
     cy.get('button[value="password"]').click()
 
+    // since we aren't skipping the consent, Kratos will ask us to login again
+    cy.get('input[name="password"]').clear().type(newPassword)
+    cy.get('button[value="password"]').click()
+
     // we should now end up on the consent screen
-    doConsent()
+    doConsent(["code_recovery", "password"])
   })
 })

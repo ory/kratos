@@ -406,7 +406,6 @@ type createBrowserLoginFlow struct {
 func (h *Handler) createBrowserLoginFlow(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	var hlr *hydraclientgo.OAuth2LoginRequest
 	var hlc uuid.NullUUID
-	var flowOpts []FlowOption
 	if r.URL.Query().Has("login_challenge") {
 		var err error
 		hlc, err = hydra.GetLoginChallengeID(h.d.Config(), r)
@@ -434,11 +433,14 @@ func (h *Handler) createBrowserLoginFlow(w http.ResponseWriter, r *http.Request,
 		// After completing a complex flow, such as recovery, we want the user
 		// to be redirected back to the original flow.
 		if hlr.RequestUrl != "" {
-			flowOpts = append(flowOpts, WithFlowReturnTo(hlr.RequestUrl))
+			// replace the return_to query parameter
+			q := r.URL.Query()
+			q.Set("return_to", hlr.RequestUrl)
+			r.URL.RawQuery = q.Encode()
 		}
 	}
 
-	a, sess, err := h.NewLoginFlow(w, r, flow.TypeBrowser, flowOpts...)
+	a, sess, err := h.NewLoginFlow(w, r, flow.TypeBrowser)
 	if errors.Is(err, ErrAlreadyLoggedIn) {
 		if hlr != nil {
 			if !hlr.GetSkip() {
