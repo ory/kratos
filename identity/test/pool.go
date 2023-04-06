@@ -213,6 +213,25 @@ func TestPool(ctx context.Context, conf *config.Config, p persistence.Persister,
 					assertx.EqualAsJSONExcept(t, expected.VerifiableAddresses, actual.VerifiableAddresses, []string{"0.updated_at", "0.created_at"})
 				})
 			})
+
+			t.Run("confidential", func(t *testing.T) {
+				// confidential is like expand=all
+				actual, err := p.GetIdentityConfidential(ctx, expected.ID)
+				require.NoError(t, err)
+				assertx.EqualAsJSONExcept(t, expected, actual, []string{
+					"verifiable_addresses", "recovery_addresses", "updated_at", "created_at", "credentials", "state_changed_at",
+				})
+				require.Len(t, actual.Credentials, 2)
+
+				assertx.EqualAsJSONExcept(t, expected.Credentials[identity.CredentialsTypePassword], actual.Credentials[identity.CredentialsTypePassword], []string{"updated_at", "created_at"})
+				assertx.EqualAsJSONExcept(t, expected.Credentials[identity.CredentialsTypeWebAuthn], actual.Credentials[identity.CredentialsTypeWebAuthn], []string{"updated_at", "created_at"})
+
+				require.Len(t, actual.RecoveryAddresses, 1)
+				assertx.EqualAsJSONExcept(t, expected.RecoveryAddresses, actual.RecoveryAddresses, []string{"0.updated_at", "0.created_at"})
+
+				require.Len(t, actual.VerifiableAddresses, 1)
+				assertx.EqualAsJSONExcept(t, expected.VerifiableAddresses, actual.VerifiableAddresses, []string{"0.updated_at", "0.created_at"})
+			})
 		})
 
 		var createdIDs []uuid.UUID
