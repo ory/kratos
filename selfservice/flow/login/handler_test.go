@@ -87,6 +87,24 @@ func TestFlowLifecycle(t *testing.T) {
 		return res, body
 	}
 
+	initUnauthenticatedFlow := func(t *testing.T, extQuery url.Values, isAPI bool) (*http.Response, []byte) {
+		route := login.RouteInitBrowserFlow
+		if isAPI {
+			route = login.RouteInitAPIFlow
+		}
+		client := ts.Client()
+		req := x.NewTestHTTPRequest(t, "GET", ts.URL+route, nil)
+
+		req.URL.RawQuery = extQuery.Encode()
+		res, err := client.Do(req)
+		require.NoError(t, errors.WithStack(err))
+
+		body, err := io.ReadAll(res.Body)
+		require.NoError(t, errors.WithStack(err))
+		require.NoError(t, res.Body.Close())
+		return res, body
+	}
+
 	initFlowWithAccept := func(t *testing.T, query url.Values, isAPI bool, accept string) (*http.Response, []byte) {
 		route := login.RouteInitBrowserFlow
 		if isAPI {
@@ -581,6 +599,33 @@ func TestFlowLifecycle(t *testing.T) {
 
 			conf.MustSet(ctx, config.ViperKeyOAuth2ProviderURL, "https://fake-hydra")
 
+			t.Run("case=oauth2 flow init should override return_to to the oauth2 request_url", func(t *testing.T) {
+				res, body := initUnauthenticatedFlow(t, url.Values{
+					"return_to":       {"https://example.com"},
+					"login_challenge": {hydra.FAKE_SUCCESS},
+				}, false)
+				require.Equal(t, http.StatusOK, res.StatusCode)
+				require.Contains(t, res.Request.URL.String(), loginTS.URL)
+				b := string(body)
+				assert.Contains(t, b, "https://ory.sh")
+
+				c := ts.Client()
+				req := x.NewTestHTTPRequest(t, "GET", ts.URL+login.RouteGetFlow, nil)
+				req.URL.RawQuery = url.Values{"id": {res.Request.URL.Query().Get("flow")}}.Encode()
+
+				res, err := c.Do(req)
+				require.NoError(t, err)
+
+				body, err = io.ReadAll(res.Body)
+				require.NoError(t, errors.WithStack(err))
+
+				require.NoError(t, res.Body.Close())
+
+				b = string(body)
+				assert.Contains(t, b, "https://example.com")
+				assert.Equal(t, "https://www.ory.sh", gjson.GetBytes(body, "return_to").Value())
+			})
+
 			t.Run("case=oauth2 flow init succeeds", func(t *testing.T) {
 				res, _ := initAuthenticatedFlow(t, url.Values{"login_challenge": {hydra.FAKE_SUCCESS}}, false)
 				require.Contains(t, res.Request.URL.String(), loginTS.URL)
@@ -591,25 +636,6 @@ func TestFlowLifecycle(t *testing.T) {
 				assert.NotContains(t, res.Request.URL.String(), loginTS.URL)
 
 				assert.NotEmpty(t, gjson.GetBytes(body, "oauth2_login_request").Value(), "%s", body)
-			})
-
-			t.Run("case=oauth2 flow init should override return_to to the oauth2 request_url", func(t *testing.T) {
-				route := login.RouteInitBrowserFlow
-				req := x.NewTestHTTPRequest(t, "GET", ts.URL+route, nil)
-				req.URL.RawQuery = url.Values{
-					"return_to":       {"https://example.com"},
-					"login_challenge": {hydra.FAKE_SUCCESS},
-				}.Encode()
-
-				c := &http.Client{}
-				res, err := c.Do(req)
-				require.NoError(t, errors.WithStack(err))
-
-				body, err := io.ReadAll(res.Body)
-				require.NoError(t, errors.WithStack(err))
-
-				require.Equal(t, http.StatusOK, res.StatusCode)
-				assert.Equal(t, "https://www.ory.sh", gjson.GetBytes(body, "return_to").Value())
 			})
 		})
 
