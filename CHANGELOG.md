@@ -5,7 +5,7 @@
 
 **Table of Contents**
 
-- [ (2023-04-05)](#2023-04-05)
+- [ (2023-04-06)](#2023-04-06)
   - [Breaking Changes](#breaking-changes)
     - [Bug Fixes](#bug-fixes)
     - [Code Refactoring](#code-refactoring)
@@ -296,7 +296,7 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# [](https://github.com/ory/kratos/compare/v0.11.1...v) (2023-04-05)
+# [](https://github.com/ory/kratos/compare/v0.11.1...v) (2023-04-06)
 
 ## Breaking Changes
 
@@ -448,6 +448,9 @@ flows.
   closes [#3208](https://github.com/ory/kratos/issues/3208)
 - Test contract names
   ([e9ac00b](https://github.com/ory/kratos/commit/e9ac00b3941641a955f5d8f32f25a4031c87a726))
+- Use correct names in WebAuthN dialogs
+  ([#3215](https://github.com/ory/kratos/issues/3215))
+  ([3bc1ff0](https://github.com/ory/kratos/commit/3bc1ff0e63c885c1db08e3d1332d959799edb0a8))
 - Use type alias instead of type definition
   ([#3148](https://github.com/ory/kratos/issues/3148))
   ([dba3803](https://github.com/ory/kratos/commit/dba38032d5939ff7286560ec19d83a89fe0410ce))
@@ -485,6 +488,9 @@ flows.
   ([8aa75e9](https://github.com/ory/kratos/commit/8aa75e97e4bfee37e7cf551173b516c6244786ff))
 - Add patreon oidc provider ([#3021](https://github.com/ory/kratos/issues/3021))
   ([20ea29e](https://github.com/ory/kratos/commit/20ea29e018b33231cf6b2743de74d2233f756c2a))
+- Add test to verify GetIdentityConfidential expands everything
+  ([#3217](https://github.com/ory/kratos/issues/3217))
+  ([f088ccd](https://github.com/ory/kratos/commit/f088ccdf462f5e6373aceb142caa181d98975a09))
 - Add token prefixes to session and logout tokens
   ([#3132](https://github.com/ory/kratos/issues/3132))
   ([8210cd0](https://github.com/ory/kratos/commit/8210cd09200d370b101072649fddd1ad9a7f32a9)):
