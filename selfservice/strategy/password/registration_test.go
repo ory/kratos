@@ -76,8 +76,7 @@ func TestRegistration(t *testing.T) {
 		apiClient := testhelpers.NewDebugClient(t)
 
 		t.Run("AssertCommonErrorCases", func(t *testing.T) {
-			reg := newRegistrationRegistry(t)
-			registrationhelpers.AssertCommonErrorCases(t, reg, flows)
+			registrationhelpers.AssertCommonErrorCases(t, flows)
 		})
 
 		t.Run("AssertRegistrationRespectsValidation", func(t *testing.T) {

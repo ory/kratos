@@ -74,6 +74,16 @@ type UpdateLoginFlowWithOidcMethod struct {
 
 	// The identity traits. This is a placeholder for the registration flow.
 	Traits json.RawMessage `json:"traits"`
+
+	// UpstreamParameters are the parameters that are passed to the upstream identity provider.
+	//
+	// These parameters are optional and depend on what the upstream identity provider supports.
+	// Supported parameters are:
+	// - `login_hint` (string): The `login_hint` parameter suppresses the account chooser and either pre-fills the email box on the sign-in form, or selects the proper session.
+	// - `hd` (string): The `hd` parameter limits the login/registration process to a Google Organization, e.g. `mycollege.edu`.
+	//
+	// required: false
+	UpstreamParameters json.RawMessage `json:"upstream_parameters"`
 }
 
 func (s *Strategy) processLogin(w http.ResponseWriter, r *http.Request, a *login.Flow, token *oauth2.Token, claims *Claims, provider Provider, container *authCodeContainer) (*registration.Flow, error) {
@@ -191,7 +201,12 @@ func (s *Strategy) Login(w http.ResponseWriter, r *http.Request, f *login.Flow, 
 		return nil, s.handleError(w, r, f, pid, nil, errors.WithStack(herodot.ErrInternalServerError.WithReason("Could not update flow").WithDebug(err.Error())))
 	}
 
-	codeURL := c.AuthCodeURL(state, provider.AuthCodeURLOptions(req)...)
+	var up map[string]string
+	if err := json.NewDecoder(bytes.NewBuffer(p.UpstreamParameters)).Decode(&up); err != nil {
+		return nil, err
+	}
+
+	codeURL := c.AuthCodeURL(state, append(provider.AuthCodeURLOptions(req), UpstreamParameters(provider, up)...)...)
 	if x.IsJSONRequest(r) {
 		s.d.Writer().WriteError(w, r, flow.NewBrowserLocationChangeRequiredError(codeURL))
 	} else {

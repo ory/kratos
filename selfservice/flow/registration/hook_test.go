@@ -22,6 +22,7 @@ import (
 	"github.com/ory/kratos/internal/testhelpers"
 	"github.com/ory/kratos/selfservice/flow"
 	"github.com/ory/kratos/selfservice/flow/registration"
+	"github.com/ory/kratos/selfservice/hook"
 	"github.com/ory/kratos/x"
 )
 
@@ -158,6 +159,44 @@ func TestRegistrationExecutor(t *testing.T) {
 					assert.NotEmpty(t, gjson.Get(body, "identity.id"))
 					assert.Empty(t, gjson.Get(body, "session.token"))
 					assert.Empty(t, gjson.Get(body, "session_token"))
+				})
+
+				t.Run("case=should redirect to verification ui if show_verification_ui hook is set", func(t *testing.T) {
+					verificationTS := testhelpers.NewVerificationUIFlowEchoServer(t, reg)
+					t.Cleanup(testhelpers.SelfServiceHookConfigReset(t, conf))
+					conf.Set(ctx, config.ViperKeySelfServiceVerificationEnabled, true)
+					conf.Set(ctx, config.ViperKeySelfServiceRegistrationAfter+".hooks", []map[string]interface{}{
+						{
+							"hook": hook.KeyVerificationUI,
+						},
+					})
+					i := testhelpers.SelfServiceHookFakeIdentity(t)
+					i.Traits = identity.Traits(`{"email": "verifiable@ory.sh"}`)
+
+					res, _ := makeRequestPost(t, newServer(t, i, flow.TypeBrowser), false, url.Values{})
+					assert.EqualValues(t, http.StatusOK, res.StatusCode)
+					assert.Contains(t, res.Request.URL.String(), verificationTS.URL)
+					assert.NotEmpty(t, res.Request.URL.Query().Get("flow"))
+				})
+
+				t.Run("case=should redirect to first verification ui if show_verification_ui hook is set and multiple verifiable addresses", func(t *testing.T) {
+					verificationTS := testhelpers.NewVerificationUIFlowEchoServer(t, reg)
+					t.Cleanup(testhelpers.SelfServiceHookConfigReset(t, conf))
+					conf.Set(ctx, config.ViperKeySelfServiceVerificationEnabled, true)
+					conf.Set(ctx, config.ViperKeySelfServiceRegistrationAfter+".hooks", []map[string]interface{}{
+						{
+							"hook": hook.KeyVerificationUI,
+						},
+					})
+
+					i := testhelpers.SelfServiceHookFakeIdentity(t)
+					i.SchemaID = testhelpers.UseIdentitySchema(t, conf, "file://./stub/registration-multi-email.schema.json")
+					i.Traits = identity.Traits(`{"emails": ["one@ory.sh", "two@ory.sh"]}`)
+
+					res, _ := makeRequestPost(t, newServer(t, i, flow.TypeBrowser), false, url.Values{})
+					assert.EqualValues(t, http.StatusOK, res.StatusCode)
+					assert.Contains(t, res.Request.URL.String(), verificationTS.URL)
+					assert.NotEmpty(t, res.Request.URL.Query().Get("flow"))
 				})
 			})
 

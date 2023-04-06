@@ -2,8 +2,8 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { appPrefix, gen } from "../../../../helpers"
-import { routes as react } from "../../../../helpers/react"
 import { routes as express } from "../../../../helpers/express"
+import { routes as react } from "../../../../helpers/react"
 
 context("Account Verification Login Errors", () => {
   ;[
@@ -36,6 +36,10 @@ context("Account Verification Login Errors", () => {
         cy.get(appPrefix(app) + '[name="identifier"]').type(identity.email)
         cy.get('[name="password"]').type(identity.password)
         cy.get('[value="password"]').click()
+
+        if (app === "express") {
+          cy.url().should("contain", "/verification")
+        }
 
         cy.get('[data-testid="ui/message/4000010"]').contains(
           "Account not active yet",

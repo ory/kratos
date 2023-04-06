@@ -70,7 +70,7 @@ func (h *Handler) RegisterAdminRoutes(admin *x.RouterAdmin) {
 //
 //nolint:deadcode,unused
 //lint:ignore U1000 Used to generate Swagger and OpenAPI definitions
-type identitySchema json.RawMessage
+type identitySchema = json.RawMessage
 
 // Get Identity JSON Schema Response
 //

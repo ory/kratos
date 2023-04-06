@@ -195,6 +195,72 @@ context("Social Sign Up Successes", () => {
         cy.location("href").should("eq", "https://www.ory.sh/")
         cy.logout()
       })
+
+      it("should be able to register with upstream parameters", () => {
+        const email = gen.email()
+        cy.intercept("GET", "**/oauth2/auth*").as("getHydraRegistration")
+
+        cy.visit(registration + "?return_to=https://www.example.org/")
+
+        cy.addInputElement("form", "upstream_parameters.login_hint", email)
+
+        cy.triggerOidc(app)
+
+        // once a request to getHydraRegistration responds, 'cy.wait' will resolve
+        cy.wait("@getHydraRegistration")
+          .its("request.url")
+          .should("include", "login_hint=" + encodeURIComponent(email))
+      })
+
+      it("oidc registration with duplicate identifier should return new login flow with duplicate error", () => {
+        cy.visit(registration)
+
+        const email = gen.email()
+        const password = gen.password()
+
+        cy.get('input[name="traits.email"]').type(email)
+        cy.get('input[name="password"]').type(password)
+        cy.get('input[name="traits.website"]').type(website)
+        cy.get('[name="traits.consent"]').siblings("label").click()
+        cy.get('[name="traits.newsletter"]').siblings("label").click()
+
+        cy.submitPasswordForm()
+
+        cy.location("pathname").should("not.contain", "/registration")
+
+        cy.getSession().should(shouldSession(email))
+
+        cy.logout()
+        cy.noSession()
+
+        // register the account through the OIDC provider
+        cy.registerOidc({
+          app,
+          acceptConsent: true,
+          acceptLogin: true,
+          expectSession: false,
+          email,
+          website,
+          route: registration,
+        })
+
+        cy.get('[data-testid="ui/message/4000027"]').should("be.visible")
+
+        cy.location("href").should("contain", "/login")
+
+        cy.get("[name='provider'][value='hydra']").should("be.visible")
+        cy.get("[name='provider'][value='google']").should("be.visible")
+        cy.get("[name='provider'][value='github']").should("be.visible")
+
+        if (app === "express") {
+          cy.get("[data-testid='forgot-password-link']").should("be.visible")
+        }
+
+        cy.get("input[name='identifier']").type(email)
+        cy.get("input[name='password']").type(password)
+        cy.submitPasswordForm()
+        cy.getSession()
+      })
     })
   })
 })

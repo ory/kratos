@@ -76,6 +76,9 @@ test-resetdb:
 test:
 	go test -p 1 -tags sqlite -count=1 -failfast ./...
 
+test-short:
+	go test -tags sqlite -count=1 -failfast -short ./...
+
 .PHONY: test-coverage
 test-coverage: .bin/go-acc .bin/goveralls
 	go-acc -o coverage.out ./... -- -v -failfast -timeout=20m -tags sqlite

@@ -20,7 +20,6 @@ import (
 	"github.com/ory/kratos/x"
 	"github.com/ory/x/decoderx"
 	"github.com/ory/x/sqlxx"
-	"github.com/ory/x/urlx"
 )
 
 func (s *Strategy) VerificationStrategyID() string {
@@ -33,21 +32,45 @@ func (s *Strategy) RegisterPublicVerificationRoutes(public *x.RouterPublic) {
 func (s *Strategy) RegisterAdminVerificationRoutes(admin *x.RouterAdmin) {
 }
 
+// PopulateVerificationMethod set's the appropriate UI nodes on this flow
+//
+// If the flow's state is `sent_email`, the `code` input and the success notification is set
+// Otherwise, the default email input is added.
+// If the flow is a browser flow, the CSRF token is added to the UI.
 func (s *Strategy) PopulateVerificationMethod(r *http.Request, f *verification.Flow) error {
-	f.UI.SetCSRF(s.deps.GenerateCSRFToken(r))
-	f.UI.GetNodes().Upsert(
-		node.NewInputField("email", nil, node.CodeGroup, node.InputAttributeTypeEmail, node.WithRequiredInputAttribute).
-			WithMetaLabel(text.NewInfoNodeInputEmail()),
-	)
-	f.UI.GetNodes().Append(
+	nodes := node.Nodes{}
+	switch f.State {
+	case verification.StateEmailSent:
+		nodes.Upsert(
+			node.
+				NewInputField("code", nil, node.CodeGroup, node.InputAttributeTypeText, node.WithRequiredInputAttribute).
+				WithMetaLabel(text.NewInfoNodeLabelVerifyOTP()),
+		)
+		// Required for the re-send code button
+		nodes.Append(
+			node.NewInputField("method", s.VerificationNodeGroup(), node.CodeGroup, node.InputAttributeTypeHidden),
+		)
+		f.UI.Messages.Set(text.NewVerificationEmailWithCodeSent())
+	default:
+		nodes.Upsert(
+			node.NewInputField("email", nil, node.CodeGroup, node.InputAttributeTypeEmail, node.WithRequiredInputAttribute).
+				WithMetaLabel(text.NewInfoNodeInputEmail()),
+		)
+	}
+	nodes.Append(
 		node.NewInputField("method", s.VerificationStrategyID(), node.CodeGroup, node.InputAttributeTypeSubmit).
 			WithMetaLabel(text.NewInfoNodeLabelSubmit()),
 	)
+
+	f.UI.Nodes = nodes
+	if f.Type == flow.TypeBrowser {
+		f.UI.SetCSRF(s.deps.GenerateCSRFToken(r))
+	}
 	return nil
 }
 
-func (s *Strategy) decodeVerification(r *http.Request) (*updateVerificationFlowWithCodeMethodBody, error) {
-	var body updateVerificationFlowWithCodeMethodBody
+func (s *Strategy) decodeVerification(r *http.Request) (*updateVerificationFlowWithCodeMethod, error) {
+	var body updateVerificationFlowWithCodeMethod
 
 	compiler, err := decoderx.HTTPRawJSONSchemaCompiler(verificationMethodSchema)
 	if err != nil {
@@ -68,7 +91,7 @@ func (s *Strategy) decodeVerification(r *http.Request) (*updateVerificationFlowW
 }
 
 // handleVerificationError is a convenience function for handling all types of errors that may occur (e.g. validation error).
-func (s *Strategy) handleVerificationError(w http.ResponseWriter, r *http.Request, f *verification.Flow, body *updateVerificationFlowWithCodeMethodBody, err error) error {
+func (s *Strategy) handleVerificationError(w http.ResponseWriter, r *http.Request, f *verification.Flow, body *updateVerificationFlowWithCodeMethod, err error) error {
 	if f != nil {
 		f.UI.SetCSRF(s.deps.GenerateCSRFToken(r))
 		f.UI.GetNodes().Upsert(
@@ -79,8 +102,8 @@ func (s *Strategy) handleVerificationError(w http.ResponseWriter, r *http.Reques
 	return err
 }
 
-// swagger:model updateVerificationFlowWithCodeMethodBody
-type updateVerificationFlowWithCodeMethodBody struct {
+// swagger:model updateVerificationFlowWithCodeMethod
+type updateVerificationFlowWithCodeMethod struct {
 	// Email to Verify
 	//
 	// Needs to be set when initiating the flow. If the email is a registered
@@ -108,7 +131,7 @@ type updateVerificationFlowWithCodeMethodBody struct {
 }
 
 // getMethod returns the method of this submission or "" if no method could be found
-func (body *updateVerificationFlowWithCodeMethodBody) getMethod() string {
+func (body *updateVerificationFlowWithCodeMethod) getMethod() string {
 	if body.Method != "" {
 		return body.Method
 	}
@@ -145,39 +168,12 @@ func (s *Strategy) Verify(w http.ResponseWriter, r *http.Request, f *verificatio
 	}
 }
 
-func (s *Strategy) createVerificationCodeForm(action string, code *string, email *string) *container.Container {
-	// re-initialize the UI with a "clean" new state
-	c := &container.Container{
-		Method: "POST",
-		Action: action,
-	}
-
-	c.Nodes.Append(
-		node.
-			NewInputField("code", code, node.CodeGroup, node.InputAttributeTypeText, node.WithRequiredInputAttribute).
-			WithMetaLabel(text.NewInfoNodeLabelVerifyOTP()),
-	)
-	c.Nodes.Append(
-		node.NewInputField("method", s.VerificationNodeGroup(), node.CodeGroup, node.InputAttributeTypeHidden),
-	)
-
-	c.Nodes.Append(
-		node.NewInputField("method", s.VerificationStrategyID(), node.CodeGroup, node.InputAttributeTypeSubmit).
-			WithMetaLabel(text.NewInfoNodeLabelSubmit()),
-	)
-
-	if email != nil {
-		c.Nodes.Append(
-			node.NewInputField("email", email, node.CodeGroup, node.InputAttributeTypeSubmit).
-				WithMetaLabel(text.NewInfoNodeResendOTP()),
-		)
-	}
-
-	return c
-}
-
 func (s *Strategy) handleLinkClick(w http.ResponseWriter, r *http.Request, f *verification.Flow, code string) error {
-	f.UI = s.createVerificationCodeForm(flow.AppendFlowTo(urlx.AppendPaths(s.deps.Config().SelfPublicURL(r.Context()), verification.RouteSubmitFlow), f.ID).String(), &code, nil)
+
+	// Pre-fill the code
+	if codeField := f.UI.Nodes.Find("code"); codeField != nil {
+		codeField.Attributes.SetValue(code)
+	}
 
 	// In the verification flow, we can't enforce CSRF if the flow is opened from an email, so we initialize the CSRF
 	// token here, so all subsequent interactions are protected
@@ -197,7 +193,7 @@ func (s *Strategy) handleLinkClick(w http.ResponseWriter, r *http.Request, f *ve
 	return errors.WithStack(flow.ErrCompletedByStrategy)
 }
 
-func (s *Strategy) verificationHandleFormSubmission(w http.ResponseWriter, r *http.Request, f *verification.Flow, body *updateVerificationFlowWithCodeMethodBody) error {
+func (s *Strategy) verificationHandleFormSubmission(w http.ResponseWriter, r *http.Request, f *verification.Flow, body *updateVerificationFlowWithCodeMethod) error {
 	if len(body.Code) > 0 {
 		if r.Method == http.MethodGet {
 			// Special case: in the code strategy we send out links as well, that contain the code
@@ -228,9 +224,16 @@ func (s *Strategy) verificationHandleFormSubmission(w http.ResponseWriter, r *ht
 
 	f.State = verification.StateEmailSent
 
-	f.UI = s.createVerificationCodeForm(flow.AppendFlowTo(urlx.AppendPaths(s.deps.Config().SelfPublicURL(r.Context()), verification.RouteSubmitFlow), f.ID).String(), nil, &body.Email)
-	f.UI.Messages.Set(text.NewVerificationEmailWithCodeSent())
-	f.UI.SetCSRF(s.deps.GenerateCSRFToken(r))
+	if err := s.PopulateVerificationMethod(r, f); err != nil {
+		return s.handleVerificationError(w, r, f, body, err)
+	}
+
+	if body.Email != "" {
+		f.UI.Nodes.Append(
+			node.NewInputField("email", body.Email, node.CodeGroup, node.InputAttributeTypeSubmit).
+				WithMetaLabel(text.NewInfoNodeResendOTP()),
+		)
+	}
 
 	if err := s.deps.VerificationFlowPersister().UpdateVerificationFlow(r.Context(), f); err != nil {
 		return s.handleVerificationError(w, r, f, body, err)

@@ -2,8 +2,8 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { appPrefix, gen, website } from "../../../../helpers"
-import { routes as react } from "../../../../helpers/react"
 import { routes as express } from "../../../../helpers/express"
+import { routes as react } from "../../../../helpers/react"
 
 context("Social Sign In Settings Success", () => {
   ;[
@@ -42,7 +42,7 @@ context("Social Sign In Settings Success", () => {
         cy.get('input[name="traits.website"]').clear().type(website)
         cy.triggerOidc(app, "hydra")
 
-        cy.get('[data-testid="ui/message/4000007"]').should(
+        cy.get('[data-testid="ui/message/4000027"]').should(
           "contain.text",
           "An account with the same identifier",
         )
@@ -110,7 +110,16 @@ context("Social Sign In Settings Success", () => {
           cy.logout()
 
           cy.visit(login)
+
+          // we create an intercept for login so we make sure the login endpoint is called
+          cy.intercept("GET", "**/oauth2/auth*").as("login")
+
           cy.get('[value="google"]').click()
+
+          // wait for the login endpoint to be called
+          cy.wait("@login")
+
+          // check the session
           cy.getSession()
         })
 
@@ -182,6 +191,38 @@ context("Social Sign In Settings Success", () => {
           cy.expectSettingsSaved()
 
           hydraReauthFails()
+        })
+
+        it("settings screen stays intact when the original sign up method gets removed", () => {
+          const expectSettingsOk = () => {
+            cy.get('[value="google"]', { timeout: 1000 })
+              .should("have.attr", "name", "link")
+              .should("contain.text", "Link google")
+
+            cy.get('[value="github"]', { timeout: 1000 })
+              .should("have.attr", "name", "link")
+              .should("contain.text", "Link github")
+          }
+
+          cy.visit(settings)
+          expectSettingsOk()
+
+          // set password
+          cy.get('input[name="password"]').type(gen.password())
+          cy.get('button[value="password"]').click()
+
+          // remove the provider used to log in
+          cy.updateConfigFile((config) => {
+            config.selfservice.methods.oidc.config.providers =
+              config.selfservice.methods.oidc.config.providers.filter(
+                ({ id }) => id !== "hydra",
+              )
+            return config
+          })
+
+          // visit settings and everything should still be fine
+          cy.visit(settings)
+          expectSettingsOk()
         })
       })
     })

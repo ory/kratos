@@ -80,12 +80,14 @@
   path: /components/schemas/updateVerificationFlowBody/oneOf
   value:
     - "$ref": "#/components/schemas/updateVerificationFlowWithLinkMethod"
+    - "$ref": "#/components/schemas/updateVerificationFlowWithCodeMethod"
 - op: add
   path: /components/schemas/updateVerificationFlowBody/discriminator
   value:
     propertyName: method
     mapping:
       link: "#/components/schemas/updateVerificationFlowWithLinkMethod"
+      code: "#/components/schemas/updateVerificationFlowWithCodeMethod"
 - op: add
   path: /components/schemas/verificationFlowState/enum
   value:

@@ -20,7 +20,6 @@ import (
 	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/hydra"
 	"github.com/ory/kratos/identity"
-	"github.com/ory/kratos/schema"
 	"github.com/ory/kratos/selfservice/flow"
 	"github.com/ory/kratos/session"
 	"github.com/ory/kratos/x"
@@ -49,7 +48,7 @@ type (
 	}
 )
 
-func PostHookPostPersistExecutorNames(e []PostHookPostPersistExecutor) []string {
+func ExecutorNames[T any](e []T) []string {
 	names := make([]string, len(e))
 	for k, ee := range e {
 		names[k] = fmt.Sprintf("%T", ee)
@@ -108,24 +107,31 @@ func (e *HookExecutor) PostRegistrationHook(w http.ResponseWriter, r *http.Reque
 					WithRequest(r).
 					WithField("executor", fmt.Sprintf("%T", executor)).
 					WithField("executor_position", k).
-					WithField("executors", PostHookPostPersistExecutorNames(e.d.PostRegistrationPostPersistHooks(r.Context(), ct))).
+					WithField("executors", ExecutorNames(e.d.PostRegistrationPrePersistHooks(r.Context(), ct))).
 					WithField("identity_id", i.ID).
 					WithField("flow_method", ct).
 					Debug("A ExecutePostRegistrationPrePersistHook hook aborted early.")
 				return nil
 			}
 
-			var traits identity.Traits
-			if i != nil {
-				traits = i.Traits
-			}
+			e.d.Logger().
+				WithRequest(r).
+				WithField("executor", fmt.Sprintf("%T", executor)).
+				WithField("executor_position", k).
+				WithField("executors", ExecutorNames(e.d.PostRegistrationPrePersistHooks(r.Context(), ct))).
+				WithField("identity_id", i.ID).
+				WithField("flow_method", ct).
+				WithError(err).
+				Error("ExecutePostRegistrationPostPersistHook hook failed with an error.")
+
+			traits := i.Traits
 			return flow.HandleHookError(w, r, a, traits, ct.ToUiNodeGroup(), err, e.d, e.d)
 		}
 
 		e.d.Logger().WithRequest(r).
 			WithField("executor", fmt.Sprintf("%T", executor)).
 			WithField("executor_position", k).
-			WithField("executors", PostHookPostPersistExecutorNames(e.d.PostRegistrationPostPersistHooks(r.Context(), ct))).
+			WithField("executors", ExecutorNames(e.d.PostRegistrationPrePersistHooks(r.Context(), ct))).
 			WithField("identity_id", i.ID).
 			WithField("flow_method", ct).
 			Debug("ExecutePostRegistrationPrePersistHook completed successfully.")
@@ -138,7 +144,10 @@ func (e *HookExecutor) PostRegistrationHook(w http.ResponseWriter, r *http.Reque
 		// would imply that the identity has to exist already.
 	} else if err := e.d.IdentityManager().Create(r.Context(), i); err != nil {
 		if errors.Is(err, sqlcon.ErrUniqueViolation) {
-			return schema.NewDuplicateCredentialsError()
+			// In this case the user is already registered through another method.
+			// We handle this case by returning a spcial error that is handled by
+			// the caller.
+			return ErrDuplicateCredentials
 		}
 		return err
 	}
@@ -187,24 +196,31 @@ func (e *HookExecutor) PostRegistrationHook(w http.ResponseWriter, r *http.Reque
 					WithRequest(r).
 					WithField("executor", fmt.Sprintf("%T", executor)).
 					WithField("executor_position", k).
-					WithField("executors", PostHookPostPersistExecutorNames(e.d.PostRegistrationPostPersistHooks(r.Context(), ct))).
+					WithField("executors", ExecutorNames(e.d.PostRegistrationPostPersistHooks(r.Context(), ct))).
 					WithField("identity_id", i.ID).
 					WithField("flow_method", ct).
 					Debug("A ExecutePostRegistrationPostPersistHook hook aborted early.")
 				return nil
 			}
 
-			var traits identity.Traits
-			if i != nil {
-				traits = i.Traits
-			}
+			e.d.Logger().
+				WithRequest(r).
+				WithField("executor", fmt.Sprintf("%T", executor)).
+				WithField("executor_position", k).
+				WithField("executors", ExecutorNames(e.d.PostRegistrationPostPersistHooks(r.Context(), ct))).
+				WithField("identity_id", i.ID).
+				WithField("flow_method", ct).
+				WithError(err).
+				Error("ExecutePostRegistrationPostPersistHook hook failed with an error.")
+
+			traits := i.Traits
 			return flow.HandleHookError(w, r, a, traits, ct.ToUiNodeGroup(), err, e.d, e.d)
 		}
 
 		e.d.Logger().WithRequest(r).
 			WithField("executor", fmt.Sprintf("%T", executor)).
 			WithField("executor_position", k).
-			WithField("executors", PostHookPostPersistExecutorNames(e.d.PostRegistrationPostPersistHooks(r.Context(), ct))).
+			WithField("executors", ExecutorNames(e.d.PostRegistrationPostPersistHooks(r.Context(), ct))).
 			WithField("identity_id", i.ID).
 			WithField("flow_method", ct).
 			Debug("ExecutePostRegistrationPostPersistHook completed successfully.")
@@ -217,7 +233,10 @@ func (e *HookExecutor) PostRegistrationHook(w http.ResponseWriter, r *http.Reque
 		Debug("Post registration execution hooks completed successfully.")
 
 	if a.Type == flow.TypeAPI || x.IsJSONRequest(r) {
-		e.d.Writer().Write(w, r, &APIFlowResponse{Identity: i})
+		e.d.Writer().Write(w, r, &APIFlowResponse{
+			Identity:     i,
+			ContinueWith: a.ContinueWith(),
+		})
 		return nil
 	}
 
@@ -230,7 +249,7 @@ func (e *HookExecutor) PostRegistrationHook(w http.ResponseWriter, r *http.Reque
 		finalReturnTo = cr
 	}
 
-	x.ContentNegotiationRedirection(w, r, s.Declassify(), e.d.Writer(), finalReturnTo)
+	x.ContentNegotiationRedirection(w, r, s.Declassified(), e.d.Writer(), finalReturnTo)
 	return nil
 }
 

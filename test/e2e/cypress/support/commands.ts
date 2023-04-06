@@ -12,13 +12,12 @@ import {
   MOBILE_URL,
   parseHtml,
   pollInterval,
-  privilegedLifespan,
 } from "../helpers"
 
-import { Session } from "@ory/kratos-client"
 import dayjs from "dayjs"
 import YAML from "yamljs"
 import { Strategy } from "."
+import { OryKratosConfiguration } from "./config"
 
 const configFile = "kratos.generated.yml"
 
@@ -49,7 +48,9 @@ function checkConfigVersion(previous, tries = 0) {
   })
 }
 
-const updateConfigFile = (cb: (arg: any) => any) => {
+const updateConfigFile = (
+  cb: (arg: OryKratosConfiguration) => OryKratosConfiguration,
+) => {
   cy.request("GET", KRATOS_ADMIN + "/health/config").then(({ body }) => {
     cy.readFile(configFile).then((contents) => {
       cy.writeFile(configFile, YAML.stringify(cb(YAML.parse(contents))))
@@ -398,6 +399,7 @@ Cypress.Commands.add(
       })
       .then(({ body }) => {
         expect(body.identity.traits.email).to.contain(email)
+        return body
       }),
 )
 
@@ -440,6 +442,7 @@ Cypress.Commands.add("loginApi", ({ email, password } = {}) =>
     })
     .then(({ body }) => {
       expect(body.session.identity.traits.email).to.contain(email)
+      return body
     }),
 )
 
@@ -504,10 +507,8 @@ Cypress.Commands.add(
     cy.request({ url })
       .then(({ body }) => {
         const form = body.ui
-        // label should still exist after request, for more detail: #2591
-        expect(form.nodes[1].meta).to.not.be.null
-        expect(form.nodes[1].meta.label).to.not.be.null
-        expect(form.nodes[1].meta.label.text).to.equal("Email")
+        expect(form.nodes.some((node) => node.meta?.label?.text === "Email")).to
+          .be.true
 
         return cy.request({
           method: form.method,
@@ -751,8 +752,11 @@ Cypress.Commands.add("resetCourierTemplates", (type) => {
 
 Cypress.Commands.add(
   "loginOidc",
-  ({ app, expectSession = true, url = APP_URL + "/login" }) => {
+  ({ app, expectSession = true, url = APP_URL + "/login", preTriggerHook }) => {
     cy.visit(url)
+    if (preTriggerHook) {
+      preTriggerHook()
+    }
     cy.triggerOidc(app, "hydra")
     cy.location("href").should("not.eq", "/consent")
     if (expectSession) {
@@ -1000,18 +1004,6 @@ Cypress.Commands.add("noSession", () =>
       return request
     }),
 )
-Cypress.Commands.add("getIdentityByEmail", ({ email }) =>
-  cy
-    .request({
-      method: "GET",
-      url: `${KRATOS_ADMIN}/identities`,
-      failOnStatusCode: false,
-    })
-    .then((response) => {
-      expect(response.status).to.eq(200)
-      return response.body.find((identity) => identity.traits.email === email)
-    }),
-)
 
 Cypress.Commands.add(
   "performEmailVerification",
@@ -1112,7 +1104,7 @@ Cypress.Commands.add(
 // Uses the verification email but waits so that it expires
 Cypress.Commands.add(
   "verifyEmailButExpired",
-  ({ expect: { email, password }, strategy = "code" }) => {
+  ({ expect: { email }, strategy = "code" }) => {
     cy.getMail().then((message) => {
       expect(message.subject).to.equal("Please verify your email address")
 
@@ -1155,27 +1147,17 @@ Cypress.Commands.add("useVerificationStrategy", (strategy: Strategy) => {
   })
 })
 
-// Uses the verification email but waits so that it expires
-Cypress.Commands.add("waitForPrivilegedSessionToExpire", () => {
-  cy.getSession().should((session: Session) => {
-    expect(session.authenticated_at).to.not.be.empty
-    cy.wait(
-      dayjs(session.authenticated_at).add(privilegedLifespan).diff(dayjs()) +
-        100,
-    )
-  })
-})
-
 Cypress.Commands.add("getLookupSecrets", () =>
   cy
     .get('[data-testid="node/text/lookup_secret_codes/text"] code')
     .then(($e) => $e.map((_, e) => e.innerText.trim()).toArray()),
 )
-Cypress.Commands.add("expectSettingsSaved", () =>
-  cy
-    .get('[data-testid="ui/message/1050001"]')
-    .should("contain.text", "Your changes have been saved"),
-)
+Cypress.Commands.add("expectSettingsSaved", () => {
+  cy.get('[data-testid="ui/message/1050001"]').should(
+    "contain.text",
+    "Your changes have been saved",
+  )
+})
 
 Cypress.Commands.add("getMail", ({ removeMail = true } = {}) => {
   let tries = 0
@@ -1322,6 +1304,15 @@ Cypress.Commands.add(
 )
 
 Cypress.Commands.add(
+  "addInputElement",
+  (parent: string, attribute: string, value: string) => {
+    cy.get(parent).then(($el) => {
+      $el.append(`<input type="hidden" name="${attribute}" value="${value}" />`)
+    })
+  },
+)
+
+Cypress.Commands.add(
   "notifyUnknownRecipients",
   (flow: "recovery" | "verification", value: boolean = true) => {
     cy.updateConfigFile((config) => {
@@ -1335,4 +1326,40 @@ Cypress.Commands.add("getCourierMessages", () => {
   return cy.request(KRATOS_ADMIN + "/courier/messages").then((res) => {
     return res.body
   })
+})
+
+Cypress.Commands.add(
+  "enableVerificationUIAfterRegistration",
+  (strategy: "password" | "oidc" | "webauthn") => {
+    cy.updateConfigFile((config) => {
+      if (!config.selfservice.flows.registration.after[strategy]) {
+        config.selfservice.flows.registration.after = {
+          [strategy]: { hooks: [] },
+        }
+      }
+
+      const hooks =
+        config.selfservice.flows.registration.after[strategy].hooks || []
+      config.selfservice.flows.registration.after[strategy].hooks = [
+        ...hooks.filter((h) => h.hook !== "show_verification_ui"),
+        { hook: "show_verification_ui" },
+      ]
+      return config
+    })
+  },
+)
+
+Cypress.Commands.add("getVerificationCodeFromEmail", (email) => {
+  return cy
+    .getMail({ removeMail: true })
+    .should((message) => {
+      expect(message.subject).to.equal("Please verify your email address")
+      expect(message.toAddresses[0].trim()).to.equal(email)
+    })
+    .then((message) => {
+      const code = extractRecoveryCode(message.body)
+      expect(code).to.not.be.undefined
+      expect(code.length).to.equal(6)
+      return code
+    })
 })

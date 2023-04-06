@@ -68,6 +68,7 @@ func TestHandleError(t *testing.T) {
 	}
 
 	newFlow := func(t *testing.T, ttl time.Duration, ft flow.Type) *verification.Flow {
+		t.Helper()
 		req := &http.Request{URL: urlx.ParseOrPanic("/")}
 		strategy, err := reg.GetActiveVerificationStrategy(context.Background())
 		require.NoError(t, err)
@@ -80,6 +81,7 @@ func TestHandleError(t *testing.T) {
 	}
 
 	expectErrorUI := func(t *testing.T) (map[string]interface{}, *http.Response) {
+		t.Helper()
 		res, err := ts.Client().Get(ts.URL + "/error")
 		require.NoError(t, err)
 		defer res.Body.Close()
@@ -230,6 +232,21 @@ func TestHandleError(t *testing.T) {
 
 			sse, _ := expectErrorUI(t)
 			assertx.EqualAsJSON(t, flowError, sse)
+		})
+
+		t.Run("case=fails to retry flow if recovery strategy id is not valid", func(t *testing.T) {
+			t.Cleanup(func() {
+				reset()
+				conf.MustSet(ctx, config.ViperKeySelfServiceVerificationUse, "code")
+			})
+
+			verificationFlow = newFlow(t, 0, flow.TypeBrowser)
+			verificationFlow.Active = "not-valid"
+			flowError = flow.NewFlowExpiredError(anHourAgo)
+
+			conf.MustSet(ctx, config.ViperKeySelfServiceVerificationUse, "not-valid")
+			sse, _ := expectErrorUI(t)
+			testhelpers.SnapshotTExcept(t, sse, nil)
 		})
 	})
 }

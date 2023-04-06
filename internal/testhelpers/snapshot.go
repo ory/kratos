@@ -13,6 +13,7 @@ import (
 )
 
 func SnapshotTExcept(t *testing.T, actual interface{}, except []string) {
+	t.Helper()
 	compare, err := json.MarshalIndent(actual, "", "  ")
 	require.NoError(t, err, "%+v", actual)
 	for _, e := range except {

@@ -43,7 +43,7 @@ func (p *Persister) DeleteContinuitySession(ctx context.Context, id uuid.UUID) e
 	defer span.End()
 
 	if count, err := p.GetConnection(ctx).RawQuery(
-		// #nosec
+		//#nosec G201 -- TableName is static
 		fmt.Sprintf("DELETE FROM %s WHERE id=? AND nid=?",
 			new(continuity.Container).TableName(ctx)), id, p.NetworkID(ctx)).ExecWithCount(); err != nil {
 		return sqlcon.HandleError(err)
@@ -54,7 +54,7 @@ func (p *Persister) DeleteContinuitySession(ctx context.Context, id uuid.UUID) e
 }
 
 func (p *Persister) DeleteExpiredContinuitySessions(ctx context.Context, expiresAt time.Time, limit int) error {
-	// #nosec G201
+	//#nosec G201 -- TableName is static
 	err := p.GetConnection(ctx).RawQuery(fmt.Sprintf(
 		"DELETE FROM %s WHERE id in (SELECT id FROM (SELECT id FROM %s c WHERE expires_at <= ? and nid = ? ORDER BY expires_at ASC LIMIT %d ) AS s )",
 		new(continuity.Container).TableName(ctx),

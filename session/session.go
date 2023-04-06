@@ -12,6 +12,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/ory/kratos/x"
+
 	"github.com/ory/x/httpx"
 	"github.com/ory/x/pagination/keysetpagination"
 	"github.com/ory/x/stringsx"
@@ -214,8 +216,8 @@ func NewActiveSession(r *http.Request, i *identity.Identity, c lifespanProvider,
 func NewInactiveSession() *Session {
 	return &Session{
 		ID:                          uuid.Nil,
-		Token:                       randx.MustString(32, randx.AlphaNum),
-		LogoutToken:                 randx.MustString(32, randx.AlphaNum),
+		Token:                       x.OrySessionToken + randx.MustString(32, randx.AlphaNum),
+		LogoutToken:                 x.OryLogoutToken + randx.MustString(32, randx.AlphaNum),
 		Active:                      false,
 		AuthenticatorAssuranceLevel: identity.NoAuthenticatorAssuranceLevel,
 	}
@@ -261,9 +263,9 @@ func (s *Session) SetSessionDeviceInformation(r *http.Request) {
 	s.Devices = append(s.Devices, device)
 }
 
-func (s *Session) Declassify() *Session {
+func (s Session) Declassified() *Session {
 	s.Identity = s.Identity.CopyWithoutCredentials()
-	return s
+	return &s
 }
 
 func (s *Session) IsActive() bool {

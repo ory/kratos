@@ -53,7 +53,7 @@ jobs:
     steps:
       - run: |
           docker create --name cockroach -p 26257:26257 \
-            cockroachdb/cockroach:v22.1.3 start-single-node --insecure
+            cockroachdb/cockroach:v22.2.6 start-single-node --insecure
           docker start cockroach
         name: Start CockroachDB
       - run: |
@@ -91,7 +91,7 @@ jobs:
           GOGC: 100
         with:
           args: --timeout 10m0s
-          version: v1.49.0
+          version: v1.50.1
           skip-go-installation: true
           skip-pkg-cache: true
       - name: Build Kratos
@@ -145,7 +145,7 @@ jobs:
           node-version: 16
       - run: |
           docker create --name cockroach -p 26257:26257 \
-            cockroachdb/cockroach:v20.2.5 start-single-node --insecure
+            cockroachdb/cockroach:v22.2.6 start-single-node --insecure
           docker start cockroach
         name: Start CockroachDB
       - uses: browser-actions/setup-chrome@latest
@@ -171,6 +171,7 @@ jobs:
         uses: actions/setup-go@v3
         with:
           go-version: "1.19"
+
       - name: Install selfservice-ui-react-native
         uses: actions/checkout@v3
         with:
@@ -179,6 +180,7 @@ jobs:
       - run: |
           cd react-native-ui
           npm install
+
       - name: Install selfservice-ui-node
         uses: actions/checkout@v3
         with:
@@ -187,14 +189,26 @@ jobs:
       - run: |
           cd node-ui
           npm install
+
+      - name: Install selfservice-ui-react-nextjs
+        uses: actions/checkout@v3
+        with:
+          repository: ory/kratos-selfservice-ui-react-nextjs
+          path: react-ui
+      - run: |
+          cd react-ui
+          npm ci
+
       - run: |
           echo 'RN_UI_PATH='"$(realpath react-native-ui)" >> $GITHUB_ENV
           echo 'NODE_UI_PATH='"$(realpath node-ui)" >> $GITHUB_ENV
+          echo 'REACT_UI_PATH='"$(realpath react-ui)" >> $GITHUB_ENV
       - run: |
           ./test/e2e/run.sh ${{ matrix.database }}
         env:
           RN_UI_PATH: react-native-ui
           NODE_UI_PATH: node-ui
+          REACT_UI_PATH: react-ui
           CYPRESS_RECORD_KEY: ${{ secrets.CYPRESS_RECORD_KEY }}
       - if: failure()
         uses: actions/upload-artifact@v2

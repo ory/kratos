@@ -23,12 +23,14 @@ import (
 	"github.com/ory/x/urlx"
 )
 
+var _ flow.Flow = new(Flow)
+
 // A Verification Flow
 //
 // Used to verify an out-of-band communication
 // channel such as an email address or a phone number.
 //
-// For more information head over to: https://www.ory.sh/docs/kratos/selfservice/flows/verify-email-account-activation
+// For more information head over to: https://www.ory.sh/docs/kratos/self-service/flows/verify-email-account-activation
 //
 // swagger:model verificationFlow
 type Flow struct {

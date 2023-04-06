@@ -32,8 +32,6 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/tidwall/gjson"
 
-	"github.com/ory/x/sqlxx"
-
 	"github.com/ory/x/urlx"
 
 	"github.com/ory/kratos/driver/config"
@@ -481,7 +479,7 @@ func TestStrategy(t *testing.T) {
 		})
 	})
 
-	t.Run("case=should fail to register if email is already being used by password credentials", func(t *testing.T) {
+	t.Run("case=should fail to register and return fresh login flow if email is already being used by password credentials", func(t *testing.T) {
 		subject = "email-exist-with-password-strategy@ory.sh"
 		scope = []string{"openid"}
 
@@ -499,7 +497,8 @@ func TestStrategy(t *testing.T) {
 			r := newRegistrationFlow(t, returnTS.URL, time.Minute)
 			action := afv(t, r.ID, "valid")
 			res, body := makeRequest(t, "valid", action, url.Values{})
-			aue(t, res, body, "An account with the same identifier (email, phone, username, ...) exists already.")
+			aue(t, res, body, "An account with the same identifier (email, phone, username, ...) exists already. Please sign in to your existing account and link your social profile in the settings page.")
+			require.Contains(t, gjson.GetBytes(body, "ui.action").String(), "/self-service/login")
 		})
 
 		t.Run("case=should fail login", func(t *testing.T) {
@@ -547,6 +546,97 @@ func TestStrategy(t *testing.T) {
 		assert.Greater(t, authAt2.Sub(authAt1).Milliseconds(), int64(0), "%s - %s : %s - %s", authAt2, authAt1, body2, body1)
 	})
 
+	t.Run("case=upstream parameters should be passed on to provider", func(t *testing.T) {
+		subject = "oidc-upstream-parameters@ory.sh"
+		scope = []string{"openid", "offline"}
+
+		// We need to disable redirects because the upstream parameters are only passed on to the provider
+		c := &http.Client{
+			CheckRedirect: func(req *http.Request, via []*http.Request) error {
+				return http.ErrUseLastResponse
+			},
+		}
+
+		t.Run("case=should pass when registering", func(t *testing.T) {
+			f := newRegistrationFlow(t, returnTS.URL, time.Minute)
+			action := afv(t, f.ID, "valid")
+
+			fv := url.Values{}
+
+			fv.Set("provider", "valid")
+			fv.Set("upstream_parameters.login_hint", "oidc-upstream-parameters@ory.sh")
+			fv.Set("upstream_parameters.hd", "ory.sh")
+
+			res, err := c.PostForm(action, fv)
+			require.NoError(t, err)
+			require.Equal(t, http.StatusSeeOther, res.StatusCode)
+
+			loc, err := res.Location()
+			require.NoError(t, err)
+
+			require.Equal(t, "oidc-upstream-parameters@ory.sh", loc.Query().Get("login_hint"))
+			require.Equal(t, "ory.sh", loc.Query().Get("hd"))
+		})
+
+		t.Run("case=should pass when logging in", func(t *testing.T) {
+			f := newLoginFlow(t, returnTS.URL, time.Minute)
+
+			action := afv(t, f.ID, "valid")
+
+			fv := url.Values{}
+
+			fv.Set("provider", "valid")
+			fv.Set("upstream_parameters.login_hint", "oidc-upstream-parameters@ory.sh")
+			fv.Set("upstream_parameters.hd", "ory.sh")
+
+			res, err := c.PostForm(action, fv)
+			require.NoError(t, err)
+			require.Equal(t, http.StatusSeeOther, res.StatusCode)
+
+			loc, err := res.Location()
+			require.NoError(t, err)
+
+			require.Equal(t, "oidc-upstream-parameters@ory.sh", loc.Query().Get("login_hint"))
+			require.Equal(t, "ory.sh", loc.Query().Get("hd"))
+		})
+
+		t.Run("case=should ignore invalid parameters when logging in", func(t *testing.T) {
+			f := newLoginFlow(t, returnTS.URL, time.Minute)
+			action := afv(t, f.ID, "valid")
+
+			fv := url.Values{}
+			fv.Set("upstream_parameters.lol", "invalid")
+
+			res, err := c.PostForm(action, fv)
+			require.NoError(t, err)
+			require.Equal(t, http.StatusSeeOther, res.StatusCode)
+
+			loc, err := res.Location()
+			require.NoError(t, err)
+
+			// upstream parameters that are not on the allow list will be ignored and not passed on to the upstream provider.
+			require.Empty(t, loc.Query().Get("lol"))
+		})
+
+		t.Run("case=should ignore invalid parameters when registering", func(t *testing.T) {
+			f := newRegistrationFlow(t, returnTS.URL, time.Minute)
+			action := afv(t, f.ID, "valid")
+
+			fv := url.Values{}
+			fv.Set("upstream_parameters.lol", "invalid")
+
+			res, err := c.PostForm(action, fv)
+			require.NoError(t, err)
+			require.Equal(t, http.StatusFound, res.StatusCode)
+
+			loc, err := res.Location()
+			require.NoError(t, err)
+
+			// upstream parameters that are not on the allow list will be ignored and not passed on to the upstream provider.
+			require.Empty(t, loc.Query().Get("lol"))
+		})
+	})
+
 	t.Run("method=TestPopulateSignUpMethod", func(t *testing.T) {
 		conf.MustSet(ctx, config.ViperKeyPublicBaseURL, "https://foo/")
 
@@ -579,17 +669,17 @@ func TestCountActiveFirstFactorCredentials(t *testing.T) {
 	}
 
 	for k, tc := range []struct {
-		in       identity.CredentialsCollection
+		in       map[identity.CredentialsType]identity.Credentials
 		expected int
 	}{
 		{
-			in: identity.CredentialsCollection{{
+			in: map[identity.CredentialsType]identity.Credentials{strategy.ID(): {
 				Type:   strategy.ID(),
-				Config: sqlxx.JSONRawMessage{},
+				Config: []byte{},
 			}},
 		},
 		{
-			in: identity.CredentialsCollection{{
+			in: map[identity.CredentialsType]identity.Credentials{strategy.ID(): {
 				Type: strategy.ID(),
 				Config: toJson(identity.CredentialsOIDC{Providers: []identity.CredentialsOIDCProvider{
 					{Subject: "foo", Provider: "bar"},
@@ -597,7 +687,7 @@ func TestCountActiveFirstFactorCredentials(t *testing.T) {
 			}},
 		},
 		{
-			in: identity.CredentialsCollection{{
+			in: map[identity.CredentialsType]identity.Credentials{strategy.ID(): {
 				Type:        strategy.ID(),
 				Identifiers: []string{""},
 				Config: toJson(identity.CredentialsOIDC{Providers: []identity.CredentialsOIDCProvider{
@@ -606,7 +696,7 @@ func TestCountActiveFirstFactorCredentials(t *testing.T) {
 			}},
 		},
 		{
-			in: identity.CredentialsCollection{{
+			in: map[identity.CredentialsType]identity.Credentials{strategy.ID(): {
 				Type:        strategy.ID(),
 				Identifiers: []string{"bar:"},
 				Config: toJson(identity.CredentialsOIDC{Providers: []identity.CredentialsOIDCProvider{
@@ -615,7 +705,7 @@ func TestCountActiveFirstFactorCredentials(t *testing.T) {
 			}},
 		},
 		{
-			in: identity.CredentialsCollection{{
+			in: map[identity.CredentialsType]identity.Credentials{strategy.ID(): {
 				Type:        strategy.ID(),
 				Identifiers: []string{":foo"},
 				Config: toJson(identity.CredentialsOIDC{Providers: []identity.CredentialsOIDCProvider{
@@ -624,7 +714,7 @@ func TestCountActiveFirstFactorCredentials(t *testing.T) {
 			}},
 		},
 		{
-			in: identity.CredentialsCollection{{
+			in: map[identity.CredentialsType]identity.Credentials{strategy.ID(): {
 				Type:        strategy.ID(),
 				Identifiers: []string{"not-bar:foo"},
 				Config: toJson(identity.CredentialsOIDC{Providers: []identity.CredentialsOIDCProvider{
@@ -633,7 +723,7 @@ func TestCountActiveFirstFactorCredentials(t *testing.T) {
 			}},
 		},
 		{
-			in: identity.CredentialsCollection{{
+			in: map[identity.CredentialsType]identity.Credentials{strategy.ID(): {
 				Type:        strategy.ID(),
 				Identifiers: []string{"bar:not-foo"},
 				Config: toJson(identity.CredentialsOIDC{Providers: []identity.CredentialsOIDCProvider{
@@ -642,7 +732,7 @@ func TestCountActiveFirstFactorCredentials(t *testing.T) {
 			}},
 		},
 		{
-			in: identity.CredentialsCollection{{
+			in: map[identity.CredentialsType]identity.Credentials{strategy.ID(): {
 				Type:        strategy.ID(),
 				Identifiers: []string{"bar:foo"},
 				Config: toJson(identity.CredentialsOIDC{Providers: []identity.CredentialsOIDCProvider{

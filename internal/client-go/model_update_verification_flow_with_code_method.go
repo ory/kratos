@@ -15,8 +15,8 @@ import (
 	"encoding/json"
 )
 
-// UpdateVerificationFlowWithCodeMethodBody struct for UpdateVerificationFlowWithCodeMethodBody
-type UpdateVerificationFlowWithCodeMethodBody struct {
+// UpdateVerificationFlowWithCodeMethod struct for UpdateVerificationFlowWithCodeMethod
+type UpdateVerificationFlowWithCodeMethod struct {
 	// The verification code
 	Code *string `json:"code,omitempty"`
 	// Sending the anti-csrf token is only required for browser login flows.
@@ -29,25 +29,25 @@ type UpdateVerificationFlowWithCodeMethodBody struct {
 	Method *string `json:"method,omitempty"`
 }
 
-// NewUpdateVerificationFlowWithCodeMethodBody instantiates a new UpdateVerificationFlowWithCodeMethodBody object
+// NewUpdateVerificationFlowWithCodeMethod instantiates a new UpdateVerificationFlowWithCodeMethod object
 // This constructor will assign default values to properties that have it defined,
 // and makes sure properties required by API are set, but the set of arguments
 // will change when the set of required properties is changed
-func NewUpdateVerificationFlowWithCodeMethodBody() *UpdateVerificationFlowWithCodeMethodBody {
-	this := UpdateVerificationFlowWithCodeMethodBody{}
+func NewUpdateVerificationFlowWithCodeMethod() *UpdateVerificationFlowWithCodeMethod {
+	this := UpdateVerificationFlowWithCodeMethod{}
 	return &this
 }
 
-// NewUpdateVerificationFlowWithCodeMethodBodyWithDefaults instantiates a new UpdateVerificationFlowWithCodeMethodBody object
+// NewUpdateVerificationFlowWithCodeMethodWithDefaults instantiates a new UpdateVerificationFlowWithCodeMethod object
 // This constructor will only assign default values to properties that have it defined,
 // but it doesn't guarantee that properties required by API are set
-func NewUpdateVerificationFlowWithCodeMethodBodyWithDefaults() *UpdateVerificationFlowWithCodeMethodBody {
-	this := UpdateVerificationFlowWithCodeMethodBody{}
+func NewUpdateVerificationFlowWithCodeMethodWithDefaults() *UpdateVerificationFlowWithCodeMethod {
+	this := UpdateVerificationFlowWithCodeMethod{}
 	return &this
 }
 
 // GetCode returns the Code field value if set, zero value otherwise.
-func (o *UpdateVerificationFlowWithCodeMethodBody) GetCode() string {
+func (o *UpdateVerificationFlowWithCodeMethod) GetCode() string {
 	if o == nil || o.Code == nil {
 		var ret string
 		return ret
@@ -57,7 +57,7 @@ func (o *UpdateVerificationFlowWithCodeMethodBody) GetCode() string {
 
 // GetCodeOk returns a tuple with the Code field value if set, nil otherwise
 // and a boolean to check if the value has been set.
-func (o *UpdateVerificationFlowWithCodeMethodBody) GetCodeOk() (*string, bool) {
+func (o *UpdateVerificationFlowWithCodeMethod) GetCodeOk() (*string, bool) {
 	if o == nil || o.Code == nil {
 		return nil, false
 	}
@@ -65,7 +65,7 @@ func (o *UpdateVerificationFlowWithCodeMethodBody) GetCodeOk() (*string, bool) {
 }
 
 // HasCode returns a boolean if a field has been set.
-func (o *UpdateVerificationFlowWithCodeMethodBody) HasCode() bool {
+func (o *UpdateVerificationFlowWithCodeMethod) HasCode() bool {
 	if o != nil && o.Code != nil {
 		return true
 	}
@@ -74,12 +74,12 @@ func (o *UpdateVerificationFlowWithCodeMethodBody) HasCode() bool {
 }
 
 // SetCode gets a reference to the given string and assigns it to the Code field.
-func (o *UpdateVerificationFlowWithCodeMethodBody) SetCode(v string) {
+func (o *UpdateVerificationFlowWithCodeMethod) SetCode(v string) {
 	o.Code = &v
 }
 
 // GetCsrfToken returns the CsrfToken field value if set, zero value otherwise.
-func (o *UpdateVerificationFlowWithCodeMethodBody) GetCsrfToken() string {
+func (o *UpdateVerificationFlowWithCodeMethod) GetCsrfToken() string {
 	if o == nil || o.CsrfToken == nil {
 		var ret string
 		return ret
@@ -89,7 +89,7 @@ func (o *UpdateVerificationFlowWithCodeMethodBody) GetCsrfToken() string {
 
 // GetCsrfTokenOk returns a tuple with the CsrfToken field value if set, nil otherwise
 // and a boolean to check if the value has been set.
-func (o *UpdateVerificationFlowWithCodeMethodBody) GetCsrfTokenOk() (*string, bool) {
+func (o *UpdateVerificationFlowWithCodeMethod) GetCsrfTokenOk() (*string, bool) {
 	if o == nil || o.CsrfToken == nil {
 		return nil, false
 	}
@@ -97,7 +97,7 @@ func (o *UpdateVerificationFlowWithCodeMethodBody) GetCsrfTokenOk() (*string, bo
 }
 
 // HasCsrfToken returns a boolean if a field has been set.
-func (o *UpdateVerificationFlowWithCodeMethodBody) HasCsrfToken() bool {
+func (o *UpdateVerificationFlowWithCodeMethod) HasCsrfToken() bool {
 	if o != nil && o.CsrfToken != nil {
 		return true
 	}
@@ -106,12 +106,12 @@ func (o *UpdateVerificationFlowWithCodeMethodBody) HasCsrfToken() bool {
 }
 
 // SetCsrfToken gets a reference to the given string and assigns it to the CsrfToken field.
-func (o *UpdateVerificationFlowWithCodeMethodBody) SetCsrfToken(v string) {
+func (o *UpdateVerificationFlowWithCodeMethod) SetCsrfToken(v string) {
 	o.CsrfToken = &v
 }
 
 // GetEmail returns the Email field value if set, zero value otherwise.
-func (o *UpdateVerificationFlowWithCodeMethodBody) GetEmail() string {
+func (o *UpdateVerificationFlowWithCodeMethod) GetEmail() string {
 	if o == nil || o.Email == nil {
 		var ret string
 		return ret
@@ -121,7 +121,7 @@ func (o *UpdateVerificationFlowWithCodeMethodBody) GetEmail() string {
 
 // GetEmailOk returns a tuple with the Email field value if set, nil otherwise
 // and a boolean to check if the value has been set.
-func (o *UpdateVerificationFlowWithCodeMethodBody) GetEmailOk() (*string, bool) {
+func (o *UpdateVerificationFlowWithCodeMethod) GetEmailOk() (*string, bool) {
 	if o == nil || o.Email == nil {
 		return nil, false
 	}
@@ -129,7 +129,7 @@ func (o *UpdateVerificationFlowWithCodeMethodBody) GetEmailOk() (*string, bool) 
 }
 
 // HasEmail returns a boolean if a field has been set.
-func (o *UpdateVerificationFlowWithCodeMethodBody) HasEmail() bool {
+func (o *UpdateVerificationFlowWithCodeMethod) HasEmail() bool {
 	if o != nil && o.Email != nil {
 		return true
 	}
@@ -138,12 +138,12 @@ func (o *UpdateVerificationFlowWithCodeMethodBody) HasEmail() bool {
 }
 
 // SetEmail gets a reference to the given string and assigns it to the Email field.
-func (o *UpdateVerificationFlowWithCodeMethodBody) SetEmail(v string) {
+func (o *UpdateVerificationFlowWithCodeMethod) SetEmail(v string) {
 	o.Email = &v
 }
 
 // GetFlow returns the Flow field value if set, zero value otherwise.
-func (o *UpdateVerificationFlowWithCodeMethodBody) GetFlow() string {
+func (o *UpdateVerificationFlowWithCodeMethod) GetFlow() string {
 	if o == nil || o.Flow == nil {
 		var ret string
 		return ret
@@ -153,7 +153,7 @@ func (o *UpdateVerificationFlowWithCodeMethodBody) GetFlow() string {
 
 // GetFlowOk returns a tuple with the Flow field value if set, nil otherwise
 // and a boolean to check if the value has been set.
-func (o *UpdateVerificationFlowWithCodeMethodBody) GetFlowOk() (*string, bool) {
+func (o *UpdateVerificationFlowWithCodeMethod) GetFlowOk() (*string, bool) {
 	if o == nil || o.Flow == nil {
 		return nil, false
 	}
@@ -161,7 +161,7 @@ func (o *UpdateVerificationFlowWithCodeMethodBody) GetFlowOk() (*string, bool) {
 }
 
 // HasFlow returns a boolean if a field has been set.
-func (o *UpdateVerificationFlowWithCodeMethodBody) HasFlow() bool {
+func (o *UpdateVerificationFlowWithCodeMethod) HasFlow() bool {
 	if o != nil && o.Flow != nil {
 		return true
 	}
@@ -170,12 +170,12 @@ func (o *UpdateVerificationFlowWithCodeMethodBody) HasFlow() bool {
 }
 
 // SetFlow gets a reference to the given string and assigns it to the Flow field.
-func (o *UpdateVerificationFlowWithCodeMethodBody) SetFlow(v string) {
+func (o *UpdateVerificationFlowWithCodeMethod) SetFlow(v string) {
 	o.Flow = &v
 }
 
 // GetMethod returns the Method field value if set, zero value otherwise.
-func (o *UpdateVerificationFlowWithCodeMethodBody) GetMethod() string {
+func (o *UpdateVerificationFlowWithCodeMethod) GetMethod() string {
 	if o == nil || o.Method == nil {
 		var ret string
 		return ret
@@ -185,7 +185,7 @@ func (o *UpdateVerificationFlowWithCodeMethodBody) GetMethod() string {
 
 // GetMethodOk returns a tuple with the Method field value if set, nil otherwise
 // and a boolean to check if the value has been set.
-func (o *UpdateVerificationFlowWithCodeMethodBody) GetMethodOk() (*string, bool) {
+func (o *UpdateVerificationFlowWithCodeMethod) GetMethodOk() (*string, bool) {
 	if o == nil || o.Method == nil {
 		return nil, false
 	}
@@ -193,7 +193,7 @@ func (o *UpdateVerificationFlowWithCodeMethodBody) GetMethodOk() (*string, bool)
 }
 
 // HasMethod returns a boolean if a field has been set.
-func (o *UpdateVerificationFlowWithCodeMethodBody) HasMethod() bool {
+func (o *UpdateVerificationFlowWithCodeMethod) HasMethod() bool {
 	if o != nil && o.Method != nil {
 		return true
 	}
@@ -202,11 +202,11 @@ func (o *UpdateVerificationFlowWithCodeMethodBody) HasMethod() bool {
 }
 
 // SetMethod gets a reference to the given string and assigns it to the Method field.
-func (o *UpdateVerificationFlowWithCodeMethodBody) SetMethod(v string) {
+func (o *UpdateVerificationFlowWithCodeMethod) SetMethod(v string) {
 	o.Method = &v
 }
 
-func (o UpdateVerificationFlowWithCodeMethodBody) MarshalJSON() ([]byte, error) {
+func (o UpdateVerificationFlowWithCodeMethod) MarshalJSON() ([]byte, error) {
 	toSerialize := map[string]interface{}{}
 	if o.Code != nil {
 		toSerialize["code"] = o.Code
@@ -226,38 +226,38 @@ func (o UpdateVerificationFlowWithCodeMethodBody) MarshalJSON() ([]byte, error) 
 	return json.Marshal(toSerialize)
 }
 
-type NullableUpdateVerificationFlowWithCodeMethodBody struct {
-	value *UpdateVerificationFlowWithCodeMethodBody
+type NullableUpdateVerificationFlowWithCodeMethod struct {
+	value *UpdateVerificationFlowWithCodeMethod
 	isSet bool
 }
 
-func (v NullableUpdateVerificationFlowWithCodeMethodBody) Get() *UpdateVerificationFlowWithCodeMethodBody {
+func (v NullableUpdateVerificationFlowWithCodeMethod) Get() *UpdateVerificationFlowWithCodeMethod {
 	return v.value
 }
 
-func (v *NullableUpdateVerificationFlowWithCodeMethodBody) Set(val *UpdateVerificationFlowWithCodeMethodBody) {
+func (v *NullableUpdateVerificationFlowWithCodeMethod) Set(val *UpdateVerificationFlowWithCodeMethod) {
 	v.value = val
 	v.isSet = true
 }
 
-func (v NullableUpdateVerificationFlowWithCodeMethodBody) IsSet() bool {
+func (v NullableUpdateVerificationFlowWithCodeMethod) IsSet() bool {
 	return v.isSet
 }
 
-func (v *NullableUpdateVerificationFlowWithCodeMethodBody) Unset() {
+func (v *NullableUpdateVerificationFlowWithCodeMethod) Unset() {
 	v.value = nil
 	v.isSet = false
 }
 
-func NewNullableUpdateVerificationFlowWithCodeMethodBody(val *UpdateVerificationFlowWithCodeMethodBody) *NullableUpdateVerificationFlowWithCodeMethodBody {
-	return &NullableUpdateVerificationFlowWithCodeMethodBody{value: val, isSet: true}
+func NewNullableUpdateVerificationFlowWithCodeMethod(val *UpdateVerificationFlowWithCodeMethod) *NullableUpdateVerificationFlowWithCodeMethod {
+	return &NullableUpdateVerificationFlowWithCodeMethod{value: val, isSet: true}
 }
 
-func (v NullableUpdateVerificationFlowWithCodeMethodBody) MarshalJSON() ([]byte, error) {
+func (v NullableUpdateVerificationFlowWithCodeMethod) MarshalJSON() ([]byte, error) {
 	return json.Marshal(v.value)
 }
 
-func (v *NullableUpdateVerificationFlowWithCodeMethodBody) UnmarshalJSON(src []byte) error {
+func (v *NullableUpdateVerificationFlowWithCodeMethod) UnmarshalJSON(src []byte) error {
 	v.isSet = true
 	return json.Unmarshal(src, &v.value)
 }

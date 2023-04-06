@@ -7,8 +7,8 @@ import (
 	"context"
 	"crypto/aes"
 	"crypto/cipher"
-	"crypto/md5"  // #nosec G501
-	"crypto/sha1" // #nosec G505 - compatibility for imported passwords
+	"crypto/md5"  //#nosec G501 -- compatibility for imported passwords
+	"crypto/sha1" //#nosec G505 -- compatibility for imported passwords
 	"crypto/sha256"
 	"crypto/sha512"
 	"crypto/subtle"
@@ -220,7 +220,7 @@ func CompareMD5(_ context.Context, password []byte, hash []byte) error {
 		r := strings.NewReplacer("{SALT}", string(salt), "{PASSWORD}", string(password))
 		arg = []byte(r.Replace(string(pf)))
 	}
-	// #nosec G401
+	//#nosec G401 -- compatibility for imported passwords
 	otherHash := md5.Sum(arg)
 
 	// Check that the contents of the hashed passwords are identical. Note
@@ -412,7 +412,7 @@ func compareSHAHelper(hasher string, raw []byte, hash []byte) error {
 
 	switch hasher {
 	case "sha1":
-		sum := sha1.Sum(raw) // #nosec G401 - compatibility for imported passwords
+		sum := sha1.Sum(raw) //#nosec G401 -- compatibility for imported passwords
 		sha = sum[:]
 	case "sha256":
 		sum := sha256.Sum256(raw)

@@ -6,6 +6,9 @@ package driver
 import (
 	"context"
 
+	"github.com/pkg/errors"
+
+	"github.com/ory/herodot"
 	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/selfservice/flow/verification"
@@ -51,8 +54,13 @@ func (m *RegistryDefault) LinkSender() *link.Sender {
 // GetActiveVerificationStrategy returns the currently active verification strategy
 // If no verification strategy has been set, an error is returned
 func (m *RegistryDefault) GetActiveVerificationStrategy(ctx context.Context) (verification.Strategy, error) {
-	activeVerificationStrategy := m.Config().SelfServiceFlowVerificationUse(ctx)
-	return m.VerificationStrategies(ctx).Strategy(activeVerificationStrategy)
+	as := m.Config().SelfServiceFlowVerificationUse(ctx)
+	s, err := m.VerificationStrategies(ctx).Strategy(as)
+	if err != nil {
+		return nil, errors.WithStack(herodot.ErrBadRequest.
+			WithReasonf("The active verification strategy %s is not enabled. Please enable it in the configuration.", as))
+	}
+	return s, nil
 }
 
 func (m *RegistryDefault) VerificationStrategies(ctx context.Context) (verificationStrategies verification.Strategies) {

@@ -148,7 +148,7 @@ func CheckE2EServerOnHTTP(t *testing.T, publicPort, adminPort int) (publicUrl, a
 
 func waitToComeAlive(t *testing.T, publicUrl, adminUrl string) {
 	require.NoError(t, retry.Do(func() error {
-		/* #nosec G402: TLS InsecureSkipVerify set true. */
+		//#nosec G402 -- TLS InsecureSkipVerify set true
 		tr := &http.Transport{TLSClientConfig: &tls.Config{InsecureSkipVerify: true}}
 		client := &http.Client{Transport: tr}
 

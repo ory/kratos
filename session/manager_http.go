@@ -203,7 +203,7 @@ func (s *ManagerHTTP) FetchFromRequest(ctx context.Context, r *http.Request) (_ 
 		}
 	}()
 
-	token := s.extractToken(r)
+	token := s.extractToken(r.WithContext(ctx))
 	if token == "" {
 		return nil, errors.WithStack(NewErrNoCredentialsForSession())
 	}

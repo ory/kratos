@@ -97,10 +97,11 @@ type RegistryDefault struct {
 	persister       persistence.Persister
 	migrationStatus popx.MigrationStatuses
 
-	hookVerifier         *hook.Verifier
-	hookSessionIssuer    *hook.SessionIssuer
-	hookSessionDestroyer *hook.SessionDestroyer
-	hookAddressVerifier  *hook.AddressVerifier
+	hookVerifier           *hook.Verifier
+	hookSessionIssuer      *hook.SessionIssuer
+	hookSessionDestroyer   *hook.SessionDestroyer
+	hookAddressVerifier    *hook.AddressVerifier
+	hookShowVerificationUI *hook.ShowVerificationUIHook
 
 	identityHandler   *identity.Handler
 	identityValidator *identity.Validator
@@ -507,6 +508,7 @@ func (m *RegistryDefault) CookieManager(ctx context.Context) sessions.StoreExact
 	cs.Options.MaxAge = 0
 	if m.Config().SessionPersistentCookie(ctx) {
 		cs.Options.MaxAge = int(m.Config().SessionLifespan(ctx).Seconds())
+		cs.MaxAge(cs.Options.MaxAge)
 	}
 	return cs
 }
@@ -522,8 +524,7 @@ func (m *RegistryDefault) ContinuityCookieManager(ctx context.Context) sessions.
 
 func (m *RegistryDefault) Tracer(ctx context.Context) *otelx.Tracer {
 	if m.trc == nil {
-		m.Logger().WithError(errors.WithStack(errors.New(""))).Warn("No tracer setup in RegistryDefault")
-		return otelx.NewNoop(m.l, m.Config().Tracing(ctx)) // should never happen
+		return otelx.NewNoop(m.l, m.Config().Tracing(ctx))
 	}
 	return m.trc
 }
@@ -582,6 +583,8 @@ func (m *RegistryDefault) Init(ctx context.Context, ctxer contextx.Contextualize
 	if m.Tracer(ctx).IsLoaded() {
 		instrumentedDriverOpts = []instrumentedsql.Opt{
 			instrumentedsql.WithTracer(otelsql.NewTracer()),
+			instrumentedsql.WithOpsExcluded(instrumentedsql.OpSQLRowsNext),
+			instrumentedsql.WithOmitArgs(), // don't risk leaking PII or secrets
 		}
 	}
 	if o.replaceTracer != nil {

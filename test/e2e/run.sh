@@ -43,6 +43,7 @@ base=$(pwd)
 setup=yes
 dev=no
 nokill=no
+cleanup=no
 for i in "$@"; do
   case $i in
   --no-kill)
@@ -61,11 +62,14 @@ for i in "$@"; do
     dev=yes
     shift # past argument=value
     ;;
+  --cleanup)
+    cleanup=yes
+    shift # past argument=value
+    ;;
   esac
 done
 
-prepare() {
-  if [[ "${nokill}" == "no" ]]; then
+cleanup() {
     killall node || true
     killall modd || true
     killall webhook || true
@@ -73,13 +77,18 @@ prepare() {
     killall hydra-login-consent || true
     killall hydra-kratos-login-consent || true
     docker kill kratos_test_hydra || true
+}
+
+prepare() {
+  if [[ "${nokill}" == "no" ]]; then
+    cleanup
   fi
 
   if [ -z ${TEST_DATABASE_POSTGRESQL+x} ]; then
     docker rm -f kratos_test_database_mysql kratos_test_database_postgres kratos_test_database_cockroach || true
     docker run --platform linux/amd64 --name kratos_test_database_mysql -p 3444:3306 -e MYSQL_ROOT_PASSWORD=secret -d mysql:5.7
     docker run --name kratos_test_database_postgres -p 3445:5432 -e POSTGRES_PASSWORD=secret -e POSTGRES_DB=postgres -d postgres:9.6 postgres -c log_statement=all
-    docker run --name kratos_test_database_cockroach -p 3446:26257 -d cockroachdb/cockroach:v20.2.4 start-single-node --insecure
+    docker run --name kratos_test_database_cockroach -p 3446:26257 -d cockroachdb/cockroach:v22.2.6 start-single-node --insecure
 
     export TEST_DATABASE_MYSQL="mysql://root:secret@(localhost:3444)/mysql?parseTime=true&multiStatements=true"
     export TEST_DATABASE_POSTGRESQL="postgres://postgres:secret@localhost:3445/postgres?sslmode=disable"
@@ -339,6 +348,11 @@ the path where the kratos-selfservice-ui-node project is checked out:
   $0 ..."
 }
 
+if [[ "${cleanup}" == "yes" ]]; then
+  cleanup
+  exit 0
+fi
+
 export TEST_DATABASE_SQLITE="sqlite:///$(mktemp -d -t ci-XXXXXXXXXX)/db.sqlite?_fk=true"
 export TEST_DATABASE_MEMORY="memory"
 
@@ -374,4 +388,5 @@ esac
 if [[ "${setup}" == "yes" ]]; then
   prepare
 fi
+
 run "${db}"
