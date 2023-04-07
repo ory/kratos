@@ -5,7 +5,7 @@
 
 **Table of Contents**
 
-- [ (2023-04-06)](#2023-04-06)
+- [ (2023-04-07)](#2023-04-07)
   - [Breaking Changes](#breaking-changes)
     - [Bug Fixes](#bug-fixes)
     - [Code Refactoring](#code-refactoring)
@@ -296,7 +296,7 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# [](https://github.com/ory/kratos/compare/v0.11.1...v) (2023-04-06)
+# [](https://github.com/ory/kratos/compare/v0.11.1...v) (2023-04-07)
 
 ## Breaking Changes
 
@@ -393,6 +393,13 @@ flows.
   ([5ab1a56](https://github.com/ory/kratos/commit/5ab1a56cfd41e95fbb30b8f93426a27e510c62c7)):
 
   Also fix tracing.
+
+- Missing issuer regression in OIDC
+  ([#3220](https://github.com/ory/kratos/issues/3220))
+  ([52f0740](https://github.com/ory/kratos/commit/52f07402edac2624cb37c72c768737a785658d29)):
+
+  Closes https://github.com/ory/kratos/issues/3182 Closes
+  https://github.com/ory/kratos/issues/3040
 
 - Nolint comment
   ([93e6501](https://github.com/ory/kratos/commit/93e6501c63a253336c081f156ada58458b83ef92))
