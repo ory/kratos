@@ -6,11 +6,12 @@ package oidc
 import (
 	"context"
 	"encoding/json"
-	"github.com/ory/x/stringsx"
 	"io"
 	"net/url"
 	"path"
 	"time"
+
+	"github.com/ory/x/stringsx"
 
 	"github.com/tidwall/sjson"
 

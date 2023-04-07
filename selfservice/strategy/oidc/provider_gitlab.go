@@ -6,9 +6,10 @@ package oidc
 import (
 	"context"
 	"encoding/json"
-	"github.com/ory/x/stringsx"
 	"net/url"
 	"path"
+
+	"github.com/ory/x/stringsx"
 
 	"github.com/hashicorp/go-retryablehttp"
 
