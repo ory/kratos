@@ -11,6 +11,8 @@ import (
 	"path"
 	"time"
 
+	"github.com/ory/x/stringsx"
+
 	"github.com/tidwall/sjson"
 
 	"github.com/hashicorp/go-retryablehttp"
@@ -116,6 +118,7 @@ func (g *ProviderAuth0) Claims(ctx context.Context, exchange *oauth2.Token, quer
 		return nil, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("%s", err))
 	}
 
+	claims.Issuer = stringsx.Coalesce(claims.Issuer, g.config.IssuerURL)
 	return &claims, nil
 }
 
