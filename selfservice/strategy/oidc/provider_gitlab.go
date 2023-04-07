@@ -6,6 +6,7 @@ package oidc
 import (
 	"context"
 	"encoding/json"
+	"github.com/ory/x/stringsx"
 	"net/url"
 	"path"
 
@@ -101,6 +102,7 @@ func (g *ProviderGitLab) Claims(ctx context.Context, exchange *oauth2.Token, que
 		return nil, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("%s", err))
 	}
 
+	claims.Issuer = stringsx.Coalesce(claims.Issuer, g.config.IssuerURL)
 	return &claims, nil
 }
 
