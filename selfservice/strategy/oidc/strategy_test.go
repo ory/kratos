@@ -178,7 +178,7 @@ func TestStrategy(t *testing.T) {
 
 	// assert identity (success)
 	var ai = func(t *testing.T, res *http.Response, body []byte) {
-		assert.Contains(t, res.Request.URL.String(), returnTS.URL)
+		assert.Contains(t, res.Request.URL.String(), returnTS.URL, "%s", body)
 		assert.Equal(t, subject, gjson.GetBytes(body, "identity.traits.subject").String(), "%s", body)
 		assert.Equal(t, claims.traits.website, gjson.GetBytes(body, "identity.traits.website").String(), "%s", body)
 		assert.Equal(t, claims.metadataPublic.picture, gjson.GetBytes(body, "identity.metadata_public.picture").String(), "%s", body)
@@ -545,6 +545,72 @@ func TestStrategy(t *testing.T) {
 		require.NoError(t, err)
 		// authenticated at is newer in the second body
 		assert.Greater(t, authAt2.Sub(authAt1).Milliseconds(), int64(0), "%s - %s : %s - %s", authAt2, authAt1, body2, body1)
+	})
+
+	t.Run("case=registration should start new login flow if duplicate credentials detected", func(t *testing.T) {
+		subject = "new-login-if-email-exist-with-password-strategy@ory.sh"
+		scope = []string{"openid"}
+		password := "lwkj52sdkjf"
+
+		var i *identity.Identity
+		t.Run("case=create password identity", func(t *testing.T) {
+			i = identity.NewIdentity(config.DefaultIdentityTraitsSchemaID)
+			p, err := reg.Hasher(ctx).Generate(ctx, []byte(password))
+			require.NoError(t, err)
+			i.SetCredentials(identity.CredentialsTypePassword, identity.Credentials{
+				Identifiers: []string{subject},
+				Config:      sqlxx.JSONRawMessage(`{"hashed_password":"` + string(p) + `"}`),
+			})
+			i.Traits = identity.Traits(`{"subject":"` + subject + `"}`)
+
+			require.NoError(t, reg.PrivilegedIdentityPool().CreateIdentity(context.Background(), i))
+		})
+
+		c := testhelpers.NewClientWithCookieJar(t, nil, false)
+		r := newLoginFlow(t, returnTS.URL, time.Minute)
+		t.Run("case=should fail login", func(t *testing.T) {
+			action := afv(t, r.ID, "valid")
+			res, err := c.PostForm(action, url.Values{"provider": {"valid"}})
+			require.NoError(t, err, action)
+			body, err := io.ReadAll(res.Body)
+			require.NoError(t, res.Body.Close())
+			require.NoError(t, err)
+			aue(t, res, body, "An account with the same identifier (email, phone, username, ...) exists already.")
+		})
+
+		var loginFlow *login.Flow
+
+		t.Run("case=should start new login flow", func(t *testing.T) {
+			action := afv(t, r.ID, "valid")
+			res, err := c.PostForm(action, url.Values{"provider": {"valid"}})
+			require.NoError(t, err, action)
+			body, err := io.ReadAll(res.Body)
+			require.NoError(t, res.Body.Close())
+			require.NoError(t, err)
+			aue(t, res, body, "New credentials will be linked to existing account after login.")
+			loginFlow, err = reg.LoginFlowPersister().GetLoginFlow(context.Background(), uuid.FromStringOrNil(gjson.GetBytes(body, "id").String()))
+			assert.NotNil(t, loginFlow, "%s", body)
+		})
+
+		t.Run("case=should link oidc credentials to existing identity", func(t *testing.T) {
+			res, err := c.PostForm(loginFlow.UI.Action, url.Values{
+				"csrf_token": {loginFlow.CSRFToken},
+				"method":     {"password"},
+				"identifier": {subject},
+				"password":   {password}})
+			require.NoError(t, err, loginFlow.UI.Action)
+			body, err := io.ReadAll(res.Body)
+			require.NoError(t, res.Body.Close())
+			require.NoError(t, err)
+			assert.Contains(t, res.Request.URL.String(), returnTS.URL, "%s", body)
+			assert.Equal(t, subject, gjson.GetBytes(body, "identity.traits.subject").String(), "%s", body)
+			i, err = reg.PrivilegedIdentityPool().GetIdentityConfidential(ctx, i.ID)
+			require.NoError(t, err)
+			assert.NotEmpty(t, i.Credentials["oidc"], "%+v", i.Credentials)
+			assert.Equal(t, "valid", gjson.GetBytes(i.Credentials["oidc"].Config, "providers.0.provider").String(),
+				"%s", string(i.Credentials["oidc"].Config[:]))
+			assert.Equal(t, "oidc", gjson.GetBytes(body, "authentication_methods.0.method").String(), "%s", body)
+		})
 	})
 
 	t.Run("method=TestPopulateSignUpMethod", func(t *testing.T) {

@@ -488,3 +488,38 @@ func (s *Strategy) CompletedAuthenticationMethod(ctx context.Context) session.Au
 		AAL:    identity.AuthenticatorAssuranceLevel1,
 	}
 }
+
+func (s *Strategy) linkCredentials(ctx context.Context, i *identity.Identity, idToken, accessToken, refreshToken, provider, subject string) error {
+	if i.Credentials == nil {
+		confidential, err := s.d.PrivilegedIdentityPool().GetIdentityConfidential(ctx, i.ID)
+		if err != nil {
+			return err
+		}
+		i.Credentials = confidential.Credentials
+	}
+	var conf identity.CredentialsOIDC
+	creds, err := i.ParseCredentials(s.ID(), &conf)
+	if errors.Is(err, herodot.ErrNotFound) {
+		var err error
+		if creds, err = identity.NewCredentialsOIDC(idToken, accessToken, refreshToken, provider, subject); err != nil {
+			return err
+		}
+	} else if err != nil {
+		return err
+	} else {
+		creds.Identifiers = append(creds.Identifiers, identity.OIDCUniqueID(provider, subject))
+		conf.Providers = append(conf.Providers, identity.CredentialsOIDCProvider{
+			Subject: subject, Provider: provider,
+			InitialAccessToken:  accessToken,
+			InitialRefreshToken: refreshToken,
+			InitialIDToken:      idToken,
+		})
+
+		creds.Config, err = json.Marshal(conf)
+		if err != nil {
+			return err
+		}
+	}
+	i.Credentials[s.ID()] = *creds
+	return nil
+}

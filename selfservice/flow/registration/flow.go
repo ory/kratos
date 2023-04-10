@@ -6,6 +6,7 @@ package registration
 import (
 	"context"
 	"encoding/json"
+	"github.com/tidwall/sjson"
 	"net/http"
 	"net/url"
 	"time"
@@ -202,4 +203,35 @@ func (f *Flow) AfterSave(*pop.Connection) error {
 
 func (f *Flow) GetUI() *container.Container {
 	return f.UI
+}
+
+const internalContextOuterLoginFlowPath = "outer_flow"
+
+type OuterLoginFlow struct {
+	ID string
+}
+
+func (f *Flow) GetOuterLoginFlowID() (*uuid.UUID, error) {
+	la := gjson.GetBytes(f.InternalContext, internalContextOuterLoginFlowPath)
+	if !la.IsObject() {
+		return nil, nil
+	}
+	var internalContextOuterFlow OuterLoginFlow
+	if err := json.Unmarshal([]byte(la.Raw), &internalContextOuterFlow); err != nil {
+		return nil, err
+	}
+	id, err := uuid.FromString(internalContextOuterFlow.ID)
+	if err != nil {
+		return nil, err
+	}
+	return &id, nil
+}
+
+func (f *Flow) SetOuterLoginFlowID(flowID uuid.UUID) error {
+	var err error = nil
+	f.InternalContext, err = sjson.SetBytes(f.InternalContext, internalContextOuterLoginFlowPath,
+		OuterLoginFlow{
+			ID: flowID.String(),
+		})
+	return err
 }

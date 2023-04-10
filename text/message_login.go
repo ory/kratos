@@ -183,3 +183,12 @@ func NewInfoSelfServiceLoginContinue() *Message {
 		Type: Info,
 	}
 }
+
+func NewInfoSelfServiceLoginLinkCredentials() *Message {
+	return &Message{
+		ID:      InfoSelfServiceLoginLinkCredentials,
+		Text:    "New credentials will be linked to existing account after login.",
+		Type:    Info,
+		Context: context(nil),
+	}
+}

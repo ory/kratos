@@ -5,6 +5,7 @@ package login
 
 import (
 	"context"
+	"github.com/ory/x/sqlxx"
 	"net/http"
 
 	"github.com/ory/kratos/session"
@@ -26,6 +27,10 @@ type Strategy interface {
 }
 
 type Strategies []Strategy
+
+type LinkableStrategy interface {
+	Link(ctx context.Context, i *identity.Identity, credentials sqlxx.JSONRawMessage) error
+}
 
 func (s Strategies) Strategy(id identity.CredentialsType) (Strategy, error) {
 	ids := make([]identity.CredentialsType, len(s))

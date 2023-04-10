@@ -96,6 +96,8 @@ func (s *Strategy) processLogin(w http.ResponseWriter, r *http.Request, a *login
 				opts = append(opts, registration.WithFlowReturnTo(a.ReturnTo))
 			}
 
+			opts = append(opts, registration.WithOuterFlow(a.ID))
+
 			// This flow only works for browsers anyways.
 			aa, err := s.d.RegistrationHandler().NewRegistrationFlow(w, r, flow.TypeBrowser, opts...)
 			if err != nil {

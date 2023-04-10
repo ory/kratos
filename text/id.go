@@ -23,6 +23,7 @@ const (
 	InfoSelfServiceLoginContinueWebAuthn                         // 1010011
 	InfoSelfServiceLoginWebAuthnPasswordless                     // 1010012
 	InfoSelfServiceLoginContinue                                 // 1010013
+	InfoSelfServiceLoginLinkCredentials                          // 1010014
 )
 
 const (

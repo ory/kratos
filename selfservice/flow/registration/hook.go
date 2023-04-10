@@ -6,6 +6,8 @@ package registration
 import (
 	"context"
 	"fmt"
+	"github.com/ory/kratos/selfservice/flow/login"
+	"github.com/tidwall/sjson"
 	"net/http"
 	"time"
 
@@ -73,9 +75,11 @@ type (
 		config.Provider
 		identity.ManagementProvider
 		identity.ValidationProvider
+		login.FlowPersistenceProvider
 		session.PersistenceProvider
 		session.ManagementProvider
 		HooksProvider
+		FlowPersistenceProvider
 		hydra.HydraProvider
 		x.CSRFTokenGeneratorProvider
 		x.HTTPClientProvider
@@ -137,6 +141,38 @@ func (e *HookExecutor) PostRegistrationHook(w http.ResponseWriter, r *http.Reque
 		// would imply that the identity has to exist already.
 	} else if err := e.d.IdentityManager().Create(r.Context(), i); err != nil {
 		if errors.Is(err, sqlcon.ErrUniqueViolation) {
+			registrationDuplicateCredentials := flow.RegistrationDuplicateCredentials{
+				CredentialsType:   ct,
+				CredentialsConfig: i.Credentials[ct].Config,
+			}
+			loginFlowID, err := a.GetOuterLoginFlowID()
+			if err != nil {
+				return err
+			}
+			if loginFlowID != nil {
+				loginFlow, err := e.d.LoginFlowPersister().GetLoginFlow(r.Context(), *loginFlowID)
+				if err != nil {
+					return err
+				}
+				loginFlow.InternalContext, err = sjson.SetBytes(loginFlow.InternalContext, flow.InternalContextDuplicateCredentialsPath,
+					registrationDuplicateCredentials)
+				if err != nil {
+					return err
+				}
+				if err := e.d.LoginFlowPersister().UpdateLoginFlow(r.Context(), loginFlow); err != nil {
+					return err
+				}
+			}
+
+			a.InternalContext, err = sjson.SetBytes(a.InternalContext, flow.InternalContextDuplicateCredentialsPath,
+				registrationDuplicateCredentials)
+			if err != nil {
+				return err
+			}
+			if err := e.d.RegistrationFlowPersister().UpdateRegistrationFlow(r.Context(), a); err != nil {
+				return err
+			}
+
 			return schema.NewDuplicateCredentialsError()
 		}
 		return err

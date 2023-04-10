@@ -4,6 +4,8 @@
 package flow
 
 import (
+	"github.com/ory/kratos/identity"
+	"github.com/ory/x/sqlxx"
 	"net/http"
 	"net/url"
 
@@ -18,6 +20,14 @@ import (
 
 	"github.com/ory/x/urlx"
 )
+
+const InternalContextDuplicateCredentialsPath = "registration_duplicate_credentials"
+const InternalContextLinkCredentialsPath = "link_credentials"
+
+type RegistrationDuplicateCredentials struct {
+	CredentialsType   identity.CredentialsType
+	CredentialsConfig sqlxx.JSONRawMessage
+}
 
 func AppendFlowTo(src *url.URL, id uuid.UUID) *url.URL {
 	return urlx.CopyWithQuery(src, url.Values{"flow": {id.String()}})

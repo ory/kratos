@@ -4,6 +4,11 @@
 package login
 
 import (
+	"context"
+	"encoding/json"
+	"fmt"
+	"github.com/tidwall/gjson"
+	"github.com/tidwall/sjson"
 	"net/http"
 	"net/url"
 	"time"
@@ -694,6 +699,37 @@ continueLogin:
 		return
 	}
 
+	internalContextDuplicateCredentials := gjson.GetBytes(f.InternalContext, flow.InternalContextDuplicateCredentialsPath)
+	if internalContextDuplicateCredentials.IsObject() {
+		// If return_to was set before, we need to preserve it.
+		var opts []FlowOption
+		if len(f.ReturnTo) > 0 {
+			opts = append(opts, WithFlowReturnTo(f.ReturnTo))
+		}
+		opts = append(opts, func(newFlow *Flow) {
+			newFlow.UI.Messages.Add(text.NewInfoSelfServiceLoginLinkCredentials())
+			var linkCredentials flow.RegistrationDuplicateCredentials
+			if err := json.Unmarshal([]byte(internalContextDuplicateCredentials.Raw), &linkCredentials); err != nil {
+				h.d.LoginFlowErrorHandler().WriteFlowError(w, r, f, node.DefaultGroup, err)
+				return
+			}
+			newFlow.InternalContext, err = sjson.SetBytes(newFlow.InternalContext, flow.InternalContextLinkCredentialsPath,
+				linkCredentials)
+			if err != nil {
+				h.d.LoginFlowErrorHandler().WriteFlowError(w, r, f, node.DefaultGroup, err)
+				return
+			}
+		})
+		loginFlow, _, err := h.NewLoginFlow(w, r, flow.TypeBrowser, opts...)
+		if err != nil {
+			h.d.LoginFlowErrorHandler().WriteFlowError(w, r, f, node.DefaultGroup, err)
+			return
+		}
+
+		http.Redirect(w, r, loginFlow.AppendTo(h.d.Config().SelfServiceFlowLoginUI(r.Context())).String(), http.StatusSeeOther)
+		return
+	}
+
 	var i *identity.Identity
 	var group node.UiNodeGroup
 	for _, ss := range h.d.AllLoginStrategies() {
@@ -712,6 +748,11 @@ continueLogin:
 		// session!
 		if sess.IdentityID != uuid.Nil && sess.IdentityID != interim.ID {
 			sess = session.NewInactiveSession()
+		}
+
+		if err := h.linkCredentials(r.Context(), sess, interim, f); err != nil {
+			h.d.LoginFlowErrorHandler().WriteFlowError(w, r, f, group, err)
+			return
 		}
 
 		method := ss.CompletedAuthenticationMethod(r.Context())
@@ -734,4 +775,32 @@ continueLogin:
 		h.d.LoginFlowErrorHandler().WriteFlowError(w, r, f, node.DefaultGroup, err)
 		return
 	}
+}
+
+func (h *Handler) linkCredentials(ctx context.Context, s *session.Session, i *identity.Identity, f *Flow) error {
+	internalContextLinkCredentials := gjson.GetBytes(f.InternalContext, flow.InternalContextLinkCredentialsPath)
+	if internalContextLinkCredentials.IsObject() {
+		var linkCredentials flow.RegistrationDuplicateCredentials
+		if err := json.Unmarshal([]byte(internalContextLinkCredentials.Raw), &linkCredentials); err != nil {
+			return err
+		}
+		strategy, err := h.d.AllLoginStrategies().Strategy(linkCredentials.CredentialsType)
+		if err != nil {
+			return err
+		}
+
+		linkableStrategy, ok := strategy.(LinkableStrategy)
+		if !ok {
+			return errors.New(fmt.Sprintf("Strategy is not linkable: %T", linkableStrategy))
+		}
+
+		if err := linkableStrategy.Link(ctx, i, linkCredentials.CredentialsConfig); err != nil {
+			return err
+		}
+
+		method := strategy.CompletedAuthenticationMethod(ctx)
+		s.CompletedLoginFor(method.Method, method.AAL)
+	}
+
+	return nil
 }
