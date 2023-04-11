@@ -8,6 +8,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/ory/kratos/ui/node"
 	"io"
 	"net/http"
 	"net/http/cookiejar"
@@ -576,13 +577,14 @@ func TestStrategy(t *testing.T) {
 			require.NoError(t, res.Body.Close())
 			require.NoError(t, err)
 			aue(t, res, body, "An account with the same identifier (email, phone, username, ...) exists already.")
+			assert.Equal(t, node.LoginAndLinkCredentials, gjson.GetBytes(body, "ui.nodes.#(attributes.name==\"method\").attributes.value").String(), "%s", body)
 		})
 
 		var loginFlow *login.Flow
 
 		t.Run("case=should start new login flow", func(t *testing.T) {
 			action := afv(t, r.ID, "valid")
-			res, err := c.PostForm(action, url.Values{"provider": {"valid"}})
+			res, err := c.PostForm(action, url.Values{"method": {node.LoginAndLinkCredentials}})
 			require.NoError(t, err, action)
 			body, err := io.ReadAll(res.Body)
 			require.NoError(t, res.Body.Close())

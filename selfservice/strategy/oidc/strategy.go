@@ -449,7 +449,17 @@ func (s *Strategy) handleError(w http.ResponseWriter, r *http.Request, f flow.Fl
 		// Reset all nodes to not confuse users.
 		// This is kinda hacky and will probably need to be updated at some point.
 
+		var loginAndLinkCredentialsNode *node.Node
+		for _, n := range rf.UI.Nodes {
+			if n.ID() == "method" && n.GetValue() == node.LoginAndLinkCredentials {
+				loginAndLinkCredentialsNode = n
+				break
+			}
+		}
 		rf.UI.Nodes = node.Nodes{}
+		if loginAndLinkCredentialsNode != nil {
+			rf.UI.Nodes.Upsert(loginAndLinkCredentialsNode)
+		}
 
 		// Adds the "Continue" button
 		rf.UI.SetCSRF(s.d.GenerateCSRFToken(r))

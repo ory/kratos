@@ -7,6 +7,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/ory/kratos/selfservice/flow/login"
+	"github.com/ory/kratos/ui/node"
 	"github.com/tidwall/sjson"
 	"net/http"
 	"time"
@@ -76,6 +77,7 @@ type (
 		identity.ManagementProvider
 		identity.ValidationProvider
 		login.FlowPersistenceProvider
+		login.StrategyProvider
 		session.PersistenceProvider
 		session.ManagementProvider
 		HooksProvider
@@ -141,36 +143,56 @@ func (e *HookExecutor) PostRegistrationHook(w http.ResponseWriter, r *http.Reque
 		// would imply that the identity has to exist already.
 	} else if err := e.d.IdentityManager().Create(r.Context(), i); err != nil {
 		if errors.Is(err, sqlcon.ErrUniqueViolation) {
-			registrationDuplicateCredentials := flow.RegistrationDuplicateCredentials{
-				CredentialsType:   ct,
-				CredentialsConfig: i.Credentials[ct].Config,
-			}
-			loginFlowID, err := a.GetOuterLoginFlowID()
+			strategy, err := e.d.AllLoginStrategies().Strategy(ct)
 			if err != nil {
 				return err
 			}
-			if loginFlowID != nil {
-				loginFlow, err := e.d.LoginFlowPersister().GetLoginFlow(r.Context(), *loginFlowID)
+
+			_, ok := strategy.(login.LinkableStrategy)
+
+			if ok {
+				registrationDuplicateCredentials := flow.RegistrationDuplicateCredentials{
+					CredentialsType:   ct,
+					CredentialsConfig: i.Credentials[ct].Config,
+				}
+				loginFlowID, err := a.GetOuterLoginFlowID()
 				if err != nil {
 					return err
 				}
-				loginFlow.InternalContext, err = sjson.SetBytes(loginFlow.InternalContext, flow.InternalContextDuplicateCredentialsPath,
+				if loginFlowID != nil {
+					loginFlow, err := e.d.LoginFlowPersister().GetLoginFlow(r.Context(), *loginFlowID)
+					if err != nil {
+						return err
+					}
+					loginFlow.InternalContext, err = sjson.SetBytes(loginFlow.InternalContext, flow.InternalContextDuplicateCredentialsPath,
+						registrationDuplicateCredentials)
+					if err != nil {
+						return err
+					}
+					loginFlow.UI.SetNode(node.NewInputField(
+						"method",
+						node.LoginAndLinkCredentials,
+						node.DefaultGroup,
+						node.InputAttributeTypeSubmit))
+					if err := e.d.LoginFlowPersister().UpdateLoginFlow(r.Context(), loginFlow); err != nil {
+						return err
+					}
+
+				}
+
+				a.InternalContext, err = sjson.SetBytes(a.InternalContext, flow.InternalContextDuplicateCredentialsPath,
 					registrationDuplicateCredentials)
 				if err != nil {
 					return err
 				}
-				if err := e.d.LoginFlowPersister().UpdateLoginFlow(r.Context(), loginFlow); err != nil {
+				a.UI.SetNode(node.NewInputField(
+					"method",
+					node.LoginAndLinkCredentials,
+					node.DefaultGroup,
+					node.InputAttributeTypeSubmit))
+				if err := e.d.RegistrationFlowPersister().UpdateRegistrationFlow(r.Context(), a); err != nil {
 					return err
 				}
-			}
-
-			a.InternalContext, err = sjson.SetBytes(a.InternalContext, flow.InternalContextDuplicateCredentialsPath,
-				registrationDuplicateCredentials)
-			if err != nil {
-				return err
-			}
-			if err := e.d.RegistrationFlowPersister().UpdateRegistrationFlow(r.Context(), a); err != nil {
-				return err
 			}
 
 			return schema.NewDuplicateCredentialsError()
