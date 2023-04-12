@@ -65,9 +65,9 @@ func TestInitFlow(t *testing.T) {
 	ctx := context.Background()
 	conf, reg := internal.NewFastRegistryWithMocks(t)
 	conf.MustSet(ctx, config.ViperKeySelfServiceRecoveryEnabled, true)
-	conf.MustSet(ctx, config.ViperKeySelfServiceStrategyConfig+"."+recovery.StrategyRecoveryLinkName,
+	conf.MustSet(ctx, config.ViperKeySelfServiceStrategyConfig+"."+string(recovery.RecoveryStrategyLink),
 		map[string]interface{}{"enabled": true})
-	conf.MustSet(ctx, config.ViperKeySelfServiceStrategyConfig+"."+recovery.StrategyRecoveryCodeName,
+	conf.MustSet(ctx, config.ViperKeySelfServiceStrategyConfig+"."+string(recovery.RecoveryStrategyCode),
 		map[string]interface{}{"enabled": true})
 
 	router := x.NewRouterPublic()
@@ -203,9 +203,9 @@ func TestGetFlow(t *testing.T) {
 	ctx := context.Background()
 	conf, reg := internal.NewFastRegistryWithMocks(t)
 	conf.MustSet(ctx, config.ViperKeySelfServiceRecoveryEnabled, true)
-	conf.MustSet(ctx, config.ViperKeySelfServiceStrategyConfig+"."+recovery.StrategyRecoveryLinkName,
+	conf.MustSet(ctx, config.ViperKeySelfServiceStrategyConfig+"."+string(recovery.RecoveryStrategyLink),
 		map[string]interface{}{"enabled": true})
-	conf.MustSet(ctx, config.ViperKeySelfServiceStrategyConfig+"."+recovery.StrategyRecoveryCodeName,
+	conf.MustSet(ctx, config.ViperKeySelfServiceStrategyConfig+"."+string(recovery.RecoveryStrategyCode),
 		map[string]interface{}{"enabled": true})
 	testhelpers.SetDefaultIdentitySchema(conf, "file://./stub/identity.schema.json")
 

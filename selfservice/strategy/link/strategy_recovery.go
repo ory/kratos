@@ -34,7 +34,7 @@ const (
 )
 
 func (s *Strategy) RecoveryStrategyID() string {
-	return recovery.StrategyRecoveryLinkName
+	return string(recovery.RecoveryStrategyLink)
 }
 
 func (s *Strategy) RegisterPublicRecoveryRoutes(public *x.RouterPublic) {
@@ -222,10 +222,12 @@ type updateRecoveryFlowWithLinkMethod struct {
 	// Sending the anti-csrf token is only required for browser login flows.
 	CSRFToken string `form:"csrf_token" json:"csrf_token"`
 
-	// Method supports `link` only right now.
+	// Method is the method that should be used for this recovery flow
+	//
+	// Allowed values are `link` and `code`
 	//
 	// required: true
-	Method string `json:"method"`
+	Method recovery.RecoveryMethod `json:"method"`
 }
 
 func (s *Strategy) Recover(w http.ResponseWriter, r *http.Request, f *recovery.Flow) (err error) {

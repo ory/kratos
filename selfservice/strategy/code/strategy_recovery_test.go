@@ -314,7 +314,7 @@ func createIdentityToRecover(t *testing.T, reg *driver.RegistryDefault, email st
 func TestRecovery(t *testing.T) {
 	ctx := context.Background()
 	conf, reg := internal.NewFastRegistryWithMocks(t)
-	conf.MustSet(ctx, config.ViperKeySelfServiceStrategyConfig+"."+recovery.StrategyRecoveryLinkName+".enabled", false)
+	conf.MustSet(ctx, config.ViperKeySelfServiceStrategyConfig+"."+string(recovery.RecoveryStrategyLink+".enabled"), false)
 	initViper(t, ctx, conf)
 
 	_ = testhelpers.NewRecoveryUIFlowEchoServer(t, reg)
@@ -1017,8 +1017,8 @@ func TestDisabledStrategy(t *testing.T) {
 	ctx := context.Background()
 	conf, reg := internal.NewFastRegistryWithMocks(t)
 	initViper(t, ctx, conf)
-	conf.MustSet(ctx, config.ViperKeySelfServiceStrategyConfig+"."+recovery.StrategyRecoveryLinkName+".enabled", false)
-	conf.MustSet(ctx, config.ViperKeySelfServiceStrategyConfig+"."+recovery.StrategyRecoveryCodeName+".enabled", false)
+	conf.MustSet(ctx, config.ViperKeySelfServiceStrategyConfig+"."+string(recovery.RecoveryStrategyLink)+".enabled", false)
+	conf.MustSet(ctx, config.ViperKeySelfServiceStrategyConfig+"."+string(recovery.RecoveryStrategyCode)+".enabled", false)
 
 	publicTS, adminTS := testhelpers.NewKratosServer(t, reg)
 	adminSDK := testhelpers.NewSDKClient(adminTS)

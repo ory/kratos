@@ -30,7 +30,7 @@ func TestGetFlow(t *testing.T) {
 	ctx := context.Background()
 	conf, reg := internal.NewFastRegistryWithMocks(t)
 	conf.MustSet(ctx, config.ViperKeySelfServiceVerificationEnabled, true)
-	conf.MustSet(ctx, config.ViperKeySelfServiceStrategyConfig+"."+verification.StrategyVerificationLinkName,
+	conf.MustSet(ctx, config.ViperKeySelfServiceStrategyConfig+"."+string(verification.VerificationStrategyLink),
 		map[string]interface{}{"enabled": true})
 	testhelpers.SetDefaultIdentitySchema(conf, "file://./stub/identity.schema.json")
 

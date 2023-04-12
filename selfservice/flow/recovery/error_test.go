@@ -99,7 +99,7 @@ func TestHandleError(t *testing.T) {
 		t.Cleanup(reset)
 
 		flowError = herodot.ErrInternalServerError.WithReason("system error")
-		methodName = recovery.StrategyRecoveryLinkName
+		methodName = node.UiNodeGroup(recovery.RecoveryStrategyLink)
 
 		sse, _ := expectErrorUI(t)
 		assertx.EqualAsJSON(t, flowError, sse)
@@ -109,7 +109,7 @@ func TestHandleError(t *testing.T) {
 		t.Cleanup(reset)
 
 		flowError = herodot.ErrInternalServerError.WithReason("system error")
-		methodName = recovery.StrategyRecoveryLinkName
+		methodName = node.UiNodeGroup(recovery.RecoveryStrategyLink)
 
 		res, err := ts.Client().Do(testhelpers.NewHTTPGetJSONRequest(t, ts.URL+"/error"))
 		require.NoError(t, err)
@@ -135,7 +135,7 @@ func TestHandleError(t *testing.T) {
 
 				recoveryFlow = newFlow(t, time.Minute, flow.TypeAPI)
 				flowError = flow.NewFlowExpiredError(anHourAgo)
-				methodName = recovery.StrategyRecoveryLinkName
+				methodName = node.UiNodeGroup(recovery.RecoveryStrategyLink)
 
 				res, err := ts.Client().Do(testhelpers.NewHTTPGetJSONRequest(t, ts.URL+"/error"))
 				require.NoError(t, err)
@@ -154,7 +154,7 @@ func TestHandleError(t *testing.T) {
 
 				recoveryFlow = newFlow(t, time.Minute, tc.t)
 				flowError = schema.NewInvalidCredentialsError()
-				methodName = recovery.StrategyRecoveryLinkName
+				methodName = node.UiNodeGroup(recovery.RecoveryStrategyLink)
 
 				res, err := ts.Client().Do(testhelpers.NewHTTPGetJSONRequest(t, ts.URL+"/error"))
 				require.NoError(t, err)
@@ -172,7 +172,7 @@ func TestHandleError(t *testing.T) {
 
 				recoveryFlow = newFlow(t, time.Minute, tc.t)
 				flowError = herodot.ErrInternalServerError.WithReason("system error")
-				methodName = recovery.StrategyRecoveryLinkName
+				methodName = node.UiNodeGroup(recovery.RecoveryStrategyLink)
 
 				res, err := ts.Client().Do(testhelpers.NewHTTPGetJSONRequest(t, ts.URL+"/error"))
 				require.NoError(t, err)
@@ -191,7 +191,7 @@ func TestHandleError(t *testing.T) {
 				_, err := reg.GetActiveRecoveryStrategy(context.Background())
 				recoveryFlow = newFlow(t, time.Minute, tc.t)
 				flowError = err
-				methodName = recovery.StrategyRecoveryLinkName
+				methodName = node.UiNodeGroup(recovery.RecoveryStrategyLink)
 
 				res, err := ts.Client().Do(testhelpers.NewHTTPGetJSONRequest(t, ts.URL+"/error"))
 				require.NoError(t, err)

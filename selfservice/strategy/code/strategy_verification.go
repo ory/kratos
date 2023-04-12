@@ -23,7 +23,7 @@ import (
 )
 
 func (s *Strategy) VerificationStrategyID() string {
-	return verification.StrategyVerificationCodeName
+	return string(verification.VerificationStrategyCode)
 }
 
 func (s *Strategy) RegisterPublicVerificationRoutes(public *x.RouterPublic) {
@@ -104,39 +104,47 @@ func (s *Strategy) handleVerificationError(w http.ResponseWriter, r *http.Reques
 
 // swagger:model updateVerificationFlowWithCodeMethod
 type updateVerificationFlowWithCodeMethod struct {
-	// Email to Verify
+	// The email address to verify
 	//
-	// Needs to be set when initiating the flow. If the email is a registered
-	// verification email, a verification link will be sent. If the email is not known,
-	// a email with details on what happened will be sent instead.
+	// If the email belongs to a valid account, a verifiation email will be sent.
+	//
+	// If you want to notify the email address if the account does not exist, see
+	// the [notify_unknown_recipients flag](https://www.ory.sh/docs/kratos/self-service/flows/verify-email-account-activation#attempted-verification-notifications)
+	//
+	// If a code was already sent, including this field in the payload will invalidate the sent code and re-send a new code.
 	//
 	// format: email
+	// required: false
 	Email string `form:"email" json:"email"`
 
 	// Sending the anti-csrf token is only required for browser login flows.
 	CSRFToken string `form:"csrf_token" json:"csrf_token"`
 
-	// Method is the recovery method
+	// Method is the method that should be used for this verification flow
 	//
-	// enum:
-	// - link
-	// - code
-	Method string `json:"method"`
+	// Allowed values are `link` and `code`.
+	//
+	// required: true
+	Method verification.VerificationStrategy `json:"method"`
+
+	// Code from the recovery email
+	//
+	// If you want to submit a code, use this field, but make sure to _not_ include the email field, as well.
+	//
+	// required: false
+	Code string `json:"code" form:"code"`
 
 	// The id of the flow
-	Flow string `json:"flow" form:"flow"`
-
-	// The verification code
-	Code string `json:"code" form:"code"`
+	Flow string `json:"-" form:"-"`
 }
 
 // getMethod returns the method of this submission or "" if no method could be found
-func (body *updateVerificationFlowWithCodeMethod) getMethod() string {
+func (body *updateVerificationFlowWithCodeMethod) getMethod() verification.VerificationStrategy {
 	if body.Method != "" {
 		return body.Method
 	}
 	if body.Code != "" {
-		return verification.StrategyVerificationCodeName
+		return verification.VerificationStrategyCode
 	}
 
 	return ""
@@ -148,7 +156,7 @@ func (s *Strategy) Verify(w http.ResponseWriter, r *http.Request, f *verificatio
 		return s.handleVerificationError(w, r, nil, body, err)
 	}
 
-	if err := flow.MethodEnabledAndAllowed(r.Context(), s.VerificationStrategyID(), body.getMethod(), s.deps); err != nil {
+	if err := flow.MethodEnabledAndAllowed(r.Context(), s.VerificationStrategyID(), string(body.getMethod()), s.deps); err != nil {
 		return s.handleVerificationError(w, r, f, body, err)
 	}
 

@@ -2677,7 +2677,7 @@
         "description": "Update Recovery Flow with Code Method",
         "properties": {
           "code": {
-            "description": "Code from recovery email\n\nSent to the user once a recovery has been initiated and is used to prove\nthat the user is in possession of the email",
+            "description": "Code from the recovery email\n\nIf you want to submit a code, use this field, but make sure to _not_ include the email field, as well.",
             "type": "string"
           },
           "csrf_token": {
@@ -2685,12 +2685,17 @@
             "type": "string"
           },
           "email": {
-            "description": "Email to Recover\n\nNeeds to be set when initiating the flow. If the email is a registered\nrecovery email, a recovery link will be sent. If the email is not known,\na email with details on what happened will be sent instead.\n\nformat: email",
+            "description": "The email address of the account to recover\n\nIf the email belongs to a valid account, a recovery email will be sent.\n\nIf you want to notify the email address if the account does not exist, see\nthe [notify_unknown_recipients flag](https://www.ory.sh/docs/kratos/self-service/flows/account-recovery-password-reset#attempted-recovery-notifications)\n\nIf a code was already sent, including this field in the payload will invalidate the sent code and re-send a new code.\n\nformat: email",
             "type": "string"
           },
           "method": {
-            "description": "Method supports `link` and `code` only right now.",
-            "type": "string"
+            "description": "Method is the method that should be used for this recovery flow\n\nAllowed values are `link` and `code`.\nlink RecoveryStrategyLink\ncode RecoveryStrategyCode",
+            "enum": [
+              "link",
+              "code"
+            ],
+            "type": "string",
+            "x-go-enum-desc": "link RecoveryStrategyLink\ncode RecoveryStrategyCode"
           }
         },
         "required": [
@@ -2710,8 +2715,13 @@
             "type": "string"
           },
           "method": {
-            "description": "Method supports `link` only right now.",
-            "type": "string"
+            "description": "Method is the method that should be used for this recovery flow\n\nAllowed values are `link` and `code`\nlink RecoveryStrategyLink\ncode RecoveryStrategyCode",
+            "enum": [
+              "link",
+              "code"
+            ],
+            "type": "string",
+            "x-go-enum-desc": "link RecoveryStrategyLink\ncode RecoveryStrategyCode"
           }
         },
         "required": [
@@ -3063,7 +3073,7 @@
       "updateVerificationFlowWithCodeMethod": {
         "properties": {
           "code": {
-            "description": "The verification code",
+            "description": "Code from the recovery email\n\nIf you want to submit a code, use this field, but make sure to _not_ include the email field, as well.",
             "type": "string"
           },
           "csrf_token": {
@@ -3071,18 +3081,22 @@
             "type": "string"
           },
           "email": {
-            "description": "Email to Verify\n\nNeeds to be set when initiating the flow. If the email is a registered\nverification email, a verification link will be sent. If the email is not known,\na email with details on what happened will be sent instead.\n\nformat: email",
-            "type": "string"
-          },
-          "flow": {
-            "description": "The id of the flow",
+            "description": "The email address to verify\n\nIf the email belongs to a valid account, a verifiation email will be sent.\n\nIf you want to notify the email address if the account does not exist, see\nthe [notify_unknown_recipients flag](https://www.ory.sh/docs/kratos/self-service/flows/verify-email-account-activation#attempted-verification-notifications)\n\nIf a code was already sent, including this field in the payload will invalidate the sent code and re-send a new code.\n\nformat: email",
             "type": "string"
           },
           "method": {
-            "description": "Method is the recovery method",
-            "type": "string"
+            "description": "Method is the method that should be used for this verification flow\n\nAllowed values are `link` and `code`.\nlink VerificationStrategyLink\ncode VerificationStrategyCode",
+            "enum": [
+              "link",
+              "code"
+            ],
+            "type": "string",
+            "x-go-enum-desc": "link VerificationStrategyLink\ncode VerificationStrategyCode"
           }
         },
+        "required": [
+          "method"
+        ],
         "type": "object"
       },
       "updateVerificationFlowWithLinkMethod": {
@@ -3097,7 +3111,7 @@
             "type": "string"
           },
           "method": {
-            "description": "Method supports `link` only right now.",
+            "description": "Method is the method that should be used for this verification flow\n\nAllowed values are `link` and `code`",
             "type": "string"
           }
         },
@@ -4564,15 +4578,15 @@
             },
             "description": "Ory Kratos is ready to accept connections."
           },
-          "500": {
+          "default": {
             "content": {
-              "application/json": {
+              "text/plain": {
                 "schema": {
-                  "$ref": "#/components/schemas/genericError"
+                  "type": "string"
                 }
               }
             },
-            "description": "genericError"
+            "description": "Unexpected error"
           }
         },
         "summary": "Check HTTP Server Status",
@@ -4626,6 +4640,16 @@
               }
             },
             "description": "Ory Kratos is not yet ready to accept requests."
+          },
+          "default": {
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "description": "Unexpected error"
           }
         },
         "summary": "Check HTTP Server and Database Status",
