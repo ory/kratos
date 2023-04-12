@@ -11,6 +11,7 @@ import (
 	"github.com/pkg/errors"
 
 	"github.com/ory/herodot"
+	"github.com/ory/x/pointerx"
 	"github.com/ory/x/sqlxx"
 
 	"github.com/ory/kratos/x"
@@ -61,7 +62,7 @@ func (c *Container) Valid(identity uuid.UUID) error {
 		return errors.WithStack(herodot.ErrBadRequest.WithReasonf("You must restart the flow because the resumable session has expired."))
 	}
 
-	if identity != uuid.Nil && x.DerefUUID(c.IdentityID) != identity {
+	if identity != uuid.Nil && pointerx.Deref(c.IdentityID) != identity {
 		return errors.WithStack(herodot.ErrBadRequest.WithReasonf("You must restart the flow because the resumable session was initiated by another person."))
 	}
 
