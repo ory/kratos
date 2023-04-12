@@ -1149,7 +1149,8 @@
       "get": {
         "description": "This endpoint returns a 200 status code when the HTTP server is up running.\nThis status does currently not include checks whether the database connection is working.\n\nIf the service supports TLS Edge Termination, this endpoint does not require the\n`X-Forwarded-Proto` header to be set.\n\nBe aware that if you are running multiple nodes of this service, the health status will never\nrefer to the cluster state, only to a single instance.",
         "produces": [
-          "application/json"
+          "application/json",
+          "text/plain"
         ],
         "tags": [
           "health"
@@ -1163,10 +1164,10 @@
               "$ref": "#/definitions/healthStatus"
             }
           },
-          "500": {
-            "description": "genericError",
+          "default": {
+            "description": "unexpectedError",
             "schema": {
-              "$ref": "#/definitions/genericError"
+              "$ref": "#/definitions/unexpectedError"
             }
           }
         }
@@ -1176,7 +1177,8 @@
       "get": {
         "description": "This endpoint returns a 200 status code when the HTTP server is up running and the environment dependencies (e.g.\nthe database) are responsive as well.\n\nIf the service supports TLS Edge Termination, this endpoint does not require the\n`X-Forwarded-Proto` header to be set.\n\nBe aware that if you are running multiple nodes of this service, the health status will never\nrefer to the cluster state, only to a single instance.",
         "produces": [
-          "application/json"
+          "application/json",
+          "text/plain"
         ],
         "tags": [
           "health"
@@ -1194,6 +1196,12 @@
             "description": "healthNotReadyStatus",
             "schema": {
               "$ref": "#/definitions/healthNotReadyStatus"
+            }
+          },
+          "default": {
+            "description": "unexpectedError",
+            "schema": {
+              "$ref": "#/definitions/unexpectedError"
             }
           }
         }
@@ -2969,6 +2977,7 @@
     }
   },
   "definitions": {
+    "DefaultError": {},
     "Duration": {
       "description": "A Duration represents the elapsed time between two instants\nas an int64 nanosecond count. The representation limits the\nlargest representable duration to approximately 290 years.",
       "type": "integer",
@@ -3474,155 +3483,36 @@
     },
     "errorAuthenticatorAssuranceLevelNotSatisfied": {
       "type": "object",
-      "title": "ErrAALNotSatisfied is returned when an active session was found but the requested AAL is not satisfied.",
-      "required": [
-        "message"
-      ],
+      "title": "Is returned when an active session was found but the requested AAL is not satisfied.",
       "properties": {
-        "code": {
-          "description": "The status code",
-          "type": "integer",
-          "format": "int64",
-          "example": 404
-        },
-        "debug": {
-          "description": "Debug information\n\nThis field is often not exposed to protect against leaking\nsensitive information.",
-          "type": "string",
-          "example": "SQL field \"foo\" is not a bool."
-        },
-        "details": {
-          "description": "Further error details",
-          "type": "object",
-          "additionalProperties": {}
-        },
-        "id": {
-          "description": "The error ID\n\nUseful when trying to identify various errors in application logic.",
-          "type": "string"
-        },
-        "message": {
-          "description": "Error message\n\nThe error's message.",
-          "type": "string",
-          "example": "The resource could not be found"
-        },
-        "reason": {
-          "description": "A human-readable reason for the error",
-          "type": "string",
-          "example": "User with ID 1234 does not exist."
+        "error": {
+          "$ref": "#/definitions/genericError"
         },
         "redirect_browser_to": {
+          "description": "Points to where to redirect the user to next.",
           "type": "string"
-        },
-        "request": {
-          "description": "The request ID\n\nThe request ID is often exposed internally in order to trace\nerrors across service architectures. This is often a UUID.",
-          "type": "string",
-          "example": "d7ef54b1-ec15-46e6-bccb-524b82c035e6"
-        },
-        "status": {
-          "description": "The status description",
-          "type": "string",
-          "example": "Not Found"
         }
       }
     },
     "errorBrowserLocationChangeRequired": {
       "type": "object",
       "title": "Is sent when a flow requires a browser to change its location.",
-      "required": [
-        "message"
-      ],
       "properties": {
-        "code": {
-          "description": "The status code",
-          "type": "integer",
-          "format": "int64",
-          "example": 404
-        },
-        "debug": {
-          "description": "Debug information\n\nThis field is often not exposed to protect against leaking\nsensitive information.",
-          "type": "string",
-          "example": "SQL field \"foo\" is not a bool."
-        },
-        "details": {
-          "description": "Further error details",
-          "type": "object",
-          "additionalProperties": {}
-        },
-        "id": {
-          "description": "The error ID\n\nUseful when trying to identify various errors in application logic.",
-          "type": "string"
-        },
-        "message": {
-          "description": "Error message\n\nThe error's message.",
-          "type": "string",
-          "example": "The resource could not be found"
-        },
-        "reason": {
-          "description": "A human-readable reason for the error",
-          "type": "string",
-          "example": "User with ID 1234 does not exist."
+        "error": {
+          "$ref": "#/definitions/errorGeneric"
         },
         "redirect_browser_to": {
-          "description": "Since when the flow has expired",
+          "description": "Points to where to redirect the user to next.",
           "type": "string"
-        },
-        "request": {
-          "description": "The request ID\n\nThe request ID is often exposed internally in order to trace\nerrors across service architectures. This is often a UUID.",
-          "type": "string",
-          "example": "d7ef54b1-ec15-46e6-bccb-524b82c035e6"
-        },
-        "status": {
-          "description": "The status description",
-          "type": "string",
-          "example": "Not Found"
         }
       }
     },
     "errorFlowReplaced": {
       "description": "Is sent when a flow is replaced by a different flow of the same class",
       "type": "object",
-      "required": [
-        "message"
-      ],
       "properties": {
-        "code": {
-          "description": "The status code",
-          "type": "integer",
-          "format": "int64",
-          "example": 404
-        },
-        "debug": {
-          "description": "Debug information\n\nThis field is often not exposed to protect against leaking\nsensitive information.",
-          "type": "string",
-          "example": "SQL field \"foo\" is not a bool."
-        },
-        "details": {
-          "description": "Further error details",
-          "type": "object",
-          "additionalProperties": {}
-        },
-        "id": {
-          "description": "The error ID\n\nUseful when trying to identify various errors in application logic.",
-          "type": "string"
-        },
-        "message": {
-          "description": "Error message\n\nThe error's message.",
-          "type": "string",
-          "example": "The resource could not be found"
-        },
-        "reason": {
-          "description": "A human-readable reason for the error",
-          "type": "string",
-          "example": "User with ID 1234 does not exist."
-        },
-        "request": {
-          "description": "The request ID\n\nThe request ID is often exposed internally in order to trace\nerrors across service architectures. This is often a UUID.",
-          "type": "string",
-          "example": "d7ef54b1-ec15-46e6-bccb-524b82c035e6"
-        },
-        "status": {
-          "description": "The status description",
-          "type": "string",
-          "example": "Not Found"
+        "error": {
+          "$ref": "#/definitions/genericError"
         },
         "use_flow_id": {
           "description": "The flow ID that should be used for the new flow as it contains the correct messages.",
@@ -4300,53 +4190,15 @@
       "type": "object",
       "title": "Is sent when a privileged session is required to perform the settings update.",
       "required": [
-        "message",
         "redirect_browser_to"
       ],
       "properties": {
-        "code": {
-          "description": "The status code",
-          "type": "integer",
-          "format": "int64",
-          "example": 404
-        },
-        "debug": {
-          "description": "Debug information\n\nThis field is often not exposed to protect against leaking\nsensitive information.",
-          "type": "string",
-          "example": "SQL field \"foo\" is not a bool."
-        },
-        "details": {
-          "description": "Further error details",
-          "type": "object",
-          "additionalProperties": {}
-        },
-        "id": {
-          "description": "The error ID\n\nUseful when trying to identify various errors in application logic.",
-          "type": "string"
-        },
-        "message": {
-          "description": "Error message\n\nThe error's message.",
-          "type": "string",
-          "example": "The resource could not be found"
-        },
-        "reason": {
-          "description": "A human-readable reason for the error",
-          "type": "string",
-          "example": "User with ID 1234 does not exist."
+        "error": {
+          "$ref": "#/definitions/genericError"
         },
         "redirect_browser_to": {
           "description": "Points to where to redirect the user to next.",
           "type": "string"
-        },
-        "request": {
-          "description": "The request ID\n\nThe request ID is often exposed internally in order to trace\nerrors across service architectures. This is often a UUID.",
-          "type": "string",
-          "example": "d7ef54b1-ec15-46e6-bccb-524b82c035e6"
-        },
-        "status": {
-          "description": "The status description",
-          "type": "string",
-          "example": "Not Found"
         }
       }
     },
@@ -4593,57 +4445,17 @@
     "selfServiceFlowExpiredError": {
       "description": "Is sent when a flow is expired",
       "type": "object",
-      "required": [
-        "message"
-      ],
       "properties": {
-        "code": {
-          "description": "The status code",
-          "type": "integer",
-          "format": "int64",
-          "example": 404
-        },
-        "debug": {
-          "description": "Debug information\n\nThis field is often not exposed to protect against leaking\nsensitive information.",
-          "type": "string",
-          "example": "SQL field \"foo\" is not a bool."
-        },
-        "details": {
-          "description": "Further error details",
-          "type": "object",
-          "additionalProperties": {}
+        "error": {
+          "$ref": "#/definitions/genericError"
         },
         "expired_at": {
           "description": "When the flow has expired",
           "type": "string",
           "format": "date-time"
         },
-        "id": {
-          "description": "The error ID\n\nUseful when trying to identify various errors in application logic.",
-          "type": "string"
-        },
-        "message": {
-          "description": "Error message\n\nThe error's message.",
-          "type": "string",
-          "example": "The resource could not be found"
-        },
-        "reason": {
-          "description": "A human-readable reason for the error",
-          "type": "string",
-          "example": "User with ID 1234 does not exist."
-        },
-        "request": {
-          "description": "The request ID\n\nThe request ID is often exposed internally in order to trace\nerrors across service architectures. This is often a UUID.",
-          "type": "string",
-          "example": "d7ef54b1-ec15-46e6-bccb-524b82c035e6"
-        },
         "since": {
           "$ref": "#/definitions/Duration"
-        },
-        "status": {
-          "description": "The status description",
-          "type": "string",
-          "example": "Not Found"
         },
         "use_flow_id": {
           "description": "The flow ID that should be used for the new flow as it contains the correct messages.",
@@ -5244,6 +5056,9 @@
       "items": {
         "$ref": "#/definitions/uiText"
       }
+    },
+    "unexpectedError": {
+      "type": "string"
     },
     "updateIdentityBody": {
       "description": "Update Identity Body",

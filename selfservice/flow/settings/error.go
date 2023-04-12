@@ -9,6 +9,7 @@ import (
 	"net/url"
 
 	"github.com/ory/kratos/session"
+	"github.com/ory/kratos/x/swagger"
 
 	"github.com/ory/kratos/ui/node"
 
@@ -53,12 +54,23 @@ type (
 // Is sent when a privileged session is required to perform the settings update.
 //
 // swagger:model needsPrivilegedSessionError
-type FlowNeedsReAuth struct {
-	*herodot.DefaultError `json:"error"`
+//
+//nolint:deadcode,unused
+//lint:ignore U1000 Used to generate Swagger and OpenAPI definitions
+type needsPrivilegedSessionError struct {
+	Error swagger.GenericError `json:"error"`
 
 	// Points to where to redirect the user to next.
 	//
 	// required: true
+	RedirectBrowserTo string `json:"redirect_browser_to"`
+}
+
+// FlowNeedsReAuth is sent when a privileged session is required to perform the settings update.
+type FlowNeedsReAuth struct {
+	*herodot.DefaultError `json:"error"`
+
+	// Points to where to redirect the user to next.
 	RedirectBrowserTo string `json:"redirect_browser_to"`
 }
 

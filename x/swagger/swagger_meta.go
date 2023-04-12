@@ -30,4 +30,4 @@
 //	---
 //
 // swagger:meta
-package main
+package swagger

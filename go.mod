@@ -70,12 +70,12 @@ require (
 	github.com/ory/dockertest/v3 v3.9.1
 	github.com/ory/go-acc v0.2.9-0.20230103102148-6b1c9a70dbbe
 	github.com/ory/graceful v0.1.4-0.20230301144740-e222150c51d0
-	github.com/ory/herodot v0.10.1
+	github.com/ory/herodot v0.10.2
 	github.com/ory/hydra-client-go/v2 v2.0.3
 	github.com/ory/jsonschema/v3 v3.0.8
 	github.com/ory/mail/v3 v3.0.0
 	github.com/ory/nosurf v1.2.7
-	github.com/ory/x v0.0.549
+	github.com/ory/x v0.0.551
 	github.com/phayes/freeport v0.0.0-20180830031419-95f893ade6f2
 	github.com/pkg/errors v0.9.1
 	github.com/pquerna/otp v1.4.0
