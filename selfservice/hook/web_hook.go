@@ -353,7 +353,7 @@ func (e *WebHook) execute(ctx context.Context, data *templateContext) error {
 
 		resp, err := httpClient.Do(req)
 		if err != nil {
-			if te := interface{ Timeout() bool }(nil); errors.As(err, &te) && te.Timeout() || errors.Is(err, context.DeadlineExceeded) {
+			if isTimeoutError(err) {
 				return herodot.DefaultError{
 					CodeField:     http.StatusGatewayTimeout,
 					StatusField:   http.StatusText(http.StatusGatewayTimeout),
@@ -486,4 +486,9 @@ func parseWebhookResponse(resp *http.Response, id *identity.Identity) (err error
 	}
 
 	return nil
+}
+
+func isTimeoutError(err error) bool {
+	var te interface{ Timeout() bool }
+	return errors.As(err, &te) && te.Timeout() || errors.Is(err, context.DeadlineExceeded)
 }
