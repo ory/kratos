@@ -7,6 +7,10 @@ import (
 	"net/http"
 	"net/url"
 
+	"github.com/ory/kratos/identity"
+	"github.com/ory/kratos/x/events"
+	"github.com/ory/x/otelx/semconv"
+
 	"github.com/pkg/errors"
 
 	"github.com/ory/herodot"
@@ -198,6 +202,16 @@ func (h *Handler) performNativeLogout(w http.ResponseWriter, r *http.Request, _ 
 		h.d.Writer().WriteError(w, r, err)
 		return
 	}
+	sess, err := h.d.SessionPersister().GetSessionByToken(r.Context(), p.SessionToken, session.ExpandNothing, identity.ExpandNothing)
+	if err != nil {
+		if errors.Is(err, sqlcon.ErrNoRows) {
+			h.d.Writer().WriteError(w, r, errors.WithStack(herodot.ErrForbidden.WithReason("The provided Ory Session Token could not be found, is invalid, or otherwise malformed.")))
+			return
+		}
+
+		h.d.Writer().WriteError(w, r, err)
+		return
+	}
 
 	if err := h.d.SessionPersister().RevokeSessionByToken(r.Context(), p.SessionToken); err != nil {
 		if errors.Is(err, sqlcon.ErrNoRows) {
@@ -208,6 +222,10 @@ func (h *Handler) performNativeLogout(w http.ResponseWriter, r *http.Request, _ 
 		h.d.Writer().WriteError(w, r, err)
 		return
 	}
+
+	events.Emit(r.Context(), events.SessionRevoked,
+		semconv.AttrIdentityID(sess.IdentityID),
+		events.AttrSessionID(sess.ID))
 
 	w.WriteHeader(http.StatusNoContent)
 }
@@ -285,6 +303,10 @@ func (h *Handler) updateLogoutFlow(w http.ResponseWriter, r *http.Request, ps ht
 		h.d.SelfServiceErrorManager().Forward(r.Context(), w, r, err)
 		return
 	}
+
+	events.Emit(r.Context(), events.SessionRevoked,
+		semconv.AttrIdentityID(sess.IdentityID),
+		events.AttrSessionID(sess.ID))
 
 	h.completeLogout(w, r)
 }

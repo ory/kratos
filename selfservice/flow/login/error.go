@@ -7,6 +7,7 @@ import (
 	"net/http"
 
 	"github.com/ory/kratos/ui/node"
+	"github.com/ory/kratos/x/events"
 
 	"github.com/ory/kratos/selfservice/flow"
 	"github.com/ory/kratos/text"
@@ -79,6 +80,13 @@ func (s *ErrorHandler) WriteFlowError(w http.ResponseWriter, r *http.Request, f 
 		WithRequest(r).
 		WithField("login_flow", f).
 		Info("Encountered self-service login error.")
+
+	var flowType flow.Type
+	if f != nil {
+		flowType = f.Type
+	}
+
+	events.Emit(r.Context(), events.LoginFailed, events.AttrFlowType(flowType))
 
 	if f == nil {
 		s.forward(w, r, nil, err)

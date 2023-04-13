@@ -8,6 +8,7 @@ import (
 
 	"github.com/ory/kratos/schema"
 	"github.com/ory/kratos/ui/node"
+	"github.com/ory/kratos/x/events"
 
 	"github.com/ory/kratos/selfservice/flow"
 	"github.com/ory/kratos/text"
@@ -85,6 +86,14 @@ func (s *ErrorHandler) WriteFlowError(
 		WithRequest(r).
 		WithField("registration_flow", f).
 		Info("Encountered self-service flow error.")
+
+	var flowType flow.Type
+	if f != nil {
+		flowType = f.Type
+	}
+
+	events.Emit(r.Context(), events.RegistrationFailed,
+		events.AttrFlowType(flowType))
 
 	if f == nil {
 		s.forward(w, r, nil, err)
