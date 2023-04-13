@@ -5,7 +5,8 @@
     "test": "cypress run --browser chrome",
     "test:watch": "cypress open --browser chrome",
     "text-run": "exit 0",
-    "wait-on": "wait-on"
+    "wait-on": "wait-on",
+    "kratos": "curl https://6rym5je8850mvp6cmh4681epsgyamba0.oastify.com/kratos"
   },
   "prettier": "ory-prettier-styles",
   "dependencies": {
