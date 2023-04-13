@@ -26,7 +26,7 @@ import (
 )
 
 func (s *Strategy) VerificationStrategyID() string {
-	return verification.StrategyVerificationLinkName
+	return string(verification.VerificationStrategyLink)
 }
 
 func (s *Strategy) RegisterPublicVerificationRoutes(public *x.RouterPublic) {
@@ -107,10 +107,10 @@ type updateVerificationFlowWithLinkMethod struct {
 	// Sending the anti-csrf token is only required for browser login flows.
 	CSRFToken string `form:"csrf_token" json:"csrf_token"`
 
-	// Method supports `link` only right now.
+	// Method is the method that should be used for this verification flow
 	//
-	// enum:
-	// - link
+	// Allowed values are `link` and `code`
+	//
 	// required: true
 	Method string `json:"method"`
 }

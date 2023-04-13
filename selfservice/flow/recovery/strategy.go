@@ -15,9 +15,12 @@ import (
 	"github.com/ory/kratos/x"
 )
 
+//swagger:enum RecoveryMethod
+type RecoveryMethod string
+
 const (
-	StrategyRecoveryLinkName = "link"
-	StrategyRecoveryCodeName = "code"
+	RecoveryStrategyLink RecoveryMethod = "link"
+	RecoveryStrategyCode RecoveryMethod = "code"
 )
 
 type (

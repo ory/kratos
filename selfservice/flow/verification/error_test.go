@@ -99,7 +99,7 @@ func TestHandleError(t *testing.T) {
 		t.Cleanup(reset)
 
 		flowError = herodot.ErrInternalServerError.WithReason("system error")
-		methodName = verification.StrategyVerificationLinkName
+		methodName = node.UiNodeGroup(verification.VerificationStrategyLink)
 
 		sse, _ := expectErrorUI(t)
 		assertx.EqualAsJSON(t, flowError, sse)
@@ -109,7 +109,7 @@ func TestHandleError(t *testing.T) {
 		t.Cleanup(reset)
 
 		flowError = herodot.ErrInternalServerError.WithReason("system error")
-		methodName = verification.StrategyVerificationLinkName
+		methodName = node.UiNodeGroup(verification.VerificationStrategyLink)
 
 		res, err := ts.Client().Do(testhelpers.NewHTTPGetJSONRequest(t, ts.URL+"/error"))
 		require.NoError(t, err)
@@ -135,7 +135,7 @@ func TestHandleError(t *testing.T) {
 
 				verificationFlow = newFlow(t, time.Minute, flow.TypeAPI)
 				flowError = flow.NewFlowExpiredError(anHourAgo)
-				methodName = verification.StrategyVerificationLinkName
+				methodName = node.UiNodeGroup(verification.VerificationStrategyLink)
 
 				res, err := ts.Client().Do(testhelpers.NewHTTPGetJSONRequest(t, ts.URL+"/error"))
 				require.NoError(t, err)
@@ -154,7 +154,7 @@ func TestHandleError(t *testing.T) {
 
 				verificationFlow = newFlow(t, time.Minute, tc.t)
 				flowError = schema.NewInvalidCredentialsError()
-				methodName = verification.StrategyVerificationLinkName
+				methodName = node.UiNodeGroup(verification.VerificationStrategyLink)
 
 				res, err := ts.Client().Do(testhelpers.NewHTTPGetJSONRequest(t, ts.URL+"/error"))
 				require.NoError(t, err)
@@ -172,7 +172,7 @@ func TestHandleError(t *testing.T) {
 
 				verificationFlow = newFlow(t, time.Minute, tc.t)
 				flowError = herodot.ErrInternalServerError.WithReason("system error")
-				methodName = verification.StrategyVerificationLinkName
+				methodName = node.UiNodeGroup(verification.VerificationStrategyLink)
 
 				res, err := ts.Client().Do(testhelpers.NewHTTPGetJSONRequest(t, ts.URL+"/error"))
 				require.NoError(t, err)

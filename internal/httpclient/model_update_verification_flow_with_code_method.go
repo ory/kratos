@@ -17,24 +17,23 @@ import (
 
 // UpdateVerificationFlowWithCodeMethod struct for UpdateVerificationFlowWithCodeMethod
 type UpdateVerificationFlowWithCodeMethod struct {
-	// The verification code
+	// Code from the recovery email  If you want to submit a code, use this field, but make sure to _not_ include the email field, as well.
 	Code *string `json:"code,omitempty"`
 	// Sending the anti-csrf token is only required for browser login flows.
 	CsrfToken *string `json:"csrf_token,omitempty"`
-	// Email to Verify  Needs to be set when initiating the flow. If the email is a registered verification email, a verification link will be sent. If the email is not known, a email with details on what happened will be sent instead.  format: email
+	// The email address to verify  If the email belongs to a valid account, a verifiation email will be sent.  If you want to notify the email address if the account does not exist, see the [notify_unknown_recipients flag](https://www.ory.sh/docs/kratos/self-service/flows/verify-email-account-activation#attempted-verification-notifications)  If a code was already sent, including this field in the payload will invalidate the sent code and re-send a new code.  format: email
 	Email *string `json:"email,omitempty"`
-	// The id of the flow
-	Flow *string `json:"flow,omitempty"`
-	// Method is the recovery method
-	Method *string `json:"method,omitempty"`
+	// Method is the method that should be used for this verification flow  Allowed values are `link` and `code`. link VerificationStrategyLink code VerificationStrategyCode
+	Method string `json:"method"`
 }
 
 // NewUpdateVerificationFlowWithCodeMethod instantiates a new UpdateVerificationFlowWithCodeMethod object
 // This constructor will assign default values to properties that have it defined,
 // and makes sure properties required by API are set, but the set of arguments
 // will change when the set of required properties is changed
-func NewUpdateVerificationFlowWithCodeMethod() *UpdateVerificationFlowWithCodeMethod {
+func NewUpdateVerificationFlowWithCodeMethod(method string) *UpdateVerificationFlowWithCodeMethod {
 	this := UpdateVerificationFlowWithCodeMethod{}
+	this.Method = method
 	return &this
 }
 
@@ -142,68 +141,28 @@ func (o *UpdateVerificationFlowWithCodeMethod) SetEmail(v string) {
 	o.Email = &v
 }
 
-// GetFlow returns the Flow field value if set, zero value otherwise.
-func (o *UpdateVerificationFlowWithCodeMethod) GetFlow() string {
-	if o == nil || o.Flow == nil {
-		var ret string
-		return ret
-	}
-	return *o.Flow
-}
-
-// GetFlowOk returns a tuple with the Flow field value if set, nil otherwise
-// and a boolean to check if the value has been set.
-func (o *UpdateVerificationFlowWithCodeMethod) GetFlowOk() (*string, bool) {
-	if o == nil || o.Flow == nil {
-		return nil, false
-	}
-	return o.Flow, true
-}
-
-// HasFlow returns a boolean if a field has been set.
-func (o *UpdateVerificationFlowWithCodeMethod) HasFlow() bool {
-	if o != nil && o.Flow != nil {
-		return true
-	}
-
-	return false
-}
-
-// SetFlow gets a reference to the given string and assigns it to the Flow field.
-func (o *UpdateVerificationFlowWithCodeMethod) SetFlow(v string) {
-	o.Flow = &v
-}
-
-// GetMethod returns the Method field value if set, zero value otherwise.
+// GetMethod returns the Method field value
 func (o *UpdateVerificationFlowWithCodeMethod) GetMethod() string {
-	if o == nil || o.Method == nil {
+	if o == nil {
 		var ret string
 		return ret
 	}
-	return *o.Method
+
+	return o.Method
 }
 
-// GetMethodOk returns a tuple with the Method field value if set, nil otherwise
+// GetMethodOk returns a tuple with the Method field value
 // and a boolean to check if the value has been set.
 func (o *UpdateVerificationFlowWithCodeMethod) GetMethodOk() (*string, bool) {
-	if o == nil || o.Method == nil {
+	if o == nil {
 		return nil, false
 	}
-	return o.Method, true
+	return &o.Method, true
 }
 
-// HasMethod returns a boolean if a field has been set.
-func (o *UpdateVerificationFlowWithCodeMethod) HasMethod() bool {
-	if o != nil && o.Method != nil {
-		return true
-	}
-
-	return false
-}
-
-// SetMethod gets a reference to the given string and assigns it to the Method field.
+// SetMethod sets field value
 func (o *UpdateVerificationFlowWithCodeMethod) SetMethod(v string) {
-	o.Method = &v
+	o.Method = v
 }
 
 func (o UpdateVerificationFlowWithCodeMethod) MarshalJSON() ([]byte, error) {
@@ -217,10 +176,7 @@ func (o UpdateVerificationFlowWithCodeMethod) MarshalJSON() ([]byte, error) {
 	if o.Email != nil {
 		toSerialize["email"] = o.Email
 	}
-	if o.Flow != nil {
-		toSerialize["flow"] = o.Flow
-	}
-	if o.Method != nil {
+	if true {
 		toSerialize["method"] = o.Method
 	}
 	return json.Marshal(toSerialize)
