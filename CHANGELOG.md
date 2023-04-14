@@ -5,7 +5,7 @@
 
 **Table of Contents**
 
-- [ (2023-04-07)](#2023-04-07)
+- [ (2023-04-14)](#2023-04-14)
   - [Breaking Changes](#breaking-changes)
     - [Bug Fixes](#bug-fixes)
     - [Code Refactoring](#code-refactoring)
@@ -296,7 +296,7 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# [](https://github.com/ory/kratos/compare/v0.11.1...v) (2023-04-07)
+# [](https://github.com/ory/kratos/compare/v0.11.1...v) (2023-04-14)
 
 ## Breaking Changes
 
@@ -353,6 +353,10 @@ flows.
   ([e260fcf](https://github.com/ory/kratos/commit/e260fcf06181ce9339edc729ab74826aa4be78cf))
 - Don't treat missing session as error in tracing
   ([290d28a](https://github.com/ory/kratos/commit/290d28ada1a55b599af7e41e638de699a474f1d8))
+- Error messages in OpenAPI/Swagger / improve error messages from failed
+  webhooks and client timeouts
+  ([#3218](https://github.com/ory/kratos/issues/3218))
+  ([b1bdcd3](https://github.com/ory/kratos/commit/b1bdcd32828fcdbf65bc43b85b64df210ba4c646))
 - Handle upstream errors in patreon provider
   ([#3032](https://github.com/ory/kratos/issues/3032))
   ([39fa31f](https://github.com/ory/kratos/commit/39fa31f85deb3f015aa0f1b30b4a17e4b51d461b))
