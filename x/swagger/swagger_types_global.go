@@ -1,7 +1,7 @@
 // Copyright © 2023 Ory Corp
 // SPDX-License-Identifier: Apache-2.0
 
-package main
+package swagger
 
 import "github.com/ory/herodot"
 
@@ -13,12 +13,15 @@ import "github.com/ory/herodot"
 //
 //nolint:deadcode,unused
 //lint:ignore U1000 Used to generate Swagger and OpenAPI definitions
-type errorGeneric struct {
+type ErrorGeneric struct {
 	// Contains error details
 	//
 	// required: true
-	Error herodot.DefaultError `json:"error"`
+	Error GenericError `json:"error"`
 }
+
+// swagger:model genericError
+type GenericError struct{ herodot.DefaultError }
 
 // Empty responses are sent when, for example, resources are deleted. The HTTP status code for empty responses is typically 201.
 //

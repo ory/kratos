@@ -1,1 +1,8 @@
-"{\"error\":{\"code\":404,\"status\":\"Not Found\",\"message\":\"Unable to locate the resource\"}}\n"
+{
+  "error": {
+    "code": 404,
+    "status": "Not Found",
+    "message": "Unable to locate the resource"
+  }
+}
+

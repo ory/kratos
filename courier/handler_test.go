@@ -65,7 +65,7 @@ func TestHandler(t *testing.T) {
 		require.NoError(t, err)
 		require.NoError(t, res.Body.Close())
 
-		assert.EqualValues(t, expectCode, res.StatusCode, "%s", body)
+		assert.EqualValuesf(t, expectCode, res.StatusCode, "%s", body)
 		return gjson.ParseBytes(body)
 	}
 
@@ -80,7 +80,7 @@ func TestHandler(t *testing.T) {
 		}
 
 		parsed := get(t, ts, href, http.StatusOK)
-		require.True(t, parsed.IsArray(), "%s", parsed.Raw)
+		require.Truef(t, parsed.IsArray(), "%s", parsed.Raw)
 		return parsed
 	}
 
@@ -188,7 +188,7 @@ func TestHandler(t *testing.T) {
 			for _, tc := range tss {
 				t.Run("endpoint="+tc.name, func(t *testing.T) {
 					parsed := getList(t, tc.name, "")
-					require.Len(t, parsed.Array(), msgCount, "%s", parsed.Raw)
+					require.Lenf(t, parsed.Array(), msgCount, "%s", parsed.Raw)
 
 					for _, item := range parsed.Array() {
 						assert.Equal(t, "<redacted-unless-dev-mode>", item.Get("body").String())
@@ -201,7 +201,7 @@ func TestHandler(t *testing.T) {
 			for _, tc := range tss {
 				t.Run("endpoint="+tc.name, func(t *testing.T) {
 					parsed := getList(t, tc.name, "")
-					require.Len(t, parsed.Array(), msgCount, "%s", parsed.Raw)
+					require.Lenf(t, parsed.Array(), msgCount, "%s", parsed.Raw)
 
 					for _, item := range parsed.Array() {
 						assert.Equal(t, "body content", item.Get("body").String())
@@ -266,7 +266,7 @@ func TestHandler(t *testing.T) {
 				t.Run("endpoint="+tc.name, func(t *testing.T) {
 					body := getCourierMessag(tc.s, "not-a-uuid")
 
-					snapshotx.SnapshotT(t, body.String())
+					snapshotx.SnapshotTJSONString(t, body.String())
 				})
 			}
 		})
@@ -274,8 +274,7 @@ func TestHandler(t *testing.T) {
 			for _, tc := range tss {
 				t.Run("endpoint="+tc.name, func(t *testing.T) {
 					body := getCourierMessag(tc.s, uuid.Nil.String())
-
-					snapshotx.SnapshotT(t, body.String())
+					snapshotx.SnapshotTJSONString(t, body.String())
 				})
 			}
 		})
