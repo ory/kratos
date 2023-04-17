@@ -7,6 +7,7 @@ import (
 	stdctx "context"
 	"crypto/tls"
 	"net/http"
+	"time"
 
 	"github.com/pkg/errors"
 	"github.com/rs/cors"
@@ -283,7 +284,11 @@ func sqa(ctx stdctx.Context, cmd *cobra.Command, d driver.Registry) *metricsx.Se
 			BuildHash:    config.Commit,
 			BuildTime:    config.Date,
 			Config: &analytics.Config{
-				Endpoint: "https://sqa.ory.sh",
+				Endpoint:             "https://sqa.ory.sh",
+				GzipCompressionLevel: 6,
+				BatchMaxSize:         500 * 1000,
+				BatchSize:            1000,
+				Interval:             time.Hour * 6,
 			},
 		},
 	)
