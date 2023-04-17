@@ -56,8 +56,8 @@ func TestExecutePostRegistrationPostPersistHook(t *testing.T) {
 		}
 		rec := httptest.NewRecorder()
 		require.NoError(t, h.ExecutePostRegistrationPostPersistHook(rec, browserRequest, rf, nil))
-		assert.Equal(t, 303, rec.Code)
-		assert.Equal(t, "/verification?flow="+vf.ID.String(), rec.Header().Get("Location"))
+		assert.Equal(t, 200, rec.Code)
+		assert.Equal(t, "/verification?flow="+vf.ID.String(), rf.ReturnToVerification)
 	})
 
 	t.Run("case=no verification ui in continue with item returns 200 OK", func(t *testing.T) {
