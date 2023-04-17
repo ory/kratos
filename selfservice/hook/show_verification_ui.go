@@ -63,7 +63,7 @@ func (e *ShowVerificationUIHook) execute(w http.ResponseWriter, r *http.Request,
 
 	if vf != nil {
 		redir := e.d.Config().SelfServiceFlowVerificationUI(r.Context())
-		http.Redirect(w, r, vf.AppendTo(redir).String(), http.StatusSeeOther)
+		f.ReturnToVerification = vf.AppendTo(redir).String()
 	}
 
 	return nil
