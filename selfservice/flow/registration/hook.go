@@ -247,6 +247,8 @@ func (e *HookExecutor) PostRegistrationHook(w http.ResponseWriter, r *http.Reque
 			return err
 		}
 		finalReturnTo = cr
+	} else if a.ReturnToVerification != "" {
+		finalReturnTo = a.ReturnToVerification
 	}
 
 	x.ContentNegotiationRedirection(w, r, s.Declassified(), e.d.Writer(), finalReturnTo)

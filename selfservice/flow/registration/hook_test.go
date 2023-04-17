@@ -198,6 +198,36 @@ func TestRegistrationExecutor(t *testing.T) {
 					assert.Contains(t, res.Request.URL.String(), verificationTS.URL)
 					assert.NotEmpty(t, res.Request.URL.Query().Get("flow"))
 				})
+
+				t.Run("case=should still sent session if show_verification_ui is set after session hook", func(t *testing.T) {
+					verificationTS := testhelpers.NewVerificationUIFlowEchoServer(t, reg)
+					t.Cleanup(testhelpers.SelfServiceHookConfigReset(t, conf))
+					conf.Set(ctx, config.ViperKeySelfServiceVerificationEnabled, true)
+					conf.Set(ctx, config.ViperKeySelfServiceRegistrationAfter+".hooks", []map[string]interface{}{
+						{
+							"hook": hook.KeyVerificationUI,
+						},
+						{
+							"hook": hook.KeySessionIssuer,
+						},
+					})
+
+					i := testhelpers.SelfServiceHookFakeIdentity(t)
+					i.Traits = identity.Traits(`{"email": "verifiable4@ory.sh"}`)
+
+					jar := x.EasyCookieJar(t, nil)
+					s := newServer(t, i, flow.TypeBrowser)
+					s.Client().Jar = jar
+					res, _ := makeRequestPost(t, s, false, url.Values{})
+					assert.EqualValues(t, http.StatusOK, res.StatusCode)
+					assert.Contains(t, res.Request.URL.String(), verificationTS.URL)
+					assert.NotEmpty(t, res.Request.URL.Query().Get("flow"))
+					u, err := url.Parse(s.URL)
+					require.NoError(t, err)
+					cookies := jar.Cookies(u)
+					require.Len(t, cookies, 1)
+					assert.Equal(t, "ory_kratos_session", cookies[0].Name)
+				})
 			})
 
 			for _, kind := range []flow.Type{flow.TypeBrowser, flow.TypeAPI} {
