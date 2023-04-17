@@ -5,7 +5,7 @@
 
 **Table of Contents**
 
-- [ (2023-04-14)](#2023-04-14)
+- [ (2023-04-17)](#2023-04-17)
   - [Breaking Changes](#breaking-changes)
     - [Bug Fixes](#bug-fixes)
     - [Code Refactoring](#code-refactoring)
@@ -296,7 +296,7 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# [](https://github.com/ory/kratos/compare/v0.11.1...v) (2023-04-14)
+# [](https://github.com/ory/kratos/compare/v0.11.1...v) (2023-04-17)
 
 ## Breaking Changes
 
@@ -457,6 +457,9 @@ flows.
   ([#3209](https://github.com/ory/kratos/issues/3209))
   ([1180c05](https://github.com/ory/kratos/commit/1180c051b34eb5de786d6b4e4bd94e863f60d06a)),
   closes [#3208](https://github.com/ory/kratos/issues/3208)
+- Sqa config values unified across projects
+  ([#3237](https://github.com/ory/kratos/issues/3237))
+  ([523b93f](https://github.com/ory/kratos/commit/523b93fd1fe8715d06aeedc2db0ac072dfcafb71))
 - Test contract names
   ([e9ac00b](https://github.com/ory/kratos/commit/e9ac00b3941641a955f5d8f32f25a4031c87a726))
 - Use correct names in WebAuthN dialogs
