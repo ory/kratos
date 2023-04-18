@@ -11,6 +11,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/ory/kratos/selfservice/sessiontokenexchange"
 	"github.com/ory/x/contextx"
 	"github.com/ory/x/jsonnetsecure"
 
@@ -132,6 +133,8 @@ type RegistryDefault struct {
 	selfserviceLoginHandler             *login.Handler
 	selfserviceLoginRequestErrorHandler *login.ErrorHandler
 
+	sessionTokenExchangeHandler *sessiontokenexchange.Handler
+
 	selfserviceSettingsHandler      *settings.Handler
 	selfserviceSettingsErrorHandler *settings.ErrorHandler
 	selfserviceSettingsExecutor     *settings.HookExecutor
@@ -187,6 +190,7 @@ func (m *RegistryDefault) RegisterPublicRoutes(ctx context.Context, router *x.Ro
 	m.SessionHandler().RegisterPublicRoutes(router)
 	m.SelfServiceErrorHandler().RegisterPublicRoutes(router)
 	m.SchemaHandler().RegisterPublicRoutes(router)
+	m.SessionTokenExchangeHandler().RegisterPublicRoutes(router)
 
 	m.AllRecoveryStrategies().RegisterPublicRoutes(router)
 	m.RecoveryHandler().RegisterPublicRoutes(router)
@@ -206,6 +210,7 @@ func (m *RegistryDefault) RegisterAdminRoutes(ctx context.Context, router *x.Rou
 	m.IdentityHandler().RegisterAdminRoutes(router)
 	m.CourierHandler().RegisterAdminRoutes(router)
 	m.SelfServiceErrorHandler().RegisterAdminRoutes(router)
+	m.SessionTokenExchangeHandler().RegisterAdminRoutes(router)
 
 	m.RecoveryHandler().RegisterAdminRoutes(router)
 	m.AllRecoveryStrategies().RegisterAdminRoutes(router)

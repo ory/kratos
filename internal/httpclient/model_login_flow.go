@@ -36,6 +36,8 @@ type LoginFlow struct {
 	RequestedAal *AuthenticatorAssuranceLevel `json:"requested_aal,omitempty"`
 	// ReturnTo contains the requested return_to URL.
 	ReturnTo *string `json:"return_to,omitempty"`
+	// SessionTokenExchangeCode holds the secret code that the client can use to retrieve a session token after the login flow has been completed. This is only set if the client has requested a session token exchange code, and if the flow is of type \"api\", and only on creating the login flow.
+	SessionTokenExchangeCode *string `json:"session_token_exchange_code,omitempty"`
 	// The flow type can either be `api` or `browser`.
 	Type string      `json:"type"`
 	Ui   UiContainer `json:"ui"`
@@ -397,6 +399,38 @@ func (o *LoginFlow) SetReturnTo(v string) {
 	o.ReturnTo = &v
 }
 
+// GetSessionTokenExchangeCode returns the SessionTokenExchangeCode field value if set, zero value otherwise.
+func (o *LoginFlow) GetSessionTokenExchangeCode() string {
+	if o == nil || o.SessionTokenExchangeCode == nil {
+		var ret string
+		return ret
+	}
+	return *o.SessionTokenExchangeCode
+}
+
+// GetSessionTokenExchangeCodeOk returns a tuple with the SessionTokenExchangeCode field value if set, nil otherwise
+// and a boolean to check if the value has been set.
+func (o *LoginFlow) GetSessionTokenExchangeCodeOk() (*string, bool) {
+	if o == nil || o.SessionTokenExchangeCode == nil {
+		return nil, false
+	}
+	return o.SessionTokenExchangeCode, true
+}
+
+// HasSessionTokenExchangeCode returns a boolean if a field has been set.
+func (o *LoginFlow) HasSessionTokenExchangeCode() bool {
+	if o != nil && o.SessionTokenExchangeCode != nil {
+		return true
+	}
+
+	return false
+}
+
+// SetSessionTokenExchangeCode gets a reference to the given string and assigns it to the SessionTokenExchangeCode field.
+func (o *LoginFlow) SetSessionTokenExchangeCode(v string) {
+	o.SessionTokenExchangeCode = &v
+}
+
 // GetType returns the Type field value
 func (o *LoginFlow) GetType() string {
 	if o == nil {
@@ -511,6 +545,9 @@ func (o LoginFlow) MarshalJSON() ([]byte, error) {
 	}
 	if o.ReturnTo != nil {
 		toSerialize["return_to"] = o.ReturnTo
+	}
+	if o.SessionTokenExchangeCode != nil {
+		toSerialize["session_token_exchange_code"] = o.SessionTokenExchangeCode
 	}
 	if true {
 		toSerialize["type"] = o.Type

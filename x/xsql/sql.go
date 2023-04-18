@@ -10,6 +10,7 @@ import (
 	"github.com/gobuffalo/pop/v6"
 
 	"github.com/ory/kratos/selfservice/errorx"
+	"github.com/ory/kratos/selfservice/sessiontokenexchange"
 
 	"github.com/ory/kratos/continuity"
 	"github.com/ory/kratos/courier"
@@ -54,6 +55,7 @@ func CleanSQL(t testing.TB, c *pop.Connection) {
 		new(identity.RecoveryAddress).TableName(ctx),
 		new(identity.Identity).TableName(ctx),
 		new(identity.CredentialsTypeTable).TableName(ctx),
+		new(sessiontokenexchange.Exchanger).TableName(),
 		"networks",
 		"schema_migration",
 	} {

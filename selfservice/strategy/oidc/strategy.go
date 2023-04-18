@@ -6,14 +6,13 @@ package oidc
 import (
 	"bytes"
 	"context"
-	"encoding/base64"
 	"encoding/json"
-	"fmt"
 	"net/http"
 	"path/filepath"
 	"strings"
 
 	"github.com/ory/kratos/cipher"
+	"github.com/ory/kratos/selfservice/sessiontokenexchange"
 	"github.com/ory/x/jsonnetsecure"
 
 	"github.com/ory/kratos/text"
@@ -76,6 +75,7 @@ type dependencies interface {
 
 	session.ManagementProvider
 	session.HandlerProvider
+	sessiontokenexchange.PersistenceProvider
 
 	login.HookExecutorProvider
 	login.FlowPersistenceProvider
@@ -125,8 +125,7 @@ type authCodeContainer struct {
 }
 
 func generateState(flowID string) string {
-	state := x.NewUUID().String()
-	return base64.RawURLEncoding.EncodeToString([]byte(fmt.Sprintf("%s:%s", flowID, state)))
+	return flowID
 }
 
 func (s *Strategy) CountActiveFirstFactorCredentials(cc map[identity.CredentialsType]identity.Credentials) (count int, err error) {
@@ -215,10 +214,6 @@ func (s *Strategy) validateFlow(ctx context.Context, r *http.Request, rid uuid.U
 	}
 
 	if ar, err := s.d.RegistrationFlowPersister().GetRegistrationFlow(ctx, rid); err == nil {
-		if ar.Type != flow.TypeBrowser {
-			return ar, ErrAPIFlowNotSupported
-		}
-
 		if err := ar.Valid(); err != nil {
 			return ar, err
 		}
@@ -226,10 +221,6 @@ func (s *Strategy) validateFlow(ctx context.Context, r *http.Request, rid uuid.U
 	}
 
 	if ar, err := s.d.LoginFlowPersister().GetLoginFlow(ctx, rid); err == nil {
-		if ar.Type != flow.TypeBrowser {
-			return ar, ErrAPIFlowNotSupported
-		}
-
 		if err := ar.Valid(); err != nil {
 			return ar, err
 		}
@@ -238,10 +229,6 @@ func (s *Strategy) validateFlow(ctx context.Context, r *http.Request, rid uuid.U
 
 	ar, err := s.d.SettingsFlowPersister().GetSettingsFlow(ctx, rid)
 	if err == nil {
-		if ar.Type != flow.TypeBrowser {
-			return ar, ErrAPIFlowNotSupported
-		}
-
 		sess, err := s.d.SessionManager().FetchFromRequest(ctx, r)
 		if err != nil {
 			return ar, err
@@ -258,46 +245,74 @@ func (s *Strategy) validateFlow(ctx context.Context, r *http.Request, rid uuid.U
 
 func (s *Strategy) validateCallback(w http.ResponseWriter, r *http.Request) (flow.Flow, *authCodeContainer, error) {
 	var (
-		code  = stringsx.Coalesce(r.URL.Query().Get("code"), r.URL.Query().Get("authCode"))
-		state = r.URL.Query().Get("state")
+		codeParam  = stringsx.Coalesce(r.URL.Query().Get("code"), r.URL.Query().Get("authCode"))
+		stateParam = r.URL.Query().Get("state")
+		errorParam = r.URL.Query().Get("error")
 	)
 
-	if state == "" {
+	if stateParam == "" {
 		return nil, nil, errors.WithStack(herodot.ErrBadRequest.WithReasonf(`Unable to complete OpenID Connect flow because the OpenID Provider did not return the state query parameter.`))
 	}
 
-	var cntnr authCodeContainer
-	if _, err := s.d.ContinuityManager().Continue(r.Context(), w, r, sessionName, continuity.WithPayload(&cntnr)); err != nil {
+	f, err := s.validateFlow(r.Context(), r, x.ParseUUID(stateParam))
+	if err != nil {
 		return nil, nil, err
 	}
 
-	if state != cntnr.State {
-		return nil, &cntnr, errors.WithStack(herodot.ErrBadRequest.WithReasonf(`Unable to complete OpenID Connect flow because the query state parameter does not match the state parameter from the session cookie.`))
+	cntnr := authCodeContainer{}
+	if f.GetType() == flow.TypeBrowser {
+		if _, err := s.d.ContinuityManager().Continue(r.Context(), w, r, sessionName, continuity.WithPayload(&cntnr)); err != nil {
+			return nil, nil, err
+		}
+		if stateParam != cntnr.State {
+			return nil, &cntnr, errors.WithStack(herodot.ErrBadRequest.WithReasonf(`Unable to complete OpenID Connect flow because the query state parameter does not match the state parameter from the session cookie.`))
+		}
+	} else {
+		cntnr.State = stateParam
+		cntnr.FlowID = stateParam
 	}
 
-	req, err := s.validateFlow(r.Context(), r, x.ParseUUID(cntnr.FlowID))
-	if err != nil {
-		return nil, &cntnr, err
+	if errorParam != "" {
+		return f, &cntnr, errors.WithStack(herodot.ErrBadRequest.WithReasonf(`Unable to complete OpenID Connect flow because the OpenID Provider returned error "%s": %s`, r.URL.Query().Get("error"), r.URL.Query().Get("error_description")))
+	}
+	if codeParam == "" {
+		return f, &cntnr, errors.WithStack(herodot.ErrBadRequest.WithReasonf(`Unable to complete OpenID Connect flow because the OpenID Provider did not return the code query parameter.`))
 	}
 
-	if r.URL.Query().Get("error") != "" {
-		return req, &cntnr, errors.WithStack(herodot.ErrBadRequest.WithReasonf(`Unable to complete OpenID Connect flow because the OpenID Provider returned error "%s": %s`, r.URL.Query().Get("error"), r.URL.Query().Get("error_description")))
-	}
-
-	if code == "" {
-		return req, &cntnr, errors.WithStack(herodot.ErrBadRequest.WithReasonf(`Unable to complete OpenID Connect flow because the OpenID Provider did not return the code query parameter.`))
-	}
-
-	return req, &cntnr, nil
+	return f, &cntnr, nil
 }
 
-func (s *Strategy) alreadyAuthenticated(w http.ResponseWriter, r *http.Request, req interface{}) bool {
-	// we assume an error means the user has no session
-	if _, err := s.d.SessionManager().FetchFromRequest(r.Context(), r); err == nil {
-		if _, ok := req.(*settings.Flow); ok {
+func registrationOrLoginFlowID(flow any) (uuid.UUID, bool) {
+	switch f := flow.(type) {
+	case *registration.Flow:
+		return f.ID, true
+	case *login.Flow:
+		return f.ID, true
+	default:
+		return uuid.Nil, false
+	}
+}
+
+func (s *Strategy) alreadyAuthenticated(w http.ResponseWriter, r *http.Request, f interface{}) bool {
+	ctx := r.Context()
+
+	if sess, _ := s.d.SessionManager().FetchFromRequest(ctx, r); sess != nil {
+		if _, ok := f.(*settings.Flow); ok {
 			// ignore this if it's a settings flow
-		} else if !isForced(req) {
-			http.Redirect(w, r, s.d.Config().SelfServiceBrowserDefaultReturnTo(r.Context()).String(), http.StatusSeeOther)
+		} else if !isForced(f) {
+			if flowID, ok := registrationOrLoginFlowID(f); ok {
+				if hasCode, _ := s.d.SessionTokenExchangePersister().CodeExistsForFlow(ctx, flowID); hasCode {
+					_ = s.d.SessionTokenExchangePersister().UpdateSessionOnExchanger(ctx, flowID, sess.ID)
+				}
+			}
+			returnTo := s.d.Config().SelfServiceBrowserDefaultReturnTo(ctx)
+			if redirecter, ok := f.(flow.FlowWithRedirect); ok {
+				r, err := x.SecureRedirectTo(r, returnTo, redirecter.SecureRedirectToOpts(ctx, s.d)...)
+				if err != nil {
+					returnTo = r
+				}
+			}
+			http.Redirect(w, r, returnTo.String(), http.StatusSeeOther)
 			return true
 		}
 	}

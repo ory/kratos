@@ -8,8 +8,11 @@ import (
 	"net/url"
 	"time"
 
+	"github.com/ory/herodot"
 	"github.com/ory/kratos/hydra"
+	"github.com/ory/kratos/selfservice/sessiontokenexchange"
 	"github.com/ory/kratos/text"
+	"github.com/ory/x/randx"
 
 	"github.com/ory/nosurf"
 
@@ -54,6 +57,7 @@ type (
 		HookExecutorProvider
 		FlowPersistenceProvider
 		ErrorHandlerProvider
+		sessiontokenexchange.PersistenceProvider
 	}
 	HandlerProvider interface {
 		RegistrationHandler() *Handler
@@ -117,6 +121,17 @@ func (h *Handler) NewRegistrationFlow(w http.ResponseWriter, r *http.Request, ft
 	}
 	for _, o := range opts {
 		o(f)
+	}
+
+	if ft == flow.TypeAPI && r.URL.Query().Get("enable_session_token_exchange_code") == "true" {
+		// Panicing here is ok since it will return a 500 to the user, which is accurate for when
+		// we can't generate a random string.
+		f.SessionTokenExchangeCode = randx.MustString(64, randx.AlphaNum)
+
+		err = h.d.SessionTokenExchangePersister().CreateSessionTokenExchanger(r.Context(), f.ID, f.SessionTokenExchangeCode)
+		if err != nil {
+			return nil, errors.WithStack(herodot.ErrInternalServerError.WithWrap(err))
+		}
 	}
 
 	for _, s := range h.d.RegistrationStrategies(r.Context()) {
@@ -193,6 +208,25 @@ func (h *Handler) createNativeRegistrationFlow(w http.ResponseWriter, r *http.Re
 	}
 
 	h.d.Writer().Write(w, r, a)
+}
+
+// Create Native Registration Flow Parameters
+//
+// swagger:parameters createNativeRegistrationFlow
+//
+//nolint:deadcode,unused
+//lint:ignore U1000 Used to generate Swagger and OpenAPI definitions
+type createNativeRegistrationFlow struct {
+	// EnableSessionTokenExchangeCode requests the login flow to include a code that can be used to retrieve the session token
+	// after the login flow has been completed.
+	//
+	// in: query
+	EnableSessionTokenExchangeCode bool `json:"enable_session_token_exchange_code"`
+
+	// The URL to return the browser to after the flow was completed.
+	//
+	// in: query
+	ReturnTo string `json:"return_to"`
 }
 
 // Create Browser Registration Flow Parameters

@@ -48,10 +48,6 @@ func (s *Strategy) RegisterRegistrationRoutes(r *x.RouterPublic) {
 }
 
 func (s *Strategy) PopulateRegistrationMethod(r *http.Request, f *registration.Flow) error {
-	if f.Type != flow.TypeBrowser {
-		return nil
-	}
-
 	return s.populateMethod(r, f.UI, text.NewInfoRegistrationWith)
 }
 
@@ -196,9 +192,12 @@ func (s *Strategy) registrationToLogin(w http.ResponseWriter, r *http.Request, r
 		opts = append(opts, login.WithFormErrorMessage(rf.UI.Messages))
 	}
 
-	// This endpoint only handles browser flow at the moment.
-	lf, _, err := s.d.LoginHandler().NewLoginFlow(w, r, flow.TypeBrowser, opts...)
+	lf, _, err := s.d.LoginHandler().NewLoginFlow(w, r, rf.Type, opts...)
+	if err != nil {
+		return nil, err
+	}
 
+	err = s.d.SessionTokenExchangePersister().MoveToNewFlow(r.Context(), rf.ID, lf.ID)
 	if err != nil {
 		return nil, err
 	}

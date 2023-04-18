@@ -4,11 +4,13 @@
 package flow
 
 import (
+	"context"
 	"net/http"
 	"net/url"
 
 	"github.com/pkg/errors"
 
+	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/ui/container"
 
 	"github.com/ory/herodot"
@@ -37,4 +39,8 @@ type Flow interface {
 	GetRequestURL() string
 	AppendTo(*url.URL) *url.URL
 	GetUI() *container.Container
+}
+
+type FlowWithRedirect interface {
+	SecureRedirectToOpts(ctx context.Context, cfg config.Provider) (opts []x.SecureRedirectOption)
 }

@@ -41,10 +41,6 @@ func (s *Strategy) RegisterLoginRoutes(r *x.RouterPublic) {
 }
 
 func (s *Strategy) PopulateLoginMethod(r *http.Request, requestedAAL identity.AuthenticatorAssuranceLevel, l *login.Flow) error {
-	if l.Type != flow.TypeBrowser {
-		return nil
-	}
-
 	// This strategy can only solve AAL1
 	if requestedAAL > identity.AuthenticatorAssuranceLevel1 {
 		return nil
@@ -109,7 +105,12 @@ func (s *Strategy) processLogin(w http.ResponseWriter, r *http.Request, a *login
 			}
 
 			// This flow only works for browsers anyways.
-			aa, err := s.d.RegistrationHandler().NewRegistrationFlow(w, r, flow.TypeBrowser, opts...)
+			aa, err := s.d.RegistrationHandler().NewRegistrationFlow(w, r, a.Type, opts...)
+			if err != nil {
+				return nil, s.handleError(w, r, a, provider.Config().ID, nil, err)
+			}
+
+			err = s.d.SessionTokenExchangePersister().MoveToNewFlow(r.Context(), a.ID, aa.ID)
 			if err != nil {
 				return nil, s.handleError(w, r, a, provider.Config().ID, nil, err)
 			}

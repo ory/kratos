@@ -47,6 +47,7 @@ import (
 	registration "github.com/ory/kratos/selfservice/flow/registration/test"
 	settings "github.com/ory/kratos/selfservice/flow/settings/test"
 	verification "github.com/ory/kratos/selfservice/flow/verification/test"
+	sessiontokenexchange "github.com/ory/kratos/selfservice/sessiontokenexchange/test"
 	code "github.com/ory/kratos/selfservice/strategy/code/test"
 	link "github.com/ory/kratos/selfservice/strategy/link/test"
 	session "github.com/ory/kratos/session/test"
@@ -240,6 +241,10 @@ func TestPersister(t *testing.T) {
 			t.Run("contract=session.TestPersister", func(t *testing.T) {
 				pop.SetLogger(pl(t))
 				session.TestPersister(ctx, conf, p)(t)
+			})
+			t.Run("contract=sessiontokenexchange.TestPersister", func(t *testing.T) {
+				pop.SetLogger(pl(t))
+				sessiontokenexchange.TestPersister(ctx, conf, p)(t)
 			})
 			t.Run("contract=courier.TestPersister", func(t *testing.T) {
 				pop.SetLogger(pl(t))

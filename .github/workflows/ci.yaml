@@ -203,13 +203,23 @@ jobs:
           echo 'RN_UI_PATH='"$(realpath react-native-ui)" >> $GITHUB_ENV
           echo 'NODE_UI_PATH='"$(realpath node-ui)" >> $GITHUB_ENV
           echo 'REACT_UI_PATH='"$(realpath react-ui)" >> $GITHUB_ENV
-      - run: |
-          ./test/e2e/run.sh ${{ matrix.database }}
+      - name: "Run Cypress tests"
+        run: ./test/e2e/run.sh ${{ matrix.database }}
         env:
           RN_UI_PATH: react-native-ui
           NODE_UI_PATH: node-ui
           REACT_UI_PATH: react-ui
           CYPRESS_RECORD_KEY: ${{ secrets.CYPRESS_RECORD_KEY }}
+      #      TODO(hperl): Enable this once the React Native app uses the new SDK
+      #      - name: "Run Playwright tests"
+      #        run: |
+      #          cd test/e2e
+      #          npm run playwright
+      #        env:
+      #          DB: ${{ matrix.database }}
+      #          RN_UI_PATH: react-native-ui
+      #          NODE_UI_PATH: node-ui
+      #          REACT_UI_PATH: react-ui
       - if: failure()
         uses: actions/upload-artifact@v2
         with:

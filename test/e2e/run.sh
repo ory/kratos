@@ -252,6 +252,14 @@ prepare() {
     PORT=4455 npm run start \
       >"${base}/test/e2e/proxy.e2e.log" 2>&1 &
   )
+
+  # Make the environment available to Playwright
+  env | grep KRATOS_                         >  test/e2e/playwright/playwright.env
+  env | grep TEST_DATABASE_                  >> test/e2e/playwright/playwright.env
+  env | grep OIDC_                           >> test/e2e/playwright/playwright.env
+  env | grep CYPRESS_                        >> test/e2e/playwright/playwright.env
+  echo LOG_LEAK_SENSITIVE_VALUES=true        >> test/e2e/playwright/playwright.env
+  echo DEV_DISABLE_API_FLOW_ENFORCEMENT=true >> test/e2e/playwright/playwright.env
 }
 
 run() {

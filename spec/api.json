@@ -1181,6 +1181,10 @@
             "description": "ReturnTo contains the requested return_to URL.",
             "type": "string"
           },
+          "session_token_exchange_code": {
+            "description": "SessionTokenExchangeCode holds the secret code that the client can use to retrieve a session token after the login flow has been completed.\nThis is only set if the client has requested a session token exchange code, and if the flow is of type \"api\",\nand only on creating the login flow.",
+            "type": "string"
+          },
           "type": {
             "$ref": "#/components/schemas/selfServiceFlowType"
           },
@@ -1590,6 +1594,10 @@
             "description": "ReturnTo contains the requested return_to URL.",
             "type": "string"
           },
+          "session_token_exchange_code": {
+            "description": "SessionTokenExchangeCode holds the secret code that the client can use to retrieve a session token after the flow has been completed.\nThis is only set if the client has requested a session token exchange code, and if the flow is of type \"api\",\nand only on creating the flow.",
+            "type": "string"
+          },
           "transient_payload": {
             "description": "TransientPayload is used to pass data from the registration to a webhook",
             "type": "object"
@@ -1822,6 +1830,22 @@
         ],
         "title": "State represents the state of this flow. It knows two states:",
         "type": "string"
+      },
+      "successfulCodeExchangeResponse": {
+        "description": "The Response for Registration Flows via API",
+        "properties": {
+          "session": {
+            "$ref": "#/components/schemas/session"
+          },
+          "session_token": {
+            "description": "The Session Token\n\nA session token is equivalent to a session cookie, but it can be sent in the HTTP Authorization\nHeader:\n\nAuthorization: bearer ${session-token}\n\nThe session token is only issued for API flows, not for Browser flows!",
+            "type": "string"
+          }
+        },
+        "required": [
+          "session"
+        ],
+        "type": "object"
       },
       "successfulNativeLogin": {
         "description": "The Response for Login Flows via API",
@@ -4631,6 +4655,78 @@
         ]
       }
     },
+    "/self-service/exchange-code-for-session-token": {
+      "get": {
+        "operationId": "exchangeSessionToken",
+        "parameters": [
+          {
+            "description": "The Session Token Exchange Code",
+            "in": "query",
+            "name": "code",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/successfulNativeLogin"
+                }
+              }
+            },
+            "description": "successfulNativeLogin"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/errorGeneric"
+                }
+              }
+            },
+            "description": "errorGeneric"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/errorGeneric"
+                }
+              }
+            },
+            "description": "errorGeneric"
+          },
+          "410": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/errorGeneric"
+                }
+              }
+            },
+            "description": "errorGeneric"
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/errorGeneric"
+                }
+              }
+            },
+            "description": "errorGeneric"
+          }
+        },
+        "summary": "Exchange Session Token",
+        "tags": [
+          "frontend"
+        ]
+      }
+    },
     "/self-service/login": {
       "post": {
         "description": ":::info\n\nThis endpoint is EXPERIMENTAL and subject to potential breaking changes in the future.\n\n:::\n\nUse this endpoint to complete a login flow. This endpoint\nbehaves differently for API and browser flows.\n\nAPI flows expect `application/json` to be sent in the body and responds with\nHTTP 200 and a application/json body with the session token on success;\nHTTP 410 if the original flow expired with the appropriate error messages set and optionally a `use_flow_id` parameter in the body;\nHTTP 400 on form validation errors.\n\nBrowser flows expect a Content-Type of `application/x-www-form-urlencoded` or `application/json` to be sent in the body and respond with\na HTTP 303 redirect to the post/after login URL or the `return_to` value if it was set and if the login succeeded;\na HTTP 303 redirect to the login UI URL with the flow ID containing the validation errors otherwise.\n\nBrowser flows with an accept header of `application/json` will not redirect but instead respond with\nHTTP 200 and a application/json body with the signed in identity and a `Set-Cookie` header on success;\nHTTP 303 redirect to a fresh login flow if the original flow expired with the appropriate error messages set;\nHTTP 400 on form validation errors.\n\nIf this endpoint is called with `Accept: application/json` in the header, the response contains the flow without a redirect. In the\ncase of an error, the `error.id` of the JSON response body can be one of:\n\n`session_already_available`: The user is already signed in.\n`security_csrf_violation`: Unable to fetch the flow because a CSRF violation occurred.\n`security_identity_mismatch`: The requested `?return_to` address is not allowed to be used. Adjust this in the configuration!\n`browser_location_change_required`: Usually sent when an AJAX request indicates that the browser needs to open a specific URL.\nMost likely used in Social Sign In flows.\n\nMore information can be found at [Ory Kratos User Login](https://www.ory.sh/docs/kratos/self-service/flows/user-login) and [User Registration Documentation](https://www.ory.sh/docs/kratos/self-service/flows/user-registration).",
@@ -4764,6 +4860,22 @@
             "description": "The Session Token of the Identity performing the settings flow.",
             "in": "header",
             "name": "X-Session-Token",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "EnableSessionTokenExchangeCode requests the login flow to include a code that can be used to retrieve the session token\nafter the login flow has been completed.",
+            "in": "query",
+            "name": "enable_session_token_exchange_code",
+            "schema": {
+              "type": "boolean"
+            }
+          },
+          {
+            "description": "The URL to return the browser to after the flow was completed.",
+            "in": "query",
+            "name": "return_to",
             "schema": {
               "type": "string"
             }
@@ -5499,6 +5611,24 @@
       "get": {
         "description": "This endpoint initiates a registration flow for API clients such as mobile devices, smart TVs, and so on.\n\nIf a valid provided session cookie or session token is provided, a 400 Bad Request error\nwill be returned unless the URL query parameter `?refresh=true` is set.\n\nTo fetch an existing registration flow call `/self-service/registration/flows?flow=\u003cflow_id\u003e`.\n\nYou MUST NOT use this endpoint in client-side (Single Page Apps, ReactJS, AngularJS) nor server-side (Java Server\nPages, NodeJS, PHP, Golang, ...) browser applications. Using this endpoint in these applications will make\nyou vulnerable to a variety of CSRF attacks.\n\nIn the case of an error, the `error.id` of the JSON response body can be one of:\n\n`session_already_available`: The user is already signed in.\n`security_csrf_violation`: Unable to fetch the flow because a CSRF violation occurred.\n\nThis endpoint MUST ONLY be used in scenarios such as native mobile apps (React Native, Objective C, Swift, Java, ...).\n\nMore information can be found at [Ory Kratos User Login](https://www.ory.sh/docs/kratos/self-service/flows/user-login) and [User Registration Documentation](https://www.ory.sh/docs/kratos/self-service/flows/user-registration).",
         "operationId": "createNativeRegistrationFlow",
+        "parameters": [
+          {
+            "description": "EnableSessionTokenExchangeCode requests the login flow to include a code that can be used to retrieve the session token\nafter the login flow has been completed.",
+            "in": "query",
+            "name": "enable_session_token_exchange_code",
+            "schema": {
+              "type": "boolean"
+            }
+          },
+          {
+            "description": "The URL to return the browser to after the flow was completed.",
+            "in": "query",
+            "name": "return_to",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "content": {

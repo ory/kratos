@@ -56,7 +56,7 @@ func TestLoginExecutor(t *testing.T) {
 				router.GET("/login/post", func(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 					a, err := login.NewFlow(conf, time.Minute, "", r, ft)
 					require.NoError(t, err)
-					a.Active = identity.CredentialsType(strategy)
+					a.Active = strategy
 					a.RequestURL = x.RequestURL(r).String()
 					sess := session.NewInactiveSession()
 					sess.CompletedLoginFor(identity.CredentialsTypePassword, identity.AuthenticatorAssuranceLevel1)
