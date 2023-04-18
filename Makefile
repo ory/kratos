@@ -16,7 +16,8 @@ GO_DEPENDENCIES = github.com/ory/go-acc \
 				  github.com/go-swagger/go-swagger/cmd/swagger \
 				  golang.org/x/tools/cmd/goimports \
 				  github.com/mattn/goveralls \
-				  github.com/cortesi/modd/cmd/modd
+				  github.com/cortesi/modd/cmd/modd \
+				  github.com/mailhog/MailHog \
 
 define make-go-dependency
   # go install is responsible for not re-building when the code hasn't changed
