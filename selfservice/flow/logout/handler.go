@@ -7,11 +7,12 @@ import (
 	"net/http"
 	"net/url"
 
-	"github.com/ory/kratos/identity"
-	"github.com/ory/kratos/x/events"
-	"github.com/ory/x/otelx/semconv"
+	"go.opentelemetry.io/otel/trace"
 
 	"github.com/pkg/errors"
+
+	"github.com/ory/kratos/identity"
+	"github.com/ory/kratos/x/events"
 
 	"github.com/ory/herodot"
 	"github.com/ory/x/decoderx"
@@ -223,9 +224,7 @@ func (h *Handler) performNativeLogout(w http.ResponseWriter, r *http.Request, _ 
 		return
 	}
 
-	events.Emit(r.Context(), events.SessionRevoked,
-		semconv.AttrIdentityID(sess.IdentityID),
-		events.AttrSessionID(sess.ID))
+	trace.SpanFromContext(r.Context()).AddEvent(events.NewSessionRevoked(r.Context(), sess.ID, sess.IdentityID))
 
 	w.WriteHeader(http.StatusNoContent)
 }
@@ -304,9 +303,7 @@ func (h *Handler) updateLogoutFlow(w http.ResponseWriter, r *http.Request, ps ht
 		return
 	}
 
-	events.Emit(r.Context(), events.SessionRevoked,
-		semconv.AttrIdentityID(sess.IdentityID),
-		events.AttrSessionID(sess.ID))
+	trace.SpanFromContext(r.Context()).AddEvent(events.NewSessionRevoked(r.Context(), sess.ID, sess.IdentityID))
 
 	h.completeLogout(w, r)
 }

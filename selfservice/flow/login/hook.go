@@ -9,6 +9,8 @@ import (
 	"net/http"
 	"time"
 
+	"go.opentelemetry.io/otel/trace"
+
 	"github.com/ory/kratos/x/events"
 
 	"github.com/pkg/errors"
@@ -22,7 +24,6 @@ import (
 	"github.com/ory/kratos/ui/node"
 	"github.com/ory/kratos/x"
 	"github.com/ory/x/otelx"
-	"github.com/ory/x/otelx/semconv"
 )
 
 type (
@@ -178,10 +179,7 @@ func (e *HookExecutor) PostLoginHook(w http.ResponseWriter, r *http.Request, g n
 			WithField("identity_id", i.ID).
 			Info("Identity authenticated successfully and was issued an Ory Kratos Session Token.")
 
-		events.Emit(r.Context(), events.SessionIssued,
-			semconv.AttrIdentityID(i.ID),
-			events.AttrSessionID(s.ID),
-			events.AttrFlowType(a.Type))
+		trace.SpanFromContext(r.Context()).AddEvent(events.NewSessionIssued(r.Context(), s.ID, i.ID, a))
 
 		response := &APIFlowResponse{Session: s, Token: s.Token}
 		if required, _ := e.requiresAAL2(r, classified, a); required {
@@ -203,10 +201,7 @@ func (e *HookExecutor) PostLoginHook(w http.ResponseWriter, r *http.Request, g n
 		WithField("session_id", s.ID).
 		Info("Identity authenticated successfully and was issued an Ory Kratos Session Cookie.")
 
-	events.Emit(r.Context(), events.SessionIssued,
-		semconv.AttrIdentityID(i.ID),
-		events.AttrSessionID(s.ID),
-		events.AttrFlowType(a.Type))
+	trace.SpanFromContext(r.Context()).AddEvent(events.NewSessionIssued(r.Context(), s.ID, i.ID, a))
 
 	if x.IsJSONRequest(r) {
 		// Browser flows rely on cookies. Adding tokens in the mix will confuse consumers.
