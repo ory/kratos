@@ -1862,7 +1862,7 @@ type FrontendApiApiCreateNativeLoginFlowRequest struct {
 	refresh                        *bool
 	aal                            *string
 	xSessionToken                  *string
-	enableSessionTokenExchangeCode *bool
+	returnSessionTokenExchangeCode *bool
 	returnTo                       *string
 }
 
@@ -1878,8 +1878,8 @@ func (r FrontendApiApiCreateNativeLoginFlowRequest) XSessionToken(xSessionToken 
 	r.xSessionToken = &xSessionToken
 	return r
 }
-func (r FrontendApiApiCreateNativeLoginFlowRequest) EnableSessionTokenExchangeCode(enableSessionTokenExchangeCode bool) FrontendApiApiCreateNativeLoginFlowRequest {
-	r.enableSessionTokenExchangeCode = &enableSessionTokenExchangeCode
+func (r FrontendApiApiCreateNativeLoginFlowRequest) ReturnSessionTokenExchangeCode(returnSessionTokenExchangeCode bool) FrontendApiApiCreateNativeLoginFlowRequest {
+	r.returnSessionTokenExchangeCode = &returnSessionTokenExchangeCode
 	return r
 }
 func (r FrontendApiApiCreateNativeLoginFlowRequest) ReturnTo(returnTo string) FrontendApiApiCreateNativeLoginFlowRequest {
@@ -1954,8 +1954,8 @@ func (a *FrontendApiService) CreateNativeLoginFlowExecute(r FrontendApiApiCreate
 	if r.aal != nil {
 		localVarQueryParams.Add("aal", parameterToString(*r.aal, ""))
 	}
-	if r.enableSessionTokenExchangeCode != nil {
-		localVarQueryParams.Add("return_session_token_exchange_code", parameterToString(*r.enableSessionTokenExchangeCode, ""))
+	if r.returnSessionTokenExchangeCode != nil {
+		localVarQueryParams.Add("return_session_token_exchange_code", parameterToString(*r.returnSessionTokenExchangeCode, ""))
 	}
 	if r.returnTo != nil {
 		localVarQueryParams.Add("return_to", parameterToString(*r.returnTo, ""))
@@ -2167,12 +2167,12 @@ func (a *FrontendApiService) CreateNativeRecoveryFlowExecute(r FrontendApiApiCre
 type FrontendApiApiCreateNativeRegistrationFlowRequest struct {
 	ctx                            context.Context
 	ApiService                     FrontendApi
-	enableSessionTokenExchangeCode *bool
+	returnSessionTokenExchangeCode *bool
 	returnTo                       *string
 }
 
-func (r FrontendApiApiCreateNativeRegistrationFlowRequest) EnableSessionTokenExchangeCode(enableSessionTokenExchangeCode bool) FrontendApiApiCreateNativeRegistrationFlowRequest {
-	r.enableSessionTokenExchangeCode = &enableSessionTokenExchangeCode
+func (r FrontendApiApiCreateNativeRegistrationFlowRequest) ReturnSessionTokenExchangeCode(returnSessionTokenExchangeCode bool) FrontendApiApiCreateNativeRegistrationFlowRequest {
+	r.returnSessionTokenExchangeCode = &returnSessionTokenExchangeCode
 	return r
 }
 func (r FrontendApiApiCreateNativeRegistrationFlowRequest) ReturnTo(returnTo string) FrontendApiApiCreateNativeRegistrationFlowRequest {
@@ -2240,8 +2240,8 @@ func (a *FrontendApiService) CreateNativeRegistrationFlowExecute(r FrontendApiAp
 	localVarQueryParams := url.Values{}
 	localVarFormParams := url.Values{}
 
-	if r.enableSessionTokenExchangeCode != nil {
-		localVarQueryParams.Add("return_session_token_exchange_code", parameterToString(*r.enableSessionTokenExchangeCode, ""))
+	if r.returnSessionTokenExchangeCode != nil {
+		localVarQueryParams.Add("return_session_token_exchange_code", parameterToString(*r.returnSessionTokenExchangeCode, ""))
 	}
 	if r.returnTo != nil {
 		localVarQueryParams.Add("return_to", parameterToString(*r.returnTo, ""))

@@ -4867,7 +4867,7 @@
           {
             "description": "EnableSessionTokenExchangeCode requests the login flow to include a code that can be used to retrieve the session token\nafter the login flow has been completed.",
             "in": "query",
-            "name": "enable_session_token_exchange_code",
+            "name": "return_session_token_exchange_code",
             "schema": {
               "type": "boolean"
             }
@@ -5615,7 +5615,7 @@
           {
             "description": "EnableSessionTokenExchangeCode requests the login flow to include a code that can be used to retrieve the session token\nafter the login flow has been completed.",
             "in": "query",
-            "name": "enable_session_token_exchange_code",
+            "name": "return_session_token_exchange_code",
             "schema": {
               "type": "boolean"
             }
