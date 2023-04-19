@@ -17,6 +17,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/ory/kratos/selfservice/sessiontokenexchange"
 	"github.com/ory/x/snapshotx"
 
 	"github.com/ory/kratos/text"
@@ -98,7 +99,7 @@ func TestStrategy(t *testing.T) {
 	scope = []string{}
 
 	// assert form values
-	var afv = func(t *testing.T, flowID uuid.UUID, provider string) (action string) {
+	var assertFormValues = func(t *testing.T, flowID uuid.UUID, provider string) (action string) {
 		var config *container.Container
 		if req, err := reg.RegistrationFlowPersister().GetRegistrationFlow(context.Background(), flowID); err == nil {
 			require.EqualValues(t, req.ID, flowID)
@@ -153,7 +154,35 @@ func TestStrategy(t *testing.T) {
 		return makeRequestWithCookieJar(t, provider, action, fv, nil)
 	}
 
-	var assertSystemError = func(t *testing.T, res *http.Response, body []byte, code int, reason string) {
+	var makeAPICodeFlowRequest = func(t *testing.T, provider, action string) {
+		res, err := testhelpers.NewDebugClient(t).Post(action, "application/json", strings.NewReader(fmt.Sprintf(`{
+	"method": "oidc",
+	"provider": %q
+}`, provider)))
+		require.NoError(t, err)
+		require.Equal(t, http.StatusUnprocessableEntity, res.StatusCode)
+		var changeLocation flow.BrowserLocationChangeRequiredError
+		require.NoError(t, json.NewDecoder(res.Body).Decode(&changeLocation))
+
+		res, err = testhelpers.NewClientWithCookieJar(t, nil, true).Get(changeLocation.RedirectBrowserTo)
+		require.NoError(t, err)
+
+		assert.Equal(t, returnTS.URL+"/app_code", res.Request.URL.String())
+
+		return
+	}
+
+	var exchangeCodeForToken = func(t *testing.T, code string) (codeResponse sessiontokenexchange.Response, err error) {
+		res, err := ts.Client().Get(ts.URL + "/self-service/exchange-code-for-session-token?code=" + code)
+		if err != nil {
+			return codeResponse, err
+		}
+		require.NoError(t, json.NewDecoder(res.Body).Decode(&codeResponse))
+
+		return
+	}
+
+	var assertSystemErrorWithReason = func(t *testing.T, res *http.Response, body []byte, code int, reason string) {
 		require.Contains(t, res.Request.URL.String(), errTS.URL, "%s", body)
 
 		assert.Equal(t, int64(code), gjson.GetBytes(body, "code").Int(), "%s", body)
@@ -161,31 +190,31 @@ func TestStrategy(t *testing.T) {
 	}
 
 	// assert system error (redirect to error endpoint)
-	var asem = func(t *testing.T, res *http.Response, body []byte, code int, reason string) {
+	var assertSystemErrorWithMessage = func(t *testing.T, res *http.Response, body []byte, code int, message string) {
 		require.Contains(t, res.Request.URL.String(), errTS.URL, "%s", body)
 
 		assert.Equal(t, int64(code), gjson.GetBytes(body, "code").Int(), "%s", body)
-		assert.Contains(t, gjson.GetBytes(body, "message").String(), reason, "%s", body)
+		assert.Contains(t, gjson.GetBytes(body, "message").String(), message, "%s", body)
 	}
 
 	// assert ui error (redirect to login/registration ui endpoint)
-	var aue = func(t *testing.T, res *http.Response, body []byte, reason string) {
+	var assertUIError = func(t *testing.T, res *http.Response, body []byte, reason string) {
 		require.Contains(t, res.Request.URL.String(), uiTS.URL, "status: %d, body: %s", res.StatusCode, body)
 		assert.Contains(t, gjson.GetBytes(body, "ui.messages.0.text").String(), reason, "%s", body)
 	}
 
 	// assert identity (success)
-	var ai = func(t *testing.T, res *http.Response, body []byte) {
+	var assertIdentity = func(t *testing.T, res *http.Response, body []byte) {
 		assert.Contains(t, res.Request.URL.String(), returnTS.URL)
 		assert.Equal(t, subject, gjson.GetBytes(body, "identity.traits.subject").String(), "%s", body)
 		assert.Equal(t, claims.traits.website, gjson.GetBytes(body, "identity.traits.website").String(), "%s", body)
 		assert.Equal(t, claims.metadataPublic.picture, gjson.GetBytes(body, "identity.metadata_public.picture").String(), "%s", body)
 	}
 
-	var newLoginFlow = func(t *testing.T, redirectTo string, exp time.Duration) (req *login.Flow) {
+	var newLoginFlow = func(t *testing.T, redirectTo string, exp time.Duration, flowType flow.Type) (req *login.Flow) {
 		// Use NewLoginFlow to instantiate the request but change the things we need to control a copy of it.
 		req, _, err := reg.LoginHandler().NewLoginFlow(httptest.NewRecorder(),
-			&http.Request{URL: urlx.ParseOrPanic(redirectTo)}, flow.TypeBrowser)
+			&http.Request{URL: urlx.ParseOrPanic(redirectTo)}, flowType)
 		require.NoError(t, err)
 		req.RequestURL = redirectTo
 		req.ExpiresAt = time.Now().Add(exp)
@@ -199,11 +228,17 @@ func TestStrategy(t *testing.T) {
 
 		return
 	}
+	var newBrowserLoginFlow = func(t *testing.T, redirectTo string, exp time.Duration) (req *login.Flow) {
+		return newLoginFlow(t, redirectTo, exp, flow.TypeBrowser)
+	}
+	var newAPILoginFlow = func(t *testing.T, redirectTo string, exp time.Duration) (req *login.Flow) {
+		return newLoginFlow(t, redirectTo, exp, flow.TypeAPI)
+	}
 
-	var newRegistrationFlow = func(t *testing.T, redirectTo string, exp time.Duration) *registration.Flow {
+	var newRegistrationFlow = func(t *testing.T, redirectTo string, exp time.Duration, flowType flow.Type) *registration.Flow {
 		// Use NewLoginFlow to instantiate the request but change the things we need to control a copy of it.
 		req, err := reg.RegistrationHandler().NewRegistrationFlow(httptest.NewRecorder(),
-			&http.Request{URL: urlx.ParseOrPanic(redirectTo)}, flow.TypeBrowser)
+			&http.Request{URL: urlx.ParseOrPanic(redirectTo)}, flowType)
 		require.NoError(t, err)
 		req.RequestURL = redirectTo
 		req.ExpiresAt = time.Now().Add(exp)
@@ -216,15 +251,21 @@ func TestStrategy(t *testing.T) {
 
 		return req
 	}
+	var newBrowserRegistrationFlow = func(t *testing.T, redirectTo string, exp time.Duration) *registration.Flow {
+		return newRegistrationFlow(t, redirectTo, exp, flow.TypeBrowser)
+	}
+	var newAPIRegistrationFlow = func(t *testing.T, redirectTo string, exp time.Duration) *registration.Flow {
+		return newRegistrationFlow(t, redirectTo, exp, flow.TypeAPI)
+	}
 
 	t.Run("case=should fail because provider does not exist", func(t *testing.T) {
 		for k, v := range []string{
-			loginAction(newLoginFlow(t, returnTS.URL, time.Minute).ID),
-			registerAction(newRegistrationFlow(t, returnTS.URL, time.Minute).ID),
+			loginAction(newBrowserLoginFlow(t, returnTS.URL, time.Minute).ID),
+			registerAction(newBrowserRegistrationFlow(t, returnTS.URL, time.Minute).ID),
 		} {
 			t.Run(fmt.Sprintf("case=%d", k), func(t *testing.T) {
 				res, body := makeRequest(t, "provider-does-not-exist", v, url.Values{})
-				assertSystemError(t, res, body, http.StatusNotFound, "is unknown or has not been configured")
+				assertSystemErrorWithReason(t, res, body, http.StatusNotFound, "is unknown or has not been configured")
 			})
 		}
 	})
@@ -232,12 +273,12 @@ func TestStrategy(t *testing.T) {
 	t.Run("case=should fail because the issuer is mismatching", func(t *testing.T) {
 		scope = []string{"openid"}
 		for k, v := range []string{
-			loginAction(newLoginFlow(t, returnTS.URL, time.Minute).ID),
-			registerAction(newRegistrationFlow(t, returnTS.URL, time.Minute).ID),
+			loginAction(newBrowserLoginFlow(t, returnTS.URL, time.Minute).ID),
+			registerAction(newBrowserRegistrationFlow(t, returnTS.URL, time.Minute).ID),
 		} {
 			t.Run(fmt.Sprintf("case=%d", k), func(t *testing.T) {
 				res, body := makeRequest(t, "invalid-issuer", v, url.Values{})
-				assertSystemError(t, res, body, http.StatusInternalServerError, "issuer did not match the issuer returned by provider")
+				assertSystemErrorWithReason(t, res, body, http.StatusInternalServerError, "issuer did not match the issuer returned by provider")
 			})
 		}
 	})
@@ -246,17 +287,17 @@ func TestStrategy(t *testing.T) {
 		for k, v := range []string{loginAction(x.NewUUID()), registerAction(x.NewUUID())} {
 			t.Run(fmt.Sprintf("case=%d", k), func(t *testing.T) {
 				res, body := makeRequest(t, "valid", v, url.Values{})
-				asem(t, res, body, http.StatusNotFound, "Unable to locate the resource")
+				assertSystemErrorWithMessage(t, res, body, http.StatusNotFound, "Unable to locate the resource")
 			})
 		}
 	})
 
 	t.Run("case=should fail because the flow is expired", func(t *testing.T) {
 		for k, v := range []uuid.UUID{
-			newLoginFlow(t, returnTS.URL, -time.Minute).ID,
-			newRegistrationFlow(t, returnTS.URL, -time.Minute).ID} {
+			newBrowserLoginFlow(t, returnTS.URL, -time.Minute).ID,
+			newBrowserRegistrationFlow(t, returnTS.URL, -time.Minute).ID} {
 			t.Run(fmt.Sprintf("case=%d", k), func(t *testing.T) {
-				action := afv(t, v, "valid")
+				action := assertFormValues(t, v, "valid")
 				res, body := makeRequest(t, "valid", action, url.Values{})
 
 				assert.NotEqual(t, v, gjson.GetBytes(body, "id"))
@@ -271,12 +312,13 @@ func TestStrategy(t *testing.T) {
 		scope = []string{}
 
 		for k, v := range []uuid.UUID{
-			newLoginFlow(t, returnTS.URL, time.Minute).ID,
-			newRegistrationFlow(t, returnTS.URL, time.Minute).ID} {
+			newBrowserLoginFlow(t, returnTS.URL, time.Minute).ID,
+			newBrowserRegistrationFlow(t, returnTS.URL, time.Minute).ID,
+		} {
 			t.Run(fmt.Sprintf("case=%d", k), func(t *testing.T) {
-				action := afv(t, v, "valid")
+				action := assertFormValues(t, v, "valid")
 				res, body := makeRequest(t, "valid", action, url.Values{})
-				aue(t, res, body, "no id_token was returned")
+				assertUIError(t, res, body, "no id_token was returned")
 			})
 		}
 	})
@@ -305,18 +347,18 @@ func TestStrategy(t *testing.T) {
 	})
 
 	t.Run("case=should fail login because scope was not provided", func(t *testing.T) {
-		r := newLoginFlow(t, returnTS.URL, time.Minute)
-		action := afv(t, r.ID, "valid")
+		r := newBrowserLoginFlow(t, returnTS.URL, time.Minute)
+		action := assertFormValues(t, r.ID, "valid")
 		res, body := makeRequest(t, "valid", action, url.Values{})
-		aue(t, res, body, "no id_token was returned")
+		assertUIError(t, res, body, "no id_token was returned")
 	})
 
 	t.Run("case=should fail registration flow because subject is not an email", func(t *testing.T) {
 		subject = "not-an-email"
 		scope = []string{"openid"}
 
-		r := newRegistrationFlow(t, returnTS.URL, time.Minute)
-		action := afv(t, r.ID, "valid")
+		r := newBrowserRegistrationFlow(t, returnTS.URL, time.Minute)
+		action := assertFormValues(t, r.ID, "valid")
 		res, body := makeRequest(t, "valid", action, url.Values{})
 
 		require.Contains(t, res.Request.URL.String(), uiTS.URL, "%s", body)
@@ -341,20 +383,20 @@ func TestStrategy(t *testing.T) {
 		}
 
 		t.Run("case=should pass registration", func(t *testing.T) {
-			r := newRegistrationFlow(t, returnTS.URL, time.Minute)
-			action := afv(t, r.ID, "valid")
+			r := newBrowserRegistrationFlow(t, returnTS.URL, time.Minute)
+			action := assertFormValues(t, r.ID, "valid")
 			res, body := makeRequest(t, "valid", action, url.Values{})
-			ai(t, res, body)
+			assertIdentity(t, res, body)
 			expectTokens(t, "valid", body)
 		})
 
 		t.Run("case=try another registration", func(t *testing.T) {
 			returnTo := fmt.Sprintf("%s/home?query=true", returnTS.URL)
-			r := newRegistrationFlow(t, fmt.Sprintf("%s?return_to=%s", returnTS.URL, url.QueryEscape(returnTo)), time.Minute)
-			action := afv(t, r.ID, "valid")
+			r := newBrowserRegistrationFlow(t, fmt.Sprintf("%s?return_to=%s", returnTS.URL, url.QueryEscape(returnTo)), time.Minute)
+			action := assertFormValues(t, r.ID, "valid")
 			res, body := makeRequest(t, "valid", action, url.Values{})
 			assert.Equal(t, returnTo, res.Request.URL.String())
-			ai(t, res, body)
+			assertIdentity(t, res, body)
 			expectTokens(t, "valid", body)
 		})
 	})
@@ -377,18 +419,18 @@ func TestStrategy(t *testing.T) {
 		}
 
 		t.Run("case=should pass registration", func(t *testing.T) {
-			r := newRegistrationFlow(t, returnTS.URL, time.Minute)
-			action := afv(t, r.ID, "valid")
+			r := newBrowserRegistrationFlow(t, returnTS.URL, time.Minute)
+			action := assertFormValues(t, r.ID, "valid")
 			res, body := makeRequest(t, "valid", action, url.Values{})
-			ai(t, res, body)
+			assertIdentity(t, res, body)
 			expectTokens(t, "valid", body)
 		})
 
 		t.Run("case=should pass login", func(t *testing.T) {
-			r := newLoginFlow(t, returnTS.URL, time.Minute)
-			action := afv(t, r.ID, "valid")
+			r := newBrowserLoginFlow(t, returnTS.URL, time.Minute)
+			action := assertFormValues(t, r.ID, "valid")
 			res, body := makeRequest(t, "valid", action, url.Values{})
-			ai(t, res, body)
+			assertIdentity(t, res, body)
 			expectTokens(t, "valid", body)
 		})
 	})
@@ -398,11 +440,61 @@ func TestStrategy(t *testing.T) {
 		scope = []string{"openid"}
 
 		t.Run("case=should pass login", func(t *testing.T) {
-			r := newLoginFlow(t, returnTS.URL, time.Minute)
-			action := afv(t, r.ID, "valid")
+			r := newBrowserLoginFlow(t, returnTS.URL, time.Minute)
+			action := assertFormValues(t, r.ID, "valid")
 			res, body := makeRequest(t, "valid", action, url.Values{})
-			ai(t, res, body)
+			assertIdentity(t, res, body)
 		})
+	})
+
+	t.Run("suite=API with session token exchange code", func(t *testing.T) {
+		subject = "api-code-register@ory.sh"
+		scope = []string{"openid"}
+
+		var loginOrRegister = func(id uuid.UUID, code string) {
+			_, err := exchangeCodeForToken(t, code)
+			require.Error(t, err, "session token should not be available yet")
+
+			action := assertFormValues(t, id, "valid")
+			makeAPICodeFlowRequest(t, "valid", action)
+			codeResponse, err := exchangeCodeForToken(t, code)
+			require.NoError(t, err, "session token should be available not w")
+
+			assert.NotEmpty(t, codeResponse.Token)
+			assert.Equal(t, subject, gjson.GetBytes(codeResponse.Session.Identity.Traits, "subject").String())
+		}
+		var register = func() {
+			f := newAPIRegistrationFlow(t, returnTS.URL+"?return_session_token_exchange_code=true&return_to=/app_code", 1*time.Minute)
+			loginOrRegister(f.ID, f.SessionTokenExchangeCode)
+		}
+		var login = func() {
+			f := newAPILoginFlow(t, returnTS.URL+"?return_session_token_exchange_code=true&return_to=/app_code", 1*time.Minute)
+			loginOrRegister(f.ID, f.SessionTokenExchangeCode)
+		}
+
+		for _, tc := range []struct {
+			name        string
+			first, then func()
+		}{{
+			name:  "login-twice",
+			first: login, then: login,
+		}, {
+			name:  "login-then-register",
+			first: login, then: register,
+		}, {
+			name:  "register-then-login",
+			first: register, then: login,
+		}, {
+			name:  "register-twice",
+			first: register, then: register,
+		}} {
+			t.Run("case="+tc.name, func(t *testing.T) {
+				subject = tc.name + "-api-code-testing@ory.sh"
+				tc.first()
+				tc.then()
+			})
+		}
+
 	})
 
 	t.Run("case=login without registered account with return_to", func(t *testing.T) {
@@ -411,11 +503,11 @@ func TestStrategy(t *testing.T) {
 		returnTo := "/foo"
 
 		t.Run("case=should pass login", func(t *testing.T) {
-			r := newLoginFlow(t, fmt.Sprintf("%s?return_to=%s", returnTS.URL, returnTo), time.Minute)
-			action := afv(t, r.ID, "valid")
+			r := newBrowserLoginFlow(t, fmt.Sprintf("%s?return_to=%s", returnTS.URL, returnTo), time.Minute)
+			action := assertFormValues(t, r.ID, "valid")
 			res, body := makeRequest(t, "valid", action, url.Values{})
 			assert.True(t, strings.HasSuffix(res.Request.URL.String(), returnTo))
-			ai(t, res, body)
+			assertIdentity(t, res, body)
 		})
 	})
 
@@ -424,26 +516,26 @@ func TestStrategy(t *testing.T) {
 		scope = []string{"openid"}
 
 		t.Run("case=should pass registration", func(t *testing.T) {
-			r := newRegistrationFlow(t, returnTS.URL, time.Minute)
-			action := afv(t, r.ID, "valid")
+			r := newBrowserRegistrationFlow(t, returnTS.URL, time.Minute)
+			action := assertFormValues(t, r.ID, "valid")
 			res, body := makeRequest(t, "valid", action, url.Values{})
-			ai(t, res, body)
+			assertIdentity(t, res, body)
 		})
 
 		t.Run("case=should pass second time registration", func(t *testing.T) {
-			r := newLoginFlow(t, returnTS.URL, time.Minute)
-			action := afv(t, r.ID, "valid")
+			r := newBrowserLoginFlow(t, returnTS.URL, time.Minute)
+			action := assertFormValues(t, r.ID, "valid")
 			res, body := makeRequest(t, "valid", action, url.Values{})
-			ai(t, res, body)
+			assertIdentity(t, res, body)
 		})
 
 		t.Run("case=should pass third time registration with return to", func(t *testing.T) {
 			returnTo := "/foo"
-			r := newLoginFlow(t, fmt.Sprintf("%s?return_to=%s", returnTS.URL, returnTo), time.Minute)
-			action := afv(t, r.ID, "valid")
+			r := newBrowserLoginFlow(t, fmt.Sprintf("%s?return_to=%s", returnTS.URL, returnTo), time.Minute)
+			action := assertFormValues(t, r.ID, "valid")
 			res, body := makeRequest(t, "valid", action, url.Values{})
 			assert.True(t, strings.HasSuffix(res.Request.URL.String(), returnTo))
-			ai(t, res, body)
+			assertIdentity(t, res, body)
 		})
 	})
 
@@ -457,8 +549,8 @@ func TestStrategy(t *testing.T) {
 		claims.metadataAdmin.phoneNumber = "911"
 
 		t.Run("case=should fail registration on first attempt", func(t *testing.T) {
-			r := newRegistrationFlow(t, returnTS.URL, time.Minute)
-			action := afv(t, r.ID, "valid")
+			r := newBrowserRegistrationFlow(t, returnTS.URL, time.Minute)
+			action := assertFormValues(t, r.ID, "valid")
 			res, body := makeRequest(t, "valid", action, url.Values{"traits.name": {"i"}})
 			require.Contains(t, res.Request.URL.String(), uiTS.URL, "%s", body)
 
@@ -469,10 +561,10 @@ func TestStrategy(t *testing.T) {
 		})
 
 		t.Run("case=should pass registration with valid data", func(t *testing.T) {
-			r := newRegistrationFlow(t, returnTS.URL, time.Minute)
-			action := afv(t, r.ID, "valid")
+			r := newBrowserRegistrationFlow(t, returnTS.URL, time.Minute)
+			action := assertFormValues(t, r.ID, "valid")
 			res, body := makeRequest(t, "valid", action, url.Values{"traits.name": {"valid-name"}})
-			ai(t, res, body)
+			assertIdentity(t, res, body)
 			assert.Equal(t, "https://www.ory.sh/kratos", gjson.GetBytes(body, "identity.traits.website").String(), "%s", body)
 			assert.Equal(t, "valid-name", gjson.GetBytes(body, "identity.traits.name").String(), "%s", body)
 			assert.Equal(t, "[\"group1\",\"group2\"]", gjson.GetBytes(body, "identity.traits.groups").String(), "%s", body)
@@ -494,18 +586,18 @@ func TestStrategy(t *testing.T) {
 		})
 
 		t.Run("case=should fail registration", func(t *testing.T) {
-			r := newRegistrationFlow(t, returnTS.URL, time.Minute)
-			action := afv(t, r.ID, "valid")
+			r := newBrowserRegistrationFlow(t, returnTS.URL, time.Minute)
+			action := assertFormValues(t, r.ID, "valid")
 			res, body := makeRequest(t, "valid", action, url.Values{})
-			aue(t, res, body, "An account with the same identifier (email, phone, username, ...) exists already. Please sign in to your existing account and link your social profile in the settings page.")
+			assertUIError(t, res, body, "An account with the same identifier (email, phone, username, ...) exists already. Please sign in to your existing account and link your social profile in the settings page.")
 			require.Contains(t, gjson.GetBytes(body, "ui.action").String(), "/self-service/login")
 		})
 
 		t.Run("case=should fail login", func(t *testing.T) {
-			r := newLoginFlow(t, returnTS.URL, time.Minute)
-			action := afv(t, r.ID, "valid")
+			r := newBrowserLoginFlow(t, returnTS.URL, time.Minute)
+			action := assertFormValues(t, r.ID, "valid")
 			res, body := makeRequest(t, "valid", action, url.Values{})
-			aue(t, res, body, "An account with the same identifier (email, phone, username, ...) exists already.")
+			assertUIError(t, res, body, "An account with the same identifier (email, phone, username, ...) exists already.")
 		})
 	})
 
@@ -515,12 +607,12 @@ func TestStrategy(t *testing.T) {
 
 		fv := url.Values{"traits.name": {"valid-name"}}
 		jar, _ := cookiejar.New(nil)
-		r1 := newLoginFlow(t, returnTS.URL, time.Minute)
-		res1, body1 := makeRequestWithCookieJar(t, "valid", afv(t, r1.ID, "valid"), fv, jar)
-		ai(t, res1, body1)
-		r2 := newLoginFlow(t, returnTS.URL, time.Minute)
-		res2, body2 := makeRequestWithCookieJar(t, "valid", afv(t, r2.ID, "valid"), fv, jar)
-		ai(t, res2, body2)
+		r1 := newBrowserLoginFlow(t, returnTS.URL, time.Minute)
+		res1, body1 := makeRequestWithCookieJar(t, "valid", assertFormValues(t, r1.ID, "valid"), fv, jar)
+		assertIdentity(t, res1, body1)
+		r2 := newBrowserLoginFlow(t, returnTS.URL, time.Minute)
+		res2, body2 := makeRequestWithCookieJar(t, "valid", assertFormValues(t, r2.ID, "valid"), fv, jar)
+		assertIdentity(t, res2, body2)
 		assert.Equal(t, body1, body2)
 	})
 
@@ -530,13 +622,13 @@ func TestStrategy(t *testing.T) {
 
 		fv := url.Values{"traits.name": {"valid-name"}}
 		jar, _ := cookiejar.New(nil)
-		r1 := newLoginFlow(t, returnTS.URL, time.Minute)
-		res1, body1 := makeRequestWithCookieJar(t, "valid", afv(t, r1.ID, "valid"), fv, jar)
-		ai(t, res1, body1)
-		r2 := newLoginFlow(t, returnTS.URL, time.Minute)
+		r1 := newBrowserLoginFlow(t, returnTS.URL, time.Minute)
+		res1, body1 := makeRequestWithCookieJar(t, "valid", assertFormValues(t, r1.ID, "valid"), fv, jar)
+		assertIdentity(t, res1, body1)
+		r2 := newBrowserLoginFlow(t, returnTS.URL, time.Minute)
 		require.NoError(t, reg.LoginFlowPersister().ForceLoginFlow(context.Background(), r2.ID))
-		res2, body2 := makeRequestWithCookieJar(t, "valid", afv(t, r2.ID, "valid"), fv, jar)
-		ai(t, res2, body2)
+		res2, body2 := makeRequestWithCookieJar(t, "valid", assertFormValues(t, r2.ID, "valid"), fv, jar)
+		assertIdentity(t, res2, body2)
 		assert.NotEqual(t, gjson.GetBytes(body1, "id"), gjson.GetBytes(body2, "id"))
 		authAt1, err := time.Parse(time.RFC3339, gjson.GetBytes(body1, "authenticated_at").String())
 		require.NoError(t, err)
@@ -558,8 +650,8 @@ func TestStrategy(t *testing.T) {
 		}
 
 		t.Run("case=should pass when registering", func(t *testing.T) {
-			f := newRegistrationFlow(t, returnTS.URL, time.Minute)
-			action := afv(t, f.ID, "valid")
+			f := newBrowserRegistrationFlow(t, returnTS.URL, time.Minute)
+			action := assertFormValues(t, f.ID, "valid")
 
 			fv := url.Values{}
 
@@ -579,9 +671,9 @@ func TestStrategy(t *testing.T) {
 		})
 
 		t.Run("case=should pass when logging in", func(t *testing.T) {
-			f := newLoginFlow(t, returnTS.URL, time.Minute)
+			f := newBrowserLoginFlow(t, returnTS.URL, time.Minute)
 
-			action := afv(t, f.ID, "valid")
+			action := assertFormValues(t, f.ID, "valid")
 
 			fv := url.Values{}
 
@@ -601,8 +693,8 @@ func TestStrategy(t *testing.T) {
 		})
 
 		t.Run("case=should ignore invalid parameters when logging in", func(t *testing.T) {
-			f := newLoginFlow(t, returnTS.URL, time.Minute)
-			action := afv(t, f.ID, "valid")
+			f := newBrowserLoginFlow(t, returnTS.URL, time.Minute)
+			action := assertFormValues(t, f.ID, "valid")
 
 			fv := url.Values{}
 			fv.Set("upstream_parameters.lol", "invalid")
@@ -619,8 +711,8 @@ func TestStrategy(t *testing.T) {
 		})
 
 		t.Run("case=should ignore invalid parameters when registering", func(t *testing.T) {
-			f := newRegistrationFlow(t, returnTS.URL, time.Minute)
-			action := afv(t, f.ID, "valid")
+			f := newBrowserRegistrationFlow(t, returnTS.URL, time.Minute)
+			action := assertFormValues(t, f.ID, "valid")
 
 			fv := url.Values{}
 			fv.Set("upstream_parameters.lol", "invalid")

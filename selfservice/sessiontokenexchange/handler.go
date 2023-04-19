@@ -63,7 +63,7 @@ type exchangeSessionToken struct {
 // The Response for Registration Flows via API
 //
 // swagger:model successfulCodeExchangeResponse
-type codeExchangeResponse struct {
+type Response struct {
 	// The Session Token
 	//
 	// A session token is equivalent to a session cookie, but it can be sent in the HTTP Authorization
@@ -119,7 +119,7 @@ func (h *Handler) exchangeCode(w http.ResponseWriter, r *http.Request, _ httprou
 		return
 	}
 
-	h.d.Writer().Write(w, r, &codeExchangeResponse{
+	h.d.Writer().Write(w, r, &Response{
 		Token:   sess.Token,
 		Session: sess,
 	})
