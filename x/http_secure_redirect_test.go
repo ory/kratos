@@ -126,8 +126,7 @@ func TestTakeOverReturnToParameter(t *testing.T) {
 }
 
 func TestSecureRedirectTo(t *testing.T) {
-
-	var newServer = func(t *testing.T, isTLS bool, isRelative bool, expectErr bool, opts func(ts *httptest.Server) []x.SecureRedirectOption) *httptest.Server {
+	newServer := func(t *testing.T, isTLS bool, isRelative bool, expectErr bool, opts func(ts *httptest.Server) []x.SecureRedirectOption) *httptest.Server {
 		var ts *httptest.Server
 		f := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			if opts == nil {
@@ -160,7 +159,7 @@ func TestSecureRedirectTo(t *testing.T) {
 		return ts
 	}
 
-	var makeRequest = func(t *testing.T, ts *httptest.Server, path string) (*http.Response, string) {
+	makeRequest := func(t *testing.T, ts *httptest.Server, path string) (*http.Response, string) {
 		res, err := ts.Client().Get(ts.URL + "/" + path)
 		require.NoError(t, err)
 
@@ -265,5 +264,40 @@ func TestSecureRedirectTo(t *testing.T) {
 		})
 		_, body := makeRequest(t, s, "?return_to=/original")
 		assert.Equal(t, body, s.URL+"/override")
+	})
+
+	t.Run("case=should work with subdomain wildcard", func(t *testing.T) {
+		s := newServer(t, false, false, false, func(ts *httptest.Server) []x.SecureRedirectOption {
+			return []x.SecureRedirectOption{x.SecureRedirectAllowURLs([]url.URL{*urlx.ParseOrPanic("https://*.ory.sh/")})}
+		})
+		_, body := makeRequest(t, s, "?return_to=https://www.ory.sh/kratos")
+		assert.Equal(t, body, "https://www.ory.sh/kratos")
+		_, body = makeRequest(t, s, "?return_to=https://even.deeper.nested.ory.sh/kratos")
+		assert.Equal(t, body, "https://even.deeper.nested.ory.sh/kratos")
+	})
+
+	t.Run("case=should fallback to default return_to scheme", func(t *testing.T) {
+		s := newServer(t, false, false, false, func(ts *httptest.Server) []x.SecureRedirectOption {
+			return []x.SecureRedirectOption{
+				x.SecureRedirectAllowURLs([]url.URL{*urlx.ParseOrPanic("https://www.ory.sh")}),
+				x.SecureRedirectOverrideDefaultReturnTo(urlx.ParseOrPanic("https://www.ory.sh/docs")),
+			}
+		})
+		_, body := makeRequest(t, s, "?return_to=//www.ory.sh/kratos")
+		assert.Equal(t, body, "https://www.ory.sh/kratos")
+	})
+
+	t.Run("case=should fallback to default return_to host", func(t *testing.T) {
+		s := newServer(t, false, false, false, func(ts *httptest.Server) []x.SecureRedirectOption {
+			return []x.SecureRedirectOption{
+				x.SecureRedirectAllowURLs([]url.URL{
+					*urlx.ParseOrPanic("https://www.ory.sh"),
+					*urlx.ParseOrPanic("http://www.ory.sh"),
+				}),
+				x.SecureRedirectOverrideDefaultReturnTo(urlx.ParseOrPanic("https://www.ory.sh/docs")),
+			}
+		})
+		_, body := makeRequest(t, s, "?return_to=http:///kratos")
+		assert.Equal(t, body, "http://www.ory.sh/kratos")
 	})
 }
