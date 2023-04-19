@@ -55,7 +55,7 @@ func (e *SessionIssuer) executePostRegistrationPostPersistHook(w http.ResponseWr
 		return err
 	}
 
-	trace.SpanFromContext(r.Context()).AddEvent(events.NewSessionIssued(r.Context(), s.ID, s.IdentityID, a))
+	trace.SpanFromContext(r.Context()).AddEvent(events.NewSessionIssued(r.Context(), s.ID, s.IdentityID))
 
 	if a.Type == flow.TypeAPI {
 		a.AddContinueWith(flow.NewContinueWithSetToken(s.Token))

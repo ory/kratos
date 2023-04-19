@@ -89,7 +89,7 @@ func (s *ErrorHandler) WriteFlowError(
 		WithField("registration_flow", f).
 		Info("Encountered self-service flow error.")
 
-	trace.SpanFromContext(r.Context()).AddEvent(events.NewRegistrationFailed(r.Context(), f))
+	trace.SpanFromContext(r.Context()).AddEvent(events.NewRegistrationFailed(r.Context()))
 
 	if f == nil {
 		s.forward(w, r, nil, err)

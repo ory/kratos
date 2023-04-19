@@ -83,7 +83,7 @@ func (s *ErrorHandler) WriteFlowError(w http.ResponseWriter, r *http.Request, f 
 		WithField("login_flow", f).
 		Info("Encountered self-service login error.")
 
-	trace.SpanFromContext(r.Context()).AddEvent(events.NewLoginFailed(r.Context(), f))
+	trace.SpanFromContext(r.Context()).AddEvent(events.NewLoginFailed(r.Context()))
 
 	if f == nil {
 		s.forward(w, r, nil, err)

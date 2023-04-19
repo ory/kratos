@@ -179,7 +179,7 @@ func (e *HookExecutor) PostLoginHook(w http.ResponseWriter, r *http.Request, g n
 			WithField("identity_id", i.ID).
 			Info("Identity authenticated successfully and was issued an Ory Kratos Session Token.")
 
-		trace.SpanFromContext(r.Context()).AddEvent(events.NewSessionIssued(r.Context(), s.ID, i.ID, a))
+		trace.SpanFromContext(r.Context()).AddEvent(events.NewSessionIssued(r.Context(), s.ID, i.ID))
 
 		response := &APIFlowResponse{Session: s, Token: s.Token}
 		if required, _ := e.requiresAAL2(r, classified, a); required {
@@ -201,7 +201,7 @@ func (e *HookExecutor) PostLoginHook(w http.ResponseWriter, r *http.Request, g n
 		WithField("session_id", s.ID).
 		Info("Identity authenticated successfully and was issued an Ory Kratos Session Cookie.")
 
-	trace.SpanFromContext(r.Context()).AddEvent(events.NewSessionIssued(r.Context(), s.ID, i.ID, a))
+	trace.SpanFromContext(r.Context()).AddEvent(events.NewSessionIssued(r.Context(), s.ID, i.ID))
 
 	if x.IsJSONRequest(r) {
 		// Browser flows rely on cookies. Adding tokens in the mix will confuse consumers.
