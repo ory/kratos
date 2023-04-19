@@ -1955,7 +1955,7 @@ func (a *FrontendApiService) CreateNativeLoginFlowExecute(r FrontendApiApiCreate
 		localVarQueryParams.Add("aal", parameterToString(*r.aal, ""))
 	}
 	if r.enableSessionTokenExchangeCode != nil {
-		localVarQueryParams.Add("enable_session_token_exchange_code", parameterToString(*r.enableSessionTokenExchangeCode, ""))
+		localVarQueryParams.Add("return_session_token_exchange_code", parameterToString(*r.enableSessionTokenExchangeCode, ""))
 	}
 	if r.returnTo != nil {
 		localVarQueryParams.Add("return_to", parameterToString(*r.returnTo, ""))
@@ -2241,7 +2241,7 @@ func (a *FrontendApiService) CreateNativeRegistrationFlowExecute(r FrontendApiAp
 	localVarFormParams := url.Values{}
 
 	if r.enableSessionTokenExchangeCode != nil {
-		localVarQueryParams.Add("enable_session_token_exchange_code", parameterToString(*r.enableSessionTokenExchangeCode, ""))
+		localVarQueryParams.Add("return_session_token_exchange_code", parameterToString(*r.enableSessionTokenExchangeCode, ""))
 	}
 	if r.returnTo != nil {
 		localVarQueryParams.Add("return_to", parameterToString(*r.returnTo, ""))

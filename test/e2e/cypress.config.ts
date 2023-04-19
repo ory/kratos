@@ -22,7 +22,7 @@ export default defineConfig({
     },
     videosFolder: "cypress/videos",
     screenshotsFolder: "cypress/screenshots",
-    excludeSpecPattern: "**/*snapshots.js",
+    excludeSpecPattern: ["**/*snapshots.js", "playwright/**"],
     supportFile: "cypress/support/index.js",
     specPattern: "**/*.spec.{js,ts}",
     baseUrl: "http://localhost:4455/",

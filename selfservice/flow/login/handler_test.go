@@ -396,7 +396,7 @@ func TestFlowLifecycle(t *testing.T) {
 			})
 
 			t.Run("case=returns session exchange code", func(t *testing.T) {
-				res, body := initFlow(t, urlx.ParseOrPanic("/?enable_session_token_exchange_code=true").Query(), true)
+				res, body := initFlow(t, urlx.ParseOrPanic("/?return_session_token_exchange_code=true").Query(), true)
 				assert.Contains(t, res.Request.URL.String(), login.RouteInitAPIFlow)
 				assert.NotEmpty(t, gjson.GetBytes(body, "session_token_exchange_code").String())
 			})
@@ -478,7 +478,7 @@ func TestFlowLifecycle(t *testing.T) {
 			})
 
 			t.Run("case=never returns a session token exchange code", func(t *testing.T) {
-				_, body := initFlow(t, urlx.ParseOrPanic("/?enable_session_token_exchange_code=true").Query(), false)
+				_, body := initFlow(t, urlx.ParseOrPanic("/?return_session_token_exchange_code=true").Query(), false)
 				assertion(body, false, false)
 				assert.Empty(t, gjson.GetBytes(body, "session_token_exchange_code").String())
 			})

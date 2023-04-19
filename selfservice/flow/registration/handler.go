@@ -123,7 +123,7 @@ func (h *Handler) NewRegistrationFlow(w http.ResponseWriter, r *http.Request, ft
 		o(f)
 	}
 
-	if ft == flow.TypeAPI && r.URL.Query().Get("enable_session_token_exchange_code") == "true" {
+	if ft == flow.TypeAPI && r.URL.Query().Get("return_session_token_exchange_code") == "true" {
 		// Panicing here is ok since it will return a 500 to the user, which is accurate for when
 		// we can't generate a random string.
 		f.SessionTokenExchangeCode = randx.MustString(64, randx.AlphaNum)
@@ -221,7 +221,7 @@ type createNativeRegistrationFlow struct {
 	// after the login flow has been completed.
 	//
 	// in: query
-	EnableSessionTokenExchangeCode bool `json:"enable_session_token_exchange_code"`
+	EnableSessionTokenExchangeCode bool `json:"return_session_token_exchange_code"`
 
 	// The URL to return the browser to after the flow was completed.
 	//

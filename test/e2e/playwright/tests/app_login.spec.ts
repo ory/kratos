@@ -90,7 +90,7 @@ test.describe("Login", () => {
     await testLogin(page, "login@example.com")
   })
 
-  test("register, then login", async ({ page }) => {
+  test("login, then register", async ({ page }) => {
     await testLogin(page, "login-registration@example.com")
     await logout(page)
     await testRegistration(page, "login-registration@example.com")
