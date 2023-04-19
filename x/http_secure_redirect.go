@@ -131,25 +131,20 @@ func SecureRedirectTo(r *http.Request, defaultReturnTo *url.URL, opts ...SecureR
 	returnTo.Host = stringsx.Coalesce(returnTo.Host, o.defaultReturnTo.Host)
 	returnTo.Scheme = stringsx.Coalesce(returnTo.Scheme, o.defaultReturnTo.Scheme)
 
-	var found bool
 	for _, allowed := range o.allowlist {
 		if strings.EqualFold(allowed.Scheme, returnTo.Scheme) &&
 			SecureRedirectToIsAllowedHost(returnTo, allowed) &&
 			strings.HasPrefix(
 				stringsx.Coalesce(returnTo.Path, "/"),
 				stringsx.Coalesce(allowed.Path, "/")) {
-			found = true
+			return returnTo, nil
 		}
 	}
 
-	if !found {
-		return nil, errors.WithStack(herodot.ErrBadRequest.
-			WithID(text.ErrIDRedirectURLNotAllowed).
-			WithReasonf("Requested return_to URL \"%s\" is not allowed.", returnTo).
-			WithDebugf("Allowed domains are: %v", o.allowlist))
-	}
-
-	return returnTo, nil
+	return nil, errors.WithStack(herodot.ErrBadRequest.
+		WithID(text.ErrIDRedirectURLNotAllowed).
+		WithReasonf("Requested return_to URL \"%s\" is not allowed.", returnTo).
+		WithDebugf("Allowed domains are: %v", o.allowlist))
 }
 
 func SecureContentNegotiationRedirection(
