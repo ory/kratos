@@ -190,7 +190,7 @@ func (e *HookExecutor) PostLoginHook(w http.ResponseWriter, r *http.Request, g n
 			),
 		)
 
-		if ok, _ := e.d.SessionTokenExchangePersister().CodeExistsForFlow(ctx, a.ID); ok {
+		if _, ok, _ := e.d.SessionTokenExchangePersister().CodeForFlow(ctx, a.ID); ok {
 			if err = e.d.SessionTokenExchangePersister().UpdateSessionOnExchanger(r.Context(), a.ID, s.ID); err != nil {
 				return errors.WithStack(err)
 			}

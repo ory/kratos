@@ -235,7 +235,7 @@ func (e *HookExecutor) PostRegistrationHook(w http.ResponseWriter, r *http.Reque
 		Debug("Post registration execution hooks completed successfully.")
 
 	if a.Type == flow.TypeAPI || x.IsJSONRequest(r) {
-		if ok, _ := e.d.SessionTokenExchangePersister().CodeExistsForFlow(r.Context(), a.ID); ok {
+		if _, ok, _ := e.d.SessionTokenExchangePersister().CodeForFlow(r.Context(), a.ID); ok {
 			if err = e.d.SessionTokenExchangePersister().UpdateSessionOnExchanger(r.Context(), a.ID, s.ID); err != nil {
 				return errors.WithStack(err)
 			}

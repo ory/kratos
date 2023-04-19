@@ -33,7 +33,7 @@ type (
 		CreateSessionTokenExchanger(ctx context.Context, flowID uuid.UUID, code string) error
 		GetExchangerFromCode(ctx context.Context, code string) (*Exchanger, error)
 		UpdateSessionOnExchanger(ctx context.Context, flowID uuid.UUID, sessionID uuid.UUID) error
-		CodeExistsForFlow(ctx context.Context, flowID uuid.UUID) (bool, error)
+		CodeForFlow(ctx context.Context, flowID uuid.UUID) (code string, found bool, err error)
 		MoveToNewFlow(ctx context.Context, oldFlow, newFlow uuid.UUID) error
 	}
 

@@ -69,19 +69,20 @@ func (p *Persister) UpdateSessionOnExchanger(ctx context.Context, flowID uuid.UU
 	return sqlcon.HandleError(conn.RawQuery(query, sessionID, flowID, p.NetworkID(ctx)).Exec())
 }
 
-func (p *Persister) CodeExistsForFlow(ctx context.Context, flowID uuid.UUID) (found bool, err error) {
-	ctx, span := p.r.Tracer(ctx).Tracer().Start(ctx, "persistence.sql.CodeExistsForFlow")
+func (p *Persister) CodeForFlow(ctx context.Context, flowID uuid.UUID) (code string, found bool, err error) {
+	ctx, span := p.r.Tracer(ctx).Tracer().Start(ctx, "persistence.sql.CodeForFlow")
 	defer otelx.End(span, &err)
 
+	var e sessiontokenexchange.Exchanger
 	switch err = sqlcon.HandleError(p.GetConnection(ctx).
 		Where("flow_id = ? AND nid = ? AND code <> ''", flowID, p.NetworkID(ctx)).
-		First(&sessiontokenexchange.Exchanger{})); {
+		First(&e)); {
 	case err == nil:
-		return true, nil
+		return e.Code, true, nil
 	case errors.Is(err, sqlcon.ErrNoRows):
-		return false, nil
+		return "", false, nil
 	default:
-		return false, err
+		return "", false, err
 	}
 }
 

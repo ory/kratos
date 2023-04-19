@@ -43,7 +43,7 @@ func TestPersister(ctx context.Context, _ *config.Config, p interface {
 
 			t.Run("step=create", func(t *testing.T) {
 				require.NoError(t, p.CreateSessionTokenExchanger(ctx, params.flowID, params.code))
-				ok, err := p.CodeExistsForFlow(ctx, params.flowID)
+				_, ok, err := p.CodeForFlow(ctx, params.flowID)
 				assert.True(t, ok)
 				assert.NoError(t, err)
 			})
@@ -59,12 +59,12 @@ func TestPersister(ctx context.Context, _ *config.Config, p interface {
 			})
 		})
 
-		t.Run("suite=CodeExistsForFlow", func(t *testing.T) {
+		t.Run("suite=CodeForFlow", func(t *testing.T) {
 			t.Parallel()
 
 			t.Run("case=returns false for non-existing flow", func(t *testing.T) {
 				t.Parallel()
-				ok, err := p.CodeExistsForFlow(ctx, uuid.Must(uuid.NewV4()))
+				_, ok, err := p.CodeForFlow(ctx, uuid.Must(uuid.NewV4()))
 				assert.False(t, ok)
 				assert.NoError(t, err)
 			})

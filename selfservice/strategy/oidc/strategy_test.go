@@ -177,6 +177,9 @@ func TestStrategy(t *testing.T) {
 		if err != nil {
 			return codeResponse, err
 		}
+		if res.StatusCode != 200 {
+			return codeResponse, fmt.Errorf("got status code %d", res.StatusCode)
+		}
 		require.NoError(t, json.NewDecoder(res.Body).Decode(&codeResponse))
 
 		return
@@ -453,12 +456,12 @@ func TestStrategy(t *testing.T) {
 
 		var loginOrRegister = func(id uuid.UUID, code string) {
 			_, err := exchangeCodeForToken(t, code)
-			require.Error(t, err, "session token should not be available yet")
+			require.Error(t, err)
 
 			action := assertFormValues(t, id, "valid")
 			makeAPICodeFlowRequest(t, "valid", action)
 			codeResponse, err := exchangeCodeForToken(t, code)
-			require.NoError(t, err, "session token should be available not w")
+			require.NoError(t, err)
 
 			assert.NotEmpty(t, codeResponse.Token)
 			assert.Equal(t, subject, gjson.GetBytes(codeResponse.Session.Identity.Traits, "subject").String())

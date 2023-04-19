@@ -56,7 +56,7 @@ func (e *SessionIssuer) executePostRegistrationPostPersistHook(w http.ResponseWr
 	}
 
 	if a.Type == flow.TypeAPI {
-		if ok, _ := e.r.SessionTokenExchangePersister().CodeExistsForFlow(r.Context(), a.ID); ok {
+		if _, ok, _ := e.r.SessionTokenExchangePersister().CodeForFlow(r.Context(), a.ID); ok {
 			if err := e.r.SessionTokenExchangePersister().UpdateSessionOnExchanger(r.Context(), a.ID, s.ID); err != nil {
 				return errors.WithStack(err)
 			}

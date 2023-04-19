@@ -120,7 +120,7 @@ func (s *ErrorHandler) WriteFlowError(w http.ResponseWriter, r *http.Request, f 
 		return
 	}
 
-	if hasCode, _ := s.d.SessionTokenExchangePersister().CodeExistsForFlow(r.Context(), f.ID); f.Type == flow.TypeAPI && hasCode {
+	if _, hasCode, _ := s.d.SessionTokenExchangePersister().CodeForFlow(r.Context(), f.ID); f.Type == flow.TypeAPI && hasCode {
 		http.Redirect(w, r, f.ReturnTo, http.StatusSeeOther)
 		return
 	}

@@ -6,7 +6,10 @@ package oidc
 import (
 	"bytes"
 	"context"
+	"crypto/sha512"
+	"encoding/base64"
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"path/filepath"
 	"strings"
@@ -124,8 +127,37 @@ type authCodeContainer struct {
 	TransientPayload json.RawMessage `json:"transient_payload"`
 }
 
-func generateState(flowID string) string {
-	return flowID
+type State struct {
+	FlowID string
+	Data   []byte
+}
+
+func (s *State) String() string {
+	return base64.RawURLEncoding.EncodeToString([]byte(fmt.Sprintf("%s:%s", s.FlowID, s.Data)))
+}
+
+func generateState(flowID string) *State {
+	return &State{
+		FlowID: flowID,
+		Data:   x.NewUUID().Bytes(),
+	}
+}
+func (s *State) setCode(code string) {
+	s.Data = sha512.New().Sum([]byte(code))
+}
+func (s *State) codeMatches(code string) bool {
+	return bytes.Equal(s.Data, sha512.New().Sum([]byte(code)))
+}
+func parseState(s string) (*State, error) {
+	raw, err := base64.RawURLEncoding.DecodeString(s)
+	if err != nil {
+		return nil, err
+	}
+	if id, data, ok := bytes.Cut(raw, []byte(":")); !ok {
+		return nil, errors.New("state has invalid format")
+	} else {
+		return &State{FlowID: string(id), Data: data}, nil
+	}
 }
 
 func (s *Strategy) CountActiveFirstFactorCredentials(cc map[identity.CredentialsType]identity.Credentials) (count int, err error) {
@@ -253,14 +285,23 @@ func (s *Strategy) validateCallback(w http.ResponseWriter, r *http.Request) (flo
 	if stateParam == "" {
 		return nil, nil, errors.WithStack(herodot.ErrBadRequest.WithReasonf(`Unable to complete OpenID Connect flow because the OpenID Provider did not return the state query parameter.`))
 	}
+	state, err := parseState(stateParam)
+	if err != nil {
+		return nil, nil, errors.WithStack(herodot.ErrBadRequest.WithReasonf(`Unable to complete OpenID Connect flow because the state parameter was invalid.`))
+	}
 
-	f, err := s.validateFlow(r.Context(), r, x.ParseUUID(stateParam))
+	f, err := s.validateFlow(r.Context(), r, x.ParseUUID(state.FlowID))
+	if err != nil {
+		return nil, nil, err
+	}
+
+	tokenCode, hasSessionTokenCode, err := s.d.SessionTokenExchangePersister().CodeForFlow(r.Context(), f.GetID())
 	if err != nil {
 		return nil, nil, err
 	}
 
 	cntnr := authCodeContainer{}
-	if f.GetType() == flow.TypeBrowser {
+	if f.GetType() == flow.TypeBrowser || !hasSessionTokenCode {
 		if _, err := s.d.ContinuityManager().Continue(r.Context(), w, r, sessionName, continuity.WithPayload(&cntnr)); err != nil {
 			return nil, nil, err
 		}
@@ -268,8 +309,12 @@ func (s *Strategy) validateCallback(w http.ResponseWriter, r *http.Request) (flo
 			return nil, &cntnr, errors.WithStack(herodot.ErrBadRequest.WithReasonf(`Unable to complete OpenID Connect flow because the query state parameter does not match the state parameter from the session cookie.`))
 		}
 	} else {
+		// We need to validate the tokenCode here
+		if !state.codeMatches(tokenCode) {
+			return nil, &cntnr, errors.WithStack(herodot.ErrBadRequest.WithReasonf(`Unable to complete OpenID Connect flow because the query state parameter does not match the state parameter from the code.`))
+		}
 		cntnr.State = stateParam
-		cntnr.FlowID = stateParam
+		cntnr.FlowID = state.FlowID
 	}
 
 	if errorParam != "" {
@@ -301,7 +346,7 @@ func (s *Strategy) alreadyAuthenticated(w http.ResponseWriter, r *http.Request, 
 			// ignore this if it's a settings flow
 		} else if !isForced(f) {
 			if flowID, ok := registrationOrLoginFlowID(f); ok {
-				if hasCode, _ := s.d.SessionTokenExchangePersister().CodeExistsForFlow(ctx, flowID); hasCode {
+				if _, hasCode, _ := s.d.SessionTokenExchangePersister().CodeForFlow(ctx, flowID); hasCode {
 					_ = s.d.SessionTokenExchangePersister().UpdateSessionOnExchanger(ctx, flowID, sess.ID)
 				}
 			}
