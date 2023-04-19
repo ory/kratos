@@ -1,0 +1,16 @@
+{
+  "TableName": "\"identities\"",
+  "ColumnsDecl": "\"id\", \"created_at\", \"metadata_admin\", \"metadata_public\", \"nid\", \"schema_id\", \"state\", \"state_changed_at\", \"traits\", \"updated_at\"",
+  "Columns": [
+    "created_at",
+    "metadata_admin",
+    "metadata_public",
+    "nid",
+    "schema_id",
+    "state",
+    "state_changed_at",
+    "traits",
+    "updated_at"
+  ],
+  "Placeholders": "(gen_random_uuid(), ?, ?, ?, ?, ?, ?, ?, ?, ?),\n(gen_random_uuid(), ?, ?, ?, ?, ?, ?, ?, ?, ?),\n(gen_random_uuid(), ?, ?, ?, ?, ?, ?, ?, ?, ?),\n(gen_random_uuid(), ?, ?, ?, ?, ?, ?, ?, ?, ?),\n(gen_random_uuid(), ?, ?, ?, ?, ?, ?, ?, ?, ?),\n(gen_random_uuid(), ?, ?, ?, ?, ?, ?, ?, ?, ?),\n(gen_random_uuid(), ?, ?, ?, ?, ?, ?, ?, ?, ?),\n(gen_random_uuid(), ?, ?, ?, ?, ?, ?, ?, ?, ?),\n(gen_random_uuid(), ?, ?, ?, ?, ?, ?, ?, ?, ?),\n(gen_random_uuid(), ?, ?, ?, ?, ?, ?, ?, ?, ?)"
+}

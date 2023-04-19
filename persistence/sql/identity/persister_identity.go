@@ -349,19 +349,19 @@ func updateAssociation[T interface {
 	return nil
 }
 
-func (p *IdentityPersister) normalizeAllAddressess(ctx context.Context, identities ...*identity.Identity) {
+func NormalizeAllAddressess(ctx context.Context, identities ...*identity.Identity) {
 	for _, id := range identities {
-		p.normalizeRecoveryAddresses(ctx, id)
-		p.normalizeVerifiableAddresses(ctx, id)
+		NormalizeRecoveryAddresses(ctx, id)
+		NormalizeVerifiableAddresses(ctx, id)
 	}
 }
 
-func (p *IdentityPersister) normalizeVerifiableAddresses(ctx context.Context, id *identity.Identity) {
+func NormalizeVerifiableAddresses(ctx context.Context, id *identity.Identity) {
 	for k := range id.VerifiableAddresses {
 		v := id.VerifiableAddresses[k]
 
 		v.IdentityID = id.ID
-		v.NID = p.NetworkID(ctx)
+		v.NID = id.NID
 		v.Value = stringToLowerTrim(v.Value)
 		v.Via = x.Coalesce(v.Via, identity.AddressTypeEmail)
 		if len(v.Status) == 0 {
@@ -381,10 +381,10 @@ func (p *IdentityPersister) normalizeVerifiableAddresses(ctx context.Context, id
 	}
 }
 
-func (p *IdentityPersister) normalizeRecoveryAddresses(ctx context.Context, id *identity.Identity) {
+func NormalizeRecoveryAddresses(ctx context.Context, id *identity.Identity) {
 	for k := range id.RecoveryAddresses {
 		id.RecoveryAddresses[k].IdentityID = id.ID
-		id.RecoveryAddresses[k].NID = p.NetworkID(ctx)
+		id.RecoveryAddresses[k].NID = id.NID
 		id.RecoveryAddresses[k].Value = stringToLowerTrim(id.RecoveryAddresses[k].Value)
 		id.RecoveryAddresses[k].Via = x.Coalesce(id.RecoveryAddresses[k].Via, identity.AddressTypeEmail)
 	}
@@ -463,7 +463,7 @@ func (p *IdentityPersister) CreateIdentities(ctx context.Context, identities ...
 			return sqlcon.HandleError(err)
 		}
 
-		p.normalizeAllAddressess(ctx, identities...)
+		NormalizeAllAddressess(ctx, identities...)
 
 		if err = p.createVerifiableAddresses(ctx, tx, identities...); err != nil {
 			return sqlcon.HandleError(err)
@@ -761,7 +761,7 @@ func (p *IdentityPersister) UpdateIdentity(ctx context.Context, i *identity.Iden
 			return sql.ErrNoRows
 		}
 
-		p.normalizeAllAddressess(ctx, i)
+		NormalizeAllAddressess(ctx, i)
 		if err := updateAssociation(ctx, p, i, i.RecoveryAddresses); err != nil {
 			return err
 		}

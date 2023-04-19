@@ -67,9 +67,6 @@ type Identity struct {
 	// Credentials represents all credentials that can be used for authenticating this identity.
 	Credentials map[CredentialsType]Credentials `json:"credentials,omitempty" faker:"-" db:"-"`
 
-	// // IdentifierCredentials contains the access and refresh token for oidc identifier
-	// IdentifierCredentials []IdentifierCredential `json:"identifier_credentials,omitempty" faker:"-" db:"-"`
-
 	// SchemaID is the ID of the JSON Schema to be used for validating the identity's traits.
 	//
 	// required: true
@@ -165,6 +162,10 @@ func (t *Traits) UnmarshalJSON(data []byte) error {
 
 func (i Identity) TableName(ctx context.Context) string {
 	return "identities"
+}
+
+func (i *Identity) SetID(id uuid.UUID) {
+	i.ID = id
 }
 
 func (i *Identity) lock() *sync.RWMutex {

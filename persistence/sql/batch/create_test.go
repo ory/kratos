@@ -30,20 +30,23 @@ type (
 		CreatedAt   time.Time       `json:"created_at" db:"created_at"`
 		UpdatedAt   time.Time       `json:"updated_at" db:"updated_at"`
 	}
-	testQuoter struct{}
+	testQuoter struct{ name string }
 )
 
-func (i testModel) TableName(ctx context.Context) string {
+func (testModel) TableName() string {
 	return "test_models"
 }
 
 func (tq testQuoter) Quote(s string) string { return fmt.Sprintf("%q", s) }
 
+func (tq testQuoter) Name() string { return tq.name }
+
 func Test_buildInsertQueryArgs(t *testing.T) {
 	ctx := context.Background()
-	t.Run("case=testModel", func(t *testing.T) {
+
+	t.Run("case=testModel/quoter=generic", func(t *testing.T) {
 		models := make([]*testModel, 10)
-		args := buildInsertQueryArgs(ctx, testQuoter{}, models)
+		args := buildInsertQueryArgs(ctx, testQuoter{"generic"}, models)
 		snapshotx.SnapshotT(t, args)
 
 		query := fmt.Sprintf("INSERT INTO %s (%s) VALUES\n%s", args.TableName, args.ColumnsDecl, args.Placeholders)
@@ -60,23 +63,44 @@ func Test_buildInsertQueryArgs(t *testing.T) {
 (?, ?, ?, ?, ?, ?, ?, ?)`, query)
 	})
 
-	t.Run("case=Identities", func(t *testing.T) {
-		models := make([]*identity.Identity, 10)
-		args := buildInsertQueryArgs(ctx, testQuoter{}, models)
+	t.Run("case=testModel/quoter=cockroach", func(t *testing.T) {
+		models := make([]*testModel, 10)
+		args := buildInsertQueryArgs(ctx, testQuoter{"cockroach"}, models)
 		snapshotx.SnapshotT(t, args)
+
+		query := fmt.Sprintf("INSERT INTO %s (%s) VALUES\n%s", args.TableName, args.ColumnsDecl, args.Placeholders)
+		assert.Equal(t, `INSERT INTO "test_models" ("id", "created_at", "int", "nid", "null_time_ptr", "string", "traits", "updated_at") VALUES
+(gen_random_uuid(), ?, ?, ?, ?, ?, ?, ?),
+(gen_random_uuid(), ?, ?, ?, ?, ?, ?, ?),
+(gen_random_uuid(), ?, ?, ?, ?, ?, ?, ?),
+(gen_random_uuid(), ?, ?, ?, ?, ?, ?, ?),
+(gen_random_uuid(), ?, ?, ?, ?, ?, ?, ?),
+(gen_random_uuid(), ?, ?, ?, ?, ?, ?, ?),
+(gen_random_uuid(), ?, ?, ?, ?, ?, ?, ?),
+(gen_random_uuid(), ?, ?, ?, ?, ?, ?, ?),
+(gen_random_uuid(), ?, ?, ?, ?, ?, ?, ?),
+(gen_random_uuid(), ?, ?, ?, ?, ?, ?, ?)`, query)
 	})
 
-	t.Run("case=RecoveryAddress", func(t *testing.T) {
-		models := make([]*identity.RecoveryAddress, 10)
-		args := buildInsertQueryArgs(ctx, testQuoter{}, models)
-		snapshotx.SnapshotT(t, args)
-	})
+	for _, tc := range []testQuoter{{"generic"}, {"cockroach"}} {
+		t.Run("case=Identities/quoter="+tc.name, func(t *testing.T) {
+			models := make([]*identity.Identity, 10)
+			args := buildInsertQueryArgs(ctx, tc, models)
+			snapshotx.SnapshotT(t, args)
+		})
 
-	t.Run("case=RecoveryAddress", func(t *testing.T) {
-		models := make([]*identity.RecoveryAddress, 10)
-		args := buildInsertQueryArgs(ctx, testQuoter{}, models)
-		snapshotx.SnapshotT(t, args)
-	})
+		t.Run("case=RecoveryAddress/quoter="+tc.name, func(t *testing.T) {
+			models := make([]*identity.RecoveryAddress, 10)
+			args := buildInsertQueryArgs(ctx, tc, models)
+			snapshotx.SnapshotT(t, args)
+		})
+
+		t.Run("case=RecoveryAddress/quoter="+tc.name, func(t *testing.T) {
+			models := make([]*identity.RecoveryAddress, 10)
+			args := buildInsertQueryArgs(ctx, tc, models)
+			snapshotx.SnapshotT(t, args)
+		})
+	}
 }
 
 func Test_buildInsertQueryValues(t *testing.T) {

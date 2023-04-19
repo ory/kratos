@@ -154,6 +154,14 @@ func (c CredentialIdentifier) TableName(ctx context.Context) string {
 	return "identity_credential_identifiers"
 }
 
+func (c *Credentials) SetID(id uuid.UUID) {
+	c.ID = id
+}
+
+func (c *CredentialIdentifier) SetID(id uuid.UUID) {
+	c.ID = id
+}
+
 func CredentialsEqual(a, b map[CredentialsType]Credentials) bool {
 	if len(a) != len(b) {
 		return false

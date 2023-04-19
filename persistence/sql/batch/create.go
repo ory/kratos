@@ -30,6 +30,7 @@ type (
 		Placeholders string
 	}
 	quoter interface {
+		Name() string
 		Quote(key string) string
 	}
 	TracerConnection struct {
@@ -43,13 +44,21 @@ func buildInsertQueryArgs[T any](ctx context.Context, quoter quoter, models []*T
 		v     T
 		model = pop.NewModel(v, ctx)
 
+		cols           = model.Columns()
 		columns        []string
 		quotedColumns  []string
 		placeholders   []string
 		placeholderRow []string
+
+		isCRDB = strings.HasPrefix(quoter.Name(), "cockroach") // use gen_random_uuid for ID field
 	)
 
-	for _, col := range model.Columns().Cols {
+	if isCRDB {
+		cols.Remove(model.IDField())
+		quotedColumns = []string{quoter.Quote(model.IDField())}
+	}
+
+	for _, col := range cols.Cols {
 		columns = append(columns, col.Name)
 		placeholderRow = append(placeholderRow, "?")
 	}
@@ -61,7 +70,11 @@ func buildInsertQueryArgs[T any](ctx context.Context, quoter quoter, models []*T
 		quotedColumns = append(quotedColumns, quoter.Quote(col))
 	}
 	for range models {
-		placeholders = append(placeholders, fmt.Sprintf("(%s)", strings.Join(placeholderRow, ", ")))
+		if isCRDB {
+			placeholders = append(placeholders, fmt.Sprintf("(gen_random_uuid(), %s)", strings.Join(placeholderRow, ", ")))
+		} else {
+			placeholders = append(placeholders, fmt.Sprintf("(%s)", strings.Join(placeholderRow, ", ")))
+		}
 	}
 
 	return insertQueryArgs{
@@ -91,14 +104,13 @@ func buildInsertQueryValues[T any](mapper *reflectx.Mapper, columns []string, mo
 				field.Set(reflect.ValueOf(now))
 
 			case "id":
-				if field.Interface().(uuid.UUID) != uuid.Nil {
-					break // breaks switch, not for
+				if uid, ok := field.Interface().(uuid.UUID); ok && uid.IsNil() {
+					id, err := uuid.NewV4()
+					if err != nil {
+						return nil, err
+					}
+					field.Set(reflect.ValueOf(id))
 				}
-				id, err := uuid.NewV4()
-				if err != nil {
-					return nil, err
-				}
-				field.Set(reflect.ValueOf(id))
 			}
 			values = append(values, field.Interface())
 
@@ -117,7 +129,11 @@ func buildInsertQueryValues[T any](mapper *reflectx.Mapper, columns []string, mo
 
 // Create batch-inserts the given models into the database using a single INSERT statement.
 // The models are either all created or none.
-func Create[T any](ctx context.Context, p *TracerConnection, models []*T) (err error) {
+func Create[X any, T interface {
+	*X
+	SetID(uuid.UUID)
+}](ctx context.Context, p *TracerConnection, models []*X,
+) (err error) {
 	ctx, span := p.Tracer.Tracer().Start(ctx, "persistence.sql.batch.Create")
 	defer otelx.End(span, &err)
 
@@ -137,14 +153,33 @@ func Create[T any](ctx context.Context, p *TracerConnection, models []*T) (err e
 		return err
 	}
 
-	query := conn.Dialect.TranslateSQL(fmt.Sprintf(
-		"INSERT INTO %s (%s) VALUES\n%s",
-		queryArgs.TableName,
-		queryArgs.ColumnsDecl,
-		queryArgs.Placeholders,
-	))
-
-	_, err = conn.Store.ExecContext(ctx, query, values...)
+	if strings.HasPrefix(conn.Dialect.Name(), "cockroach") {
+		query := conn.Dialect.TranslateSQL(fmt.Sprintf(
+			"INSERT INTO %s (%s) VALUES\n%s\nRETURNING id",
+			queryArgs.TableName,
+			queryArgs.ColumnsDecl,
+			queryArgs.Placeholders,
+		))
+		var uuids []uuid.UUID
+		err = conn.Store.SelectContext(ctx, &uuids, query, values...)
+		if err != nil {
+			return sqlcon.HandleError(err)
+		}
+		if len(uuids) != len(models) {
+			return errors.WithStack(errors.New("mismatched number of rows"))
+		}
+		for i := range uuids {
+			T(models[i]).SetID(uuids[i])
+		}
+	} else {
+		query := conn.Dialect.TranslateSQL(fmt.Sprintf(
+			"INSERT INTO %s (%s) VALUES\n%s",
+			queryArgs.TableName,
+			queryArgs.ColumnsDecl,
+			queryArgs.Placeholders,
+		))
+		_, err = conn.Store.ExecContext(ctx, query, values...)
+	}
 
 	return sqlcon.HandleError(err)
 }

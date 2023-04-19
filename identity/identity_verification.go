@@ -101,6 +101,10 @@ func (a VerifiableAddress) TableName(ctx context.Context) string {
 	return "identity_verifiable_addresses"
 }
 
+func (v *VerifiableAddress) SetID(id uuid.UUID) {
+	v.ID = id
+}
+
 func NewVerifiableEmailAddress(value string, identity uuid.UUID) *VerifiableAddress {
 	return &VerifiableAddress{
 		Value:      value,
