@@ -11,5 +11,9 @@ CREATE TABLE session_token_exchanges (
 
 -- Relevant query:
 --   SELECT * from session_token_exchanges
---   WHERE flow_id = ? AND nid = ? AND code = ? AND session_id IS NOT NULL AND code <> '';
-CREATE INDEX session_token_exchanges_nid_flow_id_code_idx ON session_token_exchanges (nid, flow_id, code);
+--   WHERE nid = ? AND code = ? AND code <> '' AND session_id IS NOT NULL
+CREATE INDEX session_token_exchanges_nid_code_idx ON session_token_exchanges (code, nid);
+
+-- Relevant query:
+--   UPDATE session_token_exchanges SET session_id = ? WHERE flow_id = ? AND nid = ?
+CREATE INDEX session_token_exchanges_nid_flow_id_idx ON session_token_exchanges (flow_id, nid);
