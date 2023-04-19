@@ -7,6 +7,7 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/gobuffalo/pop/v6"
 	"github.com/gofrs/uuid"
 	"github.com/pkg/errors"
 
@@ -16,6 +17,16 @@ import (
 )
 
 var _ sessiontokenexchange.Persister = new(Persister)
+
+func updateLimitClause(conn *pop.Connection) string {
+	// Not all databases support limiting in update clauses.
+	switch conn.Dialect.Name() {
+	case "sqlite3", "postgres":
+		return ""
+	default:
+		return "LIMIT 1"
+	}
+}
 
 func (p *Persister) CreateSessionTokenExchanger(ctx context.Context, flowID uuid.UUID, code string) (err error) {
 	ctx, span := p.r.Tracer(ctx).Tracer().Start(ctx, "persistence.sql.CreateSessionTokenExchanger")
@@ -50,8 +61,9 @@ func (p *Persister) UpdateSessionOnExchanger(ctx context.Context, flowID uuid.UU
 	defer otelx.End(span, &err)
 
 	conn := p.GetConnection(ctx)
-	query := fmt.Sprintf("UPDATE %s SET session_id = ? WHERE flow_id = ? AND nid = ?",
+	query := fmt.Sprintf("UPDATE %s SET session_id = ? WHERE flow_id = ? AND nid = ? %s",
 		conn.Dialect.Quote(new(sessiontokenexchange.Exchanger).TableName()),
+		updateLimitClause(conn),
 	)
 
 	return sqlcon.HandleError(conn.RawQuery(query, sessionID, flowID, p.NetworkID(ctx)).Exec())
@@ -78,8 +90,9 @@ func (p *Persister) MoveToNewFlow(ctx context.Context, oldFlow, newFlow uuid.UUI
 	defer otelx.End(span, &err)
 
 	conn := p.GetConnection(ctx)
-	query := fmt.Sprintf("UPDATE %s SET flow_id = ? WHERE flow_id = ? AND nid = ?",
+	query := fmt.Sprintf("UPDATE %s SET flow_id = ? WHERE flow_id = ? AND nid = ? %s",
 		conn.Dialect.Quote(new(sessiontokenexchange.Exchanger).TableName()),
+		updateLimitClause(conn),
 	)
 
 	return sqlcon.HandleError(conn.RawQuery(query, newFlow, oldFlow, p.NetworkID(ctx)).Exec())
