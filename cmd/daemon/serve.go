@@ -9,6 +9,8 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/ory/x/otelx/semconv"
+
 	"github.com/pkg/errors"
 	"github.com/rs/cors"
 	"github.com/spf13/cobra"
@@ -87,6 +89,7 @@ func ServePublic(r driver.Registry, cmd *cobra.Command, args []string, slOpts *s
 		publicLogger.ExcludePaths(healthx.AliveCheckPath, healthx.ReadyCheckPath)
 	}
 
+	n.UseFunc(semconv.Middleware)
 	n.Use(publicLogger)
 	n.Use(x.HTTPLoaderContextMiddleware(r))
 	n.Use(sqa(ctx, cmd, r))
@@ -169,6 +172,7 @@ func ServeAdmin(r driver.Registry, cmd *cobra.Command, args []string, slOpts *se
 	if r.Config().DisableAdminHealthRequestLog(ctx) {
 		adminLogger.ExcludePaths(x.AdminPrefix+healthx.AliveCheckPath, x.AdminPrefix+healthx.ReadyCheckPath, x.AdminPrefix+prometheus.MetricsPrometheusPath)
 	}
+	n.UseFunc(semconv.Middleware)
 	n.Use(adminLogger)
 	n.UseFunc(x.RedirectAdminMiddleware)
 	n.Use(x.HTTPLoaderContextMiddleware(r))

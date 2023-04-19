@@ -6,8 +6,11 @@ package registration
 import (
 	"net/http"
 
+	"go.opentelemetry.io/otel/trace"
+
 	"github.com/ory/kratos/schema"
 	"github.com/ory/kratos/ui/node"
+	"github.com/ory/kratos/x/events"
 
 	"github.com/ory/kratos/selfservice/flow"
 	"github.com/ory/kratos/text"
@@ -85,6 +88,8 @@ func (s *ErrorHandler) WriteFlowError(
 		WithRequest(r).
 		WithField("registration_flow", f).
 		Info("Encountered self-service flow error.")
+
+	trace.SpanFromContext(r.Context()).AddEvent(events.NewRegistrationFailed(r.Context()))
 
 	if f == nil {
 		s.forward(w, r, nil, err)
