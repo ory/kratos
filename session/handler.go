@@ -9,6 +9,7 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/ory/kratos/selfservice/sessiontokenexchange"
 	"github.com/ory/x/pagination/migrationpagination"
 
 	"github.com/ory/x/pagination/keysetpagination"
@@ -36,6 +37,7 @@ type (
 		x.LoggingProvider
 		x.CSRFProvider
 		config.Provider
+		sessiontokenexchange.PersistenceProvider
 	}
 	HandlerProvider interface {
 		SessionHandler() *Handler
@@ -56,9 +58,10 @@ func NewHandler(
 }
 
 const (
-	RouteCollection = "/sessions"
-	RouteWhoami     = RouteCollection + "/whoami"
-	RouteSession    = RouteCollection + "/:id"
+	RouteCollection                  = "/sessions"
+	RouteExchangeCodeForSessionToken = RouteCollection + "/token-exchange" // #nosec G101
+	RouteWhoami                      = RouteCollection + "/whoami"
+	RouteSession                     = RouteCollection + "/:id"
 )
 
 const (
@@ -95,6 +98,8 @@ func (h *Handler) RegisterPublicRoutes(public *x.RouterPublic) {
 	public.DELETE(RouteCollection, h.deleteMySessions)
 	public.DELETE(RouteSession, h.deleteMySession)
 	public.GET(RouteCollection, h.listMySessions)
+
+	public.GET(RouteExchangeCodeForSessionToken, h.exchangeCode)
 
 	public.DELETE(AdminRouteIdentitiesSessions, x.RedirectToAdminRoute(h.r))
 }
@@ -902,4 +907,83 @@ func RespondWitherrorGenericOnAuthenticated(h herodot.Writer, err error) httprou
 	return func(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 		h.WriteError(w, r, err)
 	}
+}
+
+// Exchange Session Token Parameters
+//
+// swagger:parameters exchangeSessionToken
+//
+//nolint:deadcode,unused
+//lint:ignore U1000 Used to generate Swagger and OpenAPI definitions
+type exchangeSessionToken struct {
+	// The Session Token Exchange Code
+	//
+	// required: true
+	// in: query
+	SessionTokenExchangeCode string `json:"code"`
+}
+
+// The Response for Registration Flows via API
+//
+// swagger:model successfulCodeExchangeResponse
+type CodeExchangeResponse struct {
+	// The Session Token
+	//
+	// A session token is equivalent to a session cookie, but it can be sent in the HTTP Authorization
+	// Header:
+	//
+	// 		Authorization: bearer ${session-token}
+	//
+	// The session token is only issued for API flows, not for Browser flows!
+	Token string `json:"session_token,omitempty"`
+
+	// The Session
+	//
+	// The session contains information about the user, the session device, and so on.
+	// This is only available for API flows, not for Browser flows!
+	//
+	// required: true
+	Session *Session `json:"session"`
+}
+
+// swagger:route GET /sessions/token-exchange frontend exchangeSessionToken
+//
+// # Exchange Session Token
+//
+//	Produces:
+//	- application/json
+//
+//	Schemes: http, https
+//
+//	Responses:
+//	  200: successfulNativeLogin
+//	  403: errorGeneric
+//	  404: errorGeneric
+//	  410: errorGeneric
+//	  default: errorGeneric
+func (h *Handler) exchangeCode(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+	code := r.URL.Query().Get("code")
+	ctx := r.Context()
+
+	if code == "" {
+		h.r.Writer().WriteError(w, r, herodot.ErrBadRequest.WithReason(`"code" query param must be set`))
+		return
+	}
+
+	e, err := h.r.SessionTokenExchangePersister().GetExchangerFromCode(ctx, code)
+	if err != nil {
+		h.r.Writer().WriteError(w, r, herodot.ErrNotFound.WithReason(`no session yet for this "code"`))
+		return
+	}
+
+	sess, err := h.r.SessionPersister().GetSession(ctx, e.SessionID.UUID, ExpandDefault)
+	if err != nil {
+		h.r.Writer().WriteError(w, r, err)
+		return
+	}
+
+	h.r.Writer().Write(w, r, &CodeExchangeResponse{
+		Token:   sess.Token,
+		Session: sess,
+	})
 }

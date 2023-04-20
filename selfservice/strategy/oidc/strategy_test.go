@@ -17,7 +17,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/ory/kratos/selfservice/sessiontokenexchange"
+	"github.com/ory/kratos/session"
 	"github.com/ory/x/snapshotx"
 
 	"github.com/ory/kratos/text"
@@ -172,8 +172,8 @@ func TestStrategy(t *testing.T) {
 		return
 	}
 
-	var exchangeCodeForToken = func(t *testing.T, code string) (codeResponse sessiontokenexchange.Response, err error) {
-		res, err := ts.Client().Get(ts.URL + "/self-service/exchange-code-for-session-token?code=" + code)
+	var exchangeCodeForToken = func(t *testing.T, code string) (codeResponse session.CodeExchangeResponse, err error) {
+		res, err := ts.Client().Get(ts.URL + "/sessions/token-exchange?code=" + code)
 		if err != nil {
 			return codeResponse, err
 		}

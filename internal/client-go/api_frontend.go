@@ -2927,7 +2927,7 @@ func (a *FrontendApiService) ExchangeSessionTokenExecute(r FrontendApiApiExchang
 		return localVarReturnValue, nil, &GenericOpenAPIError{error: err.Error()}
 	}
 
-	localVarPath := localBasePath + "/self-service/exchange-code-for-session-token"
+	localVarPath := localBasePath + "/sessions/token-exchange"
 
 	localVarHeaderParams := make(map[string]string)
 	localVarQueryParams := url.Values{}

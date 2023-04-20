@@ -139,7 +139,6 @@ type Registry interface {
 	verification.HandlerProvider
 	verification.StrategyProvider
 
-	sessiontokenexchange.HandlerProvider
 	sessiontokenexchange.PersistenceProvider
 
 	link.SenderProvider
