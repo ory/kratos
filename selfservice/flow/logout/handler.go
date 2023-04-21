@@ -7,7 +7,12 @@ import (
 	"net/http"
 	"net/url"
 
+	"go.opentelemetry.io/otel/trace"
+
 	"github.com/pkg/errors"
+
+	"github.com/ory/kratos/identity"
+	"github.com/ory/kratos/x/events"
 
 	"github.com/ory/herodot"
 	"github.com/ory/x/decoderx"
@@ -198,6 +203,16 @@ func (h *Handler) performNativeLogout(w http.ResponseWriter, r *http.Request, _ 
 		h.d.Writer().WriteError(w, r, err)
 		return
 	}
+	sess, err := h.d.SessionPersister().GetSessionByToken(r.Context(), p.SessionToken, session.ExpandNothing, identity.ExpandNothing)
+	if err != nil {
+		if errors.Is(err, sqlcon.ErrNoRows) {
+			h.d.Writer().WriteError(w, r, errors.WithStack(herodot.ErrForbidden.WithReason("The provided Ory Session Token could not be found, is invalid, or otherwise malformed.")))
+			return
+		}
+
+		h.d.Writer().WriteError(w, r, err)
+		return
+	}
 
 	if err := h.d.SessionPersister().RevokeSessionByToken(r.Context(), p.SessionToken); err != nil {
 		if errors.Is(err, sqlcon.ErrNoRows) {
@@ -208,6 +223,8 @@ func (h *Handler) performNativeLogout(w http.ResponseWriter, r *http.Request, _ 
 		h.d.Writer().WriteError(w, r, err)
 		return
 	}
+
+	trace.SpanFromContext(r.Context()).AddEvent(events.NewSessionRevoked(r.Context(), sess.ID, sess.IdentityID))
 
 	w.WriteHeader(http.StatusNoContent)
 }
@@ -285,6 +302,8 @@ func (h *Handler) updateLogoutFlow(w http.ResponseWriter, r *http.Request, ps ht
 		h.d.SelfServiceErrorManager().Forward(r.Context(), w, r, err)
 		return
 	}
+
+	trace.SpanFromContext(r.Context()).AddEvent(events.NewSessionRevoked(r.Context(), sess.ID, sess.IdentityID))
 
 	h.completeLogout(w, r)
 }

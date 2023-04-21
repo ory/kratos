@@ -6,8 +6,11 @@ package login
 import (
 	"net/http"
 
+	"go.opentelemetry.io/otel/trace"
+
 	"github.com/ory/kratos/selfservice/sessiontokenexchange"
 	"github.com/ory/kratos/ui/node"
+	"github.com/ory/kratos/x/events"
 
 	"github.com/ory/kratos/selfservice/flow"
 	"github.com/ory/kratos/text"
@@ -81,6 +84,8 @@ func (s *ErrorHandler) WriteFlowError(w http.ResponseWriter, r *http.Request, f 
 		WithRequest(r).
 		WithField("login_flow", f).
 		Info("Encountered self-service login error.")
+
+	trace.SpanFromContext(r.Context()).AddEvent(events.NewLoginFailed(r.Context()))
 
 	if f == nil {
 		s.forward(w, r, nil, err)

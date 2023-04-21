@@ -19,8 +19,6 @@ heap_profiler/
 goroutine_dump/
 inflight_trace_dump/
 
-.vscode
-
 e2e/*.log
 e2e/kratos.*.yml
 e2e/proxy.json
@@ -63,3 +61,4 @@ test/e2e/kratos.*.yml
 
 # VSCode debug artifact
 __debug_bin
+.debug.sqlite.db
