@@ -51,9 +51,11 @@ func TestPersister(ctx context.Context, _ *config.Config, p interface {
 				e, err := p.CreateSessionTokenExchanger(ctx, params.flowID)
 				require.NoError(t, err)
 				params.setCodes(e)
-				_, ok, err := p.CodeForFlow(ctx, params.flowID)
+				codes, ok, err := p.CodeForFlow(ctx, params.flowID)
 				assert.True(t, ok)
 				assert.NoError(t, err)
+				assert.Equal(t, params.initCode, codes.InitCode)
+				assert.Equal(t, params.returnToCode, codes.ReturnToCode)
 			})
 			t.Run("step=update", func(t *testing.T) {
 				require.NoError(t, p.UpdateSessionOnExchanger(ctx, params.flowID, params.sessionID))

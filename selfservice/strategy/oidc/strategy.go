@@ -338,7 +338,7 @@ func registrationOrLoginFlowID(flow any) (uuid.UUID, bool) {
 	}
 }
 
-func (s *Strategy) alreadyAuthenticated(w http.ResponseWriter, r *http.Request, f interface{}) bool {
+func (s *Strategy) alreadyAuthenticated(w http.ResponseWriter, r *http.Request, f interface{}) (bool, error) {
 	ctx := r.Context()
 
 	if sess, _ := s.d.SessionManager().FetchFromRequest(ctx, r); sess != nil {
@@ -347,7 +347,10 @@ func (s *Strategy) alreadyAuthenticated(w http.ResponseWriter, r *http.Request, 
 		} else if !isForced(f) {
 			if flowID, ok := registrationOrLoginFlowID(f); ok {
 				if _, hasCode, _ := s.d.SessionTokenExchangePersister().CodeForFlow(ctx, flowID); hasCode {
-					_ = s.d.SessionTokenExchangePersister().UpdateSessionOnExchanger(ctx, flowID, sess.ID)
+					err := s.d.SessionTokenExchangePersister().UpdateSessionOnExchanger(ctx, flowID, sess.ID)
+					if err != nil {
+						return false, err
+					}
 				}
 			}
 			returnTo := s.d.Config().SelfServiceBrowserDefaultReturnTo(ctx)
@@ -358,11 +361,11 @@ func (s *Strategy) alreadyAuthenticated(w http.ResponseWriter, r *http.Request, 
 				}
 			}
 			http.Redirect(w, r, returnTo.String(), http.StatusSeeOther)
-			return true
+			return true, nil
 		}
 	}
 
-	return false
+	return false, nil
 }
 
 func (s *Strategy) handleCallback(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
@@ -381,7 +384,9 @@ func (s *Strategy) handleCallback(w http.ResponseWriter, r *http.Request, ps htt
 		return
 	}
 
-	if s.alreadyAuthenticated(w, r, req) {
+	if authenticated, err := s.alreadyAuthenticated(w, r, req); err != nil {
+		s.forwardError(w, r, req, s.handleError(w, r, req, pid, nil, err))
+	} else if authenticated {
 		return
 	}
 

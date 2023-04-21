@@ -328,23 +328,27 @@ func (s *ManagerHTTP) MaybeRedirectAPICodeFlow(w http.ResponseWriter, r *http.Re
 	ctx, span := s.r.Tracer(r.Context()).Tracer().Start(r.Context(), "sessions.ManagerHTTP.MaybeRedirectAPICodeFlow")
 	defer otelx.End(span, &err)
 
-	if code, ok, _ := s.r.SessionTokenExchangePersister().CodeForFlow(ctx, f.GetID()); ok {
-		returnTo := s.r.Config().SelfServiceBrowserDefaultReturnTo(ctx)
-		if redirecter, ok := f.(flow.FlowWithRedirect); ok {
-			r, err := x.SecureRedirectTo(r, returnTo, redirecter.SecureRedirectToOpts(ctx, s.r)...)
-			if err == nil {
-				returnTo = r
-			}
-		}
-
-		if err = s.r.SessionTokenExchangePersister().UpdateSessionOnExchanger(r.Context(), f.GetID(), sessionID); err != nil {
-			return false, errors.WithStack(err)
-		}
-
-		returnTo.RawQuery = "code=" + code.ReturnToCode
-		http.Redirect(w, r, returnTo.String(), http.StatusSeeOther)
-
-		return true, nil
+	code, ok, _ := s.r.SessionTokenExchangePersister().CodeForFlow(ctx, f.GetID())
+	if !ok {
+		return false, nil
 	}
-	return false, nil
+
+	returnTo := s.r.Config().SelfServiceBrowserDefaultReturnTo(ctx)
+	if redirecter, ok := f.(flow.FlowWithRedirect); ok {
+		r, err := x.SecureRedirectTo(r, returnTo, redirecter.SecureRedirectToOpts(ctx, s.r)...)
+		if err == nil {
+			returnTo = r
+		}
+	}
+
+	if err = s.r.SessionTokenExchangePersister().UpdateSessionOnExchanger(r.Context(), f.GetID(), sessionID); err != nil {
+		return false, errors.WithStack(err)
+	}
+
+	q := returnTo.Query()
+	q.Set("code", code.ReturnToCode)
+	returnTo.RawQuery = q.Encode()
+	http.Redirect(w, r, returnTo.String(), http.StatusSeeOther)
+
+	return true, nil
 }

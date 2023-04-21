@@ -182,8 +182,10 @@ func (s *Strategy) Login(w http.ResponseWriter, r *http.Request, f *login.Flow, 
 		return nil, s.handleError(w, r, f, pid, nil, err)
 	}
 
-	if s.alreadyAuthenticated(w, r, req) {
-		return
+	if authenticated, err := s.alreadyAuthenticated(w, r, req); err != nil {
+		return nil, s.handleError(w, r, f, pid, nil, err)
+	} else if authenticated {
+		return i, nil
 	}
 	state := generateState(f.ID.String())
 	if code, hasCode, _ := s.d.SessionTokenExchangePersister().CodeForFlow(r.Context(), f.ID); hasCode {

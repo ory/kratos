@@ -150,9 +150,12 @@ func (s *Strategy) Register(w http.ResponseWriter, r *http.Request, f *registrat
 		return s.handleError(w, r, f, pid, nil, err)
 	}
 
-	if s.alreadyAuthenticated(w, r, req) {
+	if authenticated, err := s.alreadyAuthenticated(w, r, req); err != nil {
+		return s.handleError(w, r, f, pid, nil, err)
+	} else if authenticated {
 		return errors.WithStack(registration.ErrAlreadyLoggedIn)
 	}
+
 	state := generateState(f.ID.String())
 	if code, hasCode, _ := s.d.SessionTokenExchangePersister().CodeForFlow(r.Context(), f.ID); hasCode {
 		state.setCode(code.InitCode)
