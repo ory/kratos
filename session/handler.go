@@ -916,11 +916,17 @@ func RespondWitherrorGenericOnAuthenticated(h herodot.Writer, err error) httprou
 //nolint:deadcode,unused
 //lint:ignore U1000 Used to generate Swagger and OpenAPI definitions
 type exchangeSessionToken struct {
-	// The Session Token Exchange Code
+	// The part of the code return when initializing the flow.
 	//
 	// required: true
 	// in: query
-	SessionTokenExchangeCode string `json:"code"`
+	InitCode string `json:"init_code"`
+
+	// The part of the code returned by the return_to URL.
+	//
+	// required: true
+	// in: query
+	ReturnToCode string `json:"return_to_code"`
 }
 
 // The Response for Registration Flows via API
@@ -962,15 +968,18 @@ type CodeExchangeResponse struct {
 //	  410: errorGeneric
 //	  default: errorGeneric
 func (h *Handler) exchangeCode(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
-	code := r.URL.Query().Get("code")
-	ctx := r.Context()
+	var (
+		ctx          = r.Context()
+		initCode     = r.URL.Query().Get("init_code")
+		returnToCode = r.URL.Query().Get("return_to_code")
+	)
 
-	if code == "" {
-		h.r.Writer().WriteError(w, r, herodot.ErrBadRequest.WithReason(`"code" query param must be set`))
+	if initCode == "" || returnToCode == "" {
+		h.r.Writer().WriteError(w, r, herodot.ErrBadRequest.WithReason(`"init_code" and "return_to_code" query params must be set`))
 		return
 	}
 
-	e, err := h.r.SessionTokenExchangePersister().GetExchangerFromCode(ctx, code)
+	e, err := h.r.SessionTokenExchangePersister().GetExchangerFromCode(ctx, initCode, returnToCode)
 	if err != nil {
 		h.r.Writer().WriteError(w, r, herodot.ErrNotFound.WithReason(`no session yet for this "code"`))
 		return

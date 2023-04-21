@@ -310,7 +310,7 @@ func (s *Strategy) validateCallback(w http.ResponseWriter, r *http.Request) (flo
 		}
 	} else {
 		// We need to validate the tokenCode here
-		if !state.codeMatches(tokenCode) {
+		if !state.codeMatches(tokenCode.InitCode) {
 			return nil, &cntnr, errors.WithStack(herodot.ErrBadRequest.WithReasonf(`Unable to complete OpenID Connect flow because the query state parameter does not match the state parameter from the code.`))
 		}
 		cntnr.State = stateParam

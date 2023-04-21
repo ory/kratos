@@ -3,7 +3,9 @@ CREATE TABLE session_token_exchanges (
     "nid" UUID NOT NULL,
     "flow_id" UUID NOT NULL,
     "session_id" UUID DEFAULT NULL,
-    "code" VARCHAR(64) NOT NULL,
+    "init_code" VARCHAR(64) NOT NULL,
+    "return_to_code" VARCHAR(64) NOT NULL,
+
 
     "created_at" timestamp NOT NULL,
     "updated_at" timestamp NOT NULL
@@ -12,7 +14,7 @@ CREATE TABLE session_token_exchanges (
 -- Relevant query:
 --   SELECT * from session_token_exchanges
 --   WHERE nid = ? AND code = ? AND code <> '' AND session_id IS NOT NULL
-CREATE INDEX session_token_exchanges_nid_code_idx ON session_token_exchanges (code, nid);
+CREATE INDEX session_token_exchanges_nid_code_idx ON session_token_exchanges (init_code, nid);
 
 -- Relevant query:
 --   UPDATE session_token_exchanges SET session_id = ? WHERE flow_id = ? AND nid = ?

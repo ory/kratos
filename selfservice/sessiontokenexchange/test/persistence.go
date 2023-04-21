@@ -14,20 +14,26 @@ import (
 	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/internal/testhelpers"
 	"github.com/ory/kratos/persistence"
+	"github.com/ory/kratos/selfservice/sessiontokenexchange"
 	"github.com/ory/x/randx"
 )
 
 type testParams struct {
-	flowID, sessionID uuid.UUID
-	code              string
+	flowID, sessionID      uuid.UUID
+	initCode, returnToCode string
 }
 
 func newParams() testParams {
 	return testParams{
-		flowID:    uuid.Must(uuid.NewV4()),
-		sessionID: uuid.Must(uuid.NewV4()),
-		code:      randx.MustString(64, randx.AlphaNum),
+		flowID:       uuid.Must(uuid.NewV4()),
+		sessionID:    uuid.Must(uuid.NewV4()),
+		initCode:     randx.MustString(64, randx.AlphaNum),
+		returnToCode: randx.MustString(64, randx.AlphaNum),
 	}
+}
+func (t *testParams) setCodes(e *sessiontokenexchange.Exchanger) {
+	t.initCode = e.InitCode
+	t.returnToCode = e.ReturnToCode
 }
 
 func TestPersister(ctx context.Context, _ *config.Config, p interface {
@@ -42,7 +48,9 @@ func TestPersister(ctx context.Context, _ *config.Config, p interface {
 			params := newParams()
 
 			t.Run("step=create", func(t *testing.T) {
-				require.NoError(t, p.CreateSessionTokenExchanger(ctx, params.flowID, params.code))
+				e, err := p.CreateSessionTokenExchanger(ctx, params.flowID)
+				require.NoError(t, err)
+				params.setCodes(e)
 				_, ok, err := p.CodeForFlow(ctx, params.flowID)
 				assert.True(t, ok)
 				assert.NoError(t, err)
@@ -51,7 +59,7 @@ func TestPersister(ctx context.Context, _ *config.Config, p interface {
 				require.NoError(t, p.UpdateSessionOnExchanger(ctx, params.flowID, params.sessionID))
 			})
 			t.Run("step=get", func(t *testing.T) {
-				e, err := p.GetExchangerFromCode(ctx, params.code)
+				e, err := p.GetExchangerFromCode(ctx, params.initCode, params.returnToCode)
 				require.NoError(t, err)
 
 				assert.Equal(t, params.sessionID, e.SessionID.UUID)
@@ -77,11 +85,13 @@ func TestPersister(ctx context.Context, _ *config.Config, p interface {
 				params := newParams()
 				other := newParams()
 
-				require.NoError(t, p.CreateSessionTokenExchanger(ctx, params.flowID, params.code))
+				e, err := p.CreateSessionTokenExchanger(ctx, params.flowID)
+				require.NoError(t, err)
+				params.setCodes(e)
 				require.NoError(t, p.MoveToNewFlow(ctx, params.flowID, other.flowID))
 				require.NoError(t, p.UpdateSessionOnExchanger(ctx, other.flowID, params.sessionID))
 
-				e, err := p.GetExchangerFromCode(ctx, params.code)
+				e, err = p.GetExchangerFromCode(ctx, params.initCode, params.returnToCode)
 				require.NoError(t, err)
 				assert.Equal(t, params.sessionID, e.SessionID.UUID)
 			})
@@ -94,8 +104,11 @@ func TestPersister(ctx context.Context, _ *config.Config, p interface {
 				t.Parallel()
 				params := newParams()
 
-				require.NoError(t, p.CreateSessionTokenExchanger(ctx, params.flowID, params.code))
-				e, err := p.GetExchangerFromCode(ctx, params.code)
+				e, err := p.CreateSessionTokenExchanger(ctx, params.flowID)
+				require.NoError(t, err)
+				params.setCodes(e)
+
+				e, err = p.GetExchangerFromCode(ctx, params.initCode, params.returnToCode)
 
 				assert.Error(t, err)
 				assert.Nil(t, e)
@@ -106,9 +119,12 @@ func TestPersister(ctx context.Context, _ *config.Config, p interface {
 				params := newParams()
 				other := newParams()
 
-				require.NoError(t, p.CreateSessionTokenExchanger(ctx, params.flowID, params.code))
+				e, err := p.CreateSessionTokenExchanger(ctx, params.flowID)
+				require.NoError(t, err)
+				params.setCodes(e)
+
 				require.NoError(t, p.UpdateSessionOnExchanger(ctx, params.flowID, params.sessionID))
-				e, err := p.GetExchangerFromCode(ctx, other.code)
+				e, err = p.GetExchangerFromCode(ctx, other.initCode, other.returnToCode)
 
 				assert.Error(t, err)
 				assert.Nil(t, e)
@@ -118,9 +134,12 @@ func TestPersister(ctx context.Context, _ *config.Config, p interface {
 				t.Parallel()
 				params := newParams()
 
-				require.NoError(t, p.CreateSessionTokenExchanger(ctx, params.flowID, ""))
+				e, err := p.CreateSessionTokenExchanger(ctx, params.flowID)
+				require.NoError(t, err)
+				params.setCodes(e)
+
 				require.NoError(t, p.UpdateSessionOnExchanger(ctx, params.flowID, params.sessionID))
-				e, err := p.GetExchangerFromCode(ctx, "")
+				e, err = p.GetExchangerFromCode(ctx, "", "")
 
 				assert.Error(t, err)
 				assert.Nil(t, e)
@@ -131,9 +150,12 @@ func TestPersister(ctx context.Context, _ *config.Config, p interface {
 				params := newParams()
 				otherNID := uuid.Must(uuid.NewV4())
 
-				require.NoError(t, p.CreateSessionTokenExchanger(ctx, params.flowID, params.code))
+				e, err := p.CreateSessionTokenExchanger(ctx, params.flowID)
+				require.NoError(t, err)
+				params.setCodes(e)
+
 				require.NoError(t, p.UpdateSessionOnExchanger(ctx, params.flowID, params.sessionID))
-				e, err := p.WithNetworkID(otherNID).GetExchangerFromCode(ctx, params.code)
+				e, err = p.WithNetworkID(otherNID).GetExchangerFromCode(ctx, params.initCode, params.returnToCode)
 
 				assert.Error(t, err)
 				assert.Nil(t, e)

@@ -13,6 +13,7 @@ import (
 
 	"github.com/ory/kratos/selfservice/sessiontokenexchange"
 	"github.com/ory/x/otelx"
+	"github.com/ory/x/randx"
 	"github.com/ory/x/sqlcon"
 )
 
@@ -28,28 +29,32 @@ func updateLimitClause(conn *pop.Connection) string {
 	}
 }
 
-func (p *Persister) CreateSessionTokenExchanger(ctx context.Context, flowID uuid.UUID, code string) (err error) {
+func (p *Persister) CreateSessionTokenExchanger(ctx context.Context, flowID uuid.UUID) (e *sessiontokenexchange.Exchanger, err error) {
 	ctx, span := p.r.Tracer(ctx).Tracer().Start(ctx, "persistence.sql.CreateSessionTokenExchanger")
 	defer otelx.End(span, &err)
 
-	e := sessiontokenexchange.Exchanger{
-		NID:    p.NetworkID(ctx),
-		FlowID: flowID,
-		Code:   code,
+	e = &sessiontokenexchange.Exchanger{
+		NID:          p.NetworkID(ctx),
+		FlowID:       flowID,
+		InitCode:     randx.MustString(64, randx.AlphaNum),
+		ReturnToCode: randx.MustString(64, randx.AlphaNum),
 	}
 
-	return p.GetConnection(ctx).Create(&e)
+	return e, p.GetConnection(ctx).Create(e)
 }
 
-func (p *Persister) GetExchangerFromCode(ctx context.Context, code string) (e *sessiontokenexchange.Exchanger, err error) {
+func (p *Persister) GetExchangerFromCode(ctx context.Context, initCode string, returnToCode string) (e *sessiontokenexchange.Exchanger, err error) {
 	ctx, span := p.r.Tracer(ctx).Tracer().Start(ctx, "persistence.sql.GetExchangerFromCode")
 	defer otelx.End(span, &err)
 
 	e = new(sessiontokenexchange.Exchanger)
 	conn := p.GetConnection(ctx)
-	if err = conn.Where(
-		"nid = ? AND code = ? AND session_id IS NOT NULL AND code <> ''",
-		p.NetworkID(ctx), code).First(e); err != nil {
+	if err = conn.Where(`
+nid = ? AND
+init_code = ? AND init_code <> '' AND
+return_to_code = ? AND return_to_code <> '' AND
+session_id IS NOT NULL`,
+		p.NetworkID(ctx), initCode, returnToCode).First(e); err != nil {
 		return nil, sqlcon.HandleError(err)
 	}
 
@@ -69,20 +74,23 @@ func (p *Persister) UpdateSessionOnExchanger(ctx context.Context, flowID uuid.UU
 	return sqlcon.HandleError(conn.RawQuery(query, sessionID, flowID, p.NetworkID(ctx)).Exec())
 }
 
-func (p *Persister) CodeForFlow(ctx context.Context, flowID uuid.UUID) (code string, found bool, err error) {
+func (p *Persister) CodeForFlow(ctx context.Context, flowID uuid.UUID) (codes *sessiontokenexchange.Codes, found bool, err error) {
 	ctx, span := p.r.Tracer(ctx).Tracer().Start(ctx, "persistence.sql.CodeForFlow")
 	defer otelx.End(span, &err)
 
 	var e sessiontokenexchange.Exchanger
 	switch err = sqlcon.HandleError(p.GetConnection(ctx).
-		Where("flow_id = ? AND nid = ? AND code <> ''", flowID, p.NetworkID(ctx)).
+		Where("flow_id = ? AND nid = ? AND init_code <> '' and return_to_code <> ''", flowID, p.NetworkID(ctx)).
 		First(&e)); {
 	case err == nil:
-		return e.Code, true, nil
+		return &sessiontokenexchange.Codes{
+			InitCode:     e.InitCode,
+			ReturnToCode: e.ReturnToCode,
+		}, true, nil
 	case errors.Is(err, sqlcon.ErrNoRows):
-		return "", false, nil
+		return nil, false, nil
 	default:
-		return "", false, err
+		return nil, false, err
 	}
 }
 

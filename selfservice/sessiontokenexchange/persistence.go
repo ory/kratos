@@ -10,12 +10,19 @@ import (
 	"github.com/gofrs/uuid"
 )
 
+type Codes struct {
+	InitCode     string
+	ReturnToCode string
+}
+
 type Exchanger struct {
 	ID        uuid.UUID     `db:"id"`
 	NID       uuid.UUID     `db:"nid"`
 	FlowID    uuid.UUID     `db:"flow_id"`
 	SessionID uuid.NullUUID `db:"session_id"`
-	Code      string        `db:"code"`
+
+	InitCode     string `db:"init_code"`
+	ReturnToCode string `db:"return_to_code"`
 
 	// CreatedAt is a helper struct field for gobuffalo.pop.
 	CreatedAt time.Time `db:"created_at"`
@@ -30,10 +37,10 @@ func (e *Exchanger) TableName() string {
 
 type (
 	Persister interface {
-		CreateSessionTokenExchanger(ctx context.Context, flowID uuid.UUID, code string) error
-		GetExchangerFromCode(ctx context.Context, code string) (*Exchanger, error)
+		CreateSessionTokenExchanger(ctx context.Context, flowID uuid.UUID) (e *Exchanger, err error)
+		GetExchangerFromCode(ctx context.Context, initCode string, returnToCode string) (*Exchanger, error)
 		UpdateSessionOnExchanger(ctx context.Context, flowID uuid.UUID, sessionID uuid.UUID) error
-		CodeForFlow(ctx context.Context, flowID uuid.UUID) (code string, found bool, err error)
+		CodeForFlow(ctx context.Context, flowID uuid.UUID) (codes *Codes, found bool, err error)
 		MoveToNewFlow(ctx context.Context, oldFlow, newFlow uuid.UUID) error
 	}
 

@@ -183,11 +183,9 @@ func (e *HookExecutor) PostLoginHook(w http.ResponseWriter, r *http.Request, g n
 
 		trace.SpanFromContext(r.Context()).AddEvent(events.NewSessionIssued(r.Context(), s.ID, i.ID))
 
-		if _, ok, _ := e.d.SessionTokenExchangePersister().CodeForFlow(ctx, a.ID); ok {
-			if err = e.d.SessionTokenExchangePersister().UpdateSessionOnExchanger(r.Context(), a.ID, s.ID); err != nil {
-				return errors.WithStack(err)
-			}
-			http.Redirect(w, r, returnTo.String(), http.StatusFound)
+		if handled, err := e.d.SessionManager().MaybeRedirectAPICodeFlow(w, r, a, s.ID); err != nil {
+			return errors.WithStack(err)
+		} else if handled {
 			return nil
 		}
 

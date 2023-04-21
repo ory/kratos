@@ -62,16 +62,9 @@ func (e *SessionIssuer) executePostRegistrationPostPersistHook(w http.ResponseWr
 	trace.SpanFromContext(r.Context()).AddEvent(events.NewSessionIssued(r.Context(), s.ID, s.IdentityID))
 
 	if a.Type == flow.TypeAPI {
-		if _, ok, _ := e.r.SessionTokenExchangePersister().CodeForFlow(r.Context(), a.ID); ok {
-			if err := e.r.SessionTokenExchangePersister().UpdateSessionOnExchanger(r.Context(), a.ID, s.ID); err != nil {
-				return errors.WithStack(err)
-			}
-			returnTo, err := x.SecureRedirectTo(r, e.r.Config().SelfServiceBrowserDefaultReturnTo(r.Context()), a.SecureRedirectToOpts(r.Context(), e.r)...)
-			if err != nil {
-				return errors.WithStack(err)
-			}
-
-			http.Redirect(w, r, returnTo.String(), http.StatusFound)
+		if handled, err := e.r.SessionManager().MaybeRedirectAPICodeFlow(w, r, a, s.ID); err != nil {
+			return errors.WithStack(err)
+		} else if handled {
 			return nil
 		}
 

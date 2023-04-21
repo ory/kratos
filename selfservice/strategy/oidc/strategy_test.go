@@ -17,6 +17,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/ory/kratos/selfservice/sessiontokenexchange"
 	"github.com/ory/kratos/session"
 	"github.com/ory/x/snapshotx"
 
@@ -154,7 +155,7 @@ func TestStrategy(t *testing.T) {
 		return makeRequestWithCookieJar(t, provider, action, fv, nil)
 	}
 
-	var makeAPICodeFlowRequest = func(t *testing.T, provider, action string) {
+	var makeAPICodeFlowRequest = func(t *testing.T, provider, action string) (returnToCode string) {
 		res, err := testhelpers.NewDebugClient(t).Post(action, "application/json", strings.NewReader(fmt.Sprintf(`{
 	"method": "oidc",
 	"provider": %q
@@ -167,13 +168,20 @@ func TestStrategy(t *testing.T) {
 		res, err = testhelpers.NewClientWithCookieJar(t, nil, true).Get(changeLocation.RedirectBrowserTo)
 		require.NoError(t, err)
 
-		assert.Equal(t, returnTS.URL+"/app_code", res.Request.URL.String())
+		returnToURL := res.Request.URL
+		assert.True(t, strings.HasPrefix(returnToURL.String(), returnTS.URL+"/app_code"))
 
-		return
+		code := returnToURL.Query().Get("code")
+		assert.NotEmpty(t, code, "code query param was empty in the return_to URL")
+
+		return code
 	}
 
-	var exchangeCodeForToken = func(t *testing.T, code string) (codeResponse session.CodeExchangeResponse, err error) {
-		res, err := ts.Client().Get(ts.URL + "/sessions/token-exchange?code=" + code)
+	var exchangeCodeForToken = func(t *testing.T, codes sessiontokenexchange.Codes) (codeResponse session.CodeExchangeResponse, err error) {
+		tokenURL := urlx.ParseOrPanic(ts.URL)
+		tokenURL.Path = "/sessions/token-exchange"
+		tokenURL.RawQuery = fmt.Sprintf("init_code=%s&return_to_code=%s", codes.InitCode, codes.ReturnToCode)
+		res, err := ts.Client().Get(tokenURL.String())
 		if err != nil {
 			return codeResponse, err
 		}
@@ -451,33 +459,35 @@ func TestStrategy(t *testing.T) {
 	})
 
 	t.Run("suite=API with session token exchange code", func(t *testing.T) {
-		subject = "api-code-register@ory.sh"
 		scope = []string{"openid"}
 
-		var loginOrRegister = func(id uuid.UUID, code string) {
-			_, err := exchangeCodeForToken(t, code)
+		var loginOrRegister = func(t *testing.T, id uuid.UUID, code string) {
+			_, err := exchangeCodeForToken(t, sessiontokenexchange.Codes{InitCode: code})
 			require.Error(t, err)
 
 			action := assertFormValues(t, id, "valid")
-			makeAPICodeFlowRequest(t, "valid", action)
-			codeResponse, err := exchangeCodeForToken(t, code)
+			returnToCode := makeAPICodeFlowRequest(t, "valid", action)
+			codeResponse, err := exchangeCodeForToken(t, sessiontokenexchange.Codes{
+				InitCode:     code,
+				ReturnToCode: returnToCode,
+			})
 			require.NoError(t, err)
 
 			assert.NotEmpty(t, codeResponse.Token)
 			assert.Equal(t, subject, gjson.GetBytes(codeResponse.Session.Identity.Traits, "subject").String())
 		}
-		var register = func() {
+		var register = func(t *testing.T) {
 			f := newAPIRegistrationFlow(t, returnTS.URL+"?return_session_token_exchange_code=true&return_to=/app_code", 1*time.Minute)
-			loginOrRegister(f.ID, f.SessionTokenExchangeCode)
+			loginOrRegister(t, f.ID, f.SessionTokenExchangeCode)
 		}
-		var login = func() {
+		var login = func(t *testing.T) {
 			f := newAPILoginFlow(t, returnTS.URL+"?return_session_token_exchange_code=true&return_to=/app_code", 1*time.Minute)
-			loginOrRegister(f.ID, f.SessionTokenExchangeCode)
+			loginOrRegister(t, f.ID, f.SessionTokenExchangeCode)
 		}
 
 		for _, tc := range []struct {
 			name        string
-			first, then func()
+			first, then func(*testing.T)
 		}{{
 			name:  "login-twice",
 			first: login, then: login,
@@ -493,8 +503,8 @@ func TestStrategy(t *testing.T) {
 		}} {
 			t.Run("case="+tc.name, func(t *testing.T) {
 				subject = tc.name + "-api-code-testing@ory.sh"
-				tc.first()
-				tc.then()
+				tc.first(t)
+				tc.then(t)
 			})
 		}
 

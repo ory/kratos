@@ -9,6 +9,8 @@ import (
 	"net/url"
 	"time"
 
+	"github.com/ory/kratos/selfservice/flow"
+	"github.com/ory/kratos/selfservice/sessiontokenexchange"
 	"github.com/ory/x/otelx"
 
 	"github.com/ory/x/randx"
@@ -41,6 +43,7 @@ type (
 		x.CSRFProvider
 		x.TracingProvider
 		PersistenceProvider
+		sessiontokenexchange.PersistenceProvider
 	}
 	ManagerHTTP struct {
 		cookieName func(ctx context.Context) string
@@ -319,4 +322,29 @@ func (s *ManagerHTTP) SessionAddAuthenticationMethods(ctx context.Context, sid u
 	}
 	sess.SetAuthenticatorAssuranceLevel()
 	return s.r.SessionPersister().UpsertSession(ctx, sess)
+}
+
+func (s *ManagerHTTP) MaybeRedirectAPICodeFlow(w http.ResponseWriter, r *http.Request, f flow.Flow, sessionID uuid.UUID) (handled bool, err error) {
+	ctx, span := s.r.Tracer(r.Context()).Tracer().Start(r.Context(), "sessions.ManagerHTTP.MaybeRedirectAPICodeFlow")
+	defer otelx.End(span, &err)
+
+	if code, ok, _ := s.r.SessionTokenExchangePersister().CodeForFlow(ctx, f.GetID()); ok {
+		returnTo := s.r.Config().SelfServiceBrowserDefaultReturnTo(ctx)
+		if redirecter, ok := f.(flow.FlowWithRedirect); ok {
+			r, err := x.SecureRedirectTo(r, returnTo, redirecter.SecureRedirectToOpts(ctx, s.r)...)
+			if err == nil {
+				returnTo = r
+			}
+		}
+
+		if err = s.r.SessionTokenExchangePersister().UpdateSessionOnExchanger(r.Context(), f.GetID(), sessionID); err != nil {
+			return false, errors.WithStack(err)
+		}
+
+		returnTo.RawQuery = "code=" + code.ReturnToCode
+		http.Redirect(w, r, returnTo.String(), http.StatusSeeOther)
+
+		return true, nil
+	}
+	return false, nil
 }

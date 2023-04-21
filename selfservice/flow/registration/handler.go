@@ -12,8 +12,6 @@ import (
 	"github.com/ory/kratos/hydra"
 	"github.com/ory/kratos/selfservice/sessiontokenexchange"
 	"github.com/ory/kratos/text"
-	"github.com/ory/x/randx"
-
 	"github.com/ory/nosurf"
 
 	"github.com/ory/kratos/schema"
@@ -126,12 +124,11 @@ func (h *Handler) NewRegistrationFlow(w http.ResponseWriter, r *http.Request, ft
 	if ft == flow.TypeAPI && r.URL.Query().Get("return_session_token_exchange_code") == "true" {
 		// Panicing here is ok since it will return a 500 to the user, which is accurate for when
 		// we can't generate a random string.
-		f.SessionTokenExchangeCode = randx.MustString(64, randx.AlphaNum)
-
-		err = h.d.SessionTokenExchangePersister().CreateSessionTokenExchanger(r.Context(), f.ID, f.SessionTokenExchangeCode)
+		e, err := h.d.SessionTokenExchangePersister().CreateSessionTokenExchanger(r.Context(), f.ID)
 		if err != nil {
 			return nil, errors.WithStack(herodot.ErrInternalServerError.WithWrap(err))
 		}
+		f.SessionTokenExchangeCode = e.InitCode
 	}
 
 	for _, s := range h.d.RegistrationStrategies(r.Context()) {
