@@ -97,7 +97,7 @@ func ServePublic(r driver.Registry, cmd *cobra.Command, args []string, slOpts *s
 	n.Use(r.PrometheusManager())
 
 	router := x.NewRouterPublic()
-	csrf := x.NewCSRFHandler(router, r)
+	csrf := x.NewCSRFHandler(router, r, r.Config())
 
 	n.UseFunc(x.CleanPath) // Prevent double slashes from breaking CSRF.
 	r.WithCSRFHandler(csrf)

@@ -34,7 +34,7 @@ func TestHandler(t *testing.T) {
 
 	t.Run("case=public authorization", func(t *testing.T) {
 		router := x.NewRouterPublic()
-		ns := x.NewTestCSRFHandler(router, reg)
+		ns := x.NewTestCSRFHandler(router, reg, reg.Config())
 
 		h.RegisterPublicRoutes(router)
 		router.GET("/regen", func(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {

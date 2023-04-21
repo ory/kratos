@@ -11,6 +11,8 @@ import (
 	"net/http/httptest"
 	"testing"
 
+	"github.com/ory/kratos/x"
+
 	"github.com/ory/jsonschema/v3/httploader"
 	"github.com/ory/x/httpx"
 
@@ -58,12 +60,12 @@ func TestSchemaValidator(t *testing.T) {
 		{
 			u:   ts.URL,
 			i:   json.RawMessage(`{ "firstName": "first-name", "lastName": "last-name", "age": 1 }`),
-			err: "An internal server error occurred, please contact the system administrator",
+			err: x.ErrMisconfiguration.ErrorField,
 		},
 		{
 			u:   "not-a-url",
 			i:   json.RawMessage(`{ "firstName": "first-name", "lastName": "last-name", "age": 1 }`),
-			err: "An internal server error occurred, please contact the system administrator",
+			err: x.ErrMisconfiguration.ErrorField,
 		},
 	} {
 		t.Run(fmt.Sprintf("case=%d", k), func(t *testing.T) {

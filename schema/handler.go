@@ -60,8 +60,8 @@ func (h *Handler) RegisterPublicRoutes(public *x.RouterPublic) {
 }
 
 func (h *Handler) RegisterAdminRoutes(admin *x.RouterAdmin) {
-	admin.GET(fmt.Sprintf("/%s/:id", SchemasPath), x.RedirectToPublicRoute(h.r))
-	admin.GET(fmt.Sprintf("/%s", SchemasPath), x.RedirectToPublicRoute(h.r))
+	admin.GET(fmt.Sprintf("/%s/:id", SchemasPath), x.RedirectToAdminRoute(h.r.Config()))
+	admin.GET(fmt.Sprintf("/%s", SchemasPath), x.RedirectToAdminRoute(h.r.Config()))
 }
 
 // Raw JSON Schema
@@ -104,7 +104,7 @@ type getIdentitySchema struct {
 func (h *Handler) getIdentitySchema(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	ss, err := h.r.IdentityTraitsSchemas(r.Context())
 	if err != nil {
-		h.r.Writer().WriteError(w, r, errors.WithStack(herodot.ErrInternalServerError.WithWrap(err)))
+		h.r.Writer().WriteError(w, r, err)
 		return
 	}
 
@@ -125,14 +125,14 @@ func (h *Handler) getIdentitySchema(w http.ResponseWriter, r *http.Request, ps h
 
 	src, err := ReadSchema(s)
 	if err != nil {
-		h.r.Writer().WriteError(w, r, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("The file for this JSON Schema ID could not be found or opened. This is a configuration issue.").WithDebugf("%+v", err)))
+		h.r.Writer().WriteError(w, r, errors.WithStack(x.ErrMisconfiguration.WithReasonf("The file for this JSON Schema ID could not be found or opened.").WithDebugf("%+v", err)))
 		return
 	}
 	defer src.Close()
 
 	w.Header().Add("Content-Type", "application/json")
 	if _, err := io.Copy(w, src); err != nil {
-		h.r.Writer().WriteError(w, r, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("The file for this JSON Schema ID could not be found or opened. This is a configuration issue.").WithDebugf("%+v", err)))
+		h.r.Writer().WriteError(w, r, errors.WithStack(x.ErrMisconfiguration.WithReasonf("The file for this JSON Schema ID could not be found or opened.").WithDebugf("%+v", err)))
 		return
 	}
 }
@@ -194,7 +194,7 @@ func (h *Handler) getAll(w http.ResponseWriter, r *http.Request, ps httprouter.P
 
 	allSchemas, err := h.r.IdentityTraitsSchemas(r.Context())
 	if err != nil {
-		h.r.Writer().WriteError(w, r, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("Unable to load identity schemas").WithWrap(err)))
+		h.r.Writer().WriteError(w, r, err)
 		return
 	}
 	total := allSchemas.Total()
@@ -205,14 +205,14 @@ func (h *Handler) getAll(w http.ResponseWriter, r *http.Request, ps httprouter.P
 		schema := schemas[k]
 		src, err := ReadSchema(&schema)
 		if err != nil {
-			h.r.Writer().WriteError(w, r, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("The file for this JSON Schema ID could not be found or opened. This is a configuration issue.").WithDebugf("%+v", err)))
+			h.r.Writer().WriteError(w, r, errors.WithStack(x.ErrMisconfiguration.WithReasonf("The file for this JSON Schema ID could not be found or opened.").WithDebugf("%+v", err)))
 			return
 		}
 
 		raw, err := io.ReadAll(src)
 		_ = src.Close()
 		if err != nil {
-			h.r.Writer().WriteError(w, r, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("The file for this JSON Schema ID could not be found or opened. This is a configuration issue.").WithDebugf("%+v", err)))
+			h.r.Writer().WriteError(w, r, errors.WithStack(x.ErrMisconfiguration.WithReasonf("The file for this JSON Schema ID could not be found or opened.").WithDebugf("%+v", err)))
 			return
 		}
 

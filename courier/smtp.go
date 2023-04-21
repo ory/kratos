@@ -12,6 +12,8 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/ory/kratos/x"
+
 	"github.com/ory/kratos/courier/template"
 
 	"github.com/ory/kratos/driver/config"
@@ -19,7 +21,6 @@ import (
 	"github.com/gofrs/uuid"
 	"github.com/pkg/errors"
 
-	"github.com/ory/herodot"
 	gomail "github.com/ory/mail/v3"
 )
 
@@ -158,7 +159,7 @@ func (c *courier) QueueEmail(ctx context.Context, t EmailTemplate) (uuid.UUID, e
 
 func (c *courier) dispatchEmail(ctx context.Context, msg Message) error {
 	if c.smtpClient.Host == "" {
-		return errors.WithStack(herodot.ErrInternalServerError.WithErrorf("Courier tried to deliver an email but %s is not set!", config.ViperKeyCourierSMTPURL))
+		return errors.WithStack(x.ErrMisconfiguration.WithReasonf("Courier tried to deliver an email but %s is not set!", config.ViperKeyCourierSMTPURL))
 	}
 
 	from := c.deps.CourierConfig().CourierSMTPFrom(ctx)
@@ -224,7 +225,7 @@ func (c *courier) dispatchEmail(ctx context.Context, msg Message) error {
 				return err
 			}
 		}
-		return errors.WithStack(herodot.ErrInternalServerError.
+		return errors.WithStack(x.ErrMisconfiguration.
 			WithError(err.Error()).WithReason("failed to send email via smtp"))
 	}
 

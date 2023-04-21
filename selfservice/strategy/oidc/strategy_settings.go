@@ -266,7 +266,7 @@ func (s *Strategy) Settings(w http.ResponseWriter, r *http.Request, f *settings.
 			return ctxUpdate, nil
 		}
 
-		return nil, s.handleSettingsError(w, r, ctxUpdate, &p, errors.WithStack(herodot.ErrInternalServerError.WithReason("Expected either link or unlink to be set when continuing flow but both are unset.")))
+		return nil, s.handleSettingsError(w, r, ctxUpdate, &p, errors.WithStack(herodot.ErrBadRequest.WithReason("Expected either link or unlink to be set when continuing flow but both are unset.")))
 	} else if err != nil {
 		return nil, s.handleSettingsError(w, r, ctxUpdate, &p, err)
 	}

@@ -91,11 +91,11 @@ func (h *Handler) onAuthenticated(w http.ResponseWriter, r *http.Request, ps htt
 }
 
 func (h *Handler) RegisterAdminRoutes(admin *x.RouterAdmin) {
-	admin.GET(RouteInitBrowserFlow, x.RedirectToPublicRoute(h.d))
-	admin.GET(RouteInitAPIFlow, x.RedirectToPublicRoute(h.d))
-	admin.GET(RouteGetFlow, x.RedirectToPublicRoute(h.d))
-	admin.POST(RouteSubmitFlow, x.RedirectToPublicRoute(h.d))
-	admin.GET(RouteSubmitFlow, x.RedirectToPublicRoute(h.d))
+	admin.GET(RouteInitBrowserFlow, x.RedirectToAdminRoute(h.d.Config()))
+	admin.GET(RouteInitAPIFlow, x.RedirectToAdminRoute(h.d.Config()))
+	admin.GET(RouteGetFlow, x.RedirectToAdminRoute(h.d.Config()))
+	admin.POST(RouteSubmitFlow, x.RedirectToAdminRoute(h.d.Config()))
+	admin.GET(RouteSubmitFlow, x.RedirectToAdminRoute(h.d.Config()))
 }
 
 type FlowOption func(f *Flow)
@@ -400,7 +400,7 @@ func (h *Handler) getRegistrationFlow(w http.ResponseWriter, r *http.Request, ps
 	//
 	// Resolves: https://github.com/ory/kratos/issues/1282
 	if ar.Type == flow.TypeBrowser && !nosurf.VerifyToken(h.d.GenerateCSRFToken(r), ar.CSRFToken) {
-		h.d.Writer().WriteError(w, r, x.CSRFErrorReason(r, h.d))
+		h.d.Writer().WriteError(w, r, x.CSRFErrorReason(r, h.d.Config()))
 		return
 	}
 

@@ -67,9 +67,9 @@ func (h *Handler) RegisterPublicRoutes(router *x.RouterPublic) {
 }
 
 func (h *Handler) RegisterAdminRoutes(admin *x.RouterAdmin) {
-	admin.GET(RouteInitBrowserFlow, x.RedirectToPublicRoute(h.d))
-	admin.DELETE(RouteAPIFlow, x.RedirectToPublicRoute(h.d))
-	admin.GET(RouteSubmitFlow, x.RedirectToPublicRoute(h.d))
+	admin.GET(RouteInitBrowserFlow, x.RedirectToAdminRoute(h.d.Config()))
+	admin.DELETE(RouteAPIFlow, x.RedirectToAdminRoute(h.d.Config()))
+	admin.GET(RouteSubmitFlow, x.RedirectToAdminRoute(h.d.Config()))
 }
 
 // Logout Flow

@@ -9,6 +9,8 @@ import (
 	"encoding/hex"
 	"io"
 
+	"github.com/ory/kratos/x"
+
 	"github.com/pkg/errors"
 	"golang.org/x/crypto/chacha20poly1305"
 
@@ -35,12 +37,12 @@ func (c *XChaCha20Poly1305) Encrypt(ctx context.Context, message []byte) (string
 	}
 
 	if len(c.c.Config().SecretsCipher(ctx)) == 0 {
-		return "", errors.WithStack(herodot.ErrInternalServerError.WithReason("Unable to encrypt message because no cipher secrets were configured."))
+		return "", errors.WithStack(x.ErrMisconfiguration.WithReason("Unable to encrypt message because no cipher secrets were configured."))
 	}
 
 	aead, err := chacha20poly1305.NewX(c.c.Config().SecretsCipher(ctx)[0][:])
 	if err != nil {
-		return "", herodot.ErrInternalServerError.WithWrap(err).WithReason("Unable to generate key")
+		return "", x.ErrMisconfiguration.WithWrap(err).WithReason("Unable to generate key")
 	}
 
 	nonce := make([]byte, aead.NonceSize(), aead.NonceSize()+len(message)+aead.Overhead())
@@ -61,7 +63,7 @@ func (c *XChaCha20Poly1305) Decrypt(ctx context.Context, ciphertext string) ([]b
 
 	secrets := c.c.Config().SecretsCipher(ctx)
 	if len(secrets) == 0 {
-		return nil, errors.WithStack(herodot.ErrInternalServerError.WithReason("Unable to decipher the encrypted message because no cipher secrets were configured."))
+		return nil, errors.WithStack(x.ErrMisconfiguration.WithReason("Unable to decipher the encrypted message because no cipher secrets were configured."))
 	}
 
 	rawCiphertext, err := hex.DecodeString(ciphertext)
@@ -72,7 +74,7 @@ func (c *XChaCha20Poly1305) Decrypt(ctx context.Context, ciphertext string) ([]b
 	for i := range secrets {
 		aead, err := chacha20poly1305.NewX(secrets[i][:])
 		if err != nil {
-			return nil, errors.WithStack(herodot.ErrInternalServerError.WithWrap(err).WithReason("Unable to instanciate chacha20"))
+			return nil, errors.WithStack(x.ErrMisconfiguration.WithWrap(err).WithReasonf("Unable to instanciate chacha20 with secret %d", i))
 		}
 
 		if len(ciphertext) < aead.NonceSize() {
@@ -86,5 +88,5 @@ func (c *XChaCha20Poly1305) Decrypt(ctx context.Context, ciphertext string) ([]b
 		}
 	}
 
-	return nil, errors.WithStack(herodot.ErrInternalServerError.WithReason("Unable to decrypt string"))
+	return nil, errors.WithStack(x.ErrMisconfiguration.WithReason("Unable to decipher the encrypted message. It seems the secrets are invalid or a secret was removed."))
 }

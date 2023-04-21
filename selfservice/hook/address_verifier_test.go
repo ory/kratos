@@ -11,8 +11,6 @@ import (
 
 	"github.com/ory/kratos/ui/node"
 
-	"github.com/ory/herodot"
-
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/selfservice/flow/login"
 	"github.com/ory/kratos/session"
@@ -38,7 +36,7 @@ func TestAddressVerifier(t *testing.T) {
 				{
 					name:                "No Verification Address",
 					verifiableAddresses: []identity.VerifiableAddress{},
-					expectedError:       herodot.ErrInternalServerError.WithReason("A misconfiguration prevents login. Expected to find a verification address but this identity does not have one assigned."),
+					expectedError:       x.ErrMisconfiguration,
 				},
 				{
 					name: "Single Address Not Verified",

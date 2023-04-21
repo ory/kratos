@@ -67,7 +67,7 @@ func EnsureCSRF(reg interface {
 		return nil
 	default:
 		if !nosurf.VerifyToken(generator(r), actual) {
-			return errors.WithStack(x.CSRFErrorReason(r, reg))
+			return errors.WithStack(x.CSRFErrorReason(r, reg.Config()))
 		}
 	}
 

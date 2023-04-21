@@ -6,11 +6,11 @@ package hook
 import (
 	"net/http"
 
+	"github.com/ory/kratos/x"
+
 	"github.com/pkg/errors"
 
 	"github.com/ory/kratos/ui/node"
-
-	"github.com/ory/herodot"
 
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/selfservice/flow/login"
@@ -31,9 +31,8 @@ func (e *AddressVerifier) ExecuteLoginPostHook(_ http.ResponseWriter, _ *http.Re
 		return nil
 	}
 
-	// TODO: can this happen at all?
 	if len(s.Identity.VerifiableAddresses) == 0 {
-		return errors.WithStack(herodot.ErrInternalServerError.WithReason("A misconfiguration prevents login. Expected to find a verification address but this identity does not have one assigned."))
+		return errors.WithStack(x.ErrMisconfiguration.WithReason("Expected to find a verification address but this identity does not have one assigned. This indicates an error with the identity schema."))
 	}
 
 	addressVerified := false

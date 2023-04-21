@@ -7,6 +7,8 @@ import (
 	"context"
 	"encoding/hex"
 
+	"github.com/ory/kratos/x"
+
 	"github.com/gtank/cryptopasta"
 
 	"github.com/ory/herodot"
@@ -37,7 +39,7 @@ func (a *AES) Encrypt(ctx context.Context, message []byte) (string, error) {
 	}
 
 	if len(a.c.Config().SecretsCipher(ctx)) == 0 {
-		return "", errors.WithStack(herodot.ErrInternalServerError.WithReason("Unable to encrypt message because no cipher secrets were configured."))
+		return "", errors.WithStack(x.ErrMisconfiguration.WithReason("Unable to encrypt message because no cipher secrets were configured."))
 	}
 
 	ciphertext, err := cryptopasta.Encrypt(message, &a.c.Config().SecretsCipher(ctx)[0])
@@ -54,7 +56,7 @@ func (a *AES) Decrypt(ctx context.Context, ciphertext string) ([]byte, error) {
 
 	secrets := a.c.Config().SecretsCipher(ctx)
 	if len(secrets) == 0 {
-		return nil, errors.WithStack(herodot.ErrInternalServerError.WithReason("Unable to decipher the encrypted message because no AES secrets were configured."))
+		return nil, errors.WithStack(x.ErrMisconfiguration.WithReason("Unable to decipher the encrypted message because no AES secrets were configured."))
 	}
 
 	decode, err := hex.DecodeString(ciphertext)
@@ -69,5 +71,5 @@ func (a *AES) Decrypt(ctx context.Context, ciphertext string) ([]byte, error) {
 		}
 	}
 
-	return nil, errors.WithStack(herodot.ErrInternalServerError.WithReason("Unable to decipher the encrypted message."))
+	return nil, errors.WithStack(x.ErrMisconfiguration.WithReason("Unable to decipher the encrypted message. It seems the secrets are invalid or a secret was removed."))
 }

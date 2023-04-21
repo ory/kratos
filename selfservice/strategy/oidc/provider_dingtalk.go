@@ -68,7 +68,7 @@ func (g *ProviderDingTalk) OAuth2(ctx context.Context) (*oauth2.Config, error) {
 func (g *ProviderDingTalk) Exchange(ctx context.Context, code string, opts ...oauth2.AuthCodeOption) (*oauth2.Token, error) {
 	conf, err := g.OAuth2(ctx)
 	if err != nil {
-		return nil, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("%s", err))
+		return nil, err
 	}
 
 	pTokenParams := &struct {
@@ -117,7 +117,7 @@ func (g *ProviderDingTalk) Exchange(ctx context.Context, code string, opts ...oa
 
 	token := &oauth2.Token{
 		AccessToken: dToken.AccessToken,
-		Expiry:      time.Unix(time.Now().Unix()+int64(dToken.ExpiresIn), 0),
+		Expiry:      time.Unix(time.Now().Unix()+dToken.ExpiresIn, 0),
 	}
 	return token, nil
 }

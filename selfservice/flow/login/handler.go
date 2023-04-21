@@ -86,12 +86,12 @@ func (h *Handler) RegisterPublicRoutes(public *x.RouterPublic) {
 }
 
 func (h *Handler) RegisterAdminRoutes(admin *x.RouterAdmin) {
-	admin.GET(RouteInitBrowserFlow, x.RedirectToPublicRoute(h.d))
-	admin.GET(RouteInitAPIFlow, x.RedirectToPublicRoute(h.d))
-	admin.GET(RouteGetFlow, x.RedirectToPublicRoute(h.d))
+	admin.GET(RouteInitBrowserFlow, x.RedirectToPublicRoute(h.d.Config()))
+	admin.GET(RouteInitAPIFlow, x.RedirectToPublicRoute(h.d.Config()))
+	admin.GET(RouteGetFlow, x.RedirectToPublicRoute(h.d.Config()))
 
-	admin.POST(RouteSubmitFlow, x.RedirectToPublicRoute(h.d))
-	admin.GET(RouteSubmitFlow, x.RedirectToPublicRoute(h.d))
+	admin.POST(RouteSubmitFlow, x.RedirectToPublicRoute(h.d.Config()))
+	admin.GET(RouteSubmitFlow, x.RedirectToPublicRoute(h.d.Config()))
 }
 
 type FlowOption func(f *Flow)
@@ -413,12 +413,11 @@ func (h *Handler) createBrowserLoginFlow(w http.ResponseWriter, r *http.Request,
 	if errors.Is(err, ErrAlreadyLoggedIn) {
 		if hlr != nil {
 			if !hlr.GetSkip() {
-				h.d.SelfServiceErrorManager().Forward(r.Context(), w, r, errors.WithStack(herodot.ErrInternalServerError.WithReason("ErrAlreadyLoggedIn indicated we can skip login, but Hydra asked us to refresh")))
+				h.d.SelfServiceErrorManager().Forward(r.Context(), w, r, errors.WithStack(herodot.ErrBadRequest.WithReason("ErrAlreadyLoggedIn indicated we can skip login, but Hydra asked us to refresh")))
 				return
 			}
 
 			rt, err := h.d.Hydra().AcceptLoginRequest(r.Context(), hlc.UUID, sess.IdentityID.String(), sess.AMR)
-
 			if err != nil {
 				h.d.SelfServiceErrorManager().Forward(r.Context(), w, r, err)
 				return
@@ -529,7 +528,7 @@ func (h *Handler) getLoginFlow(w http.ResponseWriter, r *http.Request, _ httprou
 	//
 	// Resolves: https://github.com/ory/kratos/issues/1282
 	if ar.Type == flow.TypeBrowser && !nosurf.VerifyToken(h.d.GenerateCSRFToken(r), ar.CSRFToken) {
-		h.d.Writer().WriteError(w, r, x.CSRFErrorReason(r, h.d))
+		h.d.Writer().WriteError(w, r, x.CSRFErrorReason(r, h.d.Config()))
 		return
 	}
 

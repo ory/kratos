@@ -11,6 +11,8 @@ import (
 	"path"
 	"time"
 
+	"github.com/ory/kratos/x"
+
 	"github.com/ory/x/stringsx"
 
 	"github.com/tidwall/sjson"
@@ -45,7 +47,7 @@ func NewProviderAuth0(
 func (g *ProviderAuth0) oauth2(ctx context.Context) (*oauth2.Config, error) {
 	endpoint, err := url.Parse(g.config.IssuerURL)
 	if err != nil {
-		return nil, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("%s", err))
+		return nil, errors.WithStack(x.ErrMisconfiguration.WithReasonf("%s", err))
 	}
 
 	authUrl := *endpoint
@@ -75,7 +77,7 @@ func (g *ProviderAuth0) OAuth2(ctx context.Context) (*oauth2.Config, error) {
 func (g *ProviderAuth0) Claims(ctx context.Context, exchange *oauth2.Token, query url.Values) (*Claims, error) {
 	o, err := g.OAuth2(ctx)
 	if err != nil {
-		return nil, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("%s", err))
+		return nil, err
 	}
 
 	client := g.reg.HTTPClient(ctx, httpx.ResilientClientWithClient(o.Client(ctx, exchange)))
@@ -109,7 +111,7 @@ func (g *ProviderAuth0) Claims(ctx context.Context, exchange *oauth2.Token, quer
 
 	b, err = authZeroUpdatedAtWorkaround(b)
 	if err != nil {
-		return nil, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("%s", err))
+		return nil, err
 	}
 
 	// Once we get here, we know that if there is an updated_at field in the json, it is the correct type.

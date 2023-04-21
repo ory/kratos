@@ -18,6 +18,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/ory/kratos/x"
+
 	"github.com/duo-labs/webauthn/protocol"
 	"github.com/duo-labs/webauthn/webauthn"
 	"github.com/gofrs/uuid"
@@ -30,7 +32,6 @@ import (
 	"go.opentelemetry.io/otel/trace"
 	"golang.org/x/net/publicsuffix"
 
-	"github.com/ory/herodot"
 	"github.com/ory/jsonschema/v3"
 	"github.com/ory/jsonschema/v3/httploader"
 	"github.com/ory/kratos/embedx"
@@ -559,7 +560,7 @@ func (p *Config) OIDCRedirectURIBase(ctx context.Context) *url.URL {
 
 func (p *Config) IdentityTraitsSchemas(ctx context.Context) (ss Schemas, err error) {
 	if err = p.GetProvider(ctx).Koanf.Unmarshal(ViperKeyIdentitySchemas, &ss); err != nil {
-		return ss, nil
+		return nil, x.ErrMisconfiguration.WithWrap(err).WithReasonf("Unable to decode %s", ViperKeyIdentitySchemas)
 	}
 
 	return ss, nil
@@ -863,7 +864,7 @@ func (p *Config) CourierSMTPURL(ctx context.Context) (*url.URL, error) {
 	source := p.GetProvider(ctx).String(ViperKeyCourierSMTPURL)
 	parsed, err := url.Parse(source)
 	if err != nil {
-		return nil, errors.WithStack(herodot.ErrInternalServerError.WithReason("Unable to parse the project's SMTP URL. Please ensure that it is properly escaped: https://www.ory.sh/dr/3").WithDebugf("%s", err))
+		return nil, errors.WithStack(x.ErrMisconfiguration.WithReason("Unable to parse the project's SMTP URL. Please ensure that it is properly escaped: https://www.ory.sh/dr/3").WithDebug(err.Error()))
 	}
 	return parsed, nil
 }

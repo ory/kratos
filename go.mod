@@ -61,6 +61,7 @@ require (
 	github.com/knadh/koanf v1.4.4
 	github.com/laher/mergefs v0.1.2-0.20230223191438-d16611b2f4e7
 	github.com/luna-duclos/instrumentedsql v1.1.3
+	github.com/mailhog/MailHog v1.0.1
 	github.com/mattn/goveralls v0.0.7
 	github.com/mikefarah/yq/v4 v4.19.1
 	github.com/mohae/deepcopy v0.0.0-20170929034955-c48cc78d4826
@@ -152,7 +153,6 @@ require (
 	github.com/fsnotify/fsnotify v1.6.0 // indirect
 	github.com/fullstorydev/grpcurl v1.8.1 // indirect
 	github.com/fxamacker/cbor/v2 v2.4.0 // indirect
-	github.com/go-bindata/go-bindata v3.1.2+incompatible // indirect
 	github.com/go-logr/logr v1.2.3 // indirect
 	github.com/go-logr/stdr v1.2.2 // indirect
 	github.com/go-openapi/analysis v0.21.4 // indirect
@@ -233,7 +233,6 @@ require (
 	github.com/leodido/go-urn v1.2.0 // indirect
 	github.com/lib/pq v1.10.7 // indirect
 	github.com/magiconair/properties v1.8.7 // indirect
-	github.com/mailhog/MailHog v1.0.1 // indirect
 	github.com/mailhog/MailHog-Server v1.0.1 // indirect
 	github.com/mailhog/MailHog-UI v1.0.1 // indirect
 	github.com/mailhog/data v1.0.1 // indirect

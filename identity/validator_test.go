@@ -157,7 +157,7 @@ func TestSchemaValidator(t *testing.T) {
 				SchemaID: "unreachable-url",
 				Traits:   Traits(`{ "firstName": "first-name", "lastName": "last-name", "age": 1 }`),
 			},
-			err: "An internal server error occurred, please contact the system administrator",
+			err: x.ErrMisconfiguration.ErrorField,
 		},
 	} {
 		t.Run(fmt.Sprintf("case=%d", k), func(t *testing.T) {

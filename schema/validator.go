@@ -9,9 +9,9 @@ import (
 	"encoding/json"
 	"sync"
 
-	"github.com/pkg/errors"
+	"github.com/ory/kratos/x"
 
-	"github.com/ory/herodot"
+	"github.com/pkg/errors"
 
 	"github.com/ory/jsonschema/v3"
 )
@@ -52,7 +52,7 @@ func (v *Validator) Validate(
 	compiler := jsonschema.NewCompiler()
 	resource, err := jsonschema.LoadURL(ctx, href)
 	if err != nil {
-		return errors.WithStack(herodot.ErrInternalServerError.WithReasonf("Unable to parse validate JSON object against JSON schema.").WithDebugf("%s", err))
+		return errors.WithStack(x.ErrMisconfiguration.WithReasonf("Unable load JSON schema.").WithDebugf("%s", err))
 	}
 
 	if o.e != nil {
@@ -60,12 +60,12 @@ func (v *Validator) Validate(
 	}
 
 	if err := compiler.AddResource(href, resource); err != nil {
-		return errors.WithStack(herodot.ErrInternalServerError.WithReasonf("Unable to parse validate JSON object against JSON schema.").WithDebugf("%s", err))
+		return errors.WithStack(x.ErrMisconfiguration.WithReasonf("Unable read JSON schema.").WithDebugf("%s", err))
 	}
 
 	schema, err := compiler.Compile(ctx, href)
 	if err != nil {
-		return errors.WithStack(herodot.ErrInternalServerError.WithReasonf("Unable to parse validate JSON object against JSON schema.").WithDebugf("%s", err))
+		return errors.WithStack(x.ErrMisconfiguration.WithReasonf("Unable to compile JSON schema.").WithDebugf("%s", err))
 	}
 
 	if err := schema.Validate(bytes.NewBuffer(document)); err != nil {

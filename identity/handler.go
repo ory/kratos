@@ -78,21 +78,21 @@ func (h *Handler) RegisterPublicRoutes(public *x.RouterPublic) {
 		x.AdminPrefix+RouteCollection+"/*/credentials/*",
 	)
 
-	public.GET(RouteCollection, x.RedirectToAdminRoute(h.r))
-	public.GET(RouteItem, x.RedirectToAdminRoute(h.r))
-	public.DELETE(RouteItem, x.RedirectToAdminRoute(h.r))
-	public.POST(RouteCollection, x.RedirectToAdminRoute(h.r))
-	public.PUT(RouteItem, x.RedirectToAdminRoute(h.r))
-	public.PATCH(RouteItem, x.RedirectToAdminRoute(h.r))
-	public.DELETE(RouteCredentialItem, x.RedirectToAdminRoute(h.r))
+	public.GET(RouteCollection, x.RedirectToAdminRoute(h.r.Config()))
+	public.GET(RouteItem, x.RedirectToAdminRoute(h.r.Config()))
+	public.DELETE(RouteItem, x.RedirectToAdminRoute(h.r.Config()))
+	public.POST(RouteCollection, x.RedirectToAdminRoute(h.r.Config()))
+	public.PUT(RouteItem, x.RedirectToAdminRoute(h.r.Config()))
+	public.PATCH(RouteItem, x.RedirectToAdminRoute(h.r.Config()))
+	public.DELETE(RouteCredentialItem, x.RedirectToAdminRoute(h.r.Config()))
 
-	public.GET(x.AdminPrefix+RouteCollection, x.RedirectToAdminRoute(h.r))
-	public.GET(x.AdminPrefix+RouteItem, x.RedirectToAdminRoute(h.r))
-	public.DELETE(x.AdminPrefix+RouteItem, x.RedirectToAdminRoute(h.r))
-	public.POST(x.AdminPrefix+RouteCollection, x.RedirectToAdminRoute(h.r))
-	public.PUT(x.AdminPrefix+RouteItem, x.RedirectToAdminRoute(h.r))
-	public.PATCH(x.AdminPrefix+RouteItem, x.RedirectToAdminRoute(h.r))
-	public.DELETE(x.AdminPrefix+RouteCredentialItem, x.RedirectToAdminRoute(h.r))
+	public.GET(x.AdminPrefix+RouteCollection, x.RedirectToAdminRoute(h.r.Config()))
+	public.GET(x.AdminPrefix+RouteItem, x.RedirectToAdminRoute(h.r.Config()))
+	public.DELETE(x.AdminPrefix+RouteItem, x.RedirectToAdminRoute(h.r.Config()))
+	public.POST(x.AdminPrefix+RouteCollection, x.RedirectToAdminRoute(h.r.Config()))
+	public.PUT(x.AdminPrefix+RouteItem, x.RedirectToAdminRoute(h.r.Config()))
+	public.PATCH(x.AdminPrefix+RouteItem, x.RedirectToAdminRoute(h.r.Config()))
+	public.DELETE(x.AdminPrefix+RouteCredentialItem, x.RedirectToAdminRoute(h.r.Config()))
 }
 
 func (h *Handler) RegisterAdminRoutes(admin *x.RouterAdmin) {
@@ -820,7 +820,7 @@ func (h *Handler) patch(w http.ResponseWriter, r *http.Request, ps httprouter.Pa
 	h.r.Writer().Write(w, r, WithCredentialsMetadataAndAdminMetadataInJSON(updatedIdenty))
 }
 
-func deletCredentialWebAuthFromIdentity(identity *Identity) (*Identity, error) {
+func deleteCredentialWebAuthFromIdentity(identity *Identity) (*Identity, error) {
 	cred, ok := identity.GetCredentials(CredentialsTypeWebAuthn)
 	if !ok {
 		// This should never happend as it's checked earlier in the code;
@@ -920,14 +920,12 @@ func (h *Handler) deleteIdentityCredentials(w http.ResponseWriter, r *http.Reque
 	case CredentialsTypeTOTP:
 		identity.DeleteCredentialsType(cred.Type)
 	case CredentialsTypeWebAuthn:
-		identity, err = deletCredentialWebAuthFromIdentity(identity)
+		identity, err = deleteCredentialWebAuthFromIdentity(identity)
 		if err != nil {
 			h.r.Writer().WriteError(w, r, err)
 			return
 		}
-	case CredentialsTypeOIDC:
-		fallthrough
-	case CredentialsTypePassword:
+	case CredentialsTypePassword, CredentialsTypeOIDC:
 		h.r.Writer().WriteError(w, r, errors.WithStack(herodot.ErrBadRequest.WithReasonf("You can't remove first factor credentials.")))
 		return
 	default:

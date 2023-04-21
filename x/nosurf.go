@@ -4,14 +4,14 @@
 package x
 
 import (
+	"context"
 	"crypto/sha256"
 	"encoding/base64"
 	"fmt"
 	"net/http"
+	"net/url"
 
 	"github.com/ory/kratos/text"
-
-	"github.com/ory/kratos/driver/config"
 
 	"github.com/pkg/errors"
 
@@ -76,14 +76,8 @@ func DefaultCSRFToken(r *http.Request) string {
 
 var FakeCSRFToken = base64.StdEncoding.EncodeToString([]byte(randx.MustString(32, randx.AlphaLowerNum)))
 
-func FakeCSRFTokenGenerator(r *http.Request) string {
+func FakeCSRFTokenGenerator(*http.Request) string {
 	return FakeCSRFToken
-}
-
-func FakeCSRFTokenGeneratorWithToken(token string) func(r *http.Request) string {
-	return func(r *http.Request) string {
-		return token
-	}
 }
 
 var _ nosurf.Handler = new(FakeCSRFHandler)
@@ -96,31 +90,31 @@ func NewFakeCSRFHandler(name string) *FakeCSRFHandler {
 	}
 }
 
-func (f *FakeCSRFHandler) DisablePath(s string) {
+func (f *FakeCSRFHandler) DisablePath(string) {
 }
 
-func (f *FakeCSRFHandler) DisableGlob(s string) {
+func (f *FakeCSRFHandler) DisableGlob(string) {
 }
 
-func (f *FakeCSRFHandler) DisableGlobs(s ...string) {
+func (f *FakeCSRFHandler) DisableGlobs(...string) {
 }
 
-func (f *FakeCSRFHandler) ExemptPath(s string) {
+func (f *FakeCSRFHandler) ExemptPath(string) {
 }
 
-func (f *FakeCSRFHandler) IgnorePath(s string) {
+func (f *FakeCSRFHandler) IgnorePath(string) {
 }
 
-func (f *FakeCSRFHandler) IgnoreGlob(s string) {
+func (f *FakeCSRFHandler) IgnoreGlob(string) {
 }
 
-func (f *FakeCSRFHandler) IgnoreGlobs(s ...string) {
+func (f *FakeCSRFHandler) IgnoreGlobs(...string) {
 }
 
-func (f *FakeCSRFHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+func (f *FakeCSRFHandler) ServeHTTP(http.ResponseWriter, *http.Request) {
 }
 
-func (f *FakeCSRFHandler) RegenerateToken(w http.ResponseWriter, r *http.Request) string {
+func (f *FakeCSRFHandler) RegenerateToken(http.ResponseWriter, *http.Request) string {
 	return stringsx.Coalesce(f.name, FakeCSRFToken)
 }
 
@@ -128,52 +122,50 @@ type CSRFProvider interface {
 	CSRFHandler() nosurf.Handler
 }
 
-func CSRFCookieName(reg interface {
-	config.Provider
+func CSRFCookieName(c interface {
+	SelfPublicURL(ctx context.Context) *url.URL
 }, r *http.Request) string {
-	return "csrf_token_" + fmt.Sprintf("%x", sha256.Sum256([]byte(reg.Config().SelfPublicURL(r.Context()).String())))
+	return "csrf_token_" + fmt.Sprintf("%x", sha256.Sum256([]byte(c.SelfPublicURL(r.Context()).String())))
 }
 
-func NosurfBaseCookieHandler(reg interface {
-	config.Provider
-}) func(w http.ResponseWriter, r *http.Request) http.Cookie {
-	return func(w http.ResponseWriter, r *http.Request) http.Cookie {
-		secure := !reg.Config().IsInsecureDevMode(r.Context())
+type config interface {
+	SelfPublicURL(ctx context.Context) *url.URL
+	IsInsecureDevMode(ctx context.Context) bool
+	CookieSameSiteMode(ctx context.Context) http.SameSite
+	CookiePath(ctx context.Context) string
+	CookieDomain(ctx context.Context) string
+}
 
-		sameSite := reg.Config().CookieSameSiteMode(r.Context())
+func NosurfBaseCookieHandler(c config) func(w http.ResponseWriter, r *http.Request) http.Cookie {
+	return func(w http.ResponseWriter, r *http.Request) http.Cookie {
+		secure := !c.IsInsecureDevMode(r.Context())
+
+		sameSite := c.CookieSameSiteMode(r.Context())
 		if !secure {
 			sameSite = http.SameSiteLaxMode
 		}
 
 		domain := ""
-		if d := reg.Config().CookieDomain(r.Context()); d != "" {
+		if d := c.CookieDomain(r.Context()); d != "" {
 			domain = d
 		}
 
-		name := CSRFCookieName(reg, r)
+		name := CSRFCookieName(c, r)
 		cookie := http.Cookie{
 			Name:     name,
 			MaxAge:   nosurf.MaxAge,
-			Path:     reg.Config().CookiePath(r.Context()),
+			Path:     c.CookiePath(r.Context()),
 			Domain:   domain,
 			HttpOnly: true,
 			Secure:   secure,
 			SameSite: sameSite,
 		}
 
-		if alias := reg.Config().SelfPublicURL(r.Context()); reg.Config().SelfPublicURL(r.Context()).String() != alias.String() {
-			// If a domain alias is detected use that instead.
-			cookie.Domain = alias.Hostname()
-			cookie.Path = alias.Path
-		}
-
 		return cookie
 	}
 }
 
-func CSRFErrorReason(r *http.Request, reg interface {
-	config.Provider
-}) error {
+func CSRFErrorReason(r *http.Request, c config) error {
 	// Is it an AJAX request?
 	isAjax := len(r.Header.Get("Origin")) == 0
 
@@ -182,7 +174,7 @@ func CSRFErrorReason(r *http.Request, reg interface {
 			return errors.WithStack(ErrInvalidCSRFTokenAJAXNoCookies)
 		}
 		return errors.WithStack(ErrInvalidCSRFTokenServerNoCookies)
-	} else if _, err := r.Cookie(CSRFCookieName(reg, r)); errors.Is(err, http.ErrNoCookie) {
+	} else if _, err := r.Cookie(CSRFCookieName(c, r)); errors.Is(err, http.ErrNoCookie) {
 		if isAjax {
 			return errors.WithStack(ErrInvalidCSRFTokenAJAXCookieMissing)
 		}
@@ -201,12 +193,11 @@ func CSRFErrorReason(r *http.Request, reg interface {
 }
 
 func CSRFFailureHandler(reg interface {
-	config.Provider
 	LoggingProvider
 	WriterProvider
-}) http.HandlerFunc {
+}, c config) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		err := CSRFErrorReason(r, reg)
+		err := CSRFErrorReason(r, c)
 		reg.Logger().
 			WithError(err).
 			WithField("result", nosurf.VerifyToken(nosurf.Token(r), r.Form.Get("csrf_token"))).
@@ -224,14 +215,14 @@ func CSRFFailureHandler(reg interface {
 func NewCSRFHandler(
 	router http.Handler,
 	reg interface {
-		config.Provider
 		LoggingProvider
 		WriterProvider
-	}) *nosurf.CSRFHandler {
+	},
+	c config) *nosurf.CSRFHandler {
 	n := nosurf.New(router)
 
-	n.SetBaseCookieFunc(NosurfBaseCookieHandler(reg))
-	n.SetFailureHandler(CSRFFailureHandler(reg))
+	n.SetBaseCookieFunc(NosurfBaseCookieHandler(c))
+	n.SetFailureHandler(CSRFFailureHandler(reg, c))
 	return n
 }
 
@@ -240,9 +231,8 @@ func NewTestCSRFHandler(router http.Handler, reg interface {
 	WithCSRFTokenGenerator(CSRFToken)
 	WriterProvider
 	LoggingProvider
-	config.Provider
-}) *nosurf.CSRFHandler {
-	n := NewCSRFHandler(router, reg)
+}, c config) *nosurf.CSRFHandler {
+	n := NewCSRFHandler(router, reg, c)
 	reg.WithCSRFHandler(n)
 	reg.WithCSRFTokenGenerator(nosurf.Token)
 	return n

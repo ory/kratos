@@ -45,8 +45,8 @@ func NewHandler(r handlerDependencies) *Handler {
 
 func (h *Handler) RegisterPublicRoutes(public *x.RouterPublic) {
 	h.r.CSRFHandler().IgnoreGlobs(x.AdminPrefix+AdminRouteListMessages, AdminRouteListMessages)
-	public.GET(x.AdminPrefix+AdminRouteListMessages, x.RedirectToAdminRoute(h.r))
-	public.GET(x.AdminPrefix+AdminRouteGetMessage, x.RedirectToAdminRoute(h.r))
+	public.GET(x.AdminPrefix+AdminRouteListMessages, x.RedirectToAdminRoute(h.r.Config()))
+	public.GET(x.AdminPrefix+AdminRouteGetMessage, x.RedirectToAdminRoute(h.r.Config()))
 }
 
 func (h *Handler) RegisterAdminRoutes(admin *x.RouterAdmin) {

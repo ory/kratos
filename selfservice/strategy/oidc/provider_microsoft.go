@@ -9,6 +9,8 @@ import (
 	"net/url"
 	"strings"
 
+	"github.com/ory/kratos/x"
+
 	"github.com/hashicorp/go-retryablehttp"
 
 	"github.com/ory/x/httpx"
@@ -41,7 +43,7 @@ func NewProviderMicrosoft(
 
 func (m *ProviderMicrosoft) OAuth2(ctx context.Context) (*oauth2.Config, error) {
 	if len(strings.TrimSpace(m.config.Tenant)) == 0 {
-		return nil, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("No Tenant specified for the `microsoft` oidc provider %s", m.config.ID))
+		return nil, errors.WithStack(x.ErrMisconfiguration.WithReasonf("No Tenant specified for the `microsoft` oidc provider %s", m.config.ID))
 	}
 
 	endpointPrefix := "https://login.microsoftonline.com/" + m.config.Tenant

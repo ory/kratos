@@ -48,7 +48,7 @@ func GetLoginChallengeID(conf *config.Config, r *http.Request) (uuid.NullUUID, e
 	if !r.URL.Query().Has("login_challenge") {
 		return uuid.NullUUID{}, nil
 	} else if conf.OAuth2ProviderURL(r.Context()) == nil {
-		return uuid.NullUUID{}, errors.WithStack(herodot.ErrInternalServerError.WithReason("refusing to parse login_challenge query parameter because " + config.ViperKeyOAuth2ProviderURL + " is invalid or unset"))
+		return uuid.NullUUID{}, errors.WithStack(x.ErrMisconfiguration.WithReason("refusing to parse login_challenge query parameter because " + config.ViperKeyOAuth2ProviderURL + " is invalid or unset"))
 	}
 
 	hlc, err := uuid.FromString(r.URL.Query().Get("login_challenge"))
@@ -62,7 +62,7 @@ func GetLoginChallengeID(conf *config.Config, r *http.Request) (uuid.NullUUID, e
 func (h *DefaultHydra) getAdminURL(ctx context.Context) (string, error) {
 	u := h.d.Config().OAuth2ProviderURL(ctx)
 	if u == nil {
-		return "", errors.WithStack(herodot.ErrInternalServerError.WithReason(config.ViperKeyOAuth2ProviderURL + " is not configured"))
+		return "", errors.WithStack(x.ErrMisconfiguration.WithDebug(config.ViperKeyOAuth2ProviderURL + " is not configured"))
 	}
 	return u.String(), nil
 }
@@ -104,7 +104,7 @@ func (h *DefaultHydra) AcceptLoginRequest(ctx context.Context, hlc uuid.UUID, su
 
 	resp, r, err := aa.AcceptOAuth2LoginRequest(ctx).LoginChallenge(fmt.Sprintf("%x", hlc)).AcceptOAuth2LoginRequest(*alr).Execute()
 	if err != nil {
-		innerErr := herodot.ErrInternalServerError.WithWrap(err).WithReasonf("Unable to accept OAuth 2.0 Login Challenge.")
+		innerErr := x.ErrMisconfiguration.WithWrap(err).WithReasonf("Unable to accept OAuth 2.0 Login Challenge.")
 		if r != nil {
 			innerErr = innerErr.
 				WithDetail("status_code", r.StatusCode).
@@ -138,7 +138,7 @@ func (h *DefaultHydra) GetLoginRequest(ctx context.Context, hlc uuid.NullUUID) (
 
 	hlr, r, err := aa.GetOAuth2LoginRequest(ctx).LoginChallenge(fmt.Sprintf("%x", hlc.UUID)).Execute()
 	if err != nil {
-		innerErr := herodot.ErrInternalServerError.WithWrap(err).WithReasonf("Unable to get OAuth 2.0 Login Challenge.")
+		innerErr := x.ErrMisconfiguration.WithWrap(err).WithReasonf("Unable to get OAuth 2.0 Login Challenge.")
 		if r != nil {
 			innerErr = innerErr.
 				WithDetail("status_code", r.StatusCode).

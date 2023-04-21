@@ -7,6 +7,8 @@ import (
 	"context"
 	"net/url"
 
+	"github.com/ory/kratos/x"
+
 	"github.com/pkg/errors"
 
 	"github.com/ory/kratos/schema"
@@ -19,10 +21,10 @@ func (m *RegistryDefault) IdentityTraitsSchemas(ctx context.Context) (schema.Sch
 	}
 
 	var ss schema.Schemas
-	for _, s := range ms {
+	for i, s := range ms {
 		surl, err := url.Parse(s.URL)
 		if err != nil {
-			return nil, errors.WithStack(err)
+			return nil, errors.WithStack(x.ErrMisconfiguration.WithReasonf("Unable to parse Identity Schema URL: %d", i))
 		}
 
 		ss = append(ss, schema.Schema{

@@ -4,18 +4,20 @@
 package x
 
 import (
+	"context"
 	"net/http"
+	"net/url"
 	"path"
 	"strings"
 
 	"github.com/julienschmidt/httprouter"
-
-	"github.com/ory/kratos/driver/config"
 )
 
-func RedirectToAdminRoute(reg config.Provider) httprouter.Handle {
+func RedirectToAdminRoute(c interface {
+	SelfAdminURL(ctx context.Context) *url.URL
+}) httprouter.Handle {
 	return func(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
-		admin := reg.Config().SelfAdminURL(r.Context())
+		admin := c.SelfAdminURL(r.Context())
 
 		dest := *r.URL
 		dest.Host = admin.Host
@@ -27,9 +29,11 @@ func RedirectToAdminRoute(reg config.Provider) httprouter.Handle {
 	}
 }
 
-func RedirectToPublicRoute(reg config.Provider) httprouter.Handle {
+func RedirectToPublicRoute(c interface {
+	SelfPublicURL(ctx context.Context) *url.URL
+}) httprouter.Handle {
 	return func(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
-		public := reg.Config().SelfPublicURL(r.Context())
+		public := c.SelfPublicURL(r.Context())
 
 		dest := *r.URL
 		dest.Host = public.Host

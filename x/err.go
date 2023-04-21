@@ -17,6 +17,16 @@ var PseudoPanic = herodot.DefaultError{
 	CodeField:   http.StatusInternalServerError,
 }
 
+var ErrMisconfiguration = herodot.DefaultError{
+	StatusField: http.StatusText(http.StatusInternalServerError),
+	ErrorField:  "Invalid configuration",
+	ReasonField: "One or more configuration values are invalid. Please report this to the system administrator.",
+	CodeField:   http.StatusInternalServerError,
+	DetailsField: map[string]interface{}{
+		"cause": "misconfiguration",
+	},
+}
+
 func RecoverStatusCode(err error, fallback int) int {
 	var sc herodot.StatusCodeCarrier
 	if errors.As(err, &sc) {

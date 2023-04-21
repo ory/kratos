@@ -76,7 +76,7 @@ func (h *Handler) RegisterAdminRoutes(admin *x.RouterAdmin) {
 	admin.DELETE(AdminRouteIdentitiesSessions, h.deleteIdentitySessions)
 	admin.PATCH(AdminRouteSessionExtendId, h.adminSessionExtend)
 
-	admin.DELETE(RouteCollection, x.RedirectToPublicRoute(h.r))
+	admin.DELETE(RouteCollection, x.RedirectToPublicRoute(h.r.Config()))
 }
 
 func (h *Handler) RegisterPublicRoutes(public *x.RouterPublic) {
@@ -96,7 +96,7 @@ func (h *Handler) RegisterPublicRoutes(public *x.RouterPublic) {
 	public.DELETE(RouteSession, h.deleteMySession)
 	public.GET(RouteCollection, h.listMySessions)
 
-	public.DELETE(AdminRouteIdentitiesSessions, x.RedirectToAdminRoute(h.r))
+	public.DELETE(AdminRouteIdentitiesSessions, x.RedirectToAdminRoute(h.r.Config()))
 }
 
 // Check Session Request Parameters
@@ -420,7 +420,7 @@ type getSession struct {
 func (h *Handler) getSession(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	if ps.ByName("id") == "whoami" {
 		// for /admin/sessions/whoami redirect to the public route
-		x.RedirectToPublicRoute(h.r)(w, r, ps)
+		x.RedirectToPublicRoute(h.r.Config())(w, r, ps)
 		return
 	}
 

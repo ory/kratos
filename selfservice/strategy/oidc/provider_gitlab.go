@@ -9,6 +9,8 @@ import (
 	"net/url"
 	"path"
 
+	"github.com/ory/kratos/x"
+
 	"github.com/ory/x/stringsx"
 
 	"github.com/hashicorp/go-retryablehttp"
@@ -44,7 +46,7 @@ func NewProviderGitLab(
 func (g *ProviderGitLab) oauth2(ctx context.Context) (*oauth2.Config, error) {
 	endpoint, err := g.endpoint()
 	if err != nil {
-		return nil, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("%s", err))
+		return nil, errors.WithStack(x.ErrMisconfiguration.WithReasonf("%s", err))
 	}
 
 	authUrl := *endpoint
@@ -72,14 +74,14 @@ func (g *ProviderGitLab) OAuth2(ctx context.Context) (*oauth2.Config, error) {
 func (g *ProviderGitLab) Claims(ctx context.Context, exchange *oauth2.Token, query url.Values) (*Claims, error) {
 	o, err := g.OAuth2(ctx)
 	if err != nil {
-		return nil, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("%s", err))
+		return nil, err
 	}
 
 	client := g.reg.HTTPClient(ctx, httpx.ResilientClientDisallowInternalIPs(), httpx.ResilientClientWithClient(o.Client(ctx, exchange)))
 
 	u, err := g.endpoint()
 	if err != nil {
-		return nil, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("%s", err))
+		return nil, err
 	}
 	u.Path = path.Join(u.Path, "/oauth/userinfo")
 	req, err := retryablehttp.NewRequest("GET", u.String(), nil)
