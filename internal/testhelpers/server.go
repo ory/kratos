@@ -28,12 +28,12 @@ func NewKratosServerWithCSRF(t *testing.T, reg driver.Registry) (public, admin *
 
 func NewKratosServerWithCSRFAndRouters(t *testing.T, reg driver.Registry) (public, admin *httptest.Server, rp *x.RouterPublic, ra *x.RouterAdmin) {
 	rp, ra = x.NewRouterPublic(), x.NewRouterAdmin()
-	csrfHandler := x.NewTestCSRFHandler(rp, reg)
+	csrfHandler := x.NewTestCSRFHandler(rp, reg, reg.Config())
 	reg.WithCSRFHandler(csrfHandler)
 	ran := negroni.New()
 	ran.UseFunc(x.RedirectAdminMiddleware)
 	ran.UseHandler(ra)
-	public = httptest.NewServer(x.NewTestCSRFHandler(rp, reg))
+	public = httptest.NewServer(x.NewTestCSRFHandler(rp, reg, reg.Config()))
 	admin = httptest.NewServer(ran)
 	ctx := context.Background()
 

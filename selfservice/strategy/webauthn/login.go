@@ -125,12 +125,12 @@ func (s *Strategy) populateLoginMethod(r *http.Request, sr *login.Flow, i *ident
 
 	web, err := webauthn.New(s.d.Config().WebAuthnConfig(r.Context()))
 	if err != nil {
-		return errors.WithStack(herodot.ErrInternalServerError.WithReasonf("Unable to initiate WebAuth.").WithDebug(err.Error()))
+		return errors.WithStack(x.ErrMisconfiguration.WithReasonf("Unable to initiate WebAuth.").WithDebug(err.Error()))
 	}
 
 	options, sessionData, err := web.BeginLogin(NewUser(conf.UserHandle, webAuthCreds, web.Config))
 	if err != nil {
-		return errors.WithStack(herodot.ErrInternalServerError.WithReasonf("Unable to initiate WebAuth login.").WithDebug(err.Error()))
+		return errors.WithStack(x.ErrMisconfiguration.WithReasonf("Unable to initiate WebAuth login.").WithDebug(err.Error()))
 	}
 
 	// Remove the WebAuthn URL from the internal context now that it is set!
@@ -297,7 +297,7 @@ func (s *Strategy) loginAuthenticate(_ http.ResponseWriter, r *http.Request, f *
 
 	web, err := webauthn.New(s.d.Config().WebAuthnConfig(r.Context()))
 	if err != nil {
-		return nil, s.handleLoginError(r, f, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("Unable to get webAuthn config.").WithDebug(err.Error())))
+		return nil, s.handleLoginError(r, f, errors.WithStack(x.ErrMisconfiguration.WithReasonf("Unable to get webAuthn config.").WithDebug(err.Error())))
 	}
 
 	webAuthnResponse, err := protocol.ParseCredentialRequestResponseBody(strings.NewReader(p.Login))

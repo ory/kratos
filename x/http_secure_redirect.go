@@ -16,8 +16,6 @@ import (
 	"github.com/ory/herodot"
 	"github.com/ory/x/stringsx"
 	"github.com/ory/x/urlx"
-
-	"github.com/ory/kratos/driver/config"
 )
 
 type secureRedirectOptions struct {
@@ -125,7 +123,7 @@ func SecureRedirectTo(r *http.Request, defaultReturnTo *url.URL, opts ...SecureR
 
 	returnTo, err = url.Parse(rawReturnTo)
 	if err != nil {
-		return nil, errors.WithStack(herodot.ErrInternalServerError.WithWrap(err).WithReasonf("Unable to parse the return_to query parameter as an URL: %s", err))
+		return nil, errors.WithStack(herodot.ErrBadRequest.WithWrap(err).WithReasonf("Unable to parse the return_to query parameter as an URL: %s", err))
 	}
 
 	returnTo.Host = stringsx.Coalesce(returnTo.Host, o.defaultReturnTo.Host)
@@ -145,37 +143,6 @@ func SecureRedirectTo(r *http.Request, defaultReturnTo *url.URL, opts ...SecureR
 		WithID(text.ErrIDRedirectURLNotAllowed).
 		WithReasonf("Requested return_to URL \"%s\" is not allowed.", returnTo).
 		WithDebugf("Allowed domains are: %v", o.allowlist))
-}
-
-func SecureContentNegotiationRedirection(
-	w http.ResponseWriter, r *http.Request, out interface{},
-	requestURL string, writer herodot.Writer, c *config.Config,
-	opts ...SecureRedirectOption,
-) error {
-	switch httputil.NegotiateContentType(r, []string{
-		"text/html",
-		"application/json",
-	}, "text/html") {
-	case "application/json":
-		writer.Write(w, r, out)
-	case "text/html":
-		fallthrough
-	default:
-		ret, err := SecureRedirectTo(r, c.SelfServiceBrowserDefaultReturnTo(r.Context()),
-			append([]SecureRedirectOption{
-				SecureRedirectUseSourceURL(requestURL),
-				SecureRedirectAllowURLs(c.SelfServiceBrowserAllowedReturnToDomains(r.Context())),
-				SecureRedirectAllowSelfServiceURLs(c.SelfPublicURL(r.Context())),
-			}, opts...)...,
-		)
-		if err != nil {
-			return err
-		}
-
-		http.Redirect(w, r, ret.String(), http.StatusSeeOther)
-	}
-
-	return nil
 }
 
 func ContentNegotiationRedirection(

@@ -34,14 +34,14 @@ func TestRedirectToPublicAdminRoute(t *testing.T) {
 	conf.MustSet(ctx, config.ViperKeyAdminBaseURL, adminTS.URL)
 	conf.MustSet(ctx, config.ViperKeyPublicBaseURL, pubTS.URL)
 
-	pub.POST("/privileged", x.RedirectToAdminRoute(reg))
-	pub.POST("/admin/privileged", x.RedirectToAdminRoute(reg))
+	pub.POST("/privileged", x.RedirectToAdminRoute(reg.Config()))
+	pub.POST("/admin/privileged", x.RedirectToAdminRoute(reg.Config()))
 	adm.POST("/privileged", func(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 		body, _ := io.ReadAll(r.Body)
 		w.Write(body)
 	})
 
-	adm.POST("/read", x.RedirectToPublicRoute(reg))
+	adm.POST("/read", x.RedirectToPublicRoute(reg.Config()))
 	pub.POST("/read", func(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 		body, _ := io.ReadAll(r.Body)
 		w.Write(body)

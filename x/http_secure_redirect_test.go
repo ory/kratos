@@ -4,80 +4,19 @@
 package x_test
 
 import (
-	"context"
-	"encoding/json"
 	"io"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
 	"testing"
 
-	"github.com/julienschmidt/httprouter"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/ory/herodot"
 	"github.com/ory/x/urlx"
 
-	"github.com/ory/kratos/driver/config"
-	"github.com/ory/kratos/internal"
 	"github.com/ory/kratos/x"
 )
-
-func TestSecureContentNegotiationRedirection(t *testing.T) {
-	conf, _ := internal.NewFastRegistryWithMocks(t)
-	var jsonActual = json.RawMessage(`{"foo":"bar"}` + "\n")
-	writer := herodot.NewJSONWriter(nil)
-
-	router := httprouter.New()
-	router.GET("/redir", func(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
-		require.NoError(t, x.SecureContentNegotiationRedirection(w, r, jsonActual, x.RequestURL(r).String(), writer, conf))
-	})
-	router.GET("/default-return-to", func(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
-		w.WriteHeader(http.StatusNoContent)
-	})
-	router.GET("/return-to", func(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
-		w.WriteHeader(http.StatusNoContent)
-	})
-
-	ts := httptest.NewServer(router)
-	defer ts.Close()
-
-	ctx := context.Background()
-
-	defaultReturnTo := ts.URL + "/default-return-to"
-	conf.MustSet(ctx, config.ViperKeySelfServiceBrowserDefaultReturnTo, defaultReturnTo)
-	conf.MustSet(ctx, config.ViperKeyPublicBaseURL, ts.URL)
-	conf.MustSet(ctx, config.ViperKeyURLsAllowedReturnToDomains, []string{ts.URL})
-
-	run := func(t *testing.T, href string, contentType string) (*http.Response, string) {
-		req, err := http.NewRequest("GET", href, nil)
-		require.NoError(t, err)
-		req.Header.Add("Accept", contentType)
-		res, err := ts.Client().Do(req)
-		require.NoError(t, err)
-		body, err := io.ReadAll(res.Body)
-		require.NoError(t, err)
-		require.NoError(t, res.Body.Close())
-		return res, string(body)
-	}
-
-	t.Run("case=html browser causes redirect", func(t *testing.T) {
-		res, _ := run(t, ts.URL+"/redir", "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9")
-		assert.EqualValues(t, res.Request.URL.String(), defaultReturnTo)
-	})
-
-	t.Run("case=html browser causes redirect with redirect_to", func(t *testing.T) {
-		res, _ := run(t, ts.URL+"/redir?return_to=/redirect-to", "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9")
-		assert.EqualValues(t, res.Request.URL.String(), ts.URL+"/redirect-to")
-	})
-
-	t.Run("case=html browser causes redirect with redirect_to", func(t *testing.T) {
-		res, body := run(t, ts.URL+"/redir?return_to=/redirect-to", "application/json")
-		assert.EqualValues(t, res.Request.URL.String(), ts.URL+"/redir?return_to=/redirect-to")
-		assert.EqualValues(t, body, jsonActual)
-	})
-}
 
 func TestSecureRedirectToIsAllowedHost(t *testing.T) {
 	type testCase struct {

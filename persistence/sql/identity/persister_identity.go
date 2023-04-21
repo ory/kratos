@@ -127,9 +127,7 @@ func NormalizeIdentifier(ct identity.CredentialsType, match string) string {
 	case identity.CredentialsTypeOIDC:
 		// OIDC credentials are case-sensitive
 		return match
-	case identity.CredentialsTypePassword:
-		fallthrough
-	case identity.CredentialsTypeWebAuthn:
+	case identity.CredentialsTypePassword, identity.CredentialsTypeWebAuthn:
 		return stringToLowerTrim(match)
 	}
 	return match
@@ -262,7 +260,7 @@ func (p *IdentityPersister) createIdentityCredentials(ctx context.Context, conn 
 			ids = NormalizeIdentifier(cred.Type, ids)
 
 			if ids == "" {
-				return errors.WithStack(herodot.ErrInternalServerError.WithReasonf(
+				return errors.WithStack(herodot.ErrBadRequest.WithReasonf(
 					"Unable to create identity credentials with missing or empty identifier."))
 			}
 

@@ -206,7 +206,7 @@ func TestManagerHTTP(t *testing.T) {
 			reg.Writer().Write(w, r, sess)
 		})
 
-		pts := httptest.NewServer(x.NewTestCSRFHandler(rp, reg))
+		pts := httptest.NewServer(x.NewTestCSRFHandler(rp, reg, reg.Config()))
 		t.Cleanup(pts.Close)
 		conf.MustSet(ctx, config.ViperKeyPublicBaseURL, pts.URL)
 		reg.RegisterPublicRoutes(context.Background(), rp)

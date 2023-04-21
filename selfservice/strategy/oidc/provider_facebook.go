@@ -9,7 +9,6 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"encoding/json"
-	"fmt"
 	"net/url"
 
 	"github.com/hashicorp/go-retryablehttp"
@@ -41,7 +40,7 @@ func NewProviderFacebook(
 	}
 }
 
-func (g *ProviderFacebook) generateAppSecretProof(ctx context.Context, exchange *oauth2.Token) string {
+func (g *ProviderFacebook) generateAppSecretProof(_ context.Context, exchange *oauth2.Token) string {
 	secret := g.config.ClientSecret
 	data := exchange.AccessToken
 
@@ -62,15 +61,15 @@ func (g *ProviderFacebook) OAuth2(ctx context.Context) (*oauth2.Config, error) {
 	return g.oauth2ConfigFromEndpoint(ctx, endpoint), nil
 }
 
-func (g *ProviderFacebook) Claims(ctx context.Context, exchange *oauth2.Token, query url.Values) (*Claims, error) {
+func (g *ProviderFacebook) Claims(ctx context.Context, exchange *oauth2.Token, _ url.Values) (*Claims, error) {
 	o, err := g.OAuth2(ctx)
 	if err != nil {
-		return nil, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("%s", err))
+		return nil, err
 	}
 
 	appSecretProof := g.generateAppSecretProof(ctx, exchange)
 	client := g.reg.HTTPClient(ctx, httpx.ResilientClientWithClient(o.Client(ctx, exchange)))
-	u, err := url.Parse(fmt.Sprintf("https://graph.facebook.com/me?fields=id,name,first_name,last_name,middle_name,email,picture,birthday,gender&appsecret_proof=%s", appSecretProof))
+	u, err := url.Parse("https://graph.facebook.com/me?fields=id,name,first_name,last_name,middle_name,email,picture,birthday,gender&appsecret_proof=" + appSecretProof)
 	if err != nil {
 		return nil, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("%s", err))
 	}

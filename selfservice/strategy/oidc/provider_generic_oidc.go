@@ -7,6 +7,8 @@ import (
 	"context"
 	"net/url"
 
+	"github.com/ory/kratos/x"
+
 	"github.com/pkg/errors"
 	"golang.org/x/oauth2"
 
@@ -42,7 +44,7 @@ func (g *ProviderGenericOIDC) provider(ctx context.Context) (*gooidc.Provider, e
 	if g.p == nil {
 		p, err := gooidc.NewProvider(context.WithValue(ctx, oauth2.HTTPClient, g.reg.HTTPClient(ctx).HTTPClient), g.config.IssuerURL)
 		if err != nil {
-			return nil, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("Unable to initialize OpenID Connect Provider: %s", err))
+			return nil, errors.WithStack(x.ErrMisconfiguration.WithReasonf("Unable to initialize OpenID Connect Provider: %s", err))
 		}
 		g.p = p
 	}

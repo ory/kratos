@@ -284,7 +284,7 @@ func (e *WebHook) execute(ctx context.Context, data *templateContext) error {
 		tracer         = trace.SpanFromContext(ctx).TracerProvider().Tracer("kratos-webhooks")
 	)
 	if ignoreResponse && (parseResponse || canInterrupt) {
-		return errors.WithStack(herodot.ErrInternalServerError.WithReasonf("A webhook is configured to ignore the response but also to parse the response. This is not possible."))
+		return errors.WithStack(x.ErrMisconfiguration.WithReasonf("A webhook is configured to ignore the response but also to parse the response. This is not possible."))
 	}
 
 	makeRequest := func() (finalErr error) {

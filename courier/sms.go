@@ -8,9 +8,9 @@ import (
 	"encoding/json"
 	"net/http"
 
-	"github.com/pkg/errors"
+	"github.com/ory/kratos/x"
 
-	"github.com/ory/herodot"
+	"github.com/pkg/errors"
 
 	"github.com/gofrs/uuid"
 
@@ -70,7 +70,7 @@ func (c *courier) QueueSMS(ctx context.Context, t SMSTemplate) (uuid.UUID, error
 
 func (c *courier) dispatchSMS(ctx context.Context, msg Message) error {
 	if !c.deps.CourierConfig().CourierSMSEnabled(ctx) {
-		return errors.WithStack(herodot.ErrInternalServerError.WithReasonf("Courier tried to deliver an sms but courier.sms.enabled is set to false!"))
+		return errors.WithStack(x.ErrMisconfiguration.WithReasonf("Courier tried to deliver an sms but courier.sms.enabled is set to false!"))
 	}
 
 	tmpl, err := c.smsClient.NewTemplateFromMessage(c.deps, msg)

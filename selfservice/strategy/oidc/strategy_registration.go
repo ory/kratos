@@ -9,8 +9,6 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/ory/herodot"
-
 	"github.com/ory/x/fetcher"
 
 	"github.com/tidwall/gjson"
@@ -327,7 +325,7 @@ func (s *Strategy) createIdentity(w http.ResponseWriter, r *http.Request, a *reg
 func (s *Strategy) setTraits(w http.ResponseWriter, r *http.Request, a *registration.Flow, claims *Claims, provider Provider, container *authCodeContainer, evaluated string, i *identity.Identity) error {
 	jsonTraits := gjson.Get(evaluated, "identity.traits")
 	if !jsonTraits.IsObject() {
-		return errors.WithStack(herodot.ErrInternalServerError.WithReasonf("OpenID Connect Jsonnet mapper did not return an object for key identity.traits. Please check your Jsonnet code!"))
+		return errors.WithStack(x.ErrMisconfiguration.WithReasonf("OpenID Connect Jsonnet mapper did not return an object for key identity.traits. Please check your Jsonnet code!"))
 	}
 
 	traits, err := merge(container.Traits, json.RawMessage(jsonTraits.Raw))
@@ -353,7 +351,7 @@ func (s *Strategy) setMetadata(evaluated string, i *identity.Identity, m Metadat
 
 	metadata := gjson.Get(evaluated, string(m))
 	if metadata.Exists() && !metadata.IsObject() {
-		return errors.WithStack(herodot.ErrInternalServerError.WithReasonf("OpenID Connect Jsonnet mapper did not return an object for key %s. Please check your Jsonnet code!", m))
+		return errors.WithStack(x.ErrMisconfiguration.WithReasonf("OpenID Connect Jsonnet mapper did not return an object for key %s. Please check your Jsonnet code!", m))
 	}
 
 	switch m {

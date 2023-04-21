@@ -52,7 +52,7 @@ func (h *Handler) RegisterPublicRoutes(public *x.RouterPublic) {
 }
 
 func (h *Handler) RegisterAdminRoutes(public *x.RouterAdmin) {
-	public.GET(RouteGet, x.RedirectToPublicRoute(h.r))
+	public.GET(RouteGet, x.RedirectToAdminRoute(h.r.Config()))
 }
 
 // swagger:parameters getFlowError

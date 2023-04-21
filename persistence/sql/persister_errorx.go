@@ -82,7 +82,7 @@ func (p *Persister) ClearErrorContainers(ctx context.Context, olderThan time.Dur
 	return sqlcon.HandleError(err)
 }
 
-func (p *Persister) encodeSelfServiceErrors(ctx context.Context, e error) ([]byte, error) {
+func (p *Persister) encodeSelfServiceErrors(_ context.Context, e error) ([]byte, error) {
 	if e == nil {
 		return nil, errors.WithStack(herodot.ErrInternalServerError.WithDebug("A nil error was passed to the error manager which is most likely a code bug."))
 	}
