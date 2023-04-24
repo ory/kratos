@@ -428,6 +428,7 @@ func (h *Handler) createBrowserLoginFlow(w http.ResponseWriter, r *http.Request,
 				h.d.SelfServiceErrorManager().Forward(r.Context(), w, r, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("Unable to parse URL: %s", rt)))
 				return
 			}
+			err = flow.NewBrowserLocationChangeRequiredError(returnTo.String())
 			x.AcceptToRedirectOrJSON(w, r, h.d.Writer(), err, returnTo.String())
 			return
 		}
