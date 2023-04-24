@@ -2882,13 +2882,18 @@ func (a *FrontendApiService) DisableMySessionExecute(r FrontendApiApiDisableMySe
 }
 
 type FrontendApiApiExchangeSessionTokenRequest struct {
-	ctx        context.Context
-	ApiService FrontendApi
-	code       *string
+	ctx          context.Context
+	ApiService   FrontendApi
+	initCode     *string
+	returnToCode *string
 }
 
-func (r FrontendApiApiExchangeSessionTokenRequest) Code(code string) FrontendApiApiExchangeSessionTokenRequest {
-	r.code = &code
+func (r FrontendApiApiExchangeSessionTokenRequest) InitCode(initCode string) FrontendApiApiExchangeSessionTokenRequest {
+	r.initCode = &initCode
+	return r
+}
+func (r FrontendApiApiExchangeSessionTokenRequest) ReturnToCode(returnToCode string) FrontendApiApiExchangeSessionTokenRequest {
+	r.returnToCode = &returnToCode
 	return r
 }
 
@@ -2932,11 +2937,15 @@ func (a *FrontendApiService) ExchangeSessionTokenExecute(r FrontendApiApiExchang
 	localVarHeaderParams := make(map[string]string)
 	localVarQueryParams := url.Values{}
 	localVarFormParams := url.Values{}
-	if r.code == nil {
-		return localVarReturnValue, nil, reportError("code is required and must be specified")
+	if r.initCode == nil {
+		return localVarReturnValue, nil, reportError("initCode is required and must be specified")
+	}
+	if r.returnToCode == nil {
+		return localVarReturnValue, nil, reportError("returnToCode is required and must be specified")
 	}
 
-	localVarQueryParams.Add("code", parameterToString(*r.code, ""))
+	localVarQueryParams.Add("init_code", parameterToString(*r.initCode, ""))
+	localVarQueryParams.Add("return_to_code", parameterToString(*r.returnToCode, ""))
 	// to determine the Content-Type header
 	localVarHTTPContentTypes := []string{}
 

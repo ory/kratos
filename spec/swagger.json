@@ -1354,63 +1354,6 @@
         }
       }
     },
-    "/self-service/exchange-code-for-session-token": {
-      "get": {
-        "produces": [
-          "application/json"
-        ],
-        "schemes": [
-          "http",
-          "https"
-        ],
-        "tags": [
-          "frontend"
-        ],
-        "summary": "Exchange Session Token",
-        "operationId": "exchangeSessionToken",
-        "parameters": [
-          {
-            "type": "string",
-            "description": "The Session Token Exchange Code",
-            "name": "code",
-            "in": "query",
-            "required": true
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "successfulNativeLogin",
-            "schema": {
-              "$ref": "#/definitions/successfulNativeLogin"
-            }
-          },
-          "403": {
-            "description": "errorGeneric",
-            "schema": {
-              "$ref": "#/definitions/errorGeneric"
-            }
-          },
-          "404": {
-            "description": "errorGeneric",
-            "schema": {
-              "$ref": "#/definitions/errorGeneric"
-            }
-          },
-          "410": {
-            "description": "errorGeneric",
-            "schema": {
-              "$ref": "#/definitions/errorGeneric"
-            }
-          },
-          "default": {
-            "description": "errorGeneric",
-            "schema": {
-              "$ref": "#/definitions/errorGeneric"
-            }
-          }
-        }
-      }
-    },
     "/self-service/login": {
       "post": {
         "description": ":::info\n\nThis endpoint is EXPERIMENTAL and subject to potential breaking changes in the future.\n\n:::\n\nUse this endpoint to complete a login flow. This endpoint\nbehaves differently for API and browser flows.\n\nAPI flows expect `application/json` to be sent in the body and responds with\nHTTP 200 and a application/json body with the session token on success;\nHTTP 410 if the original flow expired with the appropriate error messages set and optionally a `use_flow_id` parameter in the body;\nHTTP 400 on form validation errors.\n\nBrowser flows expect a Content-Type of `application/x-www-form-urlencoded` or `application/json` to be sent in the body and respond with\na HTTP 303 redirect to the post/after login URL or the `return_to` value if it was set and if the login succeeded;\na HTTP 303 redirect to the login UI URL with the flow ID containing the validation errors otherwise.\n\nBrowser flows with an accept header of `application/json` will not redirect but instead respond with\nHTTP 200 and a application/json body with the signed in identity and a `Set-Cookie` header on success;\nHTTP 303 redirect to a fresh login flow if the original flow expired with the appropriate error messages set;\nHTTP 400 on form validation errors.\n\nIf this endpoint is called with `Accept: application/json` in the header, the response contains the flow without a redirect. In the\ncase of an error, the `error.id` of the JSON response body can be one of:\n\n`session_already_available`: The user is already signed in.\n`security_csrf_violation`: Unable to fetch the flow because a CSRF violation occurred.\n`security_identity_mismatch`: The requested `?return_to` address is not allowed to be used. Adjust this in the configuration!\n`browser_location_change_required`: Usually sent when an AJAX request indicates that the browser needs to open a specific URL.\nMost likely used in Social Sign In flows.\n\nMore information can be found at [Ory Kratos User Login](https://www.ory.sh/docs/kratos/self-service/flows/user-login) and [User Registration Documentation](https://www.ory.sh/docs/kratos/self-service/flows/user-registration).",
@@ -2908,6 +2851,70 @@
             }
           },
           "401": {
+            "description": "errorGeneric",
+            "schema": {
+              "$ref": "#/definitions/errorGeneric"
+            }
+          },
+          "default": {
+            "description": "errorGeneric",
+            "schema": {
+              "$ref": "#/definitions/errorGeneric"
+            }
+          }
+        }
+      }
+    },
+    "/sessions/token-exchange": {
+      "get": {
+        "produces": [
+          "application/json"
+        ],
+        "schemes": [
+          "http",
+          "https"
+        ],
+        "tags": [
+          "frontend"
+        ],
+        "summary": "Exchange Session Token",
+        "operationId": "exchangeSessionToken",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "The part of the code return when initializing the flow.",
+            "name": "init_code",
+            "in": "query",
+            "required": true
+          },
+          {
+            "type": "string",
+            "description": "The part of the code returned by the return_to URL.",
+            "name": "return_to_code",
+            "in": "query",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "successfulNativeLogin",
+            "schema": {
+              "$ref": "#/definitions/successfulNativeLogin"
+            }
+          },
+          "403": {
+            "description": "errorGeneric",
+            "schema": {
+              "$ref": "#/definitions/errorGeneric"
+            }
+          },
+          "404": {
+            "description": "errorGeneric",
+            "schema": {
+              "$ref": "#/definitions/errorGeneric"
+            }
+          },
+          "410": {
             "description": "errorGeneric",
             "schema": {
               "$ref": "#/definitions/errorGeneric"

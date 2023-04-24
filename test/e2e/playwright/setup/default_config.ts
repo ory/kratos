@@ -4,7 +4,7 @@
 import { OryKratosConfiguration } from "../../cypress/support/config"
 
 export const default_config: OryKratosConfiguration = {
-  dsn: process.env["DSN"],
+  dsn: "",
   identity: {
     schemas: [
       {
