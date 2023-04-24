@@ -656,7 +656,7 @@ func TestStrategy(t *testing.T) {
 		webViewHTTPClient := &http.Client{
 			Jar: cj,
 			CheckRedirect: func(req *http.Request, via []*http.Request) error {
-				if strings.HasSuffix(req.URL.Path, "/error") {
+				if strings.HasSuffix(req.URL.Path, "/kerr") {
 					assert.Equal(t, strconv.Itoa(int(text.ErrorValidationDuplicateCredentials)),
 						req.URL.Query().Get("code"), "%s", req.URL.String())
 					assert.Contains(t, req.URL.Query().Get("message"),

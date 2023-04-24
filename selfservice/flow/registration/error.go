@@ -146,7 +146,7 @@ func (s *ErrorHandler) WriteFlowError(
 				query.Set("message", f.UI.Messages[0].Text)
 				returnTo.RawQuery = query.Encode()
 			}
-			returnTo.Path = path.Join(returnTo.Path, "error")
+			returnTo.Path = path.Join(returnTo.Path, "kerr")
 			redirectLocation = returnTo.String()
 
 		} else {
