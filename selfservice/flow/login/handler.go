@@ -4,7 +4,7 @@
 package login
 
 import (
-	"context"
+	_ "embed"
 	"encoding/json"
 	"fmt"
 	"github.com/tidwall/gjson"
@@ -40,6 +40,9 @@ import (
 	"github.com/ory/kratos/session"
 	"github.com/ory/kratos/x"
 )
+
+//go:embed .schema/link_credentials.schema.json
+var linkCredentialsSchema []byte
 
 const (
 	RouteInitBrowserFlow = "/self-service/login/browser"
@@ -750,7 +753,7 @@ continueLogin:
 			sess = session.NewInactiveSession()
 		}
 
-		if err := h.linkCredentials(r.Context(), sess, interim, f); err != nil {
+		if err := h.linkCredentials(r, sess, interim, f); err != nil {
 			h.d.LoginFlowErrorHandler().WriteFlowError(w, r, f, group, err)
 			return
 		}
@@ -777,14 +780,41 @@ continueLogin:
 	}
 }
 
-func (h *Handler) linkCredentials(ctx context.Context, s *session.Session, i *identity.Identity, f *Flow) error {
-	internalContextLinkCredentials := gjson.GetBytes(f.InternalContext, flow.InternalContextLinkCredentialsPath)
-	if internalContextLinkCredentials.IsObject() {
-		var linkCredentials flow.RegistrationDuplicateCredentials
-		if err := json.Unmarshal([]byte(internalContextLinkCredentials.Raw), &linkCredentials); err != nil {
+func (h *Handler) linkCredentials(r *http.Request, s *session.Session, i *identity.Identity, f *Flow) error {
+	var lc flow.RegistrationDuplicateCredentials
+
+	var p struct {
+		FlowID string `json:"linkCredentialsFlow" form:"linkCredentialsFlow"`
+	}
+
+	if err := h.hd.Decode(r, &p,
+		decoderx.HTTPDecoderSetValidatePayloads(true),
+		decoderx.MustHTTPRawJSONSchemaCompiler(linkCredentialsSchema),
+		decoderx.HTTPDecoderJSONFollowsFormFormat()); err != nil {
+		return err
+	}
+
+	if p.FlowID != "" {
+		linkCredentialsFlowID, innerErr := uuid.FromString(p.FlowID)
+		if innerErr != nil {
+			return innerErr
+		}
+		linkCredentialsFlow, innerErr := h.d.LoginFlowPersister().GetLoginFlow(r.Context(), linkCredentialsFlowID)
+		innerErr = h.getInternalContextLinkCredentials(linkCredentialsFlow, flow.InternalContextDuplicateCredentialsPath, &lc)
+		if innerErr != nil {
+			return innerErr
+		}
+	}
+
+	if lc.CredentialsType == "" {
+		err := h.getInternalContextLinkCredentials(f, flow.InternalContextLinkCredentialsPath, &lc)
+		if err != nil {
 			return err
 		}
-		strategy, err := h.d.AllLoginStrategies().Strategy(linkCredentials.CredentialsType)
+	}
+
+	if lc.CredentialsType != "" {
+		strategy, err := h.d.AllLoginStrategies().Strategy(lc.CredentialsType)
 		if err != nil {
 			return err
 		}
@@ -794,13 +824,23 @@ func (h *Handler) linkCredentials(ctx context.Context, s *session.Session, i *id
 			return errors.New(fmt.Sprintf("Strategy is not linkable: %T", linkableStrategy))
 		}
 
-		if err := linkableStrategy.Link(ctx, i, linkCredentials.CredentialsConfig); err != nil {
+		if err := linkableStrategy.Link(r.Context(), i, lc.CredentialsConfig); err != nil {
 			return err
 		}
 
-		method := strategy.CompletedAuthenticationMethod(ctx)
+		method := strategy.CompletedAuthenticationMethod(r.Context())
 		s.CompletedLoginFor(method.Method, method.AAL)
 	}
 
+	return nil
+}
+
+func (h *Handler) getInternalContextLinkCredentials(f *Flow, internalContextPath string, lc *flow.RegistrationDuplicateCredentials) error {
+	internalContextLinkCredentials := gjson.GetBytes(f.InternalContext, internalContextPath)
+	if internalContextLinkCredentials.IsObject() {
+		if err := json.Unmarshal([]byte(internalContextLinkCredentials.Raw), lc); err != nil {
+			return err
+		}
+	}
 	return nil
 }
