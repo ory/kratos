@@ -11,10 +11,10 @@ dotenv.config({ path: "playwright/playwright.env" })
  */
 export default defineConfig({
   testDir: "./playwright/tests",
-  fullyParallel: true,
+  fullyParallel: false,
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 2 : 1,
-  workers: 3,
+  workers: 1,
   reporter: process.env.CI ? [["github"], ["html"], ["list"]] : "html",
 
   globalSetup: "./playwright/setup/global_setup.ts",
