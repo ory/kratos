@@ -122,8 +122,6 @@ func (h *Handler) NewRegistrationFlow(w http.ResponseWriter, r *http.Request, ft
 	}
 
 	if ft == flow.TypeAPI && r.URL.Query().Get("return_session_token_exchange_code") == "true" {
-		// Panicing here is ok since it will return a 500 to the user, which is accurate for when
-		// we can't generate a random string.
 		e, err := h.d.SessionTokenExchangePersister().CreateSessionTokenExchanger(r.Context(), f.ID)
 		if err != nil {
 			return nil, errors.WithStack(herodot.ErrInternalServerError.WithWrap(err))

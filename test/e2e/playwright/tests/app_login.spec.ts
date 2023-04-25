@@ -28,7 +28,7 @@ async function testRegistrationOrLogin(page: Page, username: string) {
   await page.getByText(/sign (up|in) with ory/i).click()
   const popup = await popupPromise
 
-  await performOidcLogin(popup, "registration@example.com")
+  await performOidcLogin(popup, username)
 
   await page.waitForURL("Home")
   expect(popup.isClosed()).toBeTruthy()
