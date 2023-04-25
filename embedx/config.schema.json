@@ -1901,6 +1901,12 @@
               "Authorization": "Bearer some-token"
             }
           ]
+        },
+        "return_to_enabled": {
+          "title":"Override `return_to` in OAuth2 flows",
+          "type":"boolean",
+          "default":false,
+          "description":"Override the return_to query paramter in OAuth flows back to the Provider Request URL"
         }
       },
       "additionalProperties": false
