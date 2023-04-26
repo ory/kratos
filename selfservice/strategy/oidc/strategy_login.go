@@ -41,10 +41,6 @@ func (s *Strategy) RegisterLoginRoutes(r *x.RouterPublic) {
 }
 
 func (s *Strategy) PopulateLoginMethod(r *http.Request, requestedAAL identity.AuthenticatorAssuranceLevel, l *login.Flow) error {
-	if l.Type != flow.TypeBrowser {
-		return nil
-	}
-
 	// This strategy can only solve AAL1
 	if requestedAAL > identity.AuthenticatorAssuranceLevel1 {
 		return nil
@@ -108,8 +104,12 @@ func (s *Strategy) processLogin(w http.ResponseWriter, r *http.Request, a *login
 				opts = append(opts, registration.WithFlowReturnTo(a.ReturnTo))
 			}
 
-			// This flow only works for browsers anyways.
-			aa, err := s.d.RegistrationHandler().NewRegistrationFlow(w, r, flow.TypeBrowser, opts...)
+			aa, err := s.d.RegistrationHandler().NewRegistrationFlow(w, r, a.Type, opts...)
+			if err != nil {
+				return nil, s.handleError(w, r, a, provider.Config().ID, nil, err)
+			}
+
+			err = s.d.SessionTokenExchangePersister().MoveToNewFlow(r.Context(), a.ID, aa.ID)
 			if err != nil {
 				return nil, s.handleError(w, r, a, provider.Config().ID, nil, err)
 			}
@@ -182,14 +182,18 @@ func (s *Strategy) Login(w http.ResponseWriter, r *http.Request, f *login.Flow, 
 		return nil, s.handleError(w, r, f, pid, nil, err)
 	}
 
-	if s.alreadyAuthenticated(w, r, req) {
-		return
+	if authenticated, err := s.alreadyAuthenticated(w, r, req); err != nil {
+		return nil, s.handleError(w, r, f, pid, nil, err)
+	} else if authenticated {
+		return i, nil
 	}
-
 	state := generateState(f.ID.String())
+	if code, hasCode, _ := s.d.SessionTokenExchangePersister().CodeForFlow(r.Context(), f.ID); hasCode {
+		state.setCode(code.InitCode)
+	}
 	if err := s.d.ContinuityManager().Pause(r.Context(), w, r, sessionName,
 		continuity.WithPayload(&authCodeContainer{
-			State:  state,
+			State:  state.String(),
 			FlowID: f.ID.String(),
 			Traits: p.Traits,
 		}),
@@ -207,7 +211,7 @@ func (s *Strategy) Login(w http.ResponseWriter, r *http.Request, f *login.Flow, 
 		return nil, err
 	}
 
-	codeURL := c.AuthCodeURL(state, append(provider.AuthCodeURLOptions(req), UpstreamParameters(provider, up)...)...)
+	codeURL := c.AuthCodeURL(state.String(), append(provider.AuthCodeURLOptions(req), UpstreamParameters(provider, up)...)...)
 	if x.IsJSONRequest(r) {
 		s.d.Writer().WriteError(w, r, flow.NewBrowserLocationChangeRequiredError(codeURL))
 	} else {

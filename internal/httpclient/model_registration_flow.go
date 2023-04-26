@@ -31,6 +31,8 @@ type RegistrationFlow struct {
 	RequestUrl string `json:"request_url"`
 	// ReturnTo contains the requested return_to URL.
 	ReturnTo *string `json:"return_to,omitempty"`
+	// SessionTokenExchangeCode holds the secret code that the client can use to retrieve a session token after the flow has been completed. This is only set if the client has requested a session token exchange code, and if the flow is of type \"api\", and only on creating the flow.
+	SessionTokenExchangeCode *string `json:"session_token_exchange_code,omitempty"`
 	// TransientPayload is used to pass data from the registration to a webhook
 	TransientPayload map[string]interface{} `json:"transient_payload,omitempty"`
 	// The flow type can either be `api` or `browser`.
@@ -296,6 +298,38 @@ func (o *RegistrationFlow) SetReturnTo(v string) {
 	o.ReturnTo = &v
 }
 
+// GetSessionTokenExchangeCode returns the SessionTokenExchangeCode field value if set, zero value otherwise.
+func (o *RegistrationFlow) GetSessionTokenExchangeCode() string {
+	if o == nil || o.SessionTokenExchangeCode == nil {
+		var ret string
+		return ret
+	}
+	return *o.SessionTokenExchangeCode
+}
+
+// GetSessionTokenExchangeCodeOk returns a tuple with the SessionTokenExchangeCode field value if set, nil otherwise
+// and a boolean to check if the value has been set.
+func (o *RegistrationFlow) GetSessionTokenExchangeCodeOk() (*string, bool) {
+	if o == nil || o.SessionTokenExchangeCode == nil {
+		return nil, false
+	}
+	return o.SessionTokenExchangeCode, true
+}
+
+// HasSessionTokenExchangeCode returns a boolean if a field has been set.
+func (o *RegistrationFlow) HasSessionTokenExchangeCode() bool {
+	if o != nil && o.SessionTokenExchangeCode != nil {
+		return true
+	}
+
+	return false
+}
+
+// SetSessionTokenExchangeCode gets a reference to the given string and assigns it to the SessionTokenExchangeCode field.
+func (o *RegistrationFlow) SetSessionTokenExchangeCode(v string) {
+	o.SessionTokenExchangeCode = &v
+}
+
 // GetTransientPayload returns the TransientPayload field value if set, zero value otherwise.
 func (o *RegistrationFlow) GetTransientPayload() map[string]interface{} {
 	if o == nil || o.TransientPayload == nil {
@@ -401,6 +435,9 @@ func (o RegistrationFlow) MarshalJSON() ([]byte, error) {
 	}
 	if o.ReturnTo != nil {
 		toSerialize["return_to"] = o.ReturnTo
+	}
+	if o.SessionTokenExchangeCode != nil {
+		toSerialize["session_token_exchange_code"] = o.SessionTokenExchangeCode
 	}
 	if o.TransientPayload != nil {
 		toSerialize["transient_payload"] = o.TransientPayload

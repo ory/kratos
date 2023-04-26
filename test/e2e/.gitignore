@@ -1,0 +1,6 @@
+node_modules/
+/test-results/
+/playwright-report/
+/playwright/.cache/
+/playwright/playwright.env
+/playwright/kratos.config.json

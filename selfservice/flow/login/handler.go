@@ -12,8 +12,8 @@ import (
 
 	"github.com/ory/herodot"
 	hydraclientgo "github.com/ory/hydra-client-go/v2"
-
 	"github.com/ory/kratos/hydra"
+	"github.com/ory/kratos/selfservice/sessiontokenexchange"
 	"github.com/ory/kratos/text"
 	"github.com/ory/x/stringsx"
 
@@ -27,13 +27,12 @@ import (
 	"github.com/julienschmidt/httprouter"
 	"github.com/pkg/errors"
 
-	"github.com/ory/x/urlx"
-
 	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/selfservice/errorx"
 	"github.com/ory/kratos/selfservice/flow"
 	"github.com/ory/kratos/session"
 	"github.com/ory/kratos/x"
+	"github.com/ory/x/urlx"
 )
 
 const (
@@ -43,6 +42,8 @@ const (
 	RouteGetFlow = "/self-service/login/flows"
 
 	RouteSubmitFlow = "/self-service/login"
+
+	RouteExchangeSessionToken = "/self-service/login/exchange-session-token" //nolint:gosec
 )
 
 type (
@@ -59,6 +60,7 @@ type (
 		x.CSRFProvider
 		config.Provider
 		ErrorHandlerProvider
+		sessiontokenexchange.PersistenceProvider
 	}
 	HandlerProvider interface {
 		LoginHandler() *Handler
@@ -131,6 +133,14 @@ func (h *Handler) NewLoginFlow(w http.ResponseWriter, r *http.Request, ft flow.T
 		f.RequestedAAL = identity.AuthenticatorAssuranceLevel2
 	default:
 		return nil, nil, errors.WithStack(herodot.ErrBadRequest.WithReasonf("Unable to parse AuthenticationMethod Assurance Level (AAL): %s", cs.ToUnknownCaseErr()))
+	}
+
+	if ft == flow.TypeAPI && r.URL.Query().Get("return_session_token_exchange_code") == "true" {
+		e, err := h.d.SessionTokenExchangePersister().CreateSessionTokenExchanger(r.Context(), f.ID)
+		if err != nil {
+			return nil, nil, errors.WithStack(herodot.ErrInternalServerError.WithWrap(err))
+		}
+		f.SessionTokenExchangeCode = e.InitCode
 	}
 
 	// We assume an error means the user has no session
@@ -250,6 +260,17 @@ type createNativeLoginFlow struct {
 	//
 	// in: header
 	SessionToken string `json:"X-Session-Token"`
+
+	// EnableSessionTokenExchangeCode requests the login flow to include a code that can be used to retrieve the session token
+	// after the login flow has been completed.
+	//
+	// in: query
+	EnableSessionTokenExchangeCode bool `json:"return_session_token_exchange_code"`
+
+	// The URL to return the browser to after the flow was completed.
+	//
+	// in: query
+	ReturnTo string `json:"return_to"`
 }
 
 // swagger:route GET /self-service/login/api frontend createNativeLoginFlow

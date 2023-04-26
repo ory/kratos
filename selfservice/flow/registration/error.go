@@ -9,6 +9,7 @@ import (
 	"go.opentelemetry.io/otel/trace"
 
 	"github.com/ory/kratos/schema"
+	"github.com/ory/kratos/selfservice/sessiontokenexchange"
 	"github.com/ory/kratos/ui/node"
 	"github.com/ory/kratos/x/events"
 
@@ -38,6 +39,7 @@ type (
 		x.LoggingProvider
 		config.Provider
 
+		sessiontokenexchange.PersistenceProvider
 		FlowPersistenceProvider
 		HandlerProvider
 	}
@@ -132,6 +134,10 @@ func (s *ErrorHandler) WriteFlowError(
 
 	if f.Type == flow.TypeBrowser && !x.IsJSONRequest(r) {
 		http.Redirect(w, r, f.AppendTo(s.d.Config().SelfServiceFlowRegistrationUI(r.Context())).String(), http.StatusFound)
+		return
+	}
+	if _, hasCode, _ := s.d.SessionTokenExchangePersister().CodeForFlow(r.Context(), f.ID); f.Type == flow.TypeAPI && hasCode {
+		http.Redirect(w, r, f.ReturnTo, http.StatusSeeOther)
 		return
 	}
 

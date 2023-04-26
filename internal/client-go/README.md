@@ -94,6 +94,7 @@ Class | Method | HTTP request | Description
 *FrontendApi* | [**CreateNativeVerificationFlow**](docs/FrontendApi.md#createnativeverificationflow) | **Get** /self-service/verification/api | Create Verification Flow for Native Apps
 *FrontendApi* | [**DisableMyOtherSessions**](docs/FrontendApi.md#disablemyothersessions) | **Delete** /sessions | Disable my other sessions
 *FrontendApi* | [**DisableMySession**](docs/FrontendApi.md#disablemysession) | **Delete** /sessions/{id} | Disable one of my sessions
+*FrontendApi* | [**ExchangeSessionToken**](docs/FrontendApi.md#exchangesessiontoken) | **Get** /sessions/token-exchange | Exchange Session Token
 *FrontendApi* | [**GetFlowError**](docs/FrontendApi.md#getflowerror) | **Get** /self-service/errors | Get User-Flow Errors
 *FrontendApi* | [**GetLoginFlow**](docs/FrontendApi.md#getloginflow) | **Get** /self-service/login/flows | Get Login Flow
 *FrontendApi* | [**GetRecoveryFlow**](docs/FrontendApi.md#getrecoveryflow) | **Get** /self-service/recovery/flows | Get Recovery Flow
@@ -198,6 +199,7 @@ Class | Method | HTTP request | Description
  - [SessionDevice](docs/SessionDevice.md)
  - [SettingsFlow](docs/SettingsFlow.md)
  - [SettingsFlowState](docs/SettingsFlowState.md)
+ - [SuccessfulCodeExchangeResponse](docs/SuccessfulCodeExchangeResponse.md)
  - [SuccessfulNativeLogin](docs/SuccessfulNativeLogin.md)
  - [SuccessfulNativeRegistration](docs/SuccessfulNativeRegistration.md)
  - [TokenPagination](docs/TokenPagination.md)
