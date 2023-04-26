@@ -43,7 +43,7 @@ context("OpenID Provider", () => {
     // kratos login ui
     cy.get("[name=identifier]").type(email)
     cy.get("[name=password]").type(password)
-    cy.get("[type=submit]").click()
+    cy.get("[type='submit'][value='password']").click()
 
     // consent ui
     cy.get("#openid").click()
@@ -81,7 +81,7 @@ context("OpenID Provider", () => {
     // kratos login ui
     cy.get("[name=identifier]").type(email)
     cy.get("[name=password]").type(password)
-    cy.get("[type=submit]").click()
+    cy.get("[type='submit'][value='password']").click()
 
     // consent ui
     cy.get("#accept").click()
@@ -113,8 +113,7 @@ context("OpenID Provider", () => {
       // kratos login ui
       cy.get("[name=identifier]").type(email)
       cy.get("[name=password]").type(password)
-      cy.get("[type=submit]").click()
-
+      cy.get("[type='submit'][value='password']").click()
       // consent ui
       cy.get("#accept").click()
     }
@@ -213,12 +212,12 @@ context("OpenID Provider - change between flows", () => {
     cy.get("[name='traits.email']").type(identity.email)
     cy.get("[name='password']").type(identity.password)
     cy.get("[name='traits.website']").type(identity.fields["traits.website"])
-    cy.get("[type='submit']").click()
+    cy.get("[type='submit'][value='password']").click()
 
     doConsent()
   })
 
-  it("switch to recovery flow", () => {
+  it("switch to recovery flow with password reset", () => {
     cy.deleteMail()
     cy.longRecoveryLifespan()
     cy.longLinkLifespan()
@@ -226,6 +225,7 @@ context("OpenID Provider - change between flows", () => {
     cy.enableRecovery()
     cy.useRecoveryStrategy("code")
     cy.notifyUnknownRecipients("recovery", false)
+    cy.longPrivilegedSessionTime()
 
     const identity = gen.identityWithWebsite()
     cy.registerApi(identity)
@@ -262,5 +262,74 @@ context("OpenID Provider - change between flows", () => {
 
     // we should now end up on the consent screen
     doConsent(["code_recovery", "password"])
+  })
+
+  it("switch to recovery flow with oidc link", () => {
+    cy.deleteMail()
+    cy.longRecoveryLifespan()
+    cy.longLinkLifespan()
+    cy.enableRecovery()
+    cy.useRecoveryStrategy("code")
+    cy.notifyUnknownRecipients("recovery", false)
+    cy.longPrivilegedSessionTime()
+
+    const fakeOidcFlow = (identity: identityWithWebsite) => {
+      cy.get("input[name='username']").type(identity.email)
+      cy.get("button[name='action'][value='accept']").click()
+      // consent screen for the 'fake' oidc provider
+      cy.url().should("contain", "/consent")
+      // consent ui for 3rd party integration to Kratos (sign in with Google)
+      // it will look the same as Hydra consent ui since we are reusing it as
+      // a 'fake' oidc provider
+      cy.get("#openid").click()
+      cy.get("#offline").click()
+      cy.get("#accept").click()
+    }
+
+    const identity = gen.identityWithWebsite()
+    cy.registerApi(identity)
+
+    const url = oauth2.getDefaultAuthorizeURL(client)
+    cy.visit(url)
+
+    cy.get("[href*='/recovery']").click()
+    cy.get("input[name='email']").type(identity.email)
+    cy.get("button[value='code']").click()
+
+    cy.get('[data-testid="ui/message/1060003"]').should(
+      "have.text",
+      "An email containing a recovery code has been sent to the email address you provided. If you have not received an email, check the spelling of the address and make sure to use the address you registered with.",
+    )
+
+    cy.recoveryEmailWithCode({ expect: { email: identity.email } })
+    cy.get("button[value='code']").click()
+
+    cy.get('[data-testid="ui/message/1060001"]', { timeout: 30000 }).should(
+      "contain.text",
+      "You successfully recovered your account. ",
+    )
+
+    cy.getSession()
+    cy.location("pathname").should("eq", "/settings")
+
+    // (OAauth2+Kratos provider '/settings' -> Fake OAuth2 '/login')
+
+    // we are reusing Hydra as an OIDC provider for Kratos and doing an OIDC account
+    // linking process here
+    // this is to check if the user can recover their account through OIDC linking
+    // and still be redirected back to the original request
+    cy.get("button[value='google']").click()
+    cy.location("pathname").should("eq", "/login")
+    fakeOidcFlow(identity)
+
+    // it should return us back to the initial OAauth2 login flow
+    // sign in through the 'fake' oidc provider
+    cy.get("button[type='submit'][value='google']").click()
+
+    // login again at the 'fake' oidc provider
+    fakeOidcFlow(identity)
+
+    // complete the consent screen
+    doConsent(["oidc"])
   })
 })
