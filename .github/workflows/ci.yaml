@@ -264,6 +264,7 @@ jobs:
       - run: |
           npm ci
           cd test/e2e; npm ci
+          npx playwright install --with-deps
           npm i -g expo-cli
         name: Install node deps
       - run: |
@@ -273,7 +274,7 @@ jobs:
         uses: actions/setup-go@v4
         with:
           go-version: "1.19"
-        run: go build -tags sqlite,json1 .
+      - run: go build -tags sqlite,json1 .
 
       - name: Install selfservice-ui-react-native
         uses: actions/checkout@v3
