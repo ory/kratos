@@ -192,6 +192,12 @@ func (p *Persister) CleanupDatabase(ctx context.Context, wait time.Duration, old
 	}
 	time.Sleep(wait)
 
+	p.r.Logger().Println("Cleaning up expired session token exchangers")
+	if err := p.DeleteExpiredExchangers(ctx, currentTime, batchSize); err != nil {
+		return err
+	}
+	time.Sleep(wait)
+
 	p.r.Logger().Println("Successfully cleaned up the latest batch of the SQL database! " +
 		"This should be re-run periodically, to be sure that all expired data is purged.")
 	return nil
