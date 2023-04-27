@@ -34,12 +34,12 @@ export type RequiredAuthenticatorAssuranceLevel = "aal1" | "highest_available"
  */
 export type WebHookConfiguration =
   | {
-    [k: string]: unknown | undefined
-  }
+      [k: string]: unknown | undefined
+    }
   | {
-    can_interrupt?: false
-    [k: string]: unknown | undefined
-  }
+      can_interrupt?: false
+      [k: string]: unknown | undefined
+    }
 export type SelfServiceHooks = SelfServiceWebHook[]
 /**
  * If set to true will enable [User Registration](https://www.ory.sh/kratos/docs/self-service/flows/user-registration/).
@@ -1032,7 +1032,7 @@ export interface OryTracingConfig {
         | IPv4AddressAndPort
         | HostnameAndPort
       ) &
-      string
+        string
       sampling?: {
         /**
          * The address of jaeger-agent's HTTP sampling server
@@ -1071,7 +1071,7 @@ export interface OryTracingConfig {
         | IPv4AddressAndPort1
         | HostnameAndPort1
       ) &
-      string
+        string
       /**
        * Will use HTTP if set to true; defaults to HTTPS.
        */
