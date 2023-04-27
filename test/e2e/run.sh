@@ -252,6 +252,14 @@ prepare() {
     PORT=4455 npm run start \
       >"${base}/test/e2e/proxy.e2e.log" 2>&1 &
   )
+
+  # Make the environment available to Playwright
+  env | grep KRATOS_                         >  test/e2e/playwright/playwright.env
+  env | grep TEST_DATABASE_                  >> test/e2e/playwright/playwright.env
+  env | grep OIDC_                           >> test/e2e/playwright/playwright.env
+  env | grep CYPRESS_                        >> test/e2e/playwright/playwright.env
+  echo LOG_LEAK_SENSITIVE_VALUES=true        >> test/e2e/playwright/playwright.env
+  echo DEV_DISABLE_API_FLOW_ENFORCEMENT=true >> test/e2e/playwright/playwright.env
 }
 
 run() {
@@ -273,6 +281,7 @@ run() {
   (modd -f test/e2e/modd.conf >"${base}/test/e2e/kratos.e2e.log" 2>&1 &)
 
   npm run wait-on -- -v -l -t 300000 http-get://localhost:4434/health/ready \
+    http-get://localhost:4444/.well-known/openid-configuration \
     http-get://localhost:4455/health/ready \
     http-get://localhost:4445/health/ready \
     http-get://localhost:4446/ \

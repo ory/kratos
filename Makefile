@@ -177,6 +177,12 @@ test-e2e: node_modules test-resetdb
 	test/e2e/run.sh cockroach
 	test/e2e/run.sh mysql
 
+.PHONY: test-e2e-playwright
+test-e2e-playwright: node_modules test-resetdb
+	source script/test-envs.sh
+	test/e2e/run.sh --only-setup
+	(cd test/e2e; DB=memory npm run playwright)
+
 .PHONY: migrations-sync
 migrations-sync: .bin/ory
 	ory dev pop migration sync persistence/sql/migrations/templates persistence/sql/migratest/testdata

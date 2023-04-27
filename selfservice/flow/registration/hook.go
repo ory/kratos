@@ -11,6 +11,7 @@ import (
 
 	"go.opentelemetry.io/otel/trace"
 
+	"github.com/ory/kratos/selfservice/sessiontokenexchange"
 	"github.com/ory/kratos/x/events"
 
 	"github.com/pkg/errors"
@@ -81,6 +82,7 @@ type (
 		x.HTTPClientProvider
 		x.LoggingProvider
 		x.WriterProvider
+		sessiontokenexchange.PersistenceProvider
 	}
 	HookExecutor struct {
 		d executorDependencies
@@ -226,6 +228,12 @@ func (e *HookExecutor) PostRegistrationHook(w http.ResponseWriter, r *http.Reque
 		Debug("Post registration execution hooks completed successfully.")
 
 	if a.Type == flow.TypeAPI || x.IsJSONRequest(r) {
+		if handled, err := e.d.SessionManager().MaybeRedirectAPICodeFlow(w, r, a, s.ID); err != nil {
+			return errors.WithStack(err)
+		} else if handled {
+			return nil
+		}
+
 		e.d.Writer().Write(w, r, &APIFlowResponse{
 			Identity:     i,
 			ContinueWith: a.ContinueWith(),

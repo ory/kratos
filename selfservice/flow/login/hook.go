@@ -19,6 +19,7 @@ import (
 	"github.com/ory/kratos/hydra"
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/selfservice/flow"
+	"github.com/ory/kratos/selfservice/sessiontokenexchange"
 	"github.com/ory/kratos/session"
 	"github.com/ory/kratos/ui/container"
 	"github.com/ory/kratos/ui/node"
@@ -51,6 +52,7 @@ type (
 		x.WriterProvider
 		x.LoggingProvider
 		x.TracingProvider
+		sessiontokenexchange.PersistenceProvider
 
 		HooksProvider
 	}
@@ -180,6 +182,12 @@ func (e *HookExecutor) PostLoginHook(w http.ResponseWriter, r *http.Request, g n
 			Info("Identity authenticated successfully and was issued an Ory Kratos Session Token.")
 
 		trace.SpanFromContext(r.Context()).AddEvent(events.NewSessionIssued(r.Context(), s.ID, i.ID))
+
+		if handled, err := e.d.SessionManager().MaybeRedirectAPICodeFlow(w, r, a, s.ID); err != nil {
+			return errors.WithStack(err)
+		} else if handled {
+			return nil
+		}
 
 		response := &APIFlowResponse{Session: s, Token: s.Token}
 		if required, _ := e.requiresAAL2(r, classified, a); required {

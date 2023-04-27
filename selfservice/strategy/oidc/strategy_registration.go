@@ -48,10 +48,6 @@ func (s *Strategy) RegisterRegistrationRoutes(r *x.RouterPublic) {
 }
 
 func (s *Strategy) PopulateRegistrationMethod(r *http.Request, f *registration.Flow) error {
-	if f.Type != flow.TypeBrowser {
-		return nil
-	}
-
 	return s.populateMethod(r, f.UI, text.NewInfoRegistrationWith)
 }
 
@@ -154,14 +150,19 @@ func (s *Strategy) Register(w http.ResponseWriter, r *http.Request, f *registrat
 		return s.handleError(w, r, f, pid, nil, err)
 	}
 
-	if s.alreadyAuthenticated(w, r, req) {
+	if authenticated, err := s.alreadyAuthenticated(w, r, req); err != nil {
+		return s.handleError(w, r, f, pid, nil, err)
+	} else if authenticated {
 		return errors.WithStack(registration.ErrAlreadyLoggedIn)
 	}
 
 	state := generateState(f.ID.String())
+	if code, hasCode, _ := s.d.SessionTokenExchangePersister().CodeForFlow(r.Context(), f.ID); hasCode {
+		state.setCode(code.InitCode)
+	}
 	if err := s.d.ContinuityManager().Pause(r.Context(), w, r, sessionName,
 		continuity.WithPayload(&authCodeContainer{
-			State:            state,
+			State:            state.String(),
 			FlowID:           f.ID.String(),
 			Traits:           p.Traits,
 			TransientPayload: f.TransientPayload,
@@ -175,7 +176,7 @@ func (s *Strategy) Register(w http.ResponseWriter, r *http.Request, f *registrat
 		return err
 	}
 
-	codeURL := c.AuthCodeURL(state, append(provider.AuthCodeURLOptions(req), UpstreamParameters(provider, up)...)...)
+	codeURL := c.AuthCodeURL(state.String(), append(provider.AuthCodeURLOptions(req), UpstreamParameters(provider, up)...)...)
 	if x.IsJSONRequest(r) {
 		s.d.Writer().WriteError(w, r, flow.NewBrowserLocationChangeRequiredError(codeURL))
 	} else {
@@ -196,9 +197,12 @@ func (s *Strategy) registrationToLogin(w http.ResponseWriter, r *http.Request, r
 		opts = append(opts, login.WithFormErrorMessage(rf.UI.Messages))
 	}
 
-	// This endpoint only handles browser flow at the moment.
-	lf, _, err := s.d.LoginHandler().NewLoginFlow(w, r, flow.TypeBrowser, opts...)
+	lf, _, err := s.d.LoginHandler().NewLoginFlow(w, r, rf.Type, opts...)
+	if err != nil {
+		return nil, err
+	}
 
+	err = s.d.SessionTokenExchangePersister().MoveToNewFlow(r.Context(), rf.ID, lf.ID)
 	if err != nil {
 		return nil, err
 	}

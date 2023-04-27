@@ -392,6 +392,13 @@ func TestFlowLifecycle(t *testing.T) {
 				res, body := initFlow(t, url.Values{}, true)
 				assert.Contains(t, res.Request.URL.String(), login.RouteInitAPIFlow)
 				assertion(body, false, true)
+				assert.Empty(t, gjson.GetBytes(body, "session_token_exchange_code").String())
+			})
+
+			t.Run("case=returns session exchange code", func(t *testing.T) {
+				res, body := initFlow(t, urlx.ParseOrPanic("/?return_session_token_exchange_code=true").Query(), true)
+				assert.Contains(t, res.Request.URL.String(), login.RouteInitAPIFlow)
+				assert.NotEmpty(t, gjson.GetBytes(body, "session_token_exchange_code").String())
 			})
 
 			t.Run("case=can not request refresh and aal at the same time on unauthenticated request", func(t *testing.T) {
@@ -468,6 +475,12 @@ func TestFlowLifecycle(t *testing.T) {
 				res, body := initFlow(t, url.Values{}, false)
 				assertion(body, false, false)
 				assert.Contains(t, res.Request.URL.String(), loginTS.URL)
+			})
+
+			t.Run("case=never returns a session token exchange code", func(t *testing.T) {
+				_, body := initFlow(t, urlx.ParseOrPanic("/?return_session_token_exchange_code=true").Query(), false)
+				assertion(body, false, false)
+				assert.Empty(t, gjson.GetBytes(body, "session_token_exchange_code").String())
 			})
 
 			t.Run("case=can not request refresh and aal at the same time on unauthenticated request", func(t *testing.T) {

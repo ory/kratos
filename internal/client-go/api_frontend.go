@@ -388,6 +388,19 @@ type FrontendApi interface {
 	DisableMySessionExecute(r FrontendApiApiDisableMySessionRequest) (*http.Response, error)
 
 	/*
+	 * ExchangeSessionToken Exchange Session Token
+	 * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
+	 * @return FrontendApiApiExchangeSessionTokenRequest
+	 */
+	ExchangeSessionToken(ctx context.Context) FrontendApiApiExchangeSessionTokenRequest
+
+	/*
+	 * ExchangeSessionTokenExecute executes the request
+	 * @return SuccessfulNativeLogin
+	 */
+	ExchangeSessionTokenExecute(r FrontendApiApiExchangeSessionTokenRequest) (*SuccessfulNativeLogin, *http.Response, error)
+
+	/*
 			 * GetFlowError Get User-Flow Errors
 			 * This endpoint returns the error associated with a user-facing self service errors.
 
@@ -1844,11 +1857,13 @@ func (a *FrontendApiService) CreateBrowserVerificationFlowExecute(r FrontendApiA
 }
 
 type FrontendApiApiCreateNativeLoginFlowRequest struct {
-	ctx           context.Context
-	ApiService    FrontendApi
-	refresh       *bool
-	aal           *string
-	xSessionToken *string
+	ctx                            context.Context
+	ApiService                     FrontendApi
+	refresh                        *bool
+	aal                            *string
+	xSessionToken                  *string
+	returnSessionTokenExchangeCode *bool
+	returnTo                       *string
 }
 
 func (r FrontendApiApiCreateNativeLoginFlowRequest) Refresh(refresh bool) FrontendApiApiCreateNativeLoginFlowRequest {
@@ -1861,6 +1876,14 @@ func (r FrontendApiApiCreateNativeLoginFlowRequest) Aal(aal string) FrontendApiA
 }
 func (r FrontendApiApiCreateNativeLoginFlowRequest) XSessionToken(xSessionToken string) FrontendApiApiCreateNativeLoginFlowRequest {
 	r.xSessionToken = &xSessionToken
+	return r
+}
+func (r FrontendApiApiCreateNativeLoginFlowRequest) ReturnSessionTokenExchangeCode(returnSessionTokenExchangeCode bool) FrontendApiApiCreateNativeLoginFlowRequest {
+	r.returnSessionTokenExchangeCode = &returnSessionTokenExchangeCode
+	return r
+}
+func (r FrontendApiApiCreateNativeLoginFlowRequest) ReturnTo(returnTo string) FrontendApiApiCreateNativeLoginFlowRequest {
+	r.returnTo = &returnTo
 	return r
 }
 
@@ -1930,6 +1953,12 @@ func (a *FrontendApiService) CreateNativeLoginFlowExecute(r FrontendApiApiCreate
 	}
 	if r.aal != nil {
 		localVarQueryParams.Add("aal", parameterToString(*r.aal, ""))
+	}
+	if r.returnSessionTokenExchangeCode != nil {
+		localVarQueryParams.Add("return_session_token_exchange_code", parameterToString(*r.returnSessionTokenExchangeCode, ""))
+	}
+	if r.returnTo != nil {
+		localVarQueryParams.Add("return_to", parameterToString(*r.returnTo, ""))
 	}
 	// to determine the Content-Type header
 	localVarHTTPContentTypes := []string{}
@@ -2136,8 +2165,19 @@ func (a *FrontendApiService) CreateNativeRecoveryFlowExecute(r FrontendApiApiCre
 }
 
 type FrontendApiApiCreateNativeRegistrationFlowRequest struct {
-	ctx        context.Context
-	ApiService FrontendApi
+	ctx                            context.Context
+	ApiService                     FrontendApi
+	returnSessionTokenExchangeCode *bool
+	returnTo                       *string
+}
+
+func (r FrontendApiApiCreateNativeRegistrationFlowRequest) ReturnSessionTokenExchangeCode(returnSessionTokenExchangeCode bool) FrontendApiApiCreateNativeRegistrationFlowRequest {
+	r.returnSessionTokenExchangeCode = &returnSessionTokenExchangeCode
+	return r
+}
+func (r FrontendApiApiCreateNativeRegistrationFlowRequest) ReturnTo(returnTo string) FrontendApiApiCreateNativeRegistrationFlowRequest {
+	r.returnTo = &returnTo
+	return r
 }
 
 func (r FrontendApiApiCreateNativeRegistrationFlowRequest) Execute() (*RegistrationFlow, *http.Response, error) {
@@ -2200,6 +2240,12 @@ func (a *FrontendApiService) CreateNativeRegistrationFlowExecute(r FrontendApiAp
 	localVarQueryParams := url.Values{}
 	localVarFormParams := url.Values{}
 
+	if r.returnSessionTokenExchangeCode != nil {
+		localVarQueryParams.Add("return_session_token_exchange_code", parameterToString(*r.returnSessionTokenExchangeCode, ""))
+	}
+	if r.returnTo != nil {
+		localVarQueryParams.Add("return_to", parameterToString(*r.returnTo, ""))
+	}
 	// to determine the Content-Type header
 	localVarHTTPContentTypes := []string{}
 
@@ -2833,6 +2879,162 @@ func (a *FrontendApiService) DisableMySessionExecute(r FrontendApiApiDisableMySe
 	}
 
 	return localVarHTTPResponse, nil
+}
+
+type FrontendApiApiExchangeSessionTokenRequest struct {
+	ctx          context.Context
+	ApiService   FrontendApi
+	initCode     *string
+	returnToCode *string
+}
+
+func (r FrontendApiApiExchangeSessionTokenRequest) InitCode(initCode string) FrontendApiApiExchangeSessionTokenRequest {
+	r.initCode = &initCode
+	return r
+}
+func (r FrontendApiApiExchangeSessionTokenRequest) ReturnToCode(returnToCode string) FrontendApiApiExchangeSessionTokenRequest {
+	r.returnToCode = &returnToCode
+	return r
+}
+
+func (r FrontendApiApiExchangeSessionTokenRequest) Execute() (*SuccessfulNativeLogin, *http.Response, error) {
+	return r.ApiService.ExchangeSessionTokenExecute(r)
+}
+
+/*
+ * ExchangeSessionToken Exchange Session Token
+ * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
+ * @return FrontendApiApiExchangeSessionTokenRequest
+ */
+func (a *FrontendApiService) ExchangeSessionToken(ctx context.Context) FrontendApiApiExchangeSessionTokenRequest {
+	return FrontendApiApiExchangeSessionTokenRequest{
+		ApiService: a,
+		ctx:        ctx,
+	}
+}
+
+/*
+ * Execute executes the request
+ * @return SuccessfulNativeLogin
+ */
+func (a *FrontendApiService) ExchangeSessionTokenExecute(r FrontendApiApiExchangeSessionTokenRequest) (*SuccessfulNativeLogin, *http.Response, error) {
+	var (
+		localVarHTTPMethod   = http.MethodGet
+		localVarPostBody     interface{}
+		localVarFormFileName string
+		localVarFileName     string
+		localVarFileBytes    []byte
+		localVarReturnValue  *SuccessfulNativeLogin
+	)
+
+	localBasePath, err := a.client.cfg.ServerURLWithContext(r.ctx, "FrontendApiService.ExchangeSessionToken")
+	if err != nil {
+		return localVarReturnValue, nil, &GenericOpenAPIError{error: err.Error()}
+	}
+
+	localVarPath := localBasePath + "/sessions/token-exchange"
+
+	localVarHeaderParams := make(map[string]string)
+	localVarQueryParams := url.Values{}
+	localVarFormParams := url.Values{}
+	if r.initCode == nil {
+		return localVarReturnValue, nil, reportError("initCode is required and must be specified")
+	}
+	if r.returnToCode == nil {
+		return localVarReturnValue, nil, reportError("returnToCode is required and must be specified")
+	}
+
+	localVarQueryParams.Add("init_code", parameterToString(*r.initCode, ""))
+	localVarQueryParams.Add("return_to_code", parameterToString(*r.returnToCode, ""))
+	// to determine the Content-Type header
+	localVarHTTPContentTypes := []string{}
+
+	// set Content-Type header
+	localVarHTTPContentType := selectHeaderContentType(localVarHTTPContentTypes)
+	if localVarHTTPContentType != "" {
+		localVarHeaderParams["Content-Type"] = localVarHTTPContentType
+	}
+
+	// to determine the Accept header
+	localVarHTTPHeaderAccepts := []string{"application/json"}
+
+	// set Accept header
+	localVarHTTPHeaderAccept := selectHeaderAccept(localVarHTTPHeaderAccepts)
+	if localVarHTTPHeaderAccept != "" {
+		localVarHeaderParams["Accept"] = localVarHTTPHeaderAccept
+	}
+	req, err := a.client.prepareRequest(r.ctx, localVarPath, localVarHTTPMethod, localVarPostBody, localVarHeaderParams, localVarQueryParams, localVarFormParams, localVarFormFileName, localVarFileName, localVarFileBytes)
+	if err != nil {
+		return localVarReturnValue, nil, err
+	}
+
+	localVarHTTPResponse, err := a.client.callAPI(req)
+	if err != nil || localVarHTTPResponse == nil {
+		return localVarReturnValue, localVarHTTPResponse, err
+	}
+
+	localVarBody, err := io.ReadAll(localVarHTTPResponse.Body)
+	localVarHTTPResponse.Body.Close()
+	localVarHTTPResponse.Body = io.NopCloser(bytes.NewBuffer(localVarBody))
+	if err != nil {
+		return localVarReturnValue, localVarHTTPResponse, err
+	}
+
+	if localVarHTTPResponse.StatusCode >= 300 {
+		newErr := &GenericOpenAPIError{
+			body:  localVarBody,
+			error: localVarHTTPResponse.Status,
+		}
+		if localVarHTTPResponse.StatusCode == 403 {
+			var v ErrorGeneric
+			err = a.client.decode(&v, localVarBody, localVarHTTPResponse.Header.Get("Content-Type"))
+			if err != nil {
+				newErr.error = err.Error()
+				return localVarReturnValue, localVarHTTPResponse, newErr
+			}
+			newErr.model = v
+			return localVarReturnValue, localVarHTTPResponse, newErr
+		}
+		if localVarHTTPResponse.StatusCode == 404 {
+			var v ErrorGeneric
+			err = a.client.decode(&v, localVarBody, localVarHTTPResponse.Header.Get("Content-Type"))
+			if err != nil {
+				newErr.error = err.Error()
+				return localVarReturnValue, localVarHTTPResponse, newErr
+			}
+			newErr.model = v
+			return localVarReturnValue, localVarHTTPResponse, newErr
+		}
+		if localVarHTTPResponse.StatusCode == 410 {
+			var v ErrorGeneric
+			err = a.client.decode(&v, localVarBody, localVarHTTPResponse.Header.Get("Content-Type"))
+			if err != nil {
+				newErr.error = err.Error()
+				return localVarReturnValue, localVarHTTPResponse, newErr
+			}
+			newErr.model = v
+			return localVarReturnValue, localVarHTTPResponse, newErr
+		}
+		var v ErrorGeneric
+		err = a.client.decode(&v, localVarBody, localVarHTTPResponse.Header.Get("Content-Type"))
+		if err != nil {
+			newErr.error = err.Error()
+			return localVarReturnValue, localVarHTTPResponse, newErr
+		}
+		newErr.model = v
+		return localVarReturnValue, localVarHTTPResponse, newErr
+	}
+
+	err = a.client.decode(&localVarReturnValue, localVarBody, localVarHTTPResponse.Header.Get("Content-Type"))
+	if err != nil {
+		newErr := &GenericOpenAPIError{
+			body:  localVarBody,
+			error: err.Error(),
+		}
+		return localVarReturnValue, localVarHTTPResponse, newErr
+	}
+
+	return localVarReturnValue, localVarHTTPResponse, nil
 }
 
 type FrontendApiApiGetFlowErrorRequest struct {

@@ -14,8 +14,10 @@ import (
 
 	"github.com/pkg/errors"
 
+	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/selfservice/flow"
 	"github.com/ory/kratos/selfservice/flow/registration"
+	"github.com/ory/kratos/selfservice/sessiontokenexchange"
 	"github.com/ory/kratos/session"
 	"github.com/ory/kratos/x"
 	"github.com/ory/x/otelx"
@@ -29,6 +31,8 @@ type (
 	sessionIssuerDependencies interface {
 		session.ManagementProvider
 		session.PersistenceProvider
+		sessiontokenexchange.PersistenceProvider
+		config.Provider
 		x.WriterProvider
 	}
 	SessionIssuerProvider interface {
@@ -58,6 +62,12 @@ func (e *SessionIssuer) executePostRegistrationPostPersistHook(w http.ResponseWr
 	trace.SpanFromContext(r.Context()).AddEvent(events.NewSessionIssued(r.Context(), s.ID, s.IdentityID))
 
 	if a.Type == flow.TypeAPI {
+		if handled, err := e.r.SessionManager().MaybeRedirectAPICodeFlow(w, r, a, s.ID); err != nil {
+			return errors.WithStack(err)
+		} else if handled {
+			return nil
+		}
+
 		a.AddContinueWith(flow.NewContinueWithSetToken(s.Token))
 		e.r.Writer().Write(w, r, &registration.APIFlowResponse{
 			Session:      s,

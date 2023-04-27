@@ -38,13 +38,13 @@ func TestRedirectToPublicAdminRoute(t *testing.T) {
 	pub.POST("/admin/privileged", x.RedirectToAdminRoute(reg))
 	adm.POST("/privileged", func(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 		body, _ := io.ReadAll(r.Body)
-		w.Write(body)
+		_, _ = w.Write(body)
 	})
 
 	adm.POST("/read", x.RedirectToPublicRoute(reg))
 	pub.POST("/read", func(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 		body, _ := io.ReadAll(r.Body)
-		w.Write(body)
+		_, _ = w.Write(body)
 	})
 
 	for k, tc := range []struct {

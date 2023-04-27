@@ -1474,6 +1474,18 @@
             "description": "The Session Token of the Identity performing the settings flow.",
             "name": "X-Session-Token",
             "in": "header"
+          },
+          {
+            "type": "boolean",
+            "description": "EnableSessionTokenExchangeCode requests the login flow to include a code that can be used to retrieve the session token\nafter the login flow has been completed.",
+            "name": "return_session_token_exchange_code",
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "description": "The URL to return the browser to after the flow was completed.",
+            "name": "return_to",
+            "in": "query"
           }
         ],
         "responses": {
@@ -2084,6 +2096,20 @@
         ],
         "summary": "Create Registration Flow for Native Apps",
         "operationId": "createNativeRegistrationFlow",
+        "parameters": [
+          {
+            "type": "boolean",
+            "description": "EnableSessionTokenExchangeCode requests the login flow to include a code that can be used to retrieve the session token\nafter the login flow has been completed.",
+            "name": "return_session_token_exchange_code",
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "description": "The URL to return the browser to after the flow was completed.",
+            "name": "return_to",
+            "in": "query"
+          }
+        ],
         "responses": {
           "200": {
             "description": "registrationFlow",
@@ -2825,6 +2851,70 @@
             }
           },
           "401": {
+            "description": "errorGeneric",
+            "schema": {
+              "$ref": "#/definitions/errorGeneric"
+            }
+          },
+          "default": {
+            "description": "errorGeneric",
+            "schema": {
+              "$ref": "#/definitions/errorGeneric"
+            }
+          }
+        }
+      }
+    },
+    "/sessions/token-exchange": {
+      "get": {
+        "produces": [
+          "application/json"
+        ],
+        "schemes": [
+          "http",
+          "https"
+        ],
+        "tags": [
+          "frontend"
+        ],
+        "summary": "Exchange Session Token",
+        "operationId": "exchangeSessionToken",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "The part of the code return when initializing the flow.",
+            "name": "init_code",
+            "in": "query",
+            "required": true
+          },
+          {
+            "type": "string",
+            "description": "The part of the code returned by the return_to URL.",
+            "name": "return_to_code",
+            "in": "query",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "successfulNativeLogin",
+            "schema": {
+              "$ref": "#/definitions/successfulNativeLogin"
+            }
+          },
+          "403": {
+            "description": "errorGeneric",
+            "schema": {
+              "$ref": "#/definitions/errorGeneric"
+            }
+          },
+          "404": {
+            "description": "errorGeneric",
+            "schema": {
+              "$ref": "#/definitions/errorGeneric"
+            }
+          },
+          "410": {
             "description": "errorGeneric",
             "schema": {
               "$ref": "#/definitions/errorGeneric"
@@ -4036,6 +4126,10 @@
           "description": "ReturnTo contains the requested return_to URL.",
           "type": "string"
         },
+        "session_token_exchange_code": {
+          "description": "SessionTokenExchangeCode holds the secret code that the client can use to retrieve a session token after the login flow has been completed.\nThis is only set if the client has requested a session token exchange code, and if the flow is of type \"api\",\nand only on creating the login flow.",
+          "type": "string"
+        },
         "type": {
           "$ref": "#/definitions/selfServiceFlowType"
         },
@@ -4430,6 +4524,10 @@
           "description": "ReturnTo contains the requested return_to URL.",
           "type": "string"
         },
+        "session_token_exchange_code": {
+          "description": "SessionTokenExchangeCode holds the secret code that the client can use to retrieve a session token after the flow has been completed.\nThis is only set if the client has requested a session token exchange code, and if the flow is of type \"api\",\nand only on creating the flow.",
+          "type": "string"
+        },
         "transient_payload": {
           "description": "TransientPayload is used to pass data from the registration to a webhook",
           "type": "object"
@@ -4638,6 +4736,22 @@
       "description": "show_form: No user data has been collected, or it is invalid, and thus the form should be shown.\nsuccess: Indicates that the settings flow has been updated successfully with the provided data.\nDone will stay true when repeatedly checking. If set to true, done will revert back to false only\nwhen a flow with invalid (e.g. \"please use a valid phone number\") data was sent.",
       "type": "string",
       "title": "State represents the state of this flow. It knows two states:"
+    },
+    "successfulCodeExchangeResponse": {
+      "description": "The Response for Registration Flows via API",
+      "type": "object",
+      "required": [
+        "session"
+      ],
+      "properties": {
+        "session": {
+          "$ref": "#/definitions/session"
+        },
+        "session_token": {
+          "description": "The Session Token\n\nA session token is equivalent to a session cookie, but it can be sent in the HTTP Authorization\nHeader:\n\nAuthorization: bearer ${session-token}\n\nThe session token is only issued for API flows, not for Browser flows!",
+          "type": "string"
+        }
+      }
     },
     "successfulNativeLogin": {
       "description": "The Response for Login Flows via API",

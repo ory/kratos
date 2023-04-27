@@ -8,9 +8,10 @@ import (
 	"net/url"
 	"time"
 
+	"github.com/ory/herodot"
 	"github.com/ory/kratos/hydra"
+	"github.com/ory/kratos/selfservice/sessiontokenexchange"
 	"github.com/ory/kratos/text"
-
 	"github.com/ory/nosurf"
 
 	"github.com/ory/kratos/schema"
@@ -54,6 +55,7 @@ type (
 		HookExecutorProvider
 		FlowPersistenceProvider
 		ErrorHandlerProvider
+		sessiontokenexchange.PersistenceProvider
 	}
 	HandlerProvider interface {
 		RegistrationHandler() *Handler
@@ -117,6 +119,14 @@ func (h *Handler) NewRegistrationFlow(w http.ResponseWriter, r *http.Request, ft
 	}
 	for _, o := range opts {
 		o(f)
+	}
+
+	if ft == flow.TypeAPI && r.URL.Query().Get("return_session_token_exchange_code") == "true" {
+		e, err := h.d.SessionTokenExchangePersister().CreateSessionTokenExchanger(r.Context(), f.ID)
+		if err != nil {
+			return nil, errors.WithStack(herodot.ErrInternalServerError.WithWrap(err))
+		}
+		f.SessionTokenExchangeCode = e.InitCode
 	}
 
 	for _, s := range h.d.RegistrationStrategies(r.Context()) {
@@ -193,6 +203,25 @@ func (h *Handler) createNativeRegistrationFlow(w http.ResponseWriter, r *http.Re
 	}
 
 	h.d.Writer().Write(w, r, a)
+}
+
+// Create Native Registration Flow Parameters
+//
+// swagger:parameters createNativeRegistrationFlow
+//
+//nolint:deadcode,unused
+//lint:ignore U1000 Used to generate Swagger and OpenAPI definitions
+type createNativeRegistrationFlow struct {
+	// EnableSessionTokenExchangeCode requests the login flow to include a code that can be used to retrieve the session token
+	// after the login flow has been completed.
+	//
+	// in: query
+	EnableSessionTokenExchangeCode bool `json:"return_session_token_exchange_code"`
+
+	// The URL to return the browser to after the flow was completed.
+	//
+	// in: query
+	ReturnTo string `json:"return_to"`
 }
 
 // Create Browser Registration Flow Parameters
