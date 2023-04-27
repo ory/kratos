@@ -800,6 +800,9 @@ func (h *Handler) linkCredentials(r *http.Request, s *session.Session, i *identi
 			return innerErr
 		}
 		linkCredentialsFlow, innerErr := h.d.LoginFlowPersister().GetLoginFlow(r.Context(), linkCredentialsFlowID)
+		if innerErr != nil {
+			return innerErr
+		}
 		innerErr = h.getInternalContextLinkCredentials(linkCredentialsFlow, flow.InternalContextDuplicateCredentialsPath, &lc)
 		if innerErr != nil {
 			return innerErr

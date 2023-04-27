@@ -466,6 +466,29 @@ func TestCompleteLogin(t *testing.T) {
 		})
 	})
 
+	t.Run("case=should return an error because the linkCredentialsFlow does not exist", func(t *testing.T) {
+		identifier, pwd := x.NewUUID().String(), "password"
+		createIdentity(ctx, reg, t, identifier, pwd)
+
+		var check = func(t *testing.T, actual string) {
+			assert.Equal(t, int64(http.StatusNotFound), gjson.Get(actual, "code").Int(), "%s", actual)
+			assert.Equal(t, "Not Found", gjson.Get(actual, "status").String(), "%s", actual)
+			assert.Contains(t, gjson.Get(actual, "message").String(), "Unable to locate the resource", "%s", actual)
+		}
+
+		var values = func(v url.Values) {
+			v.Set("identifier", identifier)
+			v.Set("password", pwd)
+			v.Set("linkCredentialsFlow", "00000000-0000-0000-0000-000000000000")
+		}
+
+		t.Run("type=api", func(t *testing.T) {
+			actual := testhelpers.SubmitLoginForm(t, true, nil, publicTS, values,
+				false, false, http.StatusNotFound, publicTS.URL+login.RouteSubmitFlow)
+			check(t, gjson.Get(actual, "error").Raw)
+		})
+	})
+
 	t.Run("should pass with real request", func(t *testing.T) {
 		identifier, pwd := x.NewUUID().String(), "password"
 		createIdentity(ctx, reg, t, identifier, pwd)
