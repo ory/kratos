@@ -601,10 +601,10 @@ func TestFlowLifecycle(t *testing.T) {
 
 			t.Run("case=oauth2 flow init should override return_to to the oauth2 request_url", func(t *testing.T) {
 				conf.MustSet(ctx, config.ViperKeyURLsAllowedReturnToDomains, []string{"https://www.ory.sh", "https://example.com"})
-				conf.MustSet(ctx, config.ViperKeyOAuth2ProviderReturnToEnabled, true)
+				conf.MustSet(ctx, config.ViperKeyOAuth2ProviderOverrideReturnTo, true)
 
 				t.Cleanup(func() {
-					conf.MustSet(ctx, config.ViperKeyOAuth2ProviderReturnToEnabled, false)
+					conf.MustSet(ctx, config.ViperKeyOAuth2ProviderOverrideReturnTo, false)
 				})
 
 				res, _ := initUnauthenticatedFlow(t, url.Values{

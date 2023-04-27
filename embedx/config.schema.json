@@ -1902,11 +1902,11 @@
             }
           ]
         },
-        "return_to_enabled": {
-          "title":"Override `return_to` in OAuth2 flows",
+        "override_return_to": {
+          "title":"Persist OAuth2 request between flows",
           "type":"boolean",
           "default":false,
-          "description":"Override the return_to query paramter in OAuth flows back to the Provider Request URL"
+          "description":"Override the return_to query parameter to the OAuth2 provider request URL when perfoming an OAuth2 login flow."
         }
       },
       "additionalProperties": false
