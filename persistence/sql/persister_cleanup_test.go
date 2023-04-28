@@ -150,7 +150,7 @@ func TestPersister_SessionTokenExchange_Cleanup(t *testing.T) {
 		assert.Nil(t, p.DeleteExpiredExchangers(ctx, currentTime, reg.Config().DatabaseCleanupBatchSize(ctx)))
 	})
 
-	t.Run("case=should throw error on cleanup session token exchangers", func(t *testing.T) {
+	t.Run("case=should throw error on cleanup session token exchangers if DB is closed", func(t *testing.T) {
 		p.GetConnection(ctx).Close()
 		assert.Error(t, p.DeleteExpiredExchangers(ctx, currentTime, reg.Config().DatabaseCleanupBatchSize(ctx)))
 	})
