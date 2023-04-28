@@ -10,6 +10,7 @@ import (
 
 	"github.com/ory/kratos/selfservice/flow"
 	"github.com/ory/kratos/text"
+	"github.com/ory/kratos/ui/node"
 	"github.com/ory/kratos/x/swagger"
 
 	"github.com/gofrs/uuid"
@@ -140,7 +141,7 @@ type Manager interface {
 
 	// MaybeRedirectAPICodeFlow for API+Code flows redirects the user to the return_to URL and adds the code query parameter.
 	// `handled` is true if the request a redirect was written, false otherwise.
-	MaybeRedirectAPICodeFlow(w http.ResponseWriter, r *http.Request, f flow.Flow, sessionID uuid.UUID) (handled bool, err error)
+	MaybeRedirectAPICodeFlow(w http.ResponseWriter, r *http.Request, f flow.Flow, sessionID uuid.UUID, uiNode node.UiNodeGroup) (handled bool, err error)
 }
 
 type ManagementProvider interface {

@@ -11,6 +11,7 @@ import (
 
 	"github.com/ory/kratos/selfservice/flow"
 	"github.com/ory/kratos/selfservice/sessiontokenexchange"
+	"github.com/ory/kratos/ui/node"
 	"github.com/ory/x/otelx"
 
 	"github.com/ory/x/randx"
@@ -324,9 +325,13 @@ func (s *ManagerHTTP) SessionAddAuthenticationMethods(ctx context.Context, sid u
 	return s.r.SessionPersister().UpsertSession(ctx, sess)
 }
 
-func (s *ManagerHTTP) MaybeRedirectAPICodeFlow(w http.ResponseWriter, r *http.Request, f flow.Flow, sessionID uuid.UUID) (handled bool, err error) {
+func (s *ManagerHTTP) MaybeRedirectAPICodeFlow(w http.ResponseWriter, r *http.Request, f flow.Flow, sessionID uuid.UUID, uiNode node.UiNodeGroup) (handled bool, err error) {
 	ctx, span := s.r.Tracer(r.Context()).Tracer().Start(r.Context(), "sessions.ManagerHTTP.MaybeRedirectAPICodeFlow")
 	defer otelx.End(span, &err)
+
+	if uiNode != node.OpenIDConnectGroup {
+		return false, nil
+	}
 
 	code, ok, _ := s.r.SessionTokenExchangePersister().CodeForFlow(ctx, f.GetID())
 	if !ok {
