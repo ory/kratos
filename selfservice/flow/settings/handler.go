@@ -406,7 +406,7 @@ func (h *Handler) fetchFlow(w http.ResponseWriter, r *http.Request) error {
 		return errors.WithStack(herodot.ErrForbidden.WithID(text.ErrIDInitiatedBySomeoneElse).WithReasonf("The request was made for another identity and has been blocked for security reasons."))
 	}
 
-	if err := h.d.SessionManager().DoesSessionSatisfy(r, sess, h.d.Config().SelfServiceSettingsRequiredAAL(r.Context())); err != nil {
+	if err := h.d.SessionManager().DoesSessionSatisfy(r, sess, h.d.Config().SelfServiceSettingsRequiredAAL(r.Context()), session.WithRequestURL(pr.GetRequestURL())); err != nil {
 		return err
 	}
 

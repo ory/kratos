@@ -119,7 +119,8 @@ func TestHandler(t *testing.T) {
 		Credentials: map[identity.CredentialsType]identity.Credentials{
 			identity.CredentialsTypePassword: {Type: identity.CredentialsTypePassword, Config: []byte(`{"hashed_password":"$argon2id$v=19$m=32,t=2,p=4$cm94YnRVOW5jZzFzcVE4bQ$MNzk5BtR2vUhrp6qQEjRNw"}`), Identifiers: []string{"foo@bar"}},
 			identity.CredentialsTypeWebAuthn: {Type: identity.CredentialsTypeWebAuthn, Config: []byte(`{"credentials":[{"is_passwordless":false}]}`), Identifiers: []string{"foo@bar"}},
-		}})
+		},
+	})
 
 	t.Run("endpoint=init", func(t *testing.T) {
 		t.Run("description=init a flow as API", func(t *testing.T) {
@@ -241,7 +242,8 @@ func TestHandler(t *testing.T) {
 					Credentials: map[identity.CredentialsType]identity.Credentials{
 						identity.CredentialsTypePassword: {Type: identity.CredentialsTypePassword, Config: []byte(`{"hashed_password":"$argon2id$v=19$m=32,t=2,p=4$cm94YnRVOW5jZzFzcVE4bQ$MNzk5BtR2vUhrp6qQEjRNw"}`), Identifiers: []string{email}},
 						identity.CredentialsTypeWebAuthn: {Type: identity.CredentialsTypeWebAuthn, Config: []byte(`{"credentials":[{"is_passwordless":false}]}`), Identifiers: []string{email}},
-					}})
+					},
+				})
 				res, body := initSPAFlow(t, user1)
 				assert.Equal(t, http.StatusForbidden, res.StatusCode)
 				assertx.EqualAsJSON(t, session.NewErrAALNotSatisfied(publicTS.URL+"/self-service/login/browser?aal=aal2"), json.RawMessage(body))
@@ -353,6 +355,39 @@ func TestHandler(t *testing.T) {
 
 				require.EqualValues(t, res.StatusCode, http.StatusForbidden)
 				assertx.EqualAsJSON(t, session.NewErrAALNotSatisfied(publicTS.URL+"/self-service/login/browser?aal=aal2"), json.RawMessage(body))
+			})
+
+			t.Run("description=preserve return_to if identity has aal2 but session has aal1", func(t *testing.T) {
+				t.Cleanup(func() {
+					conf.MustSet(ctx, config.ViperKeySelfServiceSettingsRequiredAAL, config.HighestAvailableAAL)
+				})
+				conf.MustSet(ctx, config.ViperKeySelfServiceSettingsRequiredAAL, "aal1")
+				conf.MustSet(ctx, config.ViperKeyURLsAllowedReturnToDomains, []string{"https://ory.sh"})
+
+				returnTo := "?return_to=https://ory.sh"
+				req, err := http.NewRequest("GET", publicTS.URL+settings.RouteInitBrowserFlow+returnTo, nil)
+				require.NoError(t, err)
+
+				res, err := aal2Identity.Do(req)
+				require.NoError(t, err)
+
+				require.Equal(t, http.StatusOK, res.StatusCode)
+
+				body := ioutilx.MustReadAll(res.Body)
+				require.NoError(t, res.Body.Close())
+
+				id := gjson.GetBytes(body, "id").String()
+
+				conf.MustSet(ctx, config.ViperKeySelfServiceSettingsRequiredAAL, config.HighestAvailableAAL)
+				res, err = aal2Identity.Get(publicTS.URL + settings.RouteGetFlow + "?id=" + id)
+				require.NoError(t, err)
+
+				body = ioutilx.MustReadAll(res.Body)
+				require.NoError(t, res.Body.Close())
+
+				require.EqualValues(t, http.StatusForbidden, res.StatusCode)
+
+				assertx.EqualAsJSON(t, session.NewErrAALNotSatisfied(publicTS.URL+"/self-service/login/browser?aal=aal2&return_to="+url.QueryEscape("https://ory.sh")), json.RawMessage(body))
 			})
 		})
 	})
