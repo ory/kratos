@@ -158,6 +158,15 @@ func (s *Session) CompletedLoginFor(method identity.CredentialsType, aal identit
 	s.AMR = append(s.AMR, AuthenticationMethod{Method: method, AAL: aal, CompletedAt: time.Now().UTC()})
 }
 
+func (s *Session) AuthenticatedVia(method identity.CredentialsType) bool {
+	for _, authMethod := range s.AMR {
+		if authMethod.Method == method {
+			return true
+		}
+	}
+	return false
+}
+
 func (s *Session) SetAuthenticatorAssuranceLevel() {
 	if len(s.AMR) == 0 {
 		// No AMR is set

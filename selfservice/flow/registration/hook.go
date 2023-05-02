@@ -228,7 +228,7 @@ func (e *HookExecutor) PostRegistrationHook(w http.ResponseWriter, r *http.Reque
 		Debug("Post registration execution hooks completed successfully.")
 
 	if a.Type == flow.TypeAPI || x.IsJSONRequest(r) {
-		if handled, err := e.d.SessionManager().MaybeRedirectAPICodeFlow(w, r, a, s.ID); err != nil {
+		if handled, err := e.d.SessionManager().MaybeRedirectAPICodeFlow(w, r, a, s.ID, ct.ToUiNodeGroup()); err != nil {
 			return errors.WithStack(err)
 		} else if handled {
 			return nil

@@ -42,6 +42,8 @@ type (
 		UpdateSessionOnExchanger(ctx context.Context, flowID uuid.UUID, sessionID uuid.UUID) error
 		CodeForFlow(ctx context.Context, flowID uuid.UUID) (codes *Codes, found bool, err error)
 		MoveToNewFlow(ctx context.Context, oldFlow, newFlow uuid.UUID) error
+
+		DeleteExpiredExchangers(context.Context, time.Time, int) error
 	}
 
 	PersistenceProvider interface {

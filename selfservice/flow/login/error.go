@@ -125,7 +125,8 @@ func (s *ErrorHandler) WriteFlowError(w http.ResponseWriter, r *http.Request, f 
 		return
 	}
 
-	if _, hasCode, _ := s.d.SessionTokenExchangePersister().CodeForFlow(r.Context(), f.ID); f.Type == flow.TypeAPI && hasCode {
+	_, hasCode, _ := s.d.SessionTokenExchangePersister().CodeForFlow(r.Context(), f.ID)
+	if f.Type == flow.TypeAPI && hasCode && group == node.OpenIDConnectGroup {
 		http.Redirect(w, r, f.ReturnTo, http.StatusSeeOther)
 		return
 	}

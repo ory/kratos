@@ -42,8 +42,6 @@ const (
 	RouteGetFlow = "/self-service/login/flows"
 
 	RouteSubmitFlow = "/self-service/login"
-
-	RouteExchangeSessionToken = "/self-service/login/exchange-session-token" //nolint:gosec
 )
 
 type (
@@ -135,18 +133,17 @@ func (h *Handler) NewLoginFlow(w http.ResponseWriter, r *http.Request, ft flow.T
 		return nil, nil, errors.WithStack(herodot.ErrBadRequest.WithReasonf("Unable to parse AuthenticationMethod Assurance Level (AAL): %s", cs.ToUnknownCaseErr()))
 	}
 
-	if ft == flow.TypeAPI && r.URL.Query().Get("return_session_token_exchange_code") == "true" {
-		e, err := h.d.SessionTokenExchangePersister().CreateSessionTokenExchanger(r.Context(), f.ID)
-		if err != nil {
-			return nil, nil, errors.WithStack(herodot.ErrInternalServerError.WithWrap(err))
-		}
-		f.SessionTokenExchangeCode = e.InitCode
-	}
-
 	// We assume an error means the user has no session
 	sess, err := h.d.SessionManager().FetchFromRequest(r.Context(), r)
 	if e := new(session.ErrNoActiveSessionFound); errors.As(err, &e) {
 		// No session exists yet
+		if ft == flow.TypeAPI && r.URL.Query().Get("return_session_token_exchange_code") == "true" {
+			e, err := h.d.SessionTokenExchangePersister().CreateSessionTokenExchanger(r.Context(), f.ID)
+			if err != nil {
+				return nil, nil, errors.WithStack(herodot.ErrInternalServerError.WithWrap(err))
+			}
+			f.SessionTokenExchangeCode = e.InitCode
+		}
 
 		// We can not request an AAL > 1 because we must first verify the first factor.
 		if f.RequestedAAL > identity.AuthenticatorAssuranceLevel1 {
