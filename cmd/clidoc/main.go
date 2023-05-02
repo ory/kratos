@@ -132,6 +132,7 @@ func init() {
 		"NewInfoSelfServiceLoginContinue":                         text.NewInfoSelfServiceLoginContinue(),
 		"NewErrorValidationSuchNoWebAuthnUser":                    text.NewErrorValidationSuchNoWebAuthnUser(),
 		"NewInfoSelfServiceLoginLinkCredentials":                  text.NewInfoSelfServiceLoginLinkCredentials(),
+		"NewErrorValidationLoginLinkedCredentialsDoNotMatch":      text.NewErrorValidationLoginLinkedCredentialsDoNotMatch(),
 	}
 }
 

@@ -25,8 +25,9 @@ const InternalContextDuplicateCredentialsPath = "registration_duplicate_credenti
 const InternalContextLinkCredentialsPath = "link_credentials"
 
 type RegistrationDuplicateCredentials struct {
-	CredentialsType   identity.CredentialsType
-	CredentialsConfig sqlxx.JSONRawMessage
+	CredentialsType     identity.CredentialsType
+	CredentialsConfig   sqlxx.JSONRawMessage
+	DuplicateIdentifier string
 }
 
 func AppendFlowTo(src *url.URL, id uuid.UUID) *url.URL {

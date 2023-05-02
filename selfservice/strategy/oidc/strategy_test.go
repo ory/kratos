@@ -14,6 +14,7 @@ import (
 	"net/http/cookiejar"
 	"net/http/httptest"
 	"net/url"
+	"strconv"
 	"strings"
 	"testing"
 	"time"
@@ -550,6 +551,7 @@ func TestStrategy(t *testing.T) {
 
 	t.Run("case=registration should start new login flow if duplicate credentials detected", func(t *testing.T) {
 		subject = "new-login-if-email-exist-with-password-strategy@ory.sh"
+		subject2 := "new-login-subject2@ory.sh"
 		scope = []string{"openid"}
 		password := "lwkj52sdkjf"
 
@@ -563,8 +565,15 @@ func TestStrategy(t *testing.T) {
 				Config:      sqlxx.JSONRawMessage(`{"hashed_password":"` + string(p) + `"}`),
 			})
 			i.Traits = identity.Traits(`{"subject":"` + subject + `"}`)
-
 			require.NoError(t, reg.PrivilegedIdentityPool().CreateIdentity(context.Background(), i))
+
+			i2 := identity.NewIdentity(config.DefaultIdentityTraitsSchemaID)
+			i2.SetCredentials(identity.CredentialsTypePassword, identity.Credentials{
+				Identifiers: []string{subject2},
+				Config:      sqlxx.JSONRawMessage(`{"hashed_password":"` + string(p) + `"}`),
+			})
+			i2.Traits = identity.Traits(`{"subject":"` + subject2 + `"}`)
+			require.NoError(t, reg.PrivilegedIdentityPool().CreateIdentity(context.Background(), i2))
 		})
 
 		c := testhelpers.NewClientWithCookieJar(t, nil, false)
@@ -592,6 +601,19 @@ func TestStrategy(t *testing.T) {
 			aue(t, res, body, "New credentials will be linked to existing account after login.")
 			loginFlow, err = reg.LoginFlowPersister().GetLoginFlow(context.Background(), uuid.FromStringOrNil(gjson.GetBytes(body, "id").String()))
 			assert.NotNil(t, loginFlow, "%s", body)
+		})
+
+		t.Run("case=should fail login if existing identity identifier doesn't match", func(t *testing.T) {
+			res, err := c.PostForm(loginFlow.UI.Action, url.Values{
+				"csrf_token": {loginFlow.CSRFToken},
+				"method":     {"password"},
+				"identifier": {subject2},
+				"password":   {password}})
+			require.NoError(t, err, loginFlow.UI.Action)
+			body, err := io.ReadAll(res.Body)
+			require.NoError(t, res.Body.Close())
+			require.NoError(t, err)
+			assert.Equal(t, strconv.Itoa(int(text.ErrorValidationLoginLinkedCredentialsDoNotMatch)), gjson.GetBytes(body, "ui.messages.0.id").String(), "%s", body)
 		})
 
 		t.Run("case=should link oidc credentials to existing identity", func(t *testing.T) {

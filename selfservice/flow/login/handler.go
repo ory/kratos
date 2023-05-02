@@ -4,6 +4,7 @@
 package login
 
 import (
+	"context"
 	_ "embed"
 	"encoding/json"
 	"fmt"
@@ -67,6 +68,7 @@ type (
 		x.CSRFProvider
 		config.Provider
 		ErrorHandlerProvider
+		identity.PrivilegedPoolProvider
 	}
 	HandlerProvider interface {
 		LoginHandler() *Handler
@@ -817,6 +819,9 @@ func (h *Handler) linkCredentials(r *http.Request, s *session.Session, i *identi
 	}
 
 	if lc.CredentialsType != "" {
+		if err := h.checkDuplecateCredentialsIdentifierMatch(r.Context(), i.ID, lc.DuplicateIdentifier); err != nil {
+			return err
+		}
 		strategy, err := h.d.AllLoginStrategies().Strategy(lc.CredentialsType)
 		if err != nil {
 			return err
@@ -846,4 +851,19 @@ func (h *Handler) getInternalContextLinkCredentials(f *Flow, internalContextPath
 		}
 	}
 	return nil
+}
+
+func (h *Handler) checkDuplecateCredentialsIdentifierMatch(ctx context.Context, identityID uuid.UUID, match string) error {
+	i, err := h.d.PrivilegedIdentityPool().GetIdentityConfidential(ctx, identityID)
+	if err != nil {
+		return err
+	}
+	for _, credentials := range i.Credentials {
+		for _, identifier := range credentials.Identifiers {
+			if identifier == match {
+				return nil
+			}
+		}
+	}
+	return schema.NewLinkedCredentialsDoNotMatch()
 }

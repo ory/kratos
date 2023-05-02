@@ -75,6 +75,7 @@ type (
 	executorDependencies interface {
 		config.Provider
 		identity.ManagementProvider
+		identity.PrivilegedPoolProvider
 		identity.ValidationProvider
 		login.FlowPersistenceProvider
 		login.StrategyProvider
@@ -151,9 +152,14 @@ func (e *HookExecutor) PostRegistrationHook(w http.ResponseWriter, r *http.Reque
 			_, ok := strategy.(login.LinkableStrategy)
 
 			if ok {
+				duplicateIdentifier, err := e.getDuplicateIdentifier(r.Context(), i)
+				if err != nil {
+					return err
+				}
 				registrationDuplicateCredentials := flow.RegistrationDuplicateCredentials{
-					CredentialsType:   ct,
-					CredentialsConfig: i.Credentials[ct].Config,
+					CredentialsType:     ct,
+					CredentialsConfig:   i.Credentials[ct].Config,
+					DuplicateIdentifier: duplicateIdentifier,
 				}
 				loginFlowID, err := a.GetOuterLoginFlowID()
 				if err != nil {
@@ -288,6 +294,22 @@ func (e *HookExecutor) PostRegistrationHook(w http.ResponseWriter, r *http.Reque
 
 	x.ContentNegotiationRedirection(w, r, s.Declassify(), e.d.Writer(), finalReturnTo)
 	return nil
+}
+
+func (e *HookExecutor) getDuplicateIdentifier(ctx context.Context, i *identity.Identity) (string, error) {
+	for ct, credentials := range i.Credentials {
+		for _, identifier := range credentials.Identifiers {
+			_, _, err := e.d.PrivilegedIdentityPool().FindByCredentialsIdentifier(ctx, ct, identifier)
+			if err != nil {
+				if errors.Is(err, sqlcon.ErrNoRows) {
+					continue
+				}
+				return "", err
+			}
+			return identifier, nil
+		}
+	}
+	return "", errors.New("Duplicate credential not found")
 }
 
 func (e *HookExecutor) PreRegistrationHook(w http.ResponseWriter, r *http.Request, a *Flow) error {
