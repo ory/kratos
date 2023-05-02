@@ -44,6 +44,7 @@ export default defineConfig({
       url: "http://localhost:4433/health/ready",
       reuseExistingServer: false,
       env: { DSN: dbToDsn() },
+      timeout: 5 * 60 * 1000, // 5 minutes
     },
   ],
 })
