@@ -42,8 +42,6 @@ const (
 	RouteGetFlow = "/self-service/login/flows"
 
 	RouteSubmitFlow = "/self-service/login"
-
-	RouteExchangeSessionToken = "/self-service/login/exchange-session-token" //nolint:gosec
 )
 
 type (
