@@ -111,10 +111,18 @@ func (s *Sender) SendRecoveryCode(ctx context.Context, f *recovery.Flow, via ide
 		return err
 	}
 
-	return s.SendRecoveryCodeTo(ctx, i, rawCode, code)
+	return s.SendRecoveryCodeTo(ctx, f, i, rawCode, code)
 }
 
-func (s *Sender) SendRecoveryCodeTo(ctx context.Context, i *identity.Identity, codeString string, code *RecoveryCode) error {
+func (s *Sender) constructRecoveryLink(ctx context.Context, fID uuid.UUID) string {
+	return urlx.CopyWithQuery(
+		s.deps.Config().SelfServiceFlowRecoveryUI(ctx),
+		url.Values{
+			"flow": {fID.String()},
+		}).String()
+}
+
+func (s *Sender) SendRecoveryCodeTo(ctx context.Context, f *recovery.Flow, i *identity.Identity, codeString string, code *RecoveryCode) error {
 	s.deps.Audit().
 		WithField("via", code.RecoveryAddress.Via).
 		WithField("identity_id", code.RecoveryAddress.IdentityID).
@@ -130,6 +138,7 @@ func (s *Sender) SendRecoveryCodeTo(ctx context.Context, i *identity.Identity, c
 
 	emailModel := email.RecoveryCodeValidModel{
 		To:           code.RecoveryAddress.Value,
+		RecoveryURL:  s.constructRecoveryLink(ctx, f.ID),
 		RecoveryCode: codeString,
 		Identity:     model,
 	}

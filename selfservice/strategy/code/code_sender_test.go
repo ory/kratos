@@ -34,11 +34,21 @@ var b64 = func(str string) string {
 func TestSender(t *testing.T) {
 	ctx := context.Background()
 	conf, reg := internal.NewFastRegistryWithMocks(t)
+
+	var (
+		recoveryURL         = "https://recovery-url/ui"
+		verificationBaseURL = "https://link-url/"
+
+		recoveryURLRegex     = recoveryURL + `\?flow=[-0-9a-f]{36}(\s|$)`
+		verificationURLRegex = verificationBaseURL + `self-service/verification\?code=` + testhelpers.CodeRegex + `&flow=[-0-9a-f]{36}(\s|$)`
+	)
+
 	testhelpers.SetDefaultIdentitySchema(conf, "file://./stub/default.schema.json")
 	conf.MustSet(ctx, config.ViperKeyPublicBaseURL, "https://www.ory.sh/")
 	conf.MustSet(ctx, config.ViperKeyCourierSMTPURL, "smtp://foo@bar@dev.null/")
-	conf.MustSet(ctx, config.ViperKeyLinkBaseURL, "https://link-url/")
+	conf.MustSet(ctx, config.ViperKeyLinkBaseURL, verificationBaseURL)
 	conf.MustSet(ctx, config.ViperKeySelfServiceRecoveryNotifyUnknownRecipients, true)
+	conf.MustSet(ctx, config.ViperKeySelfServiceRecoveryUI, recoveryURL)
 	conf.MustSet(ctx, config.ViperKeySelfServiceVerificationNotifyUnknownRecipients, true)
 
 	u := &http.Request{URL: urlx.ParseOrPanic("https://www.ory.sh/")}
@@ -70,11 +80,13 @@ func TestSender(t *testing.T) {
 			assert.Contains(t, messages[0].Subject, "Recover access to your account")
 
 			assert.Regexp(t, testhelpers.CodeRegex, messages[0].Body)
+			assert.Regexp(t, recoveryURLRegex, messages[0].Body)
 
 			assert.EqualValues(t, "not-tracked@ory.sh", messages[1].Recipient)
 			assert.Contains(t, messages[1].Subject, "Account access attempted")
 
 			assert.NotRegexp(t, testhelpers.CodeRegex, messages[1].Body, "Expected message to not contain an 6 digit recovery code, but it did: ", messages[1].Body)
+			assert.NotContains(t, messages[1].Body, recoveryURL)
 		})
 
 		t.Run("case=with custom templates", func(t *testing.T) {
@@ -85,7 +97,7 @@ func TestSender(t *testing.T) {
 				conf.MustSet(ctx, config.ViperKeyCourierTemplatesRecoveryCodeValidEmail, nil)
 			})
 			conf.MustSet(ctx, config.ViperKeyCourierTemplatesRecoveryCodeInvalidEmail, fmt.Sprintf(`{ "subject": "base64://%s", "body": { "plaintext": "base64://%s", "html": "base64://%s" }}`, b64(subject+" invalid"), b64(body), b64(body)))
-			conf.MustSet(ctx, config.ViperKeyCourierTemplatesRecoveryCodeValidEmail, fmt.Sprintf(`{ "subject": "base64://%s", "body": { "plaintext": "base64://%s", "html": "base64://%s" }}`, b64(subject+" valid"), b64(body+" {{ .RecoveryCode }}"), b64(body+" {{ .RecoveryCode }}")))
+			conf.MustSet(ctx, config.ViperKeyCourierTemplatesRecoveryCodeValidEmail, fmt.Sprintf(`{ "subject": "base64://%s", "body": { "plaintext": "base64://%s", "html": "base64://%s" }}`, b64(subject+" valid"), b64(body+" {{ .RecoveryCode }} {{ .RecoveryURL }}"), b64(body+" {{ .RecoveryCode }} {{ .RecoveryURL }}")))
 			recoveryCode(t)
 			messages, err := reg.CourierPersister().NextMessages(ctx, 12)
 			require.NoError(t, err)
@@ -96,6 +108,7 @@ func TestSender(t *testing.T) {
 			assert.Contains(t, messages[0].Body, body)
 
 			assert.Regexp(t, testhelpers.CodeRegex, messages[0].Body)
+			assert.Regexp(t, recoveryURL, messages[0].Body)
 
 			assert.EqualValues(t, "not-tracked@ory.sh", messages[1].Recipient)
 			assert.Equal(t, messages[1].Subject, subject+" invalid")
@@ -127,11 +140,13 @@ func TestSender(t *testing.T) {
 			assert.Contains(t, messages[0].Subject, "Please verify your email address")
 
 			assert.Regexp(t, testhelpers.CodeRegex, messages[0].Body)
+			assert.Regexp(t, verificationURLRegex, messages[0].Body)
 
 			assert.EqualValues(t, "not-tracked@ory.sh", messages[1].Recipient)
 			assert.Contains(t, messages[1].Subject, "Someone tried to verify this email address")
 
 			assert.NotRegexp(t, testhelpers.CodeRegex, messages[1].Body, "Expected message to not contain an 6 digit recovery code, but it did: ", messages[1].Body)
+			assert.NotContains(t, messages[1].Body, verificationBaseURL)
 		})
 
 		t.Run("case=with custom templates", func(t *testing.T) {
@@ -142,7 +157,7 @@ func TestSender(t *testing.T) {
 				conf.MustSet(ctx, config.ViperKeyCourierTemplatesVerificationCodeValidEmail, nil)
 			})
 			conf.MustSet(ctx, config.ViperKeyCourierTemplatesVerificationCodeInvalidEmail, fmt.Sprintf(`{ "subject": "base64://%s", "body": { "plaintext": "base64://%s", "html": "base64://%s" }}`, b64(subject+" invalid"), b64(body), b64(body)))
-			conf.MustSet(ctx, config.ViperKeyCourierTemplatesVerificationCodeValidEmail, fmt.Sprintf(`{ "subject": "base64://%s", "body": { "plaintext": "base64://%s", "html": "base64://%s" }}`, b64(subject+" valid"), b64(body+" {{ .VerificationCode }}"), b64(body+" {{ .VerificationCode }}")))
+			conf.MustSet(ctx, config.ViperKeyCourierTemplatesVerificationCodeValidEmail, fmt.Sprintf(`{ "subject": "base64://%s", "body": { "plaintext": "base64://%s", "html": "base64://%s" }}`, b64(subject+" valid"), b64(body+" {{ .VerificationCode }} {{ .VerificationURL }}"), b64(body+" {{ .VerificationCode }} {{ .VerificationURL }}")))
 			verificationFlow(t)
 			messages, err := reg.CourierPersister().NextMessages(ctx, 12)
 			require.NoError(t, err)
@@ -153,6 +168,7 @@ func TestSender(t *testing.T) {
 			assert.Contains(t, messages[0].Body, body)
 
 			assert.Regexp(t, testhelpers.CodeRegex, messages[0].Body)
+			assert.Regexp(t, verificationURLRegex, messages[0].Body)
 
 			assert.EqualValues(t, "not-tracked@ory.sh", messages[1].Recipient)
 			assert.Equal(t, messages[1].Subject, subject+" invalid")
