@@ -1901,6 +1901,12 @@
               "Authorization": "Bearer some-token"
             }
           ]
+        },
+        "override_return_to": {
+          "title":"Persist OAuth2 request between flows",
+          "type":"boolean",
+          "default":false,
+          "description":"Override the return_to query parameter with the OAuth2 provider request URL when perfoming an OAuth2 login flow."
         }
       },
       "additionalProperties": false

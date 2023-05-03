@@ -2,3 +2,4 @@ oauth2_provider:
   url: https://oauth2_provider/
   headers:
     Authorization: Basic
+  override_return_to: true

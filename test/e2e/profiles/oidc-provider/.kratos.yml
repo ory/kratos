@@ -4,6 +4,23 @@ clients:
 oauth2_provider:
   url: "http://localhost:4745"
 selfservice:
+  methods:
+    password:
+      enabled: true
+    code:
+      enabled: true
+    oidc:
+      enabled: true
+      config:
+        providers:
+          - id: google
+            provider: generic
+            client_id: ${OIDC_GOOGLE_CLIENT_ID}
+            client_secret: ${OIDC_GOOGLE_CLIENT_SECRET}
+            issuer_url: http://localhost:4444/
+            scope:
+              - offline
+            mapper_url: file://test/e2e/profiles/oidc-provider/hydra.jsonnet
   flows:
     settings:
       privileged_session_max_age: 5m
@@ -30,6 +47,8 @@ selfservice:
       ui_url: http://localhost:4455/verify
     recovery:
       ui_url: http://localhost:4455/recovery
+      enabled: true
+      lifespan: 5m
 
 identity:
   schemas:

@@ -44,7 +44,8 @@ context("OpenID Provider", () => {
     cy.get('input[type=checkbox][name="traits.newsletter"]').click({
       force: true,
     })
-    cy.get("[type=submit]").click()
+
+    cy.get("[type='submit'][value='password']").click()
 
     cy.get("#openid").click()
     cy.get("#offline").click()
