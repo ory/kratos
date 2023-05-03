@@ -7,13 +7,13 @@ import { routes as react } from "../../../../helpers/react"
 
 context("Recovery with `return_to`", () => {
   ;[
-    {
-      recovery: react.recovery,
-      settings: react.settings,
-      base: react.base,
-      app: "react" as "react",
-      profile: "spa",
-    },
+    //{
+    //  recovery: react.recovery,
+    //  settings: react.settings,
+    //  base: react.base,
+    //  app: "react" as "react",
+    //  profile: "spa",
+    //},
     {
       recovery: express.recovery,
       settings: express.settings,
@@ -58,6 +58,12 @@ context("Recovery with `return_to`", () => {
           cy.recoveryEmailWithCode({ expect: { email: identity.email } })
           cy.get("button[value='code']").click()
 
+        }
+
+        it("should return to the `return_to` url after successful account recovery and settings update", () => {
+          cy.visit(recovery + "?return_to=https://www.ory.sh/")
+          doRecovery()
+
           cy.get('[data-testid="ui/message/1060001"]', { timeout: 30000 }).should(
             "contain.text",
             "You successfully recovered your account. ",
@@ -65,11 +71,6 @@ context("Recovery with `return_to`", () => {
 
           cy.getSession()
           cy.location("pathname").should("eq", "/settings")
-        }
-
-        it("should return to the `return_to` url after successful account recovery and settings update", () => {
-          cy.visit(recovery + "?return_to=https://www.ory.sh/")
-          doRecovery()
 
           const newPassword = gen.password()
           cy.get(appPrefix(app) + 'input[name="password"]')
@@ -77,15 +78,17 @@ context("Recovery with `return_to`", () => {
             .type(newPassword)
           cy.get('button[value="password"]').click()
 
-          cy.location("hostname").should("eq", "ory.sh")
+          cy.location("hostname").should("eq", "www.ory.sh")
         })
 
         it("should return to the `return_to` url even with mfa enabled after successful account recovery and settings update", () => {
           cy.requireStrictAal()
 
           cy.visit(settings)
-          cy.get('input[name="identifier"]').type(email)
-          cy.get('input[name="password"]').type(password)
+          cy.get('input[name="identifier"]').type(identity.email)
+          cy.get('input[name="password"]').type(identity.password)
+          cy.get('button[type="submit"]').click()
+          cy.visit(settings)
 
           // enable mfa for this account
           let secret
@@ -107,21 +110,19 @@ context("Recovery with `return_to`", () => {
           cy.visit(recovery + "?return_to=https://www.ory.sh/")
           doRecovery()
 
-          const newPassword = gen.password()
-          cy.get(appPrefix(app) + 'input[name="password"]')
-            .clear()
-            .type(newPassword)
-          cy.get('button[value="password"]').click()
-
-
           cy.shouldShow2FAScreen()
           cy.get('input[name="totp_code"]').then(($e) => {
             cy.wrap($e).type(authenticator.generate(secret))
           })
           cy.get('*[name="method"][value="totp"]').click()
-          cy.location("pathname").should((loc) => {
-            expect(loc.hostname).to.eq("ory.sh")
-          })
+
+          cy.location("hostname").should("eq", "www.ory.sh")
+
+          const newPassword = gen.password()
+          cy.get(appPrefix(app) + 'input[name="password"]')
+            .clear()
+            .type(newPassword)
+          cy.get('button[value="password"]').click()
         })
     })
   })

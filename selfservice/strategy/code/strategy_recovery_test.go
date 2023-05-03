@@ -46,8 +46,11 @@ import (
 	"github.com/ory/kratos/internal"
 	"github.com/ory/kratos/internal/testhelpers"
 	"github.com/ory/kratos/selfservice/flow"
+	"github.com/ory/kratos/selfservice/flow/login"
 	"github.com/ory/kratos/selfservice/flow/recovery"
+	"github.com/ory/kratos/selfservice/flow/settings"
 	"github.com/ory/kratos/selfservice/strategy/code"
+	"github.com/ory/kratos/selfservice/strategy/totp"
 	"github.com/ory/kratos/text"
 	"github.com/ory/kratos/x"
 )
@@ -314,7 +317,8 @@ func createIdentityToRecover(t *testing.T, reg *driver.RegistryDefault, email st
 func TestRecovery(t *testing.T) {
 	ctx := context.Background()
 	conf, reg := internal.NewFastRegistryWithMocks(t)
-	conf.MustSet(ctx, config.ViperKeySelfServiceStrategyConfig+"."+string(recovery.RecoveryStrategyLink+".enabled"), false)
+	testhelpers.StrategyEnable(t, conf, string(recovery.RecoveryStrategyCode), true)
+	testhelpers.StrategyEnable(t, conf, string(recovery.RecoveryStrategyLink), true)
 	initViper(t, ctx, conf)
 
 	_ = testhelpers.NewRecoveryUIFlowEchoServer(t, reg)
@@ -468,21 +472,22 @@ func TestRecovery(t *testing.T) {
 			returnTo := public.URL + "/return-to"
 			conf.Set(ctx, config.ViperKeyURLsAllowedReturnToDomains, []string{returnTo})
 			for _, tc := range []struct {
-				desc     string
-				returnTo string
-				f        func(t *testing.T, client *http.Client) *kratos.RecoveryFlow
+				desc        string
+				returnTo    string
+				f           func(t *testing.T, client *http.Client, identity *identity.Identity) *kratos.RecoveryFlow
+				expectedAAL string
 			}{
 				{
 					desc:     "should use return_to from recovery flow",
 					returnTo: returnTo,
-					f: func(t *testing.T, client *http.Client) *kratos.RecoveryFlow {
+					f: func(t *testing.T, client *http.Client, identity *identity.Identity) *kratos.RecoveryFlow {
 						return testhelpers.InitializeRecoveryFlowViaBrowser(t, client, false, public, url.Values{"return_to": []string{returnTo}})
 					},
 				},
 				{
 					desc:     "should use return_to from config",
 					returnTo: returnTo,
-					f: func(t *testing.T, client *http.Client) *kratos.RecoveryFlow {
+					f: func(t *testing.T, client *http.Client, identity *identity.Identity) *kratos.RecoveryFlow {
 						conf.Set(ctx, config.ViperKeySelfServiceRecoveryBrowserDefaultReturnTo, returnTo)
 						t.Cleanup(func() {
 							conf.Set(ctx, config.ViperKeySelfServiceRecoveryBrowserDefaultReturnTo, "")
@@ -493,19 +498,47 @@ func TestRecovery(t *testing.T) {
 				{
 					desc:     "no return to",
 					returnTo: "",
-					f: func(t *testing.T, client *http.Client) *kratos.RecoveryFlow {
+					f: func(t *testing.T, client *http.Client, identity *identity.Identity) *kratos.RecoveryFlow {
 						return testhelpers.InitializeRecoveryFlowViaBrowser(t, client, false, public, nil)
 					},
+				},
+				{
+					desc:     "should use return_to with an account that has 2fa enabled",
+					returnTo: returnTo,
+					f: func(t *testing.T, client *http.Client, id *identity.Identity) *kratos.RecoveryFlow {
+						conf.Set(ctx, config.ViperKeySelfServiceSettingsRequiredAAL, config.HighestAvailableAAL)
+						conf.Set(ctx, config.ViperKeySessionWhoAmIAAL, "aal2")
+						testhelpers.StrategyEnable(t, conf, settings.StrategyProfile, true)
+						testhelpers.StrategyEnable(t, conf, identity.CredentialsTypeTOTP.String(), true)
+						testhelpers.StrategyEnable(t, conf, identity.CredentialsTypePassword.String(), true)
+
+						key, err := totp.NewKey(context.Background(), "foo", reg)
+						require.NoError(t, err)
+
+						assert.True(t, id.IsActive())
+
+						id.SetCredentials(identity.CredentialsTypeTOTP, identity.Credentials{
+							Type:        identity.CredentialsTypeTOTP,
+							Identifiers: []string{id.ID.String()},
+							Config:      sqlxx.JSONRawMessage(`{"totp_url":"` + string(key.URL()) + `"}`),
+						})
+
+						id.State = identity.StateActive
+
+						require.NoError(t, reg.PrivilegedIdentityPool().UpdateIdentity(context.Background(), id))
+
+						return testhelpers.InitializeRecoveryFlowViaBrowser(t, client, true, public, url.Values{"return_to": []string{returnTo}})
+					},
+					expectedAAL: "aal2",
 				},
 			} {
 				t.Run(fmt.Sprintf("%s", tc.desc), func(t *testing.T) {
 					client := testhelpers.NewClientWithCookies(t)
 					email := testhelpers.RandomEmail()
-					createIdentityToRecover(t, reg, email)
+					i := createIdentityToRecover(t, reg, email)
 
 					client.Transport = testhelpers.NewTransportWithLogger(http.DefaultTransport, t).RoundTripper
-
-					f := tc.f(t, client)
+					f := tc.f(t, client, i)
 
 					formPayload := testhelpers.SDKFormFieldsToURLValues(f.Ui.Nodes)
 					formPayload.Set("email", email)
@@ -516,6 +549,23 @@ func TestRecovery(t *testing.T) {
 					assert.Contains(t, res.Request.URL.String(), expectedURL, "%+v\n\t%s", res.Request, body)
 
 					body = checkRecovery(t, client, RecoveryFlowTypeBrowser, email, body)
+
+					if tc.expectedAAL == "aal2" {
+						res, err := client.Get(public.URL + session.RouteWhoami)
+						require.NoError(t, err)
+						body = string(x.MustReadAll(res.Body))
+						require.NoError(t, res.Body.Close())
+						assert.Equal(t, "code_recovery", gjson.Get(body, "authentication_methods.0.method").String(), "%s", body)
+						assert.Equal(t, "aal2", gjson.Get(body, "authenticator_assurance_level").String(), "%s", body)
+
+						_, _, err = reg.PrivilegedIdentityPool().FindByCredentialsIdentifier(context.Background(), identity.CredentialsTypeTOTP, i.ID.String())
+						require.NoError(t, err)
+
+						require.Equal(t, "", string(body))
+						loc, err := res.Location()
+						require.NoError(t, err)
+						assert.Equal(t, login.RouteInitBrowserFlow+"?aal=aal2&return_to="+tc.returnTo, loc.String())
+					}
 
 					assert.Equal(t, text.NewRecoverySuccessful(time.Now().Add(time.Hour)).Text,
 						gjson.Get(body, "ui.messages.0.text").String())
@@ -532,7 +582,11 @@ func TestRecovery(t *testing.T) {
 					body = string(x.MustReadAll(res.Body))
 					require.NoError(t, res.Body.Close())
 					assert.Equal(t, "code_recovery", gjson.Get(body, "authentication_methods.0.method").String(), "%s", body)
-					assert.Equal(t, "aal1", gjson.Get(body, "authenticator_assurance_level").String(), "%s", body)
+					expectedAAL := "aal1"
+					if tc.expectedAAL != "" {
+						expectedAAL = tc.expectedAAL
+					}
+					assert.Equal(t, expectedAAL, gjson.Get(body, "authenticator_assurance_level").String(), "%s", body)
 				})
 			}
 		})
