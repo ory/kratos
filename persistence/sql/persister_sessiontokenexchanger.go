@@ -6,6 +6,7 @@ package sql
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"github.com/gobuffalo/pop/v6"
 	"github.com/gofrs/uuid"
@@ -105,4 +106,22 @@ func (p *Persister) MoveToNewFlow(ctx context.Context, oldFlow, newFlow uuid.UUI
 	)
 
 	return sqlcon.HandleError(conn.RawQuery(query, newFlow, oldFlow, p.NetworkID(ctx)).Exec())
+}
+
+func (p *Persister) DeleteExpiredExchangers(ctx context.Context, at time.Time, limit int) error {
+	expiredAfter := at.Add(1 * time.Hour)
+	conn := p.GetConnection(ctx)
+
+	//#nosec G201 -- TableName is static
+	err := conn.RawQuery(fmt.Sprintf(
+		"DELETE FROM %s WHERE id in (SELECT id FROM (SELECT id FROM %s c WHERE created_at <= ? and nid = ? ORDER BY created_at ASC LIMIT %d ) AS s )",
+		conn.Dialect.Quote(new(sessiontokenexchange.Exchanger).TableName()),
+		conn.Dialect.Quote(new(sessiontokenexchange.Exchanger).TableName()),
+		limit,
+	),
+		expiredAfter,
+		p.NetworkID(ctx),
+	).Exec()
+
+	return sqlcon.HandleError(err)
 }

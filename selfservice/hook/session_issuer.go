@@ -10,6 +10,9 @@ import (
 
 	"go.opentelemetry.io/otel/trace"
 
+	"github.com/ory/kratos/identity"
+	"github.com/ory/kratos/ui/node"
+
 	"github.com/ory/kratos/x/events"
 
 	"github.com/pkg/errors"
@@ -62,10 +65,12 @@ func (e *SessionIssuer) executePostRegistrationPostPersistHook(w http.ResponseWr
 	trace.SpanFromContext(r.Context()).AddEvent(events.NewSessionIssued(r.Context(), s.ID, s.IdentityID))
 
 	if a.Type == flow.TypeAPI {
-		if handled, err := e.r.SessionManager().MaybeRedirectAPICodeFlow(w, r, a, s.ID); err != nil {
-			return errors.WithStack(err)
-		} else if handled {
-			return nil
+		if s.AuthenticatedVia(identity.CredentialsTypeOIDC) {
+			if handled, err := e.r.SessionManager().MaybeRedirectAPICodeFlow(w, r, a, s.ID, node.OpenIDConnectGroup); err != nil {
+				return errors.WithStack(err)
+			} else if handled {
+				return nil
+			}
 		}
 
 		a.AddContinueWith(flow.NewContinueWithSetToken(s.Token))

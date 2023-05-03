@@ -136,7 +136,7 @@ func (s *ErrorHandler) WriteFlowError(
 		http.Redirect(w, r, f.AppendTo(s.d.Config().SelfServiceFlowRegistrationUI(r.Context())).String(), http.StatusFound)
 		return
 	}
-	if _, hasCode, _ := s.d.SessionTokenExchangePersister().CodeForFlow(r.Context(), f.ID); f.Type == flow.TypeAPI && hasCode {
+	if _, hasCode, _ := s.d.SessionTokenExchangePersister().CodeForFlow(r.Context(), f.ID); group == node.OpenIDConnectGroup && f.Type == flow.TypeAPI && hasCode {
 		http.Redirect(w, r, f.ReturnTo, http.StatusSeeOther)
 		return
 	}
