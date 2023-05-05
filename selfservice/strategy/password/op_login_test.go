@@ -163,6 +163,7 @@ func TestOAuth2Provider(t *testing.T) {
 		config.ViperKeySelfServiceStrategyConfig+"."+string(identity.CredentialsTypePassword),
 		map[string]interface{}{"enabled": true},
 	)
+
 	router := x.NewRouterPublic()
 	kratosPublicTS, _ := testhelpers.NewKratosServerWithRouters(t, reg, router, x.NewRouterAdmin())
 
@@ -238,6 +239,7 @@ func TestOAuth2Provider(t *testing.T) {
 
 	hydraAdmin, hydraPublic := newHydra(t, uiTS.URL, uiTS.URL)
 	conf.MustSet(ctx, config.ViperKeyOAuth2ProviderURL, hydraAdmin)
+
 	hydraAdminClient = createHydraOAuth2ApiClient(hydraAdmin)
 	clientID := createOAuth2Client(t, ctx, hydraAdminClient, []string{clientAppTS.URL}, "profile email")
 

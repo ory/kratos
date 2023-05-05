@@ -5,7 +5,7 @@
 
 **Table of Contents**
 
-- [ (2023-05-02)](#2023-05-02)
+- [ (2023-05-03)](#2023-05-03)
   - [Bug Fixes](#bug-fixes)
   - [Features](#features)
   - [Tests](#tests)
@@ -301,7 +301,7 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# [](https://github.com/ory/kratos/compare/v0.13.0...v) (2023-05-02)
+# [](https://github.com/ory/kratos/compare/v0.13.0...v) (2023-05-03)
 
 ### Bug Fixes
 
@@ -316,6 +316,39 @@
 - Emit events for login/logout and registration
   ([#3235](https://github.com/ory/kratos/issues/3235))
   ([c784b7e](https://github.com/ory/kratos/commit/c784b7e7ed2834ca83c6db2326b735e78e5a75f2))
+- Return to oauth flow after switching from login to other flows
+  ([#3212](https://github.com/ory/kratos/issues/3212))
+  ([a1fea6c](https://github.com/ory/kratos/commit/a1fea6c353768bbf154900766fbbe51f2a148554)):
+
+  - feat: return to oauth flow after switching from login to other flows
+
+  - feat(e2e): flows should have return_to set to hydra request_url
+
+  - u
+
+  - fix: override return_to URL on OAuth flows
+
+  - style: format
+
+  - fix: TestOAuth2Provider
+
+  - feat: config to opt into using OAuth request url as return_to
+
+  - chore: cleanup
+
+  - fix(e2e): oauth2 login flow switching to recovery
+
+  - feat(test): oauth2 login flow to recovery through oidc provider
+
+  - fix(e2e): oidc-provider registration
+
+  - chore: rename `oauth2_provider.return_to_enabled` to
+    `oauth2_provider.override_return_to`
+
+  - style: format
+
+  - chore: nit config description
+
 - Support OIDC flows for native apps
   ([#3216](https://github.com/ory/kratos/issues/3216))
   ([cb10609](https://github.com/ory/kratos/commit/cb106097210ac9a146738d06c20a4306c2345923)),
