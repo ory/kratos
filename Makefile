@@ -198,9 +198,9 @@ post-release:
 
 .PHONY: update-quickstart
 update-quickstart: .bin/yq
-	cat quickstart.yml | yq '.services.kratos.image = "oryd/kratos:'$$DOCKER_TAG'"' | sponge quickstart.yml
-	cat quickstart.yml | yq '.services.kratos-migrate.image = "oryd/kratos:'$$DOCKER_TAG'"' | sponge quickstart.yml
-	cat quickstart.yml | yq '.services.kratos-selfservice-ui-node.image = "oryd/kratos-selfservice-ui-node:'$$DOCKER_TAG'"' | sponge quickstart.yml
+	cat quickstart.yml | yq '.services.kratos.image = "oryd/kratos:'$$NEXT_VERSION'"' | sponge quickstart.yml
+	cat quickstart.yml | yq '.services.kratos-migrate.image = "oryd/kratos:'$$NEXT_VERSION'"' | sponge quickstart.yml
+	cat quickstart.yml | yq '.services.kratos-selfservice-ui-node.image = "oryd/kratos-selfservice-ui-node:'$$NEXT_VERSION'"' | sponge quickstart.yml
 
 licenses: .bin/licenses node_modules  # checks open-source licenses
 	.bin/licenses
