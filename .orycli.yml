@@ -5,3 +5,4 @@ pre_release_hooks:
   - ./script/render-schemas.sh
   - git config --unset user.email
   - git config --unset user.name
+  - make update-quickstart

@@ -193,7 +193,11 @@ test-update-snapshots:
 	UPDATE_SNAPSHOTS=true go test -p 4 -tags sqlite -short ./...
 
 .PHONY: post-release
-post-release: .bin/yq
+post-release:
+	echo "nothing to do here"
+
+.PHONY: update-quickstart
+update-quickstart: .bin/yq
 	cat quickstart.yml | yq '.services.kratos.image = "oryd/kratos:'$$DOCKER_TAG'"' | sponge quickstart.yml
 	cat quickstart.yml | yq '.services.kratos-migrate.image = "oryd/kratos:'$$DOCKER_TAG'"' | sponge quickstart.yml
 	cat quickstart.yml | yq '.services.kratos-selfservice-ui-node.image = "oryd/kratos-selfservice-ui-node:'$$DOCKER_TAG'"' | sponge quickstart.yml
