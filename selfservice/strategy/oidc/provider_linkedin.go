@@ -88,7 +88,7 @@ func (l *ProviderLinkedIn) oauth2(ctx context.Context) *oauth2.Config {
 		ClientSecret: l.config.ClientSecret,
 		Endpoint:     linkedin.Endpoint,
 		Scopes:       l.config.Scope,
-		RedirectURL:  l.config.Redir(l.reg.Config().SelfPublicURL(ctx)),
+		RedirectURL:  l.config.Redir(l.reg.Config().OIDCRedirectURIBase(ctx)),
 	}
 }
 
