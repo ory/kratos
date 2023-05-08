@@ -47,6 +47,14 @@ context("Import Identities", () => {
       },
       checkPassword: "123456",
     },
+    {
+      name: "legacy",
+      config: {
+        hashed_password:
+          "$legacy$alg=sha512,format=e1NBTFR9e1BXRH17UEVQUEVSfQ,i=2,salt=YSBzYWx0,pepper=YSBwZXBwZXI$argon2id$v=19$m=65536,t=2,p=2$50KKKea7S6zVD1mw4daJ5Q$XvhuzVysBuAUYtlm6Q0OzX7UhqenPkV5inrvppinFKE",
+      },
+      checkPassword: "123456",
+    },
   ]) {
     it(`should be able to sign in using an imported password (${tc.name})`, () => {
       const email = gen.email()
