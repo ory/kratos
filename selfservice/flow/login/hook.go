@@ -5,7 +5,12 @@ package login
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
+	"github.com/gofrs/uuid"
+	"github.com/ory/kratos/schema"
+	"github.com/ory/x/decoderx"
+	"github.com/tidwall/gjson"
 	"net/http"
 	"time"
 
@@ -43,13 +48,16 @@ type (
 	executorDependencies interface {
 		config.Provider
 		hydra.HydraProvider
+		identity.PrivilegedPoolProvider
 		session.ManagementProvider
 		session.PersistenceProvider
 		x.CSRFTokenGeneratorProvider
 		x.WriterProvider
 		x.LoggingProvider
 
+		FlowPersistenceProvider
 		HooksProvider
+		StrategyProvider
 	}
 	HookExecutor struct {
 		d executorDependencies
@@ -110,6 +118,10 @@ func (e *HookExecutor) handleLoginError(_ http.ResponseWriter, r *http.Request, 
 }
 
 func (e *HookExecutor) PostLoginHook(w http.ResponseWriter, r *http.Request, g node.UiNodeGroup, a *Flow, i *identity.Identity, s *session.Session) error {
+	if err := e.linkCredentials(r, s, i, a); err != nil {
+		return err
+	}
+
 	if err := s.Activate(r, i, e.d.Config(), time.Now().UTC()); err != nil {
 		return err
 	}
@@ -249,4 +261,92 @@ func (e *HookExecutor) PreLoginHook(w http.ResponseWriter, r *http.Request, a *F
 	}
 
 	return nil
+}
+
+func (e *HookExecutor) linkCredentials(r *http.Request, s *session.Session, i *identity.Identity, f *Flow) error {
+	var lc flow.RegistrationDuplicateCredentials
+
+	if r.Method == "POST" {
+		var p struct {
+			FlowID string `json:"linkCredentialsFlow" form:"linkCredentialsFlow"`
+		}
+
+		if err := decoderx.NewHTTP().Decode(r, &p,
+			decoderx.HTTPDecoderSetValidatePayloads(true),
+			decoderx.MustHTTPRawJSONSchemaCompiler(linkCredentialsSchema),
+			decoderx.HTTPDecoderJSONFollowsFormFormat()); err != nil {
+			return err
+		}
+
+		if p.FlowID != "" {
+			linkCredentialsFlowID, innerErr := uuid.FromString(p.FlowID)
+			if innerErr != nil {
+				return innerErr
+			}
+			linkCredentialsFlow, innerErr := e.d.LoginFlowPersister().GetLoginFlow(r.Context(), linkCredentialsFlowID)
+			if innerErr != nil {
+				return innerErr
+			}
+			innerErr = e.getInternalContextLinkCredentials(linkCredentialsFlow, flow.InternalContextDuplicateCredentialsPath, &lc)
+			if innerErr != nil {
+				return innerErr
+			}
+		}
+	}
+
+	if lc.CredentialsType == "" {
+		err := e.getInternalContextLinkCredentials(f, flow.InternalContextLinkCredentialsPath, &lc)
+		if err != nil {
+			return err
+		}
+	}
+
+	if lc.CredentialsType != "" {
+		if err := e.checkDuplecateCredentialsIdentifierMatch(r.Context(), i.ID, lc.DuplicateIdentifier); err != nil {
+			return err
+		}
+		strategy, err := e.d.AllLoginStrategies().Strategy(lc.CredentialsType)
+		if err != nil {
+			return err
+		}
+
+		linkableStrategy, ok := strategy.(LinkableStrategy)
+		if !ok {
+			return errors.New(fmt.Sprintf("Strategy is not linkable: %T", linkableStrategy))
+		}
+
+		if err := linkableStrategy.Link(r.Context(), i, lc.CredentialsConfig); err != nil {
+			return err
+		}
+
+		method := strategy.CompletedAuthenticationMethod(r.Context())
+		s.CompletedLoginFor(method.Method, method.AAL)
+	}
+
+	return nil
+}
+
+func (e *HookExecutor) getInternalContextLinkCredentials(f *Flow, internalContextPath string, lc *flow.RegistrationDuplicateCredentials) error {
+	internalContextLinkCredentials := gjson.GetBytes(f.InternalContext, internalContextPath)
+	if internalContextLinkCredentials.IsObject() {
+		if err := json.Unmarshal([]byte(internalContextLinkCredentials.Raw), lc); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func (e *HookExecutor) checkDuplecateCredentialsIdentifierMatch(ctx context.Context, identityID uuid.UUID, match string) error {
+	i, err := e.d.PrivilegedIdentityPool().GetIdentityConfidential(ctx, identityID)
+	if err != nil {
+		return err
+	}
+	for _, credentials := range i.Credentials {
+		for _, identifier := range credentials.Identifiers {
+			if identifier == match {
+				return nil
+			}
+		}
+	}
+	return schema.NewLinkedCredentialsDoNotMatch()
 }

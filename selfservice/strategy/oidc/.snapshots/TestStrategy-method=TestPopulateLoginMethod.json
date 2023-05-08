@@ -42,6 +42,28 @@
       "attributes": {
         "name": "provider",
         "type": "submit",
+        "value": "secondProvider",
+        "disabled": false,
+        "node_type": "input"
+      },
+      "messages": [],
+      "meta": {
+        "label": {
+          "id": 1010002,
+          "text": "Sign in with secondProvider",
+          "type": "info",
+          "context": {
+            "provider": "secondProvider"
+          }
+        }
+      }
+    },
+    {
+      "type": "input",
+      "group": "oidc",
+      "attributes": {
+        "name": "provider",
+        "type": "submit",
         "value": "invalid-issuer",
         "disabled": false,
         "node_type": "input"
