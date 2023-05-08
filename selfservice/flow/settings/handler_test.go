@@ -357,39 +357,41 @@ func TestHandler(t *testing.T) {
 				assertx.EqualAsJSON(t, session.NewErrAALNotSatisfied(publicTS.URL+"/self-service/login/browser?aal=aal2"), json.RawMessage(body))
 			})
 
-			t.Run("description=preserve return_to if identity has aal2 but session has aal1", func(t *testing.T) {
-				t.Cleanup(func() {
-					conf.MustSet(ctx, config.ViperKeySelfServiceSettingsRequiredAAL, config.HighestAvailableAAL)
-				})
-				conf.MustSet(ctx, config.ViperKeySelfServiceSettingsRequiredAAL, "aal1")
-				conf.MustSet(ctx, config.ViperKeyURLsAllowedReturnToDomains, []string{"https://ory.sh"})
-
-				returnTo := "?return_to=https://ory.sh"
-				req, err := http.NewRequest("GET", publicTS.URL+settings.RouteInitBrowserFlow+returnTo, nil)
-				require.NoError(t, err)
-
-				res, err := aal2Identity.Do(req)
-				require.NoError(t, err)
-
-				require.Equal(t, http.StatusOK, res.StatusCode)
-
-				body := ioutilx.MustReadAll(res.Body)
-				require.NoError(t, res.Body.Close())
-
-				id := gjson.GetBytes(body, "id").String()
-
-				conf.MustSet(ctx, config.ViperKeySelfServiceSettingsRequiredAAL, config.HighestAvailableAAL)
-				res, err = aal2Identity.Get(publicTS.URL + settings.RouteGetFlow + "?id=" + id)
-				require.NoError(t, err)
-
-				body = ioutilx.MustReadAll(res.Body)
-				require.NoError(t, res.Body.Close())
-
-				require.EqualValues(t, http.StatusForbidden, res.StatusCode)
-
-				assertx.EqualAsJSON(t, session.NewErrAALNotSatisfied(publicTS.URL+"/self-service/login/browser?aal=aal2&return_to="+url.QueryEscape("https://ory.sh")), json.RawMessage(body))
-			})
 		})
+
+		t.Run("description=preserve return_to if identity has aal2 but session has aal1", func(t *testing.T) {
+			t.Cleanup(func() {
+				conf.MustSet(ctx, config.ViperKeySelfServiceSettingsRequiredAAL, config.HighestAvailableAAL)
+			})
+			conf.MustSet(ctx, config.ViperKeySelfServiceSettingsRequiredAAL, "aal1")
+			conf.MustSet(ctx, config.ViperKeyURLsAllowedReturnToDomains, []string{"https://ory.sh"})
+
+			returnTo := "?return_to=https://ory.sh"
+			req, err := http.NewRequest("GET", publicTS.URL+settings.RouteInitBrowserFlow+returnTo, nil)
+			require.NoError(t, err)
+
+			res, err := aal2Identity.Do(req)
+			require.NoError(t, err)
+
+			require.Equal(t, http.StatusOK, res.StatusCode)
+
+			body := ioutilx.MustReadAll(res.Body)
+			require.NoError(t, res.Body.Close())
+
+			id := gjson.GetBytes(body, "id").String()
+
+			conf.MustSet(ctx, config.ViperKeySelfServiceSettingsRequiredAAL, config.HighestAvailableAAL)
+			res, err = aal2Identity.Get(publicTS.URL + settings.RouteGetFlow + "?id=" + id)
+			require.NoError(t, err)
+
+			body = ioutilx.MustReadAll(res.Body)
+			require.NoError(t, res.Body.Close())
+
+			require.EqualValues(t, http.StatusForbidden, res.StatusCode)
+
+			assertx.EqualAsJSON(t, session.NewErrAALNotSatisfied(publicTS.URL+"/self-service/login/browser?aal=aal2&return_to="+url.QueryEscape("https://ory.sh")), json.RawMessage(body))
+		})
+
 	})
 
 	t.Run("endpoint=submit", func(t *testing.T) {

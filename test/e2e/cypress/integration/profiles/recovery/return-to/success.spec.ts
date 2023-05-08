@@ -1,6 +1,7 @@
 // Copyright © 2023 Ory Corp
 // SPDX-License-Identifier: Apache-2.0
 
+import { Identity } from "@ory/kratos-client"
 import { authenticator } from "otplib"
 import { gen, website } from "../../../../helpers"
 import { appPrefix, assertRecoveryAddress, gen } from "../../../../helpers"
@@ -30,19 +31,18 @@ context("Recovery with `return_to`", () => {
         cy.proxy(app)
       })
 
-      let identity
+      let identity: any
 
       beforeEach(() => {
         cy.deleteMail()
         cy.longRecoveryLifespan()
-        cy.longLinkLifespan()
         cy.disableVerification()
         cy.enableRecovery()
         cy.useRecoveryStrategy("code")
         cy.notifyUnknownRecipients("recovery", false)
         cy.clearAllCookies()
         cy.longPrivilegedSessionTime()
-        cy.useLaxAal()
+        cy.requireStrictAal()
         identity = gen.identityWithWebsite()
         cy.registerApi(identity)
       })
@@ -91,7 +91,7 @@ context("Recovery with `return_to`", () => {
         cy.visit(settings)
 
         // enable mfa for this account
-        let secret
+        let secret: string
         cy.get('[data-testid="node/text/totp_secret_key/text"]').then(($e) => {
           secret = $e.text().trim()
         })
@@ -105,6 +105,7 @@ context("Recovery with `return_to`", () => {
           expectMethods: ["password", "totp"],
         })
 
+        cy.logout()
         cy.clearAllCookies()
 
         cy.visit(recovery + "?return_to=https://www.ory.sh/")
