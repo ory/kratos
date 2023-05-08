@@ -25,7 +25,7 @@ import (
 	"github.com/ory/x/resilience"
 )
 
-func TestQueueMailerEmail(t *testing.T) {
+func TestQueueHTTPEmail(t *testing.T) {
 	ctx := context.Background()
 
 	type sendEmailRequestBody struct {

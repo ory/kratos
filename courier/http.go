@@ -13,23 +13,23 @@ import (
 	"github.com/ory/kratos/request"
 )
 
-type mailerDataModel struct {
+type httpDataModel struct {
 	Recipient    string
 	TemplateType TemplateType
 	TemplateData EmailTemplate
 }
 
-type mailerClient struct {
+type httpClient struct {
 	RequestConfig json.RawMessage
 }
 
-func newMailer(ctx context.Context, deps Dependencies) *mailerClient {
-	return &mailerClient{
+func newHTTP(ctx context.Context, deps Dependencies) *httpClient {
+	return &httpClient{
 		RequestConfig: deps.CourierConfig().CourierEmailRequestConfig(ctx),
 	}
 }
 func (c *courier) dispatchMailerEmail(ctx context.Context, msg Message) error {
-	builder, err := request.NewBuilder(c.mailerClient.RequestConfig, c.deps)
+	builder, err := request.NewBuilder(c.httpClient.RequestConfig, c.deps)
 	if err != nil {
 		return err
 	}
@@ -39,7 +39,7 @@ func (c *courier) dispatchMailerEmail(ctx context.Context, msg Message) error {
 		return err
 	}
 
-	td := mailerDataModel{
+	td := httpDataModel{
 		Recipient:    msg.Recipient,
 		TemplateType: msg.TemplateType,
 		TemplateData: tmpl,
