@@ -19,7 +19,7 @@ import (
 type IdentitySchemaContainer struct {
 	// The ID of the Identity JSON Schema
 	Id *string `json:"id,omitempty"`
-	// Raw JSON Schema
+	// The actual Identity JSON Schema
 	Schema map[string]interface{} `json:"schema,omitempty"`
 }
 

@@ -31,7 +31,7 @@ func NewVerificationEmailSent() *Message {
 	return &Message{
 		ID:      InfoSelfServiceVerificationEmailSent,
 		Type:    Info,
-		Text:    "An email containing a verification link has been sent to the email address you provided.",
+		Text:    "An email containing a verification link has been sent to the email address you provided. If you have not received an email, check the spelling of the address and make sure to use the address you registered with.",
 		Context: context(nil),
 	}
 }
@@ -76,7 +76,7 @@ func NewVerificationEmailWithCodeSent() *Message {
 	return &Message{
 		ID:      InfoSelfServiceVerificationEmailWithCodeSent,
 		Type:    Info,
-		Text:    "An email containing a verification code has been sent to the email address you provided.",
+		Text:    "An email containing a verification code has been sent to the email address you provided. If you have not received an email, check the spelling of the address and make sure to use the address you registered with.",
 		Context: context(nil),
 	}
 }

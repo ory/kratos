@@ -4,7 +4,7 @@
 package courier
 
 import (
-	cx "context"
+	"context"
 	"net/http"
 
 	"github.com/spf13/cobra"
@@ -22,7 +22,7 @@ import (
 )
 
 func NewWatchCmd(slOpts []servicelocatorx.Option, dOpts []driver.RegistryOption) *cobra.Command {
-	var c = &cobra.Command{
+	c := &cobra.Command{
 		Use:   "watch",
 		Short: "Starts the Ory Kratos message courier",
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -38,7 +38,7 @@ func NewWatchCmd(slOpts []servicelocatorx.Option, dOpts []driver.RegistryOption)
 	return c
 }
 
-func StartCourier(ctx cx.Context, r driver.Registry) error {
+func StartCourier(ctx context.Context, r driver.Registry) error {
 	eg, ctx := errgroup.WithContext(ctx)
 
 	if r.Config().CourierExposeMetricsPort(ctx) != 0 {
@@ -54,7 +54,7 @@ func StartCourier(ctx cx.Context, r driver.Registry) error {
 	return eg.Wait()
 }
 
-func ServeMetrics(ctx cx.Context, r driver.Registry) error {
+func ServeMetrics(ctx context.Context, r driver.Registry) error {
 	c := r.Config()
 	l := r.Logger()
 	n := negroni.New()
@@ -73,39 +73,23 @@ func ServeMetrics(ctx cx.Context, r driver.Registry) error {
 		handler = otelx.NewHandler(handler, "cmd.courier.ServeMetrics", otelhttp.WithTracerProvider(tp))
 	}
 
-	// #nosec G112 - the correct settings are set by graceful.WithDefaults
+	//#nosec G112 -- the correct settings are set by graceful.WithDefaults
 	server := graceful.WithDefaults(&http.Server{
 		Addr:    c.MetricsListenOn(ctx),
 		Handler: handler,
 	})
 
 	l.Printf("Starting the metrics httpd on: %s", server.Addr)
-	if err := graceful.Graceful(func() error {
-		errChan := make(chan error, 1)
-		go func(errChan chan error) {
-			if err := server.ListenAndServe(); err != nil {
-				errChan <- err
-			}
-		}(errChan)
-		select {
-		case err := <-errChan:
-			l.Errorf("Failed to start the metrics httpd: %s\n", err)
-			return err
-		case <-ctx.Done():
-			l.Printf("Shutting down the metrics httpd: context closed: %s\n", ctx.Err())
-			return server.Shutdown(ctx)
-		}
-	}, server.Shutdown); err != nil {
+	if err := graceful.GracefulContext(ctx, server.ListenAndServe, server.Shutdown); err != nil {
 		l.Errorln("Failed to gracefully shutdown metrics httpd")
 		return err
-	} else {
-		l.Println("Metrics httpd was shutdown gracefully")
 	}
+	l.Println("Metrics httpd was shutdown gracefully")
 	return nil
 }
 
-func Watch(ctx cx.Context, r driver.Registry) error {
-	ctx, cancel := cx.WithCancel(ctx)
+func Watch(ctx context.Context, r driver.Registry) error {
+	ctx, cancel := context.WithCancel(ctx)
 
 	r.Logger().Println("Courier worker started.")
 	if err := graceful.Graceful(func() error {
@@ -115,7 +99,7 @@ func Watch(ctx cx.Context, r driver.Registry) error {
 		}
 
 		return c.Work(ctx)
-	}, func(_ cx.Context) error {
+	}, func(_ context.Context) error {
 		cancel()
 		return nil
 	}); err != nil {

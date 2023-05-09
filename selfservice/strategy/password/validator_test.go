@@ -7,7 +7,7 @@ import (
 	"bytes"
 	"context"
 	"crypto/rand"
-	"crypto/sha1"
+	"crypto/sha1" //#nosec G505 -- compatibility for imported passwords
 	"errors"
 	"fmt"
 	"io"
@@ -144,7 +144,7 @@ func TestDefaultPasswordValidationStrategy(t *testing.T) {
 		s.Client = httpx.NewResilientClient(httpx.ResilientClientWithClient(&fakeClient.Client), httpx.ResilientClientWithMaxRetry(1), httpx.ResilientClientWithConnectionTimeout(time.Millisecond))
 
 		var hashPw = func(t *testing.T, pw string) string {
-			/* #nosec G401 sha1 is used for k-anonymity */
+			//#nosec G401 -- sha1 is used for k-anonymity
 			h := sha1.New()
 			_, err := h.Write([]byte(pw))
 			require.NoError(t, err)

@@ -50,19 +50,6 @@ func send(code int) httprouter.Handle {
 	}
 }
 
-func getSessionCookie(t *testing.T, r *http.Response) *http.Cookie {
-	var sessionCookie *http.Cookie
-	var found bool
-	for _, c := range r.Cookies() {
-		if c.Name == config.DefaultSessionCookieName {
-			found = true
-			sessionCookie = c
-		}
-	}
-	require.True(t, found)
-	return sessionCookie
-}
-
 func assertNoCSRFCookieInResponse(t *testing.T, _ *httptest.Server, _ *http.Client, r *http.Response) {
 	found := false
 	for _, c := range r.Cookies() {

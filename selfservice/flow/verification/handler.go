@@ -156,8 +156,10 @@ func (h *Handler) createNativeVerificationFlow(w http.ResponseWriter, r *http.Re
 
 // Create Browser Verification Flow Parameters
 //
-// nolint:deadcode,unused
 // swagger:parameters createBrowserVerificationFlow
+//
+//nolint:deadcode,unused
+//lint:ignore U1000 Used to generate Swagger and OpenAPI definitions
 type createBrowserVerificationFlow struct {
 	// The URL to return the browser to after the flow was completed.
 	//
@@ -176,7 +178,7 @@ type createBrowserVerificationFlow struct {
 //
 // This endpoint is NOT INTENDED for API clients and only works with browsers (Chrome, Firefox, ...).
 //
-// More information can be found at [Ory Kratos Email and Phone Verification Documentation](https://www.ory.sh/docs/kratos/selfservice/flows/verify-email-account-activation).
+// More information can be found at [Ory Kratos Email and Phone Verification Documentation](https://www.ory.sh/docs/kratos/self-service/flows/verify-email-account-activation).
 //
 //	Schemes: http, https
 //
@@ -203,7 +205,9 @@ func (h *Handler) createBrowserVerificationFlow(w http.ResponseWriter, r *http.R
 // Get Verification Flow Parameters
 //
 // swagger:parameters getVerificationFlow
-// nolint:deadcode,unused
+//
+//nolint:deadcode,unused
+//lint:ignore U1000 Used to generate Swagger and OpenAPI definitions
 type getVerificationFlow struct {
 	// The Flow ID
 	//
@@ -236,15 +240,16 @@ type getVerificationFlow struct {
 // If you use the browser-flow for server-side apps, the services need to run on a common top-level-domain
 // and you need to forward the incoming HTTP Cookie header to this endpoint:
 //
-//		```js
-//		// pseudo-code example
-//		router.get('/recovery', async function (req, res) {
-//		  const flow = await client.getVerificationFlow(req.header('cookie'), req.query['flow'])
+//	```js
+//	// pseudo-code example
+//	router.get('/recovery', async function (req, res) {
+//	  const flow = await client.getVerificationFlow(req.header('cookie'), req.query['flow'])
 //
-//	   res.render('verification', flow)
-//		})
+//	  res.render('verification', flow)
+//	})
+//	```
 //
-// More information can be found at [Ory Kratos Email and Phone Verification Documentation](https://www.ory.sh/docs/kratos/selfservice/flows/verify-email-account-activation).
+// More information can be found at [Ory Kratos Email and Phone Verification Documentation](https://www.ory.sh/docs/kratos/self-service/flows/verify-email-account-activation).
 //
 //	Produces:
 //	- application/json
@@ -298,8 +303,10 @@ func (h *Handler) getVerificationFlow(w http.ResponseWriter, r *http.Request, _ 
 
 // Update Verification Flow Parameters
 //
-// nolint:deadcode,unused
 // swagger:parameters updateVerificationFlow
+//
+//nolint:deadcode,unused
+//lint:ignore U1000 Used to generate Swagger and OpenAPI definitions
 type updateVerificationFlow struct {
 	// The Verification Flow ID
 	//
@@ -336,8 +343,10 @@ type updateVerificationFlow struct {
 
 // Update Verification Flow Request Body
 //
-// nolint:deadcode,unused
 // swagger:model updateVerificationFlowBody
+//
+//nolint:deadcode,unused
+//lint:ignore U1000 Used to generate Swagger and OpenAPI definitions
 type updateVerificationFlowBody struct{}
 
 // swagger:route POST /self-service/verification frontend updateVerificationFlow
@@ -359,7 +368,7 @@ type updateVerificationFlowBody struct{}
 //     (if the link was valid) and instructs the user to update their password, or a redirect to the Verification UI URL with
 //     a new Verification Flow ID which contains an error message that the verification link was invalid.
 //
-// More information can be found at [Ory Kratos Email and Phone Verification Documentation](https://www.ory.sh/docs/kratos/selfservice/flows/verify-email-account-activation).
+// More information can be found at [Ory Kratos Email and Phone Verification Documentation](https://www.ory.sh/docs/kratos/self-service/flows/verify-email-account-activation).
 //
 //	Consumes:
 //	- application/json

@@ -6,7 +6,7 @@ package main
 import (
 	"testing"
 
-	"github.com/google/uuid"
+	"github.com/gofrs/uuid"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
@@ -19,7 +19,7 @@ func TestFunc(t *testing.T) {
 	publicURL, _ := testhelpers.StartE2EServer(t, "../../pkg/stub/kratos.yaml", nil)
 	client = pkg.NewSDKForSelfHosted(publicURL)
 
-	flow := performRecovery("dev+" + uuid.New().String() + "@ory.sh")
+	flow := performRecovery("dev+" + uuid.Must(uuid.NewV4()).String() + "@ory.sh")
 	require.NotEmpty(t, flow.Id)
 	assert.EqualValues(t, ory.RECOVERYFLOWSTATE_SENT_EMAIL, flow.State)
 }

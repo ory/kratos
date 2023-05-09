@@ -16,7 +16,7 @@ import (
 
 	"github.com/ory/x/sqlxx"
 
-	hydraclientgo "github.com/ory/hydra-client-go"
+	hydraclientgo "github.com/ory/hydra-client-go/v2"
 
 	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/hydra"
@@ -80,6 +80,9 @@ type Flow struct {
 	// ReturnTo contains the requested return_to URL.
 	ReturnTo string `json:"return_to,omitempty" db:"-"`
 
+	// ReturnToVerification contains the redirect URL for the verification flow.
+	ReturnToVerification string `json:"-" db:"-"`
+
 	// Active, if set, contains the registration method that is being used. It is initially
 	// not set.
 	Active identity.CredentialsType `json:"active,omitempty" faker:"identity_credentials_type" db:"active_method"`
@@ -97,7 +100,21 @@ type Flow struct {
 
 	// CSRFToken contains the anti-csrf token associated with this flow. Only set for browser flows.
 	CSRFToken string    `json:"-" db:"csrf_token"`
-	NID       uuid.UUID `json:"-"  faker:"-" db:"nid"`
+	NID       uuid.UUID `json:"-" faker:"-" db:"nid"`
+
+	// TransientPayload is used to pass data from the registration to a webhook
+	TransientPayload json.RawMessage `json:"transient_payload,omitempty" faker:"-" db:"-"`
+
+	// Contains a list of actions, that could follow this flow
+	//
+	// It can, for example, contain a reference to the verification flow, created as part of the user's
+	// registration.
+	ContinueWithItems []flow.ContinueWith `json:"-" db:"-" faker:"-" `
+
+	// SessionTokenExchangeCode holds the secret code that the client can use to retrieve a session token after the flow has been completed.
+	// This is only set if the client has requested a session token exchange code, and if the flow is of type "api",
+	// and only on creating the flow.
+	SessionTokenExchangeCode string `json:"session_token_exchange_code,omitempty" faker:"-" db:"-"`
 }
 
 func NewFlow(conf *config.Config, exp time.Duration, csrf string, r *http.Request, ft flow.Type) (*Flow, error) {
@@ -202,4 +219,22 @@ func (f *Flow) AfterSave(*pop.Connection) error {
 
 func (f *Flow) GetUI() *container.Container {
 	return f.UI
+}
+
+func (f *Flow) AddContinueWith(c flow.ContinueWith) {
+	f.ContinueWithItems = append(f.ContinueWithItems, c)
+}
+
+func (f *Flow) ContinueWith() []flow.ContinueWith {
+	return f.ContinueWithItems
+}
+
+func (f *Flow) SecureRedirectToOpts(ctx context.Context, cfg config.Provider) (opts []x.SecureRedirectOption) {
+	return []x.SecureRedirectOption{
+		x.SecureRedirectReturnTo(f.ReturnTo),
+		x.SecureRedirectUseSourceURL(f.RequestURL),
+		x.SecureRedirectAllowURLs(cfg.Config().SelfServiceBrowserAllowedReturnToDomains(ctx)),
+		x.SecureRedirectAllowSelfServiceURLs(cfg.Config().SelfPublicURL(ctx)),
+		x.SecureRedirectOverrideDefaultReturnTo(cfg.Config().SelfServiceFlowRegistrationReturnTo(ctx, f.Active.String())),
+	}
 }

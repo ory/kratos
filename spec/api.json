@@ -81,6 +81,7 @@
       }
     },
     "schemas": {
+      "DefaultError": {},
       "Duration": {
         "description": "A Duration represents the elapsed time between two instants\nas an int64 nanosecond count. The representation limits the\nlargest representable duration to approximately 290 years.",
         "format": "int64",
@@ -417,6 +418,103 @@
         "title": "Authenticator Assurance Level (AAL)",
         "type": "string"
       },
+      "batchPatchIdentitiesResponse": {
+        "description": "Patch identities response",
+        "properties": {
+          "identities": {
+            "description": "The patch responses for the individual identities.",
+            "items": {
+              "$ref": "#/components/schemas/identityPatchResponse"
+            },
+            "type": "array"
+          }
+        },
+        "type": "object"
+      },
+      "continueWith": {
+        "discriminator": {
+          "mapping": {
+            "set_ory_session_token": "#/components/schemas/continueWithSetOrySessionToken",
+            "show_verification_ui": "#/components/schemas/continueWithVerificationUi"
+          },
+          "propertyName": "action"
+        },
+        "oneOf": [
+          {
+            "$ref": "#/components/schemas/continueWithVerificationUi"
+          },
+          {
+            "$ref": "#/components/schemas/continueWithSetOrySessionToken"
+          }
+        ]
+      },
+      "continueWithSetOrySessionToken": {
+        "description": "Indicates that a session was issued, and the application should use this token for authenticated requests",
+        "properties": {
+          "action": {
+            "description": "Action will always be `set_ory_session_token`\nset_ory_session_token ContinueWithActionSetOrySessionToken\nshow_verification_ui ContinueWithActionShowVerificationUI",
+            "enum": [
+              "set_ory_session_token",
+              "show_verification_ui"
+            ],
+            "type": "string",
+            "x-go-enum-desc": "set_ory_session_token ContinueWithActionSetOrySessionToken\nshow_verification_ui ContinueWithActionShowVerificationUI"
+          },
+          "ory_session_token": {
+            "description": "Token is the token of the session",
+            "type": "string"
+          }
+        },
+        "required": [
+          "action",
+          "ory_session_token"
+        ],
+        "type": "object"
+      },
+      "continueWithVerificationUi": {
+        "description": "Indicates, that the UI flow could be continued by showing a verification ui",
+        "properties": {
+          "action": {
+            "description": "Action will always be `show_verification_ui`\nset_ory_session_token ContinueWithActionSetOrySessionToken\nshow_verification_ui ContinueWithActionShowVerificationUI",
+            "enum": [
+              "set_ory_session_token",
+              "show_verification_ui"
+            ],
+            "type": "string",
+            "x-go-enum-desc": "set_ory_session_token ContinueWithActionSetOrySessionToken\nshow_verification_ui ContinueWithActionShowVerificationUI"
+          },
+          "flow": {
+            "$ref": "#/components/schemas/continueWithVerificationUiFlow"
+          }
+        },
+        "required": [
+          "action",
+          "flow"
+        ],
+        "type": "object"
+      },
+      "continueWithVerificationUiFlow": {
+        "properties": {
+          "id": {
+            "description": "The ID of the verification flow",
+            "format": "uuid",
+            "type": "string"
+          },
+          "url": {
+            "description": "The URL of the verification flow",
+            "type": "string"
+          },
+          "verifiable_address": {
+            "description": "The address that should be verified in this flow",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "verifiable_address"
+        ],
+        "type": "object"
+      },
       "courierMessageStatus": {
         "description": "A Message's Status",
         "enum": [
@@ -531,151 +629,35 @@
       },
       "errorAuthenticatorAssuranceLevelNotSatisfied": {
         "properties": {
-          "code": {
-            "description": "The status code",
-            "example": 404,
-            "format": "int64",
-            "type": "integer"
-          },
-          "debug": {
-            "description": "Debug information\n\nThis field is often not exposed to protect against leaking\nsensitive information.",
-            "example": "SQL field \"foo\" is not a bool.",
-            "type": "string"
-          },
-          "details": {
-            "additionalProperties": {},
-            "description": "Further error details",
-            "type": "object"
-          },
-          "id": {
-            "description": "The error ID\n\nUseful when trying to identify various errors in application logic.",
-            "type": "string"
-          },
-          "message": {
-            "description": "Error message\n\nThe error's message.",
-            "example": "The resource could not be found",
-            "type": "string"
-          },
-          "reason": {
-            "description": "A human-readable reason for the error",
-            "example": "User with ID 1234 does not exist.",
-            "type": "string"
+          "error": {
+            "$ref": "#/components/schemas/genericError"
           },
           "redirect_browser_to": {
-            "type": "string"
-          },
-          "request": {
-            "description": "The request ID\n\nThe request ID is often exposed internally in order to trace\nerrors across service architectures. This is often a UUID.",
-            "example": "d7ef54b1-ec15-46e6-bccb-524b82c035e6",
-            "type": "string"
-          },
-          "status": {
-            "description": "The status description",
-            "example": "Not Found",
+            "description": "Points to where to redirect the user to next.",
             "type": "string"
           }
         },
-        "required": [
-          "message"
-        ],
-        "title": "ErrAALNotSatisfied is returned when an active session was found but the requested AAL is not satisfied.",
+        "title": "Is returned when an active session was found but the requested AAL is not satisfied.",
         "type": "object"
       },
       "errorBrowserLocationChangeRequired": {
         "properties": {
-          "code": {
-            "description": "The status code",
-            "example": 404,
-            "format": "int64",
-            "type": "integer"
-          },
-          "debug": {
-            "description": "Debug information\n\nThis field is often not exposed to protect against leaking\nsensitive information.",
-            "example": "SQL field \"foo\" is not a bool.",
-            "type": "string"
-          },
-          "details": {
-            "additionalProperties": {},
-            "description": "Further error details",
-            "type": "object"
-          },
-          "id": {
-            "description": "The error ID\n\nUseful when trying to identify various errors in application logic.",
-            "type": "string"
-          },
-          "message": {
-            "description": "Error message\n\nThe error's message.",
-            "example": "The resource could not be found",
-            "type": "string"
-          },
-          "reason": {
-            "description": "A human-readable reason for the error",
-            "example": "User with ID 1234 does not exist.",
-            "type": "string"
+          "error": {
+            "$ref": "#/components/schemas/errorGeneric"
           },
           "redirect_browser_to": {
-            "description": "Since when the flow has expired",
-            "type": "string"
-          },
-          "request": {
-            "description": "The request ID\n\nThe request ID is often exposed internally in order to trace\nerrors across service architectures. This is often a UUID.",
-            "example": "d7ef54b1-ec15-46e6-bccb-524b82c035e6",
-            "type": "string"
-          },
-          "status": {
-            "description": "The status description",
-            "example": "Not Found",
+            "description": "Points to where to redirect the user to next.",
             "type": "string"
           }
         },
-        "required": [
-          "message"
-        ],
         "title": "Is sent when a flow requires a browser to change its location.",
         "type": "object"
       },
       "errorFlowReplaced": {
         "description": "Is sent when a flow is replaced by a different flow of the same class",
         "properties": {
-          "code": {
-            "description": "The status code",
-            "example": 404,
-            "format": "int64",
-            "type": "integer"
-          },
-          "debug": {
-            "description": "Debug information\n\nThis field is often not exposed to protect against leaking\nsensitive information.",
-            "example": "SQL field \"foo\" is not a bool.",
-            "type": "string"
-          },
-          "details": {
-            "additionalProperties": {},
-            "description": "Further error details",
-            "type": "object"
-          },
-          "id": {
-            "description": "The error ID\n\nUseful when trying to identify various errors in application logic.",
-            "type": "string"
-          },
-          "message": {
-            "description": "Error message\n\nThe error's message.",
-            "example": "The resource could not be found",
-            "type": "string"
-          },
-          "reason": {
-            "description": "A human-readable reason for the error",
-            "example": "User with ID 1234 does not exist.",
-            "type": "string"
-          },
-          "request": {
-            "description": "The request ID\n\nThe request ID is often exposed internally in order to trace\nerrors across service architectures. This is often a UUID.",
-            "example": "d7ef54b1-ec15-46e6-bccb-524b82c035e6",
-            "type": "string"
-          },
-          "status": {
-            "description": "The status description",
-            "example": "Not Found",
-            "type": "string"
+          "error": {
+            "$ref": "#/components/schemas/genericError"
           },
           "use_flow_id": {
             "description": "The flow ID that should be used for the new flow as it contains the correct messages.",
@@ -683,9 +665,6 @@
             "type": "string"
           }
         },
-        "required": [
-          "message"
-        ],
         "type": "object"
       },
       "errorGeneric": {
@@ -959,6 +938,44 @@
         "title": "CredentialsType  represents several different credential types, like password credentials, passwordless credentials,",
         "type": "string"
       },
+      "identityPatch": {
+        "description": "Payload for patching an identity",
+        "properties": {
+          "create": {
+            "$ref": "#/components/schemas/createIdentityBody"
+          },
+          "patch_id": {
+            "description": "The ID of this patch.\n\nThe patch ID is optional. If specified, the ID will be returned in the\nresponse, so consumers of this API can correlate the response with the\npatch.",
+            "format": "uuid",
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "identityPatchResponse": {
+        "description": "Response for a single identity patch",
+        "properties": {
+          "action": {
+            "description": "The action for this specific patch\ncreate ActionCreate  Create this identity.",
+            "enum": [
+              "create"
+            ],
+            "type": "string",
+            "x-go-enum-desc": "create ActionCreate  Create this identity."
+          },
+          "identity": {
+            "description": "The identity ID payload of this patch",
+            "format": "uuid",
+            "type": "string"
+          },
+          "patch_id": {
+            "description": "The ID of this patch response, if an ID was specified in the patch.",
+            "format": "uuid",
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
       "identitySchema": {
         "description": "Raw JSON Schema",
         "type": "object"
@@ -971,7 +988,8 @@
             "type": "string"
           },
           "schema": {
-            "$ref": "#/components/schemas/identitySchema"
+            "description": "The actual Identity JSON Schema",
+            "type": "object"
           }
         },
         "type": "object"
@@ -1163,6 +1181,10 @@
             "description": "ReturnTo contains the requested return_to URL.",
             "type": "string"
           },
+          "session_token_exchange_code": {
+            "description": "SessionTokenExchangeCode holds the secret code that the client can use to retrieve a session token after the login flow has been completed.\nThis is only set if the client has requested a session token exchange code, and if the flow is of type \"api\",\nand only on creating the login flow.",
+            "type": "string"
+          },
           "type": {
             "$ref": "#/components/schemas/selfServiceFlowType"
           },
@@ -1325,53 +1347,15 @@
       },
       "needsPrivilegedSessionError": {
         "properties": {
-          "code": {
-            "description": "The status code",
-            "example": 404,
-            "format": "int64",
-            "type": "integer"
-          },
-          "debug": {
-            "description": "Debug information\n\nThis field is often not exposed to protect against leaking\nsensitive information.",
-            "example": "SQL field \"foo\" is not a bool.",
-            "type": "string"
-          },
-          "details": {
-            "additionalProperties": {},
-            "description": "Further error details",
-            "type": "object"
-          },
-          "id": {
-            "description": "The error ID\n\nUseful when trying to identify various errors in application logic.",
-            "type": "string"
-          },
-          "message": {
-            "description": "Error message\n\nThe error's message.",
-            "example": "The resource could not be found",
-            "type": "string"
-          },
-          "reason": {
-            "description": "A human-readable reason for the error",
-            "example": "User with ID 1234 does not exist.",
-            "type": "string"
+          "error": {
+            "$ref": "#/components/schemas/genericError"
           },
           "redirect_browser_to": {
             "description": "Points to where to redirect the user to next.",
             "type": "string"
-          },
-          "request": {
-            "description": "The request ID\n\nThe request ID is often exposed internally in order to trace\nerrors across service architectures. This is often a UUID.",
-            "example": "d7ef54b1-ec15-46e6-bccb-524b82c035e6",
-            "type": "string"
-          },
-          "status": {
-            "description": "The status description",
-            "example": "Not Found",
-            "type": "string"
           }
         },
         "required": [
-          "message",
           "redirect_browser_to"
         ],
         "title": "Is sent when a privileged session is required to perform the settings update.",
@@ -1415,8 +1399,21 @@
         },
         "type": "object"
       },
+      "patchIdentitiesBody": {
+        "description": "Patch Identities Body",
+        "properties": {
+          "identities": {
+            "description": "Identities holds the list of patches to apply\n\nrequired",
+            "items": {
+              "$ref": "#/components/schemas/identityPatch"
+            },
+            "type": "array"
+          }
+        },
+        "type": "object"
+      },
       "performNativeLogoutBody": {
-        "description": "nolint:deadcode,unused",
+        "description": "Perform Native Logout Request Body",
         "properties": {
           "session_token": {
             "description": "The Session Token\n\nInvalidate this session token.",
@@ -1426,7 +1423,6 @@
         "required": [
           "session_token"
         ],
-        "title": "Perform Native Logout Request Body",
         "type": "object"
       },
       "recoveryCodeForIdentity": {
@@ -1598,6 +1594,14 @@
             "description": "ReturnTo contains the requested return_to URL.",
             "type": "string"
           },
+          "session_token_exchange_code": {
+            "description": "SessionTokenExchangeCode holds the secret code that the client can use to retrieve a session token after the flow has been completed.\nThis is only set if the client has requested a session token exchange code, and if the flow is of type \"api\",\nand only on creating the flow.",
+            "type": "string"
+          },
+          "transient_payload": {
+            "description": "TransientPayload is used to pass data from the registration to a webhook",
+            "type": "object"
+          },
           "type": {
             "$ref": "#/components/schemas/selfServiceFlowType"
           },
@@ -1618,53 +1622,16 @@
       "selfServiceFlowExpiredError": {
         "description": "Is sent when a flow is expired",
         "properties": {
-          "code": {
-            "description": "The status code",
-            "example": 404,
-            "format": "int64",
-            "type": "integer"
-          },
-          "debug": {
-            "description": "Debug information\n\nThis field is often not exposed to protect against leaking\nsensitive information.",
-            "example": "SQL field \"foo\" is not a bool.",
-            "type": "string"
-          },
-          "details": {
-            "additionalProperties": {},
-            "description": "Further error details",
-            "type": "object"
+          "error": {
+            "$ref": "#/components/schemas/genericError"
           },
           "expired_at": {
             "description": "When the flow has expired",
             "format": "date-time",
             "type": "string"
           },
-          "id": {
-            "description": "The error ID\n\nUseful when trying to identify various errors in application logic.",
-            "type": "string"
-          },
-          "message": {
-            "description": "Error message\n\nThe error's message.",
-            "example": "The resource could not be found",
-            "type": "string"
-          },
-          "reason": {
-            "description": "A human-readable reason for the error",
-            "example": "User with ID 1234 does not exist.",
-            "type": "string"
-          },
-          "request": {
-            "description": "The request ID\n\nThe request ID is often exposed internally in order to trace\nerrors across service architectures. This is often a UUID.",
-            "example": "d7ef54b1-ec15-46e6-bccb-524b82c035e6",
-            "type": "string"
-          },
           "since": {
             "$ref": "#/components/schemas/Duration"
-          },
-          "status": {
-            "description": "The status description",
-            "example": "Not Found",
-            "type": "string"
           },
           "use_flow_id": {
             "description": "The flow ID that should be used for the new flow as it contains the correct messages.",
@@ -1672,9 +1639,6 @@
             "type": "string"
           }
         },
-        "required": [
-          "message"
-        ],
         "type": "object"
       },
       "selfServiceFlowType": {
@@ -1802,6 +1766,13 @@
             "description": "Active, if set, contains the registration method that is being used. It is initially\nnot set.",
             "type": "string"
           },
+          "continue_with": {
+            "description": "Contains a list of actions, that could follow this flow\n\nIt can, for example, contain a reference to the verification flow, created as part of the user's\nregistration.",
+            "items": {
+              "$ref": "#/components/schemas/continueWith"
+            },
+            "type": "array"
+          },
           "expires_at": {
             "description": "ExpiresAt is the time (UTC) when the flow expires. If the user still wishes to update the setting,\na new flow has to be initiated.",
             "format": "date-time",
@@ -1860,6 +1831,22 @@
         "title": "State represents the state of this flow. It knows two states:",
         "type": "string"
       },
+      "successfulCodeExchangeResponse": {
+        "description": "The Response for Registration Flows via API",
+        "properties": {
+          "session": {
+            "$ref": "#/components/schemas/session"
+          },
+          "session_token": {
+            "description": "The Session Token\n\nA session token is equivalent to a session cookie, but it can be sent in the HTTP Authorization\nHeader:\n\nAuthorization: bearer ${session-token}\n\nThe session token is only issued for API flows, not for Browser flows!",
+            "type": "string"
+          }
+        },
+        "required": [
+          "session"
+        ],
+        "type": "object"
+      },
       "successfulNativeLogin": {
         "description": "The Response for Login Flows via API",
         "properties": {
@@ -1879,6 +1866,13 @@
       "successfulNativeRegistration": {
         "description": "The Response for Registration Flows via API",
         "properties": {
+          "continue_with": {
+            "description": "Contains a list of actions, that could follow this flow\n\nIt can, for example, this will contain a reference to the verification flow, created as part of the user's\nregistration or the token of the session.",
+            "items": {
+              "$ref": "#/components/schemas/continueWith"
+            },
+            "type": "array"
+          },
           "identity": {
             "$ref": "#/components/schemas/identity"
           },
@@ -2298,6 +2292,9 @@
         },
         "type": "array"
       },
+      "unexpectedError": {
+        "type": "string"
+      },
       "updateIdentityBody": {
         "description": "Update Identity Body",
         "properties": {
@@ -2397,6 +2394,10 @@
           },
           "traits": {
             "description": "The identity traits. This is a placeholder for the registration flow.",
+            "type": "object"
+          },
+          "upstream_parameters": {
+            "description": "UpstreamParameters are the parameters that are passed to the upstream identity provider.\n\nThese parameters are optional and depend on what the upstream identity provider supports.\nSupported parameters are:\n`login_hint` (string): The `login_hint` parameter suppresses the account chooser and either pre-fills the email box on the sign-in form, or selects the proper session.\n`hd` (string): The `hd` parameter limits the login/registration process to a Google Organization, e.g. `mycollege.edu`.",
             "type": "object"
           }
         },
@@ -2507,7 +2508,7 @@
         "description": "Update Recovery Flow with Code Method",
         "properties": {
           "code": {
-            "description": "Code from recovery email\n\nSent to the user once a recovery has been initiated and is used to prove\nthat the user is in possession of the email",
+            "description": "Code from the recovery email\n\nIf you want to submit a code, use this field, but make sure to _not_ include the email field, as well.",
             "type": "string"
           },
           "csrf_token": {
@@ -2515,12 +2516,17 @@
             "type": "string"
           },
           "email": {
-            "description": "Email to Recover\n\nNeeds to be set when initiating the flow. If the email is a registered\nrecovery email, a recovery link will be sent. If the email is not known,\na email with details on what happened will be sent instead.\n\nformat: email",
+            "description": "The email address of the account to recover\n\nIf the email belongs to a valid account, a recovery email will be sent.\n\nIf you want to notify the email address if the account does not exist, see\nthe [notify_unknown_recipients flag](https://www.ory.sh/docs/kratos/self-service/flows/account-recovery-password-reset#attempted-recovery-notifications)\n\nIf a code was already sent, including this field in the payload will invalidate the sent code and re-send a new code.\n\nformat: email",
             "type": "string"
           },
           "method": {
-            "description": "Method supports `link` and `code` only right now.",
-            "type": "string"
+            "description": "Method is the method that should be used for this recovery flow\n\nAllowed values are `link` and `code`.\nlink RecoveryStrategyLink\ncode RecoveryStrategyCode",
+            "enum": [
+              "link",
+              "code"
+            ],
+            "type": "string",
+            "x-go-enum-desc": "link RecoveryStrategyLink\ncode RecoveryStrategyCode"
           }
         },
         "required": [
@@ -2540,8 +2546,13 @@
             "type": "string"
           },
           "method": {
-            "description": "Method supports `link` only right now.",
-            "type": "string"
+            "description": "Method is the method that should be used for this recovery flow\n\nAllowed values are `link` and `code`\nlink RecoveryStrategyLink\ncode RecoveryStrategyCode",
+            "enum": [
+              "link",
+              "code"
+            ],
+            "type": "string",
+            "x-go-enum-desc": "link RecoveryStrategyLink\ncode RecoveryStrategyCode"
           }
         },
         "required": [
@@ -2590,6 +2601,14 @@
           "traits": {
             "description": "The identity traits",
             "type": "object"
+          },
+          "transient_payload": {
+            "description": "Transient data to pass along to any webhooks",
+            "type": "object"
+          },
+          "upstream_parameters": {
+            "description": "UpstreamParameters are the parameters that are passed to the upstream identity provider.\n\nThese parameters are optional and depend on what the upstream identity provider supports.\nSupported parameters are:\n`login_hint` (string): The `login_hint` parameter suppresses the account chooser and either pre-fills the email box on the sign-in form, or selects the proper session.\n`hd` (string): The `hd` parameter limits the login/registration process to a Google Organization, e.g. `mycollege.edu`.",
+            "type": "object"
           }
         },
         "required": [
@@ -2616,6 +2635,10 @@
           "traits": {
             "description": "The identity's traits",
             "type": "object"
+          },
+          "transient_payload": {
+            "description": "Transient data to pass along to any webhooks",
+            "type": "object"
           }
         },
         "required": [
@@ -2638,6 +2661,10 @@
           },
           "traits": {
             "description": "The identity's traits",
+            "type": "object"
+          },
+          "transient_payload": {
+            "description": "Transient data to pass along to any webhooks",
             "type": "object"
           },
           "webauthn_register": {
@@ -2726,7 +2753,7 @@
         "type": "object"
       },
       "updateSettingsFlowWithOidcMethod": {
-        "description": "nolint:deadcode,unused",
+        "description": "Update Settings Flow with OpenID Connect Method",
         "properties": {
           "flow": {
             "description": "Flow ID is the flow's ID.\n\nin: query",
@@ -2747,12 +2774,15 @@
           "unlink": {
             "description": "Unlink this provider\n\nEither this or `link` must be set.\n\ntype: string\nin: body",
             "type": "string"
+          },
+          "upstream_parameters": {
+            "description": "UpstreamParameters are the parameters that are passed to the upstream identity provider.\n\nThese parameters are optional and depend on what the upstream identity provider supports.\nSupported parameters are:\n`login_hint` (string): The `login_hint` parameter suppresses the account chooser and either pre-fills the email box on the sign-in form, or selects the proper session.\n`hd` (string): The `hd` parameter limits the login/registration process to a Google Organization, e.g. `mycollege.edu`.",
+            "type": "object"
           }
         },
         "required": [
           "method"
         ],
-        "title": "Update Settings Flow with OpenID Connect Method",
         "type": "object"
       },
       "updateSettingsFlowWithPasswordMethod": {
@@ -2778,7 +2808,7 @@
         "type": "object"
       },
       "updateSettingsFlowWithProfileMethod": {
-        "description": "nolint:deadcode,unused",
+        "description": "Update Settings Flow with Profile Method",
         "properties": {
           "csrf_token": {
             "description": "The Anti-CSRF Token\n\nThis token is only required when performing browser flows.",
@@ -2797,7 +2827,6 @@
           "traits",
           "method"
         ],
-        "title": "Update Settings Flow with Profile Method",
         "type": "object"
       },
       "updateSettingsFlowWithTotpMethod": {
@@ -2855,9 +2884,10 @@
         "type": "object"
       },
       "updateVerificationFlowBody": {
-        "description": "nolint:deadcode,unused",
+        "description": "Update Verification Flow Request Body",
         "discriminator": {
           "mapping": {
+            "code": "#/components/schemas/updateVerificationFlowWithCodeMethod",
             "link": "#/components/schemas/updateVerificationFlowWithLinkMethod"
           },
           "propertyName": "method"
@@ -2865,14 +2895,16 @@
         "oneOf": [
           {
             "$ref": "#/components/schemas/updateVerificationFlowWithLinkMethod"
+          },
+          {
+            "$ref": "#/components/schemas/updateVerificationFlowWithCodeMethod"
           }
-        ],
-        "title": "Update Verification Flow Request Body"
+        ]
       },
-      "updateVerificationFlowWithCodeMethodBody": {
+      "updateVerificationFlowWithCodeMethod": {
         "properties": {
           "code": {
-            "description": "The verification code",
+            "description": "Code from the recovery email\n\nIf you want to submit a code, use this field, but make sure to _not_ include the email field, as well.",
             "type": "string"
           },
           "csrf_token": {
@@ -2880,18 +2912,22 @@
             "type": "string"
           },
           "email": {
-            "description": "Email to Verify\n\nNeeds to be set when initiating the flow. If the email is a registered\nverification email, a verification link will be sent. If the email is not known,\na email with details on what happened will be sent instead.\n\nformat: email",
-            "type": "string"
-          },
-          "flow": {
-            "description": "The id of the flow",
+            "description": "The email address to verify\n\nIf the email belongs to a valid account, a verifiation email will be sent.\n\nIf you want to notify the email address if the account does not exist, see\nthe [notify_unknown_recipients flag](https://www.ory.sh/docs/kratos/self-service/flows/verify-email-account-activation#attempted-verification-notifications)\n\nIf a code was already sent, including this field in the payload will invalidate the sent code and re-send a new code.\n\nformat: email",
             "type": "string"
           },
           "method": {
-            "description": "Method is the recovery method",
-            "type": "string"
+            "description": "Method is the method that should be used for this verification flow\n\nAllowed values are `link` and `code`.\nlink VerificationStrategyLink\ncode VerificationStrategyCode",
+            "enum": [
+              "link",
+              "code"
+            ],
+            "type": "string",
+            "x-go-enum-desc": "link VerificationStrategyLink\ncode VerificationStrategyCode"
           }
         },
+        "required": [
+          "method"
+        ],
         "type": "object"
       },
       "updateVerificationFlowWithLinkMethod": {
@@ -2906,7 +2942,7 @@
             "type": "string"
           },
           "method": {
-            "description": "Method supports `link` only right now.",
+            "description": "Method is the method that should be used for this verification flow\n\nAllowed values are `link` and `code`",
             "type": "string"
           }
         },
@@ -2964,7 +3000,7 @@
         "type": "object"
       },
       "verificationFlow": {
-        "description": "Used to verify an out-of-band communication\nchannel such as an email address or a phone number.\n\nFor more information head over to: https://www.ory.sh/docs/kratos/selfservice/flows/verify-email-account-activation",
+        "description": "Used to verify an out-of-band communication\nchannel such as an email address or a phone number.\n\nFor more information head over to: https://www.ory.sh/docs/kratos/self-service/flows/verify-email-account-activation",
         "properties": {
           "active": {
             "description": "Active, if set, contains the registration method that is being used. It is initially\nnot set.",
@@ -3241,6 +3277,14 @@
               "minimum": 1,
               "type": "integer"
             }
+          },
+          {
+            "description": "CredentialsIdentifier is the identifier (username, email) of the credentials to look up.",
+            "in": "query",
+            "name": "credentials_identifier",
+            "schema": {
+              "type": "string"
+            }
           }
         ],
         "responses": {
@@ -3264,6 +3308,71 @@
           }
         ],
         "summary": "List Identities",
+        "tags": [
+          "identity"
+        ]
+      },
+      "patch": {
+        "description": "Creates or delete multiple\n[identities](https://www.ory.sh/docs/kratos/concepts/identity-user-model).\nThis endpoint can also be used to [import\ncredentials](https://www.ory.sh/docs/kratos/manage-identities/import-user-accounts-identities)\nfor instance passwords, social sign in configurations or multifactor methods.",
+        "operationId": "batchPatchIdentities",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/patchIdentitiesBody"
+              }
+            }
+          },
+          "x-originalParamName": "Body"
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/batchPatchIdentitiesResponse"
+                }
+              }
+            },
+            "description": "batchPatchIdentitiesResponse"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/errorGeneric"
+                }
+              }
+            },
+            "description": "errorGeneric"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/errorGeneric"
+                }
+              }
+            },
+            "description": "errorGeneric"
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/errorGeneric"
+                }
+              }
+            },
+            "description": "errorGeneric"
+          }
+        },
+        "security": [
+          {
+            "oryAccessToken": []
+          }
+        ],
+        "summary": "Create and deletes multiple identities",
         "tags": [
           "identity"
         ]
@@ -3619,6 +3728,78 @@
           }
         ],
         "summary": "Update an Identity",
+        "tags": [
+          "identity"
+        ]
+      }
+    },
+    "/admin/identities/{id}/credentials/{type}": {
+      "delete": {
+        "description": "Delete an [identity](https://www.ory.sh/docs/kratos/concepts/identity-user-model) credential by its type\nYou can only delete second factor (aal2) credentials.",
+        "operationId": "deleteIdentityCredentials",
+        "parameters": [
+          {
+            "description": "ID is the identity's ID.",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "Type is the credential's Type.\nOne of totp, webauthn, lookup",
+            "in": "path",
+            "name": "type",
+            "required": true,
+            "schema": {
+              "enum": [
+                "totp",
+                "webauthn",
+                "lookup"
+              ],
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/identity"
+                }
+              }
+            },
+            "description": "identity"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/errorGeneric"
+                }
+              }
+            },
+            "description": "errorGeneric"
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/errorGeneric"
+                }
+              }
+            },
+            "description": "errorGeneric"
+          }
+        },
+        "security": [
+          {
+            "oryAccessToken": []
+          }
+        ],
+        "summary": "Delete a credential for a specific identity",
         "tags": [
           "identity"
         ]
@@ -4228,15 +4409,15 @@
             },
             "description": "Ory Kratos is ready to accept connections."
           },
-          "500": {
+          "default": {
             "content": {
-              "application/json": {
+              "text/plain": {
                 "schema": {
-                  "$ref": "#/components/schemas/genericError"
+                  "type": "string"
                 }
               }
             },
-            "description": "genericError"
+            "description": "Unexpected error"
           }
         },
         "summary": "Check HTTP Server Status",
@@ -4290,6 +4471,16 @@
               }
             },
             "description": "Ory Kratos is not yet ready to accept requests."
+          },
+          "default": {
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "description": "Unexpected error"
           }
         },
         "summary": "Check HTTP Server and Database Status",
@@ -4597,6 +4788,22 @@
             "description": "The Session Token of the Identity performing the settings flow.",
             "in": "header",
             "name": "X-Session-Token",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "EnableSessionTokenExchangeCode requests the login flow to include a code that can be used to retrieve the session token\nafter the login flow has been completed.",
+            "in": "query",
+            "name": "return_session_token_exchange_code",
+            "schema": {
+              "type": "boolean"
+            }
+          },
+          {
+            "description": "The URL to return the browser to after the flow was completed.",
+            "in": "query",
+            "name": "return_to",
             "schema": {
               "type": "string"
             }
@@ -5332,6 +5539,24 @@
       "get": {
         "description": "This endpoint initiates a registration flow for API clients such as mobile devices, smart TVs, and so on.\n\nIf a valid provided session cookie or session token is provided, a 400 Bad Request error\nwill be returned unless the URL query parameter `?refresh=true` is set.\n\nTo fetch an existing registration flow call `/self-service/registration/flows?flow=\u003cflow_id\u003e`.\n\nYou MUST NOT use this endpoint in client-side (Single Page Apps, ReactJS, AngularJS) nor server-side (Java Server\nPages, NodeJS, PHP, Golang, ...) browser applications. Using this endpoint in these applications will make\nyou vulnerable to a variety of CSRF attacks.\n\nIn the case of an error, the `error.id` of the JSON response body can be one of:\n\n`session_already_available`: The user is already signed in.\n`security_csrf_violation`: Unable to fetch the flow because a CSRF violation occurred.\n\nThis endpoint MUST ONLY be used in scenarios such as native mobile apps (React Native, Objective C, Swift, Java, ...).\n\nMore information can be found at [Ory Kratos User Login](https://www.ory.sh/docs/kratos/self-service/flows/user-login) and [User Registration Documentation](https://www.ory.sh/docs/kratos/self-service/flows/user-registration).",
         "operationId": "createNativeRegistrationFlow",
+        "parameters": [
+          {
+            "description": "EnableSessionTokenExchangeCode requests the login flow to include a code that can be used to retrieve the session token\nafter the login flow has been completed.",
+            "in": "query",
+            "name": "return_session_token_exchange_code",
+            "schema": {
+              "type": "boolean"
+            }
+          },
+          {
+            "description": "The URL to return the browser to after the flow was completed.",
+            "in": "query",
+            "name": "return_to",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "content": {
@@ -5387,6 +5612,14 @@
             "description": "Ory OAuth 2.0 Login Challenge.\n\nIf set will cooperate with Ory OAuth2 and OpenID to act as an OAuth2 server / OpenID Provider.\n\nThe value for this parameter comes from `login_challenge` URL Query parameter sent to your\napplication (e.g. `/registration?login_challenge=abcde`).\n\nThis feature is compatible with Ory Hydra when not running on the Ory Network.",
             "in": "query",
             "name": "login_challenge",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "The URL to return the browser to after the verification flow was completed.\n\nAfter the registration flow is completed, the user will be sent a verification email.\nUpon completing the verification flow, this URL will be used to override the default\n`selfservice.flows.verification.after.default_redirect_to` value.",
+            "in": "query",
+            "name": "after_verification_return_to",
             "schema": {
               "type": "string"
             }
@@ -5873,7 +6106,7 @@
     },
     "/self-service/verification": {
       "post": {
-        "description": "Use this endpoint to complete a verification flow. This endpoint\nbehaves differently for API and browser flows and has several states:\n\n`choose_method` expects `flow` (in the URL query) and `email` (in the body) to be sent\nand works with API- and Browser-initiated flows.\nFor API clients and Browser clients with HTTP Header `Accept: application/json` it either returns a HTTP 200 OK when the form is valid and HTTP 400 OK when the form is invalid\nand a HTTP 303 See Other redirect with a fresh verification flow if the flow was otherwise invalid (e.g. expired).\nFor Browser clients without HTTP Header `Accept` or with `Accept: text/*` it returns a HTTP 303 See Other redirect to the Verification UI URL with the Verification Flow ID appended.\n`sent_email` is the success state after `choose_method` when using the `link` method and allows the user to request another verification email. It\nworks for both API and Browser-initiated flows and returns the same responses as the flow in `choose_method` state.\n`passed_challenge` expects a `token` to be sent in the URL query and given the nature of the flow (\"sending a verification link\")\ndoes not have any API capabilities. The server responds with a HTTP 303 See Other redirect either to the Settings UI URL\n(if the link was valid) and instructs the user to update their password, or a redirect to the Verification UI URL with\na new Verification Flow ID which contains an error message that the verification link was invalid.\n\nMore information can be found at [Ory Kratos Email and Phone Verification Documentation](https://www.ory.sh/docs/kratos/selfservice/flows/verify-email-account-activation).",
+        "description": "Use this endpoint to complete a verification flow. This endpoint\nbehaves differently for API and browser flows and has several states:\n\n`choose_method` expects `flow` (in the URL query) and `email` (in the body) to be sent\nand works with API- and Browser-initiated flows.\nFor API clients and Browser clients with HTTP Header `Accept: application/json` it either returns a HTTP 200 OK when the form is valid and HTTP 400 OK when the form is invalid\nand a HTTP 303 See Other redirect with a fresh verification flow if the flow was otherwise invalid (e.g. expired).\nFor Browser clients without HTTP Header `Accept` or with `Accept: text/*` it returns a HTTP 303 See Other redirect to the Verification UI URL with the Verification Flow ID appended.\n`sent_email` is the success state after `choose_method` when using the `link` method and allows the user to request another verification email. It\nworks for both API and Browser-initiated flows and returns the same responses as the flow in `choose_method` state.\n`passed_challenge` expects a `token` to be sent in the URL query and given the nature of the flow (\"sending a verification link\")\ndoes not have any API capabilities. The server responds with a HTTP 303 See Other redirect either to the Settings UI URL\n(if the link was valid) and instructs the user to update their password, or a redirect to the Verification UI URL with\na new Verification Flow ID which contains an error message that the verification link was invalid.\n\nMore information can be found at [Ory Kratos Email and Phone Verification Documentation](https://www.ory.sh/docs/kratos/self-service/flows/verify-email-account-activation).",
         "operationId": "updateVerificationFlow",
         "parameters": [
           {
@@ -6013,7 +6246,7 @@
     },
     "/self-service/verification/browser": {
       "get": {
-        "description": "This endpoint initializes a browser-based account verification flow. Once initialized, the browser will be redirected to\n`selfservice.flows.verification.ui_url` with the flow ID set as the query parameter `?flow=`.\n\nIf this endpoint is called via an AJAX request, the response contains the recovery flow without any redirects.\n\nThis endpoint is NOT INTENDED for API clients and only works with browsers (Chrome, Firefox, ...).\n\nMore information can be found at [Ory Kratos Email and Phone Verification Documentation](https://www.ory.sh/docs/kratos/selfservice/flows/verify-email-account-activation).",
+        "description": "This endpoint initializes a browser-based account verification flow. Once initialized, the browser will be redirected to\n`selfservice.flows.verification.ui_url` with the flow ID set as the query parameter `?flow=`.\n\nIf this endpoint is called via an AJAX request, the response contains the recovery flow without any redirects.\n\nThis endpoint is NOT INTENDED for API clients and only works with browsers (Chrome, Firefox, ...).\n\nMore information can be found at [Ory Kratos Email and Phone Verification Documentation](https://www.ory.sh/docs/kratos/self-service/flows/verify-email-account-activation).",
         "operationId": "createBrowserVerificationFlow",
         "parameters": [
           {
@@ -6058,7 +6291,7 @@
     },
     "/self-service/verification/flows": {
       "get": {
-        "description": "This endpoint returns a verification flow's context with, for example, error details and other information.\n\nBrowser flows expect the anti-CSRF cookie to be included in the request's HTTP Cookie Header.\nFor AJAX requests you must ensure that cookies are included in the request or requests will fail.\n\nIf you use the browser-flow for server-side apps, the services need to run on a common top-level-domain\nand you need to forward the incoming HTTP Cookie header to this endpoint:\n\n```js\npseudo-code example\nrouter.get('/recovery', async function (req, res) {\nconst flow = await client.getVerificationFlow(req.header('cookie'), req.query['flow'])\n\nres.render('verification', flow)\n})\n\nMore information can be found at [Ory Kratos Email and Phone Verification Documentation](https://www.ory.sh/docs/kratos/selfservice/flows/verify-email-account-activation).",
+        "description": "This endpoint returns a verification flow's context with, for example, error details and other information.\n\nBrowser flows expect the anti-CSRF cookie to be included in the request's HTTP Cookie Header.\nFor AJAX requests you must ensure that cookies are included in the request or requests will fail.\n\nIf you use the browser-flow for server-side apps, the services need to run on a common top-level-domain\nand you need to forward the incoming HTTP Cookie header to this endpoint:\n\n```js\npseudo-code example\nrouter.get('/recovery', async function (req, res) {\nconst flow = await client.getVerificationFlow(req.header('cookie'), req.query['flow'])\n\nres.render('verification', flow)\n})\n```\n\nMore information can be found at [Ory Kratos Email and Phone Verification Documentation](https://www.ory.sh/docs/kratos/self-service/flows/verify-email-account-activation).",
         "operationId": "getVerificationFlow",
         "parameters": [
           {
@@ -6276,6 +6509,87 @@
           }
         },
         "summary": "Get My Active Sessions",
+        "tags": [
+          "frontend"
+        ]
+      }
+    },
+    "/sessions/token-exchange": {
+      "get": {
+        "operationId": "exchangeSessionToken",
+        "parameters": [
+          {
+            "description": "The part of the code return when initializing the flow.",
+            "in": "query",
+            "name": "init_code",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "The part of the code returned by the return_to URL.",
+            "in": "query",
+            "name": "return_to_code",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/successfulNativeLogin"
+                }
+              }
+            },
+            "description": "successfulNativeLogin"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/errorGeneric"
+                }
+              }
+            },
+            "description": "errorGeneric"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/errorGeneric"
+                }
+              }
+            },
+            "description": "errorGeneric"
+          },
+          "410": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/errorGeneric"
+                }
+              }
+            },
+            "description": "errorGeneric"
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/errorGeneric"
+                }
+              }
+            },
+            "description": "errorGeneric"
+          }
+        },
+        "summary": "Exchange Session Token",
         "tags": [
           "frontend"
         ]

@@ -23,12 +23,14 @@ import (
 	"github.com/ory/x/urlx"
 )
 
+var _ flow.Flow = new(Flow)
+
 // A Verification Flow
 //
 // Used to verify an out-of-band communication
 // channel such as an email address or a phone number.
 //
-// For more information head over to: https://www.ory.sh/docs/kratos/selfservice/flows/verify-email-account-activation
+// For more information head over to: https://www.ory.sh/docs/kratos/self-service/flows/verify-email-account-activation
 //
 // swagger:model verificationFlow
 type Flow struct {
@@ -221,4 +223,33 @@ func (f *Flow) AfterSave(*pop.Connection) error {
 
 func (f *Flow) GetUI() *container.Container {
 	return f.UI
+}
+
+// ContinueURL generates the URL to show on the continue screen after succesful verification
+//
+// It follows the following precedence:
+//  1. If a `return_to` parameter has been passed to the flow's creation, is a valid URL and it's in the `selfservice.allowed_return_urls` that URL is returned
+//  2. If `selfservice.flows.verification.after` is set, that URL is returned
+//  3. As a fallback, the `selfservice.default_browser_return_url` URL is returned
+func (f *Flow) ContinueURL(ctx context.Context, config *config.Config) *url.URL {
+	flowContinueURL := config.SelfServiceFlowVerificationReturnTo(ctx, config.SelfServiceBrowserDefaultReturnTo(ctx))
+
+	// Parse the flows request URL
+	verificationRequestURL, err := urlx.Parse(f.GetRequestURL())
+	if err != nil {
+		// Return flow default, or global default return URL
+		return flowContinueURL
+	}
+
+	verificationRequest := http.Request{URL: verificationRequestURL}
+
+	returnTo, err := x.SecureRedirectTo(&verificationRequest, flowContinueURL,
+		x.SecureRedirectAllowSelfServiceURLs(config.SelfPublicURL(ctx)),
+		x.SecureRedirectAllowURLs(config.SelfServiceBrowserAllowedReturnToDomains(ctx)),
+	)
+	if err != nil {
+		// an error occured return flow default, or global default return URL
+		return flowContinueURL
+	}
+	return returnTo
 }

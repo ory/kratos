@@ -10,6 +10,11 @@ api_metadata.go
 client.go
 configuration.go
 docs/AuthenticatorAssuranceLevel.md
+docs/BatchPatchIdentitiesResponse.md
+docs/ContinueWith.md
+docs/ContinueWithSetOrySessionToken.md
+docs/ContinueWithVerificationUi.md
+docs/ContinueWithVerificationUiFlow.md
 docs/CourierApi.md
 docs/CourierMessageStatus.md
 docs/CourierMessageType.md
@@ -34,6 +39,8 @@ docs/IdentityCredentialsOidc.md
 docs/IdentityCredentialsOidcProvider.md
 docs/IdentityCredentialsPassword.md
 docs/IdentityCredentialsType.md
+docs/IdentityPatch.md
+docs/IdentityPatchResponse.md
 docs/IdentitySchemaContainer.md
 docs/IdentityState.md
 docs/IdentityWithCredentials.md
@@ -55,6 +62,7 @@ docs/OAuth2Client.md
 docs/OAuth2ConsentRequestOpenIDConnectContext.md
 docs/OAuth2LoginRequest.md
 docs/Pagination.md
+docs/PatchIdentitiesBody.md
 docs/PerformNativeLogoutBody.md
 docs/RecoveryCodeForIdentity.md
 docs/RecoveryFlow.md
@@ -68,6 +76,7 @@ docs/SessionAuthenticationMethod.md
 docs/SessionDevice.md
 docs/SettingsFlow.md
 docs/SettingsFlowState.md
+docs/SuccessfulCodeExchangeResponse.md
 docs/SuccessfulNativeLogin.md
 docs/SuccessfulNativeRegistration.md
 docs/TokenPagination.md
@@ -104,7 +113,7 @@ docs/UpdateSettingsFlowWithProfileMethod.md
 docs/UpdateSettingsFlowWithTotpMethod.md
 docs/UpdateSettingsFlowWithWebAuthnMethod.md
 docs/UpdateVerificationFlowBody.md
-docs/UpdateVerificationFlowWithCodeMethodBody.md
+docs/UpdateVerificationFlowWithCodeMethod.md
 docs/UpdateVerificationFlowWithLinkMethod.md
 docs/VerifiableIdentityAddress.md
 docs/VerificationFlow.md
@@ -114,6 +123,11 @@ git_push.sh
 go.mod
 go.sum
 model_authenticator_assurance_level.go
+model_batch_patch_identities_response.go
+model_continue_with.go
+model_continue_with_set_ory_session_token.go
+model_continue_with_verification_ui.go
+model_continue_with_verification_ui_flow.go
 model_courier_message_status.go
 model_courier_message_type.go
 model_create_identity_body.go
@@ -135,6 +149,8 @@ model_identity_credentials_oidc.go
 model_identity_credentials_oidc_provider.go
 model_identity_credentials_password.go
 model_identity_credentials_type.go
+model_identity_patch.go
+model_identity_patch_response.go
 model_identity_schema_container.go
 model_identity_state.go
 model_identity_with_credentials.go
@@ -155,6 +171,7 @@ model_o_auth2_client.go
 model_o_auth2_consent_request_open_id_connect_context.go
 model_o_auth2_login_request.go
 model_pagination.go
+model_patch_identities_body.go
 model_perform_native_logout_body.go
 model_recovery_code_for_identity.go
 model_recovery_flow.go
@@ -168,6 +185,7 @@ model_session_authentication_method.go
 model_session_device.go
 model_settings_flow.go
 model_settings_flow_state.go
+model_successful_code_exchange_response.go
 model_successful_native_login.go
 model_successful_native_registration.go
 model_token_pagination.go
@@ -204,7 +222,7 @@ model_update_settings_flow_with_profile_method.go
 model_update_settings_flow_with_totp_method.go
 model_update_settings_flow_with_web_authn_method.go
 model_update_verification_flow_body.go
-model_update_verification_flow_with_code_method_body.go
+model_update_verification_flow_with_code_method.go
 model_update_verification_flow_with_link_method.go
 model_verifiable_identity_address.go
 model_verification_flow.go

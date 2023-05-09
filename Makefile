@@ -16,11 +16,12 @@ GO_DEPENDENCIES = github.com/ory/go-acc \
 				  github.com/go-swagger/go-swagger/cmd/swagger \
 				  golang.org/x/tools/cmd/goimports \
 				  github.com/mattn/goveralls \
-				  github.com/cortesi/modd/cmd/modd
+				  github.com/cortesi/modd/cmd/modd \
+				  github.com/mailhog/MailHog
 
 define make-go-dependency
   # go install is responsible for not re-building when the code hasn't changed
-  .bin/$(notdir $1): go.mod go.sum Makefile
+  .bin/$(notdir $1): go.mod go.sum
 		GOBIN=$(PWD)/.bin/ go install $1
 endef
 $(foreach dep, $(GO_DEPENDENCIES), $(eval $(call make-go-dependency, $(dep))))
@@ -47,14 +48,14 @@ docs/swagger:
 	npx @redocly/openapi-cli preview-docs spec/swagger.json
 
 .bin/golangci-lint: Makefile
-	curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -d -b .bin v1.47.3
+	curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -d -b .bin v1.50.1
 
 .bin/hydra: Makefile
 	bash <(curl https://raw.githubusercontent.com/ory/meta/master/install.sh) -d -b .bin hydra v2.0.2
 
 .bin/ory: Makefile
-	curl https://raw.githubusercontent.com/ory/meta/master/install.sh | bash -s -- -b .bin ory v0.1.47
-	touch .bin/ory
+	curl https://raw.githubusercontent.com/ory/meta/master/install.sh | bash -s -- -b .bin ory v0.2.2
+	touch -a -m .bin/ory
 
 .PHONY: lint
 lint: .bin/golangci-lint
@@ -75,6 +76,9 @@ test-resetdb:
 .PHONY: test
 test:
 	go test -p 1 -tags sqlite -count=1 -failfast ./...
+
+test-short:
+	go test -tags sqlite -count=1 -failfast -short ./...
 
 .PHONY: test-coverage
 test-coverage: .bin/go-acc .bin/goveralls
@@ -150,7 +154,7 @@ authors:  # updates the AUTHORS file
 # Formats the code
 .PHONY: format
 format: .bin/goimports .bin/ory node_modules
-	.bin/ory dev headers license --exclude=internal/httpclient --exclude=internal/client-go --exclude test/e2e/proxy/node_modules --exclude test/e2e/node_modules --exclude node_modules
+	.bin/ory dev headers copyright --exclude=internal/httpclient --exclude=internal/client-go --exclude test/e2e/proxy/node_modules --exclude test/e2e/node_modules --exclude node_modules
 	goimports -w -local github.com/ory .
 	npm exec -- prettier --write 'test/e2e/**/*{.ts,.js}'
 	npm exec -- prettier --write '.github'
@@ -172,6 +176,12 @@ test-e2e: node_modules test-resetdb
 	test/e2e/run.sh postgres
 	test/e2e/run.sh cockroach
 	test/e2e/run.sh mysql
+
+.PHONY: test-e2e-playwright
+test-e2e-playwright: node_modules test-resetdb
+	source script/test-envs.sh
+	test/e2e/run.sh --only-setup
+	(cd test/e2e; DB=memory npm run playwright)
 
 .PHONY: migrations-sync
 migrations-sync: .bin/ory

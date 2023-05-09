@@ -35,7 +35,7 @@ const (
 )
 
 func (s *Strategy) RecoveryStrategyID() string {
-	return recovery.StrategyRecoveryCodeName
+	return string(recovery.RecoveryStrategyCode)
 }
 
 func (s *Strategy) RegisterPublicRecoveryRoutes(public *x.RouterPublic) {
@@ -67,7 +67,8 @@ func (s *Strategy) PopulateRecoveryMethod(r *http.Request, f *recovery.Flow) err
 //
 // swagger:parameters createRecoveryCodeForIdentity
 //
-// nolint
+//nolint:deadcode,unused
+//lint:ignore U1000 Used to generate Swagger and OpenAPI definitions
 type createRecoveryCodeForIdentity struct {
 	// in: body
 	Body createRecoveryCodeForIdentityBody
@@ -103,7 +104,9 @@ type createRecoveryCodeForIdentityBody struct {
 // Used when an administrator creates a recovery code for an identity.
 //
 // swagger:model recoveryCodeForIdentity
-// nolint
+//
+//nolint:deadcode,unused
+//lint:ignore U1000 Used to generate Swagger and OpenAPI definitions
 type recoveryCodeForIdentity struct {
 	// RecoveryLink with flow
 	//
@@ -239,22 +242,26 @@ func (s *Strategy) createRecoveryCodeForIdentity(w http.ResponseWriter, r *http.
 // Update Recovery Flow with Code Method
 //
 // swagger:model updateRecoveryFlowWithCodeMethod
-// nolint:deadcode,unused
+//
+//nolint:deadcode,unused
+//lint:ignore U1000 Used to generate Swagger and OpenAPI definitions
 type updateRecoveryFlowWithCodeMethod struct {
-	// Email to Recover
+	// The email address of the account to recover
 	//
-	// Needs to be set when initiating the flow. If the email is a registered
-	// recovery email, a recovery link will be sent. If the email is not known,
-	// a email with details on what happened will be sent instead.
+	// If the email belongs to a valid account, a recovery email will be sent.
+	//
+	// If you want to notify the email address if the account does not exist, see
+	// the [notify_unknown_recipients flag](https://www.ory.sh/docs/kratos/self-service/flows/account-recovery-password-reset#attempted-recovery-notifications)
+	//
+	// If a code was already sent, including this field in the payload will invalidate the sent code and re-send a new code.
 	//
 	// format: email
 	// required: false
 	Email string `json:"email" form:"email"`
 
-	// Code from recovery email
+	// Code from the recovery email
 	//
-	// Sent to the user once a recovery has been initiated and is used to prove
-	// that the user is in possession of the email
+	// If you want to submit a code, use this field, but make sure to _not_ include the email field, as well.
 	//
 	// required: false
 	Code string `json:"code" form:"code"`
@@ -262,10 +269,12 @@ type updateRecoveryFlowWithCodeMethod struct {
 	// Sending the anti-csrf token is only required for browser login flows.
 	CSRFToken string `form:"csrf_token" json:"csrf_token"`
 
-	// Method supports `link` and `code` only right now.
+	// Method is the method that should be used for this recovery flow
+	//
+	// Allowed values are `link` and `code`.
 	//
 	// required: true
-	Method string `json:"method"`
+	Method recovery.RecoveryMethod `json:"method"`
 }
 
 func (s Strategy) isCodeFlow(f *recovery.Flow) bool {
@@ -375,21 +384,15 @@ func (s *Strategy) recoveryIssueSession(w http.ResponseWriter, r *http.Request, 
 		return s.retryRecoveryFlowWithError(w, r, f.Type, err)
 	}
 
-	// Carry `return_to` parameter over from recovery flow
-	sfRequestURL, err := url.Parse(sf.RequestURL)
-	if err != nil {
-		return s.retryRecoveryFlowWithError(w, r, f.Type, err)
+	returnToURL := s.deps.Config().SelfServiceFlowRecoveryReturnTo(r.Context(), nil)
+	returnTo := ""
+	if returnToURL != nil {
+		returnTo = returnToURL.String()
 	}
-
-	fRequestURL, err := url.Parse(f.RequestURL)
+	sf.RequestURL, err = x.TakeOverReturnToParameter(f.RequestURL, sf.RequestURL, returnTo)
 	if err != nil {
-		return s.retryRecoveryFlowWithError(w, r, f.Type, err)
+		return s.retryRecoveryFlowWithError(w, r, flow.TypeBrowser, err)
 	}
-
-	sfQuery := sfRequestURL.Query()
-	sfQuery.Set("return_to", fRequestURL.Query().Get("return_to"))
-	sfRequestURL.RawQuery = sfQuery.Encode()
-	sf.RequestURL = sfRequestURL.String()
 
 	if err := s.deps.RecoveryExecutor().PostRecoveryHook(w, r, f, sess); err != nil {
 		return s.retryRecoveryFlowWithError(w, r, f.Type, err)
@@ -522,7 +525,7 @@ func (s *Strategy) recoveryHandleFormSubmission(w http.ResponseWriter, r *http.R
 		return s.HandleRecoveryError(w, r, f, body, err)
 	}
 
-	if err := s.deps.CodeSender().SendRecoveryCode(ctx, r, f, identity.VerifiableAddressTypeEmail, body.Email); err != nil {
+	if err := s.deps.CodeSender().SendRecoveryCode(ctx, f, identity.VerifiableAddressTypeEmail, body.Email); err != nil {
 		if !errors.Is(err, ErrUnknownAddress) {
 			return s.HandleRecoveryError(w, r, f, body, err)
 		}

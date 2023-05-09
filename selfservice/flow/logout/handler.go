@@ -7,7 +7,12 @@ import (
 	"net/http"
 	"net/url"
 
+	"go.opentelemetry.io/otel/trace"
+
 	"github.com/pkg/errors"
+
+	"github.com/ory/kratos/identity"
+	"github.com/ory/kratos/x/events"
 
 	"github.com/ory/herodot"
 	"github.com/ory/x/decoderx"
@@ -86,7 +91,9 @@ type logoutFlow struct {
 // Create Browser Logout Flow Parameters
 //
 // swagger:parameters createBrowserLogoutFlow
-// nolint:deadcode,unused
+//
+//nolint:deadcode,unused
+//lint:ignore U1000 Used to generate Swagger and OpenAPI definitions
 type createBrowserLogoutFlow struct {
 	// HTTP Cookies
 	//
@@ -139,7 +146,9 @@ func (h *Handler) createBrowserLogoutFlow(w http.ResponseWriter, r *http.Request
 // Perform Native Logout Parameters
 //
 // swagger:parameters performNativeLogout
-// nolint:deadcode,unused
+//
+//nolint:deadcode,unused
+//lint:ignore U1000 Used to generate Swagger and OpenAPI definitions
 type performNativeLogout struct {
 	// in: body
 	// required: true
@@ -148,8 +157,10 @@ type performNativeLogout struct {
 
 // Perform Native Logout Request Body
 //
-// nolint:deadcode,unused
 // swagger:model performNativeLogoutBody
+//
+//nolint:deadcode,unused
+//lint:ignore U1000 Used to generate Swagger and OpenAPI definitions
 type performNativeLogoutBody struct {
 	// The Session Token
 	//
@@ -192,6 +203,16 @@ func (h *Handler) performNativeLogout(w http.ResponseWriter, r *http.Request, _ 
 		h.d.Writer().WriteError(w, r, err)
 		return
 	}
+	sess, err := h.d.SessionPersister().GetSessionByToken(r.Context(), p.SessionToken, session.ExpandNothing, identity.ExpandNothing)
+	if err != nil {
+		if errors.Is(err, sqlcon.ErrNoRows) {
+			h.d.Writer().WriteError(w, r, errors.WithStack(herodot.ErrForbidden.WithReason("The provided Ory Session Token could not be found, is invalid, or otherwise malformed.")))
+			return
+		}
+
+		h.d.Writer().WriteError(w, r, err)
+		return
+	}
 
 	if err := h.d.SessionPersister().RevokeSessionByToken(r.Context(), p.SessionToken); err != nil {
 		if errors.Is(err, sqlcon.ErrNoRows) {
@@ -203,13 +224,17 @@ func (h *Handler) performNativeLogout(w http.ResponseWriter, r *http.Request, _ 
 		return
 	}
 
+	trace.SpanFromContext(r.Context()).AddEvent(events.NewSessionRevoked(r.Context(), sess.ID, sess.IdentityID))
+
 	w.WriteHeader(http.StatusNoContent)
 }
 
 // Update Logout Flow Parameters
 //
-// nolint:deadcode,unused
 // swagger:parameters updateLogoutFlow
+//
+//nolint:deadcode,unused
+//lint:ignore U1000 Used to generate Swagger and OpenAPI definitions
 type updateLogoutFlow struct {
 	// A Valid Logout Token
 	//
@@ -277,6 +302,8 @@ func (h *Handler) updateLogoutFlow(w http.ResponseWriter, r *http.Request, ps ht
 		h.d.SelfServiceErrorManager().Forward(r.Context(), w, r, err)
 		return
 	}
+
+	trace.SpanFromContext(r.Context()).AddEvent(events.NewSessionRevoked(r.Context(), sess.ID, sess.IdentityID))
 
 	h.completeLogout(w, r)
 }

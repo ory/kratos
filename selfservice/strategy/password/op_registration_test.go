@@ -14,7 +14,7 @@ import (
 
 	"golang.org/x/oauth2"
 
-	hydraclientgo "github.com/ory/hydra-client-go"
+	hydraclientgo "github.com/ory/hydra-client-go/v2"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -48,7 +48,7 @@ type kratosUIConfig struct {
 }
 
 func newClientAppTS(t *testing.T, c *clientAppConfig) *httptest.Server {
-	return testhelpers.NewHTTPTestServer(t, http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	return testhelpers.NewHTTPTestServer(t, http.HandlerFunc(func(_ http.ResponseWriter, r *http.Request) {
 		c.state.visits += 1
 		t.Logf("[clientAppTS] handling a callback at client app %s", r.URL.String())
 		if r.URL.Query().Has("code") {
@@ -90,7 +90,7 @@ func kratosUIHandleConsent(t *testing.T, req *http.Request, client *http.Client,
 }
 
 func newKratosUITS(t *testing.T, c *kratosUIConfig) *httptest.Server {
-	return testhelpers.NewHTTPTestServer(t, http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	return testhelpers.NewHTTPTestServer(t, http.HandlerFunc(func(_ http.ResponseWriter, r *http.Request) {
 		t.Logf("[uiTS] handling %s", r.URL)
 		q := r.URL.Query()
 

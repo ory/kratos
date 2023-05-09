@@ -554,7 +554,7 @@ func TestCompleteLogin(t *testing.T) {
 
 		t.Run("case=login with a security key using", func(t *testing.T) {
 			idd := uuid.FromStringOrNil("44fc22c9-abae-4c3e-a56b-37c7b38d973e")
-			out, err := json.Marshal(webauthn.CredentialsConfig{UserHandle: idd[:]})
+			out, err := json.Marshal(identity.CredentialsWebAuthnConfig{UserHandle: idd[:]})
 			require.NoError(t, err)
 			t.Logf("json: %s", out)
 			out, err = json.Marshal(protocol.AuthenticatorAssertionResponse{UserHandle: idd[:]})

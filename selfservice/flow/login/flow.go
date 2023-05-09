@@ -20,7 +20,7 @@ import (
 
 	"github.com/ory/x/stringsx"
 
-	hydraclientgo "github.com/ory/hydra-client-go"
+	hydraclientgo "github.com/ory/hydra-client-go/v2"
 
 	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/hydra"
@@ -119,6 +119,11 @@ type Flow struct {
 	//
 	// This value can be one of "aal1", "aal2", "aal3".
 	RequestedAAL identity.AuthenticatorAssuranceLevel `json:"requested_aal" faker:"len=4" db:"requested_aal"`
+
+	// SessionTokenExchangeCode holds the secret code that the client can use to retrieve a session token after the login flow has been completed.
+	// This is only set if the client has requested a session token exchange code, and if the flow is of type "api",
+	// and only on creating the login flow.
+	SessionTokenExchangeCode string `json:"session_token_exchange_code,omitempty" faker:"-" db:"-"`
 }
 
 func NewFlow(conf *config.Config, exp time.Duration, csrf string, r *http.Request, flowType flow.Type) (*Flow, error) {
@@ -235,4 +240,14 @@ func (f *Flow) AfterSave(*pop.Connection) error {
 
 func (f *Flow) GetUI() *container.Container {
 	return f.UI
+}
+
+func (f *Flow) SecureRedirectToOpts(ctx context.Context, cfg config.Provider) (opts []x.SecureRedirectOption) {
+	return []x.SecureRedirectOption{
+		x.SecureRedirectReturnTo(f.ReturnTo),
+		x.SecureRedirectUseSourceURL(f.RequestURL),
+		x.SecureRedirectAllowURLs(cfg.Config().SelfServiceBrowserAllowedReturnToDomains(ctx)),
+		x.SecureRedirectAllowSelfServiceURLs(cfg.Config().SelfPublicURL(ctx)),
+		x.SecureRedirectOverrideDefaultReturnTo(cfg.Config().SelfServiceFlowLoginReturnTo(ctx, f.Active.String())),
+	}
 }

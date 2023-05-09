@@ -8,12 +8,19 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/pkg/errors"
-	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/trace"
 
+	"github.com/ory/kratos/identity"
+	"github.com/ory/kratos/ui/node"
+
+	"github.com/ory/kratos/x/events"
+
+	"github.com/pkg/errors"
+
+	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/selfservice/flow"
 	"github.com/ory/kratos/selfservice/flow/registration"
+	"github.com/ory/kratos/selfservice/sessiontokenexchange"
 	"github.com/ory/kratos/session"
 	"github.com/ory/kratos/x"
 	"github.com/ory/x/otelx"
@@ -27,6 +34,8 @@ type (
 	sessionIssuerDependencies interface {
 		session.ManagementProvider
 		session.PersistenceProvider
+		sessiontokenexchange.PersistenceProvider
+		config.Provider
 		x.WriterProvider
 	}
 	SessionIssuerProvider interface {
@@ -42,9 +51,9 @@ func NewSessionIssuer(r sessionIssuerDependencies) *SessionIssuer {
 }
 
 func (e *SessionIssuer) ExecutePostRegistrationPostPersistHook(w http.ResponseWriter, r *http.Request, a *registration.Flow, s *session.Session) error {
-	return otelx.WithSpan(r.Context(), "selfservice.hook.ExecutePostRegistrationPostPersistHook", func(ctx context.Context) error {
+	return otelx.WithSpan(r.Context(), "selfservice.hook.SessionIssuer.ExecutePostRegistrationPostPersistHook", func(ctx context.Context) error {
 		return e.executePostRegistrationPostPersistHook(w, r.WithContext(ctx), a, s)
-	}, trace.WithAttributes(attribute.String("hook", KeySessionIssuer)))
+	})
 }
 
 func (e *SessionIssuer) executePostRegistrationPostPersistHook(w http.ResponseWriter, r *http.Request, a *registration.Flow, s *session.Session) error {
@@ -53,11 +62,23 @@ func (e *SessionIssuer) executePostRegistrationPostPersistHook(w http.ResponseWr
 		return err
 	}
 
+	trace.SpanFromContext(r.Context()).AddEvent(events.NewSessionIssued(r.Context(), s.ID, s.IdentityID))
+
 	if a.Type == flow.TypeAPI {
+		if s.AuthenticatedVia(identity.CredentialsTypeOIDC) {
+			if handled, err := e.r.SessionManager().MaybeRedirectAPICodeFlow(w, r, a, s.ID, node.OpenIDConnectGroup); err != nil {
+				return errors.WithStack(err)
+			} else if handled {
+				return nil
+			}
+		}
+
+		a.AddContinueWith(flow.NewContinueWithSetToken(s.Token))
 		e.r.Writer().Write(w, r, &registration.APIFlowResponse{
-			Session:  s,
-			Token:    s.Token,
-			Identity: s.Identity,
+			Session:      s,
+			Token:        s.Token,
+			Identity:     s.Identity,
+			ContinueWith: a.ContinueWithItems,
 		})
 		return errors.WithStack(registration.ErrHookAbortFlow)
 	}
@@ -70,8 +91,9 @@ func (e *SessionIssuer) executePostRegistrationPostPersistHook(w http.ResponseWr
 	// SPA flows additionally send the session
 	if x.IsJSONRequest(r) {
 		e.r.Writer().Write(w, r, &registration.APIFlowResponse{
-			Session:  s,
-			Identity: s.Identity,
+			Session:      s,
+			Identity:     s.Identity,
+			ContinueWith: a.ContinueWithItems,
 		})
 		return errors.WithStack(registration.ErrHookAbortFlow)
 	}

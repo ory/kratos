@@ -53,7 +53,7 @@ jobs:
     steps:
       - run: |
           docker create --name cockroach -p 26257:26257 \
-            cockroachdb/cockroach:v22.1.3 start-single-node --insecure
+            cockroachdb/cockroach:v22.2.6 start-single-node --insecure
           docker start cockroach
         name: Start CockroachDB
       - run: |
@@ -75,7 +75,7 @@ jobs:
       - uses: ory/ci/checkout@master
         with:
           fetch-depth: 2
-      - uses: actions/setup-go@v2
+      - uses: actions/setup-go@v4
         with:
           go-version: "1.19"
       - run: go list -json > go.list
@@ -91,7 +91,7 @@ jobs:
           GOGC: 100
         with:
           args: --timeout 10m0s
-          version: v1.49.0
+          version: v1.50.1
           skip-go-installation: true
           skip-pkg-cache: true
       - name: Build Kratos
@@ -145,7 +145,7 @@ jobs:
           node-version: 16
       - run: |
           docker create --name cockroach -p 26257:26257 \
-            cockroachdb/cockroach:v20.2.5 start-single-node --insecure
+            cockroachdb/cockroach:v22.2.6 start-single-node --insecure
           docker start cockroach
         name: Start CockroachDB
       - uses: browser-actions/setup-chrome@latest
@@ -168,34 +168,157 @@ jobs:
           sudo apt-get install -y moreutils gettext
         name: Install tools
       - name: Setup Go
-        uses: actions/setup-go@v2
+        uses: actions/setup-go@v4
         with:
           go-version: "1.19"
+
       - name: Install selfservice-ui-react-native
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
         with:
           repository: ory/kratos-selfservice-ui-react-native
           path: react-native-ui
       - run: |
           cd react-native-ui
           npm install
+
       - name: Install selfservice-ui-node
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
         with:
           repository: ory/kratos-selfservice-ui-node
           path: node-ui
       - run: |
           cd node-ui
           npm install
+
+      - name: Install selfservice-ui-react-nextjs
+        uses: actions/checkout@v3
+        with:
+          repository: ory/kratos-selfservice-ui-react-nextjs
+          path: react-ui
+      - run: |
+          cd react-ui
+          npm ci
+
       - run: |
           echo 'RN_UI_PATH='"$(realpath react-native-ui)" >> $GITHUB_ENV
           echo 'NODE_UI_PATH='"$(realpath node-ui)" >> $GITHUB_ENV
-      - run: |
-          ./test/e2e/run.sh ${{ matrix.database }}
+          echo 'REACT_UI_PATH='"$(realpath react-ui)" >> $GITHUB_ENV
+      - name: "Run Cypress tests"
+        run: ./test/e2e/run.sh ${{ matrix.database }}
         env:
           RN_UI_PATH: react-native-ui
           NODE_UI_PATH: node-ui
+          REACT_UI_PATH: react-ui
           CYPRESS_RECORD_KEY: ${{ secrets.CYPRESS_RECORD_KEY }}
+      - if: failure()
+        uses: actions/upload-artifact@v2
+        with:
+          name: logs
+          path: test/e2e/*.e2e.log
+
+  test-e2e-playwright:
+    name: Run Playwright end-to-end tests
+    runs-on: ubuntu-latest
+    needs:
+      - sdk-generate
+    services:
+      postgres:
+        image: postgres:9.6
+        env:
+          POSTGRES_DB: postgres
+          POSTGRES_PASSWORD: test
+          POSTGRES_USER: test
+        ports:
+          - 5432:5432
+      mysql:
+        image: mysql:5.7
+        env:
+          MYSQL_ROOT_PASSWORD: test
+        ports:
+          - 3306:3306
+      mailslurper:
+        image: oryd/mailslurper:latest-smtps
+        ports:
+          - 4436:4436
+          - 4437:4437
+          - 1025:1025
+    env:
+      TEST_DATABASE_POSTGRESQL: "postgres://test:test@localhost:5432/postgres?sslmode=disable"
+      TEST_DATABASE_MYSQL: "mysql://root:test@(localhost:3306)/mysql?parseTime=true&multiStatements=true"
+      TEST_DATABASE_COCKROACHDB: "cockroach://root@localhost:26257/defaultdb?sslmode=disable"
+    strategy:
+      matrix:
+        database: ["postgres", "cockroach", "sqlite", "mysql"]
+    steps:
+      - uses: actions/setup-node@v3
+        with:
+          node-version: 16
+      - run: |
+          docker create --name cockroach -p 26257:26257 \
+            cockroachdb/cockroach:v22.2.6 start-single-node --insecure
+          docker start cockroach
+        name: Start CockroachDB
+      - uses: ory/ci/checkout@master
+        with:
+          fetch-depth: 2
+      - run: |
+          npm ci
+          cd test/e2e; npm ci
+          npx playwright install --with-deps
+          npm i -g expo-cli
+        name: Install node deps
+      - run: |
+          sudo apt-get install -y moreutils gettext
+        name: Install tools
+      - name: Setup Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: "1.19"
+      - run: go build -tags sqlite,json1 .
+
+      - name: Install selfservice-ui-react-native
+        uses: actions/checkout@v3
+        with:
+          repository: ory/kratos-selfservice-ui-react-native
+          path: react-native-ui
+      - run: |
+          cd react-native-ui
+          npm install
+
+      - name: Install selfservice-ui-node
+        uses: actions/checkout@v3
+        with:
+          repository: ory/kratos-selfservice-ui-node
+          path: node-ui
+      - run: |
+          cd node-ui
+          npm install
+
+      - name: Install selfservice-ui-react-nextjs
+        uses: actions/checkout@v3
+        with:
+          repository: ory/kratos-selfservice-ui-react-nextjs
+          path: react-ui
+      - run: |
+          cd react-ui
+          npm ci
+
+      - run: |
+          echo 'RN_UI_PATH='"$(realpath react-native-ui)" >> $GITHUB_ENV
+          echo 'NODE_UI_PATH='"$(realpath node-ui)" >> $GITHUB_ENV
+          echo 'REACT_UI_PATH='"$(realpath react-ui)" >> $GITHUB_ENV
+
+      - name: "Set up environment"
+        run: test/e2e/run.sh --only-setup
+      - name: "Run Playwright tests"
+        run: |
+          cd test/e2e
+          npm run playwright
+        env:
+          DB: ${{ matrix.database }}
+          RN_UI_PATH: react-native-ui
+          NODE_UI_PATH: node-ui
+          REACT_UI_PATH: react-ui
       - if: failure()
         uses: actions/upload-artifact@v2
         with:

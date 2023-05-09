@@ -9,6 +9,7 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/ory/kratos/selfservice/sessiontokenexchange"
 	"github.com/ory/x/pagination/migrationpagination"
 
 	"github.com/ory/x/pagination/keysetpagination"
@@ -36,6 +37,7 @@ type (
 		x.LoggingProvider
 		x.CSRFProvider
 		config.Provider
+		sessiontokenexchange.PersistenceProvider
 	}
 	HandlerProvider interface {
 		SessionHandler() *Handler
@@ -56,9 +58,10 @@ func NewHandler(
 }
 
 const (
-	RouteCollection = "/sessions"
-	RouteWhoami     = RouteCollection + "/whoami"
-	RouteSession    = RouteCollection + "/:id"
+	RouteCollection                  = "/sessions"
+	RouteExchangeCodeForSessionToken = RouteCollection + "/token-exchange" // #nosec G101
+	RouteWhoami                      = RouteCollection + "/whoami"
+	RouteSession                     = RouteCollection + "/:id"
 )
 
 const (
@@ -96,13 +99,17 @@ func (h *Handler) RegisterPublicRoutes(public *x.RouterPublic) {
 	public.DELETE(RouteSession, h.deleteMySession)
 	public.GET(RouteCollection, h.listMySessions)
 
+	public.GET(RouteExchangeCodeForSessionToken, h.exchangeCode)
+
 	public.DELETE(AdminRouteIdentitiesSessions, x.RedirectToAdminRoute(h.r))
 }
 
 // Check Session Request Parameters
 //
-// nolint:deadcode,unused
 // swagger:parameters toSession
+//
+//nolint:deadcode,unused
+//lint:ignore U1000 Used to generate Swagger and OpenAPI definitions
 type toSession struct {
 	// Set the Session Token when calling from non-browser clients. A session token has a format of `MP2YWEMeM8MxjkGKpH4dqOQ4Q4DlSPaj`.
 	//
@@ -231,7 +238,9 @@ func (h *Handler) whoami(w http.ResponseWriter, r *http.Request, ps httprouter.P
 // Delete Identity Session Parameters
 //
 // swagger:parameters deleteIdentitySessions
-// nolint:deadcode,unused
+//
+//nolint:deadcode,unused
+//lint:ignore U1000 Used to generate Swagger and OpenAPI definitions
 type deleteIdentitySessions struct {
 	// ID is the identity's ID.
 	//
@@ -276,7 +285,9 @@ func (h *Handler) deleteIdentitySessions(w http.ResponseWriter, r *http.Request,
 // The request object for listing sessions in an administrative context.
 //
 // swagger:parameters listSessions
-// nolint:deadcode,unused
+//
+//nolint:deadcode,unused
+//lint:ignore U1000 Used to generate Swagger and OpenAPI definitions
 type listSessionsRequest struct {
 	keysetpagination.RequestParameters
 
@@ -300,7 +311,9 @@ type listSessionsRequest struct {
 // The response given when listing sessions in an administrative context.
 //
 // swagger:response listSessions
-// nolint:deadcode,unused
+//
+//nolint:deadcode,unused
+//lint:ignore U1000 Used to generate Swagger and OpenAPI definitions
 type listSessionsResponse struct {
 	keysetpagination.ResponseHeaders
 
@@ -372,7 +385,9 @@ func (h *Handler) adminListSessions(w http.ResponseWriter, r *http.Request, ps h
 // The request object for getting a session in an administrative context.
 //
 // swagger:parameters getSession
-// nolint:deadcode,unused
+//
+//nolint:deadcode,unused
+//lint:ignore U1000 Used to generate Swagger and OpenAPI definitions
 type getSession struct {
 	// ExpandOptions is a query parameter encoded list of all properties that must be expanded in the Session.
 	// Example - ?expand=Identity&expand=Devices
@@ -449,7 +464,9 @@ func (h *Handler) getSession(w http.ResponseWriter, r *http.Request, ps httprout
 // Deactivate Session Parameters
 //
 // swagger:parameters disableSession
-// nolint:deadcode,unused
+//
+//nolint:deadcode,unused
+//lint:ignore U1000 Used to generate Swagger and OpenAPI definitions
 type disableSession struct {
 	// ID is the session's ID.
 	//
@@ -492,7 +509,9 @@ func (h *Handler) disableSession(w http.ResponseWriter, r *http.Request, ps http
 // List Identity Sessions Parameters
 //
 // swagger:parameters listIdentitySessions
-// nolint:deadcode,unused
+//
+//nolint:deadcode,unused
+//lint:ignore U1000 Used to generate Swagger and OpenAPI definitions
 type listIdentitySessionsRequest struct {
 	migrationpagination.RequestParameters
 
@@ -512,7 +531,9 @@ type listIdentitySessionsRequest struct {
 // List Identity Sessions Response
 //
 // swagger:response listIdentitySessions
-// nolint:deadcode,unused
+//
+//nolint:deadcode,unused
+//lint:ignore U1000 Used to generate Swagger and OpenAPI definitions
 type listIdentitySessionsResponse struct {
 	migrationpagination.ResponseHeaderAnnotation
 
@@ -576,8 +597,10 @@ type deleteMySessionsCount struct {
 
 // Disable My Other Session Parameters
 //
-// nolint:deadcode,unused
 // swagger:parameters disableMyOtherSessions
+//
+//nolint:deadcode,unused
+//lint:ignore U1000 Used to generate Swagger and OpenAPI definitions
 type disableMyOtherSessions struct {
 	// Set the Session Token when calling from non-browser clients. A session token has a format of `MP2YWEMeM8MxjkGKpH4dqOQ4Q4DlSPaj`.
 	//
@@ -628,7 +651,9 @@ func (h *Handler) deleteMySessions(w http.ResponseWriter, r *http.Request, _ htt
 // Disable My Session Parameters
 //
 // swagger:parameters disableMySession
-// nolint:deadcode,unused
+//
+//nolint:deadcode,unused
+//lint:ignore U1000 Used to generate Swagger and OpenAPI definitions
 type disableMySession struct {
 	// ID is the session's ID.
 	//
@@ -668,7 +693,7 @@ type disableMySession struct {
 func (h *Handler) deleteMySession(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	sid := ps.ByName("id")
 	if sid == "whoami" {
-		// Special case where we actually want to handle the whomai endpoint.
+		// Special case where we actually want to handle the whoami endpoint.
 		h.whoami(w, r, ps)
 		return
 	}
@@ -701,7 +726,9 @@ func (h *Handler) deleteMySession(w http.ResponseWriter, r *http.Request, ps htt
 // List My Session Parameters
 //
 // swagger:parameters listMySessions
-// nolint:deadcode,unused
+//
+//nolint:deadcode,unused
+//lint:ignore U1000 Used to generate Swagger and OpenAPI definitions
 type listMySessionsParameters struct {
 	x.PaginationParams
 
@@ -723,7 +750,9 @@ type listMySessionsParameters struct {
 // List My Session Response
 //
 // swagger:response listMySessions
-// nolint:deadcode,unused
+//
+//nolint:deadcode,unused
+//lint:ignore U1000 Used to generate Swagger and OpenAPI definitions
 type listMySessionsResponse struct {
 	migrationpagination.ResponseHeaderAnnotation
 
@@ -781,7 +810,9 @@ func (h *Handler) IsAuthenticated(wrap httprouter.Handle, onUnauthenticated http
 }
 
 // swagger:parameters extendSession
-// nolint:deadcode,unused
+//
+//nolint:deadcode,unused
+//lint:ignore U1000 Used to generate Swagger and OpenAPI definitions
 type extendSession struct {
 	// ID is the session's ID.
 	//
@@ -876,4 +907,92 @@ func RespondWitherrorGenericOnAuthenticated(h herodot.Writer, err error) httprou
 	return func(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 		h.WriteError(w, r, err)
 	}
+}
+
+// Exchange Session Token Parameters
+//
+// swagger:parameters exchangeSessionToken
+//
+//nolint:deadcode,unused
+//lint:ignore U1000 Used to generate Swagger and OpenAPI definitions
+type exchangeSessionToken struct {
+	// The part of the code return when initializing the flow.
+	//
+	// required: true
+	// in: query
+	InitCode string `json:"init_code"`
+
+	// The part of the code returned by the return_to URL.
+	//
+	// required: true
+	// in: query
+	ReturnToCode string `json:"return_to_code"`
+}
+
+// The Response for Registration Flows via API
+//
+// swagger:model successfulCodeExchangeResponse
+type CodeExchangeResponse struct {
+	// The Session Token
+	//
+	// A session token is equivalent to a session cookie, but it can be sent in the HTTP Authorization
+	// Header:
+	//
+	// 		Authorization: bearer ${session-token}
+	//
+	// The session token is only issued for API flows, not for Browser flows!
+	Token string `json:"session_token,omitempty"`
+
+	// The Session
+	//
+	// The session contains information about the user, the session device, and so on.
+	// This is only available for API flows, not for Browser flows!
+	//
+	// required: true
+	Session *Session `json:"session"`
+}
+
+// swagger:route GET /sessions/token-exchange frontend exchangeSessionToken
+//
+// # Exchange Session Token
+//
+//	Produces:
+//	- application/json
+//
+//	Schemes: http, https
+//
+//	Responses:
+//	  200: successfulNativeLogin
+//	  403: errorGeneric
+//	  404: errorGeneric
+//	  410: errorGeneric
+//	  default: errorGeneric
+func (h *Handler) exchangeCode(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+	var (
+		ctx          = r.Context()
+		initCode     = r.URL.Query().Get("init_code")
+		returnToCode = r.URL.Query().Get("return_to_code")
+	)
+
+	if initCode == "" || returnToCode == "" {
+		h.r.Writer().WriteError(w, r, herodot.ErrBadRequest.WithReason(`"init_code" and "return_to_code" query params must be set`))
+		return
+	}
+
+	e, err := h.r.SessionTokenExchangePersister().GetExchangerFromCode(ctx, initCode, returnToCode)
+	if err != nil {
+		h.r.Writer().WriteError(w, r, herodot.ErrNotFound.WithReason(`no session yet for this "code"`))
+		return
+	}
+
+	sess, err := h.r.SessionPersister().GetSession(ctx, e.SessionID.UUID, ExpandDefault)
+	if err != nil {
+		h.r.Writer().WriteError(w, r, err)
+		return
+	}
+
+	h.r.Writer().Write(w, r, &CodeExchangeResponse{
+		Token:   sess.Token,
+		Session: sess,
+	})
 }

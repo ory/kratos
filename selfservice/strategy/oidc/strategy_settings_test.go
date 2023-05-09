@@ -257,7 +257,7 @@ func TestSettingsStrategy(t *testing.T) {
 			return
 		}
 
-		var unlinkInvalid = func(agent, provider string) func(t *testing.T) {
+		var unlinkInvalid = func(agent, provider, errorMessage string) func(t *testing.T) {
 			return func(t *testing.T) {
 				body, res, req := unlink(t, agent, provider)
 
@@ -267,27 +267,26 @@ func TestSettingsStrategy(t *testing.T) {
 
 				// The original options to link google and github are still there
 				t.Run("flow=fetch", func(t *testing.T) {
-					snapshotx.SnapshotTExcept(t, req.Ui.Nodes, []string{"0.attributes.value", "1.attributes.value"})
+					snapshotx.SnapshotT(t, req.Ui.Nodes, snapshotx.ExceptPaths("0.attributes.value", "1.attributes.value"))
 				})
 
 				t.Run("flow=json", func(t *testing.T) {
-					snapshotx.SnapshotTExcept(t, json.RawMessage(gjson.GetBytes(body, `ui.nodes`).Raw), []string{"0.attributes.value", "1.attributes.value"})
+					snapshotx.SnapshotT(t, json.RawMessage(gjson.GetBytes(body, `ui.nodes`).Raw), snapshotx.ExceptPaths("0.attributes.value", "1.attributes.value"))
 				})
 
 				assert.Contains(t, gjson.GetBytes(body, "ui.action").String(), publicTS.URL+settings.RouteSubmitFlow+"?flow=")
-				assert.Contains(t, gjson.GetBytes(body, `ui.messages.0.text`).String(),
-					"can not unlink non-existing OpenID Connect")
+				assert.Contains(t, gjson.GetBytes(body, `ui.messages.0.text`).String(), errorMessage)
 			}
 		}
 
 		t.Run("case=should not be able to unlink the last remaining connection",
-			unlinkInvalid("oryer", "ory"))
+			unlinkInvalid("oryer", "ory", "can not unlink OpenID Connect connection because it is the last remaining first factor credential"))
 
 		t.Run("case=should not be able to unlink an non-existing connection",
-			unlinkInvalid("oryer", "i-do-not-exist"))
+			unlinkInvalid("githuber", "i-do-not-exist", "can not unlink non-existing OpenID Connect connection"))
 
 		t.Run("case=should not be able to unlink a connection not yet linked",
-			unlinkInvalid("githuber", "google"))
+			unlinkInvalid("githuber", "google", "can not unlink non-existing OpenID Connect connection"))
 
 		t.Run("case=should unlink a connection", func(t *testing.T) {
 			agent, provider := "githuber", "github"
@@ -460,6 +459,68 @@ func TestSettingsStrategy(t *testing.T) {
 			snapshotx.SnapshotTExcept(t, rs.Ui.Nodes, []string{"0.attributes.value", "1.attributes.value"})
 
 			checkCredentials(t, true, users[agent].ID, provider, subject, true)
+		})
+
+		t.Run("case=upstream parameters", func(t *testing.T) {
+			t.Cleanup(reset(t))
+
+			subject = "hackerman+new-connection-new-oidc-with-parameters+" + testID
+			scope = []string{"openid", "offline"}
+			agent, provider := "password", "google"
+
+			a := agents[agent]
+
+			t.Run("case=should be able to pass upstream paramters when linking a connection", func(t *testing.T) {
+				c := &http.Client{}
+				req := nprSDK(t, a, "", time.Hour)
+				// copy over the client so we can disable redirects
+				*c = *a
+				// We need to disable redirects because the upstream parameters are only passed on to the provider
+				c.CheckRedirect = func(req *http.Request, via []*http.Request) error {
+					return http.ErrUseLastResponse
+				}
+
+				values := &url.Values{}
+				values.Set("csrf_token", x.FakeCSRFToken)
+				values.Set("link", provider)
+				values.Set("upstream_parameters.login_hint", "foo@bar.com")
+				values.Set("upstream_parameters.hd", "bar.com")
+
+				resp, err := c.PostForm(action(req), *values)
+				require.NoError(t, err)
+				require.Equal(t, http.StatusSeeOther, resp.StatusCode)
+
+				loc, err := resp.Location()
+				require.NoError(t, err)
+
+				require.EqualValues(t, "foo@bar.com", loc.Query().Get("login_hint"))
+				require.EqualValues(t, "bar.com", loc.Query().Get("hd"))
+			})
+
+			t.Run("case=invalid query parameters should be ignored", func(t *testing.T) {
+				c := &http.Client{}
+				req := nprSDK(t, a, "", time.Hour)
+				// copy over the client so we can disable redirects
+				*c = *a
+				// We need to disable redirects because the upstream parameters are only passed on to the provider
+				c.CheckRedirect = func(req *http.Request, via []*http.Request) error {
+					return http.ErrUseLastResponse
+				}
+
+				values := &url.Values{}
+				values.Set("csrf_token", x.FakeCSRFToken)
+				values.Set("link", provider)
+				values.Set("upstream_parameters.lol", "invalid")
+
+				resp, err := c.PostForm(action(req), *values)
+				require.NoError(t, err)
+				require.Equal(t, http.StatusSeeOther, resp.StatusCode)
+
+				loc, err := resp.Location()
+				require.NoError(t, err)
+
+				require.Empty(t, loc.Query().Get("lol"))
+			})
 		})
 
 		t.Run("case=should not be able to link a connection without a privileged session", func(t *testing.T) {

@@ -13,9 +13,6 @@ import (
 	"github.com/ory/x/configx"
 	"github.com/ory/x/otelx"
 
-	"github.com/ory/kratos/identity"
-	"github.com/ory/kratos/schema"
-
 	"github.com/gobuffalo/pop/v6"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -23,6 +20,8 @@ import (
 	"github.com/ory/x/logrusx"
 
 	"github.com/ory/kratos/driver/config"
+	"github.com/ory/kratos/identity"
+	"github.com/ory/kratos/schema"
 )
 
 type logRegistryOnly struct {
@@ -39,14 +38,6 @@ func (l *logRegistryOnly) Contextualizer() contextx.Contextualizer {
 	panic("implement me")
 }
 
-func (l *logRegistryOnly) IdentityTraitsSchemas(ctx context.Context) (schema.Schemas, error) {
-	panic("implement me")
-}
-
-func (l *logRegistryOnly) IdentityValidator() *identity.Validator {
-	panic("implement me")
-}
-
 func (l *logRegistryOnly) Logger() *logrusx.Logger {
 	if l.l == nil {
 		l.l = logrusx.New("kratos", "testing")
@@ -60,6 +51,13 @@ func (l *logRegistryOnly) Audit() *logrusx.Logger {
 
 func (l *logRegistryOnly) Tracer(ctx context.Context) *otelx.Tracer {
 	return otelx.NewNoop(l.l, new(otelx.Config))
+}
+func (l *logRegistryOnly) IdentityTraitsSchemas(ctx context.Context) (schema.Schemas, error) {
+	panic("implement me")
+}
+
+func (l *logRegistryOnly) IdentityValidator() *identity.Validator {
+	panic("implement me")
 }
 
 var _ persisterDependencies = &logRegistryOnly{}

@@ -7,6 +7,7 @@ import (
 	"context"
 	"time"
 
+	"github.com/ory/kratos/selfservice/sessiontokenexchange"
 	"github.com/ory/x/networkx"
 
 	"github.com/gofrs/uuid"
@@ -42,6 +43,7 @@ type Persister interface {
 	settings.FlowPersister
 	courier.Persister
 	session.Persister
+	sessiontokenexchange.Persister
 	errorx.Persister
 	verification.FlowPersister
 	recovery.FlowPersister
@@ -57,6 +59,7 @@ type Persister interface {
 	MigrateDown(c context.Context, steps int) error
 	MigrateUp(c context.Context) error
 	Migrator() *popx.Migrator
+	MigrationBox() *popx.MigrationBox
 	GetConnection(ctx context.Context) *pop.Connection
 	Transaction(ctx context.Context, callback func(ctx context.Context, connection *pop.Connection) error) error
 	Networker

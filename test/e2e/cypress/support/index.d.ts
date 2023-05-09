@@ -1,7 +1,8 @@
 // Copyright © 2023 Ory Corp
 // SPDX-License-Identifier: Apache-2.0
 
-import { Session } from "@ory/kratos-client"
+import { Session as KratosSession } from "@ory/kratos-client"
+import { OryKratosConfiguration } from "./config"
 
 export interface MailMessage {
   fromAddress: string
@@ -38,7 +39,7 @@ declare global {
         expectMethods?: Array<
           "password" | "webauthn" | "lookup_secret" | "totp"
         >
-      }): Chainable<Session>
+      }): Chainable<KratosSession>
 
       /**
        * Expect that the browser has no valid Ory Kratos Cookie Session.
@@ -55,7 +56,7 @@ declare global {
         password: string
         expectSession?: boolean
         cookieUrl?: string
-      }): Chainable<Response<Session | undefined>>
+      }): Chainable<Response<KratosSession | undefined>>
 
       /**
        * Sign up a user
@@ -93,6 +94,7 @@ declare global {
       performEmailVerification(opts?: {
         expect?: { email?: string; redirectTo?: string }
         strategy?: Strategy
+        useLinkFromEmail?: boolean
       }): Chainable<void>
 
       /**
@@ -113,7 +115,7 @@ declare global {
         email: string
         password: string
         fields: { [key: string]: string }
-      }): Chainable<Session>
+      }): Chainable<KratosSession>
 
       /**
        * Submits a recovery flow via the API
@@ -138,7 +140,7 @@ declare global {
        *
        * @param cb
        */
-      updateConfigFile(cb: (arg: any) => any): Chainable<any>
+      updateConfigFile(cb: (arg: OryKratosConfiguration) => any): Chainable<any>
 
       /**
        * Submits a verification flow via the API
@@ -150,6 +152,32 @@ declare global {
         strategy?: Strategy
         returnTo?: string
       }): Chainable<void>
+
+      /**
+       *  Sets the hook.
+       *
+       * @param hooks
+       */
+      setupHooks(
+        flow:
+          | "registration"
+          | "login"
+          | "recovery"
+          | "verification"
+          | "settings",
+        phase: "before" | "after",
+        kind: "password" | "webauthn" | "oidc",
+        hooks: Array<{ hook: string; config?: any }>,
+      ): Chainable<void>
+
+      /**
+       *  Sets the post registration hook.
+       *
+       * @param hooks
+       */
+      setPostPasswordRegistrationHooks(
+        hooks: Array<{ hook: string; config?: any }>,
+      ): Chainable<void>
 
       /**
        * Submits a verification flow via the Browser
@@ -233,7 +261,10 @@ declare global {
        *
        * @param opts
        */
-      reauth(opts: { expect: { email; success?: boolean } }): Chainable<void>
+      reauth(opts: {
+        expect: { email; success?: boolean }
+        type: { email?: string; password?: string }
+      }): Chainable<void>
 
       /**
        * Re-authenticates a user.
@@ -351,6 +382,7 @@ declare global {
         app: app
         expectSession?: boolean
         url?: string
+        preTriggerHook?: () => void
       }): Chainable<void>
 
       /**
@@ -485,7 +517,7 @@ declare global {
        * @param opts
        */
       verifyEmailButExpired(opts?: {
-        expect: { password?: string; email: string }
+        expect: { email: string }
         strategy?: Strategy
       }): Chainable<void>
 
@@ -546,7 +578,7 @@ declare global {
       recoverEmail(opts: {
         expect: { email: string }
         shouldVisit?: boolean
-      }): Chainable<string>
+      }): Chainable<MailMessage>
 
       /**
        * Expect a verification email which is valid.
@@ -565,6 +597,17 @@ declare global {
       enableLoginForVerifiedAddressOnly(): Chainable<void>
 
       /**
+       * Sets the value for the `notify_unknown_recipients` key for a flow
+       *
+       * @param flow the flow for which to set the config value
+       * @param value the value, defaults to true
+       */
+      notifyUnknownRecipients(
+        flow: "recovery" | "verification",
+        value?: boolean,
+      ): Chainable<void>
+
+      /**
        * Sign a user in via the API and return the session.
        *
        * @param opts
@@ -572,7 +615,7 @@ declare global {
       loginApi(opts: {
         email: string
         password: string
-      }): Chainable<{ session: Session }>
+      }): Chainable<{ session: KratosSession }>
 
       /**
        * Same as loginApi but uses dark magic to avoid cookie issues.
@@ -582,7 +625,7 @@ declare global {
       loginApiWithoutCookies(opts: {
         email: string
         password: string
-      }): Chainable<{ session: Session }>
+      }): Chainable<{ session: KratosSession }>
 
       /**
        * Which app to proxy
@@ -612,6 +655,34 @@ declare global {
        * Remove the specified attribute from the given HTML elements
        */
       removeAttribute(selectors: string[], attribute: string): Chainable<void>
+
+      /**
+       * Add an input element to the DOM as a child of the given parent
+       */
+      addInputElement(
+        parent: string,
+        attribute: string,
+        value: string,
+      ): Chainable<void>
+
+      /**
+       * Fetches the courier messages from the admin API
+       */
+      getCourierMessages(): Chainable<
+        { recipient: string; template_type: string }[]
+      >
+
+      /**
+       * Enable the verification UI after registration hook
+       */
+      enableVerificationUIAfterRegistration(
+        strategy: "password" | "oidc" | "webauthn",
+      ): Chainable<void>
+
+      /**
+       * Extracts a verification code from the received email
+       */
+      getVerificationCodeFromEmail(email: string): Chainable<string>
     }
   }
 }

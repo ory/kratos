@@ -15,7 +15,7 @@ import (
 	"encoding/json"
 )
 
-// PerformNativeLogoutBody nolint:deadcode,unused
+// PerformNativeLogoutBody Perform Native Logout Request Body
 type PerformNativeLogoutBody struct {
 	// The Session Token  Invalidate this session token.
 	SessionToken string `json:"session_token"`

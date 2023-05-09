@@ -10,9 +10,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/ory/kratos/internal/testhelpers"
-
 	"github.com/ory/kratos/courier"
+	"github.com/ory/kratos/internal/testhelpers"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -75,7 +74,7 @@ func TestVerifier(t *testing.T) {
 			i, err = reg.IdentityPool().GetIdentity(context.Background(), i.ID, identity.ExpandDefault)
 			require.NoError(t, err)
 
-			var originalFlow flow.Flow
+			var originalFlow flow.FlowWithContinueWith
 			switch k {
 			case "settings":
 				originalFlow = &settings.Flow{RequestURL: "http://foo.com/settings?after_verification_return_to=verification_callback"}
@@ -87,15 +86,15 @@ func TestVerifier(t *testing.T) {
 
 			h := hook.NewVerifier(reg)
 			require.NoError(t, hf(h, i, originalFlow))
-			s, err := reg.GetActiveVerificationStrategy(ctx)
-			require.NoError(t, err)
-			expectedVerificationFlow, err := verification.NewPostHookFlow(conf, conf.SelfServiceFlowVerificationRequestLifespan(ctx), "", u, s, originalFlow)
-			require.NoError(t, err)
+			assert.Lenf(t, originalFlow.ContinueWith(), 2, "%#ßv", originalFlow.ContinueWith())
+			assertContinueWithAddresses(t, originalFlow.ContinueWith(), []string{"foo@ory.sh", "bar@ory.sh"})
+			vf := originalFlow.ContinueWith()[0]
+			assert.IsType(t, &flow.ContinueWithVerificationUI{}, vf)
+			fView := vf.(*flow.ContinueWithVerificationUI).Flow
 
-			var verificationFlow verification.Flow
-			require.NoError(t, reg.Persister().GetConnection(context.Background()).First(&verificationFlow))
-
-			assert.Equal(t, expectedVerificationFlow.RequestURL, verificationFlow.RequestURL)
+			expectedVerificationFlow, err := reg.VerificationFlowPersister().GetVerificationFlow(ctx, fView.ID)
+			require.NoError(t, err)
+			require.Equal(t, expectedVerificationFlow.State, verification.StateEmailSent)
 
 			messages, err := reg.CourierPersister().NextMessages(context.Background(), 12)
 			require.NoError(t, err)
@@ -108,8 +107,8 @@ func TestVerifier(t *testing.T) {
 
 			assert.Contains(t, recipients, "foo@ory.sh")
 			assert.Contains(t, recipients, "bar@ory.sh")
-			assert.NotContains(t, recipients, "baz@ory.sh")
 			// Email to baz@ory.sh is skipped because it is verified already.
+			assert.NotContains(t, recipients, "baz@ory.sh")
 
 			//these addresses will be marked as sent and won't be sent again by the settings hook
 			address1, err := reg.IdentityPool().FindVerifiableAddressByValue(context.Background(), identity.VerifiableAddressTypeEmail, "foo@ory.sh")
@@ -119,14 +118,38 @@ func TestVerifier(t *testing.T) {
 			require.NoError(t, err)
 			assert.EqualValues(t, identity.VerifiableAddressStatusSent, address2.Status)
 
+			switch k {
+			case "settings":
+				originalFlow = &settings.Flow{RequestURL: "http://foo.com/settings?after_verification_return_to=verification_callback"}
+			case "register":
+				originalFlow = &registration.Flow{RequestURL: "http://foo.com/registration?after_verification_return_to=verification_callback"}
+			default:
+				t.FailNow()
+			}
 			require.NoError(t, hf(h, i, originalFlow))
-			expectedVerificationFlow, err = verification.NewPostHookFlow(conf, conf.SelfServiceFlowVerificationRequestLifespan(ctx), "", u, s, originalFlow)
-			var verificationFlow2 verification.Flow
-			require.NoError(t, reg.Persister().GetConnection(context.Background()).First(&verificationFlow2))
-			assert.Equal(t, expectedVerificationFlow.RequestURL, verificationFlow2.RequestURL)
+
+			assert.Emptyf(t, originalFlow.ContinueWith(), "%+v", originalFlow.ContinueWith())
+
+			require.NoError(t, err)
 			messages, err = reg.CourierPersister().NextMessages(context.Background(), 12)
 			require.EqualError(t, err, courier.ErrQueueEmpty.Error())
 			assert.Len(t, messages, 0)
 		})
 	}
+}
+
+func assertContinueWithAddresses(t *testing.T, cs []flow.ContinueWith, addresses []string) {
+	t.Helper()
+
+	require.Len(t, cs, len(addresses))
+
+	e := make([]string, len(cs))
+
+	for i, c := range cs {
+		require.IsType(t, &flow.ContinueWithVerificationUI{}, c)
+		fView := c.(*flow.ContinueWithVerificationUI).Flow
+		e[i] = fView.VerifiableAddress
+	}
+
+	require.ElementsMatch(t, addresses, e)
 }

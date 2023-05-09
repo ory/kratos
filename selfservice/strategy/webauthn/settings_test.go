@@ -376,7 +376,7 @@ func TestCompleteSettings(t *testing.T) {
 				// The remove key should be empty
 				snapshotx.SnapshotTExcept(t, v, []string{"csrf_token"})
 
-				v.Set(node.WebAuthnRemove, fmt.Sprintf("666f6f666f6f"))
+				v.Set(node.WebAuthnRemove, "666f6f666f6f")
 			}, id)
 
 			if spa {
@@ -416,7 +416,7 @@ func TestCompleteSettings(t *testing.T) {
 			body, res := doBrowserFlow(t, spa, func(v url.Values) {
 				// The remove key should be set
 				snapshotx.SnapshotTExcept(t, v, []string{"csrf_token"})
-				v.Set(node.WebAuthnRemove, fmt.Sprintf("666f6f666f6f"))
+				v.Set(node.WebAuthnRemove, "666f6f666f6f")
 			}, id)
 
 			if spa {
@@ -449,7 +449,7 @@ func TestCompleteSettings(t *testing.T) {
 			allCred, ok := id.GetCredentials(identity.CredentialsTypeWebAuthn)
 			assert.True(t, ok)
 
-			var cc webauthn.CredentialsConfig
+			var cc identity.CredentialsWebAuthnConfig
 			require.NoError(t, json.Unmarshal(allCred.Config, &cc))
 			require.Len(t, cc.Credentials, 2)
 

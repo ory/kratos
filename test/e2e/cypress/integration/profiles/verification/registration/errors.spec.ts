@@ -9,8 +9,8 @@ import {
   verifyHrefPattern,
 } from "../../../../helpers"
 
-import { routes as react } from "../../../../helpers/react"
 import { routes as express } from "../../../../helpers/express"
+import { routes as react } from "../../../../helpers/react"
 
 context("Account Verification Registration Errors", () => {
   ;[
@@ -49,7 +49,7 @@ context("Account Verification Registration Errors", () => {
       it("is unable to verify the email address if the code is no longer valid and resend the code", () => {
         cy.shortCodeLifespan()
         cy.verifyEmailButExpired({
-          expect: { email: identity.email, password: identity.password },
+          expect: { email: identity.email },
         })
 
         cy.longCodeLifespan()

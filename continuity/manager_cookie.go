@@ -50,14 +50,14 @@ func (m *ManagerCookie) Pause(ctx context.Context, w http.ResponseWriter, r *htt
 	}
 	c := NewContainer(name, *o)
 
+	if err := m.d.ContinuityPersister().SaveContinuitySession(ctx, c); err != nil {
+		return errors.WithStack(err)
+	}
+
 	if err := x.SessionPersistValues(w, r, m.d.ContinuityCookieManager(ctx), CookieName, map[string]interface{}{
 		name: c.ID.String(),
 	}); err != nil {
 		return err
-	}
-
-	if err := m.d.ContinuityPersister().SaveContinuitySession(ctx, c); err != nil {
-		return errors.WithStack(err)
 	}
 
 	return nil

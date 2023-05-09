@@ -6,7 +6,12 @@ package registration
 import (
 	"net/http"
 
+	"go.opentelemetry.io/otel/trace"
+
+	"github.com/ory/kratos/schema"
+	"github.com/ory/kratos/selfservice/sessiontokenexchange"
 	"github.com/ory/kratos/ui/node"
+	"github.com/ory/kratos/x/events"
 
 	"github.com/ory/kratos/selfservice/flow"
 	"github.com/ory/kratos/text"
@@ -20,9 +25,11 @@ import (
 )
 
 var (
-	ErrHookAbortFlow        = errors.New("aborted registration hook execution")
-	ErrAlreadyLoggedIn      = herodot.ErrBadRequest.WithID(text.ErrIDAlreadyLoggedIn).WithError("you are already logged in").WithReason("A valid session was detected and thus registration is not possible.")
-	ErrRegistrationDisabled = herodot.ErrBadRequest.WithID(text.ErrIDSelfServiceFlowDisabled).WithError("registration flow disabled").WithReason("Registration is not allowed because it was disabled.")
+	ErrHookAbortFlow                  = errors.New("aborted registration hook execution")
+	ErrAlreadyLoggedIn                = herodot.ErrBadRequest.WithID(text.ErrIDAlreadyLoggedIn).WithError("you are already logged in").WithReason("A valid session was detected and thus registration is not possible.")
+	ErrRegistrationDisabled           = herodot.ErrBadRequest.WithID(text.ErrIDSelfServiceFlowDisabled).WithError("registration flow disabled").WithReason("Registration is not allowed because it was disabled.")
+	ErrDuplicateCredentials           = herodot.ErrBadRequest.WithError(text.NewErrorValidationDuplicateCredentials().Text)
+	ErrDuplicateCredentialsOnOIDCLink = herodot.ErrBadRequest.WithError(text.NewErrorValidationDuplicateCredentialsOnOIDCLink().Text)
 )
 
 type (
@@ -32,6 +39,7 @@ type (
 		x.LoggingProvider
 		config.Provider
 
+		sessiontokenexchange.PersistenceProvider
 		FlowPersistenceProvider
 		HandlerProvider
 	}
@@ -72,11 +80,18 @@ func (s *ErrorHandler) WriteFlowError(
 	group node.UiNodeGroup,
 	err error,
 ) {
+
+	if errors.Is(err, ErrDuplicateCredentials) {
+		err = schema.NewDuplicateCredentialsError()
+	}
+
 	s.d.Audit().
 		WithError(err).
 		WithRequest(r).
 		WithField("registration_flow", f).
 		Info("Encountered self-service flow error.")
+
+	trace.SpanFromContext(r.Context()).AddEvent(events.NewRegistrationFailed(r.Context()))
 
 	if f == nil {
 		s.forward(w, r, nil, err)
@@ -119,6 +134,10 @@ func (s *ErrorHandler) WriteFlowError(
 
 	if f.Type == flow.TypeBrowser && !x.IsJSONRequest(r) {
 		http.Redirect(w, r, f.AppendTo(s.d.Config().SelfServiceFlowRegistrationUI(r.Context())).String(), http.StatusFound)
+		return
+	}
+	if _, hasCode, _ := s.d.SessionTokenExchangePersister().CodeForFlow(r.Context(), f.ID); group == node.OpenIDConnectGroup && f.Type == flow.TypeAPI && hasCode {
+		http.Redirect(w, r, f.ReturnTo, http.StatusSeeOther)
 		return
 	}
 

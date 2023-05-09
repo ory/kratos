@@ -31,7 +31,6 @@ import (
 	"github.com/ory/kratos/schema"
 	"github.com/ory/kratos/selfservice/flow"
 	"github.com/ory/kratos/selfservice/flow/login"
-	"github.com/ory/kratos/session"
 	"github.com/ory/x/decoderx"
 )
 
@@ -109,7 +108,7 @@ func (s *Strategy) populateLoginMethod(r *http.Request, sr *login.Flow, i *ident
 		return nil
 	}
 
-	var conf CredentialsConfig
+	var conf identity.CredentialsWebAuthnConfig
 	if err := json.Unmarshal(cred.Config, &conf); err != nil {
 		return errors.WithStack(err)
 	}
@@ -120,16 +119,16 @@ func (s *Strategy) populateLoginMethod(r *http.Request, sr *login.Flow, i *ident
 	}
 
 	if len(webAuthCreds) == 0 {
-		// Identity has no webauth
+		// Identity has no webauthn
 		return ErrNoCredentials
 	}
 
-	web, err := s.newWebAuthn(r.Context())
+	web, err := webauthn.New(s.d.Config().WebAuthnConfig(r.Context()))
 	if err != nil {
 		return errors.WithStack(herodot.ErrInternalServerError.WithReasonf("Unable to initiate WebAuth.").WithDebug(err.Error()))
 	}
 
-	options, sessionData, err := web.BeginLogin(&wrappedUser{id: conf.UserHandle, c: webAuthCreds})
+	options, sessionData, err := web.BeginLogin(NewUser(conf.UserHandle, webAuthCreds, web.Config))
 	if err != nil {
 		return errors.WithStack(herodot.ErrInternalServerError.WithReasonf("Unable to initiate WebAuth login.").WithDebug(err.Error()))
 	}
@@ -192,7 +191,7 @@ type updateLoginFlowWithWebAuthnMethod struct {
 	Login string `json:"webauthn_login"`
 }
 
-func (s *Strategy) Login(w http.ResponseWriter, r *http.Request, f *login.Flow, ss *session.Session) (i *identity.Identity, err error) {
+func (s *Strategy) Login(w http.ResponseWriter, r *http.Request, f *login.Flow, identityID uuid.UUID) (i *identity.Identity, err error) {
 	if f.Type != flow.TypeBrowser {
 		return nil, flow.ErrStrategyNotResponsible
 	}
@@ -221,13 +220,13 @@ func (s *Strategy) Login(w http.ResponseWriter, r *http.Request, f *login.Flow, 
 	}
 
 	if s.d.Config().WebAuthnForPasswordless(r.Context()) || f.IsForced() && f.RequestedAAL == identity.AuthenticatorAssuranceLevel1 {
-		return s.loginPasswordless(w, r, f, ss, &p)
+		return s.loginPasswordless(w, r, f, &p)
 	}
 
-	return s.loginMultiFactor(w, r, f, ss, &p)
+	return s.loginMultiFactor(w, r, f, identityID, &p)
 }
 
-func (s *Strategy) loginPasswordless(w http.ResponseWriter, r *http.Request, f *login.Flow, _ *session.Session, p *updateLoginFlowWithWebAuthnMethod) (i *identity.Identity, err error) {
+func (s *Strategy) loginPasswordless(w http.ResponseWriter, r *http.Request, f *login.Flow, p *updateLoginFlowWithWebAuthnMethod) (i *identity.Identity, err error) {
 	if err := login.CheckAAL(f, identity.AuthenticatorAssuranceLevel1); err != nil {
 		return nil, s.handleLoginError(r, f, err)
 	}
@@ -291,12 +290,12 @@ func (s *Strategy) loginAuthenticate(_ http.ResponseWriter, r *http.Request, f *
 		return nil, s.handleLoginError(r, f, errors.WithStack(schema.NewNoWebAuthnRegistered()))
 	}
 
-	var o CredentialsConfig
+	var o identity.CredentialsWebAuthnConfig
 	if err := json.Unmarshal(c.Config, &o); err != nil {
 		return nil, s.handleLoginError(r, f, errors.WithStack(herodot.ErrInternalServerError.WithReason("The WebAuthn credentials could not be decoded properly").WithDebug(err.Error()).WithWrap(err)))
 	}
 
-	web, err := s.newWebAuthn(r.Context())
+	web, err := webauthn.New(s.d.Config().WebAuthnConfig(r.Context()))
 	if err != nil {
 		return nil, s.handleLoginError(r, f, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("Unable to get webAuthn config.").WithDebug(err.Error())))
 	}
@@ -316,7 +315,7 @@ func (s *Strategy) loginAuthenticate(_ http.ResponseWriter, r *http.Request, f *
 		webAuthCreds = o.Credentials.ToWebAuthn()
 	}
 
-	if _, err := web.ValidateLogin(&wrappedUser{id: o.UserHandle, c: webAuthCreds}, webAuthnSess, webAuthnResponse); err != nil {
+	if _, err := web.ValidateLogin(NewUser(o.UserHandle, webAuthCreds, web.Config), webAuthnSess, webAuthnResponse); err != nil {
 		return nil, s.handleLoginError(r, f, errors.WithStack(schema.NewWebAuthnVerifierWrongError("#/")))
 	}
 
@@ -334,9 +333,9 @@ func (s *Strategy) loginAuthenticate(_ http.ResponseWriter, r *http.Request, f *
 	return i, nil
 }
 
-func (s *Strategy) loginMultiFactor(w http.ResponseWriter, r *http.Request, f *login.Flow, ss *session.Session, p *updateLoginFlowWithWebAuthnMethod) (*identity.Identity, error) {
+func (s *Strategy) loginMultiFactor(w http.ResponseWriter, r *http.Request, f *login.Flow, identityID uuid.UUID, p *updateLoginFlowWithWebAuthnMethod) (*identity.Identity, error) {
 	if err := login.CheckAAL(f, identity.AuthenticatorAssuranceLevel2); err != nil {
 		return nil, err
 	}
-	return s.loginAuthenticate(w, r, f, ss.IdentityID, p, identity.AuthenticatorAssuranceLevel2)
+	return s.loginAuthenticate(w, r, f, identityID, p, identity.AuthenticatorAssuranceLevel2)
 }

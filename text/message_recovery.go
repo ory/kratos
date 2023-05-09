@@ -35,7 +35,7 @@ func NewRecoveryEmailSent() *Message {
 	return &Message{
 		ID:      InfoSelfServiceRecoveryEmailSent,
 		Type:    Info,
-		Text:    "An email containing a recovery link has been sent to the email address you provided.",
+		Text:    "An email containing a recovery link has been sent to the email address you provided. If you have not received an email, check the spelling of the address and make sure to use the address you registered with.",
 		Context: context(nil),
 	}
 }
@@ -44,7 +44,7 @@ func NewRecoveryEmailWithCodeSent() *Message {
 	return &Message{
 		ID:      InfoSelfServiceRecoveryEmailWithCodeSent,
 		Type:    Info,
-		Text:    "An email containing a recovery code has been sent to the email address you provided.",
+		Text:    "An email containing a recovery code has been sent to the email address you provided. If you have not received an email, check the spelling of the address and make sure to use the address you registered with.",
 		Context: context(nil),
 	}
 }

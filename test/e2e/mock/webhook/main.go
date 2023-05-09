@@ -7,6 +7,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"io"
 	"net/http"
 	"strings"
 
@@ -97,15 +98,24 @@ func webhookHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	payload := struct {
-		IdentityId string `json:"identity_id,omitempty"`
-		Email      string `json:"email,omitempty"`
-		FlowId     string `json:"flow_id"`
-		FlowType   string `json:"flow_type"`
+		IdentityId string          `json:"identity_id,omitempty"`
+		Email      string          `json:"email,omitempty"`
+		FlowId     string          `json:"flow_id"`
+		FlowType   string          `json:"flow_type"`
+		Context    json.RawMessage `json:"ctx"`
 	}{}
 
-	encoder := json.NewDecoder(r.Body)
+	body, err := io.ReadAll(r.Body)
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		log.WithError(err).Warn("could not read request body")
+		b := bytes.NewBufferString(fmt.Sprintf("error while reading request body: %s", err))
+		_, _ = w.Write(b.Bytes())
+		return
+	}
 	defer r.Body.Close()
-	if err := encoder.Decode(&payload); err != nil {
+
+	if err := json.Unmarshal(body, &payload); err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		log.WithError(err).Warn("could not unmarshal request JSON")
 		b := bytes.NewBufferString(fmt.Sprintf("error while parsing request JSON: %s", err))
@@ -113,7 +123,7 @@ func webhookHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	log.WithField("payload", payload).Info("unmarshalled request")
+	log.WithField("payload", string(body)).Info("unmarshalled request")
 
 	if !strings.Contains(payload.Email, "_blocked@ory.sh") || payload.FlowType == "api" {
 		w.WriteHeader(http.StatusOK)
@@ -129,7 +139,7 @@ func webhookHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	msg := errorMessage{InstancePtr: "#/traits/email", Messages: []detailedMessage{detail}}
 	resp := rawHookResponse{Messages: []errorMessage{msg}}
-	err := json.NewEncoder(w).Encode(&resp)
+	err = json.NewEncoder(w).Encode(&resp)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		buff := bytes.NewBufferString(err.Error())
@@ -138,11 +148,22 @@ func webhookHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+func writeWebhookHandler(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+
+	log.WithFields(log.Fields{"application": "webhooks", "path": r.URL.Path, "response": r.URL.Query().Get("response")}).Info("sending response")
+	_, _ = w.Write([]byte(r.URL.Query().Get("response")))
+}
+
 func main() {
 	mux := http.NewServeMux()
 
 	mux.HandleFunc("/health", healthCheck)
 	mux.HandleFunc("/webhook", accessLog(headerAuth(webhookHandler)))
+	mux.HandleFunc("/webhook/write", accessLog(writeWebhookHandler))
 
 	s := http.Server{
 		Addr:    ":4459",

@@ -9,6 +9,9 @@ import (
 	"net/url"
 	"time"
 
+	"github.com/ory/kratos/selfservice/flow"
+	"github.com/ory/kratos/selfservice/sessiontokenexchange"
+	"github.com/ory/kratos/ui/node"
 	"github.com/ory/x/otelx"
 
 	"github.com/ory/x/randx"
@@ -41,6 +44,7 @@ type (
 		x.CSRFProvider
 		x.TracingProvider
 		PersistenceProvider
+		sessiontokenexchange.PersistenceProvider
 	}
 	ManagerHTTP struct {
 		cookieName func(ctx context.Context) string
@@ -195,9 +199,15 @@ func (s *ManagerHTTP) extractToken(r *http.Request) string {
 
 func (s *ManagerHTTP) FetchFromRequest(ctx context.Context, r *http.Request) (_ *Session, err error) {
 	ctx, span := s.r.Tracer(ctx).Tracer().Start(ctx, "sessions.ManagerHTTP.FetchFromRequest")
-	defer otelx.End(span, &err)
+	defer func() {
+		if e := new(ErrNoActiveSessionFound); errors.As(err, &e) {
+			span.End()
+		} else {
+			otelx.End(span, &err)
+		}
+	}()
 
-	token := s.extractToken(r)
+	token := s.extractToken(r.WithContext(ctx))
 	if token == "" {
 		return nil, errors.WithStack(NewErrNoCredentialsForSession())
 	}
@@ -251,7 +261,7 @@ func (s *ManagerHTTP) PurgeFromRequest(ctx context.Context, w http.ResponseWrite
 }
 
 func (s *ManagerHTTP) DoesSessionSatisfy(r *http.Request, sess *Session, requestedAAL string) (err error) {
-	_, span := s.r.Tracer(r.Context()).Tracer().Start(r.Context(), "sessions.ManagerHTTP.DoesSessionSatisfy")
+	ctx, span := s.r.Tracer(r.Context()).Tracer().Start(r.Context(), "sessions.ManagerHTTP.DoesSessionSatisfy")
 	defer otelx.End(span, &err)
 
 	sess.SetAuthenticatorAssuranceLevel()
@@ -261,23 +271,28 @@ func (s *ManagerHTTP) DoesSessionSatisfy(r *http.Request, sess *Session, request
 			return nil
 		}
 	case config.HighestAvailableAAL:
-		i := *sess.Identity
-
-		// If credentials are not expanded, we load them here.
-		if len(i.Credentials) == 0 {
-			if err := s.r.PrivilegedIdentityPool().HydrateIdentityAssociations(r.Context(), &i, identity.ExpandCredentials); err != nil {
+		i := sess.Identity
+		if i == nil {
+			i, err = s.r.IdentityPool().GetIdentity(ctx, sess.IdentityID, identity.ExpandCredentials)
+			if err != nil {
+				return err
+			}
+			sess.Identity = i
+		} else if len(i.Credentials) == 0 {
+			// If credentials are not expanded, we load them here.
+			if err := s.r.PrivilegedIdentityPool().HydrateIdentityAssociations(ctx, i, identity.ExpandCredentials); err != nil {
 				return err
 			}
 		}
 
 		available := identity.NoAuthenticatorAssuranceLevel
-		if firstCount, err := s.r.IdentityManager().CountActiveFirstFactorCredentials(r.Context(), &i); err != nil {
+		if firstCount, err := s.r.IdentityManager().CountActiveFirstFactorCredentials(ctx, i); err != nil {
 			return err
 		} else if firstCount > 0 {
 			available = identity.AuthenticatorAssuranceLevel1
 		}
 
-		if secondCount, err := s.r.IdentityManager().CountActiveMultiFactorCredentials(r.Context(), &i); err != nil {
+		if secondCount, err := s.r.IdentityManager().CountActiveMultiFactorCredentials(ctx, i); err != nil {
 			return err
 		} else if secondCount > 0 {
 			available = identity.AuthenticatorAssuranceLevel2
@@ -288,7 +303,7 @@ func (s *ManagerHTTP) DoesSessionSatisfy(r *http.Request, sess *Session, request
 		}
 
 		return NewErrAALNotSatisfied(
-			urlx.CopyWithQuery(urlx.AppendPaths(s.r.Config().SelfPublicURL(r.Context()), "/self-service/login/browser"), url.Values{"aal": {"aal2"}}).String())
+			urlx.CopyWithQuery(urlx.AppendPaths(s.r.Config().SelfPublicURL(ctx), "/self-service/login/browser"), url.Values{"aal": {"aal2"}}).String())
 	}
 
 	return errors.Errorf("requested unknown aal: %s", requestedAAL)
@@ -308,4 +323,37 @@ func (s *ManagerHTTP) SessionAddAuthenticationMethods(ctx context.Context, sid u
 	}
 	sess.SetAuthenticatorAssuranceLevel()
 	return s.r.SessionPersister().UpsertSession(ctx, sess)
+}
+
+func (s *ManagerHTTP) MaybeRedirectAPICodeFlow(w http.ResponseWriter, r *http.Request, f flow.Flow, sessionID uuid.UUID, uiNode node.UiNodeGroup) (handled bool, err error) {
+	ctx, span := s.r.Tracer(r.Context()).Tracer().Start(r.Context(), "sessions.ManagerHTTP.MaybeRedirectAPICodeFlow")
+	defer otelx.End(span, &err)
+
+	if uiNode != node.OpenIDConnectGroup {
+		return false, nil
+	}
+
+	code, ok, _ := s.r.SessionTokenExchangePersister().CodeForFlow(ctx, f.GetID())
+	if !ok {
+		return false, nil
+	}
+
+	returnTo := s.r.Config().SelfServiceBrowserDefaultReturnTo(ctx)
+	if redirecter, ok := f.(flow.FlowWithRedirect); ok {
+		r, err := x.SecureRedirectTo(r, returnTo, redirecter.SecureRedirectToOpts(ctx, s.r)...)
+		if err == nil {
+			returnTo = r
+		}
+	}
+
+	if err = s.r.SessionTokenExchangePersister().UpdateSessionOnExchanger(r.Context(), f.GetID(), sessionID); err != nil {
+		return false, errors.WithStack(err)
+	}
+
+	q := returnTo.Query()
+	q.Set("code", code.ReturnToCode)
+	returnTo.RawQuery = q.Encode()
+	http.Redirect(w, r, returnTo.String(), http.StatusSeeOther)
+
+	return true, nil
 }

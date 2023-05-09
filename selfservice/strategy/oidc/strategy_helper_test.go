@@ -176,7 +176,7 @@ func newHydraIntegration(t *testing.T, remote *string, subject *string, claims *
 	parsed, err := url.ParseRequestURI(addr)
 	require.NoError(t, err)
 
-	// #nosec G112
+	//#nosec G112
 	server := &http.Server{Addr: ":" + parsed.Port(), Handler: router}
 	go func(t *testing.T) {
 		if err := server.ListenAndServe(); err != http.ErrServerClosed {
@@ -194,6 +194,10 @@ func newHydraIntegration(t *testing.T, remote *string, subject *string, claims *
 func newReturnTs(t *testing.T, reg driver.Registry) *httptest.Server {
 	ctx := context.Background()
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path == "/app_code" {
+			reg.Writer().Write(w, r, "ok")
+			return
+		}
 		sess, err := reg.SessionManager().FetchFromRequest(r.Context(), r)
 		require.NoError(t, err)
 		reg.Writer().Write(w, r, sess)
@@ -268,6 +272,30 @@ func newHydra(t *testing.T, subject *string, claims *idTokenClaims, scope *[]str
 
 		remotePublic = "http://localhost:" + hydra.GetPort("4444/tcp")
 		remoteAdmin = "http://localhost:" + hydra.GetPort("4445/tcp")
+
+		err = resilience.Retry(logrusx.New("", ""), time.Second*1, time.Second*5, func() error {
+			pr := remotePublic + "/health/ready"
+			res, err := http.DefaultClient.Get(pr)
+			if err != nil || res.StatusCode != 200 {
+				return errors.Errorf("Hydra public is not ready at " + pr)
+			}
+
+			wellKnown := remotePublic + "/.well-known/openid-configuration"
+			res, err = http.DefaultClient.Get(wellKnown)
+			if err != nil || res.StatusCode != 200 {
+				return errors.Errorf("Hydra .well-known is not ready at " + wellKnown)
+			}
+
+			ar := remoteAdmin + "/health/ready"
+			res, err = http.DefaultClient.Get(ar)
+			if err != nil && res.StatusCode != 200 {
+				return errors.Errorf("Hydra admin is not ready at " + ar)
+			} else {
+				return nil
+			}
+		})
+		require.NoError(t, err)
+
 	}
 
 	t.Logf("Ory Hydra running at: %s %s", remotePublic, remoteAdmin)

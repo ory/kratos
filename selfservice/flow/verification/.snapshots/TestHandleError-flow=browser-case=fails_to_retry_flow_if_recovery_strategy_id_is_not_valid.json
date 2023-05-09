@@ -1,0 +1,6 @@
+{
+  "code": 400,
+  "message": "The request was malformed or contained invalid parameters",
+  "reason": "The active verification strategy not-valid is not enabled. Please enable it in the configuration.",
+  "status": "Bad Request"
+}

@@ -10,6 +10,8 @@ selfservice:
   default_browser_return_url: http://localhost:4455/
   allowed_return_urls:
     - http://localhost:4455
+    - http://localhost:4457/Callback
+    - exp://example.com/Callback
     - https://www.ory.sh/
     - https://example.org/
     - https://www.example.org/

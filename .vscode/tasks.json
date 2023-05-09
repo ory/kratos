@@ -1,0 +1,85 @@
+{
+  // See https://go.microsoft.com/fwlink/?LinkId=733558
+  // for the documentation about the tasks.json format
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "Kratos: build",
+      "type": "shell",
+      "command": "go",
+      "args": [
+        "build",
+        "-tags",
+        "sqlite",
+        "-o",
+        "${workspaceFolder}/kratos",
+        "${workspaceFolder}/main.go"
+      ]
+    },
+    {
+      "label": "Kratos debug: setup sqlite",
+      "type": "shell",
+      "presentation": {
+        "echo": false,
+        "reveal": "always"
+      },
+      "dependsOn": ["Kratos: build"],
+      "command": "rm -f ${workspaceFolder}/.debug.sqlite.db && ${workspaceFolder}/kratos migrate sql up -e --yes",
+      "options": {
+        "env": {
+          "DSN": "sqlite://${workspaceFolder}/.debug.sqlite.db?_fk=true"
+        }
+      }
+    },
+    {
+      "label": "Kratos: install mailhog",
+      "type": "shell",
+      "command": "make .bin/MailHog"
+    },
+    {
+      "label": "Kratos: start mailhog",
+      "type": "shell",
+      "presentation": {
+        "echo": false,
+        "reveal": "always",
+        "panel": "dedicated"
+      },
+      "dependsOn": ["Kratos: install mailhog"],
+      "isBackground": true,
+      "command": "${workspaceFolder}/.bin/MailHog -smtp-bind-addr=localhost:8026",
+      "problemMatcher": {
+        "pattern": {
+          "regexp": ""
+        },
+        "background": {
+          "activeOnStart": true,
+          "beginsPattern": " ",
+          "endsPattern": "Serving under"
+        }
+      }
+    },
+    {
+      "label": "Kratos: setup",
+      "type": "shell",
+      "presentation": {
+        "reveal": "silent"
+      },
+      "dependsOn": ["Kratos: start mailhog", "Kratos debug: setup sqlite"],
+      "problemMatcher": []
+    },
+    {
+      "label": "close tasks",
+      "command": "echo ${input:terminate}",
+      "type": "shell",
+      "problemMatcher": []
+    }
+  ],
+  "inputs": [
+    {
+      "id": "terminate",
+      "type": "command",
+      "command": "workbench.action.tasks.terminate",
+      "args": "terminateAll"
+    }
+  ]
+}

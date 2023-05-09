@@ -7,6 +7,9 @@ import (
 	stdctx "context"
 	"crypto/tls"
 	"net/http"
+	"time"
+
+	"github.com/ory/x/otelx/semconv"
 
 	"github.com/pkg/errors"
 	"github.com/rs/cors"
@@ -86,6 +89,7 @@ func ServePublic(r driver.Registry, cmd *cobra.Command, args []string, slOpts *s
 		publicLogger.ExcludePaths(healthx.AliveCheckPath, healthx.ReadyCheckPath)
 	}
 
+	n.UseFunc(semconv.Middleware)
 	n.Use(publicLogger)
 	n.Use(x.HTTPLoaderContextMiddleware(r))
 	n.Use(sqa(ctx, cmd, r))
@@ -120,7 +124,7 @@ func ServePublic(r driver.Registry, cmd *cobra.Command, args []string, slOpts *s
 		handler = otelx.TraceHandler(handler, otelhttp.WithTracerProvider(tracer.Provider()))
 	}
 
-	// #nosec G112 - the correct settings are set by graceful.WithDefaults
+	//#nosec G112 -- the correct settings are set by graceful.WithDefaults
 	server := graceful.WithDefaults(&http.Server{
 		Handler:   handler,
 		TLSConfig: &tls.Config{GetCertificate: certs, MinVersion: tls.VersionTLS12},
@@ -128,7 +132,7 @@ func ServePublic(r driver.Registry, cmd *cobra.Command, args []string, slOpts *s
 	addr := c.PublicListenOn(ctx)
 
 	l.Printf("Starting the public httpd on: %s", addr)
-	if err := graceful.Graceful(func() error {
+	if err := graceful.GracefulContext(ctx, func() error {
 		listener, err := networkx.MakeListener(addr, c.PublicSocketPermission(ctx))
 		if err != nil {
 			return err
@@ -168,6 +172,7 @@ func ServeAdmin(r driver.Registry, cmd *cobra.Command, args []string, slOpts *se
 	if r.Config().DisableAdminHealthRequestLog(ctx) {
 		adminLogger.ExcludePaths(x.AdminPrefix+healthx.AliveCheckPath, x.AdminPrefix+healthx.ReadyCheckPath, x.AdminPrefix+prometheus.MetricsPrometheusPath)
 	}
+	n.UseFunc(semconv.Middleware)
 	n.Use(adminLogger)
 	n.UseFunc(x.RedirectAdminMiddleware)
 	n.Use(x.HTTPLoaderContextMiddleware(r))
@@ -191,7 +196,7 @@ func ServeAdmin(r driver.Registry, cmd *cobra.Command, args []string, slOpts *se
 		)
 	}
 
-	// #nosec G112 - the correct settings are set by graceful.WithDefaults
+	//#nosec G112 -- the correct settings are set by graceful.WithDefaults
 	server := graceful.WithDefaults(&http.Server{
 		Handler:   handler,
 		TLSConfig: &tls.Config{GetCertificate: certs, MinVersion: tls.VersionTLS12},
@@ -200,7 +205,7 @@ func ServeAdmin(r driver.Registry, cmd *cobra.Command, args []string, slOpts *se
 	addr := c.AdminListenOn(ctx)
 
 	l.Printf("Starting the admin httpd on: %s", addr)
-	if err := graceful.Graceful(func() error {
+	if err := graceful.GracefulContext(ctx, func() error {
 		listener, err := networkx.MakeListener(addr, c.AdminSocketPermission(ctx))
 		if err != nil {
 			return err
@@ -283,7 +288,11 @@ func sqa(ctx stdctx.Context, cmd *cobra.Command, d driver.Registry) *metricsx.Se
 			BuildHash:    config.Commit,
 			BuildTime:    config.Date,
 			Config: &analytics.Config{
-				Endpoint: "https://sqa.ory.sh",
+				Endpoint:             "https://sqa.ory.sh",
+				GzipCompressionLevel: 6,
+				BatchMaxSize:         500 * 1000,
+				BatchSize:            1000,
+				Interval:             time.Hour * 6,
 			},
 		},
 	)

@@ -60,6 +60,11 @@ type updateRegistrationFlowWithWebAuthnMethod struct {
 	//
 	// swagger:ignore
 	Flow string `json:"flow"`
+
+	// Transient data to pass along to any webhooks
+	//
+	// required: false
+	TransientPayload json.RawMessage `json:"transient_payload,omitempty"`
 }
 
 func (s *Strategy) RegisterRegistrationRoutes(_ *x.RouterPublic) {
@@ -97,6 +102,8 @@ func (s *Strategy) Register(w http.ResponseWriter, r *http.Request, f *registrat
 		return s.handleRegistrationError(w, r, f, &p, err)
 	}
 
+	f.TransientPayload = p.TransientPayload
+
 	if err := flow.EnsureCSRF(s.d, r, f.Type, s.d.Config().DisableAPIFlowEnforcement(r.Context()), s.d.GenerateCSRFToken, p.CSRFToken); err != nil {
 		return s.handleRegistrationError(w, r, f, &p, err)
 	}
@@ -130,18 +137,21 @@ func (s *Strategy) Register(w http.ResponseWriter, r *http.Request, f *registrat
 		return s.handleRegistrationError(w, r, f, &p, errors.WithStack(herodot.ErrBadRequest.WithReasonf("Unable to parse WebAuthn response: %s", err)))
 	}
 
-	web, err := s.newWebAuthn(r.Context())
+	web, err := webauthn.New(s.d.Config().WebAuthnConfig(r.Context()))
 	if err != nil {
 		return s.handleRegistrationError(w, r, f, &p, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("Unable to get webAuthn config.").WithDebug(err.Error())))
 	}
 
-	credential, err := web.CreateCredential(&wrappedUser{id: webAuthnSess.UserID}, webAuthnSess, webAuthnResponse)
+	credential, err := web.CreateCredential(NewUser(webAuthnSess.UserID, nil, web.Config), webAuthnSess, webAuthnResponse)
 	if err != nil {
+		if devErr := new(protocol.Error); errors.As(err, &devErr) {
+			s.d.Logger().WithError(err).WithField("error_devinfo", devErr.DevInfo).Error("Failed to create WebAuthn credential")
+		}
 		return s.handleRegistrationError(w, r, f, &p, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("Unable to create WebAuthn credential: %s", err)))
 	}
 
-	var cc CredentialsConfig
-	wc := CredentialFromWebAuthn(credential, true)
+	var cc identity.CredentialsWebAuthnConfig
+	wc := identity.CredentialFromWebAuthn(credential, true)
 	wc.AddedAt = time.Now().UTC().Round(time.Second)
 	wc.DisplayName = p.RegisterDisplayName
 	wc.IsPasswordless = s.d.Config().WebAuthnForPasswordless(r.Context())
@@ -190,13 +200,14 @@ func (s *Strategy) PopulateRegistrationMethod(r *http.Request, f *registration.F
 		f.UI.SetNode(n)
 	}
 
-	web, err := s.newWebAuthn(r.Context())
+	web, err := webauthn.New(s.d.Config().WebAuthnConfig(r.Context()))
 	if err != nil {
-		return err
+		return errors.WithStack(err)
 	}
 
 	webauthID := x.NewUUID()
-	option, sessionData, err := web.BeginRegistration(&wrappedUser{id: webauthID[:]})
+	user := NewUser(webauthID[:], nil, s.d.Config().WebAuthnConfig(r.Context()))
+	option, sessionData, err := web.BeginRegistration(user)
 	if err != nil {
 		return errors.WithStack(err)
 	}

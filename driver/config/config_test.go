@@ -396,19 +396,6 @@ func TestViperProvider(t *testing.T) {
 	})
 }
 
-type InterceptHook struct {
-	lastEntry *logrus.Entry
-}
-
-func (l InterceptHook) Levels() []logrus.Level {
-	return []logrus.Level{logrus.FatalLevel}
-}
-
-func (l InterceptHook) Fire(e *logrus.Entry) error {
-	l.lastEntry = e
-	return nil
-}
-
 func TestBcrypt(t *testing.T) {
 	ctx := context.Background()
 	p := config.MustNew(t, logrusx.New("", ""), os.Stderr, configx.SkipValidation())
@@ -527,6 +514,7 @@ func TestViperProvider_Defaults(t *testing.T) {
 				assert.True(t, p.SelfServiceStrategy(ctx, "password").Enabled)
 				assert.True(t, p.SelfServiceStrategy(ctx, "profile").Enabled)
 				assert.True(t, p.SelfServiceStrategy(ctx, "link").Enabled)
+				assert.True(t, p.SelfServiceStrategy(ctx, "code").Enabled)
 				assert.False(t, p.SelfServiceStrategy(ctx, "oidc").Enabled)
 			},
 		},
@@ -544,6 +532,15 @@ func TestViperProvider_Defaults(t *testing.T) {
 				assert.True(t, p.SelfServiceStrategy(ctx, "oidc").Enabled)
 			},
 		},
+		{
+			init: func() *config.Config {
+				return config.MustNew(t, l, os.Stderr, configx.WithConfigFiles("stub/.kratos.notify-unknown-recipients.yml"), configx.SkipValidation())
+			},
+			expect: func(t *testing.T, p *config.Config) {
+				assert.True(t, p.SelfServiceFlowRecoveryNotifyUnknownRecipients(ctx))
+				assert.True(t, p.SelfServiceFlowVerificationNotifyUnknownRecipients(ctx))
+			},
+		},
 	} {
 		t.Run(fmt.Sprintf("case=%d", k), func(t *testing.T) {
 			p := tc.init()
@@ -559,6 +556,9 @@ func TestViperProvider_Defaults(t *testing.T) {
 			assert.False(t, p.SelfServiceStrategy(ctx, "link").Enabled)
 			assert.True(t, p.SelfServiceStrategy(ctx, "code").Enabled)
 			assert.False(t, p.SelfServiceStrategy(ctx, "oidc").Enabled)
+
+			assert.False(t, p.SelfServiceFlowRecoveryNotifyUnknownRecipients(ctx))
+			assert.False(t, p.SelfServiceFlowVerificationNotifyUnknownRecipients(ctx))
 		})
 	}
 
@@ -579,10 +579,10 @@ func TestViperProvider_ReturnTo(t *testing.T) {
 
 	p.MustSet(ctx, config.ViperKeySelfServiceBrowserDefaultReturnTo, "https://www.ory.sh/")
 	assert.Equal(t, "https://www.ory.sh/", p.SelfServiceFlowVerificationReturnTo(ctx, urlx.ParseOrPanic("https://www.ory.sh/")).String())
-	assert.Equal(t, "https://www.ory.sh/", p.SelfServiceFlowRecoveryReturnTo(ctx).String())
+	assert.Equal(t, "https://www.ory.sh/", p.SelfServiceFlowRecoveryReturnTo(ctx, urlx.ParseOrPanic("https://www.ory.sh/")).String())
 
 	p.MustSet(ctx, config.ViperKeySelfServiceRecoveryBrowserDefaultReturnTo, "https://www.ory.sh/recovery")
-	assert.Equal(t, "https://www.ory.sh/recovery", p.SelfServiceFlowRecoveryReturnTo(ctx).String())
+	assert.Equal(t, "https://www.ory.sh/recovery", p.SelfServiceFlowRecoveryReturnTo(ctx, urlx.ParseOrPanic("https://www.ory.sh/")).String())
 
 	p.MustSet(ctx, config.ViperKeySelfServiceVerificationBrowserDefaultReturnTo, "https://www.ory.sh/verification")
 	assert.Equal(t, "https://www.ory.sh/verification", p.SelfServiceFlowVerificationReturnTo(ctx, urlx.ParseOrPanic("https://www.ory.sh/")).String())
@@ -684,7 +684,7 @@ func TestViperProvider_DSN(t *testing.T) {
 		var exitCode int
 		l := logrusx.New("", "", logrusx.WithExitFunc(func(i int) {
 			exitCode = i
-		}), logrusx.WithHook(InterceptHook{}))
+		}))
 		p := config.MustNew(t, l, os.Stderr, configx.SkipValidation())
 
 		assert.Equal(t, dsn, p.DSN(ctx))
@@ -1183,12 +1183,14 @@ func TestOAuth2Provider(t *testing.T) {
 			configx.WithConfigFiles("stub/.kratos.oauth2_provider.yaml"), configx.SkipValidation())
 		assert.Equal(t, "https://oauth2_provider/", conf.OAuth2ProviderURL(ctx).String())
 		assert.Equal(t, http.Header{"Authorization": {"Basic"}}, conf.OAuth2ProviderHeader(ctx))
+		assert.True(t, conf.OAuth2ProviderOverrideReturnTo(ctx))
 	})
 
 	t.Run("case=defaults", func(t *testing.T) {
 		conf, _ := config.New(ctx, logrusx.New("", ""), os.Stderr, configx.SkipValidation())
 		assert.Empty(t, conf.OAuth2ProviderURL(ctx))
 		assert.Empty(t, conf.OAuth2ProviderHeader(ctx))
+		assert.False(t, conf.OAuth2ProviderOverrideReturnTo(ctx))
 	})
 }
 

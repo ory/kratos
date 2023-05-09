@@ -10,6 +10,7 @@ import (
 	"github.com/gobuffalo/pop/v6"
 
 	"github.com/ory/kratos/selfservice/errorx"
+	"github.com/ory/kratos/selfservice/sessiontokenexchange"
 
 	"github.com/ory/kratos/continuity"
 	"github.com/ory/kratos/courier"
@@ -24,7 +25,7 @@ import (
 	"github.com/ory/kratos/session"
 )
 
-func CleanSQL(t *testing.T, c *pop.Connection) {
+func CleanSQL(t testing.TB, c *pop.Connection) {
 	ctx := context.Background()
 	for _, table := range []string{
 		new(continuity.Container).TableName(ctx),
@@ -48,12 +49,13 @@ func CleanSQL(t *testing.T, c *pop.Connection) {
 
 		new(errorx.ErrorContainer).TableName(ctx),
 
-		new(identity.CredentialIdentifierCollection).TableName(ctx),
-		new(identity.CredentialsCollection).TableName(ctx),
+		new(identity.CredentialIdentifier).TableName(ctx),
+		new(identity.Credentials).TableName(ctx),
 		new(identity.VerifiableAddress).TableName(ctx),
 		new(identity.RecoveryAddress).TableName(ctx),
 		new(identity.Identity).TableName(ctx),
 		new(identity.CredentialsTypeTable).TableName(ctx),
+		new(sessiontokenexchange.Exchanger).TableName(),
 		"networks",
 		"schema_migration",
 	} {

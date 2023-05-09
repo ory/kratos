@@ -2,8 +2,8 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { appPrefix, gen, website } from "../../../../helpers"
-import { routes as react } from "../../../../helpers/react"
 import { routes as express } from "../../../../helpers/express"
+import { routes as react } from "../../../../helpers/react"
 
 context("Settings failures with email profile", () => {
   ;[
@@ -62,7 +62,7 @@ context("Settings failures with email profile", () => {
         it("fails with validation errors", () => {
           cy.get('input[name="traits.website"]').clear().type("http://s")
           cy.get('[name="method"][value="profile"]').click()
-          cy.get('[data-testid^="ui/message"]').should(
+          cy.get('[data-testid="ui/message/4000003"]').should(
             "contain.text",
             "length must be >= 10",
           )
@@ -161,7 +161,7 @@ context("Settings failures with email profile", () => {
         it("fails if password policy is violated", () => {
           cy.get('input[name="password"]').clear().type("12345678")
           cy.get('button[value="password"]').click()
-          cy.get('*[data-testid^="ui/message"]').should(
+          cy.get('[data-testid="ui/message/4000005"]').should(
             "contain.text",
             "data breaches",
           )

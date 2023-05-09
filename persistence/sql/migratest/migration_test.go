@@ -6,7 +6,6 @@ package migratest
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 	"os"
 	"path/filepath"
 	"sync"
@@ -14,8 +13,6 @@ import (
 	"time"
 
 	"github.com/ory/x/servicelocatorx"
-
-	"github.com/ory/x/fsx"
 
 	"github.com/ory/kratos/identity"
 
@@ -69,326 +66,330 @@ func CompareWithFixture(t *testing.T, actual interface{}, prefix string, id stri
 	s := snapshotFor("fixtures", prefix)
 	actualJSON, err := json.MarshalIndent(actual, "", "  ")
 	require.NoError(t, err)
-	assert.NoError(t, s.SnapshotWithName(id, actualJSON))
+	err = s.SnapshotWithName(id, actualJSON)
+	assert.NoErrorf(t, err, "actual = %s", string(actualJSON))
 }
 
-func TestMigrations(t *testing.T) {
+func TestMigrations_SQLite(t *testing.T) {
+	t.Parallel()
 	sqlite, err := pop.NewConnection(&pop.ConnectionDetails{
 		URL: "sqlite3://" + filepath.Join(os.TempDir(), x.NewUUID().String()) + ".sql?_fk=true"})
 	require.NoError(t, err)
 	require.NoError(t, sqlite.Open())
 
-	connections := map[string]*pop.Connection{
-		"sqlite": sqlite,
-	}
-	if !testing.Short() {
-		dockertest.Parallel([]func(){
-			func() {
-				connections["postgres"] = dockertest.ConnectToTestPostgreSQLPop(t)
-			},
-			func() {
-				connections["mysql"] = dockertest.ConnectToTestMySQLPop(t)
-			},
-			func() {
-				connections["cockroach"] = dockertest.ConnectToTestCockroachDBPop(t)
-			},
-		})
-	}
+	testDatabase(t, "sqlite", sqlite)
+}
 
-	var test = func(db string, c *pop.Connection) func(t *testing.T) {
-		return func(t *testing.T) {
+func TestMigrations_Postgres(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping testing in short mode")
+	}
+	t.Parallel()
+	testDatabase(t, "postgres", dockertest.ConnectToTestPostgreSQLPop(t))
+}
+
+func TestMigrations_Mysql(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping testing in short mode")
+	}
+	t.Parallel()
+	testDatabase(t, "mysql", dockertest.ConnectToTestMySQLPop(t))
+}
+
+func TestMigrations_Cockroach(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping testing in short mode")
+	}
+	t.Parallel()
+	testDatabase(t, "cockroach", dockertest.ConnectToTestCockroachDBPop(t))
+}
+
+func testDatabase(t *testing.T, db string, c *pop.Connection) {
+
+	ctx := context.Background()
+	l := logrusx.New("", "", logrusx.ForceLevel(logrus.ErrorLevel))
+
+	t.Logf("Cleaning up before migrations")
+	_ = os.Remove("../migrations/sql/schema.sql")
+	xsql.CleanSQL(t, c)
+
+	t.Cleanup(func() {
+		t.Logf("Cleaning up after migrations")
+		xsql.CleanSQL(t, c)
+		require.NoError(t, c.Close())
+	})
+
+	url := c.URL()
+	// workaround for https://github.com/gobuffalo/pop/issues/538
+	switch db {
+	case "mysql":
+		url = "mysql://" + url
+	case "sqlite":
+		url = "sqlite3://" + url
+	}
+	t.Logf("URL: %s", url)
+
+	t.Run("suite=up", func(t *testing.T) {
+		tm, err := popx.NewMigrationBox(
+			os.DirFS("../migrations/sql"),
+			popx.NewMigrator(c, logrusx.New("", "", logrusx.ForceLevel(logrus.DebugLevel)), nil, 1*time.Minute),
+			popx.WithTestdata(t, os.DirFS("./testdata")),
+		)
+		require.NoError(t, err)
+		require.NoError(t, tm.Up(ctx))
+	})
+
+	t.Run("suite=fixtures", func(t *testing.T) {
+		wg := &sync.WaitGroup{}
+
+		d, err := driver.New(
+			context.Background(),
+			os.Stderr,
+			servicelocatorx.NewOptions(),
+			nil,
+			[]configx.OptionModifier{
+				configx.WithValues(map[string]interface{}{
+					config.ViperKeyDSN:             url,
+					config.ViperKeyPublicBaseURL:   "https://www.ory.sh/",
+					config.ViperKeyIdentitySchemas: config.Schemas{{ID: "default", URL: "file://stub/default.schema.json"}},
+					config.ViperKeySecretsDefault:  []string{"secret"},
+				}),
+				configx.SkipValidation(),
+			},
+		)
+		require.NoError(t, err)
+
+		t.Run("case=identity", func(t *testing.T) {
+			wg.Add(1)
+			defer wg.Done()
 			t.Parallel()
 
-			ctx := context.Background()
-			l := logrusx.New("", "", logrusx.ForceLevel(logrus.ErrorLevel))
+			ids, err := d.PrivilegedIdentityPool().ListIdentities(context.Background(), identity.ListIdentityParameters{Expand: identity.ExpandEverything, Page: 0, PerPage: 1000})
+			require.NoError(t, err)
+			require.NotEmpty(t, ids)
 
-			t.Logf("Cleaning up before migrations")
-			_ = os.Remove("../migrations/sql/schema.sql")
-			xsql.CleanSQL(t, c)
+			var found []string
+			for y, id := range ids {
+				found = append(found, id.ID.String())
+				actual := &ids[y]
 
-			t.Cleanup(func() {
-				t.Logf("Cleaning up after migrations")
-				xsql.CleanSQL(t, c)
-				require.NoError(t, c.Close())
-			})
+				for _, a := range actual.VerifiableAddresses {
+					CompareWithFixture(t, a, "identity_verification_address", a.ID.String())
+				}
 
-			url := c.URL()
-			// workaround for https://github.com/gobuffalo/pop/issues/538
-			switch db {
-			case "mysql":
-				url = "mysql://" + url
-			case "sqlite":
-				url = "sqlite3://" + url
+				for _, a := range actual.RecoveryAddresses {
+					CompareWithFixture(t, a, "identity_recovery_address", a.ID.String())
+				}
+
+				CompareWithFixture(t, identity.WithCredentialsAndAdminMetadataInJSON(*actual), "identity", id.ID.String())
 			}
-			t.Logf("URL: %s", url)
 
-			t.Run("suite=up", func(t *testing.T) {
-				tm, err := popx.NewMigrationBox(
-					fsx.Merge(os.DirFS("../migrations/sql")),
-					popx.NewMigrator(c, logrusx.New("", "", logrusx.ForceLevel(logrus.DebugLevel)), nil, 1*time.Minute),
-					popx.WithTestdata(t, os.DirFS("./testdata")),
-				)
+			migratest.ContainsExpectedIds(t, filepath.Join("fixtures", "identity"), found)
+		})
+
+		t.Run("case=identity_get", func(t *testing.T) {
+			wg.Add(1)
+			defer wg.Done()
+			t.Parallel()
+
+			ids, err := d.PrivilegedIdentityPool().ListIdentities(context.Background(), identity.ListIdentityParameters{Expand: identity.ExpandNothing, Page: 0, PerPage: 1000})
+			require.NoError(t, err)
+			require.NotEmpty(t, ids)
+
+			var found []string
+			for _, id := range ids {
+				actual, err := d.PrivilegedIdentityPool().GetIdentityConfidential(context.Background(), id.ID)
 				require.NoError(t, err)
-				require.NoError(t, tm.Up(ctx))
-			})
+				found = append(found, actual.ID.String())
 
-			t.Run("suite=fixtures", func(t *testing.T) {
-				wg := &sync.WaitGroup{}
+				CompareWithFixture(t, identity.WithCredentialsAndAdminMetadataInJSON(*actual), "identity", id.ID.String())
+			}
 
-				d, err := driver.New(
-					context.Background(),
-					os.Stderr,
-					servicelocatorx.NewOptions(),
-					nil,
-					[]configx.OptionModifier{
-						configx.WithValues(map[string]interface{}{
-							config.ViperKeyDSN:             url,
-							config.ViperKeyPublicBaseURL:   "https://www.ory.sh/",
-							config.ViperKeyIdentitySchemas: config.Schemas{{ID: "default", URL: "file://stub/default.schema.json"}},
-							config.ViperKeySecretsDefault:  []string{"secret"},
-						}),
-						configx.SkipValidation(),
-					},
-				)
+			migratest.ContainsExpectedIds(t, filepath.Join("fixtures", "identity"), found)
+		})
+
+		t.Run("case=verification_token", func(t *testing.T) {
+			wg.Add(1)
+			defer wg.Done()
+			t.Parallel()
+
+			var ids []link.VerificationToken
+
+			require.NoError(t, c.All(&ids))
+			require.NotEmpty(t, ids)
+
+			for _, id := range ids {
+				CompareWithFixture(t, id, "verification_token", id.ID.String())
+			}
+		})
+
+		t.Run("case=session", func(t *testing.T) {
+			wg.Add(1)
+			defer wg.Done()
+			t.Parallel()
+
+			var ids []session.Session
+			require.NoError(t, c.Select("id").All(&ids))
+			require.NotEmpty(t, ids)
+
+			var found []string
+			for _, id := range ids {
+				found = append(found, id.ID.String())
+				actual, err := d.SessionPersister().GetSession(context.Background(), id.ID, session.ExpandEverything)
+				require.NoErrorf(t, err, "Trying to get session: %s", id.ID)
+				require.NotEmpty(t, actual.LogoutToken, "check if migrations have generated a logout token for existing sessions")
+				CompareWithFixture(t, actual, "session", id.ID.String())
+			}
+			migratest.ContainsExpectedIds(t, filepath.Join("fixtures", "session"), found)
+		})
+
+		t.Run("case=login", func(t *testing.T) {
+			wg.Add(1)
+			defer wg.Done()
+			t.Parallel()
+
+			var ids []login.Flow
+			require.NoError(t, c.Select("id").All(&ids))
+			require.NotEmpty(t, ids)
+
+			var found []string
+			for _, id := range ids {
+				found = append(found, id.ID.String())
+				actual, err := d.LoginFlowPersister().GetLoginFlow(context.Background(), id.ID)
 				require.NoError(t, err)
+				CompareWithFixture(t, actual, "login_flow", id.ID.String())
+			}
+			migratest.ContainsExpectedIds(t, filepath.Join("fixtures", "login_flow"), found)
+		})
 
-				t.Run("case=identity", func(t *testing.T) {
-					wg.Add(1)
-					defer wg.Done()
-					t.Parallel()
+		t.Run("case=registration", func(t *testing.T) {
+			wg.Add(1)
+			defer wg.Done()
+			t.Parallel()
 
-					ids, err := d.PrivilegedIdentityPool().ListIdentities(context.Background(), identity.ExpandEverything, 0, 1000)
-					require.NoError(t, err)
-					require.NotEmpty(t, ids)
+			var ids []registration.Flow
+			require.NoError(t, c.Select("id").All(&ids))
+			require.NotEmpty(t, ids)
 
-					var found []string
-					for y, id := range ids {
-						found = append(found, id.ID.String())
-						actual := &ids[y]
+			var found []string
+			for _, id := range ids {
+				found = append(found, id.ID.String())
+				actual, err := d.RegistrationFlowPersister().GetRegistrationFlow(context.Background(), id.ID)
+				require.NoError(t, err)
+				CompareWithFixture(t, actual, "registration_flow", id.ID.String())
+			}
+			migratest.ContainsExpectedIds(t, filepath.Join("fixtures", "registration_flow"), found)
+		})
 
-						for _, a := range actual.VerifiableAddresses {
-							CompareWithFixture(t, a, "identity_verification_address", a.ID.String())
-						}
+		t.Run("case=settings_flow", func(t *testing.T) {
+			wg.Add(1)
+			defer wg.Done()
+			t.Parallel()
 
-						for _, a := range actual.RecoveryAddresses {
-							CompareWithFixture(t, a, "identity_recovery_address", a.ID.String())
-						}
+			var ids []settings.Flow
+			require.NoError(t, c.Select("id").All(&ids))
+			require.NotEmpty(t, ids)
 
-						CompareWithFixture(t, identity.WithCredentialsAndAdminMetadataInJSON(*actual), "identity", id.ID.String())
-					}
+			var found []string
+			for _, id := range ids {
+				found = append(found, id.ID.String())
+				actual, err := d.SettingsFlowPersister().GetSettingsFlow(context.Background(), id.ID)
+				require.NoError(t, err, id.ID.String())
+				CompareWithFixture(t, actual, "settings_flow", id.ID.String())
+			}
+			migratest.ContainsExpectedIds(t, filepath.Join("fixtures", "settings_flow"), found)
+		})
 
-					migratest.ContainsExpectedIds(t, filepath.Join("fixtures", "identity"), found)
-				})
+		t.Run("case=recovery_flow", func(t *testing.T) {
+			wg.Add(1)
+			defer wg.Done()
+			t.Parallel()
 
-				t.Run("case=identity_get", func(t *testing.T) {
-					wg.Add(1)
-					defer wg.Done()
-					t.Parallel()
+			var ids []recovery.Flow
+			require.NoError(t, c.Select("id").All(&ids))
+			require.NotEmpty(t, ids)
 
-					ids, err := d.PrivilegedIdentityPool().ListIdentities(context.Background(), identity.ExpandNothing, 0, 1000)
-					require.NoError(t, err)
-					require.NotEmpty(t, ids)
+			var found []string
+			for _, id := range ids {
+				found = append(found, id.ID.String())
+				actual, err := d.RecoveryFlowPersister().GetRecoveryFlow(context.Background(), id.ID)
+				require.NoError(t, err)
+				CompareWithFixture(t, actual, "recovery_flow", id.ID.String())
+			}
+			migratest.ContainsExpectedIds(t, filepath.Join("fixtures", "recovery_flow"), found)
+		})
 
-					var found []string
-					for _, id := range ids {
-						actual, err := d.PrivilegedIdentityPool().GetIdentityConfidential(context.Background(), id.ID)
-						require.NoError(t, err)
-						found = append(found, actual.ID.String())
+		t.Run("case=verification_flow", func(t *testing.T) {
+			wg.Add(1)
+			defer wg.Done()
+			t.Parallel()
 
-						CompareWithFixture(t, identity.WithCredentialsAndAdminMetadataInJSON(*actual), "identity", id.ID.String())
-					}
+			var ids []verification.Flow
+			require.NoError(t, c.Select("id").All(&ids))
+			require.NotEmpty(t, ids)
 
-					migratest.ContainsExpectedIds(t, filepath.Join("fixtures", "identity"), found)
-				})
+			var found []string
+			for _, id := range ids {
+				found = append(found, id.ID.String())
+				actual, err := d.VerificationFlowPersister().GetVerificationFlow(context.Background(), id.ID)
+				require.NoError(t, err)
+				CompareWithFixture(t, actual, "verification_flow", id.ID.String())
+			}
+			migratest.ContainsExpectedIds(t, filepath.Join("fixtures", "verification_flow"), found)
+		})
 
-				t.Run("case=verification_token", func(t *testing.T) {
-					wg.Add(1)
-					defer wg.Done()
-					t.Parallel()
+		t.Run("case=recovery_token", func(t *testing.T) {
+			wg.Add(1)
+			defer wg.Done()
+			t.Parallel()
 
-					var ids []link.VerificationToken
+			var ids []link.RecoveryToken
+			require.NoError(t, c.All(&ids))
+			require.NotEmpty(t, ids)
 
-					require.NoError(t, c.All(&ids))
-					require.NotEmpty(t, ids)
+			var found []string
+			for _, id := range ids {
+				found = append(found, id.ID.String())
+				CompareWithFixture(t, id, "recovery_token", id.ID.String())
+			}
+			migratest.ContainsExpectedIds(t, filepath.Join("fixtures", "recovery_token"), found)
+		})
 
-					for _, id := range ids {
-						CompareWithFixture(t, id, "verification_token", id.ID.String())
-					}
-				})
+		t.Run("case=recovery_code", func(t *testing.T) {
+			wg.Add(1)
+			defer wg.Done()
+			t.Parallel()
 
-				t.Run("case=session", func(t *testing.T) {
-					wg.Add(1)
-					defer wg.Done()
-					t.Parallel()
+			var ids []code.RecoveryCode
+			require.NoError(t, c.All(&ids))
+			require.NotEmpty(t, ids)
 
-					var ids []session.Session
-					require.NoError(t, c.Select("id").All(&ids))
-					require.NotEmpty(t, ids)
+			var found []string
+			for _, id := range ids {
+				found = append(found, id.ID.String())
+				CompareWithFixture(t, id, "recovery_code", id.ID.String())
+			}
+			migratest.ContainsExpectedIds(t, filepath.Join("fixtures", "recovery_code"), found)
+		})
 
-					var found []string
-					for _, id := range ids {
-						found = append(found, id.ID.String())
-						actual, err := d.SessionPersister().GetSession(context.Background(), id.ID, session.ExpandEverything)
-						require.NoErrorf(t, err, "Trying to get session: %s", id.ID)
-						require.NotEmpty(t, actual.LogoutToken, "check if migrations have generated a logout token for existing sessions")
-						CompareWithFixture(t, actual, "session", id.ID.String())
-					}
-					migratest.ContainsExpectedIds(t, filepath.Join("fixtures", "session"), found)
-				})
+		t.Run("suite=constraints", func(t *testing.T) {
+			// This is not really a parallel test, but we have to mark it parallel so the other tests run first.
+			t.Parallel()
+			wg.Wait()
 
-				t.Run("case=login", func(t *testing.T) {
-					wg.Add(1)
-					defer wg.Done()
-					t.Parallel()
+			sr, err := d.SettingsFlowPersister().GetSettingsFlow(context.Background(), x.ParseUUID("a79bfcf1-68ae-49de-8b23-4f96921b8341"))
+			require.NoError(t, err)
 
-					var ids []login.Flow
-					require.NoError(t, c.Select("id").All(&ids))
-					require.NotEmpty(t, ids)
+			require.NoError(t, d.PrivilegedIdentityPool().DeleteIdentity(context.Background(), sr.IdentityID))
 
-					var found []string
-					for _, id := range ids {
-						found = append(found, id.ID.String())
-						actual, err := d.LoginFlowPersister().GetLoginFlow(context.Background(), id.ID)
-						require.NoError(t, err)
-						CompareWithFixture(t, actual, "login_flow", id.ID.String())
-					}
-					migratest.ContainsExpectedIds(t, filepath.Join("fixtures", "login_flow"), found)
-				})
+			_, err = d.SettingsFlowPersister().GetSettingsFlow(context.Background(), x.ParseUUID("a79bfcf1-68ae-49de-8b23-4f96921b8341"))
+			require.Error(t, err)
+			require.ErrorIs(t, err, sqlcon.ErrNoRows)
+		})
+	})
 
-				t.Run("case=registration", func(t *testing.T) {
-					wg.Add(1)
-					defer wg.Done()
-					t.Parallel()
-
-					var ids []registration.Flow
-					require.NoError(t, c.Select("id").All(&ids))
-					require.NotEmpty(t, ids)
-
-					var found []string
-					for _, id := range ids {
-						found = append(found, id.ID.String())
-						actual, err := d.RegistrationFlowPersister().GetRegistrationFlow(context.Background(), id.ID)
-						require.NoError(t, err)
-						CompareWithFixture(t, actual, "registration_flow", id.ID.String())
-					}
-					migratest.ContainsExpectedIds(t, filepath.Join("fixtures", "registration_flow"), found)
-				})
-
-				t.Run("case=settings_flow", func(t *testing.T) {
-					wg.Add(1)
-					defer wg.Done()
-					t.Parallel()
-
-					var ids []settings.Flow
-					require.NoError(t, c.Select("id").All(&ids))
-					require.NotEmpty(t, ids)
-
-					var found []string
-					for _, id := range ids {
-						found = append(found, id.ID.String())
-						actual, err := d.SettingsFlowPersister().GetSettingsFlow(context.Background(), id.ID)
-						require.NoError(t, err, id.ID.String())
-						CompareWithFixture(t, actual, "settings_flow", id.ID.String())
-					}
-					migratest.ContainsExpectedIds(t, filepath.Join("fixtures", "settings_flow"), found)
-				})
-
-				t.Run("case=recovery_flow", func(t *testing.T) {
-					wg.Add(1)
-					defer wg.Done()
-					t.Parallel()
-
-					var ids []recovery.Flow
-					require.NoError(t, c.Select("id").All(&ids))
-					require.NotEmpty(t, ids)
-
-					var found []string
-					for _, id := range ids {
-						found = append(found, id.ID.String())
-						actual, err := d.RecoveryFlowPersister().GetRecoveryFlow(context.Background(), id.ID)
-						require.NoError(t, err)
-						CompareWithFixture(t, actual, "recovery_flow", id.ID.String())
-					}
-					migratest.ContainsExpectedIds(t, filepath.Join("fixtures", "recovery_flow"), found)
-				})
-
-				t.Run("case=verification_flow", func(t *testing.T) {
-					wg.Add(1)
-					defer wg.Done()
-					t.Parallel()
-
-					var ids []verification.Flow
-					require.NoError(t, c.Select("id").All(&ids))
-					require.NotEmpty(t, ids)
-
-					var found []string
-					for _, id := range ids {
-						found = append(found, id.ID.String())
-						actual, err := d.VerificationFlowPersister().GetVerificationFlow(context.Background(), id.ID)
-						require.NoError(t, err)
-						CompareWithFixture(t, actual, "verification_flow", id.ID.String())
-					}
-					migratest.ContainsExpectedIds(t, filepath.Join("fixtures", "verification_flow"), found)
-				})
-
-				t.Run("case=recovery_token", func(t *testing.T) {
-					wg.Add(1)
-					defer wg.Done()
-					t.Parallel()
-
-					var ids []link.RecoveryToken
-					require.NoError(t, c.All(&ids))
-					require.NotEmpty(t, ids)
-
-					var found []string
-					for _, id := range ids {
-						found = append(found, id.ID.String())
-						CompareWithFixture(t, id, "recovery_token", id.ID.String())
-					}
-					migratest.ContainsExpectedIds(t, filepath.Join("fixtures", "recovery_token"), found)
-				})
-
-				t.Run("case=recovery_code", func(t *testing.T) {
-					wg.Add(1)
-					defer wg.Done()
-					t.Parallel()
-
-					var ids []code.RecoveryCode
-					require.NoError(t, c.All(&ids))
-					require.NotEmpty(t, ids)
-
-					var found []string
-					for _, id := range ids {
-						found = append(found, id.ID.String())
-						CompareWithFixture(t, id, "recovery_code", id.ID.String())
-					}
-					migratest.ContainsExpectedIds(t, filepath.Join("fixtures", "recovery_code"), found)
-				})
-
-				t.Run("suite=constraints", func(t *testing.T) {
-					// This is not really a parallel test, but we have to mark it parallel so the other tests run first.
-					t.Parallel()
-					wg.Wait()
-
-					sr, err := d.SettingsFlowPersister().GetSettingsFlow(context.Background(), x.ParseUUID("a79bfcf1-68ae-49de-8b23-4f96921b8341"))
-					require.NoError(t, err)
-
-					require.NoError(t, d.PrivilegedIdentityPool().DeleteIdentity(context.Background(), sr.IdentityID))
-
-					_, err = d.SettingsFlowPersister().GetSettingsFlow(context.Background(), x.ParseUUID("a79bfcf1-68ae-49de-8b23-4f96921b8341"))
-					require.Error(t, err)
-					require.ErrorIs(t, err, sqlcon.ErrNoRows)
-				})
-			})
-
-			t.Run("suite=down", func(t *testing.T) {
-				tm := popx.NewTestMigrator(t, c, os.DirFS("../migrations/sql"), os.DirFS("./testdata"), l)
-				require.NoError(t, tm.Down(ctx, -1))
-			})
-		}
-	}
-
-	for db, c := range connections {
-		t.Run(fmt.Sprintf("database=%s", db), test(db, c))
-	}
+	t.Run("suite=down", func(t *testing.T) {
+		tm := popx.NewTestMigrator(t, c, os.DirFS("../migrations/sql"), os.DirFS("./testdata"), l)
+		require.NoError(t, tm.Down(ctx, -1))
+	})
 }

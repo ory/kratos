@@ -6,7 +6,12 @@ package oidc
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"net/url"
+
+	gooidc "github.com/coreos/go-oidc"
+
+	"github.com/ory/x/stringslice"
 
 	"github.com/hashicorp/go-retryablehttp"
 	"github.com/pkg/errors"
@@ -31,6 +36,11 @@ func NewProviderNetID(
 	config *Configuration,
 	reg dependencies,
 ) *ProviderNetID {
+	config.IssuerURL = fmt.Sprintf("%s://%s/", defaultBrokerScheme, defaultBrokerHost)
+	if !stringslice.Has(config.Scope, gooidc.ScopeOpenID) {
+		config.Scope = append(config.Scope, gooidc.ScopeOpenID)
+	}
+
 	return &ProviderNetID{
 		ProviderGenericOIDC: &ProviderGenericOIDC{
 			config: config,
@@ -68,17 +78,12 @@ func (n *ProviderNetID) Claims(ctx context.Context, exchange *oauth2.Token, _ ur
 		return nil, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("%s", err))
 	}
 
-	client := n.reg.HTTPClient(ctx, httpx.ResilientClientDisallowInternalIPs(), httpx.ResilientClientWithClient(o.Client(ctx, exchange)))
+	req, err := retryablehttp.NewRequestWithContext(ctx, "GET", urlx.AppendPaths(n.brokerURL(), "/userinfo").String(), nil)
+	if err != nil {
+		return nil, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("%s", err))
+	}
 
-	u := n.brokerURL()
-	if err != nil {
-		return nil, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("%s", err))
-	}
-	userInfoURL := urlx.AppendPaths(u, "/userinfo")
-	req, err := retryablehttp.NewRequest("GET", userInfoURL.String(), nil)
-	if err != nil {
-		return nil, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("%s", err))
-	}
+	client := n.reg.HTTPClient(ctx, httpx.ResilientClientDisallowInternalIPs(), httpx.ResilientClientWithClient(o.Client(ctx, exchange)))
 
 	resp, err := client.Do(req)
 	if err != nil {
@@ -90,12 +95,28 @@ func (n *ProviderNetID) Claims(ctx context.Context, exchange *oauth2.Token, _ ur
 		return nil, err
 	}
 
-	var claims Claims
-	if err := json.NewDecoder(resp.Body).Decode(&claims); err != nil {
-		return nil, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("%s", err))
+	p, err := n.provider(ctx)
+	if err != nil {
+		return nil, err
 	}
 
-	return &claims, nil
+	raw, ok := exchange.Extra("id_token").(string)
+	if !ok || len(raw) == 0 {
+		return nil, errors.WithStack(ErrIDTokenMissing)
+	}
+
+	claims, err := n.verifyAndDecodeClaimsWithProvider(ctx, p, raw)
+	if err != nil {
+		return nil, err
+	}
+
+	var userinfo Claims
+	if err := json.NewDecoder(resp.Body).Decode(&userinfo); err != nil {
+		return nil, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("%s", err))
+	}
+	userinfo.Issuer = claims.Issuer
+	userinfo.Subject = claims.Subject
+	return &userinfo, nil
 }
 
 func (n *ProviderNetID) brokerURL() *url.URL {

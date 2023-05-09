@@ -6,6 +6,7 @@ package oidc
 import (
 	"bytes"
 	"context"
+	"crypto/sha512"
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
@@ -14,6 +15,7 @@ import (
 	"strings"
 
 	"github.com/ory/kratos/cipher"
+	"github.com/ory/kratos/selfservice/sessiontokenexchange"
 	"github.com/ory/x/jsonnetsecure"
 
 	"github.com/ory/kratos/text"
@@ -67,6 +69,7 @@ type dependencies interface {
 	x.CSRFTokenGeneratorProvider
 	x.WriterProvider
 	x.HTTPClientProvider
+	x.TracingProvider
 
 	identity.ValidationProvider
 	identity.PrivilegedPoolProvider
@@ -75,6 +78,7 @@ type dependencies interface {
 
 	session.ManagementProvider
 	session.HandlerProvider
+	sessiontokenexchange.PersistenceProvider
 
 	login.HookExecutorProvider
 	login.FlowPersistenceProvider
@@ -117,14 +121,43 @@ type Strategy struct {
 }
 
 type authCodeContainer struct {
-	FlowID string          `json:"flow_id"`
-	State  string          `json:"state"`
-	Traits json.RawMessage `json:"traits"`
+	FlowID           string          `json:"flow_id"`
+	State            string          `json:"state"`
+	Traits           json.RawMessage `json:"traits"`
+	TransientPayload json.RawMessage `json:"transient_payload"`
 }
 
-func generateState(flowID string) string {
-	state := x.NewUUID().String()
-	return base64.RawURLEncoding.EncodeToString([]byte(fmt.Sprintf("%s:%s", flowID, state)))
+type State struct {
+	FlowID string
+	Data   []byte
+}
+
+func (s *State) String() string {
+	return base64.RawURLEncoding.EncodeToString([]byte(fmt.Sprintf("%s:%s", s.FlowID, s.Data)))
+}
+
+func generateState(flowID string) *State {
+	return &State{
+		FlowID: flowID,
+		Data:   x.NewUUID().Bytes(),
+	}
+}
+func (s *State) setCode(code string) {
+	s.Data = sha512.New().Sum([]byte(code))
+}
+func (s *State) codeMatches(code string) bool {
+	return bytes.Equal(s.Data, sha512.New().Sum([]byte(code)))
+}
+func parseState(s string) (*State, error) {
+	raw, err := base64.RawURLEncoding.DecodeString(s)
+	if err != nil {
+		return nil, err
+	}
+	if id, data, ok := bytes.Cut(raw, []byte(":")); !ok {
+		return nil, errors.New("state has invalid format")
+	} else {
+		return &State{FlowID: string(id), Data: data}, nil
+	}
 }
 
 func (s *Strategy) CountActiveFirstFactorCredentials(cc map[identity.CredentialsType]identity.Credentials) (count int, err error) {
@@ -208,15 +241,11 @@ func (s *Strategy) ID() identity.CredentialsType {
 }
 
 func (s *Strategy) validateFlow(ctx context.Context, r *http.Request, rid uuid.UUID) (flow.Flow, error) {
-	if x.IsZeroUUID(rid) {
+	if rid.IsNil() {
 		return nil, errors.WithStack(herodot.ErrBadRequest.WithReason("The session cookie contains invalid values and the flow could not be executed. Please try again."))
 	}
 
 	if ar, err := s.d.RegistrationFlowPersister().GetRegistrationFlow(ctx, rid); err == nil {
-		if ar.Type != flow.TypeBrowser {
-			return ar, ErrAPIFlowNotSupported
-		}
-
 		if err := ar.Valid(); err != nil {
 			return ar, err
 		}
@@ -224,10 +253,6 @@ func (s *Strategy) validateFlow(ctx context.Context, r *http.Request, rid uuid.U
 	}
 
 	if ar, err := s.d.LoginFlowPersister().GetLoginFlow(ctx, rid); err == nil {
-		if ar.Type != flow.TypeBrowser {
-			return ar, ErrAPIFlowNotSupported
-		}
-
 		if err := ar.Valid(); err != nil {
 			return ar, err
 		}
@@ -236,10 +261,6 @@ func (s *Strategy) validateFlow(ctx context.Context, r *http.Request, rid uuid.U
 
 	ar, err := s.d.SettingsFlowPersister().GetSettingsFlow(ctx, rid)
 	if err == nil {
-		if ar.Type != flow.TypeBrowser {
-			return ar, ErrAPIFlowNotSupported
-		}
-
 		sess, err := s.d.SessionManager().FetchFromRequest(ctx, r)
 		if err != nil {
 			return ar, err
@@ -256,51 +277,95 @@ func (s *Strategy) validateFlow(ctx context.Context, r *http.Request, rid uuid.U
 
 func (s *Strategy) validateCallback(w http.ResponseWriter, r *http.Request) (flow.Flow, *authCodeContainer, error) {
 	var (
-		code  = stringsx.Coalesce(r.URL.Query().Get("code"), r.URL.Query().Get("authCode"))
-		state = r.URL.Query().Get("state")
+		codeParam  = stringsx.Coalesce(r.URL.Query().Get("code"), r.URL.Query().Get("authCode"))
+		stateParam = r.URL.Query().Get("state")
+		errorParam = r.URL.Query().Get("error")
 	)
 
-	if state == "" {
+	if stateParam == "" {
 		return nil, nil, errors.WithStack(herodot.ErrBadRequest.WithReasonf(`Unable to complete OpenID Connect flow because the OpenID Provider did not return the state query parameter.`))
 	}
+	state, err := parseState(stateParam)
+	if err != nil {
+		return nil, nil, errors.WithStack(herodot.ErrBadRequest.WithReasonf(`Unable to complete OpenID Connect flow because the state parameter was invalid.`))
+	}
 
-	var cntnr authCodeContainer
-	if _, err := s.d.ContinuityManager().Continue(r.Context(), w, r, sessionName, continuity.WithPayload(&cntnr)); err != nil {
+	f, err := s.validateFlow(r.Context(), r, x.ParseUUID(state.FlowID))
+	if err != nil {
 		return nil, nil, err
 	}
 
-	if state != cntnr.State {
-		return nil, &cntnr, errors.WithStack(herodot.ErrBadRequest.WithReasonf(`Unable to complete OpenID Connect flow because the query state parameter does not match the state parameter from the session cookie.`))
-	}
-
-	req, err := s.validateFlow(r.Context(), r, x.ParseUUID(cntnr.FlowID))
+	tokenCode, hasSessionTokenCode, err := s.d.SessionTokenExchangePersister().CodeForFlow(r.Context(), f.GetID())
 	if err != nil {
-		return nil, &cntnr, err
+		return nil, nil, err
 	}
 
-	if r.URL.Query().Get("error") != "" {
-		return req, &cntnr, errors.WithStack(herodot.ErrBadRequest.WithReasonf(`Unable to complete OpenID Connect flow because the OpenID Provider returned error "%s": %s`, r.URL.Query().Get("error"), r.URL.Query().Get("error_description")))
+	cntnr := authCodeContainer{}
+	if f.GetType() == flow.TypeBrowser || !hasSessionTokenCode {
+		if _, err := s.d.ContinuityManager().Continue(r.Context(), w, r, sessionName, continuity.WithPayload(&cntnr)); err != nil {
+			return nil, nil, err
+		}
+		if stateParam != cntnr.State {
+			return nil, &cntnr, errors.WithStack(herodot.ErrBadRequest.WithReasonf(`Unable to complete OpenID Connect flow because the query state parameter does not match the state parameter from the session cookie.`))
+		}
+	} else {
+		// We need to validate the tokenCode here
+		if !state.codeMatches(tokenCode.InitCode) {
+			return nil, &cntnr, errors.WithStack(herodot.ErrBadRequest.WithReasonf(`Unable to complete OpenID Connect flow because the query state parameter does not match the state parameter from the code.`))
+		}
+		cntnr.State = stateParam
+		cntnr.FlowID = state.FlowID
 	}
 
-	if code == "" {
-		return req, &cntnr, errors.WithStack(herodot.ErrBadRequest.WithReasonf(`Unable to complete OpenID Connect flow because the OpenID Provider did not return the code query parameter.`))
+	if errorParam != "" {
+		return f, &cntnr, errors.WithStack(herodot.ErrBadRequest.WithReasonf(`Unable to complete OpenID Connect flow because the OpenID Provider returned error "%s": %s`, r.URL.Query().Get("error"), r.URL.Query().Get("error_description")))
+	}
+	if codeParam == "" {
+		return f, &cntnr, errors.WithStack(herodot.ErrBadRequest.WithReasonf(`Unable to complete OpenID Connect flow because the OpenID Provider did not return the code query parameter.`))
 	}
 
-	return req, &cntnr, nil
+	return f, &cntnr, nil
 }
 
-func (s *Strategy) alreadyAuthenticated(w http.ResponseWriter, r *http.Request, req interface{}) bool {
-	// we assume an error means the user has no session
-	if _, err := s.d.SessionManager().FetchFromRequest(r.Context(), r); err == nil {
-		if _, ok := req.(*settings.Flow); ok {
+func registrationOrLoginFlowID(flow any) (uuid.UUID, bool) {
+	switch f := flow.(type) {
+	case *registration.Flow:
+		return f.ID, true
+	case *login.Flow:
+		return f.ID, true
+	default:
+		return uuid.Nil, false
+	}
+}
+
+func (s *Strategy) alreadyAuthenticated(w http.ResponseWriter, r *http.Request, f interface{}) (bool, error) {
+	ctx := r.Context()
+
+	if sess, _ := s.d.SessionManager().FetchFromRequest(ctx, r); sess != nil {
+		if _, ok := f.(*settings.Flow); ok {
 			// ignore this if it's a settings flow
-		} else if !isForced(req) {
-			http.Redirect(w, r, s.d.Config().SelfServiceBrowserDefaultReturnTo(r.Context()).String(), http.StatusSeeOther)
-			return true
+		} else if !isForced(f) {
+			if flowID, ok := registrationOrLoginFlowID(f); ok {
+				if _, hasCode, _ := s.d.SessionTokenExchangePersister().CodeForFlow(ctx, flowID); hasCode {
+					err := s.d.SessionTokenExchangePersister().UpdateSessionOnExchanger(ctx, flowID, sess.ID)
+					if err != nil {
+						return false, err
+					}
+				}
+			}
+			returnTo := s.d.Config().SelfServiceBrowserDefaultReturnTo(ctx)
+			if redirecter, ok := f.(flow.FlowWithRedirect); ok {
+				r, err := x.SecureRedirectTo(r, returnTo, redirecter.SecureRedirectToOpts(ctx, s.d)...)
+				if err != nil {
+					returnTo = r
+				}
+			}
+			http.Redirect(w, r, returnTo.String(), http.StatusSeeOther)
+			return true, nil
 		}
 	}
 
-	return false
+	return false, nil
 }
 
 func (s *Strategy) handleCallback(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
@@ -319,7 +384,9 @@ func (s *Strategy) handleCallback(w http.ResponseWriter, r *http.Request, ps htt
 		return
 	}
 
-	if s.alreadyAuthenticated(w, r, req) {
+	if authenticated, err := s.alreadyAuthenticated(w, r, req); err != nil {
+		s.forwardError(w, r, req, s.handleError(w, r, req, pid, nil, err))
+	} else if authenticated {
 		return
 	}
 
@@ -366,6 +433,7 @@ func (s *Strategy) handleCallback(w http.ResponseWriter, r *http.Request, ps htt
 		}
 		return
 	case *registration.Flow:
+		a.TransientPayload = cntnr.TransientPayload
 		if ff, err := s.processRegistration(w, r, a, token, claims, provider, cntnr); err != nil {
 			if ff != nil {
 				s.forwardError(w, r, ff, err)
@@ -453,6 +521,18 @@ func (s *Strategy) handleError(w http.ResponseWriter, r *http.Request, f flow.Fl
 	case *registration.Flow:
 		// Reset all nodes to not confuse users.
 		// This is kinda hacky and will probably need to be updated at some point.
+
+		if errors.Is(err, registration.ErrDuplicateCredentials) {
+			rf.UI.Messages.Add(text.NewErrorValidationDuplicateCredentialsOnOIDCLink())
+			lf, err := s.registrationToLogin(w, r, rf, provider)
+			if err != nil {
+				return err
+			}
+			// return a new login flow with the error message embedded in the login flow.
+			x.AcceptToRedirectOrJSON(w, r, s.d.Writer(), lf, lf.AppendTo(s.d.Config().SelfServiceFlowLoginUI(r.Context())).String())
+			// ensure the function does not continue to execute
+			return registration.ErrHookAbortFlow
+		}
 
 		rf.UI.Nodes = node.Nodes{}
 

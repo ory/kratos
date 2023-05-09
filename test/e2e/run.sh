@@ -43,6 +43,7 @@ base=$(pwd)
 setup=yes
 dev=no
 nokill=no
+cleanup=no
 for i in "$@"; do
   case $i in
   --no-kill)
@@ -61,11 +62,14 @@ for i in "$@"; do
     dev=yes
     shift # past argument=value
     ;;
+  --cleanup)
+    cleanup=yes
+    shift # past argument=value
+    ;;
   esac
 done
 
-prepare() {
-  if [[ "${nokill}" == "no" ]]; then
+cleanup() {
     killall node || true
     killall modd || true
     killall webhook || true
@@ -73,13 +77,18 @@ prepare() {
     killall hydra-login-consent || true
     killall hydra-kratos-login-consent || true
     docker kill kratos_test_hydra || true
+}
+
+prepare() {
+  if [[ "${nokill}" == "no" ]]; then
+    cleanup
   fi
 
   if [ -z ${TEST_DATABASE_POSTGRESQL+x} ]; then
     docker rm -f kratos_test_database_mysql kratos_test_database_postgres kratos_test_database_cockroach || true
     docker run --platform linux/amd64 --name kratos_test_database_mysql -p 3444:3306 -e MYSQL_ROOT_PASSWORD=secret -d mysql:5.7
     docker run --name kratos_test_database_postgres -p 3445:5432 -e POSTGRES_PASSWORD=secret -e POSTGRES_DB=postgres -d postgres:9.6 postgres -c log_statement=all
-    docker run --name kratos_test_database_cockroach -p 3446:26257 -d cockroachdb/cockroach:v20.2.4 start-single-node --insecure
+    docker run --name kratos_test_database_cockroach -p 3446:26257 -d cockroachdb/cockroach:v22.2.6 start-single-node --insecure
 
     export TEST_DATABASE_MYSQL="mysql://root:secret@(localhost:3444)/mysql?parseTime=true&multiStatements=true"
     export TEST_DATABASE_POSTGRESQL="postgres://postgres:secret@localhost:3445/postgres?sslmode=disable"
@@ -243,6 +252,14 @@ prepare() {
     PORT=4455 npm run start \
       >"${base}/test/e2e/proxy.e2e.log" 2>&1 &
   )
+
+  # Make the environment available to Playwright
+  env | grep KRATOS_                         >  test/e2e/playwright/playwright.env
+  env | grep TEST_DATABASE_                  >> test/e2e/playwright/playwright.env
+  env | grep OIDC_                           >> test/e2e/playwright/playwright.env
+  env | grep CYPRESS_                        >> test/e2e/playwright/playwright.env
+  echo LOG_LEAK_SENSITIVE_VALUES=true        >> test/e2e/playwright/playwright.env
+  echo DEV_DISABLE_API_FLOW_ENFORCEMENT=true >> test/e2e/playwright/playwright.env
 }
 
 run() {
@@ -264,6 +281,7 @@ run() {
   (modd -f test/e2e/modd.conf >"${base}/test/e2e/kratos.e2e.log" 2>&1 &)
 
   npm run wait-on -- -v -l -t 300000 http-get://localhost:4434/health/ready \
+    http-get://localhost:4444/.well-known/openid-configuration \
     http-get://localhost:4455/health/ready \
     http-get://localhost:4445/health/ready \
     http-get://localhost:4446/ \
@@ -339,6 +357,11 @@ the path where the kratos-selfservice-ui-node project is checked out:
   $0 ..."
 }
 
+if [[ "${cleanup}" == "yes" ]]; then
+  cleanup
+  exit 0
+fi
+
 export TEST_DATABASE_SQLITE="sqlite:///$(mktemp -d -t ci-XXXXXXXXXX)/db.sqlite?_fk=true"
 export TEST_DATABASE_MEMORY="memory"
 
@@ -374,4 +397,5 @@ esac
 if [[ "${setup}" == "yes" ]]; then
   prepare
 fi
+
 run "${db}"

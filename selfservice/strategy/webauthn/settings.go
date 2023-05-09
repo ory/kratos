@@ -181,13 +181,13 @@ func (s *Strategy) continueSettingsFlowRemove(w http.ResponseWriter, r *http.Req
 		return errors.WithStack(herodot.ErrBadRequest.WithReasonf("You tried to remove a WebAuthn but you have no WebAuthn set up."))
 	}
 
-	var cc CredentialsConfig
+	var cc identity.CredentialsWebAuthnConfig
 	if err := json.Unmarshal(cred.Config, &cc); err != nil {
 		return errors.WithStack(herodot.ErrInternalServerError.WithReasonf("Unable to decode identity credentials.").WithDebug(err.Error()))
 	}
 
 	var wasPasswordless bool
-	updated := make([]Credential, 0)
+	updated := make([]identity.CredentialWebAuthn, 0)
 	for k, cred := range cc.Credentials {
 		if fmt.Sprintf("%x", cred.ID) != p.Remove {
 			updated = append(updated, cc.Credentials[k])
@@ -242,12 +242,12 @@ func (s *Strategy) continueSettingsFlowAdd(w http.ResponseWriter, r *http.Reques
 		return errors.WithStack(herodot.ErrBadRequest.WithReasonf("Unable to parse WebAuthn response: %s", err))
 	}
 
-	web, err := s.newWebAuthn(r.Context())
+	web, err := webauthn.New(s.d.Config().WebAuthnConfig(r.Context()))
 	if err != nil {
 		return errors.WithStack(herodot.ErrInternalServerError.WithReasonf("Unable to get webAuthn config.").WithDebug(err.Error()))
 	}
 
-	credential, err := web.CreateCredential(&wrappedUser{id: ctxUpdate.Session.IdentityID[:]}, webAuthnSess, webAuthnResponse)
+	credential, err := web.CreateCredential(NewUser(ctxUpdate.Session.IdentityID[:], nil, web.Config), webAuthnSess, webAuthnResponse)
 	if err != nil {
 		return errors.WithStack(herodot.ErrInternalServerError.WithReasonf("Unable to create WebAuthn credential: %s", err))
 	}
@@ -259,12 +259,12 @@ func (s *Strategy) continueSettingsFlowAdd(w http.ResponseWriter, r *http.Reques
 
 	cred := i.GetCredentialsOr(s.ID(), &identity.Credentials{Config: sqlxx.JSONRawMessage("{}")})
 
-	var cc CredentialsConfig
+	var cc identity.CredentialsWebAuthnConfig
 	if err := json.Unmarshal(cred.Config, &cc); err != nil {
 		return errors.WithStack(herodot.ErrInternalServerError.WithReasonf("Unable to decode identity credentials.").WithDebug(err.Error()))
 	}
 
-	wc := CredentialFromWebAuthn(credential, s.d.Config().WebAuthnForPasswordless(r.Context()))
+	wc := identity.CredentialFromWebAuthn(credential, s.d.Config().WebAuthnForPasswordless(r.Context()))
 	wc.AddedAt = time.Now().UTC().Round(time.Second)
 	wc.DisplayName = p.RegisterDisplayName
 	wc.IsPasswordless = s.d.Config().WebAuthnForPasswordless(r.Context())
@@ -308,13 +308,13 @@ func (s *Strategy) continueSettingsFlowAdd(w http.ResponseWriter, r *http.Reques
 	return nil
 }
 
-func (s *Strategy) identityListWebAuthn(id *identity.Identity) (*CredentialsConfig, error) {
+func (s *Strategy) identityListWebAuthn(id *identity.Identity) (*identity.CredentialsWebAuthnConfig, error) {
 	cred, ok := id.GetCredentials(s.ID())
 	if !ok {
 		return nil, errors.WithStack(sqlcon.ErrNoRows)
 	}
 
-	var cc CredentialsConfig
+	var cc identity.CredentialsWebAuthnConfig
 	if err := json.Unmarshal(cred.Config, &cc); err != nil {
 		return nil, errors.WithStack(err)
 	}
@@ -356,12 +356,12 @@ func (s *Strategy) PopulateSettingsMethod(r *http.Request, id *identity.Identity
 		}
 	}
 
-	web, err := s.newWebAuthn(r.Context())
+	web, err := webauthn.New(s.d.Config().WebAuthnConfig(r.Context()))
 	if err != nil {
-		return err
+		return errors.WithStack(err)
 	}
 
-	option, sessionData, err := web.BeginRegistration(&wrappedUser{id: id.ID[:]})
+	option, sessionData, err := web.BeginRegistration(NewUser(id.ID[:], nil, web.Config))
 	if err != nil {
 		return errors.WithStack(err)
 	}

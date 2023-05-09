@@ -416,6 +416,11 @@ func TestRecovery(t *testing.T) {
 	})
 
 	t.Run("description=should try to recover an email that does not exist", func(t *testing.T) {
+		conf.Set(ctx, config.ViperKeySelfServiceRecoveryNotifyUnknownRecipients, true)
+
+		t.Cleanup(func() {
+			conf.Set(ctx, config.ViperKeySelfServiceRecoveryNotifyUnknownRecipients, false)
+		})
 		var email string
 		var check = func(t *testing.T, actual string) {
 			assert.EqualValues(t, node.LinkGroup, gjson.Get(actual, "active").String(), "%s", actual)
@@ -553,27 +558,62 @@ func TestRecovery(t *testing.T) {
 			}), email, "")
 		})
 
-		t.Run("type=browser set return_to", func(t *testing.T) {
-			email := "recoverme2@ory.sh"
-			returnTo := "https://www.ory.sh"
-			createIdentityToRecover(t, reg, email)
+		t.Run("description=should return browser to return url", func(t *testing.T) {
+			returnTo := public.URL + "/return-to"
+			conf.Set(ctx, config.ViperKeyURLsAllowedReturnToDomains, []string{returnTo})
+			for _, tc := range []struct {
+				desc     string
+				returnTo string
+				f        func(t *testing.T, client *http.Client) *kratos.RecoveryFlow
+			}{
+				{
+					desc:     "should use return_to from recovery flow",
+					returnTo: returnTo,
+					f: func(t *testing.T, client *http.Client) *kratos.RecoveryFlow {
+						return testhelpers.InitializeRecoveryFlowViaBrowser(t, client, false, public, url.Values{"return_to": []string{returnTo}})
+					},
+				},
+				{
+					desc:     "should use return_to from config",
+					returnTo: returnTo,
+					f: func(t *testing.T, client *http.Client) *kratos.RecoveryFlow {
+						conf.Set(ctx, config.ViperKeySelfServiceRecoveryBrowserDefaultReturnTo, returnTo)
+						t.Cleanup(func() {
+							conf.Set(ctx, config.ViperKeySelfServiceRecoveryBrowserDefaultReturnTo, "")
+						})
+						return testhelpers.InitializeRecoveryFlowViaBrowser(t, client, false, public, nil)
+					},
+				},
+				{
+					desc:     "no return to",
+					returnTo: "",
+					f: func(t *testing.T, client *http.Client) *kratos.RecoveryFlow {
+						return testhelpers.InitializeRecoveryFlowViaBrowser(t, client, false, public, nil)
+					},
+				},
+			} {
+				t.Run(fmt.Sprintf("%s", tc.desc), func(t *testing.T) {
+					email := testhelpers.RandomEmail()
+					createIdentityToRecover(t, reg, email)
 
-			hc := testhelpers.NewClientWithCookies(t)
-			hc.Transport = testhelpers.NewTransportWithLogger(http.DefaultTransport, t).RoundTripper
+					hc := testhelpers.NewClientWithCookies(t)
+					hc.Transport = testhelpers.NewTransportWithLogger(http.DefaultTransport, t).RoundTripper
 
-			f := testhelpers.InitializeRecoveryFlowViaBrowser(t, hc, false, public, url.Values{"return_to": []string{returnTo}})
+					f := tc.f(t, hc)
 
-			time.Sleep(time.Millisecond) // add a bit of delay to allow `1ns` to time out.
+					time.Sleep(time.Millisecond) // add a bit of delay to allow `1ns` to time out.
 
-			formPayload := testhelpers.SDKFormFieldsToURLValues(f.Ui.Nodes)
-			formPayload.Set("email", email)
+					formPayload := testhelpers.SDKFormFieldsToURLValues(f.Ui.Nodes)
+					formPayload.Set("email", email)
 
-			b, res := testhelpers.RecoveryMakeRequest(t, false, f, hc, testhelpers.EncodeFormAsJSON(t, false, formPayload))
-			assert.EqualValues(t, http.StatusOK, res.StatusCode, "%s", b)
-			expectedURL := testhelpers.ExpectURL(false, public.URL+recovery.RouteSubmitFlow, conf.SelfServiceFlowRecoveryUI(ctx).String())
-			assert.Contains(t, res.Request.URL.String(), expectedURL, "%+v\n\t%s", res.Request, b)
+					b, res := testhelpers.RecoveryMakeRequest(t, false, f, hc, testhelpers.EncodeFormAsJSON(t, false, formPayload))
+					assert.EqualValues(t, http.StatusOK, res.StatusCode, "%s", b)
+					expectedURL := testhelpers.ExpectURL(false, public.URL+recovery.RouteSubmitFlow, conf.SelfServiceFlowRecoveryUI(ctx).String())
+					assert.Contains(t, res.Request.URL.String(), expectedURL, "%+v\n\t%s", res.Request, b)
 
-			check(t, b, email, returnTo)
+					check(t, b, email, tc.returnTo)
+				})
+			}
 		})
 
 		t.Run("type=spa", func(t *testing.T) {
@@ -789,8 +829,8 @@ func TestDisabledEndpoint(t *testing.T) {
 	ctx := context.Background()
 	conf, reg := internal.NewFastRegistryWithMocks(t)
 	initViper(t, conf)
-	conf.MustSet(ctx, config.ViperKeySelfServiceStrategyConfig+"."+recovery.StrategyRecoveryLinkName+".enabled", false)
-	conf.MustSet(ctx, config.ViperKeySelfServiceStrategyConfig+"."+recovery.StrategyRecoveryCodeName+".enabled", false)
+	conf.MustSet(ctx, config.ViperKeySelfServiceStrategyConfig+"."+string(recovery.RecoveryStrategyLink)+".enabled", false)
+	conf.MustSet(ctx, config.ViperKeySelfServiceStrategyConfig+"."+string(recovery.RecoveryStrategyCode)+".enabled", false)
 
 	publicTS, adminTS := testhelpers.NewKratosServer(t, reg)
 	adminSDK := testhelpers.NewSDKClient(adminTS)

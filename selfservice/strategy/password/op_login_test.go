@@ -27,7 +27,7 @@ import (
 	"github.com/ory/x/resilience"
 	"github.com/ory/x/urlx"
 
-	hydraclientgo "github.com/ory/hydra-client-go"
+	hydraclientgo "github.com/ory/hydra-client-go/v2"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -163,6 +163,7 @@ func TestOAuth2Provider(t *testing.T) {
 		config.ViperKeySelfServiceStrategyConfig+"."+string(identity.CredentialsTypePassword),
 		map[string]interface{}{"enabled": true},
 	)
+
 	router := x.NewRouterPublic()
 	kratosPublicTS, _ := testhelpers.NewKratosServerWithRouters(t, reg, router, x.NewRouterAdmin())
 
@@ -176,7 +177,7 @@ func TestOAuth2Provider(t *testing.T) {
 	var hydraAdminClient hydraclientgo.OAuth2Api
 	var clientAppOAuth2Config *oauth2.Config
 
-	clientAppTS := testhelpers.NewHTTPTestServer(t, http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	clientAppTS := testhelpers.NewHTTPTestServer(t, http.HandlerFunc(func(_ http.ResponseWriter, r *http.Request) {
 		t.Logf("[clientAppTS] handling a callback at client app %s", r.URL.String())
 		if r.URL.Query().Has("code") {
 			token, err := clientAppOAuth2Config.Exchange(r.Context(), r.URL.Query().Get("code"))
@@ -194,7 +195,7 @@ func TestOAuth2Provider(t *testing.T) {
 
 	testRequireLogin := true
 
-	uiTS := testhelpers.NewHTTPTestServer(t, http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	uiTS := testhelpers.NewHTTPTestServer(t, http.HandlerFunc(func(_ http.ResponseWriter, r *http.Request) {
 		t.Logf("[uiTS] handling %s", r.URL)
 		q := r.URL.Query()
 
@@ -238,6 +239,7 @@ func TestOAuth2Provider(t *testing.T) {
 
 	hydraAdmin, hydraPublic := newHydra(t, uiTS.URL, uiTS.URL)
 	conf.MustSet(ctx, config.ViperKeyOAuth2ProviderURL, hydraAdmin)
+
 	hydraAdminClient = createHydraOAuth2ApiClient(hydraAdmin)
 	clientID := createOAuth2Client(t, ctx, hydraAdminClient, []string{clientAppTS.URL}, "profile email")
 

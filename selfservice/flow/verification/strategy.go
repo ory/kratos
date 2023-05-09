@@ -15,9 +15,12 @@ import (
 	"github.com/ory/kratos/x"
 )
 
+//swagger:enum VerificationStrategy
+type VerificationStrategy string
+
 const (
-	StrategyVerificationLinkName = "link"
-	StrategyVerificationCodeName = "code"
+	VerificationStrategyLink VerificationStrategy = "link"
+	VerificationStrategyCode VerificationStrategy = "code"
 )
 
 type (

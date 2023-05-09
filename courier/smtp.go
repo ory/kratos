@@ -82,13 +82,13 @@ func newSMTP(ctx context.Context, deps Dependencies) (*smtpClient, error) {
 		// Enforcing StartTLS by default for security best practices (config review, etc.)
 		skipStartTLS, _ := strconv.ParseBool(uri.Query().Get("disable_starttls"))
 		if !skipStartTLS {
-			// #nosec G402 This is ok (and required!) because it is configurable and disabled by default.
+			//#nosec G402 -- This is ok (and required!) because it is configurable and disabled by default.
 			dialer.TLSConfig = &tls.Config{InsecureSkipVerify: sslSkipVerify, Certificates: tlsCertificates, ServerName: serverName}
 			// Enforcing StartTLS
 			dialer.StartTLSPolicy = gomail.MandatoryStartTLS
 		}
 	case "smtps":
-		// #nosec G402 This is ok (and required!) because it is configurable and disabled by default.
+		//#nosec G402 -- This is ok (and required!) because it is configurable and disabled by default.
 		dialer.TLSConfig = &tls.Config{InsecureSkipVerify: sslSkipVerify, Certificates: tlsCertificates, ServerName: serverName}
 		dialer.SSL = true
 	}

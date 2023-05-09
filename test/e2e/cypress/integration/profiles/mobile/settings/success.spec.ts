@@ -53,18 +53,18 @@ context("Mobile Profile", () => {
     })
 
     describe("profile", () => {
-      const email = gen.email()
-      const password = gen.password()
+      let email: string
+      let password: string
 
-      before(() => {
+      beforeEach(() => {
+        cy.deleteMail()
+        email = gen.email()
+        password = gen.password()
         cy.registerApi({
           email,
           password,
           fields: { "traits.website": website },
         })
-      })
-
-      beforeEach(() => {
         cy.loginMobile({ email, password })
         cy.visit(MOBILE_URL + "/Settings")
       })
@@ -105,6 +105,36 @@ context("Mobile Profile", () => {
 
         cy.visit(MOBILE_URL + "/Home")
         cy.get('[data-testid="session-content"]').should("contain", newEmail)
+      })
+
+      it("shows verification screen after email update", () => {
+        cy.enableVerification()
+        const newEmail = up(email)
+        cy.get(
+          '*[data-testid="settings-profile"] input[data-testid="traits.email"]',
+        )
+          .clear()
+          .type(newEmail)
+        cy.get(
+          '*[data-testid="settings-profile"] div[data-testid="submit-form"]',
+        ).click()
+        cy.get(
+          '*[data-testid="settings-profile"] div[data-testid="submit-form"]',
+        ).should("have.attr", "data-focusable", "true")
+
+        cy.get('div[data-testid="field/code"] input').should("be.visible")
+
+        cy.getVerificationCodeFromEmail(newEmail).then((code) => {
+          cy.get('div[data-testid="field/code"] input').type(code)
+          cy.get(
+            'div[data-testid="field/method/code"] div[data-testid=submit-form]',
+          ).click()
+        })
+
+        cy.get('[data-testid="ui/message/1080002"]').should(
+          "have.text",
+          "You successfully verified your email address.",
+        )
       })
     })
   })

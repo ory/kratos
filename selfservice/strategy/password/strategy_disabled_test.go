@@ -35,6 +35,7 @@ func TestDisabledEndpoint(t *testing.T) {
 		assert.Equal(t, http.StatusNotFound, res.StatusCode)
 
 		b, err := io.ReadAll(res.Body)
+		require.NoError(t, err)
 		assert.Contains(t, string(b), "This endpoint was disabled by system administrator", "%s", b)
 	})
 
@@ -47,6 +48,7 @@ func TestDisabledEndpoint(t *testing.T) {
 		assert.Equal(t, http.StatusNotFound, res.StatusCode)
 
 		b, err := io.ReadAll(res.Body)
+		require.NoError(t, err)
 		assert.Contains(t, string(b), "This endpoint was disabled by system administrator", "%s", b)
 	})
 
@@ -69,6 +71,7 @@ func TestDisabledEndpoint(t *testing.T) {
 			assert.Equal(t, http.StatusNotFound, res.StatusCode)
 
 			b, err := io.ReadAll(res.Body)
+			require.NoError(t, err)
 			assert.Contains(t, string(b), "This endpoint was disabled by system administrator", "%s", b)
 		})
 	})

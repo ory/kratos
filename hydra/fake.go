@@ -9,7 +9,7 @@ import (
 
 	"github.com/gofrs/uuid"
 
-	hydraclientgo "github.com/ory/hydra-client-go"
+	hydraclientgo "github.com/ory/hydra-client-go/v2"
 	"github.com/ory/kratos/session"
 )
 
@@ -41,7 +41,9 @@ func (h *FakeHydra) GetLoginRequest(ctx context.Context, hlc uuid.NullUUID) (*hy
 	case FAKE_ACCEPT_REQUEST_FAIL:
 		return &hydraclientgo.OAuth2LoginRequest{}, nil
 	case FAKE_SUCCESS:
-		return &hydraclientgo.OAuth2LoginRequest{}, nil
+		return &hydraclientgo.OAuth2LoginRequest{
+			RequestUrl: "https://www.ory.sh",
+		}, nil
 	default:
 		panic("unknown fake login_challenge " + hlc.UUID.String())
 	}

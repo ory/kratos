@@ -30,7 +30,7 @@ func TestGetFlow(t *testing.T) {
 	ctx := context.Background()
 	conf, reg := internal.NewFastRegistryWithMocks(t)
 	conf.MustSet(ctx, config.ViperKeySelfServiceVerificationEnabled, true)
-	conf.MustSet(ctx, config.ViperKeySelfServiceStrategyConfig+"."+verification.StrategyVerificationLinkName,
+	conf.MustSet(ctx, config.ViperKeySelfServiceStrategyConfig+"."+string(verification.VerificationStrategyLink),
 		map[string]interface{}{"enabled": true})
 	testhelpers.SetDefaultIdentitySchema(conf, "file://./stub/identity.schema.json")
 
@@ -135,6 +135,7 @@ func TestGetFlow(t *testing.T) {
 		// submit the flow but it is expired
 		u := public.URL + verification.RouteSubmitFlow + "?flow=" + f.ID.String()
 		res, err := client.PostForm(u, url.Values{"method": {"link"}, "csrf_token": {f.CSRFToken}, "email": {"email@ory.sh"}})
+		require.NoError(t, err)
 		resBody, err := io.ReadAll(res.Body)
 		require.NoError(t, err)
 		require.NoError(t, res.Body.Close())

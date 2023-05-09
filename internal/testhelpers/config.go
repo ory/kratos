@@ -14,6 +14,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/ory/x/configx"
+	"github.com/ory/x/randx"
 )
 
 func UseConfigFile(t *testing.T, path string) *pflag.FlagSet {
@@ -28,6 +29,23 @@ func SetDefaultIdentitySchema(conf *config.Config, url string) {
 	conf.MustSet(context.Background(), config.ViperKeyIdentitySchemas, config.Schemas{
 		{ID: "default", URL: url},
 	})
+}
+
+// UseIdentitySchema registeres an identity schema in the config with a random ID and returns the ID
+//
+// It also registeres a test cleanup function, to reset the schemas to the original values, after the test finishes
+func UseIdentitySchema(t *testing.T, conf *config.Config, url string) (id string) {
+	id = randx.MustString(16, randx.Alpha)
+	schemas, err := conf.IdentityTraitsSchemas(context.Background())
+	require.NoError(t, err)
+	conf.MustSet(context.Background(), config.ViperKeyIdentitySchemas, append(schemas, config.Schema{
+		ID:  id,
+		URL: url,
+	}))
+	t.Cleanup(func() {
+		conf.MustSet(context.Background(), config.ViperKeyIdentitySchemas, schemas)
+	})
+	return id
 }
 
 // SetDefaultIdentitySchemaFromRaw allows setting the default identity schema from a raw JSON string.

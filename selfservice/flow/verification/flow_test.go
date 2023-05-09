@@ -15,6 +15,7 @@ import (
 
 	"github.com/ory/x/jsonx"
 
+	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/internal"
 	"github.com/ory/kratos/selfservice/flow/verification"
 
@@ -141,4 +142,70 @@ func TestFromOldFlow(t *testing.T) {
 			require.Equal(t, flow.TypeBrowser, nf.Type)
 		})
 	}
+}
+
+func TestContinueURL(t *testing.T) {
+	const globalReturnTo = "https://ory.sh/global-return-to"
+	const localReturnTo = "https://ory.sh/local-return-to"
+	const flowReturnTo = "https://ory.sh/flow-return-to"
+
+	for _, tc := range []struct {
+		desc       string
+		prep       func(conf *config.Config)
+		requestURL string
+		expect     string
+	}{
+		{
+			desc: "return_to has precedence over global return to",
+			prep: func(conf *config.Config) {
+				conf.MustSet(context.Background(), config.ViperKeyURLsAllowedReturnToDomains, []string{localReturnTo})
+			},
+			requestURL: fmt.Sprintf("http://kratos:4433/verification?return_to=%s", localReturnTo),
+			expect:     localReturnTo,
+		},
+		{
+			desc:       "with return_to not allowed",
+			requestURL: fmt.Sprintf("http://kratos:4433/verification?return_to=%s", localReturnTo),
+			expect:     globalReturnTo,
+		},
+		{
+			desc:       "with invalid request url",
+			requestURL: string([]byte{0x7f}), // 0x7f is an ASCII control char, and fails URL validation
+			expect:     globalReturnTo,
+		},
+		{
+			desc: "flow return to has precedence over global return to",
+			prep: func(conf *config.Config) {
+				conf.MustSet(context.Background(), config.ViperKeySelfServiceVerificationBrowserDefaultReturnTo, flowReturnTo)
+			},
+			requestURL: "http://kratos:4433/verification",
+			expect:     flowReturnTo,
+		},
+		{
+			desc: "return_to has precedence over flow return to",
+			prep: func(conf *config.Config) {
+				conf.MustSet(context.Background(), config.ViperKeySelfServiceVerificationBrowserDefaultReturnTo, flowReturnTo)
+				conf.MustSet(context.Background(), config.ViperKeyURLsAllowedReturnToDomains, []string{localReturnTo})
+			},
+			requestURL: fmt.Sprintf("http://kratos:4433/verification?return_to=%s", localReturnTo),
+			expect:     localReturnTo,
+		},
+	} {
+		t.Run(fmt.Sprintf("case=%s", tc.desc), func(t *testing.T) {
+			conf := internal.NewConfigurationWithDefaults(t)
+			conf.MustSet(context.Background(), config.ViperKeySelfServiceBrowserDefaultReturnTo, globalReturnTo)
+			if tc.prep != nil {
+				tc.prep(conf)
+			}
+			flow := verification.Flow{
+				RequestURL: tc.requestURL,
+			}
+
+			url := flow.ContinueURL(context.Background(), conf)
+			require.NotNil(t, url)
+
+			require.Equal(t, tc.expect, url.String())
+		})
+	}
+
 }

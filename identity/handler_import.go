@@ -48,7 +48,7 @@ func (h *Handler) importPasswordCredentials(ctx context.Context, i *Identity, cr
 		creds.Config.HashedPassword = string(hashed)
 	}
 
-	if !(hash.IsArgon2idHash(hashed) || hash.IsArgon2iHash(hashed) || hash.IsBcryptHash(hashed) || hash.IsPbkdf2Hash(hashed) || hash.IsScryptHash(hashed) || hash.IsFirebaseScryptHash(hashed) || hash.IsMD5Hash(hashed)) {
+	if !(hash.IsValidHashFormat(hashed)) {
 		return errors.WithStack(herodot.ErrBadRequest.WithReasonf("The imported password does not match any known hash format. For more information see https://www.ory.sh/dr/2"))
 	}
 

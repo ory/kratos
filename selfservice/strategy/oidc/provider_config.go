@@ -36,6 +36,7 @@ type Configuration struct {
 	// - spotify
 	// - netid
 	// - dingtalk
+	// - linkedin
 	// - patreon
 	Provider string `json:"provider"`
 
@@ -162,6 +163,8 @@ func (c ConfigurationCollection) Provider(id string, reg dependencies) (Provider
 				return NewProviderNetID(&p, reg), nil
 			case addProviderName("dingtalk"):
 				return NewProviderDingTalk(&p, reg), nil
+			case addProviderName("linkedin"):
+				return NewProviderLinkedIn(&p, reg), nil
 			case addProviderName("patreon"):
 				return NewProviderPatreon(&p, reg), nil
 			}

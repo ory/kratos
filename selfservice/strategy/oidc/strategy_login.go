@@ -11,6 +11,8 @@ import (
 
 	"golang.org/x/oauth2"
 
+	"github.com/gofrs/uuid"
+
 	"github.com/ory/kratos/session"
 
 	"github.com/ory/kratos/ui/node"
@@ -39,10 +41,6 @@ func (s *Strategy) RegisterLoginRoutes(r *x.RouterPublic) {
 }
 
 func (s *Strategy) PopulateLoginMethod(r *http.Request, requestedAAL identity.AuthenticatorAssuranceLevel, l *login.Flow) error {
-	if l.Type != flow.TypeBrowser {
-		return nil
-	}
-
 	// This strategy can only solve AAL1
 	if requestedAAL > identity.AuthenticatorAssuranceLevel1 {
 		return nil
@@ -72,6 +70,16 @@ type UpdateLoginFlowWithOidcMethod struct {
 
 	// The identity traits. This is a placeholder for the registration flow.
 	Traits json.RawMessage `json:"traits"`
+
+	// UpstreamParameters are the parameters that are passed to the upstream identity provider.
+	//
+	// These parameters are optional and depend on what the upstream identity provider supports.
+	// Supported parameters are:
+	// - `login_hint` (string): The `login_hint` parameter suppresses the account chooser and either pre-fills the email box on the sign-in form, or selects the proper session.
+	// - `hd` (string): The `hd` parameter limits the login/registration process to a Google Organization, e.g. `mycollege.edu`.
+	//
+	// required: false
+	UpstreamParameters json.RawMessage `json:"upstream_parameters"`
 }
 
 func (s *Strategy) processLogin(w http.ResponseWriter, r *http.Request, a *login.Flow, token *oauth2.Token, claims *Claims, provider Provider, container *authCodeContainer) (*registration.Flow, error) {
@@ -96,8 +104,12 @@ func (s *Strategy) processLogin(w http.ResponseWriter, r *http.Request, a *login
 				opts = append(opts, registration.WithFlowReturnTo(a.ReturnTo))
 			}
 
-			// This flow only works for browsers anyways.
-			aa, err := s.d.RegistrationHandler().NewRegistrationFlow(w, r, flow.TypeBrowser, opts...)
+			aa, err := s.d.RegistrationHandler().NewRegistrationFlow(w, r, a.Type, opts...)
+			if err != nil {
+				return nil, s.handleError(w, r, a, provider.Config().ID, nil, err)
+			}
+
+			err = s.d.SessionTokenExchangePersister().MoveToNewFlow(r.Context(), a.ID, aa.ID)
 			if err != nil {
 				return nil, s.handleError(w, r, a, provider.Config().ID, nil, err)
 			}
@@ -136,7 +148,7 @@ func (s *Strategy) processLogin(w http.ResponseWriter, r *http.Request, a *login
 	return nil, s.handleError(w, r, a, provider.Config().ID, nil, errors.WithStack(herodot.ErrInternalServerError.WithReason("Unable to find matching OpenID Connect Credentials.").WithDebugf(`Unable to find credentials that match the given provider "%s" and subject "%s".`, provider.Config().ID, claims.Subject)))
 }
 
-func (s *Strategy) Login(w http.ResponseWriter, r *http.Request, f *login.Flow, ss *session.Session) (i *identity.Identity, err error) {
+func (s *Strategy) Login(w http.ResponseWriter, r *http.Request, f *login.Flow, identityID uuid.UUID) (i *identity.Identity, err error) {
 	if err := login.CheckAAL(f, identity.AuthenticatorAssuranceLevel1); err != nil {
 		return nil, err
 	}
@@ -170,14 +182,18 @@ func (s *Strategy) Login(w http.ResponseWriter, r *http.Request, f *login.Flow, 
 		return nil, s.handleError(w, r, f, pid, nil, err)
 	}
 
-	if s.alreadyAuthenticated(w, r, req) {
-		return
+	if authenticated, err := s.alreadyAuthenticated(w, r, req); err != nil {
+		return nil, s.handleError(w, r, f, pid, nil, err)
+	} else if authenticated {
+		return i, nil
 	}
-
 	state := generateState(f.ID.String())
+	if code, hasCode, _ := s.d.SessionTokenExchangePersister().CodeForFlow(r.Context(), f.ID); hasCode {
+		state.setCode(code.InitCode)
+	}
 	if err := s.d.ContinuityManager().Pause(r.Context(), w, r, sessionName,
 		continuity.WithPayload(&authCodeContainer{
-			State:  state,
+			State:  state.String(),
 			FlowID: f.ID.String(),
 			Traits: p.Traits,
 		}),
@@ -190,7 +206,12 @@ func (s *Strategy) Login(w http.ResponseWriter, r *http.Request, f *login.Flow, 
 		return nil, s.handleError(w, r, f, pid, nil, errors.WithStack(herodot.ErrInternalServerError.WithReason("Could not update flow").WithDebug(err.Error())))
 	}
 
-	codeURL := c.AuthCodeURL(state, provider.AuthCodeURLOptions(req)...)
+	var up map[string]string
+	if err := json.NewDecoder(bytes.NewBuffer(p.UpstreamParameters)).Decode(&up); err != nil {
+		return nil, err
+	}
+
+	codeURL := c.AuthCodeURL(state.String(), append(provider.AuthCodeURLOptions(req), UpstreamParameters(provider, up)...)...)
 	if x.IsJSONRequest(r) {
 		s.d.Writer().WriteError(w, r, flow.NewBrowserLocationChangeRequiredError(codeURL))
 	} else {

@@ -6,6 +6,7 @@ package driver
 import (
 	"context"
 
+	"github.com/ory/kratos/selfservice/sessiontokenexchange"
 	"github.com/ory/x/contextx"
 	"github.com/ory/x/jsonnetsecure"
 	"github.com/ory/x/otelx"
@@ -104,6 +105,7 @@ type Registry interface {
 	courier.PersistenceProvider
 
 	schema.HandlerProvider
+	schema.IdentityTraitsProvider
 
 	password2.ValidationProvider
 
@@ -136,6 +138,8 @@ type Registry interface {
 	verification.ErrorHandlerProvider
 	verification.HandlerProvider
 	verification.StrategyProvider
+
+	sessiontokenexchange.PersistenceProvider
 
 	link.SenderProvider
 	link.VerificationTokenPersistenceProvider
@@ -177,6 +181,7 @@ type options struct {
 	skipNetworkInit bool
 	config          *config.Config
 	replaceTracer   func(*otelx.Tracer) *otelx.Tracer
+	inspect         func(Registry) error
 }
 
 type RegistryOption func(*options)
@@ -194,6 +199,12 @@ func WithConfig(config *config.Config) func(o *options) {
 func ReplaceTracer(f func(*otelx.Tracer) *otelx.Tracer) func(o *options) {
 	return func(o *options) {
 		o.replaceTracer = f
+	}
+}
+
+func Inspect(f func(reg Registry) error) func(o *options) {
+	return func(o *options) {
+		o.inspect = f
 	}
 }
 

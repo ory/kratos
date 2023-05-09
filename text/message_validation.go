@@ -27,27 +27,111 @@ func NewValidationErrorRequired(missing string) *Message {
 	}
 }
 
-func NewErrorValidationMinLength(expected, actual int) *Message {
+func NewErrorValidationMinLength(reason string) *Message {
 	return &Message{
-		ID:   ErrorValidationMinLength,
-		Text: fmt.Sprintf("Length must be >= %d, but got %d.", expected, actual),
-		Type: Error,
-		Context: context(map[string]interface{}{
-			"expected_length": expected,
-			"actual_length":   actual,
-		}),
+		ID:      ErrorValidationMinLength,
+		Text:    reason,
+		Type:    Error,
+		Context: context(nil),
 	}
 }
 
-func NewErrorValidationInvalidFormat(format, value string) *Message {
+func NewErrorValidationMaxLength(reason string) *Message {
 	return &Message{
-		ID:   ErrorValidationInvalidFormat,
-		Text: fmt.Sprintf("%q is not valid %q", value, format),
-		Type: Error,
-		Context: context(map[string]interface{}{
-			"expected_format": format,
-			"actual_value":    value,
-		}),
+		ID:      ErrorValidationMaxLength,
+		Text:    reason,
+		Type:    Error,
+		Context: context(nil),
+	}
+}
+
+func NewErrorValidationInvalidFormat(reason string) *Message {
+	return &Message{
+		ID:      ErrorValidationInvalidFormat,
+		Text:    reason,
+		Type:    Error,
+		Context: context(nil),
+	}
+}
+
+func NewErrorValidationMinimum(reason string) *Message {
+	return &Message{
+		ID:      ErrorValidationMinimum,
+		Text:    reason,
+		Type:    Error,
+		Context: context(nil),
+	}
+}
+
+func NewErrorValidationExclusiveMinimum(reason string) *Message {
+	return &Message{
+		ID:      ErrorValidationExclusiveMinimum,
+		Text:    reason,
+		Type:    Error,
+		Context: context(nil),
+	}
+}
+
+func NewErrorValidationMaximum(reason string) *Message {
+	return &Message{
+		ID:      ErrorValidationMaximum,
+		Text:    reason,
+		Type:    Error,
+		Context: context(nil),
+	}
+}
+
+func NewErrorValidationExclusiveMaximum(reason string) *Message {
+	return &Message{
+		ID:      ErrorValidationExclusiveMaximum,
+		Text:    reason,
+		Type:    Error,
+		Context: context(nil),
+	}
+}
+
+func NewErrorValidationMultipleOf(reason string) *Message {
+	return &Message{
+		ID:      ErrorValidationMultipleOf,
+		Text:    reason,
+		Type:    Error,
+		Context: context(nil),
+	}
+}
+
+func NewErrorValidationMaxItems(reason string) *Message {
+	return &Message{
+		ID:      ErrorValidationMaxItems,
+		Text:    reason,
+		Type:    Error,
+		Context: context(nil),
+	}
+}
+
+func NewErrorValidationMinItems(reason string) *Message {
+	return &Message{
+		ID:      ErrorValidationMinItems,
+		Text:    reason,
+		Type:    Error,
+		Context: context(nil),
+	}
+}
+
+func NewErrorValidationUniqueItems(reason string) *Message {
+	return &Message{
+		ID:      ErrorValidationUniqueItems,
+		Text:    reason,
+		Type:    Error,
+		Context: context(nil),
+	}
+}
+
+func NewErrorValidationWrongType(reason string) *Message {
+	return &Message{
+		ID:      ErrorValidationWrongType,
+		Text:    reason,
+		Type:    Error,
+		Context: context(nil),
 	}
 }
 
@@ -75,6 +159,15 @@ func NewErrorValidationDuplicateCredentials() *Message {
 	return &Message{
 		ID:      ErrorValidationDuplicateCredentials,
 		Text:    "An account with the same identifier (email, phone, username, ...) exists already.",
+		Type:    Error,
+		Context: context(nil),
+	}
+}
+
+func NewErrorValidationDuplicateCredentialsOnOIDCLink() *Message {
+	return &Message{
+		ID:      ErrorValidationDuplicateCredentialsOnOIDCLink,
+		Text:    "An account with the same identifier (email, phone, username, ...) exists already. Please sign in to your existing account and link your social profile in the settings page.",
 		Type:    Error,
 		Context: context(nil),
 	}

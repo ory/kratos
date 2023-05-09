@@ -33,7 +33,7 @@ func init() {
 	})
 }
 
-func NewConfigurationWithDefaults(t *testing.T) *config.Config {
+func NewConfigurationWithDefaults(t testing.TB) *config.Config {
 	c := config.MustNew(t, logrusx.New("", ""),
 		os.Stderr,
 		configx.WithValues(map[string]interface{}{
@@ -73,7 +73,7 @@ func NewFastRegistryWithMocks(t *testing.T) (*config.Config, *driver.RegistryDef
 }
 
 // NewRegistryDefaultWithDSN returns a more standard registry without mocks. Good for e2e and advanced integration testing!
-func NewRegistryDefaultWithDSN(t *testing.T, dsn string) (*config.Config, *driver.RegistryDefault) {
+func NewRegistryDefaultWithDSN(t testing.TB, dsn string) (*config.Config, *driver.RegistryDefault) {
 	ctx := context.Background()
 	c := NewConfigurationWithDefaults(t)
 	c.MustSet(ctx, config.ViperKeyDSN, stringsx.Coalesce(dsn, dbal.NewSQLiteTestDatabase(t)))
@@ -92,5 +92,12 @@ func NewRegistryDefaultWithDSN(t *testing.T, dsn string) (*config.Config, *drive
 	require.NotEqual(t, uuid.Nil, reg.Persister().NetworkID(context.Background()))
 	reg.Persister()
 
+	return c, reg.(*driver.RegistryDefault)
+}
+
+func NewVeryFastRegistryWithoutDB(t *testing.T) (*config.Config, *driver.RegistryDefault) {
+	c := NewConfigurationWithDefaults(t)
+	reg, err := driver.NewRegistryFromDSN(context.Background(), c, logrusx.New("", ""))
+	require.NoError(t, err)
 	return c, reg.(*driver.RegistryDefault)
 }

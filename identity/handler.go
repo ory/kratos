@@ -31,8 +31,13 @@ import (
 	"github.com/ory/kratos/driver/config"
 )
 
-const RouteCollection = "/identities"
-const RouteItem = RouteCollection + "/:id"
+const (
+	RouteCollection     = "/identities"
+	RouteItem           = RouteCollection + "/:id"
+	RouteCredentialItem = RouteItem + "/credentials/:type"
+
+	BatchPatchIdentitiesLimit = 2000
+)
 
 type (
 	handlerDependencies interface {
@@ -68,7 +73,9 @@ func NewHandler(r handlerDependencies) *Handler {
 func (h *Handler) RegisterPublicRoutes(public *x.RouterPublic) {
 	h.r.CSRFHandler().IgnoreGlobs(
 		RouteCollection, RouteCollection+"/*",
+		RouteCollection+"/*/credentials/*",
 		x.AdminPrefix+RouteCollection, x.AdminPrefix+RouteCollection+"/*",
+		x.AdminPrefix+RouteCollection+"/*/credentials/*",
 	)
 
 	public.GET(RouteCollection, x.RedirectToAdminRoute(h.r))
@@ -77,6 +84,7 @@ func (h *Handler) RegisterPublicRoutes(public *x.RouterPublic) {
 	public.POST(RouteCollection, x.RedirectToAdminRoute(h.r))
 	public.PUT(RouteItem, x.RedirectToAdminRoute(h.r))
 	public.PATCH(RouteItem, x.RedirectToAdminRoute(h.r))
+	public.DELETE(RouteCredentialItem, x.RedirectToAdminRoute(h.r))
 
 	public.GET(x.AdminPrefix+RouteCollection, x.RedirectToAdminRoute(h.r))
 	public.GET(x.AdminPrefix+RouteItem, x.RedirectToAdminRoute(h.r))
@@ -84,6 +92,7 @@ func (h *Handler) RegisterPublicRoutes(public *x.RouterPublic) {
 	public.POST(x.AdminPrefix+RouteCollection, x.RedirectToAdminRoute(h.r))
 	public.PUT(x.AdminPrefix+RouteItem, x.RedirectToAdminRoute(h.r))
 	public.PATCH(x.AdminPrefix+RouteItem, x.RedirectToAdminRoute(h.r))
+	public.DELETE(x.AdminPrefix+RouteCredentialItem, x.RedirectToAdminRoute(h.r))
 }
 
 func (h *Handler) RegisterAdminRoutes(admin *x.RouterAdmin) {
@@ -93,13 +102,18 @@ func (h *Handler) RegisterAdminRoutes(admin *x.RouterAdmin) {
 	admin.PATCH(RouteItem, h.patch)
 
 	admin.POST(RouteCollection, h.create)
+	admin.PATCH(RouteCollection, h.batchPatchIdentities)
 	admin.PUT(RouteItem, h.update)
+
+	admin.DELETE(RouteCredentialItem, h.deleteIdentityCredentials)
 }
 
 // Paginated Identity List Response
 //
 // swagger:response listIdentities
-// nolint:deadcode,unused
+//
+//nolint:deadcode,unused
+//lint:ignore U1000 Used to generate Swagger and OpenAPI definitions
 type listIdentitiesResponse struct {
 	migrationpagination.ResponseHeaderAnnotation
 
@@ -112,9 +126,17 @@ type listIdentitiesResponse struct {
 // Paginated List Identity Parameters
 //
 // swagger:parameters listIdentities
-// nolint:deadcode,unused
+//
+//nolint:deadcode,unused
+//lint:ignore U1000 Used to generate Swagger and OpenAPI definitions
 type listIdentitiesParameters struct {
 	migrationpagination.RequestParameters
+
+	// CredentialsIdentifier is the identifier (username, email) of the credentials to look up.
+	//
+	// required: false
+	// in: query
+	CredentialsIdentifier string `json:"credentials_identifier"`
 }
 
 // swagger:route GET /admin/identities identity listIdentities
@@ -136,22 +158,31 @@ type listIdentitiesParameters struct {
 //	  default: errorGeneric
 func (h *Handler) list(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 	page, itemsPerPage := x.ParsePagination(r)
-	is, err := h.r.IdentityPool().ListIdentities(r.Context(), ExpandDefault, page, itemsPerPage)
+
+	params := ListIdentityParameters{Expand: ExpandDefault, Page: page, PerPage: itemsPerPage, CredentialsIdentifier: r.URL.Query().Get("credentials_identifier")}
+	if params.CredentialsIdentifier != "" {
+		params.Expand = ExpandEverything
+	}
+
+	is, err := h.r.IdentityPool().ListIdentities(r.Context(), params)
 	if err != nil {
 		h.r.Writer().WriteError(w, r, err)
 		return
 	}
 
-	total, err := h.r.IdentityPool().CountIdentities(r.Context())
-	if err != nil {
-		h.r.Writer().WriteError(w, r, err)
-		return
+	total := int64(len(is))
+	if params.CredentialsIdentifier == "" {
+		total, err = h.r.IdentityPool().CountIdentities(r.Context())
+		if err != nil {
+			h.r.Writer().WriteError(w, r, err)
+			return
+		}
 	}
 
 	// Identities using the marshaler for including metadata_admin
-	isam := make([]WithAdminMetadataInJSON, len(is))
+	isam := make([]WithCredentialsMetadataAndAdminMetadataInJSON, len(is))
 	for i, identity := range is {
-		isam[i] = WithAdminMetadataInJSON(identity)
+		isam[i] = WithCredentialsMetadataAndAdminMetadataInJSON(identity)
 	}
 
 	migrationpagination.PaginationHeader(w, urlx.AppendPaths(h.r.Config().SelfAdminURL(r.Context()), RouteCollection), total, page, itemsPerPage)
@@ -161,7 +192,9 @@ func (h *Handler) list(w http.ResponseWriter, r *http.Request, _ httprouter.Para
 // Get Identity Parameters
 //
 // swagger:parameters getIdentity
-// nolint:deadcode,unused
+//
+//nolint:deadcode,unused
+//lint:ignore U1000 Used to generate Swagger and OpenAPI definitions
 type getIdentity struct {
 	// ID must be set to the ID of identity you want to get
 	//
@@ -228,7 +261,9 @@ func (h *Handler) get(w http.ResponseWriter, r *http.Request, ps httprouter.Para
 // Create Identity Parameters
 //
 // swagger:parameters createIdentity
-// nolint:deadcode,unused
+//
+//nolint:deadcode,unused
+//lint:ignore U1000 Used to generate Swagger and OpenAPI definitions
 type createIdentity struct {
 	// in: body
 	Body CreateIdentityBody
@@ -374,28 +409,8 @@ func (h *Handler) create(w http.ResponseWriter, r *http.Request, _ httprouter.Pa
 		return
 	}
 
-	stateChangedAt := sqlxx.NullTime(time.Now())
-	state := StateActive
-	if cr.State != "" {
-		if err := cr.State.IsValid(); err != nil {
-			h.r.Writer().WriteError(w, r, errors.WithStack(herodot.ErrBadRequest.WithReasonf("%s", err).WithWrap(err)))
-			return
-		}
-		state = cr.State
-	}
-
-	i := &Identity{
-		SchemaID:            cr.SchemaID,
-		Traits:              []byte(cr.Traits),
-		State:               state,
-		StateChangedAt:      &stateChangedAt,
-		VerifiableAddresses: cr.VerifiableAddresses,
-		RecoveryAddresses:   cr.RecoveryAddresses,
-		MetadataAdmin:       []byte(cr.MetadataAdmin),
-		MetadataPublic:      []byte(cr.MetadataPublic),
-	}
-
-	if err := h.importCredentials(r.Context(), i, cr.Credentials); err != nil {
+	i, err := h.identityFromCreateIdentityBody(r.Context(), &cr)
+	if err != nil {
 		h.r.Writer().WriteError(w, r, err)
 		return
 	}
@@ -415,10 +430,119 @@ func (h *Handler) create(w http.ResponseWriter, r *http.Request, _ httprouter.Pa
 	)
 }
 
+func (h *Handler) identityFromCreateIdentityBody(ctx context.Context, cr *CreateIdentityBody) (*Identity, error) {
+	stateChangedAt := sqlxx.NullTime(time.Now())
+	state := StateActive
+	if cr.State != "" {
+		if err := cr.State.IsValid(); err != nil {
+			return nil, errors.WithStack(herodot.ErrBadRequest.WithReasonf("%s", err).WithWrap(err))
+		}
+		state = cr.State
+	}
+
+	i := &Identity{
+		SchemaID:            cr.SchemaID,
+		Traits:              []byte(cr.Traits),
+		State:               state,
+		StateChangedAt:      &stateChangedAt,
+		VerifiableAddresses: cr.VerifiableAddresses,
+		RecoveryAddresses:   cr.RecoveryAddresses,
+		MetadataAdmin:       []byte(cr.MetadataAdmin),
+		MetadataPublic:      []byte(cr.MetadataPublic),
+	}
+
+	if err := h.importCredentials(ctx, i, cr.Credentials); err != nil {
+		return nil, err
+	}
+
+	return i, nil
+}
+
+// swagger:route PATCH /admin/identities identity batchPatchIdentities
+//
+// # Create and deletes multiple identities
+//
+// Creates or delete multiple
+// [identities](https://www.ory.sh/docs/kratos/concepts/identity-user-model).
+// This endpoint can also be used to [import
+// credentials](https://www.ory.sh/docs/kratos/manage-identities/import-user-accounts-identities)
+// for instance passwords, social sign in configurations or multifactor methods.
+//
+//	Consumes:
+//	- application/json
+//
+//	Produces:
+//	- application/json
+//
+//	Schemes: http, https
+//
+//	Security:
+//	  oryAccessToken:
+//
+//	Responses:
+//	  200: batchPatchIdentitiesResponse
+//	  400: errorGeneric
+//	  409: errorGeneric
+//	  default: errorGeneric
+func (h *Handler) batchPatchIdentities(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+	var (
+		req BatchPatchIdentitiesBody
+		res batchPatchIdentitiesResponse
+	)
+	if err := jsonx.NewStrictDecoder(r.Body).Decode(&req); err != nil {
+		h.r.Writer().WriteErrorCode(w, r, http.StatusBadRequest, errors.WithStack(err))
+		return
+	}
+
+	if len(req.Identities) > BatchPatchIdentitiesLimit {
+		h.r.Writer().WriteErrorCode(w, r, http.StatusBadRequest,
+			errors.WithStack(herodot.ErrBadRequest.WithReasonf(
+				"The maximum number of identities that can be created or deleted at once is %d.",
+				BatchPatchIdentitiesLimit)))
+		return
+	}
+
+	res.Identities = make([]*BatchIdentityPatchResponse, len(req.Identities))
+	// Array to look up the index of the identity in the identities array.
+	indexInIdentities := make([]*int, len(req.Identities))
+	identities := make([]*Identity, 0, len(req.Identities))
+
+	for i, patch := range req.Identities {
+		if patch.Create != nil {
+			res.Identities[i] = &BatchIdentityPatchResponse{
+				Action:  ActionCreate,
+				PatchID: patch.ID,
+			}
+			identity, err := h.identityFromCreateIdentityBody(r.Context(), patch.Create)
+			if err != nil {
+				h.r.Writer().WriteError(w, r, err)
+				return
+			}
+			identities = append(identities, identity)
+			idx := len(identities) - 1
+			indexInIdentities[i] = &idx
+		}
+	}
+
+	if err := h.r.IdentityManager().CreateIdentities(r.Context(), identities); err != nil {
+		h.r.Writer().WriteError(w, r, err)
+		return
+	}
+	for resIdx, identitiesIdx := range indexInIdentities {
+		if identitiesIdx != nil {
+			res.Identities[resIdx].IdentityID = &identities[*identitiesIdx].ID
+		}
+	}
+
+	h.r.Writer().Write(w, r, &res)
+}
+
 // Update Identity Parameters
 //
 // swagger:parameters updateIdentity
-// nolint:deadcode,unused
+//
+//nolint:deadcode,unused
+//lint:ignore U1000 Used to generate Swagger and OpenAPI definitions
 type updateIdentity struct {
 	// ID must be set to the ID of identity you want to update
 	//
@@ -549,7 +673,9 @@ func (h *Handler) update(w http.ResponseWriter, r *http.Request, ps httprouter.P
 // Delete Identity Parameters
 //
 // swagger:parameters deleteIdentity
-// nolint:deadcode,unused
+//
+//nolint:deadcode,unused
+//lint:ignore U1000 Used to generate Swagger and OpenAPI definitions
 type deleteIdentity struct {
 	// ID is the identity's ID.
 	//
@@ -579,7 +705,7 @@ type deleteIdentity struct {
 //	  404: errorGeneric
 //	  default: errorGeneric
 func (h *Handler) delete(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	if err := h.r.IdentityPool().(PrivilegedPool).DeleteIdentity(r.Context(), x.ParseUUID(ps.ByName("id"))); err != nil {
+	if err := h.r.PrivilegedIdentityPool().DeleteIdentity(r.Context(), x.ParseUUID(ps.ByName("id"))); err != nil {
 		h.r.Writer().WriteError(w, r, err)
 		return
 	}
@@ -590,7 +716,9 @@ func (h *Handler) delete(w http.ResponseWriter, r *http.Request, ps httprouter.P
 // Patch Identity Parameters
 //
 // swagger:parameters patchIdentity
-// nolint:deadcode,unused
+//
+//nolint:deadcode,unused
+//lint:ignore U1000 Used to generate Swagger and OpenAPI definitions
 type patchIdentity struct {
 	// ID must be set to the ID of identity you want to update
 	//
@@ -643,25 +771,168 @@ func (h *Handler) patch(w http.ResponseWriter, r *http.Request, ps httprouter.Pa
 	credentials := identity.Credentials
 	oldState := identity.State
 
-	if err := jsonx.ApplyJSONPatch(requestBody, identity, "/id", "/stateChangedAt", "/credentials"); err != nil {
-		h.r.Writer().WriteError(w, r, errors.WithStack(herodot.ErrBadRequest.WithReasonf("%s", err).WithWrap(err)))
+	patchedIdentity := WithAdminMetadataInJSON(*identity)
+
+	if err := jsonx.ApplyJSONPatch(requestBody, &patchedIdentity, "/id", "/stateChangedAt", "/credentials"); err != nil {
+		h.r.Writer().WriteError(w, r, errors.WithStack(
+			herodot.
+				ErrBadRequest.
+				WithReasonf("An error occured when applying the JSON patch").
+				WithErrorf("%v", err).
+				WithWrap(err),
+		))
 		return
 	}
 
 	// See https://github.com/ory/cloud/issues/148
 	// The apply patch operation overrides the credentials with an empty map.
-	identity.Credentials = credentials
+	patchedIdentity.Credentials = credentials
 
-	if oldState != identity.State {
+	if oldState != patchedIdentity.State {
 		// Check if the changed state was actually valid
-		if err := identity.State.IsValid(); err != nil {
-			h.r.Writer().WriteError(w, r, errors.WithStack(herodot.ErrBadRequest.WithReasonf("%s", err).WithWrap(err)))
+		if err := patchedIdentity.State.IsValid(); err != nil {
+			h.r.Writer().WriteError(w, r, errors.WithStack(
+				herodot.
+					ErrBadRequest.
+					WithReasonf("The supplied state ('%s') was not valid. Valid states are ('%s', '%s').", string(patchedIdentity.State), StateActive, StateInactive).
+					WithErrorf("%v", err).
+					WithWrap(err),
+			))
 			return
 		}
 
 		// If the state changed, we need to update the timestamp of it
 		stateChangedAt := sqlxx.NullTime(time.Now())
-		identity.StateChangedAt = &stateChangedAt
+		patchedIdentity.StateChangedAt = &stateChangedAt
+	}
+
+	updatedIdenty := Identity(patchedIdentity)
+
+	if err := h.r.IdentityManager().Update(
+		r.Context(),
+		&updatedIdenty,
+		ManagerAllowWriteProtectedTraits,
+	); err != nil {
+		h.r.Writer().WriteError(w, r, err)
+		return
+	}
+
+	h.r.Writer().Write(w, r, WithCredentialsMetadataAndAdminMetadataInJSON(updatedIdenty))
+}
+
+func deletCredentialWebAuthFromIdentity(identity *Identity) (*Identity, error) {
+	cred, ok := identity.GetCredentials(CredentialsTypeWebAuthn)
+	if !ok {
+		// This should never happend as it's checked earlier in the code;
+		// But we never know...
+		return nil, errors.WithStack(herodot.ErrNotFound.WithReasonf("You tried to remove a CredentialsTypeWebAuthn but this user have no CredentialsTypeWebAuthn set up."))
+	}
+
+	var cc CredentialsWebAuthnConfig
+	if err := json.Unmarshal(cred.Config, &cc); err != nil {
+		// Database has been tampered or the json schema are incompatible (migration issue);
+		return nil, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("Unable to decode identity credentials.").WithDebug(err.Error()))
+	}
+
+	updated := make([]CredentialWebAuthn, 0)
+	for k, cred := range cc.Credentials {
+		if cred.IsPasswordless {
+			updated = append(updated, cc.Credentials[k])
+		}
+	}
+
+	if len(updated) == 0 {
+		identity.DeleteCredentialsType(CredentialsTypeWebAuthn)
+		return identity, nil
+	}
+
+	cc.Credentials = updated
+	message, err := json.Marshal(cc)
+	if err != nil {
+		return nil, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("Unable to encode identity credentials.").WithDebug(err.Error()))
+	}
+
+	cred.Config = message
+	identity.SetCredentials(CredentialsTypeWebAuthn, *cred)
+	return identity, nil
+}
+
+// Delete Credential Parameters
+//
+// swagger:parameters deleteIdentityCredentials
+//
+//nolint:deadcode,unused
+//lint:ignore U1000 Used to generate Swagger and OpenAPI definitions
+type deleteIdentityCredentials struct {
+	// ID is the identity's ID.
+	//
+	// required: true
+	// in: path
+	ID string `json:"id"`
+
+	// Type is the credential's Type.
+	// One of totp, webauthn, lookup
+	//
+	// enum: totp,webauthn,lookup
+	// required: true
+	// in: path
+	Type string `json:"type"`
+}
+
+// swagger:route DELETE /admin/identities/{id}/credentials/{type} identity deleteIdentityCredentials
+//
+// # Delete a credential for a specific identity
+//
+// Delete an [identity](https://www.ory.sh/docs/kratos/concepts/identity-user-model) credential by its type
+// You can only delete second factor (aal2) credentials.
+//
+//	Consumes:
+//	- application/json
+//
+//	Produces:
+//	- application/json
+//
+//	Schemes: http, https
+//
+//	Security:
+//	  oryAccessToken:
+//
+//	Responses:
+//	  200: identity
+//	  404: errorGeneric
+//	  default: errorGeneric
+func (h *Handler) deleteIdentityCredentials(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	identity, err := h.r.PrivilegedIdentityPool().GetIdentityConfidential(r.Context(), x.ParseUUID(ps.ByName("id")))
+	if err != nil {
+		h.r.Writer().WriteError(w, r, err)
+		return
+	}
+
+	cred, ok := identity.GetCredentials(CredentialsType(ps.ByName("type")))
+	if !ok {
+		h.r.Writer().WriteError(w, r, errors.WithStack(herodot.ErrNotFound.WithReasonf("You tried to remove a %s but this user have no %s set up.", ps.ByName("type"), ps.ByName("type"))))
+		return
+	}
+
+	switch cred.Type {
+	case CredentialsTypeLookup:
+		fallthrough
+	case CredentialsTypeTOTP:
+		identity.DeleteCredentialsType(cred.Type)
+	case CredentialsTypeWebAuthn:
+		identity, err = deletCredentialWebAuthFromIdentity(identity)
+		if err != nil {
+			h.r.Writer().WriteError(w, r, err)
+			return
+		}
+	case CredentialsTypeOIDC:
+		fallthrough
+	case CredentialsTypePassword:
+		h.r.Writer().WriteError(w, r, errors.WithStack(herodot.ErrBadRequest.WithReasonf("You can't remove first factor credentials.")))
+		return
+	default:
+		h.r.Writer().WriteError(w, r, errors.WithStack(herodot.ErrBadRequest.WithReasonf("Unknown credentials type %s.", cred.Type)))
+		return
 	}
 
 	if err := h.r.IdentityManager().Update(
@@ -673,5 +944,5 @@ func (h *Handler) patch(w http.ResponseWriter, r *http.Request, ps httprouter.Pa
 		return
 	}
 
-	h.r.Writer().Write(w, r, WithCredentialsMetadataAndAdminMetadataInJSON(*identity))
+	w.WriteHeader(http.StatusNoContent)
 }
