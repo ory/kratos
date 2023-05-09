@@ -223,6 +223,17 @@ func (e *HookExecutor) PostLoginHook(w http.ResponseWriter, r *http.Request, g n
 		// Browser flows rely on cookies. Adding tokens in the mix will confuse consumers.
 		s.Token = ""
 
+		// If Kratos is used as a Hydra login provider, we need to redirect back to Hydra by returning a 422 status
+		// with the post login challenge URL as the body.
+		if a.OAuth2LoginChallenge.Valid {
+			postChallengeURL, err := e.d.Hydra().AcceptLoginRequest(r.Context(), a.OAuth2LoginChallenge.UUID, i.ID.String(), s.AMR)
+			if err != nil {
+				return err
+			}
+			e.d.Writer().WriteError(w, r, flow.NewBrowserLocationChangeRequiredError(postChallengeURL))
+			return nil
+		}
+
 		response := &APIFlowResponse{Session: s}
 		if required, _ := e.requiresAAL2(r, s, a); required {
 			// If AAL is not satisfied, we omit the identity to preserve the user's privacy in case of a phishing attack.

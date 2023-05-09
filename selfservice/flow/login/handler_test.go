@@ -52,7 +52,7 @@ func init() {
 func TestFlowLifecycle(t *testing.T) {
 	ctx := context.Background()
 	conf, reg := internal.NewFastRegistryWithMocks(t)
-	reg.WithHydra(hydra.NewFakeHydra())
+	reg.WithHydra(hydra.NewFake())
 	router := x.NewRouterPublic()
 	ts, _ := testhelpers.NewKratosServerWithRouters(t, reg, router, x.NewRouterAdmin())
 	loginTS := testhelpers.NewLoginUIFlowEchoServer(t, reg)
@@ -592,7 +592,7 @@ func TestFlowLifecycle(t *testing.T) {
 			})
 
 			t.Run("case=refuses to parse oauth2 login challenge when Hydra is not configured", func(t *testing.T) {
-				res, body := initAuthenticatedFlow(t, url.Values{"login_challenge": {hydra.FAKE_GET_LOGIN_REQUEST_RETURN_NIL_NIL}}, false)
+				res, body := initAuthenticatedFlow(t, url.Values{"login_challenge": {hydra.FakeValidLoginChallenge}}, false)
 				require.Contains(t, res.Request.URL.String(), errorTS.URL)
 				require.Contains(t, string(body), "refusing to parse")
 			})
@@ -609,7 +609,7 @@ func TestFlowLifecycle(t *testing.T) {
 
 				res, _ := initUnauthenticatedFlow(t, url.Values{
 					"return_to":       {"https://example.com"},
-					"login_challenge": {hydra.FAKE_SUCCESS},
+					"login_challenge": {hydra.FakeValidLoginChallenge},
 				}, false)
 				require.Equal(t, http.StatusOK, res.StatusCode)
 				require.Contains(t, res.Request.URL.String(), loginTS.URL)
@@ -630,12 +630,12 @@ func TestFlowLifecycle(t *testing.T) {
 			})
 
 			t.Run("case=oauth2 flow init succeeds", func(t *testing.T) {
-				res, _ := initAuthenticatedFlow(t, url.Values{"login_challenge": {hydra.FAKE_SUCCESS}}, false)
+				res, _ := initAuthenticatedFlow(t, url.Values{"login_challenge": {hydra.FakeValidLoginChallenge}}, false)
 				require.Contains(t, res.Request.URL.String(), loginTS.URL)
 			})
 
 			t.Run("case=oauth2 flow init adds oauth2_login_request field", func(t *testing.T) {
-				res, body := initSPAFlow(t, url.Values{"login_challenge": {hydra.FAKE_SUCCESS}})
+				res, body := initSPAFlow(t, url.Values{"login_challenge": {hydra.FakeValidLoginChallenge}})
 				assert.NotContains(t, res.Request.URL.String(), loginTS.URL)
 
 				assert.NotEmpty(t, gjson.GetBytes(body, "oauth2_login_request").Value(), "%s", body)
