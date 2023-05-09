@@ -1095,6 +1095,23 @@ func TestChangeMinPasswordLength(t *testing.T) {
 	})
 }
 
+func TestCourierEmailHTTP(t *testing.T) {
+	ctx := context.Background()
+
+	t.Run("case=configs set", func(t *testing.T) {
+		conf, _ := config.New(ctx, logrusx.New("", ""), os.Stderr,
+			configx.WithConfigFiles("stub/.kratos.courier.email.http.yaml"), configx.SkipValidation())
+		assert.Equal(t, "http", conf.CourierEmailStrategy(ctx))
+		snapshotx.SnapshotT(t, conf.CourierEmailRequestConfig(ctx))
+	})
+
+	t.Run("case=defaults", func(t *testing.T) {
+		conf, _ := config.New(ctx, logrusx.New("", ""), os.Stderr, configx.SkipValidation())
+
+		assert.Equal(t, "smtp", conf.CourierEmailStrategy(ctx))
+	})
+}
+
 func TestCourierSMS(t *testing.T) {
 	ctx := context.Background()
 

@@ -87,8 +87,8 @@ func TestQueueMailerEmail(t *testing.T) {
 	}`, srv.URL)
 
 	conf, reg := internal.NewFastRegistryWithMocks(t)
-	conf.MustSet(ctx, config.ViperKeyCourierMailerEnabled, true)
-	conf.MustSet(ctx, config.ViperKeyCourierMailerRequestConfig, requestConfig)
+	conf.MustSet(ctx, config.ViperKeyCourierEmailStrategy, "http")
+	conf.MustSet(ctx, config.ViperKeyCourierEmailRequestConfig, requestConfig)
 	conf.MustSet(ctx, config.ViperKeyCourierSMTPURL, "http://foo.url")
 	reg.Logger().Level = logrus.TraceLevel
 
