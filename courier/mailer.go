@@ -25,7 +25,7 @@ type mailerClient struct {
 
 func newMailer(ctx context.Context, deps Dependencies) *mailerClient {
 	return &mailerClient{
-		RequestConfig: deps.CourierConfig().CourierMailerRequestConfig(ctx),
+		RequestConfig: deps.CourierConfig().CourierEmailRequestConfig(ctx),
 	}
 }
 func (c *courier) dispatchMailerEmail(ctx context.Context, msg Message) error {
