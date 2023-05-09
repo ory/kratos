@@ -111,6 +111,12 @@ func WithFormErrorMessage(messages []text.Message) FlowOption {
 	}
 }
 
+func WithAuthenticatorAssuranceLevel(auth identity.AuthenticatorAssuranceLevel) FlowOption {
+	return func(f *Flow) {
+		f.RequestedAAL = auth
+	}
+}
+
 func (h *Handler) NewLoginFlow(w http.ResponseWriter, r *http.Request, ft flow.Type, opts ...FlowOption) (*Flow, *session.Session, error) {
 	conf := h.d.Config()
 	f, err := NewFlow(conf, conf.SelfServiceFlowLoginRequestLifespan(r.Context()), h.d.GenerateCSRFToken(r), r, ft)

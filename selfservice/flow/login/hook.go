@@ -7,6 +7,7 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"net/url"
 	"time"
 
 	"go.opentelemetry.io/otel/trace"
@@ -132,15 +133,32 @@ func (e *HookExecutor) PostLoginHook(
 		return err
 	}
 
-	// Verify the redirect URL before we do any other processing.
 	c := e.d.Config()
-	returnTo, err := x.SecureRedirectTo(r, c.SelfServiceBrowserDefaultReturnTo(r.Context()),
+	redirectOpts := []x.SecureRedirectOption{
 		x.SecureRedirectReturnTo(a.ReturnTo),
 		x.SecureRedirectUseSourceURL(a.RequestURL),
 		x.SecureRedirectAllowURLs(c.SelfServiceBrowserAllowedReturnToDomains(r.Context())),
 		x.SecureRedirectAllowSelfServiceURLs(c.SelfPublicURL(r.Context())),
-		x.SecureRedirectOverrideDefaultReturnTo(e.d.Config().SelfServiceFlowLoginReturnTo(r.Context(), a.Active.String())),
-	)
+		x.SecureRedirectOverrideDefaultReturnTo(c.SelfServiceFlowLoginReturnTo(r.Context(), a.Active.String())),
+	}
+
+	requestURL, err := url.Parse(a.RequestURL)
+
+	if err != nil {
+		return err
+	}
+
+	// Verify if the current RequestURL is part of the self service public URLs.
+	// If so, we can safely redirect to it.
+	if _, err := x.SecureRedirectTo(r, requestURL, x.SecureRedirectAllowSelfServiceURLs(e.d.Config().SelfPublicURL(r.Context()))); err == nil {
+		redirectOpts = append(redirectOpts, x.SecureRedirectOverrideDefaultReturnTo(requestURL))
+	}
+
+	// Verify the redirect URL before we do any other processing.
+	returnTo, err := x.SecureRedirectTo(r,
+		c.SelfServiceBrowserDefaultReturnTo(r.Context()),
+		redirectOpts...)
+
 	if err != nil {
 		return err
 	}

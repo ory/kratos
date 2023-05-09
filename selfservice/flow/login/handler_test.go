@@ -14,6 +14,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/julienschmidt/httprouter"
 	"github.com/pkg/errors"
 
 	"github.com/ory/x/urlx"
@@ -22,6 +23,11 @@ import (
 
 	"github.com/ory/kratos/hydra"
 	"github.com/ory/kratos/selfservice/flow"
+	"github.com/ory/kratos/selfservice/strategy/totp"
+	"github.com/ory/kratos/session"
+
+	stdtotp "github.com/pquerna/otp/totp"
+
 	"github.com/ory/kratos/ui/container"
 
 	"github.com/ory/kratos/text"
@@ -42,6 +48,7 @@ import (
 	"github.com/ory/kratos/internal"
 	"github.com/ory/kratos/internal/testhelpers"
 	"github.com/ory/kratos/selfservice/flow/login"
+	"github.com/ory/kratos/selfservice/flow/settings"
 	"github.com/ory/kratos/x"
 )
 
@@ -404,6 +411,130 @@ func TestFlowLifecycle(t *testing.T) {
 				assert.NotEqual(t, "00000000-0000-0000-0000-000000000000", gjson.Get(actual, "use_flow_id").String())
 				assertx.EqualAsJSONExcept(t, flow.NewFlowExpiredError(expired), json.RawMessage(actual), []string{"use_flow_id", "since"}, "expired", "%s", actual)
 			})
+		})
+
+		t.Run("case=should return to settings flow after successful mfa login after recovery", func(t *testing.T) {
+			conf.MustSet(ctx, config.ViperKeySelfServiceSettingsRequiredAAL, config.HighestAvailableAAL)
+			conf.MustSet(ctx, config.ViperKeySessionWhoAmIAAL, config.HighestAvailableAAL)
+			conf.MustSet(ctx, config.ViperKeySelfServiceLoginUI, "/login-ts")
+
+			testhelpers.StrategyEnable(t, conf, identity.CredentialsTypePassword.String(), true)
+			testhelpers.StrategyEnable(t, conf, identity.CredentialsTypeTOTP.String(), true)
+
+			require.Equal(t, true, reg.Config().SelfServiceStrategy(ctx, identity.CredentialsTypeTOTP.String()).Enabled)
+
+			t.Cleanup(func() {
+				conf.MustSet(ctx, config.ViperKeySelfServiceSettingsRequiredAAL, string(identity.AuthenticatorAssuranceLevel1))
+				conf.MustSet(ctx, config.ViperKeySessionWhoAmIAAL, string(identity.AuthenticatorAssuranceLevel1))
+
+				testhelpers.StrategyEnable(t, conf, identity.CredentialsTypeTOTP.String(), false)
+			})
+
+			key, err := totp.NewKey(context.Background(), "foo", reg)
+			require.NoError(t, err)
+			email := testhelpers.RandomEmail()
+			var id = &identity.Identity{
+				Credentials: map[identity.CredentialsType]identity.Credentials{
+					"password": {
+						Type:        "password",
+						Identifiers: []string{email},
+						Config:      sqlxx.JSONRawMessage(`{"hashed_password":"foo"}`),
+					},
+				},
+				Traits:   identity.Traits(fmt.Sprintf(`{"email":"%s"}`, email)),
+				SchemaID: config.DefaultIdentityTraitsSchemaID,
+			}
+
+			require.NoError(t, reg.PrivilegedIdentityPool().CreateIdentities(context.Background(), id))
+
+			id.SetCredentials(identity.CredentialsTypeTOTP, identity.Credentials{
+				Type:        identity.CredentialsTypeTOTP,
+				Identifiers: []string{id.ID.String()},
+				Config:      sqlxx.JSONRawMessage(`{"totp_url":"` + string(key.URL()) + `"}`),
+			})
+			require.NoError(t, reg.PrivilegedIdentityPool().UpdateIdentity(context.Background(), id))
+
+			h := func(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+				sess, err := session.NewActiveSession(r, id, reg.Config(), time.Now().UTC(), identity.CredentialsTypePassword, identity.AuthenticatorAssuranceLevel1)
+				require.NoError(t, err)
+				sess.AuthenticatorAssuranceLevel = identity.AuthenticatorAssuranceLevel1
+				require.NoError(t, reg.SessionPersister().UpsertSession(context.Background(), sess))
+				require.NoError(t, reg.SessionManager().IssueCookie(context.Background(), w, r, sess))
+				require.Equal(t, identity.AuthenticatorAssuranceLevel1, sess.AuthenticatorAssuranceLevel)
+
+			}
+
+			router.GET("/mock-session", h)
+
+			client := testhelpers.NewClientWithCookies(t)
+
+			testhelpers.MockHydrateCookieClient(t, client, ts.URL+"/mock-session")
+
+			req, err := http.NewRequest("GET", ts.URL+settings.RouteInitBrowserFlow, nil)
+			require.NoError(t, err)
+
+			client.CheckRedirect = func(req *http.Request, via []*http.Request) error {
+				return http.ErrUseLastResponse
+			}
+
+			// we initialize the settings flow with a session that has AAL1 set
+			resp, err := client.Do(req)
+			require.NoError(t, err)
+			require.Equal(t, http.StatusSeeOther, resp.StatusCode)
+			// we expect the request to redirect to the login flow because the AAL1 session is not sufficient
+			requestURL := resp.Request.URL
+			require.NoError(t, err)
+			require.Equal(t, settings.RouteInitBrowserFlow, requestURL.Path)
+
+			// we expect to be on the login page now
+			respURL, err := resp.Location()
+			require.NoError(t, err)
+			require.Equal(t, "/login-ts", respURL.Path)
+			flowID := respURL.Query().Get("flow")
+			require.NotEmpty(t, flowID)
+
+			code, err := stdtotp.GenerateCode(key.Secret(), time.Now())
+			require.NoError(t, err)
+
+			req, err = http.NewRequest("GET", ts.URL+login.RouteGetFlow+"?id="+flowID, nil)
+			require.NoError(t, err)
+
+			req.Header.Add("Content-Type", "application/json")
+
+			client.CheckRedirect = nil
+
+			resp, err = client.Do(req)
+			require.NoError(t, err)
+			require.Equal(t, http.StatusOK, resp.StatusCode)
+			body := string(x.MustReadAll(resp.Body))
+			defer resp.Body.Close()
+
+			totpNode := gjson.Get(body, "ui.nodes.#(attributes.name==totp_code)").String()
+			require.NotEmpty(t, totpNode)
+			require.NotEmpty(t, gjson.Get(body, "ui.action").String())
+
+			csrfToken := gjson.Get(body, "ui.nodes.#(attributes.name==csrf_token).attributes.value").String()
+
+			req, err = http.NewRequest("POST", ts.URL+login.RouteSubmitFlow+"?flow="+flowID, strings.NewReader(url.Values{
+				"method":     {"totp"},
+				"totp_code":  {code},
+				"csrf_token": {csrfToken},
+			}.Encode()))
+
+			require.NoError(t, err)
+			req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
+
+			client.CheckRedirect = func(req *http.Request, via []*http.Request) error {
+				return http.ErrUseLastResponse
+			}
+
+			resp, err = client.Do(req)
+			require.NoError(t, err)
+			require.Equal(t, http.StatusSeeOther, resp.StatusCode)
+
+			location, err := resp.Location()
+			require.NoError(t, err)
+			require.Equal(t, settings.RouteInitBrowserFlow, location.Path)
 		})
 	})
 

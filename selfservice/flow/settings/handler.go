@@ -50,8 +50,6 @@ type (
 
 		config.Provider
 
-		continuity.ManagementProvider
-
 		session.HandlerProvider
 		session.ManagementProvider
 
@@ -61,12 +59,17 @@ type (
 
 		errorx.ManagementProvider
 
+		continuity.ManagementProvider
+
 		ErrorHandlerProvider
 		FlowPersistenceProvider
 		StrategyProvider
 		HookExecutorProvider
+		x.CSRFTokenGeneratorProvider
 
 		schema.IdentityTraitsProvider
+
+		login.HandlerProvider
 	}
 	HandlerProvider interface {
 		SettingsHandler() *Handler
@@ -299,6 +302,35 @@ func (h *Handler) createBrowserSettingsFlow(w http.ResponseWriter, r *http.Reque
 	}
 
 	if err := h.d.SessionManager().DoesSessionSatisfy(r, s, h.d.Config().SelfServiceSettingsRequiredAAL(r.Context())); err != nil {
+		if e := new(session.ErrAALNotSatisfied); errors.As(err, &e) {
+			var opts []login.FlowOption
+
+			c := h.d.Config()
+			requestURL := x.RequestURL(r)
+
+			returnTo, err := x.SecureRedirectTo(r, c.SelfServiceBrowserDefaultReturnTo(r.Context()),
+				x.SecureRedirectOverrideDefaultReturnTo(requestURL),
+				x.SecureRedirectUseSourceURL(requestURL.String()),
+				x.SecureRedirectAllowURLs(c.SelfServiceBrowserAllowedReturnToDomains(r.Context())),
+				x.SecureRedirectAllowSelfServiceURLs(c.SelfPublicURL(r.Context())),
+			)
+
+			if err != nil {
+				h.d.SettingsFlowErrorHandler().WriteFlowError(w, r, node.DefaultGroup, nil, nil, err)
+				return
+			}
+			opts = append(opts, []login.FlowOption{login.WithFlowReturnTo(returnTo.String()), login.WithAuthenticatorAssuranceLevel(identity.AuthenticatorAssuranceLevel2)}...)
+
+			lf, _, err := h.d.LoginHandler().NewLoginFlow(w, r, flow.TypeBrowser, opts...)
+			if err != nil {
+				h.d.SettingsFlowErrorHandler().WriteFlowError(w, r, node.DefaultGroup, nil, nil, err)
+				return
+			}
+
+			redirectTo := lf.AppendTo(h.d.Config().SelfServiceFlowLoginUI(r.Context())).String()
+			x.AcceptToRedirectOrJSON(w, r, h.d.Writer(), lf, redirectTo)
+			return
+		}
 		h.d.SettingsFlowErrorHandler().WriteFlowError(w, r, node.DefaultGroup, nil, nil, err)
 		return
 	}
