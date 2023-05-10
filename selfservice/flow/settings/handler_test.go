@@ -246,7 +246,18 @@ func TestHandler(t *testing.T) {
 				})
 				res, body := initSPAFlow(t, user1)
 				assert.Equal(t, http.StatusForbidden, res.StatusCode)
-				assertx.EqualAsJSON(t, session.NewErrAALNotSatisfied(publicTS.URL+"/self-service/login/browser?aal=aal2"), json.RawMessage(body))
+
+				url := url.URL{
+					Scheme: conf.SelfPublicURL(ctx).Scheme,
+					Host:   conf.SelfPublicURL(ctx).Host,
+					Path:   login.RouteInitBrowserFlow,
+				}
+				q := url.Query()
+				q.Add("aal", "aal2")
+				q.Add("return_to", conf.SelfPublicURL(ctx).String()+settings.RouteInitBrowserFlow)
+				url.RawQuery = q.Encode()
+
+				assertx.EqualAsJSON(t, session.NewErrAALNotSatisfied(url.String()), json.RawMessage(body))
 			})
 		})
 	})
@@ -348,13 +359,24 @@ func TestHandler(t *testing.T) {
 				require.Equal(t, http.StatusOK, res.StatusCode)
 
 				conf.MustSet(ctx, config.ViperKeySelfServiceSettingsRequiredAAL, config.HighestAvailableAAL)
-				res, err := aal2Identity.Get(publicTS.URL + settings.RouteGetFlow + "?id=" + gjson.GetBytes(body, "id").String())
+				settingsURL := publicTS.URL + settings.RouteGetFlow + "?id=" + gjson.GetBytes(body, "id").String()
+				res, err := aal2Identity.Get(settingsURL)
 				require.NoError(t, err)
 				body = ioutilx.MustReadAll(res.Body)
 				require.NoError(t, res.Body.Close())
 
-				require.EqualValues(t, res.StatusCode, http.StatusForbidden)
-				assertx.EqualAsJSON(t, session.NewErrAALNotSatisfied(publicTS.URL+"/self-service/login/browser?aal=aal2"), json.RawMessage(body))
+				url := url.URL{
+					Scheme: conf.SelfPublicURL(ctx).Scheme,
+					Host:   conf.SelfPublicURL(ctx).Host,
+					Path:   login.RouteInitBrowserFlow,
+				}
+				q := url.Query()
+				q.Set("aal", "aal2")
+				q.Set("return_to", settingsURL)
+				url.RawQuery = q.Encode()
+
+				require.EqualValues(t, http.StatusForbidden, res.StatusCode)
+				assertx.EqualAsJSON(t, session.NewErrAALNotSatisfied(url.String()), json.RawMessage(body))
 			})
 
 		})
@@ -363,33 +385,28 @@ func TestHandler(t *testing.T) {
 			t.Cleanup(func() {
 				conf.MustSet(ctx, config.ViperKeySelfServiceSettingsRequiredAAL, config.HighestAvailableAAL)
 			})
-			conf.MustSet(ctx, config.ViperKeySelfServiceSettingsRequiredAAL, "aal1")
+
+			conf.MustSet(ctx, config.ViperKeySelfServiceSettingsRequiredAAL, config.HighestAvailableAAL)
 			conf.MustSet(ctx, config.ViperKeyURLsAllowedReturnToDomains, []string{"https://ory.sh"})
 
-			returnTo := "?return_to=https://ory.sh"
-			req, err := http.NewRequest("GET", publicTS.URL+settings.RouteInitBrowserFlow+returnTo, nil)
+			settingsURL := publicTS.URL + settings.RouteInitBrowserFlow + "?return_to=https://ory.sh"
+			req, err := http.NewRequest("GET", settingsURL, nil)
 			require.NoError(t, err)
 
 			res, err := aal2Identity.Do(req)
 			require.NoError(t, err)
+			require.Equal(t, "/login-ts", res.Request.URL.Path)
 
-			require.Equal(t, http.StatusOK, res.StatusCode)
+			// get the Login flow to verify the return to URL
+			id := res.Request.URL.Query().Get("flow")
 
-			body := ioutilx.MustReadAll(res.Body)
-			require.NoError(t, res.Body.Close())
-
-			id := gjson.GetBytes(body, "id").String()
-
-			conf.MustSet(ctx, config.ViperKeySelfServiceSettingsRequiredAAL, config.HighestAvailableAAL)
-			res, err = aal2Identity.Get(publicTS.URL + settings.RouteGetFlow + "?id=" + id)
+			lf, err := reg.Persister().GetLoginFlow(context.Background(), uuid.FromStringOrNil(id))
 			require.NoError(t, err)
+			require.Equal(t, lf.RequestedAAL, identity.AuthenticatorAssuranceLevel2)
 
-			body = ioutilx.MustReadAll(res.Body)
-			require.NoError(t, res.Body.Close())
-
-			require.EqualValues(t, http.StatusForbidden, res.StatusCode)
-
-			assertx.EqualAsJSON(t, session.NewErrAALNotSatisfied(publicTS.URL+"/self-service/login/browser?aal=aal2&return_to="+url.QueryEscape("https://ory.sh")), json.RawMessage(body))
+			requestURL, err := url.Parse(lf.RequestURL)
+			require.NoError(t, err)
+			require.Equal(t, settingsURL, requestURL.Query().Get("return_to"))
 		})
 
 	})
@@ -427,7 +444,18 @@ func TestHandler(t *testing.T) {
 				conf.MustSet(ctx, config.ViperKeySelfServiceSettingsRequiredAAL, config.HighestAvailableAAL)
 				actual, res := testhelpers.SettingsMakeRequest(t, false, true, &f, aal2Identity, `{"method":"not-exists"}`)
 				assert.Equal(t, http.StatusForbidden, res.StatusCode)
-				assertx.EqualAsJSON(t, session.NewErrAALNotSatisfied(publicTS.URL+"/self-service/login/browser?aal=aal2"), json.RawMessage(actual))
+
+				url := url.URL{
+					Scheme: conf.SelfPublicURL(ctx).Scheme,
+					Host:   conf.SelfPublicURL(ctx).Host,
+					Path:   login.RouteInitBrowserFlow,
+				}
+				q := url.Query()
+				q.Set("aal", "aal2")
+				q.Set("return_to", publicTS.URL+"/self-service/settings?flow="+f.GetId())
+				url.RawQuery = q.Encode()
+
+				assert.Equal(t, url.String(), gjson.Get(actual, "redirect_browser_to").String(), actual)
 			})
 
 			t.Run("type=api", func(t *testing.T) {
@@ -444,7 +472,17 @@ func TestHandler(t *testing.T) {
 				conf.MustSet(ctx, config.ViperKeySelfServiceSettingsRequiredAAL, config.HighestAvailableAAL)
 				actual, res := testhelpers.SettingsMakeRequest(t, true, false, &f, aal2Identity, `{"method":"not-exists"}`)
 				assert.Equal(t, http.StatusForbidden, res.StatusCode)
-				assertx.EqualAsJSON(t, session.NewErrAALNotSatisfied(publicTS.URL+"/self-service/login/browser?aal=aal2"), json.RawMessage(actual))
+
+				url := url.URL{
+					Scheme: conf.SelfPublicURL(ctx).Scheme,
+					Host:   conf.SelfPublicURL(ctx).Host,
+					Path:   login.RouteInitBrowserFlow,
+				}
+				q := url.Query()
+				q.Set("aal", "aal2")
+				q.Set("return_to", publicTS.URL+"/self-service/settings?flow="+f.GetId())
+				url.RawQuery = q.Encode()
+				assert.Equal(t, url.String(), gjson.Get(actual, "redirect_browser_to").String(), actual)
 			})
 		})
 

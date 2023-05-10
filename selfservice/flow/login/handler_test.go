@@ -417,6 +417,7 @@ func TestFlowLifecycle(t *testing.T) {
 			conf.MustSet(ctx, config.ViperKeySelfServiceSettingsRequiredAAL, config.HighestAvailableAAL)
 			conf.MustSet(ctx, config.ViperKeySessionWhoAmIAAL, config.HighestAvailableAAL)
 			testhelpers.StrategyEnable(t, conf, identity.CredentialsTypeTOTP.String(), true)
+			conf.MustSet(ctx, config.ViperKeyURLsAllowedReturnToDomains, []string{"https://www.ory.sh/"})
 
 			t.Cleanup(func() {
 				conf.MustSet(ctx, config.ViperKeySelfServiceSettingsRequiredAAL, string(identity.AuthenticatorAssuranceLevel1))
@@ -464,24 +465,23 @@ func TestFlowLifecycle(t *testing.T) {
 
 			testhelpers.MockHydrateCookieClient(t, client, ts.URL+"/mock-session")
 
-			req, err := http.NewRequest("GET", ts.URL+settings.RouteInitBrowserFlow, nil)
+			settingsURL := ts.URL + settings.RouteInitBrowserFlow + "?return_to=https://www.ory.sh"
+			req, err := http.NewRequest("GET", settingsURL, nil)
 			require.NoError(t, err)
-
-			client.CheckRedirect = func(req *http.Request, via []*http.Request) error {
-				return http.ErrUseLastResponse
-			}
 
 			// we initialize the settings flow with a session that has AAL1 set
 			resp, err := client.Do(req)
 			require.NoError(t, err)
-			require.Equal(t, http.StatusSeeOther, resp.StatusCode)
+			require.Equal(t, http.StatusOK, resp.StatusCode)
 			// we expect the request to redirect to the login flow because the AAL1 session is not sufficient
-			requestURL := resp.Request.URL
+			requestURL, err := url.Parse(resp.Request.Referer())
 			require.NoError(t, err)
-			require.Equal(t, settings.RouteInitBrowserFlow, requestURL.Path)
+			require.Equal(t, login.RouteInitBrowserFlow, requestURL.Path)
+			require.Equal(t, "aal2", requestURL.Query().Get("aal"))
+			require.Equal(t, settingsURL, requestURL.Query().Get("return_to"))
 
 			// we expect to be on the login page now
-			respURL, err := resp.Location()
+			respURL := resp.Request.URL
 			require.NoError(t, err)
 			require.Equal(t, "/login-ts", respURL.Path)
 			flowID := respURL.Query().Get("flow")
@@ -494,8 +494,6 @@ func TestFlowLifecycle(t *testing.T) {
 			require.NoError(t, err)
 
 			req.Header.Add("Content-Type", "application/json")
-
-			client.CheckRedirect = nil
 
 			resp, err = client.Do(req)
 			require.NoError(t, err)

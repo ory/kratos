@@ -332,16 +332,14 @@ func (s *ManagerHTTP) DoesSessionSatisfy(r *http.Request, sess *Session, request
 			return nil
 		}
 
-		loginURL := urlx.CopyWithQuery(urlx.AppendPaths(s.r.Config().SelfPublicURL(ctx), "/self-service/login/browser"), url.Values{"aal": {"aal2"}}).String()
+		loginURL := urlx.CopyWithQuery(urlx.AppendPaths(s.r.Config().SelfPublicURL(ctx), "/self-service/login/browser"), url.Values{"aal": {"aal2"}})
 
+		// return to the requestURL if it was set
 		if managerOpts.requestURL != "" {
-			loginURL, err = x.TakeOverReturnToParameter(managerOpts.requestURL, loginURL)
-			if err != nil {
-				return errors.WithStack(err)
-			}
+			loginURL = urlx.CopyWithQuery(loginURL, url.Values{"return_to": {managerOpts.requestURL}})
 		}
 
-		return NewErrAALNotSatisfied(loginURL)
+		return NewErrAALNotSatisfied(loginURL.String())
 	}
 
 	return errors.Errorf("requested unknown aal: %s", requestedAAL)

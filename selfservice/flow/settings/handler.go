@@ -301,36 +301,8 @@ func (h *Handler) createBrowserSettingsFlow(w http.ResponseWriter, r *http.Reque
 		return
 	}
 
-	if err := h.d.SessionManager().DoesSessionSatisfy(r, s, h.d.Config().SelfServiceSettingsRequiredAAL(r.Context())); err != nil {
-		if e := new(session.ErrAALNotSatisfied); errors.As(err, &e) {
-			var opts []login.FlowOption
-
-			c := h.d.Config()
-			requestURL := x.RequestURL(r)
-
-			returnTo, err := x.SecureRedirectTo(r, c.SelfServiceBrowserDefaultReturnTo(r.Context()),
-				x.SecureRedirectOverrideDefaultReturnTo(requestURL),
-				x.SecureRedirectUseSourceURL(requestURL.String()),
-				x.SecureRedirectAllowURLs(c.SelfServiceBrowserAllowedReturnToDomains(r.Context())),
-				x.SecureRedirectAllowSelfServiceURLs(c.SelfPublicURL(r.Context())),
-			)
-
-			if err != nil {
-				h.d.SettingsFlowErrorHandler().WriteFlowError(w, r, node.DefaultGroup, nil, nil, err)
-				return
-			}
-			opts = append(opts, []login.FlowOption{login.WithFlowReturnTo(returnTo.String()), login.WithAuthenticatorAssuranceLevel(identity.AuthenticatorAssuranceLevel2)}...)
-
-			lf, _, err := h.d.LoginHandler().NewLoginFlow(w, r, flow.TypeBrowser, opts...)
-			if err != nil {
-				h.d.SettingsFlowErrorHandler().WriteFlowError(w, r, node.DefaultGroup, nil, nil, err)
-				return
-			}
-
-			redirectTo := lf.AppendTo(h.d.Config().SelfServiceFlowLoginUI(r.Context())).String()
-			x.AcceptToRedirectOrJSON(w, r, h.d.Writer(), lf, redirectTo)
-			return
-		}
+	requestURL := x.RequestURL(r).String()
+	if err := h.d.SessionManager().DoesSessionSatisfy(r, s, h.d.Config().SelfServiceSettingsRequiredAAL(r.Context()), session.WithRequestURL(requestURL)); err != nil {
 		h.d.SettingsFlowErrorHandler().WriteFlowError(w, r, node.DefaultGroup, nil, nil, err)
 		return
 	}
@@ -438,7 +410,8 @@ func (h *Handler) fetchFlow(w http.ResponseWriter, r *http.Request) error {
 		return errors.WithStack(herodot.ErrForbidden.WithID(text.ErrIDInitiatedBySomeoneElse).WithReasonf("The request was made for another identity and has been blocked for security reasons."))
 	}
 
-	if err := h.d.SessionManager().DoesSessionSatisfy(r, sess, h.d.Config().SelfServiceSettingsRequiredAAL(r.Context()), session.WithRequestURL(pr.GetRequestURL())); err != nil {
+	requestURL := x.RequestURL(r)
+	if err := h.d.SessionManager().DoesSessionSatisfy(r, sess, h.d.Config().SelfServiceSettingsRequiredAAL(r.Context()), session.WithRequestURL(requestURL.String())); err != nil {
 		return err
 	}
 
@@ -596,7 +569,8 @@ func (h *Handler) updateSettingsFlow(w http.ResponseWriter, r *http.Request, ps 
 		return
 	}
 
-	if err := h.d.SessionManager().DoesSessionSatisfy(r, ss, h.d.Config().SelfServiceSettingsRequiredAAL(r.Context())); err != nil {
+	requestURL := x.RequestURL(r).String()
+	if err := h.d.SessionManager().DoesSessionSatisfy(r, ss, h.d.Config().SelfServiceSettingsRequiredAAL(r.Context()), session.WithRequestURL(requestURL)); err != nil {
 		h.d.SettingsFlowErrorHandler().WriteFlowError(w, r, node.DefaultGroup, f, nil, err)
 		return
 	}
