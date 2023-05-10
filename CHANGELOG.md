@@ -5,7 +5,7 @@
 
 **Table of Contents**
 
-- [ (2023-05-03)](#2023-05-03)
+- [ (2023-05-08)](#2023-05-08)
   - [Bug Fixes](#bug-fixes)
   - [Features](#features)
   - [Tests](#tests)
@@ -301,12 +301,15 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# [](https://github.com/ory/kratos/compare/v0.13.0...v) (2023-05-03)
+# [](https://github.com/ory/kratos/compare/v0.13.0...v) (2023-05-08)
 
 ### Bug Fixes
 
 - Bump quickstart version ([#3257](https://github.com/ory/kratos/issues/3257))
   ([6db70a8](https://github.com/ory/kratos/commit/6db70a81afac5860a86c31881a6fc988096ff0e4))
+- Use the correct redirect_uri for linkedin social login
+  ([#3269](https://github.com/ory/kratos/issues/3269))
+  ([27ccecc](https://github.com/ory/kratos/commit/27ccecc1cd490eaa71da7f8235b4b0057b8f14fe))
 
 ### Features
 
