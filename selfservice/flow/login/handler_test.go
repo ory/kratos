@@ -416,17 +416,11 @@ func TestFlowLifecycle(t *testing.T) {
 		t.Run("case=should return to settings flow after successful mfa login after recovery", func(t *testing.T) {
 			conf.MustSet(ctx, config.ViperKeySelfServiceSettingsRequiredAAL, config.HighestAvailableAAL)
 			conf.MustSet(ctx, config.ViperKeySessionWhoAmIAAL, config.HighestAvailableAAL)
-			conf.MustSet(ctx, config.ViperKeySelfServiceLoginUI, "/login-ts")
-
-			testhelpers.StrategyEnable(t, conf, identity.CredentialsTypePassword.String(), true)
 			testhelpers.StrategyEnable(t, conf, identity.CredentialsTypeTOTP.String(), true)
-
-			require.Equal(t, true, reg.Config().SelfServiceStrategy(ctx, identity.CredentialsTypeTOTP.String()).Enabled)
 
 			t.Cleanup(func() {
 				conf.MustSet(ctx, config.ViperKeySelfServiceSettingsRequiredAAL, string(identity.AuthenticatorAssuranceLevel1))
 				conf.MustSet(ctx, config.ViperKeySessionWhoAmIAAL, string(identity.AuthenticatorAssuranceLevel1))
-
 				testhelpers.StrategyEnable(t, conf, identity.CredentialsTypeTOTP.String(), false)
 			})
 
