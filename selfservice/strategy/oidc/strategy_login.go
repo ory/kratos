@@ -103,6 +103,9 @@ func (s *Strategy) processLogin(w http.ResponseWriter, r *http.Request, a *login
 			if len(a.ReturnTo) > 0 {
 				opts = append(opts, registration.WithFlowReturnTo(a.ReturnTo))
 			}
+			if a.OAuth2LoginChallenge.Valid {
+				opts = append(opts, registration.WithFlowOAuth2LoginChallenge(a.OAuth2LoginChallenge))
+			}
 
 			aa, err := s.d.RegistrationHandler().NewRegistrationFlow(w, r, a.Type, opts...)
 			if err != nil {
