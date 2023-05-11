@@ -359,7 +359,8 @@ func TestHandler(t *testing.T) {
 				require.Equal(t, http.StatusOK, res.StatusCode)
 
 				conf.MustSet(ctx, config.ViperKeySelfServiceSettingsRequiredAAL, config.HighestAvailableAAL)
-				settingsURL := publicTS.URL + settings.RouteGetFlow + "?id=" + gjson.GetBytes(body, "id").String()
+				flowID := gjson.GetBytes(body, "id").String()
+				settingsURL := publicTS.URL + settings.RouteGetFlow + "?id=" + flowID
 				res, err := aal2Identity.Get(settingsURL)
 				require.NoError(t, err)
 				body = ioutilx.MustReadAll(res.Body)
@@ -370,9 +371,15 @@ func TestHandler(t *testing.T) {
 					Host:   conf.SelfPublicURL(ctx).Host,
 					Path:   login.RouteInitBrowserFlow,
 				}
+
+				returnTo := conf.SelfServiceFlowSettingsUI(context.Background())
+				rq := returnTo.Query()
+				rq.Set("flow", flowID)
+				returnTo.RawQuery = rq.Encode()
+
 				q := url.Query()
 				q.Set("aal", "aal2")
-				q.Set("return_to", settingsURL)
+				q.Set("return_to", returnTo.String())
 				url.RawQuery = q.Encode()
 
 				require.EqualValues(t, http.StatusForbidden, res.StatusCode)
@@ -478,6 +485,7 @@ func TestHandler(t *testing.T) {
 					Host:   conf.SelfPublicURL(ctx).Host,
 					Path:   login.RouteInitBrowserFlow,
 				}
+
 				q := url.Query()
 				q.Set("aal", "aal2")
 				q.Set("return_to", publicTS.URL+"/self-service/settings?flow="+f.GetId())

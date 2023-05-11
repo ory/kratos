@@ -166,7 +166,13 @@ func (s *ErrorHandler) WriteFlowError(
 		if shouldRespondWithJSON {
 			s.d.Writer().WriteError(w, r, aalErr)
 		} else {
-			http.Redirect(w, r, aalErr.RedirectTo, http.StatusSeeOther)
+			if aalErr.RedirectTo == "" {
+				http.Redirect(w, r, urlx.CopyWithQuery(
+					urlx.AppendPaths(s.d.Config().SelfPublicURL(r.Context()), login.RouteInitBrowserFlow),
+					url.Values{"aal": {string(identity.AuthenticatorAssuranceLevel2)}}).String(), http.StatusSeeOther)
+			} else {
+				http.Redirect(w, r, aalErr.RedirectTo, http.StatusSeeOther)
+			}
 		}
 		return
 	}

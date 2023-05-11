@@ -410,7 +410,12 @@ func (h *Handler) fetchFlow(w http.ResponseWriter, r *http.Request) error {
 		return errors.WithStack(herodot.ErrForbidden.WithID(text.ErrIDInitiatedBySomeoneElse).WithReasonf("The request was made for another identity and has been blocked for security reasons."))
 	}
 
-	requestURL := x.RequestURL(r)
+	// we cannot redirect back to the settings flow
+	// because it would just return a json response which is not what we want
+	requestURL := h.d.Config().SelfServiceFlowSettingsUI(r.Context())
+	query := requestURL.Query()
+	query.Set("flow", rid.String())
+	requestURL.RawQuery = query.Encode()
 	if err := h.d.SessionManager().DoesSessionSatisfy(r, sess, h.d.Config().SelfServiceSettingsRequiredAAL(r.Context()), session.WithRequestURL(requestURL.String())); err != nil {
 		return err
 	}

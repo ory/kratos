@@ -25,9 +25,11 @@ selfservice:
 
 serve:
   public:
-    # We are using a proxy to make cypress not fail with different origins which is why we use this URL here.
+    # We are using a proxy to make cypress not fail with different origins.
+    # the proxy sets the X-FORWARDED-HOST header which allows the base_url here to be set to
+    # the kratos instance
     # See ../proxy
-    base_url: http://localhost:4455/
+    base_url: http://localhost:4433/
     cors:
       enabled: true
       allowed_origins:

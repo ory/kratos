@@ -117,13 +117,12 @@ context("Recovery with `return_to`", () => {
         })
         cy.get('*[name="method"][value="totp"]').click()
 
-        cy.location("hostname").should("eq", "www.ory.sh")
-
         const newPassword = gen.password()
         cy.get(appPrefix(app) + 'input[name="password"]')
           .clear()
           .type(newPassword)
         cy.get('button[value="password"]').click()
+        cy.location("hostname").should("eq", "www.ory.sh")
       })
     })
   })
