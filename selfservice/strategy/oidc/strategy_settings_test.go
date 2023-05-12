@@ -485,6 +485,7 @@ func TestSettingsStrategy(t *testing.T) {
 				values.Set("link", provider)
 				values.Set("upstream_parameters.login_hint", "foo@bar.com")
 				values.Set("upstream_parameters.hd", "bar.com")
+				values.Set("upstream_parameters.prompt", "consent")
 
 				resp, err := c.PostForm(action(req), *values)
 				require.NoError(t, err)
@@ -495,6 +496,7 @@ func TestSettingsStrategy(t *testing.T) {
 
 				require.EqualValues(t, "foo@bar.com", loc.Query().Get("login_hint"))
 				require.EqualValues(t, "bar.com", loc.Query().Get("hd"))
+				require.EqualValues(t, "consent", loc.Query().Get("prompt"))
 			})
 
 			t.Run("case=invalid query parameters should be ignored", func(t *testing.T) {
