@@ -41,7 +41,6 @@ func (s *Strategy) RecoveryStrategyID() string {
 func (s *Strategy) RegisterPublicRecoveryRoutes(public *x.RouterPublic) {
 	s.deps.CSRFHandler().IgnorePath(RouteAdminCreateRecoveryCode)
 	public.POST(RouteAdminCreateRecoveryCode, x.RedirectToAdminRoute(s.deps))
-
 }
 
 func (s *Strategy) RegisterAdminRecoveryRoutes(admin *x.RouterAdmin) {
@@ -392,12 +391,6 @@ func (s *Strategy) recoveryIssueSession(w http.ResponseWriter, r *http.Request, 
 	sf.RequestURL, err = x.TakeOverReturnToParameter(f.RequestURL, sf.RequestURL, returnTo)
 	if err != nil {
 		return s.retryRecoveryFlowWithError(w, r, flow.TypeBrowser, err)
-	}
-
-	if u, err := url.Parse(sf.RequestURL); err != nil {
-		return s.retryRecoveryFlowWithError(w, r, flow.TypeBrowser, err)
-	} else {
-		sf.ReturnTo = u.Query().Get("return_to")
 	}
 
 	if err := s.deps.RecoveryExecutor().PostRecoveryHook(w, r, f, sess); err != nil {
