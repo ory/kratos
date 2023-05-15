@@ -168,6 +168,10 @@ func (s *Session) CompletedLoginFor(method identity.CredentialsType, aal identit
 	s.AMR = append(s.AMR, AuthenticationMethod{Method: method, AAL: aal, CompletedAt: time.Now().UTC()})
 }
 
+func (s *Session) CompletedLoginForWithProvider(method identity.CredentialsType, aal identity.AuthenticatorAssuranceLevel, providerID string) {
+	s.AMR = append(s.AMR, AuthenticationMethod{Method: method, AAL: aal, Provider: providerID, CompletedAt: time.Now().UTC()})
+}
+
 func (s *Session) SetAuthenticatorAssuranceLevel() {
 	if len(s.AMR) == 0 {
 		// No AMR is set
@@ -324,6 +328,9 @@ type AuthenticationMethod struct {
 
 	// When the authentication challenge was completed.
 	CompletedAt time.Time `json:"completed_at"`
+
+	// OIDC or SAML provider id used for authentication
+	Provider string `json:"provider,omitempty"`
 }
 
 // Scan implements the Scanner interface.

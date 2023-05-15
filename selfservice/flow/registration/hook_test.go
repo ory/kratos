@@ -56,7 +56,7 @@ func TestRegistrationExecutor(t *testing.T) {
 					a, err := registration.NewFlow(conf, time.Minute, x.FakeCSRFToken, r, ft)
 					require.NoError(t, err)
 					a.RequestURL = x.RequestURL(r).String()
-					_ = handleErr(t, w, r, reg.RegistrationHookExecutor().PostRegistrationHook(w, r, identity.CredentialsType(strategy), a, i))
+					_ = handleErr(t, w, r, reg.RegistrationHookExecutor().PostRegistrationHook(w, r, identity.CredentialsType(strategy), "", a, i))
 				})
 
 				ts := httptest.NewServer(router)
