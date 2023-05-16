@@ -5723,8 +5723,13 @@
           "type": "string"
         },
         "method": {
-          "description": "Method is the method that should be used for this verification flow\n\nAllowed values are `link` and `code`",
-          "type": "string"
+          "description": "Method is the method that should be used for this verification flow\n\nAllowed values are `link` and `code`\nlink VerificationStrategyLink\ncode VerificationStrategyCode",
+          "type": "string",
+          "enum": [
+            "link",
+            "code"
+          ],
+          "x-go-enum-desc": "link VerificationStrategyLink\ncode VerificationStrategyCode"
         }
       }
     },
