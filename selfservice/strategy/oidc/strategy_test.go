@@ -755,3 +755,66 @@ func TestPostEndpointRedirect(t *testing.T) {
 		assert.Equal(t, publicTS.URL+"/self-service/methods/oidc/callback/apple?state=foo&test=3", location.String())
 	})
 }
+
+func TestProvidersHandler(t *testing.T) {
+	conf, reg := internal.NewFastRegistryWithMocks(t)
+	testhelpers.StrategyEnable(t, conf, identity.CredentialsTypeOIDC.String(), true)
+
+	// Start kratos server
+	publicTS, adminTS := testhelpers.NewKratosServerWithCSRF(t, reg)
+
+	var get = func(t *testing.T, base *httptest.Server, href string, expectCode int) gjson.Result {
+		t.Helper()
+		res, err := base.Client().Get(base.URL + href)
+		require.NoError(t, err)
+		body, err := io.ReadAll(res.Body)
+		require.NoError(t, err)
+		require.NoError(t, res.Body.Close())
+
+		require.EqualValues(t, expectCode, res.StatusCode, "%s", body)
+		return gjson.ParseBytes(body)
+	}
+
+	t.Run("case=should return an empty list", func(t *testing.T) {
+		for name, ts := range map[string]*httptest.Server{"public": publicTS, "admin": adminTS} {
+			t.Run("endpoint="+name, func(t *testing.T) {
+				parsed := get(t, ts, "/providers/oidc", http.StatusOK)
+				require.True(t, parsed.IsArray(), "%s", parsed.Raw)
+				assert.Len(t, parsed.Array(), 0)
+			})
+		}
+	})
+
+	t.Run("case=should return list containing two providers", func(t *testing.T) {
+		viperSetProviderConfig(
+			t,
+			conf,
+			oidc.Configuration{
+				Provider:     "generic",
+				ID:           "provider1",
+				ClientID:     "clientID1",
+				ClientSecret: "secret1",
+				IssuerURL:    "https//:url1",
+				Mapper:       "mapper1",
+			},
+			oidc.Configuration{
+				Provider:     "generic",
+				ID:           "provider2",
+				ClientID:     "clientID2",
+				ClientSecret: "secret2",
+				IssuerURL:    "https//:url2",
+				Mapper:       "mapper2",
+			},
+		)
+		for name, ts := range map[string]*httptest.Server{"public": publicTS, "admin": adminTS} {
+			t.Run("endpoint="+name, func(t *testing.T) {
+				parsed := get(t, ts, "/providers/oidc", http.StatusOK)
+				require.True(t, parsed.IsArray(), "%s", parsed.Raw)
+				assert.Len(t, parsed.Array(), 2)
+				assert.Equal(t, "provider1", parsed.Array()[0].Get("id").String(), "%s", parsed.Array()[0].Raw)
+				assert.Equal(t, "", parsed.Array()[0].Get("client_secret").String(), "%s", parsed.Array()[0].Raw)
+			})
+		}
+	})
+
+}

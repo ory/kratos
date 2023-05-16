@@ -38,6 +38,10 @@ func (s *Strategy) RegisterLoginRoutes(r *x.RouterPublic) {
 	s.setRoutes(r)
 }
 
+func (s *Strategy) RegisterAdminLoginRoutes(r *x.RouterAdmin) {
+	s.setAdminRoutes(r)
+}
+
 func (s *Strategy) PopulateLoginMethod(r *http.Request, requestedAAL identity.AuthenticatorAssuranceLevel, l *login.Flow) error {
 	if l.Type != flow.TypeBrowser {
 		return nil

@@ -25,6 +25,10 @@ type Strategy interface {
 	CompletedAuthenticationMethod(ctx context.Context) session.AuthenticationMethod
 }
 
+type AdminHandler interface {
+	RegisterAdminLoginRoutes(admin *x.RouterAdmin)
+}
+
 type Strategies []Strategy
 
 func (s Strategies) Strategy(id identity.CredentialsType) (Strategy, error) {
@@ -50,6 +54,14 @@ func (s Strategies) MustStrategy(id identity.CredentialsType) Strategy {
 func (s Strategies) RegisterPublicRoutes(r *x.RouterPublic) {
 	for _, ss := range s {
 		ss.RegisterLoginRoutes(r)
+	}
+}
+
+func (s Strategies) RegisterAdminRoutes(r *x.RouterAdmin) {
+	for _, ss := range s {
+		if h, ok := ss.(AdminHandler); ok {
+			h.RegisterAdminLoginRoutes(r)
+		}
 	}
 }
 
