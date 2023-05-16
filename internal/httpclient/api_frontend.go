@@ -4861,6 +4861,7 @@ type FrontendApiApiUpdateLogoutFlowRequest struct {
 	ApiService FrontendApi
 	token      *string
 	returnTo   *string
+	cookie     *string
 }
 
 func (r FrontendApiApiUpdateLogoutFlowRequest) Token(token string) FrontendApiApiUpdateLogoutFlowRequest {
@@ -4869,6 +4870,10 @@ func (r FrontendApiApiUpdateLogoutFlowRequest) Token(token string) FrontendApiAp
 }
 func (r FrontendApiApiUpdateLogoutFlowRequest) ReturnTo(returnTo string) FrontendApiApiUpdateLogoutFlowRequest {
 	r.returnTo = &returnTo
+	return r
+}
+func (r FrontendApiApiUpdateLogoutFlowRequest) Cookie(cookie string) FrontendApiApiUpdateLogoutFlowRequest {
+	r.cookie = &cookie
 	return r
 }
 
@@ -4946,6 +4951,9 @@ func (a *FrontendApiService) UpdateLogoutFlowExecute(r FrontendApiApiUpdateLogou
 	localVarHTTPHeaderAccept := selectHeaderAccept(localVarHTTPHeaderAccepts)
 	if localVarHTTPHeaderAccept != "" {
 		localVarHeaderParams["Accept"] = localVarHTTPHeaderAccept
+	}
+	if r.cookie != nil {
+		localVarHeaderParams["Cookie"] = parameterToString(*r.cookie, "")
 	}
 	req, err := a.client.prepareRequest(r.ctx, localVarPath, localVarHTTPMethod, localVarPostBody, localVarHeaderParams, localVarQueryParams, localVarFormParams, localVarFormFileName, localVarFileName, localVarFileBytes)
 	if err != nil {
