@@ -7,12 +7,18 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 
 	"github.com/ory/kratos/x"
 )
 
 func TestGenerateState(t *testing.T) {
-	state := generateState(x.NewUUID().String())
+	flowID := x.NewUUID().String()
+	state := generateState(flowID).String()
 	assert.NotEmpty(t, state)
-	t.Logf("state: %s", state)
+
+	s, err := parseState(state)
+	require.NoError(t, err)
+	assert.Equal(t, flowID, s.FlowID)
+	assert.NotEmpty(t, s.Data)
 }

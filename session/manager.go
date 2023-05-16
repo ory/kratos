@@ -8,7 +8,9 @@ import (
 	"net/http"
 	"net/url"
 
+	"github.com/ory/kratos/selfservice/flow"
 	"github.com/ory/kratos/text"
+	"github.com/ory/kratos/ui/node"
 	"github.com/ory/kratos/x/swagger"
 
 	"github.com/gofrs/uuid"
@@ -136,6 +138,10 @@ type Manager interface {
 
 	// SessionAddAuthenticationMethods adds one or more authentication method to the session.
 	SessionAddAuthenticationMethods(ctx context.Context, sid uuid.UUID, methods ...AuthenticationMethod) error
+
+	// MaybeRedirectAPICodeFlow for API+Code flows redirects the user to the return_to URL and adds the code query parameter.
+	// `handled` is true if the request a redirect was written, false otherwise.
+	MaybeRedirectAPICodeFlow(w http.ResponseWriter, r *http.Request, f flow.Flow, sessionID uuid.UUID, uiNode node.UiNodeGroup) (handled bool, err error)
 }
 
 type ManagementProvider interface {

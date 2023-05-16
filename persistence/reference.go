@@ -7,6 +7,7 @@ import (
 	"context"
 	"time"
 
+	"github.com/ory/kratos/selfservice/sessiontokenexchange"
 	"github.com/ory/x/networkx"
 
 	"github.com/gofrs/uuid"
@@ -42,6 +43,7 @@ type Persister interface {
 	settings.FlowPersister
 	courier.Persister
 	session.Persister
+	sessiontokenexchange.Persister
 	errorx.Persister
 	verification.FlowPersister
 	recovery.FlowPersister

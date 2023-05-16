@@ -14,6 +14,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/pkg/errors"
+
 	"github.com/ory/x/urlx"
 
 	"github.com/ory/x/sqlxx"
@@ -57,6 +59,7 @@ func TestFlowLifecycle(t *testing.T) {
 
 	errorTS := testhelpers.NewErrorTestServer(t, reg)
 	conf.MustSet(ctx, config.ViperKeySelfServiceBrowserDefaultReturnTo, "https://www.ory.sh")
+
 	testhelpers.SetDefaultIdentitySchema(conf, "file://./stub/password.schema.json")
 
 	assertion := func(body []byte, isForced, isApi bool) {
@@ -81,6 +84,24 @@ func TestFlowLifecycle(t *testing.T) {
 		if isAPI {
 			assert.Len(t, res.Header.Get("Set-Cookie"), 0)
 		}
+		return res, body
+	}
+
+	initUnauthenticatedFlow := func(t *testing.T, extQuery url.Values, isAPI bool) (*http.Response, []byte) {
+		route := login.RouteInitBrowserFlow
+		if isAPI {
+			route = login.RouteInitAPIFlow
+		}
+		client := ts.Client()
+		req := x.NewTestHTTPRequest(t, "GET", ts.URL+route, nil)
+
+		req.URL.RawQuery = extQuery.Encode()
+		res, err := client.Do(req)
+		require.NoError(t, errors.WithStack(err))
+
+		body, err := io.ReadAll(res.Body)
+		require.NoError(t, errors.WithStack(err))
+		require.NoError(t, res.Body.Close())
 		return res, body
 	}
 
@@ -392,6 +413,13 @@ func TestFlowLifecycle(t *testing.T) {
 				res, body := initFlow(t, url.Values{}, true)
 				assert.Contains(t, res.Request.URL.String(), login.RouteInitAPIFlow)
 				assertion(body, false, true)
+				assert.Empty(t, gjson.GetBytes(body, "session_token_exchange_code").String())
+			})
+
+			t.Run("case=returns session exchange code", func(t *testing.T) {
+				res, body := initFlow(t, urlx.ParseOrPanic("/?return_session_token_exchange_code=true").Query(), true)
+				assert.Contains(t, res.Request.URL.String(), login.RouteInitAPIFlow)
+				assert.NotEmpty(t, gjson.GetBytes(body, "session_token_exchange_code").String())
 			})
 
 			t.Run("case=can not request refresh and aal at the same time on unauthenticated request", func(t *testing.T) {
@@ -468,6 +496,12 @@ func TestFlowLifecycle(t *testing.T) {
 				res, body := initFlow(t, url.Values{}, false)
 				assertion(body, false, false)
 				assert.Contains(t, res.Request.URL.String(), loginTS.URL)
+			})
+
+			t.Run("case=never returns a session token exchange code", func(t *testing.T) {
+				_, body := initFlow(t, urlx.ParseOrPanic("/?return_session_token_exchange_code=true").Query(), false)
+				assertion(body, false, false)
+				assert.Empty(t, gjson.GetBytes(body, "session_token_exchange_code").String())
 			})
 
 			t.Run("case=can not request refresh and aal at the same time on unauthenticated request", func(t *testing.T) {
@@ -564,6 +598,36 @@ func TestFlowLifecycle(t *testing.T) {
 			})
 
 			conf.MustSet(ctx, config.ViperKeyOAuth2ProviderURL, "https://fake-hydra")
+
+			t.Run("case=oauth2 flow init should override return_to to the oauth2 request_url", func(t *testing.T) {
+				conf.MustSet(ctx, config.ViperKeyURLsAllowedReturnToDomains, []string{"https://www.ory.sh", "https://example.com"})
+				conf.MustSet(ctx, config.ViperKeyOAuth2ProviderOverrideReturnTo, true)
+
+				t.Cleanup(func() {
+					conf.MustSet(ctx, config.ViperKeyOAuth2ProviderOverrideReturnTo, false)
+				})
+
+				res, _ := initUnauthenticatedFlow(t, url.Values{
+					"return_to":       {"https://example.com"},
+					"login_challenge": {hydra.FAKE_SUCCESS},
+				}, false)
+				require.Equal(t, http.StatusOK, res.StatusCode)
+				require.Contains(t, res.Request.URL.String(), loginTS.URL)
+
+				c := ts.Client()
+				req := x.NewTestHTTPRequest(t, "GET", ts.URL+login.RouteGetFlow, nil)
+				req.URL.RawQuery = url.Values{"id": {res.Request.URL.Query().Get("flow")}}.Encode()
+
+				res, err := c.Do(req)
+				require.NoError(t, err)
+
+				body, err := io.ReadAll(res.Body)
+				require.NoError(t, errors.WithStack(err))
+
+				require.NoError(t, res.Body.Close())
+
+				assert.Equal(t, "https://www.ory.sh", gjson.GetBytes(body, "return_to").Value())
+			})
 
 			t.Run("case=oauth2 flow init succeeds", func(t *testing.T) {
 				res, _ := initAuthenticatedFlow(t, url.Values{"login_challenge": {hydra.FAKE_SUCCESS}}, false)

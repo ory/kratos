@@ -6,6 +6,7 @@ package driver
 import (
 	"context"
 
+	"github.com/ory/kratos/selfservice/sessiontokenexchange"
 	"github.com/ory/x/contextx"
 	"github.com/ory/x/jsonnetsecure"
 	"github.com/ory/x/otelx"
@@ -137,6 +138,8 @@ type Registry interface {
 	verification.ErrorHandlerProvider
 	verification.HandlerProvider
 	verification.StrategyProvider
+
+	sessiontokenexchange.PersistenceProvider
 
 	link.SenderProvider
 	link.VerificationTokenPersistenceProvider

@@ -529,10 +529,9 @@ func (p *IdentityPersister) HydrateIdentityAssociations(ctx context.Context, i *
 			//
 			// https://github.com/gobuffalo/pop/issues/723
 			con := con.WithContext(ctx)
-			creds, err := QueryForCredentials(con, Where{
-				"(identity_credentials.identity_id = ? AND identity_credentials.nid = ?)",
-				[]interface{}{i.ID, nid},
-			})
+			creds, err := QueryForCredentials(con,
+				"identity_credential_identifiers.identity_credential_id = identity_credentials.id AND identity_credential_identifiers.nid = identity_credentials.nid",
+				Where{"(identity_credentials.identity_id = ? AND identity_credentials.nid = ?)", []interface{}{i.ID, nid}})
 			if err != nil {
 				return err
 			}
@@ -584,14 +583,14 @@ type Where struct {
 
 // QueryForCredentials queries for identity credentials with custom WHERE
 // clauses, returning the results resolved by the owning identity's UUID.
-func QueryForCredentials(con *pop.Connection, where ...Where) (map[uuid.UUID](map[identity.CredentialsType]identity.Credentials), error) {
+func QueryForCredentials(con *pop.Connection, joinOn string, where ...Where) (map[uuid.UUID](map[identity.CredentialsType]identity.Credentials), error) {
 	q := con.Select(
 		"identity_credentials.id cred_id",
 		"identity_credentials.identity_id identity_id",
 		"identity_credentials.nid nid",
 		"ict.name cred_type",
 		"ict.id cred_type_id",
-		"COALESCE(ici.identifier, '') cred_identifier",
+		"COALESCE(identity_credential_identifiers.identifier, '') cred_identifier",
 		"identity_credentials.config cred_config",
 		"identity_credentials.version cred_version",
 		"identity_credentials.created_at created_at",
@@ -600,8 +599,8 @@ func QueryForCredentials(con *pop.Connection, where ...Where) (map[uuid.UUID](ma
 		"identity_credential_types ict",
 		"(identity_credentials.identity_credential_type_id = ict.id)",
 	).LeftJoin(
-		"identity_credential_identifiers ici",
-		"(ici.identity_credential_id = identity_credentials.id AND ici.nid = identity_credentials.nid)",
+		"identity_credential_identifiers",
+		joinOn,
 	)
 	for _, w := range where {
 		q = q.Where("("+w.Condition+")", w.Args...)
@@ -707,9 +706,9 @@ func (p *IdentityPersister) ListIdentities(ctx context.Context, params identity.
 			ids = append(ids, is[k].ID)
 		}
 		creds, err := QueryForCredentials(con,
-			Where{"(identity_credentials.nid = ?)", []interface{}{nid}},
-			Where{"(identity_credentials.identity_id IN (?) )", ids},
-		)
+			"identity_credential_identifiers.identity_credential_id = identity_credentials.id AND identity_credential_identifiers.nid = identity_credentials.nid",
+			Where{"identity_credentials.nid = ?", []interface{}{nid}},
+			Where{"identity_credentials.identity_id IN (?)", ids})
 		if err != nil {
 			return nil, err
 		}

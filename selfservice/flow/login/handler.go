@@ -12,8 +12,8 @@ import (
 
 	"github.com/ory/herodot"
 	hydraclientgo "github.com/ory/hydra-client-go/v2"
-
 	"github.com/ory/kratos/hydra"
+	"github.com/ory/kratos/selfservice/sessiontokenexchange"
 	"github.com/ory/kratos/text"
 	"github.com/ory/x/stringsx"
 
@@ -27,13 +27,12 @@ import (
 	"github.com/julienschmidt/httprouter"
 	"github.com/pkg/errors"
 
-	"github.com/ory/x/urlx"
-
 	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/selfservice/errorx"
 	"github.com/ory/kratos/selfservice/flow"
 	"github.com/ory/kratos/session"
 	"github.com/ory/kratos/x"
+	"github.com/ory/x/urlx"
 )
 
 const (
@@ -59,6 +58,7 @@ type (
 		x.CSRFProvider
 		config.Provider
 		ErrorHandlerProvider
+		sessiontokenexchange.PersistenceProvider
 	}
 	HandlerProvider interface {
 		LoginHandler() *Handler
@@ -137,6 +137,13 @@ func (h *Handler) NewLoginFlow(w http.ResponseWriter, r *http.Request, ft flow.T
 	sess, err := h.d.SessionManager().FetchFromRequest(r.Context(), r)
 	if e := new(session.ErrNoActiveSessionFound); errors.As(err, &e) {
 		// No session exists yet
+		if ft == flow.TypeAPI && r.URL.Query().Get("return_session_token_exchange_code") == "true" {
+			e, err := h.d.SessionTokenExchangePersister().CreateSessionTokenExchanger(r.Context(), f.ID)
+			if err != nil {
+				return nil, nil, errors.WithStack(herodot.ErrInternalServerError.WithWrap(err))
+			}
+			f.SessionTokenExchangeCode = e.InitCode
+		}
 
 		// We can not request an AAL > 1 because we must first verify the first factor.
 		if f.RequestedAAL > identity.AuthenticatorAssuranceLevel1 {
@@ -250,6 +257,17 @@ type createNativeLoginFlow struct {
 	//
 	// in: header
 	SessionToken string `json:"X-Session-Token"`
+
+	// EnableSessionTokenExchangeCode requests the login flow to include a code that can be used to retrieve the session token
+	// after the login flow has been completed.
+	//
+	// in: query
+	EnableSessionTokenExchangeCode bool `json:"return_session_token_exchange_code"`
+
+	// The URL to return the browser to after the flow was completed.
+	//
+	// in: query
+	ReturnTo string `json:"return_to"`
 }
 
 // swagger:route GET /self-service/login/api frontend createNativeLoginFlow
@@ -405,6 +423,19 @@ func (h *Handler) createBrowserLoginFlow(w http.ResponseWriter, r *http.Request,
 		if !hlr.GetSkip() {
 			q := r.URL.Query()
 			q.Set("refresh", "true")
+			r.URL.RawQuery = q.Encode()
+		}
+
+		// on OAuth2 flows, we need to use the RequestURL
+		// as the ReturnTo URL.
+		// This is because a user might want to switch between
+		// different flows, such as login to registration and login to recovery.
+		// After completing a complex flow, such as recovery, we want the user
+		// to be redirected back to the original OAuth2 login flow.
+		if hlr.RequestUrl != "" && h.d.Config().OAuth2ProviderOverrideReturnTo(r.Context()) {
+			// replace the return_to query parameter
+			q := r.URL.Query()
+			q.Set("return_to", hlr.RequestUrl)
 			r.URL.RawQuery = q.Encode()
 		}
 	}
