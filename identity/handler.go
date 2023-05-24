@@ -204,8 +204,8 @@ type getIdentity struct {
 
 	// Include Credentials in Response
 	//
-	// Currently, only `oidc` is supported. This will return the initial OAuth 2.0 Access,
-	// Refresh and (optionally) OpenID Connect ID Token.
+	// Include any credential, for example `password` or `oidc`, in the response. When set to `oidc`, This will return
+	// the initial OAuth 2.0 Access Token, OAuth 2.0 Refresh Token and the OpenID Connect ID Token if available.
 	//
 	// required: false
 	// in: query
@@ -241,21 +241,25 @@ func (h *Handler) get(w http.ResponseWriter, r *http.Request, ps httprouter.Para
 		return
 	}
 
-	if declassify := r.URL.Query().Get("include_credential"); declassify == "oidc" {
-		emit, err := i.WithDeclassifiedCredentialsOIDC(r.Context(), h.r)
-		if err != nil {
-			h.r.Writer().WriteError(w, r, err)
+	includeCredentials, _ := r.URL.Query()["include_credential"]
+	var declassify []CredentialsType
+	for _, v := range includeCredentials {
+		tc, ok := ParseCredentialsType(v)
+		if ok {
+			declassify = append(declassify, tc)
+		} else {
+			h.r.Writer().WriteError(w, r, errors.WithStack(herodot.ErrBadRequest.WithReasonf("Invalid value `%s` for parameter `include_credential`.", declassify)))
 			return
 		}
-		h.r.Writer().Write(w, r, WithCredentialsAndAdminMetadataInJSON(*emit))
-		return
-	} else if len(declassify) > 0 {
-		h.r.Writer().WriteError(w, r, errors.WithStack(herodot.ErrBadRequest.WithReasonf("Invalid value `%s` for parameter `include_credential`.", declassify)))
-		return
-
 	}
 
-	h.r.Writer().Write(w, r, WithCredentialsMetadataAndAdminMetadataInJSON(*i))
+	emit, err := i.WithDeclassifiedCredentials(r.Context(), h.r, declassify)
+	if err != nil {
+		h.r.Writer().WriteError(w, r, err)
+		return
+	}
+	h.r.Writer().Write(w, r, WithCredentialsAndAdminMetadataInJSON(*emit))
+	return
 }
 
 // Create Identity Parameters
