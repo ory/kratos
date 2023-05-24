@@ -5035,6 +5035,14 @@
             "schema": {
               "type": "string"
             }
+          },
+          {
+            "description": "HTTP Cookies\n\nWhen using the SDK in a browser app, on the server side you must include the HTTP Cookie Header\nsent by the client to your server here. This ensures that CSRF and session cookies are respected.",
+            "in": "header",
+            "name": "Cookie",
+            "schema": {
+              "type": "string"
+            }
           }
         ],
         "responses": {
