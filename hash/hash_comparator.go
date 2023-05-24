@@ -60,6 +60,9 @@ func CompareBcrypt(_ context.Context, password []byte, hash []byte) error {
 
 	err := bcrypt.CompareHashAndPassword(hash, password)
 	if err != nil {
+		if errors.Is(err, bcrypt.ErrMismatchedHashAndPassword) {
+			return errors.WithStack(ErrMismatchedHashAndPassword)
+		}
 		return err
 	}
 
@@ -75,15 +78,9 @@ func CompareArgon2id(_ context.Context, password []byte, hash []byte) error {
 	}
 
 	// Derive the key from the other password using the same parameters.
-	otherHash := argon2.IDKey([]byte(password), salt, p.Iterations, uint32(p.Memory), p.Parallelism, p.KeyLength)
+	otherHash := argon2.IDKey(password, salt, p.Iterations, uint32(p.Memory), p.Parallelism, p.KeyLength)
 
-	// Check that the contents of the hashed passwords are identical. Note
-	// that we are using the subtle.ConstantTimeCompare() function for this
-	// to help prevent timing attacks.
-	if subtle.ConstantTimeCompare(hash, otherHash) == 1 {
-		return nil
-	}
-	return errors.WithStack(ErrMismatchedHashAndPassword)
+	return comparePasswordHashConstantTime(hash, otherHash)
 }
 
 func CompareArgon2i(_ context.Context, password []byte, hash []byte) error {
@@ -95,15 +92,9 @@ func CompareArgon2i(_ context.Context, password []byte, hash []byte) error {
 	}
 
 	// Derive the key from the other password using the same parameters.
-	otherHash := argon2.Key([]byte(password), salt, p.Iterations, uint32(p.Memory), p.Parallelism, p.KeyLength)
+	otherHash := argon2.Key(password, salt, p.Iterations, uint32(p.Memory), p.Parallelism, p.KeyLength)
 
-	// Check that the contents of the hashed passwords are identical. Note
-	// that we are using the subtle.ConstantTimeCompare() function for this
-	// to help prevent timing attacks.
-	if subtle.ConstantTimeCompare(hash, otherHash) == 1 {
-		return nil
-	}
-	return errors.WithStack(ErrMismatchedHashAndPassword)
+	return comparePasswordHashConstantTime(hash, otherHash)
 }
 
 func ComparePbkdf2(_ context.Context, password []byte, hash []byte) error {
@@ -117,13 +108,7 @@ func ComparePbkdf2(_ context.Context, password []byte, hash []byte) error {
 	// Derive the key from the other password using the same parameters.
 	otherHash := pbkdf2.Key(password, salt, int(p.Iterations), int(p.KeyLength), getPseudorandomFunctionForPbkdf2(p.Algorithm))
 
-	// Check that the contents of the hashed passwords are identical. Note
-	// that we are using the subtle.ConstantTimeCompare() function for this
-	// to help prevent timing attacks.
-	if subtle.ConstantTimeCompare(hash, otherHash) == 1 {
-		return nil
-	}
-	return errors.WithStack(ErrMismatchedHashAndPassword)
+	return comparePasswordHashConstantTime(hash, otherHash)
 }
 
 func CompareScrypt(_ context.Context, password []byte, hash []byte) error {
@@ -140,13 +125,7 @@ func CompareScrypt(_ context.Context, password []byte, hash []byte) error {
 		return errors.WithStack(err)
 	}
 
-	// Check that the contents of the hashed passwords are identical. Note
-	// that we are using the subtle.ConstantTimeCompare() function for this
-	// to help prevent timing attacks.
-	if subtle.ConstantTimeCompare(hash, otherHash) == 1 {
-		return nil
-	}
-	return errors.WithStack(ErrMismatchedHashAndPassword)
+	return comparePasswordHashConstantTime(hash, otherHash)
 }
 
 func CompareSSHA(_ context.Context, password []byte, hash []byte) error {
@@ -199,13 +178,7 @@ func CompareFirebaseScrypt(_ context.Context, password []byte, hash []byte) erro
 	stream.XORKeyStream(cipherText[aes.BlockSize:], signerKey)
 	otherHash := cipherText[aes.BlockSize:]
 
-	// Check that the contents of the hashed passwords are identical. Note
-	// that we are using the subtle.ConstantTimeCompare() function for this
-	// to help prevent timing attacks.
-	if subtle.ConstantTimeCompare(hash, otherHash) == 1 {
-		return nil
-	}
-	return errors.WithStack(ErrMismatchedHashAndPassword)
+	return comparePasswordHashConstantTime(hash, otherHash)
 }
 
 func CompareMD5(_ context.Context, password []byte, hash []byte) error {
@@ -223,13 +196,7 @@ func CompareMD5(_ context.Context, password []byte, hash []byte) error {
 	//#nosec G401 -- compatibility for imported passwords
 	otherHash := md5.Sum(arg)
 
-	// Check that the contents of the hashed passwords are identical. Note
-	// that we are using the subtle.ConstantTimeCompare() function for this
-	// to help prevent timing attacks.
-	if subtle.ConstantTimeCompare(hash, otherHash[:]) == 1 {
-		return nil
-	}
-	return errors.WithStack(ErrMismatchedHashAndPassword)
+	return comparePasswordHashConstantTime(hash, otherHash[:])
 }
 
 var (
@@ -427,12 +394,7 @@ func compareSHAHelper(hasher string, raw []byte, hash []byte) error {
 	encodedHash := []byte(base64.StdEncoding.EncodeToString(hash))
 	newEncodedHash := []byte(base64.StdEncoding.EncodeToString(sha))
 
-	// Check that the contents of the hashed passwords are identical.
-	// subtle.ConstantTimeCompare() is used to help prevent timing attacks.
-	if subtle.ConstantTimeCompare(encodedHash, newEncodedHash) == 1 {
-		return nil
-	}
-	return errors.WithStack(ErrMismatchedHashAndPassword)
+	return comparePasswordHashConstantTime(encodedHash, newEncodedHash)
 }
 
 // decodeSSHAHash decodes SSHA[1|256|512] encoded password hash in usual {SSHA...} format.
@@ -557,4 +519,12 @@ func decodeMD5Hash(encodedHash string) (pf, salt, hash []byte, err error) {
 	default:
 		return nil, nil, nil, ErrInvalidHash
 	}
+}
+
+func comparePasswordHashConstantTime(hash, otherHash []byte) error {
+	// use subtle.ConstantTimeCompare() to prevent timing attacks.
+	if subtle.ConstantTimeCompare(hash, otherHash) == 1 {
+		return nil
+	}
+	return errors.WithStack(ErrMismatchedHashAndPassword)
 }
