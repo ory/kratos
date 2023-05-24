@@ -77,6 +77,24 @@ const (
 	CredentialsTypeRecoveryCode CredentialsType = "code_recovery"
 )
 
+// ParseCredentialsType parses a string into a CredentialsType or returns false as the second argument.
+func ParseCredentialsType(in string) (CredentialsType, bool) {
+	for _, t := range []CredentialsType{
+		CredentialsTypePassword,
+		CredentialsTypeOIDC,
+		CredentialsTypeTOTP,
+		CredentialsTypeLookup,
+		CredentialsTypeWebAuthn,
+		CredentialsTypeRecoveryLink,
+		CredentialsTypeRecoveryCode,
+	} {
+		if t.String() == in {
+			return t, true
+		}
+	}
+	return "", false
+}
+
 // Credentials represents a specific credential type
 //
 // swagger:model identityCredentials

@@ -11,6 +11,14 @@
     - oidc
     - webauthn
     - lookup_secret
+- op: add
+  path: /paths/~1admin~1identities~1{id}/get/parameters/1/schema/items/enum
+  value:
+    - password
+    - totp
+    - oidc
+    - webauthn
+    - lookup_secret
 - op: remove
   path: /components/schemas/updateIdentityBody/properties/metadata_admin/type
 - op: remove

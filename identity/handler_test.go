@@ -436,6 +436,33 @@ func TestHandler(t *testing.T) {
 			}
 		})
 
+		t.Run("case=should get identity with credentials", func(t *testing.T) {
+			i := identity.NewIdentity(config.DefaultIdentityTraitsSchemaID)
+			credentials := map[identity.CredentialsType]identity.Credentials{
+				identity.CredentialsTypePassword: {Identifiers: []string{"zab", "bar"}, Type: identity.CredentialsTypePassword, Config: sqlxx.JSONRawMessage("{\"some\" : \"secret\"}")},
+				identity.CredentialsTypeOIDC:     {Type: identity.CredentialsTypeOIDC, Identifiers: []string{"bar", "baz"}, Config: sqlxx.JSONRawMessage("{\"some\" : \"secret\"}")},
+				identity.CredentialsTypeWebAuthn: {Type: identity.CredentialsTypeWebAuthn, Identifiers: []string{"foo", "bar"}, Config: sqlxx.JSONRawMessage("{\"some\" : \"secret\", \"user_handle\": \"rVIFaWRcTTuQLkXFmQWpgA==\"}")},
+			}
+			i.Credentials = credentials
+			require.NoError(t, reg.PrivilegedIdentityPool().CreateIdentity(context.Background(), i))
+
+			excludeKeys := snapshotx.ExceptNestedKeys("id", "created_at", "updated_at", "schema_url", "state_changed_at")
+			t.Run("case=should get identity without credentials included", func(t *testing.T) {
+				res := get(t, adminTS, "/identities/"+i.ID.String(), http.StatusOK)
+				snapshotx.SnapshotT(t, json.RawMessage(res.Raw), excludeKeys)
+			})
+
+			t.Run("case=should get identity with password credentials included", func(t *testing.T) {
+				res := get(t, adminTS, "/identities/"+i.ID.String()+"?include_credential=password", http.StatusOK)
+				snapshotx.SnapshotT(t, json.RawMessage(res.Raw), excludeKeys)
+			})
+
+			t.Run("case=should get identity with password and webauthn credentials included", func(t *testing.T) {
+				res := get(t, adminTS, "/identities/"+i.ID.String()+"?include_credential=password&include_credential=webauthn", http.StatusOK)
+				snapshotx.SnapshotT(t, json.RawMessage(res.Raw), excludeKeys)
+			})
+		})
+
 		t.Run("case=should pass if no oidc credentials are set", func(t *testing.T) {
 			for name, ts := range map[string]*httptest.Server{"public": publicTS, "admin": adminTS} {
 				t.Run("endpoint="+name, func(t *testing.T) {

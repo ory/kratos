@@ -388,58 +388,65 @@ func CollectRecoveryAddresses(i []*Identity) (res []RecoveryAddress) {
 	return res
 }
 
-func (i *Identity) WithDeclassifiedCredentialsOIDC(ctx context.Context, c cipher.Provider) (*Identity, error) {
+func (i *Identity) WithDeclassifiedCredentials(ctx context.Context, c cipher.Provider, includeCredentials []CredentialsType) (*Identity, error) {
 	credsToPublish := make(map[CredentialsType]Credentials)
 
 	for ct, original := range i.Credentials {
-		if ct != CredentialsTypeOIDC {
+		if _, found := lo.Find(includeCredentials, func(i CredentialsType) bool {
+			return i == ct
+		}); !found {
 			toPublish := original
 			toPublish.Config = []byte{}
 			credsToPublish[ct] = toPublish
 			continue
 		}
 
-		toPublish := original
-		toPublish.Config = []byte{}
+		switch ct {
+		case CredentialsTypeOIDC:
+			toPublish := original
+			toPublish.Config = []byte{}
 
-		for _, token := range []string{"initial_id_token", "initial_access_token", "initial_refresh_token"} {
-			var i int
-			var err error
-			gjson.GetBytes(original.Config, "providers").ForEach(func(_, v gjson.Result) bool {
-				key := fmt.Sprintf("%d.%s", i, token)
-				ciphertext := v.Get(token).String()
+			for _, token := range []string{"initial_id_token", "initial_access_token", "initial_refresh_token"} {
+				var i int
+				var err error
+				gjson.GetBytes(original.Config, "providers").ForEach(func(_, v gjson.Result) bool {
+					key := fmt.Sprintf("%d.%s", i, token)
+					ciphertext := v.Get(token).String()
 
-				var plaintext []byte
-				plaintext, err = c.Cipher(ctx).Decrypt(ctx, ciphertext)
+					var plaintext []byte
+					plaintext, err = c.Cipher(ctx).Decrypt(ctx, ciphertext)
+					if err != nil {
+						return false
+					}
+
+					toPublish.Config, err = sjson.SetBytes(toPublish.Config, "providers."+key, string(plaintext))
+					if err != nil {
+						return false
+					}
+
+					toPublish.Config, err = sjson.SetBytes(toPublish.Config, fmt.Sprintf("providers.%d.subject", i), v.Get("subject").String())
+					if err != nil {
+						return false
+					}
+
+					toPublish.Config, err = sjson.SetBytes(toPublish.Config, fmt.Sprintf("providers.%d.provider", i), v.Get("provider").String())
+					if err != nil {
+						return false
+					}
+
+					i++
+					return true
+				})
+
 				if err != nil {
-					return false
+					return nil, err
 				}
 
-				toPublish.Config, err = sjson.SetBytes(toPublish.Config, "providers."+key, string(plaintext))
-				if err != nil {
-					return false
-				}
-
-				toPublish.Config, err = sjson.SetBytes(toPublish.Config, fmt.Sprintf("providers.%d.subject", i), v.Get("subject").String())
-				if err != nil {
-					return false
-				}
-
-				toPublish.Config, err = sjson.SetBytes(toPublish.Config, fmt.Sprintf("providers.%d.provider", i), v.Get("provider").String())
-				if err != nil {
-					return false
-				}
-
-				i++
-				return true
-			})
-
-			if err != nil {
-				return nil, err
+				credsToPublish[ct] = toPublish
 			}
+		default:
+			credsToPublish[ct] = original
 		}
-
-		credsToPublish[ct] = toPublish
 	}
 
 	ii := *i

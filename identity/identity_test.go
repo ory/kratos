@@ -313,3 +313,58 @@ func TestVerifiableAddresses(t *testing.T) {
 
 	assert.Equal(t, addresses, CollectVerifiableAddresses([]*Identity{id1, id2, id3}))
 }
+
+func TestWithDeclassifiedCredentials(t *testing.T) {
+	i := NewIdentity(config.DefaultIdentityTraitsSchemaID)
+	credentials := map[CredentialsType]Credentials{
+		CredentialsTypePassword: {
+			Identifiers: []string{"zab", "bar"},
+			Type:        CredentialsTypePassword,
+			Config:      sqlxx.JSONRawMessage("{\"some\" : \"secret\"}"),
+		},
+		CredentialsTypeOIDC: {
+			Type:        CredentialsTypeOIDC,
+			Identifiers: []string{"bar", "baz"},
+			Config:      sqlxx.JSONRawMessage("{\"some\" : \"secret\"}"),
+		},
+		CredentialsTypeWebAuthn: {
+			Type:        CredentialsTypeWebAuthn,
+			Identifiers: []string{"foo", "bar"},
+			Config:      sqlxx.JSONRawMessage("{\"some\" : \"secret\"}"),
+		},
+	}
+	i.Credentials = credentials
+
+	t.Run("case=no-include", func(t *testing.T) {
+		actualIdentity, err := i.WithDeclassifiedCredentials(ctx, nil, nil)
+		require.NoError(t, err)
+
+		for ct, actual := range actualIdentity.Credentials {
+			t.Run("credential="+string(ct), func(t *testing.T) {
+				snapshotx.SnapshotT(t, actual)
+			})
+		}
+	})
+
+	t.Run("case=include-webauthn", func(t *testing.T) {
+		actualIdentity, err := i.WithDeclassifiedCredentials(ctx, nil, []CredentialsType{CredentialsTypeWebAuthn})
+		require.NoError(t, err)
+
+		for ct, actual := range actualIdentity.Credentials {
+			t.Run("credential="+string(ct), func(t *testing.T) {
+				snapshotx.SnapshotT(t, actual)
+			})
+		}
+	})
+
+	t.Run("case=include-multi", func(t *testing.T) {
+		actualIdentity, err := i.WithDeclassifiedCredentials(ctx, nil, []CredentialsType{CredentialsTypeWebAuthn, CredentialsTypePassword})
+		require.NoError(t, err)
+
+		for ct, actual := range actualIdentity.Credentials {
+			t.Run("credential="+string(ct), func(t *testing.T) {
+				snapshotx.SnapshotT(t, actual)
+			})
+		}
+	})
+}
