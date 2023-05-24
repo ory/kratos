@@ -241,7 +241,7 @@ func (h *Handler) get(w http.ResponseWriter, r *http.Request, ps httprouter.Para
 		return
 	}
 
-	includeCredentials, _ := r.URL.Query()["include_credential"]
+	includeCredentials := r.URL.Query()["include_credential"]
 	var declassify []CredentialsType
 	for _, v := range includeCredentials {
 		tc, ok := ParseCredentialsType(v)
@@ -259,7 +259,6 @@ func (h *Handler) get(w http.ResponseWriter, r *http.Request, ps httprouter.Para
 		return
 	}
 	h.r.Writer().Write(w, r, WithCredentialsAndAdminMetadataInJSON(*emit))
-	return
 }
 
 // Create Identity Parameters
