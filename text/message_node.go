@@ -6,7 +6,23 @@ package text
 func NewInfoNodeLabelVerifyOTP() *Message {
 	return &Message{
 		ID:   InfoNodeLabelVerifyOTP,
+		Text: "Verify code",
+		Type: Info,
+	}
+}
+
+func NewInfoNodeLabelVerificationCode() *Message {
+	return &Message{
+		ID:   InfoNodeLabelVerificationCode,
 		Text: "Verification code",
+		Type: Info,
+	}
+}
+
+func NewInfoNodeLabelRecoveryCode() *Message {
+	return &Message{
+		ID:   InfoNodeLabelRecoveryCode,
+		Text: "Recovery code",
 		Type: Info,
 	}
 }

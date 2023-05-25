@@ -186,7 +186,7 @@ func (s *Strategy) createRecoveryCodeForIdentity(w http.ResponseWriter, r *http.
 	flow.State = recovery.StateEmailSent
 	flow.UI.Nodes = node.Nodes{}
 	flow.UI.Nodes.Append(node.NewInputField("code", nil, node.CodeGroup, node.InputAttributeTypeText, node.WithRequiredInputAttribute).
-		WithMetaLabel(text.NewInfoNodeLabelVerifyOTP()),
+		WithMetaLabel(text.NewInfoNodeLabelRecoveryCode()),
 	)
 
 	flow.UI.Nodes.
@@ -543,7 +543,7 @@ func (s *Strategy) recoveryHandleFormSubmission(w http.ResponseWriter, r *http.R
 	f.State = recovery.StateEmailSent
 	f.UI.Messages.Set(text.NewRecoveryEmailWithCodeSent())
 	f.UI.Nodes.Append(node.NewInputField("code", nil, node.CodeGroup, node.InputAttributeTypeText, node.WithRequiredInputAttribute).
-		WithMetaLabel(text.NewInfoNodeLabelVerifyOTP()),
+		WithMetaLabel(text.NewInfoNodeLabelRecoveryCode()),
 	)
 	f.UI.Nodes.Append(node.NewInputField("method", s.RecoveryNodeGroup(), node.CodeGroup, node.InputAttributeTypeHidden))
 
