@@ -112,7 +112,7 @@ type updateVerificationFlowWithLinkMethod struct {
 	// Allowed values are `link` and `code`
 	//
 	// required: true
-	Method string `json:"method"`
+	Method verification.VerificationStrategy `json:"method"`
 }
 
 func (s *Strategy) Verify(w http.ResponseWriter, r *http.Request, f *verification.Flow) (err error) {
