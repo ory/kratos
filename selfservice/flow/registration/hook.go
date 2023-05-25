@@ -96,7 +96,7 @@ func NewHookExecutor(d executorDependencies) *HookExecutor {
 	return &HookExecutor{d: d}
 }
 
-func (e *HookExecutor) PostRegistrationHook(w http.ResponseWriter, r *http.Request, ct identity.CredentialsType, a *Flow, i *identity.Identity) error {
+func (e *HookExecutor) PostRegistrationHook(w http.ResponseWriter, r *http.Request, ct identity.CredentialsType, provider string, a *Flow, i *identity.Identity) error {
 	e.d.Logger().
 		WithRequest(r).
 		WithField("identity_id", i.ID).
@@ -174,7 +174,12 @@ func (e *HookExecutor) PostRegistrationHook(w http.ResponseWriter, r *http.Reque
 
 	trace.SpanFromContext(r.Context()).AddEvent(events.NewIdentityCreated(r.Context(), i.ID))
 
-	s, err := session.NewActiveSession(r, i, e.d.Config(), time.Now().UTC(), ct, identity.AuthenticatorAssuranceLevel1)
+	s := session.NewInactiveSession()
+	s.CompletedLoginForWithProvider(ct, identity.AuthenticatorAssuranceLevel1, provider)
+	if err := s.Activate(r, i, c, time.Now().UTC()); err != nil {
+		return err
+	}
+
 	if err != nil {
 		return err
 	}
