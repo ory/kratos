@@ -316,12 +316,20 @@
 
   Closes https://github.com/ory/sdk/issues/255
 
+- String to enum for updateVerificationFlowWithLinkMethod Method
+  ([#3279](https://github.com/ory/kratos/issues/3279))
+  ([34ff1d2](https://github.com/ory/kratos/commit/34ff1d2912e7f7aefb35dae759dce2eb37ecb790)),
+  closes [#2943](https://github.com/ory/kratos/issues/2943)
 - Use the correct redirect_uri for linkedin social login
   ([#3269](https://github.com/ory/kratos/issues/3269))
   ([27ccecc](https://github.com/ory/kratos/commit/27ccecc1cd490eaa71da7f8235b4b0057b8f14fe))
 
 ### Features
 
+- Add “provider id” parameter to kratos session
+  ([#3292](https://github.com/ory/kratos/issues/3292))
+  ([387f5a2](https://github.com/ory/kratos/commit/387f5a2711ca8eee97ad0f6bb2575ec9ba4797d9)),
+  closes [#3283](https://github.com/ory/kratos/issues/3283)
 - Allow customization of JOIN predicate in QueryForCredentials
   ([#3253](https://github.com/ory/kratos/issues/3253))
   ([8785166](https://github.com/ory/kratos/commit/87851668e776404aabbfbc67af73a43ea3ee28fc))
