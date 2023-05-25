@@ -5,7 +5,7 @@
 
 **Table of Contents**
 
-- [ (2023-05-24)](#2023-05-24)
+- [ (2023-05-25)](#2023-05-25)
   - [Bug Fixes](#bug-fixes)
   - [Features](#features)
   - [Tests](#tests)
@@ -301,7 +301,7 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# [](https://github.com/ory/kratos/compare/v0.13.0...v) (2023-05-24)
+# [](https://github.com/ory/kratos/compare/v0.13.0...v) (2023-05-25)
 
 ### Bug Fixes
 
@@ -328,6 +328,10 @@
 - Emit events for login/logout and registration
   ([#3235](https://github.com/ory/kratos/issues/3235))
   ([c784b7e](https://github.com/ory/kratos/commit/c784b7e7ed2834ca83c6db2326b735e78e5a75f2))
+- Forward `prompt` upstream parameter during OIDC flow
+  ([#3276](https://github.com/ory/kratos/issues/3276))
+  ([d290cb0](https://github.com/ory/kratos/commit/d290cb05bb4f63d04ec3763db127060e13c350dc)),
+  closes [#2709](https://github.com/ory/kratos/issues/2709)
 - Return to oauth flow after switching from login to other flows
   ([#3212](https://github.com/ory/kratos/issues/3212))
   ([a1fea6c](https://github.com/ory/kratos/commit/a1fea6c353768bbf154900766fbbe51f2a148554)):
