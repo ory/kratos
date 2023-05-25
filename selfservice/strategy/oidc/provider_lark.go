@@ -87,13 +87,17 @@ func (g *ProviderLark) Claims(ctx context.Context, exchange *oauth2.Token, query
 	}
 
 	exchange.SetAuthHeader(req.Request)
-	resp, err := client.Do(req)
+	res, err := client.Do(req)
 	if err != nil {
 		return nil, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("%s", err))
 	}
-	defer resp.Body.Close()
+	defer res.Body.Close()
 
-	if err := json.NewDecoder(resp.Body).Decode(&user); err != nil {
+	if err := logUpstreamError(d.reg.Logger(), res); err != nil {
+		return nil, err
+	}
+
+	if err := json.NewDecoder(res.Body).Decode(&user); err != nil {
 		return nil, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("%s", err))
 	}
 
@@ -106,7 +110,6 @@ func (g *ProviderLark) Claims(ctx context.Context, exchange *oauth2.Token, query
 		Email:       user.Email,
 		PhoneNumber: user.Mobile,
 	}, nil
-
 }
 
 func (pl *ProviderLark) AuthCodeURLOptions(r ider) []oauth2.AuthCodeOption {
