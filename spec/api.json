@@ -1720,6 +1720,10 @@
             ],
             "title": "The method used",
             "type": "string"
+          },
+          "provider": {
+            "description": "OIDC or SAML provider id used for authentication",
+            "type": "string"
           }
         },
         "title": "AuthenticationMethod identifies an authentication method",

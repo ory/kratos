@@ -4638,6 +4638,10 @@
         },
         "method": {
           "$ref": "#/definitions/identityCredentialsType"
+        },
+        "provider": {
+          "description": "OIDC or SAML provider id used for authentication",
+          "type": "string"
         }
       }
     },
