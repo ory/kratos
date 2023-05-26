@@ -41,10 +41,18 @@ func (i testModel) TableName(ctx context.Context) string {
 
 func (tq testQuoter) Quote(s string) string { return fmt.Sprintf("%q", s) }
 
+func makeModels[T any]() []*T {
+	models := make([]*T, 10)
+	for k := range models {
+		models[k] = new(T)
+	}
+	return models
+}
+
 func Test_buildInsertQueryArgs(t *testing.T) {
 	ctx := context.Background()
 	t.Run("case=testModel", func(t *testing.T) {
-		models := make([]*testModel, 10)
+		models := makeModels[testModel]()
 		mapper := reflectx.NewMapper("db")
 		args, err := buildInsertQueryArgs(ctx, "other", mapper, testQuoter{}, models)
 		require.NoError(t, err)
@@ -65,7 +73,7 @@ func Test_buildInsertQueryArgs(t *testing.T) {
 	})
 
 	t.Run("case=Identities", func(t *testing.T) {
-		models := make([]*identity.Identity, 10)
+		models := makeModels[identity.Identity]()
 		mapper := reflectx.NewMapper("db")
 		args, err := buildInsertQueryArgs(ctx, "other", mapper, testQuoter{}, models)
 		require.NoError(t, err)
@@ -73,7 +81,7 @@ func Test_buildInsertQueryArgs(t *testing.T) {
 	})
 
 	t.Run("case=RecoveryAddress", func(t *testing.T) {
-		models := make([]*identity.RecoveryAddress, 10)
+		models := makeModels[identity.RecoveryAddress]()
 		mapper := reflectx.NewMapper("db")
 		args, err := buildInsertQueryArgs(ctx, "other", mapper, testQuoter{}, models)
 		require.NoError(t, err)
@@ -81,9 +89,22 @@ func Test_buildInsertQueryArgs(t *testing.T) {
 	})
 
 	t.Run("case=RecoveryAddress", func(t *testing.T) {
-		models := make([]*identity.RecoveryAddress, 10)
+		models := makeModels[identity.RecoveryAddress]()
 		mapper := reflectx.NewMapper("db")
 		args, err := buildInsertQueryArgs(ctx, "other", mapper, testQuoter{}, models)
+		require.NoError(t, err)
+		snapshotx.SnapshotT(t, args)
+	})
+
+	t.Run("case=cockroach", func(t *testing.T) {
+		models := makeModels[testModel]()
+		for k := range models {
+			if k%3 == 0 {
+				models[k].ID = uuid.FromStringOrNil(fmt.Sprintf("ae0125a9-2786-4ada-82d2-d169cf75047%d", k))
+			}
+		}
+		mapper := reflectx.NewMapper("db")
+		args, err := buildInsertQueryArgs(ctx, "cockroach", mapper, testQuoter{}, models)
 		require.NoError(t, err)
 		snapshotx.SnapshotT(t, args)
 	})

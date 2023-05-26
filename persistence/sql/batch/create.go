@@ -64,28 +64,25 @@ func buildInsertQueryArgs[T any](ctx context.Context, dialect string, mapper *re
 	for _, col := range columns {
 		quotedColumns = append(quotedColumns, quoter.Quote(col))
 	}
-	for _, model := range models {
+
+	for _, m := range models {
+		m := reflect.ValueOf(m)
+
 		pl := make([]string, len(placeholderRow))
 		copy(pl, placeholderRow)
+
 		for k := range placeholderRow {
-			if columns[k] != "id" || dialect != dbal.DriverCockroachDB {
+			if columns[k] != "id" {
 				continue
 			}
 
-			m := reflect.ValueOf(model)
-			el := reflect.ValueOf(model).Elem()
-			fbn := el.FieldByName("ID")
-			if !fbn.IsValid() {
-				return insertQueryArgs{}, errors.New("model does not have a field named id")
-			}
-
-			field := mapper.FieldByName(m, "ID")
+			field := mapper.FieldByName(m, columns[k])
 			val, ok := field.Interface().(uuid.UUID)
 			if !ok {
 				continue
 			}
 
-			if val != uuid.Nil {
+			if val == uuid.Nil && dialect == dbal.DriverCockroachDB {
 				pl[k] = "gen_random_uuid()"
 				break
 			}
@@ -122,7 +119,7 @@ func buildInsertQueryValues[T any](dialect string, mapper *reflectx.Mapper, colu
 				if field.Interface().(uuid.UUID) != uuid.Nil {
 					break // breaks switch, not for
 				} else if dialect == dbal.DriverCockroachDB {
-					continue // We do not need a value for this column because it is set automatically
+					break // break switch - no need to generate an ID it is done by cockroach itself
 				}
 
 				id, err := uuid.NewV4()
