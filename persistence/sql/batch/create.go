@@ -119,7 +119,7 @@ func buildInsertQueryValues[T any](dialect string, mapper *reflectx.Mapper, colu
 				if field.Interface().(uuid.UUID) != uuid.Nil {
 					break // breaks switch, not for
 				} else if dialect == dbal.DriverCockroachDB {
-					break // break switch - no need to generate an ID it is done by cockroach itself
+					continue // break switch - no need to generate an ID it is done by cockroach itself
 				}
 
 				id, err := uuid.NewV4()
