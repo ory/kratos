@@ -5,7 +5,7 @@
 
 **Table of Contents**
 
-- [ (2023-05-08)](#2023-05-08)
+- [ (2023-05-25)](#2023-05-25)
   - [Bug Fixes](#bug-fixes)
   - [Features](#features)
   - [Tests](#tests)
@@ -301,24 +301,45 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# [](https://github.com/ory/kratos/compare/v0.13.0...v) (2023-05-08)
+# [](https://github.com/ory/kratos/compare/v0.13.0...v) (2023-05-25)
 
 ### Bug Fixes
 
 - Bump quickstart version ([#3257](https://github.com/ory/kratos/issues/3257))
   ([6db70a8](https://github.com/ory/kratos/commit/6db70a81afac5860a86c31881a6fc988096ff0e4))
+- Minor refactorings in package hash
+  ([#3186](https://github.com/ory/kratos/issues/3186))
+  ([831fb19](https://github.com/ory/kratos/commit/831fb19e1c98b9fade3ff61d26ad249c548292d6))
+- **sdk:** Add cookie for updateLogoutFlow
+  ([#3284](https://github.com/ory/kratos/issues/3284))
+  ([95ed2b9](https://github.com/ory/kratos/commit/95ed2b94cc99d40af6bbe57e5356ec0f28cb9b78)):
+
+  Closes https://github.com/ory/sdk/issues/255
+
+- String to enum for updateVerificationFlowWithLinkMethod Method
+  ([#3279](https://github.com/ory/kratos/issues/3279))
+  ([34ff1d2](https://github.com/ory/kratos/commit/34ff1d2912e7f7aefb35dae759dce2eb37ecb790)),
+  closes [#2943](https://github.com/ory/kratos/issues/2943)
 - Use the correct redirect_uri for linkedin social login
   ([#3269](https://github.com/ory/kratos/issues/3269))
   ([27ccecc](https://github.com/ory/kratos/commit/27ccecc1cd490eaa71da7f8235b4b0057b8f14fe))
 
 ### Features
 
+- Add “provider id” parameter to kratos session
+  ([#3292](https://github.com/ory/kratos/issues/3292))
+  ([387f5a2](https://github.com/ory/kratos/commit/387f5a2711ca8eee97ad0f6bb2575ec9ba4797d9)),
+  closes [#3283](https://github.com/ory/kratos/issues/3283)
 - Allow customization of JOIN predicate in QueryForCredentials
   ([#3253](https://github.com/ory/kratos/issues/3253))
   ([8785166](https://github.com/ory/kratos/commit/87851668e776404aabbfbc67af73a43ea3ee28fc))
 - Emit events for login/logout and registration
   ([#3235](https://github.com/ory/kratos/issues/3235))
   ([c784b7e](https://github.com/ory/kratos/commit/c784b7e7ed2834ca83c6db2326b735e78e5a75f2))
+- Forward `prompt` upstream parameter during OIDC flow
+  ([#3276](https://github.com/ory/kratos/issues/3276))
+  ([d290cb0](https://github.com/ory/kratos/commit/d290cb05bb4f63d04ec3763db127060e13c350dc)),
+  closes [#2709](https://github.com/ory/kratos/issues/2709)
 - Return to oauth flow after switching from login to other flows
   ([#3212](https://github.com/ory/kratos/issues/3212))
   ([a1fea6c](https://github.com/ory/kratos/commit/a1fea6c353768bbf154900766fbbe51f2a148554)):
@@ -351,6 +372,13 @@
   - style: format
 
   - chore: nit config description
+
+- Support exporting of all credential types
+  ([#3290](https://github.com/ory/kratos/issues/3290))
+  ([de6c857](https://github.com/ory/kratos/commit/de6c8574c9c6070458303f9b5caf7e8533f06b69)):
+
+  It's now possible to export all credential types (including passwords) when
+  calling the `getIdentity` SDK method.
 
 - Support OIDC flows for native apps
   ([#3216](https://github.com/ory/kratos/issues/3216))

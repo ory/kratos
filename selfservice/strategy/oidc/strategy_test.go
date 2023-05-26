@@ -435,6 +435,7 @@ func TestStrategy(t *testing.T) {
 			res, body := makeRequest(t, "valid", action, url.Values{})
 			assertIdentity(t, res, body)
 			expectTokens(t, "valid", body)
+			assert.Equal(t, "valid", gjson.GetBytes(body, "authentication_methods.0.provider").String(), "%s", body)
 		})
 
 		t.Run("case=should pass login", func(t *testing.T) {
@@ -443,6 +444,7 @@ func TestStrategy(t *testing.T) {
 			res, body := makeRequest(t, "valid", action, url.Values{})
 			assertIdentity(t, res, body)
 			expectTokens(t, "valid", body)
+			assert.Equal(t, "valid", gjson.GetBytes(body, "authentication_methods.0.provider").String(), "%s", body)
 		})
 	})
 
@@ -455,6 +457,7 @@ func TestStrategy(t *testing.T) {
 			action := assertFormValues(t, r.ID, "valid")
 			res, body := makeRequest(t, "valid", action, url.Values{})
 			assertIdentity(t, res, body)
+			assert.Equal(t, "valid", gjson.GetBytes(body, "authentication_methods.0.provider").String(), "%s", body)
 		})
 	})
 
@@ -671,6 +674,7 @@ func TestStrategy(t *testing.T) {
 			fv.Set("provider", "valid")
 			fv.Set("upstream_parameters.login_hint", "oidc-upstream-parameters@ory.sh")
 			fv.Set("upstream_parameters.hd", "ory.sh")
+			fv.Set("upstream_parameters.prompt", "select_account")
 
 			res, err := c.PostForm(action, fv)
 			require.NoError(t, err)
@@ -681,6 +685,7 @@ func TestStrategy(t *testing.T) {
 
 			require.Equal(t, "oidc-upstream-parameters@ory.sh", loc.Query().Get("login_hint"))
 			require.Equal(t, "ory.sh", loc.Query().Get("hd"))
+			require.Equal(t, "select_account", loc.Query().Get("prompt"))
 		})
 
 		t.Run("case=should pass when logging in", func(t *testing.T) {
@@ -693,6 +698,7 @@ func TestStrategy(t *testing.T) {
 			fv.Set("provider", "valid")
 			fv.Set("upstream_parameters.login_hint", "oidc-upstream-parameters@ory.sh")
 			fv.Set("upstream_parameters.hd", "ory.sh")
+			fv.Set("upstream_parameters.prompt", "select_account")
 
 			res, err := c.PostForm(action, fv)
 			require.NoError(t, err)
@@ -703,6 +709,7 @@ func TestStrategy(t *testing.T) {
 
 			require.Equal(t, "oidc-upstream-parameters@ory.sh", loc.Query().Get("login_hint"))
 			require.Equal(t, "ory.sh", loc.Query().Get("hd"))
+			require.Equal(t, "select_account", loc.Query().Get("prompt"))
 		})
 
 		t.Run("case=should ignore invalid parameters when logging in", func(t *testing.T) {

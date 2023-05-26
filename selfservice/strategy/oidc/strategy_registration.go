@@ -84,6 +84,7 @@ type UpdateRegistrationFlowWithOidcMethod struct {
 	// Supported parameters are:
 	// - `login_hint` (string): The `login_hint` parameter suppresses the account chooser and either pre-fills the email box on the sign-in form, or selects the proper session.
 	// - `hd` (string): The `hd` parameter limits the login/registration process to a Google Organization, e.g. `mycollege.edu`.
+	// - `prompt` (string): The `prompt` specifies whether the Authorization Server prompts the End-User for reauthentication and consent, e.g. `select_account`.
 	//
 	// required: false
 	UpstreamParameters json.RawMessage `json:"upstream_parameters"`
@@ -176,7 +177,7 @@ func (s *Strategy) Register(w http.ResponseWriter, r *http.Request, f *registrat
 		return err
 	}
 
-	codeURL := c.AuthCodeURL(state.String(), append(provider.AuthCodeURLOptions(req), UpstreamParameters(provider, up)...)...)
+	codeURL := c.AuthCodeURL(state.String(), append(UpstreamParameters(provider, up), provider.AuthCodeURLOptions(req)...)...)
 	if x.IsJSONRequest(r) {
 		s.d.Writer().WriteError(w, r, flow.NewBrowserLocationChangeRequiredError(codeURL))
 	} else {
@@ -281,7 +282,7 @@ func (s *Strategy) processRegistration(w http.ResponseWriter, r *http.Request, r
 	}
 
 	i.SetCredentials(s.ID(), *creds)
-	if err := s.d.RegistrationExecutor().PostRegistrationHook(w, r, identity.CredentialsTypeOIDC, rf, i); err != nil {
+	if err := s.d.RegistrationExecutor().PostRegistrationHook(w, r, identity.CredentialsTypeOIDC, provider.Config().ID, rf, i); err != nil {
 		return nil, s.handleError(w, r, rf, provider.Config().ID, i.Traits, err)
 	}
 

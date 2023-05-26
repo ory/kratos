@@ -27,6 +27,10 @@
           "description": "The hd (hosted domain) parameter streamlines the login process for G Suite hosted accounts. By including the domain of the G Suite user (for example, mycollege.edu), you can indicate that the account selection UI should be optimized for accounts at that domain.",
           "type": "string"
         },
+        "prompt": {
+          "description": "The prompt specifies whether the Authorization Server prompts the End-User for reauthentication and consent (for example, select_account).",
+          "type": "string"
+        },
         "additionalProperties": false
       }
     }

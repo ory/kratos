@@ -1720,6 +1720,10 @@
             ],
             "title": "The method used",
             "type": "string"
+          },
+          "provider": {
+            "description": "OIDC or SAML provider id used for authentication",
+            "type": "string"
           }
         },
         "title": "AuthenticationMethod identifies an authentication method",
@@ -2397,7 +2401,7 @@
             "type": "object"
           },
           "upstream_parameters": {
-            "description": "UpstreamParameters are the parameters that are passed to the upstream identity provider.\n\nThese parameters are optional and depend on what the upstream identity provider supports.\nSupported parameters are:\n`login_hint` (string): The `login_hint` parameter suppresses the account chooser and either pre-fills the email box on the sign-in form, or selects the proper session.\n`hd` (string): The `hd` parameter limits the login/registration process to a Google Organization, e.g. `mycollege.edu`.",
+            "description": "UpstreamParameters are the parameters that are passed to the upstream identity provider.\n\nThese parameters are optional and depend on what the upstream identity provider supports.\nSupported parameters are:\n`login_hint` (string): The `login_hint` parameter suppresses the account chooser and either pre-fills the email box on the sign-in form, or selects the proper session.\n`hd` (string): The `hd` parameter limits the login/registration process to a Google Organization, e.g. `mycollege.edu`.\n`prompt` (string): The `prompt` specifies whether the Authorization Server prompts the End-User for reauthentication and consent, e.g. `select_account`.",
             "type": "object"
           }
         },
@@ -2607,7 +2611,7 @@
             "type": "object"
           },
           "upstream_parameters": {
-            "description": "UpstreamParameters are the parameters that are passed to the upstream identity provider.\n\nThese parameters are optional and depend on what the upstream identity provider supports.\nSupported parameters are:\n`login_hint` (string): The `login_hint` parameter suppresses the account chooser and either pre-fills the email box on the sign-in form, or selects the proper session.\n`hd` (string): The `hd` parameter limits the login/registration process to a Google Organization, e.g. `mycollege.edu`.",
+            "description": "UpstreamParameters are the parameters that are passed to the upstream identity provider.\n\nThese parameters are optional and depend on what the upstream identity provider supports.\nSupported parameters are:\n`login_hint` (string): The `login_hint` parameter suppresses the account chooser and either pre-fills the email box on the sign-in form, or selects the proper session.\n`hd` (string): The `hd` parameter limits the login/registration process to a Google Organization, e.g. `mycollege.edu`.\n`prompt` (string): The `prompt` specifies whether the Authorization Server prompts the End-User for reauthentication and consent, e.g. `select_account`.",
             "type": "object"
           }
         },
@@ -2776,7 +2780,7 @@
             "type": "string"
           },
           "upstream_parameters": {
-            "description": "UpstreamParameters are the parameters that are passed to the upstream identity provider.\n\nThese parameters are optional and depend on what the upstream identity provider supports.\nSupported parameters are:\n`login_hint` (string): The `login_hint` parameter suppresses the account chooser and either pre-fills the email box on the sign-in form, or selects the proper session.\n`hd` (string): The `hd` parameter limits the login/registration process to a Google Organization, e.g. `mycollege.edu`.",
+            "description": "UpstreamParameters are the parameters that are passed to the upstream identity provider.\n\nThese parameters are optional and depend on what the upstream identity provider supports.\nSupported parameters are:\n`login_hint` (string): The `login_hint` parameter suppresses the account chooser and either pre-fills the email box on the sign-in form, or selects the proper session.\n`hd` (string): The `hd` parameter limits the login/registration process to a Google Organization, e.g. `mycollege.edu`.\n`prompt` (string): The `prompt` specifies whether the Authorization Server prompts the End-User for reauthentication and consent, e.g. `select_account`.",
             "type": "object"
           }
         },
@@ -2942,8 +2946,13 @@
             "type": "string"
           },
           "method": {
-            "description": "Method is the method that should be used for this verification flow\n\nAllowed values are `link` and `code`",
-            "type": "string"
+            "description": "Method is the method that should be used for this verification flow\n\nAllowed values are `link` and `code`\nlink VerificationStrategyLink\ncode VerificationStrategyCode",
+            "enum": [
+              "link",
+              "code"
+            ],
+            "type": "string",
+            "x-go-enum-desc": "link VerificationStrategyLink\ncode VerificationStrategyCode"
           }
         },
         "required": [
@@ -3507,11 +3516,18 @@
             }
           },
           {
-            "description": "Include Credentials in Response\n\nCurrently, only `oidc` is supported. This will return the initial OAuth 2.0 Access,\nRefresh and (optionally) OpenID Connect ID Token.",
+            "description": "Include Credentials in Response\n\nInclude any credential, for example `password` or `oidc`, in the response. When set to `oidc`, This will return\nthe initial OAuth 2.0 Access Token, OAuth 2.0 Refresh Token and the OpenID Connect ID Token if available.",
             "in": "query",
             "name": "include_credential",
             "schema": {
               "items": {
+                "enum": [
+                  "password",
+                  "totp",
+                  "oidc",
+                  "webauthn",
+                  "lookup_secret"
+                ],
                 "type": "string"
               },
               "type": "array"
@@ -5032,6 +5048,14 @@
             "description": "The URL to return to after the logout was completed.",
             "in": "query",
             "name": "return_to",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "HTTP Cookies\n\nWhen using the SDK in a browser app, on the server side you must include the HTTP Cookie Header\nsent by the client to your server here. This ensures that CSRF and session cookies are respected.",
+            "in": "header",
+            "name": "Cookie",
             "schema": {
               "type": "string"
             }

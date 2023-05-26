@@ -6,6 +6,8 @@ package identity
 import (
 	"testing"
 
+	"github.com/stretchr/testify/require"
+
 	"github.com/mohae/deepcopy"
 	"github.com/stretchr/testify/assert"
 
@@ -28,4 +30,30 @@ func TestAALOrder(t *testing.T) {
 	assert.True(t, AuthenticatorAssuranceLevel1 < AuthenticatorAssuranceLevel2)
 	assert.True(t, AuthenticatorAssuranceLevel1 < AuthenticatorAssuranceLevel3)
 	assert.True(t, AuthenticatorAssuranceLevel2 < AuthenticatorAssuranceLevel3)
+}
+
+func TestParseCredentialsType(t *testing.T) {
+	for _, tc := range []struct {
+		input    string
+		expected CredentialsType
+	}{
+		{"password", CredentialsTypePassword},
+		{"oidc", CredentialsTypeOIDC},
+		{"totp", CredentialsTypeTOTP},
+		{"webauthn", CredentialsTypeWebAuthn},
+		{"lookup_secret", CredentialsTypeLookup},
+		{"link_recovery", CredentialsTypeRecoveryLink},
+		{"code_recovery", CredentialsTypeRecoveryCode},
+	} {
+		t.Run("case="+tc.input, func(t *testing.T) {
+			actual, ok := ParseCredentialsType(tc.input)
+			require.True(t, ok)
+			assert.Equal(t, tc.expected, actual)
+		})
+	}
+
+	t.Run("case=unknown", func(t *testing.T) {
+		_, ok := ParseCredentialsType("unknown")
+		require.False(t, ok)
+	})
 }

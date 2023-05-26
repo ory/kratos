@@ -77,6 +77,7 @@ type UpdateLoginFlowWithOidcMethod struct {
 	// Supported parameters are:
 	// - `login_hint` (string): The `login_hint` parameter suppresses the account chooser and either pre-fills the email box on the sign-in form, or selects the proper session.
 	// - `hd` (string): The `hd` parameter limits the login/registration process to a Google Organization, e.g. `mycollege.edu`.
+	// - `prompt` (string): The `prompt` specifies whether the Authorization Server prompts the End-User for reauthentication and consent, e.g. `select_account`.
 	//
 	// required: false
 	UpstreamParameters json.RawMessage `json:"upstream_parameters"`
@@ -135,7 +136,7 @@ func (s *Strategy) processLogin(w http.ResponseWriter, r *http.Request, a *login
 	}
 
 	sess := session.NewInactiveSession()
-	sess.CompletedLoginFor(s.ID(), identity.AuthenticatorAssuranceLevel1)
+	sess.CompletedLoginForWithProvider(s.ID(), identity.AuthenticatorAssuranceLevel1, provider.Config().ID)
 	for _, c := range o.Providers {
 		if c.Subject == claims.Subject && c.Provider == provider.Config().ID {
 			if err = s.d.LoginHookExecutor().PostLoginHook(w, r, node.OpenIDConnectGroup, a, i, sess); err != nil {
@@ -211,7 +212,7 @@ func (s *Strategy) Login(w http.ResponseWriter, r *http.Request, f *login.Flow, 
 		return nil, err
 	}
 
-	codeURL := c.AuthCodeURL(state.String(), append(provider.AuthCodeURLOptions(req), UpstreamParameters(provider, up)...)...)
+	codeURL := c.AuthCodeURL(state.String(), append(UpstreamParameters(provider, up), provider.AuthCodeURLOptions(req)...)...)
 	if x.IsJSONRequest(r) {
 		s.d.Writer().WriteError(w, r, flow.NewBrowserLocationChangeRequiredError(codeURL))
 	} else {
