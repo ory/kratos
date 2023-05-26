@@ -98,14 +98,14 @@ func pl(t testing.TB) func(lvl logging.Level, s string, args ...interface{}) {
 
 func createCleanDatabases(t testing.TB) map[string]*driver.RegistryDefault {
 	conns := map[string]string{
-		//"sqlite": "sqlite://file:" + t.TempDir() + "/db.sqlite?_fk=true",
+		"sqlite": "sqlite://file:" + t.TempDir() + "/db.sqlite?_fk=true",
 	}
 
 	var l sync.Mutex
 	if !testing.Short() {
 		funcs := map[string]func(t testing.TB) string{
-			"postgres": dockertest.RunTestPostgreSQL,
-			//"mysql":     dockertest.RunTestMySQL,
+			"postgres":  dockertest.RunTestPostgreSQL,
+			"mysql":     dockertest.RunTestMySQL,
 			"cockroach": dockertest.NewLocalTestCRDBServer,
 		}
 
