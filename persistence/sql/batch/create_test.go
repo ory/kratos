@@ -9,6 +9,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/ory/x/dbal"
+
 	"github.com/gofrs/uuid"
 	"github.com/jmoiron/sqlx/reflectx"
 	"github.com/stretchr/testify/assert"
@@ -87,21 +89,34 @@ func Test_buildInsertQueryValues(t *testing.T) {
 			Traits: []byte(`{"foo": "bar"}`),
 		}
 		mapper := reflectx.NewMapper("db")
-		values, err := buildInsertQueryValues(mapper, []string{"created_at", "updated_at", "id", "string", "int", "null_time_ptr", "traits"}, []*testModel{model})
-		require.NoError(t, err)
 
-		assert.NotNil(t, model.CreatedAt)
-		assert.Equal(t, model.CreatedAt, values[0])
+		nowFunc := func() time.Time {
+			return time.Time{}
+		}
+		t.Run("case=cockroach", func(t *testing.T) {
+			values, err := buildInsertQueryValues(dbal.DriverCockroachDB, mapper, []string{"created_at", "updated_at", "id", "string", "int", "null_time_ptr", "traits"}, []*testModel{model}, nowFunc)
+			require.NoError(t, err)
+			snapshotx.SnapshotT(t, values)
+		})
 
-		assert.NotNil(t, model.UpdatedAt)
-		assert.Equal(t, model.UpdatedAt, values[1])
+		t.Run("case=others", func(t *testing.T) {
+			values, err := buildInsertQueryValues("other", mapper, []string{"created_at", "updated_at", "id", "string", "int", "null_time_ptr", "traits"}, []*testModel{model}, nowFunc)
+			require.NoError(t, err)
 
-		assert.NotNil(t, model.ID)
-		assert.Equal(t, model.ID, values[2])
+			assert.NotNil(t, model.CreatedAt)
+			assert.Equal(t, model.CreatedAt, values[0])
 
-		assert.Equal(t, model.String, values[3])
-		assert.Equal(t, model.Int, values[4])
+			assert.NotNil(t, model.UpdatedAt)
+			assert.Equal(t, model.UpdatedAt, values[1])
 
-		assert.Nil(t, model.NullTimePtr)
+			assert.NotNil(t, model.ID)
+			assert.Equal(t, model.ID, values[2])
+
+			assert.Equal(t, model.String, values[3])
+			assert.Equal(t, model.Int, values[4])
+
+			assert.Nil(t, model.NullTimePtr)
+
+		})
 	})
 }
