@@ -65,12 +65,22 @@ func buildInsertQueryArgs[T any](ctx context.Context, dialect string, mapper *re
 		quotedColumns = append(quotedColumns, quoter.Quote(col))
 	}
 
+	// We generate a list (for every row one) of VALUE statements here that
+	// will be substituted by their column values later:
+	//
+	//	(?, ?, ?, ?),
+	//	(?, ?, ?, ?),
+	//	(?, ?, ?, ?)
 	for _, m := range models {
 		m := reflect.ValueOf(m)
 
 		pl := make([]string, len(placeholderRow))
 		copy(pl, placeholderRow)
 
+		// There is a special case - when using CockroachDB we want to generate
+		// UUIDs using "gen_random_uuid()" which ends up in a VALUE statement of:
+		//
+		//	(gen_random_uuid(), ?, ?, ?),
 		for k := range placeholderRow {
 			if columns[k] != "id" {
 				continue
@@ -119,7 +129,18 @@ func buildInsertQueryValues[T any](dialect string, mapper *reflectx.Mapper, colu
 				if field.Interface().(uuid.UUID) != uuid.Nil {
 					break // breaks switch, not for
 				} else if dialect == dbal.DriverCockroachDB {
-					continue // break switch - no need to generate an ID it is done by cockroach itself
+					// This is a special case:
+					// 1. We're using cockroach
+					// 2. It's the primary key field ("ID")
+					// 3. A UUID was not yet set.
+					//
+					// If all these conditions meet, the VALUE statement will look as such:
+					//
+					//	(gen_random_uuid(), ?, ?, ?, ...)
+					//
+					// For that reason, we do not add the ID value to the list of arguments,
+					// because one of the arguments is using a built-in and thus doesn't need a value.
+					continue // break switch, not for
 				}
 
 				id, err := uuid.NewV4()
@@ -193,6 +214,9 @@ func Create[T any](ctx context.Context, p *TracerConnection, models []*T) (err e
 	}
 	defer rows.Close()
 
+	// Hydrate the models from the RETURNING clause.
+	//
+	// Databases not supporting RETURNING will just return 0 rows.
 	count := 0
 	for rows.Next() {
 		if err := rows.Err(); err != nil {
@@ -216,6 +240,8 @@ func Create[T any](ctx context.Context, p *TracerConnection, models []*T) (err e
 	return sqlcon.HandleError(err)
 }
 
+// setModelID was copy & pasted from pop. It basically sets
+// the primary key to the given value read from the SQL row.
 func setModelID(row *sql.Rows, model *pop.Model) error {
 	el := reflect.ValueOf(model.Value).Elem()
 	fbn := el.FieldByName("ID")
