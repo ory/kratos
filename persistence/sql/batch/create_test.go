@@ -45,7 +45,9 @@ func Test_buildInsertQueryArgs(t *testing.T) {
 	ctx := context.Background()
 	t.Run("case=testModel", func(t *testing.T) {
 		models := make([]*testModel, 10)
-		args := buildInsertQueryArgs(ctx, testQuoter{}, models)
+		mapper := reflectx.NewMapper("db")
+		args, err := buildInsertQueryArgs(ctx, "other", mapper, testQuoter{}, models)
+		require.NoError(t, err)
 		snapshotx.SnapshotT(t, args)
 
 		query := fmt.Sprintf("INSERT INTO %s (%s) VALUES\n%s", args.TableName, args.ColumnsDecl, args.Placeholders)
@@ -64,19 +66,25 @@ func Test_buildInsertQueryArgs(t *testing.T) {
 
 	t.Run("case=Identities", func(t *testing.T) {
 		models := make([]*identity.Identity, 10)
-		args := buildInsertQueryArgs(ctx, testQuoter{}, models)
+		mapper := reflectx.NewMapper("db")
+		args, err := buildInsertQueryArgs(ctx, "other", mapper, testQuoter{}, models)
+		require.NoError(t, err)
 		snapshotx.SnapshotT(t, args)
 	})
 
 	t.Run("case=RecoveryAddress", func(t *testing.T) {
 		models := make([]*identity.RecoveryAddress, 10)
-		args := buildInsertQueryArgs(ctx, testQuoter{}, models)
+		mapper := reflectx.NewMapper("db")
+		args, err := buildInsertQueryArgs(ctx, "other", mapper, testQuoter{}, models)
+		require.NoError(t, err)
 		snapshotx.SnapshotT(t, args)
 	})
 
 	t.Run("case=RecoveryAddress", func(t *testing.T) {
 		models := make([]*identity.RecoveryAddress, 10)
-		args := buildInsertQueryArgs(ctx, testQuoter{}, models)
+		mapper := reflectx.NewMapper("db")
+		args, err := buildInsertQueryArgs(ctx, "other", mapper, testQuoter{}, models)
+		require.NoError(t, err)
 		snapshotx.SnapshotT(t, args)
 	})
 }

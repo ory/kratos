@@ -42,7 +42,7 @@ type (
 	}
 )
 
-func buildInsertQueryArgs[T any](ctx context.Context, quoter quoter, models []*T) insertQueryArgs {
+func buildInsertQueryArgs[T any](ctx context.Context, dialect string, mapper *reflectx.Mapper, quoter quoter, models []*T) (insertQueryArgs, error) {
 	var (
 		v     T
 		model = pop.NewModel(v, ctx)
@@ -64,8 +64,34 @@ func buildInsertQueryArgs[T any](ctx context.Context, quoter quoter, models []*T
 	for _, col := range columns {
 		quotedColumns = append(quotedColumns, quoter.Quote(col))
 	}
-	for range models {
-		placeholders = append(placeholders, fmt.Sprintf("(%s)", strings.Join(placeholderRow, ", ")))
+	for _, model := range models {
+		pl := make([]string, len(placeholderRow))
+		copy(pl, placeholderRow)
+		for k := range placeholderRow {
+			if columns[k] != "id" || dialect != dbal.DriverCockroachDB {
+				continue
+			}
+
+			m := reflect.ValueOf(model)
+			el := reflect.ValueOf(model).Elem()
+			fbn := el.FieldByName("ID")
+			if !fbn.IsValid() {
+				return insertQueryArgs{}, errors.New("model does not have a field named id")
+			}
+
+			field := mapper.FieldByName(m, "ID")
+			val, ok := field.Interface().(uuid.UUID)
+			if !ok {
+				continue
+			}
+
+			if val != uuid.Nil {
+				pl[k] = "gen_random_uuid()"
+				break
+			}
+		}
+
+		placeholders = append(placeholders, fmt.Sprintf("(%s)", strings.Join(pl, ", ")))
 	}
 
 	return insertQueryArgs{
@@ -73,7 +99,7 @@ func buildInsertQueryArgs[T any](ctx context.Context, quoter quoter, models []*T
 		ColumnsDecl:  strings.Join(quotedColumns, ", "),
 		Columns:      columns,
 		Placeholders: strings.Join(placeholders, ",\n"),
-	}
+	}, nil
 }
 
 func buildInsertQueryValues[T any](dialect string, mapper *reflectx.Mapper, columns []string, models []*T, nowFunc func() time.Time) (values []any, err error) {
@@ -95,18 +121,15 @@ func buildInsertQueryValues[T any](dialect string, mapper *reflectx.Mapper, colu
 			case "id":
 				if field.Interface().(uuid.UUID) != uuid.Nil {
 					break // breaks switch, not for
+				} else if dialect == dbal.DriverCockroachDB {
+					continue // We do not need a value for this column because it is set automatically
 				}
 
-				if dialect == dbal.DriverCockroachDB {
-					values = append(values, "gen_random_uuid()")
-					continue
-				} else {
-					id, err := uuid.NewV4()
-					if err != nil {
-						return nil, err
-					}
-					field.Set(reflect.ValueOf(id))
+				id, err := uuid.NewV4()
+				if err != nil {
+					return nil, err
 				}
+				field.Set(reflect.ValueOf(id))
 			}
 
 			values = append(values, field.Interface())
@@ -143,7 +166,11 @@ func Create[T any](ctx context.Context, p *TracerConnection, models []*T) (err e
 		return errors.Errorf("store is not a quoter: %T", conn.Store)
 	}
 
-	queryArgs := buildInsertQueryArgs(ctx, quoter, models)
+	queryArgs, err := buildInsertQueryArgs(ctx, conn.Dialect.Name(), conn.TX.Mapper, quoter, models)
+	if err != nil {
+		return err
+	}
+
 	values, err := buildInsertQueryValues(conn.Dialect.Name(), conn.TX.Mapper, queryArgs.Columns, models, func() time.Time { return time.Now().UTC().Truncate(time.Microsecond) })
 	if err != nil {
 		return err
