@@ -109,7 +109,7 @@ func Test_buildInsertQueryValues(t *testing.T) {
 			assert.NotNil(t, model.UpdatedAt)
 			assert.Equal(t, model.UpdatedAt, values[1])
 
-			assert.NotNil(t, model.ID)
+			assert.NotZero(t, model.ID)
 			assert.Equal(t, model.ID, values[2])
 
 			assert.Equal(t, model.String, values[3])
