@@ -42,7 +42,7 @@ type (
 	}
 )
 
-func buildInsertQueryArgs[T any](ctx context.Context, dialect string, mapper *reflectx.Mapper, quoter quoter, models []*T) (insertQueryArgs, error) {
+func buildInsertQueryArgs[T any](ctx context.Context, dialect string, mapper *reflectx.Mapper, quoter quoter, models []*T) insertQueryArgs {
 	var (
 		v     T
 		model = pop.NewModel(v, ctx)
@@ -106,7 +106,7 @@ func buildInsertQueryArgs[T any](ctx context.Context, dialect string, mapper *re
 		ColumnsDecl:  strings.Join(quotedColumns, ", "),
 		Columns:      columns,
 		Placeholders: strings.Join(placeholders, ",\n"),
-	}, nil
+	}
 }
 
 func buildInsertQueryValues[T any](dialect string, mapper *reflectx.Mapper, columns []string, models []*T, nowFunc func() time.Time) (values []any, err error) {
@@ -184,11 +184,7 @@ func Create[T any](ctx context.Context, p *TracerConnection, models []*T) (err e
 		return errors.Errorf("store is not a quoter: %T", conn.Store)
 	}
 
-	queryArgs, err := buildInsertQueryArgs(ctx, conn.Dialect.Name(), conn.TX.Mapper, quoter, models)
-	if err != nil {
-		return err
-	}
-
+	queryArgs := buildInsertQueryArgs(ctx, conn.Dialect.Name(), conn.TX.Mapper, quoter, models)
 	values, err := buildInsertQueryValues(conn.Dialect.Name(), conn.TX.Mapper, queryArgs.Columns, models, func() time.Time { return time.Now().UTC().Truncate(time.Microsecond) })
 	if err != nil {
 		return err
