@@ -5,15 +5,19 @@ package batch
 
 import (
 	"context"
+	"database/sql"
 	"fmt"
 	"reflect"
 	"sort"
 	"strings"
 	"time"
 
+	"github.com/jmoiron/sqlx/reflectx"
+
+	"github.com/ory/x/dbal"
+
 	"github.com/gobuffalo/pop/v6"
 	"github.com/gofrs/uuid"
-	"github.com/jmoiron/sqlx/reflectx"
 	"github.com/pkg/errors"
 
 	"github.com/ory/x/otelx"
@@ -38,7 +42,7 @@ type (
 	}
 )
 
-func buildInsertQueryArgs[T any](ctx context.Context, quoter quoter, models []*T) insertQueryArgs {
+func buildInsertQueryArgs[T any](ctx context.Context, dialect string, mapper *reflectx.Mapper, quoter quoter, models []*T) insertQueryArgs {
 	var (
 		v     T
 		model = pop.NewModel(v, ctx)
@@ -60,8 +64,41 @@ func buildInsertQueryArgs[T any](ctx context.Context, quoter quoter, models []*T
 	for _, col := range columns {
 		quotedColumns = append(quotedColumns, quoter.Quote(col))
 	}
-	for range models {
-		placeholders = append(placeholders, fmt.Sprintf("(%s)", strings.Join(placeholderRow, ", ")))
+
+	// We generate a list (for every row one) of VALUE statements here that
+	// will be substituted by their column values later:
+	//
+	//	(?, ?, ?, ?),
+	//	(?, ?, ?, ?),
+	//	(?, ?, ?, ?)
+	for _, m := range models {
+		m := reflect.ValueOf(m)
+
+		pl := make([]string, len(placeholderRow))
+		copy(pl, placeholderRow)
+
+		// There is a special case - when using CockroachDB we want to generate
+		// UUIDs using "gen_random_uuid()" which ends up in a VALUE statement of:
+		//
+		//	(gen_random_uuid(), ?, ?, ?),
+		for k := range placeholderRow {
+			if columns[k] != "id" {
+				continue
+			}
+
+			field := mapper.FieldByName(m, columns[k])
+			val, ok := field.Interface().(uuid.UUID)
+			if !ok {
+				continue
+			}
+
+			if val == uuid.Nil && dialect == dbal.DriverCockroachDB {
+				pl[k] = "gen_random_uuid()"
+				break
+			}
+		}
+
+		placeholders = append(placeholders, fmt.Sprintf("(%s)", strings.Join(pl, ", ")))
 	}
 
 	return insertQueryArgs{
@@ -72,12 +109,11 @@ func buildInsertQueryArgs[T any](ctx context.Context, quoter quoter, models []*T
 	}
 }
 
-func buildInsertQueryValues[T any](mapper *reflectx.Mapper, columns []string, models []*T) (values []any, err error) {
-	now := time.Now().UTC().Truncate(time.Microsecond)
-
+func buildInsertQueryValues[T any](dialect string, mapper *reflectx.Mapper, columns []string, models []*T, nowFunc func() time.Time) (values []any, err error) {
 	for _, m := range models {
 		m := reflect.ValueOf(m)
 
+		now := nowFunc()
 		// Append model fields to args
 		for _, c := range columns {
 			field := mapper.FieldByName(m, c)
@@ -89,17 +125,31 @@ func buildInsertQueryValues[T any](mapper *reflectx.Mapper, columns []string, mo
 				}
 			case "updated_at":
 				field.Set(reflect.ValueOf(now))
-
 			case "id":
 				if field.Interface().(uuid.UUID) != uuid.Nil {
 					break // breaks switch, not for
+				} else if dialect == dbal.DriverCockroachDB {
+					// This is a special case:
+					// 1. We're using cockroach
+					// 2. It's the primary key field ("ID")
+					// 3. A UUID was not yet set.
+					//
+					// If all these conditions meet, the VALUE statement will look as such:
+					//
+					//	(gen_random_uuid(), ?, ?, ?, ...)
+					//
+					// For that reason, we do not add the ID value to the list of arguments,
+					// because one of the arguments is using a built-in and thus doesn't need a value.
+					continue // break switch, not for
 				}
+
 				id, err := uuid.NewV4()
 				if err != nil {
 					return nil, err
 				}
 				field.Set(reflect.ValueOf(id))
 			}
+
 			values = append(values, field.Interface())
 
 			// Special-handling for *sqlxx.NullTime: mapper.FieldByName sets this to a zero time.Time,
@@ -125,26 +175,101 @@ func Create[T any](ctx context.Context, p *TracerConnection, models []*T) (err e
 		return nil
 	}
 
+	var v T
+	model := pop.NewModel(v, ctx)
+
 	conn := p.Connection
 	quoter, ok := conn.Dialect.(quoter)
 	if !ok {
 		return errors.Errorf("store is not a quoter: %T", conn.Store)
 	}
 
-	queryArgs := buildInsertQueryArgs(ctx, quoter, models)
-	values, err := buildInsertQueryValues(conn.TX.Mapper, queryArgs.Columns, models)
+	queryArgs := buildInsertQueryArgs(ctx, conn.Dialect.Name(), conn.TX.Mapper, quoter, models)
+	values, err := buildInsertQueryValues(conn.Dialect.Name(), conn.TX.Mapper, queryArgs.Columns, models, func() time.Time { return time.Now().UTC().Truncate(time.Microsecond) })
 	if err != nil {
 		return err
 	}
 
+	var returningClause string
+	if conn.Dialect.Name() != dbal.DriverMySQL {
+		// PostgreSQL, CockroachDB, SQLite support RETURNING.
+		returningClause = fmt.Sprintf("RETURNING %s", model.IDField())
+	}
+
 	query := conn.Dialect.TranslateSQL(fmt.Sprintf(
-		"INSERT INTO %s (%s) VALUES\n%s",
+		"INSERT INTO %s (%s) VALUES\n%s\n%s",
 		queryArgs.TableName,
 		queryArgs.ColumnsDecl,
 		queryArgs.Placeholders,
+		returningClause,
 	))
 
-	_, err = conn.Store.ExecContext(ctx, query, values...)
+	rows, err := conn.TX.QueryContext(ctx, query, values...)
+	if err != nil {
+		return sqlcon.HandleError(err)
+	}
+	defer rows.Close()
+
+	// Hydrate the models from the RETURNING clause.
+	//
+	// Databases not supporting RETURNING will just return 0 rows.
+	count := 0
+	for rows.Next() {
+		if err := rows.Err(); err != nil {
+			return sqlcon.HandleError(err)
+		}
+
+		if err := setModelID(rows, pop.NewModel(models[count], ctx)); err != nil {
+			return err
+		}
+		count++
+	}
+
+	if err := rows.Err(); err != nil {
+		return sqlcon.HandleError(err)
+	}
+
+	if err := rows.Close(); err != nil {
+		return sqlcon.HandleError(err)
+	}
 
 	return sqlcon.HandleError(err)
+}
+
+// setModelID was copy & pasted from pop. It basically sets
+// the primary key to the given value read from the SQL row.
+func setModelID(row *sql.Rows, model *pop.Model) error {
+	el := reflect.ValueOf(model.Value).Elem()
+	fbn := el.FieldByName("ID")
+	if !fbn.IsValid() {
+		return errors.New("model does not have a field named id")
+	}
+
+	pkt, err := model.PrimaryKeyType()
+	if err != nil {
+		return errors.WithStack(err)
+	}
+
+	switch pkt {
+	case "UUID":
+		var id uuid.UUID
+		if err := row.Scan(&id); err != nil {
+			return errors.WithStack(err)
+		}
+		fbn.Set(reflect.ValueOf(id))
+	default:
+		var id interface{}
+		if err := row.Scan(&id); err != nil {
+			return errors.WithStack(err)
+		}
+		v := reflect.ValueOf(id)
+		switch fbn.Kind() {
+		case reflect.Int, reflect.Int64:
+			fbn.SetInt(v.Int())
+		default:
+			fbn.Set(reflect.ValueOf(id))
+		}
+	}
+
+	return nil
 }
