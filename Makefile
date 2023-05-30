@@ -10,6 +10,7 @@ export PWD                := $(shell pwd)
 export BUILD_DATE         := $(shell date -u +"%Y-%m-%dT%H:%M:%SZ")
 export VCS_REF            := $(shell git rev-parse HEAD)
 export QUICKSTART_OPTIONS ?= ""
+export IMAGE_TAG 					:= $(if $(IMAGE_TAG),$(IMAGE_TAG),latest)
 
 GO_DEPENDENCIES = github.com/ory/go-acc \
 				  github.com/golang/mock/mockgen \
@@ -162,7 +163,7 @@ format: .bin/goimports .bin/ory node_modules
 # Build local docker image
 .PHONY: docker
 docker:
-	DOCKER_BUILDKIT=1 docker build -f .docker/Dockerfile-build --build-arg=COMMIT=$(VCS_REF) --build-arg=BUILD_DATE=$(BUILD_DATE) -t oryd/kratos:latest .
+	DOCKER_BUILDKIT=1 docker build -f .docker/Dockerfile-build --build-arg=COMMIT=$(VCS_REF) --build-arg=BUILD_DATE=$(BUILD_DATE) -t oryd/kratos:${IMAGE_TAG} .
 
 # Runs the documentation tests
 .PHONY: test-docs

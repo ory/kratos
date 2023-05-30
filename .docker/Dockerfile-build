@@ -5,10 +5,10 @@ RUN apk --update upgrade && apk --no-cache --update-cache --upgrade --latest add
 
 WORKDIR /go/src/github.com/ory/kratos
 
-ADD go.mod go.mod
-ADD go.sum go.sum
-ADD internal/httpclient/go.* internal/httpclient/
-ADD internal/client-go/go.* internal/client-go/
+COPY go.mod go.mod
+COPY go.sum go.sum
+COPY internal/httpclient/go.* internal/httpclient/
+COPY internal/client-go/go.* internal/client-go/
 
 ENV GO111MODULE on
 ENV CGO_ENABLED 1
@@ -16,7 +16,7 @@ ENV CGO_CPPFLAGS -DSQLITE_DEFAULT_FILE_PERMISSIONS=0600
 
 RUN go mod download
 
-ADD . .
+COPY . .
 
 ARG VERSION
 ARG COMMIT
