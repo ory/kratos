@@ -320,6 +320,9 @@
   ([#3279](https://github.com/ory/kratos/issues/3279))
   ([34ff1d2](https://github.com/ory/kratos/commit/34ff1d2912e7f7aefb35dae759dce2eb37ecb790)),
   closes [#2943](https://github.com/ory/kratos/issues/2943)
+- Use RETURNING clause for batch create
+  ([#3293](https://github.com/ory/kratos/issues/3293))
+  ([8ae8783](https://github.com/ory/kratos/commit/8ae8783935292fb011b1018ac7417ed77eb6abb7))
 - Use the correct redirect_uri for linkedin social login
   ([#3269](https://github.com/ory/kratos/issues/3269))
   ([27ccecc](https://github.com/ory/kratos/commit/27ccecc1cd490eaa71da7f8235b4b0057b8f14fe))
