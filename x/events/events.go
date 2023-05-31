@@ -36,6 +36,7 @@ const (
 	attributeKeySessionAAL                      semconv.AttributeKey = "SessionAAL"
 	attributeKeySelfServiceFlowType             semconv.AttributeKey = "SelfServiceFlowType"
 	attributeKeySelfServiceMethodUsed           semconv.AttributeKey = "SelfServiceMethodUsed"
+	attributeKeySelfServiceSSOProviderUsed      semconv.AttributeKey = "SelfServiceSSOProviderUsed"
 	attributeKeyLoginRequestedAAL               semconv.AttributeKey = "LoginRequestedAAL"
 	attributeKeyLoginRequestedPrivilegedSession semconv.AttributeKey = "LoginRequestedPrivilegedSession"
 )
@@ -64,6 +65,10 @@ func attrSelfServiceMethodUsed(val string) otelattr.KeyValue {
 	return otelattr.String(attributeKeySelfServiceMethodUsed.String(), val)
 }
 
+func attrSelfServiceSSOProviderUsed(val string) otelattr.KeyValue {
+	return otelattr.String(attributeKeySelfServiceSSOProviderUsed.String(), val)
+}
+
 func NewSessionIssued(ctx context.Context, aal string, sessionID, identityID uuid.UUID) (string, trace.EventOption) {
 	return SessionIssued.String(),
 		trace.WithAttributes(
@@ -88,54 +93,66 @@ func NewSessionChanged(ctx context.Context, aal string, sessionID, identityID uu
 		)
 }
 
-func NewLoginSucceeded(ctx context.Context, sessionID, identityID uuid.UUID, flowType string, requestedAAL string, isRefresh bool, method string) (string, trace.EventOption) {
+type LoginSucceededOpts struct {
+	SessionID, IdentityID                       uuid.UUID
+	FlowType, RequestedAAL, Method, SSOProvider string
+	IsRefresh                                   bool
+}
+
+func NewLoginSucceeded(ctx context.Context, o *LoginSucceededOpts) (string, trace.EventOption) {
 	return LoginSucceeded.String(),
 		trace.WithAttributes(
 			append(
 				semconv.AttributesFromContext(ctx),
-				semconv.AttrIdentityID(identityID),
-				attrSessionID(sessionID),
-				attrSelfServiceFlowType(flowType),
-				attLoginRequestedAAL(requestedAAL),
-				attLoginRequestedPrivilegedSession(isRefresh),
-				attrSelfServiceMethodUsed(method),
+				semconv.AttrIdentityID(o.IdentityID),
+				attrSessionID(o.SessionID),
+				attrSelfServiceFlowType(o.FlowType),
+				attLoginRequestedAAL(o.RequestedAAL),
+				attLoginRequestedPrivilegedSession(o.IsRefresh),
+				attrSelfServiceMethodUsed(o.Method),
+				attrSelfServiceSSOProviderUsed(o.SSOProvider),
 			)...,
 		)
 }
 
-func NewRegistrationSucceeded(ctx context.Context, flowType string, method string) (string, trace.EventOption) {
+func NewRegistrationSucceeded(ctx context.Context, identityID uuid.UUID, flowType string, method, provider string) (string, trace.EventOption) {
 	return RegistrationSucceeded.String(),
 		trace.WithAttributes(append(
 			semconv.AttributesFromContext(ctx),
 			attrSelfServiceFlowType(flowType),
+			semconv.AttrIdentityID(identityID),
 			attrSelfServiceMethodUsed(method),
+			attrSelfServiceSSOProviderUsed(provider),
 		)...)
 }
 
-func NewRecoverySucceeded(ctx context.Context, flowType string, method string) (string, trace.EventOption) {
+func NewRecoverySucceeded(ctx context.Context, identityID uuid.UUID, flowType string, method string) (string, trace.EventOption) {
 	return RecoverySucceeded.String(),
 		trace.WithAttributes(append(
 			semconv.AttributesFromContext(ctx),
 			attrSelfServiceFlowType(flowType),
+			semconv.AttrIdentityID(identityID),
 			attrSelfServiceMethodUsed(method),
 		)...)
 }
 
-func NewSettingsSucceeded(ctx context.Context, flowType string, method string) (string, trace.EventOption) {
+func NewSettingsSucceeded(ctx context.Context, identityID uuid.UUID, flowType string, method string) (string, trace.EventOption) {
 	return SettingsSucceeded.String(),
 		trace.WithAttributes(append(
 			semconv.AttributesFromContext(ctx),
 			attrSelfServiceFlowType(flowType),
+			semconv.AttrIdentityID(identityID),
 			attrSelfServiceMethodUsed(method),
 		)...)
 }
 
-func NewVerificationSucceeded(ctx context.Context, flowType string, method string) (string, trace.EventOption) {
+func NewVerificationSucceeded(ctx context.Context, identityID uuid.UUID, flowType string, method string) (string, trace.EventOption) {
 	return VerificationSucceeded.String(),
 		trace.WithAttributes(append(
 			semconv.AttributesFromContext(ctx),
 			attrSelfServiceMethodUsed(method),
 			attrSelfServiceFlowType(flowType),
+			semconv.AttrIdentityID(identityID),
 		)...)
 }
 

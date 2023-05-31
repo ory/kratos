@@ -114,7 +114,7 @@ func (e *HookExecutor) handleLoginError(_ http.ResponseWriter, r *http.Request, 
 	return flowError
 }
 
-func (e *HookExecutor) PostLoginHook(w http.ResponseWriter, r *http.Request, g node.UiNodeGroup, a *Flow, i *identity.Identity, s *session.Session) (err error) {
+func (e *HookExecutor) PostLoginHook(w http.ResponseWriter, r *http.Request, g node.UiNodeGroup, a *Flow, i *identity.Identity, s *session.Session, provider string) (err error) {
 	ctx := r.Context()
 	ctx, span := e.d.Tracer(ctx).Tracer().Start(ctx, "HookExecutor.PostLoginHook")
 	r = r.WithContext(ctx)
@@ -171,7 +171,11 @@ func (e *HookExecutor) PostLoginHook(w http.ResponseWriter, r *http.Request, g n
 			Debug("ExecuteLoginPostHook completed successfully.")
 	}
 
-	trace.SpanFromContext(r.Context()).AddEvent(events.NewLoginSucceeded(r.Context(), s.ID, i.ID, string(a.Type), string(a.RequestedAAL), a.Refresh, a.Active.String()))
+	trace.SpanFromContext(r.Context()).AddEvent(events.NewLoginSucceeded(r.Context(), &events.LoginSucceededOpts{
+		SessionID:  s.ID,
+		IdentityID: i.ID, FlowType: string(a.Type), RequestedAAL: string(a.RequestedAAL), IsRefresh: a.Refresh, Method: a.Active.String(),
+		SSOProvider: provider,
+	}))
 
 	if a.Type == flow.TypeAPI {
 		if err := e.d.SessionPersister().UpsertSession(r.Context(), s); err != nil {
