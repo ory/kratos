@@ -7,6 +7,10 @@ import (
 	"context"
 	"reflect"
 
+	"go.opentelemetry.io/otel/trace"
+
+	"github.com/ory/kratos/x/events"
+
 	"github.com/ory/x/otelx"
 
 	"github.com/ory/kratos/x"
@@ -86,6 +90,7 @@ func (m *Manager) Create(ctx context.Context, i *Identity, opts ...ManagerOption
 		return err
 	}
 
+	trace.SpanFromContext(ctx).AddEvent(events.NewIdentityCreated(ctx, i.ID))
 	return m.r.PrivilegedIdentityPool().CreateIdentity(ctx, i)
 }
 
@@ -170,6 +175,7 @@ func (m *Manager) UpdateSchemaID(ctx context.Context, id uuid.UUID, schemaID str
 		return err
 	}
 
+	trace.SpanFromContext(ctx).AddEvent(events.NewIdentityUpdated(ctx, id))
 	return m.r.PrivilegedIdentityPool().UpdateIdentity(ctx, original)
 }
 
@@ -206,6 +212,7 @@ func (m *Manager) UpdateTraits(ctx context.Context, id uuid.UUID, traits Traits,
 		return err
 	}
 
+	trace.SpanFromContext(ctx).AddEvent(events.NewIdentityUpdated(ctx, id))
 	return m.r.PrivilegedIdentityPool().UpdateIdentity(ctx, updated)
 }
 

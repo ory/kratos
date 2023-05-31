@@ -8,6 +8,10 @@ import (
 	"net/http"
 	"net/url"
 
+	"go.opentelemetry.io/otel/trace"
+
+	"github.com/ory/kratos/x/events"
+
 	"github.com/ory/kratos/session"
 	"github.com/ory/kratos/x/swagger"
 
@@ -167,9 +171,11 @@ func (s *ErrorHandler) WriteFlowError(
 	}
 
 	if f == nil {
-		s.forward(w, r, f, err)
+		trace.SpanFromContext(r.Context()).AddEvent(events.NewSettingsFailed(r.Context(), "", ""))
+		s.forward(w, r, nil, err)
 		return
 	}
+	trace.SpanFromContext(r.Context()).AddEvent(events.NewSettingsFailed(r.Context(), string(f.Type), f.Active.String()))
 
 	if expired, inner := s.PrepareReplacementForExpiredFlow(w, r, f, id, err); inner != nil {
 		s.forward(w, r, f, err)

@@ -8,12 +8,8 @@ import (
 	"net/http"
 	"time"
 
-	"go.opentelemetry.io/otel/trace"
-
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/ui/node"
-
-	"github.com/ory/kratos/x/events"
 
 	"github.com/pkg/errors"
 
@@ -61,8 +57,6 @@ func (e *SessionIssuer) executePostRegistrationPostPersistHook(w http.ResponseWr
 	if err := e.r.SessionPersister().UpsertSession(r.Context(), s); err != nil {
 		return err
 	}
-
-	trace.SpanFromContext(r.Context()).AddEvent(events.NewSessionIssued(r.Context(), s.ID, s.IdentityID))
 
 	if a.Type == flow.TypeAPI {
 		if s.AuthenticatedVia(identity.CredentialsTypeOIDC) {

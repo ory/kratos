@@ -85,12 +85,13 @@ func (s *ErrorHandler) WriteFlowError(w http.ResponseWriter, r *http.Request, f 
 		WithField("login_flow", f).
 		Info("Encountered self-service login error.")
 
-	trace.SpanFromContext(r.Context()).AddEvent(events.NewLoginFailed(r.Context()))
-
 	if f == nil {
+		trace.SpanFromContext(r.Context()).AddEvent(events.NewLoginFailed(r.Context(), "", "", false))
 		s.forward(w, r, nil, err)
 		return
 	}
+
+	trace.SpanFromContext(r.Context()).AddEvent(events.NewLoginFailed(r.Context(), string(f.Type), string(f.RequestedAAL), f.Refresh))
 
 	if expired, inner := s.PrepareReplacementForExpiredFlow(w, r, f, err); inner != nil {
 		s.WriteFlowError(w, r, f, group, inner)
