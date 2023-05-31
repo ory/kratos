@@ -796,6 +796,8 @@ func TestProvidersHandler(t *testing.T) {
 				ClientSecret: "secret1",
 				IssuerURL:    "https//:url1",
 				Mapper:       "mapper1",
+				PrivateKeyId: "ke1",
+				PrivateKey:   "ke1-value",
 			},
 			oidc.Configuration{
 				Provider:     "generic",
@@ -804,6 +806,8 @@ func TestProvidersHandler(t *testing.T) {
 				ClientSecret: "secret2",
 				IssuerURL:    "https//:url2",
 				Mapper:       "mapper2",
+				PrivateKeyId: "ke1",
+				PrivateKey:   "ke1-value",
 			},
 		)
 		for name, ts := range map[string]*httptest.Server{"public": publicTS, "admin": adminTS} {
@@ -813,6 +817,8 @@ func TestProvidersHandler(t *testing.T) {
 				assert.Len(t, parsed.Array(), 2)
 				assert.Equal(t, "provider1", parsed.Array()[0].Get("id").String(), "%s", parsed.Array()[0].Raw)
 				assert.Equal(t, "", parsed.Array()[0].Get("client_secret").String(), "%s", parsed.Array()[0].Raw)
+				assert.Equal(t, "", parsed.Array()[0].Get("apple_private_key").String(), "%s", parsed.Array()[0].Raw)
+				assert.Equal(t, "", parsed.Array()[0].Get("apple_private_key_id").String(), "%s", parsed.Array()[0].Raw)
 			})
 		}
 	})
