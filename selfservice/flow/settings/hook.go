@@ -9,6 +9,10 @@ import (
 	"net/http"
 	"time"
 
+	"go.opentelemetry.io/otel/trace"
+
+	"github.com/ory/kratos/x/events"
+
 	"github.com/ory/kratos/session"
 
 	"github.com/ory/kratos/text"
@@ -277,6 +281,8 @@ func (e *HookExecutor) PostSettingsHook(w http.ResponseWriter, r *http.Request, 
 		WithField("identity_id", i.ID).
 		WithField("flow_method", settingsType).
 		Debug("Completed all PostSettingsPrePersistHooks and PostSettingsPostPersistHooks.")
+
+	trace.SpanFromContext(r.Context()).AddEvent(events.NewSettingsSucceeded(r.Context(), string(ctxUpdate.Flow.Type), ctxUpdate.Flow.Active.String()))
 
 	if ctxUpdate.Flow.Type == flow.TypeAPI {
 		updatedFlow, err := e.d.SettingsFlowPersister().GetSettingsFlow(r.Context(), ctxUpdate.Flow.ID)

@@ -14,37 +14,165 @@ import (
 )
 
 const (
-	SessionIssued      semconv.Event = "SessionIssued"
-	SessionRevoked     semconv.Event = "SessionRevoked"
-	RegistrationFailed semconv.Event = "RegistrationFailed"
-	IdentityCreated    semconv.Event = "IdentityCreated"
-	LoginFailed        semconv.Event = "LoginFailed"
+	SessionIssued         semconv.Event = "SessionIssued"
+	SessionChanged        semconv.Event = "SessionChanged"
+	SessionRevoked        semconv.Event = "SessionRevoked"
+	RegistrationFailed    semconv.Event = "RegistrationFailed"
+	RegistrationSucceeded semconv.Event = "RegistrationSucceeded"
+	LoginFailed           semconv.Event = "LoginFailed"
+	LoginSucceeded        semconv.Event = "LoginSucceeded"
+	SettingsFailed        semconv.Event = "SettingsFailed"
+	SettingsSucceeded     semconv.Event = "SettingsSucceeded"
+	RecoveryFailed        semconv.Event = "RecoveryFailed"
+	RecoverySucceeded     semconv.Event = "RecoverySucceeded"
+	VerificationFailed    semconv.Event = "VerificationFailed"
+	VerificationSucceeded semconv.Event = "VerificationSucceeded"
+	IdentityCreated       semconv.Event = "IdentityCreated"
+	IdentityUpdated       semconv.Event = "IdentityUpdated"
 )
 
 const (
-	attributeKeySessionID semconv.AttributeKey = "SessionID"
+	attributeKeySessionID                       semconv.AttributeKey = "SessionID"
+	attributeKeySessionAAL                      semconv.AttributeKey = "SessionAAL"
+	attributeKeySelfServiceFlowType             semconv.AttributeKey = "SelfServiceFlowType"
+	attributeKeySelfServiceMethodUsed           semconv.AttributeKey = "SelfServiceMethodUsed"
+	attributeKeyLoginRequestedAAL               semconv.AttributeKey = "LoginRequestedAAL"
+	attributeKeyLoginRequestedPrivilegedSession semconv.AttributeKey = "LoginRequestedPrivilegedSession"
 )
 
 func attrSessionID(val uuid.UUID) otelattr.KeyValue {
 	return otelattr.String(attributeKeySessionID.String(), val.String())
 }
 
-func NewSessionIssued(ctx context.Context, sessionID, identityID uuid.UUID) (string, trace.EventOption) {
+func attrSessionAAL(val string) otelattr.KeyValue {
+	return otelattr.String(attributeKeySessionAAL.String(), val)
+}
+
+func attLoginRequestedAAL(val string) otelattr.KeyValue {
+	return otelattr.String(attributeKeyLoginRequestedAAL.String(), val)
+}
+
+func attLoginRequestedPrivilegedSession(val bool) otelattr.KeyValue {
+	return otelattr.Bool(attributeKeyLoginRequestedPrivilegedSession.String(), val)
+}
+
+func attrSelfServiceFlowType(val string) otelattr.KeyValue {
+	return otelattr.String(attributeKeySelfServiceFlowType.String(), val)
+}
+
+func attrSelfServiceMethodUsed(val string) otelattr.KeyValue {
+	return otelattr.String(attributeKeySelfServiceMethodUsed.String(), val)
+}
+
+func NewSessionIssued(ctx context.Context, aal string, sessionID, identityID uuid.UUID) (string, trace.EventOption) {
 	return SessionIssued.String(),
 		trace.WithAttributes(
 			append(
 				semconv.AttributesFromContext(ctx),
 				semconv.AttrIdentityID(identityID),
 				attrSessionID(sessionID),
+				attrSessionAAL(aal),
 			)...,
 		)
 }
 
-func NewRegistrationFailed(ctx context.Context) (string, trace.EventOption) {
-	return RegistrationFailed.String(),
+func NewSessionChanged(ctx context.Context, aal string, sessionID, identityID uuid.UUID) (string, trace.EventOption) {
+	return SessionChanged.String(),
 		trace.WithAttributes(
-			semconv.AttributesFromContext(ctx)...,
+			append(
+				semconv.AttributesFromContext(ctx),
+				semconv.AttrIdentityID(identityID),
+				attrSessionID(sessionID),
+				attrSessionAAL(aal),
+			)...,
 		)
+}
+
+func NewLoginSucceeded(ctx context.Context, sessionID, identityID uuid.UUID, flowType string, requestedAAL string, isRefresh bool, method string) (string, trace.EventOption) {
+	return LoginSucceeded.String(),
+		trace.WithAttributes(
+			append(
+				semconv.AttributesFromContext(ctx),
+				semconv.AttrIdentityID(identityID),
+				attrSessionID(sessionID),
+				attrSelfServiceFlowType(flowType),
+				attLoginRequestedAAL(requestedAAL),
+				attLoginRequestedPrivilegedSession(isRefresh),
+				attrSelfServiceMethodUsed(method),
+			)...,
+		)
+}
+
+func NewRegistrationSucceeded(ctx context.Context, flowType string, method string) (string, trace.EventOption) {
+	return RegistrationSucceeded.String(),
+		trace.WithAttributes(append(
+			semconv.AttributesFromContext(ctx),
+			attrSelfServiceFlowType(flowType),
+			attrSelfServiceMethodUsed(method),
+		)...)
+}
+
+func NewRecoverySucceeded(ctx context.Context, flowType string, method string) (string, trace.EventOption) {
+	return RecoverySucceeded.String(),
+		trace.WithAttributes(append(
+			semconv.AttributesFromContext(ctx),
+			attrSelfServiceFlowType(flowType),
+			attrSelfServiceMethodUsed(method),
+		)...)
+}
+
+func NewSettingsSucceeded(ctx context.Context, flowType string, method string) (string, trace.EventOption) {
+	return SettingsSucceeded.String(),
+		trace.WithAttributes(append(
+			semconv.AttributesFromContext(ctx),
+			attrSelfServiceFlowType(flowType),
+			attrSelfServiceMethodUsed(method),
+		)...)
+}
+
+func NewVerificationSucceeded(ctx context.Context, flowType string, method string) (string, trace.EventOption) {
+	return VerificationSucceeded.String(),
+		trace.WithAttributes(append(
+			semconv.AttributesFromContext(ctx),
+			attrSelfServiceMethodUsed(method),
+			attrSelfServiceFlowType(flowType),
+		)...)
+}
+
+func NewRegistrationFailed(ctx context.Context, flowType string, method string) (string, trace.EventOption) {
+	return RegistrationFailed.String(),
+		trace.WithAttributes(append(
+			semconv.AttributesFromContext(ctx),
+			attrSelfServiceFlowType(flowType),
+			attrSelfServiceMethodUsed(method),
+		)...)
+}
+
+func NewRecoveryFailed(ctx context.Context, flowType string, method string) (string, trace.EventOption) {
+	return RecoveryFailed.String(),
+		trace.WithAttributes(append(
+			semconv.AttributesFromContext(ctx),
+			attrSelfServiceFlowType(flowType),
+			attrSelfServiceMethodUsed(method),
+		)...)
+}
+
+func NewSettingsFailed(ctx context.Context, flowType string, method string) (string, trace.EventOption) {
+	return SettingsFailed.String(),
+		trace.WithAttributes(append(
+			semconv.AttributesFromContext(ctx),
+			attrSelfServiceFlowType(flowType),
+			attrSelfServiceMethodUsed(method),
+		)...)
+}
+
+func NewVerificationFailed(ctx context.Context, flowType string, method string) (string, trace.EventOption) {
+	return VerificationFailed.String(),
+		trace.WithAttributes(append(
+			semconv.AttributesFromContext(ctx),
+			attrSelfServiceFlowType(flowType),
+			attrSelfServiceMethodUsed(method),
+		)...)
 }
 
 func NewIdentityCreated(ctx context.Context, identityID uuid.UUID) (string, trace.EventOption) {
@@ -57,11 +185,24 @@ func NewIdentityCreated(ctx context.Context, identityID uuid.UUID) (string, trac
 		)
 }
 
-func NewLoginFailed(ctx context.Context) (string, trace.EventOption) {
-	return LoginFailed.String(),
+func NewIdentityUpdated(ctx context.Context, identityID uuid.UUID) (string, trace.EventOption) {
+	return IdentityUpdated.String(),
 		trace.WithAttributes(
-			semconv.AttributesFromContext(ctx)...,
+			append(
+				semconv.AttributesFromContext(ctx),
+				semconv.AttrIdentityID(identityID),
+			)...,
 		)
+}
+
+func NewLoginFailed(ctx context.Context, flowType string, requestedAAL string, isRefresh bool) (string, trace.EventOption) {
+	return LoginFailed.String(),
+		trace.WithAttributes(append(
+			semconv.AttributesFromContext(ctx),
+			attrSelfServiceFlowType(flowType),
+			attLoginRequestedAAL(requestedAAL),
+			attLoginRequestedPrivilegedSession(isRefresh),
+		)...)
 }
 
 func NewSessionRevoked(ctx context.Context, sessionID, identityID uuid.UUID) (string, trace.EventOption) {
