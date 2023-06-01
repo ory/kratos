@@ -5,7 +5,7 @@
 
 **Table of Contents**
 
-- [ (2023-05-31)](#2023-05-31)
+- [ (2023-06-01)](#2023-06-01)
   - [Bug Fixes](#bug-fixes)
   - [Features](#features)
   - [Tests](#tests)
@@ -301,7 +301,7 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# [](https://github.com/ory/kratos/compare/v0.13.0...v) (2023-05-31)
+# [](https://github.com/ory/kratos/compare/v0.13.0...v) (2023-06-01)
 
 ### Bug Fixes
 
@@ -345,6 +345,9 @@
   ([#3276](https://github.com/ory/kratos/issues/3276))
   ([d290cb0](https://github.com/ory/kratos/commit/d290cb05bb4f63d04ec3763db127060e13c350dc)),
   closes [#2709](https://github.com/ory/kratos/issues/2709)
+- Improve event types and capture more events
+  ([#3297](https://github.com/ory/kratos/issues/3297))
+  ([835fe13](https://github.com/ory/kratos/commit/835fe13d9ce81f7c0ed91dd2863a740fbb0c6209))
 - Return to oauth flow after switching from login to other flows
   ([#3212](https://github.com/ory/kratos/issues/3212))
   ([a1fea6c](https://github.com/ory/kratos/commit/a1fea6c353768bbf154900766fbbe51f2a148554)):
