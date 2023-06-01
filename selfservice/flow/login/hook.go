@@ -114,7 +114,7 @@ func (e *HookExecutor) handleLoginError(_ http.ResponseWriter, r *http.Request, 
 	return flowError
 }
 
-func (e *HookExecutor) PostLoginHook(w http.ResponseWriter, r *http.Request, g node.UiNodeGroup, a *Flow, i *identity.Identity, s *session.Session) (err error) {
+func (e *HookExecutor) PostLoginHook(w http.ResponseWriter, r *http.Request, g node.UiNodeGroup, a *Flow, i *identity.Identity, s *session.Session, provider string) (err error) {
 	ctx := r.Context()
 	ctx, span := e.d.Tracer(ctx).Tracer().Start(ctx, "HookExecutor.PostLoginHook")
 	r = r.WithContext(ctx)
@@ -171,6 +171,12 @@ func (e *HookExecutor) PostLoginHook(w http.ResponseWriter, r *http.Request, g n
 			Debug("ExecuteLoginPostHook completed successfully.")
 	}
 
+	trace.SpanFromContext(r.Context()).AddEvent(events.NewLoginSucceeded(r.Context(), &events.LoginSucceededOpts{
+		SessionID:  s.ID,
+		IdentityID: i.ID, FlowType: string(a.Type), RequestedAAL: string(a.RequestedAAL), IsRefresh: a.Refresh, Method: a.Active.String(),
+		SSOProvider: provider,
+	}))
+
 	if a.Type == flow.TypeAPI {
 		if err := e.d.SessionPersister().UpsertSession(r.Context(), s); err != nil {
 			return errors.WithStack(err)
@@ -180,8 +186,6 @@ func (e *HookExecutor) PostLoginHook(w http.ResponseWriter, r *http.Request, g n
 			WithField("session_id", s.ID).
 			WithField("identity_id", i.ID).
 			Info("Identity authenticated successfully and was issued an Ory Kratos Session Token.")
-
-		trace.SpanFromContext(r.Context()).AddEvent(events.NewSessionIssued(r.Context(), s.ID, i.ID))
 
 		if handled, err := e.d.SessionManager().MaybeRedirectAPICodeFlow(w, r, a, s.ID, g); err != nil {
 			return errors.WithStack(err)
@@ -208,8 +212,6 @@ func (e *HookExecutor) PostLoginHook(w http.ResponseWriter, r *http.Request, g n
 		WithField("identity_id", i.ID).
 		WithField("session_id", s.ID).
 		Info("Identity authenticated successfully and was issued an Ory Kratos Session Cookie.")
-
-	trace.SpanFromContext(r.Context()).AddEvent(events.NewSessionIssued(r.Context(), s.ID, i.ID))
 
 	if x.IsJSONRequest(r) {
 		// Browser flows rely on cookies. Adding tokens in the mix will confuse consumers.

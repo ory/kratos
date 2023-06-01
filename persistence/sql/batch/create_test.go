@@ -9,6 +9,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/ory/x/dbal"
+
 	"github.com/gofrs/uuid"
 	"github.com/jmoiron/sqlx/reflectx"
 	"github.com/stretchr/testify/assert"
@@ -39,11 +41,20 @@ func (i testModel) TableName(ctx context.Context) string {
 
 func (tq testQuoter) Quote(s string) string { return fmt.Sprintf("%q", s) }
 
+func makeModels[T any]() []*T {
+	models := make([]*T, 10)
+	for k := range models {
+		models[k] = new(T)
+	}
+	return models
+}
+
 func Test_buildInsertQueryArgs(t *testing.T) {
 	ctx := context.Background()
 	t.Run("case=testModel", func(t *testing.T) {
-		models := make([]*testModel, 10)
-		args := buildInsertQueryArgs(ctx, testQuoter{}, models)
+		models := makeModels[testModel]()
+		mapper := reflectx.NewMapper("db")
+		args := buildInsertQueryArgs(ctx, "other", mapper, testQuoter{}, models)
 		snapshotx.SnapshotT(t, args)
 
 		query := fmt.Sprintf("INSERT INTO %s (%s) VALUES\n%s", args.TableName, args.ColumnsDecl, args.Placeholders)
@@ -61,20 +72,35 @@ func Test_buildInsertQueryArgs(t *testing.T) {
 	})
 
 	t.Run("case=Identities", func(t *testing.T) {
-		models := make([]*identity.Identity, 10)
-		args := buildInsertQueryArgs(ctx, testQuoter{}, models)
+		models := makeModels[identity.Identity]()
+		mapper := reflectx.NewMapper("db")
+		args := buildInsertQueryArgs(ctx, "other", mapper, testQuoter{}, models)
 		snapshotx.SnapshotT(t, args)
 	})
 
 	t.Run("case=RecoveryAddress", func(t *testing.T) {
-		models := make([]*identity.RecoveryAddress, 10)
-		args := buildInsertQueryArgs(ctx, testQuoter{}, models)
+		models := makeModels[identity.RecoveryAddress]()
+		mapper := reflectx.NewMapper("db")
+		args := buildInsertQueryArgs(ctx, "other", mapper, testQuoter{}, models)
 		snapshotx.SnapshotT(t, args)
 	})
 
 	t.Run("case=RecoveryAddress", func(t *testing.T) {
-		models := make([]*identity.RecoveryAddress, 10)
-		args := buildInsertQueryArgs(ctx, testQuoter{}, models)
+		models := makeModels[identity.RecoveryAddress]()
+		mapper := reflectx.NewMapper("db")
+		args := buildInsertQueryArgs(ctx, "other", mapper, testQuoter{}, models)
+		snapshotx.SnapshotT(t, args)
+	})
+
+	t.Run("case=cockroach", func(t *testing.T) {
+		models := makeModels[testModel]()
+		for k := range models {
+			if k%3 == 0 {
+				models[k].ID = uuid.FromStringOrNil(fmt.Sprintf("ae0125a9-2786-4ada-82d2-d169cf75047%d", k))
+			}
+		}
+		mapper := reflectx.NewMapper("db")
+		args := buildInsertQueryArgs(ctx, "cockroach", mapper, testQuoter{}, models)
 		snapshotx.SnapshotT(t, args)
 	})
 }
@@ -87,21 +113,34 @@ func Test_buildInsertQueryValues(t *testing.T) {
 			Traits: []byte(`{"foo": "bar"}`),
 		}
 		mapper := reflectx.NewMapper("db")
-		values, err := buildInsertQueryValues(mapper, []string{"created_at", "updated_at", "id", "string", "int", "null_time_ptr", "traits"}, []*testModel{model})
-		require.NoError(t, err)
 
-		assert.NotNil(t, model.CreatedAt)
-		assert.Equal(t, model.CreatedAt, values[0])
+		nowFunc := func() time.Time {
+			return time.Time{}
+		}
+		t.Run("case=cockroach", func(t *testing.T) {
+			values, err := buildInsertQueryValues(dbal.DriverCockroachDB, mapper, []string{"created_at", "updated_at", "id", "string", "int", "null_time_ptr", "traits"}, []*testModel{model}, nowFunc)
+			require.NoError(t, err)
+			snapshotx.SnapshotT(t, values)
+		})
 
-		assert.NotNil(t, model.UpdatedAt)
-		assert.Equal(t, model.UpdatedAt, values[1])
+		t.Run("case=others", func(t *testing.T) {
+			values, err := buildInsertQueryValues("other", mapper, []string{"created_at", "updated_at", "id", "string", "int", "null_time_ptr", "traits"}, []*testModel{model}, nowFunc)
+			require.NoError(t, err)
 
-		assert.NotNil(t, model.ID)
-		assert.Equal(t, model.ID, values[2])
+			assert.NotNil(t, model.CreatedAt)
+			assert.Equal(t, model.CreatedAt, values[0])
 
-		assert.Equal(t, model.String, values[3])
-		assert.Equal(t, model.Int, values[4])
+			assert.NotNil(t, model.UpdatedAt)
+			assert.Equal(t, model.UpdatedAt, values[1])
 
-		assert.Nil(t, model.NullTimePtr)
+			assert.NotZero(t, model.ID)
+			assert.Equal(t, model.ID, values[2])
+
+			assert.Equal(t, model.String, values[3])
+			assert.Equal(t, model.Int, values[4])
+
+			assert.Nil(t, model.NullTimePtr)
+
+		})
 	})
 }

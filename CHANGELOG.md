@@ -5,7 +5,7 @@
 
 **Table of Contents**
 
-- [ (2023-05-25)](#2023-05-25)
+- [ (2023-05-31)](#2023-05-31)
   - [Bug Fixes](#bug-fixes)
   - [Features](#features)
   - [Tests](#tests)
@@ -301,7 +301,7 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# [](https://github.com/ory/kratos/compare/v0.13.0...v) (2023-05-25)
+# [](https://github.com/ory/kratos/compare/v0.13.0...v) (2023-05-31)
 
 ### Bug Fixes
 
@@ -310,6 +310,8 @@
 - Minor refactorings in package hash
   ([#3186](https://github.com/ory/kratos/issues/3186))
   ([831fb19](https://github.com/ory/kratos/commit/831fb19e1c98b9fade3ff61d26ad249c548292d6))
+- Remove codeball
+  ([aa29606](https://github.com/ory/kratos/commit/aa296067e2736cad329814f7acffd816ce0d74a3))
 - **sdk:** Add cookie for updateLogoutFlow
   ([#3284](https://github.com/ory/kratos/issues/3284))
   ([95ed2b9](https://github.com/ory/kratos/commit/95ed2b94cc99d40af6bbe57e5356ec0f28cb9b78)):
@@ -320,6 +322,9 @@
   ([#3279](https://github.com/ory/kratos/issues/3279))
   ([34ff1d2](https://github.com/ory/kratos/commit/34ff1d2912e7f7aefb35dae759dce2eb37ecb790)),
   closes [#2943](https://github.com/ory/kratos/issues/2943)
+- Use RETURNING clause for batch create
+  ([#3293](https://github.com/ory/kratos/issues/3293))
+  ([8ae8783](https://github.com/ory/kratos/commit/8ae8783935292fb011b1018ac7417ed77eb6abb7))
 - Use the correct redirect_uri for linkedin social login
   ([#3269](https://github.com/ory/kratos/issues/3269))
   ([27ccecc](https://github.com/ory/kratos/commit/27ccecc1cd490eaa71da7f8235b4b0057b8f14fe))
