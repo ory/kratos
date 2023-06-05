@@ -23,6 +23,10 @@ import (
 	"golang.org/x/crypto/pbkdf2"
 	"golang.org/x/crypto/scrypt"
 
+	"github.com/go-crypt/crypt"
+	"github.com/go-crypt/crypt/algorithm/md5crypt"
+	"github.com/go-crypt/crypt/algorithm/shacrypt"
+
 	"github.com/ory/kratos/driver/config"
 )
 
@@ -30,8 +34,14 @@ var ErrUnknownHashAlgorithm = errors.New("unknown hash algorithm")
 
 func Compare(ctx context.Context, password []byte, hash []byte) error {
 	switch {
+	case IsMD5CryptHash(hash):
+		return CompareMD5Crypt(ctx, password, hash)
 	case IsBcryptHash(hash):
 		return CompareBcrypt(ctx, password, hash)
+	case IsSHA256CryptHash(hash):
+		return CompareSHA256Crypt(ctx, password, hash)
+	case IsSHA512CryptHash(hash):
+		return CompareSHA512Crypt(ctx, password, hash)
 	case IsArgon2idHash(hash):
 		return CompareArgon2id(ctx, password, hash)
 	case IsArgon2iHash(hash):
@@ -53,6 +63,16 @@ func Compare(ctx context.Context, password []byte, hash []byte) error {
 	}
 }
 
+func CompareMD5Crypt(_ context.Context, password []byte, hash []byte) error {
+	decoder := crypt.NewDecoder()
+
+	if err := md5crypt.RegisterDecoder(decoder); err != nil {
+		return err
+	}
+
+	return compareCryptHelper(decoder, password, string(hash))
+}
+
 func CompareBcrypt(_ context.Context, password []byte, hash []byte) error {
 	if err := validateBcryptPasswordLength(password); err != nil {
 		return err
@@ -67,6 +87,26 @@ func CompareBcrypt(_ context.Context, password []byte, hash []byte) error {
 	}
 
 	return nil
+}
+
+func CompareSHA256Crypt(_ context.Context, password []byte, hash []byte) error {
+	decoder := crypt.NewDecoder()
+
+	if err := shacrypt.RegisterDecoderSHA256(decoder); err != nil {
+		return err
+	}
+
+	return compareCryptHelper(decoder, password, string(hash))
+}
+
+func CompareSHA512Crypt(_ context.Context, password []byte, hash []byte) error {
+	decoder := crypt.NewDecoder()
+
+	if err := shacrypt.RegisterDecoderSHA512(decoder); err != nil {
+		return err
+	}
+
+	return compareCryptHelper(decoder, password, string(hash))
 }
 
 func CompareArgon2id(_ context.Context, password []byte, hash []byte) error {
@@ -200,7 +240,10 @@ func CompareMD5(_ context.Context, password []byte, hash []byte) error {
 }
 
 var (
+	isMD5CryptHash       = regexp.MustCompile(`^\$1\$`)
 	isBcryptHash         = regexp.MustCompile(`^\$2[abzy]?\$`)
+	isSHA256CryptHash    = regexp.MustCompile(`^\$5\$`)
+	isSHA512CryptHash    = regexp.MustCompile(`^\$6\$`)
 	isArgon2idHash       = regexp.MustCompile(`^\$argon2id\$`)
 	isArgon2iHash        = regexp.MustCompile(`^\$argon2i\$`)
 	isPbkdf2Hash         = regexp.MustCompile(`^\$pbkdf2-sha[0-9]{1,3}\$`)
@@ -211,7 +254,10 @@ var (
 	isMD5Hash            = regexp.MustCompile(`^\$md5\$`)
 )
 
+func IsMD5CryptHash(hash []byte) bool       { return isMD5CryptHash.Match(hash) }
 func IsBcryptHash(hash []byte) bool         { return isBcryptHash.Match(hash) }
+func IsSHA256CryptHash(hash []byte) bool    { return isSHA256CryptHash.Match(hash) }
+func IsSHA512CryptHash(hash []byte) bool    { return isSHA512CryptHash.Match(hash) }
 func IsArgon2idHash(hash []byte) bool       { return isArgon2idHash.Match(hash) }
 func IsArgon2iHash(hash []byte) bool        { return isArgon2iHash.Match(hash) }
 func IsPbkdf2Hash(hash []byte) bool         { return isPbkdf2Hash.Match(hash) }
@@ -222,7 +268,10 @@ func IsFirebaseScryptHash(hash []byte) bool { return isFirebaseScryptHash.Match(
 func IsMD5Hash(hash []byte) bool            { return isMD5Hash.Match(hash) }
 
 func IsValidHashFormat(hash []byte) bool {
-	if IsBcryptHash(hash) ||
+	if IsMD5CryptHash(hash) ||
+		IsBcryptHash(hash) ||
+		IsSHA256CryptHash(hash) ||
+		IsSHA512CryptHash(hash) ||
 		IsArgon2idHash(hash) ||
 		IsArgon2iHash(hash) ||
 		IsPbkdf2Hash(hash) ||
@@ -395,6 +444,19 @@ func compareSHAHelper(hasher string, raw []byte, hash []byte) error {
 	newEncodedHash := []byte(base64.StdEncoding.EncodeToString(sha))
 
 	return comparePasswordHashConstantTime(encodedHash, newEncodedHash)
+}
+
+func compareCryptHelper(decoder *crypt.Decoder, password []byte, hash string) error {
+	digest, err := decoder.Decode(hash)
+	if err != nil {
+		return err
+	}
+
+	if digest.MatchBytes(password) {
+		return nil
+	}
+
+	return errors.WithStack(ErrMismatchedHashAndPassword)
 }
 
 // decodeSSHAHash decodes SSHA[1|256|512] encoded password hash in usual {SSHA...} format.
