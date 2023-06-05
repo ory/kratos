@@ -66,7 +66,7 @@ func Compare(ctx context.Context, password []byte, hash []byte) error {
 func CompareMD5Crypt(_ context.Context, password []byte, hash []byte) error {
 	decoder := crypt.NewDecoder()
 
-	if err := md5crypt.RegisterDecoder(decoder); err != nil {
+	if err := md5crypt.RegisterDecoderCommon(decoder); err != nil {
 		return err
 	}
 
