@@ -19,7 +19,7 @@ import (
 	"golang.org/x/net/context"
 	"golang.org/x/sync/errgroup"
 
-	"github.com/ory/analytics-go/v4"
+	"github.com/ory/analytics-go/v5"
 	"github.com/ory/graceful"
 	"github.com/ory/x/healthx"
 	"github.com/ory/x/metricsx"
@@ -234,7 +234,7 @@ func sqa(ctx stdctx.Context, cmd *cobra.Command, d driver.Registry) *metricsx.Se
 		d.Config().GetProvider(ctx),
 		&metricsx.Options{
 			Service:       "ory-kratos",
-			ClusterID:     metricsx.Hash(d.Persister().NetworkID(ctx).String()),
+			DeploymentId:  metricsx.Hash(d.Persister().NetworkID(ctx).String()),
 			IsDevelopment: d.Config().IsInsecureDevMode(ctx),
 			WriteKey:      "qQlI6q8Q4WvkzTjKQSor4sHYOikHIvvi",
 			WhitelistedPaths: []string{
