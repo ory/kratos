@@ -53,7 +53,7 @@
         },
       })
 
-      document.querySelector(triggerQuerySelector).closest('form').submit()
+      document.querySelector(triggerQuerySelector).closest('form').requestSubmit()
     }).catch((err) => {
       alert(err)
     })
@@ -87,7 +87,7 @@
         },
       })
 
-      document.querySelector(triggerQuerySelector).closest('form').submit()
+      document.querySelector(triggerQuerySelector).closest('form').requestSubmit()
     }).catch((err) => {
       alert(err)
     })
