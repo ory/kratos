@@ -4,6 +4,7 @@
 package hash
 
 import (
+	"bytes"
 	"context"
 	"crypto/aes"
 	"crypto/cipher"
@@ -31,6 +32,24 @@ import (
 )
 
 var ErrUnknownHashAlgorithm = errors.New("unknown hash algorithm")
+
+func NewCryptDecoder() *crypt.Decoder {
+	decoder := crypt.NewDecoder()
+
+	// The register function only returns an error if the decoder is nil or the algorithm is already registered.
+	// This is never the case here, if it is, we did something horribly wrong.
+	if err := md5crypt.RegisterDecoderCommon(decoder); err != nil {
+		panic(err)
+	}
+
+	if err := shacrypt.RegisterDecoder(decoder); err != nil {
+		panic(err)
+	}
+
+	return decoder
+}
+
+var CryptDecoder = NewCryptDecoder()
 
 func Compare(ctx context.Context, password []byte, hash []byte) error {
 	switch {
@@ -64,13 +83,13 @@ func Compare(ctx context.Context, password []byte, hash []byte) error {
 }
 
 func CompareMD5Crypt(_ context.Context, password []byte, hash []byte) error {
-	decoder := crypt.NewDecoder()
+	// the password has successfully been validated (has prefix `$md5-crypt`),
+	// the decoder expect the module crypt identifier instead (`$1`), which means we need to replace the prefix
+	// before decoding
+	hash = bytes.TrimPrefix(hash, []byte("$md5-crypt"))
+	hash = append([]byte("$1"), hash...)
 
-	if err := md5crypt.RegisterDecoderCommon(decoder); err != nil {
-		return err
-	}
-
-	return compareCryptHelper(decoder, password, string(hash))
+	return compareCryptHelper(password, string(hash))
 }
 
 func CompareBcrypt(_ context.Context, password []byte, hash []byte) error {
@@ -90,23 +109,17 @@ func CompareBcrypt(_ context.Context, password []byte, hash []byte) error {
 }
 
 func CompareSHA256Crypt(_ context.Context, password []byte, hash []byte) error {
-	decoder := crypt.NewDecoder()
+	hash = bytes.TrimPrefix(hash, []byte("$sha256-crypt"))
+	hash = append([]byte("$5"), hash...)
 
-	if err := shacrypt.RegisterDecoderSHA256(decoder); err != nil {
-		return err
-	}
-
-	return compareCryptHelper(decoder, password, string(hash))
+	return compareCryptHelper(password, string(hash))
 }
 
 func CompareSHA512Crypt(_ context.Context, password []byte, hash []byte) error {
-	decoder := crypt.NewDecoder()
+	hash = bytes.TrimPrefix(hash, []byte("$sha512-crypt"))
+	hash = append([]byte("$6"), hash...)
 
-	if err := shacrypt.RegisterDecoderSHA512(decoder); err != nil {
-		return err
-	}
-
-	return compareCryptHelper(decoder, password, string(hash))
+	return compareCryptHelper(password, string(hash))
 }
 
 func CompareArgon2id(_ context.Context, password []byte, hash []byte) error {
@@ -240,10 +253,10 @@ func CompareMD5(_ context.Context, password []byte, hash []byte) error {
 }
 
 var (
-	isMD5CryptHash       = regexp.MustCompile(`^\$1\$`)
+	isMD5CryptHash       = regexp.MustCompile(`^\$md5-crypt\$`)
 	isBcryptHash         = regexp.MustCompile(`^\$2[abzy]?\$`)
-	isSHA256CryptHash    = regexp.MustCompile(`^\$5\$`)
-	isSHA512CryptHash    = regexp.MustCompile(`^\$6\$`)
+	isSHA256CryptHash    = regexp.MustCompile(`^\$sha256-crypt\$`)
+	isSHA512CryptHash    = regexp.MustCompile(`^\$sha512-crypt\$`)
 	isArgon2idHash       = regexp.MustCompile(`^\$argon2id\$`)
 	isArgon2iHash        = regexp.MustCompile(`^\$argon2i\$`)
 	isPbkdf2Hash         = regexp.MustCompile(`^\$pbkdf2-sha[0-9]{1,3}\$`)
@@ -446,8 +459,8 @@ func compareSHAHelper(hasher string, raw []byte, hash []byte) error {
 	return comparePasswordHashConstantTime(encodedHash, newEncodedHash)
 }
 
-func compareCryptHelper(decoder *crypt.Decoder, password []byte, hash string) error {
-	digest, err := decoder.Decode(hash)
+func compareCryptHelper(password []byte, hash string) error {
+	digest, err := CryptDecoder.Decode(hash)
 	if err != nil {
 		return err
 	}

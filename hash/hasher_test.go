@@ -366,51 +366,51 @@ func TestCompare(t *testing.T) {
 		assert.Error(t, hash.CompareMD5(context.Background(), []byte("ory1"), []byte("$md5$pf=e1BBU1NXT1JEfXtTQUxUfSQ/$MTIzNDU2Nzg5$8PhwWanVRnpJAFK4NUjR0w==")))
 	})
 
-	t.Run("md5crypt", func(t *testing.T) {
+	t.Run("md5-crypt", func(t *testing.T) {
 		t.Parallel()
 
-		assert.Nil(t, hash.Compare(context.Background(), []byte("test"), []byte("$1$TVEiiKNb$SN6/pUaRQS/E8Jh46As2C/")))
-		assert.Nil(t, hash.CompareMD5Crypt(context.Background(), []byte("test"), []byte("$1$TVEiiKNb$SN6/pUaRQS/E8Jh46As2C/")))
-		assert.Nil(t, hash.Compare(context.Background(), []byte("test"), []byte("$1$$whuMjZj.HMFoaTaZRRtkO0")))
-		assert.Error(t, hash.Compare(context.Background(), []byte("test"), []byte("$1$xWMlm2eL$GGTOpgZu4p2k6ORprAu3b.")))
+		assert.Nil(t, hash.Compare(context.Background(), []byte("test"), []byte("$md5-crypt$TVEiiKNb$SN6/pUaRQS/E8Jh46As2C/")))
+		assert.Nil(t, hash.CompareMD5Crypt(context.Background(), []byte("test"), []byte("$md5-crypt$TVEiiKNb$SN6/pUaRQS/E8Jh46As2C/")))
+		assert.Nil(t, hash.Compare(context.Background(), []byte("test"), []byte("$md5-crypt$$whuMjZj.HMFoaTaZRRtkO0")))
+		assert.Error(t, hash.Compare(context.Background(), []byte("test"), []byte("$md5-crypt$xWMlm2eL$GGTOpgZu4p2k6ORprAu3b.")))
 
-		assert.Nil(t, hash.Compare(context.Background(), []byte("ory"), []byte("$1$xWMlm2eL$GGTOpgZu4p2k6ORprAu3b.")))
-		assert.Nil(t, hash.CompareMD5Crypt(context.Background(), []byte("ory"), []byte("$1$xWMlm2eL$GGTOpgZu4p2k6ORprAu3b.")))
-		assert.Error(t, hash.Compare(context.Background(), []byte("ory"), []byte("$1$E7zjruqF$RTglYR1CzBHwwiTk9nVzx1")))
+		assert.Nil(t, hash.Compare(context.Background(), []byte("ory"), []byte("$md5-crypt$xWMlm2eL$GGTOpgZu4p2k6ORprAu3b.")))
+		assert.Nil(t, hash.CompareMD5Crypt(context.Background(), []byte("ory"), []byte("$md5-crypt$xWMlm2eL$GGTOpgZu4p2k6ORprAu3b.")))
+		assert.Error(t, hash.Compare(context.Background(), []byte("ory"), []byte("$md5-crypt$E7zjruqF$RTglYR1CzBHwwiTk9nVzx1")))
 
-		assert.ErrorIs(t, hash.Compare(context.Background(), []byte("ory"), []byte("$1$$")), hash.ErrMismatchedHashAndPassword)
-		assert.Error(t, hash.Compare(context.Background(), []byte("ory"), []byte("$1$$$")))
+		assert.ErrorIs(t, hash.Compare(context.Background(), []byte("ory"), []byte("$md5-crypt$$")), hash.ErrMismatchedHashAndPassword)
+		assert.Error(t, hash.Compare(context.Background(), []byte("ory"), []byte("$md5-crypt$$$")))
 		// per crypt(5), `md5crypt` can be run without a salt, but the salt section must still be present
-		assert.Error(t, hash.Compare(context.Background(), []byte("test"), []byte("$1$whuMjZj.HMFoaTaZRRtkO0")), "md5crypt decode error: provided encoded hash has an invalid format")
+		assert.Error(t, hash.Compare(context.Background(), []byte("test"), []byte("$md5-crypt$whuMjZj.HMFoaTaZRRtkO0")), "md5crypt decode error: provided encoded hash has an invalid format")
 	})
 
-	t.Run("sha256crypt", func(t *testing.T) {
+	t.Run("sha256-crypt", func(t *testing.T) {
 		t.Parallel()
 
-		assert.Nil(t, hash.Compare(context.Background(), []byte("test"), []byte("$5$rounds=535000$05R.9KB6UC2kLI3w$Q/zslzx./JjkAVPTwp6th7nW5l7JU91Gte/UmIh.U78")))
-		assert.Nil(t, hash.CompareSHA256Crypt(context.Background(), []byte("test"), []byte("$5$rounds=535000$05R.9KB6UC2kLI3w$Q/zslzx./JjkAVPTwp6th7nW5l7JU91Gte/UmIh.U78")))
-		assert.Error(t, hash.Compare(context.Background(), []byte("test"), []byte("$5$rounds=535000$awpcR7lDlnK/S7WE$vHU7KkQwyjfGz6u4MUi7.lH9htK/l63HloTsX1ZMz.3")))
+		assert.Nil(t, hash.Compare(context.Background(), []byte("test"), []byte("$sha256-crypt$rounds=535000$05R.9KB6UC2kLI3w$Q/zslzx./JjkAVPTwp6th7nW5l7JU91Gte/UmIh.U78")))
+		assert.Nil(t, hash.CompareSHA256Crypt(context.Background(), []byte("test"), []byte("$sha256-crypt$rounds=535000$05R.9KB6UC2kLI3w$Q/zslzx./JjkAVPTwp6th7nW5l7JU91Gte/UmIh.U78")))
+		assert.Error(t, hash.Compare(context.Background(), []byte("test"), []byte("$sha256-crypt$rounds=535000$awpcR7lDlnK/S7WE$vHU7KkQwyjfGz6u4MUi7.lH9htK/l63HloTsX1ZMz.3")))
 
-		assert.Nil(t, hash.Compare(context.Background(), []byte("ory"), []byte("$5$rounds=535000$awpcR7lDlnK/S7WE$vHU7KkQwyjfGz6u4MUi7.lH9htK/l63HloTsX1ZMz.3")))
-		assert.Nil(t, hash.CompareSHA256Crypt(context.Background(), []byte("ory"), []byte("$5$rounds=535000$awpcR7lDlnK/S7WE$vHU7KkQwyjfGz6u4MUi7.lH9htK/l63HloTsX1ZMz.3")))
-		assert.Error(t, hash.Compare(context.Background(), []byte("ory"), []byte("$5$rounds=535000$T95kH8e37IGVdxzJ$gLeaNa6qRog.bx4Bzqp63ceWItH6nSAal6c3WmT5GHB")))
+		assert.Nil(t, hash.Compare(context.Background(), []byte("ory"), []byte("$sha256-crypt$rounds=535000$awpcR7lDlnK/S7WE$vHU7KkQwyjfGz6u4MUi7.lH9htK/l63HloTsX1ZMz.3")))
+		assert.Nil(t, hash.CompareSHA256Crypt(context.Background(), []byte("ory"), []byte("$sha256-crypt$rounds=535000$awpcR7lDlnK/S7WE$vHU7KkQwyjfGz6u4MUi7.lH9htK/l63HloTsX1ZMz.3")))
+		assert.Error(t, hash.Compare(context.Background(), []byte("ory"), []byte("$sha256-crypt$rounds=535000$T95kH8e37IGVdxzJ$gLeaNa6qRog.bx4Bzqp63ceWItH6nSAal6c3WmT5GHB")))
 
-		assert.Error(t, hash.Compare(context.Background(), []byte("ory"), []byte("$5$$")), "shacrypt decode error: provided encoded hash has an invalid format")
-		assert.Error(t, hash.Compare(context.Background(), []byte("ory"), []byte("$5$$$")))
+		assert.Error(t, hash.Compare(context.Background(), []byte("ory"), []byte("$sha256-crypt$$")), "shacrypt decode error: provided encoded hash has an invalid format")
+		assert.Error(t, hash.Compare(context.Background(), []byte("ory"), []byte("$sha256-crypt$$$")))
 	})
 
-	t.Run("sha512crypt", func(t *testing.T) {
+	t.Run("sha512-crypt", func(t *testing.T) {
 		t.Parallel()
 
-		assert.Nil(t, hash.Compare(context.Background(), []byte("test"), []byte("$6$rounds=656000$3LVbIAVxR//cRajw$uuNasMW.RYxlGzIRFU1Was70BPSa933AjxhZIGJdJBOlqJAHlgqa0yuiuq5JHF/ryNGryJkj87G9i3G2HPSXg1")))
-		assert.Nil(t, hash.CompareSHA512Crypt(context.Background(), []byte("test"), []byte("$6$rounds=656000$3LVbIAVxR//cRajw$uuNasMW.RYxlGzIRFU1Was70BPSa933AjxhZIGJdJBOlqJAHlgqa0yuiuq5JHF/ryNGryJkj87G9i3G2HPSXg1")))
+		assert.Nil(t, hash.Compare(context.Background(), []byte("test"), []byte("$sha512-crypt$rounds=656000$3LVbIAVxR//cRajw$uuNasMW.RYxlGzIRFU1Was70BPSa933AjxhZIGJdJBOlqJAHlgqa0yuiuq5JHF/ryNGryJkj87G9i3G2HPSXg1")))
+		assert.Nil(t, hash.CompareSHA512Crypt(context.Background(), []byte("test"), []byte("$sha512-crypt$rounds=656000$3LVbIAVxR//cRajw$uuNasMW.RYxlGzIRFU1Was70BPSa933AjxhZIGJdJBOlqJAHlgqa0yuiuq5JHF/ryNGryJkj87G9i3G2HPSXg1")))
 		assert.Error(t, hash.Compare(context.Background(), []byte("test"), []byte("$5$rounds=535000$awpcR7lDlnK/S7WE$vHU7KkQwyjfGz6u4MUi7.lH9htK/l63HloTsX1ZMz.3")))
 
-		assert.Nil(t, hash.Compare(context.Background(), []byte("ory"), []byte("$6$rounds=656000$0baQbxBrfpKqvizk$Q9cYk1MeNAlECPgpG3jjfNI2DumLqd0yHbxzLdxiX6nsSD5i9n0awcbiCf8R5DzpIYxeBPznPcb1wtzlgUKtH0")))
-		assert.Nil(t, hash.CompareSHA512Crypt(context.Background(), []byte("ory"), []byte("$6$rounds=656000$0baQbxBrfpKqvizk$Q9cYk1MeNAlECPgpG3jjfNI2DumLqd0yHbxzLdxiX6nsSD5i9n0awcbiCf8R5DzpIYxeBPznPcb1wtzlgUKtH0")))
-		assert.Error(t, hash.Compare(context.Background(), []byte("ory"), []byte("$6$rounds=656000$hNcDLFO63bkYVDZf$Mt9dhH0xqfxWZ6Pu8zXw.Ku5f15IRTweuaDcUc.ObXWGn7B1h8YIWLmArZd8psd2mrUVswCXLAVptmISr.8iI/")))
+		assert.Nil(t, hash.Compare(context.Background(), []byte("ory"), []byte("$sha512-crypt$rounds=656000$0baQbxBrfpKqvizk$Q9cYk1MeNAlECPgpG3jjfNI2DumLqd0yHbxzLdxiX6nsSD5i9n0awcbiCf8R5DzpIYxeBPznPcb1wtzlgUKtH0")))
+		assert.Nil(t, hash.CompareSHA512Crypt(context.Background(), []byte("ory"), []byte("$sha512-crypt$rounds=656000$0baQbxBrfpKqvizk$Q9cYk1MeNAlECPgpG3jjfNI2DumLqd0yHbxzLdxiX6nsSD5i9n0awcbiCf8R5DzpIYxeBPznPcb1wtzlgUKtH0")))
+		assert.Error(t, hash.Compare(context.Background(), []byte("ory"), []byte("$sha512-crypt$rounds=656000$hNcDLFO63bkYVDZf$Mt9dhH0xqfxWZ6Pu8zXw.Ku5f15IRTweuaDcUc.ObXWGn7B1h8YIWLmArZd8psd2mrUVswCXLAVptmISr.8iI/")))
 
-		assert.Error(t, hash.Compare(context.Background(), []byte("ory"), []byte("$6$$")), "shacrypt decode error: provided encoded hash has an invalid format")
-		assert.Error(t, hash.Compare(context.Background(), []byte("ory"), []byte("$6$$$")))
+		assert.Error(t, hash.Compare(context.Background(), []byte("ory"), []byte("$sha512-crypt$$")), "shacrypt decode error: provided encoded hash has an invalid format")
+		assert.Error(t, hash.Compare(context.Background(), []byte("ory"), []byte("$sha512-crypt$$$")))
 	})
 }
