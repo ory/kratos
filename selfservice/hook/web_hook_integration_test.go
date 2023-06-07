@@ -765,6 +765,45 @@ func TestWebHooks(t *testing.T) {
 		assert.Error(t, err)
 	})
 
+	for _, tc := range []struct {
+		uc    string
+		parse bool
+	}{
+		{uc: "Post Settings Hook - parse true", parse: true},
+		{uc: "Post Settings Hook - parse false", parse: false},
+	} {
+		tc := tc
+		t.Run("uc="+tc.uc, func(t *testing.T) {
+			t.Parallel()
+			ts := newServer(webHookHttpCodeWithBodyEndPoint(t, 200, []byte(`{"identity":{"traits":{"email":"some@other-example.org"}}}`)))
+			req := &http.Request{
+				Header: map[string][]string{"Some-Header": {"Some-Value"}},
+				Host:   "www.ory.sh",
+				TLS:    new(tls.ConnectionState),
+				URL:    &url.URL{Path: "/some_end_point"},
+
+				Method: http.MethodPost,
+			}
+			f := &settings.Flow{ID: x.NewUUID()}
+			conf := json.RawMessage(fmt.Sprintf(`{"url": "%s", "method": "POST", "body": "%s", "response": {"parse":%t}}`, ts.URL+path, "file://./stub/test_body.jsonnet", tc.parse))
+			wh := hook.NewWebHook(&whDeps, conf)
+			uuid := x.NewUUID()
+			in := &identity.Identity{ID: uuid}
+
+			postPersistErr := wh.ExecuteSettingsPostPersistHook(nil, req, f, in)
+			assert.NoError(t, postPersistErr)
+			assert.Equal(t, in, &identity.Identity{ID: uuid})
+
+			prePersistErr := wh.ExecuteSettingsPrePersistHook(nil, req, f, in)
+			assert.NoError(t, prePersistErr)
+			if tc.parse == true {
+				assert.Equal(t, in, &identity.Identity{ID: uuid, Traits: identity.Traits(`{"email":"some@other-example.org"}`)})
+			} else {
+				assert.Equal(t, in, &identity.Identity{ID: uuid})
+			}
+		})
+	}
+
 	t.Run("must error when template is erroneous", func(t *testing.T) {
 		t.Parallel()
 		ts := newServer(webHookHttpCodeEndPoint(200))
