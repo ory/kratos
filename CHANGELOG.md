@@ -306,6 +306,9 @@
 
 ### Bug Fixes
 
+- Ability to patch metadata even if it is `null`
+  ([#3304](https://github.com/ory/kratos/issues/3304))
+  ([3c04d8f](https://github.com/ory/kratos/commit/3c04d8fb63cacf91774864450b02d6d1eb90d856))
 - Bump quickstart version ([#3257](https://github.com/ory/kratos/issues/3257))
   ([6db70a8](https://github.com/ory/kratos/commit/6db70a81afac5860a86c31881a6fc988096ff0e4))
 - Minor refactorings in package hash
