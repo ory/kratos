@@ -67,7 +67,7 @@ require (
 	github.com/mikefarah/yq/v4 v4.19.1
 	github.com/mohae/deepcopy v0.0.0-20170929034955-c48cc78d4826
 	github.com/montanaflynn/stats v0.0.0-20171201202039-1bf9dbcd8cbe
-	github.com/ory/analytics-go/v4 v4.0.3
+	github.com/ory/analytics-go/v5 v5.0.1
 	github.com/ory/client-go v0.2.0-alpha.60
 	github.com/ory/dockertest/v3 v3.9.1
 	github.com/ory/go-acc v0.2.9-0.20230103102148-6b1c9a70dbbe
@@ -77,7 +77,7 @@ require (
 	github.com/ory/jsonschema/v3 v3.0.8
 	github.com/ory/mail/v3 v3.0.0
 	github.com/ory/nosurf v1.2.7
-	github.com/ory/x v0.0.552
+	github.com/ory/x v0.0.557
 	github.com/phayes/freeport v0.0.0-20180830031419-95f893ade6f2
 	github.com/pkg/errors v0.9.1
 	github.com/pquerna/otp v1.4.0
@@ -146,7 +146,7 @@ require (
 	github.com/elliotchance/orderedmap v1.4.0 // indirect
 	github.com/envoyproxy/go-control-plane v0.10.3 // indirect
 	github.com/envoyproxy/protoc-gen-validate v0.9.1 // indirect
-	github.com/evanphx/json-patch v5.6.0+incompatible // indirect
+	github.com/evanphx/json-patch/v5 v5.6.0 // indirect
 	github.com/fatih/structs v1.1.0 // indirect
 	github.com/felixge/fgprof v0.9.3 // indirect
 	github.com/felixge/httpsnoop v1.0.3 // indirect

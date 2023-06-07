@@ -5,7 +5,7 @@
 
 **Table of Contents**
 
-- [ (2023-06-01)](#2023-06-01)
+- [ (2023-06-07)](#2023-06-07)
   - [Bug Fixes](#bug-fixes)
   - [Documentation](#documentation)
   - [Features](#features)
@@ -302,7 +302,7 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# [](https://github.com/ory/kratos/compare/v0.13.0...v) (2023-06-01)
+# [](https://github.com/ory/kratos/compare/v0.13.0...v) (2023-06-07)
 
 ### Bug Fixes
 
@@ -387,6 +387,8 @@
 
   - chore: nit config description
 
+- Sqa metrics v2 ([#3300](https://github.com/ory/kratos/issues/3300))
+  ([98fe73f](https://github.com/ory/kratos/commit/98fe73faa75c56be47c19c61a780578ef24e7267))
 - Support exporting of all credential types
   ([#3290](https://github.com/ory/kratos/issues/3290))
   ([de6c857](https://github.com/ory/kratos/commit/de6c8574c9c6070458303f9b5caf7e8533f06b69)):
