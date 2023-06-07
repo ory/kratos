@@ -262,7 +262,6 @@ require (
 	github.com/opencontainers/image-spec v1.1.0-rc2 // indirect
 	github.com/opencontainers/runc v1.1.5 // indirect
 	github.com/openzipkin/zipkin-go v0.4.1 // indirect
-	github.com/ory/analytics-go/v5 v5.0.1 // indirect
 	github.com/pelletier/go-toml v1.9.5 // indirect
 	github.com/pelletier/go-toml/v2 v2.0.7 // indirect
 	github.com/philhofer/fwd v1.1.2 // indirect
