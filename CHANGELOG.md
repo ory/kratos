@@ -5,7 +5,7 @@
 
 **Table of Contents**
 
-- [ (2023-06-01)](#2023-06-01)
+- [ (2023-06-07)](#2023-06-07)
   - [Bug Fixes](#bug-fixes)
   - [Documentation](#documentation)
   - [Features](#features)
@@ -302,10 +302,13 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# [](https://github.com/ory/kratos/compare/v0.13.0...v) (2023-06-01)
+# [](https://github.com/ory/kratos/compare/v0.13.0...v) (2023-06-07)
 
 ### Bug Fixes
 
+- Ability to patch metadata even if it is `null`
+  ([#3304](https://github.com/ory/kratos/issues/3304))
+  ([3c04d8f](https://github.com/ory/kratos/commit/3c04d8fb63cacf91774864450b02d6d1eb90d856))
 - Bump quickstart version ([#3257](https://github.com/ory/kratos/issues/3257))
   ([6db70a8](https://github.com/ory/kratos/commit/6db70a81afac5860a86c31881a6fc988096ff0e4))
 - Minor refactorings in package hash
@@ -387,6 +390,8 @@
 
   - chore: nit config description
 
+- Sqa metrics v2 ([#3300](https://github.com/ory/kratos/issues/3300))
+  ([98fe73f](https://github.com/ory/kratos/commit/98fe73faa75c56be47c19c61a780578ef24e7267))
 - Support exporting of all credential types
   ([#3290](https://github.com/ory/kratos/issues/3290))
   ([de6c857](https://github.com/ory/kratos/commit/de6c8574c9c6070458303f9b5caf7e8533f06b69)):
