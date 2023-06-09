@@ -5,7 +5,7 @@
 
 **Table of Contents**
 
-- [ (2023-06-07)](#2023-06-07)
+- [ (2023-06-09)](#2023-06-09)
   - [Bug Fixes](#bug-fixes)
   - [Documentation](#documentation)
   - [Features](#features)
@@ -302,7 +302,7 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# [](https://github.com/ory/kratos/compare/v0.13.0...v) (2023-06-07)
+# [](https://github.com/ory/kratos/compare/v0.13.0...v) (2023-06-09)
 
 ### Bug Fixes
 
@@ -354,6 +354,15 @@
   ([#3276](https://github.com/ory/kratos/issues/3276))
   ([d290cb0](https://github.com/ory/kratos/commit/d290cb05bb4f63d04ec3763db127060e13c350dc)),
   closes [#2709](https://github.com/ory/kratos/issues/2709)
+- Implement `crypt(3)` hashers
+  ([#3303](https://github.com/ory/kratos/issues/3303))
+  ([afe06db](https://github.com/ory/kratos/commit/afe06db95663cc0cb9704ba4f7014ed9bfb4de09)),
+  closes [#3291](https://github.com/ory/kratos/issues/3291):
+
+  This PR implements md5crypt, sha256crypt, sha512crypt, which are considered
+  legacy (like md5), but are used in legacy systems looking to convert to ory.
+  They use the existing format of crypt(5) (which is compliant to PHC).
+
 - Improve event types and capture more events
   ([#3297](https://github.com/ory/kratos/issues/3297))
   ([835fe13](https://github.com/ory/kratos/commit/835fe13d9ce81f7c0ed91dd2863a740fbb0c6209))
