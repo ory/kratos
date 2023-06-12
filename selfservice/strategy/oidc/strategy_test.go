@@ -68,11 +68,13 @@ func TestStrategy(t *testing.T) {
 	routerP := x.NewRouterPublic()
 	routerA := x.NewRouterAdmin()
 	ts, _ := testhelpers.NewKratosServerWithRouters(t, reg, routerP, routerA)
-	invalid := newOIDCProvider(t, ts, remotePublic, remoteAdmin, "invalid-issuer")
+	invalid := newOIDCProvider(t, ts, remotePublic, remoteAdmin, "invalid-issuer", "", nil)
+	testCallbackUrl := newTestCallback(t, reg)
+	validProviderConfig := newOIDCProvider(t, ts, remotePublic, remoteAdmin, "valid", testCallbackUrl, nil)
 	viperSetProviderConfig(
 		t,
 		conf,
-		newOIDCProvider(t, ts, remotePublic, remoteAdmin, "valid"),
+		validProviderConfig,
 		oidc.Configuration{
 			Provider:     "generic",
 			ID:           "invalid-issuer",
@@ -82,6 +84,7 @@ func TestStrategy(t *testing.T) {
 			IssuerURL: strings.Replace(remotePublic, "localhost", "127.0.0.1", 1) + "/",
 			Mapper:    "file://./stub/oidc.hydra.jsonnet",
 		},
+		newOIDCProvider(t, ts, remotePublic, remoteAdmin, "check_audience", testCallbackUrl, []string{"test.audience"}),
 	)
 
 	conf.MustSet(ctx, config.ViperKeySelfServiceRegistrationEnabled, true)
@@ -936,7 +939,7 @@ func TestPostEndpointRedirect(t *testing.T) {
 	viperSetProviderConfig(
 		t,
 		conf,
-		newOIDCProvider(t, publicTS, remotePublic, remoteAdmin, "apple"),
+		newOIDCProvider(t, publicTS, remotePublic, remoteAdmin, "apple", "", nil),
 	)
 	testhelpers.InitKratosServers(t, reg, publicTS, adminTS)
 

@@ -5,6 +5,7 @@ package oidc
 
 import (
 	"context"
+	"fmt"
 	"net/url"
 
 	"github.com/pkg/errors"
@@ -87,10 +88,21 @@ func (g *ProviderGenericOIDC) AuthCodeURLOptions(r ider) []oauth2.AuthCodeOption
 	return options
 }
 
-func (g *ProviderGenericOIDC) verifyAndDecodeClaimsWithProvider(ctx context.Context, provider *gooidc.Provider, raw string) (*Claims, error) {
-	token, err := provider.Verifier(&gooidc.Config{ClientID: g.config.ClientID}).Verify(ctx, raw)
+func (g *ProviderGenericOIDC) verifyAndDecodeClaimsWithProvider(ctx context.Context, provider *gooidc.Provider, rawIdToken string) (*Claims, error) {
+	skipClientIDCheck := g.config.AllowedAudiences != nil && len(g.config.AllowedAudiences) > 0
+	token, err := provider.
+		Verifier(&gooidc.Config{
+			ClientID:          g.config.ClientID,
+			SkipClientIDCheck: skipClientIDCheck,
+		}).
+		Verify(ctx, rawIdToken)
 	if err != nil {
 		return nil, errors.WithStack(herodot.ErrBadRequest.WithReasonf("%s", err))
+	}
+	if skipClientIDCheck {
+		if err := verifyAudience(token.Audience, g.config.AllowedAudiences); err != nil {
+			return nil, errors.WithStack(herodot.ErrBadRequest.WithReasonf("%s", err))
+		}
 	}
 
 	var claims Claims
@@ -107,16 +119,32 @@ func (g *ProviderGenericOIDC) verifyAndDecodeClaimsWithProvider(ctx context.Cont
 	return &claims, nil
 }
 
+func verifyAudience(received []string, expected []string) error {
+	for _, r := range received {
+		for _, e := range expected {
+			if r == e {
+				return nil
+			}
+		}
+	}
+	return fmt.Errorf("oidc: audience not valid: %v", received)
+}
+
 func (g *ProviderGenericOIDC) Claims(ctx context.Context, exchange *oauth2.Token, query url.Values) (*Claims, error) {
 	raw, ok := exchange.Extra("id_token").(string)
 	if !ok || len(raw) == 0 {
 		return nil, errors.WithStack(ErrIDTokenMissing)
 	}
 
+	return g.ClaimsFromIDToken(ctx, raw)
+}
+
+func (g *ProviderGenericOIDC) ClaimsFromIDToken(ctx context.Context, rawIDToken string) (*Claims, error) {
+
 	p, err := g.provider(ctx)
 	if err != nil {
 		return nil, err
 	}
 
-	return g.verifyAndDecodeClaimsWithProvider(ctx, p, raw)
+	return g.verifyAndDecodeClaimsWithProvider(ctx, p, rawIDToken)
 }
