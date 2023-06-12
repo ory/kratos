@@ -68,7 +68,7 @@ func TestStrategy(t *testing.T) {
 	routerP := x.NewRouterPublic()
 	routerA := x.NewRouterAdmin()
 	ts, _ := testhelpers.NewKratosServerWithRouters(t, reg, routerP, routerA)
-	invalid := newOIDCProvider(t, ts, remotePublic, remoteAdmin, "invalid-issuer", "", nil)
+	invalid := newOIDCProvider(t, ts, remotePublic, remoteAdmin, "invalid-issuer", nil)
 	validProviderConfig := newOIDCProvider(t, ts, remotePublic, remoteAdmin, "valid", nil)
 	viperSetProviderConfig(
 		t,
@@ -938,7 +938,7 @@ func TestPostEndpointRedirect(t *testing.T) {
 	viperSetProviderConfig(
 		t,
 		conf,
-		newOIDCProvider(t, publicTS, remotePublic, remoteAdmin, "apple", "", nil),
+		newOIDCProvider(t, publicTS, remotePublic, remoteAdmin, "apple", nil),
 	)
 	testhelpers.InitKratosServers(t, reg, publicTS, adminTS)
 
