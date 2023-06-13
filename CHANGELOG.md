@@ -5,7 +5,7 @@
 
 **Table of Contents**
 
-- [ (2023-06-10)](#2023-06-10)
+- [ (2023-06-13)](#2023-06-13)
   - [Bug Fixes](#bug-fixes)
   - [Documentation](#documentation)
   - [Features](#features)
@@ -302,7 +302,7 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# [](https://github.com/ory/kratos/compare/v0.13.0...v) (2023-06-10)
+# [](https://github.com/ory/kratos/compare/v0.13.0...v) (2023-06-13)
 
 ### Bug Fixes
 
@@ -311,6 +311,8 @@
   ([3c04d8f](https://github.com/ory/kratos/commit/3c04d8fb63cacf91774864450b02d6d1eb90d856))
 - Bump quickstart version ([#3257](https://github.com/ory/kratos/issues/3257))
   ([6db70a8](https://github.com/ory/kratos/commit/6db70a81afac5860a86c31881a6fc988096ff0e4))
+- IdentityCreated event ([#3314](https://github.com/ory/kratos/issues/3314))
+  ([78e31cb](https://github.com/ory/kratos/commit/78e31cb82a28e240a6176c8d3d9ef3bc64559e75))
 - Minor refactorings in package hash
   ([#3186](https://github.com/ory/kratos/issues/3186))
   ([831fb19](https://github.com/ory/kratos/commit/831fb19e1c98b9fade3ff61d26ad249c548292d6))
