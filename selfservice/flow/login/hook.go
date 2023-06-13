@@ -114,7 +114,15 @@ func (e *HookExecutor) handleLoginError(_ http.ResponseWriter, r *http.Request, 
 	return flowError
 }
 
-func (e *HookExecutor) PostLoginHook(w http.ResponseWriter, r *http.Request, g node.UiNodeGroup, a *Flow, i *identity.Identity, s *session.Session, provider string) (err error) {
+func (e *HookExecutor) PostLoginHook(
+	w http.ResponseWriter,
+	r *http.Request,
+	g node.UiNodeGroup,
+	a *Flow,
+	i *identity.Identity,
+	s *session.Session,
+	provider string,
+) (err error) {
 	ctx := r.Context()
 	ctx, span := e.d.Tracer(ctx).Tracer().Start(ctx, "HookExecutor.PostLoginHook")
 	r = r.WithContext(ctx)
