@@ -5,7 +5,7 @@
 
 **Table of Contents**
 
-- [ (2023-06-13)](#2023-06-13)
+- [ (2023-06-14)](#2023-06-14)
   - [Bug Fixes](#bug-fixes)
   - [Documentation](#documentation)
   - [Features](#features)
@@ -302,7 +302,7 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# [](https://github.com/ory/kratos/compare/v0.13.0...v) (2023-06-13)
+# [](https://github.com/ory/kratos/compare/v0.13.0...v) (2023-06-14)
 
 ### Bug Fixes
 
@@ -316,6 +316,9 @@
 - Minor refactorings in package hash
   ([#3186](https://github.com/ory/kratos/issues/3186))
   ([831fb19](https://github.com/ory/kratos/commit/831fb19e1c98b9fade3ff61d26ad249c548292d6))
+- Missing id for login event
+  ([#3315](https://github.com/ory/kratos/issues/3315))
+  ([b6b80a3](https://github.com/ory/kratos/commit/b6b80a3af1162e4009fa8c7c5e9ae7225e941849))
 - Remove codeball
   ([aa29606](https://github.com/ory/kratos/commit/aa296067e2736cad329814f7acffd816ce0d74a3))
 - **sdk:** Add cookie for updateLogoutFlow
@@ -334,6 +337,9 @@
 - Use the correct redirect_uri for linkedin social login
   ([#3269](https://github.com/ory/kratos/issues/3269))
   ([27ccecc](https://github.com/ory/kratos/commit/27ccecc1cd490eaa71da7f8235b4b0057b8f14fe))
+- Webhook config parse for settings flow
+  ([#3305](https://github.com/ory/kratos/issues/3305))
+  ([95ad94d](https://github.com/ory/kratos/commit/95ad94d08efdbb369caecaa64cd0a30058c34ed3))
 
 ### Documentation
 
