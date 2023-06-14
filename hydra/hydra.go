@@ -5,13 +5,12 @@ package hydra
 
 import (
 	"context"
-	"fmt"
 	"net/http"
 	"time"
 
 	"github.com/ory/x/httpx"
+	"github.com/ory/x/sqlxx"
 
-	"github.com/gofrs/uuid"
 	"github.com/pkg/errors"
 
 	"github.com/ory/herodot"
@@ -26,12 +25,12 @@ type (
 		config.Provider
 		x.HTTPClientProvider
 	}
-	HydraProvider interface {
+	Provider interface {
 		Hydra() Hydra
 	}
 	Hydra interface {
-		AcceptLoginRequest(ctx context.Context, hlc uuid.UUID, sub string, amr session.AuthenticationMethods) (string, error)
-		GetLoginRequest(ctx context.Context, hlc uuid.NullUUID) (*hydraclientgo.OAuth2LoginRequest, error)
+		AcceptLoginRequest(ctx context.Context, loginChallenge string, subject string, amr session.AuthenticationMethods) (string, error)
+		GetLoginRequest(ctx context.Context, loginChallenge string) (*hydraclientgo.OAuth2LoginRequest, error)
 	}
 	DefaultHydra struct {
 		d hydraDependencies
@@ -44,19 +43,14 @@ func NewDefaultHydra(d hydraDependencies) *DefaultHydra {
 	}
 }
 
-func GetLoginChallengeID(conf *config.Config, r *http.Request) (uuid.NullUUID, error) {
+func GetLoginChallengeID(conf *config.Config, r *http.Request) (sqlxx.NullString, error) {
 	if !r.URL.Query().Has("login_challenge") {
-		return uuid.NullUUID{}, nil
+		return "", nil
 	} else if conf.OAuth2ProviderURL(r.Context()) == nil {
-		return uuid.NullUUID{}, errors.WithStack(herodot.ErrInternalServerError.WithReason("refusing to parse login_challenge query parameter because " + config.ViperKeyOAuth2ProviderURL + " is invalid or unset"))
+		return "", errors.WithStack(herodot.ErrInternalServerError.WithReason("refusing to parse login_challenge query parameter because " + config.ViperKeyOAuth2ProviderURL + " is invalid or unset"))
 	}
 
-	hlc, err := uuid.FromString(r.URL.Query().Get("login_challenge"))
-	if err != nil || hlc.IsNil() {
-		return uuid.NullUUID{}, errors.WithStack(herodot.ErrBadRequest.WithReason("the login_challenge parameter is present but invalid or zero UUID"))
-	} else {
-		return uuid.NullUUID{UUID: hlc, Valid: true}, nil
-	}
+	return sqlxx.NullString(r.URL.Query().Get("login_challenge")), nil
 }
 
 func (h *DefaultHydra) getAdminURL(ctx context.Context) (string, error) {
@@ -85,11 +79,11 @@ func (h *DefaultHydra) getAdminAPIClient(ctx context.Context) (hydraclientgo.OAu
 	return hydraclientgo.NewAPIClient(configuration).OAuth2Api, nil
 }
 
-func (h *DefaultHydra) AcceptLoginRequest(ctx context.Context, hlc uuid.UUID, sub string, amr session.AuthenticationMethods) (string, error) {
+func (h *DefaultHydra) AcceptLoginRequest(ctx context.Context, loginChallenge string, subject string, amr session.AuthenticationMethods) (string, error) {
 	remember := h.d.Config().SessionPersistentCookie(ctx)
 	rememberFor := int64(h.d.Config().SessionLifespan(ctx) / time.Second)
 
-	alr := hydraclientgo.NewAcceptOAuth2LoginRequest(sub)
+	alr := hydraclientgo.NewAcceptOAuth2LoginRequest(subject)
 	alr.Remember = &remember
 	alr.RememberFor = &rememberFor
 	alr.Amr = []string{}
@@ -102,7 +96,7 @@ func (h *DefaultHydra) AcceptLoginRequest(ctx context.Context, hlc uuid.UUID, su
 		return "", err
 	}
 
-	resp, r, err := aa.AcceptOAuth2LoginRequest(ctx).LoginChallenge(fmt.Sprintf("%x", hlc)).AcceptOAuth2LoginRequest(*alr).Execute()
+	resp, r, err := aa.AcceptOAuth2LoginRequest(ctx).LoginChallenge(loginChallenge).AcceptOAuth2LoginRequest(*alr).Execute()
 	if err != nil {
 		innerErr := herodot.ErrInternalServerError.WithWrap(err).WithReasonf("Unable to accept OAuth 2.0 Login Challenge.")
 		if r != nil {
@@ -126,8 +120,8 @@ func (h *DefaultHydra) AcceptLoginRequest(ctx context.Context, hlc uuid.UUID, su
 	return resp.RedirectTo, nil
 }
 
-func (h *DefaultHydra) GetLoginRequest(ctx context.Context, hlc uuid.NullUUID) (*hydraclientgo.OAuth2LoginRequest, error) {
-	if !hlc.Valid {
+func (h *DefaultHydra) GetLoginRequest(ctx context.Context, loginChallenge string) (*hydraclientgo.OAuth2LoginRequest, error) {
+	if loginChallenge == "" {
 		return nil, errors.WithStack(herodot.ErrBadRequest.WithReason("invalid login_challenge"))
 	}
 
@@ -136,7 +130,7 @@ func (h *DefaultHydra) GetLoginRequest(ctx context.Context, hlc uuid.NullUUID) (
 		return nil, err
 	}
 
-	hlr, r, err := aa.GetOAuth2LoginRequest(ctx).LoginChallenge(fmt.Sprintf("%x", hlc.UUID)).Execute()
+	hlr, r, err := aa.GetOAuth2LoginRequest(ctx).LoginChallenge(loginChallenge).Execute()
 	if err != nil {
 		innerErr := herodot.ErrInternalServerError.WithWrap(err).WithReasonf("Unable to get OAuth 2.0 Login Challenge.")
 		if r != nil {
