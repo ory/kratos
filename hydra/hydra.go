@@ -50,7 +50,12 @@ func GetLoginChallengeID(conf *config.Config, r *http.Request) (sqlxx.NullString
 		return "", errors.WithStack(herodot.ErrInternalServerError.WithReason("refusing to parse login_challenge query parameter because " + config.ViperKeyOAuth2ProviderURL + " is invalid or unset"))
 	}
 
-	return sqlxx.NullString(r.URL.Query().Get("login_challenge")), nil
+	loginChallenge := r.URL.Query().Get("login_challenge")
+	if loginChallenge == "" {
+		return "", errors.WithStack(herodot.ErrBadRequest.WithReason("the login_challenge parameter is present but empty"))
+	}
+
+	return sqlxx.NullString(loginChallenge), nil
 }
 
 func (h *DefaultHydra) getAdminURL(ctx context.Context) (string, error) {

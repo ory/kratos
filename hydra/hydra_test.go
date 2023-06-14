@@ -65,6 +65,15 @@ func TestGetLoginChallengeID(t *testing.T) {
 			assertErr: assert.NoError,
 		},
 		{
+			name: "empty login challenge; hydra is configured",
+			args: args{
+				conf: configWithHydra,
+				r:    requestFromChallenge(""),
+			},
+			want:      "",
+			assertErr: assert.Error,
+		},
+		{
 			name: "login_challenge is present; Hydra is not configured",
 			args: args{
 				conf: defaultConfig,

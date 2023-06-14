@@ -233,8 +233,8 @@ func (e *HookExecutor) PostLoginHook(
 
 		// If Kratos is used as a Hydra login provider, we need to redirect back to Hydra by returning a 422 status
 		// with the post login challenge URL as the body.
-		if a.OAuth2LoginChallenge.Valid {
-			postChallengeURL, err := e.d.Hydra().AcceptLoginRequest(r.Context(), a.OAuth2LoginChallenge.UUID, i.ID.String(), s.AMR)
+		if a.OAuth2LoginChallenge != "" {
+			postChallengeURL, err := e.d.Hydra().AcceptLoginRequest(r.Context(), string(a.OAuth2LoginChallenge), i.ID.String(), s.AMR)
 			if err != nil {
 				return err
 			}

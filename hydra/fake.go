@@ -27,7 +27,7 @@ func NewFake() *FakeHydra {
 	return &FakeHydra{}
 }
 
-	func (h *FakeHydra) AcceptLoginRequest(_ context.Context, loginChallenge string, _ string, _ session.AuthenticationMethods) (string, error) {
+func (h *FakeHydra) AcceptLoginRequest(_ context.Context, loginChallenge string, _ string, _ session.AuthenticationMethods) (string, error) {
 	switch loginChallenge {
 	case FakeInvalidLoginChallenge:
 		return "", ErrFakeAcceptLoginRequestFailed
