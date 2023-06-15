@@ -114,7 +114,15 @@ func (e *HookExecutor) handleLoginError(_ http.ResponseWriter, r *http.Request, 
 	return flowError
 }
 
-func (e *HookExecutor) PostLoginHook(w http.ResponseWriter, r *http.Request, g node.UiNodeGroup, a *Flow, i *identity.Identity, s *session.Session, provider string) (err error) {
+func (e *HookExecutor) PostLoginHook(
+	w http.ResponseWriter,
+	r *http.Request,
+	g node.UiNodeGroup,
+	a *Flow,
+	i *identity.Identity,
+	s *session.Session,
+	provider string,
+) (err error) {
 	ctx := r.Context()
 	ctx, span := e.d.Tracer(ctx).Tracer().Start(ctx, "HookExecutor.PostLoginHook")
 	r = r.WithContext(ctx)
@@ -222,6 +230,17 @@ func (e *HookExecutor) PostLoginHook(w http.ResponseWriter, r *http.Request, g n
 	if x.IsJSONRequest(r) {
 		// Browser flows rely on cookies. Adding tokens in the mix will confuse consumers.
 		s.Token = ""
+
+		// If Kratos is used as a Hydra login provider, we need to redirect back to Hydra by returning a 422 status
+		// with the post login challenge URL as the body.
+		if a.OAuth2LoginChallenge.Valid {
+			postChallengeURL, err := e.d.Hydra().AcceptLoginRequest(r.Context(), a.OAuth2LoginChallenge.UUID, i.ID.String(), s.AMR)
+			if err != nil {
+				return err
+			}
+			e.d.Writer().WriteError(w, r, flow.NewBrowserLocationChangeRequiredError(postChallengeURL))
+			return nil
+		}
 
 		response := &APIFlowResponse{Session: s}
 		if required, _ := e.requiresAAL2(r, s, a); required {

@@ -91,7 +91,7 @@ func newHydra(t *testing.T, loginUI string, consentUI string) (hydraAdmin string
 	pool, err := dockertest.NewPool("")
 	require.NoError(t, err)
 
-	hydra, err := pool.RunWithOptions(&dockertest.RunOptions{
+	hydraResource, err := pool.RunWithOptions(&dockertest.RunOptions{
 		Repository: "oryd/hydra",
 		Tag:        "v2.0.0",
 		Env: []string{
@@ -110,18 +110,25 @@ func newHydra(t *testing.T, loginUI string, consentUI string) (hydraAdmin string
 	})
 	require.NoError(t, err)
 	t.Cleanup(func() {
-		require.NoError(t, hydra.Close())
+		require.NoError(t, hydraResource.Close())
 	})
 
-	require.NoError(t, hydra.Expire(uint(60*5)))
+	require.NoError(t, hydraResource.Expire(uint(60*5)))
 
-	require.NotEmpty(t, hydra.GetPort("4444/tcp"), "%+v", hydra.Container.NetworkSettings.Ports)
-	require.NotEmpty(t, hydra.GetPort("4445/tcp"), "%+v", hydra.Container)
+	require.NotEmpty(t, hydraResource.GetPort("4444/tcp"), "%+v", hydraResource.Container.NetworkSettings.Ports)
+	require.NotEmpty(t, hydraResource.GetPort("4445/tcp"), "%+v", hydraResource.Container)
 
-	hydraPublic = "http://127.0.0.1:" + hydra.GetPort("4444/tcp")
-	hydraAdmin = "http://127.0.0.1:" + hydra.GetPort("4445/tcp")
+	hydraPublic = "http://127.0.0.1:" + hydraResource.GetPort("4444/tcp")
+	hydraAdmin = "http://127.0.0.1:" + hydraResource.GetPort("4445/tcp")
 
-	go pool.Client.Logs(docker.LogsOptions{ErrorStream: TestLogWriter{T: t, streamName: "hydra-stderr"}, OutputStream: TestLogWriter{T: t, streamName: "hydra-stdout"}, Stdout: true, Stderr: true, Follow: true, Container: hydra.Container.ID})
+	go pool.Client.Logs(docker.LogsOptions{
+		ErrorStream:  TestLogWriter{T: t, streamName: "hydra-stderr"},
+		OutputStream: TestLogWriter{T: t, streamName: "hydra-stdout"},
+		Stdout:       true,
+		Stderr:       true,
+		Follow:       true,
+		Container:    hydraResource.Container.ID,
+	})
 	hl := logrusx.New("hydra-ready-check", "hydra-ready-check")
 	err = resilience.Retry(hl, time.Second*1, time.Second*5, func() error {
 		pr := hydraPublic + "/health/ready"
