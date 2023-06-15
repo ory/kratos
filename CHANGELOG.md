@@ -5,7 +5,7 @@
 
 **Table of Contents**
 
-- [ (2023-06-14)](#2023-06-14)
+- [ (2023-06-15)](#2023-06-15)
   - [Bug Fixes](#bug-fixes)
   - [Documentation](#documentation)
   - [Features](#features)
@@ -302,13 +302,21 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# [](https://github.com/ory/kratos/compare/v0.13.0...v) (2023-06-14)
+# [](https://github.com/ory/kratos/compare/v0.13.0...v) (2023-06-15)
 
 ### Bug Fixes
 
 - Ability to patch metadata even if it is `null`
   ([#3304](https://github.com/ory/kratos/issues/3304))
   ([3c04d8f](https://github.com/ory/kratos/commit/3c04d8fb63cacf91774864450b02d6d1eb90d856))
+- Accept OIDC login request in browser+JSON login flow
+  ([#3271](https://github.com/ory/kratos/issues/3271))
+  ([ad54093](https://github.com/ory/kratos/commit/ad540930df96e84fb65a36616d5081ec0bb46df5)):
+
+  - fix: OIDC login in browser JSON flow
+
+  - test: add test for OIDC+JSON continuity cookie
+
 - Bump quickstart version ([#3257](https://github.com/ory/kratos/issues/3257))
   ([6db70a8](https://github.com/ory/kratos/commit/6db70a81afac5860a86c31881a6fc988096ff0e4))
 - IdentityCreated event ([#3314](https://github.com/ory/kratos/issues/3314))
