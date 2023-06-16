@@ -1694,6 +1694,7 @@ func (a *IdentityApiService) GetIdentityExecute(r IdentityApiApiGetIdentityReque
 			localVarQueryParams.Add("include_credential", parameterToString(t, "multi"))
 		}
 	}
+	
 	// to determine the Content-Type header
 	localVarHTTPContentTypes := []string{}
 
@@ -2061,7 +2062,8 @@ type IdentityApiApiListIdentitiesRequest struct {
 	ApiService            IdentityApi
 	perPage               *int64
 	page                  *int64
-	credentialsIdentifier *string
+	credentialsIdentifier *string	
+	includeCredential *[]string
 }
 
 func (r IdentityApiApiListIdentitiesRequest) PerPage(perPage int64) IdentityApiApiListIdentitiesRequest {
@@ -2128,6 +2130,17 @@ func (a *IdentityApiService) ListIdentitiesExecute(r IdentityApiApiListIdentitie
 	if r.credentialsIdentifier != nil {
 		localVarQueryParams.Add("credentials_identifier", parameterToString(*r.credentialsIdentifier, ""))
 	}
+	if r.includeCredential != nil {
+		t := *r.includeCredential
+		if reflect.TypeOf(t).Kind() == reflect.Slice {
+			s := reflect.ValueOf(t)
+			for i := 0; i < s.Len(); i++ {
+				localVarQueryParams.Add("include_credential", parameterToString(s.Index(i), "multi"))
+			}
+		} else {
+			localVarQueryParams.Add("include_credential", parameterToString(t, "multi"))
+		}
+	}	
 	// to determine the Content-Type header
 	localVarHTTPContentTypes := []string{}
 
