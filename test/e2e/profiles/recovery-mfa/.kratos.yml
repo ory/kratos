@@ -9,6 +9,7 @@ selfservice:
     settings:
       ui_url: http://localhost:4455/settings
       privileged_session_max_age: 1m
+      required_aal: highest_available
 
     recovery:
       ui_url: http://localhost:4455/recovery

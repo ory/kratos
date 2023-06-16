@@ -1,22 +1,20 @@
 // Copyright © 2023 Ory Corp
 // SPDX-License-Identifier: Apache-2.0
 
-import { Identity } from "@ory/kratos-client"
 import { authenticator } from "otplib"
-import { gen, website } from "../../../../helpers"
-import { appPrefix, assertRecoveryAddress, gen } from "../../../../helpers"
+import { appPrefix, gen } from "../../../../helpers"
 import { routes as express } from "../../../../helpers/express"
 import { routes as react } from "../../../../helpers/react"
 
 context("Recovery with `return_to`", () => {
   ;[
-    //{
-    //  recovery: react.recovery,
-    //  settings: react.settings,
-    //  base: react.base,
-    //  app: "react" as "react",
-    //  profile: "spa",
-    //},
+    {
+      recovery: react.recovery,
+      settings: react.settings,
+      base: react.base,
+      app: "react" as "react",
+      profile: "recovery-mfa",
+    },
     {
       recovery: express.recovery,
       settings: express.settings,
@@ -87,7 +85,7 @@ context("Recovery with `return_to`", () => {
         cy.visit(settings)
         cy.get('input[name="identifier"]').type(identity.email)
         cy.get('input[name="password"]').type(identity.password)
-        cy.get('button[type="submit"]').click()
+        cy.get('button[value="password"]').click()
         cy.visit(settings)
 
         // enable mfa for this account
