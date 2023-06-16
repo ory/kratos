@@ -301,8 +301,13 @@ func (h *Handler) createBrowserSettingsFlow(w http.ResponseWriter, r *http.Reque
 		return
 	}
 
-	requestURL := x.RequestURL(r).String()
-	if err := h.d.SessionManager().DoesSessionSatisfy(r, s, h.d.Config().SelfServiceSettingsRequiredAAL(r.Context()), session.WithRequestURL(requestURL)); err != nil {
+	var managerOptions []session.ManagerOptions
+	requestURL := x.RequestURL(r)
+	if requestURL.Query().Get("return_to") != "" {
+		managerOptions = append(managerOptions, session.WithRequestURL(requestURL.String()))
+	}
+
+	if err := h.d.SessionManager().DoesSessionSatisfy(r, s, h.d.Config().SelfServiceSettingsRequiredAAL(r.Context()), managerOptions...); err != nil {
 		h.d.SettingsFlowErrorHandler().WriteFlowError(w, r, node.DefaultGroup, nil, nil, err)
 		return
 	}
