@@ -13,8 +13,10 @@ const proxy =
   (base, prefix = null) =>
   (req, res, next) => {
     let url = urljoin(base, req.url)
+
     // we need to tell Krato we are behind a reverse proxy
-    res.set("X-Forwarded-Host", url)
+    req.headers["x-forwarded-host"] = req.get("host")
+
     if (prefix) {
       url = urljoin(base, prefix, req.url)
     }
