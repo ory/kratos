@@ -2063,7 +2063,7 @@ type IdentityApiApiListIdentitiesRequest struct {
 	perPage               *int64
 	page                  *int64
 	credentialsIdentifier *string	
-	includeCredential *[]string
+	includeCredential	  *[]string
 }
 
 func (r IdentityApiApiListIdentitiesRequest) PerPage(perPage int64) IdentityApiApiListIdentitiesRequest {
