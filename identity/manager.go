@@ -90,8 +90,12 @@ func (m *Manager) Create(ctx context.Context, i *Identity, opts ...ManagerOption
 		return err
 	}
 
+	if err := m.r.PrivilegedIdentityPool().CreateIdentity(ctx, i); err != nil {
+		return err
+	}
+
 	trace.SpanFromContext(ctx).AddEvent(events.NewIdentityCreated(ctx, i.ID))
-	return m.r.PrivilegedIdentityPool().CreateIdentity(ctx, i)
+	return nil
 }
 
 func (m *Manager) CreateIdentities(ctx context.Context, identities []*Identity, opts ...ManagerOption) (err error) {
@@ -109,8 +113,15 @@ func (m *Manager) CreateIdentities(ctx context.Context, identities []*Identity, 
 		}
 	}
 
-	err = m.r.PrivilegedIdentityPool().CreateIdentities(ctx, identities...)
-	return err
+	if err := m.r.PrivilegedIdentityPool().CreateIdentities(ctx, identities...); err != nil {
+		return err
+	}
+
+	for _, i := range identities {
+		trace.SpanFromContext(ctx).AddEvent(events.NewIdentityCreated(ctx, i.ID))
+	}
+
+	return nil
 }
 
 func (m *Manager) requiresPrivilegedAccess(ctx context.Context, original, updated *Identity, o *ManagerOptions) (err error) {

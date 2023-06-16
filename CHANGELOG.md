@@ -5,7 +5,7 @@
 
 **Table of Contents**
 
-- [ (2023-06-10)](#2023-06-10)
+- [ (2023-06-15)](#2023-06-15)
   - [Bug Fixes](#bug-fixes)
   - [Documentation](#documentation)
   - [Features](#features)
@@ -302,18 +302,31 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# [](https://github.com/ory/kratos/compare/v0.13.0...v) (2023-06-10)
+# [](https://github.com/ory/kratos/compare/v0.13.0...v) (2023-06-15)
 
 ### Bug Fixes
 
 - Ability to patch metadata even if it is `null`
   ([#3304](https://github.com/ory/kratos/issues/3304))
   ([3c04d8f](https://github.com/ory/kratos/commit/3c04d8fb63cacf91774864450b02d6d1eb90d856))
+- Accept OIDC login request in browser+JSON login flow
+  ([#3271](https://github.com/ory/kratos/issues/3271))
+  ([ad54093](https://github.com/ory/kratos/commit/ad540930df96e84fb65a36616d5081ec0bb46df5)):
+
+  - fix: OIDC login in browser JSON flow
+
+  - test: add test for OIDC+JSON continuity cookie
+
 - Bump quickstart version ([#3257](https://github.com/ory/kratos/issues/3257))
   ([6db70a8](https://github.com/ory/kratos/commit/6db70a81afac5860a86c31881a6fc988096ff0e4))
+- IdentityCreated event ([#3314](https://github.com/ory/kratos/issues/3314))
+  ([78e31cb](https://github.com/ory/kratos/commit/78e31cb82a28e240a6176c8d3d9ef3bc64559e75))
 - Minor refactorings in package hash
   ([#3186](https://github.com/ory/kratos/issues/3186))
   ([831fb19](https://github.com/ory/kratos/commit/831fb19e1c98b9fade3ff61d26ad249c548292d6))
+- Missing id for login event
+  ([#3315](https://github.com/ory/kratos/issues/3315))
+  ([b6b80a3](https://github.com/ory/kratos/commit/b6b80a3af1162e4009fa8c7c5e9ae7225e941849))
 - Remove codeball
   ([aa29606](https://github.com/ory/kratos/commit/aa296067e2736cad329814f7acffd816ce0d74a3))
 - **sdk:** Add cookie for updateLogoutFlow
@@ -332,6 +345,9 @@
 - Use the correct redirect_uri for linkedin social login
   ([#3269](https://github.com/ory/kratos/issues/3269))
   ([27ccecc](https://github.com/ory/kratos/commit/27ccecc1cd490eaa71da7f8235b4b0057b8f14fe))
+- Webhook config parse for settings flow
+  ([#3305](https://github.com/ory/kratos/issues/3305))
+  ([95ad94d](https://github.com/ory/kratos/commit/95ad94d08efdbb369caecaa64cd0a30058c34ed3))
 
 ### Documentation
 
