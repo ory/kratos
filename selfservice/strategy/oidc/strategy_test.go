@@ -155,6 +155,25 @@ func TestStrategy(t *testing.T) {
 		return makeRequestWithCookieJar(t, provider, action, fv, nil)
 	}
 
+	var makeJSONRequest = func(t *testing.T, provider string, action string, fv url.Values) (*http.Response, []byte) {
+		fv.Set("provider", provider)
+		client := testhelpers.NewClientWithCookieJar(t, nil, false)
+		req, err := http.NewRequest("POST", action, strings.NewReader(fv.Encode()))
+		require.NoError(t, err)
+		req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+		req.Header.Set("Accept", "application/json")
+		res, err := client.Do(req)
+		require.NoError(t, err, action)
+
+		body, err := io.ReadAll(res.Body)
+		require.NoError(t, res.Body.Close())
+		require.NoError(t, err)
+
+		require.Equal(t, 422, res.StatusCode, "%s: %s\n\t%s", action, res.Request.URL.String(), body)
+
+		return res, body
+	}
+
 	var makeAPICodeFlowRequest = func(t *testing.T, provider, action string) (returnToCode string) {
 		res, err := testhelpers.NewDebugClient(t).Post(action, "application/json", strings.NewReader(fmt.Sprintf(`{
 	"method": "oidc",
@@ -458,6 +477,25 @@ func TestStrategy(t *testing.T) {
 			res, body := makeRequest(t, "valid", action, url.Values{})
 			assertIdentity(t, res, body)
 			assert.Equal(t, "valid", gjson.GetBytes(body, "authentication_methods.0.provider").String(), "%s", body)
+		})
+	})
+
+	t.Run("case=login with Browser+JSON", func(t *testing.T) {
+		subject = "login-with-browser-json@ory.sh"
+		scope = []string{"openid"}
+
+		t.Run("case=should pass login", func(t *testing.T) {
+			r := newBrowserLoginFlow(t, returnTS.URL, time.Minute)
+			action := assertFormValues(t, r.ID, "valid")
+			res, body := makeJSONRequest(t, "valid", action, url.Values{})
+
+			assert.Equal(t, "browser_location_change_required", gjson.GetBytes(body, "error.id").String(), "%s", body)
+
+			continuityCookie := res.Header.Get("Set-Cookie")
+			key, val, ok := strings.Cut(continuityCookie, "=")
+			require.True(t, ok)
+			assert.Equal(t, "ory_kratos_continuity", key)
+			assert.NotEmpty(t, val)
 		})
 	})
 

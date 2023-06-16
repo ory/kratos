@@ -22,7 +22,7 @@
     <a href="https://github.com/ory/kratos/blob/master/CODE_OF_CONDUCT.md" alt="Ory Code of Conduct"><img src="https://img.shields.io/badge/ory-code%20of%20conduct-green" /></a>
 </>
 
-Ory Kratos is _the_ developer-friendly, security-hardened and battle-test
+Ory Kratos is _the_ developer-friendly, security-hardened and battle-tested
 Identity, User Management and Authentication system for the Cloud. Finally, it
 is no longer necessary to implement User Login for the umpteenth time!
 
