@@ -92,7 +92,7 @@ func TestGetLoginChallengeID(t *testing.T) {
 			assertErr: assert.NoError,
 		},
 		{
-			name: "login_challenge is invalid; hydra is configured",
+			name: "login_challenge is present & non-uuid; hydra is configured",
 			args: args{
 				conf: configWithHydra,
 				r:    requestFromChallenge(blobChallenge),
