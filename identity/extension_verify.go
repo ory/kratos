@@ -5,6 +5,7 @@ package identity
 
 import (
 	"fmt"
+	"strings"
 	"sync"
 	"time"
 
@@ -33,7 +34,9 @@ func (r *SchemaExtensionVerification) Run(ctx jsonschema.ValidationContext, s sc
 			return ctx.Error("format", "%q is not valid %q", value, "email")
 		}
 
-		address := NewVerifiableEmailAddress(fmt.Sprintf("%s", value), r.i.ID)
+		address := NewVerifiableEmailAddress(
+			strings.ToLower(strings.TrimSpace(
+				fmt.Sprintf("%s", value))), r.i.ID)
 
 		r.appendAddress(address)
 
