@@ -23,6 +23,8 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/tidwall/gjson"
 
+	"github.com/tomnomnom/linkheader"
+
 	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/hash"
 	"github.com/ory/kratos/identity"
@@ -33,7 +35,6 @@ import (
 	"github.com/ory/x/snapshotx"
 	"github.com/ory/x/sqlxx"
 	"github.com/ory/x/urlx"
-	"github.com/tomnomnom/linkheader"
 )
 
 func TestHandler(t *testing.T) {
