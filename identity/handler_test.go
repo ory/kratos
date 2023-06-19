@@ -14,6 +14,7 @@ import (
 	"net/url"
 	"sort"
 	"strconv"
+	"strings"
 	"testing"
 	"time"
 
@@ -733,7 +734,8 @@ func TestHandler(t *testing.T) {
 
 	t.Run("case=PATCH update of state should update state changed at timestamp", func(t *testing.T) {
 		uuid := x.NewUUID().String()
-		i := &identity.Identity{Traits: identity.Traits(fmt.Sprintf(`{"subject":"%s"}`, uuid))}
+		email := "UPPER" + uuid + "@ory.sh"
+		i := &identity.Identity{Traits: identity.Traits(fmt.Sprintf(`{"subject": %q, "email": %q}`, uuid, email))}
 		require.NoError(t, reg.PrivilegedIdentityPool().CreateIdentity(context.Background(), i))
 
 		for name, ts := range map[string]*httptest.Server{"public": publicTS, "admin": adminTS} {
@@ -744,6 +746,7 @@ func TestHandler(t *testing.T) {
 
 				res := send(t, ts, "PATCH", "/identities/"+i.ID.String(), http.StatusOK, &patch)
 				assert.EqualValues(t, uuid, res.Get("traits.subject").String(), "%s", res.Raw)
+				assert.EqualValues(t, email, res.Get("traits.email").String(), "%s", res.Raw)
 				assert.False(t, res.Get("metadata_admin.admin").Exists(), "%s", res.Raw)
 				assert.False(t, res.Get("metadata_public.public").Exists(), "%s", res.Raw)
 				assert.EqualValues(t, identity.StateInactive, res.Get("state").String(), "%s", res.Raw)
@@ -752,12 +755,54 @@ func TestHandler(t *testing.T) {
 				res = get(t, ts, "/identities/"+i.ID.String(), http.StatusOK)
 				assert.EqualValues(t, i.ID.String(), res.Get("id").String(), "%s", res.Raw)
 				assert.EqualValues(t, uuid, res.Get("traits.subject").String(), "%s", res.Raw)
+				assert.EqualValues(t, email, res.Get("traits.email").String(), "%s", res.Raw)
 				assert.False(t, res.Get("metadata_admin.admin").Exists(), "%s", res.Raw)
 				assert.False(t, res.Get("metadata_public.public").Exists(), "%s", res.Raw)
 				assert.EqualValues(t, identity.StateInactive, res.Get("state").String(), "%s", res.Raw)
 				assert.NotEqualValues(t, i.StateChangedAt, sqlxx.NullTime(res.Get("state_changed_at").Time()), "%s", res.Raw)
 			})
 		}
+	})
+
+	t.Run("case=PATCH update with uppercase emails should work", func(t *testing.T) {
+		// Regression test for https://github.com/ory/kratos/issues/3187
+
+		for name, ts := range map[string]*httptest.Server{"public": publicTS, "admin": adminTS} {
+			t.Run("endpoint="+name, func(t *testing.T) {
+
+				email := "UPPER" + x.NewUUID().String() + "@ory.sh"
+				lowercaseEmail := strings.ToLower(email)
+				var cr identity.CreateIdentityBody
+				cr.SchemaID = "employee"
+				cr.Traits = []byte(`{"email":"` + email + `"}`)
+				res := send(t, ts, "POST", "/identities", http.StatusCreated, &cr)
+				assert.EqualValues(t, lowercaseEmail, res.Get("recovery_addresses.0.value").String(), "%s", res.Raw)
+				assert.EqualValues(t, lowercaseEmail, res.Get("verifiable_addresses.0.value").String(), "%s", res.Raw)
+				identityID := res.Get("id").String()
+
+				patch := []patch{
+					{
+						"op":    "replace",
+						"path":  "/verifiable_addresses/0/verified",
+						"value": true,
+					},
+				}
+
+				res = send(t, ts, "PATCH", "/identities/"+identityID, http.StatusOK, &patch)
+				assert.EqualValues(t, email, res.Get("traits.email").String(), "%s", res.Raw)
+				assert.False(t, res.Get("metadata_admin.admin").Exists(), "%s", res.Raw)
+				assert.False(t, res.Get("metadata_public.public").Exists(), "%s", res.Raw)
+				assert.EqualValues(t, identity.StateActive, res.Get("state").String(), "%s", res.Raw)
+
+				res = get(t, ts, "/identities/"+identityID, http.StatusOK)
+				assert.EqualValues(t, identityID, res.Get("id").String(), "%s", res.Raw)
+				assert.EqualValues(t, email, res.Get("traits.email").String(), "%s", res.Raw)
+				assert.False(t, res.Get("metadata_admin.admin").Exists(), "%s", res.Raw)
+				assert.False(t, res.Get("metadata_public.public").Exists(), "%s", res.Raw)
+				assert.EqualValues(t, identity.StateActive, res.Get("state").String(), "%s", res.Raw)
+			})
+		}
+
 	})
 
 	t.Run("case=PATCH update should not persist if schema id is invalid", func(t *testing.T) {
