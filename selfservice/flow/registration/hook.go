@@ -77,7 +77,7 @@ type (
 		session.PersistenceProvider
 		session.ManagementProvider
 		HooksProvider
-		hydra.HydraProvider
+		hydra.Provider
 		x.CSRFTokenGeneratorProvider
 		x.HTTPClientProvider
 		x.LoggingProvider
@@ -247,8 +247,8 @@ func (e *HookExecutor) PostRegistrationHook(w http.ResponseWriter, r *http.Reque
 	}
 
 	finalReturnTo := returnTo.String()
-	if a.OAuth2LoginChallenge.Valid {
-		cr, err := e.d.Hydra().AcceptLoginRequest(r.Context(), a.OAuth2LoginChallenge.UUID, i.ID.String(), s.AMR)
+	if a.OAuth2LoginChallenge != "" {
+		cr, err := e.d.Hydra().AcceptLoginRequest(r.Context(), string(a.OAuth2LoginChallenge), i.ID.String(), s.AMR)
 		if err != nil {
 			return err
 		}

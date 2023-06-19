@@ -15,6 +15,7 @@ import (
 	"github.com/ory/kratos/hydra"
 	"github.com/ory/kratos/selfservice/sessiontokenexchange"
 	"github.com/ory/kratos/text"
+	"github.com/ory/x/sqlxx"
 	"github.com/ory/x/stringsx"
 
 	"github.com/ory/nosurf"
@@ -49,7 +50,7 @@ type (
 		HookExecutorProvider
 		FlowPersistenceProvider
 		errorx.ManagementProvider
-		hydra.HydraProvider
+		hydra.Provider
 		StrategyProvider
 		session.HandlerProvider
 		session.ManagementProvider
@@ -403,24 +404,26 @@ type createBrowserLoginFlow struct {
 //	  303: emptyResponse
 //	  400: errorGeneric
 //	  default: errorGeneric
-func (h *Handler) createBrowserLoginFlow(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	var hlr *hydraclientgo.OAuth2LoginRequest
-	var hlc uuid.NullUUID
+func (h *Handler) createBrowserLoginFlow(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+	var (
+		hydraLoginRequest   *hydraclientgo.OAuth2LoginRequest
+		hydraLoginChallenge sqlxx.NullString
+	)
 	if r.URL.Query().Has("login_challenge") {
 		var err error
-		hlc, err = hydra.GetLoginChallengeID(h.d.Config(), r)
+		hydraLoginChallenge, err = hydra.GetLoginChallengeID(h.d.Config(), r)
 		if err != nil {
 			h.d.SelfServiceErrorManager().Forward(r.Context(), w, r, err)
 			return
 		}
 
-		hlr, err = h.d.Hydra().GetLoginRequest(r.Context(), hlc)
+		hydraLoginRequest, err = h.d.Hydra().GetLoginRequest(r.Context(), string(hydraLoginChallenge))
 		if err != nil {
 			h.d.SelfServiceErrorManager().Forward(r.Context(), w, r, errors.WithStack(herodot.ErrInternalServerError.WithReason("Failed to retrieve OAuth 2.0 login request.")))
 			return
 		}
 
-		if !hlr.GetSkip() {
+		if !hydraLoginRequest.GetSkip() {
 			q := r.URL.Query()
 			q.Set("refresh", "true")
 			r.URL.RawQuery = q.Encode()
@@ -432,23 +435,23 @@ func (h *Handler) createBrowserLoginFlow(w http.ResponseWriter, r *http.Request,
 		// different flows, such as login to registration and login to recovery.
 		// After completing a complex flow, such as recovery, we want the user
 		// to be redirected back to the original OAuth2 login flow.
-		if hlr.RequestUrl != "" && h.d.Config().OAuth2ProviderOverrideReturnTo(r.Context()) {
+		if hydraLoginRequest.RequestUrl != "" && h.d.Config().OAuth2ProviderOverrideReturnTo(r.Context()) {
 			// replace the return_to query parameter
 			q := r.URL.Query()
-			q.Set("return_to", hlr.RequestUrl)
+			q.Set("return_to", hydraLoginRequest.RequestUrl)
 			r.URL.RawQuery = q.Encode()
 		}
 	}
 
 	a, sess, err := h.NewLoginFlow(w, r, flow.TypeBrowser)
 	if errors.Is(err, ErrAlreadyLoggedIn) {
-		if hlr != nil {
-			if !hlr.GetSkip() {
+		if hydraLoginRequest != nil {
+			if !hydraLoginRequest.GetSkip() {
 				h.d.SelfServiceErrorManager().Forward(r.Context(), w, r, errors.WithStack(herodot.ErrInternalServerError.WithReason("ErrAlreadyLoggedIn indicated we can skip login, but Hydra asked us to refresh")))
 				return
 			}
 
-			rt, err := h.d.Hydra().AcceptLoginRequest(r.Context(), hlc.UUID, sess.IdentityID.String(), sess.AMR)
+			rt, err := h.d.Hydra().AcceptLoginRequest(r.Context(), string(hydraLoginChallenge), sess.IdentityID.String(), sess.AMR)
 
 			if err != nil {
 				h.d.SelfServiceErrorManager().Forward(r.Context(), w, r, err)
@@ -479,7 +482,7 @@ func (h *Handler) createBrowserLoginFlow(w http.ResponseWriter, r *http.Request,
 		return
 	}
 
-	a.HydraLoginRequest = hlr
+	a.HydraLoginRequest = hydraLoginRequest
 
 	x.AcceptToRedirectOrJSON(w, r, h.d.Writer(), a, a.AppendTo(h.d.Config().SelfServiceFlowLoginUI(r.Context())).String())
 }
@@ -580,8 +583,8 @@ func (h *Handler) getLoginFlow(w http.ResponseWriter, r *http.Request, _ httprou
 		return
 	}
 
-	if ar.OAuth2LoginChallenge.Valid {
-		hlr, err := h.d.Hydra().GetLoginRequest(r.Context(), ar.OAuth2LoginChallenge)
+	if ar.OAuth2LoginChallenge != "" {
+		hlr, err := h.d.Hydra().GetLoginRequest(r.Context(), string(ar.OAuth2LoginChallenge))
 		if err != nil {
 			// We don't redirect back to the third party on errors because Hydra doesn't
 			// give us the 3rd party return_uri when it redirects to the login UI.

@@ -10,7 +10,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/gofrs/uuid"
 	"github.com/stretchr/testify/require"
 
 	"github.com/ory/kratos/hydra"
@@ -167,7 +166,7 @@ func TestLoginExecutor(t *testing.T) {
 						t.Cleanup(testhelpers.SelfServiceHookConfigReset(t, conf))
 
 						withOAuthChallenge := func(f *login.Flow) {
-							f.OAuth2LoginChallenge = uuid.NullUUID{Valid: true, UUID: uuid.Must(uuid.FromString(hydra.FakeValidLoginChallenge))}
+							f.OAuth2LoginChallenge = hydra.FakeValidLoginChallenge
 						}
 						res, body := makeRequestPost(t, newServer(t, flow.TypeBrowser, nil, withOAuthChallenge), true, url.Values{})
 						assert.EqualValues(t, http.StatusUnprocessableEntity, res.StatusCode)
@@ -178,7 +177,7 @@ func TestLoginExecutor(t *testing.T) {
 						t.Cleanup(testhelpers.SelfServiceHookConfigReset(t, conf))
 
 						withOAuthChallenge := func(f *login.Flow) {
-							f.OAuth2LoginChallenge = uuid.NullUUID{Valid: true, UUID: uuid.Must(uuid.FromString(hydra.FakeInvalidLoginChallenge))}
+							f.OAuth2LoginChallenge = hydra.FakeInvalidLoginChallenge
 						}
 						res, body := makeRequestPost(t, newServer(t, flow.TypeBrowser, nil, withOAuthChallenge), true, url.Values{})
 						assert.EqualValues(t, http.StatusInternalServerError, res.StatusCode)
