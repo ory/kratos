@@ -31,7 +31,7 @@ type VerificationCode struct {
 
 	// VerifiableAddress links this code to a verification address.
 	// required: true
-	VerifiableAddress *identity.VerifiableAddress `json:"verification_address" belongs_to:"identity_verifiable_addresses" fk_id:"VerificationAddVerifiableAddressIDressID"`
+	VerifiableAddress *identity.VerifiableAddress `json:"verification_address" belongs_to:"identity_verifiable_addresses"`
 
 	// ExpiresAt is the time (UTC) when the code expires.
 	// required: true
@@ -52,7 +52,7 @@ type VerificationCode struct {
 	NID    uuid.UUID `json:"-" faker:"-" db:"nid"`
 }
 
-func (VerificationCode) TableName(ctx context.Context) string {
+func (VerificationCode) TableName(context.Context) string {
 	return "identity_verification_codes"
 }
 
