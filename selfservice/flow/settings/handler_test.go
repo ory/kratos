@@ -295,7 +295,6 @@ func TestHandler(t *testing.T) {
 				}
 				q := url.Query()
 				q.Add("aal", "aal2")
-				q.Add("return_to", conf.SelfPublicURL(ctx).String()+settings.RouteInitBrowserFlow)
 				url.RawQuery = q.Encode()
 
 				assertx.EqualAsJSON(t, session.NewErrAALNotSatisfied(url.String()), json.RawMessage(body))
