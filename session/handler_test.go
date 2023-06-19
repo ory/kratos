@@ -10,13 +10,13 @@ import (
 	"io"
 	"net/http"
 	"net/http/httptest"
+	"sort"
 	"strconv"
 	"strings"
 	"testing"
 	"time"
 
 	"github.com/bxcodec/faker/v3"
-
 	"github.com/tidwall/gjson"
 
 	"github.com/ory/kratos/identity"
@@ -749,6 +749,7 @@ func TestHandlerAdminSessionManagement(t *testing.T) {
 			t.Run(fmt.Sprintf("active=%#v", tc.activeOnly), func(t *testing.T) {
 				sessions, _, _ := reg.SessionPersister().ListSessionsByIdentity(ctx, i.ID, nil, 1, 10, uuid.Nil, ExpandEverything)
 				require.Equal(t, 5, len(sessions))
+				assert.True(t, sort.IsSorted(sort.Reverse(byAuthenticatedAt(sessions))))
 
 				reqURL := ts.URL + "/admin/identities/" + i.ID.String() + "/sessions"
 				if tc.activeOnly != "" {
@@ -1021,4 +1022,12 @@ func TestHandlerRefreshSessionBySessionID(t *testing.T) {
 		body := ioutilx.MustReadAll(res.Body)
 		assert.NotEqual(t, gjson.GetBytes(body, "error.id").String(), "security_csrf_violation")
 	})
+}
+
+type byAuthenticatedAt []Session
+
+func (s byAuthenticatedAt) Len() int      { return len(s) }
+func (s byAuthenticatedAt) Swap(i, j int) { s[i], s[j] = s[j], s[i] }
+func (s byAuthenticatedAt) Less(i, j int) bool {
+	return s[i].AuthenticatedAt.Before(s[j].AuthenticatedAt)
 }
