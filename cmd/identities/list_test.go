@@ -44,8 +44,8 @@ func TestListCmd(t *testing.T) {
 		is, ids := makeIdentities(t, reg, 6)
 		defer deleteIdentities(t, is)
 
-		stdoutP1 := execNoErr(t, c, "1", "3")
-		stdoutP2 := execNoErr(t, c, "2", "3")
+		stdoutP1 := execNoErr(t, c, "0", "3")
+		stdoutP2 := execNoErr(t, c, "1", "3")
 
 		for _, id := range ids {
 			// exactly one of page 1 and 2 should contain the id
