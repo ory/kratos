@@ -688,7 +688,7 @@ func (p *IdentityPersister) ListIdentities(ctx context.Context, params identity.
 			Where("ict.name IN (?)", identity.CredentialsTypeWebAuthn, identity.CredentialsTypePassword).
 			Limit(1)
 	} else {
-		query = query.Paginate(params.Page, params.PerPage)
+		query = query.Paginate(params.Page+1, params.PerPage)
 	}
 
 	if err := sqlcon.HandleError(query.All(&is)); err != nil {
