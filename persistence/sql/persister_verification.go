@@ -11,6 +11,7 @@ import (
 
 	"github.com/pkg/errors"
 
+	"github.com/ory/herodot"
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/persistence/sql/update"
 
@@ -257,12 +258,14 @@ func (p *Persister) CreateVerificationCode(ctx context.Context, c *code.CreateVe
 		NID:       p.NetworkID(ctx),
 	}
 
-	if c.VerifiableAddress != nil {
-		verificationCode.VerifiableAddress = c.VerifiableAddress
-		verificationCode.VerifiableAddressID = uuid.NullUUID{
-			UUID:  c.VerifiableAddress.ID,
-			Valid: true,
-		}
+	if c.VerifiableAddress == nil {
+		return nil, errors.WithStack(herodot.ErrNotFound.WithReason("can't create a verification code without a verifiable address"))
+	}
+
+	verificationCode.VerifiableAddress = c.VerifiableAddress
+	verificationCode.VerifiableAddressID = uuid.NullUUID{
+		UUID:  c.VerifiableAddress.ID,
+		Valid: true,
 	}
 
 	// This should not create the request eagerly because otherwise we might accidentally create an address that isn't
