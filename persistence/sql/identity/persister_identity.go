@@ -583,6 +583,17 @@ type Where struct {
 // QueryForCredentials queries for identity credentials with custom WHERE
 // clauses, returning the results resolved by the owning identity's UUID.
 func QueryForCredentials(con *pop.Connection, joinOn string, where ...Where) (map[uuid.UUID](map[identity.CredentialsType]identity.Credentials), error) {
+	ici := "identity_credential_identifiers"
+	switch con.Dialect.Name() {
+	case "cockroach":
+		ici += "@identity_credential_identifiers_nid_identity_credential_id_idx"
+	case "sqlite3":
+		ici += " INDEXED BY identity_credential_identifiers_nid_identity_credential_id_idx"
+	case "mysql":
+		ici += " USE INDEX(identity_credential_identifiers_nid_identity_credential_id_idx)"
+	default:
+		// good luck 🤷‍♂️
+	}
 	q := con.Select(
 		"identity_credentials.id cred_id",
 		"identity_credentials.identity_id identity_id",
@@ -598,7 +609,7 @@ func QueryForCredentials(con *pop.Connection, joinOn string, where ...Where) (ma
 		"identity_credential_types ict",
 		"(identity_credentials.identity_credential_type_id = ict.id)",
 	).LeftJoin(
-		"identity_credential_identifiers",
+		ici,
 		joinOn,
 	)
 	for _, w := range where {
