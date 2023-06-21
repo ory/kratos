@@ -5,7 +5,7 @@
 
 **Table of Contents**
 
-- [ (2023-06-15)](#2023-06-15)
+- [ (2023-06-21)](#2023-06-21)
   - [Bug Fixes](#bug-fixes)
   - [Documentation](#documentation)
   - [Features](#features)
@@ -302,7 +302,7 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# [](https://github.com/ory/kratos/compare/v0.13.0...v) (2023-06-15)
+# [](https://github.com/ory/kratos/compare/v0.13.0...v) (2023-06-21)
 
 ### Bug Fixes
 
@@ -317,8 +317,26 @@
 
   - test: add test for OIDC+JSON continuity cookie
 
+- Add error checking when creating verification code
+  ([#3328](https://github.com/ory/kratos/issues/3328))
+  ([7182eca](https://github.com/ory/kratos/commit/7182eca074c8e84be325d62c75b62d22698878be))
 - Bump quickstart version ([#3257](https://github.com/ory/kratos/issues/3257))
   ([6db70a8](https://github.com/ory/kratos/commit/6db70a81afac5860a86c31881a6fc988096ff0e4))
+- Cypress TOTP test
+  ([eac908c](https://github.com/ory/kratos/commit/eac908c4fc14831288e6fd5b3c65ac197d2f58e1))
+- Don't assume the login challenge to be a UUID
+  ([#3317](https://github.com/ory/kratos/issues/3317))
+  ([3172862](https://github.com/ory/kratos/commit/3172862929ad68011fc940a6e0876fa07187a275)):
+
+  For compatibility with https://github.com/ory/hydra/pull/3515, which now
+  encodes the whole flow in the login challenge, we cannot further assume that
+  the challenge is a UUID.
+
+- Identity list pagination ([#3325](https://github.com/ory/kratos/issues/3325))
+  ([9d3ef0d](https://github.com/ory/kratos/commit/9d3ef0df9333aff2c587005df0cdd263028029f3)):
+
+  Resolves a pesky issue that would skip the last page.
+
 - IdentityCreated event ([#3314](https://github.com/ory/kratos/issues/3314))
   ([78e31cb](https://github.com/ory/kratos/commit/78e31cb82a28e240a6176c8d3d9ef3bc64559e75))
 - Minor refactorings in package hash
@@ -327,8 +345,16 @@
 - Missing id for login event
   ([#3315](https://github.com/ory/kratos/issues/3315))
   ([b6b80a3](https://github.com/ory/kratos/commit/b6b80a3af1162e4009fa8c7c5e9ae7225e941849))
+- Properly normalize uppercase mail addresses
+  ([4984e0f](https://github.com/ory/kratos/commit/4984e0fb329291484a54344255f797008142b7cc)):
+
+  Fixes https://github.com/ory/kratos/issues/3187 Fixes
+  https://github.com/ory/kratos/issues/3289
+
 - Remove codeball
   ([aa29606](https://github.com/ory/kratos/commit/aa296067e2736cad329814f7acffd816ce0d74a3))
+- Return HTTP 400 instead of 500 for bad query parameters
+  ([58258eb](https://github.com/ory/kratos/commit/58258eba99aa15f2ac852123c0200f56518ecb2a))
 - **sdk:** Add cookie for updateLogoutFlow
   ([#3284](https://github.com/ory/kratos/issues/3284))
   ([95ed2b9](https://github.com/ory/kratos/commit/95ed2b94cc99d40af6bbe57e5356ec0f28cb9b78)):
@@ -414,6 +440,12 @@
   - style: format
 
   - chore: nit config description
+
+- Sort sessions by authenticated_at
+  ([#3324](https://github.com/ory/kratos/issues/3324))
+  ([46f92ff](https://github.com/ory/kratos/commit/46f92ffebf14d1cf4133ca37a2151e8c3aef9d2d)):
+
+  Closes https://github.com/ory/network/issues/295
 
 - Sqa metrics v2 ([#3300](https://github.com/ory/kratos/issues/3300))
   ([98fe73f](https://github.com/ory/kratos/commit/98fe73faa75c56be47c19c61a780578ef24e7267))
