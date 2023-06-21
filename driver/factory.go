@@ -51,6 +51,5 @@ func NewWithoutInit(ctx context.Context, stdOutOrErr io.Writer, sl *servicelocat
 		return nil, err
 	}
 
-	c.SetTracer(ctx, r.Tracer(ctx))
 	return r, nil
 }

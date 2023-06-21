@@ -465,10 +465,6 @@ func (p *Config) CORS(ctx context.Context, iface string) (cors.Options, bool) {
 	}
 }
 
-func (p *Config) SetTracer(ctx context.Context, t *otelx.Tracer) {
-	p.GetProvider(ctx).SetTracer(ctx, t)
-}
-
 func (p *Config) cors(ctx context.Context, prefix string) (cors.Options, bool) {
 	return p.GetProvider(ctx).CORS(prefix, cors.Options{
 		AllowedMethods:   []string{"GET", "POST", "PUT", "PATCH", "DELETE"},
