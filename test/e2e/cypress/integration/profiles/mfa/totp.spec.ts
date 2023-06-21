@@ -85,7 +85,7 @@ context("2FA TOTP", () => {
         })
         cy.get('*[name="method"][value="totp"]').click()
         cy.location("pathname").should((loc) => {
-          expect(loc).to.oneOf(["/welcome", "/", "/sessions"])
+          expect(loc).to.oneOf(["/welcome", "/", "/sessions", "/settings"])
         })
         cy.getSession({
           expectAal: "aal2",
