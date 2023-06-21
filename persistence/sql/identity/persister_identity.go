@@ -529,7 +529,6 @@ func (p *IdentityPersister) HydrateIdentityAssociations(ctx context.Context, i *
 			// https://github.com/gobuffalo/pop/issues/723
 			con := con.WithContext(ctx)
 			creds, err := QueryForCredentials(con,
-				"identity_credential_identifiers.identity_credential_id = identity_credentials.id AND identity_credential_identifiers.nid = identity_credentials.nid",
 				Where{"(identity_credentials.identity_id = ? AND identity_credentials.nid = ?)", []interface{}{i.ID, nid}})
 			if err != nil {
 				return err
@@ -582,7 +581,7 @@ type Where struct {
 
 // QueryForCredentials queries for identity credentials with custom WHERE
 // clauses, returning the results resolved by the owning identity's UUID.
-func QueryForCredentials(con *pop.Connection, joinOn string, where ...Where) (map[uuid.UUID](map[identity.CredentialsType]identity.Credentials), error) {
+func QueryForCredentials(con *pop.Connection, where ...Where) (map[uuid.UUID](map[identity.CredentialsType]identity.Credentials), error) {
 	ici := "identity_credential_identifiers"
 	switch con.Dialect.Name() {
 	case "cockroach":
@@ -610,7 +609,7 @@ func QueryForCredentials(con *pop.Connection, joinOn string, where ...Where) (ma
 		"(identity_credentials.identity_credential_type_id = ict.id)",
 	).LeftJoin(
 		ici,
-		joinOn,
+		"identity_credential_identifiers.identity_credential_id = identity_credentials.id AND identity_credential_identifiers.nid = identity_credentials.nid",
 	)
 	for _, w := range where {
 		q = q.Where("("+w.Condition+")", w.Args...)
@@ -716,7 +715,6 @@ func (p *IdentityPersister) ListIdentities(ctx context.Context, params identity.
 			ids = append(ids, is[k].ID)
 		}
 		creds, err := QueryForCredentials(con,
-			"identity_credential_identifiers.identity_credential_id = identity_credentials.id AND identity_credential_identifiers.nid = identity_credentials.nid",
 			Where{"identity_credentials.nid = ?", []interface{}{nid}},
 			Where{"identity_credentials.identity_id IN (?)", ids})
 		if err != nil {
