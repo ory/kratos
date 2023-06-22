@@ -985,7 +985,7 @@ func (p *Config) SelfServiceFlowLogoutRedirectURL(ctx context.Context) *url.URL 
 }
 
 func (p *Config) CourierEmailStrategy(ctx context.Context) string {
-	return p.GetProvider(ctx).StringF(ViperKeyCourierDeliveryStrategy, "smtp")
+	return p.GetProvider(ctx).String(ViperKeyCourierDeliveryStrategy)
 }
 
 func (p *Config) CourierEmailRequestConfig(ctx context.Context) json.RawMessage {

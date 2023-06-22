@@ -15,6 +15,8 @@ import (
 
 type httpDataModel struct {
 	Recipient    string
+	Subject      string
+	Body         string
 	TemplateType TemplateType
 	TemplateData EmailTemplate
 }
@@ -41,6 +43,8 @@ func (c *courier) dispatchMailerEmail(ctx context.Context, msg Message) error {
 
 	td := httpDataModel{
 		Recipient:    msg.Recipient,
+		Subject:      msg.Subject,
+		Body:         msg.Body,
 		TemplateType: msg.TemplateType,
 		TemplateData: tmpl,
 	}

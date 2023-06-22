@@ -11,5 +11,5 @@
     "Content-Type": "application/json"
   },
   "method": "POST",
-  "url": "https://api.crm.com/email"
+  "url": "https://example.com/email"
 }

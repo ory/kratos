@@ -91,20 +91,20 @@ func TestQueueHTTPEmail(t *testing.T) {
 	conf.MustSet(ctx, config.ViperKeyCourierSMTPURL, "http://foo.url")
 	reg.Logger().Level = logrus.TraceLevel
 
-	c, err := reg.Courier(ctx)
+	courier, err := reg.Courier(ctx)
 	require.NoError(t, err)
 
 	ctx, cancel := context.WithCancel(ctx)
 	defer t.Cleanup(cancel)
 
 	for _, message := range expectedEmail {
-		id, err := c.QueueEmail(ctx, email.NewTestStub(reg, message))
+		id, err := courier.QueueEmail(ctx, email.NewTestStub(reg, message))
 		require.NoError(t, err)
 		require.NotEqual(t, uuid.Nil, id)
 	}
 
 	go func() {
-		require.NoError(t, c.Work(ctx))
+		require.NoError(t, courier.Work(ctx))
 	}()
 
 	require.NoError(t, resilience.Retry(reg.Logger(), time.Millisecond*250, time.Second*10, func() error {
