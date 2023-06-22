@@ -66,8 +66,8 @@ const (
 	ViperKeyCourierTemplatesVerificationValidEmail           = "courier.templates.verification.valid.email"
 	ViperKeyCourierTemplatesVerificationCodeInvalidEmail     = "courier.templates.verification_code.invalid.email"
 	ViperKeyCourierTemplatesVerificationCodeValidEmail       = "courier.templates.verification_code.valid.email"
-	ViperKeyCourierEmailStrategy                             = "courier.email.strategy"
-	ViperKeyCourierEmailRequestConfig                        = "courier.http.request_config"
+	ViperKeyCourierDeliveryStrategy                          = "courier.delivery_strategy"
+	ViperKeyCourierHTTPRequestConfig                         = "courier.http.request_config"
 	ViperKeyCourierSMTPFrom                                  = "courier.smtp.from_address"
 	ViperKeyCourierSMTPFromName                              = "courier.smtp.from_name"
 	ViperKeyCourierSMTPHeaders                               = "courier.smtp.headers"
@@ -985,7 +985,7 @@ func (p *Config) SelfServiceFlowLogoutRedirectURL(ctx context.Context) *url.URL 
 }
 
 func (p *Config) CourierEmailStrategy(ctx context.Context) string {
-	return p.GetProvider(ctx).StringF(ViperKeyCourierEmailStrategy, "smtp")
+	return p.GetProvider(ctx).StringF(ViperKeyCourierDeliveryStrategy, "smtp")
 }
 
 func (p *Config) CourierEmailRequestConfig(ctx context.Context) json.RawMessage {
@@ -999,7 +999,7 @@ func (p *Config) CourierEmailRequestConfig(ctx context.Context) json.RawMessage 
 		return nil
 	}
 
-	config := gjson.GetBytes(out, ViperKeyCourierEmailRequestConfig).Raw
+	config := gjson.GetBytes(out, ViperKeyCourierHTTPRequestConfig).Raw
 	if len(config) <= 0 {
 		return json.RawMessage("{}")
 	}
