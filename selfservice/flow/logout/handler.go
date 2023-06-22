@@ -135,6 +135,7 @@ type createBrowserLogoutFlow struct {
 //
 //	Responses:
 //	  200: logoutFlow
+//	  400: errorGeneric
 //	  401: errorGeneric
 //	  500: errorGeneric
 func (h *Handler) createBrowserLogoutFlow(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
@@ -146,18 +147,22 @@ func (h *Handler) createBrowserLogoutFlow(w http.ResponseWriter, r *http.Request
 
 	conf := h.d.Config()
 
-	requestURL := x.RequestURL(r).String()
+	requestURL := x.RequestURL(r)
 
-	// Pre-validate the return to URL which is contained in the HTTP request.
-	returnTo, err := x.SecureRedirectTo(r,
-		conf.SelfServiceBrowserDefaultReturnTo(r.Context()),
-		x.SecureRedirectUseSourceURL(requestURL),
-		x.SecureRedirectAllowURLs(conf.SelfServiceBrowserAllowedReturnToDomains(r.Context())),
-		x.SecureRedirectAllowSelfServiceURLs(conf.SelfPublicURL(r.Context())),
-	)
-	if err != nil {
-		h.d.SelfServiceErrorManager().Forward(r.Context(), w, r, err)
-		return
+	var returnTo *url.URL
+
+	if requestURL.Query().Get("return_to") != "" {
+		// Pre-validate the return to URL which is contained in the HTTP request.
+		returnTo, err = x.SecureRedirectTo(r,
+			h.d.Config().SelfServiceFlowLogoutRedirectURL(r.Context()),
+			x.SecureRedirectUseSourceURL(requestURL.String()),
+			x.SecureRedirectAllowURLs(conf.SelfServiceBrowserAllowedReturnToDomains(r.Context())),
+			x.SecureRedirectAllowSelfServiceURLs(conf.SelfPublicURL(r.Context())),
+		)
+		if err != nil {
+			h.d.SelfServiceErrorManager().Forward(r.Context(), w, r, err)
+			return
+		}
 	}
 
 	params := url.Values{"token": {sess.LogoutToken}}
