@@ -1762,6 +1762,12 @@
             "description": "HTTP Cookies\n\nIf you call this endpoint from a backend, please include the\noriginal Cookie header in the request.",
             "name": "cookie",
             "in": "header"
+          },
+          {
+            "type": "string",
+            "description": "Return to URL\n\nThe URL to which the browser should be redirected to after the logout\nhas been performed.",
+            "name": "return_to",
+            "in": "query"
           }
         ],
         "responses": {
@@ -1769,6 +1775,12 @@
             "description": "logoutFlow",
             "schema": {
               "$ref": "#/definitions/logoutFlow"
+            }
+          },
+          "400": {
+            "description": "errorGeneric",
+            "schema": {
+              "$ref": "#/definitions/errorGeneric"
             }
           },
           "401": {

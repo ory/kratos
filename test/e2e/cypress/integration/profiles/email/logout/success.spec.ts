@@ -11,13 +11,15 @@ context("Testing logout flows", () => {
       route: express.login,
       app: "express" as "express",
       profile: "email",
+      settings: express.settings,
     },
     {
       route: react.login,
       app: "react" as "react",
       profile: "spa",
+      settings: react.settings,
     },
-  ].forEach(({ route, profile, app }) => {
+  ].forEach(({ route, profile, app, settings }) => {
     describe(`for app ${app}`, () => {
       const email = gen.email()
       const password = gen.password()
@@ -55,6 +57,30 @@ context("Testing logout flows", () => {
         cy.noSession()
         cy.url().should("include", "/login")
       })
+    })
+
+    it("should be able to sign out at 2fa page", () => {
+      cy.sessionRequires2fa()
+      cy.getSession({ expectAal: "aal1" })
+
+      // add 2fa to account
+      cy.visit(settings)
+      cy.get(appPrefix(app) + 'button[name="lookup_secret_regenerate"]').click()
+      cy.get('button[name="lookup_secret_confirm"]').click()
+      cy.expectSettingsSaved()
+
+      cy.logout()
+      cy.visit(route + "?return_to=https://www.ory.sh")
+
+      cy.reauth({
+        expect: { email },
+        type: { email: email, password: password },
+      })
+
+      cy.get("href*=/logout").should("have.", "https://www.ory.sh")
+      cy.get("href*=/logout").click()
+
+      cy.location("host").should("eq", "www.ory.sh")
     })
   })
 })
