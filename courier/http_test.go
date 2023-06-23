@@ -22,6 +22,7 @@ import (
 	"github.com/ory/kratos/courier/template/email"
 	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/internal"
+	"github.com/ory/kratos/x"
 	"github.com/ory/x/resilience"
 )
 
@@ -115,10 +116,10 @@ func TestQueueHTTPEmail(t *testing.T) {
 	}))
 
 	for i, message := range actual {
-		expected := expectedEmail[i]
+		expected := email.NewTestStub(reg, expectedEmail[i])
 
-		assert.Equal(t, expected.To, message.To)
-		assert.Equal(t, expected.Body, message.Body)
-		assert.Equal(t, expected.Subject, message.Subject)
+		assert.Equal(t, x.Must(expected.EmailRecipient()), message.To)
+		assert.Equal(t, x.Must(expected.EmailBody(ctx)), message.Body)
+		assert.Equal(t, x.Must(expected.EmailSubject(ctx)), message.Subject)
 	}
 }
