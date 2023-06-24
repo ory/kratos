@@ -93,7 +93,7 @@ func (g *ProviderLark) Claims(ctx context.Context, exchange *oauth2.Token, query
 	}
 	defer res.Body.Close()
 
-	if err := logUpstreamError(d.reg.Logger(), res); err != nil {
+	if err := logUpstreamError(g.reg.Logger(), res); err != nil {
 		return nil, err
 	}
 
