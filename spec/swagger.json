@@ -3087,19 +3087,6 @@
       "type": "object",
       "title": "JSONRawMessage represents a json.RawMessage that works well with JSON, SQL, and Swagger."
     },
-    "NullUUID": {
-      "description": "NullUUID can be used with the standard sql package to represent a\nUUID value that can be NULL in the database.",
-      "type": "object",
-      "properties": {
-        "UUID": {
-          "type": "string",
-          "format": "uuid"
-        },
-        "Valid": {
-          "type": "boolean"
-        }
-      }
-    },
     "OAuth2Client": {
       "type": "object",
       "title": "OAuth2Client OAuth 2.0 Clients are used to perform OAuth 2.0 and OpenID Connect flows. Usually, OAuth 2.0 clients are generated for applications which want to consume your OAuth 2.0 or OpenID Connect capabilities.",
@@ -4112,7 +4099,8 @@
           "format": "date-time"
         },
         "oauth2_login_challenge": {
-          "$ref": "#/definitions/NullUUID"
+          "description": "Ory OAuth 2.0 Login Challenge.\n\nThis value is set using the `login_challenge` query parameter of the registration and login endpoints.\nIf set will cooperate with Ory OAuth2 and OpenID to act as an OAuth2 server / OpenID Provider.",
+          "type": "string"
         },
         "oauth2_login_request": {
           "$ref": "#/definitions/OAuth2LoginRequest"
@@ -4517,7 +4505,8 @@
           "format": "date-time"
         },
         "oauth2_login_challenge": {
-          "$ref": "#/definitions/NullUUID"
+          "description": "Ory OAuth 2.0 Login Challenge.\n\nThis value is set using the `login_challenge` query parameter of the registration and login endpoints.\nIf set will cooperate with Ory OAuth2 and OpenID to act as an OAuth2 server / OpenID Provider.",
+          "type": "string"
         },
         "oauth2_login_request": {
           "$ref": "#/definitions/OAuth2LoginRequest"

@@ -57,7 +57,7 @@ type Flow struct {
 	//
 	// This value is set using the `login_challenge` query parameter of the registration and login endpoints.
 	// If set will cooperate with Ory OAuth2 and OpenID to act as an OAuth2 server / OpenID Provider.
-	OAuth2LoginChallenge uuid.NullUUID `json:"oauth2_login_challenge,omitempty" faker:"-" db:"oauth2_login_challenge"`
+	OAuth2LoginChallenge sqlxx.NullString `json:"oauth2_login_challenge,omitempty" faker:"-" db:"oauth2_login_challenge_data"`
 
 	// HydraLoginRequest is an optional field whose presence indicates that Kratos
 	// is being used as an identity provider in a Hydra OAuth2 flow. Kratos
@@ -142,14 +142,14 @@ func NewFlow(conf *config.Config, exp time.Duration, csrf string, r *http.Reques
 		return nil, err
 	}
 
-	hlc, err := hydra.GetLoginChallengeID(conf, r)
+	hydraLoginChallenge, err := hydra.GetLoginChallengeID(conf, r)
 	if err != nil {
 		return nil, err
 	}
 
 	return &Flow{
 		ID:                   id,
-		OAuth2LoginChallenge: hlc,
+		OAuth2LoginChallenge: hydraLoginChallenge,
 		ExpiresAt:            now.Add(exp),
 		IssuedAt:             now,
 		UI: &container.Container{

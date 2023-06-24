@@ -14,6 +14,7 @@ import (
 	"net/url"
 	"sort"
 	"strconv"
+	"strings"
 	"testing"
 	"time"
 
@@ -22,6 +23,8 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/tidwall/gjson"
+
+	"github.com/tomnomnom/linkheader"
 
 	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/hash"
@@ -54,7 +57,7 @@ func TestHandler(t *testing.T) {
 
 	conf.MustSet(ctx, config.ViperKeyPublicBaseURL, mockServerURL.String())
 
-	get := func(t *testing.T, base *httptest.Server, href string, expectCode int) gjson.Result {
+	getFull := func(t *testing.T, base *httptest.Server, href string, expectCode int) (gjson.Result, *http.Response) {
 		t.Helper()
 		res, err := base.Client().Get(base.URL + href)
 		require.NoError(t, err)
@@ -63,7 +66,13 @@ func TestHandler(t *testing.T) {
 		require.NoError(t, res.Body.Close())
 
 		require.EqualValues(t, expectCode, res.StatusCode, "%s", body)
-		return gjson.ParseBytes(body)
+		return gjson.ParseBytes(body), res
+	}
+
+	get := func(t *testing.T, base *httptest.Server, href string, expectCode int) gjson.Result {
+		t.Helper()
+		res, _ := getFull(t, base, href, expectCode)
+		return res
 	}
 
 	remove := func(t *testing.T, base *httptest.Server, href string, expectCode int) {
@@ -725,7 +734,8 @@ func TestHandler(t *testing.T) {
 
 	t.Run("case=PATCH update of state should update state changed at timestamp", func(t *testing.T) {
 		uuid := x.NewUUID().String()
-		i := &identity.Identity{Traits: identity.Traits(fmt.Sprintf(`{"subject":"%s"}`, uuid))}
+		email := "UPPER" + uuid + "@ory.sh"
+		i := &identity.Identity{Traits: identity.Traits(fmt.Sprintf(`{"subject": %q, "email": %q}`, uuid, email))}
 		require.NoError(t, reg.PrivilegedIdentityPool().CreateIdentity(context.Background(), i))
 
 		for name, ts := range map[string]*httptest.Server{"public": publicTS, "admin": adminTS} {
@@ -736,6 +746,7 @@ func TestHandler(t *testing.T) {
 
 				res := send(t, ts, "PATCH", "/identities/"+i.ID.String(), http.StatusOK, &patch)
 				assert.EqualValues(t, uuid, res.Get("traits.subject").String(), "%s", res.Raw)
+				assert.EqualValues(t, email, res.Get("traits.email").String(), "%s", res.Raw)
 				assert.False(t, res.Get("metadata_admin.admin").Exists(), "%s", res.Raw)
 				assert.False(t, res.Get("metadata_public.public").Exists(), "%s", res.Raw)
 				assert.EqualValues(t, identity.StateInactive, res.Get("state").String(), "%s", res.Raw)
@@ -744,12 +755,54 @@ func TestHandler(t *testing.T) {
 				res = get(t, ts, "/identities/"+i.ID.String(), http.StatusOK)
 				assert.EqualValues(t, i.ID.String(), res.Get("id").String(), "%s", res.Raw)
 				assert.EqualValues(t, uuid, res.Get("traits.subject").String(), "%s", res.Raw)
+				assert.EqualValues(t, email, res.Get("traits.email").String(), "%s", res.Raw)
 				assert.False(t, res.Get("metadata_admin.admin").Exists(), "%s", res.Raw)
 				assert.False(t, res.Get("metadata_public.public").Exists(), "%s", res.Raw)
 				assert.EqualValues(t, identity.StateInactive, res.Get("state").String(), "%s", res.Raw)
 				assert.NotEqualValues(t, i.StateChangedAt, sqlxx.NullTime(res.Get("state_changed_at").Time()), "%s", res.Raw)
 			})
 		}
+	})
+
+	t.Run("case=PATCH update with uppercase emails should work", func(t *testing.T) {
+		// Regression test for https://github.com/ory/kratos/issues/3187
+
+		for name, ts := range map[string]*httptest.Server{"public": publicTS, "admin": adminTS} {
+			t.Run("endpoint="+name, func(t *testing.T) {
+
+				email := "UPPER" + x.NewUUID().String() + "@ory.sh"
+				lowercaseEmail := strings.ToLower(email)
+				var cr identity.CreateIdentityBody
+				cr.SchemaID = "employee"
+				cr.Traits = []byte(`{"email":"` + email + `"}`)
+				res := send(t, ts, "POST", "/identities", http.StatusCreated, &cr)
+				assert.EqualValues(t, lowercaseEmail, res.Get("recovery_addresses.0.value").String(), "%s", res.Raw)
+				assert.EqualValues(t, lowercaseEmail, res.Get("verifiable_addresses.0.value").String(), "%s", res.Raw)
+				identityID := res.Get("id").String()
+
+				patch := []patch{
+					{
+						"op":    "replace",
+						"path":  "/verifiable_addresses/0/verified",
+						"value": true,
+					},
+				}
+
+				res = send(t, ts, "PATCH", "/identities/"+identityID, http.StatusOK, &patch)
+				assert.EqualValues(t, email, res.Get("traits.email").String(), "%s", res.Raw)
+				assert.False(t, res.Get("metadata_admin.admin").Exists(), "%s", res.Raw)
+				assert.False(t, res.Get("metadata_public.public").Exists(), "%s", res.Raw)
+				assert.EqualValues(t, identity.StateActive, res.Get("state").String(), "%s", res.Raw)
+
+				res = get(t, ts, "/identities/"+identityID, http.StatusOK)
+				assert.EqualValues(t, identityID, res.Get("id").String(), "%s", res.Raw)
+				assert.EqualValues(t, email, res.Get("traits.email").String(), "%s", res.Raw)
+				assert.False(t, res.Get("metadata_admin.admin").Exists(), "%s", res.Raw)
+				assert.False(t, res.Get("metadata_public.public").Exists(), "%s", res.Raw)
+				assert.EqualValues(t, identity.StateActive, res.Get("state").String(), "%s", res.Raw)
+			})
+		}
+
 	})
 
 	t.Run("case=PATCH update should not persist if schema id is invalid", func(t *testing.T) {
@@ -1389,6 +1442,109 @@ func TestHandler(t *testing.T) {
 				})
 			}
 		}
+	})
+
+	t.Run("case=should paginate all identities", func(t *testing.T) {
+		// Start new server
+		conf, reg := internal.NewFastRegistryWithMocks(t)
+		_, ts := testhelpers.NewKratosServerWithCSRF(t, reg)
+		mockServerURL := urlx.ParseOrPanic(publicTS.URL)
+		conf.MustSet(ctx, config.ViperKeyAdminBaseURL, ts.URL)
+		testhelpers.SetIdentitySchemas(t, conf, map[string]string{
+			"default":         "file://./stub/identity.schema.json",
+			"customer":        "file://./stub/handler/customer.schema.json",
+			"multiple_emails": "file://./stub/handler/multiple_emails.schema.json",
+			"employee":        "file://./stub/handler/employee.schema.json",
+		})
+		conf.MustSet(ctx, config.ViperKeyPublicBaseURL, mockServerURL.String())
+
+		var toCreate []*identity.Identity
+		count := 500
+		for i := 0; i < count; i++ {
+			i := identity.NewIdentity(config.DefaultIdentityTraitsSchemaID)
+			i.Traits = identity.Traits(`{"email":"` + x.NewUUID().String() + `@ory.sh"}`)
+			toCreate = append(toCreate, i)
+		}
+
+		require.NoError(t, reg.PrivilegedIdentityPool().CreateIdentities(context.Background(), toCreate...))
+
+		for _, perPage := range []int{10, 50, 100, 500} {
+			t.Run(fmt.Sprintf("perPage=%d", perPage), func(t *testing.T) {
+				t.Parallel()
+				body, res := getFull(t, ts, fmt.Sprintf("/identities?per_page=%d", perPage), http.StatusOK)
+				assert.Len(t, body.Array(), perPage)
+				assert.Equal(t, strconv.Itoa(count), res.Header.Get("X-Total-Count"))
+			})
+		}
+
+		t.Run("iterate over next page", func(t *testing.T) {
+			perPage := 10
+			pagePath := fmt.Sprintf("/identities?per_page=%d", perPage)
+
+			run := func(t *testing.T, path string, knownIDs map[string]struct{}) (isLast bool, parsed *url.URL) {
+				var err error
+				t.Logf("Requesting %s", path)
+				body, res := getFull(t, ts, path, http.StatusOK)
+				for _, link := range linkheader.Parse(res.Header.Get("Link")) {
+					if link.Rel != "next" {
+						isLast = true
+						continue
+					}
+					parsed, err = url.Parse(link.URL)
+					require.NoError(t, err)
+					isLast = false
+					break
+				}
+
+				for _, i := range body.Array() {
+					assert.NotContains(t, knownIDs, i.Get("id").String())
+					knownIDs[i.Get("id").String()] = struct{}{}
+				}
+				return isLast, parsed
+			}
+
+			t.Run("using token pagination", func(t *testing.T) {
+				knownIDs := make(map[string]struct{})
+				var isLast bool
+				var pages int
+				path := pagePath
+				for !isLast {
+					t.Run(fmt.Sprintf("page=%d", pages), func(t *testing.T) {
+						var res *url.URL
+						pages++
+						isLast, res = run(t, path, knownIDs)
+						if isLast {
+							return
+						}
+						path = fmt.Sprintf("/identities?page_size=%s&page_token=%s", res.Query().Get("page_size"), res.Query().Get("page_token"))
+					})
+				}
+
+				assert.Len(t, knownIDs, count)
+				assert.Equal(t, count/perPage, pages)
+			})
+
+			t.Run("using üage pagination", func(t *testing.T) {
+				knownIDs := make(map[string]struct{})
+				var isLast bool
+				var pages int
+				path := pagePath
+				for !isLast {
+					t.Run(fmt.Sprintf("page=%d", pages), func(t *testing.T) {
+						var res *url.URL
+						pages++
+						isLast, res = run(t, path, knownIDs)
+						if isLast {
+							return
+						}
+						path = fmt.Sprintf("/identities?per_page=%s&page=%s", res.Query().Get("per_page"), res.Query().Get("page"))
+					})
+				}
+
+				assert.Len(t, knownIDs, count)
+				assert.Equal(t, count/perPage, pages)
+			})
+		})
 	})
 }
 

@@ -76,7 +76,7 @@ require (
 	github.com/ory/jsonschema/v3 v3.0.8
 	github.com/ory/mail/v3 v3.0.0
 	github.com/ory/nosurf v1.2.7
-	github.com/ory/x v0.0.560
+	github.com/ory/x v0.0.562
 	github.com/phayes/freeport v0.0.0-20180830031419-95f893ade6f2
 	github.com/pkg/errors v0.9.1
 	github.com/pquerna/otp v1.4.0
@@ -90,6 +90,7 @@ require (
 	github.com/stretchr/testify v1.8.2
 	github.com/tidwall/gjson v1.14.3
 	github.com/tidwall/sjson v1.2.5
+	github.com/tomnomnom/linkheader v0.0.0-20180905144013-02ca5825eb80
 	github.com/urfave/negroni v1.0.0
 	github.com/zmb3/spotify/v2 v2.0.0
 	go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp v0.36.4
@@ -153,6 +154,7 @@ require (
 	github.com/fsnotify/fsnotify v1.6.0 // indirect
 	github.com/fullstorydev/grpcurl v1.8.1 // indirect
 	github.com/fxamacker/cbor/v2 v2.4.0 // indirect
+	github.com/go-bindata/go-bindata v3.1.2+incompatible // indirect
 	github.com/go-crypt/x v0.2.1 // indirect
 	github.com/go-logr/logr v1.2.3 // indirect
 	github.com/go-logr/stdr v1.2.2 // indirect

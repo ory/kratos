@@ -125,7 +125,7 @@ func SecureRedirectTo(r *http.Request, defaultReturnTo *url.URL, opts ...SecureR
 
 	returnTo, err = url.Parse(rawReturnTo)
 	if err != nil {
-		return nil, errors.WithStack(herodot.ErrInternalServerError.WithWrap(err).WithReasonf("Unable to parse the return_to query parameter as an URL: %s", err))
+		return nil, errors.WithStack(herodot.ErrBadRequest.WithWrap(err).WithReasonf("Unable to parse the return_to query parameter as an URL: %s", err))
 	}
 
 	returnTo.Host = stringsx.Coalesce(returnTo.Host, o.defaultReturnTo.Host)

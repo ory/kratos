@@ -1161,7 +1161,8 @@
             "type": "string"
           },
           "oauth2_login_challenge": {
-            "$ref": "#/components/schemas/NullUUID"
+            "description": "Ory OAuth 2.0 Login Challenge.\n\nThis value is set using the `login_challenge` query parameter of the registration and login endpoints.\nIf set will cooperate with Ory OAuth2 and OpenID to act as an OAuth2 server / OpenID Provider.",
+            "type": "string"
           },
           "oauth2_login_request": {
             "$ref": "#/components/schemas/OAuth2LoginRequest"
@@ -1581,7 +1582,8 @@
             "type": "string"
           },
           "oauth2_login_challenge": {
-            "$ref": "#/components/schemas/NullUUID"
+            "description": "Ory OAuth 2.0 Login Challenge.\n\nThis value is set using the `login_challenge` query parameter of the registration and login endpoints.\nIf set will cooperate with Ory OAuth2 and OpenID to act as an OAuth2 server / OpenID Provider.",
+            "type": "string"
           },
           "oauth2_login_request": {
             "$ref": "#/components/schemas/OAuth2LoginRequest"

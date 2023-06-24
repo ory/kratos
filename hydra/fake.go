@@ -7,8 +7,6 @@ import (
 	"context"
 	"errors"
 
-	"github.com/gofrs/uuid"
-
 	hydraclientgo "github.com/ory/hydra-client-go/v2"
 	"github.com/ory/kratos/session"
 )
@@ -29,19 +27,19 @@ func NewFake() *FakeHydra {
 	return &FakeHydra{}
 }
 
-func (h *FakeHydra) AcceptLoginRequest(_ context.Context, hlc uuid.UUID, _ string, _ session.AuthenticationMethods) (string, error) {
-	switch hlc.String() {
+func (h *FakeHydra) AcceptLoginRequest(_ context.Context, loginChallenge string, _ string, _ session.AuthenticationMethods) (string, error) {
+	switch loginChallenge {
 	case FakeInvalidLoginChallenge:
 		return "", ErrFakeAcceptLoginRequestFailed
 	case FakeValidLoginChallenge:
 		return FakePostLoginURL, nil
 	default:
-		panic("unknown fake login_challenge " + hlc.String())
+		panic("unknown fake login_challenge " + loginChallenge)
 	}
 }
 
-func (h *FakeHydra) GetLoginRequest(_ context.Context, hlc uuid.NullUUID) (*hydraclientgo.OAuth2LoginRequest, error) {
-	switch hlc.UUID.String() {
+func (h *FakeHydra) GetLoginRequest(_ context.Context, loginChallenge string) (*hydraclientgo.OAuth2LoginRequest, error) {
+	switch loginChallenge {
 	case FakeInvalidLoginChallenge:
 		return &hydraclientgo.OAuth2LoginRequest{}, nil
 	case FakeValidLoginChallenge:
@@ -49,6 +47,6 @@ func (h *FakeHydra) GetLoginRequest(_ context.Context, hlc uuid.NullUUID) (*hydr
 			RequestUrl: "https://www.ory.sh",
 		}, nil
 	default:
-		panic("unknown fake login_challenge " + hlc.UUID.String())
+		panic("unknown fake login_challenge " + loginChallenge)
 	}
 }

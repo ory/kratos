@@ -45,7 +45,7 @@ type (
 	handlerDependencies interface {
 		config.Provider
 		errorx.ManagementProvider
-		hydra.HydraProvider
+		hydra.Provider
 		session.HandlerProvider
 		session.ManagementProvider
 		x.WriterProvider
@@ -449,8 +449,8 @@ func (h *Handler) getRegistrationFlow(w http.ResponseWriter, r *http.Request, ps
 		return
 	}
 
-	if ar.OAuth2LoginChallenge.Valid {
-		hlr, err := h.d.Hydra().GetLoginRequest(r.Context(), ar.OAuth2LoginChallenge)
+	if ar.OAuth2LoginChallenge != "" {
+		hlr, err := h.d.Hydra().GetLoginRequest(r.Context(), string(ar.OAuth2LoginChallenge))
 		if err != nil {
 			// We don't redirect back to the third party on errors because Hydra doesn't
 			// give us the 3rd party return_uri when it redirects to the login UI.

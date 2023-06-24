@@ -118,7 +118,14 @@ func (p *Persister) ListSessions(ctx context.Context, active *bool, paginatorOpt
 }
 
 // ListSessionsByIdentity retrieves sessions for an identity from the store.
-func (p *Persister) ListSessionsByIdentity(ctx context.Context, iID uuid.UUID, active *bool, page, perPage int, except uuid.UUID, expandables session.Expandables) (_ []session.Session, _ int64, err error) {
+func (p *Persister) ListSessionsByIdentity(
+	ctx context.Context,
+	iID uuid.UUID,
+	active *bool,
+	page, perPage int,
+	except uuid.UUID,
+	expandables session.Expandables,
+) (_ []session.Session, _ int64, err error) {
 	ctx, span := p.r.Tracer(ctx).Tracer().Start(ctx, "persistence.sql.ListSessionsByIdentity")
 	defer otelx.End(span, &err)
 
@@ -149,6 +156,8 @@ func (p *Persister) ListSessionsByIdentity(ctx context.Context, iID uuid.UUID, a
 			return sqlcon.HandleError(err)
 		}
 		t = int64(total)
+
+		q.Order("authenticated_at DESC")
 
 		// Get the paginated list of matching items
 		if err := q.Paginate(page, perPage).All(&s); err != nil {
