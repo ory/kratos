@@ -198,8 +198,6 @@ func (e *HookExecutor) PostLoginHook(
 			Method:       a.Active.String(),
 			SSOProvider:  provider,
 		}))
-		trace.SpanFromContext(r.Context()).AddEvent(events.NewSessionIssued(r.Context(), string(s.AuthenticatorAssuranceLevel), s.ID, s.IdentityID))
-
 		if handled, err := e.d.SessionManager().MaybeRedirectAPICodeFlow(w, r, a, s.ID, g); err != nil {
 			return errors.WithStack(err)
 		} else if handled {
