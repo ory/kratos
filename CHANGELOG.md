@@ -320,6 +320,15 @@
 - Add error checking when creating verification code
   ([#3328](https://github.com/ory/kratos/issues/3328))
   ([7182eca](https://github.com/ory/kratos/commit/7182eca074c8e84be325d62c75b62d22698878be))
+- Add missing SessionIssued event for api flows
+  ([#3348](https://github.com/ory/kratos/issues/3348))
+  ([adf78e0](https://github.com/ory/kratos/commit/adf78e09f336b2ac83f8ff1ba5ca382c7cfbec23)):
+
+  - fix: missing SessionIssued event for api flows
+  - chore: add SessionIssued event to post registration hook
+  - chore: format
+  - chore: move sessionissued event to persister
+
 - Bump quickstart version ([#3257](https://github.com/ory/kratos/issues/3257))
   ([6db70a8](https://github.com/ory/kratos/commit/6db70a81afac5860a86c31881a6fc988096ff0e4))
 - Cypress TOTP test
