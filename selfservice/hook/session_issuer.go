@@ -8,10 +8,11 @@ import (
 	"net/http"
 	"time"
 
+	"go.opentelemetry.io/otel/trace"
+
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/ui/node"
 	"github.com/ory/kratos/x/events"
-	"go.opentelemetry.io/otel/trace"
 
 	"github.com/pkg/errors"
 
