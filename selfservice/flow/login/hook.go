@@ -190,10 +190,15 @@ func (e *HookExecutor) PostLoginHook(
 			Info("Identity authenticated successfully and was issued an Ory Kratos Session Token.")
 
 		trace.SpanFromContext(r.Context()).AddEvent(events.NewLoginSucceeded(r.Context(), &events.LoginSucceededOpts{
-			SessionID:  s.ID,
-			IdentityID: i.ID, FlowType: string(a.Type), RequestedAAL: string(a.RequestedAAL), IsRefresh: a.Refresh, Method: a.Active.String(),
-			SSOProvider: provider,
+			SessionID:    s.ID,
+			IdentityID:   i.ID,
+			FlowType:     string(a.Type),
+			RequestedAAL: string(a.RequestedAAL),
+			IsRefresh:    a.Refresh,
+			Method:       a.Active.String(),
+			SSOProvider:  provider,
 		}))
+		trace.SpanFromContext(r.Context()).AddEvent(events.NewSessionIssued(r.Context(), string(s.AuthenticatorAssuranceLevel), s.ID, s.IdentityID))
 
 		if handled, err := e.d.SessionManager().MaybeRedirectAPICodeFlow(w, r, a, s.ID, g); err != nil {
 			return errors.WithStack(err)
