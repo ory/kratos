@@ -5,7 +5,7 @@
 
 **Table of Contents**
 
-- [ (2023-06-22)](#2023-06-22)
+- [ (2023-06-26)](#2023-06-26)
   - [Bug Fixes](#bug-fixes)
   - [Documentation](#documentation)
   - [Features](#features)
@@ -302,7 +302,7 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# [](https://github.com/ory/kratos/compare/v0.13.0...v) (2023-06-22)
+# [](https://github.com/ory/kratos/compare/v0.13.0...v) (2023-06-26)
 
 ### Bug Fixes
 
@@ -350,6 +350,16 @@
 
   Fixes https://github.com/ory/kratos/issues/3187 Fixes
   https://github.com/ory/kratos/issues/3289
+
+- Provide index hint in QueryForCredentials
+  ([#3329](https://github.com/ory/kratos/issues/3329))
+  ([4ba530e](https://github.com/ory/kratos/commit/4ba530ef593272d3cc0a9e1d354e81db495e8686)):
+
+  - fix: provide index hint in QueryForCredentials
+
+  - feat: remove customizable join predicate in QueryForCredentials
+
+  - chore: remove obsolete config tracer
 
 - Remove codeball
   ([aa29606](https://github.com/ory/kratos/commit/aa296067e2736cad329814f7acffd816ce0d74a3))
