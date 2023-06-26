@@ -10,6 +10,8 @@ import (
 
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/ui/node"
+	"github.com/ory/kratos/x/events"
+	"go.opentelemetry.io/otel/trace"
 
 	"github.com/pkg/errors"
 
@@ -67,6 +69,8 @@ func (e *SessionIssuer) executePostRegistrationPostPersistHook(w http.ResponseWr
 			}
 		}
 
+		trace.SpanFromContext(r.Context()).AddEvent(events.NewSessionIssued(r.Context(), string(s.AuthenticatorAssuranceLevel), s.ID, s.IdentityID))
+
 		a.AddContinueWith(flow.NewContinueWithSetToken(s.Token))
 		e.r.Writer().Write(w, r, &registration.APIFlowResponse{
 			Session:      s,
@@ -81,6 +85,7 @@ func (e *SessionIssuer) executePostRegistrationPostPersistHook(w http.ResponseWr
 	if err := e.r.SessionManager().IssueCookie(r.Context(), w, r, s); err != nil {
 		return err
 	}
+	trace.SpanFromContext(r.Context()).AddEvent(events.NewSessionIssued(r.Context(), string(s.AuthenticatorAssuranceLevel), s.ID, s.IdentityID))
 
 	// SPA flows additionally send the session
 	if x.IsJSONRequest(r) {
