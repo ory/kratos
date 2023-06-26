@@ -1147,6 +1147,18 @@ Cypress.Commands.add("useVerificationStrategy", (strategy: Strategy) => {
   })
 })
 
+Cypress.Commands.add("useLookupSecrets", (value: boolean) => {
+  cy.updateConfigFile((config) => {
+    config.selfservice.methods = {
+      ...config.selfservice.methods,
+      lookup_secret: {
+        enabled: value,
+      },
+    }
+    return config
+  })
+})
+
 Cypress.Commands.add("getLookupSecrets", () =>
   cy
     .get('[data-testid="node/text/lookup_secret_codes/text"] code')

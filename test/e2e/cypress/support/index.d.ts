@@ -262,9 +262,15 @@ declare global {
        * @param opts
        */
       reauth(opts: {
-        expect: { email; success?: boolean }
+        expect: { email: string; success?: boolean }
         type: { email?: string; password?: string }
       }): Chainable<void>
+
+      /**
+       * Change the config file to support lookup secrets
+       * @param value
+       */
+      useLookupSecrets(value: boolean): Chainable<void>
 
       /**
        * Re-authenticates a user.
@@ -273,7 +279,7 @@ declare global {
        */
       reauthWithOtherAccount(opts: {
         previousUrl: string
-        expect: { email; success?: boolean }
+        expect: { email: string; success?: boolean }
         type: { email?: string; password?: string }
       }): Chainable<void>
 
