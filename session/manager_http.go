@@ -9,10 +9,6 @@ import (
 	"net/url"
 	"time"
 
-	"go.opentelemetry.io/otel/trace"
-
-	"github.com/ory/kratos/x/events"
-
 	"github.com/ory/kratos/selfservice/flow"
 	"github.com/ory/kratos/selfservice/sessiontokenexchange"
 	"github.com/ory/kratos/ui/node"
@@ -78,12 +74,6 @@ func (s *ManagerHTTP) UpsertAndIssueCookie(ctx context.Context, w http.ResponseW
 		return err
 	}
 
-	var event = events.NewSessionChanged
-	if isNew {
-		event = events.NewSessionIssued
-	}
-
-	trace.SpanFromContext(r.Context()).AddEvent(event(r.Context(), string(ss.AuthenticatorAssuranceLevel), ss.ID, ss.IdentityID))
 	return nil
 }
 
