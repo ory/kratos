@@ -636,11 +636,8 @@
           }
         ],
         "responses": {
-          "200": {
-            "description": "identity",
-            "schema": {
-              "$ref": "#/definitions/identity"
-            }
+          "204": {
+            "$ref": "#/responses/emptyResponse"
           },
           "404": {
             "description": "errorGeneric",

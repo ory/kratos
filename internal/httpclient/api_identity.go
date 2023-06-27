@@ -121,9 +121,8 @@ type IdentityApi interface {
 
 	/*
 	 * DeleteIdentityCredentialsExecute executes the request
-	 * @return Identity
 	 */
-	DeleteIdentityCredentialsExecute(r IdentityApiApiDeleteIdentityCredentialsRequest) (*Identity, *http.Response, error)
+	DeleteIdentityCredentialsExecute(r IdentityApiApiDeleteIdentityCredentialsRequest) (*http.Response, error)
 
 	/*
 	 * DeleteIdentitySessions Delete & Invalidate an Identity's Sessions
@@ -1059,7 +1058,7 @@ type IdentityApiApiDeleteIdentityCredentialsRequest struct {
 	type_      string
 }
 
-func (r IdentityApiApiDeleteIdentityCredentialsRequest) Execute() (*Identity, *http.Response, error) {
+func (r IdentityApiApiDeleteIdentityCredentialsRequest) Execute() (*http.Response, error) {
 	return r.ApiService.DeleteIdentityCredentialsExecute(r)
 }
 
@@ -1084,21 +1083,19 @@ func (a *IdentityApiService) DeleteIdentityCredentials(ctx context.Context, id s
 
 /*
  * Execute executes the request
- * @return Identity
  */
-func (a *IdentityApiService) DeleteIdentityCredentialsExecute(r IdentityApiApiDeleteIdentityCredentialsRequest) (*Identity, *http.Response, error) {
+func (a *IdentityApiService) DeleteIdentityCredentialsExecute(r IdentityApiApiDeleteIdentityCredentialsRequest) (*http.Response, error) {
 	var (
 		localVarHTTPMethod   = http.MethodDelete
 		localVarPostBody     interface{}
 		localVarFormFileName string
 		localVarFileName     string
 		localVarFileBytes    []byte
-		localVarReturnValue  *Identity
 	)
 
 	localBasePath, err := a.client.cfg.ServerURLWithContext(r.ctx, "IdentityApiService.DeleteIdentityCredentials")
 	if err != nil {
-		return localVarReturnValue, nil, &GenericOpenAPIError{error: err.Error()}
+		return nil, &GenericOpenAPIError{error: err.Error()}
 	}
 
 	localVarPath := localBasePath + "/admin/identities/{id}/credentials/{type}"
@@ -1142,19 +1139,19 @@ func (a *IdentityApiService) DeleteIdentityCredentialsExecute(r IdentityApiApiDe
 	}
 	req, err := a.client.prepareRequest(r.ctx, localVarPath, localVarHTTPMethod, localVarPostBody, localVarHeaderParams, localVarQueryParams, localVarFormParams, localVarFormFileName, localVarFileName, localVarFileBytes)
 	if err != nil {
-		return localVarReturnValue, nil, err
+		return nil, err
 	}
 
 	localVarHTTPResponse, err := a.client.callAPI(req)
 	if err != nil || localVarHTTPResponse == nil {
-		return localVarReturnValue, localVarHTTPResponse, err
+		return localVarHTTPResponse, err
 	}
 
 	localVarBody, err := io.ReadAll(localVarHTTPResponse.Body)
 	localVarHTTPResponse.Body.Close()
 	localVarHTTPResponse.Body = io.NopCloser(bytes.NewBuffer(localVarBody))
 	if err != nil {
-		return localVarReturnValue, localVarHTTPResponse, err
+		return localVarHTTPResponse, err
 	}
 
 	if localVarHTTPResponse.StatusCode >= 300 {
@@ -1167,31 +1164,22 @@ func (a *IdentityApiService) DeleteIdentityCredentialsExecute(r IdentityApiApiDe
 			err = a.client.decode(&v, localVarBody, localVarHTTPResponse.Header.Get("Content-Type"))
 			if err != nil {
 				newErr.error = err.Error()
-				return localVarReturnValue, localVarHTTPResponse, newErr
+				return localVarHTTPResponse, newErr
 			}
 			newErr.model = v
-			return localVarReturnValue, localVarHTTPResponse, newErr
+			return localVarHTTPResponse, newErr
 		}
 		var v ErrorGeneric
 		err = a.client.decode(&v, localVarBody, localVarHTTPResponse.Header.Get("Content-Type"))
 		if err != nil {
 			newErr.error = err.Error()
-			return localVarReturnValue, localVarHTTPResponse, newErr
+			return localVarHTTPResponse, newErr
 		}
 		newErr.model = v
-		return localVarReturnValue, localVarHTTPResponse, newErr
+		return localVarHTTPResponse, newErr
 	}
 
-	err = a.client.decode(&localVarReturnValue, localVarBody, localVarHTTPResponse.Header.Get("Content-Type"))
-	if err != nil {
-		newErr := &GenericOpenAPIError{
-			body:  localVarBody,
-			error: err.Error(),
-		}
-		return localVarReturnValue, localVarHTTPResponse, newErr
-	}
-
-	return localVarReturnValue, localVarHTTPResponse, nil
+	return localVarHTTPResponse, nil
 }
 
 type IdentityApiApiDeleteIdentitySessionsRequest struct {

@@ -901,7 +901,7 @@ type deleteIdentityCredentials struct {
 //	  oryAccessToken:
 //
 //	Responses:
-//	  200: identity
+//	  204: emptyResponse
 //	  404: errorGeneric
 //	  default: errorGeneric
 func (h *Handler) deleteIdentityCredentials(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {

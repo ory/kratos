@@ -3781,15 +3781,8 @@
           }
         ],
         "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/identity"
-                }
-              }
-            },
-            "description": "identity"
+          "204": {
+            "$ref": "#/components/responses/emptyResponse"
           },
           "404": {
             "content": {
