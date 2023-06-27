@@ -48,7 +48,6 @@ import (
 	"github.com/ory/kratos/selfservice/flow"
 	"github.com/ory/kratos/selfservice/flow/recovery"
 	"github.com/ory/kratos/selfservice/strategy/code"
-	"github.com/ory/kratos/selfservice/strategy/totp"
 	"github.com/ory/kratos/text"
 	"github.com/ory/kratos/x"
 )
@@ -291,7 +290,7 @@ func withCSRFToken(t *testing.T, flowType, body string, v url.Values) string {
 
 func createIdentityToRecover(t *testing.T, reg *driver.RegistryDefault, email string) *identity.Identity {
 	t.Helper()
-	var id = &identity.Identity{
+	id := &identity.Identity{
 		Credentials: map[identity.CredentialsType]identity.Credentials{
 			"password": {
 				Type:        "password",
@@ -301,6 +300,7 @@ func createIdentityToRecover(t *testing.T, reg *driver.RegistryDefault, email st
 		},
 		Traits:   identity.Traits(fmt.Sprintf(`{"email":"%s"}`, email)),
 		SchemaID: config.DefaultIdentityTraitsSchemaID,
+		State:    identity.StateActive,
 	}
 	require.NoError(t, reg.IdentityManager().Create(context.Background(), id, identity.ManagerAllowWriteProtectedTraits))
 
@@ -327,7 +327,7 @@ func TestRecovery(t *testing.T) {
 
 	public, _, _, _ := testhelpers.NewKratosServerWithCSRFAndRouters(t, reg)
 
-	var submitRecovery = func(t *testing.T, client *http.Client, flowType string, values func(url.Values), code int) string {
+	submitRecovery := func(t *testing.T, client *http.Client, flowType string, values func(url.Values), code int) string {
 		isSPA := flowType == RecoveryFlowTypeSPA
 		isAPI := flowType == RecoveryFlowTypeAPI
 		if client == nil {
@@ -342,7 +342,7 @@ func TestRecovery(t *testing.T) {
 		return testhelpers.SubmitRecoveryForm(t, isAPI, isSPA, client, public, values, code, expectedUrl)
 	}
 
-	var submitRecoveryCode = func(t *testing.T, client *http.Client, flow string, flowType string, recoveryCode string, statusCode int) string {
+	submitRecoveryCode := func(t *testing.T, client *http.Client, flow string, flowType string, recoveryCode string, statusCode int) string {
 		action := gjson.Get(flow, "ui.action").String()
 		assert.NotEmpty(t, action)
 
@@ -363,7 +363,7 @@ func TestRecovery(t *testing.T) {
 		return string(ioutilx.MustReadAll(res.Body))
 	}
 
-	var resendRecoveryCode = func(t *testing.T, client *http.Client, flow string, flowType string, statusCode int) string {
+	resendRecoveryCode := func(t *testing.T, client *http.Client, flow string, flowType string, statusCode int) string {
 		action := gjson.Get(flow, "ui.action").String()
 		assert.NotEmpty(t, action)
 
@@ -386,17 +386,17 @@ func TestRecovery(t *testing.T) {
 		return string(ioutilx.MustReadAll(res.Body))
 	}
 
-	var expectValidationError = func(t *testing.T, hc *http.Client, flowType string, values func(url.Values)) string {
+	expectValidationError := func(t *testing.T, hc *http.Client, flowType string, values func(url.Values)) string {
 		code := testhelpers.ExpectStatusCode(flowType == RecoveryFlowTypeAPI || flowType == RecoveryFlowTypeSPA, http.StatusBadRequest, http.StatusOK)
 		return submitRecovery(t, hc, flowType, values, code)
 	}
 
-	var expectSuccessfulRecovery = func(t *testing.T, hc *http.Client, flowType string, values func(url.Values)) string {
+	expectSuccessfulRecovery := func(t *testing.T, hc *http.Client, flowType string, values func(url.Values)) string {
 		code := testhelpers.ExpectStatusCode(flowType == RecoveryFlowTypeAPI || flowType == RecoveryFlowTypeSPA, http.StatusUnprocessableEntity, http.StatusOK)
 		return submitRecovery(t, hc, flowType, values, code)
 	}
 
-	var ExpectVerfiableAddressStatus = func(t *testing.T, email string, status identity.VerifiableAddressStatus) {
+	ExpectVerfiableAddressStatus := func(t *testing.T, email string, status identity.VerifiableAddressStatus) {
 		addr, err := reg.IdentityPool().
 			FindVerifiableAddressByValue(context.Background(), identity.VerifiableAddressTypeEmail, email)
 		assert.NoError(t, err)
@@ -404,8 +404,7 @@ func TestRecovery(t *testing.T) {
 	}
 
 	t.Run("description=should recover an account", func(t *testing.T) {
-		var checkRecovery = func(t *testing.T, client *http.Client, flowType, recoveryEmail, recoverySubmissionResponse string) string {
-
+		checkRecovery := func(t *testing.T, client *http.Client, flowType, recoveryEmail, recoverySubmissionResponse string) string {
 			ExpectVerfiableAddressStatus(t, recoveryEmail, identity.VerifiableAddressStatusPending)
 
 			assert.EqualValues(t, node.CodeGroup, gjson.Get(recoverySubmissionResponse, "active").String(), "%s", recoverySubmissionResponse)
@@ -505,30 +504,25 @@ func TestRecovery(t *testing.T) {
 					desc:     "should use return_to with an account that has 2fa enabled",
 					returnTo: returnTo,
 					f: func(t *testing.T, client *http.Client, id *identity.Identity) *kratos.RecoveryFlow {
-						conf.MustSet(ctx, config.ViperKeySelfServiceSettingsRequiredAAL, config.HighestAvailableAAL)
-						conf.MustSet(ctx, config.ViperKeySessionWhoAmIAAL, string(identity.AuthenticatorAssuranceLevel2))
-
-						testhelpers.StrategyEnable(t, conf, identity.CredentialsTypeTOTP.String(), true)
-						testhelpers.StrategyEnable(t, conf, identity.CredentialsTypePassword.String(), true)
+						conf.Set(ctx, config.ViperKeySelfServiceSettingsRequiredAAL, config.HighestAvailableAAL)
+						conf.Set(ctx, config.ViperKeySessionWhoAmIAAL, config.HighestAvailableAAL)
+						conf.Set(ctx, config.ViperKeyWebAuthnRPDisplayName, "Kratos")
+						conf.Set(ctx, config.ViperKeyWebAuthnRPID, "ory.sh")
 
 						t.Cleanup(func() {
-							conf.MustSet(ctx, config.ViperKeySelfServiceSettingsRequiredAAL, string(identity.AuthenticatorAssuranceLevel1))
-							testhelpers.StrategyEnable(t, conf, identity.CredentialsTypeTOTP.String(), false)
-							testhelpers.StrategyEnable(t, conf, identity.CredentialsTypePassword.String(), false)
+							conf.MustSet(ctx, config.ViperKeySessionWhoAmIAAL, identity.AuthenticatorAssuranceLevel1)
+							conf.MustSet(ctx, config.ViperKeySelfServiceSettingsRequiredAAL, identity.AuthenticatorAssuranceLevel1)
+						})
+						testhelpers.StrategyEnable(t, conf, identity.CredentialsTypeWebAuthn.String(), true)
+
+						id.SetCredentials(identity.CredentialsTypeWebAuthn, identity.Credentials{
+							Type:        identity.CredentialsTypeWebAuthn,
+							Config:      []byte(`{"credentials":[{"is_passwordless":false, "display_name":"test"}]}`),
+							Identifiers: []string{testhelpers.RandomEmail()},
 						})
 
-						key, err := totp.NewKey(context.Background(), "foo", reg)
-						require.NoError(t, err)
-
-						id.SetCredentials(identity.CredentialsTypeTOTP, identity.Credentials{
-							Type:        identity.CredentialsTypeTOTP,
-							Identifiers: []string{id.ID.String()},
-							Config:      sqlxx.JSONRawMessage(`{"totp_url":"` + string(key.URL()) + `"}`),
-						})
-
-						require.NoError(t, reg.PrivilegedIdentityPool().UpdateIdentity(context.Background(), id))
-
-						return testhelpers.InitializeRecoveryFlowViaBrowser(t, client, true, public, url.Values{"return_to": []string{returnTo}})
+						require.NoError(t, reg.PrivilegedIdentityPool().UpdateIdentity(ctx, id))
+						return testhelpers.InitializeRecoveryFlowViaBrowser(t, client, false, public, url.Values{"return_to": []string{returnTo}})
 					},
 					expectedAAL: "aal2",
 				},
@@ -559,6 +553,17 @@ func TestRecovery(t *testing.T) {
 					sf, err := reg.SettingsFlowPersister().GetSettingsFlow(ctx, uuid.Must(uuid.FromString(settingsId)))
 					require.NoError(t, err)
 
+					u, err := url.Parse(public.URL)
+					require.NoError(t, err)
+					require.Len(t, client.Jar.Cookies(u), 2)
+					found := false
+					for _, cookie := range client.Jar.Cookies(u) {
+						if cookie.Name == "ory_kratos_session" {
+							found = true
+						}
+					}
+					require.True(t, found)
+
 					require.Equal(t, tc.returnTo, sf.ReturnTo)
 					res, err = client.Get(public.URL + session.RouteWhoami)
 					require.NoError(t, err)
@@ -566,7 +571,9 @@ func TestRecovery(t *testing.T) {
 					require.NoError(t, res.Body.Close())
 
 					if tc.expectedAAL == "aal2" {
-						assert.Equal(t, http.StatusUnauthorized, res.StatusCode, "%s", body)
+						require.Equal(t, http.StatusForbidden, res.StatusCode)
+						require.Equalf(t, session.NewErrAALNotSatisfied("").Reason(), gjson.Get(body, "error.reason").String(), "%s", body)
+						require.Equalf(t, "session_aal2_required", gjson.Get(body, "error.id").String(), "%s", body)
 					} else {
 						assert.Equal(t, "code_recovery", gjson.Get(body, "authentication_methods.0.method").String(), "%s", body)
 						assert.Equal(t, "aal1", gjson.Get(body, "authenticator_assurance_level").String(), "%s", body)
@@ -607,7 +614,6 @@ func TestRecovery(t *testing.T) {
 	})
 
 	t.Run("description=should require a valid email to be sent", func(t *testing.T) {
-
 		for _, flowType := range flowTypes {
 			for _, email := range []string{"\\", "asdf", "...", "aiacobelli.sec@gmail.com,alejandro.iacobelli@mercadolibre.com"} {
 				t.Run("type="+flowType, func(t *testing.T) {
@@ -682,7 +688,7 @@ func TestRecovery(t *testing.T) {
 			conf.Set(ctx, config.ViperKeySelfServiceRecoveryNotifyUnknownRecipients, false)
 		})
 
-		var check = func(t *testing.T, c *http.Client, flowType, email string) {
+		check := func(t *testing.T, c *http.Client, flowType, email string) {
 			withValues := func(v url.Values) {
 				v.Set("email", email)
 			}
