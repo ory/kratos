@@ -8,7 +8,8 @@ variables:
   buildinfo_hash: "github.com/ory/kratos/driver/config.Commit"
   buildinfo_tag: "github.com/ory/kratos/driver/config.Version"
   buildinfo_date: "github.com/ory/kratos/driver/config.Date"
-  dockerfile: ".docker/Dockerfile-alpine"
+  dockerfile_alpine: ".docker/Dockerfile-alpine"
+  dockerfile_static: ".docker/Dockerfile-distroless-static"
 
 project_name: kratos
 
