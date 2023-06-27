@@ -1063,8 +1063,7 @@
               "/dashboard",
               "https://www.my-app.com/"
             ]
-          ],
-          "uniqueItems": true
+          ]
         },
         "flows": {
           "type": "object",
