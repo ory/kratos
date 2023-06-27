@@ -32,9 +32,7 @@ import (
 	"github.com/ory/kratos/x"
 )
 
-var (
-	ErrHookAbortFlow = errors.New("aborted settings hook execution")
-)
+var ErrHookAbortFlow = errors.New("aborted settings hook execution")
 
 type (
 	errorHandlerDependencies interface {
@@ -85,7 +83,8 @@ func (e *FlowNeedsReAuth) EnhanceJSONError() interface{} {
 func NewFlowNeedsReAuth() *FlowNeedsReAuth {
 	return &FlowNeedsReAuth{
 		DefaultError: herodot.ErrForbidden.WithID(text.ErrIDNeedsPrivilegedSession).
-			WithReasonf("The login session is too old and thus not allowed to update these fields. Please re-authenticate.")}
+			WithReasonf("The login session is too old and thus not allowed to update these fields. Please re-authenticate."),
+	}
 }
 
 func NewErrorHandler(d errorHandlerDependencies) *ErrorHandler {
@@ -166,13 +165,7 @@ func (s *ErrorHandler) WriteFlowError(
 		if shouldRespondWithJSON {
 			s.d.Writer().WriteError(w, r, aalErr)
 		} else {
-			if aalErr.RedirectTo == "" {
-				http.Redirect(w, r, urlx.CopyWithQuery(
-					urlx.AppendPaths(s.d.Config().SelfPublicURL(r.Context()), login.RouteInitBrowserFlow),
-					url.Values{"aal": {string(identity.AuthenticatorAssuranceLevel2)}}).String(), http.StatusSeeOther)
-			} else {
-				http.Redirect(w, r, aalErr.RedirectTo, http.StatusSeeOther)
-			}
+			http.Redirect(w, r, aalErr.RedirectTo, http.StatusSeeOther)
 		}
 		return
 	}

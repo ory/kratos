@@ -111,12 +111,6 @@ func WithFormErrorMessage(messages []text.Message) FlowOption {
 	}
 }
 
-func WithAuthenticatorAssuranceLevel(auth identity.AuthenticatorAssuranceLevel) FlowOption {
-	return func(f *Flow) {
-		f.RequestedAAL = auth
-	}
-}
-
 func (h *Handler) NewLoginFlow(w http.ResponseWriter, r *http.Request, ft flow.Type, opts ...FlowOption) (*Flow, *session.Session, error) {
 	conf := h.d.Config()
 	f, err := NewFlow(conf, conf.SelfServiceFlowLoginRequestLifespan(r.Context()), h.d.GenerateCSRFToken(r), r, ft)
@@ -458,7 +452,6 @@ func (h *Handler) createBrowserLoginFlow(w http.ResponseWriter, r *http.Request,
 			}
 
 			rt, err := h.d.Hydra().AcceptLoginRequest(r.Context(), string(hydraLoginChallenge), sess.IdentityID.String(), sess.AMR)
-
 			if err != nil {
 				h.d.SelfServiceErrorManager().Forward(r.Context(), w, r, err)
 				return

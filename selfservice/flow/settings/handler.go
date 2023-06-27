@@ -5,6 +5,7 @@ package settings
 
 import (
 	"net/http"
+	"net/url"
 	"time"
 
 	"github.com/julienschmidt/httprouter"
@@ -415,12 +416,10 @@ func (h *Handler) fetchFlow(w http.ResponseWriter, r *http.Request) error {
 		return errors.WithStack(herodot.ErrForbidden.WithID(text.ErrIDInitiatedBySomeoneElse).WithReasonf("The request was made for another identity and has been blocked for security reasons."))
 	}
 
-	// we cannot redirect back to the settings flow
-	// because it would just return a json response which is not what we want
-	requestURL := h.d.Config().SelfServiceFlowSettingsUI(r.Context())
-	query := requestURL.Query()
-	query.Set("flow", rid.String())
-	requestURL.RawQuery = query.Encode()
+	// we cannot redirect back to the request URL (/self-service/settings/flows?id=...) since it would just redirect
+	// to a page displaying raw JSON to the client (browser), which is not what we want.
+	// Let's rather carry over the flow ID as a query parameter and redirect to the settings UI URL.
+	requestURL := urlx.CopyWithQuery(h.d.Config().SelfServiceFlowSettingsUI(r.Context()), url.Values{"flow": {rid.String()}})
 	if err := h.d.SessionManager().DoesSessionSatisfy(r, sess, h.d.Config().SelfServiceSettingsRequiredAAL(r.Context()), session.WithRequestURL(requestURL.String())); err != nil {
 		return err
 	}
