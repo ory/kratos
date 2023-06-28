@@ -1,0 +1,7 @@
+FROM gcr.io/distroless/static-debian11:nonroot
+
+COPY kratos /usr/bin/kratos
+EXPOSE 4433 4434
+
+ENTRYPOINT ["kratos"]
+CMD ["serve"]
