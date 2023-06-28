@@ -22,6 +22,7 @@ import (
 type (
 	Dependencies interface {
 		PersistenceProvider
+		x.TracingProvider
 		x.LoggingProvider
 		ConfigProvider
 		x.HTTPClientProvider

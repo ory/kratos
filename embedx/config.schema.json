@@ -136,7 +136,7 @@
             "https://example.com/api/v1/email"
           ],
           "type": "string",
-          "pattern": "^https?:\\/\\/.*"
+          "pattern": "^https?://"
         },
         "method": {
           "type": "string",
