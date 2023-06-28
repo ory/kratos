@@ -5,7 +5,7 @@
 
 **Table of Contents**
 
-- [ (2023-06-26)](#2023-06-26)
+- [ (2023-06-28)](#2023-06-28)
   - [Bug Fixes](#bug-fixes)
   - [Documentation](#documentation)
   - [Features](#features)
@@ -302,7 +302,7 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# [](https://github.com/ory/kratos/compare/v0.13.0...v) (2023-06-26)
+# [](https://github.com/ory/kratos/compare/v0.13.0...v) (2023-06-28)
 
 ### Bug Fixes
 
@@ -333,6 +333,9 @@
   ([6db70a8](https://github.com/ory/kratos/commit/6db70a81afac5860a86c31881a6fc988096ff0e4))
 - Cypress TOTP test
   ([eac908c](https://github.com/ory/kratos/commit/eac908c4fc14831288e6fd5b3c65ac197d2f58e1))
+- Do not require items to be unique
+  ([#3349](https://github.com/ory/kratos/issues/3349))
+  ([17be30d](https://github.com/ory/kratos/commit/17be30dd84c667e5d1ae13bd79827b7ca9cdd2de))
 - Don't assume the login challenge to be a UUID
   ([#3317](https://github.com/ory/kratos/issues/3317))
   ([3172862](https://github.com/ory/kratos/commit/3172862929ad68011fc940a6e0876fa07187a275)):
@@ -380,6 +383,9 @@
 
   Closes https://github.com/ory/sdk/issues/255
 
+- **sdk:** Update the API spec to reflect the 204 NoContent in
+  DeleteIdentityCredentials ([#3347](https://github.com/ory/kratos/issues/3347))
+  ([f3dee86](https://github.com/ory/kratos/commit/f3dee869bef0e0dd2d36541823ae57d54ba5788e))
 - String to enum for updateVerificationFlowWithLinkMethod Method
   ([#3279](https://github.com/ory/kratos/issues/3279))
   ([34ff1d2](https://github.com/ory/kratos/commit/34ff1d2912e7f7aefb35dae759dce2eb37ecb790)),
@@ -405,6 +411,9 @@
   ([#3292](https://github.com/ory/kratos/issues/3292))
   ([387f5a2](https://github.com/ory/kratos/commit/387f5a2711ca8eee97ad0f6bb2575ec9ba4797d9)),
   closes [#3283](https://github.com/ory/kratos/issues/3283)
+- Add distroless and static images
+  ([#3350](https://github.com/ory/kratos/issues/3350))
+  ([1e65662](https://github.com/ory/kratos/commit/1e65662c92b107290466c20de38bbdc0571b596a))
 - Allow customization of JOIN predicate in QueryForCredentials
   ([#3253](https://github.com/ory/kratos/issues/3253))
   ([8785166](https://github.com/ory/kratos/commit/87851668e776404aabbfbc67af73a43ea3ee28fc))
@@ -427,6 +436,8 @@
 - Improve event types and capture more events
   ([#3297](https://github.com/ory/kratos/issues/3297))
   ([835fe13](https://github.com/ory/kratos/commit/835fe13d9ce81f7c0ed91dd2863a740fbb0c6209))
+- Lark OIDC provider ([#2925](https://github.com/ory/kratos/issues/2925))
+  ([f884dfb](https://github.com/ory/kratos/commit/f884dfbaa8aeba58b3b1595bd45e41f9b3e5a0e0))
 - Return to oauth flow after switching from login to other flows
   ([#3212](https://github.com/ory/kratos/issues/3212))
   ([a1fea6c](https://github.com/ory/kratos/commit/a1fea6c353768bbf154900766fbbe51f2a148554)):
