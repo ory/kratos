@@ -5138,6 +5138,14 @@
             "schema": {
               "type": "string"
             }
+          },
+          {
+            "description": "Return to URL\n\nThe URL to which the browser should be redirected to after the logout\nhas been performed.",
+            "in": "query",
+            "name": "return_to",
+            "schema": {
+              "type": "string"
+            }
           }
         ],
         "responses": {
@@ -5150,6 +5158,16 @@
               }
             },
             "description": "logoutFlow"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/errorGeneric"
+                }
+              }
+            },
+            "description": "errorGeneric"
           },
           "401": {
             "content": {

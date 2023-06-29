@@ -103,6 +103,14 @@ type createBrowserLogoutFlow struct {
 	// in: header
 	// name: cookie
 	Cookie string `json:"cookie"`
+
+	// Return to URL
+	//
+	// The URL to which the browser should be redirected to after the logout
+	// has been performed.
+	//
+	// in: query
+	ReturnTo string `json:"return_to"`
 }
 
 // swagger:route GET /self-service/logout/browser frontend createBrowserLogoutFlow
@@ -127,19 +135,45 @@ type createBrowserLogoutFlow struct {
 //
 //	Responses:
 //	  200: logoutFlow
+//	  400: errorGeneric
 //	  401: errorGeneric
 //	  500: errorGeneric
 func (h *Handler) createBrowserLogoutFlow(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	sess, err := h.d.SessionManager().FetchFromRequest(r.Context(), r)
 	if err != nil {
-		h.d.Writer().WriteError(w, r, err)
+		h.d.SelfServiceErrorManager().Forward(r.Context(), w, r, err)
 		return
+	}
+
+	conf := h.d.Config()
+
+	requestURL := x.RequestURL(r)
+
+	var returnTo *url.URL
+
+	if requestURL.Query().Get("return_to") != "" {
+		// Pre-validate the return to URL which is contained in the HTTP request.
+		returnTo, err = x.SecureRedirectTo(r,
+			h.d.Config().SelfServiceFlowLogoutRedirectURL(r.Context()),
+			x.SecureRedirectUseSourceURL(requestURL.String()),
+			x.SecureRedirectAllowURLs(conf.SelfServiceBrowserAllowedReturnToDomains(r.Context())),
+			x.SecureRedirectAllowSelfServiceURLs(conf.SelfPublicURL(r.Context())),
+		)
+		if err != nil {
+			h.d.SelfServiceErrorManager().Forward(r.Context(), w, r, err)
+			return
+		}
+	}
+
+	params := url.Values{"token": {sess.LogoutToken}}
+
+	if returnTo != nil {
+		params.Set("return_to", returnTo.String())
 	}
 
 	h.d.Writer().Write(w, r, &logoutFlow{
 		LogoutToken: sess.LogoutToken,
-		LogoutURL: urlx.CopyWithQuery(urlx.AppendPaths(h.d.Config().SelfPublicURL(r.Context()), RouteSubmitFlow),
-			url.Values{"token": {sess.LogoutToken}}).String(),
+		LogoutURL:   urlx.CopyWithQuery(urlx.AppendPaths(h.d.Config().SelfPublicURL(r.Context()), RouteSubmitFlow), params).String(),
 	})
 }
 
