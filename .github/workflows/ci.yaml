@@ -188,7 +188,7 @@ jobs:
           path: node-ui
       - run: |
           cd node-ui
-          npm install
+          npm install --legacy-peer-deps
 
       - name: Install selfservice-ui-react-nextjs
         uses: actions/checkout@v3
@@ -292,7 +292,7 @@ jobs:
           path: node-ui
       - run: |
           cd node-ui
-          npm install
+          npm install --legacy-peer-deps
 
       - name: Install selfservice-ui-react-nextjs
         uses: actions/checkout@v3
