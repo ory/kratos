@@ -134,7 +134,7 @@ type Manager interface {
 	PurgeFromRequest(context.Context, http.ResponseWriter, *http.Request) error
 
 	// DoesSessionSatisfy answers if a session is satisfying the AAL.
-	DoesSessionSatisfy(r *http.Request, sess *Session, requestedAAL string) error
+	DoesSessionSatisfy(r *http.Request, sess *Session, requestedAAL string, opts ...ManagerOptions) error
 
 	// SessionAddAuthenticationMethods adds one or more authentication method to the session.
 	SessionAddAuthenticationMethods(ctx context.Context, sid uuid.UUID, methods ...AuthenticationMethod) error

@@ -41,7 +41,6 @@ func (s *Strategy) RecoveryStrategyID() string {
 func (s *Strategy) RegisterPublicRecoveryRoutes(public *x.RouterPublic) {
 	s.deps.CSRFHandler().IgnorePath(RouteAdminCreateRecoveryCode)
 	public.POST(RouteAdminCreateRecoveryCode, x.RedirectToAdminRoute(s.deps))
-
 }
 
 func (s *Strategy) RegisterAdminRecoveryRoutes(admin *x.RouterAdmin) {

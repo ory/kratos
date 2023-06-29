@@ -49,7 +49,7 @@ context("2FA TOTP", () => {
         cy.visit(settings)
         cy.requireStrictAal()
 
-        let secret
+        let secret: string
         cy.get('[data-testid="node/text/totp_secret_key/text"]').then(($e) => {
           secret = $e.text().trim()
         })
@@ -101,7 +101,7 @@ context("2FA TOTP", () => {
         cy.visit(settings)
         cy.requireStrictAal()
 
-        let secret
+        let secret: string
         cy.get('[data-testid="node/text/totp_secret_key/text"]').then(($e) => {
           secret = $e.text().trim()
         })
@@ -147,7 +147,7 @@ context("2FA TOTP", () => {
         cy.get('img[data-testid="node/image/totp_qr"]').should("exist")
 
         // Set up TOTP
-        let secret
+        let secret: string
         cy.get('[data-testid="node/text/totp_secret_key/text"]').then(($e) => {
           secret = $e.text().trim()
         })
@@ -206,7 +206,7 @@ context("2FA TOTP", () => {
 
         // Linking a new device works
         cy.visit(settings)
-        let newSecret
+        let newSecret: string
         cy.get('[data-testid="node/text/totp_secret_key/text"]').then(($e) => {
           newSecret = $e.text().trim()
         })
@@ -300,7 +300,7 @@ context("2FA TOTP", () => {
         cy.get('*[name="method"][value="profile"]').click()
         cy.expectSettingsSaved()
 
-        let secret
+        let secret: string
         cy.get('[data-testid="node/text/totp_secret_key/text"]').then(($e) => {
           secret = $e.text().trim()
         })

@@ -452,7 +452,6 @@ func (h *Handler) createBrowserLoginFlow(w http.ResponseWriter, r *http.Request,
 			}
 
 			rt, err := h.d.Hydra().AcceptLoginRequest(r.Context(), string(hydraLoginChallenge), sess.IdentityID.String(), sess.AMR)
-
 			if err != nil {
 				h.d.SelfServiceErrorManager().Forward(r.Context(), w, r, err)
 				return

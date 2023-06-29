@@ -53,7 +53,7 @@ func TestHandleError(t *testing.T) {
 	t.Cleanup(ts.Close)
 
 	_ = testhelpers.NewSettingsUIFlowEchoServer(t, reg)
-	errorTS := testhelpers.NewErrorTestServer(t, reg)
+	_ = testhelpers.NewErrorTestServer(t, reg)
 	loginTS := testhelpers.NewLoginUIFlowEchoServer(t, reg)
 
 	h := reg.SettingsFlowErrorHandler()
@@ -70,6 +70,10 @@ func TestHandleError(t *testing.T) {
 
 	router.GET("/error", func(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 		h.WriteFlowError(w, r, flowMethod, settingsFlow, &id, flowError)
+	})
+
+	router.GET("/fake-redirect", func(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
+		reg.LoginHandler().NewLoginFlow(w, r, flow.TypeBrowser)
 	})
 
 	reset := func() {
@@ -318,17 +322,42 @@ func TestHandleError(t *testing.T) {
 
 			settingsFlow = newFlow(t, time.Minute, flow.TypeBrowser)
 			settingsFlow.IdentityID = id.ID
-			flowError = errors.WithStack(session.NewErrAALNotSatisfied(""))
+			flowError = errors.WithStack(session.NewErrAALNotSatisfied(conf.SelfServiceFlowLoginUI(ctx).String()))
 			flowMethod = settings.StrategyProfile
 
-			res, err := ts.Client().Get(ts.URL + "/error")
+			client := &http.Client{}
+			*client = *ts.Client()
+
+			// disable redirects
+			client.CheckRedirect = func(req *http.Request, via []*http.Request) error {
+				return http.ErrUseLastResponse
+			}
+
+			res, err := client.Get(ts.URL + "/error")
 			require.NoError(t, err)
-			assert.Contains(t, res.Request.URL.String(), errorTS.URL)
+
+			loc, err := res.Location()
+			require.NoError(t, err)
+
+			// we should end up at the login URL since the NewALLNotSatisfied takes in a redirect to URL.
+			assert.Contains(t, loc.String(), loginTS.URL)
+
+			// test the JSON resoponse as well
+			request, err := http.NewRequest("GET", ts.URL+"/error", nil)
+			require.NoError(t, err)
+
+			request.Header.Add("Accept", "application/json")
+
+			res, err = client.Do(request)
+			require.NoError(t, err)
+
+			// the body should contain the reason for the error
 			body := x.MustReadAll(res.Body)
 			require.NoError(t, res.Body.Close())
 
+			require.NotEmpty(t, gjson.GetBytes(body, "error.reason").String(), "%s", body)
 			// We end up at the error endpoint with an aal2 error message because ts.client has no session.
-			assert.Equal(t, "You can not requested a higher AAL (AAL2/AAL3) without an active session.", gjson.GetBytes(body, "reason").String(), "%s", body)
+			assert.Equal(t, session.NewErrAALNotSatisfied("").Reason(), gjson.GetBytes(body, "error.reason").String(), "%s", body)
 		})
 
 		t.Run("case=session old error", func(t *testing.T) {

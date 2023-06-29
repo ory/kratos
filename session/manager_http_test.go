@@ -9,10 +9,12 @@ import (
 	"fmt"
 	"net/http"
 	"net/http/httptest"
+	"net/url"
 	"testing"
 	"time"
 
 	"github.com/ory/nosurf"
+	"github.com/ory/x/urlx"
 
 	"github.com/ory/kratos/driver"
 
@@ -98,7 +100,7 @@ func TestManagerHTTP(t *testing.T) {
 
 		require.NoError(t, conf.GetProvider(ctx).Set(config.ViperKeyPublicBaseURL, "https://baseurl.com/base_url"))
 
-		var getCookie = func(t *testing.T, req *http.Request) *http.Cookie {
+		getCookie := func(t *testing.T, req *http.Request) *http.Cookie {
 			rec := httptest.NewRecorder()
 			require.NoError(t, reg.SessionManager().IssueCookie(ctx, rec, req, s))
 			require.Len(t, rec.Result().Cookies(), 1)
@@ -405,7 +407,6 @@ func TestManagerHTTP(t *testing.T) {
 			})
 		})
 	})
-
 }
 
 func TestDoesSessionSatisfy(t *testing.T) {
@@ -438,11 +439,13 @@ func TestDoesSessionSatisfy(t *testing.T) {
 	amrPassword := session.AuthenticationMethod{Method: identity.CredentialsTypePassword, AAL: identity.AuthenticatorAssuranceLevel1}
 
 	for k, tc := range []struct {
-		d         string
-		err       error
-		requested identity.AuthenticatorAssuranceLevel
-		creds     []identity.Credentials
-		amr       session.AuthenticationMethods
+		d                     string
+		err                   error
+		requested             identity.AuthenticatorAssuranceLevel
+		creds                 []identity.Credentials
+		amr                   session.AuthenticationMethods
+		sessionManagerOptions []session.ManagerOptions
+		expectedFunc          func(t *testing.T, err error, tcError error)
 	}{
 		{
 			d:         "has=aal1, requested=highest, available=aal1, credential=password",
@@ -525,6 +528,28 @@ func TestDoesSessionSatisfy(t *testing.T) {
 			creds:     []identity.Credentials{oidc, webAuthEmpty, passwordEmpty},
 			amr:       session.AuthenticationMethods{{Method: identity.CredentialsTypeOIDC, AAL: identity.AuthenticatorAssuranceLevel1}},
 		},
+		{
+			d:                     "has=aal1, requested=highest, available=aal1, credentials=password+webauthn_mfa, recovery with session manager options",
+			requested:             config.HighestAvailableAAL,
+			creds:                 []identity.Credentials{password, mfaWebAuth},
+			amr:                   session.AuthenticationMethods{{Method: identity.CredentialsTypeRecoveryCode}},
+			err:                   session.NewErrAALNotSatisfied(urlx.CopyWithQuery(urlx.AppendPaths(conf.SelfPublicURL(context.Background()), "/self-service/login/browser"), url.Values{"aal": {"aal2"}, "return_to": {"https://myapp.com/settings?id=123"}}).String()),
+			sessionManagerOptions: []session.ManagerOptions{session.WithRequestURL("https://myapp.com/settings?id=123")},
+			expectedFunc: func(t *testing.T, err error, tcError error) {
+				require.Contains(t, err.(*session.ErrAALNotSatisfied).RedirectTo, "myapp.com")
+				require.Equal(t, tcError.(*session.ErrAALNotSatisfied).RedirectTo, err.(*session.ErrAALNotSatisfied).RedirectTo)
+			},
+		},
+		{
+			d:         "has=aal1, requested=highest, available=aal1, credentials=password+webauthn_mfa, recovery without session manager options",
+			requested: config.HighestAvailableAAL,
+			creds:     []identity.Credentials{password, mfaWebAuth},
+			amr:       session.AuthenticationMethods{{Method: identity.CredentialsTypeRecoveryCode}},
+			err:       session.NewErrAALNotSatisfied(urlx.CopyWithQuery(urlx.AppendPaths(conf.SelfPublicURL(context.Background()), "/self-service/login/browser"), url.Values{"aal": {"aal2"}}).String()),
+			expectedFunc: func(t *testing.T, err error, tcError error) {
+				require.Equal(t, tcError.(*session.ErrAALNotSatisfied).RedirectTo, err.(*session.ErrAALNotSatisfied).RedirectTo)
+			},
+		},
 	} {
 		t.Run(fmt.Sprintf("run=%d/desc=%s", k, tc.d), func(t *testing.T) {
 			id := identity.NewIdentity("")
@@ -543,17 +568,25 @@ func TestDoesSessionSatisfy(t *testing.T) {
 			}
 			require.NoError(t, s.Activate(req, id, conf, time.Now().UTC()))
 
-			err := reg.SessionManager().DoesSessionSatisfy((&http.Request{}).WithContext(context.Background()), s, string(tc.requested))
+			err := reg.SessionManager().DoesSessionSatisfy((&http.Request{}).WithContext(context.Background()), s, string(tc.requested), tc.sessionManagerOptions...)
 			if tc.err != nil {
+				if tc.expectedFunc != nil {
+					tc.expectedFunc(t, err, tc.err)
+				}
+
 				require.ErrorAs(t, err, &tc.err)
+
 			} else {
 				require.NoError(t, err)
 			}
 
 			// This should still work even if the session does not have identity data attached yet...
 			s.Identity = nil
-			err = reg.SessionManager().DoesSessionSatisfy((&http.Request{}).WithContext(context.Background()), s, string(tc.requested))
+			err = reg.SessionManager().DoesSessionSatisfy((&http.Request{}).WithContext(context.Background()), s, string(tc.requested), tc.sessionManagerOptions...)
 			if tc.err != nil {
+				if tc.expectedFunc != nil {
+					tc.expectedFunc(t, err, tc.err)
+				}
 				require.ErrorAs(t, err, &tc.err)
 			} else {
 				require.NoError(t, err)
@@ -562,8 +595,11 @@ func TestDoesSessionSatisfy(t *testing.T) {
 			// ..or no credentials attached.
 			s.Identity = id
 			s.Identity.Credentials = nil
-			err = reg.SessionManager().DoesSessionSatisfy((&http.Request{}).WithContext(context.Background()), s, string(tc.requested))
+			err = reg.SessionManager().DoesSessionSatisfy((&http.Request{}).WithContext(context.Background()), s, string(tc.requested), tc.sessionManagerOptions...)
 			if tc.err != nil {
+				if tc.expectedFunc != nil {
+					tc.expectedFunc(t, err, tc.err)
+				}
 				require.ErrorAs(t, err, &tc.err)
 			} else {
 				require.NoError(t, err)

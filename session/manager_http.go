@@ -65,6 +65,19 @@ func NewManagerHTTP(r managerHTTPDependencies) *ManagerHTTP {
 	}
 }
 
+type options struct {
+	requestURL string
+}
+
+type ManagerOptions func(*options)
+
+// WithRequestURL passes along query parameters from the requestURL to the new URL (if any exist)
+func WithRequestURL(requestURL string) ManagerOptions {
+	return func(opts *options) {
+		opts.requestURL = requestURL
+	}
+}
+
 func (s *ManagerHTTP) UpsertAndIssueCookie(ctx context.Context, w http.ResponseWriter, r *http.Request, ss *Session) (err error) {
 	ctx, span := s.r.Tracer(ctx).Tracer().Start(ctx, "sessions.ManagerHTTP.UpsertAndIssueCookie")
 	defer otelx.End(span, &err)
@@ -271,9 +284,15 @@ func (s *ManagerHTTP) PurgeFromRequest(ctx context.Context, w http.ResponseWrite
 	return nil
 }
 
-func (s *ManagerHTTP) DoesSessionSatisfy(r *http.Request, sess *Session, requestedAAL string) (err error) {
+func (s *ManagerHTTP) DoesSessionSatisfy(r *http.Request, sess *Session, requestedAAL string, opts ...ManagerOptions) (err error) {
 	ctx, span := s.r.Tracer(r.Context()).Tracer().Start(r.Context(), "sessions.ManagerHTTP.DoesSessionSatisfy")
 	defer otelx.End(span, &err)
+
+	managerOpts := &options{}
+
+	for _, o := range opts {
+		o(managerOpts)
+	}
 
 	sess.SetAuthenticatorAssuranceLevel()
 	switch requestedAAL {
@@ -313,8 +332,14 @@ func (s *ManagerHTTP) DoesSessionSatisfy(r *http.Request, sess *Session, request
 			return nil
 		}
 
-		return NewErrAALNotSatisfied(
-			urlx.CopyWithQuery(urlx.AppendPaths(s.r.Config().SelfPublicURL(ctx), "/self-service/login/browser"), url.Values{"aal": {"aal2"}}).String())
+		loginURL := urlx.CopyWithQuery(urlx.AppendPaths(s.r.Config().SelfPublicURL(ctx), "/self-service/login/browser"), url.Values{"aal": {"aal2"}})
+
+		// return to the requestURL if it was set
+		if managerOpts.requestURL != "" {
+			loginURL = urlx.CopyWithQuery(loginURL, url.Values{"return_to": {managerOpts.requestURL}})
+		}
+
+		return NewErrAALNotSatisfied(loginURL.String())
 	}
 
 	return errors.Errorf("requested unknown aal: %s", requestedAAL)
