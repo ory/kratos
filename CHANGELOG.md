@@ -5,7 +5,7 @@
 
 **Table of Contents**
 
-- [ (2023-06-28)](#2023-06-28)
+- [ (2023-06-29)](#2023-06-29)
   - [Bug Fixes](#bug-fixes)
   - [Documentation](#documentation)
   - [Features](#features)
@@ -302,7 +302,7 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# [](https://github.com/ory/kratos/compare/v0.13.0...v) (2023-06-28)
+# [](https://github.com/ory/kratos/compare/v0.13.0...v) (2023-06-29)
 
 ### Bug Fixes
 
@@ -344,6 +344,9 @@
   encodes the whole flow in the login challenge, we cannot further assume that
   the challenge is a UUID.
 
+- **e2e:** Install kratos-selfservice-ui-node peer deps
+  ([#3354](https://github.com/ory/kratos/issues/3354))
+  ([ce20063](https://github.com/ory/kratos/commit/ce20063a858acecb5d9124792fe6d3899bf95c1c))
 - Identity list pagination ([#3325](https://github.com/ory/kratos/issues/3325))
   ([9d3ef0d](https://github.com/ory/kratos/commit/9d3ef0df9333aff2c587005df0cdd263028029f3)):
 
@@ -386,6 +389,50 @@
 - **sdk:** Update the API spec to reflect the 204 NoContent in
   DeleteIdentityCredentials ([#3347](https://github.com/ory/kratos/issues/3347))
   ([f3dee86](https://github.com/ory/kratos/commit/f3dee869bef0e0dd2d36541823ae57d54ba5788e))
+- Settings should persist `return_to` after required mfa login flow
+  ([#3263](https://github.com/ory/kratos/issues/3263))
+  ([0ed1abd](https://github.com/ory/kratos/commit/0ed1abd391b6b5369862ee5db8faa4f4aaf68b09)):
+
+  - fix: get settings should persist `return_to` when redirecting to aal2
+
+  - feat(e2e): verify `return_to` persists in recovery flows
+
+  - test: recovery strategy with mfa account
+
+  - test: code recovery return to persists to settings with aal2
+
+  - u
+
+  - fix: return to settings flow after mfa login
+
+  - fix(test): login handler
+
+  - fix: flow between settings and mfa
+
+  - fix: get settings endpoint should redirect to settings ui instead of to
+    itself
+
+  - feat(test): preserve URL from various settings flows through login mfa flow
+
+  - chore: cleanup
+
+  - fix(e2e): recovery return to spa tests
+
+  - fix: e2e proxy
+
+  - fix: do not always redirect back to settings on mfa
+
+  - fix: new settings flow with required mfa shouldn't be added to login flow
+    return_to unless it contains a return_to parameter
+
+  - fix(e2e): let test dynamically handle required_aal
+
+  - chore: cleanup unused code
+
+  - test: `DoesSessionSatisfy` with method options
+
+  - test: recovery strategy with aal2
+
 - String to enum for updateVerificationFlowWithLinkMethod Method
   ([#3279](https://github.com/ory/kratos/issues/3279))
   ([34ff1d2](https://github.com/ory/kratos/commit/34ff1d2912e7f7aefb35dae759dce2eb37ecb790)),
