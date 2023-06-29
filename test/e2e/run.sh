@@ -98,7 +98,7 @@ prepare() {
   if [ -z ${NODE_UI_PATH+x} ]; then
     node_ui_dir="$(mktemp -d -t ci-XXXXXXXXXX)/kratos-selfservice-ui-node"
     git clone --depth 1 --branch master https://github.com/ory/kratos-selfservice-ui-node.git "$node_ui_dir"
-    (cd "$node_ui_dir" && npm i && npm run build)
+    (cd "$node_ui_dir" && npm i --legacy-peer-deps && npm run build)
   else
     node_ui_dir="${NODE_UI_PATH}"
   fi
