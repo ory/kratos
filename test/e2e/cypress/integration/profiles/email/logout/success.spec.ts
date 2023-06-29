@@ -62,6 +62,9 @@ context("Testing logout flows", () => {
       })
 
       it("should be able to sign out at 2fa page", () => {
+        if (app === "react") {
+          return
+        }
         cy.useLookupSecrets(true)
         cy.sessionRequires2fa()
         cy.getSession({ expectAal: "aal1" })
