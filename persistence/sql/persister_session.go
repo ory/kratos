@@ -39,9 +39,8 @@ func (p *Persister) GetSession(ctx context.Context, sid uuid.UUID, expandables s
 	nid := p.NetworkID(ctx)
 
 	q := p.GetConnection(ctx).Q()
-	// if len(expandables) > 0 {
 	if expandables.Has(session.ExpandSessionDevices) {
-		q = q.Eager(expandables.ToEager()...)
+		q = q.Eager(session.ExpandSessionDevices.String())
 	}
 
 	if err := q.Where("id = ? AND nid = ?", sid, nid).First(&s); err != nil {

@@ -221,7 +221,7 @@ func (s *ManagerHTTP) extractToken(r *http.Request) string {
 	return token
 }
 
-func (s *ManagerHTTP) FetchFromRequest(ctx context.Context, r *http.Request) (_ *Session, err error) {
+func (s *ManagerHTTP) FetchFromRequest(ctx context.Context, r *http.Request, sessionExpand ...Expandable) (_ *Session, err error) {
 	ctx, span := s.r.Tracer(ctx).Tracer().Start(ctx, "sessions.ManagerHTTP.FetchFromRequest")
 	defer func() {
 		if e := new(ErrNoActiveSessionFound); errors.As(err, &e) {
@@ -236,15 +236,18 @@ func (s *ManagerHTTP) FetchFromRequest(ctx context.Context, r *http.Request) (_ 
 		return nil, errors.WithStack(NewErrNoCredentialsForSession())
 	}
 
-	expand := identity.ExpandDefault
+	identityExpand := identity.ExpandDefault
+	if len(sessionExpand) > 0 {
+		identityExpand = sessionExpand
+	}
 	if s.r.Config().SessionWhoAmIAAL(r.Context()) == config.HighestAvailableAAL {
 		// When the session endpoint requires the highest AAL, we fetch all credentials immediately to save a
 		// query later in "DoesSessionSatisfy". This is a SQL optimization, because the identity manager fetches
 		// the data in parallel, which is a bit faster than fetching it in sequence.
-		expand = identity.ExpandEverything
+		identityExpand = append(identityExpand, identity.ExpandFieldCredentials)
 	}
 
-	se, err := s.r.SessionPersister().GetSessionByToken(ctx, token, ExpandEverything, expand)
+	se, err := s.r.SessionPersister().GetSessionByToken(ctx, token, sessionExpand, identityExpand)
 	if err != nil {
 		if errors.Is(err, herodot.ErrNotFound) || errors.Is(err, sqlcon.ErrNoRows) {
 			return nil, errors.WithStack(NewErrNoActiveSessionFound())

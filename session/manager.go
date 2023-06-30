@@ -127,8 +127,8 @@ type Manager interface {
 	// RefreshCookie checks if the request uses an outdated cookie and refreshes the cookie if needed.
 	RefreshCookie(context.Context, http.ResponseWriter, *http.Request, *Session) error
 
-	// FetchFromRequest creates an HTTP session using cookies.
-	FetchFromRequest(context.Context, *http.Request) (*Session, error)
+	// FetchFromRequest inspects the request cookies and retrieves the associated session from the database.
+	FetchFromRequest(context.Context, *http.Request, ...Expandable) (*Session, error)
 
 	// PurgeFromRequest removes an HTTP session.
 	PurgeFromRequest(context.Context, http.ResponseWriter, *http.Request) error

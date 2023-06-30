@@ -124,6 +124,17 @@ type toSession struct {
 	//
 	// in: header
 	Cookie string `json:"Cookie"`
+
+	// ExpandOptions is a query parameter encoded list of all properties that should be included in the session information response.
+	// Example - ?expand=identity&expand=devices
+	// Defaults to expand=identity.
+	// Querying for PII (personally identifiable information) always reaches to the identity's home region, which incurs additional latency.
+	// To check for session validity and nothing else, use `?expand=`.
+	//
+	// required: false
+	// enum: identity,devices
+	// in: query
+	ExpandOptions []string `json:"expand"`
 }
 
 // swagger:route GET /sessions/whoami frontend toSession
@@ -190,8 +201,17 @@ type toSession struct {
 //	  401: errorGeneric
 //	  403: errorGeneric
 //	  default: errorGeneric
-func (h *Handler) whoami(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	s, err := h.r.SessionManager().FetchFromRequest(r.Context(), r)
+func (h *Handler) whoami(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+	expandables := ExpandDefault
+	if es, ok := r.URL.Query()["expand"]; ok {
+		var err error
+		expandables, err = ParseExpandables(es)
+		if err != nil {
+			h.r.Writer().WriteError(w, r, errors.WithStack(herodot.ErrBadRequest.WithReasonf("Could not parse expand option: %v", err)))
+			return
+		}
+	}
+	s, err := h.r.SessionManager().FetchFromRequest(r.Context(), r, expandables...)
 	c := h.r.Config()
 	if err != nil {
 		// We cache errors (and set cache header only when configured) where no session was found.
@@ -219,7 +239,7 @@ func (h *Handler) whoami(w http.ResponseWriter, r *http.Request, ps httprouter.P
 	s.Identity = s.Identity.CopyWithoutCredentials()
 
 	// Set userId as the X-Kratos-Authenticated-Identity-Id header.
-	w.Header().Set("X-Kratos-Authenticated-Identity-Id", s.Identity.ID.String())
+	w.Header().Set("X-Kratos-Authenticated-Identity-Id", s.IdentityID.String())
 
 	// Set Cache header only when configured
 	if c.SessionWhoAmICaching(r.Context()) {
@@ -357,15 +377,12 @@ func (h *Handler) adminListSessions(w http.ResponseWriter, r *http.Request, ps h
 		return
 	}
 
-	var expandables Expandables
+	expandables := ExpandNothing
 	if es, ok := r.URL.Query()["expand"]; ok {
-		for _, e := range es {
-			expand, ok := ParseExpandable(e)
-			if !ok {
-				h.r.Writer().WriteError(w, r, errors.WithStack(herodot.ErrBadRequest.WithReasonf("Could not parse expand option: %s", e)))
-				return
-			}
-			expandables = append(expandables, expand)
+		var err error
+		expandables, err = ParseExpandables(es)
+		if err != nil {
+			h.r.Writer().WriteError(w, r, errors.WithStack(herodot.ErrBadRequest.WithReasonf("Could not parse expand option: %v", err)))
 		}
 	}
 
@@ -435,17 +452,12 @@ func (h *Handler) getSession(w http.ResponseWriter, r *http.Request, ps httprout
 		return
 	}
 
-	var expandables Expandables
-
-	urlValues := r.URL.Query()
-	if es, ok := urlValues["expand"]; ok {
-		for _, e := range es {
-			expand, ok := ParseExpandable(e)
-			if !ok {
-				h.r.Writer().WriteError(w, r, errors.WithStack(herodot.ErrBadRequest.WithReasonf("Could not parse expand option: %s", e)))
-				return
-			}
-			expandables = append(expandables, expand)
+	expandables := Expandables{ExpandSessionIdentity}
+	if es, ok := r.URL.Query()["expand"]; ok {
+		var err error
+		expandables, err = ParseExpandables(es)
+		if err != nil {
+			h.r.Writer().WriteError(w, r, errors.WithStack(herodot.ErrBadRequest.WithReasonf("Could not parse expand option: %v", err)))
 		}
 	}
 
