@@ -12,3 +12,6 @@ var recoveryMethodSchema []byte
 
 //go:embed .schema/verification.schema.json
 var verificationMethodSchema []byte
+
+//go:embed .schema/login.schema.json
+var loginMethodSchema []byte

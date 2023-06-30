@@ -149,7 +149,7 @@ func NewFlow(conf *config.Config, exp time.Duration, csrf string, r *http.Reques
 	}
 
 	if strategy != nil {
-		f.Active = sqlxx.NullString(strategy.VerificationNodeGroup())
+		f.Active = sqlxx.NullString(strategy.NodeGroup())
 		if err := strategy.PopulateVerificationMethod(r, f); err != nil {
 			return nil, err
 		}

@@ -430,12 +430,12 @@ func (h *Handler) updateRecoveryFlow(w http.ResponseWriter, r *http.Request, ps 
 		} else if errors.Is(err, flow.ErrCompletedByStrategy) {
 			return
 		} else if err != nil {
-			h.d.RecoveryFlowErrorHandler().WriteFlowError(w, r, f, ss.RecoveryNodeGroup(), err)
+			h.d.RecoveryFlowErrorHandler().WriteFlowError(w, r, f, ss.NodeGroup(), err)
 			return
 		}
 
 		found = true
-		g = ss.RecoveryNodeGroup()
+		g = ss.NodeGroup()
 		break
 	}
 

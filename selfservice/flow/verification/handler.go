@@ -427,12 +427,12 @@ func (h *Handler) updateVerificationFlow(w http.ResponseWriter, r *http.Request,
 		} else if errors.Is(err, flow.ErrCompletedByStrategy) {
 			return
 		} else if err != nil {
-			h.d.VerificationFlowErrorHandler().WriteFlowError(w, r, f, ss.VerificationNodeGroup(), err)
+			h.d.VerificationFlowErrorHandler().WriteFlowError(w, r, f, ss.NodeGroup(), err)
 			return
 		}
 
 		found = true
-		g = ss.VerificationNodeGroup()
+		g = ss.NodeGroup()
 		break
 	}
 

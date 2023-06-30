@@ -94,6 +94,8 @@ func (c CredentialsType) ToUiNodeGroup() node.UiNodeGroup {
 		return node.WebAuthnGroup
 	case CredentialsTypeLookup:
 		return node.LookupGroup
+	case CredentialsTypeCodeAuth:
+		return node.CodeGroup
 	default:
 		return node.DefaultGroup
 	}
@@ -106,6 +108,7 @@ const (
 	CredentialsTypeTOTP     CredentialsType = "totp"
 	CredentialsTypeLookup   CredentialsType = "lookup_secret"
 	CredentialsTypeWebAuthn CredentialsType = "webauthn"
+	CredentialsTypeCodeAuth CredentialsType = "code"
 )
 
 var AllCredentialTypes = []CredentialsType{
@@ -131,6 +134,7 @@ func ParseCredentialsType(in string) (CredentialsType, bool) {
 		CredentialsTypeTOTP,
 		CredentialsTypeLookup,
 		CredentialsTypeWebAuthn,
+		CredentialsTypeCodeAuth,
 		CredentialsTypeRecoveryLink,
 		CredentialsTypeRecoveryCode,
 	} {

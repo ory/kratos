@@ -133,7 +133,7 @@ func NewFlow(conf *config.Config, exp time.Duration, csrf string, r *http.Reques
 	}
 
 	if strategy != nil {
-		flow.Active = sqlxx.NullString(strategy.RecoveryNodeGroup())
+		flow.Active = sqlxx.NullString(strategy.NodeGroup())
 		if err := strategy.PopulateRecoveryMethod(r, flow); err != nil {
 			return nil, err
 		}

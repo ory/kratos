@@ -281,7 +281,7 @@ func (s Strategy) isCodeFlow(f *recovery.Flow) bool {
 	if err != nil {
 		return false
 	}
-	return value == s.RecoveryNodeGroup().String()
+	return value == s.NodeGroup().String()
 }
 
 func (s *Strategy) Recover(w http.ResponseWriter, r *http.Request, f *recovery.Flow) (err error) {
@@ -539,13 +539,13 @@ func (s *Strategy) recoveryHandleFormSubmission(w http.ResponseWriter, r *http.R
 
 	f.UI.SetCSRF(s.deps.GenerateCSRFToken(r))
 
-	f.Active = sqlxx.NullString(s.RecoveryNodeGroup())
+	f.Active = sqlxx.NullString(s.NodeGroup())
 	f.State = recovery.StateEmailSent
 	f.UI.Messages.Set(text.NewRecoveryEmailWithCodeSent())
 	f.UI.Nodes.Append(node.NewInputField("code", nil, node.CodeGroup, node.InputAttributeTypeText, node.WithRequiredInputAttribute).
 		WithMetaLabel(text.NewInfoNodeLabelRecoveryCode()),
 	)
-	f.UI.Nodes.Append(node.NewInputField("method", s.RecoveryNodeGroup(), node.CodeGroup, node.InputAttributeTypeHidden))
+	f.UI.Nodes.Append(node.NewInputField("method", s.NodeGroup(), node.CodeGroup, node.InputAttributeTypeHidden))
 
 	f.UI.
 		GetNodes().
