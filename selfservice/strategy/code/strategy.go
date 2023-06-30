@@ -9,7 +9,9 @@ import (
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/schema"
 	"github.com/ory/kratos/selfservice/errorx"
+	"github.com/ory/kratos/selfservice/flow/login"
 	"github.com/ory/kratos/selfservice/flow/recovery"
+	"github.com/ory/kratos/selfservice/flow/registration"
 	"github.com/ory/kratos/selfservice/flow/settings"
 	"github.com/ory/kratos/selfservice/flow/verification"
 	"github.com/ory/kratos/session"
@@ -27,6 +29,9 @@ var _ recovery.PublicHandler = new(Strategy)
 var _ verification.Strategy = new(Strategy)
 var _ verification.AdminHandler = new(Strategy)
 var _ verification.PublicHandler = new(Strategy)
+
+var _ login.Strategy = new(Strategy)
+var _ registration.Strategy = new(Strategy)
 
 type (
 	// FlowMethod contains the configuration for this selfservice strategy.
@@ -65,6 +70,12 @@ type (
 		verification.StrategyProvider
 		verification.HookExecutorProvider
 
+		login.StrategyProvider
+		login.HookExecutorProvider
+		login.FlowPersistenceProvider
+
+		registration.StrategyProvider
+
 		RecoveryCodePersistenceProvider
 		VerificationCodePersistenceProvider
 		SenderProvider
@@ -82,11 +93,7 @@ func NewStrategy(deps strategyDependencies) *Strategy {
 	return &Strategy{deps: deps, dx: decoderx.NewHTTP()}
 }
 
-func (s *Strategy) RecoveryNodeGroup() node.UiNodeGroup {
-	return node.CodeGroup
-}
-
-func (s *Strategy) VerificationNodeGroup() node.UiNodeGroup {
+func (s *Strategy) NodeGroup() node.UiNodeGroup {
 	return node.CodeGroup
 }
 

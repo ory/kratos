@@ -48,7 +48,7 @@ func (s *Strategy) PopulateVerificationMethod(r *http.Request, f *verification.F
 		)
 		// Required for the re-send code button
 		nodes.Append(
-			node.NewInputField("method", s.VerificationNodeGroup(), node.CodeGroup, node.InputAttributeTypeHidden),
+			node.NewInputField("method", s.NodeGroup(), node.CodeGroup, node.InputAttributeTypeHidden),
 		)
 		f.UI.Messages.Set(text.NewVerificationEmailWithCodeSent())
 	default:
