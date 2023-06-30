@@ -21,6 +21,7 @@ type (
 		To          string
 		RecoveryURL string
 		Identity    map[string]interface{}
+		Branding    string
 	}
 )
 

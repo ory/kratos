@@ -62,7 +62,7 @@ func NewSender(deps senderDependencies) *Sender {
 // SendRecoveryCode sends a recovery code to the specified address.
 // If the address does not exist in the store, an email is still being sent to prevent account
 // enumeration attacks. In that case, this function returns the ErrUnknownAddress error.
-func (s *Sender) SendRecoveryCode(ctx context.Context, r *http.Request, f *recovery.Flow, via identity.VerifiableAddressType, to string) error {
+func (s *Sender) SendRecoveryCode(ctx context.Context, r *http.Request, f *recovery.Flow, via identity.VerifiableAddressType, to string, branding string) error {
 	s.deps.Logger().
 		WithField("via", via).
 		WithSensitiveField("address", to).
@@ -98,10 +98,10 @@ func (s *Sender) SendRecoveryCode(ctx context.Context, r *http.Request, f *recov
 		return err
 	}
 
-	return s.SendRecoveryCodeTo(ctx, i, rawCode, code)
+	return s.SendRecoveryCodeTo(ctx, i, rawCode, code, branding)
 }
 
-func (s *Sender) SendRecoveryCodeTo(ctx context.Context, i *identity.Identity, codeString string, code *RecoveryCode) error {
+func (s *Sender) SendRecoveryCodeTo(ctx context.Context, i *identity.Identity, codeString string, code *RecoveryCode, branding string) error {
 	s.deps.Audit().
 		WithField("via", code.RecoveryAddress.Via).
 		WithField("identity_id", code.RecoveryAddress.IdentityID).
@@ -119,6 +119,7 @@ func (s *Sender) SendRecoveryCodeTo(ctx context.Context, i *identity.Identity, c
 		To:           code.RecoveryAddress.Value,
 		RecoveryCode: codeString,
 		Identity:     model,
+		Branding:     branding,
 	}
 
 	return s.send(ctx, string(code.RecoveryAddress.Via), email.NewRecoveryCodeValid(s.deps, &emailModel))
@@ -127,7 +128,7 @@ func (s *Sender) SendRecoveryCodeTo(ctx context.Context, i *identity.Identity, c
 // SendVerificationCode sends a verification link to the specified address. If the address does not exist in the store, an email is
 // still being sent to prevent account enumeration attacks. In that case, this function returns the ErrUnknownAddress
 // error.
-func (s *Sender) SendVerificationCode(ctx context.Context, f *verification.Flow, via identity.VerifiableAddressType, to string) error {
+func (s *Sender) SendVerificationCode(ctx context.Context, f *verification.Flow, via identity.VerifiableAddressType, to string, branding string) error {
 	s.deps.Logger().
 		WithField("via", via).
 		WithSensitiveField("address", to).
@@ -165,7 +166,7 @@ func (s *Sender) SendVerificationCode(ctx context.Context, f *verification.Flow,
 		return err
 	}
 
-	if err := s.SendVerificationCodeTo(ctx, f, i, rawCode, code); err != nil {
+	if err := s.SendVerificationCodeTo(ctx, f, i, rawCode, code, branding); err != nil {
 		return err
 	}
 	return nil
@@ -180,7 +181,7 @@ func (s *Sender) constructVerificationLink(ctx context.Context, fID uuid.UUID, c
 		}).String()
 }
 
-func (s *Sender) SendVerificationCodeTo(ctx context.Context, f *verification.Flow, i *identity.Identity, codeString string, code *VerificationCode) error {
+func (s *Sender) SendVerificationCodeTo(ctx context.Context, f *verification.Flow, i *identity.Identity, codeString string, code *VerificationCode, branding string) error {
 	s.deps.Audit().
 		WithField("via", code.VerifiableAddress.Via).
 		WithField("identity_id", i.ID).
@@ -200,6 +201,7 @@ func (s *Sender) SendVerificationCodeTo(ctx context.Context, f *verification.Flo
 			VerificationURL:  s.constructVerificationLink(ctx, f.ID, codeString),
 			Identity:         model,
 			VerificationCode: codeString,
+			Branding:         branding,
 		})); err != nil {
 		return err
 	}

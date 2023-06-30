@@ -21,6 +21,7 @@ type (
 		To              string
 		VerificationURL string
 		Identity        map[string]interface{}
+		Branding        string
 	}
 )
 

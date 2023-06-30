@@ -245,6 +245,17 @@ func TestVerification(t *testing.T) {
 		testhelpers.AssertMessage(t, []byte(body), "The verification code is invalid or has already been used. Please try again.")
 	})
 
+	t.Run("description=should save branding to template data", func(t *testing.T) {
+		c := testhelpers.NewClientWithCookies(t)
+		testhelpers.SubmitVerificationForm(t, false, false, c, public, func(v url.Values) {
+			v.Set("email", verificationEmail)
+			v.Set("branding", "brand-1")
+		}, 200, "")
+
+		message := testhelpers.CourierExpectMessage(t, reg, verificationEmail, "Please verify your email address")
+		assert.Equal(t, "brand-1", gjson.GetBytes(message.TemplateData, "Branding").String(), "%s", message.TemplateData)
+	})
+
 	t.Run("description=should not be able to submit email in expired flow", func(t *testing.T) {
 		conf.MustSet(ctx, config.ViperKeySelfServiceVerificationRequestLifespan, time.Millisecond*10)
 		t.Cleanup(func() {

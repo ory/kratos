@@ -19,6 +19,9 @@
     },
     "csrf_token": {
       "type": "string"
+    },
+    "branding": {
+      "type": "string"
     }
   }
 }

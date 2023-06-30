@@ -62,7 +62,7 @@ func NewSender(r senderDependencies) *Sender {
 // SendRecoveryLink sends a recovery link to the specified address. If the address does not exist in the store, an email is
 // still being sent to prevent account enumeration attacks. In that case, this function returns the ErrUnknownAddress
 // error.
-func (s *Sender) SendRecoveryLink(ctx context.Context, r *http.Request, f *recovery.Flow, via identity.VerifiableAddressType, to string) error {
+func (s *Sender) SendRecoveryLink(ctx context.Context, r *http.Request, f *recovery.Flow, via identity.VerifiableAddressType, to string, branding string) error {
 	s.r.Logger().
 		WithField("via", via).
 		WithSensitiveField("address", to).
@@ -87,7 +87,7 @@ func (s *Sender) SendRecoveryLink(ctx context.Context, r *http.Request, f *recov
 		return err
 	}
 
-	if err := s.SendRecoveryTokenTo(ctx, f, i, address, token); err != nil {
+	if err := s.SendRecoveryTokenTo(ctx, f, i, address, token, branding); err != nil {
 		return err
 	}
 
@@ -97,7 +97,7 @@ func (s *Sender) SendRecoveryLink(ctx context.Context, r *http.Request, f *recov
 // SendVerificationLink sends a verification link to the specified address. If the address does not exist in the store, an email is
 // still being sent to prevent account enumeration attacks. In that case, this function returns the ErrUnknownAddress
 // error.
-func (s *Sender) SendVerificationLink(ctx context.Context, f *verification.Flow, via identity.VerifiableAddressType, to string) error {
+func (s *Sender) SendVerificationLink(ctx context.Context, f *verification.Flow, via identity.VerifiableAddressType, to string, branding string) error {
 	s.r.Logger().
 		WithField("via", via).
 		WithSensitiveField("address", to).
@@ -129,13 +129,13 @@ func (s *Sender) SendVerificationLink(ctx context.Context, f *verification.Flow,
 		return err
 	}
 
-	if err := s.SendVerificationTokenTo(ctx, f, i, address, token); err != nil {
+	if err := s.SendVerificationTokenTo(ctx, f, i, address, token, branding); err != nil {
 		return err
 	}
 	return nil
 }
 
-func (s *Sender) SendRecoveryTokenTo(ctx context.Context, f *recovery.Flow, i *identity.Identity, address *identity.RecoveryAddress, token *RecoveryToken) error {
+func (s *Sender) SendRecoveryTokenTo(ctx context.Context, f *recovery.Flow, i *identity.Identity, address *identity.RecoveryAddress, token *RecoveryToken, branding string) error {
 	s.r.Audit().
 		WithField("via", address.Via).
 		WithField("identity_id", address.IdentityID).
@@ -155,10 +155,10 @@ func (s *Sender) SendRecoveryTokenTo(ctx context.Context, f *recovery.Flow, i *i
 			url.Values{
 				"token": {token.Token},
 				"flow":  {f.ID.String()},
-			}).String(), Identity: model}))
+			}).String(), Identity: model, Branding: branding}))
 }
 
-func (s *Sender) SendVerificationTokenTo(ctx context.Context, f *verification.Flow, i *identity.Identity, address *identity.VerifiableAddress, token *VerificationToken) error {
+func (s *Sender) SendVerificationTokenTo(ctx context.Context, f *verification.Flow, i *identity.Identity, address *identity.VerifiableAddress, token *VerificationToken, branding string) error {
 	s.r.Audit().
 		WithField("via", address.Via).
 		WithField("identity_id", address.IdentityID).
@@ -178,7 +178,7 @@ func (s *Sender) SendVerificationTokenTo(ctx context.Context, f *verification.Fl
 			url.Values{
 				"flow":  {f.ID.String()},
 				"token": {token.Token},
-			}).String(), Identity: model})); err != nil {
+			}).String(), Identity: model, Branding: branding})); err != nil {
 		return err
 	}
 	address.Status = identity.VerifiableAddressStatusSent

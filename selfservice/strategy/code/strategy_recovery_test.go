@@ -399,6 +399,22 @@ func TestRecovery(t *testing.T) {
 		assert.Equal(t, status, addr.Status, "verifiable address %s was not %s. instead %", email, status, addr.Status)
 	}
 
+	t.Run("description=should save branding to template data", func(t *testing.T) {
+
+		t.Run("type=browser", func(t *testing.T) {
+			client := testhelpers.NewClientWithCookies(t)
+			email := "recover-with-branding@ory.sh"
+			createIdentityToRecover(t, reg, email)
+			submitRecovery(t, client, RecoveryFlowTypeBrowser, func(v url.Values) {
+				v.Set("email", email)
+				v.Set("branding", "brand-1")
+			}, http.StatusOK)
+
+			message := testhelpers.CourierExpectMessage(t, reg, email, "Recover access to your account")
+			assert.Equal(t, "brand-1", gjson.GetBytes(message.TemplateData, "Branding").String(), "%s", message.TemplateData)
+		})
+	})
+
 	t.Run("description=should recover an account", func(t *testing.T) {
 		var checkRecovery = func(t *testing.T, client *http.Client, flowType, recoveryEmail, recoverySubmissionResponse, returnTo string) string {
 

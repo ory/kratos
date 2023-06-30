@@ -783,6 +783,20 @@ func TestRecovery(t *testing.T) {
 		assert.Nil(t, addr.VerifiedAt)
 		assert.Equal(t, identity.VerifiableAddressStatusPending, addr.Status)
 	})
+
+	t.Run("description=should save branding to template data", func(t *testing.T) {
+		t.Run("type=browser", func(t *testing.T) {
+			email := "recover-with-branding@ory.sh"
+			createIdentityToRecover(t, reg, email)
+			expectSuccess(t, nil, false, false, func(v url.Values) {
+				v.Set("email", email)
+				v.Set("branding", "brand-1")
+			})
+
+			message := testhelpers.CourierExpectMessage(t, reg, email, "Recover access to your account")
+			assert.Equal(t, "brand-1", gjson.GetBytes(message.TemplateData, "Branding").String(), "%s", message.TemplateData)
+		})
+	})
 }
 
 func TestDisabledEndpoint(t *testing.T) {

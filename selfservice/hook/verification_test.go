@@ -4,7 +4,9 @@
 package hook_test
 
 import (
+	"bytes"
 	"context"
+	"github.com/tidwall/gjson"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -28,12 +30,19 @@ import (
 	"github.com/ory/kratos/session"
 	"github.com/ory/kratos/x"
 	"github.com/ory/x/sqlxx"
-	"github.com/ory/x/urlx"
 )
 
 func TestVerifier(t *testing.T) {
 	ctx := context.Background()
-	u := &http.Request{URL: urlx.ParseOrPanic("https://www.ory.sh/")}
+	u, err := http.NewRequest(
+		http.MethodPost,
+		"https://www.ory.sh/",
+		bytes.NewReader([]byte("branding=brand-1")),
+	)
+	if err != nil {
+		return
+	}
+	u.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 	for k, hf := range map[string]func(*hook.Verifier, *identity.Identity, flow.Flow) error{
 		"settings": func(h *hook.Verifier, i *identity.Identity, f flow.Flow) error {
 			return h.ExecuteSettingsPostPersistHook(
@@ -104,6 +113,7 @@ func TestVerifier(t *testing.T) {
 			recipients := make([]string, len(messages))
 			for k, m := range messages {
 				recipients[k] = m.Recipient
+				assert.Equal(t, "brand-1", gjson.GetBytes(m.TemplateData, "Branding").String())
 			}
 
 			assert.Contains(t, recipients, "foo@ory.sh")
