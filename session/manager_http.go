@@ -65,7 +65,6 @@ func (s *ManagerHTTP) UpsertAndIssueCookie(ctx context.Context, w http.ResponseW
 	ctx, span := s.r.Tracer(ctx).Tracer().Start(ctx, "sessions.ManagerHTTP.UpsertAndIssueCookie")
 	defer otelx.End(span, &err)
 
-	isNew := ss.ID == uuid.Nil
 	if err := s.r.SessionPersister().UpsertSession(ctx, ss); err != nil {
 		return err
 	}
