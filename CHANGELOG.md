@@ -5,7 +5,7 @@
 
 **Table of Contents**
 
-- [ (2023-06-29)](#2023-06-29)
+- [ (2023-07-04)](#2023-07-04)
   - [Bug Fixes](#bug-fixes)
   - [Documentation](#documentation)
   - [Features](#features)
@@ -302,7 +302,7 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# [](https://github.com/ory/kratos/compare/v0.13.0...v) (2023-06-29)
+# [](https://github.com/ory/kratos/compare/v0.13.0...v) (2023-07-04)
 
 ### Bug Fixes
 
@@ -378,6 +378,9 @@
 
 - Remove codeball
   ([aa29606](https://github.com/ory/kratos/commit/aa296067e2736cad329814f7acffd816ce0d74a3))
+- Remove duplicate SessionIssued event
+  ([#3351](https://github.com/ory/kratos/issues/3351))
+  ([b1e78ad](https://github.com/ory/kratos/commit/b1e78ad3e39418695639e521ddceb64589455d87))
 - Return HTTP 400 instead of 500 for bad query parameters
   ([58258eb](https://github.com/ory/kratos/commit/58258eba99aa15f2ac852123c0200f56518ecb2a))
 - **sdk:** Add cookie for updateLogoutFlow
@@ -461,6 +464,20 @@
 - Add distroless and static images
   ([#3350](https://github.com/ory/kratos/issues/3350))
   ([1e65662](https://github.com/ory/kratos/commit/1e65662c92b107290466c20de38bbdc0571b596a))
+- Add return_to parameters to the `createLogout` handler
+  ([#3336](https://github.com/ory/kratos/issues/3336))
+  ([08fed36](https://github.com/ory/kratos/commit/08fed36973274ef294491d00811bc867f1537d62)):
+
+  - feat: add return_to parameters to the `createLogout` handler
+
+  - test: logout take over return_to from create to update
+
+  - test(e2e): logout return to
+
+  - test(e2e): logout return to
+
+  - test: logout return_to isnt applicable to react
+
 - Allow customization of JOIN predicate in QueryForCredentials
   ([#3253](https://github.com/ory/kratos/issues/3253))
   ([8785166](https://github.com/ory/kratos/commit/87851668e776404aabbfbc67af73a43ea3ee28fc))
