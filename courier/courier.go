@@ -22,6 +22,7 @@ import (
 type (
 	Dependencies interface {
 		PersistenceProvider
+		x.TracingProvider
 		x.LoggingProvider
 		ConfigProvider
 		x.HTTPClientProvider
@@ -51,6 +52,7 @@ type (
 	courier struct {
 		smsClient   *smsClient
 		smtpClient  *smtpClient
+		httpClient  *httpClient
 		deps        Dependencies
 		failOnError bool
 		backoff     backoff.BackOff
@@ -65,6 +67,7 @@ func NewCourier(ctx context.Context, deps Dependencies) (Courier, error) {
 	return &courier{
 		smsClient:  newSMS(ctx, deps),
 		smtpClient: smtp,
+		httpClient: newHTTP(ctx, deps),
 		deps:       deps,
 		backoff:    backoff.NewExponentialBackOff(),
 	}, nil
