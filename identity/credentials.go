@@ -31,7 +31,6 @@ const (
 	NoAuthenticatorAssuranceLevel AuthenticatorAssuranceLevel = "aal0"
 	AuthenticatorAssuranceLevel1  AuthenticatorAssuranceLevel = "aal1"
 	AuthenticatorAssuranceLevel2  AuthenticatorAssuranceLevel = "aal2"
-	AuthenticatorAssuranceLevel3  AuthenticatorAssuranceLevel = "aal3"
 )
 
 // CredentialsType  represents several different credential types, like password credentials, passwordless credentials,
