@@ -377,6 +377,9 @@
 
   - chore: remove obsolete config tracer
 
+- Reduce lookups in whoami call
+  ([#3364](https://github.com/ory/kratos/issues/3364))
+  ([5bb7b0c](https://github.com/ory/kratos/commit/5bb7b0c83b330ee893bdeb4e636655179bd29e39))
 - Remove codeball
   ([aa29606](https://github.com/ory/kratos/commit/aa296067e2736cad329814f7acffd816ce0d74a3))
 - Remove duplicate SessionIssued event
