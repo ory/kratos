@@ -28,8 +28,6 @@ func TestCredentialsEqual(t *testing.T) {
 func TestAALOrder(t *testing.T) {
 	assert.True(t, NoAuthenticatorAssuranceLevel < AuthenticatorAssuranceLevel1)
 	assert.True(t, AuthenticatorAssuranceLevel1 < AuthenticatorAssuranceLevel2)
-	assert.True(t, AuthenticatorAssuranceLevel1 < AuthenticatorAssuranceLevel3)
-	assert.True(t, AuthenticatorAssuranceLevel2 < AuthenticatorAssuranceLevel3)
 }
 
 func TestParseCredentialsType(t *testing.T) {

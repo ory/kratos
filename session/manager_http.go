@@ -226,13 +226,6 @@ func (s *ManagerHTTP) FetchFromRequest(ctx context.Context, r *http.Request) (_ 
 	}
 
 	expand := identity.ExpandDefault
-	if s.r.Config().SessionWhoAmIAAL(r.Context()) == config.HighestAvailableAAL {
-		// When the session endpoint requires the highest AAL, we fetch all credentials immediately to save a
-		// query later in "DoesSessionSatisfy". This is a SQL optimization, because the identity manager fetches
-		// the data in parallel, which is a bit faster than fetching it in sequence.
-		expand = identity.ExpandEverything
-	}
-
 	se, err := s.r.SessionPersister().GetSessionByToken(ctx, token, ExpandEverything, expand)
 	if err != nil {
 		if errors.Is(err, herodot.ErrNotFound) || errors.Is(err, sqlcon.ErrNoRows) {
@@ -276,6 +269,11 @@ func (s *ManagerHTTP) PurgeFromRequest(ctx context.Context, w http.ResponseWrite
 func (s *ManagerHTTP) DoesSessionSatisfy(r *http.Request, sess *Session, requestedAAL string, opts ...ManagerOptions) (err error) {
 	ctx, span := s.r.Tracer(r.Context()).Tracer().Start(r.Context(), "sessions.ManagerHTTP.DoesSessionSatisfy")
 	defer otelx.End(span, &err)
+
+	// If we already have AAL2 there is no need to check further because it is the highest AAL.
+	if sess.AuthenticatorAssuranceLevel > identity.AuthenticatorAssuranceLevel1 {
+		return nil
+	}
 
 	managerOpts := &options{}
 
