@@ -5,11 +5,12 @@
 
 **Table of Contents**
 
-- [ (2023-07-04)](#2023-07-04)
+- [ (2023-07-05)](#2023-07-05)
   - [Bug Fixes](#bug-fixes)
   - [Documentation](#documentation)
   - [Features](#features)
   - [Tests](#tests)
+  - [Unclassified](#unclassified)
 - [0.13.0 (2023-04-18)](#0130-2023-04-18)
   - [Breaking Changes](#breaking-changes)
     - [Bug Fixes](#bug-fixes-1)
@@ -18,7 +19,7 @@
     - [Documentation](#documentation-1)
     - [Features](#features-1)
     - [Tests](#tests-1)
-    - [Unclassified](#unclassified)
+    - [Unclassified](#unclassified-1)
 - [0.11.1 (2023-01-14)](#0111-2023-01-14)
   - [Breaking Changes](#breaking-changes-1)
     - [Bug Fixes](#bug-fixes-2)
@@ -35,7 +36,7 @@
     - [Features](#features-3)
     - [Reverts](#reverts)
     - [Tests](#tests-3)
-    - [Unclassified](#unclassified-1)
+    - [Unclassified](#unclassified-2)
 - [0.10.1 (2022-06-01)](#0101-2022-06-01)
   - [Bug Fixes](#bug-fixes-4)
   - [Code Generation](#code-generation-3)
@@ -47,7 +48,7 @@
     - [Documentation](#documentation-4)
     - [Features](#features-4)
     - [Tests](#tests-4)
-    - [Unclassified](#unclassified-2)
+    - [Unclassified](#unclassified-3)
 - [0.9.0-alpha.3 (2022-03-25)](#090-alpha3-2022-03-25)
   - [Breaking Changes](#breaking-changes-4)
     - [Bug Fixes](#bug-fixes-6)
@@ -64,7 +65,7 @@
     - [Documentation](#documentation-6)
     - [Features](#features-5)
     - [Tests](#tests-5)
-    - [Unclassified](#unclassified-3)
+    - [Unclassified](#unclassified-4)
 - [0.8.3-alpha.1.pre.0 (2022-01-21)](#083-alpha1pre0-2022-01-21)
   - [Breaking Changes](#breaking-changes-6)
     - [Bug Fixes](#bug-fixes-9)
@@ -104,7 +105,7 @@
     - [Features](#features-9)
     - [Reverts](#reverts-1)
     - [Tests](#tests-9)
-    - [Unclassified](#unclassified-4)
+    - [Unclassified](#unclassified-5)
 - [0.7.6-alpha.1 (2021-09-12)](#076-alpha1-2021-09-12)
   - [Code Generation](#code-generation-15)
 - [0.7.5-alpha.1 (2021-09-11)](#075-alpha1-2021-09-11)
@@ -133,7 +134,7 @@
     - [Documentation](#documentation-15)
     - [Features](#features-12)
     - [Tests](#tests-12)
-    - [Unclassified](#unclassified-5)
+    - [Unclassified](#unclassified-6)
 - [0.6.3-alpha.1 (2021-05-17)](#063-alpha1-2021-05-17)
   - [Breaking Changes](#breaking-changes-10)
     - [Bug Fixes](#bug-fixes-19)
@@ -157,14 +158,14 @@
     - [Documentation](#documentation-17)
     - [Features](#features-15)
     - [Tests](#tests-13)
-    - [Unclassified](#unclassified-6)
+    - [Unclassified](#unclassified-7)
 - [0.5.5-alpha.1 (2020-12-09)](#055-alpha1-2020-12-09)
   - [Bug Fixes](#bug-fixes-22)
   - [Code Generation](#code-generation-26)
   - [Documentation](#documentation-18)
   - [Features](#features-16)
   - [Tests](#tests-14)
-  - [Unclassified](#unclassified-7)
+  - [Unclassified](#unclassified-8)
 - [0.5.4-alpha.1 (2020-11-11)](#054-alpha1-2020-11-11)
   - [Bug Fixes](#bug-fixes-23)
   - [Code Generation](#code-generation-27)
@@ -188,7 +189,7 @@
   - [Documentation](#documentation-22)
   - [Features](#features-19)
   - [Tests](#tests-17)
-  - [Unclassified](#unclassified-8)
+  - [Unclassified](#unclassified-9)
 - [0.5.0-alpha.1 (2020-10-15)](#050-alpha1-2020-10-15)
   - [Breaking Changes](#breaking-changes-12)
     - [Bug Fixes](#bug-fixes-27)
@@ -197,7 +198,7 @@
     - [Documentation](#documentation-23)
     - [Features](#features-20)
     - [Tests](#tests-18)
-    - [Unclassified](#unclassified-9)
+    - [Unclassified](#unclassified-10)
 - [0.4.6-alpha.1 (2020-07-13)](#046-alpha1-2020-07-13)
   - [Bug Fixes](#bug-fixes-28)
   - [Code Generation](#code-generation-32)
@@ -221,7 +222,7 @@
     - [Code Refactoring](#code-refactoring-11)
     - [Documentation](#documentation-25)
     - [Features](#features-21)
-    - [Unclassified](#unclassified-10)
+    - [Unclassified](#unclassified-11)
 - [0.3.0-alpha.1 (2020-05-15)](#030-alpha1-2020-05-15)
   - [Breaking Changes](#breaking-changes-14)
     - [Bug Fixes](#bug-fixes-34)
@@ -229,7 +230,7 @@
     - [Code Refactoring](#code-refactoring-12)
     - [Documentation](#documentation-26)
     - [Features](#features-22)
-    - [Unclassified](#unclassified-11)
+    - [Unclassified](#unclassified-12)
 - [0.2.1-alpha.1 (2020-05-05)](#021-alpha1-2020-05-05)
   - [Chores](#chores-1)
   - [Documentation](#documentation-27)
@@ -240,7 +241,7 @@
     - [Code Refactoring](#code-refactoring-13)
     - [Documentation](#documentation-28)
     - [Features](#features-23)
-    - [Unclassified](#unclassified-12)
+    - [Unclassified](#unclassified-13)
 - [0.1.1-alpha.1 (2020-02-18)](#011-alpha1-2020-02-18)
   - [Bug Fixes](#bug-fixes-36)
   - [Code Refactoring](#code-refactoring-14)
@@ -262,47 +263,47 @@
   - [Bug Fixes](#bug-fixes-38)
   - [Documentation](#documentation-33)
   - [Features](#features-26)
-  - [Unclassified](#unclassified-13)
+  - [Unclassified](#unclassified-14)
 - [0.1.0-alpha.1 (2020-01-31)](#010-alpha1-2020-01-31)
   - [Documentation](#documentation-34)
 - [0.0.3-alpha.15 (2020-01-31)](#003-alpha15-2020-01-31)
-  - [Unclassified](#unclassified-14)
-- [0.0.3-alpha.14 (2020-01-31)](#003-alpha14-2020-01-31)
   - [Unclassified](#unclassified-15)
-- [0.0.3-alpha.13 (2020-01-31)](#003-alpha13-2020-01-31)
+- [0.0.3-alpha.14 (2020-01-31)](#003-alpha14-2020-01-31)
   - [Unclassified](#unclassified-16)
-- [0.0.3-alpha.11 (2020-01-31)](#003-alpha11-2020-01-31)
+- [0.0.3-alpha.13 (2020-01-31)](#003-alpha13-2020-01-31)
   - [Unclassified](#unclassified-17)
-- [0.0.3-alpha.10 (2020-01-31)](#003-alpha10-2020-01-31)
+- [0.0.3-alpha.11 (2020-01-31)](#003-alpha11-2020-01-31)
   - [Unclassified](#unclassified-18)
-- [0.0.3-alpha.7 (2020-01-30)](#003-alpha7-2020-01-30)
+- [0.0.3-alpha.10 (2020-01-31)](#003-alpha10-2020-01-31)
   - [Unclassified](#unclassified-19)
+- [0.0.3-alpha.7 (2020-01-30)](#003-alpha7-2020-01-30)
+  - [Unclassified](#unclassified-20)
 - [0.0.3-alpha.5 (2020-01-30)](#003-alpha5-2020-01-30)
   - [Continuous Integration](#continuous-integration-2)
-  - [Unclassified](#unclassified-20)
-- [0.0.3-alpha.4 (2020-01-30)](#003-alpha4-2020-01-30)
   - [Unclassified](#unclassified-21)
-- [0.0.3-alpha.2 (2020-01-30)](#003-alpha2-2020-01-30)
+- [0.0.3-alpha.4 (2020-01-30)](#003-alpha4-2020-01-30)
   - [Unclassified](#unclassified-22)
-- [0.0.3-alpha.1 (2020-01-30)](#003-alpha1-2020-01-30)
+- [0.0.3-alpha.2 (2020-01-30)](#003-alpha2-2020-01-30)
   - [Unclassified](#unclassified-23)
+- [0.0.3-alpha.1 (2020-01-30)](#003-alpha1-2020-01-30)
+  - [Unclassified](#unclassified-24)
 - [0.0.1-alpha.9 (2020-01-29)](#001-alpha9-2020-01-29)
   - [Continuous Integration](#continuous-integration-3)
 - [0.0.2-alpha.1 (2020-01-29)](#002-alpha1-2020-01-29)
-  - [Unclassified](#unclassified-24)
+  - [Unclassified](#unclassified-25)
 - [0.0.1-alpha.6 (2020-01-29)](#001-alpha6-2020-01-29)
   - [Continuous Integration](#continuous-integration-4)
 - [0.0.1-alpha.5 (2020-01-29)](#001-alpha5-2020-01-29)
   - [Continuous Integration](#continuous-integration-5)
-  - [Unclassified](#unclassified-25)
+  - [Unclassified](#unclassified-26)
 - [0.0.1-alpha.3 (2020-01-28)](#001-alpha3-2020-01-28)
   - [Continuous Integration](#continuous-integration-6)
   - [Documentation](#documentation-35)
-  - [Unclassified](#unclassified-26)
+  - [Unclassified](#unclassified-27)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# [](https://github.com/ory/kratos/compare/v0.13.0...v) (2023-07-04)
+# [](https://github.com/ory/kratos/compare/v0.13.0...v) (2023-07-05)
 
 ### Bug Fixes
 
@@ -440,6 +441,8 @@
   ([#3279](https://github.com/ory/kratos/issues/3279))
   ([34ff1d2](https://github.com/ory/kratos/commit/34ff1d2912e7f7aefb35dae759dce2eb37ecb790)),
   closes [#2943](https://github.com/ory/kratos/issues/2943)
+- Update README ([#3363](https://github.com/ory/kratos/issues/3363))
+  ([c426014](https://github.com/ory/kratos/commit/c4260140966489a05169a0197e209ff98181bc2e))
 - Use RETURNING clause for batch create
   ([#3293](https://github.com/ory/kratos/issues/3293))
   ([8ae8783](https://github.com/ory/kratos/commit/8ae8783935292fb011b1018ac7417ed77eb6abb7))
@@ -578,6 +581,27 @@
   - fix: error handling with OIDC+Code
 
   - fix: increase playwright timeout
+
+### Unclassified
+
+- @barnarddt @hperl feat: send emails via http api endpoint instead of smtp
+  (#1030) (#3341)
+  ([28b7b04](https://github.com/ory/kratos/commit/28b7b04a34eeba2d84de5c543f5ba8b41b38a129)),
+  closes [#1030](https://github.com/ory/kratos/issues/1030)
+  [#3341](https://github.com/ory/kratos/issues/3341)
+  [#1030](https://github.com/ory/kratos/issues/1030)
+  [#3008](https://github.com/ory/kratos/issues/3008):
+
+  This change adds a new delivery method to the courier called `mailer`. Similar
+  to SMS functionality it posts a templated Data model to a API endpoint. This
+  API can then send emails via a CRM or any other mechanism that it wants.
+
+  `Mailer` still uses the existing email data models so any new email added will
+  automatically be sent to the API/CRM as well.
+
+  ## Related issue(s)
+
+  Resolves https://github.com/ory/kratos/issues/2825
 
 # [0.13.0](https://github.com/ory/kratos/compare/v0.11.1...v0.13.0) (2023-04-18)
 
