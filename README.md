@@ -157,10 +157,6 @@ and that have made outstanding contributions to our ecosystem. _If you think
 that your company deserves a spot here, reach out to
 <a href="mailto:office-muc@ory.sh">office-muc@ory.sh</a> now_!
 
-**Please consider giving back by becoming a sponsor of our open source work on
-<a href="https://www.patreon.com/_ory">Patreon</a> or
-<a href="https://opencollective.com/ory">Open Collective</a>.**
-
 <table>
     <thead>
         <tr>
