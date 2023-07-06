@@ -67,6 +67,7 @@ func TestSessionWhoAmI(t *testing.T) {
 
 	// set this intermediate because kratos needs some valid url for CRUDE operations
 	conf.MustSet(ctx, config.ViperKeyPublicBaseURL, "http://example.com")
+	email := "foo" + uuid.Must(uuid.NewV4()).String() + "@bar.sh"
 	i := &identity.Identity{
 		ID:    x.NewUUID(),
 		State: identity.StateActive,
@@ -76,9 +77,21 @@ func TestSessionWhoAmI(t *testing.T) {
 				Config:      []byte(`{"hashed_password":"$argon2id$v=19$m=32,t=2,p=4$cm94YnRVOW5jZzFzcVE4bQ$MNzk5BtR2vUhrp6qQEjRNw"}`),
 			},
 		},
-		Traits:         identity.Traits(`{"baz":"bar","foo":true,"bar":2.5}`),
+		Traits:         identity.Traits(`{"email": "` + email + `","baz":"bar","foo":true,"bar":2.5}`),
 		MetadataAdmin:  []byte(`{"admin":"ma"}`),
 		MetadataPublic: []byte(`{"public":"mp"}`),
+		RecoveryAddresses: []identity.RecoveryAddress{
+			{
+				Value: email,
+				Via:   identity.AddressTypeEmail,
+			},
+		},
+		VerifiableAddresses: []identity.VerifiableAddress{
+			{
+				Value: email,
+				Via:   identity.AddressTypeEmail,
+			},
+		},
 	}
 	h, _ := testhelpers.MockSessionCreateHandlerWithIdentity(t, reg, i)
 
@@ -182,6 +195,9 @@ func TestSessionWhoAmI(t *testing.T) {
 					assert.Empty(t, gjson.GetBytes(body, "identity.credentials"))
 					assert.Equal(t, "mp", gjson.GetBytes(body, "identity.metadata_public.public").String(), "%s", body)
 					assert.False(t, gjson.GetBytes(body, "identity.metadata_admin").Exists())
+
+					assert.NotEmpty(t, gjson.GetBytes(body, "identity.recovery_addresses").String(), "%s", body)
+					assert.NotEmpty(t, gjson.GetBytes(body, "identity.verifiable_addresses").String(), "%s", body)
 				})
 			}
 		}
