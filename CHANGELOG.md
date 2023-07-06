@@ -310,6 +310,9 @@
 
 ### Bug Fixes
 
+- Incorrect override in identity hydrate
+  ([#3368](https://github.com/ory/kratos/issues/3368))
+  ([eaa3f3c](https://github.com/ory/kratos/commit/eaa3f3c19feaf9048e800cc5a5f1e28d3708c624))
 - Reintroduce ExpandAll ([#3369](https://github.com/ory/kratos/issues/3369))
   ([8f9bff5](https://github.com/ory/kratos/commit/8f9bff527528780b623bf8e4801f7f3c37a5a6f3))
 
