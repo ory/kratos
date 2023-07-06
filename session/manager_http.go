@@ -226,6 +226,13 @@ func (s *ManagerHTTP) FetchFromRequest(ctx context.Context, r *http.Request) (_ 
 	}
 
 	expand := identity.ExpandDefault
+	if s.r.Config().SessionWhoAmIAAL(r.Context()) == config.HighestAvailableAAL {
+		// When the session endpoint requires the highest AAL, we fetch all credentials immediately to save a
+		// query later in "DoesSessionSatisfy". This is a SQL optimization, because the identity manager fetches
+		// the data in parallel, which is a bit faster than fetching it in sequence.
+		expand = identity.ExpandEverything
+	}
+
 	se, err := s.r.SessionPersister().GetSessionByToken(ctx, token, ExpandEverything, expand)
 	if err != nil {
 		if errors.Is(err, herodot.ErrNotFound) || errors.Is(err, sqlcon.ErrNoRows) {
