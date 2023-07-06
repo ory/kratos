@@ -1,0 +1,1 @@
+ALTER TABLE identities ADD COLUMN available_aal TYPE VARCHAR(4) NOT NULL DEFAULT "aal0";

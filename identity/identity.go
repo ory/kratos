@@ -67,6 +67,10 @@ type Identity struct {
 	// Credentials represents all credentials that can be used for authenticating this identity.
 	Credentials map[CredentialsType]Credentials `json:"credentials,omitempty" faker:"-" db:"-"`
 
+	// AvailableAAL defines the maximum available AAL for this identity. If the user has only a password
+	// configured, the AAL will be 1. If the user has a password and a TOTP configured, the AAL will be 2.
+	AvailableAAL AuthenticatorAssuranceLevel `json:"available_aal" faker:"-" db:"available_aal"`
+
 	// // IdentifierCredentials contains the access and refresh token for oidc identifier
 	// IdentifierCredentials []IdentifierCredential `json:"identifier_credentials,omitempty" faker:"-" db:"-"`
 

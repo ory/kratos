@@ -295,31 +295,33 @@ func (s *ManagerHTTP) DoesSessionSatisfy(r *http.Request, sess *Session, request
 			return nil
 		}
 	case config.HighestAvailableAAL:
-		i := sess.Identity
-		if i == nil {
-			i, err = s.r.IdentityPool().GetIdentity(ctx, sess.IdentityID, identity.ExpandCredentials)
+		if sess.Identity == nil {
+			sess.Identity, err = s.r.IdentityPool().GetIdentity(ctx, sess.IdentityID, identity.ExpandNothing)
 			if err != nil {
 				return err
 			}
-			sess.Identity = i
-		} else if len(i.Credentials) == 0 {
-			// If credentials are not expanded, we load them here.
+		}
+
+		i := sess.Identity
+		available := i.AvailableAAL
+		if available == identity.NoAuthenticatorAssuranceLevel && len(i.Credentials) == 0 {
+			// Indicates that the database state is not up-to-date. Most likely because the SQL migrations did not catch this case.
 			if err := s.r.PrivilegedIdentityPool().HydrateIdentityAssociations(ctx, i, identity.ExpandCredentials); err != nil {
 				return err
 			}
-		}
 
-		available := identity.NoAuthenticatorAssuranceLevel
-		if firstCount, err := s.r.IdentityManager().CountActiveFirstFactorCredentials(ctx, i); err != nil {
-			return err
-		} else if firstCount > 0 {
-			available = identity.AuthenticatorAssuranceLevel1
-		}
+			available = identity.NoAuthenticatorAssuranceLevel
+			if firstCount, err := s.r.IdentityManager().CountActiveFirstFactorCredentials(ctx, i); err != nil {
+				return err
+			} else if firstCount > 0 {
+				available = identity.AuthenticatorAssuranceLevel1
+			}
 
-		if secondCount, err := s.r.IdentityManager().CountActiveMultiFactorCredentials(ctx, i); err != nil {
-			return err
-		} else if secondCount > 0 {
-			available = identity.AuthenticatorAssuranceLevel2
+			if secondCount, err := s.r.IdentityManager().CountActiveMultiFactorCredentials(ctx, i); err != nil {
+				return err
+			} else if secondCount > 0 {
+				available = identity.AuthenticatorAssuranceLevel2
+			}
 		}
 
 		if sess.AuthenticatorAssuranceLevel >= available {
