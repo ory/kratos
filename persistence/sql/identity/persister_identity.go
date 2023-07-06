@@ -482,11 +482,8 @@ func (p *IdentityPersister) HydrateIdentityAssociations(ctx context.Context, i *
 	defer otelx.End(span, &err)
 
 	var (
-		con                 = p.GetConnection(ctx)
-		nid                 = p.NetworkID(ctx)
-		credentials         map[identity.CredentialsType]identity.Credentials
-		verifiableAddresses []identity.VerifiableAddress
-		recoveryAddresses   []identity.RecoveryAddress
+		con = p.GetConnection(ctx)
+		nid = p.NetworkID(ctx)
 	)
 
 	eg, ctx := errgroup.WithContext(ctx)
@@ -499,7 +496,7 @@ func (p *IdentityPersister) HydrateIdentityAssociations(ctx context.Context, i *
 			if err := con.WithContext(ctx).
 				Where("identity_id = ? AND nid = ?", i.ID, nid).
 				Order("id ASC").
-				All(&recoveryAddresses); err != nil {
+				All(&i.RecoveryAddresses); err != nil {
 				return sqlcon.HandleError(err)
 			}
 			return nil
@@ -514,7 +511,8 @@ func (p *IdentityPersister) HydrateIdentityAssociations(ctx context.Context, i *
 			// https://github.com/gobuffalo/pop/issues/723
 			if err := con.WithContext(ctx).
 				Order("id ASC").
-				Where("identity_id = ? AND nid = ?", i.ID, nid).All(&verifiableAddresses); err != nil {
+				Where("identity_id = ? AND nid = ?", i.ID, nid).
+				All(&i.VerifiableAddresses); err != nil {
 				return sqlcon.HandleError(err)
 			}
 			return nil
@@ -533,7 +531,7 @@ func (p *IdentityPersister) HydrateIdentityAssociations(ctx context.Context, i *
 			if err != nil {
 				return err
 			}
-			credentials = creds[i.ID]
+			i.Credentials = creds[i.ID]
 			return
 		})
 	}
@@ -541,10 +539,6 @@ func (p *IdentityPersister) HydrateIdentityAssociations(ctx context.Context, i *
 	if err := eg.Wait(); err != nil {
 		return err
 	}
-
-	i.VerifiableAddresses = verifiableAddresses
-	i.RecoveryAddresses = recoveryAddresses
-	i.Credentials = credentials
 
 	if err := i.Validate(); err != nil {
 		return err
