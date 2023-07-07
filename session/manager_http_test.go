@@ -366,11 +366,6 @@ func TestManagerHTTP(t *testing.T) {
 
 			t.Run("required_aal=aal2", func(t *testing.T) {
 				req := x.NewTestHTTPRequest(t, "GET", "/sessions/whoami", nil)
-				idAAL2 := createAAL2Identity(t, reg)
-				idAAL1 := createAAL1Identity(t, reg)
-				require.NoError(t, reg.PrivilegedIdentityPool().CreateIdentity(context.Background(), idAAL1))
-				require.NoError(t, reg.PrivilegedIdentityPool().CreateIdentity(context.Background(), idAAL2))
-
 				run := func(t *testing.T, complete []identity.CredentialsType, requested string, i *identity.Identity, expectedError error) {
 					s := session.NewInactiveSession()
 					for _, m := range complete {
@@ -385,24 +380,62 @@ func TestManagerHTTP(t *testing.T) {
 					}
 				}
 
-				t.Run("fulfilled for aal2 if identity has aal2", func(t *testing.T) {
-					run(t, []identity.CredentialsType{identity.CredentialsTypePassword, identity.CredentialsTypeWebAuthn}, config.HighestAvailableAAL, idAAL2, nil)
+				test := func(t *testing.T, idAAL1, idAAL2 *identity.Identity) {
+					t.Run("fulfilled for aal2 if identity has aal2", func(t *testing.T) {
+						run(t, []identity.CredentialsType{identity.CredentialsTypePassword, identity.CredentialsTypeWebAuthn}, config.HighestAvailableAAL, idAAL2, nil)
+					})
+
+					t.Run("rejected for aal1 if identity has aal2", func(t *testing.T) {
+						run(t, []identity.CredentialsType{identity.CredentialsTypePassword}, config.HighestAvailableAAL, idAAL2, session.NewErrAALNotSatisfied(""))
+					})
+
+					t.Run("fulfilled for aal1 if identity has aal2 but config is aal1", func(t *testing.T) {
+						run(t, []identity.CredentialsType{identity.CredentialsTypePassword}, "aal1", idAAL2, nil)
+					})
+
+					t.Run("fulfilled for aal2 if identity has aal1", func(t *testing.T) {
+						run(t, []identity.CredentialsType{identity.CredentialsTypePassword}, "aal1", idAAL2, nil)
+					})
+
+					t.Run("fulfilled for aal1 if identity has aal1", func(t *testing.T) {
+						run(t, []identity.CredentialsType{identity.CredentialsTypePassword}, "aal1", idAAL1, nil)
+					})
+				}
+
+				t.Run("identity available AAL is not hydrated", func(t *testing.T) {
+					idAAL2 := createAAL2Identity(t, reg)
+					idAAL1 := createAAL1Identity(t, reg)
+					require.NoError(t, reg.PrivilegedIdentityPool().CreateIdentity(context.Background(), idAAL1))
+					require.NoError(t, reg.PrivilegedIdentityPool().CreateIdentity(context.Background(), idAAL2))
+					test(t, idAAL1, idAAL2)
 				})
 
-				t.Run("rejected for aal1 if identity has aal2", func(t *testing.T) {
-					run(t, []identity.CredentialsType{identity.CredentialsTypePassword}, config.HighestAvailableAAL, idAAL2, session.NewErrAALNotSatisfied(""))
+				t.Run("identity available AAL is hydrated and updated in the DB", func(t *testing.T) {
+					// We do not create the identity in the database, proving that we do not need
+					// to do any DB roundtrips in this case.
+					idAAL1 := createAAL2Identity(t, reg)
+					require.NoError(t, reg.PrivilegedIdentityPool().CreateIdentity(context.Background(), idAAL1))
+
+					s := session.NewInactiveSession()
+					s.CompletedLoginFor(identity.CredentialsTypePassword, "")
+					require.NoError(t, s.Activate(req, idAAL1, conf, time.Now().UTC()))
+					require.Error(t, reg.SessionManager().DoesSessionSatisfy((&http.Request{}).WithContext(context.Background()), s, config.HighestAvailableAAL, session.UpsertAAL))
+
+					result, err := reg.IdentityPool().GetIdentity(context.Background(), idAAL1.ID, identity.ExpandNothing)
+					require.NoError(t, err)
+					assert.EqualValues(t, identity.AuthenticatorAssuranceLevel2, result.AvailableAAL)
 				})
 
-				t.Run("fulfilled for aal1 if identity has aal2 but config is aal1", func(t *testing.T) {
-					run(t, []identity.CredentialsType{identity.CredentialsTypePassword}, "aal1", idAAL2, nil)
-				})
+				t.Run("identity available AAL is hydrated without DB", func(t *testing.T) {
+					// We do not create the identity in the database, proving that we do not need
+					// to do any DB roundtrips in this case.
+					idAAL2 := createAAL2Identity(t, reg)
+					idAAL2.AvailableAAL = identity.AuthenticatorAssuranceLevel2
 
-				t.Run("fulfilled for aal2 if identity has aal1", func(t *testing.T) {
-					run(t, []identity.CredentialsType{identity.CredentialsTypePassword}, "aal1", idAAL2, nil)
-				})
+					idAAL1 := createAAL1Identity(t, reg)
+					idAAL1.AvailableAAL = identity.AuthenticatorAssuranceLevel1
 
-				t.Run("fulfilled for aal1 if identity has aal1", func(t *testing.T) {
-					run(t, []identity.CredentialsType{identity.CredentialsTypePassword}, "aal1", idAAL1, nil)
+					test(t, idAAL1, idAAL2)
 				})
 			})
 		})

@@ -191,7 +191,7 @@ migrations-sync: .bin/ory
 
 .PHONY: test-update-snapshots
 test-update-snapshots:
-	UPDATE_SNAPSHOTS=true go test -p 4 -tags sqlite -short ./...
+	UPDATE_SNAPSHOTS=true go test -tags sqlite,json1,refresh -short ./...
 
 .PHONY: post-release
 post-release: .bin/yq

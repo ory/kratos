@@ -69,7 +69,7 @@ type Identity struct {
 
 	// AvailableAAL defines the maximum available AAL for this identity. If the user has only a password
 	// configured, the AAL will be 1. If the user has a password and a TOTP configured, the AAL will be 2.
-	AvailableAAL AuthenticatorAssuranceLevel `json:"available_aal" faker:"-" db:"available_aal"`
+	AvailableAAL AuthenticatorAssuranceLevel `json:"-" faker:"-" db:"available_aal"`
 
 	// // IdentifierCredentials contains the access and refresh token for oidc identifier
 	// IdentifierCredentials []IdentifierCredential `json:"identifier_credentials,omitempty" faker:"-" db:"-"`

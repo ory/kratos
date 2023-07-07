@@ -9,6 +9,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/gofrs/uuid"
+
 	"github.com/ory/x/sqlxx"
 
 	"github.com/ory/kratos/internal/testhelpers"
@@ -65,10 +67,72 @@ func TestManager(t *testing.T) {
 
 	t.Run("method=Create", func(t *testing.T) {
 		t.Run("case=should create identity and track extension fields", func(t *testing.T) {
+			email := uuid.Must(uuid.NewV4()).String() + "@ory.sh"
 			original := identity.NewIdentity(config.DefaultIdentityTraitsSchemaID)
-			original.Traits = newTraits("foo@ory.sh", "")
+			original.Traits = newTraits(email, "")
 			require.NoError(t, reg.IdentityManager().Create(context.Background(), original))
-			checkExtensionFieldsForIdentities(t, "foo@ory.sh", original)
+			checkExtensionFieldsForIdentities(t, email, original)
+			assert.Equal(t, identity.NoAuthenticatorAssuranceLevel, original.AvailableAAL)
+		})
+
+		t.Run("case=correctly set AAL", func(t *testing.T) {
+			t.Run("case=should set AAL to 0 if no credentials are available", func(t *testing.T) {
+				email := uuid.Must(uuid.NewV4()).String() + "@ory.sh"
+				original := identity.NewIdentity(config.DefaultIdentityTraitsSchemaID)
+				original.Traits = newTraits(email, "")
+				require.NoError(t, reg.IdentityManager().Create(context.Background(), original))
+				assert.Equal(t, identity.NoAuthenticatorAssuranceLevel, original.AvailableAAL)
+			})
+
+			t.Run("case=should set AAL to 1 if password is set", func(t *testing.T) {
+				email := uuid.Must(uuid.NewV4()).String() + "@ory.sh"
+				original := identity.NewIdentity(config.DefaultIdentityTraitsSchemaID)
+				original.Traits = newTraits(email, "")
+				original.Credentials = map[identity.CredentialsType]identity.Credentials{
+					identity.CredentialsTypePassword: {
+						Type:        identity.CredentialsTypePassword,
+						Identifiers: []string{email},
+						Config:      sqlxx.JSONRawMessage(`{"hashed_password":"$2a$08$.cOYmAd.vCpDOoiVJrO5B.hjTLKQQ6cAK40u8uB.FnZDyPvVvQ9Q."}`),
+					},
+				}
+				require.NoError(t, reg.IdentityManager().Create(context.Background(), original))
+				assert.Equal(t, identity.AuthenticatorAssuranceLevel1, original.AvailableAAL)
+			})
+
+			t.Run("case=should set AAL to 2 if password and TOTP is set", func(t *testing.T) {
+				email := uuid.Must(uuid.NewV4()).String() + "@ory.sh"
+				original := identity.NewIdentity(config.DefaultIdentityTraitsSchemaID)
+				original.Traits = newTraits(email, "")
+				original.Credentials = map[identity.CredentialsType]identity.Credentials{
+					identity.CredentialsTypePassword: {
+						Type:        identity.CredentialsTypePassword,
+						Identifiers: []string{email},
+						Config:      sqlxx.JSONRawMessage(`{"hashed_password":"$2a$08$.cOYmAd.vCpDOoiVJrO5B.hjTLKQQ6cAK40u8uB.FnZDyPvVvQ9Q."}`),
+					},
+					identity.CredentialsTypeTOTP: {
+						Type:        identity.CredentialsTypeTOTP,
+						Identifiers: []string{email},
+						Config:      sqlxx.JSONRawMessage(`{"totp_url":"otpauth://totp/test"}`),
+					},
+				}
+				require.NoError(t, reg.IdentityManager().Create(context.Background(), original))
+				assert.Equal(t, identity.AuthenticatorAssuranceLevel2, original.AvailableAAL)
+			})
+
+			t.Run("case=should set AAL to 0 if only TOTP is set", func(t *testing.T) {
+				email := uuid.Must(uuid.NewV4()).String() + "@ory.sh"
+				original := identity.NewIdentity(config.DefaultIdentityTraitsSchemaID)
+				original.Traits = newTraits(email, "")
+				original.Credentials = map[identity.CredentialsType]identity.Credentials{
+					identity.CredentialsTypeTOTP: {
+						Type:        identity.CredentialsTypeTOTP,
+						Identifiers: []string{email},
+						Config:      sqlxx.JSONRawMessage(`{"totp_url":"otpauth://totp/test"}`),
+					},
+				}
+				require.NoError(t, reg.IdentityManager().Create(context.Background(), original))
+				assert.Equal(t, identity.NoAuthenticatorAssuranceLevel, original.AvailableAAL)
+			})
 		})
 
 		t.Run("case=should expose validation errors with option", func(t *testing.T) {
@@ -98,6 +162,62 @@ func TestManager(t *testing.T) {
 			require.NoError(t, reg.IdentityManager().Update(context.Background(), original, identity.ManagerAllowWriteProtectedTraits))
 
 			checkExtensionFieldsForIdentities(t, "bar@ory.sh", original)
+		})
+
+		t.Run("case=should set AAL to 1 if password is set", func(t *testing.T) {
+			email := uuid.Must(uuid.NewV4()).String() + "@ory.sh"
+			original := identity.NewIdentity(config.DefaultIdentityTraitsSchemaID)
+			original.Traits = newTraits(email, "")
+			require.NoError(t, reg.IdentityManager().Create(context.Background(), original))
+			original.Credentials = map[identity.CredentialsType]identity.Credentials{
+				identity.CredentialsTypePassword: {
+					Type:        identity.CredentialsTypePassword,
+					Identifiers: []string{email},
+					Config:      sqlxx.JSONRawMessage(`{"hashed_password":"$2a$08$.cOYmAd.vCpDOoiVJrO5B.hjTLKQQ6cAK40u8uB.FnZDyPvVvQ9Q."}`),
+				},
+			}
+			require.NoError(t, reg.IdentityManager().Update(context.Background(), original, identity.ManagerAllowWriteProtectedTraits))
+			assert.Equal(t, identity.AuthenticatorAssuranceLevel1, original.AvailableAAL)
+		})
+
+		t.Run("case=should set AAL to 2 if password and TOTP is set", func(t *testing.T) {
+			email := uuid.Must(uuid.NewV4()).String() + "@ory.sh"
+			original := identity.NewIdentity(config.DefaultIdentityTraitsSchemaID)
+			original.Traits = newTraits(email, "")
+			original.Credentials = map[identity.CredentialsType]identity.Credentials{
+				identity.CredentialsTypePassword: {
+					Type:        identity.CredentialsTypePassword,
+					Identifiers: []string{email},
+					Config:      sqlxx.JSONRawMessage(`{"hashed_password":"$2a$08$.cOYmAd.vCpDOoiVJrO5B.hjTLKQQ6cAK40u8uB.FnZDyPvVvQ9Q."}`),
+				},
+			}
+			require.NoError(t, reg.IdentityManager().Create(context.Background(), original))
+			assert.Equal(t, identity.AuthenticatorAssuranceLevel1, original.AvailableAAL)
+			require.NoError(t, reg.IdentityManager().Update(context.Background(), original, identity.ManagerAllowWriteProtectedTraits))
+			assert.Equal(t, identity.AuthenticatorAssuranceLevel1, original.AvailableAAL, "Updating without changes should not change AAL")
+			original.Credentials[identity.CredentialsTypeTOTP] = identity.Credentials{
+				Type:        identity.CredentialsTypeTOTP,
+				Identifiers: []string{email},
+				Config:      sqlxx.JSONRawMessage(`{"totp_url":"otpauth://totp/test"}`),
+			}
+			require.NoError(t, reg.IdentityManager().Update(context.Background(), original, identity.ManagerAllowWriteProtectedTraits))
+			assert.Equal(t, identity.AuthenticatorAssuranceLevel2, original.AvailableAAL)
+		})
+
+		t.Run("case=should set AAL to 0 if only TOTP is set", func(t *testing.T) {
+			email := uuid.Must(uuid.NewV4()).String() + "@ory.sh"
+			original := identity.NewIdentity(config.DefaultIdentityTraitsSchemaID)
+			original.Traits = newTraits(email, "")
+			require.NoError(t, reg.IdentityManager().Create(context.Background(), original))
+			original.Credentials = map[identity.CredentialsType]identity.Credentials{
+				identity.CredentialsTypeTOTP: {
+					Type:        identity.CredentialsTypeTOTP,
+					Identifiers: []string{email},
+					Config:      sqlxx.JSONRawMessage(`{"totp_url":"otpauth://totp/test"}`),
+				},
+			}
+			require.NoError(t, reg.IdentityManager().Update(context.Background(), original, identity.ManagerAllowWriteProtectedTraits))
+			assert.Equal(t, identity.NoAuthenticatorAssuranceLevel, original.AvailableAAL)
 		})
 
 		t.Run("case=should not update protected traits without option", func(t *testing.T) {
