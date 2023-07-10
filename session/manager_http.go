@@ -307,7 +307,7 @@ func (s *ManagerHTTP) DoesSessionSatisfy(r *http.Request, sess *Session, request
 			// Available is 0 if the identity was created before the AAL feature was introduced, or if the identity
 			// was directly created in the persister and not the identity manager.
 			//
-			// aal0 indicates that there AAL state of the identity is probably unknown.
+			// aal0 indicates that the AAL state of the identity is probably unknown.
 			//
 			// In either case, we need to fetch the credentials from the database to determine the AAL.
 			if len(i.Credentials) == 0 {
