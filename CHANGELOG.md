@@ -5,7 +5,7 @@
 
 **Table of Contents**
 
-- [ (2023-07-06)](#2023-07-06)
+- [ (2023-07-10)](#2023-07-10)
   - [Bug Fixes](#bug-fixes)
 - [0.14.0-pre.0 (2023-07-06)](#0140-pre0-2023-07-06)
   - [Bug Fixes](#bug-fixes-1)
@@ -306,7 +306,7 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# [](https://github.com/ory/kratos/compare/v0.14.0-pre.0...v) (2023-07-06)
+# [](https://github.com/ory/kratos/compare/v0.14.0-pre.0...v) (2023-07-10)
 
 ### Bug Fixes
 
