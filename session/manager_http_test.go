@@ -423,17 +423,17 @@ func TestManagerHTTP(t *testing.T) {
 
 					result, err := reg.IdentityPool().GetIdentity(context.Background(), idAAL1.ID, identity.ExpandNothing)
 					require.NoError(t, err)
-					assert.EqualValues(t, identity.AuthenticatorAssuranceLevel2, result.AvailableAAL)
+					assert.EqualValues(t, identity.AuthenticatorAssuranceLevel2, result.AvailableAAL.String)
 				})
 
 				t.Run("identity available AAL is hydrated without DB", func(t *testing.T) {
 					// We do not create the identity in the database, proving that we do not need
 					// to do any DB roundtrips in this case.
 					idAAL2 := createAAL2Identity(t, reg)
-					idAAL2.AvailableAAL = identity.AuthenticatorAssuranceLevel2
+					idAAL2.AvailableAAL = identity.NewNullableAuthenticatorAssuranceLevel(identity.AuthenticatorAssuranceLevel2)
 
 					idAAL1 := createAAL1Identity(t, reg)
-					idAAL1.AvailableAAL = identity.AuthenticatorAssuranceLevel1
+					idAAL1.AvailableAAL = identity.NewNullableAuthenticatorAssuranceLevel(identity.AuthenticatorAssuranceLevel1)
 
 					test(t, idAAL1, idAAL2)
 				})

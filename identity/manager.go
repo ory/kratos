@@ -180,7 +180,7 @@ func (m *Manager) Update(ctx context.Context, updated *Identity, opts ...Manager
 }
 
 func (m *Manager) setAAL(ctx context.Context, i *Identity) (err error) {
-	i.AvailableAAL = NoAuthenticatorAssuranceLevel
+	i.AvailableAAL = NewNullableAuthenticatorAssuranceLevel(NoAuthenticatorAssuranceLevel)
 	if c, err := m.CountActiveFirstFactorCredentials(ctx, i); err != nil {
 		return err
 	} else if c == 0 {
@@ -188,7 +188,7 @@ func (m *Manager) setAAL(ctx context.Context, i *Identity) (err error) {
 		return nil
 	}
 
-	i.AvailableAAL = AuthenticatorAssuranceLevel1
+	i.AvailableAAL = NewNullableAuthenticatorAssuranceLevel(AuthenticatorAssuranceLevel1)
 	if c, err := m.CountActiveMultiFactorCredentials(ctx, i); err != nil {
 		return err
 	} else if c == 0 {
@@ -196,7 +196,7 @@ func (m *Manager) setAAL(ctx context.Context, i *Identity) (err error) {
 		return nil
 	}
 
-	i.AvailableAAL = AuthenticatorAssuranceLevel2
+	i.AvailableAAL = NewNullableAuthenticatorAssuranceLevel(AuthenticatorAssuranceLevel2)
 	return nil
 }
 

@@ -302,8 +302,8 @@ func (s *ManagerHTTP) DoesSessionSatisfy(r *http.Request, sess *Session, request
 		}
 
 		i := sess.Identity
-		available := i.AvailableAAL
-		if len(available) == 0 || available == identity.NoAuthenticatorAssuranceLevel {
+		available := identity.AuthenticatorAssuranceLevel(i.AvailableAAL.String)
+		if !i.AvailableAAL.Valid {
 			// Available is 0 if the identity was created before the AAL feature was introduced, or if the identity
 			// was directly created in the persister and not the identity manager.
 			//
@@ -330,7 +330,7 @@ func (s *ManagerHTTP) DoesSessionSatisfy(r *http.Request, sess *Session, request
 				available = identity.AuthenticatorAssuranceLevel2
 			}
 
-			i.AvailableAAL = available
+			i.AvailableAAL = identity.NewNullableAuthenticatorAssuranceLevel(available)
 
 			// This is the migration strategy for identities that already exist.
 			if managerOpts.upsertAAL {

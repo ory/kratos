@@ -295,7 +295,7 @@ func createIdentityToRecover(t *testing.T, reg *driver.RegistryDefault, email st
 			"password": {
 				Type:        "password",
 				Identifiers: []string{email},
-				Config:      sqlxx.JSONRawMessage(`{"hashed_password":"foo"}`),
+				Config:      sqlxx.JSONRawMessage(`{"hashed_password":"$2a$08$.cOYmAd.vCpDOoiVJrO5B.hjTLKQQ6cAK40u8uB.FnZDyPvVvQ9Q."}`),
 			},
 		},
 		Traits:   identity.Traits(fmt.Sprintf(`{"email":"%s"}`, email)),
@@ -521,7 +521,7 @@ func TestRecovery(t *testing.T) {
 							Identifiers: []string{testhelpers.RandomEmail()},
 						})
 
-						require.NoError(t, reg.PrivilegedIdentityPool().UpdateIdentity(ctx, id))
+						require.NoError(t, reg.IdentityManager().Update(ctx, id, identity.ManagerAllowWriteProtectedTraits))
 						return testhelpers.InitializeRecoveryFlowViaBrowser(t, client, false, public, url.Values{"return_to": []string{returnTo}})
 					},
 					expectedAAL: "aal2",

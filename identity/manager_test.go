@@ -72,7 +72,9 @@ func TestManager(t *testing.T) {
 			original.Traits = newTraits(email, "")
 			require.NoError(t, reg.IdentityManager().Create(context.Background(), original))
 			checkExtensionFieldsForIdentities(t, email, original)
-			assert.Equal(t, identity.NoAuthenticatorAssuranceLevel, original.AvailableAAL)
+			got, ok := original.AvailableAAL.ToAAL()
+			require.True(t, ok)
+			assert.Equal(t, identity.NoAuthenticatorAssuranceLevel, got)
 		})
 
 		t.Run("case=correctly set AAL", func(t *testing.T) {
@@ -81,7 +83,9 @@ func TestManager(t *testing.T) {
 				original := identity.NewIdentity(config.DefaultIdentityTraitsSchemaID)
 				original.Traits = newTraits(email, "")
 				require.NoError(t, reg.IdentityManager().Create(context.Background(), original))
-				assert.Equal(t, identity.NoAuthenticatorAssuranceLevel, original.AvailableAAL)
+				got, ok := original.AvailableAAL.ToAAL()
+				require.True(t, ok)
+				assert.Equal(t, identity.NoAuthenticatorAssuranceLevel, got)
 			})
 
 			t.Run("case=should set AAL to 1 if password is set", func(t *testing.T) {
@@ -96,7 +100,9 @@ func TestManager(t *testing.T) {
 					},
 				}
 				require.NoError(t, reg.IdentityManager().Create(context.Background(), original))
-				assert.Equal(t, identity.AuthenticatorAssuranceLevel1, original.AvailableAAL)
+				got, ok := original.AvailableAAL.ToAAL()
+				require.True(t, ok)
+				assert.Equal(t, identity.AuthenticatorAssuranceLevel1, got)
 			})
 
 			t.Run("case=should set AAL to 2 if password and TOTP is set", func(t *testing.T) {
@@ -116,7 +122,9 @@ func TestManager(t *testing.T) {
 					},
 				}
 				require.NoError(t, reg.IdentityManager().Create(context.Background(), original))
-				assert.Equal(t, identity.AuthenticatorAssuranceLevel2, original.AvailableAAL)
+				got, ok := original.AvailableAAL.ToAAL()
+				require.True(t, ok)
+				assert.Equal(t, identity.AuthenticatorAssuranceLevel2, got)
 			})
 
 			t.Run("case=should set AAL to 0 if only TOTP is set", func(t *testing.T) {
@@ -131,7 +139,9 @@ func TestManager(t *testing.T) {
 					},
 				}
 				require.NoError(t, reg.IdentityManager().Create(context.Background(), original))
-				assert.Equal(t, identity.NoAuthenticatorAssuranceLevel, original.AvailableAAL)
+				got, ok := original.AvailableAAL.ToAAL()
+				require.True(t, ok)
+				assert.Equal(t, identity.NoAuthenticatorAssuranceLevel, got)
 			})
 		})
 
@@ -177,7 +187,7 @@ func TestManager(t *testing.T) {
 				},
 			}
 			require.NoError(t, reg.IdentityManager().Update(context.Background(), original, identity.ManagerAllowWriteProtectedTraits))
-			assert.Equal(t, identity.AuthenticatorAssuranceLevel1, original.AvailableAAL)
+			assert.EqualValues(t, identity.AuthenticatorAssuranceLevel1, original.AvailableAAL.String)
 		})
 
 		t.Run("case=should set AAL to 2 if password and TOTP is set", func(t *testing.T) {
@@ -192,16 +202,16 @@ func TestManager(t *testing.T) {
 				},
 			}
 			require.NoError(t, reg.IdentityManager().Create(context.Background(), original))
-			assert.Equal(t, identity.AuthenticatorAssuranceLevel1, original.AvailableAAL)
+			assert.EqualValues(t, identity.AuthenticatorAssuranceLevel1, original.AvailableAAL.String)
 			require.NoError(t, reg.IdentityManager().Update(context.Background(), original, identity.ManagerAllowWriteProtectedTraits))
-			assert.Equal(t, identity.AuthenticatorAssuranceLevel1, original.AvailableAAL, "Updating without changes should not change AAL")
+			assert.EqualValues(t, identity.AuthenticatorAssuranceLevel1, original.AvailableAAL.String, "Updating without changes should not change AAL")
 			original.Credentials[identity.CredentialsTypeTOTP] = identity.Credentials{
 				Type:        identity.CredentialsTypeTOTP,
 				Identifiers: []string{email},
 				Config:      sqlxx.JSONRawMessage(`{"totp_url":"otpauth://totp/test"}`),
 			}
 			require.NoError(t, reg.IdentityManager().Update(context.Background(), original, identity.ManagerAllowWriteProtectedTraits))
-			assert.Equal(t, identity.AuthenticatorAssuranceLevel2, original.AvailableAAL)
+			assert.EqualValues(t, identity.AuthenticatorAssuranceLevel2, original.AvailableAAL.String)
 		})
 
 		t.Run("case=should set AAL to 0 if only TOTP is set", func(t *testing.T) {
@@ -217,7 +227,8 @@ func TestManager(t *testing.T) {
 				},
 			}
 			require.NoError(t, reg.IdentityManager().Update(context.Background(), original, identity.ManagerAllowWriteProtectedTraits))
-			assert.Equal(t, identity.NoAuthenticatorAssuranceLevel, original.AvailableAAL)
+			assert.True(t, original.AvailableAAL.Valid)
+			assert.EqualValues(t, identity.NoAuthenticatorAssuranceLevel, original.AvailableAAL.String)
 		})
 
 		t.Run("case=should not update protected traits without option", func(t *testing.T) {
