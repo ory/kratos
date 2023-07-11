@@ -589,7 +589,7 @@ func TestDoesSessionSatisfy(t *testing.T) {
 			for _, c := range tc.creds {
 				id.SetCredentials(c.Type, c)
 			}
-			require.NoError(t, reg.PrivilegedIdentityPool().CreateIdentity(context.Background(), id))
+			require.NoError(t, reg.IdentityManager().Create(context.Background(), id, identity.ManagerAllowWriteProtectedTraits))
 			t.Cleanup(func() {
 				require.NoError(t, reg.PrivilegedIdentityPool().DeleteIdentity(context.Background(), id.ID))
 			})
@@ -606,9 +606,7 @@ func TestDoesSessionSatisfy(t *testing.T) {
 				if tc.expectedFunc != nil {
 					tc.expectedFunc(t, err, tc.err)
 				}
-
 				require.ErrorAs(t, err, &tc.err)
-
 			} else {
 				require.NoError(t, err)
 			}

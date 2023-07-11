@@ -45,6 +45,7 @@ func NewSessionClient(t *testing.T, u string) *http.Client {
 func maybePersistSession(t *testing.T, reg *driver.RegistryDefault, sess *session.Session) {
 	id, err := reg.PrivilegedIdentityPool().GetIdentityConfidential(context.Background(), sess.Identity.ID)
 	if err != nil {
+		require.NoError(t, sess.Identity.SetAvailableAAL(context.Background(), reg.IdentityManager()))
 		require.NoError(t, reg.PrivilegedIdentityPool().CreateIdentity(context.Background(), sess.Identity))
 		id, err = reg.PrivilegedIdentityPool().GetIdentityConfidential(context.Background(), sess.Identity.ID)
 		require.NoError(t, err)
@@ -156,7 +157,7 @@ func NewHTTPClientWithArbitrarySessionToken(t *testing.T, reg *driver.RegistryDe
 func NewHTTPClientWithArbitrarySessionCookie(t *testing.T, reg *driver.RegistryDefault) *http.Client {
 	req := x.NewTestHTTPRequest(t, "GET", "/sessions/whoami", nil)
 	s, err := session.NewActiveSession(req,
-		&identity.Identity{ID: x.NewUUID(), State: identity.StateActive},
+		&identity.Identity{ID: x.NewUUID(), State: identity.StateActive, Traits: []byte("{}")},
 		NewSessionLifespanProvider(time.Hour),
 		time.Now(),
 		identity.CredentialsTypePassword,

@@ -78,6 +78,7 @@ func createIdentity(t *testing.T, reg driver.Registry) (*identity.Identity, stri
 			Config:      sqlxx.JSONRawMessage(`{"totp_url":"` + string(key.URL()) + `"}`),
 		},
 	}
+	require.NoError(t, i.SetAvailableAAL(context.Background(), reg.IdentityManager()))
 	require.NoError(t, reg.PrivilegedIdentityPool().UpdateIdentity(context.Background(), i))
 	return i, password, key
 }
