@@ -5,7 +5,7 @@
 
 **Table of Contents**
 
-- [ (2023-07-10)](#2023-07-10)
+- [ (2023-07-11)](#2023-07-11)
   - [Bug Fixes](#bug-fixes)
 - [0.14.0-pre.0 (2023-07-06)](#0140-pre0-2023-07-06)
   - [Bug Fixes](#bug-fixes-1)
@@ -306,7 +306,7 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# [](https://github.com/ory/kratos/compare/v0.14.0-pre.0...v) (2023-07-10)
+# [](https://github.com/ory/kratos/compare/v0.14.0-pre.0...v) (2023-07-11)
 
 ### Bug Fixes
 
@@ -315,6 +315,11 @@
   ([eaa3f3c](https://github.com/ory/kratos/commit/eaa3f3c19feaf9048e800cc5a5f1e28d3708c624))
 - Reintroduce ExpandAll ([#3369](https://github.com/ory/kratos/issues/3369))
   ([8f9bff5](https://github.com/ory/kratos/commit/8f9bff527528780b623bf8e4801f7f3c37a5a6f3))
+- Update correct typo ([#3281](https://github.com/ory/kratos/issues/3281))
+  ([0fea75c](https://github.com/ory/kratos/commit/0fea75c4093d2c7edc84c14f0ab5bebf33a58970)):
+
+  The text for verification code input should be `Verification code` not
+  `Verify code`.
 
 # [0.14.0-pre.0](https://github.com/ory/kratos/compare/v0.13.0...v0.14.0-pre.0) (2023-07-06)
 
