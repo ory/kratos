@@ -11,6 +11,22 @@ func NewInfoNodeLabelVerifyOTP() *Message {
 	}
 }
 
+func NewInfoNodeLabelVerificationCode() *Message {
+	return &Message{
+		ID:   InfoNodeLabelVerificationCode,
+		Text: "Verification code",
+		Type: Info,
+	}
+}
+
+func NewInfoNodeLabelRecoveryCode() *Message {
+	return &Message{
+		ID:   InfoNodeLabelRecoveryCode,
+		Text: "Recovery code",
+		Type: Info,
+	}
+}
+
 func NewInfoNodeInputPassword() *Message {
 	return &Message{
 		ID:   InfoNodeLabelInputPassword,

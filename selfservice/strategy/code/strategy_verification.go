@@ -44,7 +44,7 @@ func (s *Strategy) PopulateVerificationMethod(r *http.Request, f *verification.F
 		nodes.Upsert(
 			node.
 				NewInputField("code", nil, node.CodeGroup, node.InputAttributeTypeText, node.WithRequiredInputAttribute).
-				WithMetaLabel(text.NewInfoNodeLabelVerifyOTP()),
+				WithMetaLabel(text.NewInfoNodeLabelVerificationCode()),
 		)
 		// Required for the re-send code button
 		nodes.Append(
