@@ -321,6 +321,27 @@ func (i *Identity) UnmarshalJSON(b []byte) error {
 	return err
 }
 
+func (i *Identity) SetAvailableAAL(ctx context.Context, m *Manager) (err error) {
+	i.AvailableAAL = NewNullableAuthenticatorAssuranceLevel(NoAuthenticatorAssuranceLevel)
+	if c, err := m.CountActiveFirstFactorCredentials(ctx, i); err != nil {
+		return err
+	} else if c == 0 {
+		// No first factor set up - AAL is 0
+		return nil
+	}
+
+	i.AvailableAAL = NewNullableAuthenticatorAssuranceLevel(AuthenticatorAssuranceLevel1)
+	if c, err := m.CountActiveMultiFactorCredentials(ctx, i); err != nil {
+		return err
+	} else if c == 0 {
+		// No second factor set up - AAL is 1
+		return nil
+	}
+
+	i.AvailableAAL = NewNullableAuthenticatorAssuranceLevel(AuthenticatorAssuranceLevel2)
+	return nil
+}
+
 type WithAdminMetadataInJSON Identity
 
 func (i WithAdminMetadataInJSON) MarshalJSON() ([]byte, error) {

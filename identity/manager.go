@@ -90,7 +90,7 @@ func (m *Manager) Create(ctx context.Context, i *Identity, opts ...ManagerOption
 		return err
 	}
 
-	if err := m.setAAL(ctx, i); err != nil {
+	if err := i.SetAvailableAAL(ctx, m); err != nil {
 		return err
 	}
 
@@ -111,7 +111,7 @@ func (m *Manager) CreateIdentities(ctx context.Context, identities []*Identity, 
 			i.SchemaID = m.r.Config().DefaultIdentityTraitsSchemaID(ctx)
 		}
 
-		if err := m.setAAL(ctx, i); err != nil {
+		if err := i.SetAvailableAAL(ctx, m); err != nil {
 			return err
 		}
 
@@ -172,32 +172,11 @@ func (m *Manager) Update(ctx context.Context, updated *Identity, opts ...Manager
 		return err
 	}
 
-	if err := m.setAAL(ctx, updated); err != nil {
+	if err := updated.SetAvailableAAL(ctx, m); err != nil {
 		return err
 	}
 
 	return m.r.PrivilegedIdentityPool().UpdateIdentity(ctx, updated)
-}
-
-func (m *Manager) setAAL(ctx context.Context, i *Identity) (err error) {
-	i.AvailableAAL = NewNullableAuthenticatorAssuranceLevel(NoAuthenticatorAssuranceLevel)
-	if c, err := m.CountActiveFirstFactorCredentials(ctx, i); err != nil {
-		return err
-	} else if c == 0 {
-		// No first factor set up - AAL is 0
-		return nil
-	}
-
-	i.AvailableAAL = NewNullableAuthenticatorAssuranceLevel(AuthenticatorAssuranceLevel1)
-	if c, err := m.CountActiveMultiFactorCredentials(ctx, i); err != nil {
-		return err
-	} else if c == 0 {
-		// No second factor set up - AAL is 1
-		return nil
-	}
-
-	i.AvailableAAL = NewNullableAuthenticatorAssuranceLevel(AuthenticatorAssuranceLevel2)
-	return nil
 }
 
 func (m *Manager) UpdateSchemaID(ctx context.Context, id uuid.UUID, schemaID string, opts ...ManagerOption) (err error) {

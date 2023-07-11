@@ -317,20 +317,9 @@ func (s *ManagerHTTP) DoesSessionSatisfy(r *http.Request, sess *Session, request
 				}
 			}
 
-			available = identity.NoAuthenticatorAssuranceLevel
-			if firstCount, err := s.r.IdentityManager().CountActiveFirstFactorCredentials(ctx, i); err != nil {
+			if err := i.SetAvailableAAL(ctx, s.r.IdentityManager()); err != nil {
 				return err
-			} else if firstCount > 0 {
-				available = identity.AuthenticatorAssuranceLevel1
 			}
-
-			if secondCount, err := s.r.IdentityManager().CountActiveMultiFactorCredentials(ctx, i); err != nil {
-				return err
-			} else if secondCount > 0 {
-				available = identity.AuthenticatorAssuranceLevel2
-			}
-
-			i.AvailableAAL = identity.NewNullableAuthenticatorAssuranceLevel(available)
 
 			// This is the migration strategy for identities that already exist.
 			if managerOpts.upsertAAL {
