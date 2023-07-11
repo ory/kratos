@@ -173,7 +173,7 @@ type toSession struct {
 // - if the `Authorization: bearer <ory-session-token>` HTTP header was set with a valid Ory Kratos Session Token;
 // - if the `X-Session-Token` HTTP header was set with a valid Ory Kratos Session Token.
 //
-// If none of these headers are set or the cooke or token are invalid, the endpoint returns a HTTP 401 status code.
+// If none of these headers are set or the cookie or token are invalid, the endpoint returns a HTTP 401 status code.
 //
 // As explained above, this request may fail due to several reasons. The `error.id` can be one of:
 //
