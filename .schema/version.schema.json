@@ -7,6 +7,23 @@
                 {
                     "properties": {
                         "version": {
+                            "const": "v1.0.0"
+                        }
+                    },
+                    "required": [
+                        "version"
+                    ]
+                },
+                {
+                    "$ref": "https://raw.githubusercontent.com/ory/kratos/v1.0.0/.schemastore/config.schema.json"
+                }
+            ]
+        },
+        {
+            "allOf": [
+                {
+                    "properties": {
+                        "version": {
                             "const": "v0.13.0"
                         }
                     },
