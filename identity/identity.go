@@ -264,6 +264,9 @@ func (i *Identity) ParseCredentials(t CredentialsType, config interface{}) (*Cre
 }
 
 func (i *Identity) CopyWithoutCredentials() *Identity {
+	if i == nil {
+		return nil
+	}
 	i.lock().RLock()
 	defer i.lock().RUnlock()
 	ii := *i
