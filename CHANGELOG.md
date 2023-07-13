@@ -5,9 +5,9 @@
 
 **Table of Contents**
 
-- [ (2023-07-11)](#2023-07-11)
+- [ (2023-07-13)](#2023-07-13)
   - [Bug Fixes](#bug-fixes)
-- [0.14.0-pre.0 (2023-07-06)](#0140-pre0-2023-07-06)
+- [1.0.0 (2023-07-12)](#100-2023-07-12)
   - [Bug Fixes](#bug-fixes-1)
   - [Code Generation](#code-generation)
   - [Documentation](#documentation)
@@ -306,24 +306,125 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# [](https://github.com/ory/kratos/compare/v0.14.0-pre.0...v) (2023-07-11)
+# [](https://github.com/ory/kratos/compare/v1.0.0...v) (2023-07-13)
 
 ### Bug Fixes
 
-- Incorrect override in identity hydrate
-  ([#3368](https://github.com/ory/kratos/issues/3368))
-  ([eaa3f3c](https://github.com/ory/kratos/commit/eaa3f3c19feaf9048e800cc5a5f1e28d3708c624))
-- Reintroduce ExpandAll ([#3369](https://github.com/ory/kratos/issues/3369))
-  ([8f9bff5](https://github.com/ory/kratos/commit/8f9bff527528780b623bf8e4801f7f3c37a5a6f3))
-- Update correct typo ([#3281](https://github.com/ory/kratos/issues/3281))
-  ([0fea75c](https://github.com/ory/kratos/commit/0fea75c4093d2c7edc84c14f0ab5bebf33a58970)):
+- Reduce db lookups in whoami for aal check
+  ([#3372](https://github.com/ory/kratos/issues/3372))
+  ([d814a48](https://github.com/ory/kratos/commit/d814a4864d5c25c4f320daca733873577d517331)):
 
-  The text for verification code input should be `Verification code` not
-  `Verify code`.
+  Significantly improves performance by reducing the amount of queries we need
+  to do when checking for the different AAL levels.
 
-# [0.14.0-pre.0](https://github.com/ory/kratos/compare/v0.13.0...v0.14.0-pre.0) (2023-07-06)
+# [1.0.0](https://github.com/ory/kratos/compare/v0.13.0...v1.0.0) (2023-07-12)
 
-autogen: pin v0.14.0-pre.0 release commit
+We are thrilled to announce Ory Kratos v1.0, the powerful Identity, User
+Management, and Authentication system! With this major update, Ory Kratos brings
+a host of enhancements and fixes that greatly improve the user experience and
+overall performance.
+
+Several compelling reasons led to label Ory Kratos as a major release, like
+successfully processing over 100 million API requests daily and having about 100
+million Docker Pulls. We have maintained stability within the Ory Kratos APIs
+for nearly two years, demonstrating their robustness and reliability. No
+breaking changes mean that developers can trust the stability of Ory Kratos in
+production.
+
+Ory Kratos 1.0 introduces a variety of new features while focusing on stability,
+robustness, and improved performance. Major enhancements include support for
+social login and single-sign-on via OpenID connect in native apps, emails sent
+through HTTP rather than SMTP, and full compatibility with Ory Hydra v2.2.0.
+Users will also find multi-region support in the Ory Network for broader
+geographic reach, improved export functionality for all credential types, and
+enhanced session management with the introduction of the "provider ID"
+parameter. Other additions comprise distroless images for leaner resource
+utilization and faster deployment and support for the Lark OIDC provider.
+
+Significant improvements and fixes accompany these new features. Enhanced OIDC
+flows now include the ability to forward prompt upstream parameters, offering
+developers increased flexibility and customization options. The logout flow also
+supports the `return_to` parameter, facilitating more flexible redirection
+post-user logout. Performance has been a key focus, with Ory Kratos 1.0 now
+capable of handling hundreds of millions of active users monthly. Critical bug
+fixes have been applied to prevent users from being redirected to incorrect
+destinations, ensuring smoother authentication and authorization. Additionally,
+there's more support for legacy systems via implemented crypt(3) hashers and a
+fix for metadata patching has been deployed to ensure consistent user metadata
+management. For a detailed view of all changes, refer to the
+[changelog on GitHub](https://github.com/ory/kratos/blob/master/CHANGELOG.md).
+Feedback and support are, as always, greatly appreciated.
+
+Ory Kratos 1.0 is a major release that marks a significant milestone in our
+journey.
+
+We sincerely hope that you find these new features and improvements in Ory
+Kratos 1.0 valuable for your projects. To experience the power of the latest
+release, we encourage you to get the latest version of Ory
+Kratos [here](https://github.com/ory/kratos) or leverage Kratos
+in [Ory Network](https://www.ory.sh/network/) — the easiest, simplest, and most
+cost-effective way to run Ory.
+
+For organizations seeking to upgrade their self-hosted solution, **Ory offers
+dedicated support services to ensure a smooth transition**. Our team is ready to
+assist you throughout the migration process, ensuring uninterrupted access to
+the latest features and improvements. Additionally, we provide
+various [support plans](https://www.ory.sh/support/) specifically tailored for
+self-hosting organizations. These plans offer comprehensive assistance and
+guidance to optimize your Ory deployments and meet your unique requirements.
+
+We extend our heartfelt gratitude to the vibrant and supportive Ory Community.
+Without your constant support, feedback, and contributions, reaching this
+significant milestone would not have been possible. As we continue on this
+journey, your feedback and suggestions are invaluable to us. Together, we are
+shaping the future of identity management and authentication in the digital
+landscape.
+
+Contributors to this release in alphabetical order:
+[borisroman](https://github.com/ory/kratos/commits?author=borisroman),
+[ci42](https://github.com/ory/kratos/commits?author=ci42),
+[CNLHC](https://github.com/ory/kratos/commits?author=CNLHC),
+[David-Wobrock](https://github.com/ory/kratos/commits?author=David-Wobrock),
+[giautm](https://github.com/ory/kratos/commits?author=giautm),
+[IchordeDionysos](https://github.com/ory/kratos/commits?author=IchordeDionysos),
+[indietyp](https://github.com/ory/kratos/commits?author=indietyp),
+[jossbnd](https://github.com/ory/kratos/commits?author=jossbnd),
+[kralicky](https://github.com/ory/kratos/commits?author=kralicky),
+[PhakornKiong](https://github.com/ory/kratos/commits?author=PhakornKiong),
+[sunakan](https://github.com/ory/kratos/commits?author=sunakan),
+[steverusso](https://github.com/ory/kratos/commits?author=steverusso)
+
+Are you passionate about security and want to make a meaningful impact in one of
+the biggest open-source communities? Join the
+[Ory community](https://slack.ory.sh) and become a part of the new ID stack.
+Together, we are building the next generation of IAM solutions that empower
+organizations and individuals to secure their identities effectively.
+
+Want to check out Ory Kratos yourself? Use these commands to get your Ory Kratos
+project running on the Ory Network:
+
+```shell
+brew install ory/tap/cli
+
+scoop bucket add ory https://github.com/ory/scoop.git
+scoop install ory
+
+bash <(curl <https://raw.githubusercontent.com/ory/meta/master/install.sh>) -b . ory
+sudo mv ./ory /usr/local/bin/
+
+ory auth
+
+ory create project --name "My first Kratos project"
+
+ory open account-experience registration
+
+ory patch identity-config \\
+  --replace '/identity/default_schema_id="preset://username"' \\
+  --replace '/identity/schemas=[{"id":"preset://username","url":"preset://username"}]' \\
+  --format yaml
+
+ory open account-experience registration
+```
 
 ### Bug Fixes
 
@@ -375,6 +476,9 @@ autogen: pin v0.14.0-pre.0 release commit
 
 - IdentityCreated event ([#3314](https://github.com/ory/kratos/issues/3314))
   ([78e31cb](https://github.com/ory/kratos/commit/78e31cb82a28e240a6176c8d3d9ef3bc64559e75))
+- Incorrect override in identity hydrate
+  ([#3368](https://github.com/ory/kratos/issues/3368))
+  ([eaa3f3c](https://github.com/ory/kratos/commit/eaa3f3c19feaf9048e800cc5a5f1e28d3708c624))
 - Increase size for request url
   ([#3366](https://github.com/ory/kratos/issues/3366))
   ([10713cc](https://github.com/ory/kratos/commit/10713cc703457cb6f4a1b38482c836e54a0cb224))
@@ -403,6 +507,8 @@ autogen: pin v0.14.0-pre.0 release commit
 - Reduce lookups in whoami call
   ([#3364](https://github.com/ory/kratos/issues/3364))
   ([5bb7b0c](https://github.com/ory/kratos/commit/5bb7b0c83b330ee893bdeb4e636655179bd29e39))
+- Reintroduce ExpandAll ([#3369](https://github.com/ory/kratos/issues/3369))
+  ([8f9bff5](https://github.com/ory/kratos/commit/8f9bff527528780b623bf8e4801f7f3c37a5a6f3))
 - Remove codeball
   ([aa29606](https://github.com/ory/kratos/commit/aa296067e2736cad329814f7acffd816ce0d74a3))
 - Remove duplicate SessionIssued event
@@ -467,6 +573,12 @@ autogen: pin v0.14.0-pre.0 release commit
   ([#3279](https://github.com/ory/kratos/issues/3279))
   ([34ff1d2](https://github.com/ory/kratos/commit/34ff1d2912e7f7aefb35dae759dce2eb37ecb790)),
   closes [#2943](https://github.com/ory/kratos/issues/2943)
+- Update correct typo ([#3281](https://github.com/ory/kratos/issues/3281))
+  ([0fea75c](https://github.com/ory/kratos/commit/0fea75c4093d2c7edc84c14f0ab5bebf33a58970)):
+
+  The text for verification code input should be `Verification code` not
+  `Verify code`.
+
 - Update README ([#3363](https://github.com/ory/kratos/issues/3363))
   ([c426014](https://github.com/ory/kratos/commit/c4260140966489a05169a0197e209ff98181bc2e))
 - Use RETURNING clause for batch create
@@ -481,8 +593,8 @@ autogen: pin v0.14.0-pre.0 release commit
 
 ### Code Generation
 
-- Pin v0.14.0-pre.0 release commit
-  ([b75313e](https://github.com/ory/kratos/commit/b75313e15d7071a77ac49a8425c1fac1be1f5bb3))
+- Pin v1.0.0 release commit
+  ([41b7c51](https://github.com/ory/kratos/commit/41b7c51c1c6b3bdff9e9ea8bb5e455e3c15c5256))
 
 ### Documentation
 
