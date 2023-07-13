@@ -90,6 +90,10 @@ func (m *Manager) Create(ctx context.Context, i *Identity, opts ...ManagerOption
 		return err
 	}
 
+	if err := i.SetAvailableAAL(ctx, m); err != nil {
+		return err
+	}
+
 	if err := m.r.PrivilegedIdentityPool().CreateIdentity(ctx, i); err != nil {
 		return err
 	}
@@ -105,6 +109,10 @@ func (m *Manager) CreateIdentities(ctx context.Context, identities []*Identity, 
 	for _, i := range identities {
 		if i.SchemaID == "" {
 			i.SchemaID = m.r.Config().DefaultIdentityTraitsSchemaID(ctx)
+		}
+
+		if err := i.SetAvailableAAL(ctx, m); err != nil {
+			return err
 		}
 
 		o := newManagerOptions(opts)
@@ -161,6 +169,10 @@ func (m *Manager) Update(ctx context.Context, updated *Identity, opts ...Manager
 	}
 
 	if err := m.requiresPrivilegedAccess(ctx, original, updated, o); err != nil {
+		return err
+	}
+
+	if err := updated.SetAvailableAAL(ctx, m); err != nil {
 		return err
 	}
 

@@ -5,6 +5,7 @@ package identity
 
 import (
 	"context"
+	"database/sql"
 	"reflect"
 	"time"
 
@@ -32,6 +33,44 @@ const (
 	AuthenticatorAssuranceLevel1  AuthenticatorAssuranceLevel = "aal1"
 	AuthenticatorAssuranceLevel2  AuthenticatorAssuranceLevel = "aal2"
 )
+
+type NullableAuthenticatorAssuranceLevel struct {
+	sql.NullString
+}
+
+// NewNullableAuthenticatorAssuranceLevel returns a new NullableAuthenticatorAssuranceLevel
+func NewNullableAuthenticatorAssuranceLevel(aal AuthenticatorAssuranceLevel) NullableAuthenticatorAssuranceLevel {
+	switch aal {
+	case NoAuthenticatorAssuranceLevel:
+		fallthrough
+	case AuthenticatorAssuranceLevel1:
+		fallthrough
+	case AuthenticatorAssuranceLevel2:
+		return NullableAuthenticatorAssuranceLevel{sql.NullString{
+			String: string(aal),
+			Valid:  true,
+		}}
+	default:
+		return NullableAuthenticatorAssuranceLevel{sql.NullString{}}
+	}
+}
+
+// ToAAL returns the AuthenticatorAssuranceLevel value of the given NullableAuthenticatorAssuranceLevel.
+func (n NullableAuthenticatorAssuranceLevel) ToAAL() (AuthenticatorAssuranceLevel, bool) {
+	if !n.Valid {
+		return "", false
+	}
+	switch n.String {
+	case string(NoAuthenticatorAssuranceLevel):
+		return NoAuthenticatorAssuranceLevel, true
+	case string(AuthenticatorAssuranceLevel1):
+		return AuthenticatorAssuranceLevel1, true
+	case string(AuthenticatorAssuranceLevel2):
+		return AuthenticatorAssuranceLevel2, true
+	default:
+		return "", false
+	}
+}
 
 // CredentialsType  represents several different credential types, like password credentials, passwordless credentials,
 // and so on.

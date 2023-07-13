@@ -433,21 +433,21 @@ func TestFlowLifecycle(t *testing.T) {
 					"password": {
 						Type:        "password",
 						Identifiers: []string{email},
-						Config:      sqlxx.JSONRawMessage(`{"hashed_password":"foo"}`),
+						Config:      sqlxx.JSONRawMessage(`{"hashed_password": "$argon2id$v=19$m=32,t=2,p=4$cm94YnRVOW5jZzFzcVE4bQ$MNzk5BtR2vUhrp6qQEjRNw"}`),
 					},
 				},
 				Traits:   identity.Traits(fmt.Sprintf(`{"email":"%s"}`, email)),
 				SchemaID: config.DefaultIdentityTraitsSchemaID,
 			}
 
-			require.NoError(t, reg.PrivilegedIdentityPool().CreateIdentities(context.Background(), id))
+			require.NoError(t, reg.IdentityManager().CreateIdentities(context.Background(), []*identity.Identity{id}, identity.ManagerAllowWriteProtectedTraits))
 
 			id.SetCredentials(identity.CredentialsTypeTOTP, identity.Credentials{
 				Type:        identity.CredentialsTypeTOTP,
 				Identifiers: []string{id.ID.String()},
 				Config:      sqlxx.JSONRawMessage(`{"totp_url":"` + string(key.URL()) + `"}`),
 			})
-			require.NoError(t, reg.PrivilegedIdentityPool().UpdateIdentity(context.Background(), id))
+			require.NoError(t, reg.IdentityManager().Update(context.Background(), id, identity.ManagerAllowWriteProtectedTraits))
 
 			h := func(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 				sess, err := session.NewActiveSession(r, id, reg.Config(), time.Now().UTC(), identity.CredentialsTypePassword, identity.AuthenticatorAssuranceLevel1)
@@ -456,7 +456,6 @@ func TestFlowLifecycle(t *testing.T) {
 				require.NoError(t, reg.SessionPersister().UpsertSession(context.Background(), sess))
 				require.NoError(t, reg.SessionManager().IssueCookie(context.Background(), w, r, sess))
 				require.Equal(t, identity.AuthenticatorAssuranceLevel1, sess.AuthenticatorAssuranceLevel)
-
 			}
 
 			router.GET("/mock-session", h)

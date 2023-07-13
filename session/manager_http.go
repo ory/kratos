@@ -63,6 +63,7 @@ func NewManagerHTTP(r managerHTTPDependencies) *ManagerHTTP {
 
 type options struct {
 	requestURL string
+	upsertAAL  bool
 }
 
 type ManagerOptions func(*options)
@@ -72,6 +73,12 @@ func WithRequestURL(requestURL string) ManagerOptions {
 	return func(opts *options) {
 		opts.requestURL = requestURL
 	}
+}
+
+// UpsertAAL will update the available AAL of the identity if it was previoulsy unset. This is used to migrate
+// identities from older versions of Ory Kratos.
+func UpsertAAL(opts *options) {
+	opts.upsertAAL = true
 }
 
 func (s *ManagerHTTP) UpsertAndIssueCookie(ctx context.Context, w http.ResponseWriter, r *http.Request, ss *Session) (err error) {
@@ -225,15 +232,7 @@ func (s *ManagerHTTP) FetchFromRequest(ctx context.Context, r *http.Request) (_ 
 		return nil, errors.WithStack(NewErrNoCredentialsForSession())
 	}
 
-	expand := identity.ExpandDefault
-	if s.r.Config().SessionWhoAmIAAL(r.Context()) == config.HighestAvailableAAL {
-		// When the session endpoint requires the highest AAL, we fetch all credentials immediately to save a
-		// query later in "DoesSessionSatisfy". This is a SQL optimization, because the identity manager fetches
-		// the data in parallel, which is a bit faster than fetching it in sequence.
-		expand = identity.ExpandEverything
-	}
-
-	se, err := s.r.SessionPersister().GetSessionByToken(ctx, token, ExpandEverything, expand)
+	se, err := s.r.SessionPersister().GetSessionByToken(ctx, token, ExpandEverything, identity.ExpandDefault)
 	if err != nil {
 		if errors.Is(err, herodot.ErrNotFound) || errors.Is(err, sqlcon.ErrNoRows) {
 			return nil, errors.WithStack(NewErrNoActiveSessionFound())
@@ -295,31 +294,41 @@ func (s *ManagerHTTP) DoesSessionSatisfy(r *http.Request, sess *Session, request
 			return nil
 		}
 	case config.HighestAvailableAAL:
-		i := sess.Identity
-		if i == nil {
-			i, err = s.r.IdentityPool().GetIdentity(ctx, sess.IdentityID, identity.ExpandCredentials)
+		if sess.Identity == nil {
+			sess.Identity, err = s.r.IdentityPool().GetIdentity(ctx, sess.IdentityID, identity.ExpandNothing)
 			if err != nil {
 				return err
 			}
-			sess.Identity = i
-		} else if len(i.Credentials) == 0 {
-			// If credentials are not expanded, we load them here.
-			if err := s.r.PrivilegedIdentityPool().HydrateIdentityAssociations(ctx, i, identity.ExpandCredentials); err != nil {
+		}
+
+		i := sess.Identity
+		available, valid := i.AvailableAAL.ToAAL()
+		if !valid {
+			// Available is 0 if the identity was created before the AAL feature was introduced, or if the identity
+			// was directly created in the persister and not the identity manager.
+			//
+			// aal0 indicates that the AAL state of the identity is probably unknown.
+			//
+			// In either case, we need to fetch the credentials from the database to determine the AAL.
+			if len(i.Credentials) == 0 {
+				// The identity was apparently fetched without credentials. Let's hydrate them.
+				if err := s.r.PrivilegedIdentityPool().HydrateIdentityAssociations(ctx, i, identity.ExpandCredentials); err != nil {
+					return err
+				}
+			}
+
+			if err := i.SetAvailableAAL(ctx, s.r.IdentityManager()); err != nil {
 				return err
 			}
-		}
 
-		available := identity.NoAuthenticatorAssuranceLevel
-		if firstCount, err := s.r.IdentityManager().CountActiveFirstFactorCredentials(ctx, i); err != nil {
-			return err
-		} else if firstCount > 0 {
-			available = identity.AuthenticatorAssuranceLevel1
-		}
+			available, _ = i.AvailableAAL.ToAAL()
 
-		if secondCount, err := s.r.IdentityManager().CountActiveMultiFactorCredentials(ctx, i); err != nil {
-			return err
-		} else if secondCount > 0 {
-			available = identity.AuthenticatorAssuranceLevel2
+			// This is the migration strategy for identities that already exist.
+			if managerOpts.upsertAAL {
+				if _, err := s.r.SessionPersister().GetConnection(ctx).Where("id = ? AND nid = ?", i.ID, i.NID).UpdateQuery(i, "available_aal"); err != nil {
+					return err
+				}
+			}
 		}
 
 		if sess.AuthenticatorAssuranceLevel >= available {

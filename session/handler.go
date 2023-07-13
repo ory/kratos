@@ -205,7 +205,10 @@ func (h *Handler) whoami(w http.ResponseWriter, r *http.Request, ps httprouter.P
 	}
 
 	var aalErr *ErrAALNotSatisfied
-	if err := h.r.SessionManager().DoesSessionSatisfy(r, s, c.SessionWhoAmIAAL(r.Context())); errors.As(err, &aalErr) {
+	if err := h.r.SessionManager().DoesSessionSatisfy(r, s, c.SessionWhoAmIAAL(r.Context()),
+		// For the time being we want to update the AAL in the database if it is unset.
+		UpsertAAL,
+	); errors.As(err, &aalErr) {
 		h.r.Audit().WithRequest(r).WithError(err).Info("Session was found but AAL is not satisfied for calling this endpoint.")
 		h.r.Writer().WriteError(w, r, err)
 		return
