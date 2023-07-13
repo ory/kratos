@@ -15,3 +15,6 @@ var verificationMethodSchema []byte
 
 //go:embed .schema/login.schema.json
 var loginMethodSchema []byte
+
+//go:embed .schema/registration.schema.json
+var registrationSchema []byte

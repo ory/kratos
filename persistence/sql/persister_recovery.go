@@ -23,8 +23,10 @@ import (
 	"github.com/ory/x/sqlcon"
 )
 
-var _ recovery.FlowPersister = new(Persister)
-var _ link.RecoveryTokenPersister = new(Persister)
+var (
+	_ recovery.FlowPersister      = new(Persister)
+	_ link.RecoveryTokenPersister = new(Persister)
+)
 
 func (p *Persister) CreateRecoveryFlow(ctx context.Context, r *recovery.Flow) error {
 	ctx, span := p.r.Tracer(ctx).Tracer().Start(ctx, "persistence.sql.CreateRecoveryFlow")
@@ -186,7 +188,6 @@ func (p *Persister) UseRecoveryCode(ctx context.Context, fID uuid.UUID, codeVal 
 	flowTableName := new(recovery.Flow).TableName(ctx)
 
 	if err := sqlcon.HandleError(p.Transaction(ctx, func(ctx context.Context, tx *pop.Connection) (err error) {
-
 		//#nosec G201 -- TableName is static
 		if err := sqlcon.HandleError(tx.RawQuery(fmt.Sprintf("UPDATE %s SET submit_count = submit_count + 1 WHERE id = ? AND nid = ?", flowTableName), fID, nid).Exec()); err != nil {
 			return err
@@ -256,15 +257,15 @@ func (p *Persister) UseRecoveryCode(ctx context.Context, fID uuid.UUID, codeVal 
 	}
 
 	if recoveryCode == nil {
-		return nil, code.ErrCodeNotFound
+		return nil, errors.WithStack(code.ErrCodeNotFound)
 	}
 
 	if recoveryCode.IsExpired() {
-		return nil, flow.NewFlowExpiredError(recoveryCode.ExpiresAt)
+		return nil, errors.WithStack(flow.NewFlowExpiredError(recoveryCode.ExpiresAt))
 	}
 
 	if recoveryCode.WasUsed() {
-		return nil, code.ErrCodeAlreadyUsed
+		return nil, errors.WithStack(code.ErrCodeAlreadyUsed)
 	}
 
 	return recoveryCode, nil

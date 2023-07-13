@@ -412,7 +412,7 @@ func TestRecovery(t *testing.T) {
 			assert.Len(t, gjson.Get(recoverySubmissionResponse, "ui.messages").Array(), 1, "%s", recoverySubmissionResponse)
 			assertx.EqualAsJSON(t, text.NewRecoveryEmailWithCodeSent(), json.RawMessage(gjson.Get(recoverySubmissionResponse, "ui.messages.0").Raw))
 
-			message := testhelpers.CourierExpectMessage(t, reg, recoveryEmail, "Recover access to your account")
+			message := testhelpers.CourierExpectMessage(ctx, t, reg, recoveryEmail, "Recover access to your account")
 			assert.Contains(t, message.Body, "please recover access to your account by entering the following code")
 
 			recoveryCode := testhelpers.CourierExpectCodeInMessage(t, message, 1)
@@ -697,7 +697,7 @@ func TestRecovery(t *testing.T) {
 			assert.Empty(t, gjson.Get(body, "ui.nodes.#(attributes.name==code).attributes.value").String(), "%s", body)
 			assertx.EqualAsJSON(t, text.NewRecoveryEmailWithCodeSent(), json.RawMessage(gjson.Get(body, "ui.messages.0").Raw))
 
-			message := testhelpers.CourierExpectMessage(t, reg, email, "Account access attempted")
+			message := testhelpers.CourierExpectMessage(ctx, t, reg, email, "Account access attempted")
 			assert.Contains(t, message.Body, "If this was you, check if you signed up using a different address.")
 		}
 
@@ -734,7 +734,7 @@ func TestRecovery(t *testing.T) {
 				addr, err := reg.IdentityPool().FindVerifiableAddressByValue(context.Background(), identity.VerifiableAddressTypeEmail, email)
 				assert.NoError(t, err)
 
-				emailText := testhelpers.CourierExpectMessage(t, reg, email, "Recover access to your account")
+				emailText := testhelpers.CourierExpectMessage(ctx, t, reg, email, "Recover access to your account")
 				recoveryCode := testhelpers.CourierExpectCodeInMessage(t, emailText, 1)
 
 				// Deactivate the identity
@@ -773,7 +773,7 @@ func TestRecovery(t *testing.T) {
 		actual := expectSuccessfulRecovery(t, cl, RecoveryFlowTypeBrowser, func(v url.Values) {
 			v.Set("email", email)
 		})
-		message := testhelpers.CourierExpectMessage(t, reg, email, "Recover access to your account")
+		message := testhelpers.CourierExpectMessage(ctx, t, reg, email, "Recover access to your account")
 		recoveryCode := testhelpers.CourierExpectCodeInMessage(t, message, 1)
 
 		cl.CheckRedirect = func(req *http.Request, via []*http.Request) error {
@@ -834,7 +834,7 @@ func TestRecovery(t *testing.T) {
 					v.Set("email", recoveryEmail)
 				}, http.StatusOK)
 
-				message := testhelpers.CourierExpectMessage(t, reg, recoveryEmail, "Recover access to your account")
+				message := testhelpers.CourierExpectMessage(ctx, t, reg, recoveryEmail, "Recover access to your account")
 				recoveryCode := testhelpers.CourierExpectCodeInMessage(t, message, 1)
 
 				form := withCSRFToken(t, testCase.FlowType, actual, url.Values{
@@ -945,7 +945,7 @@ func TestRecovery(t *testing.T) {
 
 		initialFlowId := gjson.Get(body, "id")
 
-		message := testhelpers.CourierExpectMessage(t, reg, recoveryEmail, "Recover access to your account")
+		message := testhelpers.CourierExpectMessage(ctx, t, reg, recoveryEmail, "Recover access to your account")
 		assert.Contains(t, message.Body, "please recover access to your account by entering the following code")
 
 		recoveryCode := testhelpers.CourierExpectCodeInMessage(t, message, 1)
@@ -1000,7 +1000,7 @@ func TestRecovery(t *testing.T) {
 		assert.True(t, gjson.Get(body, "ui.nodes.#(attributes.name==code)").Exists())
 		assert.Equal(t, recoveryEmail, gjson.Get(body, "ui.nodes.#(attributes.name==email).attributes.value").String())
 
-		message := testhelpers.CourierExpectMessage(t, reg, recoveryEmail, "Recover access to your account")
+		message := testhelpers.CourierExpectMessage(ctx, t, reg, recoveryEmail, "Recover access to your account")
 		recoveryCode := testhelpers.CourierExpectCodeInMessage(t, message, 1)
 
 		submitRecoveryCode(t, c, body, RecoveryFlowTypeBrowser, recoveryCode, http.StatusOK)
@@ -1019,14 +1019,14 @@ func TestRecovery(t *testing.T) {
 		require.NotEmpty(t, action)
 		assert.Equal(t, recoveryEmail, gjson.Get(body, "ui.nodes.#(attributes.name==email).attributes.value").String())
 
-		message1 := testhelpers.CourierExpectMessage(t, reg, recoveryEmail, "Recover access to your account")
+		message1 := testhelpers.CourierExpectMessage(ctx, t, reg, recoveryEmail, "Recover access to your account")
 		recoveryCode1 := testhelpers.CourierExpectCodeInMessage(t, message1, 1)
 
 		body = resendRecoveryCode(t, c, body, RecoveryFlowTypeBrowser, http.StatusOK)
 		assert.True(t, gjson.Get(body, "ui.nodes.#(attributes.name==code)").Exists())
 		assert.Equal(t, recoveryEmail, gjson.Get(body, "ui.nodes.#(attributes.name==email).attributes.value").String())
 
-		message2 := testhelpers.CourierExpectMessage(t, reg, recoveryEmail, "Recover access to your account")
+		message2 := testhelpers.CourierExpectMessage(ctx, t, reg, recoveryEmail, "Recover access to your account")
 		recoveryCode2 := testhelpers.CourierExpectCodeInMessage(t, message2, 1)
 
 		body = submitRecoveryCode(t, c, body, RecoveryFlowTypeBrowser, recoveryCode1, http.StatusOK)

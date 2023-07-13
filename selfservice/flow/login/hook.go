@@ -142,7 +142,6 @@ func (e *HookExecutor) PostLoginHook(
 		x.SecureRedirectAllowSelfServiceURLs(c.SelfPublicURL(r.Context())),
 		x.SecureRedirectOverrideDefaultReturnTo(c.SelfServiceFlowLoginReturnTo(r.Context(), a.Active.String())),
 	)
-
 	if err != nil {
 		return err
 	}

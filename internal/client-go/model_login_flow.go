@@ -39,6 +39,8 @@ type LoginFlow struct {
 	ReturnTo *string `json:"return_to,omitempty"`
 	// SessionTokenExchangeCode holds the secret code that the client can use to retrieve a session token after the login flow has been completed. This is only set if the client has requested a session token exchange code, and if the flow is of type \"api\", and only on creating the login flow.
 	SessionTokenExchangeCode *string `json:"session_token_exchange_code,omitempty"`
+	// State represents the state of this request:  choose_method: ask the user to choose a method (e.g. verify your email) sent_email: the email has been sent to the user passed_challenge: the request was successful and the verification challenge was passed.
+	State interface{} `json:"state"`
 	// The flow type can either be `api` or `browser`.
 	Type string      `json:"type"`
 	Ui   UiContainer `json:"ui"`
@@ -50,12 +52,13 @@ type LoginFlow struct {
 // This constructor will assign default values to properties that have it defined,
 // and makes sure properties required by API are set, but the set of arguments
 // will change when the set of required properties is changed
-func NewLoginFlow(expiresAt time.Time, id string, issuedAt time.Time, requestUrl string, type_ string, ui UiContainer) *LoginFlow {
+func NewLoginFlow(expiresAt time.Time, id string, issuedAt time.Time, requestUrl string, state interface{}, type_ string, ui UiContainer) *LoginFlow {
 	this := LoginFlow{}
 	this.ExpiresAt = expiresAt
 	this.Id = id
 	this.IssuedAt = issuedAt
 	this.RequestUrl = requestUrl
+	this.State = state
 	this.Type = type_
 	this.Ui = ui
 	return &this
@@ -421,6 +424,32 @@ func (o *LoginFlow) SetSessionTokenExchangeCode(v string) {
 	o.SessionTokenExchangeCode = &v
 }
 
+// GetState returns the State field value
+// If the value is explicit nil, the zero value for interface{} will be returned
+func (o *LoginFlow) GetState() interface{} {
+	if o == nil {
+		var ret interface{}
+		return ret
+	}
+
+	return o.State
+}
+
+// GetStateOk returns a tuple with the State field value
+// and a boolean to check if the value has been set.
+// NOTE: If the value is an explicit nil, `nil, true` will be returned
+func (o *LoginFlow) GetStateOk() (*interface{}, bool) {
+	if o == nil || o.State == nil {
+		return nil, false
+	}
+	return &o.State, true
+}
+
+// SetState sets field value
+func (o *LoginFlow) SetState(v interface{}) {
+	o.State = v
+}
+
 // GetType returns the Type field value
 func (o *LoginFlow) GetType() string {
 	if o == nil {
@@ -538,6 +567,9 @@ func (o LoginFlow) MarshalJSON() ([]byte, error) {
 	}
 	if o.SessionTokenExchangeCode != nil {
 		toSerialize["session_token_exchange_code"] = o.SessionTokenExchangeCode
+	}
+	if o.State != nil {
+		toSerialize["state"] = o.State
 	}
 	if true {
 		toSerialize["type"] = o.Type

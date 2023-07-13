@@ -20,8 +20,10 @@ import (
 	"github.com/ory/x/otelx"
 )
 
-var _ registration.PostHookPostPersistExecutor = new(Verifier)
-var _ settings.PostHookPostPersistExecutor = new(Verifier)
+var (
+	_ registration.PostHookPostPersistExecutor = new(Verifier)
+	_ settings.PostHookPostPersistExecutor     = new(Verifier)
+)
 
 type (
 	verifierDependencies interface {
@@ -98,7 +100,7 @@ func (e *Verifier) do(
 			flowCallback(verificationFlow)
 		}
 
-		verificationFlow.State = verification.StateEmailSent
+		verificationFlow.State = flow.StateEmailSent
 
 		if err := strategy.PopulateVerificationMethod(r, verificationFlow); err != nil {
 			return err

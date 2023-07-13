@@ -137,12 +137,12 @@ func (s *Strategy) Register(w http.ResponseWriter, r *http.Request, f *registrat
 
 	f.TransientPayload = p.TransientPayload
 
-	var pid = p.Provider // this can come from both url query and post body
+	pid := p.Provider // this can come from both url query and post body
 	if pid == "" {
 		return errors.WithStack(flow.ErrStrategyNotResponsible)
 	}
 
-	if err := flow.MethodEnabledAndAllowed(r.Context(), s.SettingsStrategyID(), s.SettingsStrategyID(), s.d); err != nil {
+	if err := flow.MethodEnabledAndAllowed(r.Context(), f.GetFlowName(), s.SettingsStrategyID(), s.SettingsStrategyID(), s.d); err != nil {
 		return s.handleError(w, r, f, pid, nil, err)
 	}
 

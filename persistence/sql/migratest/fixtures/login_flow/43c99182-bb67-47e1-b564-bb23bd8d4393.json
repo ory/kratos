@@ -13,5 +13,6 @@
   "created_at": "2013-10-07T08:23:19Z",
   "updated_at": "2013-10-07T08:23:19Z",
   "refresh": true,
-  "requested_aal": "aal1"
+  "requested_aal": "aal1",
+  "state": ""
 }

@@ -102,6 +102,8 @@ type Flow struct {
 	DangerousSkipCSRFCheck bool `json:"-" faker:"-" db:"skip_csrf_check"`
 }
 
+var _ flow.Flow = new(Flow)
+
 func NewFlow(conf *config.Config, exp time.Duration, csrf string, r *http.Request, strategy Strategy, ft flow.Type) (*Flow, error) {
 	now := time.Now().UTC()
 	id := x.NewUUID()
@@ -127,7 +129,7 @@ func NewFlow(conf *config.Config, exp time.Duration, csrf string, r *http.Reques
 			Method: "POST",
 			Action: flow.AppendFlowTo(urlx.AppendPaths(conf.SelfPublicURL(r.Context()), RouteSubmitFlow), id).String(),
 		},
-		State:     StateChooseMethod,
+		State:     flow.StateChooseMethod,
 		CSRFToken: csrf,
 		Type:      ft,
 	}
@@ -221,4 +223,16 @@ func (f *Flow) AfterSave(*pop.Connection) error {
 
 func (f *Flow) GetUI() *container.Container {
 	return f.UI
+}
+
+func (f *Flow) GetState() State {
+	return f.State
+}
+
+func (f *Flow) GetFlowName() flow.FlowName {
+	return flow.RecoveryFlow
+}
+
+func (f *Flow) SetState(state State) {
+	f.State = state
 }

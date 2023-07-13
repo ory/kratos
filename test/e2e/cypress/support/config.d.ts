@@ -106,6 +106,8 @@ export type EnablesLinkMethod = boolean
 export type OverrideTheBaseURLWhichShouldBeUsedAsTheBaseForRecoveryAndVerificationLinks =
   string
 export type HowLongALinkIsValidFor = string
+export type EnablesLoginWithCodeMethod = boolean
+export type EnablesRegistrationWithCodeMethod = boolean
 export type EnablesCodeMethod = boolean
 export type HowLongACodeIsValidFor = string
 export type EnablesUsernameEmailAndPasswordMethod = boolean
@@ -210,6 +212,7 @@ export type Provider =
   | "dingtalk"
   | "patreon"
   | "linkedin"
+  | "lark"
 export type OptionalStringWhichWillBeUsedWhenGeneratingLabelsForUIButtons =
   string
 /**
@@ -261,6 +264,20 @@ export type DataSourceName = string
  */
 export type OverrideMessageTemplates = string
 /**
+ * Defines how emails will be sent, either through SMTP (default) or HTTP.
+ */
+export type DeliveryStrategy = "smtp" | "http"
+/**
+ * This URL will be used to send the emails to.
+ */
+export type HTTPAddressOfAPIEndpoint = string
+/**
+ * Define which auth mechanism to use for auth with the HTTP email provider
+ */
+export type AuthMechanisms =
+  | WebHookAuthApiKeyProperties
+  | WebHookAuthBasicAuthProperties
+/**
  * This URI will be used to connect to the SMTP server. Use the scheme smtps for implicit TLS sessions or smtp for explicit StartTLS/cleartext sessions. Please note that TLS is always enforced with certificate trust verification by default for security reasons on both schemes. With the smtp scheme you can use the query parameter (`?disable_starttls=true`) to allow cleartext sessions or (`?disable_starttls=false`) to enforce StartTLS (default behaviour). Additionally, use the query parameter to allow (`?skip_ssl_verify=true`) or disallow (`?skip_ssl_verify=false`) self-signed TLS certificates (default behaviour) on both implicit and explicit TLS sessions.
  */
 export type SMTPConnectionString = string
@@ -291,17 +308,21 @@ export type SMSSenderAddress = string
 /**
  * This URL will be used to connect to the SMS provider.
  */
-export type HTTPAddressOfAPIEndpoint = string
+export type HTTPAddressOfAPIEndpoint1 = string
 /**
  * Define which auth mechanism to use for auth with the SMS provider
  */
-export type AuthMechanisms =
+export type AuthMechanisms1 =
   | WebHookAuthApiKeyProperties
   | WebHookAuthBasicAuthProperties
 /**
  * If set, the login and registration flows will handle the Ory OAuth 2.0 & OpenID `login_challenge` query parameter to serve as an OpenID Connect Provider. This URL should point to Ory Hydra when you are not running on the Ory Network and be left untouched otherwise.
  */
 export type OAuth20ProviderURL = string
+/**
+ * Override the return_to query parameter with the OAuth2 provider request URL when perfoming an OAuth2 login flow.
+ */
+export type PersistOAuth2RequestBetweenFlows = boolean
 /**
  * Disable request logging for /health/alive and /health/ready endpoints
  */
@@ -506,6 +527,8 @@ export interface OryKratosConfiguration2 {
         config?: LinkConfiguration
       }
       code?: {
+        login_enabled?: EnablesLoginWithCodeMethod
+        registration_enabled?: EnablesRegistrationWithCodeMethod
         enabled?: EnablesCodeMethod
         config?: CodeConfiguration
       }
@@ -674,14 +697,22 @@ export interface SelfServiceAfterRegistration {
   password?: SelfServiceAfterRegistrationMethod
   webauthn?: SelfServiceAfterRegistrationMethod
   oidc?: SelfServiceAfterRegistrationMethod
+  code?: SelfServiceAfterRegistrationMethod
   hooks?: SelfServiceHooks
 }
 export interface SelfServiceAfterRegistrationMethod {
   default_browser_return_url?: RedirectBrowsersToSetURLPerDefault
-  hooks?: (SelfServiceSessionIssuerHook | SelfServiceWebHook)[]
+  hooks?: (
+    | SelfServiceSessionIssuerHook
+    | SelfServiceWebHook
+    | SelfServiceShowVerificationUIHook
+  )[]
 }
 export interface SelfServiceSessionIssuerHook {
   hook: "session"
+}
+export interface SelfServiceShowVerificationUIHook {
+  hook: "show_verification_ui"
 }
 export interface SelfServiceBeforeLogin {
   hooks?: SelfServiceHooks
@@ -691,6 +722,7 @@ export interface SelfServiceAfterLogin {
   password?: SelfServiceAfterDefaultLoginMethod
   webauthn?: SelfServiceAfterDefaultLoginMethod
   oidc?: SelfServiceAfterOIDCLoginMethod
+  code?: SelfServiceAfterDefaultLoginMethod
   hooks?: (
     | SelfServiceWebHook
     | SelfServiceSessionRevokerHook
@@ -868,6 +900,8 @@ export interface CourierConfiguration {
    * Defines the maximum number of times the sending of a message is retried after it failed before it is marked as abandoned
    */
   message_retries?: number
+  delivery_strategy?: DeliveryStrategy
+  http?: HTTPConfiguration
   smtp: SMTPConfiguration
   sms?: SMSSenderConfiguration
 }
@@ -893,51 +927,29 @@ export interface EmailCourierTemplate {
   subject?: string
 }
 /**
- * Configures outgoing emails using the SMTP protocol.
+ * Configures outgoing emails using HTTP.
  */
-export interface SMTPConfiguration {
-  connection_uri: SMTPConnectionString
-  client_cert_path?: SMTPClientCertificatePath
-  client_key_path?: SMTPClientPrivateKeyPath
-  from_address?: SMTPSenderAddress
-  from_name?: SMTPSenderName
-  headers?: SMTPHeaders
-  local_name?: SMTPHELOEHLOName
+export interface HTTPConfiguration {
+  request_config?: HttpRequestConfig
 }
-/**
- * These headers will be passed in the SMTP conversation -- e.g. when using the AWS SES SMTP interface for cross-account sending.
- */
-export interface SMTPHeaders {
-  [k: string]: string | undefined
-}
-/**
- * Configures outgoing sms messages using HTTP protocol with generic SMS provider
- */
-export interface SMSSenderConfiguration {
+export interface HttpRequestConfig {
+  url?: HTTPAddressOfAPIEndpoint
   /**
-   * Determines if SMS functionality is enabled
+   * The HTTP method to use (GET, POST, etc). Defaults to POST.
    */
-  enabled?: boolean
-  from?: SMSSenderAddress
-  request_config?: {
-    url: HTTPAddressOfAPIEndpoint
-    /**
-     * The HTTP method to use (GET, POST, etc).
-     */
-    method: string
-    /**
-     * The HTTP headers that must be applied to request
-     */
-    headers?: {
-      [k: string]: string | undefined
-    }
-    /**
-     * URI pointing to the jsonnet template used for payload generation. Only used for those HTTP methods, which support HTTP body payloads
-     */
-    body?: string
-    auth?: AuthMechanisms
-    additionalProperties?: false
+  method?: string
+  /**
+   * The HTTP headers that must be applied to request
+   */
+  headers?: {
+    [k: string]: string | undefined
   }
+  /**
+   * URI pointing to the jsonnet template used for payload generation. Only used for those HTTP methods, which support HTTP body payloads
+   */
+  body?: string
+  auth?: AuthMechanisms
+  additionalProperties?: false
 }
 export interface WebHookAuthApiKeyProperties {
   type: "api_key"
@@ -969,10 +981,57 @@ export interface WebHookAuthBasicAuthProperties {
     password: string
   }
 }
+/**
+ * Configures outgoing emails using the SMTP protocol.
+ */
+export interface SMTPConfiguration {
+  connection_uri: SMTPConnectionString
+  client_cert_path?: SMTPClientCertificatePath
+  client_key_path?: SMTPClientPrivateKeyPath
+  from_address?: SMTPSenderAddress
+  from_name?: SMTPSenderName
+  headers?: SMTPHeaders
+  local_name?: SMTPHELOEHLOName
+}
+/**
+ * These headers will be passed in the SMTP conversation -- e.g. when using the AWS SES SMTP interface for cross-account sending.
+ */
+export interface SMTPHeaders {
+  [k: string]: string | undefined
+}
+/**
+ * Configures outgoing sms messages using HTTP protocol with generic SMS provider
+ */
+export interface SMSSenderConfiguration {
+  /**
+   * Determines if SMS functionality is enabled
+   */
+  enabled?: boolean
+  from?: SMSSenderAddress
+  request_config?: {
+    url: HTTPAddressOfAPIEndpoint1
+    /**
+     * The HTTP method to use (GET, POST, etc).
+     */
+    method: string
+    /**
+     * The HTTP headers that must be applied to request
+     */
+    headers?: {
+      [k: string]: string | undefined
+    }
+    /**
+     * URI pointing to the jsonnet template used for payload generation. Only used for those HTTP methods, which support HTTP body payloads
+     */
+    body?: string
+    auth?: AuthMechanisms1
+    additionalProperties?: false
+  }
+}
 export interface OAuth2ProviderConfiguration {
   url?: OAuth20ProviderURL
   headers?: HTTPRequestHeaders
-  override_return_to?: boolean
+  override_return_to?: PersistOAuth2RequestBetweenFlows
 }
 /**
  * These headers will be passed in HTTP request to the OAuth2 Provider.

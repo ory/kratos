@@ -55,7 +55,7 @@ func TestMethodEnabledAndAllowed(t *testing.T) {
 	ctx := context.Background()
 	conf, d := internal.NewFastRegistryWithMocks(t)
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if err := flow.MethodEnabledAndAllowedFromRequest(r, "password", d); err != nil {
+		if err := flow.MethodEnabledAndAllowedFromRequest(r, flow.LoginFlow, "password", d); err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
@@ -89,5 +89,77 @@ func TestMethodEnabledAndAllowed(t *testing.T) {
 		require.NoError(t, res.Body.Close())
 		assert.Equal(t, http.StatusInternalServerError, res.StatusCode)
 		assert.Contains(t, string(body), "The requested resource could not be found")
+	})
+}
+
+func TestMethodCodeEnabledAndAllowed(t *testing.T) {
+	ctx := context.Background()
+	conf, d := internal.NewFastRegistryWithMocks(t)
+
+	currentFlow := make(chan flow.FlowName, 1)
+
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		f := <-currentFlow
+		if err := flow.MethodEnabledAndAllowedFromRequest(r, f, "code", d); err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		w.WriteHeader(http.StatusNoContent)
+	}))
+
+	t.Run("login code allowed", func(t *testing.T) {
+		conf.MustSet(ctx, config.ViperKeySelfServiceStrategyConfig+".code.login_enabled", true)
+		currentFlow <- flow.LoginFlow
+		res, err := ts.Client().PostForm(ts.URL, url.Values{"method": {"code"}})
+		require.NoError(t, err)
+		require.NoError(t, res.Body.Close())
+		assert.Equal(t, http.StatusNoContent, res.StatusCode)
+	})
+
+	t.Run("login code not allowed", func(t *testing.T) {
+		conf.MustSet(ctx, config.ViperKeySelfServiceStrategyConfig+".code.login_enabled", false)
+		currentFlow <- flow.LoginFlow
+		res, err := ts.Client().PostForm(ts.URL, url.Values{"method": {"code"}})
+		require.NoError(t, err)
+		body, err := io.ReadAll(res.Body)
+		require.NoError(t, err)
+		require.NoError(t, res.Body.Close())
+		assert.Equal(t, http.StatusInternalServerError, res.StatusCode)
+		assert.Contains(t, string(body), "The requested resource could not be found")
+	})
+
+	t.Run("registration code allowed", func(t *testing.T) {
+		conf.MustSet(ctx, config.ViperKeySelfServiceStrategyConfig+".code.registration_enabled", true)
+		currentFlow <- flow.RegistrationFlow
+		res, err := ts.Client().PostForm(ts.URL, url.Values{"method": {"code"}})
+		require.NoError(t, err)
+		require.NoError(t, res.Body.Close())
+		assert.Equal(t, http.StatusNoContent, res.StatusCode)
+	})
+
+	t.Run("registration code not allowed", func(t *testing.T) {
+		conf.MustSet(ctx, config.ViperKeySelfServiceStrategyConfig+".code.registration_enabled", false)
+		currentFlow <- flow.RegistrationFlow
+		res, err := ts.Client().PostForm(ts.URL, url.Values{"method": {"code"}})
+		require.NoError(t, err)
+		body, err := io.ReadAll(res.Body)
+		require.NoError(t, err)
+		require.NoError(t, res.Body.Close())
+		assert.Equal(t, http.StatusInternalServerError, res.StatusCode)
+		assert.Contains(t, string(body), "The requested resource could not be found")
+	})
+
+	t.Run("recovery and verification should still be allowed if registration and login is disabled", func(t *testing.T) {
+		conf.MustSet(ctx, config.ViperKeySelfServiceStrategyConfig+".code.registration_enabled", false)
+		conf.MustSet(ctx, config.ViperKeySelfServiceStrategyConfig+".code.login_enabled", false)
+		conf.MustSet(ctx, config.ViperKeySelfServiceStrategyConfig+".code.enabled", true)
+
+		for _, f := range []flow.FlowName{flow.RecoveryFlow, flow.VerificationFlow} {
+			currentFlow <- f
+			res, err := ts.Client().PostForm(ts.URL, url.Values{"method": {"code"}})
+			require.NoError(t, err)
+			require.NoError(t, res.Body.Close())
+			assert.Equal(t, http.StatusNoContent, res.StatusCode)
+		}
 	})
 }

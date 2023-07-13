@@ -1,0 +1,40 @@
+selfservice:
+  flows:
+    settings:
+      ui_url: http://localhost:4455/settings
+      privileged_session_max_age: 5m
+
+    logout:
+      after:
+        default_browser_return_url: http://localhost:4455/login
+
+    registration:
+      ui_url: http://localhost:4455/registration
+      after:
+        password:
+          hooks:
+            - hook: session
+
+    login:
+      ui_url: http://localhost:4455/login
+      after:
+        code:
+          - hook: require_verified_address
+    error:
+      ui_url: http://localhost:4455/error
+    verification:
+      enabled: true
+      use: code
+      ui_url: http://localhost:4455/verification
+    recovery:
+      ui_url: http://localhost:4455/recovery
+  methods:
+    code:
+      registration_enabled: true
+      login_enabled: true
+      enabled: true
+
+identity:
+  schemas:
+    - id: default
+      url: file://test/e2e/profiles/code/identity.traits.schema.json

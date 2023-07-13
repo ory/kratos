@@ -334,7 +334,7 @@ func TestCompleteSettings(t *testing.T) {
 			} else {
 				assert.Contains(t, res.Request.URL.String(), uiTS.URL)
 			}
-			assert.EqualValues(t, settings.StateSuccess, gjson.Get(body, "state").String(), body)
+			assert.EqualValues(t, flow.StateSuccess, gjson.Get(body, "state").String(), body)
 
 			actual, err := reg.Persister().GetIdentityConfidential(context.Background(), id.ID)
 			require.NoError(t, err)
@@ -386,7 +386,7 @@ func TestCompleteSettings(t *testing.T) {
 			}
 
 			t.Run("response", func(t *testing.T) {
-				assert.EqualValues(t, settings.StateShowForm, gjson.Get(body, "state").String(), body)
+				assert.EqualValues(t, flow.StateShowForm, gjson.Get(body, "state").String(), body)
 				snapshotx.SnapshotTExcept(t, json.RawMessage(gjson.Get(body, "ui.nodes.#(attributes.name==webauthn_remove)").String()), nil)
 
 				actual, err := reg.Persister().GetIdentityConfidential(context.Background(), id.ID)
@@ -426,7 +426,7 @@ func TestCompleteSettings(t *testing.T) {
 			}
 
 			t.Run("response", func(t *testing.T) {
-				assert.EqualValues(t, settings.StateSuccess, gjson.Get(body, "state").String(), body)
+				assert.EqualValues(t, flow.StateSuccess, gjson.Get(body, "state").String(), body)
 				actual, err := reg.Persister().GetIdentityConfidential(context.Background(), id.ID)
 				require.NoError(t, err)
 				_, ok := actual.GetCredentials(identity.CredentialsTypeWebAuthn)
@@ -463,7 +463,7 @@ func TestCompleteSettings(t *testing.T) {
 				} else {
 					assert.Contains(t, res.Request.URL.String(), uiTS.URL)
 				}
-				assert.EqualValues(t, settings.StateSuccess, gjson.Get(body, "state").String(), body)
+				assert.EqualValues(t, flow.StateSuccess, gjson.Get(body, "state").String(), body)
 			}
 
 			actual, err := reg.Persister().GetIdentityConfidential(context.Background(), id.ID)
@@ -496,7 +496,7 @@ func TestCompleteSettings(t *testing.T) {
 			} else {
 				assert.Contains(t, res.Request.URL.String(), uiTS.URL)
 			}
-			assert.EqualValues(t, settings.StateSuccess, json.RawMessage(gjson.Get(body, "state").String()))
+			assert.EqualValues(t, flow.StateSuccess, json.RawMessage(gjson.Get(body, "state").String()))
 
 			actual, err := reg.Persister().GetIdentityConfidential(context.Background(), id.ID)
 			require.NoError(t, err)

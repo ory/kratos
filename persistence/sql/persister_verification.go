@@ -237,7 +237,7 @@ func (p *Persister) UseVerificationCode(ctx context.Context, fID uuid.UUID, code
 	}
 
 	if verificationCode == nil {
-		return nil, code.ErrCodeNotFound
+		return nil, errors.WithStack(code.ErrCodeNotFound)
 	}
 
 	return verificationCode, nil

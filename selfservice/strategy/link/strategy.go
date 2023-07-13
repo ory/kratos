@@ -19,13 +19,17 @@ import (
 	"github.com/ory/x/decoderx"
 )
 
-var _ recovery.Strategy = new(Strategy)
-var _ recovery.AdminHandler = new(Strategy)
-var _ recovery.PublicHandler = new(Strategy)
+var (
+	_ recovery.Strategy      = new(Strategy)
+	_ recovery.AdminHandler  = new(Strategy)
+	_ recovery.PublicHandler = new(Strategy)
+)
 
-var _ verification.Strategy = new(Strategy)
-var _ verification.AdminHandler = new(Strategy)
-var _ verification.PublicHandler = new(Strategy)
+var (
+	_ verification.Strategy      = new(Strategy)
+	_ verification.AdminHandler  = new(Strategy)
+	_ verification.PublicHandler = new(Strategy)
+)
 
 type (
 	// FlowMethod contains the configuration for this selfservice strategy.
@@ -83,10 +87,6 @@ func NewStrategy(d strategyDependencies) *Strategy {
 	return &Strategy{d: d, dx: decoderx.NewHTTP()}
 }
 
-func (s *Strategy) RecoveryNodeGroup() node.UiNodeGroup {
-	return node.LinkGroup
-}
-
-func (s *Strategy) VerificationNodeGroup() node.UiNodeGroup {
+func (s *Strategy) NodeGroup() node.UiNodeGroup {
 	return node.LinkGroup
 }

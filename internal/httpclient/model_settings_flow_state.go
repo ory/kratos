@@ -19,7 +19,7 @@ import (
 // SettingsFlowState show_form: No user data has been collected, or it is invalid, and thus the form should be shown. success: Indicates that the settings flow has been updated successfully with the provided data. Done will stay true when repeatedly checking. If set to true, done will revert back to false only when a flow with invalid (e.g. \"please use a valid phone number\") data was sent.
 type SettingsFlowState string
 
-// List of settingsFlowState
+// List of SettingsFlowState
 const (
 	SETTINGSFLOWSTATE_SHOW_FORM SettingsFlowState = "show_form"
 	SETTINGSFLOWSTATE_SUCCESS   SettingsFlowState = "success"
@@ -42,7 +42,7 @@ func (v *SettingsFlowState) UnmarshalJSON(src []byte) error {
 	return fmt.Errorf("%+v is not a valid SettingsFlowState", value)
 }
 
-// Ptr returns reference to settingsFlowState value
+// Ptr returns reference to SettingsFlowState value
 func (v SettingsFlowState) Ptr() *SettingsFlowState {
 	return &v
 }

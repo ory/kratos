@@ -190,7 +190,7 @@ func (c *Container) ParseError(group node.UiNodeGroup, err error) error {
 		default:
 			// The pointer can be ignored because if there is an error, we'll just use
 			// the empty field (global error).
-			var causes = e.Causes
+			causes := e.Causes
 			if len(e.Causes) == 0 {
 				pointer, _ := jsonschemax.JSONPointerToDotNotation(e.InstancePtr)
 				c.AddMessage(group, translateValidationError(e), pointer)
@@ -310,6 +310,7 @@ func (c *Container) AddMessage(group node.UiNodeGroup, err *text.Message, setFor
 func (c *Container) Scan(value interface{}) error {
 	return sqlxx.JSONScan(c, value)
 }
+
 func (c *Container) Value() (driver.Value, error) {
 	return sqlxx.JSONValue(c)
 }

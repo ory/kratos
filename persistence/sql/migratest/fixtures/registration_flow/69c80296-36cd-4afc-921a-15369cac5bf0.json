@@ -1,0 +1,14 @@
+{
+  "id": "69c80296-36cd-4afc-921a-15369cac5bf0",
+  "type": "browser",
+  "expires_at": "2013-10-07T08:23:19Z",
+  "issued_at": "2013-10-07T08:23:19Z",
+  "request_url": "http://kratos:4433/self-service/browser/flows/registration?login_challenge/self-service/browser/flows/registration?login_challenge/self-service/browser/flows/registration?login_challenge/self-service/browser/flows/registration?login_challenge/self-service/browser/flows/registration?login_challenge/self-service/browser/flows/registration?login_challenge/self-service/browser/flows/registration?login_challenge/self-service/browser/flows/registration?login_challenge/self-service/browser/flows/registration?login_challenge/self-service/browser/flows/registration?login_challenge/self-service/browser/flows/registration?login_challenge/self-service/browser/flows/registration?login_challenge/self-service/browser/flows/registration?login_challenge/self-service/browser/flows/registration?login_challenge/self-service/browser/flows/registration?login_challenge/self-service/browser/flows/registration?login_challenge/self-service/browser/flows/registration?login_challenge/self-service/browser/flows/registration?login_challenge/self-service/browser/flows/registration?login_challenge/self-service/browser/flows/registration?login_challenge/self-service/browser/flows/registration?login_challenge/self-service/browser/flows/registration?login_challenge/self-service/browser/flows/registration?login_challenge/self-service/browser/flows/registration?login_challenge/self-service/browser/flows/registration?login_challenge/self-service/browser/flows/registration?login_challenge/self-service/browser/flows/registration?login_challenge=",
+  "active": "password",
+  "ui": {
+    "action": "",
+    "method": "",
+    "nodes": null
+  },
+  "state": ""
+}

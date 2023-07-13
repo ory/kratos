@@ -19,7 +19,7 @@ import (
 // VerificationFlowState The state represents the state of the verification flow.  choose_method: ask the user to choose a method (e.g. recover account via email) sent_email: the email has been sent to the user passed_challenge: the request was successful and the recovery challenge was passed.
 type VerificationFlowState string
 
-// List of verificationFlowState
+// List of VerificationFlowState
 const (
 	VERIFICATIONFLOWSTATE_CHOOSE_METHOD    VerificationFlowState = "choose_method"
 	VERIFICATIONFLOWSTATE_SENT_EMAIL       VerificationFlowState = "sent_email"
@@ -43,7 +43,7 @@ func (v *VerificationFlowState) UnmarshalJSON(src []byte) error {
 	return fmt.Errorf("%+v is not a valid VerificationFlowState", value)
 }
 
-// Ptr returns reference to verificationFlowState value
+// Ptr returns reference to VerificationFlowState value
 func (v VerificationFlowState) Ptr() *VerificationFlowState {
 	return &v
 }

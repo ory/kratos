@@ -12,9 +12,14 @@
     "code": {
       "type": "string"
     },
-    "email": {
+    "identifier": {
+      "type": "string"
+    },
+    "resend": {
       "type": "string",
-      "format": "email"
+      "enum": [
+        "code"
+      ]
     },
     "flow": {
       "type": "string",

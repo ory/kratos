@@ -95,13 +95,13 @@ prepare() {
     export TEST_DATABASE_COCKROACHDB="cockroach://root@localhost:3446/defaultdb?sslmode=disable"
   fi
 
-  if [ -z ${NODE_UI_PATH+x} ]; then
-    node_ui_dir="$(mktemp -d -t ci-XXXXXXXXXX)/kratos-selfservice-ui-node"
-    git clone --depth 1 --branch master https://github.com/ory/kratos-selfservice-ui-node.git "$node_ui_dir"
-    (cd "$node_ui_dir" && npm i --legacy-peer-deps && npm run build)
-  else
-    node_ui_dir="${NODE_UI_PATH}"
-  fi
+  # if [ -z ${NODE_UI_PATH+x} ]; then
+  #   node_ui_dir="$(mktemp -d -t ci-XXXXXXXXXX)/kratos-selfservice-ui-node"
+  #   git clone --depth 1 --branch master https://github.com/ory/kratos-selfservice-ui-node.git "$node_ui_dir"
+  #   (cd "$node_ui_dir" && npm i --legacy-peer-deps && npm run build)
+  # else
+  #   node_ui_dir="${NODE_UI_PATH}"
+  # fi
 
   if [ -z ${RN_UI_PATH+x} ]; then
     rn_ui_dir="$(mktemp -d -t ci-XXXXXXXXXX)/kratos-selfservice-ui-react-native"
@@ -136,8 +136,8 @@ prepare() {
   nc -zv localhost 4445 && exit 1
   nc -zv localhost 4446 && exit 1
   nc -zv localhost 4455 && exit 1
-  nc -zv localhost 4456 && exit 1
   nc -zv localhost 19006 && exit 1
+  # nc -zv localhost 4456 && exit 1
   nc -zv localhost 4458 && exit 1
   nc -zv localhost 4744 && exit 1
   nc -zv localhost 4745 && exit 1
@@ -219,19 +219,19 @@ prepare() {
     PORT=4746 HYDRA_ADMIN_URL=http://localhost:4745 ./hydra-kratos-login-consent >"${base}/test/e2e/hydra-kratos-ui.e2e.log" 2>&1 &
   )
 
-  if [ -z ${NODE_UI_PATH+x} ]; then
-    (
-      cd "$node_ui_dir"
-      PORT=4456 SECURITY_MODE=cookie npm run serve \
-        >"${base}/test/e2e/ui-node.e2e.log" 2>&1 &
-    )
-  else
-    (
-      cd "$node_ui_dir"
-      PORT=4456 SECURITY_MODE=cookie npm run start \
-        >"${base}/test/e2e/ui-node.e2e.log" 2>&1 &
-    )
-  fi
+  # if [ -z ${NODE_UI_PATH+x} ]; then
+  #   (
+  #     cd "$node_ui_dir"
+  #     PORT=4456 SECURITY_MODE=cookie npm run serve \
+  #       >"${base}/test/e2e/ui-node.e2e.log" 2>&1 &
+  #   )
+  # else
+  #   (
+  #     cd "$node_ui_dir"
+  #     PORT=4456 SECURITY_MODE=cookie npm run start \
+  #       >"${base}/test/e2e/ui-node.e2e.log" 2>&1 &
+  #   )
+  # fi
 
   if [ -z ${REACT_UI_PATH+x} ]; then
     (
@@ -273,7 +273,7 @@ run() {
   nc -zv localhost 4433 && exit 1
 
   ls -la .
-  for profile in email mobile oidc recovery recovery-mfa verification mfa spa network passwordless webhooks oidc-provider oidc-provider-mfa; do
+  for profile in code email mobile oidc recovery recovery-mfa verification mfa spa network passwordless webhooks oidc-provider oidc-provider-mfa; do
     yq ea '. as $item ireduce ({}; . * $item )' test/e2e/profiles/kratos.base.yml "test/e2e/profiles/${profile}/.kratos.yml" > test/e2e/kratos.${profile}.yml
     cat "test/e2e/kratos.${profile}.yml" | envsubst | sponge "test/e2e/kratos.${profile}.yml"
   done
