@@ -221,6 +221,10 @@ Cypress.Commands.add("setPostPasswordRegistrationHooks", (hooks) => {
   cy.setupHooks("registration", "after", "password", hooks)
 })
 
+Cypress.Commands.add("setPostCodeRegistrationHooks", (hooks) => {
+  cy.setupHooks("registration", "after", "code", hooks)
+})
+
 Cypress.Commands.add("shortLoginLifespan", ({} = {}) => {
   updateConfigFile((config) => {
     config.selfservice.flows.login.lifespan = "100ms"
@@ -374,6 +378,70 @@ Cypress.Commands.add(
       .then(({ body }) => {
         expect(body.identity.traits.email).to.contain(email)
       })
+  },
+)
+
+Cypress.Commands.add(
+  "registerWithCode",
+  ({ email = gen.email(), code = undefined, query = {} } = {}) => {
+    console.log("Creating user account: ", { email })
+
+    cy.clearAllCookies()
+
+    cy.request({
+      url: APP_URL + "/self-service/registration/browser",
+      method: "GET",
+      followRedirect: false,
+      headers: {
+        "Content-Type": "application/json",
+        Accept: "application/json",
+      },
+      qs: query || {},
+    }).then(({ body, status }) => {
+      expect(status).to.eq(200)
+      const form = body.ui
+      return cy
+        .request({
+          headers: {
+            Accept: "application/json",
+          },
+          method: form.method,
+          body: mergeFields(form, {
+            method: "code",
+            "traits.email": email,
+            ...(code && { code }),
+          }),
+          url: form.action,
+          followRedirect: false,
+        })
+        .then(({ body }) => {
+          if (!code) {
+            expect(
+              body.ui.nodes.find(
+                (f) =>
+                  f.group === "default" && f.attributes.name === "traits.email",
+              ).attributes.value,
+            ).to.eq(email)
+            return cy.getRegistrationCodeFromEmail(email).then((code) => {
+              return cy.request({
+                headers: {
+                  Accept: "application/json",
+                },
+                method: form.method,
+                body: mergeFields(form, {
+                  method: "code",
+                  "traits.email": email,
+                  code,
+                }),
+                url: form.action,
+                followRedirect: false,
+              })
+            })
+          } else {
+            expect(body.session).to.contain(email)
+          }
+        })
+    })
   },
 )
 
@@ -1171,30 +1239,44 @@ Cypress.Commands.add("expectSettingsSaved", () => {
   )
 })
 
-Cypress.Commands.add("getMail", ({ removeMail = true } = {}) => {
-  let tries = 0
-  const req = () =>
-    cy.request(`${MAIL_API}/mail`).then((response) => {
-      expect(response.body).to.have.property("mailItems")
-      const count = response.body.mailItems.length
-      if (count === 0 && tries < 100) {
-        tries++
-        cy.wait(pollInterval)
-        return req()
-      }
+Cypress.Commands.add(
+  "getMail",
+  ({ removeMail = true, expectedCount = 1, email = undefined } = {}) => {
+    let tries = 0
+    const req = () =>
+      cy.request(`${MAIL_API}/mail`).then((response) => {
+        expect(response.body).to.have.property("mailItems")
+        const count = response.body.mailItems.length
+        if (count === 0 && tries < 100) {
+          tries++
+          cy.wait(pollInterval)
+          return req()
+        }
+        let mailItem: any
+        if (email) {
+          mailItem = response.body.mailItems.find((m: any) =>
+            m.toAddresses.includes(email),
+          )
+        } else {
+          mailItem = response.body.mailItems[0]
+        }
+        console.log({ mailItems: response.body.mailItems })
+        console.log({ mailItem })
+        console.log({ email })
 
-      expect(count).to.equal(1)
-      if (removeMail) {
-        return cy
-          .deleteMail({ atLeast: count })
-          .then(() => Promise.resolve(response.body.mailItems[0]))
-      }
+        expect(count).to.equal(expectedCount)
+        if (removeMail) {
+          return cy.deleteMail({ atLeast: count }).then(() => {
+            return Promise.resolve(mailItem)
+          })
+        }
 
-      return Promise.resolve(response.body.mailItems[0])
-    })
+        return Promise.resolve(mailItem)
+      })
 
-  return req()
-})
+    return req()
+  },
+)
 
 Cypress.Commands.add("clearAllCookies", () => {
   cy.clearCookies({ domain: null })
@@ -1208,6 +1290,11 @@ Cypress.Commands.add("submitPasswordForm", () => {
 Cypress.Commands.add("submitProfileForm", () => {
   cy.get('[name="method"][value="profile"]').click()
   cy.get('[name="method"][value="profile"]:disabled').should("not.exist")
+})
+
+Cypress.Commands.add("submitCodeForm", () => {
+  cy.get('button[name="method"][value="code"]').click()
+  cy.get('button[name="method"][value="code"]:disabled').should("not.exist")
 })
 
 Cypress.Commands.add("clickWebAuthButton", (type: string) => {
@@ -1366,6 +1453,43 @@ Cypress.Commands.add("getVerificationCodeFromEmail", (email) => {
     .getMail({ removeMail: true })
     .should((message) => {
       expect(message.subject).to.equal("Please verify your email address")
+      expect(message.toAddresses[0].trim()).to.equal(email)
+    })
+    .then((message) => {
+      const code = extractRecoveryCode(message.body)
+      expect(code).to.not.be.undefined
+      expect(code.length).to.equal(6)
+      return code
+    })
+})
+
+Cypress.Commands.add("enableRegistrationViaCode", (enable: boolean = true) => {
+  cy.updateConfigFile((config) => {
+    config.selfservice.methods.code.registration_enabled = enable
+    return config
+  })
+})
+
+Cypress.Commands.add("getRegistrationCodeFromEmail", (email, opts) => {
+  return cy
+    .getMail({ removeMail: true, email, ...opts })
+    .should((message) => {
+      expect(message.subject).to.equal("Complete your account registration")
+      expect(message.toAddresses[0].trim()).to.equal(email)
+    })
+    .then((message) => {
+      const code = extractRecoveryCode(message.body)
+      expect(code).to.not.be.undefined
+      expect(code.length).to.equal(6)
+      return code
+    })
+})
+
+Cypress.Commands.add("getLoginCodeFromEmail", (email, opts) => {
+  return cy
+    .getMail({ removeMail: true, email, ...opts })
+    .should((message) => {
+      expect(message.subject).to.equal("Login to your account")
       expect(message.toAddresses[0].trim()).to.equal(email)
     })
     .then((message) => {

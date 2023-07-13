@@ -54,7 +54,7 @@ func TestFlow(t *testing.T) {
 		})
 	}
 
-	assert.EqualValues(t, recovery.StateChooseMethod,
+	assert.EqualValues(t, flow.StateChooseMethod,
 		must(recovery.NewFlow(conf, time.Hour, "", u, nil, flow.TypeBrowser)).State)
 
 	t.Run("type=return_to", func(t *testing.T) {

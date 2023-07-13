@@ -366,3 +366,21 @@ func NewErrorValidationSuchNoWebAuthnUser() *Message {
 		Context: context(nil),
 	}
 }
+
+func NewErrorValidationNoCodeUser() *Message {
+	return &Message{
+		ID:      ErrorValidationNoCodeUser,
+		Text:    "This account does not exist or has not setup sign in with code.",
+		Type:    Error,
+		Context: context(nil),
+	}
+}
+
+func NewErrorValidationTraitsMismatch() *Message {
+	return &Message{
+		ID:      ErrorValidationTraitsMismatch,
+		Text:    "The provided traits do not match the traits previously associated with this flow.",
+		Type:    Error,
+		Context: context(nil),
+	}
+}

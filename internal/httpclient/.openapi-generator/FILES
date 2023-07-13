@@ -35,6 +35,7 @@ docs/HealthStatus.md
 docs/Identity.md
 docs/IdentityApi.md
 docs/IdentityCredentials.md
+docs/IdentityCredentialsOTP.md
 docs/IdentityCredentialsOidc.md
 docs/IdentityCredentialsOidcProvider.md
 docs/IdentityCredentialsPassword.md
@@ -53,6 +54,7 @@ docs/IsAlive200Response.md
 docs/IsReady503Response.md
 docs/JsonPatch.md
 docs/LoginFlow.md
+docs/LoginFlowState.md
 docs/LogoutFlow.md
 docs/Message.md
 docs/MessageDispatch.md
@@ -70,6 +72,7 @@ docs/RecoveryFlowState.md
 docs/RecoveryIdentityAddress.md
 docs/RecoveryLinkForIdentity.md
 docs/RegistrationFlow.md
+docs/RegistrationFlowState.md
 docs/SelfServiceFlowExpiredError.md
 docs/Session.md
 docs/SessionAuthenticationMethod.md
@@ -93,6 +96,7 @@ docs/UiNodeTextAttributes.md
 docs/UiText.md
 docs/UpdateIdentityBody.md
 docs/UpdateLoginFlowBody.md
+docs/UpdateLoginFlowWithCodeMethod.md
 docs/UpdateLoginFlowWithLookupSecretMethod.md
 docs/UpdateLoginFlowWithOidcMethod.md
 docs/UpdateLoginFlowWithPasswordMethod.md
@@ -102,6 +106,7 @@ docs/UpdateRecoveryFlowBody.md
 docs/UpdateRecoveryFlowWithCodeMethod.md
 docs/UpdateRecoveryFlowWithLinkMethod.md
 docs/UpdateRegistrationFlowBody.md
+docs/UpdateRegistrationFlowWithCodeMethod.md
 docs/UpdateRegistrationFlowWithOidcMethod.md
 docs/UpdateRegistrationFlowWithPasswordMethod.md
 docs/UpdateRegistrationFlowWithWebAuthnMethod.md
@@ -147,6 +152,7 @@ model_identity.go
 model_identity_credentials.go
 model_identity_credentials_oidc.go
 model_identity_credentials_oidc_provider.go
+model_identity_credentials_otp.go
 model_identity_credentials_password.go
 model_identity_credentials_type.go
 model_identity_patch.go
@@ -163,6 +169,7 @@ model_is_alive_200_response.go
 model_is_ready_503_response.go
 model_json_patch.go
 model_login_flow.go
+model_login_flow_state.go
 model_logout_flow.go
 model_message.go
 model_message_dispatch.go
@@ -179,6 +186,7 @@ model_recovery_flow_state.go
 model_recovery_identity_address.go
 model_recovery_link_for_identity.go
 model_registration_flow.go
+model_registration_flow_state.go
 model_self_service_flow_expired_error.go
 model_session.go
 model_session_authentication_method.go
@@ -202,6 +210,7 @@ model_ui_node_text_attributes.go
 model_ui_text.go
 model_update_identity_body.go
 model_update_login_flow_body.go
+model_update_login_flow_with_code_method.go
 model_update_login_flow_with_lookup_secret_method.go
 model_update_login_flow_with_oidc_method.go
 model_update_login_flow_with_password_method.go
@@ -211,6 +220,7 @@ model_update_recovery_flow_body.go
 model_update_recovery_flow_with_code_method.go
 model_update_recovery_flow_with_link_method.go
 model_update_registration_flow_body.go
+model_update_registration_flow_with_code_method.go
 model_update_registration_flow_with_oidc_method.go
 model_update_registration_flow_with_password_method.go
 model_update_registration_flow_with_web_authn_method.go

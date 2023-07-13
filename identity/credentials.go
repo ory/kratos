@@ -117,6 +117,7 @@ var AllCredentialTypes = []CredentialsType{
 	CredentialsTypeTOTP,
 	CredentialsTypeLookup,
 	CredentialsTypeWebAuthn,
+	CredentialsTypeCodeAuth,
 }
 
 const (
@@ -145,6 +146,15 @@ func ParseCredentialsType(in string) (CredentialsType, bool) {
 	return "", false
 }
 
+// swagger:ignore
+type CredentialsIdentifierAddressType string
+
+const (
+	CredentialsIdentifierAddressTypeEmail CredentialsIdentifierAddressType = AddressTypeEmail
+	CredentialsIdentifierAddressTypePhone CredentialsIdentifierAddressType = AddressTypePhone
+	CredentialsIdentifierAddressTypeNone  CredentialsIdentifierAddressType = "none"
+)
+
 // Credentials represents a specific credential type
 //
 // swagger:model identityCredentials
@@ -157,6 +167,12 @@ type Credentials struct {
 
 	// Identifiers represents a list of unique identifiers this credential type matches.
 	Identifiers []string `json:"identifiers" db:"-"`
+
+	// IdentifierAddressType represents the type of the identifiers (e.g. email, phone).
+	// This is used to determine the correct courier to send messages to.
+	// The value is set by the code extension schema and is not persisted.
+	// only applicable on the login, registration with `code` method.
+	IdentifierAddressType CredentialsIdentifierAddressType `json:"-" db:"-"`
 
 	// Config contains the concrete credential payload. This might contain the bcrypt-hashed password, the email
 	// for passwordless authentication or access_token and refresh tokens from OpenID Connect flows.

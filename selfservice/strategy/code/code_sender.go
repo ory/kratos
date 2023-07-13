@@ -22,6 +22,7 @@ import (
 	"github.com/ory/kratos/courier"
 	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/identity"
+	"github.com/ory/kratos/selfservice/flow"
 	"github.com/ory/kratos/selfservice/flow/recovery"
 	"github.com/ory/kratos/selfservice/flow/verification"
 	"github.com/ory/kratos/x"
@@ -40,6 +41,8 @@ type (
 
 		RecoveryCodePersistenceProvider
 		VerificationCodePersistenceProvider
+		RegistrationCodePersistenceProvider
+		LoginCodePersistenceProvider
 
 		HTTPClient(ctx context.Context, opts ...httpx.ResilientOptions) *retryablehttp.Client
 	}
@@ -50,12 +53,103 @@ type (
 	Sender struct {
 		deps senderDependencies
 	}
+	Address struct {
+		To  string
+		Via identity.CodeAddressType
+	}
 )
 
 var ErrUnknownAddress = herodot.ErrNotFound.WithReason("recovery requested for unknown address")
 
 func NewSender(deps senderDependencies) *Sender {
 	return &Sender{deps: deps}
+}
+
+func (s *Sender) SendCode(ctx context.Context, f flow.Flow, id *identity.Identity, addresses ...Address) error {
+	s.deps.Logger().
+		WithSensitiveField("address", addresses).
+		Debugf("Preparing %s code", f.GetFlowName())
+
+	// send to all addresses
+	for _, address := range addresses {
+		rawCode := GenerateCode()
+
+		switch f.GetFlowName() {
+		case flow.RegistrationFlow:
+			code, err := s.deps.
+				RegistrationCodePersister().
+				CreateRegistrationCode(ctx, &CreateRegistrationCodeParams{
+					AddressType: address.Via,
+					RawCode:     rawCode,
+					ExpiresIn:   s.deps.Config().SelfServiceCodeMethodLifespan(ctx),
+					FlowID:      f.GetID(),
+					Address:     address.To,
+				})
+			if err != nil {
+				return err
+			}
+			model, err := x.StructToMap(id.Traits)
+			if err != nil {
+				return err
+			}
+
+			emailModel := email.RegistrationCodeValidModel{
+				To:               address.To,
+				RegistrationCode: rawCode,
+				Traits:           model,
+			}
+
+			s.deps.Audit().
+				WithField("registration_flow_id", code.FlowID).
+				WithField("registration_code_id", code.ID).
+				WithSensitiveField("registration_code", rawCode).
+				Info("Sending out registration email with code.")
+
+			if err := s.send(ctx, string(address.Via), email.NewRegistrationCodeValid(s.deps, &emailModel)); err != nil {
+				return errors.WithStack(err)
+			}
+
+		case flow.LoginFlow:
+			code, err := s.deps.
+				LoginCodePersister().
+				CreateLoginCode(ctx, &CreateLoginCodeParams{
+					AddressType: address.Via,
+					Address:     address.To,
+					RawCode:     rawCode,
+					ExpiresIn:   s.deps.Config().SelfServiceCodeMethodLifespan(ctx),
+					FlowID:      f.GetID(),
+					IdentityID:  id.ID,
+				})
+			if err != nil {
+				return err
+			}
+
+			model, err := x.StructToMap(id)
+			if err != nil {
+				return err
+			}
+
+			emailModel := email.LoginCodeValidModel{
+				To:        address.To,
+				LoginCode: rawCode,
+				Identity:  model,
+			}
+			s.deps.Audit().
+				WithField("login_flow_id", code.FlowID).
+				WithField("login_code_id", code.ID).
+				WithSensitiveField("login_code", rawCode).
+				Info("Sending out login email with code.")
+
+			if err := s.send(ctx, string(address.Via), email.NewLoginCodeValid(s.deps, &emailModel)); err != nil {
+				return errors.WithStack(err)
+			}
+
+		default:
+			return errors.WithStack(errors.New("received unknown flow type"))
+
+		}
+	}
+	return nil
 }
 
 // SendRecoveryCode sends a recovery code to the specified address

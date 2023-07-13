@@ -40,7 +40,8 @@ func SetupRemoteConfig(t *testing.T, ctx context.Context, plaintext string, html
 func TestRendered(t *testing.T, ctx context.Context, tpl interface {
 	EmailBody(context.Context) (string, error)
 	EmailSubject(context.Context) (string, error)
-}) {
+},
+) {
 	rendered, err := tpl.EmailBody(ctx)
 	require.NoError(t, err)
 	assert.NotEmpty(t, rendered)
@@ -83,6 +84,10 @@ func TestRemoteTemplates(t *testing.T, basePath string, tmplType courier.Templat
 			return email.NewVerificationCodeInvalid(d, &email.VerificationCodeInvalidModel{})
 		case courier.TypeVerificationCodeValid:
 			return email.NewVerificationCodeValid(d, &email.VerificationCodeValidModel{})
+		case courier.TypeLoginCodeValid:
+			return email.NewLoginCodeValid(d, &email.LoginCodeValidModel{})
+		case courier.TypeRegistrationCodeValid:
+			return email.NewRegistrationCodeValid(d, &email.RegistrationCodeValidModel{})
 		default:
 			return nil
 		}

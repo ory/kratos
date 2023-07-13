@@ -231,7 +231,7 @@ func (e *HookExecutor) PostSettingsHook(w http.ResponseWriter, r *http.Request, 
 		Debug("An identity's settings have been updated.")
 
 	ctxUpdate.UpdateIdentity(i)
-	ctxUpdate.Flow.State = StateSuccess
+	ctxUpdate.Flow.State = flow.StateSuccess
 	if hookOptions.cb != nil {
 		if err := hookOptions.cb(ctxUpdate); err != nil {
 			return err

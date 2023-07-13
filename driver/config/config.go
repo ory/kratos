@@ -68,6 +68,8 @@ const (
 	ViperKeyCourierTemplatesVerificationCodeValidEmail       = "courier.templates.verification_code.valid.email"
 	ViperKeyCourierDeliveryStrategy                          = "courier.delivery_strategy"
 	ViperKeyCourierHTTPRequestConfig                         = "courier.http.request_config"
+	ViperKeyCourierTemplatesLoginCodeValidEmail              = "courier.templates.login_code.valid.email"
+	ViperKeyCourierTemplatesRegistrationCodeValidEmail       = "courier.templates.registration_code.valid.email"
 	ViperKeyCourierSMTPFrom                                  = "courier.smtp.from_address"
 	ViperKeyCourierSMTPFromName                              = "courier.smtp.from_name"
 	ViperKeyCourierSMTPHeaders                               = "courier.smtp.headers"
@@ -226,6 +228,11 @@ type (
 		Enabled bool            `json:"enabled"`
 		Config  json.RawMessage `json:"config"`
 	}
+	SelfServiceStrategyCode struct {
+		RegistrationEnabled bool `json:"registration_enabled"`
+		LoginEnabled        bool `json:"login_enabled"`
+		*SelfServiceStrategy
+	}
 	Schema struct {
 		ID  string `json:"id" koanf:"id"`
 		URL string `json:"url" koanf:"url"`
@@ -279,6 +286,8 @@ type (
 		CourierTemplatesRecoveryCodeValid(ctx context.Context) *CourierEmailTemplate
 		CourierTemplatesVerificationCodeInvalid(ctx context.Context) *CourierEmailTemplate
 		CourierTemplatesVerificationCodeValid(ctx context.Context) *CourierEmailTemplate
+		CourierTemplatesLoginCodeValid(ctx context.Context) *CourierEmailTemplate
+		CourierTemplatesRegistrationCodeValid(ctx context.Context) *CourierEmailTemplate
 		CourierMessageRetries(ctx context.Context) int
 	}
 )
@@ -729,7 +738,8 @@ func (p *Config) SelfServiceStrategy(ctx context.Context, strategy string) *Self
 		config = c
 	}
 
-	enabledKey := fmt.Sprintf("%s.%s.enabled", ViperKeySelfServiceStrategyConfig, strategy)
+	basePath := fmt.Sprintf("%s.%s", ViperKeySelfServiceStrategyConfig, strategy)
+	enabledKey := fmt.Sprintf("%s.enabled", basePath)
 	s := &SelfServiceStrategy{
 		Enabled: pp.Bool(enabledKey),
 		Config:  json.RawMessage(config),
@@ -739,6 +749,7 @@ func (p *Config) SelfServiceStrategy(ctx context.Context, strategy string) *Self
 	// we need to forcibly set these values here:
 	if !pp.Exists(enabledKey) {
 		switch strategy {
+		case "otp":
 		case "password":
 			fallthrough
 		case "profile":
@@ -752,6 +763,40 @@ func (p *Config) SelfServiceStrategy(ctx context.Context, strategy string) *Self
 		s.Config = json.RawMessage("{}")
 	}
 
+	return s
+}
+
+func (p *Config) SelfServiceCodeStrategy(ctx context.Context) *SelfServiceStrategyCode {
+	pp := p.GetProvider(ctx)
+
+	config := "{}"
+	out, err := pp.Marshal(kjson.Parser())
+	if err != nil {
+		p.l.WithError(err).Warn("Unable to marshal self service strategy configuration.")
+	} else if c := gjson.GetBytes(out,
+		fmt.Sprintf("%s.%s.config", ViperKeySelfServiceStrategyConfig, "code")).Raw; len(c) > 0 {
+		config = c
+	}
+
+	basePath := fmt.Sprintf("%s.%s", ViperKeySelfServiceStrategyConfig, "code")
+	enabledKey := fmt.Sprintf("%s.enabled", basePath)
+	registrationKey := fmt.Sprintf("%s.registration_enabled", basePath)
+	loginKey := fmt.Sprintf("%s.login_enabled", basePath)
+
+	s := &SelfServiceStrategyCode{
+		SelfServiceStrategy: &SelfServiceStrategy{
+			Enabled: pp.Bool(enabledKey),
+			Config:  json.RawMessage(config),
+		},
+		RegistrationEnabled: pp.Bool(registrationKey),
+		LoginEnabled:        pp.Bool(loginKey),
+	}
+
+	if !pp.Exists(enabledKey) {
+		s.RegistrationEnabled = false
+		s.LoginEnabled = false
+		s.Enabled = true
+	}
 	return s
 }
 
@@ -1094,6 +1139,14 @@ func (p *Config) CourierTemplatesVerificationCodeInvalid(ctx context.Context) *C
 
 func (p *Config) CourierTemplatesVerificationCodeValid(ctx context.Context) *CourierEmailTemplate {
 	return p.CourierTemplatesHelper(ctx, ViperKeyCourierTemplatesVerificationCodeValidEmail)
+}
+
+func (p *Config) CourierTemplatesLoginCodeValid(ctx context.Context) *CourierEmailTemplate {
+	return p.CourierTemplatesHelper(ctx, ViperKeyCourierTemplatesLoginCodeValidEmail)
+}
+
+func (p *Config) CourierTemplatesRegistrationCodeValid(ctx context.Context) *CourierEmailTemplate {
+	return p.CourierTemplatesHelper(ctx, ViperKeyCourierTemplatesRegistrationCodeValidEmail)
 }
 
 func (p *Config) CourierMessageRetries(ctx context.Context) int {

@@ -19,7 +19,7 @@ import (
 // RecoveryFlowState The state represents the state of the recovery flow.  choose_method: ask the user to choose a method (e.g. recover account via email) sent_email: the email has been sent to the user passed_challenge: the request was successful and the recovery challenge was passed.
 type RecoveryFlowState string
 
-// List of recoveryFlowState
+// List of RecoveryFlowState
 const (
 	RECOVERYFLOWSTATE_CHOOSE_METHOD    RecoveryFlowState = "choose_method"
 	RECOVERYFLOWSTATE_SENT_EMAIL       RecoveryFlowState = "sent_email"
@@ -43,7 +43,7 @@ func (v *RecoveryFlowState) UnmarshalJSON(src []byte) error {
 	return fmt.Errorf("%+v is not a valid RecoveryFlowState", value)
 }
 
-// Ptr returns reference to recoveryFlowState value
+// Ptr returns reference to RecoveryFlowState value
 func (v RecoveryFlowState) Ptr() *RecoveryFlowState {
 	return &v
 }

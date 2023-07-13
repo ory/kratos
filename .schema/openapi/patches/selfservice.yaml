@@ -25,6 +25,12 @@
       password: "#/components/schemas/updateRegistrationFlowWithPasswordMethod"
       oidc: "#/components/schemas/updateRegistrationFlowWithOidcMethod"
       webauthn: "#/components/schemas/updateRegistrationFlowWithWebAuthnMethod"
+- op: add
+  path: /components/schemas/registrationFlowState/enum
+  value:
+    - choose_method
+    - sent_email
+    - passed_challenge
 # end
 
 # All modifications for the login flow
@@ -48,6 +54,12 @@
       totp: "#/components/schemas/updateLoginFlowWithTotpMethod"
       webauthn: "#/components/schemas/updateLoginFlowWithWebAuthnMethod"
       lookup_secret: "#/components/schemas/updateLoginFlowWithLookupSecretMethod"
+- op: add
+  path: /components/schemas/loginFlowState/enum
+  value:
+    - choose_method
+    - sent_email
+    - passed_challenge
 # end
 
 # All modifications for the recovery flow

@@ -28,6 +28,11 @@ func (m *RegistryDefault) PostRegistrationPostPersistHooks(ctx context.Context, 
 		initialHookCount = 1
 	}
 
+	if credentialsType == identity.CredentialsTypeCodeAuth && m.Config().SelfServiceCodeStrategy(ctx).RegistrationEnabled {
+		b = append(b, m.HookCodeAddressVerifier())
+		initialHookCount += 1
+	}
+
 	for _, v := range m.getHooks(string(credentialsType), m.Config().SelfServiceFlowRegistrationAfterHooks(ctx, string(credentialsType))) {
 		if hook, ok := v.(registration.PostHookPostPersistExecutor); ok {
 			b = append(b, hook)

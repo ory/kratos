@@ -627,7 +627,8 @@ func TestDriverDefault_Strategies(t *testing.T) {
 			{
 				prep: func(conf *config.Config) {
 					conf.MustSet(ctx, config.ViperKeySelfServiceStrategyConfig+".password.enabled", false)
-				}},
+				},
+			},
 			{
 				prep: func(conf *config.Config) {
 					conf.MustSet(ctx, config.ViperKeySelfServiceStrategyConfig+".password.enabled", true)
@@ -648,6 +649,13 @@ func TestDriverDefault_Strategies(t *testing.T) {
 					conf.MustSet(ctx, config.ViperKeySelfServiceStrategyConfig+".totp.enabled", true)
 				},
 				expect: []string{"password", "oidc"},
+			},
+			{
+				prep: func(conf *config.Config) {
+					conf.MustSet(ctx, config.ViperKeySelfServiceStrategyConfig+".password.enabled", true)
+					conf.MustSet(ctx, config.ViperKeySelfServiceStrategyConfig+".code.registration_enabled", true)
+				},
+				expect: []string{"password", "code"},
 			},
 		} {
 			t.Run(fmt.Sprintf("run=%d", k), func(t *testing.T) {
@@ -672,7 +680,8 @@ func TestDriverDefault_Strategies(t *testing.T) {
 			{
 				prep: func(conf *config.Config) {
 					conf.MustSet(ctx, config.ViperKeySelfServiceStrategyConfig+".password.enabled", false)
-				}},
+				},
+			},
 			{
 				prep: func(conf *config.Config) {
 					conf.MustSet(ctx, config.ViperKeySelfServiceStrategyConfig+".password.enabled", true)
@@ -693,6 +702,13 @@ func TestDriverDefault_Strategies(t *testing.T) {
 					conf.MustSet(ctx, config.ViperKeySelfServiceStrategyConfig+".totp.enabled", true)
 				},
 				expect: []string{"password", "oidc", "totp"},
+			},
+			{
+				prep: func(conf *config.Config) {
+					conf.MustSet(ctx, config.ViperKeySelfServiceStrategyConfig+".password.enabled", true)
+					conf.MustSet(ctx, config.ViperKeySelfServiceStrategyConfig+".code.login_enabled", true)
+				},
+				expect: []string{"password", "code"},
 			},
 		} {
 			t.Run(fmt.Sprintf("run=%d", k), func(t *testing.T) {
@@ -760,7 +776,8 @@ func TestDriverDefault_Strategies(t *testing.T) {
 						}),
 						configx.SkipValidation())
 					return c
-				}},
+				},
+			},
 			{
 				prep: func(t *testing.T) *config.Config {
 					c := config.MustNew(t, l,
@@ -834,7 +851,7 @@ func TestDefaultRegistry_AllStrategies(t *testing.T) {
 	_, reg := internal.NewVeryFastRegistryWithoutDB(t)
 
 	t.Run("case=all login strategies", func(t *testing.T) {
-		expects := []string{"password", "oidc", "totp", "webauthn", "lookup_secret"}
+		expects := []string{"password", "oidc", "code", "totp", "webauthn", "lookup_secret"}
 		s := reg.AllLoginStrategies()
 		require.Len(t, s, len(expects))
 		for k, e := range expects {
@@ -843,7 +860,7 @@ func TestDefaultRegistry_AllStrategies(t *testing.T) {
 	})
 
 	t.Run("case=all registration strategies", func(t *testing.T) {
-		expects := []string{"password", "oidc", "webauthn"}
+		expects := []string{"password", "oidc", "code", "webauthn"}
 		s := reg.AllRegistrationStrategies()
 		require.Len(t, s, len(expects))
 		for k, e := range expects {

@@ -61,9 +61,10 @@ func init() {
 }
 
 func createIdentityToRecover(t *testing.T, reg *driver.RegistryDefault, email string) *identity.Identity {
-	var id = &identity.Identity{
+	id := &identity.Identity{
 		Credentials: map[identity.CredentialsType]identity.Credentials{
-			"password": {Type: "password", Identifiers: []string{email}, Config: sqlxx.JSONRawMessage(`{"hashed_password":"foo"}`)}},
+			"password": {Type: "password", Identifiers: []string{email}, Config: sqlxx.JSONRawMessage(`{"hashed_password":"foo"}`)},
+		},
 		Traits:   identity.Traits(fmt.Sprintf(`{"email":"%s"}`, email)),
 		SchemaID: config.DefaultIdentityTraitsSchemaID,
 	}
@@ -273,7 +274,7 @@ func TestRecovery(t *testing.T) {
 
 	public, _, publicRouter, _ := testhelpers.NewKratosServerWithCSRFAndRouters(t, reg)
 
-	var expect = func(t *testing.T, hc *http.Client, isAPI, isSPA bool, values func(url.Values), c int) string {
+	expect := func(t *testing.T, hc *http.Client, isAPI, isSPA bool, values func(url.Values), c int) string {
 		if hc == nil {
 			hc = testhelpers.NewDebugClient(t)
 			if !isAPI {
@@ -286,11 +287,11 @@ func TestRecovery(t *testing.T) {
 			testhelpers.ExpectURL(isAPI || isSPA, public.URL+recovery.RouteSubmitFlow, conf.SelfServiceFlowRecoveryUI(ctx).String()))
 	}
 
-	var expectValidationError = func(t *testing.T, hc *http.Client, isAPI, isSPA bool, values func(url.Values)) string {
+	expectValidationError := func(t *testing.T, hc *http.Client, isAPI, isSPA bool, values func(url.Values)) string {
 		return expect(t, hc, isAPI, isSPA, values, testhelpers.ExpectStatusCode(isAPI || isSPA, http.StatusBadRequest, http.StatusOK))
 	}
 
-	var expectSuccess = func(t *testing.T, hc *http.Client, isAPI, isSPA bool, values func(url.Values)) string {
+	expectSuccess := func(t *testing.T, hc *http.Client, isAPI, isSPA bool, values func(url.Values)) string {
 		return expect(t, hc, isAPI, isSPA, values, http.StatusOK)
 	}
 
@@ -311,14 +312,14 @@ func TestRecovery(t *testing.T) {
 	})
 
 	t.Run("description=should require an email to be sent", func(t *testing.T) {
-		var check = func(t *testing.T, actual string) {
+		check := func(t *testing.T, actual string) {
 			assert.EqualValues(t, node.LinkGroup, gjson.Get(actual, "active").String(), "%s", actual)
 			assert.EqualValues(t, "Property email is missing.",
 				gjson.Get(actual, "ui.nodes.#(attributes.name==email).messages.0.text").String(),
 				"%s", actual)
 		}
 
-		var values = func(v url.Values) {
+		values := func(v url.Values) {
 			v.Del("email")
 		}
 
@@ -336,14 +337,14 @@ func TestRecovery(t *testing.T) {
 	})
 
 	t.Run("description=should require a valid email to be sent", func(t *testing.T) {
-		var check = func(t *testing.T, actual string, value string) {
+		check := func(t *testing.T, actual string, value string) {
 			assert.EqualValues(t, node.LinkGroup, gjson.Get(actual, "active").String(), "%s", actual)
 			assert.EqualValues(t, fmt.Sprintf("%q is not valid \"email\"", value),
 				gjson.Get(actual, "ui.nodes.#(attributes.name==email).messages.0.text").String(),
 				"%s", actual)
 		}
 		for _, email := range []string{"\\", "asdf", "...", "aiacobelli.sec@gmail.com,alejandro.iacobelli@mercadolibre.com"} {
-			var values = func(v url.Values) {
+			values := func(v url.Values) {
 				v.Set("email", email)
 			}
 
@@ -422,16 +423,16 @@ func TestRecovery(t *testing.T) {
 			conf.Set(ctx, config.ViperKeySelfServiceRecoveryNotifyUnknownRecipients, false)
 		})
 		var email string
-		var check = func(t *testing.T, actual string) {
+		check := func(t *testing.T, actual string) {
 			assert.EqualValues(t, node.LinkGroup, gjson.Get(actual, "active").String(), "%s", actual)
 			assert.EqualValues(t, email, gjson.Get(actual, "ui.nodes.#(attributes.name==email).attributes.value").String(), "%s", actual)
 			assertx.EqualAsJSON(t, text.NewRecoveryEmailSent(), json.RawMessage(gjson.Get(actual, "ui.messages.0").Raw))
 
-			message := testhelpers.CourierExpectMessage(t, reg, email, "Account access attempted")
+			message := testhelpers.CourierExpectMessage(ctx, t, reg, email, "Account access attempted")
 			assert.Contains(t, message.Body, "If this was you, check if you signed up using a different address.")
 		}
 
-		var values = func(v url.Values) {
+		values := func(v url.Values) {
 			v.Set("email", email)
 		}
 
@@ -452,11 +453,11 @@ func TestRecovery(t *testing.T) {
 	})
 
 	t.Run("description=should not be able to recover an inactive account", func(t *testing.T) {
-		var check = func(t *testing.T, recoverySubmissionResponse, recoveryEmail string, isAPI bool) {
+		check := func(t *testing.T, recoverySubmissionResponse, recoveryEmail string, isAPI bool) {
 			addr, err := reg.IdentityPool().FindVerifiableAddressByValue(context.Background(), identity.VerifiableAddressTypeEmail, recoveryEmail)
 			assert.NoError(t, err)
 
-			recoveryLink := testhelpers.CourierExpectLinkInMessage(t, testhelpers.CourierExpectMessage(t, reg, recoveryEmail, "Recover access to your account"), 1)
+			recoveryLink := testhelpers.CourierExpectLinkInMessage(t, testhelpers.CourierExpectMessage(ctx, t, reg, recoveryEmail, "Recover access to your account"), 1)
 			cl := testhelpers.NewClientWithCookies(t)
 
 			// Deactivate the identity
@@ -503,7 +504,7 @@ func TestRecovery(t *testing.T) {
 	})
 
 	t.Run("description=should recover an account", func(t *testing.T) {
-		var check = func(t *testing.T, recoverySubmissionResponse, recoveryEmail, returnTo string) {
+		check := func(t *testing.T, recoverySubmissionResponse, recoveryEmail, returnTo string) {
 			addr, err := reg.IdentityPool().FindVerifiableAddressByValue(context.Background(), identity.VerifiableAddressTypeEmail, recoveryEmail)
 			assert.NoError(t, err)
 			assert.False(t, addr.Verified)
@@ -515,7 +516,7 @@ func TestRecovery(t *testing.T) {
 			require.Len(t, gjson.Get(recoverySubmissionResponse, "ui.messages").Array(), 1, "%s", recoverySubmissionResponse)
 			assertx.EqualAsJSON(t, text.NewRecoveryEmailSent(), json.RawMessage(gjson.Get(recoverySubmissionResponse, "ui.messages.0").Raw))
 
-			message := testhelpers.CourierExpectMessage(t, reg, recoveryEmail, "Recover access to your account")
+			message := testhelpers.CourierExpectMessage(ctx, t, reg, recoveryEmail, "Recover access to your account")
 			assert.Contains(t, message.Body, "please recover access to your account by clicking the following link")
 
 			recoveryLink := testhelpers.CourierExpectLinkInMessage(t, message, 1)
@@ -634,8 +635,8 @@ func TestRecovery(t *testing.T) {
 	})
 
 	t.Run("description=should recover an account and set the csrf cookies", func(t *testing.T) {
-		var check = func(t *testing.T, actual, recoveryEmail string, cl *http.Client, do func(*http.Client, *http.Request) (*http.Response, error)) {
-			message := testhelpers.CourierExpectMessage(t, reg, recoveryEmail, "Recover access to your account")
+		check := func(t *testing.T, actual, recoveryEmail string, cl *http.Client, do func(*http.Client, *http.Request) (*http.Response, error)) {
+			message := testhelpers.CourierExpectMessage(ctx, t, reg, recoveryEmail, "Recover access to your account")
 			recoveryLink := testhelpers.CourierExpectLinkInMessage(t, message, 1)
 
 			cl.CheckRedirect = func(req *http.Request, via []*http.Request) error {
@@ -659,21 +660,21 @@ func TestRecovery(t *testing.T) {
 			body := x.MustReadAll(actualRes.Body)
 			require.NoError(t, actualRes.Body.Close())
 			assert.Equal(t, http.StatusOK, actualRes.StatusCode, "%s", body)
-			assert.Equal(t, string(recovery.StatePassedChallenge), gjson.GetBytes(body, "state").String(), "%s", body)
+			assert.Equal(t, string(flow.StatePassedChallenge), gjson.GetBytes(body, "state").String(), "%s", body)
 		}
 
 		email := x.NewUUID().String() + "@ory.sh"
 		id := createIdentityToRecover(t, reg, email)
 
 		t.Run("case=unauthenticated", func(t *testing.T) {
-			var values = func(v url.Values) {
+			values := func(v url.Values) {
 				v.Set("email", email)
 			}
 			check(t, expectSuccess(t, nil, false, false, values), email, testhelpers.NewClientWithCookies(t), (*http.Client).Do)
 		})
 
 		t.Run("case=already logged into another account", func(t *testing.T) {
-			var values = func(v url.Values) {
+			values := func(v url.Values) {
 				v.Set("email", email)
 			}
 
@@ -684,7 +685,7 @@ func TestRecovery(t *testing.T) {
 		})
 
 		t.Run("case=already logged into the account", func(t *testing.T) {
-			var values = func(v url.Values) {
+			values := func(v url.Values) {
 				v.Set("email", email)
 			}
 
@@ -715,8 +716,8 @@ func TestRecovery(t *testing.T) {
 		require.NoError(t, err)
 		assert.True(t, actualSession.IsActive())
 
-		var check = func(t *testing.T, actual string) {
-			message := testhelpers.CourierExpectMessage(t, reg, recoveryEmail, "Recover access to your account")
+		check := func(t *testing.T, actual string) {
+			message := testhelpers.CourierExpectMessage(ctx, t, reg, recoveryEmail, "Recover access to your account")
 			recoveryLink := testhelpers.CourierExpectLinkInMessage(t, message, 1)
 
 			cl := testhelpers.NewClientWithCookies(t)
@@ -736,7 +737,7 @@ func TestRecovery(t *testing.T) {
 			assert.False(t, actualSession.IsActive())
 		}
 
-		var values = func(v url.Values) {
+		values := func(v url.Values) {
 			v.Set("email", recoveryEmail)
 		}
 
@@ -797,7 +798,7 @@ func TestRecovery(t *testing.T) {
 			v.Set("email", recoveryEmail)
 		})
 
-		message := testhelpers.CourierExpectMessage(t, reg, recoveryEmail, "Recover access to your account")
+		message := testhelpers.CourierExpectMessage(ctx, t, reg, recoveryEmail, "Recover access to your account")
 		assert.Contains(t, message.Body, "please recover access to your account by clicking the following link")
 
 		recoveryLink := testhelpers.CourierExpectLinkInMessage(t, message, 1)

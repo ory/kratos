@@ -1,0 +1,18 @@
+{
+  "id": "00b1517f-2467-4aaf-b0a5-82b4a27dcaf5",
+  "oauth2_login_challenge": "challenge data",
+  "type": "api",
+  "expires_at": "2013-10-07T08:23:19Z",
+  "issued_at": "2013-10-07T08:23:19Z",
+  "request_url": "http://kratos:4433/self-service/browser/flows/login/self-service/browser/flows/login/self-service/browser/flows/login/self-service/browser/flows/login/self-service/browser/flows/login/self-service/browser/flows/login/self-service/browser/flows/login/self-service/browser/flows/login/self-service/browser/flows/login/self-service/browser/flows/login/self-service/browser/flows/login/self-service/browser/flows/login/self-service/browser/flows/login/self-service/browser/flows/login/self-service/browser/flows/login/self-service/browser/flows/login/self-service/browser/flows/login/self-service/browser/flows/login/self-service/browser/flows/login/self-service/browser/flows/login/self-service/browser/flows/login/self-service/browser/flows/login/self-service/browser/flows/login/self-service/browser/flows/login/self-service/browser/flows/login/self-service/browser/flows/login/self-service/browser/flows/login/self-service/browser/flows/login/self-service/browser/flows/login/self-service/browser/flows/login/self-service/browser/flows/login/self-service/browser/flows/login/self-service/browser/flows/login/self-service/browser/flows/login/self-service/browser/flows/login/self-service/browser/flows/login/self-service/browser/flows/login/self-service/browser/flows/login/self-service/browser/flows/login/self-service/browser/flows/login",
+  "ui": {
+    "action": "",
+    "method": "",
+    "nodes": null
+  },
+  "created_at": "2013-10-07T08:23:19Z",
+  "updated_at": "2013-10-07T08:23:19Z",
+  "refresh": false,
+  "requested_aal": "aal1",
+  "state": ""
+}
