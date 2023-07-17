@@ -14,8 +14,8 @@ import (
 
 	"github.com/ory/x/urlx"
 
-	"github.com/duo-labs/webauthn/protocol"
-	"github.com/duo-labs/webauthn/webauthn"
+	"github.com/go-webauthn/webauthn/protocol"
+	"github.com/go-webauthn/webauthn/webauthn"
 
 	"github.com/ory/x/sqlcon"
 	"github.com/ory/x/sqlxx"
@@ -361,7 +361,7 @@ func (s *Strategy) PopulateSettingsMethod(r *http.Request, id *identity.Identity
 		return errors.WithStack(err)
 	}
 
-	option, sessionData, err := web.BeginRegistration(NewUser(id.ID[:], nil, web.Config))
+	option, sessionData, err := web.BeginRegistration(NewUser(id.ID.Bytes(), nil, web.Config))
 	if err != nil {
 		return errors.WithStack(err)
 	}

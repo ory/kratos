@@ -6,7 +6,7 @@ package identity
 import (
 	"time"
 
-	"github.com/duo-labs/webauthn/webauthn"
+	"github.com/go-webauthn/webauthn/webauthn"
 )
 
 // CredentialsConfig is the struct that is being used as part of the identity credentials.

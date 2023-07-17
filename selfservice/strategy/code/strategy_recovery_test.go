@@ -545,7 +545,7 @@ func TestRecovery(t *testing.T) {
 
 					body = checkRecovery(t, client, RecoveryFlowTypeBrowser, email, body)
 
-					assert.Equal(t, text.NewRecoverySuccessful(time.Now().Add(time.Hour)).Text,
+					require.Equal(t, text.NewRecoverySuccessful(time.Now().Add(time.Hour)).Text,
 						gjson.Get(body, "ui.messages.0.text").String())
 
 					settingsId := gjson.Get(body, "id").String()

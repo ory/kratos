@@ -78,8 +78,9 @@ selfservice:
       enabled: true
       config:
         rp:
-          id: example.com
+          id: https://example.com/webauthn
           display_name: Webauthn
+          origin: https://origin-a.example.com
   flows:
     error:
       ui_url: http://test.kratos.ory.sh/error

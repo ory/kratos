@@ -18,8 +18,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/duo-labs/webauthn/protocol"
-	"github.com/duo-labs/webauthn/webauthn"
+	"github.com/go-webauthn/webauthn/protocol"
+	"github.com/go-webauthn/webauthn/webauthn"
 	"github.com/gofrs/uuid"
 	"github.com/inhies/go-bytesize"
 	kjson "github.com/knadh/koanf/parsers/json"
@@ -178,7 +178,7 @@ const (
 	ViperKeyWebAuthnRPDisplayName                            = "selfservice.methods.webauthn.config.rp.display_name"
 	ViperKeyWebAuthnRPID                                     = "selfservice.methods.webauthn.config.rp.id"
 	ViperKeyWebAuthnRPOrigin                                 = "selfservice.methods.webauthn.config.rp.origin"
-	ViperKeyWebAuthnRPIcon                                   = "selfservice.methods.webauthn.config.rp.issuer"
+	ViperKeyWebAuthnRPOrigins                                = "selfservice.methods.webauthn.config.rp.origins"
 	ViperKeyWebAuthnPasswordless                             = "selfservice.methods.webauthn.config.passwordless"
 	ViperKeyOAuth2ProviderURL                                = "oauth2_provider.url"
 	ViperKeyOAuth2ProviderHeader                             = "oauth2_provider.headers"
@@ -1364,14 +1364,18 @@ func (p *Config) WebAuthnForPasswordless(ctx context.Context) bool {
 }
 
 func (p *Config) WebAuthnConfig(ctx context.Context) *webauthn.Config {
+	scheme := p.SelfPublicURL(ctx).Scheme
+	id := p.GetProvider(ctx).String(ViperKeyWebAuthnRPID)
+	origin := p.GetProvider(ctx).String(ViperKeyWebAuthnRPOrigin)
+	origins := p.GetProvider(ctx).StringsF(ViperKeyWebAuthnRPOrigins, []string{stringsx.Coalesce(origin, scheme+"://"+id)})
 	return &webauthn.Config{
 		RPDisplayName: p.GetProvider(ctx).String(ViperKeyWebAuthnRPDisplayName),
-		RPID:          p.GetProvider(ctx).String(ViperKeyWebAuthnRPID),
-		RPOrigin:      p.GetProvider(ctx).String(ViperKeyWebAuthnRPOrigin),
-		RPIcon:        p.GetProvider(ctx).String(ViperKeyWebAuthnRPIcon),
+		RPID:          id,
+		RPOrigins:     origins,
 		AuthenticatorSelection: protocol.AuthenticatorSelection{
 			UserVerification: protocol.VerificationDiscouraged,
 		},
+		EncodeUserIDAsString: false,
 	}
 }
 

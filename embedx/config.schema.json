@@ -1578,10 +1578,6 @@
                     },
                     "rp": {
                       "title": "Relying Party (RP) Config",
-                      "required": [
-                        "id",
-                        "display_name"
-                      ],
                       "properties": {
                         "display_name": {
                           "type": "string",
@@ -1602,23 +1598,72 @@
                         "origin": {
                           "type": "string",
                           "title": "Relying Party Origin",
-                          "description": "An explicit RP origin. If left empty, this defaults to `id`.",
+                          "description": "An explicit RP origin. If left empty, this defaults to `id`, prepended with the current protocol schema (HTTP or HTTPS).",
                           "format": "uri",
+                          "deprecationMessage": "This field is deprecated. Use `origins` instead.",
                           "examples": [
-                            "https://www.ory.sh/login"
+                            "https://www.ory.sh"
                           ]
+                        },
+                        "origins": {
+                          "type": "array",
+                          "title": "Relying Party Origins",
+                          "description": "A list of explicit RP origins. If left empty, this defaults to either `origin` or `id`, prepended with the current protocol schema (HTTP or HTTPS).",
+                          "items": {
+                            "type": "string",
+                            "format": "uri",
+                            "examples": [
+                              "https://www.ory.sh",
+                              "https://auth.ory.sh"
+                            ]
+                          }
                         },
                         "icon": {
                           "type": "string",
                           "title": "Relying Party Icon",
                           "description": "An icon to help the user identify this RP.",
                           "format": "uri",
+                          "deprecationMessage": "This field is deprecated and ignored due to security considerations.",
                           "examples": [
                             "https://www.ory.sh/an-icon.png"
                           ]
                         }
                       },
-                      "type": "object"
+                      "type": "object",
+                      "oneOf": [
+                        {
+                          "required": [
+                            "id",
+                            "display_name"
+                          ],
+                          "properties": {
+                            "origin": {"not": {}},
+                            "origins": {"not": {}}
+                          }
+                        },
+                        {
+                          "required": [
+                            "id",
+                            "display_name",
+                            "origin"
+                          ],
+                          "properties": {
+                            "origin": {"type": "string"},
+                            "origins": {"not": {}}
+                          }
+                        },
+                        {
+                          "required": [
+                            "id",
+                            "display_name",
+                            "origins"
+                          ],
+                          "properties": {
+                            "origin": {"not": {}},
+                            "origins": {"type": "array", "items": {"type": "string"}}
+                          }
+                        }
+                      ]
                     }
                   },
                   "additionalProperties": false

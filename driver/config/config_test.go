@@ -1194,6 +1194,51 @@ func TestOAuth2Provider(t *testing.T) {
 	})
 }
 
+func TestWebauthn(t *testing.T) {
+	ctx := context.Background()
+
+	t.Run("case=multiple origins", func(t *testing.T) {
+		conf, err := config.New(ctx, logrusx.New("", ""), os.Stderr,
+			configx.WithConfigFiles("stub/.kratos.webauthn.origins.yaml"))
+		require.NoError(t, err)
+		webAuthnConfig := conf.WebAuthnConfig(ctx)
+		assert.Equal(t, "https://example.com/webauthn", webAuthnConfig.RPID)
+		assert.EqualValues(t, []string{
+			"https://origin-a.example.com",
+			"https://origin-b.example.com",
+			"https://origin-c.example.com",
+		}, webAuthnConfig.RPOrigins)
+	})
+
+	t.Run("case=one origin", func(t *testing.T) {
+		conf, err := config.New(ctx, logrusx.New("", ""), os.Stderr,
+			configx.WithConfigFiles("stub/.kratos.webauthn.origin.yaml"))
+		require.NoError(t, err)
+		webAuthnConfig := conf.WebAuthnConfig(ctx)
+		assert.Equal(t, "https://example.com/webauthn", webAuthnConfig.RPID)
+		assert.EqualValues(t, []string{
+			"https://origin-a.example.com",
+		}, webAuthnConfig.RPOrigins)
+	})
+
+	t.Run("case=id as origin", func(t *testing.T) {
+		conf, err := config.New(ctx, logrusx.New("", ""), os.Stderr,
+			configx.WithConfigFiles("stub/.kratos.yaml"))
+		require.NoError(t, err)
+		webAuthnConfig := conf.WebAuthnConfig(ctx)
+		assert.Equal(t, "example.com", webAuthnConfig.RPID)
+		assert.EqualValues(t, []string{
+			"http://example.com",
+		}, webAuthnConfig.RPOrigins)
+	})
+
+	t.Run("case=invalid", func(t *testing.T) {
+		_, err := config.New(ctx, logrusx.New("", ""), os.Stderr,
+			configx.WithConfigFiles("stub/.kratos.webauthn.invalid.yaml"))
+		assert.Error(t, err)
+	})
+}
+
 func TestCourierTemplatesConfig(t *testing.T) {
 	ctx := context.Background()
 
