@@ -38,17 +38,24 @@ import (
 	"github.com/ory/kratos/x"
 )
 
-var (
-	_ registration.PostHookPostPersistExecutor = new(WebHook)
-	_ registration.PostHookPrePersistExecutor  = new(WebHook)
+var _ interface {
+	login.PreHookExecutor
+	login.PostHookExecutor
 
-	_ verification.PostHookExecutor = new(WebHook)
+	registration.PostHookPostPersistExecutor
+	registration.PostHookPrePersistExecutor
+	registration.PreHookExecutor
 
-	_ recovery.PostHookExecutor = new(WebHook)
+	verification.PreHookExecutor
+	verification.PostHookExecutor
 
-	_ settings.PostHookPostPersistExecutor = new(WebHook)
-	_ settings.PostHookPrePersistExecutor  = new(WebHook)
-)
+	recovery.PreHookExecutor
+	recovery.PostHookExecutor
+
+	settings.PreHookExecutor
+	settings.PostHookPrePersistExecutor
+	settings.PostHookPostPersistExecutor
+} = (*WebHook)(nil)
 
 type (
 	webHookDependencies interface {
