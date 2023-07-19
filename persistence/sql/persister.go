@@ -6,6 +6,7 @@ package sql
 import (
 	"context"
 	"embed"
+	"io/fs"
 	"time"
 
 	"github.com/gobuffalo/pop/v6"
@@ -53,8 +54,8 @@ type (
 	}
 )
 
-func NewPersister(ctx context.Context, r persisterDependencies, c *pop.Connection) (*Persister, error) {
-	m, err := popx.NewMigrationBox(mergefs.Merge(migrations, networkx.Migrations), popx.NewMigrator(c, r.Logger(), r.Tracer(ctx), 0))
+func NewPersister(ctx context.Context, r persisterDependencies, c *pop.Connection, extraMigrations ...fs.FS) (*Persister, error) {
+	m, err := popx.NewMigrationBox(mergefs.Merge(append([]fs.FS{migrations, networkx.Migrations}, extraMigrations...)...), popx.NewMigrator(c, r.Logger(), r.Tracer(ctx), 0))
 	if err != nil {
 		return nil, err
 	}

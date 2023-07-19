@@ -5,6 +5,7 @@ package driver
 
 import (
 	"context"
+	"io/fs"
 
 	"github.com/ory/kratos/selfservice/sessiontokenexchange"
 	"github.com/ory/x/contextx"
@@ -182,6 +183,7 @@ type options struct {
 	config          *config.Config
 	replaceTracer   func(*otelx.Tracer) *otelx.Tracer
 	inspect         func(Registry) error
+	extraMigrations []fs.FS
 }
 
 type RegistryOption func(*options)
@@ -190,21 +192,27 @@ func SkipNetworkInit(o *options) {
 	o.skipNetworkInit = true
 }
 
-func WithConfig(config *config.Config) func(o *options) {
+func WithConfig(config *config.Config) RegistryOption {
 	return func(o *options) {
 		o.config = config
 	}
 }
 
-func ReplaceTracer(f func(*otelx.Tracer) *otelx.Tracer) func(o *options) {
+func ReplaceTracer(f func(*otelx.Tracer) *otelx.Tracer) RegistryOption {
 	return func(o *options) {
 		o.replaceTracer = f
 	}
 }
 
-func Inspect(f func(reg Registry) error) func(o *options) {
+func Inspect(f func(reg Registry) error) RegistryOption {
 	return func(o *options) {
 		o.inspect = f
+	}
+}
+
+func WithExtraMigrations(m ...fs.FS) RegistryOption {
+	return func(o *options) {
+		o.extraMigrations = append(o.extraMigrations, m...)
 	}
 }
 
