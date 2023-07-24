@@ -5,7 +5,7 @@
 
 **Table of Contents**
 
-- [ (2023-07-19)](#2023-07-19)
+- [ (2023-07-24)](#2023-07-24)
   - [Bug Fixes](#bug-fixes)
   - [Features](#features)
 - [1.0.0 (2023-07-12)](#100-2023-07-12)
@@ -307,7 +307,7 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# [](https://github.com/ory/kratos/compare/v1.0.0...v) (2023-07-19)
+# [](https://github.com/ory/kratos/compare/v1.0.0...v) (2023-07-24)
 
 ### Bug Fixes
 
@@ -323,6 +323,9 @@
 
 ### Features
 
+- Add OpenTelemetry span for password hash comparison
+  ([#3383](https://github.com/ory/kratos/issues/3383))
+  ([e3fcf0c](https://github.com/ory/kratos/commit/e3fcf0c31db9742ed61bcf783e37ee119ed19d42))
 - Allow extra migrations in NewPersister
   ([96c1ff7](https://github.com/ory/kratos/commit/96c1ff7747ea38e23a3892f74b75ee555ed49c88))
 
