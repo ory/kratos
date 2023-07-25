@@ -296,6 +296,10 @@ func (s *Strategy) recoveryIssueSession(w http.ResponseWriter, r *http.Request, 
 		return s.retryRecoveryFlowWithError(w, r, flow.TypeBrowser, err)
 	}
 
+	if err := s.d.RecoveryExecutor().PostRecoveryHook(w, r, f, sess); err != nil {
+		return s.retryRecoveryFlowWithError(w, r, flow.TypeBrowser, err)
+	}
+
 	if err := s.d.SessionManager().UpsertAndIssueCookie(r.Context(), w, r, sess); err != nil {
 		return s.retryRecoveryFlowWithError(w, r, flow.TypeBrowser, err)
 	}
@@ -313,10 +317,6 @@ func (s *Strategy) recoveryIssueSession(w http.ResponseWriter, r *http.Request, 
 
 	sf.RequestURL, err = x.TakeOverReturnToParameter(f.RequestURL, sf.RequestURL, returnTo)
 	if err != nil {
-		return s.retryRecoveryFlowWithError(w, r, flow.TypeBrowser, err)
-	}
-
-	if err := s.d.RecoveryExecutor().PostRecoveryHook(w, r, f, sess); err != nil {
 		return s.retryRecoveryFlowWithError(w, r, flow.TypeBrowser, err)
 	}
 
