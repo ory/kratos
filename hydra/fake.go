@@ -7,6 +7,7 @@ import (
 	"context"
 	"errors"
 
+	"github.com/ory/herodot"
 	hydraclientgo "github.com/ory/hydra-client-go/v2"
 	"github.com/ory/kratos/session"
 )
@@ -41,7 +42,7 @@ func (h *FakeHydra) AcceptLoginRequest(_ context.Context, loginChallenge string,
 func (h *FakeHydra) GetLoginRequest(_ context.Context, loginChallenge string) (*hydraclientgo.OAuth2LoginRequest, error) {
 	switch loginChallenge {
 	case FakeInvalidLoginChallenge:
-		return &hydraclientgo.OAuth2LoginRequest{}, nil
+		return nil, herodot.ErrBadRequest.WithReasonf("Unable to get OAuth 2.0 Login Challenge.")
 	case FakeValidLoginChallenge:
 		return &hydraclientgo.OAuth2LoginRequest{
 			RequestUrl: "https://www.ory.sh",
