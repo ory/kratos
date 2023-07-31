@@ -7,6 +7,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+
 	"github.com/ory/kratos/request"
 	"github.com/ory/x/otelx"
 )
