@@ -137,7 +137,13 @@ func (h *DefaultHydra) GetLoginRequest(ctx context.Context, loginChallenge strin
 
 	hlr, r, err := aa.GetOAuth2LoginRequest(ctx).LoginChallenge(loginChallenge).Execute()
 	if err != nil {
-		innerErr := herodot.ErrInternalServerError.WithWrap(err).WithReasonf("Unable to get OAuth 2.0 Login Challenge.")
+		var innerErr *herodot.DefaultError
+		if r == nil || r.StatusCode >= 500 {
+			innerErr = &herodot.ErrInternalServerError
+		} else {
+			innerErr = &herodot.ErrBadRequest
+		}
+		innerErr = innerErr.WithReasonf("Unable to get OAuth 2.0 Login Challenge.")
 		if r != nil {
 			innerErr = innerErr.
 				WithDetail("status_code", r.StatusCode).
