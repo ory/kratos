@@ -1778,7 +1778,10 @@
           "title": "Delivery Strategy",
           "description": "Defines how emails will be sent, either through SMTP (default) or HTTP.",
           "type": "string",
-          "enum": ["smtp", "http"],
+          "enum": [
+            "smtp",
+            "http"
+          ],
           "default": "smtp"
         },
         "http": {
@@ -1942,9 +1945,6 @@
           "additionalProperties": false
         }
       },
-      "required": [
-        "smtp"
-      ],
       "additionalProperties": false
     },
     "oauth2_provider": {
@@ -1975,10 +1975,10 @@
           ]
         },
         "override_return_to": {
-          "title":"Persist OAuth2 request between flows",
-          "type":"boolean",
-          "default":false,
-          "description":"Override the return_to query parameter with the OAuth2 provider request URL when perfoming an OAuth2 login flow."
+          "title": "Persist OAuth2 request between flows",
+          "type": "boolean",
+          "default": false,
+          "description": "Override the return_to query parameter with the OAuth2 provider request URL when perfoming an OAuth2 login flow."
         }
       },
       "additionalProperties": false
