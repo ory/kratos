@@ -126,6 +126,7 @@ func (m *ProviderMicrosoft) updateSubject(ctx context.Context, claims *Claims, e
 		claims.Subject = user.ID
 		claims.BusinessPhones = user.BusinessPhones
 		claims.DisplayName = user.DisplayName
+		claims.GivenName = user.GivenName
 		claims.JobTitle = user.JobTitle
 		claims.Email = user.Mail
 		claims.PhoneNumber = user.MobilePhone
