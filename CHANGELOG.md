@@ -312,6 +312,13 @@
 
 ### Bug Fixes
 
+- Accept all 200 responses as OK in courier
+  ([#3401](https://github.com/ory/kratos/issues/3401))
+  ([88237e2](https://github.com/ory/kratos/commit/88237e25b080a9643f6cbf7eedbf23988ba9ba7c)),
+  closes [#3399](https://github.com/ory/kratos/issues/3399):
+
+  - fix: accept all 200 responses as OK in courier
+
 - Reduce db lookups in whoami for aal check
   ([#3372](https://github.com/ory/kratos/issues/3372))
   ([d814a48](https://github.com/ory/kratos/commit/d814a4864d5c25c4f320daca733873577d517331)):
