@@ -641,12 +641,6 @@ type updateLoginFlowBody struct{}
 //
 // # Submit a Login Flow
 //
-// :::info
-//
-// This endpoint is EXPERIMENTAL and subject to potential breaking changes in the future.
-//
-// :::
-//
 // Use this endpoint to complete a login flow. This endpoint
 // behaves differently for API and browser flows.
 //
