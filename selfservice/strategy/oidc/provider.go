@@ -75,7 +75,6 @@ func (c *Claims) Validate() error {
 	if c.Issuer == "" {
 		return errors.WithStack(herodot.ErrInternalServerError.WithReasonf("issuer not set in claims"))
 	}
-	// TODO - Microsoft Graph API
 	return nil
 }
 
