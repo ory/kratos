@@ -114,12 +114,6 @@ type FrontendApi interface {
 			 * This endpoint initializes a browser-based user registration flow. This endpoint will set the appropriate
 		cookies and anti-CSRF measures required for browser-based flows.
 
-		:::info
-
-		This endpoint is EXPERIMENTAL and subject to potential breaking changes in the future.
-
-		:::
-
 		If this endpoint is opened as a link in the browser, it will be redirected to
 		`selfservice.flows.registration.ui_url` with the flow ID set as the query parameter `?flow=`. If a valid user session
 		exists already, the browser will be redirected to `urls.default_redirect_url`.
@@ -707,13 +701,7 @@ type FrontendApi interface {
 
 	/*
 			 * UpdateLoginFlow Submit a Login Flow
-			 * :::info
-
-		This endpoint is EXPERIMENTAL and subject to potential breaking changes in the future.
-
-		:::
-
-		Use this endpoint to complete a login flow. This endpoint
+			 * Use this endpoint to complete a login flow. This endpoint
 		behaves differently for API and browser flows.
 
 		API flows expect `application/json` to be sent in the body and responds with
@@ -1440,12 +1428,6 @@ func (r FrontendApiApiCreateBrowserRegistrationFlowRequest) Execute() (*Registra
   - This endpoint initializes a browser-based user registration flow. This endpoint will set the appropriate
 
 cookies and anti-CSRF measures required for browser-based flows.
-
-:::info
-
-This endpoint is EXPERIMENTAL and subject to potential breaking changes in the future.
-
-:::
 
 If this endpoint is opened as a link in the browser, it will be redirected to
 `selfservice.flows.registration.ui_url` with the flow ID set as the query parameter `?flow=`. If a valid user session
@@ -4700,13 +4682,8 @@ func (r FrontendApiApiUpdateLoginFlowRequest) Execute() (*SuccessfulNativeLogin,
 
 /*
   - UpdateLoginFlow Submit a Login Flow
-  - :::info
+  - Use this endpoint to complete a login flow. This endpoint
 
-This endpoint is EXPERIMENTAL and subject to potential breaking changes in the future.
-
-:::
-
-Use this endpoint to complete a login flow. This endpoint
 behaves differently for API and browser flows.
 
 API flows expect `application/json` to be sent in the body and responds with
