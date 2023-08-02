@@ -16,7 +16,7 @@ import (
 )
 
 var (
-	_ registration.PostHookPostPersistExecutor = new(SessionIssuer)
+	_ registration.PostHookPostPersistExecutor = new(ShowVerificationUIHook)
 )
 
 type (
@@ -41,13 +41,13 @@ func NewShowVerificationUIHook(d showVerificationUIDependencies) *ShowVerificati
 
 // ExecutePostRegistrationPostPersistHook adds redirect headers and status code if the request is a browser request.
 // If the request is not a browser request, this hook does nothing.
-func (e *ShowVerificationUIHook) ExecutePostRegistrationPostPersistHook(w http.ResponseWriter, r *http.Request, f *registration.Flow, s *session.Session) error {
+func (e *ShowVerificationUIHook) ExecutePostRegistrationPostPersistHook(_ http.ResponseWriter, r *http.Request, f *registration.Flow, _ *session.Session) error {
 	return otelx.WithSpan(r.Context(), "selfservice.hook.SessionIssuer.ExecutePostRegistrationPostPersistHook", func(ctx context.Context) error {
-		return e.execute(w, r.WithContext(ctx), f, s)
+		return e.execute(r.WithContext(ctx), f)
 	})
 }
 
-func (e *ShowVerificationUIHook) execute(w http.ResponseWriter, r *http.Request, f *registration.Flow, s *session.Session) error {
+func (e *ShowVerificationUIHook) execute(r *http.Request, f *registration.Flow) error {
 	if !x.IsBrowserRequest(r) {
 		// this hook is only intended to be used by browsers, as it redirects to the verification ui
 		// JSON API clients should use the `continue_with` field to continue the flow

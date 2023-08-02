@@ -108,6 +108,14 @@ const (
 	CredentialsTypeWebAuthn CredentialsType = "webauthn"
 )
 
+var AllCredentialTypes = []CredentialsType{
+	CredentialsTypePassword,
+	CredentialsTypeOIDC,
+	CredentialsTypeTOTP,
+	CredentialsTypeLookup,
+	CredentialsTypeWebAuthn,
+}
+
 const (
 	// CredentialsTypeRecoveryLink is a special credential type linked to the link strategy (recovery flow).
 	// It is not used within the credentials object itself.
@@ -163,7 +171,7 @@ type Credentials struct {
 	NID       uuid.UUID `json:"-"  faker:"-" db:"nid"`
 }
 
-func (c Credentials) TableName(ctx context.Context) string {
+func (c Credentials) TableName(context.Context) string {
 	return "identity_credentials"
 }
 
@@ -202,11 +210,11 @@ type (
 	}
 )
 
-func (c CredentialsTypeTable) TableName(ctx context.Context) string {
+func (c CredentialsTypeTable) TableName(context.Context) string {
 	return "identity_credential_types"
 }
 
-func (c CredentialIdentifier) TableName(ctx context.Context) string {
+func (c CredentialIdentifier) TableName(context.Context) string {
 	return "identity_credential_identifiers"
 }
 

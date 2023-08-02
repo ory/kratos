@@ -7,6 +7,7 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"net/url"
 	"time"
 
 	"go.opentelemetry.io/otel/trace"
@@ -248,11 +249,24 @@ func (e *HookExecutor) PostRegistrationHook(w http.ResponseWriter, r *http.Reque
 
 	finalReturnTo := returnTo.String()
 	if a.OAuth2LoginChallenge != "" {
-		cr, err := e.d.Hydra().AcceptLoginRequest(r.Context(), string(a.OAuth2LoginChallenge), i.ID.String(), s.AMR)
+		callbackURL, err := e.d.Hydra().AcceptLoginRequest(r.Context(), string(a.OAuth2LoginChallenge), i.ID.String(), s.AMR)
 		if err != nil {
 			return err
 		}
-		finalReturnTo = cr
+		if a.ReturnToVerification != "" {
+			// Special case: If Kratos is used as a login UI *and* we want to show the verification UI,
+			// redirect to the verification URL first and then return to Hydra.
+			verificationURL, err := url.Parse(a.ReturnToVerification)
+			if err != nil {
+				return err
+			}
+			q := verificationURL.Query()
+			q.Set("return_to", callbackURL)
+			verificationURL.RawQuery = q.Encode()
+			finalReturnTo = verificationURL.String()
+		} else {
+			finalReturnTo = callbackURL
+		}
 	} else if a.ReturnToVerification != "" {
 		finalReturnTo = a.ReturnToVerification
 	}
