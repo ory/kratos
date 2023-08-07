@@ -6,6 +6,7 @@ package identity_test
 import (
 	"context"
 	"fmt"
+	"github.com/ory/x/pointerx"
 	"testing"
 	"time"
 
@@ -28,6 +29,7 @@ import (
 func TestManager(t *testing.T) {
 	conf, reg := internal.NewFastRegistryWithMocks(t)
 	testhelpers.SetDefaultIdentitySchema(conf, "file://./stub/manager.schema.json")
+	extensionSchemaID := testhelpers.UseIdentitySchema(t, conf, "file://./stub/extension.schema.json")
 	conf.MustSet(ctx, config.ViperKeyPublicBaseURL, "https://www.ory.sh/")
 	conf.MustSet(ctx, config.ViperKeyCourierSMTPURL, "smtp://foo@bar@dev.null/")
 
@@ -246,6 +248,45 @@ func TestManager(t *testing.T) {
 			// As UpdateTraits takes only the ID as a parameter it cannot update the identity in place.
 			// That is why we only check the identity in the store.
 			checkExtensionFields(fromStore, "email-update-1@ory.sh")(t)
+		})
+
+		t.Run("case=should update unprotected traits with multiple credential identifiers", func(t *testing.T) {
+			original := identity.NewIdentity(extensionSchemaID)
+			original.Traits = identity.Traits(`{"email": "email-update-ewisdfuja@ory.sh", "names": ["username1", "username2"], "age": 30}`)
+			require.NoError(t, reg.IdentityManager().Create(ctx, original))
+			assert.Len(t, original.Credentials[identity.CredentialsTypePassword].Identifiers, 3)
+
+			original.Traits = identity.Traits(`{"email": "email-update-ewisdfuja@ory.sh", "names": ["username1", "username2"], "age": 31}`)
+			require.NoError(t, reg.IdentityManager().Update(ctx, original))
+
+			fromStore, err := reg.PrivilegedIdentityPool().GetIdentityConfidential(ctx, original.ID)
+			require.NoError(t, err)
+			assert.JSONEq(t, string(original.Traits), string(fromStore.Traits))
+		})
+
+		t.Run("case=should update unprotected traits with verified user", func(t *testing.T) {
+			email := x.NewUUID().String() + "@ory.sh"
+			original := identity.NewIdentity(config.DefaultIdentityTraitsSchemaID)
+			original.Traits = newTraits(email, "initial")
+			require.NoError(t, reg.IdentityManager().Create(ctx, original))
+
+			// mock successful verification process
+			addr := original.VerifiableAddresses[0]
+			addr.Verified = true
+			addr.VerifiedAt = pointerx.Ptr(sqlxx.NullTime(time.Now().UTC()))
+			require.NoError(t, reg.PrivilegedIdentityPool().UpdateVerifiableAddress(ctx, &addr))
+
+			// reload to properly set the verified address
+			var err error
+			original, err = reg.PrivilegedIdentityPool().GetIdentityConfidential(ctx, original.ID)
+			require.NoError(t, err)
+
+			original.Traits = newTraits(email, "updated")
+			require.NoError(t, reg.IdentityManager().Update(ctx, original))
+
+			fromStore, err := reg.PrivilegedIdentityPool().GetIdentityConfidential(ctx, original.ID)
+			require.NoError(t, err)
+			assert.JSONEq(t, string(original.Traits), string(fromStore.Traits))
 		})
 
 		t.Run("case=changing recovery address removes it from the store", func(t *testing.T) {
