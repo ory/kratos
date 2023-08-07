@@ -6,9 +6,10 @@ package identity_test
 import (
 	"context"
 	"fmt"
-	"github.com/ory/x/pointerx"
 	"testing"
 	"time"
+
+	"github.com/ory/x/pointerx"
 
 	"github.com/gofrs/uuid"
 
