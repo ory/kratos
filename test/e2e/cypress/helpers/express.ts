@@ -10,4 +10,5 @@ export const routes = {
   settings: APP_URL + "/settings",
   recovery: APP_URL + "/recovery",
   verification: APP_URL + "/verification",
+  welcome: APP_URL + "/welcome",
 }
