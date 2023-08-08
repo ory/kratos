@@ -5,7 +5,7 @@
 
 **Table of Contents**
 
-- [ (2023-08-07)](#2023-08-07)
+- [ (2023-08-08)](#2023-08-08)
   - [Bug Fixes](#bug-fixes)
   - [Documentation](#documentation)
   - [Features](#features)
@@ -309,7 +309,7 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# [](https://github.com/ory/kratos/compare/v1.0.0...v) (2023-08-07)
+# [](https://github.com/ory/kratos/compare/v1.0.0...v) (2023-08-08)
 
 ### Bug Fixes
 
@@ -320,6 +320,9 @@
 
   - fix: accept all 200 responses as OK in courier
 
+- False-positives for requiring re-authentication on update
+  ([#3421](https://github.com/ory/kratos/issues/3421))
+  ([ce8139f](https://github.com/ory/kratos/commit/ce8139f2325a8317388cbcaaa98f3f83d626657b))
 - Redirect to verification URL even if login_challenge is set
   ([#3412](https://github.com/ory/kratos/issues/3412))
   ([cd9e6a0](https://github.com/ory/kratos/commit/cd9e6a0e1e4cb4957d2a50ae3d288ebb0591e42d)):
