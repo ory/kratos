@@ -341,6 +341,7 @@ func New(ctx context.Context, l *logrusx.Logger, stdOutOrErr io.Writer, opts ...
 		configx.WithStderrValidationReporter(),
 		configx.OmitKeysFromTracing("dsn", "courier.smtp.connection_uri", "secrets.default", "secrets.cookie", "secrets.cipher", "client_secret"),
 		configx.WithImmutables("serve", "profiling", "log"),
+		configx.WithExceptImmutables("serve.public.cors.allowed_origins", "serve.admin.cors.allowed_origins"),
 		configx.WithLogrusWatcher(l),
 		configx.WithLogger(l),
 		configx.WithContext(ctx),
@@ -467,15 +468,6 @@ func (p *Config) CORS(ctx context.Context, iface string) (cors.Options, bool) {
 	default:
 		panic(fmt.Sprintf("Received unexpected CORS interface: %s", iface))
 	}
-}
-
-func (p *Config) cors(ctx context.Context, prefix string) (cors.Options, bool) {
-	return p.GetProvider(ctx).CORS(prefix, cors.Options{
-		AllowedMethods:   []string{"GET", "POST", "PUT", "PATCH", "DELETE"},
-		AllowedHeaders:   []string{"Authorization", "Content-Type", "Cookie"},
-		ExposedHeaders:   []string{"Content-Type", "Set-Cookie"},
-		AllowCredentials: true,
-	})
 }
 
 func (p *Config) Set(ctx context.Context, key string, value interface{}) error {
