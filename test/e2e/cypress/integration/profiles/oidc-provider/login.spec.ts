@@ -146,51 +146,6 @@ context("OpenID Provider", () => {
     odicLogin()
     cy.getCookie("ory_hydra_session_dev").should("be.null")
   })
-
-  it("transfers oauth challenge from login flow to new registration flow", () => {
-    let odicLogin = () => {
-      const email = gen.email()
-      const password = gen.password()
-
-      let url = oauth2.getDefaultAuthorizeURL(client)
-      cy.visit(url)
-
-      // kratos login ui
-      cy.get("[name=identifier]").type(email)
-      cy.get("[name=password]").type(password)
-      cy.get("[type='submit'][value='password']").click()
-      // consent ui
-      cy.get("#accept").click()
-    }
-
-    cy.clearAllCookies()
-    cy.updateConfigFile((config) => {
-      config.session.cookie = config.session.cookie || {}
-      config.session.cookie.persistent = true
-      config.session.lifespan = "1234s"
-      return config
-    })
-
-    odicLogin()
-    console.log(cy.getCookies())
-    cy.getCookie("ory_hydra_session_dev").should("not.be.null")
-    cy.getCookie("ory_hydra_session_dev").then((cookie) => {
-      let expected = Date.now() / 1000 + 1234
-      let precision = 10
-      expect(cookie.expiry).to.be.lessThan(expected + precision)
-      expect(cookie.expiry).to.be.greaterThan(expected - precision)
-    })
-
-    cy.clearAllCookies()
-    cy.updateConfigFile((config) => {
-      config.session.cookie = config.session.cookie || {}
-      config.session.cookie.persistent = false
-      return config
-    })
-
-    odicLogin()
-    cy.getCookie("ory_hydra_session_dev").should("be.null")
-  })
 })
 
 context("OpenID Provider - change between flows", () => {

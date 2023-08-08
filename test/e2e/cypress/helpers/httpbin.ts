@@ -23,7 +23,7 @@ export function checkToken(
           const tokenParams = {
             code: result.args.code,
             redirect_uri:
-              "https://ory-network-httpbin-ijakee5waq-ez.a.run.app//anything",
+              "https://ory-network-httpbin-ijakee5waq-ez.a.run.app/anything",
             scope: scope.join(" "),
           }
           oauth2
