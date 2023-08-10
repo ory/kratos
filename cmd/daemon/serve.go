@@ -113,10 +113,9 @@ func ServePublic(r driver.Registry, cmd *cobra.Command, _ []string, slOpts *serv
 	r.PrometheusManager().RegisterRouter(router.Router)
 
 	var handler http.Handler = n
-	options, enabled := r.Config().CORS(ctx, "public")
-	if enabled {
-		handler = cors.New(options).Handler(handler)
-	}
+	options, _ := r.Config().CORS(ctx, "public")
+	// we need to always load the CORS middleware to allow hot-enabling CORS
+	handler = cors.New(options).Handler(handler)
 
 	certs := c.GetTLSCertificatesForPublic(ctx)
 

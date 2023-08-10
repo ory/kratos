@@ -49,7 +49,6 @@ func TestViperProvider(t *testing.T) {
 	t.Parallel()
 	ctx, cancel := context.WithCancel(context.Background())
 	t.Cleanup(cancel)
-	t.Parallel()
 
 	t.Run("suite=loaders", func(t *testing.T) {
 		p := config.MustNew(t, logrusx.New("", ""), os.Stderr,
@@ -810,7 +809,6 @@ func newTestConfig(t *testing.T) (_ *config.Config, _ *test.Hook, exited *bool) 
 func TestLoadingTLSConfig(t *testing.T) {
 	t.Parallel()
 	ctx := context.Background()
-	t.Parallel()
 
 	certPath, keyPath, certBase64, keyBase64 := testhelpers.GenerateTLSCertificateFilesForTests(t)
 
