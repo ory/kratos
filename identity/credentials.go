@@ -237,7 +237,14 @@ func CredentialsEqual(a, b map[CredentialsType]Credentials) bool {
 			return false
 		}
 
-		if !reflect.DeepEqual(expect.Identifiers, actual.Identifiers) {
+		expectIdentifiers, actualIdentifiers := make(map[string]struct{}, len(expect.Identifiers)), make(map[string]struct{}, len(actual.Identifiers))
+		for _, i := range expect.Identifiers {
+			expectIdentifiers[i] = struct{}{}
+		}
+		for _, i := range actual.Identifiers {
+			actualIdentifiers[i] = struct{}{}
+		}
+		if !reflect.DeepEqual(expectIdentifiers, actualIdentifiers) {
 			return false
 		}
 	}

@@ -207,7 +207,7 @@ prepare() {
     --response-type code --response-type id_token \
     --scope openid --scope offline --scope email --scope website \
     --redirect-uri http://localhost:5555/callback \
-    --redirect-uri https://httpbin.org/anything \
+    --redirect-uri https://ory-network-httpbin-ijakee5waq-ez.a.run.app/anything \
     --format json)
   export CYPRESS_OIDC_DUMMY_CLIENT_ID=$(jq -r '.client_id' <<< "$dummy_client" )
   export CYPRESS_OIDC_DUMMY_CLIENT_SECRET=$(jq -r '.client_secret' <<< "$dummy_client" )
