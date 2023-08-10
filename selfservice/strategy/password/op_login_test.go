@@ -37,7 +37,6 @@ import (
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/internal"
 	"github.com/ory/kratos/internal/testhelpers"
-	"github.com/ory/kratos/session"
 	"github.com/ory/kratos/x"
 )
 
@@ -340,9 +339,9 @@ type AcceptWrongSubject struct {
 	h *hydra.DefaultHydra
 }
 
-func (h *AcceptWrongSubject) AcceptLoginRequest(ctx context.Context, loginChallenge string, subject string, amr session.AuthenticationMethods) (string, error) {
-	hackerman := uuid.Must(uuid.NewV4())
-	return h.h.AcceptLoginRequest(ctx, loginChallenge, hackerman.String(), amr)
+func (h *AcceptWrongSubject) AcceptLoginRequest(ctx context.Context, params hydra.AcceptLoginRequestParams) (string, error) {
+	params.IdentityID = uuid.Must(uuid.NewV4()).String()
+	return h.h.AcceptLoginRequest(ctx, params)
 }
 
 func (h *AcceptWrongSubject) GetLoginRequest(ctx context.Context, loginChallenge string) (*hydraclientgo.OAuth2LoginRequest, error) {

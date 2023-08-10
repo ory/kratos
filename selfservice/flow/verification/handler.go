@@ -448,7 +448,13 @@ func (h *Handler) updateVerificationFlow(w http.ResponseWriter, r *http.Request,
 				return
 			}
 
-			callbackURL, err := h.d.Hydra().AcceptLoginRequest(r.Context(), string(f.OAuth2LoginChallenge), s.IdentityID.String(), s.AMR)
+			callbackURL, err := h.d.Hydra().AcceptLoginRequest(r.Context(),
+				hydra.AcceptLoginRequestParams{
+					LoginChallenge:        string(f.OAuth2LoginChallenge),
+					IdentityID:            s.IdentityID.String(),
+					SessionID:             s.ID.String(),
+					AuthenticationMethods: s.AMR,
+				})
 			if err != nil {
 				h.d.VerificationFlowErrorHandler().WriteFlowError(w, r, f, node.DefaultGroup, err)
 				return
