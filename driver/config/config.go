@@ -9,6 +9,7 @@ import (
 	"crypto/tls"
 	"encoding/json"
 	"fmt"
+	"github.com/ory/x/corsx"
 	"io"
 	"net/http"
 	"net/url"
@@ -468,6 +469,21 @@ func (p *Config) CORS(ctx context.Context, iface string) (cors.Options, bool) {
 	default:
 		panic(fmt.Sprintf("Received unexpected CORS interface: %s", iface))
 	}
+}
+
+func (p *Config) cors(ctx context.Context, prefix string) (cors.Options, bool) {
+	opts, enabled := p.GetProvider(ctx).CORS(prefix, cors.Options{
+		AllowedMethods:   []string{"GET", "POST", "PUT", "PATCH", "DELETE"},
+		AllowedHeaders:   []string{"Authorization", "Content-Type", "Cookie"},
+		ExposedHeaders:   []string{"Content-Type", "Set-Cookie"},
+		AllowCredentials: true,
+	})
+	opts.AllowOriginRequestFunc = func(r *http.Request, origin string) bool {
+		// load the origins from the config on every request to allow hot-reloading
+		allowedOrigins := p.GetProvider(r.Context()).Strings(prefix + ".cors.allowed_origins")
+		return corsx.CheckOrigin(allowedOrigins, origin)
+	}
+	return opts, enabled
 }
 
 func (p *Config) Set(ctx context.Context, key string, value interface{}) error {

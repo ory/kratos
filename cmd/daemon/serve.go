@@ -68,7 +68,7 @@ func WithContext(ctx stdctx.Context) Option {
 	}
 }
 
-func ServePublic(r driver.Registry, cmd *cobra.Command, args []string, slOpts *servicelocatorx.Options, opts []Option) error {
+func ServePublic(r driver.Registry, cmd *cobra.Command, _ []string, slOpts *servicelocatorx.Options, opts []Option) error {
 	modifiers := NewOptions(cmd.Context(), opts)
 	ctx := modifiers.ctx
 
@@ -152,7 +152,7 @@ func ServePublic(r driver.Registry, cmd *cobra.Command, args []string, slOpts *s
 	return nil
 }
 
-func ServeAdmin(r driver.Registry, cmd *cobra.Command, args []string, slOpts *servicelocatorx.Options, opts []Option) error {
+func ServeAdmin(r driver.Registry, cmd *cobra.Command, _ []string, slOpts *servicelocatorx.Options, opts []Option) error {
 	modifiers := NewOptions(cmd.Context(), opts)
 	ctx := modifiers.ctx
 
@@ -299,7 +299,7 @@ func sqa(ctx stdctx.Context, cmd *cobra.Command, d driver.Registry) *metricsx.Se
 	)
 }
 
-func bgTasks(d driver.Registry, cmd *cobra.Command, args []string, slOpts *servicelocatorx.Options, opts []Option) error {
+func bgTasks(d driver.Registry, cmd *cobra.Command, _ []string, _ *servicelocatorx.Options, opts []Option) error {
 	modifiers := NewOptions(cmd.Context(), opts)
 	ctx := modifiers.ctx
 
