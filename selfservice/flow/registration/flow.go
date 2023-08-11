@@ -229,6 +229,10 @@ func (f *Flow) ContinueWith() []flow.ContinueWith {
 	return f.ContinueWithItems
 }
 
+func (f Flow) GetOAuth2LoginChallenge() sqlxx.NullString {
+	return f.OAuth2LoginChallenge
+}
+
 func (f *Flow) SecureRedirectToOpts(ctx context.Context, cfg config.Provider) (opts []x.SecureRedirectOption) {
 	return []x.SecureRedirectOption{
 		x.SecureRedirectReturnTo(f.ReturnTo),

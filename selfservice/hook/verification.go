@@ -83,6 +83,10 @@ func (e *Verifier) do(w http.ResponseWriter, r *http.Request, i *identity.Identi
 			return err
 		}
 
+		if f, ok := f.(flow.Challenger); ok {
+			verificationFlow.OAuth2LoginChallenge = f.GetOAuth2LoginChallenge()
+		}
+
 		verificationFlow.State = verification.StateEmailSent
 
 		if err := strategy.PopulateVerificationMethod(r, verificationFlow); err != nil {

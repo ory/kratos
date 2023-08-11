@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/gobuffalo/httptest"
+	"github.com/gofrs/uuid"
 	"github.com/julienschmidt/httprouter"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -202,25 +203,11 @@ func TestRegistrationExecutor(t *testing.T) {
 					res, _ := makeRequestPost(t, newServer(t, i, flow.TypeBrowser, withOAuthChallenge), false, url.Values{})
 					assert.EqualValues(t, http.StatusOK, res.StatusCode)
 					assert.Contains(t, res.Request.URL.String(), verificationTS.URL)
-					assert.NotEmpty(t, res.Request.URL.Query().Get("flow"))
-					assert.Equal(t, hydra.FakePostLoginURL, res.Request.URL.Query().Get("return_to"))
-				})
-
-				t.Run("case=should not redirect to verification UI if the login_challenge is invalid", func(t *testing.T) {
-					t.Cleanup(testhelpers.SelfServiceHookConfigReset(t, conf))
-					conf.MustSet(ctx, config.ViperKeySelfServiceVerificationEnabled, true)
-					conf.MustSet(ctx, config.ViperKeySelfServiceRegistrationAfter+".hooks", []map[string]interface{}{{
-						"hook": hook.KeyVerificationUI,
-					}})
-					i := testhelpers.SelfServiceHookFakeIdentity(t)
-					i.Traits = identity.Traits(`{"email": "verifiable-invalid-login_challenge@ory.sh"}`)
-
-					withOAuthChallenge := func(f *registration.Flow) {
-						f.OAuth2LoginChallenge = hydra.FakeInvalidLoginChallenge
-					}
-					res, body := makeRequestPost(t, newServer(t, i, flow.TypeBrowser, withOAuthChallenge), false, url.Values{})
-					assert.EqualValues(t, http.StatusInternalServerError, res.StatusCode)
-					assert.Equal(t, hydra.ErrFakeAcceptLoginRequestFailed.Error(), body, "%s", body)
+					flowID := res.Request.URL.Query().Get("flow")
+					require.NotEmpty(t, flowID)
+					flow, err := reg.VerificationFlowPersister().GetVerificationFlow(ctx, uuid.Must(uuid.FromString(flowID)))
+					require.NoError(t, err)
+					assert.Equal(t, hydra.FakeValidLoginChallenge, flow.OAuth2LoginChallenge.String())
 				})
 
 				t.Run("case=should redirect to first verification UI if show_verification_ui hook is set and multiple verifiable addresses", func(t *testing.T) {

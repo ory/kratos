@@ -190,7 +190,7 @@ type toSession struct {
 //	  401: errorGeneric
 //	  403: errorGeneric
 //	  default: errorGeneric
-func (h *Handler) whoami(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+func (h *Handler) whoami(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 	s, err := h.r.SessionManager().FetchFromRequest(r.Context(), r)
 	c := h.r.Config()
 	if err != nil {
