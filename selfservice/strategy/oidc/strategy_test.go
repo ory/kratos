@@ -17,6 +17,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/ory/kratos/hydra"
 	"github.com/ory/kratos/selfservice/sessiontokenexchange"
 	"github.com/ory/kratos/session"
 	"github.com/ory/x/snapshotx"
@@ -241,12 +242,12 @@ func TestStrategy(t *testing.T) {
 		assert.Equal(t, claims.metadataPublic.picture, gjson.GetBytes(body, "identity.metadata_public.picture").String(), "%s", body)
 	}
 
-	var newLoginFlow = func(t *testing.T, redirectTo string, exp time.Duration, flowType flow.Type) (req *login.Flow) {
+	var newLoginFlow = func(t *testing.T, requestURL string, exp time.Duration, flowType flow.Type) (req *login.Flow) {
 		// Use NewLoginFlow to instantiate the request but change the things we need to control a copy of it.
 		req, _, err := reg.LoginHandler().NewLoginFlow(httptest.NewRecorder(),
-			&http.Request{URL: urlx.ParseOrPanic(redirectTo)}, flowType)
+			&http.Request{URL: urlx.ParseOrPanic(requestURL)}, flowType)
 		require.NoError(t, err)
-		req.RequestURL = redirectTo
+		req.RequestURL = requestURL
 		req.ExpiresAt = time.Now().Add(exp)
 		require.NoError(t, reg.LoginFlowPersister().UpdateLoginFlow(context.Background(), req))
 
@@ -552,16 +553,32 @@ func TestStrategy(t *testing.T) {
 	})
 
 	t.Run("case=login without registered account with return_to", func(t *testing.T) {
-		subject = "login-without-register-return-to@ory.sh"
-		scope = []string{"openid"}
-		returnTo := "/foo"
 
 		t.Run("case=should pass login", func(t *testing.T) {
+			subject = "login-without-register-return-to@ory.sh"
+			scope = []string{"openid"}
+			returnTo := "/foo"
 			r := newBrowserLoginFlow(t, fmt.Sprintf("%s?return_to=%s", returnTS.URL, returnTo), time.Minute)
 			action := assertFormValues(t, r.ID, "valid")
 			res, body := makeRequest(t, "valid", action, url.Values{})
 			assert.True(t, strings.HasSuffix(res.Request.URL.String(), returnTo))
 			assertIdentity(t, res, body)
+		})
+
+		t.Run("case=should pass login and carry over login_challenge to registration", func(t *testing.T) {
+			subject = "login_challenge_carry_over@ory.sh"
+			scope = []string{"openid"}
+			conf.MustSet(ctx, config.ViperKeyOAuth2ProviderURL, "http://fake-hydra")
+
+			reg.WithHydra(hydra.NewFake())
+			r := newBrowserLoginFlow(t, fmt.Sprintf("%s?login_challenge=%s", returnTS.URL, hydra.FakeValidLoginChallenge), time.Minute)
+			action := assertFormValues(t, r.ID, "valid")
+			fv := url.Values{}
+			fv.Set("provider", "valid")
+			res, err := testhelpers.NewClientWithCookieJar(t, nil, false).PostForm(action, fv)
+			require.NoError(t, err)
+			// Expect to be returned to the hydra instance, that instantiated the request
+			assert.Equal(t, hydra.FakePostLoginURL, res.Request.URL.String())
 		})
 	})
 

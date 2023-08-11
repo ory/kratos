@@ -94,11 +94,11 @@ func createClient(t *testing.T, remote string, redir string) (id, secret string)
 		}
 		defer res.Body.Close()
 
+		body := ioutilx.MustReadAll(res.Body)
 		if http.StatusCreated != res.StatusCode {
-			return errors.Errorf("got status code: %d", res.StatusCode)
+			return errors.Errorf("got status code: %d\n%s", res.StatusCode, body)
 		}
 
-		body := ioutilx.MustReadAll(res.Body)
 		id = gjson.GetBytes(body, "client_id").String()
 		secret = gjson.GetBytes(body, "client_secret").String()
 		return nil

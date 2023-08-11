@@ -22,6 +22,7 @@ import (
 	"github.com/julienschmidt/httprouter"
 	"github.com/pkg/errors"
 
+	"github.com/ory/x/sqlxx"
 	"github.com/ory/x/urlx"
 
 	"github.com/ory/kratos/driver/config"
@@ -105,6 +106,12 @@ type FlowOption func(f *Flow)
 func WithFlowReturnTo(returnTo string) FlowOption {
 	return func(f *Flow) {
 		f.ReturnTo = returnTo
+	}
+}
+
+func WithFlowOAuth2LoginChallenge(loginChallenge string) FlowOption {
+	return func(f *Flow) {
+		f.OAuth2LoginChallenge = sqlxx.NullString(loginChallenge)
 	}
 }
 
