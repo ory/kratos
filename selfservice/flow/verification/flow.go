@@ -79,6 +79,8 @@ type Flow struct {
 	// required: true
 	State State `json:"state" faker:"-" db:"state"`
 
+	OAuth2LoginChallenge sqlxx.NullString `json:"-" db:"oauth2_login_challenge"`
+
 	// CSRFToken contains the anti-csrf token associated with this request.
 	CSRFToken string `json:"-" db:"csrf_token"`
 
