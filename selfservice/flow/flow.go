@@ -12,6 +12,7 @@ import (
 
 	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/ui/container"
+	"github.com/ory/x/sqlxx"
 
 	"github.com/ory/herodot"
 	"github.com/ory/kratos/x"
@@ -39,6 +40,10 @@ type Flow interface {
 	GetRequestURL() string
 	AppendTo(*url.URL) *url.URL
 	GetUI() *container.Container
+}
+
+type Challenger interface {
+	GetOAuth2LoginChallenge() sqlxx.NullString
 }
 
 type FlowWithRedirect interface {

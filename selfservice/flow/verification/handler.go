@@ -7,6 +7,8 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/ory/kratos/hydra"
+	"github.com/ory/kratos/session"
 	"github.com/ory/nosurf"
 
 	"github.com/ory/kratos/schema"
@@ -44,6 +46,8 @@ type (
 		identity.ManagementProvider
 		identity.PrivilegedPoolProvider
 		config.Provider
+		hydra.Provider
+		session.ManagementProvider
 
 		x.CSRFTokenGeneratorProvider
 		x.WriterProvider
@@ -186,7 +190,7 @@ type createBrowserVerificationFlow struct {
 //	  200: verificationFlow
 //	  303: emptyResponse
 //	  default: errorGeneric
-func (h *Handler) createBrowserVerificationFlow(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+func (h *Handler) createBrowserVerificationFlow(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 	if !h.d.Config().SelfServiceFlowVerificationEnabled(r.Context()) {
 		h.d.SelfServiceErrorManager().Forward(r.Context(), w, r, errors.WithStack(herodot.ErrBadRequest.WithReasonf("Verification is not allowed because it was disabled.")))
 		return
@@ -385,7 +389,7 @@ type updateVerificationFlowBody struct{}
 //	  400: verificationFlow
 //	  410: errorGeneric
 //	  default: errorGeneric
-func (h *Handler) updateVerificationFlow(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+func (h *Handler) updateVerificationFlow(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 	rid, err := flow.GetFlowID(r)
 	if err != nil {
 		h.d.VerificationFlowErrorHandler().WriteFlowError(w, r, nil, node.DefaultGroup, err)
@@ -435,6 +439,25 @@ func (h *Handler) updateVerificationFlow(w http.ResponseWriter, r *http.Request,
 	}
 
 	if x.IsBrowserRequest(r) {
+		// Special case: If we ended up here through a OAuth2 login challenge, we need to accept the login request
+		// and redirect back to the OAuth2 provider.
+		if found && f.OAuth2LoginChallenge.String() != "" {
+			s, err := h.d.SessionManager().FetchFromRequest(r.Context(), r)
+			if err != nil {
+				h.d.VerificationFlowErrorHandler().WriteFlowError(w, r, f, node.DefaultGroup, err)
+				return
+			}
+
+			callbackURL, err := h.d.Hydra().AcceptLoginRequest(r.Context(), string(f.OAuth2LoginChallenge), s.IdentityID.String(), s.AMR)
+			if err != nil {
+				h.d.VerificationFlowErrorHandler().WriteFlowError(w, r, f, node.DefaultGroup, err)
+				return
+			}
+
+			http.Redirect(w, r, callbackURL, http.StatusSeeOther)
+			return
+		}
+
 		http.Redirect(w, r, f.AppendTo(h.d.Config().SelfServiceFlowVerificationUI(r.Context())).String(), http.StatusSeeOther)
 		return
 	}

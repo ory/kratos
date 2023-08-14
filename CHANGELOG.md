@@ -5,7 +5,7 @@
 
 **Table of Contents**
 
-- [ (2023-08-08)](#2023-08-08)
+- [ (2023-08-13)](#2023-08-13)
   - [Bug Fixes](#bug-fixes)
   - [Documentation](#documentation)
   - [Features](#features)
@@ -309,7 +309,7 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# [](https://github.com/ory/kratos/compare/v1.0.0...v) (2023-08-08)
+# [](https://github.com/ory/kratos/compare/v1.0.0...v) (2023-08-13)
 
 ### Bug Fixes
 
@@ -319,6 +319,18 @@
   closes [#3399](https://github.com/ory/kratos/issues/3399):
 
   - fix: accept all 200 responses as OK in courier
+
+- Accept login_challenge after verification
+  ([#3427](https://github.com/ory/kratos/issues/3427))
+  ([6b02350](https://github.com/ory/kratos/commit/6b02350c21aa65decd1bb16e559e1cc7dae42d55)):
+
+  Part of https://github.com/ory/network/issues/320
+
+- Carry `oauth2_login_challenge` over to registration flow
+  ([#3419](https://github.com/ory/kratos/issues/3419))
+  ([76241be](https://github.com/ory/kratos/commit/76241bee3dc7fec4690346ee85bc4b9f897fdd34)):
+
+  Fixes https://github.com/ory/kratos/issues/3321
 
 - False-positives for requiring re-authentication on update
   ([#3421](https://github.com/ory/kratos/issues/3421))
