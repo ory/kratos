@@ -17,6 +17,9 @@ import (
 	"github.com/ory/kratos/cipher"
 	"github.com/ory/kratos/selfservice/sessiontokenexchange"
 	"github.com/ory/x/jsonnetsecure"
+	"github.com/ory/x/otelx"
+	"go.opentelemetry.io/otel/attribute"
+	"golang.org/x/oauth2"
 
 	"github.com/ory/kratos/text"
 
@@ -396,16 +399,7 @@ func (s *Strategy) handleCallback(w http.ResponseWriter, r *http.Request, ps htt
 		return
 	}
 
-	te, ok := provider.(TokenExchanger)
-	if !ok {
-		te, err = provider.OAuth2(r.Context())
-		if err != nil {
-			s.forwardError(w, r, req, s.handleError(w, r, req, pid, nil, err))
-			return
-		}
-	}
-
-	token, err := te.Exchange(r.Context(), code)
+	token, err := s.ExchangeCode(r.Context(), provider, code)
 	if err != nil {
 		s.forwardError(w, r, req, s.handleError(w, r, req, pid, nil, err))
 		return
@@ -458,6 +452,24 @@ func (s *Strategy) handleCallback(w http.ResponseWriter, r *http.Request, ps htt
 			WithDetailf("cause", "Unexpected type in OpenID Connect flow: %T", a))))
 		return
 	}
+}
+
+func (s *Strategy) ExchangeCode(ctx context.Context, provider Provider, code string) (token *oauth2.Token, err error) {
+	ctx, span := s.d.Tracer(ctx).Tracer().Start(ctx, "strategy.oidc.ExchangeCode")
+	defer otelx.End(span, &err)
+	span.SetAttributes(attribute.String("provider_id", provider.Config().ID))
+	span.SetAttributes(attribute.String("provider_label", provider.Config().Label))
+
+	te, ok := provider.(TokenExchanger)
+	if !ok {
+		te, err = provider.OAuth2(ctx)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	token, err = te.Exchange(ctx, code)
+	return token, err
 }
 
 func (s *Strategy) populateMethod(r *http.Request, c *container.Container, message func(provider string) *text.Message) error {
