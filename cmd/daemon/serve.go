@@ -6,9 +6,10 @@ package daemon
 import (
 	stdctx "context"
 	"crypto/tls"
-	"github.com/rs/cors"
 	"net/http"
 	"time"
+
+	"github.com/rs/cors"
 
 	"github.com/ory/x/otelx/semconv"
 
@@ -101,7 +102,12 @@ func ServePublic(r driver.Registry, cmd *cobra.Command, _ []string, slOpts *serv
 
 	// we need to always load the CORS middleware even if it is disabled, to allow hot-enabling CORS
 	n.UseFunc(func(w http.ResponseWriter, req *http.Request, next http.HandlerFunc) {
-		cors.New(r.Config().CORS(req.Context(), "public")).ServeHTTP(w, req, next)
+		cfg, enabled := r.Config().CORS(req.Context(), "public")
+		if !enabled {
+			next(w, req)
+			return
+		}
+		cors.New(cfg).ServeHTTP(w, req, next)
 	})
 
 	n.UseFunc(x.CleanPath) // Prevent double slashes from breaking CSRF.
