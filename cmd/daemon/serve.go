@@ -99,6 +99,9 @@ func ServePublic(r driver.Registry, cmd *cobra.Command, _ []string, slOpts *serv
 	router := x.NewRouterPublic()
 	csrf := x.NewCSRFHandler(router, r)
 
+	// we need to always load the CORS middleware even if it is disabled, to allow hot-enabling CORS
+	n.Use(cors.New(r.Config().CORS(ctx, "public")))
+
 	n.UseFunc(x.CleanPath) // Prevent double slashes from breaking CSRF.
 	r.WithCSRFHandler(csrf)
 	n.UseHandler(r.CSRFHandler())
@@ -112,13 +115,9 @@ func ServePublic(r driver.Registry, cmd *cobra.Command, _ []string, slOpts *serv
 	r.RegisterPublicRoutes(ctx, router)
 	r.PrometheusManager().RegisterRouter(router.Router)
 
-	var handler http.Handler = n
-	options, _ := r.Config().CORS(ctx, "public")
-	// we need to always load the CORS middleware to allow hot-enabling CORS
-	handler = cors.New(options).Handler(handler)
-
 	certs := c.GetTLSCertificatesForPublic(ctx)
 
+	var handler http.Handler = n
 	if tracer := r.Tracer(ctx); tracer.IsLoaded() {
 		handler = otelx.TraceHandler(handler, otelhttp.WithTracerProvider(tracer.Provider()))
 	}

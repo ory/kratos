@@ -461,7 +461,7 @@ func (p *Config) formatJsonErrors(schema []byte, err error) {
 	jsonschemax.FormatValidationErrorForCLI(p.stdOutOrErr, schema, err)
 }
 
-func (p *Config) CORS(ctx context.Context, iface string) (cors.Options, bool) {
+func (p *Config) CORS(ctx context.Context, iface string) cors.Options {
 	switch iface {
 	case "admin":
 		return p.cors(ctx, "serve.admin")
@@ -472,8 +472,8 @@ func (p *Config) CORS(ctx context.Context, iface string) (cors.Options, bool) {
 	}
 }
 
-func (p *Config) cors(ctx context.Context, prefix string) (cors.Options, bool) {
-	opts, enabled := p.GetProvider(ctx).CORS(prefix, cors.Options{
+func (p *Config) cors(ctx context.Context, prefix string) cors.Options {
+	opts, _ := p.GetProvider(ctx).CORS(prefix, cors.Options{
 		AllowedMethods:   []string{"GET", "POST", "PUT", "PATCH", "DELETE"},
 		AllowedHeaders:   []string{"Authorization", "Content-Type", "Cookie"},
 		ExposedHeaders:   []string{"Content-Type", "Set-Cookie"},
@@ -489,7 +489,7 @@ func (p *Config) cors(ctx context.Context, prefix string) (cors.Options, bool) {
 		allowedOrigins := p.GetProvider(r.Context()).Strings(prefix + ".cors.allowed_origins")
 		return corsx.CheckOrigin(allowedOrigins, origin)
 	}
-	return opts, enabled
+	return opts
 }
 
 func (p *Config) Set(ctx context.Context, key string, value interface{}) error {
