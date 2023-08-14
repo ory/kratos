@@ -6,13 +6,13 @@ package daemon
 import (
 	stdctx "context"
 	"crypto/tls"
+	"github.com/rs/cors"
 	"net/http"
 	"time"
 
 	"github.com/ory/x/otelx/semconv"
 
 	"github.com/pkg/errors"
-	"github.com/rs/cors"
 	"github.com/spf13/cobra"
 	"github.com/urfave/negroni"
 	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
@@ -100,7 +100,9 @@ func ServePublic(r driver.Registry, cmd *cobra.Command, _ []string, slOpts *serv
 	csrf := x.NewCSRFHandler(router, r)
 
 	// we need to always load the CORS middleware even if it is disabled, to allow hot-enabling CORS
-	n.Use(cors.New(r.Config().CORS(ctx, "public")))
+	n.UseFunc(func(w http.ResponseWriter, req *http.Request, next http.HandlerFunc) {
+		cors.New(r.Config().CORS(req.Context(), "public")).ServeHTTP(w, req, next)
+	})
 
 	n.UseFunc(x.CleanPath) // Prevent double slashes from breaking CSRF.
 	r.WithCSRFHandler(csrf)

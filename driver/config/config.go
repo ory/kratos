@@ -18,8 +18,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/ory/x/corsx"
-
 	"github.com/go-webauthn/webauthn/protocol"
 	"github.com/go-webauthn/webauthn/webauthn"
 	"github.com/gofrs/uuid"
@@ -479,16 +477,6 @@ func (p *Config) cors(ctx context.Context, prefix string) cors.Options {
 		ExposedHeaders:   []string{"Content-Type", "Set-Cookie"},
 		AllowCredentials: true,
 	})
-	opts.AllowOriginRequestFunc = func(r *http.Request, origin string) bool {
-		// if cors is not enabled, return false
-		// this enables hot-reloading on every request
-		if !p.GetProvider(r.Context()).Bool(prefix + ".cors.enabled") {
-			return false
-		}
-		// load the origins from the config on every request to allow hot-reloading
-		allowedOrigins := p.GetProvider(r.Context()).Strings(prefix + ".cors.allowed_origins")
-		return corsx.CheckOrigin(allowedOrigins, origin)
-	}
 	return opts
 }
 
