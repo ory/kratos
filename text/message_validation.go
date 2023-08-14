@@ -164,6 +164,15 @@ func NewErrorValidationDuplicateCredentials() *Message {
 	}
 }
 
+func NewErrorValidationDuplicateCredentialsCustomMessage(reason string) *Message {
+	return &Message{
+		ID:      ErrorValidationDuplicateCredentials,
+		Text:    reason,
+		Type:    Error,
+		Context: context(nil),
+	}
+}
+
 func NewErrorValidationDuplicateCredentialsOnOIDCLink() *Message {
 	return &Message{
 		ID:      ErrorValidationDuplicateCredentialsOnOIDCLink,

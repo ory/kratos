@@ -18,6 +18,11 @@ type ValidationError struct {
 	Messages text.Messages
 }
 
+type Hinter interface {
+	MessageOverride() string
+	Hints() []string
+}
+
 func NewRequiredError(missingPtr, missingFieldName string) error {
 	return errors.WithStack(&ValidationError{
 		ValidationError: &jsonschema.ValidationError{
@@ -129,15 +134,25 @@ func (r *ValidationErrorContextDuplicateCredentialsError) AddContext(_, _ string
 
 func (r *ValidationErrorContextDuplicateCredentialsError) FinishInstanceContext() {}
 
-func NewDuplicateCredentialsError() error {
-	return errors.WithStack(&ValidationError{
+func NewDuplicateCredentialsError(err error) error {
+	e := &ValidationError{
 		ValidationError: &jsonschema.ValidationError{
 			Message:     `an account with the same identifier (email, phone, username, ...) exists already`,
 			InstancePtr: "#/",
 			Context:     &ValidationErrorContextDuplicateCredentialsError{},
 		},
 		Messages: new(text.Messages).Add(text.NewErrorValidationDuplicateCredentials()),
-	})
+	}
+	if hinter := Hinter(nil); errors.As(err, &hinter) {
+		if msg := hinter.MessageOverride(); msg != "" {
+			e.Messages.Clear()
+			e.Messages.Add(text.NewErrorValidationDuplicateCredentialsCustomMessage(msg))
+		}
+		for _, hint := range hinter.Hints() {
+			e.Messages.Add(&text.Message{Text: hint})
+		}
+	}
+	return errors.WithStack(e)
 }
 
 func NewNoLoginStrategyResponsible() error {

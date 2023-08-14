@@ -97,6 +97,7 @@ func init() {
 		"NewErrorValidationPasswordPolicyViolation":               text.NewErrorValidationPasswordPolicyViolation("{reason}"),
 		"NewErrorValidationInvalidCredentials":                    text.NewErrorValidationInvalidCredentials(),
 		"NewErrorValidationDuplicateCredentials":                  text.NewErrorValidationDuplicateCredentials(),
+		"NewErrorValidationDuplicateCredentialsCustomMessage":     text.NewErrorValidationDuplicateCredentialsCustomMessage("{reason}"),
 		"NewErrorValidationDuplicateCredentialsOnOIDCLink":        text.NewErrorValidationDuplicateCredentialsOnOIDCLink(),
 		"NewErrorValidationTOTPVerifierWrong":                     text.NewErrorValidationTOTPVerifierWrong(),
 		"NewErrorValidationLookupAlreadyUsed":                     text.NewErrorValidationLookupAlreadyUsed(),

@@ -5,11 +5,15 @@ package identity
 
 import (
 	"context"
+	"encoding/json"
+	"fmt"
 	"reflect"
 
 	"go.opentelemetry.io/otel/trace"
 
+	"github.com/ory/kratos/schema"
 	"github.com/ory/kratos/x/events"
+	"github.com/ory/x/sqlcon"
 
 	"github.com/ory/x/otelx"
 
@@ -41,6 +45,7 @@ type (
 		courier.Provider
 		ValidationProvider
 		ActiveCredentialsCounterStrategyProvider
+		x.LoggingProvider
 	}
 	ManagementProvider interface {
 		IdentityManager() *Manager
@@ -95,11 +100,97 @@ func (m *Manager) Create(ctx context.Context, i *Identity, opts ...ManagerOption
 	}
 
 	if err := m.r.PrivilegedIdentityPool().CreateIdentity(ctx, i); err != nil {
+		if errors.Is(err, sqlcon.ErrUniqueViolation) {
+			return m.generateCredentialHint(ctx, err, i)
+		}
 		return err
 	}
 
 	trace.SpanFromContext(ctx).AddEvent(events.NewIdentityCreated(ctx, i.ID))
 	return nil
+}
+
+func (m *Manager) generateCredentialHint(ctx context.Context, e error, i *Identity) (err error) {
+	var hints []string
+	var message string
+	for _, va := range i.VerifiableAddresses {
+		conflictingAddress, err := m.r.PrivilegedIdentityPool().FindVerifiableAddressByValue(ctx, va.Via, va.Value)
+		if errors.Is(err, sqlcon.ErrNoRows) {
+			continue
+		}
+		if err != nil {
+			m.r.Logger().WithError(err).Error("Failed to generate credential hint")
+			continue
+		}
+		message = fmt.Sprintf("An account for %s already exists.", va.Value)
+		hintIdentity, err := m.r.PrivilegedIdentityPool().GetIdentity(ctx, conflictingAddress.IdentityID, ExpandCredentials)
+		if err != nil {
+			m.r.Logger().WithError(err).Error("Failed to generate credential hint")
+			continue
+		}
+		for _, c := range hintIdentity.Credentials {
+			hints = append(hints, toPretty(&c)...)
+		}
+	}
+	if len(hints) == 0 {
+		hints = append(hints, "If you forgot your credentials, please recover your account from the sign-in page.")
+	} else {
+		hints = append(hints, "Alternatively, please recover your account from the sign-in page.")
+	}
+	return &ErrDuplicateCredentials{e, message, hints}
+}
+
+func toPretty(c *Credentials) (hints []string) {
+	switch c.Type {
+	case CredentialsTypeOIDC:
+		var cfg CredentialsOIDC
+		_ = json.Unmarshal(c.Config, &cfg)
+		for _, provider := range cfg.Providers {
+			hints = append(hints, fmt.Sprintf("Please sign in with %s instead.", provider.Provider))
+		}
+		return hints
+	case CredentialsTypeWebAuthn:
+		var cfg CredentialsWebAuthnConfig
+		_ = json.Unmarshal(c.Config, &cfg)
+		for _, webauthn := range cfg.Credentials {
+			if webauthn.IsPasswordless {
+				hints = append(hints, "Please sign passwordless using %s instead.", webauthn.DisplayName)
+			} else {
+				hints = append(hints, "Please sign in using your security key %s instead.", webauthn.DisplayName)
+			}
+		}
+		return hints
+	}
+	return hints
+}
+
+type ErrDuplicateCredentials struct {
+	error
+	overrideMessage string
+	hints           []string
+}
+
+var _ schema.Hinter = (*ErrDuplicateCredentials)(nil)
+
+func (e *ErrDuplicateCredentials) Unwrap() error {
+	if e == nil {
+		return nil
+	}
+	return e.error
+}
+
+func (e *ErrDuplicateCredentials) Hints() []string {
+	if e == nil {
+		return nil
+	}
+	return e.hints
+}
+
+func (e *ErrDuplicateCredentials) MessageOverride() string {
+	if e == nil {
+		return ""
+	}
+	return e.overrideMessage
 }
 
 func (m *Manager) CreateIdentities(ctx context.Context, identities []*Identity, opts ...ManagerOption) (err error) {
