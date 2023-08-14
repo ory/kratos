@@ -14,12 +14,13 @@ import (
 	"path/filepath"
 	"strings"
 
+	"go.opentelemetry.io/otel/attribute"
+	"golang.org/x/oauth2"
+
 	"github.com/ory/kratos/cipher"
 	"github.com/ory/kratos/selfservice/sessiontokenexchange"
 	"github.com/ory/x/jsonnetsecure"
 	"github.com/ory/x/otelx"
-	"go.opentelemetry.io/otel/attribute"
-	"golang.org/x/oauth2"
 
 	"github.com/ory/kratos/text"
 
