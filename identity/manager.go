@@ -8,6 +8,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"reflect"
+	"sort"
 
 	"go.opentelemetry.io/otel/trace"
 
@@ -169,7 +170,16 @@ func (m *Manager) findExistingAuthMethod(ctx context.Context, e error, i *Identi
 		return &ErrDuplicateCredentials{error: e}
 	}
 
+	// We need to sort the credentials for the error message to be deterministic.
+	var creds []Credentials
 	for _, cred := range found.Credentials {
+		creds = append(creds, cred)
+	}
+	sort.Slice(creds, func(i, j int) bool {
+		return creds[i].Type < creds[j].Type
+	})
+
+	for _, cred := range creds {
 		if cred.Config == nil {
 			continue
 		}

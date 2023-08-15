@@ -5,10 +5,9 @@ package schema
 
 import (
 	"fmt"
-	"strings"
-
 	"golang.org/x/text/cases"
 	"golang.org/x/text/language"
+	"strings"
 
 	"github.com/pkg/errors"
 
@@ -146,16 +145,16 @@ type DuplicateCredentialsHinter interface {
 
 func NewDuplicateCredentialsError(err error) error {
 	if hinter := DuplicateCredentialsHinter(nil); errors.As(err, &hinter) && hinter.HasHints() {
+		oidcProviders := make([]string, 0, len(hinter.AvailableOIDCProviders()))
+		for _, provider := range hinter.AvailableOIDCProviders() {
+			oidcProviders = append(oidcProviders, cases.Title(language.English).String(provider))
+		}
+
 		reason := ""
 		if hinter.IdentifierHint() != "" {
 			reason = fmt.Sprintf("You tried signing with %s which is already in use by another account.", hinter.IdentifierHint())
 		} else {
 			reason = "You tried to sign up using an email, phone, or username that is already used by another account."
-		}
-
-		oidcProviders := make([]string, 0, len(hinter.AvailableOIDCProviders()))
-		for _, provider := range hinter.AvailableOIDCProviders() {
-			oidcProviders = append(oidcProviders, cases.Title(language.English).String(provider))
 		}
 
 		if len(hinter.AvailableCredentials()) > 0 {
@@ -173,10 +172,10 @@ func NewDuplicateCredentialsError(err error) error {
 
 			reason = fmt.Sprintf("%s You can sign in using %s.", reason, strings.Join(humanReadable, ", "))
 			if len(hinter.AvailableOIDCProviders()) > 0 {
-				reason = fmt.Sprintf("%s Or using the following social sign in providers: %s", reason, strings.Join(hinter.AvailableOIDCProviders(), ", "))
+				reason = fmt.Sprintf("%s Or using the following social sign in providers: %s", reason, strings.Join(oidcProviders, ", "))
 			}
 		} else if len(hinter.AvailableOIDCProviders()) > 0 {
-			reason = fmt.Sprintf("%s You can sign in using one of the following social sign in providers: %s.", reason, strings.Join(hinter.AvailableOIDCProviders(), ", "))
+			reason = fmt.Sprintf("%s You can sign in using one of the following social sign in providers: %s.", reason, strings.Join(oidcProviders, ", "))
 		}
 
 		return errors.WithStack(&ValidationError{
