@@ -173,7 +173,7 @@ func NewDuplicateCredentialsError(err error) error {
 
 			reason = fmt.Sprintf("%s You can sign in using %s.", reason, strings.Join(humanReadable, ", "))
 			if len(hinter.AvailableOIDCProviders()) > 0 {
-				reason = fmt.Sprintf("%s Or using the following social sign in providers: %s", reason, strings.Join(oidcProviders, ", "))
+				reason = fmt.Sprintf("%s Use one of the following social sign in providers: %s", reason, strings.Join(oidcProviders, ", "))
 			}
 		} else if len(hinter.AvailableOIDCProviders()) > 0 {
 			reason = fmt.Sprintf("%s You can sign in using one of the following social sign in providers: %s.", reason, strings.Join(oidcProviders, ", "))
