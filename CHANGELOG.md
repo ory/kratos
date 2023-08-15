@@ -372,6 +372,27 @@
   ([e3fcf0c](https://github.com/ory/kratos/commit/e3fcf0c31db9742ed61bcf783e37ee119ed19d42))
 - Allow extra migrations in NewPersister
   ([96c1ff7](https://github.com/ory/kratos/commit/96c1ff7747ea38e23a3892f74b75ee555ed49c88))
+- Provide login hints when registration fails due to duplicate
+  credentials/addresses ([#3430](https://github.com/ory/kratos/issues/3430))
+  ([8b28469](https://github.com/ory/kratos/commit/8b284697e4a26fb01ad57d2e9ebd8f714be49f33)):
+
+  - feat: provide login hints when registration fails due to duplicate
+    credentials or identifiers
+
+  - feat: identify edge cases and write tests
+
+  - chore: synchronize workspaces
+
+  - feat: make login hints configurable
+
+  - chore: synchronize workspaces
+
+  - chore: synchronize workspaces
+
+  - chore: synchronize workspaces
+
+  - chore: synchronize workspaces
+
 - Support multiple origins for WebAuthN
   ([#3380](https://github.com/ory/kratos/issues/3380))
   ([013f335](https://github.com/ory/kratos/commit/013f335881831bbf90ac31b219b57118fc089fe6)):
