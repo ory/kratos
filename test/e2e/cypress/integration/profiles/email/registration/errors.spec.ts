@@ -22,6 +22,10 @@ describe("Registration failures with email profile", () => {
       before(() => {
         cy.useConfigProfile(profile)
         cy.proxy(app)
+        cy.updateConfigFile((config) => {
+          config.selfservice.flows.registration.login_hints = true
+          return config
+        })
       })
 
       beforeEach(() => {
