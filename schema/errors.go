@@ -5,9 +5,10 @@ package schema
 
 import (
 	"fmt"
+	"strings"
+
 	"golang.org/x/text/cases"
 	"golang.org/x/text/language"
-	"strings"
 
 	"github.com/pkg/errors"
 
