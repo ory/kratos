@@ -45,10 +45,12 @@ func newRegistrationRegistry(t *testing.T) *driver.RegistryDefault {
 	ctx := context.Background()
 	conf, reg := internal.NewFastRegistryWithMocks(t)
 	conf.MustSet(ctx, config.ViperKeySelfServiceStrategyConfig+"."+string(identity.CredentialsTypePassword), map[string]interface{}{"enabled": true})
+	conf.MustSet(ctx, config.ViperKeySelfServiceRegistrationLoginHints, true)
 	return reg
 }
 
 func TestRegistration(t *testing.T) {
+
 	ctx := context.Background()
 	t.Run("case=registration", func(t *testing.T) {
 		reg := newRegistrationRegistry(t)
@@ -300,7 +302,7 @@ func TestRegistration(t *testing.T) {
 					body := testhelpers.SubmitRegistrationForm(t, true, apiClient, publicTS,
 						applyTransform(values, transform), false, http.StatusBadRequest,
 						publicTS.URL+registration.RouteSubmitFlow)
-					assert.Contains(t, gjson.Get(body, "ui.messages.0.text").String(), "An account with the same identifier (email, phone, username, ...) exists already.", "%s", body)
+					assert.Contains(t, gjson.Get(body, "ui.messages.0.text").String(), "You tried signing with registration-identifier-8-api-duplicate-"+suffix+" which is already in use by another account. You can sign in using your password.", "%s", body)
 				})
 
 				t.Run("type=spa", func(t *testing.T) {
@@ -312,7 +314,7 @@ func TestRegistration(t *testing.T) {
 
 					_ = expectSuccessfulLogin(t, false, true, nil, values)
 					body := registrationhelpers.ExpectValidationError(t, publicTS, conf, "spa", applyTransform(values, transform))
-					assert.Contains(t, gjson.Get(body, "ui.messages.0.text").String(), "An account with the same identifier (email, phone, username, ...) exists already.", "%s", body)
+					assert.Contains(t, gjson.Get(body, "ui.messages.0.text").String(), "You tried signing with registration-identifier-8-spa-duplicate-"+suffix+" which is already in use by another account. You can sign in using your password.", "%s", body)
 				})
 
 				t.Run("type=browser", func(t *testing.T) {
@@ -324,7 +326,7 @@ func TestRegistration(t *testing.T) {
 
 					_ = expectSuccessfulLogin(t, false, false, nil, values)
 					body := registrationhelpers.ExpectValidationError(t, publicTS, conf, "browser", applyTransform(values, transform))
-					assert.Contains(t, gjson.Get(body, "ui.messages.0.text").String(), "An account with the same identifier (email, phone, username, ...) exists already.", "%s", body)
+					assert.Contains(t, gjson.Get(body, "ui.messages.0.text").String(), "You tried signing with registration-identifier-8-browser-duplicate-"+suffix+" which is already in use by another account. You can sign in using your password.", "%s", body)
 				})
 			}
 

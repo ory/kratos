@@ -164,6 +164,19 @@ func NewErrorValidationDuplicateCredentials() *Message {
 	}
 }
 
+func NewErrorValidationDuplicateCredentialsWithHints(reason string, availableCredentialTypes []string, availableOIDCProviders []string, credentialIdentifierHint string) *Message {
+	return &Message{
+		ID:   ErrorValidationDuplicateCredentialsWithHints,
+		Text: reason,
+		Type: Error,
+		Context: context(map[string]interface{}{
+			"available_credential_types": availableCredentialTypes,
+			"available_oidc_providers":   availableOIDCProviders,
+			"credential_identifier_hint": credentialIdentifierHint,
+		}),
+	}
+}
+
 func NewErrorValidationDuplicateCredentialsOnOIDCLink() *Message {
 	return &Message{
 		ID:      ErrorValidationDuplicateCredentialsOnOIDCLink,

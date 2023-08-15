@@ -1,7 +1,7 @@
 // Copyright © 2023 Ory Corp
 // SPDX-License-Identifier: Apache-2.0
 
-import { appPrefix, gen } from "../../../../helpers"
+import { appPrefix, gen, website } from "../../../../helpers"
 import { routes as express } from "../../../../helpers/express"
 import { routes as react } from "../../../../helpers/react"
 
@@ -22,6 +22,10 @@ describe("Registration failures with email profile", () => {
       before(() => {
         cy.useConfigProfile(profile)
         cy.proxy(app)
+        cy.updateConfigFile((config) => {
+          config.selfservice.flows.registration.login_hints = true
+          return config
+        })
       })
 
       beforeEach(() => {
@@ -223,6 +227,29 @@ describe("Registration failures with email profile", () => {
           cy.get('[data-testid="ui/message/4000020"]').should(
             "contain.text",
             "must be <= 300 but found 600",
+          )
+        })
+
+        it("should show a hint for existing account", () => {
+          const email = gen.email()
+          const password = gen.password()
+
+          cy.registerApi({
+            email,
+            password,
+            fields: { "traits.website": website },
+          })
+
+          cy.get('input[name="traits.email"]').type(email)
+          cy.get('input[name="password"]').type(password)
+          cy.get('input[name="traits.website').type(website)
+          cy.get('input[name="traits.age"]').type(`30`)
+          cy.submitPasswordForm()
+          cy.get('[data-testid="ui/message/4000028"]').should(
+            "contain.text",
+            "You tried signing with " +
+              email +
+              " which is already in use by another account. You can sign in using your password.",
           )
         })
       })

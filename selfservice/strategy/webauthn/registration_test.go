@@ -51,6 +51,7 @@ func newRegistrationRegistry(t *testing.T) *driver.RegistryDefault {
 	conf.MustSet(ctx, config.ViperKeySelfServiceStrategyConfig+"."+string(identity.CredentialsTypePassword)+".enabled", true)
 	enableWebAuthn(conf)
 	conf.MustSet(ctx, config.ViperKeyWebAuthnPasswordless, true)
+	conf.MustSet(ctx, config.ViperKeySelfServiceRegistrationLoginHints, true)
 	return reg
 }
 
@@ -392,7 +393,7 @@ func TestRegistration(t *testing.T) {
 					actual, _, _ = makeRegistration(t, f, values(email))
 					assert.Contains(t, gjson.Get(actual, "ui.action").String(), publicTS.URL+registration.RouteSubmitFlow, "%s", actual)
 					registrationhelpers.CheckFormContent(t, []byte(actual), node.WebAuthnRegisterTrigger, "csrf_token", "traits.username")
-					assert.Equal(t, text.NewErrorValidationDuplicateCredentials().Text, gjson.Get(actual, "ui.messages.0.text").String(), "%s", actual)
+					assert.Equal(t, "You tried signing with "+email+" which is already in use by another account. You can sign in using your password.", gjson.Get(actual, "ui.messages.0.text").String(), "%s", actual)
 				})
 			}
 		})

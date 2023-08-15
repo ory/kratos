@@ -483,6 +483,7 @@ export interface OryKratosConfiguration2 {
         lifespan?: string
         before?: SelfServiceBeforeRegistration
         after?: SelfServiceAfterRegistration
+        login_hints?: boolean
       }
       login?: {
         ui_url?: LoginUIURL

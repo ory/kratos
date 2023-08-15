@@ -8,6 +8,7 @@ import (
 
 	"go.opentelemetry.io/otel/trace"
 
+	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/schema"
 	"github.com/ory/kratos/selfservice/sessiontokenexchange"
 	"github.com/ory/kratos/ui/node"
@@ -25,11 +26,9 @@ import (
 )
 
 var (
-	ErrHookAbortFlow                  = errors.New("aborted registration hook execution")
-	ErrAlreadyLoggedIn                = herodot.ErrBadRequest.WithID(text.ErrIDAlreadyLoggedIn).WithError("you are already logged in").WithReason("A valid session was detected and thus registration is not possible.")
-	ErrRegistrationDisabled           = herodot.ErrBadRequest.WithID(text.ErrIDSelfServiceFlowDisabled).WithError("registration flow disabled").WithReason("Registration is not allowed because it was disabled.")
-	ErrDuplicateCredentials           = herodot.ErrBadRequest.WithError(text.NewErrorValidationDuplicateCredentials().Text)
-	ErrDuplicateCredentialsOnOIDCLink = herodot.ErrBadRequest.WithError(text.NewErrorValidationDuplicateCredentialsOnOIDCLink().Text)
+	ErrHookAbortFlow        = errors.New("aborted registration hook execution")
+	ErrAlreadyLoggedIn      = herodot.ErrBadRequest.WithID(text.ErrIDAlreadyLoggedIn).WithError("you are already logged in").WithReason("A valid session was detected and thus registration is not possible.")
+	ErrRegistrationDisabled = herodot.ErrBadRequest.WithID(text.ErrIDSelfServiceFlowDisabled).WithError("registration flow disabled").WithReason("Registration is not allowed because it was disabled.")
 )
 
 type (
@@ -81,8 +80,8 @@ func (s *ErrorHandler) WriteFlowError(
 	err error,
 ) {
 
-	if errors.Is(err, ErrDuplicateCredentials) {
-		err = schema.NewDuplicateCredentialsError()
+	if dup := new(identity.ErrDuplicateCredentials); errors.As(err, &dup) {
+		err = schema.NewDuplicateCredentialsError(dup)
 	}
 
 	s.d.Audit().

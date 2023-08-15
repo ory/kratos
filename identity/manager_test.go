@@ -33,10 +33,11 @@ func TestManager(t *testing.T) {
 	extensionSchemaID := testhelpers.UseIdentitySchema(t, conf, "file://./stub/extension.schema.json")
 	conf.MustSet(ctx, config.ViperKeyPublicBaseURL, "https://www.ory.sh/")
 	conf.MustSet(ctx, config.ViperKeyCourierSMTPURL, "smtp://foo@bar@dev.null/")
+	conf.MustSet(ctx, config.ViperKeySelfServiceRegistrationLoginHints, true)
 
 	t.Run("case=should fail to create because validation fails", func(t *testing.T) {
 		i := identity.NewIdentity(config.DefaultIdentityTraitsSchemaID)
-		i.Traits = identity.Traits("{}")
+		i.Traits = identity.Traits(`{"email":"not an email"}`)
 		require.Error(t, reg.IdentityManager().Create(context.Background(), i))
 	})
 
@@ -162,6 +163,132 @@ func TestManager(t *testing.T) {
 			err := reg.IdentityManager().Create(context.Background(), original)
 			require.Error(t, err)
 			assert.NotContains(t, err.Error(), "\"not an email\" is not valid \"email\"")
+		})
+
+		t.Run("case=should correctly hint at the duplicate credential", func(t *testing.T) {
+			createIdentity := func(email string, field string, creds map[identity.CredentialsType]identity.Credentials) *identity.Identity {
+				i := identity.NewIdentity(config.DefaultIdentityTraitsSchemaID)
+				i.Traits = identity.Traits(fmt.Sprintf(`{"%s":"%s"}`, field, email))
+				i.Credentials = creds
+				return i
+			}
+
+			t.Run("case=credential identifier duplicate", func(t *testing.T) {
+				t.Run("type=password", func(t *testing.T) {
+					email := uuid.Must(uuid.NewV4()).String() + "@ory.sh"
+					creds := map[identity.CredentialsType]identity.Credentials{
+						identity.CredentialsTypePassword: {
+							Type:        identity.CredentialsTypePassword,
+							Identifiers: []string{email},
+							Config:      sqlxx.JSONRawMessage(`{"hashed_password":"$2a$08$.cOYmAd.vCpDOoiVJrO5B.hjTLKQQ6cAK40u8uB.FnZDyPvVvQ9Q."}`),
+						},
+					}
+
+					first := createIdentity(email, "email_creds", creds)
+					require.NoError(t, reg.IdentityManager().Create(context.Background(), first))
+
+					second := createIdentity(email, "email_creds", creds)
+					err := reg.IdentityManager().Create(context.Background(), second)
+					require.Error(t, err)
+
+					var verr = new(identity.ErrDuplicateCredentials)
+					assert.ErrorAs(t, err, &verr)
+					assert.EqualValues(t, []string{identity.CredentialsTypePassword.String()}, verr.AvailableCredentials())
+					assert.Len(t, verr.AvailableOIDCProviders(), 0)
+					assert.Equal(t, verr.IdentifierHint(), email)
+				})
+
+				t.Run("type=webauthn", func(t *testing.T) {
+					email := uuid.Must(uuid.NewV4()).String() + "@ory.sh"
+					creds := map[identity.CredentialsType]identity.Credentials{
+						identity.CredentialsTypeWebAuthn: {
+							Type:        identity.CredentialsTypeWebAuthn,
+							Identifiers: []string{email},
+							Config:      sqlxx.JSONRawMessage(`{"credentials": [{"is_passwordless":true}]}`),
+						},
+					}
+
+					first := createIdentity(email, "email_webauthn", creds)
+					require.NoError(t, reg.IdentityManager().Create(context.Background(), first))
+
+					second := createIdentity(email, "email_webauthn", nil)
+					err := reg.IdentityManager().Create(context.Background(), second)
+					require.Error(t, err)
+
+					var verr = new(identity.ErrDuplicateCredentials)
+					assert.ErrorAs(t, err, &verr)
+					assert.EqualValues(t, []string{identity.CredentialsTypeWebAuthn.String()}, verr.AvailableCredentials())
+					assert.Len(t, verr.AvailableOIDCProviders(), 0)
+					assert.Equal(t, verr.IdentifierHint(), email)
+				})
+			})
+
+			runAddress := func(t *testing.T, field string) {
+				t.Run("case=password duplicate", func(t *testing.T) {
+					// This test mimics a case where an existing user with email + password exists, and the
+					// new user tries to sign up with a verification email (NOT email + password) that matches
+					// this existing record. Here, the end result is that we want to show the
+					// user: "Sign up with email foo@bar.com and your password instead."
+					email := uuid.Must(uuid.NewV4()).String() + "@ory.sh"
+					creds := map[identity.CredentialsType]identity.Credentials{
+						identity.CredentialsTypePassword: {
+							Type:        identity.CredentialsTypePassword,
+							Identifiers: []string{email},
+							Config:      sqlxx.JSONRawMessage(`{"hashed_password":"$2a$08$.cOYmAd.vCpDOoiVJrO5B.hjTLKQQ6cAK40u8uB.FnZDyPvVvQ9Q."}`),
+						},
+					}
+
+					first := createIdentity(email, field, creds)
+					require.NoError(t, reg.IdentityManager().Create(context.Background(), first))
+
+					second := createIdentity(email, field, nil)
+					err := reg.IdentityManager().Create(context.Background(), second)
+					require.Error(t, err)
+
+					var verr = new(identity.ErrDuplicateCredentials)
+					assert.ErrorAs(t, err, &verr)
+					assert.EqualValues(t, []string{identity.CredentialsTypePassword.String()}, verr.AvailableCredentials())
+					assert.Len(t, verr.AvailableOIDCProviders(), 0)
+					assert.Equal(t, verr.IdentifierHint(), email)
+				})
+
+				t.Run("case=OIDC duplicate", func(t *testing.T) {
+					// This test mimics a case where user signed up using Social Sign In exists, and the
+					// new user tries to sign up with a verification email (NOT email + password) that matches
+					// this existing record (for example by using another social sign in provider.
+					// Here, the end result is that we want to show "Sign in using google instead".
+					email := uuid.Must(uuid.NewV4()).String() + "@ory.sh"
+					creds := map[identity.CredentialsType]identity.Credentials{
+						identity.CredentialsTypeOIDC: {
+							Type: identity.CredentialsTypeOIDC,
+							// Identifiers in OIDC are not email addresses, but a unique user ID.
+							Identifiers: []string{"google:" + uuid.Must(uuid.NewV4()).String()},
+							Config:      sqlxx.JSONRawMessage(`{"providers":[{"provider": "google"},{"provider": "github"}]}`),
+						},
+					}
+
+					first := createIdentity(email, field, creds)
+					require.NoError(t, reg.IdentityManager().Create(context.Background(), first))
+
+					second := createIdentity(email, field, nil)
+					err := reg.IdentityManager().Create(context.Background(), second)
+					require.Error(t, err)
+
+					var verr = new(identity.ErrDuplicateCredentials)
+					assert.ErrorAs(t, err, &verr)
+					assert.EqualValues(t, []string{identity.CredentialsTypeOIDC.String()}, verr.AvailableCredentials())
+					assert.EqualValues(t, verr.AvailableOIDCProviders(), []string{"google", "github"})
+					assert.Equal(t, verr.IdentifierHint(), email)
+				})
+			}
+
+			t.Run("case=verifiable address", func(t *testing.T) {
+				runAddress(t, "email_verify")
+			})
+
+			t.Run("case=recovery address", func(t *testing.T) {
+				runAddress(t, "email_recovery")
+			})
 		})
 	})
 

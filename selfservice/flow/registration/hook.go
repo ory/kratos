@@ -16,8 +16,6 @@ import (
 
 	"github.com/pkg/errors"
 
-	"github.com/ory/x/sqlcon"
-
 	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/hydra"
 	"github.com/ory/kratos/identity"
@@ -145,12 +143,6 @@ func (e *HookExecutor) PostRegistrationHook(w http.ResponseWriter, r *http.Reque
 		// We're now creating the identity because any of the hooks could trigger a "redirect" or a "session" which
 		// would imply that the identity has to exist already.
 	} else if err := e.d.IdentityManager().Create(r.Context(), i); err != nil {
-		if errors.Is(err, sqlcon.ErrUniqueViolation) {
-			// In this case the user is already registered through another method.
-			// We handle this case by returning a spcial error that is handled by
-			// the caller.
-			return ErrDuplicateCredentials
-		}
 		return err
 	}
 

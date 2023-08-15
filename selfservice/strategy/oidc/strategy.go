@@ -522,7 +522,7 @@ func (s *Strategy) handleError(w http.ResponseWriter, r *http.Request, f flow.Fl
 		// Reset all nodes to not confuse users.
 		// This is kinda hacky and will probably need to be updated at some point.
 
-		if errors.Is(err, registration.ErrDuplicateCredentials) {
+		if dup := new(identity.ErrDuplicateCredentials); errors.As(err, &dup) {
 			rf.UI.Messages.Add(text.NewErrorValidationDuplicateCredentialsOnOIDCLink())
 			lf, err := s.registrationToLogin(w, r, rf, provider)
 			if err != nil {

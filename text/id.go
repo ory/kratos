@@ -121,6 +121,7 @@ const (
 	ErrorValidationUniqueItems
 	ErrorValidationWrongType
 	ErrorValidationDuplicateCredentialsOnOIDCLink
+	ErrorValidationDuplicateCredentialsWithHints
 )
 
 const (
