@@ -6,7 +6,6 @@ package identity
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 	"reflect"
 	"sort"
 
@@ -112,6 +111,9 @@ func (m *Manager) Create(ctx context.Context, i *Identity, opts ...ManagerOption
 }
 
 func (m *Manager) findExistingAuthMethod(ctx context.Context, e error, i *Identity) (err error) {
+	if !m.r.Config().SelfServiceFlowRegistrationLoginHints(ctx) {
+		return &ErrDuplicateCredentials{error: e}
+	}
 	// First we try to find the conflict in the identifiers table. This is most likely to have a conflict.
 	var found *Identity
 	for ct, cred := range i.Credentials {
@@ -240,30 +242,6 @@ func (m *Manager) findExistingAuthMethod(ctx context.Context, e error, i *Identi
 
 	// Still not found? Return generic error.
 	return &ErrDuplicateCredentials{error: e}
-}
-
-func toPretty(c *Credentials) (hints []string) {
-	switch c.Type {
-	case CredentialsTypeOIDC:
-		var cfg CredentialsOIDC
-		_ = json.Unmarshal(c.Config, &cfg)
-		for _, provider := range cfg.Providers {
-			hints = append(hints, fmt.Sprintf("Please sign in with %s instead.", provider.Provider))
-		}
-		return hints
-	case CredentialsTypeWebAuthn:
-		var cfg CredentialsWebAuthnConfig
-		_ = json.Unmarshal(c.Config, &cfg)
-		for _, webauthn := range cfg.Credentials {
-			if webauthn.IsPasswordless {
-				hints = append(hints, "Please sign passwordless using %s instead.", webauthn.DisplayName)
-			} else {
-				hints = append(hints, "Please sign in using your security key %s instead.", webauthn.DisplayName)
-			}
-		}
-		return hints
-	}
-	return hints
 }
 
 type ErrDuplicateCredentials struct {

@@ -1469,6 +1469,7 @@ func TestHandler(t *testing.T) {
 		require.NoError(t, reg.PrivilegedIdentityPool().CreateIdentities(context.Background(), toCreate...))
 
 		for _, perPage := range []int{10, 50, 100, 500} {
+			perPage := perPage
 			t.Run(fmt.Sprintf("perPage=%d", perPage), func(t *testing.T) {
 				t.Parallel()
 				body, res := getFull(t, ts, fmt.Sprintf("/identities?per_page=%d", perPage), http.StatusOK)
@@ -1524,7 +1525,7 @@ func TestHandler(t *testing.T) {
 				assert.Equal(t, count/perPage, pages)
 			})
 
-			t.Run("using üage pagination", func(t *testing.T) {
+			t.Run("using page pagination", func(t *testing.T) {
 				knownIDs := make(map[string]struct{})
 				var isLast bool
 				var pages int

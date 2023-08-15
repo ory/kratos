@@ -117,6 +117,7 @@ const (
 	ViperKeySelfServiceBrowserDefaultReturnTo                = "selfservice." + DefaultBrowserReturnURL
 	ViperKeyURLsAllowedReturnToDomains                       = "selfservice.allowed_return_urls"
 	ViperKeySelfServiceRegistrationEnabled                   = "selfservice.flows.registration.enabled"
+	ViperKeySelfServiceRegistrationLoginHints                = "selfservice.flows.registration.login_hints"
 	ViperKeySelfServiceRegistrationUI                        = "selfservice.flows.registration.ui_url"
 	ViperKeySelfServiceRegistrationRequestLifespan           = "selfservice.flows.registration.lifespan"
 	ViperKeySelfServiceRegistrationAfter                     = "selfservice.flows.registration.after"
@@ -626,6 +627,10 @@ func (p *Config) ClientHTTPPrivateIPExceptionURLs(ctx context.Context) []string 
 
 func (p *Config) SelfServiceFlowRegistrationEnabled(ctx context.Context) bool {
 	return p.GetProvider(ctx).Bool(ViperKeySelfServiceRegistrationEnabled)
+}
+
+func (p *Config) SelfServiceFlowRegistrationLoginHints(ctx context.Context) bool {
+	return p.GetProvider(ctx).Bool(ViperKeySelfServiceRegistrationLoginHints)
 }
 
 func (p *Config) SelfServiceFlowVerificationEnabled(ctx context.Context) bool {
