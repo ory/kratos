@@ -45,10 +45,12 @@ func newRegistrationRegistry(t *testing.T) *driver.RegistryDefault {
 	ctx := context.Background()
 	conf, reg := internal.NewFastRegistryWithMocks(t)
 	conf.MustSet(ctx, config.ViperKeySelfServiceStrategyConfig+"."+string(identity.CredentialsTypePassword), map[string]interface{}{"enabled": true})
+	conf.MustSet(ctx, config.ViperKeySelfServiceRegistrationLoginHints, true)
 	return reg
 }
 
 func TestRegistration(t *testing.T) {
+
 	ctx := context.Background()
 	t.Run("case=registration", func(t *testing.T) {
 		reg := newRegistrationRegistry(t)

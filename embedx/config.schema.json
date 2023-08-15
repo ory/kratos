@@ -1196,7 +1196,7 @@
                 },
                 "login_hints": {
                   "type": "boolean",
-                  "title": "EXPERIMENTAL: Provide Login Hints on Failed Registration",
+                  "title": "Provide Login Hints on Failed Registration",
                   "description": "When registration fails because an account with the given credentials or addresses previously signed up, provide login hints about available methods to sign in to the user.",
                   "default": false
                 },
