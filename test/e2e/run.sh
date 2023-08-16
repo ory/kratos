@@ -196,6 +196,7 @@ prepare() {
     LOG_LEVEL=trace \
     URLS_LOGIN=http://localhost:4455/login \
     URLS_CONSENT=http://localhost:4746/consent \
+    SECRETS_SYSTEM="[\"1234567890123456789012345678901\"]" \
     hydra serve all --dev >"${base}/test/e2e/hydra-kratos.e2e.log" 2>&1 &
 
   (cd test/e2e; npm run wait-on -- -l -t 300000 http-get://127.0.0.1:4745/health/alive)

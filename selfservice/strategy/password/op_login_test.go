@@ -92,13 +92,14 @@ func newHydra(t *testing.T, loginUI string, consentUI string) (hydraAdmin string
 
 	hydraResource, err := pool.RunWithOptions(&dockertest.RunOptions{
 		Repository: "oryd/hydra",
-		Tag:        "v2.0.0",
+		Tag:        "v2.2.0",
 		Env: []string{
 			"DSN=memory",
 			fmt.Sprintf("URLS_SELF_ISSUER=http://127.0.0.1:%d/", publicPort),
 			"URLS_LOGIN=" + loginUI,
 			"URLS_CONSENT=" + consentUI,
 			"LOG_LEAK_SENSITIVE_VALUES=true",
+			"SECRETS_SYSTEM=someverylongsecretthatis32byteslong",
 		},
 		Cmd:          []string{"serve", "all", "--dev"},
 		ExposedPorts: []string{"4444/tcp", "4445/tcp"},
