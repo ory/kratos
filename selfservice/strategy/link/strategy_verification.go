@@ -151,7 +151,6 @@ func (s *Strategy) Verify(w http.ResponseWriter, r *http.Request, f *verificatio
 }
 
 func (s *Strategy) verificationHandleFormSubmission(w http.ResponseWriter, r *http.Request, f *verification.Flow) error {
-	body := new(verificationSubmitPayload)
 	body, err := s.decodeVerification(r)
 	if err != nil {
 		return s.handleVerificationError(w, r, f, body, err)
