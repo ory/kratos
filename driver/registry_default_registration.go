@@ -12,6 +12,10 @@ import (
 )
 
 func (m *RegistryDefault) PostRegistrationPrePersistHooks(ctx context.Context, credentialsType identity.CredentialsType) (b []registration.PostHookPrePersistExecutor) {
+	if credentialsType == identity.CredentialsTypeCodeAuth && m.Config().SelfServiceCodeStrategy(ctx).RegistrationEnabled {
+		b = append(b, m.HookCodeAddressVerifier())
+	}
+
 	for _, v := range m.getHooks(string(credentialsType), m.Config().SelfServiceFlowRegistrationAfterHooks(ctx, string(credentialsType))) {
 		if hook, ok := v.(registration.PostHookPrePersistExecutor); ok {
 			b = append(b, hook)
@@ -26,11 +30,6 @@ func (m *RegistryDefault) PostRegistrationPostPersistHooks(ctx context.Context, 
 	if m.Config().SelfServiceFlowVerificationEnabled(ctx) {
 		b = append(b, m.HookVerifier())
 		initialHookCount = 1
-	}
-
-	if credentialsType == identity.CredentialsTypeCodeAuth && m.Config().SelfServiceCodeStrategy(ctx).RegistrationEnabled {
-		b = append(b, m.HookCodeAddressVerifier())
-		initialHookCount += 1
 	}
 
 	for _, v := range m.getHooks(string(credentialsType), m.Config().SelfServiceFlowRegistrationAfterHooks(ctx, string(credentialsType))) {

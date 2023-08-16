@@ -20,7 +20,6 @@ import (
 	"github.com/ory/kratos/selfservice/flow/registration"
 	"github.com/ory/kratos/selfservice/hook"
 	"github.com/ory/kratos/selfservice/strategy/code"
-	"github.com/ory/kratos/session"
 	"github.com/ory/kratos/x"
 	"github.com/ory/x/randx"
 )
@@ -68,33 +67,24 @@ func TestCodeAddressVerifier(t *testing.T) {
 	runHook := func(t *testing.T, id *identity.Identity, flow *registration.Flow) {
 		t.Helper()
 
-		sessions := &session.Session{
-			ID:       x.NewUUID(),
-			Identity: id,
-		}
-
 		r := &http.Request{}
-		require.NoError(t, verifier.ExecutePostRegistrationPostPersistHook(nil, r, flow, sessions))
+		require.NoError(t, verifier.ExecutePostRegistrationPrePersistHook(nil, r, flow, id))
 	}
 
 	t.Run("case=should set the verifiable email address to verified", func(t *testing.T) {
 		address, flow := setup(t)
 		id := setupIdentity(t, address)
-
+		require.False(t, id.VerifiableAddresses[0].Verified)
 		runHook(t, id, flow)
-		va, err := reg.IdentityPool().FindVerifiableAddressByValue(ctx, identity.VerifiableAddressTypeEmail, address)
-		require.NoError(t, err)
-		require.True(t, va.Verified)
+		require.True(t, id.VerifiableAddresses[0].Verified)
 	})
 
 	t.Run("case=should ignore verifiable email address that does not match the code", func(t *testing.T) {
 		_, flow := setup(t)
 		newEmail := testhelpers.RandomEmail()
 		id := setupIdentity(t, newEmail)
-
+		require.False(t, id.VerifiableAddresses[0].Verified)
 		runHook(t, id, flow)
-		va, err := reg.IdentityPool().FindVerifiableAddressByValue(ctx, identity.VerifiableAddressTypeEmail, newEmail)
-		require.NoError(t, err)
-		require.False(t, va.Verified)
+		require.False(t, id.VerifiableAddresses[0].Verified)
 	})
 }
