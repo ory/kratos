@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/ory/x/pagination/migrationpagination"
+	"github.com/ory/x/sqlcon"
 
 	"github.com/ory/kratos/hash"
 	"github.com/ory/kratos/x"
@@ -419,7 +420,11 @@ func (h *Handler) create(w http.ResponseWriter, r *http.Request, _ httprouter.Pa
 	}
 
 	if err := h.r.IdentityManager().Create(r.Context(), i); err != nil {
-		h.r.Writer().WriteError(w, r, err)
+		if errors.Is(err, sqlcon.ErrUniqueViolation) {
+			h.r.Writer().WriteError(w, r, errors.WithStack(herodot.ErrConflict.WithReason("This identity conflicts with another identity that already exists.")))
+		} else {
+			h.r.Writer().WriteError(w, r, err)
+		}
 		return
 	}
 
