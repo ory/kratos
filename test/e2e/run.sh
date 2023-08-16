@@ -34,7 +34,7 @@ export KRATOS_BROWSER_URL=http://localhost:4433/
 export KRATOS_ADMIN_URL=http://localhost:4434/
 export KRATOS_UI_URL=http://localhost:4456/
 export KRATOS_UI_REACT_URL=http://localhost:4458/
-export KRATOS_UI_REACT_NATIVE_URL=http://localhost:4457/
+export KRATOS_UI_REACT_NATIVE_URL=http://localhost:19006/
 export LOG_LEAK_SENSITIVE_VALUES=true
 export DEV_DISABLE_API_FLOW_ENFORCEMENT=true
 
@@ -137,7 +137,7 @@ prepare() {
   nc -zv localhost 4446 && exit 1
   nc -zv localhost 4455 && exit 1
   nc -zv localhost 4456 && exit 1
-  nc -zv localhost 4457 && exit 1
+  nc -zv localhost 19006 && exit 1
   nc -zv localhost 4458 && exit 1
   nc -zv localhost 4744 && exit 1
   nc -zv localhost 4745 && exit 1
@@ -145,7 +145,7 @@ prepare() {
   (
     cd "$rn_ui_dir"
     npm i expo-cli
-    WEB_PORT=4457 KRATOS_URL=http://localhost:4433 npm run web -- --non-interactive \
+    KRATOS_URL=http://localhost:4433 CI=1 npm run web \
       >"${base}/test/e2e/rn-profile-app.e2e.log" 2>&1 &
   )
 
@@ -286,7 +286,7 @@ run() {
     http-get://localhost:4445/health/ready \
     http-get://localhost:4446/ \
     http-get://localhost:4456/health/alive \
-    http-get://localhost:4457/ \
+    http-get://localhost:19006/ \
     http-get://localhost:4437/mail \
     http-get://localhost:4458/ \
     http-get://localhost:4459/health
