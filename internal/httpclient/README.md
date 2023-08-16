@@ -159,7 +159,7 @@ Class | Method | HTTP request | Description
  - [HealthStatus](docs/HealthStatus.md)
  - [Identity](docs/Identity.md)
  - [IdentityCredentials](docs/IdentityCredentials.md)
- - [IdentityCredentialsOTP](docs/IdentityCredentialsOTP.md)
+ - [IdentityCredentialsCode](docs/IdentityCredentialsCode.md)
  - [IdentityCredentialsOidc](docs/IdentityCredentialsOidc.md)
  - [IdentityCredentialsOidcProvider](docs/IdentityCredentialsOidcProvider.md)
  - [IdentityCredentialsPassword](docs/IdentityCredentialsPassword.md)

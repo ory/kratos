@@ -98,15 +98,6 @@
         "title": "JSONRawMessage represents a json.RawMessage that works well with JSON, SQL, and Swagger.",
         "type": "object"
       },
-      "LoginFlowState": {
-        "description": "The state represents the state of the login flow.\n\nchoose_method: ask the user to choose a method (e.g. login account via email)\nsent_email: the email has been sent to the user\npassed_challenge: the request was successful and the login challenge was passed.",
-        "enum": [
-          "choose_method",
-          "sent_email",
-          "passed_challenge"
-        ],
-        "title": "Login Flow State"
-      },
       "NullBool": {
         "nullable": true,
         "type": "boolean"
@@ -431,32 +422,6 @@
         "title": "RecoveryAddressType must not exceed 16 characters as that is the limitation in the SQL Schema.",
         "type": "string"
       },
-      "RecoveryFlowState": {
-        "description": "The state represents the state of the recovery flow.\n\nchoose_method: ask the user to choose a method (e.g. recover account via email)\nsent_email: the email has been sent to the user\npassed_challenge: the request was successful and the recovery challenge was passed.",
-        "enum": [
-          "choose_method",
-          "sent_email",
-          "passed_challenge"
-        ],
-        "title": "Recovery Flow State"
-      },
-      "RegistrationFlowState": {
-        "description": "choose_method: ask the user to choose a method (e.g. registration with email)\nsent_email: the email has been sent to the user\npassed_challenge: the request was successful and the registration challenge was passed.",
-        "enum": [
-          "choose_method",
-          "sent_email",
-          "passed_challenge"
-        ],
-        "title": "State represents the state of this request:"
-      },
-      "SettingsFlowState": {
-        "description": "show_form: No user data has been collected, or it is invalid, and thus the form should be shown.\nsuccess: Indicates that the settings flow has been updated successfully with the provided data.\nDone will stay true when repeatedly checking. If set to true, done will revert back to false only\nwhen a flow with invalid (e.g. \"please use a valid phone number\") data was sent.",
-        "enum": [
-          "show_form",
-          "success"
-        ],
-        "title": "State represents the state of this flow. It knows two states:"
-      },
       "Time": {
         "format": "date-time",
         "type": "string"
@@ -464,15 +429,6 @@
       "UUID": {
         "format": "uuid4",
         "type": "string"
-      },
-      "VerificationFlowState": {
-        "description": "The state represents the state of the verification flow.\n\nchoose_method: ask the user to choose a method (e.g. recover account via email)\nsent_email: the email has been sent to the user\npassed_challenge: the request was successful and the recovery challenge was passed.",
-        "enum": [
-          "choose_method",
-          "sent_email",
-          "passed_challenge"
-        ],
-        "title": "Verification Flow State"
       },
       "authenticatorAssuranceLevel": {
         "description": "The authenticator assurance level can be one of \"aal1\", \"aal2\", or \"aal3\". A higher number means that it is harder\nfor an attacker to compromise the account.\n\nGenerally, \"aal1\" implies that one authentication factor was used while AAL2 implies that two factors (e.g.\npassword + TOTP) have been used.\n\nTo learn more about these levels please head over to: https://www.ory.sh/kratos/docs/concepts/credentials",
@@ -950,8 +906,8 @@
         },
         "type": "object"
       },
-      "identityCredentialsOTP": {
-        "description": "CredentialsOTP represents an OTP code",
+      "identityCredentialsCode": {
+        "description": "CredentialsCode represents a one time login/registraiton code",
         "properties": {
           "address_type": {
             "$ref": "#/components/schemas/CodeAddressType"
@@ -1266,7 +1222,7 @@
             "type": "string"
           },
           "state": {
-            "description": "State represents the state of this request:\n\nchoose_method: ask the user to choose a method (e.g. verify your email)\nsent_email: the email has been sent to the user\npassed_challenge: the request was successful and the verification challenge was passed."
+            "description": "State represents the state of this request:\n\nchoose_method: ask the user to choose a method to sign in with\nsent_email: the email has been sent to the user\npassed_challenge: the request was successful and the login challenge was passed."
           },
           "type": {
             "$ref": "#/components/schemas/selfServiceFlowType"
@@ -1291,6 +1247,15 @@
         ],
         "title": "Login Flow",
         "type": "object"
+      },
+      "loginFlowState": {
+        "description": "The state represents the state of the login flow.\n\nchoose_method: ask the user to choose a method (e.g. login account via email)\nsent_email: the email has been sent to the user\npassed_challenge: the request was successful and the login challenge was passed.",
+        "enum": [
+          "choose_method",
+          "sent_email",
+          "passed_challenge"
+        ],
+        "title": "Login Flow State"
       },
       "logoutFlow": {
         "description": "Logout Flow",
@@ -1587,6 +1552,15 @@
         "title": "A Recovery Flow",
         "type": "object"
       },
+      "recoveryFlowState": {
+        "description": "The state represents the state of the recovery flow.\n\nchoose_method: ask the user to choose a method (e.g. recover account via email)\nsent_email: the email has been sent to the user\npassed_challenge: the request was successful and the recovery challenge was passed.",
+        "enum": [
+          "choose_method",
+          "sent_email",
+          "passed_challenge"
+        ],
+        "title": "Recovery Flow State"
+      },
       "recoveryIdentityAddress": {
         "properties": {
           "created_at": {
@@ -1699,6 +1673,15 @@
           "state"
         ],
         "type": "object"
+      },
+      "registrationFlowState": {
+        "description": "choose_method: ask the user to choose a method (e.g. registration with email)\nsent_email: the email has been sent to the user\npassed_challenge: the request was successful and the registration challenge was passed.",
+        "enum": [
+          "choose_method",
+          "sent_email",
+          "passed_challenge"
+        ],
+        "title": "State represents the state of this request:"
       },
       "selfServiceFlowExpiredError": {
         "description": "Is sent when a flow is expired",
@@ -1906,6 +1889,14 @@
         ],
         "title": "Flow represents a Settings Flow",
         "type": "object"
+      },
+      "settingsFlowState": {
+        "description": "show_form: No user data has been collected, or it is invalid, and thus the form should be shown.\nsuccess: Indicates that the settings flow has been updated successfully with the provided data.\nDone will stay true when repeatedly checking. If set to true, done will revert back to false only\nwhen a flow with invalid (e.g. \"please use a valid phone number\") data was sent.",
+        "enum": [
+          "show_form",
+          "success"
+        ],
+        "title": "State represents the state of this flow. It knows two states:"
       },
       "successfulCodeExchangeResponse": {
         "description": "The Response for Registration Flows via API",
@@ -3192,6 +3183,15 @@
         ],
         "title": "A Verification Flow",
         "type": "object"
+      },
+      "verificationFlowState": {
+        "description": "The state represents the state of the verification flow.\n\nchoose_method: ask the user to choose a method (e.g. recover account via email)\nsent_email: the email has been sent to the user\npassed_challenge: the request was successful and the recovery challenge was passed.",
+        "enum": [
+          "choose_method",
+          "sent_email",
+          "passed_challenge"
+        ],
+        "title": "Verification Flow State"
       },
       "version": {
         "properties": {

@@ -19,7 +19,7 @@ import (
 // RegistrationFlowState choose_method: ask the user to choose a method (e.g. registration with email) sent_email: the email has been sent to the user passed_challenge: the request was successful and the registration challenge was passed.
 type RegistrationFlowState string
 
-// List of RegistrationFlowState
+// List of registrationFlowState
 const (
 	REGISTRATIONFLOWSTATE_CHOOSE_METHOD    RegistrationFlowState = "choose_method"
 	REGISTRATIONFLOWSTATE_SENT_EMAIL       RegistrationFlowState = "sent_email"
@@ -43,7 +43,7 @@ func (v *RegistrationFlowState) UnmarshalJSON(src []byte) error {
 	return fmt.Errorf("%+v is not a valid RegistrationFlowState", value)
 }
 
-// Ptr returns reference to RegistrationFlowState value
+// Ptr returns reference to registrationFlowState value
 func (v RegistrationFlowState) Ptr() *RegistrationFlowState {
 	return &v
 }

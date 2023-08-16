@@ -117,6 +117,8 @@ func MethodEnabledAndAllowed(ctx context.Context, flowName FlowName, expected, a
 			ok = d.Config().SelfServiceCodeStrategy(ctx).RegistrationEnabled
 		case LoginFlow:
 			ok = d.Config().SelfServiceCodeStrategy(ctx).LoginEnabled
+		case VerificationFlow, RecoveryFlow:
+			ok = d.Config().SelfServiceCodeStrategy(ctx).Enabled
 		default:
 			ok = false
 		}
