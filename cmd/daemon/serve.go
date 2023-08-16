@@ -9,10 +9,11 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/rs/cors"
+
 	"github.com/ory/x/otelx/semconv"
 
 	"github.com/pkg/errors"
-	"github.com/rs/cors"
 	"github.com/spf13/cobra"
 	"github.com/urfave/negroni"
 	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
@@ -68,7 +69,7 @@ func WithContext(ctx stdctx.Context) Option {
 	}
 }
 
-func ServePublic(r driver.Registry, cmd *cobra.Command, args []string, slOpts *servicelocatorx.Options, opts []Option) error {
+func ServePublic(r driver.Registry, cmd *cobra.Command, _ []string, slOpts *servicelocatorx.Options, opts []Option) error {
 	modifiers := NewOptions(cmd.Context(), opts)
 	ctx := modifiers.ctx
 
@@ -99,6 +100,16 @@ func ServePublic(r driver.Registry, cmd *cobra.Command, args []string, slOpts *s
 	router := x.NewRouterPublic()
 	csrf := x.NewCSRFHandler(router, r)
 
+	// we need to always load the CORS middleware even if it is disabled, to allow hot-enabling CORS
+	n.UseFunc(func(w http.ResponseWriter, req *http.Request, next http.HandlerFunc) {
+		cfg, enabled := r.Config().CORS(req.Context(), "public")
+		if !enabled {
+			next(w, req)
+			return
+		}
+		cors.New(cfg).ServeHTTP(w, req, next)
+	})
+
 	n.UseFunc(x.CleanPath) // Prevent double slashes from breaking CSRF.
 	r.WithCSRFHandler(csrf)
 	n.UseHandler(r.CSRFHandler())
@@ -112,14 +123,9 @@ func ServePublic(r driver.Registry, cmd *cobra.Command, args []string, slOpts *s
 	r.RegisterPublicRoutes(ctx, router)
 	r.PrometheusManager().RegisterRouter(router.Router)
 
-	var handler http.Handler = n
-	options, enabled := r.Config().CORS(ctx, "public")
-	if enabled {
-		handler = cors.New(options).Handler(handler)
-	}
-
 	certs := c.GetTLSCertificatesForPublic(ctx)
 
+	var handler http.Handler = n
 	if tracer := r.Tracer(ctx); tracer.IsLoaded() {
 		handler = otelx.TraceHandler(handler, otelhttp.WithTracerProvider(tracer.Provider()))
 	}
@@ -152,7 +158,7 @@ func ServePublic(r driver.Registry, cmd *cobra.Command, args []string, slOpts *s
 	return nil
 }
 
-func ServeAdmin(r driver.Registry, cmd *cobra.Command, args []string, slOpts *servicelocatorx.Options, opts []Option) error {
+func ServeAdmin(r driver.Registry, cmd *cobra.Command, _ []string, slOpts *servicelocatorx.Options, opts []Option) error {
 	modifiers := NewOptions(cmd.Context(), opts)
 	ctx := modifiers.ctx
 
@@ -299,7 +305,7 @@ func sqa(ctx stdctx.Context, cmd *cobra.Command, d driver.Registry) *metricsx.Se
 	)
 }
 
-func bgTasks(d driver.Registry, cmd *cobra.Command, args []string, slOpts *servicelocatorx.Options, opts []Option) error {
+func bgTasks(d driver.Registry, cmd *cobra.Command, _ []string, _ *servicelocatorx.Options, opts []Option) error {
 	modifiers := NewOptions(cmd.Context(), opts)
 	ctx := modifiers.ctx
 

@@ -342,6 +342,7 @@ func New(ctx context.Context, l *logrusx.Logger, stdOutOrErr io.Writer, opts ...
 		configx.WithStderrValidationReporter(),
 		configx.OmitKeysFromTracing("dsn", "courier.smtp.connection_uri", "secrets.default", "secrets.cookie", "secrets.cipher", "client_secret"),
 		configx.WithImmutables("serve", "profiling", "log"),
+		configx.WithExceptImmutables("serve.public.cors.allowed_origins"),
 		configx.WithLogrusWatcher(l),
 		configx.WithLogger(l),
 		configx.WithContext(ctx),
