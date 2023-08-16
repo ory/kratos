@@ -19,7 +19,7 @@ import (
 // LoginFlowState The state represents the state of the login flow.  choose_method: ask the user to choose a method (e.g. login account via email) sent_email: the email has been sent to the user passed_challenge: the request was successful and the login challenge was passed.
 type LoginFlowState string
 
-// List of LoginFlowState
+// List of loginFlowState
 const (
 	LOGINFLOWSTATE_CHOOSE_METHOD    LoginFlowState = "choose_method"
 	LOGINFLOWSTATE_SENT_EMAIL       LoginFlowState = "sent_email"
@@ -43,7 +43,7 @@ func (v *LoginFlowState) UnmarshalJSON(src []byte) error {
 	return fmt.Errorf("%+v is not a valid LoginFlowState", value)
 }
 
-// Ptr returns reference to LoginFlowState value
+// Ptr returns reference to loginFlowState value
 func (v LoginFlowState) Ptr() *LoginFlowState {
 	return &v
 }

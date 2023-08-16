@@ -3,6 +3,14 @@
 
 package flow
 
+import (
+	"database/sql"
+	"database/sql/driver"
+	"encoding/json"
+
+	"github.com/pkg/errors"
+)
+
 // Flow State
 //
 // The state represents the state of the verification flow.
@@ -46,4 +54,47 @@ func NextState(current State) State {
 	}
 
 	return states[indexOf(current)+1]
+}
+
+// For some reason using sqlxx.NullString as the State type does not work here.
+// Reimplementing the Scanner interface on type State does work and allows
+// the state to be NULL in the database.
+
+// MarshalJSON returns m as the JSON encoding of m.
+func (ns State) MarshalJSON() ([]byte, error) {
+	return json.Marshal(string(ns))
+}
+
+// UnmarshalJSON sets *m to a copy of data.
+func (ns *State) UnmarshalJSON(data []byte) error {
+	if ns == nil {
+		return errors.New("json.RawMessage: UnmarshalJSON on nil pointer")
+	}
+	if len(data) == 0 {
+		return nil
+	}
+	return errors.WithStack(json.Unmarshal(data, (*string)(ns)))
+}
+
+// Scan implements the Scanner interface.
+func (ns *State) Scan(value interface{}) error {
+	var v sql.NullString
+	if err := (&v).Scan(value); err != nil {
+		return err
+	}
+	*ns = State(v.String)
+	return nil
+}
+
+// Value implements the driver Valuer interface.
+func (ns State) Value() (driver.Value, error) {
+	if len(ns) == 0 {
+		return sql.NullString{}.Value()
+	}
+	return sql.NullString{Valid: true, String: string(ns)}.Value()
+}
+
+// String implements the Stringer interface.
+func (ns State) String() string {
+	return string(ns)
 }

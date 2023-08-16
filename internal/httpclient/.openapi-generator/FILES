@@ -35,7 +35,7 @@ docs/HealthStatus.md
 docs/Identity.md
 docs/IdentityApi.md
 docs/IdentityCredentials.md
-docs/IdentityCredentialsOTP.md
+docs/IdentityCredentialsCode.md
 docs/IdentityCredentialsOidc.md
 docs/IdentityCredentialsOidcProvider.md
 docs/IdentityCredentialsPassword.md
@@ -150,9 +150,9 @@ model_health_not_ready_status.go
 model_health_status.go
 model_identity.go
 model_identity_credentials.go
+model_identity_credentials_code.go
 model_identity_credentials_oidc.go
 model_identity_credentials_oidc_provider.go
-model_identity_credentials_otp.go
 model_identity_credentials_password.go
 model_identity_credentials_type.go
 model_identity_patch.go

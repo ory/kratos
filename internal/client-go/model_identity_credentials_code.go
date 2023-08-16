@@ -16,31 +16,31 @@ import (
 	"time"
 )
 
-// IdentityCredentialsOTP CredentialsOTP represents an OTP code
-type IdentityCredentialsOTP struct {
+// IdentityCredentialsCode CredentialsCode represents a one time login/registraiton code
+type IdentityCredentialsCode struct {
 	AddressType *string      `json:"address_type,omitempty"`
 	UsedAt      NullableTime `json:"used_at,omitempty"`
 }
 
-// NewIdentityCredentialsOTP instantiates a new IdentityCredentialsOTP object
+// NewIdentityCredentialsCode instantiates a new IdentityCredentialsCode object
 // This constructor will assign default values to properties that have it defined,
 // and makes sure properties required by API are set, but the set of arguments
 // will change when the set of required properties is changed
-func NewIdentityCredentialsOTP() *IdentityCredentialsOTP {
-	this := IdentityCredentialsOTP{}
+func NewIdentityCredentialsCode() *IdentityCredentialsCode {
+	this := IdentityCredentialsCode{}
 	return &this
 }
 
-// NewIdentityCredentialsOTPWithDefaults instantiates a new IdentityCredentialsOTP object
+// NewIdentityCredentialsCodeWithDefaults instantiates a new IdentityCredentialsCode object
 // This constructor will only assign default values to properties that have it defined,
 // but it doesn't guarantee that properties required by API are set
-func NewIdentityCredentialsOTPWithDefaults() *IdentityCredentialsOTP {
-	this := IdentityCredentialsOTP{}
+func NewIdentityCredentialsCodeWithDefaults() *IdentityCredentialsCode {
+	this := IdentityCredentialsCode{}
 	return &this
 }
 
 // GetAddressType returns the AddressType field value if set, zero value otherwise.
-func (o *IdentityCredentialsOTP) GetAddressType() string {
+func (o *IdentityCredentialsCode) GetAddressType() string {
 	if o == nil || o.AddressType == nil {
 		var ret string
 		return ret
@@ -50,7 +50,7 @@ func (o *IdentityCredentialsOTP) GetAddressType() string {
 
 // GetAddressTypeOk returns a tuple with the AddressType field value if set, nil otherwise
 // and a boolean to check if the value has been set.
-func (o *IdentityCredentialsOTP) GetAddressTypeOk() (*string, bool) {
+func (o *IdentityCredentialsCode) GetAddressTypeOk() (*string, bool) {
 	if o == nil || o.AddressType == nil {
 		return nil, false
 	}
@@ -58,7 +58,7 @@ func (o *IdentityCredentialsOTP) GetAddressTypeOk() (*string, bool) {
 }
 
 // HasAddressType returns a boolean if a field has been set.
-func (o *IdentityCredentialsOTP) HasAddressType() bool {
+func (o *IdentityCredentialsCode) HasAddressType() bool {
 	if o != nil && o.AddressType != nil {
 		return true
 	}
@@ -67,12 +67,12 @@ func (o *IdentityCredentialsOTP) HasAddressType() bool {
 }
 
 // SetAddressType gets a reference to the given string and assigns it to the AddressType field.
-func (o *IdentityCredentialsOTP) SetAddressType(v string) {
+func (o *IdentityCredentialsCode) SetAddressType(v string) {
 	o.AddressType = &v
 }
 
 // GetUsedAt returns the UsedAt field value if set, zero value otherwise (both if not set or set to explicit null).
-func (o *IdentityCredentialsOTP) GetUsedAt() time.Time {
+func (o *IdentityCredentialsCode) GetUsedAt() time.Time {
 	if o == nil || o.UsedAt.Get() == nil {
 		var ret time.Time
 		return ret
@@ -83,7 +83,7 @@ func (o *IdentityCredentialsOTP) GetUsedAt() time.Time {
 // GetUsedAtOk returns a tuple with the UsedAt field value if set, nil otherwise
 // and a boolean to check if the value has been set.
 // NOTE: If the value is an explicit nil, `nil, true` will be returned
-func (o *IdentityCredentialsOTP) GetUsedAtOk() (*time.Time, bool) {
+func (o *IdentityCredentialsCode) GetUsedAtOk() (*time.Time, bool) {
 	if o == nil {
 		return nil, false
 	}
@@ -91,7 +91,7 @@ func (o *IdentityCredentialsOTP) GetUsedAtOk() (*time.Time, bool) {
 }
 
 // HasUsedAt returns a boolean if a field has been set.
-func (o *IdentityCredentialsOTP) HasUsedAt() bool {
+func (o *IdentityCredentialsCode) HasUsedAt() bool {
 	if o != nil && o.UsedAt.IsSet() {
 		return true
 	}
@@ -100,21 +100,21 @@ func (o *IdentityCredentialsOTP) HasUsedAt() bool {
 }
 
 // SetUsedAt gets a reference to the given NullableTime and assigns it to the UsedAt field.
-func (o *IdentityCredentialsOTP) SetUsedAt(v time.Time) {
+func (o *IdentityCredentialsCode) SetUsedAt(v time.Time) {
 	o.UsedAt.Set(&v)
 }
 
 // SetUsedAtNil sets the value for UsedAt to be an explicit nil
-func (o *IdentityCredentialsOTP) SetUsedAtNil() {
+func (o *IdentityCredentialsCode) SetUsedAtNil() {
 	o.UsedAt.Set(nil)
 }
 
 // UnsetUsedAt ensures that no value is present for UsedAt, not even an explicit nil
-func (o *IdentityCredentialsOTP) UnsetUsedAt() {
+func (o *IdentityCredentialsCode) UnsetUsedAt() {
 	o.UsedAt.Unset()
 }
 
-func (o IdentityCredentialsOTP) MarshalJSON() ([]byte, error) {
+func (o IdentityCredentialsCode) MarshalJSON() ([]byte, error) {
 	toSerialize := map[string]interface{}{}
 	if o.AddressType != nil {
 		toSerialize["address_type"] = o.AddressType
@@ -125,38 +125,38 @@ func (o IdentityCredentialsOTP) MarshalJSON() ([]byte, error) {
 	return json.Marshal(toSerialize)
 }
 
-type NullableIdentityCredentialsOTP struct {
-	value *IdentityCredentialsOTP
+type NullableIdentityCredentialsCode struct {
+	value *IdentityCredentialsCode
 	isSet bool
 }
 
-func (v NullableIdentityCredentialsOTP) Get() *IdentityCredentialsOTP {
+func (v NullableIdentityCredentialsCode) Get() *IdentityCredentialsCode {
 	return v.value
 }
 
-func (v *NullableIdentityCredentialsOTP) Set(val *IdentityCredentialsOTP) {
+func (v *NullableIdentityCredentialsCode) Set(val *IdentityCredentialsCode) {
 	v.value = val
 	v.isSet = true
 }
 
-func (v NullableIdentityCredentialsOTP) IsSet() bool {
+func (v NullableIdentityCredentialsCode) IsSet() bool {
 	return v.isSet
 }
 
-func (v *NullableIdentityCredentialsOTP) Unset() {
+func (v *NullableIdentityCredentialsCode) Unset() {
 	v.value = nil
 	v.isSet = false
 }
 
-func NewNullableIdentityCredentialsOTP(val *IdentityCredentialsOTP) *NullableIdentityCredentialsOTP {
-	return &NullableIdentityCredentialsOTP{value: val, isSet: true}
+func NewNullableIdentityCredentialsCode(val *IdentityCredentialsCode) *NullableIdentityCredentialsCode {
+	return &NullableIdentityCredentialsCode{value: val, isSet: true}
 }
 
-func (v NullableIdentityCredentialsOTP) MarshalJSON() ([]byte, error) {
+func (v NullableIdentityCredentialsCode) MarshalJSON() ([]byte, error) {
 	return json.Marshal(v.value)
 }
 
-func (v *NullableIdentityCredentialsOTP) UnmarshalJSON(src []byte) error {
+func (v *NullableIdentityCredentialsCode) UnmarshalJSON(src []byte) error {
 	v.isSet = true
 	return json.Unmarshal(src, &v.value)
 }
