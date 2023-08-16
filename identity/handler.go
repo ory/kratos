@@ -421,7 +421,7 @@ func (h *Handler) create(w http.ResponseWriter, r *http.Request, _ httprouter.Pa
 
 	if err := h.r.IdentityManager().Create(r.Context(), i); err != nil {
 		if errors.Is(err, sqlcon.ErrUniqueViolation) {
-			h.r.Writer().WriteError(w, r, herodot.ErrConflict)
+			h.r.Writer().WriteError(w, r, errors.WithStack(herodot.ErrConflict.WithReason("This identity conflicts with another identity that already exists.")))
 		} else {
 			h.r.Writer().WriteError(w, r, err)
 		}
