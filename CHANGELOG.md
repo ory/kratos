@@ -5,7 +5,7 @@
 
 **Table of Contents**
 
-- [ (2023-08-15)](#2023-08-15)
+- [ (2023-08-16)](#2023-08-16)
   - [Bug Fixes](#bug-fixes)
   - [Documentation](#documentation)
   - [Features](#features)
@@ -309,7 +309,7 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# [](https://github.com/ory/kratos/compare/v1.0.0...v) (2023-08-15)
+# [](https://github.com/ory/kratos/compare/v1.0.0...v) (2023-08-16)
 
 ### Bug Fixes
 
@@ -326,6 +326,9 @@
 
   Part of https://github.com/ory/network/issues/320
 
+- Add missing tracing & attributes in oidc strategy
+  ([#3429](https://github.com/ory/kratos/issues/3429))
+  ([09bcb71](https://github.com/ory/kratos/commit/09bcb71f1f0b3238e2d0f4376a1a2290d062c6c1))
 - Carry `oauth2_login_challenge` over to registration flow
   ([#3419](https://github.com/ory/kratos/issues/3419))
   ([76241be](https://github.com/ory/kratos/commit/76241bee3dc7fec4690346ee85bc4b9f897fdd34)):
@@ -372,6 +375,8 @@
   ([e3fcf0c](https://github.com/ory/kratos/commit/e3fcf0c31db9742ed61bcf783e37ee119ed19d42))
 - Allow extra migrations in NewPersister
   ([96c1ff7](https://github.com/ory/kratos/commit/96c1ff7747ea38e23a3892f74b75ee555ed49c88))
+- Hot-reload CORS origins ([#3423](https://github.com/ory/kratos/issues/3423))
+  ([157d934](https://github.com/ory/kratos/commit/157d9345aeb04f371f9d85b70c89e8646e781333))
 - Provide login hints when registration fails due to duplicate
   credentials/addresses ([#3430](https://github.com/ory/kratos/issues/3430))
   ([8b28469](https://github.com/ory/kratos/commit/8b284697e4a26fb01ad57d2e9ebd8f714be49f33)):
