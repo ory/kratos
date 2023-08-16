@@ -254,7 +254,11 @@ type ErrDuplicateCredentials struct {
 
 var _ schema.DuplicateCredentialsHinter = (*ErrDuplicateCredentials)(nil)
 
-func (e ErrDuplicateCredentials) AvailableCredentials() []string {
+func (e *ErrDuplicateCredentials) Unwrap() error {
+	return e.error
+}
+
+func (e *ErrDuplicateCredentials) AvailableCredentials() []string {
 	res := make([]string, len(e.availableCredentials))
 	for k, v := range e.availableCredentials {
 		res[k] = string(v)
@@ -262,14 +266,14 @@ func (e ErrDuplicateCredentials) AvailableCredentials() []string {
 	return res
 }
 
-func (e ErrDuplicateCredentials) AvailableOIDCProviders() []string {
+func (e *ErrDuplicateCredentials) AvailableOIDCProviders() []string {
 	return e.availableOIDCProviders
 }
 
-func (e ErrDuplicateCredentials) IdentifierHint() string {
+func (e *ErrDuplicateCredentials) IdentifierHint() string {
 	return e.identifierHint
 }
-func (e ErrDuplicateCredentials) HasHints() bool {
+func (e *ErrDuplicateCredentials) HasHints() bool {
 	return len(e.availableCredentials) > 0 || len(e.availableOIDCProviders) > 0 || len(e.identifierHint) > 0
 }
 
