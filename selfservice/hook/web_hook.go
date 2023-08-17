@@ -327,7 +327,7 @@ func (e *WebHook) execute(ctx context.Context, data *templateContext) error {
 			}
 		}()
 
-		builder, err := request.NewBuilder(e.conf, e.deps)
+		builder, err := request.NewBuilder(ctx, e.conf, e.deps)
 		if err != nil {
 			return err
 		}
