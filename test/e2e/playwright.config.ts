@@ -22,7 +22,7 @@ export default defineConfig({
   /* Shared settings for all the projects below. See https://playwright.dev/docs/api/class-testoptions. */
   use: {
     trace: process.env.CI ? "retain-on-failure" : "on",
-    baseURL: "http://localhost:4457",
+    baseURL: "http://localhost:19006",
   },
 
   /* Configure projects for major browsers */
