@@ -5,6 +5,7 @@ package code_test
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
@@ -25,10 +26,10 @@ import (
 	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/internal"
+	kratos "github.com/ory/kratos/internal/httpclient"
 	"github.com/ory/kratos/internal/testhelpers"
 	"github.com/ory/kratos/selfservice/flow/registration"
 	"github.com/ory/kratos/selfservice/strategy/code"
-	"github.com/ory/x/ioutilx"
 )
 
 type state struct {
@@ -36,6 +37,8 @@ type state struct {
 	csrfToken string
 	client    *http.Client
 	email     string
+
+	registrationFlow *kratos.RegistrationFlow
 }
 
 func TestRegistrationCodeStrategyDisabled(t *testing.T) {
@@ -102,22 +105,14 @@ func TestRegistrationCodeStrategy(t *testing.T) {
 		return conf, reg, public
 	}
 
-	createRegistrationFlow := func(ctx context.Context, t *testing.T, publicURL string) *state {
+	createRegistrationFlow := func(ctx context.Context, t *testing.T, public *httptest.Server, isSPA bool) *state {
 		t.Helper()
 
 		client := testhelpers.NewClientWithCookies(t)
-		req, err := http.NewRequestWithContext(ctx, "GET", publicURL+registration.RouteInitBrowserFlow, nil)
-		require.NoError(t, err)
+		clientInit := testhelpers.InitializeRegistrationFlowViaBrowser(t, client, public, isSPA, false, false)
 
-		resp, err := client.Do(req)
+		body, err := json.Marshal(clientInit)
 		require.NoError(t, err)
-		require.EqualValues(t, http.StatusOK, resp.StatusCode)
-
-		body, err := io.ReadAll(resp.Body)
-		require.NoError(t, err)
-
-		flowID := gjson.GetBytes(body, "id").String()
-		require.NotEmpty(t, flowID)
 
 		csrfToken := gjson.GetBytes(body, "ui.nodes.#(attributes.name==csrf_token).attributes.value").String()
 		require.NotEmpty(t, csrfToken)
@@ -125,78 +120,66 @@ func TestRegistrationCodeStrategy(t *testing.T) {
 		require.Truef(t, gjson.GetBytes(body, "ui.nodes.#(attributes.name==traits.email)").Exists(), "%s", body)
 		require.Truef(t, gjson.GetBytes(body, "ui.nodes.#(attributes.value==code)").Exists(), "%s", body)
 
-		require.NoError(t, resp.Body.Close())
 		return &state{
-			csrfToken: csrfToken,
-			client:    client,
-			flowID:    flowID,
+			csrfToken:        csrfToken,
+			client:           client,
+			flowID:           clientInit.GetId(),
+			registrationFlow: clientInit,
 		}
 	}
 
-	type onSubmitAssertion func(ctx context.Context, t *testing.T, s *state, resp *http.Response)
+	type onSubmitAssertion func(ctx context.Context, t *testing.T, s *state, body string, resp *http.Response)
 
-	registerNewUser := func(ctx context.Context, t *testing.T, publicURL string, s *state, submitAssertion onSubmitAssertion) *state {
+	registerNewUser := func(ctx context.Context, t *testing.T, s *state, isSPA bool, submitAssertion onSubmitAssertion) *state {
 		t.Helper()
 
 		email := testhelpers.RandomEmail()
 
 		s.email = email
 
-		payload := strings.NewReader(url.Values{
-			"csrf_token":   {s.csrfToken},
-			"method":       {"code"},
-			"traits.email": {email},
-		}.Encode())
+		values := testhelpers.SDKFormFieldsToURLValues(s.registrationFlow.Ui.Nodes)
+		values.Set("traits.email", email)
+		values.Set("csrf_token", s.csrfToken)
+		values.Set("method", "code")
 
-		req, err := http.NewRequestWithContext(ctx, "POST", publicURL+registration.RouteSubmitFlow+"?flow="+s.flowID, payload)
-		require.NoError(t, err)
-
-		req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
-		req.Header.Set("Accept", "application/json")
-
-		client := s.client
+		// TODO: API client
+		body, resp := testhelpers.RegistrationMakeRequest(t, false, isSPA, s.registrationFlow, s.client, testhelpers.EncodeFormAsJSON(t, false, values))
 
 		// 2. Submit Identifier (email)
-		resp, err := client.Do(req)
-		require.NoError(t, err)
 		if submitAssertion != nil {
-			submitAssertion(ctx, t, s, resp)
+			submitAssertion(ctx, t, s, body, resp)
 		} else {
-			assert.Equal(t, http.StatusOK, resp.StatusCode)
-			body, err := io.ReadAll(resp.Body)
-			require.NoError(t, err)
-			csrfToken := gjson.GetBytes(body, "ui.nodes.#(attributes.name==csrf_token).attributes.value").String()
+			require.Equal(t, http.StatusOK, resp.StatusCode)
+			csrfToken := gjson.Get(body, "ui.nodes.#(attributes.name==csrf_token).attributes.value").String()
 			assert.NotEmptyf(t, csrfToken, "%s", body)
-			require.Equal(t, email, gjson.GetBytes(body, "ui.nodes.#(attributes.name==traits.email).attributes.value").String())
+			require.Equal(t, email, gjson.Get(body, "ui.nodes.#(attributes.name==traits.email).attributes.value").String())
 		}
 
-		require.NoError(t, resp.Body.Close())
+		var rf *kratos.RegistrationFlow
+		require.NoError(t, json.Unmarshal([]byte(body), &rf))
+		s.registrationFlow = rf
 
 		return s
 	}
 
-	submitOTP := func(ctx context.Context, t *testing.T, reg *driver.RegistryDefault, publicURL string, s *state, otp string, shouldHaveSessionCookie bool, submitAssertion onSubmitAssertion) *state {
+	submitOTP := func(ctx context.Context, t *testing.T, reg *driver.RegistryDefault, s *state, otp string, isSPA bool, submitAssertion onSubmitAssertion) *state {
 		t.Helper()
 
-		req, err := http.NewRequestWithContext(ctx, "POST", publicURL+registration.RouteSubmitFlow+"?flow="+s.flowID, strings.NewReader(url.Values{
-			"csrf_token":   {s.csrfToken},
-			"method":       {"code"},
-			"code":         {otp},
-			"traits.email": {s.email},
-		}.Encode()))
-		require.NoError(t, err)
+		values := testhelpers.SDKFormFieldsToURLValues(s.registrationFlow.Ui.Nodes)
+		values.Set("csrf_token", s.csrfToken)
+		values.Set("method", "code")
+		values.Set("code", otp)
+		values.Set("traits.email", s.email)
 
-		req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
-		req.Header.Set("Accept", "application/json")
-
-		// 3. Submit OTP
-		resp, err := s.client.Do(req)
-		require.NoError(t, err)
+		// TODO: API clients
+		body, resp := testhelpers.RegistrationMakeRequest(t, false, isSPA, s.registrationFlow, s.client, testhelpers.EncodeFormAsJSON(t, false, values))
 
 		if submitAssertion != nil {
-			submitAssertion(ctx, t, s, resp)
+			submitAssertion(ctx, t, s, body, resp)
 			return s
 		}
+
+		require.Equal(t, http.StatusOK, resp.StatusCode)
 
 		verifiableAddress, err := reg.PrivilegedIdentityPool().FindVerifiableAddressByValue(ctx, identity.VerifiableAddressTypeEmail, s.email)
 		require.NoError(t, err)
@@ -209,18 +192,6 @@ func TestRegistrationCodeStrategy(t *testing.T) {
 		_, ok := id.GetCredentials(identity.CredentialsTypeCodeAuth)
 		require.True(t, ok)
 
-		if shouldHaveSessionCookie {
-			// we should now end up with a session cookie
-			var sessionCookie *http.Cookie
-			for _, c := range resp.Cookies() {
-				if c.Name == "ory_kratos_session" {
-					sessionCookie = c
-					break
-				}
-			}
-			require.NotNil(t, sessionCookie)
-			require.NotEmpty(t, sessionCookie.Value)
-		}
 		return s
 	}
 
@@ -230,142 +201,273 @@ func TestRegistrationCodeStrategy(t *testing.T) {
 		ctx := context.Background()
 		_, reg, public := setup(ctx, t)
 
-		t.Run("case=should be able to register with code identity credentials", func(t *testing.T) {
-			ctx := context.Background()
+		t.Run("test=SPA client", func(t *testing.T) {
+			t.Run("case=should be able to register with code identity credentials", func(t *testing.T) {
+				ctx := context.Background()
 
-			// 1. Initiate flow
-			state := createRegistrationFlow(ctx, t, public.URL)
+				// 1. Initiate flow
+				state := createRegistrationFlow(ctx, t, public, true)
 
-			// 2. Submit Identifier (email)
-			state = registerNewUser(ctx, t, public.URL, state, nil)
+				// 2. Submit Identifier (email)
+				state = registerNewUser(ctx, t, state, true, nil)
 
-			message := testhelpers.CourierExpectMessage(ctx, t, reg, state.email, "Complete your account registration")
-			assert.Contains(t, message.Body, "please complete your account registration by entering the following code")
+				message := testhelpers.CourierExpectMessage(ctx, t, reg, state.email, "Complete your account registration")
+				assert.Contains(t, message.Body, "please complete your account registration by entering the following code")
 
-			registrationCode := testhelpers.CourierExpectCodeInMessage(t, message, 1)
-			assert.NotEmpty(t, registrationCode)
+				registrationCode := testhelpers.CourierExpectCodeInMessage(t, message, 1)
+				assert.NotEmpty(t, registrationCode)
 
-			// 3. Submit OTP
-			state = submitOTP(ctx, t, reg, public.URL, state, registrationCode, true, nil)
-		})
-
-		t.Run("case=should be able to resend the code", func(t *testing.T) {
-			ctx := context.Background()
-
-			s := createRegistrationFlow(ctx, t, public.URL)
-
-			s = registerNewUser(ctx, t, public.URL, s, func(ctx context.Context, t *testing.T, s *state, resp *http.Response) {
-				require.Equal(t, http.StatusOK, resp.StatusCode)
-				body, err := io.ReadAll(resp.Body)
-				require.NoError(t, err)
-				csrfToken := gjson.GetBytes(body, "ui.nodes.#(attributes.name==csrf_token).attributes.value").String()
-				require.NotEmptyf(t, csrfToken, "%s", body)
-				require.Equal(t, s.email, gjson.GetBytes(body, "ui.nodes.#(attributes.name==traits.email).attributes.value").String())
-
-				attr := gjson.GetBytes(body, "ui.nodes.#(attributes.name==method)#").String()
-				require.NotEmpty(t, attr)
-
-				val := gjson.Get(attr, "#(attributes.type==hidden).attributes.value").String()
-				require.Equal(t, "code", val)
+				// 3. Submit OTP
+				state = submitOTP(ctx, t, reg, state, registrationCode, true, nil)
 			})
 
-			message := testhelpers.CourierExpectMessage(ctx, t, reg, s.email, "Complete your account registration")
-			assert.Contains(t, message.Body, "please complete your account registration by entering the following code")
+			t.Run("case=should be able to resend the code", func(t *testing.T) {
+				ctx := context.Background()
 
-			registrationCode := testhelpers.CourierExpectCodeInMessage(t, message, 1)
-			assert.NotEmpty(t, registrationCode)
+				s := createRegistrationFlow(ctx, t, public, true)
 
-			// resend code
-			req, err := http.NewRequestWithContext(ctx, "POST", public.URL+registration.RouteSubmitFlow+"?flow="+s.flowID, strings.NewReader(url.Values{
-				"csrf_token":   {s.csrfToken},
-				"method":       {"code"},
-				"resend":       {"code"},
-				"traits.email": {s.email},
-			}.Encode()))
-			require.NoError(t, err)
+				s = registerNewUser(ctx, t, s, true, func(ctx context.Context, t *testing.T, s *state, body string, resp *http.Response) {
+					require.Equal(t, http.StatusOK, resp.StatusCode)
+					csrfToken := gjson.Get(body, "ui.nodes.#(attributes.name==csrf_token).attributes.value").String()
+					require.NotEmptyf(t, csrfToken, "%s", body)
+					require.Equal(t, s.email, gjson.Get(body, "ui.nodes.#(attributes.name==traits.email).attributes.value").String())
 
-			req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
-			req.Header.Set("Accept", "application/json")
+					attr := gjson.Get(body, "ui.nodes.#(attributes.name==method)#").String()
+					require.NotEmpty(t, attr)
 
-			resp, err := s.client.Do(req)
-			require.NoError(t, err)
-
-			require.Equal(t, http.StatusOK, resp.StatusCode)
-
-			// get the new code from email
-			message = testhelpers.CourierExpectMessage(ctx, t, reg, s.email, "Complete your account registration")
-			assert.Contains(t, message.Body, "please complete your account registration by entering the following code")
-
-			registrationCode2 := testhelpers.CourierExpectCodeInMessage(t, message, 1)
-			assert.NotEmpty(t, registrationCode2)
-
-			require.NotEqual(t, registrationCode, registrationCode2)
-
-			// try submit old code
-			s = submitOTP(ctx, t, reg, public.URL, s, registrationCode, false, func(ctx context.Context, t *testing.T, s *state, resp *http.Response) {
-				require.Equal(t, http.StatusBadRequest, resp.StatusCode)
-				body, err := io.ReadAll(resp.Body)
-				require.NoError(t, err)
-				require.Contains(t, gjson.GetBytes(body, "ui.messages").String(), "The registration code is invalid or has already been used. Please try again")
-			})
-
-			s = submitOTP(ctx, t, reg, public.URL, s, registrationCode2, true, nil)
-		})
-
-		t.Run("case=swapping out traits should not be possible on code submit", func(t *testing.T) {
-			ctx := context.Background()
-
-			// 1. Initiate flow
-			s := createRegistrationFlow(ctx, t, public.URL)
-
-			// 2. Submit Identifier (email)
-			s = registerNewUser(ctx, t, public.URL, s, nil)
-
-			message := testhelpers.CourierExpectMessage(ctx, t, reg, s.email, "Complete your account registration")
-			assert.Contains(t, message.Body, "please complete your account registration by entering the following code")
-
-			registrationCode := testhelpers.CourierExpectCodeInMessage(t, message, 1)
-			assert.NotEmpty(t, registrationCode)
-
-			s.email = "not-" + s.email // swap out email
-
-			// 3. Submit OTP
-			s = submitOTP(ctx, t, reg, public.URL, s, registrationCode, false, func(ctx context.Context, t *testing.T, s *state, resp *http.Response) {
-				require.Equal(t, http.StatusBadRequest, resp.StatusCode)
-				body := ioutilx.MustReadAll(resp.Body)
-				require.Contains(t, gjson.GetBytes(body, "ui.messages.0.text").String(), "The provided traits do not match the traits previously associated with this flow.")
-			})
-		})
-
-		t.Run("case=code should not be able to use more than 5 times", func(t *testing.T) {
-			ctx := context.Background()
-
-			// 1. Initiate flow
-			s := createRegistrationFlow(ctx, t, public.URL)
-
-			// 2. Submit Identifier (email)
-			s = registerNewUser(ctx, t, public.URL, s, nil)
-
-			reg.Persister().Transaction(ctx, func(ctx context.Context, connection *pop.Connection) error {
-				count, err := connection.RawQuery(fmt.Sprintf("SELECT * FROM %s WHERE selfservice_registration_flow_id = ?", new(code.RegistrationCode).TableName(ctx)), uuid.FromStringOrNil(s.flowID)).Count(new(code.RegistrationCode))
-				require.NoError(t, err)
-				require.Equal(t, 1, count)
-				return nil
-			})
-
-			for i := 0; i < 5; i++ {
-				s = submitOTP(ctx, t, reg, public.URL, s, "111111", false, func(ctx context.Context, t *testing.T, s *state, resp *http.Response) {
-					require.Equal(t, http.StatusBadRequest, resp.StatusCode)
-					body := ioutilx.MustReadAll(resp.Body)
-					require.Contains(t, gjson.GetBytes(body, "ui.messages.0.text").String(), "The registration code is invalid or has already been used")
+					val := gjson.Get(attr, "#(attributes.type==hidden).attributes.value").String()
+					require.Equal(t, "code", val)
 				})
-			}
 
-			s = submitOTP(ctx, t, reg, public.URL, s, "111111", false, func(ctx context.Context, t *testing.T, s *state, resp *http.Response) {
-				require.Equal(t, http.StatusBadRequest, resp.StatusCode)
-				body := ioutilx.MustReadAll(resp.Body)
-				require.Contains(t, gjson.GetBytes(body, "ui.messages.0.text").String(), "The request was submitted too often.")
+				message := testhelpers.CourierExpectMessage(ctx, t, reg, s.email, "Complete your account registration")
+				assert.Contains(t, message.Body, "please complete your account registration by entering the following code")
+
+				registrationCode := testhelpers.CourierExpectCodeInMessage(t, message, 1)
+				assert.NotEmpty(t, registrationCode)
+
+				// resend code
+				req, err := http.NewRequestWithContext(ctx, "POST", public.URL+registration.RouteSubmitFlow+"?flow="+s.flowID, strings.NewReader(url.Values{
+					"csrf_token":   {s.csrfToken},
+					"method":       {"code"},
+					"resend":       {"code"},
+					"traits.email": {s.email},
+				}.Encode()))
+				require.NoError(t, err)
+
+				req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+				req.Header.Set("Accept", "application/json")
+
+				resp, err := s.client.Do(req)
+				require.NoError(t, err)
+
+				require.Equal(t, http.StatusOK, resp.StatusCode)
+
+				// get the new code from email
+				message = testhelpers.CourierExpectMessage(ctx, t, reg, s.email, "Complete your account registration")
+				assert.Contains(t, message.Body, "please complete your account registration by entering the following code")
+
+				registrationCode2 := testhelpers.CourierExpectCodeInMessage(t, message, 1)
+				assert.NotEmpty(t, registrationCode2)
+
+				require.NotEqual(t, registrationCode, registrationCode2)
+
+				// try submit old code
+				s = submitOTP(ctx, t, reg, s, registrationCode, true, func(ctx context.Context, t *testing.T, s *state, body string, resp *http.Response) {
+					require.Equal(t, http.StatusBadRequest, resp.StatusCode)
+					require.Contains(t, gjson.Get(body, "ui.messages").String(), "The registration code is invalid or has already been used. Please try again")
+				})
+
+				s = submitOTP(ctx, t, reg, s, registrationCode2, true, nil)
 			})
+
+			t.Run("case=swapping out traits should not be possible on code submit", func(t *testing.T) {
+				ctx := context.Background()
+
+				// 1. Initiate flow
+				s := createRegistrationFlow(ctx, t, public, true)
+
+				// 2. Submit Identifier (email)
+				s = registerNewUser(ctx, t, s, true, nil)
+
+				message := testhelpers.CourierExpectMessage(ctx, t, reg, s.email, "Complete your account registration")
+				assert.Contains(t, message.Body, "please complete your account registration by entering the following code")
+
+				registrationCode := testhelpers.CourierExpectCodeInMessage(t, message, 1)
+				assert.NotEmpty(t, registrationCode)
+
+				s.email = "not-" + s.email // swap out email
+
+				// 3. Submit OTP
+				s = submitOTP(ctx, t, reg, s, registrationCode, true, func(ctx context.Context, t *testing.T, s *state, body string, resp *http.Response) {
+					require.Equal(t, http.StatusBadRequest, resp.StatusCode)
+					require.Contains(t, gjson.Get(body, "ui.messages.0.text").String(), "The provided traits do not match the traits previously associated with this flow.")
+				})
+			})
+
+			t.Run("case=code should not be able to use more than 5 times", func(t *testing.T) {
+				ctx := context.Background()
+
+				// 1. Initiate flow
+				s := createRegistrationFlow(ctx, t, public, true)
+
+				// 2. Submit Identifier (email)
+				s = registerNewUser(ctx, t, s, true, nil)
+
+				reg.Persister().Transaction(ctx, func(ctx context.Context, connection *pop.Connection) error {
+					count, err := connection.RawQuery(fmt.Sprintf("SELECT * FROM %s WHERE selfservice_registration_flow_id = ?", new(code.RegistrationCode).TableName(ctx)), uuid.FromStringOrNil(s.flowID)).Count(new(code.RegistrationCode))
+					require.NoError(t, err)
+					require.Equal(t, 1, count)
+					return nil
+				})
+
+				for i := 0; i < 5; i++ {
+					s = submitOTP(ctx, t, reg, s, "111111", true, func(ctx context.Context, t *testing.T, s *state, body string, resp *http.Response) {
+						require.Equal(t, http.StatusBadRequest, resp.StatusCode)
+						require.Contains(t, gjson.Get(body, "ui.messages.0.text").String(), "The registration code is invalid or has already been used")
+					})
+				}
+
+				s = submitOTP(ctx, t, reg, s, "111111", true, func(ctx context.Context, t *testing.T, s *state, body string, resp *http.Response) {
+					require.Equal(t, http.StatusBadRequest, resp.StatusCode)
+					require.Contains(t, gjson.Get(body, "ui.messages.0.text").String(), "The request was submitted too often.")
+				})
+			})
+
+		})
+
+		t.Run("test=Browser client", func(t *testing.T) {
+			t.Run("case=should be able to register with code identity credentials", func(t *testing.T) {
+				ctx := context.Background()
+
+				// 1. Initiate flow
+				state := createRegistrationFlow(ctx, t, public, false)
+
+				// 2. Submit Identifier (email)
+				state = registerNewUser(ctx, t, state, false, nil)
+
+				message := testhelpers.CourierExpectMessage(ctx, t, reg, state.email, "Complete your account registration")
+				assert.Contains(t, message.Body, "please complete your account registration by entering the following code")
+
+				registrationCode := testhelpers.CourierExpectCodeInMessage(t, message, 1)
+				assert.NotEmpty(t, registrationCode)
+
+				// 3. Submit OTP
+				state = submitOTP(ctx, t, reg, state, registrationCode, false, nil)
+			})
+
+			t.Run("case=should be able to resend the code", func(t *testing.T) {
+				ctx := context.Background()
+
+				s := createRegistrationFlow(ctx, t, public, false)
+
+				s = registerNewUser(ctx, t, s, false, func(ctx context.Context, t *testing.T, s *state, body string, resp *http.Response) {
+					require.Equal(t, http.StatusOK, resp.StatusCode)
+
+					csrfToken := gjson.Get(body, "ui.nodes.#(attributes.name==csrf_token).attributes.value").String()
+					require.NotEmptyf(t, csrfToken, "%s", body)
+					require.Equal(t, s.email, gjson.Get(body, "ui.nodes.#(attributes.name==traits.email).attributes.value").String())
+
+					attr := gjson.Get(body, "ui.nodes.#(attributes.name==method)#").String()
+					require.NotEmpty(t, attr)
+
+					val := gjson.Get(attr, "#(attributes.type==hidden).attributes.value").String()
+					require.Equal(t, "code", val)
+				})
+
+				message := testhelpers.CourierExpectMessage(ctx, t, reg, s.email, "Complete your account registration")
+				assert.Contains(t, message.Body, "please complete your account registration by entering the following code")
+
+				registrationCode := testhelpers.CourierExpectCodeInMessage(t, message, 1)
+				assert.NotEmpty(t, registrationCode)
+
+				// resend code
+				req, err := http.NewRequestWithContext(ctx, "POST", public.URL+registration.RouteSubmitFlow+"?flow="+s.flowID, strings.NewReader(url.Values{
+					"csrf_token":   {s.csrfToken},
+					"method":       {"code"},
+					"resend":       {"code"},
+					"traits.email": {s.email},
+				}.Encode()))
+				require.NoError(t, err)
+
+				req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+				req.Header.Set("Accept", "application/json")
+
+				resp, err := s.client.Do(req)
+				require.NoError(t, err)
+
+				require.Equal(t, http.StatusOK, resp.StatusCode)
+
+				// get the new code from email
+				message = testhelpers.CourierExpectMessage(ctx, t, reg, s.email, "Complete your account registration")
+				assert.Contains(t, message.Body, "please complete your account registration by entering the following code")
+
+				registrationCode2 := testhelpers.CourierExpectCodeInMessage(t, message, 1)
+				assert.NotEmpty(t, registrationCode2)
+
+				require.NotEqual(t, registrationCode, registrationCode2)
+
+				// try submit old code
+				s = submitOTP(ctx, t, reg, s, registrationCode, false, func(ctx context.Context, t *testing.T, s *state, body string, resp *http.Response) {
+					require.Equal(t, http.StatusBadRequest, resp.StatusCode)
+					require.Contains(t, gjson.Get(body, "ui.messages").String(), "The registration code is invalid or has already been used. Please try again")
+				})
+
+				s = submitOTP(ctx, t, reg, s, registrationCode2, false, nil)
+			})
+
+			t.Run("case=swapping out traits should not be possible on code submit", func(t *testing.T) {
+				ctx := context.Background()
+
+				// 1. Initiate flow
+				s := createRegistrationFlow(ctx, t, public, false)
+
+				// 2. Submit Identifier (email)
+				s = registerNewUser(ctx, t, s, false, nil)
+
+				message := testhelpers.CourierExpectMessage(ctx, t, reg, s.email, "Complete your account registration")
+				assert.Contains(t, message.Body, "please complete your account registration by entering the following code")
+
+				registrationCode := testhelpers.CourierExpectCodeInMessage(t, message, 1)
+				assert.NotEmpty(t, registrationCode)
+
+				s.email = "not-" + s.email // swap out email
+
+				// 3. Submit OTP
+				s = submitOTP(ctx, t, reg, s, registrationCode, false, func(ctx context.Context, t *testing.T, s *state, body string, resp *http.Response) {
+					require.Equal(t, http.StatusOK, resp.Status)
+					require.Contains(t, gjson.Get(body, "ui.messages.0.text").String(), "The provided traits do not match the traits previously associated with this flow.")
+				})
+			})
+
+			t.Run("case=code should not be able to use more than 5 times", func(t *testing.T) {
+				ctx := context.Background()
+
+				// 1. Initiate flow
+				s := createRegistrationFlow(ctx, t, public, false)
+
+				// 2. Submit Identifier (email)
+				s = registerNewUser(ctx, t, s, false, nil)
+
+				reg.Persister().Transaction(ctx, func(ctx context.Context, connection *pop.Connection) error {
+					count, err := connection.RawQuery(fmt.Sprintf("SELECT * FROM %s WHERE selfservice_registration_flow_id = ?", new(code.RegistrationCode).TableName(ctx)), uuid.FromStringOrNil(s.flowID)).Count(new(code.RegistrationCode))
+					require.NoError(t, err)
+					require.Equal(t, 1, count)
+					return nil
+				})
+
+				for i := 0; i < 5; i++ {
+					s = submitOTP(ctx, t, reg, s, "111111", false, func(ctx context.Context, t *testing.T, s *state, body string, resp *http.Response) {
+						require.Equal(t, http.StatusBadRequest, resp.StatusCode)
+						require.Contains(t, gjson.Get(body, "ui.messages.0.text").String(), "The registration code is invalid or has already been used")
+					})
+				}
+
+				s = submitOTP(ctx, t, reg, s, "111111", false, func(ctx context.Context, t *testing.T, s *state, body string, resp *http.Response) {
+					require.Equal(t, http.StatusBadRequest, resp.StatusCode)
+					require.Contains(t, gjson.Get(body, "ui.messages.0.text").String(), "The request was submitted too often.")
+				})
+			})
+
 		})
 	})
 
@@ -373,73 +475,142 @@ func TestRegistrationCodeStrategy(t *testing.T) {
 		ctx := context.Background()
 		conf, reg, public := setup(ctx, t)
 
-		t.Run("case=should fail when schema does not contain the `code` extension", func(t *testing.T) {
-			testhelpers.SetDefaultIdentitySchema(conf, "file://./stub/default.schema.json")
-			t.Cleanup(func() {
-				testhelpers.SetDefaultIdentitySchema(conf, "file://./stub/code.identity.schema.json")
-			})
+		t.Run("test=SPA client", func(t *testing.T) {
+			t.Run("case=should fail when schema does not contain the `code` extension", func(t *testing.T) {
+				testhelpers.SetDefaultIdentitySchema(conf, "file://./stub/default.schema.json")
+				t.Cleanup(func() {
+					testhelpers.SetDefaultIdentitySchema(conf, "file://./stub/code.identity.schema.json")
+				})
 
-			// 1. Initiate flow
-			s := createRegistrationFlow(ctx, t, public.URL)
+				// 1. Initiate flow
+				s := createRegistrationFlow(ctx, t, public, true)
 
-			// 2. Submit Identifier (email)
-			s = registerNewUser(ctx, t, public.URL, s, func(ctx context.Context, t *testing.T, s *state, resp *http.Response) {
-				require.Equal(t, http.StatusBadRequest, resp.StatusCode)
-				body, err := io.ReadAll(resp.Body)
-				require.NoError(t, err)
-				require.Contains(t, gjson.GetBytes(body, "ui.messages").String(), "Could not find any login identifiers")
-			})
-		})
-
-		t.Run("case=should have verifiable address even if after session hook is disabled", func(t *testing.T) {
-			// disable the after session hook
-			conf.MustSet(ctx, config.ViperKeySelfServiceRegistrationAfter+".code.hooks", []map[string]interface{}{})
-
-			t.Cleanup(func() {
-				conf.MustSet(ctx, config.ViperKeySelfServiceRegistrationAfter+".code.hooks", []map[string]interface{}{
-					{"hook": "session"},
+				// 2. Submit Identifier (email)
+				s = registerNewUser(ctx, t, s, true, func(ctx context.Context, t *testing.T, s *state, body string, resp *http.Response) {
+					require.Equal(t, http.StatusBadRequest, resp.StatusCode)
+					require.Contains(t, gjson.Get(body, "ui.messages").String(), "Could not find any login identifiers")
 				})
 			})
 
-			// 1. Initiate flow
-			state := createRegistrationFlow(ctx, t, public.URL)
+			t.Run("case=should have verifiable address even if after session hook is disabled", func(t *testing.T) {
+				// disable the after session hook
+				conf.MustSet(ctx, config.ViperKeySelfServiceRegistrationAfter+".code.hooks", []map[string]interface{}{})
 
-			// 2. Submit Identifier (email)
-			state = registerNewUser(ctx, t, public.URL, state, nil)
+				t.Cleanup(func() {
+					conf.MustSet(ctx, config.ViperKeySelfServiceRegistrationAfter+".code.hooks", []map[string]interface{}{
+						{"hook": "session"},
+					})
+				})
 
-			message := testhelpers.CourierExpectMessage(ctx, t, reg, state.email, "Complete your account registration")
-			assert.Contains(t, message.Body, "please complete your account registration by entering the following code")
+				// 1. Initiate flow
+				state := createRegistrationFlow(ctx, t, public, true)
 
-			registrationCode := testhelpers.CourierExpectCodeInMessage(t, message, 1)
-			assert.NotEmpty(t, registrationCode)
+				// 2. Submit Identifier (email)
+				state = registerNewUser(ctx, t, state, true, nil)
 
-			// 3. Submit OTP
-			state = submitOTP(ctx, t, reg, public.URL, state, registrationCode, false, nil)
-		})
+				message := testhelpers.CourierExpectMessage(ctx, t, reg, state.email, "Complete your account registration")
+				assert.Contains(t, message.Body, "please complete your account registration by entering the following code")
 
-		t.Run("case=code should expire", func(t *testing.T) {
-			conf.MustSet(ctx, config.ViperKeySelfServiceStrategyConfig+".code.config.lifespan", "10ns")
-			t.Cleanup(func() {
-				conf.MustSet(ctx, config.ViperKeySelfServiceStrategyConfig+".code.config.lifespan", "1h")
+				registrationCode := testhelpers.CourierExpectCodeInMessage(t, message, 1)
+				assert.NotEmpty(t, registrationCode)
+
+				// 3. Submit OTP
+				state = submitOTP(ctx, t, reg, state, registrationCode, true, nil)
 			})
 
-			// 1. Initiate flow
-			s := createRegistrationFlow(ctx, t, public.URL)
+			t.Run("case=code should expire", func(t *testing.T) {
+				conf.MustSet(ctx, config.ViperKeySelfServiceStrategyConfig+".code.config.lifespan", "10ns")
+				t.Cleanup(func() {
+					conf.MustSet(ctx, config.ViperKeySelfServiceStrategyConfig+".code.config.lifespan", "1h")
+				})
 
-			// 2. Submit Identifier (email)
-			s = registerNewUser(ctx, t, public.URL, s, nil)
+				// 1. Initiate flow
+				s := createRegistrationFlow(ctx, t, public, true)
 
-			message := testhelpers.CourierExpectMessage(ctx, t, reg, s.email, "Complete your account registration")
-			assert.Contains(t, message.Body, "please complete your account registration by entering the following code")
+				// 2. Submit Identifier (email)
+				s = registerNewUser(ctx, t, s, true, nil)
 
-			registrationCode := testhelpers.CourierExpectCodeInMessage(t, message, 1)
-			assert.NotEmpty(t, registrationCode)
+				message := testhelpers.CourierExpectMessage(ctx, t, reg, s.email, "Complete your account registration")
+				assert.Contains(t, message.Body, "please complete your account registration by entering the following code")
 
-			s = submitOTP(ctx, t, reg, public.URL, s, registrationCode, false, func(ctx context.Context, t *testing.T, s *state, resp *http.Response) {
-				require.Equal(t, http.StatusGone, resp.StatusCode)
-				body := ioutilx.MustReadAll(resp.Body)
-				require.Contains(t, gjson.GetBytes(body, "error.reason").String(), "self-service flow expired 0.00 minutes ago")
+				registrationCode := testhelpers.CourierExpectCodeInMessage(t, message, 1)
+				assert.NotEmpty(t, registrationCode)
+
+				s = submitOTP(ctx, t, reg, s, registrationCode, false, func(ctx context.Context, t *testing.T, s *state, body string, resp *http.Response) {
+					require.Equal(t, http.StatusGone, resp.StatusCode)
+					require.Contains(t, gjson.Get(body, "error.reason").String(), "self-service flow expired 0.00 minutes ago")
+				})
+			})
+
+		})
+
+		t.Run("test=Browser client", func(t *testing.T) {
+			t.Run("case=should fail when schema does not contain the `code` extension", func(t *testing.T) {
+				testhelpers.SetDefaultIdentitySchema(conf, "file://./stub/default.schema.json")
+				t.Cleanup(func() {
+					testhelpers.SetDefaultIdentitySchema(conf, "file://./stub/code.identity.schema.json")
+				})
+
+				// 1. Initiate flow
+				s := createRegistrationFlow(ctx, t, public, false)
+
+				// 2. Submit Identifier (email)
+				s = registerNewUser(ctx, t, s, false, func(ctx context.Context, t *testing.T, s *state, body string, resp *http.Response) {
+					require.Equal(t, http.StatusBadRequest, resp.StatusCode)
+					require.Contains(t, gjson.Get(body, "ui.messages").String(), "Could not find any login identifiers")
+				})
+			})
+
+			t.Run("case=should have verifiable address even if after session hook is disabled", func(t *testing.T) {
+				// disable the after session hook
+				conf.MustSet(ctx, config.ViperKeySelfServiceRegistrationAfter+".code.hooks", []map[string]interface{}{})
+
+				t.Cleanup(func() {
+					conf.MustSet(ctx, config.ViperKeySelfServiceRegistrationAfter+".code.hooks", []map[string]interface{}{
+						{"hook": "session"},
+					})
+				})
+
+				// 1. Initiate flow
+				state := createRegistrationFlow(ctx, t, public, false)
+
+				// 2. Submit Identifier (email)
+				state = registerNewUser(ctx, t, state, false, nil)
+
+				message := testhelpers.CourierExpectMessage(ctx, t, reg, state.email, "Complete your account registration")
+				assert.Contains(t, message.Body, "please complete your account registration by entering the following code")
+
+				registrationCode := testhelpers.CourierExpectCodeInMessage(t, message, 1)
+				assert.NotEmpty(t, registrationCode)
+
+				// 3. Submit OTP
+				state = submitOTP(ctx, t, reg, state, registrationCode, false, nil)
+			})
+
+			t.Run("case=code should expire", func(t *testing.T) {
+				conf.MustSet(ctx, config.ViperKeySelfServiceStrategyConfig+".code.config.lifespan", "10ns")
+				t.Cleanup(func() {
+					conf.MustSet(ctx, config.ViperKeySelfServiceStrategyConfig+".code.config.lifespan", "1h")
+				})
+
+				// 1. Initiate flow
+				s := createRegistrationFlow(ctx, t, public, false)
+
+				// 2. Submit Identifier (email)
+				s = registerNewUser(ctx, t, s, false, nil)
+
+				message := testhelpers.CourierExpectMessage(ctx, t, reg, s.email, "Complete your account registration")
+				assert.Contains(t, message.Body, "please complete your account registration by entering the following code")
+
+				registrationCode := testhelpers.CourierExpectCodeInMessage(t, message, 1)
+				assert.NotEmpty(t, registrationCode)
+
+				s = submitOTP(ctx, t, reg, s, registrationCode, false, func(ctx context.Context, t *testing.T, s *state, body string, resp *http.Response) {
+					require.Equal(t, http.StatusGone, resp.StatusCode)
+					require.Contains(t, gjson.Get(body, "error.reason").String(), "self-service flow expired 0.00 minutes ago")
+				})
 			})
 		})
+
 	})
 }
