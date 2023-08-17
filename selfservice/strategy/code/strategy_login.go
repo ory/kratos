@@ -136,25 +136,21 @@ func (s *Strategy) Login(w http.ResponseWriter, r *http.Request, f *login.Flow, 
 		return nil, s.HandleLoginError(w, r, f, &p, err)
 	}
 
-	codeManager := NewCodeStateManager(f, &CodeStateManagerPayload{
-		Identifier: p.Identifier,
-		Resend:     p.Resend,
-		Code:       p.Code,
-	})
+	codeManager := NewCodeStateManager[*login.Flow, *updateLoginFlowWithCodeMethod](f, s, &p)
 
-	codeManager.SetCreateCodeHandler(func(ctx context.Context, p *CodeStateManagerPayload) error {
-		s.deps.Audit().
+	codeManager.SetCreateCodeHandler(func(ctx context.Context, f *login.Flow, strategy *Strategy, p *updateLoginFlowWithCodeMethod) error {
+		strategy.deps.Audit().
 			WithSensitiveField("identifier", p.Identifier).
 			Info("Creating login code state.")
 
 		// Step 1: Get the identity
-		i, cred, err := s.getIdentity(ctx, p.Identifier)
+		i, cred, err := strategy.getIdentity(ctx, p.Identifier)
 		if err != nil {
 			return err
 		}
 
 		// Step 2: Delete any previous login codes for this flow ID
-		if err := s.deps.LoginCodePersister().DeleteLoginCodesOfFlow(ctx, f.ID); err != nil {
+		if err := strategy.deps.LoginCodePersister().DeleteLoginCodesOfFlow(ctx, f.GetID()); err != nil {
 			return errors.WithStack(err)
 		}
 
@@ -174,7 +170,7 @@ func (s *Strategy) Login(w http.ResponseWriter, r *http.Request, f *login.Flow, 
 
 		// kratos only supports `email` identifiers at the moment with the code method
 		// this is validated in the identity validation step above
-		if err := s.deps.CodeSender().SendCode(ctx, f, i, addresses...); err != nil {
+		if err := strategy.deps.CodeSender().SendCode(ctx, f, i, addresses...); err != nil {
 			return errors.WithStack(err)
 		}
 
@@ -195,14 +191,14 @@ func (s *Strategy) Login(w http.ResponseWriter, r *http.Request, f *login.Flow, 
 		}
 
 		f.Active = identity.CredentialsTypeCodeAuth
-		if err = s.deps.LoginFlowPersister().UpdateLoginFlow(ctx, f); err != nil {
+		if err = strategy.deps.LoginFlowPersister().UpdateLoginFlow(ctx, f); err != nil {
 			return err
 		}
 
 		if x.IsJSONRequest(r) {
-			s.deps.Writer().Write(w, r, f)
+			strategy.deps.Writer().Write(w, r, f)
 		} else {
-			http.Redirect(w, r, f.AppendTo(s.deps.Config().SelfServiceFlowLoginUI(ctx)).String(), http.StatusSeeOther)
+			http.Redirect(w, r, f.AppendTo(strategy.deps.Config().SelfServiceFlowLoginUI(ctx)).String(), http.StatusSeeOther)
 		}
 
 		// we return an error to the flow handler so that it does not continue execution of the hooks.
@@ -210,19 +206,19 @@ func (s *Strategy) Login(w http.ResponseWriter, r *http.Request, f *login.Flow, 
 		return errors.WithStack(flow.ErrCompletedByStrategy)
 	})
 
-	codeManager.SetCodeVerifyHandler(func(ctx context.Context, p *CodeStateManagerPayload) error {
-		s.deps.Audit().
+	codeManager.SetCodeVerifyHandler(func(ctx context.Context, f *login.Flow, strategy *Strategy, p *updateLoginFlowWithCodeMethod) error {
+		strategy.deps.Audit().
 			WithSensitiveField("code", p.Code).
 			WithSensitiveField("identifier", p.Identifier).
 			Debug("Verifying login code")
 
 		// Step 1: Get the identity
-		i, _, err = s.getIdentity(ctx, p.Identifier)
+		i, _, err = strategy.getIdentity(ctx, p.Identifier)
 		if err != nil {
 			return err
 		}
 
-		loginCode, err := s.deps.LoginCodePersister().UseLoginCode(ctx, f.ID, i.ID, p.Code)
+		loginCode, err := strategy.deps.LoginCodePersister().UseLoginCode(ctx, f.ID, i.ID, p.Code)
 		if err != nil {
 			if errors.Is(err, ErrCodeNotFound) {
 				return schema.NewLoginCodeInvalid()
@@ -230,7 +226,7 @@ func (s *Strategy) Login(w http.ResponseWriter, r *http.Request, f *login.Flow, 
 			return errors.WithStack(err)
 		}
 
-		i, err = s.deps.PrivilegedIdentityPool().GetIdentity(ctx, loginCode.IdentityID, identity.ExpandDefault)
+		i, err = strategy.deps.PrivilegedIdentityPool().GetIdentity(ctx, loginCode.IdentityID, identity.ExpandDefault)
 		if err != nil {
 			return errors.WithStack(err)
 		}
@@ -240,9 +236,9 @@ func (s *Strategy) Login(w http.ResponseWriter, r *http.Request, f *login.Flow, 
 
 		// since nothing has errored yet, we can assume that the code is correct
 		// and we can update the login flow
-		s.NextFlowState(f)
+		strategy.NextFlowState(f)
 
-		if err := s.deps.LoginFlowPersister().UpdateLoginFlow(ctx, f); err != nil {
+		if err := strategy.deps.LoginFlowPersister().UpdateLoginFlow(ctx, f); err != nil {
 			return errors.WithStack(err)
 		}
 
@@ -251,7 +247,7 @@ func (s *Strategy) Login(w http.ResponseWriter, r *http.Request, f *login.Flow, 
 			if !va.Verified && loginCode.Address == va.Value {
 				va.Verified = true
 				va.Status = identity.VerifiableAddressStatusCompleted
-				if err := s.deps.PrivilegedIdentityPool().UpdateVerifiableAddress(r.Context(), &va); err != nil {
+				if err := strategy.deps.PrivilegedIdentityPool().UpdateVerifiableAddress(r.Context(), &va); err != nil {
 					return err
 				}
 				break
@@ -261,11 +257,11 @@ func (s *Strategy) Login(w http.ResponseWriter, r *http.Request, f *login.Flow, 
 		return nil
 	})
 
-	codeManager.SetCodeDoneHandler(func(ctx context.Context, codePayload *CodeStateManagerPayload) error {
-		s.deps.Audit().
-			WithSensitiveField("identifier", codePayload.Identifier).
+	codeManager.SetCodeDoneHandler(func(ctx context.Context, f *login.Flow, strategy *Strategy, p *updateLoginFlowWithCodeMethod) error {
+		strategy.deps.Audit().
+			WithSensitiveField("identifier", p.Identifier).
 			Debug("The login flow has already been completed, but is being re-requested.")
-		return s.HandleLoginError(w, r, f, &p, errors.WithStack(schema.NewNoLoginStrategyResponsible()))
+		return errors.WithStack(schema.NewNoLoginStrategyResponsible())
 	})
 
 	if err := codeManager.Run(r.Context()); err != nil {

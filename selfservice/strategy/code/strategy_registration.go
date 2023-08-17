@@ -143,15 +143,10 @@ func (s *Strategy) Register(w http.ResponseWriter, r *http.Request, f *registrat
 		return s.HandleRegistrationError(w, r, f, &p, err)
 	}
 
-	codeManager := NewCodeStateManager(f, &CodeStateManagerPayload{
-		Code:             p.Code,
-		Traits:           p.Traits,
-		Resend:           p.Resend,
-		TransientPayload: p.TransientPayload,
-	})
+	codeManager := NewCodeStateManager[*registration.Flow, *updateRegistrationFlowWithCodeMethod](f, s, &p)
 
-	codeManager.SetCreateCodeHandler(func(ctx context.Context, p *CodeStateManagerPayload) error {
-		s.deps.Logger().
+	codeManager.SetCreateCodeHandler(func(ctx context.Context, f *registration.Flow, strategy *Strategy, p *updateRegistrationFlowWithCodeMethod) error {
+		strategy.deps.Logger().
 			WithSensitiveField("traits", p.Traits).
 			WithSensitiveField("transient_paylaod", p.TransientPayload).
 			Debug("Creating registration code.")
@@ -159,13 +154,13 @@ func (s *Strategy) Register(w http.ResponseWriter, r *http.Request, f *registrat
 		// Create the Registration code
 
 		// Step 1: validate the identity's traits
-		cred, err := s.getCredentialsFromTraits(ctx, f, i, p.Traits, p.TransientPayload)
+		cred, err := strategy.getCredentialsFromTraits(ctx, f, i, p.Traits, p.TransientPayload)
 		if err != nil {
 			return err
 		}
 
 		// Step 2: Delete any previous registration codes for this flow ID
-		if err := s.deps.RegistrationCodePersister().DeleteRegistrationCodesOfFlow(ctx, f.ID); err != nil {
+		if err := strategy.deps.RegistrationCodePersister().DeleteRegistrationCodesOfFlow(ctx, f.ID); err != nil {
 			return errors.WithStack(err)
 		}
 
@@ -176,27 +171,27 @@ func (s *Strategy) Register(w http.ResponseWriter, r *http.Request, f *registrat
 		}
 		// kratos only supports `email` identifiers at the moment with the code method
 		// this is validated in the identity validation step above
-		if err := s.deps.CodeSender().SendCode(ctx, f, i, addresses...); err != nil {
+		if err := strategy.deps.CodeSender().SendCode(ctx, f, i, addresses...); err != nil {
 			return errors.WithStack(err)
 		}
 
 		// sets the flow state to code sent
-		s.NextFlowState(f)
+		strategy.NextFlowState(f)
 
 		// Step 4: Generate the UI for the `code` input form
 		// re-initialize the UI with a "clean" new state
 		// this should also provide a "resend" button and an option to change the email address
-		if err := s.NewCodeUINodes(r, f, p.Traits); err != nil {
+		if err := strategy.NewCodeUINodes(r, f, p.Traits); err != nil {
 			return errors.WithStack(err)
 		}
 
 		f.Active = identity.CredentialsTypeCodeAuth
-		if err := s.deps.RegistrationFlowPersister().UpdateRegistrationFlow(ctx, f); err != nil {
+		if err := strategy.deps.RegistrationFlowPersister().UpdateRegistrationFlow(ctx, f); err != nil {
 			return errors.WithStack(err)
 		}
 
 		if x.IsJSONRequest(r) {
-			s.deps.Writer().Write(w, r, f)
+			strategy.deps.Writer().Write(w, r, f)
 		} else {
 			http.Redirect(w, r, f.AppendTo(s.deps.Config().SelfServiceFlowRegistrationUI(ctx)).String(), http.StatusSeeOther)
 		}
@@ -206,8 +201,8 @@ func (s *Strategy) Register(w http.ResponseWriter, r *http.Request, f *registrat
 		return errors.WithStack(flow.ErrCompletedByStrategy)
 	})
 
-	codeManager.SetCodeVerifyHandler(func(ctx context.Context, p *CodeStateManagerPayload) error {
-		s.deps.Logger().
+	codeManager.SetCodeVerifyHandler(func(ctx context.Context, f *registration.Flow, strategy *Strategy, p *updateRegistrationFlowWithCodeMethod) error {
+		strategy.deps.Logger().
 			WithSensitiveField("traits", p.Traits).
 			WithSensitiveField("transient_payload", p.TransientPayload).
 			WithSensitiveField("code", p.Code).
@@ -216,7 +211,7 @@ func (s *Strategy) Register(w http.ResponseWriter, r *http.Request, f *registrat
 		// Step 1: Re-validate the identity's traits
 		// this is important since the client could have switched out the identity's traits
 		// this method also returns the credentials for a temporary identity
-		cred, err := s.getCredentialsFromTraits(ctx, f, i, p.Traits, p.TransientPayload)
+		cred, err := strategy.getCredentialsFromTraits(ctx, f, i, p.Traits, p.TransientPayload)
 		if err != nil {
 			return err
 		}
@@ -229,7 +224,7 @@ func (s *Strategy) Register(w http.ResponseWriter, r *http.Request, f *registrat
 		}
 
 		// Step 3: Attempt to use the code
-		registrationCode, err := s.deps.RegistrationCodePersister().UseRegistrationCode(ctx, f.ID, p.Code, cred.Identifiers...)
+		registrationCode, err := strategy.deps.RegistrationCodePersister().UseRegistrationCode(ctx, f.ID, p.Code, cred.Identifiers...)
 		if err != nil {
 			if errors.Is(err, ErrCodeNotFound) {
 				return errors.WithStack(schema.NewRegistrationCodeInvalid())
@@ -238,22 +233,28 @@ func (s *Strategy) Register(w http.ResponseWriter, r *http.Request, f *registrat
 		}
 
 		// Step 4: The code was correct, populate the Identity credentials and traits
-		if err := s.handleIdentityTraits(ctx, f, p.Traits, p.TransientPayload, i, WithCredentials(registrationCode.AddressType, registrationCode.UsedAt)); err != nil {
+		if err := strategy.handleIdentityTraits(ctx, f, p.Traits, p.TransientPayload, i, WithCredentials(registrationCode.AddressType, registrationCode.UsedAt)); err != nil {
 			return errors.WithStack(err)
 		}
 
 		// since nothing has errored yet, we can assume that the code is correct
 		// and we can update the registration flow
-		s.NextFlowState(f)
+		strategy.NextFlowState(f)
 
-		if err := s.deps.RegistrationFlowPersister().UpdateRegistrationFlow(ctx, f); err != nil {
+		if err := strategy.deps.RegistrationFlowPersister().UpdateRegistrationFlow(ctx, f); err != nil {
 			return errors.WithStack(err)
 		}
 
 		return nil
 	})
 
-	codeManager.SetCodeDoneHandler(func(ctx context.Context, _ *CodeStateManagerPayload) error {
+	codeManager.SetCodeDoneHandler(func(ctx context.Context, f *registration.Flow, strategy *Strategy, p *updateRegistrationFlowWithCodeMethod) error {
+		strategy.deps.Audit().
+			WithSensitiveField("traits", p.Traits).
+			WithSensitiveField("transient_payload", p.TransientPayload).
+			WithSensitiveField("code", p.Code).
+			Debug("The registration flow has already been completed, but is being re-requested.")
+
 		return errors.WithStack(schema.NewNoRegistrationStrategyResponsible())
 	})
 
