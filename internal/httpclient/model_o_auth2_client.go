@@ -18,8 +18,11 @@ import (
 
 // OAuth2Client struct for OAuth2Client
 type OAuth2Client struct {
-	AllowedCorsOrigins []string `json:"allowed_cors_origins,omitempty"`
-	Audience           []string `json:"audience,omitempty"`
+	AdditionalPropertiesField map[string]interface{} `json:"AdditionalProperties,omitempty"`
+	// OAuth 2.0 Access Token Strategy  AccessTokenStrategy is the strategy used to generate access tokens. Valid options are `jwt` and `opaque`. `jwt` is a bad idea, see https://www.ory.sh/docs/hydra/advanced#json-web-tokens Setting the stragegy here overrides the global setting in `strategies.access_token`.
+	AccessTokenStrategy *string  `json:"access_token_strategy,omitempty"`
+	AllowedCorsOrigins  []string `json:"allowed_cors_origins,omitempty"`
+	Audience            []string `json:"audience,omitempty"`
 	// Specify a time duration in milliseconds, seconds, minutes, hours.
 	AuthorizationCodeGrantAccessTokenLifespan *string `json:"authorization_code_grant_access_token_lifespan,omitempty"`
 	// Specify a time duration in milliseconds, seconds, minutes, hours.
@@ -87,9 +90,11 @@ type OAuth2Client struct {
 	Scope *string `json:"scope,omitempty"`
 	// OpenID Connect Sector Identifier URI  URL using the https scheme to be used in calculating Pseudonymous Identifiers by the OP. The URL references a file with a single JSON array of redirect_uri values.
 	SectorIdentifierUri *string `json:"sector_identifier_uri,omitempty"`
+	// SkipConsent skips the consent screen for this client. This field can only be set from the admin API.
+	SkipConsent *bool `json:"skip_consent,omitempty"`
 	// OpenID Connect Subject Type  The `subject_types_supported` Discovery parameter contains a list of the supported subject_type values for this server. Valid types include `pairwise` and `public`.
 	SubjectType *string `json:"subject_type,omitempty"`
-	// OAuth 2.0 Token Endpoint Authentication Method  Requested Client Authentication method for the Token Endpoint. The options are:  `client_secret_post`: (default) Send `client_id` and `client_secret` as `application/x-www-form-urlencoded` in the HTTP body. `client_secret_basic`: Send `client_id` and `client_secret` as `application/x-www-form-urlencoded` encoded in the HTTP Authorization header. `private_key_jwt`: Use JSON Web Tokens to authenticate the client. `none`: Used for public clients (native apps, mobile apps) which can not have secrets.
+	// OAuth 2.0 Token Endpoint Authentication Method  Requested Client Authentication method for the Token Endpoint. The options are:  `client_secret_basic`: (default) Send `client_id` and `client_secret` as `application/x-www-form-urlencoded` encoded in the HTTP Authorization header. `client_secret_post`: Send `client_id` and `client_secret` as `application/x-www-form-urlencoded` in the HTTP body. `private_key_jwt`: Use JSON Web Tokens to authenticate the client. `none`: Used for public clients (native apps, mobile apps) which can not have secrets.
 	TokenEndpointAuthMethod *string `json:"token_endpoint_auth_method,omitempty"`
 	// OAuth 2.0 Token Endpoint Signing Algorithm  Requested Client Authentication signing algorithm for the Token Endpoint.
 	TokenEndpointAuthSigningAlg *string `json:"token_endpoint_auth_signing_alg,omitempty"`
@@ -116,6 +121,70 @@ func NewOAuth2Client() *OAuth2Client {
 func NewOAuth2ClientWithDefaults() *OAuth2Client {
 	this := OAuth2Client{}
 	return &this
+}
+
+// GetAdditionalPropertiesField returns the AdditionalPropertiesField field value if set, zero value otherwise.
+func (o *OAuth2Client) GetAdditionalPropertiesField() map[string]interface{} {
+	if o == nil || o.AdditionalPropertiesField == nil {
+		var ret map[string]interface{}
+		return ret
+	}
+	return o.AdditionalPropertiesField
+}
+
+// GetAdditionalPropertiesFieldOk returns a tuple with the AdditionalPropertiesField field value if set, nil otherwise
+// and a boolean to check if the value has been set.
+func (o *OAuth2Client) GetAdditionalPropertiesFieldOk() (map[string]interface{}, bool) {
+	if o == nil || o.AdditionalPropertiesField == nil {
+		return nil, false
+	}
+	return o.AdditionalPropertiesField, true
+}
+
+// HasAdditionalPropertiesField returns a boolean if a field has been set.
+func (o *OAuth2Client) HasAdditionalPropertiesField() bool {
+	if o != nil && o.AdditionalPropertiesField != nil {
+		return true
+	}
+
+	return false
+}
+
+// SetAdditionalPropertiesField gets a reference to the given map[string]interface{} and assigns it to the AdditionalPropertiesField field.
+func (o *OAuth2Client) SetAdditionalPropertiesField(v map[string]interface{}) {
+	o.AdditionalPropertiesField = v
+}
+
+// GetAccessTokenStrategy returns the AccessTokenStrategy field value if set, zero value otherwise.
+func (o *OAuth2Client) GetAccessTokenStrategy() string {
+	if o == nil || o.AccessTokenStrategy == nil {
+		var ret string
+		return ret
+	}
+	return *o.AccessTokenStrategy
+}
+
+// GetAccessTokenStrategyOk returns a tuple with the AccessTokenStrategy field value if set, nil otherwise
+// and a boolean to check if the value has been set.
+func (o *OAuth2Client) GetAccessTokenStrategyOk() (*string, bool) {
+	if o == nil || o.AccessTokenStrategy == nil {
+		return nil, false
+	}
+	return o.AccessTokenStrategy, true
+}
+
+// HasAccessTokenStrategy returns a boolean if a field has been set.
+func (o *OAuth2Client) HasAccessTokenStrategy() bool {
+	if o != nil && o.AccessTokenStrategy != nil {
+		return true
+	}
+
+	return false
+}
+
+// SetAccessTokenStrategy gets a reference to the given string and assigns it to the AccessTokenStrategy field.
+func (o *OAuth2Client) SetAccessTokenStrategy(v string) {
+	o.AccessTokenStrategy = &v
 }
 
 // GetAllowedCorsOrigins returns the AllowedCorsOrigins field value if set, zero value otherwise.
@@ -1368,6 +1437,38 @@ func (o *OAuth2Client) SetSectorIdentifierUri(v string) {
 	o.SectorIdentifierUri = &v
 }
 
+// GetSkipConsent returns the SkipConsent field value if set, zero value otherwise.
+func (o *OAuth2Client) GetSkipConsent() bool {
+	if o == nil || o.SkipConsent == nil {
+		var ret bool
+		return ret
+	}
+	return *o.SkipConsent
+}
+
+// GetSkipConsentOk returns a tuple with the SkipConsent field value if set, nil otherwise
+// and a boolean to check if the value has been set.
+func (o *OAuth2Client) GetSkipConsentOk() (*bool, bool) {
+	if o == nil || o.SkipConsent == nil {
+		return nil, false
+	}
+	return o.SkipConsent, true
+}
+
+// HasSkipConsent returns a boolean if a field has been set.
+func (o *OAuth2Client) HasSkipConsent() bool {
+	if o != nil && o.SkipConsent != nil {
+		return true
+	}
+
+	return false
+}
+
+// SetSkipConsent gets a reference to the given bool and assigns it to the SkipConsent field.
+func (o *OAuth2Client) SetSkipConsent(v bool) {
+	o.SkipConsent = &v
+}
+
 // GetSubjectType returns the SubjectType field value if set, zero value otherwise.
 func (o *OAuth2Client) GetSubjectType() string {
 	if o == nil || o.SubjectType == nil {
@@ -1562,6 +1663,12 @@ func (o *OAuth2Client) SetUserinfoSignedResponseAlg(v string) {
 
 func (o OAuth2Client) MarshalJSON() ([]byte, error) {
 	toSerialize := map[string]interface{}{}
+	if o.AdditionalPropertiesField != nil {
+		toSerialize["AdditionalProperties"] = o.AdditionalPropertiesField
+	}
+	if o.AccessTokenStrategy != nil {
+		toSerialize["access_token_strategy"] = o.AccessTokenStrategy
+	}
 	if o.AllowedCorsOrigins != nil {
 		toSerialize["allowed_cors_origins"] = o.AllowedCorsOrigins
 	}
@@ -1678,6 +1785,9 @@ func (o OAuth2Client) MarshalJSON() ([]byte, error) {
 	}
 	if o.SectorIdentifierUri != nil {
 		toSerialize["sector_identifier_uri"] = o.SectorIdentifierUri
+	}
+	if o.SkipConsent != nil {
+		toSerialize["skip_consent"] = o.SkipConsent
 	}
 	if o.SubjectType != nil {
 		toSerialize["subject_type"] = o.SubjectType
