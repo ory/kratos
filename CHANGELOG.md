@@ -5,7 +5,7 @@
 
 **Table of Contents**
 
-- [ (2023-08-16)](#2023-08-16)
+- [ (2023-08-17)](#2023-08-17)
   - [Bug Fixes](#bug-fixes)
   - [Documentation](#documentation)
   - [Features](#features)
@@ -309,7 +309,7 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# [](https://github.com/ory/kratos/compare/v1.0.0...v) (2023-08-16)
+# [](https://github.com/ory/kratos/compare/v1.0.0...v) (2023-08-17)
 
 ### Bug Fixes
 
@@ -335,6 +335,9 @@
 
   Fixes https://github.com/ory/kratos/issues/3321
 
+- Don't return 500 on conflict for POST /admin/identities
+  ([#3437](https://github.com/ory/kratos/issues/3437))
+  ([1429949](https://github.com/ory/kratos/commit/142994932e449d9948148804502c98ef73daafff))
 - False-positives for requiring re-authentication on update
   ([#3421](https://github.com/ory/kratos/issues/3421))
   ([ce8139f](https://github.com/ory/kratos/commit/ce8139f2325a8317388cbcaaa98f3f83d626657b))
@@ -403,6 +406,16 @@
   ([013f335](https://github.com/ory/kratos/commit/013f335881831bbf90ac31b219b57118fc089fe6)):
 
   Users can now supply a list of origins for webauthn in the configuration.
+
+- Transmit current session ID to Hydra when accepting the login
+  ([#3426](https://github.com/ory/kratos/issues/3426))
+  ([610c76d](https://github.com/ory/kratos/commit/610c76d9140f2f43217ac55094051a994ea83ecc)):
+
+  - chore: change react-native port to 19006
+
+  - feat: transmit current session ID when accepting login
+
+  - fix: upgrade hydra in tests
 
 ### Tests
 
