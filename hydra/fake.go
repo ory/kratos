@@ -9,7 +9,6 @@ import (
 
 	"github.com/ory/herodot"
 	hydraclientgo "github.com/ory/hydra-client-go/v2"
-	"github.com/ory/kratos/session"
 )
 
 const (
@@ -28,14 +27,17 @@ func NewFake() *FakeHydra {
 	return &FakeHydra{}
 }
 
-func (h *FakeHydra) AcceptLoginRequest(_ context.Context, loginChallenge string, _ string, _ session.AuthenticationMethods) (string, error) {
-	switch loginChallenge {
+func (h *FakeHydra) AcceptLoginRequest(_ context.Context, params AcceptLoginRequestParams) (string, error) {
+	if params.SessionID == "" {
+		return "", errors.New("session id must not be empty")
+	}
+	switch params.LoginChallenge {
 	case FakeInvalidLoginChallenge:
 		return "", ErrFakeAcceptLoginRequestFailed
 	case FakeValidLoginChallenge:
 		return FakePostLoginURL, nil
 	default:
-		panic("unknown fake login_challenge " + loginChallenge)
+		panic("unknown fake login_challenge " + params.LoginChallenge)
 	}
 }
 

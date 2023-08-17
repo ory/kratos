@@ -45,7 +45,7 @@ export const APP_URL = (
 ).replace(/\/$/, "")
 
 export const MOBILE_URL = (
-  Cypress.env("mobile_url") || "http://localhost:4457"
+  Cypress.env("mobile_url") || "http://localhost:19006"
 ).replace(/\/$/, "")
 export const SPA_URL = (
   Cypress.env("react_url") || "http://localhost:4455"

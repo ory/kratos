@@ -37,7 +37,6 @@ import (
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/internal"
 	"github.com/ory/kratos/internal/testhelpers"
-	"github.com/ory/kratos/session"
 	"github.com/ory/kratos/x"
 )
 
@@ -93,13 +92,14 @@ func newHydra(t *testing.T, loginUI string, consentUI string) (hydraAdmin string
 
 	hydraResource, err := pool.RunWithOptions(&dockertest.RunOptions{
 		Repository: "oryd/hydra",
-		Tag:        "v2.0.0",
+		Tag:        "v2.2.0",
 		Env: []string{
 			"DSN=memory",
 			fmt.Sprintf("URLS_SELF_ISSUER=http://127.0.0.1:%d/", publicPort),
 			"URLS_LOGIN=" + loginUI,
 			"URLS_CONSENT=" + consentUI,
 			"LOG_LEAK_SENSITIVE_VALUES=true",
+			"SECRETS_SYSTEM=someverylongsecretthatis32byteslong",
 		},
 		Cmd:          []string{"serve", "all", "--dev"},
 		ExposedPorts: []string{"4444/tcp", "4445/tcp"},
@@ -340,9 +340,9 @@ type AcceptWrongSubject struct {
 	h *hydra.DefaultHydra
 }
 
-func (h *AcceptWrongSubject) AcceptLoginRequest(ctx context.Context, loginChallenge string, subject string, amr session.AuthenticationMethods) (string, error) {
-	hackerman := uuid.Must(uuid.NewV4())
-	return h.h.AcceptLoginRequest(ctx, loginChallenge, hackerman.String(), amr)
+func (h *AcceptWrongSubject) AcceptLoginRequest(ctx context.Context, params hydra.AcceptLoginRequestParams) (string, error) {
+	params.IdentityID = uuid.Must(uuid.NewV4()).String()
+	return h.h.AcceptLoginRequest(ctx, params)
 }
 
 func (h *AcceptWrongSubject) GetLoginRequest(ctx context.Context, loginChallenge string) (*hydraclientgo.OAuth2LoginRequest, error) {
