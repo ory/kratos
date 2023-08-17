@@ -44,9 +44,8 @@ context("Mobile Profile", () => {
           '*[data-testid="settings-password"] div[data-testid="submit-form"]',
         ).should("not.have.attr", "data-focusable", "false")
         cy.get('*[data-testid="logout"]').click()
-        cy.noSession()
+        cy.get('input[data-testid="identifier"]').should("exist")
 
-        cy.visit(MOBILE_URL + "/Home")
         cy.loginMobile({ email, password })
         cy.get('[data-testid="session-token"]').should("not.exist")
         cy.loginMobile({ email, password: newPassword })
