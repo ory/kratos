@@ -957,7 +957,7 @@ func TestIdentitySchemaValidation(t *testing.T) {
 	testWatch := func(t *testing.T, ctx context.Context, cmd *cobra.Command, identity *configFile) (*config.Config, *test.Hook, func([]map[string]string)) {
 		tdir := t.TempDir()
 		assert.NoError(t,
-			os.MkdirAll(tdir, // DO NOT CHANGE THIS: https://github.com/fsnotify/fsnotify/issues/340
+			os.MkdirAll(tdir,
 				os.ModePerm))
 		configFileName := randx.MustString(8, randx.Alpha)
 		tmpConfig, err := os.Create(filepath.Join(tdir, configFileName+".config.yaml"))
