@@ -48,7 +48,7 @@ type (
 )
 
 func NewBuilder(ctx context.Context, config json.RawMessage, deps Dependencies) (_ *Builder, err error) {
-	ctx, span := deps.Tracer(ctx).Tracer().Start(ctx, "request.NewBuilder")
+	_, span := deps.Tracer(ctx).Tracer().Start(ctx, "request.NewBuilder")
 	defer otelx.End(span, &err)
 
 	c, err := parseConfig(config)
