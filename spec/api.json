@@ -968,7 +968,8 @@
           "totp",
           "oidc",
           "webauthn",
-          "lookup_secret"
+          "lookup_secret",
+          "code"
         ],
         "title": "CredentialsType  represents several different credential types, like password credentials, passwordless credentials,",
         "type": "string"
@@ -3650,7 +3651,8 @@
                   "totp",
                   "oidc",
                   "webauthn",
-                  "lookup_secret"
+                  "lookup_secret",
+                  "code"
                 ],
                 "type": "string"
               },
