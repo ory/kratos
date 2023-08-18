@@ -33,7 +33,7 @@ func (c *courier) dispatchMailerEmail(ctx context.Context, msg Message) (err err
 	ctx, span := c.deps.Tracer(ctx).Tracer().Start(ctx, "courier.http.dispatchMailerEmail")
 	defer otelx.End(span, &err)
 
-	builder, err := request.NewBuilder(c.httpClient.RequestConfig, c.deps)
+	builder, err := request.NewBuilder(ctx, c.httpClient.RequestConfig, c.deps)
 	if err != nil {
 		return err
 	}
