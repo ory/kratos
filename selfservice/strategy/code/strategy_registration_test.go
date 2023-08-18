@@ -168,7 +168,6 @@ func TestRegistrationCodeStrategy(t *testing.T) {
 		// so we delete it here.
 		// the custom vals func can add it again if needed.
 		values.Del("resend")
-
 		values.Set("traits.email", s.email)
 		vals(&values)
 
