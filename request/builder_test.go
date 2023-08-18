@@ -18,6 +18,7 @@ import (
 	"github.com/ory/kratos/x"
 	"github.com/ory/x/jsonnetsecure"
 	"github.com/ory/x/logrusx"
+	"github.com/ory/x/otelx"
 )
 
 type testRequestBody struct {
@@ -296,6 +297,7 @@ func newTestDependencyProvider(t *testing.T) *testDependencyProvider {
 	return &testDependencyProvider{
 		SimpleLoggerWithClient: x.SimpleLoggerWithClient{
 			L: logrusx.New("kratos", "test"),
+			T: otelx.NewNoop(nil, nil),
 		},
 		TestProvider: jsonnetsecure.NewTestProvider(t),
 	}
