@@ -7,6 +7,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/ory/herodot"
@@ -38,7 +39,14 @@ var _ registration.Strategy = new(Strategy)
 
 type MetadataType string
 
+type VerifiedAddress struct {
+	Value string                         `json:"value"`
+	Via   identity.VerifiableAddressType `json:"via"`
+}
+
 const (
+	VerifiedAddressesKey = "verified_addresses"
+
 	PublicMetadata MetadataType = "identity.metadata_public"
 	AdminMetadata  MetadataType = "identity.metadata_admin"
 )
@@ -249,7 +257,7 @@ func (s *Strategy) processRegistration(w http.ResponseWriter, r *http.Request, r
 		return nil, s.handleError(w, r, rf, provider.Config().ID, nil, err)
 	}
 
-	i, err := s.createIdentity(w, r, rf, claims, provider, container, jn)
+	i, va, err := s.createIdentity(w, r, rf, claims, provider, container, jn)
 	if err != nil {
 		return nil, s.handleError(w, r, rf, provider.Config().ID, nil, err)
 	}
@@ -257,6 +265,17 @@ func (s *Strategy) processRegistration(w http.ResponseWriter, r *http.Request, r
 	// Validate the identity itself
 	if err := s.d.IdentityValidator().Validate(r.Context(), i); err != nil {
 		return nil, s.handleError(w, r, rf, provider.Config().ID, i.Traits, err)
+	}
+
+	for n := range i.VerifiableAddresses {
+		verifiable := &i.VerifiableAddresses[n]
+		for _, verified := range va {
+			if verifiable.Via == verified.Via && verifiable.Value == verified.Value {
+				verifiable.Status = identity.VerifiableAddressStatusCompleted
+				verifiable.Verified = true
+				verifiable.VerifiedAt = i.StateChangedAt
+			}
+		}
 	}
 
 	var it string
@@ -289,34 +308,39 @@ func (s *Strategy) processRegistration(w http.ResponseWriter, r *http.Request, r
 	return nil, nil
 }
 
-func (s *Strategy) createIdentity(w http.ResponseWriter, r *http.Request, a *registration.Flow, claims *Claims, provider Provider, container *authCodeContainer, jn *bytes.Buffer) (*identity.Identity, error) {
+func (s *Strategy) createIdentity(w http.ResponseWriter, r *http.Request, a *registration.Flow, claims *Claims, provider Provider, container *authCodeContainer, jn *bytes.Buffer) (*identity.Identity, []VerifiedAddress, error) {
 	var jsonClaims bytes.Buffer
 	if err := json.NewEncoder(&jsonClaims).Encode(claims); err != nil {
-		return nil, s.handleError(w, r, a, provider.Config().ID, nil, err)
+		return nil, nil, s.handleError(w, r, a, provider.Config().ID, nil, err)
 	}
 
 	vm, err := s.d.JsonnetVM(r.Context())
 	if err != nil {
-		return nil, s.handleError(w, r, a, provider.Config().ID, nil, err)
+		return nil, nil, s.handleError(w, r, a, provider.Config().ID, nil, err)
 	}
 
 	vm.ExtCode("claims", jsonClaims.String())
 	evaluated, err := vm.EvaluateAnonymousSnippet(provider.Config().Mapper, jn.String())
 	if err != nil {
-		return nil, s.handleError(w, r, a, provider.Config().ID, nil, err)
+		return nil, nil, s.handleError(w, r, a, provider.Config().ID, nil, err)
 	}
 
 	i := identity.NewIdentity(s.d.Config().DefaultIdentityTraitsSchemaID(r.Context()))
 	if err := s.setTraits(w, r, a, claims, provider, container, evaluated, i); err != nil {
-		return nil, s.handleError(w, r, a, provider.Config().ID, i.Traits, err)
+		return nil, nil, s.handleError(w, r, a, provider.Config().ID, i.Traits, err)
 	}
 
 	if err := s.setMetadata(evaluated, i, PublicMetadata); err != nil {
-		return nil, s.handleError(w, r, a, provider.Config().ID, i.Traits, err)
+		return nil, nil, s.handleError(w, r, a, provider.Config().ID, i.Traits, err)
 	}
 
 	if err := s.setMetadata(evaluated, i, AdminMetadata); err != nil {
-		return nil, s.handleError(w, r, a, provider.Config().ID, i.Traits, err)
+		return nil, nil, s.handleError(w, r, a, provider.Config().ID, i.Traits, err)
+	}
+
+	va, err := s.extractVerifiedAddresses(evaluated)
+	if err != nil {
+		return nil, nil, s.handleError(w, r, a, provider.Config().ID, i.Traits, err)
 	}
 
 	s.d.Logger().
@@ -326,7 +350,7 @@ func (s *Strategy) createIdentity(w http.ResponseWriter, r *http.Request, a *reg
 		WithSensitiveField("mapper_jsonnet_output", evaluated).
 		WithField("mapper_jsonnet_url", provider.Config().Mapper).
 		Debug("OpenID Connect Jsonnet mapper completed.")
-	return i, nil
+	return i, va, nil
 }
 
 func (s *Strategy) setTraits(w http.ResponseWriter, r *http.Request, a *registration.Flow, claims *Claims, provider Provider, container *authCodeContainer, evaluated string, i *identity.Identity) error {
@@ -369,4 +393,27 @@ func (s *Strategy) setMetadata(evaluated string, i *identity.Identity, m Metadat
 	}
 
 	return nil
+}
+
+func (s *Strategy) extractVerifiedAddresses(evaluated string) ([]VerifiedAddress, error) {
+	if verifiedAddresses := gjson.Get(evaluated, VerifiedAddressesKey); verifiedAddresses.Exists() {
+		if !verifiedAddresses.IsArray() {
+			return nil, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("OpenID Connect Jsonnet mapper did not return an array for key %s. Please check your Jsonnet code!", VerifiedAddressesKey))
+		}
+
+		var va []VerifiedAddress
+		if err := json.Unmarshal([]byte(verifiedAddresses.Raw), &va); err != nil {
+			return nil, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("Failed to unmarshal value for key %s. Please check your Jsonnet code!", VerifiedAddressesKey).WithDebugf("%s", err))
+		}
+
+		for _, va := range va {
+			if va.Via == identity.VerifiableAddressTypeEmail {
+				va.Value = strings.ToLower(strings.TrimSpace(va.Value))
+			}
+		}
+
+		return va, nil
+	}
+
+	return nil, nil
 }

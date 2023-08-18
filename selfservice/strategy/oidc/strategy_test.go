@@ -804,6 +804,38 @@ func TestStrategy(t *testing.T) {
 		})
 	})
 
+	t.Run("case=verified addresses should be respected", func(t *testing.T) {
+		scope = []string{"openid"}
+
+		testhelpers.SetDefaultIdentitySchema(conf, "file://./stub/registration-verifiable-email.schema.json")
+
+		var assertVerifiedEmail = func(t *testing.T, body []byte, verified bool) {
+			assert.Len(t, gjson.GetBytes(body, "identity.verifiable_addresses").Array(), 1, "%s", body)
+			assert.Equal(t, "email", gjson.GetBytes(body, "identity.verifiable_addresses.0.via").String(), "%s", body)
+			assert.Equal(t, subject, gjson.GetBytes(body, "identity.verifiable_addresses.0.value").String(), "%s", body)
+			assert.Equal(t, verified, gjson.GetBytes(body, "identity.verifiable_addresses.0.verified").Bool(), "%s", body)
+		}
+
+		t.Run("case=should have verified address when subject matches", func(t *testing.T) {
+			subject = "verified-email@ory.sh"
+			r := newBrowserRegistrationFlow(t, returnTS.URL, time.Minute)
+			action := assertFormValues(t, r.ID, "valid")
+			res, body := makeRequest(t, "valid", action, url.Values{})
+			assertIdentity(t, res, body)
+			assertVerifiedEmail(t, body, true)
+		})
+
+		t.Run("case=should have unverified address when subject does not match", func(t *testing.T) {
+			subject = "changed-verified-email@ory.sh"
+			r := newBrowserRegistrationFlow(t, returnTS.URL, time.Minute)
+			action := assertFormValues(t, r.ID, "valid")
+			res, body := makeRequest(t, "valid", action, url.Values{"traits.subject": {"unverified-email@ory.sh"}})
+			subject = "unverified-email@ory.sh"
+			assertIdentity(t, res, body)
+			assertVerifiedEmail(t, body, false)
+		})
+	})
+
 	t.Run("method=TestPopulateSignUpMethod", func(t *testing.T) {
 		conf.MustSet(ctx, config.ViperKeyPublicBaseURL, "https://foo/")
 
