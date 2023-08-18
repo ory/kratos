@@ -74,10 +74,10 @@ func (m *RegistryDefault) VerificationStrategies(ctx context.Context) (verificat
 	return
 }
 
-func (m *RegistryDefault) AllVerificationStrategies() (recoveryStrategies verification.Strategies) {
+func (m *RegistryDefault) AllVerificationStrategies() (verificationStrategies verification.Strategies) {
 	for _, strategy := range m.selfServiceStrategies() {
 		if s, ok := strategy.(verification.Strategy); ok {
-			recoveryStrategies = append(recoveryStrategies, s)
+			verificationStrategies = append(verificationStrategies, s)
 		}
 	}
 

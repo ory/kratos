@@ -154,7 +154,7 @@ func NewFlow(conf *config.Config, exp time.Duration, csrf string, r *http.Reques
 	}, nil
 }
 
-func (f Flow) TableName(ctx context.Context) string {
+func (f Flow) TableName(context.Context) string {
 	return "selfservice_registration_flows"
 }
 
@@ -227,10 +227,6 @@ func (f *Flow) AddContinueWith(c flow.ContinueWith) {
 
 func (f *Flow) ContinueWith() []flow.ContinueWith {
 	return f.ContinueWithItems
-}
-
-func (f Flow) GetOAuth2LoginChallenge() sqlxx.NullString {
-	return f.OAuth2LoginChallenge
 }
 
 func (f *Flow) SecureRedirectToOpts(ctx context.Context, cfg config.Provider) (opts []x.SecureRedirectOption) {

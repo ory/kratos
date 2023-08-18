@@ -4,6 +4,7 @@
 package verification
 
 import (
+	"context"
 	"net/http"
 	"time"
 
@@ -47,6 +48,7 @@ type (
 		identity.PrivilegedPoolProvider
 		config.Provider
 		hydra.Provider
+		session.PersistenceProvider
 		session.ManagementProvider
 
 		x.CSRFTokenGeneratorProvider
@@ -396,7 +398,8 @@ func (h *Handler) updateVerificationFlow(w http.ResponseWriter, r *http.Request,
 		return
 	}
 
-	f, err := h.d.VerificationFlowPersister().GetVerificationFlow(r.Context(), rid)
+	ctx := r.Context()
+	f, err := h.d.VerificationFlowPersister().GetVerificationFlow(ctx, rid)
 	if errors.Is(err, sqlcon.ErrNoRows) {
 		h.d.VerificationFlowErrorHandler().WriteFlowError(w, r, nil, node.DefaultGroup, errors.WithStack(herodot.ErrNotFound.WithReasonf("The verification request could not be found. Please restart the flow.")))
 		return
@@ -441,19 +444,20 @@ func (h *Handler) updateVerificationFlow(w http.ResponseWriter, r *http.Request,
 	if x.IsBrowserRequest(r) {
 		// Special case: If we ended up here through a OAuth2 login challenge, we need to accept the login request
 		// and redirect back to the OAuth2 provider.
-		if found && f.OAuth2LoginChallenge.String() != "" {
-			s, err := h.d.SessionManager().FetchFromRequest(r.Context(), r)
-			if err != nil {
-				h.d.VerificationFlowErrorHandler().WriteFlowError(w, r, f, node.DefaultGroup, err)
+		if f.OAuth2LoginChallenge.String() != "" {
+			sess := h.maybeGetSession(ctx, f)
+			if sess == nil {
+				h.d.VerificationFlowErrorHandler().WriteFlowError(w, r, f, node.DefaultGroup,
+					herodot.ErrBadRequest.WithReasonf("No session was found for this flow. Please retry the authentication."))
 				return
 			}
 
-			callbackURL, err := h.d.Hydra().AcceptLoginRequest(r.Context(),
+			callbackURL, err := h.d.Hydra().AcceptLoginRequest(ctx,
 				hydra.AcceptLoginRequestParams{
 					LoginChallenge:        string(f.OAuth2LoginChallenge),
-					IdentityID:            s.IdentityID.String(),
-					SessionID:             s.ID.String(),
-					AuthenticationMethods: s.AMR,
+					IdentityID:            sess.IdentityID.String(),
+					SessionID:             sess.ID.String(),
+					AuthenticationMethods: sess.AMR,
 				})
 			if err != nil {
 				h.d.VerificationFlowErrorHandler().WriteFlowError(w, r, f, node.DefaultGroup, err)
@@ -464,15 +468,28 @@ func (h *Handler) updateVerificationFlow(w http.ResponseWriter, r *http.Request,
 			return
 		}
 
-		http.Redirect(w, r, f.AppendTo(h.d.Config().SelfServiceFlowVerificationUI(r.Context())).String(), http.StatusSeeOther)
+		http.Redirect(w, r, f.AppendTo(h.d.Config().SelfServiceFlowVerificationUI(ctx)).String(), http.StatusSeeOther)
 		return
 	}
 
-	updatedFlow, err := h.d.VerificationFlowPersister().GetVerificationFlow(r.Context(), f.ID)
+	updatedFlow, err := h.d.VerificationFlowPersister().GetVerificationFlow(ctx, f.ID)
 	if err != nil {
 		h.d.VerificationFlowErrorHandler().WriteFlowError(w, r, f, g, err)
 		return
 	}
 
 	h.d.Writer().Write(w, r, updatedFlow)
+}
+
+// maybeGetSession returns the session if it was found in the flow or nil otherwise.
+func (h *Handler) maybeGetSession(ctx context.Context, f *Flow) *session.Session {
+	if !f.SessionID.Valid {
+		return nil
+	}
+	s, err := h.d.SessionPersister().GetSession(ctx, f.SessionID.UUID, session.ExpandNothing)
+	if err != nil {
+		return nil
+	}
+
+	return s
 }
