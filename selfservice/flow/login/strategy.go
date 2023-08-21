@@ -25,6 +25,7 @@ type Strategy interface {
 	PopulateLoginMethod(r *http.Request, requestedAAL identity.AuthenticatorAssuranceLevel, sr *Flow) error
 	Login(w http.ResponseWriter, r *http.Request, f *Flow, identityID uuid.UUID) (i *identity.Identity, err error)
 	CompletedAuthenticationMethod(ctx context.Context) session.AuthenticationMethod
+	CredentialType() identity.CredentialsType
 }
 
 type Strategies []Strategy

@@ -4,6 +4,7 @@
 package login
 
 import (
+	"github.com/ory/x/sqlcon"
 	"net/http"
 	"net/url"
 	"time"
@@ -56,6 +57,7 @@ type (
 		config.Provider
 		ErrorHandlerProvider
 		sessiontokenexchange.PersistenceProvider
+		identity.PrivilegedPoolProvider
 	}
 	HandlerProvider interface {
 		LoginHandler() *Handler
@@ -187,8 +189,20 @@ preLoginHook:
 		f.UI.Messages.Add(text.NewInfoLoginMFA())
 	}
 
+	loginHint := r.URL.Query().Get("login_hint")
+	searchForLoginHints := h.d.Config().LoginHintEnabled(r.Context()) && len(loginHint) > 0
+
 	var s Strategy
 	for _, s = range h.d.LoginStrategies(r.Context()) {
+		if searchForLoginHints {
+			if _, _, err := h.d.PrivilegedIdentityPool().FindByCredentialsIdentifier(r.Context(), s.CredentialType(), loginHint); errors.Is(err, sqlcon.ErrNoRows) {
+				continue
+			} else if err != nil {
+				// TODO handle error?
+			}
+			// credential exists, continue to populate the method
+		}
+
 		if err := s.PopulateLoginMethod(r, f.RequestedAAL, f); err != nil {
 			return nil, nil, err
 		}

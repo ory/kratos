@@ -1467,3 +1467,7 @@ func (p *Config) getTLSCertificates(ctx context.Context, daemon, certBase64, key
 func (p *Config) GetProvider(ctx context.Context) *configx.Provider {
 	return p.c.Config(ctx, p.p)
 }
+
+func (p *Config) LoginHintEnabled(context.Context) bool {
+	return true
+}

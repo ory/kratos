@@ -156,3 +156,7 @@ func (s *Strategy) PopulateLoginMethod(r *http.Request, requestedAAL identity.Au
 
 	return nil
 }
+
+func (s *Strategy) CredentialType() identity.CredentialsType {
+	return identity.CredentialsTypePassword
+}
