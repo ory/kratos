@@ -373,6 +373,10 @@ func (s *Strategy) recoveryIssueSession(w http.ResponseWriter, r *http.Request, 
 		return s.retryRecoveryFlowWithError(w, r, f.Type, err)
 	}
 
+	if err := s.deps.RecoveryExecutor().PostRecoveryHook(w, r, f, sess); err != nil {
+		return s.retryRecoveryFlowWithError(w, r, f.Type, err)
+	}
+
 	// TODO: How does this work with Mobile?
 	if err := s.deps.SessionManager().UpsertAndIssueCookie(ctx, w, r, sess); err != nil {
 		return s.retryRecoveryFlowWithError(w, r, f.Type, err)
@@ -391,10 +395,6 @@ func (s *Strategy) recoveryIssueSession(w http.ResponseWriter, r *http.Request, 
 	sf.RequestURL, err = x.TakeOverReturnToParameter(f.RequestURL, sf.RequestURL, returnTo)
 	if err != nil {
 		return s.retryRecoveryFlowWithError(w, r, flow.TypeBrowser, err)
-	}
-
-	if err := s.deps.RecoveryExecutor().PostRecoveryHook(w, r, f, sess); err != nil {
-		return s.retryRecoveryFlowWithError(w, r, f.Type, err)
 	}
 
 	config := s.deps.Config()

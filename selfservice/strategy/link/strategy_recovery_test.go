@@ -823,6 +823,72 @@ func TestRecovery(t *testing.T) {
 		assert.Nil(t, addr.VerifiedAt)
 		assert.Equal(t, identity.VerifiableAddressStatusPending, addr.Status)
 	})
+
+	t.Run("description=should recover if post recovery hook is successful", func(t *testing.T) {
+		conf.MustSet(ctx, config.HookStrategyKey(config.ViperKeySelfServiceRecoveryAfter, config.HookGlobal), []config.SelfServiceHook{{Name: "err", Config: []byte(`{}`)}})
+		t.Cleanup(func() {
+			conf.MustSet(ctx, config.HookStrategyKey(config.ViperKeySelfServiceRecoveryAfter, config.HookGlobal), nil)
+		})
+
+		recoveryEmail := testhelpers.RandomEmail()
+		createIdentityToRecover(t, reg, recoveryEmail)
+
+		var check = func(t *testing.T, actual string) {
+			message := testhelpers.CourierExpectMessage(t, reg, recoveryEmail, "Recover access to your account")
+			recoveryLink := testhelpers.CourierExpectLinkInMessage(t, message, 1)
+
+			cl := testhelpers.NewClientWithCookies(t)
+			cl.CheckRedirect = func(req *http.Request, via []*http.Request) error {
+				return http.ErrUseLastResponse
+			}
+			res, err := cl.Get(recoveryLink)
+			require.NoError(t, err)
+			require.NoError(t, res.Body.Close())
+			assert.Equal(t, http.StatusSeeOther, res.StatusCode)
+			require.Len(t, cl.Jar.Cookies(urlx.ParseOrPanic(public.URL)), 2)
+			cookies := spew.Sdump(cl.Jar.Cookies(urlx.ParseOrPanic(public.URL)))
+			assert.Contains(t, cookies, "ory_kratos_session")
+		}
+
+		var values = func(v url.Values) {
+			v.Set("email", recoveryEmail)
+		}
+
+		check(t, expectSuccess(t, nil, false, false, values))
+	})
+
+	t.Run("description=should not be able to recover if post recovery hook fails", func(t *testing.T) {
+		conf.MustSet(ctx, config.HookStrategyKey(config.ViperKeySelfServiceRecoveryAfter, config.HookGlobal), []config.SelfServiceHook{{Name: "err", Config: []byte(`{"ExecutePostRecoveryHook": "err"}`)}})
+		t.Cleanup(func() {
+			conf.MustSet(ctx, config.HookStrategyKey(config.ViperKeySelfServiceRecoveryAfter, config.HookGlobal), nil)
+		})
+
+		recoveryEmail := testhelpers.RandomEmail()
+		createIdentityToRecover(t, reg, recoveryEmail)
+
+		var check = func(t *testing.T, actual string) {
+			message := testhelpers.CourierExpectMessage(t, reg, recoveryEmail, "Recover access to your account")
+			recoveryLink := testhelpers.CourierExpectLinkInMessage(t, message, 1)
+
+			cl := testhelpers.NewClientWithCookies(t)
+			cl.CheckRedirect = func(req *http.Request, via []*http.Request) error {
+				return http.ErrUseLastResponse
+			}
+			res, err := cl.Get(recoveryLink)
+			require.NoError(t, err)
+			require.NoError(t, res.Body.Close())
+			assert.Equal(t, http.StatusSeeOther, res.StatusCode)
+			require.Len(t, cl.Jar.Cookies(urlx.ParseOrPanic(public.URL)), 1)
+			cookies := spew.Sdump(cl.Jar.Cookies(urlx.ParseOrPanic(public.URL)))
+			assert.NotContains(t, cookies, "ory_kratos_session")
+		}
+
+		var values = func(v url.Values) {
+			v.Set("email", recoveryEmail)
+		}
+
+		check(t, expectSuccess(t, nil, false, false, values))
+	})
 }
 
 func TestDisabledEndpoint(t *testing.T) {
