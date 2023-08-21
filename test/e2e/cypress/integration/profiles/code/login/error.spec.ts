@@ -132,7 +132,9 @@ context("Login error messages with code method", () => {
           "required",
         )
 
-        cy.get('form[data-testid="login-flow-code"] input[name="identifier"]').clear()
+        cy.get(
+          'form[data-testid="login-flow-code"] input[name="identifier"]',
+        ).clear()
 
         cy.submitCodeForm()
         cy.get('[data-testid="ui/message/4000002"]').should(
@@ -147,14 +149,13 @@ context("Login error messages with code method", () => {
             registration_enabled: true,
             login_enabled: true,
             config: {
-              lifespan: "1ns"
+              lifespan: "1ns",
             },
           }
           return config
         }).then(() => {
           cy.visit(route)
         })
-
 
         cy.get("@email").then((email) => {
           cy.get(
@@ -167,9 +168,9 @@ context("Login error messages with code method", () => {
 
         cy.get("@email").then((email) => {
           cy.getLoginCodeFromEmail(email.toString()).then((code) => {
-            cy.get('form[data-testid="login-flow-code"] input[name="code"]').type(
-              code,
-            )
+            cy.get(
+              'form[data-testid="login-flow-code"] input[name="code"]',
+            ).type(code)
           })
         })
 
@@ -185,14 +186,12 @@ context("Login error messages with code method", () => {
             registration_enabled: true,
             login_enabled: true,
             config: {
-              lifespan: "1h"
+              lifespan: "1h",
             },
           }
           return config
         })
       })
-
-
     })
   })
 })
