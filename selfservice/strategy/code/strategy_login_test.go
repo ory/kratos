@@ -288,7 +288,7 @@ func TestLoginCodeStrategy(t *testing.T) {
 			t.Run("case=code should expire", func(t *testing.T) {
 				ctx := context.Background()
 
-				conf.MustSet(ctx, config.ViperKeySelfServiceStrategyConfig+".code.config.lifespan", "10ns")
+				conf.MustSet(ctx, config.ViperKeySelfServiceStrategyConfig+".code.config.lifespan", "1ns")
 
 				t.Cleanup(func() {
 					conf.MustSet(ctx, config.ViperKeySelfServiceStrategyConfig+".code.config.lifespan", "1h")
@@ -317,7 +317,7 @@ func TestLoginCodeStrategy(t *testing.T) {
 						// with browser clients we redirect back to the UI with a new flow id as a query parameter
 						require.Equal(t, http.StatusOK, resp.StatusCode)
 						require.Equal(t, conf.SelfServiceFlowLoginUI(ctx).Path, resp.Request.URL.Path)
-						require.NotEqual(t, s.flowID, resp.Request.URL.Query().Get("flow"))
+						require.Equal(t, s.flowID, resp.Request.URL.Query().Get("flow"))
 					}
 				})
 			})

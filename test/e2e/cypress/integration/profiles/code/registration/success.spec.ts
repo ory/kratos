@@ -1,7 +1,6 @@
 // Copyright © 2023 Ory Corp
 // SPDX-License-Identifier: Apache-2.0
 
-import { should } from "chai"
 import { appPrefix, APP_URL, gen } from "../../../../helpers"
 import { routes as express } from "../../../../helpers/express"
 import { routes as react } from "../../../../helpers/react"
@@ -25,9 +24,6 @@ context("Registration success with code method", () => {
         cy.deleteMail()
         cy.useConfigProfile(profile)
         cy.proxy(app)
-        cy.setIdentitySchema(
-          "file://test/e2e/profiles/code/identity.traits.schema.json",
-        )
         cy.setPostCodeRegistrationHooks([])
         cy.setupHooks("login", "after", "code", [])
       })
