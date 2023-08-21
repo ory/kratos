@@ -383,7 +383,7 @@ Cypress.Commands.add(
 
 Cypress.Commands.add(
   "registerWithCode",
-  ({ email = gen.email(), code = undefined, query = {} } = {}) => {
+  ({ email = gen.email(), code = undefined, traits = {}, query = {} } = {}) => {
     console.log("Creating user account: ", { email })
 
     cy.clearAllCookies()
@@ -409,6 +409,7 @@ Cypress.Commands.add(
           body: mergeFields(form, {
             method: "code",
             "traits.email": email,
+            ...traits,
             ...(code && { code }),
           }),
           url: form.action,
@@ -423,21 +424,32 @@ Cypress.Commands.add(
                   f.group === "code" && f.attributes.name === "traits.email",
               ).attributes.value,
             ).to.eq(email)
-            return cy.getRegistrationCodeFromEmail(email).then((code) => {
-              return cy.request({
-                headers: {
-                  Accept: "application/json",
-                },
-                method: form.method,
-                body: mergeFields(form, {
-                  method: "code",
-                  "traits.email": email,
-                  code,
-                }),
-                url: form.action,
-                followRedirect: false,
+
+            const expectedCount =
+              Object.keys(traits)
+                .map((k) => (k.includes("email") ? k : null))
+                .filter(Boolean).length + 1
+
+            return cy
+              .getRegistrationCodeFromEmail(email, {
+                expectedCount: expectedCount,
               })
-            })
+              .then((code) => {
+                return cy.request({
+                  headers: {
+                    Accept: "application/json",
+                  },
+                  method: form.method,
+                  body: mergeFields(form, {
+                    method: "code",
+                    "traits.email": email,
+                    code,
+                    ...traits,
+                  }),
+                  url: form.action,
+                  followRedirect: false,
+                })
+              })
           } else {
             expect(body.session).to.contain(email)
           }

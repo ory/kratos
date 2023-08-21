@@ -255,7 +255,6 @@ context("Registration success with code method", () => {
         }
 
         cy.getSession().should((session) => {
-          console.dir({ session })
           const { identity } = session
           expect(identity.id).to.not.be.empty
           expect(identity.verifiable_addresses).to.have.length(2)

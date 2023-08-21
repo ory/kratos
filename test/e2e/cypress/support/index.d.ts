@@ -37,7 +37,7 @@ declare global {
       getSession(opts?: {
         expectAal?: "aal2" | "aal1"
         expectMethods?: Array<
-          "password" | "webauthn" | "lookup_secret" | "totp"
+          "password" | "webauthn" | "lookup_secret" | "totp" | "code"
         >
       }): Chainable<KratosSession>
 
@@ -78,6 +78,7 @@ declare global {
       registerWithCode(opts: {
         email: string
         code?: string
+        traits?: { [key: string]: any }
         query?: { [key: string]: string }
       }): Chainable<Response<void>>
 
