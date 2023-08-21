@@ -20,170 +20,179 @@ context("Login error messages with code method", () => {
   ].forEach(({ route, profile, app }) => {
     describe(`for app ${app}`, () => {
       before(() => {
-        cy.deleteMail()
-        cy.useConfigProfile(profile)
         cy.proxy(app)
-        cy.setIdentitySchema(
-          "file://test/e2e/profiles/code/identity.traits.schema.json",
+      })
+
+      beforeEach(() => {
+        cy.useConfigProfile(profile)
+        cy.deleteMail()
+        cy.clearAllCookies()
+
+        const email = gen.email()
+        cy.wrap(email).as("email")
+        cy.registerWithCode({ email })
+
+        cy.deleteMail()
+        cy.clearAllCookies()
+        cy.visit(route)
+      })
+
+      it("should show error message when account identifier does not exist", () => {
+        const email = gen.email()
+
+        cy.get(
+          'form[data-testid="login-flow-code"] input[name="identifier"]',
+        ).type(email)
+        cy.submitCodeForm()
+
+        cy.url().should("contain", "login")
+
+        cy.get('[data-testid="ui/message/4000029"]').should(
+          "contain",
+          "This account does not exist or has not setup sign in with code.",
         )
       })
-    })
 
-    beforeEach(() => {
-      cy.deleteMail()
-      cy.clearAllCookies()
+      it("should show error message when code is invalid", () => {
+        cy.get("@email").then((email) => {
+          cy.get('form[data-testid="login-flow-code"] input[name="identifier"]')
+            .clear()
+            .type(email.toString())
+        })
 
-      cy.visit(route)
-      const email = gen.email()
-      cy.wrap(email).as("email")
-      cy.registerWithCode({ email })
+        cy.submitCodeForm()
 
-      cy.deleteMail()
-      cy.clearAllCookies()
-    })
+        cy.url().should("contain", "login")
+        cy.get('[data-testid="ui/message/1010014"]').should(
+          "contain",
+          "An email containing a code has been sent to the email address you provided",
+        )
 
-    it("should show error message when account identifier does not exist", () => {
-      const email = gen.email()
+        cy.get('form[data-testid="login-flow-code"] input[name="code"]').type(
+          "invalid-code",
+        )
+        cy.submitCodeForm()
 
-      cy.get(
-        'form[data-testid="login-flow-code"] input[name="identifier"]',
-      ).type(email)
-      cy.submitCodeForm()
+        cy.get('[data-testid="ui/message/4010008"]').should(
+          "contain",
+          "The login code is invalid or has already been used. Please try again.",
+        )
+      })
 
-      cy.url().should("contain", "login")
+      it("should show error message when identifier has changed", () => {
+        cy.get("@email").then((email) => {
+          cy.get(
+            'form[data-testid="login-flow-code"] input[name="identifier"]',
+          ).type(email.toString())
+        })
 
-      cy.get('[data-testid="ui/message/4000028"]').should(
-        "contain",
-        "This account does not exist or has not setup sign in with code.",
-      )
-    })
+        cy.submitCodeForm()
 
-    it("should show error message when code is invalid", () => {
-      cy.get("@email").then((email) => {
+        cy.url().should("contain", "login")
         cy.get('form[data-testid="login-flow-code"] input[name="identifier"]')
           .clear()
-          .type(email.toString())
+          .type(gen.email())
+        cy.get('form[data-testid="login-flow-code"] input[name="code"]').type(
+          "invalid-code",
+        )
+        cy.submitCodeForm()
+
+        cy.get('[data-testid="ui/message/4000029"]').should(
+          "contain",
+          "This account does not exist or has not setup sign in with code.",
+        )
       })
 
-      cy.submitCodeForm()
+      it("should show error message when required fields are missing", () => {
+        cy.get("@email").then((email) => {
+          cy.get(
+            'form[data-testid="login-flow-code"] input[name="identifier"]',
+          ).type(email.toString())
+        })
 
-      cy.url().should("contain", "login")
-      cy.get('[data-testid="ui/message/1010014"]').should(
-        "contain",
-        "An email containing a code has been sent to the email address you provided",
-      )
+        cy.submitCodeForm()
+        cy.url().should("contain", "login")
 
-      cy.get('form[data-testid="login-flow-code"] input[name="code"]').type(
-        "invalid-code",
-      )
-      cy.submitCodeForm()
+        cy.removeAttribute(
+          ['form[data-testid="login-flow-code"] input[name="code"]'],
+          "required",
+        )
+        cy.submitCodeForm()
 
-      cy.get('[data-testid="ui/message/4010008"]').should(
-        "contain",
-        "The login code is invalid or has already been used. Please try again.",
-      )
-    })
+        cy.get('[data-testid="ui/message/4000002"]').should(
+          "contain",
+          "Property code is missing",
+        )
 
-    it("should show error message when identifier has changed", () => {
-      cy.get("@email").then((email) => {
-        cy.get(
-          'form[data-testid="login-flow-code"] input[name="identifier"]',
-        ).type(email.toString())
+        cy.get('form[data-testid="login-flow-code"] input[name="code"]').type(
+          "invalid-code",
+        )
+        cy.removeAttribute(
+          ['form[data-testid="login-flow-code"] input[name="identifier"]'],
+          "required",
+        )
+
+        cy.get('form[data-testid="login-flow-code"] input[name="identifier"]').clear()
+
+        cy.submitCodeForm()
+        cy.get('[data-testid="ui/message/4000002"]').should(
+          "contain",
+          "Property identifier is missing",
+        )
       })
 
-      cy.submitCodeForm()
+      it("should show error message when code is expired", () => {
+        cy.updateConfigFile((config) => {
+          config.selfservice.methods.code = {
+            registration_enabled: true,
+            login_enabled: true,
+            config: {
+              lifespan: "1ns"
+            },
+          }
+          return config
+        }).then(() => {
+          cy.visit(route)
+        })
 
-      cy.url().should("contain", "login")
-      cy.get('form[data-testid="login-flow-code"] input[name="identifier"]')
-        .clear()
-        .type(gen.email())
-      cy.get('form[data-testid="login-flow-code"] input[name="code"]').type(
-        "invalid-code",
-      )
-      cy.submitCodeForm()
 
-      cy.get('[data-testid="ui/message/4000028"]').should(
-        "contain",
-        "This account does not exist or has not setup sign in with code.",
-      )
-    })
+        cy.get("@email").then((email) => {
+          cy.get(
+            'form[data-testid="login-flow-code"] input[name="identifier"]',
+          ).type(email.toString())
+        })
+        cy.submitCodeForm()
 
-    it("should show error message when code is expired", () => {
-      cy.clearAllCookies()
+        cy.url().should("contain", "login")
 
-      cy.updateConfigFile((config) => {
-        config.selfservice.methods.code.config.lifespan = "1ns"
-        return config
-      })
+        cy.get("@email").then((email) => {
+          cy.getLoginCodeFromEmail(email.toString()).then((code) => {
+            cy.get('form[data-testid="login-flow-code"] input[name="code"]').type(
+              code,
+            )
+          })
+        })
 
-      cy.visit(route)
+        cy.submitCodeForm()
 
-      cy.get("@email").then((email) => {
-        cy.get(
-          'form[data-testid="login-flow-code"] input[name="identifier"]',
-        ).type(email.toString())
-      })
-      cy.submitCodeForm()
+        cy.get('[data-testid="ui/message/4010001"]').should(
+          "contain",
+          "The login flow expired",
+        )
 
-      cy.url().should("contain", "login")
-
-      cy.get("@email").then((email) => {
-        cy.getLoginCodeFromEmail(email.toString()).then((code) => {
-          cy.get('form[data-testid="login-flow-code"] input[name="code"]').type(
-            code,
-          )
-          cy.submitCodeForm()
+        cy.updateConfigFile((config) => {
+          config.selfservice.methods.code = {
+            registration_enabled: true,
+            login_enabled: true,
+            config: {
+              lifespan: "1h"
+            },
+          }
+          return config
         })
       })
 
-      cy.get('[data-testid="ui/message/4040001"]').should(
-        "contain",
-        "The login flow expired",
-      )
 
-      cy.updateConfigFile((config) => {
-        config.selfservice.methods.code.config.lifespan = "1h"
-        return config
-      })
-    })
-
-    it("should show error message when required fields are missing", () => {
-      const email = gen.email()
-
-      cy.get(
-        'form[data-testid="login-flow-code"] input[name="identifier"]',
-      ).type(email)
-      cy.submitCodeForm()
-
-      cy.url().should("contain", "login")
-
-      cy.removeAttribute(
-        ['form[data-testid="login-flow-code"] input[name="code"]'],
-        "required",
-      )
-      cy.submitCodeForm()
-
-      cy.get('[data-testid="ui/message/4000002"]').should(
-        "contain",
-        "Property code is missing",
-      )
-
-      cy.get(
-        'form[data-testid="login-flow-code"] input[name="identifier"]',
-      ).clear()
-      cy.get('form[data-testid="login-flow-code"] input[name="code"]').type(
-        "invalid-code",
-      )
-      cy.removeAttribute(
-        ['form[data-testid="login-flow-code"] input[name="identifier"]'],
-        "required",
-      )
-
-      cy.submitCodeForm()
-      cy.get('[data-testid="ui/message/4000002"]').should(
-        "contain",
-        "Property email is missing",
-      )
     })
   })
 })

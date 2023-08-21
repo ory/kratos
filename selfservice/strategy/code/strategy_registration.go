@@ -130,6 +130,11 @@ func (s *Strategy) getCredentialsFromTraits(ctx context.Context, f *registration
 }
 
 func (s *Strategy) Register(w http.ResponseWriter, r *http.Request, f *registration.Flow, i *identity.Identity) error {
+	s.deps.Audit().
+		WithRequest(r).
+		WithField("registration_flow_id", f.ID).
+		Info("Registration with the code strategy started.")
+
 	if err := flow.MethodEnabledAndAllowedFromRequest(r, f.GetFlowName(), s.ID().String(), s.deps); err != nil {
 		return err
 	}

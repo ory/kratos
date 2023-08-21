@@ -13,13 +13,16 @@ selfservice:
       after:
         password:
           hooks:
-            - hook: session
+            -
+              hook: session
 
     login:
       ui_url: http://localhost:4455/login
       after:
         code:
-          - hook: require_verified_address
+          hooks:
+            -
+              hook: require_verified_address
     error:
       ui_url: http://localhost:4455/error
     verification:
@@ -33,6 +36,8 @@ selfservice:
       registration_enabled: true
       login_enabled: true
       enabled: true
+      config:
+        lifespan: 1h
 
 identity:
   schemas:
