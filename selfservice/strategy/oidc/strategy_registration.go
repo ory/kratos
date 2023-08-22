@@ -6,6 +6,7 @@ package oidc
 import (
 	"bytes"
 	"encoding/json"
+	"github.com/ory/x/sqlxx"
 	"net/http"
 	"strings"
 	"time"
@@ -45,7 +46,7 @@ type VerifiedAddress struct {
 }
 
 const (
-	VerifiedAddressesKey = "verified_addresses"
+	VerifiedAddressesKey = "identity.verified_addresses"
 
 	PublicMetadata MetadataType = "identity.metadata_public"
 	AdminMetadata  MetadataType = "identity.metadata_admin"
@@ -273,7 +274,8 @@ func (s *Strategy) processRegistration(w http.ResponseWriter, r *http.Request, r
 			if verifiable.Via == verified.Via && verifiable.Value == verified.Value {
 				verifiable.Status = identity.VerifiableAddressStatusCompleted
 				verifiable.Verified = true
-				verifiable.VerifiedAt = i.StateChangedAt
+				t := sqlxx.NullTime(time.Now().UTC().Round(time.Second))
+				verifiable.VerifiedAt = &t
 			}
 		}
 	}
@@ -398,12 +400,12 @@ func (s *Strategy) setMetadata(evaluated string, i *identity.Identity, m Metadat
 func (s *Strategy) extractVerifiedAddresses(evaluated string) ([]VerifiedAddress, error) {
 	if verifiedAddresses := gjson.Get(evaluated, VerifiedAddressesKey); verifiedAddresses.Exists() {
 		if !verifiedAddresses.IsArray() {
-			return nil, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("OpenID Connect Jsonnet mapper did not return an array for key %s. Please check your Jsonnet code!", VerifiedAddressesKey))
+			return nil, errors.WithStack(herodot.ErrBadRequest.WithReasonf("OpenID Connect Jsonnet mapper did not return an array for key %s. Please check your Jsonnet code!", VerifiedAddressesKey))
 		}
 
 		var va []VerifiedAddress
 		if err := json.Unmarshal([]byte(verifiedAddresses.Raw), &va); err != nil {
-			return nil, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("Failed to unmarshal value for key %s. Please check your Jsonnet code!", VerifiedAddressesKey).WithDebugf("%s", err))
+			return nil, errors.WithStack(herodot.ErrBadRequest.WithReasonf("Failed to unmarshal value for key %s. Please check your Jsonnet code!", VerifiedAddressesKey).WithDebugf("%s", err))
 		}
 
 		for _, va := range va {
