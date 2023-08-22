@@ -15,6 +15,9 @@ else
       },
       metadata_admin: {
         [if "phone_number" in claims then "phone_number" else null]: claims.phone_number,
-      }
+      },
+      verified_addresses: [
+        { via: "email", value: claims.sub },
+      ],
     },
   }
