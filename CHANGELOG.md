@@ -384,6 +384,16 @@
   ([e3fcf0c](https://github.com/ory/kratos/commit/e3fcf0c31db9742ed61bcf783e37ee119ed19d42))
 - Allow extra migrations in NewPersister
   ([96c1ff7](https://github.com/ory/kratos/commit/96c1ff7747ea38e23a3892f74b75ee555ed49c88))
+- Allow marking OIDC provider-verified addresses as verified during registration
+  ([#3448](https://github.com/ory/kratos/issues/3448))
+  ([e7b33a1](https://github.com/ory/kratos/commit/e7b33a168bf0c0fe0492901abd3df8b6d6a08a68)),
+  closes [#3445](https://github.com/ory/kratos/issues/3445)
+  [#3424](https://github.com/ory/kratos/issues/3424)
+  [#1057](https://github.com/ory/kratos/issues/1057):
+
+  This feature allows marking emails provided by social sign in providers as
+  verified.
+
 - Hot-reload CORS origins ([#3423](https://github.com/ory/kratos/issues/3423))
   ([157d934](https://github.com/ory/kratos/commit/157d9345aeb04f371f9d85b70c89e8646e781333))
 - Provide login hints when registration fails due to duplicate
