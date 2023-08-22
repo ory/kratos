@@ -30,6 +30,8 @@ selfservice:
       use: code
       ui_url: http://localhost:4455/verification
     recovery:
+      enabled: true
+      use: code
       ui_url: http://localhost:4455/recovery
   methods:
     code:

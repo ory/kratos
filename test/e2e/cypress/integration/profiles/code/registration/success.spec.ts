@@ -10,6 +10,7 @@ context("Registration success with code method", () => {
     {
       route: express.registration,
       login: express.login,
+      recovery: express.recovery,
       app: "express" as "express",
       profile: "code",
     },
@@ -18,7 +19,7 @@ context("Registration success with code method", () => {
     //   app: "react" as "react",
     //   profile: "code",
     // },
-  ].forEach(({ route, login, profile, app }) => {
+  ].forEach(({ route, login, recovery, profile, app }) => {
     describe(`for app ${app}`, () => {
       before(() => {
         cy.deleteMail()
@@ -189,6 +190,27 @@ context("Registration success with code method", () => {
         })
       })
 
+      it("should be able to recover account when registered with code", () => {
+        const email = gen.email()
+        cy.registerWithCode({ email })
+
+        cy.clearAllCookies()
+        cy.visit(recovery)
+
+        cy.get('input[name="email"]').type(email)
+        cy.get('button[name="method"][value="code"]').click()
+
+        cy.recoveryEmailWithCode({ expect: { email } })
+        cy.get('button[value="code"]').click()
+
+        cy.getSession().should((session) => {
+          const { identity } = session
+          expect(identity.id).to.not.be.empty
+          expect(identity.traits.email).to.equal(email)
+        })
+      })
+
+      // Try keep this test as the last one, as it updates the identity schema.
       it("should be able to use multiple identifiers to signup with and sign in to", () => {
         cy.setPostCodeRegistrationHooks([
           {
