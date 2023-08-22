@@ -70,6 +70,7 @@ type (
 		SenderProvider
 
 		schema.IdentityTraitsProvider
+		session.PersistenceProvider
 	}
 
 	Strategy struct {

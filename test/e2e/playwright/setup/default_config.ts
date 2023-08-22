@@ -112,6 +112,7 @@ export const default_config: OryKratosConfiguration = {
         ui_url: "http://localhost:4455/verify",
       },
       recovery: {
+        enabled: true,
         ui_url: "http://localhost:4455/recovery",
       },
     },
@@ -119,7 +120,7 @@ export const default_config: OryKratosConfiguration = {
 
   courier: {
     smtp: {
-      connection_uri: "smtps://test:test@localhost:1025/?skip_ssl_verify=true",
+      connection_uri: "smtp://localhost:8026/?disable_starttls=true",
     },
   },
 }

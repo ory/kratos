@@ -21,6 +21,7 @@ type ContinueWithAction string
 const (
 	ContinueWithActionSetOrySessionToken ContinueWithAction = "set_ory_session_token"
 	ContinueWithActionShowVerificationUI ContinueWithAction = "show_verification_ui"
+	ContinueWithActionShowSettingsUI     ContinueWithAction = "show_settings_ui"
 )
 
 var _ ContinueWith = new(ContinueWithSetToken)
@@ -105,4 +106,37 @@ type FlowWithContinueWith interface {
 	Flow
 	AddContinueWith(ContinueWith)
 	ContinueWith() []ContinueWith
+}
+
+var _ ContinueWith = new(ContinueWithSettingsUI)
+
+// Indicates, that the UI flow could be continued by showing a settings ui
+//
+// swagger:model continueWithSettingsUi
+type ContinueWithSettingsUI struct {
+	// Action will always be `show_settings_ui`
+	//
+	// required: true
+	Action ContinueWithAction `json:"action"`
+	// Flow contains the ID of the verification flow
+	//
+	// required: true
+	Flow ContinueWithSettingsUIFlow `json:"flow"`
+}
+
+// swagger:model continueWithSettingsUiFlow
+type ContinueWithSettingsUIFlow struct {
+	// The ID of the settings flow
+	//
+	// required: true
+	ID uuid.UUID `json:"id"`
+}
+
+func NewContinueWithSettingsUI(f Flow) *ContinueWithSettingsUI {
+	return &ContinueWithSettingsUI{
+		Action: ContinueWithActionShowSettingsUI,
+		Flow: ContinueWithSettingsUIFlow{
+			ID: f.GetID(),
+		},
+	}
 }

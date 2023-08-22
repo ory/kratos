@@ -240,7 +240,7 @@ type FrontendApi interface {
 
 		If a valid provided session cookie or session token is provided, a 400 Bad Request error.
 
-		To fetch an existing recovery flow call `/self-service/recovery/flows?flow=<flow_id>`.
+		If you already created a recovery, fetch the flow's information using the getRecoveryFlow API endpoint.
 
 		You MUST NOT use this endpoint in client-side (Single Page Apps, ReactJS, AngularJS) nor server-side (Java Server
 		Pages, NodeJS, PHP, Golang, ...) browser applications. Using this endpoint in these applications will make
@@ -765,8 +765,8 @@ type FrontendApi interface {
 	UpdateLogoutFlowExecute(r FrontendApiApiUpdateLogoutFlowRequest) (*http.Response, error)
 
 	/*
-			 * UpdateRecoveryFlow Complete Recovery Flow
-			 * Use this endpoint to complete a recovery flow. This endpoint
+			 * UpdateRecoveryFlow Update Recovery Flow
+			 * Use this endpoint to update a recovery flow. This endpoint
 		behaves differently for API and browser flows and has several states:
 
 		`choose_method` expects `flow` (in the URL query) and `email` (in the body) to be sent
@@ -2049,7 +2049,7 @@ func (r FrontendApiApiCreateNativeRecoveryFlowRequest) Execute() (*RecoveryFlow,
 
 If a valid provided session cookie or session token is provided, a 400 Bad Request error.
 
-To fetch an existing recovery flow call `/self-service/recovery/flows?flow=<flow_id>`.
+If you already created a recovery, fetch the flow's information using the getRecoveryFlow API endpoint.
 
 You MUST NOT use this endpoint in client-side (Single Page Apps, ReactJS, AngularJS) nor server-side (Java Server
 Pages, NodeJS, PHP, Golang, ...) browser applications. Using this endpoint in these applications will make
@@ -5016,8 +5016,8 @@ func (r FrontendApiApiUpdateRecoveryFlowRequest) Execute() (*RecoveryFlow, *http
 }
 
 /*
-  - UpdateRecoveryFlow Complete Recovery Flow
-  - Use this endpoint to complete a recovery flow. This endpoint
+  - UpdateRecoveryFlow Update Recovery Flow
+  - Use this endpoint to update a recovery flow. This endpoint
 
 behaves differently for API and browser flows and has several states:
 

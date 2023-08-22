@@ -100,6 +100,8 @@ type Flow struct {
 	// This is needed, because we can not enforce these measures, if the flow has been initialized by someone else than
 	// the user.
 	DangerousSkipCSRFCheck bool `json:"-" faker:"-" db:"skip_csrf_check"`
+
+	ContinueWith []flow.ContinueWith `json:"continue_with,omitempty" faker:"-" db:"-"`
 }
 
 func NewFlow(conf *config.Config, exp time.Duration, csrf string, r *http.Request, strategy Strategy, ft flow.Type) (*Flow, error) {

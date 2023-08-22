@@ -12,6 +12,8 @@ docs/AuthenticatorAssuranceLevel.md
 docs/BatchPatchIdentitiesResponse.md
 docs/ContinueWith.md
 docs/ContinueWithSetOrySessionToken.md
+docs/ContinueWithSettingsUi.md
+docs/ContinueWithSettingsUiFlow.md
 docs/ContinueWithVerificationUi.md
 docs/ContinueWithVerificationUiFlow.md
 docs/CourierApi.md
@@ -125,6 +127,8 @@ model_authenticator_assurance_level.go
 model_batch_patch_identities_response.go
 model_continue_with.go
 model_continue_with_set_ory_session_token.go
+model_continue_with_settings_ui.go
+model_continue_with_settings_ui_flow.go
 model_continue_with_verification_ui.go
 model_continue_with_verification_ui_flow.go
 model_courier_message_status.go

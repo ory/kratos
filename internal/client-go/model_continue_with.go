@@ -19,6 +19,7 @@ import (
 // ContinueWith - struct for ContinueWith
 type ContinueWith struct {
 	ContinueWithSetOrySessionToken *ContinueWithSetOrySessionToken
+	ContinueWithSettingsUi         *ContinueWithSettingsUi
 	ContinueWithVerificationUi     *ContinueWithVerificationUi
 }
 
@@ -26,6 +27,13 @@ type ContinueWith struct {
 func ContinueWithSetOrySessionTokenAsContinueWith(v *ContinueWithSetOrySessionToken) ContinueWith {
 	return ContinueWith{
 		ContinueWithSetOrySessionToken: v,
+	}
+}
+
+// ContinueWithSettingsUiAsContinueWith is a convenience function that returns ContinueWithSettingsUi wrapped in ContinueWith
+func ContinueWithSettingsUiAsContinueWith(v *ContinueWithSettingsUi) ContinueWith {
+	return ContinueWith{
+		ContinueWithSettingsUi: v,
 	}
 }
 
@@ -53,6 +61,19 @@ func (dst *ContinueWith) UnmarshalJSON(data []byte) error {
 		dst.ContinueWithSetOrySessionToken = nil
 	}
 
+	// try to unmarshal data into ContinueWithSettingsUi
+	err = newStrictDecoder(data).Decode(&dst.ContinueWithSettingsUi)
+	if err == nil {
+		jsonContinueWithSettingsUi, _ := json.Marshal(dst.ContinueWithSettingsUi)
+		if string(jsonContinueWithSettingsUi) == "{}" { // empty struct
+			dst.ContinueWithSettingsUi = nil
+		} else {
+			match++
+		}
+	} else {
+		dst.ContinueWithSettingsUi = nil
+	}
+
 	// try to unmarshal data into ContinueWithVerificationUi
 	err = newStrictDecoder(data).Decode(&dst.ContinueWithVerificationUi)
 	if err == nil {
@@ -69,6 +90,7 @@ func (dst *ContinueWith) UnmarshalJSON(data []byte) error {
 	if match > 1 { // more than 1 match
 		// reset to nil
 		dst.ContinueWithSetOrySessionToken = nil
+		dst.ContinueWithSettingsUi = nil
 		dst.ContinueWithVerificationUi = nil
 
 		return fmt.Errorf("Data matches more than one schema in oneOf(ContinueWith)")
@@ -85,6 +107,10 @@ func (src ContinueWith) MarshalJSON() ([]byte, error) {
 		return json.Marshal(&src.ContinueWithSetOrySessionToken)
 	}
 
+	if src.ContinueWithSettingsUi != nil {
+		return json.Marshal(&src.ContinueWithSettingsUi)
+	}
+
 	if src.ContinueWithVerificationUi != nil {
 		return json.Marshal(&src.ContinueWithVerificationUi)
 	}
@@ -99,6 +125,10 @@ func (obj *ContinueWith) GetActualInstance() interface{} {
 	}
 	if obj.ContinueWithSetOrySessionToken != nil {
 		return obj.ContinueWithSetOrySessionToken
+	}
+
+	if obj.ContinueWithSettingsUi != nil {
+		return obj.ContinueWithSettingsUi
 	}
 
 	if obj.ContinueWithVerificationUi != nil {

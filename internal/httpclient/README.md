@@ -107,7 +107,7 @@ Class | Method | HTTP request | Description
 *FrontendApi* | [**ToSession**](docs/FrontendApi.md#tosession) | **Get** /sessions/whoami | Check Who the Current HTTP Session Belongs To
 *FrontendApi* | [**UpdateLoginFlow**](docs/FrontendApi.md#updateloginflow) | **Post** /self-service/login | Submit a Login Flow
 *FrontendApi* | [**UpdateLogoutFlow**](docs/FrontendApi.md#updatelogoutflow) | **Get** /self-service/logout | Update Logout Flow
-*FrontendApi* | [**UpdateRecoveryFlow**](docs/FrontendApi.md#updaterecoveryflow) | **Post** /self-service/recovery | Complete Recovery Flow
+*FrontendApi* | [**UpdateRecoveryFlow**](docs/FrontendApi.md#updaterecoveryflow) | **Post** /self-service/recovery | Update Recovery Flow
 *FrontendApi* | [**UpdateRegistrationFlow**](docs/FrontendApi.md#updateregistrationflow) | **Post** /self-service/registration | Update Registration Flow
 *FrontendApi* | [**UpdateSettingsFlow**](docs/FrontendApi.md#updatesettingsflow) | **Post** /self-service/settings | Complete Settings Flow
 *FrontendApi* | [**UpdateVerificationFlow**](docs/FrontendApi.md#updateverificationflow) | **Post** /self-service/verification | Complete Verification Flow
@@ -140,6 +140,8 @@ Class | Method | HTTP request | Description
  - [BatchPatchIdentitiesResponse](docs/BatchPatchIdentitiesResponse.md)
  - [ContinueWith](docs/ContinueWith.md)
  - [ContinueWithSetOrySessionToken](docs/ContinueWithSetOrySessionToken.md)
+ - [ContinueWithSettingsUi](docs/ContinueWithSettingsUi.md)
+ - [ContinueWithSettingsUiFlow](docs/ContinueWithSettingsUiFlow.md)
  - [ContinueWithVerificationUi](docs/ContinueWithVerificationUi.md)
  - [ContinueWithVerificationUiFlow](docs/ContinueWithVerificationUiFlow.md)
  - [CourierMessageStatus](docs/CourierMessageStatus.md)

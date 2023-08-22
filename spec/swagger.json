@@ -1794,7 +1794,7 @@
     },
     "/self-service/recovery": {
       "post": {
-        "description": "Use this endpoint to complete a recovery flow. This endpoint\nbehaves differently for API and browser flows and has several states:\n\n`choose_method` expects `flow` (in the URL query) and `email` (in the body) to be sent\nand works with API- and Browser-initiated flows.\nFor API clients and Browser clients with HTTP Header `Accept: application/json` it either returns a HTTP 200 OK when the form is valid and HTTP 400 OK when the form is invalid.\nand a HTTP 303 See Other redirect with a fresh recovery flow if the flow was otherwise invalid (e.g. expired).\nFor Browser clients without HTTP Header `Accept` or with `Accept: text/*` it returns a HTTP 303 See Other redirect to the Recovery UI URL with the Recovery Flow ID appended.\n`sent_email` is the success state after `choose_method` for the `link` method and allows the user to request another recovery email. It\nworks for both API and Browser-initiated flows and returns the same responses as the flow in `choose_method` state.\n`passed_challenge` expects a `token` to be sent in the URL query and given the nature of the flow (\"sending a recovery link\")\ndoes not have any API capabilities. The server responds with a HTTP 303 See Other redirect either to the Settings UI URL\n(if the link was valid) and instructs the user to update their password, or a redirect to the Recover UI URL with\na new Recovery Flow ID which contains an error message that the recovery link was invalid.\n\nMore information can be found at [Ory Kratos Account Recovery Documentation](../self-service/flows/account-recovery).",
+        "description": "Use this endpoint to update a recovery flow. This endpoint\nbehaves differently for API and browser flows and has several states:\n\n`choose_method` expects `flow` (in the URL query) and `email` (in the body) to be sent\nand works with API- and Browser-initiated flows.\nFor API clients and Browser clients with HTTP Header `Accept: application/json` it either returns a HTTP 200 OK when the form is valid and HTTP 400 OK when the form is invalid.\nand a HTTP 303 See Other redirect with a fresh recovery flow if the flow was otherwise invalid (e.g. expired).\nFor Browser clients without HTTP Header `Accept` or with `Accept: text/*` it returns a HTTP 303 See Other redirect to the Recovery UI URL with the Recovery Flow ID appended.\n`sent_email` is the success state after `choose_method` for the `link` method and allows the user to request another recovery email. It\nworks for both API and Browser-initiated flows and returns the same responses as the flow in `choose_method` state.\n`passed_challenge` expects a `token` to be sent in the URL query and given the nature of the flow (\"sending a recovery link\")\ndoes not have any API capabilities. The server responds with a HTTP 303 See Other redirect either to the Settings UI URL\n(if the link was valid) and instructs the user to update their password, or a redirect to the Recover UI URL with\na new Recovery Flow ID which contains an error message that the recovery link was invalid.\n\nMore information can be found at [Ory Kratos Account Recovery Documentation](../self-service/flows/account-recovery).",
         "consumes": [
           "application/json",
           "application/x-www-form-urlencoded"
@@ -1809,7 +1809,7 @@
         "tags": [
           "frontend"
         ],
-        "summary": "Complete Recovery Flow",
+        "summary": "Update Recovery Flow",
         "operationId": "updateRecoveryFlow",
         "parameters": [
           {
@@ -1879,7 +1879,7 @@
     },
     "/self-service/recovery/api": {
       "get": {
-        "description": "This endpoint initiates a recovery flow for API clients such as mobile devices, smart TVs, and so on.\n\nIf a valid provided session cookie or session token is provided, a 400 Bad Request error.\n\nTo fetch an existing recovery flow call `/self-service/recovery/flows?flow=\u003cflow_id\u003e`.\n\nYou MUST NOT use this endpoint in client-side (Single Page Apps, ReactJS, AngularJS) nor server-side (Java Server\nPages, NodeJS, PHP, Golang, ...) browser applications. Using this endpoint in these applications will make\nyou vulnerable to a variety of CSRF attacks.\n\nThis endpoint MUST ONLY be used in scenarios such as native mobile apps (React Native, Objective C, Swift, Java, ...).\n\nMore information can be found at [Ory Kratos Account Recovery Documentation](../self-service/flows/account-recovery).",
+        "description": "This endpoint initiates a recovery flow for API clients such as mobile devices, smart TVs, and so on.\n\nIf a valid provided session cookie or session token is provided, a 400 Bad Request error.\n\nIf you already created a recovery, fetch the flow's information using the getRecoveryFlow API endpoint.\n\nYou MUST NOT use this endpoint in client-side (Single Page Apps, ReactJS, AngularJS) nor server-side (Java Server\nPages, NodeJS, PHP, Golang, ...) browser applications. Using this endpoint in these applications will make\nyou vulnerable to a variety of CSRF attacks.\n\nThis endpoint MUST ONLY be used in scenarios such as native mobile apps (React Native, Objective C, Swift, Java, ...).\n\nMore information can be found at [Ory Kratos Account Recovery Documentation](../self-service/flows/account-recovery).",
         "schemes": [
           "http",
           "https"
@@ -3426,17 +3426,54 @@
       ],
       "properties": {
         "action": {
-          "description": "Action will always be `set_ory_session_token`\nset_ory_session_token ContinueWithActionSetOrySessionToken\nshow_verification_ui ContinueWithActionShowVerificationUI",
+          "description": "Action will always be `set_ory_session_token`\nset_ory_session_token ContinueWithActionSetOrySessionToken\nshow_verification_ui ContinueWithActionShowVerificationUI\nshow_settings_ui ContinueWithActionShowSettingsUI",
           "type": "string",
           "enum": [
             "set_ory_session_token",
-            "show_verification_ui"
+            "show_verification_ui",
+            "show_settings_ui"
           ],
-          "x-go-enum-desc": "set_ory_session_token ContinueWithActionSetOrySessionToken\nshow_verification_ui ContinueWithActionShowVerificationUI"
+          "x-go-enum-desc": "set_ory_session_token ContinueWithActionSetOrySessionToken\nshow_verification_ui ContinueWithActionShowVerificationUI\nshow_settings_ui ContinueWithActionShowSettingsUI"
         },
         "ory_session_token": {
           "description": "Token is the token of the session",
           "type": "string"
+        }
+      }
+    },
+    "continueWithSettingsUi": {
+      "description": "Indicates, that the UI flow could be continued by showing a settings ui",
+      "type": "object",
+      "required": [
+        "action",
+        "flow"
+      ],
+      "properties": {
+        "action": {
+          "description": "Action will always be `show_settings_ui`\nset_ory_session_token ContinueWithActionSetOrySessionToken\nshow_verification_ui ContinueWithActionShowVerificationUI\nshow_settings_ui ContinueWithActionShowSettingsUI",
+          "type": "string",
+          "enum": [
+            "set_ory_session_token",
+            "show_verification_ui",
+            "show_settings_ui"
+          ],
+          "x-go-enum-desc": "set_ory_session_token ContinueWithActionSetOrySessionToken\nshow_verification_ui ContinueWithActionShowVerificationUI\nshow_settings_ui ContinueWithActionShowSettingsUI"
+        },
+        "flow": {
+          "$ref": "#/definitions/continueWithSettingsUiFlow"
+        }
+      }
+    },
+    "continueWithSettingsUiFlow": {
+      "type": "object",
+      "required": [
+        "id"
+      ],
+      "properties": {
+        "id": {
+          "description": "The ID of the settings flow",
+          "type": "string",
+          "format": "uuid"
         }
       }
     },
@@ -3449,13 +3486,14 @@
       ],
       "properties": {
         "action": {
-          "description": "Action will always be `show_verification_ui`\nset_ory_session_token ContinueWithActionSetOrySessionToken\nshow_verification_ui ContinueWithActionShowVerificationUI",
+          "description": "Action will always be `show_verification_ui`\nset_ory_session_token ContinueWithActionSetOrySessionToken\nshow_verification_ui ContinueWithActionShowVerificationUI\nshow_settings_ui ContinueWithActionShowSettingsUI",
           "type": "string",
           "enum": [
             "set_ory_session_token",
-            "show_verification_ui"
+            "show_verification_ui",
+            "show_settings_ui"
           ],
-          "x-go-enum-desc": "set_ory_session_token ContinueWithActionSetOrySessionToken\nshow_verification_ui ContinueWithActionShowVerificationUI"
+          "x-go-enum-desc": "set_ory_session_token ContinueWithActionSetOrySessionToken\nshow_verification_ui ContinueWithActionShowVerificationUI\nshow_settings_ui ContinueWithActionShowSettingsUI"
         },
         "flow": {
           "$ref": "#/definitions/continueWithVerificationUiFlow"
@@ -4412,6 +4450,12 @@
         "active": {
           "description": "Active, if set, contains the recovery method that is being used. It is initially\nnot set.",
           "type": "string"
+        },
+        "continue_with": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/continueWith"
+          }
         },
         "expires_at": {
           "description": "ExpiresAt is the time (UTC) when the request expires. If the user still wishes to update the setting,\na new request has to be initiated.",
