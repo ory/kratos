@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"strings"
 	"sync"
+	"testing"
 	"time"
 
 	"github.com/ory/x/contextx"
@@ -387,6 +388,16 @@ func (m *RegistryDefault) IdentityValidator() *identity.Validator {
 
 func (m *RegistryDefault) WithConfig(c *config.Config) Registry {
 	m.c = c
+	return m
+}
+
+// WithSelfserviceStrategies is only available in testing and overrides the
+// selfservice strategies with the given ones.
+func (m *RegistryDefault) WithSelfserviceStrategies(t testing.TB, strategies []any) Registry {
+	if t == nil {
+		panic("Passing selfservice strategies is only supported in testing")
+	}
+	m.selfserviceStrategies = strategies
 	return m
 }
 

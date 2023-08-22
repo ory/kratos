@@ -7,6 +7,8 @@ import (
 	"context"
 	"net/http"
 
+	"github.com/gofrs/uuid"
+
 	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/selfservice/flow"
@@ -42,17 +44,26 @@ func NewVerifier(r verifierDependencies) *Verifier {
 
 func (e *Verifier) ExecutePostRegistrationPostPersistHook(w http.ResponseWriter, r *http.Request, f *registration.Flow, s *session.Session) error {
 	return otelx.WithSpan(r.Context(), "selfservice.hook.Verifier.ExecutePostRegistrationPostPersistHook", func(ctx context.Context) error {
-		return e.do(w, r.WithContext(ctx), s.Identity, f)
+		return e.do(w, r.WithContext(ctx), s.Identity, f, func(v *verification.Flow) {
+			v.OAuth2LoginChallenge = f.OAuth2LoginChallenge
+			v.SessionID = uuid.NullUUID{UUID: s.ID, Valid: true}
+		})
 	})
 }
 
-func (e *Verifier) ExecuteSettingsPostPersistHook(w http.ResponseWriter, r *http.Request, a *settings.Flow, i *identity.Identity) error {
+func (e *Verifier) ExecuteSettingsPostPersistHook(w http.ResponseWriter, r *http.Request, f *settings.Flow, i *identity.Identity) error {
 	return otelx.WithSpan(r.Context(), "selfservice.hook.Verifier.ExecuteSettingsPostPersistHook", func(ctx context.Context) error {
-		return e.do(w, r.WithContext(ctx), i, a)
+		return e.do(w, r.WithContext(ctx), i, f, nil)
 	})
 }
 
-func (e *Verifier) do(w http.ResponseWriter, r *http.Request, i *identity.Identity, f flow.FlowWithContinueWith) error {
+func (e *Verifier) do(
+	w http.ResponseWriter,
+	r *http.Request,
+	i *identity.Identity,
+	f flow.FlowWithContinueWith,
+	flowCallback func(*verification.Flow),
+) error {
 	// This is called after the identity has been created so we can safely assume that all addresses are available
 	// already.
 
@@ -83,8 +94,8 @@ func (e *Verifier) do(w http.ResponseWriter, r *http.Request, i *identity.Identi
 			return err
 		}
 
-		if f, ok := f.(flow.Challenger); ok {
-			verificationFlow.OAuth2LoginChallenge = f.GetOAuth2LoginChallenge()
+		if flowCallback != nil {
+			flowCallback(verificationFlow)
 		}
 
 		verificationFlow.State = verification.StateEmailSent

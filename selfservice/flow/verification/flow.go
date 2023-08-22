@@ -79,7 +79,11 @@ type Flow struct {
 	// required: true
 	State State `json:"state" faker:"-" db:"state"`
 
+	// OAuth2LoginChallenge holds the login challenge originally set during the registration flow.
 	OAuth2LoginChallenge sqlxx.NullString `json:"-" db:"oauth2_login_challenge"`
+
+	// SessionID holds the session id if set from a registraton hook.
+	SessionID uuid.NullUUID `json:"-" faker:"-" db:"session_id"`
 
 	// CSRFToken contains the anti-csrf token associated with this request.
 	CSRFToken string `json:"-" db:"csrf_token"`
@@ -99,7 +103,7 @@ func (f *Flow) GetRequestURL() string {
 	return f.RequestURL
 }
 
-func (f Flow) TableName(ctx context.Context) string {
+func (f Flow) TableName(context.Context) string {
 	return "selfservice_verification_flows"
 }
 

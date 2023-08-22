@@ -81,7 +81,7 @@ func TestHandler(t *testing.T) {
 		return s
 	}
 
-	getFromTS := func(url string, expectCode int) []byte {
+	getFromTS := func(t *testing.T, url string, expectCode int) []byte {
 		res, err := ts.Client().Get(url)
 		require.NoError(t, err)
 		body, err := io.ReadAll(res.Body)
@@ -92,12 +92,12 @@ func TestHandler(t *testing.T) {
 		return body
 	}
 
-	getFromTSById := func(id string, expectCode int) []byte {
-		return getFromTS(fmt.Sprintf("%s/schemas/%s", ts.URL, id), expectCode)
+	getFromTSById := func(t *testing.T, id string, expectCode int) []byte {
+		return getFromTS(t, fmt.Sprintf("%s/schemas/%s", ts.URL, id), expectCode)
 	}
 
-	getFromTSPaginated := func(page, perPage, expectCode int) []byte {
-		return getFromTS(fmt.Sprintf("%s/schemas?page=%d&per_page=%d", ts.URL, page, perPage), expectCode)
+	getFromTSPaginated := func(t *testing.T, page, perPage, expectCode int) []byte {
+		return getFromTS(t, fmt.Sprintf("%s/schemas?page=%d&per_page=%d", ts.URL, page, perPage), expectCode)
 	}
 
 	getFromFS := func(id string) []byte {
@@ -132,46 +132,46 @@ func TestHandler(t *testing.T) {
 	setSchemas(schemas)
 
 	t.Run("case=get default schema", func(t *testing.T) {
-		server := getFromTSById(config.DefaultIdentityTraitsSchemaID, http.StatusOK)
+		server := getFromTSById(t, config.DefaultIdentityTraitsSchemaID, http.StatusOK)
 		file := getFromFS(config.DefaultIdentityTraitsSchemaID)
 		require.JSONEq(t, string(file), string(server))
 	})
 
 	t.Run("case=get other schema", func(t *testing.T) {
-		server := getFromTSById("identity2", http.StatusOK)
+		server := getFromTSById(t, "identity2", http.StatusOK)
 		file := getFromFS("identity2")
 		require.JSONEq(t, string(file), string(server))
 	})
 
 	t.Run("case=get base64 schema", func(t *testing.T) {
-		server := getFromTSById("base64", http.StatusOK)
+		server := getFromTSById(t, "base64", http.StatusOK)
 		file := getFromFS("base64")
 		require.JSONEq(t, string(file), string(server))
 	})
 
 	t.Run("case=get encoded schema", func(t *testing.T) {
-		server := getFromTSById("cHJlc2V0Oi8vZW1haWw", http.StatusOK)
+		server := getFromTSById(t, "cHJlc2V0Oi8vZW1haWw", http.StatusOK)
 		file := getFromFS("preset://email")
 		require.JSONEq(t, string(file), string(server))
 	})
 
 	t.Run("case=get unreachable schema", func(t *testing.T) {
-		reason := getFromTSById("unreachable", http.StatusInternalServerError)
+		reason := getFromTSById(t, "unreachable", http.StatusInternalServerError)
 		require.Contains(t, string(reason), "could not be found or opened")
 	})
 
 	t.Run("case=get no-file schema", func(t *testing.T) {
-		reason := getFromTSById("no-file", http.StatusInternalServerError)
+		reason := getFromTSById(t, "no-file", http.StatusInternalServerError)
 		require.Contains(t, string(reason), "could not be found or opened")
 	})
 
 	t.Run("case=get directory schema", func(t *testing.T) {
-		reason := getFromTSById("directory", http.StatusInternalServerError)
+		reason := getFromTSById(t, "directory", http.StatusInternalServerError)
 		require.Contains(t, string(reason), "could not be found or opened")
 	})
 
 	t.Run("case=get not-existing schema", func(t *testing.T) {
-		_ = getFromTSById("not-existing", http.StatusNotFound)
+		_ = getFromTSById(t, "not-existing", http.StatusNotFound)
 	})
 
 	t.Run("case=get all schemas", func(t *testing.T) {
@@ -188,7 +188,7 @@ func TestHandler(t *testing.T) {
 			},
 		})
 
-		body := getFromTSPaginated(0, 2, http.StatusOK)
+		body := getFromTSPaginated(t, 0, 2, http.StatusOK)
 
 		var result []client.IdentitySchemaContainer
 		require.NoError(t, json.Unmarshal(body, &result))
@@ -230,7 +230,7 @@ func TestHandler(t *testing.T) {
 			},
 		})
 
-		body1, body2 := getFromTSPaginated(0, 1, http.StatusOK), getFromTSPaginated(1, 1, http.StatusOK)
+		body1, body2 := getFromTSPaginated(t, 0, 1, http.StatusOK), getFromTSPaginated(t, 1, 1, http.StatusOK)
 
 		var result1, result2 schema.IdentitySchemas
 		require.NoError(t, json.Unmarshal(body1, &result1))

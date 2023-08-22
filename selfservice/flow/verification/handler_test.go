@@ -12,14 +12,14 @@ import (
 	"testing"
 	"time"
 
-	"github.com/gofrs/uuid"
-
 	"github.com/gobuffalo/httptest"
+	"github.com/gofrs/uuid"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/tidwall/gjson"
 
 	"github.com/ory/kratos/driver/config"
+	"github.com/ory/kratos/hydra"
 	"github.com/ory/kratos/internal"
 	"github.com/ory/kratos/internal/testhelpers"
 	"github.com/ory/kratos/selfservice/flow/verification"
@@ -168,20 +168,97 @@ func TestGetFlow(t *testing.T) {
 		router := x.NewRouterPublic()
 		ts, _ := testhelpers.NewKratosServerWithRouters(t, reg, router, x.NewRouterAdmin())
 
-		c := &http.Client{}
-		// don't get the reference, instead copy the values, so we don't alter the client directly.
-		*c = *ts.Client()
 		// prevent the redirect
-		c.CheckRedirect = func(req *http.Request, via []*http.Request) error {
+		ts.Client().CheckRedirect = func(req *http.Request, via []*http.Request) error {
 			return http.ErrUseLastResponse
 		}
 		req, err := http.NewRequest("GET", ts.URL+verification.RouteInitBrowserFlow, nil)
 		require.NoError(t, err)
 
-		res, err := c.Do(req)
+		res, err := ts.Client().Do(req)
 		require.NoError(t, err)
 		defer res.Body.Close()
 		// here we check that the redirect status is 303
 		require.Equal(t, http.StatusSeeOther, res.StatusCode)
 	})
+}
+
+func TestPostFlow(t *testing.T) {
+	ctx := context.Background()
+	conf, reg := internal.NewFastRegistryWithMocks(t)
+	reg.WithSelfserviceStrategies(t, []any{&verification.FakeStrategy{}})
+	reg.WithHydra(hydra.NewFake())
+	conf.MustSet(ctx, config.ViperKeySelfServiceVerificationEnabled, true)
+	testhelpers.SetDefaultIdentitySchema(conf, "file://./stub/identity.schema.json")
+
+	public, _ := testhelpers.NewKratosServerWithCSRF(t, reg)
+	_ = testhelpers.NewErrorTestServer(t, reg)
+	_ = testhelpers.NewRedirTS(t, "", conf)
+
+	t.Run("case=valid", func(t *testing.T) {
+		f := &verification.Flow{
+			ID:        uuid.Must(uuid.NewV4()),
+			Type:      "browser",
+			ExpiresAt: time.Now().Add(1 * time.Hour),
+			IssuedAt:  time.Now(),
+		}
+		require.NoError(t, reg.VerificationFlowPersister().CreateVerificationFlow(ctx, f))
+
+		client := testhelpers.NewClientWithCookies(t)
+
+		u := public.URL + verification.RouteSubmitFlow + "?flow=" + f.ID.String()
+		resp, err := client.PostForm(u, url.Values{"method": {"fake"}})
+		require.NoError(t, err)
+		assert.EqualValues(t, http.StatusOK, resp.StatusCode)
+	})
+
+	t.Run("suite=with OIDC login challenge", func(t *testing.T) {
+		t.Run("case=succeeds with a session", func(t *testing.T) {
+			s := testhelpers.CreateSession(t, reg)
+
+			f := &verification.Flow{
+				ID:                   uuid.Must(uuid.NewV4()),
+				Type:                 "browser",
+				ExpiresAt:            time.Now().Add(1 * time.Hour),
+				IssuedAt:             time.Now(),
+				OAuth2LoginChallenge: hydra.FakeValidLoginChallenge,
+				SessionID:            uuid.NullUUID{UUID: s.ID, Valid: true},
+			}
+			require.NoError(t, reg.VerificationFlowPersister().CreateVerificationFlow(ctx, f))
+
+			client := testhelpers.NewNoRedirectClientWithCookies(t)
+
+			u := public.URL + verification.RouteSubmitFlow + "?flow=" + f.ID.String()
+			resp, err := client.PostForm(u, url.Values{"method": {"fake"}})
+			require.NoError(t, err)
+			assert.Equal(t, http.StatusSeeOther, resp.StatusCode)
+			assert.Equal(t, hydra.FakePostLoginURL, resp.Header.Get("Location"))
+		})
+
+		t.Run("case=fails without a session", func(t *testing.T) {
+			client := testhelpers.NewClientWithCookies(t)
+			ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				_, err := w.Write(x.EasyGetBody(t, client, public.URL+verification.RouteGetFlow+"?id="+r.URL.Query().Get("flow")))
+				require.NoError(t, err)
+			}))
+			t.Cleanup(ts.Close)
+			conf.MustSet(ctx, config.ViperKeySelfServiceVerificationUI, ts.URL)
+
+			f := &verification.Flow{
+				ID:                   uuid.Must(uuid.NewV4()),
+				Type:                 "browser",
+				ExpiresAt:            time.Now().Add(1 * time.Hour),
+				IssuedAt:             time.Now(),
+				OAuth2LoginChallenge: hydra.FakeValidLoginChallenge,
+			}
+			require.NoError(t, reg.VerificationFlowPersister().CreateVerificationFlow(ctx, f))
+
+			u := public.URL + verification.RouteSubmitFlow + "?flow=" + f.ID.String()
+			resp, err := client.PostForm(u, url.Values{"method": {"fake"}})
+			require.NoError(t, err)
+			assert.Equal(t, http.StatusOK, resp.StatusCode)
+			assert.Equal(t, f.ID.String(), resp.Request.URL.Query().Get("flow"))
+		})
+	})
+
 }
