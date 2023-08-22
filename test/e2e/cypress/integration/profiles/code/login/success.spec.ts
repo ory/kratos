@@ -1,8 +1,9 @@
 // Copyright © 2023 Ory Corp
 // SPDX-License-Identifier: Apache-2.0
 
-import { appPrefix, APP_URL, gen } from "../../../../helpers"
+import { gen } from "../../../../helpers"
 import { routes as express } from "../../../../helpers/express"
+import { routes as react } from "../../../../helpers/react"
 
 context("Login success with code method", () => {
   ;[
@@ -11,11 +12,11 @@ context("Login success with code method", () => {
       app: "express" as "express",
       profile: "code",
     },
-    // {
-    //   route: react.registration,
-    //   app: "react" as "react",
-    //   profile: "code",
-    // },
+    {
+      route: react.login,
+      app: "react" as "react",
+      profile: "code",
+    },
   ].forEach(({ route, profile, app }) => {
     describe(`for app ${app}`, () => {
       before(() => {
@@ -38,15 +39,11 @@ context("Login success with code method", () => {
 
       it("should be able to sign in with code", () => {
         cy.get("@email").then((email) => {
-          cy.get('form[data-testid="login-flow-code"] input[name="identifier"]')
-            .clear()
-            .type(email.toString())
+          cy.get('input[name="identifier"]').clear().type(email.toString())
           cy.submitCodeForm()
 
           cy.getLoginCodeFromEmail(email.toString()).then((code) => {
-            cy.get(
-              'form[data-testid="login-flow-code"] input[name="code"]',
-            ).type(code)
+            cy.get('input[name="code"]').type(code)
 
             cy.get("button[name=method][value=code]").click()
           })
@@ -68,9 +65,7 @@ context("Login success with code method", () => {
 
       it("should be able to resend login code", () => {
         cy.get("@email").then((email) => {
-          cy.get('form[data-testid="login-flow-code"] input[name="identifier"]')
-            .clear()
-            .type(email.toString())
+          cy.get('input[name="identifier"]').clear().type(email.toString())
           cy.submitCodeForm()
 
           cy.getLoginCodeFromEmail(email.toString()).then((code) => {
@@ -91,9 +86,7 @@ context("Login success with code method", () => {
 
           // attempt to submit code 1
           cy.get("@code1").then((code1) => {
-            cy.get('form[data-testid="login-flow-code"] input[name="code"]')
-              .clear()
-              .type(code1.toString())
+            cy.get('input[name="code"]').clear().type(code1.toString())
           })
 
           cy.get("button[name=method][value=code]").click()
@@ -104,9 +97,7 @@ context("Login success with code method", () => {
 
           // attempt to submit code 2
           cy.get("@code2").then((code2) => {
-            cy.get('form[data-testid="login-flow-code"] input[name="code"]')
-              .clear()
-              .type(code2.toString())
+            cy.get('input[name="code"]').clear().type(code2.toString())
           })
 
           cy.get('button[name="method"][value="code"]').click()
@@ -146,15 +137,11 @@ context("Login success with code method", () => {
 
         cy.visit(route)
 
-        cy.get('form[data-testid="login-flow-code"] input[name="identifier"]')
-          .clear()
-          .type(email2)
+        cy.get('input[name="identifier"]').clear().type(email2)
         cy.submitCodeForm()
 
         cy.getLoginCodeFromEmail(email2).then((code) => {
-          cy.get('form[data-testid="login-flow-code"] input[name="code"]').type(
-            code,
-          )
+          cy.get('input[name="code"]').type(code)
           cy.get("button[name=method][value=code]").click()
         })
 

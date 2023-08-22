@@ -1,6 +1,6 @@
 // Copyright © 2023 Ory Corp
 // SPDX-License-Identifier: Apache-2.0
-import { appPrefix, APP_URL, gen } from "../../../../helpers"
+import { gen } from "../../../../helpers"
 import { routes as express } from "../../../../helpers/express"
 import { routes as react } from "../../../../helpers/react"
 
@@ -11,19 +11,20 @@ context("Registration error messages with code method", () => {
       app: "express" as "express",
       profile: "code",
     },
-    // {
-    //   route: react.registration,
-    //   app: "react" as "react",
-    //   profile: "code",
-    // },
+    {
+      route: react.registration,
+      app: "react" as "react",
+      profile: "code",
+    },
   ].forEach(({ route, profile, app }) => {
     describe(`for app ${app}`, () => {
       before(() => {
         cy.proxy(app)
+        cy.useConfigProfile(profile)
+        cy.deleteMail()
       })
 
       beforeEach(() => {
-        cy.useConfigProfile(profile)
         cy.deleteMail()
         cy.clearAllCookies()
         cy.visit(route)
@@ -32,9 +33,7 @@ context("Registration error messages with code method", () => {
       it("should show error message when code is invalid", () => {
         const email = gen.email()
 
-        cy.get(
-          'form[data-testid="registration-flow-code"] input[name="traits.email"]',
-        ).type(email)
+        cy.get('input[name="traits.email"]').type(email)
         cy.submitCodeForm()
 
         cy.url().should("contain", "registration")
@@ -43,9 +42,7 @@ context("Registration error messages with code method", () => {
           "An email containing a code has been sent to the email address you provided",
         )
 
-        cy.get(
-          'form[data-testid="registration-flow-code"] input[name="code"]',
-        ).type("invalid-code")
+        cy.get(' input[name="code"]').type("invalid-code")
         cy.submitCodeForm()
 
         cy.get('[data-testid="ui/message/4040003"]').should(
@@ -57,20 +54,14 @@ context("Registration error messages with code method", () => {
       it("should show error message when traits have changed", () => {
         const email = gen.email()
 
-        cy.get(
-          'form[data-testid="registration-flow-code"] input[name="traits.email"]',
-        ).type(email)
+        cy.get('input[name="traits.email"]').type(email)
         cy.submitCodeForm()
 
         cy.url().should("contain", "registration")
-        cy.get(
-          'form[data-testid="registration-flow-code"] input[name="traits.email"]',
-        )
+        cy.get('input[name="traits.email"]')
           .clear()
           .type("changed-email@email.com")
-        cy.get(
-          'form[data-testid="registration-flow-code"] input[name="code"]',
-        ).type("invalid-code")
+        cy.get(' input[name="code"]').type("invalid-code")
         cy.submitCodeForm()
 
         cy.get('[data-testid="ui/message/4000030"]').should(
@@ -82,17 +73,12 @@ context("Registration error messages with code method", () => {
       it("should show error message when required fields are missing", () => {
         const email = gen.email()
 
-        cy.get(
-          'form[data-testid="registration-flow-code"] input[name="traits.email"]',
-        ).type(email)
+        cy.get('input[name="traits.email"]').type(email)
         cy.submitCodeForm()
 
         cy.url().should("contain", "registration")
 
-        cy.removeAttribute(
-          ['form[data-testid="registration-flow-code"] input[name="code"]'],
-          "required",
-        )
+        cy.removeAttribute(['input[name="code"]'], "required")
         cy.submitCodeForm()
 
         cy.get('[data-testid="ui/message/4000002"]').should(
@@ -100,18 +86,9 @@ context("Registration error messages with code method", () => {
           "Property code is missing",
         )
 
-        cy.get(
-          'form[data-testid="registration-flow-code"] input[name="traits.email"]',
-        ).clear()
-        cy.get(
-          'form[data-testid="registration-flow-code"] input[name="code"]',
-        ).type("invalid-code")
-        cy.removeAttribute(
-          [
-            'form[data-testid="registration-flow-code"] input[name="traits.email"]',
-          ],
-          "required",
-        )
+        cy.get('input[name="traits.email"]').clear()
+        cy.get('input[name="code"]').type("invalid-code")
+        cy.removeAttribute(['input[name="traits.email"]'], "required")
 
         cy.submitCodeForm()
         cy.get('[data-testid="ui/message/4000002"]').should(
@@ -128,23 +105,26 @@ context("Registration error messages with code method", () => {
 
         const email = gen.email()
 
-        cy.get(
-          'form[data-testid="registration-flow-code"] input[name="traits.email"]',
-        ).type(email)
+        cy.get(' input[name="traits.email"]').type(email)
         cy.submitCodeForm()
 
         cy.url().should("contain", "registration")
         cy.getRegistrationCodeFromEmail(email).then((code) => {
-          cy.get(
-            'form[data-testid="registration-flow-code"] input[name="code"]',
-          ).type(code)
+          cy.get('input[name="code"]').type(code)
           cy.submitCodeForm()
         })
 
-        cy.get('[data-testid="ui/message/4040001"]').should(
-          "contain",
-          "The registration flow expired",
-        )
+        // in the react spa app we don't show the 410 gone error. we create a new flow.
+        if (app === "express") {
+          cy.get('[data-testid="ui/message/4040001"]').should(
+            "contain",
+            "The registration flow expired",
+          )
+        } else {
+          cy.get('input[name="traits.email"]').should("be.visible")
+        }
+
+        cy.noSession()
 
         cy.updateConfigFile((config) => {
           config.selfservice.methods.code.config.lifespan = "1h"
