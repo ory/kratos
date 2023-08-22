@@ -5,7 +5,7 @@
 
 **Table of Contents**
 
-- [ (2023-08-18)](#2023-08-18)
+- [ (2023-08-22)](#2023-08-22)
   - [Bug Fixes](#bug-fixes)
   - [Documentation](#documentation)
   - [Features](#features)
@@ -309,7 +309,7 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# [](https://github.com/ory/kratos/compare/v1.0.0...v) (2023-08-18)
+# [](https://github.com/ory/kratos/compare/v1.0.0...v) (2023-08-22)
 
 ### Bug Fixes
 
@@ -329,12 +329,18 @@
 - Add missing tracing & attributes in oidc strategy
   ([#3429](https://github.com/ory/kratos/issues/3429))
   ([09bcb71](https://github.com/ory/kratos/commit/09bcb71f1f0b3238e2d0f4376a1a2290d062c6c1))
+- Allow post recovery hooks to interrupt the flow
+  ([#3393](https://github.com/ory/kratos/issues/3393))
+  ([6c1d2f1](https://github.com/ory/kratos/commit/6c1d2f1e4173cfb9a7abe2bfe4f20e47b7568d3b))
 - Carry `oauth2_login_challenge` over to registration flow
   ([#3419](https://github.com/ory/kratos/issues/3419))
   ([76241be](https://github.com/ory/kratos/commit/76241bee3dc7fec4690346ee85bc4b9f897fdd34)):
 
   Fixes https://github.com/ory/kratos/issues/3321
 
+- Don't require session for OIDC verification
+  ([#3443](https://github.com/ory/kratos/issues/3443))
+  ([e08f831](https://github.com/ory/kratos/commit/e08f831c2715e515bf58dc2dbb47fc3576421a5c))
 - Don't return 500 on conflict for POST /admin/identities
   ([#3437](https://github.com/ory/kratos/issues/3437))
   ([1429949](https://github.com/ory/kratos/commit/142994932e449d9948148804502c98ef73daafff))
