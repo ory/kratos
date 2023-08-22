@@ -2397,6 +2397,7 @@
       "updateLoginFlowBody": {
         "discriminator": {
           "mapping": {
+            "code": "#/components/schemas/updateLoginFlowWithCodeMethod",
             "lookup_secret": "#/components/schemas/updateLoginFlowWithLookupSecretMethod",
             "oidc": "#/components/schemas/updateLoginFlowWithOidcMethod",
             "password": "#/components/schemas/updateLoginFlowWithPasswordMethod",
@@ -2420,6 +2421,9 @@
           },
           {
             "$ref": "#/components/schemas/updateLoginFlowWithLookupSecretMethod"
+          },
+          {
+            "$ref": "#/components/schemas/updateLoginFlowWithCodeMethod"
           }
         ]
       },
@@ -2663,6 +2667,7 @@
         "description": "Update Registration Request Body",
         "discriminator": {
           "mapping": {
+            "code": "#/components/schemas/updateRegistrationFlowWithCodeMethod",
             "oidc": "#/components/schemas/updateRegistrationFlowWithOidcMethod",
             "password": "#/components/schemas/updateRegistrationFlowWithPasswordMethod",
             "webauthn": "#/components/schemas/updateRegistrationFlowWithWebAuthnMethod"
@@ -2678,6 +2683,9 @@
           },
           {
             "$ref": "#/components/schemas/updateRegistrationFlowWithWebAuthnMethod"
+          },
+          {
+            "$ref": "#/components/schemas/updateRegistrationFlowWithCodeMethod"
           }
         ]
       },
