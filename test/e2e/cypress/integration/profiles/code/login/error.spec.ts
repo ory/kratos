@@ -12,19 +12,20 @@ context("Login error messages with code method", () => {
       app: "express" as "express",
       profile: "code",
     },
-    // {
-    //   route: react.login,
-    //   app: "react" as "react",
-    //   profile: "code",
-    // },
+    {
+      route: react.login,
+      app: "react" as "react",
+      profile: "code",
+    },
   ].forEach(({ route, profile, app }) => {
     describe(`for app ${app}`, () => {
       before(() => {
         cy.proxy(app)
+        cy.useConfigProfile(profile)
+        cy.deleteMail()
       })
 
       beforeEach(() => {
-        cy.useConfigProfile(profile)
         cy.deleteMail()
         cy.clearAllCookies()
 
@@ -40,9 +41,7 @@ context("Login error messages with code method", () => {
       it("should show error message when account identifier does not exist", () => {
         const email = gen.email()
 
-        cy.get(
-          'form[data-testid="login-flow-code"] input[name="identifier"]',
-        ).type(email)
+        cy.get('input[name="identifier"]').type(email)
         cy.submitCodeForm()
 
         cy.url().should("contain", "login")
@@ -55,9 +54,7 @@ context("Login error messages with code method", () => {
 
       it("should show error message when code is invalid", () => {
         cy.get("@email").then((email) => {
-          cy.get('form[data-testid="login-flow-code"] input[name="identifier"]')
-            .clear()
-            .type(email.toString())
+          cy.get('input[name="identifier"]').clear().type(email.toString())
         })
 
         cy.submitCodeForm()
@@ -68,9 +65,7 @@ context("Login error messages with code method", () => {
           "An email containing a code has been sent to the email address you provided",
         )
 
-        cy.get('form[data-testid="login-flow-code"] input[name="code"]').type(
-          "invalid-code",
-        )
+        cy.get('input[name="code"]').type("invalid-code")
         cy.submitCodeForm()
 
         cy.get('[data-testid="ui/message/4010008"]').should(
@@ -81,20 +76,14 @@ context("Login error messages with code method", () => {
 
       it("should show error message when identifier has changed", () => {
         cy.get("@email").then((email) => {
-          cy.get(
-            'form[data-testid="login-flow-code"] input[name="identifier"]',
-          ).type(email.toString())
+          cy.get('input[name="identifier"]').type(email.toString())
         })
 
         cy.submitCodeForm()
 
         cy.url().should("contain", "login")
-        cy.get('form[data-testid="login-flow-code"] input[name="identifier"]')
-          .clear()
-          .type(gen.email())
-        cy.get('form[data-testid="login-flow-code"] input[name="code"]').type(
-          "invalid-code",
-        )
+        cy.get('input[name="identifier"]').clear().type(gen.email())
+        cy.get('input[name="code"]').type("invalid-code")
         cy.submitCodeForm()
 
         cy.get('[data-testid="ui/message/4000029"]').should(
@@ -105,18 +94,13 @@ context("Login error messages with code method", () => {
 
       it("should show error message when required fields are missing", () => {
         cy.get("@email").then((email) => {
-          cy.get(
-            'form[data-testid="login-flow-code"] input[name="identifier"]',
-          ).type(email.toString())
+          cy.get('input[name="identifier"]').type(email.toString())
         })
 
         cy.submitCodeForm()
         cy.url().should("contain", "login")
 
-        cy.removeAttribute(
-          ['form[data-testid="login-flow-code"] input[name="code"]'],
-          "required",
-        )
+        cy.removeAttribute(['input[name="code"]'], "required")
         cy.submitCodeForm()
 
         cy.get('[data-testid="ui/message/4000002"]').should(
@@ -124,17 +108,10 @@ context("Login error messages with code method", () => {
           "Property code is missing",
         )
 
-        cy.get('form[data-testid="login-flow-code"] input[name="code"]').type(
-          "invalid-code",
-        )
-        cy.removeAttribute(
-          ['form[data-testid="login-flow-code"] input[name="identifier"]'],
-          "required",
-        )
+        cy.get('input[name="code"]').type("invalid-code")
+        cy.removeAttribute(['input[name="identifier"]'], "required")
 
-        cy.get(
-          'form[data-testid="login-flow-code"] input[name="identifier"]',
-        ).clear()
+        cy.get('input[name="identifier"]').clear()
 
         cy.submitCodeForm()
         cy.get('[data-testid="ui/message/4000002"]').should(
@@ -158,9 +135,7 @@ context("Login error messages with code method", () => {
         })
 
         cy.get("@email").then((email) => {
-          cy.get(
-            'form[data-testid="login-flow-code"] input[name="identifier"]',
-          ).type(email.toString())
+          cy.get('input[name="identifier"]').type(email.toString())
         })
         cy.submitCodeForm()
 
@@ -168,18 +143,24 @@ context("Login error messages with code method", () => {
 
         cy.get("@email").then((email) => {
           cy.getLoginCodeFromEmail(email.toString()).then((code) => {
-            cy.get(
-              'form[data-testid="login-flow-code"] input[name="code"]',
-            ).type(code)
+            cy.get('input[name="code"]').type(code)
           })
         })
 
         cy.submitCodeForm()
 
-        cy.get('[data-testid="ui/message/4010001"]').should(
-          "contain",
-          "The login flow expired",
-        )
+        // the react app does not show the error message for 410 errors
+        // it just creates a new flow
+        if (app === "express") {
+          cy.get('[data-testid="ui/message/4010001"]').should(
+            "contain",
+            "The login flow expired",
+          )
+        } else {
+          cy.get("input[name=identifier]").should("be.visible")
+        }
+
+        cy.noSession()
 
         cy.updateConfigFile((config) => {
           config.selfservice.methods.code = {

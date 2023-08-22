@@ -11,7 +11,7 @@ selfservice:
     registration:
       ui_url: http://localhost:4455/registration
       after:
-        password:
+        code:
           hooks:
             -
               hook: session
@@ -34,6 +34,8 @@ selfservice:
       use: code
       ui_url: http://localhost:4455/recovery
   methods:
+    password:
+      enabled: false
     code:
       registration_enabled: true
       login_enabled: true
