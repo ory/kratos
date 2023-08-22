@@ -6,10 +6,11 @@ package oidc
 import (
 	"bytes"
 	"encoding/json"
-	"github.com/ory/x/sqlxx"
 	"net/http"
 	"strings"
 	"time"
+
+	"github.com/ory/x/sqlxx"
 
 	"github.com/ory/herodot"
 
