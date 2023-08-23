@@ -18,10 +18,11 @@ type (
 		m *VerificationValidModel
 	}
 	VerificationValidModel struct {
-		To              string
-		VerificationURL string
-		Identity        map[string]interface{}
-		Branding        string
+		To               string
+		VerificationURL  string
+		Identity         map[string]interface{}
+		TransientPayload json.RawMessage
+		Branding         string
 	}
 )
 

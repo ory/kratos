@@ -22,6 +22,7 @@ type (
 		VerificationURL  string
 		VerificationCode string
 		Identity         map[string]interface{}
+		TransientPayload json.RawMessage
 		Branding         string
 	}
 )

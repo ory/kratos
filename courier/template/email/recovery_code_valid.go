@@ -18,10 +18,11 @@ type (
 		model *RecoveryCodeValidModel
 	}
 	RecoveryCodeValidModel struct {
-		To           string
-		RecoveryCode string
-		Identity     map[string]interface{}
-		Branding     string
+		To               string
+		RecoveryCode     string
+		Identity         map[string]interface{}
+		TransientPayload json.RawMessage
+		Branding         string
 	}
 )
 

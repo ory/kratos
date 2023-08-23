@@ -790,10 +790,12 @@ func TestRecovery(t *testing.T) {
 			createIdentityToRecover(t, reg, email)
 			expectSuccess(t, nil, false, false, func(v url.Values) {
 				v.Set("email", email)
+				v.Set("transient_payload", `{"branding": "brand-1"}`)
 				v.Set("branding", "brand-1")
 			})
 
 			message := testhelpers.CourierExpectMessage(t, reg, email, "Recover access to your account")
+			assert.Equal(t, "brand-1", gjson.GetBytes(message.TemplateData, "TransientPayload.branding").String(), "%s", message.TemplateData)
 			assert.Equal(t, "brand-1", gjson.GetBytes(message.TemplateData, "Branding").String(), "%s", message.TemplateData)
 		})
 	})

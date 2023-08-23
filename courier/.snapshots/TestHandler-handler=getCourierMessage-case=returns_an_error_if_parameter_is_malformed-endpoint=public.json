@@ -1,1 +1,1 @@
-"{\"error\":{\"code\":400,\"status\":\"Bad Request\",\"debug\":\"could not parse parameter {id} as UUID, got \",\"message\":\"uuid: incorrect UUID length 10 in string \\\"not-a-uuid\\\"\"}}\n"
+"{\"error\":{\"code\":400,\"status\":\"Bad Request\",\"message\":\"uuid: incorrect UUID length 10 in string \\\"not-a-uuid\\\"\"}}\n"

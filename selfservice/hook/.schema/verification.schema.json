@@ -3,6 +3,10 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "type": "object",
   "properties": {
+    "transient_payload": {
+      "type": "object",
+      "additionalProperties": true
+    },
     "branding": {
       "type": "string"
     }

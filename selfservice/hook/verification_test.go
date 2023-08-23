@@ -37,7 +37,7 @@ func TestVerifier(t *testing.T) {
 	u, err := http.NewRequest(
 		http.MethodPost,
 		"https://www.ory.sh/",
-		bytes.NewReader([]byte("branding=brand-1")),
+		bytes.NewReader([]byte("transient_payload=%7B%22branding%22%3A+%22brand-1%22%7D&branding=brand-1")),
 	)
 	if err != nil {
 		return
@@ -113,7 +113,8 @@ func TestVerifier(t *testing.T) {
 			recipients := make([]string, len(messages))
 			for k, m := range messages {
 				recipients[k] = m.Recipient
-				assert.Equal(t, "brand-1", gjson.GetBytes(m.TemplateData, "Branding").String())
+				assert.Equal(t, "brand-1", gjson.GetBytes(m.TemplateData, "TransientPayload.branding").String(), "%v", string(m.TemplateData))
+				assert.Equal(t, "brand-1", gjson.GetBytes(m.TemplateData, "Branding").String(), "%v", string(m.TemplateData))
 			}
 
 			assert.Contains(t, recipients, "foo@ory.sh")

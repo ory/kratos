@@ -5,6 +5,7 @@ package code
 
 import (
 	"context"
+	"encoding/json"
 	"net/http"
 	"net/url"
 	"time"
@@ -106,6 +107,8 @@ type updateVerificationFlowWithCodeMethodBody struct {
 
 	// The verification code
 	Code string `json:"code" form:"code"`
+
+	TransientPayload json.RawMessage `json:"transient_payload" form:"transient_payload"`
 
 	// A branding to be applied to the email body
 	Branding string `json:"branding" form:"branding"`
@@ -223,7 +226,8 @@ func (s *Strategy) verificationHandleFormSubmission(w http.ResponseWriter, r *ht
 		return s.handleVerificationError(w, r, f, body, err)
 	}
 
-	if err := s.deps.CodeSender().SendVerificationCode(r.Context(), f, identity.VerifiableAddressTypeEmail, body.Email, body.Branding); err != nil {
+	if err := s.deps.CodeSender().SendVerificationCode(r.Context(), f, identity.VerifiableAddressTypeEmail,
+		body.Email, body.TransientPayload, body.Branding); err != nil {
 		if !errors.Is(err, ErrUnknownAddress) {
 			return s.handleVerificationError(w, r, f, body, err)
 		}
@@ -392,7 +396,8 @@ func (s *Strategy) retryVerificationFlowWithError(w http.ResponseWriter, r *http
 	return errors.WithStack(flow.ErrCompletedByStrategy)
 }
 
-func (s *Strategy) SendVerificationEmail(ctx context.Context, f *verification.Flow, i *identity.Identity, a *identity.VerifiableAddress, branding string) (err error) {
+func (s *Strategy) SendVerificationEmail(ctx context.Context, f *verification.Flow, i *identity.Identity, a *identity.VerifiableAddress,
+	transientPayload json.RawMessage, branding string) (err error) {
 
 	rawCode := GenerateCode()
 
@@ -407,5 +412,5 @@ func (s *Strategy) SendVerificationEmail(ctx context.Context, f *verification.Fl
 		return err
 	}
 
-	return s.deps.CodeSender().SendVerificationCodeTo(ctx, f, i, rawCode, code, branding)
+	return s.deps.CodeSender().SendVerificationCodeTo(ctx, f, i, rawCode, code, transientPayload, branding)
 }

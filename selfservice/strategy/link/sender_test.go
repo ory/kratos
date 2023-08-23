@@ -5,6 +5,7 @@ package link_test
 
 import (
 	"context"
+	"encoding/json"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -50,8 +51,10 @@ func TestManager(t *testing.T) {
 
 		require.NoError(t, reg.RecoveryFlowPersister().CreateRecoveryFlow(context.Background(), f))
 
-		require.NoError(t, reg.LinkSender().SendRecoveryLink(context.Background(), hr, f, "email", "tracked@ory.sh", "branding-1"))
-		require.EqualError(t, reg.LinkSender().SendRecoveryLink(context.Background(), hr, f, "email", "not-tracked@ory.sh", "branding-2"), link.ErrUnknownAddress.Error())
+		require.NoError(t, reg.LinkSender().SendRecoveryLink(context.Background(), hr, f, "email", "tracked@ory.sh",
+			json.RawMessage(`{"branding": "branding-1"}`), "branding-1"))
+		require.EqualError(t, reg.LinkSender().SendRecoveryLink(context.Background(), hr, f, "email", "not-tracked@ory.sh",
+			json.RawMessage(`{"branding": "branding-2"}`), "branding-2"), link.ErrUnknownAddress.Error())
 
 		messages, err := reg.CourierPersister().NextMessages(context.Background(), 12)
 		require.NoError(t, err)
@@ -79,8 +82,10 @@ func TestManager(t *testing.T) {
 
 		require.NoError(t, reg.VerificationFlowPersister().CreateVerificationFlow(context.Background(), f))
 
-		require.NoError(t, reg.LinkSender().SendVerificationLink(context.Background(), f, "email", "tracked@ory.sh", "branding-1"))
-		require.EqualError(t, reg.LinkSender().SendVerificationLink(context.Background(), f, "email", "not-tracked@ory.sh", "branding-2"), link.ErrUnknownAddress.Error())
+		require.NoError(t, reg.LinkSender().SendVerificationLink(context.Background(), f, "email", "tracked@ory.sh",
+			json.RawMessage(`{"branding": "branding-1"}`), "branding-1"))
+		require.EqualError(t, reg.LinkSender().SendVerificationLink(context.Background(), f, "email", "not-tracked@ory.sh",
+			json.RawMessage(`{"branding": "branding-2"}`), "branding-2"), link.ErrUnknownAddress.Error())
 		messages, err := reg.CourierPersister().NextMessages(context.Background(), 12)
 		require.NoError(t, err)
 		require.Len(t, messages, 2)

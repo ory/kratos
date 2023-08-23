@@ -5,6 +5,7 @@ package verification
 
 import (
 	"context"
+	"encoding/json"
 	"net/http"
 
 	"github.com/ory/kratos/identity"
@@ -26,7 +27,7 @@ type (
 		VerificationNodeGroup() node.UiNodeGroup
 		PopulateVerificationMethod(*http.Request, *Flow) error
 		Verify(w http.ResponseWriter, r *http.Request, f *Flow) (err error)
-		SendVerificationEmail(context.Context, *Flow, *identity.Identity, *identity.VerifiableAddress, string) error
+		SendVerificationEmail(context.Context, *Flow, *identity.Identity, *identity.VerifiableAddress, json.RawMessage, string) error
 	}
 	AdminHandler interface {
 		RegisterAdminVerificationRoutes(admin *x.RouterAdmin)

@@ -249,11 +249,24 @@ func TestVerification(t *testing.T) {
 		c := testhelpers.NewClientWithCookies(t)
 		testhelpers.SubmitVerificationForm(t, false, false, c, public, func(v url.Values) {
 			v.Set("email", verificationEmail)
+			v.Set("transient_payload", `{"branding": "brand-1"}`)
 			v.Set("branding", "brand-1")
 		}, 200, "")
 
 		message := testhelpers.CourierExpectMessage(t, reg, verificationEmail, "Please verify your email address")
+		assert.Equal(t, "brand-1", gjson.GetBytes(message.TemplateData, "TransientPayload.branding").String(), "%s", message.TemplateData)
 		assert.Equal(t, "brand-1", gjson.GetBytes(message.TemplateData, "Branding").String(), "%s", message.TemplateData)
+	})
+
+	t.Run("description=should save transient payload to template data", func(t *testing.T) {
+		c := testhelpers.NewClientWithCookies(t)
+		testhelpers.SubmitVerificationForm(t, false, false, c, public, func(v url.Values) {
+			v.Set("email", verificationEmail)
+			v.Set("transient_payload", `{"branding": "brand-1"}`)
+		}, 200, "")
+
+		message := testhelpers.CourierExpectMessage(t, reg, verificationEmail, "Please verify your email address")
+		assert.Equal(t, "brand-1", gjson.GetBytes(message.TemplateData, "TransientPayload.branding").String(), "%s", message.TemplateData)
 	})
 
 	t.Run("description=should not be able to submit email in expired flow", func(t *testing.T) {

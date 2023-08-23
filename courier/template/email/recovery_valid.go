@@ -18,10 +18,11 @@ type (
 		m *RecoveryValidModel
 	}
 	RecoveryValidModel struct {
-		To          string
-		RecoveryURL string
-		Identity    map[string]interface{}
-		Branding    string
+		To               string
+		RecoveryURL      string
+		Identity         map[string]interface{}
+		TransientPayload json.RawMessage
+		Branding         string
 	}
 )
 

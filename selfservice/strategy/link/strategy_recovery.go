@@ -4,6 +4,7 @@
 package link
 
 import (
+	"encoding/json"
 	"net/http"
 	"net/url"
 	"time"
@@ -429,7 +430,8 @@ func (s *Strategy) recoveryHandleFormSubmission(w http.ResponseWriter, r *http.R
 		return s.HandleRecoveryError(w, r, f, body, err)
 	}
 
-	if err := s.d.LinkSender().SendRecoveryLink(r.Context(), r, f, identity.VerifiableAddressTypeEmail, body.Email, body.Branding); err != nil {
+	if err := s.d.LinkSender().SendRecoveryLink(r.Context(), r, f, identity.VerifiableAddressTypeEmail, body.Email,
+		body.TransientPayload, body.Branding); err != nil {
 		if !errors.Is(err, ErrUnknownAddress) {
 			return s.HandleRecoveryError(w, r, f, body, err)
 		}
@@ -493,12 +495,13 @@ func (s *Strategy) HandleRecoveryError(w http.ResponseWriter, r *http.Request, r
 }
 
 type recoverySubmitPayload struct {
-	Method    string `json:"method" form:"method"`
-	Token     string `json:"token" form:"token"`
-	CSRFToken string `json:"csrf_token" form:"csrf_token"`
-	Flow      string `json:"flow" form:"flow"`
-	Email     string `json:"email" form:"email"`
-	Branding  string `json:"branding" form:"branding"`
+	Method           string          `json:"method" form:"method"`
+	Token            string          `json:"token" form:"token"`
+	CSRFToken        string          `json:"csrf_token" form:"csrf_token"`
+	Flow             string          `json:"flow" form:"flow"`
+	Email            string          `json:"email" form:"email"`
+	TransientPayload json.RawMessage `json:"transient_payload" form:"transient_payload"`
+	Branding         string          `json:"branding" form:"branding"`
 }
 
 func (s *Strategy) decodeRecovery(r *http.Request) (*recoverySubmitPayload, error) {

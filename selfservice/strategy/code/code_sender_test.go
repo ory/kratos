@@ -6,6 +6,7 @@ package code_test
 import (
 	"context"
 	"encoding/base64"
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"net/http/httptest"
@@ -56,8 +57,10 @@ func TestSender(t *testing.T) {
 
 			require.NoError(t, reg.RecoveryFlowPersister().CreateRecoveryFlow(context.Background(), f))
 
-			require.NoError(t, reg.CodeSender().SendRecoveryCode(context.Background(), hr, f, "email", "tracked@ory.sh", "branding-1"))
-			require.ErrorIs(t, reg.CodeSender().SendRecoveryCode(context.Background(), hr, f, "email", "not-tracked@ory.sh", "branding-2"), code.ErrUnknownAddress)
+			require.NoError(t, reg.CodeSender().SendRecoveryCode(context.Background(), hr, f, "email", "tracked@ory.sh",
+				json.RawMessage(`{"branding": "branding-1"}`), "branding-1"))
+			require.ErrorIs(t, reg.CodeSender().SendRecoveryCode(context.Background(), hr, f, "email", "not-tracked@ory.sh",
+				json.RawMessage(`{"branding": "branding-1"}`), "branding-2"), code.ErrUnknownAddress)
 		}
 
 		t.Run("case=with default templates", func(t *testing.T) {
@@ -113,8 +116,10 @@ func TestSender(t *testing.T) {
 
 			require.NoError(t, reg.VerificationFlowPersister().CreateVerificationFlow(context.Background(), f))
 
-			require.NoError(t, reg.CodeSender().SendVerificationCode(context.Background(), f, "email", "tracked@ory.sh", "branding-1"))
-			require.ErrorIs(t, reg.CodeSender().SendVerificationCode(context.Background(), f, "email", "not-tracked@ory.sh", "branding-2"), code.ErrUnknownAddress)
+			require.NoError(t, reg.CodeSender().SendVerificationCode(context.Background(), f, "email", "tracked@ory.sh",
+				json.RawMessage(`{"branding": "b-1"}`), "branding-1"))
+			require.ErrorIs(t, reg.CodeSender().SendVerificationCode(context.Background(), f, "email", "not-tracked@ory.sh",
+				json.RawMessage(`{"branding": "b-1"}`), "branding-2"), code.ErrUnknownAddress)
 		}
 
 		t.Run("case=with default templates", func(t *testing.T) {
