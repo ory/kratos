@@ -113,10 +113,8 @@ func MethodEnabledAndAllowed(ctx context.Context, flowName FlowName, expected, a
 	var ok bool
 	if strings.EqualFold(actual, identity.CredentialsTypeCodeAuth.String()) {
 		switch flowName {
-		case RegistrationFlow:
-			ok = d.Config().SelfServiceCodeStrategy(ctx).RegistrationEnabled
-		case LoginFlow:
-			ok = d.Config().SelfServiceCodeStrategy(ctx).LoginEnabled
+		case RegistrationFlow, LoginFlow:
+			ok = d.Config().SelfServiceCodeStrategy(ctx).PasswordlessEnabled
 		case VerificationFlow, RecoveryFlow:
 			ok = d.Config().SelfServiceCodeStrategy(ctx).Enabled
 		default:

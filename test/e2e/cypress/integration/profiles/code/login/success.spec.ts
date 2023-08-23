@@ -133,7 +133,7 @@ context("Login success with code method", () => {
             "traits.email2": email2,
           },
         })
-        cy.deleteMail({ atLeast: 2 })
+        cy.deleteMail({ atLeast: 1 })
 
         cy.visit(route)
 

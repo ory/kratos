@@ -1070,7 +1070,7 @@ func TestRecovery(t *testing.T) {
 			v.Set("email", recoveryEmail)
 		})
 
-		message := testhelpers.CourierExpectMessage(t, reg, recoveryEmail, "Recover access to your account")
+		message := testhelpers.CourierExpectMessage(ctx, t, reg, recoveryEmail, "Recover access to your account")
 		recoveryCode := testhelpers.CourierExpectCodeInMessage(t, message, 1)
 
 		action := gjson.Get(body, "ui.action").String()
@@ -1102,7 +1102,7 @@ func TestRecovery(t *testing.T) {
 			v.Set("email", recoveryEmail)
 		})
 
-		message := testhelpers.CourierExpectMessage(t, reg, recoveryEmail, "Recover access to your account")
+		message := testhelpers.CourierExpectMessage(ctx, t, reg, recoveryEmail, "Recover access to your account")
 		recoveryCode := testhelpers.CourierExpectCodeInMessage(t, message, 1)
 
 		action := gjson.Get(body, "ui.action").String()

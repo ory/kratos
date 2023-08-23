@@ -229,9 +229,8 @@ type (
 		Config  json.RawMessage `json:"config"`
 	}
 	SelfServiceStrategyCode struct {
-		RegistrationEnabled bool `json:"registration_enabled"`
-		LoginEnabled        bool `json:"login_enabled"`
 		*SelfServiceStrategy
+		PasswordlessEnabled bool `json:"passwordless_enabled"`
 	}
 	Schema struct {
 		ID  string `json:"id" koanf:"id"`
@@ -780,21 +779,18 @@ func (p *Config) SelfServiceCodeStrategy(ctx context.Context) *SelfServiceStrate
 
 	basePath := fmt.Sprintf("%s.%s", ViperKeySelfServiceStrategyConfig, "code")
 	enabledKey := fmt.Sprintf("%s.enabled", basePath)
-	registrationKey := fmt.Sprintf("%s.registration_enabled", basePath)
-	loginKey := fmt.Sprintf("%s.login_enabled", basePath)
+	passwordlessKey := fmt.Sprintf("%s.passwordless_enabled", basePath)
 
 	s := &SelfServiceStrategyCode{
 		SelfServiceStrategy: &SelfServiceStrategy{
 			Enabled: pp.Bool(enabledKey),
 			Config:  json.RawMessage(config),
 		},
-		RegistrationEnabled: pp.Bool(registrationKey),
-		LoginEnabled:        pp.Bool(loginKey),
+		PasswordlessEnabled: pp.Bool(passwordlessKey),
 	}
 
 	if !pp.Exists(enabledKey) {
-		s.RegistrationEnabled = false
-		s.LoginEnabled = false
+		s.PasswordlessEnabled = false
 		s.Enabled = true
 	}
 	return s

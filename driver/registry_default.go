@@ -331,7 +331,7 @@ func (m *RegistryDefault) selfServiceStrategies() []interface{} {
 func (m *RegistryDefault) strategyRegistrationEnabled(ctx context.Context, id string) bool {
 	switch id {
 	case identity.CredentialsTypeCodeAuth.String():
-		return m.Config().SelfServiceCodeStrategy(ctx).RegistrationEnabled
+		return m.Config().SelfServiceCodeStrategy(ctx).PasswordlessEnabled
 	default:
 		return m.Config().SelfServiceStrategy(ctx, id).Enabled
 	}
@@ -340,7 +340,7 @@ func (m *RegistryDefault) strategyRegistrationEnabled(ctx context.Context, id st
 func (m *RegistryDefault) strategyLoginEnabled(ctx context.Context, id string) bool {
 	switch id {
 	case identity.CredentialsTypeCodeAuth.String():
-		return m.Config().SelfServiceCodeStrategy(ctx).LoginEnabled
+		return m.Config().SelfServiceCodeStrategy(ctx).PasswordlessEnabled
 	default:
 		return m.Config().SelfServiceStrategy(ctx, id).Enabled
 	}

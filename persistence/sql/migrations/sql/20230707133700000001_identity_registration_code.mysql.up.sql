@@ -25,4 +25,3 @@ CREATE INDEX identity_registration_codes_nid_flow_id_idx ON identity_registratio
 CREATE INDEX identity_registration_codes_id_nid_idx ON identity_registration_codes (id, nid);
 
 ALTER TABLE selfservice_registration_flows ADD submit_count int NOT NULL DEFAULT 0;
-ALTER TABLE selfservice_registration_flows ADD skip_csrf_check boolean NOT NULL DEFAULT FALSE;
