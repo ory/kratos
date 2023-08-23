@@ -54,7 +54,7 @@ export default defineConfig({
       command:
         "make .bin/MailHog && .bin/MailHog -smtp-bind-addr=localhost:8026",
       cwd: "../..",
-      reuseExistingServer: true,
+      reuseExistingServer: false,
       url: "http://localhost:8025/",
     },
   ],

@@ -185,7 +185,6 @@ func (s *Strategy) recoveryIssueSession(w http.ResponseWriter, r *http.Request, 
 
 	switch {
 	case f.Type == flow.TypeBrowser:
-		// TODO: How does this work with Mobile?
 		if err := s.deps.SessionManager().UpsertAndIssueCookie(ctx, w, r, sess); err != nil {
 			return s.retryRecoveryFlowWithError(w, r, f.Type, err)
 		}

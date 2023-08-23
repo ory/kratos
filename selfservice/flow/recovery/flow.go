@@ -101,6 +101,7 @@ type Flow struct {
 	// the user.
 	DangerousSkipCSRFCheck bool `json:"-" faker:"-" db:"skip_csrf_check"`
 
+	// Contains possible actions that could follow this flow
 	ContinueWith []flow.ContinueWith `json:"continue_with,omitempty" faker:"-" db:"-"`
 }
 
