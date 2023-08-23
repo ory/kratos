@@ -137,7 +137,7 @@ prepare() {
   nc -zv localhost 4446 && exit 1
   nc -zv localhost 4455 && exit 1
   nc -zv localhost 19006 && exit 1
-  # nc -zv localhost 4456 && exit 1
+   nc -zv localhost 4456 && exit 1
   nc -zv localhost 4458 && exit 1
   nc -zv localhost 4744 && exit 1
   nc -zv localhost 4745 && exit 1
