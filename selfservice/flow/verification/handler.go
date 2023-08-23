@@ -4,7 +4,6 @@
 package verification
 
 import (
-	"context"
 	"net/http"
 	"time"
 
@@ -54,6 +53,7 @@ type (
 		x.CSRFTokenGeneratorProvider
 		x.WriterProvider
 		x.CSRFProvider
+		x.LoggingProvider
 
 		FlowPersistenceProvider
 		ErrorHandlerProvider
@@ -445,8 +445,7 @@ func (h *Handler) updateVerificationFlow(w http.ResponseWriter, r *http.Request,
 		// Special case: If we ended up here through a OAuth2 login challenge, we need to accept the login request
 		// and redirect back to the OAuth2 provider.
 		if f.OAuth2LoginChallenge.String() != "" {
-			sess := h.maybeGetSession(ctx, f)
-			if sess == nil {
+			if !f.IdentityID.Valid || !f.SessionID.Valid {
 				h.d.VerificationFlowErrorHandler().WriteFlowError(w, r, f, node.DefaultGroup,
 					herodot.ErrBadRequest.WithReasonf("No session was found for this flow. Please retry the authentication."))
 				return
@@ -455,9 +454,9 @@ func (h *Handler) updateVerificationFlow(w http.ResponseWriter, r *http.Request,
 			callbackURL, err := h.d.Hydra().AcceptLoginRequest(ctx,
 				hydra.AcceptLoginRequestParams{
 					LoginChallenge:        string(f.OAuth2LoginChallenge),
-					IdentityID:            sess.IdentityID.String(),
-					SessionID:             sess.ID.String(),
-					AuthenticationMethods: sess.AMR,
+					IdentityID:            f.IdentityID.UUID.String(),
+					SessionID:             f.SessionID.UUID.String(),
+					AuthenticationMethods: f.AMR,
 				})
 			if err != nil {
 				h.d.VerificationFlowErrorHandler().WriteFlowError(w, r, f, node.DefaultGroup, err)
@@ -479,17 +478,4 @@ func (h *Handler) updateVerificationFlow(w http.ResponseWriter, r *http.Request,
 	}
 
 	h.d.Writer().Write(w, r, updatedFlow)
-}
-
-// maybeGetSession returns the session if it was found in the flow or nil otherwise.
-func (h *Handler) maybeGetSession(ctx context.Context, f *Flow) *session.Session {
-	if !f.SessionID.Valid {
-		return nil
-	}
-	s, err := h.d.SessionPersister().GetSession(ctx, f.SessionID.UUID, session.ExpandNothing)
-	if err != nil {
-		return nil
-	}
-
-	return s
 }

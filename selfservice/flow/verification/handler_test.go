@@ -20,9 +20,11 @@ import (
 
 	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/hydra"
+	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/internal"
 	"github.com/ory/kratos/internal/testhelpers"
 	"github.com/ory/kratos/selfservice/flow/verification"
+	"github.com/ory/kratos/session"
 	"github.com/ory/kratos/x"
 )
 
@@ -214,15 +216,17 @@ func TestPostFlow(t *testing.T) {
 
 	t.Run("suite=with OIDC login challenge", func(t *testing.T) {
 		t.Run("case=succeeds with a session", func(t *testing.T) {
-			s := testhelpers.CreateSession(t, reg)
-
 			f := &verification.Flow{
 				ID:                   uuid.Must(uuid.NewV4()),
 				Type:                 "browser",
 				ExpiresAt:            time.Now().Add(1 * time.Hour),
 				IssuedAt:             time.Now(),
 				OAuth2LoginChallenge: hydra.FakeValidLoginChallenge,
-				SessionID:            uuid.NullUUID{UUID: s.ID, Valid: true},
+				OAuth2LoginChallengeParams: verification.OAuth2LoginChallengeParams{
+					SessionID:  uuid.NullUUID{UUID: uuid.Must(uuid.NewV4()), Valid: true},
+					IdentityID: uuid.NullUUID{UUID: uuid.Must(uuid.NewV4()), Valid: true},
+					AMR:        session.AuthenticationMethods{{Method: identity.CredentialsTypePassword}},
+				},
 			}
 			require.NoError(t, reg.VerificationFlowPersister().CreateVerificationFlow(ctx, f))
 
