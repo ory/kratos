@@ -23,6 +23,7 @@ import (
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/internal"
 	"github.com/ory/kratos/internal/testhelpers"
+	"github.com/ory/kratos/selfservice/flow"
 	"github.com/ory/kratos/selfservice/flow/verification"
 	"github.com/ory/kratos/session"
 	"github.com/ory/kratos/x"
@@ -203,6 +204,7 @@ func TestPostFlow(t *testing.T) {
 			Type:      "browser",
 			ExpiresAt: time.Now().Add(1 * time.Hour),
 			IssuedAt:  time.Now(),
+			State:     flow.StateChooseMethod,
 		}
 		require.NoError(t, reg.VerificationFlowPersister().CreateVerificationFlow(ctx, f))
 
@@ -227,6 +229,8 @@ func TestPostFlow(t *testing.T) {
 					IdentityID: uuid.NullUUID{UUID: uuid.Must(uuid.NewV4()), Valid: true},
 					AMR:        session.AuthenticationMethods{{Method: identity.CredentialsTypePassword}},
 				},
+				SessionID:            uuid.NullUUID{UUID: s.ID, Valid: true},
+				State:                flow.StatePassedChallenge,
 			}
 			require.NoError(t, reg.VerificationFlowPersister().CreateVerificationFlow(ctx, f))
 
@@ -254,6 +258,7 @@ func TestPostFlow(t *testing.T) {
 				ExpiresAt:            time.Now().Add(1 * time.Hour),
 				IssuedAt:             time.Now(),
 				OAuth2LoginChallenge: hydra.FakeValidLoginChallenge,
+				State:                flow.StateChooseMethod,
 			}
 			require.NoError(t, reg.VerificationFlowPersister().CreateVerificationFlow(ctx, f))
 
@@ -264,5 +269,4 @@ func TestPostFlow(t *testing.T) {
 			assert.Equal(t, f.ID.String(), resp.Request.URL.Query().Get("flow"))
 		})
 	})
-
 }
