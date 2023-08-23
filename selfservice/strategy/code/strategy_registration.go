@@ -148,7 +148,7 @@ func (s *Strategy) Register(w http.ResponseWriter, r *http.Request, f *registrat
 		return s.HandleRegistrationError(w, r, f, &p, err)
 	}
 
-	codeManager := NewCodeStateManager[*registration.Flow, *updateRegistrationFlowWithCodeMethod](f, s, &p)
+	codeManager := NewCodeStateManager(f, s, &p)
 
 	codeManager.SetCreateCodeHandler(func(ctx context.Context, f *registration.Flow, strategy *Strategy, p *updateRegistrationFlowWithCodeMethod) error {
 		strategy.deps.Logger().
@@ -196,7 +196,7 @@ func (s *Strategy) Register(w http.ResponseWriter, r *http.Request, f *registrat
 		}
 
 		if x.IsJSONRequest(r) {
-			strategy.deps.Writer().Write(w, r, f)
+			strategy.deps.Writer().WriteCode(w, r, http.StatusBadRequest, f)
 		} else {
 			http.Redirect(w, r, f.AppendTo(s.deps.Config().SelfServiceFlowRegistrationUI(ctx)).String(), http.StatusSeeOther)
 		}

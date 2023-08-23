@@ -12,7 +12,7 @@ import (
 )
 
 func (m *RegistryDefault) PostRegistrationPrePersistHooks(ctx context.Context, credentialsType identity.CredentialsType) (b []registration.PostHookPrePersistExecutor) {
-	if credentialsType == identity.CredentialsTypeCodeAuth && m.Config().SelfServiceCodeStrategy(ctx).RegistrationEnabled {
+	if credentialsType == identity.CredentialsTypeCodeAuth && m.Config().SelfServiceCodeStrategy(ctx).PasswordlessEnabled {
 		b = append(b, m.HookCodeAddressVerifier())
 	}
 

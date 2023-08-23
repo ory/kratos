@@ -136,7 +136,7 @@ func (s *Strategy) Login(w http.ResponseWriter, r *http.Request, f *login.Flow, 
 		return nil, s.HandleLoginError(w, r, f, &p, err)
 	}
 
-	codeManager := NewCodeStateManager[*login.Flow, *updateLoginFlowWithCodeMethod](f, s, &p)
+	codeManager := NewCodeStateManager(f, s, &p)
 
 	codeManager.SetCreateCodeHandler(func(ctx context.Context, f *login.Flow, strategy *Strategy, p *updateLoginFlowWithCodeMethod) error {
 		strategy.deps.Audit().
@@ -196,7 +196,7 @@ func (s *Strategy) Login(w http.ResponseWriter, r *http.Request, f *login.Flow, 
 		}
 
 		if x.IsJSONRequest(r) {
-			strategy.deps.Writer().Write(w, r, f)
+			strategy.deps.Writer().WriteCode(w, r, http.StatusBadRequest, f)
 		} else {
 			http.Redirect(w, r, f.AppendTo(strategy.deps.Config().SelfServiceFlowLoginUI(ctx)).String(), http.StatusSeeOther)
 		}

@@ -27,4 +27,3 @@ CREATE INDEX identity_login_codes_id_nid_idx ON identity_login_codes (id, nid);
 
 
 ALTER TABLE selfservice_login_flows ADD submit_count int NOT NULL DEFAULT 0;
-ALTER TABLE selfservice_login_flows ADD skip_csrf_check boolean NOT NULL DEFAULT FALSE;

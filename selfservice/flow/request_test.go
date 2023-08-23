@@ -108,7 +108,7 @@ func TestMethodCodeEnabledAndAllowed(t *testing.T) {
 	}))
 
 	t.Run("login code allowed", func(t *testing.T) {
-		conf.MustSet(ctx, config.ViperKeySelfServiceStrategyConfig+".code.login_enabled", true)
+		conf.MustSet(ctx, config.ViperKeySelfServiceStrategyConfig+".code.passwordless_enabled", true)
 		currentFlow <- flow.LoginFlow
 		res, err := ts.Client().PostForm(ts.URL, url.Values{"method": {"code"}})
 		require.NoError(t, err)
@@ -117,7 +117,7 @@ func TestMethodCodeEnabledAndAllowed(t *testing.T) {
 	})
 
 	t.Run("login code not allowed", func(t *testing.T) {
-		conf.MustSet(ctx, config.ViperKeySelfServiceStrategyConfig+".code.login_enabled", false)
+		conf.MustSet(ctx, config.ViperKeySelfServiceStrategyConfig+".code.passwordless_enabled", false)
 		currentFlow <- flow.LoginFlow
 		res, err := ts.Client().PostForm(ts.URL, url.Values{"method": {"code"}})
 		require.NoError(t, err)
@@ -129,7 +129,7 @@ func TestMethodCodeEnabledAndAllowed(t *testing.T) {
 	})
 
 	t.Run("registration code allowed", func(t *testing.T) {
-		conf.MustSet(ctx, config.ViperKeySelfServiceStrategyConfig+".code.registration_enabled", true)
+		conf.MustSet(ctx, config.ViperKeySelfServiceStrategyConfig+".code.passwordless_enabled", true)
 		currentFlow <- flow.RegistrationFlow
 		res, err := ts.Client().PostForm(ts.URL, url.Values{"method": {"code"}})
 		require.NoError(t, err)
@@ -138,7 +138,7 @@ func TestMethodCodeEnabledAndAllowed(t *testing.T) {
 	})
 
 	t.Run("registration code not allowed", func(t *testing.T) {
-		conf.MustSet(ctx, config.ViperKeySelfServiceStrategyConfig+".code.registration_enabled", false)
+		conf.MustSet(ctx, config.ViperKeySelfServiceStrategyConfig+".code.passwordless_enabled", false)
 		currentFlow <- flow.RegistrationFlow
 		res, err := ts.Client().PostForm(ts.URL, url.Values{"method": {"code"}})
 		require.NoError(t, err)
@@ -150,8 +150,7 @@ func TestMethodCodeEnabledAndAllowed(t *testing.T) {
 	})
 
 	t.Run("recovery and verification should still be allowed if registration and login is disabled", func(t *testing.T) {
-		conf.MustSet(ctx, config.ViperKeySelfServiceStrategyConfig+".code.registration_enabled", false)
-		conf.MustSet(ctx, config.ViperKeySelfServiceStrategyConfig+".code.login_enabled", false)
+		conf.MustSet(ctx, config.ViperKeySelfServiceStrategyConfig+".code.passwordless_enabled", false)
 		conf.MustSet(ctx, config.ViperKeySelfServiceStrategyConfig+".code.enabled", true)
 
 		for _, f := range []flow.FlowName{flow.RecoveryFlow, flow.VerificationFlow} {

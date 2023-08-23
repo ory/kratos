@@ -653,7 +653,7 @@ func TestDriverDefault_Strategies(t *testing.T) {
 			{
 				prep: func(conf *config.Config) {
 					conf.MustSet(ctx, config.ViperKeySelfServiceStrategyConfig+".password.enabled", true)
-					conf.MustSet(ctx, config.ViperKeySelfServiceStrategyConfig+".code.registration_enabled", true)
+					conf.MustSet(ctx, config.ViperKeySelfServiceStrategyConfig+".code.passwordless_enabled", true)
 				},
 				expect: []string{"password", "code"},
 			},
@@ -706,7 +706,7 @@ func TestDriverDefault_Strategies(t *testing.T) {
 			{
 				prep: func(conf *config.Config) {
 					conf.MustSet(ctx, config.ViperKeySelfServiceStrategyConfig+".password.enabled", true)
-					conf.MustSet(ctx, config.ViperKeySelfServiceStrategyConfig+".code.login_enabled", true)
+					conf.MustSet(ctx, config.ViperKeySelfServiceStrategyConfig+".code.passwordless_enabled", true)
 				},
 				expect: []string{"password", "code"},
 			},

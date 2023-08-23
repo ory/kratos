@@ -834,8 +834,8 @@ func TestRecovery(t *testing.T) {
 		recoveryEmail := testhelpers.RandomEmail()
 		createIdentityToRecover(t, reg, recoveryEmail)
 
-		var check = func(t *testing.T, actual string) {
-			message := testhelpers.CourierExpectMessage(t, reg, recoveryEmail, "Recover access to your account")
+		check := func(t *testing.T, actual string) {
+			message := testhelpers.CourierExpectMessage(ctx, t, reg, recoveryEmail, "Recover access to your account")
 			recoveryLink := testhelpers.CourierExpectLinkInMessage(t, message, 1)
 
 			cl := testhelpers.NewClientWithCookies(t)
@@ -851,7 +851,7 @@ func TestRecovery(t *testing.T) {
 			assert.Contains(t, cookies, "ory_kratos_session")
 		}
 
-		var values = func(v url.Values) {
+		values := func(v url.Values) {
 			v.Set("email", recoveryEmail)
 		}
 
@@ -867,8 +867,8 @@ func TestRecovery(t *testing.T) {
 		recoveryEmail := testhelpers.RandomEmail()
 		createIdentityToRecover(t, reg, recoveryEmail)
 
-		var check = func(t *testing.T, actual string) {
-			message := testhelpers.CourierExpectMessage(t, reg, recoveryEmail, "Recover access to your account")
+		check := func(t *testing.T, actual string) {
+			message := testhelpers.CourierExpectMessage(ctx, t, reg, recoveryEmail, "Recover access to your account")
 			recoveryLink := testhelpers.CourierExpectLinkInMessage(t, message, 1)
 
 			cl := testhelpers.NewClientWithCookies(t)
@@ -884,7 +884,7 @@ func TestRecovery(t *testing.T) {
 			assert.NotContains(t, cookies, "ory_kratos_session")
 		}
 
-		var values = func(v url.Values) {
+		values := func(v url.Values) {
 			v.Set("email", recoveryEmail)
 		}
 

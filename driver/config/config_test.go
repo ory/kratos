@@ -507,8 +507,7 @@ func TestViperProvider_Defaults(t *testing.T) {
 				assert.True(t, p.SelfServiceStrategy(ctx, "profile").Enabled)
 				assert.True(t, p.SelfServiceStrategy(ctx, "link").Enabled)
 				assert.True(t, p.SelfServiceStrategy(ctx, "code").Enabled)
-				assert.False(t, p.SelfServiceCodeStrategy(ctx).RegistrationEnabled)
-				assert.False(t, p.SelfServiceCodeStrategy(ctx).LoginEnabled)
+				assert.False(t, p.SelfServiceCodeStrategy(ctx).PasswordlessEnabled)
 				assert.False(t, p.SelfServiceStrategy(ctx, "oidc").Enabled)
 			},
 		},
@@ -524,8 +523,7 @@ func TestViperProvider_Defaults(t *testing.T) {
 				assert.True(t, p.SelfServiceStrategy(ctx, "profile").Enabled)
 				assert.True(t, p.SelfServiceStrategy(ctx, "link").Enabled)
 				assert.True(t, p.SelfServiceStrategy(ctx, "code").Enabled)
-				assert.False(t, p.SelfServiceCodeStrategy(ctx).RegistrationEnabled)
-				assert.False(t, p.SelfServiceCodeStrategy(ctx).LoginEnabled)
+				assert.False(t, p.SelfServiceCodeStrategy(ctx).PasswordlessEnabled)
 				assert.False(t, p.SelfServiceStrategy(ctx, "oidc").Enabled)
 			},
 		},
@@ -541,8 +539,7 @@ func TestViperProvider_Defaults(t *testing.T) {
 				assert.False(t, p.SelfServiceStrategy(ctx, "link").Enabled)
 				assert.True(t, p.SelfServiceStrategy(ctx, "code").Enabled)
 				assert.True(t, p.SelfServiceStrategy(ctx, "oidc").Enabled)
-				assert.False(t, p.SelfServiceCodeStrategy(ctx).LoginEnabled)
-				assert.False(t, p.SelfServiceCodeStrategy(ctx).RegistrationEnabled)
+				assert.False(t, p.SelfServiceCodeStrategy(ctx).PasswordlessEnabled)
 			},
 		},
 		{
@@ -569,9 +566,7 @@ func TestViperProvider_Defaults(t *testing.T) {
 			assert.False(t, p.SelfServiceStrategy(ctx, "link").Enabled)
 			assert.True(t, p.SelfServiceStrategy(ctx, "code").Enabled)
 			assert.False(t, p.SelfServiceStrategy(ctx, "oidc").Enabled)
-			assert.False(t, p.SelfServiceCodeStrategy(ctx).LoginEnabled)
-			assert.False(t, p.SelfServiceCodeStrategy(ctx).RegistrationEnabled)
-
+			assert.False(t, p.SelfServiceCodeStrategy(ctx).PasswordlessEnabled)
 			assert.False(t, p.SelfServiceFlowRecoveryNotifyUnknownRecipients(ctx))
 			assert.False(t, p.SelfServiceFlowVerificationNotifyUnknownRecipients(ctx))
 		})

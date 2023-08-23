@@ -44,7 +44,7 @@ func TestRegistrationCodeStrategyDisabled(t *testing.T) {
 	testhelpers.SetDefaultIdentitySchema(conf, "file://./stub/code.identity.schema.json")
 	conf.MustSet(ctx, fmt.Sprintf("%s.%s.enabled", config.ViperKeySelfServiceStrategyConfig, identity.CredentialsTypePassword.String()), false)
 	conf.MustSet(ctx, fmt.Sprintf("%s.%s.enabled", config.ViperKeySelfServiceStrategyConfig, identity.CredentialsTypeCodeAuth.String()), false)
-	conf.MustSet(ctx, fmt.Sprintf("%s.%s.registration_enabled", config.ViperKeySelfServiceStrategyConfig, identity.CredentialsTypeCodeAuth), false)
+	conf.MustSet(ctx, fmt.Sprintf("%s.%s.passwordless_enabled", config.ViperKeySelfServiceStrategyConfig, identity.CredentialsTypeCodeAuth), false)
 
 	_ = testhelpers.NewRegistrationUIFlowEchoServer(t, reg)
 	_ = testhelpers.NewErrorTestServer(t, reg)
@@ -87,7 +87,7 @@ func TestRegistrationCodeStrategy(t *testing.T) {
 		testhelpers.SetDefaultIdentitySchema(conf, "file://./stub/code.identity.schema.json")
 		conf.MustSet(ctx, fmt.Sprintf("%s.%s.enabled", config.ViperKeySelfServiceStrategyConfig, identity.CredentialsTypePassword.String()), false)
 		conf.MustSet(ctx, fmt.Sprintf("%s.%s.enabled", config.ViperKeySelfServiceStrategyConfig, identity.CredentialsTypeCodeAuth.String()), false)
-		conf.MustSet(ctx, fmt.Sprintf("%s.%s.registration_enabled", config.ViperKeySelfServiceStrategyConfig, identity.CredentialsTypeCodeAuth), true)
+		conf.MustSet(ctx, fmt.Sprintf("%s.%s.passwordless_enabled", config.ViperKeySelfServiceStrategyConfig, identity.CredentialsTypeCodeAuth), true)
 		conf.MustSet(ctx, config.ViperKeySelfServiceBrowserDefaultReturnTo, "https://www.ory.sh")
 		conf.MustSet(ctx, config.ViperKeyURLsAllowedReturnToDomains, []string{"https://www.ory.sh"})
 		conf.MustSet(ctx, config.ViperKeySelfServiceRegistrationAfter+".code.hooks", []map[string]interface{}{
@@ -148,7 +148,11 @@ func TestRegistrationCodeStrategy(t *testing.T) {
 			return s
 		}
 
-		require.Equal(t, http.StatusOK, resp.StatusCode)
+		if isSPA {
+			require.EqualValues(t, http.StatusBadRequest, resp.StatusCode)
+		} else {
+			require.EqualValues(t, http.StatusOK, resp.StatusCode)
+		}
 		csrfToken := gjson.Get(body, "ui.nodes.#(attributes.name==csrf_token).attributes.value").String()
 		assert.NotEmptyf(t, csrfToken, "%s", body)
 		require.Equal(t, email, gjson.Get(body, "ui.nodes.#(attributes.name==traits.email).attributes.value").String())
@@ -241,7 +245,11 @@ func TestRegistrationCodeStrategy(t *testing.T) {
 					s := createRegistrationFlow(ctx, t, public, tc.isSPA)
 
 					s = registerNewUser(ctx, t, s, tc.isSPA, func(ctx context.Context, t *testing.T, s *state, body string, resp *http.Response) {
-						require.Equal(t, http.StatusOK, resp.StatusCode)
+						if tc.isSPA {
+							require.EqualValues(t, http.StatusBadRequest, resp.StatusCode)
+						} else {
+							require.EqualValues(t, http.StatusOK, resp.StatusCode)
+						}
 						csrfToken := gjson.Get(body, "ui.nodes.#(attributes.name==csrf_token).attributes.value").String()
 						require.NotEmptyf(t, csrfToken, "%s", body)
 						require.Equal(t, s.email, gjson.Get(body, "ui.nodes.#(attributes.name==traits.email).attributes.value").String())
@@ -263,7 +271,11 @@ func TestRegistrationCodeStrategy(t *testing.T) {
 					s = submitOTP(ctx, t, reg, s, func(v *url.Values) {
 						v.Set("resend", "code")
 					}, tc.isSPA, func(ctx context.Context, t *testing.T, s *state, body string, resp *http.Response) {
-						require.Equal(t, http.StatusOK, resp.StatusCode)
+						if tc.isSPA {
+							require.EqualValues(t, http.StatusBadRequest, resp.StatusCode)
+						} else {
+							require.Equal(t, http.StatusOK, resp.StatusCode)
+						}
 						csrfToken := gjson.Get(body, "ui.nodes.#(attributes.name==csrf_token).attributes.value").String()
 						require.NotEmptyf(t, csrfToken, "%s", body)
 						require.Containsf(t, gjson.Get(body, "ui.messages").String(), "An email containing a code has been sent to the email address you provided.", "%s", body)

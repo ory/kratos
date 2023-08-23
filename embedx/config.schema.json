@@ -1299,14 +1299,9 @@
               "type": "object",
               "additionalProperties": false,
               "properties": {
-                "login_enabled": {
+                "passwordless_enabled": {
                   "type": "boolean",
-                  "title": "Enables Login with Code Method",
-                  "default": false
-                },
-                "registration_enabled": {
-                  "type": "boolean",
-                  "title": "Enables Registration with Code Method",
+                  "title": "Enables Login and Registration with the Code Method",
                   "default": false
                 },
                 "enabled": {

@@ -18,6 +18,7 @@ import dayjs from "dayjs"
 import YAML from "yamljs"
 import { Strategy } from "."
 import { OryKratosConfiguration } from "./config"
+import { UiNode, UiNodeAttributes } from "@ory/kratos-client"
 
 const configFile = "kratos.generated.yml"
 
@@ -414,14 +415,17 @@ Cypress.Commands.add(
           }),
           url: form.action,
           followRedirect: false,
+          failOnStatusCode: false,
         })
         .then(({ body }) => {
           if (!code) {
             console.log("registration with code", body)
             expect(
               body.ui.nodes.find(
-                (f) =>
-                  f.group === "code" && f.attributes.name === "traits.email",
+                (f: UiNode) =>
+                  f.group === "code" &&
+                  "name" in f.attributes &&
+                  f.attributes.name === "traits.email",
               ).attributes.value,
             ).to.eq(email)
 
@@ -1270,6 +1274,9 @@ Cypress.Commands.add(
           mailItem = response.body.mailItems.find((m: any) =>
             m.toAddresses.includes(email),
           )
+          if (!mailItem) {
+            return req
+          }
         } else {
           mailItem = response.body.mailItems[0]
         }

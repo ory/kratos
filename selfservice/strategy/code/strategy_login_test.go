@@ -29,7 +29,7 @@ func TestLoginCodeStrategy(t *testing.T) {
 	conf, reg := internal.NewFastRegistryWithMocks(t)
 	testhelpers.SetDefaultIdentitySchema(conf, "file://./stub/code.identity.schema.json")
 	conf.MustSet(ctx, fmt.Sprintf("%s.%s.enabled", config.ViperKeySelfServiceStrategyConfig, identity.CredentialsTypeCodeAuth.String()), false)
-	conf.MustSet(ctx, fmt.Sprintf("%s.%s.login_enabled", config.ViperKeySelfServiceStrategyConfig, identity.CredentialsTypeCodeAuth.String()), true)
+	conf.MustSet(ctx, fmt.Sprintf("%s.%s.passwordless_enabled", config.ViperKeySelfServiceStrategyConfig, identity.CredentialsTypeCodeAuth.String()), true)
 	conf.MustSet(ctx, config.ViperKeySelfServiceBrowserDefaultReturnTo, "https://www.ory.sh")
 	conf.MustSet(ctx, config.ViperKeyURLsAllowedReturnToDomains, []string{"https://www.ory.sh"})
 
@@ -131,12 +131,18 @@ func TestLoginCodeStrategy(t *testing.T) {
 			return s
 		}
 
-		require.EqualValues(t, http.StatusOK, resp.StatusCode)
-
 		if mustHaveSession {
 			resp, err = s.client.Get(s.testServer.URL + session.RouteWhoami)
 			require.NoError(t, err)
 			require.EqualValues(t, http.StatusOK, resp.StatusCode)
+		} else {
+			// SPAs need to be informed that the login has not yet completed using status 400.
+			// Browser clients will redirect back to the login URL.
+			if isSPA {
+				require.EqualValues(t, http.StatusBadRequest, resp.StatusCode)
+			} else {
+				require.EqualValues(t, http.StatusOK, resp.StatusCode)
+			}
 		}
 
 		return s
@@ -155,9 +161,7 @@ func TestLoginCodeStrategy(t *testing.T) {
 			isSPA: false,
 		},
 	} {
-
 		t.Run("test="+tc.d, func(t *testing.T) {
-
 			t.Run("case=should be able to log in with code", func(t *testing.T) {
 				// create login flow
 				s := createLoginFlow(ctx, t, public, tc.isSPA)
@@ -237,7 +241,6 @@ func TestLoginCodeStrategy(t *testing.T) {
 						require.NoError(t, err)
 						assert.Contains(t, gjson.GetBytes(body, "ui.messages.0.text").String(), "account does not exist or has not setup sign in with code")
 					}
-
 				})
 			})
 
@@ -317,7 +320,13 @@ func TestLoginCodeStrategy(t *testing.T) {
 						// with browser clients we redirect back to the UI with a new flow id as a query parameter
 						require.Equal(t, http.StatusOK, resp.StatusCode)
 						require.Equal(t, conf.SelfServiceFlowLoginUI(ctx).Path, resp.Request.URL.Path)
-						require.Equal(t, s.flowID, resp.Request.URL.Query().Get("flow"))
+						lf, _, err := testhelpers.NewSDKCustomClient(public, s.client).FrontendApi.GetLoginFlow(ctx).Id(resp.Request.URL.Query().Get("flow")).Execute()
+						require.NoError(t, err)
+						require.EqualValues(t, http.StatusOK, resp.StatusCode)
+
+						body, err := json.Marshal(lf)
+						require.NoError(t, err)
+						assert.Contains(t, gjson.GetBytes(body, "ui.messages.0.text").String(), "flow expired 0.00 minutes ago")
 					}
 				})
 			})
@@ -419,9 +428,6 @@ func TestLoginCodeStrategy(t *testing.T) {
 				require.NotNil(t, va)
 				require.True(t, va.Verified)
 			})
-
 		})
-
 	}
-
 }
