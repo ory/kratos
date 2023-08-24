@@ -367,6 +367,9 @@
         },
         "type": "object"
       },
+      "OAuth2LoginChallengeParams": {
+        "type": "object"
+      },
       "OAuth2LoginRequest": {
         "description": "OAuth2LoginRequest struct for OAuth2LoginRequest",
         "properties": {
