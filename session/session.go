@@ -329,6 +329,9 @@ type AuthenticationMethod struct {
 
 // Scan implements the Scanner interface.
 func (n *AuthenticationMethod) Scan(value interface{}) error {
+	if value == nil {
+		return nil
+	}
 	v := fmt.Sprintf("%s", value)
 	if len(v) == 0 {
 		return nil
@@ -347,6 +350,9 @@ func (n AuthenticationMethod) Value() (driver.Value, error) {
 
 // Scan implements the Scanner interface.
 func (n *AuthenticationMethods) Scan(value interface{}) error {
+	if value == nil {
+		return nil
+	}
 	v := fmt.Sprintf("%s", value)
 	if len(v) == 0 {
 		return nil

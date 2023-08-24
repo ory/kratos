@@ -47,6 +47,8 @@ func (e *Verifier) ExecutePostRegistrationPostPersistHook(w http.ResponseWriter,
 		return e.do(w, r.WithContext(ctx), s.Identity, f, func(v *verification.Flow) {
 			v.OAuth2LoginChallenge = f.OAuth2LoginChallenge
 			v.SessionID = uuid.NullUUID{UUID: s.ID, Valid: true}
+			v.IdentityID = uuid.NullUUID{UUID: s.Identity.ID, Valid: true}
+			v.AMR = s.AMR
 		})
 	})
 }
