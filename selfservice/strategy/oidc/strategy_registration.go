@@ -409,7 +409,8 @@ func (s *Strategy) extractVerifiedAddresses(evaluated string) ([]VerifiedAddress
 			return nil, errors.WithStack(herodot.ErrBadRequest.WithReasonf("Failed to unmarshal value for key %s. Please check your Jsonnet code!", VerifiedAddressesKey).WithDebugf("%s", err))
 		}
 
-		for _, va := range va {
+		for i := range va {
+			va := &va[i]
 			if va.Via == identity.VerifiableAddressTypeEmail {
 				va.Value = strings.ToLower(strings.TrimSpace(va.Value))
 			}

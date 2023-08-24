@@ -825,6 +825,17 @@ func TestStrategy(t *testing.T) {
 			assertVerifiedEmail(t, body, true)
 		})
 
+		t.Run("case=should have verified address when subject matches after normalization", func(t *testing.T) {
+			subject = " Denormalized-Verified-Email@ory.sh "
+			r := newBrowserRegistrationFlow(t, returnTS.URL, time.Minute)
+			action := assertFormValues(t, r.ID, "valid")
+			res, body := makeRequest(t, "valid", action, url.Values{"traits.subject": {"denormalized-verified-EMAIL@ory.sh"}})
+			subject = "denormalized-verified-EMAIL@ory.sh"
+			assertIdentity(t, res, body)
+			subject = "denormalized-verified-email@ory.sh"
+			assertVerifiedEmail(t, body, true)
+		})
+
 		t.Run("case=should have unverified address when subject does not match", func(t *testing.T) {
 			subject = "changed-verified-email@ory.sh"
 			r := newBrowserRegistrationFlow(t, returnTS.URL, time.Minute)
