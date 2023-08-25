@@ -263,13 +263,11 @@ func translateValidationError(err *jsonschema.ValidationError) *text.Message {
 		_, _ = fmt.Sscanf(err.Message, "items at index %d and %d are equal", &indexA, &indexB)
 		return text.NewErrorValidationUniqueItems(indexA, indexB)
 	case "type":
-		allowedTypes, actualType := "", ""
-		_, _ = fmt.Sscanf(err.Message, "expected %s, but got %s", &allowedTypes, &actualType)
+		allowedTypes, actualType, _ := strings.Cut(strings.TrimPrefix(err.Message, "expected "), ", but got ")
 		return text.NewErrorValidationWrongType(strings.Split(allowedTypes, " or "), actualType)
 	case "const":
 		if err.Message != "const failed" {
-			var expectedValue any
-			_, _ = fmt.Sscanf(err.Message, "value must be %#v", &expectedValue)
+			expectedValue := strings.TrimPrefix(err.Message, "value must be ")
 			return text.NewErrorValidationConst(expectedValue)
 		}
 		return text.NewErrorValidationConstGeneric()

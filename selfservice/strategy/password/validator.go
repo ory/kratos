@@ -47,7 +47,6 @@ var (
 	_                       Validator = new(DefaultPasswordValidator)
 	ErrNetworkFailure                 = stderrs.New("unable to check if password has been leaked because an unexpected network error occurred")
 	ErrUnexpectedStatusCode           = stderrs.New("unexpected status code")
-	ErrTooManyBreaches                = stderrs.New("the password has been found in data breaches and must no longer be used")
 )
 
 // DefaultPasswordValidator implements Validator. It is based on best

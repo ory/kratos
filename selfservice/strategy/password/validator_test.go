@@ -10,6 +10,7 @@ import (
 	"crypto/sha1" //#nosec G505 -- compatibility for imported passwords
 	"errors"
 	"fmt"
+	"github.com/ory/kratos/text"
 	"io"
 	"net/http"
 	"net/http/httptest"
@@ -224,7 +225,7 @@ func TestDefaultPasswordValidationStrategy(t *testing.T) {
 				res: func(t *testing.T, hash string) string {
 					return fmt.Sprintf("%s:%d", hash, conf.PasswordPolicyConfig(ctx).MaxBreaches+1)
 				},
-				expectErr: password.ErrTooManyBreaches,
+				expectErr: text.NewErrorValidationPasswordTooManyBreaches(int(conf.PasswordPolicyConfig(ctx).MaxBreaches) + 1),
 			},
 		} {
 			t.Run(fmt.Sprintf("case=%s/expected err=%s", tc.name, tc.expectErr), func(t *testing.T) {
