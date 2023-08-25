@@ -14,7 +14,7 @@ const (
 	CodeAddressTypePhone CodeAddressType = AddressTypePhone
 )
 
-// CredentialsCode represents a one time login/registraiton code
+// CredentialsCode represents a one time login/registration code
 //
 // swagger:model identityCredentialsCode
 type CredentialsCode struct {

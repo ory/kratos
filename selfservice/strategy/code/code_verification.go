@@ -71,6 +71,14 @@ func (f *VerificationCode) Validate() error {
 	return nil
 }
 
+func (f *VerificationCode) GetHMACCode() string {
+	return f.CodeHMAC
+}
+
+func (f *VerificationCode) GetID() uuid.UUID {
+	return f.ID
+}
+
 type CreateVerificationCodeParams struct {
 	// Code represents the recovery code
 	RawCode string

@@ -186,7 +186,7 @@ func (s *Strategy) Register(w http.ResponseWriter, r *http.Request, f *registrat
 		// Step 4: Generate the UI for the `code` input form
 		// re-initialize the UI with a "clean" new state
 		// this should also provide a "resend" button and an option to change the email address
-		if err := strategy.NewCodeUINodes(r, f, p.Traits); err != nil {
+		if err := s.NewCodeUINodes(r, f, p.Traits); err != nil {
 			return errors.WithStack(err)
 		}
 

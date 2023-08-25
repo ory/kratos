@@ -5,12 +5,9 @@ package code
 
 import (
 	"context"
-	"encoding/json"
-	"net/http"
-	"strings"
-
 	"github.com/gofrs/uuid"
 	"github.com/pkg/errors"
+	"net/http"
 
 	"github.com/ory/herodot"
 	"github.com/ory/kratos/identity"
@@ -86,22 +83,15 @@ func (s *Strategy) PopulateLoginMethod(r *http.Request, requestedAAL identity.Au
 }
 
 func (s *Strategy) getIdentity(ctx context.Context, identifier string) (*identity.Identity, *identity.Credentials, error) {
-	i, _, err := s.deps.PrivilegedIdentityPool().FindByCredentialsIdentifier(ctx, s.ID(), identifier)
+	i, cred, err := s.deps.PrivilegedIdentityPool().FindByCredentialsIdentifier(ctx, s.ID(), identifier)
 	if err != nil {
 		return nil, nil, errors.WithStack(schema.NewNoCodeAuthnCredentials())
 	}
 
-	if err := s.deps.IdentityValidator().Validate(ctx, i); err != nil {
-		return nil, nil, errors.WithStack(schema.NewRequiredError("#/identifier", "identifier"))
-	}
-
-	cred, ok := i.GetCredentials(s.ID())
-	if !ok {
-		return nil, nil, errors.WithStack(schema.NewNoCodeAuthnCredentials())
-	} else if len(cred.Identifiers) == 0 {
+	if len(cred.Identifiers) == 0 {
 		return nil, nil, errors.WithStack(schema.NewNoCodeAuthnCredentials())
 	} else if cred.IdentifierAddressType == "" {
-		return nil, nil, errors.WithStack(schema.NewRequiredError("#/code", "via"))
+		return nil, nil, errors.WithStack(schema.NewNoCodeAuthnCredentials())
 	}
 
 	return i, cred, nil
@@ -154,16 +144,9 @@ func (s *Strategy) Login(w http.ResponseWriter, r *http.Request, f *login.Flow, 
 			return errors.WithStack(err)
 		}
 
-		var identifier string
-		for _, id := range cred.Identifiers {
-			if strings.EqualFold(p.Identifier, id) {
-				identifier = id
-			}
-		}
-
 		addresses := []Address{
 			{
-				To:  identifier,
+				To:  p.Identifier,
 				Via: identity.CodeAddressType(cred.IdentifierAddressType),
 			},
 		}
@@ -177,16 +160,7 @@ func (s *Strategy) Login(w http.ResponseWriter, r *http.Request, f *login.Flow, 
 		// sets the flow state to code sent
 		s.NextFlowState(f)
 
-		nodeData, err := json.Marshal(struct {
-			Identifier string `json:"identifier"`
-		}{
-			Identifier: p.Identifier,
-		})
-		if err != nil {
-			return errors.WithStack(err)
-		}
-
-		if err := s.NewCodeUINodes(r, f, nodeData); err != nil {
+		if err := s.NewCodeUINodes(r, f, &codeIdentifier{Identifier: p.Identifier}); err != nil {
 			return err
 		}
 

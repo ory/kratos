@@ -360,7 +360,7 @@ func NewNoCodeAuthnCredentials() error {
 func NewTraitsMismatch() error {
 	return errors.WithStack(&ValidationError{
 		ValidationError: &jsonschema.ValidationError{
-			Message:     `the submitted form data has changed from the previous submission. Please try again.`,
+			Message:     `the submitted form data has changed from the previous submission`,
 			InstancePtr: "#/",
 		},
 		Messages: new(text.Messages).Add(text.NewErrorValidationTraitsMismatch()),
@@ -370,7 +370,7 @@ func NewTraitsMismatch() error {
 func NewRegistrationCodeInvalid() error {
 	return errors.WithStack(&ValidationError{
 		ValidationError: &jsonschema.ValidationError{
-			Message:     `the provided code is invalid or has already been used. Please try again.`,
+			Message:     `the provided code is invalid or has already been used`,
 			InstancePtr: "#/",
 		},
 		Messages: new(text.Messages).Add(text.NewErrorValidationRegistrationCodeInvalidOrAlreadyUsed()),
@@ -380,7 +380,7 @@ func NewRegistrationCodeInvalid() error {
 func NewLoginCodeInvalid() error {
 	return errors.WithStack(&ValidationError{
 		ValidationError: &jsonschema.ValidationError{
-			Message:     `the provided code is invalid or has already been used. Please try again.`,
+			Message:     `the provided code is invalid or has already been used`,
 			InstancePtr: "#/",
 		},
 		Messages: new(text.Messages).Add(text.NewErrorValidationLoginCodeInvalidOrAlreadyUsed()),

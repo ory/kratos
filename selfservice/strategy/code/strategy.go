@@ -5,7 +5,6 @@ package code
 
 import (
 	"context"
-	"encoding/json"
 	"net/http"
 	"strings"
 
@@ -112,6 +111,10 @@ type (
 	Strategy struct {
 		deps strategyDependencies
 		dx   *decoderx.HTTP
+	}
+
+	codeIdentifier struct {
+		Identifier string `json:"identifier"`
 	}
 )
 
@@ -294,22 +297,25 @@ func (s *Strategy) PopulateMethod(r *http.Request, f flow.Flow) error {
 
 // NewCodeUINodes creates a fresh UI for the code flow.
 // this is used with the `recovery`, `verification`, `registration` and `login` flows.
-func (s *Strategy) NewCodeUINodes(r *http.Request, f flow.Flow, data json.RawMessage) error {
+func (s *Strategy) NewCodeUINodes(r *http.Request, f flow.Flow, data any) error {
 	if err := s.PopulateMethod(r, f); err != nil {
 		return err
 	}
 
-	// on Registration flow we need to populate the form with the values from the initial form generation
+	prefix := "" // The login flow does not process traits
 	if f.GetFlowName() == flow.RegistrationFlow {
-		for _, n := range container.NewFromJSON("", node.CodeGroup, data, "traits").Nodes {
-			// we only set the value and not the whole field because we want to keep types from the initial form generation
-			f.GetUI().GetNodes().SetValueAttribute(n.ID(), n.Attributes.GetValue())
-		}
-	} else if f.GetFlowName() == flow.LoginFlow {
-		// on Login flow we need to populate the form with the values from the initial form generation
-		for _, n := range container.NewFromJSON("", node.DefaultGroup, data, "").Nodes {
-			f.GetUI().GetNodes().SetValueAttribute(n.ID(), n.Attributes.GetValue())
-		}
+		// The registration form does however
+		prefix = "traits"
+	}
+
+	cont, err := container.NewFromStruct("", node.CodeGroup, data, prefix)
+	if err != nil {
+		return err
+	}
+
+	for _, n := range cont.Nodes {
+		// we only set the value and not the whole field because we want to keep types from the initial form generation
+		f.GetUI().GetNodes().SetValueAttribute(n.ID(), n.Attributes.GetValue())
 	}
 
 	return nil
