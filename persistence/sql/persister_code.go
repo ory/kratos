@@ -19,12 +19,14 @@ type oneTimeCodeProvider interface {
 	GetHMACCode() string
 }
 
-func useOneTimeCode[T oneTimeCodeProvider](ctx context.Context, p *Persister, flowID uuid.UUID, userProvidedCode string, target T, flowTableName string, foreignKeyName string) error {
+func useOneTimeCode[P any, U interface {
+	*P
+	oneTimeCodeProvider
+}](ctx context.Context, p *Persister, flowID uuid.UUID, userProvidedCode string, flowTableName string, foreignKeyName string) (U, error) {
 	ctx, span := p.r.Tracer(ctx).Tracer().Start(ctx, "persistence.sql.useOneTimeCode")
 	defer span.End()
 
-	var found bool
-
+	var target U
 	nid := p.NetworkID(ctx)
 	if err := p.Transaction(ctx, func(ctx context.Context, tx *pop.Connection) error {
 		//#nosec G201 -- TableName is static
@@ -51,7 +53,7 @@ func useOneTimeCode[T oneTimeCodeProvider](ctx context.Context, p *Persister, fl
 			return errors.WithStack(code.ErrCodeSubmittedTooOften)
 		}
 
-		var codes []T
+		var codes []U
 		if err := sqlcon.HandleError(tx.Where(fmt.Sprintf("nid = ? AND %s = ?", foreignKeyName), nid, flowID).All(&codes)); err != nil {
 			if errors.Is(err, sqlcon.ErrNoRows) {
 				// Return no error, as that would roll back the transaction and reset the submit count.
@@ -71,12 +73,11 @@ func useOneTimeCode[T oneTimeCodeProvider](ctx context.Context, p *Persister, fl
 					continue
 				}
 				target = c
-				found = true
 				break secrets
 			}
 		}
 
-		if !found || target.Validate() != nil {
+		if target.Validate() != nil {
 			// Return no error, as that would roll back the transaction
 			return nil
 		}
@@ -84,16 +85,12 @@ func useOneTimeCode[T oneTimeCodeProvider](ctx context.Context, p *Persister, fl
 		//#nosec G201 -- TableName is static
 		return tx.RawQuery(fmt.Sprintf("UPDATE %s SET used_at = ? WHERE id = ? AND nid = ?", target.TableName(ctx)), time.Now().UTC(), target.GetID(), nid).Exec()
 	}); err != nil {
-		return sqlcon.HandleError(err)
-	}
-
-	if !found {
-		return errors.WithStack(code.ErrCodeNotFound)
+		return nil, sqlcon.HandleError(err)
 	}
 
 	if err := target.Validate(); err != nil {
-		return err
+		return nil, err
 	}
 
-	return nil
+	return target, nil
 }

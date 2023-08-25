@@ -76,6 +76,9 @@ func (RecoveryCode) TableName(ctx context.Context) string {
 }
 
 func (f *RecoveryCode) Validate() error {
+	if f == nil {
+		return errors.WithStack(ErrCodeNotFound)
+	}
 	if f.ExpiresAt.Before(time.Now().UTC()) {
 		return errors.WithStack(flow.NewFlowExpiredError(f.ExpiresAt))
 	}

@@ -63,6 +63,9 @@ func (RegistrationCode) TableName(ctx context.Context) string {
 }
 
 func (f *RegistrationCode) Validate() error {
+	if f == nil {
+		return errors.WithStack(ErrCodeNotFound)
+	}
 	if f.ExpiresAt.Before(time.Now().UTC()) {
 		return errors.WithStack(flow.NewFlowExpiredError(f.ExpiresAt))
 	}

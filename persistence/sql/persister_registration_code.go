@@ -38,8 +38,8 @@ func (p *Persister) UseRegistrationCode(ctx context.Context, flowID uuid.UUID, u
 	ctx, span := p.r.Tracer(ctx).Tracer().Start(ctx, "persistence.sql.UseRegistrationCode")
 	defer span.End()
 
-	var codeRow *code.RegistrationCode // This has to be nil per default
-	if err := useOneTimeCode[*code.RegistrationCode](ctx, p, flowID, userProvidedCode, codeRow, new(registration.Flow).TableName(ctx), "selfservice_registration_flow_id"); err != nil {
+	codeRow, err := useOneTimeCode[code.RegistrationCode, *code.RegistrationCode](ctx, p, flowID, userProvidedCode, new(registration.Flow).TableName(ctx), "selfservice_registration_flow_id")
+	if err != nil {
 		return nil, err
 	}
 

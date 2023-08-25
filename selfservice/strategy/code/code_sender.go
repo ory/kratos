@@ -70,9 +70,14 @@ func (s *Sender) SendCode(ctx context.Context, f flow.Flow, id *identity.Identit
 		WithSensitiveField("address", addresses).
 		Debugf("Preparing %s code", f.GetFlowName())
 
+	// We generate the code once and use it for all addresses. This is important because
+	// generating different codes per address would reduce the search space for an attacker.
+	//
+	// See also [this discussion](https://github.com/ory/kratos/pull/3378#discussion_r1305436968).
+	rawCode := GenerateCode()
+
 	// send to all addresses
 	for _, address := range addresses {
-		rawCode := GenerateCode()
 
 		switch f.GetFlowName() {
 		case flow.RegistrationFlow:

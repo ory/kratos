@@ -52,8 +52,8 @@ func (p *Persister) UseRecoveryCode(ctx context.Context, flowID uuid.UUID, userP
 	ctx, span := p.r.Tracer(ctx).Tracer().Start(ctx, "persistence.sql.UseRecoveryCode")
 	defer span.End()
 
-	var codeRow *code.RecoveryCode // This has to be nil per default
-	if err := useOneTimeCode[*code.RecoveryCode](ctx, p, flowID, userProvidedCode, codeRow, new(recovery.Flow).TableName(ctx), "selfservice_recovery_flow_id"); err != nil {
+	codeRow, err := useOneTimeCode[code.RecoveryCode, *code.RecoveryCode](ctx, p, flowID, userProvidedCode, new(recovery.Flow).TableName(ctx), "selfservice_recovery_flow_id")
+	if err != nil {
 		return nil, err
 	}
 
