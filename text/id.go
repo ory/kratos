@@ -98,7 +98,7 @@ const (
 	ErrorValidationRequired
 	ErrorValidationMinLength
 	ErrorValidationInvalidFormat
-	ErrorValidationPasswordPolicyViolation
+	ErrorValidationPasswordPolicyViolationGeneric
 	ErrorValidationInvalidCredentials
 	ErrorValidationDuplicateCredentials
 	ErrorValidationTOTPVerifierWrong
@@ -122,6 +122,12 @@ const (
 	ErrorValidationWrongType
 	ErrorValidationDuplicateCredentialsOnOIDCLink
 	ErrorValidationDuplicateCredentialsWithHints
+	ErrorValidationConst
+	ErrorValidationConstGeneric
+	ErrorValidationPasswordIdentifierTooSimilar
+	ErrorValidationPasswordMinLength
+	ErrorValidationPasswordMaxLength
+	ErrorValidationPasswordTooManyBreaches
 )
 
 const (

@@ -33,11 +33,11 @@ var inAMinute = time.Date(2020, 1, 1, 1, 0, 0, 0, time.UTC).Add(time.Minute)
 var messages map[string]*text.Message
 
 func init() {
-	text.Now = func() time.Time {
-		return inAMinute
-	}
 	text.Until = func(t time.Time) time.Duration {
-		return time.Second
+		return time.Minute
+	}
+	text.Since = func(time.Time) time.Duration {
+		return time.Minute
 	}
 
 	messages = map[string]*text.Message{
@@ -59,8 +59,8 @@ func init() {
 		"NewInfoSelfServiceSettingsRegenerateLookup": text.NewInfoSelfServiceSettingsRegenerateLookup(),
 		"NewInfoSelfServiceSettingsDisableLookup":    text.NewInfoSelfServiceSettingsDisableLookup(),
 		"NewInfoSelfServiceSettingsLookupConfirm":    text.NewInfoSelfServiceSettingsLookupConfirm(),
-		"NewInfoSelfServiceSettingsLookupSecretList": text.NewInfoSelfServiceSettingsLookupSecretList([]string{"{code-1}", "{code-2}"}, []interface{}{
-			text.NewInfoSelfServiceSettingsLookupSecret("{code}"),
+		"NewInfoSelfServiceSettingsLookupSecretList": text.NewInfoSelfServiceSettingsLookupSecretList([]string{"{secrets_list}"}, []interface{}{
+			text.NewInfoSelfServiceSettingsLookupSecret("{secret}"),
 			text.NewInfoSelfServiceSettingsLookupSecretUsed(aSecondAgo),
 		}),
 		"NewInfoSelfServiceSettingsLookupSecret":                  text.NewInfoSelfServiceSettingsLookupSecret("{secret}"),
@@ -82,19 +82,25 @@ func init() {
 		"NewErrorSystemGeneric":                                   text.NewErrorSystemGeneric("{reason}"),
 		"NewValidationErrorGeneric":                               text.NewValidationErrorGeneric("{reason}"),
 		"NewValidationErrorRequired":                              text.NewValidationErrorRequired("{field}"),
-		"NewErrorValidationMinLength":                             text.NewErrorValidationMinLength("length must be >= 5, but got 3"),
-		"NewErrorValidationMaxLength":                             text.NewErrorValidationMaxLength("length must be <= 5, but got 6"),
-		"NewErrorValidationInvalidFormat":                         text.NewErrorValidationInvalidFormat("does not match pattern \"^[a-z]*$\""),
-		"NewErrorValidationMinimum":                               text.NewErrorValidationMinimum("must be >= 5 but found 3"),
-		"NewErrorValidationExclusiveMinimum":                      text.NewErrorValidationExclusiveMinimum("must be > 5 but found 5"),
-		"NewErrorValidationMaximum":                               text.NewErrorValidationMaximum("must be <= 5 but found 6"),
-		"NewErrorValidationExclusiveMaximum":                      text.NewErrorValidationExclusiveMaximum("must be < 5 but found 5"),
-		"NewErrorValidationMultipleOf":                            text.NewErrorValidationMultipleOf("7 not multipleOf 3"),
-		"NewErrorValidationMaxItems":                              text.NewErrorValidationMaxItems("maximum 3 items allowed, but found 4 items"),
-		"NewErrorValidationMinItems":                              text.NewErrorValidationMinItems("minimum 3 items allowed, but found 2 items"),
-		"NewErrorValidationUniqueItems":                           text.NewErrorValidationUniqueItems("items at index 0 and 2 are equal"),
-		"NewErrorValidationWrongType":                             text.NewErrorValidationWrongType("expected number, but got string"),
-		"NewErrorValidationPasswordPolicyViolation":               text.NewErrorValidationPasswordPolicyViolation("{reason}"),
+		"NewErrorValidationMinLength":                             text.NewErrorValidationMinLength(5, 3),
+		"NewErrorValidationMaxLength":                             text.NewErrorValidationMaxLength(5, 6),
+		"NewErrorValidationInvalidFormat":                         text.NewErrorValidationInvalidFormat("{pattern}"),
+		"NewErrorValidationMinimum":                               text.NewErrorValidationMinimum(5, 3),
+		"NewErrorValidationExclusiveMinimum":                      text.NewErrorValidationExclusiveMinimum(5, 5),
+		"NewErrorValidationMaximum":                               text.NewErrorValidationMaximum(5, 6),
+		"NewErrorValidationExclusiveMaximum":                      text.NewErrorValidationExclusiveMaximum(5, 5),
+		"NewErrorValidationMultipleOf":                            text.NewErrorValidationMultipleOf(7, 3),
+		"NewErrorValidationMaxItems":                              text.NewErrorValidationMaxItems(3, 4),
+		"NewErrorValidationMinItems":                              text.NewErrorValidationMinItems(3, 2),
+		"NewErrorValidationUniqueItems":                           text.NewErrorValidationUniqueItems(0, 2),
+		"NewErrorValidationWrongType":                             text.NewErrorValidationWrongType([]string{"{allowed_types_list}"}, "{actual_type}"),
+		"NewErrorValidationConst":                                 text.NewErrorValidationConst("{expected}"),
+		"NewErrorValidationConstGeneric":                          text.NewErrorValidationConstGeneric(),
+		"NewErrorValidationPasswordPolicyViolationGeneric":        text.NewErrorValidationPasswordPolicyViolationGeneric("{reason}"),
+		"NewErrorValidationPasswordIdentifierTooSimilar":          text.NewErrorValidationPasswordIdentifierTooSimilar(),
+		"NewErrorValidationPasswordMinLength":                     text.NewErrorValidationPasswordMinLength(6, 5),
+		"NewErrorValidationPasswordMaxLength":                     text.NewErrorValidationPasswordMaxLength(72, 80),
+		"NewErrorValidationPasswordTooManyBreaches":               text.NewErrorValidationPasswordTooManyBreaches(101),
 		"NewErrorValidationInvalidCredentials":                    text.NewErrorValidationInvalidCredentials(),
 		"NewErrorValidationDuplicateCredentials":                  text.NewErrorValidationDuplicateCredentials(),
 		"NewErrorValidationDuplicateCredentialsWithHints":         text.NewErrorValidationDuplicateCredentialsWithHints("{reason}", nil, nil, ""),

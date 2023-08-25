@@ -136,7 +136,10 @@ func (s *Strategy) validateCredentials(ctx context.Context, i *identity.Identity
 			if _, ok := errorsx.Cause(err).(*herodot.DefaultError); ok {
 				return err
 			}
-			return schema.NewPasswordPolicyViolationError("#/password", err.Error())
+			if message := new(text.Message); errors.As(err, &message) {
+				return schema.NewPasswordPolicyViolationError("#/password", message)
+			}
+			return schema.NewPasswordPolicyViolationError("#/password", text.NewErrorValidationPasswordPolicyViolationGeneric(err.Error()))
 		}
 	}
 

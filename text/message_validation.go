@@ -5,6 +5,7 @@ package text
 
 import (
 	"fmt"
+	"strings"
 )
 
 func NewValidationErrorGeneric(reason string) *Message {
@@ -12,7 +13,7 @@ func NewValidationErrorGeneric(reason string) *Message {
 		ID:      ErrorValidationGeneric,
 		Text:    reason,
 		Type:    Error,
-		Context: nil,
+		Context: context(nil),
 	}
 }
 
@@ -21,127 +22,226 @@ func NewValidationErrorRequired(missing string) *Message {
 		ID:   ErrorValidationRequired,
 		Text: fmt.Sprintf("Property %s is missing.", missing),
 		Type: Error,
-		Context: context(map[string]interface{}{
+		Context: context(map[string]any{
 			"property": missing,
 		}),
 	}
 }
 
-func NewErrorValidationMinLength(reason string) *Message {
+func NewErrorValidationMinLength(minLength, actualLength int) *Message {
 	return &Message{
-		ID:      ErrorValidationMinLength,
-		Text:    reason,
+		ID:   ErrorValidationMinLength,
+		Text: fmt.Sprintf("length must be >= %d, but got %d", minLength, actualLength),
+		Type: Error,
+		Context: context(map[string]any{
+			"min_length":    minLength,
+			"actual_length": actualLength,
+		}),
+	}
+}
+
+func NewErrorValidationMaxLength(maxLength, actualLength int) *Message {
+	return &Message{
+		ID:   ErrorValidationMaxLength,
+		Text: fmt.Sprintf("length must be <= %d, but got %d", maxLength, actualLength),
+		Type: Error,
+		Context: context(map[string]any{
+			"max_length":    maxLength,
+			"actual_length": actualLength,
+		}),
+	}
+}
+
+func NewErrorValidationInvalidFormat(pattern string) *Message {
+	return &Message{
+		ID:   ErrorValidationInvalidFormat,
+		Text: fmt.Sprintf("does not match pattern %q", pattern),
+		Type: Error,
+		Context: context(map[string]any{
+			"pattern": pattern,
+		}),
+	}
+}
+
+func NewErrorValidationMinimum(minimum, actual float64) *Message {
+	return &Message{
+		ID:   ErrorValidationMinimum,
+		Text: fmt.Sprintf("must be >= %v but found %v", minimum, actual),
+		Type: Error,
+		Context: context(map[string]any{
+			"minimum": minimum,
+			"actual":  actual,
+		}),
+	}
+}
+
+func NewErrorValidationExclusiveMinimum(minimum, actual float64) *Message {
+	return &Message{
+		ID:   ErrorValidationExclusiveMinimum,
+		Text: fmt.Sprintf("must be > %v but found %v", minimum, actual),
+		Type: Error,
+		Context: context(map[string]any{
+			"minimum": minimum,
+			"actual":  actual,
+		}),
+	}
+}
+
+func NewErrorValidationMaximum(maximum, actual float64) *Message {
+	return &Message{
+		ID:   ErrorValidationMaximum,
+		Text: fmt.Sprintf("must be <= %v but found %v", maximum, actual),
+		Type: Error,
+		Context: context(map[string]any{
+			"maximum": maximum,
+			"actual":  actual,
+		}),
+	}
+}
+
+func NewErrorValidationExclusiveMaximum(maximum, actual float64) *Message {
+	return &Message{
+		ID:   ErrorValidationExclusiveMaximum,
+		Text: fmt.Sprintf("must be < %v but found %v", maximum, actual),
+		Type: Error,
+		Context: context(map[string]any{
+			"maximum": maximum,
+			"actual":  actual,
+		}),
+	}
+}
+
+func NewErrorValidationMultipleOf(base, actual float64) *Message {
+	return &Message{
+		ID:   ErrorValidationMultipleOf,
+		Text: fmt.Sprintf("%v not multipleOf %v", actual, base),
+		Type: Error,
+		Context: context(map[string]any{
+			"base":   base,
+			"actual": actual,
+		}),
+	}
+}
+
+func NewErrorValidationMaxItems(maxItems, actualItems int) *Message {
+	return &Message{
+		ID:   ErrorValidationMaxItems,
+		Text: fmt.Sprintf("maximum %d items allowed, but found %d items", maxItems, actualItems),
+		Type: Error,
+		Context: context(map[string]any{
+			"max_items":    maxItems,
+			"actual_items": actualItems,
+		}),
+	}
+}
+
+func NewErrorValidationMinItems(minItems, actualItems int) *Message {
+	return &Message{
+		ID:   ErrorValidationMinItems,
+		Text: fmt.Sprintf("minimum %d items allowed, but found %d items", minItems, actualItems),
+		Type: Error,
+		Context: context(map[string]any{
+			"min_items":    minItems,
+			"actual_items": actualItems,
+		}),
+	}
+}
+
+func NewErrorValidationUniqueItems(indexA, indexB int) *Message {
+	return &Message{
+		ID:   ErrorValidationUniqueItems,
+		Text: fmt.Sprintf("items at index %d and %d are equal", indexA, indexB),
+		Type: Error,
+		Context: context(map[string]any{
+			"index_a": indexA,
+			"index_b": indexB,
+		}),
+	}
+}
+
+func NewErrorValidationWrongType(allowedTypes []string, actualType string) *Message {
+	return &Message{
+		ID:   ErrorValidationWrongType,
+		Text: fmt.Sprintf("expected %s, but got %s", strings.Join(allowedTypes, " or "), actualType),
+		Type: Error,
+		Context: context(map[string]any{
+			"allowed_types": allowedTypes,
+			"actual_type":   actualType,
+		}),
+	}
+}
+
+func NewErrorValidationConst(expected any) *Message {
+	return &Message{
+		ID:   ErrorValidationConst,
+		Text: fmt.Sprintf("must be equal to constant %v", expected),
+		Type: Error,
+		Context: context(map[string]any{
+			"expected": expected,
+		}),
+	}
+}
+
+func NewErrorValidationConstGeneric() *Message {
+	return &Message{
+		ID:      ErrorValidationConstGeneric,
+		Text:    "const failed",
 		Type:    Error,
 		Context: context(nil),
 	}
 }
 
-func NewErrorValidationMaxLength(reason string) *Message {
+func NewErrorValidationPasswordPolicyViolationGeneric(reason string) *Message {
 	return &Message{
-		ID:      ErrorValidationMaxLength,
-		Text:    reason,
-		Type:    Error,
-		Context: context(nil),
-	}
-}
-
-func NewErrorValidationInvalidFormat(reason string) *Message {
-	return &Message{
-		ID:      ErrorValidationInvalidFormat,
-		Text:    reason,
-		Type:    Error,
-		Context: context(nil),
-	}
-}
-
-func NewErrorValidationMinimum(reason string) *Message {
-	return &Message{
-		ID:      ErrorValidationMinimum,
-		Text:    reason,
-		Type:    Error,
-		Context: context(nil),
-	}
-}
-
-func NewErrorValidationExclusiveMinimum(reason string) *Message {
-	return &Message{
-		ID:      ErrorValidationExclusiveMinimum,
-		Text:    reason,
-		Type:    Error,
-		Context: context(nil),
-	}
-}
-
-func NewErrorValidationMaximum(reason string) *Message {
-	return &Message{
-		ID:      ErrorValidationMaximum,
-		Text:    reason,
-		Type:    Error,
-		Context: context(nil),
-	}
-}
-
-func NewErrorValidationExclusiveMaximum(reason string) *Message {
-	return &Message{
-		ID:      ErrorValidationExclusiveMaximum,
-		Text:    reason,
-		Type:    Error,
-		Context: context(nil),
-	}
-}
-
-func NewErrorValidationMultipleOf(reason string) *Message {
-	return &Message{
-		ID:      ErrorValidationMultipleOf,
-		Text:    reason,
-		Type:    Error,
-		Context: context(nil),
-	}
-}
-
-func NewErrorValidationMaxItems(reason string) *Message {
-	return &Message{
-		ID:      ErrorValidationMaxItems,
-		Text:    reason,
-		Type:    Error,
-		Context: context(nil),
-	}
-}
-
-func NewErrorValidationMinItems(reason string) *Message {
-	return &Message{
-		ID:      ErrorValidationMinItems,
-		Text:    reason,
-		Type:    Error,
-		Context: context(nil),
-	}
-}
-
-func NewErrorValidationUniqueItems(reason string) *Message {
-	return &Message{
-		ID:      ErrorValidationUniqueItems,
-		Text:    reason,
-		Type:    Error,
-		Context: context(nil),
-	}
-}
-
-func NewErrorValidationWrongType(reason string) *Message {
-	return &Message{
-		ID:      ErrorValidationWrongType,
-		Text:    reason,
-		Type:    Error,
-		Context: context(nil),
-	}
-}
-
-func NewErrorValidationPasswordPolicyViolation(reason string) *Message {
-	return &Message{
-		ID:   ErrorValidationPasswordPolicyViolation,
+		ID:   ErrorValidationPasswordPolicyViolationGeneric,
 		Text: fmt.Sprintf("The password can not be used because %s.", reason),
 		Type: Error,
-		Context: context(map[string]interface{}{
+		Context: context(map[string]any{
 			"reason": reason,
+		}),
+	}
+}
+
+func NewErrorValidationPasswordIdentifierTooSimilar() *Message {
+	return &Message{
+		ID:      ErrorValidationPasswordIdentifierTooSimilar,
+		Text:    "The password can not be used because it is too similar to the identifier.",
+		Type:    Error,
+		Context: context(nil),
+	}
+}
+
+func NewErrorValidationPasswordMinLength(minLength, actualLength int) *Message {
+	return &Message{
+		ID:   ErrorValidationPasswordMinLength,
+		Text: fmt.Sprintf("The password must be at least %d characters long, but got %d.", minLength, actualLength),
+		Type: Error,
+		Context: context(map[string]any{
+			"min_length":    minLength,
+			"actual_length": actualLength,
+		}),
+	}
+}
+
+func NewErrorValidationPasswordMaxLength(maxLength, actualLength int) *Message {
+	return &Message{
+		ID:   ErrorValidationPasswordMaxLength,
+		Text: fmt.Sprintf("The password must be at most %d characters long, but got %d.", maxLength, actualLength),
+		Type: Error,
+		Context: context(map[string]any{
+			"max_length":    maxLength,
+			"actual_length": actualLength,
+		}),
+	}
+}
+
+func NewErrorValidationPasswordTooManyBreaches(breaches int) *Message {
+	return &Message{
+		ID:   ErrorValidationPasswordTooManyBreaches,
+		Text: "The password has been found in data breaches and must no longer be used.",
+		Type: Error,
+		Context: context(map[string]any{
+			"breaches": breaches,
 		}),
 	}
 }
@@ -169,7 +269,7 @@ func NewErrorValidationDuplicateCredentialsWithHints(reason string, availableCre
 		ID:   ErrorValidationDuplicateCredentialsWithHints,
 		Text: reason,
 		Type: Error,
-		Context: context(map[string]interface{}{
+		Context: context(map[string]any{
 			"available_credential_types": availableCredentialTypes,
 			"available_oidc_providers":   availableOIDCProviders,
 			"credential_identifier_hint": credentialIdentifierHint,
@@ -215,17 +315,19 @@ func NewErrorValidationLookupInvalid() *Message {
 
 func NewErrorValidationIdentifierMissing() *Message {
 	return &Message{
-		ID:   ErrorValidationIdentifierMissing,
-		Text: "Could not find any login identifiers. Did you forget to set them? This could also be caused by a server misconfiguration.",
-		Type: Error,
+		ID:      ErrorValidationIdentifierMissing,
+		Text:    "Could not find any login identifiers. Did you forget to set them? This could also be caused by a server misconfiguration.",
+		Type:    Error,
+		Context: context(nil),
 	}
 }
 
 func NewErrorValidationAddressNotVerified() *Message {
 	return &Message{
-		ID:   ErrorValidationAddressNotVerified,
-		Text: "Account not active yet. Did you forget to verify your email address?",
-		Type: Error,
+		ID:      ErrorValidationAddressNotVerified,
+		Text:    "Account not active yet. Did you forget to verify your email address?",
+		Type:    Error,
+		Context: context(nil),
 	}
 }
 

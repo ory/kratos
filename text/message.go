@@ -72,3 +72,7 @@ func (m *Message) Scan(value interface{}) error {
 func (m Message) Value() (driver.Value, error) {
 	return sqlxx.JSONValue(&m)
 }
+
+func (m *Message) Error() string {
+	return m.Text
+}

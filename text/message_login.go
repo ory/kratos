@@ -112,7 +112,7 @@ func NewInfoLoginWith(provider string) *Message {
 func NewErrorValidationLoginFlowExpired(expiredAt time.Time) *Message {
 	return &Message{
 		ID:   ErrorValidationLoginFlowExpired,
-		Text: fmt.Sprintf("The login flow expired %.2f minutes ago, please try again.", Now().Sub(expiredAt).Minutes()),
+		Text: fmt.Sprintf("The login flow expired %.2f minutes ago, please try again.", Since(expiredAt).Minutes()),
 		Type: Error,
 		Context: context(map[string]interface{}{
 			"expired_at": expiredAt,

@@ -211,6 +211,8 @@ func TestContainer(t *testing.T) {
 	})
 
 	t.Run("method=ParseError", func(t *testing.T) {
+		sc, err := jsonschema.CompileString(ctx, "test", `{"type":"object","properties":{"foo":{"type":"string", "minLength": 3}}}`)
+		require.NoError(t, err)
 		for k, tc := range []struct {
 			err       error
 			expectErr bool
@@ -224,6 +226,7 @@ func TestContainer(t *testing.T) {
 				&node.Node{Group: node.DefaultGroup, Type: node.Input, Attributes: &node.InputAttributes{Name: "foo.bar.baz", Type: node.InputAttributeTypeText}, Messages: text.Messages{*text.NewValidationErrorGeneric("test")}, Meta: new(node.Meta)},
 			}}},
 			{err: &jsonschema.ValidationError{Message: "test", InstancePtr: ""}, expect: Container{Nodes: node.Nodes{}, Messages: text.Messages{*text.NewValidationErrorGeneric("test")}}},
+			{err: sc.ValidateInterface(map[string]any{"foo": "x"})},
 		} {
 			t.Run(fmt.Sprintf("case=%d", k), func(t *testing.T) {
 				for _, in := range []error{tc.err, errors.WithStack(tc.err)} {

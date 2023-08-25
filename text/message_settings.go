@@ -12,7 +12,7 @@ import (
 func NewErrorValidationSettingsFlowExpired(expiredAt time.Time) *Message {
 	return &Message{
 		ID:   ErrorValidationSettingsFlowExpired,
-		Text: fmt.Sprintf("The settings flow expired %.2f minutes ago, please try again.", (-Until(expiredAt)).Minutes()),
+		Text: fmt.Sprintf("The settings flow expired %.2f minutes ago, please try again.", Since(expiredAt).Minutes()),
 		Type: Error,
 		Context: context(map[string]interface{}{
 			"expired_at": expiredAt,
