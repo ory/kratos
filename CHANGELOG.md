@@ -5,7 +5,7 @@
 
 **Table of Contents**
 
-- [ (2023-08-22)](#2023-08-22)
+- [ (2023-08-28)](#2023-08-28)
   - [Bug Fixes](#bug-fixes)
   - [Documentation](#documentation)
   - [Features](#features)
@@ -309,7 +309,7 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# [](https://github.com/ory/kratos/compare/v1.0.0...v) (2023-08-22)
+# [](https://github.com/ory/kratos/compare/v1.0.0...v) (2023-08-28)
 
 ### Bug Fixes
 
@@ -347,6 +347,11 @@
 - False-positives for requiring re-authentication on update
   ([#3421](https://github.com/ory/kratos/issues/3421))
   ([ce8139f](https://github.com/ory/kratos/commit/ce8139f2325a8317388cbcaaa98f3f83d626657b))
+- Pass context ([#3452](https://github.com/ory/kratos/issues/3452))
+  ([c492bdc](https://github.com/ory/kratos/commit/c492bdcd0c5dbdf527ae523d879a6c1eeb9c4cdf))
+- Properly normalize OIDC verified emails
+  ([#3450](https://github.com/ory/kratos/issues/3450))
+  ([703b910](https://github.com/ory/kratos/commit/703b910927d879558bfeb0fd2c3339b1d301fac8))
 - Redirect to verification URL even if login_challenge is set
   ([#3412](https://github.com/ory/kratos/issues/3412))
   ([cd9e6a0](https://github.com/ory/kratos/commit/cd9e6a0e1e4cb4957d2a50ae3d288ebb0591e42d)):
@@ -360,6 +365,9 @@
   Significantly improves performance by reducing the amount of queries we need
   to do when checking for the different AAL levels.
 
+- Registration with verification
+  ([#3451](https://github.com/ory/kratos/issues/3451))
+  ([77c3196](https://github.com/ory/kratos/commit/77c3196fd60c5927b84e9a7f6546f80ac2d78ee5))
 - Remove requirement for smtp section
   ([#3405](https://github.com/ory/kratos/issues/3405))
   ([59a3f14](https://github.com/ory/kratos/commit/59a3f1469b8412e49846a500493cb02fc6eb34b1))
@@ -396,6 +404,9 @@
 
 - Hot-reload CORS origins ([#3423](https://github.com/ory/kratos/issues/3423))
   ([157d934](https://github.com/ory/kratos/commit/157d9345aeb04f371f9d85b70c89e8646e781333))
+- Improve messages for easier i18n
+  ([#3457](https://github.com/ory/kratos/issues/3457))
+  ([37f1657](https://github.com/ory/kratos/commit/37f16577d92ba88869bf15fb1ea54e819b062724))
 - Provide login hints when registration fails due to duplicate
   credentials/addresses ([#3430](https://github.com/ory/kratos/issues/3430))
   ([8b28469](https://github.com/ory/kratos/commit/8b284697e4a26fb01ad57d2e9ebd8f714be49f33)):
