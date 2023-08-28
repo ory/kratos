@@ -10,13 +10,14 @@ import (
 	"crypto/sha1" //#nosec G505 -- compatibility for imported passwords
 	"errors"
 	"fmt"
-	"github.com/ory/kratos/text"
 	"io"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
 	"testing"
 	"time"
+
+	"github.com/ory/kratos/text"
 
 	"github.com/stretchr/testify/assert"
 
