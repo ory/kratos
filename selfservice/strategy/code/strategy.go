@@ -4,7 +4,6 @@
 package code
 
 import (
-	"context"
 	"net/http"
 	"strings"
 
@@ -62,6 +61,7 @@ type (
 		x.CSRFTokenGeneratorProvider
 		x.WriterProvider
 		x.LoggingProvider
+		x.TracingProvider
 
 		config.Provider
 
@@ -321,148 +321,13 @@ func (s *Strategy) NewCodeUINodes(r *http.Request, f flow.Flow, data any) error 
 	return nil
 }
 
-type (
-	FlowType interface {
-		*login.Flow | *registration.Flow | *recovery.Flow | *verification.Flow
-		flow.Flow
-	}
-	FlowPayload interface {
-		*updateLoginFlowWithCodeMethod | *updateRegistrationFlowWithCodeMethod | *updateRecoveryFlowWithCodeMethod | *updateVerificationFlowWithCodeMethod
-	}
-	CreateCodeState[T FlowType, P FlowPayload]           func(context.Context, T, *Strategy, P) error
-	ValidateCodeState[T FlowType, P FlowPayload]         func(context.Context, T, *Strategy, P) error
-	AlreadyValidatedCodeState[T FlowType, P FlowPayload] func(context.Context, T, *Strategy, P) error
-	CodeStateManager[T FlowType, P FlowPayload]          struct {
-		f                         T
-		payload                   P
-		strategy                  *Strategy
-		createCodeState           CreateCodeState[T, P]
-		verifyCodeState           ValidateCodeState[T, P]
-		alreadyValidatedCodeState AlreadyValidatedCodeState[T, P]
-	}
-)
-
-func NewCodeStateManager[T FlowType, P FlowPayload](f T, s *Strategy, payload P) *CodeStateManager[T, P] {
-	return &CodeStateManager[T, P]{
-		f:        f,
-		strategy: s,
-		payload:  payload,
-	}
-}
-
-func (c *CodeStateManager[T, P]) SetCreateCodeHandler(fn CreateCodeState[T, P]) {
-	c.createCodeState = fn
-}
-
-func (c *CodeStateManager[T, P]) SetCodeVerifyHandler(fn ValidateCodeState[T, P]) {
-	c.verifyCodeState = fn
-}
-
-func (c *CodeStateManager[T, P]) SetCodeDoneHandler(fn AlreadyValidatedCodeState[T, P]) {
-	c.alreadyValidatedCodeState = fn
-}
-
-func (c *CodeStateManager[T, P]) validatePayload(ctx context.Context) error {
-	switch v := any(c.payload).(type) {
-	case *updateLoginFlowWithCodeMethod:
-		if len(v.Identifier) == 0 {
-			return errors.WithStack(schema.NewRequiredError("#/identifier", "identifier"))
-		}
-	case *updateRegistrationFlowWithCodeMethod:
-		if len(v.Traits) == 0 {
-			return errors.WithStack(schema.NewRequiredError("#/traits", "traits"))
-		}
-	case *updateRecoveryFlowWithCodeMethod:
-		if len(v.Email) == 0 {
-			return errors.WithStack(schema.NewRequiredError("#/email", "email"))
-		}
-	case *updateVerificationFlowWithCodeMethod:
-		if len(v.Email) == 0 {
-			return errors.WithStack(schema.NewRequiredError("#/email", "email"))
-		}
-	default:
-		return errors.WithStack(herodot.ErrBadRequest.WithReason("received unexpected flow payload type"))
-	}
-	return nil
-}
-
-func (c *CodeStateManager[T, P]) getResend() string {
-	switch v := any(c.payload).(type) {
-	case *updateLoginFlowWithCodeMethod:
-		return v.Resend
-	case *updateRegistrationFlowWithCodeMethod:
-		return v.Resend
-	}
-	return ""
-}
-
-func (c *CodeStateManager[T, P]) getCode() string {
-	switch v := any(c.payload).(type) {
-	case *updateLoginFlowWithCodeMethod:
-		return v.Code
-	case *updateRegistrationFlowWithCodeMethod:
-		return v.Code
-	case *updateRecoveryFlowWithCodeMethod:
-		return v.Code
-	case *updateVerificationFlowWithCodeMethod:
-		return v.Code
-	}
-	return ""
-}
-
-func (c *CodeStateManager[T, P]) Run(ctx context.Context) error {
+func SetDefaultFlowState(f flow.Flow, resend string) {
 	// By Default the flow should be in the 'choose method' state.
-	if c.f.GetState() == "" {
-		c.f.SetState(flow.StateChooseMethod)
+	if f.GetState() == "" {
+		f.SetState(flow.StateChooseMethod)
 	}
 
-	if strings.EqualFold(c.getResend(), "code") {
-		c.f.SetState(flow.StateChooseMethod)
-	}
-
-	switch c.f.GetState() {
-	case flow.StateChooseMethod:
-		// we are in the first submission state of the flow
-
-		if err := c.validatePayload(ctx); err != nil {
-			return err
-		}
-
-		if err := c.createCodeState(ctx, c.f, c.strategy, c.payload); err != nil {
-			return err
-		}
-
-	case flow.StateEmailSent:
-		// we are in the second submission state of the flow
-		// we need to check the code and update the identity
-		if len(c.getCode()) == 0 {
-			return errors.WithStack(schema.NewRequiredError("#/code", "code"))
-		}
-
-		if err := c.validatePayload(ctx); err != nil {
-			return err
-		}
-
-		if err := c.verifyCodeState(ctx, c.f, c.strategy, c.payload); err != nil {
-			return err
-		}
-	case flow.StatePassedChallenge:
-		return c.alreadyValidatedCodeState(ctx, c.f, c.strategy, c.payload)
-	default:
-		return errors.WithStack(errors.New("Unknown flow state"))
-	}
-	return nil
-}
-
-func (s *Strategy) NextFlowState(f flow.Flow) {
-	switch f.GetState() {
-	case flow.StateChooseMethod:
-		f.SetState(flow.StateEmailSent)
-	case flow.StateEmailSent:
-		f.SetState(flow.StatePassedChallenge)
-	case flow.StatePassedChallenge:
-		f.SetState(flow.StatePassedChallenge)
-	default:
+	if strings.EqualFold(resend, "code") {
 		f.SetState(flow.StateChooseMethod)
 	}
 }

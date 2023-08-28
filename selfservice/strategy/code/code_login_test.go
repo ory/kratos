@@ -1,17 +1,22 @@
+// Copyright © 2023 Ory Corp
+// SPDX-License-Identifier: Apache-2.0
+
 package code_test
 
 import (
 	"database/sql"
+	"net/http"
+	"testing"
+	"time"
+
+	"github.com/stretchr/testify/require"
+
 	"github.com/ory/kratos/internal"
 	"github.com/ory/kratos/selfservice/flow"
 	"github.com/ory/kratos/selfservice/flow/login"
 	"github.com/ory/kratos/selfservice/strategy/code"
 	"github.com/ory/kratos/x"
 	"github.com/ory/x/urlx"
-	"github.com/stretchr/testify/require"
-	"net/http"
-	"testing"
-	"time"
 )
 
 func TestLoginCode(t *testing.T) {

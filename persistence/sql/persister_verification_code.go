@@ -1,15 +1,20 @@
+// Copyright © 2023 Ory Corp
+// SPDX-License-Identifier: Apache-2.0
+
 package sql
 
 import (
 	"context"
+	"time"
+
 	"github.com/gofrs/uuid"
+	"github.com/pkg/errors"
+
 	"github.com/ory/herodot"
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/selfservice/flow/verification"
 	"github.com/ory/kratos/selfservice/strategy/code"
 	"github.com/ory/x/sqlcon"
-	"github.com/pkg/errors"
-	"time"
 )
 
 func (p *Persister) CreateVerificationCode(ctx context.Context, params *code.CreateVerificationCodeParams) (*code.VerificationCode, error) {

@@ -6,9 +6,11 @@ package code
 import (
 	"context"
 	"database/sql"
-	"github.com/ory/kratos/selfservice/flow"
-	"github.com/pkg/errors"
 	"time"
+
+	"github.com/pkg/errors"
+
+	"github.com/ory/kratos/selfservice/flow"
 
 	"github.com/gofrs/uuid"
 

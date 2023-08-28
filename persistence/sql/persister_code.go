@@ -1,15 +1,20 @@
+// Copyright © 2023 Ory Corp
+// SPDX-License-Identifier: Apache-2.0
+
 package sql
 
 import (
 	"context"
 	"crypto/subtle"
 	"fmt"
+	"time"
+
 	"github.com/gobuffalo/pop/v6"
 	"github.com/gofrs/uuid"
+	"github.com/pkg/errors"
+
 	"github.com/ory/kratos/selfservice/strategy/code"
 	"github.com/ory/x/sqlcon"
-	"github.com/pkg/errors"
-	"time"
 )
 
 type oneTimeCodeProvider interface {
@@ -25,7 +30,7 @@ type codeOptions struct {
 
 type codeOption func(o *codeOptions)
 
-func codeCheckIdentityID(id uuid.UUID) codeOption {
+func withCheckIdentityID(id uuid.UUID) codeOption {
 	return func(o *codeOptions) {
 		o.IdentityID = &id
 	}

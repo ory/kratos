@@ -1,12 +1,17 @@
+// Copyright © 2023 Ory Corp
+// SPDX-License-Identifier: Apache-2.0
+
 package sql
 
 import (
 	"context"
+	"time"
+
 	"github.com/gofrs/uuid"
+
 	"github.com/ory/kratos/selfservice/flow/login"
 	"github.com/ory/kratos/selfservice/strategy/code"
 	"github.com/ory/x/sqlcon"
-	"time"
 )
 
 func (p *Persister) CreateLoginCode(ctx context.Context, params *code.CreateLoginCodeParams) (*code.LoginCode, error) {
@@ -37,7 +42,7 @@ func (p *Persister) UseLoginCode(ctx context.Context, flowID uuid.UUID, identity
 	ctx, span := p.r.Tracer(ctx).Tracer().Start(ctx, "persistence.sql.UseLoginCode")
 	defer span.End()
 
-	codeRow, err := useOneTimeCode[code.LoginCode, *code.LoginCode](ctx, p, flowID, userProvidedCode, new(login.Flow).TableName(ctx), "selfservice_login_flow_id")
+	codeRow, err := useOneTimeCode[code.LoginCode, *code.LoginCode](ctx, p, flowID, userProvidedCode, new(login.Flow).TableName(ctx), "selfservice_login_flow_id", withCheckIdentityID(identityID))
 	if err != nil {
 		return nil, err
 	}

@@ -5,11 +5,14 @@ package code
 
 import (
 	"context"
-	"github.com/gofrs/uuid"
-	"github.com/pkg/errors"
 	"net/http"
 
+	"github.com/gofrs/uuid"
+	"github.com/pkg/errors"
+
 	"github.com/ory/herodot"
+	"github.com/ory/x/otelx"
+
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/schema"
 	"github.com/ory/kratos/selfservice/flow"
@@ -61,15 +64,19 @@ func (s *Strategy) CompletedAuthenticationMethod(ctx context.Context) session.Au
 	}
 }
 
-func (s *Strategy) HandleLoginError(w http.ResponseWriter, r *http.Request, flow *login.Flow, body *updateLoginFlowWithCodeMethod, err error) error {
-	if flow != nil {
+func (s *Strategy) HandleLoginError(r *http.Request, f *login.Flow, body *updateLoginFlowWithCodeMethod, err error) error {
+	if errors.Is(err, flow.ErrCompletedByStrategy) {
+		return err
+	}
+
+	if f != nil {
 		email := ""
 		if body != nil {
 			email = body.Identifier
 		}
 
-		flow.UI.SetCSRF(s.deps.GenerateCSRFToken(r))
-		flow.UI.GetNodes().Upsert(
+		f.UI.SetCSRF(s.deps.GenerateCSRFToken(r))
+		f.UI.GetNodes().Upsert(
 			node.NewInputField("identifier", email, node.DefaultGroup, node.InputAttributeTypeText, node.WithRequiredInputAttribute).
 				WithMetaLabel(text.NewInfoNodeLabelID()),
 		)
@@ -82,7 +89,10 @@ func (s *Strategy) PopulateLoginMethod(r *http.Request, requestedAAL identity.Au
 	return s.PopulateMethod(r, lf)
 }
 
-func (s *Strategy) getIdentity(ctx context.Context, identifier string) (*identity.Identity, *identity.Credentials, error) {
+func (s *Strategy) getIdentity(ctx context.Context, identifier string) (_ *identity.Identity, _ *identity.Credentials, err error) {
+	ctx, span := s.deps.Tracer(ctx).Tracer().Start(ctx, "selfservice.strategy.code.strategy.getIdentity")
+	defer otelx.End(span, &err)
+
 	i, cred, err := s.deps.PrivilegedIdentityPool().FindByCredentialsIdentifier(ctx, s.ID(), identifier)
 	if err != nil {
 		return nil, nil, errors.WithStack(schema.NewNoCodeAuthnCredentials())
@@ -95,12 +105,9 @@ func (s *Strategy) getIdentity(ctx context.Context, identifier string) (*identit
 	return i, cred, nil
 }
 
-func (s *Strategy) Login(w http.ResponseWriter, r *http.Request, f *login.Flow, identityID uuid.UUID) (i *identity.Identity, err error) {
-	s.deps.Audit().
-		WithRequest(r).
-		WithField("identity_id", identityID).
-		WithField("login_flow_id", f.ID).
-		Info("Login with the code strategy started.")
+func (s *Strategy) Login(w http.ResponseWriter, r *http.Request, f *login.Flow, _ uuid.UUID) (_ *identity.Identity, err error) {
+	ctx, span := s.deps.Tracer(r.Context()).Tracer().Start(r.Context(), "selfservice.strategy.code.strategy.Login")
+	defer otelx.End(span, &err)
 
 	if err := flow.MethodEnabledAndAllowedFromRequest(r, f.GetFlowName(), s.ID().String(), s.deps); err != nil {
 		return nil, err
@@ -117,141 +124,142 @@ func (s *Strategy) Login(w http.ResponseWriter, r *http.Request, f *login.Flow, 
 		decoderx.MustHTTPRawJSONSchemaCompiler(loginMethodSchema),
 		decoderx.HTTPDecoderAllowedMethods("POST"),
 		decoderx.HTTPDecoderJSONFollowsFormFormat()); err != nil {
-		return nil, s.HandleLoginError(w, r, f, &p, err)
+		return nil, s.HandleLoginError(r, f, &p, err)
 	}
 
-	if err := flow.EnsureCSRF(s.deps, r, f.Type, s.deps.Config().DisableAPIFlowEnforcement(r.Context()), s.deps.GenerateCSRFToken, p.CSRFToken); err != nil {
-		return nil, s.HandleLoginError(w, r, f, &p, err)
+	if err := flow.EnsureCSRF(s.deps, r, f.Type, s.deps.Config().DisableAPIFlowEnforcement(ctx), s.deps.GenerateCSRFToken, p.CSRFToken); err != nil {
+		return nil, s.HandleLoginError(r, f, &p, err)
 	}
 
-	codeManager := NewCodeStateManager(f, s, &p)
+	// By Default the flow should be in the 'choose method' state.
+	SetDefaultFlowState(f, p.Resend)
 
-	codeManager.SetCreateCodeHandler(func(ctx context.Context, f *login.Flow, strategy *Strategy, p *updateLoginFlowWithCodeMethod) error {
-		strategy.deps.Audit().
-			WithSensitiveField("identifier", p.Identifier).
-			Info("Creating login code state.")
-
-		// Step 1: Get the identity
-		i, _, err := strategy.getIdentity(ctx, p.Identifier)
+	switch f.GetState() {
+	case flow.StateChooseMethod:
+		if err := s.loginSendEmail(ctx, w, r, f, &p); err != nil {
+			return nil, s.HandleLoginError(r, f, &p, err)
+		}
+		return nil, nil
+	case flow.StateEmailSent:
+		i, err := s.loginVerifyCode(ctx, r, f, &p)
 		if err != nil {
-			return err
+			return nil, s.HandleLoginError(r, f, &p, err)
 		}
+		return i, nil
+	case flow.StatePassedChallenge:
+		return nil, s.HandleLoginError(r, f, &p, errors.WithStack(schema.NewNoLoginStrategyResponsible()))
+	}
 
-		// Step 2: Delete any previous login codes for this flow ID
-		if err := strategy.deps.LoginCodePersister().DeleteLoginCodesOfFlow(ctx, f.GetID()); err != nil {
-			return errors.WithStack(err)
+	return nil, s.HandleLoginError(r, f, &p, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("Unexpected flow state: %s", f.GetState())))
+}
+
+func (s *Strategy) loginSendEmail(ctx context.Context, w http.ResponseWriter, r *http.Request, f *login.Flow, p *updateLoginFlowWithCodeMethod) (err error) {
+	ctx, span := s.deps.Tracer(r.Context()).Tracer().Start(r.Context(), "selfservice.strategy.code.strategy.loginSendEmail")
+	defer otelx.End(span, &err)
+
+	if len(p.Identifier) == 0 {
+		return errors.WithStack(schema.NewRequiredError("#/identifier", "identifier"))
+	}
+
+	// Step 1: Get the identity
+	i, _, err := s.getIdentity(ctx, p.Identifier)
+	if err != nil {
+		return err
+	}
+
+	// Step 2: Delete any previous login codes for this flow ID
+	if err := s.deps.LoginCodePersister().DeleteLoginCodesOfFlow(ctx, f.GetID()); err != nil {
+		return errors.WithStack(err)
+	}
+
+	addresses := []Address{{
+		To:  p.Identifier,
+		Via: identity.CodeAddressType(identity.AddressTypeEmail),
+	}}
+
+	// kratos only supports `email` identifiers at the moment with the code method
+	// this is validated in the identity validation step above
+	if err := s.deps.CodeSender().SendCode(ctx, f, i, addresses...); err != nil {
+		return errors.WithStack(err)
+	}
+
+	// sets the flow state to code sent
+	f.SetState(flow.NextState(f.GetState()))
+
+	if err := s.NewCodeUINodes(r, f, &codeIdentifier{Identifier: p.Identifier}); err != nil {
+		return err
+	}
+
+	f.Active = identity.CredentialsTypeCodeAuth
+	if err = s.deps.LoginFlowPersister().UpdateLoginFlow(ctx, f); err != nil {
+		return err
+	}
+
+	if x.IsJSONRequest(r) {
+		s.deps.Writer().WriteCode(w, r, http.StatusBadRequest, f)
+	} else {
+		http.Redirect(w, r, f.AppendTo(s.deps.Config().SelfServiceFlowLoginUI(ctx)).String(), http.StatusSeeOther)
+	}
+
+	// we return an error to the flow handler so that it does not continue execution of the hooks.
+	// we are not done with the login flow yet. The user needs to verify the code and then we need to persist the identity.
+	return errors.WithStack(flow.ErrCompletedByStrategy)
+}
+
+func (s *Strategy) loginVerifyCode(ctx context.Context, r *http.Request, f *login.Flow, p *updateLoginFlowWithCodeMethod) (_ *identity.Identity, err error) {
+	ctx, span := s.deps.Tracer(r.Context()).Tracer().Start(r.Context(), "selfservice.strategy.code.strategy.loginVerifyCode")
+	defer otelx.End(span, &err)
+
+	// we are in the second submission state of the flow
+	// we need to check the code and update the identity
+	if p.Code == "" {
+		return nil, errors.WithStack(schema.NewRequiredError("#/code", "code"))
+	}
+
+	if len(p.Identifier) == 0 {
+		return nil, errors.WithStack(schema.NewRequiredError("#/identifier", "identifier"))
+	}
+
+	// Step 1: Get the identity
+	i, _, err := s.getIdentity(ctx, p.Identifier)
+	if err != nil {
+		return nil, err
+	}
+
+	loginCode, err := s.deps.LoginCodePersister().UseLoginCode(ctx, f.ID, i.ID, p.Code)
+	if err != nil {
+		if errors.Is(err, ErrCodeNotFound) {
+			return nil, schema.NewLoginCodeInvalid()
 		}
+		return nil, errors.WithStack(err)
+	}
 
-		addresses := []Address{
-			{
-				To:  p.Identifier,
-				Via: identity.CodeAddressType(identity.AddressTypeEmail),
-			},
-		}
+	i, err = s.deps.PrivilegedIdentityPool().GetIdentity(ctx, loginCode.IdentityID, identity.ExpandDefault)
+	if err != nil {
+		return nil, errors.WithStack(err)
+	}
 
-		// kratos only supports `email` identifiers at the moment with the code method
-		// this is validated in the identity validation step above
-		if err := strategy.deps.CodeSender().SendCode(ctx, f, i, addresses...); err != nil {
-			return errors.WithStack(err)
-		}
+	// Step 2: The code was correct
+	f.Active = identity.CredentialsTypeCodeAuth
 
-		// sets the flow state to code sent
-		s.NextFlowState(f)
+	// since nothing has errored yet, we can assume that the code is correct
+	// and we can update the login flow
+	f.SetState(flow.NextState(f.GetState()))
 
-		if err := s.NewCodeUINodes(r, f, &codeIdentifier{Identifier: p.Identifier}); err != nil {
-			return err
-		}
+	if err := s.deps.LoginFlowPersister().UpdateLoginFlow(ctx, f); err != nil {
+		return nil, errors.WithStack(err)
+	}
 
-		f.Active = identity.CredentialsTypeCodeAuth
-		if err = strategy.deps.LoginFlowPersister().UpdateLoginFlow(ctx, f); err != nil {
-			return err
-		}
-
-		if x.IsJSONRequest(r) {
-			strategy.deps.Writer().WriteCode(w, r, http.StatusBadRequest, f)
-		} else {
-			http.Redirect(w, r, f.AppendTo(strategy.deps.Config().SelfServiceFlowLoginUI(ctx)).String(), http.StatusSeeOther)
-		}
-
-		// we return an error to the flow handler so that it does not continue execution of the hooks.
-		// we are not done with the login flow yet. The user needs to verify the code and then we need to persist the identity.
-		return errors.WithStack(flow.ErrCompletedByStrategy)
-	})
-
-	codeManager.SetCodeVerifyHandler(func(ctx context.Context, f *login.Flow, strategy *Strategy, p *updateLoginFlowWithCodeMethod) error {
-		strategy.deps.Audit().
-			WithSensitiveField("code", p.Code).
-			WithSensitiveField("identifier", p.Identifier).
-			Debug("Verifying login code")
-
-		// Step 1: Get the identity
-		i, _, err = strategy.getIdentity(ctx, p.Identifier)
-		if err != nil {
-			return err
-		}
-
-		loginCode, err := strategy.deps.LoginCodePersister().UseLoginCode(ctx, f.ID, i.ID, p.Code)
-		if err != nil {
-			if errors.Is(err, ErrCodeNotFound) {
-				return schema.NewLoginCodeInvalid()
+	for idx := range i.VerifiableAddresses {
+		va := i.VerifiableAddresses[idx]
+		if !va.Verified && loginCode.Address == va.Value {
+			va.Verified = true
+			va.Status = identity.VerifiableAddressStatusCompleted
+			if err := s.deps.PrivilegedIdentityPool().UpdateVerifiableAddress(ctx, &va); err != nil {
+				return nil, err
 			}
-			return errors.WithStack(err)
+			break
 		}
-
-		i, err = strategy.deps.PrivilegedIdentityPool().GetIdentity(ctx, loginCode.IdentityID, identity.ExpandDefault)
-		if err != nil {
-			return errors.WithStack(err)
-		}
-
-		// Step 2: The code was correct
-		f.Active = identity.CredentialsTypeCodeAuth
-
-		// since nothing has errored yet, we can assume that the code is correct
-		// and we can update the login flow
-		strategy.NextFlowState(f)
-
-		if err := strategy.deps.LoginFlowPersister().UpdateLoginFlow(ctx, f); err != nil {
-			return errors.WithStack(err)
-		}
-
-		for idx := range i.VerifiableAddresses {
-			va := i.VerifiableAddresses[idx]
-			if !va.Verified && loginCode.Address == va.Value {
-				va.Verified = true
-				va.Status = identity.VerifiableAddressStatusCompleted
-				if err := strategy.deps.PrivilegedIdentityPool().UpdateVerifiableAddress(r.Context(), &va); err != nil {
-					return err
-				}
-				break
-			}
-		}
-
-		return nil
-	})
-
-	codeManager.SetCodeDoneHandler(func(ctx context.Context, f *login.Flow, strategy *Strategy, p *updateLoginFlowWithCodeMethod) error {
-		strategy.deps.Audit().
-			WithSensitiveField("identifier", p.Identifier).
-			Debug("The login flow has already been completed, but is being re-requested.")
-		return errors.WithStack(schema.NewNoLoginStrategyResponsible())
-	})
-
-	if err := codeManager.Run(r.Context()); err != nil {
-		if errors.Is(err, flow.ErrCompletedByStrategy) {
-			return nil, err
-		}
-		// the error is already handled by the registered code states
-		return i, s.HandleLoginError(w, r, f, &p, err)
-	}
-
-	// a precaution in case the code manager did not set the identity
-	if i == nil {
-		s.deps.Audit().
-			WithSensitiveField("identifier", p.Identifier).
-			WithRequest(r).
-			WithField("login_flow", f).
-			Error("The code manager did not set the identity.")
-		return nil, errors.WithStack(herodot.ErrInternalServerError.WithReason("the login flow did not complete successfully"))
 	}
 
 	return i, nil

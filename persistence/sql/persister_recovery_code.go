@@ -1,14 +1,19 @@
+// Copyright © 2023 Ory Corp
+// SPDX-License-Identifier: Apache-2.0
+
 package sql
 
 import (
 	"context"
+	"time"
+
 	"github.com/gofrs/uuid"
+	"github.com/pkg/errors"
+
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/selfservice/flow/recovery"
 	"github.com/ory/kratos/selfservice/strategy/code"
 	"github.com/ory/x/sqlcon"
-	"github.com/pkg/errors"
-	"time"
 )
 
 func (p *Persister) CreateRecoveryCode(ctx context.Context, params *code.CreateRecoveryCodeParams) (*code.RecoveryCode, error) {

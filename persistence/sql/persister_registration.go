@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/gofrs/uuid"
+
 	"github.com/ory/x/sqlcon"
 
 	"github.com/ory/kratos/persistence/sql/update"
