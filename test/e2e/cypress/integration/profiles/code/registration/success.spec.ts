@@ -38,21 +38,23 @@ context("Registration success with code method", () => {
       it("should be able to resend the registration code", async () => {
         const email = gen.email()
 
-        cy.get(` input[name='traits.email']`).type(email)
+        cy.get(`input[name='traits.email']`).type(email)
 
         cy.submitCodeForm()
-
-        cy.url().should("contain", "registration")
+        cy.get('[data-testid="ui/message/1040005"]').should(
+          "contain",
+          "An email containing a code has been sent to the email address you provided",
+        )
 
         cy.getRegistrationCodeFromEmail(email).should((code) =>
           cy.wrap(code).as("code1"),
         )
 
-        cy.get(` input[name='traits.email']`).should("have.value", email)
-        cy.get(` input[name='method'][value='code'][type='hidden']`).should(
+        cy.get(`input[name='traits.email']`).should("have.value", email)
+        cy.get(`input[name='method'][value='code'][type='hidden']`).should(
           "exist",
         )
-        cy.get(` button[name='resend'][value='code']`).click()
+        cy.get(`button[name='resend'][value='code']`).click()
 
         cy.getRegistrationCodeFromEmail(email).should((code) => {
           cy.wrap(code).as("code2")
@@ -61,8 +63,8 @@ context("Registration success with code method", () => {
         cy.get("@code1").then((code1) => {
           // previous code should not work
           cy.get('input[name="code"]').clear().type(code1.toString())
-          cy.submitCodeForm()
 
+          cy.submitCodeForm()
           cy.get('[data-testid="ui/message/4040003"]').should(
             "contain.text",
             "The registration code is invalid or has already been used. Please try again.",
@@ -89,10 +91,13 @@ context("Registration success with code method", () => {
         cy.get(` input[name='traits.email']`).type(email)
 
         cy.submitCodeForm()
+        cy.get('[data-testid="ui/message/1040005"]').should(
+          "contain",
+          "An email containing a code has been sent to the email address you provided",
+        )
 
-        cy.url().should("contain", "registration")
         cy.getRegistrationCodeFromEmail(email).should((code) => {
-          cy.get(` input[name=code]`).type(code)
+          cy.get(`input[name=code]`).type(code)
           cy.get("button[name=method][value=code]").click()
         })
 
@@ -109,28 +114,27 @@ context("Registration success with code method", () => {
         cy.setPostCodeRegistrationHooks([])
         const email = gen.email()
 
-        cy.get(` input[name='traits.email']`).type(email)
+        cy.get(`input[name='traits.email']`).type(email)
 
         cy.submitCodeForm()
+        cy.get('[data-testid="ui/message/1040005"]').should(
+          "contain",
+          "An email containing a code has been sent to the email address you provided",
+        )
 
-        cy.url().should("contain", "registration")
         cy.getRegistrationCodeFromEmail(email).should((code) => {
-          cy.get(` input[name=code]`).type(code)
+          cy.get(`input[name=code]`).type(code)
           cy.get("button[name=method][value=code]").click()
         })
 
-        cy.deleteMail({ atLeast: 1 })
-
         cy.visit(login)
-        cy.get(` input[name=identifier]`).type(email)
+        cy.get(`input[name=identifier]`).type(email)
         cy.get("button[name=method][value=code]").click()
 
         cy.getLoginCodeFromEmail(email).then((code) => {
-          cy.get(`input[name = code]`).type(code)
+          cy.get(`input[name=code]`).type(code)
           cy.get("button[name=method][value=code]").click()
         })
-
-        cy.deleteMail({ atLeast: 1 })
 
         cy.getSession().should((session) => {
           const { identity } = session
@@ -179,35 +183,40 @@ context("Registration success with code method", () => {
         cy.get(`input[name='traits.username']`).type(Math.random().toString(36))
 
         const email = gen.email()
-
         cy.get(`input[name='traits.email']`).type(email)
 
         const email2 = gen.email()
-
         cy.get(`input[name='traits.email2']`).type(email2)
 
         cy.submitCodeForm()
+        cy.get('[data-testid="ui/message/1040005"]').should(
+          "contain",
+          "An email containing a code has been sent to the email address you provided",
+        )
 
-        // intentionally use email 1 to verify the account
-        cy.url().should("contain", "registration")
-        cy.getRegistrationCodeFromEmail(email, { expectedCount: 2 }).should(
+        // intentionally use email 1 to sign up for the account
+        cy.getRegistrationCodeFromEmail(email, { expectedCount: 1 }).should(
           (code) => {
             cy.get(`input[name=code]`).type(code)
             cy.get("button[name=method][value=code]").click()
           },
         )
 
-        cy.deleteMail({ atLeast: 2 })
-
         cy.logout()
+
+        // There are verification emails from the registration process in the inbox that we need to deleted
+        // for the assertions below to pass.
+        cy.deleteMail({ atLeast: 1 })
 
         // Attempt to sign in with email 2 (should fail)
         cy.visit(login)
-        cy.get(` input[name=identifier]`).type(email2)
+        cy.get(`input[name=identifier]`).type(email2)
 
         cy.get("button[name=method][value=code]").click()
 
-        cy.getLoginCodeFromEmail(email2).should((code) => {
+        cy.getLoginCodeFromEmail(email2, {
+          expectedCount: 1,
+        }).should((code) => {
           cy.get(`input[name=code]`).type(code)
           cy.get("button[name=method][value=code]").click()
         })

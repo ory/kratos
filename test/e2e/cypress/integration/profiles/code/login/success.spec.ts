@@ -133,6 +133,9 @@ context("Login success with code method", () => {
             "traits.email2": email2,
           },
         })
+
+        // There are verification emails from the registration process in the inbox that we need to deleted
+        // for the assertions below to pass.
         cy.deleteMail({ atLeast: 1 })
 
         cy.visit(route)

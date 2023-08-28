@@ -384,7 +384,13 @@ Cypress.Commands.add(
 
 Cypress.Commands.add(
   "registerWithCode",
-  ({ email = gen.email(), code = undefined, traits = {}, query = {} } = {}) => {
+  ({
+    email = gen.email(),
+    code = undefined,
+    traits = {},
+    query = {},
+    expectedMailCount = 1,
+  } = {}) => {
     cy.clearAllCookies()
 
     cy.request({
@@ -416,7 +422,6 @@ Cypress.Commands.add(
         })
         .then(({ body }) => {
           if (!code) {
-            console.log("registration with code", body)
             expect(
               body.ui.nodes.find(
                 (f: UiNode) =>
@@ -426,14 +431,9 @@ Cypress.Commands.add(
               ).attributes.value,
             ).to.eq(email)
 
-            const expectedCount =
-              Object.keys(traits)
-                .map((k) => (k.includes("email") ? k : null))
-                .filter(Boolean).length + 1
-
             return cy
               .getRegistrationCodeFromEmail(email, {
-                expectedCount: expectedCount,
+                expectedCount: expectedMailCount,
               })
               .then((code) => {
                 return cy.request({
@@ -1260,7 +1260,7 @@ Cypress.Commands.add(
     const req = () =>
       cy.request(`${MAIL_API}/mail`).then((response) => {
         expect(response.body).to.have.property("mailItems")
-        const count = response.body.mailItems.length
+        let count = response.body.mailItems.length
         if (count === 0 && tries < 100) {
           tries++
           cy.wait(pollInterval)
@@ -1269,19 +1269,23 @@ Cypress.Commands.add(
 
         let mailItem: any
         if (email) {
-          mailItem = response.body.mailItems.find((m: any) =>
+          const filtered = response.body.mailItems.filter((m: any) =>
             m.toAddresses.includes(email),
           )
-          if (!mailItem) {
+
+          if (filtered.length === 0) {
             tries++
             cy.wait(pollInterval)
             return req()
           }
+
+          expect(filtered.length).to.equal(expectedCount)
+          mailItem = filtered[0]
         } else {
+          expect(count).to.equal(expectedCount)
           mailItem = response.body.mailItems[0]
         }
 
-        expect(count).to.equal(expectedCount)
         if (removeMail) {
           return cy.deleteMail({ atLeast: count }).then(() => {
             return Promise.resolve(mailItem)

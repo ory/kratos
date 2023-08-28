@@ -36,13 +36,12 @@ context("Registration error messages with code method", () => {
         cy.get('input[name="traits.email"]').type(email)
         cy.submitCodeForm()
 
-        cy.url().should("contain", "registration")
         cy.get('[data-testid="ui/message/1040005"]').should(
           "contain",
           "An email containing a code has been sent to the email address you provided",
         )
 
-        cy.get(' input[name="code"]').type("invalid-code")
+        cy.get('input[name="code"]').type("invalid-code")
         cy.submitCodeForm()
 
         cy.get('[data-testid="ui/message/4040003"]').should(
@@ -56,12 +55,15 @@ context("Registration error messages with code method", () => {
 
         cy.get('input[name="traits.email"]').type(email)
         cy.submitCodeForm()
+        cy.get('[data-testid="ui/message/1040005"]').should(
+          "contain",
+          "An email containing a code has been sent to the email address you provided",
+        )
 
-        cy.url().should("contain", "registration")
         cy.get('input[name="traits.email"]')
           .clear()
           .type("changed-email@email.com")
-        cy.get(' input[name="code"]').type("invalid-code")
+        cy.get('input[name="code"]').type("invalid-code")
         cy.submitCodeForm()
 
         cy.get('[data-testid="ui/message/4000030"]').should(
@@ -75,12 +77,14 @@ context("Registration error messages with code method", () => {
 
         cy.get('input[name="traits.email"]').type(email)
         cy.submitCodeForm()
-
-        cy.url().should("contain", "registration")
+        cy.get('[data-testid="ui/message/1040005"]').should(
+          "contain",
+          "An email containing a code has been sent to the email address you provided",
+        )
 
         cy.removeAttribute(['input[name="code"]'], "required")
-        cy.submitCodeForm()
 
+        cy.submitCodeForm()
         cy.get('[data-testid="ui/message/4000002"]').should(
           "contain",
           "Property code is missing",
@@ -105,11 +109,14 @@ context("Registration error messages with code method", () => {
         cy.visit(route)
 
         const email = gen.email()
-
         cy.get('input[name="traits.email"]').type(email)
-        cy.submitCodeForm()
 
-        cy.url().should("contain", "registration")
+        cy.submitCodeForm()
+        cy.get('[data-testid="ui/message/1040005"]').should(
+          "contain",
+          "An email containing a code has been sent to the email address you provided",
+        )
+
         cy.getRegistrationCodeFromEmail(email).should((code) => {
           cy.get('input[name="code"]').type(code)
           cy.submitCodeForm()
