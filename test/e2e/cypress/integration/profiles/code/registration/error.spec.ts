@@ -102,6 +102,7 @@ context("Registration error messages with code method", () => {
           config.selfservice.methods.code.config.lifespan = "1ns"
           return config
         })
+        cy.visit(route)
 
         const email = gen.email()
 

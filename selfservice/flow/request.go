@@ -102,10 +102,7 @@ func MethodEnabledAndAllowedFromRequest(r *http.Request, flow FlowName, expected
 	return MethodEnabledAndAllowed(r.Context(), flow, expected, method.Method, d)
 }
 
-func MethodEnabledAndAllowed(ctx context.Context, flowName FlowName, expected, actual string, d interface {
-	config.Provider
-},
-) error {
+func MethodEnabledAndAllowed(ctx context.Context, flowName FlowName, expected, actual string, d config.Provider) error {
 	if actual != expected {
 		return errors.WithStack(ErrStrategyNotResponsible)
 	}
@@ -117,8 +114,6 @@ func MethodEnabledAndAllowed(ctx context.Context, flowName FlowName, expected, a
 			ok = d.Config().SelfServiceCodeStrategy(ctx).PasswordlessEnabled
 		case VerificationFlow, RecoveryFlow:
 			ok = d.Config().SelfServiceCodeStrategy(ctx).Enabled
-		default:
-			ok = false
 		}
 	} else {
 		ok = d.Config().SelfServiceStrategy(ctx, expected).Enabled

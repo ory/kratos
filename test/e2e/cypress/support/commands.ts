@@ -385,8 +385,6 @@ Cypress.Commands.add(
 Cypress.Commands.add(
   "registerWithCode",
   ({ email = gen.email(), code = undefined, traits = {}, query = {} } = {}) => {
-    console.log("Creating user account: ", { email })
-
     cy.clearAllCookies()
 
     cy.request({
@@ -394,7 +392,6 @@ Cypress.Commands.add(
       method: "GET",
       followRedirect: false,
       headers: {
-        "Content-Type": "application/json",
         Accept: "application/json",
       },
       qs: query || {},

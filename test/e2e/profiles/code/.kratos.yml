@@ -37,8 +37,7 @@ selfservice:
     password:
       enabled: false
     code:
-      registration_enabled: true
-      login_enabled: true
+      passwordless_enabled: true
       enabled: true
       config:
         lifespan: 1h
