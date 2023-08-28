@@ -161,7 +161,7 @@ context("Settings failures with email profile", () => {
         it("fails if password policy is violated", () => {
           cy.get('input[name="password"]').clear().type("12345678")
           cy.get('button[value="password"]').click()
-          cy.get('[data-testid="ui/message/4000005"]').should(
+          cy.get('[data-testid="ui/message/4000034"]').should(
             "contain.text",
             "data breaches",
           )

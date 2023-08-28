@@ -811,17 +811,17 @@ Cypress.Commands.add(
           failOnStatusCode: false,
         })
       })
-      .then(({ status }) => {
+      .then(({ status, body }) => {
         console.log("Login sequence completed: ", {
           email,
           password,
           expectSession,
         })
         if (expectSession) {
-          expect(status).to.eq(200)
+          expect(status).to.eq(200, body)
           return cy.getSession()
         } else {
-          expect(status).to.not.eq(200)
+          expect(status).to.not.eq(200, body)
           return cy.noSession()
         }
       })

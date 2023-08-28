@@ -133,10 +133,10 @@ func TestSettings(t *testing.T) {
 	}
 
 	t.Run("description=should fail if password violates policy", func(t *testing.T) {
-		var check = func(t *testing.T, actual string) {
+		var check = func(t *testing.T, reason, actual string) {
 			assert.Empty(t, gjson.Get(actual, "ui.nodes.#(attributes.name==password).attributes.value").String(), "%s", actual)
 			assert.NotEmpty(t, gjson.Get(actual, "ui.nodes.#(attributes.name==csrf_token).attributes.value").String(), "%s", actual)
-			assert.Contains(t, gjson.Get(actual, "ui.nodes.#(attributes.name==password).messages.0.text").String(), "password can not be used because", "%s", actual)
+			assert.Equal(t, reason, gjson.Get(actual, "ui.nodes.#(attributes.name==password).messages.0.text").String(), "%s", actual)
 		}
 
 		t.Run("session=with privileged session", func(t *testing.T) {
@@ -148,15 +148,15 @@ func TestSettings(t *testing.T) {
 			}
 
 			t.Run("type=api", func(t *testing.T) {
-				check(t, expectValidationError(t, true, false, apiUser1, payload))
+				check(t, "The password must be at least 8 characters long, but got 6.", expectValidationError(t, true, false, apiUser1, payload))
 			})
 
 			t.Run("spa=spa", func(t *testing.T) {
-				check(t, expectValidationError(t, false, true, browserUser1, payload))
+				check(t, "The password must be at least 8 characters long, but got 6.", expectValidationError(t, false, true, browserUser1, payload))
 			})
 
 			t.Run("type=browser", func(t *testing.T) {
-				check(t, expectValidationError(t, false, false, browserUser1, payload))
+				check(t, "The password must be at least 8 characters long, but got 6.", expectValidationError(t, false, false, browserUser1, payload))
 			})
 		})
 
@@ -190,7 +190,7 @@ func TestSettings(t *testing.T) {
 
 			t.Run("type=browser", func(t *testing.T) {
 				_ = testhelpers.NewSettingsLoginAcceptAPIServer(t, testhelpers.NewSDKCustomClient(publicTS, browserUser1), conf)
-				check(t, expectValidationError(t, false, false, browserUser1, payload))
+				check(t, "The password must be at least 8 characters long, but got 6.", expectValidationError(t, false, false, browserUser1, payload))
 			})
 		})
 	})

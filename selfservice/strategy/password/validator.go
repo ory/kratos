@@ -14,6 +14,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/ory/kratos/text"
+
 	"github.com/arbovm/levenshtein"
 	"github.com/dgraph-io/ristretto"
 	"github.com/hashicorp/go-retryablehttp"
@@ -45,7 +47,6 @@ var (
 	_                       Validator = new(DefaultPasswordValidator)
 	ErrNetworkFailure                 = stderrs.New("unable to check if password has been leaked because an unexpected network error occurred")
 	ErrUnexpectedStatusCode           = stderrs.New("unexpected status code")
-	ErrTooManyBreaches                = stderrs.New("the password has been found in data breaches and must no longer be used")
 )
 
 // DefaultPasswordValidator implements Validator. It is based on best
@@ -179,7 +180,7 @@ func (s *DefaultPasswordValidator) validate(ctx context.Context, identifier, pas
 	passwordPolicyConfig := s.reg.Config().PasswordPolicyConfig(ctx)
 
 	if len(password) < int(passwordPolicyConfig.MinPasswordLength) {
-		return errors.Errorf("password length must be at least %d characters but only got %d", passwordPolicyConfig.MinPasswordLength, len(password))
+		return text.NewErrorValidationPasswordMinLength(int(passwordPolicyConfig.MinPasswordLength), len(password))
 	}
 
 	if passwordPolicyConfig.IdentifierSimilarityCheckEnabled && len(identifier) > 0 {
@@ -187,7 +188,7 @@ func (s *DefaultPasswordValidator) validate(ctx context.Context, identifier, pas
 		dist := levenshtein.Distance(compIdentifier, compPassword)
 		lcs := float32(lcsLength(compIdentifier, compPassword)) / float32(len(compPassword))
 		if dist < s.minIdentifierPasswordDist || lcs > s.maxIdentifierPasswordSubstrThreshold {
-			return errors.Errorf("the password is too similar to the user identifier")
+			return text.NewErrorValidationPasswordIdentifierTooSimilar()
 		}
 	}
 
@@ -215,7 +216,7 @@ func (s *DefaultPasswordValidator) validate(ctx context.Context, identifier, pas
 
 	v, ok := c.(int64)
 	if ok && v > int64(s.reg.Config().PasswordPolicyConfig(ctx).MaxBreaches) {
-		return errors.WithStack(ErrTooManyBreaches)
+		return text.NewErrorValidationPasswordTooManyBreaches(v)
 	}
 
 	return nil

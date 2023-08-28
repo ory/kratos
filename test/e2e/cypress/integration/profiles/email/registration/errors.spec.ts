@@ -67,7 +67,7 @@ describe("Registration failures with email profile", () => {
             .should("have.value", "12345678")
 
           cy.submitPasswordForm()
-          cy.get('[data-testid="ui/message/4000005"]').should(
+          cy.get('[data-testid="ui/message/4000034"]').should(
             "contain.text",
             "data breaches",
           )
@@ -79,7 +79,7 @@ describe("Registration failures with email profile", () => {
           cy.get('input[name="password"]').type(identity)
 
           cy.submitPasswordForm()
-          cy.get('[data-testid="ui/message/4000005"]').should(
+          cy.get('[data-testid="ui/message/4000031"]').should(
             "contain.text",
             "too similar",
           )

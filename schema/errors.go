@@ -87,16 +87,16 @@ func (r *ValidationErrorContextPasswordPolicyViolation) AddContext(_, _ string) 
 
 func (r *ValidationErrorContextPasswordPolicyViolation) FinishInstanceContext() {}
 
-func NewPasswordPolicyViolationError(instancePtr string, reason string) error {
+func NewPasswordPolicyViolationError(instancePtr string, message *text.Message) error {
 	return errors.WithStack(&ValidationError{
 		ValidationError: &jsonschema.ValidationError{
-			Message:     fmt.Sprintf("the password does not fulfill the password policy because: %s", reason),
+			Message:     fmt.Sprintf("the password does not fulfill the password policy because: %s", message.Text),
 			InstancePtr: instancePtr,
 			Context: &ValidationErrorContextPasswordPolicyViolation{
-				Reason: reason,
+				Reason: message.Text,
 			},
 		},
-		Messages: new(text.Messages).Add(text.NewErrorValidationPasswordPolicyViolation(reason)),
+		Messages: new(text.Messages).Add(message),
 	})
 }
 

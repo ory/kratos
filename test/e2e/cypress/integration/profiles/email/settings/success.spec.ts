@@ -61,14 +61,15 @@ context("Settings success with email profile", () => {
           cy.get('input[name="password"]').clear().type("123")
           cy.get('button[value="password"]').click()
           cy.get('[data-testid="ui/message/1050001"]').should("not.exist")
-          cy.get('[data-testid="ui/message/4000005"]').should("exist")
+          cy.get('[data-testid="ui/message/4000032"]').should("exist")
           cy.get('input[name="password"]').should("be.empty")
 
           password = up(password)
           cy.get('input[name="password"]').clear().type(password)
           cy.get('button[value="password"]').click()
           cy.expectSettingsSaved()
-          cy.get('[data-testid="ui/message/4000005"]').should("not.exist")
+          cy.get('[data-testid="ui/message/4000032"]').should("not.exist")
+          cy.get('[data-testid="ui/message/1050001"]').should("exist")
           cy.get('input[name="password"]').should("be.empty")
         })
 
