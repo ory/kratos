@@ -216,7 +216,7 @@ func (s *DefaultPasswordValidator) validate(ctx context.Context, identifier, pas
 
 	v, ok := c.(int64)
 	if ok && v > int64(s.reg.Config().PasswordPolicyConfig(ctx).MaxBreaches) {
-		return text.NewErrorValidationPasswordTooManyBreaches(int(v))
+		return text.NewErrorValidationPasswordTooManyBreaches(v)
 	}
 
 	return nil

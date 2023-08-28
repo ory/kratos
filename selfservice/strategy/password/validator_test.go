@@ -226,7 +226,7 @@ func TestDefaultPasswordValidationStrategy(t *testing.T) {
 				res: func(t *testing.T, hash string) string {
 					return fmt.Sprintf("%s:%d", hash, conf.PasswordPolicyConfig(ctx).MaxBreaches+1)
 				},
-				expectErr: text.NewErrorValidationPasswordTooManyBreaches(int(conf.PasswordPolicyConfig(ctx).MaxBreaches) + 1),
+				expectErr: text.NewErrorValidationPasswordTooManyBreaches(int64(conf.PasswordPolicyConfig(ctx).MaxBreaches) + 1),
 			},
 		} {
 			t.Run(fmt.Sprintf("case=%s/expected err=%s", tc.name, tc.expectErr), func(t *testing.T) {

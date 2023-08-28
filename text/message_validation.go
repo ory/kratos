@@ -235,7 +235,7 @@ func NewErrorValidationPasswordMaxLength(maxLength, actualLength int) *Message {
 	}
 }
 
-func NewErrorValidationPasswordTooManyBreaches(breaches int) *Message {
+func NewErrorValidationPasswordTooManyBreaches(breaches int64) *Message {
 	return &Message{
 		ID:   ErrorValidationPasswordTooManyBreaches,
 		Text: "The password has been found in data breaches and must no longer be used.",
