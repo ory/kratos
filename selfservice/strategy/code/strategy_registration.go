@@ -172,7 +172,7 @@ func (s *Strategy) Register(w http.ResponseWriter, r *http.Request, f *registrat
 		// Step 3: Get the identity email and send the code
 		var addresses []Address
 		for _, identifier := range cred.Identifiers {
-			addresses = append(addresses, Address{To: identifier, Via: identity.CodeAddressType(cred.IdentifierAddressType)})
+			addresses = append(addresses, Address{To: identifier, Via: identity.AddressTypeEmail})
 		}
 		// kratos only supports `email` identifiers at the moment with the code method
 		// this is validated in the identity validation step above

@@ -90,8 +90,6 @@ func (s *Strategy) getIdentity(ctx context.Context, identifier string) (*identit
 
 	if len(cred.Identifiers) == 0 {
 		return nil, nil, errors.WithStack(schema.NewNoCodeAuthnCredentials())
-	} else if cred.IdentifierAddressType == "" {
-		return nil, nil, errors.WithStack(schema.NewNoCodeAuthnCredentials())
 	}
 
 	return i, cred, nil
@@ -134,7 +132,7 @@ func (s *Strategy) Login(w http.ResponseWriter, r *http.Request, f *login.Flow, 
 			Info("Creating login code state.")
 
 		// Step 1: Get the identity
-		i, cred, err := strategy.getIdentity(ctx, p.Identifier)
+		i, _, err := strategy.getIdentity(ctx, p.Identifier)
 		if err != nil {
 			return err
 		}
@@ -147,7 +145,7 @@ func (s *Strategy) Login(w http.ResponseWriter, r *http.Request, f *login.Flow, 
 		addresses := []Address{
 			{
 				To:  p.Identifier,
-				Via: identity.CodeAddressType(cred.IdentifierAddressType),
+				Via: identity.CodeAddressType(identity.AddressTypeEmail),
 			},
 		}
 

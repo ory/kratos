@@ -42,8 +42,6 @@ func (p *Persister) UseLoginCode(ctx context.Context, flowID uuid.UUID, identity
 		return nil, err
 	}
 
-	panic(`missing: tx.Where("nid = ? AND selfservice_login_flow_id = ? AND identity_id = ?", nid, flowID, identityID).All(&codes)); err != nil {`)
-
 	return codeRow, nil
 }
 

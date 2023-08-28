@@ -41,7 +41,6 @@ func (r *SchemaExtensionCredentials) setIdentifier(ct CredentialsType, value int
 
 	r.v[ct] = stringslice.Unique(append(r.v[ct], strings.ToLower(fmt.Sprintf("%s", value))))
 	cred.Identifiers = r.v[ct]
-	cred.IdentifierAddressType = addressType
 	r.i.SetCredentials(ct, *cred)
 }
 
@@ -64,7 +63,7 @@ func (r *SchemaExtensionCredentials) Run(ctx jsonschema.ValidationContext, s sch
 				return ctx.Error("format", "%q is not a valid %q", value, s.Credentials.Code.Via)
 			}
 
-			r.setIdentifier(CredentialsTypeCodeAuth, value, CredentialsIdentifierAddressType(AddressTypeEmail))
+			r.setIdentifier(CredentialsTypeCodeAuth, value, AddressTypeEmail)
 		// case f.AddCase(AddressTypePhone):
 		// 	if !jsonschema.Formats["tel"](value) {
 		// 		return ctx.Error("format", "%q is not a valid %q", value, s.Credentials.Code.Via)

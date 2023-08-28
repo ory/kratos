@@ -19,12 +19,29 @@ type oneTimeCodeProvider interface {
 	GetHMACCode() string
 }
 
+type codeOptions struct {
+	IdentityID *uuid.UUID
+}
+
+type codeOption func(o *codeOptions)
+
+func codeCheckIdentityID(id uuid.UUID) codeOption {
+	return func(o *codeOptions) {
+		o.IdentityID = &id
+	}
+}
+
 func useOneTimeCode[P any, U interface {
 	*P
 	oneTimeCodeProvider
-}](ctx context.Context, p *Persister, flowID uuid.UUID, userProvidedCode string, flowTableName string, foreignKeyName string) (U, error) {
+}](ctx context.Context, p *Persister, flowID uuid.UUID, userProvidedCode string, flowTableName string, foreignKeyName string, opts ...codeOption) (U, error) {
 	ctx, span := p.r.Tracer(ctx).Tracer().Start(ctx, "persistence.sql.useOneTimeCode")
 	defer span.End()
+
+	o := new(codeOptions)
+	for _, opt := range opts {
+		opt(o)
+	}
 
 	var target U
 	nid := p.NetworkID(ctx)
@@ -54,7 +71,12 @@ func useOneTimeCode[P any, U interface {
 		}
 
 		var codes []U
-		if err := sqlcon.HandleError(tx.Where(fmt.Sprintf("nid = ? AND %s = ?", foreignKeyName), nid, flowID).All(&codes)); err != nil {
+		codesQuery := tx.Where(fmt.Sprintf("nid = ? AND %s = ?", foreignKeyName), nid, flowID)
+		if o.IdentityID != nil {
+			codesQuery = codesQuery.Where("identity_id = ?", *o.IdentityID)
+		}
+
+		if err := sqlcon.HandleError(codesQuery.All(&codes)); err != nil {
 			if errors.Is(err, sqlcon.ErrNoRows) {
 				// Return no error, as that would roll back the transaction and reset the submit count.
 				return nil
