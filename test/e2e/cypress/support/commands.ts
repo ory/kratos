@@ -1266,20 +1266,20 @@ Cypress.Commands.add(
           cy.wait(pollInterval)
           return req()
         }
+
         let mailItem: any
         if (email) {
           mailItem = response.body.mailItems.find((m: any) =>
             m.toAddresses.includes(email),
           )
           if (!mailItem) {
-            return req
+            tries++
+            cy.wait(pollInterval)
+            return req()
           }
         } else {
           mailItem = response.body.mailItems[0]
         }
-        console.log({ mailItems: response.body.mailItems })
-        console.log({ mailItem })
-        console.log({ email })
 
         expect(count).to.equal(expectedCount)
         if (removeMail) {
