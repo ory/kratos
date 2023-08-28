@@ -141,7 +141,7 @@ context("Login error messages with code method", () => {
         cy.url().should("contain", "login")
 
         cy.get("@email").then((email) => {
-          cy.getLoginCodeFromEmail(email.toString()).then((code) => {
+          cy.getLoginCodeFromEmail(email.toString()).should((code) => {
             cy.get('input[name="code"]').type(code)
           })
         })

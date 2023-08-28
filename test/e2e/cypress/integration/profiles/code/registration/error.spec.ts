@@ -106,11 +106,11 @@ context("Registration error messages with code method", () => {
 
         const email = gen.email()
 
-        cy.get(' input[name="traits.email"]').type(email)
+        cy.get('input[name="traits.email"]').type(email)
         cy.submitCodeForm()
 
         cy.url().should("contain", "registration")
-        cy.getRegistrationCodeFromEmail(email).then((code) => {
+        cy.getRegistrationCodeFromEmail(email).should((code) => {
           cy.get('input[name="code"]').type(code)
           cy.submitCodeForm()
         })

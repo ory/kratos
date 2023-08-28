@@ -1187,7 +1187,7 @@ Cypress.Commands.add(
 Cypress.Commands.add(
   "verifyEmailButExpired",
   ({ expect: { email }, strategy = "code" }) => {
-    cy.getMail().then((message) => {
+    cy.getMail().should((message) => {
       expect(message.subject).to.equal("Please verify your email address")
 
       expect(message.fromAddress.trim()).to.equal("no-reply@ory.kratos.sh")
@@ -1482,7 +1482,7 @@ Cypress.Commands.add("getVerificationCodeFromEmail", (email) => {
 
 Cypress.Commands.add("enableRegistrationViaCode", (enable: boolean = true) => {
   cy.updateConfigFile((config) => {
-    config.selfservice.methods.code.registration_enabled = enable
+    config.selfservice.methods.code.passwordless_enabled = enable
     return config
   })
 })

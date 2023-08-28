@@ -44,7 +44,7 @@ context("Registration success with code method", () => {
 
         cy.url().should("contain", "registration")
 
-        cy.getRegistrationCodeFromEmail(email).then((code) =>
+        cy.getRegistrationCodeFromEmail(email).should((code) =>
           cy.wrap(code).as("code1"),
         )
 
@@ -54,7 +54,7 @@ context("Registration success with code method", () => {
         )
         cy.get(` button[name='resend'][value='code']`).click()
 
-        cy.getRegistrationCodeFromEmail(email).then((code) => {
+        cy.getRegistrationCodeFromEmail(email).should((code) => {
           cy.wrap(code).as("code2")
         })
 
@@ -91,7 +91,7 @@ context("Registration success with code method", () => {
         cy.submitCodeForm()
 
         cy.url().should("contain", "registration")
-        cy.getRegistrationCodeFromEmail(email).then((code) => {
+        cy.getRegistrationCodeFromEmail(email).should((code) => {
           cy.get(` input[name=code]`).type(code)
           cy.get("button[name=method][value=code]").click()
         })
@@ -114,7 +114,7 @@ context("Registration success with code method", () => {
         cy.submitCodeForm()
 
         cy.url().should("contain", "registration")
-        cy.getRegistrationCodeFromEmail(email).then((code) => {
+        cy.getRegistrationCodeFromEmail(email).should((code) => {
           cy.get(` input[name=code]`).type(code)
           cy.get("button[name=method][value=code]").click()
         })
@@ -180,17 +180,17 @@ context("Registration success with code method", () => {
 
         const email = gen.email()
 
-        cy.get(` input[name='traits.email']`).type(email)
+        cy.get(`input[name='traits.email']`).type(email)
 
         const email2 = gen.email()
 
-        cy.get(` input[name='traits.email2']`).type(email2)
+        cy.get(`input[name='traits.email2']`).type(email2)
 
         cy.submitCodeForm()
 
         // intentionally use email 1 to verify the account
         cy.url().should("contain", "registration")
-        cy.getRegistrationCodeFromEmail(email, { expectedCount: 2 }).then(
+        cy.getRegistrationCodeFromEmail(email, { expectedCount: 2 }).should(
           (code) => {
             cy.get(`input[name=code]`).type(code)
             cy.get("button[name=method][value=code]").click()
@@ -207,7 +207,7 @@ context("Registration success with code method", () => {
 
         cy.get("button[name=method][value=code]").click()
 
-        cy.getLoginCodeFromEmail(email2).then((code) => {
+        cy.getLoginCodeFromEmail(email2).should((code) => {
           cy.get(`input[name=code]`).type(code)
           cy.get("button[name=method][value=code]").click()
         })

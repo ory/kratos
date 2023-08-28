@@ -42,7 +42,7 @@ context("Login success with code method", () => {
           cy.get('input[name="identifier"]').clear().type(email.toString())
           cy.submitCodeForm()
 
-          cy.getLoginCodeFromEmail(email.toString()).then((code) => {
+          cy.getLoginCodeFromEmail(email.toString()).should((code) => {
             cy.get('input[name="code"]').type(code)
 
             cy.get("button[name=method][value=code]").click()
@@ -68,13 +68,13 @@ context("Login success with code method", () => {
           cy.get('input[name="identifier"]').clear().type(email.toString())
           cy.submitCodeForm()
 
-          cy.getLoginCodeFromEmail(email.toString()).then((code) => {
+          cy.getLoginCodeFromEmail(email.toString()).should((code) => {
             cy.wrap(code).as("code1")
           })
 
           cy.get("button[name=resend]").click()
 
-          cy.getLoginCodeFromEmail(email.toString()).then((code) => {
+          cy.getLoginCodeFromEmail(email.toString()).should((code) => {
             cy.wrap(code).as("code2")
           })
 
@@ -140,7 +140,7 @@ context("Login success with code method", () => {
         cy.get('input[name="identifier"]').clear().type(email2)
         cy.submitCodeForm()
 
-        cy.getLoginCodeFromEmail(email2).then((code) => {
+        cy.getLoginCodeFromEmail(email2).should((code) => {
           cy.get('input[name="code"]').type(code)
           cy.get("button[name=method][value=code]").click()
         })
