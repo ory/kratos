@@ -107,6 +107,6 @@ func (c *courier) watchMessages(ctx context.Context, errChan chan error) {
 			errChan <- err
 			return
 		}
-		time.Sleep(time.Second)
+		time.Sleep(time.Second * 30)
 	}
 }
