@@ -6,6 +6,7 @@ package code
 import (
 	"context"
 	"net/http"
+	"strings"
 
 	"github.com/gofrs/uuid"
 	"github.com/pkg/errors"
@@ -161,6 +162,8 @@ func (s *Strategy) loginSendEmail(ctx context.Context, w http.ResponseWriter, r 
 		return errors.WithStack(schema.NewRequiredError("#/identifier", "identifier"))
 	}
 
+	p.Identifier = maybeNormalizeEmail(p.Identifier)
+
 	// Step 1: Get the identity
 	i, _, err := s.getIdentity(ctx, p.Identifier)
 	if err != nil {
@@ -206,6 +209,14 @@ func (s *Strategy) loginSendEmail(ctx context.Context, w http.ResponseWriter, r 
 	return errors.WithStack(flow.ErrCompletedByStrategy)
 }
 
+// If identifier is an email, we lower case it because on mobile phones the first letter sometimes is capitalized.
+func maybeNormalizeEmail(input string) string {
+	if strings.Contains(input, "@") {
+		return strings.ToLower(input)
+	}
+	return input
+}
+
 func (s *Strategy) loginVerifyCode(ctx context.Context, r *http.Request, f *login.Flow, p *updateLoginFlowWithCodeMethod) (_ *identity.Identity, err error) {
 	ctx, span := s.deps.Tracer(ctx).Tracer().Start(ctx, "selfservice.strategy.code.strategy.loginVerifyCode")
 	defer otelx.End(span, &err)
@@ -219,6 +230,8 @@ func (s *Strategy) loginVerifyCode(ctx context.Context, r *http.Request, f *logi
 	if len(p.Identifier) == 0 {
 		return nil, errors.WithStack(schema.NewRequiredError("#/identifier", "identifier"))
 	}
+
+	p.Identifier = maybeNormalizeEmail(p.Identifier)
 
 	// Step 1: Get the identity
 	i, _, err := s.getIdentity(ctx, p.Identifier)

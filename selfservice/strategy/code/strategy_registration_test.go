@@ -32,10 +32,11 @@ import (
 )
 
 type state struct {
-	flowID     string
-	client     *http.Client
-	email      string
-	testServer *httptest.Server
+	flowID         string
+	client         *http.Client
+	email          string
+	testServer     *httptest.Server
+	resultIdentity *identity.Identity
 }
 
 func TestRegistrationCodeStrategyDisabled(t *testing.T) {
@@ -130,15 +131,16 @@ func TestRegistrationCodeStrategy(t *testing.T) {
 	registerNewUser := func(ctx context.Context, t *testing.T, s *state, isSPA bool, submitAssertion onSubmitAssertion) *state {
 		t.Helper()
 
-		email := testhelpers.RandomEmail()
-		s.email = email
+		if s.email == "" {
+			s.email = testhelpers.RandomEmail()
+		}
 
 		rf, resp, err := testhelpers.NewSDKCustomClient(s.testServer, s.client).FrontendApi.GetRegistrationFlow(context.Background()).Id(s.flowID).Execute()
 		require.NoError(t, err)
 		require.EqualValues(t, http.StatusOK, resp.StatusCode)
 
 		values := testhelpers.SDKFormFieldsToURLValues(rf.Ui.Nodes)
-		values.Set("traits.email", email)
+		values.Set("traits.email", s.email)
 		values.Set("method", "code")
 
 		body, resp := testhelpers.RegistrationMakeRequest(t, false, isSPA, rf, s.client, testhelpers.EncodeFormAsJSON(t, false, values))
@@ -155,7 +157,7 @@ func TestRegistrationCodeStrategy(t *testing.T) {
 		}
 		csrfToken := gjson.Get(body, "ui.nodes.#(attributes.name==csrf_token).attributes.value").String()
 		assert.NotEmptyf(t, csrfToken, "%s", body)
-		require.Equal(t, email, gjson.Get(body, "ui.nodes.#(attributes.name==traits.email).attributes.value").String())
+		require.Equal(t, s.email, gjson.Get(body, "ui.nodes.#(attributes.name==traits.email).attributes.value").String())
 
 		return s
 	}
@@ -186,7 +188,7 @@ func TestRegistrationCodeStrategy(t *testing.T) {
 
 		verifiableAddress, err := reg.PrivilegedIdentityPool().FindVerifiableAddressByValue(ctx, identity.VerifiableAddressTypeEmail, s.email)
 		require.NoError(t, err)
-		require.Equal(t, s.email, verifiableAddress.Value)
+		require.Equal(t, strings.ToLower(s.email), verifiableAddress.Value)
 
 		id, err := reg.PrivilegedIdentityPool().GetIdentityConfidential(ctx, verifiableAddress.IdentityID)
 		require.NoError(t, err)
@@ -195,6 +197,7 @@ func TestRegistrationCodeStrategy(t *testing.T) {
 		_, ok := id.GetCredentials(identity.CredentialsTypeCodeAuth)
 		require.True(t, ok)
 
+		s.resultIdentity = id
 		return s
 	}
 
@@ -237,6 +240,35 @@ func TestRegistrationCodeStrategy(t *testing.T) {
 					state = submitOTP(ctx, t, reg, state, func(v *url.Values) {
 						v.Set("code", registrationCode)
 					}, tc.isSPA, nil)
+				})
+
+				t.Run("case=should normalize email address on sign up", func(t *testing.T) {
+					ctx := context.Background()
+
+					// 1. Initiate flow
+					state := createRegistrationFlow(ctx, t, public, tc.isSPA)
+					sourceMail := testhelpers.RandomEmail()
+					state.email = strings.ToUpper(sourceMail)
+					assert.NotEqual(t, sourceMail, state.email)
+
+					// 2. Submit Identifier (email)
+					state = registerNewUser(ctx, t, state, tc.isSPA, nil)
+
+					message := testhelpers.CourierExpectMessage(ctx, t, reg, sourceMail, "Complete your account registration")
+					assert.Contains(t, message.Body, "please complete your account registration by entering the following code")
+
+					registrationCode := testhelpers.CourierExpectCodeInMessage(t, message, 1)
+					assert.NotEmpty(t, registrationCode)
+
+					// 3. Submit OTP
+					state = submitOTP(ctx, t, reg, state, func(v *url.Values) {
+						v.Set("code", registrationCode)
+					}, tc.isSPA, nil)
+
+					creds, ok := state.resultIdentity.GetCredentials(identity.CredentialsTypeCodeAuth)
+					require.True(t, ok)
+					require.Len(t, creds.Identifiers, 1)
+					assert.Equal(t, sourceMail, creds.Identifiers[0])
 				})
 
 				t.Run("case=should be able to resend the code", func(t *testing.T) {
