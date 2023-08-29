@@ -83,7 +83,7 @@ test-short:
 
 .PHONY: test-coverage
 test-coverage: .bin/go-acc .bin/goveralls
-	go-acc -o coverage.out ./... -- -v -failfast -timeout=20m -tags sqlite,json1
+	go-acc -o coverage.out ./... -- -failfast -timeout=20m -tags sqlite,json1
 
 .PHONY: test-coverage-next
 test-coverage-next: .bin/go-acc .bin/goveralls
