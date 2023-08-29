@@ -112,7 +112,7 @@ func (s *Strategy) Settings(w http.ResponseWriter, r *http.Request, f *settings.
 	if len(p.Register+p.Remove) > 0 {
 		// This method has only two submit buttons
 		p.Method = s.SettingsStrategyID()
-		if err := flow.MethodEnabledAndAllowed(r.Context(), s.SettingsStrategyID(), p.Method, s.d); err != nil {
+		if err := flow.MethodEnabledAndAllowed(r.Context(), f.GetFlowName(), s.SettingsStrategyID(), p.Method, s.d); err != nil {
 			return nil, s.handleSettingsError(w, r, ctxUpdate, &p, err)
 		}
 	} else {
@@ -146,7 +146,7 @@ func (s *Strategy) continueSettingsFlow(
 	ctxUpdate *settings.UpdateContext, p *updateSettingsFlowWithWebAuthnMethod,
 ) error {
 	if len(p.Register+p.Remove) > 0 {
-		if err := flow.MethodEnabledAndAllowed(r.Context(), s.SettingsStrategyID(), s.SettingsStrategyID(), s.d); err != nil {
+		if err := flow.MethodEnabledAndAllowed(r.Context(), flow.SettingsFlow, s.SettingsStrategyID(), s.SettingsStrategyID(), s.d); err != nil {
 			return err
 		}
 

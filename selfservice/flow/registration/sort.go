@@ -16,6 +16,7 @@ func SortNodes(ctx context.Context, n node.Nodes, schemaRef string) error {
 			node.DefaultGroup,
 			node.OpenIDConnectGroup,
 			node.WebAuthnGroup,
+			node.CodeGroup,
 			node.PasswordGroup,
 		}),
 		node.SortUpdateOrder(node.PasswordLoginOrder),

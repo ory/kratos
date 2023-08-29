@@ -18,9 +18,17 @@ import (
 
 // UpdateRegistrationFlowBody - Update Registration Request Body
 type UpdateRegistrationFlowBody struct {
+	UpdateRegistrationFlowWithCodeMethod     *UpdateRegistrationFlowWithCodeMethod
 	UpdateRegistrationFlowWithOidcMethod     *UpdateRegistrationFlowWithOidcMethod
 	UpdateRegistrationFlowWithPasswordMethod *UpdateRegistrationFlowWithPasswordMethod
 	UpdateRegistrationFlowWithWebAuthnMethod *UpdateRegistrationFlowWithWebAuthnMethod
+}
+
+// UpdateRegistrationFlowWithCodeMethodAsUpdateRegistrationFlowBody is a convenience function that returns UpdateRegistrationFlowWithCodeMethod wrapped in UpdateRegistrationFlowBody
+func UpdateRegistrationFlowWithCodeMethodAsUpdateRegistrationFlowBody(v *UpdateRegistrationFlowWithCodeMethod) UpdateRegistrationFlowBody {
+	return UpdateRegistrationFlowBody{
+		UpdateRegistrationFlowWithCodeMethod: v,
+	}
 }
 
 // UpdateRegistrationFlowWithOidcMethodAsUpdateRegistrationFlowBody is a convenience function that returns UpdateRegistrationFlowWithOidcMethod wrapped in UpdateRegistrationFlowBody
@@ -48,6 +56,19 @@ func UpdateRegistrationFlowWithWebAuthnMethodAsUpdateRegistrationFlowBody(v *Upd
 func (dst *UpdateRegistrationFlowBody) UnmarshalJSON(data []byte) error {
 	var err error
 	match := 0
+	// try to unmarshal data into UpdateRegistrationFlowWithCodeMethod
+	err = newStrictDecoder(data).Decode(&dst.UpdateRegistrationFlowWithCodeMethod)
+	if err == nil {
+		jsonUpdateRegistrationFlowWithCodeMethod, _ := json.Marshal(dst.UpdateRegistrationFlowWithCodeMethod)
+		if string(jsonUpdateRegistrationFlowWithCodeMethod) == "{}" { // empty struct
+			dst.UpdateRegistrationFlowWithCodeMethod = nil
+		} else {
+			match++
+		}
+	} else {
+		dst.UpdateRegistrationFlowWithCodeMethod = nil
+	}
+
 	// try to unmarshal data into UpdateRegistrationFlowWithOidcMethod
 	err = newStrictDecoder(data).Decode(&dst.UpdateRegistrationFlowWithOidcMethod)
 	if err == nil {
@@ -89,6 +110,7 @@ func (dst *UpdateRegistrationFlowBody) UnmarshalJSON(data []byte) error {
 
 	if match > 1 { // more than 1 match
 		// reset to nil
+		dst.UpdateRegistrationFlowWithCodeMethod = nil
 		dst.UpdateRegistrationFlowWithOidcMethod = nil
 		dst.UpdateRegistrationFlowWithPasswordMethod = nil
 		dst.UpdateRegistrationFlowWithWebAuthnMethod = nil
@@ -103,6 +125,10 @@ func (dst *UpdateRegistrationFlowBody) UnmarshalJSON(data []byte) error {
 
 // Marshal data from the first non-nil pointers in the struct to JSON
 func (src UpdateRegistrationFlowBody) MarshalJSON() ([]byte, error) {
+	if src.UpdateRegistrationFlowWithCodeMethod != nil {
+		return json.Marshal(&src.UpdateRegistrationFlowWithCodeMethod)
+	}
+
 	if src.UpdateRegistrationFlowWithOidcMethod != nil {
 		return json.Marshal(&src.UpdateRegistrationFlowWithOidcMethod)
 	}
@@ -123,6 +149,10 @@ func (obj *UpdateRegistrationFlowBody) GetActualInstance() interface{} {
 	if obj == nil {
 		return nil
 	}
+	if obj.UpdateRegistrationFlowWithCodeMethod != nil {
+		return obj.UpdateRegistrationFlowWithCodeMethod
+	}
+
 	if obj.UpdateRegistrationFlowWithOidcMethod != nil {
 		return obj.UpdateRegistrationFlowWithOidcMethod
 	}

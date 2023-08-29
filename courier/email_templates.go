@@ -40,6 +40,8 @@ const (
 	TypeVerificationCodeValid   TemplateType = "verification_code_valid"
 	TypeOTP                     TemplateType = "otp"
 	TypeTestStub                TemplateType = "stub"
+	TypeLoginCodeValid          TemplateType = "login_code_valid"
+	TypeRegistrationCodeValid   TemplateType = "registration_code_valid"
 )
 
 func GetEmailTemplateType(t EmailTemplate) (TemplateType, error) {
@@ -60,6 +62,10 @@ func GetEmailTemplateType(t EmailTemplate) (TemplateType, error) {
 		return TypeVerificationCodeInvalid, nil
 	case *email.VerificationCodeValid:
 		return TypeVerificationCodeValid, nil
+	case *email.LoginCodeValid:
+		return TypeLoginCodeValid, nil
+	case *email.RegistrationCodeValid:
+		return TypeRegistrationCodeValid, nil
 	case *email.TestStub:
 		return TypeTestStub, nil
 	default:
@@ -123,6 +129,18 @@ func NewEmailTemplateFromMessage(d template.Dependencies, msg Message) (EmailTem
 			return nil, err
 		}
 		return email.NewTestStub(d, &t), nil
+	case TypeLoginCodeValid:
+		var t email.LoginCodeValidModel
+		if err := json.Unmarshal(msg.TemplateData, &t); err != nil {
+			return nil, err
+		}
+		return email.NewLoginCodeValid(d, &t), nil
+	case TypeRegistrationCodeValid:
+		var t email.RegistrationCodeValidModel
+		if err := json.Unmarshal(msg.TemplateData, &t); err != nil {
+			return nil, err
+		}
+		return email.NewRegistrationCodeValid(d, &t), nil
 	default:
 		return nil, errors.Errorf("received unexpected message template type: %s", msg.TemplateType)
 	}

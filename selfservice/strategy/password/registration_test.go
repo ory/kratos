@@ -50,8 +50,8 @@ func newRegistrationRegistry(t *testing.T) *driver.RegistryDefault {
 }
 
 func TestRegistration(t *testing.T) {
-
 	ctx := context.Background()
+
 	t.Run("case=registration", func(t *testing.T) {
 		reg := newRegistrationRegistry(t)
 		conf := reg.Config()

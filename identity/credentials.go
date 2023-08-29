@@ -94,6 +94,8 @@ func (c CredentialsType) ToUiNodeGroup() node.UiNodeGroup {
 		return node.WebAuthnGroup
 	case CredentialsTypeLookup:
 		return node.LookupGroup
+	case CredentialsTypeCodeAuth:
+		return node.CodeGroup
 	default:
 		return node.DefaultGroup
 	}
@@ -106,6 +108,7 @@ const (
 	CredentialsTypeTOTP     CredentialsType = "totp"
 	CredentialsTypeLookup   CredentialsType = "lookup_secret"
 	CredentialsTypeWebAuthn CredentialsType = "webauthn"
+	CredentialsTypeCodeAuth CredentialsType = "code"
 )
 
 var AllCredentialTypes = []CredentialsType{
@@ -114,6 +117,7 @@ var AllCredentialTypes = []CredentialsType{
 	CredentialsTypeTOTP,
 	CredentialsTypeLookup,
 	CredentialsTypeWebAuthn,
+	CredentialsTypeCodeAuth,
 }
 
 const (
@@ -131,6 +135,7 @@ func ParseCredentialsType(in string) (CredentialsType, bool) {
 		CredentialsTypeTOTP,
 		CredentialsTypeLookup,
 		CredentialsTypeWebAuthn,
+		CredentialsTypeCodeAuth,
 		CredentialsTypeRecoveryLink,
 		CredentialsTypeRecoveryCode,
 	} {
@@ -140,6 +145,15 @@ func ParseCredentialsType(in string) (CredentialsType, bool) {
 	}
 	return "", false
 }
+
+// swagger:ignore
+type CredentialsIdentifierAddressType string
+
+const (
+	CredentialsIdentifierAddressTypeEmail CredentialsIdentifierAddressType = AddressTypeEmail
+	CredentialsIdentifierAddressTypePhone CredentialsIdentifierAddressType = AddressTypePhone
+	CredentialsIdentifierAddressTypeNone  CredentialsIdentifierAddressType = "none"
+)
 
 // Credentials represents a specific credential type
 //

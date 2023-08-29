@@ -11,6 +11,7 @@
     - oidc
     - webauthn
     - lookup_secret
+    - code
 - op: add
   path: /paths/~1admin~1identities~1{id}/get/parameters/1/schema/items/enum
   value:
@@ -19,6 +20,7 @@
     - oidc
     - webauthn
     - lookup_secret
+    - code
 - op: remove
   path: /components/schemas/updateIdentityBody/properties/metadata_admin/type
 - op: remove
@@ -32,4 +34,3 @@
 - op: add
   path: /components/schemas/nullJsonRawMessage/nullable
   value: true
-

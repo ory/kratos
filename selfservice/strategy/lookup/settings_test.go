@@ -273,7 +273,7 @@ func TestCompleteSettings(t *testing.T) {
 
 	t.Run("type=can not confirm without regenerate", func(t *testing.T) {
 		id, codes := createIdentity(t, reg)
-		var payload = func(v url.Values) {
+		payload := func(v url.Values) {
 			v.Set(node.LookupConfirm, "true")
 		}
 
@@ -310,7 +310,7 @@ func TestCompleteSettings(t *testing.T) {
 
 	t.Run("type=regenerate but no confirmation", func(t *testing.T) {
 		id, codes := createIdentity(t, reg)
-		var payload = func(v url.Values) {
+		payload := func(v url.Values) {
 			v.Set(node.LookupRegenerate, "true")
 		}
 
@@ -363,13 +363,13 @@ func TestCompleteSettings(t *testing.T) {
 			},
 		} {
 			t.Run("credentials="+tc.d, func(t *testing.T) {
-				var payload = func(v url.Values) {
+				payload := func(v url.Values) {
 					v.Del(node.LookupReveal)
 					v.Del(node.LookupDisable)
 					v.Set(node.LookupRegenerate, "true")
 				}
 
-				var payloadConfirm = func(v url.Values) {
+				payloadConfirm := func(v url.Values) {
 					v.Del(node.LookupRegenerate)
 					v.Del(node.LookupDisable)
 					v.Del(node.LookupReveal)
@@ -401,7 +401,7 @@ func TestCompleteSettings(t *testing.T) {
 					assert.Equal(t, http.StatusOK, res.StatusCode)
 
 					assert.Contains(t, res.Request.URL.String(), publicTS.URL+settings.RouteSubmitFlow)
-					assert.EqualValues(t, settings.StateSuccess, json.RawMessage(gjson.Get(actual, "state").String()))
+					assert.EqualValues(t, flow.StateSuccess, json.RawMessage(gjson.Get(actual, "state").String()))
 
 					checkIdentity(t, id, f)
 					testhelpers.EnsureAAL(t, apiClient, publicTS, "aal2", string(identity.CredentialsTypeLookup))
@@ -427,7 +427,7 @@ func TestCompleteSettings(t *testing.T) {
 						assert.Contains(t, res.Request.URL.String(), uiTS.URL)
 					}
 
-					assert.EqualValues(t, settings.StateSuccess, json.RawMessage(gjson.Get(actual, "state").String()))
+					assert.EqualValues(t, flow.StateSuccess, json.RawMessage(gjson.Get(actual, "state").String()))
 					checkIdentity(t, id, f)
 					testhelpers.EnsureAAL(t, browserClient, publicTS, "aal2", string(identity.CredentialsTypeLookup))
 				}
@@ -463,7 +463,7 @@ func TestCompleteSettings(t *testing.T) {
 			},
 		} {
 			t.Run("credentials="+tc.d, func(t *testing.T) {
-				var payloadConfirm = func(v url.Values) {
+				payloadConfirm := func(v url.Values) {
 					v.Del(node.LookupRegenerate)
 					v.Del(node.LookupReveal)
 					v.Set(node.LookupDisable, "true")
@@ -489,7 +489,7 @@ func TestCompleteSettings(t *testing.T) {
 					assert.Equal(t, http.StatusOK, res.StatusCode)
 
 					assert.Contains(t, res.Request.URL.String(), publicTS.URL+settings.RouteSubmitFlow)
-					assert.EqualValues(t, settings.StateSuccess, json.RawMessage(gjson.Get(actual, "state").String()))
+					assert.EqualValues(t, flow.StateSuccess, json.RawMessage(gjson.Get(actual, "state").String()))
 
 					checkIdentity(t, id, f)
 					testhelpers.EnsureAAL(t, apiClient, publicTS, "aal1")
@@ -512,7 +512,7 @@ func TestCompleteSettings(t *testing.T) {
 						assert.Contains(t, res.Request.URL.String(), uiTS.URL)
 					}
 
-					assert.EqualValues(t, settings.StateSuccess, json.RawMessage(gjson.Get(actual, "state").String()))
+					assert.EqualValues(t, flow.StateSuccess, json.RawMessage(gjson.Get(actual, "state").String()))
 					checkIdentity(t, id, f)
 					testhelpers.EnsureAAL(t, browserClient, publicTS, "aal1")
 				}

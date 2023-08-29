@@ -97,11 +97,12 @@ type RegistryDefault struct {
 	persister       persistence.Persister
 	migrationStatus popx.MigrationStatuses
 
-	hookVerifier           *hook.Verifier
-	hookSessionIssuer      *hook.SessionIssuer
-	hookSessionDestroyer   *hook.SessionDestroyer
-	hookAddressVerifier    *hook.AddressVerifier
-	hookShowVerificationUI *hook.ShowVerificationUIHook
+	hookVerifier            *hook.Verifier
+	hookSessionIssuer       *hook.SessionIssuer
+	hookSessionDestroyer    *hook.SessionDestroyer
+	hookAddressVerifier     *hook.AddressVerifier
+	hookShowVerificationUI  *hook.ShowVerificationUIHook
+	hookCodeAddressVerifier *hook.CodeAddressVerifier
 
 	identityHandler   *identity.Handler
 	identityValidator *identity.Validator
@@ -327,10 +328,28 @@ func (m *RegistryDefault) selfServiceStrategies() []interface{} {
 	return m.selfserviceStrategies
 }
 
+func (m *RegistryDefault) strategyRegistrationEnabled(ctx context.Context, id string) bool {
+	switch id {
+	case identity.CredentialsTypeCodeAuth.String():
+		return m.Config().SelfServiceCodeStrategy(ctx).PasswordlessEnabled
+	default:
+		return m.Config().SelfServiceStrategy(ctx, id).Enabled
+	}
+}
+
+func (m *RegistryDefault) strategyLoginEnabled(ctx context.Context, id string) bool {
+	switch id {
+	case identity.CredentialsTypeCodeAuth.String():
+		return m.Config().SelfServiceCodeStrategy(ctx).PasswordlessEnabled
+	default:
+		return m.Config().SelfServiceStrategy(ctx, id).Enabled
+	}
+}
+
 func (m *RegistryDefault) RegistrationStrategies(ctx context.Context) (registrationStrategies registration.Strategies) {
 	for _, strategy := range m.selfServiceStrategies() {
 		if s, ok := strategy.(registration.Strategy); ok {
-			if m.Config().SelfServiceStrategy(ctx, string(s.ID())).Enabled {
+			if m.strategyRegistrationEnabled(ctx, s.ID().String()) {
 				registrationStrategies = append(registrationStrategies, s)
 			}
 		}
@@ -352,7 +371,7 @@ func (m *RegistryDefault) AllRegistrationStrategies() registration.Strategies {
 func (m *RegistryDefault) LoginStrategies(ctx context.Context) (loginStrategies login.Strategies) {
 	for _, strategy := range m.selfServiceStrategies() {
 		if s, ok := strategy.(login.Strategy); ok {
-			if m.Config().SelfServiceStrategy(ctx, string(s.ID())).Enabled {
+			if m.strategyLoginEnabled(ctx, s.ID().String()) {
 				loginStrategies = append(loginStrategies, s)
 			}
 		}
@@ -660,7 +679,6 @@ func (m *RegistryDefault) Init(ctx context.Context, ctxer contextx.Contextualize
 		m.persister = p.WithNetworkID(net.ID)
 		return nil
 	}, bc)
-
 	if err != nil {
 		return err
 	}
@@ -741,6 +759,14 @@ func (m *RegistryDefault) VerificationTokenPersister() link.VerificationTokenPer
 }
 
 func (m *RegistryDefault) VerificationCodePersister() code.VerificationCodePersister {
+	return m.Persister()
+}
+
+func (m *RegistryDefault) RegistrationCodePersister() code.RegistrationCodePersister {
+	return m.Persister()
+}
+
+func (m *RegistryDefault) LoginCodePersister() code.LoginCodePersister {
 	return m.Persister()
 }
 
