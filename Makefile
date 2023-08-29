@@ -83,7 +83,13 @@ test-short:
 
 .PHONY: test-coverage
 test-coverage: .bin/go-acc .bin/goveralls
-	go-acc -o coverage.out ./... -- -v -failfast -timeout=20m -tags sqlite
+	go-acc -o coverage.out ./... -- -v -failfast -timeout=20m -tags sqlite,json1
+
+.PHONY: test-coverage-next
+test-coverage-next: .bin/go-acc .bin/goveralls
+	go test -short -failfast -timeout=20m -tags sqlite,json1 -cover ./... --args test.gocoverdir="$$PWD/coverage"
+	go tool covdata percent -i=coverage
+	go tool covdata textfmt -i=./coverage -o coverage.new.out
 
 # Generates the SDK
 .PHONY: sdk

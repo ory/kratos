@@ -10,6 +10,9 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/ory/herodot"
+	"github.com/ory/x/otelx"
+
 	"github.com/pkg/errors"
 
 	"github.com/ory/kratos/identity"
@@ -59,19 +62,27 @@ type updateRegistrationFlowWithCodeMethod struct {
 	Resend string `json:"resend" form:"resend"`
 }
 
+func (p *updateRegistrationFlowWithCodeMethod) GetResend() string {
+	return p.Resend
+}
+
 func (s *Strategy) RegisterRegistrationRoutes(*x.RouterPublic) {}
 
-func (s *Strategy) HandleRegistrationError(w http.ResponseWriter, r *http.Request, flow *registration.Flow, body *updateRegistrationFlowWithCodeMethod, err error) error {
-	if flow != nil {
+func (s *Strategy) HandleRegistrationError(ctx context.Context, r *http.Request, f *registration.Flow, body *updateRegistrationFlowWithCodeMethod, err error) error {
+	if errors.Is(err, flow.ErrCompletedByStrategy) {
+		return err
+	}
+
+	if f != nil {
 		if body != nil {
-			action := flow.AppendTo(urlx.AppendPaths(s.deps.Config().SelfPublicURL(r.Context()), registration.RouteSubmitFlow)).String()
+			action := f.AppendTo(urlx.AppendPaths(s.deps.Config().SelfPublicURL(ctx), registration.RouteSubmitFlow)).String()
 			for _, n := range container.NewFromJSON(action, node.CodeGroup, body.Traits, "traits").Nodes {
 				// we only set the value and not the whole field because we want to keep types from the initial form generation
-				flow.UI.Nodes.SetValueAttribute(n.ID(), n.Attributes.GetValue())
+				f.UI.Nodes.SetValueAttribute(n.ID(), n.Attributes.GetValue())
 			}
 		}
 
-		flow.UI.SetCSRF(s.deps.GenerateCSRFToken(r))
+		f.UI.SetCSRF(s.deps.GenerateCSRFToken(r))
 	}
 
 	return err
@@ -129,11 +140,9 @@ func (s *Strategy) getCredentialsFromTraits(ctx context.Context, f *registration
 	return cred, nil
 }
 
-func (s *Strategy) Register(w http.ResponseWriter, r *http.Request, f *registration.Flow, i *identity.Identity) error {
-	s.deps.Audit().
-		WithRequest(r).
-		WithField("registration_flow_id", f.ID).
-		Info("Registration with the code strategy started.")
+func (s *Strategy) Register(w http.ResponseWriter, r *http.Request, f *registration.Flow, i *identity.Identity) (err error) {
+	ctx, span := s.deps.Tracer(r.Context()).Tracer().Start(r.Context(), "selfservice.strategy.code.strategy.Register")
+	defer otelx.End(span, &err)
 
 	if err := flow.MethodEnabledAndAllowedFromRequest(r, f.GetFlowName(), s.ID().String(), s.deps); err != nil {
 		return err
@@ -141,133 +150,135 @@ func (s *Strategy) Register(w http.ResponseWriter, r *http.Request, f *registrat
 
 	var p updateRegistrationFlowWithCodeMethod
 	if err := registration.DecodeBody(&p, r, s.dx, s.deps.Config(), registrationSchema); err != nil {
-		return s.HandleRegistrationError(w, r, f, &p, err)
+		return s.HandleRegistrationError(ctx, r, f, &p, err)
 	}
 
-	if err := flow.EnsureCSRF(s.deps, r, f.Type, s.deps.Config().DisableAPIFlowEnforcement(r.Context()), s.deps.GenerateCSRFToken, p.CSRFToken); err != nil {
-		return s.HandleRegistrationError(w, r, f, &p, err)
+	if err := flow.EnsureCSRF(s.deps, r, f.Type, s.deps.Config().DisableAPIFlowEnforcement(ctx), s.deps.GenerateCSRFToken, p.CSRFToken); err != nil {
+		return s.HandleRegistrationError(ctx, r, f, &p, err)
 	}
 
-	codeManager := NewCodeStateManager(f, s, &p)
+	// By Default the flow should be in the 'choose method' state.
+	SetDefaultFlowState(f, p.Resend)
 
-	codeManager.SetCreateCodeHandler(func(ctx context.Context, f *registration.Flow, strategy *Strategy, p *updateRegistrationFlowWithCodeMethod) error {
-		strategy.deps.Logger().
-			WithSensitiveField("traits", p.Traits).
-			WithSensitiveField("transient_paylaod", p.TransientPayload).
-			Debug("Creating registration code.")
-
-		// Create the Registration code
-
-		// Step 1: validate the identity's traits
-		cred, err := strategy.getCredentialsFromTraits(ctx, f, i, p.Traits, p.TransientPayload)
-		if err != nil {
-			return err
-		}
-
-		// Step 2: Delete any previous registration codes for this flow ID
-		if err := strategy.deps.RegistrationCodePersister().DeleteRegistrationCodesOfFlow(ctx, f.ID); err != nil {
-			return errors.WithStack(err)
-		}
-
-		// Step 3: Get the identity email and send the code
-		var addresses []Address
-		for _, identifier := range cred.Identifiers {
-			addresses = append(addresses, Address{To: identifier, Via: identity.CodeAddressType(cred.IdentifierAddressType)})
-		}
-		// kratos only supports `email` identifiers at the moment with the code method
-		// this is validated in the identity validation step above
-		if err := strategy.deps.CodeSender().SendCode(ctx, f, i, addresses...); err != nil {
-			return errors.WithStack(err)
-		}
-
-		// sets the flow state to code sent
-		strategy.NextFlowState(f)
-
-		// Step 4: Generate the UI for the `code` input form
-		// re-initialize the UI with a "clean" new state
-		// this should also provide a "resend" button and an option to change the email address
-		if err := strategy.NewCodeUINodes(r, f, p.Traits); err != nil {
-			return errors.WithStack(err)
-		}
-
-		f.Active = identity.CredentialsTypeCodeAuth
-		if err := strategy.deps.RegistrationFlowPersister().UpdateRegistrationFlow(ctx, f); err != nil {
-			return errors.WithStack(err)
-		}
-
-		if x.IsJSONRequest(r) {
-			strategy.deps.Writer().WriteCode(w, r, http.StatusBadRequest, f)
-		} else {
-			http.Redirect(w, r, f.AppendTo(s.deps.Config().SelfServiceFlowRegistrationUI(ctx)).String(), http.StatusSeeOther)
-		}
-
-		// we return an error to the flow handler so that it does not continue execution of the hooks.
-		// we are not done with the registration flow yet. The user needs to verify the code and then we need to persist the identity.
-		return errors.WithStack(flow.ErrCompletedByStrategy)
-	})
-
-	codeManager.SetCodeVerifyHandler(func(ctx context.Context, f *registration.Flow, strategy *Strategy, p *updateRegistrationFlowWithCodeMethod) error {
-		strategy.deps.Logger().
-			WithSensitiveField("traits", p.Traits).
-			WithSensitiveField("transient_payload", p.TransientPayload).
-			WithSensitiveField("code", p.Code).
-			Debug("Verifying  registration code")
-
-		// Step 1: Re-validate the identity's traits
-		// this is important since the client could have switched out the identity's traits
-		// this method also returns the credentials for a temporary identity
-		cred, err := strategy.getCredentialsFromTraits(ctx, f, i, p.Traits, p.TransientPayload)
-		if err != nil {
-			return err
-		}
-
-		// Step 2: Check if the flow traits match the identity traits
-		for _, n := range container.NewFromJSON("", node.DefaultGroup, p.Traits, "traits").Nodes {
-			if !strings.EqualFold(f.GetUI().GetNodes().Find(n.ID()).Attributes.GetValue().(string), n.Attributes.GetValue().(string)) {
-				return errors.WithStack(schema.NewTraitsMismatch())
-			}
-		}
-
-		// Step 3: Attempt to use the code
-		registrationCode, err := strategy.deps.RegistrationCodePersister().UseRegistrationCode(ctx, f.ID, p.Code, cred.Identifiers...)
-		if err != nil {
-			if errors.Is(err, ErrCodeNotFound) {
-				return errors.WithStack(schema.NewRegistrationCodeInvalid())
-			}
-			return errors.WithStack(err)
-		}
-
-		// Step 4: The code was correct, populate the Identity credentials and traits
-		if err := strategy.handleIdentityTraits(ctx, f, p.Traits, p.TransientPayload, i, WithCredentials(registrationCode.AddressType, registrationCode.UsedAt)); err != nil {
-			return errors.WithStack(err)
-		}
-
-		// since nothing has errored yet, we can assume that the code is correct
-		// and we can update the registration flow
-		strategy.NextFlowState(f)
-
-		if err := strategy.deps.RegistrationFlowPersister().UpdateRegistrationFlow(ctx, f); err != nil {
-			return errors.WithStack(err)
-		}
-
-		return nil
-	})
-
-	codeManager.SetCodeDoneHandler(func(ctx context.Context, f *registration.Flow, strategy *Strategy, p *updateRegistrationFlowWithCodeMethod) error {
-		strategy.deps.Audit().
-			WithSensitiveField("traits", p.Traits).
-			WithSensitiveField("transient_payload", p.TransientPayload).
-			WithSensitiveField("code", p.Code).
-			Debug("The registration flow has already been completed, but is being re-requested.")
-
-		return errors.WithStack(schema.NewNoRegistrationStrategyResponsible())
-	})
-
-	if err := codeManager.Run(r.Context()); err != nil {
-		if errors.Is(err, flow.ErrCompletedByStrategy) {
-			return err
-		}
-		return s.HandleRegistrationError(w, r, f, &p, err)
+	switch f.GetState() {
+	case flow.StateChooseMethod:
+		return s.HandleRegistrationError(ctx, r, f, &p, s.registrationSendEmail(ctx, w, r, f, &p, i))
+	case flow.StateEmailSent:
+		return s.HandleRegistrationError(ctx, r, f, &p, s.registrationVerifyCode(ctx, f, &p, i))
+	case flow.StatePassedChallenge:
+		return s.HandleRegistrationError(ctx, r, f, &p, errors.WithStack(schema.NewNoRegistrationStrategyResponsible()))
 	}
+
+	return s.HandleRegistrationError(ctx, r, f, &p, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("Unexpected flow state: %s", f.GetState())))
+}
+
+func (s *Strategy) registrationSendEmail(ctx context.Context, w http.ResponseWriter, r *http.Request, f *registration.Flow, p *updateRegistrationFlowWithCodeMethod, i *identity.Identity) (err error) {
+	ctx, span := s.deps.Tracer(ctx).Tracer().Start(ctx, "selfservice.strategy.code.strategy.registrationSendEmail")
+	defer otelx.End(span, &err)
+
+	if len(p.Traits) == 0 {
+		return errors.WithStack(schema.NewRequiredError("#/traits", "traits"))
+	}
+
+	// Create the Registration code
+
+	// Step 1: validate the identity's traits
+	cred, err := s.getCredentialsFromTraits(ctx, f, i, p.Traits, p.TransientPayload)
+	if err != nil {
+		return err
+	}
+
+	// Step 2: Delete any previous registration codes for this flow ID
+	if err := s.deps.RegistrationCodePersister().DeleteRegistrationCodesOfFlow(ctx, f.ID); err != nil {
+		return errors.WithStack(err)
+	}
+
+	// Step 3: Get the identity email and send the code
+	var addresses []Address
+	for _, identifier := range cred.Identifiers {
+		addresses = append(addresses, Address{To: identifier, Via: identity.AddressTypeEmail})
+	}
+	// kratos only supports `email` identifiers at the moment with the code method
+	// this is validated in the identity validation step above
+	if err := s.deps.CodeSender().SendCode(ctx, f, i, addresses...); err != nil {
+		return errors.WithStack(err)
+	}
+
+	// sets the flow state to code sent
+	f.SetState(flow.NextState(f.GetState()))
+
+	// Step 4: Generate the UI for the `code` input form
+	// re-initialize the UI with a "clean" new state
+	// this should also provide a "resend" button and an option to change the email address
+	if err := s.NewCodeUINodes(r, f, p.Traits); err != nil {
+		return errors.WithStack(err)
+	}
+
+	f.Active = identity.CredentialsTypeCodeAuth
+	if err := s.deps.RegistrationFlowPersister().UpdateRegistrationFlow(ctx, f); err != nil {
+		return errors.WithStack(err)
+	}
+
+	if x.IsJSONRequest(r) {
+		s.deps.Writer().WriteCode(w, r, http.StatusBadRequest, f)
+	} else {
+		http.Redirect(w, r, f.AppendTo(s.deps.Config().SelfServiceFlowRegistrationUI(ctx)).String(), http.StatusSeeOther)
+	}
+
+	// we return an error to the flow handler so that it does not continue execution of the hooks.
+	// we are not done with the registration flow yet. The user needs to verify the code and then we need to persist the identity.
+	return errors.WithStack(flow.ErrCompletedByStrategy)
+
+}
+
+func (s *Strategy) registrationVerifyCode(ctx context.Context, f *registration.Flow, p *updateRegistrationFlowWithCodeMethod, i *identity.Identity) (err error) {
+	ctx, span := s.deps.Tracer(ctx).Tracer().Start(ctx, "selfservice.strategy.code.strategy.registrationVerifyCode")
+	defer otelx.End(span, &err)
+
+	if len(p.Code) == 0 {
+		return errors.WithStack(schema.NewRequiredError("#/code", "code"))
+	}
+
+	if len(p.Traits) == 0 {
+		return errors.WithStack(schema.NewRequiredError("#/traits", "traits"))
+	}
+
+	// Step 1: Re-validate the identity's traits
+	// this is important since the client could have switched out the identity's traits
+	// this method also returns the credentials for a temporary identity
+	cred, err := s.getCredentialsFromTraits(ctx, f, i, p.Traits, p.TransientPayload)
+	if err != nil {
+		return err
+	}
+
+	// Step 2: Check if the flow traits match the identity traits
+	for _, n := range container.NewFromJSON("", node.DefaultGroup, p.Traits, "traits").Nodes {
+		if !strings.EqualFold(f.GetUI().GetNodes().Find(n.ID()).Attributes.GetValue().(string), n.Attributes.GetValue().(string)) {
+			return errors.WithStack(schema.NewTraitsMismatch())
+		}
+	}
+
+	// Step 3: Attempt to use the code
+	registrationCode, err := s.deps.RegistrationCodePersister().UseRegistrationCode(ctx, f.ID, p.Code, cred.Identifiers...)
+	if err != nil {
+		if errors.Is(err, ErrCodeNotFound) {
+			return errors.WithStack(schema.NewRegistrationCodeInvalid())
+		}
+		return errors.WithStack(err)
+	}
+
+	// Step 4: The code was correct, populate the Identity credentials and traits
+	if err := s.handleIdentityTraits(ctx, f, p.Traits, p.TransientPayload, i, WithCredentials(registrationCode.AddressType, registrationCode.UsedAt)); err != nil {
+		return errors.WithStack(err)
+	}
+
+	// since nothing has errored yet, we can assume that the code is correct
+	// and we can update the registration flow
+	f.SetState(flow.NextState(f.GetState()))
+
+	if err := s.deps.RegistrationFlowPersister().UpdateRegistrationFlow(ctx, f); err != nil {
+		return errors.WithStack(err)
+	}
+
 	return nil
 }

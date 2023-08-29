@@ -9,24 +9,21 @@ import (
 	"testing"
 	"time"
 
-	"github.com/ory/kratos/internal"
-	"github.com/ory/kratos/selfservice/strategy/code"
-	"github.com/ory/kratos/x"
-
-	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/ory/x/urlx"
-
+	"github.com/ory/kratos/internal"
 	"github.com/ory/kratos/selfservice/flow"
-	"github.com/ory/kratos/selfservice/flow/recovery"
+	"github.com/ory/kratos/selfservice/flow/login"
+	"github.com/ory/kratos/selfservice/strategy/code"
+	"github.com/ory/kratos/x"
+	"github.com/ory/x/urlx"
 )
 
-func TestRecoveryCode(t *testing.T) {
+func TestLoginCode(t *testing.T) {
 	conf, _ := internal.NewFastRegistryWithMocks(t)
 
-	newCode := func(expiresIn time.Duration, f *recovery.Flow) *code.RecoveryCode {
-		return &code.RecoveryCode{
+	newCode := func(expiresIn time.Duration, f *login.Flow) *code.LoginCode {
+		return &code.LoginCode{
 			ID:        x.NewUUID(),
 			FlowID:    f.ID,
 			ExpiresAt: time.Now().Add(expiresIn),
@@ -38,7 +35,7 @@ func TestRecoveryCode(t *testing.T) {
 		t.Parallel()
 
 		t.Run("case=returns error if flow is expired", func(t *testing.T) {
-			f, err := recovery.NewFlow(conf, -time.Hour, "", req, nil, flow.TypeBrowser)
+			f, err := login.NewFlow(conf, -time.Hour, "", req, flow.TypeBrowser)
 			require.NoError(t, err)
 
 			c := newCode(-time.Hour, f)
@@ -46,7 +43,7 @@ func TestRecoveryCode(t *testing.T) {
 			require.ErrorAs(t, c.Validate(), &expected)
 		})
 		t.Run("case=returns no error if flow is not expired", func(t *testing.T) {
-			f, err := recovery.NewFlow(conf, time.Hour, "", req, nil, flow.TypeBrowser)
+			f, err := login.NewFlow(conf, time.Hour, "", req, flow.TypeBrowser)
 			require.NoError(t, err)
 
 			c := newCode(time.Hour, f)
@@ -54,7 +51,7 @@ func TestRecoveryCode(t *testing.T) {
 		})
 
 		t.Run("case=returns error if flow has been used", func(t *testing.T) {
-			f, err := recovery.NewFlow(conf, -time.Hour, "", req, nil, flow.TypeBrowser)
+			f, err := login.NewFlow(conf, -time.Hour, "", req, flow.TypeBrowser)
 			require.NoError(t, err)
 
 			c := newCode(time.Hour, f)
@@ -66,7 +63,7 @@ func TestRecoveryCode(t *testing.T) {
 		})
 
 		t.Run("case=returns no error if flow has not been used", func(t *testing.T) {
-			f, err := recovery.NewFlow(conf, -time.Hour, "", req, nil, flow.TypeBrowser)
+			f, err := login.NewFlow(conf, -time.Hour, "", req, flow.TypeBrowser)
 			require.NoError(t, err)
 
 			c := newCode(time.Hour, f)
@@ -77,13 +74,8 @@ func TestRecoveryCode(t *testing.T) {
 		})
 
 		t.Run("case=returns error if flow is nil", func(t *testing.T) {
-			var c *code.RecoveryCode
+			var c *code.LoginCode
 			require.ErrorIs(t, c.Validate(), code.ErrCodeNotFound)
 		})
 	})
-}
-
-func TestRecoveryCodeType(t *testing.T) {
-	assert.Equal(t, 1, int(code.RecoveryCodeTypeAdmin))
-	assert.Equal(t, 2, int(code.RecoveryCodeTypeSelfService))
 }

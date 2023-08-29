@@ -80,6 +80,7 @@ declare global {
         code?: string
         traits?: { [key: string]: any }
         query?: { [key: string]: string }
+        expectedMailCount?: number
       }): Chainable<Response<void>>
 
       /**
@@ -731,7 +732,7 @@ declare global {
        */
       getRegistrationCodeFromEmail(
         email: string,
-        opts?: { expectedCount: number },
+        opts?: { expectedCount: number; removeMail?: boolean },
       ): Chainable<string>
 
       /**

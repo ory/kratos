@@ -20,9 +20,9 @@ context("Login error messages with code method", () => {
   ].forEach(({ route, profile, app }) => {
     describe(`for app ${app}`, () => {
       before(() => {
-        cy.proxy(app)
         cy.useConfigProfile(profile)
         cy.deleteMail()
+        cy.proxy(app)
       })
 
       beforeEach(() => {
@@ -123,8 +123,7 @@ context("Login error messages with code method", () => {
       it("should show error message when code is expired", () => {
         cy.updateConfigFile((config) => {
           config.selfservice.methods.code = {
-            registration_enabled: true,
-            login_enabled: true,
+            passwordless_enabled: true,
             config: {
               lifespan: "1ns",
             },
@@ -142,7 +141,7 @@ context("Login error messages with code method", () => {
         cy.url().should("contain", "login")
 
         cy.get("@email").then((email) => {
-          cy.getLoginCodeFromEmail(email.toString()).then((code) => {
+          cy.getLoginCodeFromEmail(email.toString()).should((code) => {
             cy.get('input[name="code"]').type(code)
           })
         })
@@ -164,8 +163,7 @@ context("Login error messages with code method", () => {
 
         cy.updateConfigFile((config) => {
           config.selfservice.methods.code = {
-            registration_enabled: true,
-            login_enabled: true,
+            passwordless_enabled: true,
             config: {
               lifespan: "1h",
             },

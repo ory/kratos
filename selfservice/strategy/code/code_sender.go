@@ -72,6 +72,10 @@ func (s *Sender) SendCode(ctx context.Context, f flow.Flow, id *identity.Identit
 
 	// send to all addresses
 	for _, address := range addresses {
+		// We have to generate a unique code per address, or otherwise it is not possible to link which
+		// address was used to verify the code.
+		//
+		// See also [this discussion](https://github.com/ory/kratos/pull/3456#discussion_r1307560988).
 		rawCode := GenerateCode()
 
 		switch f.GetFlowName() {

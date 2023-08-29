@@ -12,6 +12,8 @@ import (
 	"net/url"
 	"testing"
 
+	"github.com/ory/x/stringsx"
+
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/tidwall/gjson"
@@ -162,6 +164,27 @@ func TestLoginCodeStrategy(t *testing.T) {
 		},
 	} {
 		t.Run("test="+tc.d, func(t *testing.T) {
+			t.Run("case=email identifier should be case insensitive", func(t *testing.T) {
+				// create login flow
+				s := createLoginFlow(ctx, t, public, tc.isSPA)
+
+				// submit email
+				s = submitLogin(ctx, t, s, tc.isSPA, func(v *url.Values) {
+					v.Set("identifier", stringsx.ToUpperInitial(s.identityEmail))
+				}, false, nil)
+
+				message := testhelpers.CourierExpectMessage(ctx, t, reg, s.identityEmail, "Login to your account")
+				assert.Contains(t, message.Body, "please login to your account by entering the following code")
+
+				loginCode := testhelpers.CourierExpectCodeInMessage(t, message, 1)
+				assert.NotEmpty(t, loginCode)
+
+				// 3. Submit OTP
+				submitLogin(ctx, t, s, tc.isSPA, func(v *url.Values) {
+					v.Set("code", loginCode)
+				}, true, nil)
+			})
+
 			t.Run("case=should be able to log in with code", func(t *testing.T) {
 				// create login flow
 				s := createLoginFlow(ctx, t, public, tc.isSPA)
@@ -331,7 +354,7 @@ func TestLoginCodeStrategy(t *testing.T) {
 				})
 			})
 
-			t.Run("case=resend code shoud invalidate previous code", func(t *testing.T) {
+			t.Run("case=resend code should invalidate previous code", func(t *testing.T) {
 				ctx := context.Background()
 
 				s := createLoginFlow(ctx, t, public, tc.isSPA)

@@ -527,8 +527,7 @@ export interface OryKratosConfiguration2 {
         config?: LinkConfiguration
       }
       code?: {
-        login_enabled?: EnablesLoginWithCodeMethod
-        registration_enabled?: EnablesRegistrationWithCodeMethod
+        passwordless_enabled?: boolean
         enabled?: EnablesCodeMethod
         config?: CodeConfiguration
       }
