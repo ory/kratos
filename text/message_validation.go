@@ -299,8 +299,8 @@ func NewErrorValidationDuplicateCredentialsWithHints(availableCredentialTypes []
 		}
 		reason += fmt.Sprintf(" You can sign in using %s.", strings.Join(maps.Keys(humanReadable), ", "))
 	}
-	if len(availableOIDCProviders) > 0 {
-		reason += fmt.Sprintf(" You can sign in using one of the following social sign in providers: %s.", strings.Join(availableOIDCProviders, ", "))
+	if len(oidcProviders) > 0 {
+		reason += fmt.Sprintf(" You can sign in using one of the following social sign in providers: %s.", strings.Join(oidcProviders, ", "))
 	}
 
 	return &Message{
