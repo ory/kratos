@@ -229,8 +229,8 @@ func TestPostFlow(t *testing.T) {
 					IdentityID: uuid.NullUUID{UUID: uuid.Must(uuid.NewV4()), Valid: true},
 					AMR:        session.AuthenticationMethods{{Method: identity.CredentialsTypePassword}},
 				},
-				SessionID:            uuid.NullUUID{UUID: s.ID, Valid: true},
-				State:                flow.StatePassedChallenge,
+				SessionID: uuid.NullUUID{UUID: s.ID, Valid: true},
+				State:     flow.StatePassedChallenge,
 			}
 			require.NoError(t, reg.VerificationFlowPersister().CreateVerificationFlow(ctx, f))
 

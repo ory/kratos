@@ -48,9 +48,8 @@ context("Login success with code method", () => {
             cy.get("button[name=method][value=code]").click()
           })
 
-          if (app === "express") {
-            cy.get('a[href*="sessions"').click()
-          }
+          cy.location("pathname").should("not.contain", "login")
+
           cy.getSession().should((session) => {
             const { identity } = session
             expect(identity.id).to.not.be.empty

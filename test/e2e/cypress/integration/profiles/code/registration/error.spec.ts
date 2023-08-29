@@ -66,7 +66,7 @@ context("Registration error messages with code method", () => {
         cy.get('input[name="code"]').type("invalid-code")
         cy.submitCodeForm()
 
-        cy.get('[data-testid="ui/message/4000030"]').should(
+        cy.get('[data-testid="ui/message/4000036"]').should(
           "contain",
           "The provided traits do not match the traits previously associated with this flow.",
         )

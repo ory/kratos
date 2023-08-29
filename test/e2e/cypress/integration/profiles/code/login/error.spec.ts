@@ -46,7 +46,7 @@ context("Login error messages with code method", () => {
 
         cy.url().should("contain", "login")
 
-        cy.get('[data-testid="ui/message/4000029"]').should(
+        cy.get('[data-testid="ui/message/4000035"]').should(
           "contain",
           "This account does not exist or has not setup sign in with code.",
         )
@@ -86,7 +86,7 @@ context("Login error messages with code method", () => {
         cy.get('input[name="code"]').type("invalid-code")
         cy.submitCodeForm()
 
-        cy.get('[data-testid="ui/message/4000029"]').should(
+        cy.get('[data-testid="ui/message/4000035"]').should(
           "contain",
           "This account does not exist or has not setup sign in with code.",
         )
