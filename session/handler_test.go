@@ -1008,8 +1008,9 @@ func TestHandlerRefreshSessionBySessionID(t *testing.T) {
 		require.NoError(t, err)
 		require.Equal(t, http.StatusOK, res.StatusCode)
 
-		s, err = reg.SessionPersister().GetSession(context.Background(), s.ID, ExpandNothing)
+		updatedSession, err := reg.SessionPersister().GetSession(context.Background(), s.ID, ExpandNothing)
 		require.Nil(t, err)
+		require.True(t, s.ExpiresAt.Before(updatedSession.ExpiresAt))
 	})
 
 	t.Run("case=should return 400 when bad UUID is sent", func(t *testing.T) {
