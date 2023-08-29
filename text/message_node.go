@@ -40,6 +40,9 @@ func NewInfoNodeLabelGenerated(title string) *Message {
 		ID:   InfoNodeLabelGenerated,
 		Text: title,
 		Type: Info,
+		Context: context(map[string]any{
+			"title": title,
+		}),
 	}
 }
 

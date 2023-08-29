@@ -10,91 +10,81 @@ import (
 
 func NewInfoLoginReAuth() *Message {
 	return &Message{
-		ID:      InfoSelfServiceLoginReAuth,
-		Type:    Info,
-		Text:    "Please confirm this action by verifying that it is you.",
-		Context: context(nil),
+		ID:   InfoSelfServiceLoginReAuth,
+		Type: Info,
+		Text: "Please confirm this action by verifying that it is you.",
 	}
 }
 
 func NewInfoLoginMFA() *Message {
 	return &Message{
-		ID:      InfoSelfServiceLoginMFA,
-		Type:    Info,
-		Text:    "Please complete the second authentication challenge.",
-		Context: context(nil),
+		ID:   InfoSelfServiceLoginMFA,
+		Type: Info,
+		Text: "Please complete the second authentication challenge.",
 	}
 }
 
 func NewInfoLoginWebAuthnPasswordless() *Message {
 	return &Message{
-		ID:      InfoSelfServiceLoginWebAuthnPasswordless,
-		Type:    Info,
-		Text:    "Prepare your WebAuthn device (e.g. security key, biometrics scanner, ...) and press continue.",
-		Context: context(nil),
+		ID:   InfoSelfServiceLoginWebAuthnPasswordless,
+		Type: Info,
+		Text: "Prepare your WebAuthn device (e.g. security key, biometrics scanner, ...) and press continue.",
 	}
 }
 
 func NewInfoLoginTOTPLabel() *Message {
 	return &Message{
-		ID:      InfoSelfServiceLoginTOTPLabel,
-		Type:    Info,
-		Text:    "Authentication code",
-		Context: context(nil),
+		ID:   InfoSelfServiceLoginTOTPLabel,
+		Type: Info,
+		Text: "Authentication code",
 	}
 }
 
 func NewInfoLoginLookupLabel() *Message {
 	return &Message{
-		ID:      InfoLoginLookupLabel,
-		Type:    Info,
-		Text:    "Backup recovery code",
-		Context: context(nil),
+		ID:   InfoLoginLookupLabel,
+		Type: Info,
+		Text: "Backup recovery code",
 	}
 }
 
 func NewInfoLogin() *Message {
 	return &Message{
-		ID:      InfoSelfServiceLogin,
-		Text:    "Sign in",
-		Type:    Info,
-		Context: context(map[string]interface{}{}),
+		ID:   InfoSelfServiceLogin,
+		Text: "Sign in",
+		Type: Info,
 	}
 }
 
 func NewInfoLoginPasswordlessWebAuthn() *Message {
 	return &Message{
-		ID:      InfoSelfServiceLogin,
-		Text:    "Sign in with security key",
-		Type:    Info,
-		Context: context(map[string]interface{}{}),
+		ID:   InfoSelfServiceLogin,
+		Text: "Sign in with security key",
+		Type: Info,
 	}
 }
 
 func NewInfoLoginTOTP() *Message {
 	return &Message{
-		ID:      InfoLoginTOTP,
-		Text:    "Use Authenticator",
-		Type:    Info,
-		Context: context(map[string]interface{}{}),
+		ID:   InfoLoginTOTP,
+		Text: "Use Authenticator",
+		Type: Info,
 	}
 }
 
 func NewInfoLoginLookup() *Message {
 	return &Message{
-		ID:      InfoLoginLookup,
-		Text:    "Use backup recovery code",
-		Type:    Info,
-		Context: context(map[string]interface{}{}),
+		ID:   InfoLoginLookup,
+		Text: "Use backup recovery code",
+		Type: Info,
 	}
 }
 
 func NewInfoLoginVerify() *Message {
 	return &Message{
-		ID:      InfoSelfServiceLoginVerify,
-		Text:    "Verify",
-		Type:    Info,
-		Context: context(map[string]interface{}{}),
+		ID:   InfoSelfServiceLoginVerify,
+		Text: "Verify",
+		Type: Info,
 	}
 }
 
@@ -103,7 +93,7 @@ func NewInfoLoginWith(provider string) *Message {
 		ID:   InfoSelfServiceLoginWith,
 		Text: fmt.Sprintf("Sign in with %s", provider),
 		Type: Info,
-		Context: context(map[string]interface{}{
+		Context: context(map[string]any{
 			"provider": provider,
 		}),
 	}
@@ -114,8 +104,9 @@ func NewErrorValidationLoginFlowExpired(expiredAt time.Time) *Message {
 		ID:   ErrorValidationLoginFlowExpired,
 		Text: fmt.Sprintf("The login flow expired %.2f minutes ago, please try again.", Since(expiredAt).Minutes()),
 		Type: Error,
-		Context: context(map[string]interface{}{
-			"expired_at": expiredAt,
+		Context: context(map[string]any{
+			"expired_at":      expiredAt,
+			"expired_at_unix": expiredAt.Unix(),
 		}),
 	}
 }

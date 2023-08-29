@@ -6,14 +6,18 @@ package text
 import (
 	"fmt"
 	"strings"
+
+	"golang.org/x/exp/maps"
 )
 
 func NewValidationErrorGeneric(reason string) *Message {
 	return &Message{
-		ID:      ErrorValidationGeneric,
-		Text:    reason,
-		Type:    Error,
-		Context: context(nil),
+		ID:   ErrorValidationGeneric,
+		Text: reason,
+		Type: Error,
+		Context: context(map[string]any{
+			"reason": reason,
+		}),
 	}
 }
 
@@ -184,10 +188,9 @@ func NewErrorValidationConst(expected any) *Message {
 
 func NewErrorValidationConstGeneric() *Message {
 	return &Message{
-		ID:      ErrorValidationConstGeneric,
-		Text:    "const failed",
-		Type:    Error,
-		Context: context(nil),
+		ID:   ErrorValidationConstGeneric,
+		Text: "const failed",
+		Type: Error,
 	}
 }
 
@@ -204,10 +207,9 @@ func NewErrorValidationPasswordPolicyViolationGeneric(reason string) *Message {
 
 func NewErrorValidationPasswordIdentifierTooSimilar() *Message {
 	return &Message{
-		ID:      ErrorValidationPasswordIdentifierTooSimilar,
-		Text:    "The password can not be used because it is too similar to the identifier.",
-		Type:    Error,
-		Context: context(nil),
+		ID:   ErrorValidationPasswordIdentifierTooSimilar,
+		Text: "The password can not be used because it is too similar to the identifier.",
+		Type: Error,
 	}
 }
 
@@ -248,23 +250,51 @@ func NewErrorValidationPasswordTooManyBreaches(breaches int64) *Message {
 
 func NewErrorValidationInvalidCredentials() *Message {
 	return &Message{
-		ID:      ErrorValidationInvalidCredentials,
-		Text:    "The provided credentials are invalid, check for spelling mistakes in your password or username, email address, or phone number.",
-		Type:    Error,
-		Context: context(nil),
+		ID:   ErrorValidationInvalidCredentials,
+		Text: "The provided credentials are invalid, check for spelling mistakes in your password or username, email address, or phone number.",
+		Type: Error,
 	}
 }
 
 func NewErrorValidationDuplicateCredentials() *Message {
 	return &Message{
-		ID:      ErrorValidationDuplicateCredentials,
-		Text:    "An account with the same identifier (email, phone, username, ...) exists already.",
-		Type:    Error,
-		Context: context(nil),
+		ID:   ErrorValidationDuplicateCredentials,
+		Text: "An account with the same identifier (email, phone, username, ...) exists already.",
+		Type: Error,
 	}
 }
 
-func NewErrorValidationDuplicateCredentialsWithHints(reason string, availableCredentialTypes []string, availableOIDCProviders []string, credentialIdentifierHint string) *Message {
+func NewErrorValidationDuplicateCredentialsWithHints(availableCredentialTypes []string, availableOIDCProviders []string, credentialIdentifierHint string) *Message {
+	identifier := credentialIdentifierHint
+	if identifier == "" {
+		identifier = "an email, phone, or username"
+	}
+	reason := fmt.Sprintf("You tried signing in with %s which is already in use by another account.", identifier)
+	if len(availableCredentialTypes) > 0 {
+		humanReadable := make(map[string]struct{}, len(availableCredentialTypes))
+		for _, cred := range availableCredentialTypes {
+			switch cred {
+			case "password":
+				humanReadable["your password"] = struct{}{}
+			case "oidc":
+				humanReadable["social sign in"] = struct{}{}
+			case "webauthn":
+				humanReadable["your PassKey or a security key"] = struct{}{}
+			}
+		}
+		if len(humanReadable) == 0 {
+			// show at least some hint
+			// also our example message generation tool runs into this case
+			for _, cred := range availableCredentialTypes {
+				humanReadable[cred] = struct{}{}
+			}
+		}
+		reason += fmt.Sprintf(" You can sign in using %s.", strings.Join(maps.Keys(humanReadable), ", "))
+	}
+	if len(availableOIDCProviders) > 0 {
+		reason += fmt.Sprintf(" You can sign in using one of the following social sign in providers: %s.", strings.Join(availableOIDCProviders, ", "))
+	}
+
 	return &Message{
 		ID:   ErrorValidationDuplicateCredentialsWithHints,
 		Text: reason,
@@ -279,90 +309,80 @@ func NewErrorValidationDuplicateCredentialsWithHints(reason string, availableCre
 
 func NewErrorValidationDuplicateCredentialsOnOIDCLink() *Message {
 	return &Message{
-		ID:      ErrorValidationDuplicateCredentialsOnOIDCLink,
-		Text:    "An account with the same identifier (email, phone, username, ...) exists already. Please sign in to your existing account and link your social profile in the settings page.",
-		Type:    Error,
-		Context: context(nil),
+		ID:   ErrorValidationDuplicateCredentialsOnOIDCLink,
+		Text: "An account with the same identifier (email, phone, username, ...) exists already. Please sign in to your existing account and link your social profile in the settings page.",
+		Type: Error,
 	}
 }
 
 func NewErrorValidationTOTPVerifierWrong() *Message {
 	return &Message{
-		ID:      ErrorValidationTOTPVerifierWrong,
-		Text:    "The provided authentication code is invalid, please try again.",
-		Type:    Error,
-		Context: context(nil),
+		ID:   ErrorValidationTOTPVerifierWrong,
+		Text: "The provided authentication code is invalid, please try again.",
+		Type: Error,
 	}
 }
 
 func NewErrorValidationLookupAlreadyUsed() *Message {
 	return &Message{
-		ID:      ErrorValidationLookupAlreadyUsed,
-		Text:    "This backup recovery code has already been used.",
-		Type:    Error,
-		Context: context(nil),
+		ID:   ErrorValidationLookupAlreadyUsed,
+		Text: "This backup recovery code has already been used.",
+		Type: Error,
 	}
 }
 
 func NewErrorValidationLookupInvalid() *Message {
 	return &Message{
-		ID:      ErrorValidationLookupInvalid,
-		Text:    "The backup recovery code is not valid.",
-		Type:    Error,
-		Context: context(nil),
+		ID:   ErrorValidationLookupInvalid,
+		Text: "The backup recovery code is not valid.",
+		Type: Error,
 	}
 }
 
 func NewErrorValidationIdentifierMissing() *Message {
 	return &Message{
-		ID:      ErrorValidationIdentifierMissing,
-		Text:    "Could not find any login identifiers. Did you forget to set them? This could also be caused by a server misconfiguration.",
-		Type:    Error,
-		Context: context(nil),
+		ID:   ErrorValidationIdentifierMissing,
+		Text: "Could not find any login identifiers. Did you forget to set them? This could also be caused by a server misconfiguration.",
+		Type: Error,
 	}
 }
 
 func NewErrorValidationAddressNotVerified() *Message {
 	return &Message{
-		ID:      ErrorValidationAddressNotVerified,
-		Text:    "Account not active yet. Did you forget to verify your email address?",
-		Type:    Error,
-		Context: context(nil),
+		ID:   ErrorValidationAddressNotVerified,
+		Text: "Account not active yet. Did you forget to verify your email address?",
+		Type: Error,
 	}
 }
 
 func NewErrorValidationNoTOTPDevice() *Message {
 	return &Message{
-		ID:      ErrorValidationNoTOTPDevice,
-		Text:    "You have no TOTP device set up.",
-		Type:    Error,
-		Context: context(nil),
+		ID:   ErrorValidationNoTOTPDevice,
+		Text: "You have no TOTP device set up.",
+		Type: Error,
 	}
 }
 
 func NewErrorValidationNoLookup() *Message {
 	return &Message{
-		ID:      ErrorValidationNoLookup,
-		Text:    "You have no backup recovery codes set up.",
-		Type:    Error,
-		Context: context(nil),
+		ID:   ErrorValidationNoLookup,
+		Text: "You have no backup recovery codes set up.",
+		Type: Error,
 	}
 }
 
 func NewErrorValidationNoWebAuthnDevice() *Message {
 	return &Message{
-		ID:      ErrorValidationNoWebAuthnDevice,
-		Text:    "You have no WebAuthn device set up.",
-		Type:    Error,
-		Context: context(nil),
+		ID:   ErrorValidationNoWebAuthnDevice,
+		Text: "You have no WebAuthn device set up.",
+		Type: Error,
 	}
 }
 
 func NewErrorValidationSuchNoWebAuthnUser() *Message {
 	return &Message{
-		ID:      ErrorValidationSuchNoWebAuthnUser,
-		Text:    "This account does not exist or has no security key set up.",
-		Type:    Error,
-		Context: context(nil),
+		ID:   ErrorValidationSuchNoWebAuthnUser,
+		Text: "This account does not exist or has no security key set up.",
+		Type: Error,
 	}
 }

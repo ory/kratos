@@ -5,7 +5,6 @@ package schema
 
 import (
 	"fmt"
-	"strings"
 
 	"golang.org/x/text/cases"
 	"golang.org/x/text/language"
@@ -151,34 +150,6 @@ func NewDuplicateCredentialsError(err error) error {
 			oidcProviders = append(oidcProviders, cases.Title(language.English).String(provider))
 		}
 
-		reason := ""
-		if hinter.IdentifierHint() != "" {
-			reason = fmt.Sprintf("You tried signing with %s which is already in use by another account.", hinter.IdentifierHint())
-		} else {
-			reason = "You tried to sign up using an email, phone, or username that is already used by another account."
-		}
-
-		if len(hinter.AvailableCredentials()) > 0 {
-			humanReadable := make([]string, 0, len(hinter.AvailableCredentials()))
-			for _, cred := range hinter.AvailableCredentials() {
-				switch cred {
-				case "password":
-					humanReadable = append(humanReadable, "your password")
-				case "oidc":
-					humanReadable = append(humanReadable, "social sign in")
-				case "webauthn":
-					humanReadable = append(humanReadable, "your PassKey or a security key")
-				}
-			}
-
-			reason = fmt.Sprintf("%s You can sign in using %s.", reason, strings.Join(humanReadable, ", "))
-			if len(hinter.AvailableOIDCProviders()) > 0 {
-				reason = fmt.Sprintf("%s Use one of the following social sign in providers: %s", reason, strings.Join(oidcProviders, ", "))
-			}
-		} else if len(hinter.AvailableOIDCProviders()) > 0 {
-			reason = fmt.Sprintf("%s You can sign in using one of the following social sign in providers: %s.", reason, strings.Join(oidcProviders, ", "))
-		}
-
 		return errors.WithStack(&ValidationError{
 			ValidationError: &jsonschema.ValidationError{
 				Message:     `an account with the same identifier (email, phone, username, ...) exists already`,
@@ -189,7 +160,7 @@ func NewDuplicateCredentialsError(err error) error {
 					IdentifierHint:         hinter.IdentifierHint(),
 				},
 			},
-			Messages: new(text.Messages).Add(text.NewErrorValidationDuplicateCredentialsWithHints(reason, hinter.AvailableCredentials(), hinter.AvailableOIDCProviders(), hinter.IdentifierHint())),
+			Messages: new(text.Messages).Add(text.NewErrorValidationDuplicateCredentialsWithHints(hinter.AvailableCredentials(), hinter.AvailableOIDCProviders(), hinter.IdentifierHint())),
 		})
 	}
 

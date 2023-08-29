@@ -10,10 +10,9 @@ import (
 
 func NewInfoRegistration() *Message {
 	return &Message{
-		ID:      InfoSelfServiceRegistration,
-		Text:    "Sign up",
-		Type:    Info,
-		Context: context(map[string]interface{}{}),
+		ID:   InfoSelfServiceRegistration,
+		Text: "Sign up",
+		Type: Info,
 	}
 }
 
@@ -22,7 +21,7 @@ func NewInfoRegistrationWith(provider string) *Message {
 		ID:   InfoSelfServiceRegistrationWith,
 		Text: fmt.Sprintf("Sign up with %s", provider),
 		Type: Info,
-		Context: context(map[string]interface{}{
+		Context: context(map[string]any{
 			"provider": provider,
 		}),
 	}
@@ -41,8 +40,9 @@ func NewErrorValidationRegistrationFlowExpired(expiredAt time.Time) *Message {
 		ID:   ErrorValidationRegistrationFlowExpired,
 		Text: fmt.Sprintf("The registration flow expired %.2f minutes ago, please try again.", Since(expiredAt).Minutes()),
 		Type: Error,
-		Context: context(map[string]interface{}{
-			"expired_at": expiredAt,
+		Context: context(map[string]any{
+			"expired_at":      expiredAt,
+			"expired_at_unix": expiredAt.Unix(),
 		}),
 	}
 }
