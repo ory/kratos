@@ -57,28 +57,25 @@ func NewInfoSelfServiceRegistrationRegisterWebAuthn() *Message {
 
 func NewRegistrationEmailWithCodeSent() *Message {
 	return &Message{
-		ID:      InfoSelfServiceRegistrationEmailWithCodeSent,
-		Type:    Info,
-		Text:    "An email containing a code has been sent to the email address you provided. If you have not received an email, check the spelling of the address and retry the registration.",
-		Context: context(nil),
+		ID:   InfoSelfServiceRegistrationEmailWithCodeSent,
+		Type: Info,
+		Text: "An email containing a code has been sent to the email address you provided. If you have not received an email, check the spelling of the address and retry the registration.",
 	}
 }
 
 func NewErrorValidationRegistrationCodeInvalidOrAlreadyUsed() *Message {
 	return &Message{
-		ID:      ErrorValidationRegistrationCodeInvalidOrAlreadyUsed,
-		Text:    "The registration code is invalid or has already been used. Please try again.",
-		Type:    Error,
-		Context: context(nil),
+		ID:   ErrorValidationRegistrationCodeInvalidOrAlreadyUsed,
+		Text: "The registration code is invalid or has already been used. Please try again.",
+		Type: Error,
 	}
 }
 
 func NewErrorValidationRegistrationRetrySuccessful() *Message {
 	return &Message{
-		ID:      ErrorValidateionRegistrationRetrySuccess,
-		Type:    Error,
-		Text:    "The request was already completed successfully and can not be retried.",
-		Context: context(nil),
+		ID:   ErrorValidateionRegistrationRetrySuccess,
+		Type: Error,
+		Text: "The request was already completed successfully and can not be retried.",
 	}
 }
 

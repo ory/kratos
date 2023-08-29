@@ -177,28 +177,25 @@ func NewInfoSelfServiceLoginContinue() *Message {
 
 func NewLoginEmailWithCodeSent() *Message {
 	return &Message{
-		ID:      InfoSelfServiceLoginEmailWithCodeSent,
-		Type:    Info,
-		Text:    "An email containing a code has been sent to the email address you provided. If you have not received an email, check the spelling of the address and retry the login.",
-		Context: context(nil),
+		ID:   InfoSelfServiceLoginEmailWithCodeSent,
+		Type: Info,
+		Text: "An email containing a code has been sent to the email address you provided. If you have not received an email, check the spelling of the address and retry the login.",
 	}
 }
 
 func NewErrorValidationLoginCodeInvalidOrAlreadyUsed() *Message {
 	return &Message{
-		ID:      ErrorValidationLoginCodeInvalidOrAlreadyUsed,
-		Text:    "The login code is invalid or has already been used. Please try again.",
-		Type:    Error,
-		Context: context(nil),
+		ID:   ErrorValidationLoginCodeInvalidOrAlreadyUsed,
+		Text: "The login code is invalid or has already been used. Please try again.",
+		Type: Error,
 	}
 }
 
 func NewErrorValidationLoginRetrySuccessful() *Message {
 	return &Message{
-		ID:      ErrorValidationLoginRetrySuccess,
-		Type:    Error,
-		Text:    "The request was already completed successfully and can not be retried.",
-		Context: context(nil),
+		ID:   ErrorValidationLoginRetrySuccess,
+		Type: Error,
+		Text: "The request was already completed successfully and can not be retried.",
 	}
 }
 
