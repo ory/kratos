@@ -115,7 +115,17 @@ type Flow struct {
 	// This is only set if the client has requested a session token exchange code, and if the flow is of type "api",
 	// and only on creating the flow.
 	SessionTokenExchangeCode string `json:"session_token_exchange_code,omitempty" faker:"-" db:"-"`
+
+	// State represents the state of this request:
+	//
+	// - choose_method: ask the user to choose a method (e.g. registration with email)
+	// - sent_email: the email has been sent to the user
+	// - passed_challenge: the request was successful and the registration challenge was passed.
+	// required: true
+	State State `json:"state" faker:"-" db:"state"`
 }
+
+var _ flow.Flow = new(Flow)
 
 func NewFlow(conf *config.Config, exp time.Duration, csrf string, r *http.Request, ft flow.Type) (*Flow, error) {
 	now := time.Now().UTC()
@@ -151,6 +161,7 @@ func NewFlow(conf *config.Config, exp time.Duration, csrf string, r *http.Reques
 		CSRFToken:       csrf,
 		Type:            ft,
 		InternalContext: []byte("{}"),
+		State:           flow.StateChooseMethod,
 	}, nil
 }
 
@@ -237,4 +248,16 @@ func (f *Flow) SecureRedirectToOpts(ctx context.Context, cfg config.Provider) (o
 		x.SecureRedirectAllowSelfServiceURLs(cfg.Config().SelfPublicURL(ctx)),
 		x.SecureRedirectOverrideDefaultReturnTo(cfg.Config().SelfServiceFlowRegistrationReturnTo(ctx, f.Active.String())),
 	}
+}
+
+func (f *Flow) GetState() State {
+	return f.State
+}
+
+func (f *Flow) GetFlowName() flow.FlowName {
+	return flow.RegistrationFlow
+}
+
+func (f *Flow) SetState(state State) {
+	f.State = state
 }

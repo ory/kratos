@@ -28,6 +28,8 @@ import (
 func CleanSQL(t testing.TB, c *pop.Connection) {
 	ctx := context.Background()
 	for _, table := range []string{
+		new(code.LoginCode).TableName(ctx),
+		new(code.RegistrationCode).TableName(ctx),
 		new(continuity.Container).TableName(ctx),
 		new(courier.MessageDispatch).TableName(),
 		new(courier.Message).TableName(ctx),

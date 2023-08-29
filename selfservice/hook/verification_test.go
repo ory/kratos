@@ -22,7 +22,6 @@ import (
 	"github.com/ory/kratos/selfservice/flow"
 	"github.com/ory/kratos/selfservice/flow/registration"
 	"github.com/ory/kratos/selfservice/flow/settings"
-	"github.com/ory/kratos/selfservice/flow/verification"
 	"github.com/ory/kratos/selfservice/hook"
 	"github.com/ory/kratos/session"
 	"github.com/ory/kratos/x"
@@ -94,7 +93,7 @@ func TestVerifier(t *testing.T) {
 
 			expectedVerificationFlow, err := reg.VerificationFlowPersister().GetVerificationFlow(ctx, fView.ID)
 			require.NoError(t, err)
-			require.Equal(t, expectedVerificationFlow.State, verification.StateEmailSent)
+			require.Equal(t, expectedVerificationFlow.State, flow.StateEmailSent)
 
 			messages, err := reg.CourierPersister().NextMessages(context.Background(), 12)
 			require.NoError(t, err)
@@ -110,7 +109,7 @@ func TestVerifier(t *testing.T) {
 			// Email to baz@ory.sh is skipped because it is verified already.
 			assert.NotContains(t, recipients, "baz@ory.sh")
 
-			//these addresses will be marked as sent and won't be sent again by the settings hook
+			// these addresses will be marked as sent and won't be sent again by the settings hook
 			address1, err := reg.IdentityPool().FindVerifiableAddressByValue(context.Background(), identity.VerifiableAddressTypeEmail, "foo@ory.sh")
 			require.NoError(t, err)
 			assert.EqualValues(t, identity.VerifiableAddressStatusSent, address1.Status)

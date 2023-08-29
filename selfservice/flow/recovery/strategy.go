@@ -26,7 +26,7 @@ const (
 type (
 	Strategy interface {
 		RecoveryStrategyID() string
-		RecoveryNodeGroup() node.UiNodeGroup
+		NodeGroup() node.UiNodeGroup
 		PopulateRecoveryMethod(*http.Request, *Flow) error
 		Recover(w http.ResponseWriter, r *http.Request, f *Flow) (err error)
 	}

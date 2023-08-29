@@ -136,8 +136,8 @@ prepare() {
   nc -zv localhost 4445 && exit 1
   nc -zv localhost 4446 && exit 1
   nc -zv localhost 4455 && exit 1
-  nc -zv localhost 4456 && exit 1
   nc -zv localhost 19006 && exit 1
+   nc -zv localhost 4456 && exit 1
   nc -zv localhost 4458 && exit 1
   nc -zv localhost 4744 && exit 1
   nc -zv localhost 4745 && exit 1
@@ -273,7 +273,7 @@ run() {
   nc -zv localhost 4433 && exit 1
 
   ls -la .
-  for profile in email mobile oidc recovery recovery-mfa verification mfa spa network passwordless webhooks oidc-provider oidc-provider-mfa; do
+  for profile in code email mobile oidc recovery recovery-mfa verification mfa spa network passwordless webhooks oidc-provider oidc-provider-mfa; do
     yq ea '. as $item ireduce ({}; . * $item )' test/e2e/profiles/kratos.base.yml "test/e2e/profiles/${profile}/.kratos.yml" > test/e2e/kratos.${profile}.yml
     cat "test/e2e/kratos.${profile}.yml" | envsubst | sponge "test/e2e/kratos.${profile}.yml"
   done

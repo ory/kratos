@@ -27,8 +27,10 @@ import (
 	"github.com/ory/x/clidoc"
 )
 
-var aSecondAgo = time.Date(2020, 1, 1, 1, 0, 0, 0, time.UTC).Add(-time.Second)
-var inAMinute = time.Date(2020, 1, 1, 1, 0, 0, 0, time.UTC).Add(time.Minute)
+var (
+	aSecondAgo = time.Date(2020, 1, 1, 1, 0, 0, 0, time.UTC).Add(-time.Second)
+	inAMinute  = time.Date(2020, 1, 1, 1, 0, 0, 0, time.UTC).Add(time.Minute)
+)
 
 var messages map[string]*text.Message
 
@@ -151,6 +153,18 @@ func init() {
 		"NewInfoSelfServiceContinueLoginWebAuthn":                 text.NewInfoSelfServiceContinueLoginWebAuthn(),
 		"NewInfoSelfServiceLoginContinue":                         text.NewInfoSelfServiceLoginContinue(),
 		"NewErrorValidationSuchNoWebAuthnUser":                    text.NewErrorValidationSuchNoWebAuthnUser(),
+		"NewRegistrationEmailWithCodeSent":                        text.NewRegistrationEmailWithCodeSent(),
+		"NewLoginEmailWithCodeSent":                               text.NewLoginEmailWithCodeSent(),
+		"NewErrorValidationRegistrationCodeInvalidOrAlreadyUsed":  text.NewErrorValidationRegistrationCodeInvalidOrAlreadyUsed(),
+		"NewErrorValidationLoginCodeInvalidOrAlreadyUsed":         text.NewErrorValidationLoginCodeInvalidOrAlreadyUsed(),
+		"NewErrorValidationNoCodeUser":                            text.NewErrorValidationNoCodeUser(),
+		"NewInfoNodeLabelRegistrationCode":                        text.NewInfoNodeLabelRegistrationCode(),
+		"NewInfoNodeLabelLoginCode":                               text.NewInfoNodeLabelLoginCode(),
+		"NewErrorValidationLoginRetrySuccessful":                  text.NewErrorValidationLoginRetrySuccessful(),
+		"NewErrorValidationTraitsMismatch":                        text.NewErrorValidationTraitsMismatch(),
+		"NewInfoSelfServiceLoginCode":                             text.NewInfoSelfServiceLoginCode(),
+		"NewErrorValidationRegistrationRetrySuccessful":           text.NewErrorValidationRegistrationRetrySuccessful(),
+		"NewInfoSelfServiceRegistrationRegisterCode":              text.NewInfoSelfServiceRegistrationRegisterCode(),
 	}
 }
 

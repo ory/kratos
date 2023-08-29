@@ -3076,6 +3076,9 @@
     }
   },
   "definitions": {
+    "CodeAddressType": {
+      "type": "string"
+    },
     "DefaultError": {},
     "Duration": {
       "description": "A Duration represents the elapsed time between two instants\nas an int64 nanosecond count. The representation limits the\nlargest representable duration to approximately 290 years.",
@@ -3089,6 +3092,20 @@
     "JSONRawMessage": {
       "type": "object",
       "title": "JSONRawMessage represents a json.RawMessage that works well with JSON, SQL, and Swagger."
+    },
+    "NullTime": {
+      "description": "NullTime implements the Scanner interface so\nit can be used as a scan destination, similar to NullString.",
+      "type": "object",
+      "title": "NullTime represents a time.Time that may be null.",
+      "properties": {
+        "Time": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "Valid": {
+          "type": "boolean"
+        }
+      }
     },
     "OAuth2Client": {
       "type": "object",
@@ -3847,6 +3864,18 @@
         }
       }
     },
+    "identityCredentialsCode": {
+      "description": "CredentialsCode represents a one time login/registration code",
+      "type": "object",
+      "properties": {
+        "address_type": {
+          "$ref": "#/definitions/CodeAddressType"
+        },
+        "used_at": {
+          "$ref": "#/definitions/NullTime"
+        }
+      }
+    },
     "identityCredentialsOidc": {
       "type": "object",
       "title": "CredentialsOIDC is contains the configuration for credentials of the type oidc.",
@@ -4098,7 +4127,8 @@
         "expires_at",
         "issued_at",
         "request_url",
-        "ui"
+        "ui",
+        "state"
       ],
       "properties": {
         "active": {
@@ -4150,6 +4180,9 @@
           "description": "SessionTokenExchangeCode holds the secret code that the client can use to retrieve a session token after the login flow has been completed.\nThis is only set if the client has requested a session token exchange code, and if the flow is of type \"api\",\nand only on creating the login flow.",
           "type": "string"
         },
+        "state": {
+          "description": "State represents the state of this request:\n\nchoose_method: ask the user to choose a method to sign in with\nsent_email: the email has been sent to the user\npassed_challenge: the request was successful and the login challenge was passed."
+        },
         "type": {
           "$ref": "#/definitions/selfServiceFlowType"
         },
@@ -4162,6 +4195,10 @@
           "format": "date-time"
         }
       }
+    },
+    "loginFlowState": {
+      "description": "The state represents the state of the login flow.\n\nchoose_method: ask the user to choose a method (e.g. login account via email)\nsent_email: the email has been sent to the user\npassed_challenge: the request was successful and the login challenge was passed.",
+      "title": "Login Flow State"
     },
     "logoutFlow": {
       "description": "Logout Flow",
@@ -4229,7 +4266,7 @@
           "type": "string"
         },
         "template_type": {
-          "description": "\nrecovery_invalid TypeRecoveryInvalid\nrecovery_valid TypeRecoveryValid\nrecovery_code_invalid TypeRecoveryCodeInvalid\nrecovery_code_valid TypeRecoveryCodeValid\nverification_invalid TypeVerificationInvalid\nverification_valid TypeVerificationValid\nverification_code_invalid TypeVerificationCodeInvalid\nverification_code_valid TypeVerificationCodeValid\notp TypeOTP\nstub TypeTestStub",
+          "description": "\nrecovery_invalid TypeRecoveryInvalid\nrecovery_valid TypeRecoveryValid\nrecovery_code_invalid TypeRecoveryCodeInvalid\nrecovery_code_valid TypeRecoveryCodeValid\nverification_invalid TypeVerificationInvalid\nverification_valid TypeVerificationValid\nverification_code_invalid TypeVerificationCodeInvalid\nverification_code_valid TypeVerificationCodeValid\notp TypeOTP\nstub TypeTestStub\nlogin_code_valid TypeLoginCodeValid\nregistration_code_valid TypeRegistrationCodeValid",
           "type": "string",
           "enum": [
             "recovery_invalid",
@@ -4241,9 +4278,11 @@
             "verification_code_invalid",
             "verification_code_valid",
             "otp",
-            "stub"
+            "stub",
+            "login_code_valid",
+            "registration_code_valid"
           ],
-          "x-go-enum-desc": "recovery_invalid TypeRecoveryInvalid\nrecovery_valid TypeRecoveryValid\nrecovery_code_invalid TypeRecoveryCodeInvalid\nrecovery_code_valid TypeRecoveryCodeValid\nverification_invalid TypeVerificationInvalid\nverification_valid TypeVerificationValid\nverification_code_invalid TypeVerificationCodeInvalid\nverification_code_valid TypeVerificationCodeValid\notp TypeOTP\nstub TypeTestStub"
+          "x-go-enum-desc": "recovery_invalid TypeRecoveryInvalid\nrecovery_valid TypeRecoveryValid\nrecovery_code_invalid TypeRecoveryCodeInvalid\nrecovery_code_valid TypeRecoveryCodeValid\nverification_invalid TypeVerificationInvalid\nverification_valid TypeVerificationValid\nverification_code_invalid TypeVerificationCodeInvalid\nverification_code_valid TypeVerificationCodeValid\notp TypeOTP\nstub TypeTestStub\nlogin_code_valid TypeLoginCodeValid\nregistration_code_valid TypeRegistrationCodeValid"
         },
         "type": {
           "$ref": "#/definitions/courierMessageType"
@@ -4437,7 +4476,7 @@
           "type": "string"
         },
         "state": {
-          "$ref": "#/definitions/recoveryFlowState"
+          "description": "State represents the state of this request:\n\nchoose_method: ask the user to choose a method (e.g. recover account via email)\nsent_email: the email has been sent to the user\npassed_challenge: the request was successful and the recovery challenge was passed."
         },
         "type": {
           "$ref": "#/definitions/selfServiceFlowType"
@@ -4449,7 +4488,6 @@
     },
     "recoveryFlowState": {
       "description": "The state represents the state of the recovery flow.\n\nchoose_method: ask the user to choose a method (e.g. recover account via email)\nsent_email: the email has been sent to the user\npassed_challenge: the request was successful and the recovery challenge was passed.",
-      "type": "string",
       "title": "Recovery Flow State"
     },
     "recoveryIdentityAddress": {
@@ -4509,7 +4547,8 @@
         "expires_at",
         "issued_at",
         "request_url",
-        "ui"
+        "ui",
+        "state"
       ],
       "properties": {
         "active": {
@@ -4549,6 +4588,9 @@
           "description": "SessionTokenExchangeCode holds the secret code that the client can use to retrieve a session token after the flow has been completed.\nThis is only set if the client has requested a session token exchange code, and if the flow is of type \"api\",\nand only on creating the flow.",
           "type": "string"
         },
+        "state": {
+          "description": "State represents the state of this request:\n\nchoose_method: ask the user to choose a method (e.g. registration with email)\nsent_email: the email has been sent to the user\npassed_challenge: the request was successful and the registration challenge was passed."
+        },
         "transient_payload": {
           "description": "TransientPayload is used to pass data from the registration to a webhook",
           "type": "object"
@@ -4560,6 +4602,10 @@
           "$ref": "#/definitions/uiContainer"
         }
       }
+    },
+    "registrationFlowState": {
+      "description": "choose_method: ask the user to choose a method (e.g. registration with email)\nsent_email: the email has been sent to the user\npassed_challenge: the request was successful and the registration challenge was passed.",
+      "title": "State represents the state of this request:"
     },
     "selfServiceFlowExpiredError": {
       "description": "Is sent when a flow is expired",
@@ -4747,7 +4793,7 @@
           "type": "string"
         },
         "state": {
-          "$ref": "#/definitions/settingsFlowState"
+          "description": "State represents the state of this flow. It knows two states:\n\nshow_form: No user data has been collected, or it is invalid, and thus the form should be shown.\nsuccess: Indicates that the settings flow has been updated successfully with the provided data.\nDone will stay true when repeatedly checking. If set to true, done will revert back to false only\nwhen a flow with invalid (e.g. \"please use a valid phone number\") data was sent."
         },
         "type": {
           "$ref": "#/definitions/selfServiceFlowType"
@@ -4759,7 +4805,6 @@
     },
     "settingsFlowState": {
       "description": "show_form: No user data has been collected, or it is invalid, and thus the form should be shown.\nsuccess: Indicates that the settings flow has been updated successfully with the provided data.\nDone will stay true when repeatedly checking. If set to true, done will revert back to false only\nwhen a flow with invalid (e.g. \"please use a valid phone number\") data was sent.",
-      "type": "string",
       "title": "State represents the state of this flow. It knows two states:"
     },
     "successfulCodeExchangeResponse": {
@@ -5235,6 +5280,36 @@
     "updateLoginFlowBody": {
       "type": "object"
     },
+    "updateLoginFlowWithCodeMethod": {
+      "description": "Update Login flow using the code method",
+      "type": "object",
+      "required": [
+        "method",
+        "csrf_token"
+      ],
+      "properties": {
+        "code": {
+          "description": "Code is the 6 digits code sent to the user",
+          "type": "string"
+        },
+        "csrf_token": {
+          "description": "CSRFToken is the anti-CSRF token",
+          "type": "string"
+        },
+        "identifier": {
+          "description": "Identifier is the code identifier\nThe identifier requires that the user has already completed the registration or settings with code flow.",
+          "type": "string"
+        },
+        "method": {
+          "description": "Method should be set to \"code\" when logging in using the code strategy.",
+          "type": "string"
+        },
+        "resend": {
+          "description": "Resend is set when the user wants to resend the code",
+          "type": "string"
+        }
+      }
+    },
     "updateLoginFlowWithLookupSecretMethod": {
       "description": "Update Login Flow with Lookup Secret Method",
       "type": "object",
@@ -5430,6 +5505,40 @@
     "updateRegistrationFlowBody": {
       "description": "Update Registration Request Body",
       "type": "object"
+    },
+    "updateRegistrationFlowWithCodeMethod": {
+      "description": "Update Registration Flow with Code Method",
+      "type": "object",
+      "required": [
+        "traits",
+        "method"
+      ],
+      "properties": {
+        "code": {
+          "description": "The OTP Code sent to the user",
+          "type": "string"
+        },
+        "csrf_token": {
+          "description": "The CSRF Token",
+          "type": "string"
+        },
+        "method": {
+          "description": "Method to use\n\nThis field must be set to `code` when using the code method.",
+          "type": "string"
+        },
+        "resend": {
+          "description": "Resend restarts the flow with a new code",
+          "type": "string"
+        },
+        "traits": {
+          "description": "The identity's traits",
+          "type": "object"
+        },
+        "transient_payload": {
+          "description": "Transient data to pass along to any webhooks",
+          "type": "object"
+        }
+      }
     },
     "updateRegistrationFlowWithOidcMethod": {
       "description": "Update Registration Flow with OpenID Connect Method",
@@ -5844,7 +5953,7 @@
           "type": "string"
         },
         "state": {
-          "$ref": "#/definitions/verificationFlowState"
+          "description": "State represents the state of this request:\n\nchoose_method: ask the user to choose a method (e.g. verify your email)\nsent_email: the email has been sent to the user\npassed_challenge: the request was successful and the verification challenge was passed."
         },
         "type": {
           "$ref": "#/definitions/selfServiceFlowType"
@@ -5856,7 +5965,6 @@
     },
     "verificationFlowState": {
       "description": "The state represents the state of the verification flow.\n\nchoose_method: ask the user to choose a method (e.g. recover account via email)\nsent_email: the email has been sent to the user\npassed_challenge: the request was successful and the recovery challenge was passed.",
-      "type": "string",
       "title": "Verification Flow State"
     },
     "version": {

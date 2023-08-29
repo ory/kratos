@@ -64,7 +64,7 @@ func TestFlow(t *testing.T) {
 		require.NoError(t, err)
 	})
 
-	assert.EqualValues(t, verification.StateChooseMethod,
+	assert.EqualValues(t, flow.StateChooseMethod,
 		must(verification.NewFlow(conf, time.Hour, "", u, nil, flow.TypeBrowser)).State)
 }
 
@@ -207,5 +207,4 @@ func TestContinueURL(t *testing.T) {
 			require.Equal(t, tc.expect, url.String())
 		})
 	}
-
 }
