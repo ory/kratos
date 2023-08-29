@@ -16,7 +16,7 @@ import (
 	"time"
 )
 
-// IdentityCredentialsCode CredentialsCode represents a one time login/registraiton code
+// IdentityCredentialsCode CredentialsCode represents a one time login/registration code
 type IdentityCredentialsCode struct {
 	AddressType *string      `json:"address_type,omitempty"`
 	UsedAt      NullableTime `json:"used_at,omitempty"`

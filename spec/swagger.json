@@ -3865,7 +3865,7 @@
       }
     },
     "identityCredentialsCode": {
-      "description": "CredentialsCode represents a one time login/registraiton code",
+      "description": "CredentialsCode represents a one time login/registration code",
       "type": "object",
       "properties": {
         "address_type": {
