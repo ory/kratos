@@ -35,7 +35,8 @@
               "text": "Secret was used at 2021-08-17 11:32:39 +0000 UTC",
               "type": "info",
               "context": {
-                "used_at": "2021-08-17T11:32:39Z"
+                "used_at": "2021-08-17T11:32:39Z",
+                "used_at_unix": 1629199959
               }
             },
             {
@@ -59,7 +60,8 @@
               "text": "Secret was used at 2021-08-17 11:32:42 +0000 UTC",
               "type": "info",
               "context": {
-                "used_at": "2021-08-17T11:32:42Z"
+                "used_at": "2021-08-17T11:32:42Z",
+                "used_at_unix": 1629199962
               }
             },
             {
@@ -83,7 +85,8 @@
               "text": "Secret was used at 2021-08-17 11:32:45 +0000 UTC",
               "type": "info",
               "context": {
-                "used_at": "2021-08-17T11:32:45Z"
+                "used_at": "2021-08-17T11:32:45Z",
+                "used_at_unix": 1629199965
               }
             },
             {
@@ -107,7 +110,8 @@
               "text": "Secret was used at 2021-08-17 11:32:48 +0000 UTC",
               "type": "info",
               "context": {
-                "used_at": "2021-08-17T11:32:48Z"
+                "used_at": "2021-08-17T11:32:48Z",
+                "used_at_unix": 1629199968
               }
             },
             {

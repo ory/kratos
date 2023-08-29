@@ -6,9 +6,6 @@ package schema
 import (
 	"fmt"
 
-	"golang.org/x/text/cases"
-	"golang.org/x/text/language"
-
 	"github.com/pkg/errors"
 
 	"github.com/ory/jsonschema/v3"
@@ -145,11 +142,6 @@ type DuplicateCredentialsHinter interface {
 
 func NewDuplicateCredentialsError(err error) error {
 	if hinter := DuplicateCredentialsHinter(nil); errors.As(err, &hinter) && hinter.HasHints() {
-		oidcProviders := make([]string, 0, len(hinter.AvailableOIDCProviders()))
-		for _, provider := range hinter.AvailableOIDCProviders() {
-			oidcProviders = append(oidcProviders, cases.Title(language.English).String(provider))
-		}
-
 		return errors.WithStack(&ValidationError{
 			ValidationError: &jsonschema.ValidationError{
 				Message:     `an account with the same identifier (email, phone, username, ...) exists already`,

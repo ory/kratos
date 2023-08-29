@@ -26,6 +26,7 @@
       "label": {
         "context": {
           "added_at": "0001-01-01T00:00:00Z",
+          "added_at_unix": -62135596800,
           "display_name": "bar"
         },
         "id": 1050018,
@@ -49,6 +50,7 @@
       "label": {
         "context": {
           "added_at": "0001-01-01T00:00:00Z",
+          "added_at_unix": -62135596800,
           "display_name": "foo"
         },
         "id": 1050018,

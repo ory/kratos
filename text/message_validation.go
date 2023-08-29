@@ -7,6 +7,9 @@ import (
 	"fmt"
 	"strings"
 
+	"golang.org/x/text/cases"
+	"golang.org/x/text/language"
+
 	"golang.org/x/exp/maps"
 )
 
@@ -269,6 +272,11 @@ func NewErrorValidationDuplicateCredentialsWithHints(availableCredentialTypes []
 	if identifier == "" {
 		identifier = "an email, phone, or username"
 	}
+	oidcProviders := make([]string, 0, len(availableOIDCProviders))
+	for _, provider := range availableOIDCProviders {
+		oidcProviders = append(oidcProviders, cases.Title(language.English).String(provider))
+	}
+
 	reason := fmt.Sprintf("You tried signing in with %s which is already in use by another account.", identifier)
 	if len(availableCredentialTypes) > 0 {
 		humanReadable := make(map[string]struct{}, len(availableCredentialTypes))

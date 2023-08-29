@@ -25,7 +25,6 @@
     "messages": [],
     "meta": {
       "label": {
-        "context": {},
         "id": 1010006,
         "text": "Authentication code",
         "type": "info"
@@ -45,7 +44,6 @@
     "messages": [],
     "meta": {
       "label": {
-        "context": {},
         "id": 1010009,
         "text": "Use Authenticator",
         "type": "info"
