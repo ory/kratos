@@ -5,7 +5,7 @@
 
 **Table of Contents**
 
-- [ (2023-08-28)](#2023-08-28)
+- [ (2023-08-29)](#2023-08-29)
   - [Bug Fixes](#bug-fixes)
   - [Documentation](#documentation)
   - [Features](#features)
@@ -309,7 +309,7 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# [](https://github.com/ory/kratos/compare/v1.0.0...v) (2023-08-28)
+# [](https://github.com/ory/kratos/compare/v1.0.0...v) (2023-08-29)
 
 ### Bug Fixes
 
@@ -407,6 +407,18 @@
 - Improve messages for easier i18n
   ([#3457](https://github.com/ory/kratos/issues/3457))
   ([37f1657](https://github.com/ory/kratos/commit/37f16577d92ba88869bf15fb1ea54e819b062724))
+- Passwordless browser login and registration via code to email
+  ([#3378](https://github.com/ory/kratos/issues/3378))
+  ([eaaf375](https://github.com/ory/kratos/commit/eaaf37519917612671238412a633847386d7c613)),
+  closes [#2029](https://github.com/ory/kratos/issues/2029)
+  [ory-corp/cloud#3573](https://github.com/ory-corp/cloud/issues/3573):
+
+  This feature adds passwordless email code login. When a user signs up, or
+  signs in, a code is sent to their email address which they can use to complete
+  the authentication process.
+
+  This feature is currently only working for browser facing APIs.
+
 - Provide login hints when registration fails due to duplicate
   credentials/addresses ([#3430](https://github.com/ory/kratos/issues/3430))
   ([8b28469](https://github.com/ory/kratos/commit/8b284697e4a26fb01ad57d2e9ebd8f714be49f33)):
