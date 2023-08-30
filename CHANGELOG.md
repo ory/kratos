@@ -371,6 +371,9 @@
 - Remove `earliest_possible_extend` default in schema
   ([#3464](https://github.com/ory/kratos/issues/3464))
   ([7e05b7d](https://github.com/ory/kratos/commit/7e05b7db3c01efc96185ac18042e971e33da37c8))
+- Remove duplicate message ID usage
+  ([#3468](https://github.com/ory/kratos/issues/3468))
+  ([dfcbe22](https://github.com/ory/kratos/commit/dfcbe226bc53b91f3a6c9837496a159b85c2e68a))
 - Remove requirement for smtp section
   ([#3405](https://github.com/ory/kratos/issues/3405))
   ([59a3f14](https://github.com/ory/kratos/commit/59a3f1469b8412e49846a500493cb02fc6eb34b1))
