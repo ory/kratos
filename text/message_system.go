@@ -5,9 +5,11 @@ package text
 
 func NewErrorSystemGeneric(reason string) *Message {
 	return &Message{
-		ID:      ErrorSystemGeneric,
-		Text:    reason,
-		Type:    Error,
-		Context: context(nil),
+		ID:   ErrorSystemGeneric,
+		Text: reason,
+		Type: Error,
+		Context: context(map[string]any{
+			"reason": reason,
+		}),
 	}
 }
