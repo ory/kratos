@@ -56,14 +56,6 @@ func NewInfoLogin() *Message {
 	}
 }
 
-func NewInfoLoginPasswordlessWebAuthn() *Message {
-	return &Message{
-		ID:   InfoSelfServiceLogin,
-		Text: "Sign in with security key",
-		Type: Info,
-	}
-}
-
 func NewInfoLoginTOTP() *Message {
 	return &Message{
 		ID:   InfoLoginTOTP,

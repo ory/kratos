@@ -70,7 +70,6 @@ func init() {
 		"NewInfoSelfServiceSettingsLookupSecretsLabel":            text.NewInfoSelfServiceSettingsLookupSecretsLabel(),
 		"NewInfoSelfServiceSettingsUpdateLinkOIDC":                text.NewInfoSelfServiceSettingsUpdateLinkOIDC("{provider}"),
 		"NewInfoSelfServiceSettingsUpdateUnlinkOIDC":              text.NewInfoSelfServiceSettingsUpdateUnlinkOIDC("{provider}"),
-		"NewInfoSelfServiceRegisterWebAuthn":                      text.NewInfoSelfServiceSettingsRegisterWebAuthn(),
 		"NewInfoSelfServiceRegisterWebAuthnDisplayName":           text.NewInfoSelfServiceRegisterWebAuthnDisplayName(),
 		"NewInfoSelfServiceRemoveWebAuthn":                        text.NewInfoSelfServiceRemoveWebAuthn("{display_name}", aSecondAgo),
 		"NewErrorValidationVerificationFlowExpired":               text.NewErrorValidationVerificationFlowExpired(aSecondAgo),
@@ -149,7 +148,6 @@ func init() {
 		"NewInfoSelfServiceSettingsRegisterWebAuthn":              text.NewInfoSelfServiceSettingsRegisterWebAuthn(),
 		"NewInfoLoginWebAuthnPasswordless":                        text.NewInfoLoginWebAuthnPasswordless(),
 		"NewInfoSelfServiceRegistrationRegisterWebAuthn":          text.NewInfoSelfServiceRegistrationRegisterWebAuthn(),
-		"NewInfoLoginPasswordlessWebAuthn":                        text.NewInfoLoginPasswordlessWebAuthn(),
 		"NewInfoSelfServiceContinueLoginWebAuthn":                 text.NewInfoSelfServiceContinueLoginWebAuthn(),
 		"NewInfoSelfServiceLoginContinue":                         text.NewInfoSelfServiceLoginContinue(),
 		"NewErrorValidationSuchNoWebAuthnUser":                    text.NewErrorValidationSuchNoWebAuthnUser(),
@@ -180,6 +178,12 @@ func main() {
 	}
 
 	sortedMessages := sortMessages()
+	for i := 1; i < len(sortedMessages); i++ {
+		if sortedMessages[i].ID == sortedMessages[i-1].ID {
+			_, _ = fmt.Fprintf(os.Stderr, "Message ID %d is used more than once: %q %q\n", sortedMessages[i].ID, sortedMessages[i].Text, sortedMessages[i-1].Text)
+			os.Exit(1)
+		}
+	}
 
 	if err := writeMessages(filepath.Join(os.Args[2], "concepts/ui-user-interface.mdx"), sortedMessages); err != nil {
 		_, _ = fmt.Fprintf(os.Stderr, "Unable to generate message table: %+v\n", err)
